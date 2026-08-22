@@ -1,0 +1,94 @@
+{
+ "date": "2026-07-24",
+ "groups": [
+  {
+   "group": "れいわ新選組",
+   "no": 3,
+   "size": 5,
+   "yes": 1
+  },
+  {
+   "group": "沖縄の風",
+   "no": 0,
+   "size": 2,
+   "yes": 2
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "no": 3,
+   "size": 3,
+   "yes": 0
+  }
+ ],
+ "id": "221-0724-v006",
+ "session": 221,
+ "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0724-v007.htm",
+ "title": "大都市地域における特別区の設置に関する法律の一部を改正する法律案（奥村祥大君外３名発議）",
+ "totals": {
+  "no": 6,
+  "total": 9,
+  "yes": 3
+ },
+ "votes": [
+  {
+   "group": "れいわ新選組",
+   "memberId": "",
+   "nameText": "伊勢崎 賢治",
+   "value": "賛成"
+  },
+  {
+   "group": "れいわ新選組",
+   "memberId": "m_007017",
+   "nameText": "大島 九州男",
+   "value": "反対"
+  },
+  {
+   "group": "れいわ新選組",
+   "memberId": "m_025012",
+   "nameText": "奥田 ふみよ",
+   "value": "反対"
+  },
+  {
+   "group": "れいわ新選組",
+   "memberId": "m_019015",
+   "nameText": "木村 英子",
+   "value": "反対"
+  },
+  {
+   "group": "れいわ新選組",
+   "memberId": "m_022026",
+   "nameText": "天畠 大輔",
+   "value": "投票なし"
+  },
+  {
+   "group": "沖縄の風",
+   "memberId": "m_016007",
+   "nameText": "伊波 洋一",
+   "value": "賛成"
+  },
+  {
+   "group": "沖縄の風",
+   "memberId": "m_025027",
+   "nameText": "高良 沙哉",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_010001",
+   "nameText": "青木 一彦",
+   "value": "反対"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_022003",
+   "nameText": "赤松 健",
+   "value": "反対"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_998003",
+   "nameText": "浅尾 慶一郎",
+   "value": "反対"
+  }
+ ]
+}
