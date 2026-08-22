@@ -13,5 +13,6 @@ const hasMemberData = existsSync(path.join(defaultDataDir(), "members", "index.j
 export default [
   index("routes/home.tsx"),
   route("about", "routes/about.tsx"),
+  route("members", "routes/members.tsx"),
   ...(hasMemberData ? [route("members/:id", "routes/member.tsx")] : []),
 ] satisfies RouteConfig;
