@@ -1,20 +1,24 @@
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import type { Dirent } from "node:fs";
 import { join } from "node:path";
-import type { DatasetMeta, MemberDetail, MemberSummary, RollCall, RollCallSummary } from "@seiji-kiroku/shared";
+import type { Bill, BillSummary, DatasetMeta, MemberDetail, MemberSummary, RollCall, RollCallSummary } from "@seiji-kiroku/shared";
 import type { Aggregated } from "./aggregate.ts";
 import { stableJson } from "./json.ts";
 import type { GroupMismatch, Unmatched } from "./match-votes.ts";
 import type { UnmatchedSpeech } from "./match-speeches.ts";
 import type { UnmatchedBillProposer } from "./match-bills.ts";
+import type { UnmatchedShugiinBillName } from "./match-shugiin-bills.ts";
+import { toBillSummary } from "./sources/shugiin-bills.ts";
 import type { UnmatchedBill } from "./sources/sangiin-bills.ts";
 import type { UnmatchedGroup } from "./sources/sangiin-members.ts";
 
 /** `data/` に書く一式（docs/DATA_CONTRACT.md）。 */
 export interface Dataset extends Aggregated {
   rollCallDetails: RollCall[];
-  /** 名寄せできなかった票（rollCallId）・発言（speechId）・参法の発議者（billId）。 */
-  unmatched: (Unmatched | UnmatchedSpeech | UnmatchedBillProposer)[];
+  /** 議案（衆院 議案情報から。Issue #72）。`bills/{提出回次}/{id}.json` と `bills/index.json` になる。 */
+  bills: Bill[];
+  /** 名寄せできなかった票（rollCallId）・発言（speechId）・参法の発議者 / 衆院 議案の提出者・賛成者（billId）。 */
+  unmatched: (Unmatched | UnmatchedSpeech | UnmatchedBillProposer | UnmatchedShugiinBillName)[];
   /** 議案情報の審議結果と突合できなかった採決（得票のみの result になる）。 */
   unmatchedBills: UnmatchedBill[];
   /** 対応表（sangiin-groups.ts）に無い会派略称。group には原文のまま入る（Issue #36）。 */
@@ -48,10 +52,13 @@ export async function readSessionsOnDisk(dir: string): Promise<number[]> {
  * 契約どおりのパスに stableJson で書く。
  * 前回実行の残骸が残らないよう members/ と、今回対象（meta.sessions）の回次の rollcalls/{session}/ は先に消す。
  * 対象外の回次の rollcalls/{session}/ は触らない。
+ * bills/ は全部消す: 議案は「審議回次の一覧」から取り、継続審議の議案は提出回次（対象外のこともある）の下に置くので、回次単位では消せない。
+ * ETL は常に「指定 ∪ data/ にある回次」を全部処理する（resolveSessions）ので、全消しでも他回次の議案は同じ実行で書き直される。
  */
 export async function writeDataset(dir: string, ds: Dataset): Promise<void> {
   await rm(join(dir, "members"), { recursive: true, force: true });
   for (const session of ds.meta.sessions) await rm(join(dir, "rollcalls", String(session)), { recursive: true, force: true });
+  await rm(join(dir, "bills"), { recursive: true, force: true });
   const put = async (rel: string, value: unknown) => {
     const file = join(dir, rel);
     await mkdir(join(file, ".."), { recursive: true });
@@ -61,6 +68,9 @@ export async function writeDataset(dir: string, ds: Dataset): Promise<void> {
   for (const d of ds.details) await put(`members/${d.id}.json`, d);
   await put("rollcalls/index.json", ds.rollCalls);
   for (const rc of ds.rollCallDetails) await put(`rollcalls/${rc.session}/${rc.id}.json`, rc);
+  const bills = sortBills(ds.bills);
+  await put("bills/index.json", bills.map(toBillSummary));
+  for (const b of bills) await put(`bills/${b.session}/${b.id}.json`, b);
   await put("unmatched.json", ds.unmatched);
   await put("unmatched-bills.json", ds.unmatchedBills);
   await put("unmatched-groups.json", ds.unmatchedGroups);
@@ -76,6 +86,13 @@ const RESULT_FORM = /^(?:[^（）]+（賛成 \d+・反対 \d+）|賛成 \d+・�
 /** group-mismatch.json の1行に必須のキー（GroupMismatch）。 */
 const MISMATCH_KEYS = ["memberId", "nameText", "voteGroup", "rosterGroup", "rollCallId"] as const;
 const BILL_SOURCE =/^https:\/\/www\.sangiin\.go\.jp\/japanese\/joho1\/kousei\/gian\/\d+\/meisai\/m\d+\.htm$/;
+/** bills/ の id は `{提出回次}-{種別原文}-{番号 or 経過ページ id}`。 */
+const BILL_ID = /^(\d+)-[^-]+-[^-]+$/;
+
+/** bills/index.json の順: 提出回次の降順、同じ回次では id の昇順（決定的な並び）。 */
+export function sortBills(bills: readonly Bill[]): Bill[] {
+  return [...bills].sort((a, b) => b.session - a.session || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+}
 
 /**
  * docs/DATA_CONTRACT.md の不変条件を `dir` 上のファイルに対して検証し、違反を文字列で返す（空なら合格）。
@@ -159,6 +176,35 @@ export async function validateDataset(dir: string): Promise<string[]> {
       } else if (!ids.has(vote.memberId)) v.push(`${rel}: memberId ${vote.memberId} not in members/index.json`);
       else matchedVotes++;
     }
+  }
+  // bills/: index と各ファイルの整合、sourceUrl、会派態度（推定）の形（Issue #72）
+  const billIndex = (await read<BillSummary[]>("bills/index.json")) ?? [];
+  const billIds = new Set<string>();
+  for (let i = 0; i < billIndex.length; i++) {
+    const s = billIndex[i];
+    if (billIds.has(s.id)) v.push(`bills/index.json: duplicate id ${s.id}`);
+    billIds.add(s.id);
+    checkSource("bills/index.json", s, `[${i}]`);
+    if (!BILL_ID.test(s.id)) v.push(`bills/index.json[${i}]: id must be {回次}-{種別}-{番号}, got ${s.id}`);
+    const rel = `bills/${s.session}/${s.id}.json`;
+    const b = await read<Bill>(rel);
+    if (!b) continue;
+    if (b.id !== s.id) v.push(`${rel}: id ${b.id} !== ${s.id}`);
+    if (b.session !== s.session) v.push(`${rel}: session ${b.session} !== ${s.session}`);
+    if (b.house !== s.house) v.push(`${rel}: house ${b.house} !== ${s.house}`);
+    checkSource(rel, b);
+    const st = b.shugiinGroupStance;
+    if (st !== undefined) {
+      if (typeof st.stanceText !== "string" || !Array.isArray(st.yes) || !Array.isArray(st.no)) v.push(`${rel}: shugiinGroupStance must be {stanceText, yes[], no[]}`);
+      if (st.unanimous !== undefined && (st.unanimous !== true || st.stanceText !== "全会一致")) v.push(`${rel}: unanimous may be true only when stanceText is 全会一致 (got ${st.stanceText})`);
+    }
+    for (const key of ["submitters", "supporters"] as const) {
+      for (const id of b[key] ?? []) if (!ids.has(id)) v.push(`${rel}: ${key} memberId ${id} not in members/index.json`);
+    }
+  }
+  const billFiles = new Set(billIndex.map((s) => `bills/${s.session}/${s.id}.json`));
+  for (const rel of await listJsonFiles(dir, "bills")) {
+    if (rel !== "bills/index.json" && !billFiles.has(rel)) v.push(`${rel}: not in bills/index.json (stale file from a previous run?)`);
   }
   // group-mismatch.json: 行の形と、memberId / rollCallId が公開データ上に実在することを検査（Issue #24）
   const mismatch = await read<unknown>("group-mismatch.json");

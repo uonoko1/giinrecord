@@ -13,7 +13,7 @@
   7. failure()              「ETL 日次実行が失敗した（etl.yml）」という Issue を作る（同タイトルの open Issue があればコメントだけ）
 ```
 
-- `.cache/` のうち回次一覧 `vote_ind.htm`・議員名簿・議案ページ・会議録 API は ETL 側が `noCache` で毎回取得する。キャッシュが効くのは各採決の投票結果ページ（不変）だけ。
+- `.cache/` のうち回次一覧 `vote_ind.htm`・議員名簿・議案ページ（参院 meisai・衆院 kaiji/keika）・会議録 API は ETL 側が `noCache` で毎回取得する。衆院 議案情報は Shift_JIS で、回次あたり一覧 1 ページ＋経過ページ約 160 枚（0.5 秒間隔で約 1.5 分）。キャッシュが効くのは各採決の投票結果ページ（不変）だけ。
 - 06:30 JST の `deploy.yml` schedule は安全網。通常は 6 で起動された Deploy が先に走る（`concurrency: deploy` で重複は直列化）。
 
 ## 確認の仕方（PO チェックリスト）
