@@ -11,6 +11,17 @@ export interface Aggregated {
   rollCalls: RollCallSummary[];
 }
 
+/**
+ * 回次 targets の採決・発言を突合するのに取得する名簿の回次。
+ * 名簿ページ giin/{N}/giin.htm は第N回終了後のある時点（概ね次の回次の直前）の名簿で、
+ * 第N回の会期中に退任した議員（通常選挙・辞職）を含まない（第217回の名簿は令和7年7月31日現在）。
+ * 第N回中の議員は「N-1 の名簿 ∪ N の名簿」で覆えるので、最小回次の1つ前も取る。
+ */
+export function rosterSessionsFor(targets: readonly number[]): number[] {
+  const sorted = [...new Set(targets)].sort((a, b) => a - b);
+  return sorted.length ? [sorted[0] - 1, ...sorted] : [];
+}
+
 /** 1回次分の名簿（parseMemberList の出力）。 */
 export interface Roster { session: number; members: readonly Member[] }
 

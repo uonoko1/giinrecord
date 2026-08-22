@@ -2,7 +2,7 @@ import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import type { Member, MemberTerm } from "@seiji-kiroku/shared";
-import { mergeRosters } from "../src/aggregate.ts";
+import { mergeRosters, rosterSessionsFor } from "../src/aggregate.ts";
 import { parseMemberList } from "../src/sources/sangiin-members.ts";
 
 const fixture = (name: string) => readFileSync(new URL(`./fixtures/${name}.htm`, import.meta.url), "utf-8");
@@ -87,5 +87,22 @@ describe("mergeRosters: 回次ごとの名簿をプロフィールIDで1人に�
     assert.ok(merged.every((m) => m.current === latest.has(m.id)));
     assert.ok(merged.every((m) => m.terms.every((t) => t.sessionTo !== undefined && t.sessionTo >= t.sessionFrom)));
     assert.ok(merged.every((m) => m.terms.every((t, i) => i === 0 || m.terms[i - 1].sessionFrom > t.sessionFrom)), "terms は新しい順");
+  });
+});
+
+describe("rosterSessionsFor: 回次 N の採決を突合するのに要る名簿の回次", () => {
+  // 名簿ページ giin/{N}/giin.htm は「第N回の終了後のある時点（次の回次の直前）」の名簿で、
+  // 第217回の名簿（令和7年7月31日現在）は同年7月の通常選挙で退任した議員を含まない。
+  // 第N回中の議員は「N-1 の名簿 ∪ N の名簿」で覆える。
+  test("最小回次の1つ前の名簿も含める", () => {
+    assert.deepEqual(rosterSessionsFor([217, 218, 219, 220, 221]), [216, 217, 218, 219, 220, 221]);
+    assert.deepEqual(rosterSessionsFor([221]), [220, 221]);
+  });
+
+  test("実HTML: 第216回の名簿には第217回の名簿にいない議員（任期満了）が多数いて、統合後も元職として残る", () => {
+    const merged = mergeRosters([216, 217].map((s) => ({ session: s, members: parseMemberList(fixture(`sangiin-giin-${s}`), roster(s), s) })));
+    const former = merged.filter((m) => !m.current);
+    assert.ok(former.length >= 40, `former ${former.length}`);
+    assert.ok(former.every((m) => m.terms[0].sessionTo === 216));
   });
 });

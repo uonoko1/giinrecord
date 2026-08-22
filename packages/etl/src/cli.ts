@@ -7,7 +7,7 @@ import { fetchSpeeches, speechPageUrl } from "./sources/kokkai-speeches.ts";
 import { matchVotes, type GroupMismatch, type Unmatched } from "./match-votes.ts";
 import { billListUrl, fetchBillDecisions, matchBillResults, type BillDecision } from "./sources/sangiin-bills.ts";
 import { matchSpeeches, type UnmatchedSpeech } from "./match-speeches.ts";
-import { buildDataset, mergeRosters } from "./aggregate.ts";
+import { buildDataset, mergeRosters, rosterSessionsFor } from "./aggregate.ts";
 import { readSessionsOnDisk, resolveSessions, validateDataset, writeDataset } from "./dataset.ts";
 
 /**
@@ -26,9 +26,11 @@ console.log(`sessions: ${targets.join(" ")}`);
 const fetchedAt = new Date().toISOString();
 
 // Members: 回次ごとの名簿をプロフィールIDで統合する。current は最新回次の名簿に載っているか（辞職・補選で入れ替わった人も残す）。
+// 名簿ページは各回次の終了後時点なので、最小回次の1つ前の名簿も取って会期中に退任した議員を覆う（rosterSessionsFor）。
 const memberSession = Math.max(...targets);
+const rosterSessions = rosterSessionsFor(targets);
 const rosters = [];
-for (const session of targets) {
+for (const session of rosterSessions) {
   const roster = await fetchMembers(session);
   console.log(`session ${session}: ${roster.length} members in roster`);
   rosters.push({ session, members: roster });
@@ -96,7 +98,7 @@ await writeDataset(DATA, {
     fetchedAt,
     sessions: targets,
     sources: [
-      ...targets.map((s) => ({ name: `参議院 議員一覧（第${s}回）`, url: memberListUrl(s), fetchedAt })),
+      ...rosterSessions.map((s) => ({ name: `参議院 議員一覧（第${s}回）`, url: memberListUrl(s), fetchedAt })),
       { name: "参議院 本会議投票結果", url: "https://www.sangiin.go.jp/japanese/touhyoulist/", fetchedAt },
       { name: "国会会議録検索システム 検索用API（参議院 本会議）", url: speechPageUrl(memberSession), fetchedAt },
       ...targets.map((s) => ({ name: `参議院 議案情報（第${s}回）`, url: billListUrl(s), fetchedAt })),
