@@ -198,6 +198,15 @@
    "value": "賛成"
   },
   {
+   "billId": "221-参法-19",
+   "date": "2026-07-15",
+   "kind": "bill",
+   "role": "提出者",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/221/meisai/m221100221019.htm",
+   "submitterText": "伊藤孝恵君",
+   "title": "青少年が安全に安心してインターネットを利用できる環境の整備等に関する法律の一部を改正する法律案"
+  },
+  {
    "date": "2026-07-13",
    "groupValue": "賛成",
    "kind": "vote",
@@ -768,6 +777,15 @@
    "value": "賛成"
   },
   {
+   "billId": "221-参法-8",
+   "date": "2026-05-19",
+   "kind": "bill",
+   "role": "提出者",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/221/meisai/m221100221008.htm",
+   "submitterText": "伊藤孝恵君",
+   "title": "内密出産に対応するための体制の整備等の促進に関する法律案"
+  },
+  {
    "date": "2026-05-15",
    "groupValue": "賛成",
    "kind": "vote",
@@ -1136,6 +1154,33 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0330-v001.htm",
    "title": "日程第１　令和八年度一般会計暫定予算",
    "value": "賛成"
+  },
+  {
+   "billId": "221-参法-4",
+   "date": "2026-03-27",
+   "kind": "bill",
+   "role": "提出者",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/221/meisai/m221100221004.htm",
+   "submitterText": "伊藤孝恵君 外1名",
+   "title": "地方税法の一部を改正する法律案"
+  },
+  {
+   "billId": "221-参法-3",
+   "date": "2026-03-27",
+   "kind": "bill",
+   "role": "提出者",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/221/meisai/m221100221003.htm",
+   "submitterText": "伊藤孝恵君 外1名",
+   "title": "所得税法の一部を改正する法律案"
+  },
+  {
+   "billId": "221-参法-2",
+   "date": "2026-03-27",
+   "kind": "bill",
+   "role": "提出者",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/221/meisai/m221100221002.htm",
+   "submitterText": "伊藤孝恵君 外1名",
+   "title": "特別児童扶養手当等の支給に関する法律の一部を改正する法律案"
   },
   {
    "date": "2026-03-23",
@@ -2782,6 +2827,15 @@
    "meeting": "本会議 第8号",
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715254X00820250326/39",
    "speechId": "121715254X00820250326_039"
+  },
+  {
+   "billId": "217-参法-4",
+   "date": "2025-03-18",
+   "kind": "bill",
+   "role": "提出者",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/217/meisai/m217100217004.htm",
+   "submitterText": "伊藤孝恵君",
+   "title": "学校教育法の一部を改正する法律案"
   },
   {
    "date": "2025-03-14",

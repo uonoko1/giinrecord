@@ -1227,6 +1227,15 @@
    "value": "賛成"
   },
   {
+   "billId": "220-参法-1",
+   "date": "2026-01-23",
+   "kind": "bill",
+   "role": "提出者",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/220/meisai/m220100220001.htm",
+   "submitterText": "上田勇君 外3名",
+   "title": "政府等特定資産の運用の効率化を図るための措置に関する法律案"
+  },
+  {
    "date": "2025-12-16",
    "groupValue": "賛成",
    "kind": "vote",
