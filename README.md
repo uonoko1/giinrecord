@@ -18,7 +18,7 @@ apps/web         React + TypeScript + Vite + React Router。ビルド時にプ�
 packages/etl     TypeScript のバッチ。GitHub Actions で日次実行し、衆参・会議録から data/ を生成
 packages/shared  型定義
 data/            正規化済み JSON（CC BY 4.0）
-deploy/          VPS（Caddy 静的配信）の設定
+deploy/          VPS の配信設定（nginx コンテナ + docker compose。共用ホストの nginx は TLS と proxy のみ）
 ```
 
 ## 開発
