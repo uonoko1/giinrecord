@@ -6,12 +6,15 @@ import type { Aggregated } from "./aggregate.ts";
 import { stableJson } from "./json.ts";
 import type { Unmatched } from "./match-votes.ts";
 import type { UnmatchedSpeech } from "./match-speeches.ts";
+import type { UnmatchedBill } from "./sources/sangiin-bills.ts";
 
 /** `data/` に書く一式（docs/DATA_CONTRACT.md）。 */
 export interface Dataset extends Aggregated {
   rollCallDetails: RollCall[];
   /** 名寄せできなかった票（rollCallId）と発言（speechId）。 */
   unmatched: (Unmatched | UnmatchedSpeech)[];
+  /** 議案情報の審議結果と突合できなかった採決（得票のみの result になる）。 */
+  unmatchedBills: UnmatchedBill[];
   meta: DatasetMeta;
 }
 
@@ -28,11 +31,14 @@ export async function writeDataset(dir: string, ds: Dataset): Promise<void> {
   await put("rollcalls/index.json", ds.rollCalls);
   for (const rc of ds.rollCallDetails) await put(`rollcalls/${rc.session}/${rc.id}.json`, rc);
   await put("unmatched.json", ds.unmatched);
+  await put("unmatched-bills.json", ds.unmatchedBills);
   await put("meta.json", ds.meta);
 }
 
 const SOURCE_HOST = /(^|\.)(sangiin\.go\.jp|shugiin\.go\.jp|ndl\.go\.jp)$/;
 const VOTE_VALUES = new Set(["賛成", "反対", "投票なし"]);
+/** result は必ず得票を含む: 「賛成 N・反対 N」または「<審議結果の原文>（賛成 N・反対 N）」。可否だけの表示にはしない。 */
+const RESULT_FORM = /^(?:[^（）]+（賛成 \d+・反対 \d+）|賛成 \d+・反対 \d+)$/;
 
 /**
  * docs/DATA_CONTRACT.md の不変条件を `dir` 上のファイルに対して検証し、違反を文字列で返す（空なら合格）。
@@ -95,6 +101,7 @@ export async function validateDataset(dir: string): Promise<string[]> {
   for (let i = 0; i < summaries.length; i++) {
     const s = summaries[i];
     checkSource("rollcalls/index.json", s, `[${i}]`);
+    if (!RESULT_FORM.test(s.result)) v.push(`rollcalls/index.json[${i}]: result must contain the tally (賛成 N・反対 N), got "${s.result}"`);
     if (i > 0 && summaries[i - 1].date < s.date) v.push(`rollcalls/index.json: not in descending date order at [${i}]`);
     const rel = `rollcalls/${s.session}/${s.id}.json`;
     const rc = await read<RollCall>(rel);

@@ -48,6 +48,12 @@ describe("summarizeRollCall: rollcalls/index.json の1行", () => {
       totals: { total: 3, yes: 1, no: 1 }, result: "賛成 1・反対 1", sourceUrl: `${BASE}/221-0605-v001.htm`,
     });
   });
+
+  test("議案情報の審議結果があれば「可決（賛成 1・反対 1）」の形で原文と得票を両方出す", () => {
+    const rc = rollCall("221-0605-v001", "2026-06-05", [vote("m_1", "賛成"), vote("m_2", "反対")]);
+    assert.equal(summarizeRollCall(rc, "可決").result, "可決（賛成 1・反対 1）");
+    assert.equal(summarizeRollCall(rc, "同意").result, "同意（賛成 1・反対 1）");
+  });
 });
 
 describe("buildDataset: members/{id}.json・members/index.json・rollcalls/index.json", () => {
@@ -102,6 +108,13 @@ describe("buildDataset: members/{id}.json・members/index.json・rollcalls/index
     assert.deepEqual(ds.rollCalls.map((r) => r.id), ["221-0724-v001", "221-0605-v001"]);
   });
 
+  test("審議結果の突合結果を渡すと、紐づいた採決だけ result に可決等が付き、timeline にも同じ result が入る", () => {
+    const withResults = buildDataset(members, rcs, new Map([["221-0605-v001", "可決"]]));
+    assert.deepEqual(withResults.rollCalls.map((r) => r.result), ["賛成 1・反対 0", "可決（賛成 1・反対 1）"]);
+    const m1 = withResults.details.find((d) => d.id === "m_1")!;
+    assert.deepEqual(m1.timeline.map((e) => (e.kind === "vote" ? e.result : "")), ["賛成 1・反対 0", "可決（賛成 1・反対 1）"]);
+  });
+
   test("採決が 0 件でも全議員の detail と空の index を返す", () => {
     const empty = buildDataset(members, []);
     assert.equal(empty.details.length, 3);
@@ -126,7 +139,7 @@ describe("buildDataset: speech を timeline に入れる", () => {
     speech("122115254X02020260610_004", "m_1", "2026-06-10", { position: "議長" }),
     speech("122115254X01920260605_010", undefined, "2026-06-05", { position: "内閣総理大臣" }),
   ];
-  const ds = buildDataset(members, rcs, speeches);
+  const ds = buildDataset(members, rcs, new Map(), speeches);
 
   test("speech エントリは speechId・会議名・冒頭抜粋・文字数・出典URL を持ち、要約や評価は持たない", () => {
     const m1 = ds.details.find((d) => d.id === "m_1")!;
@@ -138,7 +151,7 @@ describe("buildDataset: speech を timeline に入れる", () => {
 
   test("vote と speech が混ざっても timeline は日付降順（不変条件）。同日は vote → speech の順", () => {
     const m1 = ds.details.find((d) => d.id === "m_1")!;
-    const later = buildDataset(members, rcs, [...speeches, speech("122115254X02020260610_009", "m_1", "2026-06-10")]);
+    const later = buildDataset(members, rcs, new Map(), [...speeches, speech("122115254X02020260610_009", "m_1", "2026-06-10")]);
     assert.deepEqual(later.details.find((d) => d.id === "m_1")!.timeline.map((e) => [e.kind, e.date]), [["speech", "2026-06-10"], ["vote", "2026-06-05"], ["speech", "2026-06-05"]]);
     assert.deepEqual(m1.timeline.map((e) => [e.kind, e.date]), [["vote", "2026-06-05"], ["speech", "2026-06-05"]]);
   });
@@ -146,7 +159,7 @@ describe("buildDataset: speech を timeline に入れる", () => {
   test("議長・大臣など position 付きの発言は、TimelineEntry に position が無い間は timeline に入れない（議員としての発言と区別できない数値を出さない）", () => {
     const m1 = ds.details.find((d) => d.id === "m_1")!;
     assert.equal(m1.timeline.some((e) => e.kind === "speech" && e.speechId === "122115254X02020260610_004"), false);
-    assert.equal(buildDataset(members, [], [speech("x_001", "m_1", "2026-06-05", { position: "" })]).index[0].counts.speeches, 1);
+    assert.equal(buildDataset(members, [], new Map(), [speech("x_001", "m_1", "2026-06-05", { position: "" })]).index[0].counts.speeches, 1);
   });
 
   test("memberId の無い発言（名簿にいない大臣など）は timeline に入れない", () => {
@@ -162,7 +175,7 @@ describe("buildDataset: speech を timeline に入れる", () => {
   });
 
   test("名簿にない memberId の発言は例外（名寄せの不整合を黙って捨てない）", () => {
-    assert.throws(() => buildDataset(members, [], [speech("x_001", "m_9", "2026-06-05")]), /m_9/);
+    assert.throws(() => buildDataset(members, [], new Map(), [speech("x_001", "m_9", "2026-06-05")]), /m_9/);
   });
 });
 

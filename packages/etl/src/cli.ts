@@ -5,6 +5,7 @@ import { fetchMembers, memberListUrl } from "./sources/sangiin-members.ts";
 import { fetchText } from "./fetch.ts";
 import { fetchSpeeches, speechPageUrl } from "./sources/kokkai-speeches.ts";
 import { matchVotes, type GroupMismatch, type Unmatched } from "./match-votes.ts";
+import { billListUrl, fetchBillDecisions, matchBillResults, type BillDecision } from "./sources/sangiin-bills.ts";
 import { matchSpeeches, type UnmatchedSpeech } from "./match-speeches.ts";
 import { buildDataset } from "./aggregate.ts";
 import { validateDataset, writeDataset } from "./dataset.ts";
@@ -12,7 +13,7 @@ import { validateDataset, writeDataset } from "./dataset.ts";
 /**
  * ETL entry point. S1: House of Councillors members and roll-call votes. S2: plenary speeches (国会会議録API).
  * Writes normalized JSON under ../../data/ (committed to the repo, CC BY 4.0):
- *   members/index.json, members/{id}.json, rollcalls/index.json, rollcalls/{session}/{id}.json, unmatched.json, meta.json
+ *   members/index.json, members/{id}.json, rollcalls/index.json, rollcalls/{session}/{id}.json, unmatched.json, unmatched-bills.json, meta.json
  * then runs validateDataset (docs/DATA_CONTRACT.md) and exits non-zero on any violation.
  * Usage: pnpm etl [session...]   (default: current session only)
  */
@@ -40,6 +41,17 @@ for (const session of targets) {
     groupMismatch.push(...matched.groupMismatch);
   }
 }
+// 可決/否決は投票結果ページに無いので、参院 議案情報（事実）から取り、採決に紐づける（Issue #26）。
+const decisions: BillDecision[] = [];
+for (const session of targets) {
+  const list = await fetchBillDecisions(session);
+  console.log(`session ${session}: ${list.length} bill decisions`);
+  decisions.push(...list);
+}
+const bills = matchBillResults(rollCalls, decisions);
+// 人事案件・決議など議案情報に載らない採決は得票のみの表示になる。件数を出して運用者が確認できるようにする。
+if (bills.unmatched.length) console.warn(`roll calls without bill decision: ${bills.unmatched.length} (see data/unmatched-bills.json)`);
+
 // 発言: 国会会議録API（公開まで約1ヶ月のラグ。meta.sources[].fetchedAt が「いつ時点の会議録か」を示す）。
 const speeches: Speech[] = [];
 for (const session of targets) {
@@ -60,9 +72,10 @@ if (groupMismatch.length) {
 }
 
 await writeDataset(DATA, {
-  ...buildDataset(members, rollCalls, speeches),
+  ...buildDataset(members, rollCalls, new Map([...bills.results].map(([id, r]) => [id, r.decision])), speeches),
   rollCallDetails: rollCalls,
   unmatched,
+  unmatchedBills: bills.unmatched,
   meta: {
     fetchedAt,
     sessions: targets,
@@ -70,6 +83,7 @@ await writeDataset(DATA, {
       { name: "参議院 議員一覧", url: memberListUrl(memberSession), fetchedAt },
       { name: "参議院 本会議投票結果", url: "https://www.sangiin.go.jp/japanese/touhyoulist/", fetchedAt },
       { name: "国会会議録検索システム 検索用API（参議院 本会議）", url: speechPageUrl(memberSession), fetchedAt },
+      ...targets.map((s) => ({ name: `参議院 議案情報（第${s}回）`, url: billListUrl(s), fetchedAt })),
     ],
   },
 });
