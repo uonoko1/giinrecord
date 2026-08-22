@@ -27,11 +27,15 @@ export default function Members({ data = bundled }: { data?: Dataset }) {
   const [query, setQuery] = useState("");
   const [group, setGroup] = useState("");
   const [district, setDistrict] = useState("");
+  const [includeFormer, setIncludeFormer] = useState(false);
   const searchId = useId();
+  const formerId = useId();
   const groupId = useId();
   const districtId = useId();
 
-  const all = useMemo(() => data.members.filter((m) => m.house === "sangiin"), [data.members]);
+  const sangiin = useMemo(() => data.members.filter((m) => m.house === "sangiin"), [data.members]);
+  // 既定は現職（最新回次の名簿に載っている人）のみ。元職は事実として残っているので、トグルで同じ一覧に出す。
+  const all = useMemo(() => (includeFormer ? sangiin : sangiin.filter((m) => m.current !== false)), [sangiin, includeFormer]);
   const groups = useMemo(() => distinctSorted(all.map((m) => m.group)), [all]);
   const districts = useMemo(() => distinctSorted(all.map((m) => m.district)), [all]);
   const hits = useMemo(() => filterMembers(all, { query, group, district }), [all, query, group, district]);
@@ -47,7 +51,7 @@ export default function Members({ data = bundled }: { data?: Dataset }) {
         <p className="cover__lead">{DESCRIPTION}</p>
       </header>
 
-      {all.length === 0 ? (
+      {sangiin.length === 0 ? (
         <section className="section">
           <p className="note">取得前です。</p>
         </section>
@@ -90,6 +94,10 @@ export default function Members({ data = bundled }: { data?: Dataset }) {
                 </select>
               </label>
             </div>
+            <label className="members-check" htmlFor={formerId}>
+              <input id={formerId} type="checkbox" checked={includeFormer} onChange={(e) => setIncludeFormer(e.target.checked)} />
+              <span>元職も含める</span>
+            </label>
             <p className="members-count" aria-live="polite">
               <span className="num">{hits.length.toLocaleString("ja-JP")} 名</span>
               {hits.length !== all.length && <span className="members-count__of">／ {all.length.toLocaleString("ja-JP")} 名</span>}
@@ -138,7 +146,7 @@ function MemberRow({ member }: { member: MemberSummary }) {
         <span className="members-item__name">{member.name}</span>
       </Link>
       <span className="members-item__meta num">
-        {[member.group, member.district, term].filter(Boolean).join(" ・ ")}
+        {[member.group, member.district, term, member.current === false ? "元職" : undefined].filter(Boolean).join(" ・ ")}
       </span>
     </li>
   );

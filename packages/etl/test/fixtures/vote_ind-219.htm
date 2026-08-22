@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ja">
+	<head>
+		<meta charset="utf-8">
+		<title>本会議投票結果：参議院</title>
+		<link rel="stylesheet" title="" href="/common/css/import_h25.css" type="text/css" media="all">
+		<link rel="alternate stylesheet" type="text/css" media="all" title="small" href="/common/css/small_h25.css">
+		<link rel="alternate stylesheet" type="text/css" media="all" title="medium" href="/common/css/medium_h25.css">
+		<link rel="alternate stylesheet" type="text/css" media="all" title="large" href="/common/css/large_h25.css">
+		<script src="/common/js/fontsizer.js"></script>
+		<style>
+/*
+.pro   { background: #FFFF66; white-space: pre; text-align: center; font-size: 100%;}
+.con   { background: #99FF99; white-space: pre; color: #009900; text-align: center; font-size: 100%;}
+.ttl   { white-space: pre; font-size: 100%;}
+.party { background: #CCCCFF; white-space: pre; text-align: left;}
+.nam   { text-align: left; font-size: 100%;}
+table  { border-color: #000000;}
+td     { padding: 0.4em;}
+*/
+
+.kaiji_title{ font-size: 150%; color: #af1b65; margin-top: 50px; margin-bottom: 50px;}
+.touhyo_index{ width: 590px; text-align: left; border: 2px solid #000; /*border-collapse: collapse;*/ font-family: monospace, sans-serif; line-height: 130%;}
+.touhyo_index th, .touhyo_index td{ padding: 6px; border: 1px solid #000; }
+.touhyo_index th{ text-align: center;}
+.touhyo_date{ vertical-align: top; white-space: nowrap; font-weight: normal;}
+@media screen and (max-width: 768px){ 
+	.touhyo_index{ width: auto; }
+	.touhyo_date{ white-space: normal; width:30%; }
+}
+
+		</style>
+<!-- トップへ戻るCSS方式 -->
+<script src="/common/js/jquery.min.js"></script> 
+<script src="/common/js/common.js"></script>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" title="" href="/common/css/responsive.css" type="text/css" media="all">
+	</head>
+	<body>
+		<noscript>
+			<div class="jsOn">すべての機能をご利用いただくにはJavascriptを有効にしてください。</div>
+		</noscript>
+		<div id="OutWrapper">
+			<!--　ラッパーここから　-->
+			<div id="Wrapper">
+				<!--　ヘッダーここから　-->
+				<div id="Header">
+					<div id="skip">
+						<a href="#ContentsBox">本文へ</a>
+					</div>
+					<div id="HeadLeft">
+						<h1 id="Logo"><a href="/"><img src="/common/images/layout/logo.jpg" alt="参議院"></a></h1>
+					</div>
+					<div id="Headright">
+						<form action="/cgi-bin/search/search.cgi" method="get">
+							<a href="/cgi-bin/search/search.cgi" title="検索方法の解説ページが開きます">検索方法</a>
+							<input type="text" name="q" id="q" class="font12px" value="" size="20" title="ここに検索語を入力してください">
+							<button type="submit" name="search" id="SearBtn" value="検索" title="サイト内検索を実行します">検索</button>
+						</form>
+						<div id="FonSiBox">
+							<ul id="FontSizer">
+								<li>文字サイズの変更</li>
+								<li><button type="button" class="sizebutton" name="small_button" value="small" onclick="return selectStyle('small')" onkeypress="return selectStyle('small')">標準</button></li>
+								<li><button type="button" class="sizebutton" name="medium_button" value="medium" onclick="return selectStyle('medium')" onkeypress="return selectStyle('medium')">拡大</button></li>
+								<li><button type="button" class="sizebutton" name="large_button" value="large" onclick="return selectStyle('large')" onkeypress="return selectStyle('large')">最大</button></li>
+							</ul>
+						</div>
+					</div>
+				</div>
+				<!--//　ヘッダーここまで　-->
+				<!--　グローバルナビゲーションここから　-->
+				<div id="PrimaryNavi0">
+					<div id="PrimaryNavi">
+						<ul id="GlobalNavi">
+							<li id="Sitemap"><a href="/japanese/sitemap/index.html" title="サイトマップ">サイトマップ</a></li>
+							<li id="Faq"><a href="/japanese/goiken_gositumon/faq/index.html" title="よくある質問">よくある質問</a></li>
+							<li id="Link"><a href="/japanese/link/index.html" title="リンク集">リンク集</a></li>
+							<li id="English"><a href="/eng/index.htm" title="English">English</a></li>
+						</ul>
+					</div>
+				</div>
+				<!--//　グローバルナビゲーションここまで　-->
+				<div class="clearing"><img src="/common/images/layout/spacer.gif" alt="" width="1" height="1"></div>
+				<!--　ローカルコンテンツボックスここから　-->
+				<div id="LocalContents">
+					<!--　左ボックスここから　-->
+					<div id="LocalLeft">
+					  <button id="hbbtn" class="hbbutton " type="button" aria-label="ナビゲーションを開く" aria-controls="nav" aria-expanded="false">
+					    <span></span>
+					  </button>
+					  <button id="sp_search" class="sp_search " type="button" aria-label="検索画面を開く" onclick="location.href='/cgi-bin/search/search.cgi'" aria-hidden="true">
+					    <span></span>
+					  </button>
+					  <nav id="nav" class="nav" aria-hidden="true">
+					    <ul class="local_navigation">
+					    <li id="HomeLink"><a href="/index.htm">トップページに戻る</a></li>
+					    <li><a href="/japanese/joho1/kousei/giin/current/yakuin.htm">議員情報</a></li>
+					    <li><a href="/japanese/kon_kokkaijyoho/index.html">今国会情報</a></li>
+					    <li><a href="/japanese/kaiki/index.html">ライブラリー</a></li>
+					    <li><a href="/japanese/joho1/kousei/gian/current/gian.htm">議案情報</a></li>
+					    <li><a href="/japanese/joho1/kaigirok/kaigirok.htm">会議録情報</a></li>
+					    <li><a href="/japanese/joho1/kousei/seigan/current/seigan.htm">請願</a></li>
+					    <li><a href="/japanese/joho1/kousei/syuisyo/current/syuisyo.htm">質問主意書</a></li>
+					    <li><a href="/japanese/joho1/kousei/koho/current/koho.htm">参議院公報</a></li>
+					    <li><a href="/japanese/aramashi/index.html">参議院のあらまし</a></li>
+					    <li><a href="/japanese/taiken/bochou/kengaku.html">国会体験・見学</a></li>
+					    <li><a href="/japanese/kokusai_kankei/index.html">国際関係</a></li>
+					    <li><a href="/japanese/annai/chousa/index.html">調査室作成資料</a></li>
+					    <li><a href="https://www.webtv.sangiin.go.jp" target="_blank">参議院審議中継<br>（別ウィンドウで開きます）</a></li>
+					    <li><a href="/japanese/taiken/t_program/t_program.html">特別体験プログラム</a></li>
+					    <li><a href="/japanese/kids/index.html">キッズページ</a></li>
+					    </ul>
+					    <div id="js-focus-trap" tabindex="0"></div>
+					  </nav>
+					</div>
+					<!--//左ボックスここまで　-->
+					<!--　右ボックスここから　-->
+					<div id="LocalRight">
+						<!--　パンくずここから　-->
+						<div id="BreadCrimbs">
+							<ol>
+								<li><a href="/" title="トップ">トップ</a> &gt; </li>
+								<li>本会議投票結果</li>
+							</ol>
+							
+						</div>
+						<!--// パンくずここまで -->
+						<!-- コンテンツここから -->
+						<div id="ContentsBox">
+							<h1 id="Title01" class="mt10">本会議投票結果</h1>
+							<p class="ta_l">記名投票及び押しボタン投票の結果を掲載しています。</p>
+							<h2 class="kaiji_title">第219回国会本会議投票結果</h2>
+							<p class="ta_l">案件名をクリックすると投票情報が表示されます。</p>
+								<table class="touhyo_index">
+									<tr>
+										<th>日付</th>
+										<th>案件名</th>
+									</tr>
+									<!--START-->
+<!--START[2025/12/16]-->
+<TR><TH scope="row" rowspan="11" class="touhyo_date">令和07年12月16日</TH><TD><A HREF="219-1216-v001.htm">日程第１　令和七年度一般会計補正予算（第１号）</A></TD></TR>
+<TR><TD><A HREF="219-1216-v002.htm">日程第２　令和七年度特別会計補正予算（特第１号）</A></TD></TR>
+<TR><TD><A HREF="219-1216-v003.htm">高次脳機能障害者支援法案（衆議院提出）</A></TD></TR>
+<TR><TD><A HREF="219-1216-v004.htm">一般職の職員の給与に関する法律等の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="219-1216-v005.htm">特別職の職員の給与に関する法律等の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="219-1216-v006.htm">裁判官の報酬等に関する法律の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="219-1216-v007.htm">検察官の俸給等に関する法律の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="219-1216-v008.htm">地方交付税法及び特別会計に関する法律の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="219-1216-v009.htm">防衛省の職員の給与等に関する法律の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="219-1216-v010.htm">国会議員の歳費、旅費及び手当等に関する法律の一部を改正する法律案（衆議院提出）</A></TD></TR>
+<TR><TD><A HREF="219-1216-v011.htm">国会議員の秘書の給与等に関する法律の一部を改正する法律案（衆議院提出）</A></TD></TR>
+<!--END[2025/12/16]-->
+<!--START[2025/12/05]-->
+<TR><TH scope="row" rowspan="2" class="touhyo_date">令和07年12月5日</TH><TD><A HREF="219-1205-v001.htm">日程第１　気象業務法及び水防法の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="219-1205-v002.htm">日程第２　医療法等の一部を改正する法律案（第２１７回国会内閣提出、第２１９回国会衆議院送付）</A></TD></TR>
+<!--END[2025/12/05]-->
+<!--START[2025/12/03]-->
+<TR><TH scope="row" rowspan="8" class="touhyo_date">令和07年12月3日</TH><TD><A HREF="219-1203-v001.htm">日程第２　愛知・名古屋アジア競技大会及び愛知・名古屋アジアパラ競技大会に関する特別措置法案（衆議院提出）</A></TD></TR>
+<TR><TD><A HREF="219-1203-v002.htm">日程第３　更生保護制度の充実を図るための保護司法等の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="219-1203-v003.htm">日程第４　ストーカー行為等の規制等に関する法律の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="219-1203-v004.htm">日程第５　配偶者からの暴力の防止及び被害者の保護等に関する法律の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="219-1203-v005.htm">日程第６　日本放送協会令和二年度財産目録、貸借対照表、損益計算書、資本等変動計算書及びキャッシュ・フロー計算書並びにこれらに関する説明書</A></TD></TR>
+<TR><TD><A HREF="219-1203-v006.htm">日程第７　日本放送協会令和三年度財産目録、貸借対照表、損益計算書、資本等変動計算書及びキャッシュ・フロー計算書並びにこれらに関する説明書</A></TD></TR>
+<TR><TD><A HREF="219-1203-v007.htm">日程第８　日本放送協会令和四年度財産目録、貸借対照表、損益計算書、資本等変動計算書及びキャッシュ・フロー計算書並びにこれらに関する説明書</A></TD></TR>
+<TR><TD><A HREF="219-1203-v008.htm">日程第９　日本放送協会令和五年度財産目録、貸借対照表、損益計算書、資本等変動計算書及びキャッシュ・フロー計算書並びにこれらに関する説明書</A></TD></TR>
+<!--END[2025/12/03]-->
+<!--START[2025/11/28]-->
+<TR><TH scope="row" rowspan="10" class="touhyo_date">令和07年11月28日</TH><TD><A HREF="219-1128-v001.htm">国家公務員等の任命に関する件「食品安全委員会委員（春日文子君）」</A></TD></TR>
+<TR><TD><A HREF="219-1128-v002.htm">国家公務員等の任命に関する件「個人情報保護委員会委員（藤村明子君、木田俊昭君及び藤井英治君）及び運輸審議会委員（堀川義弘君）」</A></TD></TR>
+<TR><TD><A HREF="219-1128-v003.htm">国家公務員等の任命に関する件「個人情報保護委員会委員（新保史生君）」</A></TD></TR>
+<TR><TD><A HREF="219-1128-v004.htm">国家公務員等の任命に関する件「証券取引等監視委員会委員長（中原亮一君）、同委員（加藤さゆり君及び橋本尚君）、電気通信紛争処理委員会委員（笠井之彦君、三尾美枝子君、小塚荘一郎君、中條祐介君及び前原賀代君）、中央更生保護審査会委員（久保美紀君）及び運輸安全委員会委員（堂園正人君、古川敦君、大野寛之君、鈴木美緒君及び新妻実保子君）」</A></TD></TR>
+<TR><TD><A HREF="219-1128-v005.htm">国家公務員等の任命に関する件「電波監理審議会委員（大久保哲夫君）」</A></TD></TR>
+<TR><TD><A HREF="219-1128-v006.htm">国家公務員等の任命に関する件「日本放送協会経営委員会委員（岩井睦雄君）」</A></TD></TR>
+<TR><TD><A HREF="219-1128-v007.htm">国家公務員等の任命に関する件「日本放送協会経営委員会委員（前田香織君及び榊原陽子君）」</A></TD></TR>
+<TR><TD><A HREF="219-1128-v008.htm">国家公務員等の任命に関する件「運輸審議会委員（大石美奈子君）」</A></TD></TR>
+<TR><TD><A HREF="219-1128-v009.htm">国家公務員等の任命に関する件「公害健康被害補償不服審査会委員（星景子君）」</A></TD></TR>
+<TR><TD><A HREF="219-1128-v010.htm">日程第１　租税特別措置法及び東日本大震災の被災者等に係る国税関係法律の臨時特例に関する法律の一部を改正する法律案（衆議院提出）</A></TD></TR>
+<!--END[2025/11/28]-->
+<!--START[2025/10/21]-->
+<TR><TH scope="row" nowrap rowspan="3" valign="top"><p>令和7年10月21日</p></TH>
+<TR><TD ALIGN="LEFT"><p><TT><A HREF="219-1021-v001.pdf">内閣総理大臣の指名（１回目の投票）（PDF）</A></TT></p></TD></TR>
+<TR><TD ALIGN="LEFT"><p><TT><A HREF="219-1021-v002.pdf">内閣総理大臣の指名　決選投票（PDF）</A></TT></p></TD></TR>
+<!--END[2025/10/21]-->
+									<!--END-->
+								</table>
+						</div>
+						<!--// コンテンツここまで -->
+					</div>
+					<!--//右ボックスここまで　-->
+					<div class="clearing"><img src="/common/images/layout/spacer.gif" alt="" width="1" height="1"></div>
+					<!--　コンテンツ下ナビゲーションここから　-->
+					<div id="BottomNavi0">
+						<div id="BottomNavi">
+							<ul id="SecondaryNavi">
+								<li id="Guide"><a href="/japanese/riyouannai/index.html" title="利用案内">利用案内</a></li>
+								<li id="Copy"><a href="/japanese/chosakuken/index.html" title="著作権">著作権</a></li>
+								<li id="Immunity"><a href="/japanese/menseki/index.html" title="免責事項">免責事項</a></li>
+								<li id="Opinion"><a href="/japanese/goiken_gositumon/index.html" title="ご意見・ご質問">ご意見・ご質問</a></li>
+							</ul>
+						</div>
+					</div>
+					<!--//　コンテンツ下ナビゲーションここまで　-->
+				</div>
+				<!--//　ホームコンテンツボックスここまで　-->
+				<!-- トップへ戻るCSS方式 --><div id="page_top"><a href="#" aria-label="ページの先頭へ戻ります"><span></span></a></div>
+				<!--　フッターここから　-->
+				<div id="Footer">
+					<small>All rights reserved. Copyright(c) , House of Councillors, The National Diet of Japan</small>
+				</div>
+				<!--//　フッターここまで　-->
+			</div>
+			<!--//　ラッパーここまで　-->
+		</div>
+	<script src="/common/js/spmenu.js"></script>
+	</body>
+</html>
+

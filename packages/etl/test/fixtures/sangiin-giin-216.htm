@@ -1,0 +1,2431 @@
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="ja">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="Content-Script-Type" content="text/javascript">
+
+<title>議員一覧（50音順）：参議院</title>
+<link rel="stylesheet" title="" href="../../common/css/import_h25.css" type="text/css" media="all">
+<link rel="stylesheet" title="" href="../../common/css/table_h25.css" type="text/css" media="all">
+<link rel="alternate stylesheet" type="text/css" media="all" title="small" href="../../common/css/small_h25.css">
+<link rel="alternate stylesheet" type="text/css" media="all" title="medium" href="../../common/css/medium_h25.css">
+<link rel="alternate stylesheet" type="text/css" media="all" title="large" href="../../common/css/large_h25.css">
+<script type="text/javascript" src="../../common/js/fontsizer.js"></script>
+
+<style type="text/css">
+<!--
+.Graylink:hover { text-decoration:underline; color:#D90000 }
+-->
+</style>
+
+</head>
+
+<body>
+<noscript>
+<div class="jsOn">すべての機能をご利用いただくにはJavascriptを有効にしてください。</div>
+</noscript>
+
+<div id="OutWrapper">
+<!--　ラッパーここから　-->
+<div id="Wrapper">
+<!--　ヘッダーここから　-->
+<div id="Header">
+<div id="skip">
+<a href="#ContentsBox">本文へ</a>
+</div>
+<div id="HeadLeft">
+<h1 id="Logo"><a href="/"><img src="../../common/images/layout/logo.jpg" alt="参議院"></a></h1>
+</div>
+<div id="Headright">
+<form action="/cgi-bin/search/search.cgi" method="get">
+<label for="q"><a href="/cgi-bin/search/search.cgi" >検索方法</a>
+<input type="text"name="q" id="q" class="font12px" value="" size="20" title="ここに検索語を入力してください">
+<button type="submit" name="search" id="SearBtn" value="検索" title="サイト内検索を実行します">検索</button>
+</form>
+<div id="FonSiBox">
+<ul id="FontSizer">
+<li>文字サイズの変更</li>
+<li><button type="button" class="sizebutton" name="small_button" value="small" onclick="return selectStyle('small')" onkeypress="return selectStyle('small')">標準</button></li>
+<li><button type="button" class="sizebutton" name="medium_button" value="medium" onclick="return selectStyle('medium')" onkeypress="return selectStyle('medium')">拡大</button></li>
+<li><button type="button" class="sizebutton" name="large_button" value="large" onclick="return selectStyle('large')" onkeypress="return selectStyle('large')">最大</button></li>
+</ul>
+</div>
+</div>
+</div>
+<!--//　ヘッダーここまで　-->
+
+
+<!--　グローバルナビゲーションここから　-->
+<div id="PrimaryNavi0">
+<div id="PrimaryNavi">
+<ul id="GlobalNavi">
+<li id="Sitemap"><a href="/japanese/sitemap/index.html" >サイトマップ</a></li>
+<li id="Faq"><a href="/japanese/goiken_gositumon/faq/index.html" >よくある質問</a></li>
+<li id="Link"><a href="/japanese/link/index.html" >リンク集</a></li>
+<li id="English"><a href="/eng/index.htm"><span lang="en">English</span></a></li>
+</ul>
+</div>
+</div>
+<!--//　グローバルナビゲーションここまで　-->
+<div class="clearing"><img src="../../common/images/layout/spacer.gif" alt="" width="1" height="1"></div>
+
+
+<!--　ローカルコンテンツボックスここから　-->
+<div id="LocalContents">
+
+<!--　左ボックスここから　-->
+<div id="LocalLeft">
+<ul class="local_navigation">
+<li id="HomeLink"><a href="/">トップページに戻る</a></li>
+<li id="Current2"><a href="/japanese/joho1/kousei/giin/current/yakuin.htm">議員情報</a>
+ <ul class="sub_link_set">
+  <li class="sub_down2"><a href="/japanese/joho1/kousei/giin/current/yakuin.htm">参議院役員等一覧</a></li>
+  <li class="sub_down2"><a href="/japanese/joho1/kousei/giin/current/giinsu.htm">会派別所属議員数</a></li>
+  <li class="sub_down2"><a href="/japanese/joho1/kousei/giin/current/giin.htm">議員一覧（50音順）</a></li>
+ </ul>
+</li>
+<li><a href="/japanese/kon_kokkaijyoho/index.html">今国会情報</a></li>
+<li><a href="/japanese/kaiki/index.html">ライブラリー</a></li>
+<li><a href="/japanese/joho1/kousei/gian/current/gian.htm">議案情報</a></li>
+<li><a href="/japanese/joho1/kaigirok/kaigirok.htm">会議録情報</a></li>
+<li><a href="/japanese/joho1/kousei/seigan/current/seigan.htm">請願</a></li>
+<li><a href="/japanese/joho1/kousei/syuisyo/current/syuisyo.htm">質問主意書</a></li>
+<li><a href="/japanese/joho1/kousei/koho/current/koho.htm">参議院公報</a></li>
+<li><a href="/japanese/aramashi/index.html">参議院のあらまし</a></li>
+<li><a href="/japanese/taiken/bochou/kengaku.html">国会体験・見学</a></li>
+<li><a href="/japanese/kokusai_kankei/index.html">国際関係</a></li>
+<li><a href="/japanese/annai/chousa/index.html">調査室作成資料</a></li>
+<li><a href="https://www.webtv.sangiin.go.jp" target="_blank">参議院審議中継<br>（別ウィンドウで開きます）</a></li>
+<li><a href="/japanese/taiken/t_program/t_program.html">特別体験プログラム</a></li>
+<li><a href="/japanese/kids/index.html">キッズページ</a></li>
+</ul>
+</div>
+<!--//左ボックスここまで　-->
+
+<!--　右ボックスここから　-->
+<div id="LocalRight">
+<!--　パンくずここから　-->
+<div id="BreadCrimbs">
+<ol>
+<li><a href="/" >トップ</a> &gt; </li>
+<li><a href="/japanese/joho1/kousei/giin/current/yakuin.htm" >議員情報</a></li>
+</ol>
+</div>
+<!--//　パンくずここまで　-->
+
+<!--　コンテンツここから　-->
+<div id="ContentsBox">
+<h1><img src="/japanese/joho1/kousei/giin/images/title01.gif" alt="議員情報" width="590" height="31"></h1>
+<h2 class="title02_main mt10">議員一覧（５０音順）</h2>
+<p class="exp">第216回国会（臨時会）（令和6年11月28日～令和6年12月24日）</p>
+<ul id="KouhouLink">
+<li><a href="giin.htm"><img src="/japanese/joho1/kousei/giin/images/link_btn04.gif" alt="議員一覧（50音順）" width="170" height="35" class="mr15"></a></li>
+<li><a href="/japanese/giin/hireiku/hireiku.htm"><img src="/japanese/joho1/kousei/giin/images/link_btn05.gif" alt="選挙区・比例代表別議員一覧" width="170" height="35" class="mr15"></a></li>
+<li><a href="../seiji/seiji216.htm"><img src="/japanese/joho1/kousei/giin/images/link_btn06.gif" alt="議員氏名の正確な表記" width="170" height="35" class="mr15"></a></li>
+</ul>
+<p class="exp">議員の名前をクリックすると議員個人の紹介ページが表示されます。<br>
+議員名欄の[ ]内は、通称名使用議員の本名です。<br>
+＜正字＞をクリックすると議員氏名の正確な表記が表示されます。<br>
+あ行からわ行の各欄をクリックすると選ばれた行のトップにジャンプします。<br>
+会派名は略称で表示されております。<br><a href="../kaiha/kaiha216.htm" class="Graylink" >正式な会派名は、「参議院会派名一覧」で、ご覧いただけます。</a>
+</p>
+<p class="ta_r">令和7年1月23日現在&nbsp;</p>
+<table width="100%" cellspacing="0" cellpadding="0" class="list">
+<tr>
+<td style="background-color: #FFFFDD"><a href="#a" class="Graylink">あ行</a></td>
+<td style="background-color: #FFFFDD"><a href="#ka" class="Graylink">か行</a></td>
+<td style="background-color: #FFFFDD"><a href="#sa" class="Graylink">さ行</a></td>
+<td style="background-color: #FFFFDD"><a href="#ta" class="Graylink">た行</a></td>
+<td style="background-color: #FFFFDD"><a href="#na" class="Graylink">な行</a></td>
+</tr>
+<tr> 
+<td style="background-color: #FFFFDD"><a href="#ha" class="Graylink">は行</a></td>
+<td style="background-color: #FFFFDD"><a href="#ma" class="Graylink">ま行</a></td>
+<td style="background-color: #FFFFDD"><a href="#ya" class="Graylink">や行</a></td>
+<td style="background-color: #FFFFDD">ら行</td>
+<td style="background-color: #FFFFDD"><a href="#wa" class="Graylink">わ行</a></td>
+</tr>
+</table>
+<table width="100%" cellspacing="0" cellpadding="0" class="list" summary="議員一覧（50音順）">
+<tr>
+<th scope="col" >&nbsp;</th>
+<th scope="col" >議員氏名</th>
+<th scope="col" >読み方</th>
+<th scope="col" >会派</th>
+<th scope="col" >選挙区</th>
+<th scope="col" >任期満了</th>
+<th scope="col" >&nbsp;</th>
+</tr>
+<tr>
+<th scope="row"  rowspan="12" align="center" valign="top"><a name="a"></a><b>あ</b>
+<P></P>
+</th>
+<td><a href="../profile/7014002.htm" class="Graylink">阿達　　雅志</a></td>
+<td>あだち　まさし</td>
+<td>自民</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7007006.htm" class="Graylink">青木　　　愛</a></td>
+<td>あおき　あい</td>
+<td>立憲</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7010001.htm" class="Graylink">青木　　一彦</a></td>
+<td>あおき　かずひこ</td>
+<td>自民</td>
+<td>鳥取・島根</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7022002.htm" class="Graylink">青島　　健太</a></td>
+<td>あおしま　けんた</td>
+<td>維新</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7016002.htm" class="Graylink">青山　　繁晴</a></td>
+<td>あおやま　しげはる</td>
+<td>自民</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7013004.htm" class="Graylink">赤池　　誠章</a></td>
+<td>あかいけ　まさあき</td>
+<td>自民</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7022003.htm" class="Graylink">赤松　　　健</a></td>
+<td>あかまつ　けん</td>
+<td>自民</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7010003.htm" class="Graylink">秋野　　公造</a></td>
+<td>あきの　こうぞう</td>
+<td>公明</td>
+<td>福岡</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/5998003.htm" class="Graylink">浅尾　慶一郎</a></td>
+<td>あさお　けいいちろう</td>
+<td>自民</td>
+<td>神奈川</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7016003.htm" class="Graylink">浅田　　　均</a></td>
+<td>あさだ　ひとし</td>
+<td>維新</td>
+<td>大阪</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7016004.htm" class="Graylink">朝日　健太郎</a></td>
+<td>あさひ　けんたろう</td>
+<td>自民</td>
+<td>東京</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7001006.htm" class="Graylink">有村　　治子</a></td>
+<td>ありむら　はるこ</td>
+<td>自民</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<th scope="row"  rowspan="24" align="center" valign="top"><b>い</b>
+<P></P>
+</th>
+<td><a href="../profile/7001007.htm" class="Graylink">井上　　哲士</a></td>
+<td>いのうえ　さとし</td>
+<td>共産</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7013006.htm" class="Graylink">井上　　義行</a></td>
+<td>いのうえ　よしゆき</td>
+<td>自民</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7019002.htm" class="Graylink">伊藤　　　岳</a></td>
+<td>いとう　がく</td>
+<td>共産</td>
+<td>埼玉</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7016005.htm" class="Graylink">伊藤　　孝江</a></td>
+<td>いとう　たかえ</td>
+<td>公明</td>
+<td>兵庫</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7016006.htm" class="Graylink">伊藤　　孝恵</a></td>
+<td>いとう　たかえ</td>
+<td>民主</td>
+<td>愛知</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7016007.htm" class="Graylink">伊波　　洋一</a></td>
+<td>いは　よういち</td>
+<td>沖縄</td>
+<td>沖縄</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7022004.htm" class="Graylink">生稲　　晃子<BR>[佐山　　晃子]</a></td>
+<td>いくいな　あきこ</td>
+<td>自民</td>
+<td>東京</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7016008.htm" class="Graylink">石井　　　章</a></td>
+<td>いしい　あきら</td>
+<td>維新</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7007007.htm" class="Graylink">石井　　準一</a></td>
+<td>いしい　じゅんいち</td>
+<td>自民</td>
+<td>千葉</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7010005.htm" class="Graylink">石井　　浩郎</a></td>
+<td>いしい　ひろお</td>
+<td>自民</td>
+<td>秋田</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7013008.htm" class="Graylink">石井　　正弘</a></td>
+<td>いしい　まさひろ</td>
+<td>自民</td>
+<td>岡山</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7016009.htm" class="Graylink">石井　　苗子</a></td>
+<td>いしい　みつこ</td>
+<td>維新</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7019003.htm" class="Graylink">石垣　のりこ<BR>[小川　のり子]</a></td>
+<td>いしがき　のりこ</td>
+<td>立憲</td>
+<td>宮城</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7019004.htm" class="Graylink">石川　　大我</a></td>
+<td>いしかわ　たいが</td>
+<td>立憲</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7010006.htm" class="Graylink">石川　　博崇</a></td>
+<td>いしかわ　ひろたか</td>
+<td>公明</td>
+<td>大阪</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7013010.htm" class="Graylink">石田　　昌宏</a></td>
+<td>いしだ　まさひろ</td>
+<td>自民</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7010007.htm" class="Graylink">石橋　　通宏</a></td>
+<td>いしばし　みちひろ</td>
+<td>立憲</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7010008.htm" class="Graylink">磯崎　　仁彦</a></td>
+<td>いそざき　よしひこ</td>
+<td>自民</td>
+<td>香川</td>
+<td>令和10年7月25日</td>
+<td><a href="../seiji/seiji216.htm#7010008" class="Graylink">＜正字＞</a></td>
+</tr>
+<tr>
+<td><a href="../profile/7013011.htm" class="Graylink">礒崎　　哲史</a></td>
+<td>いそざき　てつじ</td>
+<td>民主</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td><a href="../seiji/seiji216.htm#7013011" class="Graylink">＜正字＞</a></td>
+</tr>
+<tr>
+<td><a href="../profile/7010009.htm" class="Graylink">猪口　　邦子</a></td>
+<td>いのぐち　くにこ</td>
+<td>自民</td>
+<td>千葉</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7022005.htm" class="Graylink">猪瀬　　直樹</a></td>
+<td>いのせ　なおき</td>
+<td>維新</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7016010.htm" class="Graylink">今井　絵理子</a></td>
+<td>いまい　えりこ</td>
+<td>自民</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7016011.htm" class="Graylink">岩渕　　　友</a></td>
+<td>いわぶち　とも</td>
+<td>共産</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7019005.htm" class="Graylink">岩本　　剛人</a></td>
+<td>いわもと　つよひと</td>
+<td>自民</td>
+<td>北海道</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<th scope="row"  rowspan="6" align="center" valign="top"><b>う</b>
+<P></P>
+</th>
+<td><a href="../profile/7022006.htm" class="Graylink">上田　　　勇</a></td>
+<td>うえだ　いさむ</td>
+<td>公明</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7019042.htm" class="Graylink">上田　　清司</a></td>
+<td>うえだ　きよし</td>
+<td>民主</td>
+<td>埼玉</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7010013.htm" class="Graylink">上野　　通子</a></td>
+<td>うえの　みちこ</td>
+<td>自民</td>
+<td>栃木</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7022007.htm" class="Graylink">臼井　　正一</a></td>
+<td>うすい　しょういち</td>
+<td>自民</td>
+<td>千葉</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7019006.htm" class="Graylink">打越　さく良<BR>[村木　さく良]</a></td>
+<td>うちこし　さくら</td>
+<td>立憲</td>
+<td>新潟</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7019007.htm" class="Graylink">梅村　みずほ</a></td>
+<td>うめむら　みずほ</td>
+<td>維新</td>
+<td>大阪</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<th scope="row"  rowspan="2" align="center" valign="top"><b>え</b>
+<P></P>
+</th>
+<td><a href="../profile/7013001.htm" class="Graylink">江島　　　潔</a></td>
+<td>えじま　きよし</td>
+<td>自民</td>
+<td>山口</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7007014.htm" class="Graylink">衛藤　　晟一</a></td>
+<td>えとう　せいいち</td>
+<td>自民</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<th scope="row"  rowspan="14" align="center" valign="top"><b>お</b>
+<P></P>
+</th>
+<td><a href="../profile/7016012.htm" class="Graylink">小川　　克巳</a></td>
+<td>おがわ　かつみ</td>
+<td>自民</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7019008.htm" class="Graylink">小沢　　雅仁</a></td>
+<td>おざわ　まさひと</td>
+<td>立憲</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7019009.htm" class="Graylink">小沼　　　巧</a></td>
+<td>おぬま　たくみ</td>
+<td>立憲</td>
+<td>茨城</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7016013.htm" class="Graylink">小野田　紀美</a></td>
+<td>おのだ　きみ</td>
+<td>自民</td>
+<td>岡山</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/5989018.htm" class="Graylink">尾辻　　秀久</a></td>
+<td>おつじ　ひでひさ</td>
+<td>自民</td>
+<td>鹿児島</td>
+<td>令和7年7月28日</td>
+<td><a href="../seiji/seiji216.htm#5989018" class="Graylink">＜正字＞</a></td>
+</tr>
+<tr>
+<td><a href="../profile/7022008.htm" class="Graylink">越智　　俊之</a></td>
+<td>おち　としゆき</td>
+<td>自民</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7010018.htm" class="Graylink">大家　　敏志</a></td>
+<td>おおいえ　さとし</td>
+<td>自民</td>
+<td>福岡</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7007017.htm" class="Graylink">大島　九州男</a></td>
+<td>おおしま　くすお</td>
+<td>れ新</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7023003.htm" class="Graylink">大椿　ゆうこ<BR>[大椿　　裕子]</a></td>
+<td>おおつばき　ゆうこ</td>
+<td>立憲</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7013013.htm" class="Graylink">大野　　泰正</a></td>
+<td>おおの　やすただ</td>
+<td>無所属</td>
+<td>岐阜</td>
+<td>令和7年7月28日</td>
+<td><a href="../seiji/seiji216.htm#7013013" class="Graylink">＜正字＞</a></td>
+</tr>
+<tr>
+<td><a href="../profile/7013014.htm" class="Graylink">太田　　房江<BR>[齊藤　　房江]</a></td>
+<td>おおた　ふさえ</td>
+<td>自民</td>
+<td>大阪</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7004012.htm" class="Graylink">岡田　　直樹</a></td>
+<td>おかだ　なおき</td>
+<td>自民</td>
+<td>石川</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7024002.htm" class="Graylink">奥村　　政佳</a></td>
+<td>おくむら　まさよし</td>
+<td>立憲</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7022009.htm" class="Graylink">鬼木　　　誠</a></td>
+<td>おにき　まこと</td>
+<td>立憲</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<th scope="row"  rowspan="14" align="center" valign="top"><a name="ka"></a><b>か</b>
+<P></P>
+</th>
+<td><a href="../profile/7019011.htm" class="Graylink">加田　　裕之</a></td>
+<td>かだ　ひろゆき</td>
+<td>自民</td>
+<td>兵庫</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7022010.htm" class="Graylink">加藤　　明良</a></td>
+<td>かとう　あきよし</td>
+<td>自民</td>
+<td>茨城</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7019012.htm" class="Graylink">嘉田　由紀子</a></td>
+<td>かだ　ゆきこ</td>
+<td>維新</td>
+<td>滋賀</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7022012.htm" class="Graylink">梶原　　大介</a></td>
+<td>かじはら　だいすけ</td>
+<td>自民</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7010020.htm" class="Graylink">片山　さつき</a></td>
+<td>かたやま　さつき</td>
+<td>自民</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7016014.htm" class="Graylink">片山　　大介</a></td>
+<td>かたやま　だいすけ</td>
+<td>維新</td>
+<td>兵庫</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7019013.htm" class="Graylink">勝部　　賢志</a></td>
+<td>かつべ　けんじ</td>
+<td>立憲</td>
+<td>北海道</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7022013.htm" class="Graylink">金子　　道仁</a></td>
+<td>かねこ　みちひと</td>
+<td>維新</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7022014.htm" class="Graylink">神谷　　宗幣</a></td>
+<td>かみや　そうへい</td>
+<td>無所属</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7022015.htm" class="Graylink">神谷　　政幸</a></td>
+<td>かみや　まさゆき</td>
+<td>自民</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7001010.htm" class="Graylink">紙　　　智子<BR>[内山　　智子]</a></td>
+<td>かみ　ともこ</td>
+<td>共産</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7007022.htm" class="Graylink">川合　　孝典</a></td>
+<td>かわい　たかのり</td>
+<td>民主</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7007025.htm" class="Graylink">川田　　龍平</a></td>
+<td>かわだ　りゅうへい</td>
+<td>立憲</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7013015.htm" class="Graylink">河野　　義博</a></td>
+<td>かわの　よしひろ</td>
+<td>公明</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<th scope="row"  rowspan="5" align="center" valign="top"><b>き</b>
+<P></P>
+</th>
+<td><a href="../profile/7016015.htm" class="Graylink">木戸口　英司</a></td>
+<td>きどぐち　えいじ</td>
+<td>立憲</td>
+<td>岩手</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7019015.htm" class="Graylink">木村　　英子</a></td>
+<td>きむら　えいこ</td>
+<td>れ新</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7013017.htm" class="Graylink">吉良　よし子<BR>[吉良　　佳子]</a></td>
+<td>きら　よしこ</td>
+<td>共産</td>
+<td>東京</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7019016.htm" class="Graylink">岸　　真紀子</a></td>
+<td>きし　まきこ</td>
+<td>立憲</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7013019.htm" class="Graylink">北村　　経夫</a></td>
+<td>きたむら　つねお</td>
+<td>自民</td>
+<td>山口</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<th scope="row"  rowspan="4" align="center" valign="top"><b>く</b>
+<P></P>
+</th>
+<td><a href="../profile/7022016.htm" class="Graylink">串田　　誠一</a></td>
+<td>くしだ　せいいち</td>
+<td>維新</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7022017.htm" class="Graylink">窪田　　哲也</a></td>
+<td>くぼた　てつや</td>
+<td>公明</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7019017.htm" class="Graylink">熊谷　　裕人</a></td>
+<td>くまがい　ひろと</td>
+<td>立憲</td>
+<td>埼玉</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7013020.htm" class="Graylink">倉林　　明子</a></td>
+<td>くらばやし　あきこ</td>
+<td>共産</td>
+<td>京都</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<th scope="row"  rowspan="9" align="center" valign="top"><b>こ</b>
+<P></P>
+</th>
+<td><a href="../profile/7016017.htm" class="Graylink">こやり　隆史<BR>[小鑓　　隆史]</a></td>
+<td>こやり　たかし</td>
+<td>自民</td>
+<td>滋賀</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/5998022.htm" class="Graylink">小池　　　晃</a></td>
+<td>こいけ　あきら</td>
+<td>共産</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7010024.htm" class="Graylink">小西　　洋之</a></td>
+<td>こにし　ひろゆき</td>
+<td>立憲</td>
+<td>千葉</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7022018.htm" class="Graylink">小林　　一大</a></td>
+<td>こばやし　かずひろ</td>
+<td>自民</td>
+<td>新潟</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7022019.htm" class="Graylink">古賀　　千景</a></td>
+<td>こが　ちかげ</td>
+<td>立憲</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7013021.htm" class="Graylink">古賀　友一郎</a></td>
+<td>こが　ゆういちろう</td>
+<td>自民</td>
+<td>長崎</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7016018.htm" class="Graylink">古賀　　之士</a></td>
+<td>こが　ゆきひと</td>
+<td>立憲</td>
+<td>福岡</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7022020.htm" class="Graylink">古庄　　玄知</a></td>
+<td>こしょう　はるとも</td>
+<td>自民</td>
+<td>大分</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7013022.htm" class="Graylink">上月　　良祐</a></td>
+<td>こうづき　りょうすけ</td>
+<td>自民</td>
+<td>茨城</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<th scope="row"  rowspan="10" align="center" valign="top"><a name="sa"></a><b>さ</b>
+<P></P>
+</th>
+<td><a href="../profile/7013023.htm" class="Graylink">佐々木　さやか<BR>[山口　さやか]</a></td>
+<td>ささき　さやか</td>
+<td>公明</td>
+<td>神奈川</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7016019.htm" class="Graylink">佐藤　　　啓</a></td>
+<td>さとう　けい</td>
+<td>自民</td>
+<td>奈良</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7007028.htm" class="Graylink">佐藤　　信秋</a></td>
+<td>さとう　のぶあき</td>
+<td>自民</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7007029.htm" class="Graylink">佐藤　　正久</a></td>
+<td>さとう　まさひさ</td>
+<td>自民</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7010027.htm" class="Graylink">斎藤　　嘉隆</a></td>
+<td>さいとう　よしたか</td>
+<td>立憲</td>
+<td>愛知</td>
+<td>令和10年7月25日</td>
+<td><a href="../seiji/seiji216.htm#7010027" class="Graylink">＜正字＞</a></td>
+</tr>
+<tr>
+<td><a href="../profile/7023002.htm" class="Graylink">齊藤　健一郎</a></td>
+<td>さいとう　けんいちろう</td>
+<td>Ｎ党</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7013024.htm" class="Graylink">酒井　　庸行</a></td>
+<td>さかい　やすゆき</td>
+<td>自民</td>
+<td>愛知</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/5998030.htm" class="Graylink">櫻井　　　充</a></td>
+<td>さくらい　みつる</td>
+<td>自民</td>
+<td>宮城</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7016020.htm" class="Graylink">里見　　隆治</a></td>
+<td>さとみ　りゅうじ</td>
+<td>公明</td>
+<td>愛知</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/5974040.htm" class="Graylink">山東　　昭子</a></td>
+<td>さんとう　あきこ</td>
+<td>自民</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<th scope="row"  rowspan="10" align="center" valign="top"><b>し</b>
+<P></P>
+</th>
+<td><a href="../profile/7019018.htm" class="Graylink">清水　　真人</a></td>
+<td>しみず　まさと</td>
+<td>自民</td>
+<td>群馬</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7016021.htm" class="Graylink">自見　はなこ<BR>[橋本　　英子]</a></td>
+<td>じみ　はなこ</td>
+<td>自民</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7019019.htm" class="Graylink">塩田　　博昭</a></td>
+<td>しおた　ひろあき</td>
+<td>公明</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7019020.htm" class="Graylink">塩村　あやか<BR>[塩村　　文夏]</a></td>
+<td>しおむら　あやか</td>
+<td>立憲</td>
+<td>東京</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7022021.htm" class="Graylink">柴　　　愼一</a></td>
+<td>しば　しんいち</td>
+<td>立憲</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7010029.htm" class="Graylink">柴田　　　巧</a></td>
+<td>しばた　たくみ</td>
+<td>維新</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7019021.htm" class="Graylink">下野　　六太</a></td>
+<td>しもの　ろくた</td>
+<td>公明</td>
+<td>福岡</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7023004.htm" class="Graylink">白坂　　亜紀<BR>[中山　　亜紀]</a></td>
+<td>しらさか　あき</td>
+<td>自民</td>
+<td>大分</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7016022.htm" class="Graylink">進藤　金日子</a></td>
+<td>しんどう　かねひこ</td>
+<td>自民</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7001027.htm" class="Graylink">榛葉　賀津也</a></td>
+<td>しんば　かづや</td>
+<td>民主</td>
+<td>静岡</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<th scope="row"  rowspan="4" align="center" valign="top"><b>す</b>
+<P></P>
+</th>
+<td><a href="../profile/7004033.htm" class="Graylink">末松　　信介</a></td>
+<td>すえまつ　しんすけ</td>
+<td>自民</td>
+<td>兵庫</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7013028.htm" class="Graylink">杉　　　久武</a></td>
+<td>すぎ　ひさたけ</td>
+<td>公明</td>
+<td>大阪</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7016023.htm" class="Graylink">杉尾　　秀哉</a></td>
+<td>すぎお　ひでや</td>
+<td>立憲</td>
+<td>長野</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7019023.htm" class="Graylink">鈴木　　宗男</a></td>
+<td>すずき　むねお</td>
+<td>無所属</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<th scope="row"  align="center" valign="top"><b>せ</b></th>
+<td><a href="../profile/7003005.htm" class="Graylink">関口　　昌一</a></td>
+<td>せきぐち　まさかず</td>
+<td>無所属</td>
+<td>埼玉</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<th scope="row"  rowspan="19" align="center" valign="top"><a name="ta"></a><b>た</b>
+<P></P>
+</th>
+<td><a href="../profile/7019024.htm" class="Graylink">田島　麻衣子</a></td>
+<td>たじま　まいこ</td>
+<td>立憲</td>
+<td>愛知</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7023001.htm" class="Graylink">田中　　昌史</a></td>
+<td>たなか　まさし</td>
+<td>自民</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7016025.htm" class="Graylink">田名部　匡代</a></td>
+<td>たなぶ　まさよ</td>
+<td>立憲</td>
+<td>青森</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7019025.htm" class="Graylink">田村　　まみ<BR>[田村　　麻美]</a></td>
+<td>たむら　まみ</td>
+<td>民主</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7001001.htm" class="Graylink">大門　実紀史</a></td>
+<td>だいもん　みきし</td>
+<td>共産</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7016026.htm" class="Graylink">高木　かおり<BR>[高木　佳保里]</a></td>
+<td>たかぎ　かおり</td>
+<td>維新</td>
+<td>大阪</td>
+<td>令和10年7月25日</td>
+<td><a href="../seiji/seiji216.htm#7016026" class="Graylink">＜正字＞</a></td>
+</tr>
+<tr>
+<td><a href="../profile/7022023.htm" class="Graylink">高木　　真理</a></td>
+<td>たかぎ　まり</td>
+<td>立憲</td>
+<td>埼玉</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7013030.htm" class="Graylink">高橋　　克法</a></td>
+<td>たかはし　かつのり</td>
+<td>自民</td>
+<td>栃木</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7024003.htm" class="Graylink">高橋　　次郎</a></td>
+<td>たかはし　じろう</td>
+<td>公明</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td><a href="../seiji/seiji216.htm#7024003" class="Graylink">＜正字＞</a></td>
+</tr>
+<tr>
+<td><a href="../profile/7019026.htm" class="Graylink">高橋　はるみ</a></td>
+<td>たかはし　はるみ</td>
+<td>自民</td>
+<td>北海道</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7019027.htm" class="Graylink">高橋　　光男</a></td>
+<td>たかはし　みつお</td>
+<td>公明</td>
+<td>兵庫</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7019028.htm" class="Graylink">高良　　鉄美</a></td>
+<td>たから　てつみ</td>
+<td>沖縄</td>
+<td>沖縄</td>
+<td>令和7年7月28日</td>
+<td><a href="../seiji/seiji216.htm#7019028" class="Graylink">＜正字＞</a></td>
+</tr>
+<tr>
+<td><a href="../profile/7013031.htm" class="Graylink">滝沢　　　求</a></td>
+<td>たきさわ　もとめ</td>
+<td>自民</td>
+<td>青森</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7013032.htm" class="Graylink">滝波　　宏文</a></td>
+<td>たきなみ　ひろふみ</td>
+<td>自民</td>
+<td>福井</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7017001.htm" class="Graylink">竹内　　真二</a></td>
+<td>たけうち　しんじ</td>
+<td>公明</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7022024.htm" class="Graylink">竹詰　　　仁</a></td>
+<td>たけづめ　ひとし</td>
+<td>民主</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7010033.htm" class="Graylink">竹谷　とし子<BR>[菊地　とし子]</a></td>
+<td>たけや　としこ</td>
+<td>公明</td>
+<td>東京</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/5995043.htm" class="Graylink">武見　　敬三</a></td>
+<td>たけみ　けいぞう</td>
+<td>自民</td>
+<td>東京</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7004036.htm" class="Graylink">谷合　　正明</a></td>
+<td>たにあい　まさあき</td>
+<td>公明</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<th scope="row"  rowspan="3" align="center" valign="top"><b>つ</b>
+<P></P>
+</th>
+<td><a href="../profile/7013034.htm" class="Graylink">柘植　　芳文</a></td>
+<td>つげ　よしふみ</td>
+<td>自民</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7022025.htm" class="Graylink">辻元　　清美</a></td>
+<td>つじもと　きよみ</td>
+<td>立憲</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td><a href="../seiji/seiji216.htm#7022025" class="Graylink">＜正字＞</a></td>
+</tr>
+<tr>
+<td><a href="../profile/5998036.htm" class="Graylink">鶴保　　庸介</a></td>
+<td>つるほ　ようすけ</td>
+<td>自民</td>
+<td>和歌山</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<th scope="row"  rowspan="2" align="center" valign="top"><b>て</b>
+<P></P>
+</th>
+<td><a href="../profile/7019030.htm" class="Graylink">寺田　　　静</a></td>
+<td>てらた　しずか</td>
+<td>無所属</td>
+<td>秋田</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7022026.htm" class="Graylink">天畠　　大輔</a></td>
+<td>てんばた　だいすけ</td>
+<td>れ新</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<th scope="row"  rowspan="5" align="center" valign="top"><b>と</b>
+<P></P>
+</th>
+<td><a href="../profile/7013035.htm" class="Graylink">堂故　　　茂</a></td>
+<td>どうこ　しげる</td>
+<td>自民</td>
+<td>富山</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7022027.htm" class="Graylink">堂込　麻紀子</a></td>
+<td>どうごみ　まきこ</td>
+<td>民主</td>
+<td>茨城</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7010036.htm" class="Graylink">徳永　　エリ<BR>[鈴木　　エリ]</a></td>
+<td>とくなが　えり</td>
+<td>立憲</td>
+<td>北海道</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7022028.htm" class="Graylink">友納　　理緒<BR>[土肥　　理緒]</a></td>
+<td>とものう　りお</td>
+<td>自民</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7013036.htm" class="Graylink">豊田　　俊郎</a></td>
+<td>とよだ　としろう</td>
+<td>自民</td>
+<td>千葉</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<th scope="row"  rowspan="8" align="center" valign="top"><a name="na"></a><b>な</b>
+<P></P>
+</th>
+<td><a href="../profile/7019031.htm" class="Graylink">ながえ　孝子<BR>[永江　　孝子]</a></td>
+<td>ながえ　たかこ</td>
+<td>無所属</td>
+<td>愛媛</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7022029.htm" class="Graylink">中条　きよし<BR>[下村　　　清]</a></td>
+<td>なかじょう　きよし</td>
+<td>維新</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/5986024.htm" class="Graylink">中曽根　弘文</a></td>
+<td>なかそね　ひろふみ</td>
+<td>自民</td>
+<td>群馬</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7022001.htm" class="Graylink">中田　　　宏</a></td>
+<td>なかだ　ひろし</td>
+<td>自民</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7010038.htm" class="Graylink">中西　　祐介</a></td>
+<td>なかにし　ゆうすけ</td>
+<td>自民</td>
+<td>徳島・高知</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7022030.htm" class="Graylink">永井　　　学</a></td>
+<td>ながい　まなぶ</td>
+<td>自民</td>
+<td>山梨</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7007041.htm" class="Graylink">長浜　　博行</a></td>
+<td>ながはま　ひろゆき</td>
+<td>無所属</td>
+<td>千葉</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7013039.htm" class="Graylink">長峯　　　誠</a></td>
+<td>ながみね　まこと</td>
+<td>自民</td>
+<td>宮崎</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<th scope="row"  rowspan="4" align="center" valign="top"><b>に</b>
+<P></P>
+</th>
+<td><a href="../profile/7004045.htm" class="Graylink">仁比　　聡平</a></td>
+<td>にひ　そうへい</td>
+<td>共産</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7013041.htm" class="Graylink">新妻　　秀規</a></td>
+<td>にいづま　ひでき</td>
+<td>公明</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7007044.htm" class="Graylink">西田　　昌司</a></td>
+<td>にしだ　しょうじ</td>
+<td>自民</td>
+<td>京都</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7004043.htm" class="Graylink">西田　　実仁</a></td>
+<td>にしだ　まこと</td>
+<td>公明</td>
+<td>埼玉</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<th scope="row"  rowspan="3" align="center" valign="top"><b>の</b>
+<P></P>
+</th>
+<td><a href="../profile/7001037.htm" class="Graylink">野上　浩太郎</a></td>
+<td>のがみ　こうたろう</td>
+<td>自民</td>
+<td>富山</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7013042.htm" class="Graylink">野田　　国義</a></td>
+<td>のだ　くによし</td>
+<td>立憲</td>
+<td>福岡</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7004046.htm" class="Graylink">野村　　哲郎</a></td>
+<td>のむら　てつろう</td>
+<td>自民</td>
+<td>鹿児島</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<th scope="row"  rowspan="10" align="center" valign="top"><a name="ha"></a><b>は</b>
+<P></P>
+</th>
+<td><a href="../profile/7021002.htm" class="Graylink">羽田　　次郎</a></td>
+<td>はた　じろう</td>
+<td>立憲</td>
+<td>長野</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7013043.htm" class="Graylink">羽生田　　俊</a></td>
+<td>はにゅうだ　たかし</td>
+<td>自民</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7019032.htm" class="Graylink">芳賀　　道也</a></td>
+<td>はが　みちや</td>
+<td>民主</td>
+<td>山形</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7010043.htm" class="Graylink">長谷川　　岳</a></td>
+<td>はせがわ　がく</td>
+<td>自民</td>
+<td>北海道</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7022031.htm" class="Graylink">長谷川　英晴</a></td>
+<td>はせがわ　ひではる</td>
+<td>自民</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7013044.htm" class="Graylink">馬場　　成志</a></td>
+<td>ばば　せいし</td>
+<td>自民</td>
+<td>熊本</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/5995054.htm" class="Graylink">橋本　　聖子<BR>[石崎　　聖子]</a></td>
+<td>はしもと　せいこ</td>
+<td>自民</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td><a href="../seiji/seiji216.htm#5995054" class="Graylink">＜正字＞</a></td>
+</tr>
+<tr>
+<td><a href="../profile/7016032.htm" class="Graylink">浜口　　　誠</a></td>
+<td>はまぐち　まこと</td>
+<td>民主</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7019041.htm" class="Graylink">浜田　　　聡</a></td>
+<td>はまだ　さとし</td>
+<td>Ｎ党</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7013045.htm" class="Graylink">浜野　　喜史</a></td>
+<td>はまの　よしふみ</td>
+<td>民主</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<th scope="row"  rowspan="4" align="center" valign="top"><b>ひ</b>
+<P></P>
+</th>
+<td><a href="../profile/7021003.htm" class="Graylink">比嘉　奈津美</a></td>
+<td>ひが　なつみ</td>
+<td>自民</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7013046.htm" class="Graylink">平木　　大作</a></td>
+<td>ひらき　だいさく</td>
+<td>公明</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7016033.htm" class="Graylink">平山　佐知子</a></td>
+<td>ひらやま　さちこ</td>
+<td>無所属</td>
+<td>静岡</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7004050.htm" class="Graylink">広田　　　一</a></td>
+<td>ひろた　はじめ</td>
+<td>立憲</td>
+<td>徳島・高知</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<th scope="row"  rowspan="11" align="center" valign="top"><b>ふ</b>
+<P></P>
+</th>
+<td><a href="../profile/7010045.htm" class="Graylink">福岡　　資麿</a></td>
+<td>ふくおか　たかまろ</td>
+<td>自民</td>
+<td>佐賀</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/5998049.htm" class="Graylink">福島　みずほ<BR>[福島　　瑞穂]</a></td>
+<td>ふくしま　みずほ</td>
+<td>立憲</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/5998050.htm" class="Graylink">福山　　哲郎</a></td>
+<td>ふくやま　てつろう</td>
+<td>立憲</td>
+<td>京都</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7022033.htm" class="Graylink">藤井　　一博</a></td>
+<td>ふじい　かずひろ</td>
+<td>自民</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7010046.htm" class="Graylink">藤川　　政人</a></td>
+<td>ふじかわ　まさひと</td>
+<td>自民</td>
+<td>愛知</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7016034.htm" class="Graylink">藤木　　眞也</a></td>
+<td>ふじき　しんや</td>
+<td>自民</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7013047.htm" class="Graylink">藤巻　　健史</a></td>
+<td>ふじまき　たけし</td>
+<td>維新</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7007052.htm" class="Graylink">舟山　　康江</a></td>
+<td>ふなやま　やすえ</td>
+<td>民主</td>
+<td>山形</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7019033.htm" class="Graylink">舩後　　靖彦</a></td>
+<td>ふなご　やすひこ</td>
+<td>れ新</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7022034.htm" class="Graylink">船橋　　利実</a></td>
+<td>ふなはし　としみつ</td>
+<td>自民</td>
+<td>北海道</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7007053.htm" class="Graylink">古川　　俊治</a></td>
+<td>ふるかわ　としはる</td>
+<td>自民</td>
+<td>埼玉</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<th scope="row"  rowspan="3" align="center" valign="top"><b>ほ</b>
+<P></P>
+</th>
+<td><a href="../profile/7022035.htm" class="Graylink">星　　　北斗</a></td>
+<td>ほし　ほくと</td>
+<td>自民</td>
+<td>福島</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7013048.htm" class="Graylink">堀井　　　巌</a></td>
+<td>ほりい　いわお</td>
+<td>自民</td>
+<td>奈良</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7019034.htm" class="Graylink">本田　　顕子</a></td>
+<td>ほんだ　あきこ</td>
+<td>自民</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<th scope="row"  rowspan="9" align="center" valign="top"><a name="ma"></a><b>ま</b>
+<P></P>
+</th>
+<td><a href="../profile/7013049.htm" class="Graylink">舞立　　昇治</a></td>
+<td>まいたち　しょうじ</td>
+<td>自民</td>
+<td>鳥取・島根</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7007054.htm" class="Graylink">牧野　たかお<BR>[牧野　　京夫]</a></td>
+<td>まきの　たかお</td>
+<td>自民</td>
+<td>静岡</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7007055.htm" class="Graylink">牧山　ひろえ<BR>[牧山　　弘惠]</a></td>
+<td>まきやま　ひろえ</td>
+<td>立憲</td>
+<td>神奈川</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7016035.htm" class="Graylink">松川　　るい<BR>[新居　　るい]</a></td>
+<td>まつかわ　るい</td>
+<td>自民</td>
+<td>大阪</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7013050.htm" class="Graylink">松沢　　成文</a></td>
+<td>まつざわ　しげふみ</td>
+<td>維新</td>
+<td>神奈川</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7004056.htm" class="Graylink">松下　　新平</a></td>
+<td>まつした　しんぺい</td>
+<td>自民</td>
+<td>宮崎</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7022036.htm" class="Graylink">松野　　明美<BR>[前田　　明美]</a></td>
+<td>まつの　あけみ</td>
+<td>維新</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7004057.htm" class="Graylink">松村　　祥史</a></td>
+<td>まつむら　よしふみ</td>
+<td>自民</td>
+<td>熊本</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7001046.htm" class="Graylink">松山　　政司</a></td>
+<td>まつやま　まさじ</td>
+<td>自民</td>
+<td>福岡</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<th scope="row"  rowspan="12" align="center" valign="top"><b>み</b>
+<P></P>
+</th>
+<td><a href="../profile/7016036.htm" class="Graylink">三浦　　信祐</a></td>
+<td>みうら　のぶひろ</td>
+<td>公明</td>
+<td>神奈川</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7019035.htm" class="Graylink">三浦　　　靖</a></td>
+<td>みうら　やすし</td>
+<td>自民</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7022037.htm" class="Graylink">三上　　えり<BR>[川堀　　絵里]</a></td>
+<td>みかみ　えり</td>
+<td>立憲</td>
+<td>広島</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7010048.htm" class="Graylink">三原　じゅん子<BR>[中根　　順子]</a></td>
+<td>みはら　じゅんこ</td>
+<td>自民</td>
+<td>神奈川</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7013052.htm" class="Graylink">三宅　　伸吾</a></td>
+<td>みやけ　しんご</td>
+<td>自民</td>
+<td>香川</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7004058.htm" class="Graylink">水岡　　俊一</a></td>
+<td>みずおか　しゅんいち</td>
+<td>立憲</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7022038.htm" class="Graylink">水野　　素子</a></td>
+<td>みずの　もとこ</td>
+<td>立憲</td>
+<td>神奈川</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7021001.htm" class="Graylink">宮口　　治子<BR>[福田　　治子]</a></td>
+<td>みやぐち　はるこ</td>
+<td>立憲</td>
+<td>広島</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7019036.htm" class="Graylink">宮崎　　雅夫</a></td>
+<td>みやざき　まさお</td>
+<td>自民</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7016037.htm" class="Graylink">宮崎　　　勝</a></td>
+<td>みやざき　まさる</td>
+<td>公明</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7010050.htm" class="Graylink">宮沢　　洋一</a></td>
+<td>みやざわ　よういち</td>
+<td>自民</td>
+<td>広島</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7013053.htm" class="Graylink">宮本　　周司</a></td>
+<td>みやもと　しゅうじ</td>
+<td>自民</td>
+<td>石川</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<th scope="row"  align="center" valign="top"><b>む</b></th>
+<td><a href="../profile/7022039.htm" class="Graylink">村田　　享子</a></td>
+<td>むらた　きょうこ</td>
+<td>立憲</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<th scope="row"  rowspan="4" align="center" valign="top"><b>も</b>
+<P></P>
+</th>
+<td><a href="../profile/7007061.htm" class="Graylink">森　　まさこ<BR>[三好　　雅子]</a></td>
+<td>もり　まさこ</td>
+<td>自民</td>
+<td>福島</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7013054.htm" class="Graylink">森本　　真治</a></td>
+<td>もりもと　しんじ</td>
+<td>立憲</td>
+<td>広島</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7019037.htm" class="Graylink">森屋　　　隆</a></td>
+<td>もりや　たかし</td>
+<td>立憲</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7013055.htm" class="Graylink">森屋　　　宏</a></td>
+<td>もりや　ひろし</td>
+<td>自民</td>
+<td>山梨</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<th scope="row"  rowspan="18" align="center" valign="top"><a name="ya"></a><b>や</b>
+<P></P>
+</th>
+<td><a href="../profile/7013056.htm" class="Graylink">矢倉　　克夫</a></td>
+<td>やくら　かつお</td>
+<td>公明</td>
+<td>埼玉</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7019038.htm" class="Graylink">安江　　伸夫</a></td>
+<td>やすえ　のぶお</td>
+<td>公明</td>
+<td>愛知</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7019039.htm" class="Graylink">柳ヶ瀬　裕文</a></td>
+<td>やながせ　ひろふみ</td>
+<td>維新</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7013059.htm" class="Graylink">山口　　和之</a></td>
+<td>やまぐち　かずゆき</td>
+<td>維新</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7001049.htm" class="Graylink">山口　那津男</a></td>
+<td>やまぐち　なつお</td>
+<td>公明</td>
+<td>東京</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/5992051.htm" class="Graylink">山崎　　正昭</a></td>
+<td>やまざき　まさあき</td>
+<td>自民</td>
+<td>福井</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7013060.htm" class="Graylink">山下　　雄平</a></td>
+<td>やました　ゆうへい</td>
+<td>自民</td>
+<td>佐賀</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/5995071.htm" class="Graylink">山下　　芳生</a></td>
+<td>やました　よしき</td>
+<td>共産</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7016042.htm" class="Graylink">山添　　　拓</a></td>
+<td>やまぞえ　たく</td>
+<td>共産</td>
+<td>東京</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7012005.htm" class="Graylink">山田　　太郎</a></td>
+<td>やまだ　たろう</td>
+<td>自民</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7007067.htm" class="Graylink">山田　　俊男</a></td>
+<td>やまだ　としお</td>
+<td>自民</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7016043.htm" class="Graylink">山田　　　宏</a></td>
+<td>やまだ　ひろし</td>
+<td>自民</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7004013.htm" class="Graylink">山谷　えり子<BR>[小川　惠里子]</a></td>
+<td>やまたに　えりこ</td>
+<td>自民</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7022040.htm" class="Graylink">山本　　啓介</a></td>
+<td>やまもと　けいすけ</td>
+<td>自民</td>
+<td>長崎</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7022041.htm" class="Graylink">山本　佐知子</a></td>
+<td>やまもと　さちこ</td>
+<td>自民</td>
+<td>三重</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7004062.htm" class="Graylink">山本　　順三</a></td>
+<td>やまもと　じゅんぞう</td>
+<td>自民</td>
+<td>愛媛</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7013062.htm" class="Graylink">山本　　太郎</a></td>
+<td>やまもと　たろう</td>
+<td>れ新</td>
+<td>東京</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7007068.htm" class="Graylink">山本　　博司</a></td>
+<td>やまもと　ひろし</td>
+<td>公明</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<th scope="row"  rowspan="5" align="center" valign="top"><b>よ</b>
+<P></P>
+</th>
+<td><a href="../profile/7019040.htm" class="Graylink">横沢　　高徳</a></td>
+<td>よこさわ　たかのり</td>
+<td>立憲</td>
+<td>岩手</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7010052.htm" class="Graylink">横山　　信一</a></td>
+<td>よこやま　しんいち</td>
+<td>公明</td>
+<td>比例</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7022042.htm" class="Graylink">吉井　　　章</a></td>
+<td>よしい　あきら</td>
+<td>自民</td>
+<td>京都</td>
+<td>令和10年7月25日</td>
+<td><a href="../seiji/seiji216.htm#7022042" class="Graylink">＜正字＞</a></td>
+</tr>
+<tr>
+<td><a href="../profile/7007071.htm" class="Graylink">吉川　　沙織</a></td>
+<td>よしかわ　さおり</td>
+<td>立憲</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7013063.htm" class="Graylink">吉川　ゆうみ<BR>[吉川　　有美]</a></td>
+<td>よしかわ　ゆうみ</td>
+<td>自民</td>
+<td>三重</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<th scope="row"  rowspan="4" align="center" valign="top"><a name="wa"></a><b>わ</b>
+<P></P>
+</th>
+<td><a href="../profile/7013064.htm" class="Graylink">和田　　政宗</a></td>
+<td>わだ　まさむね</td>
+<td>自民</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7022043.htm" class="Graylink">若林　　洋平</a></td>
+<td>わかばやし　ようへい</td>
+<td>自民</td>
+<td>静岡</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7013065.htm" class="Graylink">若松　　謙維</a></td>
+<td>わかまつ　かねしげ</td>
+<td>公明</td>
+<td>比例</td>
+<td>令和7年7月28日</td>
+<td>&nbsp;
+</td>
+</tr>
+<tr>
+<td><a href="../profile/7010055.htm" class="Graylink">渡辺　　猛之</a></td>
+<td>わたなべ　たけゆき</td>
+<td>自民</td>
+<td>岐阜</td>
+<td>令和10年7月25日</td>
+<td>&nbsp;
+</td>
+</tr>
+</table>
+</div>
+<!--//　コンテンツここまで　-->
+
+</div>
+<!--//右ボックスここまで　-->
+<div class="clearing"><img src="../../common/images/layout/spacer.gif" alt="" width="1" height="1"></div>
+
+<!--　コンテンツ下ナビゲーションここから　-->
+<div id="BottomNavi0">
+<div id="BottomNavi">
+<ul id="SecondaryNavi">
+<li id="Guide"><a href="/japanese/riyouannai/index.html" >利用案内</a></li>
+<li id="Copy"><a href="/japanese/chosakuken/index.html" >著作権</a></li>
+<li id="Immunity"><a href="/japanese/menseki/index.html" >免責事項</a></li>
+<li id="Opinion"><a href="/japanese/goiken_gositumon/index.html" >ご意見・ご質問</a></li>
+</ul>
+</div>
+</div>
+<!--//　コンテンツ下ナビゲーションここまで　-->
+
+</div>
+<!--//　ホームコンテンツボックスここまで　-->
+
+<!--　フッターここから　-->
+<div id="Footer">
+<small><span lang="en">All rights reserved. Copyright(c) , House of Councillors, The National Diet of Japan</span></small>
+</div>
+<!--//　フッターここまで　-->
+</div>
+<!--//　ラッパーここまで　-->
+</div>
+
+</body>
+</html>

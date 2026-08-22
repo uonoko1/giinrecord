@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="ja">
+	<head>
+		<meta charset="utf-8">
+		<title>本会議投票結果：参議院</title>
+		<link rel="stylesheet" title="" href="/common/css/import_h25.css" type="text/css" media="all">
+		<link rel="alternate stylesheet" type="text/css" media="all" title="small" href="/common/css/small_h25.css">
+		<link rel="alternate stylesheet" type="text/css" media="all" title="medium" href="/common/css/medium_h25.css">
+		<link rel="alternate stylesheet" type="text/css" media="all" title="large" href="/common/css/large_h25.css">
+		<script src="/common/js/fontsizer.js"></script>
+		<style>
+/*
+.pro   { background: #FFFF66; white-space: pre; text-align: center; font-size: 100%;}
+.con   { background: #99FF99; white-space: pre; color: #009900; text-align: center; font-size: 100%;}
+.ttl   { white-space: pre; font-size: 100%;}
+.party { background: #CCCCFF; white-space: pre; text-align: left;}
+.nam   { text-align: left; font-size: 100%;}
+table  { border-color: #000000;}
+td     { padding: 0.4em;}
+*/
+
+.kaiji_title{ font-size: 150%; color: #af1b65; margin-top: 50px; margin-bottom: 50px;}
+.touhyo_index{ width: 590px; text-align: left; border: 2px solid #000; /*border-collapse: collapse;*/ font-family: monospace, sans-serif; line-height: 130%;}
+.touhyo_index th, .touhyo_index td{ padding: 6px; border: 1px solid #000; }
+.touhyo_index th{ text-align: center;}
+.touhyo_date{ vertical-align: top; white-space: nowrap; font-weight: normal;}
+@media screen and (max-width: 768px){ 
+	.touhyo_index{ width: auto; }
+	.touhyo_date{ white-space: normal; width:30%; }
+}
+
+		</style>
+<!-- トップへ戻るCSS方式 -->
+<script src="/common/js/jquery.min.js"></script> 
+<script src="/common/js/common.js"></script>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" title="" href="/common/css/responsive.css" type="text/css" media="all">
+	</head>
+	<body>
+		<noscript>
+			<div class="jsOn">すべての機能をご利用いただくにはJavascriptを有効にしてください。</div>
+		</noscript>
+		<div id="OutWrapper">
+			<!--　ラッパーここから　-->
+			<div id="Wrapper">
+				<!--　ヘッダーここから　-->
+				<div id="Header">
+					<div id="skip">
+						<a href="#ContentsBox">本文へ</a>
+					</div>
+					<div id="HeadLeft">
+						<h1 id="Logo"><a href="/"><img src="/common/images/layout/logo.jpg" alt="参議院"></a></h1>
+					</div>
+					<div id="Headright">
+						<form action="/cgi-bin/search/search.cgi" method="get">
+							<a href="/cgi-bin/search/search.cgi" title="検索方法の解説ページが開きます">検索方法</a>
+							<input type="text" name="q" id="q" class="font12px" value="" size="20" title="ここに検索語を入力してください">
+							<button type="submit" name="search" id="SearBtn" value="検索" title="サイト内検索を実行します">検索</button>
+						</form>
+						<div id="FonSiBox">
+							<ul id="FontSizer">
+								<li>文字サイズの変更</li>
+								<li><button type="button" class="sizebutton" name="small_button" value="small" onclick="return selectStyle('small')" onkeypress="return selectStyle('small')">標準</button></li>
+								<li><button type="button" class="sizebutton" name="medium_button" value="medium" onclick="return selectStyle('medium')" onkeypress="return selectStyle('medium')">拡大</button></li>
+								<li><button type="button" class="sizebutton" name="large_button" value="large" onclick="return selectStyle('large')" onkeypress="return selectStyle('large')">最大</button></li>
+							</ul>
+						</div>
+					</div>
+				</div>
+				<!--//　ヘッダーここまで　-->
+				<!--　グローバルナビゲーションここから　-->
+				<div id="PrimaryNavi0">
+					<div id="PrimaryNavi">
+						<ul id="GlobalNavi">
+							<li id="Sitemap"><a href="/japanese/sitemap/index.html" title="サイトマップ">サイトマップ</a></li>
+							<li id="Faq"><a href="/japanese/goiken_gositumon/faq/index.html" title="よくある質問">よくある質問</a></li>
+							<li id="Link"><a href="/japanese/link/index.html" title="リンク集">リンク集</a></li>
+							<li id="English"><a href="/eng/index.htm" title="English">English</a></li>
+						</ul>
+					</div>
+				</div>
+				<!--//　グローバルナビゲーションここまで　-->
+				<div class="clearing"><img src="/common/images/layout/spacer.gif" alt="" width="1" height="1"></div>
+				<!--　ローカルコンテンツボックスここから　-->
+				<div id="LocalContents">
+					<!--　左ボックスここから　-->
+					<div id="LocalLeft">
+					  <button id="hbbtn" class="hbbutton " type="button" aria-label="ナビゲーションを開く" aria-controls="nav" aria-expanded="false">
+					    <span></span>
+					  </button>
+					  <button id="sp_search" class="sp_search " type="button" aria-label="検索画面を開く" onclick="location.href='/cgi-bin/search/search.cgi'" aria-hidden="true">
+					    <span></span>
+					  </button>
+					  <nav id="nav" class="nav" aria-hidden="true">
+					    <ul class="local_navigation">
+					    <li id="HomeLink"><a href="/index.htm">トップページに戻る</a></li>
+					    <li><a href="/japanese/joho1/kousei/giin/current/yakuin.htm">議員情報</a></li>
+					    <li><a href="/japanese/kon_kokkaijyoho/index.html">今国会情報</a></li>
+					    <li><a href="/japanese/kaiki/index.html">ライブラリー</a></li>
+					    <li><a href="/japanese/joho1/kousei/gian/current/gian.htm">議案情報</a></li>
+					    <li><a href="/japanese/joho1/kaigirok/kaigirok.htm">会議録情報</a></li>
+					    <li><a href="/japanese/joho1/kousei/seigan/current/seigan.htm">請願</a></li>
+					    <li><a href="/japanese/joho1/kousei/syuisyo/current/syuisyo.htm">質問主意書</a></li>
+					    <li><a href="/japanese/joho1/kousei/koho/current/koho.htm">参議院公報</a></li>
+					    <li><a href="/japanese/aramashi/index.html">参議院のあらまし</a></li>
+					    <li><a href="/japanese/taiken/bochou/kengaku.html">国会体験・見学</a></li>
+					    <li><a href="/japanese/kokusai_kankei/index.html">国際関係</a></li>
+					    <li><a href="/japanese/annai/chousa/index.html">調査室作成資料</a></li>
+					    <li><a href="https://www.webtv.sangiin.go.jp" target="_blank">参議院審議中継<br>（別ウィンドウで開きます）</a></li>
+					    <li><a href="/japanese/taiken/t_program/t_program.html">特別体験プログラム</a></li>
+					    <li><a href="/japanese/kids/index.html">キッズページ</a></li>
+					    </ul>
+					    <div id="js-focus-trap" tabindex="0"></div>
+					  </nav>
+					</div>
+					<!--//左ボックスここまで　-->
+					<!--　右ボックスここから　-->
+					<div id="LocalRight">
+						<!--　パンくずここから　-->
+						<div id="BreadCrimbs">
+							<ol>
+								<li><a href="/" title="トップ">トップ</a> &gt; </li>
+								<li>本会議投票結果</li>
+							</ol>
+							
+						</div>
+						<!--// パンくずここまで -->
+						<!-- コンテンツここから -->
+						<div id="ContentsBox">
+							<h1 id="Title01" class="mt10">本会議投票結果</h1>
+							<p class="ta_l">記名投票及び押しボタン投票の結果を掲載しています。</p>
+							<h2 class="kaiji_title">第221回国会本会議投票結果</h2>
+							<p class="ta_l">案件名をクリックすると投票情報が表示されます。</p>
+								<table class="touhyo_index">
+									<tr>
+										<th>日付</th>
+										<th>案件名</th>
+									</tr>
+									<!--START-->
+<!--START[2026/07/24]-->
+<TR><TH scope="row" rowspan="7" class="touhyo_date">令和08年7月24日</TH><TD><A HREF="221-0724-v001.htm">日程第１　日本国憲法の改正手続に関する法律の一部を改正する法律案（衆議院提出）</A></TD></TR>
+<TR><TD><A HREF="221-0724-v002.htm">日程第２　医療的ケア児及びその家族に対する支援に関する法律の一部を改正する法律案（衆議院提出）</A></TD></TR>
+<TR><TD><A HREF="221-0724-v003.htm">日程第３　建築物のエネルギー消費性能の向上等に関する法律の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0724-v004.htm">日程第４　建築士法の一部を改正する法律案（衆議院提出）</A></TD></TR>
+<TR><TD><A HREF="221-0724-v005.htm">日程第５　予防接種法の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0724-v006.htm">国家社会機能継続性確保施策及び副首都の整備に係る施策の推進に関する法律案（衆議院提出）</A></TD></TR>
+<TR><TD><A HREF="221-0724-v007.htm">大都市地域における特別区の設置に関する法律の一部を改正する法律案（奥村祥大君外３名発議）</A></TD></TR>
+<!--END[2026/07/24]-->
+<!--START[2026/07/17]-->
+<TR><TH scope="row" rowspan="7" class="touhyo_date">令和08年7月17日</TH><TD><A HREF="221-0717-v001.htm">日程第１　ヒトゲノム編集胚等の取扱いの規制に関する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0717-v002.htm">日程第２　重要品種の育成及びその種苗の生産の振興に関する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0717-v003.htm">日程第３　種苗法の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0717-v004.htm">日程第４　国旗の損壊等の処罰に関する法律案（衆議院提出）</A></TD></TR>
+<TR><TD><A HREF="221-0717-v005.htm">日程第５　電気事業法の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0717-v006.htm">日程第６　刑事訴訟法の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0717-v007.htm">日程第７　皇室典範等の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<!--END[2026/07/17]-->
+<!--START[2026/07/15]-->
+<TR><TH scope="row" rowspan="4" class="touhyo_date">令和08年7月15日</TH><TD><A HREF="221-0715-v001.htm">日程第１　高等学校の定時制教育及び通信教育振興法の一部を改正する法律案（衆議院提出）</A></TD></TR>
+<TR><TD><A HREF="221-0715-v002.htm">日程第２　日本放送協会令和六年度財産目録、貸借対照表、損益計算書、資本等変動計算書及びキャッシュ・フロー計算書並びにこれらに関する説明書</A></TD></TR>
+<TR><TD><A HREF="221-0715-v003.htm">日程第３　金融商品取引法及び資金決済に関する法律の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0715-v004.htm">日程第４　下水道法等の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<!--END[2026/07/15]-->
+<!--START[2026/07/13]-->
+<TR><TH scope="row" rowspan="4" class="touhyo_date">令和08年7月13日</TH><TD><A HREF="221-0713-v001.htm">日程第２　防災庁設置法案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0713-v002.htm">日程第３　防災庁設置法の施行に伴う関係法律の整備等に関する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0713-v003.htm">日程第４　公職選挙法及び特定電気通信による情報の流通によって発生する権利侵害等への対処に関する法律の一部を改正する法律案（衆議院提出）</A></TD></TR>
+<TR><TD><A HREF="221-0713-v004.htm">日程第５　科学技術・イノベーション創出の活性化に関する法律の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<!--END[2026/07/13]-->
+<!--START[2026/07/10]-->
+<TR><TH scope="row" rowspan="3" class="touhyo_date">令和08年7月10日</TH><TD><A HREF="221-0710-v001.htm">日程第１　情報通信技術を活用した行政の推進等に関する法律及び情報処理の促進に関する法律の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0710-v002.htm">日程第２　個人情報の保護に関する法律等の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0710-v003.htm">日程第３　労働者災害補償保険法等の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<!--END[2026/07/10]-->
+<!--START[2026/07/08]-->
+<TR><TH scope="row" rowspan="6" class="touhyo_date">令和08年7月8日</TH><TD><A HREF="221-0708-v001.htm">日程第１　令和六年度一般会計歳入歳出決算、令和六年度特別会計歳入歳出決算、令和六年度国税収納金整理資金受払計算書、令和六年度政府関係機関決算書「委員長報告のとおり是認すること」</A></TD></TR>
+<TR><TD><A HREF="221-0708-v002.htm">日程第１　令和六年度一般会計歳入歳出決算、令和六年度特別会計歳入歳出決算、令和六年度国税収納金整理資金受払計算書、令和六年度政府関係機関決算書「委員長報告のとおり内閣に対し警告すること」</A></TD></TR>
+<TR><TD><A HREF="221-0708-v003.htm">日程第２　令和六年度国有財産増減及び現在額総計算書</A></TD></TR>
+<TR><TD><A HREF="221-0708-v004.htm">日程第３　令和六年度国有財産無償貸付状況総計算書</A></TD></TR>
+<TR><TD><A HREF="221-0708-v005.htm">日程第４　有人国境離島地域の保全及び特定有人国境離島地域に係る地域社会の維持に関する特別措置法の一部を改正する法律案（衆議院提出）</A></TD></TR>
+<TR><TD><A HREF="221-0708-v006.htm">日程第５　主要食糧の需給及び価格の安定に関する法律の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<!--END[2026/07/08]-->
+<!--START[2026/06/26]-->
+<TR><TH scope="row" rowspan="1" class="touhyo_date">令和08年6月26日</TH><TD><A HREF="221-0626-v001.htm">日程第１　防衛省設置法等の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<!--END[2026/06/26]-->
+<!--START[2026/06/19]-->
+<TR><TH scope="row" rowspan="7" class="touhyo_date">令和08年6月19日</TH><TD><A HREF="221-0619-v001.htm">日程第１　日本国の自衛隊とフィリピンの軍隊との間における物品又は役務の相互の提供に関する日本国政府とフィリピン共和国政府との間の協定の締結について承認を求めるの件（衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0619-v002.htm">日程第２　日本国の自衛隊とオランダ王国の軍隊との間における物品又は役務の相互の提供に関する日本国政府とオランダ王国政府との間の協定の締結について承認を求めるの件（衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0619-v003.htm">日程第３　日本国の自衛隊とニュージーランド国防軍との間における物品又は役務の相互の提供に関する日本国政府とニュージーランド政府との間の協定の締結について承認を求めるの件（衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0619-v004.htm">日程第４　刑事に関する共助に関する日本国とカナダとの間の条約の締結について承認を求めるの件（衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0619-v005.htm">日程第５　郵政民営化法等の一部を改正する法律案（衆議院提出）</A></TD></TR>
+<TR><TD><A HREF="221-0619-v006.htm">日程第６　社会福祉法等の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0619-v007.htm">国立国会図書館法及び国立国会図書館法の規定により行政各部門に置かれる支部図書館及びその職員に関する法律の一部を改正する法律案（衆議院提出）</A></TD></TR>
+<!--END[2026/06/19]-->
+<!--START[2026/06/17]-->
+<TR><TH scope="row" rowspan="6" class="touhyo_date">令和08年6月17日</TH><TD><A HREF="221-0617-v001.htm">日程第１　令和六年度一般会計原油価格・物価高騰対策及び賃上げ促進環境整備対応予備費使用総調書及び各省各庁所管使用調書（衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0617-v002.htm">日程第２　令和六年度一般会計予備費使用総調書及び各省各庁所管使用調書（衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0617-v003.htm">日程第３　重要施設の周辺地域の上空における小型無人機等の飛行の禁止に関する法律の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0617-v004.htm">日程第４　著作権法の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0617-v005.htm">日程第５　民法等の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0617-v006.htm">日程第６　民法等の一部を改正する法律の施行に伴う関係法律の整備等に関する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<!--END[2026/06/17]-->
+<!--START[2026/06/12]-->
+<TR><TH scope="row" rowspan="9" class="touhyo_date">令和08年6月12日</TH><TD><A HREF="221-0612-v001.htm">国家公務員等の任命に関する件「情報公開・個人情報保護審査会委員（小野瀬厚君）及び公害等調整委員会委員（横田信孝君）」</A></TD></TR>
+<TR><TD><A HREF="221-0612-v002.htm">国家公務員等の任命に関する件「情報公開・個人情報保護審査会委員（徳本広孝君及び野田崇君）、中央更生保護審査会委員長（小川秀樹君）及び運輸安全委員会委員（田口晴邦君）」</A></TD></TR>
+<TR><TD><A HREF="221-0612-v003.htm">国家公務員等の任命に関する件「公害等調整委員会委員（大橋洋一君）及び運輸安全委員会委員（伊藤裕康君及び高橋明子君）」</A></TD></TR>
+<TR><TD><A HREF="221-0612-v004.htm">国家公務員等の任命に関する件「土地鑑定委員会委員（横山美夏君、永山篤史君、浅見裕子君、川添義弘君、坂本圭君及び杉浦綾子君）」</A></TD></TR>
+<TR><TD><A HREF="221-0612-v005.htm">国家公務員等の任命に関する件「土地鑑定委員会委員（藤澤美惠子君）」</A></TD></TR>
+<TR><TD><A HREF="221-0612-v006.htm">日程第１　郵便法及び民間事業者による信書の送達に関する法律の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0612-v007.htm">日程第２　廃棄物の処理及び清掃に関する法律等の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0612-v008.htm">日程第３　ポリ塩化ビフェニル廃棄物の適正な処理の推進に関する特別措置法及び中間貯蔵・環境安全事業株式会社法の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0612-v009.htm">日程第４　産業技術力強化法の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<!--END[2026/06/12]-->
+<!--START[2026/06/10]-->
+<TR><TH scope="row" rowspan="3" class="touhyo_date">令和08年6月10日</TH><TD><A HREF="221-0610-v001.htm">日程第１　学校教育法等の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0610-v002.htm">日程第２　予備自衛官等の職務の円滑な遂行を図るための国家公務員及び地方公務員の兼業の特例に関する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0610-v003.htm">日程第３　経済施策を一体的に講ずることによる安全保障の確保の推進に関する法律及び株式会社国際協力銀行法の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<!--END[2026/06/10]-->
+<!--START[2026/06/05]-->
+<TR><TH scope="row" rowspan="2" class="touhyo_date">令和08年6月5日</TH><TD><A HREF="221-0605-v001.htm">日程第１　令和八年度一般会計補正予算（第１号）</A></TD></TR>
+<TR><TD><A HREF="221-0605-v002.htm">日程第２　令和八年度特別会計補正予算（特第１号）</A></TD></TR>
+<!--END[2026/06/05]-->
+<!--START[2026/06/03]-->
+<TR><TH scope="row" rowspan="1" class="touhyo_date">令和08年6月3日</TH><TD><A HREF="221-0603-v001.htm">日程第２　地域公共交通の活性化及び再生に関する法律の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<!--END[2026/06/03]-->
+<!--START[2026/05/29]-->
+<TR><TH scope="row" rowspan="10" class="touhyo_date">令和08年5月29日</TH><TD><A HREF="221-0529-v001.htm">日程第１　所得に対する租税に関する二重課税の除去並びに脱税及び租税回避の防止のための日本国とキルギス共和国との間の協定の締結について承認を求めるの件（衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0529-v002.htm">日程第２　環境保護に関する南極条約議定書の附属書Ⅵの締結について承認を求めるの件（衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0529-v003.htm">日程第３　国際民間航空条約第五十条（ａ）の改正に関する二千十六年十月六日にモントリオールで署名された議定書及び国際民間航空条約第五十六条の改正に関する二千十六年十月六日にモントリオールで署名された議定書の締結について承認を求めるの件（衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0529-v004.htm">日程第４　万国郵便連合憲章の第十二追加議定書、万国郵便連合一般規則の第四追加議定書、万国郵便連合一般規則の第五追加議定書、万国郵便条約の第一追加議定書及び万国郵便条約の第二追加議定書の締結について承認を求めるの件（衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0529-v005.htm">日程第５　健康保険法等の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0529-v006.htm">日程第６　外国為替及び外国貿易法の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0529-v007.htm">日程第７　出入国管理及び難民認定法及び出入国管理及び難民認定法第二条第五号ロの旅券を所持する外国人の上陸申請の特例に関する法律の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0529-v008.htm">日程第８　太陽電池廃棄物の再資源化等の推進に関する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0529-v009.htm">日程第９　経済社会情勢の変化を踏まえた企業の事業活動の持続的な発展を図るための産業競争力強化法等の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0529-v010.htm">国会議員の歳費、旅費及び手当等に関する法律の一部を改正する法律案（衆議院提出）</A></TD></TR>
+<!--END[2026/05/29]-->
+<!--START[2026/05/27]-->
+<TR><TH scope="row" rowspan="2" class="touhyo_date">令和08年5月27日</TH><TD><A HREF="221-0527-v001.htm">日程第１　地域の自主性及び自立性を高めるための改革の推進を図るための関係法律の整備に関する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0527-v002.htm">日程第２　国家情報会議設置法案（内閣提出、衆議院送付）</A></TD></TR>
+<!--END[2026/05/27]-->
+<!--START[2026/05/22]-->
+<TR><TH scope="row" rowspan="1" class="touhyo_date">令和08年5月22日</TH><TD><A HREF="221-0522-v001.htm">日程第１　携帯音声通信事業者による契約者等の本人確認等及び携帯音声通信役務の不正な利用の防止に関する法律の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<!--END[2026/05/22]-->
+<!--START[2026/05/20]-->
+<TR><TH scope="row" rowspan="2" class="touhyo_date">令和08年5月20日</TH><TD><A HREF="221-0520-v001.htm">日程第１　食育基本法の一部を改正する法律案（衆議院提出）</A></TD></TR>
+<TR><TD><A HREF="221-0520-v002.htm">日程第２　都市再生特別措置法等の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<!--END[2026/05/20]-->
+<!--START[2026/05/15]-->
+<TR><TH scope="row" rowspan="6" class="touhyo_date">令和08年5月15日</TH><TD><A HREF="221-0515-v001.htm">日程第１　投資の促進及び保護に関する日本国とセルビア共和国との間の協定の締結について承認を求めるの件（衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0515-v002.htm">日程第２　投資の促進及び保護に関する日本国とパラグアイ共和国との間の協定の締結について承認を求めるの件（衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0515-v003.htm">日程第３　投資の促進及び保護に関する日本国とザンビア共和国との間の協定の締結について承認を求めるの件（衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0515-v004.htm">日程第４　投資の自由化、促進及び保護に関する日本国とタジキスタン共和国との間の協定の締結について承認を求めるの件（衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0515-v005.htm">日程第５　家畜伝染病予防法の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0515-v006.htm">日程第６　環境省設置法の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<!--END[2026/05/15]-->
+<!--START[2026/05/13]-->
+<TR><TH scope="row" rowspan="1" class="touhyo_date">令和08年5月13日</TH><TD><A HREF="221-0513-v001.htm">日程第１　物資の流通の効率化に関する法律の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<!--END[2026/05/13]-->
+<!--START[2026/04/24]-->
+<TR><TH scope="row" rowspan="7" class="touhyo_date">令和08年4月24日</TH><TD><A HREF="221-0424-v001.htm">日程第１　人工衛星等の打上げ及び人工衛星の管理に関する法律等の一部を改正する法律案（内閣提出）</A></TD></TR>
+<TR><TD><A HREF="221-0424-v002.htm">日程第２　裁判所職員定員法の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0424-v003.htm">日程第３　金融機能の強化のための特別措置に関する法律等の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0424-v004.htm">日程第４　旅券法の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0424-v005.htm">日程第５　株式会社海外通信・放送・郵便事業支援機構法の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0424-v006.htm">日程第６　農林中央金庫法の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0424-v007.htm">日程第７　農業近代化資金融通法の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<!--END[2026/04/24]-->
+<!--START[2026/04/17]-->
+<TR><TH scope="row" rowspan="3" class="touhyo_date">令和08年4月17日</TH><TD><A HREF="221-0417-v001.htm">日程第１　南極地域の環境の保護に関する法律の一部を改正する法律案（内閣提出）</A></TD></TR>
+<TR><TD><A HREF="221-0417-v002.htm">日程第２　自動車の運転により人を死傷させる行為等の処罰に関する法律及び道路交通法の一部を改正する法律案（内閣提出）</A></TD></TR>
+<TR><TD><A HREF="221-0417-v003.htm">日程第３　犯罪による収益の移転防止に関する法律の一部を改正する法律案（内閣提出）</A></TD></TR>
+<!--END[2026/04/17]-->
+<!--START[2026/04/07]-->
+<TR><TH scope="row" rowspan="3" class="touhyo_date">令和08年4月7日</TH><TD><A HREF="221-0407-v001.htm">令和八年度一般会計予算</A></TD></TR>
+<TR><TD><A HREF="221-0407-v002.htm">令和八年度特別会計予算</A></TD></TR>
+<TR><TD><A HREF="221-0407-v003.htm">令和八年度政府関係機関予算</A></TD></TR>
+<!--END[2026/04/07]-->
+<!--START[2026/03/31]-->
+<TR><TH scope="row" rowspan="14" class="touhyo_date">令和08年3月31日</TH><TD><A HREF="221-0331-v001.htm">日程第１　地方税法等の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0331-v002.htm">地方交付税法等の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0331-v003.htm">放送法第七十条第二項の規定に基づき、承認を求めるの件（衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0331-v004.htm">農業構造転換の推進に必要な施策の集中的な実施の財源に充てるための日本中央競馬会の国庫納付金の納付に関する臨時措置法案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0331-v005.htm">日本中央競馬会法の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0331-v006.htm">高等学校等就学支援金の支給に関する法律の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0331-v007.htm">公立義務教育諸学校の学級編制及び教職員定数の標準に関する法律の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0331-v008.htm">運輸事業の振興の助成に関する法律の一部を改正する法律案（衆議院提出）</A></TD></TR>
+<TR><TD><A HREF="221-0331-v009.htm">財政運営に必要な財源の確保を図るための公債の発行の特例に関する法律の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0331-v010.htm">東日本大震災からの復興のための施策を実施するために必要な財源の確保に関する特別措置法の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0331-v011.htm">関税定率法等の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0331-v012.htm">所得税法等の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0331-v013.htm">在外公館の名称及び位置並びに在外公館に勤務する外務公務員の給与に関する法律の一部を改正する法律案（内閣提出、衆議院送付）</A></TD></TR>
+<TR><TD><A HREF="221-0331-v014.htm">地震防災対策特別措置法の一部を改正する法律案（衆議院提出）</A></TD></TR>
+<!--END[2026/03/31]-->
+<!--START[2026/03/30]-->
+<TR><TH scope="row" rowspan="3" class="touhyo_date">令和08年3月30日</TH><TD><A HREF="221-0330-v001.htm">日程第１　令和八年度一般会計暫定予算</A></TD></TR>
+<TR><TD><A HREF="221-0330-v002.htm">日程第２　令和八年度特別会計暫定予算</A></TD></TR>
+<TR><TD><A HREF="221-0330-v003.htm">日程第３　令和八年度政府関係機関暫定予算</A></TD></TR>
+<!--END[2026/03/30]-->
+<!--START[2026/03/23]-->
+<TR><TH scope="row" rowspan="8" class="touhyo_date">令和08年3月23日</TH><TD><A HREF="221-0323-v001.htm">日程第１　国家公務員等の任命に関する件「人事官（菅原晶子君）」</A></TD></TR>
+<TR><TD><A HREF="221-0323-v002.htm">日程第１　国家公務員等の任命に関する件「公正取引委員会委員（若林亜理砂君及び矢尾和子君）、情報公開・個人情報保護審査会委員（市木政昭君及び石川千晶君）、労働保険審査会委員（飯島淳子君及び永野仁美君）及び中央社会保険医療協議会公益委員（井深陽子君）」</A></TD></TR>
+<TR><TD><A HREF="221-0323-v003.htm">日程第１　国家公務員等の任命に関する件「国家公安委員会委員（佐古和惠君）、社会保険審査会委員（鈴木ひろみ君）及び公害健康被害補償不服審査会委員（山下直美君）」</A></TD></TR>
+<TR><TD><A HREF="221-0323-v004.htm">日程第１　国家公務員等の任命に関する件「サイバー通信情報監理委員会委員長（近藤宏子君）及び同委員（新井悠君、田邊國昭君、上沼紫野君及び福田健介君）」</A></TD></TR>
+<TR><TD><A HREF="221-0323-v005.htm">日程第１　国家公務員等の任命に関する件「情報公開・個人情報保護審査会委員（大江裕幸君）及び中央社会保険医療協議会公益委員（菅原琢磨君）」</A></TD></TR>
+<TR><TD><A HREF="221-0323-v006.htm">日程第１　国家公務員等の任命に関する件「日本銀行政策委員会審議委員（佐藤綾野君及び浅田統一郎君）」</A></TD></TR>
+<TR><TD><A HREF="221-0323-v007.htm">日程第１　国家公務員等の任命に関する件「社会保険審査会委員長（高橋譲君）」</A></TD></TR>
+<TR><TD><A HREF="221-0323-v008.htm">日程第１　国家公務員等の任命に関する件「運輸審議会委員（二村真理子君）」</A></TD></TR>
+<!--END[2026/03/23]-->
+<!--START[2026/02/18]-->
+<TR><TH scope="row" rowspan="2" class="touhyo_date">令和08年2月18日</TH><TD><A HREF="221-0218-v001.pdf">内閣総理大臣の指名（１回目の投票）（PDF）</A></TD></TR>
+<TR><TD><A HREF="221-0218-v002.pdf">内閣総理大臣の指名　決選投票（PDF）</A></TD></TR>
+<!--END[2026/02/18]-->
+									<!--END-->
+								</table>
+						</div>
+						<!--// コンテンツここまで -->
+					</div>
+					<!--//右ボックスここまで　-->
+					<div class="clearing"><img src="/common/images/layout/spacer.gif" alt="" width="1" height="1"></div>
+					<!--　コンテンツ下ナビゲーションここから　-->
+					<div id="BottomNavi0">
+						<div id="BottomNavi">
+							<ul id="SecondaryNavi">
+								<li id="Guide"><a href="/japanese/riyouannai/index.html" title="利用案内">利用案内</a></li>
+								<li id="Copy"><a href="/japanese/chosakuken/index.html" title="著作権">著作権</a></li>
+								<li id="Immunity"><a href="/japanese/menseki/index.html" title="免責事項">免責事項</a></li>
+								<li id="Opinion"><a href="/japanese/goiken_gositumon/index.html" title="ご意見・ご質問">ご意見・ご質問</a></li>
+							</ul>
+						</div>
+					</div>
+					<!--//　コンテンツ下ナビゲーションここまで　-->
+				</div>
+				<!--//　ホームコンテンツボックスここまで　-->
+				<!-- トップへ戻るCSS方式 --><div id="page_top"><a href="#" aria-label="ページの先頭へ戻ります"><span></span></a></div>
+				<!--　フッターここから　-->
+				<div id="Footer">
+					<small>All rights reserved. Copyright(c) , House of Councillors, The National Diet of Japan</small>
+				</div>
+				<!--//　フッターここまで　-->
+			</div>
+			<!--//　ラッパーここまで　-->
+		</div>
+	<script src="/common/js/spmenu.js"></script>
+	</body>
+</html>
+

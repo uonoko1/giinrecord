@@ -5,6 +5,8 @@
 .members-input, .members-select { font: inherit; font-size: 15px; padding: 8px 10px; border: 1px solid var(--rule); background: var(--paper); color: var(--ink); border-radius: 0; width: 100%; box-sizing: border-box; }
 .members-input:focus, .members-select:focus { outline: 2px solid var(--brass); outline-offset: 1px; }
 .members-selects { display: flex; gap: 10px; }
+.members-check { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink); }
+.members-check input { accent-color: var(--brass); margin: 0; }
 .members-count { margin: 0; font-family: var(--font-head); font-size: 15px; font-weight: 700; color: var(--brass); }
 .members-count__of { margin-left: 6px; font-family: var(--font-body); font-size: 12px; font-weight: 400; color: var(--muted); }
 .members .num { font-variant-numeric: tabular-nums; }

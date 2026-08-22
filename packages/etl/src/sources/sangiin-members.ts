@@ -106,6 +106,8 @@ export function toSummary(m: Member): MemberSummary {
   return {
     id: m.id, name: m.name, kana: m.kana, house: m.house,
     group: t?.group ?? "", district: t?.district ?? "", termEnd: t?.to,
+    // 回次をまたいで統合する前（名簿1つだけ）の Member は全員が現職。
+    current: m.current ?? true,
     counts: { rollcalls: 0, bills: 0, speeches: 0 },
   };
 }
