@@ -1,7 +1,7 @@
 import { fileURLToPath } from "node:url";
 import type { RollCall, Speech } from "@seiji-kiroku/shared";
 import { listRollCalls, parseRollCall } from "./sources/sangiin-votes.ts";
-import { fetchMembers, memberListUrl } from "./sources/sangiin-members.ts";
+import { fetchMembers, memberListUrl, unmatchedGroups } from "./sources/sangiin-members.ts";
 import { fetchText } from "./fetch.ts";
 import { fetchSpeeches, speechPageUrl } from "./sources/kokkai-speeches.ts";
 import { matchVotes, type GroupMismatch, type Unmatched } from "./match-votes.ts";
@@ -13,7 +13,8 @@ import { validateDataset, writeDataset } from "./dataset.ts";
 /**
  * ETL entry point. S1: House of Councillors members and roll-call votes. S2: plenary speeches (国会会議録API).
  * Writes normalized JSON under ../../data/ (committed to the repo, CC BY 4.0):
- *   members/index.json, members/{id}.json, rollcalls/index.json, rollcalls/{session}/{id}.json, unmatched.json, unmatched-bills.json, meta.json
+ *   members/index.json, members/{id}.json, rollcalls/index.json, rollcalls/{session}/{id}.json,
+ *   unmatched.json, unmatched-bills.json, unmatched-groups.json, meta.json
  * then runs validateDataset (docs/DATA_CONTRACT.md) and exits non-zero on any violation.
  * Usage: pnpm etl [session...]   (default: current session only)
  */
@@ -26,6 +27,12 @@ const fetchedAt = new Date().toISOString();
 const memberSession = Math.max(...targets);
 const members = await fetchMembers(memberSession);
 console.log(`session ${memberSession}: ${members.length} members`);
+// 名簿の会派略称は正式名称に解決して公開する。未知の略称は ETL を止めず原文のまま出し、運用者が対応表に追記する（Issue #36）。
+const groupsUnknown = unmatchedGroups(members);
+if (groupsUnknown.length) {
+  console.warn(`unknown group abbreviations: ${groupsUnknown.length} (see data/unmatched-groups.json; add to sangiin-groups.ts)`);
+  for (const g of groupsUnknown) console.warn(`  ${g.group}: ${g.memberIds.join(", ")}`);
+}
 
 const rollCalls: RollCall[] = [];
 const unmatched: (Unmatched | UnmatchedSpeech)[] = [];
@@ -76,6 +83,7 @@ await writeDataset(DATA, {
   rollCallDetails: rollCalls,
   unmatched,
   unmatchedBills: bills.unmatched,
+  unmatchedGroups: groupsUnknown,
   meta: {
     fetchedAt,
     sessions: targets,

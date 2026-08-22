@@ -128,7 +128,7 @@ describe("実データ: 第221回の名簿と投票結果", () => {
       const { rollCall: matched, unmatched, groupMismatch } = matchVotes(rc, members);
       assert.deepEqual(unmatched, []);
       // 第221回で会派不一致になりうるのは れいわ新選組 → いのちの党 の改称分のみ
-      assert.ok(groupMismatch.every((g) => g.group === "れいわ新選組" && g.rosterGroup === "い党"), JSON.stringify(groupMismatch));
+      assert.ok(groupMismatch.every((g) => g.group === "れいわ新選組" && g.rosterGroup === "いのちの党"), JSON.stringify(groupMismatch));
       assert.ok(matched.votes.every((v) => v.memberId !== ""));
       assert.equal(new Set(matched.votes.map((v) => v.memberId)).size, matched.votes.length);
     });

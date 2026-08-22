@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { parseMemberList, memberIdFromProfileId, toSummary } from "../src/sources/sangiin-members.ts";
-import { groupFullName, matchesGroup } from "../src/sources/sangiin-groups.ts";
+import { parseMemberList, memberIdFromProfileId, toSummary, unmatchedGroups } from "../src/sources/sangiin-members.ts";
+import { groupFullName, isKnownGroup, matchesGroup } from "../src/sources/sangiin-groups.ts";
 
 const SRC = "https://www.sangiin.go.jp/japanese/joho1/kousei/giin/221/giin.htm";
 const html = readFileSync(new URL("./fixtures/sangiin-giin-221.htm", import.meta.url), "utf-8");
@@ -20,7 +20,7 @@ test("先頭の議員: 氏名の全角空白は1つに正規化、かな・会�
   assert.equal(m.kana, "あおき あい");
   assert.equal(m.house, "sangiin");
   assert.equal(m.sourceUrl, SRC);
-  assert.deepEqual(m.terms, [{ house: "sangiin", group: "立憲", district: "比例", from: "", to: "2028-07-25", sessionFrom: 221 }]);
+  assert.deepEqual(m.terms, [{ house: "sangiin", group: "立憲民主・無所属", district: "比例", from: "", to: "2028-07-25", sessionFrom: 221 }]);
 });
 
 test("任期満了 令和13年7月28日 → 2031-07-28 に変換される", () => {
@@ -54,7 +54,7 @@ test("MemberSummary へ変換: counts は 0、group/district/termEnd は terms[0
   const [m] = parseMemberList(html, SRC, 221);
   assert.deepEqual(toSummary(m), {
     id: "m_007006", name: "青木 愛", kana: "あおき あい", house: "sangiin",
-    group: "立憲", district: "比例", termEnd: "2028-07-25",
+    group: "立憲民主・無所属", district: "比例", termEnd: "2028-07-25",
     counts: { rollcalls: 0, bills: 0, speeches: 0 },
   });
 });
@@ -69,10 +69,12 @@ test("会派略称 → 正式名称。投票ページの会派名と突合でき
   assert.equal(matchesGroup("自民", "立憲民主・無所属"), false);
 });
 
-test("フィクスチャに出る会派略称はすべて対応表に載っている", () => {
+test("フィクスチャに出る会派略称はすべて対応表に載っている（未知なら正式名称に解決されず isKnownGroup が false）", () => {
   const members = parseMemberList(html, SRC, 221);
-  const missing = [...new Set(members.map((m) => m.terms[0].group))].filter((g) => !groupFullName(g));
+  const missing = [...new Set(members.map((m) => m.terms[0].group))].filter((g) => !isKnownGroup(g));
   assert.deepEqual(missing, []);
+  assert.equal(isKnownGroup("みら"), false);
+  assert.equal(isKnownGroup("い党"), false);
 });
 
 test("index.json の文字列化: キーはソート済み・末尾改行（DATA_CONTRACT）", async () => {
@@ -100,4 +102,27 @@ test("2行表記の最小ケース: <BR> の前を name にし、[本名] は le
   assert.equal(m.legalName, "齊藤 蓮舫");
   const [plain] = parseMemberList(`<table><tr><td><a href="../profile/7007006.htm">青木　　愛</a></td><td>あおき あい</td><td>立憲</td><td>比例</td><td>令和10年7月25日</td><td></td></tr></table>`, SRC, 221);
   assert.equal(plain.legalName, undefined);
+});
+
+// Issue #36: 名簿の会派セルは「みら」「い党」のような2文字略称で、改行や切り詰めではない（実フィクスチャ 7025008 = い党 など）。
+// 利用者に略称をそのまま見せず、会派別所属議員数（giinsu.htm）の正式名称に解決して出す。
+test("実フィクスチャ: 『い党』『みら』の行は正式名称『いのちの党』『チームみらい・無所属の会』になる", () => {
+  const byId = new Map(parseMemberList(html, SRC, 221).map((m) => [m.id, m]));
+  assert.equal(byId.get("m_025008")?.terms[0].group, "いのちの党");
+  assert.equal(byId.get("m_025005")?.terms[0].group, "チームみらい・無所属の会");
+  assert.equal(byId.get("m_007006")?.terms[0].group, "立憲民主・無所属");
+});
+
+test("実フィクスチャ: index.json に略称（2文字の断片）が残らない", () => {
+  const members = parseMemberList(html, SRC, 221);
+  for (const g of new Set(members.map((m) => toSummary(m).group))) assert.ok(isKnownGroup(g), `unexpected group: ${g}`);
+  assert.deepEqual(unmatchedGroups(members), []);
+});
+
+test("未知の略称は ETL を止めず、そのまま保持して unmatchedGroups に列挙する", () => {
+  const row = (pid: string, g: string) => `<tr><td><a href="../profile/${pid}.htm">甲 乙</a></td><td>こう おつ</td><td>${g}</td><td>比例</td><td>令和10年7月25日</td><td></td></tr>`;
+  const members = parseMemberList(`<table>${row("7000001", "新党")}${row("7000002", "新党")}${row("7000003", "自民")}</table>`, SRC, 221);
+  assert.equal(members[0].terms[0].group, "新党");
+  assert.equal(members[2].terms[0].group, "自由民主党・無所属の会");
+  assert.deepEqual(unmatchedGroups(members), [{ group: "新党", memberIds: ["m_000001", "m_000002"], sourceUrl: SRC }]);
 });

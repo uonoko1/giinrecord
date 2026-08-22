@@ -2,6 +2,7 @@ import { parse } from "node-html-parser";
 import type { Member, MemberSummary } from "@seiji-kiroku/shared";
 import { fetchText } from "../fetch.ts";
 import { stableJson } from "../json.ts";
+import { isKnownGroup, resolveGroup } from "./sangiin-groups.ts";
 
 const BASE = "https://www.sangiin.go.jp/japanese/joho1/kousei/giin";
 
@@ -44,7 +45,7 @@ export function parseMemberList(html: string, sourceUrl: string, session: number
       ...(legalName ? { legalName } : {}),
       kana: cells[1],
       house: "sangiin",
-      terms: [{ house: "sangiin", group: cells[2], district: cells[3], from: "", to: warekiToIso(cells[4]), sessionFrom: session }],
+      terms: [{ house: "sangiin", group: resolveGroup(cells[2]), district: cells[3], from: "", to: warekiToIso(cells[4]), sessionFrom: session }],
       sourceUrl,
     });
   }
@@ -73,6 +74,31 @@ function assertUniqueIds(members: Member[]): void {
     if (seen.has(id)) throw new Error(`duplicate member id: ${id}`);
     seen.add(id);
   }
+}
+
+/** 対応表に無い会派略称（正式名称に解決できなかったもの）。data/unmatched-groups.json に出す。 */
+export interface UnmatchedGroup {
+  /** 名簿セルの原文（略称のまま公開データにも入っている）。 */
+  group: string;
+  memberIds: string[];
+  sourceUrl: string;
+}
+
+/**
+ * 正式名称に解決できなかった会派を、略称ごとにまとめて返す。
+ * 新会派・改称のたびに略称が増えるので、ETL は止めずに運用者へ見せる（sangiin-groups.ts に追記すれば消える）。
+ */
+export function unmatchedGroups(members: Member[]): UnmatchedGroup[] {
+  const byGroup = new Map<string, UnmatchedGroup>();
+  for (const m of members) {
+    for (const t of m.terms) {
+      if (t.house !== "sangiin" || isKnownGroup(t.group)) continue;
+      const entry = byGroup.get(t.group) ?? { group: t.group, memberIds: [], sourceUrl: m.sourceUrl };
+      if (!entry.memberIds.includes(m.id)) entry.memberIds.push(m.id);
+      byGroup.set(t.group, entry);
+    }
+  }
+  return [...byGroup.values()];
 }
 
 export function toSummary(m: Member): MemberSummary {
