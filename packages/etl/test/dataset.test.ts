@@ -216,6 +216,27 @@ describe("writeDataset / validateDataset: docs/DATA_CONTRACT.md の不変条件"
     cleanup();
   });
 
+  test("bill 行の sourceUrl は衆院 経過ページ（gian/keika/）でもよい（#73。衆院議員の提出・賛同）", async () => {
+    const bill = { kind: "bill", date: "2026-07-30", billId: "221-衆法-1", title: "法案", role: "賛成者", sourceUrl: `${KEIKA}/1DE153E.htm` };
+    patch<{ timeline: unknown[] }>(dir, "members/m_007006.json", (d) => ({ ...d, timeline: [bill, ...d.timeline] }));
+    patch<{ id: string; counts: { bills: number } }[]>(dir, "members/index.json", (idx) => idx.map((m) => (m.id === "m_007006" ? { ...m, counts: { ...m.counts, bills: 1 } } : m)));
+    assert.deepEqual(await validateDataset(dir), []);
+    cleanup();
+  });
+
+  test("stance 行（会派態度の推定）は estimated: true・stance は 賛成/反対・sourceUrl は衆院 経過ページ。counts には数えない", async () => {
+    const stance = (extra: Record<string, unknown> = {}) => ({ kind: "stance", estimated: true, date: "2026-07-30", billId: "221-閣法-3", title: "法案", group: "日本共産党", stance: "反対", stanceText: "多数", sourceUrl: `${KEIKA}/1DE14D6.htm`, ...extra });
+    patch<{ timeline: unknown[] }>(dir, "members/m_007006.json", (d) => ({ ...d, timeline: [stance(), ...d.timeline] }));
+    assert.deepEqual(await validateDataset(dir), []);
+    patch<{ timeline: unknown[] }>(dir, "members/m_007006.json", (d) => ({ ...d, timeline: [stance({ estimated: false }), ...d.timeline.slice(1)] }));
+    assert.match((await validateDataset(dir)).join("\n"), /m_007006.*timeline\[0\].*estimated/);
+    patch<{ timeline: unknown[] }>(dir, "members/m_007006.json", (d) => ({ ...d, timeline: [stance({ stance: "投票なし" }), ...d.timeline.slice(1)] }));
+    assert.match((await validateDataset(dir)).join("\n"), /m_007006.*timeline\[0\].*stance/);
+    patch<{ timeline: unknown[] }>(dir, "members/m_007006.json", (d) => ({ ...d, timeline: [stance({ sourceUrl: `${BASE}/221-0605-v001.htm` }), ...d.timeline.slice(1)] }));
+    assert.match((await validateDataset(dir)).join("\n"), /m_007006.*timeline\[0\].*経過/);
+    cleanup();
+  });
+
   test("rollcalls/index.json の行に対応する採決ファイルが無ければ違反", async () => {
     rmSync(join(dir, "rollcalls/221/221-0724-v001.json"));
     assert.match((await validateDataset(dir)).join("\n"), /221-0724-v001\.json/);

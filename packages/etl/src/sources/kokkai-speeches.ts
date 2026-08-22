@@ -1,9 +1,10 @@
-import type { Speech } from "@seiji-kiroku/shared";
+import type { House, Speech } from "@seiji-kiroku/shared";
 import { fetchText, sleep } from "../fetch.ts";
 
 /**
  * 国会会議録検索システム 検索用API（https://kokkai.ndl.go.jp/api.html）。
- * S2 の対象は参議院・本会議のみ。会議録の公開には約1ヶ月のラグがある（meta.sources[].fetchedAt で明示する）。
+ * S2 は参議院・本会議のみ。Issue #73 で衆議院・本会議も対象にした（house 引数）。
+ * 会議録の公開には約1ヶ月のラグがある（meta.sources[].fetchedAt で明示する）。
  * Verified 2026-08-22.
  */
 const API = "https://kokkai.ndl.go.jp/api/speech";
@@ -13,9 +14,12 @@ export const REQUEST_INTERVAL_MS = 1000;
 /** 冒頭抜粋の長さ（コードポイント）。要約はしない。 */
 export const EXCERPT_CHARS = 200;
 
-export function speechPageUrl(session: number, startRecord = 1): string {
+/** API の nameOfHouse（会議録の院名の原文）。 */
+const HOUSE_NAME: Record<House, string> = { sangiin: "参議院", shugiin: "衆議院" };
+
+export function speechPageUrl(session: number, startRecord = 1, house: House = "sangiin"): string {
   const u = new URL(API);
-  u.searchParams.set("nameOfHouse", "参議院");
+  u.searchParams.set("nameOfHouse", HOUSE_NAME[house]);
   u.searchParams.set("nameOfMeeting", "本会議");
   u.searchParams.set("sessionFrom", String(session));
   u.searchParams.set("sessionTo", String(session));
@@ -58,7 +62,7 @@ interface SpeechRecord {
  * - speakerGroup は会派（名寄せに使う）、speakerPosition は議長・大臣等の役職（あればそのまま保持）。
  * - 形が違う／必須項目が無いレスポンスは例外にする（黙って空を返さない）。
  */
-export function parseSpeechPage(json: unknown): SpeechPage {
+export function parseSpeechPage(json: unknown, house: House = "sangiin"): SpeechPage {
   if (!isObject(json) || !Array.isArray(json.speechRecord)) throw new SpeechParseError("speechRecord がありません（API レスポンスの形が想定と違います）");
   const numberOfRecords = typeof json.numberOfRecords === "number" ? json.numberOfRecords : fail("numberOfRecords がありません");
   const next = json.nextRecordPosition;
@@ -66,12 +70,12 @@ export function parseSpeechPage(json: unknown): SpeechPage {
   const speeches: Speech[] = [];
   for (const rec of json.speechRecord as SpeechRecord[]) {
     if (rec.speechOrder === 0) continue;
-    speeches.push(toSpeech(rec));
+    speeches.push(toSpeech(rec, house));
   }
   return { numberOfRecords, nextRecordPosition, speeches };
 }
 
-function toSpeech(rec: SpeechRecord): Speech {
+function toSpeech(rec: SpeechRecord, house: House): Speech {
   const id = str(rec.speechID) ?? fail("speechID がありません");
   const need = (v: unknown, what: string) => str(v) ?? fail(`${id}: ${what} がありません`);
   const { excerpt, chars } = toExcerpt(need(rec.speech, "speech"));
@@ -82,7 +86,7 @@ function toSpeech(rec: SpeechRecord): Speech {
     speakerText: need(rec.speaker, "speaker"),
     ...(group ? { group } : {}),
     ...(position ? { position } : {}),
-    house: "sangiin",
+    house,
     meeting: [need(rec.nameOfMeeting, "nameOfMeeting"), str(rec.issue)].filter(Boolean).join(" "),
     date: need(rec.date, "date"),
     excerpt, chars,
@@ -101,12 +105,12 @@ export function toExcerpt(speech: string): { excerpt: string; chars: number } {
   return { excerpt: cps.slice(0, EXCERPT_CHARS).join(""), chars: cps.length };
 }
 
-/** 回次の参院本会議発言を全ページ取得する。リクエスト間隔 ≥ REQUEST_INTERVAL_MS。会議録は追加公開されるのでキャッシュしない。 */
-export async function fetchSpeeches(session: number): Promise<Speech[]> {
+/** 回次の本会議発言（house の院）を全ページ取得する。リクエスト間隔 ≥ REQUEST_INTERVAL_MS。会議録は追加公開されるのでキャッシュしない。 */
+export async function fetchSpeeches(session: number, house: House = "sangiin"): Promise<Speech[]> {
   const out: Speech[] = [];
   let start: number | null = 1;
   while (start !== null) {
-    const page = parseSpeechPage(JSON.parse(await fetchText(speechPageUrl(session, start), "utf-8", { noCache: true })));
+    const page = parseSpeechPage(JSON.parse(await fetchText(speechPageUrl(session, start, house), "utf-8", { noCache: true })), house);
     out.push(...page.speeches);
     start = page.nextRecordPosition;
     if (start !== null) await sleep(REQUEST_INTERVAL_MS);
