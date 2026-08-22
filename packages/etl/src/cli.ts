@@ -6,7 +6,7 @@ import { fetchShugiinMembers, memberListUrl as shugiinMemberListUrl, unmatchedSh
 import { fetchText } from "./fetch.ts";
 import { fetchSpeeches, speechPageUrl } from "./sources/kokkai-speeches.ts";
 import { matchVotes, type GroupMismatch, type Unmatched } from "./match-votes.ts";
-import { billListUrl, fetchBills, matchBillResults, toBillDecisions, type Bill } from "./sources/sangiin-bills.ts";
+import { billListUrl, committeeBills, fetchBills, matchBillResults, toBillDecisions, type Bill } from "./sources/sangiin-bills.ts";
 import { matchSpeeches, type UnmatchedSpeech } from "./match-speeches.ts";
 import { matchBills, type UnmatchedBillProposer } from "./match-bills.ts";
 import { fetchShugiinBills, shugiinBillListUrl } from "./sources/shugiin-bills.ts";
@@ -85,6 +85,8 @@ if (bills.unmatched.length) console.warn(`roll calls without bill decision: ${bi
 // 提出法案: 参法の発議者（議案ページに載る筆頭者。「外N名」の氏名は公表されていない）を名簿に名寄せして timeline の bill 行にする（Issue #56）。
 const proposed = matchBills(allBills, members);
 console.log(`bills: ${allBills.filter((b) => b.kind === "参法").length} 参法, ${proposed.entries.length} proposer entries matched`);
+const committee = committeeBills(allBills);
+if (committee.length) console.log(`bills: ${committee.length} 参法 by committee (no individual proposer; not in timeline): ${committee.map((b) => `${b.id} ${b.submitterText ?? "?"}`).join(", ")}`);
 unmatched.push(...proposed.unmatched);
 
 // 衆院 議案情報（Issue #72）: 一覧（審議回次）→経過ページ。提出者一覧・賛成者は個人名（事実）、会派態度は会派単位（推定）で Bill.shugiinGroupStance にだけ入る。
