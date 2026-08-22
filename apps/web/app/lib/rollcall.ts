@@ -22,9 +22,9 @@ export function votesByGroup(votes: readonly Vote[]): Map<string, Vote[]> {
   return map;
 }
 
-/** 日付降順。同日は元の順（index.json は id 昇順で同日採決が並ぶ）。 */
-export function sortByDateDesc<T extends { date: string }>(rows: readonly T[]): T[] {
-  return [...rows].sort((a, b) => b.date.localeCompare(a.date));
+/** 日付降順。同日は id 昇順（公表された採決番号の順）で安定させる。入力の順に依存しない。 */
+export function sortByDateDesc<T extends { id: string; date: string }>(rows: readonly T[]): T[] {
+  return [...rows].sort((a, b) => b.date.localeCompare(a.date) || a.id.localeCompare(b.id));
 }
 
 /** 登場する回次を重複なく新しい順に。 */
