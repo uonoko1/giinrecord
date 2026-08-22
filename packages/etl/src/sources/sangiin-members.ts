@@ -1,6 +1,7 @@
 import { parse } from "node-html-parser";
 import type { Member, MemberSummary } from "@seiji-kiroku/shared";
 import { fetchText } from "../fetch.ts";
+import { stableJson } from "../json.ts";
 
 const BASE = "https://www.sangiin.go.jp/japanese/joho1/kousei/giin";
 
@@ -85,13 +86,8 @@ export function toSummary(m: Member): MemberSummary {
 
 /** `data/members/index.json` の本文。キーは再帰的にソート、末尾改行（差分を小さくするため）。 */
 export function serializeMembersIndex(members: Member[]): string {
-  return JSON.stringify(members.map(toSummary), sortKeys, 1) + "\n";
+  return stableJson(members.map(toSummary));
 }
-
-const sortKeys = (_: string, v: unknown) =>
-  v && typeof v === "object" && !Array.isArray(v)
-    ? Object.fromEntries(Object.entries(v as Record<string, unknown>).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)))
-    : v;
 
 const ERA: Record<string, number> = { 令和: 2018, 平成: 1988, 昭和: 1925 };
 
