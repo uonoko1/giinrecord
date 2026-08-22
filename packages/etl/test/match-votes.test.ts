@@ -85,11 +85,27 @@ describe("matchVotes: 純粋関数", () => {
     assert.deepEqual(unmatched, [{ nameText: "存在 しない", group: "公明党", rollCallId: "221-0605-v001" }]);
   });
 
-  test("氏名で1人に絞れるなら会派表記が名簿と異なっても一致する（採決後の会派改称）", () => {
+  test("氏名で1人に絞れるなら会派表記が名簿と異なっても一致するが、groupMismatch に載せて可視化する（採決後の会派改称）", () => {
     const members = [member("m_000005", "木村 英子", "い党")];
-    const { rollCall: rc, unmatched } = matchVotes(rollCall([{ nameText: "木村 英子", group: "れいわ新選組" }]), members);
+    const { rollCall: rc, unmatched, groupMismatch } = matchVotes(rollCall([{ nameText: "木村 英子", group: "れいわ新選組" }]), members);
     assert.equal(rc.votes[0].memberId, "m_000005");
     assert.deepEqual(unmatched, []);
+    assert.deepEqual(groupMismatch, [
+      { nameText: "木村 英子", group: "れいわ新選組", memberId: "m_000005", rosterGroup: "い党", rollCallId: "221-0605-v001" },
+    ]);
+  });
+
+  test("候補1人で会派が一致（略称/正式名称）すれば groupMismatch は空", () => {
+    const members = [member("m_000001", "青木 一彦", "自民")];
+    const { groupMismatch } = matchVotes(rollCall([{ nameText: "青木 一彦", group: "自由民主党・無所属の会" }]), members);
+    assert.deepEqual(groupMismatch, []);
+  });
+
+  test("votes が空なら unmatched・groupMismatch とも空", () => {
+    const { rollCall: rc, unmatched, groupMismatch } = matchVotes(rollCall([]), [member("m_000001", "青木 一彦", "自民")]);
+    assert.deepEqual(rc.votes, []);
+    assert.deepEqual(unmatched, []);
+    assert.deepEqual(groupMismatch, []);
   });
 
   test("1採決内で同じ memberId が2回出たら例外", () => {
@@ -109,8 +125,10 @@ describe("実データ: 第221回の名簿と投票結果", () => {
   for (const id of ["221-0605-v001", "221-0724-v001"]) {
     test(`${id}: 未突合 0 件、全票に memberId が入る`, () => {
       const rc = parseRollCall(fixture(id), `${BASE}/${id}.htm`, 221);
-      const { rollCall: matched, unmatched } = matchVotes(rc, members);
+      const { rollCall: matched, unmatched, groupMismatch } = matchVotes(rc, members);
       assert.deepEqual(unmatched, []);
+      // 第221回で会派不一致になりうるのは れいわ新選組 → いのちの党 の改称分のみ
+      assert.ok(groupMismatch.every((g) => g.group === "れいわ新選組" && g.rosterGroup === "い党"), JSON.stringify(groupMismatch));
       assert.ok(matched.votes.every((v) => v.memberId !== ""));
       assert.equal(new Set(matched.votes.map((v) => v.memberId)).size, matched.votes.length);
     });
