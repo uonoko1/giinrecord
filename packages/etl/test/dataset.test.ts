@@ -146,6 +146,22 @@ describe("writeDataset / validateDataset: docs/DATA_CONTRACT.md の不変条件"
     cleanup();
   });
 
+  test("counts.bills が timeline の bill 数と食い違えば違反", async () => {
+    patch<{ id: string; counts: { bills: number } }[]>(dir, "members/index.json", (idx) => idx.map((m) => (m.id === "m_007006" ? { ...m, counts: { ...m.counts, bills: 99 } } : m)));
+    assert.match((await validateDataset(dir)).join("\n"), /m_007006.*counts\.bills/);
+    cleanup();
+  });
+
+  test("bill 行の sourceUrl が参院 議案ページ（kousei/gian/{回次}/meisai/）でなければ違反", async () => {
+    const bill = (sourceUrl: string) => ({ kind: "bill", date: "2026-07-09", billId: "221-参法-16", title: "法案", role: "提出者", sourceUrl });
+    patch<{ timeline: unknown[] }>(dir, "members/m_007006.json", (d) => ({ ...d, timeline: [bill(`${BASE}/221-0605-v001.htm`), ...d.timeline] }));
+    patch<{ id: string; counts: { bills: number } }[]>(dir, "members/index.json", (idx) => idx.map((m) => (m.id === "m_007006" ? { ...m, counts: { ...m.counts, bills: 1 } } : m)));
+    assert.match((await validateDataset(dir)).join("\n"), /m_007006.*timeline\[0\].*議案/);
+    patch<{ timeline: unknown[] }>(dir, "members/m_007006.json", (d) => ({ ...d, timeline: [bill("https://www.sangiin.go.jp/japanese/joho1/kousei/gian/221/meisai/m221100221016.htm"), ...d.timeline.slice(1)] }));
+    assert.deepEqual(await validateDataset(dir), []);
+    cleanup();
+  });
+
   test("rollcalls/index.json の行に対応する採決ファイルが無ければ違反", async () => {
     rmSync(join(dir, "rollcalls/221/221-0724-v001.json"));
     assert.match((await validateDataset(dir)).join("\n"), /221-0724-v001\.json/);
