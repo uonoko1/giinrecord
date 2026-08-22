@@ -44,6 +44,14 @@ export default function Members({ data = bundled }: { data?: Dataset }) {
   const houseId = useId();
   const districtId = useId();
 
+  // 院を切り替えると会派・選挙区の選択肢が変わる（参院の会派や選挙区はほぼ衆院に存在しない）ので、
+  // 旧い選択を残すと select は「すべて」に見えるのに 0 名になる。院の変更時はまとめてリセットする。
+  function changeHouse(next: House | "") {
+    setHouse(next);
+    setGroup("");
+    setDistrict("");
+  }
+
   // 既定は両院・現職（最新回次の名簿に載っている人）のみ。元職は事実として残っているので、トグルで同じ一覧に出す。
   const all = useMemo(
     () => data.members.filter((m) => (!house || m.house === house) && (includeFormer || m.current !== false)),
@@ -86,7 +94,7 @@ export default function Members({ data = bundled }: { data?: Dataset }) {
             <div className="members-selects">
               <label className="members-field" htmlFor={houseId}>
                 <span className="members-field__label">院</span>
-                <select id={houseId} className="members-select" value={house} onChange={(e) => setHouse(e.target.value as House | "")}>
+                <select id={houseId} className="members-select" value={house} onChange={(e) => changeHouse(e.target.value as House | "")}>
                   {HOUSE_OPTIONS.map((o) => (
                     <option key={o.value} value={o.value}>
                       {o.label}

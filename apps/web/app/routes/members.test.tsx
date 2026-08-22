@@ -164,6 +164,18 @@ describe("/members", () => {
       await user.click(screen.getByRole("checkbox", { name: "元職も含める" }));
       expect(screen.getByText("2 名")).toBeInTheDocument();
     });
+
+    it("会派・選挙区を選んだ状態で院を切り替えると、その絞り込みはリセットされ 0 名にならない", async () => {
+      const user = userEvent.setup();
+      renderMembers(both);
+      const group = screen.getByRole("combobox", { name: "会派" });
+      await user.selectOptions(group, "立憲");
+      await user.selectOptions(screen.getByRole("combobox", { name: "院" }), "shugiin");
+      expect(group).toHaveValue("");
+      expect(screen.getByRole("combobox", { name: "選挙区" })).toHaveValue("");
+      expect(screen.getByText("1 名")).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: /衆 太郎/ })).toBeInTheDocument();
+    });
   });
 
   it("取得日時をフッターに出す", () => {
