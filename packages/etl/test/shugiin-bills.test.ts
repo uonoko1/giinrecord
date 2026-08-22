@@ -57,7 +57,7 @@ describe("実HTML: 経過ページ keika/*.htm", () => {
     assert.equal(bill.number, 1);
     assert.equal(bill.title, "政治資金規正法の一部を改正する法律案");
     assert.equal(bill.sourceUrl, url);
-    assert.equal(bill.submitterText, "落合　貴之君外四名");
+    assert.equal(bill.submitterText, "落合 貴之君外四名"); // 原文の全角空白は squash で半角1つ（参院の submitterText と同じ扱い）
     assert.deepEqual(bill.submitterNames, ["落合貴之", "中野洋昌", "中川康洋", "古川元久", "臼木秀剛"]);
     assert.equal(bill.supporterNames?.length, 69);
     assert.equal(bill.supporterNames?.[0], "赤羽一嘉");
@@ -121,7 +121,7 @@ describe("実HTML: 経過ページ keika/*.htm", () => {
     const bill = parseShugiinBill(fixture("shugiin-keika-1DE213E"), keika("1DE213E"));
     assert.equal(bill.kind, "参法");
     assert.equal(bill.id, "221-参法-1");
-    assert.equal(bill.submitterText, "竹詰　仁君外一名");
+    assert.equal(bill.submitterText, "竹詰 仁君外一名");
     assert.equal(bill.submitterNames, undefined);
     assert.equal(bill.shugiinGroupStance, undefined);
     assert.deepEqual(bill.received, { sangiin: "2026-03-19" });

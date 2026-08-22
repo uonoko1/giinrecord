@@ -48,16 +48,61 @@ export interface MemberTerm {
 
 export type BillKind = "閣法" | "衆法" | "参法" | "予算" | "条約" | "承認" | "決議" | "その他";
 
+/**
+ * 議案（衆参の議案情報から）。`data/bills/{session}/{id}.json`（docs/DATA_CONTRACT.md）。
+ * 氏名・会派名・議決はすべて議案ページの原文。`shugiinGroupStance` だけが会派単位の記録（推定）で、
+ * 個人の賛否を表すものではない。RollCall には入れない。
+ */
 export interface Bill {
-  id: string;          // e.g. "221-衆法-1"
-  session: number;
+  id: string;          // `{提出回次}-{種別原文}-{番号}`（例 "221-衆法-1"）。番号の無い議案（決算・承諾など）は番号の代わりに経過ページの id
+  session: number;     // 提出回次
   kind: BillKind;
+  /** 議案情報の種別の原文（例「決算」「ＮＨＫ決算」「承諾」）。kind に対応が無く その他 にしたとき原文を残す。kind と同じなら省略 */
+  kindText?: string;
   number?: number;
   title: string;
-  submitters?: MemberId[];   // 議員立法の提出者（事実）
-  supporters?: MemberId[];   // 議員立法の賛成者（事実）
-  submitterText?: string;    // 名寄せ前の原文（例: "落合 貴之君外四名"）
+  /** この議案ページを公開している院（sourceUrl のドメインと一致） */
+  house: House;
+  submitters?: MemberId[];   // 議員立法の提出者（事実。名簿に名寄せできた人だけ）
+  supporters?: MemberId[];   // 議員立法の賛成者（事実。名簿に名寄せできた人だけ）
+  submitterText?: string;    // 「議案提出者」欄の原文（例: "落合　貴之君外四名", "内閣", "国土交通委員長"）
+  /** 「議案提出者一覧」の氏名（原文から「君」を除いたもの。事実）。欄が無い（閣法・参法）なら省略 */
+  submitterNames?: string[];
+  /** 「議案提出の賛成者」の氏名（同上）。欄はあるが空なら [] */
+  supporterNames?: string[];
+  /** 「議案提出会派」（原文の会派名） */
+  submitterGroups?: string[];
+  /** 議案受理年月日（各院）。ISO */
+  received?: { shugiin?: string; sangiin?: string };
+  /** 一覧ページの「審議状況」の原文（例「成立」「衆議院で閉会中審査」「本院議了」） */
+  status?: string;
+  /** 各院の審議結果の原文（可決・否決・修正・承認・閉会中審査 …）と公布日・法律番号 */
   result?: { sangiin?: string; shugiin?: string; promulgated?: string; lawNumber?: string };
+  /**
+   * 【推定】衆議院審議時の会派態度（経過ページ「衆議院審議時会派態度／賛成会派／反対会派」の原文）。
+   * 衆議院は個人別の投票記録を公開していないため、個人の賛否はここから推定するしかない。事実（参院の個人票）とは型で分ける。
+   */
+  shugiinGroupStance?: ShugiinGroupStance;
+  sourceUrl: string;
+}
+
+/** 会派単位の態度（推定の材料）。会派名は原文。`unanimous` はページが「全会一致」と書いているときだけ true（反対会派が空でも推論しない）。 */
+export interface ShugiinGroupStance {
+  /** 「衆議院審議時会派態度」の原文（多数・少数・全会一致） */
+  stanceText: string;
+  yes: string[];
+  no: string[];
+  unanimous?: boolean;
+}
+
+/** Row of `data/bills/index.json`（議案一覧用）. */
+export interface BillSummary {
+  id: string;
+  session: number;
+  kind: BillKind;
+  house: House;
+  title: string;
+  status?: string;
   sourceUrl: string;
 }
 
