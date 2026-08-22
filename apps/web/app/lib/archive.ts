@@ -8,13 +8,14 @@
  *
  * Limits: plain ZIP (no ZIP64) — fine for < 4 GiB and < 65535 entries. Exceeding either throws.
  */
+import type { Dirent } from "node:fs";
+import { readdir, readFile } from "node:fs/promises";
+import path from "node:path";
 import { crc32, deflateRawSync } from "node:zlib";
 import type { DatasetMeta } from "./data-contract";
-import { REPO_URL } from "./dataset";
+import { ARCHIVE_NAME, ARCHIVE_PATH, REPO_URL } from "./archive-path";
 
-export const ARCHIVE_NAME = "data-archive.zip";
-/** URL path on the site. nginx serves /data/ with a 1h cache (deploy/nginx-seiji-kiroku.conf). */
-export const ARCHIVE_PATH = `/data/${ARCHIVE_NAME}`;
+export { ARCHIVE_NAME, ARCHIVE_PATH };
 export const ARCHIVE_README = "README.txt";
 
 export interface ZipEntry {
@@ -164,6 +165,59 @@ export function readZipDirectory(zip: Buffer): ZipDirectoryEntry[] {
     pos += 46 + nameLen + extraLen + commentLen;
   }
   return out;
+}
+
+/** Every regular file under `dataDir` (recursively) as archive entries; empty when the dir is absent. */
+export async function collectDataFiles(dataDir: string): Promise<ZipEntry[]> {
+  let dirents: Dirent[];
+  try {
+    dirents = await readdir(dataDir, { recursive: true, withFileTypes: true });
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") return [];
+    throw err;
+  }
+  const out: ZipEntry[] = [];
+  for (const d of dirents) {
+    if (!d.isFile()) continue;
+    const abs = path.join(d.parentPath, d.name);
+    out.push({ path: path.relative(dataDir, abs).split(path.sep).join("/"), data: await readFile(abs) });
+  }
+  return out;
+}
+
+/** Assemble the archive: all of data/ (incl. data/LICENSE) plus README.txt. */
+export async function buildDataArchive(dataDir: string): Promise<{ zip: Buffer; dataFileCount: number }> {
+  const files = await collectDataFiles(dataDir);
+  const metaFile = files.find((f) => f.path === "meta.json");
+  const meta = metaFile ? (JSON.parse(metaFile.data.toString("utf8")) as DatasetMeta) : undefined;
+  const zip = buildZip([...files, { path: ARCHIVE_README, data: Buffer.from(archiveReadme(meta), "utf8") }]);
+  return { zip, dataFileCount: files.length };
+}
+
+export interface ArchiveExpectation {
+  /** number of files under data/ at smoke time; the archive must hold exactly these + README.txt */
+  dataFileCount: number;
+  maxBytes: number;
+}
+
+/** Smoke check for the built archive. Pure; returns failure messages (empty = OK). */
+export function checkArchive(zip: Buffer | undefined, expected: ArchiveExpectation): string[] {
+  if (zip === undefined) return [`missing archive: ${ARCHIVE_PATH}`];
+  if (zip.length > expected.maxBytes) return [`archive size: ${zip.length} bytes exceeds limit ${expected.maxBytes}`];
+  let dir: ZipDirectoryEntry[];
+  try {
+    dir = readZipDirectory(zip);
+  } catch (err) {
+    return [`archive unreadable: ${(err as Error).message}`];
+  }
+  const failures: string[] = [];
+  const want = expected.dataFileCount + 1;
+  if (dir.length !== want) failures.push(`archive entries: expected ${want} (${expected.dataFileCount} data files + README), got ${dir.length}`);
+  const paths = new Set(dir.map((e) => e.path));
+  for (const required of ["LICENSE", ARCHIVE_README]) {
+    if (!paths.has(required)) failures.push(`archive missing entry: ${required}`);
+  }
+  return failures;
 }
 
 /** README.txt placed at the archive root: licence, attribution, sources, fetch time. Facts only. */

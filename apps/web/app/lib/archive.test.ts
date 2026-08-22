@@ -106,7 +106,7 @@ describe("checkArchive（smoke の一部）", () => {
   });
 
   it("LICENSE と README が無ければ失敗", () => {
-    const noLicense = buildZip([{ path: "meta.json", data: Buffer.from("{}") }]);
+    const noLicense = buildZip([{ path: "meta.json", data: Buffer.from("{}") }, { path: "x.json", data: Buffer.from("{}") }]);
     expect(checkArchive(noLicense, { dataFileCount: 1, maxBytes: 1024 })).toEqual([
       "archive missing entry: LICENSE",
       "archive missing entry: README.txt",
