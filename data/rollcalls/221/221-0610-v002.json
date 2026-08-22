@@ -1,0 +1,1576 @@
+{
+ "date": "2026-06-10",
+ "groups": [
+  {
+   "group": "自由民主党・無所属の会",
+   "no": 0,
+   "size": 101,
+   "yes": 97
+  },
+  {
+   "group": "立憲民主・無所属",
+   "no": 0,
+   "size": 40,
+   "yes": 40
+  },
+  {
+   "group": "国民民主党・新緑風会",
+   "no": 0,
+   "size": 25,
+   "yes": 25
+  },
+  {
+   "group": "公明党",
+   "no": 0,
+   "size": 21,
+   "yes": 21
+  },
+  {
+   "group": "日本維新の会",
+   "no": 0,
+   "size": 19,
+   "yes": 19
+  },
+  {
+   "group": "参政党",
+   "no": 0,
+   "size": 15,
+   "yes": 15
+  },
+  {
+   "group": "日本共産党",
+   "no": 7,
+   "size": 7,
+   "yes": 0
+  },
+  {
+   "group": "れいわ新選組",
+   "no": 5,
+   "size": 5,
+   "yes": 0
+  },
+  {
+   "group": "日本保守党",
+   "no": 0,
+   "size": 2,
+   "yes": 2
+  },
+  {
+   "group": "沖縄の風",
+   "no": 2,
+   "size": 2,
+   "yes": 0
+  },
+  {
+   "group": "チームみらい・無所属の会",
+   "no": 0,
+   "size": 2,
+   "yes": 2
+  },
+  {
+   "group": "社会民主党",
+   "no": 2,
+   "size": 2,
+   "yes": 0
+  },
+  {
+   "group": "各派に属しない議員",
+   "no": 0,
+   "size": 6,
+   "yes": 5
+  }
+ ],
+ "id": "221-0610-v002",
+ "session": 221,
+ "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0610-v002.htm",
+ "title": "日程第２　予備自衛官等の職務の円滑な遂行を図るための国家公務員及び地方公務員の兼業の特例に関する法律案（内閣提出、衆議院送付）",
+ "totals": {
+  "no": 16,
+  "total": 242,
+  "yes": 226
+ },
+ "votes": [
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_010001",
+   "nameText": "青木 一彦",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_022003",
+   "nameText": "赤松 健",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_998003",
+   "nameText": "浅尾 慶一郎",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_016004",
+   "nameText": "朝日 健太郎",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_014002",
+   "nameText": "阿達 雅志",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_001006",
+   "nameText": "有村 治子",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_022004",
+   "nameText": "生稲 晃子",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_007007",
+   "nameText": "石井 準一",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_010005",
+   "nameText": "石井 浩郎",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_013010",
+   "nameText": "石田 昌宏",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_010008",
+   "nameText": "磯崎 仁彦",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_013006",
+   "nameText": "井上 義行",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_010009",
+   "nameText": "猪口 邦子",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_016010",
+   "nameText": "今井 絵理子",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_019005",
+   "nameText": "岩本 剛人",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_025010",
+   "nameText": "いんどう周作",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_010013",
+   "nameText": "上野 通子",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_022007",
+   "nameText": "臼井 正一",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_013001",
+   "nameText": "江島 潔",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_010018",
+   "nameText": "大家 敏志",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_004012",
+   "nameText": "岡田 直樹",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_016012",
+   "nameText": "小川 克巳",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_022008",
+   "nameText": "越智 俊之",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_016013",
+   "nameText": "小野田 紀美",
+   "value": "投票なし"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_022012",
+   "nameText": "梶原 大介",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_019011",
+   "nameText": "加田 裕之",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_010020",
+   "nameText": "片山 さつき",
+   "value": "投票なし"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_022010",
+   "nameText": "加藤 明良",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_025017",
+   "nameText": "かまやち 敏",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_022015",
+   "nameText": "神谷 政幸",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_013019",
+   "nameText": "北村 経夫",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_013016",
+   "nameText": "木村 義雄",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_025021",
+   "nameText": "見坂 茂範",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_013022",
+   "nameText": "上月 良祐",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_013021",
+   "nameText": "古賀 友一郎",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_022020",
+   "nameText": "古庄 玄知",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_022018",
+   "nameText": "小林 一大",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_025026",
+   "nameText": "小林 孝一郎",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_016017",
+   "nameText": "こやり 隆史",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_013024",
+   "nameText": "酒井 庸行",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_998030",
+   "nameText": "櫻井 充",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_016019",
+   "nameText": "佐藤 啓",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_016021",
+   "nameText": "自見 はなこ",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_019018",
+   "nameText": "清水 真人",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_016022",
+   "nameText": "進藤 金日子",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_004033",
+   "nameText": "末松 信介",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_025034",
+   "nameText": "鈴木 大地",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_019023",
+   "nameText": "鈴木 宗男",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_013030",
+   "nameText": "高橋 克法",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_019026",
+   "nameText": "高橋 はるみ",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_013032",
+   "nameText": "滝波 宏文",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_998036",
+   "nameText": "鶴保 庸介",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_025037",
+   "nameText": "出川 桃子",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_019030",
+   "nameText": "寺田 静",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_022028",
+   "nameText": "友納 理緒",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_022030",
+   "nameText": "永井 学",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_986024",
+   "nameText": "中曽根 弘文",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_010038",
+   "nameText": "中西 祐介",
+   "value": "投票なし"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_007044",
+   "nameText": "西田 昌司",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_025043",
+   "nameText": "西田 英範",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_001037",
+   "nameText": "野上 浩太郎",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_004046",
+   "nameText": "野村 哲郎",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_995054",
+   "nameText": "橋本 聖子",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_010043",
+   "nameText": "長谷川 岳",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_022031",
+   "nameText": "長谷川 英晴",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_013044",
+   "nameText": "馬場 成志",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_025049",
+   "nameText": "東野 秀樹",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_010045",
+   "nameText": "福岡 資麿",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_025053",
+   "nameText": "福山 守",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_022033",
+   "nameText": "藤井 一博",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_010046",
+   "nameText": "藤川 政人",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_016034",
+   "nameText": "藤木 眞也",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_022034",
+   "nameText": "船橋 利実",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_007053",
+   "nameText": "古川 俊治",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_022035",
+   "nameText": "星 北斗",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_013048",
+   "nameText": "堀井 巌",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_019034",
+   "nameText": "本田 顕子",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_013049",
+   "nameText": "舞立 昇治",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_007054",
+   "nameText": "牧野 たかお",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_016035",
+   "nameText": "松川 るい",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_004056",
+   "nameText": "松下 新平",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_004057",
+   "nameText": "松村 祥史",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_001046",
+   "nameText": "松山 政司",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_010048",
+   "nameText": "三原じゅん子",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_010050",
+   "nameText": "宮沢 洋一",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_025057",
+   "nameText": "宮本 和宏",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_013053",
+   "nameText": "宮本 周司",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_007061",
+   "nameText": "森 まさこ",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_992051",
+   "nameText": "山崎 正昭",
+   "value": "投票なし"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_013060",
+   "nameText": "山下 雄平",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_012005",
+   "nameText": "山田 太郎",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_016043",
+   "nameText": "山田 宏",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_004013",
+   "nameText": "山谷 えり子",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_022040",
+   "nameText": "山本 啓介",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_022041",
+   "nameText": "山本 佐知子",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_004062",
+   "nameText": "山本 順三",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_022042",
+   "nameText": "吉井 章",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_025062",
+   "nameText": "若井 敦子",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_022043",
+   "nameText": "若林 洋平",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_025063",
+   "nameText": "脇 雅昭",
+   "value": "賛成"
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "m_010055",
+   "nameText": "渡辺 猛之",
+   "value": "賛成"
+  },
+  {
+   "group": "立憲民主・無所属",
+   "memberId": "m_007006",
+   "nameText": "青木 愛",
+   "value": "賛成"
+  },
+  {
+   "group": "立憲民主・無所属",
+   "memberId": "m_019003",
+   "nameText": "石垣 のりこ",
+   "value": "賛成"
+  },
+  {
+   "group": "立憲民主・無所属",
+   "memberId": "m_010007",
+   "nameText": "石橋 通宏",
+   "value": "賛成"
+  },
+  {
+   "group": "立憲民主・無所属",
+   "memberId": "m_025007",
+   "nameText": "泉 房穂",
+   "value": "賛成"
+  },
+  {
+   "group": "立憲民主・無所属",
+   "memberId": "m_019006",
+   "nameText": "打越 さく良",
+   "value": "賛成"
+  },
+  {
+   "group": "立憲民主・無所属",
+   "memberId": "m_019008",
+   "nameText": "小沢 雅仁",
+   "value": "賛成"
+  },
+  {
+   "group": "立憲民主・無所属",
+   "memberId": "m_022009",
+   "nameText": "鬼木 誠",
+   "value": "賛成"
+  },
+  {
+   "group": "立憲民主・無所属",
+   "memberId": "m_019013",
+   "nameText": "勝部 賢志",
+   "value": "賛成"
+  },
+  {
+   "group": "立憲民主・無所属",
+   "memberId": "m_019016",
+   "nameText": "岸 真紀子",
+   "value": "賛成"
+  },
+  {
+   "group": "立憲民主・無所属",
+   "memberId": "m_016015",
+   "nameText": "木戸口 英司",
+   "value": "賛成"
+  },
+  {
+   "group": "立憲民主・無所属",
+   "memberId": "m_019017",
+   "nameText": "熊谷 裕人",
+   "value": "賛成"
+  },
+  {
+   "group": "立憲民主・無所属",
+   "memberId": "m_025022",
+   "nameText": "郡山 りょう",
+   "value": "賛成"
+  },
+  {
+   "group": "立憲民主・無所属",
+   "memberId": "m_022019",
+   "nameText": "古賀 千景",
+   "value": "賛成"
+  },
+  {
+   "group": "立憲民主・無所属",
+   "memberId": "m_016018",
+   "nameText": "古賀 之士",
+   "value": "賛成"
+  },
+  {
+   "group": "立憲民主・無所属",
+   "memberId": "m_025023",
+   "nameText": "小島 とも子",
+   "value": "賛成"
+  },
+  {
+   "group": "立憲民主・無所属",
+   "memberId": "m_010024",
+   "nameText": "小西 洋之",
+   "value": "賛成"
+  },
+  {
+   "group": "立憲民主・無所属",
+   "memberId": "m_010027",
+   "nameText": "斎藤 嘉隆",
+   "value": "賛成"
+  },
+  {
+   "group": "立憲民主・無所属",
+   "memberId": "m_019020",
+   "nameText": "塩村 あやか",
+   "value": "賛成"
+  },
+  {
+   "group": "立憲民主・無所属",
+   "memberId": "m_022021",
+   "nameText": "柴 愼一",
+   "value": "賛成"
+  },
+  {
+   "group": "立憲民主・無所属",
+   "memberId": "m_016023",
+   "nameText": "杉尾 秀哉",
+   "value": "賛成"
+  },
+  {
+   "group": "立憲民主・無所属",
+   "memberId": "m_022023",
+   "nameText": "高木 真理",
+   "value": "賛成"
+  },
+  {
+   "group": "立憲民主・無所属",
+   "memberId": "m_019024",
+   "nameText": "田島 麻衣子",
+   "value": "賛成"
+  },
+  {
+   "group": "立憲民主・無所属",
+   "memberId": "m_016025",
+   "nameText": "田名部 匡代",
+   "value": "賛成"
+  },
+  {
+   "group": "立憲民主・無所属",
+   "memberId": "m_022025",
+   "nameText": "辻元 清美",
+   "value": "賛成"
+  },
+  {
+   "group": "立憲民主・無所属",
+   "memberId": "m_010036",
+   "nameText": "徳永 エリ",
+   "value": "賛成"
+  },
+  {
+   "group": "立憲民主・無所属",
+   "memberId": "m_007041",
+   "nameText": "長浜 博行",
+   "value": "賛成"
+  },
+  {
+   "group": "立憲民主・無所属",
+   "memberId": "m_021002",
+   "nameText": "羽田 次郎",
+   "value": "賛成"
+  },
+  {
+   "group": "立憲民主・無所属",
+   "memberId": "m_004050",
+   "nameText": "広田 一",
+   "value": "賛成"
+  },
+  {
+   "group": "立憲民主・無所属",
+   "memberId": "m_025052",
+   "nameText": "福士 珠美",
+   "value": "賛成"
+  },
+  {
+   "group": "立憲民主・無所属",
+   "memberId": "m_007055",
+   "nameText": "牧山 ひろえ",
+   "value": "賛成"
+  },
+  {
+   "group": "立憲民主・無所属",
+   "memberId": "m_022037",
+   "nameText": "三上 えり",
+   "value": "賛成"
+  },
+  {
+   "group": "立憲民主・無所属",
+   "memberId": "m_004058",
+   "nameText": "水岡 俊一",
+   "value": "賛成"
+  },
+  {
+   "group": "立憲民主・無所属",
+   "memberId": "m_022039",
+   "nameText": "村田 享子",
+   "value": "賛成"
+  },
+  {
+   "group": "立憲民主・無所属",
+   "memberId": "m_001047",
+   "nameText": "森 ゆうこ",
+   "value": "賛成"
+  },
+  {
+   "group": "立憲民主・無所属",
+   "memberId": "m_013054",
+   "nameText": "森本 真治",
+   "value": "賛成"
+  },
+  {
+   "group": "立憲民主・無所属",
+   "memberId": "m_025059",
+   "nameText": "山内 佳菜子",
+   "value": "賛成"
+  },
+  {
+   "group": "立憲民主・無所属",
+   "memberId": "m_019040",
+   "nameText": "横沢 高徳",
+   "value": "賛成"
+  },
+  {
+   "group": "立憲民主・無所属",
+   "memberId": "m_007071",
+   "nameText": "吉川 沙織",
+   "value": "賛成"
+  },
+  {
+   "group": "立憲民主・無所属",
+   "memberId": "m_010053",
+   "nameText": "吉田 忠智",
+   "value": "賛成"
+  },
+  {
+   "group": "立憲民主・無所属",
+   "memberId": "m_004060",
+   "nameText": "蓮舫",
+   "value": "賛成"
+  },
+  {
+   "group": "国民民主党・新緑風会",
+   "memberId": "m_025002",
+   "nameText": "足立 康史",
+   "value": "賛成"
+  },
+  {
+   "group": "国民民主党・新緑風会",
+   "memberId": "m_013011",
+   "nameText": "礒崎 哲史",
+   "value": "賛成"
+  },
+  {
+   "group": "国民民主党・新緑風会",
+   "memberId": "m_016006",
+   "nameText": "伊藤 孝恵",
+   "value": "賛成"
+  },
+  {
+   "group": "国民民主党・新緑風会",
+   "memberId": "m_025009",
+   "nameText": "伊藤 辰夫",
+   "value": "賛成"
+  },
+  {
+   "group": "国民民主党・新緑風会",
+   "memberId": "m_019042",
+   "nameText": "上田 清司",
+   "value": "賛成"
+  },
+  {
+   "group": "国民民主党・新緑風会",
+   "memberId": "m_025035",
+   "nameText": "牛田 茉友",
+   "value": "賛成"
+  },
+  {
+   "group": "国民民主党・新緑風会",
+   "memberId": "m_025011",
+   "nameText": "江原 くみ子",
+   "value": "賛成"
+  },
+  {
+   "group": "国民民主党・新緑風会",
+   "memberId": "m_025015",
+   "nameText": "奥村 祥大",
+   "value": "賛成"
+  },
+  {
+   "group": "国民民主党・新緑風会",
+   "memberId": "m_025016",
+   "nameText": "かごしま彰宏",
+   "value": "賛成"
+  },
+  {
+   "group": "国民民主党・新緑風会",
+   "memberId": "m_007022",
+   "nameText": "川合 孝典",
+   "value": "賛成"
+  },
+  {
+   "group": "国民民主党・新緑風会",
+   "memberId": "m_025025",
+   "nameText": "後藤 斎",
+   "value": "賛成"
+  },
+  {
+   "group": "国民民主党・新緑風会",
+   "memberId": "m_025041",
+   "nameText": "小林 さやか",
+   "value": "賛成"
+  },
+  {
+   "group": "国民民主党・新緑風会",
+   "memberId": "m_001027",
+   "nameText": "榛葉 賀津也",
+   "value": "賛成"
+  },
+  {
+   "group": "国民民主党・新緑風会",
+   "memberId": "m_022024",
+   "nameText": "竹詰 仁",
+   "value": "賛成"
+  },
+  {
+   "group": "国民民主党・新緑風会",
+   "memberId": "m_019025",
+   "nameText": "田村 まみ",
+   "value": "賛成"
+  },
+  {
+   "group": "国民民主党・新緑風会",
+   "memberId": "m_022027",
+   "nameText": "堂込 麻紀子",
+   "value": "賛成"
+  },
+  {
+   "group": "国民民主党・新緑風会",
+   "memberId": "m_025044",
+   "nameText": "庭田 幸恵",
+   "value": "賛成"
+  },
+  {
+   "group": "国民民主党・新緑風会",
+   "memberId": "m_019032",
+   "nameText": "芳賀 道也",
+   "value": "賛成"
+  },
+  {
+   "group": "国民民主党・新緑風会",
+   "memberId": "m_016032",
+   "nameText": "浜口 誠",
+   "value": "賛成"
+  },
+  {
+   "group": "国民民主党・新緑風会",
+   "memberId": "m_013045",
+   "nameText": "浜野 喜史",
+   "value": "賛成"
+  },
+  {
+   "group": "国民民主党・新緑風会",
+   "memberId": "m_025048",
+   "nameText": "原田 秀一",
+   "value": "賛成"
+  },
+  {
+   "group": "国民民主党・新緑風会",
+   "memberId": "m_025051",
+   "nameText": "平戸 航太",
+   "value": "賛成"
+  },
+  {
+   "group": "国民民主党・新緑風会",
+   "memberId": "m_007052",
+   "nameText": "舟山 康江",
+   "value": "賛成"
+  },
+  {
+   "group": "国民民主党・新緑風会",
+   "memberId": "m_025055",
+   "nameText": "水野 孝一",
+   "value": "賛成"
+  },
+  {
+   "group": "国民民主党・新緑風会",
+   "memberId": "m_025060",
+   "nameText": "山田 吉彦",
+   "value": "賛成"
+  },
+  {
+   "group": "公明党",
+   "memberId": "m_010003",
+   "nameText": "秋野 公造",
+   "value": "賛成"
+  },
+  {
+   "group": "公明党",
+   "memberId": "m_010006",
+   "nameText": "石川 博崇",
+   "value": "賛成"
+  },
+  {
+   "group": "公明党",
+   "memberId": "m_016005",
+   "nameText": "伊藤 孝江",
+   "value": "賛成"
+  },
+  {
+   "group": "公明党",
+   "memberId": "m_022006",
+   "nameText": "上田 勇",
+   "value": "賛成"
+  },
+  {
+   "group": "公明党",
+   "memberId": "m_025018",
+   "nameText": "川村 雄大",
+   "value": "賛成"
+  },
+  {
+   "group": "公明党",
+   "memberId": "m_022017",
+   "nameText": "窪田 哲也",
+   "value": "賛成"
+  },
+  {
+   "group": "公明党",
+   "memberId": "m_025029",
+   "nameText": "佐々木 雅文",
+   "value": "賛成"
+  },
+  {
+   "group": "公明党",
+   "memberId": "m_016020",
+   "nameText": "里見 隆治",
+   "value": "賛成"
+  },
+  {
+   "group": "公明党",
+   "memberId": "m_019021",
+   "nameText": "下野 六太",
+   "value": "賛成"
+  },
+  {
+   "group": "公明党",
+   "memberId": "m_013028",
+   "nameText": "杉 久武",
+   "value": "賛成"
+  },
+  {
+   "group": "公明党",
+   "memberId": "m_019027",
+   "nameText": "高橋 光男",
+   "value": "賛成"
+  },
+  {
+   "group": "公明党",
+   "memberId": "m_017001",
+   "nameText": "竹内 真二",
+   "value": "賛成"
+  },
+  {
+   "group": "公明党",
+   "memberId": "m_010033",
+   "nameText": "竹谷 とし子",
+   "value": "賛成"
+  },
+  {
+   "group": "公明党",
+   "memberId": "m_004036",
+   "nameText": "谷合 正明",
+   "value": "賛成"
+  },
+  {
+   "group": "公明党",
+   "memberId": "m_025036",
+   "nameText": "司 隆史",
+   "value": "賛成"
+  },
+  {
+   "group": "公明党",
+   "memberId": "m_004043",
+   "nameText": "西田 実仁",
+   "value": "賛成"
+  },
+  {
+   "group": "公明党",
+   "memberId": "m_025047",
+   "nameText": "原田 大二郎",
+   "value": "賛成"
+  },
+  {
+   "group": "公明党",
+   "memberId": "m_013046",
+   "nameText": "平木 大作",
+   "value": "賛成"
+  },
+  {
+   "group": "公明党",
+   "memberId": "m_016036",
+   "nameText": "三浦 信祐",
+   "value": "賛成"
+  },
+  {
+   "group": "公明党",
+   "memberId": "m_016037",
+   "nameText": "宮崎 勝",
+   "value": "賛成"
+  },
+  {
+   "group": "公明党",
+   "memberId": "m_010052",
+   "nameText": "横山 信一",
+   "value": "賛成"
+  },
+  {
+   "group": "日本維新の会",
+   "memberId": "m_022002",
+   "nameText": "青島 健太",
+   "value": "賛成"
+  },
+  {
+   "group": "日本維新の会",
+   "memberId": "m_016003",
+   "nameText": "浅田 均",
+   "value": "賛成"
+  },
+  {
+   "group": "日本維新の会",
+   "memberId": "m_016009",
+   "nameText": "石井 苗子",
+   "value": "賛成"
+  },
+  {
+   "group": "日本維新の会",
+   "memberId": "m_025045",
+   "nameText": "石井 めぐみ",
+   "value": "賛成"
+  },
+  {
+   "group": "日本維新の会",
+   "memberId": "m_022005",
+   "nameText": "猪瀬 直樹",
+   "value": "賛成"
+  },
+  {
+   "group": "日本維新の会",
+   "memberId": "m_025064",
+   "nameText": "上野 ほたる",
+   "value": "賛成"
+  },
+  {
+   "group": "日本維新の会",
+   "memberId": "m_025014",
+   "nameText": "岡崎 太",
+   "value": "賛成"
+  },
+  {
+   "group": "日本維新の会",
+   "memberId": "m_019012",
+   "nameText": "嘉田 由紀子",
+   "value": "賛成"
+  },
+  {
+   "group": "日本維新の会",
+   "memberId": "m_016014",
+   "nameText": "片山 大介",
+   "value": "賛成"
+  },
+  {
+   "group": "日本維新の会",
+   "memberId": "m_022013",
+   "nameText": "金子 道仁",
+   "value": "賛成"
+  },
+  {
+   "group": "日本維新の会",
+   "memberId": "m_022016",
+   "nameText": "串田 誠一",
+   "value": "賛成"
+  },
+  {
+   "group": "日本維新の会",
+   "memberId": "m_025040",
+   "nameText": "佐々木 りえ",
+   "value": "賛成"
+  },
+  {
+   "group": "日本維新の会",
+   "memberId": "m_010029",
+   "nameText": "柴田 巧",
+   "value": "賛成"
+  },
+  {
+   "group": "日本維新の会",
+   "memberId": "m_025019",
+   "nameText": "石 平",
+   "value": "賛成"
+  },
+  {
+   "group": "日本維新の会",
+   "memberId": "m_016026",
+   "nameText": "高木 かおり",
+   "value": "賛成"
+  },
+  {
+   "group": "日本維新の会",
+   "memberId": "m_022029",
+   "nameText": "中条 きよし",
+   "value": "賛成"
+  },
+  {
+   "group": "日本維新の会",
+   "memberId": "m_025042",
+   "nameText": "新実 彰平",
+   "value": "賛成"
+  },
+  {
+   "group": "日本維新の会",
+   "memberId": "m_013050",
+   "nameText": "松沢 成文",
+   "value": "賛成"
+  },
+  {
+   "group": "日本維新の会",
+   "memberId": "m_022036",
+   "nameText": "松野 明美",
+   "value": "賛成"
+  },
+  {
+   "group": "参政党",
+   "memberId": "m_025003",
+   "nameText": "安達 悠司",
+   "value": "賛成"
+  },
+  {
+   "group": "参政党",
+   "memberId": "m_025004",
+   "nameText": "安藤 裕",
+   "value": "賛成"
+  },
+  {
+   "group": "参政党",
+   "memberId": "m_025038",
+   "nameText": "岩本 麻奈",
+   "value": "賛成"
+  },
+  {
+   "group": "参政党",
+   "memberId": "m_019007",
+   "nameText": "梅村 みずほ",
+   "value": "賛成"
+  },
+  {
+   "group": "参政党",
+   "memberId": "m_025013",
+   "nameText": "大津 力",
+   "value": "賛成"
+  },
+  {
+   "group": "参政党",
+   "memberId": "m_022014",
+   "nameText": "神谷 宗幣",
+   "value": "賛成"
+  },
+  {
+   "group": "参政党",
+   "memberId": "m_025024",
+   "nameText": "後藤 翔太",
+   "value": "賛成"
+  },
+  {
+   "group": "参政党",
+   "memberId": "m_025028",
+   "nameText": "櫻井 祥子",
+   "value": "賛成"
+  },
+  {
+   "group": "参政党",
+   "memberId": "m_025030",
+   "nameText": "塩入 清香",
+   "value": "賛成"
+  },
+  {
+   "group": "参政党",
+   "memberId": "m_025033",
+   "nameText": "杉本 純子",
+   "value": "賛成"
+  },
+  {
+   "group": "参政党",
+   "memberId": "m_025039",
+   "nameText": "中田 優子",
+   "value": "賛成"
+  },
+  {
+   "group": "参政党",
+   "memberId": "m_025046",
+   "nameText": "初鹿野 裕樹",
+   "value": "賛成"
+  },
+  {
+   "group": "参政党",
+   "memberId": "m_025054",
+   "nameText": "松田 学",
+   "value": "賛成"
+  },
+  {
+   "group": "参政党",
+   "memberId": "m_025056",
+   "nameText": "宮出 千慧",
+   "value": "賛成"
+  },
+  {
+   "group": "参政党",
+   "memberId": "m_025061",
+   "nameText": "山中 泉",
+   "value": "賛成"
+  },
+  {
+   "group": "日本共産党",
+   "memberId": "m_016011",
+   "nameText": "岩渕 友",
+   "value": "反対"
+  },
+  {
+   "group": "日本共産党",
+   "memberId": "m_013017",
+   "nameText": "吉良 よし子",
+   "value": "反対"
+  },
+  {
+   "group": "日本共産党",
+   "memberId": "m_998022",
+   "nameText": "小池 晃",
+   "value": "反対"
+  },
+  {
+   "group": "日本共産党",
+   "memberId": "m_025031",
+   "nameText": "白川 容子",
+   "value": "反対"
+  },
+  {
+   "group": "日本共産党",
+   "memberId": "m_001001",
+   "nameText": "大門 実紀史",
+   "value": "反対"
+  },
+  {
+   "group": "日本共産党",
+   "memberId": "m_004045",
+   "nameText": "仁比 聡平",
+   "value": "反対"
+  },
+  {
+   "group": "日本共産党",
+   "memberId": "m_016042",
+   "nameText": "山添 拓",
+   "value": "反対"
+  },
+  {
+   "group": "れいわ新選組",
+   "memberId": "m_025008",
+   "nameText": "伊勢崎 賢治",
+   "value": "反対"
+  },
+  {
+   "group": "れいわ新選組",
+   "memberId": "m_007017",
+   "nameText": "大島 九州男",
+   "value": "反対"
+  },
+  {
+   "group": "れいわ新選組",
+   "memberId": "m_025012",
+   "nameText": "奥田 ふみよ",
+   "value": "反対"
+  },
+  {
+   "group": "れいわ新選組",
+   "memberId": "m_019015",
+   "nameText": "木村 英子",
+   "value": "反対"
+  },
+  {
+   "group": "れいわ新選組",
+   "memberId": "m_022026",
+   "nameText": "天畠 大輔",
+   "value": "反対"
+  },
+  {
+   "group": "日本保守党",
+   "memberId": "m_025020",
+   "nameText": "北村 晴男",
+   "value": "賛成"
+  },
+  {
+   "group": "日本保守党",
+   "memberId": "m_025050",
+   "nameText": "百田 尚樹",
+   "value": "賛成"
+  },
+  {
+   "group": "沖縄の風",
+   "memberId": "m_016007",
+   "nameText": "伊波 洋一",
+   "value": "反対"
+  },
+  {
+   "group": "沖縄の風",
+   "memberId": "m_025027",
+   "nameText": "高良 沙哉",
+   "value": "反対"
+  },
+  {
+   "group": "チームみらい・無所属の会",
+   "memberId": "m_025005",
+   "nameText": "安野 貴博",
+   "value": "賛成"
+  },
+  {
+   "group": "チームみらい・無所属の会",
+   "memberId": "m_025032",
+   "nameText": "尾辻 朋実",
+   "value": "賛成"
+  },
+  {
+   "group": "社会民主党",
+   "memberId": "m_998049",
+   "nameText": "福島 みずほ",
+   "value": "反対"
+  },
+  {
+   "group": "社会民主党",
+   "memberId": "m_025006",
+   "nameText": "ラサール石井",
+   "value": "反対"
+  },
+  {
+   "group": "各派に属しない議員",
+   "memberId": "m_023002",
+   "nameText": "齊藤 健一郎",
+   "value": "賛成"
+  },
+  {
+   "group": "各派に属しない議員",
+   "memberId": "m_003005",
+   "nameText": "関口 昌一",
+   "value": "投票なし"
+  },
+  {
+   "group": "各派に属しない議員",
+   "memberId": "m_019031",
+   "nameText": "ながえ 孝子",
+   "value": "賛成"
+  },
+  {
+   "group": "各派に属しない議員",
+   "memberId": "m_016033",
+   "nameText": "平山 佐知子",
+   "value": "賛成"
+  },
+  {
+   "group": "各派に属しない議員",
+   "memberId": "m_998050",
+   "nameText": "福山 哲郎",
+   "value": "賛成"
+  },
+  {
+   "group": "各派に属しない議員",
+   "memberId": "m_025058",
+   "nameText": "望月 良男",
+   "value": "賛成"
+  }
+ ]
+}
