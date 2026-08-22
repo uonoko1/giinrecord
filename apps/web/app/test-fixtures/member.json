@@ -61,6 +61,7 @@
       "role": "提出者",
       "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/217/meisai/m217080217003.htm",
       "status": "審査未了",
+      "submitterText": "藤川政人君 外3名",
       "title": "国会議員の歳費、旅費及び手当等に関する法律の一部を改正する法律案"
     },
     {
@@ -72,6 +73,14 @@
       "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/vote/217/217-0314-v002.htm",
       "title": "所得税法等の一部を改正する法律案",
       "value": "反対"
+    },
+    {
+      "billId": "217-参法-9",
+      "date": "2025-02-20",
+      "kind": "bill",
+      "role": "賛成者",
+      "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/217/meisai/m217100217009.htm",
+      "title": "国民の祝日に関する法律の一部を改正する法律案"
     }
   ]
 }

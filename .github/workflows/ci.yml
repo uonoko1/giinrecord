@@ -21,7 +21,8 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
-      - name: Smoke — built pages exist and internal links resolve
+        env: { SITE_ORIGIN: "${{ vars.SITE_ORIGIN }}" } # unset → relative URLs (#57); set the repo variable once the domain is decided (#15)
+      - name: Smoke — built pages exist, internal links resolve, sitemap.xml lists every page
         run: pnpm --filter web smoke
       - name: Guard — no server runtime code reaches the browser
         run: |

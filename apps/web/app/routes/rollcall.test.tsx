@@ -89,12 +89,20 @@ describe("RollCallPage フッター", () => {
 });
 
 describe("meta()", () => {
+  const args = { data: { rollCall, meta }, location: { pathname: "/rollcalls/221/r_1" } } as unknown as Parameters<typeof routeMeta>[0];
   it("title は案件名", () => {
-    const tags = routeMeta({ data: { rollCall, meta } } as Parameters<typeof routeMeta>[0]);
+    const tags = routeMeta(args);
     expect(tags).toContainEqual({ title: `${rollCall.title} ・ 政治記録` });
     expect(tags).toContainEqual({ name: "description", content: expect.stringContaining("2026.07.24") });
   });
+  it("canonical と OGP（article）を持つ", () => {
+    const tags = routeMeta(args);
+    expect(tags).toContainEqual({ tagName: "link", rel: "canonical", href: "/rollcalls/221/r_1" });
+    expect(tags).toContainEqual({ property: "og:type", content: "article" });
+  });
   it("data が無ければサイト名だけ", () => {
-    expect(routeMeta({ data: undefined } as Parameters<typeof routeMeta>[0])).toEqual([{ title: "政治記録" }]);
+    expect(routeMeta({ data: undefined, location: { pathname: "/x" } } as unknown as Parameters<typeof routeMeta>[0])).toEqual([
+      { title: "政治記録" },
+    ]);
   });
 });
