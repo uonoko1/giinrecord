@@ -1,1 +1,0 @@
-import{w as n,j as t}from"./jsx-runtime-Cf_Cl9cf.js";function r(){return[{title:"このデータについて ・ 政治記録"}]}const s=n(function(){return t.jsxs("main",{style:{padding:"24px 20px"},children:[t.jsx("h1",{style:{fontFamily:"var(--font-head)"},children:"このデータについて"}),t.jsx("p",{children:"このサイトは国会の公式記録を整形して並べるだけです。評価・採点・推薦はしません。すべての行に出典があります。"})]})});export{s as default,r as meta};
