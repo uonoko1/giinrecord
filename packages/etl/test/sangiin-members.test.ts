@@ -36,13 +36,13 @@ test("Member.id は参院プロフィールIDから決定的に導出し、氏�
   assert.throws(() => memberIdFromProfileId("12"));
 });
 
-test("表が無い・空の HTML では空配列を返す", () => {
-  assert.deepEqual(parseMemberList("<html><body></body></html>", SRC, 221), []);
+test("表が無い・空の HTML では例外（0名を黙って通さず index.json を空で上書きしない）", () => {
+  assert.throws(() => parseMemberList("<html><body></body></html>", SRC, 221), /no members parsed/);
 });
 
-test("プロフィールリンクの無い行はスキップされる", () => {
+test("プロフィールリンクの無い行はスキップされ、議員が1人も残らなければ例外", () => {
   const h = `<table class="list"><tr><th>議員氏名</th></tr><tr><td>欠員</td><td></td><td></td><td></td><td></td><td></td></tr></table>`;
-  assert.deepEqual(parseMemberList(h, SRC, 221), []);
+  assert.throws(() => parseMemberList(h, SRC, 221), /no members parsed/);
 });
 
 test("同じ永続IDに解決する行が2つあれば例外（衝突を黙って通さない）", () => {

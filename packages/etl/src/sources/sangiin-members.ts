@@ -26,6 +26,7 @@ export function memberIdFromProfileId(profileId: string): string {
  * 議員一覧（50音順）を Member[] に変換する。
  * 行構成: 索引行（あ行…）・見出し行・各議員行。プロフィールリンクを持つ行だけを議員とみなす。
  * 第221回: 250 tr のうち 247 名（定数 248、欠員 1）。
+ * 議員が 1 人も取れなければ例外（assertUniqueIds と同じ「黙って通さない」方針）。
  */
 export function parseMemberList(html: string, sourceUrl: string, session: number): Member[] {
   const out: Member[] = [];
@@ -46,6 +47,9 @@ export function parseMemberList(html: string, sourceUrl: string, session: number
       sourceUrl,
     });
   }
+  // 0名は「表が無い」「リンク形式が変わった」のどちらかで、正常な結果ではありえない。
+  // 黙って [] を返すと cli.ts がコミット済みの index.json を空で上書きしてしまうので例外にする。
+  if (out.length === 0) throw new Error(`no members parsed from ${sourceUrl} (session ${session}): page layout may have changed`);
   assertUniqueIds(out);
   return out;
 }
