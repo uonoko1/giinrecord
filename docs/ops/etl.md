@@ -17,6 +17,7 @@
 - 06:30 JST の `deploy.yml` schedule は安全網。通常は 6 で起動された Deploy が先に走る（`concurrency: deploy` で重複は直列化）。
 
 ## 確認の仕方（PO チェックリスト）
+`scripts/po/etl-verify.sh` が 1〜3 を 3 行にまとめて出す（`docs/ops/board.md`）。手で見るなら：
 1. Actions → ETL (daily) → 最新 run の **Summary** を見る。「データ PR」が `#N` か「なし」か、unmatched 件数が前日から急増していないか。
 2. 「deploy.yml を起動した」が Summary にあれば Actions → Deploy に run があるはず。
 3. 無ければ `gh workflow run deploy.yml --ref main` を手で叩く。

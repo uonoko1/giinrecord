@@ -2,6 +2,7 @@ import { fileURLToPath } from "node:url";
 import type { Bill as SharedBill, RollCall, Speech } from "@seiji-kiroku/shared";
 import { listRollCalls, parseRollCall } from "./sources/sangiin-votes.ts";
 import { fetchMembers, memberListUrl, unmatchedGroups } from "./sources/sangiin-members.ts";
+import { fetchShugiinMembers, memberListUrl as shugiinMemberListUrl, unmatchedShugiinGroups } from "./sources/shugiin-members.ts";
 import { fetchText } from "./fetch.ts";
 import { fetchSpeeches, speechPageUrl } from "./sources/kokkai-speeches.ts";
 import { matchVotes, type GroupMismatch, type Unmatched } from "./match-votes.ts";
@@ -46,6 +47,15 @@ const groupsUnknown = unmatchedGroups(members);
 if (groupsUnknown.length) {
   console.warn(`unknown group abbreviations: ${groupsUnknown.length} (see data/unmatched-groups.json; add to sangiin-groups.ts)`);
   for (const g of groupsUnknown) console.warn(`  ${g.group}: ${g.memberIds.join(", ")}`);
+}
+// 衆院: 回次ごとの名簿は無く「現在」の名簿だけ（Issue #71）。個人別投票が公開されていないので名寄せには使わず、
+// 採決・発言・議案の突合は参院名簿（members）だけで行い、公開する index には両院を並べる（house で区別）。
+const shugiin = await fetchShugiinMembers(memberSession);
+console.log(`shugiin: ${shugiin.members.length} members in roster (as of ${shugiin.asOf ?? "unknown"})`);
+const shugiinGroupsUnknown = unmatchedShugiinGroups(shugiin.members);
+if (shugiinGroupsUnknown.length) {
+  console.warn(`unknown shugiin group abbreviations: ${shugiinGroupsUnknown.length} (see data/unmatched-groups.json; add to shugiin-groups.ts)`);
+  for (const g of shugiinGroupsUnknown) console.warn(`  ${g.group}: ${g.memberIds.join(", ")}`);
 }
 
 const rollCalls: RollCall[] = [];
@@ -105,18 +115,19 @@ if (unmatched.length) console.warn(`unmatched: ${unmatched.length} (see data/unm
 if (groupMismatch.length) console.warn(`group mismatch (matched by name only): ${groupMismatch.length} (see data/group-mismatch.json)`);
 
 await writeDataset(DATA, {
-  ...buildDataset(members, rollCalls, new Map([...bills.results].map(([id, r]) => [id, r.decision])), speeches, proposed.entries),
+  ...buildDataset([...members, ...shugiin.members], rollCalls, new Map([...bills.results].map(([id, r]) => [id, r.decision])), speeches, proposed.entries),
   rollCallDetails: rollCalls,
   bills: shugiinMatched.bills,
   unmatched,
   unmatchedBills: bills.unmatched,
-  unmatchedGroups: groupsUnknown,
+  unmatchedGroups: [...groupsUnknown, ...shugiinGroupsUnknown],
   groupMismatch,
   meta: {
     fetchedAt,
     sessions: targets,
     sources: [
       ...rosterSessions.map((s) => ({ name: `参議院 議員一覧（第${s}回）`, url: memberListUrl(s), fetchedAt })),
+      { name: `衆議院 議員一覧（${shugiin.asOf ?? "取得日"}現在）`, url: shugiinMemberListUrl(1), fetchedAt },
       { name: "参議院 本会議投票結果", url: "https://www.sangiin.go.jp/japanese/touhyoulist/", fetchedAt },
       { name: "国会会議録検索システム 検索用API（参議院 本会議）", url: speechPageUrl(memberSession), fetchedAt },
       ...targets.map((s) => ({ name: `参議院 議案情報（第${s}回）`, url: billListUrl(s), fetchedAt })),
