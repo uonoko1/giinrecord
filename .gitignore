@@ -1,6 +1,7 @@
 node_modules/
 .next/
 out/
+build/
 dist/
 *.log
 .env
@@ -9,3 +10,4 @@ dist/
 .DS_Store
 # ETL working files (raw HTML cache). Normalized data under data/ IS committed.
 packages/etl/.cache/
+.claude/
