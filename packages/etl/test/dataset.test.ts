@@ -1,6 +1,6 @@
 import { test, describe, beforeEach } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, readFileSync, writeFileSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { RollCall } from "@seiji-kiroku/shared";
@@ -124,6 +124,30 @@ describe("writeDataset / validateDataset: docs/DATA_CONTRACT.md の不変条件"
   test("rollcalls/index.json の行に対応する採決ファイルが無ければ違反", async () => {
     rmSync(join(dir, "rollcalls/221/221-0724-v001.json"));
     assert.match((await validateDataset(dir)).join("\n"), /221-0724-v001\.json/);
+    cleanup();
+  });
+
+  test("members/index.json に載っていない members/{id}.json（前回実行の残骸）は違反", async () => {
+    const d = readJson<{ id: string; sourceUrl: string }>(dir, "members/m_007006.json");
+    writeFileSync(join(dir, "members/m_999999.json"), stableJson({ ...d, id: "m_999999", sourceUrl: "https://example.com/x" }));
+    assert.match((await validateDataset(dir)).join("\n"), /members\/m_999999\.json.*not in members\/index\.json/);
+    cleanup();
+  });
+
+  test("rollcalls/index.json に載っていない rollcalls/{session}/{id}.json（前回実行の残骸）は違反", async () => {
+    const rc = readJson<RollCall>(dir, "rollcalls/221/221-0605-v001.json");
+    writeFileSync(join(dir, "rollcalls/221/221-0101-v999.json"), stableJson({ ...rc, id: "221-0101-v999", votes: [{ ...rc.votes[0], memberId: "m_999999" }] }));
+    assert.match((await validateDataset(dir)).join("\n"), /rollcalls\/221\/221-0101-v999\.json.*not in rollcalls\/index\.json/);
+    cleanup();
+  });
+
+  test("writeDataset は前回の members/・rollcalls/ を消してから書く", async () => {
+    writeFileSync(join(dir, "members/m_999999.json"), "{}\n");
+    writeFileSync(join(dir, "rollcalls/221/221-0101-v999.json"), "{}\n");
+    await writeDataset(dir, realDataset());
+    assert.equal(existsSync(join(dir, "members/m_999999.json")), false);
+    assert.equal(existsSync(join(dir, "rollcalls/221/221-0101-v999.json")), false);
+    assert.deepEqual(await validateDataset(dir), []);
     cleanup();
   });
 
