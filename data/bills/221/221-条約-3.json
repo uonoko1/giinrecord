@@ -1,0 +1,33 @@
+{
+ "house": "shugiin",
+ "id": "221-条約-3",
+ "kind": "条約",
+ "number": 3,
+ "received": {
+  "sangiin": "2026-06-02",
+  "shugiin": "2026-03-24"
+ },
+ "result": {
+  "sangiin": "承認",
+  "shugiin": "承認"
+ },
+ "session": 221,
+ "shugiinGroupStance": {
+  "no": [
+   "日本共産党"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "中道改革連合・無所属",
+   "日本維新の会",
+   "国民民主党・無所属クラブ",
+   "参政党",
+   "チームみらい"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2202.htm",
+ "status": "両院承認",
+ "submitterText": "内閣",
+ "title": "日本国の自衛隊とニュージーランド国防軍との間における物品又は役務の相互の提供に関する日本国政府とニュージーランド政府との間の協定の締結について承認を求めるの件"
+}

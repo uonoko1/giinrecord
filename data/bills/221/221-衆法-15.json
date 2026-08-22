@@ -1,0 +1,41 @@
+{
+ "house": "shugiin",
+ "id": "221-衆法-15",
+ "kind": "衆法",
+ "number": 15,
+ "received": {
+  "sangiin": "2026-06-16",
+  "shugiin": "2026-06-16"
+ },
+ "result": {
+  "lawNumber": "49",
+  "promulgated": "2026-06-25",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 221,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "中道改革連合・無所属",
+   "日本維新の会",
+   "国民民主党・無所属クラブ",
+   "参政党",
+   "チームみらい",
+   "日本共産党"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE293E.htm",
+ "status": "成立",
+ "submitterNames": [
+  "山口俊一"
+ ],
+ "submitterText": "議院運営委員長",
+ "submitters": [
+  "h_8f64ac518a"
+ ],
+ "supporterNames": [],
+ "title": "国立国会図書館法及び国立国会図書館法の規定により行政各部門に置かれる支部図書館及びその職員に関する法律の一部を改正する法律案"
+}

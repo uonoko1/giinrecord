@@ -1,0 +1,42 @@
+{
+ "house": "shugiin",
+ "id": "221-衆法-38",
+ "kind": "衆法",
+ "number": 38,
+ "received": {
+  "sangiin": "2026-07-22",
+  "shugiin": "2026-07-22"
+ },
+ "result": {
+  "lawNumber": "74",
+  "promulgated": "2026-07-31",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 221,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "全会一致",
+  "unanimous": true,
+  "yes": [
+   "自由民主党・無所属の会",
+   "中道改革連合・無所属",
+   "日本維新の会",
+   "国民民主党・無所属クラブ",
+   "参政党",
+   "チームみらい",
+   "日本共産党"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2CF6.htm",
+ "status": "成立",
+ "submitterNames": [
+  "冨樫博之"
+ ],
+ "submitterText": "国土交通委員長",
+ "submitters": [
+  "h_07e7878861"
+ ],
+ "supporterNames": [],
+ "title": "建築士法の一部を改正する法律案"
+}
