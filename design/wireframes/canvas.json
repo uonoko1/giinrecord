@@ -1,0 +1,260 @@
+{
+  "pages": [
+    {
+      "id": "page-design",
+      "name": "採用：A 台帳 ＋ C ダーク"
+    },
+    {
+      "id": "page-alt",
+      "name": "不採用案"
+    },
+    {
+      "id": "page-wire",
+      "name": "ワイヤーフレーム"
+    }
+  ],
+  "artboards": [
+    {
+      "file": "HomeA.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 1300,
+      "title": "A 台帳 ・ Home",
+      "page": "page-design"
+    },
+    {
+      "file": "Main.dc.html",
+      "x": 480,
+      "y": 0,
+      "w": 390,
+      "h": 1560,
+      "title": "A 台帳 ・ 議員ページ",
+      "page": "page-design"
+    },
+    {
+      "file": "Votes.dc.html",
+      "x": 960,
+      "y": 0,
+      "w": 390,
+      "h": 1560,
+      "title": "A 台帳 ・ 採決タブ",
+      "page": "page-design"
+    },
+    {
+      "file": "Search.dc.html",
+      "x": 1440,
+      "y": 0,
+      "w": 390,
+      "h": 1160,
+      "title": "A 台帳 ・ 議員をさがす",
+      "page": "page-design"
+    },
+    {
+      "file": "About.dc.html",
+      "x": 1920,
+      "y": 0,
+      "w": 390,
+      "h": 1300,
+      "title": "A 台帳 ・ データについて",
+      "page": "page-design"
+    },
+    {
+      "file": "HomeB.dc.html",
+      "x": 0,
+      "y": 1700,
+      "w": 390,
+      "h": 1300,
+      "title": "B 大胆な色面 ・ Home",
+      "page": "page-alt"
+    },
+    {
+      "file": "BoldMain.dc.html",
+      "x": 480,
+      "y": 1700,
+      "w": 390,
+      "h": 1560,
+      "title": "B 大胆な色面 ・ 議員ページ",
+      "page": "page-alt"
+    },
+    {
+      "file": "BoldSearch.dc.html",
+      "x": 960,
+      "y": 1700,
+      "w": 390,
+      "h": 1160,
+      "title": "B 大胆な色面 ・ 議員をさがす",
+      "page": "page-alt"
+    },
+    {
+      "file": "HomeC.dc.html",
+      "x": 0,
+      "y": 1700,
+      "w": 390,
+      "h": 1300,
+      "title": "C 夜の台帳 ・ Home",
+      "page": "page-design"
+    },
+    {
+      "file": "MemberC.dc.html",
+      "x": 480,
+      "y": 1700,
+      "w": 390,
+      "h": 1560,
+      "title": "C 夜の台帳 ・ 議員ページ",
+      "page": "page-design"
+    },
+    {
+      "file": "HomeD.dc.html",
+      "x": 0,
+      "y": 5100,
+      "w": 390,
+      "h": 1300,
+      "title": "D ポスター ・ Home",
+      "page": "page-alt"
+    },
+    {
+      "file": "MemberD.dc.html",
+      "x": 480,
+      "y": 5100,
+      "w": 390,
+      "h": 1560,
+      "title": "D ポスター ・ 議員ページ",
+      "page": "page-alt"
+    },
+    {
+      "file": "HomeE.dc.html",
+      "x": 0,
+      "y": 6800,
+      "w": 390,
+      "h": 1300,
+      "title": "E 計器盤 ・ Home",
+      "page": "page-alt"
+    },
+    {
+      "file": "MemberE.dc.html",
+      "x": 480,
+      "y": 6800,
+      "w": 390,
+      "h": 1560,
+      "title": "E 計器盤 ・ 議員ページ",
+      "page": "page-alt"
+    },
+    {
+      "file": "AltNewspaper.dc.html",
+      "x": 0,
+      "y": 8500,
+      "w": 390,
+      "h": 640,
+      "title": "初期別案：新聞（不採用）",
+      "page": "page-alt"
+    },
+    {
+      "file": "AltWhitePaper.dc.html",
+      "x": 480,
+      "y": 8500,
+      "w": 390,
+      "h": 640,
+      "title": "初期別案：白書（不採用）",
+      "page": "page-alt"
+    },
+    {
+      "file": "Journey.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 1180,
+      "h": 520,
+      "title": "0. ユーザーの動線",
+      "page": "page-wire"
+    },
+    {
+      "file": "DirectionB.dc.html",
+      "x": 0,
+      "y": 680,
+      "w": 390,
+      "h": 1500,
+      "title": "1B. テーマ別（保留）",
+      "page": "page-wire"
+    },
+    {
+      "file": "DirectionC.dc.html",
+      "x": 480,
+      "y": 680,
+      "w": 390,
+      "h": 1500,
+      "title": "1C. 採決表（採決タブに採用）",
+      "page": "page-wire"
+    },
+    {
+      "file": "Compare.dc.html",
+      "x": 960,
+      "y": 680,
+      "w": 900,
+      "h": 700,
+      "title": "S3. 比較（先出し）",
+      "page": "page-wire"
+    }
+  ],
+  "annotations": [
+    {
+      "id": "wire-note",
+      "x": 1240,
+      "y": 0,
+      "w": 300,
+      "page": "page-wire",
+      "text": "決定（2026-08-22）\n① 議員ページは時系列をデフォルト、採決表は「採決」タブ。テーマ別は法案側の分類が整うまで保留。\n② スマホ優先。"
+    },
+    {
+      "id": "design-why",
+      "x": 0,
+      "y": -230,
+      "w": 860,
+      "page": "page-design",
+      "text": "採用（2026-08-22）：A 台帳をライト、C 夜の台帳をダークモードとして採用。\nA 台帳：墨藍の表紙＋紙の台帳。明朝の氏名、真鍮の罫。賛否は青緑／葡萄の淡い判。\n読む・信頼する、に寄せた案。落ち着き。"
+    },
+    {
+      "id": "bold-why",
+      "x": 0,
+      "y": 1470,
+      "w": 860,
+      "page": "page-alt",
+      "text": "B 大胆な色面：青緑一色の大面積、白地、極太ゴシック。賛否は墨の塗り／枠。\nTheyWorkForYou/GovTrack の精神。今すぐ調べる、に寄せた案。SNS流入に強い。"
+    },
+    {
+      "id": "c-why",
+      "x": 0,
+      "y": 1470,
+      "w": 860,
+      "page": "page-design",
+      "text": "C 夜の台帳：Aの構造そのまま、全面を墨色に反転。真鍮の見出し、紙色の文字。\n最も「セクシー」。夜にスマホで見る想定。長所：記憶に残る、氏名が浮く。短所：長文は読み疲れる、印刷・スクショ共有で重い。ライト／ダーク切替の「ダーク側」として持つ手もある。"
+    },
+    {
+      "id": "d-why",
+      "x": 0,
+      "y": 4870,
+      "w": 860,
+      "page": "page-alt",
+      "text": "D ポスター：選挙ポスターの文法を借りる。極太明朝の氏名を2行で大きく、葡萄色と山吹色の2面構成、丸い判。\n長所：一番目を引く、選挙期間の空気に合う。短所：「誰かの陣営」に見える危険が最も高い。山吹は国民民主の黄に近く、ここが中立性との最大のトレードオフ。"
+    },
+    {
+      "id": "e-why",
+      "x": 0,
+      "y": 6570,
+      "w": 860,
+      "page": "page-alt",
+      "text": "E 計器盤：データ製品の文法。薄灰の地に白いカード、等幅数字、藍紫のアクセント（どの政党色でもない）。\n長所：「データベースである」ことが一目で伝わり、記者・研究者に刺さる。CSV/APIの存在と相性がいい。短所：一般の有権者には冷たい。セクシーというより実務的。"
+    },
+    {
+      "id": "home-note",
+      "x": 960,
+      "y": 1470,
+      "w": 380,
+      "page": "page-design",
+      "text": "Home共通の設計：\n・1行目は主張ではなく方針「言ったことではなく、やったことを。」\n・入口は検索ひとつ。迷わせない\n・「最近の本会議採決」を置くのは、選挙期間外でも来る理由を作るため\n・サイトの規模（議員数・採決数・国会数）と出典・更新時刻を初見で見せる＝信頼\n・数値：248は参院定数、80は第142–221回の国会数（実数）。採決総数は集計後に入れる"
+    }
+  ],
+  "launch": {
+    "view": "canvas",
+    "page": "page-design"
+  }
+}

@@ -1,0 +1,29 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+      - name: Guard — no server runtime code in the web app
+        run: |
+          ! grep -rEl "use server|express\(|createServer\(|process\.env\." apps/web/app || (echo "server code found in apps/web" && exit 1)
+          test ! -d apps/web/build/server || echo "note: build/server is build-time only; not deployed"
+      - uses: actions/upload-artifact@v4
+        with: { name: site, path: apps/web/build/client, retention-days: 3 }

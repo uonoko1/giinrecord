@@ -1,0 +1,16 @@
+{
+  "name": "seiji-kiroku",
+  "private": true,
+  "packageManager": "pnpm@11.22.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "pnpm --filter web dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "etl": "pnpm --filter @seiji-kiroku/etl run etl"
+  }
+}

@@ -1,0 +1,10 @@
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&display=swap">
+  <style>
+    body { margin: 0; font-family: 'Zen Kurenaido', 'Hiragino Sans', 'Noto Sans JP', sans-serif; color: #222; background: #fbfaf7; }
+    a { color: #222; } a:hover { color: #000; }
+    .box { border: 2px solid #222; border-radius: 3px; }
+    .ph { background: repeating-linear-gradient(135deg, #e9e6df 0 6px, #f4f2ec 6px 12px); }
+    .note { color: #1d5fa7; font-size: 13px; }
+  </style>
+</helmet>

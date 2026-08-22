@@ -1,0 +1,84 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP:wght@400;500;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+  <style>
+    body { margin:0; background:#f3f4f6; color:#111318; font-family:'IBM Plex Sans JP','Hiragino Sans',sans-serif; -webkit-font-smoothing:antialiased; }
+    a { color:#4f46e5; text-decoration:none; border-bottom:1px solid #4f46e5; } a:hover { color:#111318; border-bottom-color:#111318; }
+    .h { font-family:'IBM Plex Sans JP','Hiragino Sans',sans-serif; }
+    .num { font-variant-numeric:tabular-nums; font-family:'IBM Plex Mono',monospace; }
+    .stamp { font-family:'IBM Plex Sans JP','Hiragino Sans',sans-serif; font-weight:700; font-size:13px; letter-spacing:0.06em; width:48px; height:26px; display:flex; align-items:center; justify-content:center; flex-shrink:0; border-radius:4px; }
+  </style>
+</helmet>
+<div style="width:390px; min-height:1300px; background:#f3f4f6; display:flex; flex-direction:column;">
+  <div style="background:#f3f4f6; color:#111318; padding:22px 20px 26px; display:flex; flex-direction:column; gap:18px;">
+    <div style="display:flex; justify-content:space-between; align-items:baseline;">
+      <div class="h" style="font-size:18px; font-weight:700; letter-spacing:0.12em; color:#111318;">政治記録</div>
+      <a href="#" style="border:none; color:#6b7280; font-size:12px;">データについて</a>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      <div class="h" style="font-size:30px; font-weight:700; line-height:1.2; letter-spacing:0.02em;">言ったことではなく、<br>やったことを。</div>
+      <div style="font-size:14px; line-height:1.75; color:#6b7280;">国会議員が本会議でどう投票し、どの法案を出し、何を発言したか。公式記録だけを、そのまま並べます。評価はしません。</div>
+    </div>
+    <div style="padding:14px; font-size:16px; background:#fff; border:1px solid #d6d9e0; color:#6b7280; border-radius:6px; box-shadow:0 1px 2px rgba(0,0,0,0.04);">議員の名前で検索（例：ふじかわ）</div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; font-size:13px;">
+      <div style="padding:7px 12px; background:#fff; border:1px solid #d6d9e0; border-radius:6px; color:#111318;">参議院の議員一覧</div>
+      <div style="padding:7px 12px; background:#fff; border:1px solid #d6d9e0; border-radius:6px; color:#111318; opacity:0.55;">選挙区からさがす（準備中）</div>
+    </div>
+  </div>
+
+  <div style="padding:22px 20px 0; display:flex; flex-direction:column; gap:6px;">
+    <div style="display:flex; justify-content:space-between; align-items:baseline;">
+      <div class="h" style="font-size:17px; font-weight:700; color:#111318;">最近の本会議採決</div>
+      <div class="num" style="font-size:12px; color:#6b7280;">第221回国会</div>
+    </div>
+    <div style="display:flex; flex-direction:column; border:1px solid #d6d9e0; border-radius:6px; padding:4px 14px;">
+      <div style="padding:11px 0; border-bottom:1px solid #d6d9e0; display:flex; flex-direction:column; gap:3px;">
+      <div style="font-size:14px; line-height:1.45;">日本国憲法の改正手続に関する法律の一部を改正する法律案</div>
+      <div style="font-size:12px; color:#6b7280;"><span class="num">2026.07.24</span> ・ 可決 ・ <a href="#">誰がどう投票したか</a></div>
+    </div>
+      <div style="padding:11px 0; border-bottom:1px solid #d6d9e0; display:flex; flex-direction:column; gap:3px;">
+      <div style="font-size:14px; line-height:1.45;">国旗の損壊等の処罰に関する法律案</div>
+      <div style="font-size:12px; color:#6b7280;"><span class="num">2026.07.17</span> ・ 可決 ・ <a href="#">誰がどう投票したか</a></div>
+    </div>
+      <div style="padding:11px 0; border-bottom:1px solid #d6d9e0; display:flex; flex-direction:column; gap:3px;">
+      <div style="font-size:14px; line-height:1.45;">ヒトゲノム編集胚等の取扱いの規制に関する法律案</div>
+      <div style="font-size:12px; color:#6b7280;"><span class="num">2026.07.17</span> ・ 可決 ・ <a href="#">誰がどう投票したか</a></div>
+    </div>
+      <div style="padding:11px 0; border-bottom:1px solid #d6d9e0; display:flex; flex-direction:column; gap:3px;">
+      <div style="font-size:14px; line-height:1.45;">令和八年度一般会計補正予算（第１号）</div>
+      <div style="font-size:12px; color:#6b7280;"><span class="num">2026.06.05</span> ・ 可決 <span class="num">148–94</span> ・ <a href="#">誰がどう投票したか</a></div>
+    </div>
+    </div>
+    <div style="padding:8px 0 0; font-size:13px;"><a href="#">第221回国会の採決 120件すべて</a></div>
+  </div>
+
+  <div style="padding:26px 20px 0; display:flex; flex-direction:column; gap:10px;">
+    <div class="h" style="font-size:17px; font-weight:700; color:#111318;">このサイトにあるもの</div>
+    <div style="display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px;">
+      <div style="display:flex; flex-direction:column; gap:2px;"><div class="h num" style="font-size:26px; font-weight:700; line-height:1;">248</div><div style="font-size:11px; color:#6b7280;">参議院議員</div></div>
+      <div style="display:flex; flex-direction:column; gap:2px;"><div class="h num" style="font-size:26px; font-weight:700; line-height:1;">［集計中］</div><div style="font-size:11px; color:#6b7280;">記名採決 1998—</div></div>
+      <div style="display:flex; flex-direction:column; gap:2px;"><div class="h num" style="font-size:26px; font-weight:700; line-height:1;">80</div><div style="font-size:11px; color:#6b7280;">国会（第142—221回）</div></div>
+    </div>
+    <div style="font-size:12px; color:#6b7280; line-height:1.7;">衆議院は個人の投票記録が公開されていないため、会派の態度として別に扱います（準備中）。</div>
+  </div>
+
+  <div style="padding:26px 20px 30px; display:flex; flex-direction:column; gap:8px;">
+    <div class="h" style="font-size:17px; font-weight:700; color:#111318;">出典と更新</div>
+    <div style="display:flex; flex-direction:column; font-size:13px;">
+      <div class="num" style="display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px solid #d6d9e0;"><span>参議院 本会議投票結果</span><span>2026.08.22 06:00</span></div>
+      <div class="num" style="display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px solid #d6d9e0;"><span>衆参 議案情報</span><span>2026.08.22 06:00</span></div>
+      <div class="num" style="display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px solid #d6d9e0;"><span>国会会議録検索システム</span><span>2026.08.22 06:00</span></div>
+    </div>
+    <div style="font-size:12px; display:flex; gap:16px; padding-top:6px;"><a href="#">ソースコード</a><a href="#">データ一括取得</a><a href="#">誤りを報告</a></div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

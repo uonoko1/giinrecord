@@ -1,0 +1,23 @@
+{
+  "name": "@seiji-kiroku/etl",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "etl": "tsx src/cli.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo skip",
+    "build": "echo skip",
+    "test": "node --test --import tsx test/*.test.ts"
+  },
+  "dependencies": {
+    "@seiji-kiroku/shared": "workspace:*",
+    "iconv-lite": "^0.6.3",
+    "node-html-parser": "^7.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24",
+    "tsx": "^4.19.0",
+    "typescript": "^5"
+  }
+}

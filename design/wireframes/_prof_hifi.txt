@@ -1,0 +1,15 @@
+<div style="padding: 14px 20px 0; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #6b6860;">
+    <a href="#" style="border: none;">← 議員をさがす</a>
+    <div class="num">更新 2026.08.22</div>
+  </div>
+  <div style="padding: 18px 20px 0; display: flex; flex-direction: column; gap: 4px;">
+    <div style="font-size: 12px; letter-spacing: 0.2em; color: #6b6860;">ふじかわ まさひと</div>
+    <div class="m" style="font-size: 40px; font-weight: 800; line-height: 1.05; letter-spacing: 0.04em;">藤川 政人</div>
+    <div style="font-size: 14px; margin-top: 6px; color: #3d3b37;">参議院 ・ 愛知 ・ 自由民主党・無所属の会</div>
+    <div class="num" style="font-size: 13px; color: #6b6860;">在職 2010 —　3期　任期満了 2028.07</div>
+  </div>
+  <div style="margin: 18px 20px 0; padding: 14px 0; border-top: 1.5px solid #1b1a18; border-bottom: 1px solid #d8d4cc; display: flex;">
+    <div style="flex: 1; display: flex; flex-direction: column; gap: 2px;"><div class="m num" style="font-size: 28px; font-weight: 700; line-height: 1;">312</div><div style="font-size: 11px; color: #6b6860; letter-spacing: 0.1em;">記名採決</div></div>
+    <div style="flex: 1; display: flex; flex-direction: column; gap: 2px; border-left: 1px solid #d8d4cc; padding-left: 14px;"><div class="m num" style="font-size: 28px; font-weight: 700; line-height: 1;">4</div><div style="font-size: 11px; color: #6b6860; letter-spacing: 0.1em;">提出法案</div></div>
+    <div style="flex: 1; display: flex; flex-direction: column; gap: 2px; border-left: 1px solid #d8d4cc; padding-left: 14px;"><div class="m num" style="font-size: 28px; font-weight: 700; line-height: 1;">27</div><div style="font-size: 11px; color: #6b6860; letter-spacing: 0.1em;">本会議発言</div></div>
+  </div>

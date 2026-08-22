@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700;800&family=BIZ+UDPGothic:wght@400;700&display=swap">
+  <style>
+    body { margin: 0; background: #f5f2ec; color: #1b1a18; font-family: 'BIZ UDPGothic', 'Hiragino Sans', 'Noto Sans JP', sans-serif; -webkit-font-smoothing: antialiased; }
+    a { color: #3a4a5e; text-decoration: none; border-bottom: 1px solid #b9b3a8; } a:hover { color: #1b1a18; border-bottom-color: #1b1a18; }
+    .m { font-family: 'Shippori Mincho', 'Hiragino Mincho ProN', 'Yu Mincho', serif; }
+    .num { font-variant-numeric: tabular-nums; }
+    .stamp { font-family: 'Shippori Mincho', 'Hiragino Mincho ProN', serif; font-weight: 700; font-size: 13px; letter-spacing: 0.08em; width: 46px; height: 26px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  </style>
+</helmet>
+<div style="width: 390px; min-height: 1300px; background: #f5f2ec; display: flex; flex-direction: column; gap: 14px; padding-bottom: 30px;">
+  <div style="background: #26364a; padding-bottom: 22px;">
+  <div style="padding: 22px 20px 0; display: flex; flex-direction: column; gap: 10px;">
+    <div class="m" style="font-size: 18px; font-weight: 700; letter-spacing: 0.12em; color: #d8b86a;">政治記録</div>
+    <div class="m" style="font-size: 30px; font-weight: 800; letter-spacing: 0.04em; line-height: 1.2; color: #f5f2ec;">このデータについて</div>
+    <div style="font-size: 14px; line-height: 1.8; color: #dfe4ea;">このサイトは国会の公式記録を整形して並べるだけです。評価・採点・推薦はしません。すべての行に出典があります。</div>
+  </div>
+  
+  </div>  <div style="padding: 0 20px; display: flex; flex-direction: column; gap: 10px;">
+    <div class="m" style="font-size: 17px; font-weight: 700; letter-spacing: 0.06em; padding-top: 6px; color: #2e4460;">何が事実で、何が推定か</div>
+    <div style="padding: 14px 16px; background: #fbfaf7; border: 1px solid #d8d4cc; display: flex; flex-direction: column; gap: 8px;">
+      <div style="display: flex; gap: 10px; align-items: center;"><div class="stamp" style="width: auto; padding: 0 8px; height: 22px; font-size: 12px; background: #1b1a18; color: #f5f2ec;">事実</div><div style="font-size: 14px; font-weight: 700;">参議院の記名・押しボタン投票</div></div>
+      <div style="font-size: 13px; color: #3d3b37; line-height: 1.7;">議員本人が押したボタンの記録。参議院公式サイト「本会議投票結果」をそのまま転記。1998年（第142回国会）以降。</div>
+    </div>
+    <div style="padding: 14px 16px; background: #fbfaf7; border: 1px solid #d8d4cc; display: flex; flex-direction: column; gap: 8px;">
+      <div style="display: flex; gap: 10px; align-items: center;"><div class="stamp" style="width: auto; padding: 0 8px; height: 22px; font-size: 12px; background: #1b1a18; color: #f5f2ec;">事実</div><div style="font-size: 14px; font-weight: 700;">法案の提出者・賛成者、本会議発言</div></div>
+      <div style="font-size: 13px; color: #3d3b37; line-height: 1.7;">衆参の議案情報と国会会議録検索システムより。発言は要約せず、原文へのリンクと冒頭の抜粋のみ。</div>
+    </div>
+    <div style="padding: 14px 16px; background: #fbfaf7; border: 1px solid #d8d4cc; display: flex; flex-direction: column; gap: 8px;">
+      <div style="display: flex; gap: 10px; align-items: center;"><div class="stamp" style="width: auto; padding: 0 8px; height: 22px; font-size: 12px; border: 1.5px dashed #8d877c; color: #6b6860;">推定</div><div style="font-size: 14px; font-weight: 700;">衆議院の賛否（準備中）</div></div>
+      <div style="font-size: 13px; color: #3d3b37; line-height: 1.7;">衆議院は起立採決が多く、個人の投票は公式に記録されません。所属会派の態度を「会派の態度」と明記して表示し、個人の賛否とは断定しません。</div>
+    </div>
+  </div>
+  <div style="padding: 0 20px; display: flex; flex-direction: column; gap: 8px;">
+    <div class="m" style="font-size: 17px; font-weight: 700; letter-spacing: 0.06em; padding-top: 6px; color: #2e4460;">記録にないこと</div>
+    <div style="font-size: 13px; color: #3d3b37; line-height: 1.9;">「投票なし」が欠席か棄権か<br>委員会での採決（個人別記録なし）<br>党議拘束の有無、投票の理由<br>選挙公約との一致・不一致の判定</div>
+  </div>
+  <div style="padding: 0 20px; display: flex; flex-direction: column; gap: 8px;">
+    <div class="m" style="font-size: 17px; font-weight: 700; letter-spacing: 0.06em; padding-top: 6px; color: #2e4460;">更新</div>
+    <div style="display: flex; flex-direction: column; font-size: 13px;">
+      <div class="num" style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #d8d4cc;"><span>参議院 投票結果</span><span>2026.08.22 06:00</span></div>
+      <div class="num" style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #d8d4cc;"><span>衆参 議案情報</span><span>2026.08.22 06:00</span></div>
+      <div class="num" style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #d8d4cc;"><span>国会会議録</span><span>2026.08.22 06:00</span></div>
+      <div style="padding-top: 6px; font-size: 11px; color: #6b6860;">会議録は国立国会図書館での公開まで約1か月かかります。</div>
+    </div>
+  </div>
+  <div style="padding: 0 20px; display: flex; flex-direction: column; gap: 8px;">
+    <div class="m" style="font-size: 17px; font-weight: 700; letter-spacing: 0.06em; padding-top: 6px; color: #2e4460;">検証する</div>
+    <div style="font-size: 13px; color: #3d3b37; line-height: 1.8;">取得プログラムと整形済みデータはすべて公開しています。間違いを見つけたら、該当行の出典と一緒にお知らせください。</div>
+    <div style="display: flex; gap: 16px; font-size: 13px;"><a href="#">ソースコード</a><a href="#">データ一括取得</a><a href="#">誤りを報告</a></div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

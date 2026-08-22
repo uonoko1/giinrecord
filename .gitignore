@@ -1,0 +1,11 @@
+node_modules/
+.next/
+out/
+dist/
+*.log
+.env
+.env.*
+!.env.example
+.DS_Store
+# ETL working files (raw HTML cache). Normalized data under data/ IS committed.
+packages/etl/.cache/

@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&display=swap">
+  <style>
+    body { margin: 0; font-family: 'Zen Kurenaido', 'Hiragino Sans', 'Noto Sans JP', sans-serif; color: #222; background: #fbfaf7; }
+    a { color: #222; } a:hover { color: #000; }
+    .box { border: 2px solid #222; border-radius: 3px; }
+    .ph { background: repeating-linear-gradient(135deg, #e9e6df 0 6px, #f4f2ec 6px 12px); }
+    .note { color: #1d5fa7; font-size: 13px; }
+  </style>
+</helmet>
+<div style="width: 1180px; padding: 32px; display: flex; flex-direction: column; gap: 24px; background: #fbfaf7;">
+  <div style="display: flex; flex-direction: column; gap: 6px;">
+    <div style="font-size: 26px; font-weight: 700;">ユーザーの動線（選挙の2週間前〜投票日）</div>
+    <div style="font-size: 15px; color: #555;">「候補者が言っていること」ではなく「やってきたこと」を、投票所に行く前の数分で確かめたい人。</div>
+  </div>
+
+  <div style="display: flex; gap: 16px; align-items: stretch;">
+    <div class="box" style="flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 8px; background: #fff;">
+      <div style="font-size: 13px; color: #777;">きっかけ</div>
+      <div style="font-size: 17px; font-weight: 700;">選挙公報・ポスター・SNSで候補者名を知る</div>
+      <div style="font-size: 14px; color: #555;">現職なら国会での記録がある。新人は記録なし＝「記録がない」と正直に出す</div>
+    </div>
+    <div style="display: flex; align-items: center; font-size: 28px;">→</div>
+    <div class="box" style="flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 8px; background: #fff;">
+      <div style="font-size: 13px; color: #777;">入口①</div>
+      <div style="font-size: 17px; font-weight: 700;">名前で検索</div>
+      <div style="font-size: 14px; color: #555;">Google検索 → 議員ページに直接着地が最多。サイトのトップを経由しない前提で設計する</div>
+    </div>
+    <div style="display: flex; align-items: center; font-size: 28px;">→</div>
+    <div class="box" style="flex: 1.3; padding: 16px; display: flex; flex-direction: column; gap: 8px; background: #fff; border-width: 3px;">
+      <div style="font-size: 13px; color: #777;">中核画面（S1）</div>
+      <div style="font-size: 17px; font-weight: 700;">議員ページ：事実の時系列</div>
+      <div style="font-size: 14px; color: #555;">採決での賛否 / 提出・賛同した法案 / 本会議での発言。すべて一次資料リンク付き。評価はしない</div>
+    </div>
+    <div style="display: flex; align-items: center; font-size: 28px;">→</div>
+    <div class="box" style="flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 8px; background: #fff; border-style: dashed;">
+      <div style="font-size: 13px; color: #777;">次の行動（S2〜S3）</div>
+      <div style="font-size: 17px; font-weight: 700;">法案を深掘り / 他候補と比較</div>
+      <div style="font-size: 14px; color: #555;">「この法案、他の人はどうだった？」→ 採決ページ。「同じ選挙区の別候補は？」→ 比較</div>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 16px;">
+    <div class="box" style="flex: 1; padding: 14px; display: flex; flex-direction: column; gap: 6px; background: #fff;">
+      <div style="font-size: 13px; color: #777;">入口②</div>
+      <div style="font-size: 15px; font-weight: 700;">争点法案から逆引き</div>
+      <div style="font-size: 13px; color: #555;">SNSで「○○法案の賛否一覧」が共有される → 採決ページ → 気になる議員へ</div>
+    </div>
+    <div class="box" style="flex: 1; padding: 14px; display: flex; flex-direction: column; gap: 6px; background: #fff;">
+      <div style="font-size: 13px; color: #777;">入口③（S3）</div>
+      <div style="font-size: 15px; font-weight: 700;">自分の選挙区から</div>
+      <div style="font-size: 13px; color: #555;">郵便番号 → 選挙区の現職・元職 → 比較ページ</div>
+    </div>
+    <div class="box" style="flex: 1.3; padding: 14px; display: flex; flex-direction: column; gap: 6px; background: #fff;">
+      <div style="font-size: 13px; color: #777;">設計上の約束（全画面共通）</div>
+      <div style="font-size: 13px; color: #333; line-height: 1.7;">・1行の事実ごとに原典（参院投票結果／衆院経過／会議録）へのリンク<br>・「事実」と「推定（会派ベース）」を視覚的に区別<br>・スコア、ランク、色による善悪表現を使わない<br>・データの取得日時を常に表示</div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

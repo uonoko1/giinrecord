@@ -1,0 +1,10 @@
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700;800&family=BIZ+UDPGothic:wght@400;700&display=swap">
+  <style>
+    body { margin: 0; background: #f5f2ec; color: #1b1a18; font-family: 'BIZ UDPGothic', 'Hiragino Sans', 'Noto Sans JP', sans-serif; -webkit-font-smoothing: antialiased; }
+    a { color: #3a4a5e; text-decoration: none; border-bottom: 1px solid #b9b3a8; } a:hover { color: #1b1a18; border-bottom-color: #1b1a18; }
+    .m { font-family: 'Shippori Mincho', 'Hiragino Mincho ProN', 'Yu Mincho', serif; }
+    .num { font-variant-numeric: tabular-nums; }
+    .stamp { font-family: 'Shippori Mincho', 'Hiragino Mincho ProN', serif; font-weight: 700; font-size: 13px; letter-spacing: 0.08em; width: 46px; height: 26px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  </style>
+</helmet>
