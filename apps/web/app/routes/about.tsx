@@ -1,10 +1,15 @@
-import { Link } from "react-router";
+import { Link, type MetaArgs } from "react-router";
 import { type Dataset, dataset as bundled, REPO_URL } from "../lib/dataset";
 import { formatDateTime } from "../lib/format";
+import { seoMeta } from "../lib/seo";
 import "../styles/pages.css";
 
-export function meta() {
-  return [{ title: "このデータについて ・ 政治記録" }];
+export function meta({ location }: MetaArgs) {
+  return seoMeta({
+    title: "このデータについて",
+    description: "このサイトが扱う記録の範囲と出典、事実と推定の区別、運営費の方針。参議院・衆議院・国立国会図書館の公式記録だけを使います。",
+    pathname: location.pathname,
+  });
 }
 
 /** デザインキャンバス「このデータについて」の本文をそのまま使う。 */

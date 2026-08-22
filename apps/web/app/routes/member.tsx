@@ -3,6 +3,7 @@ import { type LoaderFunctionArgs, type MetaArgs, useLoaderData } from "react-rou
 import type { BillEntry, BillRole, DatasetMeta, MemberDetail, TimelineEntry, VoteEntry } from "../lib/data-contract";
 import { defaultDataDir, readMemberDetail, readMeta } from "../lib/data-files";
 import { formatDate, formatDateTime, formatYearMonth } from "../lib/format";
+import { seoMeta } from "../lib/seo";
 import "./member.css";
 
 /* ---------- data (runs at build time only; ssr:false + prerender) ----------
@@ -19,13 +20,22 @@ export async function loader({ params }: LoaderFunctionArgs): Promise<MemberLoad
   return { detail, meta };
 }
 
-export function meta({ data }: MetaArgs<typeof loader>) {
+/** 「{氏名}（{院}・{選挙区}）の投票記録」: 検索語（氏名・院・選挙区）を含め、評価語は入れない。 */
+export function pageTitle(detail: MemberDetail): string {
+  const term = currentTerm(detail);
+  const where = [HOUSE_LABEL[detail.house], term?.district].filter(Boolean).join("・");
+  return `${detail.name}（${where}）の投票記録`;
+}
+
+export function meta({ data, location }: MetaArgs<typeof loader>) {
   if (!data) return [{ title: "政治記録" }];
   const { detail } = data;
-  return [
-    { title: `${detail.name} ・ 政治記録` },
-    { name: "description", content: `${affiliation(detail)}。本会議の採決・提出法案・発言を公式記録から出典付きで並べます。` },
-  ];
+  return seoMeta({
+    title: pageTitle(detail),
+    description: `${affiliation(detail)}。本会議の採決・提出法案・発言を公式記録から出典付きで並べます。`,
+    pathname: location.pathname,
+    type: "article",
+  });
 }
 
 export default function MemberRoute() {

@@ -3,7 +3,7 @@
  * 実ファイルシステムは使わず、Map で表した偽のビルドディレクトリに対して検証する。
  */
 import { describe, expect, it } from "vitest";
-import { checkBuild, extractInternalHrefs, resolveHrefTarget, formatReport, type BuildFiles } from "./smoke";
+import { checkBuild, checkSitemap, extractInternalHrefs, resolveHrefTarget, formatReport, type BuildFiles } from "./smoke";
 
 const html = (links: string[]) => `<html><body>${links.map((l) => `<a href="${l}">x</a>`).join("")}</body></html>`;
 
@@ -91,6 +91,39 @@ describe("checkBuild", () => {
       "assets/x.js": `href="/nope"`,
     });
     expect(checkBuild(b, { memberIds: null, rollCalls: null }).failures).toEqual([]);
+  });
+});
+
+describe("checkSitemap", () => {
+  const sitemap = (locs: string[]) =>
+    `<?xml version="1.0" encoding="UTF-8"?><urlset>${locs.map((l) => `<url><loc>${l}</loc></url>`).join("")}</urlset>`;
+  const pages = { "index.html": "", "about/index.html": "", "members/index.html": "", "members/m_1/index.html": "" };
+
+  it("sitemap.xml が無ければ失敗", () => {
+    const r = checkSitemap(fakeBuild(pages), { memberIds: null, rollCalls: null });
+    expect(r.failures).toEqual([expect.stringContaining("sitemap.xml")]);
+  });
+
+  it("絶対 URL でも相対パスでも、全 <loc> がビルドに存在すれば OK", () => {
+    const b = fakeBuild({
+      ...pages,
+      "sitemap.xml": sitemap(["https://example.test/", "https://example.test/about", "/members", "/members/m_1"]),
+    });
+    const r = checkSitemap(b, { memberIds: ["m_1"], rollCalls: null });
+    expect(r.failures).toEqual([]);
+    expect(r.checkedUrls).toBe(4);
+  });
+
+  it("存在しないページを指す <loc> は失敗", () => {
+    const b = fakeBuild({ ...pages, "sitemap.xml": sitemap(["/", "/about", "/members", "/members/m_1", "/members/gone"]) });
+    expect(checkSitemap(b, { memberIds: ["m_1"], rollCalls: null }).failures).toEqual([expect.stringContaining("/members/gone")]);
+  });
+
+  it("data/ が約束したページが sitemap に無ければ失敗（全議員・全採決・静的ページ）", () => {
+    const b = fakeBuild({ ...pages, "sitemap.xml": sitemap(["/", "/about", "/members"]) });
+    expect(checkSitemap(b, { memberIds: ["m_1"], rollCalls: null }).failures).toEqual([
+      expect.stringMatching(/not in sitemap.*\/members\/m_1/),
+    ]);
   });
 });
 
