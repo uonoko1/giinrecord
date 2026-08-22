@@ -4,6 +4,7 @@ import { listRollCalls, parseRollCall } from "./sources/sangiin-votes.ts";
 import { fetchMembers, memberListUrl } from "./sources/sangiin-members.ts";
 import { fetchText } from "./fetch.ts";
 import { matchVotes, type GroupMismatch, type Unmatched } from "./match-votes.ts";
+import { billListUrl, fetchBillDecisions, matchBillResults, type BillDecision } from "./sources/sangiin-bills.ts";
 import { buildDataset } from "./aggregate.ts";
 import { validateDataset, writeDataset } from "./dataset.ts";
 
@@ -38,6 +39,17 @@ for (const session of targets) {
     groupMismatch.push(...matched.groupMismatch);
   }
 }
+// 可決/否決は投票結果ページに無いので、参院 議案情報（事実）から取り、採決に紐づける（Issue #26）。
+const decisions: BillDecision[] = [];
+for (const session of targets) {
+  const list = await fetchBillDecisions(session);
+  console.log(`session ${session}: ${list.length} bill decisions`);
+  decisions.push(...list);
+}
+const bills = matchBillResults(rollCalls, decisions);
+// 人事案件・決議など議案情報に載らない採決は得票のみの表示になる。件数を出して運用者が確認できるようにする。
+if (bills.unmatched.length) console.warn(`roll calls without bill decision: ${bills.unmatched.length} (see data/unmatched-bills.json)`);
+
 // 未突合は ETL を止めず、運用者が確認するために列挙する（docs/DATA_CONTRACT.md）。
 if (unmatched.length) console.warn(`unmatched: ${unmatched.length} (see data/unmatched.json)`);
 // 氏名だけで紐づけ会派が食い違った票は受け入れ基準（氏名＋会派）からの逸脱なので、運用者に見せる（Issue #3）。
@@ -48,15 +60,17 @@ if (groupMismatch.length) {
 }
 
 await writeDataset(DATA, {
-  ...buildDataset(members, rollCalls),
+  ...buildDataset(members, rollCalls, new Map([...bills.results].map(([id, r]) => [id, r.decision]))),
   rollCallDetails: rollCalls,
   unmatched,
+  unmatchedBills: bills.unmatched,
   meta: {
     fetchedAt,
     sessions: targets,
     sources: [
       { name: "参議院 議員一覧", url: memberListUrl(memberSession), fetchedAt },
       { name: "参議院 本会議投票結果", url: "https://www.sangiin.go.jp/japanese/touhyoulist/", fetchedAt },
+      ...targets.map((s) => ({ name: `参議院 議案情報（第${s}回）`, url: billListUrl(s), fetchedAt })),
     ],
   },
 });
