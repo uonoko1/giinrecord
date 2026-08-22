@@ -44,7 +44,9 @@ for (const session of targets) {
 const speeches: Speech[] = [];
 for (const session of targets) {
   const matched = matchSpeeches(await fetchSpeeches(session), members);
-  console.log(`session ${session}: ${matched.speeches.length} speeches (${matched.speeches.filter((s) => s.memberId).length} matched)`);
+  const matchedCount = matched.speeches.filter((s) => s.memberId).length;
+  const positioned = matched.speeches.filter((s) => s.memberId && s.position).length;
+  console.log(`session ${session}: ${matched.speeches.length} speeches (${matchedCount} matched, ${positioned} with position excluded from timeline)`);
   speeches.push(...matched.speeches);
   unmatched.push(...matched.unmatched);
 }

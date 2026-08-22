@@ -34,7 +34,9 @@ export function summarizeRollCall(rc: RollCall): RollCallSummary {
  * - memberId が空（未突合）の票・memberId の無い発言は unmatched.json 側で扱うので timeline には入れない。
  * - 名簿にない memberId は名寄せの不整合なので例外にする（黙って捨てない）。
  * - 並びは日付降順。同日は kind（vote → bill → speech）、次に採決 id / 発言 id の降順で安定させる（差分最小化）。
- * - 発言は議長・大臣としてのものも事実として入れる（position は Speech にあるが TimelineEntry には無い）。
+ * - 議長・大臣など position 付きの発言（議事進行・政府答弁）は timeline に入れず counts.speeches にも数えない。
+ *   TimelineEntry（shared 契約）に position が無く、議員としての討論と区別なく「本会議発言 N」と出てしまうため。
+ *   契約に position が入ったら、この除外をやめて position を載せる。除外数は cli が表示する。
  */
 export function buildDataset(members: readonly Member[], rollCalls: readonly RollCall[], speeches: readonly Speech[] = []): Aggregated {
   const timelines = new Map<string, TimelineEntry[]>(members.map((m) => [m.id, []]));
@@ -54,7 +56,7 @@ export function buildDataset(members: readonly Member[], rollCalls: readonly Rol
     }
   }
   for (const s of speeches) {
-    if (!s.memberId) continue;
+    if (!s.memberId || s.position) continue;
     timelineOf(s.memberId, `speech ${s.id} ("${s.speakerText}")`).push({
       kind: "speech", date: s.date, speechId: s.id, meeting: s.meeting, excerpt: s.excerpt, chars: s.chars, sourceUrl: s.sourceUrl,
     });
