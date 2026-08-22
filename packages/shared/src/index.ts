@@ -19,6 +19,18 @@ export interface Member {
   sourceUrl: string;   // 衆参の議員一覧・プロフィール
 }
 
+/** Lightweight row for `data/members/index.json` (search / list). See docs/DATA_CONTRACT.md. */
+export interface MemberSummary {
+  id: MemberId;
+  name: string;
+  kana: string;
+  house: House;
+  group: string;       // 名簿上の会派表記（参院は略称）
+  district: string;
+  termEnd?: string;    // ISO date
+  counts: { rollcalls: number; bills: number; speeches: number };
+}
+
 export interface MemberTerm {
   house: House;
   group: string;       // 会派（例: "自由民主党・無所属の会"）

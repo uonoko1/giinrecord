@@ -32,6 +32,7 @@ test("任期満了 令和13年7月28日 → 2031-07-28 に変換される", () =
 test("Member.id は参院プロフィールIDから決定的に導出し、氏名には依存しない", () => {
   assert.equal(memberIdFromProfileId("7007006"), "m_007006");
   assert.equal(memberIdFromProfileId("7010001"), "m_010001");
+  assert.equal(memberIdFromProfileId("5998003"), "m_998003");
   assert.throws(() => memberIdFromProfileId("12"));
 });
 
@@ -42,6 +43,11 @@ test("表が無い・空の HTML では空配列を返す", () => {
 test("プロフィールリンクの無い行はスキップされる", () => {
   const h = `<table class="list"><tr><th>議員氏名</th></tr><tr><td>欠員</td><td></td><td></td><td></td><td></td><td></td></tr></table>`;
   assert.deepEqual(parseMemberList(h, SRC, 221), []);
+});
+
+test("同じ永続IDに解決する行が2つあれば例外（衝突を黙って通さない）", () => {
+  const row = (pid: string) => `<tr><td><a href="../profile/${pid}.htm">甲 乙</a></td><td>こう おつ</td><td>自民</td><td>比例</td><td>令和10年7月25日</td><td></td></tr>`;
+  assert.throws(() => parseMemberList(`<table>${row("7000001")}${row("5000001")}</table>`, SRC, 221), /duplicate member id/);
 });
 
 test("MemberSummary へ変換: counts は 0、group/district/termEnd は terms[0] から", () => {
