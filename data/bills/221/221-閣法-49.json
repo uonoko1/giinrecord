@@ -1,0 +1,35 @@
+{
+ "house": "shugiin",
+ "id": "221-閣法-49",
+ "kind": "閣法",
+ "number": 49,
+ "received": {
+  "sangiin": "2026-05-12",
+  "shugiin": "2026-04-03"
+ },
+ "result": {
+  "lawNumber": "33",
+  "promulgated": "2026-06-05",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 221,
+ "shugiinGroupStance": {
+  "no": [
+   "参政党"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "中道改革連合・無所属",
+   "日本維新の会",
+   "国民民主党・無所属クラブ",
+   "チームみらい",
+   "日本共産党"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE25EE.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "太陽電池廃棄物の再資源化等の推進に関する法律案"
+}

@@ -1,0 +1,35 @@
+{
+ "house": "shugiin",
+ "id": "216-承諾-1DDDDEE",
+ "kind": "その他",
+ "kindText": "承諾",
+ "received": {
+  "sangiin": "2025-05-20"
+ },
+ "result": {
+  "sangiin": "承諾",
+  "shugiin": "承諾"
+ },
+ "session": 216,
+ "shugiinGroupStance": {
+  "no": [
+   "立憲民主党・無所属",
+   "日本維新の会",
+   "れいわ新選組",
+   "日本共産党",
+   "有志の会",
+   "日本保守党"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "国民民主党・無所属クラブ",
+   "公明党",
+   "参政党"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDDEE.htm",
+ "status": "両院承諾",
+ "submitterText": "内閣",
+ "title": "令和五年度特別会計予備費使用総調書及び各省各庁所管使用調書"
+}

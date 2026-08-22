@@ -1,0 +1,14 @@
+{
+ "house": "shugiin",
+ "id": "219-決算-1DE116A",
+ "kind": "その他",
+ "kindText": "決算",
+ "result": {
+  "shugiin": "閉会中審査"
+ },
+ "session": 219,
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE116A.htm",
+ "status": "衆議院で閉会中審査",
+ "submitterText": "内閣",
+ "title": "令和六年度政府関係機関決算書"
+}
