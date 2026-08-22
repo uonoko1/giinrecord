@@ -4,10 +4,19 @@ import { fetchText } from "../fetch.ts";
 
 const BASE = "https://www.sangiin.go.jp/japanese/touhyoulist";
 
+export interface RollCallListItem { href: string; title: string; dateJa: string }
+
 /** List roll-call result pages for a Diet session. Verified 2026-08-22. */
-export async function listRollCalls(session: number): Promise<{ href: string; title: string; dateJa: string }[]> {
-  const html = await fetchText(`${BASE}/${session}/vote_ind.htm`, "utf-8", { noCache: true });
-  const out: { href: string; title: string; dateJa: string }[] = [];
+export async function listRollCalls(session: number): Promise<RollCallListItem[]> {
+  return parseRollCallList(await fetchText(`${BASE}/${session}/vote_ind.htm`, "utf-8", { noCache: true }), session);
+}
+
+/**
+ * 一覧ページ vote_ind.htm を解析する純粋関数。
+ * 採決が1件も無い回次（第218回・第220回のような特別国会・短い臨時国会）は見出しだけのページで、0件を正常に返す。
+ */
+export function parseRollCallList(html: string, session: number): RollCallListItem[] {
+  const out: RollCallListItem[] = [];
   let dateJa = "";
   for (const tr of parse(html).querySelectorAll("tr")) {
     const th = tr.querySelector("th.touhyo_date");

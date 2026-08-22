@@ -88,6 +88,42 @@ describe("/members", () => {
     expect(screen.getByText("取得前です。")).toBeInTheDocument();
   });
 
+  describe("現職／元職（current）", () => {
+    const former = { ...members[0], id: "m_000099", name: "元 職太郎", kana: "もと しょくたろう", group: "立憲", district: "東京", current: false as const };
+    const withFormer = [...members.map((m) => ({ ...m, current: true })), former];
+
+    it("既定では現職のみを出し、件数も現職の数", () => {
+      renderMembers(withFormer);
+      expect(screen.queryByRole("link", { name: /元 職太郎/ })).not.toBeInTheDocument();
+      expect(screen.getByText("10 名")).toBeInTheDocument();
+    });
+
+    it("「元職も含める」を入れると元職も出て、行に「元職」と添える", async () => {
+      const user = userEvent.setup();
+      renderMembers(withFormer);
+      await user.click(screen.getByRole("checkbox", { name: "元職も含める" }));
+      const row = screen.getByRole("link", { name: /元 職太郎/ }).closest("li");
+      expect(row).toHaveTextContent("元職");
+      expect(screen.getByText("11 名")).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: /藤川 政人/ }).closest("li")).not.toHaveTextContent("元職");
+    });
+
+    it("current が無い行（古いデータ）は現職として扱う", () => {
+      renderMembers(members);
+      expect(screen.getByText("10 名")).toBeInTheDocument();
+      expect(screen.getAllByRole("link", { name: /\S/ }).filter((a) => a.getAttribute("href")?.startsWith("/members/"))).toHaveLength(10);
+    });
+
+    it("元職しかいない会派は、元職を含めるまで会派の選択肢に出ない", async () => {
+      const user = userEvent.setup();
+      renderMembers([...withFormer.slice(0, 10), { ...former, group: "旧会派" }]);
+      const group = screen.getByRole("combobox", { name: "会派" });
+      expect(within(group).getAllByRole("option").map((o) => o.textContent)).not.toContain("旧会派");
+      await user.click(screen.getByRole("checkbox", { name: "元職も含める" }));
+      expect(within(group).getAllByRole("option").map((o) => o.textContent)).toContain("旧会派");
+    });
+  });
+
   it("取得日時をフッターに出す", () => {
     renderMembers();
     expect(screen.getByText(/2026\.08\.22 06:00/)).toBeInTheDocument();

@@ -7,8 +7,8 @@ import { fetchSpeeches, speechPageUrl } from "./sources/kokkai-speeches.ts";
 import { matchVotes, type GroupMismatch, type Unmatched } from "./match-votes.ts";
 import { billListUrl, fetchBillDecisions, matchBillResults, type BillDecision } from "./sources/sangiin-bills.ts";
 import { matchSpeeches, type UnmatchedSpeech } from "./match-speeches.ts";
-import { buildDataset } from "./aggregate.ts";
-import { validateDataset, writeDataset } from "./dataset.ts";
+import { buildDataset, mergeRosters, rosterSessionsFor } from "./aggregate.ts";
+import { readSessionsOnDisk, resolveSessions, validateDataset, writeDataset } from "./dataset.ts";
 
 /**
  * ETL entry point. S1: House of Councillors members and roll-call votes. S2: plenary speeches (国会会議録API).
@@ -16,17 +16,27 @@ import { validateDataset, writeDataset } from "./dataset.ts";
  *   members/index.json, members/{id}.json, rollcalls/index.json, rollcalls/{session}/{id}.json,
  *   unmatched.json, unmatched-bills.json, unmatched-groups.json, meta.json
  * then runs validateDataset (docs/DATA_CONTRACT.md) and exits non-zero on any violation.
- * Usage: pnpm etl [session...]   (default: current session only)
+ * Usage: pnpm etl [session...]   (default: DEFAULT_SESSIONS = 217..221)
+ * 回次は「指定 ∪ data/ に既にある回次」を全部処理する（部分実行で他回次の出力を消さないため）。
  */
-const sessions = process.argv.slice(2).map(Number).filter(Boolean);
-const targets = sessions.length ? sessions : [221];
 const DATA = fileURLToPath(new URL("../../../data/", import.meta.url));
+const requested = process.argv.slice(2).map(Number).filter(Boolean);
+const targets = resolveSessions(requested, await readSessionsOnDisk(DATA));
+console.log(`sessions: ${targets.join(" ")}`);
 const fetchedAt = new Date().toISOString();
 
-// Members: the roster of the latest requested session is the current one.
+// Members: 回次ごとの名簿をプロフィールIDで統合する。current は最新回次の名簿に載っているか（辞職・補選で入れ替わった人も残す）。
+// 名簿ページは各回次の終了後時点なので、最小回次の1つ前の名簿も取って会期中に退任した議員を覆う（rosterSessionsFor）。
 const memberSession = Math.max(...targets);
-const members = await fetchMembers(memberSession);
-console.log(`session ${memberSession}: ${members.length} members`);
+const rosterSessions = rosterSessionsFor(targets);
+const rosters = [];
+for (const session of rosterSessions) {
+  const roster = await fetchMembers(session);
+  console.log(`session ${session}: ${roster.length} members in roster`);
+  rosters.push({ session, members: roster });
+}
+const members = mergeRosters(rosters);
+console.log(`members: ${members.length} (${members.filter((m) => m.current).length} current)`);
 // 名簿の会派略称は正式名称に解決して公開する。未知の略称は ETL を止めず原文のまま出し、運用者が対応表に追記する（Issue #36）。
 const groupsUnknown = unmatchedGroups(members);
 if (groupsUnknown.length) {
@@ -73,9 +83,15 @@ for (const session of targets) {
 if (unmatched.length) console.warn(`unmatched: ${unmatched.length} (see data/unmatched.json)`);
 // 氏名だけで紐づけ会派が食い違った票は受け入れ基準（氏名＋会派）からの逸脱なので、運用者に見せる（Issue #3）。
 // 会派改称・移籍なら正常、名簿にいない旧議員が同名の現職に紐づいていたら誤りなので、nameText ごとに要確認。
+// 回次をまたぐと会派の改称（sangiin-groups.ts の旧名称表に無いもの）で同じ組み合わせが大量に出るので、（投票ページの会派 → 名簿の会派）ごとに件数でまとめる。
 if (groupMismatch.length) {
   console.warn(`group mismatch (matched by name only): ${groupMismatch.length}`);
-  for (const g of groupMismatch) console.warn(`  ${g.rollCallId} ${g.nameText} (${g.group}) -> ${g.memberId} (${g.rosterGroup})`);
+  const byPair = new Map<string, GroupMismatch[]>();
+  for (const g of groupMismatch) byPair.set(`${g.group} -> ${g.rosterGroup}`, [...(byPair.get(`${g.group} -> ${g.rosterGroup}`) ?? []), g]);
+  for (const [pair, list] of [...byPair].sort((a, b) => b[1].length - a[1].length)) {
+    const names = [...new Set(list.map((g) => `${g.nameText}=${g.memberId}`))];
+    console.warn(`  ${pair}: ${list.length} votes, ${names.length} members (${names.slice(0, 5).join(", ")}${names.length > 5 ? ", …" : ""})`);
+  }
 }
 
 await writeDataset(DATA, {
@@ -88,7 +104,7 @@ await writeDataset(DATA, {
     fetchedAt,
     sessions: targets,
     sources: [
-      { name: "参議院 議員一覧", url: memberListUrl(memberSession), fetchedAt },
+      ...rosterSessions.map((s) => ({ name: `参議院 議員一覧（第${s}回）`, url: memberListUrl(s), fetchedAt })),
       { name: "参議院 本会議投票結果", url: "https://www.sangiin.go.jp/japanese/touhyoulist/", fetchedAt },
       { name: "国会会議録検索システム 検索用API（参議院 本会議）", url: speechPageUrl(memberSession), fetchedAt },
       ...targets.map((s) => ({ name: `参議院 議案情報（第${s}回）`, url: billListUrl(s), fetchedAt })),

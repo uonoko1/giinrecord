@@ -50,13 +50,18 @@ test("同じ永続IDに解決する行が2つあれば例外（衝突を黙っ�
   assert.throws(() => parseMemberList(`<table>${row("7000001")}${row("5000001")}</table>`, SRC, 221), /duplicate member id/);
 });
 
-test("MemberSummary へ変換: counts は 0、group/district/termEnd は terms[0] から", () => {
+test("MemberSummary へ変換: counts は 0、group/district/termEnd は terms[0] から。名簿1つだけなら current は true", () => {
   const [m] = parseMemberList(html, SRC, 221);
   assert.deepEqual(toSummary(m), {
     id: "m_007006", name: "青木 愛", kana: "あおき あい", house: "sangiin",
-    group: "立憲民主・無所属", district: "比例", termEnd: "2028-07-25",
+    group: "立憲民主・無所属", district: "比例", termEnd: "2028-07-25", current: true,
     counts: { rollcalls: 0, bills: 0, speeches: 0 },
   });
+});
+
+test("MemberSummary へ変換: 統合済み Member の current=false はそのまま（元職）", () => {
+  const [m] = parseMemberList(html, SRC, 221);
+  assert.equal(toSummary({ ...m, current: false }).current, false);
 });
 
 test("会派略称 → 正式名称。投票ページの会派名と突合できる", () => {
@@ -102,6 +107,25 @@ test("2行表記の最小ケース: <BR> の前を name にし、[本名] は le
   assert.equal(m.legalName, "齊藤 蓮舫");
   const [plain] = parseMemberList(`<table><tr><td><a href="../profile/7007006.htm">青木　　愛</a></td><td>あおき あい</td><td>立憲</td><td>比例</td><td>令和10年7月25日</td><td></td></tr></table>`, SRC, 221);
   assert.equal(plain.legalName, undefined);
+});
+
+// Issue #14: 会派は回次をまたいで改称する。名簿の略称は最新の正式名称に解決するが、古い投票ページの旧名称とも同一会派として突合する。
+test("改称前の正式名称（投票ページ）も同じ略称の会派として matchesGroup が true", () => {
+  assert.equal(matchesGroup("自民", "自由民主党"), true);                       // 〜第219回
+  assert.equal(matchesGroup("自由民主党・無所属の会", "自由民主党"), true);      // 解決済みの正式名称とも
+  assert.equal(matchesGroup("立憲", "立憲民主・社民・無所属"), true);            // 〜第219回
+  assert.equal(matchesGroup("Ｎ党", "ＮＨＫから国民を守る党"), true);            // 第216回名簿（第217回中に一時「ＮＨＫ党」）
+  assert.equal(matchesGroup("Ｎ党", "ＮＨＫ党"), true);
+  assert.equal(matchesGroup("自民", "立憲民主・社民・無所属"), false);
+  assert.equal(groupFullName("Ｎ党"), "ＮＨＫから国民を守る党");
+});
+
+// Issue #14: 第217回の名簿（れいわ新選組 → 第221回で「いのちの党」に改称）では略称が「れ新」。投票ページの正式名称は「れいわ新選組」。
+test("実フィクスチャ（第217回）: 『れ新』の行は正式名称『れいわ新選組』になり、未知略称に残らない", () => {
+  const html217 = readFileSync(new URL("./fixtures/sangiin-giin-217.htm", import.meta.url), "utf-8");
+  const members = parseMemberList(html217, SRC.replace("221", "217"), 217);
+  assert.ok(members.some((m) => m.terms[0].group === "れいわ新選組"));
+  assert.deepEqual(unmatchedGroups(members), []);
 });
 
 // Issue #36: 名簿の会派セルは「みら」「い党」のような2文字略称で、改行や切り詰めではない（実フィクスチャ 7025008 = い党 など）。

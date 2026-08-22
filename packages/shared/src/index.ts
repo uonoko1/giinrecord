@@ -17,6 +17,8 @@ export interface Member {
   house: House;
   /** Membership periods; a member can move between groups/houses. */
   terms: MemberTerm[];
+  /** 最新回次の名簿に載っているか（辞職・任期満了で名簿から消えた人は false）。回次をまたいで統合したときに付く。 */
+  current?: boolean;
   sourceUrl: string;   // 衆参の議員一覧・プロフィール
 }
 
@@ -29,6 +31,8 @@ export interface MemberSummary {
   group: string;       // 名簿上の会派表記（参院は略称）
   district: string;
   termEnd?: string;    // ISO date
+  /** 最新回次の名簿に載っているか。false は元職（辞職・任期満了）。事実であって評価ではない。 */
+  current: boolean;
   counts: { rollcalls: number; bills: number; speeches: number };
 }
 

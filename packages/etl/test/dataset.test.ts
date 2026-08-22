@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { RollCall, RollCallSummary } from "@seiji-kiroku/shared";
 import { buildDataset } from "../src/aggregate.ts";
-import { writeDataset, validateDataset, type Dataset } from "../src/dataset.ts";
+import { readSessionsOnDisk, resolveSessions, writeDataset, validateDataset, type Dataset } from "../src/dataset.ts";
 import { stableJson } from "../src/json.ts";
 import { matchVotes } from "../src/match-votes.ts";
 import { parseRollCall } from "../src/sources/sangiin-votes.ts";
@@ -166,7 +166,7 @@ describe("writeDataset / validateDataset: docs/DATA_CONTRACT.md の不変条件"
     cleanup();
   });
 
-  test("writeDataset は前回の members/・rollcalls/ を消してから書く", async () => {
+  test("writeDataset は前回の members/ と、今回対象の回次の rollcalls/{session}/ を消してから書く", async () => {
     writeFileSync(join(dir, "members/m_999999.json"), "{}\n");
     writeFileSync(join(dir, "rollcalls/221/221-0101-v999.json"), "{}\n");
     await writeDataset(dir, realDataset());
@@ -176,9 +176,45 @@ describe("writeDataset / validateDataset: docs/DATA_CONTRACT.md の不変条件"
     cleanup();
   });
 
+  test("writeDataset は対象外の回次の rollcalls/{session}/ を消さない（#4 レビュー指摘）", async () => {
+    const ds = realDataset();
+    const rc217 = { ...ds.rollCallDetails[0], id: "217-0620-v001", session: 217 };
+    await writeDataset(dir, { ...ds, rollCallDetails: [rc217], rollCalls: [], meta: { ...ds.meta, sessions: [217] } });
+    await writeDataset(dir, realDataset());
+    assert.equal(existsSync(join(dir, "rollcalls/217/217-0620-v001.json")), true);
+    assert.equal(existsSync(join(dir, "rollcalls/221/221-0605-v001.json")), true);
+    cleanup();
+  });
+
+  test("採決 0 件の回次（第218回）は rollcalls/{session}/ を作らず、違反にもならない", async () => {
+    const ds = realDataset();
+    await writeDataset(dir, { ...ds, meta: { ...ds.meta, sessions: [218, 221] } });
+    assert.equal(existsSync(join(dir, "rollcalls/218")), false);
+    assert.deepEqual(await validateDataset(dir), []);
+    cleanup();
+  });
+
+  test("readSessionsOnDisk は meta.json の sessions を返し、無ければ空", async () => {
+    assert.deepEqual(await readSessionsOnDisk(dir), [221]);
+    rmSync(join(dir, "meta.json"));
+    assert.deepEqual(await readSessionsOnDisk(dir), []);
+    cleanup();
+  });
+
   test("meta.json が無ければ違反", async () => {
     rmSync(join(dir, "meta.json"));
     assert.match((await validateDataset(dir)).join("\n"), /meta\.json/);
     cleanup();
+  });
+});
+
+describe("resolveSessions: 今回処理する回次 = 指定回次 ∪ data/ に既にある回次（他回次の出力を消さないため）", () => {
+  test("指定と既存の和集合を昇順・重複なしで返す", () => {
+    assert.deepEqual(resolveSessions([221], [217, 218, 219, 220, 221]), [217, 218, 219, 220, 221]);
+    assert.deepEqual(resolveSessions([220, 217], [221]), [217, 220, 221]);
+  });
+  test("指定が空なら既定の回次 ∪ 既存", () => {
+    assert.deepEqual(resolveSessions([], [216]), [216, 217, 218, 219, 220, 221]);
+    assert.deepEqual(resolveSessions([], []), [217, 218, 219, 220, 221]);
   });
 });

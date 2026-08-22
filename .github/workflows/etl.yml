@@ -44,7 +44,7 @@ jobs:
       # ETL の非0終了が tee の exit 0 に隠れてデータ PR まで進んでしまう）。
       - name: Run ETL
         shell: bash
-        run: pnpm etl ${{ github.event.inputs.sessions }} 2>&1 | tee etl.log
+        run: pnpm etl ${{ github.event.inputs.sessions || '217 218 219 220 221' }} 2>&1 | tee etl.log
 
       # 失敗しても取得済みページは次回に活かす（job が失敗すると actions/cache の自動保存は走らない）。
       - uses: actions/cache/save@v4

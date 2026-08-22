@@ -1,4 +1,4 @@
-import type { Member, MemberDetail, MemberSummary, RollCall, RollCallSummary, Speech, TimelineEntry, VoteValue } from "@seiji-kiroku/shared";
+import type { Member, MemberDetail, MemberSummary, MemberTerm, RollCall, RollCallSummary, Speech, TimelineEntry, VoteValue } from "@seiji-kiroku/shared";
 import { toSummary } from "./sources/sangiin-members.ts";
 
 /** 集約結果（純粋関数の出力）。ファイルへの書き出しは dataset.ts が担う。 */
@@ -10,6 +10,56 @@ export interface Aggregated {
   /** `rollcalls/index.json`。日付降順。 */
   rollCalls: RollCallSummary[];
 }
+
+/**
+ * 回次 targets の採決・発言を突合するのに取得する名簿の回次。
+ * 名簿ページ giin/{N}/giin.htm は第N回終了後のある時点（概ね次の回次の直前）の名簿で、
+ * 第N回の会期中に退任した議員（通常選挙・辞職）を含まない（第217回の名簿は令和7年7月31日現在）。
+ * 第N回中の議員は「N-1 の名簿 ∪ N の名簿」で覆えるので、最小回次の1つ前も取る。
+ */
+export function rosterSessionsFor(targets: readonly number[]): number[] {
+  const sorted = [...new Set(targets)].sort((a, b) => a - b);
+  return sorted.length ? [sorted[0] - 1, ...sorted] : [];
+}
+
+/** 1回次分の名簿（parseMemberList の出力）。 */
+export interface Roster { session: number; members: readonly Member[] }
+
+/**
+ * 回次ごとの名簿をプロフィールID（Member.id）で1人に統合する。
+ * - 氏名・かな・本名・sourceUrl は最新回次の表記（改姓・通称変更は最新に従う。古い表記で突合できるよう名簿の原文は各回次のフィクスチャに残る）。
+ * - terms は回次ごとの (会派, 選挙区, 任期満了) を時系列に並べ、隣接する回次で同じなら1つに畳む（sessionFrom〜sessionTo）。新しい順。
+ * - current は最新回次の名簿に載っているか。辞職・任期満了・補選で入れ替わった人も Member として残す（票の事実は消えない）。
+ * 名簿が0件のときは例外（cli.ts が空の index.json を書かないように）。
+ */
+export function mergeRosters(rosters: readonly Roster[]): Member[] {
+  if (rosters.length === 0) throw new Error("no rosters to merge");
+  const ordered = [...rosters].sort((a, b) => a.session - b.session);
+  const latest = ordered[ordered.length - 1].session;
+  const byId = new Map<string, { member: Member; terms: MemberTerm[] }>();
+  let previous: number | undefined;
+  for (const { session, members } of ordered) {
+    for (const m of members) {
+      const entry = byId.get(m.id) ?? { member: m, terms: [] };
+      entry.member = m;
+      for (const t of m.terms) {
+        const last = entry.terms[entry.terms.length - 1];
+        // 直前に処理した名簿にも同じ条件で載っていれば同じ term の続き（間の回次を取得していなくても、手元の名簿で連続なら畳む）
+        if (last && sameTerm(last, t) && last.sessionTo === previous) last.sessionTo = session;
+        else entry.terms.push({ ...t, sessionFrom: session, sessionTo: session });
+      }
+      byId.set(m.id, entry);
+    }
+    previous = session;
+  }
+  return [...byId.values()].map(({ member, terms }) => ({
+    ...member,
+    terms: [...terms].reverse(),
+    current: terms[terms.length - 1].sessionTo === latest,
+  }));
+}
+
+const sameTerm = (a: MemberTerm, b: MemberTerm) => a.house === b.house && a.group === b.group && a.district === b.district && a.from === b.from && a.to === b.to;
 
 /**
  * その採決でその会派の多数票。賛成票>反対票なら賛成、反対票>賛成票なら反対、同数（0対0含む）なら undefined。

@@ -21,9 +21,34 @@ export interface Dataset extends Aggregated {
   meta: DatasetMeta;
 }
 
-/** 契約どおりのパスに stableJson で書く。前回実行の残骸が残らないよう members/・rollcalls/ は先に消す。 */
+/** ETL の既定回次（直近2年: 第217〜221回）。`.github/workflows/etl.yml` の既定と同じ。 */
+export const DEFAULT_SESSIONS: readonly number[] = [217, 218, 219, 220, 221];
+
+/**
+ * 今回処理する回次 = 指定された回次（空なら既定） ∪ data/ に既にある回次。
+ * `pnpm etl 221` のような部分実行でも、他回次の採決・票が data/ から消えないようにする（#4 レビュー指摘）。
+ * 回次を減らしたいときは data/ を消してから実行する。
+ */
+export function resolveSessions(requested: readonly number[], onDisk: readonly number[]): number[] {
+  return [...new Set([...(requested.length ? requested : DEFAULT_SESSIONS), ...onDisk])].sort((a, b) => a - b);
+}
+
+/** `dir/meta.json` の sessions。無ければ空（初回実行）。 */
+export async function readSessionsOnDisk(dir: string): Promise<number[]> {
+  try {
+    const meta = JSON.parse(await readFile(join(dir, "meta.json"), "utf-8")) as Partial<DatasetMeta>;
+    return Array.isArray(meta.sessions) ? meta.sessions.filter((s): s is number => typeof s === "number") : [];
+  } catch { return []; }
+}
+
+/**
+ * 契約どおりのパスに stableJson で書く。
+ * 前回実行の残骸が残らないよう members/ と、今回対象（meta.sessions）の回次の rollcalls/{session}/ は先に消す。
+ * 対象外の回次の rollcalls/{session}/ は触らない。
+ */
 export async function writeDataset(dir: string, ds: Dataset): Promise<void> {
-  for (const sub of ["members", "rollcalls"]) await rm(join(dir, sub), { recursive: true, force: true });
+  await rm(join(dir, "members"), { recursive: true, force: true });
+  for (const session of ds.meta.sessions) await rm(join(dir, "rollcalls", String(session)), { recursive: true, force: true });
   const put = async (rel: string, value: unknown) => {
     const file = join(dir, rel);
     await mkdir(join(file, ".."), { recursive: true });
