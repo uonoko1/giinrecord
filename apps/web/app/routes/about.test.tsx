@@ -98,4 +98,16 @@ describe("About", () => {
       }
     });
   });
+
+  describe("計測について（#58）", () => {
+    it("見出しがあり、何を記録し何を記録しないかを書く", () => {
+      renderAbout();
+      expect(screen.getByRole("heading", { level: 2, name: "計測について" })).toBeInTheDocument();
+      const text = screen.getByRole("heading", { level: 2, name: "計測について" }).parentElement?.textContent ?? "";
+      expect(text).toContain("Cookie");
+      expect(text).toContain("IP アドレス");
+      expect(text).toMatch(/ページビュー|PV/);
+      expect(text).toContain("リファラ");
+    });
+  });
 });
