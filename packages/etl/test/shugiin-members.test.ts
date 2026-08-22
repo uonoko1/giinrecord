@@ -6,6 +6,9 @@ import {
   decodeRosterPage, memberIdFromName, memberListUrl, parseAsOf, parseShugiinMemberList, ROSTER_PAGES, unmatchedShugiinGroups,
 } from "../src/sources/shugiin-members.ts";
 import { isKnownShugiinGroup, resolveShugiinGroup, SHUGIIN_GROUPS } from "../src/sources/shugiin-groups.ts";
+import { parseMemberList } from "../src/sources/sangiin-members.ts";
+import { buildDataset } from "../src/aggregate.ts";
+import { stableJson } from "../src/json.ts";
 
 // 名簿は「令和8年2月18日現在」（第51回総選挙後）。Shift_JIS の生バイトのまま保存している。
 const fixture = (page: number) => readFileSync(new URL(`./fixtures/shugiin-giin-20260218-${page}.htm`, import.meta.url));
@@ -99,4 +102,19 @@ test("会派略称の対応表は会派名及び会派別所属議員数ペー�
   for (const [abbr, full] of rows) assert.equal(SHUGIIN_GROUPS[abbr], full, abbr);
   assert.equal(resolveShugiinGroup("無"), "無所属");
   assert.equal(resolveShugiinGroup("未知"), "未知");
+});
+
+test("参院名簿と同じ index に統合: 参院側の index 行・詳細は衆院を足しても byte 単位で同じ。衆院行は house=shugiin・current=true・counts 0・termEnd 無し", () => {
+  const sangiin = parseMemberList(readFileSync(new URL("./fixtures/sangiin-giin-221.htm", import.meta.url), "utf-8"), "https://www.sangiin.go.jp/japanese/joho1/kousei/giin/221/giin.htm", 221);
+  const alone = buildDataset(sangiin, []);
+  const both = buildDataset([...sangiin, ...all], []);
+  assert.equal(stableJson(both.index.slice(0, sangiin.length)), stableJson(alone.index));
+  assert.equal(stableJson(both.details.slice(0, sangiin.length)), stableJson(alone.details));
+  assert.equal(both.index.length, sangiin.length + 465);
+  const row = both.index[sangiin.length];
+  assert.deepEqual(row, {
+    id: all[0].id, name: "逢沢 一郎", kana: "あいさわ いちろう", house: "shugiin", group: "自由民主党・無所属の会", district: "岡山1",
+    termEnd: undefined, current: true, counts: { rollcalls: 0, bills: 0, speeches: 0 },
+  });
+  assert.deepEqual(both.details[sangiin.length].timeline, []);
 });
