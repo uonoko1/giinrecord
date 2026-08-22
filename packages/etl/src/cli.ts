@@ -48,8 +48,8 @@ if (groupsUnknown.length) {
   console.warn(`unknown group abbreviations: ${groupsUnknown.length} (see data/unmatched-groups.json; add to sangiin-groups.ts)`);
   for (const g of groupsUnknown) console.warn(`  ${g.group}: ${g.memberIds.join(", ")}`);
 }
-// 衆院: 回次ごとの名簿は無く「現在」の名簿だけ（Issue #71）。個人別投票が公開されていないので名寄せには使わず、
-// 採決・発言・議案の突合は参院名簿（members）だけで行い、公開する index には両院を並べる（house で区別）。
+// 衆院: 回次ごとの名簿は無く「現在」の名簿だけ（Issue #71）。個人別投票が公開されていないので採決・発言の突合は参院名簿（members）だけで行い、
+// 衆院 議案の提出者・賛成者の名寄せ（matchShugiinBills）にだけ使う。公開する index には両院を並べる（house で区別）。
 const shugiin = await fetchShugiinMembers(memberSession);
 console.log(`shugiin: ${shugiin.members.length} members in roster (as of ${shugiin.asOf ?? "unknown"})`);
 const shugiinGroupsUnknown = unmatchedShugiinGroups(shugiin.members);
@@ -95,7 +95,12 @@ for (const session of targets) {
   console.log(`session ${session}: ${list.length} shugiin bills (${list.filter((b) => b.shugiinGroupStance).length} with group stance)`);
   for (const b of list) shugiinBills.set(b.id, b);
 }
-const shugiinMatched = matchShugiinBills([...shugiinBills.values()], members);
+// 提出者・賛成者は衆院の名簿に名寄せして timeline の bill 行にする（Issue #73）。名簿は「現在」の1回次分（memberSession）しか無いので、
+// 名寄せされるのはその回次に提出された議案だけ。過去回次の議案は氏名のまま残る（名簿 PBI #71 で回次ごとの名簿が入れば広がる）。
+const shugiinMatched = matchShugiinBills([...shugiinBills.values()], shugiin.members);
+const shugiinWithNames = [...shugiinBills.values()].filter((b) => b.submitterNames?.length || b.supporterNames?.length).length;
+const shugiinLinked = shugiinMatched.bills.filter((b) => b.submitters?.length || b.supporters?.length).length;
+console.log(`shugiin bills: ${shugiinBills.size} total, ${shugiinWithNames} with submitter/supporter names, ${shugiinLinked} linked to roster members (session ${memberSession} only)`);
 unmatched.push(...shugiinMatched.unmatched);
 
 // 発言: 国会会議録API（公開まで約1ヶ月のラグ。meta.sources[].fetchedAt が「いつ時点の会議録か」を示す）。
