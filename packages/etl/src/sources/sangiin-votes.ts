@@ -51,19 +51,17 @@ export function parseRollCall(html: string, sourceUrl: string, session: number):
   const groups: RollCall["groups"] = [];
   const votes: RollCall["votes"] = [];
   for (const h4 of box.querySelectorAll("h4.party")) {
-    const head = squash(h4.text).match(/^(.+?)\s*[(（]\s*(\d+)\s*名\s*[)）]$/);
-    if (!head) fail(`会派見出しを解釈できません: ${h4.text.trim()}`);
+    const head = squash(h4.text).match(/^(.+?)\s*[(（]\s*(\d+)\s*名\s*[)）]$/) ?? fail(`会派見出しを解釈できません: ${squash(h4.text)}`);
     const group = head[1].trim();
     const size = +head[2];
-    const list = nextElement(h4);
-    if (!list || !list.classList.contains("sanpilist")) fail(`会派「${group}」の投票一覧が見つかりません`);
+    const list = h4.nextElementSibling?.classList.contains("sanpilist") ? h4.nextElementSibling : fail(`会派「${group}」の投票一覧が見つかりません`);
     const tally = parseTally(list.querySelector("dt")?.text ?? "") ?? fail(`会派「${group}」の賛否集計を解釈できません`);
     groups.push({ group, size, ...tally });
 
     const items = list.querySelectorAll("li.giin");
     if (items.length !== size) fail(`会派「${group}」の人数 ${size} と個人票数 ${items.length} が一致しません`);
     for (const li of items) {
-      votes.push({ memberId: "", nameText: normalizeName(li.querySelector(".names")?.text ?? ""), group, value: parseVoteValue(li) ?? fail(`票の値を判別できません: ${squash(li.text)}`) });
+      votes.push({ memberId: "", nameText: squash(li.querySelector(".names")?.text ?? ""), group, value: parseVoteValue(li) ?? fail(`票の値を判別できません: ${squash(li.text)}`) });
     }
   }
   if (groups.length === 0) fail("会派ブロックが0件です");
@@ -74,14 +72,12 @@ export function parseRollCall(html: string, sourceUrl: string, session: number):
   return { id, session, date, title, totals, groups, votes, sourceUrl };
 }
 
-/** Whitespace of any width (incl. U+3000) → one ASCII space, trimmed. */
+/**
+ * Whitespace runs of any width (incl. U+3000) → one `sep`, trimmed.
+ * Names: 「青木　　一彦」→「青木 一彦」, 「阿達 　 雅志」→「阿達 雅志」, 「いんどう周作」はそのまま。
+ */
 function squash(s: string, sep = " "): string {
   return s.replace(/[\s　]+/g, sep).trim();
-}
-
-/** 「青木　　一彦」→「青木 一彦」 / 「阿達 　 雅志」→「阿達 雅志」 / 「いんどう周作」はそのまま。 */
-function normalizeName(s: string): string {
-  return squash(s);
 }
 
 function parseDate(text: string): string | undefined {
@@ -113,8 +109,4 @@ function parseVoteValue(li: HTMLElement): VoteValue | undefined {
   if (cons === "反対") marks.push("反対");
   if (novote === "投票なし") marks.push("投票なし");
   return marks.length === 1 ? marks[0] : undefined;
-}
-
-function nextElement(el: HTMLElement): HTMLElement | undefined {
-  return el.nextElementSibling ?? undefined;
 }
