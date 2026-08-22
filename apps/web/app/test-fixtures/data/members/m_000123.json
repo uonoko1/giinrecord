@@ -1,0 +1,57 @@
+{
+  "house": "sangiin",
+  "id": "m_000123",
+  "kana": "ふじかわ まさひと",
+  "name": "藤川 政人",
+  "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/giin/profile/7007041.htm",
+  "terms": [
+    {
+      "district": "愛知",
+      "from": "2022-07-26",
+      "group": "自由民主党・無所属の会",
+      "house": "sangiin",
+      "sessionFrom": 209,
+      "to": "2028-07-25"
+    }
+  ],
+  "timeline": [
+    {
+      "chars": 1840,
+      "date": "2025-03-31",
+      "excerpt": "ただいま議題となりました令和七年度一般会計予算外二案につきまして、予算委員会における審査の経過と結果を御報告申し上げます。",
+      "kind": "speech",
+      "meeting": "参議院本会議",
+      "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715254X01220250331/10",
+      "speechId": "121715254X01220250331_010"
+    },
+    {
+      "date": "2025-03-28",
+      "groupValue": "賛成",
+      "kind": "vote",
+      "result": "可決",
+      "rollCallId": "217-0328-v001",
+      "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/vote/217/217-0328-v001.htm",
+      "title": "関税定率法等の一部を改正する法律案",
+      "value": "投票なし"
+    },
+    {
+      "billId": "217-参法-3",
+      "date": "2025-03-14",
+      "kind": "bill",
+      "role": "提出者",
+      "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/217/meisai/m217080217003.htm",
+      "status": "審査未了",
+      "title": "国会議員の歳費、旅費及び手当等に関する法律の一部を改正する法律案"
+    },
+    {
+      "date": "2025-03-14",
+      "groupValue": "賛成",
+      "kind": "vote",
+      "result": "可決",
+      "rollCallId": "217-0314-v002",
+      "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/vote/217/217-0314-v002.htm",
+      "title": "所得税法等の一部を改正する法律案",
+      "value": "反対"
+    }
+  ]
+}
