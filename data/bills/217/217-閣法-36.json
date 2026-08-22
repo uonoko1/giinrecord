@@ -1,0 +1,37 @@
+{
+ "house": "shugiin",
+ "id": "217-閣法-36",
+ "kind": "閣法",
+ "number": 36,
+ "received": {
+  "sangiin": "2025-05-13",
+  "shugiin": "2025-03-07"
+ },
+ "result": {
+  "lawNumber": "70",
+  "promulgated": "2025-06-18",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 217,
+ "shugiinGroupStance": {
+  "no": [
+   "立憲民主党・無所属",
+   "国民民主党・無所属クラブ",
+   "れいわ新選組",
+   "日本共産党",
+   "参政党",
+   "日本保守党"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "日本維新の会",
+   "公明党"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE8EA.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "日本学術会議法案"
+}

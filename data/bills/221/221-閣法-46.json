@@ -1,0 +1,35 @@
+{
+ "house": "shugiin",
+ "id": "221-閣法-46",
+ "kind": "閣法",
+ "number": 46,
+ "received": {
+  "sangiin": "2026-06-19",
+  "shugiin": "2026-04-03"
+ },
+ "result": {
+  "lawNumber": "71",
+  "promulgated": "2026-07-24",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 221,
+ "shugiinGroupStance": {
+  "no": [
+   "日本共産党"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "中道改革連合・無所属",
+   "日本維新の会",
+   "国民民主党・無所属クラブ",
+   "参政党",
+   "チームみらい"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE25B2.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "重要品種の育成及びその種苗の生産の振興に関する法律案"
+}

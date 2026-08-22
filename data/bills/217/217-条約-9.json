@@ -1,0 +1,36 @@
+{
+ "house": "shugiin",
+ "id": "217-条約-9",
+ "kind": "条約",
+ "number": 9,
+ "received": {
+  "sangiin": "2025-04-17",
+  "shugiin": "2025-03-11"
+ },
+ "result": {
+  "sangiin": "承認",
+  "shugiin": "承認"
+ },
+ "session": 217,
+ "shugiinGroupStance": {
+  "no": [
+   "日本共産党"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主党・無所属",
+   "日本維新の会",
+   "国民民主党・無所属クラブ",
+   "公明党",
+   "れいわ新選組",
+   "有志の会",
+   "参政党",
+   "日本保守党"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEBBA.htm",
+ "status": "両院承認",
+ "submitterText": "内閣",
+ "title": "千九百九十四年四月十五日にマラケシュで作成された世界貿易機関を設立するマラケシュ協定のサービスの貿易に関する一般協定の日本国の特定の約束に係る表の改善に関する確認書の締結について承認を求めるの件"
+}
