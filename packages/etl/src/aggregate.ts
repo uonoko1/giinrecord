@@ -21,11 +21,15 @@ export function groupMajority(rollCall: RollCall, group: string): VoteValue | un
   return g.yes > g.no ? "賛成" : "反対";
 }
 
-/** `result` は公表された集計をそのまま文字列にする。可決・否決の判定は出典に無いので行わない。 */
-export function summarizeRollCall(rc: RollCall): RollCallSummary {
+/**
+ * `result` は公表された集計をそのまま文字列にする。可決・否決の判定は投票結果ページに無いので多数決から推論しない。
+ * 参院 議案情報の審議結果（原文: 可決・否決・修正議決・同意・是認 など）が突合できていれば「可決（賛成 N・反対 N）」の形で両方出す。
+ */
+export function summarizeRollCall(rc: RollCall, decision?: string): RollCallSummary {
+  const tally = `賛成 ${rc.totals.yes}・反対 ${rc.totals.no}`;
   return {
     id: rc.id, session: rc.session, date: rc.date, title: rc.title,
-    totals: rc.totals, result: `賛成 ${rc.totals.yes}・反対 ${rc.totals.no}`, sourceUrl: rc.sourceUrl,
+    totals: rc.totals, result: decision ? `${decision}（${tally}）` : tally, sourceUrl: rc.sourceUrl,
   };
 }
 
@@ -35,7 +39,13 @@ export function summarizeRollCall(rc: RollCall): RollCallSummary {
  * - 名簿にない memberId は名寄せの不整合なので例外にする（黙って捨てない）。
  * - 並びは日付降順、同日は採決 id 降順で安定させる（差分最小化）。
  */
-export function buildDataset(members: readonly Member[], rollCalls: readonly RollCall[]): Aggregated {
+export function buildDataset(
+  members: readonly Member[],
+  rollCalls: readonly RollCall[],
+  /** 採決 id → 議案情報の審議結果（原文）。無い採決は得票のみの result になる。 */
+  decisions: ReadonlyMap<string, string> = new Map(),
+): Aggregated {
+  const summarize = (rc: RollCall) => summarizeRollCall(rc, decisions.get(rc.id));
   const timelines = new Map<string, VoteEntry[]>(members.map((m) => [m.id, []]));
   for (const rc of rollCalls) {
     for (const v of rc.votes) {
@@ -45,7 +55,7 @@ export function buildDataset(members: readonly Member[], rollCalls: readonly Rol
       const groupValue = groupMajority(rc, v.group);
       timeline.push({
         kind: "vote", date: rc.date, rollCallId: rc.id, title: rc.title, value: v.value,
-        result: summarizeRollCall(rc).result, ...(groupValue ? { groupValue } : {}), sourceUrl: rc.sourceUrl,
+        result: summarize(rc).result, ...(groupValue ? { groupValue } : {}), sourceUrl: rc.sourceUrl,
       });
     }
   }
@@ -54,7 +64,7 @@ export function buildDataset(members: readonly Member[], rollCalls: readonly Rol
     const s = toSummary(m);
     return { ...s, counts: { ...s.counts, rollcalls: timelines.get(m.id)!.length } };
   });
-  return { index, details, rollCalls: rollCalls.map(summarizeRollCall).sort(byDateDesc) };
+  return { index, details, rollCalls: rollCalls.map(summarize).sort(byDateDesc) };
 }
 
 const byDateDesc = (a: { date: string; id?: string; rollCallId?: string }, b: { date: string; id?: string; rollCallId?: string }) =>
