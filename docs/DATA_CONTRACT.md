@@ -29,7 +29,8 @@ interface MemberDetail extends Member { timeline: TimelineEntry[] }
 type TimelineEntry =
   | { kind: "vote"; date: string; rollCallId: string; title: string; value: VoteValue; result: string; groupValue?: VoteValue; sourceUrl: string }
   | { kind: "bill"; date: string; billId: string; title: string; role: "提出者" | "賛成者"; submitterText?: string; status?: string; sourceUrl: string }
-  | { kind: "speech"; date: string; speechId: string; meeting: string; excerpt: string; chars: number; position?: string; sourceUrl: string };
+  | { kind: "speech"; date: string; speechId: string; meeting: string; excerpt: string; chars: number; position?: string; sourceUrl: string }
+  | { kind: "stance"; estimated: true; date: string; billId: string; title: string; group: string; stance: "賛成" | "反対"; stanceText: string; status?: string; sourceUrl: string }; // 推定（衆院の会派態度）
 interface RollCallSummary { id: string; session: number; date: string; title: string; totals: { total: number; yes: number; no: number }; result: string }
 ```
 
@@ -59,7 +60,14 @@ interface RollCallSummary { id: string; session: number; date: string; title: st
 - `submitters` / `supporters`（memberId）は衆院の名簿に名寄せできた人だけ。衆院の名簿が無い間は付かず、氏名は `submitterNames` / `supporterNames` に残る（unmatched.json にも流さない。名簿が入ったら名寄せし、紐づかない氏名だけ `kind: "bill"` で unmatched.json に載る）。経過ページに個人の会派は無いので同姓同名は絞れず unmatched に載せる。
 - **推定**: `shugiinGroupStance: { stanceText, yes, no, unanimous? }` は経過ページ「衆議院審議時会派態度／賛成会派／反対会派」の原文（会派名の配列）。衆議院は個人別の投票を公開していないため、**会派の態度から個人の賛否を読み取るのは推定であり、事実（参院の個人票 `RollCall.votes`）とは型で分ける。`RollCall` には入れない。** Web で出すときは「推定（会派の態度）」と明記し、個人の「賛成／反対」とは別の表現にする（色で善悪を示さない）。`unanimous` はページが「全会一致」と書いているときだけ `true`。「多数」で反対会派が空欄のものは全会一致とみなさない（推論しない）。欄が空（未審議・閉会中審査）なら `shugiinGroupStance` は無い。
 - 不変条件（`validateDataset`）: `bills/index.json` の id は一意、各行に対応する `bills/{session}/{id}.json` があり id・session・house が一致する、`sourceUrl` は衆参・NDL のドメイン、`submitters`/`supporters` の memberId は `members/index.json` に存在する、`unanimous` は `stanceText === "全会一致"` のときだけ、index に無いファイル（前回の残骸）は違反。`bills/` は毎回全部書き直す。
-- timeline の `bill` 行は参法（参院 議案情報）から作り、衆院の Bill はまだ timeline に入れない（#73 が消費する）。
+- timeline の `bill` 行は参法（参院 議案情報）に加え、衆院の Bill の `submitters` / `supporters`（名簿に名寄せできた衆院議員）からも作る（#73）。`role` は 提出者 / 賛成者、`date` は衆議院の議案受理年月日（`received.shugiin`）、`sourceUrl` は経過ページ、`submitterText` は「議案提出者」欄の原文。受理日の無い議案は行にしない（日付を推定しない）。
+
+## 会派の態度（timeline の `stance` 行、Issue #73）
+- **推定**。衆議院は個人の投票記録を公開していないので、衆院議員の timeline には `vote` 行が無い。代わりに `Bill.shugiinGroupStance` の賛成会派／反対会派に、その議員の**提出回次の所属会派**（`groupAt(member, bill.session)` の `group`。名簿の正式名称＝経過ページの会派名と同じ表記）が載っている議案だけを `stance` 行にする。
+- 行に記録するのは会派（`group`）とその会派が載っていた側（`stance`）、「衆議院審議時会派態度」の原文（`stanceText`: 多数・少数・全会一致）。**本人の賛否は記録しない**。`estimated: true` を常に持ち、Web は `vote`（事実）とは別の判（tokens の `est-*`：破線＋薄地、賛成・反対で色を変えない）と「会派の態度（推定）」ラベルで出す。
+- 会派がどちらにも載らない・`shugiinGroupStance` が無い・`received.shugiin` が無い・提出回次の名簿に term が無い（後の回次の名簿しか無い）議案は行にしない（推論しない）。参院議員には付けない。
+- `date` は衆議院の議案受理年月日、`sourceUrl` は経過ページ。`counts` には数えない（`counts.bills` は `bill` 行だけ）。同日の並びは vote → bill → stance → speech。
+- 不変条件（`validateDataset`）: `stance` 行は `estimated === true`、`stance` は 賛成/反対、`sourceUrl` は衆院 経過ページ（`gian/keika/`）。`bill` 行の `sourceUrl` は参院 議案ページまたは衆院 経過ページ。
 
 ## 回次
 - ETL は「指定された回次 ∪ `meta.sessions` に既にある回次」を毎回まとめて処理し、`rollcalls/{session}/` を回次ごとに並べる。部分実行で他回次の出力は消えない（回次を減らすときは `data/` を消してから実行する）。
