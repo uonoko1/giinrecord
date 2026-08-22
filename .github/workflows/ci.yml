@@ -21,9 +21,13 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
-      - name: Guard — no server runtime code in the web app
+      - name: Guard — no server runtime code reaches the browser
         run: |
-          ! grep -rEl "use server|express\(|createServer\(|process\.env\." apps/web/app || (echo "server code found in apps/web" && exit 1)
-          test ! -d apps/web/build/server || echo "note: build/server is build-time only; not deployed"
+          # Source: nothing that only makes sense on a server
+          ! grep -rEl "use server|express\(|createServer\(" apps/web/app || (echo "server code found in apps/web/app" && exit 1)
+          # Client bundle: no Node APIs / env / filesystem paths leaked into what we ship
+          ! grep -rEl "node:fs|readFile|process\.env|SEIJI_DATA_DIR|/home/" apps/web/build/client/assets || (echo "Node/env code leaked into client bundle" && exit 1)
+          # Only static files get deployed
+          test -d apps/web/build/client
       - uses: actions/upload-artifact@v4
         with: { name: site, path: apps/web/build/client, retention-days: 3 }
