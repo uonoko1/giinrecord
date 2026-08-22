@@ -58,6 +58,16 @@ export function toSummary(m: Member): MemberSummary {
   };
 }
 
+/** `data/members/index.json` の本文。キーは再帰的にソート、末尾改行（差分を小さくするため）。 */
+export function serializeMembersIndex(members: Member[]): string {
+  return JSON.stringify(members.map(toSummary), sortKeys, 1) + "\n";
+}
+
+const sortKeys = (_: string, v: unknown) =>
+  v && typeof v === "object" && !Array.isArray(v)
+    ? Object.fromEntries(Object.entries(v as Record<string, unknown>).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)))
+    : v;
+
 const ERA: Record<string, number> = { 令和: 2018, 平成: 1988, 昭和: 1925 };
 
 /** 「令和10年7月25日」→ "2028-07-25"。解釈できなければ undefined。 */
