@@ -31,4 +31,4 @@ jobs:
           printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
           rsync -az --delete --exclude '.well-known' \
             -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes" \
-            apps/web/build/client/ "$USER@$HOST:/srv/seiji-kiroku/site/"
+            apps/web/build/client/ "$USER@$HOST:/var/www/seiji-kiroku/site/"
