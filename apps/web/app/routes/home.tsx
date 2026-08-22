@@ -17,6 +17,7 @@ export default function Home({ data = bundled }: { data?: Dataset }) {
   const recent = [...data.rollcalls].sort((a, b) => b.date.localeCompare(a.date)).slice(0, RECENT_LIMIT);
   const latestSession = data.meta?.sessions.length ? Math.max(...data.meta.sessions) : undefined;
   const sangiinCount = data.members.filter((m) => m.house === "sangiin").length;
+  const shugiinCount = data.members.filter((m) => m.house === "shugiin").length;
 
   return (
     <main className="page">
@@ -32,7 +33,7 @@ export default function Home({ data = bundled }: { data?: Dataset }) {
 
       <section className="section entry" aria-label="さがす">
         <Link className="entry__link" to="/members">
-          参議院の議員一覧
+          議員一覧
           <span className="entry__sub">　名前・ふりがなでさがす</span>
         </Link>
       </section>
@@ -74,6 +75,10 @@ export default function Home({ data = bundled }: { data?: Dataset }) {
             <div className="figure__label">参議院議員</div>
           </div>
           <div className="figure">
+            <div className="figure__num">{shugiinCount > 0 ? shugiinCount : PENDING}</div>
+            <div className="figure__label">衆議院議員</div>
+          </div>
+          <div className="figure">
             <div className="figure__num">{data.rollcalls.length > 0 ? data.rollcalls.length : PENDING}</div>
             <div className="figure__label">本会議採決</div>
           </div>
@@ -82,7 +87,7 @@ export default function Home({ data = bundled }: { data?: Dataset }) {
             <div className="figure__label">国会</div>
           </div>
         </div>
-        <p className="note">衆議院は個人の投票記録が公開されていないため、会派の態度として別に扱います（準備中）。</p>
+        <p className="note">衆議院は個人の投票記録が公開されていないため、会派の態度として別に扱います。</p>
       </section>
 
       <section className="section" aria-labelledby="sources-heading">

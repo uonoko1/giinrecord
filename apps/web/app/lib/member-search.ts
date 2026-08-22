@@ -2,6 +2,7 @@
  * /members の純粋ロジック（ブラウザで動く。Node API は使わない）。
  * 五十音の行分け・部分一致の絞り込み・任期満了の表記。評価や並び替えの「重み」は一切持たない。
  */
+import type { House } from "@seiji-kiroku/shared";
 import type { MemberSummary } from "./data-contract";
 
 export const KANA_ROWS = ["あ", "か", "さ", "た", "な", "は", "ま", "や", "ら", "わ"] as const;
@@ -66,6 +67,8 @@ export function groupByKanaRow(members: MemberSummary[]): KanaGroup[] {
 }
 
 export interface MemberFilter {
+  /** 院。未指定・空文字は両院 */
+  house?: House | "";
   query?: string;
   group?: string;
   district?: string;
@@ -86,6 +89,7 @@ export function filterMembers(members: MemberSummary[], filter: MemberFilter): M
   const q = normalizeForSearch(filter.query ?? "");
   return members.filter(
     (m) =>
+      (!filter.house || m.house === filter.house) &&
       (!filter.group || m.group === filter.group) &&
       (!filter.district || m.district === filter.district) &&
       (q === "" || normalizeForSearch(m.name).includes(q) || normalizeForSearch(m.kana).includes(q)),

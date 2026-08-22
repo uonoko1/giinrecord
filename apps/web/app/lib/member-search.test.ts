@@ -74,6 +74,15 @@ describe("filterMembers", () => {
     expect(filterMembers([{ ...members[0], name: "A. B" }], { query: "Ａ" })).toHaveLength(1);
   });
 
+  it("院（house）で絞り込める。未指定・空文字は両院", () => {
+    const shugiin = { ...members[0], id: "h_000001", name: "衆 太郎", kana: "しゅう たろう", house: "shugiin" as const };
+    const both = [...members, shugiin];
+    expect(filterMembers(both, { house: "shugiin" }).map((m) => m.id)).toEqual(["h_000001"]);
+    expect(filterMembers(both, { house: "sangiin" })).toHaveLength(members.length);
+    expect(filterMembers(both, {})).toHaveLength(both.length);
+    expect(filterMembers(both, { house: "" })).toHaveLength(both.length);
+  });
+
   it("会派・選挙区で絞り込める（組み合わせ可）", () => {
     expect(filterMembers(members, { group: "立憲" })).toHaveLength(3);
     expect(filterMembers(members, { district: "比例" })).toHaveLength(5);

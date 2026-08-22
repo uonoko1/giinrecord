@@ -19,7 +19,7 @@ function renderMembers(list = members) {
 describe("/members", () => {
   it("見出し・件数「10 名」・評価語なし", () => {
     const { container } = renderMembers();
-    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("参議院議員");
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("国会議員");
     expect(screen.getByText("10 名")).toBeInTheDocument();
     for (const word of EVALUATIVE_WORDS) expect(container.textContent).not.toContain(word);
   });
@@ -124,6 +124,60 @@ describe("/members", () => {
     });
   });
 
+  describe("院（house）の絞り込み", () => {
+    const shugiin = { ...members[0], id: "h_000001", name: "衆 太郎", kana: "しゅう たろう", house: "shugiin" as const, group: "自民", district: "東京1区" };
+    const both = [...members, shugiin];
+
+    it("既定は両院を出し、院の select は 両院／参議院／衆議院", () => {
+      renderMembers(both);
+      const house = screen.getByRole("combobox", { name: "院" });
+      expect(within(house).getAllByRole("option").map((o) => o.textContent)).toEqual(["両院", "参議院", "衆議院"]);
+      expect(house).toHaveValue("");
+      expect(screen.getByText("11 名")).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: /衆 太郎/ })).toHaveAttribute("href", "/members/h_000001");
+    });
+
+    it("両院表示のとき各行に院を添える", () => {
+      renderMembers(both);
+      expect(screen.getByRole("link", { name: /衆 太郎/ }).closest("li")).toHaveTextContent("衆議院");
+      expect(screen.getByRole("link", { name: /藤川 政人/ }).closest("li")).toHaveTextContent("参議院");
+    });
+
+    it("衆議院を選ぶと衆院のみになり、会派・選挙区の選択肢もその院のものになる", async () => {
+      const user = userEvent.setup();
+      renderMembers(both);
+      await user.selectOptions(screen.getByRole("combobox", { name: "院" }), "shugiin");
+      expect(screen.getByText("1 名")).toBeInTheDocument();
+      expect(screen.queryByRole("link", { name: /藤川 政人/ })).not.toBeInTheDocument();
+      const district = screen.getByRole("combobox", { name: "選挙区" });
+      expect(within(district).getAllByRole("option").map((o) => o.textContent)).toEqual(["すべて", "東京1区"]);
+    });
+
+    it("参議院を選ぶと参院のみ。元職トグルは院と独立に効く", async () => {
+      const user = userEvent.setup();
+      const former = { ...shugiin, id: "h_000002", name: "元 衆", kana: "もと しゅう", current: false as const };
+      renderMembers([...both, former]);
+      await user.selectOptions(screen.getByRole("combobox", { name: "院" }), "sangiin");
+      expect(screen.getByText("10 名")).toBeInTheDocument();
+      await user.selectOptions(screen.getByRole("combobox", { name: "院" }), "shugiin");
+      expect(screen.getByText("1 名")).toBeInTheDocument();
+      await user.click(screen.getByRole("checkbox", { name: "元職も含める" }));
+      expect(screen.getByText("2 名")).toBeInTheDocument();
+    });
+
+    it("会派・選挙区を選んだ状態で院を切り替えると、その絞り込みはリセットされ 0 名にならない", async () => {
+      const user = userEvent.setup();
+      renderMembers(both);
+      const group = screen.getByRole("combobox", { name: "会派" });
+      await user.selectOptions(group, "立憲");
+      await user.selectOptions(screen.getByRole("combobox", { name: "院" }), "shugiin");
+      expect(group).toHaveValue("");
+      expect(screen.getByRole("combobox", { name: "選挙区" })).toHaveValue("");
+      expect(screen.getByText("1 名")).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: /衆 太郎/ })).toBeInTheDocument();
+    });
+  });
+
   it("取得日時をフッターに出す", () => {
     renderMembers();
     expect(screen.getByText(/2026\.08\.22 06:00/)).toBeInTheDocument();
@@ -133,7 +187,7 @@ describe("/members", () => {
 describe("meta()", () => {
   it("title・canonical・OGP を持つ", () => {
     const tags = routeMeta({ location: { pathname: "/members" } } as unknown as Parameters<typeof routeMeta>[0]);
-    expect(tags).toContainEqual({ title: "参議院議員一覧 ・ 政治記録" });
+    expect(tags).toContainEqual({ title: "国会議員一覧 ・ 政治記録" });
     expect(tags).toContainEqual({ tagName: "link", rel: "canonical", href: "/members" });
     expect(tags).toContainEqual({ property: "og:url", content: "/members" });
   });
