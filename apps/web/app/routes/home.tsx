@@ -107,6 +107,7 @@ export default function Home({ data = bundled }: { data?: Dataset }) {
           <a href={REPO_URL} rel="noreferrer">
             ソースコード
           </a>
+          <Link to="/about#funding">支援する</Link>
         </div>
       </section>
     </main>

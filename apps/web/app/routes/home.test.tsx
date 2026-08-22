@@ -5,6 +5,7 @@ import Home from "./home";
 import { dataset } from "../test-fixtures/dataset";
 
 const EVALUATIVE_WORDS = ["おすすめ", "ランキング", "一致率"];
+const CAMPAIGN_WORDS = ["応援", "守る", "守ろう", "ぜひ", "お願いします", "あなたの力", "みんなで"];
 
 function renderHome(data = dataset) {
   return render(
@@ -73,5 +74,22 @@ describe("Home", () => {
     renderHome({ meta: undefined, members: [], rollcalls: [] });
     expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "このサイトにあるもの" })).toHaveTextContent("［集計中］");
+  });
+
+  describe("フッターの支援リンク", () => {
+    it("/about#funding への控えめなリンクがあり、ボタンではない", () => {
+      renderHome();
+      const link = screen.getByRole("link", { name: "支援する" });
+      expect(link).toHaveAttribute("href", "/about#funding");
+      expect(link.className).not.toMatch(/button|btn|entry__link/);
+      expect(link.closest(".links")).not.toBeNull();
+    });
+
+    it("運動的な言葉を含まない", () => {
+      const { container } = renderHome();
+      for (const word of CAMPAIGN_WORDS) {
+        expect(container.textContent).not.toContain(word);
+      }
+    });
   });
 });
