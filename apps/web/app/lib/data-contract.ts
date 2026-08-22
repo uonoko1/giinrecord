@@ -48,6 +48,8 @@ export type SpeechEntry = {
   meeting: string;
   excerpt: string;
   chars: number;
+  /** 会議録の speakerPosition 原文（例: "議長", "国土交通大臣"）。役職として行った発言。無ければ省略 */
+  position?: string;
   sourceUrl: string;
 };
 export type TimelineEntry = VoteEntry | BillEntry | SpeechEntry;

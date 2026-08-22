@@ -17,12 +17,31 @@ type Pages = {
   "/about": {
     params: {};
   };
+  "/members": {
+    params: {};
+  };
+  "/members/:id": {
+    params: {
+      "id": string;
+    };
+  };
+  "/rollcalls/:session?": {
+    params: {
+      "session"?: string;
+    };
+  };
+  "/rollcalls/:session/:id": {
+    params: {
+      "session": string;
+      "id": string;
+    };
+  };
 };
 
 type RouteFiles = {
   "root.tsx": {
     id: "root";
-    page: "/" | "/about";
+    page: "/" | "/about" | "/members" | "/members/:id" | "/rollcalls/:session?" | "/rollcalls/:session/:id";
   };
   "routes/home.tsx": {
     id: "routes/home";
@@ -32,10 +51,30 @@ type RouteFiles = {
     id: "routes/about";
     page: "/about";
   };
+  "routes/members.tsx": {
+    id: "routes/members";
+    page: "/members";
+  };
+  "routes/member.tsx": {
+    id: "routes/member";
+    page: "/members/:id";
+  };
+  "routes/rollcalls.tsx": {
+    id: "routes/rollcalls";
+    page: "/rollcalls/:session?";
+  };
+  "routes/rollcall.tsx": {
+    id: "routes/rollcall";
+    page: "/rollcalls/:session/:id";
+  };
 };
 
 type RouteModules = {
   "root": typeof import("./app/root.tsx");
   "routes/home": typeof import("./app/routes/home.tsx");
   "routes/about": typeof import("./app/routes/about.tsx");
+  "routes/members": typeof import("./app/routes/members.tsx");
+  "routes/member": typeof import("./app/routes/member.tsx");
+  "routes/rollcalls": typeof import("./app/routes/rollcalls.tsx");
+  "routes/rollcall": typeof import("./app/routes/rollcall.tsx");
 };

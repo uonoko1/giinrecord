@@ -152,22 +152,30 @@ describe("buildDataset: speech を timeline に入れる", () => {
   test("vote と speech が混ざっても timeline は日付降順（不変条件）。同日は vote → speech の順", () => {
     const m1 = ds.details.find((d) => d.id === "m_1")!;
     const later = buildDataset(members, rcs, new Map(), [...speeches, speech("122115254X02020260610_009", "m_1", "2026-06-10")]);
-    assert.deepEqual(later.details.find((d) => d.id === "m_1")!.timeline.map((e) => [e.kind, e.date]), [["speech", "2026-06-10"], ["vote", "2026-06-05"], ["speech", "2026-06-05"]]);
-    assert.deepEqual(m1.timeline.map((e) => [e.kind, e.date]), [["vote", "2026-06-05"], ["speech", "2026-06-05"]]);
+    assert.deepEqual(later.details.find((d) => d.id === "m_1")!.timeline.map((e) => [e.kind, e.date]), [["speech", "2026-06-10"], ["speech", "2026-06-10"], ["vote", "2026-06-05"], ["speech", "2026-06-05"]]);
+    assert.deepEqual(m1.timeline.map((e) => [e.kind, e.date]), [["speech", "2026-06-10"], ["vote", "2026-06-05"], ["speech", "2026-06-05"]]);
   });
 
-  test("議長・大臣など position 付きの発言は、TimelineEntry に position が無い間は timeline に入れない（議員としての発言と区別できない数値を出さない）", () => {
+  test("議長・大臣など position 付きの発言も timeline に入り、position を原文のまま載せる（役職としての発言も記録）", () => {
     const m1 = ds.details.find((d) => d.id === "m_1")!;
-    assert.equal(m1.timeline.some((e) => e.kind === "speech" && e.speechId === "122115254X02020260610_004"), false);
-    assert.equal(buildDataset(members, [], new Map(), [speech("x_001", "m_1", "2026-06-05", { position: "" })]).index[0].counts.speeches, 1);
+    assert.deepEqual(m1.timeline.find((e) => e.kind === "speech" && e.speechId === "122115254X02020260610_004"), {
+      kind: "speech", date: "2026-06-10", speechId: "122115254X02020260610_004", meeting: "本会議 第1号",
+      excerpt: "抜粋 122115254X02020260610_004", chars: 300, position: "議長", sourceUrl: "https://kokkai.ndl.go.jp/txt/122115254X02020260610/4",
+    });
+  });
+
+  test("position が空文字の発言は position を載せない（キーを作らない）", () => {
+    const d = buildDataset(members, [], new Map(), [speech("x_001", "m_1", "2026-06-05", { position: "" })]);
+    assert.deepEqual(Object.keys(d.details[0].timeline[0]).includes("position"), false);
+    assert.equal(d.index[0].counts.speeches, 1);
   });
 
   test("memberId の無い発言（名簿にいない大臣など）は timeline に入れない", () => {
     assert.ok(ds.details.every((d) => d.timeline.every((e) => e.kind !== "speech" || e.speechId !== "122115254X01920260605_010")));
   });
 
-  test("counts.speeches は timeline の speech 数（position 付きの発言は含まない）", () => {
-    assert.deepEqual(ds.index.map((m) => [m.id, m.counts.speeches]), [["m_1", 1], ["m_2", 0]]);
+  test("counts.speeches は timeline の speech 数（position 付きの発言も含める。内訳は持たない）", () => {
+    assert.deepEqual(ds.index.map((m) => [m.id, m.counts.speeches]), [["m_1", 2], ["m_2", 0]]);
   });
 
   test("speeches を省略しても従来どおり（後方互換）", () => {

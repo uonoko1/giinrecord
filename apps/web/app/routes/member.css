@@ -32,6 +32,10 @@
 .member-row-title { font-size: 14.5px; line-height: 1.5; }
 .member-row-meta { font-size: 12px; line-height: 1.5; color: var(--muted); }
 .member-empty { padding: 24px 20px; color: var(--muted); }
+/* 役職（会議録の speakerPosition 原文）。役職としての発言だと分かるラベル。色は区別のみで評価ではない */
+.member-position { display: inline-block; margin-right: 8px; padding: 0 6px; font-family: var(--font-head); font-size: 12px; font-weight: 700; letter-spacing: 0.04em; color: var(--ink); border: 1px solid var(--rule); vertical-align: 1px; }
+/* 議長の議事進行発言は本文を控えめに（役職ラベルは同じ強さで残す） */
+.member-row[data-position="議長"] .member-row-title { color: var(--muted); }
 
 /* 判 */
 .member-stamp { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 48px; height: 26px; font-family: var(--font-head); font-weight: 700; font-size: 13px; letter-spacing: 0.06em; border: 1.5px solid transparent; }
