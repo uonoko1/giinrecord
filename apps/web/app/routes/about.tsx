@@ -20,7 +20,7 @@ export default function About({ data = bundled }: { data?: Dataset }) {
     <main className="page">
       <header className="cover">
         <div className="cover__brand">
-          <Link to="/">政治記録</Link>
+          <Link to="/">議会ログ</Link>
         </div>
         <h1 className="cover__title">このデータについて</h1>
         <p className="cover__lead">このサイトは国会の公式記録を整形して並べるだけです。評価・採点・推薦はしません。すべての行に出典があります。</p>

@@ -1,0 +1,40 @@
+{
+ "house": "shugiin",
+ "id": "217-衆法-36",
+ "kind": "衆法",
+ "number": 36,
+ "received": {
+  "sangiin": "2025-05-30",
+  "shugiin": "2025-05-29"
+ },
+ "result": {
+  "lawNumber": "65",
+  "promulgated": "2025-06-13",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 217,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主党・無所属",
+   "日本維新の会",
+   "国民民主党・無所属クラブ",
+   "公明党",
+   "れいわ新選組",
+   "日本共産党",
+   "有志の会",
+   "参政党"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF12E.htm",
+ "status": "成立",
+ "submitterNames": [
+  "竹内譲"
+ ],
+ "submitterText": "総務委員長",
+ "supporterNames": [],
+ "title": "行政書士法の一部を改正する法律案"
+}
