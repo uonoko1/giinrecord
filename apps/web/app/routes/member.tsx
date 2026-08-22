@@ -31,7 +31,7 @@ export function pageTitle(detail: MemberDetail): string {
 }
 
 export function meta({ data, location }: MetaArgs<typeof loader>) {
-  if (!data) return [{ title: "政治記録" }];
+  if (!data) return [{ title: "議会ログ" }];
   const { detail } = data;
   return seoMeta({
     title: pageTitle(detail),
@@ -70,9 +70,19 @@ const TABS: Record<MemberDetail["house"], { id: Tab; label: string }[]> = {
 
 const HOUSE_LABEL = { sangiin: "参議院", shugiin: "衆議院" } as const;
 
+/** 会派の態度（推定）は1人あたり100行前後になるので、最初は 20 件だけ出し「さらに表示」で残りを出す（#88）。 */
+export const STANCE_FOLD = 20;
+
 export function MemberPage({ detail, meta }: { detail: MemberDetail; meta: DatasetMeta | null }) {
-  const [tab, setTab] = useState<Tab>("all");
-  const entries = tab === "all" ? detail.timeline : detail.timeline.filter((e) => e.kind === tab);
+  const [tab, setTabState] = useState<Tab>("all");
+  const [stanceExpanded, setStanceExpanded] = useState(false);
+  const setTab = (t: Tab) => {
+    setTabState(t);
+    setStanceExpanded(false);
+  };
+  const all = tab === "all" ? detail.timeline : detail.timeline.filter((e) => e.kind === tab);
+  const folded = tab === "stance" && !stanceExpanded && all.length > STANCE_FOLD;
+  const entries = folded ? all.slice(0, STANCE_FOLD) : all;
   const counts = countKinds(detail.timeline);
 
   return (
@@ -105,6 +115,13 @@ export function MemberPage({ detail, meta }: { detail: MemberDetail; meta: Datas
           <BillTable bills={entries.filter((e): e is BillEntry => e.kind === "bill")} />
         ) : (
           <Timeline entries={entries} />
+        )}
+        {folded && (
+          <p className="member-more">
+            <button type="button" className="member-more-button" onClick={() => setStanceExpanded(true)}>
+              さらに表示（残り{(all.length - STANCE_FOLD).toLocaleString("ja-JP")}件）
+            </button>
+          </p>
         )}
       </section>
       <SourceLine meta={meta} />
@@ -140,7 +157,7 @@ function Cover({ detail, counts }: { detail: MemberDetail; counts: Counts }) {
   return (
     <header className="member-cover">
       <div className="member-cover-top">
-        <a href="/">← 政治記録</a>
+        <a href="/">← 議会ログ</a>
       </div>
       <p className="member-kana">{detail.kana}</p>
       <h1 className="member-name">{detail.name}</h1>

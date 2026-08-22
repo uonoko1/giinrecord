@@ -1,0 +1,35 @@
+{
+ "house": "shugiin",
+ "id": "221-閣法-20",
+ "kind": "閣法",
+ "number": 20,
+ "received": {
+  "sangiin": "2026-04-28",
+  "shugiin": "2026-03-10"
+ },
+ "result": {
+  "lawNumber": "32",
+  "promulgated": "2026-06-05",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 221,
+ "shugiinGroupStance": {
+  "no": [
+   "中道改革連合・無所属",
+   "日本共産党"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "日本維新の会",
+   "国民民主党・無所属クラブ",
+   "参政党",
+   "チームみらい"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1F16.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "出入国管理及び難民認定法及び出入国管理及び難民認定法第二条第五号ロの旅券を所持する外国人の上陸申請の特例に関する法律の一部を改正する法律案"
+}

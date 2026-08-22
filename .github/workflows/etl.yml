@@ -85,7 +85,10 @@ jobs:
           STAMP=$(date -u +%Y-%m-%dT%H:%MZ)
           git switch -c "$DATA_BRANCH"
           git commit -m "data: refresh $STAMP"
-          git push --force origin "$DATA_BRANCH"
+          # 既存ブランチへの force-push は main 側で進んだ .github/ の差分を含み、GITHUB_TOKEN（workflows 権限なし）が拒否する。
+          # リモートを削除して新規ブランチとして push する（新規コミットは data/ のみ）。
+          git push origin --delete "$DATA_BRANCH" 2>/dev/null || true
+          git push origin "$DATA_BRANCH"
           NUMBER=$(gh pr list --head "$DATA_BRANCH" --state open --json number -q ".[0].number")
           if [ -z "$NUMBER" ]; then
             gh pr create --base main --head "$DATA_BRANCH" --title "data: refresh $STAMP" \

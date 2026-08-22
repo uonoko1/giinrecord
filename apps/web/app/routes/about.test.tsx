@@ -31,7 +31,7 @@ describe("About", () => {
     expect(screen.getAllByText("事実")).toHaveLength(2);
     expect(screen.getAllByText("推定")).toHaveLength(1);
     expect(screen.getByText("参議院の記名・押しボタン投票")).toBeInTheDocument();
-    expect(screen.getByText("衆議院の賛否（準備中）")).toBeInTheDocument();
+    expect(screen.getByText("衆議院の賛否")).toBeInTheDocument();
   });
 
   it("記録にないことを列挙する", () => {
@@ -67,7 +67,7 @@ describe("About", () => {
     expect(link).toHaveAttribute("download");
     const section = screen.getByRole("region", { name: "検証する" });
     expect(section).toHaveTextContent("CC BY 4.0");
-    expect(section).toHaveTextContent("政治記録");
+    expect(section).toHaveTextContent("議会ログ");
     expect(screen.getByRole("link", { name: "GitHub のデータ" })).toHaveAttribute("href", "https://github.com/uonoko1/seiji-kiroku/tree/main/data");
   });
 
@@ -125,7 +125,7 @@ describe("About", () => {
 describe("meta()", () => {
   it("title・description・canonical を持つ", () => {
     const tags = routeMeta({ location: { pathname: "/about" } } as unknown as Parameters<typeof routeMeta>[0]);
-    expect(tags).toContainEqual({ title: "このデータについて ・ 政治記録" });
+    expect(tags).toContainEqual({ title: "このデータについて ・ 議会ログ" });
     expect(tags).toContainEqual({ name: "description", content: expect.any(String) });
     expect(tags).toContainEqual({ tagName: "link", rel: "canonical", href: "/about" });
   });

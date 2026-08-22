@@ -39,18 +39,18 @@ describe("seoMeta", () => {
     origin: "https://example.test",
   });
   it("title / description / canonical / OGP を一式返す", () => {
-    expect(tags).toContainEqual({ title: "藤川 政人（参議院・愛知）の投票記録 ・ 政治記録" });
+    expect(tags).toContainEqual({ title: "藤川 政人（参議院・愛知）の投票記録 ・ 議会ログ" });
     expect(tags).toContainEqual({ name: "description", content: "説明" });
     expect(tags).toContainEqual({ tagName: "link", rel: "canonical", href: "https://example.test/members/m_1" });
-    expect(tags).toContainEqual({ property: "og:title", content: "藤川 政人（参議院・愛知）の投票記録 ・ 政治記録" });
+    expect(tags).toContainEqual({ property: "og:title", content: "藤川 政人（参議院・愛知）の投票記録 ・ 議会ログ" });
     expect(tags).toContainEqual({ property: "og:description", content: "説明" });
     expect(tags).toContainEqual({ property: "og:type", content: "article" });
     expect(tags).toContainEqual({ property: "og:url", content: "https://example.test/members/m_1" });
-    expect(tags).toContainEqual({ property: "og:site_name", content: "政治記録" });
+    expect(tags).toContainEqual({ property: "og:site_name", content: "議会ログ" });
   });
   it("title が無ければサイト名だけ、type は既定で website、origin 未設定なら相対", () => {
     const t = seoMeta({ description: "d", pathname: "/", origin: "" });
-    expect(t).toContainEqual({ title: "政治記録" });
+    expect(t).toContainEqual({ title: "議会ログ" });
     expect(t).toContainEqual({ property: "og:type", content: "website" });
     expect(t).toContainEqual({ tagName: "link", rel: "canonical", href: "/" });
     expect(t).toContainEqual({ property: "og:url", content: "/" });

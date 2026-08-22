@@ -24,7 +24,7 @@ export async function loader({ params }: LoaderFunctionArgs): Promise<RollCallLo
 }
 
 export function meta({ data, location }: MetaArgs<typeof loader>) {
-  if (!data) return [{ title: "政治記録" }];
+  if (!data) return [{ title: "議会ログ" }];
   const { rollCall } = data;
   return seoMeta({
     title: rollCall.title,
@@ -56,7 +56,7 @@ export function RollCallPage({ rollCall, meta }: { rollCall: RollCall; meta: Dat
     <main className="rollcall">
       <header className="rollcall-cover">
         <div className="rollcall-cover-top">
-          <Link to="/">← 政治記録</Link>
+          <Link to="/">← 議会ログ</Link>
           <Link to={`/rollcalls/${rollCall.session}`}>第{rollCall.session}回国会の採決</Link>
         </div>
         <p className="rollcall-date">

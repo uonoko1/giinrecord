@@ -1,6 +1,6 @@
-# 政治記録 (seiji-kiroku)
+# 議会ログ (seiji-kiroku)
 
-言ったことではなく、やったことを。
+言ったことではなく、やったことを。 https://gikailog.jp
 
 国会議員が本会議でどう投票し、どの法案を出し、何を発言したか —— 衆参両院と国立国会図書館の**公式記録だけ**を、出典リンク付きでそのまま並べるサイトです。評価・採点・推薦はしません。
 
@@ -18,7 +18,7 @@ apps/web         React + TypeScript + Vite + React Router。ビルド時にプ�
 packages/etl     TypeScript のバッチ。GitHub Actions で日次実行し、衆参・会議録から data/ を生成
 packages/shared  型定義
 data/            正規化済み JSON（CC BY 4.0）
-deploy/          VPS（Caddy 静的配信）の設定
+deploy/          VPS の配信設定（nginx コンテナ + docker compose。共用ホストの nginx は TLS と proxy のみ）
 ```
 
 ## 開発

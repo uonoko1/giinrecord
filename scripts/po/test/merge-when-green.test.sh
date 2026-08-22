@@ -71,7 +71,9 @@ t_merge_behind_updates_first() {
   local h; h=$(handler <<'EOF'
 handle() {
   case "$*" in
-    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"BEHIND","url":"u"}' ;;
+    "pr view 12 --json"*)
+      if [ "$(bump)" -eq 1 ]; then echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"BEHIND","url":"u"}'
+      else echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u"}'; fi ;;
     "pr update-branch 12") echo updated ;;
     "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
     "pr merge 12 --squash --delete-branch") echo merged ;;
@@ -85,8 +87,86 @@ EOF
   local first_line; first_line=$(sed -n 2p <<<"$LOG")
   assert_eq "pr	update-branch	12" "$first_line" "update-branch is the 2nd gh call"
   assert_contains "$LOG" "pr	merge	12" "merged afterwards"
+  assert_eq 1 "$(grep -c 'pr	update-branch' <<<"$LOG")" "updated exactly once"
 }
 test_case "merge: BEHIND → update-branch before polling" t_merge_behind_updates_first
+
+# #89: main moved while we were waiting (e.g. another PR merged) → BEHIND during the poll loop
+t_merge_behind_while_pending() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"BLOCKED","url":"u"}' ;;
+    "pr view 12 --json mergeStateStatus"*)
+      # BEHIND on the 2nd poll only; back to BLOCKED once the branch was updated
+      if [ "$(cat "$FAKE_COUNTER")" -eq 2 ] && ! grep -q update-branch "$FAKE_GH_LOG"; then echo '{"mergeStateStatus":"BEHIND"}'
+      else echo '{"mergeStateStatus":"BLOCKED"}'; fi ;;
+    "pr update-branch 12") echo updated ;;
+    "pr checks 12 --json"*)
+      if [ "$(bump)" -lt 4 ]; then echo '[{"name":"check","bucket":"pending"}]'; exit 8
+      else echo '[{"name":"check","bucket":"pass"}]'; fi ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "exit status: $ERR"
+  assert_eq 1 "$(grep -c 'pr	update-branch	12' <<<"$LOG")" "update-branch called once while pending"
+  assert_contains "$LOG" "pr	merge	12" "merged afterwards"
+}
+test_case "merge: BEHIND during the poll loop → update-branch and keep waiting" t_merge_behind_while_pending
+
+# #83: checks went green on the old base, but main advanced meanwhile → update, wait for new checks, merge
+t_merge_behind_when_green() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u"}' ;;
+    "pr view 12 --json mergeStateStatus"*)
+      if grep -q update-branch "$FAKE_GH_LOG"; then echo '{"mergeStateStatus":"CLEAN"}'; else echo '{"mergeStateStatus":"BEHIND"}'; fi ;;
+    "pr update-branch 12") echo updated ;;
+    "pr checks 12 --json"*)
+      case "$(bump)" in
+        1) echo '[{"name":"check","bucket":"pass"}]' ;;
+        2) echo '[{"name":"check","bucket":"pending"}]'; exit 8 ;;
+        *) echo '[{"name":"check","bucket":"pass"}]' ;;
+      esac ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "exit status: $ERR"
+  local order; order=$(grep -E 'update-branch|pr	merge' <<<"$LOG" | tr '\n' '|')
+  assert_eq "pr	update-branch	12|pr	merge	12	--squash	--delete-branch|" "$order" "update-branch before merge"
+  assert_eq 3 "$(grep -c 'pr	checks' <<<"$LOG")" "re-polled checks after the update"
+}
+test_case "merge: green but BEHIND → update-branch, re-poll, then merge" t_merge_behind_when_green
+
+t_merge_update_branch_failure_is_not_fatal() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"BEHIND","url":"u"}' ;;
+    "pr view 12 --json mergeStateStatus"*) echo '{"mergeStateStatus":"CLEAN"}' ;;
+    "pr update-branch 12") echo "merge conflict" >&2; exit 1 ;;
+    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "exit status: $ERR"
+  assert_contains "$ERR" "could not update" "warns about the failed update"
+  assert_contains "$LOG" "pr	merge	12" "still tries to merge (gh reports the real blocker)"
+}
+test_case "merge: a failed update-branch is logged, not fatal" t_merge_update_branch_failure_is_not_fatal
 
 t_merge_pending_then_pass() {
   local h; h=$(handler <<'EOF'
