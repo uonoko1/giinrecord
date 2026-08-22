@@ -93,3 +93,51 @@ export interface DatasetMeta {
   sources: { name: string; url: string; fetchedAt: string }[];
   sessions: number[];
 }
+
+/** `data/members/{id}.json`: the member plus every record of theirs, newest first (docs/DATA_CONTRACT.md). */
+export interface MemberDetail extends Member {
+  timeline: TimelineEntry[];
+}
+
+export type VoteEntry = {
+  kind: "vote";
+  date: string;
+  rollCallId: string;
+  title: string;
+  value: VoteValue;
+  /** 公表された集計をそのまま文字列にしたもの（例: "賛成 150・反対 90"）。可否の判定・評価はしない。 */
+  result: string;
+  /** その採決でその会派の多数票（賛成票>反対票なら賛成、同数なら undefined）。 */
+  groupValue?: VoteValue;
+  sourceUrl: string;
+};
+export type BillEntry = {
+  kind: "bill";
+  date: string;
+  billId: string;
+  title: string;
+  role: "提出者" | "賛成者";
+  status?: string;
+  sourceUrl: string;
+};
+export type SpeechEntry = {
+  kind: "speech";
+  date: string;
+  speechId: string;
+  meeting: string;
+  excerpt: string;
+  chars: number;
+  sourceUrl: string;
+};
+export type TimelineEntry = VoteEntry | BillEntry | SpeechEntry;
+
+/** Row of `data/rollcalls/index.json` (採決一覧用). */
+export interface RollCallSummary {
+  id: string;
+  session: number;
+  date: string;
+  title: string;
+  totals: { total: number; yes: number; no: number };
+  result: string;
+  sourceUrl: string;
+}
