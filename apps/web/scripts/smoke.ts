@@ -5,12 +5,17 @@
  * and that data/data-archive.zip exists with one entry per data/ file (+ README) within
  * ARCHIVE_MAX_BYTES. Exits non-zero on any failure.
  * Usage: pnpm --filter web smoke   (BUILD_DIR / SEIJI_DATA_DIR override the defaults)
+ *
+ * URL mode (Issue #85): `pnpm --filter web smoke -- --url http://127.0.0.1:8080` additionally fetches
+ * every built page, one asset, one data file and an unknown path from that origin and checks status,
+ * SPA fallback, security headers and Cache-Control (app/lib/smoke-url.ts). The file checks above still run first.
  */
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { ARCHIVE_NAME, checkArchive, collectDataFiles } from "../app/lib/archive";
 import { defaultDataDir, readRollCallIndex } from "../app/lib/data-files";
 import { checkBuild, checkSitemap, formatReport, type BuildFiles, type ExpectedData } from "../app/lib/smoke";
+import { checkServed, urlSmokeTargets, type ServedResponse } from "../app/lib/smoke-url";
 
 async function listBuild(root: string): Promise<BuildFiles> {
   const files: BuildFiles = new Map();
@@ -52,7 +57,43 @@ const archive = files.has(`data/${ARCHIVE_NAME}`) ? await readFile(archivePath) 
 const dataFileCount = (await collectDataFiles(dataDir)).length;
 const archiveFailures = checkArchive(archive, { dataFileCount, maxBytes: ARCHIVE_MAX_BYTES });
 
-const report = { ...pages, failures: [...pages.failures, ...sitemap.failures, ...archiveFailures] };
+const urlFlag = process.argv.indexOf("--url");
+const baseUrl = urlFlag >= 0 ? process.argv[urlFlag + 1] : undefined;
+if (urlFlag >= 0 && !baseUrl) {
+  console.error("smoke: --url requires an origin, e.g. --url http://127.0.0.1:8080");
+  process.exit(2);
+}
+
+async function fetchAll(origin: string, urls: string[]): Promise<Map<string, ServedResponse>> {
+  const got = new Map<string, ServedResponse>();
+  for (const url of urls) {
+    try {
+      const r = await fetch(new URL(url, origin), { redirect: "manual" });
+      const headers: Record<string, string> = {};
+      r.headers.forEach((v, k) => (headers[k] = v));
+      await r.body?.cancel(); // headers + status are what we check; do not download the 5 MB archive
+      got.set(url, { status: r.status, headers, body: "" });
+    } catch {
+      // left out of the map → reported as "no response"
+    }
+  }
+  return got;
+}
+
+let servedFailures: string[] = [];
+if (baseUrl) {
+  const all = [...files.keys()];
+  const targets = urlSmokeTargets(
+    all.filter((f) => f.endsWith("index.html")),
+    all.filter((f) => !f.endsWith(".html")),
+  );
+  const urls = [...targets.pages, targets.unknown, targets.asset, targets.data].filter((u): u is string => u !== null);
+  const served = checkServed(await fetchAll(baseUrl, urls), targets);
+  servedFailures = served.failures;
+  console.log(`smoke: url=${baseUrl} ${served.checked} urls fetched`);
+}
+
+const report = { ...pages, failures: [...pages.failures, ...sitemap.failures, ...archiveFailures, ...servedFailures] };
 console.log(`smoke: build=${buildDir} data=${dataDir} members=${data.memberIds?.length ?? "none"} rollcalls=${data.rollCalls?.length ?? "none"}`);
 console.log(`smoke: sitemap.xml ${sitemap.checkedUrls} urls checked`);
 console.log(`smoke: archive=${archivePath} size=${archive?.length ?? "missing"} dataFiles=${dataFileCount} max=${ARCHIVE_MAX_BYTES}`);
