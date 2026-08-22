@@ -1,7 +1,7 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import type { Member, RollCall } from "@seiji-kiroku/shared";
+import type { Member, RollCall, Speech } from "@seiji-kiroku/shared";
 import { buildDataset, groupMajority, summarizeRollCall } from "../src/aggregate.ts";
 import { matchVotes } from "../src/match-votes.ts";
 import { parseRollCall } from "../src/sources/sangiin-votes.ts";
@@ -123,6 +123,59 @@ describe("buildDataset: members/{id}.json・members/index.json・rollcalls/index
 
   test("名簿にない memberId の票が来たら例外（名寄せの不整合を黙って捨てない）", () => {
     assert.throws(() => buildDataset([member("m_1", "一 郎")], [rollCall("221-0605-v001", "2026-06-05", [vote("m_9", "賛成")])]), /m_9/);
+  });
+});
+
+const speech = (id: string, memberId: string | undefined, date: string, extra: Partial<Speech> = {}): Speech => ({
+  id, ...(memberId ? { memberId } : {}), speakerText: memberId ?? "?", house: "sangiin", meeting: "本会議 第1号", date,
+  excerpt: `抜粋 ${id}`, chars: 300, sourceUrl: `https://kokkai.ndl.go.jp/txt/${id.split("_")[0]}/${Number(id.split("_")[1])}`, ...extra,
+});
+
+describe("buildDataset: speech を timeline に入れる", () => {
+  const members = [member("m_1", "一 郎"), member("m_2", "二 郎", "立憲")];
+  const rcs = [rollCall("221-0605-v001", "2026-06-05", [vote("m_1", "賛成")])];
+  const speeches = [
+    speech("122115254X01920260605_002", "m_1", "2026-06-05"),
+    speech("122115254X02020260610_004", "m_1", "2026-06-10", { position: "議長" }),
+    speech("122115254X01920260605_010", undefined, "2026-06-05", { position: "内閣総理大臣" }),
+  ];
+  const ds = buildDataset(members, rcs, new Map(), speeches);
+
+  test("speech エントリは speechId・会議名・冒頭抜粋・文字数・出典URL を持ち、要約や評価は持たない", () => {
+    const m1 = ds.details.find((d) => d.id === "m_1")!;
+    assert.deepEqual(m1.timeline.find((e) => e.kind === "speech" && e.speechId === "122115254X01920260605_002"), {
+      kind: "speech", date: "2026-06-05", speechId: "122115254X01920260605_002", meeting: "本会議 第1号",
+      excerpt: "抜粋 122115254X01920260605_002", chars: 300, sourceUrl: "https://kokkai.ndl.go.jp/txt/122115254X01920260605/2",
+    });
+  });
+
+  test("vote と speech が混ざっても timeline は日付降順（不変条件）。同日は vote → speech の順", () => {
+    const m1 = ds.details.find((d) => d.id === "m_1")!;
+    const later = buildDataset(members, rcs, new Map(), [...speeches, speech("122115254X02020260610_009", "m_1", "2026-06-10")]);
+    assert.deepEqual(later.details.find((d) => d.id === "m_1")!.timeline.map((e) => [e.kind, e.date]), [["speech", "2026-06-10"], ["vote", "2026-06-05"], ["speech", "2026-06-05"]]);
+    assert.deepEqual(m1.timeline.map((e) => [e.kind, e.date]), [["vote", "2026-06-05"], ["speech", "2026-06-05"]]);
+  });
+
+  test("議長・大臣など position 付きの発言は、TimelineEntry に position が無い間は timeline に入れない（議員としての発言と区別できない数値を出さない）", () => {
+    const m1 = ds.details.find((d) => d.id === "m_1")!;
+    assert.equal(m1.timeline.some((e) => e.kind === "speech" && e.speechId === "122115254X02020260610_004"), false);
+    assert.equal(buildDataset(members, [], new Map(), [speech("x_001", "m_1", "2026-06-05", { position: "" })]).index[0].counts.speeches, 1);
+  });
+
+  test("memberId の無い発言（名簿にいない大臣など）は timeline に入れない", () => {
+    assert.ok(ds.details.every((d) => d.timeline.every((e) => e.kind !== "speech" || e.speechId !== "122115254X01920260605_010")));
+  });
+
+  test("counts.speeches は timeline の speech 数（position 付きの発言は含まない）", () => {
+    assert.deepEqual(ds.index.map((m) => [m.id, m.counts.speeches]), [["m_1", 1], ["m_2", 0]]);
+  });
+
+  test("speeches を省略しても従来どおり（後方互換）", () => {
+    assert.deepEqual(buildDataset(members, rcs).index.map((m) => m.counts.speeches), [0, 0]);
+  });
+
+  test("名簿にない memberId の発言は例外（名寄せの不整合を黙って捨てない）", () => {
+    assert.throws(() => buildDataset(members, [], new Map(), [speech("x_001", "m_9", "2026-06-05")]), /m_9/);
   });
 });
 
