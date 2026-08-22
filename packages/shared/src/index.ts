@@ -127,6 +127,8 @@ export type SpeechEntry = {
   meeting: string;
   excerpt: string;
   chars: number;
+  /** 会議録の speakerPosition をそのまま（例: "議長", "国土交通大臣", "財政金融委員長"）。議員としてではなく役職として行った発言の事実。無ければ省略 */
+  position?: string;
   sourceUrl: string;
 };
 export type TimelineEntry = VoteEntry | BillEntry | SpeechEntry;
