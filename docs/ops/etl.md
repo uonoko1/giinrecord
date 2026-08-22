@@ -46,4 +46,5 @@ gh run watch                                   # 進捗
 ## このワークフローを変えるとき
 - `actionlint` を通す（`curl -sL https://github.com/rhysd/actionlint/releases/download/v1.7.7/actionlint_1.7.7_linux_amd64.tar.gz | tar xz actionlint && ./actionlint .github/workflows/*.yml`）。
 - シェル断片はローカルで一度実行して確かめる（`${PR:+...}${PR:-...}` の二重展開のような罠がある）。
+- `run` でパイプ（`... | tee`）を使うステップには `shell: bash` を付ける。`shell:` 未指定の既定は `bash -e {0}` で pipefail が無く、`bash -e -c 'false | tee /dev/null; echo $?'` → `0` のように左側の失敗が握りつぶされる。`shell: bash` なら `bash --noprofile --norc -eo pipefail {0}` になる（`packages/etl/test/workflow-etl.test.ts` が回帰テスト）。
 - 本番で試すには `workflow_dispatch` で流し、Summary と data PR、Deploy run の 3 つを確認する。
