@@ -15,6 +15,9 @@ const fixture = (name: string) => readFileSync(new URL(`./fixtures/${name}.htm`,
 const BASE = "https://www.sangiin.go.jp/japanese/touhyoulist/221";
 const ROSTER = "https://www.sangiin.go.jp/japanese/joho1/kousei/giin/221/giin.htm";
 
+/** 実在する議員（m_007006）と採決で作る group-mismatch の1行（Issue #24）。 */
+const MISMATCH = { memberId: "m_007006", nameText: "テスト 太郎", voteGroup: "れいわ新選組", rosterGroup: "いのちの党", rollCallId: "221-0605-v001" };
+
 function realDataset(): Dataset {
   const members = parseMemberList(fixture("sangiin-giin-221"), ROSTER, 221);
   const rollCalls = ["221-0605-v001", "221-0724-v001"].map((id) => matchVotes(parseRollCall(fixture(id), `${BASE}/${id}.htm`, 221), members).rollCall);
@@ -24,6 +27,7 @@ function realDataset(): Dataset {
     unmatched: [],
     unmatchedBills: [{ rollCallId: "221-0724-v001", title: rollCalls[1].title, sourceUrl: rollCalls[1].sourceUrl }],
     unmatchedGroups: [{ group: "新党", memberIds: ["m_000001"], sourceUrl: ROSTER }],
+    groupMismatch: [MISMATCH],
     meta: { fetchedAt: "2026-08-22T00:00:00.000Z", sessions: [221], sources: [{ name: "参議院 議員一覧", url: ROSTER, fetchedAt: "2026-08-22T00:00:00.000Z" }] },
   };
 }
@@ -45,10 +49,53 @@ describe("writeDataset / validateDataset: docs/DATA_CONTRACT.md の不変条件"
   });
 
   test("契約どおりのファイル一式を書く（キーソート・末尾改行）", () => {
-    for (const rel of ["meta.json", "members/index.json", "members/m_007006.json", "rollcalls/index.json", "rollcalls/221/221-0605-v001.json", "unmatched.json", "unmatched-bills.json", "unmatched-groups.json"]) {
+    for (const rel of ["meta.json", "members/index.json", "members/m_007006.json", "rollcalls/index.json", "rollcalls/221/221-0605-v001.json", "unmatched.json", "unmatched-bills.json", "unmatched-groups.json", "group-mismatch.json"]) {
       const text = readFileSync(join(dir, rel), "utf-8");
       assert.equal(text, stableJson(JSON.parse(text)), rel);
     }
+    cleanup();
+  });
+
+  test("meta.json は stableJson（キーソート・インデント1・末尾改行）で書かれる（Issue #24）", () => {
+    const text = readFileSync(join(dir, "meta.json"), "utf-8");
+    assert.equal(text, stableJson(realDataset().meta));
+    assert.match(text, /^\{\n "fetchedAt"/);
+    cleanup();
+  });
+
+  test("group-mismatch.json: 氏名だけで紐づき会派が食い違った票を永続化する（Issue #24）", () => {
+    assert.deepEqual(readJson(dir, "group-mismatch.json"), [MISMATCH]);
+    cleanup();
+  });
+
+  test("group-mismatch.json が無ければ違反", async () => {
+    rmSync(join(dir, "group-mismatch.json"));
+    assert.match((await validateDataset(dir)).join("\n"), /group-mismatch\.json: missing/);
+    cleanup();
+  });
+
+  test("group-mismatch.json が配列でなければ違反", async () => {
+    patch<unknown>(dir, "group-mismatch.json", () => ({}));
+    assert.match((await validateDataset(dir)).join("\n"), /group-mismatch\.json: must be an array/);
+    cleanup();
+  });
+
+  test("group-mismatch.json の行に memberId/nameText/voteGroup/rosterGroup/rollCallId が揃っていなければ違反", async () => {
+    const { voteGroup: _, ...rest } = MISMATCH;
+    patch<unknown[]>(dir, "group-mismatch.json", () => [rest]);
+    assert.match((await validateDataset(dir)).join("\n"), /group-mismatch\.json\[0\]: voteGroup/);
+    cleanup();
+  });
+
+  test("group-mismatch.json の memberId が members/index.json に無ければ違反", async () => {
+    patch<unknown[]>(dir, "group-mismatch.json", () => [{ ...MISMATCH, memberId: "m_999999" }]);
+    assert.match((await validateDataset(dir)).join("\n"), /group-mismatch\.json\[0\].*m_999999/);
+    cleanup();
+  });
+
+  test("group-mismatch.json の rollCallId が rollcalls/index.json に無ければ違反", async () => {
+    patch<unknown[]>(dir, "group-mismatch.json", () => [{ ...MISMATCH, rollCallId: "999-0101-v999" }]);
+    assert.match((await validateDataset(dir)).join("\n"), /group-mismatch\.json\[0\].*999-0101-v999/);
     cleanup();
   });
 
