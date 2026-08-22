@@ -226,7 +226,8 @@ describe("writeDataset / validateDataset: docs/DATA_CONTRACT.md の不変条件"
 
   test("stance 行（会派態度の推定）は estimated: true・stance は 賛成/反対・sourceUrl は衆院 経過ページ。counts には数えない", async () => {
     const stance = (extra: Record<string, unknown> = {}) => ({ kind: "stance", estimated: true, date: "2026-07-30", billId: "221-閣法-3", title: "法案", group: "日本共産党", stance: "反対", stanceText: "多数", sourceUrl: `${KEIKA}/1DE14D6.htm`, ...extra });
-    patch<{ timeline: unknown[] }>(dir, "members/m_007006.json", (d) => ({ ...d, timeline: [stance(), ...d.timeline] }));
+    // stance 行は衆院議員（house=shugiin）にだけ付く。フィクスチャは参院名簿なので house を衆院に差し替えて検証する
+    patch<{ house: string; timeline: unknown[] }>(dir, "members/m_007006.json", (d) => ({ ...d, house: "shugiin", timeline: [stance(), ...d.timeline] }));
     assert.deepEqual(await validateDataset(dir), []);
     patch<{ timeline: unknown[] }>(dir, "members/m_007006.json", (d) => ({ ...d, timeline: [stance({ estimated: false }), ...d.timeline.slice(1)] }));
     assert.match((await validateDataset(dir)).join("\n"), /m_007006.*timeline\[0\].*estimated/);
@@ -234,6 +235,13 @@ describe("writeDataset / validateDataset: docs/DATA_CONTRACT.md の不変条件"
     assert.match((await validateDataset(dir)).join("\n"), /m_007006.*timeline\[0\].*stance/);
     patch<{ timeline: unknown[] }>(dir, "members/m_007006.json", (d) => ({ ...d, timeline: [stance({ sourceUrl: `${BASE}/221-0605-v001.htm` }), ...d.timeline.slice(1)] }));
     assert.match((await validateDataset(dir)).join("\n"), /m_007006.*timeline\[0\].*経過/);
+    cleanup();
+  });
+
+  test("stance 行は house=shugiin の議員にだけ許される（参院議員に会派態度の推定は付けない、#88）", async () => {
+    const stance = { kind: "stance", estimated: true, date: "2026-07-30", billId: "221-閣法-3", title: "法案", group: "日本共産党", stance: "反対", stanceText: "多数", sourceUrl: `${KEIKA}/1DE14D6.htm` };
+    patch<{ timeline: unknown[] }>(dir, "members/m_007006.json", (d) => ({ ...d, timeline: [stance, ...d.timeline] }));
+    assert.match((await validateDataset(dir)).join("\n"), /m_007006.*timeline\[0\].*house=shugiin/);
     cleanup();
   });
 

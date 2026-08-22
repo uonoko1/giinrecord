@@ -147,6 +147,7 @@ export async function validateDataset(dir: string): Promise<string[]> {
       }
       if (e.kind === "stance") {
         // 推定の行: 型で事実と分ける不変条件（estimated は常に true、出典は衆院の経過ページ）
+        if (d.house !== "shugiin") v.push(`${rel} timeline[${i}]: stance row is allowed only for house=shugiin members, got house=${d.house}`);
         if (e.estimated !== true) v.push(`${rel} timeline[${i}]: stance row must have estimated: true`);
         if (!STANCE_VALUES.has(e.stance)) v.push(`${rel} timeline[${i}]: stance must be 賛成/反対, got ${e.stance}`);
         if (!KEIKA_SOURCE.test(e.sourceUrl)) v.push(`${rel} timeline[${i}]: stance sourceUrl must be the 衆院 経過ページ (gian/keika/), got ${e.sourceUrl}`);
