@@ -100,7 +100,8 @@ describe("MemberPage 提出法案の行", () => {
   });
   it("表紙の提出法案の数は提出者・賛成者の両方を含む", () => {
     renderPage();
-    expect(screen.getByText("提出法案").nextElementSibling).toHaveTextContent("2");
+    const dt = within(screen.getByRole("banner")).getByText("提出法案");
+    expect(dt.nextElementSibling).toHaveTextContent("2");
   });
 });
 
