@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { describe, expect, it } from "vitest";
 import Home, { meta as routeMeta } from "./home";
@@ -57,6 +57,16 @@ describe("Home", () => {
     expect(section).toHaveTextContent("3");
     expect(section).toHaveTextContent("参議院議員");
     expect(section).toHaveTextContent("第220—221回");
+  });
+
+  it("規模に衆議院議員数を出し、衆院の注記の文言を保つ", () => {
+    const shugiin = { ...dataset.members[0], id: "h_000001", name: "衆 太郎", kana: "しゅう たろう", house: "shugiin" as const };
+    renderHome({ ...dataset, members: [...dataset.members, shugiin, { ...shugiin, id: "h_000002" }] });
+    const section = screen.getByRole("region", { name: "このサイトにあるもの" });
+    const figures = within(section).getAllByText(/議員$/).map((el) => `${el.previousElementSibling?.textContent} ${el.textContent}`);
+    expect(figures).toContain("3 参議院議員");
+    expect(figures).toContain("2 衆議院議員");
+    expect(section).toHaveTextContent("衆議院は個人の投票記録が公開されていないため、会派の態度として別に扱います");
   });
 
   it("出典と更新時刻を出す", () => {
