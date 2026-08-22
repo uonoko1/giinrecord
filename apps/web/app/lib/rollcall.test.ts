@@ -43,13 +43,13 @@ describe("sortByDateDesc / sessionsDesc", () => {
   it("日付降順", () => {
     expect(sortByDateDesc(rows).map((r) => r.id)).toEqual(["a", "c", "b"]);
   });
-  it("同日は id 昇順で安定する（入力の順に依存しない）", () => {
+  it("同日は id 降順（新しい採決が上、ETL の byDateDesc と同じ）で安定する。入力の順に依存しない", () => {
     const sameDay = [
       { id: "221-0724-v007", session: 221, date: "2026-07-24" },
       { id: "221-0724-v006", session: 221, date: "2026-07-24" },
       { id: "221-0724-v010", session: 221, date: "2026-07-24" },
     ];
-    const expected = ["221-0724-v006", "221-0724-v007", "221-0724-v010"];
+    const expected = ["221-0724-v010", "221-0724-v007", "221-0724-v006"];
     expect(sortByDateDesc(sameDay).map((r) => r.id)).toEqual(expected);
     expect(sortByDateDesc([...sameDay].reverse()).map((r) => r.id)).toEqual(expected);
   });
