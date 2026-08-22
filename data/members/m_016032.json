@@ -1537,6 +1537,33 @@
    "value": "賛成"
   },
   {
+   "billId": "219-参法-2",
+   "date": "2025-10-21",
+   "kind": "bill",
+   "role": "提出者",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/219/meisai/m219100219002.htm",
+   "submitterText": "浜口誠君 外1名",
+   "title": "地方税法の一部を改正する法律案"
+  },
+  {
+   "billId": "219-参法-1",
+   "date": "2025-10-21",
+   "kind": "bill",
+   "role": "提出者",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/219/meisai/m219100219001.htm",
+   "submitterText": "浜口誠君 外1名",
+   "title": "所得税法の一部を改正する法律案"
+  },
+  {
+   "billId": "218-参法-1",
+   "date": "2025-08-01",
+   "kind": "bill",
+   "role": "提出者",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/218/meisai/m218100218001.htm",
+   "submitterText": "浜口誠君 外1名",
+   "title": "障害のあるこどもに係る公的給付の所得制限の撤廃のために早急に講ずべき措置に関する法律案"
+  },
+  {
    "date": "2025-06-20",
    "groupValue": "賛成",
    "kind": "vote",

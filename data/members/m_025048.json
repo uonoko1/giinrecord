@@ -268,6 +268,15 @@
    "value": "賛成"
   },
   {
+   "billId": "221-参法-17",
+   "date": "2026-07-10",
+   "kind": "bill",
+   "role": "提出者",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/221/meisai/m221100221017.htm",
+   "submitterText": "原田秀一君",
+   "title": "少額投資非課税制度における国債に係る所得に対する所得税の非課税に関する措置等に関する法律案"
+  },
+  {
    "date": "2026-07-08",
    "groupValue": "賛成",
    "kind": "vote",

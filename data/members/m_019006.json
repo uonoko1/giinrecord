@@ -278,6 +278,15 @@
    "value": "賛成"
   },
   {
+   "billId": "221-参法-16",
+   "date": "2026-07-09",
+   "kind": "bill",
+   "role": "提出者",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/221/meisai/m221100221016.htm",
+   "submitterText": "打越さく良君 外9名",
+   "title": "国による全ての水俣病の被害者の救済の実現に向けた給付金等の支給に係る制度の創設に関する法律案"
+  },
+  {
    "date": "2026-07-08",
    "groupValue": "反対",
    "kind": "vote",

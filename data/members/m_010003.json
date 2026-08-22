@@ -2904,6 +2904,16 @@
    "meeting": "本会議 第4号",
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715254X00420250212/10",
    "speechId": "121715254X00420250212_010"
+  },
+  {
+   "billId": "217-参法-1",
+   "date": "2025-02-05",
+   "kind": "bill",
+   "role": "提出者",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/217/meisai/m217100217001.htm",
+   "status": "参議院 内閣委員会 未了",
+   "submitterText": "秋野公造君 外3名",
+   "title": "特定生殖補助医療に関する法律案"
   }
  ]
 }
