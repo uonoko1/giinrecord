@@ -1,0 +1,52 @@
+/* 議員ページ. Colours come only from tokens.css; no raw colour codes here. */
+.member { max-width: 720px; margin: 0 auto; padding-bottom: 40px; }
+.member .num { font-variant-numeric: tabular-nums; }
+.member p { margin: 0; }
+
+/* 表紙 */
+.member-cover { padding: 14px 20px 0; background: var(--cover); color: var(--cover-fg); }
+.member-cover a { color: var(--brass-on-cover); }
+.member-cover-top { display: flex; justify-content: space-between; font-size: 12px; }
+.member-kana { margin-top: 20px; font-size: 12px; letter-spacing: 0.2em; color: var(--brass-on-cover); }
+.member-name { margin: 4px 0 0; font-family: var(--font-head); font-size: 40px; font-weight: 800; line-height: 1.05; letter-spacing: 0.04em; }
+.member-affil { margin-top: 10px; font-size: 14px; }
+.member-term { font-size: 13px; opacity: 0.8; }
+.member-counts { display: flex; margin: 18px 0 0; padding: 14px 0; border-top: 1.5px solid var(--brass-on-cover); }
+.member-count { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.member-count + .member-count { border-left: 1px solid var(--rule); padding-left: 14px; }
+.member-count dd { margin: 0; font-family: var(--font-head); font-size: 28px; font-weight: 700; line-height: 1; }
+.member-count dt { font-size: 11px; letter-spacing: 0.1em; opacity: 0.8; }
+.member-profile { padding-bottom: 16px; font-size: 12px; }
+
+/* タブ */
+.member-tabs { display: flex; margin-top: 10px; padding: 0 20px; border-bottom: 1px solid var(--rule); }
+.member-tab { flex: 1; padding: 12px 0 10px; background: none; border: 0; border-bottom: 2px solid transparent; font: inherit; font-size: 14px; color: var(--muted); cursor: pointer; }
+.member-tab[aria-selected="true"] { font-weight: 700; color: var(--brass); border-bottom-color: var(--brass); }
+
+/* 時系列 */
+.member-day { padding: 0 20px; }
+.member-date { display: flex; align-items: baseline; gap: 10px; margin: 18px 0 0; font-family: var(--font-head); font-size: 15px; font-weight: 700; color: var(--brass); }
+.member-date-label { font-family: var(--font-body); font-size: 12px; font-weight: 400; color: var(--muted); }
+.member-rows { list-style: none; margin: 0; padding: 0; }
+.member-row { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--rule); align-items: flex-start; }
+.member-row-body { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.member-row-title { font-size: 14.5px; line-height: 1.5; }
+.member-row-meta { font-size: 12px; line-height: 1.5; color: var(--muted); }
+.member-empty { padding: 24px 20px; color: var(--muted); }
+
+/* 判 */
+.member-stamp { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 48px; height: 26px; font-family: var(--font-head); font-weight: 700; font-size: 13px; letter-spacing: 0.06em; border: 1.5px solid transparent; }
+.member-stamp[data-tone="yes"] { background: var(--yes-bg); color: var(--yes-fg); border-color: var(--yes-line); }
+.member-stamp[data-tone="no"] { background: var(--no-bg); color: var(--no-fg); border-color: var(--no-line); }
+.member-stamp[data-tone="none"] { background: var(--none-bg); color: var(--none-fg); border-color: var(--none-line); border-style: dashed; }
+.member-stamp[data-tone="act"] { background: var(--act-bg); color: var(--act-fg); border-color: var(--act-line); }
+
+/* 採決表 */
+.member-table-wrap { overflow-x: auto; padding: 12px 20px 0; }
+.member-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.member-table th, .member-table td { padding: 10px 8px; border-bottom: 1px solid var(--rule); text-align: left; vertical-align: top; }
+.member-table th { font-size: 11px; letter-spacing: 0.1em; color: var(--muted); font-weight: 400; }
+.member-note { display: block; margin-top: 4px; font-size: 11px; color: var(--muted); }
+
+/* 出典 */
+.member-source { margin: 32px 20px 0; padding-top: 12px; border-top: 1px solid var(--rule); font-size: 12px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }

@@ -45,7 +45,7 @@ describe("MemberPage 時系列", () => {
   });
   it("全行に sourceUrl へのリンク（新規タブ・noopener）がある", () => {
     renderPage();
-    const links = screen.getAllByRole("link", { name: /参院投票結果|議案情報|会議録/ });
+    const links = within(screen.getByRole("tabpanel")).getAllByRole("link", { name: /参院投票結果|議案情報|会議録/ });
     expect(links).toHaveLength(4);
     for (const a of links) {
       expect(a).toHaveAttribute("target", "_blank");
