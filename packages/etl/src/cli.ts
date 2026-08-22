@@ -1,15 +1,23 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { listRollCalls, parseRollCall } from "./sources/sangiin-votes.ts";
+import { fetchMembers, memberListUrl, serializeMembersIndex } from "./sources/sangiin-members.ts";
 import { fetchText } from "./fetch.ts";
 
 /**
- * ETL entry point. S1 scope: House of Councillors roll-call votes.
+ * ETL entry point. S1 scope: House of Councillors members and roll-call votes.
  * Writes normalized JSON under ../../data/ (committed to the repo, CC BY 4.0).
  * Usage: pnpm etl [session...]   (default: current session only)
  */
 const sessions = process.argv.slice(2).map(Number).filter(Boolean);
 const targets = sessions.length ? sessions : [221];
 const DATA = new URL("../../../data/", import.meta.url);
+
+// Members: the roster of the latest requested session is the current one.
+const memberSession = Math.max(...targets);
+const members = await fetchMembers(memberSession);
+console.log(`session ${memberSession}: ${members.length} members`);
+await mkdir(new URL("members/", DATA), { recursive: true });
+await writeFile(new URL("members/index.json", DATA), serializeMembersIndex(members));
 
 for (const session of targets) {
   const list = await listRollCalls(session);
@@ -25,6 +33,9 @@ for (const session of targets) {
 await writeFile(new URL("meta.json", DATA), JSON.stringify({
   fetchedAt: new Date().toISOString(),
   sessions: targets,
-  sources: [{ name: "参議院 本会議投票結果", url: "https://www.sangiin.go.jp/japanese/touhyoulist/", fetchedAt: new Date().toISOString() }],
+  sources: [
+    { name: "参議院 議員一覧", url: memberListUrl(memberSession), fetchedAt: new Date().toISOString() },
+    { name: "参議院 本会議投票結果", url: "https://www.sangiin.go.jp/japanese/touhyoulist/", fetchedAt: new Date().toISOString() },
+  ],
 }, null, 2) + "\n");
 console.log("done");
