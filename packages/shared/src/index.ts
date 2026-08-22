@@ -11,7 +11,8 @@ export type MemberId = string; // e.g. "m_000123"
 
 export interface Member {
   id: MemberId;
-  name: string;        // 公式表記（例: "藤川 政人"）
+  name: string;        // 公式表記（例: "藤川 政人"）。通称使用者は通称（投票ページの表記と一致）
+  legalName?: string;  // 通称使用者の本名（名簿の "[本名]" 行）。通称と同じなら省略
   kana: string;        // ふりがな
   house: House;
   /** Membership periods; a member can move between groups/houses. */

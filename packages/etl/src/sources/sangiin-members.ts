@@ -35,9 +35,11 @@ export function parseMemberList(html: string, sourceUrl: string, session: number
     if (!a || !profileId) continue;
     const cells = tr.querySelectorAll("td").map((td) => normalize(td.text));
     if (cells.length < 5) continue;
+    const { name, legalName } = parseNameCell(a.innerHTML);
     out.push({
       id: memberIdFromProfileId(profileId),
-      name: normalize(a.text),
+      name,
+      ...(legalName ? { legalName } : {}),
       kana: cells[1],
       house: "sangiin",
       terms: [{ house: "sangiin", group: cells[2], district: cells[3], from: "", to: warekiToIso(cells[4]), sessionFrom: session }],
@@ -46,6 +48,17 @@ export function parseMemberList(html: string, sourceUrl: string, session: number
   }
   assertUniqueIds(out);
   return out;
+}
+
+/**
+ * 氏名セル: 通称使用者は「通称<BR>[本名]」の2行表記（第221回で 43/247 名）。
+ * 投票ページの氏名は通称なので、name は <BR> より前だけを取り、本名は legalName に分けて保持する。
+ */
+export function parseNameCell(innerHtml: string): { name: string; legalName?: string } {
+  const [first, ...rest] = innerHtml.split(/<br\s*\/?>/i);
+  const name = normalize(parse(first).text);
+  const legal = normalize(parse(rest.join(" ")).text).match(/^[\[［]\s*(.+?)\s*[\]］]$/)?.[1];
+  return legal ? { name, legalName: normalize(legal) } : { name };
 }
 
 /** 永続IDの衝突（下6桁が同じプロフィールID）を黙って通さない。 */
