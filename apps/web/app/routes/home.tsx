@@ -1,12 +1,13 @@
-import { Link } from "react-router";
+import { Link, type MetaArgs } from "react-router";
 import { type Dataset, dataset as bundled, formatSessions, REPO_URL } from "../lib/dataset";
 import { formatDateTime } from "../lib/format";
+import { seoMeta } from "../lib/seo";
 import "../styles/pages.css";
 
 const DESCRIPTION = "国会議員が本会議でどう投票し、どの法案を出し、何を発言したか。公式記録だけを、そのまま並べます。評価はしません。";
 
-export function meta() {
-  return [{ title: "政治記録" }, { name: "description", content: DESCRIPTION }];
+export function meta({ location }: MetaArgs) {
+  return seoMeta({ description: DESCRIPTION, pathname: location.pathname });
 }
 
 const RECENT_LIMIT = 4;
