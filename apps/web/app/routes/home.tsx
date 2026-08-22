@@ -22,7 +22,7 @@ export default function Home({ data = bundled }: { data?: Dataset }) {
   return (
     <main className="page">
       <header className="cover">
-        <div className="cover__brand">政治記録</div>
+        <div className="cover__brand">議会ログ</div>
         <h1 className="cover__title">
           言ったことではなく、
           <br />

@@ -153,9 +153,9 @@ describe("MemberPage フッター", () => {
 
 describe("meta()", () => {
   const args = { data: { detail, meta }, location: { pathname: "/members/m_1" } } as unknown as Parameters<typeof routeMeta>[0];
-  it("title は「{氏名}（{院}・{選挙区}）の投票記録 ・ 政治記録」（検索語を含み、評価語なし）", () => {
+  it("title は「{氏名}（{院}・{選挙区}）の投票記録 ・ 議会ログ」（検索語を含み、評価語なし）", () => {
     const tags = routeMeta(args);
-    expect(tags).toContainEqual({ title: "藤川 政人（参議院・愛知）の投票記録 ・ 政治記録" });
+    expect(tags).toContainEqual({ title: "藤川 政人（参議院・愛知）の投票記録 ・ 議会ログ" });
     expect(tags).toContainEqual({
       name: "description",
       content: expect.stringContaining("自由民主党・無所属の会"),
@@ -169,7 +169,7 @@ describe("meta()", () => {
   });
   it("data が無ければサイト名だけ", () => {
     expect(routeMeta({ data: undefined, location: { pathname: "/members/x" } } as unknown as Parameters<typeof routeMeta>[0])).toEqual([
-      { title: "政治記録" },
+      { title: "議会ログ" },
     ]);
   });
 });

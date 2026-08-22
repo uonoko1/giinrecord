@@ -6,15 +6,17 @@ The site is static files served by the existing nginx. No Node, no database on t
 
 ```sh
 # 1. nginx server block + web root (DOMAIN is the hostname you will point at the VPS)
-ssh sakura-vps 'sudo bash -s seiji-kiroku.daichisakai.net' < deploy/vps-setup.sh
-# 2. DNS: A record  seiji-kiroku.daichisakai.net -> 160.16.86.160
+ssh sakura-vps 'sudo bash -s gikailog.jp' < deploy/vps-setup.sh
+# 2. DNS: A record  gikailog.jp -> 160.16.86.160
 # 3. TLS (after DNS propagates)
-ssh sakura-vps 'sudo certbot --nginx -d seiji-kiroku.daichisakai.net --redirect'
+ssh sakura-vps 'sudo certbot --nginx -d gikailog.jp --redirect'
 ```
 
 ## Continuous deploy
 
 `.github/workflows/deploy.yml` runs on every push to `main`: build → `rsync --delete` to `/var/www/seiji-kiroku/site/` as user `ubuntu` with a dedicated, restricted deploy key (`restrict,no-pty`).
+
+The build bakes absolute URLs (canonical, OGP, sitemap) from the repository variable `SITE_ORIGIN`; its value for production is `https://gikailog.jp`.
 
 GitHub Environment `production` secrets (already set): `DEPLOY_SSH_KEY`, `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_KNOWN_HOSTS`.
 

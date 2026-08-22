@@ -82,6 +82,6 @@ describe("衆院議員ページ 会派の態度（推定）", () => {
 describe("衆院議員ページ meta", () => {
   it("title は「{氏名}（衆議院・{選挙区}）の記録」（投票記録は無いので「投票」と言わない）", () => {
     const tags = routeMeta({ data: { detail, meta }, location: { pathname: "/members/h_000321" } } as never);
-    expect(tags.find((t) => "title" in t)).toEqual({ title: "山田 太郎（衆議院・東京1区）の記録 ・ 政治記録" });
+    expect(tags.find((t) => "title" in t)).toEqual({ title: "山田 太郎（衆議院・東京1区）の記録 ・ 議会ログ" });
   });
 });

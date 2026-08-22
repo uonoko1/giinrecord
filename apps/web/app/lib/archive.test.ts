@@ -62,7 +62,7 @@ describe("archiveReadme", () => {
     const text = archiveReadme(meta);
     expect(text).toContain("CC BY 4.0");
     expect(text).toContain("https://creativecommons.org/licenses/by/4.0/");
-    expect(text).toContain("政治記録 (seiji-kiroku)");
+    expect(text).toContain("議会ログ (seiji-kiroku)");
     expect(text).toContain("https://github.com/uonoko1/seiji-kiroku");
     expect(text).toContain("参議院 本会議投票結果");
     expect(text).toContain("https://www.sangiin.go.jp/x");
@@ -73,7 +73,7 @@ describe("archiveReadme", () => {
   it("meta が無くてもライセンスと帰属表示は書く", () => {
     const text = archiveReadme(undefined);
     expect(text).toContain("CC BY 4.0");
-    expect(text).toContain("政治記録 (seiji-kiroku)");
+    expect(text).toContain("議会ログ (seiji-kiroku)");
   });
 
   it("評価語を含まない", () => {
