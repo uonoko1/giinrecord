@@ -27,7 +27,7 @@ describe("MemberPage 時系列", () => {
     expect(screen.getByLabelText("反対")).toBeInTheDocument();
     expect(screen.getByLabelText("投票なし")).toBeInTheDocument();
     expect(screen.getByLabelText("提出")).toBeInTheDocument();
-    expect(screen.getByLabelText("発言")).toBeInTheDocument();
+    expect(screen.getAllByLabelText("発言")).toHaveLength(3);
   });
   it("会派と本人が異なる行は「会派は{値}」と明記する", () => {
     renderPage();
@@ -46,12 +46,38 @@ describe("MemberPage 時系列", () => {
   it("全行に sourceUrl へのリンク（新規タブ・noopener）がある", () => {
     renderPage();
     const links = within(screen.getByRole("tabpanel")).getAllByRole("link", { name: /参院投票結果|議案情報|会議録/ });
-    expect(links).toHaveLength(4);
+    expect(links).toHaveLength(6);
     for (const a of links) {
       expect(a).toHaveAttribute("target", "_blank");
       expect(a.getAttribute("rel")).toMatch(/noopener/);
       expect(a.getAttribute("href")).toMatch(/^https:\/\/(www\.sangiin\.go\.jp|www\.shugiin\.go\.jp|kokkai\.ndl\.go\.jp)\//);
     }
+  });
+});
+
+describe("MemberPage 発言行の役職", () => {
+  it("役職付きの発言は役職を原文のまま表示する", () => {
+    renderPage();
+    const row = screen.getByText(/道路法等の一部を改正する法律案/).closest("li")!;
+    expect(within(row).getByText("国土交通大臣")).toBeInTheDocument();
+    expect(row).toHaveAttribute("data-position", "国土交通大臣");
+  });
+  it("議長の議事進行発言は「議長」と明記して区別する", () => {
+    renderPage();
+    const row = screen.getByText(/ただいまから会議を開きます/).closest("li")!;
+    expect(within(row).getByText("議長")).toBeInTheDocument();
+    expect(row).toHaveAttribute("data-position", "議長");
+  });
+  it("役職の無い発言には役職ラベルを出さない", () => {
+    renderPage();
+    const row = screen.getByText(/予算委員会における審査の経過と結果/).closest("li")!;
+    expect(row).not.toHaveAttribute("data-position");
+    expect(within(row).queryByText(/議長|大臣/)).not.toBeInTheDocument();
+  });
+  it("表紙の本会議発言の数は役職付きも含める", () => {
+    renderPage();
+    const dt = screen.getByText("本会議発言");
+    expect(dt.nextElementSibling).toHaveTextContent("3");
   });
 });
 

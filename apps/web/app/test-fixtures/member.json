@@ -25,6 +25,16 @@
       "speechId": "121715254X01220250331_010"
     },
     {
+      "chars": 120,
+      "date": "2025-03-31",
+      "excerpt": "ただいまから会議を開きます。日程第一、令和七年度一般会計予算外二案を一括して議題といたします。",
+      "kind": "speech",
+      "meeting": "参議院本会議",
+      "position": "議長",
+      "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715254X01220250331/2",
+      "speechId": "121715254X01220250331_002"
+    },
+    {
       "date": "2025-03-28",
       "groupValue": "賛成",
       "kind": "vote",
@@ -33,6 +43,16 @@
       "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/vote/217/217-0328-v001.htm",
       "title": "関税定率法等の一部を改正する法律案",
       "value": "投票なし"
+    },
+    {
+      "chars": 860,
+      "date": "2025-03-20",
+      "excerpt": "ただいま議題となりました道路法等の一部を改正する法律案につきまして、その趣旨を御説明申し上げます。",
+      "kind": "speech",
+      "meeting": "参議院本会議",
+      "position": "国土交通大臣",
+      "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715254X01020250320/5",
+      "speechId": "121715254X01020250320_005"
     },
     {
       "billId": "217-参法-3",

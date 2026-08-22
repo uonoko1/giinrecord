@@ -3,6 +3,10 @@
  * 略称は議員一覧（giin.htm）に、正式名称は投票結果ページ・会派別所属議員数（giinsu.htm）に現れる。
  * 出典: https://www.sangiin.go.jp/japanese/joho1/kousei/giin/221/giinsu.htm （2026-08-22 確認）
  * 会派は回次ごとに変わるため、新しい略称が出たらここに追記する（テストが検出する）。
+ *
+ * 「みら」「い党」は名簿ページがそのまま使っている2文字略称（改行や切り詰めではない。Issue #36）。
+ * 名簿は略称のまま公開せず resolveGroup で正式名称に解決し、未知の略称は原文のまま保持して
+ * data/unmatched-groups.json に列挙する（ETL は止めない）。
  */
 export const SANGIIN_GROUPS: Readonly<Record<string, string>> = {
   自民: "自由民主党・無所属の会",
@@ -20,9 +24,21 @@ export const SANGIIN_GROUPS: Readonly<Record<string, string>> = {
   無所属: "各派に属しない議員",
 };
 
+const FULL_NAMES: ReadonlySet<string> = new Set(Object.values(SANGIIN_GROUPS));
+
 /** 略称から正式名称。未知の略称は undefined。 */
 export function groupFullName(abbr: string): string | undefined {
   return SANGIIN_GROUPS[abbr];
+}
+
+/** 名簿セルの文字列（略称または既に正式名称）を正式名称に解決する。解決できなければ原文をそのまま返す（事実を隠さない）。 */
+export function resolveGroup(cell: string): string {
+  return groupFullName(cell) ?? cell;
+}
+
+/** 対応表の正式名称か（略称・未知の文字列は false）。公開データの group に略称が残っていないことの検査に使う。 */
+export function isKnownGroup(name: string): boolean {
+  return FULL_NAMES.has(name);
 }
 
 /** 名簿側の会派（略称または正式名称）と投票ページの会派名が同一会派を指すか。 */

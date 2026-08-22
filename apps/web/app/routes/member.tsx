@@ -219,10 +219,14 @@ function Row({ entry }: { entry: TimelineEntry }) {
       );
     case "speech":
       return (
-        <li className="member-row">
+        /* position は会議録の speakerPosition 原文（例: 議長・国土交通大臣）。役職として行った発言である事実をそのまま見せる。 */
+        <li className="member-row" {...(entry.position ? { "data-position": entry.position } : {})}>
           <Stamp value="発言" />
           <div className="member-row-body">
-            <p className="member-row-title">{entry.excerpt}</p>
+            <p className="member-row-title">
+              {entry.position && <span className="member-position">{entry.position}</span>}
+              {entry.excerpt}
+            </p>
             <p className="member-row-meta">
               <MetaLine parts={[entry.meeting, `${entry.chars.toLocaleString("ja-JP")}字`]} />
               <ExternalLink href={entry.sourceUrl}>会議録</ExternalLink>
