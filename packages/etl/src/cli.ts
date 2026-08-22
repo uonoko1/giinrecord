@@ -83,9 +83,15 @@ for (const session of targets) {
 if (unmatched.length) console.warn(`unmatched: ${unmatched.length} (see data/unmatched.json)`);
 // 氏名だけで紐づけ会派が食い違った票は受け入れ基準（氏名＋会派）からの逸脱なので、運用者に見せる（Issue #3）。
 // 会派改称・移籍なら正常、名簿にいない旧議員が同名の現職に紐づいていたら誤りなので、nameText ごとに要確認。
+// 回次をまたぐと会派の改称（sangiin-groups.ts の旧名称表に無いもの）で同じ組み合わせが大量に出るので、（投票ページの会派 → 名簿の会派）ごとに件数でまとめる。
 if (groupMismatch.length) {
   console.warn(`group mismatch (matched by name only): ${groupMismatch.length}`);
-  for (const g of groupMismatch) console.warn(`  ${g.rollCallId} ${g.nameText} (${g.group}) -> ${g.memberId} (${g.rosterGroup})`);
+  const byPair = new Map<string, GroupMismatch[]>();
+  for (const g of groupMismatch) byPair.set(`${g.group} -> ${g.rosterGroup}`, [...(byPair.get(`${g.group} -> ${g.rosterGroup}`) ?? []), g]);
+  for (const [pair, list] of [...byPair].sort((a, b) => b[1].length - a[1].length)) {
+    const names = [...new Set(list.map((g) => `${g.nameText}=${g.memberId}`))];
+    console.warn(`  ${pair}: ${list.length} votes, ${names.length} members (${names.slice(0, 5).join(", ")}${names.length > 5 ? ", …" : ""})`);
+  }
 }
 
 await writeDataset(DATA, {

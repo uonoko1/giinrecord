@@ -1,4 +1,5 @@
 {
+ "current": true,
  "house": "sangiin",
  "id": "m_025049",
  "kana": "ひがしの ひでき",
@@ -8,9 +9,10 @@
   {
    "district": "比例",
    "from": "",
-   "group": "自民",
+   "group": "自由民主党・無所属の会",
    "house": "sangiin",
-   "sessionFrom": 221,
+   "sessionFrom": 217,
+   "sessionTo": 221,
    "to": "2031-07-28"
   }
  ],
@@ -1213,6 +1215,316 @@
    "rollCallId": "221-0323-v001",
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0323-v001.htm",
    "title": "日程第１　国家公務員等の任命に関する件「人事官（菅原晶子君）」",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-12-16",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 241・反対 6）",
+   "rollCallId": "219-1216-v011",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/219/219-1216-v011.htm",
+   "title": "国会議員の秘書の給与等に関する法律の一部を改正する法律案（衆議院提出）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-12-16",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 241・反対 6）",
+   "rollCallId": "219-1216-v010",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/219/219-1216-v010.htm",
+   "title": "国会議員の歳費、旅費及び手当等に関する法律の一部を改正する法律案（衆議院提出）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-12-16",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 241・反対 6）",
+   "rollCallId": "219-1216-v009",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/219/219-1216-v009.htm",
+   "title": "防衛省の職員の給与等に関する法律の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-12-16",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 240・反対 6）",
+   "rollCallId": "219-1216-v008",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/219/219-1216-v008.htm",
+   "title": "地方交付税法及び特別会計に関する法律の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-12-16",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 241・反対 6）",
+   "rollCallId": "219-1216-v007",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/219/219-1216-v007.htm",
+   "title": "検察官の俸給等に関する法律の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-12-16",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 241・反対 6）",
+   "rollCallId": "219-1216-v006",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/219/219-1216-v006.htm",
+   "title": "裁判官の報酬等に関する法律の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-12-16",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 233・反対 14）",
+   "rollCallId": "219-1216-v005",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/219/219-1216-v005.htm",
+   "title": "特別職の職員の給与に関する法律等の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-12-16",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 241・反対 6）",
+   "rollCallId": "219-1216-v004",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/219/219-1216-v004.htm",
+   "title": "一般職の職員の給与に関する法律等の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-12-16",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 246・反対 0）",
+   "rollCallId": "219-1216-v003",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/219/219-1216-v003.htm",
+   "title": "高次脳機能障害者支援法案（衆議院提出）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-12-16",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 169・反対 75）",
+   "rollCallId": "219-1216-v002",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/219/219-1216-v002.htm",
+   "title": "日程第２　令和七年度特別会計補正予算（特第１号）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-12-16",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 169・反対 75）",
+   "rollCallId": "219-1216-v001",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/219/219-1216-v001.htm",
+   "title": "日程第１　令和七年度一般会計補正予算（第１号）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-12-05",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 229・反対 15）",
+   "rollCallId": "219-1205-v002",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/219/219-1205-v002.htm",
+   "title": "日程第２　医療法等の一部を改正する法律案（第２１７回国会内閣提出、第２１９回国会衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-12-05",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 244・反対 0）",
+   "rollCallId": "219-1205-v001",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/219/219-1205-v001.htm",
+   "title": "日程第１　気象業務法及び水防法の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-12-03",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "是認（賛成 228・反対 15）",
+   "rollCallId": "219-1203-v008",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/219/219-1203-v008.htm",
+   "title": "日程第９　日本放送協会令和五年度財産目録、貸借対照表、損益計算書、資本等変動計算書及びキャッシュ・フロー計算書並びにこれらに関する説明書",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-12-03",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "是認（賛成 228・反対 15）",
+   "rollCallId": "219-1203-v007",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/219/219-1203-v007.htm",
+   "title": "日程第８　日本放送協会令和四年度財産目録、貸借対照表、損益計算書、資本等変動計算書及びキャッシュ・フロー計算書並びにこれらに関する説明書",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-12-03",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "是認（賛成 228・反対 15）",
+   "rollCallId": "219-1203-v006",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/219/219-1203-v006.htm",
+   "title": "日程第７　日本放送協会令和三年度財産目録、貸借対照表、損益計算書、資本等変動計算書及びキャッシュ・フロー計算書並びにこれらに関する説明書",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-12-03",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "是認（賛成 228・反対 15）",
+   "rollCallId": "219-1203-v005",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/219/219-1203-v005.htm",
+   "title": "日程第６　日本放送協会令和二年度財産目録、貸借対照表、損益計算書、資本等変動計算書及びキャッシュ・フロー計算書並びにこれらに関する説明書",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-12-03",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 243・反対 0）",
+   "rollCallId": "219-1203-v004",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/219/219-1203-v004.htm",
+   "title": "日程第５　配偶者からの暴力の防止及び被害者の保護等に関する法律の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-12-03",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 243・反対 0）",
+   "rollCallId": "219-1203-v003",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/219/219-1203-v003.htm",
+   "title": "日程第４　ストーカー行為等の規制等に関する法律の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-12-03",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 243・反対 0）",
+   "rollCallId": "219-1203-v002",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/219/219-1203-v002.htm",
+   "title": "日程第３　更生保護制度の充実を図るための保護司法等の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-12-03",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 230・反対 13）",
+   "rollCallId": "219-1203-v001",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/219/219-1203-v001.htm",
+   "title": "日程第２　愛知・名古屋アジア競技大会及び愛知・名古屋アジアパラ競技大会に関する特別措置法案（衆議院提出）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-11-28",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 244・反対 0）",
+   "rollCallId": "219-1128-v010",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/219/219-1128-v010.htm",
+   "title": "日程第１　租税特別措置法及び東日本大震災の被災者等に係る国税関係法律の臨時特例に関する法律の一部を改正する法律案（衆議院提出）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-11-28",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "同意（賛成 238・反対 6）",
+   "rollCallId": "219-1128-v009",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/219/219-1128-v009.htm",
+   "title": "国家公務員等の任命に関する件「公害健康被害補償不服審査会委員（星景子君）」",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-11-28",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "賛成 214・反対 28",
+   "rollCallId": "219-1128-v008",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/219/219-1128-v008.htm",
+   "title": "国家公務員等の任命に関する件「運輸審議会委員（大石美奈子君）」",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-11-28",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "賛成 236・反対 9",
+   "rollCallId": "219-1128-v007",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/219/219-1128-v007.htm",
+   "title": "国家公務員等の任命に関する件「日本放送協会経営委員会委員（前田香織君及び榊原陽子君）」",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-11-28",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "同意（賛成 227・反対 18）",
+   "rollCallId": "219-1128-v006",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/219/219-1128-v006.htm",
+   "title": "国家公務員等の任命に関する件「日本放送協会経営委員会委員（岩井睦雄君）」",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-11-28",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "同意（賛成 230・反対 15）",
+   "rollCallId": "219-1128-v005",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/219/219-1128-v005.htm",
+   "title": "国家公務員等の任命に関する件「電波監理審議会委員（大久保哲夫君）」",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-11-28",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "同意（賛成 245・反対 0）",
+   "rollCallId": "219-1128-v004",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/219/219-1128-v004.htm",
+   "title": "国家公務員等の任命に関する件「証券取引等監視委員会委員長（中原亮一君）、同委員（加藤さゆり君及び橋本尚君）、電気通信紛争処理委員会委員（笠井之彦君、三尾美枝子君、小塚荘一郎君、中條祐介君及び前原賀代君）、中央更生保護審査会委員（久保美紀君）及び運輸安全委員会委員（堂園正人君、古川敦君、大野寛之君、鈴木美緒君及び新妻実保子君）」",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-11-28",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "賛成 237・反対 8",
+   "rollCallId": "219-1128-v003",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/219/219-1128-v003.htm",
+   "title": "国家公務員等の任命に関する件「個人情報保護委員会委員（新保史生君）」",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-11-28",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "同意（賛成 230・反対 14）",
+   "rollCallId": "219-1128-v002",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/219/219-1128-v002.htm",
+   "title": "国家公務員等の任命に関する件「個人情報保護委員会委員（藤村明子君、木田俊昭君及び藤井英治君）及び運輸審議会委員（堀川義弘君）」",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-11-28",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "同意（賛成 229・反対 15）",
+   "rollCallId": "219-1128-v001",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/219/219-1128-v001.htm",
+   "title": "国家公務員等の任命に関する件「食品安全委員会委員（春日文子君）」",
    "value": "賛成"
   }
  ]

@@ -1,0 +1,1390 @@
+{
+ "current": false,
+ "house": "sangiin",
+ "id": "m_019004",
+ "kana": "いしかわ たいが",
+ "name": "石川 大我",
+ "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/giin/216/giin.htm",
+ "terms": [
+  {
+   "district": "比例",
+   "from": "",
+   "group": "立憲民主・無所属",
+   "house": "sangiin",
+   "sessionFrom": 216,
+   "sessionTo": 216,
+   "to": "2025-07-28"
+  }
+ ],
+ "timeline": [
+  {
+   "date": "2025-06-20",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 196・反対 37）",
+   "rollCallId": "217-0620-v002",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0620-v002.htm",
+   "title": "日程第２　独立行政法人男女共同参画機構法の施行に伴う関係法律の整備等に関する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-06-20",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 196・反対 37）",
+   "rollCallId": "217-0620-v001",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0620-v001.htm",
+   "title": "日程第１　独立行政法人男女共同参画機構法案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-06-18",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 232・反対 5）",
+   "rollCallId": "217-0618-v002",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0618-v002.htm",
+   "title": "日程第３　社会保険労務士法の一部を改正する法律案（衆議院提出）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-06-18",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 233・反対 5）",
+   "rollCallId": "217-0618-v001",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0618-v001.htm",
+   "title": "日程第２　ギャンブル等依存症対策基本法の一部を改正する法律案（衆議院提出）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-06-13",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 183・反対 51）",
+   "rollCallId": "217-0613-v007",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0613-v007.htm",
+   "title": "日程第７　社会経済の変化を踏まえた年金制度の機能強化のための国民年金法等の一部を改正する等の法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-06-13",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 218・反対 19）",
+   "rollCallId": "217-0613-v006",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0613-v006.htm",
+   "title": "日程第６　環境影響評価法の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-06-13",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 236・反対 0）",
+   "rollCallId": "217-0613-v005",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0613-v005.htm",
+   "title": "日程第５　手話に関する施策の推進に関する法律案（内閣委員長提出）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-06-13",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 230・反対 7）",
+   "rollCallId": "217-0613-v004",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0613-v004.htm",
+   "title": "日程第４　盗難特定金属製物品の処分の防止等に関する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-06-13",
+   "groupValue": "反対",
+   "kind": "vote",
+   "result": "可決（賛成 189・反対 48）",
+   "rollCallId": "217-0613-v003",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0613-v003.htm",
+   "title": "日程第３　信託業法の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "反対"
+  },
+  {
+   "date": "2025-06-13",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "承認（賛成 231・反対 6）",
+   "rollCallId": "217-0613-v002",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0613-v002.htm",
+   "title": "日程第２　外国為替及び外国貿易法第十条第二項の規定に基づき、北朝鮮を仕向地とする貨物の輸出及び北朝鮮を原産地又は船積地域とする貨物の輸入につき承認義務を課する等の措置を講じたことについて承認を求めるの件（衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-06-13",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 235・反対 3）",
+   "rollCallId": "217-0613-v001",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0613-v001.htm",
+   "title": "日程第１　スポーツ基本法及びスポーツにおけるドーピングの防止活動の推進に関する法律の一部を改正する法律案（衆議院提出）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-06-11",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 227・反対 7）",
+   "rollCallId": "217-0611-v007",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0611-v007.htm",
+   "title": "日程第６　食品等の流通の合理化及び取引の適正化に関する法律及び卸売市場法の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-06-11",
+   "groupValue": "反対",
+   "kind": "vote",
+   "result": "可決（賛成 157・反対 76）",
+   "rollCallId": "217-0611-v006",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0611-v006.htm",
+   "title": "日程第５　日本学術会議法案（内閣提出、衆議院送付）",
+   "value": "反対"
+  },
+  {
+   "date": "2025-06-11",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 219・反対 16）",
+   "rollCallId": "217-0611-v005",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0611-v005.htm",
+   "title": "日程第４　公立の義務教育諸学校等の教育職員の給与等に関する特別措置法等の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-06-11",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "是認（賛成 201・反対 33）",
+   "rollCallId": "217-0611-v004",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0611-v004.htm",
+   "title": "日程第３　令和五年度国有財産無償貸付状況総計算書",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-06-11",
+   "groupValue": "反対",
+   "kind": "vote",
+   "result": "是認（賛成 140・反対 94）",
+   "rollCallId": "217-0611-v003",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0611-v003.htm",
+   "title": "日程第２　令和五年度国有財産増減及び現在額総計算書",
+   "value": "反対"
+  },
+  {
+   "date": "2025-06-11",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "賛成 228・反対 4",
+   "rollCallId": "217-0611-v002",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0611-v002.htm",
+   "title": "日程第１　令和五年度一般会計歳入歳出決算、令和五年度特別会計歳入歳出決算、令和五年度国税収納金整理資金受払計算書、令和五年度政府関係機関決算書「委員長報告のとおり内閣に対し警告すること」",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-06-11",
+   "groupValue": "反対",
+   "kind": "vote",
+   "result": "是認（賛成 141・反対 93）",
+   "rollCallId": "217-0611-v001",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0611-v001.htm",
+   "title": "日程第１　令和五年度一般会計歳入歳出決算、令和五年度特別会計歳入歳出決算、令和五年度国税収納金整理資金受払計算書、令和五年度政府関係機関決算書「委員長報告のとおり是認すること」",
+   "value": "反対"
+  },
+  {
+   "date": "2025-06-06",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 213・反対 19）",
+   "rollCallId": "217-0606-v005",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0606-v005.htm",
+   "title": "日程第５　円滑な事業再生を図るための事業者の金融機関等に対する債務の調整の手続等に関する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-06-06",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 227・反対 4）",
+   "rollCallId": "217-0606-v004",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0606-v004.htm",
+   "title": "日程第４　資金決済に関する法律の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-06-06",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 233・反対 0）",
+   "rollCallId": "217-0606-v003",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0606-v003.htm",
+   "title": "日程第３　行政書士法の一部を改正する法律案（衆議院提出）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-06-06",
+   "groupValue": "反対",
+   "kind": "vote",
+   "result": "承認（賛成 172・反対 61）",
+   "rollCallId": "217-0606-v002",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0606-v002.htm",
+   "title": "日程第２　日本国の自衛隊とイタリア共和国の軍隊との間における物品又は役務の相互の提供に関する日本国政府とイタリア共和国政府との間の協定の締結について承認を求めるの件（衆議院送付）",
+   "value": "反対"
+  },
+  {
+   "date": "2025-06-06",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "承認（賛成 215・反対 18）",
+   "rollCallId": "217-0606-v001",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0606-v001.htm",
+   "title": "日程第１　日本国の自衛隊とフィリピンの軍隊との間における相互のアクセス及び協力の円滑化に関する日本国とフィリピン共和国との間の協定の締結について承認を求めるの件（衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-06-04",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 232・反対 2）",
+   "rollCallId": "217-0604-v005",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0604-v005.htm",
+   "title": "日程第５　貨物自動車運送事業の適正化のための体制の整備等の推進に関する法律案（衆議院提出）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-06-04",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 232・反対 2）",
+   "rollCallId": "217-0604-v004",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0604-v004.htm",
+   "title": "日程第４　貨物自動車運送事業法の一部を改正する法律案（衆議院提出）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-06-04",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 216・反対 18）",
+   "rollCallId": "217-0604-v003",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0604-v003.htm",
+   "title": "日程第３　労働施策の総合的な推進並びに労働者の雇用の安定及び職業生活の充実等に関する法律等の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-06-04",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 232・反対 2）",
+   "rollCallId": "217-0604-v002",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0604-v002.htm",
+   "title": "日程第２　公益通報者保護法の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-06-04",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 229・反対 6）",
+   "rollCallId": "217-0604-v001",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0604-v001.htm",
+   "title": "日程第１　株式会社地域経済活性化支援機構法の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-30",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 228・反対 4）",
+   "rollCallId": "217-0530-v004",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0530-v004.htm",
+   "title": "日程第４　保険業法の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-30",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 228・反対 4）",
+   "rollCallId": "217-0530-v003",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0530-v003.htm",
+   "title": "日程第３　航空法等の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-30",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 232・反対 0）",
+   "rollCallId": "217-0530-v002",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0530-v002.htm",
+   "title": "日程第２　譲渡担保契約及び所有権留保契約に関する法律の施行に伴う関係法律の整備等に関する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-30",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 232・反対 0）",
+   "rollCallId": "217-0530-v001",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0530-v001.htm",
+   "title": "日程第１　譲渡担保契約及び所有権留保契約に関する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-28",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 214・反対 18）",
+   "rollCallId": "217-0528-v009",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0528-v009.htm",
+   "title": "日程第８　人工知能関連技術の研究開発及び活用の推進に関する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-28",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 211・反対 22）",
+   "rollCallId": "217-0528-v008",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0528-v008.htm",
+   "title": "日程第７　脱炭素成長型経済構造への円滑な移行の推進に関する法律及び資源の有効な利用の促進に関する法律の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-28",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "承諾（賛成 207・反対 25）",
+   "rollCallId": "217-0528-v007",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0528-v007.htm",
+   "title": "日程第６　令和五年度特別会計予算総則第二十一条第一項の規定による経費増額総調書及び各省各庁所管経費増額調書（第２１６回国会内閣提出、第２１７回国会衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-28",
+   "groupValue": "反対",
+   "kind": "vote",
+   "result": "承諾（賛成 164・反対 69）",
+   "rollCallId": "217-0528-v006",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0528-v006.htm",
+   "title": "日程第４　令和五年度一般会計予備費使用総調書及び各省各庁所管使用調書（第２１６回国会内閣提出、第２１７回国会衆議院送付）",
+   "value": "反対"
+  },
+  {
+   "date": "2025-05-28",
+   "groupValue": "反対",
+   "kind": "vote",
+   "result": "承諾（賛成 151・反対 82）",
+   "rollCallId": "217-0528-v005",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0528-v005.htm",
+   "title": "日程第５　令和五年度特別会計予備費使用総調書及び各省各庁所管使用調書（第２１６回国会内閣提出、第２１７回国会衆議院送付）",
+   "value": "反対"
+  },
+  {
+   "date": "2025-05-28",
+   "groupValue": "反対",
+   "kind": "vote",
+   "result": "承諾（賛成 151・反対 82）",
+   "rollCallId": "217-0528-v004",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0528-v004.htm",
+   "title": "日程第３　令和五年度一般会計原油価格・物価高騰対策及び賃上げ促進環境整備対応予備費使用総調書及び各省各庁所管使用調書（第２１６回国会内閣提出、第２１７回国会衆議院送付）",
+   "value": "反対"
+  },
+  {
+   "date": "2025-05-28",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 227・反対 6）",
+   "rollCallId": "217-0528-v003",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0528-v003.htm",
+   "title": "日程第２　災害対策基本法等の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-28",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 226・反対 6）",
+   "rollCallId": "217-0528-v002",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0528-v002.htm",
+   "title": "日程第１　国会議員の選挙等の執行経費の基準に関する法律の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-28",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 227・反対 3）",
+   "rollCallId": "217-0528-v001",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0528-v001.htm",
+   "title": "国際協同組合年に当たり協同組合の振興を図る決議案（山本順三君外１６名発議）",
+   "value": "賛成"
+  },
+  {
+   "chars": 4520,
+   "date": "2025-05-28",
+   "excerpt": "立憲民主・社民・無所属の石川大我です。 私は、会派を代表し、日本学術会議法案について質問をします。 まず、法案の経緯についてお尋ねします。 本法案は、七十六年にわたり続いてきた日本学術会議の在り方を根本的に変えるものです。二〇一五年に出された日本学術会議の新たな展望を考える有識者会議の報告書は「現在の制度は、日本学術会議に期待される機能に照らして相応しいものであり、これを変える積極的な理由は見出し",
+   "kind": "speech",
+   "meeting": "本会議 第22号",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715254X02220250528/13",
+   "speechId": "121715254X02220250528_013"
+  },
+  {
+   "date": "2025-05-23",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 219・反対 18）",
+   "rollCallId": "217-0523-v006",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0523-v006.htm",
+   "title": "日程第６　老朽化マンション等の管理及び再生の円滑化等を図るための建物の区分所有等に関する法律等の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-23",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 236・反対 1）",
+   "rollCallId": "217-0523-v005",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0523-v005.htm",
+   "title": "日程第５　民事裁判情報の活用の促進に関する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-23",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 220・反対 17）",
+   "rollCallId": "217-0523-v004",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0523-v004.htm",
+   "title": "日程第４　森林経営管理法及び森林法の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-23",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "承認（賛成 234・反対 0）",
+   "rollCallId": "217-0523-v003",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0523-v003.htm",
+   "title": "日程第３　千九百九十五年の漁船員の訓練及び資格証明並びに当直の基準に関する国際条約の締結について承認を求めるの件（衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-23",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "承認（賛成 234・反対 0）",
+   "rollCallId": "217-0523-v002",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0523-v002.htm",
+   "title": "日程第２　職業上の安全及び健康並びに作業環境に関する条約（第百五十五号）の締結について承認を求めるの件（衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-23",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "承認（賛成 234・反対 0）",
+   "rollCallId": "217-0523-v001",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0523-v001.htm",
+   "title": "日程第１　海洋法に関する国際連合条約に基づくいずれの国の管轄にも属さない区域における海洋の生物の多様性の保全及び持続可能な利用に関する協定の締結について承認を求めるの件（衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-21",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 217・反対 17）",
+   "rollCallId": "217-0521-v011",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0521-v011.htm",
+   "title": "日程第３　防衛省設置法等の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-21",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 200・反対 35）",
+   "rollCallId": "217-0521-v010",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0521-v010.htm",
+   "title": "日程第２　電気通信事業法及び日本電信電話株式会社等に関する法律の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-21",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "同意（賛成 220・反対 11）",
+   "rollCallId": "217-0521-v009",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0521-v009.htm",
+   "title": "国家公務員等の任命に関する件「社会保険審査会委員（浦野真美子君）」",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-21",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "同意（賛成 226・反対 6）",
+   "rollCallId": "217-0521-v008",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0521-v008.htm",
+   "title": "国家公務員等の任命に関する件「日本銀行政策委員会審議委員(増一行君）」",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-21",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "賛成 224・反対 6",
+   "rollCallId": "217-0521-v007",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0521-v007.htm",
+   "title": "国家公務員等の任命に関する件「日本放送協会経営委員会委員（榊原一夫君）」",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-21",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "同意（賛成 228・反対 4）",
+   "rollCallId": "217-0521-v006",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0521-v006.htm",
+   "title": "国家公務員等の任命に関する件「公害等調整委員会委員（大瀧敦子君）、日本放送協会経営委員会委員(大草透君、岡田美弥子君、藤本雅彦君及び田渕正朗君）及び労働保険審査会委員(菅野淑子君）」",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-21",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "同意（賛成 214・反対 17）",
+   "rollCallId": "217-0521-v005",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0521-v005.htm",
+   "title": "国家公務員等の任命に関する件「公害等調整委員会委員（中村也寸志君）」",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-21",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "同意（賛成 232・反対 0）",
+   "rollCallId": "217-0521-v004",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0521-v004.htm",
+   "title": "国家公務員等の任命に関する件「公認会計士・監査審査会委員（宮本佐知子君）、預金保険機構理事(田口紀子君及び島村英君）、労働保険審査会委員(齋藤育子君）及び中央社会保険医療協議会公益委員(本田文子君）」",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-21",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "同意（賛成 215・反対 15）",
+   "rollCallId": "217-0521-v003",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0521-v003.htm",
+   "title": "国家公務員等の任命に関する件「個人情報保護委員会委員長（手塚悟君）及び中央社会保険医療協議会公益委員（飯塚敏晃君）」",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-21",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "同意（賛成 215・反対 17）",
+   "rollCallId": "217-0521-v002",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0521-v002.htm",
+   "title": "国家公務員等の任命に関する件「原子力委員会委員（吉橋幸子君）及び原子力規制委員会委員（杉山智之君及び神田玲子君）」",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-21",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "同意（賛成 224・反対 4）",
+   "rollCallId": "217-0521-v001",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0521-v001.htm",
+   "title": "国家公務員等の任命に関する件「人事官（川本裕子君）」",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-16",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 209・反対 19）",
+   "rollCallId": "217-0516-v006",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0516-v006.htm",
+   "title": "日程第６　重要電子計算機に対する不正な行為による被害の防止に関する法律の施行に伴う関係法律の整備等に関する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-16",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 209・反対 19）",
+   "rollCallId": "217-0516-v005",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0516-v005.htm",
+   "title": "日程第５　重要電子計算機に対する不正な行為による被害の防止に関する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-16",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 211・反対 18）",
+   "rollCallId": "217-0516-v004",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0516-v004.htm",
+   "title": "日程第４　情報通信技術の進展等に対応するための刑事訴訟法等の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-16",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 227・反対 3）",
+   "rollCallId": "217-0516-v003",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0516-v003.htm",
+   "title": "日程第３　下請代金支払遅延等防止法及び下請中小企業振興法の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-16",
+   "groupValue": "反対",
+   "kind": "vote",
+   "result": "可決（賛成 149・反対 82）",
+   "rollCallId": "217-0516-v002",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0516-v002.htm",
+   "title": "日程第２　特別会計に関する法律の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "反対"
+  },
+  {
+   "date": "2025-05-16",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 209・反対 21）",
+   "rollCallId": "217-0516-v001",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0516-v001.htm",
+   "title": "日程第１　行政手続における特定の個人を識別するための番号の利用等に関する法律及び住民基本台帳法の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-14",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 216・反対 20）",
+   "rollCallId": "217-0514-v002",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0514-v002.htm",
+   "title": "日程第２　医薬品、医療機器等の品質、有効性及び安全性の確保等に関する法律等の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-14",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "承認（賛成 230・反対 6）",
+   "rollCallId": "217-0514-v001",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0514-v001.htm",
+   "title": "日程第１　特定船舶の入港の禁止に関する特別措置法第五条第一項の規定に基づき、特定船舶の入港禁止の実施につき承認を求めるの件（衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-09",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 215・反対 18）",
+   "rollCallId": "217-0509-v009",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0509-v009.htm",
+   "title": "参議院情報監視審査会規程の一部を改正する規程案（馬場成志君外７名発議）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-09",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 215・反対 18）",
+   "rollCallId": "217-0509-v008",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0509-v008.htm",
+   "title": "参議院規則の一部を改正する規則案（馬場成志君外７名発議）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-09",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 214・反対 18）",
+   "rollCallId": "217-0509-v007",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0509-v007.htm",
+   "title": "国会法及び議院における証人の宣誓及び証言等に関する法律の一部を改正する法律案（衆議院提出）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-09",
+   "groupValue": "反対",
+   "kind": "vote",
+   "result": "可決（賛成 172・反対 63）",
+   "rollCallId": "217-0509-v006",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0509-v006.htm",
+   "title": "日程第６　株式会社日本政策投資銀行法の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "反対"
+  },
+  {
+   "date": "2025-05-09",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 219・反対 16）",
+   "rollCallId": "217-0509-v005",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0509-v005.htm",
+   "title": "日程第５　地域の自主性及び自立性を高めるための改革の推進を図るための関係法律の整備に関する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-09",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "承認（賛成 225・反対 11）",
+   "rollCallId": "217-0509-v004",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0509-v004.htm",
+   "title": "日程第３　千九百九十四年四月十五日にマラケシュで作成された世界貿易機関を設立するマラケシュ協定のサービスの貿易に関する一般協定の日本国の特定の約束に係る表の改善に関する確認書の締結について承認を求めるの件（衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-09",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "承認（賛成 236・反対 0）",
+   "rollCallId": "217-0509-v003",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0509-v003.htm",
+   "title": "日程第４　東南アジア諸国連合貿易投資観光促進センターを設立する協定の第二次改正の受諾について承認を求めるの件（衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-09",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "承認（賛成 236・反対 0）",
+   "rollCallId": "217-0509-v002",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0509-v002.htm",
+   "title": "日程第２　航空業務に関する日本国とルクセンブルク大公国との間の協定の締結について承認を求めるの件（衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-09",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "承認（賛成 236・反対 0）",
+   "rollCallId": "217-0509-v001",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0509-v001.htm",
+   "title": "日程第１　航空業務に関する日本国とチェコ共和国との間の協定の締結について承認を求めるの件（衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-04-25",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 217・反対 18）",
+   "rollCallId": "217-0425-v003",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0425-v003.htm",
+   "title": "日程第３　情報処理の促進に関する法律及び特別会計に関する法律の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-04-25",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 233・反対 2）",
+   "rollCallId": "217-0425-v002",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0425-v002.htm",
+   "title": "日程第２　漁業災害補償法の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-04-25",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 229・反対 6）",
+   "rollCallId": "217-0425-v001",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0425-v001.htm",
+   "title": "日程第１　船員法等の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-04-23",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "承認（賛成 218・反対 16）",
+   "rollCallId": "217-0423-v004",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0423-v004.htm",
+   "title": "日程第４　経済上の連携に関する日本国とインドネシア共和国との間の協定を改正する議定書の締結について承認を求めるの件（衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-04-23",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "承認（賛成 224・反対 11）",
+   "rollCallId": "217-0423-v003",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0423-v003.htm",
+   "title": "日程第３　所得に対する租税に関する二重課税の除去並びに脱税及び租税回避の防止のための日本国とアルメニア共和国との間の条約の締結について承認を求めるの件（衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-04-23",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "承認（賛成 224・反対 11）",
+   "rollCallId": "217-0423-v002",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0423-v002.htm",
+   "title": "日程第２　所得に対する租税に関する二重課税の除去並びに脱税及び租税回避の防止のための日本国とトルクメニスタンとの間の条約の締結について承認を求めるの件（衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-04-23",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "承認（賛成 224・反対 11）",
+   "rollCallId": "217-0423-v001",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0423-v001.htm",
+   "title": "日程第１　所得に対する租税に関する二重課税の除去並びに脱税及び租税回避の防止のための日本国政府とウクライナ政府との間の条約の締結について承認を求めるの件（衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-04-18",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 230・反対 6）",
+   "rollCallId": "217-0418-v003",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0418-v003.htm",
+   "title": "日程第３　鳥獣の保護及び管理並びに狩猟の適正化に関する法律の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-04-18",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 216・反対 21）",
+   "rollCallId": "217-0418-v002",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0418-v002.htm",
+   "title": "日程第２　児童福祉法等の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-04-18",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 220・反対 18）",
+   "rollCallId": "217-0418-v001",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0418-v001.htm",
+   "title": "日程第１　電波法及び放送法の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-04-16",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 221・反対 18）",
+   "rollCallId": "217-0416-v003",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0416-v003.htm",
+   "title": "日程第３　日本国の自衛隊と我が国以外の締約国の軍隊との間における相互のアクセス及び協力の円滑化に関する日本国と我が国以外の締約国との間の協定の実施に関する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-04-16",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 232・反対 7）",
+   "rollCallId": "217-0416-v002",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0416-v002.htm",
+   "title": "日程第２　港湾法等の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-04-16",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 236・反対 1）",
+   "rollCallId": "217-0416-v001",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0416-v001.htm",
+   "title": "日程第１　自殺対策基本法の一部を改正する法律案（厚生労働委員長提出）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-04-11",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 235・反対 1）",
+   "rollCallId": "217-0411-v004",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0411-v004.htm",
+   "title": "日程第４　海洋再生可能エネルギー発電設備の整備に係る海域の利用の促進に関する法律の一部を改正する法律案（内閣提出）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-04-11",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 219・反対 18）",
+   "rollCallId": "217-0411-v003",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0411-v003.htm",
+   "title": "日程第３　裁判所職員定員法の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-04-11",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 216・反対 20）",
+   "rollCallId": "217-0411-v002",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0411-v002.htm",
+   "title": "日程第２　労働安全衛生法及び作業環境測定法の一部を改正する法律案（内閣提出）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-04-11",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 235・反対 2）",
+   "rollCallId": "217-0411-v001",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0411-v001.htm",
+   "title": "日程第１　国際開発協会への加盟に伴う措置に関する法律及び米州投資公社への加盟に伴う措置に関する法律の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-04-09",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 220・反対 13）",
+   "rollCallId": "217-0409-v003",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0409-v003.htm",
+   "title": "日程第３　独立行政法人国際協力機構法の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-04-09",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 231・反対 1）",
+   "rollCallId": "217-0409-v002",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0409-v002.htm",
+   "title": "日程第２　道路法等の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-04-09",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 233・反対 0）",
+   "rollCallId": "217-0409-v001",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0409-v001.htm",
+   "title": "日程第１　風俗営業等の規制及び業務の適正化等に関する法律の一部を改正する法律案（内閣提出）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-04-01",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "承認（賛成 229・反対 7）",
+   "rollCallId": "217-0401-v001",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0401-v001.htm",
+   "title": "日程第１　放送法第七十条第二項の規定に基づき、承認を求めるの件（衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-03-31",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 236・反対 0）",
+   "rollCallId": "217-0331-v013",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0331-v013.htm",
+   "title": "戦没者等の遺族に対する特別弔慰金支給法の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-03-31",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 219・反対 18）",
+   "rollCallId": "217-0331-v012",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0331-v012.htm",
+   "title": "地域人口の急減に対処するための特定地域づくり事業の推進に関する法律の一部を改正する法律案（衆議院提出）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-03-31",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 206・反対 31）",
+   "rollCallId": "217-0331-v011",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0331-v011.htm",
+   "title": "地方交付税法等の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-03-31",
+   "groupValue": "反対",
+   "kind": "vote",
+   "result": "可決（賛成 161・反対 76）",
+   "rollCallId": "217-0331-v010",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0331-v010.htm",
+   "title": "地方税法及び地方税法等の一部を改正する法律の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "反対"
+  },
+  {
+   "date": "2025-03-31",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 234・反対 2）",
+   "rollCallId": "217-0331-v009",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0331-v009.htm",
+   "title": "関税定率法等の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-03-31",
+   "groupValue": "反対",
+   "kind": "vote",
+   "result": "可決（賛成 158・反対 77）",
+   "rollCallId": "217-0331-v008",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0331-v008.htm",
+   "title": "所得税法等の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "反対"
+  },
+  {
+   "date": "2025-03-31",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 218・反対 19）",
+   "rollCallId": "217-0331-v007",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0331-v007.htm",
+   "title": "大学等における修学の支援に関する法律の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-03-31",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 235・反対 2）",
+   "rollCallId": "217-0331-v006",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0331-v006.htm",
+   "title": "日程第３　山村振興法の一部を改正する法律案（衆議院提出）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-03-31",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 235・反対 2）",
+   "rollCallId": "217-0331-v005",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0331-v005.htm",
+   "title": "日程第２　棚田地域振興法の一部を改正する法律案（衆議院提出）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-03-31",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 235・反対 2）",
+   "rollCallId": "217-0331-v004",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0331-v004.htm",
+   "title": "日程第１　土地改良法等の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-03-31",
+   "groupValue": "反対",
+   "kind": "vote",
+   "result": "可決（賛成 162・反対 75）",
+   "rollCallId": "217-0331-v003",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0331-v003.htm",
+   "title": "令和七年度政府関係機関予算",
+   "value": "反対"
+  },
+  {
+   "date": "2025-03-31",
+   "groupValue": "反対",
+   "kind": "vote",
+   "result": "可決（賛成 162・反対 75）",
+   "rollCallId": "217-0331-v002",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0331-v002.htm",
+   "title": "令和七年度特別会計予算",
+   "value": "反対"
+  },
+  {
+   "date": "2025-03-31",
+   "groupValue": "反対",
+   "kind": "vote",
+   "result": "修正（賛成 162・反対 75）",
+   "rollCallId": "217-0331-v001",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0331-v001.htm",
+   "title": "令和七年度一般会計予算「委員長報告のとおり修正議決すること」",
+   "value": "反対"
+  },
+  {
+   "date": "2025-03-26",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 236・反対 0）",
+   "rollCallId": "217-0326-v013",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0326-v013.htm",
+   "title": "議院に出頭する証人等の旅費及び日当に関する法律の一部を改正する法律案（衆議院提出）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-03-26",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 236・反対 0）",
+   "rollCallId": "217-0326-v012",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0326-v012.htm",
+   "title": "日程第４　地震防災対策強化地域における地震対策緊急整備事業に係る国の財政上の特別措置に関する法律の一部を改正する法律案（衆議院提出）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-03-26",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 228・反対 7）",
+   "rollCallId": "217-0326-v011",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0326-v011.htm",
+   "title": "日程第３　半島振興法の一部を改正する法律案（衆議院提出）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-03-26",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 236・反対 0）",
+   "rollCallId": "217-0326-v010",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0326-v010.htm",
+   "title": "日程第２　公職選挙法の一部を改正する法律案（衆議院提出第１０号）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-03-26",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 228・反対 7）",
+   "rollCallId": "217-0326-v009",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0326-v009.htm",
+   "title": "日程第１　公職選挙法の一部を改正する法律案（衆議院提出第９号）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-03-26",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "賛成 214・反対 16",
+   "rollCallId": "217-0326-v008",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0326-v008.htm",
+   "title": "国家公務員等の任命に関する件「公認会計士・監査審査会委員（井野貴章君）及び情報公開・個人情報保護審査会委員（稲山文男君）」",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-03-26",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "賛成 219・反対 11",
+   "rollCallId": "217-0326-v007",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0326-v007.htm",
+   "title": "国家公務員等の任命に関する件「公益認定等委員会委員（石津寿惠君）」",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-03-26",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "同意（賛成 230・反対 2）",
+   "rollCallId": "217-0326-v006",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0326-v006.htm",
+   "title": "国家公務員等の任命に関する件「公益認定等委員会委員（黒田かをり君及び湯浅信好君）、公認会計士・監査審査会委員（蟹江章君）、情報公開・個人情報保護審査会委員（芳仲美惠子君及び中村真由美君）及び中央更生保護審査会委員（辻惠介君）」",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-03-26",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "賛成 218・反対 13",
+   "rollCallId": "217-0326-v005",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0326-v005.htm",
+   "title": "国家公務員等の任命に関する件「公益認定等委員会委員（清水新一郎君）及び公害健康被害補償不服審査会委員（山田広樹君）」",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-03-26",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "同意（賛成 227・反対 5）",
+   "rollCallId": "217-0326-v004",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0326-v004.htm",
+   "title": "国家公務員等の任命に関する件「会計検査院情報公開・個人情報保護審査会委員（堀江正之君）、国家公安委員会委員（相星孝一君）、公認会計士・監査審査会委員（千葉通子君）、情報公開・個人情報保護審査会委員（木村琢麿君及び佐藤郁美君）及び公害健康被害補償不服審査会委員（八木貴美子君）」",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-03-26",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "同意（賛成 231・反対 0）",
+   "rollCallId": "217-0326-v003",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0326-v003.htm",
+   "title": "国家公務員等の任命に関する件「会計検査院情報公開・個人情報保護審査会委員（福重さと子君）、公益認定等委員会委員（生野考司君、原田大樹君及び北村聡子君）、公認会計士・監査審査会会長（青木雅明君）、同委員（上田亮子君、古布薫君、玉井裕子君、川村義則君及び塩谷公朗君）、行政不服審査会委員（八木一洋君、田澤奈津子君、羽田淳一君、福本美苗君、中原茂樹君及び野口貴公美君）及び情報公開・個人情報保護審査会委員（中里智美君、武藤京子君、寺田麻佑君及び久末弥生君）」",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-03-26",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "同意（賛成 211・反対 17）",
+   "rollCallId": "217-0326-v002",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0326-v002.htm",
+   "title": "国家公務員等の任命に関する件「会計検査院情報公開・個人情報保護審査会委員（杉山治樹君）」",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-03-26",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "同意（賛成 213・反対 17）",
+   "rollCallId": "217-0326-v001",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0326-v001.htm",
+   "title": "国家公務員等の任命に関する件「公正取引委員会委員長（茶谷栄治君）」",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-03-14",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 218・反対 11）",
+   "rollCallId": "217-0314-v002",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0314-v002.htm",
+   "title": "参議院憲法審査会規程の一部を改正する規程案（馬場成志君外７名発議）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-03-14",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 218・反対 11）",
+   "rollCallId": "217-0314-v001",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0314-v001.htm",
+   "title": "参議院規則の一部を改正する規則案（馬場成志君外７名発議）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-02-19",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "賛成 226・反対 8",
+   "rollCallId": "217-0219-v012",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0219-v012.htm",
+   "title": "日程第１　国家公務員等の任命に関する件「中央労働委員会公益委員（石井浩君）」",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-02-19",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "同意（賛成 222・反対 11）",
+   "rollCallId": "217-0219-v011",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0219-v011.htm",
+   "title": "日程第１　国家公務員等の任命に関する件「中央労働委員会公益委員（荒木尚志君）及び運輸審議会委員（三浦大介君）」",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-02-19",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "同意（賛成 229・反対 7）",
+   "rollCallId": "217-0219-v010",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0219-v010.htm",
+   "title": "日程第１　国家公務員等の任命に関する件「日本銀行政策委員会審議委員（小枝淳子君）及び中央労働委員会公益委員（鹿野菜穂子君）」",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-02-19",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "同意（賛成 233・反対 2）",
+   "rollCallId": "217-0219-v009",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0219-v009.htm",
+   "title": "日程第１　国家公務員等の任命に関する件「電波監理審議会委員（西村暢史君及び矢嶋雅子君）」",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-02-19",
+   "groupValue": "反対",
+   "kind": "vote",
+   "result": "賛成 190・反対 45",
+   "rollCallId": "217-0219-v008",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0219-v008.htm",
+   "title": "日程第１　国家公務員等の任命に関する件「預金保険機構理事（山崎英司君）」",
+   "value": "反対"
+  },
+  {
+   "date": "2025-02-19",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "同意（賛成 236・反対 0）",
+   "rollCallId": "217-0219-v007",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0219-v007.htm",
+   "title": "日程第１　国家公務員等の任命に関する件「預金保険機構理事（正願隆一君）、同監事（大谷益世君）、中央社会保険医療協議会公益委員（笠木映里君）、社会保険審査会委員（辻本京子君）、中央労働委員会公益委員（安西明子君、磯部哲君、小畑史子君、小圷淳子君、小西康之君、鹿士眞由美君、原恵美君、深道祐子君、川田琢之君、権丈英子君及び山川隆一君）、運輸安全委員会委員長（李家賢一君）及び同委員（早田久子君、津田宏果君及び高橋明子君）」",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-02-19",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "同意（賛成 217・反対 17）",
+   "rollCallId": "217-0219-v006",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0219-v006.htm",
+   "title": "日程第１　国家公務員等の任命に関する件「預金保険機構理事長（三井秀範君）」",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-02-19",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "賛成 219・反対 16",
+   "rollCallId": "217-0219-v005",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0219-v005.htm",
+   "title": "日程第１　国家公務員等の任命に関する件「総合科学技術・イノベーション会議議員（波多野睦子君）」",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-02-19",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "賛成 219・反対 17",
+   "rollCallId": "217-0219-v004",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0219-v004.htm",
+   "title": "日程第１　国家公務員等の任命に関する件「総合科学技術・イノベーション会議議員（鈴木純君）」",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-02-19",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "同意（賛成 231・反対 5）",
+   "rollCallId": "217-0219-v003",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0219-v003.htm",
+   "title": "日程第１　国家公務員等の任命に関する件「総合科学技術・イノベーション会議議員（宮園浩平君）、労働保険審査会委員（比佐和枝君及び廣尚典君）、中央社会保険医療協議会公益委員（城山英明君）、中央労働委員会公益委員（久保田安彦君）及び運輸安全委員会委員（高野滋君及び松井裕子君）」",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-02-19",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "賛成 236・反対 0",
+   "rollCallId": "217-0219-v002",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0219-v002.htm",
+   "title": "日程第１　国家公務員等の任命に関する件「検査官（挽文子君）」",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-02-19",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "同意（賛成 228・反対 8）",
+   "rollCallId": "217-0219-v001",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0219-v001.htm",
+   "title": "日程第１　国家公務員等の任命に関する件「検査官（田中淳子君）」",
+   "value": "賛成"
+  }
+ ]
+}

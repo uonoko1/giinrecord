@@ -109,6 +109,17 @@ test("2行表記の最小ケース: <BR> の前を name にし、[本名] は le
   assert.equal(plain.legalName, undefined);
 });
 
+// Issue #14: 会派は回次をまたいで改称する。名簿の略称は最新の正式名称に解決するが、古い投票ページの旧名称とも同一会派として突合する。
+test("改称前の正式名称（投票ページ）も同じ略称の会派として matchesGroup が true", () => {
+  assert.equal(matchesGroup("自民", "自由民主党"), true);                       // 〜第219回
+  assert.equal(matchesGroup("自由民主党・無所属の会", "自由民主党"), true);      // 解決済みの正式名称とも
+  assert.equal(matchesGroup("立憲", "立憲民主・社民・無所属"), true);            // 〜第219回
+  assert.equal(matchesGroup("Ｎ党", "ＮＨＫから国民を守る党"), true);            // 第216回名簿（第217回中に一時「ＮＨＫ党」）
+  assert.equal(matchesGroup("Ｎ党", "ＮＨＫ党"), true);
+  assert.equal(matchesGroup("自民", "立憲民主・社民・無所属"), false);
+  assert.equal(groupFullName("Ｎ党"), "ＮＨＫから国民を守る党");
+});
+
 // Issue #14: 第217回の名簿（れいわ新選組 → 第221回で「いのちの党」に改称）では略称が「れ新」。投票ページの正式名称は「れいわ新選組」。
 test("実フィクスチャ（第217回）: 『れ新』の行は正式名称『れいわ新選組』になり、未知略称に残らない", () => {
   const html217 = readFileSync(new URL("./fixtures/sangiin-giin-217.htm", import.meta.url), "utf-8");

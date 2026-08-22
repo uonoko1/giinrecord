@@ -2,123 +2,12 @@
  {
   "counts": {
    "bills": 0,
-   "rollcalls": 120,
+   "rollcalls": 287,
    "speeches": 0
   },
+  "current": true,
   "district": "比例",
-  "group": "立憲",
-  "house": "sangiin",
-  "id": "m_007006",
-  "kana": "あおき あい",
-  "name": "青木 愛",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "鳥取・島根",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_010001",
-  "kana": "あおき かずひこ",
-  "name": "青木 一彦",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "維新",
-  "house": "sangiin",
-  "id": "m_022002",
-  "kana": "あおしま けんた",
-  "name": "青島 健太",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_022003",
-  "kana": "あかまつ けん",
-  "name": "赤松 健",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "福岡",
-  "group": "公明",
-  "house": "sangiin",
-  "id": "m_010003",
-  "kana": "あきの こうぞう",
-  "name": "秋野 公造",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "神奈川",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_998003",
-  "kana": "あさお けいいちろう",
-  "name": "浅尾 慶一郎",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "大阪",
-  "group": "維新",
-  "house": "sangiin",
-  "id": "m_016003",
-  "kana": "あさだ ひとし",
-  "name": "浅田 均",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "東京",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_016004",
-  "kana": "あさひ けんたろう",
-  "name": "朝日 健太郎",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_014002",
   "kana": "あだち まさし",
@@ -128,39 +17,162 @@
  {
   "counts": {
    "bills": 0,
-   "rollcalls": 120,
+   "rollcalls": 287,
    "speeches": 0
   },
+  "current": true,
   "district": "比例",
-  "group": "民主",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
-  "id": "m_025002",
-  "kana": "あだち やすし",
-  "name": "足立 康史",
-  "termEnd": "2031-07-28"
+  "id": "m_007006",
+  "kana": "あおき あい",
+  "name": "青木 愛",
+  "termEnd": "2028-07-25"
  },
  {
   "counts": {
    "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
+   "rollcalls": 287,
+   "speeches": 3
   },
-  "district": "比例",
-  "group": "参政",
+  "current": true,
+  "district": "鳥取・島根",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
-  "id": "m_025003",
-  "kana": "あだち ゆうじ",
-  "name": "安達 悠司",
-  "termEnd": "2031-07-28"
+  "id": "m_010001",
+  "kana": "あおき かずひこ",
+  "name": "青木 一彦",
+  "termEnd": "2028-07-25"
  },
  {
   "counts": {
    "bills": 0,
-   "rollcalls": 120,
+   "rollcalls": 287,
    "speeches": 1
   },
+  "current": true,
   "district": "比例",
-  "group": "自民",
+  "group": "日本維新の会",
+  "house": "sangiin",
+  "id": "m_022002",
+  "kana": "あおしま けんた",
+  "name": "青島 健太",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 167,
+   "speeches": 2
+  },
+  "current": false,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_016002",
+  "kana": "あおやま しげはる",
+  "name": "青山 繁晴",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 0
+  },
+  "current": false,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_013004",
+  "kana": "あかいけ まさあき",
+  "name": "赤池 誠章",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_022003",
+  "kana": "あかまつ けん",
+  "name": "赤松 健",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "福岡",
+  "group": "公明党",
+  "house": "sangiin",
+  "id": "m_010003",
+  "kana": "あきの こうぞう",
+  "name": "秋野 公造",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 5
+  },
+  "current": true,
+  "district": "神奈川",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_998003",
+  "kana": "あさお けいいちろう",
+  "name": "浅尾 慶一郎",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "大阪",
+  "group": "日本維新の会",
+  "house": "sangiin",
+  "id": "m_016003",
+  "kana": "あさだ ひとし",
+  "name": "浅田 均",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "東京",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_016004",
+  "kana": "あさひ けんたろう",
+  "name": "朝日 健太郎",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_001006",
   "kana": "ありむら はるこ",
@@ -170,263 +182,27 @@
  {
   "counts": {
    "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
+   "rollcalls": 136,
+   "speeches": 5
   },
+  "current": false,
   "district": "比例",
-  "group": "参政",
+  "group": "日本共産党",
   "house": "sangiin",
-  "id": "m_025004",
-  "kana": "あんどう ひろし",
-  "name": "安藤 裕",
-  "termEnd": "2031-07-28"
+  "id": "m_001007",
+  "kana": "いのうえ さとし",
+  "name": "井上 哲士",
+  "termEnd": "2025-07-28"
  },
  {
   "counts": {
    "bills": 0,
-   "rollcalls": 120,
+   "rollcalls": 287,
    "speeches": 0
   },
+  "current": true,
   "district": "比例",
-  "group": "みら",
-  "house": "sangiin",
-  "id": "m_025005",
-  "kana": "あんの たかひろ",
-  "name": "安野 貴博",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "東京",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_022004",
-  "kana": "いくいな あきこ",
-  "name": "生稲 晃子",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "千葉",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_007007",
-  "kana": "いしい じゅんいち",
-  "name": "石井 準一",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "秋田",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_010005",
-  "kana": "いしい ひろお",
-  "name": "石井 浩郎",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "維新",
-  "house": "sangiin",
-  "id": "m_016009",
-  "kana": "いしい みつこ",
-  "name": "石井 苗子",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "維新",
-  "house": "sangiin",
-  "id": "m_025045",
-  "kana": "いしい めぐみ",
-  "name": "石井 めぐみ",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "宮城",
-  "group": "立憲",
-  "house": "sangiin",
-  "id": "m_019003",
-  "kana": "いしがき のりこ",
-  "name": "石垣 のりこ",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "大阪",
-  "group": "公明",
-  "house": "sangiin",
-  "id": "m_010006",
-  "kana": "いしかわ ひろたか",
-  "name": "石川 博崇",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_013010",
-  "kana": "いしだ まさひろ",
-  "name": "石田 昌宏",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "立憲",
-  "house": "sangiin",
-  "id": "m_010007",
-  "kana": "いしばし みちひろ",
-  "name": "石橋 通宏",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "兵庫",
-  "group": "立憲",
-  "house": "sangiin",
-  "id": "m_025007",
-  "kana": "いずみ ふさほ",
-  "name": "泉 房穂",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "い党",
-  "house": "sangiin",
-  "id": "m_025008",
-  "kana": "いせざき けんじ",
-  "name": "伊勢崎 賢治",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "民主",
-  "house": "sangiin",
-  "id": "m_013011",
-  "kana": "いそざき てつじ",
-  "name": "礒崎 哲史",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "香川",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_010008",
-  "kana": "いそざき よしひこ",
-  "name": "磯崎 仁彦",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 3
-  },
-  "district": "兵庫",
-  "group": "公明",
-  "house": "sangiin",
-  "id": "m_016005",
-  "kana": "いとう たかえ",
-  "name": "伊藤 孝江",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "愛知",
-  "group": "民主",
-  "house": "sangiin",
-  "id": "m_016006",
-  "kana": "いとう たかえ",
-  "name": "伊藤 孝恵",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "民主",
-  "house": "sangiin",
-  "id": "m_025009",
-  "kana": "いとう たつお",
-  "name": "伊藤 辰夫",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_013006",
   "kana": "いのうえ よしゆき",
@@ -436,39 +212,57 @@
  {
   "counts": {
    "bills": 0,
-   "rollcalls": 120,
-   "speeches": 3
-  },
-  "district": "千葉",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_010009",
-  "kana": "いのぐち くにこ",
-  "name": "猪口 邦子",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
+   "rollcalls": 136,
    "speeches": 1
   },
-  "district": "比例",
-  "group": "維新",
+  "current": false,
+  "district": "埼玉",
+  "group": "日本共産党",
   "house": "sangiin",
-  "id": "m_022005",
-  "kana": "いのせ なおき",
-  "name": "猪瀬 直樹",
+  "id": "m_019002",
+  "kana": "いとう がく",
+  "name": "伊藤 岳",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 5
+  },
+  "current": true,
+  "district": "兵庫",
+  "group": "公明党",
+  "house": "sangiin",
+  "id": "m_016005",
+  "kana": "いとう たかえ",
+  "name": "伊藤 孝江",
   "termEnd": "2028-07-25"
  },
  {
   "counts": {
    "bills": 0,
-   "rollcalls": 120,
+   "rollcalls": 287,
+   "speeches": 4
+  },
+  "current": true,
+  "district": "愛知",
+  "group": "国民民主党・新緑風会",
+  "house": "sangiin",
+  "id": "m_016006",
+  "kana": "いとう たかえ",
+  "name": "伊藤 孝恵",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
    "speeches": 0
   },
+  "current": true,
   "district": "沖縄",
-  "group": "沖縄",
+  "group": "沖縄の風",
   "house": "sangiin",
   "id": "m_016007",
   "kana": "いは よういち",
@@ -478,11 +272,237 @@
  {
   "counts": {
    "bills": 0,
-   "rollcalls": 120,
+   "rollcalls": 287,
    "speeches": 0
   },
+  "current": true,
+  "district": "東京",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_022004",
+  "kana": "いくいな あきこ",
+  "name": "生稲 晃子",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 1
+  },
+  "current": false,
   "district": "比例",
-  "group": "自民",
+  "group": "日本維新の会",
+  "house": "sangiin",
+  "id": "m_016008",
+  "kana": "いしい あきら",
+  "name": "石井 章",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "千葉",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_007007",
+  "kana": "いしい じゅんいち",
+  "name": "石井 準一",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "秋田",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_010005",
+  "kana": "いしい ひろお",
+  "name": "石井 浩郎",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 1
+  },
+  "current": false,
+  "district": "岡山",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_013008",
+  "kana": "いしい まさひろ",
+  "name": "石井 正弘",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "比例",
+  "group": "日本維新の会",
+  "house": "sangiin",
+  "id": "m_016009",
+  "kana": "いしい みつこ",
+  "name": "石井 苗子",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "宮城",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_019003",
+  "kana": "いしがき のりこ",
+  "name": "石垣 のりこ",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 1
+  },
+  "current": false,
+  "district": "比例",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_019004",
+  "kana": "いしかわ たいが",
+  "name": "石川 大我",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "大阪",
+  "group": "公明党",
+  "house": "sangiin",
+  "id": "m_010006",
+  "kana": "いしかわ ひろたか",
+  "name": "石川 博崇",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_013010",
+  "kana": "いしだ まさひろ",
+  "name": "石田 昌宏",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_010007",
+  "kana": "いしばし みちひろ",
+  "name": "石橋 通宏",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "香川",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_010008",
+  "kana": "いそざき よしひこ",
+  "name": "磯崎 仁彦",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 3
+  },
+  "current": true,
+  "district": "比例",
+  "group": "国民民主党・新緑風会",
+  "house": "sangiin",
+  "id": "m_013011",
+  "kana": "いそざき てつじ",
+  "name": "礒崎 哲史",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 4
+  },
+  "current": true,
+  "district": "千葉",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_010009",
+  "kana": "いのぐち くにこ",
+  "name": "猪口 邦子",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 3
+  },
+  "current": true,
+  "district": "比例",
+  "group": "日本維新の会",
+  "house": "sangiin",
+  "id": "m_022005",
+  "kana": "いのせ なおき",
+  "name": "猪瀬 直樹",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_016010",
   "kana": "いまい えりこ",
@@ -492,11 +512,12 @@
  {
   "counts": {
    "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
+   "rollcalls": 287,
+   "speeches": 2
   },
+  "current": true,
   "district": "比例",
-  "group": "共産",
+  "group": "日本共産党",
   "house": "sangiin",
   "id": "m_016011",
   "kana": "いわぶち とも",
@@ -506,11 +527,12 @@
  {
   "counts": {
    "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
+   "rollcalls": 287,
+   "speeches": 1
   },
+  "current": true,
   "district": "北海道",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_019005",
   "kana": "いわもと つよひと",
@@ -520,39 +542,12 @@
  {
   "counts": {
    "bills": 0,
-   "rollcalls": 120,
+   "rollcalls": 287,
    "speeches": 1
   },
+  "current": true,
   "district": "比例",
-  "group": "参政",
-  "house": "sangiin",
-  "id": "m_025038",
-  "kana": "いわもと まな",
-  "name": "岩本 麻奈",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_025010",
-  "kana": "いんどう しゅうさく",
-  "name": "いんどう 周作",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "比例",
-  "group": "公明",
+  "group": "公明党",
   "house": "sangiin",
   "id": "m_022006",
   "kana": "うえだ いさむ",
@@ -562,11 +557,12 @@
  {
   "counts": {
    "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
+   "rollcalls": 287,
+   "speeches": 1
   },
+  "current": true,
   "district": "埼玉",
-  "group": "民主",
+  "group": "国民民主党・新緑風会",
   "house": "sangiin",
   "id": "m_019042",
   "kana": "うえだ きよし",
@@ -576,11 +572,4017 @@
  {
   "counts": {
    "bills": 0,
-   "rollcalls": 120,
+   "rollcalls": 287,
    "speeches": 0
   },
+  "current": true,
+  "district": "栃木",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_010013",
+  "kana": "うえの みちこ",
+  "name": "上野 通子",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "千葉",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_022007",
+  "kana": "うすい しょういち",
+  "name": "臼井 正一",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "新潟",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_019006",
+  "kana": "うちこし さくら",
+  "name": "打越 さく良",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 2
+  },
+  "current": true,
   "district": "比例",
-  "group": "維新",
+  "group": "参政党",
+  "house": "sangiin",
+  "id": "m_019007",
+  "kana": "うめむら みずほ",
+  "name": "梅村 みずほ",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "山口",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_013001",
+  "kana": "えじま きよし",
+  "name": "江島 潔",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 0
+  },
+  "current": false,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_007014",
+  "kana": "えとう せいいち",
+  "name": "衛藤 晟一",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 3
+  },
+  "current": true,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_016012",
+  "kana": "おがわ かつみ",
+  "name": "小川 克巳",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "比例",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_019008",
+  "kana": "おざわ まさひと",
+  "name": "小沢 雅仁",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 0
+  },
+  "current": false,
+  "district": "茨城",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_019009",
+  "kana": "おぬま たくみ",
+  "name": "小沼 巧",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 10
+  },
+  "current": true,
+  "district": "岡山",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_016013",
+  "kana": "おのだ きみ",
+  "name": "小野田 紀美",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 0
+  },
+  "current": false,
+  "district": "鹿児島",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_989018",
+  "kana": "おつじ ひでひさ",
+  "name": "尾辻 秀久",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_022008",
+  "kana": "おち としゆき",
+  "name": "越智 俊之",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "福岡",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_010018",
+  "kana": "おおいえ さとし",
+  "name": "大家 敏志",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "いのちの党",
+  "house": "sangiin",
+  "id": "m_007017",
+  "kana": "おおしま くすお",
+  "name": "大島 九州男",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 1
+  },
+  "current": false,
+  "district": "比例",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_023003",
+  "kana": "おおつばき ゆうこ",
+  "name": "大椿 ゆうこ",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 0
+  },
+  "current": false,
+  "district": "岐阜",
+  "group": "各派に属しない議員",
+  "house": "sangiin",
+  "id": "m_013013",
+  "kana": "おおの やすただ",
+  "name": "大野 泰正",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 0
+  },
+  "current": false,
+  "district": "大阪",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_013014",
+  "kana": "おおた ふさえ",
+  "name": "太田 房江",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "石川",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_004012",
+  "kana": "おかだ なおき",
+  "name": "岡田 直樹",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 0
+  },
+  "current": false,
+  "district": "比例",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_024002",
+  "kana": "おくむら まさよし",
+  "name": "奥村 政佳",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 3
+  },
+  "current": true,
+  "district": "比例",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_022009",
+  "kana": "おにき まこと",
+  "name": "鬼木 誠",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "兵庫",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_019011",
+  "kana": "かだ ひろゆき",
+  "name": "加田 裕之",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "茨城",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_022010",
+  "kana": "かとう あきよし",
+  "name": "加藤 明良",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 3
+  },
+  "current": true,
+  "district": "比例",
+  "group": "日本維新の会",
+  "house": "sangiin",
+  "id": "m_019012",
+  "kana": "かだ ゆきこ",
+  "name": "嘉田 由紀子",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_022012",
+  "kana": "かじはら だいすけ",
+  "name": "梶原 大介",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 21
+  },
+  "current": true,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_010020",
+  "kana": "かたやま さつき",
+  "name": "片山 さつき",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "兵庫",
+  "group": "日本維新の会",
+  "house": "sangiin",
+  "id": "m_016014",
+  "kana": "かたやま だいすけ",
+  "name": "片山 大介",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "北海道",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_019013",
+  "kana": "かつべ けんじ",
+  "name": "勝部 賢志",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 4
+  },
+  "current": true,
+  "district": "比例",
+  "group": "日本維新の会",
+  "house": "sangiin",
+  "id": "m_022013",
+  "kana": "かねこ みちひと",
+  "name": "金子 道仁",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 3
+  },
+  "current": true,
+  "district": "比例",
+  "group": "参政党",
+  "house": "sangiin",
+  "id": "m_022014",
+  "kana": "かみや そうへい",
+  "name": "神谷 宗幣",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_022015",
+  "kana": "かみや まさゆき",
+  "name": "神谷 政幸",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 2
+  },
+  "current": false,
+  "district": "比例",
+  "group": "日本共産党",
+  "house": "sangiin",
+  "id": "m_001010",
+  "kana": "かみ ともこ",
+  "name": "紙 智子",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "比例",
+  "group": "国民民主党・新緑風会",
+  "house": "sangiin",
+  "id": "m_007022",
+  "kana": "かわい たかのり",
+  "name": "川合 孝典",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 2
+  },
+  "current": false,
+  "district": "比例",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_007025",
+  "kana": "かわだ りゅうへい",
+  "name": "川田 龍平",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 0
+  },
+  "current": false,
+  "district": "比例",
+  "group": "公明党",
+  "house": "sangiin",
+  "id": "m_013015",
+  "kana": "かわの よしひろ",
+  "name": "河野 義博",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "岩手",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_016015",
+  "kana": "きどぐち えいじ",
+  "name": "木戸口 英司",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "比例",
+  "group": "いのちの党",
+  "house": "sangiin",
+  "id": "m_019015",
+  "kana": "きむら えいこ",
+  "name": "木村 英子",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 4
+  },
+  "current": true,
+  "district": "東京",
+  "group": "日本共産党",
+  "house": "sangiin",
+  "id": "m_013017",
+  "kana": "きら よしこ",
+  "name": "吉良 よし子",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "比例",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_019016",
+  "kana": "きし まきこ",
+  "name": "岸 真紀子",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 4
+  },
+  "current": true,
+  "district": "山口",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_013019",
+  "kana": "きたむら つねお",
+  "name": "北村 経夫",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "比例",
+  "group": "日本維新の会",
+  "house": "sangiin",
+  "id": "m_022016",
+  "kana": "くしだ せいいち",
+  "name": "串田 誠一",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 3
+  },
+  "current": true,
+  "district": "比例",
+  "group": "公明党",
+  "house": "sangiin",
+  "id": "m_022017",
+  "kana": "くぼた てつや",
+  "name": "窪田 哲也",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 3
+  },
+  "current": true,
+  "district": "埼玉",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_019017",
+  "kana": "くまがい ひろと",
+  "name": "熊谷 裕人",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 3
+  },
+  "current": false,
+  "district": "京都",
+  "group": "日本共産党",
+  "house": "sangiin",
+  "id": "m_013020",
+  "kana": "くらばやし あきこ",
+  "name": "倉林 明子",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "滋賀",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_016017",
+  "kana": "こやり たかし",
+  "name": "こやり 隆史",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 3
+  },
+  "current": true,
+  "district": "比例",
+  "group": "日本共産党",
+  "house": "sangiin",
+  "id": "m_998022",
+  "kana": "こいけ あきら",
+  "name": "小池 晃",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 10
+  },
+  "current": true,
+  "district": "千葉",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_010024",
+  "kana": "こにし ひろゆき",
+  "name": "小西 洋之",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "新潟",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_022018",
+  "kana": "こばやし かずひろ",
+  "name": "小林 一大",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 3
+  },
+  "current": true,
+  "district": "比例",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_022019",
+  "kana": "こが ちかげ",
+  "name": "古賀 千景",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "長崎",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_013021",
+  "kana": "こが ゆういちろう",
+  "name": "古賀 友一郎",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "福岡",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_016018",
+  "kana": "こが ゆきひと",
+  "name": "古賀 之士",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "大分",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_022020",
+  "kana": "こしょう はるとも",
+  "name": "古庄 玄知",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "茨城",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_013022",
+  "kana": "こうづき りょうすけ",
+  "name": "上月 良祐",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 1
+  },
+  "current": false,
+  "district": "神奈川",
+  "group": "公明党",
+  "house": "sangiin",
+  "id": "m_013023",
+  "kana": "ささき さやか",
+  "name": "佐々木 さやか",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "奈良",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_016019",
+  "kana": "さとう けい",
+  "name": "佐藤 啓",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 0
+  },
+  "current": false,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_007028",
+  "kana": "さとう のぶあき",
+  "name": "佐藤 信秋",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 1
+  },
+  "current": false,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_007029",
+  "kana": "さとう まさひさ",
+  "name": "佐藤 正久",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "愛知",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_010027",
+  "kana": "さいとう よしたか",
+  "name": "斎藤 嘉隆",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "各派に属しない議員",
+  "house": "sangiin",
+  "id": "m_023002",
+  "kana": "さいとう けんいちろう",
+  "name": "齊藤 健一郎",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "愛知",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_013024",
+  "kana": "さかい やすゆき",
+  "name": "酒井 庸行",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "宮城",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_998030",
+  "kana": "さくらい みつる",
+  "name": "櫻井 充",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 6
+  },
+  "current": true,
+  "district": "愛知",
+  "group": "公明党",
+  "house": "sangiin",
+  "id": "m_016020",
+  "kana": "さとみ りゅうじ",
+  "name": "里見 隆治",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 0
+  },
+  "current": false,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_974040",
+  "kana": "さんとう あきこ",
+  "name": "山東 昭子",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "群馬",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_019018",
+  "kana": "しみず まさと",
+  "name": "清水 真人",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_016021",
+  "kana": "じみ はなこ",
+  "name": "自見 はなこ",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 4
+  },
+  "current": false,
+  "district": "比例",
+  "group": "公明党",
+  "house": "sangiin",
+  "id": "m_019019",
+  "kana": "しおた ひろあき",
+  "name": "塩田 博昭",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "東京",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_019020",
+  "kana": "しおむら あやか",
+  "name": "塩村 あやか",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "比例",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_022021",
+  "kana": "しば しんいち",
+  "name": "柴 愼一",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 5
+  },
+  "current": true,
+  "district": "比例",
+  "group": "日本維新の会",
+  "house": "sangiin",
+  "id": "m_010029",
+  "kana": "しばた たくみ",
+  "name": "柴田 巧",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "福岡",
+  "group": "公明党",
+  "house": "sangiin",
+  "id": "m_019021",
+  "kana": "しもの ろくた",
+  "name": "下野 六太",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 0
+  },
+  "current": false,
+  "district": "大分",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_023004",
+  "kana": "しらさか あき",
+  "name": "白坂 亜紀",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_016022",
+  "kana": "しんどう かねひこ",
+  "name": "進藤 金日子",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "静岡",
+  "group": "国民民主党・新緑風会",
+  "house": "sangiin",
+  "id": "m_001027",
+  "kana": "しんば かづや",
+  "name": "榛葉 賀津也",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "兵庫",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_004033",
+  "kana": "すえまつ しんすけ",
+  "name": "末松 信介",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "大阪",
+  "group": "公明党",
+  "house": "sangiin",
+  "id": "m_013028",
+  "kana": "すぎ ひさたけ",
+  "name": "杉 久武",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "長野",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_016023",
+  "kana": "すぎお ひでや",
+  "name": "杉尾 秀哉",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 285,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_019023",
+  "kana": "すずき むねお",
+  "name": "鈴木 宗男",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 1273
+  },
+  "current": true,
+  "district": "埼玉",
+  "group": "各派に属しない議員",
+  "house": "sangiin",
+  "id": "m_003005",
+  "kana": "せきぐち まさかず",
+  "name": "関口 昌一",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "愛知",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_019024",
+  "kana": "たじま まいこ",
+  "name": "田島 麻衣子",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 0
+  },
+  "current": false,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_023001",
+  "kana": "たなか まさし",
+  "name": "田中 昌史",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "青森",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_016025",
+  "kana": "たなぶ まさよ",
+  "name": "田名部 匡代",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 5
+  },
+  "current": true,
+  "district": "比例",
+  "group": "国民民主党・新緑風会",
+  "house": "sangiin",
+  "id": "m_019025",
+  "kana": "たむら まみ",
+  "name": "田村 まみ",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 3
+  },
+  "current": true,
+  "district": "比例",
+  "group": "日本共産党",
+  "house": "sangiin",
+  "id": "m_001001",
+  "kana": "だいもん みきし",
+  "name": "大門 実紀史",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "大阪",
+  "group": "日本維新の会",
+  "house": "sangiin",
+  "id": "m_016026",
+  "kana": "たかぎ かおり",
+  "name": "高木 かおり",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 3
+  },
+  "current": true,
+  "district": "埼玉",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_022023",
+  "kana": "たかぎ まり",
+  "name": "高木 真理",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "栃木",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_013030",
+  "kana": "たかはし かつのり",
+  "name": "高橋 克法",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 1
+  },
+  "current": false,
+  "district": "比例",
+  "group": "公明党",
+  "house": "sangiin",
+  "id": "m_024003",
+  "kana": "たかはし じろう",
+  "name": "高橋 次郎",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "北海道",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_019026",
+  "kana": "たかはし はるみ",
+  "name": "高橋 はるみ",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "兵庫",
+  "group": "公明党",
+  "house": "sangiin",
+  "id": "m_019027",
+  "kana": "たかはし みつお",
+  "name": "高橋 光男",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 0
+  },
+  "current": false,
+  "district": "沖縄",
+  "group": "沖縄の風",
+  "house": "sangiin",
+  "id": "m_019028",
+  "kana": "たから てつみ",
+  "name": "高良 鉄美",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 7
+  },
+  "current": false,
+  "district": "青森",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_013031",
+  "kana": "たきさわ もとめ",
+  "name": "滝沢 求",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "福井",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_013032",
+  "kana": "たきなみ ひろふみ",
+  "name": "滝波 宏文",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "比例",
+  "group": "公明党",
+  "house": "sangiin",
+  "id": "m_017001",
+  "kana": "たけうち しんじ",
+  "name": "竹内 真二",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 8
+  },
+  "current": true,
+  "district": "比例",
+  "group": "国民民主党・新緑風会",
+  "house": "sangiin",
+  "id": "m_022024",
+  "kana": "たけづめ ひとし",
+  "name": "竹詰 仁",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "東京",
+  "group": "公明党",
+  "house": "sangiin",
+  "id": "m_010033",
+  "kana": "たけや としこ",
+  "name": "竹谷 とし子",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 1
+  },
+  "current": false,
+  "district": "東京",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_995043",
+  "kana": "たけみ けいぞう",
+  "name": "武見 敬三",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "公明党",
+  "house": "sangiin",
+  "id": "m_004036",
+  "kana": "たにあい まさあき",
+  "name": "谷合 正明",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 7
+  },
+  "current": false,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_013034",
+  "kana": "つげ よしふみ",
+  "name": "柘植 芳文",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 6
+  },
+  "current": true,
+  "district": "比例",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_022025",
+  "kana": "つじもと きよみ",
+  "name": "辻元 清美",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "和歌山",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_998036",
+  "kana": "つるほ ようすけ",
+  "name": "鶴保 庸介",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "秋田",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_019030",
+  "kana": "てらた しずか",
+  "name": "寺田 静",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "いのちの党",
+  "house": "sangiin",
+  "id": "m_022026",
+  "kana": "てんばた だいすけ",
+  "name": "天畠 大輔",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 3
+  },
+  "current": false,
+  "district": "富山",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_013035",
+  "kana": "どうこ しげる",
+  "name": "堂故 茂",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "茨城",
+  "group": "国民民主党・新緑風会",
+  "house": "sangiin",
+  "id": "m_022027",
+  "kana": "どうごみ まきこ",
+  "name": "堂込 麻紀子",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "北海道",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_010036",
+  "kana": "とくなが えり",
+  "name": "徳永 エリ",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_022028",
+  "kana": "とものう りお",
+  "name": "友納 理緒",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 2
+  },
+  "current": false,
+  "district": "千葉",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_013036",
+  "kana": "とよだ としろう",
+  "name": "豊田 俊郎",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "愛媛",
+  "group": "各派に属しない議員",
+  "house": "sangiin",
+  "id": "m_019031",
+  "kana": "ながえ たかこ",
+  "name": "ながえ 孝子",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "日本維新の会",
+  "house": "sangiin",
+  "id": "m_022029",
+  "kana": "なかじょう きよし",
+  "name": "中条 きよし",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "群馬",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_986024",
+  "kana": "なかそね ひろふみ",
+  "name": "中曽根 弘文",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 0
+  },
+  "current": false,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_022001",
+  "kana": "なかだ ひろし",
+  "name": "中田 宏",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "徳島・高知",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_010038",
+  "kana": "なかにし ゆうすけ",
+  "name": "中西 祐介",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "山梨",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_022030",
+  "kana": "ながい まなぶ",
+  "name": "永井 学",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 4
+  },
+  "current": true,
+  "district": "千葉",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_007041",
+  "kana": "ながはま ひろゆき",
+  "name": "長浜 博行",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 0
+  },
+  "current": false,
+  "district": "宮崎",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_013039",
+  "kana": "ながみね まこと",
+  "name": "長峯 誠",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "比例",
+  "group": "日本共産党",
+  "house": "sangiin",
+  "id": "m_004045",
+  "kana": "にひ そうへい",
+  "name": "仁比 聡平",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 1
+  },
+  "current": false,
+  "district": "比例",
+  "group": "公明党",
+  "house": "sangiin",
+  "id": "m_013041",
+  "kana": "にいづま ひでき",
+  "name": "新妻 秀規",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "京都",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_007044",
+  "kana": "にしだ しょうじ",
+  "name": "西田 昌司",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "埼玉",
+  "group": "公明党",
+  "house": "sangiin",
+  "id": "m_004043",
+  "kana": "にしだ まこと",
+  "name": "西田 実仁",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "富山",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_001037",
+  "kana": "のがみ こうたろう",
+  "name": "野上 浩太郎",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 0
+  },
+  "current": false,
+  "district": "福岡",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_013042",
+  "kana": "のだ くによし",
+  "name": "野田 国義",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "鹿児島",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_004046",
+  "kana": "のむら てつろう",
+  "name": "野村 哲郎",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "長野",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_021002",
+  "kana": "はた じろう",
+  "name": "羽田 次郎",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 0
+  },
+  "current": false,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_013043",
+  "kana": "はにゅうだ たかし",
+  "name": "羽生田 俊",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 3
+  },
+  "current": true,
+  "district": "山形",
+  "group": "国民民主党・新緑風会",
+  "house": "sangiin",
+  "id": "m_019032",
+  "kana": "はが みちや",
+  "name": "芳賀 道也",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 3
+  },
+  "current": true,
+  "district": "北海道",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_010043",
+  "kana": "はせがわ がく",
+  "name": "長谷川 岳",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_022031",
+  "kana": "はせがわ ひではる",
+  "name": "長谷川 英晴",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "熊本",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_013044",
+  "kana": "ばば せいし",
+  "name": "馬場 成志",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_995054",
+  "kana": "はしもと せいこ",
+  "name": "橋本 聖子",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "比例",
+  "group": "国民民主党・新緑風会",
+  "house": "sangiin",
+  "id": "m_016032",
+  "kana": "はまぐち まこと",
+  "name": "浜口 誠",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 0
+  },
+  "current": false,
+  "district": "比例",
+  "group": "Ｎ党",
+  "house": "sangiin",
+  "id": "m_019041",
+  "kana": "はまだ さとし",
+  "name": "浜田 聡",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 4
+  },
+  "current": true,
+  "district": "比例",
+  "group": "国民民主党・新緑風会",
+  "house": "sangiin",
+  "id": "m_013045",
+  "kana": "はまの よしふみ",
+  "name": "浜野 喜史",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 1
+  },
+  "current": false,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_021003",
+  "kana": "ひが なつみ",
+  "name": "比嘉 奈津美",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "比例",
+  "group": "公明党",
+  "house": "sangiin",
+  "id": "m_013046",
+  "kana": "ひらき だいさく",
+  "name": "平木 大作",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "静岡",
+  "group": "各派に属しない議員",
+  "house": "sangiin",
+  "id": "m_016033",
+  "kana": "ひらやま さちこ",
+  "name": "平山 佐知子",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "徳島・高知",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_004050",
+  "kana": "ひろた はじめ",
+  "name": "広田 一",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 18
+  },
+  "current": true,
+  "district": "佐賀",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_010045",
+  "kana": "ふくおか たかまろ",
+  "name": "福岡 資麿",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "比例",
+  "group": "社会民主党",
+  "house": "sangiin",
+  "id": "m_998049",
+  "kana": "ふくしま みずほ",
+  "name": "福島 みずほ",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 7
+  },
+  "current": true,
+  "district": "京都",
+  "group": "各派に属しない議員",
+  "house": "sangiin",
+  "id": "m_998050",
+  "kana": "ふくやま てつろう",
+  "name": "福山 哲郎",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_022033",
+  "kana": "ふじい かずひろ",
+  "name": "藤井 一博",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 4
+  },
+  "current": true,
+  "district": "愛知",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_010046",
+  "kana": "ふじかわ まさひと",
+  "name": "藤川 政人",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 4
+  },
+  "current": true,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_016034",
+  "kana": "ふじき しんや",
+  "name": "藤木 眞也",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 1
+  },
+  "current": false,
+  "district": "比例",
+  "group": "日本維新の会",
+  "house": "sangiin",
+  "id": "m_013047",
+  "kana": "ふじまき たけし",
+  "name": "藤巻 健史",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 3
+  },
+  "current": true,
+  "district": "山形",
+  "group": "国民民主党・新緑風会",
+  "house": "sangiin",
+  "id": "m_007052",
+  "kana": "ふなやま やすえ",
+  "name": "舟山 康江",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 0
+  },
+  "current": false,
+  "district": "比例",
+  "group": "れいわ新選組",
+  "house": "sangiin",
+  "id": "m_019033",
+  "kana": "ふなご やすひこ",
+  "name": "舩後 靖彦",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "北海道",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_022034",
+  "kana": "ふなはし としみつ",
+  "name": "船橋 利実",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "埼玉",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_007053",
+  "kana": "ふるかわ としはる",
+  "name": "古川 俊治",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "福島",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_022035",
+  "kana": "ほし ほくと",
+  "name": "星 北斗",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "奈良",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_013048",
+  "kana": "ほりい いわお",
+  "name": "堀井 巌",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_019034",
+  "kana": "ほんだ あきこ",
+  "name": "本田 顕子",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 4
+  },
+  "current": true,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_013049",
+  "kana": "まいたち しょうじ",
+  "name": "舞立 昇治",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 8
+  },
+  "current": true,
+  "district": "静岡",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_007054",
+  "kana": "まきの たかお",
+  "name": "牧野 たかお",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 5
+  },
+  "current": true,
+  "district": "神奈川",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_007055",
+  "kana": "まきやま ひろえ",
+  "name": "牧山 ひろえ",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "大阪",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_016035",
+  "kana": "まつかわ るい",
+  "name": "松川 るい",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "神奈川",
+  "group": "日本維新の会",
+  "house": "sangiin",
+  "id": "m_013050",
+  "kana": "まつざわ しげふみ",
+  "name": "松沢 成文",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "宮崎",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_004056",
+  "kana": "まつした しんぺい",
+  "name": "松下 新平",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "比例",
+  "group": "日本維新の会",
+  "house": "sangiin",
+  "id": "m_022036",
+  "kana": "まつの あけみ",
+  "name": "松野 明美",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "熊本",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_004057",
+  "kana": "まつむら よしふみ",
+  "name": "松村 祥史",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 3
+  },
+  "current": true,
+  "district": "福岡",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_001046",
+  "kana": "まつやま まさじ",
+  "name": "松山 政司",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "神奈川",
+  "group": "公明党",
+  "house": "sangiin",
+  "id": "m_016036",
+  "kana": "みうら のぶひろ",
+  "name": "三浦 信祐",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 0
+  },
+  "current": false,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_019035",
+  "kana": "みうら やすし",
+  "name": "三浦 靖",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "広島",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_022037",
+  "kana": "みかみ えり",
+  "name": "三上 えり",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 4
+  },
+  "current": true,
+  "district": "神奈川",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_010048",
+  "kana": "みはら じゅんこ",
+  "name": "三原 じゅん子",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 7
+  },
+  "current": false,
+  "district": "香川",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_013052",
+  "kana": "みやけ しんご",
+  "name": "三宅 伸吾",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 3
+  },
+  "current": true,
+  "district": "比例",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_004058",
+  "kana": "みずおか しゅんいち",
+  "name": "水岡 俊一",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 1
+  },
+  "current": false,
+  "district": "神奈川",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_022038",
+  "kana": "みずの もとこ",
+  "name": "水野 素子",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 0
+  },
+  "current": false,
+  "district": "広島",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_021001",
+  "kana": "みやぐち はるこ",
+  "name": "宮口 治子",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 1
+  },
+  "current": false,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_019036",
+  "kana": "みやざき まさお",
+  "name": "宮崎 雅夫",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 6
+  },
+  "current": true,
+  "district": "比例",
+  "group": "公明党",
+  "house": "sangiin",
+  "id": "m_016037",
+  "kana": "みやざき まさる",
+  "name": "宮崎 勝",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "広島",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_010050",
+  "kana": "みやざわ よういち",
+  "name": "宮沢 洋一",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 4
+  },
+  "current": true,
+  "district": "石川",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_013053",
+  "kana": "みやもと しゅうじ",
+  "name": "宮本 周司",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "比例",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_022039",
+  "kana": "むらた きょうこ",
+  "name": "村田 享子",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "福島",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_007061",
+  "kana": "もり まさこ",
+  "name": "森 まさこ",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 3
+  },
+  "current": true,
+  "district": "広島",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_013054",
+  "kana": "もりもと しんじ",
+  "name": "森本 真治",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 0
+  },
+  "current": false,
+  "district": "比例",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_019037",
+  "kana": "もりや たかし",
+  "name": "森屋 隆",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 1
+  },
+  "current": false,
+  "district": "山梨",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_013055",
+  "kana": "もりや ひろし",
+  "name": "森屋 宏",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 0
+  },
+  "current": false,
+  "district": "埼玉",
+  "group": "公明党",
+  "house": "sangiin",
+  "id": "m_013056",
+  "kana": "やくら かつお",
+  "name": "矢倉 克夫",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 0
+  },
+  "current": false,
+  "district": "愛知",
+  "group": "公明党",
+  "house": "sangiin",
+  "id": "m_019038",
+  "kana": "やすえ のぶお",
+  "name": "安江 伸夫",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 1
+  },
+  "current": false,
+  "district": "比例",
+  "group": "日本維新の会",
+  "house": "sangiin",
+  "id": "m_019039",
+  "kana": "やながせ ひろふみ",
+  "name": "柳ヶ瀬 裕文",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 1
+  },
+  "current": false,
+  "district": "比例",
+  "group": "日本維新の会",
+  "house": "sangiin",
+  "id": "m_013059",
+  "kana": "やまぐち かずゆき",
+  "name": "山口 和之",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 0
+  },
+  "current": false,
+  "district": "東京",
+  "group": "公明党",
+  "house": "sangiin",
+  "id": "m_001049",
+  "kana": "やまぐち なつお",
+  "name": "山口 那津男",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "福井",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_992051",
+  "kana": "やまざき まさあき",
+  "name": "山崎 正昭",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "佐賀",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_013060",
+  "kana": "やました ゆうへい",
+  "name": "山下 雄平",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 2
+  },
+  "current": false,
+  "district": "比例",
+  "group": "日本共産党",
+  "house": "sangiin",
+  "id": "m_995071",
+  "kana": "やました よしき",
+  "name": "山下 芳生",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "東京",
+  "group": "日本共産党",
+  "house": "sangiin",
+  "id": "m_016042",
+  "kana": "やまぞえ たく",
+  "name": "山添 拓",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_012005",
+  "kana": "やまだ たろう",
+  "name": "山田 太郎",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 0
+  },
+  "current": false,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_007067",
+  "kana": "やまだ としお",
+  "name": "山田 俊男",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_016043",
+  "kana": "やまだ ひろし",
+  "name": "山田 宏",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_004013",
+  "kana": "やまたに えりこ",
+  "name": "山谷 えり子",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "長崎",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_022040",
+  "kana": "やまもと けいすけ",
+  "name": "山本 啓介",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "三重",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_022041",
+  "kana": "やまもと さちこ",
+  "name": "山本 佐知子",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "愛媛",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_004062",
+  "kana": "やまもと じゅんぞう",
+  "name": "山本 順三",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 167,
+   "speeches": 2
+  },
+  "current": false,
+  "district": "東京",
+  "group": "れいわ新選組",
+  "house": "sangiin",
+  "id": "m_013062",
+  "kana": "やまもと たろう",
+  "name": "山本 太郎",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 0
+  },
+  "current": false,
+  "district": "比例",
+  "group": "公明党",
+  "house": "sangiin",
+  "id": "m_007068",
+  "kana": "やまもと ひろし",
+  "name": "山本 博司",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "岩手",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_019040",
+  "kana": "よこさわ たかのり",
+  "name": "横沢 高徳",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "公明党",
+  "house": "sangiin",
+  "id": "m_010052",
+  "kana": "よこやま しんいち",
+  "name": "横山 信一",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "京都",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_022042",
+  "kana": "よしい あきら",
+  "name": "吉井 章",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 5
+  },
+  "current": true,
+  "district": "比例",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_007071",
+  "kana": "よしかわ さおり",
+  "name": "吉川 沙織",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 0
+  },
+  "current": false,
+  "district": "三重",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_013063",
+  "kana": "よしかわ ゆうみ",
+  "name": "吉川 ゆうみ",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 9
+  },
+  "current": false,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_013064",
+  "kana": "わだ まさむね",
+  "name": "和田 政宗",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "静岡",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_022043",
+  "kana": "わかばやし ようへい",
+  "name": "若林 洋平",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 136,
+   "speeches": 4
+  },
+  "current": false,
+  "district": "比例",
+  "group": "公明党",
+  "house": "sangiin",
+  "id": "m_013065",
+  "kana": "わかまつ かねしげ",
+  "name": "若松 謙維",
+  "termEnd": "2025-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 287,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "岐阜",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_010055",
+  "kana": "わたなべ たけゆき",
+  "name": "渡辺 猛之",
+  "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "国民民主党・新緑風会",
+  "house": "sangiin",
+  "id": "m_025002",
+  "kana": "あだち やすし",
+  "name": "足立 康史",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "比例",
+  "group": "参政党",
+  "house": "sangiin",
+  "id": "m_025003",
+  "kana": "あだち ゆうじ",
+  "name": "安達 悠司",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "比例",
+  "group": "参政党",
+  "house": "sangiin",
+  "id": "m_025004",
+  "kana": "あんどう ひろし",
+  "name": "安藤 裕",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "チームみらい・無所属の会",
+  "house": "sangiin",
+  "id": "m_025005",
+  "kana": "あんの たかひろ",
+  "name": "安野 貴博",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "日本維新の会",
+  "house": "sangiin",
+  "id": "m_025045",
+  "kana": "いしい めぐみ",
+  "name": "石井 めぐみ",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "兵庫",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_025007",
+  "kana": "いずみ ふさほ",
+  "name": "泉 房穂",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "いのちの党",
+  "house": "sangiin",
+  "id": "m_025008",
+  "kana": "いせざき けんじ",
+  "name": "伊勢崎 賢治",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "国民民主党・新緑風会",
+  "house": "sangiin",
+  "id": "m_025009",
+  "kana": "いとう たつお",
+  "name": "伊藤 辰夫",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "比例",
+  "group": "参政党",
+  "house": "sangiin",
+  "id": "m_025038",
+  "kana": "いわもと まな",
+  "name": "岩本 麻奈",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_025010",
+  "kana": "いんどう しゅうさく",
+  "name": "いんどう 周作",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "東京",
+  "group": "国民民主党・新緑風会",
+  "house": "sangiin",
+  "id": "m_025035",
+  "kana": "うしだ まゆ",
+  "name": "牛田 茉友",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "埼玉",
+  "group": "国民民主党・新緑風会",
+  "house": "sangiin",
+  "id": "m_025011",
+  "kana": "えはら くみこ",
+  "name": "江原 くみ子",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "埼玉",
+  "group": "参政党",
+  "house": "sangiin",
+  "id": "m_025013",
+  "kana": "おおつ つとむ",
+  "name": "大津 力",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "大阪",
+  "group": "日本維新の会",
+  "house": "sangiin",
+  "id": "m_025014",
+  "kana": "おかざき ふとし",
+  "name": "岡崎 太",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "比例",
+  "group": "いのちの党",
+  "house": "sangiin",
+  "id": "m_025012",
+  "kana": "おくだ ふみよ",
+  "name": "奥田 ふみよ",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "東京",
+  "group": "国民民主党・新緑風会",
+  "house": "sangiin",
+  "id": "m_025015",
+  "kana": "おくむら よしひろ",
+  "name": "奥村 祥大",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "鹿児島",
+  "group": "チームみらい・無所属の会",
+  "house": "sangiin",
+  "id": "m_025032",
+  "kana": "おつじ ともみ",
+  "name": "尾辻 朋実",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "神奈川",
+  "group": "国民民主党・新緑風会",
+  "house": "sangiin",
+  "id": "m_025016",
+  "kana": "かごしま あきひろ",
+  "name": "かごしま 彰宏",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_025017",
+  "kana": "かまやち さとし",
+  "name": "かまやち 敏",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "東京",
+  "group": "公明党",
+  "house": "sangiin",
+  "id": "m_025018",
+  "kana": "かわむら ゆうだい",
+  "name": "川村 雄大",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "日本保守党",
+  "house": "sangiin",
+  "id": "m_025020",
+  "kana": "きたむら はるお",
+  "name": "北村 晴男",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_025021",
+  "kana": "けんざか しげのり",
+  "name": "見坂 茂範",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "比例",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_025022",
+  "kana": "こおりやま りょう",
+  "name": "郡山 りょう",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "三重",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_025023",
+  "kana": "こじま ともこ",
+  "name": "小島 とも子",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "比例",
+  "group": "参政党",
+  "house": "sangiin",
+  "id": "m_025024",
+  "kana": "ごとう しょうた",
+  "name": "後藤 翔太",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "山梨",
+  "group": "国民民主党・新緑風会",
+  "house": "sangiin",
+  "id": "m_025025",
+  "kana": "ごとう ひとし",
+  "name": "後藤 斎",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "岡山",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_025026",
+  "kana": "こばやし こういちろう",
+  "name": "小林 孝一郎",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "千葉",
+  "group": "国民民主党・新緑風会",
+  "house": "sangiin",
+  "id": "m_025041",
+  "kana": "こばやし さやか",
+  "name": "小林 さやか",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "茨城",
+  "group": "参政党",
+  "house": "sangiin",
+  "id": "m_025028",
+  "kana": "さくらい しょうこ",
+  "name": "櫻井 祥子",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 3
+  },
+  "current": true,
+  "district": "比例",
+  "group": "公明党",
+  "house": "sangiin",
+  "id": "m_025029",
+  "kana": "ささき まさふみ",
+  "name": "佐々木 雅文",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "大阪",
+  "group": "日本維新の会",
+  "house": "sangiin",
+  "id": "m_025040",
+  "kana": "ささき りえ",
+  "name": "佐々木 りえ",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "東京",
+  "group": "参政党",
+  "house": "sangiin",
+  "id": "m_025030",
+  "kana": "しおいり さやか",
+  "name": "塩入 清香",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "比例",
+  "group": "日本共産党",
+  "house": "sangiin",
+  "id": "m_025031",
+  "kana": "しらかわ ようこ",
+  "name": "白川 容子",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "愛知",
+  "group": "参政党",
+  "house": "sangiin",
+  "id": "m_025033",
+  "kana": "すぎもと じゅんこ",
+  "name": "杉本 純子",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "東京",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_025034",
+  "kana": "すずき だいち",
+  "name": "鈴木 大地",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "日本維新の会",
+  "house": "sangiin",
+  "id": "m_025019",
+  "kana": "せき へい",
+  "name": "石 平",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "沖縄",
+  "group": "沖縄の風",
+  "house": "sangiin",
+  "id": "m_025027",
+  "kana": "たから さちか",
+  "name": "高良 沙哉",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "公明党",
+  "house": "sangiin",
+  "id": "m_025036",
+  "kana": "つかさ たかし",
+  "name": "司 隆史",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "鳥取・島根",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_025037",
+  "kana": "でがわ ももこ",
+  "name": "出川 桃子",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "福岡",
+  "group": "参政党",
+  "house": "sangiin",
+  "id": "m_025039",
+  "kana": "なかだ ゆうこ",
+  "name": "中田 優子",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "京都",
+  "group": "日本維新の会",
+  "house": "sangiin",
+  "id": "m_025042",
+  "kana": "にいみ しょうへい",
+  "name": "新実 彰平",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "広島",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_025043",
+  "kana": "にした ひでのり",
+  "name": "西田 英範",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "富山",
+  "group": "国民民主党・新緑風会",
+  "house": "sangiin",
+  "id": "m_025044",
+  "kana": "にわた ゆきえ",
+  "name": "庭田 幸恵",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "神奈川",
+  "group": "参政党",
+  "house": "sangiin",
+  "id": "m_025046",
+  "kana": "はじかの ひろき",
+  "name": "初鹿野 裕樹",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 3
+  },
+  "current": true,
+  "district": "比例",
+  "group": "公明党",
+  "house": "sangiin",
+  "id": "m_025047",
+  "kana": "はらだ だいじろう",
+  "name": "原田 大二郎",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "香川",
+  "group": "国民民主党・新緑風会",
+  "house": "sangiin",
+  "id": "m_025048",
+  "kana": "はらだ ひでかず",
+  "name": "原田 秀一",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_025049",
+  "kana": "ひがしの ひでき",
+  "name": "東野 秀樹",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "日本保守党",
+  "house": "sangiin",
+  "id": "m_025050",
+  "kana": "ひゃくた なおき",
+  "name": "百田 尚樹",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "国民民主党・新緑風会",
+  "house": "sangiin",
+  "id": "m_025051",
+  "kana": "ひらど こうた",
+  "name": "平戸 航太",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "青森",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_025052",
+  "kana": "ふくし ますみ",
+  "name": "福士 珠美",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_025053",
+  "kana": "ふくやま まもる",
+  "name": "福山 守",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "比例",
+  "group": "参政党",
+  "house": "sangiin",
+  "id": "m_025054",
+  "kana": "まつだ まなぶ",
+  "name": "松田 学",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "愛知",
+  "group": "国民民主党・新緑風会",
+  "house": "sangiin",
+  "id": "m_025055",
+  "kana": "みずの こういち",
+  "name": "水野 孝一",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 3
+  },
+  "current": true,
+  "district": "大阪",
+  "group": "参政党",
+  "house": "sangiin",
+  "id": "m_025056",
+  "kana": "みやで ちさと",
+  "name": "宮出 千慧",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "滋賀",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_025057",
+  "kana": "みやもと かずひろ",
+  "name": "宮本 和宏",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "和歌山",
+  "group": "各派に属しない議員",
+  "house": "sangiin",
+  "id": "m_025058",
+  "kana": "もちづき よしお",
+  "name": "望月 良男",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_001047",
+  "kana": "もり ゆうこ",
+  "name": "森 ゆうこ",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "宮崎",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_025059",
+  "kana": "やまうち かなこ",
+  "name": "山内 佳菜子",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "国民民主党・新緑風会",
+  "house": "sangiin",
+  "id": "m_025060",
+  "kana": "やまだ よしひこ",
+  "name": "山田 吉彦",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "参政党",
+  "house": "sangiin",
+  "id": "m_025061",
+  "kana": "やまなか せん",
+  "name": "山中 泉",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "大分",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_010053",
+  "kana": "よしだ ただとも",
+  "name": "吉田 忠智",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "社会民主党",
+  "house": "sangiin",
+  "id": "m_025006",
+  "kana": "らさーるいしい",
+  "name": "ラサール石井",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "立憲民主・無所属",
+  "house": "sangiin",
+  "id": "m_004060",
+  "kana": "れんほう",
+  "name": "蓮舫",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "岐阜",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_025062",
+  "kana": "わかい あつこ",
+  "name": "若井 敦子",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "神奈川",
+  "group": "自由民主党・無所属の会",
+  "house": "sangiin",
+  "id": "m_025063",
+  "kana": "わき まさあき",
+  "name": "脇 雅昭",
+  "termEnd": "2031-07-28"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 151,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "比例",
+  "group": "日本維新の会",
   "house": "sangiin",
   "id": "m_025064",
   "kana": "うえの ほたる",
@@ -593,2868 +4595,13 @@
    "rollcalls": 120,
    "speeches": 0
   },
-  "district": "栃木",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_010013",
-  "kana": "うえの みちこ",
-  "name": "上野 通子",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 2
-  },
-  "district": "東京",
-  "group": "民主",
-  "house": "sangiin",
-  "id": "m_025035",
-  "kana": "うしだ まゆ",
-  "name": "牛田 茉友",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "千葉",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_022007",
-  "kana": "うすい しょういち",
-  "name": "臼井 正一",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "新潟",
-  "group": "立憲",
-  "house": "sangiin",
-  "id": "m_019006",
-  "kana": "うちこし さくら",
-  "name": "打越 さく良",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
+  "current": true,
   "district": "比例",
-  "group": "参政",
-  "house": "sangiin",
-  "id": "m_019007",
-  "kana": "うめむら みずほ",
-  "name": "梅村 みずほ",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "山口",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_013001",
-  "kana": "えじま きよし",
-  "name": "江島 潔",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "埼玉",
-  "group": "民主",
-  "house": "sangiin",
-  "id": "m_025011",
-  "kana": "えはら くみこ",
-  "name": "江原 くみ子",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "福岡",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_010018",
-  "kana": "おおいえ さとし",
-  "name": "大家 敏志",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "い党",
-  "house": "sangiin",
-  "id": "m_007017",
-  "kana": "おおしま くすお",
-  "name": "大島 九州男",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 2
-  },
-  "district": "埼玉",
-  "group": "参政",
-  "house": "sangiin",
-  "id": "m_025013",
-  "kana": "おおつ つとむ",
-  "name": "大津 力",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "大阪",
-  "group": "維新",
-  "house": "sangiin",
-  "id": "m_025014",
-  "kana": "おかざき ふとし",
-  "name": "岡崎 太",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "石川",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_004012",
-  "kana": "おかだ なおき",
-  "name": "岡田 直樹",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "比例",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_016012",
-  "kana": "おがわ かつみ",
-  "name": "小川 克巳",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 2
-  },
-  "district": "比例",
-  "group": "い党",
-  "house": "sangiin",
-  "id": "m_025012",
-  "kana": "おくだ ふみよ",
-  "name": "奥田 ふみよ",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "東京",
-  "group": "民主",
-  "house": "sangiin",
-  "id": "m_025015",
-  "kana": "おくむら よしひろ",
-  "name": "奥村 祥大",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "比例",
-  "group": "立憲",
-  "house": "sangiin",
-  "id": "m_019008",
-  "kana": "おざわ まさひと",
-  "name": "小沢 雅仁",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_022008",
-  "kana": "おち としゆき",
-  "name": "越智 俊之",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "鹿児島",
-  "group": "みら",
-  "house": "sangiin",
-  "id": "m_025032",
-  "kana": "おつじ ともみ",
-  "name": "尾辻 朋実",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "比例",
-  "group": "立憲",
-  "house": "sangiin",
-  "id": "m_022009",
-  "kana": "おにき まこと",
-  "name": "鬼木 誠",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "岡山",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_016013",
-  "kana": "おのだ きみ",
-  "name": "小野田 紀美",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "神奈川",
-  "group": "民主",
-  "house": "sangiin",
-  "id": "m_025016",
-  "kana": "かごしま あきひろ",
-  "name": "かごしま 彰宏",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_022012",
-  "kana": "かじはら だいすけ",
-  "name": "梶原 大介",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "兵庫",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_019011",
-  "kana": "かだ ひろゆき",
-  "name": "加田 裕之",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "維新",
-  "house": "sangiin",
-  "id": "m_019012",
-  "kana": "かだ ゆきこ",
-  "name": "嘉田 由紀子",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_010020",
-  "kana": "かたやま さつき",
-  "name": "片山 さつき",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "兵庫",
-  "group": "維新",
-  "house": "sangiin",
-  "id": "m_016014",
-  "kana": "かたやま だいすけ",
-  "name": "片山 大介",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "北海道",
-  "group": "立憲",
-  "house": "sangiin",
-  "id": "m_019013",
-  "kana": "かつべ けんじ",
-  "name": "勝部 賢志",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "茨城",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_022010",
-  "kana": "かとう あきよし",
-  "name": "加藤 明良",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "維新",
-  "house": "sangiin",
-  "id": "m_022013",
-  "kana": "かねこ みちひと",
-  "name": "金子 道仁",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_025017",
-  "kana": "かまやち さとし",
-  "name": "かまやち 敏",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "参政",
-  "house": "sangiin",
-  "id": "m_022014",
-  "kana": "かみや そうへい",
-  "name": "神谷 宗幣",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_022015",
-  "kana": "かみや まさゆき",
-  "name": "神谷 政幸",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "民主",
-  "house": "sangiin",
-  "id": "m_007022",
-  "kana": "かわい たかのり",
-  "name": "川合 孝典",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "東京",
-  "group": "公明",
-  "house": "sangiin",
-  "id": "m_025018",
-  "kana": "かわむら ゆうだい",
-  "name": "川村 雄大",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "立憲",
-  "house": "sangiin",
-  "id": "m_019016",
-  "kana": "きし まきこ",
-  "name": "岸 真紀子",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 2
-  },
-  "district": "山口",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_013019",
-  "kana": "きたむら つねお",
-  "name": "北村 経夫",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "保守",
-  "house": "sangiin",
-  "id": "m_025020",
-  "kana": "きたむら はるお",
-  "name": "北村 晴男",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "岩手",
-  "group": "立憲",
-  "house": "sangiin",
-  "id": "m_016015",
-  "kana": "きどぐち えいじ",
-  "name": "木戸口 英司",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "い党",
-  "house": "sangiin",
-  "id": "m_019015",
-  "kana": "きむら えいこ",
-  "name": "木村 英子",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_013016",
   "kana": "きむら よしお",
   "name": "木村 義雄",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "東京",
-  "group": "共産",
-  "house": "sangiin",
-  "id": "m_013017",
-  "kana": "きら よしこ",
-  "name": "吉良 よし子",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "維新",
-  "house": "sangiin",
-  "id": "m_022016",
-  "kana": "くしだ せいいち",
-  "name": "串田 誠一",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 3
-  },
-  "district": "比例",
-  "group": "公明",
-  "house": "sangiin",
-  "id": "m_022017",
-  "kana": "くぼた てつや",
-  "name": "窪田 哲也",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "埼玉",
-  "group": "立憲",
-  "house": "sangiin",
-  "id": "m_019017",
-  "kana": "くまがい ひろと",
-  "name": "熊谷 裕人",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_025021",
-  "kana": "けんざか しげのり",
-  "name": "見坂 茂範",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "比例",
-  "group": "共産",
-  "house": "sangiin",
-  "id": "m_998022",
-  "kana": "こいけ あきら",
-  "name": "小池 晃",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "茨城",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_013022",
-  "kana": "こうづき りょうすけ",
-  "name": "上月 良祐",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "比例",
-  "group": "立憲",
-  "house": "sangiin",
-  "id": "m_025022",
-  "kana": "こおりやま りょう",
-  "name": "郡山 りょう",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "比例",
-  "group": "立憲",
-  "house": "sangiin",
-  "id": "m_022019",
-  "kana": "こが ちかげ",
-  "name": "古賀 千景",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "長崎",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_013021",
-  "kana": "こが ゆういちろう",
-  "name": "古賀 友一郎",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "福岡",
-  "group": "立憲",
-  "house": "sangiin",
-  "id": "m_016018",
-  "kana": "こが ゆきひと",
-  "name": "古賀 之士",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "三重",
-  "group": "立憲",
-  "house": "sangiin",
-  "id": "m_025023",
-  "kana": "こじま ともこ",
-  "name": "小島 とも子",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "大分",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_022020",
-  "kana": "こしょう はるとも",
-  "name": "古庄 玄知",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "比例",
-  "group": "参政",
-  "house": "sangiin",
-  "id": "m_025024",
-  "kana": "ごとう しょうた",
-  "name": "後藤 翔太",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 2
-  },
-  "district": "山梨",
-  "group": "民主",
-  "house": "sangiin",
-  "id": "m_025025",
-  "kana": "ごとう ひとし",
-  "name": "後藤 斎",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "千葉",
-  "group": "立憲",
-  "house": "sangiin",
-  "id": "m_010024",
-  "kana": "こにし ひろゆき",
-  "name": "小西 洋之",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "新潟",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_022018",
-  "kana": "こばやし かずひろ",
-  "name": "小林 一大",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "岡山",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_025026",
-  "kana": "こばやし こういちろう",
-  "name": "小林 孝一郎",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "千葉",
-  "group": "民主",
-  "house": "sangiin",
-  "id": "m_025041",
-  "kana": "こばやし さやか",
-  "name": "小林 さやか",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "滋賀",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_016017",
-  "kana": "こやり たかし",
-  "name": "こやり 隆史",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "無所属",
-  "house": "sangiin",
-  "id": "m_023002",
-  "kana": "さいとう けんいちろう",
-  "name": "齊藤 健一郎",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "愛知",
-  "group": "立憲",
-  "house": "sangiin",
-  "id": "m_010027",
-  "kana": "さいとう よしたか",
-  "name": "斎藤 嘉隆",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "愛知",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_013024",
-  "kana": "さかい やすゆき",
-  "name": "酒井 庸行",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "茨城",
-  "group": "参政",
-  "house": "sangiin",
-  "id": "m_025028",
-  "kana": "さくらい しょうこ",
-  "name": "櫻井 祥子",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "宮城",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_998030",
-  "kana": "さくらい みつる",
-  "name": "櫻井 充",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 3
-  },
-  "district": "比例",
-  "group": "公明",
-  "house": "sangiin",
-  "id": "m_025029",
-  "kana": "ささき まさふみ",
-  "name": "佐々木 雅文",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "大阪",
-  "group": "維新",
-  "house": "sangiin",
-  "id": "m_025040",
-  "kana": "ささき りえ",
-  "name": "佐々木 りえ",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "奈良",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_016019",
-  "kana": "さとう けい",
-  "name": "佐藤 啓",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 4
-  },
-  "district": "愛知",
-  "group": "公明",
-  "house": "sangiin",
-  "id": "m_016020",
-  "kana": "さとみ りゅうじ",
-  "name": "里見 隆治",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 2
-  },
-  "district": "東京",
-  "group": "参政",
-  "house": "sangiin",
-  "id": "m_025030",
-  "kana": "しおいり さやか",
-  "name": "塩入 清香",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "東京",
-  "group": "立憲",
-  "house": "sangiin",
-  "id": "m_019020",
-  "kana": "しおむら あやか",
-  "name": "塩村 あやか",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "立憲",
-  "house": "sangiin",
-  "id": "m_022021",
-  "kana": "しば しんいち",
-  "name": "柴 愼一",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "比例",
-  "group": "維新",
-  "house": "sangiin",
-  "id": "m_010029",
-  "kana": "しばた たくみ",
-  "name": "柴田 巧",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "比例",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_016021",
-  "kana": "じみ はなこ",
-  "name": "自見 はなこ",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "群馬",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_019018",
-  "kana": "しみず まさと",
-  "name": "清水 真人",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 2
-  },
-  "district": "福岡",
-  "group": "公明",
-  "house": "sangiin",
-  "id": "m_019021",
-  "kana": "しもの ろくた",
-  "name": "下野 六太",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "比例",
-  "group": "共産",
-  "house": "sangiin",
-  "id": "m_025031",
-  "kana": "しらかわ ようこ",
-  "name": "白川 容子",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_016022",
-  "kana": "しんどう かねひこ",
-  "name": "進藤 金日子",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "静岡",
-  "group": "民主",
-  "house": "sangiin",
-  "id": "m_001027",
-  "kana": "しんば かづや",
-  "name": "榛葉 賀津也",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "兵庫",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_004033",
-  "kana": "すえまつ しんすけ",
-  "name": "末松 信介",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "大阪",
-  "group": "公明",
-  "house": "sangiin",
-  "id": "m_013028",
-  "kana": "すぎ ひさたけ",
-  "name": "杉 久武",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "長野",
-  "group": "立憲",
-  "house": "sangiin",
-  "id": "m_016023",
-  "kana": "すぎお ひでや",
-  "name": "杉尾 秀哉",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "愛知",
-  "group": "参政",
-  "house": "sangiin",
-  "id": "m_025033",
-  "kana": "すぎもと じゅんこ",
-  "name": "杉本 純子",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "東京",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_025034",
-  "kana": "すずき だいち",
-  "name": "鈴木 大地",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_019023",
-  "kana": "すずき むねお",
-  "name": "鈴木 宗男",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "維新",
-  "house": "sangiin",
-  "id": "m_025019",
-  "kana": "せき へい",
-  "name": "石 平",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "埼玉",
-  "group": "無所属",
-  "house": "sangiin",
-  "id": "m_003005",
-  "kana": "せきぐち まさかず",
-  "name": "関口 昌一",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "共産",
-  "house": "sangiin",
-  "id": "m_001001",
-  "kana": "だいもん みきし",
-  "name": "大門 実紀史",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "大阪",
-  "group": "維新",
-  "house": "sangiin",
-  "id": "m_016026",
-  "kana": "たかぎ かおり",
-  "name": "高木 かおり",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 2
-  },
-  "district": "埼玉",
-  "group": "立憲",
-  "house": "sangiin",
-  "id": "m_022023",
-  "kana": "たかぎ まり",
-  "name": "高木 真理",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "栃木",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_013030",
-  "kana": "たかはし かつのり",
-  "name": "高橋 克法",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "北海道",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_019026",
-  "kana": "たかはし はるみ",
-  "name": "高橋 はるみ",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "兵庫",
-  "group": "公明",
-  "house": "sangiin",
-  "id": "m_019027",
-  "kana": "たかはし みつお",
-  "name": "高橋 光男",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "沖縄",
-  "group": "沖縄",
-  "house": "sangiin",
-  "id": "m_025027",
-  "kana": "たから さちか",
-  "name": "高良 沙哉",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "福井",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_013032",
-  "kana": "たきなみ ひろふみ",
-  "name": "滝波 宏文",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "比例",
-  "group": "公明",
-  "house": "sangiin",
-  "id": "m_017001",
-  "kana": "たけうち しんじ",
-  "name": "竹内 真二",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "比例",
-  "group": "民主",
-  "house": "sangiin",
-  "id": "m_022024",
-  "kana": "たけづめ ひとし",
-  "name": "竹詰 仁",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "東京",
-  "group": "公明",
-  "house": "sangiin",
-  "id": "m_010033",
-  "kana": "たけや としこ",
-  "name": "竹谷 とし子",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "愛知",
-  "group": "立憲",
-  "house": "sangiin",
-  "id": "m_019024",
-  "kana": "たじま まいこ",
-  "name": "田島 麻衣子",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "青森",
-  "group": "立憲",
-  "house": "sangiin",
-  "id": "m_016025",
-  "kana": "たなぶ まさよ",
-  "name": "田名部 匡代",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "公明",
-  "house": "sangiin",
-  "id": "m_004036",
-  "kana": "たにあい まさあき",
-  "name": "谷合 正明",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "比例",
-  "group": "民主",
-  "house": "sangiin",
-  "id": "m_019025",
-  "kana": "たむら まみ",
-  "name": "田村 まみ",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "公明",
-  "house": "sangiin",
-  "id": "m_025036",
-  "kana": "つかさ たかし",
-  "name": "司 隆史",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 4
-  },
-  "district": "比例",
-  "group": "立憲",
-  "house": "sangiin",
-  "id": "m_022025",
-  "kana": "つじもと きよみ",
-  "name": "辻元 清美",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "和歌山",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_998036",
-  "kana": "つるほ ようすけ",
-  "name": "鶴保 庸介",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "鳥取・島根",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_025037",
-  "kana": "でがわ ももこ",
-  "name": "出川 桃子",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "秋田",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_019030",
-  "kana": "てらた しずか",
-  "name": "寺田 静",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "い党",
-  "house": "sangiin",
-  "id": "m_022026",
-  "kana": "てんばた だいすけ",
-  "name": "天畠 大輔",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "茨城",
-  "group": "民主",
-  "house": "sangiin",
-  "id": "m_022027",
-  "kana": "どうごみ まきこ",
-  "name": "堂込 麻紀子",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "北海道",
-  "group": "立憲",
-  "house": "sangiin",
-  "id": "m_010036",
-  "kana": "とくなが えり",
-  "name": "徳永 エリ",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_022028",
-  "kana": "とものう りお",
-  "name": "友納 理緒",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "山梨",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_022030",
-  "kana": "ながい まなぶ",
-  "name": "永井 学",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "愛媛",
-  "group": "無所属",
-  "house": "sangiin",
-  "id": "m_019031",
-  "kana": "ながえ たかこ",
-  "name": "ながえ 孝子",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "維新",
-  "house": "sangiin",
-  "id": "m_022029",
-  "kana": "なかじょう きよし",
-  "name": "中条 きよし",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "群馬",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_986024",
-  "kana": "なかそね ひろふみ",
-  "name": "中曽根 弘文",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "福岡",
-  "group": "参政",
-  "house": "sangiin",
-  "id": "m_025039",
-  "kana": "なかだ ゆうこ",
-  "name": "中田 優子",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "徳島・高知",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_010038",
-  "kana": "なかにし ゆうすけ",
-  "name": "中西 祐介",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "千葉",
-  "group": "立憲",
-  "house": "sangiin",
-  "id": "m_007041",
-  "kana": "ながはま ひろゆき",
-  "name": "長浜 博行",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "京都",
-  "group": "維新",
-  "house": "sangiin",
-  "id": "m_025042",
-  "kana": "にいみ しょうへい",
-  "name": "新実 彰平",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "京都",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_007044",
-  "kana": "にしだ しょうじ",
-  "name": "西田 昌司",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "広島",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_025043",
-  "kana": "にした ひでのり",
-  "name": "西田 英範",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "埼玉",
-  "group": "公明",
-  "house": "sangiin",
-  "id": "m_004043",
-  "kana": "にしだ まこと",
-  "name": "西田 実仁",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "共産",
-  "house": "sangiin",
-  "id": "m_004045",
-  "kana": "にひ そうへい",
-  "name": "仁比 聡平",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "富山",
-  "group": "民主",
-  "house": "sangiin",
-  "id": "m_025044",
-  "kana": "にわた ゆきえ",
-  "name": "庭田 幸恵",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "富山",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_001037",
-  "kana": "のがみ こうたろう",
-  "name": "野上 浩太郎",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "鹿児島",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_004046",
-  "kana": "のむら てつろう",
-  "name": "野村 哲郎",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "山形",
-  "group": "民主",
-  "house": "sangiin",
-  "id": "m_019032",
-  "kana": "はが みちや",
-  "name": "芳賀 道也",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "神奈川",
-  "group": "参政",
-  "house": "sangiin",
-  "id": "m_025046",
-  "kana": "はじかの ひろき",
-  "name": "初鹿野 裕樹",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_995054",
-  "kana": "はしもと せいこ",
-  "name": "橋本 聖子",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 2
-  },
-  "district": "北海道",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_010043",
-  "kana": "はせがわ がく",
-  "name": "長谷川 岳",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_022031",
-  "kana": "はせがわ ひではる",
-  "name": "長谷川 英晴",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "長野",
-  "group": "立憲",
-  "house": "sangiin",
-  "id": "m_021002",
-  "kana": "はた じろう",
-  "name": "羽田 次郎",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "熊本",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_013044",
-  "kana": "ばば せいし",
-  "name": "馬場 成志",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "比例",
-  "group": "民主",
-  "house": "sangiin",
-  "id": "m_016032",
-  "kana": "はまぐち まこと",
-  "name": "浜口 誠",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 2
-  },
-  "district": "比例",
-  "group": "民主",
-  "house": "sangiin",
-  "id": "m_013045",
-  "kana": "はまの よしふみ",
-  "name": "浜野 喜史",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 2
-  },
-  "district": "比例",
-  "group": "公明",
-  "house": "sangiin",
-  "id": "m_025047",
-  "kana": "はらだ だいじろう",
-  "name": "原田 大二郎",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "香川",
-  "group": "民主",
-  "house": "sangiin",
-  "id": "m_025048",
-  "kana": "はらだ ひでかず",
-  "name": "原田 秀一",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_025049",
-  "kana": "ひがしの ひでき",
-  "name": "東野 秀樹",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "保守",
-  "house": "sangiin",
-  "id": "m_025050",
-  "kana": "ひゃくた なおき",
-  "name": "百田 尚樹",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "公明",
-  "house": "sangiin",
-  "id": "m_013046",
-  "kana": "ひらき だいさく",
-  "name": "平木 大作",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "民主",
-  "house": "sangiin",
-  "id": "m_025051",
-  "kana": "ひらど こうた",
-  "name": "平戸 航太",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "静岡",
-  "group": "無所属",
-  "house": "sangiin",
-  "id": "m_016033",
-  "kana": "ひらやま さちこ",
-  "name": "平山 佐知子",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "徳島・高知",
-  "group": "立憲",
-  "house": "sangiin",
-  "id": "m_004050",
-  "kana": "ひろた はじめ",
-  "name": "広田 一",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "佐賀",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_010045",
-  "kana": "ふくおか たかまろ",
-  "name": "福岡 資麿",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "青森",
-  "group": "立憲",
-  "house": "sangiin",
-  "id": "m_025052",
-  "kana": "ふくし ますみ",
-  "name": "福士 珠美",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "社民",
-  "house": "sangiin",
-  "id": "m_998049",
-  "kana": "ふくしま みずほ",
-  "name": "福島 みずほ",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "京都",
-  "group": "無所属",
-  "house": "sangiin",
-  "id": "m_998050",
-  "kana": "ふくやま てつろう",
-  "name": "福山 哲郎",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_025053",
-  "kana": "ふくやま まもる",
-  "name": "福山 守",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_022033",
-  "kana": "ふじい かずひろ",
-  "name": "藤井 一博",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 3
-  },
-  "district": "愛知",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_010046",
-  "kana": "ふじかわ まさひと",
-  "name": "藤川 政人",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 4
-  },
-  "district": "比例",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_016034",
-  "kana": "ふじき しんや",
-  "name": "藤木 眞也",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "北海道",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_022034",
-  "kana": "ふなはし としみつ",
-  "name": "船橋 利実",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "山形",
-  "group": "民主",
-  "house": "sangiin",
-  "id": "m_007052",
-  "kana": "ふなやま やすえ",
-  "name": "舟山 康江",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "埼玉",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_007053",
-  "kana": "ふるかわ としはる",
-  "name": "古川 俊治",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "福島",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_022035",
-  "kana": "ほし ほくと",
-  "name": "星 北斗",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "奈良",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_013048",
-  "kana": "ほりい いわお",
-  "name": "堀井 巌",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_019034",
-  "kana": "ほんだ あきこ",
-  "name": "本田 顕子",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_013049",
-  "kana": "まいたち しょうじ",
-  "name": "舞立 昇治",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "静岡",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_007054",
-  "kana": "まきの たかお",
-  "name": "牧野 たかお",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "神奈川",
-  "group": "立憲",
-  "house": "sangiin",
-  "id": "m_007055",
-  "kana": "まきやま ひろえ",
-  "name": "牧山 ひろえ",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "大阪",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_016035",
-  "kana": "まつかわ るい",
-  "name": "松川 るい",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "神奈川",
-  "group": "維新",
-  "house": "sangiin",
-  "id": "m_013050",
-  "kana": "まつざわ しげふみ",
-  "name": "松沢 成文",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "宮崎",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_004056",
-  "kana": "まつした しんぺい",
-  "name": "松下 新平",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "比例",
-  "group": "参政",
-  "house": "sangiin",
-  "id": "m_025054",
-  "kana": "まつだ まなぶ",
-  "name": "松田 学",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "比例",
-  "group": "維新",
-  "house": "sangiin",
-  "id": "m_022036",
-  "kana": "まつの あけみ",
-  "name": "松野 明美",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "熊本",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_004057",
-  "kana": "まつむら よしふみ",
-  "name": "松村 祥史",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "福岡",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_001046",
-  "kana": "まつやま まさじ",
-  "name": "松山 政司",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "神奈川",
-  "group": "公明",
-  "house": "sangiin",
-  "id": "m_016036",
-  "kana": "みうら のぶひろ",
-  "name": "三浦 信祐",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "広島",
-  "group": "立憲",
-  "house": "sangiin",
-  "id": "m_022037",
-  "kana": "みかみ えり",
-  "name": "三上 えり",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "比例",
-  "group": "立憲",
-  "house": "sangiin",
-  "id": "m_004058",
-  "kana": "みずおか しゅんいち",
-  "name": "水岡 俊一",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "愛知",
-  "group": "民主",
-  "house": "sangiin",
-  "id": "m_025055",
-  "kana": "みずの こういち",
-  "name": "水野 孝一",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "神奈川",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_010048",
-  "kana": "みはら じゅんこ",
-  "name": "三原 じゅん子",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "公明",
-  "house": "sangiin",
-  "id": "m_016037",
-  "kana": "みやざき まさる",
-  "name": "宮崎 勝",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "広島",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_010050",
-  "kana": "みやざわ よういち",
-  "name": "宮沢 洋一",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 3
-  },
-  "district": "大阪",
-  "group": "参政",
-  "house": "sangiin",
-  "id": "m_025056",
-  "kana": "みやで ちさと",
-  "name": "宮出 千慧",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "滋賀",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_025057",
-  "kana": "みやもと かずひろ",
-  "name": "宮本 和宏",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 3
-  },
-  "district": "石川",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_013053",
-  "kana": "みやもと しゅうじ",
-  "name": "宮本 周司",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "比例",
-  "group": "立憲",
-  "house": "sangiin",
-  "id": "m_022039",
-  "kana": "むらた きょうこ",
-  "name": "村田 享子",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "和歌山",
-  "group": "無所属",
-  "house": "sangiin",
-  "id": "m_025058",
-  "kana": "もちづき よしお",
-  "name": "望月 良男",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "福島",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_007061",
-  "kana": "もり まさこ",
-  "name": "森 まさこ",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "立憲",
-  "house": "sangiin",
-  "id": "m_001047",
-  "kana": "もり ゆうこ",
-  "name": "森 ゆうこ",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "広島",
-  "group": "立憲",
-  "house": "sangiin",
-  "id": "m_013054",
-  "kana": "もりもと しんじ",
-  "name": "森本 真治",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "宮崎",
-  "group": "立憲",
-  "house": "sangiin",
-  "id": "m_025059",
-  "kana": "やまうち かなこ",
-  "name": "山内 佳菜子",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "福井",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_992051",
-  "kana": "やまざき まさあき",
-  "name": "山崎 正昭",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "佐賀",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_013060",
-  "kana": "やました ゆうへい",
-  "name": "山下 雄平",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "東京",
-  "group": "共産",
-  "house": "sangiin",
-  "id": "m_016042",
-  "kana": "やまぞえ たく",
-  "name": "山添 拓",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_012005",
-  "kana": "やまだ たろう",
-  "name": "山田 太郎",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_016043",
-  "kana": "やまだ ひろし",
-  "name": "山田 宏",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "民主",
-  "house": "sangiin",
-  "id": "m_025060",
-  "kana": "やまだ よしひこ",
-  "name": "山田 吉彦",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_004013",
-  "kana": "やまたに えりこ",
-  "name": "山谷 えり子",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "参政",
-  "house": "sangiin",
-  "id": "m_025061",
-  "kana": "やまなか せん",
-  "name": "山中 泉",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "長崎",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_022040",
-  "kana": "やまもと けいすけ",
-  "name": "山本 啓介",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "三重",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_022041",
-  "kana": "やまもと さちこ",
-  "name": "山本 佐知子",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "愛媛",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_004062",
-  "kana": "やまもと じゅんぞう",
-  "name": "山本 順三",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 1
-  },
-  "district": "岩手",
-  "group": "立憲",
-  "house": "sangiin",
-  "id": "m_019040",
-  "kana": "よこさわ たかのり",
-  "name": "横沢 高徳",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "公明",
-  "house": "sangiin",
-  "id": "m_010052",
-  "kana": "よこやま しんいち",
-  "name": "横山 信一",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "京都",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_022042",
-  "kana": "よしい あきら",
-  "name": "吉井 章",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 3
-  },
-  "district": "比例",
-  "group": "立憲",
-  "house": "sangiin",
-  "id": "m_007071",
-  "kana": "よしかわ さおり",
-  "name": "吉川 沙織",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "大分",
-  "group": "立憲",
-  "house": "sangiin",
-  "id": "m_010053",
-  "kana": "よしだ ただとも",
-  "name": "吉田 忠智",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "社民",
-  "house": "sangiin",
-  "id": "m_025006",
-  "kana": "らさーるいしい",
-  "name": "ラサール石井",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "比例",
-  "group": "立憲",
-  "house": "sangiin",
-  "id": "m_004060",
-  "kana": "れんほう",
-  "name": "蓮舫",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "岐阜",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_025062",
-  "kana": "わかい あつこ",
-  "name": "若井 敦子",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "静岡",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_022043",
-  "kana": "わかばやし ようへい",
-  "name": "若林 洋平",
-  "termEnd": "2028-07-25"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "神奈川",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_025063",
-  "kana": "わき まさあき",
-  "name": "脇 雅昭",
-  "termEnd": "2031-07-28"
- },
- {
-  "counts": {
-   "bills": 0,
-   "rollcalls": 120,
-   "speeches": 0
-  },
-  "district": "岐阜",
-  "group": "自民",
-  "house": "sangiin",
-  "id": "m_010055",
-  "kana": "わたなべ たけゆき",
-  "name": "渡辺 猛之",
   "termEnd": "2028-07-25"
  }
 ]
