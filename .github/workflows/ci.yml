@@ -21,6 +21,8 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+      - name: Smoke — built pages exist and internal links resolve
+        run: pnpm --filter web smoke
       - name: Guard — no server runtime code reaches the browser
         run: |
           # Source: nothing that only makes sense on a server

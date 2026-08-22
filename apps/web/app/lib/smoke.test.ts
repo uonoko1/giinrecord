@@ -96,7 +96,9 @@ describe("checkBuild", () => {
 
 describe("formatReport", () => {
   it("成功時は件数だけ、失敗時は一覧を出す", () => {
-    expect(formatReport({ checkedPages: 3, checkedLinks: 5, failures: [] })).toMatch(/OK.*3.*5/s);
+    const ok = formatReport({ checkedPages: 3, checkedLinks: 5, failures: [] });
+    expect(ok).toContain("OK");
+    expect(ok).toMatch(/\b3\b.*\b5\b/s);
     const out = formatReport({ checkedPages: 1, checkedLinks: 0, failures: ["a", "b"] });
     expect(out).toContain("2 failure");
     expect(out).toContain("a");
