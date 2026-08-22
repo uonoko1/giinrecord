@@ -6,7 +6,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "立憲",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
   "id": "m_007006",
   "kana": "あおき あい",
@@ -20,7 +20,7 @@
    "speeches": 1
   },
   "district": "鳥取・島根",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_010001",
   "kana": "あおき かずひこ",
@@ -34,7 +34,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "維新",
+  "group": "日本維新の会",
   "house": "sangiin",
   "id": "m_022002",
   "kana": "あおしま けんた",
@@ -48,7 +48,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_022003",
   "kana": "あかまつ けん",
@@ -62,7 +62,7 @@
    "speeches": 0
   },
   "district": "福岡",
-  "group": "公明",
+  "group": "公明党",
   "house": "sangiin",
   "id": "m_010003",
   "kana": "あきの こうぞう",
@@ -76,7 +76,7 @@
    "speeches": 0
   },
   "district": "神奈川",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_998003",
   "kana": "あさお けいいちろう",
@@ -90,7 +90,7 @@
    "speeches": 0
   },
   "district": "大阪",
-  "group": "維新",
+  "group": "日本維新の会",
   "house": "sangiin",
   "id": "m_016003",
   "kana": "あさだ ひとし",
@@ -104,7 +104,7 @@
    "speeches": 0
   },
   "district": "東京",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_016004",
   "kana": "あさひ けんたろう",
@@ -118,7 +118,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_014002",
   "kana": "あだち まさし",
@@ -132,7 +132,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "民主",
+  "group": "国民民主党・新緑風会",
   "house": "sangiin",
   "id": "m_025002",
   "kana": "あだち やすし",
@@ -146,7 +146,7 @@
    "speeches": 1
   },
   "district": "比例",
-  "group": "参政",
+  "group": "参政党",
   "house": "sangiin",
   "id": "m_025003",
   "kana": "あだち ゆうじ",
@@ -160,7 +160,7 @@
    "speeches": 1
   },
   "district": "比例",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_001006",
   "kana": "ありむら はるこ",
@@ -174,7 +174,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "参政",
+  "group": "参政党",
   "house": "sangiin",
   "id": "m_025004",
   "kana": "あんどう ひろし",
@@ -188,7 +188,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "みら",
+  "group": "チームみらい・無所属の会",
   "house": "sangiin",
   "id": "m_025005",
   "kana": "あんの たかひろ",
@@ -202,7 +202,7 @@
    "speeches": 0
   },
   "district": "東京",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_022004",
   "kana": "いくいな あきこ",
@@ -216,7 +216,7 @@
    "speeches": 1
   },
   "district": "千葉",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_007007",
   "kana": "いしい じゅんいち",
@@ -230,7 +230,7 @@
    "speeches": 0
   },
   "district": "秋田",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_010005",
   "kana": "いしい ひろお",
@@ -244,7 +244,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "維新",
+  "group": "日本維新の会",
   "house": "sangiin",
   "id": "m_016009",
   "kana": "いしい みつこ",
@@ -258,7 +258,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "維新",
+  "group": "日本維新の会",
   "house": "sangiin",
   "id": "m_025045",
   "kana": "いしい めぐみ",
@@ -272,7 +272,7 @@
    "speeches": 0
   },
   "district": "宮城",
-  "group": "立憲",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
   "id": "m_019003",
   "kana": "いしがき のりこ",
@@ -286,7 +286,7 @@
    "speeches": 0
   },
   "district": "大阪",
-  "group": "公明",
+  "group": "公明党",
   "house": "sangiin",
   "id": "m_010006",
   "kana": "いしかわ ひろたか",
@@ -300,7 +300,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_013010",
   "kana": "いしだ まさひろ",
@@ -314,7 +314,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "立憲",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
   "id": "m_010007",
   "kana": "いしばし みちひろ",
@@ -328,7 +328,7 @@
    "speeches": 0
   },
   "district": "兵庫",
-  "group": "立憲",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
   "id": "m_025007",
   "kana": "いずみ ふさほ",
@@ -342,7 +342,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "い党",
+  "group": "いのちの党",
   "house": "sangiin",
   "id": "m_025008",
   "kana": "いせざき けんじ",
@@ -356,7 +356,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "民主",
+  "group": "国民民主党・新緑風会",
   "house": "sangiin",
   "id": "m_013011",
   "kana": "いそざき てつじ",
@@ -370,7 +370,7 @@
    "speeches": 0
   },
   "district": "香川",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_010008",
   "kana": "いそざき よしひこ",
@@ -384,7 +384,7 @@
    "speeches": 3
   },
   "district": "兵庫",
-  "group": "公明",
+  "group": "公明党",
   "house": "sangiin",
   "id": "m_016005",
   "kana": "いとう たかえ",
@@ -398,7 +398,7 @@
    "speeches": 0
   },
   "district": "愛知",
-  "group": "民主",
+  "group": "国民民主党・新緑風会",
   "house": "sangiin",
   "id": "m_016006",
   "kana": "いとう たかえ",
@@ -412,7 +412,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "民主",
+  "group": "国民民主党・新緑風会",
   "house": "sangiin",
   "id": "m_025009",
   "kana": "いとう たつお",
@@ -426,7 +426,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_013006",
   "kana": "いのうえ よしゆき",
@@ -440,7 +440,7 @@
    "speeches": 3
   },
   "district": "千葉",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_010009",
   "kana": "いのぐち くにこ",
@@ -454,7 +454,7 @@
    "speeches": 1
   },
   "district": "比例",
-  "group": "維新",
+  "group": "日本維新の会",
   "house": "sangiin",
   "id": "m_022005",
   "kana": "いのせ なおき",
@@ -468,7 +468,7 @@
    "speeches": 0
   },
   "district": "沖縄",
-  "group": "沖縄",
+  "group": "沖縄の風",
   "house": "sangiin",
   "id": "m_016007",
   "kana": "いは よういち",
@@ -482,7 +482,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_016010",
   "kana": "いまい えりこ",
@@ -496,7 +496,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "共産",
+  "group": "日本共産党",
   "house": "sangiin",
   "id": "m_016011",
   "kana": "いわぶち とも",
@@ -510,7 +510,7 @@
    "speeches": 0
   },
   "district": "北海道",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_019005",
   "kana": "いわもと つよひと",
@@ -524,7 +524,7 @@
    "speeches": 1
   },
   "district": "比例",
-  "group": "参政",
+  "group": "参政党",
   "house": "sangiin",
   "id": "m_025038",
   "kana": "いわもと まな",
@@ -538,7 +538,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_025010",
   "kana": "いんどう しゅうさく",
@@ -552,7 +552,7 @@
    "speeches": 1
   },
   "district": "比例",
-  "group": "公明",
+  "group": "公明党",
   "house": "sangiin",
   "id": "m_022006",
   "kana": "うえだ いさむ",
@@ -566,7 +566,7 @@
    "speeches": 0
   },
   "district": "埼玉",
-  "group": "民主",
+  "group": "国民民主党・新緑風会",
   "house": "sangiin",
   "id": "m_019042",
   "kana": "うえだ きよし",
@@ -580,7 +580,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "維新",
+  "group": "日本維新の会",
   "house": "sangiin",
   "id": "m_025064",
   "kana": "うえの ほたる",
@@ -594,7 +594,7 @@
    "speeches": 0
   },
   "district": "栃木",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_010013",
   "kana": "うえの みちこ",
@@ -608,7 +608,7 @@
    "speeches": 2
   },
   "district": "東京",
-  "group": "民主",
+  "group": "国民民主党・新緑風会",
   "house": "sangiin",
   "id": "m_025035",
   "kana": "うしだ まゆ",
@@ -622,7 +622,7 @@
    "speeches": 0
   },
   "district": "千葉",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_022007",
   "kana": "うすい しょういち",
@@ -636,7 +636,7 @@
    "speeches": 1
   },
   "district": "新潟",
-  "group": "立憲",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
   "id": "m_019006",
   "kana": "うちこし さくら",
@@ -650,7 +650,7 @@
    "speeches": 1
   },
   "district": "比例",
-  "group": "参政",
+  "group": "参政党",
   "house": "sangiin",
   "id": "m_019007",
   "kana": "うめむら みずほ",
@@ -664,7 +664,7 @@
    "speeches": 0
   },
   "district": "山口",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_013001",
   "kana": "えじま きよし",
@@ -678,7 +678,7 @@
    "speeches": 0
   },
   "district": "埼玉",
-  "group": "民主",
+  "group": "国民民主党・新緑風会",
   "house": "sangiin",
   "id": "m_025011",
   "kana": "えはら くみこ",
@@ -692,7 +692,7 @@
    "speeches": 0
   },
   "district": "福岡",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_010018",
   "kana": "おおいえ さとし",
@@ -706,7 +706,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "い党",
+  "group": "いのちの党",
   "house": "sangiin",
   "id": "m_007017",
   "kana": "おおしま くすお",
@@ -720,7 +720,7 @@
    "speeches": 2
   },
   "district": "埼玉",
-  "group": "参政",
+  "group": "参政党",
   "house": "sangiin",
   "id": "m_025013",
   "kana": "おおつ つとむ",
@@ -734,7 +734,7 @@
    "speeches": 0
   },
   "district": "大阪",
-  "group": "維新",
+  "group": "日本維新の会",
   "house": "sangiin",
   "id": "m_025014",
   "kana": "おかざき ふとし",
@@ -748,7 +748,7 @@
    "speeches": 0
   },
   "district": "石川",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_004012",
   "kana": "おかだ なおき",
@@ -762,7 +762,7 @@
    "speeches": 1
   },
   "district": "比例",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_016012",
   "kana": "おがわ かつみ",
@@ -776,7 +776,7 @@
    "speeches": 2
   },
   "district": "比例",
-  "group": "い党",
+  "group": "いのちの党",
   "house": "sangiin",
   "id": "m_025012",
   "kana": "おくだ ふみよ",
@@ -790,7 +790,7 @@
    "speeches": 0
   },
   "district": "東京",
-  "group": "民主",
+  "group": "国民民主党・新緑風会",
   "house": "sangiin",
   "id": "m_025015",
   "kana": "おくむら よしひろ",
@@ -804,7 +804,7 @@
    "speeches": 1
   },
   "district": "比例",
-  "group": "立憲",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
   "id": "m_019008",
   "kana": "おざわ まさひと",
@@ -818,7 +818,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_022008",
   "kana": "おち としゆき",
@@ -832,7 +832,7 @@
    "speeches": 0
   },
   "district": "鹿児島",
-  "group": "みら",
+  "group": "チームみらい・無所属の会",
   "house": "sangiin",
   "id": "m_025032",
   "kana": "おつじ ともみ",
@@ -846,7 +846,7 @@
    "speeches": 1
   },
   "district": "比例",
-  "group": "立憲",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
   "id": "m_022009",
   "kana": "おにき まこと",
@@ -857,10 +857,10 @@
   "counts": {
    "bills": 0,
    "rollcalls": 120,
-   "speeches": 0
+   "speeches": 9
   },
   "district": "岡山",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_016013",
   "kana": "おのだ きみ",
@@ -874,7 +874,7 @@
    "speeches": 0
   },
   "district": "神奈川",
-  "group": "民主",
+  "group": "国民民主党・新緑風会",
   "house": "sangiin",
   "id": "m_025016",
   "kana": "かごしま あきひろ",
@@ -888,7 +888,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_022012",
   "kana": "かじはら だいすけ",
@@ -902,7 +902,7 @@
    "speeches": 0
   },
   "district": "兵庫",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_019011",
   "kana": "かだ ひろゆき",
@@ -916,7 +916,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "維新",
+  "group": "日本維新の会",
   "house": "sangiin",
   "id": "m_019012",
   "kana": "かだ ゆきこ",
@@ -927,10 +927,10 @@
   "counts": {
    "bills": 0,
    "rollcalls": 120,
-   "speeches": 0
+   "speeches": 7
   },
   "district": "比例",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_010020",
   "kana": "かたやま さつき",
@@ -944,7 +944,7 @@
    "speeches": 1
   },
   "district": "兵庫",
-  "group": "維新",
+  "group": "日本維新の会",
   "house": "sangiin",
   "id": "m_016014",
   "kana": "かたやま だいすけ",
@@ -958,7 +958,7 @@
    "speeches": 0
   },
   "district": "北海道",
-  "group": "立憲",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
   "id": "m_019013",
   "kana": "かつべ けんじ",
@@ -972,7 +972,7 @@
    "speeches": 1
   },
   "district": "茨城",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_022010",
   "kana": "かとう あきよし",
@@ -986,7 +986,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "維新",
+  "group": "日本維新の会",
   "house": "sangiin",
   "id": "m_022013",
   "kana": "かねこ みちひと",
@@ -1000,7 +1000,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_025017",
   "kana": "かまやち さとし",
@@ -1014,7 +1014,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "参政",
+  "group": "参政党",
   "house": "sangiin",
   "id": "m_022014",
   "kana": "かみや そうへい",
@@ -1028,7 +1028,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_022015",
   "kana": "かみや まさゆき",
@@ -1042,7 +1042,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "民主",
+  "group": "国民民主党・新緑風会",
   "house": "sangiin",
   "id": "m_007022",
   "kana": "かわい たかのり",
@@ -1056,7 +1056,7 @@
    "speeches": 1
   },
   "district": "東京",
-  "group": "公明",
+  "group": "公明党",
   "house": "sangiin",
   "id": "m_025018",
   "kana": "かわむら ゆうだい",
@@ -1070,7 +1070,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "立憲",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
   "id": "m_019016",
   "kana": "きし まきこ",
@@ -1084,7 +1084,7 @@
    "speeches": 2
   },
   "district": "山口",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_013019",
   "kana": "きたむら つねお",
@@ -1098,7 +1098,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "保守",
+  "group": "日本保守党",
   "house": "sangiin",
   "id": "m_025020",
   "kana": "きたむら はるお",
@@ -1112,7 +1112,7 @@
    "speeches": 0
   },
   "district": "岩手",
-  "group": "立憲",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
   "id": "m_016015",
   "kana": "きどぐち えいじ",
@@ -1126,7 +1126,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "い党",
+  "group": "いのちの党",
   "house": "sangiin",
   "id": "m_019015",
   "kana": "きむら えいこ",
@@ -1140,7 +1140,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_013016",
   "kana": "きむら よしお",
@@ -1154,7 +1154,7 @@
    "speeches": 0
   },
   "district": "東京",
-  "group": "共産",
+  "group": "日本共産党",
   "house": "sangiin",
   "id": "m_013017",
   "kana": "きら よしこ",
@@ -1168,7 +1168,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "維新",
+  "group": "日本維新の会",
   "house": "sangiin",
   "id": "m_022016",
   "kana": "くしだ せいいち",
@@ -1182,7 +1182,7 @@
    "speeches": 3
   },
   "district": "比例",
-  "group": "公明",
+  "group": "公明党",
   "house": "sangiin",
   "id": "m_022017",
   "kana": "くぼた てつや",
@@ -1196,7 +1196,7 @@
    "speeches": 1
   },
   "district": "埼玉",
-  "group": "立憲",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
   "id": "m_019017",
   "kana": "くまがい ひろと",
@@ -1210,7 +1210,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_025021",
   "kana": "けんざか しげのり",
@@ -1224,7 +1224,7 @@
    "speeches": 1
   },
   "district": "比例",
-  "group": "共産",
+  "group": "日本共産党",
   "house": "sangiin",
   "id": "m_998022",
   "kana": "こいけ あきら",
@@ -1238,7 +1238,7 @@
    "speeches": 0
   },
   "district": "茨城",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_013022",
   "kana": "こうづき りょうすけ",
@@ -1252,7 +1252,7 @@
    "speeches": 1
   },
   "district": "比例",
-  "group": "立憲",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
   "id": "m_025022",
   "kana": "こおりやま りょう",
@@ -1266,7 +1266,7 @@
    "speeches": 1
   },
   "district": "比例",
-  "group": "立憲",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
   "id": "m_022019",
   "kana": "こが ちかげ",
@@ -1280,7 +1280,7 @@
    "speeches": 0
   },
   "district": "長崎",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_013021",
   "kana": "こが ゆういちろう",
@@ -1294,7 +1294,7 @@
    "speeches": 1
   },
   "district": "福岡",
-  "group": "立憲",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
   "id": "m_016018",
   "kana": "こが ゆきひと",
@@ -1308,7 +1308,7 @@
    "speeches": 1
   },
   "district": "三重",
-  "group": "立憲",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
   "id": "m_025023",
   "kana": "こじま ともこ",
@@ -1322,7 +1322,7 @@
    "speeches": 0
   },
   "district": "大分",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_022020",
   "kana": "こしょう はるとも",
@@ -1336,7 +1336,7 @@
    "speeches": 1
   },
   "district": "比例",
-  "group": "参政",
+  "group": "参政党",
   "house": "sangiin",
   "id": "m_025024",
   "kana": "ごとう しょうた",
@@ -1350,7 +1350,7 @@
    "speeches": 2
   },
   "district": "山梨",
-  "group": "民主",
+  "group": "国民民主党・新緑風会",
   "house": "sangiin",
   "id": "m_025025",
   "kana": "ごとう ひとし",
@@ -1364,7 +1364,7 @@
    "speeches": 1
   },
   "district": "千葉",
-  "group": "立憲",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
   "id": "m_010024",
   "kana": "こにし ひろゆき",
@@ -1378,7 +1378,7 @@
    "speeches": 0
   },
   "district": "新潟",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_022018",
   "kana": "こばやし かずひろ",
@@ -1392,7 +1392,7 @@
    "speeches": 0
   },
   "district": "岡山",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_025026",
   "kana": "こばやし こういちろう",
@@ -1406,7 +1406,7 @@
    "speeches": 1
   },
   "district": "千葉",
-  "group": "民主",
+  "group": "国民民主党・新緑風会",
   "house": "sangiin",
   "id": "m_025041",
   "kana": "こばやし さやか",
@@ -1420,7 +1420,7 @@
    "speeches": 0
   },
   "district": "滋賀",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_016017",
   "kana": "こやり たかし",
@@ -1434,7 +1434,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "無所属",
+  "group": "各派に属しない議員",
   "house": "sangiin",
   "id": "m_023002",
   "kana": "さいとう けんいちろう",
@@ -1448,7 +1448,7 @@
    "speeches": 0
   },
   "district": "愛知",
-  "group": "立憲",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
   "id": "m_010027",
   "kana": "さいとう よしたか",
@@ -1462,7 +1462,7 @@
    "speeches": 0
   },
   "district": "愛知",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_013024",
   "kana": "さかい やすゆき",
@@ -1476,7 +1476,7 @@
    "speeches": 1
   },
   "district": "茨城",
-  "group": "参政",
+  "group": "参政党",
   "house": "sangiin",
   "id": "m_025028",
   "kana": "さくらい しょうこ",
@@ -1490,7 +1490,7 @@
    "speeches": 0
   },
   "district": "宮城",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_998030",
   "kana": "さくらい みつる",
@@ -1504,7 +1504,7 @@
    "speeches": 3
   },
   "district": "比例",
-  "group": "公明",
+  "group": "公明党",
   "house": "sangiin",
   "id": "m_025029",
   "kana": "ささき まさふみ",
@@ -1518,7 +1518,7 @@
    "speeches": 0
   },
   "district": "大阪",
-  "group": "維新",
+  "group": "日本維新の会",
   "house": "sangiin",
   "id": "m_025040",
   "kana": "ささき りえ",
@@ -1532,7 +1532,7 @@
    "speeches": 0
   },
   "district": "奈良",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_016019",
   "kana": "さとう けい",
@@ -1546,7 +1546,7 @@
    "speeches": 4
   },
   "district": "愛知",
-  "group": "公明",
+  "group": "公明党",
   "house": "sangiin",
   "id": "m_016020",
   "kana": "さとみ りゅうじ",
@@ -1560,7 +1560,7 @@
    "speeches": 2
   },
   "district": "東京",
-  "group": "参政",
+  "group": "参政党",
   "house": "sangiin",
   "id": "m_025030",
   "kana": "しおいり さやか",
@@ -1574,7 +1574,7 @@
    "speeches": 0
   },
   "district": "東京",
-  "group": "立憲",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
   "id": "m_019020",
   "kana": "しおむら あやか",
@@ -1588,7 +1588,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "立憲",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
   "id": "m_022021",
   "kana": "しば しんいち",
@@ -1602,7 +1602,7 @@
    "speeches": 1
   },
   "district": "比例",
-  "group": "維新",
+  "group": "日本維新の会",
   "house": "sangiin",
   "id": "m_010029",
   "kana": "しばた たくみ",
@@ -1616,7 +1616,7 @@
    "speeches": 1
   },
   "district": "比例",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_016021",
   "kana": "じみ はなこ",
@@ -1630,7 +1630,7 @@
    "speeches": 0
   },
   "district": "群馬",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_019018",
   "kana": "しみず まさと",
@@ -1644,7 +1644,7 @@
    "speeches": 2
   },
   "district": "福岡",
-  "group": "公明",
+  "group": "公明党",
   "house": "sangiin",
   "id": "m_019021",
   "kana": "しもの ろくた",
@@ -1658,7 +1658,7 @@
    "speeches": 1
   },
   "district": "比例",
-  "group": "共産",
+  "group": "日本共産党",
   "house": "sangiin",
   "id": "m_025031",
   "kana": "しらかわ ようこ",
@@ -1672,7 +1672,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_016022",
   "kana": "しんどう かねひこ",
@@ -1686,7 +1686,7 @@
    "speeches": 0
   },
   "district": "静岡",
-  "group": "民主",
+  "group": "国民民主党・新緑風会",
   "house": "sangiin",
   "id": "m_001027",
   "kana": "しんば かづや",
@@ -1700,7 +1700,7 @@
    "speeches": 0
   },
   "district": "兵庫",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_004033",
   "kana": "すえまつ しんすけ",
@@ -1714,7 +1714,7 @@
    "speeches": 0
   },
   "district": "大阪",
-  "group": "公明",
+  "group": "公明党",
   "house": "sangiin",
   "id": "m_013028",
   "kana": "すぎ ひさたけ",
@@ -1728,7 +1728,7 @@
    "speeches": 1
   },
   "district": "長野",
-  "group": "立憲",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
   "id": "m_016023",
   "kana": "すぎお ひでや",
@@ -1742,7 +1742,7 @@
    "speeches": 0
   },
   "district": "愛知",
-  "group": "参政",
+  "group": "参政党",
   "house": "sangiin",
   "id": "m_025033",
   "kana": "すぎもと じゅんこ",
@@ -1756,7 +1756,7 @@
    "speeches": 0
   },
   "district": "東京",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_025034",
   "kana": "すずき だいち",
@@ -1770,7 +1770,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_019023",
   "kana": "すずき むねお",
@@ -1784,7 +1784,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "維新",
+  "group": "日本維新の会",
   "house": "sangiin",
   "id": "m_025019",
   "kana": "せき へい",
@@ -1795,10 +1795,10 @@
   "counts": {
    "bills": 0,
    "rollcalls": 120,
-   "speeches": 0
+   "speeches": 319
   },
   "district": "埼玉",
-  "group": "無所属",
+  "group": "各派に属しない議員",
   "house": "sangiin",
   "id": "m_003005",
   "kana": "せきぐち まさかず",
@@ -1812,7 +1812,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "共産",
+  "group": "日本共産党",
   "house": "sangiin",
   "id": "m_001001",
   "kana": "だいもん みきし",
@@ -1826,7 +1826,7 @@
    "speeches": 0
   },
   "district": "大阪",
-  "group": "維新",
+  "group": "日本維新の会",
   "house": "sangiin",
   "id": "m_016026",
   "kana": "たかぎ かおり",
@@ -1840,7 +1840,7 @@
    "speeches": 2
   },
   "district": "埼玉",
-  "group": "立憲",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
   "id": "m_022023",
   "kana": "たかぎ まり",
@@ -1854,7 +1854,7 @@
    "speeches": 0
   },
   "district": "栃木",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_013030",
   "kana": "たかはし かつのり",
@@ -1868,7 +1868,7 @@
    "speeches": 0
   },
   "district": "北海道",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_019026",
   "kana": "たかはし はるみ",
@@ -1882,7 +1882,7 @@
    "speeches": 0
   },
   "district": "兵庫",
-  "group": "公明",
+  "group": "公明党",
   "house": "sangiin",
   "id": "m_019027",
   "kana": "たかはし みつお",
@@ -1896,7 +1896,7 @@
    "speeches": 0
   },
   "district": "沖縄",
-  "group": "沖縄",
+  "group": "沖縄の風",
   "house": "sangiin",
   "id": "m_025027",
   "kana": "たから さちか",
@@ -1910,7 +1910,7 @@
    "speeches": 0
   },
   "district": "福井",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_013032",
   "kana": "たきなみ ひろふみ",
@@ -1924,7 +1924,7 @@
    "speeches": 1
   },
   "district": "比例",
-  "group": "公明",
+  "group": "公明党",
   "house": "sangiin",
   "id": "m_017001",
   "kana": "たけうち しんじ",
@@ -1938,7 +1938,7 @@
    "speeches": 1
   },
   "district": "比例",
-  "group": "民主",
+  "group": "国民民主党・新緑風会",
   "house": "sangiin",
   "id": "m_022024",
   "kana": "たけづめ ひとし",
@@ -1952,7 +1952,7 @@
    "speeches": 0
   },
   "district": "東京",
-  "group": "公明",
+  "group": "公明党",
   "house": "sangiin",
   "id": "m_010033",
   "kana": "たけや としこ",
@@ -1966,7 +1966,7 @@
    "speeches": 0
   },
   "district": "愛知",
-  "group": "立憲",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
   "id": "m_019024",
   "kana": "たじま まいこ",
@@ -1980,7 +1980,7 @@
    "speeches": 1
   },
   "district": "青森",
-  "group": "立憲",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
   "id": "m_016025",
   "kana": "たなぶ まさよ",
@@ -1994,7 +1994,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "公明",
+  "group": "公明党",
   "house": "sangiin",
   "id": "m_004036",
   "kana": "たにあい まさあき",
@@ -2008,7 +2008,7 @@
    "speeches": 1
   },
   "district": "比例",
-  "group": "民主",
+  "group": "国民民主党・新緑風会",
   "house": "sangiin",
   "id": "m_019025",
   "kana": "たむら まみ",
@@ -2022,7 +2022,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "公明",
+  "group": "公明党",
   "house": "sangiin",
   "id": "m_025036",
   "kana": "つかさ たかし",
@@ -2036,7 +2036,7 @@
    "speeches": 4
   },
   "district": "比例",
-  "group": "立憲",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
   "id": "m_022025",
   "kana": "つじもと きよみ",
@@ -2050,7 +2050,7 @@
    "speeches": 0
   },
   "district": "和歌山",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_998036",
   "kana": "つるほ ようすけ",
@@ -2064,7 +2064,7 @@
    "speeches": 0
   },
   "district": "鳥取・島根",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_025037",
   "kana": "でがわ ももこ",
@@ -2078,7 +2078,7 @@
    "speeches": 0
   },
   "district": "秋田",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_019030",
   "kana": "てらた しずか",
@@ -2092,7 +2092,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "い党",
+  "group": "いのちの党",
   "house": "sangiin",
   "id": "m_022026",
   "kana": "てんばた だいすけ",
@@ -2106,7 +2106,7 @@
    "speeches": 1
   },
   "district": "茨城",
-  "group": "民主",
+  "group": "国民民主党・新緑風会",
   "house": "sangiin",
   "id": "m_022027",
   "kana": "どうごみ まきこ",
@@ -2120,7 +2120,7 @@
    "speeches": 0
   },
   "district": "北海道",
-  "group": "立憲",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
   "id": "m_010036",
   "kana": "とくなが えり",
@@ -2134,7 +2134,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_022028",
   "kana": "とものう りお",
@@ -2148,7 +2148,7 @@
    "speeches": 0
   },
   "district": "山梨",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_022030",
   "kana": "ながい まなぶ",
@@ -2162,7 +2162,7 @@
    "speeches": 0
   },
   "district": "愛媛",
-  "group": "無所属",
+  "group": "各派に属しない議員",
   "house": "sangiin",
   "id": "m_019031",
   "kana": "ながえ たかこ",
@@ -2176,7 +2176,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "維新",
+  "group": "日本維新の会",
   "house": "sangiin",
   "id": "m_022029",
   "kana": "なかじょう きよし",
@@ -2190,7 +2190,7 @@
    "speeches": 0
   },
   "district": "群馬",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_986024",
   "kana": "なかそね ひろふみ",
@@ -2204,7 +2204,7 @@
    "speeches": 0
   },
   "district": "福岡",
-  "group": "参政",
+  "group": "参政党",
   "house": "sangiin",
   "id": "m_025039",
   "kana": "なかだ ゆうこ",
@@ -2218,7 +2218,7 @@
    "speeches": 0
   },
   "district": "徳島・高知",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_010038",
   "kana": "なかにし ゆうすけ",
@@ -2232,7 +2232,7 @@
    "speeches": 0
   },
   "district": "千葉",
-  "group": "立憲",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
   "id": "m_007041",
   "kana": "ながはま ひろゆき",
@@ -2246,7 +2246,7 @@
    "speeches": 0
   },
   "district": "京都",
-  "group": "維新",
+  "group": "日本維新の会",
   "house": "sangiin",
   "id": "m_025042",
   "kana": "にいみ しょうへい",
@@ -2260,7 +2260,7 @@
    "speeches": 0
   },
   "district": "京都",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_007044",
   "kana": "にしだ しょうじ",
@@ -2274,7 +2274,7 @@
    "speeches": 0
   },
   "district": "広島",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_025043",
   "kana": "にした ひでのり",
@@ -2288,7 +2288,7 @@
    "speeches": 0
   },
   "district": "埼玉",
-  "group": "公明",
+  "group": "公明党",
   "house": "sangiin",
   "id": "m_004043",
   "kana": "にしだ まこと",
@@ -2302,7 +2302,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "共産",
+  "group": "日本共産党",
   "house": "sangiin",
   "id": "m_004045",
   "kana": "にひ そうへい",
@@ -2316,7 +2316,7 @@
    "speeches": 1
   },
   "district": "富山",
-  "group": "民主",
+  "group": "国民民主党・新緑風会",
   "house": "sangiin",
   "id": "m_025044",
   "kana": "にわた ゆきえ",
@@ -2330,7 +2330,7 @@
    "speeches": 0
   },
   "district": "富山",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_001037",
   "kana": "のがみ こうたろう",
@@ -2344,7 +2344,7 @@
    "speeches": 0
   },
   "district": "鹿児島",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_004046",
   "kana": "のむら てつろう",
@@ -2358,7 +2358,7 @@
    "speeches": 0
   },
   "district": "山形",
-  "group": "民主",
+  "group": "国民民主党・新緑風会",
   "house": "sangiin",
   "id": "m_019032",
   "kana": "はが みちや",
@@ -2372,7 +2372,7 @@
    "speeches": 0
   },
   "district": "神奈川",
-  "group": "参政",
+  "group": "参政党",
   "house": "sangiin",
   "id": "m_025046",
   "kana": "はじかの ひろき",
@@ -2386,7 +2386,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_995054",
   "kana": "はしもと せいこ",
@@ -2400,7 +2400,7 @@
    "speeches": 2
   },
   "district": "北海道",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_010043",
   "kana": "はせがわ がく",
@@ -2414,7 +2414,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_022031",
   "kana": "はせがわ ひではる",
@@ -2428,7 +2428,7 @@
    "speeches": 0
   },
   "district": "長野",
-  "group": "立憲",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
   "id": "m_021002",
   "kana": "はた じろう",
@@ -2442,7 +2442,7 @@
    "speeches": 0
   },
   "district": "熊本",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_013044",
   "kana": "ばば せいし",
@@ -2456,7 +2456,7 @@
    "speeches": 1
   },
   "district": "比例",
-  "group": "民主",
+  "group": "国民民主党・新緑風会",
   "house": "sangiin",
   "id": "m_016032",
   "kana": "はまぐち まこと",
@@ -2470,7 +2470,7 @@
    "speeches": 2
   },
   "district": "比例",
-  "group": "民主",
+  "group": "国民民主党・新緑風会",
   "house": "sangiin",
   "id": "m_013045",
   "kana": "はまの よしふみ",
@@ -2484,7 +2484,7 @@
    "speeches": 2
   },
   "district": "比例",
-  "group": "公明",
+  "group": "公明党",
   "house": "sangiin",
   "id": "m_025047",
   "kana": "はらだ だいじろう",
@@ -2498,7 +2498,7 @@
    "speeches": 1
   },
   "district": "香川",
-  "group": "民主",
+  "group": "国民民主党・新緑風会",
   "house": "sangiin",
   "id": "m_025048",
   "kana": "はらだ ひでかず",
@@ -2512,7 +2512,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_025049",
   "kana": "ひがしの ひでき",
@@ -2526,7 +2526,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "保守",
+  "group": "日本保守党",
   "house": "sangiin",
   "id": "m_025050",
   "kana": "ひゃくた なおき",
@@ -2540,7 +2540,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "公明",
+  "group": "公明党",
   "house": "sangiin",
   "id": "m_013046",
   "kana": "ひらき だいさく",
@@ -2554,7 +2554,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "民主",
+  "group": "国民民主党・新緑風会",
   "house": "sangiin",
   "id": "m_025051",
   "kana": "ひらど こうた",
@@ -2568,7 +2568,7 @@
    "speeches": 0
   },
   "district": "静岡",
-  "group": "無所属",
+  "group": "各派に属しない議員",
   "house": "sangiin",
   "id": "m_016033",
   "kana": "ひらやま さちこ",
@@ -2582,7 +2582,7 @@
    "speeches": 0
   },
   "district": "徳島・高知",
-  "group": "立憲",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
   "id": "m_004050",
   "kana": "ひろた はじめ",
@@ -2596,7 +2596,7 @@
    "speeches": 0
   },
   "district": "佐賀",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_010045",
   "kana": "ふくおか たかまろ",
@@ -2610,7 +2610,7 @@
    "speeches": 0
   },
   "district": "青森",
-  "group": "立憲",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
   "id": "m_025052",
   "kana": "ふくし ますみ",
@@ -2624,7 +2624,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "社民",
+  "group": "社会民主党",
   "house": "sangiin",
   "id": "m_998049",
   "kana": "ふくしま みずほ",
@@ -2638,7 +2638,7 @@
    "speeches": 0
   },
   "district": "京都",
-  "group": "無所属",
+  "group": "各派に属しない議員",
   "house": "sangiin",
   "id": "m_998050",
   "kana": "ふくやま てつろう",
@@ -2652,7 +2652,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_025053",
   "kana": "ふくやま まもる",
@@ -2666,7 +2666,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_022033",
   "kana": "ふじい かずひろ",
@@ -2680,7 +2680,7 @@
    "speeches": 3
   },
   "district": "愛知",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_010046",
   "kana": "ふじかわ まさひと",
@@ -2694,7 +2694,7 @@
    "speeches": 4
   },
   "district": "比例",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_016034",
   "kana": "ふじき しんや",
@@ -2708,7 +2708,7 @@
    "speeches": 0
   },
   "district": "北海道",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_022034",
   "kana": "ふなはし としみつ",
@@ -2722,7 +2722,7 @@
    "speeches": 0
   },
   "district": "山形",
-  "group": "民主",
+  "group": "国民民主党・新緑風会",
   "house": "sangiin",
   "id": "m_007052",
   "kana": "ふなやま やすえ",
@@ -2736,7 +2736,7 @@
    "speeches": 0
   },
   "district": "埼玉",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_007053",
   "kana": "ふるかわ としはる",
@@ -2750,7 +2750,7 @@
    "speeches": 1
   },
   "district": "福島",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_022035",
   "kana": "ほし ほくと",
@@ -2764,7 +2764,7 @@
    "speeches": 0
   },
   "district": "奈良",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_013048",
   "kana": "ほりい いわお",
@@ -2778,7 +2778,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_019034",
   "kana": "ほんだ あきこ",
@@ -2792,7 +2792,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_013049",
   "kana": "まいたち しょうじ",
@@ -2803,10 +2803,10 @@
   "counts": {
    "bills": 0,
    "rollcalls": 120,
-   "speeches": 0
+   "speeches": 5
   },
   "district": "静岡",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_007054",
   "kana": "まきの たかお",
@@ -2820,7 +2820,7 @@
    "speeches": 0
   },
   "district": "神奈川",
-  "group": "立憲",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
   "id": "m_007055",
   "kana": "まきやま ひろえ",
@@ -2834,7 +2834,7 @@
    "speeches": 1
   },
   "district": "大阪",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_016035",
   "kana": "まつかわ るい",
@@ -2848,7 +2848,7 @@
    "speeches": 0
   },
   "district": "神奈川",
-  "group": "維新",
+  "group": "日本維新の会",
   "house": "sangiin",
   "id": "m_013050",
   "kana": "まつざわ しげふみ",
@@ -2862,7 +2862,7 @@
    "speeches": 1
   },
   "district": "宮崎",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_004056",
   "kana": "まつした しんぺい",
@@ -2876,7 +2876,7 @@
    "speeches": 1
   },
   "district": "比例",
-  "group": "参政",
+  "group": "参政党",
   "house": "sangiin",
   "id": "m_025054",
   "kana": "まつだ まなぶ",
@@ -2890,7 +2890,7 @@
    "speeches": 1
   },
   "district": "比例",
-  "group": "維新",
+  "group": "日本維新の会",
   "house": "sangiin",
   "id": "m_022036",
   "kana": "まつの あけみ",
@@ -2904,7 +2904,7 @@
    "speeches": 0
   },
   "district": "熊本",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_004057",
   "kana": "まつむら よしふみ",
@@ -2918,7 +2918,7 @@
    "speeches": 1
   },
   "district": "福岡",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_001046",
   "kana": "まつやま まさじ",
@@ -2932,7 +2932,7 @@
    "speeches": 0
   },
   "district": "神奈川",
-  "group": "公明",
+  "group": "公明党",
   "house": "sangiin",
   "id": "m_016036",
   "kana": "みうら のぶひろ",
@@ -2946,7 +2946,7 @@
    "speeches": 0
   },
   "district": "広島",
-  "group": "立憲",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
   "id": "m_022037",
   "kana": "みかみ えり",
@@ -2960,7 +2960,7 @@
    "speeches": 1
   },
   "district": "比例",
-  "group": "立憲",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
   "id": "m_004058",
   "kana": "みずおか しゅんいち",
@@ -2974,7 +2974,7 @@
    "speeches": 1
   },
   "district": "愛知",
-  "group": "民主",
+  "group": "国民民主党・新緑風会",
   "house": "sangiin",
   "id": "m_025055",
   "kana": "みずの こういち",
@@ -2988,7 +2988,7 @@
    "speeches": 0
   },
   "district": "神奈川",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_010048",
   "kana": "みはら じゅんこ",
@@ -3002,7 +3002,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "公明",
+  "group": "公明党",
   "house": "sangiin",
   "id": "m_016037",
   "kana": "みやざき まさる",
@@ -3016,7 +3016,7 @@
    "speeches": 1
   },
   "district": "広島",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_010050",
   "kana": "みやざわ よういち",
@@ -3030,7 +3030,7 @@
    "speeches": 3
   },
   "district": "大阪",
-  "group": "参政",
+  "group": "参政党",
   "house": "sangiin",
   "id": "m_025056",
   "kana": "みやで ちさと",
@@ -3044,7 +3044,7 @@
    "speeches": 0
   },
   "district": "滋賀",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_025057",
   "kana": "みやもと かずひろ",
@@ -3058,7 +3058,7 @@
    "speeches": 3
   },
   "district": "石川",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_013053",
   "kana": "みやもと しゅうじ",
@@ -3072,7 +3072,7 @@
    "speeches": 1
   },
   "district": "比例",
-  "group": "立憲",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
   "id": "m_022039",
   "kana": "むらた きょうこ",
@@ -3086,7 +3086,7 @@
    "speeches": 0
   },
   "district": "和歌山",
-  "group": "無所属",
+  "group": "各派に属しない議員",
   "house": "sangiin",
   "id": "m_025058",
   "kana": "もちづき よしお",
@@ -3100,7 +3100,7 @@
    "speeches": 0
   },
   "district": "福島",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_007061",
   "kana": "もり まさこ",
@@ -3114,7 +3114,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "立憲",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
   "id": "m_001047",
   "kana": "もり ゆうこ",
@@ -3128,7 +3128,7 @@
    "speeches": 1
   },
   "district": "広島",
-  "group": "立憲",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
   "id": "m_013054",
   "kana": "もりもと しんじ",
@@ -3142,7 +3142,7 @@
    "speeches": 0
   },
   "district": "宮崎",
-  "group": "立憲",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
   "id": "m_025059",
   "kana": "やまうち かなこ",
@@ -3156,7 +3156,7 @@
    "speeches": 0
   },
   "district": "福井",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_992051",
   "kana": "やまざき まさあき",
@@ -3170,7 +3170,7 @@
    "speeches": 0
   },
   "district": "佐賀",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_013060",
   "kana": "やました ゆうへい",
@@ -3184,7 +3184,7 @@
    "speeches": 0
   },
   "district": "東京",
-  "group": "共産",
+  "group": "日本共産党",
   "house": "sangiin",
   "id": "m_016042",
   "kana": "やまぞえ たく",
@@ -3198,7 +3198,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_012005",
   "kana": "やまだ たろう",
@@ -3212,7 +3212,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_016043",
   "kana": "やまだ ひろし",
@@ -3226,7 +3226,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "民主",
+  "group": "国民民主党・新緑風会",
   "house": "sangiin",
   "id": "m_025060",
   "kana": "やまだ よしひこ",
@@ -3240,7 +3240,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_004013",
   "kana": "やまたに えりこ",
@@ -3254,7 +3254,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "参政",
+  "group": "参政党",
   "house": "sangiin",
   "id": "m_025061",
   "kana": "やまなか せん",
@@ -3268,7 +3268,7 @@
    "speeches": 0
   },
   "district": "長崎",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_022040",
   "kana": "やまもと けいすけ",
@@ -3282,7 +3282,7 @@
    "speeches": 0
   },
   "district": "三重",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_022041",
   "kana": "やまもと さちこ",
@@ -3296,7 +3296,7 @@
    "speeches": 0
   },
   "district": "愛媛",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_004062",
   "kana": "やまもと じゅんぞう",
@@ -3310,7 +3310,7 @@
    "speeches": 1
   },
   "district": "岩手",
-  "group": "立憲",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
   "id": "m_019040",
   "kana": "よこさわ たかのり",
@@ -3324,7 +3324,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "公明",
+  "group": "公明党",
   "house": "sangiin",
   "id": "m_010052",
   "kana": "よこやま しんいち",
@@ -3338,7 +3338,7 @@
    "speeches": 0
   },
   "district": "京都",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_022042",
   "kana": "よしい あきら",
@@ -3352,7 +3352,7 @@
    "speeches": 3
   },
   "district": "比例",
-  "group": "立憲",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
   "id": "m_007071",
   "kana": "よしかわ さおり",
@@ -3366,7 +3366,7 @@
    "speeches": 0
   },
   "district": "大分",
-  "group": "立憲",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
   "id": "m_010053",
   "kana": "よしだ ただとも",
@@ -3380,7 +3380,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "社民",
+  "group": "社会民主党",
   "house": "sangiin",
   "id": "m_025006",
   "kana": "らさーるいしい",
@@ -3394,7 +3394,7 @@
    "speeches": 0
   },
   "district": "比例",
-  "group": "立憲",
+  "group": "立憲民主・無所属",
   "house": "sangiin",
   "id": "m_004060",
   "kana": "れんほう",
@@ -3408,7 +3408,7 @@
    "speeches": 0
   },
   "district": "岐阜",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_025062",
   "kana": "わかい あつこ",
@@ -3422,7 +3422,7 @@
    "speeches": 0
   },
   "district": "静岡",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_022043",
   "kana": "わかばやし ようへい",
@@ -3436,7 +3436,7 @@
    "speeches": 0
   },
   "district": "神奈川",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_025063",
   "kana": "わき まさあき",
@@ -3450,7 +3450,7 @@
    "speeches": 0
   },
   "district": "岐阜",
-  "group": "自民",
+  "group": "自由民主党・無所属の会",
   "house": "sangiin",
   "id": "m_010055",
   "kana": "わたなべ たけゆき",
