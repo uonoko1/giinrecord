@@ -2,9 +2,12 @@
  * data-archive.zip の仕様：決定的（同じ入力→同じバイト列）、エントリはパス順、
  * 更新時刻は固定、標準の ZIP として展開できる。
  */
+import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { inflateRawSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
-import { ARCHIVE_NAME, ARCHIVE_PATH, archiveReadme, buildZip, readZipDirectory } from "./archive";
+import { ARCHIVE_NAME, ARCHIVE_PATH, archiveReadme, buildZip, checkArchive, collectDataFiles, readZipDirectory } from "./archive";
 
 const entries = [
   { path: "rollcalls/index.json", data: Buffer.from("[]") },
@@ -75,6 +78,55 @@ describe("archiveReadme", () => {
 
   it("評価語を含まない", () => {
     for (const w of ["おすすめ", "ランキング", "一致率"]) expect(archiveReadme(meta)).not.toContain(w);
+  });
+});
+
+describe("checkArchive（smoke の一部）", () => {
+  const good = buildZip([
+    { path: "LICENSE", data: Buffer.from("CC BY 4.0\n") },
+    { path: "README.txt", data: Buffer.from(archiveReadme(undefined)) },
+    { path: "meta.json", data: Buffer.from("{}") },
+  ]);
+
+  it("data/ のファイル数 + README のエントリがあり、サイズが上限内なら失敗なし", () => {
+    expect(checkArchive(good, { dataFileCount: 2, maxBytes: 1024 * 1024 })).toEqual([]);
+  });
+
+  it("ファイルが無ければ失敗", () => {
+    expect(checkArchive(undefined, { dataFileCount: 2, maxBytes: 1024 })).toEqual([`missing archive: ${ARCHIVE_PATH}`]);
+  });
+
+  it("エントリ数が data/ と食い違えば失敗", () => {
+    expect(checkArchive(good, { dataFileCount: 5, maxBytes: 1024 })).toEqual(["archive entries: expected 6 (5 data files + README), got 3"]);
+  });
+
+  it("上限サイズを超えれば失敗、空なら失敗", () => {
+    expect(checkArchive(good, { dataFileCount: 2, maxBytes: 10 })).toEqual([`archive size: ${good.length} bytes exceeds limit 10`]);
+    expect(checkArchive(Buffer.alloc(0), { dataFileCount: 0, maxBytes: 10 })[0]).toMatch(/archive unreadable/);
+  });
+
+  it("LICENSE と README が無ければ失敗", () => {
+    const noLicense = buildZip([{ path: "meta.json", data: Buffer.from("{}") }]);
+    expect(checkArchive(noLicense, { dataFileCount: 1, maxBytes: 1024 })).toEqual([
+      "archive missing entry: LICENSE",
+      "archive missing entry: README.txt",
+    ]);
+  });
+});
+
+describe("collectDataFiles", () => {
+  it("ディレクトリ配下の全ファイルを posix 相対パスで読む（ソートは buildZip 側）", async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), "seiji-archive-"));
+    await mkdir(path.join(dir, "members"));
+    await writeFile(path.join(dir, "meta.json"), "{}");
+    await writeFile(path.join(dir, "members", "index.json"), "[]");
+    const files = await collectDataFiles(dir);
+    expect(files.map((f) => f.path).sort()).toEqual(["members/index.json", "meta.json"]);
+    expect(files.find((f) => f.path === "meta.json")!.data.toString()).toBe("{}");
+  });
+
+  it("存在しないディレクトリなら空", async () => {
+    expect(await collectDataFiles(path.join(tmpdir(), "seiji-archive-none-" + Date.now()))).toEqual([]);
   });
 });
 
