@@ -9,3 +9,5 @@ dist/
 .DS_Store
 # ETL working files (raw HTML cache). Normalized data under data/ IS committed.
 packages/etl/.cache/
+# React Router build output
+apps/web/build/
