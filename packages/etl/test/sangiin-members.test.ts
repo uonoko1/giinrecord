@@ -84,3 +84,20 @@ test("index.json の文字列化: キーはソート済み・末尾改行（DATA
   assert.deepEqual(keys, [...keys].sort());
   assert.deepEqual(Object.keys(JSON.parse(text)[0].counts), ["bills", "rollcalls", "speeches"]);
 });
+
+test("通称<BR>[本名] の2行表記は通称だけを name にする（投票ページの nameText と一致させる）", () => {
+  const members = parseMemberList(html, SRC, 221);
+  const byId = new Map(members.map((m) => [m.id, m]));
+  assert.equal(byId.get("m_004060")?.name, "蓮舫");
+  assert.equal(byId.get("m_022004")?.name, "生稲 晃子");
+  assert.equal(members.filter((m) => /[\[\]［］]/.test(m.name)).length, 0);
+});
+
+test("2行表記の最小ケース: <BR> の前を name にし、[本名] は legalName に保持する", () => {
+  const h = `<table><tr><td><a href="../profile/7004060.htm">蓮舫<BR>[齊藤　　蓮舫]</a></td><td>れんほう</td><td>立憲</td><td>東京</td><td>令和10年7月25日</td><td></td></tr></table>`;
+  const [m] = parseMemberList(h, SRC, 221);
+  assert.equal(m.name, "蓮舫");
+  assert.equal(m.legalName, "齊藤 蓮舫");
+  const [plain] = parseMemberList(`<table><tr><td><a href="../profile/7007006.htm">青木　　愛</a></td><td>あおき あい</td><td>立憲</td><td>比例</td><td>令和10年7月25日</td><td></td></tr></table>`, SRC, 221);
+  assert.equal(plain.legalName, undefined);
+});
