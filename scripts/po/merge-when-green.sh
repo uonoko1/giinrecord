@@ -3,6 +3,8 @@
 #   1. refuse unless the PR is OPEN and not a draft
 #   2. `gh pr update-branch` when it is BEHIND main
 #   3. poll `gh pr checks` until every check is pass/skipping (fail/cancel → abort)
+#      main may move while we wait (another PR merged → BEHIND, strict status checks block the
+#      merge): every poll re-checks mergeStateStatus and runs update-branch again (#89, like etl.yml)
 #      while waiting on data/refresh only: approve `action_required` workflow runs
 #   4. `gh pr merge --squash --delete-branch`
 # Env: POLL_INTERVAL (s, default 20), POLL_MAX (default 60), PO_REPO (owner/name override).
@@ -28,10 +30,17 @@ log "PR #$PR ($HEAD) state=$STATE draft=$DRAFT mergeState=$MERGE_STATE $URL"
 [[ "$DRAFT" == "false" ]] || die "PR #$PR is a draft; mark it ready for review first"
 
 # --- 2. bring up to date ----------------------------------------------------------------------
-if [[ "$MERGE_STATE" == "BEHIND" ]]; then
+# update_if_behind [state] → 0 when an update was attempted (checks will re-run), 1 otherwise.
+# A failed update is logged, not fatal: the merge step then surfaces the real blocker.
+update_if_behind() {
+  local state=${1:-}
+  [[ -n "$state" ]] || state=$(gh pr view "$PR" --json mergeStateStatus -q .mergeStateStatus)
+  [[ "$state" == "BEHIND" ]] || return 1
   log "branch is behind main → gh pr update-branch"
-  gh pr update-branch "$PR"
-fi
+  gh pr update-branch "$PR" || log "could not update branch (conflicts? update it manually)"
+  return 0
+}
+update_if_behind "$MERGE_STATE" || true
 
 # --- 3. poll checks ---------------------------------------------------------------------------
 approve_pending_runs() {
@@ -55,11 +64,17 @@ while true; do
     die "checks failed on PR #$PR: $(tr '\n' ' ' <<<"$failed")"
   fi
   if [[ -z "$pending" && "$total" -gt 0 ]]; then
-    log "all $total checks green"
-    break
+    if update_if_behind; then
+      log "[$i/$POLL_MAX] checks were green on an old base; waiting for them to re-run"
+    else
+      log "all $total checks green"
+      break
+    fi
+  else
+    if [[ "$total" -eq 0 ]]; then log "[$i/$POLL_MAX] no checks reported yet"; else log "[$i/$POLL_MAX] pending: $(tr '\n' ' ' <<<"$pending")"; fi
+    update_if_behind || true
+    if [[ "$HEAD" == "$DATA_BRANCH" ]]; then approve_pending_runs; fi
   fi
-  if [[ "$total" -eq 0 ]]; then log "[$i/$POLL_MAX] no checks reported yet"; else log "[$i/$POLL_MAX] pending: $(tr '\n' ' ' <<<"$pending")"; fi
-  if [[ "$HEAD" == "$DATA_BRANCH" ]]; then approve_pending_runs; fi
   if [[ "$i" -ge "$POLL_MAX" ]]; then
     die "timed out after $POLL_MAX polls waiting for checks on PR #$PR"
   fi

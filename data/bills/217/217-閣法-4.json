@@ -1,0 +1,37 @@
+{
+ "house": "shugiin",
+ "id": "217-閣法-4",
+ "kind": "閣法",
+ "number": 4,
+ "received": {
+  "sangiin": "2025-04-08",
+  "shugiin": "2025-02-07"
+ },
+ "result": {
+  "lawNumber": "42",
+  "promulgated": "2025-05-23",
+  "sangiin": "可決",
+  "shugiin": "修正"
+ },
+ "session": 217,
+ "shugiinGroupStance": {
+  "no": [
+   "れいわ新選組",
+   "日本共産党",
+   "参政党"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主党・無所属",
+   "日本維新の会",
+   "国民民主党・無所属クラブ",
+   "公明党",
+   "有志の会"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE15E.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "重要電子計算機に対する不正な行為による被害の防止に関する法律案"
+}

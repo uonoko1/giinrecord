@@ -66,7 +66,7 @@ export default function Members({ data = bundled }: { data?: Dataset }) {
     <main className="page members">
       <header className="cover">
         <div className="cover__brand">
-          <Link to="/">政治記録</Link>
+          <Link to="/">議会ログ</Link>
         </div>
         <h1 className="cover__title">国会議員</h1>
         <p className="cover__lead">{DESCRIPTION}</p>

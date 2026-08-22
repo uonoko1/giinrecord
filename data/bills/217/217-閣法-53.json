@@ -1,0 +1,38 @@
+{
+ "house": "shugiin",
+ "id": "217-閣法-53",
+ "kind": "閣法",
+ "number": 53,
+ "received": {
+  "sangiin": "2025-06-12",
+  "shugiin": "2025-03-14"
+ },
+ "result": {
+  "lawNumber": "80",
+  "promulgated": "2025-06-27",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 217,
+ "shugiinGroupStance": {
+  "no": [
+   "日本維新の会",
+   "れいわ新選組",
+   "日本共産党",
+   "参政党",
+   "日本保守党"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主党・無所属",
+   "国民民主党・無所属クラブ",
+   "公明党",
+   "有志の会"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDECD6.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "独立行政法人男女共同参画機構法の施行に伴う関係法律の整備等に関する法律案"
+}
