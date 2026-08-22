@@ -21,6 +21,8 @@ jobs:
         with: { node-version-file: .nvmrc, cache: pnpm }
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
+        env:
+          SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}
       - name: rsync static site to VPS
         env:
           SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
