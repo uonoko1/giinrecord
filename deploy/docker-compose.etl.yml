@@ -1,0 +1,18 @@
+# ETL container (Issue #86). Standalone:
+#   docker compose -f deploy/docker-compose.etl.yml run --rm etl 221
+# or layered on the site compose file (#85):
+#   docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.etl.yml run --rm etl 221
+# data/ and packages/etl/.cache are bind mounts; the container runs as ETL_UID:ETL_GID (default 1000:1000 = `node`)
+# so that written files belong to you: `ETL_UID=$(id -u) ETL_GID=$(id -g) docker compose ... run --rm etl 221`.
+# No secrets: the ETL only reads public government sites.
+services:
+  etl:
+    build:
+      context: ..
+      dockerfile: packages/etl/Dockerfile
+    image: seiji-kiroku-etl:local
+    user: "${ETL_UID:-1000}:${ETL_GID:-1000}"
+    volumes:
+      - ../data:/app/data
+      - ../packages/etl/.cache:/app/packages/etl/.cache
+    # `run --rm etl 221` → ENTRYPOINT (node --import tsx src/cli.ts) 221

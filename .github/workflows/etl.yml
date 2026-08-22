@@ -25,10 +25,19 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with: { node-version-file: .nvmrc, cache: pnpm }
-      - run: pnpm install --frozen-lockfile
+
+      # ETL はコンテナで動かす（#86）。ローカルの `docker compose -f deploy/docker-compose.etl.yml run --rm etl` と同じイメージ。
+      # GHCR には push しない。レイヤーキャッシュだけ GitHub Actions cache に置く。
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: packages/etl/Dockerfile
+          push: false
+          load: true
+          tags: seiji-kiroku-etl:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       # 取得済み HTML のキャッシュ。キーは日付なので毎日新しいエントリが保存され、restore-keys で前日分から復元する。
       # 回次一覧 vote_ind.htm・議員名簿・議案ページ・会議録 API は ETL 側が noCache で毎回取得する（packages/etl/src/fetch.ts）。
@@ -42,9 +51,18 @@ jobs:
 
       # `shell: bash` を明示すると `bash -eo pipefail` になる（既定の `bash -e {0}` は pipefail なしで、
       # ETL の非0終了が tee の exit 0 に隠れてデータ PR まで進んでしまう）。
+      # data/ と .cache は bind mount。runner の uid で動かすので、書かれたファイルはそのまま git add / cache save できる。
+      # .cache は restore が空振りしたときに docker が root で作らないよう先に mkdir する。
       - name: Run ETL
         shell: bash
-        run: pnpm etl ${{ github.event.inputs.sessions || '217 218 219 220 221' }} 2>&1 | tee etl.log
+        env:
+          SESSIONS: ${{ github.event.inputs.sessions || '217 218 219 220 221' }}
+        run: |
+          mkdir -p packages/etl/.cache
+          # shellcheck disable=SC2086  # SESSIONS は空白区切りの回次リスト
+          docker run --rm --user "$(id -u):$(id -g)" \
+            -v "$PWD/data:/app/data" -v "$PWD/packages/etl/.cache:/app/packages/etl/.cache" \
+            seiji-kiroku-etl:ci $SESSIONS 2>&1 | tee etl.log
 
       # 失敗しても取得済みページは次回に活かす（job が失敗すると actions/cache の自動保存は走らない）。
       - uses: actions/cache/save@v4

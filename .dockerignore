@@ -1,0 +1,18 @@
+# Only the pnpm workspace goes into the ETL image (packages/etl/Dockerfile). Everything runtime-ish is bind-mounted.
+.git
+.github
+.claude
+node_modules
+**/node_modules
+data
+packages/etl/.cache
+.env
+.env.*
+apps
+design
+docs
+deploy
+scripts
+**/build
+**/dist
+**/*.log
