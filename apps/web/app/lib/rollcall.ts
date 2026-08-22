@@ -31,9 +31,9 @@ export function unlistedGroups(groups: readonly Group[], votes: readonly Vote[])
   return [...new Set(votes.map((v) => v.group))].filter((g) => !listed.has(g));
 }
 
-/** 日付降順。同日は id 昇順（公表された採決番号の順）で安定させる。入力の順に依存しない。 */
+/** 日付降順。同日は id 降順（新しい採決が上。ETL の byDateDesc・議員 timeline と同じ規則）で安定させる。入力の順に依存しない。 */
 export function sortByDateDesc<T extends { id: string; date: string }>(rows: readonly T[]): T[] {
-  return [...rows].sort((a, b) => b.date.localeCompare(a.date) || a.id.localeCompare(b.id));
+  return [...rows].sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id));
 }
 
 /** 登場する回次を重複なく新しい順に。 */
