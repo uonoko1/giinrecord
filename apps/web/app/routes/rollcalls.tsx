@@ -1,7 +1,8 @@
 import { type LoaderFunctionArgs, Link, type MetaArgs, useLoaderData, useNavigate } from "react-router";
 import type { DatasetMeta, RollCallSummary } from "../lib/data-contract";
 import { defaultDataDir, readMeta, readRollCallIndex } from "../lib/data-files";
-import { formatDate, formatDateTime, sessionsDesc, sortByDateDesc } from "../lib/rollcall";
+import { formatDate, formatDateTime } from "../lib/format";
+import { sessionsDesc, sortByDateDesc } from "../lib/rollcall";
 import "./rollcall.css";
 
 /* ---------- data (build time only; ssr:false + prerender) ----------

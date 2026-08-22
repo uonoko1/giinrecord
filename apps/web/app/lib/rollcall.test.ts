@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatDate, groupsBySize, sessionsDesc, sortByDateDesc, votesByGroup } from "./rollcall";
+import { groupsBySize, sessionsDesc, sortByDateDesc, unlistedGroups, votesByGroup } from "./rollcall";
 
 describe("groupsBySize", () => {
   it("人数の多い順。同数は原文の順を保つ", () => {
@@ -40,19 +40,36 @@ describe("sortByDateDesc / sessionsDesc", () => {
     { id: "a", session: 221, date: "2026-07-24" },
     { id: "c", session: 221, date: "2026-03-23" },
   ];
-  it("日付降順（同日は元の順）", () => {
+  it("日付降順", () => {
     expect(sortByDateDesc(rows).map((r) => r.id)).toEqual(["a", "c", "b"]);
+  });
+  it("同日は id 降順（新しい採決が上、ETL の byDateDesc と同じ）で安定する。入力の順に依存しない", () => {
+    const sameDay = [
+      { id: "221-0724-v007", session: 221, date: "2026-07-24" },
+      { id: "221-0724-v006", session: 221, date: "2026-07-24" },
+      { id: "221-0724-v010", session: 221, date: "2026-07-24" },
+    ];
+    const expected = ["221-0724-v010", "221-0724-v007", "221-0724-v006"];
+    expect(sortByDateDesc(sameDay).map((r) => r.id)).toEqual(expected);
+    expect(sortByDateDesc([...sameDay].reverse()).map((r) => r.id)).toEqual(expected);
   });
   it("回次は重複を除き新しい順", () => {
     expect(sessionsDesc(rows)).toEqual([221, 220]);
   });
 });
 
-describe("formatDate", () => {
-  it("ISO 日付を 2026.07.24 にする（タイムゾーン変換はしない）", () => {
-    expect(formatDate("2026-07-24")).toBe("2026.07.24");
+describe("unlistedGroups: groups[] に無い会派の票を黙って落とさない", () => {
+  const groups = [{ group: "A", size: 1, yes: 1, no: 0 }];
+  it("票にだけ現れる会派を、票の登場順に重複なく返す", () => {
+    const votes = [
+      { memberId: "m1", nameText: "一", group: "A", value: "賛成" as const },
+      { memberId: "m2", nameText: "二", group: "C", value: "反対" as const },
+      { memberId: "m3", nameText: "三", group: "B", value: "投票なし" as const },
+      { memberId: "m4", nameText: "四", group: "C", value: "賛成" as const },
+    ];
+    expect(unlistedGroups(groups, votes)).toEqual(["C", "B"]);
   });
-  it("日付でない文字列はそのまま返す", () => {
-    expect(formatDate("不明")).toBe("不明");
+  it("すべての票の会派が groups[] にあれば空", () => {
+    expect(unlistedGroups(groups, [{ memberId: "m1", nameText: "一", group: "A", value: "賛成" }])).toEqual([]);
   });
 });

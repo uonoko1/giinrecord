@@ -23,3 +23,22 @@ describe("ビルド成果物はリポジトリに含めない", () => {
     expect(tracked).toBe("");
   });
 });
+
+describe("React Router の生成型 apps/web/.react-router/ はリポジトリに含めない", () => {
+  it("apps/web/.react-router/ は git に無視される", () => {
+    const out = execFileSync("git", ["check-ignore", "-q", "apps/web/.react-router/types/+routes.ts"], {
+      cwd: repoRoot,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    });
+    expect(out).toBe("");
+  });
+
+  it("apps/web/.react-router 配下に追跡中のファイルが無い", () => {
+    const tracked = execFileSync("git", ["ls-files", "apps/web/.react-router"], {
+      cwd: repoRoot,
+      encoding: "utf8",
+    }).trim();
+    expect(tracked).toBe("");
+  });
+});

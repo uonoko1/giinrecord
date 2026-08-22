@@ -22,24 +22,21 @@ export function votesByGroup(votes: readonly Vote[]): Map<string, Vote[]> {
   return map;
 }
 
-/** 日付降順。同日は元の順（index.json は id 昇順で同日採決が並ぶ）。 */
-export function sortByDateDesc<T extends { date: string }>(rows: readonly T[]): T[] {
-  return [...rows].sort((a, b) => b.date.localeCompare(a.date));
+/**
+ * 票には現れるが groups[]（会派別集計）に無い会派名を、票の登場順に重複なく返す。
+ * 呼び出し側はこれらを黙って落とさず、集計なしとして別に表示する。
+ */
+export function unlistedGroups(groups: readonly Group[], votes: readonly Vote[]): string[] {
+  const listed = new Set(groups.map((g) => g.group));
+  return [...new Set(votes.map((v) => v.group))].filter((g) => !listed.has(g));
+}
+
+/** 日付降順。同日は id 降順（新しい採決が上。ETL の byDateDesc・議員 timeline と同じ規則）で安定させる。入力の順に依存しない。 */
+export function sortByDateDesc<T extends { id: string; date: string }>(rows: readonly T[]): T[] {
+  return [...rows].sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id));
 }
 
 /** 登場する回次を重複なく新しい順に。 */
 export function sessionsDesc(rows: readonly { session: number }[]): number[] {
   return [...new Set(rows.map((r) => r.session))].sort((a, b) => b - a);
-}
-
-/** 2026-07-24 → 2026.07.24（文字列操作のみ。タイムゾーン変換はしない） */
-export function formatDate(iso: string): string {
-  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
-  return m ? `${m[1]}.${m[2]}.${m[3]}` : iso;
-}
-
-/** 2026-08-22T06:00:00+09:00 → 2026.08.22 06:00（文字列のまま。タイムゾーン変換はしない） */
-export function formatDateTime(iso: string): string {
-  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(iso);
-  return m ? `${m[1]}.${m[2]}.${m[3]} ${m[4]}:${m[5]}` : formatDate(iso);
 }

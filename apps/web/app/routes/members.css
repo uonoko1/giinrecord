@@ -7,7 +7,7 @@
 .members-selects { display: flex; gap: 10px; }
 .members-count { margin: 0; font-family: var(--font-head); font-size: 15px; font-weight: 700; color: var(--brass); }
 .members-count__of { margin-left: 6px; font-family: var(--font-body); font-size: 12px; font-weight: 400; color: var(--muted); }
-.num { font-variant-numeric: tabular-nums; }
+.members .num { font-variant-numeric: tabular-nums; }
 
 .members-row-group { display: flex; flex-direction: column; }
 .members-row-heading { margin: 14px 0 0; padding-bottom: 4px; border-bottom: 1.5px solid var(--brass); font-family: var(--font-head); font-size: 16px; font-weight: 700; letter-spacing: 0.2em; color: var(--brass); }

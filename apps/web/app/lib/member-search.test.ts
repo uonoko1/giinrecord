@@ -65,6 +65,15 @@ describe("filterMembers", () => {
     expect(filterMembers(members, { query: " 　" })).toHaveLength(members.length);
   });
 
+  it("カタカナ入力はひらがなとして照合する（全角・半角とも）", () => {
+    expect(filterMembers(members, { query: "タロ" }).map((m) => m.name)).toEqual(["山田 太郎"]);
+    expect(filterMembers(members, { query: "ﾌｼﾞｶﾜ" }).map((m) => m.name)).toEqual(["藤川 政人"]);
+  });
+
+  it("全角英数字は半角として照合する（NFKC）", () => {
+    expect(filterMembers([{ ...members[0], name: "A. B" }], { query: "Ａ" })).toHaveLength(1);
+  });
+
   it("会派・選挙区で絞り込める（組み合わせ可）", () => {
     expect(filterMembers(members, { group: "立憲" })).toHaveLength(3);
     expect(filterMembers(members, { district: "比例" })).toHaveLength(5);

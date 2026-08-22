@@ -1,5 +1,6 @@
 import { Link } from "react-router";
-import { type Dataset, dataset as bundled, formatDateTime, formatSessions, REPO_URL } from "../lib/dataset";
+import { type Dataset, dataset as bundled, formatSessions, REPO_URL } from "../lib/dataset";
+import { formatDateTime } from "../lib/format";
 import "../styles/pages.css";
 
 const DESCRIPTION = "国会議員が本会議でどう投票し、どの法案を出し、何を発言したか。公式記録だけを、そのまま並べます。評価はしません。";
