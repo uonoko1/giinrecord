@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { describe, expect, it } from "vitest";
-import About from "./about";
+import About, { meta as routeMeta } from "./about";
 import { dataset } from "../test-fixtures/dataset";
 
 const EVALUATIVE_WORDS = ["おすすめ", "ランキング", "一致率"];
@@ -107,5 +107,26 @@ describe("About", () => {
         expect(container.textContent).not.toContain(word);
       }
     });
+  });
+
+  describe("計測について（#58）", () => {
+    it("見出しがあり、何を記録し何を記録しないかを書く", () => {
+      renderAbout();
+      expect(screen.getByRole("heading", { level: 2, name: "計測について" })).toBeInTheDocument();
+      const text = screen.getByRole("heading", { level: 2, name: "計測について" }).parentElement?.textContent ?? "";
+      expect(text).toContain("Cookie");
+      expect(text).toContain("IP アドレス");
+      expect(text).toMatch(/ページビュー|PV/);
+      expect(text).toContain("リファラ");
+    });
+  });
+});
+
+describe("meta()", () => {
+  it("title・description・canonical を持つ", () => {
+    const tags = routeMeta({ location: { pathname: "/about" } } as unknown as Parameters<typeof routeMeta>[0]);
+    expect(tags).toContainEqual({ title: "このデータについて ・ 政治記録" });
+    expect(tags).toContainEqual({ name: "description", content: expect.any(String) });
+    expect(tags).toContainEqual({ tagName: "link", rel: "canonical", href: "/about" });
   });
 });

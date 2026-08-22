@@ -1,5 +1,6 @@
 import type { Member, MemberDetail, MemberSummary, MemberTerm, RollCall, RollCallSummary, Speech, TimelineEntry, VoteValue } from "@seiji-kiroku/shared";
 import { toSummary } from "./sources/sangiin-members.ts";
+import type { MatchedBill } from "./match-bills.ts";
 
 /** 集約結果（純粋関数の出力）。ファイルへの書き出しは dataset.ts が担う。 */
 export interface Aggregated {
@@ -90,6 +91,7 @@ export function summarizeRollCall(rc: RollCall, decision?: string): RollCallSumm
  * - 並びは日付降順。同日は kind（vote → bill → speech）、次に採決 id / 発言 id の降順で安定させる（差分最小化）。
  * - 議長・大臣など position 付きの発言（議事進行・政府答弁）も事実として timeline に入れ、position を原文のまま載せる。
  *   counts.speeches は役職付きも含めた数（内訳は持たない）。区別は web が position を表示して行う。
+ * - 提出法案（matchBills の出力）は提出日の bill 行になり、sourceUrl は議案ページ。counts.bills はその数。
  */
 export function buildDataset(
   members: readonly Member[],
@@ -97,6 +99,8 @@ export function buildDataset(
   /** 採決 id → 議案情報の審議結果（原文）。無い採決は得票のみの result になる。 */
   decisions: ReadonlyMap<string, string> = new Map(),
   speeches: readonly Speech[] = [],
+  /** 名簿に名寄せ済みの議員立法の関与（参法の発議者）。 */
+  bills: readonly MatchedBill[] = [],
 ): Aggregated {
   const summarize = (rc: RollCall) => summarizeRollCall(rc, decisions.get(rc.id));
   const timelines = new Map<string, TimelineEntry[]>(members.map((m) => [m.id, []]));
@@ -122,19 +126,25 @@ export function buildDataset(
       ...(s.position ? { position: s.position } : {}), sourceUrl: s.sourceUrl,
     });
   }
+  for (const b of bills) {
+    timelineOf(b.memberId, `bill ${b.billId}`).push({
+      kind: "bill", date: b.date, billId: b.billId, title: b.title, role: b.role,
+      ...(b.submitterText ? { submitterText: b.submitterText } : {}), ...(b.status ? { status: b.status } : {}), sourceUrl: b.sourceUrl,
+    });
+  }
   const details = members.map((m): MemberDetail => ({ ...m, timeline: [...timelines.get(m.id)!].sort(byDateDesc) }));
   const index = members.map((m) => {
     const s = toSummary(m);
     const timeline = timelines.get(m.id)!;
     const count = (kind: TimelineEntry["kind"]) => timeline.filter((e) => e.kind === kind).length;
-    return { ...s, counts: { ...s.counts, rollcalls: count("vote"), speeches: count("speech") } };
+    return { ...s, counts: { rollcalls: count("vote"), bills: count("bill"), speeches: count("speech") } };
   });
   return { index, details, rollCalls: rollCalls.map(summarize).sort(byDateDesc) };
 }
 
-type Sortable = { date: string; kind?: TimelineEntry["kind"]; id?: string; rollCallId?: string; speechId?: string };
+type Sortable = { date: string; kind?: TimelineEntry["kind"]; id?: string; rollCallId?: string; speechId?: string; billId?: string };
 const KIND_ORDER: Record<TimelineEntry["kind"], number> = { vote: 0, bill: 1, speech: 2 };
-const sortKey = (x: Sortable) => x.rollCallId ?? x.speechId ?? x.id ?? "";
+const sortKey = (x: Sortable) => x.rollCallId ?? x.speechId ?? x.billId ?? x.id ?? "";
 const byDateDesc = (a: Sortable, b: Sortable) =>
   cmp(b.date, a.date) || KIND_ORDER[a.kind ?? "vote"] - KIND_ORDER[b.kind ?? "vote"] || cmp(sortKey(b), sortKey(a));
 const cmp = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);

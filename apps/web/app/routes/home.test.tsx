@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { describe, expect, it } from "vitest";
-import Home from "./home";
+import Home, { meta as routeMeta } from "./home";
 import { dataset } from "../test-fixtures/dataset";
 
 const EVALUATIVE_WORDS = ["おすすめ", "ランキング", "一致率"];
@@ -91,5 +91,15 @@ describe("Home", () => {
         expect(container.textContent).not.toContain(word);
       }
     });
+  });
+});
+
+describe("meta()", () => {
+  it("title はサイト名、canonical と OGP（website）を持つ", () => {
+    const tags = routeMeta({ location: { pathname: "/" } } as unknown as Parameters<typeof routeMeta>[0]);
+    expect(tags).toContainEqual({ title: "政治記録" });
+    expect(tags).toContainEqual({ tagName: "link", rel: "canonical", href: "/" });
+    expect(tags).toContainEqual({ property: "og:type", content: "website" });
+    expect(tags).toContainEqual({ name: "description", content: expect.stringContaining("評価はしません") });
   });
 });

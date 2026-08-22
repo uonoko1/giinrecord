@@ -46,7 +46,7 @@ describe("MemberPage 時系列", () => {
   it("全行に sourceUrl へのリンク（新規タブ・noopener）がある", () => {
     renderPage();
     const links = within(screen.getByRole("tabpanel")).getAllByRole("link", { name: /参院投票結果|議案情報|会議録/ });
-    expect(links).toHaveLength(6);
+    expect(links).toHaveLength(7);
     for (const a of links) {
       expect(a).toHaveAttribute("target", "_blank");
       expect(a.getAttribute("rel")).toMatch(/noopener/);
@@ -81,6 +81,47 @@ describe("MemberPage 発言行の役職", () => {
   });
 });
 
+describe("MemberPage 提出法案の行", () => {
+  it("提出者の行は「提出」の判、発議者欄の原文（外N名）と審議状況を出す", () => {
+    renderPage();
+    const row = screen.getByText(/国会議員の歳費、旅費及び手当等/).closest("li")!;
+    expect(within(row).getByLabelText("提出")).toBeInTheDocument();
+    expect(within(row).getByText(/提出者/)).toBeInTheDocument();
+    expect(within(row).getByText(/藤川政人君 外3名/)).toBeInTheDocument();
+    expect(within(row).getByText(/審査未了/)).toBeInTheDocument();
+    expect(within(row).getByRole("link", { name: "議案情報" })).toHaveAttribute("href", expect.stringMatching(/kousei\/gian\/217\/meisai\//));
+  });
+  it("賛成者の行は「賛同」の判（提出とは別の文言、同じ act 色）", () => {
+    renderPage();
+    const row = screen.getByText(/国民の祝日に関する法律/).closest("li")!;
+    const stamp = within(row).getByLabelText("賛同");
+    expect(stamp).toHaveAttribute("data-tone", "act");
+    expect(within(row).getByText(/賛成者/)).toBeInTheDocument();
+  });
+  it("表紙の提出法案の数は提出者・賛成者の両方を含む", () => {
+    renderPage();
+    const dt = within(screen.getByRole("banner")).getByText("提出法案");
+    expect(dt.nextElementSibling).toHaveTextContent("2");
+  });
+});
+
+describe("MemberPage 提出法案タブ", () => {
+  it("日付／件名／立場／審議状況／出典の表になる", async () => {
+    renderPage();
+    await userEvent.click(screen.getByRole("tab", { name: "提出法案" }));
+    const table = screen.getByRole("table");
+    expect(within(table).getAllByRole("columnheader").map((th) => th.textContent)).toEqual(["日付", "件名", "立場", "審議状況", "出典"]);
+    const rows = within(table).getAllByRole("row");
+    expect(rows).toHaveLength(3);
+    expect(within(rows[1]).getByLabelText("提出")).toBeInTheDocument();
+    expect(within(rows[1]).getByText(/藤川政人君 外3名/)).toBeInTheDocument();
+    expect(within(rows[1]).getByText("審査未了")).toBeInTheDocument();
+    expect(within(rows[2]).getByLabelText("賛同")).toBeInTheDocument();
+    expect(within(rows[2]).getByText("—")).toBeInTheDocument();
+    expect(screen.queryByLabelText("発言")).not.toBeInTheDocument();
+  });
+});
+
 describe("MemberPage 採決タブ", () => {
   it("本人／会派／結果の表になる", async () => {
     renderPage();
@@ -111,12 +152,24 @@ describe("MemberPage フッター", () => {
 });
 
 describe("meta()", () => {
-  it("title は「{氏名} ・ 政治記録」、description に所属", () => {
-    const tags = routeMeta({ data: { detail, meta } } as Parameters<typeof routeMeta>[0]);
-    expect(tags).toContainEqual({ title: "藤川 政人 ・ 政治記録" });
+  const args = { data: { detail, meta }, location: { pathname: "/members/m_1" } } as unknown as Parameters<typeof routeMeta>[0];
+  it("title は「{氏名}（{院}・{選挙区}）の投票記録 ・ 政治記録」（検索語を含み、評価語なし）", () => {
+    const tags = routeMeta(args);
+    expect(tags).toContainEqual({ title: "藤川 政人（参議院・愛知）の投票記録 ・ 政治記録" });
     expect(tags).toContainEqual({
       name: "description",
       content: expect.stringContaining("自由民主党・無所属の会"),
     });
+  });
+  it("canonical と OGP（article）を持つ", () => {
+    const tags = routeMeta(args);
+    expect(tags).toContainEqual({ tagName: "link", rel: "canonical", href: "/members/m_1" });
+    expect(tags).toContainEqual({ property: "og:type", content: "article" });
+    expect(tags).toContainEqual({ property: "og:url", content: "/members/m_1" });
+  });
+  it("data が無ければサイト名だけ", () => {
+    expect(routeMeta({ data: undefined, location: { pathname: "/members/x" } } as unknown as Parameters<typeof routeMeta>[0])).toEqual([
+      { title: "政治記録" },
+    ]);
   });
 });

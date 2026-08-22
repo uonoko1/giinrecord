@@ -1,11 +1,16 @@
-import { Link } from "react-router";
+import { Link, type MetaArgs } from "react-router";
 import { ARCHIVE_PATH } from "../lib/archive-path";
 import { type Dataset, dataset as bundled, REPO_URL } from "../lib/dataset";
 import { formatDateTime } from "../lib/format";
+import { seoMeta } from "../lib/seo";
 import "../styles/pages.css";
 
-export function meta() {
-  return [{ title: "このデータについて ・ 政治記録" }];
+export function meta({ location }: MetaArgs) {
+  return seoMeta({
+    title: "このデータについて",
+    description: "このサイトが扱う記録の範囲と出典、事実と推定の区別、運営費の方針。参議院・衆議院・国立国会図書館の公式記録だけを使います。",
+    pathname: location.pathname,
+  });
 }
 
 /** デザインキャンバス「このデータについて」の本文をそのまま使う。 */
@@ -154,6 +159,16 @@ export default function About({ data = bundled }: { data?: Dataset }) {
           </a>
         </div>
         <p className="note">将来、政治カテゴリを除外した広告を載せる可能性があります。その際は方針を事前にこのページに書きます。</p>
+      </section>
+
+      <section id="analytics" className="section" aria-labelledby="analytics-heading">
+        <h2 id="analytics-heading" className="section__title">
+          計測について
+        </h2>
+        <p className="body">
+          閲覧数を知るために、サーバーのアクセスログを1日1回集計しています。記録するのは「日付・ページ・リファラ（リンク元のサイト名）・ページビュー数」だけです。Cookie
+          は使わず、計測用のスクリプトも置いていません。IP アドレスとブラウザの種類はログに書かれません。集計結果は公開していません。
+        </p>
       </section>
     </main>
   );
