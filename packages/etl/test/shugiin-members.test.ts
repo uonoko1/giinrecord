@@ -51,9 +51,9 @@ test("当選回数「1（参2）」は衆院の回数 1 を数値に、原文は
   assert.equal(all[0].terms[0].timesElectedText, undefined);
 });
 
-test("氏名に空白の無い「あかま二郎君」はそのまま「あかま二郎」", () => {
+test("かな書きの姓も氏名と同じ正規化（「あかま　二郎君」→「あかま 二郎」）", () => {
   const m = parseShugiinMemberList(page1, SRC, 221).find((x) => x.kana === "あかま じろう");
-  assert.equal(m?.name, "あかま二郎");
+  assert.equal(m?.name, "あかま 二郎");
 });
 
 test("10 ページ合計 465 名（会派別所属議員数 480 − 欠員 15）、ID は全員一意、会派は全員が対応表で正式名称に解決される", () => {

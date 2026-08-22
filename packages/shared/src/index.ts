@@ -44,6 +44,10 @@ export interface MemberTerm {
   to?: string;         // ISO date, undefined = current
   sessionFrom: number; // 国会回次
   sessionTo?: number;
+  /** 当選回数（衆院名簿「当選回数」列。参院名簿には無い）。その院での回数の数値 */
+  timesElected?: number;
+  /** 当選回数欄の原文が数値だけでないとき（例「1（参2）」= 他院での当選を併記）。数値だけなら省略 */
+  timesElectedText?: string;
 }
 
 export type BillKind = "閣法" | "衆法" | "参法" | "予算" | "条約" | "承認" | "決議" | "その他";
