@@ -3,6 +3,7 @@ import type { DatasetMeta, RollCallSummary } from "../lib/data-contract";
 import { defaultDataDir, readMeta, readRollCallIndex } from "../lib/data-files";
 import { formatDate, formatDateTime } from "../lib/format";
 import { sessionsDesc, sortByDateDesc } from "../lib/rollcall";
+import { seoMeta } from "../lib/seo";
 import "./rollcall.css";
 
 /* ---------- data (build time only; ssr:false + prerender) ----------
@@ -25,12 +26,13 @@ function pageTitle(session: number | undefined): string {
   return session === undefined ? "本会議採決" : `第${session}回国会の採決`;
 }
 
-export function meta({ data }: MetaArgs<typeof loader>) {
+export function meta({ data, location }: MetaArgs<typeof loader>) {
   if (!data) return [{ title: "政治記録" }];
-  return [
-    { title: `${pageTitle(data.session)} ・ 政治記録` },
-    { name: "description", content: "参議院本会議の記名投票を日付順に並べます。各採決で全議員の票を会派ごとに見られます。" },
-  ];
+  return seoMeta({
+    title: pageTitle(data.session),
+    description: "参議院本会議の記名投票を日付順に並べます。各採決で全議員の票を会派ごとに見られます。",
+    pathname: location.pathname,
+  });
 }
 
 export default function RollCallsRoute() {

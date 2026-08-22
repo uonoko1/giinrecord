@@ -5,6 +5,7 @@ import type { DatasetMeta, RollCall } from "../lib/data-contract";
 import { defaultDataDir, readMeta, readRollCall } from "../lib/data-files";
 import { formatDate } from "../lib/format";
 import { groupsBySize, unlistedGroups, votesByGroup } from "../lib/rollcall";
+import { seoMeta } from "../lib/seo";
 import "./rollcall.css";
 
 /* ---------- data (build time only; ssr:false + prerender) ----------
@@ -22,16 +23,15 @@ export async function loader({ params }: LoaderFunctionArgs): Promise<RollCallLo
   return { rollCall, meta };
 }
 
-export function meta({ data }: MetaArgs<typeof loader>) {
+export function meta({ data, location }: MetaArgs<typeof loader>) {
   if (!data) return [{ title: "政治記録" }];
   const { rollCall } = data;
-  return [
-    { title: `${rollCall.title} ・ 政治記録` },
-    {
-      name: "description",
-      content: `${formatDate(rollCall.date)} 参議院本会議の記名投票。${tallyText(rollCall)}。全議員の票を会派ごとに、出典付きで並べます。`,
-    },
-  ];
+  return seoMeta({
+    title: rollCall.title,
+    description: `${formatDate(rollCall.date)} 参議院本会議の記名投票。${tallyText(rollCall)}。全議員の票を会派ごとに、出典付きで並べます。`,
+    pathname: location.pathname,
+    type: "article",
+  });
 }
 
 export default function RollCallRoute() {

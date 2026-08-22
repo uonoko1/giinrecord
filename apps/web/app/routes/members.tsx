@@ -1,15 +1,16 @@
 import { useId, useMemo, useState } from "react";
-import { Link } from "react-router";
+import { Link, type MetaArgs } from "react-router";
 import { type Dataset, dataset as bundled, type MemberSummary } from "../lib/dataset";
 import { formatDateTime } from "../lib/format";
 import { filterMembers, formatTermEnd, groupByKanaRow } from "../lib/member-search";
+import { seoMeta } from "../lib/seo";
 import "../styles/pages.css";
 import "./members.css";
 
 const DESCRIPTION = "参議院議員を五十音順に。氏名・ふりがな・会派・選挙区でさがせます。";
 
-export function meta() {
-  return [{ title: "参議院議員一覧 ・ 政治記録" }, { name: "description", content: DESCRIPTION }];
+export function meta({ location }: MetaArgs) {
+  return seoMeta({ title: "参議院議員一覧", description: DESCRIPTION, pathname: location.pathname });
 }
 
 const collator = new Intl.Collator("ja");

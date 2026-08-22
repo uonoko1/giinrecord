@@ -4,7 +4,7 @@ import { MemoryRouter } from "react-router";
 import { describe, expect, it } from "vitest";
 import { dataset } from "../test-fixtures/dataset";
 import { members } from "../test-fixtures/members-index";
-import Members from "./members";
+import Members, { meta as routeMeta } from "./members";
 
 const EVALUATIVE_WORDS = ["おすすめ", "ランキング", "一致率"];
 
@@ -127,5 +127,14 @@ describe("/members", () => {
   it("取得日時をフッターに出す", () => {
     renderMembers();
     expect(screen.getByText(/2026\.08\.22 06:00/)).toBeInTheDocument();
+  });
+});
+
+describe("meta()", () => {
+  it("title・canonical・OGP を持つ", () => {
+    const tags = routeMeta({ location: { pathname: "/members" } } as unknown as Parameters<typeof routeMeta>[0]);
+    expect(tags).toContainEqual({ title: "参議院議員一覧 ・ 政治記録" });
+    expect(tags).toContainEqual({ tagName: "link", rel: "canonical", href: "/members" });
+    expect(tags).toContainEqual({ property: "og:url", content: "/members" });
   });
 });

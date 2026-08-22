@@ -1,13 +1,14 @@
 /**
  * Build smoke test: run after `pnpm build` (cwd: apps/web).
  * Walks build/client, asserts the pages data/ promised exist and every internal
- * href resolves to a file or dir/index.html. Exits non-zero on any failure.
+ * href resolves to a file or dir/index.html, and sitemap.xml lists exactly the built pages.
+ * Exits non-zero on any failure.
  * Usage: pnpm --filter web smoke   (BUILD_DIR / SEIJI_DATA_DIR override the defaults)
  */
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { defaultDataDir, readRollCallIndex } from "../app/lib/data-files";
-import { checkBuild, formatReport, type BuildFiles, type ExpectedData } from "../app/lib/smoke";
+import { checkBuild, checkSitemap, formatReport, type BuildFiles, type ExpectedData } from "../app/lib/smoke";
 
 async function listBuild(root: string): Promise<BuildFiles> {
   const files: BuildFiles = new Map();
@@ -16,7 +17,7 @@ async function listBuild(root: string): Promise<BuildFiles> {
     if (!e.isFile()) continue;
     const abs = path.join(e.parentPath, e.name);
     const rel = path.relative(root, abs).split(path.sep).join("/");
-    files.set(rel, rel.endsWith(".html") ? await readFile(abs, "utf8") : "");
+    files.set(rel, rel.endsWith(".html") || rel === "sitemap.xml" ? await readFile(abs, "utf8") : "");
   }
   return files;
 }
@@ -39,7 +40,10 @@ const buildDir = process.env.BUILD_DIR ?? path.resolve(process.cwd(), "build/cli
 const dataDir = defaultDataDir();
 const files = await listBuild(buildDir);
 const data = await readExpected(dataDir);
-const report = checkBuild(files, data);
+const pages = checkBuild(files, data);
+const sitemap = checkSitemap(files, data);
+const report = { ...pages, failures: [...pages.failures, ...sitemap.failures] };
 console.log(`smoke: build=${buildDir} data=${dataDir} members=${data.memberIds?.length ?? "none"} rollcalls=${data.rollCalls?.length ?? "none"}`);
+console.log(`smoke: sitemap.xml ${sitemap.checkedUrls} urls checked`);
 console.log(formatReport(report));
 process.exit(report.failures.length === 0 ? 0 : 1);
