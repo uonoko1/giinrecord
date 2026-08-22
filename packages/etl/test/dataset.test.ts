@@ -153,7 +153,7 @@ describe("writeDataset / validateDataset: docs/DATA_CONTRACT.md の不変条件"
   });
 
   test("bill 行の sourceUrl が参院 議案ページ（kousei/gian/{回次}/meisai/）でなければ違反", async () => {
-    const bill = (sourceUrl: string) => ({ kind: "bill", date: "2026-07-09", billId: "221-参法-16", title: "法案", role: "提出者", sourceUrl });
+    const bill = (sourceUrl: string) => ({ kind: "bill", date: "2026-07-30", billId: "221-参法-16", title: "法案", role: "提出者", sourceUrl });
     patch<{ timeline: unknown[] }>(dir, "members/m_007006.json", (d) => ({ ...d, timeline: [bill(`${BASE}/221-0605-v001.htm`), ...d.timeline] }));
     patch<{ id: string; counts: { bills: number } }[]>(dir, "members/index.json", (idx) => idx.map((m) => (m.id === "m_007006" ? { ...m, counts: { ...m.counts, bills: 1 } } : m)));
     assert.match((await validateDataset(dir)).join("\n"), /m_007006.*timeline\[0\].*議案/);

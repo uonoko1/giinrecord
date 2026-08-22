@@ -7,6 +7,7 @@ import { fetchSpeeches, speechPageUrl } from "./sources/kokkai-speeches.ts";
 import { matchVotes, type GroupMismatch, type Unmatched } from "./match-votes.ts";
 import { billListUrl, fetchBills, matchBillResults, toBillDecisions, type Bill } from "./sources/sangiin-bills.ts";
 import { matchSpeeches, type UnmatchedSpeech } from "./match-speeches.ts";
+import { matchBills, type UnmatchedBillProposer } from "./match-bills.ts";
 import { buildDataset, mergeRosters, rosterSessionsFor } from "./aggregate.ts";
 import { readSessionsOnDisk, resolveSessions, validateDataset, writeDataset } from "./dataset.ts";
 
@@ -45,7 +46,7 @@ if (groupsUnknown.length) {
 }
 
 const rollCalls: RollCall[] = [];
-const unmatched: (Unmatched | UnmatchedSpeech)[] = [];
+const unmatched: (Unmatched | UnmatchedSpeech | UnmatchedBillProposer)[] = [];
 const groupMismatch: GroupMismatch[] = [];
 for (const session of targets) {
   const list = await listRollCalls(session);
@@ -68,6 +69,10 @@ for (const session of targets) {
 const bills = matchBillResults(rollCalls, toBillDecisions(allBills));
 // 人事案件・決議など議案情報に載らない採決は得票のみの表示になる。件数を出して運用者が確認できるようにする。
 if (bills.unmatched.length) console.warn(`roll calls without bill decision: ${bills.unmatched.length} (see data/unmatched-bills.json)`);
+// 提出法案: 参法の発議者（議案ページに載る筆頭者。「外N名」の氏名は公表されていない）を名簿に名寄せして timeline の bill 行にする（Issue #56）。
+const proposed = matchBills(allBills, members);
+console.log(`bills: ${allBills.filter((b) => b.kind === "参法").length} 参法, ${proposed.entries.length} proposer entries matched`);
+unmatched.push(...proposed.unmatched);
 
 // 発言: 国会会議録API（公開まで約1ヶ月のラグ。meta.sources[].fetchedAt が「いつ時点の会議録か」を示す）。
 const speeches: Speech[] = [];
@@ -95,7 +100,7 @@ if (groupMismatch.length) {
 }
 
 await writeDataset(DATA, {
-  ...buildDataset(members, rollCalls, new Map([...bills.results].map(([id, r]) => [id, r.decision])), speeches),
+  ...buildDataset(members, rollCalls, new Map([...bills.results].map(([id, r]) => [id, r.decision])), speeches, proposed.entries),
   rollCallDetails: rollCalls,
   unmatched,
   unmatchedBills: bills.unmatched,
