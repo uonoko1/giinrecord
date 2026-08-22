@@ -4,8 +4,9 @@
 
 ```
 06:00 JST schedule / workflow_dispatch(sessions)
+  0. docker build           packages/etl/Dockerfile → seiji-kiroku-etl:ci（GHCR に push しない。レイヤーは type=gha キャッシュ）
   1. actions/cache/restore  packages/etl/.cache（key: etl-cache-YYYY-MM-DD、restore-keys で前日以前から復元）
-  2. pnpm etl [sessions]    → data/ を書き、validateDataset が違反を見つけたら非0終了（data/ はコミットされない）
+  2. docker run [sessions]  data/ と packages/etl/.cache を bind mount、runner の uid で実行 → data/ を書き、validateDataset が違反を見つけたら非0終了
   3. actions/cache/save     失敗しても保存（if: always）
   4. data PR                git diff に変更があれば data/refresh に force push → open PR が無ければ作成 → `gh pr merge --auto`
   5. Job summary            結果 / データ PR 番号 / 変更ファイル数 / unmatched・unmatched-bills 件数 / ログの警告行
@@ -27,6 +28,8 @@
 | 症状 | 原因 | 対応 |
 |---|---|---|
 | `Run ETL` で非0終了、`data contract violations` | 上流 HTML の構造変化・表記ゆれで不変条件違反 | data/ は触られない。ログの違反行をもとにパーサー／フィクスチャを修正 |
+| `docker/build-push-action` で失敗 | `pnpm install --frozen-lockfile` が lockfile と不一致、または Docker Hub 障害 | `docker build -f packages/etl/Dockerfile .` を手元で再現。lockfile を更新した PR は必ずイメージもビルドされる（etl.yml は毎回ビルド） |
+| `Run ETL` 後に `git add data` が permission denied | コンテナが runner と別の uid で書いた | `docker run --user "$(id -u):$(id -g)"` が外れていないか確認。`.cache` の mkdir が先に走っているか |
 | `Run ETL` で `HTTP 5xx` / timeout | 参議院・国会会議録の障害 | 翌日の schedule で自動再試行。急ぐなら手動 dispatch（取得済みページはキャッシュから復元される） |
 | データ PR が作られない／Summary で「なし」 | 本当に差分が無い（ETL は `fetchedAt` を meta.json に書くので通常は毎回差分が出る） | `meta.json` まで変わらないなら ETL が data/ を書いていない。ログの `done` を確認 |
 | `test -n "$NUMBER"` で失敗 | `gh pr create` 失敗（label `etl` が無い、権限不足） | 手元で `gh pr list --head data/refresh`。label が無ければ作る |
@@ -43,6 +46,26 @@ gh workflow run etl.yml -f sessions="217 221" # 複数回次
 gh run watch                                   # 進捗
 ```
 ローカルでは `pnpm etl 221` → `git diff --stat data/` で同じものが再現できる。
+
+## コンテナで実行する（#86）
+CI と同じイメージ（`packages/etl/Dockerfile`、node:24-alpine、非 root の `node` ユーザー、secrets なし）をローカルでも使える。
+`data/` と `packages/etl/.cache` は bind mount なので、`pnpm etl` と同じ場所に同じファイルを書く。
+
+```
+# 単体（deploy/docker-compose.etl.yml だけ）
+ETL_UID=$(id -u) ETL_GID=$(id -g) docker compose -f deploy/docker-compose.etl.yml run --rm --build etl 221
+# サイト側の compose（#85）と重ねる場合
+docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.etl.yml run --rm etl 221
+# compose を使わない場合
+docker build -f packages/etl/Dockerfile -t seiji-kiroku-etl .
+docker run --rm --user "$(id -u):$(id -g)" -v "$PWD/data:/app/data" -v "$PWD/packages/etl/.cache:/app/packages/etl/.cache" seiji-kiroku-etl 221
+```
+
+- `ETL_UID`/`ETL_GID` を省くと 1000:1000（イメージ内の `node`）で動く。ホストの uid が 1000 でないなら必ず渡す（root や別 uid のファイルが data/ に残ると `git add` と次の `pnpm etl` で困る）。CI は `--user "$(id -u):$(id -g)"` で runner の uid に合わせている。
+- `.cache` ディレクトリは先に作っておく（`mkdir -p packages/etl/.cache`）。無いと docker が root 所有で作る。
+- イメージには pnpm workspace（`package.json`・lockfile・`packages/etl`・`packages/shared`）しか入らない（`.dockerignore`）。`.env`・`data/`・`.cache` は入らない。ETL は公開サイトしか読まないので secrets は不要。
+- **byte-identical の確認**: `scripts/etl-docker-diff.sh 221` が `pnpm etl 221` → コンテナ実行 の順に走らせ、`data/` のスナップショットを `diff -r` する。`meta.json` の `fetchedAt`（実行時刻）だけは固定値に置換して比べる。`OK: byte-identical` で終了コード 0。回次一覧・名簿・議案・会議録 API は毎回取得するので、2 回の実行の間に上流が更新されれば差分が出る（もう一度流す）。
+- `packages/etl/test/docker-etl.test.ts` が Dockerfile（非 root USER・secrets なし）、`.dockerignore`、compose の mount、etl.yml の `docker run --user … -v …` を回帰テストとして固定している。
 
 ## このワークフローを変えるとき
 - `actionlint` を通す（`curl -sL https://github.com/rhysd/actionlint/releases/download/v1.7.7/actionlint_1.7.7_linux_amd64.tar.gz | tar xz actionlint && ./actionlint .github/workflows/*.yml`）。

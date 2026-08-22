@@ -19,3 +19,14 @@ ssh sakura-vps 'sudo certbot --nginx -d seiji-kiroku.daichisakai.net --redirect'
 GitHub Environment `production` secrets (already set): `DEPLOY_SSH_KEY`, `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_KNOWN_HOSTS`.
 
 To rotate the key: `ssh-keygen -t ed25519 -C "seiji-kiroku github-actions deploy"`, replace the line tagged `seiji-kiroku github-actions` in `~ubuntu/.ssh/authorized_keys`, update `DEPLOY_SSH_KEY`.
+
+## ETL container (`docker-compose.etl.yml`, #86)
+
+The ETL is a separate compose file so that it can be layered on the site compose file (#85) or run alone:
+
+```sh
+docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.etl.yml run --rm etl 221
+ETL_UID=$(id -u) ETL_GID=$(id -g) docker compose -f deploy/docker-compose.etl.yml run --rm --build etl 221
+```
+
+It writes `data/` and `packages/etl/.cache` through bind mounts as the given uid (non-root; `node` = 1000 by default). Details and the byte-identical check (`scripts/etl-docker-diff.sh`) are in `docs/ops/etl.md`. Nothing here needs docker on the VPS: the deploy user `ubuntu` stays without docker privileges.
