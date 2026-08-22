@@ -67,9 +67,9 @@ export function RollCallPage({ rollCall, meta }: { rollCall: RollCall; meta: Dat
       {groups.length === 0 ? (
         <p className="rollcall-empty">個人別の票はありません。</p>
       ) : (
-        groups.map((g) => (
-          <section key={g.group} className="rollcall-group" aria-labelledby={`group-${g.group}`}>
-            <h2 id={`group-${g.group}`} className="rollcall-group-name">
+        groups.map((g, gi) => (
+          <section key={g.group} className="rollcall-group" aria-labelledby={`group-${gi}`}>
+            <h2 id={`group-${gi}`} className="rollcall-group-name">
               {g.group}
             </h2>
             <p className="rollcall-group-tally num">
