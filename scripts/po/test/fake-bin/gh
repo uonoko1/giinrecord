@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Fake `gh` for scripts/po tests. Records every invocation to $FAKE_GH_LOG (one line per call,
+# args separated by a tab) and answers via the `handle` function defined in $FAKE_GH_HANDLER.
+set -euo pipefail
+printf '%s\n' "$(IFS=$'\t'; echo "$*")" >> "$FAKE_GH_LOG"
+# shellcheck source=/dev/null
+source "$FAKE_GH_HANDLER"
+handle "$@"
