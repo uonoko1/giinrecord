@@ -14,6 +14,7 @@ data/
     {session}/{rollCallId}.json     RollCall          採決ページ用（全議員の票）
   unmatched.json                    名寄せできなかった氏名表記の一覧（運用者が確認する）
   unmatched-bills.json              議案情報の審議結果と紐づかなかった採決の一覧（人事案件・決議など。得票のみの result になる）
+  unmatched-groups.json             名簿の会派略称のうち対応表（sangiin-groups.ts）に無いものの一覧（group は原文のまま公開され、運用者が対応表に追記する）
 ```
 
 ## 型（shared に追加する）
@@ -24,17 +25,19 @@ interface MemberDetail extends Member { timeline: TimelineEntry[] }
 type TimelineEntry =
   | { kind: "vote"; date: string; rollCallId: string; title: string; value: VoteValue; result: string; groupValue?: VoteValue; sourceUrl: string }
   | { kind: "bill"; date: string; billId: string; title: string; role: "提出者" | "賛成者"; status?: string; sourceUrl: string }
-  | { kind: "speech"; date: string; speechId: string; meeting: string; excerpt: string; chars: number; sourceUrl: string };
+  | { kind: "speech"; date: string; speechId: string; meeting: string; excerpt: string; chars: number; position?: string; sourceUrl: string };
 interface RollCallSummary { id: string; session: number; date: string; title: string; totals: { total: number; yes: number; no: number }; result: string }
 ```
 
 ## 不変条件
 - `RollCall.votes[].memberId` は `members/index.json` に存在する id、または名寄せ失敗時は `""`（その場合 `unmatched.json` に載る）。
 - `Σ groups[].size === votes.length`（会派人数と個人票の件数は一致する）。
+- `MemberSummary.group` は会派の正式名称（投票結果ページと同じ表記。名簿の略称「自民」「い党」等は ETL が解決する）。解決できなかった略称は原文のまま入り `unmatched-groups.json` に載る。
 - `timeline` は日付降順。
 - どのレコードも `sourceUrl` を持ち、衆参・NDL のドメインを指す。
 - `RollCallSummary.result` / `TimelineEntry(vote).result` は必ず得票「賛成 N・反対 N」を含む。参院 議案情報の審議結果（原文: 可決・否決・同意・是認 など）と紐づいた採決は「可決（賛成 N・反対 N）」の形。可否を多数決から推論しない。
 - 「投票なし」は欠席と棄権を区別しない。区別した表現を作らない。
+- `TimelineEntry(speech).position` は会議録の `speakerPosition` の原文（例: 「議長」「国土交通大臣」「財政金融委員長」）。役職として行った発言（議事進行・政府答弁・委員長報告）も事実として timeline に入れ、`counts.speeches` に含める（内訳は持たない）。Web は `position` をそのまま表示して区別する。
 
 ## 鮮度
 - `meta.fetchedAt` を全ページのフッターに出す。ETL は日次。
