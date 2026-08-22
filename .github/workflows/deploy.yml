@@ -2,6 +2,8 @@ name: Deploy
 on:
   push:
     branches: [main]
+  schedule:
+    - cron: "30 21 * * *"   # 06:30 JST — after the daily ETL; bot auto-merges do not trigger push events
   workflow_dispatch:
 concurrency:
   group: deploy
