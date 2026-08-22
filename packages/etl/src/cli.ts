@@ -2,6 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { listRollCalls, parseRollCall } from "./sources/sangiin-votes.ts";
 import { fetchMembers, memberListUrl, serializeMembersIndex } from "./sources/sangiin-members.ts";
 import { fetchText } from "./fetch.ts";
+import { matchVotes, type Unmatched } from "./match-votes.ts";
 
 /**
  * ETL entry point. S1 scope: House of Councillors members and roll-call votes.
@@ -19,6 +20,7 @@ console.log(`session ${memberSession}: ${members.length} members`);
 await mkdir(new URL("members/", DATA), { recursive: true });
 await writeFile(new URL("members/index.json", DATA), serializeMembersIndex(members));
 
+const unmatched: Unmatched[] = [];
 for (const session of targets) {
   const list = await listRollCalls(session);
   console.log(`session ${session}: ${list.length} roll calls`);
@@ -26,10 +28,14 @@ for (const session of targets) {
   await mkdir(dir, { recursive: true });
   for (const item of list) {
     const html = await fetchText(item.href);
-    const rc = parseRollCall(html, item.href, session);
-    await writeFile(new URL(`${rc.id}.json`, dir), JSON.stringify(rc, null, 1) + "\n");
+    const matched = matchVotes(parseRollCall(html, item.href, session), members);
+    unmatched.push(...matched.unmatched);
+    await writeFile(new URL(`${matched.rollCall.id}.json`, dir), JSON.stringify(matched.rollCall, null, 1) + "\n");
   }
 }
+// 未突合は ETL を止めず、運用者が確認するために列挙する（docs/DATA_CONTRACT.md）。
+await writeFile(new URL("unmatched.json", DATA), JSON.stringify(unmatched, null, 1) + "\n");
+if (unmatched.length) console.warn(`unmatched: ${unmatched.length} (see data/unmatched.json)`);
 await writeFile(new URL("meta.json", DATA), JSON.stringify({
   fetchedAt: new Date().toISOString(),
   sessions: targets,
