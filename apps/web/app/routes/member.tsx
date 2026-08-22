@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { type LoaderFunctionArgs, type MetaArgs, useLoaderData } from "react-router";
-import type { DatasetMeta, MemberDetail, TimelineEntry, VoteEntry } from "../lib/data-contract";
+import type { BillEntry, BillRole, DatasetMeta, MemberDetail, TimelineEntry, VoteEntry } from "../lib/data-contract";
 import { defaultDataDir, readMemberDetail, readMeta } from "../lib/data-files";
 import { formatDate, formatDateTime, formatYearMonth } from "../lib/format";
 import { seoMeta } from "../lib/seo";
@@ -84,6 +84,8 @@ export function MemberPage({ detail, meta }: { detail: MemberDetail; meta: Datas
           <p className="member-empty">記録はありません。</p>
         ) : tab === "vote" ? (
           <VoteTable votes={entries.filter((e): e is VoteEntry => e.kind === "vote")} />
+        ) : tab === "bill" ? (
+          <BillTable bills={entries.filter((e): e is BillEntry => e.kind === "bill")} />
         ) : (
           <Timeline entries={entries} />
         )}
@@ -215,13 +217,14 @@ function Row({ entry }: { entry: TimelineEntry }) {
         </li>
       );
     case "bill":
+      /* 発議者（提出者）は「提出」、賛成者は「賛同」の判。submitterText は議案ページの原文（「○○君 外N名」。外N名の氏名は公表されていない）。 */
       return (
         <li className="member-row">
-          <Stamp value="提出" />
+          <Stamp value={BILL_STAMP[entry.role]} />
           <div className="member-row-body">
             <p className="member-row-title">{entry.title}</p>
             <p className="member-row-meta">
-              <MetaLine parts={[entry.role, entry.status]} />
+              <MetaLine parts={[entry.role, entry.submitterText, entry.status]} />
               <ExternalLink href={entry.sourceUrl}>議案情報</ExternalLink>
             </p>
           </div>
@@ -292,14 +295,56 @@ function VoteTable({ votes }: { votes: VoteEntry[] }) {
   );
 }
 
+/* ---------- 提出法案 table ---------- */
+
+/** 役割ごとの判の文言。色はどちらも act（行為の記録）。賛成者を提出者より軽く見せる色分けはしない。 */
+const BILL_STAMP: Record<BillRole, "提出" | "賛同"> = { 提出者: "提出", 賛成者: "賛同" };
+
+function BillTable({ bills }: { bills: BillEntry[] }) {
+  return (
+    <div className="member-table-wrap">
+      <table className="member-table">
+        <thead>
+          <tr>
+            <th scope="col">日付</th>
+            <th scope="col">件名</th>
+            <th scope="col">立場</th>
+            <th scope="col">審議状況</th>
+            <th scope="col">出典</th>
+          </tr>
+        </thead>
+        <tbody>
+          {bills.map((b) => (
+            <tr key={`${b.billId}:${b.role}`}>
+              <td className="num">
+                <time dateTime={b.date}>{formatDate(b.date)}</time>
+              </td>
+              <td>{b.title}</td>
+              <td>
+                <Stamp value={BILL_STAMP[b.role]} />
+                {b.submitterText && <span className="member-note">{b.submitterText}</span>}
+              </td>
+              <td>{b.status ?? "—"}</td>
+              <td>
+                <ExternalLink href={b.sourceUrl}>議案情報</ExternalLink>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 /* ---------- primitives (to be replaced by app/components from #5) ---------- */
 
-type StampValue = "賛成" | "反対" | "投票なし" | "提出" | "発言";
+type StampValue = "賛成" | "反対" | "投票なし" | "提出" | "賛同" | "発言";
 const STAMP_TONE: Record<StampValue, "yes" | "no" | "none" | "act"> = {
   賛成: "yes",
   反対: "no",
   投票なし: "none",
   提出: "act",
+  賛同: "act",
   発言: "act",
 };
 
