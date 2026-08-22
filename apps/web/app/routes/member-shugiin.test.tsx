@@ -71,6 +71,26 @@ describe("衆院議員ページ 会派の態度（推定）", () => {
     expect(within(panel).getAllByRole("listitem")).toHaveLength(2);
     expect(within(panel).getByText(/会派の態度であり、本人の投票ではありません/)).toBeInTheDocument();
   });
+  it("会派の態度タブは 20 件で折りたたみ、「さらに表示」で残りを出す（#88）", async () => {
+    const base = detail.timeline.find((e): e is Extract<typeof e, { kind: "stance" }> => e.kind === "stance")!;
+    const many: MemberDetail = {
+      ...detail,
+      timeline: Array.from({ length: 25 }, (_, i) => ({ ...base, billId: `221-閣法-${i + 1}`, title: `法案 ${i + 1}`, date: `2026-01-${String(25 - i).padStart(2, "0")}` })),
+    };
+    render(<MemberPage detail={many} meta={meta} />);
+    await userEvent.click(screen.getByRole("tab", { name: "会派の態度" }));
+    const panel = screen.getByRole("tabpanel");
+    expect(within(panel).getAllByRole("listitem")).toHaveLength(20);
+    const more = within(panel).getByRole("button", { name: "さらに表示（残り5件）" });
+    await userEvent.click(more);
+    expect(within(panel).getAllByRole("listitem")).toHaveLength(25);
+    expect(within(panel).queryByRole("button", { name: /さらに表示/ })).not.toBeInTheDocument();
+  });
+  it("会派の態度が 20 件以下なら「さらに表示」は出ない", async () => {
+    renderPage();
+    await userEvent.click(screen.getByRole("tab", { name: "会派の態度" }));
+    expect(screen.queryByRole("button", { name: /さらに表示/ })).not.toBeInTheDocument();
+  });
   it("提出法案タブは 提出者・賛成者 の行を出す", async () => {
     renderPage();
     await userEvent.click(screen.getByRole("tab", { name: "提出法案" }));

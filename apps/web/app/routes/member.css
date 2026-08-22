@@ -50,6 +50,10 @@
 /* 衆院: 個人投票が無い旨の注記（表紙直下） */
 .member-notice { margin: 14px 20px 0; padding: 10px 12px; font-size: 13px; line-height: 1.6; color: var(--ink); border: 1px dashed var(--est-line); background: var(--est-bg); }
 .member-tab-note { padding: 12px 20px 0; font-size: 12px; color: var(--muted); }
+/* 会派の態度の折りたたみ（20 件ごえ）: 「さらに表示」は評価語を含まないただのボタン */
+.member-more { padding: 12px 20px 20px; text-align: center; }
+.member-more-button { padding: 8px 16px; background: none; border: 1px solid var(--rule); font: inherit; font-size: 13px; color: var(--ink); cursor: pointer; }
+.member-more-button:hover { border-color: var(--brass); color: var(--brass); }
 
 /* 採決表 */
 .member-table-wrap { overflow-x: auto; padding: 12px 20px 0; }

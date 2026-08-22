@@ -9,7 +9,14 @@ describe("FactsSection", () => {
     expect(screen.getAllByText("事実")).toHaveLength(2);
     expect(screen.getAllByText("推定")).toHaveLength(1);
     expect(screen.getByText("参議院の記名・押しボタン投票")).toBeInTheDocument();
-    expect(screen.getByText("衆議院の賛否（準備中）")).toBeInTheDocument();
+    expect(screen.getByText("衆議院の賛否")).toBeInTheDocument();
+  });
+
+  it("推定カードは衆院公開後の文言（準備中と言わず、会派の態度（推定）として表示すると書く）", () => {
+    render(<FactsSection />);
+    expect(screen.queryByText(/準備中/)).not.toBeInTheDocument();
+    expect(screen.getByText(/所属会派の態度を「会派の態度（推定）」として表示し/)).toBeInTheDocument();
+    expect(screen.getByText(/個人の賛否とは断定しません/)).toBeInTheDocument();
   });
 
   it("事実と推定でタグのクラスが異なる（色の意味は良し悪しではない）", () => {
