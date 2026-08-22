@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 # Tests for scripts/po/board-set.sh (sourced by run.sh)
 
 t_board_usage() {
@@ -16,12 +17,12 @@ EOF
 }
 test_case "board: usage errors before any gh call" t_board_usage
 
-# The lookup returns "<issue node id> <project item id or empty>"; see board-set.sh
+# Fixtures mirror the GraphQL shapes board-set.sh queries; an item on another project must be ignored.
 t_board_updates_existing_item() {
   local h; h=$(handler <<'EOF'
 handle() {
   case "$*" in
-    *projectItems*) echo "I_kwDOissue70 PVTI_item70" ;;
+    *projectItems*) echo '{"data":{"repository":{"issue":{"id":"I_kwDOissue70","projectItems":{"nodes":[{"id":"PVTI_item70","project":{"id":"PVT_kwHOBy0CLs4BhHqj"}},{"id":"PVTI_other","project":{"id":"PVT_other"}}]}}}}}' ;;
     *updateProjectV2ItemFieldValue*) echo '{"data":{"updateProjectV2ItemFieldValue":{"projectV2Item":{"id":"PVTI_item70"}}}}' ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
@@ -45,8 +46,8 @@ t_board_adds_missing_item() {
   local h; h=$(handler <<'EOF'
 handle() {
   case "$*" in
-    *projectItems*) echo "I_kwDOissue71 " ;;
-    *addProjectV2ItemById*) echo "PVTI_new71" ;;
+    *projectItems*) echo '{"data":{"repository":{"issue":{"id":"I_kwDOissue71","projectItems":{"nodes":[{"id":"PVTI_other","project":{"id":"PVT_other"}}]}}}}}' ;;
+    *addProjectV2ItemById*) echo '{"data":{"addProjectV2ItemById":{"item":{"id":"PVTI_new71"}}}}' ;;
     *updateProjectV2ItemFieldValue*) echo '{}' ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
@@ -67,7 +68,7 @@ t_board_option_ids() {
   local h; h=$(handler <<'EOF'
 handle() {
   case "$*" in
-    *projectItems*) echo "I_1 PVTI_1" ;;
+    *projectItems*) echo '{"data":{"repository":{"issue":{"id":"I_1","projectItems":{"nodes":[{"id":"PVTI_1","project":{"id":"PVT_kwHOBy0CLs4BhHqj"}},{"id":"PVTI_other","project":{"id":"PVT_other"}}]}}}}}' ;;
     *updateProjectV2ItemFieldValue*) echo '{}' ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac

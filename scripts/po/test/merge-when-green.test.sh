@@ -1,7 +1,5 @@
+# shellcheck shell=bash
 # Tests for scripts/po/merge-when-green.sh (sourced by run.sh)
-
-# Handler pieces shared by several cases. `$*` is the whole gh argument line.
-PR_VIEW_OPEN='{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"https://github.com/uonoko1/seiji-kiroku/pull/12"}'
 
 t_merge_rejects_non_numeric() {
   local h; h=$(handler <<'EOF'
@@ -63,7 +61,7 @@ EOF
 )
   run_script "$h" merge-when-green.sh 12
   assert_eq 0 "$STATUS" "exit status: $ERR"
-  assert_contains "$LOG" "pr merge	12	--squash	--delete-branch" "squash merge with branch deletion"
+  assert_contains "$LOG" "pr	merge	12	--squash	--delete-branch" "squash merge with branch deletion"
   assert_not_contains "$LOG" "update-branch" "no update-branch when not BEHIND"
   assert_not_contains "$LOG" "action_required" "no approval lookup for non-data branch"
 }
@@ -155,7 +153,7 @@ handle() {
     "pr view 33 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"data/refresh","mergeStateStatus":"BLOCKED","url":"u"}' ;;
     "pr checks 33 --json"*)
       if [ "$(bump)" -lt 2 ]; then echo '[]'; exit 1; else echo '[{"name":"check","bucket":"pass"}]'; fi ;;
-    "api repos/uonoko1/seiji-kiroku/actions/runs?branch=data/refresh&status=action_required"*) printf '101\n102\n' ;;
+    "api repos/uonoko1/seiji-kiroku/actions/runs?branch=data/refresh&status=action_required"*) echo '{"workflow_runs":[{"id":101},{"id":102}]}' ;;
     "api -X POST repos/uonoko1/seiji-kiroku/actions/runs/101/approve") echo ok ;;
     "api -X POST repos/uonoko1/seiji-kiroku/actions/runs/102/approve") echo "forbidden" >&2; exit 1 ;;
     "pr merge 33 --squash --delete-branch") echo merged ;;

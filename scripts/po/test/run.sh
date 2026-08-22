@@ -11,6 +11,7 @@ PASS=0; FAIL=0; FAILED=()
 
 # ---- harness -------------------------------------------------------------------------------
 TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
+# shellcheck disable=SC2034  # read by the sourced *.test.sh files
 STATUS=0; OUT=""; ERR=""; LOG=""
 
 # run_script <handler-file> <script> [args...]  → sets STATUS, OUT, ERR, LOG
@@ -22,9 +23,15 @@ run_script() {
   PATH="$HERE/fake-bin:$PATH" FAKE_GH_LOG="$TMP/gh.log" FAKE_GH_HANDLER="$handler" FAKE_COUNTER="$TMP/counter" \
     POLL_INTERVAL=0 POLL_MAX=5 PO_REPO=uonoko1/seiji-kiroku \
     bash "$PO_DIR/$script" "$@" > "$TMP/out" 2> "$TMP/err"
+  # shellcheck disable=SC2034
   STATUS=$?
   set -e
-  OUT=$(cat "$TMP/out"); ERR=$(cat "$TMP/err"); LOG=$(cat "$TMP/gh.log")
+  # shellcheck disable=SC2034
+  OUT=$(cat "$TMP/out")
+  # shellcheck disable=SC2034
+  ERR=$(cat "$TMP/err")
+  # shellcheck disable=SC2034
+  LOG=$(cat "$TMP/gh.log")
 }
 
 # handler <<'EOF' ... EOF → writes a handler file defining `handle`, echoes its path

@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 # Tests for scripts/po/etl-verify.sh (sourced by run.sh)
 
 # The script asks for one run per workflow and the latest data/refresh PR, then prints facts.
@@ -52,6 +53,25 @@ t_etl_deploy_failed() {
   assert_contains "$OUT" "failure" "deploy failure shown"
 }
 test_case "etl-verify: failed Deploy → exit 1" t_etl_deploy_failed
+
+t_etl_in_progress() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "run list --workflow etl.yml"*) echo '[{"status":"in_progress","conclusion":"","createdAt":"2026-08-23T21:00:00Z","url":"https://x/runs/1"}]' ;;
+    "pr list --head data/refresh"*) echo '[{"number":75,"state":"OPEN","mergedAt":null,"url":"https://x/pull/75"}]' ;;
+    "run list --workflow deploy.yml"*) echo '[{"status":"completed","conclusion":"success","createdAt":"2026-08-22T15:46:10Z","url":"https://x/runs/2"}]' ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" etl-verify.sh
+  assert_eq 1 "$STATUS" "exit status"
+  assert_contains "$OUT" "ETL        in_progress  2026-08-23T21:00:00Z  https://x/runs/1" "null conclusion does not shift columns"
+  assert_contains "$OUT" "data PR    #75  OPEN  -  https://x/pull/75" "null mergedAt does not shift columns"
+}
+test_case "etl-verify: in_progress run / unmerged PR keep their columns (null fields)" t_etl_in_progress
 
 t_etl_no_runs() {
   local h; h=$(handler <<'EOF'

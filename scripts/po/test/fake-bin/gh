@@ -1,8 +1,26 @@
 #!/usr/bin/env bash
 # Fake `gh` for scripts/po tests. Records every invocation to $FAKE_GH_LOG (one line per call,
 # args separated by a tab) and answers via the `handle` function defined in $FAKE_GH_HANDLER.
+# Handlers return what the real API would (JSON); a `-q/--jq <expr>` argument is applied with
+# the real `jq -r`, as `gh` does, so scripts and tests agree on one contract.
 set -euo pipefail
-printf '%s\n' "$(IFS=$'\t'; echo "$*")" >> "$FAKE_GH_LOG"
+line=$(IFS=$'\t'; echo "$*")
+printf '%s\n' "${line//$'\n'/ }" >> "$FAKE_GH_LOG"   # multi-line args (GraphQL) stay on one log line
 # shellcheck source=/dev/null
 source "$FAKE_GH_HANDLER"
-handle "$@"
+
+JQ=""
+prev=""
+for a in "$@"; do
+  if [[ "$prev" == "-q" || "$prev" == "--jq" ]]; then JQ=$a; fi
+  prev=$a
+done
+
+if [[ -z "$JQ" ]]; then handle "$@"; exit $?; fi
+
+set +e
+out=$(handle "$@")
+rc=$?
+set -e
+[[ -n "$out" ]] && jq -r "$JQ" <<<"$out"
+exit "$rc"
