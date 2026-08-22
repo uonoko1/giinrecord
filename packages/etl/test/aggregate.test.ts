@@ -136,9 +136,9 @@ describe("buildDataset: speech を timeline に入れる", () => {
     });
   });
 
-  test("vote と speech が混ざっても timeline は日付降順（不変条件）", () => {
+  test("vote と speech が混ざっても timeline は日付降順（不変条件）。同日は vote → speech の順", () => {
     const m1 = ds.details.find((d) => d.id === "m_1")!;
-    assert.deepEqual(m1.timeline.map((e) => [e.kind, e.date]), [["speech", "2026-06-10"], ["speech", "2026-06-05"], ["vote", "2026-06-05"]]);
+    assert.deepEqual(m1.timeline.map((e) => [e.kind, e.date]), [["speech", "2026-06-10"], ["vote", "2026-06-05"], ["speech", "2026-06-05"]]);
   });
 
   test("memberId の無い発言（名簿にいない大臣など）は timeline に入れない", () => {

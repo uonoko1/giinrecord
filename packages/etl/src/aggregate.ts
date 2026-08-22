@@ -1,4 +1,4 @@
-import type { Member, MemberDetail, MemberSummary, RollCall, RollCallSummary, VoteEntry, VoteValue } from "@seiji-kiroku/shared";
+import type { Member, MemberDetail, MemberSummary, RollCall, RollCallSummary, Speech, TimelineEntry, VoteValue } from "@seiji-kiroku/shared";
 import { toSummary } from "./sources/sangiin-members.ts";
 
 /** 集約結果（純粋関数の出力）。ファイルへの書き出しは dataset.ts が担う。 */
@@ -30,33 +30,48 @@ export function summarizeRollCall(rc: RollCall): RollCallSummary {
 }
 
 /**
- * 名簿と突合済みの採決から、議員ごとの timeline と一覧を組み立てる。
- * - memberId が空（未突合）の票は unmatched.json 側で扱うので timeline には入れない。
+ * 名簿と突合済みの採決・発言から、議員ごとの timeline と一覧を組み立てる。
+ * - memberId が空（未突合）の票・memberId の無い発言は unmatched.json 側で扱うので timeline には入れない。
  * - 名簿にない memberId は名寄せの不整合なので例外にする（黙って捨てない）。
- * - 並びは日付降順、同日は採決 id 降順で安定させる（差分最小化）。
+ * - 並びは日付降順。同日は kind（vote → bill → speech）、次に採決 id / 発言 id の降順で安定させる（差分最小化）。
+ * - 発言は議長・大臣としてのものも事実として入れる（position は Speech にあるが TimelineEntry には無い）。
  */
-export function buildDataset(members: readonly Member[], rollCalls: readonly RollCall[]): Aggregated {
-  const timelines = new Map<string, VoteEntry[]>(members.map((m) => [m.id, []]));
+export function buildDataset(members: readonly Member[], rollCalls: readonly RollCall[], speeches: readonly Speech[] = []): Aggregated {
+  const timelines = new Map<string, TimelineEntry[]>(members.map((m) => [m.id, []]));
+  const timelineOf = (memberId: string, what: string): TimelineEntry[] => {
+    const timeline = timelines.get(memberId);
+    if (!timeline) throw new Error(`${what} refers to unknown memberId ${memberId}`);
+    return timeline;
+  };
   for (const rc of rollCalls) {
     for (const v of rc.votes) {
       if (v.memberId === "") continue;
-      const timeline = timelines.get(v.memberId);
-      if (!timeline) throw new Error(`vote in ${rc.id} refers to unknown memberId ${v.memberId} ("${v.nameText}")`);
       const groupValue = groupMajority(rc, v.group);
-      timeline.push({
+      timelineOf(v.memberId, `vote in ${rc.id} ("${v.nameText}")`).push({
         kind: "vote", date: rc.date, rollCallId: rc.id, title: rc.title, value: v.value,
         result: summarizeRollCall(rc).result, ...(groupValue ? { groupValue } : {}), sourceUrl: rc.sourceUrl,
       });
     }
   }
+  for (const s of speeches) {
+    if (!s.memberId) continue;
+    timelineOf(s.memberId, `speech ${s.id} ("${s.speakerText}")`).push({
+      kind: "speech", date: s.date, speechId: s.id, meeting: s.meeting, excerpt: s.excerpt, chars: s.chars, sourceUrl: s.sourceUrl,
+    });
+  }
   const details = members.map((m): MemberDetail => ({ ...m, timeline: [...timelines.get(m.id)!].sort(byDateDesc) }));
   const index = members.map((m) => {
     const s = toSummary(m);
-    return { ...s, counts: { ...s.counts, rollcalls: timelines.get(m.id)!.length } };
+    const timeline = timelines.get(m.id)!;
+    const count = (kind: TimelineEntry["kind"]) => timeline.filter((e) => e.kind === kind).length;
+    return { ...s, counts: { ...s.counts, rollcalls: count("vote"), speeches: count("speech") } };
   });
   return { index, details, rollCalls: rollCalls.map(summarizeRollCall).sort(byDateDesc) };
 }
 
-const byDateDesc = (a: { date: string; id?: string; rollCallId?: string }, b: { date: string; id?: string; rollCallId?: string }) =>
-  cmp(b.date, a.date) || cmp(b.rollCallId ?? b.id ?? "", a.rollCallId ?? a.id ?? "");
+type Sortable = { date: string; kind?: TimelineEntry["kind"]; id?: string; rollCallId?: string; speechId?: string };
+const KIND_ORDER: Record<TimelineEntry["kind"], number> = { vote: 0, bill: 1, speech: 2 };
+const sortKey = (x: Sortable) => x.rollCallId ?? x.speechId ?? x.id ?? "";
+const byDateDesc = (a: Sortable, b: Sortable) =>
+  cmp(b.date, a.date) || KIND_ORDER[a.kind ?? "vote"] - KIND_ORDER[b.kind ?? "vote"] || cmp(sortKey(b), sortKey(a));
 const cmp = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);

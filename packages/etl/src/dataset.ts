@@ -5,11 +5,13 @@ import type { DatasetMeta, MemberDetail, MemberSummary, RollCall, RollCallSummar
 import type { Aggregated } from "./aggregate.ts";
 import { stableJson } from "./json.ts";
 import type { Unmatched } from "./match-votes.ts";
+import type { UnmatchedSpeech } from "./match-speeches.ts";
 
 /** `data/` に書く一式（docs/DATA_CONTRACT.md）。 */
 export interface Dataset extends Aggregated {
   rollCallDetails: RollCall[];
-  unmatched: Unmatched[];
+  /** 名寄せできなかった票（rollCallId）と発言（speechId）。 */
+  unmatched: (Unmatched | UnmatchedSpeech)[];
   meta: DatasetMeta;
 }
 
@@ -70,9 +72,11 @@ export async function validateDataset(dir: string): Promise<string[]> {
     if (d.id !== m.id) v.push(`${rel}: id ${d.id} !== ${m.id}`);
     checkSource(rel, d);
     let votes = 0;
+    let speeches = 0;
     for (let i = 0; i < d.timeline.length; i++) {
       const e = d.timeline[i];
       checkSource(rel, e, ` timeline[${i}]`);
+      if (e.kind === "speech") speeches++;
       if (e.kind === "vote") {
         votes++;
         if (!VOTE_VALUES.has(e.value)) v.push(`${rel} timeline[${i}]: vote value must be 賛成/反対/投票なし, got ${e.value}`);
@@ -81,10 +85,11 @@ export async function validateDataset(dir: string): Promise<string[]> {
     }
     voteCounts.set(m.id, votes);
     if (m.counts.rollcalls !== votes) v.push(`members/index.json ${m.id}: counts.rollcalls ${m.counts.rollcalls} !== timeline votes ${votes}`);
+    if (m.counts.speeches !== speeches) v.push(`members/index.json ${m.id}: counts.speeches ${m.counts.speeches} !== timeline speeches ${speeches}`);
   }
 
-  const unmatched = (await read<Unmatched[]>("unmatched.json")) ?? [];
-  const unmatchedKeys = new Set(unmatched.map((u) => `${u.rollCallId}\t${u.nameText}`));
+  const unmatched = (await read<Dataset["unmatched"]>("unmatched.json")) ?? [];
+  const unmatchedKeys = new Set(unmatched.map((u) => ("rollCallId" in u ? `${u.rollCallId}\t${u.nameText}` : "")));
   const summaries = (await read<RollCallSummary[]>("rollcalls/index.json")) ?? [];
   let matchedVotes = 0;
   for (let i = 0; i < summaries.length; i++) {
