@@ -123,11 +123,11 @@ jobs:
               CLOSED) echo "PR #$PR はマージされずに閉じられた" >> "$GITHUB_STEP_SUMMARY"; exit 1 ;;
             esac
             # main が進んで BEHIND になっていたら追従させる（strict status checks のため auto-merge が止まる）
-  if [ "$(gh pr view "$PR" --json mergeStateStatus -q .mergeStateStatus)" = "BEHIND" ]; then
-    echo "PR #$PR is BEHIND main; updating branch"
-    gh pr update-branch "$PR" || true
-  fi
-  # 承認待ち（action_required）の CI run があれば承認する
+            if [ "$(gh pr view "$PR" --json mergeStateStatus -q .mergeStateStatus)" = "BEHIND" ]; then
+              echo "PR #$PR is BEHIND main; updating branch"
+              gh pr update-branch "$PR" || true
+            fi
+            # 承認待ち（action_required）の CI run があれば承認する
             for RUN in $(gh api "repos/$GITHUB_REPOSITORY/actions/runs?branch=$DATA_BRANCH&status=action_required" -q '.workflow_runs[].id'); do
               echo "approving run $RUN"
               gh api -X POST "repos/$GITHUB_REPOSITORY/actions/runs/$RUN/approve" || true
