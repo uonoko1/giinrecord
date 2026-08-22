@@ -44,9 +44,17 @@ export function parseMemberList(html: string, sourceUrl: string, session: number
       sourceUrl,
     });
   }
-  const dup = out.map((m) => m.id).find((id, i, a) => a.indexOf(id) !== i);
-  if (dup) throw new Error(`duplicate member id: ${dup}`);
+  assertUniqueIds(out);
   return out;
+}
+
+/** 永続IDの衝突（下6桁が同じプロフィールID）を黙って通さない。 */
+function assertUniqueIds(members: Member[]): void {
+  const seen = new Set<string>();
+  for (const { id } of members) {
+    if (seen.has(id)) throw new Error(`duplicate member id: ${id}`);
+    seen.add(id);
+  }
 }
 
 export function toSummary(m: Member): MemberSummary {
