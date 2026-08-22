@@ -16,10 +16,19 @@ const res = (over: Partial<ServedResponse> = {}): ServedResponse => ({
 });
 
 describe("urlSmokeTargets", () => {
+  it("assets も data も無ければ null（チェックをスキップ）", () => {
+    const t = urlSmokeTargets(["index.html"], []);
+    expect(t.asset).toBeNull();
+    expect(t.data).toBeNull();
+  });
   it("必須ページ・未知パス・assets・data を、ページ一覧から組み立てる", () => {
-    const t = urlSmokeTargets(["index.html", "about/index.html", "members/m_1/index.html"], ["assets/entry-abc.js"]);
+    const t = urlSmokeTargets(
+      ["index.html", "about/index.html", "members/m_1/index.html"],
+      ["robots.txt", "assets/entry-abc.js", "data/data-archive.zip"],
+    );
     expect(t.pages).toEqual(["/", "/about/", "/members/m_1/"]);
     expect(t.asset).toBe("/assets/entry-abc.js");
+    expect(t.data).toBe("/data/data-archive.zip");
     expect(t.unknown).toBe("/__smoke-no-such-page__/");
   });
 });

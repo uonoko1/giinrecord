@@ -21,6 +21,8 @@ const siteConf = read("deploy/nginx/site.conf");
 const hostProxy = read("deploy/nginx-host-proxy.conf");
 const compose = read("deploy/docker-compose.yml");
 const setup = uncommented(read("deploy/vps-setup.sh"));
+/** heredoc 本文（nginx 設定・案内メッセージ）を除いた、実際に実行されるシェル行 */
+const setupCode = setup.replace(/<<'?(\w+)'?\n[\s\S]*?\n\1\n/g, "");
 const ci = read(".github/workflows/ci.yml");
 
 /** 旧 deploy/nginx-seiji-kiroku.conf の add_header 行（順序・値とも同一であること） */
@@ -74,16 +76,16 @@ test("docker-compose: 本番は /var/www/seiji-kiroku/site（rsync 先は不変�
   assert.match(compose, /\$\{SITE_DIR:-\/var\/www\/seiji-kiroku\/site\}/);
 });
 
-test("vps-setup.sh: 何もインストールしない（docker も apt も）。ubuntu に docker 権限を与えない", () => {
-  assert.doesNotMatch(setup, /apt-get|apt |curl .*get\.docker|snap install/);
-  assert.doesNotMatch(setup, /usermod|gpasswd|docker group/);
-  assert.doesNotMatch(setup, /docker (compose )?(up|run|pull|start)/);
+test("vps-setup.sh: 何もインストールせず docker を実行もしない。ubuntu に docker 権限を与えない", () => {
+  assert.doesNotMatch(setupCode, /apt-get|apt |curl |snap install|get\.docker/);
+  assert.doesNotMatch(setupCode, /usermod|gpasswd/);
+  assert.doesNotMatch(setupCode, /docker/);
 });
 
 test("vps-setup.sh: ホスト proxy の server block を書き、web root を作り、docker compose の手順を表示する", () => {
   assert.match(setup, /proxy_pass http:\/\/127\.0\.0\.1:8080;/);
   assert.match(setup, /\/var\/www\/seiji-kiroku\/site/);
-  assert.match(setup, /echo .*docker compose/);
+  assert.match(setup, /docker compose -f .*docker-compose\.yml up -d/);
   assert.doesNotMatch(setup, /^\s*root \/var\/www/m, "host nginx must not serve the files directly");
 });
 
