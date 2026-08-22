@@ -27,9 +27,10 @@ async function readJson<T>(file: string): Promise<T | null> {
 
 const SAFE_ID = /^[A-Za-z0-9_-]+$/;
 
+/** プリレンダー対象: 一覧 `/members`（データが無くても存在する）と、index.json の全議員ページ。 */
 export async function memberPaths(dataDir: string): Promise<string[]> {
   const index = await readJson<MemberSummary[]>(path.join(dataDir, "members", "index.json"));
-  return (index ?? []).map((m) => `/members/${m.id}`);
+  return ["/members", ...(index ?? []).map((m) => `/members/${m.id}`)];
 }
 
 export async function readMemberDetail(dataDir: string, id: string): Promise<MemberDetail | null> {
