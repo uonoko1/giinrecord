@@ -1,0 +1,39 @@
+{
+ "house": "shugiin",
+ "id": "219-閣法-4",
+ "kind": "閣法",
+ "number": 4,
+ "received": {
+  "sangiin": "2025-11-27",
+  "shugiin": "2025-11-11"
+ },
+ "result": {
+  "lawNumber": "86",
+  "promulgated": "2025-12-12",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 219,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "全会一致",
+  "unanimous": true,
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主党・無所属",
+   "日本維新の会",
+   "国民民主党・無所属クラブ",
+   "公明党",
+   "れいわ新選組",
+   "日本共産党",
+   "有志の会",
+   "参政党",
+   "改革の会",
+   "減税保守こども"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0642.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "気象業務法及び水防法の一部を改正する法律案"
+}

@@ -1,0 +1,4061 @@
+[
+ {
+  "house": "shugiin",
+  "id": "221-予算-1",
+  "kind": "予算",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE14C2.htm",
+  "status": "成立",
+  "title": "令和八年度一般会計予算"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-予算-2",
+  "kind": "予算",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE14C6.htm",
+  "status": "成立",
+  "title": "令和八年度特別会計予算"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-予算-3",
+  "kind": "予算",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE14CA.htm",
+  "status": "成立",
+  "title": "令和八年度政府関係機関予算"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-予算-4",
+  "kind": "予算",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE23D6.htm",
+  "status": "成立",
+  "title": "令和八年度一般会計暫定予算"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-予算-5",
+  "kind": "予算",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE23DA.htm",
+  "status": "成立",
+  "title": "令和八年度特別会計暫定予算"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-予算-6",
+  "kind": "予算",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE23DE.htm",
+  "status": "成立",
+  "title": "令和八年度政府関係機関暫定予算"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-予算-7",
+  "kind": "予算",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE28CE.htm",
+  "status": "成立",
+  "title": "令和八年度一般会計補正予算（第１号）"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-予算-8",
+  "kind": "予算",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE28D2.htm",
+  "status": "成立",
+  "title": "令和八年度特別会計補正予算（特第１号）"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-参法-1",
+  "kind": "参法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE213E.htm",
+  "status": "未了",
+  "title": "政党交付金の交付を受ける政党の組織及び管理運営の透明性及び公正性の向上を図るための制度の導入に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-参法-10",
+  "kind": "参法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2A42.htm",
+  "status": "未了",
+  "title": "児童扶養手当法の一部を改正する等の法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-参法-11",
+  "kind": "参法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2A6E.htm",
+  "status": "未了",
+  "title": "主要農作物の優良な品種を確保するための公的新品種育成の促進等に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-参法-12",
+  "kind": "参法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2B02.htm",
+  "status": "未了",
+  "title": "政治資金規正法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-参法-13",
+  "kind": "参法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2B56.htm",
+  "status": "未了",
+  "title": "公職選挙法及び地方自治法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-参法-14",
+  "kind": "参法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2B72.htm",
+  "status": "未了",
+  "title": "特別児童扶養手当等の支給に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-参法-15",
+  "kind": "参法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2BC6.htm",
+  "status": "未了",
+  "title": "特定空襲等被害者に対する一時金の支給等に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-参法-16",
+  "kind": "参法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2B8A.htm",
+  "status": "未了",
+  "title": "国による全ての水俣病の被害者の救済の実現に向けた給付金等の支給に係る制度の創設に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-参法-17",
+  "kind": "参法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2BE2.htm",
+  "status": "未了",
+  "title": "少額投資非課税制度における国債に係る所得に対する所得税の非課税に関する措置等に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-参法-18",
+  "kind": "参法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2CAA.htm",
+  "status": "参議院議了",
+  "title": "大都市地域における特別区の設置に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-参法-19",
+  "kind": "参法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2CC2.htm",
+  "status": "未了",
+  "title": "青少年が安全に安心してインターネットを利用できる環境の整備等に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-参法-2",
+  "kind": "参法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE23A2.htm",
+  "status": "未了",
+  "title": "特別児童扶養手当等の支給に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-参法-20",
+  "kind": "参法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2CDA.htm",
+  "status": "未了",
+  "title": "特別市の設置に係る制度の整備の推進に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-参法-21",
+  "kind": "参法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2CF2.htm",
+  "status": "未了",
+  "title": "国の出資を通じた特定民間賃貸住宅の供給の促進を図るための措置に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-参法-3",
+  "kind": "参法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE23BA.htm",
+  "status": "未了",
+  "title": "所得税法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-参法-4",
+  "kind": "参法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE23D2.htm",
+  "status": "未了",
+  "title": "地方税法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-参法-5",
+  "kind": "参法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2532.htm",
+  "status": "未了",
+  "title": "防諜に関する施策の推進に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-参法-6",
+  "kind": "参法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE254A.htm",
+  "status": "未了",
+  "title": "特定秘密の保護に関する法律及び重要経済安保情報の保護及び活用に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-参法-7",
+  "kind": "参法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2562.htm",
+  "status": "撤回",
+  "title": "刑法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-参法-8",
+  "kind": "参法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE28A6.htm",
+  "status": "未了",
+  "title": "内密出産に対応するための体制の整備等の促進に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-参法-9",
+  "kind": "参法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2996.htm",
+  "status": "未了",
+  "title": "外国人総合政策庁の設置等による外国人政策の総合的な推進に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-承認-1",
+  "kind": "承認",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE15BE.htm",
+  "status": "両院承認",
+  "title": "放送法第七十条第二項の規定に基づき、承認を求めるの件"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-承諾-1DE203A",
+  "kind": "その他",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE203A.htm",
+  "status": "両院承諾",
+  "title": "令和六年度一般会計原油価格・物価高騰対策及び賃上げ促進環境整備対応予備費使用総調書及び各省各庁所管使用調書"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-承諾-1DE204E",
+  "kind": "その他",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE204E.htm",
+  "status": "両院承諾",
+  "title": "令和六年度一般会計予備費使用総調書及び各省各庁所管使用調書"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-承諾-1DE2062",
+  "kind": "その他",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2062.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和七年度一般会計予備費使用総調書及び各省各庁所管使用調書（その１）"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-承諾-1DE287A",
+  "kind": "その他",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE287A.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和七年度一般会計予備費使用総調書及び各省各庁所管使用調書（その２）"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-承諾-1DE288E",
+  "kind": "その他",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE288E.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和七年度特別会計予算総則第二十二条第一項の規定による経費増額総調書及び各省各庁所管経費増額調書"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-条約-1",
+  "kind": "条約",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE21DA.htm",
+  "status": "両院承認",
+  "title": "日本国の自衛隊とフィリピンの軍隊との間における物品又は役務の相互の提供に関する日本国政府とフィリピン共和国政府との間の協定の締結について承認を求めるの件"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-条約-10",
+  "kind": "条約",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE246E.htm",
+  "status": "両院承認",
+  "title": "環境保護に関する南極条約議定書の附属書Ⅵの締結について承認を求めるの件"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-条約-11",
+  "kind": "条約",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2482.htm",
+  "status": "両院承認",
+  "title": "国際民間航空条約第五十条（ａ）の改正に関する二千十六年十月六日にモントリオールで署名された議定書及び国際民間航空条約第五十六条の改正に関する二千十六年十月六日にモントリオールで署名された議定書の締結について承認を求めるの件"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-条約-12",
+  "kind": "条約",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2496.htm",
+  "status": "両院承認",
+  "title": "万国郵便連合憲章の第十二追加議定書、万国郵便連合一般規則の第四追加議定書、万国郵便連合一般規則の第五追加議定書、万国郵便条約の第一追加議定書及び万国郵便条約の第二追加議定書の締結について承認を求めるの件"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-条約-2",
+  "kind": "条約",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE21EE.htm",
+  "status": "両院承認",
+  "title": "日本国の自衛隊とオランダ王国の軍隊との間における物品又は役務の相互の提供に関する日本国政府とオランダ王国政府との間の協定の締結について承認を求めるの件"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-条約-3",
+  "kind": "条約",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2202.htm",
+  "status": "両院承認",
+  "title": "日本国の自衛隊とニュージーランド国防軍との間における物品又は役務の相互の提供に関する日本国政府とニュージーランド政府との間の協定の締結について承認を求めるの件"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-条約-4",
+  "kind": "条約",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2216.htm",
+  "status": "両院承認",
+  "title": "投資の促進及び保護に関する日本国とセルビア共和国との間の協定の締結について承認を求めるの件"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-条約-5",
+  "kind": "条約",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE222A.htm",
+  "status": "両院承認",
+  "title": "投資の促進及び保護に関する日本国とパラグアイ共和国との間の協定の締結について承認を求めるの件"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-条約-6",
+  "kind": "条約",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE223E.htm",
+  "status": "両院承認",
+  "title": "投資の促進及び保護に関する日本国とザンビア共和国との間の協定の締結について承認を求めるの件"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-条約-7",
+  "kind": "条約",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2252.htm",
+  "status": "両院承認",
+  "title": "投資の自由化、促進及び保護に関する日本国とタジキスタン共和国との間の協定の締結について承認を求めるの件"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-条約-8",
+  "kind": "条約",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2446.htm",
+  "status": "両院承認",
+  "title": "刑事に関する共助に関する日本国とカナダとの間の条約の締結について承認を求めるの件"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-条約-9",
+  "kind": "条約",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE245A.htm",
+  "status": "両院承認",
+  "title": "所得に対する租税に関する二重課税の除去並びに脱税及び租税回避の防止のための日本国とキルギス共和国との間の協定の締結について承認を求めるの件"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-決議-1",
+  "kind": "決議",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1FF6.htm",
+  "status": "本院議了",
+  "title": "予算委員長坂本哲志君解任決議案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-衆法-1",
+  "kind": "衆法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE153E.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "政治資金規正法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-衆法-10",
+  "kind": "衆法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE28CA.htm",
+  "status": "成立",
+  "title": "国会議員の歳費、旅費及び手当等に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-衆法-11",
+  "kind": "衆法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE28DE.htm",
+  "status": "成立",
+  "title": "日本国憲法の改正手続に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-衆法-12",
+  "kind": "衆法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE290A.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "政党等の政治資金の収入に関する制度の在り方に係る措置に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-衆法-13",
+  "kind": "衆法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE28F6.htm",
+  "status": "成立",
+  "title": "郵政民営化法等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-衆法-14",
+  "kind": "衆法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE293A.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "政治資金規正法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-衆法-15",
+  "kind": "衆法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE293E.htm",
+  "status": "成立",
+  "title": "国立国会図書館法及び国立国会図書館法の規定により行政各部門に置かれる支部図書館及びその職員に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-衆法-16",
+  "kind": "衆法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE295A.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "自動車税及び軽自動車税の税率の上乗せに係る特例の廃止に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-衆法-17",
+  "kind": "衆法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE296E.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "自動車重量税率の上乗せに係る特例の廃止に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-衆法-18",
+  "kind": "衆法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE29A2.htm",
+  "status": "成立",
+  "title": "国旗の損壊等の処罰に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-衆法-19",
+  "kind": "衆法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE29BA.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "自動車盗難対策等の推進に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-衆法-2",
+  "kind": "衆法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1F62.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和八年度における公債の発行の特例に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-衆法-20",
+  "kind": "衆法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE29CE.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "盗難自動車等の処分の防止に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-衆法-21",
+  "kind": "衆法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE29E2.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "組織的な犯罪の処罰及び犯罪収益の規制等に関する法律及び刑事訴訟法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-衆法-22",
+  "kind": "衆法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2A26.htm",
+  "status": "成立",
+  "title": "有人国境離島地域の保全及び特定有人国境離島地域に係る地域社会の維持に関する特別措置法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-衆法-23",
+  "kind": "衆法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2A2A.htm",
+  "status": "成立",
+  "title": "高等学校の定時制教育及び通信教育振興法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-衆法-24",
+  "kind": "衆法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2A92.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "特別市の設置に係る制度の整備の推進に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-衆法-25",
+  "kind": "衆法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2AA6.htm",
+  "status": "本院議了",
+  "title": "大都市地域における特別区の設置に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-衆法-26",
+  "kind": "衆法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2AAA.htm",
+  "status": "成立",
+  "title": "公職選挙法及び特定電気通信による情報の流通によって発生する権利侵害等への対処に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-衆法-27",
+  "kind": "衆法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2ACE.htm",
+  "status": "成立",
+  "title": "国家社会機能継続性確保施策及び副首都の整備に係る施策の推進に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-衆法-28",
+  "kind": "衆法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2AE2.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "衆議院議員の選挙制度改革及び定数削減に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-衆法-29",
+  "kind": "衆法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2BCA.htm",
+  "status": "成立",
+  "title": "医療的ケア児及びその家族に対する支援に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-衆法-3",
+  "kind": "衆法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1E7E.htm",
+  "status": "本院議了",
+  "title": "インテリジェンスに係る態勢の整備の推進に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-衆法-30",
+  "kind": "衆法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2BEA.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "賃金上昇を上回る所得税の負担増加に対処するために所得税に関し講ずべき措置に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-衆法-31",
+  "kind": "衆法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2BEE.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "賃金上昇を上回る個人住民税の負担増加等に対処するために個人住民税に関し講ずべき措置に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-衆法-32",
+  "kind": "衆法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2BF2.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "受託中小企業振興法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-衆法-33",
+  "kind": "衆法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2BF6.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "ものづくり基盤技術振興基本法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-衆法-34",
+  "kind": "衆法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2C4A.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "新型コロナウイルス感染症対策検証委員会等の設置等に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-衆法-35",
+  "kind": "衆法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2C6E.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "公職選挙法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-衆法-36",
+  "kind": "衆法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2C82.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "非居住住宅税及び超短期所有住宅等の譲渡に係る事業所得等の課税の特例の創設等に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-衆法-37",
+  "kind": "衆法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2C92.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "自動車産業における脱炭素化の推進に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-衆法-38",
+  "kind": "衆法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2CF6.htm",
+  "status": "成立",
+  "title": "建築士法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-衆法-4",
+  "kind": "衆法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1E6A.htm",
+  "status": "成立",
+  "title": "運輸事業の振興の助成に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-衆法-5",
+  "kind": "衆法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1F66.htm",
+  "status": "成立",
+  "title": "地震防災対策特別措置法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-衆法-6",
+  "kind": "衆法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE233A.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "障害者及びその家族に対する福祉、教育等に係る支援に関する施策の総合的な推進に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-衆法-7",
+  "kind": "衆法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE280A.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "全ての国民が安心して医療を受けられる環境の整備を図るための高額療養費等の制度の在り方に係る措置に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-衆法-8",
+  "kind": "衆法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE280E.htm",
+  "status": "成立",
+  "title": "食育基本法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-衆法-9",
+  "kind": "衆法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2846.htm",
+  "status": "本院議了",
+  "title": "刑事訴訟法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-1",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE14CE.htm",
+  "status": "成立",
+  "title": "財政運営に必要な財源の確保を図るための公債の発行の特例に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-10",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1582.htm",
+  "status": "成立",
+  "title": "在外公館の名称及び位置並びに在外公館に勤務する外務公務員の給与に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-11",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1596.htm",
+  "status": "成立",
+  "title": "農業構造転換の推進に必要な施策の集中的な実施の財源に充てるための日本中央競馬会の国庫納付金の納付に関する臨時措置法案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-12",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE15AA.htm",
+  "status": "成立",
+  "title": "日本中央競馬会法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-13",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1612.htm",
+  "status": "成立",
+  "title": "防災庁設置法案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-14",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1626.htm",
+  "status": "成立",
+  "title": "防災庁設置法の施行に伴う関係法律の整備等に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-15",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE163A.htm",
+  "status": "成立",
+  "title": "経済社会情勢の変化を踏まえた企業の事業活動の持続的な発展を図るための産業競争力強化法等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-16",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE164E.htm",
+  "status": "成立",
+  "title": "物資の流通の効率化に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-17",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1662.htm",
+  "status": "成立",
+  "title": "環境省設置法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-18",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1E66.htm",
+  "status": "成立",
+  "title": "防衛省設置法等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-19",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1F02.htm",
+  "status": "成立",
+  "title": "裁判所職員定員法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-2",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE14D2.htm",
+  "status": "成立",
+  "title": "東日本大震災からの復興のための施策を実施するために必要な財源の確保に関する特別措置法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-20",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1F16.htm",
+  "status": "成立",
+  "title": "出入国管理及び難民認定法及び出入国管理及び難民認定法第二条第五号ロの旅券を所持する外国人の上陸申請の特例に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-21",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1F2A.htm",
+  "status": "成立",
+  "title": "旅券法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-22",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1F3E.htm",
+  "status": "成立",
+  "title": "都市再生特別措置法等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-23",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1F52.htm",
+  "status": "成立",
+  "title": "地域公共交通の活性化及び再生に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-24",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1FCA.htm",
+  "status": "成立",
+  "title": "国家情報会議設置法案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-25",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1FDE.htm",
+  "status": "成立",
+  "title": "健康保険法等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-26",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1FF2.htm",
+  "status": "成立",
+  "title": "産業技術力強化法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-27",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2076.htm",
+  "status": "成立",
+  "title": "外国為替及び外国貿易法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-28",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE209E.htm",
+  "status": "成立",
+  "title": "農林中央金庫法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-29",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE20B2.htm",
+  "status": "成立",
+  "title": "農業近代化資金融通法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-3",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE14D6.htm",
+  "status": "成立",
+  "title": "所得税法等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-30",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE20F6.htm",
+  "status": "成立",
+  "title": "経済施策を一体的に講ずることによる安全保障の確保の推進に関する法律及び株式会社国際協力銀行法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-31",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2162.htm",
+  "status": "成立",
+  "title": "重要施設の周辺地域の上空における小型無人機等の飛行の禁止に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-32",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2176.htm",
+  "status": "成立",
+  "title": "株式会社海外通信・放送・郵便事業支援機構法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-33",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE218A.htm",
+  "status": "成立",
+  "title": "携帯音声通信事業者による契約者等の本人確認等及び携帯音声通信役務の不正な利用の防止に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-34",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE219E.htm",
+  "status": "成立",
+  "title": "郵便法及び民間事業者による信書の送達に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-35",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE21B2.htm",
+  "status": "成立",
+  "title": "家畜伝染病予防法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-36",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE21C6.htm",
+  "status": "成立",
+  "title": "電気事業法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-37",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE234E.htm",
+  "status": "成立",
+  "title": "地域の自主性及び自立性を高めるための改革の推進を図るための関係法律の整備に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-38",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2362.htm",
+  "status": "成立",
+  "title": "下水道法等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-39",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2376.htm",
+  "status": "成立",
+  "title": "建築物のエネルギー消費性能の向上等に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-4",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE14DA.htm",
+  "status": "成立",
+  "title": "地方税法等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-40",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE238A.htm",
+  "status": "成立",
+  "title": "人工衛星等の打上げ及び人工衛星の管理に関する法律等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-41",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2432.htm",
+  "status": "成立",
+  "title": "科学技術・イノベーション創出の活性化に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-42",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE24AA.htm",
+  "status": "成立",
+  "title": "自動車の運転により人を死傷させる行為等の処罰に関する法律及び道路交通法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-43",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2576.htm",
+  "status": "成立",
+  "title": "民法等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-44",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE258A.htm",
+  "status": "成立",
+  "title": "民法等の一部を改正する法律の施行に伴う関係法律の整備等に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-45",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE259E.htm",
+  "status": "成立",
+  "title": "社会福祉法等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-46",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE25B2.htm",
+  "status": "成立",
+  "title": "重要品種の育成及びその種苗の生産の振興に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-47",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE25C6.htm",
+  "status": "成立",
+  "title": "種苗法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-48",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE25DA.htm",
+  "status": "成立",
+  "title": "主要食糧の需給及び価格の安定に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-49",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE25EE.htm",
+  "status": "成立",
+  "title": "太陽電池廃棄物の再資源化等の推進に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-5",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE14DE.htm",
+  "status": "成立",
+  "title": "地方交付税法等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-50",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2602.htm",
+  "status": "成立",
+  "title": "予備自衛官等の職務の円滑な遂行を図るための国家公務員及び地方公務員の兼業の特例に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-51",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2616.htm",
+  "status": "成立",
+  "title": "犯罪による収益の移転防止に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-52",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE262A.htm",
+  "status": "成立",
+  "title": "南極地域の環境の保護に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-53",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE26DE.htm",
+  "status": "成立",
+  "title": "情報通信技術を活用した行政の推進等に関する法律及び情報処理の促進に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-54",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE26F2.htm",
+  "status": "成立",
+  "title": "個人情報の保護に関する法律等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-55",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2706.htm",
+  "status": "成立",
+  "title": "学校教育法等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-56",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE271A.htm",
+  "status": "成立",
+  "title": "労働者災害補償保険法等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-57",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE278A.htm",
+  "status": "成立",
+  "title": "金融商品取引法及び資金決済に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-58",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE279E.htm",
+  "status": "成立",
+  "title": "ヒトゲノム編集胚等の取扱いの規制に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-59",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE27B2.htm",
+  "status": "成立",
+  "title": "廃棄物の処理及び清掃に関する法律等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-6",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE14E2.htm",
+  "status": "成立",
+  "title": "関税定率法等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-60",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE27C6.htm",
+  "status": "成立",
+  "title": "ポリ塩化ビフェニル廃棄物の適正な処理の推進に関する特別措置法及び中間貯蔵・環境安全事業株式会社法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-61",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2822.htm",
+  "status": "成立",
+  "title": "刑事訴訟法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-62",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2836.htm",
+  "status": "成立",
+  "title": "著作権法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-63",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE28F2.htm",
+  "status": "成立",
+  "title": "予防接種法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-64",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2B16.htm",
+  "status": "成立",
+  "title": "皇室典範等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-7",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1506.htm",
+  "status": "成立",
+  "title": "金融機能の強化のための特別措置に関する法律等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-8",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE151A.htm",
+  "status": "成立",
+  "title": "高等学校等就学支援金の支給に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "221-閣法-9",
+  "kind": "閣法",
+  "session": 221,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE152E.htm",
+  "status": "成立",
+  "title": "公立義務教育諸学校の学級編制及び教職員定数の標準に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "220-参法-1",
+  "kind": "参法",
+  "session": 220,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE113A.htm",
+  "status": "未了",
+  "title": "政府等特定資産の運用の効率化を図るための措置に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-予算-1",
+  "kind": "予算",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE08FE.htm",
+  "status": "成立",
+  "title": "令和七年度一般会計補正予算（第１号）"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-予算-2",
+  "kind": "予算",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0902.htm",
+  "status": "成立",
+  "title": "令和七年度特別会計補正予算（特第１号）"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-参法-1",
+  "kind": "参法",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE058E.htm",
+  "status": "未了",
+  "title": "所得税法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-参法-2",
+  "kind": "参法",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE05AA.htm",
+  "status": "未了",
+  "title": "地方税法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-参法-3",
+  "kind": "参法",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE05CA.htm",
+  "status": "未了",
+  "title": "刑法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-参法-4",
+  "kind": "参法",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE07F2.htm",
+  "status": "未了",
+  "title": "防諜に関する施策の推進に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-参法-5",
+  "kind": "参法",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE082E.htm",
+  "status": "未了",
+  "title": "特定秘密の保護に関する法律及び重要経済安保情報の保護及び活用に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-参法-6",
+  "kind": "参法",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0A0A.htm",
+  "status": "未了",
+  "title": "新型コロナウイルス感染症対策及びｍＲＮＡワクチン施策等検証委員会の設置等に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-参法-7",
+  "kind": "参法",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0A46.htm",
+  "status": "未了",
+  "title": "政党交付金の交付を受ける政党の組織及び管理運営の透明性及び公正性の向上を図るための制度の導入に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-国有財産-1DE071A",
+  "kind": "その他",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE071A.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和六年度国有財産増減及び現在額総計算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-国有財産-1DE072E",
+  "kind": "その他",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE072E.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和六年度国有財産無償貸付状況総計算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-国有財産-1DE0B9E",
+  "kind": "その他",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B9E.htm",
+  "status": "未了",
+  "title": "令和六年度国有財産増減及び現在額総計算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-国有財産-1DE0BA2",
+  "kind": "その他",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0BA2.htm",
+  "status": "未了",
+  "title": "令和六年度国有財産無償貸付状況総計算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-国有財産-1DE116E",
+  "kind": "その他",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE116E.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和六年度国有財産増減及び現在額総計算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-国有財産-1DE1172",
+  "kind": "その他",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1172.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和六年度国有財産無償貸付状況総計算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-決算-1DE06AA",
+  "kind": "その他",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE06AA.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和六年度一般会計歳入歳出決算"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-決算-1DE06C2",
+  "kind": "その他",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE06C2.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和六年度特別会計歳入歳出決算"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-決算-1DE06DA",
+  "kind": "その他",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE06DA.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和六年度国税収納金整理資金受払計算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-決算-1DE06F2",
+  "kind": "その他",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE06F2.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和六年度政府関係機関決算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-決算-1DE0B8E",
+  "kind": "その他",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B8E.htm",
+  "status": "未了",
+  "title": "令和六年度一般会計歳入歳出決算"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-決算-1DE0B92",
+  "kind": "その他",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B92.htm",
+  "status": "未了",
+  "title": "令和六年度特別会計歳入歳出決算"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-決算-1DE0B96",
+  "kind": "その他",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B96.htm",
+  "status": "未了",
+  "title": "令和六年度国税収納金整理資金受払計算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-決算-1DE0B9A",
+  "kind": "その他",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B9A.htm",
+  "status": "未了",
+  "title": "令和六年度政府関係機関決算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-決算-1DE115E",
+  "kind": "その他",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE115E.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和六年度一般会計歳入歳出決算"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-決算-1DE1162",
+  "kind": "その他",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1162.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和六年度特別会計歳入歳出決算"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-決算-1DE1166",
+  "kind": "その他",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1166.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和六年度国税収納金整理資金受払計算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-決算-1DE116A",
+  "kind": "その他",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE116A.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和六年度政府関係機関決算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-衆法-1",
+  "kind": "衆法",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0D06.htm",
+  "status": "未了",
+  "title": "飲食料品に係る消費税の税率を引き下げて零とする臨時特例の創設及び給付付き税額控除の導入に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-衆法-10",
+  "kind": "衆法",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE089E.htm",
+  "status": "成立",
+  "title": "高次脳機能障害者支援法案"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-衆法-11",
+  "kind": "衆法",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B2A.htm",
+  "status": "未了",
+  "title": "衆議院議員の定数削減等に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-衆法-12",
+  "kind": "衆法",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C9E.htm",
+  "status": "未了",
+  "title": "刑法及び児童買春、児童ポルノに係る行為等の規制及び処罰並びに児童の保護等に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-衆法-13",
+  "kind": "衆法",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C2A.htm",
+  "status": "未了",
+  "title": "非居住住宅税及び超短期所有住宅等の譲渡に係る事業所得等の課税の特例の創設等に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-衆法-14",
+  "kind": "衆法",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0A0E.htm",
+  "status": "成立",
+  "title": "国会議員の歳費、旅費及び手当等に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-衆法-15",
+  "kind": "衆法",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0A12.htm",
+  "status": "成立",
+  "title": "国会議員の秘書の給与等に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-衆法-16",
+  "kind": "衆法",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B16.htm",
+  "status": "未了",
+  "title": "盗難自動車等の処分の防止に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-衆法-17",
+  "kind": "衆法",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0CFE.htm",
+  "status": "未了",
+  "title": "障害者及びその家族に対する福祉、教育等に係る支援に関する施策の総合的な推進に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-衆法-18",
+  "kind": "衆法",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C4E.htm",
+  "status": "未了",
+  "title": "令和七年に開催される国際博覧会の準備及び運営のために必要な特別措置に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-衆法-19",
+  "kind": "衆法",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C2E.htm",
+  "status": "未了",
+  "title": "運輸事業の振興の助成に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-衆法-2",
+  "kind": "衆法",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0AFA.htm",
+  "status": "未了",
+  "title": "政治資金規正法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-衆法-3",
+  "kind": "衆法",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0BDA.htm",
+  "status": "未了",
+  "title": "自動車税及び軽自動車税の環境性能割並びに自動車税及び軽自動車税の種別割の税率の上乗せに係る特例の廃止に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-衆法-4",
+  "kind": "衆法",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0CE6.htm",
+  "status": "未了",
+  "title": "自動車重量税率の上乗せに係る特例の廃止に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-衆法-5",
+  "kind": "衆法",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE07EE.htm",
+  "status": "成立",
+  "title": "愛知・名古屋アジア競技大会及び愛知・名古屋アジアパラ競技大会に関する特別措置法案"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-衆法-6",
+  "kind": "衆法",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0AA6.htm",
+  "status": "未了",
+  "title": "インテリジェンスに係る態勢の整備の推進に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-衆法-7",
+  "kind": "衆法",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C26.htm",
+  "status": "未了",
+  "title": "国土の適切な利用及び管理を確保するための施策の推進に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-衆法-8",
+  "kind": "衆法",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B22.htm",
+  "status": "未了",
+  "title": "政党等の政治資金の収入に関する制度の在り方に係る措置に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-衆法-9",
+  "kind": "衆法",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0CC2.htm",
+  "status": "未了",
+  "title": "特別児童扶養手当等の支給に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-規則-1",
+  "kind": "その他",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0732.htm",
+  "status": "本院可決",
+  "title": "衆議院規則の一部を改正する規則案"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-規則-2",
+  "kind": "その他",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0736.htm",
+  "status": "本院可決",
+  "title": "衆議院規則の一部を改正する規則案"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-閣法-1",
+  "kind": "閣法",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE05FA.htm",
+  "status": "成立",
+  "title": "ストーカー行為等の規制等に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-閣法-10",
+  "kind": "閣法",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0992.htm",
+  "status": "成立",
+  "title": "防衛省の職員の給与等に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-閣法-2",
+  "kind": "閣法",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0612.htm",
+  "status": "成立",
+  "title": "配偶者からの暴力の防止及び被害者の保護等に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-閣法-3",
+  "kind": "閣法",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE062A.htm",
+  "status": "成立",
+  "title": "更生保護制度の充実を図るための保護司法等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-閣法-4",
+  "kind": "閣法",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0642.htm",
+  "status": "成立",
+  "title": "気象業務法及び水防法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-閣法-5",
+  "kind": "閣法",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0996.htm",
+  "status": "成立",
+  "title": "一般職の職員の給与に関する法律等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-閣法-6",
+  "kind": "閣法",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE099A.htm",
+  "status": "成立",
+  "title": "特別職の職員の給与に関する法律等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-閣法-7",
+  "kind": "閣法",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE094A.htm",
+  "status": "成立",
+  "title": "地方交付税法及び特別会計に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-閣法-8",
+  "kind": "閣法",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0962.htm",
+  "status": "成立",
+  "title": "裁判官の報酬等に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-閣法-9",
+  "kind": "閣法",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE097A.htm",
+  "status": "成立",
+  "title": "検察官の俸給等に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-ＮＨＫ決算-1DE0A9E",
+  "kind": "その他",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0A9E.htm",
+  "status": "未了",
+  "title": "日本放送協会令和六年度財産目録、貸借対照表、損益計算書、資本等変動計算書及びキャッシュ・フロー計算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-ＮＨＫ決算-1DE1136",
+  "kind": "その他",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1136.htm",
+  "status": "未了",
+  "title": "日本放送協会令和六年度財産目録、貸借対照表、損益計算書、資本等変動計算書及びキャッシュ・フロー計算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "219-ＮＨＫ決算-1DE117A",
+  "kind": "その他",
+  "session": 219,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE117A.htm",
+  "status": "本院議了",
+  "title": "日本放送協会令和六年度財産目録、貸借対照表、損益計算書、資本等変動計算書及びキャッシュ・フロー計算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "218-参法-1",
+  "kind": "参法",
+  "session": 218,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDFF36.htm",
+  "status": "未了",
+  "title": "障害のあるこどもに係る公的給付の所得制限の撤廃のために早急に講ずべき措置に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "218-衆法-1",
+  "kind": "衆法",
+  "session": 218,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE024E.htm",
+  "status": "成立",
+  "title": "租税特別措置法及び東日本大震災の被災者等に係る国税関係法律の臨時特例に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-予算-1",
+  "kind": "予算",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEE9E.htm",
+  "status": "参議院回付案（同意）",
+  "title": "令和七年度一般会計予算"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-予算-2",
+  "kind": "予算",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE042.htm",
+  "status": "成立",
+  "title": "令和七年度特別会計予算"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-予算-3",
+  "kind": "予算",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE046.htm",
+  "status": "成立",
+  "title": "令和七年度政府関係機関予算"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-参法-1",
+  "kind": "参法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE146.htm",
+  "status": "未了",
+  "title": "特定生殖補助医療に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-参法-10",
+  "kind": "参法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF342.htm",
+  "status": "未了",
+  "title": "出入国管理及び難民認定法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-参法-11",
+  "kind": "参法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF35E.htm",
+  "status": "未了",
+  "title": "出入国管理及び難民認定法及び外国人の技能実習の適正な実施及び技能実習生の保護に関する法律の一部を改正する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-参法-2",
+  "kind": "参法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEB26.htm",
+  "status": "未了",
+  "title": "政治資金規正法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-参法-3",
+  "kind": "参法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEB42.htm",
+  "status": "未了",
+  "title": "政党助成法を廃止する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-参法-4",
+  "kind": "参法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEE0E.htm",
+  "status": "未了",
+  "title": "学校教育法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-参法-5",
+  "kind": "参法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEF5A.htm",
+  "status": "成立",
+  "title": "自殺対策基本法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-参法-6",
+  "kind": "参法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF022.htm",
+  "status": "未了",
+  "title": "大深度地下の公共的使用に関する特別措置法の廃止に関する措置等に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-参法-7",
+  "kind": "参法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF052.htm",
+  "status": "未了",
+  "title": "労働安全衛生法及び特定受託事業者に係る取引の適正化等に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-参法-8",
+  "kind": "参法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF10A.htm",
+  "status": "未了",
+  "title": "児童の朝の居場所の確保を図るための措置等に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-参法-9",
+  "kind": "参法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF29A.htm",
+  "status": "成立",
+  "title": "手話に関する施策の推進に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-承認-1",
+  "kind": "承認",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE442.htm",
+  "status": "両院承認",
+  "title": "放送法第七十条第二項の規定に基づき、承認を求めるの件"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-承認-2",
+  "kind": "承認",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEF72.htm",
+  "status": "両院承認",
+  "title": "特定船舶の入港の禁止に関する特別措置法第五条第一項の規定に基づき、特定船舶の入港禁止の実施につき承認を求めるの件"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-承認-3",
+  "kind": "承認",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEF8A.htm",
+  "status": "両院承認",
+  "title": "外国為替及び外国貿易法第十条第二項の規定に基づき、北朝鮮を仕向地とする貨物の輸出及び北朝鮮を原産地又は船積地域とする貨物の輸入につき承認義務を課する等の措置を講じたことについて承認を求めるの件"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-承諾-1DDEDDE",
+  "kind": "その他",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEDDE.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和六年度一般会計原油価格・物価高騰対策及び賃上げ促進環境整備対応予備費使用総調書及び各省各庁所管使用調書（その１）"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-承諾-1DDEDF2",
+  "kind": "その他",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEDF2.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和六年度一般会計予備費使用総調書及び各省各庁所管使用調書（その１）"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-承諾-1DDF092",
+  "kind": "その他",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF092.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和六年度一般会計予備費使用総調書及び各省各庁所管使用調書（その２）"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-承諾-1DDF5D2",
+  "kind": "その他",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF5D2.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和六年度一般会計原油価格・物価高騰対策及び賃上げ促進環境整備対応予備費使用総調書及び各省各庁所管使用調書（その１）"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-承諾-1DDF5DA",
+  "kind": "その他",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF5DA.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和六年度一般会計予備費使用総調書及び各省各庁所管使用調書（その１）"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-承諾-1DDF5E2",
+  "kind": "その他",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF5E2.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和六年度一般会計予備費使用総調書及び各省各庁所管使用調書（その２）"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-承諾-1DE020E",
+  "kind": "その他",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE020E.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和六年度一般会計原油価格・物価高騰対策及び賃上げ促進環境整備対応予備費使用総調書及び各省各庁所管使用調書（その１）"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-承諾-1DE0212",
+  "kind": "その他",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0212.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和六年度一般会計予備費使用総調書及び各省各庁所管使用調書（その１）"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-承諾-1DE0216",
+  "kind": "その他",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0216.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和六年度一般会計予備費使用総調書及び各省各庁所管使用調書（その２）"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-承諾-1DE0B6A",
+  "kind": "その他",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B6A.htm",
+  "status": "未了",
+  "title": "令和六年度一般会計原油価格・物価高騰対策及び賃上げ促進環境整備対応予備費使用総調書及び各省各庁所管使用調書（その１）"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-承諾-1DE0B6E",
+  "kind": "その他",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B6E.htm",
+  "status": "未了",
+  "title": "令和六年度一般会計予備費使用総調書及び各省各庁所管使用調書（その１）"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-承諾-1DE0B72",
+  "kind": "その他",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B72.htm",
+  "status": "未了",
+  "title": "令和六年度一般会計予備費使用総調書及び各省各庁所管使用調書（その２）"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-条約-1",
+  "kind": "条約",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE5DE.htm",
+  "status": "両院承認",
+  "title": "所得に対する租税に関する二重課税の除去並びに脱税及び租税回避の防止のための日本国政府とウクライナ政府との間の条約の締結について承認を求めるの件"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-条約-10",
+  "kind": "条約",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEBD2.htm",
+  "status": "両院承認",
+  "title": "東南アジア諸国連合貿易投資観光促進センターを設立する協定の第二次改正の受諾について承認を求めるの件"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-条約-11",
+  "kind": "条約",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEBEA.htm",
+  "status": "両院承認",
+  "title": "海洋法に関する国際連合条約に基づくいずれの国の管轄にも属さない区域における海洋の生物の多様性の保全及び持続可能な利用に関する協定の締結について承認を求めるの件"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-条約-12",
+  "kind": "条約",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEC02.htm",
+  "status": "両院承認",
+  "title": "職業上の安全及び健康並びに作業環境に関する条約（第百五十五号）の締結について承認を求めるの件"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-条約-13",
+  "kind": "条約",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEE9A.htm",
+  "status": "両院承認",
+  "title": "千九百九十五年の漁船員の訓練及び資格証明並びに当直の基準に関する国際条約の締結について承認を求めるの件"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-条約-2",
+  "kind": "条約",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE5F6.htm",
+  "status": "両院承認",
+  "title": "所得に対する租税に関する二重課税の除去並びに脱税及び租税回避の防止のための日本国とトルクメニスタンとの間の条約の締結について承認を求めるの件"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-条約-3",
+  "kind": "条約",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE60E.htm",
+  "status": "両院承認",
+  "title": "所得に対する租税に関する二重課税の除去並びに脱税及び租税回避の防止のための日本国とアルメニア共和国との間の条約の締結について承認を求めるの件"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-条約-4",
+  "kind": "条約",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE626.htm",
+  "status": "両院承認",
+  "title": "経済上の連携に関する日本国とインドネシア共和国との間の協定を改正する議定書の締結について承認を求めるの件"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-条約-5",
+  "kind": "条約",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE63E.htm",
+  "status": "両院承認",
+  "title": "航空業務に関する日本国とチェコ共和国との間の協定の締結について承認を求めるの件"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-条約-6",
+  "kind": "条約",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE656.htm",
+  "status": "両院承認",
+  "title": "航空業務に関する日本国とルクセンブルク大公国との間の協定の締結について承認を求めるの件"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-条約-7",
+  "kind": "条約",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE66E.htm",
+  "status": "両院承認",
+  "title": "日本国の自衛隊とフィリピンの軍隊との間における相互のアクセス及び協力の円滑化に関する日本国とフィリピン共和国との間の協定の締結について承認を求めるの件"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-条約-8",
+  "kind": "条約",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE686.htm",
+  "status": "両院承認",
+  "title": "日本国の自衛隊とイタリア共和国の軍隊との間における物品又は役務の相互の提供に関する日本国政府とイタリア共和国政府との間の協定の締結について承認を求めるの件"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-条約-9",
+  "kind": "条約",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEBBA.htm",
+  "status": "両院承認",
+  "title": "千九百九十四年四月十五日にマラケシュで作成された世界貿易機関を設立するマラケシュ協定のサービスの貿易に関する一般協定の日本国の特定の約束に係る表の改善に関する確認書の締結について承認を求めるの件"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-決議-1",
+  "kind": "決議",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF116.htm",
+  "status": "本院可決",
+  "title": "国際協同組合年に当たり協同組合の振興を図る決議案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-決議-2",
+  "kind": "決議",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF346.htm",
+  "status": "本院可決",
+  "title": "財務金融委員長井林辰憲君解任決議案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-1",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0CB2.htm",
+  "status": "未了",
+  "title": "医療保険の被保険者証等の交付等の特例に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-10",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE53E.htm",
+  "status": "成立",
+  "title": "公職選挙法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-11",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C3E.htm",
+  "status": "未了",
+  "title": "中小企業正規労働者雇入臨時助成金の支給に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-12",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0BCA.htm",
+  "status": "未了",
+  "title": "軽油引取税の税率の特例の廃止に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-13",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE87E.htm",
+  "status": "撤回",
+  "title": "揮発油税及び地方揮発油税の税率の特例の廃止に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-14",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEC06.htm",
+  "status": "撤回",
+  "title": "政治資金規正法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-15",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDED3A.htm",
+  "status": "成立",
+  "title": "地震防災対策強化地域における地震対策緊急整備事業に係る国の財政上の特別措置に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-16",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDED3E.htm",
+  "status": "成立",
+  "title": "半島振興法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-17",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEDBA.htm",
+  "status": "成立",
+  "title": "地域人口の急減に対処するための特定地域づくり事業の推進に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-18",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEDCA.htm",
+  "status": "成立",
+  "title": "議院に出頭する証人等の旅費及び日当に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-19",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEDC2.htm",
+  "status": "成立",
+  "title": "棚田地域振興法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-2",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0CB6.htm",
+  "status": "未了",
+  "title": "訪問介護事業者に対する緊急の支援に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-20",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEDC6.htm",
+  "status": "成立",
+  "title": "山村振興法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-21",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0AE2.htm",
+  "status": "未了",
+  "title": "政治資金規正法及び租税特別措置法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-22",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0AAE.htm",
+  "status": "未了",
+  "title": "子ども・子育て支援法等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-23",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0CDA.htm",
+  "status": "未了",
+  "title": "若者の就労所得に係る所得税の負担を軽減するための所得控除の拡充に関し講ずべき措置に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-24",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C36.htm",
+  "status": "未了",
+  "title": "ライドシェア事業に係る制度の導入に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-25",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0CDE.htm",
+  "status": "未了",
+  "title": "外国為替資金特別会計の在り方の見直しに関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-26",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEF9E.htm",
+  "status": "撤回",
+  "title": "租税特別措置法及び東日本大震災の被災者等に係る国税関係法律の臨時特例に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-27",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0BCE.htm",
+  "status": "未了",
+  "title": "地方税法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-28",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEFD6.htm",
+  "status": "成立",
+  "title": "国会法及び議院における証人の宣誓及び証言等に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-29",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C86.htm",
+  "status": "未了",
+  "title": "民法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-3",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0292.htm",
+  "status": "未了",
+  "title": "介護・障害福祉従事者の人材確保に関する特別措置法案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-30",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C8A.htm",
+  "status": "未了",
+  "title": "婚姻前の氏の通称使用に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-31",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B02.htm",
+  "status": "未了",
+  "title": "自動車盗難対策等の推進に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-32",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C96.htm",
+  "status": "未了",
+  "title": "組織的な犯罪の処罰及び犯罪収益の規制等に関する法律及び刑事訴訟法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-33",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF10E.htm",
+  "status": "成立",
+  "title": "貨物自動車運送事業法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-34",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF112.htm",
+  "status": "成立",
+  "title": "貨物自動車運送事業の適正化のための体制の整備等の推進に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-35",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C82.htm",
+  "status": "未了",
+  "title": "民法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-36",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF12E.htm",
+  "status": "成立",
+  "title": "行政書士法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-37",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF132.htm",
+  "status": "成立",
+  "title": "ギャンブル等依存症対策基本法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-38",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C66.htm",
+  "status": "未了",
+  "title": "国有林野事業に従事する職員の労働関係を円滑に調整するための行政執行法人の労働関係に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-39",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C6A.htm",
+  "status": "未了",
+  "title": "国有林野事業に従事する職員の給与等に関する特例法案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-4",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0ADA.htm",
+  "status": "未了",
+  "title": "政治資金規正法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-40",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C6E.htm",
+  "status": "未了",
+  "title": "農業用植物の優良な品種を確保するための公的新品種育成の促進等に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-41",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C72.htm",
+  "status": "未了",
+  "title": "地域在来品種等の種苗の保存及び利用等の促進に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-42",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C76.htm",
+  "status": "未了",
+  "title": "食料供給困難事態対策法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-43",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B06.htm",
+  "status": "未了",
+  "title": "国家公務員法等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-44",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B0A.htm",
+  "status": "未了",
+  "title": "国家公務員の労働関係に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-45",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B0E.htm",
+  "status": "未了",
+  "title": "公務員庁設置法案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-46",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0BD2.htm",
+  "status": "未了",
+  "title": "地方公務員法等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-47",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0BD6.htm",
+  "status": "未了",
+  "title": "地方公務員の労働関係に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-48",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF1EE.htm",
+  "status": "成立",
+  "title": "スポーツ基本法及びスポーツにおけるドーピングの防止活動の推進に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-49",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF1F2.htm",
+  "status": "成立",
+  "title": "社会保険労務士法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-5",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0ADE.htm",
+  "status": "未了",
+  "title": "政治資金規正法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-50",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0AE6.htm",
+  "status": "未了",
+  "title": "公職選挙法及び地方自治法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-51",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B5A.htm",
+  "status": "未了",
+  "title": "衆議院の解散に係る手続等に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-52",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0CE2.htm",
+  "status": "未了",
+  "title": "租税特別措置の適用状況の透明化等に関する法律及び地方税法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-53",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF286.htm",
+  "status": "未了",
+  "title": "租税特別措置法及び東日本大震災の被災者等に係る国税関係法律の臨時特例に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-54",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C42.htm",
+  "status": "未了",
+  "title": "自動車産業における脱炭素化の推進に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-55",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0AEA.htm",
+  "status": "未了",
+  "title": "政治団体における複式簿記の導入に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-56",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0AB2.htm",
+  "status": "未了",
+  "title": "児童扶養手当法の一部を改正する等の法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-57",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0AB6.htm",
+  "status": "未了",
+  "title": "保育等従業者の人材確保のための処遇の改善等に関する特別措置法案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-58",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0BC2.htm",
+  "status": "未了",
+  "title": "郵政民営化法等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-59",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B5E.htm",
+  "status": "未了",
+  "title": "新型コロナウイルス感染症対策検証委員会等の設置等に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-6",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0CF2.htm",
+  "status": "未了",
+  "title": "高等学校等就学支援金の支給に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-60",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B12.htm",
+  "status": "未了",
+  "title": "有人国境離島地域の保全及び特定有人国境離島地域に係る地域社会の維持に関する特別措置法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-61",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C9A.htm",
+  "status": "未了",
+  "title": "刑事訴訟法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-62",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C7A.htm",
+  "status": "未了",
+  "title": "主要食糧の需給及び価格の安定に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-63",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C22.htm",
+  "status": "未了",
+  "title": "特定空港周辺航空機騒音対策特別措置法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-64",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C8E.htm",
+  "status": "未了",
+  "title": "民法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-65",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C92.htm",
+  "status": "未了",
+  "title": "性同一性障害者の性別の取扱いの特例に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-66",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C16.htm",
+  "status": "未了",
+  "title": "国による全ての水俣病の被害者の救済の実現に向けた給付金等の支給に係る制度の創設に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-7",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0CF6.htm",
+  "status": "未了",
+  "title": "義務教育諸学校等の施設費の国庫負担等に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-8",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0CBA.htm",
+  "status": "未了",
+  "title": "健康保険法等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-衆法-9",
+  "kind": "衆法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE53A.htm",
+  "status": "成立",
+  "title": "公職選挙法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-規則-1",
+  "kind": "その他",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEFDA.htm",
+  "status": "本院可決",
+  "title": "衆議院規則の一部を改正する規則案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-規則-2",
+  "kind": "その他",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B62.htm",
+  "status": "未了",
+  "title": "衆議院規則の一部を改正する規則案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-規程-1",
+  "kind": "その他",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEDBE.htm",
+  "status": "本院可決",
+  "title": "衆議院憲法審査会規程の一部を改正する規程案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-規程-2",
+  "kind": "その他",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEFDE.htm",
+  "status": "本院可決",
+  "title": "衆議院情報監視審査会規程の一部を改正する規程案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-1",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE0CA.htm",
+  "status": "成立",
+  "title": "所得税法等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-10",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE206.htm",
+  "status": "成立",
+  "title": "戦没者等の遺族に対する特別弔慰金支給法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-11",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE21E.htm",
+  "status": "成立",
+  "title": "情報処理の促進に関する法律及び特別会計に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-12",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE236.htm",
+  "status": "成立",
+  "title": "道路法等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-13",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE24E.htm",
+  "status": "成立",
+  "title": "港湾法等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-14",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE32E.htm",
+  "status": "成立",
+  "title": "裁判所職員定員法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-15",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE346.htm",
+  "status": "成立",
+  "title": "医薬品、医療機器等の品質、有効性及び安全性の確保等に関する法律等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-16",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE35E.htm",
+  "status": "成立",
+  "title": "防衛省設置法等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-17",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE3B2.htm",
+  "status": "成立",
+  "title": "災害対策基本法等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-18",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE3CA.htm",
+  "status": "成立",
+  "title": "株式会社地域経済活性化支援機構法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-19",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE3E2.htm",
+  "status": "成立",
+  "title": "電波法及び放送法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-2",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE0E2.htm",
+  "status": "成立",
+  "title": "地方税法及び地方税法等の一部を改正する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-20",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE3FA.htm",
+  "status": "成立",
+  "title": "国会議員の選挙等の執行経費の基準に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-21",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0296.htm",
+  "status": "成立",
+  "title": "医療法等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-22",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE42A.htm",
+  "status": "成立",
+  "title": "土地改良法等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-23",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE50E.htm",
+  "status": "成立",
+  "title": "独立行政法人国際協力機構法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-24",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE556.htm",
+  "status": "成立",
+  "title": "株式会社日本政策投資銀行法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-25",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE56E.htm",
+  "status": "成立",
+  "title": "特別会計に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-26",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE586.htm",
+  "status": "成立",
+  "title": "漁業災害補償法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-27",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE59E.htm",
+  "status": "成立",
+  "title": "鳥獣の保護及び管理並びに狩猟の適正化に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-28",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE5C6.htm",
+  "status": "成立",
+  "title": "脱炭素成長型経済構造への円滑な移行の推進に関する法律及び資源の有効な利用の促進に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-29",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE7A2.htm",
+  "status": "成立",
+  "title": "人工知能関連技術の研究開発及び活用の推進に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-3",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE0FA.htm",
+  "status": "成立",
+  "title": "地方交付税法等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-30",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE7BA.htm",
+  "status": "成立",
+  "title": "情報通信技術の進展等に対応するための刑事訴訟法等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-31",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE7D2.htm",
+  "status": "成立",
+  "title": "森林経営管理法及び森林法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-32",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE826.htm",
+  "status": "成立",
+  "title": "公益通報者保護法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-33",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE83E.htm",
+  "status": "成立",
+  "title": "円滑な事業再生を図るための事業者の金融機関等に対する債務の調整の手続等に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-34",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE856.htm",
+  "status": "成立",
+  "title": "老朽化マンション等の管理及び再生の円滑化等を図るための建物の区分所有等に関する法律等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-35",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE8D2.htm",
+  "status": "成立",
+  "title": "地域の自主性及び自立性を高めるための改革の推進を図るための関係法律の整備に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-36",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE8EA.htm",
+  "status": "成立",
+  "title": "日本学術会議法案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-37",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE902.htm",
+  "status": "成立",
+  "title": "保険業法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-38",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE91A.htm",
+  "status": "成立",
+  "title": "信託業法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-39",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE932.htm",
+  "status": "成立",
+  "title": "資金決済に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-4",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE15E.htm",
+  "status": "成立",
+  "title": "重要電子計算機に対する不正な行為による被害の防止に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-40",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE94A.htm",
+  "status": "成立",
+  "title": "児童福祉法等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-41",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE976.htm",
+  "status": "成立",
+  "title": "行政手続における特定の個人を識別するための番号の利用等に関する法律及び住民基本台帳法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-42",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE98E.htm",
+  "status": "成立",
+  "title": "民事裁判情報の活用の促進に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-43",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE9A6.htm",
+  "status": "成立",
+  "title": "譲渡担保契約及び所有権留保契約に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-44",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE9BE.htm",
+  "status": "成立",
+  "title": "譲渡担保契約及び所有権留保契約に関する法律の施行に伴う関係法律の整備等に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-45",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE9D6.htm",
+  "status": "成立",
+  "title": "食品等の流通の合理化及び取引の適正化に関する法律及び卸売市場法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-46",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE9EE.htm",
+  "status": "成立",
+  "title": "海洋再生可能エネルギー発電設備の整備に係る海域の利用の促進に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-47",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEA06.htm",
+  "status": "成立",
+  "title": "風俗営業等の規制及び業務の適正化等に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-48",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEB5A.htm",
+  "status": "成立",
+  "title": "下請代金支払遅延等防止法及び下請中小企業振興法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-49",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEB72.htm",
+  "status": "成立",
+  "title": "盗難特定金属製物品の処分の防止等に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-5",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE176.htm",
+  "status": "成立",
+  "title": "重要電子計算機に対する不正な行為による被害の防止に関する法律の施行に伴う関係法律の整備等に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-50",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEB8A.htm",
+  "status": "成立",
+  "title": "労働施策の総合的な推進並びに労働者の雇用の安定及び職業生活の充実等に関する法律等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-51",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEBA2.htm",
+  "status": "成立",
+  "title": "環境影響評価法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-52",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDECBE.htm",
+  "status": "成立",
+  "title": "独立行政法人男女共同参画機構法案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-53",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDECD6.htm",
+  "status": "成立",
+  "title": "独立行政法人男女共同参画機構法の施行に伴う関係法律の整備等に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-54",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDECEE.htm",
+  "status": "成立",
+  "title": "電気通信事業法及び日本電信電話株式会社等に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-55",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDED06.htm",
+  "status": "成立",
+  "title": "航空法等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-56",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDED1E.htm",
+  "status": "成立",
+  "title": "日本国の自衛隊と我が国以外の締約国の軍隊との間における相互のアクセス及び協力の円滑化に関する日本国と我が国以外の締約国との間の協定の実施に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-57",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDED36.htm",
+  "status": "成立",
+  "title": "労働安全衛生法及び作業環境測定法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-58",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEE82.htm",
+  "status": "成立",
+  "title": "船員法等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-59",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF07E.htm",
+  "status": "成立",
+  "title": "社会経済の変化を踏まえた年金制度の機能強化のための国民年金法等の一部を改正する等の法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-6",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE18E.htm",
+  "status": "成立",
+  "title": "関税定率法等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-7",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE1D6.htm",
+  "status": "成立",
+  "title": "国際開発協会への加盟に伴う措置に関する法律及び米州投資公社への加盟に伴う措置に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-8",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE1BE.htm",
+  "status": "成立",
+  "title": "大学等における修学の支援に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "217-閣法-9",
+  "kind": "閣法",
+  "session": 217,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE1EE.htm",
+  "status": "成立",
+  "title": "公立の義務教育諸学校等の教育職員の給与等に関する特別措置法等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-国有財産-1DDDDF6",
+  "kind": "その他",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDDF6.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和五年度国有財産増減及び現在額総計算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-国有財産-1DDDDFA",
+  "kind": "その他",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDDFA.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和五年度国有財産無償貸付状況総計算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-国有財産-1DDF64A",
+  "kind": "その他",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF64A.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和五年度国有財産増減及び現在額総計算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-国有財産-1DDF652",
+  "kind": "その他",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF652.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和五年度国有財産無償貸付状況総計算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-国有財産-1DE022A",
+  "kind": "その他",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE022A.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和五年度国有財産増減及び現在額総計算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-国有財産-1DE022E",
+  "kind": "その他",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE022E.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和五年度国有財産無償貸付状況総計算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-国有財産-1DE0B86",
+  "kind": "その他",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B86.htm",
+  "status": "未了",
+  "title": "令和五年度国有財産増減及び現在額総計算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-国有財産-1DE0B8A",
+  "kind": "その他",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B8A.htm",
+  "status": "未了",
+  "title": "令和五年度国有財産無償貸付状況総計算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-国有財産-1DE1156",
+  "kind": "その他",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1156.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和五年度国有財産増減及び現在額総計算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-国有財産-1DE115A",
+  "kind": "その他",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE115A.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和五年度国有財産無償貸付状況総計算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-承諾-1DDDDE6",
+  "kind": "その他",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDDE6.htm",
+  "status": "両院承諾",
+  "title": "令和五年度一般会計原油価格・物価高騰対策及び賃上げ促進環境整備対応予備費使用総調書及び各省各庁所管使用調書"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-承諾-1DDDDEA",
+  "kind": "その他",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDDEA.htm",
+  "status": "両院承諾",
+  "title": "令和五年度一般会計予備費使用総調書及び各省各庁所管使用調書"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-承諾-1DDDDEE",
+  "kind": "その他",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDDEE.htm",
+  "status": "両院承諾",
+  "title": "令和五年度特別会計予備費使用総調書及び各省各庁所管使用調書"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-承諾-1DDDDF2",
+  "kind": "その他",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDDF2.htm",
+  "status": "両院承諾",
+  "title": "令和五年度特別会計予算総則第二十一条第一項の規定による経費増額総調書及び各省各庁所管経費増額調書"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-決算-1DDDDFE",
+  "kind": "その他",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDDFE.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和五年度一般会計歳入歳出決算"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-決算-1DDDE02",
+  "kind": "その他",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDE02.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和五年度特別会計歳入歳出決算"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-決算-1DDDE06",
+  "kind": "その他",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDE06.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和五年度国税収納金整理資金受払計算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-決算-1DDDE0A",
+  "kind": "その他",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDE0A.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和五年度政府関係機関決算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-決算-1DDF5EA",
+  "kind": "その他",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF5EA.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和五年度一般会計歳入歳出決算"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-決算-1DDF5F2",
+  "kind": "その他",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF5F2.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和五年度特別会計歳入歳出決算"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-決算-1DDF602",
+  "kind": "その他",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF602.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和五年度国税収納金整理資金受払計算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-決算-1DDF616",
+  "kind": "その他",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF616.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和五年度政府関係機関決算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-決算-1DE021A",
+  "kind": "その他",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE021A.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和五年度一般会計歳入歳出決算"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-決算-1DE021E",
+  "kind": "その他",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE021E.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和五年度特別会計歳入歳出決算"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-決算-1DE0222",
+  "kind": "その他",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0222.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和五年度国税収納金整理資金受払計算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-決算-1DE0226",
+  "kind": "その他",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0226.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和五年度政府関係機関決算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-決算-1DE0B76",
+  "kind": "その他",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B76.htm",
+  "status": "未了",
+  "title": "令和五年度一般会計歳入歳出決算"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-決算-1DE0B7A",
+  "kind": "その他",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B7A.htm",
+  "status": "未了",
+  "title": "令和五年度特別会計歳入歳出決算"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-決算-1DE0B7E",
+  "kind": "その他",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B7E.htm",
+  "status": "未了",
+  "title": "令和五年度国税収納金整理資金受払計算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-決算-1DE0B82",
+  "kind": "その他",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B82.htm",
+  "status": "未了",
+  "title": "令和五年度政府関係機関決算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-決算-1DE1146",
+  "kind": "その他",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1146.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和五年度一般会計歳入歳出決算"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-決算-1DE114A",
+  "kind": "その他",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE114A.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和五年度特別会計歳入歳出決算"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-決算-1DE114E",
+  "kind": "その他",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE114E.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和五年度国税収納金整理資金受払計算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-決算-1DE1152",
+  "kind": "その他",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1152.htm",
+  "status": "衆議院で閉会中審査",
+  "title": "令和五年度政府関係機関決算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-衆法-1",
+  "kind": "衆法",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0CD2.htm",
+  "status": "未了",
+  "title": "賃金上昇を上回る所得税の負担増加等に対処するために所得税に関し講ずべき措置に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-衆法-10",
+  "kind": "衆法",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDD8A.htm",
+  "status": "撤回",
+  "title": "政治資金規正法及び租税特別措置法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-衆法-12",
+  "kind": "衆法",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0AF2.htm",
+  "status": "未了",
+  "title": "政党交付金の交付停止等に関する制度の創設に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-衆法-13",
+  "kind": "衆法",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0AF6.htm",
+  "status": "未了",
+  "title": "政治資金規正法等の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-衆法-17",
+  "kind": "衆法",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0CD6.htm",
+  "status": "未了",
+  "title": "財政法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-衆法-18",
+  "kind": "衆法",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDE26.htm",
+  "status": "未了",
+  "title": "サイバー安全保障を確保するための能動的サイバー防御等に係る態勢の整備の推進に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-衆法-19",
+  "kind": "衆法",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0CAA.htm",
+  "status": "未了",
+  "title": "育児・介護二重負担者の支援に関する施策の推進に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-衆法-21",
+  "kind": "衆法",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDDA2.htm",
+  "status": "未了",
+  "title": "消費者対応業務関連特定行為対策の推進に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-衆法-22",
+  "kind": "衆法",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B3A.htm",
+  "status": "未了",
+  "title": "被災者生活再建支援法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-衆法-23",
+  "kind": "衆法",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0CAE.htm",
+  "status": "未了",
+  "title": "健康保険法及び高齢者の医療の確保に関する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-衆法-24",
+  "kind": "衆法",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B32.htm",
+  "status": "未了",
+  "title": "我が国の総合的な安全保障の確保を図るための土地等の取得、利用及び管理の規制に関する施策の推進に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-衆法-25",
+  "kind": "衆法",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0CEE.htm",
+  "status": "未了",
+  "title": "学校給食法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-衆法-3",
+  "kind": "衆法",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDDB6.htm",
+  "status": "撤回",
+  "title": "揮発油価格高騰時における揮発油税等税率特例停止措置の実施並びに揮発油税等の税率の特例の廃止及び脱炭素社会の実現等に資する税制の構築のための措置に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-衆法-4",
+  "kind": "衆法",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE023A.htm",
+  "status": "未了",
+  "title": "一般会計からの自動車安全特別会計の自動車事故対策勘定への繰入れのために講ずべき措置に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-衆法-5",
+  "kind": "衆法",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C46.htm",
+  "status": "未了",
+  "title": "電気料金の高騰に対する当分の間の措置として電気の使用者に対して再生可能エネルギー電気に係る賦課金の請求が行われないようにするために講ずべき措置等に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-衆法-9",
+  "kind": "衆法",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0AEE.htm",
+  "status": "未了",
+  "title": "政治資金規正法の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-ＮＨＫ決算-1DDDE1E",
+  "kind": "その他",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDE1E.htm",
+  "status": "未了",
+  "title": "日本放送協会令和五年度財産目録、貸借対照表、損益計算書、資本等変動計算書及びキャッシュ・フロー計算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-ＮＨＫ決算-1DDF3E6",
+  "kind": "その他",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF3E6.htm",
+  "status": "未了",
+  "title": "日本放送協会令和五年度財産目録、貸借対照表、損益計算書、資本等変動計算書及びキャッシュ・フロー計算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "216-ＮＨＫ決算-1DE01CE",
+  "kind": "その他",
+  "session": 216,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE01CE.htm",
+  "status": "本院議了",
+  "title": "日本放送協会令和五年度財産目録、貸借対照表、損益計算書、資本等変動計算書及びキャッシュ・フロー計算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "215-衆法-1",
+  "kind": "衆法",
+  "session": 215,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDDAA.htm",
+  "status": "撤回",
+  "title": "行政手続における特定の個人を識別するための番号の利用等に関する法律等の一部を改正する法律の一部を改正する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "215-衆法-2",
+  "kind": "衆法",
+  "session": 215,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0CA6.htm",
+  "status": "未了",
+  "title": "就労支援給付制度の導入に関する法律案"
+ },
+ {
+  "house": "shugiin",
+  "id": "212-ＮＨＫ決算-1DDDE1A",
+  "kind": "その他",
+  "session": 212,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDE1A.htm",
+  "status": "未了",
+  "title": "日本放送協会令和四年度財産目録、貸借対照表、損益計算書、資本等変動計算書及びキャッシュ・フロー計算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "212-ＮＨＫ決算-1DDF3E2",
+  "kind": "その他",
+  "session": 212,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF3E2.htm",
+  "status": "未了",
+  "title": "日本放送協会令和四年度財産目録、貸借対照表、損益計算書、資本等変動計算書及びキャッシュ・フロー計算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "212-ＮＨＫ決算-1DE01CA",
+  "kind": "その他",
+  "session": 212,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE01CA.htm",
+  "status": "本院議了",
+  "title": "日本放送協会令和四年度財産目録、貸借対照表、損益計算書、資本等変動計算書及びキャッシュ・フロー計算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "210-ＮＨＫ決算-1DDDE16",
+  "kind": "その他",
+  "session": 210,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDE16.htm",
+  "status": "未了",
+  "title": "日本放送協会令和三年度財産目録、貸借対照表、損益計算書、資本等変動計算書及びキャッシュ・フロー計算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "210-ＮＨＫ決算-1DDF3DE",
+  "kind": "その他",
+  "session": 210,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF3DE.htm",
+  "status": "未了",
+  "title": "日本放送協会令和三年度財産目録、貸借対照表、損益計算書、資本等変動計算書及びキャッシュ・フロー計算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "210-ＮＨＫ決算-1DE01C6",
+  "kind": "その他",
+  "session": 210,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE01C6.htm",
+  "status": "本院議了",
+  "title": "日本放送協会令和三年度財産目録、貸借対照表、損益計算書、資本等変動計算書及びキャッシュ・フロー計算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "207-ＮＨＫ決算-1DDDE12",
+  "kind": "その他",
+  "session": 207,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDE12.htm",
+  "status": "未了",
+  "title": "日本放送協会令和二年度財産目録、貸借対照表、損益計算書、資本等変動計算書及びキャッシュ・フロー計算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "207-ＮＨＫ決算-1DDF3DA",
+  "kind": "その他",
+  "session": 207,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF3DA.htm",
+  "status": "未了",
+  "title": "日本放送協会令和二年度財産目録、貸借対照表、損益計算書、資本等変動計算書及びキャッシュ・フロー計算書"
+ },
+ {
+  "house": "shugiin",
+  "id": "207-ＮＨＫ決算-1DE01C2",
+  "kind": "その他",
+  "session": 207,
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE01C2.htm",
+  "status": "本院議了",
+  "title": "日本放送協会令和二年度財産目録、貸借対照表、損益計算書、資本等変動計算書及びキャッシュ・フロー計算書"
+ }
+]

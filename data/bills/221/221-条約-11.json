@@ -1,0 +1,33 @@
+{
+ "house": "shugiin",
+ "id": "221-条約-11",
+ "kind": "条約",
+ "number": 11,
+ "received": {
+  "sangiin": "2026-05-19",
+  "shugiin": "2026-03-31"
+ },
+ "result": {
+  "sangiin": "承認",
+  "shugiin": "承認"
+ },
+ "session": 221,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "全会一致",
+  "unanimous": true,
+  "yes": [
+   "自由民主党・無所属の会",
+   "中道改革連合・無所属",
+   "日本維新の会",
+   "国民民主党・無所属クラブ",
+   "参政党",
+   "チームみらい",
+   "日本共産党"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2482.htm",
+ "status": "両院承認",
+ "submitterText": "内閣",
+ "title": "国際民間航空条約第五十条（ａ）の改正に関する二千十六年十月六日にモントリオールで署名された議定書及び国際民間航空条約第五十六条の改正に関する二千十六年十月六日にモントリオールで署名された議定書の締結について承認を求めるの件"
+}

@@ -1,0 +1,34 @@
+{
+ "house": "shugiin",
+ "id": "221-閣法-9",
+ "kind": "閣法",
+ "number": 9,
+ "received": {
+  "sangiin": "2026-03-13",
+  "shugiin": "2026-02-27"
+ },
+ "result": {
+  "lawNumber": "7",
+  "promulgated": "2026-03-31",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 221,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "中道改革連合・無所属",
+   "日本維新の会",
+   "国民民主党・無所属クラブ",
+   "参政党",
+   "チームみらい",
+   "日本共産党"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE152E.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "公立義務教育諸学校の学級編制及び教職員定数の標準に関する法律の一部を改正する法律案"
+}

@@ -1,0 +1,35 @@
+{
+ "house": "shugiin",
+ "id": "221-閣法-60",
+ "kind": "閣法",
+ "number": 60,
+ "received": {
+  "sangiin": "2026-05-26",
+  "shugiin": "2026-04-10"
+ },
+ "result": {
+  "lawNumber": "44",
+  "promulgated": "2026-06-19",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 221,
+ "shugiinGroupStance": {
+  "no": [
+   "日本共産党"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "中道改革連合・無所属",
+   "日本維新の会",
+   "国民民主党・無所属クラブ",
+   "参政党",
+   "チームみらい"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE27C6.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "ポリ塩化ビフェニル廃棄物の適正な処理の推進に関する特別措置法及び中間貯蔵・環境安全事業株式会社法の一部を改正する法律案"
+}

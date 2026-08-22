@@ -1,0 +1,38 @@
+{
+ "house": "shugiin",
+ "id": "217-閣法-37",
+ "kind": "閣法",
+ "number": 37,
+ "received": {
+  "sangiin": "2025-05-15",
+  "shugiin": "2025-03-07"
+ },
+ "result": {
+  "lawNumber": "54",
+  "promulgated": "2025-06-06",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 217,
+ "shugiinGroupStance": {
+  "no": [
+   "れいわ新選組"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主党・無所属",
+   "日本維新の会",
+   "国民民主党・無所属クラブ",
+   "公明党",
+   "日本共産党",
+   "有志の会",
+   "参政党",
+   "日本保守党"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE902.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "保険業法の一部を改正する法律案"
+}

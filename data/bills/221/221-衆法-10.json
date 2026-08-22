@@ -1,0 +1,42 @@
+{
+ "house": "shugiin",
+ "id": "221-衆法-10",
+ "kind": "衆法",
+ "number": 10,
+ "received": {
+  "sangiin": "2026-05-26",
+  "shugiin": "2026-05-26"
+ },
+ "result": {
+  "lawNumber": "26",
+  "promulgated": "2026-05-29",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 221,
+ "shugiinGroupStance": {
+  "no": [
+   "チームみらい"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "中道改革連合・無所属",
+   "日本維新の会",
+   "国民民主党・無所属クラブ",
+   "参政党",
+   "日本共産党"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE28CA.htm",
+ "status": "成立",
+ "submitterNames": [
+  "山口俊一"
+ ],
+ "submitterText": "議院運営委員長",
+ "submitters": [
+  "h_8f64ac518a"
+ ],
+ "supporterNames": [],
+ "title": "国会議員の歳費、旅費及び手当等に関する法律の一部を改正する法律案"
+}

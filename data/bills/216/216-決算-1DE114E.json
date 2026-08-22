@@ -1,0 +1,14 @@
+{
+ "house": "shugiin",
+ "id": "216-決算-1DE114E",
+ "kind": "その他",
+ "kindText": "決算",
+ "result": {
+  "shugiin": "閉会中審査"
+ },
+ "session": 216,
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE114E.htm",
+ "status": "衆議院で閉会中審査",
+ "submitterText": "内閣",
+ "title": "令和五年度国税収納金整理資金受払計算書"
+}

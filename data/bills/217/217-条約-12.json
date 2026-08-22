@@ -1,0 +1,36 @@
+{
+ "house": "shugiin",
+ "id": "217-条約-12",
+ "kind": "条約",
+ "number": 12,
+ "received": {
+  "sangiin": "2025-04-24",
+  "shugiin": "2025-03-11"
+ },
+ "result": {
+  "sangiin": "承認",
+  "shugiin": "承認"
+ },
+ "session": 217,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "全会一致",
+  "unanimous": true,
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主党・無所属",
+   "日本維新の会",
+   "国民民主党・無所属クラブ",
+   "公明党",
+   "れいわ新選組",
+   "日本共産党",
+   "有志の会",
+   "参政党",
+   "日本保守党"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEC02.htm",
+ "status": "両院承認",
+ "submitterText": "内閣",
+ "title": "職業上の安全及び健康並びに作業環境に関する条約（第百五十五号）の締結について承認を求めるの件"
+}

@@ -1,0 +1,81 @@
+{
+ "house": "shugiin",
+ "id": "221-衆法-14",
+ "kind": "衆法",
+ "number": 14,
+ "received": {
+  "shugiin": "2026-06-12"
+ },
+ "result": {
+  "shugiin": "閉会中審査"
+ },
+ "session": 221,
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE293A.htm",
+ "status": "衆議院で閉会中審査",
+ "submitterGroups": [
+  "参政党",
+  "チームみらい"
+ ],
+ "submitterNames": [
+  "和田政宗",
+  "石川勝",
+  "高山聡史",
+  "古川あおい"
+ ],
+ "submitterText": "和田 政宗君外三名",
+ "submitters": [
+  "h_3d63b9a7de",
+  "h_a84ac713fc",
+  "h_eacf7bdbc4",
+  "h_ddc6faad29"
+ ],
+ "supporterNames": [
+  "青木ひとみ",
+  "伊藤恵介",
+  "川裕一郎",
+  "木下敏之",
+  "工藤聖子",
+  "島村かおる",
+  "鈴木美香",
+  "谷浩一郎",
+  "豊田真由子",
+  "なかやめぐ",
+  "牧野俊一",
+  "吉川里奈",
+  "渡辺藍理",
+  "宇佐美登",
+  "河合道雄",
+  "小林修平",
+  "須田英太郎",
+  "土橋章宏",
+  "林拓海",
+  "峰島侑也",
+  "武藤かず子",
+  "山田瑛理"
+ ],
+ "supporters": [
+  "h_dcf5bd65bf",
+  "h_4bf10e257c",
+  "h_ff53838a0d",
+  "h_07c3017bc6",
+  "h_e158c4b2d3",
+  "h_a120a79149",
+  "h_3e22831bd0",
+  "h_41de0ce0dc",
+  "h_f0f56ddbe9",
+  "h_fafdafd533",
+  "h_3ffb18c711",
+  "h_e1918e08bd",
+  "h_c14975273e",
+  "h_a0488eecc3",
+  "h_6f86ad54e2",
+  "h_76c514da96",
+  "h_fa266b93af",
+  "h_95e327bf89",
+  "h_eac0d0ee76",
+  "h_efe003306c",
+  "h_c7b5ce5fc1",
+  "h_9ea73c4e3f"
+ ],
+ "title": "政治資金規正法の一部を改正する法律案"
+}

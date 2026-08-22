@@ -1,0 +1,35 @@
+{
+ "house": "shugiin",
+ "id": "221-閣法-25",
+ "kind": "閣法",
+ "number": 25,
+ "received": {
+  "sangiin": "2026-04-28",
+  "shugiin": "2026-03-13"
+ },
+ "result": {
+  "lawNumber": "31",
+  "promulgated": "2026-06-05",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 221,
+ "shugiinGroupStance": {
+  "no": [
+   "日本共産党"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "中道改革連合・無所属",
+   "日本維新の会",
+   "国民民主党・無所属クラブ",
+   "参政党",
+   "チームみらい"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1FDE.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "健康保険法等の一部を改正する法律案"
+}

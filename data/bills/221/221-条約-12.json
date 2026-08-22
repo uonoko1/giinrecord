@@ -1,0 +1,33 @@
+{
+ "house": "shugiin",
+ "id": "221-条約-12",
+ "kind": "条約",
+ "number": 12,
+ "received": {
+  "sangiin": "2026-05-19",
+  "shugiin": "2026-03-31"
+ },
+ "result": {
+  "sangiin": "承認",
+  "shugiin": "承認"
+ },
+ "session": 221,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "全会一致",
+  "unanimous": true,
+  "yes": [
+   "自由民主党・無所属の会",
+   "中道改革連合・無所属",
+   "日本維新の会",
+   "国民民主党・無所属クラブ",
+   "参政党",
+   "チームみらい",
+   "日本共産党"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2496.htm",
+ "status": "両院承認",
+ "submitterText": "内閣",
+ "title": "万国郵便連合憲章の第十二追加議定書、万国郵便連合一般規則の第四追加議定書、万国郵便連合一般規則の第五追加議定書、万国郵便条約の第一追加議定書及び万国郵便条約の第二追加議定書の締結について承認を求めるの件"
+}

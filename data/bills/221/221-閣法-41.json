@@ -1,0 +1,35 @@
+{
+ "house": "shugiin",
+ "id": "221-閣法-41",
+ "kind": "閣法",
+ "number": 41,
+ "received": {
+  "sangiin": "2026-06-25",
+  "shugiin": "2026-03-31"
+ },
+ "result": {
+  "lawNumber": "59",
+  "promulgated": "2026-07-17",
+  "sangiin": "可決",
+  "shugiin": "修正"
+ },
+ "session": 221,
+ "shugiinGroupStance": {
+  "no": [
+   "参政党",
+   "日本共産党"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "中道改革連合・無所属",
+   "日本維新の会",
+   "国民民主党・無所属クラブ",
+   "チームみらい"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2432.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "科学技術・イノベーション創出の活性化に関する法律の一部を改正する法律案"
+}

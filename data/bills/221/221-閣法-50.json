@@ -1,0 +1,35 @@
+{
+ "house": "shugiin",
+ "id": "221-閣法-50",
+ "kind": "閣法",
+ "number": 50,
+ "received": {
+  "sangiin": "2026-05-19",
+  "shugiin": "2026-04-03"
+ },
+ "result": {
+  "lawNumber": "40",
+  "promulgated": "2026-06-17",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 221,
+ "shugiinGroupStance": {
+  "no": [
+   "日本共産党"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "中道改革連合・無所属",
+   "日本維新の会",
+   "国民民主党・無所属クラブ",
+   "参政党",
+   "チームみらい"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2602.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "予備自衛官等の職務の円滑な遂行を図るための国家公務員及び地方公務員の兼業の特例に関する法律案"
+}

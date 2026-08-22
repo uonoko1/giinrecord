@@ -1,0 +1,33 @@
+{
+ "house": "shugiin",
+ "id": "221-条約-9",
+ "kind": "条約",
+ "number": 9,
+ "received": {
+  "sangiin": "2026-05-19",
+  "shugiin": "2026-03-31"
+ },
+ "result": {
+  "sangiin": "承認",
+  "shugiin": "承認"
+ },
+ "session": 221,
+ "shugiinGroupStance": {
+  "no": [
+   "日本共産党"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "中道改革連合・無所属",
+   "日本維新の会",
+   "国民民主党・無所属クラブ",
+   "参政党",
+   "チームみらい"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE245A.htm",
+ "status": "両院承認",
+ "submitterText": "内閣",
+ "title": "所得に対する租税に関する二重課税の除去並びに脱税及び租税回避の防止のための日本国とキルギス共和国との間の協定の締結について承認を求めるの件"
+}

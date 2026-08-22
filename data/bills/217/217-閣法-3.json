@@ -1,0 +1,38 @@
+{
+ "house": "shugiin",
+ "id": "217-閣法-3",
+ "kind": "閣法",
+ "number": 3,
+ "received": {
+  "sangiin": "2025-03-04",
+  "shugiin": "2025-02-04"
+ },
+ "result": {
+  "lawNumber": "8",
+  "promulgated": "2025-03-31",
+  "sangiin": "可決",
+  "shugiin": "修正"
+ },
+ "session": 217,
+ "shugiinGroupStance": {
+  "no": [
+   "国民民主党・無所属クラブ",
+   "れいわ新選組",
+   "日本共産党",
+   "日本保守党"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主党・無所属",
+   "日本維新の会",
+   "公明党",
+   "有志の会",
+   "参政党"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE0FA.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "地方交付税法等の一部を改正する法律案"
+}
