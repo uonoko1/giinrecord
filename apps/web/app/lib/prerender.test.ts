@@ -17,6 +17,7 @@ describe("prerenderPaths", () => {
     expect(new Set(paths).size).toBe(paths.length);
   });
   it("data/ が無ければ静的ページだけ返して落ちない", async () => {
-    expect(await prerenderPaths(missing)).toEqual(["/", "/about"]);
+    // /members は #7 以降、データが無くても常に生成する（空の一覧を表示）
+    expect(await prerenderPaths(missing)).toEqual(["/", "/about", "/members"]);
   });
 });
