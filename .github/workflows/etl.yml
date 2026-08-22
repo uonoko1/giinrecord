@@ -33,7 +33,7 @@ jobs:
           git switch -c data/refresh
           git commit -m "data: refresh $STAMP"
           git push --force origin data/refresh
-          if ! gh pr view data/refresh --json number >/dev/null 2>&1; then
+          if [ -z "$(gh pr list --head data/refresh --state open --json number -q ".[0].number")" ]; then
             gh pr create --base main --head data/refresh --title "data: refresh $STAMP" \
               --body "Automated ETL output. Validated by validateDataset in the ETL run; CI builds the site with it." --label etl
           fi
