@@ -20,11 +20,11 @@ async function brokenDataDir(): Promise<string> {
 }
 
 describe("memberPaths", () => {
-  it("members/index.json の全議員を /members/{id} にする", async () => {
-    expect(await memberPaths(fixtures)).toEqual(["/members/m_000123", "/members/m_000456"]);
+  it("一覧 /members と、members/index.json の全議員 /members/{id} を返す", async () => {
+    expect(await memberPaths(fixtures)).toEqual(["/members", "/members/m_000123", "/members/m_000456"]);
   });
-  it("data/ が無ければ空配列を返して落ちない", async () => {
-    expect(await memberPaths(missing)).toEqual([]);
+  it("data/ が無ければ一覧 /members だけを返して落ちない", async () => {
+    expect(await memberPaths(missing)).toEqual(["/members"]);
   });
   it("index.json が壊れていれば黙らずに throw する", async () => {
     await expect(memberPaths(await brokenDataDir())).rejects.toThrow(SyntaxError);
