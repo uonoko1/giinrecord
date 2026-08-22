@@ -1,7 +1,7 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import type { Member, RollCall } from "@seiji-kiroku/shared";
+import type { Member, MemberTerm, RollCall } from "@seiji-kiroku/shared";
 import { matchVotes, normalizeName } from "../src/match-votes.ts";
 import { parseRollCall } from "../src/sources/sangiin-votes.ts";
 import { parseMemberList } from "../src/sources/sangiin-members.ts";
@@ -91,7 +91,7 @@ describe("matchVotes: 純粋関数", () => {
     assert.equal(rc.votes[0].memberId, "m_000005");
     assert.deepEqual(unmatched, []);
     assert.deepEqual(groupMismatch, [
-      { nameText: "木村 英子", group: "れいわ新選組", memberId: "m_000005", rosterGroup: "い党", rollCallId: "221-0605-v001" },
+      { nameText: "木村 英子", voteGroup: "れいわ新選組", memberId: "m_000005", rosterGroup: "い党", rollCallId: "221-0605-v001" },
     ]);
   });
 
@@ -128,9 +128,55 @@ describe("実データ: 第221回の名簿と投票結果", () => {
       const { rollCall: matched, unmatched, groupMismatch } = matchVotes(rc, members);
       assert.deepEqual(unmatched, []);
       // 第221回で会派不一致になりうるのは れいわ新選組 → いのちの党 の改称分のみ
-      assert.ok(groupMismatch.every((g) => g.group === "れいわ新選組" && g.rosterGroup === "いのちの党"), JSON.stringify(groupMismatch));
+      assert.ok(groupMismatch.every((g) => g.voteGroup === "れいわ新選組" && g.rosterGroup === "いのちの党"), JSON.stringify(groupMismatch));
       assert.ok(matched.votes.every((v) => v.memberId !== ""));
       assert.equal(new Set(matched.votes.map((v) => v.memberId)).size, matched.votes.length);
+    });
+  }
+});
+
+describe("matchVotes: 氏名＋採決時点の会派（groupAt）のマトリクス（Issue #24）", () => {
+  const t = (group: string, sessionFrom: number, sessionTo = sessionFrom): MemberTerm => ({ house: "sangiin", group, district: "", from: "", sessionFrom, sessionTo });
+  const withTerms = (id: string, name: string, terms: MemberTerm[]) => member(id, name, "", { terms });
+  const vote = (nameText: string, group: string) => ({ nameText, group });
+  type Case = { label: string; members: Member[]; vote: { nameText: string; group: string }; memberId: string; unmatched: boolean; mismatch?: string };
+  const cases: Case[] = [
+    { label: "一意な氏名・採決回次の会派が一致 → 一致、mismatch なし",
+      members: [withTerms("m_1", "木村 英子", [t("いのちの党", 221), t("れいわ新選組", 217, 220)])],
+      vote: vote("木村 英子", "いのちの党"), memberId: "m_1", unmatched: false },
+    { label: "一意な氏名・採決回次の会派とは違うが別の回次の名簿と一致 → 一致、mismatch なし（第221回の れいわ新選組 票）",
+      members: [withTerms("m_1", "木村 英子", [t("いのちの党", 221), t("れいわ新選組", 217, 220)])],
+      vote: vote("木村 英子", "れいわ新選組"), memberId: "m_1", unmatched: false },
+    { label: "一意な氏名・どの回次の会派とも違う → 氏名で一致させ、group-mismatch に採決回次の会派を記録",
+      members: [withTerms("m_1", "木村 英子", [t("いのちの党", 221), t("れいわ新選組", 217, 220)])],
+      vote: vote("木村 英子", "日本共産党"), memberId: "m_1", unmatched: false, mismatch: "いのちの党" },
+    { label: "一意な氏名・採決回次に効く名簿が無く（後の回次のみ）会派も違う → 一致させ、rosterGroup は手元の全会派",
+      members: [withTerms("m_1", "木村 英子", [t("いのちの党", 223), t("れいわ新選組", 222)])],
+      vote: vote("木村 英子", "日本共産党"), memberId: "m_1", unmatched: false, mismatch: "いのちの党/れいわ新選組" },
+    { label: "同姓同名・採決回次の会派で1人に絞れる → 一致",
+      members: [withTerms("m_1", "鈴木 一郎", [t("自由民主党・無所属の会", 221)]), withTerms("m_2", "鈴木 一郎", [t("立憲民主・無所属", 221)])],
+      vote: vote("鈴木 一郎", "立憲民主・無所属"), memberId: "m_2", unmatched: false },
+    { label: "同姓同名・採決回次の会派は名簿の略称/旧称でも一致（自由民主党 ← 自民）",
+      members: [withTerms("m_1", "鈴木 一郎", [t("自民", 221)]), withTerms("m_2", "鈴木 一郎", [t("立憲", 221)])],
+      vote: vote("鈴木 一郎", "自由民主党"), memberId: "m_1", unmatched: false },
+    { label: "同姓同名・片方は採決回次より後の名簿にしか無い（groupAt なし）→ 効いている名簿の側に一致",
+      members: [withTerms("m_1", "鈴木 一郎", [t("立憲民主・無所属", 222)]), withTerms("m_2", "鈴木 一郎", [t("立憲民主・無所属", 219, 220)])],
+      vote: vote("鈴木 一郎", "立憲民主・無所属"), memberId: "m_2", unmatched: false },
+    { label: "同姓同名・採決回次の会派が両方に一致 → 未突合",
+      members: [withTerms("m_1", "鈴木 一郎", [t("自由民主党・無所属の会", 221)]), withTerms("m_2", "鈴木 一郎", [t("自由民主党・無所属の会", 221)])],
+      vote: vote("鈴木 一郎", "自由民主党・無所属の会"), memberId: "", unmatched: true },
+    { label: "同姓同名・採決回次の会派がどちらにも一致しない → 未突合（別の回次の会派で推定しない）",
+      members: [withTerms("m_1", "鈴木 一郎", [t("自由民主党・無所属の会", 221), t("公明党", 217, 220)]), withTerms("m_2", "鈴木 一郎", [t("立憲民主・無所属", 221)])],
+      vote: vote("鈴木 一郎", "公明党"), memberId: "", unmatched: true },
+  ];
+  for (const c of cases) {
+    test(c.label, () => {
+      const { rollCall: rc, unmatched, groupMismatch } = matchVotes(rollCall([c.vote]), c.members);
+      assert.equal(rc.votes[0].memberId, c.memberId);
+      assert.equal(unmatched.length, c.unmatched ? 1 : 0);
+      assert.deepEqual(groupMismatch, c.mismatch === undefined ? [] : [
+        { memberId: c.memberId, nameText: c.vote.nameText, voteGroup: c.vote.group, rosterGroup: c.mismatch, rollCallId: "221-0605-v001" },
+      ]);
     });
   }
 });

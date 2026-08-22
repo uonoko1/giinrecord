@@ -41,6 +41,17 @@ describe("matchSpeeches: 発言者名＋会派で名寄せ（matchVotes と同�
     assert.equal(speeches[0].memberId, "m_2");
   });
 
+  test("同姓同名は回次を渡すとその回次に効いている名簿の会派（groupAt）で分離する（Issue #24）", () => {
+    const members = [
+      member("m_1", "山田 太郎", "自民", { terms: [{ house: "sangiin", group: "立憲民主・無所属", district: "", from: "", sessionFrom: 221, sessionTo: 221 }, { house: "sangiin", group: "自由民主党・無所属の会", district: "", from: "", sessionFrom: 219, sessionTo: 220 }] }),
+      member("m_2", "山田 太郎", "立憲", { terms: [{ house: "sangiin", group: "自由民主党・無所属の会", district: "", from: "", sessionFrom: 221, sessionTo: 221 }] }),
+    ];
+    const { speeches } = matchSpeeches([speech("a_001", "山田太郎", "立憲民主・無所属")], members, 221);
+    assert.equal(speeches[0].memberId, "m_1");
+    const older = matchSpeeches([speech("a_001", "山田太郎", "自由民主党・無所属の会")], members, 219);
+    assert.equal(older.speeches[0].memberId, "m_1");
+  });
+
   test("同姓同名で会派でも絞れなければ memberId なしで unmatched に載せる", () => {
     const members = [member("m_1", "山田 太郎", "自民"), member("m_2", "山田 太郎", "自民")];
     const { speeches, unmatched } = matchSpeeches([speech("a_001", "山田太郎", "自由民主党・無所属の会")], members);
