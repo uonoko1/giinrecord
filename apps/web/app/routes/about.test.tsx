@@ -5,6 +5,8 @@ import About from "./about";
 import { dataset } from "../test-fixtures/dataset";
 
 const EVALUATIVE_WORDS = ["おすすめ", "ランキング", "一致率"];
+/** 運動的・煽り的な言葉。事実と依頼だけを書く（#47）。 */
+const CAMPAIGN_WORDS = ["応援", "守る", "守ろう", "ぜひ", "お願いします", "あなたの力", "みんなで", "寄付をお願い"];
 
 function renderAbout(data = dataset) {
   return render(
@@ -19,7 +21,7 @@ describe("About", () => {
     renderAbout();
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("このデータについて");
     expect(screen.getByText(/評価・採点・推薦はしません。すべての行に出典があります。/)).toBeInTheDocument();
-    for (const name of ["何が事実で、何が推定か", "記録にないこと", "更新", "検証する"]) {
+    for (const name of ["何が事実で、何が推定か", "記録にないこと", "更新", "検証する", "運営費について"]) {
       expect(screen.getByRole("heading", { level: 2, name })).toBeInTheDocument();
     }
   });
@@ -62,5 +64,38 @@ describe("About", () => {
   it("データが無くても落ちない", () => {
     renderAbout({ meta: undefined, members: [], rollcalls: [] });
     expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument();
+  });
+
+  describe("運営費について", () => {
+    it("費用・収入源・受け取らないもの・公開の約束を書く", () => {
+      renderAbout();
+      const section = screen.getByRole("region", { name: "運営費について" });
+      expect(section).toHaveTextContent("VPS");
+      expect(section).toHaveTextContent("未算出");
+      expect(section).toHaveTextContent("ドメイン");
+      expect(section).toHaveTextContent("取得予定");
+      expect(section).toHaveTextContent("運営者の自費");
+      expect(section).toHaveTextContent("政党・候補者・業界団体からは一切受け取りません");
+      expect(section).toHaveTextContent("資金源と支出を公開します");
+    });
+
+    it("広告は将来の可能性として予告だけする", () => {
+      renderAbout();
+      const section = screen.getByRole("region", { name: "運営費について" });
+      expect(section).toHaveTextContent("政治カテゴリを除外した広告");
+      expect(section.querySelector("ins, iframe, script")).toBeNull();
+    });
+
+    it("支援リンクはリポジトリ URL を指す（GitHub Sponsors 有効化までの代替）", () => {
+      renderAbout();
+      expect(screen.getByRole("link", { name: "支援する" })).toHaveAttribute("href", "https://github.com/uonoko1/seiji-kiroku");
+    });
+
+    it("運動的な言葉を含まない", () => {
+      const { container } = renderAbout();
+      for (const word of CAMPAIGN_WORDS) {
+        expect(container.textContent).not.toContain(word);
+      }
+    });
   });
 });
