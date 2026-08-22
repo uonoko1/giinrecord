@@ -1,0 +1,54 @@
+[
+ {
+  "date": "2026-01-24",
+  "id": "220-0124-v001",
+  "result": "賛成 200・反対 40",
+  "session": 220,
+  "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/220/220-0124-v001.htm",
+  "title": "令和七年度一般会計補正予算（第１号）",
+  "totals": {
+   "no": 40,
+   "total": 240,
+   "yes": 200
+  }
+ },
+ {
+  "date": "2026-03-23",
+  "id": "221-0323-v001",
+  "result": "賛成 226・反対 15",
+  "session": 221,
+  "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0323-v001.htm",
+  "title": "日程第１　国家公務員等の任命に関する件「人事官（菅原晶子君）」",
+  "totals": {
+   "no": 15,
+   "total": 241,
+   "yes": 226
+  }
+ },
+ {
+  "date": "2026-07-24",
+  "id": "221-0724-v006",
+  "result": "賛成 123・反対 121",
+  "session": 221,
+  "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0724-v006.htm",
+  "title": "国家社会機能継続性確保施策及び副首都の整備に係る施策の推進に関する法律案（衆議院提出）",
+  "totals": {
+   "no": 121,
+   "total": 244,
+   "yes": 123
+  }
+ },
+ {
+  "date": "2026-07-24",
+  "id": "221-0724-v007",
+  "result": "賛成 117・反対 127",
+  "session": 221,
+  "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0724-v007.htm",
+  "title": "大都市地域における特別区の設置に関する法律の一部を改正する法律案（奥村祥大君外３名発議）",
+  "totals": {
+   "no": 127,
+   "total": 244,
+   "yes": 117
+  }
+ }
+]

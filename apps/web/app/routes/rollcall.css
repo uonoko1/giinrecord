@@ -1,0 +1,39 @@
+/* 採決ページ・採決一覧. Colours come only from tokens.css; no raw colour codes here. */
+.rollcall { max-width: 720px; margin: 0 auto; padding-bottom: 40px; }
+.rollcall .num { font-variant-numeric: tabular-nums; }
+.rollcall p { margin: 0; }
+
+/* 表紙 */
+.rollcall-cover { padding: 14px 20px 18px; background: var(--cover); color: var(--cover-fg); }
+.rollcall-cover a { color: var(--brass-on-cover); }
+.rollcall-cover-top { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; }
+.rollcall-date { display: flex; align-items: baseline; gap: 10px; margin-top: 20px; font-size: 12px; letter-spacing: 0.1em; color: var(--brass-on-cover); }
+.rollcall-date time { font-family: var(--font-head); font-size: 15px; font-weight: 700; }
+.rollcall-title { margin: 6px 0 0; font-family: var(--font-head); font-size: 24px; font-weight: 800; line-height: 1.35; letter-spacing: 0.02em; }
+.rollcall-tally { margin-top: 14px; padding-top: 12px; border-top: 1.5px solid var(--brass-on-cover); font-family: var(--font-head); font-size: 16px; font-weight: 700; }
+.rollcall-note { margin-top: 6px; font-size: 12px; opacity: 0.8; }
+
+/* 会派 */
+.rollcall-group { padding: 0 20px; }
+.rollcall-group-name { margin: 22px 0 0; font-family: var(--font-head); font-size: 17px; font-weight: 700; color: var(--brass); }
+.rollcall-group-tally { margin-top: 2px; padding-bottom: 6px; border-bottom: 1px solid var(--rule); font-size: 12px; color: var(--muted); }
+.rollcall-votes { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); column-gap: 16px; }
+.rollcall-vote { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--rule); font-size: 14px; }
+.rollcall-vote a { color: var(--ink); text-decoration: none; }
+.rollcall-vote a:hover { text-decoration: underline; }
+.rollcall-empty { padding: 24px 20px; color: var(--muted); }
+
+/* 一覧 */
+.rollcalls-filter { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 20px 0; font-size: 13px; }
+.rollcalls-filter label { display: flex; align-items: center; gap: 8px; }
+.rollcalls-filter select { font: inherit; padding: 4px 8px; color: var(--ink); background: var(--paper); border: 1px solid var(--rule); }
+.rollcalls-count { color: var(--muted); }
+.rollcalls-list { list-style: none; margin: 0; padding: 0 20px; }
+.rollcalls-item { padding: 12px 0; border-bottom: 1px solid var(--rule); display: flex; flex-direction: column; gap: 4px; }
+.rollcalls-item a { color: var(--ink); font-size: 14.5px; line-height: 1.5; font-weight: 700; text-decoration: none; }
+.rollcalls-item a:hover { text-decoration: underline; }
+.rollcalls-meta { font-size: 12px; color: var(--muted); }
+.rollcalls-meta time { color: var(--brass); font-weight: 700; }
+
+/* 出典（一覧） */
+.rollcall-source { margin: 32px 20px 0; padding-top: 12px; border-top: 1px solid var(--rule); font-size: 12px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }

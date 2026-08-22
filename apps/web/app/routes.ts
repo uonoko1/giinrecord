@@ -9,10 +9,12 @@ import { defaultDataDir } from "./lib/data-files";
  * data/members/index.json exists; before the ETL runs, the site is just `/` and `/about`.
  */
 const hasMemberData = existsSync(path.join(defaultDataDir(), "members", "index.json"));
+const hasRollCallData = existsSync(path.join(defaultDataDir(), "rollcalls", "index.json"));
 
 export default [
   index("routes/home.tsx"),
   route("about", "routes/about.tsx"),
   route("members", "routes/members.tsx"),
   ...(hasMemberData ? [route("members/:id", "routes/member.tsx")] : []),
+  ...(hasRollCallData ? [route("rollcalls/:session?", "routes/rollcalls.tsx"), route("rollcalls/:session/:id", "routes/rollcall.tsx")] : []),
 ] satisfies RouteConfig;

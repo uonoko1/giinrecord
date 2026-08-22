@@ -3,9 +3,9 @@
  * These mirror the types the contract says will be added to `packages/shared`;
  * once they land there (ETL PBI), replace this file with re-exports.
  */
-import type { DatasetMeta, House, Member, MemberId, VoteValue } from "@seiji-kiroku/shared";
+import type { DatasetMeta, House, Member, MemberId, RollCall, RollCallSummary, VoteValue } from "@seiji-kiroku/shared";
 
-export type { DatasetMeta, VoteValue };
+export type { DatasetMeta, RollCall, RollCallSummary, VoteValue };
 
 export interface MemberSummary {
   id: MemberId;

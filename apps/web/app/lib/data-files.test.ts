@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { memberPaths, readMemberDetail, readMeta } from "./data-files";
+import { memberPaths, readMemberDetail, readMeta, readRollCall, rollCallPaths } from "./data-files";
 
 const fixtures = fileURLToPath(new URL("../test-fixtures/data", import.meta.url));
 const missing = fileURLToPath(new URL("../test-fixtures/does-not-exist", import.meta.url));
@@ -45,6 +45,44 @@ describe("readMemberDetail", () => {
   });
   it("壊れた JSON は throw する", async () => {
     await expect(readMemberDetail(await brokenDataDir(), "m_000123")).rejects.toThrow(SyntaxError);
+  });
+});
+
+describe("rollCallPaths", () => {
+  it("一覧・回次別一覧・全採決ページを列挙する", async () => {
+    expect(await rollCallPaths(fixtures)).toEqual([
+      "/rollcalls",
+      "/rollcalls/220",
+      "/rollcalls/221",
+      "/rollcalls/220/220-0124-v001",
+      "/rollcalls/221/221-0323-v001",
+      "/rollcalls/221/221-0724-v006",
+      "/rollcalls/221/221-0724-v007",
+    ]);
+  });
+  it("data/ が無ければ空配列を返して落ちない", async () => {
+    expect(await rollCallPaths(missing)).toEqual([]);
+  });
+  it("index.json が壊れていれば黙らずに throw する", async () => {
+    const dir = await brokenDataDir();
+    await mkdir(path.join(dir, "rollcalls"));
+    await writeFile(path.join(dir, "rollcalls", "index.json"), "{ not json");
+    await expect(rollCallPaths(dir)).rejects.toThrow(SyntaxError);
+  });
+});
+
+describe("readRollCall", () => {
+  it("rollcalls/{session}/{id}.json を読む", async () => {
+    const rc = await readRollCall(fixtures, "221", "221-0724-v007");
+    expect(rc?.title).toMatch(/特別区の設置/);
+    expect(rc?.votes).toHaveLength(10);
+  });
+  it("無い id は null", async () => {
+    expect(await readRollCall(fixtures, "221", "221-9999-v999")).toBeNull();
+  });
+  it("パス区切りを含む session / id は読まない", async () => {
+    expect(await readRollCall(fixtures, "../members", "index")).toBeNull();
+    expect(await readRollCall(fixtures, "221", "../index")).toBeNull();
   });
 });
 
