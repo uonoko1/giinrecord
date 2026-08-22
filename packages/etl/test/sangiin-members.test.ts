@@ -109,6 +109,14 @@ test("2行表記の最小ケース: <BR> の前を name にし、[本名] は le
   assert.equal(plain.legalName, undefined);
 });
 
+// Issue #14: 第217回の名簿（れいわ新選組 → 第221回で「いのちの党」に改称）では略称が「れ新」。投票ページの正式名称は「れいわ新選組」。
+test("実フィクスチャ（第217回）: 『れ新』の行は正式名称『れいわ新選組』になり、未知略称に残らない", () => {
+  const html217 = readFileSync(new URL("./fixtures/sangiin-giin-217.htm", import.meta.url), "utf-8");
+  const members = parseMemberList(html217, SRC.replace("221", "217"), 217);
+  assert.ok(members.some((m) => m.terms[0].group === "れいわ新選組"));
+  assert.deepEqual(unmatchedGroups(members), []);
+});
+
 // Issue #36: 名簿の会派セルは「みら」「い党」のような2文字略称で、改行や切り詰めではない（実フィクスチャ 7025008 = い党 など）。
 // 利用者に略称をそのまま見せず、会派別所属議員数（giinsu.htm）の正式名称に解決して出す。
 test("実フィクスチャ: 『い党』『みら』の行は正式名称『いのちの党』『チームみらい・無所属の会』になる", () => {
