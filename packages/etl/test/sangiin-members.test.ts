@@ -50,13 +50,18 @@ test("同じ永続IDに解決する行が2つあれば例外（衝突を黙っ�
   assert.throws(() => parseMemberList(`<table>${row("7000001")}${row("5000001")}</table>`, SRC, 221), /duplicate member id/);
 });
 
-test("MemberSummary へ変換: counts は 0、group/district/termEnd は terms[0] から", () => {
+test("MemberSummary へ変換: counts は 0、group/district/termEnd は terms[0] から。名簿1つだけなら current は true", () => {
   const [m] = parseMemberList(html, SRC, 221);
   assert.deepEqual(toSummary(m), {
     id: "m_007006", name: "青木 愛", kana: "あおき あい", house: "sangiin",
-    group: "立憲民主・無所属", district: "比例", termEnd: "2028-07-25",
+    group: "立憲民主・無所属", district: "比例", termEnd: "2028-07-25", current: true,
     counts: { rollcalls: 0, bills: 0, speeches: 0 },
   });
+});
+
+test("MemberSummary へ変換: 統合済み Member の current=false はそのまま（元職）", () => {
+  const [m] = parseMemberList(html, SRC, 221);
+  assert.equal(toSummary({ ...m, current: false }).current, false);
 });
 
 test("会派略称 → 正式名称。投票ページの会派名と突合できる", () => {
