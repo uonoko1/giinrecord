@@ -21,11 +21,20 @@ jobs:
         with: { node-version-file: .nvmrc, cache: pnpm }
       - run: pnpm install --frozen-lockfile
       - run: pnpm etl ${{ github.event.inputs.sessions }}
-      - name: Commit data changes
+      - name: Open / update data PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config user.name "seiji-kiroku-etl[bot]"
           git config user.email "etl@users.noreply.github.com"
           git add data
           if git diff --cached --quiet; then echo "no data changes"; exit 0; fi
-          git commit -m "data: refresh $(date -u +%Y-%m-%dT%H:%MZ)"
-          git push
+          STAMP=$(date -u +%Y-%m-%dT%H:%MZ)
+          git switch -c data/refresh
+          git commit -m "data: refresh $STAMP"
+          git push --force origin data/refresh
+          if ! gh pr view data/refresh --json number >/dev/null 2>&1; then
+            gh pr create --base main --head data/refresh --title "data: refresh $STAMP" \
+              --body "Automated ETL output. Validated by validateDataset in the ETL run; CI builds the site with it." --label etl
+          fi
+          gh pr merge data/refresh --squash --auto
