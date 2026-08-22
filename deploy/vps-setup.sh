@@ -27,7 +27,7 @@ server {
     }
 
     gzip on;
-    gzip_types text/html text/css application/javascript application/json image/svg+xml;
+    gzip_types text/css application/javascript application/json image/svg+xml;
 
     add_header X-Content-Type-Options nosniff always;
     add_header X-Frame-Options DENY always;
