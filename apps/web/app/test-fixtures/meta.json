@@ -1,0 +1,9 @@
+{
+  "fetchedAt": "2025-04-01T03:00:00+09:00",
+  "sessions": [217],
+  "sources": [
+    { "fetchedAt": "2025-04-01T03:00:00+09:00", "name": "参議院", "url": "https://www.sangiin.go.jp/" },
+    { "fetchedAt": "2025-04-01T03:00:00+09:00", "name": "衆議院", "url": "https://www.shugiin.go.jp/" },
+    { "fetchedAt": "2025-04-01T03:00:00+09:00", "name": "国立国会図書館 国会会議録検索システム", "url": "https://kokkai.ndl.go.jp/" }
+  ]
+}
