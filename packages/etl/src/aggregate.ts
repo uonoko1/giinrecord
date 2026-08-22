@@ -1,5 +1,6 @@
-import type { Member, MemberDetail, MemberSummary, MemberTerm, RollCall, RollCallSummary, Speech, TimelineEntry, VoteValue } from "@seiji-kiroku/shared";
+import type { Bill, Member, MemberDetail, MemberSummary, MemberTerm, RollCall, RollCallSummary, Speech, TimelineEntry, VoteValue } from "@seiji-kiroku/shared";
 import { toSummary } from "./sources/sangiin-members.ts";
+import { groupAt } from "./group-history.ts";
 import type { MatchedBill } from "./match-bills.ts";
 
 /** 集約結果（純粋関数の出力）。ファイルへの書き出しは dataset.ts が担う。 */
@@ -92,6 +93,10 @@ export function summarizeRollCall(rc: RollCall, decision?: string): RollCallSumm
  * - 議長・大臣など position 付きの発言（議事進行・政府答弁）も事実として timeline に入れ、position を原文のまま載せる。
  *   counts.speeches は役職付きも含めた数（内訳は持たない）。区別は web が position を表示して行う。
  * - 提出法案（matchBills の出力）は提出日の bill 行になり、sourceUrl は議案ページ。counts.bills はその数。
+ * - 衆院 議案（shugiinBills、#73）: 名寄せ済みの submitters / supporters は 提出者 / 賛成者 の bill 行（事実）。
+ *   shugiinGroupStance の賛成会派／反対会派に、その議員の提出回次の会派（groupAt）が載っていれば stance 行（推定、estimated: true）。
+ *   行に記録するのは会派名であって本人の賛否ではない。会派がどちらにも無い・態度が無い・衆院の受理日が無い議案は行にしない（推論しない）。
+ *   日付は衆議院の議案受理年月日。counts.bills に stance は数えない。
  */
 export function buildDataset(
   members: readonly Member[],
@@ -101,6 +106,8 @@ export function buildDataset(
   speeches: readonly Speech[] = [],
   /** 名簿に名寄せ済みの議員立法の関与（参法の発議者）。 */
   bills: readonly MatchedBill[] = [],
+  /** 衆院 議案情報（matchShugiinBills の出力。submitters / supporters は衆院名簿の memberId）。 */
+  shugiinBills: readonly Bill[] = [],
 ): Aggregated {
   const summarize = (rc: RollCall) => summarizeRollCall(rc, decisions.get(rc.id));
   const timelines = new Map<string, TimelineEntry[]>(members.map((m) => [m.id, []]));
@@ -132,6 +139,29 @@ export function buildDataset(
       ...(b.submitterText ? { submitterText: b.submitterText } : {}), ...(b.status ? { status: b.status } : {}), sourceUrl: b.sourceUrl,
     });
   }
+  for (const b of shugiinBills) {
+    const date = b.received?.shugiin;
+    if (!date) continue;
+    const base = { date, billId: b.id, title: b.title, ...(b.status ? { status: b.status } : {}), sourceUrl: b.sourceUrl };
+    const roles = [["提出者", b.submitters], ["賛成者", b.supporters]] as const;
+    for (const [role, ids] of roles) {
+      for (const memberId of ids ?? []) {
+        timelineOf(memberId, `shugiin bill ${b.id} ${role}`).push({
+          kind: "bill", ...base, role, ...(b.submitterText ? { submitterText: b.submitterText } : {}),
+        });
+      }
+    }
+    const stance = b.shugiinGroupStance;
+    if (!stance) continue;
+    for (const m of members) {
+      if (m.house !== "shugiin") continue;
+      const group = groupAt(m, b.session)?.group;
+      if (!group) continue;
+      const side = stance.yes.includes(group) ? "賛成" : stance.no.includes(group) ? "反対" : undefined;
+      if (!side) continue;
+      timelines.get(m.id)!.push({ kind: "stance", estimated: true, ...base, group, stance: side, stanceText: stance.stanceText });
+    }
+  }
   const details = members.map((m): MemberDetail => ({ ...m, timeline: [...timelines.get(m.id)!].sort(byDateDesc) }));
   const index = members.map((m) => {
     const s = toSummary(m);
@@ -143,7 +173,7 @@ export function buildDataset(
 }
 
 type Sortable = { date: string; kind?: TimelineEntry["kind"]; id?: string; rollCallId?: string; speechId?: string; billId?: string };
-const KIND_ORDER: Record<TimelineEntry["kind"], number> = { vote: 0, bill: 1, speech: 2 };
+const KIND_ORDER: Record<TimelineEntry["kind"], number> = { vote: 0, bill: 1, stance: 2, speech: 3 };
 const sortKey = (x: Sortable) => x.rollCallId ?? x.speechId ?? x.billId ?? x.id ?? "";
 const byDateDesc = (a: Sortable, b: Sortable) =>
   cmp(b.date, a.date) || KIND_ORDER[a.kind ?? "vote"] - KIND_ORDER[b.kind ?? "vote"] || cmp(sortKey(b), sortKey(a));

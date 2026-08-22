@@ -115,7 +115,7 @@ if (unmatched.length) console.warn(`unmatched: ${unmatched.length} (see data/unm
 if (groupMismatch.length) console.warn(`group mismatch (matched by name only): ${groupMismatch.length} (see data/group-mismatch.json)`);
 
 await writeDataset(DATA, {
-  ...buildDataset([...members, ...shugiin.members], rollCalls, new Map([...bills.results].map(([id, r]) => [id, r.decision])), speeches, proposed.entries),
+  ...buildDataset([...members, ...shugiin.members], rollCalls, new Map([...bills.results].map(([id, r]) => [id, r.decision])), speeches, proposed.entries, shugiinMatched.bills),
   rollCallDetails: rollCalls,
   bills: shugiinMatched.bills,
   unmatched,
