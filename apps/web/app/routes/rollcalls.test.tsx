@@ -19,12 +19,12 @@ function renderPage(session?: number, onSessionChange = vi.fn()) {
 }
 
 describe("RollCallsPage 一覧", () => {
-  it("日付降順に並び、各行が採決ページへリンクする", () => {
+  it("日付降順（同日は id 降順）に並び、各行が採決ページへリンクする", () => {
     renderPage();
     const links = within(screen.getByRole("list")).getAllByRole("link");
     expect(links.map((a) => a.getAttribute("href"))).toEqual([
-      "/rollcalls/221/221-0724-v006",
       "/rollcalls/221/221-0724-v007",
+      "/rollcalls/221/221-0724-v006",
       "/rollcalls/221/221-0323-v001",
       "/rollcalls/220/220-0124-v001",
     ]);
