@@ -48,6 +48,12 @@ describe("summarizeRollCall: rollcalls/index.json の1行", () => {
       totals: { total: 3, yes: 1, no: 1 }, result: "賛成 1・反対 1", sourceUrl: `${BASE}/221-0605-v001.htm`,
     });
   });
+
+  test("議案情報の審議結果があれば「可決（賛成 1・反対 1）」の形で原文と得票を両方出す", () => {
+    const rc = rollCall("221-0605-v001", "2026-06-05", [vote("m_1", "賛成"), vote("m_2", "反対")]);
+    assert.equal(summarizeRollCall(rc, "可決").result, "可決（賛成 1・反対 1）");
+    assert.equal(summarizeRollCall(rc, "同意").result, "同意（賛成 1・反対 1）");
+  });
 });
 
 describe("buildDataset: members/{id}.json・members/index.json・rollcalls/index.json", () => {
@@ -100,6 +106,13 @@ describe("buildDataset: members/{id}.json・members/index.json・rollcalls/index
 
   test("rollcalls/index.json は日付降順の RollCallSummary[]", () => {
     assert.deepEqual(ds.rollCalls.map((r) => r.id), ["221-0724-v001", "221-0605-v001"]);
+  });
+
+  test("審議結果の突合結果を渡すと、紐づいた採決だけ result に可決等が付き、timeline にも同じ result が入る", () => {
+    const withResults = buildDataset(members, rcs, new Map([["221-0605-v001", "可決"]]));
+    assert.deepEqual(withResults.rollCalls.map((r) => r.result), ["賛成 1・反対 0", "可決（賛成 1・反対 1）"]);
+    const m1 = withResults.details.find((d) => d.id === "m_1")!;
+    assert.deepEqual(m1.timeline.map((e) => (e.kind === "vote" ? e.result : "")), ["賛成 1・反対 0", "可決（賛成 1・反対 1）"]);
   });
 
   test("採決が 0 件でも全議員の detail と空の index を返す", () => {

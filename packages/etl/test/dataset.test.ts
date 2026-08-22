@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { existsSync, mkdtempSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { RollCall } from "@seiji-kiroku/shared";
+import type { RollCall, RollCallSummary } from "@seiji-kiroku/shared";
 import { buildDataset } from "../src/aggregate.ts";
 import { writeDataset, validateDataset, type Dataset } from "../src/dataset.ts";
 import { stableJson } from "../src/json.ts";
@@ -22,6 +22,7 @@ function realDataset(): Dataset {
     ...buildDataset(members, rollCalls),
     rollCallDetails: rollCalls,
     unmatched: [],
+    unmatchedBills: [{ rollCallId: "221-0724-v001", title: rollCalls[1].title, sourceUrl: rollCalls[1].sourceUrl }],
     meta: { fetchedAt: "2026-08-22T00:00:00.000Z", sessions: [221], sources: [{ name: "参議院 議員一覧", url: ROSTER, fetchedAt: "2026-08-22T00:00:00.000Z" }] },
   };
 }
@@ -43,7 +44,7 @@ describe("writeDataset / validateDataset: docs/DATA_CONTRACT.md の不変条件"
   });
 
   test("契約どおりのファイル一式を書く（キーソート・末尾改行）", () => {
-    for (const rel of ["meta.json", "members/index.json", "members/m_007006.json", "rollcalls/index.json", "rollcalls/221/221-0605-v001.json", "unmatched.json"]) {
+    for (const rel of ["meta.json", "members/index.json", "members/m_007006.json", "rollcalls/index.json", "rollcalls/221/221-0605-v001.json", "unmatched.json", "unmatched-bills.json"]) {
       const text = readFileSync(join(dir, rel), "utf-8");
       assert.equal(text, stableJson(JSON.parse(text)), rel);
     }
@@ -53,6 +54,18 @@ describe("writeDataset / validateDataset: docs/DATA_CONTRACT.md の不変条件"
   test("キーが未ソート or 末尾改行なしの JSON は違反", async () => {
     writeFileSync(join(dir, "meta.json"), JSON.stringify(readJson(dir, "meta.json")));
     assert.match((await validateDataset(dir)).join("\n"), /meta\.json.*stableJson/);
+    cleanup();
+  });
+
+  test("result に得票（賛成 N・反対 N）が含まれていなければ違反（可否だけにしない）", async () => {
+    patch<RollCallSummary[]>(dir, "rollcalls/index.json", (list) => list.map((s, i) => (i === 0 ? { ...s, result: "可決" } : s)));
+    assert.match((await validateDataset(dir)).join("\n"), /rollcalls\/index\.json\[0\]: result/);
+    cleanup();
+  });
+
+  test("result が「可決（賛成 N・反対 N）」「賛成 N・反対 N」の形なら違反ではない", async () => {
+    patch<RollCallSummary[]>(dir, "rollcalls/index.json", (list) => list.map((s, i) => (i === 0 ? { ...s, result: `可決（${s.result}）` } : s)));
+    assert.deepEqual(await validateDataset(dir), []);
     cleanup();
   });
 
