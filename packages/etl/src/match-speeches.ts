@@ -12,7 +12,8 @@ export interface UnmatchedSpeech {
  * 発言者名（speaker）＋会派（speakerGroup）で Speech を名簿に突合し memberId を埋める純粋関数。
  * 正規化・同姓同名の扱いは matchVotes と同じ（resolveMember）。session を渡すと同姓同名はその回次に効いている名簿の会派（groupAt）で分ける（Issue #24）。
  * - 議長・大臣など position がある発言も、名簿にいれば memberId を入れ、position はそのまま保持する。
- * - position があって名簿にいない発言者（衆院議員の大臣・政府参考人など）は参院名簿に無いのが正常なので unmatched にしない。
+ * - 名簿は発言の院のものを渡す（参院本会議 → 参院名簿、衆院本会議 → 衆院名簿。Issue #73）。
+ * - position があって名簿にいない発言者（他院議員の大臣・政府参考人など）は名簿に無いのが正常なので unmatched にしない。
  * - position が無く名簿にもいない発言者は unmatched に載せる（表記ゆれ・名簿の欠落を運用者に見せる）。
  */
 export function matchSpeeches(speeches: readonly Speech[], members: readonly Member[], session?: number): { speeches: Speech[]; unmatched: UnmatchedSpeech[] } {

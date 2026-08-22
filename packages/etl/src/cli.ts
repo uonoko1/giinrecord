@@ -15,7 +15,7 @@ import { buildDataset, mergeRosters, rosterSessionsFor } from "./aggregate.ts";
 import { readSessionsOnDisk, resolveSessions, validateDataset, writeDataset } from "./dataset.ts";
 
 /**
- * ETL entry point. S1: House of Councillors members and roll-call votes. S2: plenary speeches (国会会議録API).
+ * ETL entry point. S1: House of Councillors members and roll-call votes. S2: plenary speeches (国会会議録API; 参院、#73 から衆院も).
  * Writes normalized JSON under ../../data/ (committed to the repo, CC BY 4.0):
  *   members/index.json, members/{id}.json, rollcalls/index.json, rollcalls/{session}/{id}.json,
  *   bills/index.json, bills/{session}/{id}.json（衆院 議案情報。S5 #72）,
@@ -48,8 +48,8 @@ if (groupsUnknown.length) {
   console.warn(`unknown group abbreviations: ${groupsUnknown.length} (see data/unmatched-groups.json; add to sangiin-groups.ts)`);
   for (const g of groupsUnknown) console.warn(`  ${g.group}: ${g.memberIds.join(", ")}`);
 }
-// 衆院: 回次ごとの名簿は無く「現在」の名簿だけ（Issue #71）。個人別投票が公開されていないので採決・発言の突合は参院名簿（members）だけで行い、
-// 衆院 議案の提出者・賛成者の名寄せ（matchShugiinBills）にだけ使う。公開する index には両院を並べる（house で区別）。
+// 衆院: 回次ごとの名簿は無く「現在」の名簿だけ（Issue #71）。個人別投票が公開されていないので採決の突合は参院名簿（members）だけで行い、
+// 衆院名簿は 衆院 議案の提出者・賛成者（matchShugiinBills）と衆院本会議の発言（matchSpeeches）の名寄せに使う。公開する index には両院を並べる（house で区別）。
 const shugiin = await fetchShugiinMembers(memberSession);
 console.log(`shugiin: ${shugiin.members.length} members in roster (as of ${shugiin.asOf ?? "unknown"})`);
 const shugiinGroupsUnknown = unmatchedShugiinGroups(shugiin.members);
@@ -104,12 +104,22 @@ console.log(`shugiin bills: ${shugiinBills.size} total, ${shugiinWithNames} with
 unmatched.push(...shugiinMatched.unmatched);
 
 // 発言: 国会会議録API（公開まで約1ヶ月のラグ。meta.sources[].fetchedAt が「いつ時点の会議録か」を示す）。
+// 参院本会議は全回次を参院名簿（回次ごと）に突合する。衆院本会議（Issue #73）は衆院名簿が「現在」の1回次分しか無いので、
+// 議案の名寄せと同じく名簿が覆う回次（memberSession）だけ取得・突合し、過去回次は取得しない（名簿に無い旧議員を同名の現職に紐づけない）。
 const speeches: Speech[] = [];
 for (const session of targets) {
-  const matched = matchSpeeches(await fetchSpeeches(session), members, session);
+  const matched = matchSpeeches(await fetchSpeeches(session, "sangiin"), members, session);
   const matchedCount = matched.speeches.filter((s) => s.memberId).length;
   const positioned = matched.speeches.filter((s) => s.memberId && s.position).length;
-  console.log(`session ${session}: ${matched.speeches.length} speeches (${matchedCount} matched, ${positioned} with position)`);
+  console.log(`session ${session}: ${matched.speeches.length} sangiin speeches (${matchedCount} matched, ${positioned} with position)`);
+  speeches.push(...matched.speeches);
+  unmatched.push(...matched.unmatched);
+}
+{
+  const matched = matchSpeeches(await fetchSpeeches(memberSession, "shugiin"), shugiin.members, memberSession);
+  const matchedCount = matched.speeches.filter((s) => s.memberId).length;
+  const positioned = matched.speeches.filter((s) => s.memberId && s.position).length;
+  console.log(`session ${memberSession}: ${matched.speeches.length} shugiin speeches (${matchedCount} matched, ${positioned} with position; roster covers session ${memberSession} only)`);
   speeches.push(...matched.speeches);
   unmatched.push(...matched.unmatched);
 }
@@ -134,7 +144,8 @@ await writeDataset(DATA, {
       ...rosterSessions.map((s) => ({ name: `参議院 議員一覧（第${s}回）`, url: memberListUrl(s), fetchedAt })),
       { name: `衆議院 議員一覧（${shugiin.asOf ?? "取得日"}現在）`, url: shugiinMemberListUrl(1), fetchedAt },
       { name: "参議院 本会議投票結果", url: "https://www.sangiin.go.jp/japanese/touhyoulist/", fetchedAt },
-      { name: "国会会議録検索システム 検索用API（参議院 本会議）", url: speechPageUrl(memberSession), fetchedAt },
+      { name: "国会会議録検索システム 検索用API（参議院 本会議）", url: speechPageUrl(memberSession, 1, "sangiin"), fetchedAt },
+      { name: "国会会議録検索システム 検索用API（衆議院 本会議）", url: speechPageUrl(memberSession, 1, "shugiin"), fetchedAt },
       ...targets.map((s) => ({ name: `参議院 議案情報（第${s}回）`, url: billListUrl(s), fetchedAt })),
       ...targets.map((s) => ({ name: `衆議院 議案情報（第${s}回）`, url: shugiinBillListUrl(s), fetchedAt })),
     ],
