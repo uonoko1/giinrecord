@@ -5,7 +5,7 @@ import Home from "./home";
 import { dataset } from "../test-fixtures/dataset";
 
 const EVALUATIVE_WORDS = ["おすすめ", "ランキング", "一致率"];
-const CAMPAIGN_WORDS = ["応援", "守る", "守ろう", "一緒に", "ぜひ", "お願いします", "あなたの力", "みんなで"];
+const CAMPAIGN_WORDS = ["応援", "守る", "守ろう", "ぜひ", "お願いします", "あなたの力", "みんなで"];
 
 function renderHome(data = dataset) {
   return render(

@@ -6,7 +6,7 @@ import { dataset } from "../test-fixtures/dataset";
 
 const EVALUATIVE_WORDS = ["おすすめ", "ランキング", "一致率"];
 /** 運動的・煽り的な言葉。事実と依頼だけを書く（#47）。 */
-const CAMPAIGN_WORDS = ["応援", "守る", "守ろう", "一緒に", "ぜひ", "お願いします", "あなたの力", "みんなで", "寄付をお願い"];
+const CAMPAIGN_WORDS = ["応援", "守る", "守ろう", "ぜひ", "お願いします", "あなたの力", "みんなで", "寄付をお願い"];
 
 function renderAbout(data = dataset) {
   return render(
