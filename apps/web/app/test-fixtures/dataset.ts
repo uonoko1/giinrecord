@@ -1,4 +1,4 @@
-import type { Dataset } from "~/lib/dataset";
+import type { Dataset } from "../lib/dataset";
 
 /** Home / About 用の最小データ。採決はわざと日付順にしていない（降順ソートを検証するため）。 */
 export const dataset: Dataset = {

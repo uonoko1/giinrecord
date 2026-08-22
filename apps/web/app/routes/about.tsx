@@ -1,6 +1,6 @@
 import { Link } from "react-router";
-import { type Dataset, dataset as bundled, formatDateTime, REPO_URL } from "~/lib/dataset";
-import "~/styles/pages.css";
+import { type Dataset, dataset as bundled, formatDateTime, REPO_URL } from "../lib/dataset";
+import "../styles/pages.css";
 
 export function meta() {
   return [{ title: "このデータについて ・ 政治記録" }];
