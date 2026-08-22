@@ -17,6 +17,11 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version-file: .nvmrc, cache: pnpm }
       - run: pnpm install --frozen-lockfile
+      - name: shellcheck + scripts/po tests (docs/ops/board.md)
+        run: |
+          shellcheck --version | head -2
+          shellcheck -x scripts/po/*.sh scripts/po/test/run.sh scripts/po/test/fake-bin/gh scripts/po/test/*.test.sh
+          bash scripts/po/test/run.sh
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
