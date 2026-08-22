@@ -31,8 +31,12 @@ export interface Bill {
   submittedOn?: string;
   /** 「発議者」欄の原文（例「打越さく良君 外9名」）。欄が無い（内閣提出など）なら undefined。 */
   proposerText?: string;
-  /** 発議者欄に氏名として載っている人（筆頭のみ。「外N名」の氏名はページに無いので含めない）。 */
+  /** 発議者欄に氏名として載っている人（筆頭のみ。「外N名」の氏名はページに無いので含めない）。委員会発議なら空。 */
   proposers: string[];
+  /** 「提出者」欄の原文（委員会発議の参法。例「厚生労働委員長」）。個人の氏名ではないので名寄せしない。欄が無ければ undefined。 */
+  submitterText?: string;
+  /** 「提出者区分」欄の原文（「議員発議」「委員会発議」）。閣法など欄が無ければ undefined。 */
+  submitterKind?: string;
   /** 審議状況: 最も日付の新しい経過ブロックの「段階名 ＋ 議決の原文」（例「参議院本会議 可決」「参議院 ○○委員会 未了」「公布（法律第13号）」）。経過が無ければ undefined。 */
   status?: string;
   /** 「参議院本会議経過」ブロックごとの議決（原文）と、採決方法欄がリンクする投票結果ページの id。未議決（空欄）は含めない。 */
@@ -92,6 +96,8 @@ export function parseBillList(html: string, sourceUrl: string): BillListItem[] {
  *   table[summary="衆議院委員会等経過情報"] / table[summary="衆議院本会議経過情報"]  同形
  *   table[summary="その他の情報"]          th 公布年月日 / 法律番号
  * 発議者欄は「筆頭者君 外N名」の形で、外N名の氏名はこのページ（および提出法律案PDF）に載らない。載っている氏名だけを事実として取る。
+ * 委員会発議の参法（提出者区分「委員会発議」）には発議者欄が無く、代わりに「提出者」欄に委員長名（例「厚生労働委員長」）が載る。
+ * 委員長名は個人の氏名ではないので proposers には入れず、原文を submitterText に残す（Issue #64）。
  * plenary は参院の議決だけ（参院の採決に紐づけるため）。status は全ブロックから日付が最新のもの。
  */
 export function parseBill(html: string, sourceUrl: string): Bill {
@@ -106,6 +112,8 @@ export function parseBill(html: string, sourceUrl: string): Bill {
   const kind = billKind(category);
   const submittedOn = warekiToIso(cellAfter(root, "提出日") ?? "");
   const proposerText = squash(cellAfter(root, "発議者") ?? "") || undefined;
+  const submitterText = squash(cellAfter(root, "提出者") ?? "") || undefined;
+  const submitterKind = squash(cellAfter(root, "提出者区分") ?? "") || undefined;
   const plenary: Bill["plenary"] = [];
   for (const table of root.querySelectorAll('table[summary="参議院本会議経過情報"]')) {
     const decision = squash(cellAfter(table, "議決") ?? "");
@@ -117,8 +125,14 @@ export function parseBill(html: string, sourceUrl: string): Bill {
   return {
     id: `${session}-${kind}-${number ?? numberText}`, session, kind, ...(number !== undefined ? { number } : {}),
     title, category, sourceUrl, ...(submittedOn ? { submittedOn } : {}), ...(proposerText ? { proposerText } : {}),
-    proposers: parseProposers(proposerText ?? ""), ...(statusOf(root) ? { status: statusOf(root) } : {}), plenary,
+    proposers: parseProposers(proposerText ?? ""), ...(submitterText ? { submitterText } : {}), ...(submitterKind ? { submitterKind } : {}),
+    ...(statusOf(root) ? { status: statusOf(root) } : {}), plenary,
   };
+}
+
+/** 参法のうち発議者の氏名が無いもの（委員会発議。「提出者 ○○委員長」）。timeline の bill 行にならないので件数をログに出す（黙ってスキップしない）。 */
+export function committeeBills(bills: readonly Bill[]): Bill[] {
+  return bills.filter((b) => b.kind === "参法" && b.proposers.length === 0);
 }
 
 /** 種別（例「法律案（参法）」「人事案件」）→ BillKind。括弧内があればそれ、無ければ先頭2文字で既知のものに寄せ、残りは「その他」。 */

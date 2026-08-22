@@ -2,7 +2,7 @@ import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import type { RollCall } from "@seiji-kiroku/shared";
-import { matchBillResults, normalizeTitle, parseBill, parseBillList, parseProposers, type BillDecision } from "../src/sources/sangiin-bills.ts";
+import { committeeBills, matchBillResults, normalizeTitle, parseBill, parseBillList, parseProposers, type BillDecision } from "../src/sources/sangiin-bills.ts";
 
 const fixture = (name: string) => readFileSync(new URL(`./fixtures/${name}.htm`, import.meta.url), "utf-8");
 const GIAN = "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/221";
@@ -109,6 +109,39 @@ describe("実HTML: 参法の議案詳細ページ（発議者）", () => {
     assert.equal(bill.proposerText, "西岡義高君 外1名");
     assert.deepEqual(bill.proposers, ["西岡義高"]);
     assert.equal(bill.status, "衆議院本会議 否決");
+  });
+});
+
+describe("実HTML: 委員会提出の参法（第217回 参法5 自殺対策基本法改正案、「提出者 厚生労働委員長」）", () => {
+  const GIAN217 = "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/217";
+  const bill = parseBill(fixture("meisai-m217100217005"), `${GIAN217}/meisai/m217100217005.htm`);
+
+  test("発議者欄が無く「提出者」欄に委員長名（原文）が載る。個人の氏名ではないので proposers は空", () => {
+    assert.equal(bill.id, "217-参法-5");
+    assert.equal(bill.kind, "参法");
+    assert.equal(bill.submittedOn, "2025-04-15");
+    assert.equal(bill.proposerText, undefined);
+    assert.equal(bill.submitterText, "厚生労働委員長");
+    assert.equal(bill.submitterKind, "委員会発議");
+    assert.deepEqual(bill.proposers, []);
+  });
+
+  test("議員発議の参法は「提出者区分」が原文「議員発議」で、提出者欄は無い", () => {
+    const b = parseBill(fixture("meisai-m221100221016"), `${GIAN}/meisai/m221100221016.htm`);
+    assert.equal(b.submitterKind, "議員発議");
+    assert.equal(b.submitterText, undefined);
+  });
+
+  test("閣法には提出者欄も提出者区分も無い", () => {
+    const b = parseBill(fixture("meisai-m221080221001"), `${GIAN}/meisai/m221080221001.htm`);
+    assert.equal(b.submitterKind, undefined);
+    assert.equal(b.submitterText, undefined);
+  });
+
+  test("committeeBills: 参法のうち発議者の氏名が無い（委員会発議）ものを数えられる（黙ってスキップしない）", () => {
+    const other = parseBill(fixture("meisai-m221100221016"), `${GIAN}/meisai/m221100221016.htm`);
+    const shuho = parseBill(fixture("meisai-m221090221025"), `${GIAN}/meisai/m221090221025.htm`);
+    assert.deepEqual(committeeBills([bill, other, shuho]).map((b) => `${b.id} ${b.submitterText}`), ["217-参法-5 厚生労働委員長"]);
   });
 });
 
