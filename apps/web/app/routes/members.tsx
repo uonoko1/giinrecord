@@ -1,6 +1,7 @@
 import { useId, useMemo, useState } from "react";
 import { Link } from "react-router";
-import { type Dataset, dataset as bundled, formatDateTime, type MemberSummary } from "../lib/dataset";
+import { type Dataset, dataset as bundled, type MemberSummary } from "../lib/dataset";
+import { formatDateTime } from "../lib/format";
 import { filterMembers, formatTermEnd, groupByKanaRow } from "../lib/member-search";
 import "../styles/pages.css";
 import "./members.css";

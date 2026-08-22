@@ -2,6 +2,7 @@ import { useState } from "react";
 import { type LoaderFunctionArgs, type MetaArgs, useLoaderData } from "react-router";
 import type { DatasetMeta, MemberDetail, TimelineEntry, VoteEntry } from "../lib/data-contract";
 import { defaultDataDir, readMemberDetail, readMeta } from "../lib/data-files";
+import { formatDate, formatDateTime, formatYearMonth } from "../lib/format";
 import "./member.css";
 
 /* ---------- data (runs at build time only; ssr:false + prerender) ----------
@@ -103,7 +104,7 @@ function Cover({ detail, counts }: { detail: MemberDetail; counts: Record<Timeli
       <p className="member-kana">{detail.kana}</p>
       <h1 className="member-name">{detail.name}</h1>
       <p className="member-affil">{affiliation(detail)}</p>
-      {term?.to && <p className="member-term num">任期満了 {formatDate(term.to, "ym")}</p>}
+      {term?.to && <p className="member-term num">任期満了 {formatYearMonth(term.to)}</p>}
       <dl className="member-counts">
         <Count n={counts.vote} label="記名採決" />
         <Count n={counts.bill} label="提出法案" />
@@ -321,16 +322,4 @@ function SourceLine({ meta }: { meta: DatasetMeta | null }) {
       <p>評価・採点はしません。記録をそのまま並べています。</p>
     </footer>
   );
-}
-
-/* ---------- formatting ---------- */
-
-function formatDate(iso: string, mode: "ymd" | "ym" = "ymd"): string {
-  const [y, m, d] = iso.slice(0, 10).split("-");
-  return mode === "ym" ? `${y}.${m}` : `${y}.${m}.${d}`;
-}
-
-function formatDateTime(iso: string): string {
-  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(iso);
-  return m ? `${m[1]}.${m[2]}.${m[3]} ${m[4]}:${m[5]}` : iso;
 }

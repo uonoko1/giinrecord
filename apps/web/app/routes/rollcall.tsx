@@ -2,7 +2,8 @@ import { type LoaderFunctionArgs, Link, type MetaArgs, useLoaderData } from "rea
 import { SourceLine, Stamp } from "../components";
 import type { DatasetMeta, RollCall } from "../lib/data-contract";
 import { defaultDataDir, readMeta, readRollCall } from "../lib/data-files";
-import { formatDate, groupsBySize, votesByGroup } from "../lib/rollcall";
+import { formatDate } from "../lib/format";
+import { groupsBySize, votesByGroup } from "../lib/rollcall";
 import "./rollcall.css";
 
 /* ---------- data (build time only; ssr:false + prerender) ----------

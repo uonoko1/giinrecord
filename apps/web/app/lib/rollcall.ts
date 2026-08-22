@@ -31,15 +31,3 @@ export function sortByDateDesc<T extends { date: string }>(rows: readonly T[]): 
 export function sessionsDesc(rows: readonly { session: number }[]): number[] {
   return [...new Set(rows.map((r) => r.session))].sort((a, b) => b - a);
 }
-
-/** 2026-07-24 → 2026.07.24（文字列操作のみ。タイムゾーン変換はしない） */
-export function formatDate(iso: string): string {
-  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
-  return m ? `${m[1]}.${m[2]}.${m[3]}` : iso;
-}
-
-/** 2026-08-22T06:00:00+09:00 → 2026.08.22 06:00（文字列のまま。タイムゾーン変換はしない） */
-export function formatDateTime(iso: string): string {
-  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(iso);
-  return m ? `${m[1]}.${m[2]}.${m[3]} ${m[4]}:${m[5]}` : formatDate(iso);
-}

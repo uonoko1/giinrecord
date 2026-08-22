@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatDate, groupsBySize, sessionsDesc, sortByDateDesc, votesByGroup } from "./rollcall";
+import { groupsBySize, sessionsDesc, sortByDateDesc, votesByGroup } from "./rollcall";
 
 describe("groupsBySize", () => {
   it("人数の多い順。同数は原文の順を保つ", () => {
@@ -45,14 +45,5 @@ describe("sortByDateDesc / sessionsDesc", () => {
   });
   it("回次は重複を除き新しい順", () => {
     expect(sessionsDesc(rows)).toEqual([221, 220]);
-  });
-});
-
-describe("formatDate", () => {
-  it("ISO 日付を 2026.07.24 にする（タイムゾーン変換はしない）", () => {
-    expect(formatDate("2026-07-24")).toBe("2026.07.24");
-  });
-  it("日付でない文字列はそのまま返す", () => {
-    expect(formatDate("不明")).toBe("不明");
   });
 });

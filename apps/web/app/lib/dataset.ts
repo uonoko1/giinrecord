@@ -45,14 +45,6 @@ export const dataset: Dataset = {
   rollcalls: first(rollcallFiles) ?? [],
 };
 
-/** 2026-08-22T06:00:00+09:00 → 2026.08.22 06:00（文字列のまま。タイムゾーン変換はしない） */
-export function formatDateTime(iso: string): string {
-  const m = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/.exec(iso);
-  if (!m) return iso;
-  const [, y, mo, d, h, mi] = m;
-  return h ? `${y}.${mo}.${d} ${h}:${mi}` : `${y}.${mo}.${d}`;
-}
-
 /** [220, 221] → "第220—221回"、[221] → "第221回" */
 export function formatSessions(sessions: number[]): string | undefined {
   if (sessions.length === 0) return undefined;
