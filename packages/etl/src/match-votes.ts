@@ -52,8 +52,7 @@ export function matchVotes(
   const seen = new Map<MemberId, string>();
 
   const votes = rollCall.votes.map((vote) => {
-    const candidates = byName.get(normalizeName(vote.nameText)) ?? [];
-    const member = resolve(candidates, vote.group);
+    const member = resolveMember(byName, vote.nameText, vote.group);
     if (!member) {
       unmatched.push({ nameText: vote.nameText, group: vote.group, rollCallId: rollCall.id });
       return { ...vote, memberId: "" };
@@ -72,7 +71,19 @@ export function matchVotes(
   return { rollCall: { ...rollCall, votes }, unmatched, groupMismatch };
 }
 
-function indexByName(members: readonly Member[]): Map<string, Member[]> {
+/**
+ * 氏名表記と会派から名簿の1人を決める（matchVotes と matchSpeeches で共通）。
+ * 1. 正規化氏名（通称 name / 本名 legalName）が一致する候補を集める
+ * 2. 候補が複数なら会派で絞る（同姓同名の分離）。会派が無ければ絞れない
+ * 3. 1人に絞れなければ undefined
+ */
+export function resolveMember(index: NameIndex, nameText: string, group: string | undefined): Member | undefined {
+  return resolve(index.get(normalizeName(nameText)) ?? [], group ?? "");
+}
+
+export type NameIndex = Map<string, Member[]>;
+
+export function indexByName(members: readonly Member[]): NameIndex {
   const map = new Map<string, Member[]>();
   for (const m of members) {
     const keys = new Set([m.name, m.legalName].filter((n): n is string => !!n).map(normalizeName));
