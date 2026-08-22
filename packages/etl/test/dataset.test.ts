@@ -115,6 +115,12 @@ describe("writeDataset / validateDataset: docs/DATA_CONTRACT.md の不変条件"
     cleanup();
   });
 
+  test("counts.speeches が timeline の speech 数と食い違えば違反", async () => {
+    patch<{ id: string; counts: { speeches: number } }[]>(dir, "members/index.json", (idx) => idx.map((m) => (m.id === "m_007006" ? { ...m, counts: { ...m.counts, speeches: 99 } } : m)));
+    assert.match((await validateDataset(dir)).join("\n"), /m_007006.*counts\.speeches/);
+    cleanup();
+  });
+
   test("counts.rollcalls が timeline の vote 数と食い違えば違反", async () => {
     patch<{ id: string; counts: { rollcalls: number } }[]>(dir, "members/index.json", (idx) => idx.map((m) => (m.id === "m_007006" ? { ...m, counts: { ...m.counts, rollcalls: 99 } } : m)));
     assert.match((await validateDataset(dir)).join("\n"), /m_007006.*counts/);
