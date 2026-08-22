@@ -74,3 +74,14 @@ docker compose -f deploy/docker-compose.yml down
 ```
 
 Operations (logs, restart, failure modes): `docs/ops/deploy.md`.
+
+## ETL container (`docker-compose.etl.yml`, #86)
+
+The ETL is a separate compose file so that it can be layered on the site compose file (#85) or run alone:
+
+```sh
+docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.etl.yml run --rm etl 221
+ETL_UID=$(id -u) ETL_GID=$(id -g) docker compose -f deploy/docker-compose.etl.yml run --rm --build etl 221
+```
+
+It writes `data/` and `packages/etl/.cache` through bind mounts as the given uid (non-root; `node` = 1000 by default). Details and the byte-identical check (`scripts/etl-docker-diff.sh`) are in `docs/ops/etl.md`. Nothing here needs docker on the VPS: the deploy user `ubuntu` stays without docker privileges.
