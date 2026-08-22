@@ -14,6 +14,7 @@ const hasRollCallData = existsSync(path.join(defaultDataDir(), "rollcalls", "ind
 export default [
   index("routes/home.tsx"),
   route("about", "routes/about.tsx"),
+  route("members", "routes/members.tsx"),
   ...(hasMemberData ? [route("members/:id", "routes/member.tsx")] : []),
   ...(hasRollCallData ? [route("rollcalls/:session?", "routes/rollcalls.tsx"), route("rollcalls/:session/:id", "routes/rollcall.tsx")] : []),
 ] satisfies RouteConfig;
