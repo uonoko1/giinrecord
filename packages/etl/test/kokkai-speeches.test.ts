@@ -17,6 +17,23 @@ describe("speechPageUrl: 国会会議録API speech の URL", () => {
     assert.equal(u.searchParams.get("maximumRecords"), "100");
     assert.equal(u.searchParams.get("startRecord"), "101");
   });
+
+  test("house を shugiin にすると nameOfHouse=衆議院 になる（Issue #73: 衆院本会議も対象）", () => {
+    const u = new URL(speechPageUrl(221, 1, "shugiin"));
+    assert.equal(u.searchParams.get("nameOfHouse"), "衆議院");
+    assert.equal(u.searchParams.get("nameOfMeeting"), "本会議");
+    assert.equal(new URL(speechPageUrl(221, 1, "sangiin")).searchParams.get("nameOfHouse"), "参議院");
+  });
+});
+
+describe("parseSpeechPage: house 引数（Issue #73）", () => {
+  test("既定は sangiin、shugiin を渡すと全発言の house が shugiin になる", () => {
+    const json = fixture("kokkai-speech-221-p1");
+    assert.ok(parseSpeechPage(json).speeches.every((s) => s.house === "sangiin"));
+    const page = parseSpeechPage(json, "shugiin");
+    assert.ok(page.speeches.length > 0);
+    assert.ok(page.speeches.every((s) => s.house === "shugiin"));
+  });
 });
 
 describe("parseSpeechPage: 実レスポンス（第221回 参院本会議）", () => {

@@ -1,0 +1,74 @@
+{
+  "current": true,
+  "house": "shugiin",
+  "id": "h_000321",
+  "kana": "やまだ たろう",
+  "name": "山田 太郎",
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_annai.nsf/html/statics/syu/1giin.htm",
+  "terms": [
+    {
+      "district": "東京1区",
+      "from": "",
+      "group": "日本共産党",
+      "house": "shugiin",
+      "sessionFrom": 221,
+      "sessionTo": 221,
+      "timesElected": 2
+    }
+  ],
+  "timeline": [
+    {
+      "chars": 640,
+      "date": "2026-03-10",
+      "excerpt": "私は、日本共産党を代表して、ただいま議題となりました法律案について質問いたします。",
+      "kind": "speech",
+      "meeting": "衆議院本会議",
+      "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105254X01120260310/5",
+      "speechId": "122105254X01120260310_005"
+    },
+    {
+      "date": "2026-03-02",
+      "billId": "221-衆法-1",
+      "kind": "bill",
+      "role": "提出者",
+      "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE153E.htm",
+      "status": "衆議院で閉会中審査",
+      "submitterText": "山田　太郎君外四名",
+      "title": "政治資金規正法の一部を改正する法律案"
+    },
+    {
+      "date": "2026-02-25",
+      "billId": "221-衆法-2",
+      "kind": "bill",
+      "role": "賛成者",
+      "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1540.htm",
+      "status": "衆議院で閉会中審査",
+      "submitterText": "鈴木　花子君外三名",
+      "title": "国会議員の歳費の一部を改正する法律案"
+    },
+    {
+      "billId": "221-閣法-3",
+      "date": "2026-02-20",
+      "estimated": true,
+      "group": "日本共産党",
+      "kind": "stance",
+      "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE14D6.htm",
+      "stance": "反対",
+      "stanceText": "多数",
+      "status": "成立",
+      "title": "所得税法等の一部を改正する法律案"
+    },
+    {
+      "billId": "221-閣法-4",
+      "date": "2026-02-20",
+      "estimated": true,
+      "group": "日本共産党",
+      "kind": "stance",
+      "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE14D7.htm",
+      "stance": "賛成",
+      "stanceText": "全会一致",
+      "status": "成立",
+      "title": "地方税法の一部を改正する法律案"
+    }
+  ]
+}

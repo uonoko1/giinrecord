@@ -1,7 +1,7 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import type { Member, RollCall, Speech } from "@seiji-kiroku/shared";
+import type { Bill, Member, RollCall, Speech } from "@seiji-kiroku/shared";
 import { buildDataset, groupMajority, summarizeRollCall } from "../src/aggregate.ts";
 import { matchVotes } from "../src/match-votes.ts";
 import type { MatchedBill } from "../src/match-bills.ts";
@@ -243,5 +243,95 @@ describe("buildDataset: bill（提出法案）を timeline に入れる", () => 
 
   test("名簿にない memberId の bill は例外", () => {
     assert.throws(() => buildDataset(members, [], new Map(), [], [matchedBill("m_9", "221-参法-1", "2026-04-01")]), /m_9/);
+  });
+});
+
+/* ---------- 衆院 議案（#73）: 提出者・賛成者 = 事実の bill 行、所属会派の態度 = 推定の stance 行 ---------- */
+
+const hMember = (id: string, group: string, sessionFrom = 221): Member => ({
+  id, name: id, kana: "", house: "shugiin",
+  terms: [{ house: "shugiin", group, district: "東京1区", from: "", sessionFrom }],
+  sourceUrl: "https://www.shugiin.go.jp/internet/itdb_annai.nsf/html/statics/syu/1giin.htm",
+});
+const keika = (id: string) => `https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/${id}.htm`;
+const shugiinBill = (id: string, extra: Partial<Bill> = {}): Bill => ({
+  id, session: 221, kind: "衆法", title: `議案 ${id}`, house: "shugiin",
+  received: { shugiin: "2026-03-02" }, status: "衆議院で閉会中審査", sourceUrl: keika(id), ...extra,
+});
+
+describe("buildDataset: 衆院 Bill から timeline を作る", () => {
+  const members = [hMember("h_1", "自由民主党・無所属の会"), hMember("h_2", "日本共産党"), hMember("h_3", "無所属")];
+  const bills: Bill[] = [
+    shugiinBill("221-衆法-1", { submitters: ["h_1"], supporters: ["h_2"], submitterText: "h_1君外四名", submitterNames: ["h_1"], supporterNames: ["h_2"] }),
+    shugiinBill("221-閣法-3", {
+      kind: "閣法", received: { shugiin: "2026-02-20", sangiin: "2026-03-13" }, status: "成立",
+      shugiinGroupStance: { stanceText: "多数", yes: ["自由民主党・無所属の会"], no: ["日本共産党"] },
+    }),
+    shugiinBill("221-閣法-4", { kind: "閣法", received: { shugiin: "2026-02-21" }, shugiinGroupStance: { stanceText: "全会一致", yes: ["自由民主党・無所属の会", "日本共産党"], no: [], unanimous: true } }),
+    shugiinBill("221-閣法-5", { kind: "閣法", received: undefined, shugiinGroupStance: { stanceText: "多数", yes: ["自由民主党・無所属の会"], no: [] } }),
+    shugiinBill("221-閣法-6", { kind: "閣法", received: { shugiin: "2026-02-22" } }),
+  ];
+  const ds = buildDataset(members, [], new Map(), [], [], bills);
+  const of = (id: string) => ds.details.find((d) => d.id === id)!.timeline;
+
+  test("提出者は role 提出者、賛成者は role 賛成者の bill 行（事実）。日付は衆議院の受理日、出典は経過ページ", () => {
+    assert.deepEqual(of("h_1").find((e) => e.kind === "bill"), {
+      kind: "bill", date: "2026-03-02", billId: "221-衆法-1", title: "議案 221-衆法-1", role: "提出者",
+      submitterText: "h_1君外四名", status: "衆議院で閉会中審査", sourceUrl: keika("221-衆法-1"),
+    });
+    assert.deepEqual(of("h_2").find((e) => e.kind === "bill"), {
+      kind: "bill", date: "2026-03-02", billId: "221-衆法-1", title: "議案 221-衆法-1", role: "賛成者",
+      submitterText: "h_1君外四名", status: "衆議院で閉会中審査", sourceUrl: keika("221-衆法-1"),
+    });
+  });
+
+  test("所属会派が賛成会派／反対会派に載る議案は stance 行（estimated: true）。記録するのは会派名であって本人ではない", () => {
+    assert.deepEqual(of("h_1").find((e) => e.kind === "stance" && e.billId === "221-閣法-3"), {
+      kind: "stance", estimated: true, date: "2026-02-20", billId: "221-閣法-3", title: "議案 221-閣法-3",
+      group: "自由民主党・無所属の会", stance: "賛成", stanceText: "多数", status: "成立", sourceUrl: keika("221-閣法-3"),
+    });
+    assert.deepEqual(of("h_2").find((e) => e.kind === "stance" && e.billId === "221-閣法-3"), {
+      kind: "stance", estimated: true, date: "2026-02-20", billId: "221-閣法-3", title: "議案 221-閣法-3",
+      group: "日本共産党", stance: "反対", stanceText: "多数", status: "成立", sourceUrl: keika("221-閣法-3"),
+    });
+  });
+
+  test("会派がどちらにも載らない議案・会派態度の無い議案は stance 行にしない（推論しない）", () => {
+    assert.deepEqual(of("h_3").filter((e) => e.kind === "stance"), []);
+    assert.ok(of("h_1").every((e) => e.kind !== "stance" || e.billId !== "221-閣法-6"));
+  });
+
+  test("衆議院の受理日が無い議案は timeline に置けないので落とす（日付を推定しない）", () => {
+    assert.ok(of("h_1").every((e) => e.kind !== "stance" || e.billId !== "221-閣法-5"));
+  });
+
+  test("全会一致の stanceText も原文のまま", () => {
+    const row = of("h_2").find((e) => e.kind === "stance" && e.billId === "221-閣法-4");
+    assert.equal(row?.kind === "stance" && row.stanceText, "全会一致");
+  });
+
+  test("timeline は日付降順、同日は vote → bill → stance → speech", () => {
+    const d = buildDataset([hMember("h_1", "自由民主党・無所属の会")], [], new Map(),
+      [speech("x_001", "h_1", "2026-03-02")],
+      [], [shugiinBill("221-衆法-1", { submitters: ["h_1"] }), shugiinBill("221-閣法-3", { kind: "閣法", shugiinGroupStance: { stanceText: "多数", yes: ["自由民主党・無所属の会"], no: [] } })]);
+    assert.deepEqual(d.details[0].timeline.map((e) => e.kind), ["bill", "stance", "speech"]);
+  });
+
+  test("counts.bills は bill 行の数（stance は数えない）", () => {
+    assert.deepEqual(ds.index.map((m) => [m.id, m.counts.bills]), [["h_1", 1], ["h_2", 1], ["h_3", 0]]);
+  });
+
+  test("参院の議員（house: sangiin）には衆院の会派態度を付けない", () => {
+    const d = buildDataset([member("m_1", "一 郎", "自由民主党・無所属の会")], [], new Map(), [], [], [bills[1]]);
+    assert.deepEqual(d.details[0].timeline, []);
+  });
+
+  test("会派は議案の提出回次の名簿で引く（後の回次の名簿しか無ければ推定しない）", () => {
+    const d = buildDataset([hMember("h_1", "自由民主党・無所属の会", 222)], [], new Map(), [], [], [bills[1]]);
+    assert.deepEqual(d.details[0].timeline, []);
+  });
+
+  test("提出者の memberId が名簿に無ければ例外", () => {
+    assert.throws(() => buildDataset(members, [], new Map(), [], [], [shugiinBill("221-衆法-9", { submitters: ["h_9"] })]), /h_9/);
   });
 });

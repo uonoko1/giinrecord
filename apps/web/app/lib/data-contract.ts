@@ -59,4 +59,24 @@ export type SpeechEntry = {
   position?: string;
   sourceUrl: string;
 };
-export type TimelineEntry = VoteEntry | BillEntry | SpeechEntry;
+/**
+ * 【推定】所属会派の態度（衆院のみ）。衆議院は個人の投票記録を公開していないため、議案ページの「賛成会派／反対会派」に
+ * その議員の所属会派が載っていることだけを記録する。本人の賛否ではない。`estimated: true` を常に持ち、VoteEntry（事実）とは型で分ける。
+ */
+export type StanceEntry = {
+  kind: "stance";
+  estimated: true;
+  /** 衆議院の議案受理年月日。 */
+  date: string;
+  billId: string;
+  title: string;
+  /** 所属会派（正式名称）。 */
+  group: string;
+  /** 会派が賛成会派／反対会派のどちらに載っていたか。 */
+  stance: "賛成" | "反対";
+  /** 「衆議院審議時会派態度」の原文（多数・少数・全会一致）。 */
+  stanceText: string;
+  status?: string;
+  sourceUrl: string;
+};
+export type TimelineEntry = VoteEntry | BillEntry | SpeechEntry | StanceEntry;

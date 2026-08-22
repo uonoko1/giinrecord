@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { type LoaderFunctionArgs, type MetaArgs, useLoaderData } from "react-router";
-import type { BillEntry, BillRole, DatasetMeta, MemberDetail, TimelineEntry, VoteEntry } from "../lib/data-contract";
+import type { BillEntry, BillRole, DatasetMeta, MemberDetail, StanceEntry, TimelineEntry, VoteEntry } from "../lib/data-contract";
 import { defaultDataDir, readMemberDetail, readMeta } from "../lib/data-files";
 import { formatDate, formatDateTime, formatYearMonth } from "../lib/format";
 import { seoMeta } from "../lib/seo";
@@ -20,11 +20,14 @@ export async function loader({ params }: LoaderFunctionArgs): Promise<MemberLoad
   return { detail, meta };
 }
 
-/** 「{氏名}（{院}・{選挙区}）の投票記録」: 検索語（氏名・院・選挙区）を含め、評価語は入れない。 */
+/**
+ * 「{氏名}（{院}・{選挙区}）の投票記録」: 検索語（氏名・院・選挙区）を含め、評価語は入れない。
+ * 衆院は個人の投票記録が公開されていないので「投票記録」と言わず「記録」。
+ */
 export function pageTitle(detail: MemberDetail): string {
   const term = currentTerm(detail);
   const where = [HOUSE_LABEL[detail.house], term?.district].filter(Boolean).join("・");
-  return `${detail.name}（${where}）の投票記録`;
+  return `${detail.name}（${where}）の${detail.house === "shugiin" ? "記録" : "投票記録"}`;
 }
 
 export function meta({ data, location }: MetaArgs<typeof loader>) {
@@ -32,7 +35,10 @@ export function meta({ data, location }: MetaArgs<typeof loader>) {
   const { detail } = data;
   return seoMeta({
     title: pageTitle(detail),
-    description: `${affiliation(detail)}。本会議の採決・提出法案・発言を公式記録から出典付きで並べます。`,
+    description:
+      detail.house === "shugiin"
+        ? `${affiliation(detail)}。提出法案・賛同法案・本会議発言と、所属会派の態度（推定）を公式記録から出典付きで並べます。`
+        : `${affiliation(detail)}。本会議の採決・提出法案・発言を公式記録から出典付きで並べます。`,
     pathname: location.pathname,
     type: "article",
   });
@@ -45,13 +51,22 @@ export default function MemberRoute() {
 
 /* ---------- page ---------- */
 
-type Tab = "all" | "vote" | "bill" | "speech";
-const TABS: { id: Tab; label: string }[] = [
-  { id: "all", label: "すべて" },
-  { id: "vote", label: "採決" },
-  { id: "bill", label: "提出法案" },
-  { id: "speech", label: "発言" },
-];
+type Tab = "all" | TimelineEntry["kind"];
+/** 参院: 個人の記名採決がある。衆院: 個人投票は公開されていないので採決タブの代わりに「会派の態度」（推定）。 */
+const TABS: Record<MemberDetail["house"], { id: Tab; label: string }[]> = {
+  sangiin: [
+    { id: "all", label: "すべて" },
+    { id: "vote", label: "採決" },
+    { id: "bill", label: "提出法案" },
+    { id: "speech", label: "発言" },
+  ],
+  shugiin: [
+    { id: "all", label: "すべて" },
+    { id: "bill", label: "提出法案" },
+    { id: "stance", label: "会派の態度" },
+    { id: "speech", label: "発言" },
+  ],
+};
 
 const HOUSE_LABEL = { sangiin: "参議院", shugiin: "衆議院" } as const;
 
@@ -63,8 +78,9 @@ export function MemberPage({ detail, meta }: { detail: MemberDetail; meta: Datas
   return (
     <main className="member">
       <Cover detail={detail} counts={counts} />
+      {detail.house === "shugiin" && <ShugiinNotice />}
       <div className="member-tabs" role="tablist" aria-label="記録の種類">
-        {TABS.map((t) => (
+        {TABS[detail.house].map((t) => (
           <button
             key={t.id}
             type="button"
@@ -80,6 +96,7 @@ export function MemberPage({ detail, meta }: { detail: MemberDetail; meta: Datas
         ))}
       </div>
       <section id="member-records" role="tabpanel" aria-labelledby={`tab-${tab}`}>
+        {tab === "stance" && <p className="member-tab-note">所属会派が議案情報の賛成会派・反対会派に載っていた記録です。会派の態度であり、本人の投票ではありません。</p>}
         {entries.length === 0 ? (
           <p className="member-empty">記録はありません。</p>
         ) : tab === "vote" ? (
@@ -106,7 +123,19 @@ function affiliation(detail: MemberDetail): string {
   return [HOUSE_LABEL[detail.house], term?.district, term?.group].filter(Boolean).join(" ・ ");
 }
 
-function Cover({ detail, counts }: { detail: MemberDetail; counts: Record<TimelineEntry["kind"], number> }) {
+/** 衆院は個人の投票記録が公開されていない事実を、ページ冒頭で1文だけ示す（評価はしない）。 */
+function ShugiinNotice() {
+  return (
+    <p className="member-notice">
+      衆議院は個人の投票記録が公開されていません。所属会派の態度は「推定」として区別して示します。
+      <a href="/about#facts-heading">記録の範囲について</a>
+    </p>
+  );
+}
+
+type Counts = Record<TimelineEntry["kind"], number> & { submitted: number; supported: number };
+
+function Cover({ detail, counts }: { detail: MemberDetail; counts: Counts }) {
   const term = currentTerm(detail);
   return (
     <header className="member-cover">
@@ -117,11 +146,20 @@ function Cover({ detail, counts }: { detail: MemberDetail; counts: Record<Timeli
       <h1 className="member-name">{detail.name}</h1>
       <p className="member-affil">{affiliation(detail)}</p>
       {term?.to && <p className="member-term num">任期満了 {formatYearMonth(term.to)}</p>}
-      <dl className="member-counts">
-        <Count n={counts.vote} label="記名採決" />
-        <Count n={counts.bill} label="提出法案" />
-        <Count n={counts.speech} label="本会議発言" />
-      </dl>
+      {detail.house === "shugiin" ? (
+        /* 衆院: 記名採決は存在しないので枠を出さない。提出者と賛成者を分けて数える（どちらも事実） */
+        <dl className="member-counts">
+          <Count n={counts.submitted} label="提出法案" />
+          <Count n={counts.supported} label="賛同法案" />
+          <Count n={counts.speech} label="本会議発言" />
+        </dl>
+      ) : (
+        <dl className="member-counts">
+          <Count n={counts.vote} label="記名採決" />
+          <Count n={counts.bill} label="提出法案" />
+          <Count n={counts.speech} label="本会議発言" />
+        </dl>
+      )}
       <p className="member-profile">
         <ExternalLink href={detail.sourceUrl}>議員プロフィール（公式）</ExternalLink>
       </p>
@@ -138,9 +176,12 @@ function Count({ n, label }: { n: number; label: string }) {
   );
 }
 
-function countKinds(timeline: TimelineEntry[]) {
-  const c = { vote: 0, bill: 0, speech: 0 };
-  for (const e of timeline) c[e.kind] += 1;
+function countKinds(timeline: TimelineEntry[]): Counts {
+  const c: Counts = { vote: 0, bill: 0, stance: 0, speech: 0, submitted: 0, supported: 0 };
+  for (const e of timeline) {
+    c[e.kind] += 1;
+    if (e.kind === "bill") c[e.role === "提出者" ? "submitted" : "supported"] += 1;
+  }
   return c;
 }
 
@@ -180,6 +221,8 @@ function entryKey(e: TimelineEntry): string {
       return `vote:${e.rollCallId}`;
     case "bill":
       return `bill:${e.billId}:${e.role}`;
+    case "stance":
+      return `stance:${e.billId}`;
     case "speech":
       return `speech:${e.speechId}`;
   }
@@ -230,6 +273,8 @@ function Row({ entry }: { entry: TimelineEntry }) {
           </div>
         </li>
       );
+    case "stance":
+      return <StanceRow entry={entry} />;
     case "speech":
       return (
         /* position は会議録の speakerPosition 原文（例: 議長・国土交通大臣）。役職として行った発言である事実をそのまま見せる。 */
@@ -248,6 +293,28 @@ function Row({ entry }: { entry: TimelineEntry }) {
         </li>
       );
   }
+}
+
+/**
+ * 【推定】会派の態度の行。判は est（破線＋薄地）で賛成・反対どちらも同じ色。ラベル「会派の態度（推定）」を常に添え、
+ * meta には会派名・態度の原文（多数・少数・全会一致）・審議状況を出す。本人の賛否とは言わない。
+ */
+function StanceRow({ entry }: { entry: StanceEntry }) {
+  return (
+    <li className="member-row" data-estimated="true">
+      <EstStamp stance={entry.stance} />
+      <div className="member-row-body">
+        <p className="member-row-title">
+          <span className="member-est-label">会派の態度（推定）</span>
+          {entry.title}
+        </p>
+        <p className="member-row-meta">
+          <MetaLine parts={[`${entry.group}が${entry.stance}会派`, `会派態度 ${entry.stanceText}`, entry.status]} />
+          <ExternalLink href={entry.sourceUrl}>議案情報</ExternalLink>
+        </p>
+      </div>
+    </li>
+  );
 }
 
 /** "A ・ B ・ " — separator-joined facts; the caller appends the source link. */
@@ -353,6 +420,15 @@ function Stamp({ value }: { value: StampValue }) {
   return (
     <span className="member-stamp" data-tone={STAMP_TONE[value]} role="img" aria-label={value}>
       {value === "投票なし" ? "－" : value}
+    </span>
+  );
+}
+
+/** 推定の判。aria-label にも「推定」を入れ、個人の票の判（賛成／反対）と読み上げでも区別する。 */
+function EstStamp({ stance }: { stance: StanceEntry["stance"] }) {
+  return (
+    <span className="member-stamp" data-tone="est" data-estimated="true" role="img" aria-label={`会派の態度（推定）: ${stance}`}>
+      {stance}
     </span>
   );
 }

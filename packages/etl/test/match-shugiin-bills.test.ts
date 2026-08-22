@@ -54,6 +54,29 @@ describe("matchShugiinBills: 提出者一覧・賛成者の氏名を衆院の名
     assert.equal(unmatched.length, 1);
   });
 
+  test("名簿が覆わない回次の議案（現在の名簿しか無く、提出回次が過去）は名寄せを試みず unmatched にも出さない。覆う回次の議案だけ紐づける", () => {
+    const members = [member("s_1", "落合 貴之")]; // term は sessionFrom: 221 だけ（衆院は「現在」の名簿しか無い）
+    const { bills, unmatched } = matchShugiinBills(
+      [
+        bill({ id: "217-衆法-1", session: 217, submitterNames: ["落合貴之"], supporterNames: ["赤羽一嘉"] }),
+        bill({ id: "221-衆法-1", session: 221, submitterNames: ["落合貴之"], supporterNames: ["赤羽一嘉"] }),
+      ],
+      members,
+    );
+    assert.equal(bills[0]?.submitters, undefined);
+    assert.equal(bills[0]?.supporters, undefined);
+    assert.deepEqual(bills[0]?.submitterNames, ["落合貴之"]);
+    assert.deepEqual(bills[1]?.submitters, ["s_1"]);
+    assert.deepEqual(unmatched, [{ kind: "bill", nameText: "赤羽一嘉", group: "", billId: "221-衆法-1" }]);
+  });
+
+  test("sessionTo のある term はその範囲の回次を覆う", () => {
+    const m = member("s_1", "落合 貴之");
+    m.terms = [{ house: "shugiin", group: "立憲", district: "東京1区", from: "", sessionFrom: 218, sessionTo: 220 }];
+    const { bills } = matchShugiinBills([bill({ id: "219-衆法-1", session: 219, submitterNames: ["落合貴之"] })], [m]);
+    assert.deepEqual(bills[0]?.submitters, ["s_1"]);
+  });
+
   test("提出者一覧の欄が無い議案（閣法）はそのまま通る", () => {
     const members = [member("s_1", "落合 貴之")];
     const input = bill({ id: "221-閣法-3", kind: "閣法", submitterText: "内閣" });

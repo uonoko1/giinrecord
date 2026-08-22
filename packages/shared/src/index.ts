@@ -6,8 +6,11 @@
 
 export type House = "sangiin" | "shugiin";
 
-/** Stable internal id. Never derived from name (names change). */
-export type MemberId = string; // e.g. "m_000123"
+/**
+ * Stable internal id. Never derived from name (names change).
+ * 参院は名簿のプロフィール id（例 "m_000123"）、衆院は "h_" 接頭辞の id（例 "h_000123"、#71）。接頭辞で院が分かる。
+ */
+export type MemberId = string; // e.g. "m_000123" (参院), "h_000123" (衆院)
 
 export interface Member {
   id: MemberId;
@@ -190,7 +193,29 @@ export type SpeechEntry = {
   position?: string;
   sourceUrl: string;
 };
-export type TimelineEntry = VoteEntry | BillEntry | SpeechEntry;
+/**
+ * 【推定】所属会派の態度（衆院のみ）。衆議院は個人の投票記録を公開していないので、Bill.shugiinGroupStance（経過ページの
+ * 「賛成会派／反対会派」の原文）のうち、その議員がその回次に所属していた会派が載っている議案だけを行にする。
+ * 記録されるのは会派（group）の態度であり、本人の賛否ではない。`estimated: true` を常に持ち、VoteEntry（事実）とは型で分ける。
+ */
+export type StanceEntry = {
+  kind: "stance";
+  estimated: true;
+  /** 衆議院の議案受理年月日（Bill.received.shugiin）。 */
+  date: string;
+  billId: string;
+  title: string;
+  /** その議員が所属していた会派（名簿の正式名称。賛成会派／反対会派の原文と同じ表記）。 */
+  group: string;
+  /** 会派が「賛成会派」「反対会派」のどちらに載っていたか。 */
+  stance: "賛成" | "反対";
+  /** 「衆議院審議時会派態度」の原文（多数・少数・全会一致）。 */
+  stanceText: string;
+  /** 一覧ページの「審議状況」の原文。 */
+  status?: string;
+  sourceUrl: string;
+};
+export type TimelineEntry = VoteEntry | BillEntry | SpeechEntry | StanceEntry;
 
 /** Row of `data/rollcalls/index.json` (採決一覧用). */
 export interface RollCallSummary {

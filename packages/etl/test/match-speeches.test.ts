@@ -22,6 +22,28 @@ const speech = (id: string, speakerText: string, group?: string, position?: stri
   sourceUrl: `https://kokkai.ndl.go.jp/txt/${id.split("_")[0]}/${Number(id.split("_")[1])}`,
 });
 
+describe("matchSpeeches: 衆院本会議の発言を衆院名簿に突合する（Issue #73）", () => {
+  const shugiinMember = (id: string, name: string, group: string): Member => ({
+    id, name, kana: "", house: "shugiin",
+    terms: [{ house: "shugiin", group, district: "", from: "", sessionFrom: 221 }],
+    sourceUrl: "https://www.shugiin.go.jp/internet/itdb_annai.nsf/html/statics/syu/1giin.htm",
+  });
+
+  test("衆院名簿（正式名称の会派）に氏名＋会派で紐づき h_ の memberId が入る", () => {
+    const s: Speech = { ...speech("h_001", "落合貴之", "中道改革連合・無所属"), house: "shugiin" };
+    const { speeches, unmatched } = matchSpeeches([s], [shugiinMember("h_000001", "落合 貴之", "中道改革連合・無所属")], 221);
+    assert.equal(speeches[0].memberId, "h_000001");
+    assert.equal(speeches[0].house, "shugiin");
+    assert.deepEqual(unmatched, []);
+  });
+
+  test("衆院の同姓同名はその回次の名簿の会派で分ける", () => {
+    const members = [shugiinMember("h_1", "山田 太郎", "自由民主党・無所属の会"), shugiinMember("h_2", "山田 太郎", "日本維新の会")];
+    const s: Speech = { ...speech("h_001", "山田太郎", "日本維新の会"), house: "shugiin" };
+    assert.equal(matchSpeeches([s], members, 221).speeches[0].memberId, "h_2");
+  });
+});
+
 describe("matchSpeeches: 発言者名＋会派で名寄せ（matchVotes と同じ正規化）", () => {
   test("API の氏名（空白なし）が名簿の氏名（空白あり）に一致し、memberId が入る", () => {
     const { speeches, unmatched } = matchSpeeches([speech("a_001", "青木一彦", "自由民主党・無所属の会")], [member("m_1", "青木 一彦", "自民")]);

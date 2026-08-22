@@ -82,10 +82,13 @@ const SOURCE_HOST = /(^|\.)(sangiin\.go\.jp|shugiin\.go\.jp|ndl\.go\.jp)$/;
 const VOTE_VALUES = new Set(["賛成", "反対", "投票なし"]);
 /** result は必ず得票を含む: 「賛成 N・反対 N」または「<審議結果の原文>（賛成 N・反対 N）」。可否だけの表示にはしない。 */
 const RESULT_FORM = /^(?:[^（）]+（賛成 \d+・反対 \d+）|賛成 \d+・反対 \d+)$/;
-/** bill 行の sourceUrl は参院 議案情報の議案詳細ページ（提出者・審議状況の一次資料）。 */
 /** group-mismatch.json の1行に必須のキー（GroupMismatch）。 */
 const MISMATCH_KEYS = ["memberId", "nameText", "voteGroup", "rosterGroup", "rollCallId"] as const;
-const BILL_SOURCE =/^https:\/\/www\.sangiin\.go\.jp\/japanese\/joho1\/kousei\/gian\/\d+\/meisai\/m\d+\.htm$/;
+/** 衆院 議案情報の経過ページ（衆院議員の提出・賛同、会派態度の一次資料）。 */
+const KEIKA_SOURCE = /^https:\/\/www\.shugiin\.go\.jp\/internet\/itdb_gian\.nsf\/html\/gian\/keika\/[^/]+\.htm$/;
+/** bill 行の sourceUrl は参院 議案情報の議案詳細ページ（提出者・審議状況の一次資料）か衆院の経過ページ。 */
+const BILL_SOURCE = /^https:\/\/www\.sangiin\.go\.jp\/japanese\/joho1\/kousei\/gian\/\d+\/meisai\/m\d+\.htm$/;
+const STANCE_VALUES = new Set(["賛成", "反対"]);
 /** bills/ の id は `{提出回次}-{種別原文}-{番号 or 経過ページ id}`。 */
 const BILL_ID = /^(\d+)-[^-]+-[^-]+$/;
 
@@ -140,7 +143,13 @@ export async function validateDataset(dir: string): Promise<string[]> {
       if (e.kind === "speech") speeches++;
       if (e.kind === "bill") {
         bills++;
-        if (!BILL_SOURCE.test(e.sourceUrl)) v.push(`${rel} timeline[${i}]: bill sourceUrl must be the 議案ページ (kousei/gian/{session}/meisai/), got ${e.sourceUrl}`);
+        if (!BILL_SOURCE.test(e.sourceUrl) && !KEIKA_SOURCE.test(e.sourceUrl)) v.push(`${rel} timeline[${i}]: bill sourceUrl must be the 議案ページ (kousei/gian/{session}/meisai/ or gian/keika/), got ${e.sourceUrl}`);
+      }
+      if (e.kind === "stance") {
+        // 推定の行: 型で事実と分ける不変条件（estimated は常に true、出典は衆院の経過ページ）
+        if (e.estimated !== true) v.push(`${rel} timeline[${i}]: stance row must have estimated: true`);
+        if (!STANCE_VALUES.has(e.stance)) v.push(`${rel} timeline[${i}]: stance must be 賛成/反対, got ${e.stance}`);
+        if (!KEIKA_SOURCE.test(e.sourceUrl)) v.push(`${rel} timeline[${i}]: stance sourceUrl must be the 衆院 経過ページ (gian/keika/), got ${e.sourceUrl}`);
       }
       if (e.kind === "vote") {
         votes++;

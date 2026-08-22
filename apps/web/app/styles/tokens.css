@@ -14,6 +14,8 @@
   --no-bg: #efe0ea;  --no-fg: #663a5c;  --no-line: #d9bdd0;
   --none-bg: #ebe8e1; --none-fg: #6b6860; --none-line: #b9b3a8;
   --act-bg: #f1e8d3; --act-fg: #6a4e12; --act-line: #dccaa0;
+  /* 推定（衆院の会派態度）。破線＋薄地。賛成・反対どちらも同じ色で、色に賛否を載せない */
+  --est-bg: #f0eee9; --est-fg: #4a4740; --est-line: #8f8a80;
   --font-head: "Shippori Mincho", "Hiragino Mincho ProN", "Yu Mincho", serif;
   --font-body: "BIZ UDPGothic", "Hiragino Sans", "Noto Sans JP", sans-serif;
 }
@@ -25,6 +27,7 @@
     --no-bg: transparent; --no-fg: #ece8df; --no-line: #ece8df;
     --none-bg: transparent; --none-fg: #9a978f; --none-line: #6b6a65;
     --act-bg: transparent; --act-fg: #d8b86a; --act-line: #d8b86a;
+    --est-bg: transparent; --est-fg: #c9c5bb; --est-line: #8f8a80;
   }
 }
 :root[data-theme="dark"] {
@@ -34,6 +37,7 @@
   --no-bg: transparent; --no-fg: #ece8df; --no-line: #ece8df;
   --none-bg: transparent; --none-fg: #9a978f; --none-line: #6b6a65;
   --act-bg: transparent; --act-fg: #d8b86a; --act-line: #d8b86a;
+  --est-bg: transparent; --est-fg: #c9c5bb; --est-line: #8f8a80;
 }
 html { background: var(--paper); color: var(--ink); font-family: var(--font-body); -webkit-font-smoothing: antialiased; }
 body { margin: 0; }
