@@ -5,7 +5,7 @@ import { fetchMembers, memberListUrl, unmatchedGroups } from "./sources/sangiin-
 import { fetchText } from "./fetch.ts";
 import { fetchSpeeches, speechPageUrl } from "./sources/kokkai-speeches.ts";
 import { matchVotes, type GroupMismatch, type Unmatched } from "./match-votes.ts";
-import { billListUrl, fetchBillDecisions, matchBillResults, type BillDecision } from "./sources/sangiin-bills.ts";
+import { billListUrl, fetchBills, matchBillResults, toBillDecisions, type Bill } from "./sources/sangiin-bills.ts";
 import { matchSpeeches, type UnmatchedSpeech } from "./match-speeches.ts";
 import { buildDataset, mergeRosters, rosterSessionsFor } from "./aggregate.ts";
 import { readSessionsOnDisk, resolveSessions, validateDataset, writeDataset } from "./dataset.ts";
@@ -59,13 +59,13 @@ for (const session of targets) {
   }
 }
 // 可決/否決は投票結果ページに無いので、参院 議案情報（事実）から取り、採決に紐づける（Issue #26）。
-const decisions: BillDecision[] = [];
+const allBills: Bill[] = [];
 for (const session of targets) {
-  const list = await fetchBillDecisions(session);
-  console.log(`session ${session}: ${list.length} bill decisions`);
-  decisions.push(...list);
+  const list = await fetchBills(session);
+  console.log(`session ${session}: ${list.length} bills (${toBillDecisions(list).length} decisions)`);
+  allBills.push(...list);
 }
-const bills = matchBillResults(rollCalls, decisions);
+const bills = matchBillResults(rollCalls, toBillDecisions(allBills));
 // 人事案件・決議など議案情報に載らない採決は得票のみの表示になる。件数を出して運用者が確認できるようにする。
 if (bills.unmatched.length) console.warn(`roll calls without bill decision: ${bills.unmatched.length} (see data/unmatched-bills.json)`);
 
