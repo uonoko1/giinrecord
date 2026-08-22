@@ -74,3 +74,13 @@ test("フィクスチャに出る会派略称はすべて対応表に載って�
   const missing = [...new Set(members.map((m) => m.terms[0].group))].filter((g) => !groupFullName(g));
   assert.deepEqual(missing, []);
 });
+
+test("index.json の文字列化: キーはソート済み・末尾改行（DATA_CONTRACT）", async () => {
+  const { serializeMembersIndex } = await import("../src/sources/sangiin-members.ts");
+  const [m] = parseMemberList(html, SRC, 221);
+  const text = serializeMembersIndex([m]);
+  assert.ok(text.endsWith("\n"));
+  const keys = Object.keys(JSON.parse(text)[0]);
+  assert.deepEqual(keys, [...keys].sort());
+  assert.deepEqual(Object.keys(JSON.parse(text)[0].counts), ["bills", "rollcalls", "speeches"]);
+});
