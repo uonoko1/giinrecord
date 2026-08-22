@@ -5,6 +5,8 @@
  * rules are unit-testable; scripts/smoke.ts does the filesystem walk.
  */
 
+import { sitemapLocs } from "./sitemap";
+
 /** relative path (posix, no leading slash) -> file content */
 export type BuildFiles = Map<string, string>;
 
@@ -73,6 +75,40 @@ export function checkBuild(files: BuildFiles, data: ExpectedData): SmokeReport {
     }
   }
   return { checkedPages, checkedLinks, failures };
+}
+
+export interface SitemapReport {
+  checkedUrls: number;
+  failures: string[];
+}
+
+/** `https://host/members/m_1` or `/members/m_1` -> `members/m_1` (build-relative target). */
+function sitemapLocTarget(loc: string): string {
+  const path = /^[a-z][a-z0-9+.-]*:\/\//i.test(loc) ? loc.replace(/^[a-z][a-z0-9+.-]*:\/\/[^/]*/i, "") : loc;
+  return resolveHrefTarget(path.startsWith("/") ? path : `/${path}`);
+}
+
+/**
+ * sitemap.xml must exist, every <loc> must resolve to a built page, and every page
+ * data/ promised must be listed (a member page search engines cannot find is a missing fact).
+ * <loc> may be absolute (SITE_ORIGIN set) or site-relative (unset).
+ */
+export function checkSitemap(files: BuildFiles, data: ExpectedData): SitemapReport {
+  const xml = files.get("sitemap.xml");
+  if (xml === undefined) return { checkedUrls: 0, failures: ["missing file: sitemap.xml"] };
+  const failures: string[] = [];
+  const listed = new Set<string>();
+  const locs = sitemapLocs(xml);
+  for (const loc of locs) {
+    const target = sitemapLocTarget(loc);
+    listed.add(target);
+    if (!targetExists(files, target)) failures.push(`sitemap entry has no page: ${loc}`);
+  }
+  for (const page of expectedPages(data)) {
+    const target = page.replace(/\/?index\.html$/, "");
+    if (!listed.has(target)) failures.push(`page not in sitemap: /${target}`);
+  }
+  return { checkedUrls: locs.length, failures };
 }
 
 export function formatReport(r: SmokeReport): string {
