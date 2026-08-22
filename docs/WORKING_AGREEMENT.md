@@ -28,7 +28,7 @@
 
 ## 並列作業の衝突回避
 - ETL と Web は `data/` のファイル契約（`docs/DATA_CONTRACT.md`）だけで結合する。
-- 共有ファイル（`routes.ts`, `tokens.css`, `shared/src/index.ts`）の変更は担当 PBI を1つに限定し、他は読み取りのみ。
+- 共有ファイル（`routes.ts`, `tokens.css`, `shared/src/index.ts`, `vitest.setup.ts`, `.gitignore`, `package.json` 群, `react-router.config.ts`）の変更は担当 PBI を1つに限定し、他は読み取りのみ。必要なら Issue に「共有ファイル変更あり」と書き、PO が順序を決める。
 - フィクスチャは `packages/etl/test/fixtures/` と `apps/web/app/test-fixtures/` に置き、他人のフィクスチャを書き換えない。
 
 ## テスト方針（t-wada に怒られないために）
