@@ -4,7 +4,7 @@ import { join } from "node:path";
 import type { DatasetMeta, MemberDetail, MemberSummary, RollCall, RollCallSummary } from "@seiji-kiroku/shared";
 import type { Aggregated } from "./aggregate.ts";
 import { stableJson } from "./json.ts";
-import type { Unmatched } from "./match-votes.ts";
+import type { GroupMismatch, Unmatched } from "./match-votes.ts";
 import type { UnmatchedSpeech } from "./match-speeches.ts";
 import type { UnmatchedBillProposer } from "./match-bills.ts";
 import type { UnmatchedBill } from "./sources/sangiin-bills.ts";
@@ -19,6 +19,8 @@ export interface Dataset extends Aggregated {
   unmatchedBills: UnmatchedBill[];
   /** 対応表（sangiin-groups.ts）に無い会派略称。group には原文のまま入る（Issue #36）。 */
   unmatchedGroups: UnmatchedGroup[];
+  /** 氏名だけで紐づき、採決ページの会派がどの回次の名簿の会派とも違った票（Issue #24）。会派移動は推定しない。 */
+  groupMismatch: GroupMismatch[];
   meta: DatasetMeta;
 }
 
@@ -62,6 +64,7 @@ export async function writeDataset(dir: string, ds: Dataset): Promise<void> {
   await put("unmatched.json", ds.unmatched);
   await put("unmatched-bills.json", ds.unmatchedBills);
   await put("unmatched-groups.json", ds.unmatchedGroups);
+  await put("group-mismatch.json", ds.groupMismatch);
   await put("meta.json", ds.meta);
 }
 
@@ -70,7 +73,9 @@ const VOTE_VALUES = new Set(["賛成", "反対", "投票なし"]);
 /** result は必ず得票を含む: 「賛成 N・反対 N」または「<審議結果の原文>（賛成 N・反対 N）」。可否だけの表示にはしない。 */
 const RESULT_FORM = /^(?:[^（）]+（賛成 \d+・反対 \d+）|賛成 \d+・反対 \d+)$/;
 /** bill 行の sourceUrl は参院 議案情報の議案詳細ページ（提出者・審議状況の一次資料）。 */
-const BILL_SOURCE = /^https:\/\/www\.sangiin\.go\.jp\/japanese\/joho1\/kousei\/gian\/\d+\/meisai\/m\d+\.htm$/;
+/** group-mismatch.json の1行に必須のキー（GroupMismatch）。 */
+const MISMATCH_KEYS = ["memberId", "nameText", "voteGroup", "rosterGroup", "rollCallId"] as const;
+const BILL_SOURCE =/^https:\/\/www\.sangiin\.go\.jp\/japanese\/joho1\/kousei\/gian\/\d+\/meisai\/m\d+\.htm$/;
 
 /**
  * docs/DATA_CONTRACT.md の不変条件を `dir` 上のファイルに対して検証し、違反を文字列で返す（空なら合格）。
@@ -153,6 +158,22 @@ export async function validateDataset(dir: string): Promise<string[]> {
         if (!unmatchedKeys.has(`${rc.id}\t${vote.nameText}`)) v.push(`${rel}: "${vote.nameText}" has empty memberId but is not listed in unmatched.json`);
       } else if (!ids.has(vote.memberId)) v.push(`${rel}: memberId ${vote.memberId} not in members/index.json`);
       else matchedVotes++;
+    }
+  }
+  // group-mismatch.json: 行の形と、memberId / rollCallId が公開データ上に実在することを検査（Issue #24）
+  const mismatch = await read<unknown>("group-mismatch.json");
+  if (mismatch !== undefined) {
+    if (!Array.isArray(mismatch)) v.push("group-mismatch.json: must be an array");
+    else {
+      const rollCallIds = new Set(summaries.map((s) => s.id));
+      mismatch.forEach((row: unknown, i) => {
+        const rec = (row && typeof row === "object" ? row : {}) as Record<string, unknown>;
+        for (const key of MISMATCH_KEYS) {
+          if (typeof rec[key] !== "string" || rec[key] === "") v.push(`group-mismatch.json[${i}]: ${key} must be a non-empty string`);
+        }
+        if (typeof rec.memberId === "string" && rec.memberId && !ids.has(rec.memberId)) v.push(`group-mismatch.json[${i}]: memberId ${rec.memberId} not in members/index.json`);
+        if (typeof rec.rollCallId === "string" && rec.rollCallId && !rollCallIds.has(rec.rollCallId)) v.push(`group-mismatch.json[${i}]: rollCallId ${rec.rollCallId} not in rollcalls/index.json`);
+      });
     }
   }
   for (const rel of await listJsonFiles(dir, "members")) {
