@@ -7,6 +7,7 @@ import { stableJson } from "./json.ts";
 import type { Unmatched } from "./match-votes.ts";
 import type { UnmatchedSpeech } from "./match-speeches.ts";
 import type { UnmatchedBill } from "./sources/sangiin-bills.ts";
+import type { UnmatchedGroup } from "./sources/sangiin-members.ts";
 
 /** `data/` に書く一式（docs/DATA_CONTRACT.md）。 */
 export interface Dataset extends Aggregated {
@@ -15,6 +16,8 @@ export interface Dataset extends Aggregated {
   unmatched: (Unmatched | UnmatchedSpeech)[];
   /** 議案情報の審議結果と突合できなかった採決（得票のみの result になる）。 */
   unmatchedBills: UnmatchedBill[];
+  /** 対応表（sangiin-groups.ts）に無い会派略称。group には原文のまま入る（Issue #36）。 */
+  unmatchedGroups: UnmatchedGroup[];
   meta: DatasetMeta;
 }
 
@@ -32,6 +35,7 @@ export async function writeDataset(dir: string, ds: Dataset): Promise<void> {
   for (const rc of ds.rollCallDetails) await put(`rollcalls/${rc.session}/${rc.id}.json`, rc);
   await put("unmatched.json", ds.unmatched);
   await put("unmatched-bills.json", ds.unmatchedBills);
+  await put("unmatched-groups.json", ds.unmatchedGroups);
   await put("meta.json", ds.meta);
 }
 
