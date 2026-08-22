@@ -1,21 +1,26 @@
 {
- "fetchedAt": "2026-08-22T11:26:08.677Z",
+ "fetchedAt": "2026-08-22T11:50:28.793Z",
  "sessions": [
   221
  ],
  "sources": [
   {
-   "fetchedAt": "2026-08-22T11:26:08.677Z",
+   "fetchedAt": "2026-08-22T11:50:28.793Z",
    "name": "参議院 議員一覧",
    "url": "https://www.sangiin.go.jp/japanese/joho1/kousei/giin/221/giin.htm"
   },
   {
-   "fetchedAt": "2026-08-22T11:26:08.677Z",
+   "fetchedAt": "2026-08-22T11:50:28.793Z",
    "name": "参議院 本会議投票結果",
    "url": "https://www.sangiin.go.jp/japanese/touhyoulist/"
   },
   {
-   "fetchedAt": "2026-08-22T11:26:08.677Z",
+   "fetchedAt": "2026-08-22T11:50:28.793Z",
+   "name": "国会会議録検索システム 検索用API（参議院 本会議）",
+   "url": "https://kokkai.ndl.go.jp/api/speech?nameOfHouse=%E5%8F%82%E8%AD%B0%E9%99%A2&nameOfMeeting=%E6%9C%AC%E4%BC%9A%E8%AD%B0&sessionFrom=221&sessionTo=221&recordPacking=json&maximumRecords=100&startRecord=1"
+  },
+  {
+   "fetchedAt": "2026-08-22T11:50:28.793Z",
    "name": "参議院 議案情報（第221回）",
    "url": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/221/gian.htm"
   }
