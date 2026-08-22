@@ -4603,5 +4603,6515 @@
   "kana": "きむら よしお",
   "name": "木村 義雄",
   "termEnd": "2028-07-25"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "岡山1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_41f223ac28",
+  "kana": "あいさわ いちろう",
+  "name": "逢沢 一郎"
+ },
+ {
+  "counts": {
+   "bills": 2,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）北関東",
+  "group": "参政党",
+  "house": "shugiin",
+  "id": "h_dcf5bd65bf",
+  "kana": "あおき ひとみ",
+  "name": "青木 ひとみ"
+ },
+ {
+  "counts": {
+   "bills": 5,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "大阪14",
+  "group": "日本維新の会",
+  "house": "shugiin",
+  "id": "h_d14b93ad81",
+  "kana": "あおやぎ ひとし",
+  "name": "青柳 仁士"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "兵庫8",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_9aeb820ec0",
+  "kana": "あおやま しげはる",
+  "name": "青山 繁晴"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "愛知12",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_e98c7a392a",
+  "kana": "あおやま しゅうへい",
+  "name": "青山 周平"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 11
+  },
+  "current": true,
+  "district": "鳥取2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_fee329b052",
+  "kana": "あかざわ りょうせい",
+  "name": "赤澤 亮正"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）近畿",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_10cea3670d",
+  "kana": "あかば かずよし",
+  "name": "赤羽 一嘉"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "神奈川14",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_26b77c5931",
+  "kana": "あかま じろう",
+  "name": "あかま 二郎"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）東北",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_2a17a0239c",
+  "kana": "あきば けんや",
+  "name": "秋葉 賢也"
+ },
+ {
+  "counts": {
+   "bills": 3,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）九州",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_cd1d5ed538",
+  "kana": "あさだ ますみ",
+  "name": "浅田 眞澄美"
+ },
+ {
+  "counts": {
+   "bills": 20,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "茨城5",
+  "group": "国民民主党・無所属クラブ",
+  "house": "shugiin",
+  "id": "h_4940347b5c",
+  "kana": "あさの さとし",
+  "name": "浅野 哲"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "北海道6",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_e6bb4208cc",
+  "kana": "あずま くによし",
+  "name": "東 国幹"
+ },
+ {
+  "counts": {
+   "bills": 4,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "大阪3",
+  "group": "日本維新の会",
+  "house": "shugiin",
+  "id": "h_0e58f8b976",
+  "kana": "あずま とおる",
+  "name": "東 徹"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "東京6",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_8819c308ca",
+  "kana": "あぜもと しょうご",
+  "name": "畦元 将吾"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "福岡8",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_cd2c78ad8d",
+  "kana": "あそう たろう",
+  "name": "麻生 太郎"
+ },
+ {
+  "counts": {
+   "bills": 6,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "兵庫2",
+  "group": "日本維新の会",
+  "house": "shugiin",
+  "id": "h_f68b28e5d7",
+  "kana": "あべ けいし",
+  "name": "阿部 圭史"
+ },
+ {
+  "counts": {
+   "bills": 5,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "（比）東京",
+  "group": "日本維新の会",
+  "house": "shugiin",
+  "id": "h_663a113188",
+  "kana": "あべ つかさ",
+  "name": "阿部 司"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）中国",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_3b2aa7630c",
+  "kana": "あべ としこ",
+  "name": "あべ 俊子"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）九州",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_54acd4b2f0",
+  "kana": "あべ ひろき",
+  "name": "阿部 弘樹"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）東北",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_b7a7966a3d",
+  "kana": "ありた よしふ",
+  "name": "有田 芳生"
+ },
+ {
+  "counts": {
+   "bills": 2,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "東京28",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_e3f302c76e",
+  "kana": "あんどう たかお",
+  "name": "安藤 たかお"
+ },
+ {
+  "counts": {
+   "bills": 21,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）四国",
+  "group": "国民民主党・無所属クラブ",
+  "house": "shugiin",
+  "id": "h_bfac0fcb97",
+  "kana": "いいずみ かもん",
+  "name": "飯泉 嘉門"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "栃木2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_ac28fee5d4",
+  "kana": "いがらし きよし",
+  "name": "五十嵐 清"
+ },
+ {
+  "counts": {
+   "bills": 5,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "大阪10",
+  "group": "日本維新の会",
+  "house": "shugiin",
+  "id": "h_3a6de426a2",
+  "kana": "いけした たく",
+  "name": "池下 卓"
+ },
+ {
+  "counts": {
+   "bills": 5,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）近畿",
+  "group": "日本維新の会",
+  "house": "shugiin",
+  "id": "h_c2d56938a8",
+  "kana": "いけはた こうたろう",
+  "name": "池畑 浩太朗"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "（比）近畿",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_064d6bc841",
+  "kana": "いさ しんいち",
+  "name": "伊佐 進一"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 47
+  },
+  "current": true,
+  "district": "（比）北関東",
+  "group": "無所属",
+  "house": "shugiin",
+  "id": "h_25ba5a16a8",
+  "kana": "いしい けいいち",
+  "name": "石井 啓一"
+ },
+ {
+  "counts": {
+   "bills": 3,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "愛知13",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_bb3cb4799d",
+  "kana": "いしい たく",
+  "name": "石井 拓"
+ },
+ {
+  "counts": {
+   "bills": 2,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）北関東",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_e84036df4e",
+  "kana": "いしかわ あきまさ",
+  "name": "石川 昭政"
+ },
+ {
+  "counts": {
+   "bills": 3,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）近畿",
+  "group": "参政党",
+  "house": "shugiin",
+  "id": "h_a84ac713fc",
+  "kana": "いしかわ まさる",
+  "name": "石川 勝"
+ },
+ {
+  "counts": {
+   "bills": 3,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "栃木4",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_8344e45389",
+  "kana": "いしざか まさる",
+  "name": "石坂 太"
+ },
+ {
+  "counts": {
+   "bills": 3,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）近畿",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_11eed3a64d",
+  "kana": "いしだ まさとし",
+  "name": "石田 真敏"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "鳥取1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_dbb28fe335",
+  "kana": "いしば しげる",
+  "name": "石破 茂"
+ },
+ {
+  "counts": {
+   "bills": 2,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "広島3",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_4b7e435584",
+  "kana": "いしばし りんたろう",
+  "name": "石橋 林太郎"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "東京3",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_e6d9f0da3a",
+  "kana": "いしはら ひろたか",
+  "name": "石原 宏高"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "三重3",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_41e2e005ba",
+  "kana": "いしはら まさたか",
+  "name": "石原 正敬"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "京都3",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_761d532f90",
+  "kana": "いずみ けんた",
+  "name": "泉 健太"
+ },
+ {
+  "counts": {
+   "bills": 4,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）近畿",
+  "group": "日本維新の会",
+  "house": "shugiin",
+  "id": "h_11a1a6da4d",
+  "kana": "いちたに ゆういちろう",
+  "name": "一谷 勇一郎"
+ },
+ {
+  "counts": {
+   "bills": 4,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）近畿",
+  "group": "日本維新の会",
+  "house": "shugiin",
+  "id": "h_6976314982",
+  "kana": "いちむら こういちろう",
+  "name": "市村 浩一郎"
+ },
+ {
+  "counts": {
+   "bills": 4,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "長野3",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_90168be527",
+  "kana": "いで ようせい",
+  "name": "井出 庸生"
+ },
+ {
+  "counts": {
+   "bills": 19,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "（比）東京",
+  "group": "国民民主党・無所属クラブ",
+  "house": "shugiin",
+  "id": "h_e00356b4dc",
+  "kana": "いど まさえ",
+  "name": "井戸 まさえ"
+ },
+ {
+  "counts": {
+   "bills": 2,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）東海",
+  "group": "参政党",
+  "house": "shugiin",
+  "id": "h_4bf10e257c",
+  "kana": "いとう けいすけ",
+  "name": "伊藤 恵介"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）南関東",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_370d70ccfb",
+  "kana": "いとう さとし",
+  "name": "伊藤 聡"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）東北",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_75ad6d6077",
+  "kana": "いとう しんたろう",
+  "name": "伊藤 信太郎"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "愛知8",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_deaceec163",
+  "kana": "いとう ただひこ",
+  "name": "伊藤 忠彦"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "東京22",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_f300b417d7",
+  "kana": "いとう たつや",
+  "name": "伊藤 達也"
+ },
+ {
+  "counts": {
+   "bills": 5,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "（比）近畿",
+  "group": "日本維新の会",
+  "house": "shugiin",
+  "id": "h_3a5f76c794",
+  "kana": "いとう のぶひさ",
+  "name": "伊東 信久"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）北海道",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_9c96f07fc8",
+  "kana": "いとう よしたか",
+  "name": "伊東 良孝"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "福井1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_944983c859",
+  "kana": "いなだ ともみ",
+  "name": "稲田 朋美"
+ },
+ {
+  "counts": {
+   "bills": 3,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "静岡8",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_08ce02324a",
+  "kana": "いなば だいすけ",
+  "name": "稲葉 大輔"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "（比）東海",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_bef5e031ac",
+  "kana": "いぬかい あきよし",
+  "name": "犬飼 明佳"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "群馬2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_0ef16ef194",
+  "kana": "いの としろう",
+  "name": "井野 俊郎"
+ },
+ {
+  "counts": {
+   "bills": 2,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "東京25",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_44a1758227",
+  "kana": "いのうえ しんじ",
+  "name": "井上 信治"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "福岡1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_819391ca49",
+  "kana": "いのうえ たかひろ",
+  "name": "井上 貴博"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 5
+  },
+  "current": true,
+  "district": "大阪1",
+  "group": "日本維新の会",
+  "house": "shugiin",
+  "id": "h_3cc0fe27ba",
+  "kana": "いのうえ ひでたか",
+  "name": "井上 英孝"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "静岡2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_346b099dc1",
+  "kana": "いばやし たつのり",
+  "name": "井林 辰憲"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "愛媛2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_68782bd907",
+  "kana": "いはら たくみ",
+  "name": "井原 巧"
+ },
+ {
+  "counts": {
+   "bills": 3,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "埼玉5",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_e364dbe888",
+  "kana": "いはら ゆたか",
+  "name": "井原 隆"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "愛知14",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_281888d72e",
+  "kana": "いまえだ そういちろう",
+  "name": "今枝 宗一郎"
+ },
+ {
+  "counts": {
+   "bills": 3,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "東京26",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_6a883dc7be",
+  "kana": "いまおか うえき",
+  "name": "今岡 植"
+ },
+ {
+  "counts": {
+   "bills": 3,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）南関東",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_ce465f59ec",
+  "kana": "いわさき ひな",
+  "name": "岩崎 比菜"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "佐賀1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_2b1a9091f7",
+  "kana": "いわた かずちか",
+  "name": "岩田 和親"
+ },
+ {
+  "counts": {
+   "bills": 5,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "大阪13",
+  "group": "日本維新の会",
+  "house": "shugiin",
+  "id": "h_8ae8aaa0c1",
+  "kana": "いわたに りょうへい",
+  "name": "岩谷 良平"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "大分3",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_1e1d63e317",
+  "kana": "いわや たけし",
+  "name": "岩屋 毅"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "福島3",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_f81124fbb7",
+  "kana": "うえすぎ けんたろう",
+  "name": "上杉 謙太郎"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "富山2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_33161f6a2b",
+  "kana": "うえだ えいしゅん",
+  "name": "上田 英俊"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 9
+  },
+  "current": true,
+  "district": "滋賀2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_300d9b8658",
+  "kana": "うえの けんいちろう",
+  "name": "上野 賢一郎"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）九州",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_55e4dc1a55",
+  "kana": "うえの ひろし",
+  "name": "上野 宏史"
+ },
+ {
+  "counts": {
+   "bills": 3,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "神奈川9",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_0160345d6a",
+  "kana": "うえはら まさひろ",
+  "name": "上原 正裕"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）北海道",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_ba10ec8d65",
+  "kana": "うきしま ともこ",
+  "name": "浮島 智子"
+ },
+ {
+  "counts": {
+   "bills": 5,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）東京",
+  "group": "チームみらい",
+  "house": "shugiin",
+  "id": "h_a0488eecc3",
+  "kana": "うさみ のぼる",
+  "name": "宇佐美 登"
+ },
+ {
+  "counts": {
+   "bills": 19,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "（比）北海道",
+  "group": "国民民主党・無所属クラブ",
+  "house": "shugiin",
+  "id": "h_cde1d7c281",
+  "kana": "うすき ひでたけ",
+  "name": "臼木 秀剛"
+ },
+ {
+  "counts": {
+   "bills": 3,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "新潟1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_9bb558ed04",
+  "kana": "うちやま こう",
+  "name": "内山 こう"
+ },
+ {
+  "counts": {
+   "bills": 4,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "大阪5",
+  "group": "日本維新の会",
+  "house": "shugiin",
+  "id": "h_aab62b628c",
+  "kana": "うめむら さとし",
+  "name": "梅村 聡"
+ },
+ {
+  "counts": {
+   "bills": 4,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "大阪15",
+  "group": "日本維新の会",
+  "house": "shugiin",
+  "id": "h_99e4752c0e",
+  "kana": "うらの やすと",
+  "name": "浦野 靖人"
+ },
+ {
+  "counts": {
+   "bills": 4,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "大阪8",
+  "group": "日本維新の会",
+  "house": "shugiin",
+  "id": "h_6cb80859b4",
+  "kana": "うるま じょうじ",
+  "name": "うるま 譲司"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）東北",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_7bfa7f0db0",
+  "kana": "えと あきのり",
+  "name": "江渡 聡徳"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）九州",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_f5cc6f0fde",
+  "kana": "えとう たく",
+  "name": "江藤 拓"
+ },
+ {
+  "counts": {
+   "bills": 3,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "大分1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_1a206b70d3",
+  "kana": "えとう ひろあき",
+  "name": "衛藤 博昭"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "千葉5",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_96f4fb4b33",
+  "kana": "えり あるふぃや",
+  "name": "英利アルフィヤ"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "大阪18",
+  "group": "日本維新の会",
+  "house": "shugiin",
+  "id": "h_e65d012291",
+  "kana": "えんどう たかし",
+  "name": "遠藤 敬"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "山形1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_99b8cc1d4c",
+  "kana": "えんどう ひろあき",
+  "name": "遠藤 寛明"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "滋賀1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_a7a3570406",
+  "kana": "おおおか としたか",
+  "name": "大岡 敏孝"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 5
+  },
+  "current": true,
+  "district": "兵庫6",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_084be64932",
+  "kana": "おおぐし まさき",
+  "name": "大串 正樹"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "（比）北関東",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_d7c53a303b",
+  "kana": "おおしま あつし",
+  "name": "大島 敦"
+ },
+ {
+  "counts": {
+   "bills": 2,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "東京15",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_8da6d43cfd",
+  "kana": "おおぞら こうき",
+  "name": "大空 幸星"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "埼玉9",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_7cc3871d43",
+  "kana": "おおつか たく",
+  "name": "大塚 拓"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "東京16",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_c1e12fb65f",
+  "kana": "おおにし ようへい",
+  "name": "大西 洋平"
+ },
+ {
+  "counts": {
+   "bills": 4,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "香川3",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_9783242ff2",
+  "kana": "おおの けいたろう",
+  "name": "大野 敬太郎"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "（比）東京",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_6dbb7e7200",
+  "kana": "おおもり えりこ",
+  "name": "大森 江里子"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "福岡9",
+  "group": "無所属",
+  "house": "shugiin",
+  "id": "h_93effd86cb",
+  "kana": "おがた りんたろう",
+  "name": "緒方 林太郎"
+ },
+ {
+  "counts": {
+   "bills": 19,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）南関東",
+  "group": "国民民主党・無所属クラブ",
+  "house": "shugiin",
+  "id": "h_5b2448bc0c",
+  "kana": "おかの じゅんこ",
+  "name": "岡野 純子"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "（比）東京",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_1e39f0232d",
+  "kana": "おかもと みつなり",
+  "name": "岡本 三成"
+ },
+ {
+  "counts": {
+   "bills": 3,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "愛知5",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_a257df5d02",
+  "kana": "おかもと やすひろ",
+  "name": "岡本 康宏"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "香川1",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_2ec72163a5",
+  "kana": "おがわ じゅんや",
+  "name": "小川 淳也"
+ },
+ {
+  "counts": {
+   "bills": 5,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "大阪7",
+  "group": "日本維新の会",
+  "house": "shugiin",
+  "id": "h_cf676ccf68",
+  "kana": "おくした たけみつ",
+  "name": "奥下 剛光"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "高知2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_a37689b16f",
+  "kana": "おざき まさなお",
+  "name": "尾崎 正直"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）東海",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_bfde3f6f0b",
+  "kana": "おさだ こういちろう",
+  "name": "長田 紘一郎"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）九州",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_bda2f958a1",
+  "kana": "おざと やすひろ",
+  "name": "小里 泰弘"
+ },
+ {
+  "counts": {
+   "bills": 19,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "（比）北陸信越",
+  "group": "国民民主党・無所属クラブ",
+  "house": "shugiin",
+  "id": "h_3d166d3c64",
+  "kana": "おだけ かい",
+  "name": "小竹 凱"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "東京21",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_2952f401b0",
+  "kana": "おだわら きよし",
+  "name": "小田原 潔"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）東京",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_6149a36aa6",
+  "kana": "おちあい たかゆき",
+  "name": "落合 貴之"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "福岡2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_0faae804b4",
+  "kana": "おにき まこと",
+  "name": "鬼木 誠"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "宮城5",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_0466cf6b0a",
+  "kana": "おのでら いつのり",
+  "name": "小野寺 五典"
+ },
+ {
+  "counts": {
+   "bills": 4,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "埼玉6",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_bff1086339",
+  "kana": "おばな あきひと",
+  "name": "尾花 瑛仁"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "群馬5",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_f902d3df62",
+  "kana": "おぶち ゆうこ",
+  "name": "小渕 優子"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）北関東",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_35b4733964",
+  "kana": "おみ あさこ",
+  "name": "尾身 朝子"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "（比）東京",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_5be55d5f17",
+  "kana": "かさい こういち",
+  "name": "河西 宏一"
+ },
+ {
+  "counts": {
+   "bills": 3,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "千葉4",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_f17b98d9e4",
+  "kana": "かしま ゆうすけ",
+  "name": "鹿嶋 祐介"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "茨城4",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_8964ea25b3",
+  "kana": "かじやま ひろし",
+  "name": "梶山 弘志"
+ },
+ {
+  "counts": {
+   "bills": 4,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）北関東",
+  "group": "日本維新の会",
+  "house": "shugiin",
+  "id": "h_f7e5abb43e",
+  "kana": "かしわくら ゆうじ",
+  "name": "柏倉 祐司"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "静岡6",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_db679ccd41",
+  "kana": "かつまた たかあき",
+  "name": "勝俣 孝明"
+ },
+ {
+  "counts": {
+   "bills": 4,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "京都1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_650ef29525",
+  "kana": "かつめ やすし",
+  "name": "勝目 康"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "東京8",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_1a35460cf9",
+  "kana": "かど ひろこ",
+  "name": "門 寛子"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "山形3",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_ce5320e30d",
+  "kana": "かとう あゆこ",
+  "name": "加藤 鮎子"
+ },
+ {
+  "counts": {
+   "bills": 3,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "岡山3",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_b9b139315f",
+  "kana": "かとう かつのぶ",
+  "name": "加藤 勝信"
+ },
+ {
+  "counts": {
+   "bills": 4,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "北海道1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_512c901868",
+  "kana": "かとう たかひろ",
+  "name": "加藤 貴弘"
+ },
+ {
+  "counts": {
+   "bills": 3,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "岐阜4",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_d97cc6e446",
+  "kana": "かとう ともひろ",
+  "name": "加藤 大博"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "長崎2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_611071402d",
+  "kana": "かとう りゅうしょう",
+  "name": "加藤 竜祥"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "千葉1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_22283c2654",
+  "kana": "かどやま ひろあき",
+  "name": "門山 宏哲"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "神奈川20",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_3f88c875bd",
+  "kana": "かなざわ ゆい",
+  "name": "金澤 結衣"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）東北",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_91a9197df1",
+  "kana": "かねこ えみ",
+  "name": "金子 恵美"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "熊本4",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_7ba58c001e",
+  "kana": "かねこ やすし",
+  "name": "金子 恭之"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "長崎3",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_86788240ad",
+  "kana": "かねこ ようぞう",
+  "name": "金子 容三"
+ },
+ {
+  "counts": {
+   "bills": 4,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "（比）南関東",
+  "group": "日本維新の会",
+  "house": "shugiin",
+  "id": "h_df496fed0c",
+  "kana": "かねむら りゅうな",
+  "name": "金村 龍那"
+ },
+ {
+  "counts": {
+   "bills": 2,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "静岡1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_be9c42cc79",
+  "kana": "かみかわ ようこ",
+  "name": "上川 陽子"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "北海道10",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_392ecbc47c",
+  "kana": "かみや ひろし",
+  "name": "神谷 裕"
+ },
+ {
+  "counts": {
+   "bills": 5,
+   "rollcalls": 0,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "（比）北陸信越",
+  "group": "参政党",
+  "house": "shugiin",
+  "id": "h_ff53838a0d",
+  "kana": "かわ ゆういちろう",
+  "name": "川 裕一郎"
+ },
+ {
+  "counts": {
+   "bills": 19,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）近畿",
+  "group": "国民民主党・無所属クラブ",
+  "house": "shugiin",
+  "id": "h_1f95c3c042",
+  "kana": "かわい あきなり",
+  "name": "河井 昭成"
+ },
+ {
+  "counts": {
+   "bills": 5,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "（比）南関東",
+  "group": "チームみらい",
+  "house": "shugiin",
+  "id": "h_6f86ad54e2",
+  "kana": "かわい みちお",
+  "name": "河合 道雄"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "三重2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_dcba636ab2",
+  "kana": "かわさき ひでと",
+  "name": "川崎 ひでと"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）九州",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_a552ed2afb",
+  "kana": "かわの まさみ",
+  "name": "河野 正美"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）九州",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_844a5df0db",
+  "kana": "かわの よしひろ",
+  "name": "河野 義博"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "東京23",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_7f09a1277d",
+  "kana": "かわまつ しんいちろう",
+  "name": "川松 真一朗"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "愛知1",
+  "group": "無所属",
+  "house": "shugiin",
+  "id": "h_7e2ca90ea1",
+  "kana": "かわむら たかし",
+  "name": "河村 たかし"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）東北",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_18343587f6",
+  "kana": "かんけ いちろう",
+  "name": "菅家 一郎"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "青森2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_27faa119e4",
+  "kana": "かんだ じゅんいち",
+  "name": "神田 潤一"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 3
+  },
+  "current": true,
+  "district": "静岡7",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_4e670d508a",
+  "kana": "きうち みのる",
+  "name": "城内 実"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "埼玉3",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_694ba09336",
+  "kana": "きかわだ ひとし",
+  "name": "黄川田 仁志"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）北陸信越",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_45d72395e4",
+  "kana": "きくた まきこ",
+  "name": "菊田 真紀子"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "山口2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_d688690d90",
+  "kana": "きし のぶちよ",
+  "name": "岸 信千世"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "広島1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_a1bdb53218",
+  "kana": "きしだ ふみお",
+  "name": "岸田 文雄"
+ },
+ {
+  "counts": {
+   "bills": 4,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）中国",
+  "group": "日本維新の会",
+  "house": "shugiin",
+  "id": "h_e46d5e03da",
+  "kana": "きた よしのり",
+  "name": "喜多 義典"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "京都4",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_5771cd4985",
+  "kana": "きたがみ けいろう",
+  "name": "北神 圭朗"
+ },
+ {
+  "counts": {
+   "bills": 2,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）九州",
+  "group": "参政党",
+  "house": "shugiin",
+  "id": "h_07c3017bc6",
+  "kana": "きのした としゆき",
+  "name": "木下 敏之"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "東京20",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_b7fa4a469b",
+  "kana": "きはら せいじ",
+  "name": "木原 誠二"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 5
+  },
+  "current": true,
+  "district": "熊本1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_3ce7c19358",
+  "kana": "きはら みのる",
+  "name": "木原 稔"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "青森3",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_96e3098796",
+  "kana": "きむら じろう",
+  "name": "木村 次郎"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）九州",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_e7eb4eac12",
+  "kana": "きんじょう やすくに",
+  "name": "金城 泰邦"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "神奈川19",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_d85f2e07de",
+  "kana": "くさま つよし",
+  "name": "草間 剛"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 3
+  },
+  "current": true,
+  "district": "愛知4",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_5e5fe33221",
+  "kana": "くどう しょうぞう",
+  "name": "工藤 彰三"
+ },
+ {
+  "counts": {
+   "bills": 2,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）南関東",
+  "group": "参政党",
+  "house": "shugiin",
+  "id": "h_e158c4b2d3",
+  "kana": "くどう せいこ",
+  "name": "工藤 聖子"
+ },
+ {
+  "counts": {
+   "bills": 3,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "新潟2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_7e70d0469a",
+  "kana": "くにさだ いさと",
+  "name": "国定 勇人"
+ },
+ {
+  "counts": {
+   "bills": 6,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）近畿",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_ba9d324469",
+  "kana": "くにしげ とおる",
+  "name": "國重 徹"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "茨城6",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_1b669c01be",
+  "kana": "くにみつ あやの",
+  "name": "国光 あやの"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）東海",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_c5f07ca028",
+  "kana": "くまだ ひろみち",
+  "name": "熊田 裕通"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "福岡5",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_3ac403d78b",
+  "kana": "くりはら わたる",
+  "name": "栗原 渉"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "東京27",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_7912430061",
+  "kana": "くろさき ゆういち",
+  "name": "黒崎 祐一"
+ },
+ {
+  "counts": {
+   "bills": 5,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "大阪16",
+  "group": "日本維新の会",
+  "house": "shugiin",
+  "id": "h_fdcfff8634",
+  "kana": "くろだ まさき",
+  "name": "黒田 征樹"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "千葉10",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_905530d5fb",
+  "kana": "こいけ まさあき",
+  "name": "小池 正昭"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 4
+  },
+  "current": true,
+  "district": "神奈川11",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_628e86f515",
+  "kana": "こいずみ しんじろう",
+  "name": "小泉 進次郎"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "埼玉11",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_e5ea14caf3",
+  "kana": "こいずみ りゅうじ",
+  "name": "小泉 龍司"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "神奈川15",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_f745167222",
+  "kana": "こうの たろう",
+  "name": "河野 太郎"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "山口1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_1122890b5c",
+  "kana": "こうむら まさひろ",
+  "name": "高村 正大"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）近畿",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_b4009c3870",
+  "kana": "こうらい けいいちろう",
+  "name": "こうらい啓一郎"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "福岡3",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_28b3771d54",
+  "kana": "こが あつし",
+  "name": "古賀 篤"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 5
+  },
+  "current": true,
+  "district": "沖縄1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_9e738763f7",
+  "kana": "こくば こうのすけ",
+  "name": "國場 幸之助"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）北関東",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_55b31a24d5",
+  "kana": "こしみず けいいち",
+  "name": "輿水 恵一"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 21
+  },
+  "current": true,
+  "district": "（比）近畿",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_003da65041",
+  "kana": "こてら ひろお",
+  "name": "小寺 裕雄"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "長野4",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_6a94aa4df1",
+  "kana": "ごとう しげゆき",
+  "name": "後藤 茂之"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "（比）南関東",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_4dce3c1125",
+  "kana": "ごとう ゆういち",
+  "name": "後藤 祐一"
+ },
+ {
+  "counts": {
+   "bills": 19,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "（比）九州",
+  "group": "国民民主党・無所属クラブ",
+  "house": "shugiin",
+  "id": "h_eb28fb369a",
+  "kana": "このみ りょうたろう",
+  "name": "許斐 亮太郎"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "奈良1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_71f5958d86",
+  "kana": "こばやし しげき",
+  "name": "小林 茂樹"
+ },
+ {
+  "counts": {
+   "bills": 5,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）南関東",
+  "group": "チームみらい",
+  "house": "shugiin",
+  "id": "h_76c514da96",
+  "kana": "こばやし しゅうへい",
+  "name": "小林 修平"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "千葉2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_89589917cc",
+  "kana": "こばやし たかゆき",
+  "name": "小林 鷹之"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "広島6",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_b8dddabe54",
+  "kana": "こばやし ふみあき",
+  "name": "小林 史明"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "石川1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_cbe06cea7e",
+  "kana": "こもり たくお",
+  "name": "小森 卓郎"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）北陸信越",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_d9c00be51f",
+  "kana": "こん ようすけ",
+  "name": "今 洋佑"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）北陸信越",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_68342e9055",
+  "kana": "こんどう かずや",
+  "name": "近藤 和也"
+ },
+ {
+  "counts": {
+   "bills": 19,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）九州",
+  "group": "国民民主党・無所属クラブ",
+  "house": "shugiin",
+  "id": "h_82536ac790",
+  "kana": "こんどう まさひこ",
+  "name": "近藤 雅彦"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "福井2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_f2a81a5c12",
+  "kana": "さいき たけし",
+  "name": "斉木 武志"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）北関東",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_001c80c59a",
+  "kana": "さいじょう まさよし",
+  "name": "西條 昌良"
+ },
+ {
+  "counts": {
+   "bills": 4,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）近畿",
+  "group": "日本維新の会",
+  "house": "shugiin",
+  "id": "h_050aff36b8",
+  "kana": "さいとう あれっくす",
+  "name": "斎藤アレックス"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "千葉7",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_40934cf100",
+  "kana": "さいとう けん",
+  "name": "齋藤 健"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）中国",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_3b5c4328a2",
+  "kana": "さいとう てつお",
+  "name": "斉藤 鉄夫"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 4
+  },
+  "current": true,
+  "district": "新潟3",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_5f0ee1b7d4",
+  "kana": "さいとう ひろあき",
+  "name": "斎藤 洋明"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）東海",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_8a4da796de",
+  "kana": "さいとう りえ",
+  "name": "斉藤 りえ"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "神奈川5",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_8d9f7f4957",
+  "kana": "さかい まなぶ",
+  "name": "坂井 学"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 3
+  },
+  "current": true,
+  "district": "熊本3",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_618bcfed6b",
+  "kana": "さかもと てつし",
+  "name": "坂本 哲志"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "福島4",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_90e8f1407d",
+  "kana": "さかもと りゅうたろう",
+  "name": "坂本 竜太郎"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "群馬3",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_ce50e70e12",
+  "kana": "ささがわ ひろよし",
+  "name": "笹川 博義"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "石川2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_9022d85ce4",
+  "kana": "ささき はじめ",
+  "name": "佐々木 紀"
+ },
+ {
+  "counts": {
+   "bills": 19,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "（比）東北",
+  "group": "国民民主党・無所属クラブ",
+  "house": "shugiin",
+  "id": "h_8503e204ec",
+  "kana": "ささき まこと",
+  "name": "佐々木 真琴"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）北海道",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_b545d7a577",
+  "kana": "さとう ひでみち",
+  "name": "佐藤 英道"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "神奈川16",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_a08100d354",
+  "kana": "さとう まさし",
+  "name": "佐藤 主迪"
+ },
+ {
+  "counts": {
+   "bills": 3,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）北関東",
+  "group": "日本共産党",
+  "house": "shugiin",
+  "id": "h_5e0e13398d",
+  "kana": "しおかわ てつや",
+  "name": "塩川 鉄也"
+ },
+ {
+  "counts": {
+   "bills": 4,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "愛媛1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_e07fbbcf4e",
+  "kana": "しおざき あきひさ",
+  "name": "塩崎 彰久"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）東海",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_1ac7f1e069",
+  "kana": "しげとく かずひこ",
+  "name": "重徳 和彦"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）近畿",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_bced30ac0c",
+  "kana": "しげもと まもる",
+  "name": "繁本 護"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "岩手1",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_1c0d3a3593",
+  "kana": "しな たけし",
+  "name": "階 猛"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "埼玉8",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_9dfc80d8e9",
+  "kana": "しばやま まさひこ",
+  "name": "柴山 昌彦"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "沖縄3",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_5998705fda",
+  "kana": "しまじり あいこ",
+  "name": "島尻 安伊子"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）近畿",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_ff7fd3a479",
+  "kana": "しまだ ともあき",
+  "name": "島田 智明"
+ },
+ {
+  "counts": {
+   "bills": 2,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）中国",
+  "group": "参政党",
+  "house": "shugiin",
+  "id": "h_a120a79149",
+  "kana": "しまむら かおる",
+  "name": "島村 かおる"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "東京11",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_e049369aa4",
+  "kana": "しもむら はくぶん",
+  "name": "下村 博文"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）東北",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_630a3461e1",
+  "kana": "しょうじ けんいち",
+  "name": "庄子 賢一"
+ },
+ {
+  "counts": {
+   "bills": 2,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）九州",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_c81186438a",
+  "kana": "しらさか あき",
+  "name": "白坂 亜紀"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "広島4",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_51327bfbfd",
+  "kana": "しんたに まさよし",
+  "name": "新谷 正義"
+ },
+ {
+  "counts": {
+   "bills": 3,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "埼玉2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_a8e4bfc0dc",
+  "kana": "しんどう よしたか",
+  "name": "新藤 義孝"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "東京9",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_d1660618c2",
+  "kana": "すがわら いっしゅう",
+  "name": "菅原 一秀"
+ },
+ {
+  "counts": {
+   "bills": 5,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "三重4",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_530ac7ff33",
+  "kana": "すずき えいけい",
+  "name": "鈴木 英敬"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "神奈川7",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_e23ccff595",
+  "kana": "すずき けいすけ",
+  "name": "鈴木 馨祐"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "岩手2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_4f6de87a9a",
+  "kana": "すずき しゅんいち",
+  "name": "鈴木 俊一"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）東海",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_1a08a6dc2c",
+  "kana": "すずき じゅんじ",
+  "name": "鈴木 淳司"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "北海道7",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_7a9adce242",
+  "kana": "すずき たかこ",
+  "name": "鈴木 貴子"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）北関東",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_aa56d12f69",
+  "kana": "すずき たくみ",
+  "name": "鈴木 拓海"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 4
+  },
+  "current": true,
+  "district": "山形2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_936e0a2151",
+  "kana": "すずき のりかず",
+  "name": "鈴木 憲和"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "東京10",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_bf8c1fa951",
+  "kana": "すずき はやと",
+  "name": "鈴木 隼人"
+ },
+ {
+  "counts": {
+   "bills": 2,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）東京",
+  "group": "参政党",
+  "house": "shugiin",
+  "id": "h_3e22831bd0",
+  "kana": "すずき みか",
+  "name": "鈴木 美香"
+ },
+ {
+  "counts": {
+   "bills": 19,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）北関東",
+  "group": "国民民主党・無所属クラブ",
+  "house": "shugiin",
+  "id": "h_cdbe6f2a57",
+  "kana": "すずき よしひろ",
+  "name": "鈴木 義弘"
+ },
+ {
+  "counts": {
+   "bills": 5,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）東海",
+  "group": "チームみらい",
+  "house": "shugiin",
+  "id": "h_fa266b93af",
+  "kana": "すだ えいたろう",
+  "name": "須田 英太郎"
+ },
+ {
+  "counts": {
+   "bills": 5,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）近畿",
+  "group": "日本維新の会",
+  "house": "shugiin",
+  "id": "h_9df211a6a7",
+  "kana": "すみよし ひろき",
+  "name": "住吉 寛紀"
+ },
+ {
+  "counts": {
+   "bills": 5,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）東海",
+  "group": "日本維新の会",
+  "house": "shugiin",
+  "id": "h_05eb1f19fa",
+  "kana": "せき けんいちろう",
+  "name": "関 健一郎"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "兵庫3",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_4526f5e92e",
+  "kana": "せき よしひろ",
+  "name": "関 芳弘"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）東海",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_8071a72234",
+  "kana": "せこ まみこ",
+  "name": "世古 万美子"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "和歌山2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_2bd0898a15",
+  "kana": "せこう ひろしげ",
+  "name": "世耕 弘成"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）四国",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_9056ddb170",
+  "kana": "せと たかかず",
+  "name": "瀬戸 隆一"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "京都6",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_eb06a7e7c3",
+  "kana": "そのさき ひろみち",
+  "name": "園崎 弘道"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "東京4",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_c535272968",
+  "kana": "たいら まさあき",
+  "name": "平 将明"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 41
+  },
+  "current": true,
+  "district": "奈良2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_3fac23c0ce",
+  "kana": "たかいち さなえ",
+  "name": "高市 早苗"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "島根1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_8836962c52",
+  "kana": "たかがい えみこ",
+  "name": "高階 恵美子"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "東京12",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_28b9a33359",
+  "kana": "たかぎ けい",
+  "name": "高木 啓"
+ },
+ {
+  "counts": {
+   "bills": 3,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "北海道3",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_af97eba999",
+  "kana": "たかぎ ひろひさ",
+  "name": "高木 宏壽"
+ },
+ {
+  "counts": {
+   "bills": 19,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）東京",
+  "group": "国民民主党・無所属クラブ",
+  "house": "shugiin",
+  "id": "h_83d824f47d",
+  "kana": "たかざわ かずもと",
+  "name": "高沢 一基"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "新潟5",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_4325d70993",
+  "kana": "たかとり しゅういち",
+  "name": "高鳥 修一"
+ },
+ {
+  "counts": {
+   "bills": 3,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "北海道2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_83486b02c5",
+  "kana": "たかはし ゆうすけ",
+  "name": "高橋 祐介"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "島根2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_82a134a0f1",
+  "kana": "たかみ やすひろ",
+  "name": "高見 康裕"
+ },
+ {
+  "counts": {
+   "bills": 5,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "大阪2",
+  "group": "日本維新の会",
+  "house": "shugiin",
+  "id": "h_ac5338dcbc",
+  "kana": "たかみ りょう",
+  "name": "高見 亮"
+ },
+ {
+  "counts": {
+   "bills": 5,
+   "rollcalls": 0,
+   "speeches": 7
+  },
+  "current": true,
+  "district": "（比）東京",
+  "group": "チームみらい",
+  "house": "shugiin",
+  "id": "h_eacf7bdbc4",
+  "kana": "たかやま さとし",
+  "name": "高山 聡史"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）九州",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_816f4defab",
+  "kana": "たけい しゅんすけ",
+  "name": "武井 俊輔"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "福岡11",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_fef98ee5b1",
+  "kana": "たけだ りょうた",
+  "name": "武田 良太"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "北海道12",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_be53268934",
+  "kana": "たけべ あらた",
+  "name": "武部 新"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 4
+  },
+  "current": true,
+  "district": "滋賀3",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_ea76bf019e",
+  "kana": "たけむら のぶひで",
+  "name": "武村 展英"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）南関東",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_df233d889b",
+  "kana": "たじま かなめ",
+  "name": "田嶋 要"
+ },
+ {
+  "counts": {
+   "bills": 2,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "富山3",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_d4cc2fc8aa",
+  "kana": "たちばな けいいちろう",
+  "name": "橘 慶一郎"
+ },
+ {
+  "counts": {
+   "bills": 3,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）近畿",
+  "group": "日本共産党",
+  "house": "shugiin",
+  "id": "h_dc9d9ebb46",
+  "kana": "たつみ こうたろう",
+  "name": "辰巳 孝太郎"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "茨城1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_78ae1bd78c",
+  "kana": "たどころ よしのり",
+  "name": "田所 嘉徳"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "神奈川10",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_c60af34cb8",
+  "kana": "たなか かずのり",
+  "name": "田中 和徳"
+ },
+ {
+  "counts": {
+   "bills": 20,
+   "rollcalls": 0,
+   "speeches": 3
+  },
+  "current": true,
+  "district": "（比）東海",
+  "group": "国民民主党・無所属クラブ",
+  "house": "shugiin",
+  "id": "h_d34d19c486",
+  "kana": "たなか けん",
+  "name": "田中 健"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）東京",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_0c798613f6",
+  "kana": "たなか まさし",
+  "name": "田中 昌史"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "埼玉15",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_a2e5eefa74",
+  "kana": "たなか りょうせい",
+  "name": "田中 良生"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "岐阜2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_80e75c4a88",
+  "kana": "たなはし やすふみ",
+  "name": "棚橋 泰文"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "兵庫5",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_6735b2a339",
+  "kana": "たに こういち",
+  "name": "谷 公一"
+ },
+ {
+  "counts": {
+   "bills": 2,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "（比）近畿",
+  "group": "参政党",
+  "house": "shugiin",
+  "id": "h_41de0ce0dc",
+  "kana": "たに こういちろう",
+  "name": "谷 浩一郎"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "大阪19",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_7447742255",
+  "kana": "たにがわ とむ",
+  "name": "谷川 とむ"
+ },
+ {
+  "counts": {
+   "bills": 3,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "奈良3",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_e4ef6b32f0",
+  "kana": "たのせ たいどう",
+  "name": "田野瀬 太道"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）北陸信越",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_a058b05b67",
+  "kana": "たばた ひろあき",
+  "name": "田畑 裕明"
+ },
+ {
+  "counts": {
+   "bills": 20,
+   "rollcalls": 0,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "香川2",
+  "group": "国民民主党・無所属クラブ",
+  "house": "shugiin",
+  "id": "h_5d6acca1e0",
+  "kana": "たまき ゆういちろう",
+  "name": "玉木 雄一郎"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "千葉9",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_7a659e52be",
+  "kana": "たみや ひさと",
+  "name": "田宮 寿人"
+ },
+ {
+  "counts": {
+   "bills": 3,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）東京",
+  "group": "日本共産党",
+  "house": "shugiin",
+  "id": "h_83dd7882b9",
+  "kana": "たむら ともこ",
+  "name": "田村 智子"
+ },
+ {
+  "counts": {
+   "bills": 2,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "三重1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_3b78d15d49",
+  "kana": "たむら のりひさ",
+  "name": "田村 憲久"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）中国",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_df17073ffa",
+  "kana": "たわらだ ゆうじ",
+  "name": "俵田 祐児"
+ },
+ {
+  "counts": {
+   "bills": 19,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "愛知11",
+  "group": "国民民主党・無所属クラブ",
+  "house": "shugiin",
+  "id": "h_9651aa598b",
+  "kana": "たんの みどり",
+  "name": "丹野 みどり"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "東京2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_19b4777ef4",
+  "kana": "つじ きよと",
+  "name": "辻 清人"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）東海",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_cdad38debb",
+  "kana": "つじ ひでき",
+  "name": "辻 秀樹"
+ },
+ {
+  "counts": {
+   "bills": 3,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）東京",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_5a45734b6d",
+  "kana": "つじ ゆうこ",
+  "name": "辻 由布子"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "青森1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_b61724f596",
+  "kana": "つしま じゅん",
+  "name": "津島 淳"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "東京13",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_5fd84b2b05",
+  "kana": "つちだ しん",
+  "name": "土田 慎"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "埼玉16",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_ceb5a991db",
+  "kana": "つちや しなこ",
+  "name": "土屋 品子"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "（比）南関東",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_9dfa33d4d2",
+  "kana": "つのだ ひでお",
+  "name": "角田 秀穂"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）中国",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_9b550dbcb7",
+  "kana": "てらだ みのる",
+  "name": "寺田 稔"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "宮城1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_de1320ac42",
+  "kana": "どい とおる",
+  "name": "土井 亨"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "兵庫10",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_2b4bb79739",
+  "kana": "とかい きさぶろう",
+  "name": "渡海 紀三朗"
+ },
+ {
+  "counts": {
+   "bills": 2,
+   "rollcalls": 0,
+   "speeches": 7
+  },
+  "current": true,
+  "district": "秋田1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_07e7878861",
+  "kana": "とがし ひろゆき",
+  "name": "冨樫 博之"
+ },
+ {
+  "counts": {
+   "bills": 2,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "（比）近畿",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_4181051a17",
+  "kana": "とかしき なおみ",
+  "name": "とかしきなおみ"
+ },
+ {
+  "counts": {
+   "bills": 5,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）東京",
+  "group": "チームみらい",
+  "house": "shugiin",
+  "id": "h_95e327bf89",
+  "kana": "どばし あきひろ",
+  "name": "土橋 章宏"
+ },
+ {
+  "counts": {
+   "bills": 3,
+   "rollcalls": 0,
+   "speeches": 4
+  },
+  "current": true,
+  "district": "（比）北関東",
+  "group": "参政党",
+  "house": "shugiin",
+  "id": "h_f0f56ddbe9",
+  "kana": "とよた まゆこ",
+  "name": "豊田 真由子"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）北関東",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_01c5583215",
+  "kana": "ながおか けいこ",
+  "name": "永岡 桂子"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "北海道11",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_5a73b002ff",
+  "kana": "なかがわ こういち",
+  "name": "中川こういち"
+ },
+ {
+  "counts": {
+   "bills": 4,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）東海",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_7d0ff3b0ee",
+  "kana": "なかがわ たかもと",
+  "name": "中川 貴元"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "（比）北陸信越",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_ac39a6e3b5",
+  "kana": "なかがわ ひろまさ",
+  "name": "中川 宏昌"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）東海",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_1fdbb4637f",
+  "kana": "なかがわ やすひろ",
+  "name": "中川 康洋"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "愛知9",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_bb9998e4af",
+  "kana": "ながさか やすまさ",
+  "name": "長坂 康正"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "東京29",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_c30ee7fb8f",
+  "kana": "ながさわ こうすけ",
+  "name": "長澤 興祐"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "東京30",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_800819d3e0",
+  "kana": "ながしま あきひさ",
+  "name": "長島 昭久"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "群馬1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_7eb3f26fa7",
+  "kana": "なかそね やすたか",
+  "name": "中曽根 康隆"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "富山1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_cdaa8fb9e3",
+  "kana": "なかだ ひろし",
+  "name": "中田 宏"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "神奈川4",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_f28a9176ab",
+  "kana": "ながた まりな",
+  "name": "永田 磨梨奈"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "高知1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_6f22671d49",
+  "kana": "なかたに げん",
+  "name": "中谷 元"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "山梨1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_4a616e7829",
+  "kana": "なかたに しんいち",
+  "name": "中谷 真一"
+ },
+ {
+  "counts": {
+   "bills": 4,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "大阪11",
+  "group": "日本維新の会",
+  "house": "shugiin",
+  "id": "h_2586cc837b",
+  "kana": "なかつか ひろし",
+  "name": "中司 宏"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "（比）東京",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_f77d9db55c",
+  "kana": "ながつま あきら",
+  "name": "長妻 昭"
+ },
+ {
+  "counts": {
+   "bills": 20,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "宮崎2",
+  "group": "国民民主党・無所属クラブ",
+  "house": "shugiin",
+  "id": "h_0c55ec3056",
+  "kana": "ながとも しんじ",
+  "name": "長友 慎治"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "神奈川3",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_3a0628454a",
+  "kana": "なかにし けんじ",
+  "name": "中西 健治"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）北関東",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_ec0831db1b",
+  "kana": "なかね かずゆき",
+  "name": "中根 一幸"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "埼玉7",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_ee5e06e5a0",
+  "kana": "なかの ひでゆき",
+  "name": "中野 英幸"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "（比）近畿",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_7951e87c23",
+  "kana": "なかの ひろまさ",
+  "name": "中野 洋昌"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）南関東",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_29a094b481",
+  "kana": "ながの はるのぶ",
+  "name": "長野 春信"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "茨城7",
+  "group": "無所属",
+  "house": "shugiin",
+  "id": "h_3ed7af8a33",
+  "kana": "なかむら はやと",
+  "name": "中村 はやと"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "北海道4",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_dbfcdd67bc",
+  "kana": "なかむら ひろゆき",
+  "name": "中村 裕之"
+ },
+ {
+  "counts": {
+   "bills": 2,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）南関東",
+  "group": "参政党",
+  "house": "shugiin",
+  "id": "h_fafdafd533",
+  "kana": "なかや めぐ",
+  "name": "なかや めぐ"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）四国",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_ba7907c1bc",
+  "kana": "なかやま のりひろ",
+  "name": "中山 展宏"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）近畿",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_587c411945",
+  "kana": "なかやま やすひで",
+  "name": "中山 泰秀"
+ },
+ {
+  "counts": {
+   "bills": 19,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）中国",
+  "group": "国民民主党・無所属クラブ",
+  "house": "shugiin",
+  "id": "h_81171270fa",
+  "kana": "なべしま せり",
+  "name": "鍋島 勢理"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "徳島1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_170add292e",
+  "kana": "にき ひろぶみ",
+  "name": "仁木 博文"
+ },
+ {
+  "counts": {
+   "bills": 20,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "長崎1",
+  "group": "国民民主党・無所属クラブ",
+  "house": "shugiin",
+  "id": "h_4ed1996422",
+  "kana": "にしおか ひでこ",
+  "name": "西岡 秀子"
+ },
+ {
+  "counts": {
+   "bills": 19,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）南関東",
+  "group": "国民民主党・無所属クラブ",
+  "house": "shugiin",
+  "id": "h_1c8b9bbd82",
+  "kana": "にしおか よしたか",
+  "name": "西岡 義高"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）東海",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_1a3750bd43",
+  "kana": "にしぞの かつひで",
+  "name": "西園 勝秀"
+ },
+ {
+  "counts": {
+   "bills": 6,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "大阪6",
+  "group": "日本維新の会",
+  "house": "shugiin",
+  "id": "h_c7af206593",
+  "kana": "にしだ かおる",
+  "name": "西田 薫"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "石川3",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_1ec82846d7",
+  "kana": "にしだ しょうじ",
+  "name": "西田 昭二"
+ },
+ {
+  "counts": {
+   "bills": 3,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "熊本2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_172c1751e1",
+  "kana": "にしの だいすけ",
+  "name": "西野 太亮"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "宮城3",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_0c96e19f37",
+  "kana": "にしむら あきひろ",
+  "name": "西村 明宏"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 3
+  },
+  "current": true,
+  "district": "（比）北陸信越",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_b177ce7a15",
+  "kana": "にしむら ちなみ",
+  "name": "西村 智奈美"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "兵庫9",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_934b961097",
+  "kana": "にしむら やすとし",
+  "name": "西村 康稔"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "沖縄4",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_a849863231",
+  "kana": "にしめ こうさぶろう",
+  "name": "西銘 恒三郎"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "福島1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_689d04c11f",
+  "kana": "にしやま なおとし",
+  "name": "西山 尚利"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "神奈川2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_f6acae8629",
+  "kana": "にった しょうぶん",
+  "name": "新田 章文"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 4
+  },
+  "current": true,
+  "district": "愛知6",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_7dddfd3f4c",
+  "kana": "にわ ひでき",
+  "name": "丹羽 秀樹"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "茨城2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_63ad266846",
+  "kana": "ぬかが ふくしろう",
+  "name": "額賀 福志郎"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）南関東",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_06e901fbfd",
+  "kana": "ぬまざき みつこ",
+  "name": "沼崎 満子"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "福島2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_e4369df944",
+  "kana": "ねもと たく",
+  "name": "根本 拓"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "愛知15",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_f6a61cabeb",
+  "kana": "ねもと ゆきのり",
+  "name": "根本 幸典"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "岐阜1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_9a904365a0",
+  "kana": "のだ せいこ",
+  "name": "野田 聖子"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "千葉14",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_8b37288147",
+  "kana": "のだ よしひこ",
+  "name": "野田 佳彦"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "埼玉12",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_431ecaa9f3",
+  "kana": "のなか あつし",
+  "name": "野中 厚"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "鹿児島3",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_160953340c",
+  "kana": "のま たけし",
+  "name": "野間 健"
+ },
+ {
+  "counts": {
+   "bills": 20,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "（比）東海",
+  "group": "国民民主党・無所属クラブ",
+  "house": "shugiin",
+  "id": "h_83837008a9",
+  "kana": "のむら みほ",
+  "name": "野村 美穂"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "東京24",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_49bfe7f929",
+  "kana": "はぎうだ こういち",
+  "name": "萩生田 光一"
+ },
+ {
+  "counts": {
+   "bills": 4,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "大阪9",
+  "group": "日本維新の会",
+  "house": "shugiin",
+  "id": "h_6e2374969f",
+  "kana": "はぎはら けい",
+  "name": "萩原 佳"
+ },
+ {
+  "counts": {
+   "bills": 2,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "岡山4",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_23bd8892bd",
+  "kana": "はしもと がく",
+  "name": "橋本 岳"
+ },
+ {
+  "counts": {
+   "bills": 19,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "（比）北関東",
+  "group": "国民民主党・無所属クラブ",
+  "house": "shugiin",
+  "id": "h_cfd13db923",
+  "kana": "はしもと みきひこ",
+  "name": "橋本 幹彦"
+ },
+ {
+  "counts": {
+   "bills": 5,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "愛媛3",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_84d56a6290",
+  "kana": "はせがわ じゅんじ",
+  "name": "長谷川 淳二"
+ },
+ {
+  "counts": {
+   "bills": 3,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）南関東",
+  "group": "日本共産党",
+  "house": "shugiin",
+  "id": "h_cbff92df67",
+  "kana": "はたの きみえ",
+  "name": "畑野 君枝"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "福岡6",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_813a9182af",
+  "kana": "はとやま じろう",
+  "name": "鳩山 二郎"
+ },
+ {
+  "counts": {
+   "bills": 2,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "茨城3",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_d9603ac1a4",
+  "kana": "はなし やすひろ",
+  "name": "葉梨 康弘"
+ },
+ {
+  "counts": {
+   "bills": 5,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "大阪17",
+  "group": "日本維新の会",
+  "house": "shugiin",
+  "id": "h_1dc3b11111",
+  "kana": "ばば のぶゆき",
+  "name": "馬場 伸幸"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "千葉12",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_2753538164",
+  "kana": "はまだ やすかず",
+  "name": "浜田 靖一"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "（比）九州",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_a510978531",
+  "kana": "はまち まさかず",
+  "name": "浜地 雅一"
+ },
+ {
+  "counts": {
+   "bills": 5,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）東北",
+  "group": "チームみらい",
+  "house": "shugiin",
+  "id": "h_eac0d0ee76",
+  "kana": "はやし たくみ",
+  "name": "林 拓海"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 5
+  },
+  "current": true,
+  "district": "山口3",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_9a0d97c705",
+  "kana": "はやし よしまさ",
+  "name": "林 芳正"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）南関東",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_e6b17206ba",
+  "kana": "はらだ なおき",
+  "name": "原田 直樹"
+ },
+ {
+  "counts": {
+   "bills": 5,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "（比）近畿",
+  "group": "日本維新の会",
+  "house": "shugiin",
+  "id": "h_9aa22454c0",
+  "kana": "はらやま だいすけ",
+  "name": "原山 大亮"
+ },
+ {
+  "counts": {
+   "bills": 3,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）近畿",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_7b67db4839",
+  "kana": "ひがしだ じゅんぺい",
+  "name": "東田 淳平"
+ },
+ {
+  "counts": {
+   "bills": 19,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "愛知7",
+  "group": "国民民主党・無所属クラブ",
+  "house": "shugiin",
+  "id": "h_cac9d17034",
+  "kana": "ひの さりあ",
+  "name": "日野 紗里亜"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）四国",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_66b70a56a8",
+  "kana": "ひらい たくや",
+  "name": "平井 卓也"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 5
+  },
+  "current": true,
+  "district": "広島2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_3d690e5a54",
+  "kana": "ひらぐち ひろし",
+  "name": "平口 洋"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "東京17",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_412e5d1b74",
+  "kana": "ひらさわ かつえい",
+  "name": "平沢 勝栄"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）中国",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_64b91f6c06",
+  "kana": "ひらぬま しょうじろう",
+  "name": "平沼 正二郎"
+ },
+ {
+  "counts": {
+   "bills": 6,
+   "rollcalls": 0,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "（比）中国",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_32e312ebb5",
+  "kana": "ひらばやし あきら",
+  "name": "平林 晃"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "大分2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_4f2e3a75ee",
+  "kana": "ひろせ けん",
+  "name": "広瀬 建"
+ },
+ {
+  "counts": {
+   "bills": 19,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "（比）南関東",
+  "group": "国民民主党・無所属クラブ",
+  "house": "shugiin",
+  "id": "h_7834c871ee",
+  "kana": "ふかさく へすす",
+  "name": "深作 ヘスス"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "静岡4",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_eecafc15b6",
+  "kana": "ふかざわ よういち",
+  "name": "深澤 陽一"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "（比）北関東",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_f3e072dccb",
+  "kana": "ふくしげ たかひろ",
+  "name": "福重 隆浩"
+ },
+ {
+  "counts": {
+   "bills": 19,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）東海",
+  "group": "国民民主党・無所属クラブ",
+  "house": "shugiin",
+  "id": "h_ef1226db31",
+  "kana": "ふくた とおる",
+  "name": "福田 徹"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "東京18",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_30fffbac07",
+  "kana": "ふくだ かおる",
+  "name": "福田 かおる"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "群馬4",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_5ad65beebf",
+  "kana": "ふくだ たつお",
+  "name": "福田 達夫"
+ },
+ {
+  "counts": {
+   "bills": 2,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "秋田2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_dd9ae94f7b",
+  "kana": "ふくはら じゅんじ",
+  "name": "福原 淳嗣"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 5
+  },
+  "current": true,
+  "district": "兵庫4",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_856f7052d1",
+  "kana": "ふじい ひさゆき",
+  "name": "藤井 比早之"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）東海",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_6fdac4bc60",
+  "kana": "ふじさわ ただもり",
+  "name": "藤沢 忠盛"
+ },
+ {
+  "counts": {
+   "bills": 3,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "長野2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_84b096148c",
+  "kana": "ふじた ひかる",
+  "name": "藤田 ひかる"
+ },
+ {
+  "counts": {
+   "bills": 4,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "大阪12",
+  "group": "日本維新の会",
+  "house": "shugiin",
+  "id": "h_869ea48350",
+  "kana": "ふじた ふみたけ",
+  "name": "藤田 文武"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "埼玉14",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_204417af85",
+  "kana": "ふじた まこと",
+  "name": "藤田 誠"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）近畿",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_69ae4ce57e",
+  "kana": "ふじた ようじ",
+  "name": "藤田 洋司"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "福岡7",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_e1422ebc0c",
+  "kana": "ふじまる さとし",
+  "name": "藤丸 敏"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "岩手3",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_dd8fb61196",
+  "kana": "ふじわら たかし",
+  "name": "藤原 崇"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）南関東",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_ce91c6e5c7",
+  "kana": "ふづき りょう",
+  "name": "文月 涼"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "栃木1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_7772febf97",
+  "kana": "ふなだ はじめ",
+  "name": "船田 元"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）北陸信越",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_3543c8c387",
+  "kana": "ふるい こうすけ",
+  "name": "古井 康介"
+ },
+ {
+  "counts": {
+   "bills": 5,
+   "rollcalls": 0,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "（比）九州",
+  "group": "チームみらい",
+  "house": "shugiin",
+  "id": "h_ddc6faad29",
+  "kana": "ふるかわ あおい",
+  "name": "古川 あおい"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "神奈川6",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_97e64f51a0",
+  "kana": "ふるかわ なおき",
+  "name": "古川 直季"
+ },
+ {
+  "counts": {
+   "bills": 22,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "愛知2",
+  "group": "国民民主党・無所属クラブ",
+  "house": "shugiin",
+  "id": "h_957e477872",
+  "kana": "ふるかわ もとひさ",
+  "name": "古川 元久"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 6
+  },
+  "current": true,
+  "district": "佐賀2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_7bc9715909",
+  "kana": "ふるかわ やすし",
+  "name": "古川 康"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "宮崎3",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_f82267d707",
+  "kana": "ふるかわ よしひさ",
+  "name": "古川 禎久"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "岐阜5",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_7149123695",
+  "kana": "ふるや けいじ",
+  "name": "古屋 圭司"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "埼玉4",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_49693cfa3b",
+  "kana": "ほさか やすし",
+  "name": "穂坂 泰"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "神奈川12",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_6c828726e2",
+  "kana": "ほしの つよし",
+  "name": "星野 剛士"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）東海",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_0698e83f7b",
+  "kana": "ほそだ けんいち",
+  "name": "細田 健一"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "静岡5",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_6f8f3795d4",
+  "kana": "ほその ごうし",
+  "name": "細野 豪志"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "山梨2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_4bb32c9e9e",
+  "kana": "ほりうち のりこ",
+  "name": "堀内 詔子"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "京都5",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_cc3f4f76fc",
+  "kana": "ほんだ たろう",
+  "name": "本田 太郎"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）北関東",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_a01e5e09f7",
+  "kana": "まえかわ めぐみ",
+  "name": "前川 恵"
+ },
+ {
+  "counts": {
+   "bills": 4,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "京都2",
+  "group": "日本維新の会",
+  "house": "shugiin",
+  "id": "h_a9dbbbbf8f",
+  "kana": "まえはら せいじ",
+  "name": "前原 誠司"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "神奈川17",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_75c8a8da4f",
+  "kana": "まきしま かれん",
+  "name": "牧島 かれん"
+ },
+ {
+  "counts": {
+   "bills": 2,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "（比）九州",
+  "group": "参政党",
+  "house": "shugiin",
+  "id": "h_3ffb18c711",
+  "kana": "まきの しゅんいち",
+  "name": "牧野 俊一"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "北海道9",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_69152e08a9",
+  "kana": "まつした ひでき",
+  "name": "松下 英樹"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "東京14",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_10427f59ec",
+  "kana": "まつしま みどり",
+  "name": "松島 みどり"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "千葉3",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_a7c83abbb5",
+  "kana": "まつの ひろかず",
+  "name": "松野 博一"
+ },
+ {
+  "counts": {
+   "bills": 3,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "千葉8",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_b83232144d",
+  "kana": "まつもと いずみ",
+  "name": "松本 泉"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 3
+  },
+  "current": true,
+  "district": "千葉13",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_bd21ef43bd",
+  "kana": "まつもと ひさし",
+  "name": "松本 尚"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "東京19",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_afe72e7f75",
+  "kana": "まつもと ようへい",
+  "name": "松本 洋平"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "神奈川1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_28a1ad3c3b",
+  "kana": "まるお なつこ",
+  "name": "丸尾 なつ子"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "東京7",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_9cd42027c3",
+  "kana": "まるかわ たまよ",
+  "name": "丸川 珠代"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "神奈川13",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_3884e241ed",
+  "kana": "まるた こういちろう",
+  "name": "丸田 康一郎"
+ },
+ {
+  "counts": {
+   "bills": 5,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）近畿",
+  "group": "日本維新の会",
+  "house": "shugiin",
+  "id": "h_03359a2ad0",
+  "kana": "みき けえ",
+  "name": "三木 圭恵"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "愛知3",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_cbbf8ed784",
+  "kana": "みずの よしひこ",
+  "name": "水野よしひこ"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "鹿児島2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_c6d8437482",
+  "kana": "みたぞの さとし",
+  "name": "三反園 訓"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "神奈川8",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_629f8a8e0c",
+  "kana": "みたに ひでひろ",
+  "name": "三谷 英弘"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "埼玉13",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_a8ce5eb99f",
+  "kana": "みつばやし ひろみ",
+  "name": "三ッ林 裕巳"
+ },
+ {
+  "counts": {
+   "bills": 5,
+   "rollcalls": 0,
+   "speeches": 3
+  },
+  "current": true,
+  "district": "（比）東京",
+  "group": "チームみらい",
+  "house": "shugiin",
+  "id": "h_efe003306c",
+  "kana": "みねしま ゆうや",
+  "name": "峰島 侑也"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "大阪4",
+  "group": "日本維新の会",
+  "house": "shugiin",
+  "id": "h_ea1d9168f8",
+  "kana": "みのべ てるお",
+  "name": "美延 映夫"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）東北",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_ba6b1847f2",
+  "kana": "みのりかわ のぶひで",
+  "name": "御法川 信英"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）九州",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_9cd60c9c6a",
+  "kana": "みはら あさと",
+  "name": "三原 朝利"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "福岡4",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_61ff7c7391",
+  "kana": "みやうち ひでき",
+  "name": "宮内 秀樹"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "沖縄2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_06b89f3449",
+  "kana": "みやざき まさひさ",
+  "name": "宮崎 政久"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 4
+  },
+  "current": true,
+  "district": "鹿児島1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_1131f8f51b",
+  "kana": "みやじ たくま",
+  "name": "宮路 拓馬"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "長野5",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_47c1f8a6a0",
+  "kana": "みやした いちろう",
+  "name": "宮下 一郎"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "北海道8",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_ee8bb95044",
+  "kana": "むこうやま じゅん",
+  "name": "向山 淳"
+ },
+ {
+  "counts": {
+   "bills": 19,
+   "rollcalls": 0,
+   "speeches": 2
+  },
+  "current": true,
+  "district": "（比）近畿",
+  "group": "国民民主党・無所属クラブ",
+  "house": "shugiin",
+  "id": "h_2cec54106a",
+  "kana": "むこやま こういち",
+  "name": "向山 好一"
+ },
+ {
+  "counts": {
+   "bills": 5,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "（比）北関東",
+  "group": "チームみらい",
+  "house": "shugiin",
+  "id": "h_c7b5ce5fc1",
+  "kana": "むとう かずこ",
+  "name": "武藤 かず子"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "岐阜3",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_b6b6e64fd1",
+  "kana": "むとう ようじ",
+  "name": "武藤 容治"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）近畿",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_4c0f14db30",
+  "kana": "むねきよ こういち",
+  "name": "宗清 皇一"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "埼玉1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_994706cf25",
+  "kana": "むらい ひでき",
+  "name": "村井 英樹"
+ },
+ {
+  "counts": {
+   "bills": 19,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "秋田3",
+  "group": "国民民主党・無所属クラブ",
+  "house": "shugiin",
+  "id": "h_26a3091825",
+  "kana": "むらおか としひで",
+  "name": "村岡 敏英"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）四国",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_7731e1b412",
+  "kana": "むらかみ せいいちろう",
+  "name": "村上 誠一郎"
+ },
+ {
+  "counts": {
+   "bills": 4,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）九州",
+  "group": "日本維新の会",
+  "house": "shugiin",
+  "id": "h_e23cac3638",
+  "kana": "むらかみ とものぶ",
+  "name": "村上 智信"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）北海道",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_31bfd41b27",
+  "kana": "むらき なぎさ",
+  "name": "村木 汀"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 3
+  },
+  "current": true,
+  "district": "栃木5",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_564ce07345",
+  "kana": "もてぎ としみつ",
+  "name": "茂木 敏充"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 514
+  },
+  "current": true,
+  "district": "千葉11",
+  "group": "無所属",
+  "house": "shugiin",
+  "id": "h_900000e820",
+  "kana": "もり えいすけ",
+  "name": "森 英介"
+ },
+ {
+  "counts": {
+   "bills": 21,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "（比）東京",
+  "group": "国民民主党・無所属クラブ",
+  "house": "shugiin",
+  "id": "h_fc379c2f81",
+  "kana": "もり ようすけ",
+  "name": "森 ようすけ"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "宮城4",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_c64773e790",
+  "kana": "もりした ちさと",
+  "name": "森下 千里"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）東京",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_2936efe962",
+  "kana": "もりはら きよこ",
+  "name": "森原 紀代子"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "鹿児島4",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_6cdeecb0a6",
+  "kana": "もりやま ひろし",
+  "name": "森山 裕"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "兵庫1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_ededd29141",
+  "kana": "もりやま まさひと",
+  "name": "盛山 正仁"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）九州",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_e38c2c518d",
+  "kana": "やすおか ひろたけ",
+  "name": "保岡 宏武"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）北関東",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_4f93b233af",
+  "kana": "やな かずお",
+  "name": "簗 和生"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）北海道",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_9043ec12a9",
+  "kana": "やまおか たつまる",
+  "name": "山岡 達丸"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "神奈川18",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_26b4d3be9c",
+  "kana": "やまぎわ だいしろう",
+  "name": "山際 大志郎"
+ },
+ {
+  "counts": {
+   "bills": 2,
+   "rollcalls": 0,
+   "speeches": 3
+  },
+  "current": true,
+  "district": "徳島2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_8f64ac518a",
+  "kana": "やまぐち しゅんいち",
+  "name": "山口 俊一"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "埼玉10",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_313ab4169d",
+  "kana": "やまぐち すすむ",
+  "name": "山口 晋"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "兵庫12",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_6db51bc613",
+  "kana": "やまぐち つよし",
+  "name": "山口 壯"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "（比）四国",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_48a1e79b6e",
+  "kana": "やまさき まさやす",
+  "name": "山崎 正恭"
+ },
+ {
+  "counts": {
+   "bills": 3,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "愛知16",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_c1c6bd728e",
+  "kana": "やました しずお",
+  "name": "山下 史守朗"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 7
+  },
+  "current": true,
+  "district": "岡山2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_94fa426b0e",
+  "kana": "やました たかし",
+  "name": "山下 貴司"
+ },
+ {
+  "counts": {
+   "bills": 5,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）南関東",
+  "group": "チームみらい",
+  "house": "shugiin",
+  "id": "h_9ea73c4e3f",
+  "kana": "やまだ えり",
+  "name": "山田 瑛理"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "兵庫7",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_00eb6be49c",
+  "kana": "やまだ けんじ",
+  "name": "山田 賢司"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "東京1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_f2bf4322a1",
+  "kana": "やまだ みき",
+  "name": "山田 美樹"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "兵庫11",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_d1d99e5de7",
+  "kana": "やまだ もとやす",
+  "name": "山田 基靖"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "（比）近畿",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_90c8b710d4",
+  "kana": "やまもと かなえ",
+  "name": "山本 香苗"
+ },
+ {
+  "counts": {
+   "bills": 3,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）東海",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_f978685b65",
+  "kana": "やまもと さこん",
+  "name": "山本 左近"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）南関東",
+  "group": "無所属",
+  "house": "shugiin",
+  "id": "h_d16bdd88e4",
+  "kana": "やまもと じょーじ",
+  "name": "山本ジョージ"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "広島5",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_dfddcf6a23",
+  "kana": "やまもと しん",
+  "name": "山本 深"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "和歌山1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_1930dde5a9",
+  "kana": "やまもと だいち",
+  "name": "山本 大地"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "静岡3",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_4d4f022bd3",
+  "kana": "やまもと ゆうぞう",
+  "name": "山本 裕三"
+ },
+ {
+  "counts": {
+   "bills": 4,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）南関東",
+  "group": "日本維新の会",
+  "house": "shugiin",
+  "id": "h_f87bb9c6bc",
+  "kana": "よこた みつひろ",
+  "name": "横田 光弘"
+ },
+ {
+  "counts": {
+   "bills": 3,
+   "rollcalls": 0,
+   "speeches": 3
+  },
+  "current": true,
+  "district": "（比）東京",
+  "group": "参政党",
+  "house": "shugiin",
+  "id": "h_e1918e08bd",
+  "kana": "よしかわ りな",
+  "name": "吉川 里奈"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）中国",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_cd74afc886",
+  "kana": "よしだ しんじ",
+  "name": "吉田 真次"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "（比）九州",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_96e209a05b",
+  "kana": "よしだ のぶひろ",
+  "name": "吉田 宣弘"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）北海道",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_5dadc6d314",
+  "kana": "よしだ ゆうり",
+  "name": "吉田 有理"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "福岡10",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_cbdb082681",
+  "kana": "よしむら はるか",
+  "name": "吉村 悠"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）東北",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_1ee2d30934",
+  "kana": "よない ひろまさ",
+  "name": "米内 紘正"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）南関東",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_e402af3d9c",
+  "kana": "りゅう ひろふみ",
+  "name": "笠 浩史"
+ },
+ {
+  "counts": {
+   "bills": 4,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）北陸信越",
+  "group": "日本維新の会",
+  "house": "shugiin",
+  "id": "h_f84fd29cdf",
+  "kana": "わかさ きよし",
+  "name": "若狹 清史"
+ },
+ {
+  "counts": {
+   "bills": 2,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "長野1",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_b4ab2d8099",
+  "kana": "わかばやし けんた",
+  "name": "若林 健太"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "東京5",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_0367e4c74c",
+  "kana": "わかみや けんじ",
+  "name": "若宮 健嗣"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "愛知10",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_53ca1ef6cf",
+  "kana": "わかやま しんじ",
+  "name": "若山 慎司"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "新潟4",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_970fb54eef",
+  "kana": "わしお えいいちろう",
+  "name": "鷲尾 英一郎"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "（比）南関東",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_6dd73a2eb2",
+  "kana": "わせだ ゆき",
+  "name": "早稲田 ゆき"
+ },
+ {
+  "counts": {
+   "bills": 5,
+   "rollcalls": 0,
+   "speeches": 5
+  },
+  "current": true,
+  "district": "（比）東北",
+  "group": "参政党",
+  "house": "shugiin",
+  "id": "h_3d63b9a7de",
+  "kana": "わだ まさむね",
+  "name": "和田 政宗"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "北海道5",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_563014a18b",
+  "kana": "わだ よしあき",
+  "name": "和田 義明"
+ },
+ {
+  "counts": {
+   "bills": 2,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）東海",
+  "group": "参政党",
+  "house": "shugiin",
+  "id": "h_c14975273e",
+  "kana": "わたなべ あいり",
+  "name": "渡辺 藍理"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "宮城2",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_9bee4cd333",
+  "kana": "わたなべ かつゆき",
+  "name": "渡辺 勝幸"
+ },
+ {
+  "counts": {
+   "bills": 1,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "（比）北海道",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_42df80d20e",
+  "kana": "わたなべ こういち",
+  "name": "渡辺 孝一"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "栃木3",
+  "group": "無所属",
+  "house": "shugiin",
+  "id": "h_83e922d65a",
+  "kana": "わたなべ しんたろう",
+  "name": "渡辺 真太朗"
+ },
+ {
+  "counts": {
+   "bills": 7,
+   "rollcalls": 0,
+   "speeches": 0
+  },
+  "current": true,
+  "district": "宮崎1",
+  "group": "中道改革連合・無所属",
+  "house": "shugiin",
+  "id": "h_828ba83d45",
+  "kana": "わたなべ そう",
+  "name": "渡辺 創"
+ },
+ {
+  "counts": {
+   "bills": 0,
+   "rollcalls": 0,
+   "speeches": 1
+  },
+  "current": true,
+  "district": "千葉6",
+  "group": "自由民主党・無所属の会",
+  "house": "shugiin",
+  "id": "h_39c48f289d",
+  "kana": "わたなべ ひろみち",
+  "name": "渡辺 博道"
  }
 ]

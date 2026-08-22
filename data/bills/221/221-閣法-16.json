@@ -1,0 +1,34 @@
+{
+ "house": "shugiin",
+ "id": "221-閣法-16",
+ "kind": "閣法",
+ "number": 16,
+ "received": {
+  "sangiin": "2026-04-14",
+  "shugiin": "2026-03-06"
+ },
+ "result": {
+  "lawNumber": "21",
+  "promulgated": "2026-05-20",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 221,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "中道改革連合・無所属",
+   "日本維新の会",
+   "国民民主党・無所属クラブ",
+   "参政党",
+   "チームみらい",
+   "日本共産党"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE164E.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "物資の流通の効率化に関する法律の一部を改正する法律案"
+}
