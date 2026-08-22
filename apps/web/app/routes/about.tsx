@@ -1,4 +1,5 @@
 import { Link, type MetaArgs } from "react-router";
+import { ARCHIVE_PATH } from "../lib/archive-path";
 import { type Dataset, dataset as bundled, REPO_URL } from "../lib/dataset";
 import { formatDateTime } from "../lib/format";
 import { seoMeta } from "../lib/seo";
@@ -118,13 +119,20 @@ export default function About({ data = bundled }: { data?: Dataset }) {
           <a href={REPO_URL} rel="noreferrer">
             ソースコード
           </a>
-          <a href={`${REPO_URL}/tree/main/data`} rel="noreferrer">
+          <a href={ARCHIVE_PATH} download>
             データ一括取得
+          </a>
+          <a href={`${REPO_URL}/tree/main/data`} rel="noreferrer">
+            GitHub のデータ
           </a>
           <a href={`${REPO_URL}/issues/new`} rel="noreferrer">
             誤りを報告
           </a>
         </div>
+        <p className="note">
+          データ一括取得は data/ 全体（JSON・LICENSE・README）の zip で、ビルドのたびに作り直されます。ライセンスは CC BY 4.0。利用の際は「政治記録
+          (seiji-kiroku)」と一次資料（参議院・衆議院・国立国会図書館）を出典として明記してください。個人・非営利・商用いずれも同じ条件です。
+        </p>
       </section>
 
       <section id="funding" className="section" aria-labelledby="funding-heading">
