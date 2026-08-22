@@ -12,7 +12,7 @@
 .member-affil { margin-top: 10px; font-size: 14px; }
 .member-term { font-size: 13px; opacity: 0.8; }
 .member-counts { display: flex; margin: 18px 0 0; padding: 14px 0; border-top: 1.5px solid var(--brass-on-cover); }
-.member-count { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.member-count { flex: 1; display: flex; flex-direction: column-reverse; gap: 2px; }
 .member-count + .member-count { border-left: 1px solid var(--rule); padding-left: 14px; }
 .member-count dd { margin: 0; font-family: var(--font-head); font-size: 28px; font-weight: 700; line-height: 1; }
 .member-count dt { font-size: 11px; letter-spacing: 0.1em; opacity: 0.8; }
@@ -26,7 +26,6 @@
 /* 時系列 */
 .member-day { padding: 0 20px; }
 .member-date { display: flex; align-items: baseline; gap: 10px; margin: 18px 0 0; font-family: var(--font-head); font-size: 15px; font-weight: 700; color: var(--brass); }
-.member-date-label { font-family: var(--font-body); font-size: 12px; font-weight: 400; color: var(--muted); }
 .member-rows { list-style: none; margin: 0; padding: 0; }
 .member-row { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--rule); align-items: flex-start; }
 .member-row-body { flex: 1; display: flex; flex-direction: column; gap: 4px; }

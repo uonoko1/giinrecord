@@ -119,8 +119,8 @@ function Cover({ detail, counts }: { detail: MemberDetail; counts: Record<Timeli
 function Count({ n, label }: { n: number; label: string }) {
   return (
     <div className="member-count">
-      <dd className="num">{n.toLocaleString("ja-JP")}</dd>
       <dt>{label}</dt>
+      <dd className="num">{n.toLocaleString("ja-JP")}</dd>
     </div>
   );
 }
@@ -172,13 +172,12 @@ function entryKey(e: TimelineEntry): string {
   }
 }
 
-function DateHeading({ date, label }: { date: string; label?: string }) {
+function DateHeading({ date }: { date: string }) {
   return (
     <h2 className="member-date">
       <time className="num" dateTime={date}>
         {formatDate(date)}
       </time>
-      {label && <span className="member-date-label">{label}</span>}
     </h2>
   );
 }
@@ -233,10 +232,9 @@ function Row({ entry }: { entry: TimelineEntry }) {
   }
 }
 
-/** "A ・ B ・ " — separator-joined facts, followed by the source link. */
+/** "A ・ B ・ " — separator-joined facts; the caller appends the source link. */
 function MetaLine({ parts }: { parts: (string | null | undefined)[] }) {
-  const shown = parts.filter((p): p is string => Boolean(p));
-  return <>{shown.map((p) => `${p} ・ `).join("")}</>;
+  return <>{parts.filter(Boolean).map((p) => `${p} ・ `)}</>;
 }
 
 /* ---------- 採決 table ---------- */
