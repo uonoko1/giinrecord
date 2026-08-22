@@ -1,14 +1,17 @@
+import type { ReactNode } from "react";
 import { type LoaderFunctionArgs, Link, type MetaArgs, useLoaderData } from "react-router";
 import { SourceLine, Stamp } from "../components";
 import type { DatasetMeta, RollCall } from "../lib/data-contract";
 import { defaultDataDir, readMeta, readRollCall } from "../lib/data-files";
 import { formatDate } from "../lib/format";
-import { groupsBySize, votesByGroup } from "../lib/rollcall";
+import { groupsBySize, unlistedGroups, votesByGroup } from "../lib/rollcall";
 import "./rollcall.css";
 
 /* ---------- data (build time only; ssr:false + prerender) ----------
  * routes.ts registers this route only when data/rollcalls/index.json exists (a `loader`
  * under ssr:false is valid only on prerendered routes), so argument types are declared by hand. */
+
+type Vote = RollCall["votes"][number];
 
 export type RollCallLoaderData = { rollCall: RollCall; meta: DatasetMeta | null };
 
@@ -47,6 +50,8 @@ function tallyText(rc: RollCall): string {
 export function RollCallPage({ rollCall, meta }: { rollCall: RollCall; meta: DatasetMeta | null }) {
   const groups = groupsBySize(rollCall.groups);
   const votes = votesByGroup(rollCall.votes);
+  // groups[] に無い会派の票は黙って落とさず、集計なしとして末尾に出す（記録にあるものはすべて見せる）
+  const unlisted = unlistedGroups(rollCall.groups, rollCall.votes);
   return (
     <main className="rollcall">
       <header className="rollcall-cover">
@@ -65,30 +70,43 @@ export function RollCallPage({ rollCall, meta }: { rollCall: RollCall; meta: Dat
         <p className="rollcall-note">「投票なし」は欠席と棄権を区別しません（公式記録に理由は載りません）。</p>
       </header>
 
-      {groups.length === 0 ? (
+      {groups.length === 0 && unlisted.length === 0 ? (
         <p className="rollcall-empty">個人別の票はありません。</p>
       ) : (
-        groups.map((g, gi) => (
-          <section key={g.group} className="rollcall-group" aria-labelledby={`group-${gi}`}>
-            <h2 id={`group-${gi}`} className="rollcall-group-name">
-              {g.group}
-            </h2>
-            <p className="rollcall-group-tally num">
+        <>
+          {groups.map((g, gi) => (
+            <GroupSection key={g.group} id={`group-${gi}`} name={g.group} votes={votes.get(g.group) ?? []}>
               {g.size}名 ・ 賛成 {g.yes} ・ 反対 {g.no}
-            </p>
-            <ul className="rollcall-votes">
-              {(votes.get(g.group) ?? []).map((v, i) => (
-                <li key={`${v.memberId || v.nameText}-${i}`} className="rollcall-vote">
-                  <Stamp value={v.value} />
-                  {v.memberId ? <Link to={`/members/${v.memberId}`}>{v.nameText}</Link> : <span>{v.nameText}</span>}
-                </li>
-              ))}
-            </ul>
-          </section>
-        ))
+            </GroupSection>
+          ))}
+          {unlisted.map((name, ui) => (
+            <GroupSection key={name} id={`group-unlisted-${ui}`} name={name} votes={votes.get(name) ?? []}>
+              {votes.get(name)?.length ?? 0}名 ・ 会派別の集計は公表記録にありません
+            </GroupSection>
+          ))}
+        </>
       )}
 
       <SourceLine sourceUrl={rollCall.sourceUrl} sourceName={SOURCE_NAME} fetchedAt={meta?.fetchedAt ?? "未取得"} />
     </main>
+  );
+}
+
+function GroupSection({ id, name, votes, children }: { id: string; name: string; votes: Vote[]; children: ReactNode }) {
+  return (
+    <section className="rollcall-group" aria-labelledby={id}>
+      <h2 id={id} className="rollcall-group-name">
+        {name}
+      </h2>
+      <p className="rollcall-group-tally num">{children}</p>
+      <ul className="rollcall-votes">
+        {votes.map((v, i) => (
+          <li key={`${v.memberId || v.nameText}-${i}`} className="rollcall-vote">
+            <Stamp value={v.value} />
+            {v.memberId ? <Link to={`/members/${v.memberId}`}>{v.nameText}</Link> : <span>{v.nameText}</span>}
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

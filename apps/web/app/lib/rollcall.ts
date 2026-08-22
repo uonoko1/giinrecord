@@ -22,6 +22,15 @@ export function votesByGroup(votes: readonly Vote[]): Map<string, Vote[]> {
   return map;
 }
 
+/**
+ * 票には現れるが groups[]（会派別集計）に無い会派名を、票の登場順に重複なく返す。
+ * 呼び出し側はこれらを黙って落とさず、集計なしとして別に表示する。
+ */
+export function unlistedGroups(groups: readonly Group[], votes: readonly Vote[]): string[] {
+  const listed = new Set(groups.map((g) => g.group));
+  return [...new Set(votes.map((v) => v.group))].filter((g) => !listed.has(g));
+}
+
 /** 日付降順。同日は id 昇順（公表された採決番号の順）で安定させる。入力の順に依存しない。 */
 export function sortByDateDesc<T extends { id: string; date: string }>(rows: readonly T[]): T[] {
   return [...rows].sort((a, b) => b.date.localeCompare(a.date) || a.id.localeCompare(b.id));
