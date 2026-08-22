@@ -1,4 +1,5 @@
 import type { Config } from "@react-router/dev/config";
+import { defaultDataDir, memberPaths } from "./app/lib/data-files";
 
 /**
  * Static site only. `ssr: false` means NO server code ships or runs in production;
@@ -8,7 +9,7 @@ import type { Config } from "@react-router/dev/config";
 export default {
   ssr: false,
   prerender: async () => {
-    // S1: enumerate members/rollcalls from data/ once the ETL populates it.
-    return ["/", "/about"];
+    // Member pages come from data/members/index.json; without data/ only the static pages exist.
+    return ["/", "/about", ...(await memberPaths(defaultDataDir()))];
   },
 } satisfies Config;
