@@ -8,7 +8,7 @@
   {
    "district": "埼玉",
    "from": "",
-   "group": "無所属",
+   "group": "各派に属しない議員",
    "house": "sangiin",
    "sessionFrom": 221,
    "to": "2028-07-25"
@@ -606,6 +606,116 @@
    "value": "投票なし"
   },
   {
+   "chars": 26,
+   "date": "2026-06-05",
+   "excerpt": "本日はこれにて散会いたします。 午後六時五十一分散会",
+   "kind": "speech",
+   "meeting": "本会議 第19号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01920260605/17",
+   "speechId": "122115254X01920260605_017"
+  },
+  {
+   "chars": 104,
+   "date": "2026-06-05",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十二 賛成 百四十八 反対 九十四 よって、両案は可決されました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────────────",
+   "kind": "speech",
+   "meeting": "本会議 第19号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01920260605/16",
+   "speechId": "122115254X01920260605_016"
+  },
+  {
+   "chars": 39,
+   "date": "2026-06-05",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第19号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01920260605/15",
+   "speechId": "122115254X01920260605_015"
+  },
+  {
+   "chars": 51,
+   "date": "2026-06-05",
+   "excerpt": "これより両案を一括して採決いたします。 両案の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第19号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01920260605/14",
+   "speechId": "122115254X01920260605_014"
+  },
+  {
+   "chars": 30,
+   "date": "2026-06-05",
+   "excerpt": "これにて討論は終局いたしました。 ─────────────",
+   "kind": "speech",
+   "meeting": "本会議 第19号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01920260605/13",
+   "speechId": "122115254X01920260605_013"
+  },
+  {
+   "chars": 19,
+   "date": "2026-06-05",
+   "excerpt": "宮出千慧君。 〔宮出千慧君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第19号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01920260605/11",
+   "speechId": "122115254X01920260605_011"
+  },
+  {
+   "chars": 19,
+   "date": "2026-06-05",
+   "excerpt": "浜野喜史君。 〔浜野喜史君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第19号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01920260605/9",
+   "speechId": "122115254X01920260605_009"
+  },
+  {
+   "chars": 21,
+   "date": "2026-06-05",
+   "excerpt": "佐々木雅文君。 〔佐々木雅文君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第19号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01920260605/7",
+   "speechId": "122115254X01920260605_007"
+  },
+  {
+   "chars": 19,
+   "date": "2026-06-05",
+   "excerpt": "加藤明良君。 〔加藤明良君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第19号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01920260605/5",
+   "speechId": "122115254X01920260605_005"
+  },
+  {
+   "chars": 47,
+   "date": "2026-06-05",
+   "excerpt": "両案に対し、討論の通告がございます。順次発言を許します。村田享子君。 〔村田享子君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第19号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01920260605/3",
+   "speechId": "122115254X01920260605_003"
+  },
+  {
+   "chars": 164,
+   "date": "2026-06-05",
+   "excerpt": "これより会議を開きます。 日程第一 令和八年度一般会計補正予算（第１号） 日程第二 令和八年度特別会計補正予算（特第１号） 以上両案を一括して議題といたします。 まず、委員長の報告を求めます。予算委員長藤川政人君。 ───────────── 〔審査報告書は本号末尾に掲載〕 ───────────── 〔藤川政人君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第19号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01920260605/1",
+   "speechId": "122115254X01920260605_001"
+  },
+  {
    "date": "2026-06-03",
    "groupValue": "賛成",
    "kind": "vote",
@@ -614,6 +724,146 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0603-v001.htm",
    "title": "日程第２　地域公共交通の活性化及び再生に関する法律の一部を改正する法律案（内閣提出、衆議院送付）",
    "value": "投票なし"
+  },
+  {
+   "chars": 25,
+   "date": "2026-06-03",
+   "excerpt": "本日はこれにて散会いたします。 午後五時五十分散会",
+   "kind": "speech",
+   "meeting": "本会議 第18号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01820260603/36",
+   "speechId": "122115254X01820260603_036"
+  },
+  {
+   "chars": 105,
+   "date": "2026-06-03",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十四 賛成 二百二十三 反対 二十一 よって、本案は可決されました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────────────",
+   "kind": "speech",
+   "meeting": "本会議 第18号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01820260603/35",
+   "speechId": "122115254X01820260603_035"
+  },
+  {
+   "chars": 39,
+   "date": "2026-06-03",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第18号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01820260603/34",
+   "speechId": "122115254X01820260603_034"
+  },
+  {
+   "chars": 45,
+   "date": "2026-06-03",
+   "excerpt": "これより採決をいたします。 本案の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第18号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01820260603/33",
+   "speechId": "122115254X01820260603_033"
+  },
+  {
+   "chars": 148,
+   "date": "2026-06-03",
+   "excerpt": "日程第二 地域公共交通の活性化及び再生に関する法律の一部を改正する法律案（内閣提出、衆議院送付）を議題といたします。 まず、委員長の報告を求めます。国土交通委員長辻元清美君。 ───────────── 〔審査報告書及び議案は本号末尾に掲載〕 ───────────── 〔辻元清美君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第18号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01820260603/31",
+   "speechId": "122115254X01820260603_031"
+  },
+  {
+   "chars": 28,
+   "date": "2026-06-03",
+   "excerpt": "これにて質疑は終了いたしました。 ─────・─────",
+   "kind": "speech",
+   "meeting": "本会議 第18号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01820260603/30",
+   "speechId": "122115254X01820260603_030"
+  },
+  {
+   "chars": 19,
+   "date": "2026-06-03",
+   "excerpt": "塩入清香君。 〔塩入清香君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第18号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01820260603/25",
+   "speechId": "122115254X01820260603_025"
+  },
+  {
+   "chars": 19,
+   "date": "2026-06-03",
+   "excerpt": "片山大介君。 〔片山大介君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第18号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01820260603/22",
+   "speechId": "122115254X01820260603_022"
+  },
+  {
+   "chars": 21,
+   "date": "2026-06-03",
+   "excerpt": "原田大二郎君。 〔原田大二郎君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第18号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01820260603/19",
+   "speechId": "122115254X01820260603_019"
+  },
+  {
+   "chars": 42,
+   "date": "2026-06-03",
+   "excerpt": "後藤君から再質疑の申出があります。これを許します。後藤斎君。 〔後藤斎君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第18号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01820260603/16",
+   "speechId": "122115254X01820260603_016"
+  },
+  {
+   "chars": 17,
+   "date": "2026-06-03",
+   "excerpt": "後藤斎君。 〔後藤斎君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第18号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01820260603/10",
+   "speechId": "122115254X01820260603_010"
+  },
+  {
+   "chars": 19,
+   "date": "2026-06-03",
+   "excerpt": "長谷川岳君。 〔長谷川岳君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第18号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01820260603/7",
+   "speechId": "122115254X01820260603_007"
+  },
+  {
+   "chars": 52,
+   "date": "2026-06-03",
+   "excerpt": "ただいまの演説に対し、質疑の通告がございます。順次発言を許します。高木真理君。 〔高木真理君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第18号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01820260603/3",
+   "speechId": "122115254X01820260603_003"
+  },
+  {
+   "chars": 96,
+   "date": "2026-06-03",
+   "excerpt": "これより会議を開きます。 日程第一 国務大臣の演説に関する件 財務大臣から財政について発言を求められております。これより発言を許します。片山さつき財務大臣。 〔国務大臣片山さつき君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第18号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01820260603/1",
+   "speechId": "122115254X01820260603_001"
   },
   {
    "date": "2026-05-29",
@@ -716,6 +966,456 @@
    "value": "投票なし"
   },
   {
+   "chars": 26,
+   "date": "2026-05-29",
+   "excerpt": "本日はこれにて散会いたします。 午後零時三十三分散会",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/68",
+   "speechId": "122115254X01720260529_068"
+  },
+  {
+   "chars": 99,
+   "date": "2026-05-29",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十五 賛成 二百三十八 反対 七 よって、本案は可決されました。 ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────────────",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/67",
+   "speechId": "122115254X01720260529_067"
+  },
+  {
+   "chars": 39,
+   "date": "2026-05-29",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/66",
+   "speechId": "122115254X01720260529_066"
+  },
+  {
+   "chars": 45,
+   "date": "2026-05-29",
+   "excerpt": "これより採決をいたします。 本案の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/65",
+   "speechId": "122115254X01720260529_065"
+  },
+  {
+   "chars": 101,
+   "date": "2026-05-29",
+   "excerpt": "御異議ないと認めます。 まず、委員長の報告を求めます。議院運営委員長青木一彦君。 ───────────── 〔審査報告書及び議案は本号末尾に掲載〕 ───────────── 〔青木一彦君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/63",
+   "speechId": "122115254X01720260529_063"
+  },
+  {
+   "chars": 87,
+   "date": "2026-05-29",
+   "excerpt": "この際、日程に追加して、 国会議員の歳費、旅費及び手当等に関する法律の一部を改正する法律案（衆議院提出）を議題とすることに御異議ございませんか。 〔「異議なし」と呼ぶ者あり〕",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/62",
+   "speechId": "122115254X01720260529_062"
+  },
+  {
+   "chars": 102,
+   "date": "2026-05-29",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十五 賛成 二百二十九 反対 十六 よって、本案は可決されました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────・─────",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/61",
+   "speechId": "122115254X01720260529_061"
+  },
+  {
+   "chars": 39,
+   "date": "2026-05-29",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/60",
+   "speechId": "122115254X01720260529_060"
+  },
+  {
+   "chars": 45,
+   "date": "2026-05-29",
+   "excerpt": "これより採決をいたします。 本案の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/59",
+   "speechId": "122115254X01720260529_059"
+  },
+  {
+   "chars": 169,
+   "date": "2026-05-29",
+   "excerpt": "日程第九 経済社会情勢の変化を踏まえた企業の事業活動の持続的な発展を図るための産業競争力強化法等の一部を改正する法律案（内閣提出、衆議院送付）を議題といたします。 まず、委員長の報告を求めます。経済産業委員長浜口誠君。 ───────────── 〔審査報告書及び議案は本号末尾に掲載〕 ───────────── 〔浜口誠君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/57",
+   "speechId": "122115254X01720260529_057"
+  },
+  {
+   "chars": 102,
+   "date": "2026-05-29",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十五 賛成 二百二十五 反対 二十 よって、本案は可決されました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────・─────",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/56",
+   "speechId": "122115254X01720260529_056"
+  },
+  {
+   "chars": 39,
+   "date": "2026-05-29",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/55",
+   "speechId": "122115254X01720260529_055"
+  },
+  {
+   "chars": 45,
+   "date": "2026-05-29",
+   "excerpt": "これより採決をいたします。 本案の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/54",
+   "speechId": "122115254X01720260529_054"
+  },
+  {
+   "chars": 138,
+   "date": "2026-05-29",
+   "excerpt": "日程第八 太陽電池廃棄物の再資源化等の推進に関する法律案（内閣提出、衆議院送付）を議題といたします。 まず、委員長の報告を求めます。環境委員長猪口邦子君。 ───────────── 〔審査報告書及び議案は本号末尾に掲載〕 ───────────── 〔猪口邦子君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/52",
+   "speechId": "122115254X01720260529_052"
+  },
+  {
+   "chars": 102,
+   "date": "2026-05-29",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十四 賛成 百八十六 反対 五十八 よって、本案は可決されました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────・─────",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/51",
+   "speechId": "122115254X01720260529_051"
+  },
+  {
+   "chars": 39,
+   "date": "2026-05-29",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/50",
+   "speechId": "122115254X01720260529_050"
+  },
+  {
+   "chars": 45,
+   "date": "2026-05-29",
+   "excerpt": "これより採決をいたします。 本案の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/49",
+   "speechId": "122115254X01720260529_049"
+  },
+  {
+   "chars": 184,
+   "date": "2026-05-29",
+   "excerpt": "日程第七 出入国管理及び難民認定法及び出入国管理及び難民認定法第二条第五号ロの旅券を所持する外国人の上陸申請の特例に関する法律の一部を改正する法律案（内閣提出、衆議院送付）を議題といたします。 まず、委員長の報告を求めます。法務委員長伊藤孝江君。 ───────────── 〔審査報告書及び議案は本号末尾に掲載〕 ───────────── 〔伊藤孝江君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/47",
+   "speechId": "122115254X01720260529_047"
+  },
+  {
+   "chars": 102,
+   "date": "2026-05-29",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十四 賛成 二百二十八 反対 十六 よって、本案は可決されました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────・─────",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/46",
+   "speechId": "122115254X01720260529_046"
+  },
+  {
+   "chars": 39,
+   "date": "2026-05-29",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/45",
+   "speechId": "122115254X01720260529_045"
+  },
+  {
+   "chars": 45,
+   "date": "2026-05-29",
+   "excerpt": "これより採決をいたします。 本案の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/44",
+   "speechId": "122115254X01720260529_044"
+  },
+  {
+   "chars": 139,
+   "date": "2026-05-29",
+   "excerpt": "日程第六 外国為替及び外国貿易法の一部を改正する法律案（内閣提出、衆議院送付）を議題といたします。 まず、委員長の報告を求めます。財政金融委員長宮本周司君。 ───────────── 〔審査報告書及び議案は本号末尾に掲載〕 ───────────── 〔宮本周司君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/42",
+   "speechId": "122115254X01720260529_042"
+  },
+  {
+   "chars": 102,
+   "date": "2026-05-29",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十五 賛成 百六十六 反対 七十九 よって、本案は可決されました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────・─────",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/41",
+   "speechId": "122115254X01720260529_041"
+  },
+  {
+   "chars": 39,
+   "date": "2026-05-29",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/40",
+   "speechId": "122115254X01720260529_040"
+  },
+  {
+   "chars": 45,
+   "date": "2026-05-29",
+   "excerpt": "これより採決をいたします。 本案の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/39",
+   "speechId": "122115254X01720260529_039"
+  },
+  {
+   "chars": 30,
+   "date": "2026-05-29",
+   "excerpt": "これにて討論は終局いたしました。 ─────────────",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/38",
+   "speechId": "122115254X01720260529_038"
+  },
+  {
+   "chars": 19,
+   "date": "2026-05-29",
+   "excerpt": "宮出千慧君。 〔宮出千慧君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/36",
+   "speechId": "122115254X01720260529_036"
+  },
+  {
+   "chars": 21,
+   "date": "2026-05-29",
+   "excerpt": "原田大二郎君。 〔原田大二郎君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/34",
+   "speechId": "122115254X01720260529_034"
+  },
+  {
+   "chars": 19,
+   "date": "2026-05-29",
+   "excerpt": "田村まみ君。 〔田村まみ君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/32",
+   "speechId": "122115254X01720260529_032"
+  },
+  {
+   "chars": 49,
+   "date": "2026-05-29",
+   "excerpt": "本案に対し、討論の通告がございます。順次発言を許します。郡山りょう君。 〔郡山りょう君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/30",
+   "speechId": "122115254X01720260529_030"
+  },
+  {
+   "chars": 134,
+   "date": "2026-05-29",
+   "excerpt": "日程第五 健康保険法等の一部を改正する法律案（内閣提出、衆議院送付）を議題といたします。 まず、委員長の報告を求めます。厚生労働委員長小川克巳君。 ───────────── 〔審査報告書及び議案は本号末尾に掲載〕 ───────────── 〔小川克巳君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/28",
+   "speechId": "122115254X01720260529_028"
+  },
+  {
+   "chars": 114,
+   "date": "2026-05-29",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十三 賛成 二百四十三 反対 〇 よって、三件は全会一致をもって承認することに決しました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────・─────",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/27",
+   "speechId": "122115254X01720260529_027"
+  },
+  {
+   "chars": 39,
+   "date": "2026-05-29",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/26",
+   "speechId": "122115254X01720260529_026"
+  },
+  {
+   "chars": 60,
+   "date": "2026-05-29",
+   "excerpt": "次に、日程第二ないし第四の条約を一括して採決いたします。 三件の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/25",
+   "speechId": "122115254X01720260529_025"
+  },
+  {
+   "chars": 108,
+   "date": "2026-05-29",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十三 賛成 二百三十六 反対 七 よって、本件は承認することに決しました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────────────",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/24",
+   "speechId": "122115254X01720260529_024"
+  },
+  {
+   "chars": 39,
+   "date": "2026-05-29",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/23",
+   "speechId": "122115254X01720260529_023"
+  },
+  {
+   "chars": 66,
+   "date": "2026-05-29",
+   "excerpt": "これより採決をいたします。 まず、日程第一の条約の採決をいたします。 本件の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/22",
+   "speechId": "122115254X01720260529_022"
+  },
+  {
+   "chars": 460,
+   "date": "2026-05-29",
+   "excerpt": "日程第一 所得に対する租税に関する二重課税の除去並びに脱税及び租税回避の防止のための日本国とキルギス共和国との間の協定の締結について承認を求めるの件 日程第二 環境保護に関する南極条約議定書の附属書Ⅵの締結について承認を求めるの件 日程第三 国際民間航空条約第五十条（ａ）の改正に関する二千十六年十月六日にモントリオールで署名された議定書及び国際民間航空条約第五十六条の改正に関する二千十六年十月六日",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/20",
+   "speechId": "122115254X01720260529_020"
+  },
+  {
+   "chars": 28,
+   "date": "2026-05-29",
+   "excerpt": "これにて質疑は終了いたしました。 ─────・─────",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/19",
+   "speechId": "122115254X01720260529_019"
+  },
+  {
+   "chars": 19,
+   "date": "2026-05-29",
+   "excerpt": "後藤翔太君。 〔後藤翔太君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/15",
+   "speechId": "122115254X01720260529_015"
+  },
+  {
+   "chars": 19,
+   "date": "2026-05-29",
+   "excerpt": "下野六太君。 〔下野六太君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/12",
+   "speechId": "122115254X01720260529_012"
+  },
+  {
+   "chars": 19,
+   "date": "2026-05-29",
+   "excerpt": "水野孝一君。 〔水野孝一君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/7",
+   "speechId": "122115254X01720260529_007"
+  },
+  {
+   "chars": 54,
+   "date": "2026-05-29",
+   "excerpt": "ただいまの趣旨説明に対し、質疑の通告がございます。順次発言を許します。古賀千景君。 〔古賀千景君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/4",
+   "speechId": "122115254X01720260529_004"
+  },
+  {
+   "chars": 39,
+   "date": "2026-05-29",
+   "excerpt": "御異議ないと認めます。松本洋平文部科学大臣。 〔国務大臣松本洋平君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/2",
+   "speechId": "122115254X01720260529_002"
+  },
+  {
+   "chars": 94,
+   "date": "2026-05-29",
+   "excerpt": "これより会議を開きます。 この際、日程に追加して、 学校教育法等の一部を改正する法律案について、提出者の趣旨説明を求めたいと存じますが、御異議ございませんか。 〔「異議なし」と呼ぶ者あり〕",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/1",
+   "speechId": "122115254X01720260529_001"
+  },
+  {
    "date": "2026-05-27",
    "groupValue": "賛成",
    "kind": "vote",
@@ -736,6 +1436,206 @@
    "value": "投票なし"
   },
   {
+   "chars": 26,
+   "date": "2026-05-27",
+   "excerpt": "本日はこれにて散会いたします。 午後零時三十二分散会",
+   "kind": "speech",
+   "meeting": "本会議 第16号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01620260527/41",
+   "speechId": "122115254X01620260527_041"
+  },
+  {
+   "chars": 104,
+   "date": "2026-05-27",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十五 賛成 百八十七 反対 五十八 よって、本案は可決されました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────────────",
+   "kind": "speech",
+   "meeting": "本会議 第16号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01620260527/40",
+   "speechId": "122115254X01620260527_040"
+  },
+  {
+   "chars": 39,
+   "date": "2026-05-27",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第16号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01620260527/39",
+   "speechId": "122115254X01620260527_039"
+  },
+  {
+   "chars": 45,
+   "date": "2026-05-27",
+   "excerpt": "これより採決をいたします。 本案の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第16号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01620260527/38",
+   "speechId": "122115254X01620260527_038"
+  },
+  {
+   "chars": 30,
+   "date": "2026-05-27",
+   "excerpt": "これにて討論は終局いたしました。 ─────────────",
+   "kind": "speech",
+   "meeting": "本会議 第16号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01620260527/37",
+   "speechId": "122115254X01620260527_037"
+  },
+  {
+   "chars": 17,
+   "date": "2026-05-27",
+   "excerpt": "大津力君。 〔大津力君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第16号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01620260527/35",
+   "speechId": "122115254X01620260527_035"
+  },
+  {
+   "chars": 19,
+   "date": "2026-05-27",
+   "excerpt": "牛田茉友君。 〔牛田茉友君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第16号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01620260527/33",
+   "speechId": "122115254X01620260527_033"
+  },
+  {
+   "chars": 45,
+   "date": "2026-05-27",
+   "excerpt": "本案に対し、討論の通告がございます。順次発言を許します。鬼木誠君。 〔鬼木誠君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第16号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01620260527/31",
+   "speechId": "122115254X01620260527_031"
+  },
+  {
+   "chars": 125,
+   "date": "2026-05-27",
+   "excerpt": "日程第二 国家情報会議設置法案（内閣提出、衆議院送付）を議題といたします。 まず、委員長の報告を求めます。内閣委員長北村経夫君。 ───────────── 〔審査報告書及び議案は本号末尾に掲載〕 ───────────── 〔北村経夫君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第16号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01620260527/29",
+   "speechId": "122115254X01620260527_029"
+  },
+  {
+   "chars": 102,
+   "date": "2026-05-27",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十四 賛成 二百三十二 反対 十二 よって、本案は可決されました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────・─────",
+   "kind": "speech",
+   "meeting": "本会議 第16号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01620260527/28",
+   "speechId": "122115254X01620260527_028"
+  },
+  {
+   "chars": 39,
+   "date": "2026-05-27",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第16号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01620260527/27",
+   "speechId": "122115254X01620260527_027"
+  },
+  {
+   "chars": 45,
+   "date": "2026-05-27",
+   "excerpt": "これより採決をいたします。 本案の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第16号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01620260527/26",
+   "speechId": "122115254X01620260527_026"
+  },
+  {
+   "chars": 173,
+   "date": "2026-05-27",
+   "excerpt": "日程第一 地域の自主性及び自立性を高めるための改革の推進を図るための関係法律の整備に関する法律案（内閣提出、衆議院送付）を議題といたします。 まず、委員長の報告を求めます。沖縄・北方問題及び地方に関する特別委員長横沢高徳君。 ───────────── 〔審査報告書及び議案は本号末尾に掲載〕 ───────────── 〔横沢高徳君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第16号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01620260527/24",
+   "speechId": "122115254X01620260527_024"
+  },
+  {
+   "chars": 28,
+   "date": "2026-05-27",
+   "excerpt": "これにて質疑は終了いたしました。 ─────・─────",
+   "kind": "speech",
+   "meeting": "本会議 第16号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01620260527/23",
+   "speechId": "122115254X01620260527_023"
+  },
+  {
+   "chars": 21,
+   "date": "2026-05-27",
+   "excerpt": "梅村みずほ君。 〔梅村みずほ君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第16号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01620260527/17",
+   "speechId": "122115254X01620260527_017"
+  },
+  {
+   "chars": 19,
+   "date": "2026-05-27",
+   "excerpt": "窪田哲也君。 〔窪田哲也君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第16号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01620260527/14",
+   "speechId": "122115254X01620260527_014"
+  },
+  {
+   "chars": 19,
+   "date": "2026-05-27",
+   "excerpt": "牛田茉友君。 〔牛田茉友君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第16号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01620260527/9",
+   "speechId": "122115254X01620260527_009"
+  },
+  {
+   "chars": 54,
+   "date": "2026-05-27",
+   "excerpt": "ただいまの趣旨説明に対し、質疑の通告がございます。順次発言を許します。杉尾秀哉君。 〔杉尾秀哉君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第16号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01620260527/4",
+   "speechId": "122115254X01620260527_004"
+  },
+  {
+   "chars": 39,
+   "date": "2026-05-27",
+   "excerpt": "御異議ないと認めます。小野田紀美国務大臣。 〔国務大臣小野田紀美君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第16号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01620260527/2",
+   "speechId": "122115254X01620260527_002"
+  },
+  {
+   "chars": 134,
+   "date": "2026-05-27",
+   "excerpt": "これより会議を開きます。 この際、日程に追加して、 経済施策を一体的に講ずることによる安全保障の確保の推進に関する法律及び株式会社国際協力銀行法の一部を改正する法律案について、提出者の趣旨説明を求めたいと存じますが、御異議ございませんか。 〔「異議なし」と呼ぶ者あり〕",
+   "kind": "speech",
+   "meeting": "本会議 第16号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01620260527/1",
+   "speechId": "122115254X01620260527_001"
+  },
+  {
    "date": "2026-05-22",
    "groupValue": "賛成",
    "kind": "vote",
@@ -744,6 +1644,166 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0522-v001.htm",
    "title": "日程第１　携帯音声通信事業者による契約者等の本人確認等及び携帯音声通信役務の不正な利用の防止に関する法律の一部を改正する法律案（内閣提出、衆議院送付）",
    "value": "投票なし"
+  },
+  {
+   "chars": 24,
+   "date": "2026-05-22",
+   "excerpt": "本日はこれにて散会いたします。 午後零時六分散会",
+   "kind": "speech",
+   "meeting": "本会議 第15号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01520260522/38",
+   "speechId": "122115254X01520260522_038"
+  },
+  {
+   "chars": 103,
+   "date": "2026-05-22",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十二 賛成 二百三十七 反対 五 よって、本案は可決されました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────────────",
+   "kind": "speech",
+   "meeting": "本会議 第15号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01520260522/37",
+   "speechId": "122115254X01520260522_037"
+  },
+  {
+   "chars": 39,
+   "date": "2026-05-22",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第15号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01520260522/36",
+   "speechId": "122115254X01520260522_036"
+  },
+  {
+   "chars": 45,
+   "date": "2026-05-22",
+   "excerpt": "これより採決をいたします。 本案の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第15号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01520260522/35",
+   "speechId": "122115254X01520260522_035"
+  },
+  {
+   "chars": 173,
+   "date": "2026-05-22",
+   "excerpt": "日程第一 携帯音声通信事業者による契約者等の本人確認等及び携帯音声通信役務の不正な利用の防止に関する法律の一部を改正する法律案（内閣提出、衆議院送付）を議題といたします。 まず、委員長の報告を求めます。総務委員長吉川沙織君。 ───────────── 〔審査報告書及び議案は本号末尾に掲載〕 ───────────── 〔吉川沙織君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第15号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01520260522/33",
+   "speechId": "122115254X01520260522_033"
+  },
+  {
+   "chars": 28,
+   "date": "2026-05-22",
+   "excerpt": "これにて質疑は終了いたしました。 ─────・─────",
+   "kind": "speech",
+   "meeting": "本会議 第15号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01520260522/32",
+   "speechId": "122115254X01520260522_032"
+  },
+  {
+   "chars": 24,
+   "date": "2026-05-22",
+   "excerpt": "奥田君、時間が超過しております。簡単に願います。",
+   "kind": "speech",
+   "meeting": "本会議 第15号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01520260522/29",
+   "speechId": "122115254X01520260522_029"
+  },
+  {
+   "chars": 21,
+   "date": "2026-05-22",
+   "excerpt": "奥田ふみよ君。 〔奥田ふみよ君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第15号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01520260522/27",
+   "speechId": "122115254X01520260522_027"
+  },
+  {
+   "chars": 17,
+   "date": "2026-05-22",
+   "excerpt": "松田学君。 〔松田学君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第15号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01520260522/21",
+   "speechId": "122115254X01520260522_021"
+  },
+  {
+   "chars": 19,
+   "date": "2026-05-22",
+   "excerpt": "松野明美君。 〔松野明美君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第15号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01520260522/18",
+   "speechId": "122115254X01520260522_018"
+  },
+  {
+   "chars": 21,
+   "date": "2026-05-22",
+   "excerpt": "佐々木雅文君。 〔佐々木雅文君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第15号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01520260522/15",
+   "speechId": "122115254X01520260522_015"
+  },
+  {
+   "chars": 19,
+   "date": "2026-05-22",
+   "excerpt": "原田秀一君。 〔原田秀一君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第15号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01520260522/12",
+   "speechId": "122115254X01520260522_012"
+  },
+  {
+   "chars": 19,
+   "date": "2026-05-22",
+   "excerpt": "小沢雅仁君。 〔小沢雅仁君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第15号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01520260522/8",
+   "speechId": "122115254X01520260522_008"
+  },
+  {
+   "chars": 52,
+   "date": "2026-05-22",
+   "excerpt": "ただいまの趣旨説明に対し、質疑の通告がございます。順次発言を許します。星北斗君。 〔星北斗君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第15号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01520260522/4",
+   "speechId": "122115254X01520260522_004"
+  },
+  {
+   "chars": 39,
+   "date": "2026-05-22",
+   "excerpt": "御異議ないと認めます。牧野たかお国務大臣。 〔国務大臣牧野たかお君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第15号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01520260522/2",
+   "speechId": "122115254X01520260522_002"
+  },
+  {
+   "chars": 113,
+   "date": "2026-05-22",
+   "excerpt": "これより会議を開きます。 この際、日程に追加して、 防災庁設置法案及び防災庁設置法の施行に伴う関係法律の整備等に関する法律案について、提出者の趣旨説明を求めたいと存じますが、御異議ございませんか。 〔「異議なし」と呼ぶ者あり〕",
+   "kind": "speech",
+   "meeting": "本会議 第15号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01520260522/1",
+   "speechId": "122115254X01520260522_001"
   },
   {
    "date": "2026-05-20",
@@ -764,6 +1824,186 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0520-v001.htm",
    "title": "日程第１　食育基本法の一部を改正する法律案（衆議院提出）",
    "value": "投票なし"
+  },
+  {
+   "chars": 27,
+   "date": "2026-05-20",
+   "excerpt": "本日はこれにて散会いたします。 午前十一時四十八分散会",
+   "kind": "speech",
+   "meeting": "本会議 第14号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01420260520/34",
+   "speechId": "122115254X01420260520_034"
+  },
+  {
+   "chars": 104,
+   "date": "2026-05-20",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十一 賛成 二百二十六 反対 十五 よって、本案は可決されました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────────────",
+   "kind": "speech",
+   "meeting": "本会議 第14号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01420260520/33",
+   "speechId": "122115254X01420260520_033"
+  },
+  {
+   "chars": 39,
+   "date": "2026-05-20",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第14号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01420260520/32",
+   "speechId": "122115254X01420260520_032"
+  },
+  {
+   "chars": 45,
+   "date": "2026-05-20",
+   "excerpt": "これより採決をいたします。 本案の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第14号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01420260520/31",
+   "speechId": "122115254X01420260520_031"
+  },
+  {
+   "chars": 138,
+   "date": "2026-05-20",
+   "excerpt": "日程第二 都市再生特別措置法等の一部を改正する法律案（内閣提出、衆議院送付）を議題といたします。 まず、委員長の報告を求めます。国土交通委員長辻元清美君。 ───────────── 〔審査報告書及び議案は本号末尾に掲載〕 ───────────── 〔辻元清美君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第14号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01420260520/29",
+   "speechId": "122115254X01420260520_029"
+  },
+  {
+   "chars": 101,
+   "date": "2026-05-20",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十二 賛成 二百三十七 反対 五 よって、本案は可決されました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────・─────",
+   "kind": "speech",
+   "meeting": "本会議 第14号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01420260520/28",
+   "speechId": "122115254X01420260520_028"
+  },
+  {
+   "chars": 39,
+   "date": "2026-05-20",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第14号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01420260520/27",
+   "speechId": "122115254X01420260520_027"
+  },
+  {
+   "chars": 45,
+   "date": "2026-05-20",
+   "excerpt": "これより採決をいたします。 本案の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第14号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01420260520/26",
+   "speechId": "122115254X01420260520_026"
+  },
+  {
+   "chars": 128,
+   "date": "2026-05-20",
+   "excerpt": "日程第一 食育基本法の一部を改正する法律案（衆議院提出）を議題といたします。 まず、委員長の報告を求めます。農林水産委員長藤木眞也君。 ───────────── 〔審査報告書及び議案は本号末尾に掲載〕 ───────────── 〔藤木眞也君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第14号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01420260520/24",
+   "speechId": "122115254X01420260520_024"
+  },
+  {
+   "chars": 28,
+   "date": "2026-05-20",
+   "excerpt": "これにて質疑は終了いたしました。 ─────・─────",
+   "kind": "speech",
+   "meeting": "本会議 第14号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01420260520/23",
+   "speechId": "122115254X01420260520_023"
+  },
+  {
+   "chars": 19,
+   "date": "2026-05-20",
+   "excerpt": "櫻井祥子君。 〔櫻井祥子君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第14号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01420260520/17",
+   "speechId": "122115254X01420260520_017"
+  },
+  {
+   "chars": 19,
+   "date": "2026-05-20",
+   "excerpt": "竹内真二君。 〔竹内真二君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第14号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01420260520/14",
+   "speechId": "122115254X01420260520_014"
+  },
+  {
+   "chars": 17,
+   "date": "2026-05-20",
+   "excerpt": "竹詰仁君。 〔竹詰仁君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第14号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01420260520/10",
+   "speechId": "122115254X01420260520_010"
+  },
+  {
+   "chars": 54,
+   "date": "2026-05-20",
+   "excerpt": "ただいまの趣旨説明に対し、質疑の通告がございます。順次発言を許します。古賀之士君。 〔古賀之士君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第14号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01420260520/6",
+   "speechId": "122115254X01420260520_006"
+  },
+  {
+   "chars": 39,
+   "date": "2026-05-20",
+   "excerpt": "御異議ないと認めます。赤澤亮正経済産業大臣。 〔国務大臣赤澤亮正君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第14号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01420260520/4",
+   "speechId": "122115254X01420260520_004"
+  },
+  {
+   "chars": 118,
+   "date": "2026-05-20",
+   "excerpt": "この際、日程に追加して、 経済社会情勢の変化を踏まえた企業の事業活動の持続的な発展を図るための産業競争力強化法等の一部を改正する法律案について、提出者の趣旨説明を求めたいと存じますが、御異議ございませんか。 〔「異議なし」と呼ぶ者あり〕",
+   "kind": "speech",
+   "meeting": "本会議 第14号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01420260520/3",
+   "speechId": "122115254X01420260520_003"
+  },
+  {
+   "chars": 181,
+   "date": "2026-05-20",
+   "excerpt": "御異議ないと認めます。 弔詞を朗読いたします。 〔総員起立〕 参議院は わが国 民主政治発展のため力を尽くされ 特に院議をもって永年の功労を表彰せられ さきに懲罰委員長 大蔵委員長の要職に就かれ また国務大臣としての重任にあたられました 元議員正三位旭日大綬章藤井孝男君の長逝に対し つつしんで哀悼の意を表し うやうやしく弔詞をささげます ─────・─────",
+   "kind": "speech",
+   "meeting": "本会議 第14号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01420260520/2",
+   "speechId": "122115254X01420260520_002"
+  },
+  {
+   "chars": 156,
+   "date": "2026-05-20",
+   "excerpt": "これより会議を開きます。 さきに院議をもって永年在職議員として表彰されました元議員藤井孝男君は、去る四月十三日逝去されました。誠に痛惜の極みであり、哀悼の念に堪えません。 つきましては、この際、院議をもって同君に対し弔詞をささげることにいたしたいと存じますが、御異議ございませんか。 〔「異議なし」と呼ぶ者あり〕",
+   "kind": "speech",
+   "meeting": "本会議 第14号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01420260520/1",
+   "speechId": "122115254X01420260520_001"
   },
   {
    "date": "2026-05-15",
@@ -826,6 +2066,206 @@
    "value": "投票なし"
   },
   {
+   "chars": 27,
+   "date": "2026-05-15",
+   "excerpt": "本日はこれにて散会いたします。 午前十一時五十二分散会",
+   "kind": "speech",
+   "meeting": "本会議 第13号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01320260515/41",
+   "speechId": "122115254X01320260515_041"
+  },
+  {
+   "chars": 103,
+   "date": "2026-05-15",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十一 賛成 二百三十六 反対 五 よって、本案は可決されました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────────────",
+   "kind": "speech",
+   "meeting": "本会議 第13号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01320260515/40",
+   "speechId": "122115254X01320260515_040"
+  },
+  {
+   "chars": 39,
+   "date": "2026-05-15",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第13号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01320260515/39",
+   "speechId": "122115254X01320260515_039"
+  },
+  {
+   "chars": 45,
+   "date": "2026-05-15",
+   "excerpt": "これより採決をいたします。 本案の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第13号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01320260515/38",
+   "speechId": "122115254X01320260515_038"
+  },
+  {
+   "chars": 132,
+   "date": "2026-05-15",
+   "excerpt": "日程第六 環境省設置法の一部を改正する法律案（内閣提出、衆議院送付）を議題といたします。 まず、委員長の報告を求めます。環境委員長猪口邦子君。 ───────────── 〔審査報告書及び議案は本号末尾に掲載〕 ───────────── 〔猪口邦子君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第13号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01320260515/36",
+   "speechId": "122115254X01320260515_036"
+  },
+  {
+   "chars": 101,
+   "date": "2026-05-15",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十二 賛成 二百三十七 反対 五 よって、本案は可決されました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────・─────",
+   "kind": "speech",
+   "meeting": "本会議 第13号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01320260515/35",
+   "speechId": "122115254X01320260515_035"
+  },
+  {
+   "chars": 39,
+   "date": "2026-05-15",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第13号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01320260515/34",
+   "speechId": "122115254X01320260515_034"
+  },
+  {
+   "chars": 45,
+   "date": "2026-05-15",
+   "excerpt": "これより採決をいたします。 本案の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第13号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01320260515/33",
+   "speechId": "122115254X01320260515_033"
+  },
+  {
+   "chars": 136,
+   "date": "2026-05-15",
+   "excerpt": "日程第五 家畜伝染病予防法の一部を改正する法律案（内閣提出、衆議院送付）を議題といたします。 まず、委員長の報告を求めます。農林水産委員長藤木眞也君。 ───────────── 〔審査報告書及び議案は本号末尾に掲載〕 ───────────── 〔藤木眞也君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第13号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01320260515/31",
+   "speechId": "122115254X01320260515_031"
+  },
+  {
+   "chars": 107,
+   "date": "2026-05-15",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十三 賛成 二百三十一 反対 十二 よって、四件は承認することに決しました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────・─────",
+   "kind": "speech",
+   "meeting": "本会議 第13号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01320260515/30",
+   "speechId": "122115254X01320260515_030"
+  },
+  {
+   "chars": 39,
+   "date": "2026-05-15",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第13号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01320260515/29",
+   "speechId": "122115254X01320260515_029"
+  },
+  {
+   "chars": 51,
+   "date": "2026-05-15",
+   "excerpt": "これより四件を一括して採決いたします。 四件の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第13号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01320260515/28",
+   "speechId": "122115254X01320260515_028"
+  },
+  {
+   "chars": 331,
+   "date": "2026-05-15",
+   "excerpt": "日程第一 投資の促進及び保護に関する日本国とセルビア共和国との間の協定の締結について承認を求めるの件 日程第二 投資の促進及び保護に関する日本国とパラグアイ共和国との間の協定の締結について承認を求めるの件 日程第三 投資の促進及び保護に関する日本国とザンビア共和国との間の協定の締結について承認を求めるの件 日程第四 投資の自由化、促進及び保護に関する日本国とタジキスタン共和国との間の協定の締結につ",
+   "kind": "speech",
+   "meeting": "本会議 第13号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01320260515/26",
+   "speechId": "122115254X01320260515_026"
+  },
+  {
+   "chars": 28,
+   "date": "2026-05-15",
+   "excerpt": "これにて質疑は終了いたしました。 ─────・─────",
+   "kind": "speech",
+   "meeting": "本会議 第13号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01320260515/25",
+   "speechId": "122115254X01320260515_025"
+  },
+  {
+   "chars": 19,
+   "date": "2026-05-15",
+   "excerpt": "安達悠司君。 〔安達悠司君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第13号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01320260515/18",
+   "speechId": "122115254X01320260515_018"
+  },
+  {
+   "chars": 21,
+   "date": "2026-05-15",
+   "excerpt": "佐々木雅文君。 〔佐々木雅文君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第13号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01320260515/15",
+   "speechId": "122115254X01320260515_015"
+  },
+  {
+   "chars": 21,
+   "date": "2026-05-15",
+   "excerpt": "小林さやか君。 〔小林さやか君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第13号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01320260515/9",
+   "speechId": "122115254X01320260515_009"
+  },
+  {
+   "chars": 56,
+   "date": "2026-05-15",
+   "excerpt": "ただいまの趣旨説明に対し、質疑の通告がございます。順次発言を許します。打越さく良君。 〔打越さく良君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第13号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01320260515/4",
+   "speechId": "122115254X01320260515_004"
+  },
+  {
+   "chars": 35,
+   "date": "2026-05-15",
+   "excerpt": "御異議ないと認めます。平口洋法務大臣。 〔国務大臣平口洋君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第13号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01320260515/2",
+   "speechId": "122115254X01320260515_002"
+  },
+  {
+   "chars": 146,
+   "date": "2026-05-15",
+   "excerpt": "これより会議を開きます。 この際、日程に追加して、 出入国管理及び難民認定法及び出入国管理及び難民認定法第二条第五号ロの旅券を所持する外国人の上陸申請の特例に関する法律の一部を改正する法律案について、提出者の趣旨説明を求めたいと存じますが、御異議ございませんか。 〔「異議なし」と呼ぶ者あり〕",
+   "kind": "speech",
+   "meeting": "本会議 第13号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01320260515/1",
+   "speechId": "122115254X01320260515_001"
+  },
+  {
    "date": "2026-05-13",
    "groupValue": "賛成",
    "kind": "vote",
@@ -834,6 +2274,236 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0513-v001.htm",
    "title": "日程第１　物資の流通の効率化に関する法律の一部を改正する法律案（内閣提出、衆議院送付）",
    "value": "投票なし"
+  },
+  {
+   "chars": 24,
+   "date": "2026-05-13",
+   "excerpt": "本日はこれにて散会いたします。 午後零時四分散会",
+   "kind": "speech",
+   "meeting": "本会議 第12号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01220260513/36",
+   "speechId": "122115254X01220260513_036"
+  },
+  {
+   "chars": 103,
+   "date": "2026-05-13",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十二 賛成 二百三十七 反対 五 よって、本案は可決されました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────────────",
+   "kind": "speech",
+   "meeting": "本会議 第12号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01220260513/35",
+   "speechId": "122115254X01220260513_035"
+  },
+  {
+   "chars": 39,
+   "date": "2026-05-13",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第12号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01220260513/34",
+   "speechId": "122115254X01220260513_034"
+  },
+  {
+   "chars": 45,
+   "date": "2026-05-13",
+   "excerpt": "これより採決をいたします。 本案の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第12号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01220260513/33",
+   "speechId": "122115254X01220260513_033"
+  },
+  {
+   "chars": 143,
+   "date": "2026-05-13",
+   "excerpt": "日程第一 物資の流通の効率化に関する法律の一部を改正する法律案（内閣提出、衆議院送付）を議題といたします。 まず、委員長の報告を求めます。国土交通委員長辻元清美君。 ───────────── 〔審査報告書及び議案は本号末尾に掲載〕 ───────────── 〔辻元清美君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第12号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01220260513/31",
+   "speechId": "122115254X01220260513_031"
+  },
+  {
+   "chars": 28,
+   "date": "2026-05-13",
+   "excerpt": "これにて質疑は終了いたしました。 ─────・─────",
+   "kind": "speech",
+   "meeting": "本会議 第12号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01220260513/30",
+   "speechId": "122115254X01220260513_030"
+  },
+  {
+   "chars": 19,
+   "date": "2026-05-13",
+   "excerpt": "白川容子君。 〔白川容子君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第12号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01220260513/27",
+   "speechId": "122115254X01220260513_027"
+  },
+  {
+   "chars": 19,
+   "date": "2026-05-13",
+   "excerpt": "岩本麻奈君。 〔岩本麻奈君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第12号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01220260513/22",
+   "speechId": "122115254X01220260513_022"
+  },
+  {
+   "chars": 19,
+   "date": "2026-05-13",
+   "excerpt": "猪瀬直樹君。 〔猪瀬直樹君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第12号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01220260513/19",
+   "speechId": "122115254X01220260513_019"
+  },
+  {
+   "chars": 19,
+   "date": "2026-05-13",
+   "excerpt": "川村雄大君。 〔川村雄大君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第12号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01220260513/15",
+   "speechId": "122115254X01220260513_015"
+  },
+  {
+   "chars": 19,
+   "date": "2026-05-13",
+   "excerpt": "庭田幸恵君。 〔庭田幸恵君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第12号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01220260513/11",
+   "speechId": "122115254X01220260513_011"
+  },
+  {
+   "chars": 19,
+   "date": "2026-05-13",
+   "excerpt": "小西洋之君。 〔小西洋之君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第12号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01220260513/7",
+   "speechId": "122115254X01220260513_007"
+  },
+  {
+   "chars": 56,
+   "date": "2026-05-13",
+   "excerpt": "ただいまの趣旨説明に対し、質疑の通告がございます。順次発言を許します。自見はなこ君。 〔自見はなこ君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第12号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01220260513/4",
+   "speechId": "122115254X01220260513_004"
+  },
+  {
+   "chars": 41,
+   "date": "2026-05-13",
+   "excerpt": "御異議ないと認めます。上野賢一郎厚生労働大臣。 〔国務大臣上野賢一郎君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第12号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01220260513/2",
+   "speechId": "122115254X01220260513_002"
+  },
+  {
+   "chars": 94,
+   "date": "2026-05-13",
+   "excerpt": "これより会議を開きます。 この際、日程に追加して、 健康保険法等の一部を改正する法律案について、提出者の趣旨説明を求めたいと存じますが、御異議ございませんか。 〔「異議なし」と呼ぶ者あり〕",
+   "kind": "speech",
+   "meeting": "本会議 第12号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01220260513/1",
+   "speechId": "122115254X01220260513_001"
+  },
+  {
+   "chars": 44,
+   "date": "2026-05-08",
+   "excerpt": "これにて質疑は終了いたしました。 本日はこれにて散会いたします。 午前十一時五十八分散会",
+   "kind": "speech",
+   "meeting": "本会議 第11号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01120260508/24",
+   "speechId": "122115254X01120260508_024"
+  },
+  {
+   "chars": 17,
+   "date": "2026-05-08",
+   "excerpt": "大津力君。 〔大津力君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第11号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01120260508/20",
+   "speechId": "122115254X01120260508_020"
+  },
+  {
+   "chars": 17,
+   "date": "2026-05-08",
+   "excerpt": "柴田巧君。 〔柴田巧君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第11号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01120260508/17",
+   "speechId": "122115254X01120260508_017"
+  },
+  {
+   "chars": 19,
+   "date": "2026-05-08",
+   "excerpt": "窪田哲也君。 〔窪田哲也君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第11号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01120260508/13",
+   "speechId": "122115254X01120260508_013"
+  },
+  {
+   "chars": 21,
+   "date": "2026-05-08",
+   "excerpt": "堂込麻紀子君。 〔堂込麻紀子君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第11号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01120260508/10",
+   "speechId": "122115254X01120260508_010"
+  },
+  {
+   "chars": 21,
+   "date": "2026-05-08",
+   "excerpt": "小島とも子君。 〔小島とも子君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第11号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01120260508/7",
+   "speechId": "122115254X01120260508_007"
+  },
+  {
+   "chars": 54,
+   "date": "2026-05-08",
+   "excerpt": "ただいまの趣旨説明に対し、質疑の通告がございます。順次発言を許します。松川るい君。 〔松川るい君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第11号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01120260508/3",
+   "speechId": "122115254X01120260508_003"
+  },
+  {
+   "chars": 79,
+   "date": "2026-05-08",
+   "excerpt": "これより会議を開きます。 日程第一 国家情報会議設置法案（趣旨説明） 本案について提出者の趣旨説明を求めます。木原稔国務大臣。 〔国務大臣木原稔君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第11号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01120260508/1",
+   "speechId": "122115254X01120260508_001"
   },
   {
    "date": "2026-04-24",
@@ -906,6 +2576,356 @@
    "value": "投票なし"
   },
   {
+   "chars": 25,
+   "date": "2026-04-24",
+   "excerpt": "本日はこれにて散会いたします。 午前十一時一分散会",
+   "kind": "speech",
+   "meeting": "本会議 第10号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01020260424/46",
+   "speechId": "122115254X01020260424_046"
+  },
+  {
+   "chars": 103,
+   "date": "2026-04-24",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十二 賛成 二百三十七 反対 五 よって、本案は可決されました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────────────",
+   "kind": "speech",
+   "meeting": "本会議 第10号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01020260424/45",
+   "speechId": "122115254X01020260424_045"
+  },
+  {
+   "chars": 39,
+   "date": "2026-04-24",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第10号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01020260424/44",
+   "speechId": "122115254X01020260424_044"
+  },
+  {
+   "chars": 66,
+   "date": "2026-04-24",
+   "excerpt": "次に、農業近代化資金融通法の一部を改正する法律案の採決をいたします。 本案の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第10号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01020260424/43",
+   "speechId": "122115254X01020260424_043"
+  },
+  {
+   "chars": 103,
+   "date": "2026-04-24",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十三 賛成 二百三十 反対 十三 よって、本案は可決されました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────────────",
+   "kind": "speech",
+   "meeting": "本会議 第10号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01020260424/42",
+   "speechId": "122115254X01020260424_042"
+  },
+  {
+   "chars": 39,
+   "date": "2026-04-24",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第10号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01020260424/41",
+   "speechId": "122115254X01020260424_041"
+  },
+  {
+   "chars": 77,
+   "date": "2026-04-24",
+   "excerpt": "これより採決をいたします。 まず、農林中央金庫法の一部を改正する法律案の採決をいたします。 本案の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第10号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01020260424/40",
+   "speechId": "122115254X01020260424_040"
+  },
+  {
+   "chars": 176,
+   "date": "2026-04-24",
+   "excerpt": "日程第六 農林中央金庫法の一部を改正する法律案 日程第七 農業近代化資金融通法の一部を改正する法律案 （いずれも内閣提出、衆議院送付） 以上両案を一括して議題といたします。 まず、委員長の報告を求めます。農林水産委員長藤木眞也君。 ───────────── 〔審査報告書及び議案は本号末尾に掲載〕 ───────────── 〔藤木眞也君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第10号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01020260424/38",
+   "speechId": "122115254X01020260424_038"
+  },
+  {
+   "chars": 102,
+   "date": "2026-04-24",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十三 賛成 二百二十八 反対 十五 よって、本案は可決されました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────・─────",
+   "kind": "speech",
+   "meeting": "本会議 第10号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01020260424/37",
+   "speechId": "122115254X01020260424_037"
+  },
+  {
+   "chars": 39,
+   "date": "2026-04-24",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第10号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01020260424/36",
+   "speechId": "122115254X01020260424_036"
+  },
+  {
+   "chars": 45,
+   "date": "2026-04-24",
+   "excerpt": "これより採決をいたします。 本案の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第10号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01020260424/35",
+   "speechId": "122115254X01020260424_035"
+  },
+  {
+   "chars": 147,
+   "date": "2026-04-24",
+   "excerpt": "日程第五 株式会社海外通信・放送・郵便事業支援機構法の一部を改正する法律案（内閣提出、衆議院送付）を議題といたします。 まず、委員長の報告を求めます。総務委員長吉川沙織君。 ───────────── 〔審査報告書及び議案は本号末尾に掲載〕 ───────────── 〔吉川沙織君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第10号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01020260424/33",
+   "speechId": "122115254X01020260424_033"
+  },
+  {
+   "chars": 109,
+   "date": "2026-04-24",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十三 賛成 二百四十三 反対 〇 よって、本案は全会一致をもって可決されました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────・─────",
+   "kind": "speech",
+   "meeting": "本会議 第10号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01020260424/32",
+   "speechId": "122115254X01020260424_032"
+  },
+  {
+   "chars": 39,
+   "date": "2026-04-24",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第10号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01020260424/31",
+   "speechId": "122115254X01020260424_031"
+  },
+  {
+   "chars": 45,
+   "date": "2026-04-24",
+   "excerpt": "これより採決をいたします。 本案の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第10号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01020260424/30",
+   "speechId": "122115254X01020260424_030"
+  },
+  {
+   "chars": 131,
+   "date": "2026-04-24",
+   "excerpt": "日程第四 旅券法の一部を改正する法律案（内閣提出、衆議院送付）を議題といたします。 まず、委員長の報告を求めます。外交防衛委員長里見隆治君。 ───────────── 〔審査報告書及び議案は本号末尾に掲載〕 ───────────── 〔里見隆治君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第10号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01020260424/28",
+   "speechId": "122115254X01020260424_028"
+  },
+  {
+   "chars": 101,
+   "date": "2026-04-24",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十二 賛成 二百三十七 反対 五 よって、本案は可決されました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────・─────",
+   "kind": "speech",
+   "meeting": "本会議 第10号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01020260424/27",
+   "speechId": "122115254X01020260424_027"
+  },
+  {
+   "chars": 39,
+   "date": "2026-04-24",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第10号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01020260424/26",
+   "speechId": "122115254X01020260424_026"
+  },
+  {
+   "chars": 45,
+   "date": "2026-04-24",
+   "excerpt": "これより採決をいたします。 本案の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第10号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01020260424/25",
+   "speechId": "122115254X01020260424_025"
+  },
+  {
+   "chars": 150,
+   "date": "2026-04-24",
+   "excerpt": "日程第三 金融機能の強化のための特別措置に関する法律等の一部を改正する法律案（内閣提出、衆議院送付）を議題といたします。 まず、委員長の報告を求めます。財政金融委員長宮本周司君。 ───────────── 〔審査報告書及び議案は本号末尾に掲載〕 ───────────── 〔宮本周司君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第10号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01020260424/23",
+   "speechId": "122115254X01020260424_023"
+  },
+  {
+   "chars": 102,
+   "date": "2026-04-24",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十三 賛成 二百二十八 反対 十五 よって、本案は可決されました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────・─────",
+   "kind": "speech",
+   "meeting": "本会議 第10号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01020260424/22",
+   "speechId": "122115254X01020260424_022"
+  },
+  {
+   "chars": 39,
+   "date": "2026-04-24",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第10号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01020260424/21",
+   "speechId": "122115254X01020260424_021"
+  },
+  {
+   "chars": 45,
+   "date": "2026-04-24",
+   "excerpt": "これより採決をいたします。 本案の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第10号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01020260424/20",
+   "speechId": "122115254X01020260424_020"
+  },
+  {
+   "chars": 134,
+   "date": "2026-04-24",
+   "excerpt": "日程第二 裁判所職員定員法の一部を改正する法律案（内閣提出、衆議院送付）を議題といたします。 まず、委員長の報告を求めます。法務委員長伊藤孝江君。 ───────────── 〔審査報告書及び議案は本号末尾に掲載〕 ───────────── 〔伊藤孝江君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第10号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01020260424/18",
+   "speechId": "122115254X01020260424_018"
+  },
+  {
+   "chars": 102,
+   "date": "2026-04-24",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十二 賛成 二百三十一 反対 十一 よって、本案は可決されました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────・─────",
+   "kind": "speech",
+   "meeting": "本会議 第10号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01020260424/17",
+   "speechId": "122115254X01020260424_017"
+  },
+  {
+   "chars": 39,
+   "date": "2026-04-24",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第10号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01020260424/16",
+   "speechId": "122115254X01020260424_016"
+  },
+  {
+   "chars": 45,
+   "date": "2026-04-24",
+   "excerpt": "これより採決をいたします。 本案の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第10号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01020260424/15",
+   "speechId": "122115254X01020260424_015"
+  },
+  {
+   "chars": 168,
+   "date": "2026-04-24",
+   "excerpt": "日程第一 人工衛星等の打上げ及び人工衛星の管理に関する法律等の一部を改正する法律案（内閣提出）を議題といたします。 まず、委員長の報告を求めます。デジタル社会の形成及び人工知能の活用等に関する特別委員長松下新平君。 ───────────── 〔審査報告書及び議案は本号末尾に掲載〕 ───────────── 〔松下新平君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第10号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01020260424/13",
+   "speechId": "122115254X01020260424_013"
+  },
+  {
+   "chars": 19,
+   "date": "2026-04-24",
+   "excerpt": "有村治子君。 〔有村治子君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第10号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01020260424/11",
+   "speechId": "122115254X01020260424_011"
+  },
+  {
+   "chars": 17,
+   "date": "2026-04-24",
+   "excerpt": "小池晃君。 〔小池晃君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第10号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01020260424/9",
+   "speechId": "122115254X01020260424_009"
+  },
+  {
+   "chars": 19,
+   "date": "2026-04-24",
+   "excerpt": "松山政司君。 〔松山政司君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第10号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01020260424/7",
+   "speechId": "122115254X01020260424_007"
+  },
+  {
+   "chars": 70,
+   "date": "2026-04-24",
+   "excerpt": "宮沢洋一君、松山政司君、小池晃君及び有村治子君から、それぞれ発言を求められました。順次発言を許します。宮沢洋一君。 〔宮沢洋一君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第10号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01020260424/5",
+   "speechId": "122115254X01020260424_005"
+  },
+  {
+   "chars": 45,
+   "date": "2026-04-24",
+   "excerpt": "水岡俊一君から発言を求められました。発言を許します。水岡俊一君。 〔水岡俊一君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第10号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01020260424/3",
+   "speechId": "122115254X01020260424_003"
+  },
+  {
+   "chars": 418,
+   "date": "2026-04-24",
+   "excerpt": "御異議ないと認めます。 四君に対する表彰文を朗読いたします。 〔宮沢洋一君起立〕 議員宮沢洋一君 君は国会議員としてその職にあること二十五年に及び常に憲政のために力を尽くされました 参議院は君の永年の功労に対しここに院議をもって表彰します 〔拍手〕 〔松山政司君起立〕 議員松山政司君 君は国会議員としてその職にあること二十五年に及び常に憲政のために力を尽くされました 参議院は君の永年の功労に対しこ",
+   "kind": "speech",
+   "meeting": "本会議 第10号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01020260424/2",
+   "speechId": "122115254X01020260424_002"
+  },
+  {
+   "chars": 162,
+   "date": "2026-04-24",
+   "excerpt": "これより会議を開きます。 この際、永年在職議員表彰の件についてお諮りいたします。 議員宮沢洋一君、松山政司君、小池晃君及び有村治子君は、国会議員として在職すること二十五年に達せられました。 つきましては、院議をもって四君の永年の功労を表彰することにいたしたいと存じますが、御異議ございませんか。 〔「異議なし」と呼ぶ者あり〕",
+   "kind": "speech",
+   "meeting": "本会議 第10号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01020260424/1",
+   "speechId": "122115254X01020260424_001"
+  },
+  {
    "date": "2026-04-17",
    "groupValue": "賛成",
    "kind": "vote",
@@ -936,6 +2956,156 @@
    "value": "投票なし"
   },
   {
+   "chars": 24,
+   "date": "2026-04-17",
+   "excerpt": "本日はこれにて散会いたします。 午前十時十分散会",
+   "kind": "speech",
+   "meeting": "本会議 第9号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00920260417/18",
+   "speechId": "122115254X00920260417_018"
+  },
+  {
+   "chars": 103,
+   "date": "2026-04-17",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百三十九 賛成 二百三十五 反対 四 よって、本案は可決されました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────────────",
+   "kind": "speech",
+   "meeting": "本会議 第9号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00920260417/17",
+   "speechId": "122115254X00920260417_017"
+  },
+  {
+   "chars": 39,
+   "date": "2026-04-17",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第9号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00920260417/16",
+   "speechId": "122115254X00920260417_016"
+  },
+  {
+   "chars": 45,
+   "date": "2026-04-17",
+   "excerpt": "これより採決をいたします。 本案の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第9号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00920260417/15",
+   "speechId": "122115254X00920260417_015"
+  },
+  {
+   "chars": 138,
+   "date": "2026-04-17",
+   "excerpt": "日程第三 犯罪による収益の移転防止に関する法律の一部を改正する法律案（内閣提出）を議題といたします。 まず、委員長の報告を求めます。内閣委員長北村経夫君。 ───────────── 〔審査報告書及び議案は本号末尾に掲載〕 ───────────── 〔北村経夫君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第9号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00920260417/13",
+   "speechId": "122115254X00920260417_013"
+  },
+  {
+   "chars": 109,
+   "date": "2026-04-17",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百三十九 賛成 二百三十九 反対 〇 よって、本案は全会一致をもって可決されました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────・─────",
+   "kind": "speech",
+   "meeting": "本会議 第9号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00920260417/12",
+   "speechId": "122115254X00920260417_012"
+  },
+  {
+   "chars": 39,
+   "date": "2026-04-17",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第9号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00920260417/11",
+   "speechId": "122115254X00920260417_011"
+  },
+  {
+   "chars": 45,
+   "date": "2026-04-17",
+   "excerpt": "これより採決をいたします。 本案の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第9号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00920260417/10",
+   "speechId": "122115254X00920260417_010"
+  },
+  {
+   "chars": 155,
+   "date": "2026-04-17",
+   "excerpt": "日程第二 自動車の運転により人を死傷させる行為等の処罰に関する法律及び道路交通法の一部を改正する法律案（内閣提出）を議題といたします。 まず、委員長の報告を求めます。法務委員長伊藤孝江君。 ───────────── 〔審査報告書及び議案は本号末尾に掲載〕 ───────────── 〔伊藤孝江君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第9号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00920260417/8",
+   "speechId": "122115254X00920260417_008"
+  },
+  {
+   "chars": 109,
+   "date": "2026-04-17",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百三十九 賛成 二百三十九 反対 〇 よって、本案は全会一致をもって可決されました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────・─────",
+   "kind": "speech",
+   "meeting": "本会議 第9号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00920260417/7",
+   "speechId": "122115254X00920260417_007"
+  },
+  {
+   "chars": 39,
+   "date": "2026-04-17",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第9号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00920260417/6",
+   "speechId": "122115254X00920260417_006"
+  },
+  {
+   "chars": 45,
+   "date": "2026-04-17",
+   "excerpt": "これより採決をいたします。 本案の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第9号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00920260417/5",
+   "speechId": "122115254X00920260417_005"
+  },
+  {
+   "chars": 136,
+   "date": "2026-04-17",
+   "excerpt": "日程第一 南極地域の環境の保護に関する法律の一部を改正する法律案（内閣提出）を議題といたします。 まず、委員長の報告を求めます。環境委員長猪口邦子君。 ───────────── 〔審査報告書及び議案は本号末尾に掲載〕 ───────────── 〔猪口邦子君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第9号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00920260417/3",
+   "speechId": "122115254X00920260417_003"
+  },
+  {
+   "chars": 41,
+   "date": "2026-04-17",
+   "excerpt": "御異議ないと認めます。 よって、許可することに決しました。 ─────・─────",
+   "kind": "speech",
+   "meeting": "本会議 第9号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00920260417/2",
+   "speechId": "122115254X00920260417_002"
+  },
+  {
+   "chars": 104,
+   "date": "2026-04-17",
+   "excerpt": "これより会議を開きます。 この際、お諮りいたします。 吉良よし子君から海外渡航のため来る二十三日から九日間の請暇の申出がございました。 これを許可することに御異議ございませんか。 〔「異議なし」と呼ぶ者あり〕",
+   "kind": "speech",
+   "meeting": "本会議 第9号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00920260417/1",
+   "speechId": "122115254X00920260417_001"
+  },
+  {
    "date": "2026-04-07",
    "groupValue": "賛成",
    "kind": "vote",
@@ -964,6 +3134,176 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0407-v001.htm",
    "title": "令和八年度一般会計予算",
    "value": "投票なし"
+  },
+  {
+   "chars": 55,
+   "date": "2026-04-07",
+   "excerpt": "御異議ないと認めます。 よって、本規程案は可決されました。 本日はこれにて散会いたします。 午後五時五十分散会",
+   "kind": "speech",
+   "meeting": "本会議 第8号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00820260407/23",
+   "speechId": "122115254X00820260407_023"
+  },
+  {
+   "chars": 31,
+   "date": "2026-04-07",
+   "excerpt": "本規程案に御異議ございませんか。 〔「異議なし」と呼ぶ者あり〕",
+   "kind": "speech",
+   "meeting": "本会議 第8号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00820260407/22",
+   "speechId": "122115254X00820260407_022"
+  },
+  {
+   "chars": 163,
+   "date": "2026-04-07",
+   "excerpt": "この際、参議院事務局職員定員規程の一部改正に関する件についてお諮りいたします。 議長は、本件につきまして議院運営委員会に諮りましたところ、議席に配付いたしました参議院事務局職員定員規程の一部を改正する規程案のとおりとする旨の決定がございました。 ───────────── 〔議案は本号末尾に掲載〕 ─────────────",
+   "kind": "speech",
+   "meeting": "本会議 第8号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00820260407/21",
+   "speechId": "122115254X00820260407_021"
+  },
+  {
+   "chars": 107,
+   "date": "2026-04-07",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十五票 白色票 百二十六票 青色票 百十九票 よって、三案は可決されました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────・─────",
+   "kind": "speech",
+   "meeting": "本会議 第8号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00820260407/20",
+   "speechId": "122115254X00820260407_020"
+  },
+  {
+   "chars": 53,
+   "date": "2026-04-07",
+   "excerpt": "これより開票いたします。投票を参事に計算させます。議場の開鎖を命じます。 〔議場開鎖〕 〔参事投票を計算〕",
+   "kind": "speech",
+   "meeting": "本会議 第8号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00820260407/19",
+   "speechId": "122115254X00820260407_019"
+  },
+  {
+   "chars": 42,
+   "date": "2026-04-07",
+   "excerpt": "投票漏れはございませんか。──投票漏れはないと認めます。投票箱閉鎖。 〔投票箱閉鎖〕",
+   "kind": "speech",
+   "meeting": "本会議 第8号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00820260407/18",
+   "speechId": "122115254X00820260407_018"
+  },
+  {
+   "chars": 121,
+   "date": "2026-04-07",
+   "excerpt": "これより三案を一括して採決いたします。 表決は記名投票をもって行います。三案に賛成の諸君は白色票を、反対の諸君は青色票を、御登壇の上、投票を願います。 議場の閉鎖を命じます。氏名点呼を行います。 〔議場閉鎖〕 〔参事氏名を点呼〕 〔投票執行〕",
+   "kind": "speech",
+   "meeting": "本会議 第8号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00820260407/17",
+   "speechId": "122115254X00820260407_017"
+  },
+  {
+   "chars": 30,
+   "date": "2026-04-07",
+   "excerpt": "これにて討論は終局いたしました。 ─────────────",
+   "kind": "speech",
+   "meeting": "本会議 第8号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00820260407/16",
+   "speechId": "122115254X00820260407_016"
+  },
+  {
+   "chars": 19,
+   "date": "2026-04-07",
+   "excerpt": "宮出千慧君。 〔宮出千慧君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第8号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00820260407/14",
+   "speechId": "122115254X00820260407_014"
+  },
+  {
+   "chars": 19,
+   "date": "2026-04-07",
+   "excerpt": "窪田哲也君。 〔窪田哲也君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第8号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00820260407/12",
+   "speechId": "122115254X00820260407_012"
+  },
+  {
+   "chars": 19,
+   "date": "2026-04-07",
+   "excerpt": "浜野喜史君。 〔浜野喜史君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第8号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00820260407/10",
+   "speechId": "122115254X00820260407_010"
+  },
+  {
+   "chars": 19,
+   "date": "2026-04-07",
+   "excerpt": "長谷川岳君。 〔長谷川岳君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第8号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00820260407/8",
+   "speechId": "122115254X00820260407_008"
+  },
+  {
+   "chars": 47,
+   "date": "2026-04-07",
+   "excerpt": "三案に対し、討論の通告がございます。順次発言を許します。森本真治君。 〔森本真治君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第8号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00820260407/6",
+   "speechId": "122115254X00820260407_006"
+  },
+  {
+   "chars": 95,
+   "date": "2026-04-07",
+   "excerpt": "御異議ないと認めます。 まず、委員長の報告を求めます。予算委員長藤川政人君。 ───────────── 〔審査報告書は本号末尾に掲載〕 ───────────── 〔藤川政人君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第8号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00820260407/4",
+   "speechId": "122115254X00820260407_004"
+  },
+  {
+   "chars": 94,
+   "date": "2026-04-07",
+   "excerpt": "この際、日程に追加して、 令和八年度一般会計予算 令和八年度特別会計予算 令和八年度政府関係機関予算 以上三案を一括して議題とすることに御異議ございませんか。 〔「異議なし」と呼ぶ者あり〕",
+   "kind": "speech",
+   "meeting": "本会議 第8号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00820260407/3",
+   "speechId": "122115254X00820260407_003"
+  },
+  {
+   "chars": 85,
+   "date": "2026-04-07",
+   "excerpt": "御異議ないと認めます。 よって、議長は、政治資金適正化委員会委員に野々上尚君、秋山修一郎君、片山泰宏君、大泉淳一君及び森田祐司君を指名いたします。 ─────・─────",
+   "kind": "speech",
+   "meeting": "本会議 第8号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00820260407/2",
+   "speechId": "122115254X00820260407_002"
+  },
+  {
+   "chars": 187,
+   "date": "2026-04-07",
+   "excerpt": "これより会議を開きます。 日程第一 政治資金適正化委員会委員の指名 内閣から、政治資金適正化委員会委員五名の任命について、本院の議決による指名を求めてまいりました。 よって、これより政治資金適正化委員会委員五名の指名を行いたいと存じます。 つきましては、政治資金適正化委員会委員の指名は、議長に御一任願いたいと存じますが、御異議ございませんか。 〔「異議なし」と呼ぶ者あり〕",
+   "kind": "speech",
+   "meeting": "本会議 第8号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00820260407/1",
+   "speechId": "122115254X00820260407_001"
   },
   {
    "date": "2026-03-31",
@@ -1106,6 +3446,526 @@
    "value": "投票なし"
   },
   {
+   "chars": 24,
+   "date": "2026-03-31",
+   "excerpt": "本日はこれにて散会いたします。 午後六時六分散会",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/62",
+   "speechId": "122115254X00720260331_062"
+  },
+  {
+   "chars": 102,
+   "date": "2026-03-31",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十四 賛成 二百四十 反対 四 よって、本案は可決されました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────────────",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/61",
+   "speechId": "122115254X00720260331_061"
+  },
+  {
+   "chars": 39,
+   "date": "2026-03-31",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/60",
+   "speechId": "122115254X00720260331_060"
+  },
+  {
+   "chars": 45,
+   "date": "2026-03-31",
+   "excerpt": "これより採決をいたします。 本案の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/59",
+   "speechId": "122115254X00720260331_059"
+  },
+  {
+   "chars": 113,
+   "date": "2026-03-31",
+   "excerpt": "御異議ないと認めます。 まず、委員長の報告を求めます。災害対策及び東日本大震災復興特別委員長下野六太君。 ───────────── 〔審査報告書及び議案は本号末尾に掲載〕 ───────────── 〔下野六太君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/57",
+   "speechId": "122115254X00720260331_057"
+  },
+  {
+   "chars": 77,
+   "date": "2026-03-31",
+   "excerpt": "この際、日程に追加して、 地震防災対策特別措置法の一部を改正する法律案（衆議院提出）を議題とすることに御異議ございませんか。 〔「異議なし」と呼ぶ者あり〕",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/56",
+   "speechId": "122115254X00720260331_056"
+  },
+  {
+   "chars": 109,
+   "date": "2026-03-31",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十四 賛成 二百四十四 反対 〇 よって、本案は全会一致をもって可決されました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────・─────",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/55",
+   "speechId": "122115254X00720260331_055"
+  },
+  {
+   "chars": 39,
+   "date": "2026-03-31",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/54",
+   "speechId": "122115254X00720260331_054"
+  },
+  {
+   "chars": 45,
+   "date": "2026-03-31",
+   "excerpt": "これより採決をいたします。 本案の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/53",
+   "speechId": "122115254X00720260331_053"
+  },
+  {
+   "chars": 101,
+   "date": "2026-03-31",
+   "excerpt": "御異議ないと認めます。 まず、委員長の報告を求めます。外交防衛委員長里見隆治君。 ───────────── 〔審査報告書及び議案は本号末尾に掲載〕 ───────────── 〔里見隆治君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/51",
+   "speechId": "122115254X00720260331_051"
+  },
+  {
+   "chars": 108,
+   "date": "2026-03-31",
+   "excerpt": "この際、日程に追加して、 在外公館の名称及び位置並びに在外公館に勤務する外務公務員の給与に関する法律の一部を改正する法律案（内閣提出、衆議院送付）を議題とすることに御異議ございませんか。 〔「異議なし」と呼ぶ者あり〕",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/50",
+   "speechId": "122115254X00720260331_050"
+  },
+  {
+   "chars": 102,
+   "date": "2026-03-31",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十四 賛成 百四十八 反対 九十六 よって、本案は可決されました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────・─────",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/49",
+   "speechId": "122115254X00720260331_049"
+  },
+  {
+   "chars": 39,
+   "date": "2026-03-31",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/48",
+   "speechId": "122115254X00720260331_048"
+  },
+  {
+   "chars": 61,
+   "date": "2026-03-31",
+   "excerpt": "次に、所得税法等の一部を改正する法律案の採決をいたします。 本案の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/47",
+   "speechId": "122115254X00720260331_047"
+  },
+  {
+   "chars": 103,
+   "date": "2026-03-31",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十三 賛成 二百三十九 反対 四 よって、両案は可決されました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────────────",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/46",
+   "speechId": "122115254X00720260331_046"
+  },
+  {
+   "chars": 39,
+   "date": "2026-03-31",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/45",
+   "speechId": "122115254X00720260331_045"
+  },
+  {
+   "chars": 120,
+   "date": "2026-03-31",
+   "excerpt": "次に、東日本大震災からの復興のための施策を実施するために必要な財源の確保に関する特別措置法の一部を改正する法律案及び関税定率法等の一部を改正する法律案を一括して採決いたします。 両案の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/44",
+   "speechId": "122115254X00720260331_044"
+  },
+  {
+   "chars": 104,
+   "date": "2026-03-31",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十三 賛成 百六十五 反対 七十八 よって、本案は可決されました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────────────",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/43",
+   "speechId": "122115254X00720260331_043"
+  },
+  {
+   "chars": 39,
+   "date": "2026-03-31",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/42",
+   "speechId": "122115254X00720260331_042"
+  },
+  {
+   "chars": 103,
+   "date": "2026-03-31",
+   "excerpt": "これより採決をいたします。 まず、財政運営に必要な財源の確保を図るための公債の発行の特例に関する法律の一部を改正する法律案の採決をいたします。 本案の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/41",
+   "speechId": "122115254X00720260331_041"
+  },
+  {
+   "chars": 30,
+   "date": "2026-03-31",
+   "excerpt": "これにて討論は終局いたしました。 ─────────────",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/40",
+   "speechId": "122115254X00720260331_040"
+  },
+  {
+   "chars": 19,
+   "date": "2026-03-31",
+   "excerpt": "塩入清香君。 〔塩入清香君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/38",
+   "speechId": "122115254X00720260331_038"
+  },
+  {
+   "chars": 17,
+   "date": "2026-03-31",
+   "excerpt": "上田勇君。 〔上田勇君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/36",
+   "speechId": "122115254X00720260331_036"
+  },
+  {
+   "chars": 41,
+   "date": "2026-03-31",
+   "excerpt": "討論の通告がございます。順次発言を許します。高木真理君。 〔高木真理君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/34",
+   "speechId": "122115254X00720260331_034"
+  },
+  {
+   "chars": 101,
+   "date": "2026-03-31",
+   "excerpt": "御異議ないと認めます。 まず、委員長の報告を求めます。財政金融委員長宮本周司君。 ───────────── 〔審査報告書及び議案は本号末尾に掲載〕 ───────────── 〔宮本周司君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/32",
+   "speechId": "122115254X00720260331_032"
+  },
+  {
+   "chars": 207,
+   "date": "2026-03-31",
+   "excerpt": "この際、日程に追加して、 財政運営に必要な財源の確保を図るための公債の発行の特例に関する法律の一部を改正する法律案 東日本大震災からの復興のための施策を実施するために必要な財源の確保に関する特別措置法の一部を改正する法律案 所得税法等の一部を改正する法律案 関税定率法等の一部を改正する法律案 （いずれも内閣提出、衆議院送付） 以上四案を一括して議題とすることに御異議ございませんか。 〔「異議なし」",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/31",
+   "speechId": "122115254X00720260331_031"
+  },
+  {
+   "chars": 109,
+   "date": "2026-03-31",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十三 賛成 二百四十三 反対 〇 よって、本案は全会一致をもって可決されました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────・─────",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/30",
+   "speechId": "122115254X00720260331_030"
+  },
+  {
+   "chars": 39,
+   "date": "2026-03-31",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/29",
+   "speechId": "122115254X00720260331_029"
+  },
+  {
+   "chars": 45,
+   "date": "2026-03-31",
+   "excerpt": "これより採決をいたします。 本案の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/28",
+   "speechId": "122115254X00720260331_028"
+  },
+  {
+   "chars": 101,
+   "date": "2026-03-31",
+   "excerpt": "御異議ないと認めます。 まず、委員長の報告を求めます。国土交通委員長辻元清美君。 ───────────── 〔審査報告書及び議案は本号末尾に掲載〕 ───────────── 〔辻元清美君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/26",
+   "speechId": "122115254X00720260331_026"
+  },
+  {
+   "chars": 82,
+   "date": "2026-03-31",
+   "excerpt": "この際、日程に追加して、 運輸事業の振興の助成に関する法律の一部を改正する法律案（衆議院提出）を議題とすることに御異議ございませんか。 〔「異議なし」と呼ぶ者あり〕",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/25",
+   "speechId": "122115254X00720260331_025"
+  },
+  {
+   "chars": 101,
+   "date": "2026-03-31",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十四 賛成 二百三十九 反対 五 よって、本案は可決されました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────・─────",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/24",
+   "speechId": "122115254X00720260331_024"
+  },
+  {
+   "chars": 39,
+   "date": "2026-03-31",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/23",
+   "speechId": "122115254X00720260331_023"
+  },
+  {
+   "chars": 86,
+   "date": "2026-03-31",
+   "excerpt": "次に、公立義務教育諸学校の学級編制及び教職員定数の標準に関する法律の一部を改正する法律案の採決をいたします。 本案の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/22",
+   "speechId": "122115254X00720260331_022"
+  },
+  {
+   "chars": 105,
+   "date": "2026-03-31",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十四 賛成 二百二十三 反対 二十一 よって、本案は可決されました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────────────",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/21",
+   "speechId": "122115254X00720260331_021"
+  },
+  {
+   "chars": 39,
+   "date": "2026-03-31",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/20",
+   "speechId": "122115254X00720260331_020"
+  },
+  {
+   "chars": 89,
+   "date": "2026-03-31",
+   "excerpt": "これより採決をいたします。 まず、高等学校等就学支援金の支給に関する法律の一部を改正する法律案の採決をいたします。 本案の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/19",
+   "speechId": "122115254X00720260331_019"
+  },
+  {
+   "chars": 101,
+   "date": "2026-03-31",
+   "excerpt": "御異議ないと認めます。 まず、委員長の報告を求めます。文教科学委員長熊谷裕人君。 ───────────── 〔審査報告書及び議案は本号末尾に掲載〕 ───────────── 〔熊谷裕人君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/17",
+   "speechId": "122115254X00720260331_017"
+  },
+  {
+   "chars": 146,
+   "date": "2026-03-31",
+   "excerpt": "この際、日程に追加して、 高等学校等就学支援金の支給に関する法律の一部を改正する法律案 公立義務教育諸学校の学級編制及び教職員定数の標準に関する法律の一部を改正する法律案 （いずれも内閣提出、衆議院送付） 以上両案を一括して議題とすることに御異議ございませんか。 〔「異議なし」と呼ぶ者あり〕",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/16",
+   "speechId": "122115254X00720260331_016"
+  },
+  {
+   "chars": 100,
+   "date": "2026-03-31",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十四 賛成 二百四十 反対 四 よって、両案は可決されました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────・─────",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/15",
+   "speechId": "122115254X00720260331_015"
+  },
+  {
+   "chars": 39,
+   "date": "2026-03-31",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/14",
+   "speechId": "122115254X00720260331_014"
+  },
+  {
+   "chars": 51,
+   "date": "2026-03-31",
+   "excerpt": "これより両案を一括して採決いたします。 両案の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/13",
+   "speechId": "122115254X00720260331_013"
+  },
+  {
+   "chars": 101,
+   "date": "2026-03-31",
+   "excerpt": "御異議ないと認めます。 まず、委員長の報告を求めます。農林水産委員長藤木眞也君。 ───────────── 〔審査報告書及び議案は本号末尾に掲載〕 ───────────── 〔藤木眞也君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/11",
+   "speechId": "122115254X00720260331_011"
+  },
+  {
+   "chars": 152,
+   "date": "2026-03-31",
+   "excerpt": "この際、日程に追加して、 農業構造転換の推進に必要な施策の集中的な実施の財源に充てるための日本中央競馬会の国庫納付金の納付に関する臨時措置法案 日本中央競馬会法の一部を改正する法律案 （いずれも内閣提出、衆議院送付） 以上両案を一括して議題とすることに御異議ございませんか。 〔「異議なし」と呼ぶ者あり〕",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/10",
+   "speechId": "122115254X00720260331_010"
+  },
+  {
+   "chars": 106,
+   "date": "2026-03-31",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十四 賛成 二百三十七 反対 七 よって、本件は承認することに決しました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────・─────",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/9",
+   "speechId": "122115254X00720260331_009"
+  },
+  {
+   "chars": 39,
+   "date": "2026-03-31",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/8",
+   "speechId": "122115254X00720260331_008"
+  },
+  {
+   "chars": 71,
+   "date": "2026-03-31",
+   "excerpt": "次に、放送法第七十条第二項の規定に基づき、承認を求めるの件の採決をいたします。 本件の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/7",
+   "speechId": "122115254X00720260331_007"
+  },
+  {
+   "chars": 104,
+   "date": "2026-03-31",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十四 賛成 二百三十三 反対 十一 よって、両案は可決されました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────────────",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/6",
+   "speechId": "122115254X00720260331_006"
+  },
+  {
+   "chars": 39,
+   "date": "2026-03-31",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/5",
+   "speechId": "122115254X00720260331_005"
+  },
+  {
+   "chars": 98,
+   "date": "2026-03-31",
+   "excerpt": "これより採決をいたします。 まず、地方税法等の一部を改正する法律案及び地方交付税法等の一部を改正する法律案を一括して採決いたします。 両案の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/4",
+   "speechId": "122115254X00720260331_004"
+  },
+  {
+   "chars": 99,
+   "date": "2026-03-31",
+   "excerpt": "御異議ないと認めます。 まず、委員長の報告を求めます。総務委員長吉川沙織君。 ───────────── 〔審査報告書及び議案は本号末尾に掲載〕 ───────────── 〔吉川沙織君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/2",
+   "speechId": "122115254X00720260331_002"
+  },
+  {
+   "chars": 183,
+   "date": "2026-03-31",
+   "excerpt": "これより会議を開きます。 日程第一 地方税法等の一部を改正する法律案（内閣提出、衆議院送付） 並びに委員長から報告書が提出されました 地方交付税法等の一部を改正する法律案（内閣提出、衆議院送付）及び 放送法第七十条第二項の規定に基づき、承認を求めるの件（衆議院送付） を日程に追加し、三件を一括して議題とすることに御異議ございませんか。 〔「異議なし」と呼ぶ者あり〕",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/1",
+   "speechId": "122115254X00720260331_001"
+  },
+  {
    "date": "2026-03-30",
    "groupValue": "賛成",
    "kind": "vote",
@@ -1134,6 +3994,56 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0330-v001.htm",
    "title": "日程第１　令和八年度一般会計暫定予算",
    "value": "投票なし"
+  },
+  {
+   "chars": 26,
+   "date": "2026-03-30",
+   "excerpt": "本日はこれにて散会いたします。 午後四時三十四分散会",
+   "kind": "speech",
+   "meeting": "本会議 第6号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00620260330/6",
+   "speechId": "122115254X00620260330_006"
+  },
+  {
+   "chars": 103,
+   "date": "2026-03-30",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十一 賛成 二百三十 反対 十一 よって、三案は可決されました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────────────",
+   "kind": "speech",
+   "meeting": "本会議 第6号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00620260330/5",
+   "speechId": "122115254X00620260330_005"
+  },
+  {
+   "chars": 39,
+   "date": "2026-03-30",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第6号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00620260330/4",
+   "speechId": "122115254X00620260330_004"
+  },
+  {
+   "chars": 51,
+   "date": "2026-03-30",
+   "excerpt": "これより三案を一括して採決いたします。 三案の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第6号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00620260330/3",
+   "speechId": "122115254X00620260330_003"
+  },
+  {
+   "chars": 174,
+   "date": "2026-03-30",
+   "excerpt": "これより会議を開きます。 日程第一 令和八年度一般会計暫定予算 日程第二 令和八年度特別会計暫定予算 日程第三 令和八年度政府関係機関暫定予算 以上三案を一括して議題といたします。 まず、委員長の報告を求めます。予算委員長藤川政人君。 ───────────── 〔審査報告書は本号末尾に掲載〕 ───────────── 〔藤川政人君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第6号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00620260330/1",
+   "speechId": "122115254X00620260330_001"
   },
   {
    "date": "2026-03-23",
@@ -1214,6 +4124,286 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0323-v001.htm",
    "title": "日程第１　国家公務員等の任命に関する件「人事官（菅原晶子君）」",
    "value": "投票なし"
+  },
+  {
+   "chars": 39,
+   "date": "2026-02-25",
+   "excerpt": "御異議ないと認めます。 本日はこれにて散会いたします。 午前十一時三十九分散会",
+   "kind": "speech",
+   "meeting": "本会議 第3号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00320260225/9",
+   "speechId": "122115254X00320260225_009"
+  },
+  {
+   "chars": 54,
+   "date": "2026-02-25",
+   "excerpt": "質疑はなおございますが、これを次会に譲りたいと存じます。御異議ございませんか。 〔「異議なし」と呼ぶ者あり〕",
+   "kind": "speech",
+   "meeting": "本会議 第3号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00320260225/8",
+   "speechId": "122115254X00320260225_008"
+  },
+  {
+   "chars": 19,
+   "date": "2026-02-25",
+   "excerpt": "石井準一君。 〔石井準一君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第3号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00320260225/4",
+   "speechId": "122115254X00320260225_004"
+  },
+  {
+   "chars": 88,
+   "date": "2026-02-25",
+   "excerpt": "これより会議を開きます。 日程第一 国務大臣の演説に関する件（第二日） 去る二十日の国務大臣の演説に対し、これより順次質疑を許します。田名部匡代君。 〔田名部匡代君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第3号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00320260225/1",
+   "speechId": "122115254X00320260225_001"
+  },
+  {
+   "chars": 37,
+   "date": "2026-02-20",
+   "excerpt": "御異議ないと認めます。 本日はこれにて散会いたします。 午後五時十九分散会",
+   "kind": "speech",
+   "meeting": "本会議 第2号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00220260220/10",
+   "speechId": "122115254X00220260220_010"
+  },
+  {
+   "chars": 54,
+   "date": "2026-02-20",
+   "excerpt": "ただいまの演説に対する質疑は次会に譲りたいと存じますが、御異議ございませんか。 〔「異議なし」と呼ぶ者あり〕",
+   "kind": "speech",
+   "meeting": "本会議 第2号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00220260220/9",
+   "speechId": "122115254X00220260220_009"
+  },
+  {
+   "chars": 24,
+   "date": "2026-02-20",
+   "excerpt": "城内実国務大臣。 〔国務大臣城内実君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第2号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00220260220/7",
+   "speechId": "122115254X00220260220_007"
+  },
+  {
+   "chars": 28,
+   "date": "2026-02-20",
+   "excerpt": "片山さつき財務大臣。 〔国務大臣片山さつき君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第2号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00220260220/5",
+   "speechId": "122115254X00220260220_005"
+  },
+  {
+   "chars": 26,
+   "date": "2026-02-20",
+   "excerpt": "茂木敏充外務大臣。 〔国務大臣茂木敏充君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第2号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00220260220/3",
+   "speechId": "122115254X00220260220_003"
+  },
+  {
+   "chars": 146,
+   "date": "2026-02-20",
+   "excerpt": "これより会議を開きます。 日程第一 国務大臣の演説に関する件 内閣総理大臣から施政方針に関し、外務大臣から外交に関し、財務大臣から財政に関し、城内国務大臣から経済に関し、それぞれ発言を求められております。これより順次発言を許します。高市早苗内閣総理大臣。 〔内閣総理大臣高市早苗君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第2号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00220260220/1",
+   "speechId": "122115254X00220260220_001"
+  },
+  {
+   "chars": 25,
+   "date": "2026-02-18",
+   "excerpt": "本日はこれにて散会いたします。 午後三時五十分散会",
+   "kind": "speech",
+   "meeting": "本会議 第1号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00120260218/18",
+   "speechId": "122115254X00120260218_018"
+  },
+  {
+   "chars": 149,
+   "date": "2026-02-18",
+   "excerpt": "決選投票の結果を報告いたします。 投票総数 二百四十六票 高市早苗君 百二十五票 小川淳也君 六十五票 無効 四十八票 白票 八票 よって、本院は、高市早苗君を内閣総理大臣に指名することに決しました。 〔拍手〕 ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────────────",
+   "kind": "speech",
+   "meeting": "本会議 第1号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00120260218/17",
+   "speechId": "122115254X00120260218_017"
+  },
+  {
+   "chars": 38,
+   "date": "2026-02-18",
+   "excerpt": "これより開票いたします。投票を参事に点検させます。 〔参事投票を計算、点検〕",
+   "kind": "speech",
+   "meeting": "本会議 第1号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00120260218/16",
+   "speechId": "122115254X00120260218_016"
+  },
+  {
+   "chars": 42,
+   "date": "2026-02-18",
+   "excerpt": "投票漏れはございませんか。──投票漏れはないと認めます。投票箱閉鎖。 〔投票箱閉鎖〕",
+   "kind": "speech",
+   "meeting": "本会議 第1号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00120260218/15",
+   "speechId": "122115254X00120260218_015"
+  },
+  {
+   "chars": 124,
+   "date": "2026-02-18",
+   "excerpt": "これより内閣総理大臣の指名について決選投票を行います。 投票の最多数を得られた方は、高市早苗君と小川淳也君であります。両君のうち一人の氏名を記名投票用紙に記入して、御登壇の上、投票を願います。 氏名点呼を行います。 〔参事氏名を点呼〕 〔投票執行〕",
+   "kind": "speech",
+   "meeting": "本会議 第1号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00120260218/14",
+   "speechId": "122115254X00120260218_014"
+  },
+  {
+   "chars": 309,
+   "date": "2026-02-18",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十六票 本投票の過半数は百二十四票でございます。 高市早苗君 百二十三票 小川淳也君 五十八票 玉木雄一郎君 二十五票 神谷宗幣君 十五票 田村智子君 七票 奥田ふみよ君 五票 水岡俊一君 五票 伊波洋一君 二票 百田尚樹君 二票 福島みずほ君 二票 安野貴博君 一票 白票 一票 ただいま報告いたしましたとおり、得票者の得票数はいずれも投票の過半数に達",
+   "kind": "speech",
+   "meeting": "本会議 第1号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00120260218/13",
+   "speechId": "122115254X00120260218_013"
+  },
+  {
+   "chars": 38,
+   "date": "2026-02-18",
+   "excerpt": "これより開票いたします。投票を参事に点検させます。 〔参事投票を計算、点検〕",
+   "kind": "speech",
+   "meeting": "本会議 第1号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00120260218/12",
+   "speechId": "122115254X00120260218_012"
+  },
+  {
+   "chars": 42,
+   "date": "2026-02-18",
+   "excerpt": "投票漏れはございませんか。──投票漏れはないと認めます。投票箱閉鎖。 〔投票箱閉鎖〕",
+   "kind": "speech",
+   "meeting": "本会議 第1号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00120260218/11",
+   "speechId": "122115254X00120260218_011"
+  },
+  {
+   "chars": 135,
+   "date": "2026-02-18",
+   "excerpt": "日程第三 内閣総理大臣の指名 本院規則第二十条の規定により、これより内閣総理大臣の指名を記名投票をもって行います。議席に配付してあります記名投票用紙に国会議員のうち一人の氏名を記入して、御登壇の上、投票を願います。 氏名点呼を行います。 〔参事氏名を点呼〕 〔投票執行〕",
+   "kind": "speech",
+   "meeting": "本会議 第1号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00120260218/10",
+   "speechId": "122115254X00120260218_010"
+  },
+  {
+   "chars": 46,
+   "date": "2026-02-18",
+   "excerpt": "過半数と認めます。 よって、会期は百五十日間とすることに決しました。 ─────・─────",
+   "kind": "speech",
+   "meeting": "本会議 第1号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00120260218/9",
+   "speechId": "122115254X00120260218_009"
+  },
+  {
+   "chars": 94,
+   "date": "2026-02-18",
+   "excerpt": "休憩前に引き続き、会議を開きます。 日程第二 会期の件 議長は、今期国会の会期を百五十日間といたしたいと存じます。 会期を百五十日間とすることに賛成の諸君の起立を求めます。 〔賛成者起立〕",
+   "kind": "speech",
+   "meeting": "本会議 第1号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00120260218/8",
+   "speechId": "122115254X00120260218_008"
+  },
+  {
+   "chars": 44,
+   "date": "2026-02-18",
+   "excerpt": "これにて休憩いたします。 午前十時六分休憩 ─────・───── 午後二時五十一分開議",
+   "kind": "speech",
+   "meeting": "本会議 第1号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00120260218/7",
+   "speechId": "122115254X00120260218_007"
+  },
+  {
+   "chars": 1566,
+   "date": "2026-02-18",
+   "excerpt": "過半数と認めます。 よって、本特別委員会を設置することに決しました。 本院規則第三十条の規定により、議長は、議席に配付いたしました氏名表のとおり特別委員を指名いたします。 ───────────── 議長の指名した委員は左のとおり 〇災害対策及び東日本大震災復興特別委員 石井 浩郎君 いんどう周作君 加田 裕之君 かまやち敏君 見坂 茂範君 小林孝一郎君 櫻井 充君 橋本 聖子君 星 北斗君 宮本",
+   "kind": "speech",
+   "meeting": "本会議 第1号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00120260218/6",
+   "speechId": "122115254X00120260218_006"
+  },
+  {
+   "chars": 145,
+   "date": "2026-02-18",
+   "excerpt": "御異議ないと認めます。 よって、沖縄・北方問題及び地方に関する特別委員会外五特別委員会を設置することに決しました。 次に、政府開発援助及び国際協力・人道支援等に関する特別委員会を設置することについて採決をいたします。 本特別委員会を設置することに賛成の諸君の起立を求めます。 〔賛成者起立〕",
+   "kind": "speech",
+   "meeting": "本会議 第1号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00120260218/5",
+   "speechId": "122115254X00120260218_005"
+  },
+  {
+   "chars": 225,
+   "date": "2026-02-18",
+   "excerpt": "過半数と認めます。 よって、本特別委員会を設置することに決しました。 次に、沖縄・北方問題及び地方に関する特別委員会、政治改革に関する特別委員会、北朝鮮による拉致問題等に関する特別委員会、デジタル社会の形成及び人工知能の活用等に関する特別委員会、消費者問題に関する特別委員会並びにこども・子育て・若者活躍に関する特別委員会を設置することについて採決をいたします。 以上の六特別委員会を設置することに御",
+   "kind": "speech",
+   "meeting": "本会議 第1号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00120260218/4",
+   "speechId": "122115254X00120260218_004"
+  },
+  {
+   "chars": 643,
+   "date": "2026-02-18",
+   "excerpt": "この際、特別委員会の設置についてお諮りいたします。 災害及び東日本大震災からの復興に関する総合的な対策を樹立するため、委員三十名から成る災害対策及び東日本大震災復興特別委員会を、 沖縄及び北方問題並びに地方の活性化等に関する総合的な対策を樹立するため、委員二十名から成る沖縄・北方問題及び地方に関する特別委員会を、 政治改革に関する調査のため、委員三十五名から成る政治改革に関する特別委員会を、 北朝",
+   "kind": "speech",
+   "meeting": "本会議 第1号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00120260218/3",
+   "speechId": "122115254X00120260218_003"
+  },
+  {
+   "chars": 78,
+   "date": "2026-02-18",
+   "excerpt": "この際、新たに議席に着かれました議員を御紹介いたします。 議席第百八十四番、比例代表選出議員、木村義雄君。 〔木村義雄君起立、拍手〕 ─────・─────",
+   "kind": "speech",
+   "meeting": "本会議 第1号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00120260218/2",
+   "speechId": "122115254X00120260218_002"
+  },
+  {
+   "chars": 103,
+   "date": "2026-02-18",
+   "excerpt": "第二百二十一回国会は本日召集されました。 これより会議を開きます。 日程第一 議席の指定 議長は、本院規則第十四条の規定により、諸君の議席をただいまの仮議席のとおりに指定いたします。 ─────・─────",
+   "kind": "speech",
+   "meeting": "本会議 第1号",
+   "position": "議長",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00120260218/1",
+   "speechId": "122115254X00120260218_001"
   }
  ]
 }
