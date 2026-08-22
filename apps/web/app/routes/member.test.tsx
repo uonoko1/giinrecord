@@ -111,12 +111,24 @@ describe("MemberPage フッター", () => {
 });
 
 describe("meta()", () => {
-  it("title は「{氏名} ・ 政治記録」、description に所属", () => {
-    const tags = routeMeta({ data: { detail, meta } } as Parameters<typeof routeMeta>[0]);
-    expect(tags).toContainEqual({ title: "藤川 政人 ・ 政治記録" });
+  const args = { data: { detail, meta }, location: { pathname: "/members/m_1" } } as unknown as Parameters<typeof routeMeta>[0];
+  it("title は「{氏名}（{院}・{選挙区}）の投票記録 ・ 政治記録」（検索語を含み、評価語なし）", () => {
+    const tags = routeMeta(args);
+    expect(tags).toContainEqual({ title: "藤川 政人（参議院・愛知）の投票記録 ・ 政治記録" });
     expect(tags).toContainEqual({
       name: "description",
       content: expect.stringContaining("自由民主党・無所属の会"),
     });
+  });
+  it("canonical と OGP（article）を持つ", () => {
+    const tags = routeMeta(args);
+    expect(tags).toContainEqual({ tagName: "link", rel: "canonical", href: "/members/m_1" });
+    expect(tags).toContainEqual({ property: "og:type", content: "article" });
+    expect(tags).toContainEqual({ property: "og:url", content: "/members/m_1" });
+  });
+  it("data が無ければサイト名だけ", () => {
+    expect(routeMeta({ data: undefined, location: { pathname: "/members/x" } } as unknown as Parameters<typeof routeMeta>[0])).toEqual([
+      { title: "政治記録" },
+    ]);
   });
 });
