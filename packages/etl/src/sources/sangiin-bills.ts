@@ -139,15 +139,15 @@ export function matchBillResults(
   const results = new Map<string, { decision: string; sourceUrl: string }>();
   const unmatched: UnmatchedBill[] = [];
   for (const rc of rollCalls) {
-    const found = unique(byId.get(rc.id)) ?? unique(byTitle.get(normalizeTitle(rc.title)));
+    const found = unanimous(byId.get(rc.id)) ?? unanimous(byTitle.get(normalizeTitle(rc.title)));
     if (found) results.set(rc.id, { decision: found.decision, sourceUrl: found.sourceUrl });
     else unmatched.push({ rollCallId: rc.id, title: rc.title, sourceUrl: rc.sourceUrl });
   }
   return { results, unmatched };
 }
 
-/** 候補が1件、または全候補の議決が同じならそれ。割れていれば undefined。 */
-function unique(cands: BillDecision[] | undefined): BillDecision | undefined {
+/** 候補が1件、または全候補の議決が同じならそれ。割れていれば undefined（どれかを選ぶ＝推測になる）。 */
+function unanimous(cands: BillDecision[] | undefined): BillDecision | undefined {
   if (!cands?.length) return undefined;
   return cands.every((c) => c.decision === cands[0].decision) ? cands[0] : undefined;
 }
@@ -166,6 +166,7 @@ function cellAfter(scope: HTMLElement, header: string): string | undefined {
   return rowOf(scope, header)?.querySelector("td")?.text;
 }
 
+/** NBSP（空欄の &nbsp;）・全角空白を含む空白の連続を1つにして trim。 */
 function squash(s: string): string {
-  return s.replace(/ /g, " ").replace(/[\s　]+/g, " ").trim();
+  return s.replace(/[\s\u00a0　]+/g, " ").trim();
 }
