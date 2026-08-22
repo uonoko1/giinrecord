@@ -477,6 +477,15 @@
    "value": "賛成"
   },
   {
+   "billId": "221-参法-9",
+   "date": "2026-06-17",
+   "kind": "bill",
+   "role": "提出者",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/221/meisai/m221100221009.htm",
+   "submitterText": "神谷宗幣君 外3名",
+   "title": "外国人総合政策庁の設置等による外国人政策の総合的な推進に関する法律案"
+  },
+  {
    "date": "2026-06-12",
    "groupValue": "賛成",
    "kind": "vote",
@@ -977,6 +986,33 @@
    "value": "反対"
   },
   {
+   "billId": "221-参法-7",
+   "date": "2026-04-02",
+   "kind": "bill",
+   "role": "提出者",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/221/meisai/m221100221007.htm",
+   "submitterText": "神谷宗幣君 外3名",
+   "title": "刑法の一部を改正する法律案"
+  },
+  {
+   "billId": "221-参法-6",
+   "date": "2026-04-02",
+   "kind": "bill",
+   "role": "提出者",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/221/meisai/m221100221006.htm",
+   "submitterText": "神谷宗幣君 外4名",
+   "title": "特定秘密の保護に関する法律及び重要経済安保情報の保護及び活用に関する法律の一部を改正する法律案"
+  },
+  {
+   "billId": "221-参法-5",
+   "date": "2026-04-02",
+   "kind": "bill",
+   "role": "提出者",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/221/meisai/m221100221005.htm",
+   "submitterText": "神谷宗幣君 外4名",
+   "title": "防諜に関する施策の推進に関する法律案"
+  },
+  {
    "date": "2026-03-31",
    "groupValue": "賛成",
    "kind": "vote",
@@ -1346,6 +1382,15 @@
    "speechId": "121915254X01020251216_008"
   },
   {
+   "billId": "219-参法-6",
+   "date": "2025-12-09",
+   "kind": "bill",
+   "role": "提出者",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/219/meisai/m219100219006.htm",
+   "submitterText": "神谷宗幣君 外3名",
+   "title": "新型コロナウイルス感染症対策及びｍＲＮＡワクチン施策等検証委員会の設置等に関する法律案"
+  },
+  {
    "chars": 3456,
    "date": "2025-12-08",
    "excerpt": "参政党の神谷宗幣です。 会派を代表して、補正予算について質問をいたします。 まず、補正予算とは、年度当初には予想できなかった支出に対応するための仕組みであり、災害対応や物価高対策など、本来、緊急不可避の支出に限定されるべきものです。しかし、今回の補正には、危機管理投資、成長投資、防衛力・外交力強化、ＧＸ推進、基金造成など、本来当初予算で議論すべき中長期的な政策が数多く含まれています。 今回、政府が",
@@ -1555,6 +1600,24 @@
    "value": "反対"
   },
   {
+   "billId": "219-参法-5",
+   "date": "2025-11-25",
+   "kind": "bill",
+   "role": "提出者",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/219/meisai/m219100219005.htm",
+   "submitterText": "神谷宗幣君 外4名",
+   "title": "特定秘密の保護に関する法律及び重要経済安保情報の保護及び活用に関する法律の一部を改正する法律案"
+  },
+  {
+   "billId": "219-参法-4",
+   "date": "2025-11-25",
+   "kind": "bill",
+   "role": "提出者",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/219/meisai/m219100219004.htm",
+   "submitterText": "神谷宗幣君 外4名",
+   "title": "防諜に関する施策の推進に関する法律案"
+  },
+  {
    "chars": 7341,
    "date": "2025-11-06",
    "excerpt": "参政党の神谷宗幣です。 会派を代表して、高市総理の所信表明に対して質問をいたします。 高市総理、第百四代内閣総理大臣就任、誠におめでとうございます。就任早々、トランプ大統領との会談を始めとする様々な外交活動に続いての国会での質疑、大変かと思いますが、よろしくお願いいたします。 本日は、党を代表して本会議場で質問に立つ初めての機会となりますので、冒頭、我々参政党のスタンスを説明してから質問に入りたい",
@@ -1562,6 +1625,15 @@
    "meeting": "本会議 第4号",
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/121915254X00420251106/12",
    "speechId": "121915254X00420251106_012"
+  },
+  {
+   "billId": "219-参法-3",
+   "date": "2025-10-27",
+   "kind": "bill",
+   "role": "提出者",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/219/meisai/m219100219003.htm",
+   "submitterText": "神谷宗幣君 外3名",
+   "title": "刑法の一部を改正する法律案"
   },
   {
    "date": "2025-06-20",

@@ -1303,6 +1303,24 @@
    "value": "反対"
   },
   {
+   "billId": "217-参法-3",
+   "date": "2025-03-11",
+   "kind": "bill",
+   "role": "提出者",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/217/meisai/m217100217003.htm",
+   "submitterText": "井上哲士君",
+   "title": "政党助成法を廃止する法律案"
+  },
+  {
+   "billId": "217-参法-2",
+   "date": "2025-03-11",
+   "kind": "bill",
+   "role": "提出者",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/217/meisai/m217100217002.htm",
+   "submitterText": "井上哲士君",
+   "title": "政治資金規正法の一部を改正する法律案"
+  },
+  {
    "date": "2025-02-19",
    "groupValue": "賛成",
    "kind": "vote",

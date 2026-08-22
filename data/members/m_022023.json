@@ -338,6 +338,15 @@
    "value": "賛成"
   },
   {
+   "billId": "221-参法-10",
+   "date": "2026-06-23",
+   "kind": "bill",
+   "role": "提出者",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/221/meisai/m221100221010.htm",
+   "submitterText": "高木真理君 外1名",
+   "title": "児童扶養手当法の一部を改正する等の法律案"
+  },
+  {
    "date": "2026-06-19",
    "groupValue": "賛成",
    "kind": "vote",
@@ -2023,6 +2032,15 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0523-v001.htm",
    "title": "日程第１　海洋法に関する国際連合条約に基づくいずれの国の管轄にも属さない区域における海洋の生物の多様性の保全及び持続可能な利用に関する協定の締結について承認を求めるの件（衆議院送付）",
    "value": "賛成"
+  },
+  {
+   "billId": "217-参法-8",
+   "date": "2025-05-23",
+   "kind": "bill",
+   "role": "提出者",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/217/meisai/m217100217008.htm",
+   "submitterText": "高木真理君 外2名",
+   "title": "児童の朝の居場所の確保を図るための措置等に関する法律案"
   },
   {
    "date": "2025-05-21",

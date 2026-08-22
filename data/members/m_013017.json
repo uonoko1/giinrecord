@@ -2385,6 +2385,15 @@
    "value": "反対"
   },
   {
+   "billId": "217-参法-6",
+   "date": "2025-04-22",
+   "kind": "bill",
+   "role": "提出者",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/217/meisai/m217100217006.htm",
+   "submitterText": "吉良よし子君",
+   "title": "大深度地下の公共的使用に関する特別措置法の廃止に関する措置等に関する法律案"
+  },
+  {
    "date": "2025-04-18",
    "groupValue": "賛成",
    "kind": "vote",

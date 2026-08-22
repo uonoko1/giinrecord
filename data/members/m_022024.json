@@ -1227,6 +1227,15 @@
    "value": "賛成"
   },
   {
+   "billId": "221-参法-1",
+   "date": "2026-03-19",
+   "kind": "bill",
+   "role": "提出者",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/221/meisai/m221100221001.htm",
+   "submitterText": "竹詰仁君 外1名",
+   "title": "政党交付金の交付を受ける政党の組織及び管理運営の透明性及び公正性の向上を図るための制度の導入に関する法律案"
+  },
+  {
    "date": "2025-12-16",
    "groupValue": "賛成",
    "kind": "vote",
@@ -1335,6 +1344,15 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/219/219-1216-v001.htm",
    "title": "日程第１　令和七年度一般会計補正予算（第１号）",
    "value": "賛成"
+  },
+  {
+   "billId": "219-参法-7",
+   "date": "2025-12-12",
+   "kind": "bill",
+   "role": "提出者",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/219/meisai/m219100219007.htm",
+   "submitterText": "竹詰仁君 外1名",
+   "title": "政党交付金の交付を受ける政党の組織及び管理運営の透明性及び公正性の向上を図るための制度の導入に関する法律案"
   },
   {
    "date": "2025-12-05",

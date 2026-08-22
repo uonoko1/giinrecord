@@ -1568,6 +1568,24 @@
    "value": "賛成"
   },
   {
+   "billId": "217-参法-11",
+   "date": "2025-06-18",
+   "kind": "bill",
+   "role": "提出者",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/217/meisai/m217100217011.htm",
+   "submitterText": "石橋通宏君 外2名",
+   "title": "出入国管理及び難民認定法及び外国人の技能実習の適正な実施及び技能実習生の保護に関する法律の一部を改正する法律の一部を改正する法律案"
+  },
+  {
+   "billId": "217-参法-10",
+   "date": "2025-06-18",
+   "kind": "bill",
+   "role": "提出者",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/217/meisai/m217100217010.htm",
+   "submitterText": "石橋通宏君 外2名",
+   "title": "出入国管理及び難民認定法の一部を改正する法律案"
+  },
+  {
    "date": "2025-06-13",
    "groupValue": "賛成",
    "kind": "vote",
@@ -2306,6 +2324,16 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0425-v001.htm",
    "title": "日程第１　船員法等の一部を改正する法律案（内閣提出、衆議院送付）",
    "value": "賛成"
+  },
+  {
+   "billId": "217-参法-7",
+   "date": "2025-04-25",
+   "kind": "bill",
+   "role": "提出者",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/217/meisai/m217100217007.htm",
+   "status": "参議院 厚生労働委員会 未了",
+   "submitterText": "石橋通宏君 外2名",
+   "title": "労働安全衛生法及び特定受託事業者に係る取引の適正化等に関する法律の一部を改正する法律案"
   },
   {
    "date": "2025-04-23",
