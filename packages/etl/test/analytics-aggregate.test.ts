@@ -10,7 +10,7 @@ import { dirname, resolve } from "node:path";
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, "../../..");
 const script = resolve(root, "deploy/analytics/aggregate.sh");
-const fixture = readFileSync(resolve(here, "fixtures/analytics-access.log"), "utf8");
+const fixture = readFileSync(resolve(here, "fixtures/analytics-access.log.txt"), "utf8");
 
 function run(date: string, input = fixture) {
   const r = spawnSync("bash", [script, date], { input, encoding: "utf8" });

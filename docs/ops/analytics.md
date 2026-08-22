@@ -79,5 +79,5 @@ ssh sakura-vps 'cat ~/analytics/2026-09-*.tsv | awk -F"\t" "\$1!=\"date\"{r[\$3]
 
 ## 変えるとき
 
-- 集計ロジックは `packages/etl/test/analytics-aggregate.test.ts` を先に直す（フィクスチャ `packages/etl/test/fixtures/analytics-access.log`）。
+- 集計ロジックは `packages/etl/test/analytics-aggregate.test.ts` を先に直す（フィクスチャ `packages/etl/test/fixtures/analytics-access.log.txt`）。
 - 取る項目を増やすなら、/about の「計測について」も同時に更新する。IP・UA・Cookie を足すことはしない。
