@@ -38,7 +38,7 @@ export default function Members({ data = bundled }: { data?: Dataset }) {
   const sections = useMemo(() => groupByKanaRow(hits), [hits]);
 
   return (
-    <main className="page">
+    <main className="page members">
       <header className="cover">
         <div className="cover__brand">
           <Link to="/">政治記録</Link>
