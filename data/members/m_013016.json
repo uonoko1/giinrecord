@@ -1,4 +1,5 @@
 {
+ "current": true,
  "house": "sangiin",
  "id": "m_013016",
  "kana": "きむら よしお",
@@ -10,7 +11,8 @@
    "from": "",
    "group": "自由民主党・無所属の会",
    "house": "sangiin",
-   "sessionFrom": 221,
+   "sessionFrom": 219,
+   "sessionTo": 221,
    "to": "2028-07-25"
   }
  ],
