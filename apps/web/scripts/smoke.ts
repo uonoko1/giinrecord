@@ -1,12 +1,14 @@
 /**
  * Build smoke test: run after `pnpm build` (cwd: apps/web).
  * Walks build/client, asserts the pages data/ promised exist and every internal
- * href resolves to a file or dir/index.html, and sitemap.xml lists exactly the built pages.
- * Exits non-zero on any failure.
+ * href resolves to a file or dir/index.html, that sitemap.xml lists exactly the built pages,
+ * and that data/data-archive.zip exists with one entry per data/ file (+ README) within
+ * ARCHIVE_MAX_BYTES. Exits non-zero on any failure.
  * Usage: pnpm --filter web smoke   (BUILD_DIR / SEIJI_DATA_DIR override the defaults)
  */
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
+import { ARCHIVE_NAME, checkArchive, collectDataFiles } from "../app/lib/archive";
 import { defaultDataDir, readRollCallIndex } from "../app/lib/data-files";
 import { checkBuild, checkSitemap, formatReport, type BuildFiles, type ExpectedData } from "../app/lib/smoke";
 
@@ -42,8 +44,17 @@ const files = await listBuild(buildDir);
 const data = await readExpected(dataDir);
 const pages = checkBuild(files, data);
 const sitemap = checkSitemap(files, data);
-const report = { ...pages, failures: [...pages.failures, ...sitemap.failures] };
+
+/** Upper bound for the bulk zip. data/ is ~41 MB raw (5 sessions) and deflates to a few MB; raise deliberately when sessions grow. */
+const ARCHIVE_MAX_BYTES = Number(process.env.ARCHIVE_MAX_BYTES ?? 50 * 1024 * 1024);
+const archivePath = path.join(buildDir, "data", ARCHIVE_NAME);
+const archive = files.has(`data/${ARCHIVE_NAME}`) ? await readFile(archivePath) : undefined;
+const dataFileCount = (await collectDataFiles(dataDir)).length;
+const archiveFailures = checkArchive(archive, { dataFileCount, maxBytes: ARCHIVE_MAX_BYTES });
+
+const report = { ...pages, failures: [...pages.failures, ...sitemap.failures, ...archiveFailures] };
 console.log(`smoke: build=${buildDir} data=${dataDir} members=${data.memberIds?.length ?? "none"} rollcalls=${data.rollCalls?.length ?? "none"}`);
 console.log(`smoke: sitemap.xml ${sitemap.checkedUrls} urls checked`);
+console.log(`smoke: archive=${archivePath} size=${archive?.length ?? "missing"} dataFiles=${dataFileCount} max=${ARCHIVE_MAX_BYTES}`);
 console.log(formatReport(report));
 process.exit(report.failures.length === 0 ? 0 : 1);

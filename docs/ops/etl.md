@@ -48,3 +48,8 @@ gh run watch                                   # 進捗
 - シェル断片はローカルで一度実行して確かめる（`${PR:+...}${PR:-...}` の二重展開のような罠がある）。
 - `run` でパイプ（`... | tee`）を使うステップには `shell: bash` を付ける。`shell:` 未指定の既定は `bash -e {0}` で pipefail が無く、`bash -e -c 'false | tee /dev/null; echo $?'` → `0` のように左側の失敗が握りつぶされる。`shell: bash` なら `bash --noprofile --norc -eo pipefail {0}` になる（`packages/etl/test/workflow-etl.test.ts` が回帰テスト）。
 - 本番で試すには `workflow_dispatch` で流し、Summary と data PR、Deploy run の 3 つを確認する。
+
+## データ一括アーカイブ（`/data/data-archive.zip`、#49）
+- `pnpm --filter web build` の最後に `apps/web/scripts/build-archive.ts` が `data/` 全体（`LICENSE` 含む）＋ `README.txt`（ライセンス・帰属表示・出典・取得時刻）を `build/client/data/data-archive.zip` に書く。Deploy は `build/client/` を rsync するので自動で配布される。
+- 再現可能：エントリはパスのバイト順、mtime は 1980-01-01 固定、deflate level 9。同じ `data/` からは同じバイト列（sha256 一致）。
+- `pnpm --filter web smoke` が、zip の存在・エントリ数（data/ のファイル数 + README）・`LICENSE`/`README.txt` の同梱・サイズ上限（既定 50 MiB、`ARCHIVE_MAX_BYTES` で上書き）を検査する。上限を超えたら意図して上げる（回次が増えたとき）。

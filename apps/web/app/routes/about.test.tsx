@@ -57,8 +57,18 @@ describe("About", () => {
     renderAbout();
     const repo = "https://github.com/uonoko1/seiji-kiroku";
     expect(screen.getByRole("link", { name: "ソースコード" })).toHaveAttribute("href", repo);
-    expect(screen.getByRole("link", { name: "データ一括取得" })).toHaveAttribute("href", `${repo}/tree/main/data`);
     expect(screen.getByRole("link", { name: "誤りを報告" })).toHaveAttribute("href", `${repo}/issues/new`);
+  });
+
+  it("データ一括取得は自サイトの zip（/data/data-archive.zip）を指し、ライセンスを添える（#49）", () => {
+    renderAbout();
+    const link = screen.getByRole("link", { name: "データ一括取得" });
+    expect(link).toHaveAttribute("href", "/data/data-archive.zip");
+    expect(link).toHaveAttribute("download");
+    const section = screen.getByRole("region", { name: "検証する" });
+    expect(section).toHaveTextContent("CC BY 4.0");
+    expect(section).toHaveTextContent("政治記録");
+    expect(screen.getByRole("link", { name: "GitHub のデータ" })).toHaveAttribute("href", "https://github.com/uonoko1/seiji-kiroku/tree/main/data");
   });
 
   it("データが無くても落ちない", () => {
