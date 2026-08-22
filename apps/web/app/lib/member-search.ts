@@ -71,18 +71,24 @@ export interface MemberFilter {
   district?: string;
 }
 
-/** 全角／半角スペースを取り除く */
-function squash(s: string): string {
-  return s.replace(/[\s　]+/g, "");
+/**
+ * 照合用の正規化。NFKC（半角カナ→全角、全角英数→半角）→ カタカナ→ひらがな → 空白除去。
+ * 入力側と氏名・かな側の両方に同じ関数をかける。
+ */
+export function normalizeForSearch(s: string): string {
+  return s
+    .normalize("NFKC")
+    .replace(/[ァ-ヶ]/g, (ch) => String.fromCodePoint((ch.codePointAt(0) ?? 0) - 0x60))
+    .replace(/[\s　]+/g, "");
 }
 
 export function filterMembers(members: MemberSummary[], filter: MemberFilter): MemberSummary[] {
-  const q = squash(filter.query ?? "");
+  const q = normalizeForSearch(filter.query ?? "");
   return members.filter(
     (m) =>
       (!filter.group || m.group === filter.group) &&
       (!filter.district || m.district === filter.district) &&
-      (q === "" || squash(m.name).includes(q) || squash(m.kana).includes(q)),
+      (q === "" || normalizeForSearch(m.name).includes(q) || normalizeForSearch(m.kana).includes(q)),
   );
 }
 

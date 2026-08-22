@@ -11,3 +11,5 @@ dist/
 # ETL working files (raw HTML cache). Normalized data under data/ IS committed.
 packages/etl/.cache/
 .claude/
+# React Router の生成型（ビルドのたびに書き換わる）
+apps/web/.react-router/

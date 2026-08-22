@@ -1,5 +1,6 @@
 import { Link } from "react-router";
-import { type Dataset, dataset as bundled, formatDateTime, REPO_URL } from "../lib/dataset";
+import { type Dataset, dataset as bundled, REPO_URL } from "../lib/dataset";
+import { formatDateTime } from "../lib/format";
 import "../styles/pages.css";
 
 export function meta() {
