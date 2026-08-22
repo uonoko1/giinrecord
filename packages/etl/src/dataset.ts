@@ -6,14 +6,15 @@ import type { Aggregated } from "./aggregate.ts";
 import { stableJson } from "./json.ts";
 import type { Unmatched } from "./match-votes.ts";
 import type { UnmatchedSpeech } from "./match-speeches.ts";
+import type { UnmatchedBillProposer } from "./match-bills.ts";
 import type { UnmatchedBill } from "./sources/sangiin-bills.ts";
 import type { UnmatchedGroup } from "./sources/sangiin-members.ts";
 
 /** `data/` に書く一式（docs/DATA_CONTRACT.md）。 */
 export interface Dataset extends Aggregated {
   rollCallDetails: RollCall[];
-  /** 名寄せできなかった票（rollCallId）と発言（speechId）。 */
-  unmatched: (Unmatched | UnmatchedSpeech)[];
+  /** 名寄せできなかった票（rollCallId）・発言（speechId）・参法の発議者（billId）。 */
+  unmatched: (Unmatched | UnmatchedSpeech | UnmatchedBillProposer)[];
   /** 議案情報の審議結果と突合できなかった採決（得票のみの result になる）。 */
   unmatchedBills: UnmatchedBill[];
   /** 対応表（sangiin-groups.ts）に無い会派略称。group には原文のまま入る（Issue #36）。 */
@@ -68,6 +69,8 @@ const SOURCE_HOST = /(^|\.)(sangiin\.go\.jp|shugiin\.go\.jp|ndl\.go\.jp)$/;
 const VOTE_VALUES = new Set(["賛成", "反対", "投票なし"]);
 /** result は必ず得票を含む: 「賛成 N・反対 N」または「<審議結果の原文>（賛成 N・反対 N）」。可否だけの表示にはしない。 */
 const RESULT_FORM = /^(?:[^（）]+（賛成 \d+・反対 \d+）|賛成 \d+・反対 \d+)$/;
+/** bill 行の sourceUrl は参院 議案情報の議案詳細ページ（提出者・審議状況の一次資料）。 */
+const BILL_SOURCE = /^https:\/\/www\.sangiin\.go\.jp\/japanese\/joho1\/kousei\/gian\/\d+\/meisai\/m\d+\.htm$/;
 
 /**
  * docs/DATA_CONTRACT.md の不変条件を `dir` 上のファイルに対して検証し、違反を文字列で返す（空なら合格）。
@@ -108,10 +111,15 @@ export async function validateDataset(dir: string): Promise<string[]> {
     checkSource(rel, d);
     let votes = 0;
     let speeches = 0;
+    let bills = 0;
     for (let i = 0; i < d.timeline.length; i++) {
       const e = d.timeline[i];
       checkSource(rel, e, ` timeline[${i}]`);
       if (e.kind === "speech") speeches++;
+      if (e.kind === "bill") {
+        bills++;
+        if (!BILL_SOURCE.test(e.sourceUrl)) v.push(`${rel} timeline[${i}]: bill sourceUrl must be the 議案ページ (kousei/gian/{session}/meisai/), got ${e.sourceUrl}`);
+      }
       if (e.kind === "vote") {
         votes++;
         if (!VOTE_VALUES.has(e.value)) v.push(`${rel} timeline[${i}]: vote value must be 賛成/反対/投票なし, got ${e.value}`);
@@ -120,6 +128,7 @@ export async function validateDataset(dir: string): Promise<string[]> {
     }
     voteCounts.set(m.id, votes);
     if (m.counts.rollcalls !== votes) v.push(`members/index.json ${m.id}: counts.rollcalls ${m.counts.rollcalls} !== timeline votes ${votes}`);
+    if (m.counts.bills !== bills) v.push(`members/index.json ${m.id}: counts.bills ${m.counts.bills} !== timeline bills ${bills}`);
     if (m.counts.speeches !== speeches) v.push(`members/index.json ${m.id}: counts.speeches ${m.counts.speeches} !== timeline speeches ${speeches}`);
   }
 

@@ -2,7 +2,7 @@ import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import type { RollCall } from "@seiji-kiroku/shared";
-import { matchBillResults, normalizeTitle, parseBill, parseBillList, type BillDecision } from "../src/sources/sangiin-bills.ts";
+import { matchBillResults, normalizeTitle, parseBill, parseBillList, parseProposers, type BillDecision } from "../src/sources/sangiin-bills.ts";
 
 const fixture = (name: string) => readFileSync(new URL(`./fixtures/${name}.htm`, import.meta.url), "utf-8");
 const GIAN = "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/221";
@@ -62,6 +62,63 @@ describe("実HTML: 議案詳細ページ", () => {
 
   test("件名が取れなければ例外", () => {
     assert.throws(() => parseBill("<html><body></body></html>", `${GIAN}/meisai/x.htm`), /件名/);
+  });
+
+  test("内閣提出法律案: 発議者は無く、回次・番号・提出日・審議状況（公布済み）が取れる", () => {
+    const bill = parseBill(fixture("meisai-m221080221001"), `${GIAN}/meisai/m221080221001.htm`);
+    assert.equal(bill.id, "221-閣法-1");
+    assert.equal(bill.submittedOn, "2026-02-20");
+    assert.equal(bill.proposerText, undefined);
+    assert.deepEqual(bill.proposers, []);
+    assert.equal(bill.status, "公布（法律第13号）");
+  });
+});
+
+describe("実HTML: 参法の議案詳細ページ（発議者）", () => {
+  test("発議者が複数（「打越さく良君 外9名」）: 名前は筆頭の1人だけが原文で載る。外9名の氏名はページに無いので推測しない", () => {
+    const url = `${GIAN}/meisai/m221100221016.htm`;
+    const bill = parseBill(fixture("meisai-m221100221016"), url);
+    assert.equal(bill.id, "221-参法-16");
+    assert.equal(bill.category, "法律案（参法）");
+    assert.equal(bill.title, "国による全ての水俣病の被害者の救済の実現に向けた給付金等の支給に係る制度の創設に関する法律案");
+    assert.equal(bill.submittedOn, "2026-07-09");
+    assert.equal(bill.proposerText, "打越さく良君 外9名");
+    assert.deepEqual(bill.proposers, ["打越さく良"]);
+    assert.equal(bill.status, undefined);
+    assert.deepEqual(bill.plenary, []);
+  });
+
+  test("発議者が1人（「原田秀一君」）: 外N名が無い", () => {
+    const bill = parseBill(fixture("meisai-m221100221017"), `${GIAN}/meisai/m221100221017.htm`);
+    assert.equal(bill.id, "221-参法-17");
+    assert.equal(bill.submittedOn, "2026-07-10");
+    assert.equal(bill.proposerText, "原田秀一君");
+    assert.deepEqual(bill.proposers, ["原田秀一"]);
+    assert.equal(bill.status, undefined);
+  });
+
+  test("委員会で「未了」: 審議状況は段階名＋原文", () => {
+    const bill = parseBill(fixture("meisai-m221100221020"), `${GIAN}/meisai/m221100221020.htm`);
+    assert.equal(bill.proposerText, "奥村祥大君 外1名");
+    assert.equal(bill.status, "参議院 沖縄・北方問題及び地方に関する特別委員会 未了");
+  });
+
+  test("衆法の発議者（衆議院議員）も原文のまま取れる（名寄せ側で参法だけを使う）", () => {
+    const bill = parseBill(fixture("meisai-m221090221025"), `${GIAN}/meisai/m221090221025.htm`);
+    assert.equal(bill.id, "221-衆法-25");
+    assert.equal(bill.proposerText, "西岡義高君 外1名");
+    assert.deepEqual(bill.proposers, ["西岡義高"]);
+    assert.equal(bill.status, "衆議院本会議 否決");
+  });
+});
+
+describe("parseProposers: 発議者欄の原文から氏名を取り出す", () => {
+  test("「君」を除き、「外N名」は氏名ではないので含めない", () => {
+    assert.deepEqual(parseProposers("打越さく良君 外9名"), ["打越さく良"]);
+    assert.deepEqual(parseProposers("原田秀一君"), ["原田秀一"]);
+  });
+  test("空欄なら空", () => {
+    assert.deepEqual(parseProposers(""), []);
   });
 });
 

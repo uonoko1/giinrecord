@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import type { Member, RollCall, Speech } from "@seiji-kiroku/shared";
 import { buildDataset, groupMajority, summarizeRollCall } from "../src/aggregate.ts";
 import { matchVotes } from "../src/match-votes.ts";
+import type { MatchedBill } from "../src/match-bills.ts";
 import { parseRollCall } from "../src/sources/sangiin-votes.ts";
 import { parseMemberList } from "../src/sources/sangiin-members.ts";
 
@@ -204,5 +205,43 @@ describe("実データ: 第221回", () => {
       const g = rc.groups.find((g) => g.group === rc.votes.find((v) => v.memberId === d.id)!.group)!;
       assert.equal(e.groupValue, g.yes > g.no ? "賛成" : g.yes < g.no ? "反対" : undefined);
     }
+  });
+});
+
+const matchedBill = (memberId: string, billId: string, date: string, extra: Partial<MatchedBill> = {}): MatchedBill => ({
+  memberId, billId, date, title: `法案 ${billId}`, role: "提出者",
+  sourceUrl: `https://www.sangiin.go.jp/japanese/joho1/kousei/gian/221/meisai/m${billId.replace(/\D/g, "")}.htm`, ...extra,
+});
+
+describe("buildDataset: bill（提出法案）を timeline に入れる", () => {
+  const members = [member("m_1", "一 郎"), member("m_2", "二 郎", "立憲")];
+  const rcs = [rollCall("221-0605-v001", "2026-06-05", [vote("m_1", "賛成")])];
+  const bills = [
+    matchedBill("m_1", "221-参法-16", "2026-06-05", { submitterText: "一郎君 外9名", status: "参議院 環境委員会 未了" }),
+    matchedBill("m_1", "221-参法-3", "2026-04-01"),
+  ];
+  const ds = buildDataset(members, rcs, new Map(), [], bills);
+
+  test("bill エントリは提出日・役割・原文・審議状況・議案ページの URL を持ち、無いキーは省く", () => {
+    const m1 = ds.details.find((d) => d.id === "m_1")!;
+    assert.deepEqual(m1.timeline.filter((e) => e.kind === "bill"), [
+      { kind: "bill", date: "2026-06-05", billId: "221-参法-16", title: "法案 221-参法-16", role: "提出者", submitterText: "一郎君 外9名", status: "参議院 環境委員会 未了",
+        sourceUrl: "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/221/meisai/m22116.htm" },
+      { kind: "bill", date: "2026-04-01", billId: "221-参法-3", title: "法案 221-参法-3", role: "提出者",
+        sourceUrl: "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/221/meisai/m2213.htm" },
+    ]);
+  });
+
+  test("同日は vote → bill の順、全体は日付降順", () => {
+    const m1 = ds.details.find((d) => d.id === "m_1")!;
+    assert.deepEqual(m1.timeline.map((e) => `${e.kind}:${e.date}`), ["vote:2026-06-05", "bill:2026-06-05", "bill:2026-04-01"]);
+  });
+
+  test("counts.bills は timeline の bill 数", () => {
+    assert.deepEqual(ds.index.map((m) => [m.id, m.counts.bills]), [["m_1", 2], ["m_2", 0]]);
+  });
+
+  test("名簿にない memberId の bill は例外", () => {
+    assert.throws(() => buildDataset(members, [], new Map(), [], [matchedBill("m_9", "221-参法-1", "2026-04-01")]), /m_9/);
   });
 });

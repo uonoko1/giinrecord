@@ -34,12 +34,17 @@ export type VoteEntry = {
   groupValue?: VoteValue;
   sourceUrl: string;
 };
+export type BillRole = "提出者" | "賛成者";
 export type BillEntry = {
   kind: "bill";
+  /** 参議院への提出日（議案ページ「提出日」）。 */
   date: string;
   billId: string;
   title: string;
-  role: "提出者" | "賛成者";
+  role: BillRole;
+  /** 議案ページ「発議者」欄の原文（例「打越さく良君 外9名」）。外N名の氏名は公表されていない。 */
+  submitterText?: string;
+  /** 審議状況（議案ページの経過のうち最新のものを「段階名 議決の原文」で）。 */
   status?: string;
   sourceUrl: string;
 };
