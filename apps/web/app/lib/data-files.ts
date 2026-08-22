@@ -1,8 +1,9 @@
 /**
  * Build-time readers for `data/` (see docs/DATA_CONTRACT.md).
  * Only runs in Node (prerender / build-time loaders); never shipped to the browser.
- * Every reader returns an empty value instead of throwing when `data/` is absent,
- * so the site still builds before the ETL has produced anything.
+ * Every reader returns an empty value when the file is absent (ENOENT), so the site
+ * still builds before the ETL has produced anything. Any other failure (malformed JSON,
+ * permission errors) throws: a broken `data/` must fail the build, not silently drop pages.
  */
 import { readFile } from "node:fs/promises";
 import path from "node:path";
@@ -14,11 +15,14 @@ export function defaultDataDir(): string {
 }
 
 async function readJson<T>(file: string): Promise<T | null> {
+  let text: string;
   try {
-    return JSON.parse(await readFile(file, "utf8")) as T;
-  } catch {
-    return null;
+    text = await readFile(file, "utf8");
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") return null;
+    throw err;
   }
+  return JSON.parse(text) as T;
 }
 
 const SAFE_ID = /^[A-Za-z0-9_-]+$/;
