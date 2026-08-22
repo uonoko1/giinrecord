@@ -1,6 +1,6 @@
 # VPS deploy (shared nginx host)
 
-The site is static files served by the existing nginx. No Node, no database, no cron on the VPS.
+The site is static files served by the existing nginx. No Node, no database on the VPS. The only cron job is the cookie-less access-log aggregation (`deploy/analytics/`, see `docs/ops/analytics.md`).
 
 ## One-time setup (needs sudo)
 
