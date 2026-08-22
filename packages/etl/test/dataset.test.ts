@@ -3,16 +3,22 @@ import assert from "node:assert/strict";
 import { existsSync, mkdtempSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { RollCall, RollCallSummary } from "@seiji-kiroku/shared";
+import iconv from "iconv-lite";
+import type { Bill, BillSummary, RollCall, RollCallSummary } from "@seiji-kiroku/shared";
 import { buildDataset } from "../src/aggregate.ts";
 import { readSessionsOnDisk, resolveSessions, writeDataset, validateDataset, type Dataset } from "../src/dataset.ts";
 import { stableJson } from "../src/json.ts";
 import { matchVotes } from "../src/match-votes.ts";
 import { parseRollCall } from "../src/sources/sangiin-votes.ts";
 import { parseMemberList } from "../src/sources/sangiin-members.ts";
+import { parseShugiinBill } from "../src/sources/shugiin-bills.ts";
 
 const fixture = (name: string) => readFileSync(new URL(`./fixtures/${name}.htm`, import.meta.url), "utf-8");
 const BASE = "https://www.sangiin.go.jp/japanese/touhyoulist/221";
+const KEIKA = "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika";
+/** 実HTML（Shift_JIS）の衆院 経過ページから作る Bill。 */
+const realBill = (id: string, status?: string): Bill =>
+  parseShugiinBill(iconv.decode(readFileSync(new URL(`./fixtures/shugiin-keika-${id}.htm`, import.meta.url)), "Shift_JIS"), `${KEIKA}/${id}.htm`, { status });
 const ROSTER = "https://www.sangiin.go.jp/japanese/joho1/kousei/giin/221/giin.htm";
 
 /** 実在する議員（m_007006）と採決で作る group-mismatch の1行（Issue #24）。 */
@@ -24,6 +30,7 @@ function realDataset(): Dataset {
   return {
     ...buildDataset(members, rollCalls),
     rollCallDetails: rollCalls,
+    bills: [realBill("1DE153E", "衆議院で閉会中審査"), realBill("1DE14D6", "成立"), realBill("1DE115E", "衆議院で閉会中審査")],
     unmatched: [],
     unmatchedBills: [{ rollCallId: "221-0724-v001", title: rollCalls[1].title, sourceUrl: rollCalls[1].sourceUrl }],
     unmatchedGroups: [{ group: "新党", memberIds: ["m_000001"], sourceUrl: ROSTER }],
@@ -49,7 +56,7 @@ describe("writeDataset / validateDataset: docs/DATA_CONTRACT.md の不変条件"
   });
 
   test("契約どおりのファイル一式を書く（キーソート・末尾改行）", () => {
-    for (const rel of ["meta.json", "members/index.json", "members/m_007006.json", "rollcalls/index.json", "rollcalls/221/221-0605-v001.json", "unmatched.json", "unmatched-bills.json", "unmatched-groups.json", "group-mismatch.json"]) {
+    for (const rel of ["meta.json", "members/index.json", "members/m_007006.json", "rollcalls/index.json", "rollcalls/221/221-0605-v001.json", "bills/index.json", "bills/221/221-衆法-1.json", "bills/219/219-決算-1DE115E.json", "unmatched.json", "unmatched-bills.json", "unmatched-groups.json", "group-mismatch.json"]) {
       const text = readFileSync(join(dir, rel), "utf-8");
       assert.equal(text, stableJson(JSON.parse(text)), rel);
     }
@@ -253,6 +260,70 @@ describe("writeDataset / validateDataset: docs/DATA_CONTRACT.md の不変条件"
     const ds = realDataset();
     await writeDataset(dir, { ...ds, meta: { ...ds.meta, sessions: [218, 221] } });
     assert.equal(existsSync(join(dir, "rollcalls/218")), false);
+    assert.deepEqual(await validateDataset(dir), []);
+    cleanup();
+  });
+
+  test("bills/index.json は軽量な行（id・回次・種別・院・件名・状況・出典）で、回次降順・id 昇順", () => {
+    const index = readJson<BillSummary[]>(dir, "bills/index.json");
+    assert.deepEqual(index.map((b) => b.id), ["221-衆法-1", "221-閣法-3", "219-決算-1DE115E"]);
+    assert.deepEqual(index[0], { id: "221-衆法-1", session: 221, kind: "衆法", house: "shugiin", title: "政治資金規正法の一部を改正する法律案", status: "衆議院で閉会中審査", sourceUrl: `${KEIKA}/1DE153E.htm` });
+    cleanup();
+  });
+
+  test("bills/{提出回次}/{id}.json は Bill そのもの（会派態度は shugiinGroupStance にだけあり、rollcalls/ には無い）", () => {
+    const bill = readJson<Bill>(dir, "bills/221/221-閣法-3.json");
+    assert.equal(bill.shugiinGroupStance?.stanceText, "多数");
+    const rc = readFileSync(join(dir, "rollcalls/221/221-0605-v001.json"), "utf-8");
+    assert.doesNotMatch(rc, /shugiinGroupStance|会派態度/);
+    cleanup();
+  });
+
+  test("bills/index.json の行に対応する bills/{session}/{id}.json が無ければ違反", async () => {
+    rmSync(join(dir, "bills/221/221-閣法-3.json"));
+    assert.match((await validateDataset(dir)).join("\n"), /bills\/221\/221-閣法-3\.json: missing/);
+    cleanup();
+  });
+
+  test("bills/index.json に載っていない bills/{session}/{id}.json（前回実行の残骸）は違反", async () => {
+    const b = readJson<Bill>(dir, "bills/221/221-閣法-3.json");
+    writeFileSync(join(dir, "bills/221/221-閣法-99.json"), stableJson({ ...b, id: "221-閣法-99" }));
+    assert.match((await validateDataset(dir)).join("\n"), /bills\/221\/221-閣法-99\.json.*not in bills\/index\.json/);
+    cleanup();
+  });
+
+  test("bills の id が重複していれば違反", async () => {
+    patch<BillSummary[]>(dir, "bills/index.json", (idx) => [...idx, idx[0]]);
+    assert.match((await validateDataset(dir)).join("\n"), /bills\/index\.json: duplicate id 221-衆法-1/);
+    cleanup();
+  });
+
+  test("bills の sourceUrl が衆参の議案ページでなければ違反、id・回次が index と食い違えば違反", async () => {
+    patch<Bill>(dir, "bills/221/221-閣法-3.json", (b) => ({ ...b, sourceUrl: "https://example.com/x", session: 220 }));
+    const v = (await validateDataset(dir)).join("\n");
+    assert.match(v, /bills\/221\/221-閣法-3\.json: sourceUrl host not allowed/);
+    assert.match(v, /bills\/221\/221-閣法-3\.json: session 220 !== 221/);
+    cleanup();
+  });
+
+  test("shugiinGroupStance の unanimous は stanceText が「全会一致」のときだけ true（反対会派が空でも推論しない）", async () => {
+    patch<Bill>(dir, "bills/221/221-閣法-3.json", (b) => ({ ...b, shugiinGroupStance: { stanceText: "多数", yes: ["A"], no: [], unanimous: true } }));
+    assert.match((await validateDataset(dir)).join("\n"), /bills\/221\/221-閣法-3\.json: unanimous/);
+    cleanup();
+  });
+
+  test("writeDataset は前回の bills/ を消してから書く", async () => {
+    writeFileSync(join(dir, "bills/221/221-閣法-99.json"), "{}\n");
+    await writeDataset(dir, realDataset());
+    assert.equal(existsSync(join(dir, "bills/221/221-閣法-99.json")), false);
+    assert.deepEqual(await validateDataset(dir), []);
+    cleanup();
+  });
+
+  test("議案 0 件なら bills/index.json は [] で、bills/{session}/ は作らず、違反にもならない", async () => {
+    await writeDataset(dir, { ...realDataset(), bills: [] });
+    assert.equal(readFileSync(join(dir, "bills/index.json"), "utf-8"), "[]\n");
+    assert.equal(existsSync(join(dir, "bills/221")), false);
     assert.deepEqual(await validateDataset(dir), []);
     cleanup();
   });
