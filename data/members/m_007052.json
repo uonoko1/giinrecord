@@ -328,6 +328,15 @@
    "value": "反対"
   },
   {
+   "billId": "221-参法-15",
+   "date": "2026-07-08",
+   "kind": "bill",
+   "role": "提出者",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/221/meisai/m221100221015.htm",
+   "submitterText": "舟山康江君 外7名",
+   "title": "特定空襲等被害者に対する一時金の支給等に関する法律案"
+  },
+  {
    "date": "2026-06-26",
    "groupValue": "賛成",
    "kind": "vote",
@@ -336,6 +345,16 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0626-v001.htm",
    "title": "日程第１　防衛省設置法等の一部を改正する法律案（内閣提出、衆議院送付）",
    "value": "賛成"
+  },
+  {
+   "billId": "221-参法-11",
+   "date": "2026-06-24",
+   "kind": "bill",
+   "role": "提出者",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/221/meisai/m221100221011.htm",
+   "status": "参議院 農林水産委員会 未了",
+   "submitterText": "舟山康江君 外4名",
+   "title": "主要農作物の優良な品種を確保するための公的新品種育成の促進等に関する法律案"
   },
   {
    "date": "2026-06-19",

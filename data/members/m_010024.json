@@ -328,6 +328,24 @@
    "value": "反対"
   },
   {
+   "billId": "221-参法-14",
+   "date": "2026-07-07",
+   "kind": "bill",
+   "role": "提出者",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/221/meisai/m221100221014.htm",
+   "submitterText": "小西洋之君 外3名",
+   "title": "特別児童扶養手当等の支給に関する法律の一部を改正する法律案"
+  },
+  {
+   "billId": "221-参法-13",
+   "date": "2026-07-02",
+   "kind": "bill",
+   "role": "提出者",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/221/meisai/m221100221013.htm",
+   "submitterText": "小西洋之君 外2名",
+   "title": "公職選挙法及び地方自治法の一部を改正する法律案"
+  },
+  {
    "date": "2026-06-26",
    "groupValue": "賛成",
    "kind": "vote",
