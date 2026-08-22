@@ -65,6 +65,16 @@ describe("RollCallPage 会派", () => {
     expect(within(row).getByRole("img", { name: "投票なし" })).toBeInTheDocument();
     expect(section.textContent).not.toMatch(/欠席|棄権/);
   });
+  it("groups[] に無い会派の票は落とさず、会派別集計が無い旨を付けて出す", () => {
+    const stray = { memberId: "", nameText: "迷子 一郎", group: "記録に無い会派", value: "賛成" as const };
+    renderPage({ ...rollCall, votes: [...rollCall.votes, stray] });
+    const section = screen.getByRole("region", { name: "記録に無い会派" });
+    expect(within(section).getByText("迷子 一郎")).toBeInTheDocument();
+    expect(within(section).getByText(/会派別の集計は公表記録にありません/)).toBeInTheDocument();
+    // 集計のある会派の後ろに置く
+    const names = screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent);
+    expect(names.at(-1)).toBe("記録に無い会派");
+  });
   it("会派が1つも無い採決でも落ちず、空の旨を出す", () => {
     renderPage({ ...rollCall, groups: [], votes: [] });
     expect(screen.getByText("個人別の票はありません。")).toBeInTheDocument();

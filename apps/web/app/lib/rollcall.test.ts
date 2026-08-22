@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { groupsBySize, sessionsDesc, sortByDateDesc, votesByGroup } from "./rollcall";
+import { groupsBySize, sessionsDesc, sortByDateDesc, unlistedGroups, votesByGroup } from "./rollcall";
 
 describe("groupsBySize", () => {
   it("人数の多い順。同数は原文の順を保つ", () => {
@@ -55,5 +55,21 @@ describe("sortByDateDesc / sessionsDesc", () => {
   });
   it("回次は重複を除き新しい順", () => {
     expect(sessionsDesc(rows)).toEqual([221, 220]);
+  });
+});
+
+describe("unlistedGroups: groups[] に無い会派の票を黙って落とさない", () => {
+  const groups = [{ group: "A", size: 1, yes: 1, no: 0 }];
+  it("票にだけ現れる会派を、票の登場順に重複なく返す", () => {
+    const votes = [
+      { memberId: "m1", nameText: "一", group: "A", value: "賛成" as const },
+      { memberId: "m2", nameText: "二", group: "C", value: "反対" as const },
+      { memberId: "m3", nameText: "三", group: "B", value: "投票なし" as const },
+      { memberId: "m4", nameText: "四", group: "C", value: "賛成" as const },
+    ];
+    expect(unlistedGroups(groups, votes)).toEqual(["C", "B"]);
+  });
+  it("すべての票の会派が groups[] にあれば空", () => {
+    expect(unlistedGroups(groups, [{ memberId: "m1", nameText: "一", group: "A", value: "賛成" }])).toEqual([]);
   });
 });
