@@ -11,30 +11,147 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  issues: write        # failure → auto Issue
+  actions: write       # gh workflow run deploy.yml / approve pending runs
+concurrency:
+  group: etl
+  cancel-in-progress: false
+env:
+  DATA_BRANCH: data/refresh
+  FAILURE_ISSUE_TITLE: "ETL 日次実行が失敗した（etl.yml）"
 jobs:
   etl:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with: { node-version-file: .nvmrc, cache: pnpm }
       - run: pnpm install --frozen-lockfile
-      - run: pnpm etl ${{ github.event.inputs.sessions }}
+
+      # 取得済み HTML のキャッシュ。キーは日付なので毎日新しいエントリが保存され、restore-keys で前日分から復元する。
+      # 回次一覧 vote_ind.htm・議員名簿・議案ページ・会議録 API は ETL 側が noCache で毎回取得する（packages/etl/src/fetch.ts）。
+      - id: date
+        run: echo "today=$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache/restore@v4
+        with:
+          path: packages/etl/.cache
+          key: etl-cache-${{ steps.date.outputs.today }}
+          restore-keys: etl-cache-
+
+      - name: Run ETL
+        run: pnpm etl ${{ github.event.inputs.sessions }} 2>&1 | tee etl.log
+
+      # 失敗しても取得済みページは次回に活かす（job が失敗すると actions/cache の自動保存は走らない）。
+      - uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: packages/etl/.cache
+          key: etl-cache-${{ steps.date.outputs.today }}
+
       - name: Open / update data PR
+        id: pr
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config user.name "seiji-kiroku-etl[bot]"
           git config user.email "etl@users.noreply.github.com"
           git add data
-          if git diff --cached --quiet; then echo "no data changes"; exit 0; fi
+          CHANGED=$(git diff --cached --name-only | wc -l | tr -d ' ')
+          echo "changed=$CHANGED" >> "$GITHUB_OUTPUT"
+          if [ "$CHANGED" = "0" ]; then echo "no data changes"; echo "number=" >> "$GITHUB_OUTPUT"; exit 0; fi
           STAMP=$(date -u +%Y-%m-%dT%H:%MZ)
-          git switch -c data/refresh
+          git switch -c "$DATA_BRANCH"
           git commit -m "data: refresh $STAMP"
-          git push --force origin data/refresh
-          if [ -z "$(gh pr list --head data/refresh --state open --json number -q ".[0].number")" ]; then
-            gh pr create --base main --head data/refresh --title "data: refresh $STAMP" \
+          git push --force origin "$DATA_BRANCH"
+          NUMBER=$(gh pr list --head "$DATA_BRANCH" --state open --json number -q ".[0].number")
+          if [ -z "$NUMBER" ]; then
+            gh pr create --base main --head "$DATA_BRANCH" --title "data: refresh $STAMP" \
               --body "Automated ETL output. Validated by validateDataset in the ETL run; CI builds the site with it." --label etl
+            NUMBER=$(gh pr list --head "$DATA_BRANCH" --state open --json number -q ".[0].number")
           fi
-          gh pr merge data/refresh --squash --auto
+          test -n "$NUMBER"   # PR が無ければここで失敗させる（サイレント失敗対策）
+          echo "data PR #$NUMBER"
+          echo "number=$NUMBER" >> "$GITHUB_OUTPUT"
+          gh pr merge "$NUMBER" --squash --auto
+
+      # bot 周りは「成功したように見えて何も起きない」失敗が多いので、結果を必ず可視化する（docs/sprints/sprint-2.md）。
+      - name: Job summary
+        if: always()
+        env:
+          PR: ${{ steps.pr.outputs.number }}
+          CHANGED: ${{ steps.pr.outputs.changed }}
+          STATUS: ${{ job.status }}
+        run: |
+          count() { node -e 'const a=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));console.log(Array.isArray(a)?a.length:"?")' "$1" 2>/dev/null || echo "?"; }
+          if [ -n "$PR" ]; then PR_CELL="#$PR"; else PR_CELL="なし（data/ に変更なし）"; fi
+          {
+            echo "## ETL"
+            echo "| 項目 | 値 |"
+            echo "|---|---|"
+            echo "| 結果 | $STATUS |"
+            echo "| データ PR | $PR_CELL |"
+            echo "| 変更ファイル数 | ${CHANGED:-?} |"
+            echo "| unmatched（名寄せ不能） | $(count data/unmatched.json) |"
+            echo "| unmatched-bills（審議結果と未突合の採決） | $(count data/unmatched-bills.json) |"
+            echo
+            echo "<details><summary>ETL ログの警告</summary>"
+            echo
+            echo '```'
+            grep -E "unmatched|group mismatch|violation|Error" etl.log || echo "(none)"
+            echo '```'
+            echo "</details>"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # auto-merge は CI 完了を待つだけで Deploy を起動しない（GITHUB_TOKEN のマージは push イベントを起こさない）ので、
+      # マージを待ってから deploy.yml を明示的に起動する。
+      - name: Wait for data PR merge, then deploy
+        if: steps.pr.outputs.number != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ steps.pr.outputs.number }}
+        run: |
+          for i in $(seq 1 45); do   # 45 × 20s = 15 min
+            STATE=$(gh pr view "$PR" --json state -q .state)
+            echo "[$i] PR #$PR state=$STATE"
+            case "$STATE" in
+              MERGED) gh workflow run deploy.yml --ref main; echo "deploy.yml を起動した" >> "$GITHUB_STEP_SUMMARY"; exit 0 ;;
+              CLOSED) echo "PR #$PR はマージされずに閉じられた" >> "$GITHUB_STEP_SUMMARY"; exit 1 ;;
+            esac
+            # 承認待ち（action_required）の CI run があれば承認する
+            for RUN in $(gh api "repos/$GITHUB_REPOSITORY/actions/runs?branch=$DATA_BRANCH&status=action_required" -q '.workflow_runs[].id'); do
+              echo "approving run $RUN"
+              gh api -X POST "repos/$GITHUB_REPOSITORY/actions/runs/$RUN/approve" || true
+            done
+            sleep 20
+          done
+          echo "PR #$PR が 15 分以内にマージされなかった（required check が走っていない／失敗？）" >> "$GITHUB_STEP_SUMMARY"
+          exit 1
+
+      - name: Open failure Issue (deduped by title)
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = process.env.FAILURE_ISSUE_TITLE;
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const open = await github.paginate(github.rest.issues.listForRepo, { ...context.repo, state: "open", labels: "etl", per_page: 100 });
+            const dup = open.find((i) => i.title === title && !i.pull_request);
+            if (dup) {
+              await github.rest.issues.createComment({ ...context.repo, issue_number: dup.number, body: `再度失敗: ${runUrl}` });
+              core.info(`commented on existing #${dup.number}`);
+              return;
+            }
+            const { data } = await github.rest.issues.create({
+              ...context.repo, title, labels: ["etl", "infra"],
+              body: [
+                "ETL ワークフローが失敗しました。",
+                "",
+                `- 実行: ${runUrl}`,
+                "- 手順と失敗モード: docs/ops/etl.md",
+                "",
+                "原因を直したら Issue を閉じてください（open のままだと次の失敗はこの Issue へのコメントになります）。",
+              ].join("\n"),
+            });
+            core.info(`created #${data.number}`);
