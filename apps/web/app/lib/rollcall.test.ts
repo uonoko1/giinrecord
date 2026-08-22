@@ -40,8 +40,18 @@ describe("sortByDateDesc / sessionsDesc", () => {
     { id: "a", session: 221, date: "2026-07-24" },
     { id: "c", session: 221, date: "2026-03-23" },
   ];
-  it("日付降順（同日は元の順）", () => {
+  it("日付降順", () => {
     expect(sortByDateDesc(rows).map((r) => r.id)).toEqual(["a", "c", "b"]);
+  });
+  it("同日は id 昇順で安定する（入力の順に依存しない）", () => {
+    const sameDay = [
+      { id: "221-0724-v007", session: 221, date: "2026-07-24" },
+      { id: "221-0724-v006", session: 221, date: "2026-07-24" },
+      { id: "221-0724-v010", session: 221, date: "2026-07-24" },
+    ];
+    const expected = ["221-0724-v006", "221-0724-v007", "221-0724-v010"];
+    expect(sortByDateDesc(sameDay).map((r) => r.id)).toEqual(expected);
+    expect(sortByDateDesc([...sameDay].reverse()).map((r) => r.id)).toEqual(expected);
   });
   it("回次は重複を除き新しい順", () => {
     expect(sessionsDesc(rows)).toEqual([221, 220]);
