@@ -3,7 +3,7 @@
  * 一致率・スコアは作らない（ここに無いことが仕様）。
  */
 import { describe, expect, it } from "vitest";
-import type { MemberDetail } from "./data-contract";
+import type { MemberDetail, VoteEntry } from "./data-contract";
 import adachi from "../test-fixtures/compare/m_014002.json";
 import otsubaki from "../test-fixtures/compare/m_023003.json";
 import aisawa from "../test-fixtures/compare/h_41f223ac28.json";
@@ -69,7 +69,7 @@ describe("alignTimelines 参院（事実）", () => {
   });
   it("各列にその議員の票を置き、値はそのまま", () => {
     const r = rows.facts[0]!;
-    expect(r.title).toBe(A.timeline[1]!.title);
+    expect(r.title).toBe((A.timeline[1] as VoteEntry).title);
     expect(r.cells.map((c) => c?.value)).toEqual(["賛成", "反対"]);
     expect(r.cells[0]?.sourceUrl).toMatch(/^https:\/\/www\.sangiin\.go\.jp\//);
   });

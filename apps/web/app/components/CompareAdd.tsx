@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { COMPARE_MAX, readStoredCompareIds, toggleCompareId, writeStoredCompareIds } from "../lib/compare";
 
 /**
- * 議員ページの「比較に追加」（Issue #104）。選んだ id を localStorage（try/catch、Cookie 不使用）に最大 COMPARE_MAX 名まで保存し、
+ * 議員ページの「比較に追加」（Issue 104）。選んだ id を localStorage（try/catch、Cookie 不使用）に最大 COMPARE_MAX 名まで保存し、
  * /compare?m=… へのリンクを出す。プリレンダー時は保存値を読めないので、マウント後に読む。
  * 議員ページ（member.tsx）と同じく素の <a>（Router 文脈に依存しない）。
  */
