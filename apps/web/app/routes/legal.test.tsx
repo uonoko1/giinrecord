@@ -85,7 +85,7 @@ describe("利用規約の運営費（#174）", () => {
     const items = Array.from(section?.querySelectorAll("li") ?? []).map((li) => li.textContent);
     expect(items).toHaveLength(3);
     expect(items[0]).toContain("運営者の自費で運営");
-    expect(items[1]).toContain("政党・候補者・業界団体からは受け取らない");
+    expect(items[1]).toContain("政党・候補者・業界団体からは受け取っていません");
     expect(items[2]).toContain("政治カテゴリを除外した広告");
     expect(items[2]).toContain("このページに明記");
     expect(SUPPORT_URL).toBe("https://github.com/uonoko1/gikailog");

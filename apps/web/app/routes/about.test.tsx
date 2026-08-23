@@ -87,7 +87,7 @@ describe("About", () => {
     it("検証する の末尾に1文があり、利用規約（/terms）へリンクする", () => {
       renderAbout();
       const section = screen.getByRole("region", { name: "検証する" });
-      expect(section).toHaveTextContent("運営者の自費で運営し、政党・候補者・業界団体からは受け取りません。運営の方針は利用規約に書いています。");
+      expect(section).toHaveTextContent("運営者の自費で運営し、政党・候補者・業界団体からは受け取っていません。運営の方針は利用規約に書いています。");
       expect(within(section).getByRole("link", { name: "利用規約" })).toHaveAttribute("href", "/terms");
     });
 
