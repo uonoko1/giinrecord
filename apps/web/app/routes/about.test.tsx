@@ -77,22 +77,15 @@ describe("About", () => {
   });
 
   describe("運営費について", () => {
-    it("費用・収入源・受け取らないもの・公開の約束を書く", () => {
+    it("方針3点だけを書き、費目・金額は書かない（#160）", () => {
       renderAbout();
       const section = screen.getByRole("region", { name: "運営費について" });
-      expect(section).toHaveTextContent("VPS");
-      expect(section).toHaveTextContent("未算出");
-      expect(section).toHaveTextContent("ドメイン");
-      expect(section).toHaveTextContent("取得予定");
-      expect(section).toHaveTextContent("運営者の自費");
-      expect(section).toHaveTextContent("政党・候補者・業界団体からは一切受け取りません");
-      expect(section).toHaveTextContent("資金源と支出を公開します");
-    });
-
-    it("広告は将来の可能性として予告だけする", () => {
-      renderAbout();
-      const section = screen.getByRole("region", { name: "運営費について" });
+      expect(section).toHaveTextContent("運営者の自費で運営");
+      expect(section).toHaveTextContent("政党・候補者・業界団体からは受け取らない");
       expect(section).toHaveTextContent("政治カテゴリを除外した広告");
+      for (const banned of ["VPS", "ドメイン", "未算出", "取得予定", "月額"]) {
+        expect(section).not.toHaveTextContent(banned);
+      }
       expect(section.querySelector("ins, iframe, script")).toBeNull();
     });
 
