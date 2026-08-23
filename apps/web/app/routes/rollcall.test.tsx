@@ -84,7 +84,7 @@ describe("RollCallPage 会派", () => {
 describe("RollCallPage フッター", () => {
   it("取得日時を出す", () => {
     renderPage();
-    expect(within(screen.getByRole("contentinfo")).getByText(/2025-04-01/)).toBeInTheDocument();
+    expect(within(screen.getByText(/^出典/).closest("footer") as HTMLElement).getByText(/2025-04-01/)).toBeInTheDocument();
   });
 });
 

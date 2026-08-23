@@ -23,10 +23,7 @@ export function VerifySection() {
           誤りを報告
         </a>
       </div>
-      <p className="note">
-        データ一括取得は data/ 全体（JSON・LICENSE・README）の zip で、ビルドのたびに作り直されます。ライセンスは CC BY 4.0。利用の際は「議会ログ
-        (gikailog)」と一次資料（参議院・衆議院・国立国会図書館）を出典として明記してください。個人・非営利・商用いずれも同じ条件です。
-      </p>
+      <p className="note">毎日更新。CC BY 4.0。出典として「議会ログ」と一次資料（参議院・衆議院・国立国会図書館）を明記してください。個人・非営利・商用いずれも同じ条件です。</p>
     </section>
   );
 }
