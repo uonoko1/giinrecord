@@ -89,6 +89,16 @@ describe("checkServed", () => {
     expect(r.failures).toEqual(["/: no response"]);
   });
 
+  // #168: 配信中の HTML にも外部リソース（Google Fonts 等）への参照が無いこと
+  it("ページ本文が外部リソースを読み込んでいれば失敗（出典リンクは可）", () => {
+    const got = new Map([
+      ["/", res({ body: '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=X"><a href="https://www.sangiin.go.jp/">出典</a>' })],
+      ["/about/", res({ body: '<link rel="stylesheet" href="/fonts/fonts.css">' })],
+    ]);
+    const r = checkServed(got, { ...base, unknown: null, asset: null, data: null });
+    expect(r.failures).toEqual(["/: external resource https://fonts.googleapis.com/css2?family=X"]);
+  });
+
   it("checked は確認した URL の数", () => {
     const got = new Map([["/", res()], ["/__x__/", res()]]);
     expect(checkServed(got, { pages: ["/"], unknown: "/__x__/", asset: null, data: null }).checked).toBe(2);

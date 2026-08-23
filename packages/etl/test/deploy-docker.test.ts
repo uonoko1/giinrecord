@@ -31,12 +31,15 @@ const deployStaging = read(".github/workflows/deploy-staging.yml");
 const release = read(".github/workflows/release.yml");
 const deployData = read(".github/workflows/deploy-data.yml");
 
-/** 旧 deploy/nginx-gikailog.conf の add_header 行（順序・値とも同一であること）＋ #127 の X-Robots-Tag */
+/**
+ * 旧 deploy/nginx-gikailog.conf の add_header 行（順序・値とも同一であること）＋ #127 の X-Robots-Tag。
+ * #168: フォントを自サイト配信にしたので CSP から fonts.googleapis.com / fonts.gstatic.com を外し、font-src 'self'。
+ */
 const EXPECTED_HEADERS = [
   "add_header X-Content-Type-Options nosniff always;",
   "add_header X-Frame-Options DENY always;",
   "add_header Referrer-Policy strict-origin-when-cross-origin always;",
-  `add_header Content-Security-Policy "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; script-src 'self'; connect-src 'self'" always;`,
+  `add_header Content-Security-Policy "default-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; script-src 'self'; connect-src 'self'" always;`,
   // #127: "" on production hosts (nginx omits add_header with an empty value), "noindex, nofollow" for staging.gikailog.jp
   "add_header X-Robots-Tag $robots_tag always;",
 ];
@@ -59,6 +62,16 @@ test("site.conf: staging.gikailog.jp 宛てだけ X-Robots-Tag: noindex, nofollo
 test("site.conf: キャッシュ方針は旧 server block と同一（/assets/ immutable 1年、/data/ 1時間）", () => {
   assert.match(siteConf, /location \/assets\/ \{\s*add_header Cache-Control "public, max-age=31536000, immutable";/);
   assert.match(siteConf, /location \/data\/ \{\s*add_header Cache-Control "public, max-age=3600";/);
+});
+
+test("site.conf: CSP はどの外部ホストも許可しない（#168 フォント自サイト配信。第三者送信ゼロ）", () => {
+  const csp = headerLines(siteConf).find((l) => /Content-Security-Policy/.test(l)) ?? "";
+  assert.doesNotMatch(csp, /https?:\/\//);
+  assert.match(csp, /font-src 'self'/);
+});
+
+test("site.conf: /fonts/ は 1 週間キャッシュ（ハッシュ無しのファイル名なので immutable にはしない）", () => {
+  assert.match(siteConf, /location \/fonts\/ \{\s*add_header Cache-Control "public, max-age=604800";/);
 });
 
 test("site.conf: プリレンダリング + SPA fallback の try_files と gzip は旧 server block と同一", () => {

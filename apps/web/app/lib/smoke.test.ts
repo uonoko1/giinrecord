@@ -3,7 +3,7 @@
  * 実ファイルシステムは使わず、Map で表した偽のビルドディレクトリに対して検証する。
  */
 import { describe, expect, it } from "vitest";
-import { checkBrandAssets, checkBuild, checkDistrictData, checkMemberData, checkOpsData, checkSitemap, extractInternalHrefs, OPS_DATA_FILES, resolveHrefTarget, formatReport, type BuildFiles } from "./smoke";
+import { checkBrandAssets, checkBuild, checkDistrictData, checkMemberData, checkNoExternalResources, checkOpsData, checkSitemap, externalResourceUrls, extractInternalHrefs, OPS_DATA_FILES, resolveHrefTarget, formatReport, type BuildFiles } from "./smoke";
 
 const html = (links: string[]) => `<html><body>${links.map((l) => `<a href="${l}">x</a>`).join("")}</body></html>`;
 
@@ -229,5 +229,51 @@ describe("checkOpsData（#152: data/meta.json などの運用ファイルを /da
   });
   it("OPS_DATA_FILES は meta.json と unmatched*/group-mismatch を含み、順序が固定", () => {
     expect(OPS_DATA_FILES).toEqual(["meta.json", "unmatched.json", "unmatched-bills.json", "unmatched-groups.json", "group-mismatch.json"]);
+  });
+});
+
+describe("checkNoExternalResources（#168: 第三者送信ゼロ。HTML と fonts.css が外部リソースを読み込まない）", () => {
+  it("外部へのリソース読み込みが無ければ失敗なし（出典への <a href> は外部でよい）", () => {
+    const b = fakeBuild({
+      "index.html": '<link rel="stylesheet" href="/fonts/fonts.css"><script src="/assets/entry.js"></script><a href="https://www.sangiin.go.jp/x">出典</a>',
+      "fonts/fonts.css": '@font-face { src: url(shippori-mincho-700.0.woff2) format("woff2"); }',
+      "fonts/shippori-mincho-700.0.woff2": "",
+    });
+    expect(checkNoExternalResources(b)).toEqual({ checkedFiles: 2, failures: [] });
+  });
+  it("link / script / img / iframe の外部 URL（// も）を報告する", () => {
+    const b = fakeBuild({
+      "index.html":
+        '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=X"><script src="//cdn.example/a.js"></script>',
+      "about/index.html": '<img src="https://img.example/a.png"><iframe src="https://www.youtube.com/embed/x"></iframe>',
+      "fonts/fonts.css": "",
+    });
+    expect(checkNoExternalResources(b).failures).toEqual([
+      "index.html: external resource https://fonts.gstatic.com",
+      "index.html: external resource https://fonts.googleapis.com/css2?family=X",
+      "index.html: external resource //cdn.example/a.js",
+      "about/index.html: external resource https://img.example/a.png",
+      "about/index.html: external resource https://www.youtube.com/embed/x",
+    ]);
+  });
+  it("fonts/fonts.css が無い、または外部 URL・@import を含めば失敗", () => {
+    expect(checkNoExternalResources(fakeBuild({ "index.html": "" })).failures).toEqual(["missing fonts/fonts.css (self-hosted fonts, #168)"]);
+    const b = fakeBuild({ "index.html": "", "fonts/fonts.css": "@import url(https://fonts.googleapis.com/css2);\n@font-face { src: url(https://fonts.gstatic.com/a.woff2); }" });
+    expect(checkNoExternalResources(b).failures).toEqual([
+      "fonts/fonts.css: external resource https://fonts.googleapis.com/css2",
+      "fonts/fonts.css: external resource https://fonts.gstatic.com/a.woff2",
+    ]);
+  });
+  it("fonts.css が参照する woff2 がビルドに無ければ失敗", () => {
+    const b = fakeBuild({ "index.html": "", "fonts/fonts.css": '@font-face { src: url(biz-udpgothic-400.3.woff2) format("woff2"); }' });
+    expect(checkNoExternalResources(b).failures).toEqual(["fonts/fonts.css: missing fonts/biz-udpgothic-400.3.woff2"]);
+  });
+});
+
+describe("externalResourceUrls: self-origin and canonical", () => {
+  it("canonical is not a fetched resource; SITE_ORIGIN absolute urls are internal", () => {
+    const html = '<link rel="canonical" href="https://gikailog.jp/x"/><link rel="stylesheet" href="https://gikailog.jp/a.css"/><script src="https://cdn.example.com/x.js"></script>';
+    expect(externalResourceUrls(html, "https://gikailog.jp")).toEqual(["https://cdn.example.com/x.js"]);
+    expect(externalResourceUrls(html, "")).toEqual(["https://gikailog.jp/a.css", "https://cdn.example.com/x.js"]);
   });
 });
