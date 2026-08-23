@@ -323,7 +323,7 @@ describe("buildDataset: 衆院 Bill から timeline を作る", () => {
 
   test("timeline は日付降順、同日は vote → bill → stance → speech", () => {
     const d = buildDataset([hMember("h_1", "自由民主党・無所属の会")], [], new Map(),
-      [speech("x_001", "h_1", "2026-03-02")],
+      [speech("x_001", "h_1", "2026-03-02", { house: "shugiin" })],
       [], [shugiinBill("221-衆法-1", { submitters: ["h_1"] }), shugiinBill("221-閣法-3", { kind: "閣法", shugiinGroupStance: { stanceText: "多数", yes: ["自由民主党・無所属の会"], no: [] } })]);
     assert.deepEqual(d.details[0].timeline.map((e) => e.kind), ["bill", "stance", "speech"]);
   });
