@@ -3,15 +3,29 @@
  * These mirror the types the contract says will be added to `packages/shared`;
  * once they land there (ETL PBI), replace this file with re-exports.
  */
-import type { DatasetMeta, House, Member, MemberId, RollCall, RollCallSummary, VoteValue } from "@seiji-kiroku/shared";
+import type { Assembly, AssemblyId, AssemblyKind, DatasetMeta, DietAssemblyId, House, LocalVote, Member, MemberId, RollCall, RollCallSummary, VoteValue } from "@seiji-kiroku/shared";
 
-export type { DatasetMeta, RollCall, RollCallSummary, VoteValue };
+export type { Assembly, AssemblyId, AssemblyKind, DatasetMeta, DietAssemblyId, LocalVote, RollCall, RollCallSummary, VoteValue };
+
+/** 国会の2議会の id（院 → 議会 id）。ETL の `assemblies.ts` と同じ値（shared は型だけなので定数は両側に持つ）。#156 */
+export const DIET_ASSEMBLY_IDS: Readonly<Record<House, DietAssemblyId>> = { sangiin: "diet-sangiin", shugiin: "diet-shugiin" };
+
+/**
+ * `assemblies/index.json` が無い古いデータ用の国会の2議会。ETL の `dietAssemblies()` と同じ並び（参議院・衆議院）。
+ * sourceUrl は名簿（議員一覧）の入口。
+ */
+export const DIET_ASSEMBLIES: readonly Assembly[] = [
+  { id: "diet-sangiin", kind: "national", name: "参議院", sourceUrl: "https://www.sangiin.go.jp/japanese/joho1/kousei/giin/221/giin.htm" },
+  { id: "diet-shugiin", kind: "national", name: "衆議院", sourceUrl: "https://www.shugiin.go.jp/internet/itdb_annai.nsf/html/statics/syu/1giin.htm" },
+];
 
 export interface MemberSummary {
   id: MemberId;
   name: string;
   kana: string;
   house: House;
+  /** 所属議会（#156）。#156 より前のデータには無いので、無ければ house から `diet-{house}`（`memberAssemblyId`） */
+  assemblyId?: AssemblyId;
   group: string;
   district: string;
   termEnd?: string;

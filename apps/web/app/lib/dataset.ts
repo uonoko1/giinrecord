@@ -1,4 +1,4 @@
-import type { DatasetMeta, House, MemberId } from "@seiji-kiroku/shared";
+import type { Assembly, AssemblyId, DatasetMeta, House, MemberId } from "@seiji-kiroku/shared";
 
 /**
  * Read side of docs/DATA_CONTRACT.md. The summary shapes below mirror the
@@ -9,6 +9,8 @@ export interface MemberSummary {
   name: string;
   kana: string;
   house: House;
+  /** 所属議会（#156）。無い（古いデータ）なら house から diet-{house} */
+  assemblyId?: AssemblyId;
   group: string;
   district: string;
   termEnd?: string;
@@ -28,12 +30,15 @@ export interface RollCallSummary {
 
 export interface Dataset {
   meta?: DatasetMeta;
+  /** `assemblies/index.json`（#156）。無い（古いデータ）なら国会の2議会（DIET_ASSEMBLIES）として扱う */
+  assemblies?: Assembly[];
   members: MemberSummary[];
   rollcalls: RollCallSummary[];
 }
 
 /** `data/` is bundled at build time; a missing file simply yields an empty dataset. */
 const metaFiles = import.meta.glob<DatasetMeta>("../../../../data/meta.json", { eager: true, import: "default" });
+const assemblyFiles = import.meta.glob<Assembly[]>("../../../../data/assemblies/index.json", { eager: true, import: "default" });
 const memberFiles = import.meta.glob<MemberSummary[]>("../../../../data/members/index.json", { eager: true, import: "default" });
 const rollcallFiles = import.meta.glob<RollCallSummary[]>("../../../../data/rollcalls/index.json", { eager: true, import: "default" });
 
@@ -43,6 +48,7 @@ function first<T>(files: Record<string, T>): T | undefined {
 
 export const dataset: Dataset = {
   meta: first(metaFiles),
+  assemblies: first(assemblyFiles),
   members: first(memberFiles) ?? [],
   rollcalls: first(rollcallFiles) ?? [],
 };

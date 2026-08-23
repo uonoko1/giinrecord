@@ -1,23 +1,17 @@
 import { useEffect, useId, useMemo, useState } from "react";
 import { Link, type MetaArgs, useSearchParams } from "react-router";
-import type { House } from "@seiji-kiroku/shared";
+import type { Assembly, AssemblyId } from "@seiji-kiroku/shared";
 import { CoverBrand } from "../components/CoverBrand";
 import { SiteFooter } from "../components/SiteFooter";
+import { DIET_ASSEMBLIES } from "../lib/data-contract";
 import { type Dataset, dataset as bundled, type MemberSummary } from "../lib/dataset";
 import { formatDateTime } from "../lib/format";
-import { filterMembers, formatTermEnd, groupByKanaRow } from "../lib/member-search";
+import { filterMembers, formatTermEnd, groupByKanaRow, memberAssemblyId } from "../lib/member-search";
 import { seoMeta } from "../lib/seo";
 import "../styles/pages.css";
 import "./members.css";
 
-const DESCRIPTION = "参議院・衆議院の議員を五十音順に。氏名・ふりがな・院・会派・選挙区でさがせます。";
-
-const HOUSE_LABEL: Record<House, string> = { sangiin: "参議院", shugiin: "衆議院" };
-const HOUSE_OPTIONS: { value: House | ""; label: string }[] = [
-  { value: "", label: "両院" },
-  { value: "sangiin", label: HOUSE_LABEL.sangiin },
-  { value: "shugiin", label: HOUSE_LABEL.shugiin },
-];
+const DESCRIPTION = "参議院・衆議院の議員を五十音順に。氏名・ふりがな・議会・会派・選挙区でさがせます。";
 
 export function meta({ location }: MetaArgs) {
   return seoMeta({ title: "国会議員一覧", description: DESCRIPTION, pathname: location.pathname });
@@ -39,7 +33,8 @@ export default function Members({ data = bundled }: { data?: Dataset }) {
   const [params, setParams] = useSearchParams();
   const districtParam = params.get("district") ?? "";
   const [query, setQuery] = useState("");
-  const [house, setHouse] = useState<House | "">("");
+  // #156: 院（参院／衆院）の絞り込みを「議会」に一般化。選択肢は assemblies/index.json の並び（国会2＋将来の地方議会）。既定はすべて。
+  const [assemblyId, setAssemblyId] = useState<AssemblyId | "">("");
   const [group, setGroup] = useState("");
   // #120: 初期値は "" にして useEffect で適用する。プリレンダーの HTML は「すべて」が選ばれたままで、hydration は
   // state が最初から districtParam だと DOM の selected を直さない（再描画が起きない）。マウント後に set して再描画させる。
@@ -50,13 +45,13 @@ export default function Members({ data = bundled }: { data?: Dataset }) {
   const searchId = useId();
   const formerId = useId();
   const groupId = useId();
-  const houseId = useId();
+  const assemblyFieldId = useId();
   const districtId = useId();
 
-  // 院を切り替えると会派・選挙区の選択肢が変わる（参院の会派や選挙区はほぼ衆院に存在しない）ので、
-  // 旧い選択を残すと select は「すべて」に見えるのに 0 名になる。院の変更時はまとめてリセットする。
-  function changeHouse(next: House | "") {
-    setHouse(next);
+  // 議会を切り替えると会派・選挙区の選択肢が変わる（参院の会派や選挙区はほぼ衆院に存在しない）ので、
+  // 旧い選択を残すと select は「すべて」に見えるのに 0 名になる。議会の変更時はまとめてリセットする。
+  function changeAssembly(next: AssemblyId | "") {
+    setAssemblyId(next);
     setGroup("");
     clearDistrict();
   }
@@ -70,10 +65,13 @@ export default function Members({ data = bundled }: { data?: Dataset }) {
     }
   }
 
-  // 既定は両院・現職（最新回次の名簿に載っている人）のみ。元職は事実として残っているので、トグルで同じ一覧に出す。
+  // assemblies/index.json が無い（#156 より前の）データは国会の2議会として扱う。
+  const assemblies: readonly Assembly[] = data.assemblies ?? DIET_ASSEMBLIES;
+  const assemblyName = useMemo(() => new Map(assemblies.map((a) => [a.id, a.name])), [assemblies]);
+  // 既定はすべての議会・現職（最新回次の名簿に載っている人）のみ。元職は事実として残っているので、トグルで同じ一覧に出す。
   const all = useMemo(
-    () => data.members.filter((m) => (!house || m.house === house) && (includeFormer || m.current !== false)),
-    [data.members, house, includeFormer],
+    () => data.members.filter((m) => (!assemblyId || memberAssemblyId(m) === assemblyId) && (includeFormer || m.current !== false)),
+    [data.members, assemblyId, includeFormer],
   );
   const groups = useMemo(() => distinctSorted(all.map((m) => m.group)), [all]);
   const districts = useMemo(() => distinctSorted(all.map((m) => m.district)), [all]);
@@ -109,12 +107,13 @@ export default function Members({ data = bundled }: { data?: Dataset }) {
                 />
               </label>
               <div className="members-selects">
-                <label className="members-field" htmlFor={houseId}>
-                  <span className="members-field__label">院</span>
-                  <select id={houseId} className="members-select" value={house} onChange={(e) => changeHouse(e.target.value as House | "")}>
-                    {HOUSE_OPTIONS.map((o) => (
-                      <option key={o.value} value={o.value}>
-                        {o.label}
+                <label className="members-field" htmlFor={assemblyFieldId}>
+                  <span className="members-field__label">議会</span>
+                  <select id={assemblyFieldId} className="members-select" value={assemblyId} onChange={(e) => changeAssembly(e.target.value as AssemblyId | "")}>
+                    <option value="">すべて</option>
+                    {assemblies.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.name}
                       </option>
                     ))}
                   </select>
@@ -173,7 +172,7 @@ export default function Members({ data = bundled }: { data?: Dataset }) {
                     </h2>
                     <ul className="members-list" aria-labelledby={`row-${s.row}`}>
                       {s.members.map((m) => (
-                        <MemberRow key={m.id} member={m} showHouse={house === ""} />
+                        <MemberRow key={m.id} member={m} assemblyName={assemblyId === "" ? assemblyName : undefined} />
                       ))}
                     </ul>
                   </div>
@@ -197,8 +196,10 @@ export default function Members({ data = bundled }: { data?: Dataset }) {
   );
 }
 
-function MemberRow({ member, showHouse }: { member: MemberSummary; showHouse: boolean }) {
+/** すべての議会を表示しているとき（assemblyName あり）は各行に議会名を添える。名称は assemblies/index.json の原文。 */
+function MemberRow({ member, assemblyName }: { member: MemberSummary; assemblyName?: ReadonlyMap<string, string> }) {
   const term = formatTermEnd(member.termEnd);
+  const assembly = assemblyName?.get(memberAssemblyId(member));
   return (
     <li className="members-item">
       <Link className="members-item__link" to={`/members/${member.id}`}>
@@ -206,7 +207,7 @@ function MemberRow({ member, showHouse }: { member: MemberSummary; showHouse: bo
         <span className="members-item__name">{member.name}</span>
       </Link>
       <span className="members-item__meta num">
-        {[showHouse ? HOUSE_LABEL[member.house] : undefined, member.group, member.district, term, member.current === false ? "元職" : undefined]
+        {[assembly, member.group, member.district, term, member.current === false ? "元職" : undefined]
           .filter(Boolean)
           .join(" ・ ")}
       </span>
