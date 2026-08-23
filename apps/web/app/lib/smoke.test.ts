@@ -3,7 +3,7 @@
  * 実ファイルシステムは使わず、Map で表した偽のビルドディレクトリに対して検証する。
  */
 import { describe, expect, it } from "vitest";
-import { checkBrandAssets, checkBuild, checkDistrictData, checkMemberData, checkNoExternalResources, checkOpsData, checkSitemap, extractInternalHrefs, OPS_DATA_FILES, resolveHrefTarget, formatReport, type BuildFiles } from "./smoke";
+import { checkBrandAssets, checkBuild, checkDistrictData, checkMemberData, checkNoExternalResources, checkOpsData, checkSitemap, externalResourceUrls, extractInternalHrefs, OPS_DATA_FILES, resolveHrefTarget, formatReport, type BuildFiles } from "./smoke";
 
 const html = (links: string[]) => `<html><body>${links.map((l) => `<a href="${l}">x</a>`).join("")}</body></html>`;
 
@@ -261,5 +261,13 @@ describe("checkNoExternalResources（#168: 第三者送信ゼロ。HTML と font
   it("fonts.css が参照する woff2 がビルドに無ければ失敗", () => {
     const b = fakeBuild({ "index.html": "", "fonts/fonts.css": '@font-face { src: url(biz-udpgothic-400.3.woff2) format("woff2"); }' });
     expect(checkNoExternalResources(b).failures).toEqual(["fonts/fonts.css: missing fonts/biz-udpgothic-400.3.woff2"]);
+  });
+});
+
+describe("externalResourceUrls: self-origin and canonical", () => {
+  it("canonical is not a fetched resource; SITE_ORIGIN absolute urls are internal", () => {
+    const html = '<link rel="canonical" href="https://gikailog.jp/x"/><link rel="stylesheet" href="https://gikailog.jp/a.css"/><script src="https://cdn.example.com/x.js"></script>';
+    expect(externalResourceUrls(html, "https://gikailog.jp")).toEqual(["https://cdn.example.com/x.js"]);
+    expect(externalResourceUrls(html, "")).toEqual(["https://gikailog.jp/a.css", "https://cdn.example.com/x.js"]);
   });
 });
