@@ -1,5 +1,5 @@
 {
- "fetchedAt": "2026-08-23T08:05:01.375Z",
+ "fetchedAt": "2026-08-23T14:56:49.140Z",
  "sessions": [
   217,
   218,
@@ -9,152 +9,157 @@
  ],
  "sources": [
   {
-   "fetchedAt": "2026-08-23T08:05:01.375Z",
+   "fetchedAt": "2026-08-23T14:56:49.140Z",
    "name": "参議院 議員一覧（第216回）",
    "url": "https://www.sangiin.go.jp/japanese/joho1/kousei/giin/216/giin.htm"
   },
   {
-   "fetchedAt": "2026-08-23T08:05:01.375Z",
+   "fetchedAt": "2026-08-23T14:56:49.140Z",
    "name": "参議院 議員一覧（第217回）",
    "url": "https://www.sangiin.go.jp/japanese/joho1/kousei/giin/217/giin.htm"
   },
   {
-   "fetchedAt": "2026-08-23T08:05:01.375Z",
+   "fetchedAt": "2026-08-23T14:56:49.140Z",
    "name": "参議院 議員一覧（第218回）",
    "url": "https://www.sangiin.go.jp/japanese/joho1/kousei/giin/218/giin.htm"
   },
   {
-   "fetchedAt": "2026-08-23T08:05:01.375Z",
+   "fetchedAt": "2026-08-23T14:56:49.140Z",
    "name": "参議院 議員一覧（第219回）",
    "url": "https://www.sangiin.go.jp/japanese/joho1/kousei/giin/219/giin.htm"
   },
   {
-   "fetchedAt": "2026-08-23T08:05:01.375Z",
+   "fetchedAt": "2026-08-23T14:56:49.140Z",
    "name": "参議院 議員一覧（第220回）",
    "url": "https://www.sangiin.go.jp/japanese/joho1/kousei/giin/220/giin.htm"
   },
   {
-   "fetchedAt": "2026-08-23T08:05:01.375Z",
+   "fetchedAt": "2026-08-23T14:56:49.140Z",
    "name": "参議院 議員一覧（第221回）",
    "url": "https://www.sangiin.go.jp/japanese/joho1/kousei/giin/221/giin.htm"
   },
   {
-   "fetchedAt": "2026-08-23T08:05:01.375Z",
+   "fetchedAt": "2026-08-23T14:56:49.140Z",
    "name": "衆議院 議員一覧（2026-02-18現在）",
    "url": "https://www.shugiin.go.jp/internet/itdb_annai.nsf/html/statics/syu/1giin.htm"
   },
   {
-   "fetchedAt": "2026-08-23T08:05:01.375Z",
+   "fetchedAt": "2026-08-23T14:56:49.140Z",
    "name": "参議院 本会議投票結果",
    "url": "https://www.sangiin.go.jp/japanese/touhyoulist/"
   },
   {
-   "fetchedAt": "2026-08-23T08:05:01.375Z",
+   "fetchedAt": "2026-08-23T14:56:49.140Z",
    "name": "国会会議録検索システム 検索用API（参議院 本会議）",
    "url": "https://kokkai.ndl.go.jp/api/speech?nameOfHouse=%E5%8F%82%E8%AD%B0%E9%99%A2&nameOfMeeting=%E6%9C%AC%E4%BC%9A%E8%AD%B0&sessionFrom=221&sessionTo=221&recordPacking=json&maximumRecords=100&startRecord=1"
   },
   {
-   "fetchedAt": "2026-08-23T08:05:01.375Z",
+   "fetchedAt": "2026-08-23T14:56:49.140Z",
    "name": "国会会議録検索システム 検索用API（衆議院 本会議）",
    "url": "https://kokkai.ndl.go.jp/api/speech?nameOfHouse=%E8%A1%86%E8%AD%B0%E9%99%A2&nameOfMeeting=%E6%9C%AC%E4%BC%9A%E8%AD%B0&sessionFrom=221&sessionTo=221&recordPacking=json&maximumRecords=100&startRecord=1"
   },
   {
-   "fetchedAt": "2026-08-23T08:05:01.375Z",
+   "fetchedAt": "2026-08-23T14:56:49.140Z",
+   "name": "国会会議録検索システム 検索用API（参議院 委員会の出席者欄）",
+   "url": "https://kokkai.ndl.go.jp/api/speech?nameOfHouse=%E5%8F%82%E8%AD%B0%E9%99%A2&speaker=%E4%BC%9A%E8%AD%B0%E9%8C%B2%E6%83%85%E5%A0%B1&any=%E7%99%BA%E8%AD%B0%E8%80%85&sessionFrom=221&sessionTo=221&recordPacking=json&maximumRecords=100&startRecord=1"
+  },
+  {
+   "fetchedAt": "2026-08-23T14:56:49.140Z",
    "name": "参議院 議案情報（第217回）",
    "url": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/217/gian.htm"
   },
   {
-   "fetchedAt": "2026-08-23T08:05:01.375Z",
+   "fetchedAt": "2026-08-23T14:56:49.140Z",
    "name": "参議院 議案情報（第218回）",
    "url": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/218/gian.htm"
   },
   {
-   "fetchedAt": "2026-08-23T08:05:01.375Z",
+   "fetchedAt": "2026-08-23T14:56:49.140Z",
    "name": "参議院 議案情報（第219回）",
    "url": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/219/gian.htm"
   },
   {
-   "fetchedAt": "2026-08-23T08:05:01.375Z",
+   "fetchedAt": "2026-08-23T14:56:49.140Z",
    "name": "参議院 議案情報（第220回）",
    "url": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/220/gian.htm"
   },
   {
-   "fetchedAt": "2026-08-23T08:05:01.375Z",
+   "fetchedAt": "2026-08-23T14:56:49.140Z",
    "name": "参議院 議案情報（第221回）",
    "url": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/221/gian.htm"
   },
   {
-   "fetchedAt": "2026-08-23T08:05:01.375Z",
+   "fetchedAt": "2026-08-23T14:56:49.140Z",
    "name": "衆議院 議案情報（第217回）",
    "url": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/kaiji217.htm"
   },
   {
-   "fetchedAt": "2026-08-23T08:05:01.375Z",
+   "fetchedAt": "2026-08-23T14:56:49.140Z",
    "name": "衆議院 議案情報（第218回）",
    "url": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/kaiji218.htm"
   },
   {
-   "fetchedAt": "2026-08-23T08:05:01.375Z",
+   "fetchedAt": "2026-08-23T14:56:49.140Z",
    "name": "衆議院 議案情報（第219回）",
    "url": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/kaiji219.htm"
   },
   {
-   "fetchedAt": "2026-08-23T08:05:01.375Z",
+   "fetchedAt": "2026-08-23T14:56:49.140Z",
    "name": "衆議院 議案情報（第220回）",
    "url": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/kaiji220.htm"
   },
   {
-   "fetchedAt": "2026-08-23T08:05:01.375Z",
+   "fetchedAt": "2026-08-23T14:56:49.140Z",
    "name": "衆議院 議案情報（第221回）",
    "url": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/kaiji221.htm"
   },
   {
-   "fetchedAt": "2026-08-23T08:05:01.375Z",
+   "fetchedAt": "2026-08-23T14:56:49.140Z",
    "name": "衆議院 質問答弁情報（第217回）",
    "url": "https://www.shugiin.go.jp/internet/itdb_shitsumon.nsf/html/shitsumon/kaiji217_l.htm"
   },
   {
-   "fetchedAt": "2026-08-23T08:05:01.375Z",
+   "fetchedAt": "2026-08-23T14:56:49.140Z",
    "name": "衆議院 質問答弁情報（第218回）",
    "url": "https://www.shugiin.go.jp/internet/itdb_shitsumon.nsf/html/shitsumon/kaiji218_l.htm"
   },
   {
-   "fetchedAt": "2026-08-23T08:05:01.375Z",
+   "fetchedAt": "2026-08-23T14:56:49.140Z",
    "name": "衆議院 質問答弁情報（第219回）",
    "url": "https://www.shugiin.go.jp/internet/itdb_shitsumon.nsf/html/shitsumon/kaiji219_l.htm"
   },
   {
-   "fetchedAt": "2026-08-23T08:05:01.375Z",
+   "fetchedAt": "2026-08-23T14:56:49.140Z",
    "name": "衆議院 質問答弁情報（第220回）",
    "url": "https://www.shugiin.go.jp/internet/itdb_shitsumon.nsf/html/shitsumon/kaiji220_l.htm"
   },
   {
-   "fetchedAt": "2026-08-23T08:05:01.375Z",
+   "fetchedAt": "2026-08-23T14:56:49.140Z",
    "name": "衆議院 質問答弁情報（第221回）",
    "url": "https://www.shugiin.go.jp/internet/itdb_shitsumon.nsf/html/shitsumon/kaiji221_l.htm"
   },
   {
-   "fetchedAt": "2026-08-23T08:05:01.375Z",
+   "fetchedAt": "2026-08-23T14:56:49.140Z",
    "name": "参議院 質問主意書（第217回）",
    "url": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/syuisyo.htm"
   },
   {
-   "fetchedAt": "2026-08-23T08:05:01.375Z",
+   "fetchedAt": "2026-08-23T14:56:49.140Z",
    "name": "参議院 質問主意書（第218回）",
    "url": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/218/syuisyo.htm"
   },
   {
-   "fetchedAt": "2026-08-23T08:05:01.375Z",
+   "fetchedAt": "2026-08-23T14:56:49.140Z",
    "name": "参議院 質問主意書（第219回）",
    "url": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/219/syuisyo.htm"
   },
   {
-   "fetchedAt": "2026-08-23T08:05:01.375Z",
+   "fetchedAt": "2026-08-23T14:56:49.140Z",
    "name": "参議院 質問主意書（第220回）",
    "url": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/220/syuisyo.htm"
   },
   {
-   "fetchedAt": "2026-08-23T08:05:01.375Z",
+   "fetchedAt": "2026-08-23T14:56:49.140Z",
    "name": "参議院 質問主意書（第221回）",
    "url": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/syuisyo.htm"
   }

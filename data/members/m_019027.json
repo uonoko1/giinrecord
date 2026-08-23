@@ -1,4 +1,5 @@
 {
+ "assemblyId": "diet-sangiin",
  "current": true,
  "house": "sangiin",
  "id": "m_019027",
@@ -275,6 +276,21 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0710-v001.htm",
    "title": "日程第１　情報通信技術を活用した行政の推進等に関する法律及び情報処理の促進に関する法律の一部を改正する法律案（内閣提出、衆議院送付）",
    "value": "賛成"
+  },
+  {
+   "bills": [
+    {
+     "billId": "221-参法-11",
+     "title": "主要農作物の優良な品種を確保するための公的新品種育成の促進等に関する法律案"
+    }
+   ],
+   "date": "2026-07-09",
+   "estimated": false,
+   "kind": "attendance",
+   "meeting": "農林水産委員会 第14号",
+   "meetingId": "122115007X01420260709_000",
+   "role": "発議者",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115007X01420260709/0"
   },
   {
    "date": "2026-07-08",

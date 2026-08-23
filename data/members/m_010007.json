@@ -1,4 +1,5 @@
 {
+ "assemblyId": "diet-sangiin",
  "current": true,
  "house": "sangiin",
  "id": "m_010007",
@@ -1916,6 +1917,21 @@
    "value": "賛成"
   },
   {
+   "bills": [
+    {
+     "billId": "217-参法-7",
+     "title": "労働安全衛生法及び特定受託事業者に係る取引の適正化等に関する法律の一部を改正する法律案"
+    }
+   ],
+   "date": "2025-05-29",
+   "estimated": false,
+   "kind": "attendance",
+   "meeting": "厚生労働委員会 第16号",
+   "meetingId": "121714260X01620250529_000",
+   "role": "発議者",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121714260X01620250529/0"
+  },
+  {
    "date": "2025-05-28",
    "groupValue": "賛成",
    "kind": "vote",
@@ -2006,6 +2022,21 @@
    "value": "賛成"
   },
   {
+   "bills": [
+    {
+     "billId": "217-参法-7",
+     "title": "労働安全衛生法及び特定受託事業者に係る取引の適正化等に関する法律の一部を改正する法律案"
+    }
+   ],
+   "date": "2025-05-27",
+   "estimated": false,
+   "kind": "attendance",
+   "meeting": "厚生労働委員会 第15号",
+   "meetingId": "121714260X01520250527_000",
+   "role": "発議者",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121714260X01520250527/0"
+  },
+  {
    "date": "2025-05-23",
    "groupValue": "賛成",
    "kind": "vote",
@@ -2064,6 +2095,21 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0523-v001.htm",
    "title": "日程第１　海洋法に関する国際連合条約に基づくいずれの国の管轄にも属さない区域における海洋の生物の多様性の保全及び持続可能な利用に関する協定の締結について承認を求めるの件（衆議院送付）",
    "value": "賛成"
+  },
+  {
+   "bills": [
+    {
+     "billId": "217-参法-7",
+     "title": "労働安全衛生法及び特定受託事業者に係る取引の適正化等に関する法律の一部を改正する法律案"
+    }
+   ],
+   "date": "2025-05-22",
+   "estimated": false,
+   "kind": "attendance",
+   "meeting": "厚生労働委員会 第14号",
+   "meetingId": "121714260X01420250522_000",
+   "role": "発議者",
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121714260X01420250522/0"
   },
   {
    "date": "2025-05-21",

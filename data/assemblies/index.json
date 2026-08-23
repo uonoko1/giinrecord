@@ -1,0 +1,14 @@
+[
+ {
+  "id": "diet-sangiin",
+  "kind": "national",
+  "name": "参議院",
+  "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/giin/221/giin.htm"
+ },
+ {
+  "id": "diet-shugiin",
+  "kind": "national",
+  "name": "衆議院",
+  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_annai.nsf/html/statics/syu/1giin.htm"
+ }
+]
