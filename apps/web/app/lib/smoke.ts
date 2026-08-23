@@ -174,6 +174,61 @@ export function checkBrandAssets(files: BuildFiles): MemberDataReport {
   return { checkedFiles: REQUIRED_BRAND_ASSETS.length, failures };
 }
 
+/** root.tsx が link する自サイト配信フォントの CSS（#168） */
+export const FONTS_CSS = "fonts/fonts.css";
+
+const RESOURCE_TAG_RE = /<(?:link|script|img|iframe|source|video|audio|object|embed)\b[^>]*?\b(?:href|src|data)\s*=\s*(?:"([^"]*)"|'([^']*)')/gi;
+const CSS_URL_RE = /url\(\s*(?:"([^"]*)"|'([^']*)'|([^)\s]+))\s*\)/g;
+
+const isExternal = (u: string) => /^(?:https?:)?\/\//i.test(u);
+
+/**
+ * Resource URLs a browser would *fetch* while rendering (link / script / img / iframe …) that point off-site.
+ * Plain <a href> to the source documents (sourceUrl) are links the visitor chooses to follow and are not listed.
+ */
+export function externalResourceUrls(html: string, siteOrigin = process.env.SITE_ORIGIN ?? ""): string[] {
+  const out: string[] = [];
+  for (const m of html.matchAll(RESOURCE_TAG_RE)) {
+    const tag = m[0];
+    // <link rel="canonical"|"alternate"> は取得されない（検索エンジン向けの自己参照）。
+    if (/^<link\b/i.test(tag) && /\brel\s*=\s*["'](?:canonical|alternate)["']/i.test(tag)) continue;
+    const u = m[1] ?? m[2] ?? "";
+    if (!isExternal(u)) continue;
+    // 自サイトの絶対 URL（SITE_ORIGIN）は外部ではない。
+    if (siteOrigin && (u === siteOrigin || u.startsWith(siteOrigin.replace(/\/$/, "") + "/"))) continue;
+    out.push(u);
+  }
+  return out;
+}
+
+function cssUrls(css: string): string[] {
+  return [...css.matchAll(CSS_URL_RE)].map((m) => m[1] ?? m[2] ?? m[3] ?? "");
+}
+
+/**
+ * Issue #168（第三者送信ゼロ）: every built page loads resources only from this site, fonts/fonts.css
+ * exists, references no external URL, and every woff2 it names is in the build.
+ */
+export function checkNoExternalResources(files: BuildFiles): MemberDataReport {
+  const failures: string[] = [];
+  let checkedFiles = 0;
+  for (const [rel, html] of files) {
+    if (!rel.endsWith(".html")) continue;
+    checkedFiles++;
+    for (const u of externalResourceUrls(html)) failures.push(`${rel}: external resource ${u}`);
+  }
+  const css = files.get(FONTS_CSS);
+  if (css === undefined) failures.push(`missing ${FONTS_CSS} (self-hosted fonts, #168)`);
+  else {
+    checkedFiles++;
+    for (const u of cssUrls(css)) {
+      if (isExternal(u)) failures.push(`${FONTS_CSS}: external resource ${u}`);
+      else if (!files.has(`fonts/${u}`)) failures.push(`${FONTS_CSS}: missing fonts/${u}`);
+    }
+  }
+  return { checkedFiles, failures };
+}
+
 export interface SitemapReport {
   checkedUrls: number;
   failures: string[];

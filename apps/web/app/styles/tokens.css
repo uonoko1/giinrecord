@@ -16,6 +16,7 @@
   --act-bg: #f1e8d3; --act-fg: #6a4e12; --act-line: #dccaa0;
   /* 推定（衆院の会派態度）。破線＋薄地。賛成・反対どちらも同じ色で、色に賛否を載せない */
   --est-bg: #f0eee9; --est-fg: #4a4740; --est-line: #8f8a80;
+  /* @font-face for both families: public/fonts/fonts.css（自サイト配信, #168。root.tsx が link する） */
   --font-head: "Shippori Mincho", "Hiragino Mincho ProN", "Yu Mincho", serif;
   --font-body: "BIZ UDPGothic", "Hiragino Sans", "Noto Sans JP", sans-serif;
 }

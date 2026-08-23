@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { BRAND } from "./lib/brand-colors";
-import { links, THEME_COLOR } from "./root";
+import { FONTS_CSS_HREF, links, THEME_COLOR } from "./root";
 
 describe("root links / meta（#129 ファビコン・manifest）", () => {
   const all = links() as Record<string, string | undefined>[];
@@ -18,13 +18,12 @@ describe("root links / meta（#129 ファビコン・manifest）", () => {
     expect(byRel("manifest")).toEqual([{ rel: "manifest", href: "/site.webmanifest" }]);
   });
 
-  it("Google Fonts（Shippori Mincho / BIZ UDPGothic）の stylesheet を preconnect 付きで読み込む", () => {
-    const sheet = byRel("stylesheet");
-    expect(sheet).toHaveLength(1);
-    expect(sheet[0]?.href).toContain("fonts.googleapis.com");
-    expect(sheet[0]?.href).toContain("Shippori+Mincho");
-    expect(sheet[0]?.href).toContain("BIZ+UDPGothic");
-    expect(byRel("preconnect").some((l) => l.href === "https://fonts.gstatic.com")).toBe(true);
+  // Issue #168: フォントは自サイト配信。Google Fonts への link / preconnect は無く、外部 URL を一切含まない
+  it("フォントは /fonts/fonts.css（自サイト配信）だけを読み込み、preconnect や外部 URL を含まない", () => {
+    expect(byRel("stylesheet")).toEqual([{ rel: "stylesheet", href: FONTS_CSS_HREF }]);
+    expect(FONTS_CSS_HREF).toBe("/fonts/fonts.css");
+    expect(byRel("preconnect")).toEqual([]);
+    for (const l of all) expect(l.href).not.toMatch(/^(https?:)?\/\//);
   });
 
   it("theme-color は墨藍", () => {
