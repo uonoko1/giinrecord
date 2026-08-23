@@ -5,7 +5,10 @@ set -euo pipefail
 DOMAIN="${1:?usage: fix-www.sh <domain>}"
 CONF=/etc/nginx/sites-enabled/gikailog.conf
 DEF=/etc/nginx/sites-enabled/default
-cp -a "$DEF" "$DEF.bak.$(date +%s)"
+BAK_DIR=/var/backups/gikailog; mkdir -p "$BAK_DIR"
+# 以前の版が sites-enabled/ に置いた bak（nginx が読み込んでしまう）を退避
+mv -f /etc/nginx/sites-enabled/default.bak.* "$BAK_DIR"/ 2>/dev/null || true
+BAK="$BAK_DIR/default.bak.$(date +%s)"; cp -a "$DEF" "$BAK"
 # default から「server_name www.DOMAIN」を含む server ブロックだけを除去
 python3 - "$DEF" "www.$DOMAIN" <<'PY'
 import re,sys
@@ -49,4 +52,4 @@ server {
     return 301 https://$DOMAIN\$request_uri;
 }
 EOF2
-if nginx -t; then systemctl reload nginx; echo "www.$DOMAIN -> https://$DOMAIN (301)"; else echo "nginx -t failed; restoring default"; cp -a "$DEF.bak."* "$DEF" 2>/dev/null; exit 1; fi
+if nginx -t; then systemctl reload nginx; echo "www.$DOMAIN -> https://$DOMAIN (301)"; else echo "nginx -t failed; restoring default"; cp -a "$BAK" "$DEF"; exit 1; fi
