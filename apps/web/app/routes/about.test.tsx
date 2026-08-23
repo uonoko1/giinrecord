@@ -21,7 +21,7 @@ describe("About", () => {
     renderAbout();
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("このデータについて");
     expect(screen.getByText(/評価・採点・推薦はしません。すべての行に出典があります。/)).toBeInTheDocument();
-    for (const name of ["何が事実で、何が推定か", "記録にないこと", "更新", "検証する", "運営費について"]) {
+    for (const name of ["何が事実で、何が推定か", "記録にないこと", "更新", "検証する", "運営費について", "規約とプライバシー"]) {
       expect(screen.getByRole("heading", { level: 2, name })).toBeInTheDocument();
     }
   });
@@ -102,15 +102,12 @@ describe("About", () => {
     });
   });
 
-  describe("計測について（#58）", () => {
-    it("見出しがあり、何を記録し何を記録しないかを書く", () => {
+  describe("規約とプライバシー（#166）", () => {
+    it("計測の節は無く、/terms と /privacy へのリンクがある", () => {
       renderAbout();
-      expect(screen.getByRole("heading", { level: 2, name: "計測について" })).toBeInTheDocument();
-      const text = screen.getByRole("heading", { level: 2, name: "計測について" }).parentElement?.textContent ?? "";
-      expect(text).toContain("Cookie");
-      expect(text).toContain("IP アドレス");
-      expect(text).toMatch(/ページビュー|PV/);
-      expect(text).toContain("リファラ");
+      expect(screen.queryByRole("heading", { level: 2, name: "計測について" })).toBeNull();
+      expect(screen.getByRole("link", { name: "利用規約" })).toHaveAttribute("href", "/terms");
+      expect(screen.getByRole("link", { name: "プライバシーポリシー" })).toHaveAttribute("href", "/privacy");
     });
   });
 });
