@@ -6,7 +6,7 @@ import type { DistrictsMeta, ZipDistricts } from "@seiji-kiroku/shared";
 import { describe, expect, it } from "vitest";
 import byZipJson from "../test-fixtures/districts/by-zip.json";
 import metaJson from "../test-fixtures/districts/meta.json";
-import { ZIP_NOT_FOUND, membersByDistrictUrl, normalizeZip, shardByZip, splitMunicipalityFor, zipShardUrl } from "./districts";
+import { ZIP_NOT_FOUND, membersByDistrictUrl, normalizeZip, shardByZip, splitMunicipalitiesOf, splitMunicipalityFor, zipShardUrl } from "./districts";
 
 const byZip = byZipJson as Record<string, ZipDistricts>;
 const meta = metaJson as DistrictsMeta;
@@ -80,5 +80,21 @@ describe("splitMunicipalityFor", () => {
 describe("ZIP_NOT_FOUND", () => {
   it("文言は「該当する郵便番号が見つかりません」", () => {
     expect(ZIP_NOT_FOUND).toBe("該当する郵便番号が見つかりません");
+  });
+});
+
+describe("splitMunicipalitiesOf（#120: by-zip の市区町村名と meta.splitMunicipalities の突合）", () => {
+  it("市区町村名があれば、そのうち分割市区町村だけを名前で返す", () => {
+    expect(splitMunicipalitiesOf(byZip["1040031"], meta)).toEqual(["東京都中央区"]);
+  });
+  it("候補が複数でも分割でない市区の和集合なら空（推定しない）", () => {
+    expect(splitMunicipalitiesOf({ sangiin: ["北海道"], shugiin: ["北海道3", "北海道5"], municipalities: ["北海道札幌市厚別区", "北海道札幌市清田区"] }, meta)).toEqual([]);
+  });
+  it("候補が 1 つなら空", () => {
+    expect(splitMunicipalitiesOf(byZip["1000001"], meta)).toEqual([]);
+  });
+  it("市区町村名が無い（旧 by-zip）ときは小選挙区の集合が一致する分割市区町村 1 件にフォールバックする", () => {
+    expect(splitMunicipalitiesOf({ sangiin: ["東京"], shugiin: ["東京1", "東京2"] }, meta)).toEqual(["東京都中央区"]);
+    expect(splitMunicipalitiesOf(byZip["4980000"], meta)).toEqual([]);
   });
 });

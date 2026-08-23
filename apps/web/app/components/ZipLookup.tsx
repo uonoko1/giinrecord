@@ -7,7 +7,7 @@
 import { useEffect, useId, useState } from "react";
 import { Link } from "react-router";
 import type { DistrictsMeta, ZipDistricts } from "@seiji-kiroku/shared";
-import { DISTRICTS_META_URL, ZIP_MULTIPLE, ZIP_NOT_FOUND, membersByDistrictUrl, normalizeZip, splitMunicipalityFor, zipShardUrl } from "../lib/districts";
+import { DISTRICTS_META_URL, ZIP_MULTIPLE, ZIP_NOT_FOUND, membersByDistrictUrl, normalizeZip, readJsonOrNull, splitMunicipalitiesOf, zipShardUrl } from "../lib/districts";
 import { formatDate } from "../lib/format";
 
 export const ZIP_INVALID = "郵便番号は7桁で入力してください";
@@ -16,20 +16,17 @@ export const ZIP_FETCH_FAILED = "取得に失敗しました";
 export type ZipLookupFn = (zip: string) => Promise<ZipDistricts | null>;
 export type DistrictsMetaLoader = () => Promise<DistrictsMeta | null>;
 
-/** 分割ファイルを fetch して 1 件引く。ファイルが無い（404）・その郵便番号が無い → null。 */
+/**
+ * 分割ファイルを fetch して 1 件引く。ファイルが無い（404）・200 でも JSON でない（SPA フォールバックの HTML など、Issue 120）・
+ * その郵便番号が無い → null（「見つからない」）。5xx など他の失敗は例外（「取得に失敗しました」）。
+ */
 export async function fetchZipDistricts(zip: string): Promise<ZipDistricts | null> {
-  const res = await fetch(zipShardUrl(zip));
-  if (res.status === 404) return null;
-  if (!res.ok) throw new Error(`${zipShardUrl(zip)}: HTTP ${res.status}`);
-  const shard = (await res.json()) as Record<string, ZipDistricts>;
-  return shard[zip] ?? null;
+  const shard = await readJsonOrNull<Record<string, ZipDistricts>>(await fetch(zipShardUrl(zip)), zipShardUrl(zip));
+  return shard?.[zip] ?? null;
 }
 
 export async function fetchDistrictsMeta(): Promise<DistrictsMeta | null> {
-  const res = await fetch(DISTRICTS_META_URL);
-  if (res.status === 404) return null;
-  if (!res.ok) throw new Error(`${DISTRICTS_META_URL}: HTTP ${res.status}`);
-  return (await res.json()) as DistrictsMeta;
+  return readJsonOrNull<DistrictsMeta>(await fetch(DISTRICTS_META_URL), DISTRICTS_META_URL);
 }
 
 type State =
@@ -124,7 +121,8 @@ function DistrictLinks({ names }: { names: string[] }) {
 
 function ZipResult({ zip, districts, meta }: { zip: string; districts: ZipDistricts; meta: DistrictsMeta | null }) {
   const multiple = districts.sangiin.length > 1 || districts.shugiin.length > 1;
-  const split = meta ? splitMunicipalityFor(districts, meta) : null;
+  const municipalities = districts.municipalities ?? [];
+  const split = meta ? splitMunicipalitiesOf(districts, meta) : [];
   const kenAll = meta?.sources.find((s) => s.name.includes("日本郵便"));
   const soumu = meta?.sources.find((s) => s.name.includes("総務省"));
   const title = `郵便番号 ${zip} の選挙区`;
@@ -134,6 +132,12 @@ function ZipResult({ zip, districts, meta }: { zip: string; districts: ZipDistri
         〒{zip.slice(0, 3)}-{zip.slice(3)}
       </h3>
       <dl className="zip__rows">
+        {municipalities.length > 0 && (
+          <div className="zip__item">
+            <dt>市区町村</dt>
+            <dd>{municipalities.join("、")}</dd>
+          </div>
+        )}
         <div className="zip__item">
           <dt>参議院</dt>
           <dd>
@@ -150,7 +154,7 @@ function ZipResult({ zip, districts, meta }: { zip: string; districts: ZipDistri
       {multiple && (
         <p className="note">
           {ZIP_MULTIPLE}
-          {split ? `（${split.pref}${split.city}は複数の小選挙区にまたがります）` : ""}。候補：
+          {split.length > 0 ? `（${split.join("、")}は複数の小選挙区にまたがります）` : ""}。候補：
           {[...districts.sangiin, ...districts.shugiin].join("、")}
         </p>
       )}
