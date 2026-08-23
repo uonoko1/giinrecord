@@ -3,7 +3,8 @@
  * Walks build/client, asserts the pages data/ promised exist and every internal
  * href resolves to a file or dir/index.html, that sitemap.xml lists exactly the built pages,
  * and that data/data-archive.zip exists with one entry per data/ file (+ README) within
- * ARCHIVE_MAX_BYTES. Exits non-zero on any failure.
+ * ARCHIVE_MAX_BYTES, and that data/members/{id}.json exists for every member (fetched at runtime by /compare, #104).
+ * Exits non-zero on any failure.
  * Usage: pnpm --filter web smoke   (BUILD_DIR / SEIJI_DATA_DIR override the defaults)
  *
  * URL mode (Issue #85): `pnpm --filter web smoke -- --url http://127.0.0.1:8080` additionally fetches
@@ -14,7 +15,7 @@ import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { ARCHIVE_NAME, checkArchive, collectDataFiles } from "../app/lib/archive";
 import { defaultDataDir, readRollCallIndex } from "../app/lib/data-files";
-import { checkBuild, checkSitemap, formatReport, type BuildFiles, type ExpectedData } from "../app/lib/smoke";
+import { checkBuild, checkMemberData, checkSitemap, formatReport, type BuildFiles, type ExpectedData } from "../app/lib/smoke";
 import { checkServed, urlSmokeTargets, type ServedResponse } from "../app/lib/smoke-url";
 
 async function listBuild(root: string): Promise<BuildFiles> {
@@ -49,6 +50,7 @@ const files = await listBuild(buildDir);
 const data = await readExpected(dataDir);
 const pages = checkBuild(files, data);
 const sitemap = checkSitemap(files, data);
+const memberData = checkMemberData(files, data);
 
 /** Upper bound for the bulk zip. data/ is ~41 MB raw (5 sessions) and deflates to a few MB; raise deliberately when sessions grow. */
 const ARCHIVE_MAX_BYTES = Number(process.env.ARCHIVE_MAX_BYTES ?? 50 * 1024 * 1024);
@@ -93,9 +95,10 @@ if (baseUrl) {
   console.log(`smoke: url=${baseUrl} ${served.checked} urls fetched`);
 }
 
-const report = { ...pages, failures: [...pages.failures, ...sitemap.failures, ...archiveFailures, ...servedFailures] };
+const report = { ...pages, failures: [...pages.failures, ...sitemap.failures, ...memberData.failures, ...archiveFailures, ...servedFailures] };
 console.log(`smoke: build=${buildDir} data=${dataDir} members=${data.memberIds?.length ?? "none"} rollcalls=${data.rollCalls?.length ?? "none"}`);
 console.log(`smoke: sitemap.xml ${sitemap.checkedUrls} urls checked`);
+console.log(`smoke: data/members ${memberData.checkedFiles} member files checked`);
 console.log(`smoke: archive=${archivePath} size=${archive?.length ?? "missing"} dataFiles=${dataFileCount} max=${ARCHIVE_MAX_BYTES}`);
 console.log(formatReport(report));
 process.exit(report.failures.length === 0 ? 0 : 1);

@@ -77,6 +77,26 @@ export function checkBuild(files: BuildFiles, data: ExpectedData): SmokeReport {
   return { checkedPages, checkedLinks, failures };
 }
 
+export interface MemberDataReport {
+  checkedFiles: number;
+  failures: string[];
+}
+
+/** ビルドが /data/members/{id}.json に置くべきファイル（/compare が実行時に fetch する、Issue #104）。 */
+export function expectedMemberDataFiles(data: ExpectedData): string[] {
+  return (data.memberIds ?? []).map((id) => `data/members/${id}.json`);
+}
+
+/**
+ * /compare（#104）は議員の JSON をバンドルせず、ビルド時に data/members/*.json を build/client/data/members/ へ
+ * コピーしたものを fetch する（scripts/copy-member-data.ts）。index.json の全 id 分が無ければ失敗。
+ */
+export function checkMemberData(files: BuildFiles, data: ExpectedData): MemberDataReport {
+  const expected = expectedMemberDataFiles(data);
+  const failures = expected.filter((f) => !files.has(f)).map((f) => `missing data file: ${f}`);
+  return { checkedFiles: expected.length, failures };
+}
+
 export interface SitemapReport {
   checkedUrls: number;
   failures: string[];

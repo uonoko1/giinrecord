@@ -17,6 +17,11 @@
 .member-count dd { margin: 0; font-family: var(--font-head); font-size: 28px; font-weight: 700; line-height: 1; }
 .member-count dt { font-size: 11px; letter-spacing: 0.1em; opacity: 0.8; }
 .member-profile { padding-bottom: 16px; font-size: 12px; }
+/* 比較に追加 (#104): 表紙の最下段。押下状態は文言（比較から外す）で示し、色で良し悪しを示さない */
+.compare-add { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding-bottom: 16px; font-size: 12px; }
+.compare-add-button { padding: 6px 12px; background: none; border: 1px solid var(--brass-on-cover); font: inherit; font-size: 12px; color: var(--brass-on-cover); cursor: pointer; }
+.compare-add-button[aria-pressed="true"] { background: var(--brass-on-cover); color: var(--cover); }
+.compare-add-note { width: 100%; opacity: 0.85; }
 
 /* タブ */
 .member-tabs { display: flex; margin-top: 10px; padding: 0 20px; border-bottom: 1px solid var(--rule); }

@@ -3,7 +3,7 @@
  * 実ファイルシステムは使わず、Map で表した偽のビルドディレクトリに対して検証する。
  */
 import { describe, expect, it } from "vitest";
-import { checkBuild, checkSitemap, extractInternalHrefs, resolveHrefTarget, formatReport, type BuildFiles } from "./smoke";
+import { checkBuild, checkMemberData, checkSitemap, extractInternalHrefs, resolveHrefTarget, formatReport, type BuildFiles } from "./smoke";
 
 const html = (links: string[]) => `<html><body>${links.map((l) => `<a href="${l}">x</a>`).join("")}</body></html>`;
 
@@ -91,6 +91,20 @@ describe("checkBuild", () => {
       "assets/x.js": `href="/nope"`,
     });
     expect(checkBuild(b, { memberIds: null, rollCalls: null }).failures).toEqual([]);
+  });
+});
+
+/** /compare（#104）は実行時に /data/members/{id}.json を fetch するので、ビルドが全議員分をコピーしている必要がある。 */
+describe("checkMemberData", () => {
+  it("members/index.json の全 id について data/members/{id}.json がビルドに必要", () => {
+    const b = fakeBuild({ "index.html": "", "data/members/m_1.json": "" });
+    expect(checkMemberData(b, { memberIds: ["m_1", "m_2"], rollCalls: null }).failures).toEqual([
+      expect.stringContaining("data/members/m_2.json"),
+    ]);
+    expect(checkMemberData(b, { memberIds: ["m_1"], rollCalls: null })).toEqual({ checkedFiles: 1, failures: [] });
+  });
+  it("data/ が無いときは何も要求しない", () => {
+    expect(checkMemberData(fakeBuild({ "index.html": "" }), { memberIds: null, rollCalls: null })).toEqual({ checkedFiles: 0, failures: [] });
   });
 });
 

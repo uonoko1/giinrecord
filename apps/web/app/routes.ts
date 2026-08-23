@@ -15,6 +15,7 @@ export default [
   index("routes/home.tsx"),
   route("about", "routes/about.tsx"),
   route("members", "routes/members.tsx"),
+  route("compare", "routes/compare.tsx"), // #104: クエリ依存・プリレンダー無し（SPA fallback）・noindex
   ...(hasMemberData ? [route("members/:id", "routes/member.tsx")] : []),
   ...(hasRollCallData ? [route("rollcalls/:session?", "routes/rollcalls.tsx"), route("rollcalls/:session/:id", "routes/rollcall.tsx")] : []),
 ] satisfies RouteConfig;
