@@ -6,8 +6,10 @@ ETL（書く側）と Web（読む側）はこのファイル群だけで結合�
 ```
 data/
   meta.json                         DatasetMeta（取得日時・出典・対象回次）
+  assemblies/
+    index.json                      Assembly[]       議会の一覧（国会2件: diet-sangiin / diet-shugiin。地方議会は Phase 1 の ETL が足す。#156）
   members/
-    index.json                      MemberSummary[]  検索・一覧用（軽量）
+    index.json                      MemberSummary[]  検索・一覧用（軽量）。assemblyId で議会を引く
     {memberId}.json                 MemberDetail     議員ページ用（その人の全記録）
   rollcalls/
     index.json                      RollCallSummary[] 採決一覧用
@@ -28,7 +30,7 @@ data/
 ## 型（shared に追加する）
 
 ```ts
-interface MemberSummary { id: MemberId; name: string; kana: string; house: House; group: string; district: string; termEnd?: string; current: boolean; counts: { rollcalls: number; bills: number; speeches: number; questions: number } }
+interface MemberSummary { id: MemberId; name: string; kana: string; house: House; assemblyId: AssemblyId; group: string; district: string; termEnd?: string; current: boolean; counts: { rollcalls: number; bills: number; speeches: number; questions: number } }
 interface MemberDetail extends Member { timeline: TimelineEntry[] }
 type TimelineEntry =
   | { kind: "vote"; date: string; rollCallId: string; title: string; value: VoteValue; result: string; groupValue?: VoteValue; sourceUrl: string }
@@ -38,6 +40,27 @@ type TimelineEntry =
   | { kind: "question"; date: string; questionId: string; title: string; submitterText?: string; status?: string; answerDate?: string; answerUrl?: string; sourceUrl: string }; // 質問主意書（事実）
 interface RollCallSummary { id: string; session: number; date: string; title: string; totals: { total: number; yes: number; no: number }; result: string }
 ```
+
+## 議会（`assemblies/`、Issue #156。`docs/research/local-assemblies.md`「DATA_CONTRACT 拡張の素案」を正式化）
+
+国会と地方議会を同じ契約で扱うための土台。**この Issue では地方議会の ETL は実装しない**（型・ファイル・検証・URL 設計だけ）。
+
+```ts
+type AssemblyKind = "national" | "prefectural" | "municipal";
+type DietAssemblyId = "diet-sangiin" | "diet-shugiin";
+type AssemblyId = DietAssemblyId | `pref-${string}` | `city-${string}`;
+interface Assembly { id: AssemblyId; kind: AssemblyKind; name: string; prefCode?: string; sourceUrl: string }
+interface LocalVote { raw: string; legend: string; mapped?: VoteValue }   // 地方議会の表決値（原文保持）
+```
+
+- `house` は**国会の院**の意味のまま残す（`"sangiin" | "shugiin"`。既存 JSON の後方互換）。階層は `Assembly.kind`、所属は `Member.assemblyId` / `MemberSummary.assemblyId` で表す。国会議員の `assemblyId` は `diet-{house}`（`diet-sangiin` / `diet-shugiin`）。
+- `Assembly.id`: 国会は `diet-sangiin` / `diet-shugiin`。都道府県は `pref-{団体コード上2桁}`（例 `pref-04` 宮城、`pref-36` 徳島）、市区町村は `city-{団体コード5桁}`（例 `city-33100` 岡山市）。団体コードは `districts/municipalities.json` の `code` と同じ体系なので、郵便番号 → 市区町村 → 議会 の結合がそのまま効く（#111）。`prefCode` は都道府県の団体コード上2桁で、`prefectural` / `municipal` に必須、`national` には無い。
+- `Assembly.name` は公式表記（「参議院」「宮城県議会」）、`sourceUrl` は名簿（議員一覧）の入口。国会の2行は衆参のドメイン。地方議会の行は https。地方議会のレコード（名簿・会議結果）の `sourceUrl` はその議会の `Assembly.sourceUrl` のホストに限る（「衆参・NDL のドメイン」の不変条件を議会ごとの許可ホストに一般化する。地方 ETL 以降）。
+- **URL**: 議会は `/assemblies/{assemblyId}/`、議員は既存の `/members/{id}` のまま。`MemberId` の空間は接頭辞で分ける: 参院 `m_…`、衆院 `h_…`、地方議会は `p_{prefCode}_…`（例 `p_04_…`）。国会の既存 URL は変えない。
+- **表決値（地方）**: 国会の `VoteValue`（賛成／反対／投票なし）には触れない。地方議会の凡例（○×議欠－棄白、簡易／起立 …）は `LocalVote` で**原文のまま**保持する: `raw` はセルの原文（「○」「×」「欠」「－」「議」）、`legend` はその議会の凡例での意味の原文（「賛成」「反対」「欠席」「議場に不在」「議長」「棄権」「白票」）、`mapped` は凡例から機械的に国会の値へ対応づけられるときだけ（○→賛成、×→反対、欠席・退席・除斥・議長など「票を投じていない」と凡例が言うとき→投票なし）。凡例から読めなければ `mapped` は省略し、推定しない。Web は必ず `raw` と `legend` を添えて表示し、`mapped` だけを出さない（欠席と棄権を区別している事実を消さない。国会の「欠席と棄権を区別しない」は国会の公表形式に従った結果で、地方の公表形式まで丸めない）。
+- 国会の既存データへの差分は `assemblies/index.json` の新設と `members/index.json` / `members/{id}.json` の `assemblyId` の追加だけ（それ以外は byte-identical）。
+- 不変条件（`validateDataset`）: `assemblies/index.json` が存在し、`id` は空でなく一意、`kind` は3値、`name` は空でない、`national` は `prefCode` を持たず `sourceUrl` は衆参・NDL のドメイン、`prefectural` / `municipal` は `prefCode` が 01〜47 で `sourceUrl` は https。`members/index.json` の各行の `assemblyId` は `assemblies/index.json` に存在し、`house` が `sangiin` / `shugiin` なら `diet-{house}` と一致する。`members/{id}.json` の `assemblyId` は index と同じ。
+- Web（`/members`）: 「院」の select（両院／参議院／衆議院）を「議会」の select（すべて＋`assemblies/index.json` の並び）に一般化する。既定はすべて。すべてを表示しているとき各行に議会名（`Assembly.name` の原文）を添える。`assemblies/index.json` が無い・`assemblyId` が無い古いデータは国会の2議会として読む（`house` から `diet-{house}`）。
 
 ## 不変条件
 - `RollCall.votes[].memberId` は `members/index.json` に存在する id、または名寄せ失敗時は `""`（その場合 `unmatched.json` に載る）。
