@@ -1,5 +1,6 @@
 import { parse } from "node-html-parser";
 import type { Member, MemberSummary } from "@seiji-kiroku/shared";
+import { assemblyIdOf } from "../assemblies.ts";
 import { fetchText } from "../fetch.ts";
 import { stableJson } from "../json.ts";
 import { isKnownGroup, resolveGroup } from "./sangiin-groups.ts";
@@ -104,7 +105,7 @@ export function unmatchedGroups(members: Member[]): UnmatchedGroup[] {
 export function toSummary(m: Member): MemberSummary {
   const t = m.terms[0];
   return {
-    id: m.id, name: m.name, kana: m.kana, house: m.house,
+    id: m.id, name: m.name, kana: m.kana, house: m.house, assemblyId: assemblyIdOf(m),
     group: t?.group ?? "", district: t?.district ?? "", termEnd: t?.to,
     // 回次をまたいで統合する前（名簿1つだけ）の Member は全員が現職。
     current: m.current ?? true,

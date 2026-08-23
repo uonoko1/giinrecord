@@ -4,9 +4,9 @@ import { existsSync, mkdtempSync, readFileSync, writeFileSync, rmSync } from "no
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import iconv from "iconv-lite";
-import type { Bill, BillSummary, RollCall, RollCallSummary } from "@seiji-kiroku/shared";
+import type { Assembly, Bill, BillSummary, MemberSummary, RollCall, RollCallSummary } from "@seiji-kiroku/shared";
 import { buildDataset } from "../src/aggregate.ts";
-import { readSessionsOnDisk, resolveSessions, writeDataset, validateDataset, type Dataset } from "../src/dataset.ts";
+import { DIET_ASSEMBLY_IDS, dietAssemblies, readSessionsOnDisk, resolveSessions, writeDataset, validateDataset, type Dataset } from "../src/dataset.ts";
 import { stableJson } from "../src/json.ts";
 import { matchVotes } from "../src/match-votes.ts";
 import { parseRollCall } from "../src/sources/sangiin-votes.ts";
@@ -29,6 +29,7 @@ function realDataset(): Dataset {
   const rollCalls = ["221-0605-v001", "221-0724-v001"].map((id) => matchVotes(parseRollCall(fixture(id), `${BASE}/${id}.htm`, 221), members).rollCall);
   return {
     ...buildDataset(members, rollCalls),
+    assemblies: dietAssemblies(221),
     rollCallDetails: rollCalls,
     bills: [realBill("1DE153E", "衆議院で閉会中審査"), realBill("1DE14D6", "成立"), realBill("1DE115E", "衆議院で閉会中審査")],
     unmatched: [],
@@ -56,10 +57,80 @@ describe("writeDataset / validateDataset: docs/DATA_CONTRACT.md の不変条件"
   });
 
   test("契約どおりのファイル一式を書く（キーソート・末尾改行）", () => {
-    for (const rel of ["meta.json", "members/index.json", "members/m_007006.json", "rollcalls/index.json", "rollcalls/221/221-0605-v001.json", "bills/index.json", "bills/221/221-衆法-1.json", "bills/219/219-決算-1DE115E.json", "unmatched.json", "unmatched-bills.json", "unmatched-groups.json", "group-mismatch.json"]) {
+    for (const rel of ["meta.json", "assemblies/index.json", "members/index.json", "members/m_007006.json", "rollcalls/index.json", "rollcalls/221/221-0605-v001.json", "bills/index.json", "bills/221/221-衆法-1.json", "bills/219/219-決算-1DE115E.json", "unmatched.json", "unmatched-bills.json", "unmatched-groups.json", "group-mismatch.json"]) {
       const text = readFileSync(join(dir, rel), "utf-8");
       assert.equal(text, stableJson(JSON.parse(text)), rel);
     }
+    cleanup();
+  });
+
+  test("assemblies/index.json: 国会の2議会（diet-sangiin / diet-shugiin）を kind: national・出典付きで書く（#156）", () => {
+    const list = readJson<Assembly[]>(dir, "assemblies/index.json");
+    assert.deepEqual(list.map((a) => a.id), ["diet-sangiin", "diet-shugiin"]);
+    assert.deepEqual(DIET_ASSEMBLY_IDS, { sangiin: "diet-sangiin", shugiin: "diet-shugiin" });
+    for (const a of list) {
+      assert.equal(a.kind, "national");
+      assert.match(a.sourceUrl, /^https:\/\/www\.(sangiin|shugiin)\.go\.jp\//);
+      assert.equal(a.prefCode, undefined);
+    }
+    assert.equal(list[0].name, "参議院");
+    assert.equal(list[1].name, "衆議院");
+    cleanup();
+  });
+
+  test("members/index.json と members/{id}.json の全員に assemblyId が付く（国会は diet-sangiin。既存項目はそのまま）", () => {
+    const idx = readJson<MemberSummary[]>(dir, "members/index.json");
+    assert.ok(idx.length > 0);
+    for (const m of idx) assert.equal(m.assemblyId, "diet-sangiin", m.id);
+    assert.equal(readJson<{ assemblyId: string }>(dir, "members/m_007006.json").assemblyId, "diet-sangiin");
+    cleanup();
+  });
+
+  test("assemblies/index.json が無ければ違反", async () => {
+    rmSync(join(dir, "assemblies/index.json"));
+    assert.match((await validateDataset(dir)).join("\n"), /assemblies\/index\.json: missing/);
+    cleanup();
+  });
+
+  test("assemblies/index.json の id が重複・kind が national|prefectural|municipal 以外・sourceUrl が不正なら違反", async () => {
+    patch<Assembly[]>(dir, "assemblies/index.json", (list) => [...list, { ...list[0], kind: "regional" as never, sourceUrl: "http://example.com/" }]);
+    const out = (await validateDataset(dir)).join("\n");
+    assert.match(out, /assemblies\/index\.json.*duplicate id diet-sangiin/);
+    assert.match(out, /assemblies\/index\.json.*kind.*regional/);
+    assert.match(out, /assemblies\/index\.json.*sourceUrl.*example\.com/);
+    cleanup();
+  });
+
+  test("prefectural / municipal の議会は prefCode が 2 桁の団体コードでなければ違反。国会は prefCode を持たない", async () => {
+    patch<Assembly[]>(dir, "assemblies/index.json", (list) => [
+      ...list.map((a) => (a.id === "diet-shugiin" ? { ...a, prefCode: "13" } : a)),
+      { id: "pref-04", kind: "prefectural", name: "宮城県議会", sourceUrl: "https://www.pref.miyagi.jp/" },
+      { id: "city-33100", kind: "municipal", name: "岡山市議会", prefCode: "033", sourceUrl: "https://www.city.okayama.jp/" },
+    ]);
+    const out = (await validateDataset(dir)).join("\n");
+    assert.match(out, /diet-shugiin.*prefCode/);
+    assert.match(out, /pref-04.*prefCode/);
+    assert.match(out, /city-33100.*prefCode/);
+    cleanup();
+  });
+
+  test("member の assemblyId が assemblies/index.json に無ければ違反", async () => {
+    patch<MemberSummary[]>(dir, "members/index.json", (idx) => idx.map((m) => (m.id === "m_007006" ? { ...m, assemblyId: "pref-99" } : m)));
+    patch<{ assemblyId: string }>(dir, "members/m_007006.json", (d) => ({ ...d, assemblyId: "pref-99" }));
+    assert.match((await validateDataset(dir)).join("\n"), /m_007006.*assemblyId pref-99 not in assemblies\/index\.json/);
+    cleanup();
+  });
+
+  test("国会議員の assemblyId は house と一致（sangiin → diet-sangiin）しなければ違反", async () => {
+    patch<MemberSummary[]>(dir, "members/index.json", (idx) => idx.map((m) => (m.id === "m_007006" ? { ...m, assemblyId: "diet-shugiin" } : m)));
+    patch<{ assemblyId: string }>(dir, "members/m_007006.json", (d) => ({ ...d, assemblyId: "diet-shugiin" }));
+    assert.match((await validateDataset(dir)).join("\n"), /m_007006.*assemblyId diet-shugiin.*house sangiin/);
+    cleanup();
+  });
+
+  test("index と detail の assemblyId が食い違えば違反。assemblyId を欠けば違反", async () => {
+    patch<{ assemblyId?: string }>(dir, "members/m_007006.json", ({ assemblyId: _, ...d }) => d);
+    assert.match((await validateDataset(dir)).join("\n"), /members\/m_007006\.json: assemblyId/);
     cleanup();
   });
 
