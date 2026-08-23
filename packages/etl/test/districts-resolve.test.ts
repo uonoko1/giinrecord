@@ -42,14 +42,14 @@ test("選挙区名は名簿の表記に合わせる（参院: 東京 / 鳥取・
 
 test("市区が丸ごと 1 つの区なら候補は 1 つ（千代田区 → 東京1）", () => {
   const r = resolve("東京都", parseDistrictText(text("tokyo"), "東京都"));
-  assert.deepEqual(r.byZip["1000001"], { sangiin: ["東京"], shugiin: ["東京1"] });
+  assert.deepEqual(r.byZip["1000001"], { sangiin: ["東京"], shugiin: ["東京1"], municipalities: ["東京都千代田区"] });
   const chiyoda = r.municipalities.find((m) => m.city === "千代田区");
   assert.deepEqual(chiyoda, { code: "13101", pref: "東京都", city: "千代田区", shugiin: ["東京1"], split: false });
 });
 
 test("分割された市区（大田区 = 第4区と第26区）は郵便番号に関わらず両方の候補を並べ、split として数える", () => {
   const r = resolve("東京都", parseDistrictText(text("tokyo"), "東京都"));
-  assert.deepEqual(r.byZip["1440052"], { sangiin: ["東京"], shugiin: ["東京4", "東京26"] });
+  assert.deepEqual(r.byZip["1440052"], { sangiin: ["東京"], shugiin: ["東京4", "東京26"], municipalities: ["東京都大田区"] });
   assert.deepEqual(r.splits.map((s) => [s.city, s.shugiin]).filter(([c]) => c === "大田区"), [["大田区", ["東京4", "東京26"]]]);
 });
 
@@ -74,9 +74,15 @@ test("同じ郵便番号が複数の市区町村にまたがれば区の候補�
   assert.deepEqual(r.byZip["0040000"].shugiin, ["北海道3", "北海道5"]);
 });
 
+test("by-zip の市区町村名（#120）: KEN_ALL の都道府県＋市区町村を団体コード順に並べ、複数にまたがる郵便番号は全部載せる（推定しない）", () => {
+  const r = resolve("北海道", parseDistrictText(text("hokkaido"), "北海道"));
+  assert.deepEqual(r.byZip["0040000"].municipalities, ["北海道札幌市厚別区", "北海道札幌市清田区"]);
+  assert.deepEqual(r.byZip["0440000"].municipalities, ["北海道虻田郡倶知安町"]);
+});
+
 test("郡の括弧は町村の列挙: 東伯郡（三朝町）→ 1区、東伯郡（湯梨浜町…）→ 2区。郡だけなら郡の全町村", () => {
   const r = resolve("鳥取県", parseDistrictText(text("tottori"), "鳥取県"));
-  assert.deepEqual(r.byZip["6820100"], { sangiin: ["鳥取・島根"], shugiin: ["鳥取1"] });
+  assert.deepEqual(r.byZip["6820100"], { sangiin: ["鳥取・島根"], shugiin: ["鳥取1"], municipalities: ["鳥取県東伯郡三朝町"] });
   assert.deepEqual(r.byZip["6820700"].shugiin, ["鳥取2"]);
   assert.deepEqual(r.byZip["6893200"].shugiin, ["鳥取2"]); // 西伯郡大山町（西伯郡 全体）
   assert.equal(r.splits.length, 0);

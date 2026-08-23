@@ -1,4 +1,4 @@
-import { useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { Link, type MetaArgs, useSearchParams } from "react-router";
 import type { House } from "@seiji-kiroku/shared";
 import { CoverBrand } from "../components/CoverBrand";
@@ -40,7 +40,11 @@ export default function Members({ data = bundled }: { data?: Dataset }) {
   const [query, setQuery] = useState("");
   const [house, setHouse] = useState<House | "">("");
   const [group, setGroup] = useState("");
-  const [district, setDistrict] = useState(districtParam);
+  // #120: 初期値は "" にして useEffect で適用する。プリレンダーの HTML は「すべて」が選ばれたままで、hydration は
+  // state が最初から districtParam だと DOM の selected を直さない（再描画が起きない）。マウント後に set して再描画させる。
+  // 同じ理由でクエリが後から変わったとき（戻る／進む）も追従する。
+  const [district, setDistrict] = useState("");
+  useEffect(() => setDistrict(districtParam), [districtParam]);
   const [includeFormer, setIncludeFormer] = useState(false);
   const searchId = useId();
   const formerId = useId();

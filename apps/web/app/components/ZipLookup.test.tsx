@@ -5,11 +5,11 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { DistrictsMeta, ZipDistricts } from "@seiji-kiroku/shared";
 import byZipJson from "../test-fixtures/districts/by-zip.json";
 import metaJson from "../test-fixtures/districts/meta.json";
-import { ZipLookup } from "./ZipLookup";
+import { ZipLookup, fetchDistrictsMeta, fetchZipDistricts } from "./ZipLookup";
 
 const byZip = byZipJson as Record<string, ZipDistricts>;
 const meta = metaJson as DistrictsMeta;
@@ -52,6 +52,21 @@ describe("ZipLookup", () => {
     expect(lookup).toHaveBeenCalledWith("1000001");
   });
 
+  it("by-zip に市区町村名があれば候補が 1 つでも「東京都千代田区」と出す（#120）", async () => {
+    renderLookup();
+    await search("1000001");
+    const result = await screen.findByRole("region", { name: "郵便番号 1000001 の選挙区" });
+    expect(within(result).getByText("東京都千代田区")).toBeInTheDocument();
+  });
+
+  it("市区町村名が無い（#120 より前の by-zip）なら市区町村の行を出さない", async () => {
+    renderLookup();
+    await search("1000014");
+    const result = await screen.findByRole("region", { name: "郵便番号 1000014 の選挙区" });
+    expect(result).not.toHaveTextContent("市区町村：");
+    expect(within(result).queryByText(/千代田区/)).not.toBeInTheDocument();
+  });
+
   it("全角数字・〒 付きの入力も正規化して引く", async () => {
     renderLookup();
     await search("〒１００－０００１");
@@ -63,7 +78,7 @@ describe("ZipLookup", () => {
     await search("1040031");
     const result = await screen.findByRole("region", { name: "郵便番号 1040031 の選挙区" });
     expect(result).toHaveTextContent("この郵便番号は複数の選挙区にまたがります");
-    expect(result).toHaveTextContent("東京都中央区");
+    expect(result).toHaveTextContent("東京都中央区は複数の小選挙区にまたがります");
     expect(within(result).getByRole("link", { name: "東京1" })).toBeInTheDocument();
     expect(within(result).getByRole("link", { name: "東京2" })).toBeInTheDocument();
   });
@@ -76,6 +91,8 @@ describe("ZipLookup", () => {
     expect(within(result).getByRole("link", { name: "三重" })).toBeInTheDocument();
     expect(result).toHaveTextContent("この郵便番号は複数の選挙区にまたがります");
     expect(result).not.toHaveTextContent(/[市区町村]は複数/);
+    // 市区町村名は事実として両方並べる（どちらかを選ばない）
+    expect(result).toHaveTextContent("愛知県弥富市、三重県桑名市");
   });
 
   it("合区（鳥取・島根）は 1 つのリンク", async () => {
@@ -116,10 +133,60 @@ describe("ZipLookup", () => {
     expect(await screen.findByRole("status")).toHaveTextContent("取得に失敗しました");
   });
 
+  it("市区町村名が分かっても、分割市区町村でなければ「は複数の小選挙区にまたがります」とは言わない（札幌市厚別区＋清田区のような和集合）", async () => {
+    renderLookup({ lookup: async () => ({ sangiin: ["北海道"], shugiin: ["北海道3", "北海道5"], municipalities: ["北海道札幌市厚別区", "北海道札幌市清田区"] }) });
+    await search("0040000");
+    const result = await screen.findByRole("region", { name: "郵便番号 0040000 の選挙区" });
+    expect(result).toHaveTextContent("この郵便番号は複数の選挙区にまたがります");
+    expect(result).not.toHaveTextContent(/[市区町村]は複数/);
+    expect(result).toHaveTextContent("北海道札幌市厚別区、北海道札幌市清田区");
+  });
+
   it("評価語・運動的な言葉を含まない", async () => {
     const { container } = renderLookup();
     await search("1040031");
     await screen.findByRole("region", { name: /の選挙区/ });
     for (const word of ["おすすめ", "ランキング", "一致率", "応援", "ぜひ"]) expect(container.textContent).not.toContain(word);
+  });
+});
+
+describe("fetchZipDistricts / fetchDistrictsMeta（fetch の境界、#120）", () => {
+  afterEach(() => vi.unstubAllGlobals());
+  const response = (status: number, body: string, type = "application/json") =>
+    new Response(body, { status, headers: { "content-type": type } });
+
+  it("分割ファイルにその郵便番号があれば返す", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => response(200, JSON.stringify({ "1000001": byZip["1000001"] }))));
+    expect(await fetchZipDistricts("1000001")).toEqual(byZip["1000001"]);
+    expect(fetch).toHaveBeenCalledWith("/data/districts/zip/100.json");
+  });
+
+  it("404（分割ファイルが無い）・分割ファイルにその郵便番号が無い → null", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => response(404, "not found", "text/html")));
+    expect(await fetchZipDistricts("9990001")).toBeNull();
+    vi.stubGlobal("fetch", vi.fn(async () => response(200, JSON.stringify({ "1000001": byZip["1000001"] }))));
+    expect(await fetchZipDistricts("1000002")).toBeNull();
+  });
+
+  it("200 でも JSON でない応答（SPA フォールバックの HTML など）は「見つからない」扱い（null）で、取得失敗にしない", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => response(200, "<!doctype html><html></html>", "text/html; charset=utf-8")));
+    expect(await fetchZipDistricts("1000001")).toBeNull();
+    expect(await fetchDistrictsMeta()).toBeNull();
+  });
+
+  it("content-type が JSON でも本文が壊れていれば null", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => response(200, "{not json")));
+    expect(await fetchZipDistricts("1000001")).toBeNull();
+  });
+
+  it("5xx は取得失敗（例外）", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => response(500, "error", "text/plain")));
+    await expect(fetchZipDistricts("1000001")).rejects.toThrow(/HTTP 500/);
+    await expect(fetchDistrictsMeta()).rejects.toThrow(/HTTP 500/);
+  });
+
+  it("meta.json は JSON なら返す", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => response(200, JSON.stringify(meta))));
+    expect(await fetchDistrictsMeta()).toEqual(meta);
   });
 });

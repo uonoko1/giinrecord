@@ -37,7 +37,7 @@ test("writeDistricts: by-zip.json / municipalities.json / meta.json を stableJs
   const dir = await mkdtemp(join(tmpdir(), "districts-"));
   await writeDistricts(dir, resolved, meta());
   const byZip = JSON.parse(await readFile(join(dir, "districts", "by-zip.json"), "utf8"));
-  assert.deepEqual(byZip["1440052"], { sangiin: ["東京"], shugiin: ["東京4", "東京26"] });
+  assert.deepEqual(byZip["1440052"], { sangiin: ["東京"], shugiin: ["東京4", "東京26"], municipalities: ["東京都大田区"] });
   const text = await readFile(join(dir, "districts", "by-zip.json"), "utf8");
   assert.ok(text.endsWith("\n"));
   assert.deepEqual(await validateDistricts(dir), []);
@@ -50,12 +50,16 @@ test("validateDistricts: 7 桁でない郵便番号・空の候補・名簿表�
   const byZip = JSON.parse(await readFile(file, "utf8"));
   byZip["12345"] = { sangiin: ["東京"], shugiin: ["東京1"] };
   byZip["1000001"] = { sangiin: [], shugiin: ["東京第1区"] };
+  byZip["1000002"] = { sangiin: ["東京"], shugiin: ["東京1"], municipalities: [] };
+  byZip["1000003"] = { sangiin: ["東京"], shugiin: ["東京1"] };
   await writeFile(file, JSON.stringify(byZip));
   const v = await validateDistricts(dir);
   assert.ok(v.some((x) => x.includes("12345")), v.join("\n"));
   assert.ok(v.some((x) => x.includes("1000001") && x.includes("sangiin")), v.join("\n"));
   assert.ok(v.some((x) => x.includes("東京第1区")), v.join("\n"));
   assert.ok(v.some((x) => x.includes("counts.zips")), v.join("\n"));
+  assert.ok(v.some((x) => x.includes("1000002") && x.includes("municipalities")), v.join("\n"));
+  assert.ok(v.some((x) => x.includes("1000003") && x.includes("municipalities")), v.join("\n"));
 });
 
 test("validateDistricts: ファイルが無ければ違反", async () => {
