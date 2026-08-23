@@ -3,7 +3,7 @@
  * 実ファイルシステムは使わず、Map で表した偽のビルドディレクトリに対して検証する。
  */
 import { describe, expect, it } from "vitest";
-import { checkBrandAssets, checkBuild, checkDistrictData, checkMemberData, checkSitemap, extractInternalHrefs, resolveHrefTarget, formatReport, type BuildFiles } from "./smoke";
+import { checkBrandAssets, checkBuild, checkDistrictData, checkMemberData, checkOpsData, checkSitemap, extractInternalHrefs, OPS_DATA_FILES, resolveHrefTarget, formatReport, type BuildFiles } from "./smoke";
 
 const html = (links: string[]) => `<html><body>${links.map((l) => `<a href="${l}">x</a>`).join("")}</body></html>`;
 
@@ -198,5 +198,30 @@ describe("checkBrandAssets（#129: favicon / manifest / og:image の存在）", 
   it("欠けたファイルを一つずつ報告する", () => {
     const files: BuildFiles = new Map(all.filter((f) => f !== "favicon.ico" && f !== "og-image.png").map((f) => [f, ""]));
     expect(checkBrandAssets(files).failures).toEqual(["missing brand asset: favicon.ico", "missing brand asset: og-image.png"]);
+  });
+});
+
+describe("checkOpsData（#152: data/meta.json などの運用ファイルを /data/ で配信する）", () => {
+  const meta = JSON.stringify({ fetchedAt: "2026-08-23T08:05:01.375Z", sources: [], sessions: [221] });
+  it("data/ にある運用ファイルはすべてビルドに必要", () => {
+    const b = fakeBuild({ "data/meta.json": meta, "data/unmatched.json": "" });
+    expect(checkOpsData(b, { memberIds: null, rollCalls: null, opsFiles: ["meta.json", "unmatched.json", "group-mismatch.json"] }).failures).toEqual([
+      "missing data file: data/group-mismatch.json",
+    ]);
+    expect(checkOpsData(b, { memberIds: null, rollCalls: null, opsFiles: ["meta.json", "unmatched.json"] })).toEqual({ checkedFiles: 2, failures: [] });
+  });
+  it("meta.json は JSON として読めて、最上位に ISO 日時の fetchedAt を持つ（監視 probe.sh が鮮度を見る）", () => {
+    const base = { memberIds: null, rollCalls: null, opsFiles: ["meta.json"] };
+    expect(checkOpsData(fakeBuild({ "data/meta.json": "{not json" }), base).failures).toEqual(["invalid JSON: data/meta.json"]);
+    expect(checkOpsData(fakeBuild({ "data/meta.json": JSON.stringify({ sources: [] }) }), base).failures).toEqual(["data/meta.json: fetchedAt missing or not an ISO datetime"]);
+    expect(checkOpsData(fakeBuild({ "data/meta.json": JSON.stringify({ fetchedAt: "yesterday" }) }), base).failures).toEqual(["data/meta.json: fetchedAt missing or not an ISO datetime"]);
+    expect(checkOpsData(fakeBuild({ "data/meta.json": meta }), base).failures).toEqual([]);
+  });
+  it("data/ に運用ファイルが無い（null / 空）ときは何も要求しない", () => {
+    expect(checkOpsData(fakeBuild({ "index.html": "" }), { memberIds: null, rollCalls: null, opsFiles: null })).toEqual({ checkedFiles: 0, failures: [] });
+    expect(checkOpsData(fakeBuild({ "index.html": "" }), { memberIds: null, rollCalls: null, opsFiles: [] })).toEqual({ checkedFiles: 0, failures: [] });
+  });
+  it("OPS_DATA_FILES は meta.json と unmatched*/group-mismatch を含み、順序が固定", () => {
+    expect(OPS_DATA_FILES).toEqual(["meta.json", "unmatched.json", "unmatched-bills.json", "unmatched-groups.json", "group-mismatch.json"]);
   });
 });

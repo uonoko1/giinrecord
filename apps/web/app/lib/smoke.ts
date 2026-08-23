@@ -19,6 +19,8 @@ export interface ExpectedData {
   rollCalls: { session: number; id: string }[] | null;
   /** data/districts/by-zip.json から: 上3桁の一覧と、引き比べる見本の1件。ファイルが無ければ省略／null（#112） */
   districts?: { prefixes: string[]; sample: { zip: string; districts: ZipDistricts } } | null;
+  /** data/ 直下にある運用ファイル名（OPS_DATA_FILES のうち存在するもの）。data/ が無ければ省略／null（#152） */
+  opsFiles?: string[] | null;
 }
 
 export interface SmokeReport {
@@ -124,6 +126,39 @@ export function checkDistrictData(files: BuildFiles, data: ExpectedData): Member
     }
     if (found === undefined) failures.push(`zip ${d.sample.zip} not in ${shardFile}`);
     else if (JSON.stringify(found) !== JSON.stringify(d.sample.districts)) failures.push(`zip ${d.sample.zip} in ${shardFile} differs from by-zip.json`);
+  }
+  return { checkedFiles: expected.length, failures };
+}
+
+/**
+ * data/ 直下の運用ファイル（#152）。ビルドが build/client/data/ へそのままコピーし（scripts/copy-member-data.ts）、
+ * nginx が /data/ で配信する。meta.json は外部監視（deploy/monitor/probe.sh）が鮮度チェックに読む。
+ * 順序は固定（コピーとログが決定的になるように）。
+ */
+export const OPS_DATA_FILES = ["meta.json", "unmatched.json", "unmatched-bills.json", "unmatched-groups.json", "group-mismatch.json"];
+
+const ISO_DATETIME_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
+
+/**
+ * data/ にある運用ファイルはすべて build/client/data/ に要る。meta.json は JSON として読めて、
+ * 最上位に ISO 日時の fetchedAt を持たなければならない（probe.sh が最初の "fetchedAt" を ETL の実行時刻として読む）。
+ * meta.json の中身（files の値）は JSON 文字列で渡す。
+ */
+export function checkOpsData(files: BuildFiles, data: ExpectedData): MemberDataReport {
+  const expected = (data.opsFiles ?? []).map((name) => `data/${name}`);
+  const failures = expected.filter((f) => !files.has(f)).map((f) => `missing data file: ${f}`);
+  const metaFile = "data/meta.json";
+  const metaText = expected.includes(metaFile) ? files.get(metaFile) : undefined;
+  if (metaText !== undefined) {
+    let fetchedAt: unknown;
+    let parsed = true;
+    try {
+      fetchedAt = (JSON.parse(metaText) as { fetchedAt?: unknown }).fetchedAt;
+    } catch {
+      parsed = false;
+      failures.push(`invalid JSON: ${metaFile}`);
+    }
+    if (parsed && (typeof fetchedAt !== "string" || !ISO_DATETIME_RE.test(fetchedAt))) failures.push(`${metaFile}: fetchedAt missing or not an ISO datetime`);
   }
   return { checkedFiles: expected.length, failures };
 }
