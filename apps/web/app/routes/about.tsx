@@ -1,5 +1,5 @@
 import type { MetaArgs } from "react-router";
-import { AnalyticsSection, FactsSection, FundingSection, NotRecordedSection, UpdateSection, VerifySection } from "../components/about";
+import { FactsSection, FundingSection, NotRecordedSection, PoliciesSection, UpdateSection, VerifySection } from "../components/about";
 import { SiteFooter } from "../components/SiteFooter";
 import { CoverBrand } from "../components/CoverBrand";
 import { type Dataset, dataset as bundled } from "../lib/dataset";
@@ -32,7 +32,7 @@ export default function About({ data = bundled }: { data?: Dataset }) {
         <UpdateSection meta={data.meta} />
         <VerifySection />
         <FundingSection />
-        <AnalyticsSection />
+        <PoliciesSection />
       </main>
       <SiteFooter />
     </>
