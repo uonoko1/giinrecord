@@ -4,10 +4,11 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { memberPaths, readMemberDetail, readMeta, readRollCall, rollCallPaths } from "./data-files";
+import { assemblyPaths, memberPaths, readAssemblies, readAssemblySessions, readMemberDetail, readMeta, readRollCall, rollCallPaths } from "./data-files";
 
 const fixtures = fileURLToPath(new URL("../test-fixtures/data", import.meta.url));
 const missing = fileURLToPath(new URL("../test-fixtures/does-not-exist", import.meta.url));
+const assemblyFixtures = fileURLToPath(new URL("../test-fixtures/assemblies/data", import.meta.url));
 
 /** data/ に壊れた JSON を置いた一時ディレクトリ（ETL 不具合の再現） */
 async function brokenDataDir(): Promise<string> {
@@ -95,5 +96,38 @@ describe("readMeta", () => {
   });
   it("壊れた JSON は throw する", async () => {
     await expect(readMeta(await brokenDataDir())).rejects.toThrow(SyntaxError);
+  });
+});
+
+describe("readAssemblies / assemblyPaths（#158）", () => {
+  it("assemblies/index.json を読む", async () => {
+    const list = await readAssemblies(assemblyFixtures);
+    expect(list?.map((a) => a.id)).toEqual(["diet-sangiin", "diet-shugiin", "pref-04"]);
+  });
+  it("assemblies/index.json が無ければ null", async () => {
+    expect(await readAssemblies(missing)).toBeNull();
+  });
+  it("一覧 /assemblies と index.json の全議会 /assemblies/{id} を返す", async () => {
+    expect(await assemblyPaths(assemblyFixtures)).toEqual(["/assemblies", "/assemblies/diet-sangiin", "/assemblies/diet-shugiin", "/assemblies/pref-04"]);
+  });
+  it("index.json が無い（#156 より前の）データでは国会の2議会を返す（ページ側の fallback と同じ）", async () => {
+    expect(await assemblyPaths(missing)).toEqual(["/assemblies", "/assemblies/diet-sangiin", "/assemblies/diet-shugiin"]);
+  });
+  it("index.json が壊れていれば黙らずに throw する", async () => {
+    const dir = await brokenDataDir();
+    await mkdir(path.join(dir, "assemblies"));
+    await writeFile(path.join(dir, "assemblies", "index.json"), "{ not json");
+    await expect(assemblyPaths(dir)).rejects.toThrow(SyntaxError);
+  });
+});
+
+describe("readAssemblySessions（#158）", () => {
+  it("assemblies/{id}/sessions.json を読む", async () => {
+    const sessions = await readAssemblySessions(assemblyFixtures, "pref-04");
+    expect(sessions?.map((s) => s.id)).toEqual(["399", "398"]);
+  });
+  it("無い議会・パス区切りを含む id は null", async () => {
+    expect(await readAssemblySessions(assemblyFixtures, "pref-99")).toBeNull();
+    expect(await readAssemblySessions(assemblyFixtures, "../index")).toBeNull();
   });
 });

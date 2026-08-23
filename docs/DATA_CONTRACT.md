@@ -63,6 +63,22 @@ interface LocalVote { raw: string; legend: string; mapped?: VoteValue }   // 地
 - 不変条件（`validateDataset`）: `assemblies/index.json` が存在し、`id` は空でなく一意、`kind` は3値、`name` は空でない、`national` は `prefCode` を持たず `sourceUrl` は衆参・NDL のドメイン、`prefectural` / `municipal` は `prefCode` が 01〜47 で `sourceUrl` は https。`members/index.json` の各行の `assemblyId` は `assemblies/index.json` に存在し、`house` が `sangiin` / `shugiin` なら `diet-{house}` と一致する。`members/{id}.json` の `assemblyId` は index と同じ。
 - Web（`/members`）: 「院」の select（両院／参議院／衆議院）を「議会」の select（すべて＋`assemblies/index.json` の並び）に一般化する。既定はすべて。すべてを表示しているとき各行に議会名（`Assembly.name` の原文）を添える。`assemblies/index.json` が無い・`assemblyId` が無い古いデータは国会の2議会として読む（`house` から `diet-{house}`）。
 
+### 地方議会の Web 表示が読む形（Issue #158。地方 ETL #157 はこの形で書く）
+
+地方議会の議員は国会と同じ `members/index.json`（`assemblyId` が `pref-…` / `city-…`）と `members/{id}.json` に載る。`/members/{id}` は `assemblyId` が `diet-` で始まらなければ地方議員として描画する（`house` は見ない）。
+
+```ts
+// members/{id}.json の timeline に足す行（事実）。国会の VoteEntry（value: VoteValue）とは kind で分ける。
+type LocalVoteEntry = { kind: "localVote"; date: string; rollCallId: string; title: string; vote: LocalVote; sessionLabel: string; method?: string; result?: string; sourceUrl: string }
+// assemblies/{assemblyId}/sessions.json  AssemblySession[]  その議会の会期一覧（新しい順）。無ければ Web は「会期の一覧は未取得」と出す
+interface AssemblySession { id: string; label: string; date: string; rollcalls: number; sourceUrl: string; fetchedAt: string }
+```
+
+- `LocalVoteEntry.vote` は `LocalVote`（`raw` / `legend` / `mapped?`）。`sessionLabel` は会期の原文（例「第399回（令和8年2月定例会）」）、`method` は表決方法の原文（例「起立」「簡易」）、`result` は議決結果の原文（例「可決」）。`sourceUrl` は表決結果の PDF／HTML（その議会の `Assembly.sourceUrl` のホスト）。
+- Web の判（Stamp）は `mapped` がある行だけ賛成／反対／投票なしの色を使い、無い行は中立の判にする。どちらも判の文字は `raw`、隣に `legend` を必ず添える。
+- `AssemblySession.id` は議会内で一意（例 `399`、`2026-06`）、`label` は原文（例「第399回（令和8年2月定例会）」）、`date` はその会期の最終議決日（ISO）、`rollcalls` はその会期の表決件数、`sourceUrl` は会期の表決結果ページ、`fetchedAt` は取得日時（ISO）。
+- 個人別表決の公開状況（公開／会派別／総数のみ／不明）は `data/` ではなく `apps/web/app/data/vote-disclosure.json`（#128 の調査表 `docs/research/local-assemblies.md` から機械的に起こしたもの。調査日付き）。`/assemblies/` が事実として表示する。
+
 ## 不変条件
 - `RollCall.votes[].memberId` は `members/index.json` に存在する id、または名寄せ失敗時は `""`（その場合 `unmatched.json` に載る）。
 - `Σ groups[].size === votes.length`（会派人数と個人票の件数は一致する）。
