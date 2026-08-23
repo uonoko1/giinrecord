@@ -27,6 +27,8 @@ export interface LocalAssemblyInput {
   rosterAsOf: string;
   sources: LocalAssemblyMeta["sources"];
   sessions: LocalAssemblyMeta["sessions"];
+  /** 取得部が付けた名寄せの候補（同姓が 2 人以上のとき。#184）。unmatched.json は rollCalls の memberId 空の票から作り直すので、候補だけここから写す */
+  unmatched?: LocalUnmatchedName[];
 }
 
 export interface LocalAssemblyDataset {
@@ -88,7 +90,13 @@ export function buildLocalAssembly(input: LocalAssemblyInput): LocalAssemblyData
     return { ...m, counts: { rollcalls: timeline.length }, terms: [{ group: m.group, district: m.district, asOf: m.asOf }], timeline };
   });
   const index: LocalMember[] = details.map(({ timeline: _t, terms: _terms, ...m }) => m);
-  const unmatchedList = [...unmatched.values()].map((u) => ({ ...u, rollCallIds: [...u.rollCallIds].sort(cmp) })).sort((a, b) => cmp(a.nameText, b.nameText) || cmp(a.group, b.group));
+  const candidates = new Map((input.unmatched ?? []).filter((u) => u.candidates?.length).map((u) => [`${u.nameText}\t${u.group}`, u.candidates!]));
+  const unmatchedList = [...unmatched.values()]
+    .map((u) => {
+      const c = candidates.get(`${u.nameText}\t${u.group}`);
+      return { ...u, rollCallIds: [...u.rollCallIds].sort(cmp), ...(c ? { candidates: c } : {}) };
+    })
+    .sort((a, b) => cmp(a.nameText, b.nameText) || cmp(a.group, b.group));
   // 会期一覧（sessions.json）: date はその会期の最終議決日（rollcalls から）。表決の無い会期は書けない（date を推定しない）
   const sessions: AssemblySession[] = input.sessions
     .map((s) => {
@@ -255,7 +263,14 @@ export async function validateLocalAssemblies(dir: string): Promise<string[]> {
     }
     const unmatched = (await read<LocalUnmatchedName[]>(`assemblies/${a.id}/unmatched.json`)) ?? [];
     const unmatchedKeys = new Set<string>();
-    for (const u of unmatched) for (const id of u.rollCallIds) unmatchedKeys.add(`${id}\t${u.nameText}`);
+    for (const u of unmatched) {
+      for (const id of u.rollCallIds) unmatchedKeys.add(`${id}\t${u.nameText}`);
+      // 候補（同姓が 2 人以上）は名簿の id を指す。空の配列は書かない（無ければ省略）
+      if ("candidates" in u) {
+        if (!Array.isArray(u.candidates) || u.candidates.length === 0) v.push(`assemblies/${a.id}/unmatched.json ${u.nameText}: candidates must be a non-empty array when present`);
+        else for (const c of u.candidates) if (!memberIds.has(c.id) || typeof c.name !== "string" || c.name === "") v.push(`assemblies/${a.id}/unmatched.json ${u.nameText}: candidate ${String(c.id)} not in members/index.json`);
+      }
+    }
     const summaries = (await read<LocalRollCallSummary[]>(`assemblies/${a.id}/rollcalls/index.json`)) ?? [];
     const seenVotes = new Map<string, number>();
     const perSession = new Map<string, { rollcalls: number; last: string }>();
@@ -279,6 +294,9 @@ export async function validateLocalAssemblies(dir: string): Promise<string[]> {
       if (typeof rc.kind !== "string" || rc.kind === "" || typeof rc.title !== "string" || rc.title === "") v.push(`${rel}: kind / title required`);
       if (!rc.method || typeof rc.method.raw !== "string" || typeof rc.method.legend !== "string" || rc.method.legend === "") v.push(`${rel}: method.raw / method.legend required`);
       if (typeof rc.result !== "string" || rc.result === "") v.push(`${rel}: result required`);
+      if (!rc.counts || [rc.counts.voting, rc.counts.yes, rc.counts.no].some((n) => typeof n !== "number") || ("present" in rc.counts && typeof rc.counts.present !== "number")) v.push(`${rel}: counts.voting / yes / no must be numbers (present optional)`);
+      if ("voteSubject" in rc && (typeof rc.voteSubject !== "string" || rc.voteSubject === "")) v.push(`${rel}: voteSubject must be a non-empty string when present`);
+      if ("committeeReport" in rc && (typeof rc.committeeReport !== "string" || rc.committeeReport === "")) v.push(`${rel}: committeeReport must be a non-empty string when present`);
       checkSource(rel, rc);
       if (!Array.isArray(rc.votes)) { v.push(`${rel}: votes required`); continue; }
       for (const vote of rc.votes) {
