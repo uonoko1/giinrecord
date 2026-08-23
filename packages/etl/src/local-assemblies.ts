@@ -5,8 +5,28 @@ import type {
 } from "@seiji-kiroku/shared";
 import { stableJson } from "./json.ts";
 import { MIYAGI_ASSEMBLY } from "./sources/local/miyagi/site.ts";
+import { runMiyagi } from "./sources/local/miyagi/index.ts";
+import { TOKUSHIMA_ASSEMBLY } from "./sources/local/tokushima/site.ts";
+import { runTokushima } from "./sources/local/tokushima/index.ts";
 
-export { MIYAGI_ASSEMBLY };
+export { MIYAGI_ASSEMBLY, TOKUSHIMA_ASSEMBLY };
+
+/** 議会ごとの取得部が返す形（buildLocalAssembly の入力になる部分）。 */
+export interface LocalSourceRun {
+  roster: { members: LocalMember[]; asOf: string };
+  rollCalls: LocalRollCall[];
+  sessions: LocalAssemblyMeta["sessions"];
+  sources: LocalAssemblyMeta["sources"];
+}
+export interface LocalSource {
+  assembly: Assembly;
+  run(opts: { sessions: number; fetchedAt: string; log?: (line: string) => void }): Promise<LocalSourceRun>;
+}
+/** `pnpm etl:local <name>` の name → 議会。議会を足すときはここに 1 行足す（local-cli.ts は触らない）。 */
+export const LOCAL_SOURCES: Record<string, LocalSource> = {
+  miyagi: { assembly: MIYAGI_ASSEMBLY, run: runMiyagi },
+  tokushima: { assembly: TOKUSHIMA_ASSEMBLY, run: runTokushima },
+};
 
 /**
  * 地方議会の出力（Issue #157、docs/DATA_CONTRACT.md「地方議会の Web 表示が読む形」#158）。Web は何も変えずに読める形で書く。
@@ -50,7 +70,7 @@ export const isDietMemberRow = (m: { assemblyId?: string }): boolean => m.assemb
 
 /** timeline の 1 行。公表の原文（会期・方法・結果）をそのまま添える。可否は判定しない。 */
 function toVoteEntry(rc: LocalRollCall, vote: LocalRollCall["votes"][number]): LocalVoteEntry {
-  return { kind: "localVote", date: rc.date, rollCallId: rc.id, title: rc.title, vote: vote.value, sessionLabel: rc.sessionLabel, method: rc.method.raw, result: rc.result, sourceUrl: rc.sourceUrl };
+  return { kind: "localVote", date: rc.date, rollCallId: rc.id, title: rc.title, vote: vote.value, sessionLabel: rc.sessionLabel, method: rc.method?.raw, result: rc.result, sourceUrl: rc.sourceUrl };
 }
 
 export function buildLocalAssembly(input: LocalAssemblyInput): LocalAssemblyDataset {
@@ -277,7 +297,9 @@ export async function validateLocalAssemblies(dir: string): Promise<string[]> {
       if (rc.id !== s.id || rc.assemblyId !== a.id) v.push(`${rel}: id/assemblyId mismatch`);
       if (!ISO_DATE.test(rc.date)) v.push(`${rel}: date must be ISO`);
       if (typeof rc.kind !== "string" || rc.kind === "" || typeof rc.title !== "string" || rc.title === "") v.push(`${rel}: kind / title required`);
-      if (!rc.method || typeof rc.method.raw !== "string" || typeof rc.method.legend !== "string" || rc.method.legend === "") v.push(`${rel}: method.raw / method.legend required`);
+      // method は PDF に表決方法の欄がある議会（宮城）だけ。あれば raw と legend（空でない）を持つ
+      if (rc.method !== undefined && (typeof rc.method.raw !== "string" || typeof rc.method.legend !== "string" || rc.method.legend === "")) v.push(`${rel}: method.raw / method.legend required when method is present`);
+      if (rc.committeeResult !== undefined && typeof rc.committeeResult !== "string") v.push(`${rel}: committeeResult must be a string`);
       if (typeof rc.result !== "string" || rc.result === "") v.push(`${rel}: result required`);
       checkSource(rel, rc);
       if (!Array.isArray(rc.votes)) { v.push(`${rel}: votes required`); continue; }
