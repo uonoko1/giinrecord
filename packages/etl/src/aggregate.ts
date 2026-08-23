@@ -1,4 +1,4 @@
-import type { Bill, Member, MemberDetail, MemberSummary, MemberTerm, RollCall, RollCallSummary, Speech, TimelineEntry, VoteValue } from "@seiji-kiroku/shared";
+import type { Bill, Member, MemberDetail, MemberSummary, MemberTerm, Question, RollCall, RollCallSummary, Speech, TimelineEntry, VoteValue } from "@seiji-kiroku/shared";
 import { toSummary } from "./sources/sangiin-members.ts";
 import { groupAt } from "./group-history.ts";
 import type { MatchedBill } from "./match-bills.ts";
@@ -89,7 +89,7 @@ export function summarizeRollCall(rc: RollCall, decision?: string): RollCallSumm
  * 名簿と突合済みの採決・発言から、議員ごとの timeline と一覧を組み立てる。
  * - memberId が空（未突合）の票・memberId の無い発言は unmatched.json 側で扱うので timeline には入れない。
  * - 名簿にない memberId は名寄せの不整合なので例外にする（黙って捨てない）。
- * - 並びは日付降順。同日は kind（vote → bill → speech）、次に採決 id / 発言 id の降順で安定させる（差分最小化）。
+ * - 並びは日付降順。同日は kind（vote → bill → stance → question → speech）、次に採決 id / 発言 id の降順で安定させる（差分最小化）。
  * - 議長・大臣など position 付きの発言（議事進行・政府答弁）も事実として timeline に入れ、position を原文のまま載せる。
  *   counts.speeches は役職付きも含めた数（内訳は持たない）。区別は web が position を表示して行う。
  * - 提出法案（matchBills の出力）は提出日の bill 行になり、sourceUrl は議案ページ。counts.bills はその数。
@@ -97,6 +97,8 @@ export function summarizeRollCall(rc: RollCall, decision?: string): RollCallSumm
  *   shugiinGroupStance の賛成会派／反対会派に、その議員の提出回次の会派（groupAt）が載っていれば stance 行（推定、estimated: true）。
  *   行に記録するのは会派名であって本人の賛否ではない。会派がどちらにも無い・態度が無い・衆院の受理日が無い議案は行にしない（推論しない）。
  *   日付は衆議院の議案受理年月日。counts.bills に stance は数えない。
+ * - 質問主意書（matchQuestions の出力、#106）: 名寄せ済みの submitters の question 行（事実）。日付は提出日、sourceUrl は衆院 経過ページ／参院 詳細ページ。
+ *   counts.questions はその数。未突合（submitters 無し）の質問は unmatched.json 側で扱うので timeline には入れない。
  */
 export function buildDataset(
   members: readonly Member[],
@@ -108,6 +110,8 @@ export function buildDataset(
   bills: readonly MatchedBill[] = [],
   /** 衆院 議案情報（matchShugiinBills の出力。submitters / supporters は衆院名簿の memberId）。 */
   shugiinBills: readonly Bill[] = [],
+  /** 質問主意書（matchQuestions の出力。submitters は名簿の memberId）。 */
+  questions: readonly Question[] = [],
 ): Aggregated {
   const summarize = (rc: RollCall) => summarizeRollCall(rc, decisions.get(rc.id));
   const timelines = new Map<string, TimelineEntry[]>(members.map((m) => [m.id, []]));
@@ -162,19 +166,28 @@ export function buildDataset(
       timelines.get(m.id)!.push({ kind: "stance", estimated: true, ...base, group, stance: side, stanceText: stance.stanceText });
     }
   }
+  for (const q of questions) {
+    for (const memberId of q.submitters ?? []) {
+      timelineOf(memberId, `question ${q.id}`).push({
+        kind: "question", date: q.date, questionId: q.id, title: q.title,
+        ...(q.submitterText ? { submitterText: q.submitterText } : {}), ...(q.status ? { status: q.status } : {}),
+        ...(q.answerDate ? { answerDate: q.answerDate } : {}), ...(q.answerUrl ? { answerUrl: q.answerUrl } : {}), sourceUrl: q.sourceUrl,
+      });
+    }
+  }
   const details = members.map((m): MemberDetail => ({ ...m, timeline: [...timelines.get(m.id)!].sort(byDateDesc) }));
   const index = members.map((m) => {
     const s = toSummary(m);
     const timeline = timelines.get(m.id)!;
     const count = (kind: TimelineEntry["kind"]) => timeline.filter((e) => e.kind === kind).length;
-    return { ...s, counts: { rollcalls: count("vote"), bills: count("bill"), speeches: count("speech") } };
+    return { ...s, counts: { rollcalls: count("vote"), bills: count("bill"), speeches: count("speech"), questions: count("question") } };
   });
   return { index, details, rollCalls: rollCalls.map(summarize).sort(byDateDesc) };
 }
 
-type Sortable = { date: string; kind?: TimelineEntry["kind"]; id?: string; rollCallId?: string; speechId?: string; billId?: string };
-const KIND_ORDER: Record<TimelineEntry["kind"], number> = { vote: 0, bill: 1, stance: 2, speech: 3 };
-const sortKey = (x: Sortable) => x.rollCallId ?? x.speechId ?? x.billId ?? x.id ?? "";
+type Sortable = { date: string; kind?: TimelineEntry["kind"]; id?: string; rollCallId?: string; speechId?: string; billId?: string; questionId?: string };
+const KIND_ORDER: Record<TimelineEntry["kind"], number> = { vote: 0, bill: 1, stance: 2, question: 3, speech: 4 };
+const sortKey = (x: Sortable) => x.rollCallId ?? x.speechId ?? x.billId ?? x.questionId ?? x.id ?? "";
 const byDateDesc = (a: Sortable, b: Sortable) =>
   cmp(b.date, a.date) || KIND_ORDER[a.kind ?? "vote"] - KIND_ORDER[b.kind ?? "vote"] || cmp(sortKey(b), sortKey(a));
 const cmp = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
