@@ -5,20 +5,33 @@ import { FundingSection, SUPPORT_URL } from "./FundingSection";
 /** 運動的・煽り的な言葉。事実と依頼だけを書く（#47）。 */
 const CAMPAIGN_WORDS = ["応援", "守る", "守ろう", "ぜひ", "お願いします", "あなたの力", "みんなで", "寄付をお願い"];
 
+/** 費目・金額・未確定の表現は書かない（#160）。 */
+const BANNED_WORDS = ["VPS", "ドメイン", "未算出", "取得予定", "月額", "円"];
+
 describe("FundingSection", () => {
-  it("id=funding の region で、費用・収入源・受け取らないもの・公開の約束を書く", () => {
+  it("id=funding の region で、方針3点を箇条書きにする", () => {
     render(<FundingSection />);
     const section = screen.getByRole("region", { name: "運営費について" });
     expect(section).toHaveAttribute("id", "funding");
-    for (const t of ["VPS", "未算出", "ドメイン", "取得予定", "運営者の自費", "政党・候補者・業界団体からは一切受け取りません", "資金源と支出を公開します"]) {
-      expect(section).toHaveTextContent(t);
-    }
+    const items = screen.getAllByRole("listitem").map((li) => li.textContent);
+    expect(items).toHaveLength(3);
+    expect(items[0]).toContain("運営者の自費で運営");
+    expect(items[1]).toContain("政党・候補者・業界団体からは受け取らない");
+    expect(items[2]).toContain("政治カテゴリを除外した広告");
+    expect(items[2]).toContain("このページに明記");
   });
 
-  it("広告は将来の可能性として予告だけし、広告要素は置かない", () => {
+  it("費目・金額・未確定の表現を含まない（禁止語）", () => {
+    const { container } = render(<FundingSection />);
+    for (const word of BANNED_WORDS) {
+      expect(container.textContent).not.toContain(word);
+    }
+    expect(container.querySelector(".rows, .row")).toBeNull();
+  });
+
+  it("広告要素は置かない", () => {
     render(<FundingSection />);
     const section = screen.getByRole("region", { name: "運営費について" });
-    expect(section).toHaveTextContent("政治カテゴリを除外した広告");
     expect(section.querySelector("ins, iframe, script")).toBeNull();
   });
 
