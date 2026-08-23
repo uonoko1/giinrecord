@@ -47,7 +47,7 @@ describe("VerifySection（#174 運営費の1文）", () => {
   it("末尾に運営費の1文を書き、利用規約（/terms）へリンクする", () => {
     render(<VerifySection />);
     const section = screen.getByRole("region", { name: "検証する" });
-    expect(section).toHaveTextContent("運営者の自費で運営し、政党・候補者・業界団体からは受け取りません。運営の方針は利用規約に書いています。");
+    expect(section).toHaveTextContent("運営者の自費で運営し、政党・候補者・業界団体からは受け取っていません。運営の方針は利用規約に書いています。");
     expect(screen.getByRole("link", { name: "利用規約" })).toHaveAttribute("href", "/terms");
     const paragraphs = section.querySelectorAll("p");
     expect(paragraphs[paragraphs.length - 1]).toHaveTextContent("運営の方針は利用規約に書いています。");
