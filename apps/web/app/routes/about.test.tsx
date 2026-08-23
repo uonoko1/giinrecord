@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { describe, expect, it } from "vitest";
 import About, { meta as routeMeta } from "./about";
@@ -21,7 +21,7 @@ describe("About", () => {
     renderAbout();
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("このデータについて");
     expect(screen.getByText(/評価・採点・推薦はしません。すべての行に出典があります。/)).toBeInTheDocument();
-    for (const name of ["何が事実で、何が推定か", "記録にないこと", "更新", "検証する", "運営費について"]) {
+    for (const name of ["何が事実で、何が推定か", "記録にないこと", "更新", "検証する", "運営費について", "規約とプライバシー"]) {
       expect(screen.getByRole("heading", { level: 2, name })).toBeInTheDocument();
     }
   });
@@ -102,15 +102,20 @@ describe("About", () => {
     });
   });
 
-  describe("計測について（#58）", () => {
-    it("見出しがあり、何を記録し何を記録しないかを書く", () => {
+  describe("規約とプライバシー（#166）", () => {
+    it("計測の節は無く、本文の節に /terms と /privacy へのリンクがある", () => {
+      const { container } = renderAbout();
+      expect(screen.queryByRole("heading", { level: 2, name: "計測について" })).toBeNull();
+      const main = within(container.querySelector("main") as HTMLElement);
+      expect(main.getByRole("link", { name: "利用規約" })).toHaveAttribute("href", "/terms");
+      expect(main.getByRole("link", { name: "プライバシーポリシー" })).toHaveAttribute("href", "/privacy");
+    });
+
+    it("サイト共通フッター（#167）も描画され、同じリンクを持つ", () => {
       renderAbout();
-      expect(screen.getByRole("heading", { level: 2, name: "計測について" })).toBeInTheDocument();
-      const text = screen.getByRole("heading", { level: 2, name: "計測について" }).parentElement?.textContent ?? "";
-      expect(text).toContain("Cookie");
-      expect(text).toContain("IP アドレス");
-      expect(text).toMatch(/ページビュー|PV/);
-      expect(text).toContain("リファラ");
+      const footer = within(screen.getByRole("contentinfo"));
+      expect(footer.getByRole("link", { name: "利用規約" })).toHaveAttribute("href", "/terms");
+      expect(footer.getByRole("link", { name: "プライバシーポリシー" })).toHaveAttribute("href", "/privacy");
     });
   });
 });

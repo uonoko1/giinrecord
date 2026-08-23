@@ -48,3 +48,12 @@ describe("FundingSection", () => {
     }
   });
 });
+
+describe("FundingSection（#166）", () => {
+  it("予告調の表現を含まない", () => {
+    const { container } = render(<FundingSection />);
+    for (const word of ["将来", "可能性", "事前に", "予定"]) {
+      expect(container.textContent).not.toContain(word);
+    }
+  });
+});
