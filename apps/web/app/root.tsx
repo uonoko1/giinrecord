@@ -2,6 +2,10 @@ import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 import "./styles/tokens.css";
 import { THEME_STORAGE_KEY } from "./components/ThemeToggle";
 import { BRAND } from "./lib/brand-colors";
+import { robotsMeta, siteOrigin } from "./lib/seo";
+
+/** staging build (#127): every page carries noindex; null on production / origin-less builds. */
+const robots = robotsMeta(siteOrigin());
 
 export const GOOGLE_FONTS_HREF =
   "https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;700;800&family=BIZ+UDPGothic:wght@400;700&display=swap";
@@ -32,6 +36,7 @@ export default function Root() {
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content={THEME_COLOR} />
+        {robots && <meta name={robots.name} content={robots.content} />}
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
         <Meta />
         <Links />

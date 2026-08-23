@@ -2,7 +2,7 @@
  * SEO タグ生成の仕様。SITE_ORIGIN が無ければ相対 URL で壊れない。
  */
 import { describe, expect, it } from "vitest";
-import { canonicalUrl, normalizeOrigin, seoMeta } from "./seo";
+import { canonicalUrl, isStagingOrigin, normalizeOrigin, robotsMeta, seoMeta } from "./seo";
 
 describe("normalizeOrigin", () => {
   it("未設定・空なら空文字（相対 URL モード）", () => {
@@ -69,5 +69,25 @@ describe("og:image（#129）", () => {
   it("origin が無ければ site-relative", () => {
     const tags = seoMeta({ description: "d", pathname: "/about", origin: "" });
     expect(tags).toContainEqual({ property: "og:image", content: "/og-image.png" });
+  });
+});
+
+// Issue #127: staging.gikailog.jp はクローラに拾わせない（robots Disallow + <meta name=robots content=noindex>）。
+describe("isStagingOrigin / robotsMeta", () => {
+  it("SITE_ORIGIN=https://staging.gikailog.jp は staging", () => {
+    expect(isStagingOrigin("https://staging.gikailog.jp")).toBe(true);
+    expect(isStagingOrigin("https://staging.gikailog.jp/")).toBe(true);
+  });
+  it("本番・未設定・staging を含むだけのホストは staging ではない", () => {
+    expect(isStagingOrigin("https://gikailog.jp")).toBe(false);
+    expect(isStagingOrigin("")).toBe(false);
+    expect(isStagingOrigin(undefined)).toBe(false);
+    expect(isStagingOrigin("https://notstaging.gikailog.jp")).toBe(false);
+    expect(isStagingOrigin("https://gikailog.jp/staging")).toBe(false);
+  });
+  it("staging のときだけ noindex, nofollow の robots meta を返す", () => {
+    expect(robotsMeta("https://staging.gikailog.jp")).toEqual({ name: "robots", content: "noindex, nofollow" });
+    expect(robotsMeta("https://gikailog.jp")).toBeNull();
+    expect(robotsMeta("")).toBeNull();
   });
 });

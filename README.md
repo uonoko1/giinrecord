@@ -34,6 +34,17 @@ pnpm etl 221        # 第221回国会の参院投票結果を data/ に取得
 
 スクラム。PBI は GitHub Issues、ボードは GitHub Projects。TDD。
 
+## デプロイ（staging → production）
+
+| 環境 | URL | いつ | ワークフロー |
+|---|---|---|---|
+| staging | https://staging.gikailog.jp（noindex） | `main` への push で自動 | `deploy-staging.yml` |
+| production | https://gikailog.jp | 手動リリース：Actions → **Release** → Run workflow（ref、既定 `main`）→ Environment `production` の承認 | `release.yml` |
+| 両方（データのみ） | — | 日次 ETL の data PR がマージされたら自動 | `deploy-data.yml`（`etl.yml` / `districts.yml` が起動） |
+
+staging の初回構築で人間がやることは 2 つだけ：**DNS の A レコード `staging.gikailog.jp → 160.16.86.160`** と、VPS で 1 回 `ssh -t sakura-vps 'sudo bash -s' < deploy/staging-setup.sh`。
+GitHub 側は Environment `staging` / `production-data` に `DEPLOY_*` secrets（`production` と同じ）、`production` に required reviewers。詳細は `deploy/README.md` と `docs/ops/deploy.md`。
+
 ## ライセンス
 
 コード: MIT / データ: CC BY 4.0（出典: 参議院・衆議院・国立国会図書館）
