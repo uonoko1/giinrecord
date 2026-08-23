@@ -19,12 +19,25 @@ export interface Aggregated {
  * 回次 targets の採決・発言を突合するのに取得する名簿の回次。
  * 名簿ページ giin/{N}/giin.htm は第N回終了後のある時点（概ね次の回次の直前）の名簿で、
  * 第N回の会期中に退任した議員（通常選挙・辞職）を含まない（第217回の名簿は令和7年7月31日現在）。
- * 第N回中の議員は「N-1 の名簿 ∪ N の名簿」で覆えるので、最小回次の1つ前も取る。
+ * 第N回中の議員は「N-1 の名簿 ∪ N の名簿」で覆えるので、各回次の1つ前も取る。
+ * 回次は飛び得る（日次の直近 5 回次＋手動で足した第200〜201回など）ので、最小回次だけでなく
+ * 連続するブロックごとに「ブロック先頭の1つ前」を足す（第217回の再突合には第216回の名簿が要る。#103 レビュー）。
  */
 export function rosterSessionsFor(targets: readonly number[]): number[] {
-  const sorted = [...new Set(targets)].sort((a, b) => a - b);
-  return sorted.length ? [sorted[0] - 1, ...sorted] : [];
+  const set = new Set(targets);
+  const out = new Set<number>();
+  for (const s of set) {
+    if (!set.has(s - 1)) out.add(s - 1);
+    out.add(s);
+  }
+  return [...out].sort((a, b) => a - b);
 }
+
+/**
+ * 対象外の回次から引き継ぐ timeline の1行（#103）。cli.ts が前回出力の members/{id}.json から、今回取得しない回次（carried）の
+ * speech / question / attendance / 参法の bill 行を読み、そのまま timeline に戻す。vote 行は rollcalls/ の再突合、衆院の bill / stance 行は bills/ から作り直すので引き継がない。
+ */
+export interface CarriedEntry { memberId: string; entry: TimelineEntry }
 
 /** 1回次分の名簿（parseMemberList の出力）。 */
 export interface Roster { session: number; members: readonly Member[] }
@@ -118,6 +131,8 @@ export function buildDataset(
   questions: readonly Question[] = [],
   /** 委員会に発議者として出席した記録（matchAttendance の出力。memberId は参院名簿）。 */
   attendance: readonly MatchedAttendance[] = [],
+  /** 対象外の回次から引き継ぐ行（#103）。memberId は名簿に無ければ例外。 */
+  carried: readonly CarriedEntry[] = [],
 ): Aggregated {
   const summarize = (rc: RollCall) => summarizeRollCall(rc, decisions.get(rc.id));
   const timelines = new Map<string, TimelineEntry[]>(members.map((m) => [m.id, []]));
@@ -131,7 +146,7 @@ export function buildDataset(
       if (v.memberId === "") continue;
       const groupValue = groupMajority(rc, v.group);
       timelineOf(v.memberId, `vote in ${rc.id} ("${v.nameText}")`).push({
-        kind: "vote", date: rc.date, rollCallId: rc.id, title: rc.title, value: v.value,
+        kind: "vote", session: rc.session, date: rc.date, rollCallId: rc.id, title: rc.title, value: v.value,
         result: summarize(rc).result, ...(groupValue ? { groupValue } : {}), sourceUrl: rc.sourceUrl,
       });
     }
@@ -143,20 +158,20 @@ export function buildDataset(
     // 発言の院と議員の院は一致していなければならない（衆院本会議の発言を同名の参院議員に付けない。Issue #107）。
     if (houseOf.get(s.memberId) !== s.house) throw new Error(`speech ${s.id} ("${s.speakerText}", ${s.house}) refers to member ${s.memberId} of house ${String(houseOf.get(s.memberId))}`);
     timeline.push({
-      kind: "speech", date: s.date, speechId: s.id, meeting: s.meeting, excerpt: s.excerpt, chars: s.chars,
+      kind: "speech", session: s.session, date: s.date, speechId: s.id, meeting: s.meeting, excerpt: s.excerpt, chars: s.chars,
       ...(s.position ? { position: s.position } : {}), sourceUrl: s.sourceUrl,
     });
   }
   for (const b of bills) {
     timelineOf(b.memberId, `bill ${b.billId}`).push({
-      kind: "bill", date: b.date, billId: b.billId, title: b.title, role: b.role,
+      kind: "bill", session: sessionOfBillId(b.billId), date: b.date, billId: b.billId, title: b.title, role: b.role,
       ...(b.submitterText ? { submitterText: b.submitterText } : {}), ...(b.status ? { status: b.status } : {}), sourceUrl: b.sourceUrl,
     });
   }
   for (const b of shugiinBills) {
     const date = b.received?.shugiin;
     if (!date) continue;
-    const base = { date, billId: b.id, title: b.title, ...(b.status ? { status: b.status } : {}), sourceUrl: b.sourceUrl };
+    const base = { session: b.session, date, billId: b.id, title: b.title, ...(b.status ? { status: b.status } : {}), sourceUrl: b.sourceUrl };
     const roles = [["提出者", b.submitters], ["賛成者", b.supporters]] as const;
     for (const [role, ids] of roles) {
       for (const memberId of ids ?? []) {
@@ -179,7 +194,7 @@ export function buildDataset(
   for (const q of questions) {
     for (const memberId of q.submitters ?? []) {
       timelineOf(memberId, `question ${q.id}`).push({
-        kind: "question", date: q.date, questionId: q.id, title: q.title,
+        kind: "question", session: q.session, date: q.date, questionId: q.id, title: q.title,
         ...(q.submitterText ? { submitterText: q.submitterText } : {}), ...(q.status ? { status: q.status } : {}),
         ...(q.answerDate ? { answerDate: q.answerDate } : {}), ...(q.answerUrl ? { answerUrl: q.answerUrl } : {}), sourceUrl: q.sourceUrl,
       });
@@ -188,8 +203,10 @@ export function buildDataset(
   for (const a of attendance) {
     const timeline = timelineOf(a.memberId, `attendance ${a.meetingId} ("${a.nameText}")`);
     if (houseOf.get(a.memberId) !== "sangiin") throw new Error(`attendance ${a.meetingId} ("${a.nameText}") refers to member ${a.memberId} of house ${String(houseOf.get(a.memberId))} (参院の委員会の発議者は参議院議員)`);
-    timeline.push({ kind: "attendance", estimated: false, date: a.date, meetingId: a.meetingId, meeting: a.meeting, role: a.role, bills: a.bills.map((b) => ({ ...b })), sourceUrl: a.sourceUrl });
+    timeline.push({ kind: "attendance", estimated: false, session: a.session, date: a.date, meetingId: a.meetingId, meeting: a.meeting, role: a.role, bills: a.bills.map((b) => ({ ...b })), sourceUrl: a.sourceUrl });
   }
+  // 対象外の回次から引き継ぐ行（#103）。そのまま入れる（再解釈しない）。名簿に無い memberId は他の行と同じく例外。
+  for (const c of carried) timelineOf(c.memberId, `carried ${c.entry.kind} (session ${c.entry.session})`).push(c.entry);
   // assemblyId（#156）は国会の名簿パーサが付けないので集約で補う（toSummary も同じ assemblyIdOf）。index と detail で同じ値（validateDataset が一致を検査する）。
   const details = members.map((m): MemberDetail => ({ ...m, assemblyId: assemblyIdOf(m), timeline: [...timelines.get(m.id)!].sort(byDateDesc) }));
   const index = members.map((m) => {
@@ -199,6 +216,13 @@ export function buildDataset(
     return { ...s, counts: { rollcalls: count("vote"), bills: count("bill"), speeches: count("speech"), questions: count("question") } };
   });
   return { index, details, rollCalls: rollCalls.map(summarize).sort(byDateDesc) };
+}
+
+/** 参法の billId `{回次}-{種別}-{番号}`（docs/DATA_CONTRACT.md）の回次。形が違えば例外（推定しない）。 */
+function sessionOfBillId(billId: string): number {
+  const m = billId.match(/^(\d+)-/);
+  if (!m) throw new Error(`billId without session prefix: ${billId}`);
+  return +m[1];
 }
 
 type Sortable = { date: string; kind?: TimelineEntry["kind"]; id?: string; rollCallId?: string; speechId?: string; billId?: string; questionId?: string; meetingId?: string };

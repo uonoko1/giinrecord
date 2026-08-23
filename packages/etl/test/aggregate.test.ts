@@ -76,8 +76,8 @@ describe("buildDataset: members/{id}.json・members/index.json・rollcalls/index
   test("timeline は日付降順で、vote エントリに採決の事実と会派の多数票を持つ", () => {
     const m1 = ds.details.find((d) => d.id === "m_1")!;
     assert.deepEqual(m1.timeline, [
-      { kind: "vote", date: "2026-07-24", rollCallId: "221-0724-v001", title: "案件 221-0724-v001", value: "投票なし", result: "賛成 1・反対 0", groupValue: "賛成", sourceUrl: `${BASE}/221-0724-v001.htm` },
-      { kind: "vote", date: "2026-06-05", rollCallId: "221-0605-v001", title: "案件 221-0605-v001", value: "賛成", result: "賛成 1・反対 1", groupValue: "賛成", sourceUrl: `${BASE}/221-0605-v001.htm` },
+      { kind: "vote", session: 221, date: "2026-07-24", rollCallId: "221-0724-v001", title: "案件 221-0724-v001", value: "投票なし", result: "賛成 1・反対 0", groupValue: "賛成", sourceUrl: `${BASE}/221-0724-v001.htm` },
+      { kind: "vote", session: 221, date: "2026-06-05", rollCallId: "221-0605-v001", title: "案件 221-0605-v001", value: "賛成", result: "賛成 1・反対 1", groupValue: "賛成", sourceUrl: `${BASE}/221-0605-v001.htm` },
     ]);
   });
 
@@ -144,7 +144,7 @@ describe("buildDataset: members/{id}.json・members/index.json・rollcalls/index
 });
 
 const speech = (id: string, memberId: string | undefined, date: string, extra: Partial<Speech> = {}): Speech => ({
-  id, ...(memberId ? { memberId } : {}), speakerText: memberId ?? "?", house: "sangiin", meeting: "本会議 第1号", date,
+  id, session: 221, ...(memberId ? { memberId } : {}), speakerText: memberId ?? "?", house: "sangiin", meeting: "本会議 第1号", date,
   excerpt: `抜粋 ${id}`, chars: 300, sourceUrl: `https://kokkai.ndl.go.jp/txt/${id.split("_")[0]}/${Number(id.split("_")[1])}`, ...extra,
 });
 
@@ -161,7 +161,7 @@ describe("buildDataset: speech を timeline に入れる", () => {
   test("speech エントリは speechId・会議名・冒頭抜粋・文字数・出典URL を持ち、要約や評価は持たない", () => {
     const m1 = ds.details.find((d) => d.id === "m_1")!;
     assert.deepEqual(m1.timeline.find((e) => e.kind === "speech" && e.speechId === "122115254X01920260605_002"), {
-      kind: "speech", date: "2026-06-05", speechId: "122115254X01920260605_002", meeting: "本会議 第1号",
+      kind: "speech", session: 221, date: "2026-06-05", speechId: "122115254X01920260605_002", meeting: "本会議 第1号",
       excerpt: "抜粋 122115254X01920260605_002", chars: 300, sourceUrl: "https://kokkai.ndl.go.jp/txt/122115254X01920260605/2",
     });
   });
@@ -176,7 +176,7 @@ describe("buildDataset: speech を timeline に入れる", () => {
   test("議長・大臣など position 付きの発言も timeline に入り、position を原文のまま載せる（役職としての発言も記録）", () => {
     const m1 = ds.details.find((d) => d.id === "m_1")!;
     assert.deepEqual(m1.timeline.find((e) => e.kind === "speech" && e.speechId === "122115254X02020260610_004"), {
-      kind: "speech", date: "2026-06-10", speechId: "122115254X02020260610_004", meeting: "本会議 第1号",
+      kind: "speech", session: 221, date: "2026-06-10", speechId: "122115254X02020260610_004", meeting: "本会議 第1号",
       excerpt: "抜粋 122115254X02020260610_004", chars: 300, position: "議長", sourceUrl: "https://kokkai.ndl.go.jp/txt/122115254X02020260610/4",
     });
   });
@@ -252,9 +252,9 @@ describe("buildDataset: bill（提出法案）を timeline に入れる", () => 
   test("bill エントリは提出日・役割・原文・審議状況・議案ページの URL を持ち、無いキーは省く", () => {
     const m1 = ds.details.find((d) => d.id === "m_1")!;
     assert.deepEqual(m1.timeline.filter((e) => e.kind === "bill"), [
-      { kind: "bill", date: "2026-06-05", billId: "221-参法-16", title: "法案 221-参法-16", role: "提出者", submitterText: "一郎君 外9名", status: "参議院 環境委員会 未了",
+      { kind: "bill", session: 221, date: "2026-06-05", billId: "221-参法-16", title: "法案 221-参法-16", role: "提出者", submitterText: "一郎君 外9名", status: "参議院 環境委員会 未了",
         sourceUrl: "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/221/meisai/m22116.htm" },
-      { kind: "bill", date: "2026-04-01", billId: "221-参法-3", title: "法案 221-参法-3", role: "提出者",
+      { kind: "bill", session: 221, date: "2026-04-01", billId: "221-参法-3", title: "法案 221-参法-3", role: "提出者",
         sourceUrl: "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/221/meisai/m2213.htm" },
     ]);
   });
@@ -303,22 +303,22 @@ describe("buildDataset: 衆院 Bill から timeline を作る", () => {
 
   test("提出者は role 提出者、賛成者は role 賛成者の bill 行（事実）。日付は衆議院の受理日、出典は経過ページ", () => {
     assert.deepEqual(of("h_1").find((e) => e.kind === "bill"), {
-      kind: "bill", date: "2026-03-02", billId: "221-衆法-1", title: "議案 221-衆法-1", role: "提出者",
+      kind: "bill", session: 221, date: "2026-03-02", billId: "221-衆法-1", title: "議案 221-衆法-1", role: "提出者",
       submitterText: "h_1君外四名", status: "衆議院で閉会中審査", sourceUrl: keika("221-衆法-1"),
     });
     assert.deepEqual(of("h_2").find((e) => e.kind === "bill"), {
-      kind: "bill", date: "2026-03-02", billId: "221-衆法-1", title: "議案 221-衆法-1", role: "賛成者",
+      kind: "bill", session: 221, date: "2026-03-02", billId: "221-衆法-1", title: "議案 221-衆法-1", role: "賛成者",
       submitterText: "h_1君外四名", status: "衆議院で閉会中審査", sourceUrl: keika("221-衆法-1"),
     });
   });
 
   test("所属会派が賛成会派／反対会派に載る議案は stance 行（estimated: true）。記録するのは会派名であって本人ではない", () => {
     assert.deepEqual(of("h_1").find((e) => e.kind === "stance" && e.billId === "221-閣法-3"), {
-      kind: "stance", estimated: true, date: "2026-02-20", billId: "221-閣法-3", title: "議案 221-閣法-3",
+      kind: "stance", estimated: true, session: 221, date: "2026-02-20", billId: "221-閣法-3", title: "議案 221-閣法-3",
       group: "自由民主党・無所属の会", stance: "賛成", stanceText: "多数", status: "成立", sourceUrl: keika("221-閣法-3"),
     });
     assert.deepEqual(of("h_2").find((e) => e.kind === "stance" && e.billId === "221-閣法-3"), {
-      kind: "stance", estimated: true, date: "2026-02-20", billId: "221-閣法-3", title: "議案 221-閣法-3",
+      kind: "stance", estimated: true, session: 221, date: "2026-02-20", billId: "221-閣法-3", title: "議案 221-閣法-3",
       group: "日本共産党", stance: "反対", stanceText: "多数", status: "成立", sourceUrl: keika("221-閣法-3"),
     });
   });
@@ -386,13 +386,13 @@ describe("buildDataset: 質問主意書を timeline に入れる", () => {
   test("question 行は提出日・件名・提出者の原文・経過状況・答弁書受領日・答弁本文URL・出典を持ち、無いキーは省く", () => {
     const m1 = ds.details.find((d) => d.id === "m_1")!;
     assert.deepEqual(m1.timeline.filter((e) => e.kind === "question"), [
-      { kind: "question", date: "2026-06-05", questionId: "221-sangiin-1", title: "質問 221-sangiin-1", submitterText: "一 郎君", answerDate: "2026-06-12",
+      { kind: "question", session: 221, date: "2026-06-05", questionId: "221-sangiin-1", title: "質問 221-sangiin-1", submitterText: "一 郎君", answerDate: "2026-06-12",
         answerUrl: "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/touh/t221001.htm",
         sourceUrl: "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/meisai/m221001.htm" },
     ]);
     const h1 = ds.details.find((d) => d.id === "h_1")!;
     assert.deepEqual(h1.timeline, [
-      { kind: "question", date: "2026-02-19", questionId: "221-shugiin-1", title: "質問 221-shugiin-1", submitterText: "衆 太郎君", status: "答弁受理",
+      { kind: "question", session: 221, date: "2026-02-19", questionId: "221-shugiin-1", title: "質問 221-shugiin-1", submitterText: "衆 太郎君", status: "答弁受理",
         sourceUrl: "https://www.shugiin.go.jp/internet/itdb_shitsumon.nsf/html/shitsumon/221001.htm" },
     ]);
   });
@@ -415,7 +415,7 @@ describe("buildDataset: 質問主意書を timeline に入れる", () => {
 /* ---------- 委員会出席（#109）: 会議録の出席者欄の「発議者」。Bill.submitters / bill 行には入れない別種の事実 ---------- */
 
 const attendance = (memberId: string, date: string, extra: Partial<MatchedAttendance> = {}): MatchedAttendance => ({
-  memberId, nameText: "舟山康江", meetingId: `12211500${date.replaceAll("-", "")}_000`, meeting: "農林水産委員会 第14号", date, role: "発議者",
+  memberId, nameText: "舟山康江", session: 221, meetingId: `12211500${date.replaceAll("-", "")}_000`, meeting: "農林水産委員会 第14号", date, role: "発議者",
   bills: [{ billId: "221-参法-11", title: "法律案" }], sourceUrl: `https://kokkai.ndl.go.jp/txt/12211500${date.replaceAll("-", "")}/0`,
   ...extra,
 });
@@ -428,9 +428,9 @@ describe("buildDataset: 委員会出席（発議者）を attendance 行とし�
   test("attendance 行は estimated: false・role 発議者・会議名・日付・その日の参法・出典（会議録）を持つ。bill 行にはならない", () => {
     const m1 = ds.details[0];
     assert.deepEqual(m1.timeline.filter((e) => e.kind === "attendance"), [
-      { kind: "attendance", estimated: false, date: "2026-07-16", meetingId: "1221150020260716_000", meeting: "農林水産委員会 第16号", role: "発議者",
+      { kind: "attendance", estimated: false, session: 221, date: "2026-07-16", meetingId: "1221150020260716_000", meeting: "農林水産委員会 第16号", role: "発議者",
         bills: [{ billId: "221-参法-11", title: "法律案" }], sourceUrl: "https://kokkai.ndl.go.jp/txt/1221150020260716/0" },
-      { kind: "attendance", estimated: false, date: "2026-07-09", meetingId: "1221150020260709_000", meeting: "農林水産委員会 第14号", role: "発議者",
+      { kind: "attendance", estimated: false, session: 221, date: "2026-07-09", meetingId: "1221150020260709_000", meeting: "農林水産委員会 第14号", role: "発議者",
         bills: [{ billId: "221-参法-11", title: "法律案" }], sourceUrl: "https://kokkai.ndl.go.jp/txt/1221150020260709/0" },
     ]);
     assert.equal(m1.timeline.filter((e) => e.kind === "bill").length, 0);

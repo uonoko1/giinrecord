@@ -1,7 +1,7 @@
 import { parse } from "node-html-parser";
 import type { Member, MemberSummary } from "@seiji-kiroku/shared";
 import { assemblyIdOf } from "../assemblies.ts";
-import { fetchText } from "../fetch.ts";
+import { fetchTextOr404 } from "../fetch.ts";
 import { stableJson } from "../json.ts";
 import { isKnownGroup, resolveGroup } from "./sangiin-groups.ts";
 
@@ -9,10 +9,15 @@ const BASE = "https://www.sangiin.go.jp/japanese/joho1/kousei/giin";
 
 export const memberListUrl = (session: number) => `${BASE}/${session}/giin.htm`;
 
-/** Fetch and parse the member roster for a Diet session. */
-export async function fetchMembers(session: number): Promise<Member[]> {
+/**
+ * Fetch and parse the member roster for a Diet session.
+ * 回次ごとの名簿は第216回以降しか公開されていない（第215回以前は 404。#103 で確認）。無い回次は undefined（名簿が無い事実。推定しない）。
+ * 呼び出し側はその回次の採決を手元にある回次の名簿で突合し、紐づかない氏名は unmatched.json に載せる。
+ */
+export async function fetchMembers(session: number): Promise<Member[] | undefined> {
   const url = memberListUrl(session);
-  return parseMemberList(await fetchText(url, "utf-8", { noCache: true }), url, session);
+  const html = await fetchTextOr404(url, "utf-8", { noCache: true });
+  return html === undefined ? undefined : parseMemberList(html, url, session);
 }
 
 /**

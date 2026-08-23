@@ -27,9 +27,9 @@ describe("matchAttendance: 委員会に出席した発議者を参院名簿に�
   test("氏名（空白・異体字を吸収）で紐づき、1 人 1 会議につき 1 行になる", () => {
     const { entries, unmatched } = matchAttendance([meeting(["舟山康江", "髙橋光男"])], [member("m_1", "舟山 康江", "国民"), member("m_2", "高橋 光男", "公明")]);
     assert.deepEqual(entries, [
-      { memberId: "m_1", nameText: "舟山康江", meetingId: "122115007X01420260709_000", meeting: "農林水産委員会 第14号", date: "2026-07-09", role: "発議者",
+      { memberId: "m_1", nameText: "舟山康江", session: 221, meetingId: "122115007X01420260709_000", meeting: "農林水産委員会 第14号", date: "2026-07-09", role: "発議者",
         bills: [{ billId: "221-参法-11", title: "法律案" }], sourceUrl: "https://kokkai.ndl.go.jp/txt/122115007X01420260709/0" },
-      { memberId: "m_2", nameText: "髙橋光男", meetingId: "122115007X01420260709_000", meeting: "農林水産委員会 第14号", date: "2026-07-09", role: "発議者",
+      { memberId: "m_2", nameText: "髙橋光男", session: 221, meetingId: "122115007X01420260709_000", meeting: "農林水産委員会 第14号", date: "2026-07-09", role: "発議者",
         bills: [{ billId: "221-参法-11", title: "法律案" }], sourceUrl: "https://kokkai.ndl.go.jp/txt/122115007X01420260709/0" },
     ]);
     assert.deepEqual(unmatched, []);

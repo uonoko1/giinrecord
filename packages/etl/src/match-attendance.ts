@@ -15,6 +15,8 @@ export interface MatchedAttendance {
   memberId: MemberId;
   /** 出席者欄の氏名の原文（空白と「君」を除いたもの）。 */
   nameText: string;
+  /** 会議の回次（timeline の session）。 */
+  session: number;
   meetingId: string;
   meeting: string;
   date: string;
@@ -36,7 +38,7 @@ export function matchAttendance(meetings: readonly CommitteeMeeting[], members: 
   for (const mt of meetings) {
     for (const a of mt.attendees) {
       const member = resolveMember(index, a.nameText, undefined, mt.session);
-      if (member) entries.push({ memberId: member.id, nameText: a.nameText, meetingId: mt.id, meeting: mt.meeting, date: mt.date, role: a.role, bills: mt.bills, sourceUrl: mt.sourceUrl });
+      if (member) entries.push({ memberId: member.id, nameText: a.nameText, session: mt.session, meetingId: mt.id, meeting: mt.meeting, date: mt.date, role: a.role, bills: mt.bills, sourceUrl: mt.sourceUrl });
       else unmatched.push({ kind: "attendance", nameText: a.nameText, group: "", meetingId: mt.id });
     }
   }

@@ -28,6 +28,14 @@
 .member-tab { flex: 1; padding: 12px 0 10px; background: none; border: 0; border-bottom: 2px solid transparent; font: inherit; font-size: 14px; color: var(--muted); cursor: pointer; }
 .member-tab[aria-selected="true"] { font-weight: 700; color: var(--brass); border-bottom-color: var(--brass); }
 
+/* 回次ごとの折りたたみ（#103）。直近2回次は open。見出しは回次名と件数だけで、評価語は無い */
+.member-session { margin: 0; }
+.member-session-head { display: flex; align-items: baseline; gap: 10px; margin: 20px 20px 0; padding: 8px 0; border-bottom: 1.5px solid var(--brass); font-family: var(--font-head); font-size: 16px; font-weight: 700; color: var(--ink); cursor: pointer; list-style: none; }
+.member-session-head::-webkit-details-marker { display: none; }
+.member-session-head::before { content: "▸"; font-size: 12px; color: var(--brass); }
+.member-session[open] > .member-session-head::before { content: "▾"; }
+.member-session-count { font-size: 12px; font-weight: 400; color: var(--muted); }
+
 /* 時系列 */
 .member-day { padding: 0 20px; }
 .member-date { display: flex; align-items: baseline; gap: 10px; margin: 18px 0 0; font-family: var(--font-head); font-size: 15px; font-weight: 700; color: var(--brass); }

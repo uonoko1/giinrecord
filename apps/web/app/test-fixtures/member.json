@@ -21,6 +21,7 @@
       "excerpt": "ただいま議題となりました令和七年度一般会計予算外二案につきまして、予算委員会における審査の経過と結果を御報告申し上げます。",
       "kind": "speech",
       "meeting": "参議院本会議",
+      "session": 217,
       "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715254X01220250331/10",
       "speechId": "121715254X01220250331_010"
     },
@@ -31,6 +32,7 @@
       "kind": "speech",
       "meeting": "参議院本会議",
       "position": "議長",
+      "session": 217,
       "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715254X01220250331/2",
       "speechId": "121715254X01220250331_002"
     },
@@ -40,19 +42,21 @@
       "kind": "vote",
       "result": "可決",
       "rollCallId": "217-0328-v001",
+      "session": 217,
       "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/vote/217/217-0328-v001.htm",
       "title": "関税定率法等の一部を改正する法律案",
       "value": "投票なし"
     },
     {
-      "kind": "question",
-      "date": "2025-03-28",
-      "questionId": "217-sangiin-45",
-      "title": "高額療養費制度の見直しに関する質問主意書",
-      "submitterText": "藤川 政人君",
       "answerDate": "2025-04-08",
       "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217045.htm",
-      "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217045.htm"
+      "date": "2025-03-28",
+      "kind": "question",
+      "questionId": "217-sangiin-45",
+      "session": 217,
+      "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217045.htm",
+      "submitterText": "藤川 政人君",
+      "title": "高額療養費制度の見直しに関する質問主意書"
     },
     {
       "chars": 860,
@@ -61,6 +65,7 @@
       "kind": "speech",
       "meeting": "参議院本会議",
       "position": "国土交通大臣",
+      "session": 217,
       "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715254X01020250320/5",
       "speechId": "121715254X01020250320_005"
     },
@@ -69,6 +74,7 @@
       "date": "2025-03-14",
       "kind": "bill",
       "role": "提出者",
+      "session": 217,
       "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/217/meisai/m217080217003.htm",
       "status": "審査未了",
       "submitterText": "藤川政人君 外3名",
@@ -80,6 +86,7 @@
       "kind": "vote",
       "result": "可決",
       "rollCallId": "217-0314-v002",
+      "session": 217,
       "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/vote/217/217-0314-v002.htm",
       "title": "所得税法等の一部を改正する法律案",
       "value": "反対"
@@ -89,6 +96,7 @@
       "date": "2025-02-20",
       "kind": "bill",
       "role": "賛成者",
+      "session": 217,
       "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/217/meisai/m217100217009.htm",
       "title": "国民の祝日に関する法律の一部を改正する法律案"
     }

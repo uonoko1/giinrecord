@@ -99,6 +99,12 @@ describe("rosterSessionsFor: 回次 N の採決を突合するのに要る名簿
     assert.deepEqual(rosterSessionsFor([221]), [220, 221]);
   });
 
+  test("回次が飛んでいたら連続する各ブロックの1つ前も含める（第200〜201回＋第217〜221回なら第216回の名簿も要る。#103 レビュー）", () => {
+    assert.deepEqual(rosterSessionsFor([200, 201, 217, 218, 219, 220, 221]), [199, 200, 201, 216, 217, 218, 219, 220, 221]);
+    assert.deepEqual(rosterSessionsFor([200, 210, 217]), [199, 200, 209, 210, 216, 217]);
+    assert.deepEqual(rosterSessionsFor([]), []);
+  });
+
   test("実HTML: 第216回の名簿には第217回の名簿にいない議員（任期満了）が多数いて、統合後も元職として残る", () => {
     const merged = mergeRosters([216, 217].map((s) => ({ session: s, members: parseMemberList(fixture(`sangiin-giin-${s}`), roster(s), s) })));
     const former = merged.filter((m) => !m.current);

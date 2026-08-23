@@ -18,7 +18,7 @@ const member = (id: string, name: string, group: string, extra: Partial<Member> 
 });
 
 const speech = (id: string, speakerText: string, group?: string, position?: string): Speech => ({
-  id, speakerText, ...(group ? { group } : {}), ...(position ? { position } : {}),
+  id, session: 221, speakerText, ...(group ? { group } : {}), ...(position ? { position } : {}),
   house: "sangiin", meeting: "本会議 第1号", date: "2026-06-05", excerpt: "本文。", chars: 3,
   sourceUrl: `https://kokkai.ndl.go.jp/txt/${id.split("_")[0]}/${Number(id.split("_")[1])}`,
 });
