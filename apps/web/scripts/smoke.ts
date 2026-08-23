@@ -20,7 +20,7 @@ import { access, readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import type { ZipDistricts } from "@seiji-kiroku/shared";
 import { ARCHIVE_NAME, checkArchive, collectDataFiles } from "../app/lib/archive";
-import { defaultDataDir, readRollCallIndex } from "../app/lib/data-files";
+import { defaultDataDir, readAssemblies, readRollCallIndex } from "../app/lib/data-files";
 import { DISTRICTS_DATA_PATH, zipPrefix } from "../app/lib/districts";
 import { checkBrandAssets, checkBuild, checkDistrictData, checkMemberData, checkNoExternalResources, checkOpsData, checkSitemap, FONTS_CSS, formatReport, OPS_DATA_FILES, type BuildFiles, type ExpectedData } from "../app/lib/smoke";
 import { checkServed, urlSmokeTargets, type ServedResponse } from "../app/lib/smoke-url";
@@ -61,6 +61,7 @@ async function readExpected(dataDir: string): Promise<ExpectedData> {
   } catch (err) {
     if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
   }
+  const assemblyIds = (await readAssemblies(dataDir))?.map((a) => a.id) ?? null;
   const opsFiles: string[] = [];
   for (const name of OPS_DATA_FILES) {
     try {
@@ -70,7 +71,7 @@ async function readExpected(dataDir: string): Promise<ExpectedData> {
       if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
     }
   }
-  return { memberIds, rollCalls, districts, opsFiles };
+  return { memberIds, rollCalls, assemblyIds, districts, opsFiles };
 }
 
 const buildDir = process.env.BUILD_DIR ?? path.resolve(process.cwd(), "build/client");
@@ -133,7 +134,7 @@ if (baseUrl) {
 }
 
 const report = { ...pages, failures: [...pages.failures, ...sitemap.failures, ...memberData.failures, ...districtData.failures, ...brandAssets.failures, ...opsData.failures, ...external.failures, ...archiveFailures, ...servedFailures] };
-console.log(`smoke: build=${buildDir} data=${dataDir} members=${data.memberIds?.length ?? "none"} rollcalls=${data.rollCalls?.length ?? "none"}`);
+console.log(`smoke: build=${buildDir} data=${dataDir} members=${data.memberIds?.length ?? "none"} rollcalls=${data.rollCalls?.length ?? "none"} assemblies=${data.assemblyIds?.length ?? "none"}`);
 console.log(`smoke: sitemap.xml ${sitemap.checkedUrls} urls checked`);
 console.log(`smoke: data/members ${memberData.checkedFiles} member files checked`);
 console.log(`smoke: data/districts ${districtData.checkedFiles} shard files checked (sample zip ${data.districts?.sample.zip ?? "none"})`);

@@ -130,4 +130,34 @@ export type AttendanceEntry = {
   /** 会議録の冒頭情報の URL。 */
   sourceUrl: string;
 };
-export type TimelineEntry = VoteEntry | BillEntry | SpeechEntry | StanceEntry | QuestionEntry | AttendanceEntry;
+/**
+ * 地方議会の表決の行（事実、#158。docs/DATA_CONTRACT.md「地方議会の Web 表示が読む形」）。国会の VoteEntry とは kind で分ける。
+ * `vote` は凡例付きの原文（LocalVote）。`sessionLabel`・`method`・`result` は議会の公表の原文。sourceUrl は表決結果の PDF／HTML。
+ */
+export type LocalVoteEntry = {
+  kind: "localVote";
+  date: string;
+  rollCallId: string;
+  title: string;
+  vote: LocalVote;
+  /** 会期の原文（例「第399回（令和8年2月定例会）」） */
+  sessionLabel: string;
+  /** 表決方法の原文（例「起立」「簡易」）。無ければ省略 */
+  method?: string;
+  /** 議決結果の原文（例「可決」）。無ければ省略 */
+  result?: string;
+  sourceUrl: string;
+};
+export type TimelineEntry = VoteEntry | BillEntry | SpeechEntry | StanceEntry | QuestionEntry | AttendanceEntry | LocalVoteEntry;
+
+/** `assemblies/{assemblyId}/sessions.json` の1行（地方議会の会期。新しい順）。#158 */
+export interface AssemblySession {
+  id: string;
+  /** 会期の原文（例「第399回（令和8年2月定例会）」） */
+  label: string;
+  /** その会期の最終議決日（ISO） */
+  date: string;
+  rollcalls: number;
+  sourceUrl: string;
+  fetchedAt: string;
+}

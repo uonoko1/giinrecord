@@ -18,6 +18,9 @@ export default [
   route("privacy", "routes/privacy.tsx"), // #167
   route("members", "routes/members.tsx"),
   route("compare", "routes/compare.tsx"), // #104: クエリ依存・プリレンダー無し（SPA fallback）・noindex
+  // #158: 議会一覧と議会ページ。loader 無し（index.json をバンドル）なのでデータが無くても存在する
+  route("assemblies", "routes/assemblies.tsx"),
+  route("assemblies/:id", "routes/assembly.tsx"),
   ...(hasMemberData ? [route("members/:id", "routes/member.tsx")] : []),
   ...(hasRollCallData ? [route("rollcalls/:session?", "routes/rollcalls.tsx"), route("rollcalls/:session/:id", "routes/rollcall.tsx")] : []),
 ] satisfies RouteConfig;

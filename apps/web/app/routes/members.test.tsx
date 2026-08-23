@@ -200,6 +200,28 @@ describe("/members", () => {
     });
   });
 
+  describe("?assembly= クエリ（#158: 議会ページから）", () => {
+    const shugiin = { ...members[0], id: "h_000001", name: "衆 太郎", kana: "しゅう たろう", house: "shugiin" as const, assemblyId: "diet-shugiin" as const, group: "自民", district: "東京1" };
+    function renderAt(url: string) {
+      return render(
+        <MemoryRouter initialEntries={[url]}>
+          <Members data={{ ...dataset, members: [...members, shugiin] }} />
+        </MemoryRouter>,
+      );
+    }
+    it("assembly を初期値として議会の select と絞り込みに反映する", () => {
+      renderAt("/members?assembly=diet-shugiin");
+      expect(screen.getByRole("combobox", { name: "議会" })).toHaveValue("diet-shugiin");
+      expect(screen.getByText("1 名")).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: /衆 太郎/ })).toBeInTheDocument();
+    });
+    it("存在しない議会 id は無視してすべてを出す", () => {
+      renderAt("/members?assembly=pref-99");
+      expect(screen.getByRole("combobox", { name: "議会" })).toHaveValue("");
+      expect(screen.getByText("11 名")).toBeInTheDocument();
+    });
+  });
+
   describe("?district= クエリ（#112: Home の郵便番号から）", () => {
     const shugiin = { ...members[0], id: "h_000001", name: "衆 太郎", kana: "しゅう たろう", house: "shugiin" as const, group: "自民", district: "東京1" };
     function renderAt(url: string, list = [...members, shugiin]) {
