@@ -48,8 +48,8 @@ run_grep() {
   local files=$1; shift
   local out status
   set +e
+  # shellcheck disable=SC2016
   out=$(printf '%s\n' "$files" | sed '/^$/d' | tr '\n' '\0' \
-    # shellcheck disable=SC2016  # "$@" は sh -c 側で展開させる意図
     | xargs -0 -r sh -c 'grep "$@"; s=$?; [ "$s" -eq 1 ] && exit 0; exit "$s"' grep "$@" -- 2>"$ERR_FILE")
   status=$?
   set -e
