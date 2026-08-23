@@ -64,7 +64,7 @@ jobs:
           printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
           rsync -az --delete --exclude '.well-known' \
             -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes" \
-            apps/web/build/client/ "$USER@$HOST:/var/www/gikailog/$TARGET_DIR/"
+            apps/web/build/client/ "$USER@$HOST:$TARGET_DIR/"   # deploy 鍵は rrsync /var/www/gikailog に制限（deploy/ops-user-setup.sh）
       - name: Summary
         env:
           ENVIRONMENT: ${{ inputs.environment }}

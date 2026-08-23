@@ -84,3 +84,8 @@ curl -sI https://DOMAIN/ | grep -i -E "content-security|x-frame" # 外から見�
 - コンテナに TLS を持たせない（certbot はホスト nginx の担当。共用ホストで 80/443 を奪わない）。
 - `ubuntu` を `docker` グループに入れない。deploy-site.yml から `docker` を呼ばない。
 - コンテナからログを外に出さない（IP を含む。集計はホスト側の IP 無しログだけ、`docs/ops/analytics.md`）。
+
+## 運用ユーザーと鍵の権限（2026-08-23）
+- `gikaiops`：NOPASSWD sudo。鍵は運用者の1本のみ（`deploy/ops-user-setup.sh`）。PO はこのユーザーで root 作業（setup スクリプト、監視）を非対話で実行する
+- `ubuntu` の CI deploy 鍵：`command="/usr/bin/rrsync /var/www/gikailog"` ＋ `restrict`。rsync で `/var/www/gikailog` 配下に書くこと以外できない（漏洩しても root 化不可）。`deploy-site.yml` の宛先はこの root 相対（`site/`・`staging/`）
+- `ubuntu` のパスワード sudo は変更しない
