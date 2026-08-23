@@ -43,8 +43,13 @@ case "$cmd" in
     if [[ "$1" == x509 ]]; then echo "notAfter=${H_NOT_AFTER-$(LC_ALL=C date -u -d '+60 days' '+%b %d %H:%M:%S %Y GMT')}"; fi ;;
   gh)
     case "$1 $2" in
-      "issue list")   echo "${H_OPEN:-[]}" ;;
-      "issue create") echo "https://github.com/example/repo/issues/99" ;;
+      "issue list")   # emulate gh's --jq: the number of the open issue whose title equals $TITLE (exported by report.sh)
+        python3 -c 'import json,os,sys
+m=[i["number"] for i in json.loads(sys.argv[1]) if i["title"]==os.environ.get("TITLE")]
+print(m[0]) if m else None' "${H_OPEN:-[]}" ;;
+      "issue create")   # keep a copy of the body (run.sh deletes its temp files on exit)
+        for ((i=1;i<=$#;i++)); do [[ "${!i}" == "--body-file" ]] && { j=$((i+1)); cat "${!j}" >> "$STUB_LOG.body"; }; done
+        echo "https://github.com/example/repo/issues/99" ;;
       "issue close"|"issue comment"|"label create") ;;
     esac ;;
   sleep) ;;
@@ -58,7 +63,7 @@ assert_contains() { [[ "$1" == *"$2"* ]] || fail "$3: expected to contain [$2] i
 assert_not_contains() { [[ "$1" != *"$2"* ]] || fail "$3: expected NOT to contain [$2] in: $1"; }
 
 fresh() {
-  P="$TMP/$1"; mkdir -p "$P"; LOG="$P/stub.log"; : > "$LOG"
+  P="$TMP/$1"; mkdir -p "$P"; LOG="$P/stub.log"; : > "$LOG"; rm -f "$LOG.body"
   export STUB_LOG="$LOG" STUB_HANDLER="$TMP/handler"
   unset H_CODE_ROOT H_CODE_MEMBERS H_CODE_META H_TITLE H_FETCHED_AT H_NOT_AFTER H_OPEN H_CURL_EXIT
 }
@@ -133,9 +138,9 @@ t_probe_curl_down() {
 }
 t_probe_rejects_bad_origin() {
   fresh p_origin
-  run_probe "http://gikailog.jp" && fail "http origin refused"
-  run_probe "https://gikailog.jp/path" && fail "origin with path refused"
-  run_probe && fail "missing origin refused"
+  if run_probe "http://gikailog.jp"; then fail "http origin accepted"; fi
+  if run_probe "https://gikailog.jp/path"; then fail "origin with path accepted"; fi
+  if run_probe; then fail "missing origin accepted"; fi
 }
 
 # ---- report.sh ----
@@ -198,9 +203,8 @@ t_run_body_has_no_secrets_or_paths() {
   fresh run_body
   GITHUB_SERVER_URL=https://github.com GITHUB_REPOSITORY=example/repo GITHUB_RUN_ID=123 \
     H_CODE_ROOT=503 run_run production https://gikailog.jp || true
-  local bodyfile; bodyfile=$(grep -o -- '--body-file [^ ]*' "$LOG" | head -1 | cut -d' ' -f2)
-  [ -n "$bodyfile" ] || { fail "no body file"; return; }
-  local body; body=$(cat "$bodyfile")
+  [ -f "$LOG.body" ] || { fail "no body file"; return; }
+  local body; body=$(cat "$LOG.body")
   assert_contains "$body" "production" "environment named"
   assert_contains "$body" "/ 503" "reason included"
   assert_contains "$body" "https://github.com/example/repo/actions/runs/123" "run link"
