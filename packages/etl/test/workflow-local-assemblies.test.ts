@@ -29,6 +29,7 @@ test("local-assemblies.yml: 日次と同じイメージで local-cli.ts miyagi �
   assert.match(block, /gikailog-etl:ci/);
   assert.match(block, /--entrypoint node/);
   assert.match(block, /src\/local-cli\.ts miyagi/);
+  assert.match(block, /src\/local-cli\.ts tottori 2>&1 \| tee -a etl\.log/, "鳥取県議会（#184）も同じステップで走らせ、ログは追記");
   assert.match(block, /\| tee etl\.log/);
   assert.match(block, /^\s*shell: bash\s*$/m);
   assert.match(block, /--user "\$\(id -u\):\$\(id -g\)"/);
