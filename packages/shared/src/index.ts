@@ -375,3 +375,145 @@ export interface RollCallSummary {
   result: string;
   sourceUrl: string;
 }
+
+/* ---------- 地方議会のレコード（Issue #157 / #158。最初の議会は宮城県議会 pref-04） ---------- */
+
+/**
+ * 地方議会の議員（名簿の原文）。国会と同じ `data/members/index.json` の1行（docs/DATA_CONTRACT.md「地方議会の Web 表示が読む形」）。
+ * 国会の MemberSummary と違い `house`（国会の院）は持たず、`counts` は rollcalls だけ（議案・発言・質問主意書は取得していない）。
+ * Web は `assemblyId` が `diet-` で始まらないことで地方議員と判定する（`house` は見ない）。
+ * id は `p_{prefCode}_{名簿のプロフィールページの slug}`（例 `p_04_meibo_yuzuki`）。氏名からは作らない。
+ */
+export interface LocalMember {
+  id: MemberId;
+  assemblyId: AssemblyId;
+  /** 名簿の表記（例「柚木 貴光」） */
+  name: string;
+  /** 名簿のふりがな（例「ゆずき たかみつ」） */
+  kana: string;
+  /** 名簿（会派別）の会派の正式名称の原文 */
+  group: string;
+  /** 名簿（選挙区別）の選挙区の原文 */
+  district: string;
+  /** 名簿のプロフィールページ */
+  profileUrl: string;
+  /** 名簿に載っている（表決 PDF にだけ出る氏名は members には入れず unmatched.json に載せる） */
+  current: boolean;
+  /** 名簿ページの掲載日（ISO）。名簿の as-of */
+  asOf: string;
+  /** 名簿ページ（議会の公式ホスト） */
+  sourceUrl: string;
+  counts: { rollcalls: number };
+}
+
+/**
+ * 地方議員の所属（名簿の掲載日時点の会派・選挙区）。国会の MemberTerm（院・回次・任期）に当たる情報は名簿に無いので持たない。
+ * Web の議員ページは `terms` の最後の行の `group` / `district` を表示する。
+ */
+export interface LocalMemberTerm {
+  group: string;
+  district: string;
+  /** 名簿の掲載日（ISO） */
+  asOf: string;
+}
+
+/** 地方議会の議員ページ用（国会と同じ `data/members/{id}.json`）: 議員＋所属＋その人の表決の行（新しい順）。 */
+export interface LocalMemberDetail extends LocalMember {
+  terms: LocalMemberTerm[];
+  timeline: LocalVoteEntry[];
+}
+
+/**
+ * 地方議会の表決の1行（事実、#158）。`members/{id}.json` の timeline。国会の VoteEntry（value: VoteValue）とは kind で分ける。
+ * `vote` は凡例付きの原文（LocalVote）で、国会の値に丸めない。`sessionLabel`・`method`・`result` は議会の公表の原文。
+ */
+export type LocalVoteEntry = {
+  kind: "localVote";
+  date: string;
+  rollCallId: string;
+  title: string;
+  vote: LocalVote;
+  /** 会期の原文（例「令和7年11月定例会（第398回）」） */
+  sessionLabel: string;
+  /** 表決方法の原文（例「起立」「簡易」）。無ければ省略 */
+  method?: string;
+  /** 議決結果の原文（例「可決」）。無ければ省略 */
+  result?: string;
+  /** 表決結果の PDF／HTML（その議会の公式ホスト） */
+  sourceUrl: string;
+};
+
+/** `data/assemblies/{assemblyId}/sessions.json` の1行（その議会の会期一覧、新しい順。#158）。 */
+export interface AssemblySession {
+  /** 議会内で一意（宮城は通算回次「398」） */
+  id: string;
+  /** 会期の原文（例「令和7年11月定例会（第398回）」） */
+  label: string;
+  /** その会期の最終議決日（ISO） */
+  date: string;
+  /** その会期の表決件数 */
+  rollcalls: number;
+  /** 会期の表決結果ページ */
+  sourceUrl: string;
+  /** 取得日時（ISO） */
+  fetchedAt: string;
+}
+
+/** 表決方法（PDF の原文と、その PDF の凡例での意味の原文。例 raw「簡易」legend「簡易表決(異議の有無を諮る)」）。 */
+export interface LocalVoteMethod {
+  raw: string;
+  legend: string;
+}
+
+/**
+ * 地方議会の本会議の表決（議案1件）。`data/assemblies/{assemblyId}/rollcalls/{sessionId}/{id}.json`。
+ * すべて表決 PDF の原文。id は `{assemblyId}-{sessionId}-{議決日 yyyymmdd}-{議案種別}-{議案番号}`（同じ会期に議決日が複数あっても一意）。
+ */
+export interface LocalRollCall {
+  id: string;
+  assemblyId: AssemblyId;
+  /** 議会内で一意な会期の id（宮城は通算回次「398」） */
+  sessionId: string;
+  /** 会期の原文（例「令和7年11月定例会（第398回）」） */
+  sessionLabel: string;
+  /** 議決日（ISO） */
+  date: string;
+  /** 議案種別の原文（「知事提出議案」「発議案」「意見書案」「請願」…） */
+  kind: string;
+  /** 議案等番号の原文（「132」「398の1」） */
+  number: string;
+  /** 件名の原文 */
+  title: string;
+  method: LocalVoteMethod;
+  /** 議決結果の原文（「可決」「否決」「採択」…） */
+  result: string;
+  /** PDF の出席者数・表決者数・賛成者数・反対者数（公表値。votes から数え直さない） */
+  counts: { present: number; voting: number; yes: number; no: number };
+  /** 各議員の表決（PDF の列順）。memberId は名簿に名寄せできたときだけ（できなければ ""。unmatched.json に載る） */
+  votes: { memberId: MemberId; nameText: string; group: string; value: LocalVote }[];
+  /** PDF の何ページ目か（1 始まり） */
+  page: number;
+  /** 表決 PDF の URL */
+  sourceUrl: string;
+}
+
+/** `rollcalls/index.json` の1行（採決一覧用）。votes を除いた LocalRollCall。 */
+export type LocalRollCallSummary = Omit<LocalRollCall, "votes">;
+
+/** `data/assemblies/{assemblyId}/meta.json`。取得日時・出典・対象会期・件数（不明セル数を含む）。 */
+export interface LocalAssemblyMeta {
+  assemblyId: AssemblyId;
+  fetchedAt: string;
+  sources: { name: string; url: string; fetchedAt: string }[];
+  /** 名簿の掲載日（ISO） */
+  rosterAsOf: string;
+  sessions: { sessionId: string; sessionLabel: string; sourceUrl: string; pdfUrl: string; rollcalls: number; unknownCells: number }[];
+  counts: { members: number; rollcalls: number; cells: number; unknownCells: number; unmatchedNames: number };
+}
+
+/** 表決 PDF の氏名のうち名簿に名寄せできなかったもの（`unmatched.json`）。運用者が確認する。 */
+export interface LocalUnmatchedName {
+  nameText: string;
+  group: string;
+  rollCallIds: string[];
+}
