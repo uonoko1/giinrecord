@@ -1,0 +1,579 @@
+{
+ "asOf": {
+  "kenAll": "2026-07-31",
+  "shugiinDistricts": "2022-12-28"
+ },
+ "counts": {
+  "municipalities": 1892,
+  "shugiinDistricts": 289,
+  "splitMunicipalities": 33,
+  "zips": 120682
+ },
+ "fetchedAt": "2026-08-23T08:01:29.817Z",
+ "sources": [
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "日本郵便 郵便番号データ（KEN_ALL）ダウンロードページ",
+   "url": "https://www.post.japanpost.jp/service/search/zipcode/download/kogaki-zip.html"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "日本郵便 郵便番号データ（KEN_ALL.CSV、全国一括）",
+   "url": "https://www.post.japanpost.jp/service/search/zipcode/download/kogaki/zip/ken_all.zip"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区の区割りの改定等について（令和4年改定）",
+   "url": "https://www.soumu.go.jp/senkyo/senkyo_s/news/senkyo/shu_kuwari/shu_kuwari_4.html"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（北海道）",
+   "url": "https://www.soumu.go.jp/main_content/000853801.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（青森県）",
+   "url": "https://www.soumu.go.jp/main_content/000853803.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（岩手県）",
+   "url": "https://www.soumu.go.jp/main_content/000853804.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（宮城県）",
+   "url": "https://www.soumu.go.jp/main_content/000853805.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（秋田県）",
+   "url": "https://www.soumu.go.jp/main_content/000853806.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（山形県）",
+   "url": "https://www.soumu.go.jp/main_content/000853807.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（福島県）",
+   "url": "https://www.soumu.go.jp/main_content/000853808.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（茨城県）",
+   "url": "https://www.soumu.go.jp/main_content/000853809.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（栃木県）",
+   "url": "https://www.soumu.go.jp/main_content/000853810.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（群馬県）",
+   "url": "https://www.soumu.go.jp/main_content/000853811.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（埼玉県）",
+   "url": "https://www.soumu.go.jp/main_content/000853812.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（千葉県）",
+   "url": "https://www.soumu.go.jp/main_content/000853813.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（東京都）",
+   "url": "https://www.soumu.go.jp/main_content/000853814.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（神奈川県）",
+   "url": "https://www.soumu.go.jp/main_content/000853816.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（新潟県）",
+   "url": "https://www.soumu.go.jp/main_content/000853817.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（富山県）",
+   "url": "https://www.soumu.go.jp/main_content/000853818.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（石川県）",
+   "url": "https://www.soumu.go.jp/main_content/000853819.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（福井県）",
+   "url": "https://www.soumu.go.jp/main_content/000853820.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（山梨県）",
+   "url": "https://www.soumu.go.jp/main_content/000853821.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（長野県）",
+   "url": "https://www.soumu.go.jp/main_content/000853822.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（岐阜県）",
+   "url": "https://www.soumu.go.jp/main_content/000853826.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（静岡県）",
+   "url": "https://www.soumu.go.jp/main_content/000853827.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（愛知県）",
+   "url": "https://www.soumu.go.jp/main_content/000853828.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（三重県）",
+   "url": "https://www.soumu.go.jp/main_content/000853829.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（滋賀県）",
+   "url": "https://www.soumu.go.jp/main_content/000853831.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（京都府）",
+   "url": "https://www.soumu.go.jp/main_content/000853832.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（大阪府）",
+   "url": "https://www.soumu.go.jp/main_content/000853834.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（兵庫県）",
+   "url": "https://www.soumu.go.jp/main_content/000853835.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（奈良県）",
+   "url": "https://www.soumu.go.jp/main_content/000853836.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（和歌山県）",
+   "url": "https://www.soumu.go.jp/main_content/000853837.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（鳥取県）",
+   "url": "https://www.soumu.go.jp/main_content/000853851.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（島根県）",
+   "url": "https://www.soumu.go.jp/main_content/000853852.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（岡山県）",
+   "url": "https://www.soumu.go.jp/main_content/000853853.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（広島県）",
+   "url": "https://www.soumu.go.jp/main_content/000853854.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（山口県）",
+   "url": "https://www.soumu.go.jp/main_content/000853855.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（徳島県）",
+   "url": "https://www.soumu.go.jp/main_content/000853856.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（香川県）",
+   "url": "https://www.soumu.go.jp/main_content/000853857.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（愛媛県）",
+   "url": "https://www.soumu.go.jp/main_content/000853858.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（高知県）",
+   "url": "https://www.soumu.go.jp/main_content/000853859.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（福岡県）",
+   "url": "https://www.soumu.go.jp/main_content/000853860.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（佐賀県）",
+   "url": "https://www.soumu.go.jp/main_content/000853861.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（長崎県）",
+   "url": "https://www.soumu.go.jp/main_content/000853862.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（熊本県）",
+   "url": "https://www.soumu.go.jp/main_content/000853863.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（大分県）",
+   "url": "https://www.soumu.go.jp/main_content/000853864.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（宮崎県）",
+   "url": "https://www.soumu.go.jp/main_content/000853866.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（鹿児島県）",
+   "url": "https://www.soumu.go.jp/main_content/000853867.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "総務省 衆議院小選挙区選出議員の選挙区（沖縄県）",
+   "url": "https://www.soumu.go.jp/main_content/000853868.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "北海道 総合振興局・振興局の所管市町村",
+   "url": "https://www.pref.hokkaido.lg.jp/gyosei/shicho/index.html"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "東京都支庁設置条例（支庁の所管区域）",
+   "url": "https://www.reiki.metro.tokyo.lg.jp/reiki/reiki_honbun/g101RG00000150.html"
+  },
+  {
+   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "name": "静岡県 区の再編（別表の旧区名と現在の区の対応）",
+   "url": "https://www.city.hamamatsu.shizuoka.jp/kikaku/kuseido/index.html"
+  }
+ ],
+ "splitMunicipalities": [
+  {
+   "city": "札幌市北区",
+   "code": "01102",
+   "pref": "北海道",
+   "shugiin": [
+    "北海道1",
+    "北海道2"
+   ]
+  },
+  {
+   "city": "札幌市白石区",
+   "code": "01104",
+   "pref": "北海道",
+   "shugiin": [
+    "北海道3",
+    "北海道5"
+   ]
+  },
+  {
+   "city": "札幌市西区",
+   "code": "01107",
+   "pref": "北海道",
+   "shugiin": [
+    "北海道1",
+    "北海道4"
+   ]
+  },
+  {
+   "city": "宇都宮市",
+   "code": "09201",
+   "pref": "栃木県",
+   "shugiin": [
+    "栃木1",
+    "栃木2"
+   ]
+  },
+  {
+   "city": "高崎市",
+   "code": "10202",
+   "pref": "群馬県",
+   "shugiin": [
+    "群馬4",
+    "群馬5"
+   ]
+  },
+  {
+   "city": "川口市",
+   "code": "11203",
+   "pref": "埼玉県",
+   "shugiin": [
+    "埼玉2",
+    "埼玉3"
+   ]
+  },
+  {
+   "city": "市川市",
+   "code": "12203",
+   "pref": "千葉県",
+   "shugiin": [
+    "千葉4",
+    "千葉5"
+   ]
+  },
+  {
+   "city": "船橋市",
+   "code": "12204",
+   "pref": "千葉県",
+   "shugiin": [
+    "千葉4",
+    "千葉14"
+   ]
+  },
+  {
+   "city": "大田区",
+   "code": "13111",
+   "pref": "東京都",
+   "shugiin": [
+    "東京4",
+    "東京26"
+   ]
+  },
+  {
+   "city": "世田谷区",
+   "code": "13112",
+   "pref": "東京都",
+   "shugiin": [
+    "東京5",
+    "東京6"
+   ]
+  },
+  {
+   "city": "杉並区",
+   "code": "13115",
+   "pref": "東京都",
+   "shugiin": [
+    "東京8",
+    "東京27"
+   ]
+  },
+  {
+   "city": "板橋区",
+   "code": "13119",
+   "pref": "東京都",
+   "shugiin": [
+    "東京11",
+    "東京12"
+   ]
+  },
+  {
+   "city": "練馬区",
+   "code": "13120",
+   "pref": "東京都",
+   "shugiin": [
+    "東京9",
+    "東京28"
+   ]
+  },
+  {
+   "city": "足立区",
+   "code": "13121",
+   "pref": "東京都",
+   "shugiin": [
+    "東京13",
+    "東京29"
+   ]
+  },
+  {
+   "city": "江戸川区",
+   "code": "13123",
+   "pref": "東京都",
+   "shugiin": [
+    "東京14",
+    "東京16"
+   ]
+  },
+  {
+   "city": "八王子市",
+   "code": "13201",
+   "pref": "東京都",
+   "shugiin": [
+    "東京21",
+    "東京24"
+   ]
+  },
+  {
+   "city": "富山市",
+   "code": "16201",
+   "pref": "富山県",
+   "shugiin": [
+    "富山1",
+    "富山2"
+   ]
+  },
+  {
+   "city": "長野市",
+   "code": "20201",
+   "pref": "長野県",
+   "shugiin": [
+    "長野1",
+    "長野2"
+   ]
+  },
+  {
+   "city": "浜松市中央区",
+   "code": "22138",
+   "pref": "静岡県",
+   "shugiin": [
+    "静岡7",
+    "静岡8"
+   ]
+  },
+  {
+   "city": "富士市",
+   "code": "22210",
+   "pref": "静岡県",
+   "shugiin": [
+    "静岡4",
+    "静岡5"
+   ]
+  },
+  {
+   "city": "四日市市",
+   "code": "24202",
+   "pref": "三重県",
+   "shugiin": [
+    "三重2",
+    "三重3"
+   ]
+  },
+  {
+   "city": "姫路市",
+   "code": "28201",
+   "pref": "兵庫県",
+   "shugiin": [
+    "兵庫11",
+    "兵庫12"
+   ]
+  },
+  {
+   "city": "西宮市",
+   "code": "28204",
+   "pref": "兵庫県",
+   "shugiin": [
+    "兵庫2",
+    "兵庫7"
+   ]
+  },
+  {
+   "city": "川西市",
+   "code": "28217",
+   "pref": "兵庫県",
+   "shugiin": [
+    "兵庫5",
+    "兵庫6"
+   ]
+  },
+  {
+   "city": "奈良市",
+   "code": "29201",
+   "pref": "奈良県",
+   "shugiin": [
+    "奈良1",
+    "奈良2"
+   ]
+  },
+  {
+   "city": "高松市",
+   "code": "37201",
+   "pref": "香川県",
+   "shugiin": [
+    "香川1",
+    "香川2"
+   ]
+  },
+  {
+   "city": "丸亀市",
+   "code": "37202",
+   "pref": "香川県",
+   "shugiin": [
+    "香川2",
+    "香川3"
+   ]
+  },
+  {
+   "city": "高知市",
+   "code": "39201",
+   "pref": "高知県",
+   "shugiin": [
+    "高知1",
+    "高知2"
+   ]
+  },
+  {
+   "city": "福岡市東区",
+   "code": "40131",
+   "pref": "福岡県",
+   "shugiin": [
+    "福岡1",
+    "福岡4"
+   ]
+  },
+  {
+   "city": "福岡市南区",
+   "code": "40134",
+   "pref": "福岡県",
+   "shugiin": [
+    "福岡2",
+    "福岡5"
+   ]
+  },
+  {
+   "city": "福岡市城南区",
+   "code": "40136",
+   "pref": "福岡県",
+   "shugiin": [
+    "福岡2",
+    "福岡3"
+   ]
+  },
+  {
+   "city": "大分市",
+   "code": "44201",
+   "pref": "大分県",
+   "shugiin": [
+    "大分1",
+    "大分2"
+   ]
+  },
+  {
+   "city": "鹿児島市",
+   "code": "46201",
+   "pref": "鹿児島県",
+   "shugiin": [
+    "鹿児島1",
+    "鹿児島2"
+   ]
+  }
+ ]
+}
