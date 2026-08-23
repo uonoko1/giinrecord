@@ -55,7 +55,7 @@ test("MemberSummary へ変換: counts は 0、group/district/termEnd は terms[0
   assert.deepEqual(toSummary(m), {
     id: "m_007006", name: "青木 愛", kana: "あおき あい", house: "sangiin",
     group: "立憲民主・無所属", district: "比例", termEnd: "2028-07-25", current: true,
-    counts: { rollcalls: 0, bills: 0, speeches: 0 },
+    counts: { rollcalls: 0, bills: 0, speeches: 0, questions: 0 },
   });
 });
 
@@ -89,7 +89,7 @@ test("index.json の文字列化: キーはソート済み・末尾改行（DATA
   assert.ok(text.endsWith("\n"));
   const keys = Object.keys(JSON.parse(text)[0]);
   assert.deepEqual(keys, [...keys].sort());
-  assert.deepEqual(Object.keys(JSON.parse(text)[0].counts), ["bills", "rollcalls", "speeches"]);
+  assert.deepEqual(Object.keys(JSON.parse(text)[0].counts), ["bills", "questions", "rollcalls", "speeches"]);
 });
 
 test("通称<BR>[本名] の2行表記は通称だけを name にする（投票ページの nameText と一致させる）", () => {

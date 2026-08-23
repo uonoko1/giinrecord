@@ -15,10 +15,10 @@ describe("衆院議員ページ 表紙（#73）", () => {
     renderPage();
     const counts = screen.getByRole("heading", { level: 1 }).closest("header")!;
     const terms = within(counts).getAllByRole("term").map((t) => t.textContent);
-    expect(terms).toEqual(["提出法案", "賛同法案", "本会議発言"]);
+    expect(terms).toEqual(["提出法案", "賛同法案", "質問主意書", "本会議発言"]);
     expect(within(counts).queryByText("記名採決")).not.toBeInTheDocument();
     const defs = within(counts).getAllByRole("definition").map((d) => d.textContent);
-    expect(defs).toEqual(["1", "1", "1"]);
+    expect(defs).toEqual(["1", "1", "1", "1"]);
   });
   it("所属は 衆議院 ・ 選挙区 ・ 会派", () => {
     renderPage();
@@ -60,9 +60,16 @@ describe("衆院議員ページ 会派の態度（推定）", () => {
     renderPage();
     expect(document.querySelectorAll('[data-tone="yes"], [data-tone="no"]')).toHaveLength(0);
   });
-  it("タブは すべて / 提出法案 / 会派の態度 / 発言（採決タブは無い）", () => {
+  it("タブは すべて / 提出法案 / 会派の態度 / 質問主意書 / 発言（採決タブは無い）", () => {
     renderPage();
-    expect(screen.getAllByRole("tab").map((t) => t.textContent)).toEqual(["すべて", "提出法案", "会派の態度", "発言"]);
+    expect(screen.getAllByRole("tab").map((t) => t.textContent)).toEqual(["すべて", "提出法案", "会派の態度", "質問主意書", "発言"]);
+  });
+  it("衆院の question 行は経過状況の原文（答弁受理）を出し、出典は衆院 経過ページ", () => {
+    renderPage();
+    const row = screen.getByText(/在日米軍基地従業員の給与支払日/).closest("li")!;
+    expect(within(row).getByLabelText("質問")).toHaveAttribute("data-tone", "act");
+    expect(within(row).getByText(/答弁受理/)).toBeInTheDocument();
+    expect(within(row).getByRole("link", { name: "質問主意書" })).toHaveAttribute("href", expect.stringMatching(/itdb_shitsumon\.nsf/));
   });
   it("会派の態度タブは stance 行だけを出し、注記を添える", async () => {
     renderPage();

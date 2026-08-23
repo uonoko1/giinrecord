@@ -122,6 +122,36 @@ describe("MemberPage 提出法案タブ", () => {
   });
 });
 
+describe("MemberPage 質問主意書（#106）", () => {
+  it("question 行は「質問」の判（act 色）、提出者の原文・答弁書受領日を出し、出典（詳細ページ）と答弁本文へのリンクがある", () => {
+    renderPage();
+    const row = screen.getByText(/高額療養費制度の見直しに関する質問主意書/).closest("li")!;
+    const stamp = within(row).getByLabelText("質問");
+    expect(stamp).toHaveAttribute("data-tone", "act");
+    expect(within(row).getByText(/藤川 政人君/)).toBeInTheDocument();
+    expect(within(row).getByText(/答弁書受領 2025\.04\.08/)).toBeInTheDocument();
+    expect(within(row).getByRole("link", { name: "質問主意書" })).toHaveAttribute("href", expect.stringMatching(/kousei\/syuisyo\/217\/meisai\//));
+    expect(within(row).getByRole("link", { name: "答弁本文" })).toHaveAttribute("href", expect.stringMatching(/syuisyo\/217\/touh\//));
+  });
+  it("表紙の件数帯に「質問主意書」の数を出す", () => {
+    renderPage();
+    const dt = within(screen.getByRole("banner")).getByText("質問主意書");
+    expect(dt.nextElementSibling).toHaveTextContent("1");
+  });
+  it("「質問主意書」タブは 日付／件名／答弁書／出典 の表になる", async () => {
+    renderPage();
+    await userEvent.click(screen.getByRole("tab", { name: "質問主意書" }));
+    const table = screen.getByRole("table");
+    expect(within(table).getAllByRole("columnheader").map((th) => th.textContent)).toEqual(["日付", "件名", "答弁書", "出典"]);
+    const rows = within(table).getAllByRole("row");
+    expect(rows).toHaveLength(2);
+    expect(within(rows[1]).getByText(/高額療養費制度/)).toBeInTheDocument();
+    expect(within(rows[1]).getByRole("link", { name: "答弁本文" })).toHaveAttribute("href", expect.stringMatching(/touh/));
+    expect(within(rows[1]).getByRole("link", { name: "質問主意書" })).toHaveAttribute("href", expect.stringMatching(/meisai/));
+    expect(screen.queryByLabelText("発言")).not.toBeInTheDocument();
+  });
+});
+
 describe("MemberPage 採決タブ", () => {
   it("本人／会派／結果の表になる", async () => {
     renderPage();
