@@ -47,7 +47,7 @@ if [[ "$1" == "getent" ]]; then [[ "${DNS_OK:-}" == 1 ]] || exit 2; fi
 # ss -tln → the listening sockets the test wants to simulate (none by default)
 if [[ "$1" == "ss" ]]; then printf '%b' "${SS_OUT:-}"; fi
 # docker compose ps -q <service> → non-empty when OUR container is running
-if [[ "$1 $2 $3" == "docker compose ps" ]]; then [[ "${OWN_CONTAINER:-}" == 1 ]] && echo "abc123"; exit 0; fi
+if [[ "$1 $2" == "docker compose" && "$*" == *" ps -q "* ]]; then [[ "${OWN_CONTAINER:-}" == 1 ]] && echo "abc123"; exit 0; fi
 H
   chmod +x "$P/handler"; export STUB_HANDLER="$P/handler"
 }
@@ -74,7 +74,7 @@ t_happy_path_order() {
   assert_order "$log" "ss -tln" "docker compose -f" "port check before the container is started"
   assert_order "$log" "docker compose -f" "vps-setup.sh" "container before host proxy (no 502 window)"
   assert_order "$log" "vps-setup.sh" "certbot" "bootstrap proxy block before certbot (challenge on :80)"
-  assert_order "$log" "certbot" "vps-setup.sh staging.gikailog.jp 8083" "vps-setup.sh again after certbot: TLS + redirect blocks"
+  assert_order "$(tac <<<"$log")" "vps-setup.sh staging.gikailog.jp 8083" "certbot" "vps-setup.sh again after certbot: TLS + redirect blocks"
   [[ $(grep -c "vps-setup.sh staging.gikailog.jp 8083" <<<"$log" || true) -eq 2 ]] || fail "vps-setup.sh runs before and after certbot"
 }
 
@@ -115,7 +115,7 @@ t_refuses_when_port_taken_by_someone_else() {
   fresh busy; docker_present
   if SS_OUT='LISTEN 0 511 127.0.0.1:8083 0.0.0.0:*\n' DNS_OK=1 run_setup; then fail "must refuse: 127.0.0.1:8083 is taken by another process"; fi
   assert_contains "$(cat "$P/out")" "8083" "message names the port"
-  assert_not_contains "$(cat "$LOG")" "docker compose -f" "container not started"
+  assert_not_contains "$(cat "$LOG")" "up -d" "container not started"
   assert_not_contains "$(cat "$LOG")" "vps-setup.sh" "host nginx untouched"
 }
 
