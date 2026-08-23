@@ -34,12 +34,14 @@ const deployData = read(".github/workflows/deploy-data.yml");
 /**
  * 旧 deploy/nginx-gikailog.conf の add_header 行（順序・値とも同一であること）＋ #127 の X-Robots-Tag。
  * #168: フォントを自サイト配信にしたので CSP から fonts.googleapis.com / fonts.gstatic.com を外し、font-src 'self'。
+ * #194: script-src に 'unsafe-inline'。React Router のプリレンダリング HTML は inline <script>（hydration context・themeInit）を
+ * 持ち、内容がページ・ビルドごとに変わるためハッシュ方式は不可。'self' だけだと本番でクライアント JS が一切動かなかった。
  */
 const EXPECTED_HEADERS = [
   "add_header X-Content-Type-Options nosniff always;",
   "add_header X-Frame-Options DENY always;",
   "add_header Referrer-Policy strict-origin-when-cross-origin always;",
-  `add_header Content-Security-Policy "default-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; script-src 'self'; connect-src 'self'" always;`,
+  `add_header Content-Security-Policy "default-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; connect-src 'self'" always;`,
   // #127: "" on production hosts (nginx omits add_header with an empty value), "noindex, nofollow" for staging.gikailog.jp
   "add_header X-Robots-Tag $robots_tag always;",
 ];
@@ -68,6 +70,22 @@ test("site.conf: CSP はどの外部ホストも許可しない（#168 フォン
   const csp = headerLines(siteConf).find((l) => /Content-Security-Policy/.test(l)) ?? "";
   assert.doesNotMatch(csp, /https?:\/\//);
   assert.match(csp, /font-src 'self'/);
+});
+
+// Issue #194: 'self' だけの script-src は React Router の inline <script>（hydration context）を遮断し、検索・郵便番号・テーマ・
+// 比較が全部動かなかった。inline は許可、外部ホスト・eval は不許可のまま。
+test("site.conf: script-src は 'self' 'unsafe-inline'（inline hydration script を通す）。unsafe-eval や外部ホストは無い（#194）", () => {
+  const csp = headerLines(siteConf).find((l) => /Content-Security-Policy/.test(l)) ?? "";
+  assert.match(csp, /script-src 'self' 'unsafe-inline';/);
+  assert.doesNotMatch(csp, /unsafe-eval/);
+});
+
+test("ci.yml: docker-web は URL smoke の後に Playwright（chromium）の browser-check を 8081 に対して実行する（#194）", () => {
+  const job = ci.slice(ci.indexOf("  docker-web:"));
+  assert.match(job, /playwright install --with-deps chromium/);
+  assert.match(job, /actions\/cache@v4[\s\S]*?ms-playwright/, "chromium download is cached");
+  assert.match(job, /browser-check -- --url http:\/\/127\.0\.0\.1:8081/);
+  assert.ok(job.indexOf("smoke -- --url http://127.0.0.1:8081") < job.indexOf("browser-check -- --url"), "browser-check runs after the URL smoke");
 });
 
 test("site.conf: /fonts/ は 1 週間キャッシュ（ハッシュ無しのファイル名なので immutable にはしない）", () => {
