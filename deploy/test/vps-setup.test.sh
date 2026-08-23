@@ -165,6 +165,114 @@ t_staging_conf() {
   [[ ! -e "$CONF" ]] || fail "production conf untouched"
 }
 
+# ---- Issue #163: Cloudflare gate on staging only ----
+CF_INCLUDE="include /etc/nginx/snippets/gikailog-cloudflare-allow.conf;"
+# shellcheck disable=SC2016  # nginx variable, not shell
+CF_403='if ($http_cf_access_jwt_assertion = "") { return 403; }'
+with_snippet() { mkdir -p "$P/etc/nginx/snippets"; printf 'allow 10.0.0.0/8;\ndeny all;\n' > "$P/etc/nginx/snippets/gikailog-cloudflare-allow.conf"; }
+
+t_staging_conf_has_cf_gate() {
+  fresh cfstg; with_cert staging.gikailog.jp; with_snippet
+  run_setup staging.gikailog.jp 8083 || fail "exit $? $(cat "$P/out")"
+  local c; c=$(cat "$STG_CONF")
+  assert_contains "$c" "$CF_INCLUDE" "allow-list included"
+  assert_contains "$c" "$CF_403" "requests without the Access JWT header get 403"
+  assert_not_contains "$c" "CF_GATE" "placeholder replaced"
+  # the gate is inside the 443 proxy location, not in the :80 redirect block
+  assert_contains "${c#*listen 443}" "$CF_INCLUDE" "gate in the 443 block"
+  assert_not_contains "${c%%listen 443*}" "gikailog-cloudflare-allow" "no gate in the :80 redirect block"
+  assert_eq "1" "$(grep -c 'gikailog-cloudflare-allow' "$STG_CONF")" "included once"
+  assert_eq "deny all;" "$(tail -1 "$P/etc/nginx/snippets/gikailog-cloudflare-allow.conf")" "existing snippet untouched"
+}
+
+t_production_conf_has_no_cf_gate() {
+  fresh cfprod; with_cert gikailog.jp; with_snippet
+  run_setup gikailog.jp || fail "exit $? $(cat "$P/out")"
+  local c; c=$(cat "$CONF")
+  assert_not_contains "$c" "cloudflare" "production is not restricted to Cloudflare"
+  assert_not_contains "$c" "cf_access" "production does not require the Access header"
+  assert_not_contains "$c" "CF_GATE" "placeholder removed"
+  assert_not_contains "$c" "403" "no 403 rule"
+}
+
+t_staging_without_snippet_fails_closed() {
+  fresh cfnosnip; with_cert staging.gikailog.jp
+  run_setup staging.gikailog.jp 8083 || fail "exit $? $(cat "$P/out")"
+  local snip="$P/etc/nginx/snippets/gikailog-cloudflare-allow.conf"
+  [[ -f "$snip" ]] || { fail "placeholder snippet written so nginx -t passes"; return; }
+  assert_eq "deny all;" "$(grep -v '^#' "$snip")" "placeholder denies everything (fail closed, never open)"
+  assert_contains "$(cat "$P/out")" "cloudflare-allowlist.sh" "operator is told to generate the real list"
+  assert_contains "$(cat "$STG_CONF")" "$CF_INCLUDE" "conf still includes it"
+}
+
+t_staging_bootstrap_has_no_gate() {
+  fresh cfboot
+  run_setup staging.gikailog.jp 8083 || fail "exit $? $(cat "$P/out")"
+  assert_not_contains "$(cat "$STG_CONF")" "cloudflare" "no gate before the certificate (certbot challenge must pass)"
+}
+
+# A certbot-managed staging conf (certbot's layout): the gate must be inserted into location / of the 443 block.
+certbot_staging_conf() {
+  cat <<'C'
+server {
+    server_name staging.gikailog.jp;
+    access_log /var/log/nginx/gikailog-staging.access.log noip;
+
+    location / {
+        proxy_pass http://127.0.0.1:8083;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+    }
+
+    listen [::]:443 ssl; # managed by Certbot
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/staging.gikailog.jp/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/staging.gikailog.jp/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+}
+server {
+    if ($host = staging.gikailog.jp) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+    listen 80;
+    listen [::]:80;
+    server_name staging.gikailog.jp;
+    access_log /var/log/nginx/gikailog-staging.access.log noip;
+    return 404; # managed by Certbot
+}
+C
+}
+
+t_certbot_staging_conf_gets_gate() {
+  fresh cfcertbot; with_cert staging.gikailog.jp; with_snippet
+  certbot_staging_conf > "$STG_CONF"
+  run_setup staging.gikailog.jp 8083 || fail "exit $? $(cat "$P/out")"
+  local c; c=$(cat "$STG_CONF")
+  assert_contains "$c" "$CF_INCLUDE" "include inserted"
+  assert_contains "$c" "$CF_403" "403 rule inserted"
+  assert_contains "$c" "# managed by Certbot" "still certbot's file"
+  assert_contains "$c" "proxy_pass http://127.0.0.1:8083;" "proxy kept"
+  # inserted inside location / { … } of the 443 server, not in the :80 server
+  assert_contains "${c%%listen 80*}" "$CF_INCLUDE" "in the 443 server"
+  assert_not_contains "${c#*listen 80}" "cloudflare" "not in the :80 server"
+  assert_contains "$c" "location / {
+        $CF_INCLUDE
+        $CF_403
+        proxy_pass http://127.0.0.1:8083;" "inserted at the top of location /"
+  local before; before=$(cat "$STG_CONF"); : > "$LOG"
+  run_setup staging.gikailog.jp 8083 || fail "second: $(cat "$P/out")"
+  assert_eq "$before" "$(cat "$STG_CONF")" "idempotent"
+  assert_eq "1" "$(grep -c 'gikailog-cloudflare-allow' "$STG_CONF")" "included once"
+}
+
+t_certbot_production_conf_gets_no_gate() {
+  fresh cfcertbotprod; with_cert gikailog.jp; with_snippet
+  certbot_conf > "$CONF"
+  run_setup gikailog.jp || fail "exit $? $(cat "$P/out")"
+  assert_eq "$(certbot_conf)" "$(cat "$CONF")" "production certbot conf untouched"
+}
+
 t_unknown_port() {
   fresh badport
   if run_setup gikailog.jp 9000; then fail "unknown port must be rejected"; fi
@@ -186,6 +294,12 @@ test_case "8083 は staging.* のドメインだけ受け付ける" t_staging_po
 test_case "8081 は staging.* のドメインを拒否する" t_production_port_rejects_staging_domain
 test_case "staging: www 無し・8083・gikailog-staging.conf、production の conf には触れない" t_staging_conf
 test_case "8081/8083 以外のポートは拒否" t_unknown_port
+test_case "#163 staging の 443 location / に Cloudflare allow-list の include と JWT ヘッダ無し 403" t_staging_conf_has_cf_gate
+test_case "#163 production の conf には Cloudflare の制限を入れない" t_production_conf_has_no_cf_gate
+test_case "#163 snippet が無ければ deny all の placeholder を書き（fail closed）、生成を案内" t_staging_without_snippet_fails_closed
+test_case "#163 証明書前の :80 bootstrap には gate を入れない" t_staging_bootstrap_has_no_gate
+test_case "#163 certbot 管理の staging conf にも gate を挿入（冪等・1 回だけ・:80 には入れない）" t_certbot_staging_conf_gets_gate
+test_case "#163 certbot 管理の production conf には挿入しない" t_certbot_production_conf_gets_no_gate
 test_case "nginx -t が落ちれば reload せず exit 1" t_broken_config_not_reloaded
 
 echo; echo "passed: $PASS  failed: $FAIL"

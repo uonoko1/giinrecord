@@ -147,7 +147,12 @@ test("vps-setup.sh: port 8083 なら staging の conf 名・web root・ログ名
   assert.doesNotMatch(staging, /www\./);
   assert.match(staging, /proxy_pass http:\/\/127\.0\.0\.1:8083;/);
   assert.match(staging, /access_log \/var\/log\/nginx\/gikailog-staging\.access\.log noip;/);
-  for (const out of [prod, staging]) assert.doesNotMatch(out, /\bPORT\b|LOG_NAME|\bDOMAIN\b|SERVER_NAMES/);
+  for (const out of [prod, staging]) assert.doesNotMatch(out, /\bPORT\b|LOG_NAME|\bDOMAIN\b|SERVER_NAMES|CF_GATE/);
+  // Issue #163: only the staging 443 location / is gated (Cloudflare ranges + Cf-Access-Jwt-Assertion); production is open
+  assert.match(staging, /include \/etc\/nginx\/snippets\/gikailog-cloudflare-allow\.conf;/);
+  assert.match(staging, /if \(\$http_cf_access_jwt_assertion = ""\) \{ return 403; \}/);
+  assert.doesNotMatch(prod, /cloudflare|cf_access|403/);
+  assert.match(hostProxy, /^CF_GATE$/m, "the template keeps the CF_GATE placeholder in the 443 location /");
   const bad = spawnSync("bash", [resolve(root, "deploy/test/render-host-proxy.sh"), "x.example", "9000"], { encoding: "utf8" });
   assert.notEqual(bad.status, 0, "unknown port must be rejected");
 });
