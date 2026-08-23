@@ -128,8 +128,11 @@ describe("parseMeetingHeader: 出席者欄と案件の解析（境界）", () =>
 });
 
 describe("parseAttendancePage: 異常系", () => {
-  test("speechRecord が無ければ例外（黙って空を返さない）", () => {
-    assert.throws(() => parseAttendancePage({ numberOfRecords: 0 }, 221), /speechRecord/);
+  test("0 件の実レスポンス（第218回: speechRecord キー自体が無い）は空の meetings。numberOfRecords が 0 でないのに speechRecord が無ければ例外", () => {
+    const zero = { numberOfRecords: 0, numberOfReturn: 0, startRecord: 1, nextRecordPosition: null };
+    assert.deepEqual(parseAttendancePage(zero, 218), { numberOfRecords: 0, nextRecordPosition: null, meetings: [] });
+    assert.throws(() => parseAttendancePage({ numberOfRecords: 3, nextRecordPosition: null }, 221), /speechRecord/);
+    assert.throws(() => parseAttendancePage({ nextRecordPosition: null }, 221), /numberOfRecords/);
   });
   test("speechOrder が 0 以外（発言本文）は会議録情報ではないので無視する", () => {
     const json = {

@@ -75,12 +75,14 @@ interface SpeechRecord {
  * speechOrder 0（会議録情報）だけを見る。参法が案件に無い、または参議院側の発議者が 0 人の会議録は残さない。
  */
 export function parseAttendancePage(json: unknown, session: number): AttendancePage {
-  if (!isObject(json) || !Array.isArray(json.speechRecord)) throw new AttendanceParseError("speechRecord がありません（API レスポンスの形が想定と違います）");
+  if (!isObject(json)) throw new AttendanceParseError("API レスポンスがオブジェクトではありません");
   const numberOfRecords = typeof json.numberOfRecords === "number" ? json.numberOfRecords : fail("numberOfRecords がありません");
   const next = json.nextRecordPosition;
   const nextRecordPosition = typeof next === "number" ? next : next == null ? null : fail(`nextRecordPosition を解釈できません: ${String(next)}`);
+  // 0 件のとき API は speechRecord キー自体を返さない（第218回で確認）。1 件以上で無ければ形が違うので例外
+  const records = Array.isArray(json.speechRecord) ? (json.speechRecord as SpeechRecord[]) : numberOfRecords === 0 ? [] : fail("speechRecord がありません（API レスポンスの形が想定と違います）");
   const meetings: CommitteeMeeting[] = [];
-  for (const rec of json.speechRecord as SpeechRecord[]) {
+  for (const rec of records) {
     if (rec.speechOrder !== 0) continue;
     const id = str(rec.speechID) ?? fail("speechID がありません");
     const need = (v: unknown, what: string) => str(v) ?? fail(`${id}: ${what} がありません`);
