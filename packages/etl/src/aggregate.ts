@@ -2,6 +2,7 @@ import type { Bill, Member, MemberDetail, MemberSummary, MemberTerm, Question, R
 import { toSummary } from "./sources/sangiin-members.ts";
 import { groupAt } from "./group-history.ts";
 import type { MatchedBill } from "./match-bills.ts";
+import type { MatchedAttendance } from "./match-attendance.ts";
 
 /** 集約結果（純粋関数の出力）。ファイルへの書き出しは dataset.ts が担う。 */
 export interface Aggregated {
@@ -89,7 +90,7 @@ export function summarizeRollCall(rc: RollCall, decision?: string): RollCallSumm
  * 名簿と突合済みの採決・発言から、議員ごとの timeline と一覧を組み立てる。
  * - memberId が空（未突合）の票・memberId の無い発言は unmatched.json 側で扱うので timeline には入れない。
  * - 名簿にない memberId は名寄せの不整合なので例外にする（黙って捨てない）。
- * - 並びは日付降順。同日は kind（vote → bill → stance → question → speech）、次に採決 id / 発言 id の降順で安定させる（差分最小化）。
+ * - 並びは日付降順。同日は kind（vote → bill → stance → question → attendance → speech）、次に採決 id / 発言 id の降順で安定させる（差分最小化）。
  * - 議長・大臣など position 付きの発言（議事進行・政府答弁）も事実として timeline に入れ、position を原文のまま載せる。
  *   counts.speeches は役職付きも含めた数（内訳は持たない）。区別は web が position を表示して行う。
  * - 提出法案（matchBills の出力）は提出日の bill 行になり、sourceUrl は議案ページ。counts.bills はその数。
@@ -99,6 +100,8 @@ export function summarizeRollCall(rc: RollCall, decision?: string): RollCallSumm
  *   日付は衆議院の議案受理年月日。counts.bills に stance は数えない。
  * - 質問主意書（matchQuestions の出力、#106）: 名寄せ済みの submitters の question 行（事実）。日付は提出日、sourceUrl は衆院 経過ページ／参院 詳細ページ。
  *   counts.questions はその数。未突合（submitters 無し）の質問は unmatched.json 側で扱うので timeline には入れない。
+ * - 委員会出席（matchAttendance の出力、#109）: 会議録の出席者欄の「発議者」を attendance 行（事実、estimated: false）にする。
+ *   出席した発議者は発議者全員ではないので bill 行（提出者）にはせず、counts にも数えない。参院の委員会の発議者は参議院議員なので衆院議員に付けば例外。
  */
 export function buildDataset(
   members: readonly Member[],
@@ -112,6 +115,8 @@ export function buildDataset(
   shugiinBills: readonly Bill[] = [],
   /** 質問主意書（matchQuestions の出力。submitters は名簿の memberId）。 */
   questions: readonly Question[] = [],
+  /** 委員会に発議者として出席した記録（matchAttendance の出力。memberId は参院名簿）。 */
+  attendance: readonly MatchedAttendance[] = [],
 ): Aggregated {
   const summarize = (rc: RollCall) => summarizeRollCall(rc, decisions.get(rc.id));
   const timelines = new Map<string, TimelineEntry[]>(members.map((m) => [m.id, []]));
@@ -179,6 +184,11 @@ export function buildDataset(
       });
     }
   }
+  for (const a of attendance) {
+    const timeline = timelineOf(a.memberId, `attendance ${a.meetingId} ("${a.nameText}")`);
+    if (houseOf.get(a.memberId) !== "sangiin") throw new Error(`attendance ${a.meetingId} ("${a.nameText}") refers to member ${a.memberId} of house ${String(houseOf.get(a.memberId))} (参院の委員会の発議者は参議院議員)`);
+    timeline.push({ kind: "attendance", estimated: false, date: a.date, meetingId: a.meetingId, meeting: a.meeting, role: a.role, bills: a.bills.map((b) => ({ ...b })), sourceUrl: a.sourceUrl });
+  }
   const details = members.map((m): MemberDetail => ({ ...m, timeline: [...timelines.get(m.id)!].sort(byDateDesc) }));
   const index = members.map((m) => {
     const s = toSummary(m);
@@ -189,9 +199,9 @@ export function buildDataset(
   return { index, details, rollCalls: rollCalls.map(summarize).sort(byDateDesc) };
 }
 
-type Sortable = { date: string; kind?: TimelineEntry["kind"]; id?: string; rollCallId?: string; speechId?: string; billId?: string; questionId?: string };
-const KIND_ORDER: Record<TimelineEntry["kind"], number> = { vote: 0, bill: 1, stance: 2, question: 3, speech: 4 };
-const sortKey = (x: Sortable) => x.rollCallId ?? x.speechId ?? x.billId ?? x.questionId ?? x.id ?? "";
+type Sortable = { date: string; kind?: TimelineEntry["kind"]; id?: string; rollCallId?: string; speechId?: string; billId?: string; questionId?: string; meetingId?: string };
+const KIND_ORDER: Record<TimelineEntry["kind"], number> = { vote: 0, bill: 1, stance: 2, question: 3, attendance: 4, speech: 5 };
+const sortKey = (x: Sortable) => x.rollCallId ?? x.speechId ?? x.billId ?? x.questionId ?? x.meetingId ?? x.id ?? "";
 const byDateDesc = (a: Sortable, b: Sortable) =>
   cmp(b.date, a.date) || KIND_ORDER[a.kind ?? "vote"] - KIND_ORDER[b.kind ?? "vote"] || cmp(sortKey(b), sortKey(a));
 const cmp = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);

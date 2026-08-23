@@ -9,6 +9,7 @@ import type { UnmatchedSpeech } from "./match-speeches.ts";
 import type { UnmatchedBillProposer } from "./match-bills.ts";
 import type { UnmatchedShugiinBillName } from "./match-shugiin-bills.ts";
 import type { UnmatchedQuestionSubmitter } from "./match-questions.ts";
+import type { UnmatchedAttendee } from "./match-attendance.ts";
 import { toBillSummary } from "./sources/shugiin-bills.ts";
 import type { UnmatchedBill } from "./sources/sangiin-bills.ts";
 import type { UnmatchedGroup } from "./sources/sangiin-members.ts";
@@ -18,8 +19,8 @@ export interface Dataset extends Aggregated {
   rollCallDetails: RollCall[];
   /** 議案（衆院 議案情報から。Issue #72）。`bills/{提出回次}/{id}.json` と `bills/index.json` になる。 */
   bills: Bill[];
-  /** 名寄せできなかった票（rollCallId）・発言（speechId）・参法の発議者 / 衆院 議案の提出者・賛成者（billId）・質問主意書の提出者（questionId）。 */
-  unmatched: (Unmatched | UnmatchedSpeech | UnmatchedBillProposer | UnmatchedShugiinBillName | UnmatchedQuestionSubmitter)[];
+  /** 名寄せできなかった票（rollCallId）・発言（speechId）・参法の発議者 / 衆院 議案の提出者・賛成者（billId）・質問主意書の提出者（questionId）・委員会出席の発議者（meetingId）。 */
+  unmatched: (Unmatched | UnmatchedSpeech | UnmatchedBillProposer | UnmatchedShugiinBillName | UnmatchedQuestionSubmitter | UnmatchedAttendee)[];
   /** 議案情報の審議結果と突合できなかった採決（得票のみの result になる）。 */
   unmatchedBills: UnmatchedBill[];
   /** 対応表（sangiin-groups.ts）に無い会派略称。group には原文のまま入る（Issue #36）。 */
@@ -92,6 +93,8 @@ const BILL_SOURCE = /^https:\/\/www\.sangiin\.go\.jp\/japanese\/joho1\/kousei\/g
 const STANCE_VALUES = new Set(["賛成", "反対"]);
 /** question 行の sourceUrl は衆院 質問答弁情報の経過ページか参院 質問主意書の詳細ページ（提出日・提出者の一次資料、#106）。 */
 const QUESTION_SOURCE = /^https:\/\/(?:www\.shugiin\.go\.jp\/internet\/itdb_shitsumon\.nsf\/html\/shitsumon\/\d+\.htm|www\.sangiin\.go\.jp\/japanese\/joho1\/kousei\/syuisyo\/\d+\/meisai\/m\d+\.htm)$/;
+/** attendance 行の sourceUrl は国会会議録検索システムの会議録（冒頭情報）。 */
+const ATTENDANCE_SOURCE = /^https:\/\/kokkai\.ndl\.go\.jp\/txt\/[0-9A-Za-z]+\/\d+$/;
 /** bills/ の id は `{提出回次}-{種別原文}-{番号 or 経過ページ id}`。 */
 const BILL_ID = /^(\d+)-[^-]+-[^-]+$/;
 
@@ -163,6 +166,13 @@ export async function validateDataset(dir: string): Promise<string[]> {
           const host = safeHost(e.answerUrl);
           if (!host || !SOURCE_HOST.test(host)) v.push(`${rel} timeline[${i}]: question answerUrl host not allowed: ${String(e.answerUrl)}`);
         }
+      }
+      if (e.kind === "attendance") {
+        // 委員会出席（事実）: 出席した発議者は発議者全員ではないので bill 行とは別の kind。参院の委員会の発議者は参議院議員にだけ付く（#109）
+        if (d.house !== "sangiin") v.push(`${rel} timeline[${i}]: attendance row is allowed only for house=sangiin members, got house=${d.house}`);
+        if (e.estimated !== false) v.push(`${rel} timeline[${i}]: attendance row must have estimated: false`);
+        if (e.role !== "発議者") v.push(`${rel} timeline[${i}]: attendance role must be 発議者, got ${String((e as { role: unknown }).role)}`);
+        if (!ATTENDANCE_SOURCE.test(e.sourceUrl)) v.push(`${rel} timeline[${i}]: attendance sourceUrl must be the 会議録 (kokkai.ndl.go.jp/txt/), got ${e.sourceUrl}`);
       }
       if (e.kind === "vote") {
         votes++;

@@ -266,7 +266,28 @@ export type QuestionEntry = {
   /** 衆院 経過ページ／参院 詳細ページ。 */
   sourceUrl: string;
 };
-export type TimelineEntry = VoteEntry | BillEntry | SpeechEntry | StanceEntry | QuestionEntry;
+/**
+ * 委員会に発議者として出席した事実（国会会議録の委員会冒頭「出席者」欄の「発議者」。Issue #109）。
+ * 載るのは**その日に出席した発議者**であり、参法の発議者全員の一覧ではない（「外N名」の氏名は公表されていない）。
+ * よって Bill.submitters / BillEntry（提出者）には絶対に入れず、別種の行として記録する。事実（`estimated: false`）だが、
+ * Web は「委員会に発議者として出席」と明示し、提出者とは別の表現にする。
+ */
+export type AttendanceEntry = {
+  kind: "attendance";
+  estimated: false;
+  /** 会議の日付。 */
+  date: string;
+  /** 会議録情報の speechID（例 "122115007X01420260709_000"）。 */
+  meetingId: string;
+  /** 会議名＋号（例「農林水産委員会 第14号」）。 */
+  meeting: string;
+  role: "発議者";
+  /** 「本日の会議に付した案件」にあった参法（billId は `{回次}-参法-{番号}`、title は原文）。複数あればどの参法の発議者として出席したかは会議録からは分からないので全部残す。 */
+  bills: { billId: string; title: string }[];
+  /** 会議録の冒頭情報の URL（kokkai.ndl.go.jp/txt/…）。 */
+  sourceUrl: string;
+};
+export type TimelineEntry = VoteEntry | BillEntry | SpeechEntry | StanceEntry | QuestionEntry | AttendanceEntry;
 
 /** Row of `data/rollcalls/index.json` (採決一覧用). */
 /* ---------- 選挙区（data/districts/、Issue #111 / #112） ---------- */

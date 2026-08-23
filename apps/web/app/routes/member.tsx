@@ -206,7 +206,7 @@ function Count({ n, label }: { n: number; label: string }) {
 }
 
 function countKinds(timeline: TimelineEntry[]): Counts {
-  const c: Counts = { vote: 0, bill: 0, stance: 0, question: 0, speech: 0, submitted: 0, supported: 0 };
+  const c: Counts = { vote: 0, bill: 0, stance: 0, question: 0, attendance: 0, speech: 0, submitted: 0, supported: 0 };
   for (const e of timeline) {
     c[e.kind] += 1;
     if (e.kind === "bill") c[e.role === "提出者" ? "submitted" : "supported"] += 1;
@@ -254,6 +254,8 @@ function entryKey(e: TimelineEntry): string {
       return `stance:${e.billId}`;
     case "question":
       return `question:${e.questionId}`;
+    case "attendance":
+      return `attendance:${e.meetingId}`;
     case "speech":
       return `speech:${e.speechId}`;
   }
@@ -322,6 +324,21 @@ function Row({ entry }: { entry: TimelineEntry }) {
                   <ExternalLink href={entry.answerUrl}>答弁本文</ExternalLink>
                 </>
               )}
+            </p>
+          </div>
+        </li>
+      );
+    case "attendance":
+      /* 委員会に発議者として出席した事実（#109）。出席した発議者は発議者全員ではないので、提出法案（提出の判）とは別の判「出席」で出し、
+         その日の案件にあった参法を添える（複数ならどれの発議者かは会議録からは分からないので全部並べる）。 */
+      return (
+        <li className="member-row">
+          <Stamp value="出席" />
+          <div className="member-row-body">
+            <p className="member-row-title">{`委員会に${entry.role}として出席（${entry.meeting}）`}</p>
+            <p className="member-row-meta">
+              <MetaLine parts={entry.bills.map((b) => `案件 ${b.title}`)} />
+              <ExternalLink href={entry.sourceUrl}>会議録</ExternalLink>
             </p>
           </div>
         </li>
@@ -512,7 +529,7 @@ function QuestionTable({ questions }: { questions: QuestionEntry[] }) {
 
 /* ---------- primitives (to be replaced by app/components from #5) ---------- */
 
-type StampValue = "賛成" | "反対" | "投票なし" | "提出" | "賛同" | "質問" | "発言";
+type StampValue = "賛成" | "反対" | "投票なし" | "提出" | "賛同" | "質問" | "出席" | "発言";
 const STAMP_TONE: Record<StampValue, "yes" | "no" | "none" | "act"> = {
   賛成: "yes",
   反対: "no",
@@ -520,6 +537,7 @@ const STAMP_TONE: Record<StampValue, "yes" | "no" | "none" | "act"> = {
   提出: "act",
   賛同: "act",
   質問: "act",
+  出席: "act",
   発言: "act",
 };
 
