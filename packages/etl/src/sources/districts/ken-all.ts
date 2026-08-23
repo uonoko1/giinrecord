@@ -5,7 +5,7 @@ import { unzipEntry } from "./zip.ts";
 
 /**
  * 日本郵便 郵便番号データ KEN_ALL（Issue #111）。
- *   ダウンロードページ: https://www.post.japanpost.jp/zipcode/dl/kogaki-zip.html（→ /service/search/zipcode/download/kogaki-zip.html に 301）
+ *   ダウンロードページ: https://www.post.japanpost.jp/zipcode/dl/kogaki-zip.html（→ /service/search/zipcode/download/kogaki-zip.html に 301。ページは UTF-8）
  *   全国一括: https://www.post.japanpost.jp/service/search/zipcode/download/kogaki/zip/ken_all.zip（zip の中に KEN_ALL.CSV、Shift_JIS、CRLF）
  * 月末更新。列（2026-07-31 更新分で確認）: 全国地方公共団体コード, 旧郵便番号, 郵便番号, 都道府県カナ, 市区町村カナ, 町域カナ, 都道府県, 市区町村, 町域, フラグ×6。
  * 同じ郵便番号が複数の市区町村（町域）にまたがる行はそのまま複数行になる。
@@ -63,7 +63,7 @@ export function parseKenAllUpdated(html: string): string {
 }
 
 export async function fetchKenAll(): Promise<{ rows: KenAllRow[]; updated: string }> {
-  const page = await fetchText(KEN_ALL_PAGE_URL, "shift_jis", { noCache: true });
+  const page = await fetchText(KEN_ALL_PAGE_URL, "utf-8", { noCache: true });
   const updated = parseKenAllUpdated(page);
   const zip = await fetchBytes(KEN_ALL_ZIP_URL, { noCache: true });
   return { rows: parseKenAll(unzipEntry(zip, "KEN_ALL.CSV")), updated };

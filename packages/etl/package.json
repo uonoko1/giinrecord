@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "etl": "tsx src/cli.ts",
+    "etl:districts": "tsx src/districts-cli.ts",
     "typecheck": "tsc --noEmit",
     "lint": "echo skip",
     "build": "echo skip",
