@@ -18,6 +18,25 @@ export function siteOrigin(): string {
   return normalizeOrigin(import.meta.env.SITE_ORIGIN);
 }
 
+/**
+ * Staging (Issue #127): a build whose SITE_ORIGIN host starts with `staging.` must never be indexed.
+ * scripts/sitemap.ts writes a Disallow-all robots.txt and root.tsx adds the noindex meta from this.
+ */
+export function isStagingOrigin(raw: string | undefined): boolean {
+  const origin = normalizeOrigin(raw);
+  if (!origin) return false;
+  try {
+    return new URL(origin).hostname.startsWith("staging.");
+  } catch {
+    return false;
+  }
+}
+
+/** `<meta name="robots">` for the build's origin; null when the site may be indexed. */
+export function robotsMeta(raw: string | undefined): { name: "robots"; content: string } | null {
+  return isStagingOrigin(raw) ? { name: "robots", content: "noindex, nofollow" } : null;
+}
+
 /** `/members/m_1/` → `{origin}/members/m_1`; `/` stays `/`. No query/hash. */
 export function canonicalUrl(origin: string, pathname: string): string {
   const path = pathname.split(/[?#]/, 1)[0] ?? "/";
