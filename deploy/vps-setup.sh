@@ -11,6 +11,10 @@
 #      bind-mounted read-only into the web / web-staging container
 #   2. writes the host nginx server blocks for this site (deploy/nginx-host-proxy.conf with SERVER_NAMES / DOMAIN /
 #      PORT / LOG_NAME substituted): :80 → 301 https://<domain> (www too), :443 TLS → proxy_pass http://127.0.0.1:<port>
+#        - staging (8083) only, Issue #163: the 443 `location /` includes /etc/nginx/snippets/gikailog-cloudflare-allow.conf
+#          (Cloudflare ranges, deploy/cloudflare-allowlist.sh; a deny-all placeholder is written when it is missing) and
+#          returns 403 without the Cf-Access-Jwt-Assertion header. A certbot-managed staging conf gets the same two
+#          lines inserted into its location / (ensure_staging_cf_gate). Production never gets either.
 #        - no certificate yet (/etc/letsencrypt/live/<domain>/fullchain.pem missing): only a plain :80 proxy block is
 #          written so that `certbot certonly --nginx` can serve the challenge; re-run after certbot for the real blocks
 #        - the conf is already managed by certbot (`# managed by Certbot`, i.e. the hosts set up before #141):
@@ -67,13 +71,38 @@ check_domain() {
 # server_names <domain> <port>: production answers for www.<domain> too; staging has no www.
 server_names() { if [ "$2" = 8081 ]; then echo "$1 www.$1"; else echo "$1"; fi; }
 
+# Issue #163: the staging 443 `location /` only answers requests that come through Cloudflare (IP allow-list from
+# deploy/cloudflare-allowlist.sh) AND carry the Cloudflare Access JWT header; everything else is 403/denied.
+# Production gets neither. The snippet must exist or nginx -t fails, so a fail-closed placeholder is written when
+# it is missing (ensure_cf_snippet).
+CF_SNIPPET=/etc/nginx/snippets/gikailog-cloudflare-allow.conf
+CF_GATE_INCLUDE="include $CF_SNIPPET;"
+# shellcheck disable=SC2016  # nginx variable, not shell
+CF_GATE_403='if ($http_cf_access_jwt_assertion = "") { return 403; }'
+
+# cf_gate_lines <port>: the two directives (indented for the template) on stdout for 8083, nothing for 8081
+cf_gate_lines() { if [ "$1" = 8083 ]; then printf '        %s\n        %s\n' "$CF_GATE_INCLUDE" "$CF_GATE_403"; fi; }
+
+# with_cf_gate <port>: stdin → stdout, the CF_GATE placeholder line replaced by cf_gate_lines (deleted for production)
+with_cf_gate() {
+  local lines; lines=$(cf_gate_lines "$1")
+  if [ -n "$lines" ]; then
+    awk -v gate="$lines" '$0 == "CF_GATE" { print gate; next } { print }'
+  else
+    awk '$0 != "CF_GATE"'
+  fi
+}
+
 # render_host_proxy <domain> <port>: the full server blocks (:80 redirect + :443 proxy) on stdout.
 # The heredoc is deploy/nginx-host-proxy.conf verbatim (the test checks they are identical).
 render_host_proxy() {
   local domain=$1 port=$2 names
   site_vars "$port"
   names=$(server_names "$domain" "$port")
-  sed -e "s/SERVER_NAMES/$names/" -e "s/DOMAIN/$domain/" -e "s/PORT/$port/" -e "s/LOG_NAME/$NAME/" <<'CONF'
+  host_proxy_template | sed -e "s/SERVER_NAMES/$names/" -e "s/DOMAIN/$domain/" -e "s/PORT/$port/" -e "s/LOG_NAME/$NAME/" | with_cf_gate "$port"
+}
+host_proxy_template() {
+  cat <<'CONF'
 server {
     listen 80;
     listen [::]:80;
@@ -99,6 +128,7 @@ server {
     ssl_session_tickets off;
 
     location / {
+CF_GATE
         proxy_pass http://127.0.0.1:PORT;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
@@ -137,6 +167,43 @@ BOOT
 # cert_exists <domain>: true once certbot has issued the certificate for <domain>
 cert_exists() { [ -f "$PREFIX/etc/letsencrypt/live/$1/fullchain.pem" ]; }
 
+# ensure_cf_snippet: the staging block includes $CF_SNIPPET; until deploy/cloudflare-allowlist.sh has generated it,
+# write a placeholder that denies everything (fail closed — staging is unreachable rather than open) so nginx -t passes.
+ensure_cf_snippet() {
+  local snip="$PREFIX$CF_SNIPPET"
+  [ -f "$snip" ] && return 0
+  mkdir -p "$(dirname "$snip")"
+  printf '# placeholder written by deploy/vps-setup.sh: run deploy/cloudflare-allowlist.sh to generate the real allow-list\ndeny all;\n' > "$snip"
+  chmod 644 "$snip"
+  echo "!! $CF_SNIPPET did not exist: wrote a deny-all placeholder. Staging stays unreachable until you run deploy/cloudflare-allowlist.sh (docs/ops/staging-access.md)." >&2
+}
+
+# ensure_staging_cf_gate <conf>: a certbot-managed staging conf is never rewritten (see write_site_conf), so the
+# Cloudflare gate is inserted in place: the two directives go at the top of every `location /` that proxies to the
+# staging container (the :80 server certbot writes has no such location). Idempotent: nothing happens when the
+# include is already there.
+ensure_staging_cf_gate() {
+  local conf=$1
+  grep -qF "$CF_GATE_INCLUDE" "$conf" && return 0
+  local tmp; tmp=$(mktemp)   # not next to the conf: nothing temporary in sites-available/ on the shared host
+  awk -v inc="        $CF_GATE_INCLUDE" -v rule="        $CF_GATE_403" '
+    /^[[:space:]]*location \/ \{/ { in_loc = 1; buf = $0 "\n"; next }
+    in_loc {
+      buf = buf $0 "\n"
+      if ($0 ~ /proxy_pass http:\/\/127\.0\.0\.1:8083;/) { gate = 1 }
+      if ($0 ~ /^[[:space:]]*\}/) {
+        if (gate) { sub(/\n/, "\n" inc "\n" rule "\n", buf) }
+        printf "%s", buf; in_loc = 0; gate = 0; buf = ""
+      }
+      next
+    }
+    { print }
+    END { if (in_loc) printf "%s", buf }
+  ' "$conf" > "$tmp"
+  cat "$tmp" > "$conf"; rm -f "$tmp"
+  echo "$conf is managed by Certbot: Cloudflare gate (allow-list include + 403 without Cf-Access-Jwt-Assertion) inserted into location /."
+}
+
 # write_site_conf <domain> <port> <conf>: decides between "leave certbot's file alone", full template and bootstrap.
 write_site_conf() {
   local domain=$1 port=$2 conf=$3
@@ -147,7 +214,9 @@ write_site_conf() {
       echo "$conf is managed by Certbot: only the proxy_pass port is set to $port (server_name, certificate, redirects untouched)."
       sed -i -E "s#proxy_pass http://127\.0\.0\.1:[0-9]+;#proxy_pass http://127.0.0.1:$port;#" "$conf"
     fi
+    if [ "$port" = 8083 ]; then ensure_cf_snippet; ensure_staging_cf_gate "$conf"; fi
   elif cert_exists "$domain"; then
+    if [ "$port" = 8083 ]; then ensure_cf_snippet; fi
     render_host_proxy "$domain" "$port" > "$conf"
   else
     render_bootstrap_proxy "$domain" "$port" > "$conf"

@@ -4,6 +4,9 @@ name: Monitor
 # A check that fails twice in a row (60 s apart, deploy/monitor/run.sh) opens ONE Issue "[monitor] <env>: <check>"
 # (label monitor, deduplicated by title, deploy/monitor/report.sh) and the Issue is closed when the check passes again.
 # The VPS-side checks (containers, disk, nginx, rsync targets) live in deploy/monitor/health.sh (root cron).
+# Issue #163: staging is behind Cloudflare Access; the probe authenticates with a service token (repo secrets
+# CF_ACCESS_CLIENT_ID / CF_ACCESS_CLIENT_SECRET, passed as env — never argv). Without them the staging job warns and
+# skips instead of opening a false Issue. Setup and rotation: docs/ops/staging-access.md.
 # Runbook: docs/ops/monitoring.md. Issue bodies contain the environment, the check, the reason and a link to the run —
 # never server details.
 on:
@@ -34,7 +37,10 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - name: probe https://staging.gikailog.jp (twice on failure) → Issues
+      - name: probe https://staging.gikailog.jp through Cloudflare Access (twice on failure) → Issues
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MONITOR_REQUIRE_CF_ACCESS: "1"
+          CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+          CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
         run: bash deploy/monitor/run.sh staging https://staging.gikailog.jp

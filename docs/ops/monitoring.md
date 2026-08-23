@@ -23,6 +23,8 @@ VPS  root cron 5分  /usr/local/lib/gikailog-monitor/health.sh                 �
 | `tls` | 証明書の残り 14 日以上 | certbot の自動更新が止まっている（`sudo certbot renew --dry-run`） |
 
 - production は `*/10`、staging は毎時 7 分（両方 `workflow_dispatch` 可）。
+- staging は Cloudflare Access の裏（#163）：repo secrets `CF_ACCESS_CLIENT_ID` / `CF_ACCESS_CLIENT_SECRET`（Service Token）でヘッダを付けて
+  probe する。無ければ `::warning::` を出してスキップ（誤報しない）。設定とローテーションは `docs/ops/staging-access.md`。
 - **2 回連続**（60 秒空けて再試行）で失敗した check だけ Issue にする（`deploy/monitor/run.sh`）。1 回だけの失敗は run のログに残るのみ。
 - Issue は title `[monitor] production: http` のように **環境 × check で 1 つ**。同名の open Issue があれば作らない（`deploy/monitor/report.sh`）。check が通れば「Recovered」コメントを付けて close する。
 - 本文に書くのは環境名・check・理由（パスと HTTP status、経過時間、残日数）・run へのリンクだけ。
