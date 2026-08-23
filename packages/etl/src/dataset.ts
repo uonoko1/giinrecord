@@ -215,6 +215,9 @@ export async function validateDataset(dir: string): Promise<string[]> {
     for (let i = 0; i < d.timeline.length; i++) {
       const e = d.timeline[i];
       checkSource(rel, e, ` timeline[${i}]`);
+      // 回次（#103）: 全行が持つ。vote 行は採決 id の回次（{回次}-MMDD-vNNN）と一致する（Web の回次ごとの折りたたみと carried の鍵）
+      if (!Number.isInteger(e.session)) v.push(`${rel} timeline[${i}]: session must be an integer, got ${String(e.session)}`);
+      else if (e.kind === "vote" && String(e.session) !== e.rollCallId.split("-")[0]) v.push(`${rel} timeline[${i}]: vote session ${e.session} !== rollCallId ${e.rollCallId}`);
       if (e.kind === "speech") speeches++;
       if (e.kind === "bill") {
         bills++;

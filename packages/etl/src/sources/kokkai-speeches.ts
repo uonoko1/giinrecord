@@ -45,6 +45,7 @@ export class SpeechParseError extends Error {
 /** API の JSON レコード（使う項目だけ）。null は「値なし」。 */
 interface SpeechRecord {
   speechID?: unknown;
+  session?: unknown;
   speechOrder?: unknown;
   speaker?: unknown;
   speakerGroup?: unknown;
@@ -83,6 +84,7 @@ function toSpeech(rec: SpeechRecord, house: House): Speech {
   const position = str(rec.speakerPosition);
   return {
     id,
+    session: typeof rec.session === "number" ? rec.session : fail(`${id}: session がありません`),
     speakerText: need(rec.speaker, "speaker"),
     ...(group ? { group } : {}),
     ...(position ? { position } : {}),

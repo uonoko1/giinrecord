@@ -235,6 +235,18 @@ describe("writeDataset / validateDataset: docs/DATA_CONTRACT.md の不変条件"
     cleanup();
   });
 
+  test("timeline の行に session が無ければ違反（#103）", async () => {
+    patch<{ timeline: Record<string, unknown>[] }>(dir, "members/m_007006.json", (d) => ({ ...d, timeline: d.timeline.map((e, i) => (i === 0 ? { ...e, session: undefined } : e)) }));
+    assert.match((await validateDataset(dir)).join("\n"), /m_007006.*timeline\[0\]: session must be an integer/);
+    cleanup();
+  });
+
+  test("vote 行の session が採決 id の回次と違えば違反（#103）", async () => {
+    patch<{ timeline: Record<string, unknown>[] }>(dir, "members/m_007006.json", (d) => ({ ...d, timeline: d.timeline.map((e) => (e.kind === "vote" ? { ...e, session: 217 } : e)) }));
+    assert.match((await validateDataset(dir)).join("\n"), /vote session 217 !== rollCallId 221-/);
+    cleanup();
+  });
+
   test("sourceUrl が衆参・NDL 以外のドメインなら違反", async () => {
     patch<{ sourceUrl: string }>(dir, "members/m_007006.json", (d) => ({ ...d, sourceUrl: "https://example.com/x" }));
     assert.match((await validateDataset(dir)).join("\n"), /example\.com/);
@@ -278,7 +290,7 @@ describe("writeDataset / validateDataset: docs/DATA_CONTRACT.md の不変条件"
   });
 
   test("bill 行の sourceUrl が参院 議案ページ（kousei/gian/{回次}/meisai/）でなければ違反", async () => {
-    const bill = (sourceUrl: string) => ({ kind: "bill", date: "2026-07-30", billId: "221-参法-16", title: "法案", role: "提出者", sourceUrl });
+    const bill = (sourceUrl: string) => ({ kind: "bill", session: 221, date: "2026-07-30", billId: "221-参法-16", title: "法案", role: "提出者", sourceUrl });
     patch<{ timeline: unknown[] }>(dir, "members/m_007006.json", (d) => ({ ...d, timeline: [bill(`${BASE}/221-0605-v001.htm`), ...d.timeline] }));
     patch<{ id: string; counts: { bills: number } }[]>(dir, "members/index.json", (idx) => idx.map((m) => (m.id === "m_007006" ? { ...m, counts: { ...m.counts, bills: 1 } } : m)));
     assert.match((await validateDataset(dir)).join("\n"), /m_007006.*timeline\[0\].*議案/);
@@ -288,7 +300,7 @@ describe("writeDataset / validateDataset: docs/DATA_CONTRACT.md の不変条件"
   });
 
   test("bill 行の sourceUrl は衆院 経過ページ（gian/keika/）でもよい（#73。衆院議員の提出・賛同）", async () => {
-    const bill = { kind: "bill", date: "2026-07-30", billId: "221-衆法-1", title: "法案", role: "賛成者", sourceUrl: `${KEIKA}/1DE153E.htm` };
+    const bill = { kind: "bill", session: 221, date: "2026-07-30", billId: "221-衆法-1", title: "法案", role: "賛成者", sourceUrl: `${KEIKA}/1DE153E.htm` };
     patch<{ timeline: unknown[] }>(dir, "members/m_007006.json", (d) => ({ ...d, timeline: [bill, ...d.timeline] }));
     patch<{ id: string; counts: { bills: number } }[]>(dir, "members/index.json", (idx) => idx.map((m) => (m.id === "m_007006" ? { ...m, counts: { ...m.counts, bills: 1 } } : m)));
     assert.deepEqual(await validateDataset(dir), []);
@@ -296,7 +308,7 @@ describe("writeDataset / validateDataset: docs/DATA_CONTRACT.md の不変条件"
   });
 
   test("stance 行（会派態度の推定）は estimated: true・stance は 賛成/反対・sourceUrl は衆院 経過ページ。counts には数えない", async () => {
-    const stance = (extra: Record<string, unknown> = {}) => ({ kind: "stance", estimated: true, date: "2026-07-30", billId: "221-閣法-3", title: "法案", group: "日本共産党", stance: "反対", stanceText: "多数", sourceUrl: `${KEIKA}/1DE14D6.htm`, ...extra });
+    const stance = (extra: Record<string, unknown> = {}) => ({ kind: "stance", estimated: true, session: 221, date: "2026-07-30", billId: "221-閣法-3", title: "法案", group: "日本共産党", stance: "反対", stanceText: "多数", sourceUrl: `${KEIKA}/1DE14D6.htm`, ...extra });
     // stance 行は衆院議員（house=shugiin）にだけ付く。フィクスチャは参院名簿なので house を衆院に差し替えて検証する
     patch<{ house: string; timeline: unknown[] }>(dir, "members/m_007006.json", (d) => ({ ...d, house: "shugiin", timeline: [stance(), ...d.timeline] }));
     assert.deepEqual(await validateDataset(dir), []);
@@ -310,7 +322,7 @@ describe("writeDataset / validateDataset: docs/DATA_CONTRACT.md の不変条件"
   });
 
   test("stance 行は house=shugiin の議員にだけ許される（参院議員に会派態度の推定は付けない、#88）", async () => {
-    const stance = { kind: "stance", estimated: true, date: "2026-07-30", billId: "221-閣法-3", title: "法案", group: "日本共産党", stance: "反対", stanceText: "多数", sourceUrl: `${KEIKA}/1DE14D6.htm` };
+    const stance = { kind: "stance", estimated: true, session: 221, date: "2026-07-30", billId: "221-閣法-3", title: "法案", group: "日本共産党", stance: "反対", stanceText: "多数", sourceUrl: `${KEIKA}/1DE14D6.htm` };
     patch<{ timeline: unknown[] }>(dir, "members/m_007006.json", (d) => ({ ...d, timeline: [stance, ...d.timeline] }));
     assert.match((await validateDataset(dir)).join("\n"), /m_007006.*timeline\[0\].*house=shugiin/);
     cleanup();
@@ -318,7 +330,7 @@ describe("writeDataset / validateDataset: docs/DATA_CONTRACT.md の不変条件"
 
   test("question 行（質問主意書、#106）: sourceUrl は衆院 経過ページか参院 詳細ページ。counts.questions は timeline の question 数", async () => {
     const SYUISYO = "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221";
-    const question = (extra: Record<string, unknown> = {}) => ({ kind: "question", date: "2026-07-30", questionId: "221-sangiin-1", title: "質問主意書", submitterText: "テスト 太郎君", answerDate: "2026-08-05", answerUrl: `${SYUISYO}/touh/t221001.htm`, sourceUrl: `${SYUISYO}/meisai/m221001.htm`, ...extra });
+    const question = (extra: Record<string, unknown> = {}) => ({ kind: "question", session: 221, date: "2026-07-30", questionId: "221-sangiin-1", title: "質問主意書", submitterText: "テスト 太郎君", answerDate: "2026-08-05", answerUrl: `${SYUISYO}/touh/t221001.htm`, sourceUrl: `${SYUISYO}/meisai/m221001.htm`, ...extra });
     const setCounts = (questions: number) => patch<{ id: string; counts: Record<string, number> }[]>(dir, "members/index.json", (idx) => idx.map((m) => (m.id === "m_007006" ? { ...m, counts: { ...m.counts, questions } } : m)));
     patch<{ timeline: unknown[] }>(dir, "members/m_007006.json", (d) => ({ ...d, timeline: [question(), ...d.timeline] }));
     assert.match((await validateDataset(dir)).join("\n"), /m_007006.*counts\.questions/);
@@ -334,7 +346,7 @@ describe("writeDataset / validateDataset: docs/DATA_CONTRACT.md の不変条件"
   });
 
   test("attendance 行（委員会出席の発議者、#109）: estimated は false・role は 発議者・sourceUrl は会議録（kokkai.ndl.go.jp/txt/）・参院議員だけ。counts には数えない", async () => {
-    const attendance = (extra: Record<string, unknown> = {}) => ({ kind: "attendance", estimated: false, date: "2026-07-30", meetingId: "122115007X01420260709_000", meeting: "農林水産委員会 第14号", role: "発議者", bills: [{ billId: "221-参法-11", title: "法律案" }], sourceUrl: "https://kokkai.ndl.go.jp/txt/122115007X01420260709/0", ...extra });
+    const attendance = (extra: Record<string, unknown> = {}) => ({ kind: "attendance", estimated: false, session: 221, date: "2026-07-30", meetingId: "122115007X01420260709_000", meeting: "農林水産委員会 第14号", role: "発議者", bills: [{ billId: "221-参法-11", title: "法律案" }], sourceUrl: "https://kokkai.ndl.go.jp/txt/122115007X01420260709/0", ...extra });
     patch<{ timeline: unknown[] }>(dir, "members/m_007006.json", (d) => ({ ...d, timeline: [attendance(), ...d.timeline] }));
     assert.deepEqual(await validateDataset(dir), []);
     patch<{ timeline: unknown[] }>(dir, "members/m_007006.json", (d) => ({ ...d, timeline: [attendance({ estimated: true }), ...d.timeline.slice(1)] }));
