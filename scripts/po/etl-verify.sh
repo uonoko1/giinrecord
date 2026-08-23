@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # etl-verify.sh
 #   Prints the three facts of docs/ops/etl.md's PO checklist: the latest ETL (daily) run,
-#   the latest data/refresh PR, and the latest Deploy run. Read-only.
+#   the latest data/refresh PR, and the latest "Deploy data" run (deploy-data.yml, #127). Read-only.
 #   Exit 0 only when ETL = success, data PR is MERGED (or there is none), Deploy = success.
 # Env: PO_REPO (owner/name override).
 set -euo pipefail
@@ -21,7 +21,7 @@ latest_run() {
 # Empty JSON fields become "-" above: `read` with IFS=tab collapses consecutive tabs, so an
 # empty column would shift every later column (seen live with an in_progress run).
 ETL=$(latest_run etl.yml)
-DEPLOY=$(latest_run deploy.yml)
+DEPLOY=$(latest_run deploy-data.yml)
 DATA_PR=$(gh pr list --head "$DATA_BRANCH" --state all --limit 1 --repo "$REPO" --json number,state,mergedAt,url \
   -q '.[0] | select(. != null) | [.number, .state, (.mergedAt | if . == null or . == "" then "-" else . end), .url] | @tsv')
 

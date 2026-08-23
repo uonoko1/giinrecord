@@ -10,7 +10,7 @@
 #   5. installs /etc/cron.d/gikailog-analytics: 00:10 daily, as ROOT, aggregates yesterday and hands
 #      only the TSV to ubuntu (install -o ubuntu -m 600)
 #
-# Deliberately NOT done: adding ubuntu to the adm group. ubuntu is the CI deploy-key user (deploy.yml rsync);
+# Deliberately NOT done: adding ubuntu to the adm group. ubuntu is the CI deploy-key user (deploy-site.yml rsync);
 # adm would let a leaked key read every log on the shared VPS (other sites' access logs with IP/UA, auth.log,
 # syslog). Likewise root never executes anything under ubuntu's writable home: scripts are copied into
 # $TOOLS by sudo install (see docs/ops/analytics.md), so a leaked key cannot escalate via the cron either.

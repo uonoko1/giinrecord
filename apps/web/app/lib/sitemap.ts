@@ -3,7 +3,7 @@
  * With no origin the <loc> values are site-relative paths: not spec-compliant, but the
  * build keeps working and the smoke test can still verify every entry exists.
  */
-import { canonicalUrl } from "./seo";
+import { canonicalUrl, isStagingOrigin } from "./seo";
 
 function escapeXml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
@@ -36,6 +36,8 @@ export function buildSitemap(paths: string[], { origin, lastmod }: SitemapOption
 }
 
 export function buildRobots(origin: string): string {
+  // staging.gikailog.jp (#127): nothing is crawlable, and no sitemap is advertised.
+  if (isStagingOrigin(origin)) return "User-agent: *\nDisallow: /\n";
   // /compare (#104) is query-driven, served from the SPA fallback and meta noindex; keep crawlers off it here too.
   const base = "User-agent: *\nAllow: /\nDisallow: /compare\n";
   return origin ? `${base}\nSitemap: ${origin}/sitemap.xml\n` : base;

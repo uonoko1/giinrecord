@@ -9,7 +9,7 @@ permissions:
   contents: write
   pull-requests: write
   issues: write        # failure → auto Issue
-  actions: write       # gh workflow run deploy.yml / approve pending runs
+  actions: write       # gh workflow run deploy-data.yml / approve pending runs
 concurrency:
   group: etl           # 日次 ETL と直列化（同時に data PR を作らない）
   cancel-in-progress: false
@@ -103,7 +103,7 @@ jobs:
             echo "</details>"
           } >> "$GITHUB_STEP_SUMMARY"
 
-      # auto-merge は Deploy を起動しない（GITHUB_TOKEN のマージは push イベントを起こさない）ので、マージを待って deploy.yml を起動する（etl.yml と同じ）。
+      # auto-merge は Deploy を起動しない（GITHUB_TOKEN のマージは push イベントを起こさない）ので、マージを待って deploy-data.yml を起動する（etl.yml と同じ）。
       - name: Wait for data PR merge, then deploy
         if: steps.pr.outputs.number != ''
         env:
@@ -114,7 +114,7 @@ jobs:
             STATE=$(gh pr view "$PR" --json state -q .state)
             echo "[$i] PR #$PR state=$STATE"
             case "$STATE" in
-              MERGED) gh workflow run deploy.yml --ref main; echo "deploy.yml を起動した" >> "$GITHUB_STEP_SUMMARY"; exit 0 ;;
+              MERGED) gh workflow run deploy-data.yml --ref main; echo "deploy-data.yml を起動した（staging + production）" >> "$GITHUB_STEP_SUMMARY"; exit 0 ;;
               CLOSED) echo "PR #$PR はマージされずに閉じられた" >> "$GITHUB_STEP_SUMMARY"; exit 1 ;;
             esac
             if [ "$(gh pr view "$PR" --json mergeStateStatus -q .mergeStateStatus)" = "BEHIND" ]; then

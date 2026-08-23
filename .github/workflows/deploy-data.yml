@@ -1,0 +1,29 @@
+name: Deploy data
+# Issue #127: daily data (validateDataset-checked facts) flows to BOTH staging and production automatically.
+# etl.yml / districts.yml dispatch this right after the data PR merges (`gh workflow run deploy-data.yml --ref main`;
+# a GITHUB_TOKEN merge fires no push event, so deploy-staging.yml would not run by itself).
+# The production job uses environment `production-data` (same secrets, NO required reviewers) so it never waits
+# for the release button. S1 simplification: it builds main, not the last released ref — docs/ops/deploy.md.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 21 * * *"   # 06:30 JST — safety net only; etl.yml dispatches this workflow right after the data PR merges
+permissions:
+  contents: read
+jobs:
+  staging:
+    uses: ./.github/workflows/deploy-site.yml
+    with:
+      environment: staging
+      site_origin: https://staging.gikailog.jp
+      target_dir: staging
+      ref: main
+    secrets: inherit
+  production:
+    uses: ./.github/workflows/deploy-site.yml
+    with:
+      environment: production-data
+      site_origin: ${{ vars.SITE_ORIGIN }}
+      target_dir: site
+      ref: main
+    secrets: inherit

@@ -8,7 +8,7 @@ handle() {
   case "\$*" in
     "run list --workflow etl.yml"*) echo '[{"databaseId":1,"status":"completed","conclusion":"$1","createdAt":"2026-08-23T21:00:00Z","url":"https://github.com/uonoko1/gikailog/actions/runs/1"}]' ;;
     "pr list --head data/refresh"*) echo '$2' ;;
-    "run list --workflow deploy.yml"*) echo '[{"databaseId":2,"status":"completed","conclusion":"$3","createdAt":"2026-08-23T21:20:00Z","url":"https://github.com/uonoko1/gikailog/actions/runs/2"}]' ;;
+    "run list --workflow deploy-data.yml"*) echo '[{"databaseId":2,"status":"completed","conclusion":"$3","createdAt":"2026-08-23T21:20:00Z","url":"https://github.com/uonoko1/gikailog/actions/runs/2"}]' ;;
     *) echo "unexpected: \$*" >&2; exit 99 ;;
   esac
 }
@@ -60,7 +60,7 @@ handle() {
   case "$*" in
     "run list --workflow etl.yml"*) echo '[{"status":"in_progress","conclusion":"","createdAt":"2026-08-23T21:00:00Z","url":"https://x/runs/1"}]' ;;
     "pr list --head data/refresh"*) echo '[{"number":75,"state":"OPEN","mergedAt":null,"url":"https://x/pull/75"}]' ;;
-    "run list --workflow deploy.yml"*) echo '[{"status":"completed","conclusion":"success","createdAt":"2026-08-22T15:46:10Z","url":"https://x/runs/2"}]' ;;
+    "run list --workflow deploy-data.yml"*) echo '[{"status":"completed","conclusion":"success","createdAt":"2026-08-22T15:46:10Z","url":"https://x/runs/2"}]' ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
 }

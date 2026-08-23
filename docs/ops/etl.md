@@ -10,18 +10,18 @@
   3. actions/cache/save     失敗しても保存（if: always）
   4. data PR                git diff に変更があれば data/refresh に force push → open PR が無ければ作成 → `gh pr merge --auto`
   5. Job summary            結果 / データ PR 番号 / 変更ファイル数 / unmatched・unmatched-bills 件数 / ログの警告行
-  6. マージ待ち → Deploy    最大 15 分 PR の state を 20 秒ごとに見る。MERGED で `gh workflow run deploy.yml --ref main`
+  6. マージ待ち → Deploy    最大 15 分 PR の state を 20 秒ごとに見る。MERGED で `gh workflow run deploy-data.yml --ref main`（staging + production の両方、#127）
   7. failure()              「ETL 日次実行が失敗した（etl.yml）」という Issue を作る（同タイトルの open Issue があればコメントだけ）
 ```
 
 - `.cache/` のうち回次一覧 `vote_ind.htm`・議員名簿・議案ページ（参院 meisai・衆院 kaiji/keika）・会議録 API は ETL 側が `noCache` で毎回取得する。衆院 議案情報は Shift_JIS で、回次あたり一覧 1 ページ＋経過ページ約 160 枚（0.5 秒間隔で約 1.5 分）。質問主意書（#106）も毎回取得する: 衆院 `itdb_shitsumon.nsf/html/shitsumon/kaiji{回次}_l.htm`（Shift_JIS）→ 経過ページ、参院 `joho1/kousei/syuisyo/{回次}/syuisyo.htm` → 詳細ページ。提出日・答弁書受領日は一覧に無く詳細ページにしかないので1件1ページ（第217回は衆 352＋参 247 枚、5 回次合計で約 1,100 枚 ≒ 10 分）。キャッシュが効くのは各採決の投票結果ページ（不変）だけ。
-- 06:30 JST の `deploy.yml` schedule は安全網。通常は 6 で起動された Deploy が先に走る（`concurrency: deploy` で重複は直列化）。
+- 06:30 JST の `deploy-data.yml` schedule は安全網。通常は 6 で起動された Deploy data が先に走る（`deploy-site.yml` の `concurrency: deploy-<dir>` で重複は直列化）。
 
 ## 確認の仕方（PO チェックリスト）
 `scripts/po/etl-verify.sh` が 1〜3 を 3 行にまとめて出す（`docs/ops/board.md`）。手で見るなら：
 1. Actions → ETL (daily) → 最新 run の **Summary** を見る。「データ PR」が `#N` か「なし」か、unmatched 件数が前日から急増していないか。
-2. 「deploy.yml を起動した」が Summary にあれば Actions → Deploy に run があるはず。
-3. 無ければ `gh workflow run deploy.yml --ref main` を手で叩く。
+2. 「deploy-data.yml を起動した」が Summary にあれば Actions → Deploy data に run があるはず。
+3. 無ければ `gh workflow run deploy-data.yml --ref main` を手で叩く。
 
 ## 失敗モード
 
@@ -33,7 +33,7 @@
 | `Run ETL` で `HTTP 5xx` / timeout | 参議院・国会会議録の障害 | 翌日の schedule で自動再試行。急ぐなら手動 dispatch（取得済みページはキャッシュから復元される） |
 | データ PR が作られない／Summary で「なし」 | 本当に差分が無い（ETL は `fetchedAt` を meta.json に書くので通常は毎回差分が出る） | `meta.json` まで変わらないなら ETL が data/ を書いていない。ログの `done` を確認 |
 | `test -n "$NUMBER"` で失敗 | `gh pr create` 失敗（label `etl` が無い、権限不足） | 手元で `gh pr list --head data/refresh`。label が無ければ作る |
-| 15 分待っても MERGED にならない | ブランチ保護の required check が走らない。`GITHUB_TOKEN` の push は `pull_request` イベントを起こさないため、CI を required にすると auto-merge が永遠に待つ | required check を外すか、push に PAT / GitHub App token を使う（`secrets.GITHUB_TOKEN` から差し替える）。手動で PR をマージすれば Deploy は `push: main` で走らない点に注意 → `gh workflow run deploy.yml` |
+| 15 分待っても MERGED にならない | ブランチ保護の required check が走らない。`GITHUB_TOKEN` の push は `pull_request` イベントを起こさないため、CI を required にすると auto-merge が永遠に待つ | required check を外すか、push に PAT / GitHub App token を使う（`secrets.GITHUB_TOKEN` から差し替える）。手動で PR をマージすれば staging は `push: main` で走るが production は走らない点に注意 → `gh workflow run deploy-data.yml` |
 | `action_required` の run が出る | fork 由来ではないので通常は出ない。出た場合はワークフローが `actions/runs/{id}/approve` を試みる | 承認できない（権限）なら Actions UI で承認 |
 | Deploy が `waiting` のまま | `environment: production` に required reviewers が設定されている | 環境の保護ルールを確認。ETL 側からは承認しない（人が判断する） |
 | 失敗 Issue が作られない | `issues: write` 権限・`etl`/`infra` label の欠落 | run ログの `Open failure Issue` ステップを見る。label は存在しないと API が 422 を返すので事前に作っておく |
@@ -79,7 +79,7 @@ docker run --rm --user "$(id -u):$(id -g)" -v "$PWD/data:/app/data" -v "$PWD/pac
 - `pnpm --filter web smoke` が、zip の存在・エントリ数（data/ のファイル数 + README）・`LICENSE`/`README.txt` の同梱・サイズ上限（既定 50 MiB、`ARCHIVE_MAX_BYTES` で上書き）を検査する。上限を超えたら意図して上げる（回次が増えたとき）。
 
 ## 選挙区 ETL（月次、`.github/workflows/districts.yml`、#111）
-- 毎月 2 日 05:00 JST（KEN_ALL は月末更新）と `workflow_dispatch`。日次と同じイメージで `--entrypoint node … src/districts-cli.ts` を走らせ、`data/districts/` だけを書く。data PR の流れ（ブランチ再作成 → `gh pr create` → auto-merge → マージ待ち → deploy.yml 起動 → 失敗 Issue）は日次と同じで、ブランチは `data/districts`、失敗 Issue のタイトルは「選挙区 ETL 月次実行が失敗した（districts.yml）」。`concurrency: etl` で日次と直列化する。
+- 毎月 2 日 05:00 JST（KEN_ALL は月末更新）と `workflow_dispatch`。日次と同じイメージで `--entrypoint node … src/districts-cli.ts` を走らせ、`data/districts/` だけを書く。data PR の流れ（ブランチ再作成 → `gh pr create` → auto-merge → マージ待ち → deploy-data.yml 起動 → 失敗 Issue）は日次と同じで、ブランチは `data/districts`、失敗 Issue のタイトルは「選挙区 ETL 月次実行が失敗した（districts.yml）」。`concurrency: etl` で日次と直列化する。
 - Summary に KEN_ALL 更新日・郵便番号／市区町村／小選挙区の件数・**分割市区町村の件数**（候補を並べただけで推定していない数。2026-08 時点で 33）を出す。件数が急に変わったら総務省の PDF か KEN_ALL の変化を疑う。
 - 手動: `gh workflow run districts.yml`。ローカル: `pnpm etl:districts`（約 40 秒。総務省 PDF 47 本は `.cache/` にキャッシュ、KEN_ALL と HTML は毎回取得）。
 - 失敗モード: 「matches no municipality」＝別表の単位が KEN_ALL に無い（市町村合併・区の再編 → `static-areas.ts` の `RENAMED_MUNICIPALITIES` に出典付きで追記）、「expected 47 prefecture PDFs」「not found on the download page」「expected 14 bureaus」＝ページのレイアウト変化（`docs/research/districts.md` の URL を確認してパーサーとフィクスチャを直す）、「district numbers not consecutive」「unbalanced parentheses」＝PDF のレイアウト変化。いずれも data/ は書かれない（書いた後の不変条件違反も PR にならない）。

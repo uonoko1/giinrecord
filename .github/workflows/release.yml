@@ -1,0 +1,23 @@
+name: Release
+# Issue #127: the production release button. Actions → Release → Run workflow (ref, default main) → the
+# `production` environment's required reviewers approve → build with vars.SITE_ORIGIN → rsync to /var/www/gikailog/site/.
+# Nothing else writes production code; daily data goes through deploy-data.yml (environment production-data, no approval).
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Git ref (branch, tag or SHA) to release to https://gikailog.jp"
+        required: true
+        type: string
+        default: main
+permissions:
+  contents: read
+jobs:
+  production:
+    uses: ./.github/workflows/deploy-site.yml
+    with:
+      environment: production
+      site_origin: ${{ vars.SITE_ORIGIN }}
+      target_dir: site
+      ref: ${{ inputs.ref }}
+    secrets: inherit

@@ -44,7 +44,7 @@ PV として数える行：`GET` かつ `200`/`304` かつ HTML ページ（`/as
 
 ### 権限の設計（ubuntu に adm を付けない）
 
-`ubuntu` は deploy.yml が rsync に使う **CI デプロイ鍵のユーザー**。このユーザーを `adm` グループに入れると、鍵が漏れたときに共有 VPS 上の**全ログ**（他サイトの nginx アクセスログ＝IP/UA 入り、`auth.log`、`syslog`）が読めてしまい、この PR の目的（個人情報を持たない）に反する。そのため
+`ubuntu` は deploy-site.yml（deploy-staging / release / deploy-data）が rsync に使う **CI デプロイ鍵のユーザー**。このユーザーを `adm` グループに入れると、鍵が漏れたときに共有 VPS 上の**全ログ**（他サイトの nginx アクセスログ＝IP/UA 入り、`auth.log`、`syslog`）が読めてしまい、この PR の目的（個人情報を持たない）に反する。そのため
 
 - cron は **root** で動かし、`/var/log/nginx` を読むのは root だけ。`daily.sh` が `install -o ubuntu -m 600` で **集計 TSV 1 ファイルだけ**を ubuntu に渡す。
 - root が実行するスクリプトは **root 所有の `/usr/local/lib/gikailog-analytics/`** に置く（`~ubuntu` 配下を root の cron から実行すると、漏れた鍵で root 昇格できてしまう）。更新は `sudo install`。

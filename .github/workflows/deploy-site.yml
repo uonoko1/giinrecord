@@ -1,0 +1,75 @@
+name: Deploy site (reusable)
+# Issue #127. Build the static site from `ref` with SITE_ORIGIN=`site_origin` and rsync it to
+# /var/www/gikailog/<target_dir>/ on the VPS as the deploy user. Called by:
+#   deploy-staging.yml  push main            → environment staging          target_dir staging  (https://staging.gikailog.jp)
+#   release.yml         workflow_dispatch    → environment production       target_dir site     (required reviewers = the release button)
+#   deploy-data.yml     dispatched by etl.yml → staging + production-data   (daily data, no approval; docs/ops/deploy.md)
+# Every environment needs the same four secrets: DEPLOY_SSH_KEY, DEPLOY_HOST, DEPLOY_USER, DEPLOY_KNOWN_HOSTS.
+# The deploy user has no docker privilege; the containers bind-mount the target directories, nothing is restarted.
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: "GitHub Environment (staging | production | production-data): secrets + reviewers"
+        required: true
+        type: string
+      site_origin:
+        description: "SITE_ORIGIN for the build (https://staging.gikailog.jp → robots Disallow + noindex)"
+        required: true
+        type: string
+      target_dir:
+        description: "Directory under /var/www/gikailog/ to rsync into (site | staging)"
+        required: true
+        type: string
+      ref:
+        description: "Git ref to build"
+        required: false
+        type: string
+        default: main
+permissions:
+  contents: read
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    concurrency:
+      group: deploy-${{ inputs.target_dir }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+        env:
+          SITE_ORIGIN: ${{ inputs.site_origin }}
+      - name: Guard — target_dir is one of the two web roots
+        env:
+          TARGET_DIR: ${{ inputs.target_dir }}
+        run: |
+          case "$TARGET_DIR" in site|staging) ;; *) echo "bad target_dir: $TARGET_DIR"; exit 1 ;; esac
+      - name: rsync static site to VPS
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          USER: ${{ secrets.DEPLOY_USER }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          TARGET_DIR: ${{ inputs.target_dir }}
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          rsync -az --delete --exclude '.well-known' \
+            -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes" \
+            apps/web/build/client/ "$USER@$HOST:/var/www/gikailog/$TARGET_DIR/"
+      - name: Summary
+        env:
+          ENVIRONMENT: ${{ inputs.environment }}
+          ORIGIN: ${{ inputs.site_origin }}
+          TARGET_DIR: ${{ inputs.target_dir }}
+          REF: ${{ inputs.ref }}
+        run: |
+          echo "deployed ref \`$REF\` ($(git rev-parse HEAD)) to \`/var/www/gikailog/$TARGET_DIR/\` (environment $ENVIRONMENT, SITE_ORIGIN=${ORIGIN:-(relative)})" >> "$GITHUB_STEP_SUMMARY"
