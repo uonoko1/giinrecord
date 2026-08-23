@@ -275,6 +275,8 @@ export type TimelineEntry = VoteEntry | BillEntry | SpeechEntry | StanceEntry | 
 export interface ZipDistricts {
   sangiin: string[];
   shugiin: string[];
+  /** KEN_ALL の都道府県＋市区町村（「東京都千代田区」、団体コード順。複数にまたがる郵便番号は全部）。#120 より前の月次 ETL の出力には無いので省略可。 */
+  municipalities?: string[];
 }
 
 /** `districts/municipalities.json` の1行（団体コード順）。`split === shugiin.length > 1`。 */

@@ -9,7 +9,7 @@ import { RENAMED_MUNICIPALITIES, TOKYO_BRANCH_OFFICES } from "./static-areas.ts"
 
 /**
  * `data/districts/`（docs/DATA_CONTRACT.md「選挙区」、Issue #111）。
- *   by-zip.json          Record<郵便番号7桁, { sangiin: string[]; shugiin: string[] }>
+ *   by-zip.json          Record<郵便番号7桁, { sangiin: string[]; shugiin: string[]; municipalities: string[] }>
  *   municipalities.json  { code, pref, city, shugiin[], split }[]（団体コード順）
  *   meta.json            DistrictsMeta（出典 URL・取得日時・基準日・件数・分割市区町村）
  */
@@ -85,6 +85,7 @@ export async function validateDistricts(dataDir: string): Promise<string[]> {
     if (!/^\d{7}$/.test(zip)) v.push(`by-zip: bad zip ${zip}`);
     if (!d.sangiin?.length) v.push(`by-zip: ${zip} has no sangiin district`);
     if (!d.shugiin?.length) v.push(`by-zip: ${zip} has no shugiin district`);
+    if (!d.municipalities?.length) v.push(`by-zip: ${zip} has no municipalities`);
     for (const s of d.sangiin ?? []) { if (/\d/.test(s) || !s) v.push(`by-zip: ${zip} bad sangiin name ${s}`); sangiinNames.add(s); }
     for (const s of d.shugiin ?? []) {
       if (!DISTRICT_NAME.test(s)) v.push(`by-zip: ${zip} bad shugiin name ${s}`);
