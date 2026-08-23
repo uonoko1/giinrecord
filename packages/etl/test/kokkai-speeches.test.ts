@@ -92,6 +92,50 @@ describe("parseSpeechPage: 実レスポンス（第221回 参院本会議）", (
   });
 });
 
+/**
+ * 実レスポンス（第221回 衆院本会議、1ページ目）。Issue #107。
+ * 取得: 2026-08-23T06:51Z, curl -A "Mozilla/5.0" speechPageUrl(221, 1, "shugiin")
+ */
+describe("parseSpeechPage: 実レスポンス（第221回 衆院本会議、Issue #107）", () => {
+  const json = fixture("kokkai-speech-shugiin-221-p1");
+  const page = parseSpeechPage(json, "shugiin");
+
+  test("ページング情報を返す（1ページ目: 919件中100件、次は101）", () => {
+    assert.equal(page.numberOfRecords, 919);
+    assert.equal(page.nextRecordPosition, 101);
+  });
+
+  test("speechOrder 0 の「会議録情報」を除き、全発言の house が shugiin になる", () => {
+    assert.equal(page.speeches.length, 100 - 9);
+    assert.ok(page.speeches.every((s) => s.house === "shugiin" && s.speakerText !== "会議録情報"));
+  });
+
+  test("衆院議員の発言: 話者・会派・会議名・日付・出典URL・冒頭抜粋", () => {
+    const s = page.speeches.find((x) => x.id === "122105254X03520260724_002")!;
+    assert.equal(s.speakerText, "小寺裕雄");
+    assert.equal(s.group, "自由民主党・無所属の会");
+    assert.equal(s.position, undefined);
+    assert.equal(s.meeting, "本会議 第35号");
+    assert.equal(s.date, "2026-07-24");
+    assert.equal(s.sourceUrl, "https://kokkai.ndl.go.jp/txt/122105254X03520260724/2");
+    assert.ok(s.excerpt.length > 0 && !s.excerpt.startsWith("○"));
+    assert.ok(s.chars >= [...s.excerpt].length);
+  });
+
+  test("衆院議長の発言は position「議長」を保持する（#35 と同じ扱い）", () => {
+    const chair = page.speeches.find((x) => x.id === "122105254X03520260724_001")!;
+    assert.equal(chair.speakerText, "森英介");
+    assert.equal(chair.position, "議長");
+    assert.equal(chair.group, "無所属");
+  });
+
+  test("参院の解釈は衆院フィクスチャを足しても変わらない（house 省略 = sangiin と同一）", () => {
+    const sangiin = fixture("kokkai-speech-221-p1");
+    assert.deepEqual(parseSpeechPage(sangiin), parseSpeechPage(sangiin, "sangiin"));
+    assert.equal(speechPageUrl(221, 1), speechPageUrl(221, 1, "sangiin"));
+  });
+});
+
 describe("toExcerpt: 冒頭抜粋（要約しない）", () => {
   const cases: [string, string, string, number][] = [
     ["冒頭の「○話者名君　」を除く", "○藤川政人君　本文。", "本文。", 3],
