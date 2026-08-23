@@ -60,7 +60,7 @@ test("parseVotePdf: 節（○ 知事提出議案／議員提出議案／請願�
     "●": "委員会審査結果又は議長宣告に起立しなかった者",
   });
   // 3月11日: 知事提出議案の表が 4 ページにまたがり、凡例は 4 ページ目の表の下に 1 つ（除斥あり）
-  assert.deepEqual(mar11.sections.map((s) => [s.kind, s.rows.length]), [["知事提出議案", 77], ["請願", 2], ["議員提出議案", 3]]);
+  assert.deepEqual(mar11.sections.map((s) => [s.kind, s.rows.length]), [["知事提出議案", 78], ["請願", 2], ["議員提出議案", 3]]);
   assert.deepEqual(mar11.sections[0].legend, {
     "○": "委員会審査結果又は議長宣告に起立（賛成）した者",
     "議": "議長",
@@ -105,16 +105,21 @@ test("parseVotePdf: セルは議員数ぶん、原文のまま（○ と 〇 U+3
   assert.ok(!jul3.sections.some((s) => s.rows.some((r) => r.cells.includes(UNKNOWN_CELL))));
 });
 
-test("parseVotePdf: 議案番号の結合セル（第１号の原案と修正案）は 2 行とも同じ番号。番号の無い行（動議）は空", () => {
+test("parseVotePdf: 議案番号の結合セル（第１号の原案と修正案）は 2 行とも同じ番号。番号の無い行（動議）は原文の「-」", () => {
   const [orig, amendment] = mar11.sections[0].rows;
   assert.deepEqual([orig.number, orig.title, orig.committeeResult, orig.result], ["第１号", "令和８年度徳島県一般会計予算", "可決", "可決"]);
   assert.deepEqual([amendment.number, amendment.title, amendment.committeeResult, amendment.result], ["第１号", "令和８年度徳島県一般会計予算に対する修正案", "-", "否決"]);
   assert.equal(mar11.sections[0].rows[2].number, "第２号");
+  // 第77号（監査委員の選任）も 2 行（木下賢功氏・仁木啓人氏）。本人の列は「除」（除斥）
+  const audit = mar11.sections[0].rows.filter((r) => r.number === "第77号");
+  assert.deepEqual(audit.map((r) => r.title), ["監査委員の選任について（木下賢功氏）", "監査委員の選任について（仁木啓人氏）"]);
+  assert.equal(audit[0].cells[13], "除"); // 木下 賢功
+  assert.equal(audit[1].cells[17], "除"); // 仁木 啓人
   assert.equal(mar11.date, "2026-03-11");
   assert.equal(mar11.unknownCells, 0);
   assert.deepEqual(feb20.sections.map((s) => [s.kind, s.rows.length]), [["動議", 1]]);
   const motion = feb20.sections[0].rows[0];
-  assert.equal(motion.number, "");
+  assert.equal(motion.number, "-"); // 番号欄の原文（番号は無い）
   assert.equal(motion.title, "議案第１号のうち、藍場浜公園西エリア新ホール整備事業に関する予算案について、他の予算案と分割の上、再提出を求める動議");
   assert.equal(motion.result, "否決");
   assert.deepEqual(feb20.sections[0].legend, {

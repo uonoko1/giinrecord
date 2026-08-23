@@ -480,15 +480,18 @@ export interface LocalRollCall {
   date: string;
   /** 議案種別の原文（「知事提出議案」「発議案」「意見書案」「請願」…） */
   kind: string;
-  /** 議案等番号の原文（「132」「398の1」） */
+  /** 議案等番号の原文（「132」「398の1」「第１号」）。徳島の番号の無い行（動議）は番号欄の原文「-」 */
   number: string;
   /** 件名の原文 */
   title: string;
-  method: LocalVoteMethod;
+  /** 表決方法（PDF にその欄があるときだけ。宮城はあり、徳島は無い＝推定しない） */
+  method?: LocalVoteMethod;
+  /** 委員会審査結果の原文（「可決」「－」「-」。徳島の PDF にだけある欄） */
+  committeeResult?: string;
   /** 議決結果の原文（「可決」「否決」「採択」…） */
   result: string;
-  /** PDF の出席者数・表決者数・賛成者数・反対者数（公表値。votes から数え直さない） */
-  counts: { present: number; voting: number; yes: number; no: number };
+  /** PDF の出席者数・表決者数・賛成者数・反対者数（公表値。votes から数え直さない）。その欄が無い PDF（徳島）では省略 */
+  counts?: { present: number; voting: number; yes: number; no: number };
   /** 各議員の表決（PDF の列順）。memberId は名簿に名寄せできたときだけ（できなければ ""。unmatched.json に載る） */
   votes: { memberId: MemberId; nameText: string; group: string; value: LocalVote }[];
   /** PDF の何ページ目か（1 始まり） */
@@ -507,7 +510,8 @@ export interface LocalAssemblyMeta {
   sources: { name: string; url: string; fetchedAt: string }[];
   /** 名簿の掲載日（ISO） */
   rosterAsOf: string;
-  sessions: { sessionId: string; sessionLabel: string; sourceUrl: string; pdfUrl: string; rollcalls: number; unknownCells: number }[];
+  /** 対象会期。pdfUrl はその会期の表決 PDF（採決日ごとに PDF が分かれる議会（徳島）は最初の 1 本。全部は pdfUrls） */
+  sessions: { sessionId: string; sessionLabel: string; sourceUrl: string; pdfUrl: string; pdfUrls?: string[]; rollcalls: number; unknownCells: number }[];
   counts: { members: number; rollcalls: number; cells: number; unknownCells: number; unmatchedNames: number };
 }
 

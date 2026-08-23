@@ -19,7 +19,7 @@ test("parseRoster: 36 人（定数 38）。id はプロフィールページの 
     name: "嘉見 博之",
     kana: "かみ ひろゆき",
     group: "徳島県議会自由民主党",
-    district: "徳島選挙区",
+    district: "阿南選挙区",
     profileUrl: "https://www.pref.tokushima.lg.jp/gikai/giin/kami/",
     current: true,
     asOf: "2026-08-24",
@@ -43,8 +43,9 @@ test("parseRoster: 会派別の「（N人）」と実際の人数が一致し、
 });
 
 test("parseRoster: 2 ページで人が食い違う・所属会派が食い違う・人数が合わなければ例外（どちらを正とするか推定しない）", () => {
-  const dropped = { ...pages, senkyoku: pages.senkyoku.replace(/<li class="list-style-white-space"><a href="https:\/\/www\.pref\.tokushima\.lg\.jp\/gikai\/giin\/kami\/"[^]*?<\/ul><\/li>/, "") };
-  assert.throws(() => parseRoster(dropped, { asOf: "2026-08-24" }), /kami/);
+  const withoutKami = pages.senkyoku.replace(/<li class="list-style-white-space"><a href="https:\/\/www\.pref\.tokushima\.lg\.jp\/gikai\/giin\/kami\/"[^]*?<\/ul><\/li>/, "");
+  assert.throws(() => parseRoster({ ...pages, senkyoku: withoutKami }, { asOf: "2026-08-24" }), /阿南 選挙区（4人）: 3 members/);
+  assert.throws(() => parseRoster({ ...pages, senkyoku: withoutKami.replace("阿南 選挙区（4人）", "阿南 選挙区（3人）") }, { asOf: "2026-08-24" }), /嘉見 博之 \(kami\) is in 会派別 but not in 選挙区別/);
   const wrongGroup = { ...pages, senkyoku: pages.senkyoku.replace("所属会派：グローカルplus", "所属会派：別の会派") };
   assert.throws(() => parseRoster(wrongGroup, { asOf: "2026-08-24" }), /所属会派/);
   const wrongCount = { ...pages, kaihabetu: pages.kaihabetu.replace("真政会（2人）", "真政会（3人）") };

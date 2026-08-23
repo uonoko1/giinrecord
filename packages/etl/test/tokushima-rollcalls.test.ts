@@ -64,18 +64,19 @@ test("toLocalRollCalls: id は {assemblyId}-{sessionId}-{採決日}-{種別}-{�
   assert.equal(rollCalls.find((rc) => rc.id === "pref-36-2026-06-20260703-議員提出議案-第1号")?.committeeResult, "-");
 });
 
-test("toLocalRollCalls: 同じ番号の行が 2 つ（原案と修正案）なら id に -1 / -2 を足す。番号の無い動議は 無番号1", () => {
+test("toLocalRollCalls: 同じ番号の行が 2 つ（原案と修正案）なら id に -1 / -2 を足す。番号の無い動議（番号欄「-」）は 無番号1", () => {
   const mar = toLocalRollCalls(mar11, roster.members, { ...FEB, pdfUrl: "https://www.pref.tokushima.lg.jp/file/attachment/1042426.pdf" });
-  assert.equal(mar.rollCalls.length, 82);
+  assert.equal(mar.rollCalls.length, 83);
   assert.deepEqual(mar.rollCalls.slice(0, 3).map((rc) => [rc.id, rc.title]), [
     ["pref-36-2026-02-20260311-知事提出議案-第1号-1", "令和８年度徳島県一般会計予算"],
     ["pref-36-2026-02-20260311-知事提出議案-第1号-2", "令和８年度徳島県一般会計予算に対する修正案"],
     ["pref-36-2026-02-20260311-知事提出議案-第2号", "令和８年度徳島県用度・給与集中管理特別会計予算"],
   ]);
-  assert.equal(new Set(mar.rollCalls.map((rc) => rc.id)).size, 82);
+  assert.equal(new Set(mar.rollCalls.map((rc) => rc.id)).size, 83);
+  assert.deepEqual(mar.rollCalls.filter((rc) => rc.number === "第77号").map((rc) => rc.id), ["pref-36-2026-02-20260311-知事提出議案-第77号-1", "pref-36-2026-02-20260311-知事提出議案-第77号-2"]);
   const feb = toLocalRollCalls(feb20, roster.members, { ...FEB, pdfUrl: "https://www.pref.tokushima.lg.jp/file/attachment/1038136.pdf" });
   assert.equal(feb.rollCalls[0].id, "pref-36-2026-02-20260220-動議-無番号1");
-  assert.equal(feb.rollCalls[0].number, "");
+  assert.equal(feb.rollCalls[0].number, "-");
   assert.equal(feb.rollCalls[0].result, "否決");
 });
 
