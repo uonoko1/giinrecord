@@ -11,6 +11,10 @@
     {
       "id": "page-wire",
       "name": "ワイヤーフレーム"
+    },
+    {
+      "id": "page-logo",
+      "name": "ロゴ案"
     }
   ],
   "artboards": [
@@ -193,6 +197,15 @@
       "h": 700,
       "title": "S3. 比較（先出し）",
       "page": "page-wire"
+    },
+    {
+      "file": "Logo.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 1480,
+      "h": 1120,
+      "title": "ロゴ案（A〜D）",
+      "page": "page-logo"
     }
   ],
   "annotations": [
@@ -255,6 +268,6 @@
   ],
   "launch": {
     "view": "canvas",
-    "page": "page-design"
+    "page": "page-logo"
   }
 }
