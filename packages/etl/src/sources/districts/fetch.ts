@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { sleep } from "../../fetch.ts";
 
-const UA = "seiji-kiroku-etl/0.1 (+https://github.com/uonoko1/seiji-kiroku)";
+const UA = "gikailog-etl/0.1 (+https://github.com/uonoko1/gikailog)";
 const CACHE_DIR = new URL("../../../.cache/", import.meta.url);
 
 /**

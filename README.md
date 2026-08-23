@@ -1,4 +1,4 @@
-# 議会ログ (seiji-kiroku)
+# 議会ログ (gikailog)
 
 言ったことではなく、やったことを。 https://gikailog.jp
 

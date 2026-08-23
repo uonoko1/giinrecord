@@ -233,9 +233,9 @@ handle() {
     "pr view 33 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"data/refresh","mergeStateStatus":"BLOCKED","url":"u"}' ;;
     "pr checks 33 --json"*)
       if [ "$(bump)" -lt 2 ]; then echo '[]'; exit 1; else echo '[{"name":"check","bucket":"pass"}]'; fi ;;
-    "api repos/uonoko1/seiji-kiroku/actions/runs?branch=data/refresh&status=action_required"*) echo '{"workflow_runs":[{"id":101},{"id":102}]}' ;;
-    "api -X POST repos/uonoko1/seiji-kiroku/actions/runs/101/approve") echo ok ;;
-    "api -X POST repos/uonoko1/seiji-kiroku/actions/runs/102/approve") echo "forbidden" >&2; exit 1 ;;
+    "api repos/uonoko1/gikailog/actions/runs?branch=data/refresh&status=action_required"*) echo '{"workflow_runs":[{"id":101},{"id":102}]}' ;;
+    "api -X POST repos/uonoko1/gikailog/actions/runs/101/approve") echo ok ;;
+    "api -X POST repos/uonoko1/gikailog/actions/runs/102/approve") echo "forbidden" >&2; exit 1 ;;
     "pr merge 33 --squash --delete-branch") echo merged ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac

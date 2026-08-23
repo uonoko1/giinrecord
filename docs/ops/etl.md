@@ -4,7 +4,7 @@
 
 ```
 06:00 JST schedule / workflow_dispatch(sessions)
-  0. docker build           packages/etl/Dockerfile → seiji-kiroku-etl:ci（GHCR に push しない。レイヤーは type=gha キャッシュ）
+  0. docker build           packages/etl/Dockerfile → gikailog-etl:ci（GHCR に push しない。レイヤーは type=gha キャッシュ）
   1. actions/cache/restore  packages/etl/.cache（key: etl-cache-YYYY-MM-DD、restore-keys で前日以前から復元）
   2. docker run [sessions]  data/ と packages/etl/.cache を bind mount、runner の uid で実行 → data/ を書き、validateDataset が違反を見つけたら非0終了
   3. actions/cache/save     失敗しても保存（if: always）
@@ -57,8 +57,8 @@ ETL_UID=$(id -u) ETL_GID=$(id -g) docker compose -f deploy/docker-compose.etl.ym
 # サイト側の compose（#85）と重ねる場合
 docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.etl.yml run --rm etl 221
 # compose を使わない場合
-docker build -f packages/etl/Dockerfile -t seiji-kiroku-etl .
-docker run --rm --user "$(id -u):$(id -g)" -v "$PWD/data:/app/data" -v "$PWD/packages/etl/.cache:/app/packages/etl/.cache" seiji-kiroku-etl 221
+docker build -f packages/etl/Dockerfile -t gikailog-etl .
+docker run --rm --user "$(id -u):$(id -g)" -v "$PWD/data:/app/data" -v "$PWD/packages/etl/.cache:/app/packages/etl/.cache" gikailog-etl 221
 ```
 
 - `ETL_UID`/`ETL_GID` を省くと 1000:1000（イメージ内の `node`）で動く。ホストの uid が 1000 でないなら必ず渡す（root や別 uid のファイルが data/ に残ると `git add` と次の `pnpm etl` で困る）。CI は `--user "$(id -u):$(id -g)"` で runner の uid に合わせている。

@@ -24,7 +24,7 @@ test("districts.yml: 月 1 回の schedule と workflow_dispatch で動く（日
 
 test("districts.yml: ETL は日次と同じコンテナイメージで districts-cli.ts を走らせ、パイプの失敗を拾う（shell: bash）", () => {
   const block = stepBlock("Run districts ETL");
-  assert.match(block, /seiji-kiroku-etl:ci/);
+  assert.match(block, /gikailog-etl:ci/);
   assert.match(block, /--entrypoint node/);
   assert.match(block, /src\/districts-cli\.ts/);
   assert.match(block, /\| tee etl\.log/);

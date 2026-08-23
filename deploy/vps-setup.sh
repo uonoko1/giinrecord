@@ -3,7 +3,7 @@
 #   ssh sakura-vps 'sudo bash -s <domain>' < deploy/vps-setup.sh
 #
 # What it does (and nothing more):
-#   1. creates the web root /var/www/seiji-kiroku/site — the rsync target of deploy.yml, owned by the
+#   1. creates the web root /var/www/gikailog/site — the rsync target of deploy.yml, owned by the
 #      deploy user, bind-mounted read-only into the web container
 #   2. writes the host nginx server block: proxy_pass http://127.0.0.1:8081 + (certbot) TLS only.
 #      The body is deploy/nginx-host-proxy.conf with DOMAIN substituted
@@ -18,13 +18,13 @@
 set -euo pipefail
 DOMAIN="${1:?usage: vps-setup.sh <domain>}"
 DEPLOY_USER=ubuntu
-SITE_DIR=/var/www/seiji-kiroku/site
-SITE_CONF=/etc/nginx/sites-available/seiji-kiroku.conf
+SITE_DIR=/var/www/gikailog/site
+SITE_CONF=/etc/nginx/sites-available/gikailog.conf
 
-install -d -o "$DEPLOY_USER" -g deploygroup -m 2775 /var/www/seiji-kiroku "$SITE_DIR"
+install -d -o "$DEPLOY_USER" -g deploygroup -m 2775 /var/www/gikailog "$SITE_DIR"
 
-cat > /etc/nginx/conf.d/seiji-kiroku-noip-log.conf <<'CONF'
-# Access-log format WITHOUT the client IP and WITHOUT the user agent (seiji-kiroku, Issue #58).
+cat > /etc/nginx/conf.d/gikailog-noip-log.conf <<'CONF'
+# Access-log format WITHOUT the client IP and WITHOUT the user agent (gikailog, Issue #58).
 log_format noip '- - [$time_local] "$request" $status $body_bytes_sent "$http_referer" "-"';
 CONF
 
@@ -37,7 +37,7 @@ server {
     listen 80;
     listen [::]:80;
     server_name DOMAIN;
-    access_log /var/log/nginx/seiji-kiroku.access.log noip;
+    access_log /var/log/nginx/gikailog.access.log noip;
 
     location / {
         proxy_pass http://127.0.0.1:8081;
@@ -49,7 +49,7 @@ server {
 }
 CONF
 fi
-ln -sfn "$SITE_CONF" /etc/nginx/sites-enabled/seiji-kiroku.conf
+ln -sfn "$SITE_CONF" /etc/nginx/sites-enabled/gikailog.conf
 nginx -t && systemctl reload nginx
 
 cat <<MSG
@@ -57,8 +57,8 @@ host nginx ready: $DOMAIN -> http://127.0.0.1:8081 (web container). Site root: $
 
 Next, as a user WITH docker privileges (not $DEPLOY_USER):
   1. install docker + compose plugin (https://docs.docker.com/engine/install/ubuntu/), if not yet present
-  2. git clone https://github.com/uonoko1/seiji-kiroku.git ~/seiji-kiroku   (only deploy/ is used)
-  3. docker compose -f ~/seiji-kiroku/deploy/docker-compose.yml up -d
+  2. git clone https://github.com/uonoko1/gikailog.git ~/gikailog   (only deploy/ is used)
+  3. docker compose -f ~/gikailog/deploy/docker-compose.yml up -d
   4. curl -sI http://127.0.0.1:8081/ | head -1      # HTTP/1.1 200 once deploy.yml has rsynced a build
 Then DNS A record $DOMAIN -> this host, and: sudo certbot --nginx -d $DOMAIN --redirect
 MSG

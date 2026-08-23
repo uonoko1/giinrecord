@@ -44,7 +44,7 @@ match($0, /^- - \[([0-9]{2})\/([A-Za-z]{3})\/([0-9]{4}):[^\]]*\] "([A-Z]+) ([^ "
   }
   print path "\t" ref
 }
-' self="${ANALYTICS_HOST:-seiji-kiroku.daichisakai.net}" "$@" \
+' self="${ANALYTICS_HOST:-gikailog.jp}" "$@" \
   | sort | uniq -c \
   | awk -v d="$DATE" 'BEGIN { OFS = "\t" } { n = $1; sub(/^ *[0-9]+ /, ""); print d, $0, n }' \
   | sort -t $'\t' -k4,4nr -k2,2 -k3,3

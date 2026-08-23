@@ -24,7 +24,7 @@ describe("FundingSection", () => {
 
   it("支援リンクは SUPPORT_URL（GitHub Sponsors 有効化までリポジトリ URL）を指す", () => {
     render(<FundingSection />);
-    expect(SUPPORT_URL).toBe("https://github.com/uonoko1/seiji-kiroku");
+    expect(SUPPORT_URL).toBe("https://github.com/uonoko1/gikailog");
     expect(screen.getByRole("link", { name: "支援する" })).toHaveAttribute("href", SUPPORT_URL);
   });
 

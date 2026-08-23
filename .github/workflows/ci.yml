@@ -20,7 +20,7 @@ jobs:
       - name: shellcheck + scripts/po tests (docs/ops/board.md)
         run: |
           shellcheck --version | head -2
-          shellcheck -x scripts/po/*.sh scripts/po/test/run.sh scripts/po/test/fake-bin/gh scripts/po/test/*.test.sh
+          shellcheck -x scripts/po/*.sh scripts/po/test/run.sh scripts/po/test/fake-bin/gh scripts/po/test/*.test.sh deploy/*.sh deploy/analytics/*.sh deploy/test/*.sh
           bash scripts/po/test/run.sh
       - run: pnpm lint
       - name: actionlint (all workflows)

@@ -1,13 +1,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 
 // Issue #85: web は nginx コンテナ（docker compose）で配信し、共用 VPS のホスト nginx は proxy_pass + TLS だけにする。
 // 受け入れ基準「セキュリティヘッダ・CSP・キャッシュが現状と同一（diff をテスト）」を、
-// 旧 server block（deploy/nginx-seiji-kiroku.conf, Sprint 1〜5 で本番運用）の値をここに固定して検証する。
+// 旧 server block（deploy/nginx-gikailog.conf, Sprint 1〜5 で本番運用）の値をここに固定して検証する。
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, "../../..");
 const read = (p: string) => readFileSync(resolve(root, p), "utf8");
@@ -25,7 +25,7 @@ const setup = uncommented(read("deploy/vps-setup.sh"));
 const setupCode = setup.replace(/<<'?(\w+)'?\n[\s\S]*?\n\1\n/g, "");
 const ci = read(".github/workflows/ci.yml");
 
-/** 旧 deploy/nginx-seiji-kiroku.conf の add_header 行（順序・値とも同一であること） */
+/** 旧 deploy/nginx-gikailog.conf の add_header 行（順序・値とも同一であること） */
 const EXPECTED_HEADERS = [
   "add_header X-Content-Type-Options nosniff always;",
   "add_header X-Frame-Options DENY always;",
@@ -72,8 +72,8 @@ test("docker-compose: nginx:alpine を 127.0.0.1:8081 にだけ公開し、サ�
   assert.match(compose, /restart: unless-stopped/);
 });
 
-test("docker-compose: 本番は /var/www/seiji-kiroku/site（rsync 先は不変）、ローカルは SITE_DIR で apps/web/build/client", () => {
-  assert.match(compose, /\$\{SITE_DIR:-\/var\/www\/seiji-kiroku\/site\}/);
+test("docker-compose: 本番は /var/www/gikailog/site（rsync 先は不変）、ローカルは SITE_DIR で apps/web/build/client", () => {
+  assert.match(compose, /\$\{SITE_DIR:-\/var\/www\/gikailog\/site\}/);
 });
 
 test("vps-setup.sh: 何もインストールせず docker を実行もしない。ubuntu に docker 権限を与えない", () => {
@@ -84,7 +84,7 @@ test("vps-setup.sh: 何もインストールせず docker を実行もしない�
 
 test("vps-setup.sh: ホスト proxy の server block を書き、web root を作り、docker compose の手順を表示する", () => {
   assert.match(setup, /proxy_pass http:\/\/127\.0\.0\.1:8081;/);
-  assert.match(setup, /\/var\/www\/seiji-kiroku\/site/);
+  assert.match(setup, /\/var\/www\/gikailog\/site/);
   assert.match(setup, /docker compose -f .*docker-compose\.yml up -d/);
   assert.doesNotMatch(setup, /^\s*root \/var\/www/m, "host nginx must not serve the files directly");
 });
@@ -100,10 +100,6 @@ test("vps-setup.sh と nginx-host-proxy.conf の server block は同一（ファ
   );
 });
 
-test("旧 nginx-seiji-kiroku.conf は削除済み", () => {
-  assert.equal(existsSync(resolve(root, "deploy/nginx-seiji-kiroku.conf")), false);
-});
-
 test("vps-setup.sh は shellcheck と bash -n を通る", () => {
   const n = spawnSync("bash", ["-n", resolve(root, "deploy/vps-setup.sh")], { encoding: "utf8" });
   assert.equal(n.status, 0, n.stderr);
@@ -116,6 +112,34 @@ test("ci.yml: docker compose config → up → URL モード smoke（http://127.
   assert.match(ci, /docker compose -f deploy\/docker-compose\.yml config/);
   assert.match(ci, /docker compose -f deploy\/docker-compose\.yml up -d/);
   assert.match(ci, /smoke -- --url http:\/\/127\.0\.0\.1:8081/);
+});
+
+// Issue #119: 改名（seiji-kiroku → gikailog）の追従。パス・conf 名・project name は新名で、go-live.sh は旧環境を移行する。
+test("compose project / パス / nginx conf / 計測 cron はすべて gikailog 名", () => {
+  assert.match(compose, /^name: gikailog$/m);
+  assert.match(setup, /\/etc\/nginx\/sites-available\/gikailog\.conf/);
+  assert.match(setup, /\/etc\/nginx\/conf\.d\/gikailog-noip-log\.conf/);
+  assert.match(read(".github/workflows/deploy.yml"), /\/var\/www\/gikailog\/site\//);
+  const analytics = read("deploy/analytics/vps-analytics-setup.sh");
+  assert.match(analytics, /\/etc\/cron\.d\/gikailog-analytics/);
+  assert.match(analytics, /\/usr\/local\/lib\/gikailog-analytics/);
+  assert.match(analytics, /\/var\/log\/nginx\/gikailog\.access\.log/);
+  for (const f of [
+    "deploy/go-live.sh",
+    "deploy/vps-setup.sh",
+    "deploy/docker-compose.yml",
+    "deploy/nginx-host-proxy.conf",
+    ".github/workflows/deploy.yml",
+  ]) {
+    // go-live.sh は移行元として OLD=seiji-kiroku を 1 箇所だけ持つ
+    const code = uncommented(read(f)).replace(/^OLD=seiji-kiroku$/m, "");
+    assert.doesNotMatch(code, /seiji-kiroku/, `${f} still references the old name`);
+  }
+});
+
+test("go-live.sh: 旧パス移行のテスト（deploy/test/go-live.test.sh）が通る", () => {
+  const r = spawnSync("bash", [resolve(root, "deploy/test/go-live.test.sh")], { encoding: "utf8" });
+  assert.equal(r.status, 0, r.stdout + r.stderr);
 });
 
 test("docker compose config が通る（docker がある環境のみ）", () => {
