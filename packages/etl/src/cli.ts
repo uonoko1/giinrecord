@@ -18,7 +18,7 @@ import { attendancePageUrl, fetchCommitteeAttendance } from "./sources/kokkai-at
 import { matchAttendance, type MatchedAttendance, type UnmatchedAttendee } from "./match-attendance.ts";
 import { buildDataset, mergeRosters, rosterSessionsFor, type Roster } from "./aggregate.ts";
 import { dietAssemblies, readSessionsOnDisk, validateDataset, writeDataset } from "./dataset.ts";
-import { planSessions, readCarried } from "./sessions.ts";
+import { lostVoteMatches, planSessions, readCarried, shouldFetchShugiinSpeeches } from "./sessions.ts";
 
 /**
  * ETL entry point. S1: House of Councillors members and roll-call votes. S2: plenary speeches (国会会議録API; 参院、#73 から衆院も).
@@ -97,6 +97,17 @@ for (const session of targets) {
 // 引き継ぐ回次の採決（前回出力）。名簿は毎回取り直すので、票の氏名・会派を現行名簿で再突合する。
 for (const rc of carried.rollCalls) addRollCall(rc);
 if (carried.rollCalls.length) console.log(`carried: ${carried.rollCalls.length} roll calls from sessions ${plan.carried.join(" ")} re-matched against current rosters`);
+// 引き継いだ採決の再突合で memberId の付いた票が前回出力より減ったら、名簿の取り漏れ（回次の飛びで必要な名簿を
+// 取得していない等）の兆候。壊れた出力（票が unmatched に落ちた members/・rollcalls/）を書かずにここで止める（#103 レビュー）。
+{
+  const lost = lostVoteMatches(carried.matchedVotes, rollCalls);
+  if (lost.length) {
+    const votes = lost.reduce((n, l) => n + l.before - l.after, 0);
+    console.error(`carried roll calls lost matched votes after re-matching (missing roster session?): ${lost.length} roll calls, ${votes} votes`);
+    for (const l of lost) console.error(`  ${l.id}: ${l.before} -> ${l.after} votes with memberId`);
+    process.exit(1);
+  }
+}
 // 可決/否決は投票結果ページに無いので、参院 議案情報（事実）から取り、採決に紐づける（Issue #26）。引き継ぐ回次の分は前回出力の result から戻す。
 const allBills: Bill[] = [];
 for (const session of targets) {
@@ -163,13 +174,17 @@ for (const session of targets) {
   speeches.push(...matched.speeches);
   unmatched.push(...matched.unmatched);
 }
-{
+// memberSession が carried のとき（過去回次だけの手動実行）は取得しない: readCarried がその回次の speech 行を引き継ぐので、
+// 取得すると同じ speechId が2行になる（validateDataset の duplicate speechId 違反。#103 レビュー）。次の日次実行が取り直す。
+if (shouldFetchShugiinSpeeches(plan)) {
   const matched = matchSpeeches(await fetchSpeeches(memberSession, "shugiin"), shugiin.members, memberSession);
   const matchedCount = matched.speeches.filter((s) => s.memberId).length;
   const positioned = matched.speeches.filter((s) => s.memberId && s.position).length;
   console.log(`session ${memberSession}: ${matched.speeches.length} shugiin speeches (${matchedCount} matched, ${positioned} with position; roster covers session ${memberSession} only)`);
   speeches.push(...matched.speeches);
   unmatched.push(...matched.unmatched);
+} else {
+  console.log(`session ${memberSession}: shugiin speeches not fetched (session is carried; carrying previous speech rows instead)`);
 }
 // 委員会出席（Issue #109）: 委員会会議録の冒頭「出席者」欄の「発議者」（参議院側だけ。案件に参法がある会議録だけ）を参院名簿に名寄せし、
 // timeline の attendance 行（「委員会に発議者として出席」）にする。出席した発議者は発議者全員ではないので Bill.submitters / bill 行には決して入れない。
@@ -210,7 +225,7 @@ await writeDataset(DATA, {
       { name: `衆議院 議員一覧（${shugiin.asOf ?? "取得日"}現在）`, url: shugiinMemberListUrl(1), fetchedAt },
       { name: "参議院 本会議投票結果", url: "https://www.sangiin.go.jp/japanese/touhyoulist/", fetchedAt },
       { name: "国会会議録検索システム 検索用API（参議院 本会議）", url: speechPageUrl(memberSession, 1, "sangiin"), fetchedAt },
-      { name: "国会会議録検索システム 検索用API（衆議院 本会議）", url: speechPageUrl(memberSession, 1, "shugiin"), fetchedAt },
+      ...(shouldFetchShugiinSpeeches(plan) ? [{ name: "国会会議録検索システム 検索用API（衆議院 本会議）", url: speechPageUrl(memberSession, 1, "shugiin"), fetchedAt }] : []),
       { name: "国会会議録検索システム 検索用API（参議院 委員会の出席者欄）", url: attendancePageUrl(memberSession), fetchedAt },
       ...targets.map((s) => ({ name: `参議院 議案情報（第${s}回）`, url: billListUrl(s), fetchedAt })),
       ...targets.map((s) => ({ name: `衆議院 議案情報（第${s}回）`, url: shugiinBillListUrl(s), fetchedAt })),

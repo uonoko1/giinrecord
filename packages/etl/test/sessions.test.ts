@@ -4,7 +4,7 @@ import { mkdtemp, mkdir, writeFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Bill, MemberDetail, RollCall, RollCallSummary } from "@seiji-kiroku/shared";
-import { planSessions, readCarried, decisionOfResult } from "../src/sessions.ts";
+import { planSessions, readCarried, decisionOfResult, lostVoteMatches, shouldFetchShugiinSpeeches } from "../src/sessions.ts";
 import { stableJson } from "../src/json.ts";
 
 // Issue #103: 日次 ETL は直近 5 回次（DEFAULT_SESSIONS）だけ取得し、data/ に既にある他の回次（第200〜216回など）は
@@ -73,6 +73,8 @@ describe("readCarried: 前回出力（data/）から引き継ぐ回次の採決�
 
       const carried = await readCarried(dir, [200]);
       assert.deepEqual(carried.rollCalls.map((r) => [r.id, r.votes[0].memberId]), [["200-1204-v001", ""]]);
+      // 再突合の後退検出用に、前回出力で memberId が付いていた票の数を採決ごとに残す（#103 レビュー）
+      assert.deepEqual([...carried.matchedVotes], [["200-1204-v001", 1]]);
       assert.deepEqual([...carried.decisions], [["200-1204-v001", "可決"]]);
       assert.deepEqual(carried.bills.map((b) => b.id), ["200-衆法-1"]);
       assert.deepEqual(carried.entries.map((c) => [c.memberId, c.entry.kind, c.entry.session, (c.entry as { sourceUrl: string }).sourceUrl.includes("kousei/gian")]), [
@@ -90,9 +92,42 @@ describe("readCarried: 前回出力（data/）から引き継ぐ回次の採決�
   test("data/ が空なら全部空", async () => {
     const dir = await mkdtemp(join(tmpdir(), "carried-"));
     try {
-      assert.deepEqual(await readCarried(dir, [200]), { rollCalls: [], decisions: new Map(), bills: [], entries: [], withoutSession: 0 });
+      assert.deepEqual(await readCarried(dir, [200]), { rollCalls: [], decisions: new Map(), matchedVotes: new Map(), bills: [], entries: [], withoutSession: 0 });
     } finally {
       await rm(dir, { recursive: true, force: true });
     }
+  });
+});
+
+describe("lostVoteMatches: 引き継いだ採決の再突合で memberId の付いた票が前回より減っていないか（#103 レビュー）", () => {
+  const rc = (id: string, memberIds: string[]): RollCall => ({
+    id, session: 217, date: "2025-01-24", title: "案件", totals: { total: memberIds.length, yes: memberIds.length, no: 0 },
+    groups: [{ group: "G", size: memberIds.length, yes: memberIds.length, no: 0 }],
+    votes: memberIds.map((m, i) => ({ memberId: m, nameText: `議員 ${i}`, group: "G", value: "賛成" as const })),
+    sourceUrl: `https://www.sangiin.go.jp/japanese/touhyoulist/217/${id}.htm`,
+  });
+
+  test("名簿の取り漏れ（第216回の名簿を取らずに第217回を再突合した等）で票の memberId が減ったら、その採決と前後の件数を返す", () => {
+    const previous = new Map([["217-0124-v001", 2], ["217-0124-v002", 1]]);
+    assert.deepEqual(lostVoteMatches(previous, [rc("217-0124-v001", ["m_1", ""]), rc("217-0124-v002", ["m_2"])]), [
+      { id: "217-0124-v001", before: 2, after: 1 },
+    ]);
+  });
+
+  test("減っていなければ空。今回取得した採決（previous に無い）は対象外。増えるのは正常（名簿が良くなった）", () => {
+    const previous = new Map([["217-0124-v001", 1]]);
+    assert.deepEqual(lostVoteMatches(previous, [rc("217-0124-v001", ["m_1", "m_2"]), rc("221-0605-v001", [""])]), []);
+  });
+});
+
+describe("shouldFetchShugiinSpeeches: 衆院本会議の発言を今回取得するか（#103 レビュー）", () => {
+  // 衆院名簿が覆う回次（memberSession = max(all)）が carried のときに取得すると、
+  // readCarried が引き継ぐ同じ回次の speech 行と重複する（同じ speechId が2行）ので取得しない。
+  test("日次実行（memberSession が取得対象）は取得する", () => {
+    assert.equal(shouldFetchShugiinSpeeches(planSessions([], [200, 201, 217, 218, 219, 220, 221])), true);
+    assert.equal(shouldFetchShugiinSpeeches(planSessions([221], [])), true);
+  });
+  test("過去回次だけの手動実行（memberSession が carried）は取得せず、前回出力の speech 行を引き継ぐ", () => {
+    assert.equal(shouldFetchShugiinSpeeches(planSessions([200, 201], [217, 218, 219, 220, 221])), false);
   });
 });

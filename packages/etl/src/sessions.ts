@@ -28,6 +28,8 @@ export interface Carried {
   rollCalls: RollCall[];
   /** 採決 id → 議案情報の審議結果（原文）。rollcalls/index.json の result から戻す（decisionOfResult）。 */
   decisions: Map<string, string>;
+  /** 採決 id → 前回出力で memberId が付いていた票の数。再突合の後退（名簿の取り漏れ）を cli が検出する（lostVoteMatches）。 */
+  matchedVotes: Map<string, number>;
   /** data/bills/ の全議案。継続審議の議案は提出回次（carried）の下にあっても今回の回次の一覧に載るので、全部を先に入れて取得分で上書きする。 */
   bills: Bill[];
   /** carried の回次の timeline 行のうち、ファイルから作り直せないもの（speech / question / attendance / 参法の bill 行）。 */
@@ -47,9 +49,11 @@ const SANGIIN_BILL_SOURCE = /^https:\/\/www\.sangiin\.go\.jp\/japanese\/joho1\/k
 export async function readCarried(dir: string, carried: readonly number[]): Promise<Carried> {
   const set = new Set(carried);
   const rollCalls: RollCall[] = [];
+  const matchedVotes = new Map<string, number>();
   for (const session of carried) {
     for (const file of await listJson(join(dir, "rollcalls", String(session)))) {
       const rc = JSON.parse(await readFile(file, "utf8")) as RollCall;
+      matchedVotes.set(rc.id, rc.votes.filter((v) => v.memberId).length);
       rollCalls.push({ ...rc, votes: rc.votes.map((v) => ({ ...v, memberId: "" })) });
     }
   }
@@ -74,7 +78,32 @@ export async function readCarried(dir: string, carried: readonly number[]): Prom
       if (set.has(entry.session)) entries.push({ memberId: row.id, entry });
     }
   }
-  return { rollCalls, decisions, bills, entries, withoutSession };
+  return { rollCalls, decisions, matchedVotes, bills, entries, withoutSession };
+}
+
+/**
+ * 引き継いだ採決の再突合（現行名簿）で memberId の付いた票が前回出力（matchedVotes）より減った採決（#103 レビュー）。
+ * 名簿は毎回取り直すので、前回紐づいた票は今回も紐づくはず。減るのは名簿の取り漏れ（回次の飛びで
+ * rosterSessionsFor が必要な名簿を返さなかった等）の兆候なので、cli は空でなければ出力せずに非0終了する。
+ */
+export function lostVoteMatches(previous: ReadonlyMap<string, number>, rollCalls: readonly RollCall[]): { id: string; before: number; after: number }[] {
+  const lost: { id: string; before: number; after: number }[] = [];
+  for (const rc of rollCalls) {
+    const before = previous.get(rc.id);
+    if (before === undefined) continue;
+    const after = rc.votes.filter((v) => v.memberId).length;
+    if (after < before) lost.push({ id: rc.id, before, after });
+  }
+  return lost;
+}
+
+/**
+ * 衆院本会議の発言を今回取得するか（#103 レビュー）。衆院名簿が覆う回次（memberSession = max(all)）が取得対象（targets）のときだけ。
+ * memberSession が carried のとき（過去回次だけの手動実行）は readCarried がその回次の speech 行を引き継ぐので、
+ * 取得すると同じ speechId が2行になる。引き継ぎに任せて取得しない（次の日次実行が取り直す）。
+ */
+export function shouldFetchShugiinSpeeches(plan: SessionPlan): boolean {
+  return plan.targets.includes(Math.max(...plan.all));
 }
 
 function isCarriable(e: TimelineEntry): boolean {

@@ -19,11 +19,18 @@ export interface Aggregated {
  * 回次 targets の採決・発言を突合するのに取得する名簿の回次。
  * 名簿ページ giin/{N}/giin.htm は第N回終了後のある時点（概ね次の回次の直前）の名簿で、
  * 第N回の会期中に退任した議員（通常選挙・辞職）を含まない（第217回の名簿は令和7年7月31日現在）。
- * 第N回中の議員は「N-1 の名簿 ∪ N の名簿」で覆えるので、最小回次の1つ前も取る。
+ * 第N回中の議員は「N-1 の名簿 ∪ N の名簿」で覆えるので、各回次の1つ前も取る。
+ * 回次は飛び得る（日次の直近 5 回次＋手動で足した第200〜201回など）ので、最小回次だけでなく
+ * 連続するブロックごとに「ブロック先頭の1つ前」を足す（第217回の再突合には第216回の名簿が要る。#103 レビュー）。
  */
 export function rosterSessionsFor(targets: readonly number[]): number[] {
-  const sorted = [...new Set(targets)].sort((a, b) => a - b);
-  return sorted.length ? [sorted[0] - 1, ...sorted] : [];
+  const set = new Set(targets);
+  const out = new Set<number>();
+  for (const s of set) {
+    if (!set.has(s - 1)) out.add(s - 1);
+    out.add(s);
+  }
+  return [...out].sort((a, b) => a - b);
 }
 
 /**
