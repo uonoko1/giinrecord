@@ -25,7 +25,7 @@ export function VerifySection() {
       </div>
       <p className="note">
         データ一括取得は data/ 全体（JSON・LICENSE・README）の zip で、ビルドのたびに作り直されます。ライセンスは CC BY 4.0。利用の際は「議会ログ
-        (seiji-kiroku)」と一次資料（参議院・衆議院・国立国会図書館）を出典として明記してください。個人・非営利・商用いずれも同じ条件です。
+        (gikailog)」と一次資料（参議院・衆議院・国立国会図書館）を出典として明記してください。個人・非営利・商用いずれも同じ条件です。
       </p>
     </section>
   );

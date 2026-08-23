@@ -6,9 +6,9 @@ etl_handler() {
   handler <<EOF
 handle() {
   case "\$*" in
-    "run list --workflow etl.yml"*) echo '[{"databaseId":1,"status":"completed","conclusion":"$1","createdAt":"2026-08-23T21:00:00Z","url":"https://github.com/uonoko1/seiji-kiroku/actions/runs/1"}]' ;;
+    "run list --workflow etl.yml"*) echo '[{"databaseId":1,"status":"completed","conclusion":"$1","createdAt":"2026-08-23T21:00:00Z","url":"https://github.com/uonoko1/gikailog/actions/runs/1"}]' ;;
     "pr list --head data/refresh"*) echo '$2' ;;
-    "run list --workflow deploy.yml"*) echo '[{"databaseId":2,"status":"completed","conclusion":"$3","createdAt":"2026-08-23T21:20:00Z","url":"https://github.com/uonoko1/seiji-kiroku/actions/runs/2"}]' ;;
+    "run list --workflow deploy.yml"*) echo '[{"databaseId":2,"status":"completed","conclusion":"$3","createdAt":"2026-08-23T21:20:00Z","url":"https://github.com/uonoko1/gikailog/actions/runs/2"}]' ;;
     *) echo "unexpected: \$*" >&2; exit 99 ;;
   esac
 }
@@ -16,7 +16,7 @@ EOF
 }
 
 t_etl_all_good() {
-  local h; h=$(etl_handler success '[{"number":80,"state":"MERGED","mergedAt":"2026-08-23T21:15:00Z","url":"https://github.com/uonoko1/seiji-kiroku/pull/80"}]' success)
+  local h; h=$(etl_handler success '[{"number":80,"state":"MERGED","mergedAt":"2026-08-23T21:15:00Z","url":"https://github.com/uonoko1/gikailog/pull/80"}]' success)
   run_script "$h" etl-verify.sh
   assert_eq 0 "$STATUS" "exit status: $ERR"
   assert_contains "$OUT" "ETL" "ETL row"
