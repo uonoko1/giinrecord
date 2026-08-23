@@ -16,18 +16,18 @@ const feb20 = await parseVotePdf(bytes("1038136.pdf"));
 const JUN = { sessionId: "2026-06", sessionLabel: "令和8年6月定例会", pdfUrl: "https://www.pref.tokushima.lg.jp/file/attachment/1064407.pdf" };
 const FEB = { sessionId: "2026-02", sessionLabel: "令和8年2月定例会" };
 
-test("mapLegend: ○（起立（賛成）した者）→賛成、議長・退席・欠席・除斥→投票なし、●（起立しなかった者）は凡例が反対と言っていないので mapped 無し。〇（U+3007）は原文のまま ○ の凡例で読む", () => {
+test("mapLegend: 議長・退席・欠席・除斥→投票なし。○（委員会審査結果又は議長宣告に起立（賛成）した者）は「議案への賛成」ではなく「委員会審査結果／議長宣告への起立」なので mapped 無し（請願の不採択に ○ なら請願を退けた側）。● も同じく mapped 無し。〇（U+3007）は原文のまま ○ の凡例で読む", () => {
   const yes = "委員会審査結果又は議長宣告に起立（賛成）した者";
   const legend = { "○": yes, "議": "議長", "退": "退席", "除": "除斥", "欠": "欠席", "●": "委員会審査結果又は議長宣告に起立しなかった者" };
-  assert.deepEqual(mapLegend("○", legend), { raw: "○", legend: yes, mapped: "賛成" });
-  assert.deepEqual(mapLegend("〇", legend), { raw: "〇", legend: yes, mapped: "賛成" });
+  assert.deepEqual(mapLegend("○", legend), { raw: "○", legend: yes });
+  assert.deepEqual(mapLegend("〇", legend), { raw: "〇", legend: yes });
   assert.deepEqual(mapLegend("議", legend), { raw: "議", legend: "議長", mapped: "投票なし" });
   assert.deepEqual(mapLegend("退", legend), { raw: "退", legend: "退席", mapped: "投票なし" });
   assert.deepEqual(mapLegend("欠", legend), { raw: "欠", legend: "欠席", mapped: "投票なし" });
   assert.deepEqual(mapLegend("除", legend), { raw: "除", legend: "除斥", mapped: "投票なし" });
   assert.deepEqual(mapLegend("●", legend), { raw: "●", legend: "委員会審査結果又は議長宣告に起立しなかった者" });
   assert.deepEqual(mapLegend("不明", legend), { raw: "不明", legend: "抽出不能" });
-  // 凡例の文面が違えば（「賛成」と書いていない ○）mapped を付けない。凡例に無い値は例外
+  // 凡例の文面が違っても ○ に mapped は付けない。凡例に無い値は例外
   assert.deepEqual(mapLegend("○", { "○": "起立した者" }), { raw: "○", legend: "起立した者" });
   assert.throws(() => mapLegend("×", legend), /not in the legend/);
 });
@@ -52,14 +52,18 @@ test("toLocalRollCalls: id は {assemblyId}-{sessionId}-{採決日}-{種別}-{�
   assert.equal(first.page, 1);
   assert.equal(first.sourceUrl, JUN.pdfUrl);
   assert.equal(first.votes.length, 36);
-  assert.deepEqual(first.votes[0], { memberId: "p_36_kami", nameText: "嘉見 博之", group: "徳島県議会自由民主党", value: { raw: "○", legend: "委員会審査結果又は議長宣告に起立（賛成）した者", mapped: "賛成" } });
+  assert.deepEqual(first.votes[0], { memberId: "p_36_kami", nameText: "嘉見 博之", group: "徳島県議会自由民主党", value: { raw: "○", legend: "委員会審査結果又は議長宣告に起立（賛成）した者" } });
   assert.deepEqual(first.votes[25], { memberId: "p_36_ikawa", nameText: "井川 龍二", group: "自由民主党県民会議", value: { raw: "議", legend: "議長", mapped: "投票なし" } });
   assert.deepEqual(first.votes[29].value, { raw: "●", legend: "委員会審査結果又は議長宣告に起立しなかった者" });
-  assert.deepEqual(first.votes[7].value, { raw: "〇", legend: "委員会審査結果又は議長宣告に起立（賛成）した者", mapped: "賛成" });
+  assert.deepEqual(first.votes[7].value, { raw: "〇", legend: "委員会審査結果又は議長宣告に起立（賛成）した者" });
   // 節ごとの凡例: 請願の「退」はその節の凡例（退席）で読む
   const petition = rollCalls.find((rc) => rc.id === "pref-36-2026-06-20260703-請願-第19号")!;
   assert.deepEqual(petition.votes[17].value, { raw: "退", legend: "退席", mapped: "投票なし" });
   assert.equal(petition.committeeResult, "不採択");
+  // 不採択の請願で ○ は「不採択に起立」＝請願を退けた側。賛成と出さない（mapped 無し）
+  const petitionYes = petition.votes.find((v) => v.value.raw === "○" || v.value.raw === "〇")!;
+  assert.equal(petitionYes.value.mapped, undefined);
+  assert.ok(petition.votes.every((v) => v.value.mapped === undefined || v.value.mapped === "投票なし"));
   assert.deepEqual(rollCalls.map((rc) => rc.kind).filter((k, i, a) => a.indexOf(k) === i), ["知事提出議案", "議員提出議案", "請願"]);
   assert.equal(rollCalls.find((rc) => rc.id === "pref-36-2026-06-20260703-議員提出議案-第1号")?.committeeResult, "-");
 });

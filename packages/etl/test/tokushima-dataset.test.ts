@@ -58,7 +58,7 @@ test("buildLocalAssembly（徳島）: 2 会期 105 採決、36 人全員に time
   assert.equal(entry.sessionLabel, "令和8年6月定例会");
   assert.equal(entry.method, undefined);
   assert.equal(entry.result, "可決");
-  assert.deepEqual(entry.vote, { raw: "○", legend: "委員会審査結果又は議長宣告に起立（賛成）した者", mapped: "賛成" });
+  assert.deepEqual(entry.vote, { raw: "○", legend: "委員会審査結果又は議長宣告に起立（賛成）した者" }); // ○ は委員会審査結果への起立なので mapped 無し
   // 会派で割れた採決（2月20日 動議）: ● は mapped 無しで raw と legend だけ
   const motion = kami.timeline.find((e) => e.rollCallId === "pref-36-2026-02-20260220-動議-無番号1")!;
   assert.deepEqual(motion.vote, { raw: "●", legend: "委員会審査結果又は議長宣告に起立しなかった者" });
