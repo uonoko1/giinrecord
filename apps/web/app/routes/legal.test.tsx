@@ -89,9 +89,9 @@ describe("プライバシーポリシーの内容", () => {
     expect(screen.getByRole("link", { name: "GitHub Issues" })).toHaveAttribute("href", "https://github.com/uonoko1/gikailog/issues");
   });
 
-  it("フォントの第三者送信（Google）を現状のとおり書く（#168 完了後に外す）", () => {
+  it("第三者送信の注記が無い（フォントは自サイト配信 #168）", () => {
     const { container } = renderPage(Privacy);
-    expect(container.textContent).toContain("Google");
+    expect(container.textContent).not.toContain("Google");
     expect(container.textContent).toContain("フォント");
   });
 });
