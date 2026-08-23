@@ -30,6 +30,13 @@ describe("Home", () => {
     }
   });
 
+  it("サイト共通フッターに利用規約・プライバシーポリシーのリンクがある（#167）", () => {
+    renderHome();
+    const footer = screen.getByRole("contentinfo");
+    expect(within(footer).getByRole("link", { name: "利用規約" })).toHaveAttribute("href", "/terms");
+    expect(within(footer).getByRole("link", { name: "プライバシーポリシー" })).toHaveAttribute("href", "/privacy");
+  });
+
   it("検索入口は /members へ向く", () => {
     renderHome();
     expect(screen.getByRole("link", { name: /議員一覧/ })).toHaveAttribute("href", "/members");
