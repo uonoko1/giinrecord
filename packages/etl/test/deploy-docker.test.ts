@@ -54,7 +54,7 @@ test("site.conf: プリレンダリング + SPA fallback の try_files と gzip 
   assert.match(siteConf, /gzip_types text\/css application\/javascript application\/json image\/svg\+xml;/);
 });
 
-test("ホスト nginx は proxy_pass http://127.0.0.1:8080 だけで、静的配信もヘッダ付与もしない", () => {
+test("ホスト nginx は proxy_pass http://127.0.0.1:8081 だけで、静的配信もヘッダ付与もしない", () => {
   const code = uncommented(hostProxy);
   assert.match(code, /proxy_pass http:\/\/127\.0\.0\.1:8080;/);
   assert.doesNotMatch(code, /^\s*root\s/m);
@@ -62,10 +62,10 @@ test("ホスト nginx は proxy_pass http://127.0.0.1:8080 だけで、静的配
   assert.doesNotMatch(code, /try_files/);
 });
 
-test("docker-compose: nginx:alpine を 127.0.0.1:8080 にだけ公開し、サイトは読み取り専用 bind mount、healthcheck と restart あり", () => {
+test("docker-compose: nginx:alpine を 127.0.0.1:8081 にだけ公開し、サイトは読み取り専用 bind mount、healthcheck と restart あり", () => {
   assert.match(compose, /image: nginx:[\d.]*-?alpine/);
-  assert.match(compose, /"127\.0\.0\.1:8080:80"/);
-  assert.doesNotMatch(compose, /"0\.0\.0\.0:|^\s*- "8080:80"/m);
+  assert.match(compose, /"127\.0\.0\.1:8081:80"/);
+  assert.doesNotMatch(compose, /"0\.0\.0\.0:|^\s*- "8081:80"/m);
   assert.match(compose, /:\/usr\/share\/nginx\/html:ro/);
   assert.match(compose, /\.\/nginx\/site\.conf:\/etc\/nginx\/conf\.d\/default\.conf:ro/);
   assert.match(compose, /healthcheck:/);
@@ -112,7 +112,7 @@ test("vps-setup.sh は shellcheck と bash -n を通る", () => {
   assert.equal(sc.status, 0, sc.stdout);
 });
 
-test("ci.yml: docker compose config → up → URL モード smoke（http://127.0.0.1:8080）のジョブがある", () => {
+test("ci.yml: docker compose config → up → URL モード smoke（http://127.0.0.1:8081）のジョブがある", () => {
   assert.match(ci, /docker compose -f deploy\/docker-compose\.yml config/);
   assert.match(ci, /docker compose -f deploy\/docker-compose\.yml up -d/);
   assert.match(ci, /smoke -- --url http:\/\/127\.0\.0\.1:8080/);
