@@ -3,7 +3,7 @@
  * 実ファイルシステムは使わず、Map で表した偽のビルドディレクトリに対して検証する。
  */
 import { describe, expect, it } from "vitest";
-import { checkBuild, checkDistrictData, checkMemberData, checkSitemap, extractInternalHrefs, resolveHrefTarget, formatReport, type BuildFiles } from "./smoke";
+import { checkBrandAssets, checkBuild, checkDistrictData, checkMemberData, checkSitemap, extractInternalHrefs, resolveHrefTarget, formatReport, type BuildFiles } from "./smoke";
 
 const html = (links: string[]) => `<html><body>${links.map((l) => `<a href="${l}">x</a>`).join("")}</body></html>`;
 
@@ -186,5 +186,17 @@ describe("checkDistrictData（#112: 郵便番号の分割ファイル）", () =>
 
   it("data/districts/ が無いときは何も要求しない", () => {
     expect(checkDistrictData(fakeBuild({ "index.html": "" }), { memberIds: null, rollCalls: null })).toEqual({ checkedFiles: 0, failures: [] });
+  });
+});
+
+describe("checkBrandAssets（#129: favicon / manifest / og:image の存在）", () => {
+  const all = ["favicon.svg", "favicon.ico", "icon-192.png", "icon-512.png", "apple-touch-icon.png", "site.webmanifest", "og-image.png", "logo.svg"];
+  it("すべて揃っていれば失敗なし", () => {
+    const files: BuildFiles = new Map(all.map((f) => [f, ""]));
+    expect(checkBrandAssets(files)).toEqual({ checkedFiles: all.length, failures: [] });
+  });
+  it("欠けたファイルを一つずつ報告する", () => {
+    const files: BuildFiles = new Map(all.filter((f) => f !== "favicon.ico" && f !== "og-image.png").map((f) => [f, ""]));
+    expect(checkBrandAssets(files).failures).toEqual(["missing brand asset: favicon.ico", "missing brand asset: og-image.png"]);
   });
 });

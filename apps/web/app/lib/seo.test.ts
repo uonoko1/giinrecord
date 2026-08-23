@@ -56,3 +56,18 @@ describe("seoMeta", () => {
     expect(t).toContainEqual({ property: "og:url", content: "/" });
   });
 });
+
+describe("og:image（#129）", () => {
+  it("origin 付きの絶対 URL で 1200×630 の og-image.png を指し、twitter:card は summary_large_image", () => {
+    const tags = seoMeta({ description: "d", pathname: "/", origin: "https://example.test" });
+    expect(tags).toContainEqual({ property: "og:image", content: "https://example.test/og-image.png" });
+    expect(tags).toContainEqual({ property: "og:image:width", content: "1200" });
+    expect(tags).toContainEqual({ property: "og:image:height", content: "630" });
+    expect(tags).toContainEqual({ name: "twitter:card", content: "summary_large_image" });
+  });
+
+  it("origin が無ければ site-relative", () => {
+    const tags = seoMeta({ description: "d", pathname: "/about", origin: "" });
+    expect(tags).toContainEqual({ property: "og:image", content: "/og-image.png" });
+  });
+});
