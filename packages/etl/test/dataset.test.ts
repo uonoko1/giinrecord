@@ -263,7 +263,7 @@ describe("writeDataset / validateDataset: docs/DATA_CONTRACT.md の不変条件"
   });
 
   test("attendance 行（委員会出席の発議者、#109）: estimated は false・role は 発議者・sourceUrl は会議録（kokkai.ndl.go.jp/txt/）・参院議員だけ。counts には数えない", async () => {
-    const attendance = (extra: Record<string, unknown> = {}) => ({ kind: "attendance", estimated: false, date: "2026-07-09", meetingId: "122115007X01420260709_000", meeting: "農林水産委員会 第14号", role: "発議者", bills: [{ billId: "221-参法-11", title: "法律案" }], sourceUrl: "https://kokkai.ndl.go.jp/txt/122115007X01420260709/0", ...extra });
+    const attendance = (extra: Record<string, unknown> = {}) => ({ kind: "attendance", estimated: false, date: "2026-07-30", meetingId: "122115007X01420260709_000", meeting: "農林水産委員会 第14号", role: "発議者", bills: [{ billId: "221-参法-11", title: "法律案" }], sourceUrl: "https://kokkai.ndl.go.jp/txt/122115007X01420260709/0", ...extra });
     patch<{ timeline: unknown[] }>(dir, "members/m_007006.json", (d) => ({ ...d, timeline: [attendance(), ...d.timeline] }));
     assert.deepEqual(await validateDataset(dir), []);
     patch<{ timeline: unknown[] }>(dir, "members/m_007006.json", (d) => ({ ...d, timeline: [attendance({ estimated: true }), ...d.timeline.slice(1)] }));
