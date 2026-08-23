@@ -10,5 +10,12 @@
   "kind": "national",
   "name": "衆議院",
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_annai.nsf/html/statics/syu/1giin.htm"
+ },
+ {
+  "id": "pref-04",
+  "kind": "prefectural",
+  "name": "宮城県議会",
+  "prefCode": "04",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/meibo/index.html"
  }
 ]

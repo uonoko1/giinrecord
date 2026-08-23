@@ -1,0 +1,2424 @@
+{
+ "asOf": "2026-04-23",
+ "assemblyId": "pref-04",
+ "counts": {
+  "rollcalls": 160
+ },
+ "current": true,
+ "district": "青葉",
+ "group": "公明党県議団",
+ "id": "p_04_nobuyuki",
+ "kana": "えんどう のぶゆき",
+ "name": "遠藤 伸幸",
+ "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/nobuyuki.html",
+ "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html",
+ "terms": [
+  {
+   "asOf": "2026-04-23",
+   "district": "青葉",
+   "group": "公明党県議団"
+  }
+ ],
+ "timeline": [
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-意見書案-1",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "地方税財源の充実確保を求める意見書",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-意見書案-2",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "地方の福祉人材確保の取組に向けた財政措置を求める意見書",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-意見書案-3",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "太陽光発電設備の適正な廃棄処理及びリサイクル推進に関する意見書",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-意見書案-4",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "公立学校における給食の質向上と学校給食費の負担軽減策の拡充を求める意見書",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-意見書案-5",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "授業料以外の学校教育費の保護者負担軽減を求める意見書",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-意見書案-6",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "自衛官及び退職自衛官の処遇改善等の促進に関する意見書",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-意見書案-7",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "皇室の伝統に基づく安定的皇位継承等の国会議論の促進を求める意見書",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-決議案-無番号1",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "北朝鮮による日本人拉致問題に対する理解を深めるための広報啓発を推進する決議",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-発議案-2",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "宮城県議会会議規則の一部を改正する規則",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-発議案-3",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "宮城県議会の保有する情報の公開に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-1",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "令和８年度宮城県一般会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-10",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "令和８年度宮城県土地取得特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-11",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "令和８年度宮城県港湾整備事業特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-12",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "令和８年度宮城県水道用水供給事業会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-13",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "令和８年度宮城県工業用水道事業会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-14",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "令和８年度宮城県地域整備事業会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-15",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "令和８年度宮城県流域下水道事業会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-16",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "地域未来基金条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-17",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "宮城県立劇場条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-18",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "職員定数条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-19",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "会計年度任用職員の給与及び費用弁償に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-2",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "令和８年度宮城県公債費特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-20",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "県議会等に出頭した関係人等に対する実費弁償に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-21",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "職員の育児休業等に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-22",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "職員の勤務時間、休暇等に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-23",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "職員の特殊勤務手当に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-24",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "公文書館条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-25",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "宮城県公告式条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-26",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "行政手続条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-27",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "情報公開条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-28",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "公益認定等委員会条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-29",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "各種使用料及び手数料並びに各種利用料金の基準額等の改定等に関する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-3",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "令和８年度宮城県母子父子寡婦福祉資金特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-30",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "手数料条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-31",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "みやぎ食の安全安心推進条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-32",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "食品衛生法施行条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-33",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "化製場等に関する法律施行条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-34",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "障害者体育施設条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-35",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "福祉型障害児入所施設条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-36",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "医薬品、医療機器等の品質、有効性及び安全性の確保等に関する法律施行条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-37",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "国民健康保険法に基づく国民健康保険事業費納付金の徴収に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-38",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "道路占用料等条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-39",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "宮城県建築審査会条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-4",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "令和８年度宮城県国民健康保険特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-40",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "学校職員の勤務時間、休暇等に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-41",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "県立学校条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-42",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "美術館条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-43",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "歴史博物館条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-44",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "県行政に係る基本的な計画の変更について（宮城県国土利用計画）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-45",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "食の安全安心の確保に関する基本的な計画の策定について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-46",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "県行政に係る基本的な計画の策定について（宮城県消費者施策推進基本計画）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-47",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "文化芸術振興ビジョンの策定について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-48",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "男女共同参画の推進に関する基本的な計画の策定について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-49",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "民間非営利活動の促進に関する基本的な計画の策定について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-5",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "令和８年度宮城県中小企業高度化資金特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-50",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "安全・安心まちづくりに関する基本計画の策定について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-51",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "青少年の健全な育成に関する基本計画の策定について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-52",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "おおむね10年を期間とする食、農業及び農村の振興に関する基本的な計画の変更について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-53",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "水産業の振興に関する基本的な計画の変更について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-54",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "包括外部監査契約の締結について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-55",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "地方独立行政法人宮城県立こども病院が作成した業務運営に関する目標を達成するための計画の認可について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-56",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "令和８年度市町村受益負担金について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "承認",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-57",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "専決処分の承認を求めることについて（選挙長等の報酬及び費用弁償条例の一部を改正する条例）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "承認",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-58",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "専決処分の承認を求めることについて（令和７年度宮城県一般会計補正予算）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-59",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "令和７年度宮城県一般会計補正予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-6",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "令和８年度宮城県農業改良資金特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-60",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "令和７年度宮城県公債費特別会計補正予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-61",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "令和７年度宮城県母子父子寡婦福祉資金特別会計補正予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-62",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "令和７年度宮城県国民健康保険特別会計補正予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-63",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "令和７年度宮城県中小企業高度化資金特別会計補正予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-64",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "令和７年度宮城県農業改良資金特別会計補正予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-65",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "令和７年度宮城県沿岸漁業改善資金特別会計補正予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-66",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "令和７年度宮城県林業・木材産業改善資金特別会計補正予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-67",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "令和７年度宮城県県有林特別会計補正予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-68",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "令和７年度宮城県土地取得特別会計補正予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-69",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "令和７年度宮城県港湾整備事業特別会計補正予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-7",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "令和８年度宮城県沿岸漁業改善資金特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-70",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "令和７年度宮城県水道用水供給事業会計補正予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-71",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "令和７年度宮城県工業用水道事業会計補正予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-72",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "令和７年度宮城県地域整備事業会計補正予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-73",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "令和７年度宮城県流域下水道事業会計補正予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-74",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "高等学校等教育改革推進基金条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-75",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "事務処理の特例に関する条例の一部を改正する条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-76",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "一時保護施設の設備及び運営に関する基準を定める条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-77",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "緊急雇用創出事業臨時特例基金条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-78",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "和解及び損害賠償の額の決定について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-79",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "和解及び損害賠償の額の決定について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-8",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "令和８年度宮城県林業・木材産業改善資金特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-80",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "あっせんの申立てについて",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-81",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "工事請負契約の締結について（（仮称）高等技術専門校本館・３号館新築工事）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-82",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "工事請負契約の締結について（（仮称）高等技術専門校４号館新築工事）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-83",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "工事請負変更契約の締結について（（仮称）高等技術専門校１・２号館新築工事）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-84",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "工事請負変更契約の締結について（仙台高等技術専門校本館等解体工事）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-85",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "工事請負変更契約の締結について（川内沢ダム本体築造工事）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-86",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "工事請負変更契約の締結について（漆沢ダム法面災害復旧工事）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-87",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "工事請負変更契約の締結について（渋井川排水機場建設工事）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-88",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "工事請負変更契約の締結について（旧笊川排水機場機械設備工事）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-89",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "工事請負変更契約の締結について（川内沢ダム管理用制御処理設備等工事）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-9",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "令和８年度宮城県県有林特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-90",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "工事請負変更契約の締結について（都市計画道路小池石生線末広町道路改築工事）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-91",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "工事請負変更契約の締結について（宮城県築館高等学校新第２グラウンド整備工事）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-92",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "工事請負変更契約の締結について（大崎地区（東部ブロック）職業教育拠点校（仮称）校舎等新築工事）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-93",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "権利の放棄について（医学生修学資金貸付金に係る債権）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-94",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "権利の放棄について（心身障害者扶養共済制度の滞納掛金に係る債権）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-95",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "権利の放棄について（中小企業等グループ施設等復旧整備補助金に係る債権）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-96",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "権利の放棄について（不徴収税額に相当する金額の支払請求に係る債権）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-97",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "令和７年度市町村受益負担金について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-18",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260318-知事提出議案-98",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "令和７年度宮城県一般会計補正予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-04",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "同意",
+   "rollCallId": "pref-04-399-20260304-知事提出議案-99",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "教育委員会教育長の任命につき同意を求めることについて",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-02-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-399-20260217-発議案-1",
+   "sessionLabel": "令和8年2月定例会（第399回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+   "title": "県議会議員の議員報酬等に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-意見書案-11",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "脳脊髄液漏出症患者の救済を求める意見書",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-意見書案-12",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "インターネット上の誹謗中傷対策の強化を求める意見書",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-意見書案-13",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "幼児教育の充実及び私立幼稚園・認定こども園への支援拡充を求める意見書",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-発議案-8",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "県議会議員の議員報酬等に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-132",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "令和７年度宮城県一般会計補正予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-133",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "手数料条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-134",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "宮城県県税条例等の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-135",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "事務処理の特例に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-136",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "就学前の子どもに関する教育、保育等の総合的な提供の推進に関する法律施行条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-137",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "児童福祉施設の設備及び運営に関する基準を定める条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-138",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "簡易給水施設等の規制に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-139",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "建築基準条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-140",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "文化財保護条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-141",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "当せん金付証票の発売限度額について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-142",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "指定管理者の指定について（宮城県こもれびの森）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-143",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "指定管理者の指定について（宮城県さくらハイツ及び宮城県コスモスハウス）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-144",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "指定管理者の指定について（宮城県啓佑学園及び宮城県第二啓佑学園）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-145",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "指定管理者の指定について（宮城県七ツ森希望の家）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-146",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "指定管理者の指定について（小鯖漁港の指定施設（小鯖護岸横泊地））",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-147",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "指定管理者の指定について（鮪立漁港の指定施設）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-148",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "指定管理者の指定について（波路上漁港の指定施設（七半沢防波堤横泊地及び内沼防波堤横泊地））",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-149",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "指定管理者の指定について（浦の浜漁港の指定施設（田尻防波堤横泊地、磯草B防波堤横泊地、浦の浜桟橋横泊地①及び浦の浜桟橋横泊地③））",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-150",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "指定管理者の指定について（志津川漁港の指定施設（林防波堤横泊地、南防波堤横泊地、大森護岸横泊地及び大森防波堤横泊地②））",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-151",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "指定管理者の指定について（桃ノ浦漁港の指定施設）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-152",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "指定管理者の指定について（仙台港多賀城地区緩衝緑地）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-153",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "指定管理者の指定について（石巻南浜津波復興祈念公園）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-154",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "和解及び損害賠償の額の決定について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-155",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "地方独立行政法人宮城県立こども病院が達成すべき業務運営に関する目標を定めることについて",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-156",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "財産の取得について（災害対策用資機材一式）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-157",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "財産の取得について（職業訓練機器一式）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-158",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "工事請負契約の締結について（気仙沼漁港岸壁整備工事）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-159",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "工事請負契約の締結について（宮城県松島高等学校校舎等改築工事）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-160",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "工事請負変更契約の締結について（（仮称）高等技術専門校５号館改修工事）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-161",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "工事請負変更契約の締結について（主要地方道気仙沼唐桑線本町道路改築工事（その２））",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-162",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "工事請負変更契約の締結について（主要地方道女川牡鹿線大谷川浜小積浜トンネル（仮称）工事）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-163",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "工事請負変更契約の締結について（名蓋川護岸等災害復旧工事（その１））",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-164",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "工事請負変更契約の締結について（名蓋川護岸等災害復旧工事（その２））",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-165",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "工事請負変更契約の締結について（名蓋川護岸等災害復旧工事（その３））",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-166",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "工事請負変更契約の締結について（宮城県美術館改修工事）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-167",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "工事請負変更契約の締結について（宮城県美術館改修空調工事）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-168",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "工事請負変更契約の締結について（宮城県岩沼警察署庁舎改築工事）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-169",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "令和７年度宮城県一般会計補正予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-172",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "職員の給与に関する条例等の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-173",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "特別職の職員の給与並びに旅費及び費用弁償に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-174",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "職員等の旅費に関する条例及び特別職の職員の給与並びに旅費及び費用弁償に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "可決",
+   "rollCallId": "pref-04-398-20251217-知事提出議案-175",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "義務教育諸学校等の教育職員の給与等の特別措置に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "採択",
+   "rollCallId": "pref-04-398-20251217-請願-398の1",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "私立高等学校等への助成強化に関することについて",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-17",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "採択",
+   "rollCallId": "pref-04-398-20251217-請願-398の2",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "私学助成拡充に関することについて",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-10",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "同意",
+   "rollCallId": "pref-04-398-20251210-知事提出議案-170",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "監査委員の選任につき同意を求めることについて",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-10",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "同意",
+   "rollCallId": "pref-04-398-20251210-知事提出議案-171",
+   "sessionLabel": "令和7年11月定例会（第398回）",
+   "sourceUrl": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
+   "title": "土地利用審査会委員の任命につき同意を求めることについて",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  }
+ ]
+}

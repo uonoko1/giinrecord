@@ -12657,5 +12657,845 @@
   "id": "h_39c48f289d",
   "kana": "わたなべ ひろみち",
   "name": "渡辺 博道"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "塩釜",
+  "group": "日本共産党宮城県会議員団",
+  "id": "p_04_amasita",
+  "kana": "あました みゆき",
+  "name": "天下 みゆき",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/amasita.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "登米",
+  "group": "立憲・無所属クラブ",
+  "id": "p_04_chuuetu",
+  "kana": "わたなべ ちゅうえつ",
+  "name": "渡辺 忠悦",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/chuuetu.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "泉",
+  "group": "自由民主党・県民会議",
+  "id": "p_04_hayato",
+  "kana": "えんどう はやと",
+  "name": "遠藤 隼人",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/hayato.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "太白",
+  "group": "自由民主党・県民会議",
+  "id": "p_04_hiroshi",
+  "kana": "わたなべ ひろし",
+  "name": "わたなべ 拓",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/hiroshi.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "富谷・黒川",
+  "group": "自由民主党・県民会議",
+  "id": "p_04_hujikura",
+  "kana": "ふじくら ちかく",
+  "name": "藤倉 知格",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/hujikura.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "多賀城・七ヶ浜",
+  "group": "自由民主党・県民会議",
+  "id": "p_04_hushiya",
+  "kana": "ふしや しゅういち",
+  "name": "伏谷 修一",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/hushiya.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "宮城野",
+  "group": "自由民主党・県民会議",
+  "id": "p_04_ishikawa",
+  "kana": "いしかわ みつじろう",
+  "name": "石川 光次郎",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/ishikawa.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "泉",
+  "group": "公明党県議団",
+  "id": "p_04_ito",
+  "kana": "いとう かずひろ",
+  "name": "伊藤 和博",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/ito.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "大崎",
+  "group": "みやぎ県民の声",
+  "id": "p_04_jinichi",
+  "kana": "さとう じんいち",
+  "name": "佐藤 仁一",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/jinichi.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "青葉",
+  "group": "日本共産党宮城県会議員団",
+  "id": "p_04_kaneta",
+  "kana": "かねた もとる",
+  "name": "金田 もとる",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/kaneta.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "加美",
+  "group": "自由民主党・県民会議",
+  "id": "p_04_kei",
+  "kana": "たかはし けい",
+  "name": "高橋 啓",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/kei.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "石巻・牡鹿",
+  "group": "みやぎ県民の声",
+  "id": "p_04_ken",
+  "kana": "さかした けん",
+  "name": "坂下 賢",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/ken.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "大崎",
+  "group": "自由民主党・県民会議",
+  "id": "p_04_kenji",
+  "kana": "ささき けんじ",
+  "name": "佐々木 賢司",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/kenji.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "青葉",
+  "group": "21世紀クラブ",
+  "id": "p_04_kikkawa",
+  "kana": "きっかわ ひろやす",
+  "name": "吉川 寛康",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/kikkawa.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "大崎",
+  "group": "自由民主党・県民会議",
+  "id": "p_04_kiku",
+  "kana": "きくち けいいち",
+  "name": "菊地 恵一",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/kiku.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "石巻・牡鹿",
+  "group": "自由民主党・県民会議",
+  "id": "p_04_kizo",
+  "kana": "ささき きぞう",
+  "name": "佐々木 喜藏",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/kizo.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "太白",
+  "group": "自由民主党・県民会議",
+  "id": "p_04_kosi",
+  "kana": "ささき こうし",
+  "name": "佐々木 幸士",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/kosi.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "遠田",
+  "group": "みやぎ県民の声",
+  "id": "p_04_kouetu",
+  "kana": "ささき こうえつ",
+  "name": "佐々木 功悦",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/kouetu.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "栗原",
+  "group": "立憲・無所属クラブ",
+  "id": "p_04_kumagai",
+  "kana": "くまがい よしひこ",
+  "name": "熊谷 義彦",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/kumagai.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "柴田",
+  "group": "みやぎ県民の声",
+  "id": "p_04_masu",
+  "kana": "ます かずや",
+  "name": "枡 和也",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/masu.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "宮城野",
+  "group": "自由民主党・県民会議",
+  "id": "p_04_matsumoto",
+  "kana": "まつもと よしお",
+  "name": "松本 由男",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/matsumoto.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "塩釜",
+  "group": "21世紀クラブ",
+  "id": "p_04_meibo_abe",
+  "kana": "あべ まさき",
+  "name": "阿部 眞喜",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/meibo_abe.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "名取",
+  "group": "みやぎ県民の声",
+  "id": "p_04_meibo_arakawa",
+  "kana": "あらかわ ようへい",
+  "name": "荒川 洋平",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/meibo_arakawa.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "多賀城・七ヶ浜",
+  "group": "日本共産党宮城県会議員団",
+  "id": "p_04_meibo_fujiwara",
+  "kana": "ふじわら ますえい",
+  "name": "藤原 益栄",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/meibo_fujiwara.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "太白",
+  "group": "日本共産党宮城県会議員団",
+  "id": "p_04_meibo_funayama",
+  "kana": "ふなやま ゆみ",
+  "name": "ふなやま 由美",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/meibo_funayama.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "富谷・黒川",
+  "group": "みやぎ県民の声",
+  "id": "p_04_meibo_hiraoka",
+  "kana": "ひらおか しずか",
+  "name": "平岡 静香",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/meibo_hiraoka.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "青葉",
+  "group": "日本維新の会",
+  "id": "p_04_meibo_ishimori",
+  "kana": "いしもり ゆうじ",
+  "name": "石森 ゆうじ",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/meibo_ishimori.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "太白",
+  "group": "立憲・無所属クラブ",
+  "id": "p_04_meibo_kacchi",
+  "kana": "かっち めぐみ",
+  "name": "かっち 恵",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/meibo_kacchi.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "白石・刈田",
+  "group": "自由民主党・県民会議",
+  "id": "p_04_meibo_kikuchita",
+  "kana": "きくち ただひさ",
+  "name": "菊地 忠久",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/meibo_kikuchita.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "気仙沼・本吉",
+  "group": "自由民主党・県民会議",
+  "id": "p_04_meibo_kumagaii",
+  "kana": "くまがい いっぺい",
+  "name": "熊谷 一平",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/meibo_kumagaii.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "岩沼",
+  "group": "自由民主党・県民会議",
+  "id": "p_04_meibo_murakamito",
+  "kana": "むらかみ ともゆき",
+  "name": "村上 智行",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/meibo_murakamito.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "青葉",
+  "group": "自由民主党・県民会議",
+  "id": "p_04_meibo_muraoka",
+  "kana": "むらおか たかこ",
+  "name": "村岡 たかこ",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/meibo_muraoka.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "泉",
+  "group": "みやぎ県民の声",
+  "id": "p_04_meibo_obata",
+  "kana": "おばた きみこ",
+  "name": "小畑 仁子",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/meibo_obata.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "宮城野",
+  "group": "公明党県議団",
+  "id": "p_04_meibo_oike",
+  "kana": "おおいけ こういち",
+  "name": "大池 康一",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/meibo_oike.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "泉",
+  "group": "日本維新の会",
+  "id": "p_04_meibo_onodera",
+  "kana": "おのでら けん",
+  "name": "小野寺 健",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/meibo_onodera.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "青葉",
+  "group": "自由民主党・県民会議",
+  "id": "p_04_meibo_satomi",
+  "kana": "さとう みちあき",
+  "name": "さとう 道昭",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/meibo_satomi.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "宮城",
+  "group": "自由民主党・県民会議",
+  "id": "p_04_meibo_sugihara",
+  "kana": "すぎはら たかし",
+  "name": "杉原 崇",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/meibo_sugihara.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "若林",
+  "group": "自由民主党・県民会議",
+  "id": "p_04_meibo_takahashika",
+  "kana": "たかはし かつや",
+  "name": "高橋 克也",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/meibo_takahashika.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "宮城",
+  "group": "自由民主党・県民会議",
+  "id": "p_04_meibo_yuzuki",
+  "kana": "ゆずき たかみつ",
+  "name": "柚木 貴光",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/meibo_yuzuki.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "石巻・牡鹿",
+  "group": "日本共産党宮城県会議員団",
+  "id": "p_04_miura",
+  "kana": "みうら かずとし",
+  "name": "三浦 一敏",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/miura.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "気仙沼・本吉",
+  "group": "自由民主党・県民会議",
+  "id": "p_04_mori",
+  "kana": "もりや もりたけ",
+  "name": "守屋 守武",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/mori.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "石巻・牡鹿",
+  "group": "自由民主党・県民会議",
+  "id": "p_04_motoki",
+  "kana": "もとき ちゅういち",
+  "name": "本木 忠一",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/motoki.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "名取",
+  "group": "自由民主党・県民会議",
+  "id": "p_04_murakamihisa",
+  "kana": "むらかみ ひさと",
+  "name": "村上 久仁",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/murakamihisa.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "富谷・黒川",
+  "group": "自由民主党・県民会議",
+  "id": "p_04_nakayama",
+  "kana": "なかやま こういち",
+  "name": "中山 耕一",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/nakayama.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "若林",
+  "group": "みやぎ県民の声",
+  "id": "p_04_nanami",
+  "kana": "みうら ななみ",
+  "name": "三浦 ななみ",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/nanami.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "宮城野",
+  "group": "みやぎ県民の声",
+  "id": "p_04_natsue",
+  "kana": "ささき なつえ",
+  "name": "佐々木 奈津江",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/natsue.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "太白",
+  "group": "公明党県議団",
+  "id": "p_04_noboru",
+  "kana": "よこやま のぼる",
+  "name": "横山 のぼる",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/noboru.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "青葉",
+  "group": "公明党県議団",
+  "id": "p_04_nobuyuki",
+  "kana": "えんどう のぶゆき",
+  "name": "遠藤 伸幸",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/nobuyuki.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "栗原",
+  "group": "自由民主党・県民会議",
+  "id": "p_04_seto",
+  "kana": "せと けんじろう",
+  "name": "瀨戸 健治郎",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/seto.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "柴田",
+  "group": "自由民主党・県民会議",
+  "id": "p_04_sinji",
+  "kana": "たかはし しんじ",
+  "name": "髙橋 伸二",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/sinji.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 0
+  },
+  "current": true,
+  "district": "亘理",
+  "group": "自由民主党・県民会議",
+  "id": "p_04_suzuki",
+  "kana": "すずき あつし",
+  "name": "鈴木 敦",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/suzuki.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "東松島",
+  "group": "自由民主党・県民会議",
+  "id": "p_04_syuya",
+  "kana": "たかはし しゅうや",
+  "name": "高橋 宗也",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/syuya.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "白石・刈田",
+  "group": "自由民主党・県民会議",
+  "id": "p_04_takamitu",
+  "kana": "よこやま たかみつ",
+  "name": "横山 隆光",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/takamitu.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "泉",
+  "group": "自由民主党・県民会議",
+  "id": "p_04_tonosaki",
+  "kana": "とのさき ひろこ",
+  "name": "外崎 浩子",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/tonosaki.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "角田・伊具",
+  "group": "自由民主党・県民会議",
+  "id": "p_04_yashima",
+  "kana": "やしま としみ",
+  "name": "八島 利美",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/yashima.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2026-04-23",
+  "assemblyId": "pref-04",
+  "counts": {
+   "rollcalls": 160
+  },
+  "current": true,
+  "district": "登米",
+  "group": "自由民主党・県民会議",
+  "id": "p_04_yoshihiro",
+  "kana": "いとう よしひろ",
+  "name": "伊藤 吉浩",
+  "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/yoshihiro.html",
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
  }
 ]

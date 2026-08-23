@@ -1,0 +1,585 @@
+{
+ "assemblyId": "pref-04",
+ "counts": {
+  "no": 0,
+  "present": 56,
+  "voting": 55,
+  "yes": 55
+ },
+ "date": "2026-02-17",
+ "id": "pref-04-399-20260217-発議案-1",
+ "kind": "発議案",
+ "method": {
+  "legend": "簡易表決(異議の有無を諮る)",
+  "raw": "簡易"
+ },
+ "number": "1",
+ "page": 1,
+ "result": "可決",
+ "sessionId": "399",
+ "sessionLabel": "令和8年2月定例会（第399回）",
+ "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
+ "title": "県議会議員の議員報酬等に関する条例の一部を改正する条例",
+ "votes": [
+  {
+   "group": "自由民主党・県民会議",
+   "memberId": "p_04_meibo_yuzuki",
+   "nameText": "柚木 貴光",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・県民会議",
+   "memberId": "p_04_meibo_takahashika",
+   "nameText": "高橋 克也",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・県民会議",
+   "memberId": "p_04_meibo_satomi",
+   "nameText": "さとう道昭",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・県民会議",
+   "memberId": "p_04_meibo_kumagaii",
+   "nameText": "熊谷 一平",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・県民会議",
+   "memberId": "p_04_meibo_kikuchita",
+   "nameText": "菊地 忠久",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・県民会議",
+   "memberId": "p_04_meibo_sugihara",
+   "nameText": "杉原 崇",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・県民会議",
+   "memberId": "p_04_meibo_muraoka",
+   "nameText": "村岡たかこ",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・県民会議",
+   "memberId": "p_04_hushiya",
+   "nameText": "伏谷 修一",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・県民会議",
+   "memberId": "p_04_matsumoto",
+   "nameText": "松本 由男",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・県民会議",
+   "memberId": "p_04_hiroshi",
+   "nameText": "わたなべ拓",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・県民会議",
+   "memberId": "p_04_yoshihiro",
+   "nameText": "伊藤 吉浩",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・県民会議",
+   "memberId": "p_04_yashima",
+   "nameText": "八島 利美",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・県民会議",
+   "memberId": "p_04_seto",
+   "nameText": "瀨戸健治郎",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・県民会議",
+   "memberId": "p_04_murakamihisa",
+   "nameText": "村上 久仁",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・県民会議",
+   "memberId": "p_04_syuya",
+   "nameText": "高橋 宗也",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・県民会議",
+   "memberId": "p_04_kei",
+   "nameText": "高橋 啓",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・県民会議",
+   "memberId": "p_04_hayato",
+   "nameText": "遠藤 隼人",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・県民会議",
+   "memberId": "p_04_takamitu",
+   "nameText": "横山 隆光",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・県民会議",
+   "memberId": "p_04_kenji",
+   "nameText": "佐々木賢司",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・県民会議",
+   "memberId": "p_04_mori",
+   "nameText": "守屋 守武",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・県民会議",
+   "memberId": "p_04_tonosaki",
+   "nameText": "外崎 浩子",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・県民会議",
+   "memberId": "p_04_meibo_murakamito",
+   "nameText": "村上 智行",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・県民会議",
+   "memberId": "p_04_kosi",
+   "nameText": "佐々木幸士",
+   "value": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "group": "自由民主党・県民会議",
+   "memberId": "p_04_sinji",
+   "nameText": "髙橋 伸二",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・県民会議",
+   "memberId": "p_04_kiku",
+   "nameText": "菊地 恵一",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・県民会議",
+   "memberId": "p_04_ishikawa",
+   "nameText": "石川光次郎",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・県民会議",
+   "memberId": "p_04_kizo",
+   "nameText": "佐々木喜藏",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・県民会議",
+   "memberId": "",
+   "nameText": "中島 源陽",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・県民会議",
+   "memberId": "p_04_motoki",
+   "nameText": "本木 忠一",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・県民会議",
+   "memberId": "p_04_nakayama",
+   "nameText": "中山 耕一",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・県民会議",
+   "memberId": "p_04_hujikura",
+   "nameText": "藤倉 知格",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "みやぎ県民の声",
+   "memberId": "p_04_meibo_hiraoka",
+   "nameText": "平岡 静香",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "みやぎ県民の声",
+   "memberId": "p_04_meibo_arakawa",
+   "nameText": "荒川 洋平",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "みやぎ県民の声",
+   "memberId": "p_04_natsue",
+   "nameText": "佐々木奈津江",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "みやぎ県民の声",
+   "memberId": "p_04_meibo_obata",
+   "nameText": "小畑 仁子",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "みやぎ県民の声",
+   "memberId": "p_04_nanami",
+   "nameText": "三浦ななみ",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "みやぎ県民の声",
+   "memberId": "p_04_masu",
+   "nameText": "枡 和也",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "みやぎ県民の声",
+   "memberId": "p_04_jinichi",
+   "nameText": "佐藤 仁一",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "みやぎ県民の声",
+   "memberId": "p_04_kouetu",
+   "nameText": "佐々木功悦",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "みやぎ県民の声",
+   "memberId": "p_04_ken",
+   "nameText": "坂下 賢",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "日本共産党宮城県会議員団",
+   "memberId": "p_04_meibo_funayama",
+   "nameText": "ふなやま由美",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "日本共産党宮城県会議員団",
+   "memberId": "p_04_meibo_fujiwara",
+   "nameText": "藤原 益栄",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "日本共産党宮城県会議員団",
+   "memberId": "p_04_kaneta",
+   "nameText": "金田もとる",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "日本共産党宮城県会議員団",
+   "memberId": "p_04_amasita",
+   "nameText": "天下みゆき",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "日本共産党宮城県会議員団",
+   "memberId": "p_04_miura",
+   "nameText": "三浦 一敏",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "公明党県議団",
+   "memberId": "p_04_meibo_oike",
+   "nameText": "大池 康一",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "公明党県議団",
+   "memberId": "p_04_nobuyuki",
+   "nameText": "遠藤 伸幸",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "公明党県議団",
+   "memberId": "p_04_noboru",
+   "nameText": "横山のぼる",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "公明党県議団",
+   "memberId": "p_04_ito",
+   "nameText": "伊藤 和博",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "立憲・無所属クラブ",
+   "memberId": "p_04_meibo_kacchi",
+   "nameText": "かっち 恵",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "立憲・無所属クラブ",
+   "memberId": "p_04_chuuetu",
+   "nameText": "渡辺 忠悦",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "立憲・無所属クラブ",
+   "memberId": "p_04_kumagai",
+   "nameText": "熊谷 義彦",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "21世紀クラブ",
+   "memberId": "p_04_meibo_abe",
+   "nameText": "阿部 眞喜",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "21世紀クラブ",
+   "memberId": "p_04_kikkawa",
+   "nameText": "吉川 寛康",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "日本維新の会",
+   "memberId": "p_04_meibo_ishimori",
+   "nameText": "石森ゆうじ",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "日本維新の会",
+   "memberId": "p_04_meibo_onodera",
+   "nameText": "小野寺 健",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  }
+ ]
+}
