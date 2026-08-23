@@ -36,7 +36,8 @@ export function buildSitemap(paths: string[], { origin, lastmod }: SitemapOption
 }
 
 export function buildRobots(origin: string): string {
-  const base = "User-agent: *\nAllow: /\n";
+  // /compare (#104) is query-driven, served from the SPA fallback and meta noindex; keep crawlers off it here too.
+  const base = "User-agent: *\nAllow: /\nDisallow: /compare\n";
   return origin ? `${base}\nSitemap: ${origin}/sitemap.xml\n` : base;
 }
 
