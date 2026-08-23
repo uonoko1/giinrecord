@@ -1,4 +1,4 @@
-import { Link, type MetaArgs } from "react-router";
+import type { MetaArgs } from "react-router";
 import { CoverBrand } from "../components/CoverBrand";
 import { SiteFooter } from "../components/SiteFooter";
 import { REPO_URL } from "../lib/dataset";
@@ -9,6 +9,13 @@ import "../styles/pages.css";
 export const TERMS_UPDATED = "2026-08-23";
 
 const ISSUE_NEW_URL = `${REPO_URL}/issues/new`;
+
+/**
+ * 支援リンクの先（#174 で /about から移動）。
+ * PLACEHOLDER: GitHub Sponsors は未有効化（uonoko1 アカウントでの人間の作業）。
+ * 有効化後に `https://github.com/sponsors/uonoko1` へ差し替える。それまではリポジトリ URL で代替する。
+ */
+export const SUPPORT_URL = REPO_URL;
 const CC_BY_URL = "https://creativecommons.org/licenses/by/4.0/deed.ja";
 
 export function meta({ location }: MetaArgs) {
@@ -78,7 +85,7 @@ export default function Terms() {
           </ul>
         </section>
 
-        <section className="section" aria-labelledby="terms-funding">
+        <section id="funding" className="section" aria-labelledby="terms-funding">
           <h2 id="terms-funding" className="section__title">
             運営費の方針
           </h2>
@@ -86,9 +93,14 @@ export default function Terms() {
             <li>運営者の自費で運営しています。</li>
             <li>政党・候補者・業界団体からは受け取らない。</li>
             <li>
-              支援や、政治カテゴリを除外した広告を受ける場合は、<Link to="/about#funding">このデータについて</Link>に明記します。
+              支援や、政治カテゴリを除外した広告を受ける場合は、このページに明記します。
             </li>
           </ul>
+          <div className="links">
+            <a href={SUPPORT_URL} target="_blank" rel="noopener noreferrer">
+              支援する
+            </a>
+          </div>
         </section>
 
         <section className="section" aria-labelledby="terms-law">
