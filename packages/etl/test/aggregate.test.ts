@@ -122,6 +122,21 @@ describe("buildDataset: members/{id}.json・members/index.json・rollcalls/index
     assert.deepEqual(empty.rollCalls, []);
   });
 
+  test("index と detail の全員に assemblyId が付き、国会は house から diet-sangiin / diet-shugiin になる（#156）", () => {
+    const shugiin: Member = { ...member("h_000001", "衆 太郎"), house: "shugiin", terms: [{ house: "shugiin", group: "自民", district: "東京1", from: "", sessionFrom: 221 }] };
+    const ds = buildDataset([member("m_000001", "甲"), shugiin], []);
+    assert.equal(ds.index.find((m) => m.id === "m_000001")?.assemblyId, "diet-sangiin");
+    assert.equal(ds.index.find((m) => m.id === "h_000001")?.assemblyId, "diet-shugiin");
+    assert.equal(ds.details.find((m) => m.id === "m_000001")?.assemblyId, "diet-sangiin");
+    assert.equal(ds.details.find((m) => m.id === "h_000001")?.assemblyId, "diet-shugiin");
+  });
+
+  test("名簿が assemblyId を持っていればそれを使う（将来の地方議会の名簿）", () => {
+    const ds = buildDataset([{ ...member("p_04_000001", "乙"), assemblyId: "pref-04" }], []);
+    assert.equal(ds.index[0].assemblyId, "pref-04");
+    assert.equal(ds.details[0].assemblyId, "pref-04");
+  });
+
   test("名簿にない memberId の票が来たら例外（名寄せの不整合を黙って捨てない）", () => {
     assert.throws(() => buildDataset([member("m_1", "一 郎")], [rollCall("221-0605-v001", "2026-06-05", [vote("m_9", "賛成")])]), /m_9/);
   });
