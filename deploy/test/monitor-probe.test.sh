@@ -32,6 +32,8 @@ case "$cmd" in
     [ -n "${H_CURL_EXIT:-}" ] && exit "$H_CURL_EXIT"
     url=${*: -1}; out=/dev/stdout
     for ((i=1;i<=$#;i++)); do [[ "${!i}" == "-o" ]] && { j=$((i+1)); out=${!j}; }; done
+    # -K <file>: keep a copy of the curl config (mode + content) — probe.sh deletes it on exit
+    for ((i=1;i<=$#;i++)); do [[ "${!i}" == "-K" ]] && { j=$((i+1)); { stat -c %A "${!j}"; cat "${!j}"; } > "$STUB_LOG.curlrc"; }; done
     case "$url" in
       */data/meta.json) printf '{\n "fetchedAt": "%s",\n "sources": [{"fetchedAt": "2020-01-01T00:00:00Z"}]\n}\n' "${H_FETCHED_AT:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}" > "$out"; printf '%s' "${H_CODE_META:-200}" ;;
       */members/)       printf '<html><head><title>議員一覧 | %s</title></head></html>' "${H_TITLE:-議会ログ}" > "$out"; printf '%s' "${H_CODE_MEMBERS:-200}" ;;
@@ -63,9 +65,10 @@ assert_contains() { [[ "$1" == *"$2"* ]] || fail "$3: expected to contain [$2] i
 assert_not_contains() { [[ "$1" != *"$2"* ]] || fail "$3: expected NOT to contain [$2] in: $1"; }
 
 fresh() {
-  P="$TMP/$1"; mkdir -p "$P"; LOG="$P/stub.log"; : > "$LOG"; rm -f "$LOG.body"
+  P="$TMP/$1"; mkdir -p "$P"; LOG="$P/stub.log"; : > "$LOG"; rm -f "$LOG.body" "$LOG.curlrc"
   export STUB_LOG="$LOG" STUB_HANDLER="$TMP/handler"
   unset H_CODE_ROOT H_CODE_MEMBERS H_CODE_META H_TITLE H_FETCHED_AT H_NOT_AFTER H_OPEN H_CURL_EXIT
+  unset CF_ACCESS_CLIENT_ID CF_ACCESS_CLIENT_SECRET MONITOR_REQUIRE_CF_ACCESS
 }
 run_probe()  { PATH="$BIN:$PATH" bash "$MON/probe.sh" "$@" > "$P/out" 2>&1; }
 run_report() { PATH="$BIN:$PATH" bash "$MON/report.sh" "$@" > "$P/out" 2>&1; }
@@ -143,6 +146,40 @@ t_probe_rejects_bad_origin() {
   if run_probe; then fail "missing origin accepted"; fi
 }
 
+# ---- probe.sh: Cloudflare Access service token (#163) ----
+t_probe_cf_access_headers_via_config_file() {
+  fresh p_cf
+  CF_ACCESS_CLIENT_ID=id-abc.access CF_ACCESS_CLIENT_SECRET=s3cr3t-xyz run_probe https://staging.gikailog.jp || fail "exit $? $(cat "$P/out")"
+  local log; log=$(cat "$LOG")
+  assert_not_contains "$log" "s3cr3t-xyz" "secret never on the curl command line"
+  assert_not_contains "$log" "id-abc.access" "client id never on the curl command line"
+  assert_not_contains "$(cat "$P/out")" "s3cr3t-xyz" "secret never printed"
+  [ -f "$LOG.curlrc" ] || { fail "curl was given a config file (-K)"; return; }
+  local rc; rc=$(cat "$LOG.curlrc")
+  assert_contains "$rc" "-rw-------" "config file mode 600"
+  assert_contains "$rc" 'header = "CF-Access-Client-Id: id-abc.access"' "client id header"
+  assert_contains "$rc" 'header = "CF-Access-Client-Secret: s3cr3t-xyz"' "client secret header"
+  assert_eq "3" "$(grep -c 'curl .*-K ' "$LOG")" "every request carries the headers"
+}
+t_probe_without_cf_access_sends_no_headers() {
+  fresh p_nocf
+  run_probe https://gikailog.jp || fail "exit $? $(cat "$P/out")"
+  assert_not_contains "$(cat "$LOG")" "-K" "no config file without a token"
+  [ ! -f "$LOG.curlrc" ] || fail "no curl config written"
+}
+t_probe_rejects_half_token() {
+  fresh p_half
+  if CF_ACCESS_CLIENT_ID=only-id run_probe https://staging.gikailog.jp; then fail "id without secret must be an error"; fi
+  assert_contains "$(cat "$P/out")" "CF_ACCESS_CLIENT_SECRET" "names the missing variable"
+  assert_not_contains "$(cat "$P/out")" "only-id" "value not printed"
+}
+t_probe_rejects_token_with_newline_or_quote() {
+  fresh p_badtok
+  if CF_ACCESS_CLIENT_ID=$'id\nheader = "X: y"' CF_ACCESS_CLIENT_SECRET=s run_probe https://staging.gikailog.jp; then fail "newline in token must be rejected (curl config injection)"; fi
+  if CF_ACCESS_CLIENT_ID=id CF_ACCESS_CLIENT_SECRET='s"x' run_probe https://staging.gikailog.jp; then fail "quote in token must be rejected"; fi
+  [ ! -f "$LOG.curlrc" ] || fail "no request made"
+}
+
 # ---- report.sh ----
 t_report_creates_once() {
   fresh r_new
@@ -181,6 +218,21 @@ t_report_ok_without_issue_is_noop() {
 }
 
 # ---- run.sh ----
+t_run_skips_without_required_token() {
+  fresh run_skip
+  MONITOR_REQUIRE_CF_ACCESS=1 run_run staging https://staging.gikailog.jp || fail "skip must exit 0: $(cat "$P/out")"
+  assert_contains "$(cat "$P/out")" "::warning::" "GitHub warning annotation"
+  assert_contains "$(cat "$P/out")" "CF_ACCESS_CLIENT_ID" "names the missing secret"
+  assert_eq "" "$(cat "$LOG")" "no curl, no gh (an Issue must not be opened or closed blindly)"
+}
+t_run_probes_with_token() {
+  fresh run_tok
+  MONITOR_REQUIRE_CF_ACCESS=1 CF_ACCESS_CLIENT_ID=id CF_ACCESS_CLIENT_SECRET=sec run_run staging https://staging.gikailog.jp || fail "exit $? $(cat "$P/out")"
+  assert_contains "$(cat "$LOG")" "curl " "probed"
+  assert_contains "$(cat "$LOG")" "-K " "with the token headers"
+  assert_not_contains "$(cat "$LOG")" "sec" "secret not in argv"
+  assert_not_contains "$(cat "$P/out")" "::warning::" "no warning"
+}
 t_run_all_ok_no_retry() {
   fresh run_ok
   run_run production https://gikailog.jp || fail "exit $? $(cat "$P/out")"
@@ -236,11 +288,17 @@ test_case "probe: 証明書の残りが 14 日未満なら tls が fail" t_probe
 test_case "probe: 証明書が読めなければ tls が fail" t_probe_tls_unreadable
 test_case "probe: 接続できなければ http と data が fail" t_probe_curl_down
 test_case "probe: origin は https のホストのみ（パス付き・http・無しは拒否）" t_probe_rejects_bad_origin
+test_case "probe: CF_ACCESS_CLIENT_ID/SECRET があれば curl の設定ファイル（600）経由でヘッダを付け、argv と出力に秘密を出さない" t_probe_cf_access_headers_via_config_file
+test_case "probe: トークンが無ければヘッダも設定ファイルも無し" t_probe_without_cf_access_sends_no_headers
+test_case "probe: ID と SECRET の片方だけはエラー（値は出さない）" t_probe_rejects_half_token
+test_case "probe: トークンに改行や引用符があれば拒否（curl 設定への注入）" t_probe_rejects_token_with_newline_or_quote
 test_case "report: fail → ラベル確保・検索・同名が無ければ作成" t_report_creates_once
 test_case "report: 同名の open Issue があれば作らない" t_report_dedups
 test_case "report: 似た title は別物（完全一致のみ）" t_report_exact_title_only
 test_case "report: ok → open Issue があればコメントして close" t_report_closes_on_ok
 test_case "report: ok で Issue が無ければ何もしない" t_report_ok_without_issue_is_noop
+test_case "run: MONITOR_REQUIRE_CF_ACCESS=1 でトークンが無ければ probe せず warning、exit 0、Issue は触らない" t_run_skips_without_required_token
+test_case "run: MONITOR_REQUIRE_CF_ACCESS=1 でトークンがあれば普通に probe（ヘッダ付き）" t_run_probes_with_token
 test_case "run: 全部 ok なら 2 回目を走らせず、作成もしない" t_run_all_ok_no_retry
 test_case "run: 2 回連続で fail した check だけ Issue" t_run_reports_after_two_rounds
 test_case "run: Issue 本文は環境名・理由・run へのリンクのみ（ローカルパス無し）" t_run_body_has_no_secrets_or_paths

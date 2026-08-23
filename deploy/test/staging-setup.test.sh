@@ -36,6 +36,8 @@ fresh() {
   : > "$P/opt/gikailog/deploy/docker-compose.yml"
   # shellcheck disable=SC2016  # the stub expands $* / $STUB_LOG when it runs, not here
   printf '#!/usr/bin/env bash\necho "vps-setup.sh $*" >> "$STUB_LOG"\n' > "$P/opt/gikailog/deploy/vps-setup.sh"
+  # shellcheck disable=SC2016
+  printf '#!/usr/bin/env bash\necho "cloudflare-allowlist.sh $*" >> "$STUB_LOG"\n' > "$P/opt/gikailog/deploy/cloudflare-allowlist.sh"
 }
 run_setup() {
   PATH="$BIN:$PATH" bash "$SCRIPT" "$@" > "$P/out" 2>&1
@@ -76,6 +78,9 @@ t_happy_path_order() {
   assert_order "$log" "vps-setup.sh" "certbot" "bootstrap proxy block before certbot (challenge on :80)"
   assert_order "$(tac <<<"$log")" "vps-setup.sh staging.gikailog.jp 8083" "certbot" "vps-setup.sh again after certbot: TLS + redirect blocks"
   [[ $(grep -c "vps-setup.sh staging.gikailog.jp 8083" <<<"$log" || true) -eq 2 ]] || fail "vps-setup.sh runs before and after certbot"
+  # #163: the Cloudflare allow-list (+ weekly cron) exists before the block that includes it is written
+  assert_contains "$log" "cloudflare-allowlist.sh --install-cron" "Cloudflare allow-list generated and its cron installed"
+  assert_order "$log" "cloudflare-allowlist.sh" "vps-setup.sh" "allow-list before the staging block that includes it (never the deny-all placeholder)"
 }
 
 t_custom_domain() {
