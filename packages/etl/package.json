@@ -13,7 +13,8 @@
   "dependencies": {
     "@seiji-kiroku/shared": "workspace:*",
     "iconv-lite": "^0.6.3",
-    "node-html-parser": "^7.0.1"
+    "node-html-parser": "^7.0.1",
+    "pdfjs-dist": "^5.7.284"
   },
   "devDependencies": {
     "@types/node": "^24",
