@@ -11,7 +11,7 @@
 set -euo pipefail
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ENV_NAME=${1:-}; ORIGIN=${2:-}
-[ -n "$ENV_NAME" ] && [ -n "$ORIGIN" ] || { echo "usage: run.sh <environment> <origin>" >&2; exit 2; }
+if [ -z "$ENV_NAME" ] || [ -z "$ORIGIN" ]; then echo "usage: run.sh <environment> <origin>" >&2; exit 2; fi
 RETRY_SLEEP=${MONITOR_RETRY_SLEEP:-60}
 CHECKS=(http data tls)
 

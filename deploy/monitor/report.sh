@@ -9,7 +9,7 @@ set -euo pipefail
 
 TITLE=${1:-}; STATUS=${2:-}; BODY=${3:-}
 case "$STATUS" in
-  fail) [ -n "$TITLE" ] && [ -f "$BODY" ] || { echo "usage: report.sh <title> fail <body-file>" >&2; exit 2; } ;;
+  fail) if [ -z "$TITLE" ] || [ ! -f "$BODY" ]; then echo "usage: report.sh <title> fail <body-file>" >&2; exit 2; fi ;;
   ok)   [ -n "$TITLE" ] || { echo "usage: report.sh <title> ok" >&2; exit 2; } ;;
   *)    echo "usage: report.sh <title> ok|fail [body-file]" >&2; exit 2 ;;
 esac
