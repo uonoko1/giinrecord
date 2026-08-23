@@ -36,7 +36,7 @@ export interface MemberSummary {
   termEnd?: string;    // ISO date
   /** 最新回次の名簿に載っているか。false は元職（辞職・任期満了）。事実であって評価ではない。 */
   current: boolean;
-  counts: { rollcalls: number; bills: number; speeches: number };
+  counts: { rollcalls: number; bills: number; speeches: number; questions: number };
 }
 
 export interface MemberTerm {
@@ -144,6 +144,40 @@ export interface Speech {
   sourceUrl: string;   // 会議録の該当発言URL
 }
 
+/**
+ * 質問主意書（衆参の質問答弁情報から。Issue #106）。事実のみ: 提出者・件名・提出日・答弁書受領日・本文URL はページの原文。
+ * 衆院は経過ページ（itdb_shitsumon.nsf/html/shitsumon/{回次}{番号3桁}.htm、Shift_JIS）、参院は詳細ページ（joho1/kousei/syuisyo/{回次}/meisai/m{回次}{番号3桁}.htm）。
+ * ファイルには書かず、名寄せ済みの提出者の timeline（QuestionEntry）にだけなる。
+ */
+export interface Question {
+  /** `{回次}-{house}-{番号}`（例 "221-shugiin-1", "221-sangiin-12"）。衆参で番号が独立なので house を含める */
+  id: string;
+  session: number;
+  number: number;
+  house: House;
+  title: string;
+  /** 提出日（衆院「質問主意書提出年月日」／参院「提出日」）。ISO */
+  date: string;
+  /** 提出者欄の原文（例「緒方 林太郎君」）。全角空白は半角1つに寄せる */
+  submitterText: string;
+  /** 提出者の氏名（原文から「君」を除いたもの）。両院とも現行ページでは1人 */
+  submitterNames: string[];
+  /** 名簿に名寄せできた提出者（memberId）。できなければ省略 */
+  submitters?: MemberId[];
+  /** 衆院 経過ページの「会派名」（原文。同姓同名の分離に使う）。参院の詳細ページには無い */
+  group?: string;
+  /** 衆院 一覧・経過ページの「経過状況」の原文（例「答弁受理」）。参院には無い */
+  status?: string;
+  /** 答弁書受領日（衆院「答弁書受領年月日」／参院「答弁書受領日」）。ISO。空欄なら省略（推定しない） */
+  answerDate?: string;
+  /** 質問本文（HTML）の URL */
+  questionUrl?: string;
+  /** 答弁本文（HTML）の URL。答弁書が無ければ省略 */
+  answerUrl?: string;
+  /** 衆院 経過ページ／参院 詳細ページ */
+  sourceUrl: string;
+}
+
 export interface DatasetMeta {
   fetchedAt: string;   // ISO datetime
   sources: { name: string; url: string; fetchedAt: string }[];
@@ -215,7 +249,24 @@ export type StanceEntry = {
   status?: string;
   sourceUrl: string;
 };
-export type TimelineEntry = VoteEntry | BillEntry | SpeechEntry | StanceEntry;
+/** 質問主意書の提出（事実。衆参の質問答弁情報から。Issue #106）。date は提出日。 */
+export type QuestionEntry = {
+  kind: "question";
+  date: string;
+  questionId: string;
+  title: string;
+  /** 提出者欄の原文（例「緒方 林太郎君」）。 */
+  submitterText?: string;
+  /** 衆院「経過状況」の原文（例「答弁受理」）。参院には無い。 */
+  status?: string;
+  /** 答弁書受領日（ISO）。無ければ省略。 */
+  answerDate?: string;
+  /** 答弁本文（HTML）の URL。無ければ省略。 */
+  answerUrl?: string;
+  /** 衆院 経過ページ／参院 詳細ページ。 */
+  sourceUrl: string;
+};
+export type TimelineEntry = VoteEntry | BillEntry | SpeechEntry | StanceEntry | QuestionEntry;
 
 /** Row of `data/rollcalls/index.json` (採決一覧用). */
 export interface RollCallSummary {

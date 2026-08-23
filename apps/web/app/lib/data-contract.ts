@@ -17,7 +17,8 @@ export interface MemberSummary {
   termEnd?: string;
   /** 最新回次の名簿に載っているか。無い（古いデータ）なら現職として扱う */
   current?: boolean;
-  counts: { rollcalls: number; bills: number; speeches: number };
+  /** questions は #106 以降のデータにだけある（古いデータでは無い） */
+  counts: { rollcalls: number; bills: number; speeches: number; questions?: number };
 }
 
 export interface MemberDetail extends Member {
@@ -79,4 +80,21 @@ export type StanceEntry = {
   status?: string;
   sourceUrl: string;
 };
-export type TimelineEntry = VoteEntry | BillEntry | SpeechEntry | StanceEntry;
+/** 質問主意書の提出（事実。衆参の質問答弁情報から、#106）。date は提出日。 */
+export type QuestionEntry = {
+  kind: "question";
+  date: string;
+  questionId: string;
+  title: string;
+  /** 提出者欄の原文（例「緒方 林太郎君」）。 */
+  submitterText?: string;
+  /** 衆院「経過状況」の原文（例「答弁受理」）。参院には無い。 */
+  status?: string;
+  /** 答弁書受領日（ISO）。無ければ省略。 */
+  answerDate?: string;
+  /** 答弁本文（HTML）の URL。無ければ省略。 */
+  answerUrl?: string;
+  /** 衆院 経過ページ／参院 詳細ページ。 */
+  sourceUrl: string;
+};
+export type TimelineEntry = VoteEntry | BillEntry | SpeechEntry | StanceEntry | QuestionEntry;

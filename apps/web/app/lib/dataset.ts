@@ -14,7 +14,7 @@ export interface MemberSummary {
   termEnd?: string;
   /** 最新回次の名簿に載っているか。無い（古いデータ）なら現職として扱う */
   current?: boolean;
-  counts: { rollcalls: number; bills: number; speeches: number };
+  counts: { rollcalls: number; bills: number; speeches: number; questions?: number };
 }
 
 export interface RollCallSummary {
