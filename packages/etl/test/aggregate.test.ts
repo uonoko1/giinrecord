@@ -5,6 +5,7 @@ import type { Bill, Member, Question, RollCall, Speech } from "@seiji-kiroku/sha
 import { buildDataset, groupMajority, summarizeRollCall } from "../src/aggregate.ts";
 import { matchVotes } from "../src/match-votes.ts";
 import type { MatchedBill } from "../src/match-bills.ts";
+import type { MatchedAttendance } from "../src/match-attendance.ts";
 import { parseRollCall } from "../src/sources/sangiin-votes.ts";
 import { parseMemberList } from "../src/sources/sangiin-members.ts";
 
@@ -408,5 +409,40 @@ describe("buildDataset: 質問主意書を timeline に入れる", () => {
 
   test("名簿にない memberId の質問は例外", () => {
     assert.throws(() => buildDataset(members, [], new Map(), [], [], [], [question("221-sangiin-9", "sangiin", "2026-04-01", { submitters: ["m_9"] })]), /m_9/);
+  });
+});
+
+/* ---------- 委員会出席（#109）: 会議録の出席者欄の「発議者」。Bill.submitters / bill 行には入れない別種の事実 ---------- */
+
+const attendance = (memberId: string, date: string, extra: Partial<MatchedAttendance> = {}): MatchedAttendance => ({
+  memberId, nameText: "舟山康江", meetingId: `12211500${date.replaceAll("-", "")}_000`, meeting: "農林水産委員会 第14号", date, role: "発議者",
+  bills: [{ billId: "221-参法-11", title: "法律案" }], sourceUrl: `https://kokkai.ndl.go.jp/txt/12211500${date.replaceAll("-", "")}/0`,
+  ...extra,
+});
+
+describe("buildDataset: 委員会出席（発議者）を attendance 行として timeline に入れる", () => {
+  const members = [member("m_1", "舟山 康江")];
+  const rcs = [rollCall("221-0709-v001", "2026-07-09", [vote("m_1", "賛成")])];
+  const ds = buildDataset(members, rcs, new Map(), [], [], [], [], [attendance("m_1", "2026-07-09"), attendance("m_1", "2026-07-16", { meeting: "農林水産委員会 第16号" })]);
+
+  test("attendance 行は estimated: false・role 発議者・会議名・日付・その日の参法・出典（会議録）を持つ。bill 行にはならない", () => {
+    const m1 = ds.details[0];
+    assert.deepEqual(m1.timeline.filter((e) => e.kind === "attendance"), [
+      { kind: "attendance", estimated: false, date: "2026-07-16", meetingId: "1221150020260716_000", meeting: "農林水産委員会 第16号", role: "発議者",
+        bills: [{ billId: "221-参法-11", title: "法律案" }], sourceUrl: "https://kokkai.ndl.go.jp/txt/1221150020260716/0" },
+      { kind: "attendance", estimated: false, date: "2026-07-09", meetingId: "1221150020260709_000", meeting: "農林水産委員会 第14号", role: "発議者",
+        bills: [{ billId: "221-参法-11", title: "法律案" }], sourceUrl: "https://kokkai.ndl.go.jp/txt/1221150020260709/0" },
+    ]);
+    assert.equal(m1.timeline.filter((e) => e.kind === "bill").length, 0);
+  });
+
+  test("同日は vote → attendance の順（question の後、speech の前）。counts には数えない（counts.bills は bill 行だけ）", () => {
+    assert.deepEqual(ds.details[0].timeline.map((e) => e.kind), ["attendance", "vote", "attendance"]);
+    assert.deepEqual(ds.index[0].counts, { rollcalls: 1, bills: 0, speeches: 0, questions: 0 });
+  });
+
+  test("名簿にない memberId は例外。衆院議員（house=shugiin）に付けようとしても例外（参院の委員会の発議者は参議院議員）", () => {
+    assert.throws(() => buildDataset(members, [], new Map(), [], [], [], [], [attendance("m_9", "2026-07-09")]), /m_9/);
+    assert.throws(() => buildDataset([hMember("h_1", "自由民主党・無所属の会")], [], new Map(), [], [], [], [], [attendance("h_1", "2026-07-09")]), /h_1.*shugiin/);
   });
 });

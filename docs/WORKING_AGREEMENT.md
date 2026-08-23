@@ -42,7 +42,7 @@
 - 秘密情報：鍵・トークン・パスワード・`.env`（履歴・フィクスチャ・ログ・スクリーンショット含む）
 - サーバー情報：他サイトのドメイン名、内部ホスト名、非公開パス、ユーザー名、ポート番号の不要な露出。VPS は可能な限りドメイン名で書き、IP を増やさない
 - スクリプト：`set -euo pipefail`、`nginx -t` 失敗時に reload しない、共用 nginx の `sites-enabled/` に一時ファイルを置かない、他サイトの資産に触れない、deploy 鍵ユーザーに権限を足さない
-- Web：外部への通信は Google Fonts のみ（CSP）、`dangerouslySetInnerHTML` なし、外部リンクに `rel=noopener noreferrer`、localStorage は try/catch、クエリ／パスから組み立てる URL は許可リスト
+- Web：外部への通信なし（フォントは自サイト配信、CSP に外部ホストを足さない）、`dangerouslySetInnerHTML` なし、外部リンクに `rel=noopener noreferrer`、localStorage は try/catch、クエリ／パスから組み立てる URL は許可リスト
 - ETL：取得先ドメインの許可リスト、ファイル書き込みはリポジトリ内 `data/` のみ、パストラバーサルなし
 - 依存：新規依存の追加理由、`pnpm audit` に high 以上が無い
 

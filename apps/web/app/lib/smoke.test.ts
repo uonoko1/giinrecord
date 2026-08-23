@@ -3,7 +3,7 @@
  * 実ファイルシステムは使わず、Map で表した偽のビルドディレクトリに対して検証する。
  */
 import { describe, expect, it } from "vitest";
-import { checkBrandAssets, checkBuild, checkDistrictData, checkMemberData, checkSitemap, extractInternalHrefs, resolveHrefTarget, formatReport, type BuildFiles } from "./smoke";
+import { checkBrandAssets, checkBuild, checkDistrictData, checkMemberData, checkNoExternalResources, checkOpsData, checkSitemap, externalResourceUrls, extractInternalHrefs, OPS_DATA_FILES, resolveHrefTarget, formatReport, type BuildFiles } from "./smoke";
 
 const html = (links: string[]) => `<html><body>${links.map((l) => `<a href="${l}">x</a>`).join("")}</body></html>`;
 
@@ -36,6 +36,8 @@ describe("checkBuild", () => {
   const staticOnly = fakeBuild({
     "index.html": html(["/about", "/members"]),
     "about/index.html": html(["/", "/assets/entry-abc123.js"]),
+    "terms/index.html": html(["/"]),
+    "privacy/index.html": html(["/"]),
     "members/index.html": html(["/"]),
     "assets/entry-abc123.js": "",
   });
@@ -43,7 +45,7 @@ describe("checkBuild", () => {
   it("data/ が無いとき静的ページだけで成功する", () => {
     const r = checkBuild(staticOnly, { memberIds: null, rollCalls: null });
     expect(r.failures).toEqual([]);
-    expect(r.checkedPages).toBe(3);
+    expect(r.checkedPages).toBe(5);
     expect(r.checkedLinks).toBeGreaterThan(0);
   });
 
@@ -73,6 +75,8 @@ describe("checkBuild", () => {
     const b = fakeBuild({
       "index.html": html(["/about", "/members", "/robots.txt", "/members/missing", "/assets/gone-1234.js"]),
       "about/index.html": "",
+      "terms/index.html": "",
+      "privacy/index.html": "",
       "members/index.html": "",
       "robots.txt": "",
     });
@@ -87,6 +91,8 @@ describe("checkBuild", () => {
     const b = fakeBuild({
       "index.html": "",
       "about/index.html": "",
+      "terms/index.html": "",
+      "privacy/index.html": "",
       "members/index.html": "",
       "assets/x.js": `href="/nope"`,
     });
@@ -111,7 +117,7 @@ describe("checkMemberData", () => {
 describe("checkSitemap", () => {
   const sitemap = (locs: string[]) =>
     `<?xml version="1.0" encoding="UTF-8"?><urlset>${locs.map((l) => `<url><loc>${l}</loc></url>`).join("")}</urlset>`;
-  const pages = { "index.html": "", "about/index.html": "", "members/index.html": "", "members/m_1/index.html": "" };
+  const pages = { "index.html": "", "about/index.html": "", "terms/index.html": "", "privacy/index.html": "", "members/index.html": "", "members/m_1/index.html": "" };
 
   it("sitemap.xml が無ければ失敗", () => {
     const r = checkSitemap(fakeBuild(pages), { memberIds: null, rollCalls: null });
@@ -121,20 +127,20 @@ describe("checkSitemap", () => {
   it("絶対 URL でも相対パスでも、全 <loc> がビルドに存在すれば OK", () => {
     const b = fakeBuild({
       ...pages,
-      "sitemap.xml": sitemap(["https://example.test/", "https://example.test/about", "/members", "/members/m_1"]),
+      "sitemap.xml": sitemap(["https://example.test/", "https://example.test/about", "/terms", "/privacy", "/members", "/members/m_1"]),
     });
     const r = checkSitemap(b, { memberIds: ["m_1"], rollCalls: null });
     expect(r.failures).toEqual([]);
-    expect(r.checkedUrls).toBe(4);
+    expect(r.checkedUrls).toBe(6);
   });
 
   it("存在しないページを指す <loc> は失敗", () => {
-    const b = fakeBuild({ ...pages, "sitemap.xml": sitemap(["/", "/about", "/members", "/members/m_1", "/members/gone"]) });
+    const b = fakeBuild({ ...pages, "sitemap.xml": sitemap(["/", "/about", "/terms", "/privacy", "/members", "/members/m_1", "/members/gone"]) });
     expect(checkSitemap(b, { memberIds: ["m_1"], rollCalls: null }).failures).toEqual([expect.stringContaining("/members/gone")]);
   });
 
   it("data/ が約束したページが sitemap に無ければ失敗（全議員・全採決・静的ページ）", () => {
-    const b = fakeBuild({ ...pages, "sitemap.xml": sitemap(["/", "/about", "/members"]) });
+    const b = fakeBuild({ ...pages, "sitemap.xml": sitemap(["/", "/about", "/terms", "/privacy", "/members"]) });
     expect(checkSitemap(b, { memberIds: ["m_1"], rollCalls: null }).failures).toEqual([
       expect.stringMatching(/not in sitemap.*\/members\/m_1/),
     ]);
@@ -198,5 +204,76 @@ describe("checkBrandAssets（#129: favicon / manifest / og:image の存在）", 
   it("欠けたファイルを一つずつ報告する", () => {
     const files: BuildFiles = new Map(all.filter((f) => f !== "favicon.ico" && f !== "og-image.png").map((f) => [f, ""]));
     expect(checkBrandAssets(files).failures).toEqual(["missing brand asset: favicon.ico", "missing brand asset: og-image.png"]);
+  });
+});
+
+describe("checkOpsData（#152: data/meta.json などの運用ファイルを /data/ で配信する）", () => {
+  const meta = JSON.stringify({ fetchedAt: "2026-08-23T08:05:01.375Z", sources: [], sessions: [221] });
+  it("data/ にある運用ファイルはすべてビルドに必要", () => {
+    const b = fakeBuild({ "data/meta.json": meta, "data/unmatched.json": "" });
+    expect(checkOpsData(b, { memberIds: null, rollCalls: null, opsFiles: ["meta.json", "unmatched.json", "group-mismatch.json"] }).failures).toEqual([
+      "missing data file: data/group-mismatch.json",
+    ]);
+    expect(checkOpsData(b, { memberIds: null, rollCalls: null, opsFiles: ["meta.json", "unmatched.json"] })).toEqual({ checkedFiles: 2, failures: [] });
+  });
+  it("meta.json は JSON として読めて、最上位に ISO 日時の fetchedAt を持つ（監視 probe.sh が鮮度を見る）", () => {
+    const base = { memberIds: null, rollCalls: null, opsFiles: ["meta.json"] };
+    expect(checkOpsData(fakeBuild({ "data/meta.json": "{not json" }), base).failures).toEqual(["invalid JSON: data/meta.json"]);
+    expect(checkOpsData(fakeBuild({ "data/meta.json": JSON.stringify({ sources: [] }) }), base).failures).toEqual(["data/meta.json: fetchedAt missing or not an ISO datetime"]);
+    expect(checkOpsData(fakeBuild({ "data/meta.json": JSON.stringify({ fetchedAt: "yesterday" }) }), base).failures).toEqual(["data/meta.json: fetchedAt missing or not an ISO datetime"]);
+    expect(checkOpsData(fakeBuild({ "data/meta.json": meta }), base).failures).toEqual([]);
+  });
+  it("data/ に運用ファイルが無い（null / 空）ときは何も要求しない", () => {
+    expect(checkOpsData(fakeBuild({ "index.html": "" }), { memberIds: null, rollCalls: null, opsFiles: null })).toEqual({ checkedFiles: 0, failures: [] });
+    expect(checkOpsData(fakeBuild({ "index.html": "" }), { memberIds: null, rollCalls: null, opsFiles: [] })).toEqual({ checkedFiles: 0, failures: [] });
+  });
+  it("OPS_DATA_FILES は meta.json と unmatched*/group-mismatch を含み、順序が固定", () => {
+    expect(OPS_DATA_FILES).toEqual(["meta.json", "unmatched.json", "unmatched-bills.json", "unmatched-groups.json", "group-mismatch.json"]);
+  });
+});
+
+describe("checkNoExternalResources（#168: 第三者送信ゼロ。HTML と fonts.css が外部リソースを読み込まない）", () => {
+  it("外部へのリソース読み込みが無ければ失敗なし（出典への <a href> は外部でよい）", () => {
+    const b = fakeBuild({
+      "index.html": '<link rel="stylesheet" href="/fonts/fonts.css"><script src="/assets/entry.js"></script><a href="https://www.sangiin.go.jp/x">出典</a>',
+      "fonts/fonts.css": '@font-face { src: url(shippori-mincho-700.0.woff2) format("woff2"); }',
+      "fonts/shippori-mincho-700.0.woff2": "",
+    });
+    expect(checkNoExternalResources(b)).toEqual({ checkedFiles: 2, failures: [] });
+  });
+  it("link / script / img / iframe の外部 URL（// も）を報告する", () => {
+    const b = fakeBuild({
+      "index.html":
+        '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=X"><script src="//cdn.example/a.js"></script>',
+      "about/index.html": '<img src="https://img.example/a.png"><iframe src="https://www.youtube.com/embed/x"></iframe>',
+      "fonts/fonts.css": "",
+    });
+    expect(checkNoExternalResources(b).failures).toEqual([
+      "index.html: external resource https://fonts.gstatic.com",
+      "index.html: external resource https://fonts.googleapis.com/css2?family=X",
+      "index.html: external resource //cdn.example/a.js",
+      "about/index.html: external resource https://img.example/a.png",
+      "about/index.html: external resource https://www.youtube.com/embed/x",
+    ]);
+  });
+  it("fonts/fonts.css が無い、または外部 URL・@import を含めば失敗", () => {
+    expect(checkNoExternalResources(fakeBuild({ "index.html": "" })).failures).toEqual(["missing fonts/fonts.css (self-hosted fonts, #168)"]);
+    const b = fakeBuild({ "index.html": "", "fonts/fonts.css": "@import url(https://fonts.googleapis.com/css2);\n@font-face { src: url(https://fonts.gstatic.com/a.woff2); }" });
+    expect(checkNoExternalResources(b).failures).toEqual([
+      "fonts/fonts.css: external resource https://fonts.googleapis.com/css2",
+      "fonts/fonts.css: external resource https://fonts.gstatic.com/a.woff2",
+    ]);
+  });
+  it("fonts.css が参照する woff2 がビルドに無ければ失敗", () => {
+    const b = fakeBuild({ "index.html": "", "fonts/fonts.css": '@font-face { src: url(biz-udpgothic-400.3.woff2) format("woff2"); }' });
+    expect(checkNoExternalResources(b).failures).toEqual(["fonts/fonts.css: missing fonts/biz-udpgothic-400.3.woff2"]);
+  });
+});
+
+describe("externalResourceUrls: self-origin and canonical", () => {
+  it("canonical is not a fetched resource; SITE_ORIGIN absolute urls are internal", () => {
+    const html = '<link rel="canonical" href="https://gikailog.jp/x"/><link rel="stylesheet" href="https://gikailog.jp/a.css"/><script src="https://cdn.example.com/x.js"></script>';
+    expect(externalResourceUrls(html, "https://gikailog.jp")).toEqual(["https://cdn.example.com/x.js"]);
+    expect(externalResourceUrls(html, "")).toEqual(["https://gikailog.jp/a.css", "https://cdn.example.com/x.js"]);
   });
 });

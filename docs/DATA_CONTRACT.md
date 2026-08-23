@@ -17,7 +17,7 @@ data/
   bills/
     index.json                      BillSummary[]    議案一覧用（軽量）。提出回次の降順・id 昇順
     {session}/{billId}.json         Bill             議案ページ用（提出者・賛成者・各院の結果・衆院の会派態度）。{session} は提出回次
-  unmatched.json                    名寄せできなかった氏名表記の一覧（票: rollCallId / 発言: speechId / 参法の発議者・衆院議案の提出者と賛成者: billId（後者は kind: "bill" 付き）/ 質問主意書の提出者: questionId（kind: "question"）。運用者が確認する）
+  unmatched.json                    名寄せできなかった氏名表記の一覧（票: rollCallId / 発言: speechId / 参法の発議者・衆院議案の提出者と賛成者: billId（後者は kind: "bill" 付き）/ 質問主意書の提出者: questionId（kind: "question"）/ 委員会出席の発議者: meetingId（kind: "attendance"）。運用者が確認する）
   unmatched-bills.json              議案情報の審議結果と紐づかなかった採決の一覧（人事案件・決議など。得票のみの result になる）
   unmatched-groups.json             名簿の会派略称のうち対応表（sangiin-groups.ts）に無いものの一覧（group は原文のまま公開され、運用者が対応表に追記する）
   group-mismatch.json               氏名で1人に紐づいたが、投票結果ページの会派がその議員のどの回次の名簿の会派とも一致しなかった票の一覧 {memberId, nameText, voteGroup, rosterGroup, rollCallId}（運用者が確認する）
@@ -37,7 +37,8 @@ type TimelineEntry =
   | { kind: "bill"; date: string; billId: string; title: string; role: "提出者" | "賛成者"; submitterText?: string; status?: string; sourceUrl: string }
   | { kind: "speech"; date: string; speechId: string; meeting: string; excerpt: string; chars: number; position?: string; sourceUrl: string }
   | { kind: "stance"; estimated: true; date: string; billId: string; title: string; group: string; stance: "賛成" | "反対"; stanceText: string; status?: string; sourceUrl: string } // 推定（衆院の会派態度）
-  | { kind: "question"; date: string; questionId: string; title: string; submitterText?: string; status?: string; answerDate?: string; answerUrl?: string; sourceUrl: string }; // 質問主意書（事実）
+  | { kind: "question"; date: string; questionId: string; title: string; submitterText?: string; status?: string; answerDate?: string; answerUrl?: string; sourceUrl: string } // 質問主意書（事実）
+  | { kind: "attendance"; estimated: false; date: string; meetingId: string; meeting: string; role: "発議者"; bills: { billId: string; title: string }[]; sourceUrl: string }; // 委員会に発議者として出席（事実。提出者ではない）
 interface RollCallSummary { id: string; session: number; date: string; title: string; totals: { total: number; yes: number; no: number }; result: string }
 ```
 
@@ -90,6 +91,14 @@ interface LocalVote { raw: string; legend: string; mapped?: VoteValue }   // 地
 - 質問はファイル（`questions/`）には書かず、名寄せ済みの提出者の timeline の `question` 行にだけなる。`counts.questions` はその数。未突合の質問はどこにも数えない。同日の並びは vote → bill → stance → question → speech。
 - 不変条件（`validateDataset`）: `question` 行の `sourceUrl` は衆院 経過ページ（`itdb_shitsumon.nsf/html/shitsumon/{数字}.htm`）か参院 詳細ページ（`kousei/syuisyo/{回次}/meisai/m….htm`）、`answerUrl` があれば衆参・NDL のドメイン、`counts.questions === timeline の question 行の数`。
 - Web は「質問主意書」タブ（日付／件名／答弁書／出典）と件数帯に出す。判は「質問」（提出・賛同・発言と同じ act 色。色で評価しない）。
+
+## 委員会出席（timeline の `attendance` 行、Issue #109）
+- **事実**だが**提出者の記録ではない**。出典は国会会議録検索システム 検索用API（`https://kokkai.ndl.go.jp/api/speech?nameOfHouse=参議院&speaker=会議録情報&any=発議者&sessionFrom={回次}&sessionTo={回次}`）の speechOrder 0（会議録情報）。委員会会議録の冒頭「出席者は左のとおり。」欄に「発議者　氏名君」の肩書きで載る氏名を採る。`sourceUrl` は会議録の冒頭情報（`https://kokkai.ndl.go.jp/txt/{会議録ID}/0`）、`date` は会議の日付、`meeting` は「会議名 第N号」、`meetingId` は会議録情報の speechID。
+- 載るのは**その日に出席した発議者**であり、参法の発議者全員ではない（217 参法 7 は「外2名」＝3 人に対し出席 2 人。`docs/research/sangiin-cosponsors.md` §5）。よって **`Bill.submitters` / `bill` 行（提出者）には絶対に入れない**。`role` は常に `"発議者"`（会議録の肩書きの原文）だが、Web は「委員会に発議者として出席」と明示し、「提出」の判とは別の「出席」の判で出す。人数が「外N名」と一致する日があっても全員と断定しない（推定しない）。
+- 採るのは参議院側の発議者だけ: 出席者欄の「衆議院議員」見出しの下（衆法の発議者）は採らない。「本日の会議に付した案件」に（参第N号）が無い会議録（衆法・憲法審査会など）は採らない。`bills` はその日の案件にあった参法の `{billId: "{回次}-参法-{番号}", title: 原文}` を全部（複数ならどの参法の発議者として出席したかは出席者欄からは分からないので選ばない）。議案番号の漢数字は位取りなし（一一＝11）で読み、十・百が現れたら例外。
+- 名寄せは `resolveMember`（会議の回次に効いている参院名簿）。出席者欄に会派は無いので同姓同名は絞れず `unmatched.json` に `kind: "attendance"`、`meetingId` 付きで載る。会議録の公開は約 1 か月遅れる（本会議発言と同じ。`meta.sources[]` の fetchedAt が時点）。
+- `counts` には数えない（`counts.bills` は `bill` 行だけ）。同日の並びは vote → bill → stance → question → attendance → speech。
+- 不変条件（`validateDataset`）: `attendance` 行は `house === "sangiin"` の議員にだけ付く、`estimated === false`、`role === "発議者"`、`sourceUrl` は `https://kokkai.ndl.go.jp/txt/{id}/{n}`。
 
 ## 議案（`bills/`、Issue #72）
 - 出典は衆議院 議案情報。一覧 `https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/kaiji{審議回次}.htm` から各議案の経過ページ `…/gian/keika/{id}.htm` を辿る（どちらも Shift_JIS）。`sourceUrl` は必ず経過ページ。`house` は `"shugiin"`。

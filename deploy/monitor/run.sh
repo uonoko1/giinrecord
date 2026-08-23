@@ -7,6 +7,10 @@
 # reported through report.sh: failed → Issue "[monitor] <environment>: <check>" (deduplicated), passed → close it if
 # one is open. Exit 1 when something was reported as failed (the workflow run shows red too).
 # Issue bodies: environment, check, the probe's reason, and the link to this run. Nothing about the server.
+# Issue #163: with MONITOR_REQUIRE_CF_ACCESS=1 (staging, behind Cloudflare Access) the run is skipped with a
+# ::warning:: and exit 0 when CF_ACCESS_CLIENT_ID / CF_ACCESS_CLIENT_SECRET are not set — probing without the
+# service token would only see Cloudflare's login page and open a false "http" Issue. Nothing is reported either
+# way in that case (an open Issue is neither created nor closed blindly).
 #   Tests: deploy/test/monitor-probe.test.sh (curl/openssl/gh/sleep are stubs)
 set -euo pipefail
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
@@ -14,6 +18,11 @@ ENV_NAME=${1:-}; ORIGIN=${2:-}
 if [ -z "$ENV_NAME" ] || [ -z "$ORIGIN" ]; then echo "usage: run.sh <environment> <origin>" >&2; exit 2; fi
 RETRY_SLEEP=${MONITOR_RETRY_SLEEP:-60}
 CHECKS=(http data tls)
+
+if [ "${MONITOR_REQUIRE_CF_ACCESS:-0}" = 1 ] && { [ -z "${CF_ACCESS_CLIENT_ID:-}" ] || [ -z "${CF_ACCESS_CLIENT_SECRET:-}" ]; }; then
+  echo "::warning::$ENV_NAME is behind Cloudflare Access but CF_ACCESS_CLIENT_ID / CF_ACCESS_CLIENT_SECRET are not set; probe skipped (docs/ops/staging-access.md)"
+  exit 0
+fi
 
 TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
 

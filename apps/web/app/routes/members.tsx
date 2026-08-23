@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useState } from "react";
 import { Link, type MetaArgs, useSearchParams } from "react-router";
 import type { Assembly, AssemblyId } from "@seiji-kiroku/shared";
 import { CoverBrand } from "../components/CoverBrand";
+import { SiteFooter } from "../components/SiteFooter";
 import { DIET_ASSEMBLIES } from "../lib/data-contract";
 import { type Dataset, dataset as bundled, type MemberSummary } from "../lib/dataset";
 import { formatDateTime } from "../lib/format";
@@ -78,117 +79,120 @@ export default function Members({ data = bundled }: { data?: Dataset }) {
   const sections = useMemo(() => groupByKanaRow(hits), [hits]);
 
   return (
-    <main className="page members">
-      <header className="cover">
-        <CoverBrand to="/" />
-        <h1 className="cover__title">国会議員</h1>
-        <p className="cover__lead">{DESCRIPTION}</p>
-      </header>
+    <>
+      <main className="page members">
+        <header className="cover">
+          <CoverBrand to="/" />
+          <h1 className="cover__title">国会議員</h1>
+          <p className="cover__lead">{DESCRIPTION}</p>
+        </header>
 
-      {data.members.length === 0 ? (
-        <section className="section">
-          <p className="note">取得前です。</p>
-        </section>
-      ) : (
-        <>
-          <section className="section members-controls" aria-label="絞り込み">
-            <label className="members-field" htmlFor={searchId}>
-              <span className="members-field__label">氏名・ふりがな</span>
-              <input
-                id={searchId}
-                type="search"
-                className="members-input"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="例：ふじかわ"
-                autoComplete="off"
-              />
-            </label>
-            <div className="members-selects">
-              <label className="members-field" htmlFor={assemblyFieldId}>
-                <span className="members-field__label">議会</span>
-                <select id={assemblyFieldId} className="members-select" value={assemblyId} onChange={(e) => changeAssembly(e.target.value as AssemblyId | "")}>
-                  <option value="">すべて</option>
-                  {assemblies.map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="members-field" htmlFor={groupId}>
-                <span className="members-field__label">会派</span>
-                <select id={groupId} className="members-select" value={group} onChange={(e) => setGroup(e.target.value)}>
-                  <option value="">すべて</option>
-                  {groups.map((g) => (
-                    <option key={g} value={g}>
-                      {g}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="members-field" htmlFor={districtId}>
-                <span className="members-field__label">選挙区</span>
-                <select id={districtId} className="members-select" value={district} onChange={(e) => setDistrict(e.target.value)}>
-                  <option value="">すべて</option>
-                  {districts.map((d) => (
-                    <option key={d} value={d}>
-                      {d}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-            {districtParam && (
-              <p className="members-chips" aria-label="絞り込み中">
-                <span className="members-chip">
-                  <span>選挙区：{districtParam}</span>
-                  <button type="button" className="members-chip__clear" aria-label="選挙区の絞り込みを解除" onClick={clearDistrict}>
-                    ×
-                  </button>
-                </span>
-              </p>
-            )}
-            <label className="members-check" htmlFor={formerId}>
-              <input id={formerId} type="checkbox" checked={includeFormer} onChange={(e) => setIncludeFormer(e.target.checked)} />
-              <span>元職も含める</span>
-            </label>
-            <p className="members-count" aria-live="polite">
-              <span className="num">{hits.length.toLocaleString("ja-JP")} 名</span>
-              {hits.length !== all.length && <span className="members-count__of">／ {all.length.toLocaleString("ja-JP")} 名</span>}
-            </p>
+        {data.members.length === 0 ? (
+          <section className="section">
+            <p className="note">取得前です。</p>
           </section>
-
-          <section className="section" aria-label="議員一覧">
-            {sections.length === 0 ? (
-              <p className="note">該当する議員はいません。</p>
-            ) : (
-              sections.map((s) => (
-                <div key={s.row} className="members-row-group">
-                  <h2 className="members-row-heading" id={`row-${s.row}`}>
-                    {s.row}
-                  </h2>
-                  <ul className="members-list" aria-labelledby={`row-${s.row}`}>
-                    {s.members.map((m) => (
-                      <MemberRow key={m.id} member={m} assemblyName={assemblyId === "" ? assemblyName : undefined} />
+        ) : (
+          <>
+            <section className="section members-controls" aria-label="絞り込み">
+              <label className="members-field" htmlFor={searchId}>
+                <span className="members-field__label">氏名・ふりがな</span>
+                <input
+                  id={searchId}
+                  type="search"
+                  className="members-input"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="例：ふじかわ"
+                  autoComplete="off"
+                />
+              </label>
+              <div className="members-selects">
+                <label className="members-field" htmlFor={assemblyFieldId}>
+                  <span className="members-field__label">議会</span>
+                  <select id={assemblyFieldId} className="members-select" value={assemblyId} onChange={(e) => changeAssembly(e.target.value as AssemblyId | "")}>
+                    <option value="">すべて</option>
+                    {assemblies.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.name}
+                      </option>
                     ))}
-                  </ul>
-                </div>
-              ))
-            )}
-          </section>
-        </>
-      )}
+                  </select>
+                </label>
+                <label className="members-field" htmlFor={groupId}>
+                  <span className="members-field__label">会派</span>
+                  <select id={groupId} className="members-select" value={group} onChange={(e) => setGroup(e.target.value)}>
+                    <option value="">すべて</option>
+                    {groups.map((g) => (
+                      <option key={g} value={g}>
+                        {g}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="members-field" htmlFor={districtId}>
+                  <span className="members-field__label">選挙区</span>
+                  <select id={districtId} className="members-select" value={district} onChange={(e) => setDistrict(e.target.value)}>
+                    <option value="">すべて</option>
+                    {districts.map((d) => (
+                      <option key={d} value={d}>
+                        {d}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              {districtParam && (
+                <p className="members-chips" aria-label="絞り込み中">
+                  <span className="members-chip">
+                    <span>選挙区：{districtParam}</span>
+                    <button type="button" className="members-chip__clear" aria-label="選挙区の絞り込みを解除" onClick={clearDistrict}>
+                      ×
+                    </button>
+                  </span>
+                </p>
+              )}
+              <label className="members-check" htmlFor={formerId}>
+                <input id={formerId} type="checkbox" checked={includeFormer} onChange={(e) => setIncludeFormer(e.target.checked)} />
+                <span>元職も含める</span>
+              </label>
+              <p className="members-count" aria-live="polite">
+                <span className="num">{hits.length.toLocaleString("ja-JP")} 名</span>
+                {hits.length !== all.length && <span className="members-count__of">／ {all.length.toLocaleString("ja-JP")} 名</span>}
+              </p>
+            </section>
 
-      <footer className="section members-source">
-        {data.meta ? (
-          <span>
-            取得 <time dateTime={data.meta.fetchedAt}>{formatDateTime(data.meta.fetchedAt)}</time>
-          </span>
-        ) : null}
-        <span>出典：参議院「議員一覧」、衆議院「議員一覧」。各議員ページに公式プロフィールへのリンクがあります。</span>
-      </footer>
-    </main>
+            <section className="section" aria-label="議員一覧">
+              {sections.length === 0 ? (
+                <p className="note">該当する議員はいません。</p>
+              ) : (
+                sections.map((s) => (
+                  <div key={s.row} className="members-row-group">
+                    <h2 className="members-row-heading" id={`row-${s.row}`}>
+                      {s.row}
+                    </h2>
+                    <ul className="members-list" aria-labelledby={`row-${s.row}`}>
+                      {s.members.map((m) => (
+                        <MemberRow key={m.id} member={m} assemblyName={assemblyId === "" ? assemblyName : undefined} />
+                      ))}
+                    </ul>
+                  </div>
+                ))
+              )}
+            </section>
+          </>
+        )}
+
+        <footer className="section members-source">
+          {data.meta ? (
+            <span>
+              取得 <time dateTime={data.meta.fetchedAt}>{formatDateTime(data.meta.fetchedAt)}</time>
+            </span>
+          ) : null}
+          <span>出典：参議院「議員一覧」、衆議院「議員一覧」。各議員ページに公式プロフィールへのリンクがあります。</span>
+        </footer>
+      </main>
+      <SiteFooter />
+    </>
   );
 }
 

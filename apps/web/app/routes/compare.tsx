@@ -9,6 +9,7 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { Stamp } from "../components";
+import { SiteFooter } from "../components/SiteFooter";
 import { COMPARE_MAX, type CompareRows, alignTimelines, parseCompareIds, readStoredCompareIds } from "../lib/compare";
 import type { DatasetMeta, MemberDetail, StanceEntry } from "../lib/data-contract";
 import { dataset } from "../lib/dataset";
@@ -76,23 +77,26 @@ export function ComparePage({ ids, load, meta }: { ids: string[]; load: (id: str
   }, [key, load]);
 
   return (
-    <main className="compare">
-      <header className="compare-cover">
-        <p className="compare-cover-top">
-          <Link to="/">← 議会ログ</Link>
-        </p>
-        <h1 className="compare-title">{TITLE}</h1>
-        <p className="compare-lead">同じ採決・議案に対する記録を、議員ごとに横へ並べます。記録をそのまま置くだけで、評価や集計はしません。</p>
-      </header>
-      {state.status === "loading" ? (
-        <p className="compare-empty">読み込み中…</p>
-      ) : state.status === "error" ? (
-        <p className="compare-empty">記録を読み込めませんでした（{state.message}）。</p>
-      ) : (
-        <Body members={state.members} missing={state.missing} />
-      )}
-      <Footer meta={meta} />
-    </main>
+    <>
+      <main className="compare">
+        <header className="compare-cover">
+          <p className="compare-cover-top">
+            <Link to="/">← 議会ログ</Link>
+          </p>
+          <h1 className="compare-title">{TITLE}</h1>
+          <p className="compare-lead">同じ採決・議案に対する記録を、議員ごとに横へ並べます。記録をそのまま置くだけで、評価や集計はしません。</p>
+        </header>
+        {state.status === "loading" ? (
+          <p className="compare-empty">読み込み中…</p>
+        ) : state.status === "error" ? (
+          <p className="compare-empty">記録を読み込めませんでした（{state.message}）。</p>
+        ) : (
+          <Body members={state.members} missing={state.missing} />
+        )}
+        <Footer meta={meta} />
+      </main>
+      <SiteFooter />
+    </>
   );
 }
 

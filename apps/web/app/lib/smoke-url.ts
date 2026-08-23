@@ -6,6 +6,8 @@
  * same values against the nginx config, so a drift in either place fails CI.
  */
 
+import { externalResourceUrls } from "./smoke";
+
 export interface ServedResponse {
   status: number;
   /** lower-cased header name -> value */
@@ -29,7 +31,7 @@ export const EXPECTED_SECURITY_HEADERS: Record<string, string> = {
   "x-frame-options": "DENY",
   "referrer-policy": "strict-origin-when-cross-origin",
   "content-security-policy":
-    "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; script-src 'self'; connect-src 'self'",
+    "default-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; script-src 'self'; connect-src 'self'",
 };
 
 export const EXPECTED_CACHE_CONTROL = {
@@ -86,6 +88,8 @@ export function checkServed(got: Map<string, ServedResponse>, t: UrlSmokeTargets
     if (!r) continue;
     if (r.status !== 200) failures.push(`${url}: status ${r.status} (expected 200)`);
     expectSecurityHeaders(url, r, failures);
+    // #168: the served HTML must not load anything off-site (Google Fonts etc.)
+    for (const u of externalResourceUrls(r.body)) failures.push(`${url}: external resource ${u}`);
   }
   if (t.unknown) {
     const r = take(t.unknown);

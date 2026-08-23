@@ -19,6 +19,8 @@ export interface ExpectedData {
   rollCalls: { session: number; id: string }[] | null;
   /** data/districts/by-zip.json から: 上3桁の一覧と、引き比べる見本の1件。ファイルが無ければ省略／null（#112） */
   districts?: { prefixes: string[]; sample: { zip: string; districts: ZipDistricts } } | null;
+  /** data/ 直下にある運用ファイル名（OPS_DATA_FILES のうち存在するもの）。data/ が無ければ省略／null（#152） */
+  opsFiles?: string[] | null;
 }
 
 export interface SmokeReport {
@@ -27,7 +29,7 @@ export interface SmokeReport {
   failures: string[];
 }
 
-export const REQUIRED_PAGES = ["index.html", "about/index.html", "members/index.html"];
+export const REQUIRED_PAGES = ["index.html", "about/index.html", "terms/index.html", "privacy/index.html", "members/index.html"];
 
 const HREF_RE = /\bhref\s*=\s*(?:"([^"]*)"|'([^']*)')/g;
 
@@ -129,6 +131,39 @@ export function checkDistrictData(files: BuildFiles, data: ExpectedData): Member
 }
 
 /**
+ * data/ 直下の運用ファイル（#152）。ビルドが build/client/data/ へそのままコピーし（scripts/copy-member-data.ts）、
+ * nginx が /data/ で配信する。meta.json は外部監視（deploy/monitor/probe.sh）が鮮度チェックに読む。
+ * 順序は固定（コピーとログが決定的になるように）。
+ */
+export const OPS_DATA_FILES = ["meta.json", "unmatched.json", "unmatched-bills.json", "unmatched-groups.json", "group-mismatch.json"];
+
+const ISO_DATETIME_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
+
+/**
+ * data/ にある運用ファイルはすべて build/client/data/ に要る。meta.json は JSON として読めて、
+ * 最上位に ISO 日時の fetchedAt を持たなければならない（probe.sh が最初の "fetchedAt" を ETL の実行時刻として読む）。
+ * meta.json の中身（files の値）は JSON 文字列で渡す。
+ */
+export function checkOpsData(files: BuildFiles, data: ExpectedData): MemberDataReport {
+  const expected = (data.opsFiles ?? []).map((name) => `data/${name}`);
+  const failures = expected.filter((f) => !files.has(f)).map((f) => `missing data file: ${f}`);
+  const metaFile = "data/meta.json";
+  const metaText = expected.includes(metaFile) ? files.get(metaFile) : undefined;
+  if (metaText !== undefined) {
+    let fetchedAt: unknown;
+    let parsed = true;
+    try {
+      fetchedAt = (JSON.parse(metaText) as { fetchedAt?: unknown }).fetchedAt;
+    } catch {
+      parsed = false;
+      failures.push(`invalid JSON: ${metaFile}`);
+    }
+    if (parsed && (typeof fetchedAt !== "string" || !ISO_DATETIME_RE.test(fetchedAt))) failures.push(`${metaFile}: fetchedAt missing or not an ISO datetime`);
+  }
+  return { checkedFiles: expected.length, failures };
+}
+
+/**
  * ロゴ・ファビコン・manifest・OGP 画像（#129）。SVG/manifest は public/ から、PNG/ICO はビルドが
  * brand/*.svg からラスタライズする（scripts/brand-assets.ts）。root.tsx と seoMeta が参照する名前と一致させる。
  */
@@ -137,6 +172,61 @@ export const REQUIRED_BRAND_ASSETS = ["favicon.svg", "favicon.ico", "icon-192.pn
 export function checkBrandAssets(files: BuildFiles): MemberDataReport {
   const failures = REQUIRED_BRAND_ASSETS.filter((f) => !files.has(f)).map((f) => `missing brand asset: ${f}`);
   return { checkedFiles: REQUIRED_BRAND_ASSETS.length, failures };
+}
+
+/** root.tsx が link する自サイト配信フォントの CSS（#168） */
+export const FONTS_CSS = "fonts/fonts.css";
+
+const RESOURCE_TAG_RE = /<(?:link|script|img|iframe|source|video|audio|object|embed)\b[^>]*?\b(?:href|src|data)\s*=\s*(?:"([^"]*)"|'([^']*)')/gi;
+const CSS_URL_RE = /url\(\s*(?:"([^"]*)"|'([^']*)'|([^)\s]+))\s*\)/g;
+
+const isExternal = (u: string) => /^(?:https?:)?\/\//i.test(u);
+
+/**
+ * Resource URLs a browser would *fetch* while rendering (link / script / img / iframe …) that point off-site.
+ * Plain <a href> to the source documents (sourceUrl) are links the visitor chooses to follow and are not listed.
+ */
+export function externalResourceUrls(html: string, siteOrigin = process.env.SITE_ORIGIN ?? ""): string[] {
+  const out: string[] = [];
+  for (const m of html.matchAll(RESOURCE_TAG_RE)) {
+    const tag = m[0];
+    // <link rel="canonical"|"alternate"> は取得されない（検索エンジン向けの自己参照）。
+    if (/^<link\b/i.test(tag) && /\brel\s*=\s*["'](?:canonical|alternate)["']/i.test(tag)) continue;
+    const u = m[1] ?? m[2] ?? "";
+    if (!isExternal(u)) continue;
+    // 自サイトの絶対 URL（SITE_ORIGIN）は外部ではない。
+    if (siteOrigin && (u === siteOrigin || u.startsWith(siteOrigin.replace(/\/$/, "") + "/"))) continue;
+    out.push(u);
+  }
+  return out;
+}
+
+function cssUrls(css: string): string[] {
+  return [...css.matchAll(CSS_URL_RE)].map((m) => m[1] ?? m[2] ?? m[3] ?? "");
+}
+
+/**
+ * Issue #168（第三者送信ゼロ）: every built page loads resources only from this site, fonts/fonts.css
+ * exists, references no external URL, and every woff2 it names is in the build.
+ */
+export function checkNoExternalResources(files: BuildFiles): MemberDataReport {
+  const failures: string[] = [];
+  let checkedFiles = 0;
+  for (const [rel, html] of files) {
+    if (!rel.endsWith(".html")) continue;
+    checkedFiles++;
+    for (const u of externalResourceUrls(html)) failures.push(`${rel}: external resource ${u}`);
+  }
+  const css = files.get(FONTS_CSS);
+  if (css === undefined) failures.push(`missing ${FONTS_CSS} (self-hosted fonts, #168)`);
+  else {
+    checkedFiles++;
+    for (const u of cssUrls(css)) {
+      if (isExternal(u)) failures.push(`${FONTS_CSS}: external resource ${u}`);
+      else if (!files.has(`fonts/${u}`)) failures.push(`${FONTS_CSS}: missing fonts/${u}`);
+    }
+  }
+  return { checkedFiles, failures };
 }
 
 export interface SitemapReport {

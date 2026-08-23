@@ -14,6 +14,8 @@ import { matchShugiinBills, type UnmatchedShugiinBillName } from "./match-shugii
 import { fetchShugiinQuestions, shugiinQuestionListUrl } from "./sources/shugiin-questions.ts";
 import { fetchSangiinQuestions, sangiinQuestionListUrl } from "./sources/sangiin-questions.ts";
 import { matchQuestions, type UnmatchedQuestionSubmitter } from "./match-questions.ts";
+import { attendancePageUrl, fetchCommitteeAttendance } from "./sources/kokkai-attendance.ts";
+import { matchAttendance, type MatchedAttendance, type UnmatchedAttendee } from "./match-attendance.ts";
 import { buildDataset, mergeRosters, rosterSessionsFor } from "./aggregate.ts";
 import { dietAssemblies, readSessionsOnDisk, resolveSessions, validateDataset, writeDataset } from "./dataset.ts";
 
@@ -24,6 +26,7 @@ import { dietAssemblies, readSessionsOnDisk, resolveSessions, validateDataset, w
  *   members/index.json, members/{id}.json, rollcalls/index.json, rollcalls/{session}/{id}.json,
  *   bills/index.json, bills/{session}/{id}.json（衆院 議案情報。S5 #72）,
  *   unmatched.json, unmatched-bills.json, unmatched-groups.json, group-mismatch.json, meta.json
+ *   （timeline には委員会出席の attendance 行も入る。#109）
  * then runs validateDataset (docs/DATA_CONTRACT.md) and exits non-zero on any violation.
  * Usage: pnpm etl [session...]   (default: DEFAULT_SESSIONS = 217..221)
  * 回次は「指定 ∪ data/ に既にある回次」を全部処理する（部分実行で他回次の出力を消さないため）。
@@ -63,7 +66,7 @@ if (shugiinGroupsUnknown.length) {
 }
 
 const rollCalls: RollCall[] = [];
-const unmatched: (Unmatched | UnmatchedSpeech | UnmatchedBillProposer | UnmatchedShugiinBillName | UnmatchedQuestionSubmitter)[] = [];
+const unmatched: (Unmatched | UnmatchedSpeech | UnmatchedBillProposer | UnmatchedShugiinBillName | UnmatchedQuestionSubmitter | UnmatchedAttendee)[] = [];
 const groupMismatch: GroupMismatch[] = [];
 for (const session of targets) {
   const list = await listRollCalls(session);
@@ -142,6 +145,16 @@ for (const session of targets) {
   speeches.push(...matched.speeches);
   unmatched.push(...matched.unmatched);
 }
+// 委員会出席（Issue #109）: 委員会会議録の冒頭「出席者」欄の「発議者」（参議院側だけ。案件に参法がある会議録だけ）を参院名簿に名寄せし、
+// timeline の attendance 行（「委員会に発議者として出席」）にする。出席した発議者は発議者全員ではないので Bill.submitters / bill 行には決して入れない。
+const attendance: MatchedAttendance[] = [];
+for (const session of targets) {
+  const meetings = await fetchCommitteeAttendance(session);
+  const matched = matchAttendance(meetings, members);
+  console.log(`session ${session}: ${meetings.length} committee meetings with 参法 proposers in attendance (${matched.entries.length} attendance entries matched, ${matched.unmatched.length} unmatched)`);
+  attendance.push(...matched.entries);
+  unmatched.push(...matched.unmatched);
+}
 // 未突合は ETL を止めず、運用者が確認するために列挙する（docs/DATA_CONTRACT.md）。
 if (unmatched.length) console.warn(`unmatched: ${unmatched.length} (see data/unmatched.json)`);
 // 氏名だけで紐づき、採決ページの会派がどの回次の名簿の会派とも違った票は data/group-mismatch.json に永続化する（Issue #24）。
@@ -151,7 +164,7 @@ if (groupMismatch.length) console.warn(`group mismatch (matched by name only): $
 await writeDataset(DATA, {
   // 議会一覧（#156）: 国会の2行。members の assemblyId（diet-sangiin / diet-shugiin）はこの id を指す。
   assemblies: dietAssemblies(memberSession),
-  ...buildDataset([...members, ...shugiin.members], rollCalls, new Map([...bills.results].map(([id, r]) => [id, r.decision])), speeches, proposed.entries, shugiinMatched.bills, questions.questions),
+  ...buildDataset([...members, ...shugiin.members], rollCalls, new Map([...bills.results].map(([id, r]) => [id, r.decision])), speeches, proposed.entries, shugiinMatched.bills, questions.questions, attendance),
   rollCallDetails: rollCalls,
   bills: shugiinMatched.bills,
   unmatched,
@@ -167,6 +180,7 @@ await writeDataset(DATA, {
       { name: "参議院 本会議投票結果", url: "https://www.sangiin.go.jp/japanese/touhyoulist/", fetchedAt },
       { name: "国会会議録検索システム 検索用API（参議院 本会議）", url: speechPageUrl(memberSession, 1, "sangiin"), fetchedAt },
       { name: "国会会議録検索システム 検索用API（衆議院 本会議）", url: speechPageUrl(memberSession, 1, "shugiin"), fetchedAt },
+      { name: "国会会議録検索システム 検索用API（参議院 委員会の出席者欄）", url: attendancePageUrl(memberSession), fetchedAt },
       ...targets.map((s) => ({ name: `参議院 議案情報（第${s}回）`, url: billListUrl(s), fetchedAt })),
       ...targets.map((s) => ({ name: `衆議院 議案情報（第${s}回）`, url: shugiinBillListUrl(s), fetchedAt })),
       ...targets.map((s) => ({ name: `衆議院 質問答弁情報（第${s}回）`, url: shugiinQuestionListUrl(s), fetchedAt })),

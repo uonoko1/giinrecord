@@ -21,7 +21,8 @@ internet ──443/80──▶ host nginx (certbot TLS)
 | `nginx-host-proxy.conf` | host nginx server blocks template: `:80` → 301 `https://DOMAIN` (www included), `:443` TLS → proxy. `vps-setup.sh <domain> [port]` writes the same text with `SERVER_NAMES` / `DOMAIN` / `PORT` / `LOG_NAME` substituted |
 | `vps-setup.sh` | one-time, sudo: web root, host server block, `noip` log format, `nginx -t` → reload (exit 1 on a broken config). Port `8081` (default) = production, `8083` = staging. **Installs nothing** |
 | `go-live.sh` | production go-live, root, idempotent (docker install, `/opt/gikailog` checkout, compose up, `vps-setup.sh`, certbot, analytics) |
-| `staging-setup.sh` | staging go-live, root, idempotent, after production exists: staging web root, compose up, `vps-setup.sh staging.gikailog.jp 8083`, certbot |
+| `staging-setup.sh` | staging go-live, root, idempotent, after production exists: staging web root, compose up, `cloudflare-allowlist.sh --install-cron`, `vps-setup.sh staging.gikailog.jp 8083`, certbot |
+| `cloudflare-allowlist.sh` | Issue #163: `/etc/nginx/snippets/gikailog-cloudflare-allow.conf` (`allow` Cloudflare's ips-v4/v6, `deny all`) from strictly validated ranges, atomic write, `nginx -t` gate with rollback, `--install-cron` = weekly root cron. Included by the **staging** 443 block only, which also returns 403 without `Cf-Access-Jwt-Assertion` (staging is behind Cloudflare Access: `docs/ops/staging-access.md`) |
 | `analytics/` | IP-less access-log aggregation of `gikailog.access.log` (production only; staging logs to `gikailog-staging.access.log` and is not aggregated) |
 
 Who may do what on the shared host:

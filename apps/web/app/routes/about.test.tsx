@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { describe, expect, it } from "vitest";
 import About, { meta as routeMeta } from "./about";
@@ -21,7 +21,7 @@ describe("About", () => {
     renderAbout();
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("このデータについて");
     expect(screen.getByText(/評価・採点・推薦はしません。すべての行に出典があります。/)).toBeInTheDocument();
-    for (const name of ["何が事実で、何が推定か", "記録にないこと", "更新", "検証する", "運営費について"]) {
+    for (const name of ["何が事実で、何が推定か", "記録にないこと", "更新", "検証する", "運営費について", "規約とプライバシー"]) {
       expect(screen.getByRole("heading", { level: 2, name })).toBeInTheDocument();
     }
   });
@@ -77,22 +77,15 @@ describe("About", () => {
   });
 
   describe("運営費について", () => {
-    it("費用・収入源・受け取らないもの・公開の約束を書く", () => {
+    it("方針3点だけを書き、費目・金額は書かない（#160）", () => {
       renderAbout();
       const section = screen.getByRole("region", { name: "運営費について" });
-      expect(section).toHaveTextContent("VPS");
-      expect(section).toHaveTextContent("未算出");
-      expect(section).toHaveTextContent("ドメイン");
-      expect(section).toHaveTextContent("取得予定");
-      expect(section).toHaveTextContent("運営者の自費");
-      expect(section).toHaveTextContent("政党・候補者・業界団体からは一切受け取りません");
-      expect(section).toHaveTextContent("資金源と支出を公開します");
-    });
-
-    it("広告は将来の可能性として予告だけする", () => {
-      renderAbout();
-      const section = screen.getByRole("region", { name: "運営費について" });
+      expect(section).toHaveTextContent("運営者の自費で運営");
+      expect(section).toHaveTextContent("政党・候補者・業界団体からは受け取らない");
       expect(section).toHaveTextContent("政治カテゴリを除外した広告");
+      for (const banned of ["VPS", "ドメイン", "未算出", "取得予定", "月額"]) {
+        expect(section).not.toHaveTextContent(banned);
+      }
       expect(section.querySelector("ins, iframe, script")).toBeNull();
     });
 
@@ -109,15 +102,20 @@ describe("About", () => {
     });
   });
 
-  describe("計測について（#58）", () => {
-    it("見出しがあり、何を記録し何を記録しないかを書く", () => {
+  describe("規約とプライバシー（#166）", () => {
+    it("計測の節は無く、本文の節に /terms と /privacy へのリンクがある", () => {
+      const { container } = renderAbout();
+      expect(screen.queryByRole("heading", { level: 2, name: "計測について" })).toBeNull();
+      const main = within(container.querySelector("main") as HTMLElement);
+      expect(main.getByRole("link", { name: "利用規約" })).toHaveAttribute("href", "/terms");
+      expect(main.getByRole("link", { name: "プライバシーポリシー" })).toHaveAttribute("href", "/privacy");
+    });
+
+    it("サイト共通フッター（#167）も描画され、同じリンクを持つ", () => {
       renderAbout();
-      expect(screen.getByRole("heading", { level: 2, name: "計測について" })).toBeInTheDocument();
-      const text = screen.getByRole("heading", { level: 2, name: "計測について" }).parentElement?.textContent ?? "";
-      expect(text).toContain("Cookie");
-      expect(text).toContain("IP アドレス");
-      expect(text).toMatch(/ページビュー|PV/);
-      expect(text).toContain("リファラ");
+      const footer = within(screen.getByRole("contentinfo"));
+      expect(footer.getByRole("link", { name: "利用規約" })).toHaveAttribute("href", "/terms");
+      expect(footer.getByRole("link", { name: "プライバシーポリシー" })).toHaveAttribute("href", "/privacy");
     });
   });
 });
