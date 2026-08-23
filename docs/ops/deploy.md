@@ -5,8 +5,8 @@ Issue #85。構成と初回セットアップは `deploy/README.md`。ここは�
 ## 構成の要点
 
 - 静的ファイルは `deploy.yml` が `rsync --delete` で `/var/www/seiji-kiroku/site/`（所有者 `ubuntu`）に置く。**ここは変えない**。
-- その同じディレクトリを `web` コンテナ（`nginx:alpine`、`deploy/docker-compose.yml`）が**読み取り専用**で bind mount し、`127.0.0.1:8080` だけに公開する。
-- ホスト nginx（共用。他サイトも同居）は `server_name DOMAIN` の block で TLS を終端し `proxy_pass http://127.0.0.1:8080` するだけ（`deploy/nginx-host-proxy.conf`）。SPA fallback・キャッシュ・セキュリティヘッダは全部コンテナ側 `deploy/nginx/site.conf`。
+- その同じディレクトリを `web` コンテナ（`nginx:alpine`、`deploy/docker-compose.yml`）が**読み取り専用**で bind mount し、`127.0.0.1:8081` だけに公開する。
+- ホスト nginx（共用。他サイトも同居）は `server_name DOMAIN` の block で TLS を終端し `proxy_pass http://127.0.0.1:8081` するだけ（`deploy/nginx-host-proxy.conf`）。SPA fallback・キャッシュ・セキュリティヘッダは全部コンテナ側 `deploy/nginx/site.conf`。
 - 権限：`ubuntu`（CI の rsync 鍵）は docker を触れない。docker のインストールと `docker compose` は人間が sudo／docker 権限で行う。
 - デプロイでコンテナの再起動は不要（bind mount なので rsync 直後から新ファイルが配信される）。
 
@@ -19,7 +19,7 @@ docker compose -f deploy/docker-compose.yml logs --tail 50     # コンテナの
 docker compose -f deploy/docker-compose.yml up -d              # 設定変更後（git pull 後）に再作成
 docker compose -f deploy/docker-compose.yml restart web
 docker compose -f deploy/docker-compose.yml pull && docker compose -f deploy/docker-compose.yml up -d   # イメージ更新
-curl -sI http://127.0.0.1:8080/ | head -1                      # コンテナ直叩き
+curl -sI http://127.0.0.1:8081/ | head -1                      # コンテナ直叩き
 curl -sI https://DOMAIN/ | grep -i -E "content-security|x-frame" # 外から見たヘッダ
 ```
 
