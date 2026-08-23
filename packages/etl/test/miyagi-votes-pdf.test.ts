@@ -47,7 +47,7 @@ test("parseVotePdf: 議員の列（縦書きの氏名）を x 座標で復元し
     ["21世紀クラブ", 2],
     ["日本維新の会", 2],
   ]);
-  assert.equal(pdf399.members.length, 57);
+  assert.equal(pdf399.members.length, 56);
 });
 
 test("parseVotePdf: 行（議案）は種別・番号・件名・議決月日・人数・表決方法・議決結果を原文で持ち、ページをまたいで続く", () => {

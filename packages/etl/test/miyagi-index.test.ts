@@ -16,21 +16,28 @@ test("parseSessionIndex: 会期（回次・原文ラベル）と「各議員の�
     sessionId: "399",
     sessionLabel: "令和8年2月定例会（第399回）",
     url: "https://www.pref.miyagi.jp/site/kengikai/hyoketu080318.html",
+    kind: "page",
   });
   assert.deepEqual(sessions[1], {
     sessionId: "398",
     sessionLabel: "令和7年11月定例会（第398回）",
     url: "https://www.pref.miyagi.jp/site/kengikai/hyoketu071217.html",
+    kind: "page",
   });
+  // 2013-10 より前は PDF への直リンク（「各議員の表決状況（PDF：739KB）」）。2008 年以前はリンクが無く、載らない
+  const s342 = sessions.find((s) => s.sessionId === "342");
+  assert.deepEqual(s342, { sessionId: "342", sessionLabel: "平成25年9月定例会（第342回）", url: "https://www.pref.miyagi.jp/documents/3149/230819_1.pdf", kind: "pdf" });
+  assert.equal(sessions.find((s) => s.sessionId === "320"), undefined);
 });
 
-test("parseSessionIndex: 会期 index の規則性 — ラベルは「令和N年M月定例会／臨時会（第N回）」、URL は hyoketu|hyouketsu{yymmdd}.html、回次は降順で一意", () => {
+test("parseSessionIndex: 会期 index の規則性 — ラベルは「令和N年M月定例会／臨時会（第N回）」、リンク文言「各議員の表決状況」が会期ごとに 1 本（slug は hyoketu080318 / hyouketsu070314 / hyouketu-271005 / hyo-ketu378 / 030705 と揺れるので頼らない）、回次は降順で一意", () => {
   const sessions = parseSessionIndex(index, sessionIndexUrl);
   const ids = new Set<string>();
   for (let i = 0; i < sessions.length; i++) {
     const s = sessions[i];
     assert.match(s.sessionLabel, /^(令和|平成)\d+年\d+月(定例会|臨時会)（第\d+回）$/, s.sessionLabel);
-    assert.match(s.url, /^https:\/\/www\.pref\.miyagi\.jp\/site\/kengikai\/(hyoketu|hyouketsu)\d{6}\.html$/, s.url);
+    if (s.kind === "page") assert.match(s.url, /^https:\/\/www\.pref\.miyagi\.jp\/(site|soshiki)\/kengikai\/[A-Za-z0-9_-]+\.html$/, s.url);
+    else assert.match(s.url, /^https:\/\/www\.pref\.miyagi\.jp\/documents\/\d+\/[A-Za-z0-9_-]+\.pdf$/, s.url);
     assert.equal(s.sessionId, s.sessionLabel.match(/第(\d+)回/)![1]);
     assert.ok(!ids.has(s.sessionId), `duplicate session ${s.sessionId}`);
     ids.add(s.sessionId);
@@ -38,8 +45,10 @@ test("parseSessionIndex: 会期 index の規則性 — ラベルは「令和N年
   }
 });
 
-test("parseSessionIndex: 表決状況のリンクが無いページは失敗する（別のページを黙って読まない）", () => {
+test("parseSessionIndex: 表決状況のリンクが 1 本も無いページは失敗する（別のページを黙って読まない）。2 本ある会期も失敗", () => {
   assert.throws(() => parseSessionIndex("<html><h2>令和8年2月定例会（第399回）</h2><ul><li><a href='/x.html'>日程</a></li></ul></html>", sessionIndexUrl), /各議員の表決状況/);
+  const two = "<html><h2>令和8年2月定例会（第399回）</h2><ul><li><a href='/site/kengikai/a.html'>各議員の表決状況</a></li><li><a href='/site/kengikai/b.html'>各議員の表決状況</a></li></ul></html>";
+  assert.throws(() => parseSessionIndex(two, sessionIndexUrl), /各議員の表決状況/);
 });
 
 test("parseSessionPage: 会期ページから表決 PDF の URL（絶対 URL）と見出しを取る", () => {

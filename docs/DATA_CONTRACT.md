@@ -7,7 +7,14 @@ ETL（書く側）と Web（読む側）はこのファイル群だけで結合�
 data/
   meta.json                         DatasetMeta（取得日時・出典・対象回次）
   assemblies/
-    index.json                      Assembly[]       議会の一覧（国会2件: diet-sangiin / diet-shugiin。地方議会は Phase 1 の ETL が足す。#156）
+    index.json                      Assembly[]       議会の一覧（国会2件: diet-sangiin / diet-shugiin ＋ 地方議会の行。#156 / #157）
+    {assemblyId}/                   地方議会のデータ（#157。国会の members/ rollcalls/ とは別。最初は pref-04 宮城県議会）
+      meta.json                     LocalAssemblyMeta（取得日時・出典・名簿の掲載日・対象会期・件数。不明セル数を含む）
+      members/index.json            LocalMember[]    名簿の原文（会派・選挙区・ふりがな）。counts.rollcalls 付き
+      members/{memberId}.json       LocalMemberDetail 議員ページ用（その人の表決の行、新しい順）
+      rollcalls/index.json          LocalRollCallSummary[] 表決一覧用（新しい順。votes 無し）
+      rollcalls/{sessionId}/{id}.json LocalRollCall   議案 1 件の表決（全議員の LocalVote）
+      unmatched.json                LocalUnmatchedName[] 表決 PDF の氏名のうち名簿に寄せられなかったもの（運用者が確認する）
   members/
     index.json                      MemberSummary[]  検索・一覧用（軽量）。assemblyId で議会を引く
     {memberId}.json                 MemberDetail     議員ページ用（その人の全記録）
@@ -62,6 +69,20 @@ interface LocalVote { raw: string; legend: string; mapped?: VoteValue }   // 地
 - 国会の既存データへの差分は `assemblies/index.json` の新設と `members/index.json` / `members/{id}.json` の `assemblyId` の追加だけ（それ以外は byte-identical）。
 - 不変条件（`validateDataset`）: `assemblies/index.json` が存在し、`id` は空でなく一意、`kind` は3値、`name` は空でない、`national` は `prefCode` を持たず `sourceUrl` は衆参・NDL のドメイン、`prefectural` / `municipal` は `prefCode` が 01〜47 で `sourceUrl` は https。`members/index.json` の各行の `assemblyId` は `assemblies/index.json` に存在し、`house` が `sangiin` / `shugiin` なら `diet-{house}` と一致する。`members/{id}.json` の `assemblyId` は index と同じ。
 - Web（`/members`）: 「院」の select（両院／参議院／衆議院）を「議会」の select（すべて＋`assemblies/index.json` の並び）に一般化する。既定はすべて。すべてを表示しているとき各行に議会名（`Assembly.name` の原文）を添える。`assemblies/index.json` が無い・`assemblyId` が無い古いデータは国会の2議会として読む（`house` から `diet-{house}`）。
+
+## 地方議会（`assemblies/{assemblyId}/`、Issue #157。最初の議会は宮城県議会 `pref-04`）
+
+型は `packages/shared/src/index.ts` の `LocalMember` / `LocalMemberDetail` / `LocalVoteEntry` / `LocalRollCall` / `LocalRollCallSummary` / `LocalAssemblyMeta` / `LocalUnmatchedName`。国会の型には触れない。
+
+- **id**: 議員は `p_{prefCode}_{名簿のプロフィールページの slug}`（例 `p_04_meibo_yuzuki`。氏名からは作らない）。表決は `{assemblyId}-{sessionId}-{議決日 yyyymmdd}-{議案種別}-{議案等番号}`（例 `pref-04-398-20251217-発議案-8`）。同じ会期に議決日が複数あっても一意。番号の無い行（決議案）は `無番号{その議決日・種別での通し番号}`。`sessionId` は議会内で一意（宮城は通算回次「398」）、`sessionLabel` は原文（「令和7年11月定例会（第398回）」）。
+- **表決値**: `LocalVote { raw, legend, mapped? }`。`raw` は PDF のセルの原文、`legend` はその PDF の凡例の意味の原文（PDF ごとに凡例を読む。第398回は「○賛成 ×反対 議議長 除除斥 欠欠席 －議場に不在」、第399回は 除 が無く「棄棄権 白白票」がある）。`mapped` は ○→賛成、×→反対、凡例が「議長・欠席・議場に不在・除斥・退席」のとき→投票なし。棄権・白票・不明には付けない。
+- **不明セル**: PDF の表を罫線（細い矩形）から復元し、文字の中心が入るセルにだけ置く。1 セルに 1 文字が入らない（空・2 つ以上・境界上）セルは `raw: "不明"`, `legend: "抽出不能"` として残し、`meta.counts.unknownCells` とワークフローの Summary に件数を出す。推定して埋めない。凡例に無い値が出たら ETL は失敗する。
+- **表決方法・結果**: `method { raw, legend }`（「起立」/「起立採決」、「簡易」/「簡易表決(異議の有無を諮る)」）。簡易表決の個人票は PDF に書かれている値そのまま（「全員賛成」と推定しない）。`result` は議決結果の原文（「可決」「承認」…）、`counts` は PDF の出席者数・表決者数・賛成者数・反対者数（votes から数え直さない）。timeline の `result` は「可決（賛成 49・反対 5）」の形。
+- **名寄せ**: 表決 PDF の氏名（縦書き 1 文字ずつを上から結合。空きマスは半角空白 1 つ）と名簿の氏名を、空白を除いた完全一致だけで寄せる。名簿に同じ氏名が 2 人いれば寄せない。寄せられない氏名（辞職・失職で名簿から消えた人など）は `memberId: ""` で `unmatched.json` に載せる。`members/` には名簿の人だけ（PDF にだけ出る人は作らない）。会派は PDF の凡例の正式名称（表決時点の事実）、名簿の会派は `LocalMember.group`。
+- **日付**: 議決月日（M/D）は PDF 見出しの和暦年（令和N年）で西暦にする。会期の月より 6 か月以上前の月は翌年（11月定例会の 1月）。名簿の as-of はページの「掲載日」（`LocalMember.asOf`, `meta.rosterAsOf`）。
+- **宮城県議会の取得先**（すべて `https://www.pref.miyagi.jp`）: 名簿は `/site/kengikai/18meibo-kaiha.html`（会派別）・`18meibo-kubetu.html`（選挙区別）・`18meibo-gojuuon.html`（五十音順）の 3 ページを突合（1 人でも食い違えば失敗）。会期は `/site/kengikai/kakohonkaigi.html` の h2「令和N年M月定例会／臨時会（第N回）」と、その下の「各議員の表決状況」リンク（2013-10 以降は会期ページ → PDF、それ以前は PDF 直リンク、2008 年以前はリンク無し）。直近 2 会期から（`--sessions N`）。
+- **不変条件（`validateLocalAssemblies`、`validateDataset` から呼ぶ）**: `assemblies/index.json` の地方議会の行ごとに `assemblies/{id}/` があれば検査する。全ファイルが stableJson。全レコードの `sourceUrl`（と `profileUrl`）のホストはその議会の `Assembly.sourceUrl` のホストに一致し https。`members/index.json` の id は一意で `p_{prefCode}_…`、`assemblyId` は index の id、`asOf` は ISO 日付。`members/{id}.json` の timeline は `local-vote` だけ・新しい順・`counts.rollcalls` と一致。`rollcalls/index.json` は新しい順で votes を持たない。各 `LocalRollCall` の `votes[].value` は `raw`・`legend` が空でなく `mapped` は 3 値だけ（不明には付けない）。`memberId` は index にあるか、空なら `unmatched.json` に載っている。議員ごとの timeline の件数＝rollcalls/ にあるその人の票の数。`meta.counts` の members / rollcalls / cells（議員数×議案数、不明を含む）/ unknownCells / unmatchedNames が実ファイルと一致。
+- `assemblies/index.json` は国会の日次 ETL と共有する: 日次 ETL は国会の 2 行を書き、既にある地方議会の行を残す（地方の行が無ければ従来どおり 2 行だけ＝byte-identical）。地方 ETL は自分の行だけ入れ替え、国会の 2 行がまだ無ければ補う。並びは国会 2 行 → 地方議会 id 順。
 
 ## 不変条件
 - `RollCall.votes[].memberId` は `members/index.json` に存在する id、または名寄せ失敗時は `""`（その場合 `unmatched.json` に載る）。

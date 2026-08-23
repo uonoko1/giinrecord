@@ -66,6 +66,6 @@ test("parseRoster: 会派別の人数（31・9・5・4・3・2・2）と選挙�
 });
 
 test("parseRoster: 3 ページで人が食い違えば失敗する（どちらかを黙って採用しない）", () => {
-  const kubetu = pages.kubetu.replace("meibo_yuzuki.html\">柚木 貴光</a>／", "");
+  const kubetu = pages.kubetu.replace(/<a href="\/site\/kengikai\/meibo_yuzuki\.html">[^<]*<\/a>／/, "");
   assert.throws(() => parseRoster({ ...pages, kubetu }), /柚木 貴光/);
 });

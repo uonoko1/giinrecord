@@ -59,9 +59,12 @@ test("writeLocalAssembly + validateLocalAssemblies: 契約どおりのパスに 
   const rcs = [rollCall("pref-04-398-20251217-発議案-8", "2025-12-17", [{ memberId: "p_04_a", nameText: "柚木 貴光", group: "自由民主党・県民会議", value: yes }])];
   rcs[0].counts = { present: 1, voting: 1, yes: 1, no: 0 };
   const built = buildLocalAssembly({ assembly: MIYAGI_ASSEMBLY, members, rollCalls: rcs, fetchedAt: "2026-08-24T00:00:00.000Z", rosterAsOf: "2026-04-23", sources: [], sessions: [{ sessionId: "398", sessionLabel: "令和7年11月定例会（第398回）", sourceUrl: "https://www.pref.miyagi.jp/site/kengikai/hyoketu071217.html", pdfUrl: PDF, rollcalls: 1, unknownCells: 0 }] });
-  await writeLocalAssembly(dir, built);
+  await writeLocalAssembly(dir, built, { national: dietAssemblies(221) });
   const index = JSON.parse(await readFile(join(dir, "assemblies", "index.json"), "utf8")) as Assembly[];
-  assert.deepEqual(index, [MIYAGI_ASSEMBLY]);
+  assert.deepEqual(index, [...dietAssemblies(221), MIYAGI_ASSEMBLY], "国会の 2 行が無ければ補い、その後に地方議会の行");
+  // 2 回目は既存の行（国会の 2 行）を残して自分の行だけ入れ替える
+  await writeLocalAssembly(dir, built);
+  assert.deepEqual(JSON.parse(await readFile(join(dir, "assemblies", "index.json"), "utf8")), [...dietAssemblies(221), MIYAGI_ASSEMBLY]);
   const text = await readFile(join(dir, "assemblies", "pref-04", "rollcalls", "398", "pref-04-398-20251217-発議案-8.json"), "utf8");
   assert.equal(text, stableJson(rcs[0]));
   assert.ok(await readFile(join(dir, "assemblies", "pref-04", "members", "p_04_a.json"), "utf8"));
@@ -85,7 +88,7 @@ test("validateLocalAssemblies: sourceUrl のホストが議会の公式ホスト
     sourceUrl: "https://example.com/x.pdf",
     votes: [
       { memberId: "p_04_zzz", nameText: "誰か", group: "g", value: { raw: "○", legend: "" } },
-      { memberId: "p_04_a", nameText: "柚木 貴光", group: "g", value: { raw: "△", legend: "三角", mapped: "賛成" } },
+      { memberId: "p_04_a", nameText: "柚木 貴光", group: "g", value: { raw: "不明", legend: "抽出不能", mapped: "賛成" } },
     ],
   };
   await writeFile(rel, stableJson(bad));

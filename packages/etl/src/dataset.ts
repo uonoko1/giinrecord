@@ -4,6 +4,7 @@ import { join } from "node:path";
 import type { Assembly, Bill, BillSummary, DatasetMeta, MemberDetail, MemberSummary, RollCall, RollCallSummary } from "@seiji-kiroku/shared";
 import type { Aggregated } from "./aggregate.ts";
 import { DIET_ASSEMBLY_IDS } from "./assemblies.ts";
+import { mergeAssemblies, validateLocalAssemblies } from "./local-assemblies.ts";
 import { stableJson } from "./json.ts";
 import type { GroupMismatch, Unmatched } from "./match-votes.ts";
 import type { UnmatchedSpeech } from "./match-speeches.ts";
@@ -83,7 +84,8 @@ export async function writeDataset(dir: string, ds: Dataset): Promise<void> {
     await mkdir(join(file, ".."), { recursive: true });
     await writeFile(file, stableJson(value));
   };
-  await put("assemblies/index.json", ds.assemblies);
+  // assemblies/index.json は地方議会の ETL（local-assemblies.ts）と共有する。既にある地方議会の行は残す（無ければ国会の 2 行だけ）。#157
+  await put("assemblies/index.json", mergeAssemblies(ds.assemblies, await readLocalAssemblyRows(dir)));
   await put("members/index.json", ds.index);
   for (const d of ds.details) await put(`members/${d.id}.json`, d);
   await put("rollcalls/index.json", ds.rollCalls);
@@ -96,6 +98,16 @@ export async function writeDataset(dir: string, ds: Dataset): Promise<void> {
   await put("unmatched-groups.json", ds.unmatchedGroups);
   await put("group-mismatch.json", ds.groupMismatch);
   await put("meta.json", ds.meta);
+}
+
+/** assemblies/index.json にある地方議会（prefectural / municipal）の行。無ければ []。 */
+async function readLocalAssemblyRows(dir: string): Promise<Assembly[]> {
+  try {
+    const rows = JSON.parse(await readFile(join(dir, "assemblies", "index.json"), "utf8")) as Assembly[];
+    return rows.filter((a) => a.kind !== "national");
+  } catch {
+    return [];
+  }
 }
 
 const SOURCE_HOST = /(^|\.)(sangiin\.go\.jp|shugiin\.go\.jp|ndl\.go\.jp)$/;
@@ -309,6 +321,8 @@ export async function validateDataset(dir: string): Promise<string[]> {
   }
   const countSum = [...voteCounts.values()].reduce((a, b) => a + b, 0);
   if (countSum !== matchedVotes) v.push(`Σ counts.rollcalls ${countSum} !== matched votes across all roll calls ${matchedVotes}`);
+  // 地方議会（assemblies/{id}/、#157）。ディレクトリがある議会だけ検査する
+  v.push(...(await validateLocalAssemblies(dir)));
   return v;
 }
 
