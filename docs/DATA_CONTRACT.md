@@ -19,6 +19,10 @@ data/
   unmatched-bills.json              議案情報の審議結果と紐づかなかった採決の一覧（人事案件・決議など。得票のみの result になる）
   unmatched-groups.json             名簿の会派略称のうち対応表（sangiin-groups.ts）に無いものの一覧（group は原文のまま公開され、運用者が対応表に追記する）
   group-mismatch.json               氏名で1人に紐づいたが、投票結果ページの会派がその議員のどの回次の名簿の会派とも一致しなかった票の一覧 {memberId, nameText, voteGroup, rosterGroup, rollCallId}（運用者が確認する）
+  districts/
+    by-zip.json                     Record<郵便番号7桁, { sangiin: string[]; shugiin: string[] }>  郵便番号 → 選挙区の候補（Issue #111、月次）
+    municipalities.json             { code, pref, city, shugiin: string[], split: boolean }[]   市区町村 → 小選挙区の候補（団体コード順）
+    meta.json                       DistrictsMeta（出典 URL・取得日時・基準日・件数・分割市区町村の一覧）。日次の meta.json とは別
 ```
 
 ## 型（shared に追加する）
@@ -81,6 +85,29 @@ interface RollCallSummary { id: string; session: number; date: string; title: st
 - `date` は衆議院の議案受理年月日、`sourceUrl` は経過ページ。`counts` には数えない（`counts.bills` は `bill` 行だけ）。同日の並びは vote → bill → stance → speech。
 - **回次ずれ（既知の限界、#88）**: 会派は**提出回次**（`bill.session`）の名簿で引いているが、「衆議院審議時会派態度」は**審議回次**（一覧 `kaiji{審議回次}.htm` の回次）の態度である。継続審議の議案では提出回次と審議回次が異なり、その間に会派が変わった議員は、審議時に所属していなかった会派の態度が載り得る。現状は衆院名簿が「現在」の1回次分しか無い（#71）ので実害は最新回次に限られるが、回次別の衆院名簿が入ったら `groupAt(member, 審議回次)` で引くように改める（審議回次は一覧ページ `kaiji{回次}.htm` の回次で、ETL は取得時にだけ知っている。`Bill` には保存していないので、改めるときは保存も併せて要る）。それまでは推定の推定を重ねず、提出回次の会派をそのまま使う。
 - 不変条件（`validateDataset`）: `stance` 行は `house === "shugiin"` の議員にだけ付く（参院議員の timeline にあれば違反）、`estimated === true`、`stance` は 賛成/反対、`sourceUrl` は衆院 経過ページ（`gian/keika/`）。`bill` 行の `sourceUrl` は参院 議案ページまたは衆院 経過ページ。
+
+## 選挙区（`districts/`、Issue #111）
+- 出典は 日本郵便 KEN_ALL（郵便番号 → 市区町村）と 総務省「衆議院小選挙区の区割りの改定等について」（令和4年改定）の都道府県別 PDF（公職選挙法 別表第一: 市区町村 → 小選挙区）、北海道の振興局所管市町村、東京都支庁設置条例、浜松市の区の再編。調査と as-of は `docs/research/districts.md`。ETL は `pnpm etl:districts`（`.github/workflows/districts.yml`、月 1 回。日次 ETL とは独立で、`data/districts/` だけを書く）。
+- 型（Web 側は #105 の残りで shared に移す）:
+
+```ts
+interface ZipDistricts { sangiin: string[]; shugiin: string[] }   // by-zip.json の値。名簿の district と同じ表記（"東京" / "鳥取・島根"、"東京4" / "北海道12"）
+interface DistrictMunicipality { code: string; pref: string; city: string; shugiin: string[]; split: boolean }
+interface DistrictsMeta {
+  fetchedAt: string;
+  asOf: { kenAll: string; shugiinDistricts: string };   // KEN_ALL の更新日（ダウンロードページの「YYYY年M月D日更新」）／区割り改定法の施行日（2022-12-28）
+  sources: { name: string; url: string; fetchedAt: string }[];
+  counts: { zips: number; municipalities: number; shugiinDistricts: number; splitMunicipalities: number };
+  splitMunicipalities: { code: string; pref: string; city: string; shugiin: string[] }[];
+}
+```
+
+- **事実のみ・推定しない**: 解決は市区町村の粒度。別表で市区町村の一部区域だけが指定されている（分割）ときは、その市区町村の全郵便番号に候補の区を**全部**並べる（`shugiin` が 2 つ以上、`municipalities.json` の `split: true`、`meta.splitMunicipalities` に一覧）。町丁目・番地で絞り込まない（KEN_ALL の町域と別表の区域の対応は一次資料に無い）。Web は候補が複数のとき「○○市は複数の小選挙区にまたがる」と事実として出し、どれかを選ばない。
+- 同じ郵便番号が複数の市区町村にまたがる行（KEN_ALL に 134 件）・都道府県をまたぐ行（3 件: 4980000, 6180000, 8710000）は和集合。そのため `sangiin` も配列（通常 1 要素）。
+- `sangiin` は都道府県（参院名簿の表記: 都府県を除く。北海道はそのまま）。合区は「鳥取・島根」「徳島・高知」。`shugiin` は `{都道府県}{区番号}`（衆院名簿の表記）。どちらも `members/index.json` の `district` と結合できる。
+- 別表の単位の解決: 市・区（政令市は「札幌市中央区」）は名前の完全一致、郡は前方一致で全町村、「郡（町村、…）」は町村の列挙（分割ではない）、「北海道○○振興局管内」は北海道のページの所管市町村のうち町村（市は別表に名指し）、「東京都○○支庁管内」は条例の固定表、再編で別表の旧区名が KEN_ALL に無い市（浜松市）は出典付きの固定表で現在の区に展開（旧区が複数の小選挙区にまたがって合流した区は分割扱い）。外字（釜石市の「釜」など PDF のフォントに Unicode が無い字）は 〓 として任意の 1 文字に照合し、県内で 1 件に絞れるときだけ紐づける。
+- 不変条件（`validateDistricts`、違反なら ETL は非 0 終了し data/ は PR にならない）: 郵便番号は 7 桁、`sangiin`/`shugiin` は空でない、`shugiin` の名称は `municipalities.json` に存在し `{非数字}{数字}` の形、`split === shugiin.length > 1`、`meta.counts` は実数と一致、`meta.asOf` は ISO 日付、`sources` はすべて https と `fetchedAt` を持つ。解決時の失敗（別表の単位が KEN_ALL に 1 件で紐づかない、KEN_ALL の市区町村に区が付かない、一部区域として載る市区が 1 つの区にしか現れない、区番号が連続しない、47 都道府県そろわない）はすべて例外で止まる（黙って落とさない）。
+- `data/districts/` は日次 ETL（`validateDataset`）の対象外で、日次 ETL は触らない。アーカイブ（`data-archive.zip`）には含まれる。
 
 ## 回次
 - ETL は「指定された回次 ∪ `meta.sessions` に既にある回次」を毎回まとめて処理し、`rollcalls/{session}/` を回次ごとに並べる。部分実行で他回次の出力は消えない（回次を減らすときは `data/` を消してから実行する）。

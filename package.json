@@ -11,6 +11,7 @@
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
-    "etl": "pnpm --filter @seiji-kiroku/etl run etl"
+    "etl": "pnpm --filter @seiji-kiroku/etl run etl",
+    "etl:districts": "pnpm --filter @seiji-kiroku/etl run etl:districts"
   }
 }
