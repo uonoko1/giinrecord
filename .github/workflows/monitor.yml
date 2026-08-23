@@ -1,0 +1,40 @@
+name: Monitor
+# Issue #135: self-hosted monitoring, no SaaS. External probes of production (every 10 minutes) and staging
+# (hourly): HTTP 200 + 議会ログ in <title> for / and /members/, /data/meta.json with fetchedAt ≤ 48 h, TLS expiry ≥ 14 d.
+# A check that fails twice in a row (60 s apart, deploy/monitor/run.sh) opens ONE Issue "[monitor] <env>: <check>"
+# (label monitor, deduplicated by title, deploy/monitor/report.sh) and the Issue is closed when the check passes again.
+# The VPS-side checks (containers, disk, nginx, rsync targets) live in deploy/monitor/health.sh (root cron).
+# Runbook: docs/ops/monitoring.md. Issue bodies contain the environment, the check, the reason and a link to the run —
+# never server details.
+on:
+  schedule:
+    - cron: "*/10 * * * *"   # production
+    - cron: "7 * * * *"      # staging (hourly, off the 10-minute grid so the two never race for the same Issue)
+  workflow_dispatch:
+permissions:
+  contents: read
+  issues: write
+concurrency:
+  group: monitor
+  cancel-in-progress: false
+jobs:
+  production:
+    if: github.event_name != 'schedule' || github.event.schedule == '*/10 * * * *'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: probe https://gikailog.jp (twice on failure) → Issues
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash deploy/monitor/run.sh production https://gikailog.jp
+  staging:
+    if: github.event_name != 'schedule' || github.event.schedule == '7 * * * *'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: probe https://staging.gikailog.jp (twice on failure) → Issues
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash deploy/monitor/run.sh staging https://staging.gikailog.jp
