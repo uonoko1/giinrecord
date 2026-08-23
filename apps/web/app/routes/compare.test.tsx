@@ -3,6 +3,7 @@
  * 一致率・スコア・色分けは出さない（禁止語検査）。
  */
 import { render, screen, waitFor, within } from "@testing-library/react";
+import { MemoryRouter } from "react-router";
 import { describe, expect, it } from "vitest";
 import type { MemberDetail } from "../lib/data-contract";
 import adachi from "../test-fixtures/compare/m_014002.json";
@@ -22,7 +23,11 @@ async function load(id: string): Promise<MemberDetail | null> {
 }
 
 function renderPage(ids: string[]) {
-  return render(<ComparePage ids={ids} load={load} meta={meta} />);
+  return render(
+    <MemoryRouter>
+      <ComparePage ids={ids} load={load} meta={meta} />
+    </MemoryRouter>,
+  );
 }
 
 describe("meta", () => {

@@ -110,3 +110,26 @@ export function alignTimelines(members: MemberDetail[]): CompareRows {
   );
   return { columns, facts: facts.rows, estimated: estimated.rows, unsharedVotes: facts.unshared };
 }
+
+/* ---------- localStorage（議員ページの「比較に追加」、Issue #104）。Cookie は使わない。必ず try/catch。 ---------- */
+
+export function readStoredCompareIds(): string[] {
+  try {
+    const raw = localStorage.getItem(COMPARE_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parseCompareIds(parsed.filter((x): x is string => typeof x === "string").join(","));
+  } catch {
+    return [];
+  }
+}
+
+export function writeStoredCompareIds(ids: string[]): void {
+  try {
+    if (ids.length === 0) localStorage.removeItem(COMPARE_STORAGE_KEY);
+    else localStorage.setItem(COMPARE_STORAGE_KEY, JSON.stringify(ids));
+  } catch {
+    /* storage unavailable (private mode etc.) — the in-page state still applies */
+  }
+}

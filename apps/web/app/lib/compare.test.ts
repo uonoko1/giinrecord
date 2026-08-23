@@ -8,7 +8,7 @@ import adachi from "../test-fixtures/compare/m_014002.json";
 import otsubaki from "../test-fixtures/compare/m_023003.json";
 import aisawa from "../test-fixtures/compare/h_41f223ac28.json";
 import aoki from "../test-fixtures/compare/h_dcf5bd65bf.json";
-import { COMPARE_MAX, COMPARE_STORAGE_KEY, alignTimelines, parseCompareIds, toggleCompareId } from "./compare";
+import { COMPARE_MAX, COMPARE_STORAGE_KEY, alignTimelines, parseCompareIds, readStoredCompareIds, toggleCompareId, writeStoredCompareIds } from "./compare";
 
 const A = adachi as MemberDetail;
 const O = otsubaki as MemberDetail;
@@ -40,6 +40,25 @@ describe("toggleCompareId", () => {
   });
   it("localStorage のキーは名前空間付き", () => {
     expect(COMPARE_STORAGE_KEY).toBe("seiji-kiroku:compare");
+  });
+});
+
+describe("localStorage の比較リスト", () => {
+  it("保存して読み戻せる。空にすればキーを消す", () => {
+    writeStoredCompareIds(["m_1", "h_2"]);
+    expect(localStorage.getItem(COMPARE_STORAGE_KEY)).toBe('["m_1","h_2"]');
+    expect(readStoredCompareIds()).toEqual(["m_1", "h_2"]);
+    writeStoredCompareIds([]);
+    expect(localStorage.getItem(COMPARE_STORAGE_KEY)).toBeNull();
+  });
+  it("壊れた値・配列でない値・不正な id は空か除外にして落ちない", () => {
+    localStorage.setItem(COMPARE_STORAGE_KEY, "{not json");
+    expect(readStoredCompareIds()).toEqual([]);
+    localStorage.setItem(COMPARE_STORAGE_KEY, '{"a":1}');
+    expect(readStoredCompareIds()).toEqual([]);
+    localStorage.setItem(COMPARE_STORAGE_KEY, '["m_1", 2, "../x"]');
+    expect(readStoredCompareIds()).toEqual(["m_1"]);
+    localStorage.removeItem(COMPARE_STORAGE_KEY);
   });
 });
 
