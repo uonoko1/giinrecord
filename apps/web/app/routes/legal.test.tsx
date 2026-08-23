@@ -92,6 +92,6 @@ describe("プライバシーポリシーの内容", () => {
   it("第三者送信の注記が無い（フォントは自サイト配信 #168）", () => {
     const { container } = renderPage(Privacy);
     expect(container.textContent).not.toContain("Google");
-    expect(container.textContent).toContain("フォント");
+    expect(container.textContent).toContain("第三者に送りません");
   });
 });
