@@ -8,6 +8,7 @@ import type { GroupMismatch, Unmatched } from "./match-votes.ts";
 import type { UnmatchedSpeech } from "./match-speeches.ts";
 import type { UnmatchedBillProposer } from "./match-bills.ts";
 import type { UnmatchedShugiinBillName } from "./match-shugiin-bills.ts";
+import type { UnmatchedQuestionSubmitter } from "./match-questions.ts";
 import { toBillSummary } from "./sources/shugiin-bills.ts";
 import type { UnmatchedBill } from "./sources/sangiin-bills.ts";
 import type { UnmatchedGroup } from "./sources/sangiin-members.ts";
@@ -17,8 +18,8 @@ export interface Dataset extends Aggregated {
   rollCallDetails: RollCall[];
   /** 議案（衆院 議案情報から。Issue #72）。`bills/{提出回次}/{id}.json` と `bills/index.json` になる。 */
   bills: Bill[];
-  /** 名寄せできなかった票（rollCallId）・発言（speechId）・参法の発議者 / 衆院 議案の提出者・賛成者（billId）。 */
-  unmatched: (Unmatched | UnmatchedSpeech | UnmatchedBillProposer | UnmatchedShugiinBillName)[];
+  /** 名寄せできなかった票（rollCallId）・発言（speechId）・参法の発議者 / 衆院 議案の提出者・賛成者（billId）・質問主意書の提出者（questionId）。 */
+  unmatched: (Unmatched | UnmatchedSpeech | UnmatchedBillProposer | UnmatchedShugiinBillName | UnmatchedQuestionSubmitter)[];
   /** 議案情報の審議結果と突合できなかった採決（得票のみの result になる）。 */
   unmatchedBills: UnmatchedBill[];
   /** 対応表（sangiin-groups.ts）に無い会派略称。group には原文のまま入る（Issue #36）。 */
@@ -89,6 +90,8 @@ const KEIKA_SOURCE = /^https:\/\/www\.shugiin\.go\.jp\/internet\/itdb_gian\.nsf\
 /** bill 行の sourceUrl は参院 議案情報の議案詳細ページ（提出者・審議状況の一次資料）か衆院の経過ページ。 */
 const BILL_SOURCE = /^https:\/\/www\.sangiin\.go\.jp\/japanese\/joho1\/kousei\/gian\/\d+\/meisai\/m\d+\.htm$/;
 const STANCE_VALUES = new Set(["賛成", "反対"]);
+/** question 行の sourceUrl は衆院 質問答弁情報の経過ページか参院 質問主意書の詳細ページ（提出日・提出者の一次資料、#106）。 */
+const QUESTION_SOURCE = /^https:\/\/(?:www\.shugiin\.go\.jp\/internet\/itdb_shitsumon\.nsf\/html\/shitsumon\/\d+\.htm|www\.sangiin\.go\.jp\/japanese\/joho1\/kousei\/syuisyo\/\d+\/meisai\/m\d+\.htm)$/;
 /** bills/ の id は `{提出回次}-{種別原文}-{番号 or 経過ページ id}`。 */
 const BILL_ID = /^(\d+)-[^-]+-[^-]+$/;
 
@@ -137,6 +140,7 @@ export async function validateDataset(dir: string): Promise<string[]> {
     let votes = 0;
     let speeches = 0;
     let bills = 0;
+    let questions = 0;
     for (let i = 0; i < d.timeline.length; i++) {
       const e = d.timeline[i];
       checkSource(rel, e, ` timeline[${i}]`);
@@ -152,6 +156,14 @@ export async function validateDataset(dir: string): Promise<string[]> {
         if (!STANCE_VALUES.has(e.stance)) v.push(`${rel} timeline[${i}]: stance must be 賛成/反対, got ${e.stance}`);
         if (!KEIKA_SOURCE.test(e.sourceUrl)) v.push(`${rel} timeline[${i}]: stance sourceUrl must be the 衆院 経過ページ (gian/keika/), got ${e.sourceUrl}`);
       }
+      if (e.kind === "question") {
+        questions++;
+        if (!QUESTION_SOURCE.test(e.sourceUrl)) v.push(`${rel} timeline[${i}]: question sourceUrl must be the 衆院 経過ページ (itdb_shitsumon.nsf/html/shitsumon/) or 参院 詳細ページ (kousei/syuisyo/{session}/meisai/), got ${e.sourceUrl}`);
+        if (e.answerUrl !== undefined) {
+          const host = safeHost(e.answerUrl);
+          if (!host || !SOURCE_HOST.test(host)) v.push(`${rel} timeline[${i}]: question answerUrl host not allowed: ${String(e.answerUrl)}`);
+        }
+      }
       if (e.kind === "vote") {
         votes++;
         if (!VOTE_VALUES.has(e.value)) v.push(`${rel} timeline[${i}]: vote value must be 賛成/反対/投票なし, got ${e.value}`);
@@ -162,6 +174,7 @@ export async function validateDataset(dir: string): Promise<string[]> {
     if (m.counts.rollcalls !== votes) v.push(`members/index.json ${m.id}: counts.rollcalls ${m.counts.rollcalls} !== timeline votes ${votes}`);
     if (m.counts.bills !== bills) v.push(`members/index.json ${m.id}: counts.bills ${m.counts.bills} !== timeline bills ${bills}`);
     if (m.counts.speeches !== speeches) v.push(`members/index.json ${m.id}: counts.speeches ${m.counts.speeches} !== timeline speeches ${speeches}`);
+    if (m.counts.questions !== questions) v.push(`members/index.json ${m.id}: counts.questions ${m.counts.questions} !== timeline questions ${questions}`);
   }
 
   const unmatched = (await read<Dataset["unmatched"]>("unmatched.json")) ?? [];
