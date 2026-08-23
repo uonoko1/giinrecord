@@ -40,7 +40,7 @@ case "$cmd" in
     esac ;;
   openssl)
     # s_client … | openssl x509 -noout -enddate
-    if [[ "$1" == x509 ]]; then echo "notAfter=${H_NOT_AFTER:-$(date -u -d '+60 days' '+%b %d %H:%M:%S %Y GMT')}"; fi ;;
+    if [[ "$1" == x509 ]]; then echo "notAfter=${H_NOT_AFTER-$(LC_ALL=C date -u -d '+60 days' '+%b %d %H:%M:%S %Y GMT')}"; fi ;;
   gh)
     case "$1 $2" in
       "issue list")   echo "${H_OPEN:-[]}" ;;
@@ -116,7 +116,7 @@ t_probe_meta_unparseable() {
 }
 t_probe_tls_expiring() {
   fresh p_tls
-  H_NOT_AFTER="$(date -u -d '+10 days' '+%b %d %H:%M:%S %Y GMT')" run_probe https://gikailog.jp && fail "expected non-zero"
+  H_NOT_AFTER="$(LC_ALL=C date -u -d '+10 days' '+%b %d %H:%M:%S %Y GMT')" run_probe https://gikailog.jp && fail "expected non-zero"
   assert_contains "$(cat "$P/out")" "fail tls" "10 days left fails"
   assert_contains "$(cat "$P/out")" "days" "reason says days"
 }

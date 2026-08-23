@@ -147,7 +147,7 @@ open_issue() { # open_issue <check>  (idempotent: adopts an existing open issue 
 close_issue() { # close_issue <check> <number>
   local tmp
   tmp=$(mktemp)
-  printf '{"body": "Recovered: check `%s` passed at %s."}\n' "$1" "$NOW_ISO" > "$tmp"
+  printf '{"body": "Recovered: check %s passed at %s."}\n' "$1" "$NOW_ISO" > "$tmp"
   api POST "/repos/$REPO/issues/$2/comments" "$tmp" >/dev/null || true
   printf '{"state": "closed", "state_reason": "completed"}\n' > "$tmp"
   if api PATCH "/repos/$REPO/issues/$2" "$tmp" >/dev/null; then rm -f "$STATE_DIR/issue.$1"; log "issue #$2 closed for $1"; fi

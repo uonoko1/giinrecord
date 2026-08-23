@@ -7,6 +7,7 @@ set -euo pipefail
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 SCRIPT="$HERE/../monitor/health.sh"
 PASS=0; FAIL=0
+ME=$(id -un)
 
 TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
 BIN="$TMP/bin"; mkdir -p "$BIN"
@@ -64,7 +65,7 @@ fresh() {
   export STUB_LOG="$LOG" STUB_HANDLER="$TMP/handler"
   export MONITOR_LOG="$P/monitor.log" MONITOR_STATE_DIR="$P/state" MONITOR_TOKEN_FILE="$P/token" \
     MONITOR_SITE_DIR="$P/site" MONITOR_STAGING_DIR="$P/staging" MONITOR_LATEST_DIR="$P/home/monitor" \
-    MONITOR_REPO="example/repo" MONITOR_OWNER="$(id -un)"
+    MONITOR_REPO="example/repo" MONITOR_OWNER="$ME"
   unset H_WEB H_STAGING H_NGINX H_DISK H_API_LIST H_API_RESP
 }
 run_health() { PATH="$BIN:$PATH" bash "$SCRIPT" > "$P/out" 2>&1; }
