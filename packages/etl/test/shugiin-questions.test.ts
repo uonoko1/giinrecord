@@ -52,7 +52,7 @@ describe("実HTML: 経過ページ 221001.htm", () => {
     assert.equal(q.questionUrl, `${BASE}/a221001.htm`);
   });
 
-  test("答弁本文のリンクが無ければ answerUrl / answerDate は省略（空欄は「未定または無し」なので推定しない）", () => {
+  test("答弁書受領年月日が空欄なら answerDate と answerUrl を省略（空欄は「未定または無し」なので推定しない）", () => {
     const html = fixture("shugiin-shitsumon-221001").replace("令和 8年 3月 3日", "");
     const q2 = parseShugiinQuestion(html, url, {});
     assert.equal(q2.answerUrl, undefined);
