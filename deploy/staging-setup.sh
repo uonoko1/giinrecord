@@ -6,8 +6,10 @@
 # 前提：production が go-live.sh で構築済み（docker・/opt/gikailog・ホスト nginx の noip log_format）。
 # 人間の作業はこれと「DNS A: staging.gikailog.jp → VPS（gikailog.jp と同じアドレス。リポジトリには書かない、#133）」だけ（README.md）。
 # 順序：引数検証 → repo pull → staging web root → ポート空き検査（ss -tln）→ コンテナ（web-staging 8083、常に --force-recreate：
-#       bind mount の site.conf は git pull で inode が変わり、再作成しないと反映されない）→ ホスト nginx の proxy block →
-#       certbot certonly（証明書が既にあればスキップ）→ もう一度 vps-setup.sh（TLS + redirect block）。production には触れない。
+#       bind mount の site.conf は git pull で inode が変わり、再作成しないと反映されない）→ Cloudflare allow-list（#163、
+#       snippet ＋週次 cron）→ ホスト nginx の proxy block → certbot certonly（証明書が既にあればスキップ）→
+#       もう一度 vps-setup.sh（TLS + redirect block、staging だけ Cloudflare gate）。production には触れない。
+# Cloudflare 側（DNS プロキシ ON、Access アプリ）は人間の作業：docs/ops/staging-access.md。
 #   テスト: deploy/test/staging-setup.test.sh（STAGING_SETUP_PREFIX で全パスを一時ディレクトリ配下に、docker 等はスタブ）
 set -euo pipefail
 
@@ -43,29 +45,32 @@ main() {
     *) echo "!! '$DOMAIN' は staging. で始まりません。production の conf を書き換えないため拒否します" >&2; usage; exit 1 ;;
   esac
 
-  step "0/7 前提確認（production が go-live.sh で構築済みであること）"
+  step "0/8 前提確認（production が go-live.sh で構築済みであること）"
   if ! command -v docker >/dev/null 2>&1 || [ ! -d "$REPO_DIR/.git" ]; then
     echo "!! docker または $REPO_DIR が無い。先に production を構築する:  ssh -t \"\${VPS_SSH_HOST:-sakura-vps}\" 'sudo bash -s gikailog.jp' < deploy/go-live.sh" >&2
     exit 1
   fi
 
-  step "1/7 リポジトリ更新（compose と site.conf の staging 対応を取り込む）"
+  step "1/8 リポジトリ更新（compose と site.conf の staging 対応を取り込む）"
   git -C "$REPO_DIR" pull -q --ff-only
 
-  step "2/7 staging の web root（deploy-staging.yml の rsync 先、所有者 ubuntu）"
+  step "2/8 staging の web root（deploy-staging.yml の rsync 先、所有者 ubuntu）"
   install -d -o ubuntu -g deploygroup -m 2775 "$SITE"
 
-  step "3/7 ポート空き検査（127.0.0.1:$PORT）"
+  step "3/8 ポート空き検査（127.0.0.1:$PORT）"
   ensure_port_free "$PORT" "$SERVICE"
 
-  step "4/7 コンテナ起動（$SERVICE: 127.0.0.1:$PORT、$SITE を読み取り専用で配信。常に --force-recreate）"
+  step "4/8 コンテナ起動（$SERVICE: 127.0.0.1:$PORT、$SITE を読み取り専用で配信。常に --force-recreate）"
   docker compose -f "$COMPOSE" up -d --wait --force-recreate
   curl -sI "http://127.0.0.1:$PORT/" | head -1 || true
 
-  step "5/7 ホスト nginx に $DOMAIN の proxy block（port $PORT）"
+  step "5/8 Cloudflare の IP allow-list（#163：staging は Cloudflare 経由のみ。snippet 生成＋週次 cron）"
+  bash "$REPO_DIR/deploy/cloudflare-allowlist.sh" --install-cron
+
+  step "6/8 ホスト nginx に $DOMAIN の proxy block（port $PORT）"
   bash "$REPO_DIR/deploy/vps-setup.sh" "$DOMAIN" "$PORT"
 
-  step "6/7 TLS（DNS が $DOMAIN -> このホストを指している必要あり。証明書が既にあればスキップ）"
+  step "7/8 TLS（DNS が $DOMAIN -> このホストを指している必要あり。証明書が既にあればスキップ）"
   if [ -f "$PREFIX/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
     echo "certificate for $DOMAIN already exists; certbot skipped (no -0001 duplicate)"
   elif getent hosts "$DOMAIN" >/dev/null 2>&1; then
@@ -74,10 +79,10 @@ main() {
     echo "!! $DOMAIN の DNS がまだ引けません。反映後に:  sudo certbot certonly --nginx -d $DOMAIN --deploy-hook 'systemctl reload nginx'  → このスクリプトを再実行"
   fi
 
-  step "7/7 ホスト nginx を TLS + redirect block に（証明書があるときだけ書き換わる。冪等）"
+  step "8/8 ホスト nginx を TLS + redirect block に（証明書があるときだけ書き換わる。冪等。#163 の Cloudflare gate 込み）"
   bash "$REPO_DIR/deploy/vps-setup.sh" "$DOMAIN" "$PORT"
 
-  echo "done. 次は PO 側: GitHub Environment 'staging' に DEPLOY_* secrets → Actions の Deploy (staging) を実行 → https://$DOMAIN/ で <meta name=robots content=noindex> と robots.txt の Disallow: / を確認"
+  echo "done. 次は PO 側: GitHub Environment 'staging' に DEPLOY_* secrets → Actions の Deploy (staging) を実行 → https://$DOMAIN/ で <meta name=robots content=noindex> と robots.txt の Disallow: / を確認（Cloudflare Access のログイン後。docs/ops/staging-access.md）"
 }
 
 main "$@"

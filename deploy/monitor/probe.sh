@@ -9,6 +9,10 @@
 #          deploy-data.yml is alive
 #   tls    the certificate presented for the origin's host is valid for at least PROBE_TLS_MIN_DAYS (14) more days
 # Reasons contain only the path, the HTTP status, ages and day counts — never headers, bodies or addresses.
+# Issue #163: staging sits behind Cloudflare Access. With CF_ACCESS_CLIENT_ID / CF_ACCESS_CLIENT_SECRET set (a
+# Cloudflare service token) every request carries CF-Access-Client-Id / CF-Access-Client-Secret. The headers are
+# written to a curl config file (mode 600, deleted on exit) and passed with -K: they never appear in argv (ps, logs)
+# and are never printed. The tls check then sees Cloudflare's edge certificate, which is what browsers see too.
 #   Tests: deploy/test/monitor-probe.test.sh (curl and openssl are stubs)
 set -euo pipefail
 export LC_ALL=C   # openssl prints English month names; date must parse them whatever the runner locale is
@@ -31,10 +35,29 @@ fail() { echo "fail $1 $2"; FAILED=1; }
 
 TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
 
+# Cloudflare Access service token (#163) → curl config file; CURL_OPTS holds only "-K <file>", never a value.
+CURL_OPTS=()
+CF_ID=${CF_ACCESS_CLIENT_ID:-}; CF_SECRET=${CF_ACCESS_CLIENT_SECRET:-}
+if [ -n "$CF_ID" ] || [ -n "$CF_SECRET" ]; then
+  if [ -z "$CF_ID" ] || [ -z "$CF_SECRET" ]; then
+    echo "probe.sh: CF_ACCESS_CLIENT_ID and CF_ACCESS_CLIENT_SECRET must be set together" >&2; exit 2
+  fi
+  # printable, no quotes / backslashes / newlines: the values go inside a quoted curl config string
+  for v in "$CF_ID" "$CF_SECRET"; do
+    if [[ ! "$v" =~ ^[A-Za-z0-9._-]+$ ]]; then
+      echo "probe.sh: CF_ACCESS_CLIENT_ID / CF_ACCESS_CLIENT_SECRET contain unexpected characters (value not shown)" >&2; exit 2
+    fi
+  done
+  CURLRC="$TMP/curlrc"
+  ( umask 077; printf 'header = "CF-Access-Client-Id: %s"\nheader = "CF-Access-Client-Secret: %s"\n' "$CF_ID" "$CF_SECRET" > "$CURLRC" )
+  CURL_OPTS=(-K "$CURLRC")
+fi
+unset CF_ID CF_SECRET
+
 # fetch <path> <outfile> → prints the HTTP status (000 when the connection failed)
 fetch() {
   local code
-  code=$(curl -sS --max-time "$TIMEOUT" -o "$2" -w '%{http_code}' "$ORIGIN$1" 2>/dev/null) || code=000
+  code=$(curl -sS --max-time "$TIMEOUT" "${CURL_OPTS[@]}" -o "$2" -w '%{http_code}' "$ORIGIN$1" 2>/dev/null) || code=000
   printf '%s' "$code"
 }
 # has_title <file> → the first <title> contains the site name
