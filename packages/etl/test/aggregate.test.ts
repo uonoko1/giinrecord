@@ -171,6 +171,17 @@ describe("buildDataset: speech を timeline に入れる", () => {
     assert.equal(d.index[0].counts.speeches, 1);
   });
 
+  test("衆院本会議の発言は衆院議員（h_）の timeline に入り、counts.speeches に数える（Issue #107）", () => {
+    const h = { ...member("h_1", "衆 一郎", "自由民主党・無所属の会"), house: "shugiin" as const, terms: [{ house: "shugiin" as const, group: "自由民主党・無所属の会", district: "東京1", from: "", sessionFrom: 221 }] };
+    const d = buildDataset([h], [], new Map(), [speech("122105254X03520260724_002", "h_1", "2026-07-24", { house: "shugiin" })]);
+    assert.equal(d.index[0].counts.speeches, 1);
+    assert.equal(d.details[0].timeline[0].kind, "speech");
+  });
+
+  test("発言の院と議員の院が違えば例外（衆院本会議の発言を参院議員に付けない）", () => {
+    assert.throws(() => buildDataset(members, [], new Map(), [speech("122105254X03520260724_002", "m_1", "2026-07-24", { house: "shugiin" })]), /house/);
+  });
+
   test("memberId の無い発言（名簿にいない大臣など）は timeline に入れない", () => {
     assert.ok(ds.details.every((d) => d.timeline.every((e) => e.kind !== "speech" || e.speechId !== "122115254X01920260605_010")));
   });
