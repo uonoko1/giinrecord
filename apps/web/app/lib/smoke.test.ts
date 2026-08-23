@@ -3,7 +3,7 @@
  * 実ファイルシステムは使わず、Map で表した偽のビルドディレクトリに対して検証する。
  */
 import { describe, expect, it } from "vitest";
-import { checkBuild, checkMemberData, checkSitemap, extractInternalHrefs, resolveHrefTarget, formatReport, type BuildFiles } from "./smoke";
+import { checkBuild, checkDistrictData, checkMemberData, checkSitemap, extractInternalHrefs, resolveHrefTarget, formatReport, type BuildFiles } from "./smoke";
 
 const html = (links: string[]) => `<html><body>${links.map((l) => `<a href="${l}">x</a>`).join("")}</body></html>`;
 
@@ -149,5 +149,42 @@ describe("formatReport", () => {
     const out = formatReport({ checkedPages: 1, checkedLinks: 0, failures: ["a", "b"] });
     expect(out).toContain("2 failure");
     expect(out).toContain("a");
+  });
+});
+
+describe("checkDistrictData（#112: 郵便番号の分割ファイル）", () => {
+  const sample = { zip: "1000001", districts: { sangiin: ["東京"], shugiin: ["東京1"] } };
+  const districts = { prefixes: ["100", "680"], sample };
+  const shard100 = JSON.stringify({ "1000001": sample.districts, "1000014": sample.districts });
+  const ok = fakeBuild({
+    "index.html": "",
+    "data/districts/meta.json": JSON.stringify({ fetchedAt: "2026-08-01T03:00:00+09:00" }),
+    "data/districts/zip/100.json": shard100,
+    "data/districts/zip/680.json": "{}",
+  });
+
+  it("by-zip.json の上3桁ごとに data/districts/zip/{上3桁}.json と meta.json が必要", () => {
+    expect(checkDistrictData(ok, { memberIds: null, rollCalls: null, districts })).toEqual({ checkedFiles: 3, failures: [] });
+    const missing = fakeBuild({ "index.html": "", "data/districts/zip/100.json": shard100 });
+    expect(checkDistrictData(missing, { memberIds: null, rollCalls: null, districts }).failures).toEqual([
+      expect.stringContaining("data/districts/meta.json"),
+      expect.stringContaining("data/districts/zip/680.json"),
+    ]);
+  });
+
+  it("見本の郵便番号を分割ファイルから引くと by-zip.json と同じ値になる", () => {
+    const wrong = fakeBuild({
+      "index.html": "",
+      "data/districts/meta.json": "{}",
+      "data/districts/zip/100.json": JSON.stringify({ "1000001": { sangiin: ["東京"], shugiin: ["東京2"] } }),
+      "data/districts/zip/680.json": "{}",
+    });
+    expect(checkDistrictData(wrong, { memberIds: null, rollCalls: null, districts }).failures).toEqual([expect.stringContaining("1000001")]);
+    const absent = fakeBuild({ "index.html": "", "data/districts/meta.json": "{}", "data/districts/zip/100.json": "{}", "data/districts/zip/680.json": "{}" });
+    expect(checkDistrictData(absent, { memberIds: null, rollCalls: null, districts }).failures).toEqual([expect.stringContaining("1000001")]);
+  });
+
+  it("data/districts/ が無いときは何も要求しない", () => {
+    expect(checkDistrictData(fakeBuild({ "index.html": "" }), { memberIds: null, rollCalls: null })).toEqual({ checkedFiles: 0, failures: [] });
   });
 });
