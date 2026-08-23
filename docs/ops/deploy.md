@@ -7,9 +7,9 @@ Issue #85・#127。構成と初回セットアップは `deploy/README.md`。こ
 | 環境 | URL | 配信元 | コード | データ |
 |---|---|---|---|---|
 | staging | https://staging.gikailog.jp | `web-staging`（127.0.0.1:8083）← `/var/www/gikailog/staging` | `main` への push で自動（`deploy-staging.yml`） | 自動（`deploy-data.yml`） |
-| production | https://gikailog.jp | `web`（127.0.0.1:8081）← `/var/www/gikailog/site` | 手動リリース（`release.yml`） | 自動（`deploy-data.yml`） |
+| production | https://gikailog.jp | `web`（127.0.0.1:8081）← `/var/www/gikailog/site` | 手動リリース（`release.yml`、成功時にタグ `released` を更新） | 自動（`deploy-data.yml`：コードは `released`、`data/` は `main`） |
 
-- 3 つとも再利用ワークフロー `deploy-site.yml`（`pnpm build` → `rsync --delete`）を呼ぶだけ。違いは Environment・`SITE_ORIGIN`・rsync 先。
+- 3 つとも再利用ワークフロー `deploy-site.yml`（`pnpm build` → `rsync --delete`）を呼ぶだけ。違いは Environment・`SITE_ORIGIN`・rsync 先・（production-data だけ）`data_ref: main` の overlay。
 - staging ビルド（`SITE_ORIGIN=https://staging.gikailog.jp`）は `robots.txt` が `Disallow: /`、全ページに `<meta name="robots" content="noindex, nofollow">`（`apps/web/app/lib/seo.ts`）。さらにコンテナの `site.conf` が Host `staging.gikailog.jp` に `X-Robots-Tag: noindex, nofollow` を付ける。
 - GitHub Environment：`staging`、`production`（**required reviewers = 承認ボタン**。PO が設定）、`production-data`（reviewers 無し）。3 つとも同じ `DEPLOY_*` secrets。
 
@@ -24,16 +24,24 @@ Issue #85・#127。構成と初回セットアップは `deploy/README.md`。こ
 
 ### 日次データ（`deploy-data.yml`）
 
-ETL の data PR がマージされると `etl.yml` / `districts.yml` が `gh workflow run deploy-data.yml --ref main` を起動し、staging と production（Environment `production-data`、承認なし）の両方を `main` でビルドして配る。
-**S1 の簡略化**：本来 production へは「最後にリリースした ref」に data/ だけ載せるべきだが、現状は `main` 全体をビルドする。つまり main にマージ済みで未リリースのコード変更も日次データと一緒に production に出る。リリース前に main に置きたくない変更はマージしない運用（あるいは後続 PBI で「最終リリース ref の記録 + その ref でビルド」）。
+ETL の data PR がマージされると `etl.yml` / `districts.yml` が `gh workflow run deploy-data.yml --ref main` を起動し、staging と production（Environment `production-data`、承認なし）の両方に配る。
+
+- **staging** は `main` をそのままビルドする（従来どおり）。
+- **production** は「最後にリリースしたコード + `main` の `data/`」をビルドする（#134）。`main` にマージ済みで未リリースのコードは日次データと一緒に本番へ出ない。
+  1. `resolve` ジョブが `scripts/ci/released-ref.sh resolve` で `refs/tags/released` の SHA を取る（タグが無ければ `main`。初回 Release 前のフォールバック）。
+  2. `deploy-site.yml` がその SHA を checkout し、`data_ref: main` で `released-ref.sh overlay main`（`data/` を丸ごと main のものに置き換える。追加も削除も反映、`data/` 以外は触らない）→ `pnpm build` → rsync。
+- タグ `released` は **Release が成功したときだけ** `release.yml` の `released-tag` ジョブが REST API（`GITHUB_TOKEN`、`contents: write`）で動かす（#127 の承認フローの外、deploy secrets は使わない）。ロールバックで古い SHA を Release すればタグもそこへ戻る。手で打ち直すなら `git push -f origin <sha>:refs/tags/released`（次の deploy-data から効く）。
+- 確認：Actions → Deploy data の Summary に `production code ref: <sha>` と `deployed ref <sha> + data/ from main` が出る。`gh api repos/uonoko1/gikailog/git/ref/tags/released` で現在のタグ。
+- 注意：`released` が指す SHA には `scripts/ci/released-ref.sh` が含まれている必要がある（#134 以前の SHA を Release するとタグは動くが次の deploy-data が overlay ステップで失敗する。その場合は新しい SHA を Release し直す）。
 
 ## 構成の要点
 
 - 静的ファイルは `deploy-site.yml` が `rsync --delete` で `/var/www/gikailog/site/`（production）と `/var/www/gikailog/staging/`（staging）に置く（所有者 `ubuntu`）。**ここは変えない**。
 - それぞれを `web` / `web-staging` コンテナ（`nginx:alpine`、`deploy/docker-compose.yml`、同じ `site.conf`）が**読み取り専用**で bind mount し、`127.0.0.1:8081` / `127.0.0.1:8083` だけに公開する。
 - ホスト nginx（共用。他サイトも同居）は `server_name` ごとの block で TLS を終端し `proxy_pass` するだけ（`deploy/nginx-host-proxy.conf`、`sites-available/gikailog.conf` と `gikailog-staging.conf`）。SPA fallback・キャッシュ・セキュリティヘッダ・staging の noindex は全部コンテナ側 `deploy/nginx/site.conf`。
+- www→apex：ホスト側 `:80` block は www も apex も `https://gikailog.jp` へ 301（テンプレートで定義。certbot の `--redirect` は使わない）。`:443` は両ホスト名を proxy し、https の www→apex 301 はコンテナの `site.conf`（#141）。
 - 権限：`ubuntu`（CI の rsync 鍵）は docker を触れない。docker のインストールと `docker compose` は人間が sudo／docker 権限で行う。
-- デプロイでコンテナの再起動は不要（bind mount なので rsync 直後から新ファイルが配信される）。
+- デプロイでコンテナの再起動は不要（bind mount なので rsync 直後から新ファイルが配信される）。**ただし `site.conf` / `docker-compose.yml` の変更は `git pull` だけでは反映されない**：bind mount した単一ファイルは `git pull` で inode が変わり、コンテナは古い inode を掴んだまま。必ず `docker compose ... up -d --force-recreate`（setup 系スクリプトは常にこれを付ける、#141）。
 
 ## 改名の移行（#119、seiji-kiroku → gikailog）
 
@@ -51,7 +59,7 @@ VPS 上のパス・conf・compose project はすべて `gikailog` 名（`/opt/gi
 cd /opt/gikailog
 docker compose -f deploy/docker-compose.yml ps                 # State: running (healthy) を確認
 docker compose -f deploy/docker-compose.yml logs --tail 50     # コンテナの nginx ログ（IP を含む。共有・保存しない）
-docker compose -f deploy/docker-compose.yml up -d              # 設定変更後（git pull 後）に再作成
+docker compose -f deploy/docker-compose.yml up -d --force-recreate   # 設定変更後（git pull 後）。--force-recreate 必須（bind mount の inode）
 docker compose -f deploy/docker-compose.yml restart web            # staging は web-staging
 docker compose -f deploy/docker-compose.yml pull && docker compose -f deploy/docker-compose.yml up -d   # イメージ更新
 curl -sI http://127.0.0.1:8081/ | head -1                      # コンテナ直叩き（staging は 8083）
@@ -62,8 +70,23 @@ curl -sI https://DOMAIN/ | grep -i -E "content-security|x-frame" # 外から見�
 
 1. `packages/etl/test/deploy-docker.test.ts`（ヘッダ・キャッシュの固定値）と `apps/web/app/lib/smoke-url.ts`（URL モード smoke の期待値）を先に直す。
 2. `deploy/nginx/site.conf` / `deploy/docker-compose.yml` を変更。CI の `docker-web` ジョブが `compose config → up → smoke --url` で検証する。
-3. マージ後、VPS で `git pull && docker compose -f deploy/docker-compose.yml up -d`。
-4. ホスト側 `deploy/nginx-host-proxy.conf` を変える場合は `vps-setup.sh` の heredoc も同じ内容にする（テストが同一性を検査）。certbot 済みのホストでは setup は上書きしないので、`sudo nano /etc/nginx/sites-available/gikailog.conf` → `sudo nginx -t && sudo systemctl reload nginx`。
+3. マージ後、VPS で `git pull && docker compose -f deploy/docker-compose.yml up -d --force-recreate`（`up -d` だけでは古い `site.conf` のまま）。
+4. ホスト側 `deploy/nginx-host-proxy.conf` を変える場合は `vps-setup.sh` の heredoc も同じ内容にする（テストが同一性を検査）。反映は `sudo bash deploy/vps-setup.sh gikailog.jp`（staging は `staging.gikailog.jp 8083`）の再実行。**certbot 管理の conf（`# managed by Certbot` を含む、#141 以前に構築したホスト）は書き換えず `proxy_pass` のポートだけ合わせる**ので、そのホストでは `sudo nano /etc/nginx/sites-available/gikailog.conf` → `sudo nginx -t && sudo systemctl reload nginx`。テンプレートへ移行したいときは `sudo certbot certonly`（既存証明書があるので実際には不要）→ conf を退避して削除 → `vps-setup.sh` 再実行。
+
+## setup スクリプトの冪等性と安全装置（#141）
+
+`deploy/go-live.sh`（production）と `deploy/staging-setup.sh`（staging）は何度実行しても同じ状態に収束する。実行前に必ず先頭の usage を読む（Sprint 7 の事故：staging-setup に本番ドメインを渡した）。
+
+| 装置 | 内容 |
+|---|---|
+| 引数検証 | `staging-setup.sh` は `staging.` で始まるドメインだけ受け付ける。`go-live.sh` と `vps-setup.sh <domain> 8081` は `staging.*` を拒否、`vps-setup.sh <domain> 8083` は `staging.*` だけ受け付ける。違反時は何も実行せず exit 1 |
+| ポート空き検査 | コンテナ起動前に `ss -tln` で `127.0.0.1:8081`／`8083` を確認。自分の compose service（`docker compose ps -q web`）以外が LISTEN していれば exit 1（共用ホストの他サイトを奪わない） |
+| `--force-recreate` | `docker compose up -d --wait --force-recreate` を常に使う（上記 inode 問題） |
+| certbot | `/etc/letsencrypt/live/<domain>/fullchain.pem` があれば certbot を実行しない（`-0001` の重複証明書を作らない）。無ければ `certbot certonly --nginx -d <domain> [-d www.<domain>] --deploy-hook 'systemctl reload nginx'`（conf は編集させない） |
+| ホスト conf の保護 | `vps-setup.sh` は `# managed by Certbot` を含む既存 conf を書き換えない（`proxy_pass` のポートだけ同期）。証明書が無ければ `:80` の proxy block だけ（certbot の challenge 用）、あればテンプレート全体（`:80` 301 + `:443` proxy）を書く。setup スクリプトは certbot の後にもう一度 `vps-setup.sh` を呼ぶ |
+| 他サイト | `sites-available/gikailog*.conf` と `conf.d/gikailog-noip-log.conf` 以外に書かない |
+
+本番ホストの現状（2026-08-23）：`sites-available/gikailog.conf` は certbot 管理 + 手編集（`:80` で www も `https://gikailog.jp` へ、www の 443 block は削除して 1 つの 443 block が両ホスト名を持つ）。テンプレートはこの挙動を再現しており、`go-live.sh gikailog.jp` の再実行は conf を変えない（no-op）。テストは `bash deploy/test/vps-setup.test.sh`、`go-live.test.sh`、`staging-setup.test.sh`（root・docker・nginx・certbot は不要、全部スタブ）。
 
 ## 失敗モード
 
@@ -72,6 +95,9 @@ curl -sI https://DOMAIN/ | grep -i -E "content-security|x-frame" # 外から見�
 | 外から 502 Bad Gateway | コンテナが落ちている／docker が起動していない | `docker compose ps`。`systemctl status docker`。`up -d` |
 | 外から 404、コンテナ直叩きも 404 | `/var/www/gikailog/site` が空（Release / Deploy data が未実行／失敗。staging なら `/var/www/gikailog/staging` と Deploy (staging)） | Actions の Release / Deploy data / Deploy (staging) を確認。`ls /var/www/gikailog/site`、`ls /var/www/gikailog/staging` |
 | `up` で `bind source path does not exist` | `/var/www/gikailog/site` が無い | `vps-setup.sh` を再実行（ディレクトリ作成は冪等） |
+| `git pull` したのに `site.conf` の変更が効かない | bind mount の inode 問題 | `docker compose -f deploy/docker-compose.yml up -d --force-recreate` |
+| setup スクリプトが `port 8081/8083 は別のプロセスが LISTEN 中` で止まる | 共用ホストの別プロセス（他サイト）がそのポートを使っている | `ss -tlnp` で確認。他サイトなら `docker-compose.yml` と `vps-setup.sh` のポートを変える PBI を切る。自分の古いコンテナなら `docker compose ps` → `down` |
+| `https://www.gikailog.jp` が証明書エラー | 443 block の `server_name` に www が無い（手編集時） | `nginx -T \| grep server_name`。テンプレート（`deploy/nginx-host-proxy.conf`）は両名を持つ |
 | ヘルスチェックが unhealthy | `site.conf` の構文エラー | `docker compose logs web`。`docker compose exec web nginx -t` |
 | ヘッダが付かない／CSP が違う | `site.conf` の変更漏れ（ホスト側には add_header が無い） | CI の `docker-web` が落ちているはず。`site.conf` を修正して `up -d` |
 | `/assets/` に CSP が無い | nginx の仕様（location 内の `add_header` は server の add_header を継承しない）。旧 server block でも同じ挙動 | 仕様どおり（HTML ページには付く）。変えるなら site.conf と smoke-url.ts を同時に |
