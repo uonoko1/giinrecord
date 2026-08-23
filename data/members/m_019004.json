@@ -38,6 +38,26 @@
    "value": "賛成"
   },
   {
+   "answerDate": "2025-07-01",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217222.htm",
+   "date": "2025-06-19",
+   "kind": "question",
+   "questionId": "217-sangiin-222",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217222.htm",
+   "submitterText": "石川 大我君",
+   "title": "男性のＤⅤ被害と自殺に関する質問主意書"
+  },
+  {
+   "answerDate": "2025-07-01",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217221.htm",
+   "date": "2025-06-19",
+   "kind": "question",
+   "questionId": "217-sangiin-221",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217221.htm",
+   "submitterText": "石川 大我君",
+   "title": "ＤＶからの避難等に関する質問主意書"
+  },
+  {
    "date": "2025-06-18",
    "groupValue": "賛成",
    "kind": "vote",

@@ -1258,6 +1258,16 @@
    "value": "賛成"
   },
   {
+   "answerDate": "2025-03-14",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217051.htm",
+   "date": "2025-03-03",
+   "kind": "question",
+   "questionId": "217-sangiin-51",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217051.htm",
+   "submitterText": "柳ヶ瀬 裕文君",
+   "title": "ねんきん定期便に記載されている老齢厚生年金額が実際の受給金額より少ない可能性等に関する質問主意書"
+  },
+  {
    "date": "2025-02-19",
    "groupValue": "賛成",
    "kind": "vote",
@@ -1385,6 +1395,36 @@
    "meeting": "本会議 第4号",
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715254X00420250212/13",
    "speechId": "121715254X00420250212_013"
+  },
+  {
+   "answerDate": "2025-02-04",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217012.htm",
+   "date": "2025-01-24",
+   "kind": "question",
+   "questionId": "217-sangiin-12",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217012.htm",
+   "submitterText": "柳ヶ瀬 裕文君",
+   "title": "日中ハイレベル人的・文化交流対話における中国側の発表文の解釈に関する質問主意書"
+  },
+  {
+   "answerDate": "2025-02-04",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217011.htm",
+   "date": "2025-01-24",
+   "kind": "question",
+   "questionId": "217-sangiin-11",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217011.htm",
+   "submitterText": "柳ヶ瀬 裕文君",
+   "title": "中国訪問中の岩屋毅外務大臣の発言に関する質問主意書"
+  },
+  {
+   "answerDate": "2025-02-04",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217010.htm",
+   "date": "2025-01-24",
+   "kind": "question",
+   "questionId": "217-sangiin-10",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217010.htm",
+   "submitterText": "柳ヶ瀬 裕文君",
+   "title": "税収弾性値の算出に用いる計算式等に関する質問主意書"
   }
  ]
 }
