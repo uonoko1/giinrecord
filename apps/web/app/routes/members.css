@@ -7,6 +7,10 @@
 .members-selects { display: flex; gap: 10px; }
 .members-check { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink); }
 .members-check input { accent-color: var(--brass); margin: 0; }
+.members-chips { margin: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.members-chip { display: inline-flex; align-items: center; gap: 6px; padding: 2px 4px 2px 10px; border: 1px solid var(--brass); color: var(--brass); font-size: 13px; font-weight: 700; }
+.members-chip__clear { font: inherit; font-size: 14px; line-height: 1; padding: 2px 6px; border: 0; background: transparent; color: inherit; cursor: pointer; }
+.members-chip__clear:focus-visible { outline: 2px solid var(--brass); outline-offset: 1px; }
 .members-count { margin: 0; font-family: var(--font-head); font-size: 15px; font-weight: 700; color: var(--brass); }
 .members-count__of { margin-left: 6px; font-family: var(--font-body); font-size: 12px; font-weight: 400; color: var(--muted); }
 .members .num { font-variant-numeric: tabular-nums; }

@@ -1,4 +1,5 @@
 import { render, screen, within } from "@testing-library/react";
+import { renderToString } from "react-dom/server";
 import { MemoryRouter } from "react-router";
 import { describe, expect, it } from "vitest";
 import Home, { meta as routeMeta } from "./home";
@@ -32,6 +33,24 @@ describe("Home", () => {
   it("検索入口は /members へ向く", () => {
     renderHome();
     expect(screen.getByRole("link", { name: /議員一覧/ })).toHaveAttribute("href", "/members");
+  });
+
+  it("郵便番号の入力欄がさがす入口にある（#112）", () => {
+    renderHome();
+    const entry = screen.getByRole("region", { name: "さがす" });
+    expect(within(entry).getByRole("textbox", { name: /郵便番号/ })).toBeInTheDocument();
+    expect(within(entry).getByRole("button", { name: "選挙区をさがす" })).toBeInTheDocument();
+  });
+
+  it("プリレンダー（JS 無し）の HTML では入力欄の代わりに /members へのリンクを出す", () => {
+    const html = renderToString(
+      <MemoryRouter>
+        <Home data={dataset} />
+      </MemoryRouter>,
+    );
+    expect(html).not.toContain("<input");
+    expect(html).toContain('href="/members"');
+    expect(html).toContain("選挙区からさがす");
   });
 
   it("最近の本会議採決は日付降順で上位4件を出し、各件が採決ページへリンクする", () => {

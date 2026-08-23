@@ -269,6 +269,33 @@ export type QuestionEntry = {
 export type TimelineEntry = VoteEntry | BillEntry | SpeechEntry | StanceEntry | QuestionEntry;
 
 /** Row of `data/rollcalls/index.json` (採決一覧用). */
+/* ---------- 選挙区（data/districts/、Issue #111 / #112） ---------- */
+
+/** `districts/by-zip.json` の値。名簿の district と同じ表記（"東京" / "鳥取・島根"、"東京4" / "北海道12"）。分割市区町村は候補を全部並べる（推定しない）。 */
+export interface ZipDistricts {
+  sangiin: string[];
+  shugiin: string[];
+}
+
+/** `districts/municipalities.json` の1行（団体コード順）。`split === shugiin.length > 1`。 */
+export interface DistrictMunicipality {
+  code: string;
+  pref: string;
+  city: string;
+  shugiin: string[];
+  split: boolean;
+}
+
+/** `districts/meta.json`（日次の meta.json とは別）。 */
+export interface DistrictsMeta {
+  fetchedAt: string;
+  /** 基準日: KEN_ALL の更新日／区割り改定法の施行日（2022-12-28） */
+  asOf: { kenAll: string; shugiinDistricts: string };
+  sources: { name: string; url: string; fetchedAt: string }[];
+  counts: { zips: number; municipalities: number; shugiinDistricts: number; splitMunicipalities: number };
+  splitMunicipalities: { code: string; pref: string; city: string; shugiin: string[] }[];
+}
+
 export interface RollCallSummary {
   id: string;
   session: number;

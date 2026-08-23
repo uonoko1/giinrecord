@@ -178,6 +178,54 @@ describe("/members", () => {
     });
   });
 
+  describe("?district= クエリ（#112: Home の郵便番号から）", () => {
+    const shugiin = { ...members[0], id: "h_000001", name: "衆 太郎", kana: "しゅう たろう", house: "shugiin" as const, group: "自民", district: "東京1" };
+    function renderAt(url: string, list = [...members, shugiin]) {
+      return render(
+        <MemoryRouter initialEntries={[url]}>
+          <Members data={{ ...dataset, members: list }} />
+        </MemoryRouter>,
+      );
+    }
+
+    it("district を初期値として両院から絞り込み、選挙区の select にも反映する", () => {
+      renderAt("/members?district=%E6%9D%B1%E4%BA%AC");
+      expect(screen.getByText("2 名")).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: /佐藤 花子/ })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: /蓮舫/ })).toBeInTheDocument();
+      expect(screen.getByRole("combobox", { name: "選挙区" })).toHaveValue("東京");
+    });
+
+    it("衆院の小選挙区名（東京1）でも絞り込める", () => {
+      renderAt("/members?district=%E6%9D%B1%E4%BA%AC1");
+      expect(screen.getByText("1 名")).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: /衆 太郎/ })).toBeInTheDocument();
+    });
+
+    it("絞り込み中のチップを出し、解除すると全員に戻る", async () => {
+      const user = userEvent.setup();
+      renderAt("/members?district=%E6%9D%B1%E4%BA%AC");
+      const chip = screen.getByText("選挙区：東京");
+      expect(chip).toBeInTheDocument();
+      await user.click(screen.getByRole("button", { name: "選挙区の絞り込みを解除" }));
+      expect(screen.queryByText("選挙区：東京")).not.toBeInTheDocument();
+      expect(screen.getByText("11 名")).toBeInTheDocument();
+      expect(screen.getByRole("combobox", { name: "選挙区" })).toHaveValue("");
+    });
+
+    it("該当しない選挙区なら 0 名と「該当する議員はいません」", () => {
+      renderAt("/members?district=%E5%AD%98%E5%9C%A8%E3%81%97%E3%81%AA%E3%81%84");
+      expect(screen.getByText("0 名")).toBeInTheDocument();
+      expect(screen.getByText("該当する議員はいません。")).toBeInTheDocument();
+      expect(screen.getByText("選挙区：存在しない")).toBeInTheDocument();
+    });
+
+    it("クエリが無ければチップは出ない", () => {
+      renderAt("/members");
+      expect(screen.queryByRole("button", { name: "選挙区の絞り込みを解除" })).not.toBeInTheDocument();
+    });
+  });
+
   it("取得日時をフッターに出す", () => {
     renderMembers();
     expect(screen.getByText(/2026\.08\.22 06:00/)).toBeInTheDocument();

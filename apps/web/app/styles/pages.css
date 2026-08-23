@@ -14,6 +14,24 @@
 .entry__link { display: block; padding: 12px 16px; border: 1px solid var(--rule); text-decoration: none; color: var(--ink); font-weight: 700; font-size: 15px; }
 .entry__sub { font-size: 13px; color: var(--muted); }
 
+/* 郵便番号 → 選挙区（#112）。色は tokens.css の変数だけ */
+.zip { display: flex; flex-direction: column; gap: 8px; padding: 12px 16px; border: 1px solid var(--rule); }
+.zip__form { display: flex; flex-direction: column; gap: 6px; }
+.zip__label { font-size: 15px; font-weight: 700; color: var(--ink); }
+.zip__row { display: flex; gap: 8px; }
+.zip__input { flex: 1; min-width: 0; font: inherit; font-size: 15px; padding: 8px 10px; border: 1px solid var(--rule); background: var(--paper); color: var(--ink); border-radius: 0; font-variant-numeric: tabular-nums; }
+.zip__input:focus { outline: 2px solid var(--brass); outline-offset: 1px; }
+.zip__button { font: inherit; font-size: 14px; font-weight: 700; padding: 8px 14px; border: 1px solid var(--ink); background: var(--ink); color: var(--paper); border-radius: 0; cursor: pointer; white-space: nowrap; }
+.zip__button:focus-visible { outline: 2px solid var(--brass); outline-offset: 1px; }
+.zip__result { display: flex; flex-direction: column; gap: 6px; padding-top: 8px; border-top: 1px solid var(--rule); }
+.zip__title { font-family: var(--font-head); font-size: 16px; font-weight: 700; margin: 0; font-variant-numeric: tabular-nums; }
+.zip__rows { display: flex; flex-direction: column; gap: 4px; margin: 0; font-size: 14px; }
+.zip__item { display: flex; gap: 12px; align-items: baseline; }
+.zip__item dt { flex-shrink: 0; width: 3.5em; font-size: 12px; color: var(--muted); }
+.zip__item dd { margin: 0; }
+.zip__links { display: flex; flex-wrap: wrap; gap: 6px 12px; }
+.zip__district { font-weight: 700; }
+
 .list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
 .list__item { padding: 10px 0; border-bottom: 1px solid var(--rule); display: flex; flex-direction: column; gap: 4px; }
 .list__item a { text-decoration: none; color: var(--ink); font-weight: 700; font-size: 14px; line-height: 1.5; }

@@ -5,6 +5,8 @@
  * rules are unit-testable; scripts/smoke.ts does the filesystem walk.
  */
 
+import type { ZipDistricts } from "@seiji-kiroku/shared";
+import { DISTRICTS_DATA_PATH, zipShardUrl } from "./districts";
 import { sitemapLocs } from "./sitemap";
 
 /** relative path (posix, no leading slash) -> file content */
@@ -15,6 +17,8 @@ export interface ExpectedData {
   memberIds: string[] | null;
   /** entries from data/rollcalls/index.json, or null when that file is absent */
   rollCalls: { session: number; id: string }[] | null;
+  /** data/districts/by-zip.json から: 上3桁の一覧と、引き比べる見本の1件。ファイルが無ければ省略／null（#112） */
+  districts?: { prefixes: string[]; sample: { zip: string; districts: ZipDistricts } } | null;
 }
 
 export interface SmokeReport {
@@ -94,6 +98,33 @@ export function expectedMemberDataFiles(data: ExpectedData): string[] {
 export function checkMemberData(files: BuildFiles, data: ExpectedData): MemberDataReport {
   const expected = expectedMemberDataFiles(data);
   const failures = expected.filter((f) => !files.has(f)).map((f) => `missing data file: ${f}`);
+  return { checkedFiles: expected.length, failures };
+}
+
+/**
+ * Home の郵便番号入力（#112）は data/districts/by-zip.json をバンドルせず、ビルドが上3桁ごとに切り出した
+ * build/client/data/districts/zip/{上3桁}.json と meta.json を fetch する（scripts/shard-districts.ts）。
+ * by-zip.json にある上3桁の分だけ分割ファイルが要り、見本の郵便番号を分割ファイルから引いた値は by-zip.json と一致しなければならない。
+ * 分割ファイルの中身（files の値）は JSON 文字列で渡す。
+ */
+export function checkDistrictData(files: BuildFiles, data: ExpectedData): MemberDataReport {
+  const d = data.districts;
+  if (!d) return { checkedFiles: 0, failures: [] };
+  const metaFile = `${DISTRICTS_DATA_PATH}/meta.json`;
+  const expected = [metaFile, ...d.prefixes.map((p) => `${DISTRICTS_DATA_PATH}/zip/${p}.json`)];
+  const failures = expected.filter((f) => !files.has(f)).map((f) => `missing data file: ${f}`);
+  const shardFile = zipShardUrl(d.sample.zip).slice(1);
+  const shardText = files.get(shardFile);
+  if (shardText !== undefined) {
+    let found: ZipDistricts | undefined;
+    try {
+      found = (JSON.parse(shardText) as Record<string, ZipDistricts>)[d.sample.zip];
+    } catch {
+      failures.push(`invalid JSON: ${shardFile}`);
+    }
+    if (found === undefined) failures.push(`zip ${d.sample.zip} not in ${shardFile}`);
+    else if (JSON.stringify(found) !== JSON.stringify(d.sample.districts)) failures.push(`zip ${d.sample.zip} in ${shardFile} differs from by-zip.json`);
+  }
   return { checkedFiles: expected.length, failures };
 }
 

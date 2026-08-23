@@ -88,7 +88,7 @@ interface RollCallSummary { id: string; session: number; date: string; title: st
 
 ## 選挙区（`districts/`、Issue #111）
 - 出典は 日本郵便 KEN_ALL（郵便番号 → 市区町村）と 総務省「衆議院小選挙区の区割りの改定等について」（令和4年改定）の都道府県別 PDF（公職選挙法 別表第一: 市区町村 → 小選挙区）、北海道の振興局所管市町村、東京都支庁設置条例、浜松市の区の再編。調査と as-of は `docs/research/districts.md`。ETL は `pnpm etl:districts`（`.github/workflows/districts.yml`、月 1 回。日次 ETL とは独立で、`data/districts/` だけを書く）。
-- 型（Web 側は #105 の残りで shared に移す）:
+- 型（`packages/shared/src/index.ts` の `ZipDistricts` / `DistrictMunicipality` / `DistrictsMeta`、#112）:
 
 ```ts
 interface ZipDistricts { sangiin: string[]; shugiin: string[] }   // by-zip.json の値。名簿の district と同じ表記（"東京" / "鳥取・島根"、"東京4" / "北海道12"）
@@ -108,6 +108,7 @@ interface DistrictsMeta {
 - 別表の単位の解決: 市・区（政令市は「札幌市中央区」）は名前の完全一致、郡は前方一致で全町村、「郡（町村、…）」は町村の列挙（分割ではない）、「北海道○○振興局管内」は北海道のページの所管市町村のうち町村（市は別表に名指し）、「東京都○○支庁管内」は条例の固定表、再編で別表の旧区名が KEN_ALL に無い市（浜松市）は出典付きの固定表で現在の区に展開（旧区が複数の小選挙区にまたがって合流した区は分割扱い）。外字（釜石市の「釜」など PDF のフォントに Unicode が無い字）は 〓 として任意の 1 文字に照合し、県内で 1 件に絞れるときだけ紐づける。
 - 不変条件（`validateDistricts`、違反なら ETL は非 0 終了し data/ は PR にならない）: 郵便番号は 7 桁、`sangiin`/`shugiin` は空でない、`shugiin` の名称は `municipalities.json` に存在し `{非数字}{数字}` の形、`split === shugiin.length > 1`、`meta.counts` は実数と一致、`meta.asOf` は ISO 日付、`sources` はすべて https と `fetchedAt` を持つ。解決時の失敗（別表の単位が KEN_ALL に 1 件で紐づかない、KEN_ALL の市区町村に区が付かない、一部区域として載る市区が 1 つの区にしか現れない、区番号が連続しない、47 都道府県そろわない）はすべて例外で止まる（黙って落とさない）。
 - `data/districts/` は日次 ETL（`validateDataset`）の対象外で、日次 ETL は触らない。アーカイブ（`data-archive.zip`）には含まれる。
+- Web（#112）: `by-zip.json` はバンドルせず、ビルドが上3桁ごとに `build/client/data/districts/zip/{上3桁}.json`（最大 1,000 ファイル）へ分割し `meta.json` を同じ場所へコピーする（`apps/web/scripts/shard-districts.ts`）。Home の郵便番号入力はその分割ファイルだけを fetch し、候補の選挙区を `/members?district=<名簿の表記>` にリンクする。
 
 ## 回次
 - ETL は「指定された回次 ∪ `meta.sessions` に既にある回次」を毎回まとめて処理し、`rollcalls/{session}/` を回次ごとに並べる。部分実行で他回次の出力は消えない（回次を減らすときは `data/` を消してから実行する）。

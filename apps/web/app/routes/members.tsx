@@ -1,5 +1,5 @@
 import { useId, useMemo, useState } from "react";
-import { Link, type MetaArgs } from "react-router";
+import { Link, type MetaArgs, useSearchParams } from "react-router";
 import type { House } from "@seiji-kiroku/shared";
 import { type Dataset, dataset as bundled, type MemberSummary } from "../lib/dataset";
 import { formatDateTime } from "../lib/format";
@@ -33,10 +33,13 @@ function distinctSorted(values: string[]): string[] {
  * データ取得前（0名）でも落ちない。
  */
 export default function Members({ data = bundled }: { data?: Dataset }) {
+  // #112: Home の郵便番号入力から /members?district=<名簿の表記> で来る。プリレンダーは既存のまま、クエリはクライアント側で読む。
+  const [params, setParams] = useSearchParams();
+  const districtParam = params.get("district") ?? "";
   const [query, setQuery] = useState("");
   const [house, setHouse] = useState<House | "">("");
   const [group, setGroup] = useState("");
-  const [district, setDistrict] = useState("");
+  const [district, setDistrict] = useState(districtParam);
   const [includeFormer, setIncludeFormer] = useState(false);
   const searchId = useId();
   const formerId = useId();
@@ -49,7 +52,16 @@ export default function Members({ data = bundled }: { data?: Dataset }) {
   function changeHouse(next: House | "") {
     setHouse(next);
     setGroup("");
+    clearDistrict();
+  }
+
+  function clearDistrict() {
     setDistrict("");
+    if (districtParam) {
+      const next = new URLSearchParams(params);
+      next.delete("district");
+      setParams(next, { replace: true });
+    }
   }
 
   // 既定は両院・現職（最新回次の名簿に載っている人）のみ。元職は事実として残っているので、トグルで同じ一覧に出す。
@@ -125,6 +137,16 @@ export default function Members({ data = bundled }: { data?: Dataset }) {
                 </select>
               </label>
             </div>
+            {districtParam && (
+              <p className="members-chips" aria-label="絞り込み中">
+                <span className="members-chip">
+                  <span>選挙区：{districtParam}</span>
+                  <button type="button" className="members-chip__clear" aria-label="選挙区の絞り込みを解除" onClick={clearDistrict}>
+                    ×
+                  </button>
+                </span>
+              </p>
+            )}
             <label className="members-check" htmlFor={formerId}>
               <input id={formerId} type="checkbox" checked={includeFormer} onChange={(e) => setIncludeFormer(e.target.checked)} />
               <span>元職も含める</span>
