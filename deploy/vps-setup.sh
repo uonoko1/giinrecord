@@ -36,7 +36,7 @@ else
 server {
     listen 80;
     listen [::]:80;
-    server_name DOMAIN;
+    server_name DOMAIN www.DOMAIN;
     access_log /var/log/nginx/gikailog.access.log noip;
 
     location / {
