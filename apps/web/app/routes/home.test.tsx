@@ -3,6 +3,7 @@ import { renderToString } from "react-dom/server";
 import { MemoryRouter } from "react-router";
 import { describe, expect, it } from "vitest";
 import Home, { meta as routeMeta } from "./home";
+import { DIET_ASSEMBLIES } from "../lib/data-contract";
 import { dataset } from "../test-fixtures/dataset";
 
 const EVALUATIVE_WORDS = ["おすすめ", "ランキング", "一致率"];
@@ -93,6 +94,21 @@ describe("Home", () => {
     expect(figures).toContain("3 参議院議員");
     expect(figures).toContain("2 衆議院議員");
     expect(section).toHaveTextContent("衆議院は個人の投票記録が公開されていないため、会派の態度として別に扱います");
+  });
+
+  it("規模に地方議会の数を出す（assemblies/index.json の national 以外。無ければ［集計中］）。議会一覧へのリンクがある（#158）", () => {
+    const miyagi = { id: "pref-04" as const, kind: "prefectural" as const, name: "宮城県議会", prefCode: "04", sourceUrl: "https://www.pref.miyagi.jp/site/kengikai/meibo/index.html" };
+    renderHome({ ...dataset, assemblies: [...DIET_ASSEMBLIES, miyagi] });
+    const section = screen.getByRole("region", { name: "このサイトにあるもの" });
+    const local = within(section).getByText("地方議会");
+    expect(local.previousElementSibling).toHaveTextContent("1");
+    expect(screen.getByRole("link", { name: /議会一覧/ })).toHaveAttribute("href", "/assemblies");
+  });
+
+  it("assemblies/index.json が無い古いデータでは地方議会は［集計中］", () => {
+    renderHome();
+    const section = screen.getByRole("region", { name: "このサイトにあるもの" });
+    expect(within(section).getByText("地方議会").previousElementSibling).toHaveTextContent("［集計中］");
   });
 
   it("出典と更新時刻を出す", () => {

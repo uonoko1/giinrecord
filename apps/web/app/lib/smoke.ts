@@ -6,6 +6,7 @@
  */
 
 import type { ZipDistricts } from "@seiji-kiroku/shared";
+import { DIET_ASSEMBLIES } from "./data-contract";
 import { DISTRICTS_DATA_PATH, zipShardUrl } from "./districts";
 import { sitemapLocs } from "./sitemap";
 
@@ -17,6 +18,8 @@ export interface ExpectedData {
   memberIds: string[] | null;
   /** entries from data/rollcalls/index.json, or null when that file is absent */
   rollCalls: { session: number; id: string }[] | null;
+  /** data/assemblies/index.json の id。ファイルが無ければ省略／null → 国会の2議会（prerender の fallback と同じ、#158） */
+  assemblyIds?: string[] | null;
   /** data/districts/by-zip.json から: 上3桁の一覧と、引き比べる見本の1件。ファイルが無ければ省略／null（#112） */
   districts?: { prefixes: string[]; sample: { zip: string; districts: ZipDistricts } } | null;
   /** data/ 直下にある運用ファイル名（OPS_DATA_FILES のうち存在するもの）。data/ が無ければ省略／null（#152） */
@@ -29,7 +32,7 @@ export interface SmokeReport {
   failures: string[];
 }
 
-export const REQUIRED_PAGES = ["index.html", "about/index.html", "terms/index.html", "privacy/index.html", "members/index.html"];
+export const REQUIRED_PAGES = ["index.html", "about/index.html", "terms/index.html", "privacy/index.html", "members/index.html", "assemblies/index.html"];
 
 const HREF_RE = /\bhref\s*=\s*(?:"([^"]*)"|'([^']*)')/g;
 
@@ -57,6 +60,7 @@ function targetExists(files: BuildFiles, target: string): boolean {
 export function expectedPages(data: ExpectedData): string[] {
   const pages = [...REQUIRED_PAGES];
   for (const id of data.memberIds ?? []) pages.push(`members/${id}/index.html`);
+  for (const id of data.assemblyIds ?? DIET_ASSEMBLIES.map((a) => a.id)) pages.push(`assemblies/${id}/index.html`);
   if (data.rollCalls && data.rollCalls.length > 0) {
     pages.push("rollcalls/index.html");
     for (const r of data.rollCalls) pages.push(`rollcalls/${r.session}/${r.id}/index.html`);

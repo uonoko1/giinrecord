@@ -48,6 +48,8 @@
 .member-stamp[data-tone="no"] { background: var(--no-bg); color: var(--no-fg); border-color: var(--no-line); }
 .member-stamp[data-tone="none"] { background: var(--none-bg); color: var(--none-fg); border-color: var(--none-line); border-style: dashed; }
 .member-stamp[data-tone="act"] { background: var(--act-bg); color: var(--act-fg); border-color: var(--act-line); }
+/* 地方議会の表決で凡例から国会の値に対応づけられない値（棄権・白票 など）: 中立の判。色で意味を足さない */
+.member-stamp[data-tone="raw"] { background: var(--paper); color: var(--ink); border-color: var(--rule); }
 /* 推定（衆院の会派態度）: 破線＋薄地の専用の判。賛成・反対で色を変えない */
 .member-stamp[data-tone="est"] { background: var(--est-bg); color: var(--est-fg); border-color: var(--est-line); border-style: dashed; }
 /* 「会派の態度（推定）」ラベル。判の隣に常に出す */

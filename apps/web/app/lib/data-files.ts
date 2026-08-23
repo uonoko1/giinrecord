@@ -7,7 +7,8 @@
  */
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import type { DatasetMeta, MemberDetail, MemberSummary, RollCall, RollCallSummary } from "./data-contract";
+import type { Assembly } from "@seiji-kiroku/shared";
+import { DIET_ASSEMBLIES, type AssemblySession, type DatasetMeta, type MemberDetail, type MemberSummary, type RollCall, type RollCallSummary } from "./data-contract";
 
 /** `data/` at the repo root; override with SEIJI_DATA_DIR. cwd is apps/web during build. */
 export function defaultDataDir(): string {
@@ -61,6 +62,26 @@ export async function readRollCallIndex(dataDir: string): Promise<RollCallSummar
 export async function readRollCall(dataDir: string, session: string, id: string): Promise<RollCall | null> {
   if (!SAFE_ID.test(session) || !SAFE_ID.test(id)) return null;
   return readJson<RollCall>(path.join(dataDir, "rollcalls", session, `${id}.json`));
+}
+
+/** `assemblies/index.json`（#156）。無い（古いデータ）なら null */
+export async function readAssemblies(dataDir: string): Promise<Assembly[] | null> {
+  return readJson<Assembly[]>(path.join(dataDir, "assemblies", "index.json"));
+}
+
+/**
+ * プリレンダー対象（#158）: 一覧 `/assemblies` と、index.json の全議会 `/assemblies/{id}`。
+ * index.json が無い（#156 より前の）データでは国会の2議会（ページ側の fallback と同じ）。
+ */
+export async function assemblyPaths(dataDir: string): Promise<string[]> {
+  const assemblies = (await readAssemblies(dataDir)) ?? DIET_ASSEMBLIES;
+  return ["/assemblies", ...assemblies.map((a) => `/assemblies/${a.id}`)];
+}
+
+/** `assemblies/{id}/sessions.json`（地方議会の会期一覧、#158）。無ければ null */
+export async function readAssemblySessions(dataDir: string, assemblyId: string): Promise<AssemblySession[] | null> {
+  if (!SAFE_ID.test(assemblyId)) return null;
+  return readJson<AssemblySession[]>(path.join(dataDir, "assemblies", assemblyId, "sessions.json"));
 }
 
 export async function readMeta(dataDir: string): Promise<DatasetMeta | null> {

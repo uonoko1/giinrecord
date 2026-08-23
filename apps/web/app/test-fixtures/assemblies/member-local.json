@@ -1,0 +1,58 @@
+{
+  "id": "p_04_000001",
+  "name": "宮城 太郎",
+  "kana": "みやぎ たろう",
+  "house": "sangiin",
+  "assemblyId": "pref-04",
+  "terms": [
+    { "house": "sangiin", "group": "自由民主党・県民会議", "district": "仙台市青葉区", "from": "2023-11-13", "sessionFrom": 390 }
+  ],
+  "current": true,
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/meibo/index.html",
+  "timeline": [
+    {
+      "kind": "localVote",
+      "date": "2026-03-18",
+      "rollCallId": "pref-04-399-2026-03-18-1",
+      "title": "議第1号議案 令和8年度宮城県一般会計予算",
+      "vote": { "raw": "○", "legend": "賛成", "mapped": "賛成" },
+      "sessionLabel": "第399回（令和8年2月定例会）",
+      "method": "起立",
+      "result": "可決",
+      "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf"
+    },
+    {
+      "kind": "localVote",
+      "date": "2026-03-18",
+      "rollCallId": "pref-04-399-2026-03-18-2",
+      "title": "議第2号議案 宮城県職員定数条例の一部を改正する条例",
+      "vote": { "raw": "×", "legend": "反対", "mapped": "反対" },
+      "sessionLabel": "第399回（令和8年2月定例会）",
+      "method": "起立",
+      "result": "可決",
+      "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf"
+    },
+    {
+      "kind": "localVote",
+      "date": "2026-03-18",
+      "rollCallId": "pref-04-399-2026-03-18-3",
+      "title": "議第3号議案 宮城県手数料条例の一部を改正する条例",
+      "vote": { "raw": "棄", "legend": "棄権" },
+      "sessionLabel": "第399回（令和8年2月定例会）",
+      "method": "起立",
+      "result": "可決",
+      "sourceUrl": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf"
+    },
+    {
+      "kind": "localVote",
+      "date": "2025-12-16",
+      "rollCallId": "pref-04-398-2025-12-16-1",
+      "title": "議第101号議案 令和7年度宮城県一般会計補正予算",
+      "vote": { "raw": "欠", "legend": "欠席", "mapped": "投票なし" },
+      "sessionLabel": "第398回（令和7年11月定例会）",
+      "method": "簡易",
+      "result": "可決",
+      "sourceUrl": "https://www.pref.miyagi.jp/documents/63000/hyouketsu071216.pdf"
+    }
+  ]
+}
