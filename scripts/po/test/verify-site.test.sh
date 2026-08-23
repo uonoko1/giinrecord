@@ -33,8 +33,8 @@ t_site_all_200() {
   assert_eq 2 "$(ssh_calls)" "ssh calls"
   assert_contains "$LOG" $'ssh\tgikaiops\t' "default ssh host"
   # production: --resolve to loopback with the real hostname; staging: container port with Host header
-  assert_contains "$LOG" $'--resolve\tgikailog.jp:443:127.0.0.1\thttps://gikailog.jp/about/' "production resolve"
-  assert_contains "$LOG" $'-H\tHost: staging.gikailog.jp\thttp://127.0.0.1:8083/about/' "staging via container port"
+  assert_contains "$(grep -F 'https://gikailog.jp/about/' <<<"$LOG")" $'--resolve\tgikailog.jp:443:127.0.0.1\t' "production resolve"
+  assert_contains "$(grep -F 'http://127.0.0.1:8083/about/' <<<"$LOG")" $'-H\tHost: staging.gikailog.jp\t' "staging via container port"
   assert_not_contains "$LOG" $'\t-k\t' "never skips TLS verification"
   for p in / /about/ /terms /privacy /members/ /rollcalls/ /assemblies/ /data/meta.json /sitemap.xml; do
     assert_contains "$LOG" "https://gikailog.jp$p" "production checks $p"
