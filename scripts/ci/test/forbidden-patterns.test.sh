@@ -120,6 +120,23 @@ t_secret_patterns_pass_when_absent() {
   assert_contains "$OUT" "FORBIDDEN_PATTERNS: 2 pattern(s)" "count logged, patterns not"
 }
 
+t_secret_patterns_crlf_still_match() {
+  repo crlf; add "docs/a.md" "see othersite.example here"
+  run FORBIDDEN_PATTERNS=$'othersite\\.example\r\nanother-host\r\n'
+  assert_eq 1 "$STATUS" "exit (CRLF line endings in the secret must not disable the check)"
+  assert_contains "$OUT" "docs/a.md" "file named"
+  assert_contains "$OUT" "FORBIDDEN_PATTERNS: 2 pattern(s)" "count ignores the CR"
+}
+
+t_secret_patterns_invalid_regex_is_an_error_not_clean() {
+  repo badre; add "docs/a.md" "see othersite.example here"
+  run FORBIDDEN_PATTERNS=$'othersite\\.example\n(unclosed['
+  assert_eq 2 "$STATUS" "exit (grep error must fail the check, never report clean)"
+  assert_not_contains "$OUT" "forbidden-patterns: clean" "not clean"
+  assert_contains "$OUT" "grep failed" "error reported"
+  assert_not_contains "$OUT" "unclosed" "the broken pattern is not echoed either"
+}
+
 t_untracked_files_are_ignored() {
   repo untracked; printf '%s\n' "$KEY_HEADER" > "$R/scratch.txt"   # not git-added
   run
@@ -143,6 +160,8 @@ test_case "IP address inside deploy/ or docs/ops/ → allowed" t_ip_inside_deplo
 test_case "loopback / 0.0.0.0 / private ranges / version strings are not IPs" t_loopback_and_versions_are_not_ips
 test_case "FORBIDDEN_PATTERNS hit → fail without echoing the pattern" t_secret_patterns_fail_and_are_not_echoed
 test_case "FORBIDDEN_PATTERNS absent → pass; blank lines ignored" t_secret_patterns_pass_when_absent
+test_case "FORBIDDEN_PATTERNS with CRLF line endings still matches" t_secret_patterns_crlf_still_match
+test_case "FORBIDDEN_PATTERNS with an invalid regex → error, not clean" t_secret_patterns_invalid_regex_is_an_error_not_clean
 test_case "untracked files are ignored" t_untracked_files_are_ignored
 test_case "data/ is skipped" t_data_dir_is_skipped
 

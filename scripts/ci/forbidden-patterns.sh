@@ -27,11 +27,38 @@ report() { # report <rule> <grep-output-lines>
 
 # Tracked (or staged) text files, NUL-separated → newline list. Binary files are skipped by grep -I.
 FILES=$(git ls-files -z | tr '\0' '\n')
+
+# run_grep <file-list> <grep args...> → prints grep's output; returns 0 for "matches or no matches", exits otherwise.
+# grep exits 1 for "no match" (fine) and 2 for errors (invalid regex, unreadable file…). xargs may split the file
+# list over several grep runs and reports any non-zero status as 123, so each run maps 1 → 0 first; what is left
+# (2 → 123) must fail the check — a silent "clean" is the worst outcome (#137 review).
+ERR_FILE=$(mktemp); PATTERN_FILE=""
+trap 'rm -f "$ERR_FILE" "$PATTERN_FILE"' EXIT
+grep_failed() {
+  # stderr may quote the offending pattern (the secret) → only its size is logged, never its content.
+  echo "forbidden-patterns: grep failed ($1; $(wc -c < "$ERR_FILE" | tr -d ' ') bytes of stderr suppressed)." \
+    "Check the regexes in FORBIDDEN_PATTERNS and the tracked files." >&2
+  exit 2
+}
+run_grep() {
+  local files=$1; shift
+  local out status
+  set +e
+  out=$(printf '%s\n' "$files" | sed '/^$/d' | tr '\n' '\0' \
+    | xargs -0 -r sh -c 'grep "$@"; s=$?; [ "$s" -eq 1 ] && exit 0; exit "$s"' grep "$@" -- 2>"$ERR_FILE")
+  status=$?
+  set -e
+  case $status in
+    0|1) printf '%s' "$out" ;;
+    123) grep_failed "grep exited with an error" ;;
+    *)   grep_failed "xargs/grep status $status" ;;
+  esac
+}
 # grep_files <rule> <ERE> [extra grep args...]  → reports file:line hits (content is NOT printed: it may be the secret)
 grep_files() {
   local rule=$1 re=$2; shift 2
   local out
-  out=$(printf '%s\n' "$FILES" | tr '\n' '\0' | xargs -0 -r grep -I -H -n -E "$@" -e "$re" -- 2>/dev/null | cut -d: -f1,2 || true)
+  out=$(run_grep "$FILES" -I -H -n -E "$@" -e "$re" | cut -d: -f1,2) || exit 2
   report "$rule" "$out"
 }
 
@@ -45,20 +72,21 @@ report env-file "$ENV_FILES"
 # Strict octets (no leading zeros) and no neighbouring digit, letter or dot: keeps SVG path data and version strings (v1.2.3.4) out.
 OCTET='(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])'
 IP_RE="(?<![0-9A-Za-z.])($OCTET\\.){3}$OCTET(?![0-9A-Za-z.])"
-IP_OUT=$(printf '%s\n' "$FILES" | grep -v -E '^(deploy/|docs/ops/|data/|pnpm-lock\.yaml$)' | tr '\n' '\0' \
-  | xargs -0 -r grep -I -H -n -o -P -e "$IP_RE" -- 2>/dev/null \
-  | grep -v -E ':(127\.|0\.0\.0\.0|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.|255\.255\.)' | cut -d: -f1,2 || true)
+IP_FILES=$(printf '%s\n' "$FILES" | grep -v -E '^(deploy/|docs/ops/|data/|pnpm-lock\.yaml$)' || true)
+IP_OUT=$(run_grep "$IP_FILES" -I -H -n -o -P -e "$IP_RE" \
+  | { grep -v -E ':(127\.|0\.0\.0\.0|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.|255\.255\.)' || true; } | cut -d: -f1,2) || exit 2
 report ip-address "$IP_OUT"
 
 if [ -z "${FORBIDDEN_PATTERNS:-}" ]; then
   echo "FORBIDDEN_PATTERNS: not configured (set the repo secret to check for site-specific names)"
 else
-  PATTERN_FILE=$(mktemp); trap 'rm -f "$PATTERN_FILE"' EXIT
-  printf '%s\n' "$FORBIDDEN_PATTERNS" | sed '/^[[:space:]]*$/d' > "$PATTERN_FILE"
+  PATTERN_FILE=$(mktemp)
+  # CR stripped: a secret pasted with CRLF endings would otherwise search for "name\r" and silently match nothing.
+  printf '%s\n' "$FORBIDDEN_PATTERNS" | tr -d '\r' | sed '/^[[:space:]]*$/d' > "$PATTERN_FILE"
   N=$(wc -l < "$PATTERN_FILE" | tr -d ' ')
   echo "FORBIDDEN_PATTERNS: $N pattern(s)"
   if [ "$N" -gt 0 ]; then
-    F_OUT=$(printf '%s\n' "$FILES" | tr '\n' '\0' | xargs -0 -r grep -I -H -n -i -E -f "$PATTERN_FILE" -- 2>/dev/null | cut -d: -f1,2 || true)
+    F_OUT=$(run_grep "$FILES" -I -H -n -i -E -f "$PATTERN_FILE" | cut -d: -f1,2) || exit 2
     report forbidden "$F_OUT"
   fi
 fi
