@@ -2,6 +2,8 @@ name: Release
 # Issue #127: the production release button. Actions → Release → Run workflow (ref, default main) → the
 # `production` environment's required reviewers approve → build with vars.SITE_ORIGIN → rsync to /var/www/gikailog/site/.
 # Nothing else writes production code; daily data goes through deploy-data.yml (environment production-data, no approval).
+# Issue #134: after a successful release the lightweight tag `released` is moved to the released sha, so deploy-data.yml
+# builds that code (not main) and lays main's data/ on top. Ref updates made with GITHUB_TOKEN trigger no other workflow.
 on:
   workflow_dispatch:
     inputs:
@@ -21,3 +23,25 @@ jobs:
       target_dir: site
       ref: ${{ inputs.ref }}
     secrets: inherit
+  released-tag:
+    # Only on success (default `needs` semantics). Runs outside the `production` environment: no deploy secret,
+    # only contents: write for the tag ref (REST API, no checkout). Rollback = Release an older sha; the tag follows.
+    needs: production
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Move tag `released` to the released sha
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          SHA: ${{ needs.production.outputs.sha }}
+          REF: ${{ inputs.ref }}
+        run: |
+          [[ "$SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "deploy-site.yml returned no sha: '$SHA'"; exit 1; }
+          if gh api "repos/$GH_REPO/git/ref/tags/released" --silent 2>/dev/null; then
+            gh api -X PATCH "repos/$GH_REPO/git/refs/tags/released" -f sha="$SHA" -F force=true --silent
+          else
+            gh api -X POST "repos/$GH_REPO/git/refs" -f ref=refs/tags/released -f sha="$SHA" --silent
+          fi
+          echo "tag \`released\` → \`$SHA\` (ref \`$REF\`); deploy-data.yml now builds this sha + data/ from main" >> "$GITHUB_STEP_SUMMARY"
