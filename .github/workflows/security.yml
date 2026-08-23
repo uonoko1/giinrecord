@@ -50,7 +50,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
-        with: { node-version-file: .nvmrc, cache: pnpm }
+        with: { node-version-file: .nvmrc }   # no `cache: pnpm`: nothing is installed, so there is no store to cache
       # no install: `pnpm audit` works from pnpm-lock.yaml alone
       - name: pnpm audit high+ (scripts/ci/audit.sh, exceptions in scripts/ci/audit-ignore.txt)
         run: bash scripts/ci/audit.sh
