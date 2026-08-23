@@ -62,3 +62,8 @@
 .site-footer { max-width: 640px; margin: 0 auto; padding: 16px 20px 32px; border-top: 1px solid var(--rule); display: flex; flex-direction: column; gap: 8px; font-size: 12px; color: var(--muted); }
 .site-footer__links { display: flex; flex-wrap: wrap; gap: 6px 16px; }
 .site-footer__note { margin: 0; }
+
+/* 「ホーム画面に追加」（#191）。JS で判定後にだけ描画。ボタンだがリンクと同じ見た目にする */
+.install-link { display: inline-flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+.install-link__button { appearance: none; background: none; border: 0; padding: 0; margin: 0; font: inherit; color: var(--link); text-decoration: underline; cursor: pointer; }
+.install-link__hint { font-size: 12px; color: var(--muted); }

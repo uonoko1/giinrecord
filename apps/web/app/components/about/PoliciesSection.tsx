@@ -1,6 +1,10 @@
 import { Link } from "react-router";
+import { InstallLink } from "../InstallLink";
 
-/** 節「規約とプライバシー」。計測の説明は /privacy に置く（#166, #167）。 */
+/**
+ * 節「規約とプライバシー」。計測の説明は /privacy に置く（#166, #167）。
+ * 末尾の InstallLink（#191）は対応ブラウザでマウント後にだけ描画され、プリレンダー HTML は変わらない。
+ */
 export function PoliciesSection() {
   return (
     <section id="policies" className="section" aria-labelledby="policies-heading">
@@ -12,6 +16,7 @@ export function PoliciesSection() {
         <Link to="/terms">利用規約</Link>
         <Link to="/privacy">プライバシーポリシー</Link>
       </div>
+      <InstallLink />
     </section>
   );
 }

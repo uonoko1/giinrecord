@@ -2,6 +2,7 @@ import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 import "./styles/tokens.css";
 import { THEME_STORAGE_KEY } from "./components/ThemeToggle";
 import { BRAND } from "./lib/brand-colors";
+import { installPromptInit } from "./lib/install-prompt";
 import { robotsMeta, siteOrigin } from "./lib/seo";
 
 /** staging build (#127): every page carries noindex; null on production / origin-less builds. */
@@ -39,6 +40,8 @@ export default function Root() {
         <meta name="theme-color" content={THEME_COLOR} />
         {robots && <meta name={robots.name} content={robots.content} />}
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
+        {/* #191: beforeinstallprompt をハイドレーション前に捕捉し、ブラウザの自動インストール案内を止める */}
+        <script dangerouslySetInnerHTML={{ __html: installPromptInit }} />
         <Meta />
         <Links />
       </head>
