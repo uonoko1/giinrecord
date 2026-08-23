@@ -18,7 +18,7 @@ internet ──443/80──▶ host nginx (certbot TLS)
 |---|---|
 | `docker-compose.yml` | `web` (`127.0.0.1:8081:80`, `/var/www/gikailog/site`) and `web-staging` (`127.0.0.1:8083:80`, `/var/www/gikailog/staging`): `nginx:1.27-alpine`, site mounted read-only, healthcheck, `restart: unless-stopped`. `SITE_DIR` / `STAGING_SITE_DIR` override the mounts (local/CI) |
 | `nginx/site.conf` | config inside both containers — the former host server block, unchanged: `try_files … /__spa-fallback.html`, `/assets/` immutable 1y, `/data/` 1h, gzip, `X-Content-Type-Options` / `X-Frame-Options` / `Referrer-Policy` / CSP. Plus a `map $host` that adds `X-Robots-Tag: noindex, nofollow` only for `staging.gikailog.jp` |
-| `nginx-host-proxy.conf` | host nginx server block template (proxy + TLS only). `vps-setup.sh <domain> [port]` writes the same text with `SERVER_NAMES` / `PORT` / `LOG_NAME` substituted |
+| `nginx-host-proxy.conf` | host nginx server blocks template: `:80` → 301 `https://DOMAIN` (www included), `:443` TLS → proxy. `vps-setup.sh <domain> [port]` writes the same text with `SERVER_NAMES` / `DOMAIN` / `PORT` / `LOG_NAME` substituted |
 | `vps-setup.sh` | one-time, sudo: web root, host server block, `noip` log format, `nginx -t` → reload (exit 1 on a broken config). Port `8081` (default) = production, `8083` = staging. **Installs nothing** |
 | `go-live.sh` | production go-live, root, idempotent (docker install, `/opt/gikailog` checkout, compose up, `vps-setup.sh`, certbot, analytics) |
 | `staging-setup.sh` | staging go-live, root, idempotent, after production exists: staging web root, compose up, `vps-setup.sh staging.gikailog.jp 8083`, certbot |
@@ -50,14 +50,19 @@ ssh "$VPS_SSH_HOST" 'sudo bash -s DOMAIN' < deploy/vps-setup.sh
 #    Do NOT add `ubuntu` to the docker group.
 # 3. (human with docker privileges) start the containers from a checkout of this repo
 ssh "$VPS_SSH_HOST" 'git clone https://github.com/uonoko1/gikailog.git /opt/gikailog'   # or git pull
-ssh "$VPS_SSH_HOST" 'docker compose -f /opt/gikailog/deploy/docker-compose.yml up -d'
+ssh "$VPS_SSH_HOST" 'docker compose -f /opt/gikailog/deploy/docker-compose.yml up -d --force-recreate'
 ssh "$VPS_SSH_HOST" 'curl -sI http://127.0.0.1:8081/ | head -1'                               # 200 once a build was rsynced
 # 4. DNS: A record  DOMAIN -> the VPS (address from the hosting panel; never commit it)
-# 5. TLS (after DNS propagates) — certbot edits only sites-available/gikailog.conf
-ssh "$VPS_SSH_HOST" 'sudo certbot --nginx -d DOMAIN --redirect'
+# 5. TLS (after DNS propagates) — certonly: certbot does not edit nginx config (the template owns the redirects)
+ssh "$VPS_SSH_HOST" "sudo certbot certonly --nginx -d DOMAIN -d www.DOMAIN --deploy-hook 'systemctl reload nginx'"
+# 6. (human, sudo) again: now that the certificate exists it writes the :80 redirect + :443 proxy blocks
+ssh "$VPS_SSH_HOST" 'sudo bash -s DOMAIN' < deploy/vps-setup.sh
 ```
 
-Re-running `vps-setup.sh` is safe: once certbot has added the 443 block the script leaves the file alone and says so.
+Re-running `vps-setup.sh` is safe (idempotent, Issue #141): without a certificate it writes a plain `:80` proxy block, with one the
+full template (`:80` → 301 https, `:443` proxy); a conf that certbot manages (hosts set up before #141) is left alone except for the
+`proxy_pass` port. `go-live.sh` / `staging-setup.sh` validate the domain, check the port with `ss -tln`, always `--force-recreate`
+the containers and skip certbot when the certificate exists — see `docs/ops/deploy.md`.
 
 ### staging (Issue #127)
 
