@@ -95,6 +95,32 @@ function assemblyLabel(detail: MemberDetail, assembly: Assembly | null): string 
 /** 会派の態度（推定）は1人あたり100行前後になるので、最初は 20 件だけ出し「さらに表示」で残りを出す（#88）。 */
 export const STANCE_FOLD = 20;
 
+/** 回次ごとの折りたたみ（#103）: 直近この数の回次だけ展開し、それ以前は見出し（第N回国会・件数）だけにする。 */
+export const EXPANDED_SESSIONS = 2;
+
+export interface SessionGroup {
+  /** 国会の回次。#103 以前のデータの行は回次を持たないので undefined（「回次不明」として最後にまとめる。推定しない） */
+  session: number | undefined;
+  entries: TimelineEntry[];
+  expanded: boolean;
+}
+
+/**
+ * timeline（日付降順）を回次ごとにまとめる。並びは回次の降順（timeline の並びは回次内でそのまま）、回次の無い行は最後。
+ * 先頭 EXPANDED_SESSIONS 個だけ expanded。地方議員の行（localVote）は回次を持たないので 1 つの「回次不明」グループになるが、地方議員のページでは使わない。
+ */
+export function groupBySession(entries: TimelineEntry[]): SessionGroup[] {
+  const map = new Map<number | undefined, TimelineEntry[]>();
+  for (const e of entries) {
+    const key = "session" in e && typeof e.session === "number" ? e.session : undefined;
+    const list = map.get(key);
+    if (list) list.push(e);
+    else map.set(key, [e]);
+  }
+  const keys = [...map.keys()].sort((a, b) => (a === undefined ? 1 : b === undefined ? -1 : b - a));
+  return keys.map((session, i) => ({ session, entries: map.get(session)!, expanded: i < EXPANDED_SESSIONS }));
+}
+
 export function MemberPage({ detail, meta, assembly = null }: { detail: MemberDetail; meta: DatasetMeta | null; assembly?: Assembly | null }) {
   const local = isLocalMember(detail);
   const [tab, setTabState] = useState<Tab>("all");
@@ -133,16 +159,29 @@ export function MemberPage({ detail, meta, assembly = null }: { detail: MemberDe
           {tab === "stance" && <p className="member-tab-note">所属会派が議案情報の賛成会派・反対会派に載っていた記録です。会派の態度であり、本人の投票ではありません。</p>}
           {entries.length === 0 ? (
             <p className="member-empty">記録はありません。</p>
-          ) : tab === "vote" ? (
-            <VoteTable votes={entries.filter((e): e is VoteEntry => e.kind === "vote")} />
           ) : tab === "localVote" ? (
             <LocalVoteTable votes={entries.filter((e): e is LocalVoteEntry => e.kind === "localVote")} />
-          ) : tab === "bill" ? (
-            <BillTable bills={entries.filter((e): e is BillEntry => e.kind === "bill")} />
-          ) : tab === "question" ? (
-            <QuestionTable questions={entries.filter((e): e is QuestionEntry => e.kind === "question")} />
-          ) : (
+          ) : local ? (
             <Timeline entries={entries} />
+          ) : (
+            /* 国会議員: 回次ごとに折りたたむ（#103）。直近 EXPANDED_SESSIONS 回次は開き、それ以前は見出しだけ */
+            groupBySession(entries).map((g) => (
+              <details key={g.session ?? "none"} className="member-session" open={g.expanded}>
+                <summary className="member-session-head">
+                  <span className="member-session-name">{g.session === undefined ? "回次不明" : `第${g.session}回国会`}</span>
+                  <span className="member-session-count num">{g.entries.length.toLocaleString("ja-JP")}件</span>
+                </summary>
+                {tab === "vote" ? (
+                  <VoteTable votes={g.entries.filter((e): e is VoteEntry => e.kind === "vote")} />
+                ) : tab === "bill" ? (
+                  <BillTable bills={g.entries.filter((e): e is BillEntry => e.kind === "bill")} />
+                ) : tab === "question" ? (
+                  <QuestionTable questions={g.entries.filter((e): e is QuestionEntry => e.kind === "question")} />
+                ) : (
+                  <Timeline entries={g.entries} />
+                )}
+              </details>
+            ))
           )}
           {folded && (
             <p className="member-more">

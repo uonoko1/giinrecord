@@ -179,6 +179,7 @@ export interface RollCall {
 
 export interface Speech {
   id: string;          // NDL speechID
+  session: number;     // 会議録の回次（API の session）
   memberId?: MemberId;
   speakerText: string;
   group?: string;
@@ -238,6 +239,8 @@ export interface MemberDetail extends Member {
 
 export type VoteEntry = {
   kind: "vote";
+  /** 国会の回次（採決・議案・会議録・質問の回次）。Web の議員ページが回次ごとに折りたたむ（#103）。 */
+  session: number;
   date: string;
   rollCallId: string;
   title: string;
@@ -252,6 +255,8 @@ export type VoteEntry = {
 export type BillRole = "提出者" | "賛成者";
 export type BillEntry = {
   kind: "bill";
+  /** 国会の回次（採決・議案・会議録・質問の回次）。Web の議員ページが回次ごとに折りたたむ（#103）。 */
+  session: number;
   /** 参議院への提出日（議案ページ「提出日」）。 */
   date: string;
   billId: string;
@@ -265,6 +270,8 @@ export type BillEntry = {
 };
 export type SpeechEntry = {
   kind: "speech";
+  /** 国会の回次（採決・議案・会議録・質問の回次）。Web の議員ページが回次ごとに折りたたむ（#103）。 */
+  session: number;
   date: string;
   speechId: string;
   meeting: string;
@@ -281,6 +288,8 @@ export type SpeechEntry = {
  */
 export type StanceEntry = {
   kind: "stance";
+  /** 国会の回次（採決・議案・会議録・質問の回次）。Web の議員ページが回次ごとに折りたたむ（#103）。 */
+  session: number;
   estimated: true;
   /** 衆議院の議案受理年月日（Bill.received.shugiin）。 */
   date: string;
@@ -299,6 +308,8 @@ export type StanceEntry = {
 /** 質問主意書の提出（事実。衆参の質問答弁情報から。Issue #106）。date は提出日。 */
 export type QuestionEntry = {
   kind: "question";
+  /** 国会の回次（採決・議案・会議録・質問の回次）。Web の議員ページが回次ごとに折りたたむ（#103）。 */
+  session: number;
   date: string;
   questionId: string;
   title: string;
@@ -321,6 +332,8 @@ export type QuestionEntry = {
  */
 export type AttendanceEntry = {
   kind: "attendance";
+  /** 国会の回次（採決・議案・会議録・質問の回次）。Web の議員ページが回次ごとに折りたたむ（#103）。 */
+  session: number;
   estimated: false;
   /** 会議の日付。 */
   date: string;
