@@ -10,7 +10,8 @@
     "typecheck": "react-router typegen && tsc --noEmit",
     "lint": "oxlint app",
     "test": "vitest run",
-    "smoke": "tsx scripts/smoke.ts"
+    "smoke": "tsx scripts/smoke.ts",
+    "fonts": "tsx scripts/fonts.ts"
   },
   "dependencies": {
     "@react-router/node": "^7.18.0",
