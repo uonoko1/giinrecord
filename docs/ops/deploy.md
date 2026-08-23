@@ -6,7 +6,7 @@ Issue #85・#127。構成と初回セットアップは `deploy/README.md`。こ
 
 | 環境 | URL | 配信元 | コード | データ |
 |---|---|---|---|---|
-| staging | https://staging.gikailog.jp | `web-staging`（127.0.0.1:8082）← `/var/www/gikailog/staging` | `main` への push で自動（`deploy-staging.yml`） | 自動（`deploy-data.yml`） |
+| staging | https://staging.gikailog.jp | `web-staging`（127.0.0.1:8083）← `/var/www/gikailog/staging` | `main` への push で自動（`deploy-staging.yml`） | 自動（`deploy-data.yml`） |
 | production | https://gikailog.jp | `web`（127.0.0.1:8081）← `/var/www/gikailog/site` | 手動リリース（`release.yml`） | 自動（`deploy-data.yml`） |
 
 - 3 つとも再利用ワークフロー `deploy-site.yml`（`pnpm build` → `rsync --delete`）を呼ぶだけ。違いは Environment・`SITE_ORIGIN`・rsync 先。
@@ -30,7 +30,7 @@ ETL の data PR がマージされると `etl.yml` / `districts.yml` が `gh wor
 ## 構成の要点
 
 - 静的ファイルは `deploy-site.yml` が `rsync --delete` で `/var/www/gikailog/site/`（production）と `/var/www/gikailog/staging/`（staging）に置く（所有者 `ubuntu`）。**ここは変えない**。
-- それぞれを `web` / `web-staging` コンテナ（`nginx:alpine`、`deploy/docker-compose.yml`、同じ `site.conf`）が**読み取り専用**で bind mount し、`127.0.0.1:8081` / `127.0.0.1:8082` だけに公開する。
+- それぞれを `web` / `web-staging` コンテナ（`nginx:alpine`、`deploy/docker-compose.yml`、同じ `site.conf`）が**読み取り専用**で bind mount し、`127.0.0.1:8081` / `127.0.0.1:8083` だけに公開する。
 - ホスト nginx（共用。他サイトも同居）は `server_name` ごとの block で TLS を終端し `proxy_pass` するだけ（`deploy/nginx-host-proxy.conf`、`sites-available/gikailog.conf` と `gikailog-staging.conf`）。SPA fallback・キャッシュ・セキュリティヘッダ・staging の noindex は全部コンテナ側 `deploy/nginx/site.conf`。
 - 権限：`ubuntu`（CI の rsync 鍵）は docker を触れない。docker のインストールと `docker compose` は人間が sudo／docker 権限で行う。
 - デプロイでコンテナの再起動は不要（bind mount なので rsync 直後から新ファイルが配信される）。
@@ -54,7 +54,7 @@ docker compose -f deploy/docker-compose.yml logs --tail 50     # コンテナの
 docker compose -f deploy/docker-compose.yml up -d              # 設定変更後（git pull 後）に再作成
 docker compose -f deploy/docker-compose.yml restart web            # staging は web-staging
 docker compose -f deploy/docker-compose.yml pull && docker compose -f deploy/docker-compose.yml up -d   # イメージ更新
-curl -sI http://127.0.0.1:8081/ | head -1                      # コンテナ直叩き（staging は 8082）
+curl -sI http://127.0.0.1:8081/ | head -1                      # コンテナ直叩き（staging は 8083）
 curl -sI https://DOMAIN/ | grep -i -E "content-security|x-frame" # 外から見たヘッダ
 ```
 
@@ -77,7 +77,7 @@ curl -sI https://DOMAIN/ | grep -i -E "content-security|x-frame" # 外から見�
 | `/assets/` に CSP が無い | nginx の仕様（location 内の `add_header` は server の add_header を継承しない）。旧 server block でも同じ挙動 | 仕様どおり（HTML ページには付く）。変えるなら site.conf と smoke-url.ts を同時に |
 | アクセス集計 TSV が空 | ホスト block の `access_log … noip` が消えた（手編集時） | `nginx -T \| grep gikailog.access.log`。`deploy/nginx-host-proxy.conf` と突き合わせる |
 | `docker` コマンドで permission denied | そのユーザーに docker 権限が無い | docker 権限のあるユーザーで実行。**`ubuntu` には付与しない** |
-| 他サイトが影響を受けた | `vps-setup.sh` は `sites-available/gikailog.conf`（8082 なら `gikailog-staging.conf`）と `conf.d/gikailog-noip-log.conf` しか書かない | 他のファイルを触った形跡があれば手順外の作業。`nginx -T` で差分確認 |
+| 他サイトが影響を受けた | `vps-setup.sh` は `sites-available/gikailog.conf`（8083 なら `gikailog-staging.conf`）と `conf.d/gikailog-noip-log.conf` しか書かない | 他のファイルを触った形跡があれば手順外の作業。`nginx -T` で差分確認 |
 
 ## やらないこと
 

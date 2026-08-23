@@ -4,14 +4,14 @@
 #   ssh -t "${VPS_SSH_HOST:-sakura-vps}" 'sudo bash -s stg.example.test' < deploy/staging-setup.sh   （ドメインを変える場合）
 # 前提：production が go-live.sh で構築済み（docker・/opt/gikailog・ホスト nginx の noip log_format）。
 # 人間の作業はこれと「DNS A: staging.gikailog.jp → VPS（gikailog.jp と同じアドレス。リポジトリには書かない、#133）」だけ（README.md）。
-# 順序：repo pull → staging web root → コンテナ（web-staging 8082。site.conf が変わっていれば web も再作成）→
+# 順序：repo pull → staging web root → コンテナ（web-staging 8083。site.conf が変わっていれば web も再作成）→
 #       ホスト nginx に staging の proxy block → certbot。production のパス・ポート・権限には触れない。
 #   テスト: deploy/test/staging-setup.test.sh（STAGING_SETUP_PREFIX で全パスを一時ディレクトリ配下に、docker 等はスタブ）
 set -euo pipefail
 
 PREFIX="${STAGING_SETUP_PREFIX:-}"
 DOMAIN="${1:-staging.gikailog.jp}"
-PORT=8082
+PORT=8083
 REPO_DIR="$PREFIX/opt/gikailog"
 SITE="$PREFIX/var/www/gikailog/staging"
 
