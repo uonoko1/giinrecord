@@ -48,7 +48,7 @@ jobs:
   docker-web:
     # Issue #85: the same compose file that serves production must bring up the built site locally and pass
     # the smoke test over HTTP (status, SPA fallback, security headers, Cache-Control).
-    # Issue #127: both services (web :8081, web-staging :8082) come up from the same build; the staging
+    # Issue #127: both services (web :8081, web-staging :8083) come up from the same build; the staging
     # X-Robots-Tag is keyed on the Host header, so it is checked with curl against either container.
     needs: check
     runs-on: ubuntu-latest
@@ -71,13 +71,13 @@ jobs:
           docker compose -f deploy/docker-compose.yml ps
       - name: Smoke (URL mode, production container) — served pages, SPA fallback, security headers and cache policy
         run: pnpm --filter web smoke -- --url http://127.0.0.1:8081
-      - name: Smoke (URL mode, staging container :8082)
-        run: pnpm --filter web smoke -- --url http://127.0.0.1:8082
+      - name: Smoke (URL mode, staging container :8083)
+        run: pnpm --filter web smoke -- --url http://127.0.0.1:8083
       - name: Staging noindex — X-Robots-Tag only for Host staging.gikailog.jp (deploy/nginx/site.conf)
         run: |
-          curl -sSI -H 'Host: staging.gikailog.jp' http://127.0.0.1:8082/ | tr -d '\r' | grep -i '^x-robots-tag: noindex, nofollow$'
+          curl -sSI -H 'Host: staging.gikailog.jp' http://127.0.0.1:8083/ | tr -d '\r' | grep -i '^x-robots-tag: noindex, nofollow$'
           ! curl -sSI -H 'Host: gikailog.jp' http://127.0.0.1:8081/ | grep -qi '^x-robots-tag' || (echo "production must not send X-Robots-Tag" && exit 1)
-          ! curl -sSI http://127.0.0.1:8082/ | grep -qi '^x-robots-tag' || (echo "X-Robots-Tag must depend on Host, not on the port" && exit 1)
+          ! curl -sSI http://127.0.0.1:8083/ | grep -qi '^x-robots-tag' || (echo "X-Robots-Tag must depend on Host, not on the port" && exit 1)
       - name: container logs
         if: always()
         run: docker compose -f deploy/docker-compose.yml logs --no-color | tail -50

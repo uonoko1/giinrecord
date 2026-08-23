@@ -9,19 +9,19 @@ The only cron job is the cookie-less access-log aggregation (`deploy/analytics/`
 internet ──443/80──▶ host nginx (certbot TLS)
                        ├─ gikailog.jp          sites-available/gikailog.conf          proxy_pass http://127.0.0.1:8081
                        │     └─▶ web          nginx:alpine  /var/www/gikailog/site    ⇐ rsync: release.yml (manual), deploy-data.yml (daily data)
-                       └─ staging.gikailog.jp  sites-available/gikailog-staging.conf  proxy_pass http://127.0.0.1:8082
+                       └─ staging.gikailog.jp  sites-available/gikailog-staging.conf  proxy_pass http://127.0.0.1:8083
                              └─▶ web-staging  nginx:alpine  /var/www/gikailog/staging ⇐ rsync: deploy-staging.yml (every push to main), deploy-data.yml
                        both containers: deploy/nginx/site.conf (SPA fallback, cache, security headers; X-Robots-Tag noindex for Host staging.gikailog.jp)
 ```
 
 | file | role |
 |---|---|
-| `docker-compose.yml` | `web` (`127.0.0.1:8081:80`, `/var/www/gikailog/site`) and `web-staging` (`127.0.0.1:8082:80`, `/var/www/gikailog/staging`): `nginx:1.27-alpine`, site mounted read-only, healthcheck, `restart: unless-stopped`. `SITE_DIR` / `STAGING_SITE_DIR` override the mounts (local/CI) |
+| `docker-compose.yml` | `web` (`127.0.0.1:8081:80`, `/var/www/gikailog/site`) and `web-staging` (`127.0.0.1:8083:80`, `/var/www/gikailog/staging`): `nginx:1.27-alpine`, site mounted read-only, healthcheck, `restart: unless-stopped`. `SITE_DIR` / `STAGING_SITE_DIR` override the mounts (local/CI) |
 | `nginx/site.conf` | config inside both containers — the former host server block, unchanged: `try_files … /__spa-fallback.html`, `/assets/` immutable 1y, `/data/` 1h, gzip, `X-Content-Type-Options` / `X-Frame-Options` / `Referrer-Policy` / CSP. Plus a `map $host` that adds `X-Robots-Tag: noindex, nofollow` only for `staging.gikailog.jp` |
 | `nginx-host-proxy.conf` | host nginx server block template (proxy + TLS only). `vps-setup.sh <domain> [port]` writes the same text with `SERVER_NAMES` / `PORT` / `LOG_NAME` substituted |
-| `vps-setup.sh` | one-time, sudo: web root, host server block, `noip` log format, `nginx -t` → reload (exit 1 on a broken config). Port `8081` (default) = production, `8082` = staging. **Installs nothing** |
+| `vps-setup.sh` | one-time, sudo: web root, host server block, `noip` log format, `nginx -t` → reload (exit 1 on a broken config). Port `8081` (default) = production, `8083` = staging. **Installs nothing** |
 | `go-live.sh` | production go-live, root, idempotent (docker install, `/opt/gikailog` checkout, compose up, `vps-setup.sh`, certbot, analytics) |
-| `staging-setup.sh` | staging go-live, root, idempotent, after production exists: staging web root, compose up, `vps-setup.sh staging.gikailog.jp 8082`, certbot |
+| `staging-setup.sh` | staging go-live, root, idempotent, after production exists: staging web root, compose up, `vps-setup.sh staging.gikailog.jp 8083`, certbot |
 | `analytics/` | IP-less access-log aggregation of `gikailog.access.log` (production only; staging logs to `gikailog-staging.access.log` and is not aggregated) |
 
 Who may do what on the shared host:
@@ -65,7 +65,7 @@ Two human actions, nothing else:
 
 ```sh
 # 1. DNS: A record  staging.gikailog.jp -> the VPS (same address as gikailog.jp; never commit it)
-# 2. (root, once; needs a TTY for certbot) staging web root, web-staging container, host proxy block on :8082, TLS
+# 2. (root, once; needs a TTY for certbot) staging web root, web-staging container, host proxy block on :8083, TLS
 ssh -t "$VPS_SSH_HOST" 'sudo bash -s' < deploy/staging-setup.sh
 ```
 
@@ -93,7 +93,7 @@ replace the line tagged `gikailog github-actions` in `~ubuntu/.ssh/authorized_ke
 `nginx/site.conf` and `docker-compose.yml` are read from the repo checkout on the VPS, so a change is: merge →
 `git pull` → `docker compose -f deploy/docker-compose.yml up -d` (recreates both containers; seconds of downtime
 the host proxy answers with 502). Header/cache values are pinned by `packages/etl/test/deploy-docker.test.ts`
-and verified on running containers by CI (`docker-web` job, ports 8081 and 8082) — change the test first.
+and verified on running containers by CI (`docker-web` job, ports 8081 and 8083) — change the test first.
 
 ## Local / CI
 
@@ -103,8 +103,8 @@ Same compose file, your own build:
 pnpm build
 SITE_DIR=$PWD/apps/web/build/client STAGING_SITE_DIR=$PWD/apps/web/build/client docker compose -f deploy/docker-compose.yml up -d --wait
 pnpm --filter web smoke -- --url http://127.0.0.1:8081     # pages 200, SPA fallback, headers, Cache-Control
-pnpm --filter web smoke -- --url http://127.0.0.1:8082
-curl -sI -H 'Host: staging.gikailog.jp' http://127.0.0.1:8082/ | grep -i x-robots-tag   # noindex, nofollow
+pnpm --filter web smoke -- --url http://127.0.0.1:8083
+curl -sI -H 'Host: staging.gikailog.jp' http://127.0.0.1:8083/ | grep -i x-robots-tag   # noindex, nofollow
 docker compose -f deploy/docker-compose.yml down
 ```
 

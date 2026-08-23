@@ -62,7 +62,7 @@ t_happy_path_order() {
   assert_contains "$log" "git -C $P/opt/gikailog pull -q --ff-only" "repo updated (compose + site.conf)"
   assert_contains "$log" "install -d -o ubuntu -g deploygroup -m 2775 $P/var/www/gikailog/staging" "staging web root for the deploy user"
   assert_contains "$log" "docker compose -f $P/opt/gikailog/deploy/docker-compose.yml up -d --wait" "both containers (re)created"
-  assert_contains "$log" "vps-setup.sh staging.gikailog.jp 8082" "host proxy block for staging on port 8082"
+  assert_contains "$log" "vps-setup.sh staging.gikailog.jp 8083" "host proxy block for staging on port 8083"
   assert_contains "$log" "certbot --nginx -d staging.gikailog.jp --redirect" "TLS for the staging hostname only"
   assert_not_contains "$log" "www.staging" "no www for staging"
   assert_order "$log" "docker compose" "vps-setup.sh" "container before host proxy (no 502 window)"
@@ -72,7 +72,7 @@ t_happy_path_order() {
 t_custom_domain() {
   fresh domain; docker_present
   DNS_OK=1 run_setup stg.example.test || fail "exit $? $(cat "$P/out")"
-  assert_contains "$(cat "$LOG")" "vps-setup.sh stg.example.test 8082" "domain argument honoured"
+  assert_contains "$(cat "$LOG")" "vps-setup.sh stg.example.test 8083" "domain argument honoured"
   assert_contains "$(cat "$LOG")" "certbot --nginx -d stg.example.test --redirect" "certbot for that domain"
 }
 
@@ -109,7 +109,7 @@ t_idempotent_second_run() {
 }
 
 test_case "staging-setup.sh: bash -n" t_syntax
-test_case "pull → web root → compose up → vps-setup.sh staging.gikailog.jp 8082 → certbot の順" t_happy_path_order
+test_case "pull → web root → compose up → vps-setup.sh staging.gikailog.jp 8083 → certbot の順" t_happy_path_order
 test_case "ドメイン引数で上書きできる" t_custom_domain
 test_case "DNS が引けなければ certbot は実行せずコマンドを案内する" t_skips_certbot_without_dns
 test_case "docker も /opt/gikailog も無ければ go-live.sh を案内して失敗する" t_requires_production_setup_first

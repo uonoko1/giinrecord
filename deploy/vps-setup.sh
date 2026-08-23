@@ -2,7 +2,7 @@
 # One-time VPS setup for the SHARED host (Issue #85; staging Issue #127). Run as:
 #   ssh "${VPS_SSH_HOST:-sakura-vps}" 'sudo bash -s <domain> [port]' < deploy/vps-setup.sh
 #     port 8081 (default) = production: gikailog.jp         → /var/www/gikailog/site,    sites-available/gikailog.conf
-#     port 8082           = staging:    staging.gikailog.jp → /var/www/gikailog/staging, sites-available/gikailog-staging.conf
+#     port 8083           = staging:    staging.gikailog.jp → /var/www/gikailog/staging, sites-available/gikailog-staging.conf
 #
 # What it does (and nothing more):
 #   1. creates the web root — the rsync target of the deploy workflows, owned by the deploy user,
@@ -35,12 +35,12 @@ reload_nginx() {
 }
 DEPLOY_USER=ubuntu
 
-# site_vars <port>: sets NAME (conf + log name) and SITE_DIR for the port; rejects anything but 8081/8082.
+# site_vars <port>: sets NAME (conf + log name) and SITE_DIR for the port; rejects anything but 8081/8083.
 site_vars() {
   case "$1" in
     8081) NAME=gikailog; SITE_DIR=/var/www/gikailog/site ;;
-    8082) NAME=gikailog-staging; SITE_DIR=/var/www/gikailog/staging ;;
-    *) echo "vps-setup.sh: port must be 8081 (production) or 8082 (staging), got '$1'" >&2; return 1 ;;
+    8083) NAME=gikailog-staging; SITE_DIR=/var/www/gikailog/staging ;;
+    *) echo "vps-setup.sh: port must be 8081 (production) or 8083 (staging), got '$1'" >&2; return 1 ;;
   esac
 }
 
@@ -71,7 +71,7 @@ CONF
 
 main() {
   local DOMAIN PORT SITE_CONF
-  DOMAIN="${1:?usage: vps-setup.sh <domain> [port: 8081 (production, default) | 8082 (staging)]}"
+  DOMAIN="${1:?usage: vps-setup.sh <domain> [port: 8081 (production, default) | 8083 (staging)]}"
   PORT="${2:-8081}"
   site_vars "$PORT"
   SITE_CONF=/etc/nginx/sites-available/$NAME.conf

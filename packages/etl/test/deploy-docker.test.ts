@@ -8,7 +8,7 @@ import { dirname, resolve } from "node:path";
 // Issue #85: web は nginx コンテナ（docker compose）で配信し、共用 VPS のホスト nginx は proxy_pass + TLS だけにする。
 // 受け入れ基準「セキュリティヘッダ・CSP・キャッシュが現状と同一（diff をテスト）」を、
 // 旧 server block（deploy/nginx-gikailog.conf, Sprint 1〜5 で本番運用）の値をここに固定して検証する。
-// Issue #127: staging（web-staging, 127.0.0.1:8082, /var/www/gikailog/staging）を同じ site.conf で足し、
+// Issue #127: staging（web-staging, 127.0.0.1:8083, /var/www/gikailog/staging）を同じ site.conf で足し、
 // main push → staging 自動、production は release.yml の承認付き手動リリース。
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, "../../..");
@@ -66,7 +66,7 @@ test("site.conf: プリレンダリング + SPA fallback の try_files と gzip 
   assert.match(siteConf, /gzip_types text\/css application\/javascript application\/json image\/svg\+xml;/);
 });
 
-test("ホスト nginx は proxy_pass http://127.0.0.1:PORT（vps-setup.sh が 8081/8082 を埋める）だけで、静的配信もヘッダ付与もしない", () => {
+test("ホスト nginx は proxy_pass http://127.0.0.1:PORT（vps-setup.sh が 8081/8083 を埋める）だけで、静的配信もヘッダ付与もしない", () => {
   const code = uncommented(hostProxy);
   assert.match(code, /proxy_pass http:\/\/127\.0\.0\.1:PORT;/);
   assert.match(code, /access_log \/var\/log\/nginx\/LOG_NAME\.access\.log noip;/);
@@ -89,17 +89,17 @@ test("docker-compose: 本番は /var/www/gikailog/site（rsync 先は不変）�
   assert.match(compose, /\$\{SITE_DIR:-\/var\/www\/gikailog\/site\}/);
 });
 
-test("docker-compose: web-staging は 127.0.0.1:8082 だけに公開し、/var/www/gikailog/staging を同じ site.conf で読み取り専用配信する", () => {
+test("docker-compose: web-staging は 127.0.0.1:8083 だけに公開し、/var/www/gikailog/staging を同じ site.conf で読み取り専用配信する", () => {
   const at = compose.indexOf("web-staging:");
   assert.ok(at > 0, "web-staging service missing");
   const staging = compose.slice(at);
   // image / healthcheck / restart / logging come from the shared `x-web` anchor (same as `web`)
   assert.match(compose, /^x-web: &web\n\s+image: nginx:[\d.]*-?alpine/m);
   assert.match(staging, /<<: \*web/);
-  assert.match(staging, /"127\.0\.0\.1:8082:80"/);
+  assert.match(staging, /"127\.0\.0\.1:8083:80"/);
   assert.match(staging, /\$\{STAGING_SITE_DIR:-\/var\/www\/gikailog\/staging\}:\/usr\/share\/nginx\/html:ro/);
   assert.match(staging, /\.\/nginx\/site\.conf:\/etc\/nginx\/conf\.d\/default\.conf:ro/);
-  assert.doesNotMatch(compose, /"0\.0\.0\.0:|^\s*- "8082:80"/m);
+  assert.doesNotMatch(compose, /"0\.0\.0\.0:|^\s*- "8083:80"/m);
 });
 
 test("vps-setup.sh: 何もインストールせず docker を実行もしない。ubuntu に docker 権限を与えない", () => {
@@ -126,12 +126,12 @@ test("vps-setup.sh と nginx-host-proxy.conf の server block は同一（ファ
   );
 });
 
-// Issue #127: vps-setup.sh <domain> [port] — 8081 = production (gikailog.conf, site/), 8082 = staging (gikailog-staging.conf, staging/).
+// Issue #127: vps-setup.sh <domain> [port] — 8081 = production (gikailog.conf, site/), 8083 = staging (gikailog-staging.conf, staging/).
 // deploy/test/render-host-proxy.sh は同じ関数で server block を stdout に描くだけ（root 不要）。
-test("vps-setup.sh: port 8082 なら staging の conf 名・web root・ログ名（8081 が既定）。置換後に placeholder が残らない", () => {
+test("vps-setup.sh: port 8083 なら staging の conf 名・web root・ログ名（8081 が既定）。置換後に placeholder が残らない", () => {
   assert.match(setupCode, /PORT="\$\{2:-8081\}"/);
   assert.match(setup, /8081\)\s*NAME=gikailog;\s*SITE_DIR=\/var\/www\/gikailog\/site/);
-  assert.match(setup, /8082\)\s*NAME=gikailog-staging;\s*SITE_DIR=\/var\/www\/gikailog\/staging/);
+  assert.match(setup, /8083\)\s*NAME=gikailog-staging;\s*SITE_DIR=\/var\/www\/gikailog\/staging/);
   assert.match(setup, /SITE_CONF=\/etc\/nginx\/sites-available\/\$NAME\.conf/);
   const render = (domain: string, port: string) => {
     const r = spawnSync("bash", [resolve(root, "deploy/test/render-host-proxy.sh"), domain, port], { encoding: "utf8" });
@@ -142,10 +142,10 @@ test("vps-setup.sh: port 8082 なら staging の conf 名・web root・ログ名
   assert.match(prod, /server_name gikailog\.jp www\.gikailog\.jp;/);
   assert.match(prod, /proxy_pass http:\/\/127\.0\.0\.1:8081;/);
   assert.match(prod, /access_log \/var\/log\/nginx\/gikailog\.access\.log noip;/);
-  const staging = render("staging.gikailog.jp", "8082");
+  const staging = render("staging.gikailog.jp", "8083");
   assert.match(staging, /server_name staging\.gikailog\.jp;/);
   assert.doesNotMatch(staging, /www\./);
-  assert.match(staging, /proxy_pass http:\/\/127\.0\.0\.1:8082;/);
+  assert.match(staging, /proxy_pass http:\/\/127\.0\.0\.1:8083;/);
   assert.match(staging, /access_log \/var\/log\/nginx\/gikailog-staging\.access\.log noip;/);
   for (const out of [prod, staging]) assert.doesNotMatch(out, /\bPORT\b|LOG_NAME|\bDOMAIN\b|SERVER_NAMES/);
   const bad = spawnSync("bash", [resolve(root, "deploy/test/render-host-proxy.sh"), "x.example", "9000"], { encoding: "utf8" });
@@ -160,11 +160,11 @@ test("vps-setup.sh は shellcheck と bash -n を通る", () => {
   assert.equal(sc.status, 0, sc.stdout);
 });
 
-test("ci.yml: docker compose config → up → URL モード smoke を 8081 と 8082 の両方で、staging の X-Robots-Tag も検査する", () => {
+test("ci.yml: docker compose config → up → URL モード smoke を 8081 と 8083 の両方で、staging の X-Robots-Tag も検査する", () => {
   assert.match(ci, /docker compose -f deploy\/docker-compose\.yml config/);
   assert.match(ci, /docker compose -f deploy\/docker-compose\.yml up -d/);
   assert.match(ci, /smoke -- --url http:\/\/127\.0\.0\.1:8081/);
-  assert.match(ci, /smoke -- --url http:\/\/127\.0\.0\.1:8082/);
+  assert.match(ci, /smoke -- --url http:\/\/127\.0\.0\.1:8083/);
   assert.match(ci, /STAGING_SITE_DIR:/);
   assert.match(ci, /Host: staging\.gikailog\.jp/);
   assert.match(ci, /x-robots-tag: noindex, nofollow/i);
