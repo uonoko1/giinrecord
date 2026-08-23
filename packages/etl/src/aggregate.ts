@@ -1,6 +1,7 @@
 import type { Bill, Member, MemberDetail, MemberSummary, MemberTerm, Question, RollCall, RollCallSummary, Speech, TimelineEntry, VoteValue } from "@seiji-kiroku/shared";
 import { toSummary } from "./sources/sangiin-members.ts";
 import { groupAt } from "./group-history.ts";
+import { assemblyIdOf } from "./assemblies.ts";
 import type { MatchedBill } from "./match-bills.ts";
 
 /** 集約結果（純粋関数の出力）。ファイルへの書き出しは dataset.ts が担う。 */
@@ -179,7 +180,8 @@ export function buildDataset(
       });
     }
   }
-  const details = members.map((m): MemberDetail => ({ ...m, timeline: [...timelines.get(m.id)!].sort(byDateDesc) }));
+  // assemblyId（#156）は国会の名簿パーサが付けないので集約で補う（toSummary も同じ assemblyIdOf）。index と detail で同じ値（validateDataset が一致を検査する）。
+  const details = members.map((m): MemberDetail => ({ ...m, assemblyId: assemblyIdOf(m), timeline: [...timelines.get(m.id)!].sort(byDateDesc) }));
   const index = members.map((m) => {
     const s = toSummary(m);
     const timeline = timelines.get(m.id)!;

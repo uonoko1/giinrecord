@@ -1,8 +1,9 @@
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import type { Dirent } from "node:fs";
 import { join } from "node:path";
-import type { Bill, BillSummary, DatasetMeta, MemberDetail, MemberSummary, RollCall, RollCallSummary } from "@seiji-kiroku/shared";
+import type { Assembly, Bill, BillSummary, DatasetMeta, MemberDetail, MemberSummary, RollCall, RollCallSummary } from "@seiji-kiroku/shared";
 import type { Aggregated } from "./aggregate.ts";
+import { DIET_ASSEMBLY_IDS } from "./assemblies.ts";
 import { stableJson } from "./json.ts";
 import type { GroupMismatch, Unmatched } from "./match-votes.ts";
 import type { UnmatchedSpeech } from "./match-speeches.ts";
@@ -11,10 +12,26 @@ import type { UnmatchedShugiinBillName } from "./match-shugiin-bills.ts";
 import type { UnmatchedQuestionSubmitter } from "./match-questions.ts";
 import { toBillSummary } from "./sources/shugiin-bills.ts";
 import type { UnmatchedBill } from "./sources/sangiin-bills.ts";
-import type { UnmatchedGroup } from "./sources/sangiin-members.ts";
+import { memberListUrl, type UnmatchedGroup } from "./sources/sangiin-members.ts";
+import { memberListUrl as shugiinMemberListUrl } from "./sources/shugiin-members.ts";
+
+export { DIET_ASSEMBLY_IDS };
+
+/**
+ * `assemblies/index.json` の国会の2行（#156）。名称は公式表記、出典は名簿（議員一覧）の入口。
+ * 地方議会の行は将来の地方 ETL が足す（このファイルは毎回全部書き直す）。
+ */
+export function dietAssemblies(rosterSession: number): Assembly[] {
+  return [
+    { id: DIET_ASSEMBLY_IDS.sangiin, kind: "national", name: "参議院", sourceUrl: memberListUrl(rosterSession) },
+    { id: DIET_ASSEMBLY_IDS.shugiin, kind: "national", name: "衆議院", sourceUrl: shugiinMemberListUrl(1) },
+  ];
+}
 
 /** `data/` に書く一式（docs/DATA_CONTRACT.md）。 */
 export interface Dataset extends Aggregated {
+  /** `assemblies/index.json`（#156）。国会の2議会（dietAssemblies）＋将来の地方議会。 */
+  assemblies: Assembly[];
   rollCallDetails: RollCall[];
   /** 議案（衆院 議案情報から。Issue #72）。`bills/{提出回次}/{id}.json` と `bills/index.json` になる。 */
   bills: Bill[];
@@ -65,6 +82,7 @@ export async function writeDataset(dir: string, ds: Dataset): Promise<void> {
     await mkdir(join(file, ".."), { recursive: true });
     await writeFile(file, stableJson(value));
   };
+  await put("assemblies/index.json", ds.assemblies);
   await put("members/index.json", ds.index);
   for (const d of ds.details) await put(`members/${d.id}.json`, d);
   await put("rollcalls/index.json", ds.rollCalls);
@@ -81,6 +99,9 @@ export async function writeDataset(dir: string, ds: Dataset): Promise<void> {
 
 const SOURCE_HOST = /(^|\.)(sangiin\.go\.jp|shugiin\.go\.jp|ndl\.go\.jp)$/;
 const VOTE_VALUES = new Set(["賛成", "反対", "投票なし"]);
+const ASSEMBLY_KINDS = new Set(["national", "prefectural", "municipal"]);
+/** 都道府県の団体コード上2桁（01〜47）。 */
+const PREF_CODE = /^(0[1-9]|[1-3]\d|4[0-7])$/;
 /** result は必ず得票を含む: 「賛成 N・反対 N」または「<審議結果の原文>（賛成 N・反対 N）」。可否だけの表示にはしない。 */
 const RESULT_FORM = /^(?:[^（）]+（賛成 \d+・反対 \d+）|賛成 \d+・反対 \d+)$/;
 /** group-mismatch.json の1行に必須のキー（GroupMismatch）。 */
@@ -124,11 +145,34 @@ export async function validateDataset(dir: string): Promise<string[]> {
   const meta = await read<DatasetMeta>("meta.json");
   if (meta && (typeof meta.fetchedAt !== "string" || !Array.isArray(meta.sessions))) v.push("meta.json: fetchedAt / sessions required");
 
+  // assemblies/index.json（#156）: id 一意、kind は3値、prefCode は地方だけ（2桁の団体コード）、sourceUrl は https。
+  // 国会の2行は衆参のドメインでなければならない。地方の sourceUrl のホストは、その議会のレコードの許可ホストになる（地方 ETL 以降）。
+  const assemblies = (await read<Assembly[]>("assemblies/index.json")) ?? [];
+  const assemblyIds = new Set<string>();
+  assemblies.forEach((a, i) => {
+    const label = `assemblies/index.json[${i}]`;
+    if (typeof a.id !== "string" || (a.id as string) === "") v.push(`${label}: id must be a non-empty string`);
+    if (assemblyIds.has(a.id)) v.push(`${label}: duplicate id ${a.id}`);
+    assemblyIds.add(a.id);
+    if (!ASSEMBLY_KINDS.has(a.kind)) v.push(`${label}: kind must be national/prefectural/municipal, got ${String(a.kind)}`);
+    if (typeof a.name !== "string" || a.name === "") v.push(`${label}: name must be a non-empty string`);
+    if (a.kind === "national") {
+      if (a.prefCode !== undefined) v.push(`${label}: ${a.id} (national) must not have prefCode`);
+      checkSource(label, a);
+    } else {
+      if (typeof a.prefCode !== "string" || !PREF_CODE.test(a.prefCode)) v.push(`${label}: ${a.id} prefCode must be the 2-digit prefecture code, got ${String(a.prefCode)}`);
+      if (!/^https:\/\//.test(String(a.sourceUrl)) || !safeHost(String(a.sourceUrl))) v.push(`${label}: ${a.id} sourceUrl must be https, got ${String(a.sourceUrl)}`);
+    }
+  });
+
   const index = (await read<MemberSummary[]>("members/index.json")) ?? [];
   const ids = new Set<string>();
   for (const m of index) {
     if (ids.has(m.id)) v.push(`members/index.json: duplicate id ${m.id}`);
     ids.add(m.id);
+    // 所属議会（#156）: assemblies/index.json に実在し、国会議員は house と一致する（diet-{house}）。
+    if (typeof m.assemblyId !== "string" || !assemblyIds.has(m.assemblyId)) v.push(`members/index.json ${m.id}: assemblyId ${String(m.assemblyId)} not in assemblies/index.json`);
+    else if ((m.house === "sangiin" || m.house === "shugiin") && m.assemblyId !== DIET_ASSEMBLY_IDS[m.house]) v.push(`members/index.json ${m.id}: assemblyId ${m.assemblyId} does not match house ${m.house} (expected ${DIET_ASSEMBLY_IDS[m.house]})`);
   }
   const voteCounts = new Map<string, number>();
   for (const m of index) {
@@ -136,6 +180,7 @@ export async function validateDataset(dir: string): Promise<string[]> {
     if (!d) continue;
     const rel = `members/${m.id}.json`;
     if (d.id !== m.id) v.push(`${rel}: id ${d.id} !== ${m.id}`);
+    if (d.assemblyId !== m.assemblyId) v.push(`${rel}: assemblyId ${String(d.assemblyId)} !== index ${String(m.assemblyId)}`);
     checkSource(rel, d);
     let votes = 0;
     let speeches = 0;

@@ -15,11 +15,12 @@ import { fetchShugiinQuestions, shugiinQuestionListUrl } from "./sources/shugiin
 import { fetchSangiinQuestions, sangiinQuestionListUrl } from "./sources/sangiin-questions.ts";
 import { matchQuestions, type UnmatchedQuestionSubmitter } from "./match-questions.ts";
 import { buildDataset, mergeRosters, rosterSessionsFor } from "./aggregate.ts";
-import { readSessionsOnDisk, resolveSessions, validateDataset, writeDataset } from "./dataset.ts";
+import { dietAssemblies, readSessionsOnDisk, resolveSessions, validateDataset, writeDataset } from "./dataset.ts";
 
 /**
  * ETL entry point. S1: House of Councillors members and roll-call votes. S2: plenary speeches (国会会議録API; 参院、#73 から衆院も).
  * Writes normalized JSON under ../../data/ (committed to the repo, CC BY 4.0):
+ *   assemblies/index.json（国会の2議会。#156。地方議会は別 Issue の ETL が足す）,
  *   members/index.json, members/{id}.json, rollcalls/index.json, rollcalls/{session}/{id}.json,
  *   bills/index.json, bills/{session}/{id}.json（衆院 議案情報。S5 #72）,
  *   unmatched.json, unmatched-bills.json, unmatched-groups.json, group-mismatch.json, meta.json
@@ -148,6 +149,8 @@ if (unmatched.length) console.warn(`unmatched: ${unmatched.length} (see data/unm
 if (groupMismatch.length) console.warn(`group mismatch (matched by name only): ${groupMismatch.length} (see data/group-mismatch.json)`);
 
 await writeDataset(DATA, {
+  // 議会一覧（#156）: 国会の2行。members の assemblyId（diet-sangiin / diet-shugiin）はこの id を指す。
+  assemblies: dietAssemblies(memberSession),
   ...buildDataset([...members, ...shugiin.members], rollCalls, new Map([...bills.results].map(([id, r]) => [id, r.decision])), speeches, proposed.entries, shugiinMatched.bills, questions.questions),
   rollCallDetails: rollCalls,
   bills: shugiinMatched.bills,

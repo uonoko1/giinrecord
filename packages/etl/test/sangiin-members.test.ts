@@ -53,7 +53,7 @@ test("同じ永続IDに解決する行が2つあれば例外（衝突を黙っ�
 test("MemberSummary へ変換: counts は 0、group/district/termEnd は terms[0] から。名簿1つだけなら current は true", () => {
   const [m] = parseMemberList(html, SRC, 221);
   assert.deepEqual(toSummary(m), {
-    id: "m_007006", name: "青木 愛", kana: "あおき あい", house: "sangiin",
+    id: "m_007006", name: "青木 愛", kana: "あおき あい", house: "sangiin", assemblyId: "diet-sangiin",
     group: "立憲民主・無所属", district: "比例", termEnd: "2028-07-25", current: true,
     counts: { rollcalls: 0, bills: 0, speeches: 0, questions: 0 },
   });
