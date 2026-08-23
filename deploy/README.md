@@ -6,10 +6,10 @@ to the container on loopback. No Node, no database on the VPS. The only cron job
 access-log aggregation (`deploy/analytics/`, see `docs/ops/analytics.md`).
 
 ```
-internet ──443/80──▶ host nginx (certbot TLS, sites-available/seiji-kiroku.conf)
+internet ──443/80──▶ host nginx (certbot TLS, sites-available/gikailog.conf)
                        └─ proxy_pass http://127.0.0.1:8081
                             └─▶ web container  nginx:alpine  (deploy/nginx/site.conf: SPA fallback, cache, security headers)
-                                   └─ /usr/share/nginx/html  ⇐ bind mount :ro ⇐ /var/www/seiji-kiroku/site  ⇐ rsync from deploy.yml
+                                   └─ /usr/share/nginx/html  ⇐ bind mount :ro ⇐ /var/www/gikailog/site  ⇐ rsync from deploy.yml
 ```
 
 | file | role |
@@ -23,11 +23,14 @@ internet ──443/80──▶ host nginx (certbot TLS, sites-available/seiji-ki
 Who may do what on the shared host:
 
 - **`ubuntu`** = the CI deploy-key user (`deploy.yml` rsync, key restricted with `restrict,no-pty`). It owns
-  `/var/www/seiji-kiroku/site` and nothing else. It is **not** in the `docker` group and never will be — docker-group
+  `/var/www/gikailog/site` and nothing else. It is **not** in the `docker` group and never will be — docker-group
   membership is root-equivalent, and a leaked deploy key must remain a file-copy key.
 - **a human with sudo** installs Docker, runs `docker compose`, runs certbot. None of that is automated.
 
 ## One-time setup
+
+All of this (plus the `seiji-kiroku` → `gikailog` path migration, Issue #119) is automated by `deploy/go-live.sh`
+(`ssh -t sakura-vps 'sudo bash -s DOMAIN' < deploy/go-live.sh`); the steps below are the manual equivalent.
 
 ```sh
 # 1. (human, sudo) host nginx block + web root. Installs nothing. DOMAIN = the hostname that will point here.
@@ -35,11 +38,11 @@ ssh sakura-vps 'sudo bash -s DOMAIN' < deploy/vps-setup.sh
 # 2. (human, sudo) Docker Engine + compose plugin, if not present: https://docs.docker.com/engine/install/ubuntu/
 #    Do NOT add `ubuntu` to the docker group.
 # 3. (human with docker privileges) start the container from a checkout of this repo
-ssh sakura-vps 'git clone https://github.com/uonoko1/seiji-kiroku.git ~/seiji-kiroku'   # or git pull
-ssh sakura-vps 'docker compose -f ~/seiji-kiroku/deploy/docker-compose.yml up -d'
+ssh sakura-vps 'git clone https://github.com/uonoko1/gikailog.git ~/gikailog'   # or git pull
+ssh sakura-vps 'docker compose -f ~/gikailog/deploy/docker-compose.yml up -d'
 ssh sakura-vps 'curl -sI http://127.0.0.1:8081/ | head -1'                               # 200 once a build was rsynced
 # 4. DNS: A record  DOMAIN -> 160.16.86.160
-# 5. TLS (after DNS propagates) — certbot edits only sites-available/seiji-kiroku.conf
+# 5. TLS (after DNS propagates) — certbot edits only sites-available/gikailog.conf
 ssh sakura-vps 'sudo certbot --nginx -d DOMAIN --redirect'
 ```
 
@@ -48,12 +51,12 @@ Re-running `vps-setup.sh` is safe: once certbot has added the 443 block the scri
 ## Continuous deploy (unchanged)
 
 `.github/workflows/deploy.yml` runs on every push to `main` (and after the daily ETL): build → `rsync --delete`
-to `/var/www/seiji-kiroku/site/` as user `ubuntu`. The container serves the new files immediately — the
+to `/var/www/gikailog/site/` as user `ubuntu`. The container serves the new files immediately — the
 directory is bind-mounted, nothing to restart.
 
 GitHub Environment `production` secrets: `DEPLOY_SSH_KEY`, `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_KNOWN_HOSTS`.
-To rotate the key: `ssh-keygen -t ed25519 -C "seiji-kiroku github-actions deploy"`, replace the line tagged
-`seiji-kiroku github-actions` in `~ubuntu/.ssh/authorized_keys`, update `DEPLOY_SSH_KEY`.
+To rotate the key: `ssh-keygen -t ed25519 -C "gikailog github-actions deploy"`, replace the line tagged
+`gikailog github-actions` in `~ubuntu/.ssh/authorized_keys`, update `DEPLOY_SSH_KEY`.
 
 ## Changing nginx config or the image
 

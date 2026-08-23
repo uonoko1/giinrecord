@@ -55,7 +55,7 @@ describe("About", () => {
 
   it("検証するのリンクはリポジトリ URL を指す", () => {
     renderAbout();
-    const repo = "https://github.com/uonoko1/seiji-kiroku";
+    const repo = "https://github.com/uonoko1/gikailog";
     expect(screen.getByRole("link", { name: "ソースコード" })).toHaveAttribute("href", repo);
     expect(screen.getByRole("link", { name: "誤りを報告" })).toHaveAttribute("href", `${repo}/issues/new`);
   });
@@ -68,7 +68,7 @@ describe("About", () => {
     const section = screen.getByRole("region", { name: "検証する" });
     expect(section).toHaveTextContent("CC BY 4.0");
     expect(section).toHaveTextContent("議会ログ");
-    expect(screen.getByRole("link", { name: "GitHub のデータ" })).toHaveAttribute("href", "https://github.com/uonoko1/seiji-kiroku/tree/main/data");
+    expect(screen.getByRole("link", { name: "GitHub のデータ" })).toHaveAttribute("href", "https://github.com/uonoko1/gikailog/tree/main/data");
   });
 
   it("データが無くても落ちない", () => {
@@ -98,7 +98,7 @@ describe("About", () => {
 
     it("支援リンクはリポジトリ URL を指す（GitHub Sponsors 有効化までの代替）", () => {
       renderAbout();
-      expect(screen.getByRole("link", { name: "支援する" })).toHaveAttribute("href", "https://github.com/uonoko1/seiji-kiroku");
+      expect(screen.getByRole("link", { name: "支援する" })).toHaveAttribute("href", "https://github.com/uonoko1/gikailog");
     });
 
     it("運動的な言葉を含まない", () => {

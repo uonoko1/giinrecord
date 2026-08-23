@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { VerifySection } from "./VerifySection";
 
-const repo = "https://github.com/uonoko1/seiji-kiroku";
+const repo = "https://github.com/uonoko1/gikailog";
 
 describe("VerifySection", () => {
   it("ソースコード・誤りを報告・GitHub のデータはリポジトリ URL を指す", () => {

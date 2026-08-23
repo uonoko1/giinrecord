@@ -223,7 +223,7 @@ export function checkArchive(zip: Buffer | undefined, expected: ArchiveExpectati
 /** README.txt placed at the archive root: licence, attribution, sources, fetch time. Facts only. */
 export function archiveReadme(meta: DatasetMeta | undefined): string {
   const lines = [
-    "議会ログ (seiji-kiroku) データ一括アーカイブ",
+    "議会ログ (gikailog) データ一括アーカイブ",
     "==========================================",
     "",
     "このアーカイブは、参議院・衆議院・国立国会図書館が公開する公式記録を整形した JSON です。",
@@ -239,7 +239,7 @@ export function archiveReadme(meta: DatasetMeta | undefined): string {
     "",
     "帰属表示 / Attribution",
     "----------------------",
-    `「議会ログ (seiji-kiroku)」 ${REPO_URL}`,
+    `「議会ログ (gikailog)」 ${REPO_URL}`,
     "一次資料：参議院・衆議院・国立国会図書館。引用する際は各記録の sourceUrl も併記してください。",
     "",
   ];

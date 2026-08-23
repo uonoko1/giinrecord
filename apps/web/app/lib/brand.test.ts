@@ -1,5 +1,5 @@
 /**
- * 改名（#84）の回帰防止：旧サービス名（seiji-kiroku 時代の和名）が app/ に残っていないこと。
+ * 改名（#84）の回帰防止：旧サービス名（改名前の和名）が app/ に残っていないこと。
  * test-fixtures/ は実 HTML のスナップショットなので対象外（about テストで内容を別途検証）。
  */
 import { readdirSync, readFileSync, statSync } from "node:fs";
