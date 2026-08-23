@@ -262,6 +262,21 @@ describe("writeDataset / validateDataset: docs/DATA_CONTRACT.md の不変条件"
     cleanup();
   });
 
+  test("attendance 行（委員会出席の発議者、#109）: estimated は false・role は 発議者・sourceUrl は会議録（kokkai.ndl.go.jp/txt/）・参院議員だけ。counts には数えない", async () => {
+    const attendance = (extra: Record<string, unknown> = {}) => ({ kind: "attendance", estimated: false, date: "2026-07-09", meetingId: "122115007X01420260709_000", meeting: "農林水産委員会 第14号", role: "発議者", bills: [{ billId: "221-参法-11", title: "法律案" }], sourceUrl: "https://kokkai.ndl.go.jp/txt/122115007X01420260709/0", ...extra });
+    patch<{ timeline: unknown[] }>(dir, "members/m_007006.json", (d) => ({ ...d, timeline: [attendance(), ...d.timeline] }));
+    assert.deepEqual(await validateDataset(dir), []);
+    patch<{ timeline: unknown[] }>(dir, "members/m_007006.json", (d) => ({ ...d, timeline: [attendance({ estimated: true }), ...d.timeline.slice(1)] }));
+    assert.match((await validateDataset(dir)).join("\n"), /m_007006.*timeline\[0\].*estimated: false/);
+    patch<{ timeline: unknown[] }>(dir, "members/m_007006.json", (d) => ({ ...d, timeline: [attendance({ role: "提出者" }), ...d.timeline.slice(1)] }));
+    assert.match((await validateDataset(dir)).join("\n"), /m_007006.*timeline\[0\].*role/);
+    patch<{ timeline: unknown[] }>(dir, "members/m_007006.json", (d) => ({ ...d, timeline: [attendance({ sourceUrl: `${BASE}/221-0605-v001.htm` }), ...d.timeline.slice(1)] }));
+    assert.match((await validateDataset(dir)).join("\n"), /m_007006.*timeline\[0\].*attendance sourceUrl/);
+    patch<{ house: string; timeline: unknown[] }>(dir, "members/m_007006.json", (d) => ({ ...d, house: "shugiin", timeline: [attendance(), ...d.timeline.slice(1)] }));
+    assert.match((await validateDataset(dir)).join("\n"), /m_007006.*timeline\[0\].*house=sangiin/);
+    cleanup();
+  });
+
   test("rollcalls/index.json の行に対応する採決ファイルが無ければ違反", async () => {
     rmSync(join(dir, "rollcalls/221/221-0724-v001.json"));
     assert.match((await validateDataset(dir)).join("\n"), /221-0724-v001\.json/);
