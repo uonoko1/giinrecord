@@ -56,7 +56,7 @@ test("site.conf: プリレンダリング + SPA fallback の try_files と gzip 
 
 test("ホスト nginx は proxy_pass http://127.0.0.1:8081 だけで、静的配信もヘッダ付与もしない", () => {
   const code = uncommented(hostProxy);
-  assert.match(code, /proxy_pass http:\/\/127\.0\.0\.1:8080;/);
+  assert.match(code, /proxy_pass http:\/\/127\.0\.0\.1:8081;/);
   assert.doesNotMatch(code, /^\s*root\s/m);
   assert.doesNotMatch(code, /add_header/);
   assert.doesNotMatch(code, /try_files/);
@@ -83,7 +83,7 @@ test("vps-setup.sh: 何もインストールせず docker を実行もしない�
 });
 
 test("vps-setup.sh: ホスト proxy の server block を書き、web root を作り、docker compose の手順を表示する", () => {
-  assert.match(setup, /proxy_pass http:\/\/127\.0\.0\.1:8080;/);
+  assert.match(setup, /proxy_pass http:\/\/127\.0\.0\.1:8081;/);
   assert.match(setup, /\/var\/www\/seiji-kiroku\/site/);
   assert.match(setup, /docker compose -f .*docker-compose\.yml up -d/);
   assert.doesNotMatch(setup, /^\s*root \/var\/www/m, "host nginx must not serve the files directly");
@@ -115,7 +115,7 @@ test("vps-setup.sh は shellcheck と bash -n を通る", () => {
 test("ci.yml: docker compose config → up → URL モード smoke（http://127.0.0.1:8081）のジョブがある", () => {
   assert.match(ci, /docker compose -f deploy\/docker-compose\.yml config/);
   assert.match(ci, /docker compose -f deploy\/docker-compose\.yml up -d/);
-  assert.match(ci, /smoke -- --url http:\/\/127\.0\.0\.1:8080/);
+  assert.match(ci, /smoke -- --url http:\/\/127\.0\.0\.1:8081/);
 });
 
 test("docker compose config が通る（docker がある環境のみ）", () => {
