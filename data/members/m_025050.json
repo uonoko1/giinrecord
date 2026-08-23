@@ -1321,6 +1321,36 @@
    "value": "反対"
   },
   {
+   "answerDate": "2025-12-26",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/219/touh/t219078.htm",
+   "date": "2025-12-16",
+   "kind": "question",
+   "questionId": "219-sangiin-78",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/219/meisai/m219078.htm",
+   "submitterText": "百田 尚樹君",
+   "title": "帰化の許可及び永住許可の要件厳格化に関する質問主意書"
+  },
+  {
+   "answerDate": "2025-12-26",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/219/touh/t219077.htm",
+   "date": "2025-12-16",
+   "kind": "question",
+   "questionId": "219-sangiin-77",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/219/meisai/m219077.htm",
+   "submitterText": "百田 尚樹君",
+   "title": "生活保護費に関する質問主意書"
+  },
+  {
+   "answerDate": "2025-12-26",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/219/touh/t219076.htm",
+   "date": "2025-12-16",
+   "kind": "question",
+   "questionId": "219-sangiin-76",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/219/meisai/m219076.htm",
+   "submitterText": "百田 尚樹君",
+   "title": "医師の応招義務及び不法滞在の外国人の医療費支払等に関する再質問主意書"
+  },
+  {
    "date": "2025-12-05",
    "groupValue": "賛成",
    "kind": "vote",
@@ -1519,6 +1549,36 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/219/219-1128-v001.htm",
    "title": "国家公務員等の任命に関する件「食品安全委員会委員（春日文子君）」",
    "value": "賛成"
+  },
+  {
+   "answerDate": "2025-10-31",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/219/touh/t219012.htm",
+   "date": "2025-10-21",
+   "kind": "question",
+   "questionId": "219-sangiin-12",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/219/meisai/m219012.htm",
+   "submitterText": "百田 尚樹君",
+   "title": "医師の応招義務及び不法滞在の外国人の医療費支払等に関する質問主意書"
+  },
+  {
+   "answerDate": "2025-08-15",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/218/touh/t218014.htm",
+   "date": "2025-08-01",
+   "kind": "question",
+   "questionId": "218-sangiin-14",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/218/meisai/m218014.htm",
+   "submitterText": "百田 尚樹君",
+   "title": "拉致問題担当の内閣官房参与二名の辞任に関する質問主意書"
+  },
+  {
+   "answerDate": "2025-08-15",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/218/touh/t218013.htm",
+   "date": "2025-08-01",
+   "kind": "question",
+   "questionId": "218-sangiin-13",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/218/meisai/m218013.htm",
+   "submitterText": "百田 尚樹君",
+   "title": "国土交通大臣任命に関する質問主意書"
   }
  ]
 }

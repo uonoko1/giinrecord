@@ -88,6 +88,46 @@
    "value": "賛成"
   },
   {
+   "answerDate": "2026-08-04",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/touh/t221112.htm",
+   "date": "2026-07-24",
+   "kind": "question",
+   "questionId": "221-sangiin-112",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/meisai/m221112.htm",
+   "submitterText": "小西 洋之君",
+   "title": "皇室典範の改正による皇位継承及び養子制度の憲法問題等に関する質問主意書"
+  },
+  {
+   "answerDate": "2026-08-04",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/touh/t221111.htm",
+   "date": "2026-07-24",
+   "kind": "question",
+   "questionId": "221-sangiin-111",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/meisai/m221111.htm",
+   "submitterText": "小西 洋之君",
+   "title": "日本国憲法における象徴天皇制の在り方等に関する質問主意書"
+  },
+  {
+   "answerDate": "2026-08-04",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/touh/t221110.htm",
+   "date": "2026-07-24",
+   "kind": "question",
+   "questionId": "221-sangiin-110",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/meisai/m221110.htm",
+   "submitterText": "小西 洋之君",
+   "title": "国旗の損壊等の処罰に関する法律に関する質問主意書"
+  },
+  {
+   "answerDate": "2026-08-04",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/touh/t221109.htm",
+   "date": "2026-07-24",
+   "kind": "question",
+   "questionId": "221-sangiin-109",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/meisai/m221109.htm",
+   "submitterText": "小西 洋之君",
+   "title": "防衛装備移転三原則及び運用指針の改正と憲法の平和主義に関する質問主意書"
+  },
+  {
    "date": "2026-07-17",
    "groupValue": "反対",
    "kind": "vote",
@@ -1165,6 +1205,16 @@
    "value": "賛成"
   },
   {
+   "answerDate": "2026-04-03",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/touh/t221022.htm",
+   "date": "2026-03-25",
+   "kind": "question",
+   "questionId": "221-sangiin-22",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/meisai/m221022.htm",
+   "submitterText": "小西 洋之君",
+   "title": "旅館業法における簡易宿所の課題に関する質問主意書"
+  },
+  {
    "date": "2026-03-23",
    "groupValue": "賛成",
    "kind": "vote",
@@ -1243,6 +1293,86 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0323-v001.htm",
    "title": "日程第１　国家公務員等の任命に関する件「人事官（菅原晶子君）」",
    "value": "賛成"
+  },
+  {
+   "answerDate": "2025-12-26",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/219/touh/t219095.htm",
+   "date": "2025-12-17",
+   "kind": "question",
+   "questionId": "219-sangiin-95",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/219/meisai/m219095.htm",
+   "submitterText": "小西 洋之君",
+   "title": "国光あやの外務副大臣による小西洋之参議院議員への質問通告に係る事実無根の誹謗中傷による名誉毀損行為に関する質問主意書"
+  },
+  {
+   "answerDate": "2025-12-26",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/219/touh/t219094.htm",
+   "date": "2025-12-17",
+   "kind": "question",
+   "questionId": "219-sangiin-94",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/219/meisai/m219094.htm",
+   "submitterText": "小西 洋之君",
+   "title": "存立危機事態の要件該当性を判断するに当たっての「戦禍」及び「国民が被ることとなる犠牲」に関する質問主意書"
+  },
+  {
+   "answerDate": "2025-12-26",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/219/touh/t219093.htm",
+   "date": "2025-12-17",
+   "kind": "question",
+   "questionId": "219-sangiin-93",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/219/meisai/m219093.htm",
+   "submitterText": "小西 洋之君",
+   "title": "高市総理の言う「台湾有事」に係る「どう考えても存立危機事態になり得るケース」の趣旨等に関する質問主意書"
+  },
+  {
+   "answerDate": "2025-12-26",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/219/touh/t219092.htm",
+   "date": "2025-12-17",
+   "kind": "question",
+   "questionId": "219-sangiin-92",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/219/meisai/m219092.htm",
+   "submitterText": "小西 洋之君",
+   "title": "高市総理の言う「台湾有事」の存立危機事態における「我が国と密接な関係にある他国」の意味等に関する質問主意書"
+  },
+  {
+   "answerDate": "2025-12-26",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/219/touh/t219091.htm",
+   "date": "2025-12-17",
+   "kind": "question",
+   "questionId": "219-sangiin-91",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/219/meisai/m219091.htm",
+   "submitterText": "小西 洋之君",
+   "title": "高市早苗内閣総理大臣の言う「台湾有事」に係る「存立危機事態」における中国の我が国に対する反撃又は報復攻撃に関する質問主意書"
+  },
+  {
+   "answerDate": "2025-12-26",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/219/touh/t219090.htm",
+   "date": "2025-12-17",
+   "kind": "question",
+   "questionId": "219-sangiin-90",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/219/meisai/m219090.htm",
+   "submitterText": "小西 洋之君",
+   "title": "日中平和友好条約に規定する「武力に訴えないこと」に関する質問主意書"
+  },
+  {
+   "answerDate": "2025-12-26",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/219/touh/t219089.htm",
+   "date": "2025-12-17",
+   "kind": "question",
+   "questionId": "219-sangiin-89",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/219/meisai/m219089.htm",
+   "submitterText": "小西 洋之君",
+   "title": "存立危機事態において我が国が我が国と密接な関係にある他国の同意を得て武力行使をすることに関する質問主意書"
+  },
+  {
+   "answerDate": "2025-12-26",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/219/touh/t219088.htm",
+   "date": "2025-12-17",
+   "kind": "question",
+   "questionId": "219-sangiin-88",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/219/meisai/m219088.htm",
+   "submitterText": "小西 洋之君",
+   "title": "存立危機事態が「平素」であるとする政府答弁に関する質問主意書"
   },
   {
    "date": "2025-12-16",
@@ -1582,6 +1712,16 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0620-v001.htm",
    "title": "日程第１　独立行政法人男女共同参画機構法案（内閣提出、衆議院送付）",
    "value": "賛成"
+  },
+  {
+   "answerDate": "2025-07-01",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217238.htm",
+   "date": "2025-06-19",
+   "kind": "question",
+   "questionId": "217-sangiin-238",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217238.htm",
+   "submitterText": "小西 洋之君",
+   "title": "薬価改定の課題に関する質問主意書"
   },
   {
    "date": "2025-06-18",

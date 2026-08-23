@@ -14,5 +14,72 @@
    "timesElected": 3
   }
  ],
- "timeline": []
+ "timeline": [
+  {
+   "answerDate": "2026-07-24",
+   "answerUrl": "https://www.shugiin.go.jp/internet/itdb_shitsumon.nsf/html/shitsumon/b221035.htm",
+   "date": "2026-07-14",
+   "kind": "question",
+   "questionId": "221-shugiin-35",
+   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_shitsumon.nsf/html/shitsumon/221035.htm",
+   "status": "答弁受理",
+   "submitterText": "山本 ジョージ君",
+   "title": "生活保護制度における勤労控除の基礎控除の全額控除額に関する再質問主意書"
+  },
+  {
+   "answerDate": "2026-07-10",
+   "answerUrl": "https://www.shugiin.go.jp/internet/itdb_shitsumon.nsf/html/shitsumon/b221024.htm",
+   "date": "2026-06-30",
+   "kind": "question",
+   "questionId": "221-shugiin-24",
+   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_shitsumon.nsf/html/shitsumon/221024.htm",
+   "status": "答弁受理",
+   "submitterText": "山本 ジョージ君",
+   "title": "生活保護制度における勤労控除の基礎控除の全額控除額に関する質問主意書"
+  },
+  {
+   "answerDate": "2026-07-10",
+   "answerUrl": "https://www.shugiin.go.jp/internet/itdb_shitsumon.nsf/html/shitsumon/b221023.htm",
+   "date": "2026-06-30",
+   "kind": "question",
+   "questionId": "221-shugiin-23",
+   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_shitsumon.nsf/html/shitsumon/221023.htm",
+   "status": "答弁受理",
+   "submitterText": "山本 ジョージ君",
+   "title": "年金給付の期日に関する質問主意書"
+  },
+  {
+   "answerDate": "2026-07-10",
+   "answerUrl": "https://www.shugiin.go.jp/internet/itdb_shitsumon.nsf/html/shitsumon/b221022.htm",
+   "date": "2026-06-29",
+   "kind": "question",
+   "questionId": "221-shugiin-22",
+   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_shitsumon.nsf/html/shitsumon/221022.htm",
+   "status": "答弁受理",
+   "submitterText": "山本 ジョージ君",
+   "title": "筋痛性脳脊髄炎等の難病患者および新型コロナウイルス感染症後遺症患者に対する障害福祉サービスの適切な提供並びに障害認定の適正化に関する質問主意書"
+  },
+  {
+   "answerDate": "2026-07-03",
+   "answerUrl": "https://www.shugiin.go.jp/internet/itdb_shitsumon.nsf/html/shitsumon/b221020.htm",
+   "date": "2026-06-23",
+   "kind": "question",
+   "questionId": "221-shugiin-20",
+   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_shitsumon.nsf/html/shitsumon/221020.htm",
+   "status": "答弁受理",
+   "submitterText": "山本 ジョージ君",
+   "title": "円借款で建造されたモロッコ王国・国立漁業研究所の海洋・漁業調査船が西サハラの海域で公然と調査を行っている件に関する質問主意書"
+  },
+  {
+   "answerDate": "2026-06-19",
+   "answerUrl": "https://www.shugiin.go.jp/internet/itdb_shitsumon.nsf/html/shitsumon/b221017.htm",
+   "date": "2026-06-10",
+   "kind": "question",
+   "questionId": "221-shugiin-17",
+   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_shitsumon.nsf/html/shitsumon/221017.htm",
+   "status": "答弁受理",
+   "submitterText": "山本 ジョージ君",
+   "title": "西サハラに関する質問主意書"
+  }
+ ]
 }

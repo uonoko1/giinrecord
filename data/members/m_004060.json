@@ -89,6 +89,16 @@
    "value": "賛成"
   },
   {
+   "answerDate": "2026-07-31",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/touh/t221102.htm",
+   "date": "2026-07-22",
+   "kind": "question",
+   "questionId": "221-sangiin-102",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/meisai/m221102.htm",
+   "submitterText": "蓮舫君",
+   "title": "養子皇族男子の子の皇位継承権に係る総理答弁に関する質問主意書"
+  },
+  {
    "date": "2026-07-17",
    "groupValue": "反対",
    "kind": "vote",
@@ -1527,6 +1537,16 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/219/219-1128-v001.htm",
    "title": "国家公務員等の任命に関する件「食品安全委員会委員（春日文子君）」",
    "value": "賛成"
+  },
+  {
+   "answerDate": "2025-08-15",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/218/touh/t218021.htm",
+   "date": "2025-08-05",
+   "kind": "question",
+   "questionId": "218-sangiin-21",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/218/meisai/m218021.htm",
+   "submitterText": "蓮舫君",
+   "title": "日米関税交渉に関する質問主意書"
   }
  ]
 }
