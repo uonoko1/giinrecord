@@ -3,7 +3,7 @@ import type { JSX } from "react";
 import { MemoryRouter } from "react-router";
 import { describe, expect, it } from "vitest";
 import Privacy, { meta as privacyMeta, PRIVACY_UPDATED } from "./privacy";
-import Terms, { meta as termsMeta, TERMS_UPDATED } from "./terms";
+import Terms, { meta as termsMeta, SUPPORT_URL, TERMS_UPDATED } from "./terms";
 
 const EVALUATIVE_WORDS = ["おすすめ", "ランキング", "一致率", "評価します", "採点します"];
 /** 運動的・煽り的な言葉。事実と依頼だけを書く（#47）。 */
@@ -73,6 +73,32 @@ describe("利用規約の内容", () => {
     expect(text).toContain("運営者の自費");
     expect(text).toContain("日本法");
     expect(screen.getByRole("link", { name: "誤りを報告" })).toHaveAttribute("href", "https://github.com/uonoko1/gikailog/issues/new");
+  });
+});
+
+describe("利用規約の運営費（#174）", () => {
+  it("id=funding の節に方針3点を書き、支援リンクは SUPPORT_URL（GitHub Sponsors 有効化までリポジトリ URL）を指す", () => {
+    const { container } = renderPage(Terms);
+    const section = container.querySelector("#funding");
+    expect(section).not.toBeNull();
+    expect(section).toHaveAttribute("aria-labelledby", "terms-funding");
+    const items = Array.from(section?.querySelectorAll("li") ?? []).map((li) => li.textContent);
+    expect(items).toHaveLength(3);
+    expect(items[0]).toContain("運営者の自費で運営");
+    expect(items[1]).toContain("政党・候補者・業界団体からは受け取らない");
+    expect(items[2]).toContain("政治カテゴリを除外した広告");
+    expect(items[2]).toContain("このページに明記");
+    expect(SUPPORT_URL).toBe("https://github.com/uonoko1/gikailog");
+    expect(screen.getByRole("link", { name: "支援する" })).toHaveAttribute("href", SUPPORT_URL);
+  });
+
+  it("費目・金額・未確定・予告調の表現を含まず、/about#funding へは飛ばさない", () => {
+    const { container } = renderPage(Terms);
+    for (const word of ["VPS", "未算出", "取得予定", "月額", "将来", "可能性", "事前に", "予定"]) {
+      expect(container.textContent).not.toContain(word);
+    }
+    expect(container.querySelector('a[href="/about#funding"]')).toBeNull();
+    expect(container.querySelector("#funding ins, #funding iframe, #funding script")).toBeNull();
   });
 });
 
