@@ -1,7 +1,7 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import type { Bill, Member, RollCall, Speech } from "@seiji-kiroku/shared";
+import type { Bill, Member, Question, RollCall, Speech } from "@seiji-kiroku/shared";
 import { buildDataset, groupMajority, summarizeRollCall } from "../src/aggregate.ts";
 import { matchVotes } from "../src/match-votes.ts";
 import type { MatchedBill } from "../src/match-bills.ts";
@@ -102,7 +102,7 @@ describe("buildDataset: members/{id}.json・members/index.json・rollcalls/index
 
   test("members/index.json の counts.rollcalls は timeline の vote 数", () => {
     assert.deepEqual(ds.index.map((m) => [m.id, m.counts.rollcalls]), [["m_1", 2], ["m_2", 1], ["m_3", 0]]);
-    assert.deepEqual(ds.index[0].counts, { rollcalls: 2, bills: 0, speeches: 0 });
+    assert.deepEqual(ds.index[0].counts, { rollcalls: 2, bills: 0, speeches: 0, questions: 0 });
   });
 
   test("rollcalls/index.json は日付降順の RollCallSummary[]", () => {
@@ -169,6 +169,17 @@ describe("buildDataset: speech を timeline に入れる", () => {
     const d = buildDataset(members, [], new Map(), [speech("x_001", "m_1", "2026-06-05", { position: "" })]);
     assert.deepEqual(Object.keys(d.details[0].timeline[0]).includes("position"), false);
     assert.equal(d.index[0].counts.speeches, 1);
+  });
+
+  test("衆院本会議の発言は衆院議員（h_）の timeline に入り、counts.speeches に数える（Issue #107）", () => {
+    const h = { ...member("h_1", "衆 一郎", "自由民主党・無所属の会"), house: "shugiin" as const, terms: [{ house: "shugiin" as const, group: "自由民主党・無所属の会", district: "東京1", from: "", sessionFrom: 221 }] };
+    const d = buildDataset([h], [], new Map(), [speech("122105254X03520260724_002", "h_1", "2026-07-24", { house: "shugiin" })]);
+    assert.equal(d.index[0].counts.speeches, 1);
+    assert.equal(d.details[0].timeline[0].kind, "speech");
+  });
+
+  test("発言の院と議員の院が違えば例外（衆院本会議の発言を参院議員に付けない）", () => {
+    assert.throws(() => buildDataset(members, [], new Map(), [speech("122105254X03520260724_002", "m_1", "2026-07-24", { house: "shugiin" })]), /house/);
   });
 
   test("memberId の無い発言（名簿にいない大臣など）は timeline に入れない", () => {
@@ -312,7 +323,7 @@ describe("buildDataset: 衆院 Bill から timeline を作る", () => {
 
   test("timeline は日付降順、同日は vote → bill → stance → speech", () => {
     const d = buildDataset([hMember("h_1", "自由民主党・無所属の会")], [], new Map(),
-      [speech("x_001", "h_1", "2026-03-02")],
+      [speech("x_001", "h_1", "2026-03-02", { house: "shugiin" })],
       [], [shugiinBill("221-衆法-1", { submitters: ["h_1"] }), shugiinBill("221-閣法-3", { kind: "閣法", shugiinGroupStance: { stanceText: "多数", yes: ["自由民主党・無所属の会"], no: [] } })]);
     assert.deepEqual(d.details[0].timeline.map((e) => e.kind), ["bill", "stance", "speech"]);
   });
@@ -333,5 +344,54 @@ describe("buildDataset: 衆院 Bill から timeline を作る", () => {
 
   test("提出者の memberId が名簿に無ければ例外", () => {
     assert.throws(() => buildDataset(members, [], new Map(), [], [], [shugiinBill("221-衆法-9", { submitters: ["h_9"] })]), /h_9/);
+  });
+});
+
+/* ---------- 質問主意書（#106）: 名寄せ済みの提出者の question 行（事実） ---------- */
+
+const question = (id: string, house: Question["house"], date: string, extra: Partial<Question> = {}): Question => ({
+  id, session: 221, number: Number(id.split("-")[2]), house, title: `質問 ${id}`, date, submitterText: "誰か君", submitterNames: ["誰か"],
+  sourceUrl: house === "sangiin"
+    ? `https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/meisai/m221${id.split("-")[2]!.padStart(3, "0")}.htm`
+    : `https://www.shugiin.go.jp/internet/itdb_shitsumon.nsf/html/shitsumon/221${id.split("-")[2]!.padStart(3, "0")}.htm`,
+  ...extra,
+});
+
+describe("buildDataset: 質問主意書を timeline に入れる", () => {
+  const members = [member("m_1", "一 郎"), hMember("h_1", "無所属")];
+  const rcs = [rollCall("221-0605-v001", "2026-06-05", [vote("m_1", "賛成")])];
+  const questions = [
+    question("221-sangiin-1", "sangiin", "2026-06-05", { submitters: ["m_1"], submitterText: "一 郎君", answerDate: "2026-06-12", answerUrl: "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/touh/t221001.htm" }),
+    question("221-shugiin-1", "shugiin", "2026-02-19", { submitters: ["h_1"], submitterText: "衆 太郎君", group: "無所属", status: "答弁受理" }),
+    question("221-shugiin-2", "shugiin", "2026-02-20"), // 未突合: どの timeline にも入らない
+  ];
+  const ds = buildDataset(members, rcs, new Map(), [], [], [], questions);
+
+  test("question 行は提出日・件名・提出者の原文・経過状況・答弁書受領日・答弁本文URL・出典を持ち、無いキーは省く", () => {
+    const m1 = ds.details.find((d) => d.id === "m_1")!;
+    assert.deepEqual(m1.timeline.filter((e) => e.kind === "question"), [
+      { kind: "question", date: "2026-06-05", questionId: "221-sangiin-1", title: "質問 221-sangiin-1", submitterText: "一 郎君", answerDate: "2026-06-12",
+        answerUrl: "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/touh/t221001.htm",
+        sourceUrl: "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/meisai/m221001.htm" },
+    ]);
+    const h1 = ds.details.find((d) => d.id === "h_1")!;
+    assert.deepEqual(h1.timeline, [
+      { kind: "question", date: "2026-02-19", questionId: "221-shugiin-1", title: "質問 221-shugiin-1", submitterText: "衆 太郎君", status: "答弁受理",
+        sourceUrl: "https://www.shugiin.go.jp/internet/itdb_shitsumon.nsf/html/shitsumon/221001.htm" },
+    ]);
+  });
+
+  test("同日は vote → question の順（bill・stance の後、speech の前）", () => {
+    const m1 = ds.details.find((d) => d.id === "m_1")!;
+    assert.deepEqual(m1.timeline.map((e) => e.kind), ["vote", "question"]);
+  });
+
+  test("counts.questions は timeline の question 数。未突合の質問はどこにも数えない", () => {
+    assert.deepEqual(ds.index.map((m) => [m.id, m.counts.questions]), [["m_1", 1], ["h_1", 1]]);
+    assert.deepEqual(ds.index[0].counts, { rollcalls: 1, bills: 0, speeches: 0, questions: 1 });
+  });
+
+  test("名簿にない memberId の質問は例外", () => {
+    assert.throws(() => buildDataset(members, [], new Map(), [], [], [], [question("221-sangiin-9", "sangiin", "2026-04-01", { submitters: ["m_9"] })]), /m_9/);
   });
 });

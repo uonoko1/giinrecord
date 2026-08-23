@@ -245,6 +245,23 @@ describe("writeDataset / validateDataset: docs/DATA_CONTRACT.md の不変条件"
     cleanup();
   });
 
+  test("question 行（質問主意書、#106）: sourceUrl は衆院 経過ページか参院 詳細ページ。counts.questions は timeline の question 数", async () => {
+    const SYUISYO = "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221";
+    const question = (extra: Record<string, unknown> = {}) => ({ kind: "question", date: "2026-07-30", questionId: "221-sangiin-1", title: "質問主意書", submitterText: "テスト 太郎君", answerDate: "2026-08-05", answerUrl: `${SYUISYO}/touh/t221001.htm`, sourceUrl: `${SYUISYO}/meisai/m221001.htm`, ...extra });
+    const setCounts = (questions: number) => patch<{ id: string; counts: Record<string, number> }[]>(dir, "members/index.json", (idx) => idx.map((m) => (m.id === "m_007006" ? { ...m, counts: { ...m.counts, questions } } : m)));
+    patch<{ timeline: unknown[] }>(dir, "members/m_007006.json", (d) => ({ ...d, timeline: [question(), ...d.timeline] }));
+    assert.match((await validateDataset(dir)).join("\n"), /m_007006.*counts\.questions/);
+    setCounts(1);
+    assert.deepEqual(await validateDataset(dir), []);
+    patch<{ timeline: unknown[] }>(dir, "members/m_007006.json", (d) => ({ ...d, timeline: [question({ sourceUrl: "https://www.shugiin.go.jp/internet/itdb_shitsumon.nsf/html/shitsumon/221001.htm" }), ...d.timeline.slice(1)] }));
+    assert.deepEqual(await validateDataset(dir), []);
+    patch<{ timeline: unknown[] }>(dir, "members/m_007006.json", (d) => ({ ...d, timeline: [question({ sourceUrl: `${BASE}/221-0605-v001.htm` }), ...d.timeline.slice(1)] }));
+    assert.match((await validateDataset(dir)).join("\n"), /m_007006.*timeline\[0\].*question sourceUrl/);
+    patch<{ timeline: unknown[] }>(dir, "members/m_007006.json", (d) => ({ ...d, timeline: [question({ answerUrl: "https://example.com/x" }), ...d.timeline.slice(1)] }));
+    assert.match((await validateDataset(dir)).join("\n"), /m_007006.*timeline\[0\].*answerUrl/);
+    cleanup();
+  });
+
   test("rollcalls/index.json の行に対応する採決ファイルが無ければ違反", async () => {
     rmSync(join(dir, "rollcalls/221/221-0724-v001.json"));
     assert.match((await validateDataset(dir)).join("\n"), /221-0724-v001\.json/);

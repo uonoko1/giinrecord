@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { type LoaderFunctionArgs, type MetaArgs, useLoaderData } from "react-router";
 import { CompareAdd } from "../components/CompareAdd";
-import type { BillEntry, BillRole, DatasetMeta, MemberDetail, StanceEntry, TimelineEntry, VoteEntry } from "../lib/data-contract";
+import type { BillEntry, BillRole, DatasetMeta, MemberDetail, QuestionEntry, StanceEntry, TimelineEntry, VoteEntry } from "../lib/data-contract";
 import { defaultDataDir, readMemberDetail, readMeta } from "../lib/data-files";
 import { formatDate, formatDateTime, formatYearMonth } from "../lib/format";
 import { seoMeta } from "../lib/seo";
@@ -38,8 +38,8 @@ export function meta({ data, location }: MetaArgs<typeof loader>) {
     title: pageTitle(detail),
     description:
       detail.house === "shugiin"
-        ? `${affiliation(detail)}。提出法案・賛同法案・本会議発言と、所属会派の態度（推定）を公式記録から出典付きで並べます。`
-        : `${affiliation(detail)}。本会議の採決・提出法案・発言を公式記録から出典付きで並べます。`,
+        ? `${affiliation(detail)}。提出法案・賛同法案・質問主意書・本会議発言と、所属会派の態度（推定）を公式記録から出典付きで並べます。`
+        : `${affiliation(detail)}。本会議の採決・提出法案・質問主意書・発言を公式記録から出典付きで並べます。`,
     pathname: location.pathname,
     type: "article",
   });
@@ -59,12 +59,14 @@ const TABS: Record<MemberDetail["house"], { id: Tab; label: string }[]> = {
     { id: "all", label: "すべて" },
     { id: "vote", label: "採決" },
     { id: "bill", label: "提出法案" },
+    { id: "question", label: "質問主意書" },
     { id: "speech", label: "発言" },
   ],
   shugiin: [
     { id: "all", label: "すべて" },
     { id: "bill", label: "提出法案" },
     { id: "stance", label: "会派の態度" },
+    { id: "question", label: "質問主意書" },
     { id: "speech", label: "発言" },
   ],
 };
@@ -114,6 +116,8 @@ export function MemberPage({ detail, meta }: { detail: MemberDetail; meta: Datas
           <VoteTable votes={entries.filter((e): e is VoteEntry => e.kind === "vote")} />
         ) : tab === "bill" ? (
           <BillTable bills={entries.filter((e): e is BillEntry => e.kind === "bill")} />
+        ) : tab === "question" ? (
+          <QuestionTable questions={entries.filter((e): e is QuestionEntry => e.kind === "question")} />
         ) : (
           <Timeline entries={entries} />
         )}
@@ -169,12 +173,14 @@ function Cover({ detail, counts }: { detail: MemberDetail; counts: Counts }) {
         <dl className="member-counts">
           <Count n={counts.submitted} label="提出法案" />
           <Count n={counts.supported} label="賛同法案" />
+          <Count n={counts.question} label="質問主意書" />
           <Count n={counts.speech} label="本会議発言" />
         </dl>
       ) : (
         <dl className="member-counts">
           <Count n={counts.vote} label="記名採決" />
           <Count n={counts.bill} label="提出法案" />
+          <Count n={counts.question} label="質問主意書" />
           <Count n={counts.speech} label="本会議発言" />
         </dl>
       )}
@@ -196,7 +202,7 @@ function Count({ n, label }: { n: number; label: string }) {
 }
 
 function countKinds(timeline: TimelineEntry[]): Counts {
-  const c: Counts = { vote: 0, bill: 0, stance: 0, speech: 0, submitted: 0, supported: 0 };
+  const c: Counts = { vote: 0, bill: 0, stance: 0, question: 0, speech: 0, submitted: 0, supported: 0 };
   for (const e of timeline) {
     c[e.kind] += 1;
     if (e.kind === "bill") c[e.role === "提出者" ? "submitted" : "supported"] += 1;
@@ -242,6 +248,8 @@ function entryKey(e: TimelineEntry): string {
       return `bill:${e.billId}:${e.role}`;
     case "stance":
       return `stance:${e.billId}`;
+    case "question":
+      return `question:${e.questionId}`;
     case "speech":
       return `speech:${e.speechId}`;
   }
@@ -294,6 +302,26 @@ function Row({ entry }: { entry: TimelineEntry }) {
       );
     case "stance":
       return <StanceRow entry={entry} />;
+    case "question":
+      /* 質問主意書（事実）。提出者欄の原文・経過状況（衆院）・答弁書受領日を出し、出典（衆院 経過ページ／参院 詳細ページ）と答弁本文にリンクする。 */
+      return (
+        <li className="member-row">
+          <Stamp value="質問" />
+          <div className="member-row-body">
+            <p className="member-row-title">{entry.title}</p>
+            <p className="member-row-meta">
+              <MetaLine parts={[entry.submitterText, entry.status, answerLabel(entry)]} />
+              <ExternalLink href={entry.sourceUrl}>質問主意書</ExternalLink>
+              {entry.answerUrl && (
+                <>
+                  {" ・ "}
+                  <ExternalLink href={entry.answerUrl}>答弁本文</ExternalLink>
+                </>
+              )}
+            </p>
+          </div>
+        </li>
+      );
     case "speech":
       return (
         /* position は会議録の speakerPosition 原文（例: 議長・国土交通大臣）。役職として行った発言である事実をそのまま見せる。 */
@@ -422,15 +450,72 @@ function BillTable({ bills }: { bills: BillEntry[] }) {
   );
 }
 
+/* ---------- 質問主意書 table ---------- */
+
+/** 答弁書受領日の表示。無ければ何も出さない（未受領と推定しない）。 */
+function answerLabel(q: QuestionEntry): string | null {
+  return q.answerDate ? `答弁書受領 ${formatDate(q.answerDate)}` : null;
+}
+
+function QuestionTable({ questions }: { questions: QuestionEntry[] }) {
+  return (
+    <div className="member-table-wrap">
+      <table className="member-table">
+        <thead>
+          <tr>
+            <th scope="col">日付</th>
+            <th scope="col">件名</th>
+            <th scope="col">答弁書</th>
+            <th scope="col">出典</th>
+          </tr>
+        </thead>
+        <tbody>
+          {questions.map((q) => (
+            <tr key={q.questionId}>
+              <td className="num">
+                <time dateTime={q.date}>{formatDate(q.date)}</time>
+              </td>
+              <td>
+                {q.title}
+                {q.submitterText && <span className="member-note">{q.submitterText}</span>}
+                {q.status && <span className="member-note">{q.status}</span>}
+              </td>
+              <td>
+                {q.answerDate ? (
+                  <>
+                    <time className="num" dateTime={q.answerDate}>{formatDate(q.answerDate)}</time>
+                    {q.answerUrl && (
+                      <>
+                        {" "}
+                        <ExternalLink href={q.answerUrl}>答弁本文</ExternalLink>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  "—"
+                )}
+              </td>
+              <td>
+                <ExternalLink href={q.sourceUrl}>質問主意書</ExternalLink>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 /* ---------- primitives (to be replaced by app/components from #5) ---------- */
 
-type StampValue = "賛成" | "反対" | "投票なし" | "提出" | "賛同" | "発言";
+type StampValue = "賛成" | "反対" | "投票なし" | "提出" | "賛同" | "質問" | "発言";
 const STAMP_TONE: Record<StampValue, "yes" | "no" | "none" | "act"> = {
   賛成: "yes",
   反対: "no",
   投票なし: "none",
   提出: "act",
   賛同: "act",
+  質問: "act",
   発言: "act",
 };
 

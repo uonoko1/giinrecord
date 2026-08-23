@@ -1,5 +1,5 @@
 import { fileURLToPath } from "node:url";
-import type { Bill as SharedBill, RollCall, Speech } from "@seiji-kiroku/shared";
+import type { Bill as SharedBill, Question, RollCall, Speech } from "@seiji-kiroku/shared";
 import { listRollCalls, parseRollCall } from "./sources/sangiin-votes.ts";
 import { fetchMembers, memberListUrl, unmatchedGroups } from "./sources/sangiin-members.ts";
 import { fetchShugiinMembers, memberListUrl as shugiinMemberListUrl, unmatchedShugiinGroups } from "./sources/shugiin-members.ts";
@@ -11,6 +11,9 @@ import { matchSpeeches, type UnmatchedSpeech } from "./match-speeches.ts";
 import { matchBills, type UnmatchedBillProposer } from "./match-bills.ts";
 import { fetchShugiinBills, shugiinBillListUrl } from "./sources/shugiin-bills.ts";
 import { matchShugiinBills, type UnmatchedShugiinBillName } from "./match-shugiin-bills.ts";
+import { fetchShugiinQuestions, shugiinQuestionListUrl } from "./sources/shugiin-questions.ts";
+import { fetchSangiinQuestions, sangiinQuestionListUrl } from "./sources/sangiin-questions.ts";
+import { matchQuestions, type UnmatchedQuestionSubmitter } from "./match-questions.ts";
 import { buildDataset, mergeRosters, rosterSessionsFor } from "./aggregate.ts";
 import { readSessionsOnDisk, resolveSessions, validateDataset, writeDataset } from "./dataset.ts";
 
@@ -59,7 +62,7 @@ if (shugiinGroupsUnknown.length) {
 }
 
 const rollCalls: RollCall[] = [];
-const unmatched: (Unmatched | UnmatchedSpeech | UnmatchedBillProposer | UnmatchedShugiinBillName)[] = [];
+const unmatched: (Unmatched | UnmatchedSpeech | UnmatchedBillProposer | UnmatchedShugiinBillName | UnmatchedQuestionSubmitter)[] = [];
 const groupMismatch: GroupMismatch[] = [];
 for (const session of targets) {
   const list = await listRollCalls(session);
@@ -105,6 +108,19 @@ const shugiinLinked = shugiinMatched.bills.filter((b) => b.submitters?.length ||
 console.log(`shugiin bills: ${shugiinBills.size} total, ${shugiinWithNames} with submitter/supporter names, ${shugiinLinked} linked to roster members (session ${memberSession} only)`);
 unmatched.push(...shugiinMatched.unmatched);
 
+// 質問主意書（Issue #106）: 衆院 質問答弁情報（一覧→経過ページ）、参院 質問主意書（一覧→詳細ページ）。提出者・件名・提出日・答弁書は原文（事実）。
+// 提出者は参院は回次ごとの参院名簿、衆院は「現在」の衆院名簿（覆う回次＝memberSession だけ）に名寄せして timeline の question 行にする。
+const rawQuestions: Question[] = [];
+for (const session of targets) {
+  const sh = await fetchShugiinQuestions(session);
+  const sa = await fetchSangiinQuestions(session);
+  console.log(`session ${session}: ${sh.length} shugiin questions, ${sa.length} sangiin questions`);
+  rawQuestions.push(...sh, ...sa);
+}
+const questions = matchQuestions(rawQuestions, [...members, ...shugiin.members]);
+console.log(`questions: ${rawQuestions.length} total, ${questions.questions.filter((q) => q.submitters?.length).length} linked to roster members (shugiin: session ${memberSession} only)`);
+unmatched.push(...questions.unmatched);
+
 // 発言: 国会会議録API（公開まで約1ヶ月のラグ。meta.sources[].fetchedAt が「いつ時点の会議録か」を示す）。
 // 参院本会議は全回次を参院名簿（回次ごと）に突合する。衆院本会議（Issue #73）は衆院名簿が「現在」の1回次分しか無いので、
 // 議案の名寄せと同じく名簿が覆う回次（memberSession）だけ取得・突合し、過去回次は取得しない（名簿に無い旧議員を同名の現職に紐づけない）。
@@ -132,7 +148,7 @@ if (unmatched.length) console.warn(`unmatched: ${unmatched.length} (see data/unm
 if (groupMismatch.length) console.warn(`group mismatch (matched by name only): ${groupMismatch.length} (see data/group-mismatch.json)`);
 
 await writeDataset(DATA, {
-  ...buildDataset([...members, ...shugiin.members], rollCalls, new Map([...bills.results].map(([id, r]) => [id, r.decision])), speeches, proposed.entries, shugiinMatched.bills),
+  ...buildDataset([...members, ...shugiin.members], rollCalls, new Map([...bills.results].map(([id, r]) => [id, r.decision])), speeches, proposed.entries, shugiinMatched.bills, questions.questions),
   rollCallDetails: rollCalls,
   bills: shugiinMatched.bills,
   unmatched,
@@ -150,6 +166,8 @@ await writeDataset(DATA, {
       { name: "国会会議録検索システム 検索用API（衆議院 本会議）", url: speechPageUrl(memberSession, 1, "shugiin"), fetchedAt },
       ...targets.map((s) => ({ name: `参議院 議案情報（第${s}回）`, url: billListUrl(s), fetchedAt })),
       ...targets.map((s) => ({ name: `衆議院 議案情報（第${s}回）`, url: shugiinBillListUrl(s), fetchedAt })),
+      ...targets.map((s) => ({ name: `衆議院 質問答弁情報（第${s}回）`, url: shugiinQuestionListUrl(s), fetchedAt })),
+      ...targets.map((s) => ({ name: `参議院 質問主意書（第${s}回）`, url: sangiinQuestionListUrl(s), fetchedAt })),
     ],
   },
 });
