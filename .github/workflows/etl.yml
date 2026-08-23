@@ -12,7 +12,7 @@ permissions:
   contents: write
   pull-requests: write
   issues: write        # failure → auto Issue
-  actions: write       # gh workflow run deploy.yml / approve pending runs
+  actions: write       # gh workflow run deploy-data.yml / approve pending runs
 concurrency:
   group: etl
   cancel-in-progress: false
@@ -129,7 +129,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       # auto-merge は CI 完了を待つだけで Deploy を起動しない（GITHUB_TOKEN のマージは push イベントを起こさない）ので、
-      # マージを待ってから deploy.yml を明示的に起動する。
+      # マージを待ってから deploy-data.yml（staging + production-data）を明示的に起動する。
       - name: Wait for data PR merge, then deploy
         if: steps.pr.outputs.number != ''
         env:
@@ -140,7 +140,7 @@ jobs:
             STATE=$(gh pr view "$PR" --json state -q .state)
             echo "[$i] PR #$PR state=$STATE"
             case "$STATE" in
-              MERGED) gh workflow run deploy.yml --ref main; echo "deploy.yml を起動した" >> "$GITHUB_STEP_SUMMARY"; exit 0 ;;
+              MERGED) gh workflow run deploy-data.yml --ref main; echo "deploy-data.yml を起動した（staging + production）" >> "$GITHUB_STEP_SUMMARY"; exit 0 ;;
               CLOSED) echo "PR #$PR はマージされずに閉じられた" >> "$GITHUB_STEP_SUMMARY"; exit 1 ;;
             esac
             # main が進んで BEHIND になっていたら追従させる（strict status checks のため auto-merge が止まる）
