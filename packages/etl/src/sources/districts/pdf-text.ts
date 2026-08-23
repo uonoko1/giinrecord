@@ -10,7 +10,9 @@ import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 export const GAIJI = "〓";
 
 export async function extractPdfText(bytes: Buffer): Promise<string> {
-  const doc = await getDocument({ data: new Uint8Array(bytes), verbosity: 0 }).promise;
+  // pdfjs-dist 6: `destroy()` lives on the loading task (PDFDocumentProxy.destroy was removed).
+  const task = getDocument({ data: new Uint8Array(bytes), verbosity: 0 });
+  const doc = await task.promise;
   let out = "";
   for (let i = 1; i <= doc.numPages; i++) {
     const page = await doc.getPage(i);
@@ -22,6 +24,6 @@ export async function extractPdfText(bytes: Buffer): Promise<string> {
     }
     out += "\n";
   }
-  await doc.destroy();
+  await task.destroy();
   return out;
 }

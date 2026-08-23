@@ -1,0 +1,4 @@
+# pnpm audit exceptions (scripts/ci/audit.sh, Issue #133). One per line:
+#   GHSA-xxxx-xxxx-xxxx  YYYY-MM-DD  why it is acceptable here (link the Issue)
+# The entry expires on the date; an expired entry fails CI again. Add one only when the advisory cannot be
+# fixed by upgrading (Dependabot opens the upgrade PRs) and the vulnerable path is not reachable with our inputs.

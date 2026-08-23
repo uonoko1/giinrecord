@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # One-time VPS setup for the SHARED host (Issue #85; staging Issue #127). Run as:
-#   ssh sakura-vps 'sudo bash -s <domain> [port]' < deploy/vps-setup.sh
+#   ssh "${VPS_SSH_HOST:-sakura-vps}" 'sudo bash -s <domain> [port]' < deploy/vps-setup.sh
 #     port 8081 (default) = production: gikailog.jp         → /var/www/gikailog/site,    sites-available/gikailog.conf
 #     port 8082           = staging:    staging.gikailog.jp → /var/www/gikailog/staging, sites-available/gikailog-staging.conf
 #
@@ -10,7 +10,7 @@
 #   2. writes the host nginx server block: proxy_pass http://127.0.0.1:<port> + (certbot) TLS only.
 #      The body is deploy/nginx-host-proxy.conf with SERVER_NAMES / PORT / LOG_NAME substituted
 #   3. defines the IP-less access-log format the block references (same file the analytics setup writes)
-#   4. reloads nginx and prints the docker compose commands for a human to run
+#   4. reloads nginx (only if `nginx -t` passes; otherwise exit 1) and prints the docker compose commands for a human to run
 #
 # Deliberately NOT done here:
 #   - installing anything (docker, packages). Docker is installed by a human with sudo (deploy/README.md)
@@ -18,8 +18,21 @@
 #     docker group is root-equivalent, and a leaked deploy key must stay a leaked *file copy* key
 #   - touching any other site's server block, certificate or log on this shared host
 #
-# Tests source this file with VPS_SETUP_NO_MAIN=1 and call render_host_proxy (deploy/test/render-host-proxy.sh).
+# Tests source this file with VPS_SETUP_NO_MAIN=1 and call render_host_proxy (deploy/test/render-host-proxy.sh)
+# or reload_nginx (deploy/test/nginx-reload.test.sh; nginx/systemctl are stubs).
 set -euo pipefail
+
+# reload_nginx: test the config, reload only if it passes, otherwise stop the script with exit 1.
+# `nginx -t && systemctl reload nginx` must NOT be used: under set -e a failing `nginx -t` is swallowed
+# (it is not the last command of the && list) and the script carries on with a broken, un-reloaded config.
+reload_nginx() {
+  if nginx -t; then
+    systemctl reload nginx
+  else
+    echo "!! nginx -t failed; nginx NOT reloaded. Fix the config and re-run." >&2
+    exit 1
+  fi
+}
 DEPLOY_USER=ubuntu
 
 # site_vars <port>: sets NAME (conf + log name) and SITE_DIR for the port; rejects anything but 8081/8082.
@@ -77,7 +90,7 @@ CONF
     render_host_proxy "$DOMAIN" "$PORT" > "$SITE_CONF"
   fi
   ln -sfn "$SITE_CONF" "/etc/nginx/sites-enabled/$NAME.conf"
-  nginx -t && systemctl reload nginx
+  reload_nginx
 
   cat <<MSG
 host nginx ready: $DOMAIN -> http://127.0.0.1:$PORT (container). Site root: $SITE_DIR (owner $DEPLOY_USER).

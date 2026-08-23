@@ -45,3 +45,6 @@
 - Web：外部への通信は Google Fonts のみ（CSP）、`dangerouslySetInnerHTML` なし、外部リンクに `rel=noopener noreferrer`、localStorage は try/catch、クエリ／パスから組み立てる URL は許可リスト
 - ETL：取得先ドメインの許可リスト、ファイル書き込みはリポジトリ内 `data/` のみ、パストラバーサルなし
 - 依存：新規依存の追加理由、`pnpm audit` に high 以上が無い
+
+CI が機械的に見る分（`.github/workflows/security.yml`、Issue #133）: gitleaks（PR 差分／週次の全履歴）、`scripts/ci/forbidden-patterns.sh`（鍵ヘッダ・トークン形式・追跡された `.env`・`deploy/` と `docs/ops/` 以外の IP・secret `FORBIDDEN_PATTERNS` の正規表現）、`scripts/ci/audit.sh`（high 以上。例外は `scripts/ci/audit-ignore.txt` に期限と理由つき）。
+他サイト名の禁止パターンは**リポジトリに書かず** repo secret `FORBIDDEN_PATTERNS`（改行区切りの正規表現）に置く。VPS の IP も書かない（ssh は `$VPS_SSH_HOST`、既定 `sakura-vps`）。nginx の reload は `if nginx -t; then systemctl reload nginx; else exit 1; fi` の形（`deploy/test/nginx-reload.test.sh`）。報告窓口は `SECURITY.md`。

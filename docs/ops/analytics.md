@@ -54,14 +54,15 @@ PV として数える行：`GET` かつ `200`/`304` かつ HTML ページ（`/as
 
 ```sh
 # 1. sudo で nginx と cron を設定（冪等。2 回走らせても access_log 行は増えない）
-ssh sakura-vps 'sudo bash -s' < deploy/analytics/vps-analytics-setup.sh
+ssh "$VPS_SSH_HOST" 'sudo bash -s' < deploy/analytics/vps-analytics-setup.sh
 # 2. スクリプトを root 所有で配置（更新時も同じ。~ubuntu 配下には置かない）
-scp deploy/analytics/aggregate.sh deploy/analytics/daily.sh sakura-vps:/tmp/
-ssh sakura-vps 'sudo install -o root -g root -m 755 /tmp/aggregate.sh /tmp/daily.sh /usr/local/lib/gikailog-analytics/ && rm /tmp/aggregate.sh /tmp/daily.sh'
+VPS_SSH_HOST="${VPS_SSH_HOST:-sakura-vps}"   # ssh alias of the VPS (your ~/.ssh/config; the IP is not in the repo, #133)
+scp deploy/analytics/aggregate.sh deploy/analytics/daily.sh "$VPS_SSH_HOST":/tmp/
+ssh "$VPS_SSH_HOST" 'sudo install -o root -g root -m 755 /tmp/aggregate.sh /tmp/daily.sh /usr/local/lib/gikailog-analytics/ && rm /tmp/aggregate.sh /tmp/daily.sh'
 # 3. 確認
-ssh sakura-vps 'sudo tail -3 /var/log/nginx/gikailog.access.log'   # 行頭が "- - [" で IP が無いこと
-ssh sakura-vps 'sudo ANALYTICS_OUT=/home/ubuntu/analytics ANALYTICS_OWNER=ubuntu /usr/local/lib/gikailog-analytics/daily.sh "$(date +%F)"' # 今日分を手動集計
-ssh sakura-vps 'ls -l ~/analytics'                                      # -rw------- ubuntu ubuntu
+ssh "$VPS_SSH_HOST" 'sudo tail -3 /var/log/nginx/gikailog.access.log'   # 行頭が "- - [" で IP が無いこと
+ssh "$VPS_SSH_HOST" 'sudo ANALYTICS_OUT=/home/ubuntu/analytics ANALYTICS_OWNER=ubuntu /usr/local/lib/gikailog-analytics/daily.sh "$(date +%F)"' # 今日分を手動集計
+ssh "$VPS_SSH_HOST" 'ls -l ~/analytics'                                      # -rw------- ubuntu ubuntu
 ```
 
 `access_log /var/log/nginx/gikailog.access.log noip;` は `vps-setup.sh` が書く proxy block に最初から入っている（certbot が複製した 443 ブロックにも入る）。analytics の setup はその 1 行が無ければ中止する（空の TSV を黙って作らない）。ログローテーションは Ubuntu 既定の `/etc/logrotate.d/nginx`（daily, 14 世代, delaycompress）に乗る。`daily.sh` は `.log` `.log.1` `.log.2.gz` を読んで日付で絞るので、ローテーション時刻と cron の順序に依存しない。
@@ -70,11 +71,11 @@ ssh sakura-vps 'ls -l ~/analytics'                                      # -rw---
 
 ```sh
 # 前日の上位ページ
-ssh sakura-vps 'head -20 ~/analytics/$(date -d yesterday +%F).tsv'
+ssh "$VPS_SSH_HOST" 'head -20 ~/analytics/$(date -d yesterday +%F).tsv'
 # 月間 PV（#48 の判断材料）
-ssh sakura-vps 'cat ~/analytics/2026-09-*.tsv | awk -F"\t" "\$1!=\"date\"{s+=\$4} END{print s}"'
+ssh "$VPS_SSH_HOST" 'cat ~/analytics/2026-09-*.tsv | awk -F"\t" "\$1!=\"date\"{s+=\$4} END{print s}"'
 # 月間リファラ上位
-ssh sakura-vps 'cat ~/analytics/2026-09-*.tsv | awk -F"\t" "\$1!=\"date\"{r[\$3]+=\$4} END{for(k in r)print r[k]\"\t\"k}" | sort -rn | head'
+ssh "$VPS_SSH_HOST" 'cat ~/analytics/2026-09-*.tsv | awk -F"\t" "\$1!=\"date\"{r[\$3]+=\$4} END{for(k in r)print r[k]\"\t\"k}" | sort -rn | head'
 ```
 
 ## 失敗モード

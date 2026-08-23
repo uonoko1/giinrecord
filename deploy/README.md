@@ -19,7 +19,7 @@ internet ──443/80──▶ host nginx (certbot TLS)
 | `docker-compose.yml` | `web` (`127.0.0.1:8081:80`, `/var/www/gikailog/site`) and `web-staging` (`127.0.0.1:8082:80`, `/var/www/gikailog/staging`): `nginx:1.27-alpine`, site mounted read-only, healthcheck, `restart: unless-stopped`. `SITE_DIR` / `STAGING_SITE_DIR` override the mounts (local/CI) |
 | `nginx/site.conf` | config inside both containers — the former host server block, unchanged: `try_files … /__spa-fallback.html`, `/assets/` immutable 1y, `/data/` 1h, gzip, `X-Content-Type-Options` / `X-Frame-Options` / `Referrer-Policy` / CSP. Plus a `map $host` that adds `X-Robots-Tag: noindex, nofollow` only for `staging.gikailog.jp` |
 | `nginx-host-proxy.conf` | host nginx server block template (proxy + TLS only). `vps-setup.sh <domain> [port]` writes the same text with `SERVER_NAMES` / `PORT` / `LOG_NAME` substituted |
-| `vps-setup.sh` | one-time, sudo: web root, host server block, `noip` log format, `nginx reload`. Port `8081` (default) = production, `8082` = staging. **Installs nothing** |
+| `vps-setup.sh` | one-time, sudo: web root, host server block, `noip` log format, `nginx -t` → reload (exit 1 on a broken config). Port `8081` (default) = production, `8082` = staging. **Installs nothing** |
 | `go-live.sh` | production go-live, root, idempotent (docker install, `/opt/gikailog` checkout, compose up, `vps-setup.sh`, certbot, analytics) |
 | `staging-setup.sh` | staging go-live, root, idempotent, after production exists: staging web root, compose up, `vps-setup.sh staging.gikailog.jp 8082`, certbot |
 | `analytics/` | IP-less access-log aggregation of `gikailog.access.log` (production only; staging logs to `gikailog-staging.access.log` and is not aggregated) |
@@ -33,23 +33,28 @@ Who may do what on the shared host:
 
 ## One-time setup
 
+The VPS is addressed by the ssh alias in `$VPS_SSH_HOST` (default `sakura-vps`, defined in your own
+`~/.ssh/config`); its IP address is deliberately not written anywhere in this repository (Issue #133) — the
+site is reachable as `gikailog.jp` once DNS is live.
+
 ### production
 
 All of this (plus the `seiji-kiroku` → `gikailog` path migration, Issue #119) is automated by `deploy/go-live.sh`
-(`ssh -t sakura-vps 'sudo bash -s gikailog.jp' < deploy/go-live.sh`); the steps below are the manual equivalent.
+(`ssh -t "$VPS_SSH_HOST" 'sudo bash -s gikailog.jp' < deploy/go-live.sh`); the steps below are the manual equivalent.
 
 ```sh
+VPS_SSH_HOST="${VPS_SSH_HOST:-sakura-vps}"
 # 1. (human, sudo) host nginx block + web root. Installs nothing. DOMAIN = the hostname that will point here.
-ssh sakura-vps 'sudo bash -s DOMAIN' < deploy/vps-setup.sh
+ssh "$VPS_SSH_HOST" 'sudo bash -s DOMAIN' < deploy/vps-setup.sh
 # 2. (human, sudo) Docker Engine + compose plugin, if not present: https://docs.docker.com/engine/install/ubuntu/
 #    Do NOT add `ubuntu` to the docker group.
 # 3. (human with docker privileges) start the containers from a checkout of this repo
-ssh sakura-vps 'git clone https://github.com/uonoko1/gikailog.git /opt/gikailog'   # or git pull
-ssh sakura-vps 'docker compose -f /opt/gikailog/deploy/docker-compose.yml up -d'
-ssh sakura-vps 'curl -sI http://127.0.0.1:8081/ | head -1'                               # 200 once a build was rsynced
-# 4. DNS: A record  DOMAIN -> 160.16.86.160
+ssh "$VPS_SSH_HOST" 'git clone https://github.com/uonoko1/gikailog.git /opt/gikailog'   # or git pull
+ssh "$VPS_SSH_HOST" 'docker compose -f /opt/gikailog/deploy/docker-compose.yml up -d'
+ssh "$VPS_SSH_HOST" 'curl -sI http://127.0.0.1:8081/ | head -1'                               # 200 once a build was rsynced
+# 4. DNS: A record  DOMAIN -> the VPS (address from the hosting panel; never commit it)
 # 5. TLS (after DNS propagates) — certbot edits only sites-available/gikailog.conf
-ssh sakura-vps 'sudo certbot --nginx -d DOMAIN --redirect'
+ssh "$VPS_SSH_HOST" 'sudo certbot --nginx -d DOMAIN --redirect'
 ```
 
 Re-running `vps-setup.sh` is safe: once certbot has added the 443 block the script leaves the file alone and says so.
@@ -59,9 +64,9 @@ Re-running `vps-setup.sh` is safe: once certbot has added the 443 block the scri
 Two human actions, nothing else:
 
 ```sh
-# 1. DNS: A record  staging.gikailog.jp -> 160.16.86.160
+# 1. DNS: A record  staging.gikailog.jp -> the VPS (same address as gikailog.jp; never commit it)
 # 2. (root, once; needs a TTY for certbot) staging web root, web-staging container, host proxy block on :8082, TLS
-ssh -t sakura-vps 'sudo bash -s' < deploy/staging-setup.sh
+ssh -t "$VPS_SSH_HOST" 'sudo bash -s' < deploy/staging-setup.sh
 ```
 
 Then on GitHub: Environment `staging` with the same `DEPLOY_*` secrets as `production` (and `production-data`, see
