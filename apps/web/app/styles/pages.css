@@ -2,8 +2,8 @@
 .page { display: flex; flex-direction: column; gap: 14px; padding-bottom: 30px; max-width: 640px; margin: 0 auto; }
 
 .cover { background: var(--cover); color: var(--cover-fg); padding: 22px 20px; display: flex; flex-direction: column; gap: 10px; }
-.cover__brand { font-family: var(--font-head); font-size: 18px; font-weight: 700; letter-spacing: 0.12em; color: var(--brass-on-cover); }
-.cover__brand a { color: inherit; text-decoration: none; }
+.cover__brand { display: flex; align-items: center; gap: 0.4em; font-family: var(--font-head); font-size: 18px; font-weight: 700; letter-spacing: 0.12em; color: var(--brass-on-cover); }
+.cover__brand a { display: inline-flex; align-items: center; gap: 0.4em; color: inherit; text-decoration: none; }
 .cover__title { font-family: var(--font-head); font-size: 30px; font-weight: 800; letter-spacing: 0.04em; line-height: 1.2; margin: 0; }
 .cover__lead { font-size: 14px; line-height: 1.8; margin: 0; opacity: 0.9; }
 
