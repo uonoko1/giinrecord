@@ -1,0 +1,111 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@700;800&family=BIZ+UDPGothic:wght@400;700&display=swap">
+  <style>
+    body { margin:0; background:#f5f2ec; color:#1b1a18; font-family:'BIZ UDPGothic','Hiragino Sans',sans-serif; }
+    a { color:#3a4a5e; }
+    .m { font-family:'Shippori Mincho','Hiragino Mincho ProN',serif; }
+    .card { background:#fbfaf7; border:1px solid #d8d4cc; padding:20px; display:flex; flex-direction:column; gap:14px; }
+    .row { display:flex; gap:16px; align-items:center; }
+    .sw { display:flex; align-items:center; justify-content:center; border:1px solid #d8d4cc; }
+    .cap { font-size:11px; color:#6b6860; letter-spacing:0.08em; }
+  </style>
+</helmet>
+<div style="width:1480px; padding:28px; display:flex; flex-direction:column; gap:20px;">
+  <div style="display:flex; flex-direction:column; gap:4px;">
+    <div class="m" style="font-size:26px; font-weight:800;">ロゴ案：議会ログ</div>
+    <div style="font-size:14px; color:#6b6860;">各案：マーク ＋ ワードマーク ／ 表紙色の上 ／ ファビコン実寸（32・16px、ライト／ダーク）。色は台帳の墨藍・真鍮・紙のみ。</div>
+  </div>
+
+  <div style="display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:20px;">
+
+    <!-- A: 判（印章）モノグラム -->
+    <div class="card">
+      <div class="m" style="font-size:18px; font-weight:700;">A　判（はん）　— 角印の「議」</div>
+      <div class="row">
+        <svg width="120" height="120" viewBox="0 0 100 100"><rect x="6" y="6" width="88" height="88" rx="6" fill="none" stroke="#26364a" stroke-width="7"/><text x="50" y="70" text-anchor="middle" font-family="Shippori Mincho,serif" font-size="58" font-weight="800" fill="#26364a">議</text></svg>
+        <div style="display:flex; flex-direction:column; gap:2px;"><div class="m" style="font-size:44px; font-weight:800; letter-spacing:0.06em; line-height:1;">議会ログ</div><div class="cap">言ったことではなく、やったことを。</div></div>
+      </div>
+      <div class="row" style="background:#26364a; padding:16px; gap:14px;">
+        <svg width="48" height="48" viewBox="0 0 100 100"><rect x="6" y="6" width="88" height="88" rx="6" fill="none" stroke="#d8b86a" stroke-width="7"/><text x="50" y="70" text-anchor="middle" font-family="Shippori Mincho,serif" font-size="58" font-weight="800" fill="#f5f2ec">議</text></svg>
+        <div class="m" style="font-size:26px; font-weight:800; color:#f5f2ec; letter-spacing:0.08em;">議会ログ</div>
+      </div>
+      <div class="row">
+        <div class="sw" style="width:48px;height:48px;background:#fff"><svg width="32" height="32" viewBox="0 0 100 100"><rect x="6" y="6" width="88" height="88" rx="8" fill="#26364a"/><text x="50" y="72" text-anchor="middle" font-family="Shippori Mincho,serif" font-size="62" font-weight="800" fill="#f5f2ec">議</text></svg></div>
+        <div class="sw" style="width:48px;height:48px;background:#fff"><svg width="16" height="16" viewBox="0 0 100 100"><rect x="6" y="6" width="88" height="88" rx="8" fill="#26364a"/><text x="50" y="72" text-anchor="middle" font-family="Shippori Mincho,serif" font-size="62" font-weight="800" fill="#f5f2ec">議</text></svg></div>
+        <div class="sw" style="width:48px;height:48px;background:#1c1d21"><svg width="32" height="32" viewBox="0 0 100 100"><rect x="6" y="6" width="88" height="88" rx="8" fill="#d8b86a"/><text x="50" y="72" text-anchor="middle" font-family="Shippori Mincho,serif" font-size="62" font-weight="800" fill="#1c1d21">議</text></svg></div>
+        <div class="sw" style="width:48px;height:48px;background:#1c1d21"><svg width="16" height="16" viewBox="0 0 100 100"><rect x="6" y="6" width="88" height="88" rx="8" fill="#d8b86a"/><text x="50" y="72" text-anchor="middle" font-family="Shippori Mincho,serif" font-size="62" font-weight="800" fill="#1c1d21">議</text></svg></div>
+        <div class="cap">サイト内の「賛成」の判と同じ文法。16px でも字が読める</div>
+      </div>
+    </div>
+
+    <!-- B: 台帳の罫線 -->
+    <div class="card">
+      <div class="m" style="font-size:18px; font-weight:700;">B　台帳　— 罫線と記帳の点</div>
+      <div class="row">
+        <svg width="120" height="120" viewBox="0 0 100 100"><rect x="8" y="10" width="84" height="80" rx="4" fill="none" stroke="#26364a" stroke-width="6"/><line x1="22" y1="34" x2="78" y2="34" stroke="#26364a" stroke-width="6" stroke-linecap="round"/><line x1="22" y1="52" x2="78" y2="52" stroke="#26364a" stroke-width="6" stroke-linecap="round"/><line x1="22" y1="70" x2="56" y2="70" stroke="#26364a" stroke-width="6" stroke-linecap="round"/><circle cx="72" cy="70" r="6" fill="#d8b86a"/></svg>
+        <div style="display:flex; flex-direction:column; gap:2px;"><div class="m" style="font-size:44px; font-weight:800; letter-spacing:0.06em; line-height:1;">議会ログ</div><div class="cap">言ったことではなく、やったことを。</div></div>
+      </div>
+      <div class="row" style="background:#26364a; padding:16px; gap:14px;">
+        <svg width="48" height="48" viewBox="0 0 100 100"><rect x="8" y="10" width="84" height="80" rx="4" fill="none" stroke="#f5f2ec" stroke-width="6"/><line x1="22" y1="34" x2="78" y2="34" stroke="#f5f2ec" stroke-width="6" stroke-linecap="round"/><line x1="22" y1="52" x2="78" y2="52" stroke="#f5f2ec" stroke-width="6" stroke-linecap="round"/><line x1="22" y1="70" x2="56" y2="70" stroke="#f5f2ec" stroke-width="6" stroke-linecap="round"/><circle cx="72" cy="70" r="6" fill="#d8b86a"/></svg>
+        <div class="m" style="font-size:26px; font-weight:800; color:#f5f2ec; letter-spacing:0.08em;">議会ログ</div>
+      </div>
+      <div class="row">
+        <div class="sw" style="width:48px;height:48px;background:#fff"><svg width="32" height="32" viewBox="0 0 100 100"><rect x="4" y="4" width="92" height="92" rx="10" fill="#26364a"/><line x1="24" y1="34" x2="76" y2="34" stroke="#f5f2ec" stroke-width="9" stroke-linecap="round"/><line x1="24" y1="52" x2="76" y2="52" stroke="#f5f2ec" stroke-width="9" stroke-linecap="round"/><line x1="24" y1="70" x2="54" y2="70" stroke="#f5f2ec" stroke-width="9" stroke-linecap="round"/><circle cx="72" cy="70" r="7" fill="#d8b86a"/></svg></div>
+        <div class="sw" style="width:48px;height:48px;background:#fff"><svg width="16" height="16" viewBox="0 0 100 100"><rect x="4" y="4" width="92" height="92" rx="10" fill="#26364a"/><line x1="24" y1="34" x2="76" y2="34" stroke="#f5f2ec" stroke-width="10" stroke-linecap="round"/><line x1="24" y1="52" x2="76" y2="52" stroke="#f5f2ec" stroke-width="10" stroke-linecap="round"/><line x1="24" y1="70" x2="54" y2="70" stroke="#f5f2ec" stroke-width="10" stroke-linecap="round"/><circle cx="72" cy="70" r="8" fill="#d8b86a"/></svg></div>
+        <div class="sw" style="width:48px;height:48px;background:#1c1d21"><svg width="32" height="32" viewBox="0 0 100 100"><rect x="4" y="4" width="92" height="92" rx="10" fill="#ece8df"/><line x1="24" y1="34" x2="76" y2="34" stroke="#1c1d21" stroke-width="9" stroke-linecap="round"/><line x1="24" y1="52" x2="76" y2="52" stroke="#1c1d21" stroke-width="9" stroke-linecap="round"/><line x1="24" y1="70" x2="54" y2="70" stroke="#1c1d21" stroke-width="9" stroke-linecap="round"/><circle cx="72" cy="70" r="7" fill="#8a6a24"/></svg></div>
+        <div class="sw" style="width:48px;height:48px;background:#1c1d21"><svg width="16" height="16" viewBox="0 0 100 100"><rect x="4" y="4" width="92" height="92" rx="10" fill="#ece8df"/><line x1="24" y1="34" x2="76" y2="34" stroke="#1c1d21" stroke-width="10" stroke-linecap="round"/><line x1="24" y1="52" x2="76" y2="52" stroke="#1c1d21" stroke-width="10" stroke-linecap="round"/><line x1="24" y1="70" x2="54" y2="70" stroke="#1c1d21" stroke-width="10" stroke-linecap="round"/><circle cx="72" cy="70" r="8" fill="#8a6a24"/></svg></div>
+        <div class="cap">記録を淡々と書き足す＝ログ。文字に依存せず小さくても判別できる</div>
+      </div>
+    </div>
+
+    <!-- C: ワードマークのみ -->
+    <div class="card">
+      <div class="m" style="font-size:18px; font-weight:700;">C　ワードマーク　— 明朝の四文字と真鍮の下線</div>
+      <div class="row">
+        <div style="display:flex; flex-direction:column; gap:6px;"><div class="m" style="font-size:56px; font-weight:800; letter-spacing:0.08em; line-height:1;">議会ログ</div><div style="height:3px; background:#d8b86a; width:100%;"></div><div class="cap">言ったことではなく、やったことを。</div></div>
+      </div>
+      <div class="row" style="background:#26364a; padding:16px; gap:14px;">
+        <div style="display:flex; flex-direction:column; gap:6px;"><div class="m" style="font-size:30px; font-weight:800; color:#f5f2ec; letter-spacing:0.1em; line-height:1;">議会ログ</div><div style="height:2px; background:#d8b86a;"></div></div>
+      </div>
+      <div class="row">
+        <div class="sw" style="width:48px;height:48px;background:#fff"><svg width="32" height="32" viewBox="0 0 100 100"><rect x="4" y="4" width="92" height="92" rx="10" fill="#26364a"/><text x="50" y="62" text-anchor="middle" font-family="Shippori Mincho,serif" font-size="44" font-weight="800" fill="#f5f2ec">議</text><rect x="24" y="74" width="52" height="6" fill="#d8b86a"/></svg></div>
+        <div class="sw" style="width:48px;height:48px;background:#fff"><svg width="16" height="16" viewBox="0 0 100 100"><rect x="4" y="4" width="92" height="92" rx="10" fill="#26364a"/><text x="50" y="62" text-anchor="middle" font-family="Shippori Mincho,serif" font-size="44" font-weight="800" fill="#f5f2ec">議</text><rect x="24" y="74" width="52" height="6" fill="#d8b86a"/></svg></div>
+        <div class="sw" style="width:48px;height:48px;background:#1c1d21"><svg width="32" height="32" viewBox="0 0 100 100"><rect x="4" y="4" width="92" height="92" rx="10" fill="#ece8df"/><text x="50" y="62" text-anchor="middle" font-family="Shippori Mincho,serif" font-size="44" font-weight="800" fill="#1c1d21">議</text><rect x="24" y="74" width="52" height="6" fill="#8a6a24"/></svg></div>
+        <div class="sw" style="width:48px;height:48px;background:#1c1d21"><svg width="16" height="16" viewBox="0 0 100 100"><rect x="4" y="4" width="92" height="92" rx="10" fill="#ece8df"/><text x="50" y="62" text-anchor="middle" font-family="Shippori Mincho,serif" font-size="44" font-weight="800" fill="#1c1d21">議</text><rect x="24" y="74" width="52" height="6" fill="#8a6a24"/></svg></div>
+        <div class="cap">いまのサイトに最も近い。ファビコンは「議＋下線」で代用するので、16px では下線が潰れやすい</div>
+      </div>
+    </div>
+
+    <!-- D: ログの点（時系列） -->
+    <div class="card">
+      <div class="m" style="font-size:18px; font-weight:700;">D　時系列　— 縦の軸と記録の点</div>
+      <div class="row">
+        <svg width="120" height="120" viewBox="0 0 100 100"><line x1="30" y1="14" x2="30" y2="86" stroke="#26364a" stroke-width="7" stroke-linecap="round"/><circle cx="30" cy="28" r="9" fill="#26364a"/><circle cx="30" cy="52" r="9" fill="#26364a"/><circle cx="30" cy="76" r="9" fill="#d8b86a"/><line x1="48" y1="28" x2="84" y2="28" stroke="#26364a" stroke-width="7" stroke-linecap="round"/><line x1="48" y1="52" x2="76" y2="52" stroke="#26364a" stroke-width="7" stroke-linecap="round"/><line x1="48" y1="76" x2="68" y2="76" stroke="#26364a" stroke-width="7" stroke-linecap="round"/></svg>
+        <div style="display:flex; flex-direction:column; gap:2px;"><div class="m" style="font-size:44px; font-weight:800; letter-spacing:0.06em; line-height:1;">議会ログ</div><div class="cap">言ったことではなく、やったことを。</div></div>
+      </div>
+      <div class="row" style="background:#26364a; padding:16px; gap:14px;">
+        <svg width="48" height="48" viewBox="0 0 100 100"><line x1="30" y1="14" x2="30" y2="86" stroke="#f5f2ec" stroke-width="7" stroke-linecap="round"/><circle cx="30" cy="28" r="9" fill="#f5f2ec"/><circle cx="30" cy="52" r="9" fill="#f5f2ec"/><circle cx="30" cy="76" r="9" fill="#d8b86a"/><line x1="48" y1="28" x2="84" y2="28" stroke="#f5f2ec" stroke-width="7" stroke-linecap="round"/><line x1="48" y1="52" x2="76" y2="52" stroke="#f5f2ec" stroke-width="7" stroke-linecap="round"/><line x1="48" y1="76" x2="68" y2="76" stroke="#f5f2ec" stroke-width="7" stroke-linecap="round"/></svg>
+        <div class="m" style="font-size:26px; font-weight:800; color:#f5f2ec; letter-spacing:0.08em;">議会ログ</div>
+      </div>
+      <div class="row">
+        <div class="sw" style="width:48px;height:48px;background:#fff"><svg width="32" height="32" viewBox="0 0 100 100"><rect x="4" y="4" width="92" height="92" rx="10" fill="#26364a"/><line x1="32" y1="22" x2="32" y2="78" stroke="#f5f2ec" stroke-width="8" stroke-linecap="round"/><circle cx="32" cy="32" r="9" fill="#f5f2ec"/><circle cx="32" cy="68" r="9" fill="#d8b86a"/><line x1="50" y1="32" x2="78" y2="32" stroke="#f5f2ec" stroke-width="8" stroke-linecap="round"/><line x1="50" y1="68" x2="70" y2="68" stroke="#f5f2ec" stroke-width="8" stroke-linecap="round"/></svg></div>
+        <div class="sw" style="width:48px;height:48px;background:#fff"><svg width="16" height="16" viewBox="0 0 100 100"><rect x="4" y="4" width="92" height="92" rx="10" fill="#26364a"/><line x1="32" y1="22" x2="32" y2="78" stroke="#f5f2ec" stroke-width="9" stroke-linecap="round"/><circle cx="32" cy="32" r="10" fill="#f5f2ec"/><circle cx="32" cy="68" r="10" fill="#d8b86a"/><line x1="50" y1="32" x2="78" y2="32" stroke="#f5f2ec" stroke-width="9" stroke-linecap="round"/><line x1="50" y1="68" x2="70" y2="68" stroke="#f5f2ec" stroke-width="9" stroke-linecap="round"/></svg></div>
+        <div class="sw" style="width:48px;height:48px;background:#1c1d21"><svg width="32" height="32" viewBox="0 0 100 100"><rect x="4" y="4" width="92" height="92" rx="10" fill="#ece8df"/><line x1="32" y1="22" x2="32" y2="78" stroke="#1c1d21" stroke-width="8" stroke-linecap="round"/><circle cx="32" cy="32" r="9" fill="#1c1d21"/><circle cx="32" cy="68" r="9" fill="#8a6a24"/><line x1="50" y1="32" x2="78" y2="32" stroke="#1c1d21" stroke-width="8" stroke-linecap="round"/><line x1="50" y1="68" x2="70" y2="68" stroke="#1c1d21" stroke-width="8" stroke-linecap="round"/></svg></div>
+        <div class="sw" style="width:48px;height:48px;background:#1c1d21"><svg width="16" height="16" viewBox="0 0 100 100"><rect x="4" y="4" width="92" height="92" rx="10" fill="#ece8df"/><line x1="32" y1="22" x2="32" y2="78" stroke="#1c1d21" stroke-width="9" stroke-linecap="round"/><circle cx="32" cy="32" r="10" fill="#1c1d21"/><circle cx="32" cy="68" r="10" fill="#8a6a24"/><line x1="50" y1="32" x2="78" y2="32" stroke="#1c1d21" stroke-width="9" stroke-linecap="round"/><line x1="50" y1="68" x2="70" y2="68" stroke="#1c1d21" stroke-width="9" stroke-linecap="round"/></svg></div>
+        <div class="cap">議員ページの timeline そのもの。真鍮の点＝最新の記録</div>
+      </div>
+    </div>
+  </div>
+  <div style="font-size:13px; color:#6b6860; line-height:1.7;">評価：A は「判」というサイト内の文法と繋がり、漢字1字で日本のサービスだと分かる。B・D は文字に頼らず小さくても崩れないが、汎用的で他サービスにも見える。C はいまの見た目の延長で、ファビコンに弱い。<br>推し：<b>A（判）</b>。次点 D。決まったら SVG／PNG（16・32・180・512）・OGP 画像を生成してサイトに組み込みます。</div>
+</div>
+</x-dc>
+</body>
+</html>
