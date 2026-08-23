@@ -97,4 +97,23 @@ export type QuestionEntry = {
   /** 衆院 経過ページ／参院 詳細ページ。 */
   sourceUrl: string;
 };
-export type TimelineEntry = VoteEntry | BillEntry | SpeechEntry | StanceEntry | QuestionEntry;
+/**
+ * 委員会に発議者として出席した事実（会議録の委員会冒頭「出席者」欄の「発議者」、#109）。
+ * 載るのはその日に出席した発議者であり、参法の発議者全員ではない。提出法案（BillEntry）とは別の kind で、`estimated: false`。
+ * 「委員会に発議者として出席」と明示し、提出者とは別の表現にする。
+ */
+export type AttendanceEntry = {
+  kind: "attendance";
+  estimated: false;
+  date: string;
+  /** 会議録情報の speechID。 */
+  meetingId: string;
+  /** 会議名＋号（例「農林水産委員会 第14号」）。 */
+  meeting: string;
+  role: "発議者";
+  /** その日の案件にあった参法（複数ならどの参法の発議者として出席したかは会議録からは分からない）。 */
+  bills: { billId: string; title: string }[];
+  /** 会議録の冒頭情報の URL。 */
+  sourceUrl: string;
+};
+export type TimelineEntry = VoteEntry | BillEntry | SpeechEntry | StanceEntry | QuestionEntry | AttendanceEntry;
