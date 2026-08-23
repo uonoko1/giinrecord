@@ -19,6 +19,7 @@ STUB
 done
 # nginx whose -t fails
 BAD="$TMP/bad"; mkdir -p "$BAD"
+# shellcheck disable=SC2016  # the stub expands $* / $STUB_LOG when it runs, not here
 printf '#!/usr/bin/env bash\necho "nginx $*" >> "$STUB_LOG"; exit 1\n' > "$BAD/nginx"; chmod +x "$BAD/nginx"
 
 fail() { echo "    x $1"; CURRENT_FAILED=1; }
