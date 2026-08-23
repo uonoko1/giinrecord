@@ -103,16 +103,36 @@ describe("利用規約の運営費（#174）", () => {
 });
 
 describe("プライバシーポリシーの内容", () => {
-  it("Cookie なし・IP なし・集計項目・localStorage・staging・連絡先を書く", () => {
+  it("Cookie なし・IP なし・集計項目・localStorage・連絡先を書く", () => {
     const { container } = renderPage(Privacy);
     const text = container.textContent ?? "";
     expect(text).toContain("Cookie");
     expect(text).toContain("IP アドレス");
+    expect(text).toContain("User-Agent");
     expect(text).toContain("リファラ");
     expect(text).toContain("localStorage");
-    expect(text).toContain("staging");
-    expect(text).toContain("Cloudflare Access");
     expect(screen.getByRole("link", { name: "GitHub Issues" })).toHaveAttribute("href", "https://github.com/uonoko1/gikailog/issues");
+  });
+
+  it("#189 staging の段落が無く、エラーログに接続元 IP が短期間残ることを注記し、更新日が 2026-08-24 以降", () => {
+    const { container } = renderPage(Privacy);
+    const text = container.textContent ?? "";
+    expect(text).not.toContain("staging");
+    expect(text).not.toContain("Cloudflare");
+    expect(container.querySelector("#privacy-staging")).toBeNull();
+    expect(text).toContain("エラー時の診断ログ");
+    expect(text).toContain("接続元 IP");
+    expect(text).toContain("短期間");
+    expect(text).toContain("ログローテーション");
+    expect(PRIVACY_UPDATED >= "2026-08-24").toBe(true);
+  });
+
+  it("#189 変更の節に、広告を入れるときは Cookie の記述と同意バナーを更新する運用ルールを書く（予告調ではない）", () => {
+    const { container } = renderPage(Privacy);
+    const text = container.textContent ?? "";
+    expect(text).toContain("広告");
+    expect(text).toContain("同意バナー");
+    for (const word of ["予定", "将来", "可能性"]) expect(text).not.toContain(word);
   });
 
   it("第三者送信の注記が無い（フォントは自サイト配信 #168）", () => {

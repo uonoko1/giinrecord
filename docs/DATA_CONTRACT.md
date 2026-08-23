@@ -39,12 +39,12 @@ data/
 interface MemberSummary { id: MemberId; name: string; kana: string; house: House; assemblyId: AssemblyId; group: string; district: string; termEnd?: string; current: boolean; counts: { rollcalls: number; bills: number; speeches: number; questions: number } }
 interface MemberDetail extends Member { timeline: TimelineEntry[] }
 type TimelineEntry =
-  | { kind: "vote"; date: string; rollCallId: string; title: string; value: VoteValue; result: string; groupValue?: VoteValue; sourceUrl: string }
-  | { kind: "bill"; date: string; billId: string; title: string; role: "提出者" | "賛成者"; submitterText?: string; status?: string; sourceUrl: string }
-  | { kind: "speech"; date: string; speechId: string; meeting: string; excerpt: string; chars: number; position?: string; sourceUrl: string }
-  | { kind: "stance"; estimated: true; date: string; billId: string; title: string; group: string; stance: "賛成" | "反対"; stanceText: string; status?: string; sourceUrl: string } // 推定（衆院の会派態度）
-  | { kind: "question"; date: string; questionId: string; title: string; submitterText?: string; status?: string; answerDate?: string; answerUrl?: string; sourceUrl: string } // 質問主意書（事実）
-  | { kind: "attendance"; estimated: false; date: string; meetingId: string; meeting: string; role: "発議者"; bills: { billId: string; title: string }[]; sourceUrl: string }; // 委員会に発議者として出席（事実。提出者ではない）
+  | { kind: "vote"; session: number; date: string; rollCallId: string; title: string; value: VoteValue; result: string; groupValue?: VoteValue; sourceUrl: string }
+  | { kind: "bill"; session: number; date: string; billId: string; title: string; role: "提出者" | "賛成者"; submitterText?: string; status?: string; sourceUrl: string }
+  | { kind: "speech"; session: number; date: string; speechId: string; meeting: string; excerpt: string; chars: number; position?: string; sourceUrl: string }
+  | { kind: "stance"; estimated: true; session: number; date: string; billId: string; title: string; group: string; stance: "賛成" | "反対"; stanceText: string; status?: string; sourceUrl: string } // 推定（衆院の会派態度）
+  | { kind: "question"; session: number; date: string; questionId: string; title: string; submitterText?: string; status?: string; answerDate?: string; answerUrl?: string; sourceUrl: string } // 質問主意書（事実）
+  | { kind: "attendance"; estimated: false; session: number; date: string; meetingId: string; meeting: string; role: "発議者"; bills: { billId: string; title: string }[]; sourceUrl: string }; // 委員会に発議者として出席（事実。提出者ではない）
 interface RollCallSummary { id: string; session: number; date: string; title: string; totals: { total: number; yes: number; no: number }; result: string }
 ```
 
@@ -112,6 +112,7 @@ interface AssemblySession { id: string; label: string; date: string; rollcalls: 
 - 採決時点の会派は回次で引く（`groupAt(member, session)`）。名簿は会期後のスナップショットなので、第 N 回の採決には第 N 回の名簿の term、無ければ（会期中の辞職・任期満了）手元で最も新しい過去の回次の term を使う。後の回次の名簿しか無ければ「不明」とし、会派移動の時期を推定しない。
 - 名寄せは「氏名＋採決時点の会派」。氏名で1人に絞れるときは会派が食い違っても紐づけるが、投票結果ページの会派がその議員のどの回次の名簿の会派（略称・旧称を含む）とも一致しなければ `group-mismatch.json` に載る（`voteGroup` は投票ページの原文、`rosterGroup` は採決時点の名簿の会派。採決時点の名簿が無ければ手元の全会派を `/` で連結）。同姓同名は採決時点の会派で分け、分けられなければ `unmatched.json` に載る（別の回次の会派では推定しない）。`memberId` は `members/index.json` に、`rollCallId` は `rollcalls/index.json` に存在する。
 - `timeline` は日付降順（回次をまたいでも一つの timeline）。
+- `timeline` の全行が `session`（国会の回次）を持つ（#103）。vote は採決の回次（`rollCallId` の先頭 `{回次}-` と一致。`validateDataset` が検査する）、bill は議案の提出回次（`billId` の先頭）、speech は会議録の回次（API の `session`）、stance は議案の提出回次、question は質問の回次、attendance は会議の回次。Web の議員ページは `session` で回次ごとに折りたたむ（直近 2 回次を展開、それ以前は「第N回国会・件数」の見出しだけ）。`session` の無い行は #103 以前の出力で、Web は「回次不明」として最後にまとめる（推定しない）。
 - どのレコードも `sourceUrl` を持ち、衆参・NDL のドメインを指す。
 - `RollCallSummary.result` / `TimelineEntry(vote).result` は必ず得票「賛成 N・反対 N」を含む。参院 議案情報の審議結果（原文: 可決・否決・同意・是認 など）と紐づいた採決は「可決（賛成 N・反対 N）」の形。可否を多数決から推論しない。
 - 「投票なし」は欠席と棄権を区別しない。区別した表現を作らない。
@@ -120,7 +121,7 @@ interface AssemblySession { id: string; label: string; date: string; rollcalls: 
 - 委員会提出の参法（議案ページの「提出者区分」が「委員会発議」。例 217/meisai/m217100217005.htm「提出者 厚生労働委員長」）には発議者欄が無く、「提出者」欄に委員長の役職名だけが載る。役職名は個人の氏名ではないので名寄せせず、bill 行（timeline）にも `unmatched.json` にも載らない。ETL はこれを黙って落とさず件数と id・提出者の原文（例「厚生労働委員長」）をログに出す（Issue #64）。一覧の参法件数と timeline の bill 行の差はここから生じる。
 - 閣法に発議者は無く、衆法の発議者は衆議院議員（参院名簿に無いのが正常）なので、bill 行は参法だけから作る。議案ページに会派が無いので同姓同名は絞れず `unmatched.json`（billId 付き）に載る。
 - `TimelineEntry(bill).status` は議案ページの経過ブロック（参議院委員会・参議院本会議・衆議院委員会・衆議院本会議・公布）のうち日付が最新のものを「段階名 議決の原文」で（例「参議院本会議 可決」「参議院 環境委員会 未了」「公布（法律第13号）」）。成立・廃案などへの言い換えはしない。経過が無ければ省略。
-- `TimelineEntry(speech)` は国会会議録検索システムの本会議の発言（参議院本会議・衆議院本会議）。参院本会議は全回次を回次ごとの参院名簿に突合する。衆院本会議（#73）は衆院名簿が「現在」の1回次分しか無いので、議案の名寄せと同じく名簿が覆う回次（`meta.sessions` の最大）だけ取得・突合し、過去回次の衆院本会議は取得しない（名簿に無い旧議員を同名の現職に紐づけない。#71 で回次ごとの名簿が入れば広がる）。衆院議員の `counts.speeches` はその範囲の件数。発言の院（会議録の `nameOfHouse`）と紐づけ先議員の院は一致する（ETL が不一致を拒否する。#107）。
+- `TimelineEntry(speech)` は国会会議録検索システムの本会議の発言（参議院本会議・衆議院本会議）。参院本会議は取得回次を回次ごとの参院名簿に突合する。衆院本会議（#73）は衆院名簿が「現在」の1回次分しか無いので、議案の名寄せと同じく名簿が覆う回次（`meta.sessions` の最大）だけ取得・突合し、過去回次の衆院本会議は取得しない（名簿に無い旧議員を同名の現職に紐づけない。#71 で回次ごとの名簿が入れば広がる）。その回次が引き継ぎ（carried）のとき（過去回次だけの手動実行）は衆院本会議も取得せず前回出力の行を引き継ぐ（取得すると同じ発言が2行になる。`shouldFetchShugiinSpeeches`。#103 レビュー）。不変条件（`validateDataset`）: 1人の timeline に同じ `speechId` の行は1つ。衆院議員の `counts.speeches` はその範囲の件数。発言の院（会議録の `nameOfHouse`）と紐づけ先議員の院は一致する（ETL が不一致を拒否する。#107）。
 - `TimelineEntry(speech).position` は会議録の `speakerPosition` の原文（例: 「議長」「国土交通大臣」「財政金融委員長」）。役職として行った発言（議事進行・政府答弁・委員長報告）も事実として timeline に入れ、`counts.speeches` に含める（内訳は持たない）。Web は `position` をそのまま表示して区別する。
 
 ## 質問主意書（timeline の `question` 行、Issue #106）
@@ -185,7 +186,9 @@ interface DistrictsMeta {
 - Web（#112）: `by-zip.json` はバンドルせず、ビルドが上3桁ごとに `build/client/data/districts/zip/{上3桁}.json`（最大 1,000 ファイル）へ分割し `meta.json` を同じ場所へコピーする（`apps/web/scripts/shard-districts.ts`）。Home の郵便番号入力はその分割ファイルだけを fetch し、市区町村名（`municipalities`）と候補の選挙区を出し、選挙区を `/members?district=<名簿の表記>` にリンクする。fetch が 404 か、200 でも JSON でない応答（SPA フォールバックの HTML など）なら「該当する郵便番号が見つかりません」、5xx は「取得に失敗しました」（#120）。
 
 ## 回次
-- ETL は「指定された回次 ∪ `meta.sessions` に既にある回次」を毎回まとめて処理し、`rollcalls/{session}/` を回次ごとに並べる。部分実行で他回次の出力は消えない（回次を減らすときは `data/` を消してから実行する）。
+- ETL がネットワークから取得するのは**指定された回次**（無ければ既定の直近 5 回次）だけ（#103、`packages/etl/src/sessions.ts`）。`meta.sessions` に既にある他の回次（carried）は前回出力から引き継ぐ: 採決は `rollcalls/{session}/` を読み、票の氏名・会派を今回の名簿で**再突合**する（名簿は取得回次 ∪ 引き継ぐ回次の全回次分に加え、連続するブロックごとにその1つ前の回次の分も毎回取る（`rosterSessionsFor`）。回次が飛んでいても第217回の再突合に第216回の名簿が要る。再突合で memberId の付いた票が前回出力より減ったら名簿の取り漏れなので、ETL は書き出さずに非0終了する（`lostVoteMatches`））。審議結果は `rollcalls/index.json` の `result`（「可決（賛成 N・反対 N）」）から原文を戻す。議案は `bills/` の全部を先に入れ取得分で上書きする。speech / question / attendance / 参法の bill 行は `members/{id}.json` の `session` が引き継ぐ回次の行をそのまま戻す（名簿から消えた memberId の行は落とし件数をログに出す）。`meta.sessions` は 取得 ∪ 引き継ぎ。部分実行で他回次の出力は消えず、日次実行（既定 5 回次）は第200〜216回を毎日取り直さない。回次を減らすときは `data/` を消してから実行する。
+- 第215回以前は回次ごとの参院名簿（`giin/{N}/giin.htm`）が公開されていない（404）。ETL は「名簿が無い」事実として飛ばし（`fetchMembers` → undefined）、その回次の採決は手元の名簿（第216回以降）で突合する。紐づかない氏名（第216回より前に退任した議員など）は `unmatched.json` に載る（上限を設けない。古い回次ほど多い）。氏名だけから Member を作ることはしない（同名の別人を 1 人にしない）。
+- 投票結果一覧（`touhyoulist/{N}/vote_ind.htm`）には**起立採決**のページ（個人票が無く「起立採決により可決されました」等の 1 行だけ。第200〜216回に多く、第210回・第216回は全件）も載る。個人票が無いので `RollCall` にはせず、ETL は件数をログに出して飛ばす（`standingVoteNote`）。第217回以降の一覧は押しボタン投票だけ。
 - 採決が 0 件の回次（特別国会など）は `rollcalls/{session}/` を作らない。`meta.sessions` には載る。
 
 ## 鮮度

@@ -56,4 +56,12 @@ describe("root robots meta", () => {
   it("本番 origin のビルドには robots meta を入れない", async () => {
     expect(await renderWith("https://gikailog.jp")).not.toContain('name="robots"');
   });
+
+  // Issue #191: beforeinstallprompt はハイドレーション前に捕捉する（テーマと同じインラインスクリプト方式）
+  it("head に installPromptInit をインラインで埋め込む", async () => {
+    const html = await renderWith("https://gikailog.jp");
+    const { installPromptInit } = await import("./lib/install-prompt");
+    expect(html).toContain(`<script>${installPromptInit}</script>`);
+    expect(installPromptInit).toContain("beforeinstallprompt");
+  });
 });
