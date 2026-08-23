@@ -41,7 +41,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: forbidden patterns (scripts/ci/forbidden-patterns.sh)
         env:
-          FORBIDDEN_PATTERNS: ${{ secrets.FORBIDDEN_PATTERNS }}   # unset → "not configured", the rest still runs
+          FORBIDDEN_PATTERNS: ${{ secrets.FORBIDDEN_PATTERNS }}
+          # Fork PRs never receive secrets (GitHub design) → the script only warns there. Everywhere else an empty
+          # secret (missing / renamed) fails the step instead of silently skipping the site-name check (#137 review).
+          FORBIDDEN_PATTERNS_REQUIRED: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
         run: bash scripts/ci/forbidden-patterns.sh
 
   audit:

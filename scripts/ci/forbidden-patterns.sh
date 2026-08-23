@@ -7,10 +7,14 @@
 #   github-token  ghp_… / github_pat_…
 #   aws-key       AKIA… access key ids
 #   env-file      a tracked .env or .env.* (only .env.example may be committed)
-#   ip-address    a public IPv4 literal outside deploy/ and docs/ops/ (the VPS is written as a domain, not an IP;
-#                 loopback, 0.0.0.0 and RFC1918 ranges are fine — they identify nothing)
+#   ip-address    a public IPv4 literal anywhere (the VPS is written as a domain, not an IP; no directory is exempt —
+#                 deploy/ and docs/ops/ are exactly where the IP used to live. Loopback, 0.0.0.0 and RFC1918
+#                 ranges are fine — they identify nothing)
 #   forbidden     regexes from $FORBIDDEN_PATTERNS (newline separated; a repo secret set by the PO — names of the
-#                 other sites on the shared VPS etc.). The patterns are never printed. Unset → "not configured".
+#                 other sites on the shared VPS etc.). The patterns are never printed.
+#                 Unset/empty → with FORBIDDEN_PATTERNS_REQUIRED=true (push, schedule, same-repo PR) that is an
+#                 error (exit 2): a missing or renamed secret must never pass as clean. Otherwise (fork PRs get no
+#                 secrets by GitHub design; local runs) a ::warning:: annotation and the other rules still run.
 #
 # data/ (ETL output) and pnpm-lock.yaml are not scanned for IPs; everything tracked is scanned for the rest.
 #   Tests: scripts/ci/test/forbidden-patterns.test.sh
@@ -72,13 +76,19 @@ report env-file "$ENV_FILES"
 # Strict octets (no leading zeros) and no neighbouring digit, letter or dot: keeps SVG path data and version strings (v1.2.3.4) out.
 OCTET='(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])'
 IP_RE="(?<![0-9A-Za-z.])($OCTET\\.){3}$OCTET(?![0-9A-Za-z.])"
-IP_FILES=$(printf '%s\n' "$FILES" | grep -v -E '^(deploy/|docs/ops/|data/|pnpm-lock\.yaml$)' || true)
+IP_FILES=$(printf '%s\n' "$FILES" | grep -v -E '^(data/|pnpm-lock\.yaml$)' || true)
 IP_OUT=$(run_grep "$IP_FILES" -I -H -n -o -P -e "$IP_RE" \
   | { grep -v -E ':(127\.|0\.0\.0\.0|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.|255\.255\.)' || true; } | cut -d: -f1,2) || exit 2
 report ip-address "$IP_OUT"
 
 if [ -z "${FORBIDDEN_PATTERNS:-}" ]; then
-  echo "FORBIDDEN_PATTERNS: not configured (set the repo secret to check for site-specific names)"
+  if [ "${FORBIDDEN_PATTERNS_REQUIRED:-false}" = "true" ]; then
+    echo "::error::FORBIDDEN_PATTERNS is empty but required on this event (push/schedule/same-repo PR):" \
+      "the repo secret is missing or renamed, so the site-name check cannot run. Not treating this as clean." >&2
+    exit 2
+  fi
+  echo "::warning::FORBIDDEN_PATTERNS not configured (fork PR or local run): site-specific names were NOT checked." \
+    "The other rules still ran."
 else
   PATTERN_FILE=$(mktemp)
   # CR stripped: a secret pasted with CRLF endings would otherwise search for "name\r" and silently match nothing.

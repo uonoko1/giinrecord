@@ -48,7 +48,7 @@ t_clean_repo_passes() {
   repo clean; add "src/a.ts" "export const x = 1;"
   run FORBIDDEN_PATTERNS=
   assert_eq 0 "$STATUS" "exit"
-  assert_contains "$OUT" "FORBIDDEN_PATTERNS: not configured" "secret absence is logged, not fatal"
+  assert_contains "$OUT" "::warning::" "secret absence is a warning annotation (local run / fork PR), not fatal"
 }
 
 t_private_key_header_fails() {
@@ -85,17 +85,20 @@ t_tracked_env_file_fails_but_example_is_fine() {
   assert_not_contains "$OUT" ".env.example" "example not reported"
 }
 
-t_ip_outside_deploy_and_docs_ops_fails() {
+t_ip_anywhere_fails() {
   repo ip; add "docs/notes.md" "host is $IP"
   run
   assert_eq 1 "$STATUS" "exit"
   assert_contains "$OUT" "docs/notes.md" "IP in docs/ reported"
 }
 
-t_ip_inside_deploy_and_docs_ops_is_allowed() {
-  repo ipok; add "deploy/README.md" "A record -> $IP"; add "docs/ops/deploy.md" "host $IP"
+t_ip_inside_deploy_and_docs_ops_fails_too() {
+  # The VPS IP used to live exactly here (deploy/README.md, staging-setup.sh) — no directory is exempt (#137 review).
+  repo ipdeploy; add "deploy/README.md" "A record -> $IP"; add "docs/ops/deploy.md" "host $IP"
   run
-  assert_eq 0 "$STATUS" "exit (deploy/ and docs/ops/ are exempt from the IP rule)"
+  assert_eq 1 "$STATUS" "exit (deploy/ and docs/ops/ are NOT exempt from the IP rule)"
+  assert_contains "$OUT" "deploy/README.md" "IP in deploy/ reported"
+  assert_contains "$OUT" "docs/ops/deploy.md" "IP in docs/ops/ reported"
 }
 
 t_loopback_and_versions_are_not_ips() {
@@ -137,6 +140,32 @@ t_secret_patterns_invalid_regex_is_an_error_not_clean() {
   assert_not_contains "$OUT" "unclosed" "the broken pattern is not echoed either"
 }
 
+t_secret_absent_and_required_is_an_error() {
+  # push / schedule / same-repo PR: the secret must be present — a missing or renamed secret must not pass as clean.
+  repo required; add "docs/a.md" "nothing to see"
+  run FORBIDDEN_PATTERNS= FORBIDDEN_PATTERNS_REQUIRED=true
+  assert_eq 2 "$STATUS" "exit (required secret missing → error, not clean)"
+  assert_not_contains "$OUT" "forbidden-patterns: clean" "not clean"
+  assert_contains "$OUT" "::error::" "GitHub error annotation"
+  assert_contains "$OUT" "FORBIDDEN_PATTERNS" "names the secret"
+}
+
+t_secret_absent_and_not_required_warns() {
+  # fork pull_request: GitHub never passes secrets, so the check is skipped with a visible warning annotation.
+  repo notrequired; add "docs/a.md" "nothing to see"
+  run FORBIDDEN_PATTERNS= FORBIDDEN_PATTERNS_REQUIRED=false
+  assert_eq 0 "$STATUS" "exit"
+  assert_contains "$OUT" "::warning::" "GitHub warning annotation"
+  assert_contains "$OUT" "forbidden-patterns: clean" "rest of the check still runs"
+}
+
+t_secret_present_and_required_passes() {
+  repo reqok; add "docs/a.md" "nothing to see"
+  run FORBIDDEN_PATTERNS=$'othersite\\.example' FORBIDDEN_PATTERNS_REQUIRED=true
+  assert_eq 0 "$STATUS" "exit"
+  assert_not_contains "$OUT" "::warning::" "no warning when the secret is set"
+}
+
 t_untracked_files_are_ignored() {
   repo untracked; printf '%s\n' "$KEY_HEADER" > "$R/scratch.txt"   # not git-added
   run
@@ -150,18 +179,21 @@ t_data_dir_is_skipped() {
 }
 
 test_case "forbidden-patterns.sh: bash -n" bash -n "$SCRIPT"
-test_case "clean repo passes; unset FORBIDDEN_PATTERNS is logged as not configured" t_clean_repo_passes
+test_case "clean repo passes; unset FORBIDDEN_PATTERNS is a warning" t_clean_repo_passes
 test_case "private key header → fail" t_private_key_header_fails
 test_case "ghp_ / github_pat_ tokens → fail" t_github_tokens_fail
 test_case "AWS access key id → fail" t_aws_key_fails
 test_case "tracked .env / .env.* → fail; .env.example allowed" t_tracked_env_file_fails_but_example_is_fine
-test_case "IP address outside deploy/ and docs/ops/ → fail" t_ip_outside_deploy_and_docs_ops_fails
-test_case "IP address inside deploy/ or docs/ops/ → allowed" t_ip_inside_deploy_and_docs_ops_is_allowed
+test_case "IP address → fail" t_ip_anywhere_fails
+test_case "IP address inside deploy/ or docs/ops/ → fail too (no exempt directories)" t_ip_inside_deploy_and_docs_ops_fails_too
 test_case "loopback / 0.0.0.0 / private ranges / version strings are not IPs" t_loopback_and_versions_are_not_ips
 test_case "FORBIDDEN_PATTERNS hit → fail without echoing the pattern" t_secret_patterns_fail_and_are_not_echoed
 test_case "FORBIDDEN_PATTERNS absent → pass; blank lines ignored" t_secret_patterns_pass_when_absent
 test_case "FORBIDDEN_PATTERNS with CRLF line endings still matches" t_secret_patterns_crlf_still_match
 test_case "FORBIDDEN_PATTERNS with an invalid regex → error, not clean" t_secret_patterns_invalid_regex_is_an_error_not_clean
+test_case "FORBIDDEN_PATTERNS absent + FORBIDDEN_PATTERNS_REQUIRED=true → error" t_secret_absent_and_required_is_an_error
+test_case "FORBIDDEN_PATTERNS absent + not required → ::warning::, still runs" t_secret_absent_and_not_required_warns
+test_case "FORBIDDEN_PATTERNS present + required → pass, no warning" t_secret_present_and_required_passes
 test_case "untracked files are ignored" t_untracked_files_are_ignored
 test_case "data/ is skipped" t_data_dir_is_skipped
 
