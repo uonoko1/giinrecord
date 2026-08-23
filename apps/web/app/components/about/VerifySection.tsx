@@ -1,7 +1,8 @@
+import { Link } from "react-router";
 import { ARCHIVE_PATH } from "../../lib/archive-path";
 import { REPO_URL } from "../../lib/dataset";
 
-/** 節「検証する」。ソースコード・データ一括取得・誤り報告へのリンクとライセンス。 */
+/** 節「検証する」。ソースコード・データ一括取得・誤り報告へのリンクとライセンス。末尾に運営費の1文（#174、詳細は /terms）。 */
 export function VerifySection() {
   return (
     <section className="section" aria-labelledby="verify-heading">
@@ -24,6 +25,9 @@ export function VerifySection() {
         </a>
       </div>
       <p className="note">毎日更新。CC BY 4.0。出典として「議会ログ」と一次資料（参議院・衆議院・国立国会図書館）を明記してください。個人・非営利・商用いずれも同じ条件です。</p>
+      <p className="note">
+        運営者の自費で運営し、政党・候補者・業界団体からは受け取りません。運営の方針は<Link to="/terms">利用規約</Link>に書いています。
+      </p>
     </section>
   );
 }

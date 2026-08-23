@@ -1,17 +1,15 @@
 import type { MetaArgs } from "react-router";
-import { FactsSection, FundingSection, NotRecordedSection, PoliciesSection, UpdateSection, VerifySection } from "../components/about";
+import { FactsSection, NotRecordedSection, PoliciesSection, UpdateSection, VerifySection } from "../components/about";
 import { SiteFooter } from "../components/SiteFooter";
 import { CoverBrand } from "../components/CoverBrand";
 import { type Dataset, dataset as bundled } from "../lib/dataset";
 import { seoMeta } from "../lib/seo";
 import "../styles/pages.css";
 
-export { SUPPORT_URL } from "../components/about";
-
 export function meta({ location }: MetaArgs) {
   return seoMeta({
     title: "このデータについて",
-    description: "このサイトが扱う記録の範囲と出典、事実と推定の区別、運営費の方針。参議院・衆議院・国立国会図書館の公式記録だけを使います。",
+    description: "このサイトが扱う記録の範囲と出典、事実と推定の区別、検証の方法。参議院・衆議院・国立国会図書館の公式記録だけを使います。",
     pathname: location.pathname,
   });
 }
@@ -31,7 +29,6 @@ export default function About({ data = bundled }: { data?: Dataset }) {
         <NotRecordedSection />
         <UpdateSection meta={data.meta} />
         <VerifySection />
-        <FundingSection />
         <PoliciesSection />
       </main>
       <SiteFooter />
