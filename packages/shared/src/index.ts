@@ -487,8 +487,15 @@ export interface LocalRollCall {
   method: LocalVoteMethod;
   /** 議決結果の原文（「可決」「否決」「採択」…） */
   result: string;
-  /** PDF の出席者数・表決者数・賛成者数・反対者数（公表値。votes から数え直さない） */
-  counts: { present: number; voting: number; yes: number; no: number };
+  /** PDF の出席者数・表決者数・賛成者数・反対者数（公表値。votes から数え直さない）。出席者数を公表しない議会（鳥取）では present を省略 */
+  counts: { present?: number; voting: number; yes: number; no: number };
+  /**
+   * 賛否の対象の原文（表の節見出し。鳥取「議案に対する賛否」「委員長報告に対する賛否」。#184）。
+   * 請願・陳情の賛否が「委員長報告（不採択 など）に対する賛否」である議会で、○ を請願そのものへの賛成と読ませないために残す。PDF に無ければ省略
+   */
+  voteSubject?: string;
+  /** 委員長報告の原文（請願・陳情の行。鳥取「不採択」「研究留保」「趣旨採択（措置済）」）。無ければ省略 */
+  committeeReport?: string;
   /** 各議員の表決（PDF の列順）。memberId は名簿に名寄せできたときだけ（できなければ ""。unmatched.json に載る） */
   votes: { memberId: MemberId; nameText: string; group: string; value: LocalVote }[];
   /** PDF の何ページ目か（1 始まり） */
@@ -516,4 +523,6 @@ export interface LocalUnmatchedName {
   nameText: string;
   group: string;
   rollCallIds: string[];
+  /** 名簿で候補になった議員（姓だけの表記で同姓が 2 人以上いたとき。鳥取 #184）。ETL は選ばない。候補が無ければ省略 */
+  candidates?: { id: MemberId; name: string }[];
 }
