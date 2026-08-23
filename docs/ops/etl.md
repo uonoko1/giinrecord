@@ -77,3 +77,9 @@ docker run --rm --user "$(id -u):$(id -g)" -v "$PWD/data:/app/data" -v "$PWD/pac
 - `pnpm --filter web build` の最後に `apps/web/scripts/build-archive.ts` が `data/` 全体（`LICENSE` 含む）＋ `README.txt`（ライセンス・帰属表示・出典・取得時刻）を `build/client/data/data-archive.zip` に書く。Deploy は `build/client/` を rsync するので自動で配布される。
 - 再現可能：エントリはパスのバイト順、mtime は 1980-01-01 固定、deflate level 9。同じ `data/` からは同じバイト列（sha256 一致）。
 - `pnpm --filter web smoke` が、zip の存在・エントリ数（data/ のファイル数 + README）・`LICENSE`/`README.txt` の同梱・サイズ上限（既定 50 MiB、`ARCHIVE_MAX_BYTES` で上書き）を検査する。上限を超えたら意図して上げる（回次が増えたとき）。
+
+## 選挙区 ETL（月次、`.github/workflows/districts.yml`、#111）
+- 毎月 2 日 05:00 JST（KEN_ALL は月末更新）と `workflow_dispatch`。日次と同じイメージで `--entrypoint node … src/districts-cli.ts` を走らせ、`data/districts/` だけを書く。data PR の流れ（ブランチ再作成 → `gh pr create` → auto-merge → マージ待ち → deploy.yml 起動 → 失敗 Issue）は日次と同じで、ブランチは `data/districts`、失敗 Issue のタイトルは「選挙区 ETL 月次実行が失敗した（districts.yml）」。`concurrency: etl` で日次と直列化する。
+- Summary に KEN_ALL 更新日・郵便番号／市区町村／小選挙区の件数・**分割市区町村の件数**（候補を並べただけで推定していない数。2026-08 時点で 33）を出す。件数が急に変わったら総務省の PDF か KEN_ALL の変化を疑う。
+- 手動: `gh workflow run districts.yml`。ローカル: `pnpm etl:districts`（約 40 秒。総務省 PDF 47 本は `.cache/` にキャッシュ、KEN_ALL と HTML は毎回取得）。
+- 失敗モード: 「matches no municipality」＝別表の単位が KEN_ALL に無い（市町村合併・区の再編 → `static-areas.ts` の `RENAMED_MUNICIPALITIES` に出典付きで追記）、「expected 47 prefecture PDFs」「not found on the download page」「expected 14 bureaus」＝ページのレイアウト変化（`docs/research/districts.md` の URL を確認してパーサーとフィクスチャを直す）、「district numbers not consecutive」「unbalanced parentheses」＝PDF のレイアウト変化。いずれも data/ は書かれない（書いた後の不変条件違反も PR にならない）。
