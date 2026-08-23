@@ -129,10 +129,10 @@ describe("Home", () => {
   });
 
   describe("フッターの支援リンク", () => {
-    it("/about#funding への控えめなリンクがあり、ボタンではない", () => {
+    it("/terms#funding への控えめなリンクがあり、ボタンではない（#174）", () => {
       renderHome();
       const link = screen.getByRole("link", { name: "支援する" });
-      expect(link).toHaveAttribute("href", "/about#funding");
+      expect(link).toHaveAttribute("href", "/terms#funding");
       expect(link.className).not.toMatch(/button|btn|entry__link/);
       expect(link.closest(".links")).not.toBeNull();
     });

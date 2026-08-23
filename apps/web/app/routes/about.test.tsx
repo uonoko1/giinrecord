@@ -21,7 +21,7 @@ describe("About", () => {
     renderAbout();
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("このデータについて");
     expect(screen.getByText(/評価・採点・推薦はしません。すべての行に出典があります。/)).toBeInTheDocument();
-    for (const name of ["何が事実で、何が推定か", "記録にないこと", "更新", "検証する", "運営費について", "規約とプライバシー"]) {
+    for (const name of ["何が事実で、何が推定か", "記録にないこと", "更新", "検証する", "規約とプライバシー"]) {
       expect(screen.getByRole("heading", { level: 2, name })).toBeInTheDocument();
     }
   });
@@ -76,22 +76,27 @@ describe("About", () => {
     expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument();
   });
 
-  describe("運営費について", () => {
-    it("方針3点だけを書き、費目・金額は書かない（#160）", () => {
-      renderAbout();
-      const section = screen.getByRole("region", { name: "運営費について" });
-      expect(section).toHaveTextContent("運営者の自費で運営");
-      expect(section).toHaveTextContent("政党・候補者・業界団体からは受け取らない");
-      expect(section).toHaveTextContent("政治カテゴリを除外した広告");
-      for (const banned of ["VPS", "ドメイン", "未算出", "取得予定", "月額"]) {
-        expect(section).not.toHaveTextContent(banned);
-      }
-      expect(section.querySelector("ins, iframe, script")).toBeNull();
+  describe("運営費（#174：節は削除し、検証する の末尾1文に集約）", () => {
+    it("「運営費について」の節と id=funding は無い", () => {
+      const { container } = renderAbout();
+      expect(screen.queryByRole("heading", { level: 2, name: "運営費について" })).toBeNull();
+      expect(container.querySelector("#funding")).toBeNull();
+      expect(screen.queryByRole("link", { name: "支援する" })).toBeNull();
     });
 
-    it("支援リンクはリポジトリ URL を指す（GitHub Sponsors 有効化までの代替）", () => {
+    it("検証する の末尾に1文があり、利用規約（/terms）へリンクする", () => {
       renderAbout();
-      expect(screen.getByRole("link", { name: "支援する" })).toHaveAttribute("href", "https://github.com/uonoko1/gikailog");
+      const section = screen.getByRole("region", { name: "検証する" });
+      expect(section).toHaveTextContent("運営者の自費で運営し、政党・候補者・業界団体からは受け取りません。運営の方針は利用規約に書いています。");
+      expect(within(section).getByRole("link", { name: "利用規約" })).toHaveAttribute("href", "/terms");
+    });
+
+    it("費目・金額は書かず、広告要素も置かない（#160）", () => {
+      const { container } = renderAbout();
+      for (const banned of ["VPS", "ドメイン", "未算出", "取得予定", "月額"]) {
+        expect(container.textContent).not.toContain(banned);
+      }
+      expect(container.querySelector("ins, iframe, script")).toBeNull();
     });
 
     it("運動的な言葉を含まない", () => {
@@ -106,9 +111,9 @@ describe("About", () => {
     it("計測の節は無く、本文の節に /terms と /privacy へのリンクがある", () => {
       const { container } = renderAbout();
       expect(screen.queryByRole("heading", { level: 2, name: "計測について" })).toBeNull();
-      const main = within(container.querySelector("main") as HTMLElement);
-      expect(main.getByRole("link", { name: "利用規約" })).toHaveAttribute("href", "/terms");
-      expect(main.getByRole("link", { name: "プライバシーポリシー" })).toHaveAttribute("href", "/privacy");
+      const policies = within(container.querySelector("main #policies") as HTMLElement);
+      expect(policies.getByRole("link", { name: "利用規約" })).toHaveAttribute("href", "/terms");
+      expect(policies.getByRole("link", { name: "プライバシーポリシー" })).toHaveAttribute("href", "/privacy");
     });
 
     it("サイト共通フッター（#167）も描画され、同じリンクを持つ", () => {
