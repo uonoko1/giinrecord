@@ -15,7 +15,7 @@ data/
   bills/
     index.json                      BillSummary[]    議案一覧用（軽量）。提出回次の降順・id 昇順
     {session}/{billId}.json         Bill             議案ページ用（提出者・賛成者・各院の結果・衆院の会派態度）。{session} は提出回次
-  unmatched.json                    名寄せできなかった氏名表記の一覧（票: rollCallId / 発言: speechId / 参法の発議者・衆院議案の提出者と賛成者: billId（後者は kind: "bill" 付き）。運用者が確認する）
+  unmatched.json                    名寄せできなかった氏名表記の一覧（票: rollCallId / 発言: speechId / 参法の発議者・衆院議案の提出者と賛成者: billId（後者は kind: "bill" 付き）/ 質問主意書の提出者: questionId（kind: "question"）。運用者が確認する）
   unmatched-bills.json              議案情報の審議結果と紐づかなかった採決の一覧（人事案件・決議など。得票のみの result になる）
   unmatched-groups.json             名簿の会派略称のうち対応表（sangiin-groups.ts）に無いものの一覧（group は原文のまま公開され、運用者が対応表に追記する）
   group-mismatch.json               氏名で1人に紐づいたが、投票結果ページの会派がその議員のどの回次の名簿の会派とも一致しなかった票の一覧 {memberId, nameText, voteGroup, rosterGroup, rollCallId}（運用者が確認する）
@@ -24,13 +24,14 @@ data/
 ## 型（shared に追加する）
 
 ```ts
-interface MemberSummary { id: MemberId; name: string; kana: string; house: House; group: string; district: string; termEnd?: string; current: boolean; counts: { rollcalls: number; bills: number; speeches: number } }
+interface MemberSummary { id: MemberId; name: string; kana: string; house: House; group: string; district: string; termEnd?: string; current: boolean; counts: { rollcalls: number; bills: number; speeches: number; questions: number } }
 interface MemberDetail extends Member { timeline: TimelineEntry[] }
 type TimelineEntry =
   | { kind: "vote"; date: string; rollCallId: string; title: string; value: VoteValue; result: string; groupValue?: VoteValue; sourceUrl: string }
   | { kind: "bill"; date: string; billId: string; title: string; role: "提出者" | "賛成者"; submitterText?: string; status?: string; sourceUrl: string }
   | { kind: "speech"; date: string; speechId: string; meeting: string; excerpt: string; chars: number; position?: string; sourceUrl: string }
-  | { kind: "stance"; estimated: true; date: string; billId: string; title: string; group: string; stance: "賛成" | "反対"; stanceText: string; status?: string; sourceUrl: string }; // 推定（衆院の会派態度）
+  | { kind: "stance"; estimated: true; date: string; billId: string; title: string; group: string; stance: "賛成" | "反対"; stanceText: string; status?: string; sourceUrl: string } // 推定（衆院の会派態度）
+  | { kind: "question"; date: string; questionId: string; title: string; submitterText?: string; status?: string; answerDate?: string; answerUrl?: string; sourceUrl: string }; // 質問主意書（事実）
 interface RollCallSummary { id: string; session: number; date: string; title: string; totals: { total: number; yes: number; no: number }; result: string }
 ```
 
@@ -53,6 +54,15 @@ interface RollCallSummary { id: string; session: number; date: string; title: st
 - `TimelineEntry(bill).status` は議案ページの経過ブロック（参議院委員会・参議院本会議・衆議院委員会・衆議院本会議・公布）のうち日付が最新のものを「段階名 議決の原文」で（例「参議院本会議 可決」「参議院 環境委員会 未了」「公布（法律第13号）」）。成立・廃案などへの言い換えはしない。経過が無ければ省略。
 - `TimelineEntry(speech)` は国会会議録検索システムの本会議の発言（参議院本会議・衆議院本会議）。参院本会議は全回次を回次ごとの参院名簿に突合する。衆院本会議（#73）は衆院名簿が「現在」の1回次分しか無いので、議案の名寄せと同じく名簿が覆う回次（`meta.sessions` の最大）だけ取得・突合し、過去回次の衆院本会議は取得しない（名簿に無い旧議員を同名の現職に紐づけない。#71 で回次ごとの名簿が入れば広がる）。衆院議員の `counts.speeches` はその範囲の件数。
 - `TimelineEntry(speech).position` は会議録の `speakerPosition` の原文（例: 「議長」「国土交通大臣」「財政金融委員長」）。役職として行った発言（議事進行・政府答弁・委員長報告）も事実として timeline に入れ、`counts.speeches` に含める（内訳は持たない）。Web は `position` をそのまま表示して区別する。
+
+## 質問主意書（timeline の `question` 行、Issue #106）
+- **事実**。出典は衆議院 質問答弁情報（一覧 `https://www.shugiin.go.jp/internet/itdb_shitsumon.nsf/html/shitsumon/kaiji{回次}_l.htm` → 経過ページ `…/shitsumon/{回次}{番号3桁}.htm`、どちらも Shift_JIS）と参議院 質問主意書（一覧 `https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/{回次}/syuisyo.htm` → 詳細ページ `…/syuisyo/{回次}/meisai/m{回次}{番号3桁}.htm`、UTF-8）。`sourceUrl` は必ず経過ページ／詳細ページ（提出日・提出者の一次資料。一覧には提出日が無い）。
+- `questionId` は `{回次}-{house}-{番号}`（例 `221-shugiin-1`、`221-sangiin-12`。衆参で番号が独立なので院を含める）。`date` は提出日（衆院「質問主意書提出年月日」／参院「提出日」）。提出日の無いページは例外（日付を推定しない）。
+- `title` は件名、`submitterText` は提出者欄の原文（「緒方 林太郎君」。全角空白は半角1つ）、`status` は衆院の「経過状況」の原文（答弁受理・転送に至らず など。参院のページには無いので省略）、`answerDate` は答弁書受領日（衆院「答弁書受領年月日」／参院「答弁書受領日」）、`answerUrl` は答弁本文（HTML）。受領日が空欄なら `answerDate` も `answerUrl` も付けない（空欄は「未定または無し」で、未受領と言い切らない）。
+- 提出者は両院とも1人（第217〜221回に「外N名」の形は無い）。名寄せは `resolveMember`: 参院の質問は回次ごとの参院名簿に（その回次に効いている名簿の会派で同姓同名を分ける。詳細ページに会派は無いので分けられなければ `unmatched.json` に `kind: "question"`、`questionId` 付きで載る）。衆院の質問は衆院名簿に、経過ページの「会派名」で同姓同名を分ける。衆院名簿は「現在」の1回次分しか無い（#71）ので、議案と同じく名簿が覆う回次（`meta.sessions` の最大）の質問だけ名寄せし、過去回次は紐づけず `unmatched.json` にも出さない。
+- 質問はファイル（`questions/`）には書かず、名寄せ済みの提出者の timeline の `question` 行にだけなる。`counts.questions` はその数。未突合の質問はどこにも数えない。同日の並びは vote → bill → stance → question → speech。
+- 不変条件（`validateDataset`）: `question` 行の `sourceUrl` は衆院 経過ページ（`itdb_shitsumon.nsf/html/shitsumon/{数字}.htm`）か参院 詳細ページ（`kousei/syuisyo/{回次}/meisai/m….htm`）、`answerUrl` があれば衆参・NDL のドメイン、`counts.questions === timeline の question 行の数`。
+- Web は「質問主意書」タブ（日付／件名／答弁書／出典）と件数帯に出す。判は「質問」（提出・賛同・発言と同じ act 色。色で評価しない）。
 
 ## 議案（`bills/`、Issue #72）
 - 出典は衆議院 議案情報。一覧 `https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/kaiji{審議回次}.htm` から各議案の経過ページ `…/gian/keika/{id}.htm` を辿る（どちらも Shift_JIS）。`sourceUrl` は必ず経過ページ。`house` は `"shugiin"`。
