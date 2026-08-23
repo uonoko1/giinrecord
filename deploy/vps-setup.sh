@@ -5,7 +5,7 @@
 # What it does (and nothing more):
 #   1. creates the web root /var/www/seiji-kiroku/site — the rsync target of deploy.yml, owned by the
 #      deploy user, bind-mounted read-only into the web container
-#   2. writes the host nginx server block: proxy_pass http://127.0.0.1:8080 + (certbot) TLS only.
+#   2. writes the host nginx server block: proxy_pass http://127.0.0.1:8081 + (certbot) TLS only.
 #      The body is deploy/nginx-host-proxy.conf with DOMAIN substituted
 #   3. defines the IP-less access-log format the block references (same file the analytics setup writes)
 #   4. reloads nginx and prints the docker compose commands for a human to run
@@ -40,7 +40,7 @@ server {
     access_log /var/log/nginx/seiji-kiroku.access.log noip;
 
     location / {
-        proxy_pass http://127.0.0.1:8080;
+        proxy_pass http://127.0.0.1:8081;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Forwarded-Proto $scheme;
@@ -53,12 +53,12 @@ ln -sfn "$SITE_CONF" /etc/nginx/sites-enabled/seiji-kiroku.conf
 nginx -t && systemctl reload nginx
 
 cat <<MSG
-host nginx ready: $DOMAIN -> http://127.0.0.1:8080 (web container). Site root: $SITE_DIR (owner $DEPLOY_USER).
+host nginx ready: $DOMAIN -> http://127.0.0.1:8081 (web container). Site root: $SITE_DIR (owner $DEPLOY_USER).
 
 Next, as a user WITH docker privileges (not $DEPLOY_USER):
   1. install docker + compose plugin (https://docs.docker.com/engine/install/ubuntu/), if not yet present
   2. git clone https://github.com/uonoko1/seiji-kiroku.git ~/seiji-kiroku   (only deploy/ is used)
   3. docker compose -f ~/seiji-kiroku/deploy/docker-compose.yml up -d
-  4. curl -sI http://127.0.0.1:8080/ | head -1      # HTTP/1.1 200 once deploy.yml has rsynced a build
+  4. curl -sI http://127.0.0.1:8081/ | head -1      # HTTP/1.1 200 once deploy.yml has rsynced a build
 Then DNS A record $DOMAIN -> this host, and: sudo certbot --nginx -d $DOMAIN --redirect
 MSG

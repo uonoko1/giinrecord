@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 議会ログ 本番切替（1回だけ、root で実行）。共用 VPS の他サイトには触れない。
 #   ssh -t sakura-vps 'sudo bash -s gikailog.jp' < deploy/go-live.sh     ← TTY が要る（certbot が対話）
-# 順序が重要：Docker → コンテナ起動（8080）→ ホスト nginx を proxy に切替 → certbot → 計測。
+# 順序が重要：Docker → コンテナ起動（8081）→ ホスト nginx を proxy に切替 → certbot → 計測。
 set -euo pipefail
 DOMAIN="${1:?usage: go-live.sh <domain>}"
 REPO_DIR=/opt/seiji-kiroku
@@ -24,10 +24,10 @@ if id -nG ubuntu | grep -qw docker; then gpasswd -d ubuntu docker; fi
 step "2/6 リポジトリ（compose ファイル用）を $REPO_DIR に取得"
 if [ -d "$REPO_DIR/.git" ]; then git -C "$REPO_DIR" pull -q --ff-only; else git clone -q https://github.com/uonoko1/seiji-kiroku.git "$REPO_DIR"; fi
 
-step "3/6 web コンテナ起動（127.0.0.1:8080、$SITE を読み取り専用で配信）"
+step "3/6 web コンテナ起動（127.0.0.1:8081、$SITE を読み取り専用で配信）"
 install -d -o ubuntu -g deploygroup -m 2775 "$SITE"
 docker compose -f "$REPO_DIR/deploy/docker-compose.yml" up -d --wait
-curl -sI http://127.0.0.1:8080/ | head -1
+curl -sI http://127.0.0.1:8081/ | head -1
 
 step "4/6 ホスト nginx を proxy_pass に切替（$DOMAIN）"
 bash "$REPO_DIR/deploy/vps-setup.sh" "$DOMAIN"

@@ -8,7 +8,7 @@
  * Exits non-zero on any failure.
  * Usage: pnpm --filter web smoke   (BUILD_DIR / SEIJI_DATA_DIR override the defaults)
  *
- * URL mode (Issue #85): `pnpm --filter web smoke -- --url http://127.0.0.1:8080` additionally fetches
+ * URL mode (Issue #85): `pnpm --filter web smoke -- --url http://127.0.0.1:8081` additionally fetches
  * every built page, one asset, one data file and an unknown path from that origin and checks status,
  * SPA fallback, security headers and Cache-Control (app/lib/smoke-url.ts). The file checks above still run first.
  */
@@ -79,7 +79,7 @@ const archiveFailures = checkArchive(archive, { dataFileCount, maxBytes: ARCHIVE
 const urlFlag = process.argv.indexOf("--url");
 const baseUrl = urlFlag >= 0 ? process.argv[urlFlag + 1] : undefined;
 if (urlFlag >= 0 && !baseUrl) {
-  console.error("smoke: --url requires an origin, e.g. --url http://127.0.0.1:8080");
+  console.error("smoke: --url requires an origin, e.g. --url http://127.0.0.1:8081");
   process.exit(2);
 }
 
