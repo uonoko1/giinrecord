@@ -1,0 +1,24 @@
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { sleep } from "../../fetch.ts";
+
+const UA = "seiji-kiroku-etl/0.1 (+https://github.com/uonoko1/seiji-kiroku)";
+const CACHE_DIR = new URL("../../../.cache/", import.meta.url);
+
+/**
+ * バイナリ（zip・PDF）向けの丁寧な fetch（Issue #111）。`fetchText` と同じ UA・キャッシュ置き場・0.5 秒間隔。
+ * 月次データと HTML は `noCache` で毎回取得し、総務省の PDF（URL が固定）だけキャッシュする。
+ */
+export async function fetchBytes(url: string, opts: { noCache?: boolean } = {}): Promise<Buffer> {
+  await mkdir(CACHE_DIR, { recursive: true });
+  const file = new URL(`${createHash("sha1").update(url).digest("hex")}.bin`, CACHE_DIR);
+  if (!opts.noCache) {
+    try { return await readFile(file); } catch { /* miss */ }
+  }
+  const res = await fetch(url, { headers: { "User-Agent": UA } });
+  if (!res.ok) throw new Error(`HTTP ${res.status} ${url}`);
+  const buf = Buffer.from(await res.arrayBuffer());
+  await writeFile(file, buf);
+  await sleep(500);
+  return buf;
+}
