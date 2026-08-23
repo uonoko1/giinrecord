@@ -3,7 +3,8 @@
  * Walks build/client, asserts the pages data/ promised exist and every internal
  * href resolves to a file or dir/index.html, that sitemap.xml lists exactly the built pages,
  * and that data/data-archive.zip exists with one entry per data/ file (+ README) within
- * ARCHIVE_MAX_BYTES, and that data/members/{id}.json exists for every member (fetched at runtime by /compare, #104).
+ * ARCHIVE_MAX_BYTES, that data/members/{id}.json exists for every member (fetched at runtime by /compare, #104),
+ * and that data/districts/zip/{first3}.json + meta.json exist and a sample zip resolves like by-zip.json (Home 郵便番号, #112).
  * Exits non-zero on any failure.
  * Usage: pnpm --filter web smoke   (BUILD_DIR / SEIJI_DATA_DIR override the defaults)
  *
@@ -13,9 +14,11 @@
  */
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
+import type { ZipDistricts } from "@seiji-kiroku/shared";
 import { ARCHIVE_NAME, checkArchive, collectDataFiles } from "../app/lib/archive";
 import { defaultDataDir, readRollCallIndex } from "../app/lib/data-files";
-import { checkBuild, checkMemberData, checkSitemap, formatReport, type BuildFiles, type ExpectedData } from "../app/lib/smoke";
+import { DISTRICTS_DATA_PATH, zipPrefix } from "../app/lib/districts";
+import { checkBuild, checkDistrictData, checkMemberData, checkSitemap, formatReport, type BuildFiles, type ExpectedData } from "../app/lib/smoke";
 import { checkServed, urlSmokeTargets, type ServedResponse } from "../app/lib/smoke-url";
 
 async function listBuild(root: string): Promise<BuildFiles> {
@@ -25,7 +28,8 @@ async function listBuild(root: string): Promise<BuildFiles> {
     if (!e.isFile()) continue;
     const abs = path.join(e.parentPath, e.name);
     const rel = path.relative(root, abs).split(path.sep).join("/");
-    files.set(rel, rel.endsWith(".html") || rel === "sitemap.xml" ? await readFile(abs, "utf8") : "");
+    const needsContent = rel.endsWith(".html") || rel === "sitemap.xml" || rel.startsWith(`${DISTRICTS_DATA_PATH}/`);
+    files.set(rel, needsContent ? await readFile(abs, "utf8") : "");
   }
   return files;
 }
@@ -41,7 +45,19 @@ async function readExpected(dataDir: string): Promise<ExpectedData> {
   let rollCalls: ExpectedData["rollCalls"] = null;
   const rc = await readRollCallIndex(dataDir);
   if (rc.length > 0) rollCalls = rc.map((r) => ({ session: r.session, id: r.id }));
-  return { memberIds, rollCalls };
+  let districts: ExpectedData["districts"] = null;
+  try {
+    const byZip = JSON.parse(await readFile(path.join(dataDir, "districts", "by-zip.json"), "utf8")) as Record<string, ZipDistricts>;
+    const zips = Object.keys(byZip);
+    const sampleZip = zips[Math.floor(zips.length / 2)];
+    if (sampleZip !== undefined) {
+      const sample = byZip[sampleZip];
+      if (sample !== undefined) districts = { prefixes: [...new Set(zips.map(zipPrefix))], sample: { zip: sampleZip, districts: sample } };
+    }
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
+  }
+  return { memberIds, rollCalls, districts };
 }
 
 const buildDir = process.env.BUILD_DIR ?? path.resolve(process.cwd(), "build/client");
@@ -51,6 +67,7 @@ const data = await readExpected(dataDir);
 const pages = checkBuild(files, data);
 const sitemap = checkSitemap(files, data);
 const memberData = checkMemberData(files, data);
+const districtData = checkDistrictData(files, data);
 
 /** Upper bound for the bulk zip. data/ is ~41 MB raw (5 sessions) and deflates to a few MB; raise deliberately when sessions grow. */
 const ARCHIVE_MAX_BYTES = Number(process.env.ARCHIVE_MAX_BYTES ?? 50 * 1024 * 1024);
@@ -95,10 +112,11 @@ if (baseUrl) {
   console.log(`smoke: url=${baseUrl} ${served.checked} urls fetched`);
 }
 
-const report = { ...pages, failures: [...pages.failures, ...sitemap.failures, ...memberData.failures, ...archiveFailures, ...servedFailures] };
+const report = { ...pages, failures: [...pages.failures, ...sitemap.failures, ...memberData.failures, ...districtData.failures, ...archiveFailures, ...servedFailures] };
 console.log(`smoke: build=${buildDir} data=${dataDir} members=${data.memberIds?.length ?? "none"} rollcalls=${data.rollCalls?.length ?? "none"}`);
 console.log(`smoke: sitemap.xml ${sitemap.checkedUrls} urls checked`);
 console.log(`smoke: data/members ${memberData.checkedFiles} member files checked`);
+console.log(`smoke: data/districts ${districtData.checkedFiles} shard files checked (sample zip ${data.districts?.sample.zip ?? "none"})`);
 console.log(`smoke: archive=${archivePath} size=${archive?.length ?? "missing"} dataFiles=${dataFileCount} max=${ARCHIVE_MAX_BYTES}`);
 console.log(formatReport(report));
 process.exit(report.failures.length === 0 ? 0 : 1);
