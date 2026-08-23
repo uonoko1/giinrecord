@@ -128,6 +128,17 @@ export function checkDistrictData(files: BuildFiles, data: ExpectedData): Member
   return { checkedFiles: expected.length, failures };
 }
 
+/**
+ * ロゴ・ファビコン・manifest・OGP 画像（#129）。SVG/manifest は public/ から、PNG/ICO はビルドが
+ * brand/*.svg からラスタライズする（scripts/brand-assets.ts）。root.tsx と seoMeta が参照する名前と一致させる。
+ */
+export const REQUIRED_BRAND_ASSETS = ["favicon.svg", "favicon.ico", "icon-192.png", "icon-512.png", "apple-touch-icon.png", "site.webmanifest", "og-image.png", "logo.svg"];
+
+export function checkBrandAssets(files: BuildFiles): MemberDataReport {
+  const failures = REQUIRED_BRAND_ASSETS.filter((f) => !files.has(f)).map((f) => `missing brand asset: ${f}`);
+  return { checkedFiles: REQUIRED_BRAND_ASSETS.length, failures };
+}
+
 export interface SitemapReport {
   checkedUrls: number;
   failures: string[];

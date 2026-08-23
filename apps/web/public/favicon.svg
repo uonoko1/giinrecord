@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- 角丸の墨藍地に紙色の軸と点、最後の点だけ真鍮。ダークでは反転（紙地に墨） -->
+  <style>
+    .bg { fill: #26364a; }
+    .fg { stroke: #f5f2ec; }
+    .dot { fill: #f5f2ec; }
+    .last { fill: #d8b86a; }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #ece8df; }
+      .fg { stroke: #1c1d21; }
+      .dot { fill: #1c1d21; }
+      .last { fill: #8a6a24; }
+    }
+  </style>
+  <rect class="bg" width="100" height="100" rx="10"/>
+  <g class="fg" fill="none" stroke-width="9" stroke-linecap="round">
+    <line x1="32" y1="22" x2="32" y2="78"/>
+    <line x1="50" y1="32" x2="78" y2="32"/>
+    <line x1="50" y1="68" x2="70" y2="68"/>
+  </g>
+  <circle class="dot" cx="32" cy="32" r="9"/>
+  <circle class="last" cx="32" cy="68" r="9"/>
+</svg>

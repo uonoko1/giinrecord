@@ -1,0 +1,14 @@
+{
+  "name": "議会ログ",
+  "short_name": "議会ログ",
+  "description": "国会議員が本会議でどう投票し、どの法案を出し、何を発言したか。公式記録だけを、そのまま並べます。",
+  "lang": "ja",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#26364a",
+  "background_color": "#f5f2ec",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="議会ログ">
+  <!-- 案 D「時系列」: 縦の軸に記録の点、最新（最下）の点だけ真鍮 -->
+  <g stroke="#26364a" stroke-width="7" stroke-linecap="round">
+    <line x1="30" y1="14" x2="30" y2="86"/>
+    <line x1="48" y1="28" x2="84" y2="28"/>
+    <line x1="48" y1="52" x2="76" y2="52"/>
+    <line x1="48" y1="76" x2="68" y2="76"/>
+  </g>
+  <circle cx="30" cy="28" r="7" fill="#26364a"/>
+  <circle cx="30" cy="52" r="7" fill="#26364a"/>
+  <circle cx="30" cy="76" r="7" fill="#d8b86a"/>
+</svg>

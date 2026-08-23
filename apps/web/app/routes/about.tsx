@@ -1,5 +1,6 @@
-import { Link, type MetaArgs } from "react-router";
+import type { MetaArgs } from "react-router";
 import { AnalyticsSection, FactsSection, FundingSection, NotRecordedSection, UpdateSection, VerifySection } from "../components/about";
+import { CoverBrand } from "../components/CoverBrand";
 import { type Dataset, dataset as bundled } from "../lib/dataset";
 import { seoMeta } from "../lib/seo";
 import "../styles/pages.css";
@@ -19,9 +20,7 @@ export default function About({ data = bundled }: { data?: Dataset }) {
   return (
     <main className="page">
       <header className="cover">
-        <div className="cover__brand">
-          <Link to="/">議会ログ</Link>
-        </div>
+        <CoverBrand to="/" />
         <h1 className="cover__title">このデータについて</h1>
         <p className="cover__lead">このサイトは国会の公式記録を整形して並べるだけです。評価・採点・推薦はしません。すべての行に出典があります。</p>
       </header>

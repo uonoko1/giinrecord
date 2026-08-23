@@ -1,6 +1,7 @@
 import { useId, useMemo, useState } from "react";
 import { Link, type MetaArgs, useSearchParams } from "react-router";
 import type { House } from "@seiji-kiroku/shared";
+import { CoverBrand } from "../components/CoverBrand";
 import { type Dataset, dataset as bundled, type MemberSummary } from "../lib/dataset";
 import { formatDateTime } from "../lib/format";
 import { filterMembers, formatTermEnd, groupByKanaRow } from "../lib/member-search";
@@ -77,9 +78,7 @@ export default function Members({ data = bundled }: { data?: Dataset }) {
   return (
     <main className="page members">
       <header className="cover">
-        <div className="cover__brand">
-          <Link to="/">議会ログ</Link>
-        </div>
+        <CoverBrand to="/" />
         <h1 className="cover__title">国会議員</h1>
         <p className="cover__lead">{DESCRIPTION}</p>
       </header>
