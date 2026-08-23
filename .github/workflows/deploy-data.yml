@@ -3,7 +3,10 @@ name: Deploy data
 # etl.yml / districts.yml dispatch this right after the data PR merges (`gh workflow run deploy-data.yml --ref main`;
 # a GITHUB_TOKEN merge fires no push event, so deploy-staging.yml would not run by itself).
 # The production job uses environment `production-data` (same secrets, NO required reviewers) so it never waits
-# for the release button. S1 simplification: it builds main, not the last released ref — docs/ops/deploy.md.
+# for the release button.
+# Issue #134: production builds the code of the last release (tag `released`, moved by release.yml) with data/ taken
+# from main, so unreleased code merged to main stays off https://gikailog.jp. Before the first Release the tag does
+# not exist and production falls back to main. Staging always builds main — docs/ops/deploy.md.
 on:
   workflow_dispatch:
   schedule:
@@ -11,6 +14,19 @@ on:
 permissions:
   contents: read
 jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    outputs:
+      ref: ${{ steps.released.outputs.ref }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - id: released
+        run: |
+          REF=$(bash scripts/ci/released-ref.sh resolve)
+          echo "ref=$REF" >> "$GITHUB_OUTPUT"
+          echo "production code ref: \`$REF\` (tag \`released\`, or main before the first Release); data/ from main" >> "$GITHUB_STEP_SUMMARY"
   staging:
     uses: ./.github/workflows/deploy-site.yml
     with:
@@ -20,10 +36,12 @@ jobs:
       ref: main
     secrets: inherit
   production:
+    needs: resolve
     uses: ./.github/workflows/deploy-site.yml
     with:
       environment: production-data
       site_origin: ${{ vars.SITE_ORIGIN }}
       target_dir: site
-      ref: main
+      ref: ${{ needs.resolve.outputs.ref }}
+      data_ref: main
     secrets: inherit

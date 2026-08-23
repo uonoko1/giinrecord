@@ -4,6 +4,8 @@ name: Deploy site (reusable)
 #   deploy-staging.yml  push main            → environment staging          target_dir staging  (https://staging.gikailog.jp)
 #   release.yml         workflow_dispatch    → environment production       target_dir site     (required reviewers = the release button)
 #   deploy-data.yml     dispatched by etl.yml → staging + production-data   (daily data, no approval; docs/ops/deploy.md)
+# Issue #134: optional `data_ref` overlays data/ from that ref onto the checkout (production-data: code = tag `released`,
+# data = main). Output `sha` = the built commit (release.yml moves the `released` tag to it).
 # Every environment needs the same four secrets: DEPLOY_SSH_KEY, DEPLOY_HOST, DEPLOY_USER, DEPLOY_KNOWN_HOSTS.
 # The deploy user has no docker privilege; the containers bind-mount the target directories, nothing is restarted.
 on:
@@ -26,6 +28,15 @@ on:
         required: false
         type: string
         default: main
+      data_ref:
+        description: "Optional ref whose data/ replaces the checkout's data/ before the build (scripts/ci/released-ref.sh overlay)"
+        required: false
+        type: string
+        default: ""
+    outputs:
+      sha:
+        description: "Commit actually built (HEAD of the checkout, before the data overlay)"
+        value: ${{ jobs.deploy.outputs.sha }}
 permissions:
   contents: read
 jobs:
@@ -35,10 +46,18 @@ jobs:
     concurrency:
       group: deploy-${{ inputs.target_dir }}
       cancel-in-progress: false
+    outputs:
+      sha: ${{ steps.head.outputs.sha }}
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref }}
+      - id: head
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Overlay data/ from data_ref (no-op when empty)
+        env:
+          DATA_REF: ${{ inputs.data_ref }}
+        run: bash scripts/ci/released-ref.sh overlay "$DATA_REF"
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with: { node-version-file: .nvmrc, cache: pnpm }
@@ -71,5 +90,6 @@ jobs:
           ORIGIN: ${{ inputs.site_origin }}
           TARGET_DIR: ${{ inputs.target_dir }}
           REF: ${{ inputs.ref }}
+          DATA_REF: ${{ inputs.data_ref }}
         run: |
-          echo "deployed ref \`$REF\` ($(git rev-parse HEAD)) to \`/var/www/gikailog/$TARGET_DIR/\` (environment $ENVIRONMENT, SITE_ORIGIN=${ORIGIN:-(relative)})" >> "$GITHUB_STEP_SUMMARY"
+          echo "deployed ref \`$REF\` ($(git rev-parse HEAD))${DATA_REF:+ + data/ from \`$DATA_REF\`} to \`/var/www/gikailog/$TARGET_DIR/\` (environment $ENVIRONMENT, SITE_ORIGIN=${ORIGIN:-(relative)})" >> "$GITHUB_STEP_SUMMARY"

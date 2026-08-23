@@ -217,6 +217,40 @@ test("deploy-data.yml: workflow_dispatch（etl.yml / districts.yml から）で 
   }
 });
 
+// Issue #134: production の日次データは「最後にリリースした ref のコード + main の data/」。release.yml が成功時にタグ
+// `released` を動かし、deploy-data.yml はそれを resolve して deploy-site.yml に ref として渡し、data_ref: main で overlay する。
+test("release.yml: 成功時だけ GITHUB_TOKEN（contents: write）で refs/tags/released を released sha へ動かす", () => {
+  assert.match(release, /^\s+released-tag:\s*\n\s+(#[^\n]*\n\s+)*needs: production$/m, "runs after (and only on success of) the production job");
+  assert.match(release, /contents: write/);
+  assert.match(release, /needs\.production\.outputs\.sha/);
+  assert.match(release, /refs\/tags\/released/);
+  assert.doesNotMatch(release, /DEPLOY_SSH_KEY/, "the tag job must not touch the deploy key");
+});
+
+test("deploy-site.yml: data_ref 入力（既定空）で released-ref.sh overlay を呼び、ビルドした sha を output に出す", () => {
+  assert.match(deploySite, /^\s+data_ref:\s*\n(\s+\w+:[^\n]*\n)*?\s+default: ""$/m);
+  assert.match(deploySite, /scripts\/ci\/released-ref\.sh overlay "\$DATA_REF"/);
+  assert.match(deploySite, /DATA_REF: \$\{\{ inputs\.data_ref \}\}/);
+  assert.match(deploySite, /^\s+sha:\s*\n\s+description:[^\n]*\n\s+value: \$\{\{ jobs\.deploy\.outputs\.sha \}\}$/m);
+  const overlayAt = deploySite.lastIndexOf("released-ref.sh overlay");
+  assert.ok(overlayAt > deploySite.indexOf("actions/checkout") && overlayAt < deploySite.indexOf("pnpm build"), "overlay runs after checkout and before the build");
+});
+
+test("deploy-data.yml: staging は main、production は released-ref.sh resolve の ref + data_ref: main", () => {
+  const staging = deployData.slice(deployData.indexOf("  staging:"), deployData.indexOf("  production:"));
+  assert.match(staging, /ref: main/);
+  assert.doesNotMatch(staging, /data_ref/);
+  const production = deployData.slice(deployData.indexOf("  production:"));
+  assert.match(production, /ref: \$\{\{ needs\.resolve\.outputs\.ref \}\}/);
+  assert.match(production, /data_ref: main/);
+  assert.match(deployData, /scripts\/ci\/released-ref\.sh resolve/);
+});
+
+test("released-ref.sh: resolve / overlay のテスト（scripts/ci/test/released-ref.test.sh）が通る", () => {
+  const r = spawnSync("bash", [resolve(root, "scripts/ci/test/released-ref.test.sh")], { encoding: "utf8" });
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+});
+
 test("staging-setup.sh: 1 回だけの root 作業のテスト（deploy/test/staging-setup.test.sh）が通る", () => {
   const r = spawnSync("bash", [resolve(root, "deploy/test/staging-setup.test.sh")], { encoding: "utf8" });
   assert.equal(r.status, 0, r.stdout + r.stderr);
