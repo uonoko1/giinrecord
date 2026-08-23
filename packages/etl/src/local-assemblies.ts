@@ -5,8 +5,33 @@ import type {
 } from "@seiji-kiroku/shared";
 import { stableJson } from "./json.ts";
 import { MIYAGI_ASSEMBLY } from "./sources/local/miyagi/site.ts";
+import { runMiyagi } from "./sources/local/miyagi/index.ts";
+import { TOKUSHIMA_ASSEMBLY } from "./sources/local/tokushima/site.ts";
+import { runTokushima } from "./sources/local/tokushima/index.ts";
+import { TOTTORI_ASSEMBLY } from "./sources/local/tottori/site.ts";
+import { runTottori } from "./sources/local/tottori/index.ts";
 
-export { MIYAGI_ASSEMBLY };
+export { MIYAGI_ASSEMBLY, TOKUSHIMA_ASSEMBLY, TOTTORI_ASSEMBLY };
+
+/** 議会ごとの取得部が返す形（buildLocalAssembly の入力になる部分）。 */
+export interface LocalSourceRun {
+  roster: { members: LocalMember[]; asOf: string };
+  rollCalls: LocalRollCall[];
+  sessions: LocalAssemblyMeta["sessions"];
+  sources: LocalAssemblyMeta["sources"];
+  /** 取得部が付けた名寄せの候補（鳥取 #184。姓だけの表記で同姓が 2 人以上のとき）。無い議会は省略 */
+  unmatched?: LocalUnmatchedName[];
+}
+export interface LocalSource {
+  assembly: Assembly;
+  run(opts: { sessions: number; fetchedAt: string; log?: (line: string) => void }): Promise<LocalSourceRun>;
+}
+/** `pnpm etl:local <name>` の name → 議会。議会を足すときはここに 1 行足す（local-cli.ts は触らない）。 */
+export const LOCAL_SOURCES: Record<string, LocalSource> = {
+  miyagi: { assembly: MIYAGI_ASSEMBLY, run: runMiyagi },
+  tokushima: { assembly: TOKUSHIMA_ASSEMBLY, run: runTokushima },
+  tottori: { assembly: TOTTORI_ASSEMBLY, run: runTottori },
+};
 
 /**
  * 地方議会の出力（Issue #157、docs/DATA_CONTRACT.md「地方議会の Web 表示が読む形」#158）。Web は何も変えずに読める形で書く。
@@ -52,7 +77,7 @@ export const isDietMemberRow = (m: { assemblyId?: string }): boolean => m.assemb
 
 /** timeline の 1 行。公表の原文（会期・方法・結果）をそのまま添える。可否は判定しない。 */
 function toVoteEntry(rc: LocalRollCall, vote: LocalRollCall["votes"][number]): LocalVoteEntry {
-  return { kind: "localVote", date: rc.date, rollCallId: rc.id, title: rc.title, vote: vote.value, sessionLabel: rc.sessionLabel, method: rc.method.raw, result: rc.result, sourceUrl: rc.sourceUrl };
+  return { kind: "localVote", date: rc.date, rollCallId: rc.id, title: rc.title, vote: vote.value, sessionLabel: rc.sessionLabel, method: rc.method?.raw, result: rc.result, sourceUrl: rc.sourceUrl };
 }
 
 export function buildLocalAssembly(input: LocalAssemblyInput): LocalAssemblyDataset {
@@ -292,9 +317,12 @@ export async function validateLocalAssemblies(dir: string): Promise<string[]> {
       if (rc.id !== s.id || rc.assemblyId !== a.id) v.push(`${rel}: id/assemblyId mismatch`);
       if (!ISO_DATE.test(rc.date)) v.push(`${rel}: date must be ISO`);
       if (typeof rc.kind !== "string" || rc.kind === "" || typeof rc.title !== "string" || rc.title === "") v.push(`${rel}: kind / title required`);
-      if (!rc.method || typeof rc.method.raw !== "string" || typeof rc.method.legend !== "string" || rc.method.legend === "") v.push(`${rel}: method.raw / method.legend required`);
+      // method は PDF に表決方法の欄がある議会（宮城）だけ。あれば raw と legend（空でない）を持つ
+      if (rc.method !== undefined && (typeof rc.method.raw !== "string" || typeof rc.method.legend !== "string" || rc.method.legend === "")) v.push(`${rel}: method.raw / method.legend required when method is present`);
+      if (rc.committeeResult !== undefined && typeof rc.committeeResult !== "string") v.push(`${rel}: committeeResult must be a string`);
       if (typeof rc.result !== "string" || rc.result === "") v.push(`${rel}: result required`);
-      if (!rc.counts || [rc.counts.voting, rc.counts.yes, rc.counts.no].some((n) => typeof n !== "number") || ("present" in rc.counts && typeof rc.counts.present !== "number")) v.push(`${rel}: counts.voting / yes / no must be numbers (present optional)`);
+      // counts はその欄がある PDF（宮城・鳥取）だけ。あれば voting / yes / no は数値、present は公表する議会（宮城）だけ
+      if (rc.counts !== undefined && ([rc.counts.voting, rc.counts.yes, rc.counts.no].some((n) => typeof n !== "number") || ("present" in rc.counts && typeof rc.counts.present !== "number"))) v.push(`${rel}: counts.voting / yes / no must be numbers (counts and present optional)`);
       if ("voteSubject" in rc && (typeof rc.voteSubject !== "string" || rc.voteSubject === "")) v.push(`${rel}: voteSubject must be a non-empty string when present`);
       if ("committeeReport" in rc && (typeof rc.committeeReport !== "string" || rc.committeeReport === "")) v.push(`${rel}: committeeReport must be a non-empty string when present`);
       checkSource(rel, rc);

@@ -31,7 +31,7 @@ export const EXPECTED_SECURITY_HEADERS: Record<string, string> = {
   "x-frame-options": "DENY",
   "referrer-policy": "strict-origin-when-cross-origin",
   "content-security-policy":
-    "default-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; script-src 'self'; connect-src 'self'",
+    "default-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; connect-src 'self'",
 };
 
 export const EXPECTED_CACHE_CONTROL = {

@@ -1,4 +1,5 @@
 import { REPO_URL } from "../lib/dataset";
+import { InstallLink } from "./InstallLink";
 import "../styles/pages.css";
 
 /**
@@ -15,6 +16,8 @@ export function SiteFooter() {
         <a href={REPO_URL} target="_blank" rel="noopener noreferrer">
           GitHub
         </a>
+        {/* Issue 191: 対応ブラウザでマウント後にだけ描画される。プリレンダー HTML には出ない */}
+        <InstallLink />
       </nav>
       <p className="site-footer__note">議会ログ ・ コード: MIT ・ データ: CC BY 4.0</p>
     </footer>

@@ -5,6 +5,7 @@
   "lang": "ja",
   "start_url": "/",
   "display": "standalone",
+  "prefer_related_applications": false,
   "theme_color": "#26364a",
   "background_color": "#f5f2ec",
   "icons": [

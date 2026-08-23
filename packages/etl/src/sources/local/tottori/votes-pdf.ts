@@ -1,4 +1,4 @@
-import { getDocument, OPS } from "pdfjs-dist/legacy/build/pdf.mjs";
+import { bandIndex, cluster, EDGE, EPS, readPages, within, type Item, type PageGeometry, type VLine } from "../pdf-table.ts";
 import { toIsoDate } from "./site.ts";
 
 /**
@@ -68,19 +68,11 @@ export interface VotePdf {
   trailingPages: number;
 }
 
-interface Item { str: string; x: number; y: number; w: number; h: number; cx: number; cy: number }
-interface VLine { x: number; y0: number; y1: number }
-interface HLine { y: number; x0: number; x1: number }
-interface PageGeometry { items: Item[]; vlines: VLine[]; hlines: HLine[] }
-
 const SESSION_LABEL = /^(令和|平成)(\d+|元)年\d{1,2}月(定例会|臨時会)$/;
 const DATE_HEADING = /^議決結果（(.+)議決分）$/;
 /** 件名の見出しセルには、前ページから続く陳情の本文がはみ出して入ることがある（陳情だけの PDF の 2 ページ目）ので前方一致 */
 const LEFT_HEADERS = [/^議案等番号$/, /^件名/];
 const RIGHT_HEADERS = [/^賛成者数$/, /^反対者数$/, /^表決者数$/, /^議決結果$/, /^表決方法$/];
-/** 境界からこの距離以内にある文字は「どちらのセルか分からない」として置かない。 */
-const EDGE = 1.0;
-const EPS = 1.5;
 /** 種別（縦書き）は列の左端に寄っている。件名はセルの左端（罫線から 4pt 以内）に揃う。 */
 const KIND_INDENT = 8;
 const TITLE_INDENT = 4;
@@ -127,47 +119,6 @@ export function checkCellsAgainstLegend(cells: readonly string[], votes: Record<
     if (c === UNKNOWN_CELL) continue;
     if (!(c in votes)) throw new Error(`${label}: cell value "${c}" is not in the legend (${Object.keys(votes).join("")})`);
   }
-}
-
-/* ---------- pdfjs ---------- */
-
-async function readPages(bytes: Buffer): Promise<PageGeometry[]> {
-  const loadingTask = getDocument({ data: new Uint8Array(bytes), verbosity: 0 });
-  const doc = await loadingTask.promise;
-  const out: PageGeometry[] = [];
-  try {
-    for (let i = 1; i <= doc.numPages; i++) {
-      const page = await doc.getPage(i);
-      const content = await page.getTextContent();
-      const items: Item[] = [];
-      for (const it of content.items) {
-        if (!("str" in it)) continue;
-        const str = it.str;
-        if (str.trim() === "") continue;
-        const x = it.transform[4];
-        const y = it.transform[5];
-        items.push({ str, x, y, w: it.width, h: it.height, cx: x + it.width / 2, cy: y + it.height / 2 });
-      }
-      const ops = await page.getOperatorList();
-      const vlines: VLine[] = [];
-      const hlines: HLine[] = [];
-      for (let k = 0; k < ops.fnArray.length; k++) {
-        if (ops.fnArray[k] !== OPS.constructPath) continue;
-        const args = ops.argsArray[k] as unknown[];
-        const minMax = args[2] as ArrayLike<number> | undefined;
-        if (!minMax || minMax.length < 4) continue;
-        const [x0, y0, x1, y1] = [minMax[0], minMax[1], minMax[2], minMax[3]];
-        const w = x1 - x0;
-        const h = y1 - y0;
-        if (w < 2 && h > 5) vlines.push({ x: (x0 + x1) / 2, y0, y1 });
-        else if (h < 2 && w > 5) hlines.push({ y: (y0 + y1) / 2, x0, x1 });
-      }
-      out.push({ items, vlines, hlines });
-    }
-  } finally {
-    await loadingTask.destroy();
-  }
-  return out;
 }
 
 /* ---------- header & legend ---------- */
@@ -217,18 +168,6 @@ interface Grid {
   /** 本文の縦線（件名と議員の間の「委員長報告」列の検出に使う） */
   bodyVlines: VLine[];
 }
-
-function cluster(values: number[], eps = EPS): number[] {
-  const sorted = [...values].sort((a, b) => a - b);
-  const out: number[] = [];
-  for (const v of sorted) {
-    if (out.length && Math.abs(out[out.length - 1] - v) <= eps) out[out.length - 1] = (out[out.length - 1] + v) / 2;
-    else out.push(v);
-  }
-  return out;
-}
-
-const within = (v: number, lo: number, hi: number) => v > Math.min(lo, hi) && v < Math.max(lo, hi);
 
 function buildGrid(page: PageGeometry, pageNo: number): Grid {
   const label = `page ${pageNo}`;
@@ -285,16 +224,6 @@ function buildGrid(page: PageGeometry, pageNo: number): Grid {
     effectiveBottom = vBottom;
   }
   return { top, groupBottom, bodyTop, bottom: effectiveBottom, leftCols, voteCols, groups, rightCols, rowLines, bodyVlines };
-}
-
-/** 区間 [lo, hi] のどこに値があるか。境界の EDGE 以内なら undefined（置かない）。 */
-function bandIndex(bounds: number[], v: number): number | undefined {
-  for (let i = 0; i + 1 < bounds.length; i++) {
-    const lo = Math.min(bounds[i], bounds[i + 1]);
-    const hi = Math.max(bounds[i], bounds[i + 1]);
-    if (v > lo + EDGE && v < hi - EDGE) return i;
-  }
-  return undefined;
 }
 
 /** 文字を上から下・左から右に並べて結合（空白は除く）。 */

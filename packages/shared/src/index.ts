@@ -179,6 +179,7 @@ export interface RollCall {
 
 export interface Speech {
   id: string;          // NDL speechID
+  session: number;     // 会議録の回次（API の session）
   memberId?: MemberId;
   speakerText: string;
   group?: string;
@@ -238,6 +239,8 @@ export interface MemberDetail extends Member {
 
 export type VoteEntry = {
   kind: "vote";
+  /** 国会の回次（採決・議案・会議録・質問の回次）。Web の議員ページが回次ごとに折りたたむ（#103）。 */
+  session: number;
   date: string;
   rollCallId: string;
   title: string;
@@ -252,6 +255,8 @@ export type VoteEntry = {
 export type BillRole = "提出者" | "賛成者";
 export type BillEntry = {
   kind: "bill";
+  /** 国会の回次（採決・議案・会議録・質問の回次）。Web の議員ページが回次ごとに折りたたむ（#103）。 */
+  session: number;
   /** 参議院への提出日（議案ページ「提出日」）。 */
   date: string;
   billId: string;
@@ -265,6 +270,8 @@ export type BillEntry = {
 };
 export type SpeechEntry = {
   kind: "speech";
+  /** 国会の回次（採決・議案・会議録・質問の回次）。Web の議員ページが回次ごとに折りたたむ（#103）。 */
+  session: number;
   date: string;
   speechId: string;
   meeting: string;
@@ -281,6 +288,8 @@ export type SpeechEntry = {
  */
 export type StanceEntry = {
   kind: "stance";
+  /** 国会の回次（採決・議案・会議録・質問の回次）。Web の議員ページが回次ごとに折りたたむ（#103）。 */
+  session: number;
   estimated: true;
   /** 衆議院の議案受理年月日（Bill.received.shugiin）。 */
   date: string;
@@ -299,6 +308,8 @@ export type StanceEntry = {
 /** 質問主意書の提出（事実。衆参の質問答弁情報から。Issue #106）。date は提出日。 */
 export type QuestionEntry = {
   kind: "question";
+  /** 国会の回次（採決・議案・会議録・質問の回次）。Web の議員ページが回次ごとに折りたたむ（#103）。 */
+  session: number;
   date: string;
   questionId: string;
   title: string;
@@ -321,6 +332,8 @@ export type QuestionEntry = {
  */
 export type AttendanceEntry = {
   kind: "attendance";
+  /** 国会の回次（採決・議案・会議録・質問の回次）。Web の議員ページが回次ごとに折りたたむ（#103）。 */
+  session: number;
   estimated: false;
   /** 会議の日付。 */
   date: string;
@@ -480,15 +493,18 @@ export interface LocalRollCall {
   date: string;
   /** 議案種別の原文（「知事提出議案」「発議案」「意見書案」「請願」…） */
   kind: string;
-  /** 議案等番号の原文（「132」「398の1」） */
+  /** 議案等番号の原文（「132」「398の1」「第１号」）。徳島の番号の無い行（動議）は番号欄の原文「-」 */
   number: string;
   /** 件名の原文 */
   title: string;
-  method: LocalVoteMethod;
+  /** 表決方法（PDF にその欄があるときだけ。宮城はあり、徳島は無い＝推定しない） */
+  method?: LocalVoteMethod;
+  /** 委員会審査結果の原文（「可決」「－」「-」。徳島の PDF にだけある欄） */
+  committeeResult?: string;
   /** 議決結果の原文（「可決」「否決」「採択」…） */
   result: string;
-  /** PDF の出席者数・表決者数・賛成者数・反対者数（公表値。votes から数え直さない）。出席者数を公表しない議会（鳥取）では present を省略 */
-  counts: { present?: number; voting: number; yes: number; no: number };
+/** PDF の出席者数・表決者数・賛成者数・反対者数（公表値。votes から数え直さない）。その欄が無い PDF（徳島）では省略。出席者数を公表しない議会（鳥取）では present を省略 */
+  counts?: { present?: number; voting: number; yes: number; no: number };
   /**
    * 賛否の対象の原文（表の節見出し。鳥取「議案に対する賛否」「委員長報告に対する賛否」。#184）。
    * 請願・陳情の賛否が「委員長報告（不採択 など）に対する賛否」である議会で、○ を請願そのものへの賛成と読ませないために残す。PDF に無ければ省略
@@ -514,7 +530,8 @@ export interface LocalAssemblyMeta {
   sources: { name: string; url: string; fetchedAt: string }[];
   /** 名簿の掲載日（ISO） */
   rosterAsOf: string;
-  sessions: { sessionId: string; sessionLabel: string; sourceUrl: string; pdfUrl: string; rollcalls: number; unknownCells: number }[];
+  /** 対象会期。pdfUrl はその会期の表決 PDF（採決日ごとに PDF が分かれる議会（徳島）は最初の 1 本。全部は pdfUrls） */
+  sessions: { sessionId: string; sessionLabel: string; sourceUrl: string; pdfUrl: string; pdfUrls?: string[]; rollcalls: number; unknownCells: number }[];
   counts: { members: number; rollcalls: number; cells: number; unknownCells: number; unmatchedNames: number };
 }
 
