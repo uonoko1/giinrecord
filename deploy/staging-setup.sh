@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # 議会ログ staging（staging.gikailog.jp）の初回セットアップ（Issue #127）。root で 1 回、再実行可。
-#   ssh -t sakura-vps 'sudo bash -s' < deploy/staging-setup.sh            ← TTY が要る（certbot が対話）
-#   ssh -t sakura-vps 'sudo bash -s stg.example.test' < deploy/staging-setup.sh   （ドメインを変える場合）
+#   ssh -t "${VPS_SSH_HOST:-sakura-vps}" 'sudo bash -s' < deploy/staging-setup.sh            ← TTY が要る（certbot が対話）
+#   ssh -t "${VPS_SSH_HOST:-sakura-vps}" 'sudo bash -s stg.example.test' < deploy/staging-setup.sh   （ドメインを変える場合）
 # 前提：production が go-live.sh で構築済み（docker・/opt/gikailog・ホスト nginx の noip log_format）。
-# 人間の作業はこれと「DNS A: staging.gikailog.jp → 160.16.86.160」だけ（README.md）。
+# 人間の作業はこれと「DNS A: staging.gikailog.jp → VPS（gikailog.jp と同じアドレス。リポジトリには書かない、#133）」だけ（README.md）。
 # 順序：repo pull → staging web root → コンテナ（web-staging 8082。site.conf が変わっていれば web も再作成）→
 #       ホスト nginx に staging の proxy block → certbot。production のパス・ポート・権限には触れない。
 #   テスト: deploy/test/staging-setup.test.sh（STAGING_SETUP_PREFIX で全パスを一時ディレクトリ配下に、docker 等はスタブ）
@@ -20,7 +20,7 @@ step() { printf '\n\033[1m== %s\033[0m\n' "$*"; }
 main() {
   step "0/5 前提確認（production が go-live.sh で構築済みであること）"
   if ! command -v docker >/dev/null 2>&1 || [ ! -d "$REPO_DIR/.git" ]; then
-    echo "!! docker または $REPO_DIR が無い。先に production を構築する:  ssh -t sakura-vps 'sudo bash -s gikailog.jp' < deploy/go-live.sh" >&2
+    echo "!! docker または $REPO_DIR が無い。先に production を構築する:  ssh -t \"\${VPS_SSH_HOST:-sakura-vps}\" 'sudo bash -s gikailog.jp' < deploy/go-live.sh" >&2
     exit 1
   fi
 

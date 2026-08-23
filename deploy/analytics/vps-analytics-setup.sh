@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # One-time VPS setup for cookie-less analytics (Issue #58). Needs sudo once.
-#   ssh sakura-vps 'sudo bash -s' < deploy/analytics/vps-analytics-setup.sh
+#   ssh "${VPS_SSH_HOST:-sakura-vps}" 'sudo bash -s' < deploy/analytics/vps-analytics-setup.sh
 #
 # What it does:
 #   1. installs gawk (aggregate.sh uses gawk's match(s, re, arr))
@@ -14,7 +14,21 @@
 # adm would let a leaked key read every log on the shared VPS (other sites' access logs with IP/UA, auth.log,
 # syslog). Likewise root never executes anything under ubuntu's writable home: scripts are copied into
 # $TOOLS by sudo install (see docs/ops/analytics.md), so a leaked key cannot escalate via the cron either.
+#   Tests: deploy/test/nginx-reload.test.sh (sourced with ANALYTICS_SETUP_NO_MAIN=1; nginx/systemctl are stubs)
 set -euo pipefail
+
+# reload_nginx: test, reload only on success, else exit 1 (never `nginx -t && systemctl reload` — under set -e
+# a failing `nginx -t` inside an && list is swallowed and the script goes on). Same as deploy/vps-setup.sh.
+reload_nginx() {
+  if nginx -t; then
+    systemctl reload nginx
+  else
+    echo "!! nginx -t failed; nginx NOT reloaded. Fix the config and re-run." >&2
+    exit 1
+  fi
+}
+
+main() {
 OWNER=ubuntu
 SITE_CONF=/etc/nginx/sites-available/gikailog.conf
 ACCESS_LOG=/var/log/nginx/gikailog.access.log
@@ -35,7 +49,7 @@ CONF
 if ! grep -q "access_log $ACCESS_LOG noip;" "$SITE_CONF"; then
   echo "refusing: $SITE_CONF has no 'access_log $ACCESS_LOG noip;' — run deploy/vps-setup.sh first" >&2; exit 1
 fi
-nginx -t && systemctl reload nginx
+reload_nginx
 
 install -d -o root -g root -m 755 "$TOOLS"
 if [ -L "$OUT_DIR" ]; then echo "refusing: $OUT_DIR is a symlink" >&2; exit 1; fi
@@ -53,4 +67,8 @@ CRON
 chmod 644 /etc/cron.d/gikailog-analytics
 
 echo "analytics ready. Install scripts (root-owned, so the root cron never runs anything ubuntu can edit):"
-echo "  scp deploy/analytics/{aggregate,daily}.sh sakura-vps:/tmp/ && ssh sakura-vps 'sudo install -o root -g root -m 755 /tmp/aggregate.sh /tmp/daily.sh $TOOLS/ && rm /tmp/aggregate.sh /tmp/daily.sh'"
+echo "  scp deploy/analytics/{aggregate,daily}.sh \"\${VPS_SSH_HOST:-sakura-vps}\":/tmp/ && ssh \"\${VPS_SSH_HOST:-sakura-vps}\" 'sudo install -o root -g root -m 755 /tmp/aggregate.sh /tmp/daily.sh $TOOLS/ && rm /tmp/aggregate.sh /tmp/daily.sh'"
+}
+
+# Tests source this file with ANALYTICS_SETUP_NO_MAIN=1 to use reload_nginx() alone
+if [ -z "${ANALYTICS_SETUP_NO_MAIN:-}" ]; then main "$@"; fi

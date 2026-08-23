@@ -1,0 +1,59 @@
+name: Security
+# Issue #133: structural leak prevention for a public repo that deploys to a SHARED VPS.
+#   gitleaks            secrets in the PR's commits (pull_request) and, weekly, in the FULL history
+#   forbidden patterns  scripts/ci/forbidden-patterns.sh — key headers, token formats, tracked .env, public IPs,
+#                       plus site-specific regexes from the FORBIDDEN_PATTERNS secret (never written to the repo)
+#   pnpm audit          scripts/ci/audit.sh — high/critical advisories fail unless listed (with expiry + reason)
+#                       in scripts/ci/audit-ignore.txt. Dependabot opens the upgrade PRs.
+# Reporting a vulnerability: SECURITY.md
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 19 * * 1"   # weekly, Monday 04:00 JST: full-history gitleaks + audit against fresh advisories
+  workflow_dispatch:
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  gitleaks:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write   # gitleaks-action comments on the PR when it finds something
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0     # full history: on pull_request the action scans the PR commits, on schedule/push everything
+      # gitleaks-action v2: no GITLEAKS_LICENSE needed for repos under a personal account (README "Do I need a
+      # free license key?"); only organization repos need one.
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_SUMMARY: "true"
+
+  forbidden-patterns:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: forbidden patterns (scripts/ci/forbidden-patterns.sh)
+        env:
+          FORBIDDEN_PATTERNS: ${{ secrets.FORBIDDEN_PATTERNS }}
+          # Fork PRs never receive secrets (GitHub design) → the script only warns there. Everywhere else an empty
+          # secret (missing / renamed) fails the step instead of silently skipping the site-name check (#137 review).
+          FORBIDDEN_PATTERNS_REQUIRED: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+        run: bash scripts/ci/forbidden-patterns.sh
+
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc }   # no `cache: pnpm`: nothing is installed, so there is no store to cache
+      # no install: `pnpm audit` works from pnpm-lock.yaml alone
+      - name: pnpm audit high+ (scripts/ci/audit.sh, exceptions in scripts/ci/audit-ignore.txt)
+        run: bash scripts/ci/audit.sh

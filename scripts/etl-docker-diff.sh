@@ -17,7 +17,7 @@ WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 
 snapshot() { # $1 = name
-  rm -rf "$WORK/$1"; cp -r data "$WORK/$1"
+  rm -rf "$WORK/${1:?}"; cp -r data "$WORK/$1"
   # fetchedAt は ISO 時刻。実行ごとに変わる唯一の値なので固定して比較する。
   find "$WORK/$1" -name meta.json -exec sed -i -E 's/"fetchedAt": ?"[^"]*"/"fetchedAt":"FIXED"/g' {} +
 }
