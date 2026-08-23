@@ -26,6 +26,8 @@ export interface ResolvedMunicipality {
 export interface ZipDistricts {
   sangiin: string[];
   shugiin: string[];
+  /** KEN_ALL の都道府県＋市区町村（「東京都千代田区」）。団体コード順。複数の市区町村にまたがる郵便番号は全部（#120）。 */
+  municipalities: string[];
 }
 export interface ResolveResult {
   municipalities: ResolvedMunicipality[];
@@ -148,21 +150,23 @@ export function resolveMunicipalities(municipalities: Municipality[], prefecture
     });
 }
 
-/** 郵便番号ごとの {sangiin[], shugiin[]}。複数の市区町村・都道府県にまたがる郵便番号は和集合。 */
+/** 郵便番号ごとの {sangiin[], shugiin[], municipalities[]}。複数の市区町村・都道府県にまたがる郵便番号は和集合。 */
 export function zipDistricts(rows: KenAllRow[], municipalities: ResolvedMunicipality[]): Record<string, ZipDistricts> {
   const byCode = new Map(municipalities.map((m) => [m.code, m]));
   const byZip: Record<string, ZipDistricts> = {};
-  const sets = new Map<string, { sangiin: Set<string>; shugiin: Set<string> }>();
+  const sets = new Map<string, { sangiin: Set<string>; shugiin: Set<string>; codes: Set<string> }>();
   for (const r of rows) {
     const m = byCode.get(r.code);
     if (!m) throw new DistrictResolveError(`KEN_ALL: ${r.pref}${r.city} (${r.code}) is not in the resolved municipalities`);
     let s = sets.get(r.zip);
-    if (!s) { s = { sangiin: new Set(), shugiin: new Set() }; sets.set(r.zip, s); }
+    if (!s) { s = { sangiin: new Set(), shugiin: new Set(), codes: new Set() }; sets.set(r.zip, s); }
     s.sangiin.add(sangiinDistrict(r.pref));
     for (const d of m.shugiin) s.shugiin.add(d);
+    s.codes.add(r.code);
   }
   for (const [zip, s] of [...sets].sort(([a], [b]) => (a < b ? -1 : 1))) {
-    byZip[zip] = { sangiin: [...s.sangiin].sort(), shugiin: [...s.shugiin].sort(byDistrictNumber) };
+    const names = [...s.codes].sort().map((code) => { const m = byCode.get(code)!; return `${m.pref}${m.city}`; });
+    byZip[zip] = { sangiin: [...s.sangiin].sort(), shugiin: [...s.shugiin].sort(byDistrictNumber), municipalities: names };
   }
   return byZip;
 }
