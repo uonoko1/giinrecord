@@ -1,4 +1,5 @@
 import { Link, type MetaArgs } from "react-router";
+import { ZipLookup } from "../components/ZipLookup";
 import { type Dataset, dataset as bundled, formatSessions, REPO_URL } from "../lib/dataset";
 import { formatDateTime } from "../lib/format";
 import { seoMeta } from "../lib/seo";
@@ -36,6 +37,8 @@ export default function Home({ data = bundled }: { data?: Dataset }) {
           議員一覧
           <span className="entry__sub">　名前・ふりがなでさがす</span>
         </Link>
+        {/* #112: 郵便番号 → 選挙区。クライアント専用（JS 無しでは /members へのリンク） */}
+        <ZipLookup />
       </section>
 
       {recent.length > 0 && (

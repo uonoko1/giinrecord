@@ -1,0 +1,10 @@
+{
+  "fetchedAt": "2026-08-01T03:00:00+09:00",
+  "asOf": { "kenAll": "2026-07-31", "shugiinDistricts": "2022-12-28" },
+  "sources": [
+    { "name": "日本郵便 郵便番号データ（KEN_ALL）ダウンロードページ", "url": "https://www.post.japanpost.jp/zipcode/download.html", "fetchedAt": "2026-08-01T03:00:00+09:00" },
+    { "name": "総務省 衆議院小選挙区の区割りの改定等について（令和4年改定）", "url": "https://www.soumu.go.jp/senkyo/senkyo_s/news/senkyo/shu_kuwari/index.html", "fetchedAt": "2026-08-01T03:00:00+09:00" }
+  ],
+  "counts": { "zips": 5, "municipalities": 4, "shugiinDistricts": 6, "splitMunicipalities": 1 },
+  "splitMunicipalities": [{ "code": "131024", "pref": "東京都", "city": "中央区", "shugiin": ["東京1", "東京2"] }]
+}

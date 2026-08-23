@@ -7,14 +7,14 @@ access-log aggregation (`deploy/analytics/`, see `docs/ops/analytics.md`).
 
 ```
 internet ──443/80──▶ host nginx (certbot TLS, sites-available/seiji-kiroku.conf)
-                       └─ proxy_pass http://127.0.0.1:8080
+                       └─ proxy_pass http://127.0.0.1:8081
                             └─▶ web container  nginx:alpine  (deploy/nginx/site.conf: SPA fallback, cache, security headers)
                                    └─ /usr/share/nginx/html  ⇐ bind mount :ro ⇐ /var/www/seiji-kiroku/site  ⇐ rsync from deploy.yml
 ```
 
 | file | role |
 |---|---|
-| `docker-compose.yml` | `web` service: `nginx:1.27-alpine`, `127.0.0.1:8080:80`, site mounted read-only, healthcheck, `restart: unless-stopped`. `SITE_DIR` overrides the mount (local/CI) |
+| `docker-compose.yml` | `web` service: `nginx:1.27-alpine`, `127.0.0.1:8081:80`, site mounted read-only, healthcheck, `restart: unless-stopped`. `SITE_DIR` overrides the mount (local/CI) |
 | `nginx/site.conf` | config inside the container — the former host server block, unchanged: `try_files … /__spa-fallback.html`, `/assets/` immutable 1y, `/data/` 1h, gzip, `X-Content-Type-Options` / `X-Frame-Options` / `Referrer-Policy` / CSP |
 | `nginx-host-proxy.conf` | host nginx server block (proxy + TLS only). `vps-setup.sh` writes the same text with `DOMAIN` substituted |
 | `vps-setup.sh` | one-time, sudo: web root, host server block, `noip` log format, `nginx reload`. **Installs nothing** |
@@ -37,7 +37,7 @@ ssh sakura-vps 'sudo bash -s DOMAIN' < deploy/vps-setup.sh
 # 3. (human with docker privileges) start the container from a checkout of this repo
 ssh sakura-vps 'git clone https://github.com/uonoko1/seiji-kiroku.git ~/seiji-kiroku'   # or git pull
 ssh sakura-vps 'docker compose -f ~/seiji-kiroku/deploy/docker-compose.yml up -d'
-ssh sakura-vps 'curl -sI http://127.0.0.1:8080/ | head -1'                               # 200 once a build was rsynced
+ssh sakura-vps 'curl -sI http://127.0.0.1:8081/ | head -1'                               # 200 once a build was rsynced
 # 4. DNS: A record  DOMAIN -> 160.16.86.160
 # 5. TLS (after DNS propagates) — certbot edits only sites-available/seiji-kiroku.conf
 ssh sakura-vps 'sudo certbot --nginx -d DOMAIN --redirect'
@@ -69,7 +69,7 @@ Same compose file, your own build:
 ```sh
 pnpm build
 SITE_DIR=$PWD/apps/web/build/client docker compose -f deploy/docker-compose.yml up -d --wait
-pnpm --filter web smoke -- --url http://127.0.0.1:8080     # pages 200, SPA fallback, headers, Cache-Control
+pnpm --filter web smoke -- --url http://127.0.0.1:8081     # pages 200, SPA fallback, headers, Cache-Control
 docker compose -f deploy/docker-compose.yml down
 ```
 
