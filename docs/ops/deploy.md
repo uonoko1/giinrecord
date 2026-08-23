@@ -7,9 +7,9 @@ Issue #85・#127。構成と初回セットアップは `deploy/README.md`。こ
 | 環境 | URL | 配信元 | コード | データ |
 |---|---|---|---|---|
 | staging | https://staging.gikailog.jp | `web-staging`（127.0.0.1:8083）← `/var/www/gikailog/staging` | `main` への push で自動（`deploy-staging.yml`） | 自動（`deploy-data.yml`） |
-| production | https://gikailog.jp | `web`（127.0.0.1:8081）← `/var/www/gikailog/site` | 手動リリース（`release.yml`） | 自動（`deploy-data.yml`） |
+| production | https://gikailog.jp | `web`（127.0.0.1:8081）← `/var/www/gikailog/site` | 手動リリース（`release.yml`、成功時にタグ `released` を更新） | 自動（`deploy-data.yml`：コードは `released`、`data/` は `main`） |
 
-- 3 つとも再利用ワークフロー `deploy-site.yml`（`pnpm build` → `rsync --delete`）を呼ぶだけ。違いは Environment・`SITE_ORIGIN`・rsync 先。
+- 3 つとも再利用ワークフロー `deploy-site.yml`（`pnpm build` → `rsync --delete`）を呼ぶだけ。違いは Environment・`SITE_ORIGIN`・rsync 先・（production-data だけ）`data_ref: main` の overlay。
 - staging ビルド（`SITE_ORIGIN=https://staging.gikailog.jp`）は `robots.txt` が `Disallow: /`、全ページに `<meta name="robots" content="noindex, nofollow">`（`apps/web/app/lib/seo.ts`）。さらにコンテナの `site.conf` が Host `staging.gikailog.jp` に `X-Robots-Tag: noindex, nofollow` を付ける。
 - GitHub Environment：`staging`、`production`（**required reviewers = 承認ボタン**。PO が設定）、`production-data`（reviewers 無し）。3 つとも同じ `DEPLOY_*` secrets。
 
@@ -24,8 +24,15 @@ Issue #85・#127。構成と初回セットアップは `deploy/README.md`。こ
 
 ### 日次データ（`deploy-data.yml`）
 
-ETL の data PR がマージされると `etl.yml` / `districts.yml` が `gh workflow run deploy-data.yml --ref main` を起動し、staging と production（Environment `production-data`、承認なし）の両方を `main` でビルドして配る。
-**S1 の簡略化**：本来 production へは「最後にリリースした ref」に data/ だけ載せるべきだが、現状は `main` 全体をビルドする。つまり main にマージ済みで未リリースのコード変更も日次データと一緒に production に出る。リリース前に main に置きたくない変更はマージしない運用（あるいは後続 PBI で「最終リリース ref の記録 + その ref でビルド」）。
+ETL の data PR がマージされると `etl.yml` / `districts.yml` が `gh workflow run deploy-data.yml --ref main` を起動し、staging と production（Environment `production-data`、承認なし）の両方に配る。
+
+- **staging** は `main` をそのままビルドする（従来どおり）。
+- **production** は「最後にリリースしたコード + `main` の `data/`」をビルドする（#134）。`main` にマージ済みで未リリースのコードは日次データと一緒に本番へ出ない。
+  1. `resolve` ジョブが `scripts/ci/released-ref.sh resolve` で `refs/tags/released` の SHA を取る（タグが無ければ `main`。初回 Release 前のフォールバック）。
+  2. `deploy-site.yml` がその SHA を checkout し、`data_ref: main` で `released-ref.sh overlay main`（`data/` を丸ごと main のものに置き換える。追加も削除も反映、`data/` 以外は触らない）→ `pnpm build` → rsync。
+- タグ `released` は **Release が成功したときだけ** `release.yml` の `released-tag` ジョブが REST API（`GITHUB_TOKEN`、`contents: write`）で動かす（#127 の承認フローの外、deploy secrets は使わない）。ロールバックで古い SHA を Release すればタグもそこへ戻る。手で打ち直すなら `git push -f origin <sha>:refs/tags/released`（次の deploy-data から効く）。
+- 確認：Actions → Deploy data の Summary に `production code ref: <sha>` と `deployed ref <sha> + data/ from main` が出る。`gh api repos/uonoko1/gikailog/git/ref/tags/released` で現在のタグ。
+- 注意：`released` が指す SHA には `scripts/ci/released-ref.sh` が含まれている必要がある（#134 以前の SHA を Release するとタグは動くが次の deploy-data が overlay ステップで失敗する。その場合は新しい SHA を Release し直す）。
 
 ## 構成の要点
 
