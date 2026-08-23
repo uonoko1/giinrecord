@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { filterMembers, formatTermEnd, groupByKanaRow, kanaRow } from "./member-search";
+import { filterMembers, formatTermEnd, groupByKanaRow, kanaRow, memberAssemblyId } from "./member-search";
 import { members } from "../test-fixtures/members-index";
 
 describe("kanaRow: かなの先頭文字から五十音の行を決める", () => {
@@ -74,13 +74,21 @@ describe("filterMembers", () => {
     expect(filterMembers([{ ...members[0], name: "A. B" }], { query: "Ａ" })).toHaveLength(1);
   });
 
-  it("院（house）で絞り込める。未指定・空文字は両院", () => {
-    const shugiin = { ...members[0], id: "h_000001", name: "衆 太郎", kana: "しゅう たろう", house: "shugiin" as const };
-    const both = [...members, shugiin];
-    expect(filterMembers(both, { house: "shugiin" }).map((m) => m.id)).toEqual(["h_000001"]);
-    expect(filterMembers(both, { house: "sangiin" })).toHaveLength(members.length);
-    expect(filterMembers(both, {})).toHaveLength(both.length);
-    expect(filterMembers(both, { house: "" })).toHaveLength(both.length);
+  it("議会（assemblyId）で絞り込める。未指定・空文字はすべての議会（#156）", () => {
+    const shugiin = { ...members[0], id: "h_000001", name: "衆 太郎", kana: "しゅう たろう", house: "shugiin" as const, assemblyId: "diet-shugiin" as const };
+    const local = { ...members[0], id: "p_04_000001", name: "宮城 太郎", kana: "みやぎ たろう", assemblyId: "pref-04" as const };
+    const all = [...members, shugiin, local];
+    expect(filterMembers(all, { assemblyId: "diet-shugiin" }).map((m) => m.id)).toEqual(["h_000001"]);
+    expect(filterMembers(all, { assemblyId: "pref-04" }).map((m) => m.id)).toEqual(["p_04_000001"]);
+    expect(filterMembers(all, { assemblyId: "diet-sangiin" })).toHaveLength(members.length);
+    expect(filterMembers(all, {})).toHaveLength(all.length);
+    expect(filterMembers(all, { assemblyId: "" })).toHaveLength(all.length);
+  });
+
+  it("memberAssemblyId: assemblyId が無い古いデータは house から diet-{house} を補う", () => {
+    expect(memberAssemblyId(members[0])).toBe("diet-sangiin");
+    expect(memberAssemblyId({ ...members[0], house: "shugiin" })).toBe("diet-shugiin");
+    expect(memberAssemblyId({ ...members[0], assemblyId: "city-33100" })).toBe("city-33100");
   });
 
   it("会派・選挙区で絞り込める（組み合わせ可）", () => {

@@ -113,7 +113,7 @@ test("参院名簿と同じ index に統合: 参院側の index 行・詳細は�
   assert.equal(both.index.length, sangiin.length + 465);
   const row = both.index[sangiin.length];
   assert.deepEqual(row, {
-    id: all[0].id, name: "逢沢 一郎", kana: "あいさわ いちろう", house: "shugiin", group: "自由民主党・無所属の会", district: "岡山1",
+    id: all[0].id, name: "逢沢 一郎", kana: "あいさわ いちろう", house: "shugiin", assemblyId: "diet-shugiin", group: "自由民主党・無所属の会", district: "岡山1",
     termEnd: undefined, current: true, counts: { rollcalls: 0, bills: 0, speeches: 0, questions: 0 },
   });
   assert.deepEqual(both.details[sangiin.length].timeline, []);

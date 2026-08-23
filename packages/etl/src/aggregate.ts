@@ -1,6 +1,7 @@
 import type { Bill, Member, MemberDetail, MemberSummary, MemberTerm, Question, RollCall, RollCallSummary, Speech, TimelineEntry, VoteValue } from "@seiji-kiroku/shared";
 import { toSummary } from "./sources/sangiin-members.ts";
 import { groupAt } from "./group-history.ts";
+import { assemblyIdOf } from "./assemblies.ts";
 import type { MatchedBill } from "./match-bills.ts";
 import type { MatchedAttendance } from "./match-attendance.ts";
 
@@ -189,7 +190,8 @@ export function buildDataset(
     if (houseOf.get(a.memberId) !== "sangiin") throw new Error(`attendance ${a.meetingId} ("${a.nameText}") refers to member ${a.memberId} of house ${String(houseOf.get(a.memberId))} (参院の委員会の発議者は参議院議員)`);
     timeline.push({ kind: "attendance", estimated: false, date: a.date, meetingId: a.meetingId, meeting: a.meeting, role: a.role, bills: a.bills.map((b) => ({ ...b })), sourceUrl: a.sourceUrl });
   }
-  const details = members.map((m): MemberDetail => ({ ...m, timeline: [...timelines.get(m.id)!].sort(byDateDesc) }));
+  // assemblyId（#156）は国会の名簿パーサが付けないので集約で補う（toSummary も同じ assemblyIdOf）。index と detail で同じ値（validateDataset が一致を検査する）。
+  const details = members.map((m): MemberDetail => ({ ...m, assemblyId: assemblyIdOf(m), timeline: [...timelines.get(m.id)!].sort(byDateDesc) }));
   const index = members.map((m) => {
     const s = toSummary(m);
     const timeline = timelines.get(m.id)!;

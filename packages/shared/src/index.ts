@@ -6,11 +6,41 @@
 
 export type House = "sangiin" | "shugiin";
 
+/* ---------- 議会（Assembly、Issue #156。docs/research/local-assemblies.md「DATA_CONTRACT 拡張の素案」を正式化） ---------- */
+
+/**
+ * 議会の階層。`House` は国会の院の意味のまま残し（既存 JSON の後方互換）、地方議会は `House` を増やさず Assembly で表す。
+ * national: 国会（参議院・衆議院）、prefectural: 都道府県議会、municipal: 市区町村議会。
+ */
+export type AssemblyKind = "national" | "prefectural" | "municipal";
+
+/** 国会の2議会の id。`diet-${House}`。 */
+export type DietAssemblyId = "diet-sangiin" | "diet-shugiin";
+
+/**
+ * 議会 id。国会は `diet-sangiin` / `diet-shugiin`、都道府県は `pref-{団体コード上2桁}`（例 pref-04 宮城）、
+ * 市区町村は `city-{団体コード5桁}`（例 city-33100 岡山市）。団体コードは `districts/municipalities.json` の code と同じ体系。
+ * URL は `/assemblies/{assemblyId}/`。
+ */
+export type AssemblyId = DietAssemblyId | `pref-${string}` | `city-${string}`;
+
+/** `data/assemblies/index.json` の1行。名称・出典は議会の公式サイトの原文。評価は持たない。 */
+export interface Assembly {
+  id: AssemblyId;
+  kind: AssemblyKind;
+  /** 議会の名称（例「参議院」「宮城県議会」「岡山市議会」） */
+  name: string;
+  /** 都道府県の団体コード上2桁（prefectural / municipal のとき）。national には無い */
+  prefCode?: string;
+  /** 議会の公式ページ（名簿・会議結果の入口）。地方議会のレコードはこのホストを sourceUrl に持つ */
+  sourceUrl: string;
+}
+
 /**
  * Stable internal id. Never derived from name (names change).
  * 参院は名簿のプロフィール id（例 "m_000123"）、衆院は "h_" 接頭辞の id（例 "h_000123"、#71）。接頭辞で院が分かる。
  */
-export type MemberId = string; // e.g. "m_000123" (参院), "h_000123" (衆院)
+export type MemberId = string; // e.g. "m_000123" (参院), "h_000123" (衆院)。地方議会は "p_{prefCode}_…"（#156）で id 空間を分ける
 
 export interface Member {
   id: MemberId;
@@ -18,6 +48,8 @@ export interface Member {
   legalName?: string;  // 通称使用者の本名（名簿の "[本名]" 行）。通称と同じなら省略
   kana: string;        // ふりがな
   house: House;
+  /** 所属議会（#156）。国会の名簿パーサは付けず、集約（buildDataset）が house から `diet-{house}` を補う。地方議会の名簿は必ず付ける */
+  assemblyId?: AssemblyId;
   /** Membership periods; a member can move between groups/houses. */
   terms: MemberTerm[];
   /** 最新回次の名簿に載っているか（辞職・任期満了で名簿から消えた人は false）。回次をまたいで統合したときに付く。 */
@@ -31,6 +63,8 @@ export interface MemberSummary {
   name: string;
   kana: string;
   house: House;
+  /** 所属議会（`assemblies/index.json` の id。国会は `diet-{house}`）。#156 */
+  assemblyId: AssemblyId;
   group: string;       // 名簿上の会派表記（参院は略称）
   district: string;
   termEnd?: string;    // ISO date
@@ -114,6 +148,19 @@ export interface BillSummary {
 }
 
 export type VoteValue = "賛成" | "反対" | "投票なし";
+
+/**
+ * 地方議会の表決値（#156）。国会の `VoteValue` には触れず、凡例（○×議欠－棄白、簡易／起立 …）を**原文のまま**保持する。
+ * - `raw`: 表決結果表のセルの原文（例「○」「×」「欠」「－」「議」）。
+ * - `legend`: その議会の凡例での意味の原文（例「賛成」「反対」「欠席」「議場に不在」「議長」「棄権」「白票」）。
+ * - `mapped`: 国会の VoteValue に機械的に対応づけられるときだけ（○→賛成、×→反対、欠席・退席・除斥・議長など「票を投じていない」ことが凡例から読めるとき→投票なし）。
+ *   凡例から読めなければ省略し、推定しない。表示は必ず raw と legend を添え、mapped だけを出さない（欠席と棄権を区別している事実を消さない）。
+ */
+export interface LocalVote {
+  raw: string;
+  legend: string;
+  mapped?: VoteValue;
+}
 
 /** One roll-call vote in the House of Councillors plenary. */
 export interface RollCall {
