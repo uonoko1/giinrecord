@@ -173,7 +173,7 @@ describe("MemberPage 採決タブ", () => {
 describe("MemberPage フッター", () => {
   it("出典3つと取得日時を出す", () => {
     renderPage();
-    const footer = screen.getByRole("contentinfo");
+    const footer = screen.getByText(/^出典/).closest("footer") as HTMLElement;
     expect(within(footer).getByRole("link", { name: "参議院" })).toHaveAttribute("href", "https://www.sangiin.go.jp/");
     expect(within(footer).getByRole("link", { name: "衆議院" })).toBeInTheDocument();
     expect(within(footer).getByRole("link", { name: /国立国会図書館/ })).toBeInTheDocument();

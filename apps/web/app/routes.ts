@@ -14,6 +14,8 @@ const hasRollCallData = existsSync(path.join(defaultDataDir(), "rollcalls", "ind
 export default [
   index("routes/home.tsx"),
   route("about", "routes/about.tsx"),
+  route("terms", "routes/terms.tsx"), // #167
+  route("privacy", "routes/privacy.tsx"), // #167
   route("members", "routes/members.tsx"),
   route("compare", "routes/compare.tsx"), // #104: クエリ依存・プリレンダー無し（SPA fallback）・noindex
   ...(hasMemberData ? [route("members/:id", "routes/member.tsx")] : []),

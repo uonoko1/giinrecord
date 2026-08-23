@@ -57,3 +57,8 @@
 .tag--estimate { border: 1.5px dashed var(--none-line); color: var(--none-fg); }
 .plain { list-style: none; margin: 0; padding: 0; font-size: 13px; line-height: 1.9; }
 .body { font-size: 13px; line-height: 1.8; margin: 0; }
+
+/* サイト共通フッター（#167）。各ページの <main> の後ろに置く。色は tokens.css の変数だけ */
+.site-footer { max-width: 640px; margin: 0 auto; padding: 16px 20px 32px; border-top: 1px solid var(--rule); display: flex; flex-direction: column; gap: 8px; font-size: 12px; color: var(--muted); }
+.site-footer__links { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.site-footer__note { margin: 0; }
