@@ -20,7 +20,7 @@ data/
   unmatched-groups.json             名簿の会派略称のうち対応表（sangiin-groups.ts）に無いものの一覧（group は原文のまま公開され、運用者が対応表に追記する）
   group-mismatch.json               氏名で1人に紐づいたが、投票結果ページの会派がその議員のどの回次の名簿の会派とも一致しなかった票の一覧 {memberId, nameText, voteGroup, rosterGroup, rollCallId}（運用者が確認する）
   districts/
-    by-zip.json                     Record<郵便番号7桁, { sangiin: string[]; shugiin: string[] }>  郵便番号 → 選挙区の候補（Issue #111、月次）
+    by-zip.json                     Record<郵便番号7桁, { sangiin: string[]; shugiin: string[]; municipalities: string[] }>  郵便番号 → 選挙区の候補と市区町村名（Issue #111 / #120、月次）
     municipalities.json             { code, pref, city, shugiin: string[], split: boolean }[]   市区町村 → 小選挙区の候補（団体コード順）
     meta.json                       DistrictsMeta（出典 URL・取得日時・基準日・件数・分割市区町村の一覧）。日次の meta.json とは別
 ```
@@ -91,7 +91,7 @@ interface RollCallSummary { id: string; session: number; date: string; title: st
 - 型（`packages/shared/src/index.ts` の `ZipDistricts` / `DistrictMunicipality` / `DistrictsMeta`、#112）:
 
 ```ts
-interface ZipDistricts { sangiin: string[]; shugiin: string[] }   // by-zip.json の値。名簿の district と同じ表記（"東京" / "鳥取・島根"、"東京4" / "北海道12"）
+interface ZipDistricts { sangiin: string[]; shugiin: string[]; municipalities?: string[] }   // by-zip.json の値。名簿の district と同じ表記（"東京" / "鳥取・島根"、"東京4" / "北海道12"）。municipalities は KEN_ALL の都道府県＋市区町村（"東京都千代田区"、団体コード順。#120）
 interface DistrictMunicipality { code: string; pref: string; city: string; shugiin: string[]; split: boolean }
 interface DistrictsMeta {
   fetchedAt: string;
@@ -104,11 +104,13 @@ interface DistrictsMeta {
 
 - **事実のみ・推定しない**: 解決は市区町村の粒度。別表で市区町村の一部区域だけが指定されている（分割）ときは、その市区町村の全郵便番号に候補の区を**全部**並べる（`shugiin` が 2 つ以上、`municipalities.json` の `split: true`、`meta.splitMunicipalities` に一覧）。町丁目・番地で絞り込まない（KEN_ALL の町域と別表の区域の対応は一次資料に無い）。Web は候補が複数のとき「○○市は複数の小選挙区にまたがる」と事実として出し、どれかを選ばない。
 - 同じ郵便番号が複数の市区町村にまたがる行（KEN_ALL に 134 件）・都道府県をまたぐ行（3 件: 4980000, 6180000, 8710000）は和集合。そのため `sangiin` も配列（通常 1 要素）。
+- `municipalities`（#120）は KEN_ALL の `都道府県 + 市区町村` の原文（政令市は「北海道札幌市厚別区」、郡部は「北海道虻田郡倶知安町」）を団体コード順に並べたもので、複数にまたがる郵便番号は全部載せる（どれかを選ばない）。ETL の出力では必須（`validateDistricts` が空を拒否する）。Web の型では省略可にしてあり、#120 より前の月次 ETL が書いた `by-zip.json` も読める（その場合 Web は市区町村の行を出さず、分割市区町村の名前は `meta.splitMunicipalities` との集合一致だけから出す）。
 - `sangiin` は都道府県（参院名簿の表記: 都府県を除く。北海道はそのまま）。合区は「鳥取・島根」「徳島・高知」。`shugiin` は `{都道府県}{区番号}`（衆院名簿の表記）。どちらも `members/index.json` の `district` と結合できる。
 - 別表の単位の解決: 市・区（政令市は「札幌市中央区」）は名前の完全一致、郡は前方一致で全町村、「郡（町村、…）」は町村の列挙（分割ではない）、「北海道○○振興局管内」は北海道のページの所管市町村のうち町村（市は別表に名指し）、「東京都○○支庁管内」は条例の固定表、再編で別表の旧区名が KEN_ALL に無い市（浜松市）は出典付きの固定表で現在の区に展開（旧区が複数の小選挙区にまたがって合流した区は分割扱い）。外字（釜石市の「釜」など PDF のフォントに Unicode が無い字）は 〓 として任意の 1 文字に照合し、県内で 1 件に絞れるときだけ紐づける。
 - 不変条件（`validateDistricts`、違反なら ETL は非 0 終了し data/ は PR にならない）: 郵便番号は 7 桁、`sangiin`/`shugiin` は空でない、`shugiin` の名称は `municipalities.json` に存在し `{非数字}{数字}` の形、`split === shugiin.length > 1`、`meta.counts` は実数と一致、`meta.asOf` は ISO 日付、`sources` はすべて https と `fetchedAt` を持つ。解決時の失敗（別表の単位が KEN_ALL に 1 件で紐づかない、KEN_ALL の市区町村に区が付かない、一部区域として載る市区が 1 つの区にしか現れない、区番号が連続しない、47 都道府県そろわない）はすべて例外で止まる（黙って落とさない）。
 - `data/districts/` は日次 ETL（`validateDataset`）の対象外で、日次 ETL は触らない。アーカイブ（`data-archive.zip`）には含まれる。
-- Web（#112）: `by-zip.json` はバンドルせず、ビルドが上3桁ごとに `build/client/data/districts/zip/{上3桁}.json`（最大 1,000 ファイル）へ分割し `meta.json` を同じ場所へコピーする（`apps/web/scripts/shard-districts.ts`）。Home の郵便番号入力はその分割ファイルだけを fetch し、候補の選挙区を `/members?district=<名簿の表記>` にリンクする。
+- **git 管理**: `data/districts/` は `data/` の他のファイルと同じくリポジトリにコミットする（`.gitignore` で除外しない）。書くのは月次の `.github/workflows/districts.yml`（`pnpm etl:districts` → `validateDistricts` が通った出力を PR にする）だけで、手元で `pnpm etl:districts` を実行した結果は原則コミットしない（差分は月次 PR でレビューする）。Web のビルド（`shard-districts.ts`）はコミット済みの `by-zip.json` / `meta.json` を読むので、無ければ Home の郵便番号入力は常に「該当する郵便番号が見つかりません」になる。
+- Web（#112）: `by-zip.json` はバンドルせず、ビルドが上3桁ごとに `build/client/data/districts/zip/{上3桁}.json`（最大 1,000 ファイル）へ分割し `meta.json` を同じ場所へコピーする（`apps/web/scripts/shard-districts.ts`）。Home の郵便番号入力はその分割ファイルだけを fetch し、市区町村名（`municipalities`）と候補の選挙区を出し、選挙区を `/members?district=<名簿の表記>` にリンクする。fetch が 404 か、200 でも JSON でない応答（SPA フォールバックの HTML など）なら「該当する郵便番号が見つかりません」、5xx は「取得に失敗しました」（#120）。
 
 ## 回次
 - ETL は「指定された回次 ∪ `meta.sessions` に既にある回次」を毎回まとめて処理し、`rollcalls/{session}/` を回次ごとに並べる。部分実行で他回次の出力は消えない（回次を減らすときは `data/` を消してから実行する）。
