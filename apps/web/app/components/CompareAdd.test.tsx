@@ -4,17 +4,12 @@
  */
 import { render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import { MemoryRouter } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { COMPARE_STORAGE_KEY } from "../lib/compare";
 import { CompareAdd } from "./CompareAdd";
 
 function renderAdd(id: string) {
-  return render(
-    <MemoryRouter>
-      <CompareAdd memberId={id} />
-    </MemoryRouter>,
-  );
+  return render(<CompareAdd memberId={id} />);
 }
 
 beforeEach(() => localStorage.clear());

@@ -173,3 +173,10 @@ describe("meta()", () => {
     ]);
   });
 });
+
+describe("MemberPage 比較に追加（#104）", () => {
+  it("表紙に「比較に追加」ボタンがある", () => {
+    renderPage();
+    expect(screen.getByRole("button", { name: "比較に追加" })).toBeInTheDocument();
+  });
+});
