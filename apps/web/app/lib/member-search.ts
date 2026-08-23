@@ -2,8 +2,13 @@
  * /members の純粋ロジック（ブラウザで動く。Node API は使わない）。
  * 五十音の行分け・部分一致の絞り込み・任期満了の表記。評価や並び替えの「重み」は一切持たない。
  */
-import type { House } from "@seiji-kiroku/shared";
-import type { MemberSummary } from "./data-contract";
+import type { AssemblyId } from "@seiji-kiroku/shared";
+import { DIET_ASSEMBLY_IDS, type MemberSummary } from "./data-contract";
+
+/** 議員の所属議会。assemblyId が無い（#156 より前の）データは国会の院から `diet-{house}` を補う。 */
+export function memberAssemblyId(m: Pick<MemberSummary, "house" | "assemblyId">): AssemblyId {
+  return m.assemblyId ?? DIET_ASSEMBLY_IDS[m.house];
+}
 
 export const KANA_ROWS = ["あ", "か", "さ", "た", "な", "は", "ま", "や", "ら", "わ"] as const;
 export const OTHER_ROW = "その他";
@@ -67,8 +72,8 @@ export function groupByKanaRow(members: MemberSummary[]): KanaGroup[] {
 }
 
 export interface MemberFilter {
-  /** 院。未指定・空文字は両院 */
-  house?: House | "";
+  /** 議会（`assemblies/index.json` の id。国会は diet-sangiin / diet-shugiin）。未指定・空文字はすべての議会 */
+  assemblyId?: AssemblyId | "";
   query?: string;
   group?: string;
   district?: string;
@@ -89,7 +94,7 @@ export function filterMembers(members: MemberSummary[], filter: MemberFilter): M
   const q = normalizeForSearch(filter.query ?? "");
   return members.filter(
     (m) =>
-      (!filter.house || m.house === filter.house) &&
+      (!filter.assemblyId || memberAssemblyId(m) === filter.assemblyId) &&
       (!filter.group || m.group === filter.group) &&
       (!filter.district || m.district === filter.district) &&
       (q === "" || normalizeForSearch(m.name).includes(q) || normalizeForSearch(m.kana).includes(q)),

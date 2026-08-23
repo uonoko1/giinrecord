@@ -2,7 +2,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Link, MemoryRouter } from "react-router";
 import { describe, expect, it } from "vitest";
-import { DIET_ASSEMBLIES } from "../lib/data-contract";
+import { type Assembly, DIET_ASSEMBLIES } from "../lib/data-contract";
 import { dataset } from "../test-fixtures/dataset";
 import { members } from "../test-fixtures/members-index";
 import Members, { meta as routeMeta } from "./members";
@@ -182,7 +182,7 @@ describe("/members", () => {
 
     it("assemblies/index.json に地方議会があれば select に並び、その議会の議員だけに絞れる", async () => {
       const user = userEvent.setup();
-      const miyagi = { id: "pref-04", kind: "prefectural" as const, name: "宮城県議会", prefCode: "04", sourceUrl: "https://www.pref.miyagi.jp/" };
+      const miyagi: Assembly = { id: "pref-04", kind: "prefectural", name: "宮城県議会", prefCode: "04", sourceUrl: "https://www.pref.miyagi.jp/" };
       const local = { ...members[0], id: "p_04_000001", name: "宮城 太郎", kana: "みやぎ たろう", assemblyId: "pref-04" as const, group: "自由民主党・県民会議", district: "仙台市青葉区" };
       render(
         <MemoryRouter>
