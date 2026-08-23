@@ -4,7 +4,7 @@ import { join } from "node:path";
 import type { Assembly, Bill, BillSummary, DatasetMeta, MemberDetail, MemberSummary, RollCall, RollCallSummary } from "@seiji-kiroku/shared";
 import type { Aggregated } from "./aggregate.ts";
 import { DIET_ASSEMBLY_IDS } from "./assemblies.ts";
-import { mergeAssemblies, validateLocalAssemblies } from "./local-assemblies.ts";
+import { isDietMemberRow, mergeAssemblies, mergeMemberIndex, readMemberIndex, validateLocalAssemblies } from "./local-assemblies.ts";
 import { stableJson } from "./json.ts";
 import type { GroupMismatch, Unmatched } from "./match-votes.ts";
 import type { UnmatchedSpeech } from "./match-speeches.ts";
@@ -76,6 +76,10 @@ export async function readSessionsOnDisk(dir: string): Promise<number[]> {
  * ETL は常に「指定 ∪ data/ にある回次」を全部処理する（resolveSessions）ので、全消しでも他回次の議案は同じ実行で書き直される。
  */
 export async function writeDataset(dir: string, ds: Dataset): Promise<void> {
+  // members/ は全消しするが、地方議会の ETL（local-assemblies.ts）が書いた地方議員の行と detail は残す（#157）。消す前に読んでおく
+  const localMembers = (await readMemberIndex(dir)).filter((m) => !isDietMemberRow(m));
+  const localDetails = new Map<string, string>();
+  for (const m of localMembers) localDetails.set(m.id, await readFile(join(dir, "members", `${m.id}.json`), "utf8"));
   await rm(join(dir, "members"), { recursive: true, force: true });
   for (const session of ds.meta.sessions) await rm(join(dir, "rollcalls", String(session)), { recursive: true, force: true });
   await rm(join(dir, "bills"), { recursive: true, force: true });
@@ -86,8 +90,13 @@ export async function writeDataset(dir: string, ds: Dataset): Promise<void> {
   };
   // assemblies/index.json は地方議会の ETL（local-assemblies.ts）と共有する。既にある地方議会の行は残す（無ければ国会の 2 行だけ）。#157
   await put("assemblies/index.json", mergeAssemblies(ds.assemblies, await readLocalAssemblyRows(dir)));
-  await put("members/index.json", ds.index);
+  // members/index.json も地方議会の ETL と共有する。既にある地方議員の行（assemblyId が diet- 以外）は残す（無ければ国会の行だけ＝byte-identical）。#157
+  await put("members/index.json", mergeMemberIndex(ds.index, localMembers));
   for (const d of ds.details) await put(`members/${d.id}.json`, d);
+  for (const [id, text] of localDetails) {
+    await mkdir(join(dir, "members"), { recursive: true });
+    await writeFile(join(dir, "members", `${id}.json`), text);
+  }
   await put("rollcalls/index.json", ds.rollCalls);
   for (const rc of ds.rollCallDetails) await put(`rollcalls/${rc.session}/${rc.id}.json`, rc);
   const bills = sortBills(ds.bills);
@@ -185,12 +194,14 @@ export async function validateDataset(dir: string): Promise<string[]> {
   for (const m of index) {
     if (ids.has(m.id)) v.push(`members/index.json: duplicate id ${m.id}`);
     ids.add(m.id);
+    if (!isDietMemberRow(m)) continue; // 地方議員の行は validateLocalAssemblies が検査する（#157）
     // 所属議会（#156）: assemblies/index.json に実在し、国会議員は house と一致する（diet-{house}）。
     if (typeof m.assemblyId !== "string" || !assemblyIds.has(m.assemblyId)) v.push(`members/index.json ${m.id}: assemblyId ${String(m.assemblyId)} not in assemblies/index.json`);
     else if ((m.house === "sangiin" || m.house === "shugiin") && m.assemblyId !== DIET_ASSEMBLY_IDS[m.house]) v.push(`members/index.json ${m.id}: assemblyId ${m.assemblyId} does not match house ${m.house} (expected ${DIET_ASSEMBLY_IDS[m.house]})`);
   }
   const voteCounts = new Map<string, number>();
   for (const m of index) {
+    if (!isDietMemberRow(m)) continue;
     const d = await read<MemberDetail>(`members/${m.id}.json`);
     if (!d) continue;
     const rel = `members/${m.id}.json`;

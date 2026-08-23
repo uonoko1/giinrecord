@@ -66,7 +66,7 @@ jobs:
           NUMBER=$(gh pr list --head "$DATA_BRANCH" --state open --json number -q ".[0].number")
           if [ -z "$NUMBER" ]; then
             gh pr create --base main --head "$DATA_BRANCH" --title "data: local assemblies $STAMP" \
-              --body "Automated local assemblies ETL output (宮城県議会 名簿 × 各議員の表決状況 PDF). Validated by validateLocalAssemblies in the ETL run. 不明セル（推定せず残した数）と名寄せできなかった氏名は data/assemblies/pref-04/meta.json・unmatched.json。" --label etl
+              --body "Automated local assemblies ETL output (宮城県議会 名簿 × 各議員の表決状況 PDF → data/members/ の pref-04 の議員と data/assemblies/pref-04/). Validated by validateLocalAssemblies in the ETL run. 不明セル（推定せず残した数）と名寄せできなかった氏名は data/assemblies/pref-04/meta.json・unmatched.json。" --label etl
             NUMBER=$(gh pr list --head "$DATA_BRANCH" --state open --json number -q ".[0].number")
           fi
           test -n "$NUMBER"   # PR が無ければここで失敗させる（サイレント失敗対策）

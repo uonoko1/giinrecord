@@ -5,8 +5,9 @@ import { DEFAULT_SESSIONS, dietAssemblies, readSessionsOnDisk } from "./dataset.
 
 /**
  * 地方議会 ETL（Issue #157）。月次（.github/workflows/local-assemblies.yml）。国会の日次 ETL（cli.ts）・選挙区（districts-cli.ts）とは独立。
- *   宮城県議会: 議員名簿（3 ページ）× 直近 N 会期の「各議員の表決状況」PDF → data/assemblies/pref-04/{meta.json, members/, rollcalls/, unmatched.json}
- *   と data/assemblies/index.json の pref-04 の行。
+ *   宮城県議会: 議員名簿（3 ページ）× 直近 N 会期の「各議員の表決状況」PDF
+ *   → data/members/index.json の pref-04 の行と data/members/p_04_*.json（Web の議員ページが読む。#158）、
+ *     data/assemblies/pref-04/{meta.json, sessions.json, rollcalls/, unmatched.json}、data/assemblies/index.json の pref-04 の行。
  * 推定しない: PDF のセルを確実に置けなければ「不明」（凡例「抽出不能」）として残し、件数をログと meta に出す。
  * 名簿に寄せられない氏名は memberId 空で unmatched.json に出す。凡例に無い値が出たら非 0 終了。
  * Usage: pnpm etl:local miyagi [--sessions N]   (default N = 2)
