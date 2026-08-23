@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # 議会ログ 本番切替（root で実行。再実行可）。共用 VPS の他サイトには触れない。
-#   ssh -t sakura-vps 'sudo bash -s gikailog.jp' < deploy/go-live.sh     ← TTY が要る（certbot が対話）
+#   ssh -t "${VPS_SSH_HOST:-sakura-vps}" 'sudo bash -s gikailog.jp' < deploy/go-live.sh     ← TTY が要る（certbot が対話）
 # 順序が重要：旧名の移行 → Docker → コンテナ起動（8081）→ ホスト nginx を proxy に切替 → certbot → 計測。
 #
 # 移行（Issue #119、リポジトリ改名 seiji-kiroku → gikailog）: 旧パス・旧 nginx conf・旧 compose project が

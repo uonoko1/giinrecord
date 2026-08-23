@@ -17,11 +17,13 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version-file: .nvmrc, cache: pnpm }
       - run: pnpm install --frozen-lockfile
-      - name: shellcheck + scripts/po tests (docs/ops/board.md)
+      - name: shellcheck + bash tests (scripts/po, scripts/ci, deploy)
         run: |
           shellcheck --version | head -2
-          shellcheck -x scripts/po/*.sh scripts/po/test/run.sh scripts/po/test/fake-bin/gh scripts/po/test/*.test.sh deploy/*.sh deploy/analytics/*.sh deploy/test/*.sh
+          shellcheck -x scripts/po/*.sh scripts/po/test/run.sh scripts/po/test/fake-bin/gh scripts/po/test/*.test.sh \
+            scripts/ci/*.sh scripts/ci/test/*.sh scripts/*.sh deploy/*.sh deploy/analytics/*.sh deploy/test/*.sh
           bash scripts/po/test/run.sh
+          for t in scripts/ci/test/*.test.sh deploy/test/*.test.sh; do echo "== $t"; bash "$t"; done
       - run: pnpm lint
       - name: actionlint (all workflows)
         run: |
