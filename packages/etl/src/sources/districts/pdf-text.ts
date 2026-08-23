@@ -10,18 +10,26 @@ import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 export const GAIJI = "〓";
 
 export async function extractPdfText(bytes: Buffer): Promise<string> {
-  const doc = await getDocument({ data: new Uint8Array(bytes), verbosity: 0 }).promise;
+  // pdfjs 6.x: PDFDocumentProxy.destroy() は廃止。後始末は loadingTask.destroy() で行う。
+  const loadingTask = getDocument({
+    data: new Uint8Array(bytes),
+    verbosity: 0,
+  });
+  const doc = await loadingTask.promise;
   let out = "";
-  for (let i = 1; i <= doc.numPages; i++) {
-    const page = await doc.getPage(i);
-    const content = await page.getTextContent();
-    for (const item of content.items) {
-      if (!("str" in item)) continue;
-      out += item.str.replace(/[\uE000-\uF8FF]/g, GAIJI);
-      if (item.hasEOL) out += "\n";
+  try {
+    for (let i = 1; i <= doc.numPages; i++) {
+      const page = await doc.getPage(i);
+      const content = await page.getTextContent();
+      for (const item of content.items) {
+        if (!("str" in item)) continue;
+        out += item.str.replace(/[\uE000-\uF8FF]/g, GAIJI);
+        if (item.hasEOL) out += "\n";
+      }
+      out += "\n";
     }
-    out += "\n";
+  } finally {
+    await loadingTask.destroy();
   }
-  await doc.destroy();
   return out;
 }
