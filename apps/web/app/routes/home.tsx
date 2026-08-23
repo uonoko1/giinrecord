@@ -1,4 +1,5 @@
 import { Link, type MetaArgs } from "react-router";
+import { CoverBrand } from "../components/CoverBrand";
 import { ZipLookup } from "../components/ZipLookup";
 import { type Dataset, dataset as bundled, formatSessions, REPO_URL } from "../lib/dataset";
 import { formatDateTime } from "../lib/format";
@@ -23,7 +24,7 @@ export default function Home({ data = bundled }: { data?: Dataset }) {
   return (
     <main className="page">
       <header className="cover">
-        <div className="cover__brand">議会ログ</div>
+        <CoverBrand />
         <h1 className="cover__title">
           言ったことではなく、
           <br />

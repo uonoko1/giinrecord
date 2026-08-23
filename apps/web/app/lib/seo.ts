@@ -48,5 +48,13 @@ export function seoMeta({ title, description, pathname, type = "website", origin
     { property: "og:type", content: type },
     { property: "og:url", content: url },
     { property: "og:site_name", content: SITE_NAME },
+    { property: "og:image", content: `${origin}${OG_IMAGE_PATH}` },
+    { property: "og:image:width", content: String(OG_IMAGE_SIZE.width) },
+    { property: "og:image:height", content: String(OG_IMAGE_SIZE.height) },
+    { name: "twitter:card", content: "summary_large_image" },
   ];
 }
+
+/** Rasterized at build time from brand/og-image.svg (scripts/brand-assets.ts, #129). */
+export const OG_IMAGE_PATH = "/og-image.png";
+export const OG_IMAGE_SIZE = { width: 1200, height: 630 } as const;
