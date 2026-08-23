@@ -9,7 +9,9 @@ import { DEFAULT_SESSIONS, dietAssemblies, readSessionsOnDisk } from "./dataset.
  *     data/assemblies/{assemblyId}/{meta.json, sessions.json, rollcalls/, unmatched.json}、data/assemblies/index.json のその議会の行。
  * 推定しない: PDF のセルを確実に置けなければ「不明」（凡例「抽出不能」）として残し、件数をログと meta に出す。
  * 名簿に寄せられない氏名は memberId 空で unmatched.json に出す。凡例に無い値が出たら非 0 終了。
- * Usage: pnpm etl:local <miyagi|tokushima> [--sessions N]   (default N = 2)
+ *   鳥取県議会（#184）: 議員名簿（1 ページ）× 直近 N 会期の「議案等の議決結果」ページの賛否 PDF（会期に複数）→ 同じ形で pref-31。
+ *     PDF の氏名は姓だけ（「○○議員」）なので、名簿で 1 人に決まるときだけ寄せ、同姓が複数なら候補を unmatched.json に列挙する。
+ * Usage: pnpm etl:local <miyagi|tokushima|tottori> [--sessions N]   (default N = 2)
  */
 const DATA = fileURLToPath(new URL("../../../data/", import.meta.url));
 const args = process.argv.slice(2);
@@ -32,11 +34,12 @@ const built = buildLocalAssembly({
   rosterAsOf: run.roster.asOf,
   sources: run.sources,
   sessions: run.sessions,
+  unmatched: run.unmatched,
 });
 console.log(`rollcalls: ${built.meta.counts.rollcalls}, cells: ${built.meta.counts.cells}, unknown cells (kept as 不明, not guessed): ${built.meta.counts.unknownCells}`);
 if (built.unmatched.length) {
-  console.warn(`names in the PDF not in the roster (memberId left empty; see data/assemblies/${source.assembly.id}/unmatched.json): ${built.unmatched.length}`);
-  for (const u of built.unmatched) console.warn(`  ${u.nameText}（${u.group}）: ${u.rollCallIds.length} roll calls`);
+  console.warn(`names in the PDF not matched to the roster (memberId left empty; see data/assemblies/${source.assembly.id}/unmatched.json): ${built.unmatched.length}`);
+  for (const u of built.unmatched) console.warn(`  ${u.nameText}（${u.group}）: ${u.rollCallIds.length} roll calls${u.candidates?.length ? `; candidates (not chosen): ${u.candidates.map((c) => c.name).join(" / ")}` : ""}`);
 }
 // assemblies/index.json に国会の 2 行が無ければ（日次 ETL がまだ #156 以降の形で走っていない）国会の行も補う
 const national = dietAssemblies(Math.max(...DEFAULT_SESSIONS, ...(await readSessionsOnDisk(DATA))));
