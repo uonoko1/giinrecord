@@ -24,11 +24,13 @@ describe("buildSitemap", () => {
 });
 
 describe("buildRobots", () => {
+  // /compare（#104）はクエリ依存で SPA fallback から描くので、meta noindex に加えて robots でも除外する
+
   it("origin があれば Sitemap 行を付ける", () => {
-    expect(buildRobots("https://example.test")).toBe("User-agent: *\nAllow: /\n\nSitemap: https://example.test/sitemap.xml\n");
+    expect(buildRobots("https://example.test")).toBe("User-agent: *\nAllow: /\nDisallow: /compare\n\nSitemap: https://example.test/sitemap.xml\n");
   });
   it("origin が無ければ Sitemap 行は出さない（相対 URL は仕様違反）", () => {
-    expect(buildRobots("")).toBe("User-agent: *\nAllow: /\n");
+    expect(buildRobots("")).toBe("User-agent: *\nAllow: /\nDisallow: /compare\n");
   });
 });
 

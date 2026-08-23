@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { type LoaderFunctionArgs, type MetaArgs, useLoaderData } from "react-router";
+import { CompareAdd } from "../components/CompareAdd";
 import type { BillEntry, BillRole, DatasetMeta, MemberDetail, QuestionEntry, StanceEntry, TimelineEntry, VoteEntry } from "../lib/data-contract";
 import { defaultDataDir, readMemberDetail, readMeta } from "../lib/data-files";
 import { formatDate, formatDateTime, formatYearMonth } from "../lib/format";
@@ -186,6 +187,7 @@ function Cover({ detail, counts }: { detail: MemberDetail; counts: Counts }) {
       <p className="member-profile">
         <ExternalLink href={detail.sourceUrl}>議員プロフィール（公式）</ExternalLink>
       </p>
+      <CompareAdd memberId={detail.id} />
     </header>
   );
 }

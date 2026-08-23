@@ -1,0 +1,42 @@
+{
+ "current": false,
+ "house": "sangiin",
+ "id": "m_023003",
+ "kana": "おおつばき ゆうこ",
+ "legalName": "大椿 裕子",
+ "name": "大椿 ゆうこ",
+ "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/giin/216/giin.htm",
+ "terms": [
+  {
+   "district": "比例",
+   "from": "",
+   "group": "立憲民主・無所属",
+   "house": "sangiin",
+   "sessionFrom": 216,
+   "sessionTo": 216,
+   "to": "2025-07-28"
+  }
+ ],
+ "timeline": [
+  {
+   "date": "2025-06-13",
+   "groupValue": "反対",
+   "kind": "vote",
+   "result": "可決（賛成 189・反対 48）",
+   "rollCallId": "217-0613-v003",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0613-v003.htm",
+   "title": "日程第３　信託業法の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "反対"
+  },
+  {
+   "date": "2025-05-16",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 209・反対 19）",
+   "rollCallId": "217-0516-v006",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0516-v006.htm",
+   "title": "日程第６　重要電子計算機に対する不正な行為による被害の防止に関する法律の施行に伴う関係法律の整備等に関する法律案（内閣提出、衆議院送付）",
+   "value": "投票なし"
+  }
+ ]
+}

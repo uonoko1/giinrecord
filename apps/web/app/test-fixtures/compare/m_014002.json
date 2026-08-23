@@ -1,0 +1,51 @@
+{
+ "current": true,
+ "house": "sangiin",
+ "id": "m_014002",
+ "kana": "あだち まさし",
+ "name": "阿達 雅志",
+ "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/giin/221/giin.htm",
+ "terms": [
+  {
+   "district": "比例",
+   "from": "",
+   "group": "自由民主党・無所属の会",
+   "house": "sangiin",
+   "sessionFrom": 216,
+   "sessionTo": 221,
+   "to": "2028-07-25"
+  }
+ ],
+ "timeline": [
+  {
+   "date": "2026-07-24",
+   "groupValue": "反対",
+   "kind": "vote",
+   "result": "否決（賛成 117・反対 127）",
+   "rollCallId": "221-0724-v007",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0724-v007.htm",
+   "title": "大都市地域における特別区の設置に関する法律の一部を改正する法律案（奥村祥大君外３名発議）",
+   "value": "反対"
+  },
+  {
+   "date": "2025-06-13",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 189・反対 48）",
+   "rollCallId": "217-0613-v003",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0613-v003.htm",
+   "title": "日程第３　信託業法の一部を改正する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  },
+  {
+   "date": "2025-05-16",
+   "groupValue": "賛成",
+   "kind": "vote",
+   "result": "可決（賛成 209・反対 19）",
+   "rollCallId": "217-0516-v006",
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0516-v006.htm",
+   "title": "日程第６　重要電子計算機に対する不正な行為による被害の防止に関する法律の施行に伴う関係法律の整備等に関する法律案（内閣提出、衆議院送付）",
+   "value": "賛成"
+  }
+ ]
+}
