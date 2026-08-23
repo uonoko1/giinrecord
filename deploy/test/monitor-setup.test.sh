@@ -21,7 +21,7 @@ fresh() {
   P="$TMP/$1"; mkdir -p "$P/etc/cron.d" "$P/var/log" "$P/home/$ME"
   export MONITOR_SETUP_PREFIX="$P" MONITOR_OWNER="$ME"
 }
-run_setup() { bash "$SCRIPT" "$@" > "$P/out" 2>&1; }
+run_setup() { bash "$SCRIPT" > "$P/out" 2>&1; }
 
 test_case() {
   local name=$1; shift; CURRENT_FAILED=0
@@ -74,12 +74,12 @@ t_refuses_symlinked_latest_dir() {
 t_warns_when_token_missing() {
   fresh notoken
   run_setup || fail "exit $?"
-  assert_contains "$(cat "$P/out")" "fail soft" "explains the script fails soft without the token"
+  assert_contains "$(cat "$P/out")" "fails soft" "explains the script fails soft without the token"
 }
 
 t_no_secrets_in_cron_or_output() {
   fresh secrets
-  echo "github_pat_TESTONLY" > "$P/etc/gikailog/monitor.token" 2>/dev/null || { mkdir -p "$P/etc/gikailog"; echo "github_pat_TESTONLY" > "$P/etc/gikailog/monitor.token"; }
+  mkdir -p "$P/etc/gikailog"; echo "github_pat_TESTONLY" > "$P/etc/gikailog/monitor.token"
   run_setup || fail "exit $?"
   assert_not_contains "$(cat "$P/out")$(cat "$P/etc/cron.d/gikailog-monitor")" "github_pat_TESTONLY" "token value never printed"
 }
