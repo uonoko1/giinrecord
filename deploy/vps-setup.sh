@@ -1,26 +1,37 @@
 #!/usr/bin/env bash
-# One-time VPS setup for the SHARED host (Issue #85; staging Issue #127). Run as:
+# Host-nginx setup for one site on the SHARED host (Issue #85; staging #127; idempotent + safety checks #141). Run as:
 #   ssh "${VPS_SSH_HOST:-sakura-vps}" 'sudo bash -s <domain> [port]' < deploy/vps-setup.sh
 #     port 8081 (default) = production: gikailog.jp         → /var/www/gikailog/site,    sites-available/gikailog.conf
 #     port 8083           = staging:    staging.gikailog.jp → /var/www/gikailog/staging, sites-available/gikailog-staging.conf
+#   The domain must NOT start with "staging." for 8081 and MUST start with "staging." for 8083 (#141: a staging
+#   setup run with the production domain once rewrote the production conf).
 #
 # What it does (and nothing more):
 #   1. creates the web root — the rsync target of the deploy workflows, owned by the deploy user,
 #      bind-mounted read-only into the web / web-staging container
-#   2. writes the host nginx server block: proxy_pass http://127.0.0.1:<port> + (certbot) TLS only.
-#      The body is deploy/nginx-host-proxy.conf with SERVER_NAMES / PORT / LOG_NAME substituted
-#   3. defines the IP-less access-log format the block references (same file the analytics setup writes)
-#   4. reloads nginx (only if `nginx -t` passes; otherwise exit 1) and prints the docker compose commands for a human to run
+#   2. writes the host nginx server blocks for this site (deploy/nginx-host-proxy.conf with SERVER_NAMES / DOMAIN /
+#      PORT / LOG_NAME substituted): :80 → 301 https://<domain> (www too), :443 TLS → proxy_pass http://127.0.0.1:<port>
+#        - no certificate yet (/etc/letsencrypt/live/<domain>/fullchain.pem missing): only a plain :80 proxy block is
+#          written so that `certbot certonly --nginx` can serve the challenge; re-run after certbot for the real blocks
+#        - the conf is already managed by certbot (`# managed by Certbot`, i.e. the hosts set up before #141):
+#          it is NOT rewritten — only the proxy_pass port is kept in sync. server_name, certificate, redirects stay
+#   3. defines the IP-less access-log format the blocks reference (same file the analytics setup writes)
+#   4. reloads nginx (only if `nginx -t` passes; otherwise exit 1) and prints the next steps for a human
 #
 # Deliberately NOT done here:
 #   - installing anything (docker, packages). Docker is installed by a human with sudo (deploy/README.md)
 #   - giving the deploy user ($DEPLOY_USER, the CI rsync key) any docker privilege: membership in the
 #     docker group is root-equivalent, and a leaked deploy key must stay a leaked *file copy* key
+#   - running certbot (go-live.sh / staging-setup.sh do, and skip it when the certificate exists)
 #   - touching any other site's server block, certificate or log on this shared host
 #
-# Tests source this file with VPS_SETUP_NO_MAIN=1 and call render_host_proxy (deploy/test/render-host-proxy.sh)
-# or reload_nginx (deploy/test/nginx-reload.test.sh; nginx/systemctl are stubs).
+# Tests: deploy/test/vps-setup.test.sh (VPS_SETUP_PREFIX roots every path in a temp dir; install/nginx/systemctl are
+# stubs), deploy/test/render-host-proxy.sh and deploy/test/nginx-reload.test.sh source this file with VPS_SETUP_NO_MAIN=1.
 set -euo pipefail
+
+# 全パスの接頭辞（テスト専用。本番では空）
+PREFIX="${VPS_SETUP_PREFIX:-}"
+DEPLOY_USER=ubuntu
 
 # reload_nginx: test the config, reload only if it passes, otherwise stop the script with exit 1.
 # `nginx -t && systemctl reload nginx` must NOT be used: under set -e a failing `nginx -t` is swallowed
@@ -33,7 +44,6 @@ reload_nginx() {
     exit 1
   fi
 }
-DEPLOY_USER=ubuntu
 
 # site_vars <port>: sets NAME (conf + log name) and SITE_DIR for the port; rejects anything but 8081/8083.
 site_vars() {
@@ -44,14 +54,69 @@ site_vars() {
   esac
 }
 
-# render_host_proxy <domain> <port>: the server block for the host nginx on stdout.
+# check_domain <domain> <port>: staging.* only on 8083, never on 8081 (#141).
+check_domain() {
+  local domain=$1 port=$2
+  case "$port:$domain" in
+    8083:staging.*) ;;
+    8083:*) echo "vps-setup.sh: port 8083 is staging; the domain must start with 'staging.' (got '$domain')" >&2; return 1 ;;
+    8081:staging.*) echo "vps-setup.sh: '$domain' looks like staging; production (8081) must not use it. For staging pass port 8083" >&2; return 1 ;;
+  esac
+}
+
+# server_names <domain> <port>: production answers for www.<domain> too; staging has no www.
+server_names() { if [ "$2" = 8081 ]; then echo "$1 www.$1"; else echo "$1"; fi; }
+
+# render_host_proxy <domain> <port>: the full server blocks (:80 redirect + :443 proxy) on stdout.
 # The heredoc is deploy/nginx-host-proxy.conf verbatim (the test checks they are identical).
-# Production answers for www.<domain> too (the container redirects it to the apex); staging has no www.
 render_host_proxy() {
   local domain=$1 port=$2 names
   site_vars "$port"
-  if [ "$port" = 8081 ]; then names="$domain www.$domain"; else names="$domain"; fi
-  sed -e "s/SERVER_NAMES/$names/" -e "s/PORT/$port/" -e "s/LOG_NAME/$NAME/" <<'CONF'
+  names=$(server_names "$domain" "$port")
+  sed -e "s/SERVER_NAMES/$names/" -e "s/DOMAIN/$domain/" -e "s/PORT/$port/" -e "s/LOG_NAME/$NAME/" <<'CONF'
+server {
+    listen 80;
+    listen [::]:80;
+    server_name SERVER_NAMES;
+    access_log /var/log/nginx/LOG_NAME.access.log noip;
+
+    location / {
+        return 301 https://DOMAIN$request_uri;
+    }
+}
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    server_name SERVER_NAMES;
+    access_log /var/log/nginx/LOG_NAME.access.log noip;
+
+    ssl_certificate /etc/letsencrypt/live/DOMAIN/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/DOMAIN/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers off;
+    ssl_session_timeout 1d;
+    ssl_session_cache shared:LOG_NAME:1m;
+    ssl_session_tickets off;
+
+    location / {
+        proxy_pass http://127.0.0.1:PORT;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}
+CONF
+}
+
+# render_bootstrap_proxy <domain> <port>: the :80-only proxy block used until the certificate exists
+# (no redirect — there is nothing to redirect to yet — and no 443 block, which would fail nginx -t without the cert).
+render_bootstrap_proxy() {
+  local domain=$1 port=$2 names
+  site_vars "$port"
+  names=$(server_names "$domain" "$port")
+  sed -e "s/SERVER_NAMES/$names/" -e "s/PORT/$port/" -e "s/LOG_NAME/$NAME/" <<'BOOT'
+# bootstrap block (no certificate yet): re-run deploy/vps-setup.sh after certbot to get the TLS + redirect blocks
 server {
     listen 80;
     listen [::]:80;
@@ -66,30 +131,46 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     }
 }
-CONF
+BOOT
+}
+
+# cert_exists <domain>: true once certbot has issued the certificate for <domain>
+cert_exists() { [ -f "$PREFIX/etc/letsencrypt/live/$1/fullchain.pem" ]; }
+
+# write_site_conf <domain> <port> <conf>: decides between "leave certbot's file alone", full template and bootstrap.
+write_site_conf() {
+  local domain=$1 port=$2 conf=$3
+  if [ -f "$conf" ] && grep -q "managed by Certbot" "$conf"; then
+    if grep -q "proxy_pass http://127.0.0.1:$port;" "$conf"; then
+      echo "$conf is managed by Certbot (set up before #141): left as is."
+    else
+      echo "$conf is managed by Certbot: only the proxy_pass port is set to $port (server_name, certificate, redirects untouched)."
+      sed -i -E "s#proxy_pass http://127\.0\.0\.1:[0-9]+;#proxy_pass http://127.0.0.1:$port;#" "$conf"
+    fi
+  elif cert_exists "$domain"; then
+    render_host_proxy "$domain" "$port" > "$conf"
+  else
+    render_bootstrap_proxy "$domain" "$port" > "$conf"
+  fi
 }
 
 main() {
   local DOMAIN PORT SITE_CONF
-  DOMAIN="${1:?usage: vps-setup.sh <domain> [port: 8081 (production, default) | 8083 (staging)]}"
+  DOMAIN="${1:?usage: vps-setup.sh <domain> [port: 8081 (production, default) | 8083 (staging, domain staging.*)]}"
   PORT="${2:-8081}"
   site_vars "$PORT"
+  check_domain "$DOMAIN" "$PORT"
   SITE_CONF=/etc/nginx/sites-available/$NAME.conf
 
-  install -d -o "$DEPLOY_USER" -g deploygroup -m 2775 /var/www/gikailog "$SITE_DIR"
+  install -d -o "$DEPLOY_USER" -g deploygroup -m 2775 "$PREFIX/var/www/gikailog" "$PREFIX$SITE_DIR"
 
-  cat > /etc/nginx/conf.d/gikailog-noip-log.conf <<'CONF'
+  cat > "$PREFIX/etc/nginx/conf.d/gikailog-noip-log.conf" <<'CONF'
 # Access-log format WITHOUT the client IP and WITHOUT the user agent (gikailog, Issue #58).
 log_format noip '- - [$time_local] "$request" $status $body_bytes_sent "$http_referer" "-"';
 CONF
 
-  # Keep certbot's 443 block if one exists (re-running after TLS was issued must not drop TLS).
-  if [ -f "$SITE_CONF" ] && grep -q "listen 443" "$SITE_CONF"; then
-    echo "$SITE_CONF already has a TLS block (certbot); not rewriting it. Edit by hand if the proxy block changed." >&2
-  else
-    render_host_proxy "$DOMAIN" "$PORT" > "$SITE_CONF"
-  fi
-  ln -sfn "$SITE_CONF" "/etc/nginx/sites-enabled/$NAME.conf"
+  write_site_conf "$DOMAIN" "$PORT" "$PREFIX$SITE_CONF"
+  ln -sfn "$PREFIX$SITE_CONF" "$PREFIX/etc/nginx/sites-enabled/$NAME.conf"
   reload_nginx
 
   cat <<MSG
@@ -98,10 +179,13 @@ host nginx ready: $DOMAIN -> http://127.0.0.1:$PORT (container). Site root: $SIT
 Next, as a user WITH docker privileges (not $DEPLOY_USER):
   1. install docker + compose plugin (https://docs.docker.com/engine/install/ubuntu/), if not yet present
   2. git clone https://github.com/uonoko1/gikailog.git /opt/gikailog   (only deploy/ is used)
-  3. docker compose -f /opt/gikailog/deploy/docker-compose.yml up -d
+  3. docker compose -f /opt/gikailog/deploy/docker-compose.yml up -d --force-recreate
   4. curl -sI http://127.0.0.1:$PORT/ | head -1      # HTTP/1.1 200 once a deploy workflow has rsynced a build
-Then DNS A record $DOMAIN -> this host, and: sudo certbot --nginx -d $DOMAIN --redirect
 MSG
+  if ! cert_exists "$DOMAIN"; then
+    # shellcheck disable=SC2046  # server_names is a space-separated list on purpose
+    echo "No certificate yet: DNS A record $DOMAIN -> this host, then:  sudo certbot certonly --nginx$(printf ' -d %s' $(server_names "$DOMAIN" "$PORT")) --deploy-hook 'systemctl reload nginx'  and re-run this script for the TLS + redirect blocks."
+  fi
 }
 
 if [ -z "${VPS_SETUP_NO_MAIN:-}" ]; then main "$@"; fi
