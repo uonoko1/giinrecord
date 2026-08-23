@@ -130,9 +130,13 @@ export function buildDataset(
       });
     }
   }
+  const houseOf = new Map(members.map((m) => [m.id, m.house]));
   for (const s of speeches) {
     if (!s.memberId) continue;
-    timelineOf(s.memberId, `speech ${s.id} ("${s.speakerText}")`).push({
+    const timeline = timelineOf(s.memberId, `speech ${s.id} ("${s.speakerText}")`);
+    // 発言の院と議員の院は一致していなければならない（衆院本会議の発言を同名の参院議員に付けない。Issue #107）。
+    if (houseOf.get(s.memberId) !== s.house) throw new Error(`speech ${s.id} ("${s.speakerText}", ${s.house}) refers to member ${s.memberId} of house ${String(houseOf.get(s.memberId))}`);
+    timeline.push({
       kind: "speech", date: s.date, speechId: s.id, meeting: s.meeting, excerpt: s.excerpt, chars: s.chars,
       ...(s.position ? { position: s.position } : {}), sourceUrl: s.sourceUrl,
     });
