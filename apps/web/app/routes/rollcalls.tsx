@@ -5,6 +5,7 @@ import { formatDate, formatDateTime } from "../lib/format";
 import { sessionsDesc, sortByDateDesc } from "../lib/rollcall";
 import { seoMeta } from "../lib/seo";
 import "./rollcall.css";
+import { SiteFooter } from "../components/SiteFooter";
 
 /* ---------- data (build time only; ssr:false + prerender) ----------
  * `/rollcalls` and `/rollcalls/:session` share this route; both are prerendered
@@ -65,57 +66,60 @@ export function RollCallsPage({
   const rows = sortByDateDesc(session === undefined ? rollcalls : rollcalls.filter((r) => r.session === session));
 
   return (
-    <main className="rollcall">
-      <header className="rollcall-cover">
-        <div className="rollcall-cover-top">
-          <Link to="/">← 議会ログ</Link>
+    <>
+      <main className="rollcall">
+        <header className="rollcall-cover">
+          <div className="rollcall-cover-top">
+            <Link to="/">← 議会ログ</Link>
+          </div>
+          <p className="rollcall-date">
+            <span>参議院本会議 ・ 記名投票</span>
+          </p>
+          <h1 className="rollcall-title">{pageTitle(session)}</h1>
+        </header>
+
+        <div className="rollcalls-filter">
+          <label>
+            回次
+            <select
+              aria-label="回次"
+              value={session === undefined ? "" : String(session)}
+              onChange={(e) => onSessionChange(e.target.value === "" ? undefined : Number(e.target.value))}
+            >
+              <option value="">すべて</option>
+              {sessions.map((s) => (
+                <option key={s} value={String(s)}>
+                  第{s}回
+                </option>
+              ))}
+            </select>
+          </label>
+          <span className="rollcalls-count num">{rows.length}件</span>
         </div>
-        <p className="rollcall-date">
-          <span>参議院本会議 ・ 記名投票</span>
-        </p>
-        <h1 className="rollcall-title">{pageTitle(session)}</h1>
-      </header>
 
-      <div className="rollcalls-filter">
-        <label>
-          回次
-          <select
-            aria-label="回次"
-            value={session === undefined ? "" : String(session)}
-            onChange={(e) => onSessionChange(e.target.value === "" ? undefined : Number(e.target.value))}
-          >
-            <option value="">すべて</option>
-            {sessions.map((s) => (
-              <option key={s} value={String(s)}>
-                第{s}回
-              </option>
+        {rows.length === 0 ? (
+          <p className="rollcall-empty">採決はありません。</p>
+        ) : (
+          <ul className="rollcalls-list">
+            {rows.map((r) => (
+              <li key={r.id} className="rollcalls-item">
+                <Link to={`/rollcalls/${r.session}/${r.id}`}>{r.title}</Link>
+                <p className="rollcalls-meta num">
+                  <time dateTime={r.date}>{formatDate(r.date)}</time>
+                  {" ・ "}第{r.session}回国会{" ・ "}
+                  {r.result}
+                </p>
+              </li>
             ))}
-          </select>
-        </label>
-        <span className="rollcalls-count num">{rows.length}件</span>
-      </div>
+          </ul>
+        )}
 
-      {rows.length === 0 ? (
-        <p className="rollcall-empty">採決はありません。</p>
-      ) : (
-        <ul className="rollcalls-list">
-          {rows.map((r) => (
-            <li key={r.id} className="rollcalls-item">
-              <Link to={`/rollcalls/${r.session}/${r.id}`}>{r.title}</Link>
-              <p className="rollcalls-meta num">
-                <time dateTime={r.date}>{formatDate(r.date)}</time>
-                {" ・ "}第{r.session}回国会{" ・ "}
-                {r.result}
-              </p>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <footer className="rollcall-source">
-        <p className="num">{meta ? `取得 ${formatDateTime(meta.fetchedAt)}` : "データ未取得"}</p>
-        <p>評価・採点はしません。記録をそのまま並べています。</p>
-      </footer>
-    </main>
+        <footer className="rollcall-source">
+          <p className="num">{meta ? `取得 ${formatDateTime(meta.fetchedAt)}` : "データ未取得"}</p>
+          <p>評価・採点はしません。記録をそのまま並べています。</p>
+        </footer>
+      </main>
+      <SiteFooter />
+    </>
   );
 }

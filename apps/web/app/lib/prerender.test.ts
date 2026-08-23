@@ -9,7 +9,7 @@ const missing = fileURLToPath(new URL("../test-fixtures/does-not-exist", import.
 describe("prerenderPaths", () => {
   it("静的ページ・全議員・全採決を列挙する", async () => {
     const paths = await prerenderPaths(fixtures);
-    expect(paths.slice(0, 2)).toEqual(["/", "/about"]);
+    expect(paths.slice(0, 4)).toEqual(["/", "/about", "/terms", "/privacy"]);
     expect(paths).toContain("/members/m_000123");
     expect(paths).toContain("/rollcalls");
     expect(paths).toContain("/rollcalls/221");
@@ -18,6 +18,6 @@ describe("prerenderPaths", () => {
   });
   it("data/ が無ければ静的ページだけ返して落ちない", async () => {
     // /members は #7 以降、データが無くても常に生成する（空の一覧を表示）
-    expect(await prerenderPaths(missing)).toEqual(["/", "/about", "/members"]);
+    expect(await prerenderPaths(missing)).toEqual(["/", "/about", "/terms", "/privacy", "/members"]);
   });
 });

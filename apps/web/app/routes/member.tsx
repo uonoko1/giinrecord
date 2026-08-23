@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { type LoaderFunctionArgs, type MetaArgs, useLoaderData } from "react-router";
 import { CompareAdd } from "../components/CompareAdd";
+import { SiteFooter } from "../components/SiteFooter";
 import type { BillEntry, BillRole, DatasetMeta, MemberDetail, QuestionEntry, StanceEntry, TimelineEntry, VoteEntry } from "../lib/data-contract";
 import { defaultDataDir, readMemberDetail, readMeta } from "../lib/data-files";
 import { formatDate, formatDateTime, formatYearMonth } from "../lib/format";
@@ -89,48 +90,51 @@ export function MemberPage({ detail, meta }: { detail: MemberDetail; meta: Datas
   const counts = countKinds(detail.timeline);
 
   return (
-    <main className="member">
-      <Cover detail={detail} counts={counts} />
-      {detail.house === "shugiin" && <ShugiinNotice />}
-      <div className="member-tabs" role="tablist" aria-label="記録の種類">
-        {TABS[detail.house].map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            role="tab"
-            id={`tab-${t.id}`}
-            aria-selected={tab === t.id}
-            aria-controls="member-records"
-            className="member-tab"
-            onClick={() => setTab(t.id)}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-      <section id="member-records" role="tabpanel" aria-labelledby={`tab-${tab}`}>
-        {tab === "stance" && <p className="member-tab-note">所属会派が議案情報の賛成会派・反対会派に載っていた記録です。会派の態度であり、本人の投票ではありません。</p>}
-        {entries.length === 0 ? (
-          <p className="member-empty">記録はありません。</p>
-        ) : tab === "vote" ? (
-          <VoteTable votes={entries.filter((e): e is VoteEntry => e.kind === "vote")} />
-        ) : tab === "bill" ? (
-          <BillTable bills={entries.filter((e): e is BillEntry => e.kind === "bill")} />
-        ) : tab === "question" ? (
-          <QuestionTable questions={entries.filter((e): e is QuestionEntry => e.kind === "question")} />
-        ) : (
-          <Timeline entries={entries} />
-        )}
-        {folded && (
-          <p className="member-more">
-            <button type="button" className="member-more-button" onClick={() => setStanceExpanded(true)}>
-              さらに表示（残り{(all.length - STANCE_FOLD).toLocaleString("ja-JP")}件）
+    <>
+      <main className="member">
+        <Cover detail={detail} counts={counts} />
+        {detail.house === "shugiin" && <ShugiinNotice />}
+        <div className="member-tabs" role="tablist" aria-label="記録の種類">
+          {TABS[detail.house].map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              role="tab"
+              id={`tab-${t.id}`}
+              aria-selected={tab === t.id}
+              aria-controls="member-records"
+              className="member-tab"
+              onClick={() => setTab(t.id)}
+            >
+              {t.label}
             </button>
-          </p>
-        )}
-      </section>
-      <SourceLine meta={meta} />
-    </main>
+          ))}
+        </div>
+        <section id="member-records" role="tabpanel" aria-labelledby={`tab-${tab}`}>
+          {tab === "stance" && <p className="member-tab-note">所属会派が議案情報の賛成会派・反対会派に載っていた記録です。会派の態度であり、本人の投票ではありません。</p>}
+          {entries.length === 0 ? (
+            <p className="member-empty">記録はありません。</p>
+          ) : tab === "vote" ? (
+            <VoteTable votes={entries.filter((e): e is VoteEntry => e.kind === "vote")} />
+          ) : tab === "bill" ? (
+            <BillTable bills={entries.filter((e): e is BillEntry => e.kind === "bill")} />
+          ) : tab === "question" ? (
+            <QuestionTable questions={entries.filter((e): e is QuestionEntry => e.kind === "question")} />
+          ) : (
+            <Timeline entries={entries} />
+          )}
+          {folded && (
+            <p className="member-more">
+              <button type="button" className="member-more-button" onClick={() => setStanceExpanded(true)}>
+                さらに表示（残り{(all.length - STANCE_FOLD).toLocaleString("ja-JP")}件）
+              </button>
+            </p>
+          )}
+        </section>
+        <SourceLine meta={meta} />
+      </main>
+      <SiteFooter />
+    </>
   );
 }
 

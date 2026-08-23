@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { type LoaderFunctionArgs, Link, type MetaArgs, useLoaderData } from "react-router";
 import { SourceLine, Stamp } from "../components";
+import { SiteFooter } from "../components/SiteFooter";
 import type { DatasetMeta, RollCall } from "../lib/data-contract";
 import { defaultDataDir, readMeta, readRollCall } from "../lib/data-files";
 import { formatDate } from "../lib/format";
@@ -53,42 +54,45 @@ export function RollCallPage({ rollCall, meta }: { rollCall: RollCall; meta: Dat
   // groups[] に無い会派の票は黙って落とさず、集計なしとして末尾に出す（記録にあるものはすべて見せる）
   const unlisted = unlistedGroups(rollCall.groups, rollCall.votes);
   return (
-    <main className="rollcall">
-      <header className="rollcall-cover">
-        <div className="rollcall-cover-top">
-          <Link to="/">← 議会ログ</Link>
-          <Link to={`/rollcalls/${rollCall.session}`}>第{rollCall.session}回国会の採決</Link>
-        </div>
-        <p className="rollcall-date">
-          <time className="num" dateTime={rollCall.date}>
-            {formatDate(rollCall.date)}
-          </time>
-          <span>参議院本会議 ・ 記名投票</span>
-        </p>
-        <h1 className="rollcall-title">{rollCall.title}</h1>
-        <p className="rollcall-tally num">{tallyText(rollCall)}</p>
-        <p className="rollcall-note">「投票なし」は欠席と棄権を区別しません（公式記録に理由は載りません）。</p>
-      </header>
+    <>
+      <main className="rollcall">
+        <header className="rollcall-cover">
+          <div className="rollcall-cover-top">
+            <Link to="/">← 議会ログ</Link>
+            <Link to={`/rollcalls/${rollCall.session}`}>第{rollCall.session}回国会の採決</Link>
+          </div>
+          <p className="rollcall-date">
+            <time className="num" dateTime={rollCall.date}>
+              {formatDate(rollCall.date)}
+            </time>
+            <span>参議院本会議 ・ 記名投票</span>
+          </p>
+          <h1 className="rollcall-title">{rollCall.title}</h1>
+          <p className="rollcall-tally num">{tallyText(rollCall)}</p>
+          <p className="rollcall-note">「投票なし」は欠席と棄権を区別しません（公式記録に理由は載りません）。</p>
+        </header>
 
-      {groups.length === 0 && unlisted.length === 0 ? (
-        <p className="rollcall-empty">個人別の票はありません。</p>
-      ) : (
-        <>
-          {groups.map((g, gi) => (
-            <GroupSection key={g.group} id={`group-${gi}`} name={g.group} votes={votes.get(g.group) ?? []}>
-              {g.size}名 ・ 賛成 {g.yes} ・ 反対 {g.no}
-            </GroupSection>
-          ))}
-          {unlisted.map((name, ui) => (
-            <GroupSection key={name} id={`group-unlisted-${ui}`} name={name} votes={votes.get(name) ?? []}>
-              {votes.get(name)?.length ?? 0}名 ・ 会派別の集計は公表記録にありません
-            </GroupSection>
-          ))}
-        </>
-      )}
+        {groups.length === 0 && unlisted.length === 0 ? (
+          <p className="rollcall-empty">個人別の票はありません。</p>
+        ) : (
+          <>
+            {groups.map((g, gi) => (
+              <GroupSection key={g.group} id={`group-${gi}`} name={g.group} votes={votes.get(g.group) ?? []}>
+                {g.size}名 ・ 賛成 {g.yes} ・ 反対 {g.no}
+              </GroupSection>
+            ))}
+            {unlisted.map((name, ui) => (
+              <GroupSection key={name} id={`group-unlisted-${ui}`} name={name} votes={votes.get(name) ?? []}>
+                {votes.get(name)?.length ?? 0}名 ・ 会派別の集計は公表記録にありません
+              </GroupSection>
+            ))}
+          </>
+        )}
 
-      <SourceLine sourceUrl={rollCall.sourceUrl} sourceName={SOURCE_NAME} fetchedAt={meta?.fetchedAt ?? "未取得"} />
-    </main>
+        <SourceLine sourceUrl={rollCall.sourceUrl} sourceName={SOURCE_NAME} fetchedAt={meta?.fetchedAt ?? "未取得"} />
+      </main>
+      <SiteFooter />
+    </>
   );
 }
 

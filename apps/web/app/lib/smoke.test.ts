@@ -36,6 +36,8 @@ describe("checkBuild", () => {
   const staticOnly = fakeBuild({
     "index.html": html(["/about", "/members"]),
     "about/index.html": html(["/", "/assets/entry-abc123.js"]),
+    "terms/index.html": html(["/"]),
+    "privacy/index.html": html(["/"]),
     "members/index.html": html(["/"]),
     "assets/entry-abc123.js": "",
   });
@@ -43,7 +45,7 @@ describe("checkBuild", () => {
   it("data/ が無いとき静的ページだけで成功する", () => {
     const r = checkBuild(staticOnly, { memberIds: null, rollCalls: null });
     expect(r.failures).toEqual([]);
-    expect(r.checkedPages).toBe(3);
+    expect(r.checkedPages).toBe(5);
     expect(r.checkedLinks).toBeGreaterThan(0);
   });
 
@@ -73,6 +75,8 @@ describe("checkBuild", () => {
     const b = fakeBuild({
       "index.html": html(["/about", "/members", "/robots.txt", "/members/missing", "/assets/gone-1234.js"]),
       "about/index.html": "",
+      "terms/index.html": "",
+      "privacy/index.html": "",
       "members/index.html": "",
       "robots.txt": "",
     });
@@ -87,6 +91,8 @@ describe("checkBuild", () => {
     const b = fakeBuild({
       "index.html": "",
       "about/index.html": "",
+      "terms/index.html": "",
+      "privacy/index.html": "",
       "members/index.html": "",
       "assets/x.js": `href="/nope"`,
     });
@@ -111,7 +117,7 @@ describe("checkMemberData", () => {
 describe("checkSitemap", () => {
   const sitemap = (locs: string[]) =>
     `<?xml version="1.0" encoding="UTF-8"?><urlset>${locs.map((l) => `<url><loc>${l}</loc></url>`).join("")}</urlset>`;
-  const pages = { "index.html": "", "about/index.html": "", "members/index.html": "", "members/m_1/index.html": "" };
+  const pages = { "index.html": "", "about/index.html": "", "terms/index.html": "", "privacy/index.html": "", "members/index.html": "", "members/m_1/index.html": "" };
 
   it("sitemap.xml が無ければ失敗", () => {
     const r = checkSitemap(fakeBuild(pages), { memberIds: null, rollCalls: null });
@@ -121,20 +127,20 @@ describe("checkSitemap", () => {
   it("絶対 URL でも相対パスでも、全 <loc> がビルドに存在すれば OK", () => {
     const b = fakeBuild({
       ...pages,
-      "sitemap.xml": sitemap(["https://example.test/", "https://example.test/about", "/members", "/members/m_1"]),
+      "sitemap.xml": sitemap(["https://example.test/", "https://example.test/about", "/terms", "/privacy", "/members", "/members/m_1"]),
     });
     const r = checkSitemap(b, { memberIds: ["m_1"], rollCalls: null });
     expect(r.failures).toEqual([]);
-    expect(r.checkedUrls).toBe(4);
+    expect(r.checkedUrls).toBe(6);
   });
 
   it("存在しないページを指す <loc> は失敗", () => {
-    const b = fakeBuild({ ...pages, "sitemap.xml": sitemap(["/", "/about", "/members", "/members/m_1", "/members/gone"]) });
+    const b = fakeBuild({ ...pages, "sitemap.xml": sitemap(["/", "/about", "/terms", "/privacy", "/members", "/members/m_1", "/members/gone"]) });
     expect(checkSitemap(b, { memberIds: ["m_1"], rollCalls: null }).failures).toEqual([expect.stringContaining("/members/gone")]);
   });
 
   it("data/ が約束したページが sitemap に無ければ失敗（全議員・全採決・静的ページ）", () => {
-    const b = fakeBuild({ ...pages, "sitemap.xml": sitemap(["/", "/about", "/members"]) });
+    const b = fakeBuild({ ...pages, "sitemap.xml": sitemap(["/", "/about", "/terms", "/privacy", "/members"]) });
     expect(checkSitemap(b, { memberIds: ["m_1"], rollCalls: null }).failures).toEqual([
       expect.stringMatching(/not in sitemap.*\/members\/m_1/),
     ]);
