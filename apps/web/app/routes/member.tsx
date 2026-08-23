@@ -2,8 +2,10 @@ import { useState } from "react";
 import { type LoaderFunctionArgs, type MetaArgs, useLoaderData } from "react-router";
 import { CompareAdd } from "../components/CompareAdd";
 import { SiteFooter } from "../components/SiteFooter";
-import type { BillEntry, BillRole, DatasetMeta, MemberDetail, QuestionEntry, StanceEntry, TimelineEntry, VoteEntry } from "../lib/data-contract";
-import { defaultDataDir, readMemberDetail, readMeta } from "../lib/data-files";
+import type { Assembly } from "@seiji-kiroku/shared";
+import { assemblyPath, findAssembly, isLocalMember, localVoteTone } from "../lib/assemblies";
+import type { BillEntry, BillRole, DatasetMeta, LocalVoteEntry, MemberDetail, QuestionEntry, StanceEntry, TimelineEntry, VoteEntry } from "../lib/data-contract";
+import { defaultDataDir, readAssemblies, readMemberDetail, readMeta } from "../lib/data-files";
 import { formatDate, formatDateTime, formatYearMonth } from "../lib/format";
 import { seoMeta } from "../lib/seo";
 import "./member.css";
@@ -13,32 +15,37 @@ import "./member.css";
  * `loader` is valid only on routes that are actually prerendered. The generated
  * `./+types/member` therefore cannot be relied on; argument types are declared by hand. */
 
-export type MemberLoaderData = { detail: MemberDetail; meta: DatasetMeta | null };
+/** assembly は地方議員（#158）のときだけ引く（assemblies/index.json の行。無ければ null）。国会議員は null */
+export type MemberLoaderData = { detail: MemberDetail; meta: DatasetMeta | null; assembly: Assembly | null };
 
 export async function loader({ params }: LoaderFunctionArgs): Promise<MemberLoaderData> {
   const dir = defaultDataDir();
   const [detail, meta] = await Promise.all([readMemberDetail(dir, params.id ?? ""), readMeta(dir)]);
   if (!detail) throw new Response("Not Found", { status: 404 });
-  return { detail, meta };
+  const assembly = isLocalMember(detail) ? findAssembly((await readAssemblies(dir)) ?? [], detail.assemblyId ?? "") ?? null : null;
+  return { detail, meta, assembly };
 }
 
 /**
  * 「{氏名}（{院}・{選挙区}）の投票記録」: 検索語（氏名・院・選挙区）を含め、評価語は入れない。
  * 衆院は個人の投票記録が公開されていないので「投票記録」と言わず「記録」。
  */
-export function pageTitle(detail: MemberDetail): string {
+export function pageTitle(detail: MemberDetail, assembly: Assembly | null = null): string {
   const term = currentTerm(detail);
+  // 地方議員（#158）: 「{氏名}（{議会名}・{選挙区}）の表決記録」。議会の公表は「表決」なので「投票」と言わない
+  if (isLocalMember(detail)) return `${detail.name}（${[assemblyLabel(detail, assembly), term?.district].filter(Boolean).join("・")}）の表決記録`;
   const where = [HOUSE_LABEL[detail.house], term?.district].filter(Boolean).join("・");
   return `${detail.name}（${where}）の${detail.house === "shugiin" ? "記録" : "投票記録"}`;
 }
 
 export function meta({ data, location }: MetaArgs<typeof loader>) {
   if (!data) return [{ title: "議会ログ" }];
-  const { detail } = data;
+  const { detail, assembly = null } = data;
   return seoMeta({
-    title: pageTitle(detail),
-    description:
-      detail.house === "shugiin"
+    title: pageTitle(detail, assembly),
+    description: isLocalMember(detail)
+      ? `${affiliation(detail, assembly)}。本会議の表決を議会の公表（凡例付きの原文）から出典付きで並べます。`
+      : detail.house === "shugiin"
         ? `${affiliation(detail)}。提出法案・賛同法案・質問主意書・本会議発言と、所属会派の態度（推定）を公式記録から出典付きで並べます。`
         : `${affiliation(detail)}。本会議の採決・提出法案・質問主意書・発言を公式記録から出典付きで並べます。`,
     pathname: location.pathname,
@@ -48,7 +55,7 @@ export function meta({ data, location }: MetaArgs<typeof loader>) {
 
 export default function MemberRoute() {
   const loaderData = useLoaderData<typeof loader>();
-  return <MemberPage detail={loaderData.detail} meta={loaderData.meta} />;
+  return <MemberPage detail={loaderData.detail} meta={loaderData.meta} assembly={loaderData.assembly ?? null} />;
 }
 
 /* ---------- page ---------- */
@@ -72,12 +79,24 @@ const TABS: Record<MemberDetail["house"], { id: Tab; label: string }[]> = {
   ],
 };
 
+/** 地方議員のタブ（#158）: 表決だけ。国会の採決・提出法案・質問主意書・発言は地方の公表にはない */
+const LOCAL_TABS: { id: Tab; label: string }[] = [
+  { id: "all", label: "すべて" },
+  { id: "localVote", label: "表決" },
+];
+
 const HOUSE_LABEL = { sangiin: "参議院", shugiin: "衆議院" } as const;
+
+/** 地方議員の議会名。assemblies/index.json に無ければ assemblyId をそのまま（推定しない） */
+function assemblyLabel(detail: MemberDetail, assembly: Assembly | null): string {
+  return assembly?.name ?? detail.assemblyId ?? "";
+}
 
 /** 会派の態度（推定）は1人あたり100行前後になるので、最初は 20 件だけ出し「さらに表示」で残りを出す（#88）。 */
 export const STANCE_FOLD = 20;
 
-export function MemberPage({ detail, meta }: { detail: MemberDetail; meta: DatasetMeta | null }) {
+export function MemberPage({ detail, meta, assembly = null }: { detail: MemberDetail; meta: DatasetMeta | null; assembly?: Assembly | null }) {
+  const local = isLocalMember(detail);
   const [tab, setTabState] = useState<Tab>("all");
   const [stanceExpanded, setStanceExpanded] = useState(false);
   const setTab = (t: Tab) => {
@@ -92,10 +111,10 @@ export function MemberPage({ detail, meta }: { detail: MemberDetail; meta: Datas
   return (
     <>
       <main className="member">
-        <Cover detail={detail} counts={counts} />
-        {detail.house === "shugiin" && <ShugiinNotice />}
+        <Cover detail={detail} counts={counts} assembly={assembly} />
+        {local ? <LocalNotice detail={detail} assembly={assembly} /> : detail.house === "shugiin" && <ShugiinNotice />}
         <div className="member-tabs" role="tablist" aria-label="記録の種類">
-          {TABS[detail.house].map((t) => (
+          {(local ? LOCAL_TABS : TABS[detail.house]).map((t) => (
             <button
               key={t.id}
               type="button"
@@ -116,6 +135,8 @@ export function MemberPage({ detail, meta }: { detail: MemberDetail; meta: Datas
             <p className="member-empty">記録はありません。</p>
           ) : tab === "vote" ? (
             <VoteTable votes={entries.filter((e): e is VoteEntry => e.kind === "vote")} />
+          ) : tab === "localVote" ? (
+            <LocalVoteTable votes={entries.filter((e): e is LocalVoteEntry => e.kind === "localVote")} />
           ) : tab === "bill" ? (
             <BillTable bills={entries.filter((e): e is BillEntry => e.kind === "bill")} />
           ) : tab === "question" ? (
@@ -144,9 +165,35 @@ function currentTerm(detail: MemberDetail) {
   return detail.terms.find((t) => !t.to) ?? detail.terms[detail.terms.length - 1];
 }
 
-function affiliation(detail: MemberDetail): string {
+function affiliation(detail: MemberDetail, assembly: Assembly | null = null): string {
   const term = currentTerm(detail);
-  return [HOUSE_LABEL[detail.house], term?.district, term?.group].filter(Boolean).join(" ・ ");
+  const where = isLocalMember(detail) ? assemblyLabel(detail, assembly) : HOUSE_LABEL[detail.house];
+  return [where, term?.district, term?.group].filter(Boolean).join(" ・ ");
+}
+
+/**
+ * 地方議員（#158）: どの議会の記録で、表決が何の原文かをページ冒頭で1文だけ示す（評価はしない）。
+ * 出典は議会の公式ページ（assemblies/index.json の sourceUrl）と、このサイトの議会ページ。
+ */
+function LocalNotice({ detail, assembly }: { detail: MemberDetail; assembly: Assembly | null }) {
+  const name = assemblyLabel(detail, assembly);
+  return (
+    <p className="member-notice">
+      {name}の記録です。表決は議会が公表する表決結果の原文を凡例（○＝賛成 など）とともにそのまま示し、賛成・反対に丸めません。
+      {assembly && (
+        <>
+          {" "}
+          <ExternalLink href={assembly.sourceUrl}>{name}（公式）</ExternalLink>
+        </>
+      )}
+      {detail.assemblyId && (
+        <>
+          {" ・ "}
+          <a href={assemblyPath(detail.assemblyId)}>議会ページ</a>
+        </>
+      )}
+    </p>
+  );
 }
 
 /** 衆院は個人の投票記録が公開されていない事実を、ページ冒頭で1文だけ示す（評価はしない）。 */
@@ -161,7 +208,7 @@ function ShugiinNotice() {
 
 type Counts = Record<TimelineEntry["kind"], number> & { submitted: number; supported: number };
 
-function Cover({ detail, counts }: { detail: MemberDetail; counts: Counts }) {
+function Cover({ detail, counts, assembly }: { detail: MemberDetail; counts: Counts; assembly: Assembly | null }) {
   const term = currentTerm(detail);
   return (
     <header className="member-cover">
@@ -170,9 +217,14 @@ function Cover({ detail, counts }: { detail: MemberDetail; counts: Counts }) {
       </div>
       <p className="member-kana">{detail.kana}</p>
       <h1 className="member-name">{detail.name}</h1>
-      <p className="member-affil">{affiliation(detail)}</p>
+      <p className="member-affil">{affiliation(detail, assembly)}</p>
       {term?.to && <p className="member-term num">任期満了 {formatYearMonth(term.to)}</p>}
-      {detail.house === "shugiin" ? (
+      {isLocalMember(detail) ? (
+        /* 地方議会（#158）: 公表されているのは表決だけ */
+        <dl className="member-counts">
+          <Count n={counts.localVote} label="表決" />
+        </dl>
+      ) : detail.house === "shugiin" ? (
         /* 衆院: 記名採決は存在しないので枠を出さない。提出者と賛成者を分けて数える（どちらも事実） */
         <dl className="member-counts">
           <Count n={counts.submitted} label="提出法案" />
@@ -206,7 +258,7 @@ function Count({ n, label }: { n: number; label: string }) {
 }
 
 function countKinds(timeline: TimelineEntry[]): Counts {
-  const c: Counts = { vote: 0, bill: 0, stance: 0, question: 0, attendance: 0, speech: 0, submitted: 0, supported: 0 };
+  const c: Counts = { vote: 0, bill: 0, stance: 0, question: 0, attendance: 0, speech: 0, localVote: 0, submitted: 0, supported: 0 };
   for (const e of timeline) {
     c[e.kind] += 1;
     if (e.kind === "bill") c[e.role === "提出者" ? "submitted" : "supported"] += 1;
@@ -258,6 +310,8 @@ function entryKey(e: TimelineEntry): string {
       return `attendance:${e.meetingId}`;
     case "speech":
       return `speech:${e.speechId}`;
+    case "localVote":
+      return `localVote:${e.rollCallId}`;
   }
 }
 
@@ -308,6 +362,8 @@ function Row({ entry }: { entry: TimelineEntry }) {
       );
     case "stance":
       return <StanceRow entry={entry} />;
+    case "localVote":
+      return <LocalVoteRow entry={entry} />;
     case "question":
       /* 質問主意書（事実）。提出者欄の原文・経過状況（衆院）・答弁書受領日を出し、出典（衆院 経過ページ／参院 詳細ページ）と答弁本文にリンクする。 */
       return (
@@ -385,6 +441,30 @@ function StanceRow({ entry }: { entry: StanceEntry }) {
   );
 }
 
+/**
+ * 地方議会の表決の行（#158）。判の文字は表決結果表の原文（○×議欠－棄白）、読み上げは「原文（凡例）」。
+ * 色は凡例から国会の値に対応づけられた（mapped がある）行だけで、それ以外は中立。凡例は必ず添え、「投票なし」には丸めない。
+ */
+function LocalVoteRow({ entry }: { entry: LocalVoteEntry }) {
+  return (
+    <li className="member-row">
+      <LocalStamp vote={entry.vote} />
+      <div className="member-row-body">
+        <p className="member-row-title">{entry.title}</p>
+        <p className="member-row-meta">
+          <MetaLine parts={[legendText(entry.vote), entry.sessionLabel, entry.method, entry.result]} />
+          <ExternalLink href={entry.sourceUrl}>表決結果</ExternalLink>
+        </p>
+      </div>
+    </li>
+  );
+}
+
+/** 「凡例 ○＝賛成」: セルの原文と、その議会の凡例での意味の原文 */
+function legendText(vote: LocalVoteEntry["vote"]): string {
+  return `凡例 ${vote.raw}＝${vote.legend}`;
+}
+
 /** "A ・ B ・ " — separator-joined facts; the caller appends the source link. */
 function MetaLine({ parts }: { parts: (string | null | undefined)[] }) {
   return <>{parts.filter(Boolean).map((p) => `${p} ・ `)}</>;
@@ -421,6 +501,49 @@ function VoteTable({ votes }: { votes: VoteEntry[] }) {
               <td>{v.result}</td>
               <td>
                 <ExternalLink href={v.sourceUrl}>参院投票結果</ExternalLink>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/* ---------- 表決（地方議会）table ---------- */
+
+function LocalVoteTable({ votes }: { votes: LocalVoteEntry[] }) {
+  return (
+    <div className="member-table-wrap">
+      <table className="member-table">
+        <thead>
+          <tr>
+            <th scope="col">日付</th>
+            <th scope="col">案件</th>
+            <th scope="col">表決</th>
+            <th scope="col">方法</th>
+            <th scope="col">結果</th>
+            <th scope="col">出典</th>
+          </tr>
+        </thead>
+        <tbody>
+          {votes.map((v) => (
+            <tr key={v.rollCallId}>
+              <td className="num">
+                <time dateTime={v.date}>{formatDate(v.date)}</time>
+              </td>
+              <td>
+                {v.title}
+                <span className="member-note">{v.sessionLabel}</span>
+              </td>
+              <td>
+                <LocalStamp vote={v.vote} />
+                <span className="member-note">{v.vote.legend}</span>
+              </td>
+              <td>{v.method ?? "—"}</td>
+              <td>{v.result ?? "—"}</td>
+              <td>
+                <ExternalLink href={v.sourceUrl}>表決結果</ExternalLink>
               </td>
             </tr>
           ))}
@@ -546,6 +669,15 @@ function Stamp({ value }: { value: StampValue }) {
   return (
     <span className="member-stamp" data-tone={STAMP_TONE[value]} role="img" aria-label={value}>
       {value === "投票なし" ? "－" : value}
+    </span>
+  );
+}
+
+/** 地方議会の表決の判（#158）。文字は原文、aria-label は「原文（凡例）」。色は mapped のある値だけ（localVoteTone）。 */
+function LocalStamp({ vote }: { vote: LocalVoteEntry["vote"] }) {
+  return (
+    <span className="member-stamp" data-tone={localVoteTone(vote)} role="img" aria-label={`${vote.raw}（${vote.legend}）`}>
+      {vote.raw}
     </span>
   );
 }

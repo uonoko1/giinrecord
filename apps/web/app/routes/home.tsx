@@ -2,6 +2,7 @@ import { Link, type MetaArgs } from "react-router";
 import { CoverBrand } from "../components/CoverBrand";
 import { SiteFooter } from "../components/SiteFooter";
 import { ZipLookup } from "../components/ZipLookup";
+import { localAssemblies } from "../lib/assemblies";
 import { type Dataset, dataset as bundled, formatSessions, REPO_URL } from "../lib/dataset";
 import { formatDateTime } from "../lib/format";
 import { seoMeta } from "../lib/seo";
@@ -21,6 +22,8 @@ export default function Home({ data = bundled }: { data?: Dataset }) {
   const latestSession = data.meta?.sessions.length ? Math.max(...data.meta.sessions) : undefined;
   const sangiinCount = data.members.filter((m) => m.house === "sangiin").length;
   const shugiinCount = data.members.filter((m) => m.house === "shugiin").length;
+  // #158: 地方議会の数（assemblies/index.json の national 以外）。index が無い古いデータでは集計中
+  const localCount = data.assemblies ? localAssemblies(data.assemblies).length : undefined;
 
   return (
     <>
@@ -42,6 +45,10 @@ export default function Home({ data = bundled }: { data?: Dataset }) {
           </Link>
           {/* #112: 郵便番号 → 選挙区。クライアント専用（JS 無しでは /members へのリンク） */}
           <ZipLookup />
+          <Link className="entry__link" to="/assemblies">
+            議会一覧
+            <span className="entry__sub">　国会と地方議会、個人別表決の公開状況</span>
+          </Link>
         </section>
 
         {recent.length > 0 && (
@@ -92,6 +99,10 @@ export default function Home({ data = bundled }: { data?: Dataset }) {
               <div className="figure__num">{data.meta ? (formatSessions(data.meta.sessions) ?? PENDING) : PENDING}</div>
               <div className="figure__label">国会</div>
             </div>
+            <div className="figure">
+              <div className="figure__num">{localCount === undefined ? PENDING : localCount.toLocaleString("ja-JP")}</div>
+              <div className="figure__label">地方議会</div>
+            </div>
           </div>
           <p className="note">衆議院は個人の投票記録が公開されていないため、会派の態度として別に扱います。</p>
         </section>
@@ -119,7 +130,7 @@ export default function Home({ data = bundled }: { data?: Dataset }) {
             <a href={REPO_URL} rel="noreferrer">
               ソースコード
             </a>
-            <Link to="/about#funding">支援する</Link>
+            <Link to="/terms#funding">支援する</Link>
           </div>
         </section>
       </main>

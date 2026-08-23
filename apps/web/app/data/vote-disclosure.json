@@ -1,0 +1,613 @@
+{
+  "surveyedAt": "2026-08-23",
+  "source": "docs/research/local-assemblies.md",
+  "issue": 128,
+  "rows": [
+    {
+      "assemblyId": "pref-01",
+      "kind": "prefectural",
+      "label": "北海道",
+      "status": "不明",
+      "format": "—",
+      "sourceUrl": "https://www.gikai.pref.hokkaido.lg.jp/honkaigi/index.html",
+      "note": "議案・決議案の一覧ページはあるが賛否の資料に到達できず"
+    },
+    {
+      "assemblyId": "pref-02",
+      "kind": "prefectural",
+      "label": "青森",
+      "status": "公開",
+      "format": "PDF",
+      "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/katsudo-shinsakekka.html",
+      "note": "令和8年6月 第326回定例会（更新 2026-07-10）。ページ注記「平成25年9月第275回定例会から、議決結果は議員ごとの賛否状況を掲載」"
+    },
+    {
+      "assemblyId": "pref-03",
+      "kind": "prefectural",
+      "label": "岩手",
+      "status": "会派別",
+      "format": "PDF",
+      "sourceUrl": "https://iwatekengikai.gijiroku.com/g07_gian_sanpi.asp",
+      "note": "令和8年6月定例会「議会議員の賛否の状況」。一部の会期は議員別と注記あり（中身は未確認）"
+    },
+    {
+      "assemblyId": "pref-04",
+      "kind": "prefectural",
+      "label": "宮城",
+      "status": "公開",
+      "format": "PDF（index は HTML）",
+      "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/kakohonkaigi.html",
+      "note": "第399回（令和8年2月定例会、2026-03-18 議決）。「各議員の表決状況」、約 20 年分。凡例「○賛成 ×反対 議 欠 － 棄 白」「簡易／起立」。文字層あり（5 ページ）"
+    },
+    {
+      "assemblyId": "pref-05",
+      "kind": "prefectural",
+      "label": "秋田",
+      "status": "公開",
+      "format": "PDF",
+      "sourceUrl": "https://pref.akita.gsl-service.net/doc/2024022000037/",
+      "note": "令和6年12月20日版まで確認（令和7・8年は未確認）。「各議員の表決状況はこちら」"
+    },
+    {
+      "assemblyId": "pref-06",
+      "kind": "prefectural",
+      "label": "山形",
+      "status": "総数のみ",
+      "format": "PDF",
+      "sourceUrl": "https://www.pref.yamagata.jp/600006/kensei/assembly/gikaikatsudou/association/r05/teireikai/r0506teireikaigaiyo.html",
+      "note": "令和5年6月定例会「議決案件一覧」（件数と可決・同意のみ）。令和8年のページは 404／一覧のみ"
+    },
+    {
+      "assemblyId": "pref-07",
+      "kind": "prefectural",
+      "label": "福島",
+      "status": "会派別",
+      "format": "PDF",
+      "sourceUrl": "https://www.pref.fukushima.lg.jp/site/gikai/202406kekka.html",
+      "note": "2024年6月定例会「各会派の賛否の状況」"
+    },
+    {
+      "assemblyId": "pref-08",
+      "kind": "prefectural",
+      "label": "茨城",
+      "status": "会派別",
+      "format": "PDF",
+      "sourceUrl": "https://www.pref.ibaraki.jp/gikai/outline/r6/teireikai1.htm",
+      "note": "令和6年第1回定例会「議案等に対する各会派等の採決態度」"
+    },
+    {
+      "assemblyId": "pref-09",
+      "kind": "prefectural",
+      "label": "栃木",
+      "status": "会派別",
+      "format": "PDF",
+      "sourceUrl": "https://pref-tochigi.gijiroku.com/g07_gian_sanpi.asp",
+      "note": "令和7年度 第414回通常議会まで。「各会派の採決態度」"
+    },
+    {
+      "assemblyId": "pref-10",
+      "kind": "prefectural",
+      "label": "群馬",
+      "status": "公開",
+      "format": "不明（PDF/HTML 未確認）",
+      "sourceUrl": "https://www.pref.gunma.jp/site/gikai/list27.html",
+      "note": "令和8年 第2回定例会まで。「提出議案・賛否の状況（議員ごとの賛否の状況は平成24年9月定例会以降）」。個票ページの形式は 2 ページ目でも辿れず"
+    },
+    {
+      "assemblyId": "pref-11",
+      "kind": "prefectural",
+      "label": "埼玉",
+      "status": "総数のみ",
+      "format": "HTML",
+      "sourceUrl": "https://www.pref.saitama.lg.jp/e1601/gikai-gaiyou/r0702/2.html",
+      "note": "令和7年2月定例会 議案一覧（番号・件名・要旨・審査結果）"
+    },
+    {
+      "assemblyId": "pref-12",
+      "kind": "prefectural",
+      "label": "千葉",
+      "status": "会派別",
+      "format": "PDF",
+      "sourceUrl": "https://www.pref.chiba.lg.jp/gikai/giji/gaiyou/r8/r8-2-teirei/index.html",
+      "note": "令和8年2月定例県議会「議案賛否一覧表」「請願賛否一覧表」「発議案賛否一覧表」。PDF 本文は会派列＋「原案に反対する会派等」欄に無所属議員の個人名（例「松澤議員」）。会派所属議員の個人票は会派欄からの読み取りになる（会派が割れた場合の扱いは未確認）→ 個人票とは言えないので 会派別 に分類",
+      "statusNote": "無所属は個人名"
+    },
+    {
+      "assemblyId": "pref-13",
+      "kind": "prefectural",
+      "label": "東京",
+      "status": "会派別",
+      "format": "HTML + PDF",
+      "sourceUrl": "https://www.gikai.metro.tokyo.lg.jp/bill/reg2025-1.html",
+      "note": "令和7年第1回定例会「各会派等の議案への賛否」（テキスト版 `newsletter/362/07.html`、PDF `pdf/362.pdf`）"
+    },
+    {
+      "assemblyId": "pref-14",
+      "kind": "prefectural",
+      "label": "神奈川",
+      "status": "会派別",
+      "format": "HTML 表",
+      "sourceUrl": "https://www.pref.kanagawa.jp/gikai/p80113.html",
+      "note": "令和8年第2回定例会。凡例「賛成＝〇 反対＝× 欠席者等＝▲」、列は会派略称（自民・立民・未来・公明・県政・共産・維新…）"
+    },
+    {
+      "assemblyId": "pref-15",
+      "kind": "prefectural",
+      "label": "新潟",
+      "status": "総数のみ",
+      "format": "HTML",
+      "sourceUrl": "https://www.pref.niigata.lg.jp/site/gikai/r0302-giketukekka.html",
+      "note": "令和3年2月定例会 議決結果（件数と可決・否決）。最新会期は未確認"
+    },
+    {
+      "assemblyId": "pref-16",
+      "kind": "prefectural",
+      "label": "富山",
+      "status": "総数のみ",
+      "format": "HTML（Shift_JIS）",
+      "sourceUrl": "https://web.pref.toyama.dbsr.jp/giketsu/giketsu2026-r08-06t.html",
+      "note": "令和8年6月定例会。列は 議案番号・件名・議決年月日・議決の結果"
+    },
+    {
+      "assemblyId": "pref-17",
+      "kind": "prefectural",
+      "label": "石川",
+      "status": "不明",
+      "format": "—",
+      "sourceUrl": "https://www.pref.ishikawa.lg.jp/gikai/index.html",
+      "note": "賛否ページに到達できず（`voices/g07_gian_sanpi.asp` は 404）"
+    },
+    {
+      "assemblyId": "pref-18",
+      "kind": "prefectural",
+      "label": "福井",
+      "status": "会派別",
+      "format": "HTML 表 + PDF",
+      "sourceUrl": "https://www.pref.fukui.lg.jp/gikai/giankekka/index.html",
+      "note": "令和8年度 6月・5月「議案等に対する各会派の賛否の状況」（列: 自・民・ふ・越・公）"
+    },
+    {
+      "assemblyId": "pref-19",
+      "kind": "prefectural",
+      "label": "山梨",
+      "status": "不明",
+      "format": "—",
+      "sourceUrl": "https://www.pref.yamanashi.jp/gikaisom/",
+      "note": "トップに議決結果・賛否の導線なし"
+    },
+    {
+      "assemblyId": "pref-20",
+      "kind": "prefectural",
+      "label": "長野",
+      "status": "不明",
+      "format": "—",
+      "sourceUrl": "https://www.pref.nagano.lg.jp/gikai/chosa/teireikai/index.html",
+      "note": "令和8年6月定例会ページは 会期日程・知事提出議案・発言通告・議員提出議案・請願陳情・委員長報告のみ。賛否資料に到達できず"
+    },
+    {
+      "assemblyId": "pref-21",
+      "kind": "prefectural",
+      "label": "岐阜",
+      "status": "会派別",
+      "format": "HTML + PDF",
+      "sourceUrl": "https://www.pref.gifu.lg.jp/site/gikai/17256.html",
+      "note": "平成30年第1回定例会（古い例しか辿れず）。「賛多（賛成多数）」の議案だけ賛否内訳 PDF。PDF は会派列（無所属は個人列 無所属Ａ〜Ｄ）＋「会派等所属議員」の氏名表"
+    },
+    {
+      "assemblyId": "pref-22",
+      "kind": "prefectural",
+      "label": "静岡",
+      "status": "会派別",
+      "format": "HTML 表 + PDF",
+      "sourceUrl": "https://www.pref.shizuoka.jp/kensei/kengikai/gikaiugoki/1003742/index.html",
+      "note": "令和5年6月定例会。通常の議案は会派列（自改・ふ県・公明…）、不信任決議案は議員名ごとに白票／青票を列挙。個人票は記名投票のときだけなので 会派別 に分類",
+      "statusNote": "記名投票時のみ個人名"
+    },
+    {
+      "assemblyId": "pref-23",
+      "kind": "prefectural",
+      "label": "愛知",
+      "status": "不明",
+      "format": "—",
+      "sourceUrl": "https://www.pref.aichi.jp/site/gikai/kekka-gaiyo.html",
+      "note": "結果概要は 議会ニュース・県議会だより（PDF/テキスト）への導線のみ。賛否の有無は未確認"
+    },
+    {
+      "assemblyId": "pref-24",
+      "kind": "prefectural",
+      "label": "三重",
+      "status": "公開",
+      "format": "PDF（index は HTML）",
+      "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/07976009017.htm",
+      "note": "令和8年2月定例会「議員別の賛否等の状況」（月ごとの PDF）。凡例「○賛成 ×反対 議 除 － 欠」。文字層あり（1 ページ）"
+    },
+    {
+      "assemblyId": "pref-25",
+      "kind": "prefectural",
+      "label": "滋賀",
+      "status": "不明",
+      "format": "—",
+      "sourceUrl": "https://www.shigaken-gikai.jp/g07_giketsu.asp",
+      "note": "検索結果の要約には「賛否状況を掲載」とあるが一次資料で確認できず"
+    },
+    {
+      "assemblyId": "pref-26",
+      "kind": "prefectural",
+      "label": "京都",
+      "status": "会派別",
+      "format": "HTML 表",
+      "sourceUrl": "https://www.pref.kyoto.jp/gikai/katsudo/tere/index.html",
+      "note": "令和4年2月定例会「賛否の状況」（自民・共産・府民・公明・維新）。最新会期は未確認"
+    },
+    {
+      "assemblyId": "pref-27",
+      "kind": "prefectural",
+      "label": "大阪",
+      "status": "総数のみ",
+      "format": "PDF/Word",
+      "sourceUrl": "https://www.pref.osaka.lg.jp/o170010/gikai_giji/hokoku/index.html",
+      "note": "令和8年7月臨時会まで「会議報告（議決等結果一覧）」。賛否の内訳は無し"
+    },
+    {
+      "assemblyId": "pref-28",
+      "kind": "prefectural",
+      "label": "兵庫",
+      "status": "会派別",
+      "format": "PDF",
+      "sourceUrl": "https://web.pref.hyogo.lg.jp/gikai/teireikai/r07/r7_374/documents/taidor80323.pdf",
+      "note": "令和8年2月 第374回定例会「議案等に対する会派態度」（PDF 本文は抽出せず。表題から分類）"
+    },
+    {
+      "assemblyId": "pref-29",
+      "kind": "prefectural",
+      "label": "奈良",
+      "status": "公開",
+      "format": "PDF",
+      "sourceUrl": "https://www.pref.nara.lg.jp/n161/18579.html",
+      "note": "令和8年6月定例会（7月2日議決分）「議員別の議案等に対する表決結果」。文字層あり（2 ページ、会派＋氏名が縦書き）"
+    },
+    {
+      "assemblyId": "pref-30",
+      "kind": "prefectural",
+      "label": "和歌山",
+      "status": "総数のみ",
+      "format": "HTML",
+      "sourceUrl": "https://www.pref.wakayama.lg.jp/prefg/200100/cms/d00155103.html",
+      "note": "令和6年6月定例会「議案・採決結果等一覧」（件数と可決）。令和8年6月は一覧に載るが個別ページ未確認"
+    },
+    {
+      "assemblyId": "pref-31",
+      "kind": "prefectural",
+      "label": "鳥取",
+      "status": "公開",
+      "format": "PDF（index は HTML 表）",
+      "sourceUrl": "https://www.pref.tottori.lg.jp/328150.htm",
+      "note": "令和8年6月定例会（6月29日議決分）。ページ注記「議員別の賛否の状況もご覧いただけます」。文字層あり（3 ページ、氏名は縦書き「○○議員」）"
+    },
+    {
+      "assemblyId": "pref-32",
+      "kind": "prefectural",
+      "label": "島根",
+      "status": "公開",
+      "format": "PDF",
+      "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/saikin/",
+      "note": "第499回（令和8年6月定例会）「議員別採決結果一覧」（1.3MB、4 ページ、文字層あり。付託委員会・採決結果の列つき）"
+    },
+    {
+      "assemblyId": "pref-33",
+      "kind": "prefectural",
+      "label": "岡山",
+      "status": "総数のみ",
+      "format": "PDF",
+      "sourceUrl": "https://www.pref.okayama.jp/site/gikai/09-02.html",
+      "note": "令和8年6月定例会「提出議案及び議決結果」（番号・概要のみ。PDF 先頭 2 ページで賛否なし）"
+    },
+    {
+      "assemblyId": "pref-34",
+      "kind": "prefectural",
+      "label": "広島",
+      "status": "総数のみ",
+      "format": "PDF",
+      "sourceUrl": "https://www.pref.hiroshima.lg.jp/site/gikai/shingikekka.html",
+      "note": "「Ｒ08.6審議結果」など会期ごとの PDF（表題から。本文未抽出）"
+    },
+    {
+      "assemblyId": "pref-35",
+      "kind": "prefectural",
+      "label": "山口",
+      "status": "会派別",
+      "format": "HTML 表 + PDF",
+      "sourceUrl": "https://www.pref.yamaguchi.lg.jp/site/gikai/25491.html",
+      "note": "令和3年2月定例会 議案審議結果表＋「議案に対する各会派の賛否の状況（PDF）」。最新会期は未確認"
+    },
+    {
+      "assemblyId": "pref-36",
+      "kind": "prefectural",
+      "label": "徳島",
+      "status": "公開",
+      "format": "PDF（index は HTML）",
+      "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/honkaigi/gaiyou/",
+      "note": "令和8年6月定例会「各議員の表決態度（7月3日採決）」。ページ注記「平成27年12月定例会以降について公表」。文字層あり（2 ページ、行＝議案・列＝議員で ○／議 が横に並ぶ。抽出しやすい）"
+    },
+    {
+      "assemblyId": "pref-37",
+      "kind": "prefectural",
+      "label": "香川",
+      "status": "総数のみ",
+      "format": "HTML",
+      "sourceUrl": "https://www.pref.kagawa.lg.jp/gikai/jyoho/giketsu/6_2b.html",
+      "note": "令和8年6月定例会 議決一覧（議案番号・件名・審議結果・議決年月日）"
+    },
+    {
+      "assemblyId": "pref-38",
+      "kind": "prefectural",
+      "label": "愛媛",
+      "status": "総数のみ",
+      "format": "HTML",
+      "sourceUrl": "https://www.pref.ehime.jp/site/gikai/152168.html",
+      "note": "第396回（令和8年6月）定例会 議員提出議案（番号・件名・提出日・付託委員会・議決日・結果）"
+    },
+    {
+      "assemblyId": "pref-39",
+      "kind": "prefectural",
+      "label": "高知",
+      "status": "公開",
+      "format": "PDF（index は HTML）",
+      "sourceUrl": "https://gikai.pref.kochi.lg.jp/activity/decision.html",
+      "note": "令和8年6月定例会「議員別賛否の状況」（ページ名そのもの）。文字層あり（2 ページ、会派名＋縦書き氏名）"
+    },
+    {
+      "assemblyId": "pref-40",
+      "kind": "prefectural",
+      "label": "福岡",
+      "status": "総数のみ",
+      "format": "HTML",
+      "sourceUrl": "https://www.gikai.pref.fukuoka.lg.jp/site/honkaigi/saiketsu-0802.html",
+      "note": "令和8年2月定例会「採決結果」（件名と「原案のとおり可決」）"
+    },
+    {
+      "assemblyId": "pref-41",
+      "kind": "prefectural",
+      "label": "佐賀",
+      "status": "不明",
+      "format": "—",
+      "sourceUrl": "https://www.pref.saga.lg.jp/gikai/list01707.html",
+      "note": "令和8年の会期ページは 議案件名一覧・委員会審議・委員長報告の導線のみ。検索要約の「意見書案と採決状況」は一次資料で未確認"
+    },
+    {
+      "assemblyId": "pref-42",
+      "kind": "prefectural",
+      "label": "長崎",
+      "status": "総数のみ",
+      "format": "HTML",
+      "sourceUrl": "https://www.pref.nagasaki.lg.jp/gikai/0706teirei/gian.html",
+      "note": "令和7年6月定例会「議案及び採決結果」（議案番号・件名・議決年月日・議決の結果）"
+    },
+    {
+      "assemblyId": "pref-43",
+      "kind": "prefectural",
+      "label": "熊本",
+      "status": "総数のみ",
+      "format": "HTML 表 + PDF",
+      "sourceUrl": "https://www.pref.kumamoto.jp/site/gikai/list4-16.html",
+      "note": "令和8年6月定例会「知事提出議案の議決結果」＋「議案等の採決結果表（PDF）」（表題から。PDF 本文未抽出）"
+    },
+    {
+      "assemblyId": "pref-44",
+      "kind": "prefectural",
+      "label": "大分",
+      "status": "公開",
+      "format": "PDF",
+      "sourceUrl": "https://www.pref.oita.jp/site/gikai/list10000-10040.html",
+      "note": "令和6年第3回定例会「議案等賛否一覧表（9月24日分）」。PDF 本文に「会派名」「議席番号 1〜43」「議員名」＋43 名の氏名、凡例「○賛成 ×反対 除 欠 議」。令和7・8年は未確認"
+    },
+    {
+      "assemblyId": "pref-45",
+      "kind": "prefectural",
+      "label": "宮崎",
+      "status": "会派別",
+      "format": "PDF（index は HTML）",
+      "sourceUrl": "https://www.pref.miyazaki.lg.jp/gikai/session/teirei-rinji/index.html",
+      "note": "令和8年6月定例会「各会派の議案・請願への賛否（PDF）」"
+    },
+    {
+      "assemblyId": "pref-46",
+      "kind": "prefectural",
+      "label": "鹿児島",
+      "status": "総数のみ",
+      "format": "HTML 表 + PDF",
+      "sourceUrl": "https://www.pref.kagoshima.jp/ha01/gikai/teireikai/tyokkinn/r6_1kai/gian.html",
+      "note": "令和6年第1回定例会 知事提出議案（議案番号・件名・議決結果）"
+    },
+    {
+      "assemblyId": "pref-47",
+      "kind": "prefectural",
+      "label": "沖縄",
+      "status": "公開",
+      "format": "PDF",
+      "sourceUrl": "https://www.pref.okinawa.lg.jp/kensei/gikai/1016839/1037683/1037684.html",
+      "note": "令和8年第1回（2月定例会）「議決状況（議案等に対する議員の賛否状況）」知事提出議案（2月18日・3月27日議決分）。PDF 本文未抽出（表題とページの説明から）"
+    },
+    {
+      "assemblyId": "city-01100",
+      "kind": "municipal",
+      "label": "札幌市",
+      "status": "会派別",
+      "format": "PDF",
+      "sourceUrl": "https://www.city.sapporo.jp/gikai/html/shingikekka.html",
+      "note": "令和8年第2回定例会「議決事件等一覧表」（11 ページ）。委員会結果欄に「（共反対）」のように反対会派だけ略記。個人票なし"
+    },
+    {
+      "assemblyId": "city-04100",
+      "kind": "municipal",
+      "label": "仙台市",
+      "status": "会派別",
+      "format": "HTML 表",
+      "sourceUrl": "https://www.gikai.city.sendai.jp/result/result/confe_2024/gian_r6_4.html",
+      "note": "令和6年第4回定例会。列＝会派名（11 会派）＋採決結果"
+    },
+    {
+      "assemblyId": "city-11100",
+      "kind": "municipal",
+      "label": "さいたま市",
+      "status": "公開",
+      "format": "PDF",
+      "sourceUrl": "https://www.city.saitama.lg.jp/gikai/003/002/hyouketutaido/index.html",
+      "note": "令和8年6月定例会「議案表決態度一覧」。PDF 本文は会派見出しの下に議員氏名が個別に並ぶ（「議長：伊藤仕議員は除く」）、凡例「○賛成 ×反対 欠 退 除」。平成25年6月定例会以降"
+    },
+    {
+      "assemblyId": "city-12100",
+      "kind": "municipal",
+      "label": "千葉市",
+      "status": "会派別",
+      "format": "HTML 表",
+      "sourceUrl": "https://www.city.chiba.jp/shigikai/sichoteisyutu2403.html",
+      "note": "令和6年第3回定例会。「賛否の状況」列は会派名、無所属は「無所属　黒澤議員」のように個人名"
+    },
+    {
+      "assemblyId": "city-14100",
+      "kind": "municipal",
+      "label": "横浜市",
+      "status": "公開",
+      "format": "PDF",
+      "sourceUrl": "https://www.city.yokohama.lg.jp/shikai/kiroku/kekka/kaihabetsu.html",
+      "note": "令和8年第2回定例会（6月5日議決）。ページ注記「令和２年第２回定例会からは議員別の賛否一覧を掲載」（それ以前は会派別）。文字層あり（2 ページ、縦書き氏名）"
+    },
+    {
+      "assemblyId": "city-14130",
+      "kind": "municipal",
+      "label": "川崎市",
+      "status": "会派別",
+      "format": "PDF",
+      "sourceUrl": "https://www.city.kawasaki.jp/980/page/0000179675.html",
+      "note": "令和7年第3回定例会「各会派及び無所属議員の賛否状況」"
+    },
+    {
+      "assemblyId": "city-14150",
+      "kind": "municipal",
+      "label": "相模原市",
+      "status": "会派別",
+      "format": "PDF（審議結果）＋議会だより",
+      "sourceUrl": "https://www.sagamihara-shigikai.jp/doc/2013120900035/",
+      "note": "「審議結果」PDF は結果のみ、「各議案における会派ごとの賛否状況」は さがみはら市議会だより へ誘導"
+    },
+    {
+      "assemblyId": "city-15100",
+      "kind": "municipal",
+      "label": "新潟市",
+      "status": "会派別",
+      "format": "不明",
+      "sourceUrl": "https://www.city.niigata.lg.jp/shigikai/index_honkaigi/honkaigi_kekka/index.html",
+      "note": "ページ注記「平成21年5月臨時会より、会派別の賛否の状況を公表」"
+    },
+    {
+      "assemblyId": "city-22100",
+      "kind": "municipal",
+      "label": "静岡市",
+      "status": "総数のみ",
+      "format": "PDF",
+      "sourceUrl": "https://www.city.shizuoka.lg.jp/gikai/s006689.html",
+      "note": "令和8年6月定例会 審議結果（表題から。PDF 本文未抽出）"
+    },
+    {
+      "assemblyId": "city-22130",
+      "kind": "municipal",
+      "label": "浜松市",
+      "status": "公開",
+      "format": "PDF",
+      "sourceUrl": "https://www.city.hamamatsu.shizuoka.jp/gikai/r0802tei/teireikai.html",
+      "note": "令和8年2月定例会「議員賛否一覧」。文字層あり（3 ページ、会派略称＋縦書き氏名 40 名超）"
+    },
+    {
+      "assemblyId": "city-23100",
+      "kind": "municipal",
+      "label": "名古屋市",
+      "status": "公開",
+      "format": "HTML 表",
+      "sourceUrl": "https://www.city.nagoya.jp/shikai/shingi/1030858/index.html",
+      "note": "市会だより第172号（6月定例会）「提出案件の賛否」: 会派名・議員名・選出区 × 議員提出議案／市長提出案件、値は 賛成／反対／欠席／議長のため議決に参加できない（88 名）。議案ごとではなく「案件群」単位に見える → 議案単位の個人票かは要確認"
+    },
+    {
+      "assemblyId": "city-26100",
+      "kind": "municipal",
+      "label": "京都市",
+      "status": "会派別",
+      "format": "HTML 表",
+      "sourceUrl": "https://www2.city.kyoto.lg.jp/shikai/honkaigi/R05/gian11.html",
+      "note": "令和5年11月市会「議案・審議結果」列＝自民・維京国・共産・公明… ○×"
+    },
+    {
+      "assemblyId": "city-27100",
+      "kind": "municipal",
+      "label": "大阪市",
+      "status": "会派別",
+      "format": "HTML 表",
+      "sourceUrl": "https://www.city.osaka.lg.jp/shikai/page/0000001592.html",
+      "note": "令和8年5月市会。列＝維新・公明・自民市民・自国くらし・共産・無所属…"
+    },
+    {
+      "assemblyId": "city-27140",
+      "kind": "municipal",
+      "label": "堺市",
+      "status": "会派別",
+      "format": "HTML → 個票",
+      "sourceUrl": "https://www.city.sakai.lg.jp/shigikai/kekka/giketsukekka/index.html",
+      "note": "「主な議案に対する会派等の賛否一覧」（主な議案のみ）"
+    },
+    {
+      "assemblyId": "city-28100",
+      "kind": "municipal",
+      "label": "神戸市",
+      "status": "会派別",
+      "format": "PDF",
+      "sourceUrl": "https://www.city.kobe.lg.jp/z/shikaijimukyoku/giann_etc/r8/2gatsukekka.html",
+      "note": "令和8年第1回定例市会（2月）「議案等に対する各会派の賛否一覧」"
+    },
+    {
+      "assemblyId": "city-33100",
+      "kind": "municipal",
+      "label": "岡山市",
+      "status": "公開",
+      "format": "HTML 表",
+      "sourceUrl": "https://www.city.okayama.jp/gikai/0000078068.html",
+      "note": "令和8年（7月28日・6月23日・3月17日議決分）。「本会議において、起立により採決を行った議案に対する議員ごとの賛否を掲載」。簡易表決（全会一致）の議案は載らない",
+      "statusNote": "起立採決のみ"
+    },
+    {
+      "assemblyId": "city-34100",
+      "kind": "municipal",
+      "label": "広島市",
+      "status": "会派別",
+      "format": "PDF",
+      "sourceUrl": "https://www.city.hiroshima.lg.jp/gikai/nittei/1027907/1043766.html",
+      "note": "令和7年第3回定例会「各会派の賛否態度」PDF（`sanpi09.pdf`）"
+    },
+    {
+      "assemblyId": "city-40100",
+      "kind": "municipal",
+      "label": "北九州市",
+      "status": "総数のみ",
+      "format": "PDF",
+      "sourceUrl": "https://www.city.kitakyushu.lg.jp/sigikai/menu11_00089.html",
+      "note": "令和8年6月定例会「会議結果一覧（PDF）」（表題から。本文未抽出）"
+    },
+    {
+      "assemblyId": "city-40130",
+      "kind": "municipal",
+      "label": "福岡市",
+      "status": "会派別",
+      "format": "HTML 表",
+      "sourceUrl": "https://gikai.city.fukuoka.lg.jp/result/r7_gikai4",
+      "note": "令和7年第4回定例会。列＝自民・公明・市民ク・維新・共産・自民新・新風＋無所属 5 列（無所属は個人）"
+    },
+    {
+      "assemblyId": "city-43100",
+      "kind": "municipal",
+      "label": "熊本市",
+      "status": "公開",
+      "format": "HTML 表（議員ページ）",
+      "sourceUrl": "https://kumamoto-shigikai.jp/namelist/pub/detail.aspx?c_id=3&mem_id=148&lsttype=1",
+      "note": "議員ごとのページに「賛否一覧 ○賛成 ×反対 －議長・欠席・除斥・退席」（会議名・議案・備考・賛否）。議案一覧側は結果のみ。賛否は画像アイコンで表現（alt の有無は未確認）"
+    }
+  ]
+}

@@ -35,6 +35,8 @@ export default function Members({ data = bundled }: { data?: Dataset }) {
   const [query, setQuery] = useState("");
   // #156: 院（参院／衆院）の絞り込みを「議会」に一般化。選択肢は assemblies/index.json の並び（国会2＋将来の地方議会）。既定はすべて。
   const [assemblyId, setAssemblyId] = useState<AssemblyId | "">("");
+  // #158: 議会ページから /members?assembly=<id> で来る。district と同じ理由でマウント後に適用し、知らない id は無視する。
+  const assemblyParam = params.get("assembly") ?? "";
   const [group, setGroup] = useState("");
   // #120: 初期値は "" にして useEffect で適用する。プリレンダーの HTML は「すべて」が選ばれたままで、hydration は
   // state が最初から districtParam だと DOM の selected を直さない（再描画が起きない）。マウント後に set して再描画させる。
@@ -68,6 +70,10 @@ export default function Members({ data = bundled }: { data?: Dataset }) {
   // assemblies/index.json が無い（#156 より前の）データは国会の2議会として扱う。
   const assemblies: readonly Assembly[] = data.assemblies ?? DIET_ASSEMBLIES;
   const assemblyName = useMemo(() => new Map(assemblies.map((a) => [a.id, a.name])), [assemblies]);
+  useEffect(() => {
+    const known = assemblies.find((a) => a.id === assemblyParam);
+    if (known) setAssemblyId(known.id);
+  }, [assemblyParam, assemblies]);
   // 既定はすべての議会・現職（最新回次の名簿に載っている人）のみ。元職は事実として残っているので、トグルで同じ一覧に出す。
   const all = useMemo(
     () => data.members.filter((m) => (!assemblyId || memberAssemblyId(m) === assemblyId) && (includeFormer || m.current !== false)),

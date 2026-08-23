@@ -1,0 +1,5 @@
+[
+  { "id": "p_04_000001", "name": "宮城 太郎", "kana": "みやぎ たろう", "house": "sangiin", "assemblyId": "pref-04", "group": "自由民主党・県民会議", "district": "仙台市青葉区", "current": true, "counts": { "rollcalls": 4, "bills": 0, "speeches": 0, "questions": 0 } },
+  { "id": "p_04_000002", "name": "石巻 花子", "kana": "いしのまき はなこ", "house": "sangiin", "assemblyId": "pref-04", "group": "みやぎ県民の声", "district": "石巻市・牡鹿郡", "current": true, "counts": { "rollcalls": 4, "bills": 0, "speeches": 0, "questions": 0 } },
+  { "id": "p_04_000003", "name": "気仙沼 次郎", "kana": "けせんぬま じろう", "house": "sangiin", "assemblyId": "pref-04", "group": "公明党県議団", "district": "気仙沼・本吉", "current": false, "counts": { "rollcalls": 2, "bills": 0, "speeches": 0, "questions": 0 } }
+]
