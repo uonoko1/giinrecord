@@ -1,7 +1,7 @@
 {
-  "1000001": { "sangiin": ["東京"], "shugiin": ["東京1"] },
+  "1000001": { "sangiin": ["東京"], "shugiin": ["東京1"], "municipalities": ["東京都千代田区"] },
   "1000014": { "sangiin": ["東京"], "shugiin": ["東京1"] },
-  "1040031": { "sangiin": ["東京"], "shugiin": ["東京1", "東京2"] },
-  "4980000": { "sangiin": ["愛知", "三重"], "shugiin": ["愛知8", "三重2"] },
-  "6800001": { "sangiin": ["鳥取・島根"], "shugiin": ["鳥取1"] }
+  "1040031": { "sangiin": ["東京"], "shugiin": ["東京1", "東京2"], "municipalities": ["東京都中央区"] },
+  "4980000": { "sangiin": ["愛知", "三重"], "shugiin": ["愛知8", "三重2"], "municipalities": ["愛知県弥富市", "三重県桑名市"] },
+  "6800001": { "sangiin": ["鳥取・島根"], "shugiin": ["鳥取1"], "municipalities": ["鳥取県鳥取市"] }
 }

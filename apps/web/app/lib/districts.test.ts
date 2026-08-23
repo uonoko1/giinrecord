@@ -44,7 +44,7 @@ describe("shardByZip", () => {
     const shards = shardByZip(byZip);
     expect([...shards.keys()].sort()).toEqual(["100", "104", "498", "680"]);
     expect(shards.get("100")).toEqual({ "1000001": byZip["1000001"], "1000014": byZip["1000014"] });
-    expect(shards.get("680")).toEqual({ "6800001": { sangiin: ["鳥取・島根"], shugiin: ["鳥取1"] } });
+    expect(shards.get("680")).toEqual({ "6800001": { sangiin: ["鳥取・島根"], shugiin: ["鳥取1"], municipalities: ["鳥取県鳥取市"] } });
   });
   it("分割ファイルは最大 1,000 個（上3桁 000〜999）", () => {
     const all: Record<string, ZipDistricts> = {};

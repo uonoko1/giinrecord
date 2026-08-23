@@ -1,6 +1,6 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router";
+import { Link, MemoryRouter } from "react-router";
 import { describe, expect, it } from "vitest";
 import { dataset } from "../test-fixtures/dataset";
 import { members } from "../test-fixtures/members-index";
@@ -218,6 +218,21 @@ describe("/members", () => {
       expect(screen.getByText("0 名")).toBeInTheDocument();
       expect(screen.getByText("該当する議員はいません。")).toBeInTheDocument();
       expect(screen.getByText("選挙区：存在しない")).toBeInTheDocument();
+    });
+
+    it("クエリが後から変わっても（プリレンダーの DOM からの hydration 後を含む）select と絞り込みに反映する（#120）", async () => {
+      const user = userEvent.setup();
+      render(
+        <MemoryRouter initialEntries={["/members"]}>
+          <Link to="/members?district=%E6%9D%B1%E4%BA%AC1">東京1 へ</Link>
+          <Members data={{ ...dataset, members: [...members, shugiin] }} />
+        </MemoryRouter>,
+      );
+      expect(screen.getByRole("combobox", { name: "選挙区" })).toHaveValue("");
+      await user.click(screen.getByRole("link", { name: "東京1 へ" }));
+      expect(screen.getByRole("combobox", { name: "選挙区" })).toHaveValue("東京1");
+      expect(screen.getByText("1 名")).toBeInTheDocument();
+      expect(screen.getByText("選挙区：東京1")).toBeInTheDocument();
     });
 
     it("クエリが無ければチップは出ない", () => {
