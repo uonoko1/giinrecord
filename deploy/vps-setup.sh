@@ -19,6 +19,9 @@
 #          written so that `certbot certonly --nginx` can serve the challenge; re-run after certbot for the real blocks
 #        - the conf is already managed by certbot (`# managed by Certbot`, i.e. the hosts set up before #141):
 #          it is NOT rewritten — only the proxy_pass port is kept in sync. server_name, certificate, redirects stay
+#        - every server block written here carries `error_log /var/log/nginx/<name>.error.log crit;` (Issue #189) so
+#          connection-level failures (which log the client IP) stay out of the shared host's global error log; a
+#          certbot-managed conf (production or staging) gets the line inserted after each access_log (ensure_error_log)
 #   3. defines the IP-less access-log format the blocks reference (same file the analytics setup writes)
 #   4. reloads nginx (only if `nginx -t` passes; otherwise exit 1) and prints the next steps for a human
 #
@@ -108,6 +111,7 @@ server {
     listen [::]:80;
     server_name SERVER_NAMES;
     access_log /var/log/nginx/LOG_NAME.access.log noip;
+    error_log /var/log/nginx/LOG_NAME.error.log crit;
 
     location / {
         return 301 https://DOMAIN$request_uri;
@@ -118,6 +122,7 @@ server {
     listen [::]:443 ssl;
     server_name SERVER_NAMES;
     access_log /var/log/nginx/LOG_NAME.access.log noip;
+    error_log /var/log/nginx/LOG_NAME.error.log crit;
 
     ssl_certificate /etc/letsencrypt/live/DOMAIN/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/DOMAIN/privkey.pem;
@@ -152,6 +157,7 @@ server {
     listen [::]:80;
     server_name SERVER_NAMES;
     access_log /var/log/nginx/LOG_NAME.access.log noip;
+    error_log /var/log/nginx/LOG_NAME.error.log crit;
 
     location / {
         proxy_pass http://127.0.0.1:PORT;
@@ -204,6 +210,23 @@ ensure_staging_cf_gate() {
   echo "$conf is managed by Certbot: Cloudflare gate (allow-list include + 403 without Cf-Access-Jwt-Assertion) inserted into location /."
 }
 
+# ensure_error_log <conf>: Issue #189 — a certbot-managed conf is never rewritten, so the per-site error_log line is
+# inserted after every `access_log … LOG_NAME.access.log noip;` line (one per server block, same indentation).
+# Idempotent: nothing happens when the error_log line is already there. Used for production AND staging.
+ensure_error_log() {
+  local conf=$1 line="error_log /var/log/nginx/$NAME.error.log crit;"
+  grep -qF "$line" "$conf" && return 0
+  local tmp; tmp=$(mktemp)   # not next to the conf: nothing temporary in sites-available/ on the shared host
+  awk -v name="$NAME" -v line="$line" '
+    { print }
+    $0 ~ ("^[[:space:]]*access_log /var/log/nginx/" name "\\.access\\.log noip;$") {
+      indent = $0; sub(/[^[:space:]].*$/, "", indent); print indent line
+    }
+  ' "$conf" > "$tmp"
+  cat "$tmp" > "$conf"; rm -f "$tmp"
+  echo "$conf is managed by Certbot: per-site error_log (crit) inserted after each access_log (#189)."
+}
+
 # write_site_conf <domain> <port> <conf>: decides between "leave certbot's file alone", full template and bootstrap.
 write_site_conf() {
   local domain=$1 port=$2 conf=$3
@@ -215,6 +238,7 @@ write_site_conf() {
       sed -i -E "s#proxy_pass http://127\.0\.0\.1:[0-9]+;#proxy_pass http://127.0.0.1:$port;#" "$conf"
     fi
     if [ "$port" = 8083 ]; then ensure_cf_snippet; ensure_staging_cf_gate "$conf"; fi
+    ensure_error_log "$conf"
   elif cert_exists "$domain"; then
     if [ "$port" = 8083 ]; then ensure_cf_snippet; fi
     render_host_proxy "$domain" "$port" > "$conf"

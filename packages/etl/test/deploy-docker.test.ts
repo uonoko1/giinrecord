@@ -79,6 +79,29 @@ test("site.conf: プリレンダリング + SPA fallback の try_files と gzip 
   assert.match(siteConf, /gzip_types text\/css application\/javascript application\/json image\/svg\+xml;/);
 });
 
+// Issue #189: the container nginx must not log requests at all (the default combined format writes the User-Agent
+// to stdout / docker logs, contradicting the privacy policy). Only the host nginx keeps its IP-less "noip" log.
+test("site.conf: access_log off を server 全体に（既定 combined 形式は User-Agent を docker logs に残す #189）", () => {
+  const code = uncommented(siteConf);
+  const main = code.slice(code.indexOf("listen 80 default_server"));
+  const server = main.slice(0, main.indexOf("location /"));
+  assert.match(server, /^\s*access_log off;$/m, "access_log off at server level, not only in /__health");
+  assert.doesNotMatch(code, /access_log\s+\/|log_format/, "no access log file anywhere in the container conf");
+});
+
+test("docker-compose: json-file の logging に max-size / max-file の上限（古い docker logs はローテーションで消える #189）", () => {
+  assert.match(compose, /^x-web: &web\n(?:.*\n)*?\s+logging:\n\s+driver: json-file\n\s+options:\n\s+max-size: "\d+[kmg]"\n\s+max-file: "\d+"/m);
+});
+
+test("ホスト proxy: 自サイトの server block ごとに error_log（crit のみ。接続元 IP は診断ログに短期間だけ残る #189）", () => {
+  const code = uncommented(hostProxy);
+  const lines = code.match(/^\s*error_log \/var\/log\/nginx\/LOG_NAME\.error\.log crit;$/gm) ?? [];
+  assert.equal(lines.length, 2, "one error_log per server block (:80 and :443)");
+  const fromScript = setup.match(/^\s*error_log \/var\/log\/nginx\/LOG_NAME\.error\.log crit;$/gm) ?? [];
+  assert.ok(fromScript.length >= 3, "template (2 blocks) + bootstrap block in vps-setup.sh");
+  assert.match(setup, /^ensure_error_log\(\)/m, "certbot-managed confs get the line inserted idempotently");
+});
+
 test("ホスト nginx は proxy_pass http://127.0.0.1:PORT（vps-setup.sh が 8081/8083 を埋める）だけで、静的配信もヘッダ付与もしない", () => {
   const code = uncommented(hostProxy);
   assert.match(code, /proxy_pass http:\/\/127\.0\.0\.1:PORT;/);

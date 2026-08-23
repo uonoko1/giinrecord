@@ -79,6 +79,11 @@ server {
 C
 }
 
+# Issue #189: what a certbot-managed conf looks like after ensure_error_log (one error_log after each access_log).
+with_error_log() { sed -E 's#^( *)access_log /var/log/nginx/([a-z-]+)\.access\.log noip;$#&\n\1error_log /var/log/nginx/\2.error.log crit;#'; }
+ERR_LOG_PROD="error_log /var/log/nginx/gikailog.error.log crit;"
+ERR_LOG_STG="error_log /var/log/nginx/gikailog-staging.error.log crit;"
+
 t_syntax() { bash -n "$SCRIPT" || fail "bash -n"; }
 
 t_bootstrap_without_cert() {
@@ -91,6 +96,7 @@ t_bootstrap_without_cert() {
   assert_not_contains "$c" "listen 443" "no TLS block before the certificate exists"
   assert_not_contains "$c" "return 301" "no redirect before TLS exists (site must stay reachable)"
   assert_contains "$c" "access_log /var/log/nginx/gikailog.access.log noip;" "noip log"
+  assert_contains "$c" "$ERR_LOG_PROD" "#189 error_log crit in the bootstrap block"
   [[ -L "$P/etc/nginx/sites-enabled/gikailog.conf" ]] || fail "enabled symlink"
   assert_contains "$(cat "$LOG")" "nginx -t" "config tested"
   assert_contains "$(cat "$LOG")" "systemctl reload nginx" "reloaded"
@@ -110,6 +116,7 @@ t_full_template_with_cert() {
   # the redirect is a location, not a server-level return: certbot's injected ACME location must win
   assert_contains "$c" "location / {
         return 301" "redirect inside location /"
+  assert_eq "2" "$(grep -c "$ERR_LOG_PROD" "$CONF")" "#189 error_log crit in both server blocks"
 }
 
 t_rerun_is_noop() {
@@ -125,9 +132,23 @@ t_protects_certbot_conf() {
   certbot_conf > "$CONF"
   local before; before=$(cat "$CONF")
   run_setup gikailog.jp || fail "exit $? $(cat "$P/out")"
-  assert_eq "$before" "$(cat "$CONF")" "certbot-managed conf untouched (live host re-run is a no-op)"
+  assert_eq "$(certbot_conf | with_error_log)" "$(cat "$CONF")" "certbot-managed conf untouched except the #189 error_log lines"
   assert_contains "$(cat "$P/out")" "managed by Certbot" "operator is told why"
   assert_contains "$(cat "$LOG")" "nginx -t" "still tested"
+  local after; after=$(cat "$CONF")
+  run_setup gikailog.jp || fail "second: $(cat "$P/out")"
+  assert_eq "$after" "$(cat "$CONF")" "re-run is a no-op (error_log inserted once)"
+  assert_eq "2" "$(grep -c "$ERR_LOG_PROD" "$CONF")" "one error_log per server block"
+  [[ "$before" != "$after" ]] || fail "error_log was inserted"
+}
+
+t_certbot_conf_with_error_log_untouched() {
+  fresh certbotlog; with_cert gikailog.jp
+  certbot_conf | with_error_log > "$CONF"
+  local before; before=$(cat "$CONF")
+  run_setup gikailog.jp || fail "exit $? $(cat "$P/out")"
+  assert_eq "$before" "$(cat "$CONF")" "conf that already has error_log is left as is"
+  assert_eq "gikailog.conf" "$(ls "$P/etc/nginx/sites-available/")" "no temp file left in sites-available"
 }
 
 t_certbot_conf_only_port_rewritten() {
@@ -137,7 +158,7 @@ t_certbot_conf_only_port_rewritten() {
   local c; c=$(cat "$CONF")
   assert_contains "$c" "proxy_pass http://127.0.0.1:8081;" "proxy port rewritten"
   assert_not_contains "$c" "8085" "old port gone"
-  assert_eq "$(certbot_conf)" "$c" "nothing else changed (server_name, certificate, redirects)"
+  assert_eq "$(certbot_conf | with_error_log)" "$c" "nothing else changed (server_name, certificate, redirects)"
 }
 
 t_staging_port_requires_staging_domain() {
@@ -162,6 +183,7 @@ t_staging_conf() {
   assert_contains "$c" "proxy_pass http://127.0.0.1:8083;" "staging port"
   assert_contains "$c" "gikailog-staging.access.log noip" "staging log"
   assert_contains "$c" "/etc/letsencrypt/live/staging.gikailog.jp/" "staging cert"
+  assert_eq "2" "$(grep -c "$ERR_LOG_STG" "$STG_CONF")" "#189 staging error_log in both blocks"
   [[ ! -e "$CONF" ]] || fail "production conf untouched"
 }
 
@@ -264,13 +286,15 @@ t_certbot_staging_conf_gets_gate() {
   run_setup staging.gikailog.jp 8083 || fail "second: $(cat "$P/out")"
   assert_eq "$before" "$(cat "$STG_CONF")" "idempotent"
   assert_eq "1" "$(grep -c 'gikailog-cloudflare-allow' "$STG_CONF")" "included once"
+  assert_eq "2" "$(grep -c "$ERR_LOG_STG" "$STG_CONF")" "#189 error_log inserted into both certbot server blocks"
+  assert_not_contains "$c" "gikailog.error.log" "staging never gets the production log name"
 }
 
 t_certbot_production_conf_gets_no_gate() {
   fresh cfcertbotprod; with_cert gikailog.jp; with_snippet
   certbot_conf > "$CONF"
   run_setup gikailog.jp || fail "exit $? $(cat "$P/out")"
-  assert_eq "$(certbot_conf)" "$(cat "$CONF")" "production certbot conf untouched"
+  assert_eq "$(certbot_conf | with_error_log)" "$(cat "$CONF")" "production certbot conf untouched (except #189 error_log)"
 }
 
 t_unknown_port() {
@@ -290,6 +314,7 @@ test_case "証明書があれば :80 は www/apex とも https://apex へ 301、
 test_case "2 回目は同じ conf（冪等）" t_rerun_is_noop
 test_case "certbot 管理の conf は書き換えない（本番の再実行は no-op）" t_protects_certbot_conf
 test_case "certbot 管理の conf でも proxy_pass のポートだけは直す" t_certbot_conf_only_port_rewritten
+test_case "#189 error_log が既にある certbot 管理の conf には何もしない" t_certbot_conf_with_error_log_untouched
 test_case "8083 は staging.* のドメインだけ受け付ける" t_staging_port_requires_staging_domain
 test_case "8081 は staging.* のドメインを拒否する" t_production_port_rejects_staging_domain
 test_case "staging: www 無し・8083・gikailog-staging.conf、production の conf には触れない" t_staging_conf

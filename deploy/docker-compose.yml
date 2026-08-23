@@ -15,6 +15,8 @@
 # The site directories are mounted read-only: the containers never write to the deploy targets.
 # Nothing is published beyond loopback, so the containers are reachable only through the host proxy.
 # deploy/nginx/site.conf is shared: it adds X-Robots-Tag: noindex only when the Host is staging.gikailog.jp.
+# Logging (Issue #189): site.conf has `access_log off`, so docker logs only carry nginx's own error output. The
+# json-file cap below rotates away anything older (including the pre-#189 access lines that recorded User-Agents).
 name: gikailog
 x-web: &web
   image: nginx:1.27-alpine

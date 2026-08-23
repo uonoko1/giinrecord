@@ -6,7 +6,7 @@ import { seoMeta } from "../lib/seo";
 import "../styles/pages.css";
 
 /** このポリシーの最終更新日（YYYY-MM-DD）。本文を変えたら更新する。 */
-export const PRIVACY_UPDATED = "2026-08-23";
+export const PRIVACY_UPDATED = "2026-08-24";
 
 const ISSUES_URL = `${REPO_URL}/issues`;
 
@@ -47,6 +47,10 @@ export default function Privacy() {
             <li>ブラウザの種類（User-Agent）も記録しません。</li>
             <li>計測用のスクリプトや外部の解析サービスは置いていません。</li>
           </ul>
+          <p className="body">
+            例外として、接続に失敗したとき（暗号化通信の確立に失敗したときなど）のエラー時の診断ログには、接続元 IP
+            アドレスが短期間残ることがあります。このログは閲覧の記録には使わず、ログローテーションで削除されます。
+          </p>
         </section>
 
         <section className="section" aria-labelledby="privacy-analytics">
@@ -75,15 +79,6 @@ export default function Privacy() {
           </p>
         </section>
 
-        <section className="section" aria-labelledby="privacy-staging">
-          <h2 id="privacy-staging" className="section__title">
-            staging 環境
-          </h2>
-          <p className="body">
-            公開前の確認用サイト（staging）は運営者専用で、Cloudflare Access によるログインが必要です。一般の方がアクセスすることはなく、このポリシーの対象外です。
-          </p>
-        </section>
-
         <section className="section" aria-labelledby="privacy-contact">
           <h2 id="privacy-contact" className="section__title">
             連絡先と変更
@@ -93,7 +88,8 @@ export default function Privacy() {
             <a href={ISSUES_URL} target="_blank" rel="noopener noreferrer">
               GitHub Issues
             </a>
-            で受け付けます。内容を変更した場合は、このページと冒頭の更新日を改めます。
+            で受け付けます。内容を変更した場合は、このページと冒頭の更新日を改めます。広告を入れるときは、Cookie
+            の記述と同意バナーをこのページと同時に更新します。
           </p>
         </section>
       </main>
