@@ -11,11 +11,10 @@ export const PRIVACY_UPDATED = "2026-08-23";
 const ISSUES_URL = `${REPO_URL}/issues`;
 
 /**
- * 第三者送信の注記。現在はフォントを Google Fonts から取得しているため、取得時に閲覧者の IP アドレスが Google に送られる。
+ * 第三者送信の注記。フォントは自サイト配信（#168）のため現在は該当なし（null）。
  * フォントの自サイト配信（#168）が完了したら、この値を `null` にする（それだけで本文から消える）。
  */
-const THIRD_PARTY_FONT_NOTE: string | null =
-  "例外が1つあります。文字のフォントを Google Fonts（Google LLC）から取得しているため、ページを開いたとき閲覧者の IP アドレスが Google に送られます。運営者はその情報を受け取りません。フォントをこのサイトから配信する変更を進めており、完了後はこの項目を削除します。";
+const THIRD_PARTY_FONT_NOTE: string | null = null; // #168 でフォントを自サイト配信にしたため第三者送信なし
 
 export function meta({ location }: MetaArgs) {
   return seoMeta({
