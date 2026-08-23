@@ -53,7 +53,8 @@ gh run watch                                   # 進捗
   ```
   gh workflow run etl.yml -f sessions="200 201 202 203 204 205 206 207 208 209 210 211 212 213 214 215 216"
   ```
-  このとき直近 5 回次は引き継ぎになる。**注意**: #103 より前の出力には `session` の無い timeline 行があり（ログに `carried: N timeline entries without session … cannot be carried`）、その分の発言・質問主意書・委員会出席は引き継げない。過去回次の手動実行のあと、翌日の日次実行（直近 5 回次を取り直す）で復元されるので、手動実行の PR と翌日の PR をセットで見る。先に日次実行を一度通して（全行に `session` が付く）から過去回次を足せば欠けは出ない。
+  このとき直近 5 回次は引き継ぎになり、衆院本会議の発言（名簿が覆う最新回次の分）も取得せず前回出力から引き継ぐ（取得すると引き継ぎと重複するため。ログに `shugiin speeches not fetched (session is carried …)`）。**注意**: #103 より前の出力には `session` の無い timeline 行があり（ログに `carried: N timeline entries without session … cannot be carried`）、その分の発言・質問主意書・委員会出席は引き継げない。過去回次の手動実行のあと、翌日の日次実行（直近 5 回次を取り直す）で復元されるので、手動実行の PR と翌日の PR をセットで見る。先に日次実行を一度通して（全行に `session` が付く）から過去回次を足せば欠けは出ない。
+- 名簿は取得回次 ∪ 引き継ぐ回次と、連続するブロックごとの1つ前の回次の分を毎回取る（回次が飛んでいても第217回の再突合には第216回の名簿が要る）。引き継いだ採決の再突合で memberId の付いた票が前回より減ったら（ログに `carried roll calls lost matched votes …`）名簿の取り漏れなので、ETL は書き出さずに非0終了する。
 - 第215回以前は回次ごとの参院名簿が公開されていない（`giin/{N}/giin.htm` が 404。ログに `no roster published (404)`）。その回次の採決は第216回以降の名簿で突合するので、2024年以前に退任した議員の票は `unmatched.json` に載る（上限なし。件数は Summary で見る）。氏名だけから議員を作ることはしない。
 - 投票結果一覧には**起立採決**（個人票なし）のページも載る。ログの `session N: X roll calls (Y with individual votes, Z standing votes skipped)` の Z がそれで、`rollcalls/` には入らない。第210回・第216回は全件が起立採決。
 - ローカルで再現: `pnpm etl 200 … 216`（初回は投票結果ページを全部取るので回次あたり数分。2 回目以降はキャッシュ）。

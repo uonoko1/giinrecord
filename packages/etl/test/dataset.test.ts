@@ -247,6 +247,14 @@ describe("writeDataset / validateDataset: docs/DATA_CONTRACT.md の不変条件"
     cleanup();
   });
 
+  test("同じ speechId の speech 行が1人の timeline に2度あれば違反（#103 レビュー: carried と取得の重複）", async () => {
+    const speech = { kind: "speech", session: 221, date: "2026-06-05", speechId: "122115254X00120260605_001", meeting: "本会議 第1号", excerpt: "抜粋", chars: 3, sourceUrl: "https://kokkai.ndl.go.jp/txt/122115254X00120260605/1" };
+    patch<{ timeline: Record<string, unknown>[] }>(dir, "members/m_007006.json", (d) => ({ ...d, timeline: [speech, { ...speech }, ...d.timeline] }));
+    patch<MemberSummary[]>(dir, "members/index.json", (rows) => rows.map((m) => (m.id === "m_007006" ? { ...m, counts: { ...m.counts, speeches: 2 } } : m)));
+    assert.match((await validateDataset(dir)).join("\n"), /m_007006.*duplicate speechId 122115254X00120260605_001/);
+    cleanup();
+  });
+
   test("sourceUrl が衆参・NDL 以外のドメインなら違反", async () => {
     patch<{ sourceUrl: string }>(dir, "members/m_007006.json", (d) => ({ ...d, sourceUrl: "https://example.com/x" }));
     assert.match((await validateDataset(dir)).join("\n"), /example\.com/);
