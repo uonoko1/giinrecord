@@ -34,8 +34,8 @@ case "$cmd" in
   docker)   # docker inspect -f {{.State.Health.Status}} <name>
     name=${*: -1}
     case "$name" in
-      gikailog-web-1)         echo "${H_WEB:-healthy}" ;;
-      gikailog-web-staging-1) echo "${H_STAGING:-healthy}" ;;
+      gikailog-web-1)         echo "${H_WEB-healthy}" ;;
+      gikailog-web-staging-1) echo "${H_STAGING-healthy}" ;;
       *) echo "Error: No such object: $name" >&2; exit 1 ;;
     esac ;;
   systemctl) echo "${H_NGINX:-active}"; [ "${H_NGINX:-active}" = active ] ;;
@@ -43,11 +43,15 @@ case "$cmd" in
   curl)
     # record the body sent to the API (-d @file) and the URL; answer from H_API_* env
     url=${*: -1}
-    body=""
-    for ((i=1;i<=$#;i++)); do [[ "${!i}" == "-d" ]] && { j=$((i+1)); body=${!j}; }; done
+    body=""; out=/dev/stdout
+    for ((i=1;i<=$#;i++)); do
+      [[ "${!i}" == "-d" ]] && { j=$((i+1)); body=${!j}; }
+      [[ "${!i}" == "-o" ]] && { j=$((i+1)); out=${!j}; }
+    done
     [ -n "$body" ] && cat "${body#@}" >> "$STUB_LOG.api" && echo >> "$STUB_LOG.api"
     echo "$url" >> "$STUB_LOG.urls"
-    if [[ "$url" == *"/issues?"* ]]; then echo "${H_API_LIST:-[]}"; else echo "${H_API_RESP:-{\"number\":42}}"; fi ;;
+    if [[ "$url" == *"/issues?"* ]]; then echo "${H_API_LIST:-[]}" > "$out"; else echo "${H_API_RESP:-{\"number\": 42}}" > "$out"; fi
+    printf '200' ;;
 esac
 H
 chmod +x "$TMP/handler"
