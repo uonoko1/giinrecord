@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { type KeyboardEvent, useState } from "react";
 import { type LoaderFunctionArgs, type MetaArgs, useLoaderData } from "react-router";
 import { CompareAdd } from "../components/CompareAdd";
 import { SiteFooter } from "../components/SiteFooter";
@@ -64,29 +64,94 @@ export default function MemberRoute() {
 /* ---------- page ---------- */
 
 type Tab = "all" | TimelineEntry["kind"];
+
+/**
+ * タブのカテゴリ（#238）。分ける軸は「誰の行為か」— 本人が行ったことか、所属会派の記録から推定したことか。
+ *
+ * 「意思表示／提案／発言」のような行為の種類で分ける案も検討したが、採らなかった。理由は 2 つ:
+ * 1. 衆院の「会派の態度」は本人の行為ではない。行為の種類で分けると「意思表示」の中で採決（参院・事実）と
+ *    並び、推定が個人の行為と同列に見える。ページ全体（判・ラベル・冒頭の注記）が事実と推定を分けている
+ *    意図（#73）と食い違う。
+ * 2. 実データでは 1 カテゴリあたりのタブが 1 つになる場合が多く（参院の「発言」、地方の「表決」）、
+ *    見出しだけ増えて選択肢は増えない。
+ * 「本人の行為」か否かは、どの院でも、将来タブが増えても揺れない軸で、事実と推定の区別とも一致する。
+ */
+type TabCategory = "all" | "self" | "group";
+
+/** カテゴリの見出し。推定であることは見出し自体に書く（タブのラベルからは読み取れないため） */
+const CATEGORY_LABEL: Record<TabCategory, string> = {
+  all: "",
+  self: "本人の記録",
+  group: "所属会派の記録（推定）",
+};
+
+/** カテゴリの説明。スクリーンリーダー向けに、見出しだけでは分からない「何が推定か」を 1 文で添える */
+const CATEGORY_NOTE: Record<TabCategory, string | null> = {
+  all: null,
+  self: null,
+  group: "本人の投票ではありません",
+};
+
+export interface TabDef {
+  id: Tab;
+  label: string;
+  category: TabCategory;
+  /** timeline のどの kind を数えるか。"all" は全件 */
+  kind: TimelineEntry["kind"] | null;
+}
+
 /** 参院: 個人の記名採決がある。衆院: 個人投票は公開されていないので採決タブの代わりに「会派の態度」（推定）。 */
-const TABS: Record<MemberDetail["house"], { id: Tab; label: string }[]> = {
+const TABS: Record<MemberDetail["house"], TabDef[]> = {
   sangiin: [
-    { id: "all", label: "すべて" },
-    { id: "vote", label: "採決" },
-    { id: "bill", label: "提出法案" },
-    { id: "question", label: "質問主意書" },
-    { id: "speech", label: "発言" },
+    { id: "all", label: "すべて", category: "all", kind: null },
+    { id: "vote", label: "採決", category: "self", kind: "vote" },
+    { id: "bill", label: "提出法案", category: "self", kind: "bill" },
+    { id: "question", label: "質問主意書", category: "self", kind: "question" },
+    { id: "speech", label: "発言", category: "self", kind: "speech" },
   ],
   shugiin: [
-    { id: "all", label: "すべて" },
-    { id: "bill", label: "提出法案" },
-    { id: "stance", label: "会派の態度" },
-    { id: "question", label: "質問主意書" },
-    { id: "speech", label: "発言" },
+    { id: "all", label: "すべて", category: "all", kind: null },
+    { id: "bill", label: "提出法案", category: "self", kind: "bill" },
+    { id: "question", label: "質問主意書", category: "self", kind: "question" },
+    { id: "speech", label: "発言", category: "self", kind: "speech" },
+    { id: "stance", label: "会派の態度", category: "group", kind: "stance" },
   ],
 };
 
 /** 地方議員のタブ（#158）: 表決だけ。国会の採決・提出法案・質問主意書・発言は地方の公表にはない */
-const LOCAL_TABS: { id: Tab; label: string }[] = [
-  { id: "all", label: "すべて" },
-  { id: "localVote", label: "表決" },
+const LOCAL_TABS: TabDef[] = [
+  { id: "all", label: "すべて", category: "all", kind: null },
+  { id: "localVote", label: "表決", category: "self", kind: "localVote" },
 ];
+
+export interface TabGroup {
+  category: TabCategory;
+  /** 見出しを出すか。カテゴリが 1 つしか無いページ（参院・地方）では出さない（過剰な装飾をしない） */
+  labelled: boolean;
+  tabs: TabDef[];
+}
+
+/**
+ * タブをカテゴリごとにまとめる。並びは TabDef の並びのまま。
+ *
+ * 見出しを出すのは「本人の記録」と「所属会派の記録（推定）」の両方があるページ（衆院）だけ。
+ * 参院・地方は本人の記録しか無いので、見出しを出しても分類が情報を足さない（過剰な装飾をしない）。
+ * 「すべて」は本人の記録と会派の記録の両方を含むので、どちらの見出しにも入れない（件数が見出しと合わなくなる）。
+ */
+export function groupTabs(tabs: TabDef[]): TabGroup[] {
+  // 見出しを出すかどうかは、名前のあるカテゴリが 2 つ以上あるかで決まる
+  const named = new Set(tabs.map((t) => t.category).filter((c) => c !== "all"));
+  const labelled = named.size > 1;
+  const groups: TabGroup[] = [];
+  for (const t of tabs) {
+    // 見出しを出さないページでは分類そのものを見せないので、タブ列は 1 本にまとめる（矢印キーも全タブを回る）
+    const key = labelled ? t.category : "all";
+    const last = groups[groups.length - 1];
+    if (last && last.category === key) last.tabs.push(t);
+    else groups.push({ category: key, labelled: labelled && key !== "all", tabs: [t] });
+  }
+  return groups;
+}
 
 const HOUSE_LABEL = { sangiin: "参議院", shugiin: "衆議院" } as const;
 
@@ -142,22 +207,7 @@ export function MemberPage({ detail, meta, assembly = null }: { detail: MemberDe
       <main className="member">
         <Cover detail={detail} counts={counts} assembly={assembly} />
         {local ? <LocalNotice detail={detail} assembly={assembly} /> : detail.house === "shugiin" && <ShugiinNotice />}
-        <div className="member-tabs" role="tablist" aria-label="記録の種類">
-          {(local ? LOCAL_TABS : TABS[detail.house]).map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              role="tab"
-              id={`tab-${t.id}`}
-              aria-selected={tab === t.id}
-              aria-controls="member-records"
-              className="member-tab"
-              onClick={() => setTab(t.id)}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
+        <TabBar tabs={local ? LOCAL_TABS : TABS[detail.house]} current={tab} counts={counts} onSelect={setTab} />
         <section id="member-records" role="tabpanel" aria-labelledby={`tab-${tab}`}>
           {tab === "stance" && <p className="member-tab-note">所属会派が議案情報の賛成会派・反対会派に載っていた記録です。会派の態度であり、本人の投票ではありません。</p>}
           {entries.length === 0 ? (
@@ -198,6 +248,89 @@ export function MemberPage({ detail, meta, assembly = null }: { detail: MemberDe
       </main>
       <SiteFooter />
     </>
+  );
+}
+
+/* ---------- タブ（#238: カテゴリ分け） ---------- */
+
+/**
+ * タブの件数。timeline の kind の数で、表紙の件数帯と同じ数え方（同じ countKinds の結果を使う）。
+ * 「すべて」は全件。提出法案は提出者・賛成者の両方を含む（表紙の「提出法案」と同じ）。
+ */
+function tabCount(t: TabDef, counts: Counts): number {
+  if (t.kind === null) return counts.all;
+  return counts[t.kind];
+}
+
+/**
+ * タブ列（#238）。カテゴリが 2 つ以上あるときだけカテゴリ見出しを出し、tablist をカテゴリごとに分ける。
+ *
+ * 件数 0 のタブは隠さない。「無い」ことが情報だから: 衆院に個人の採決が無いのも、ある議員が
+ * 質問主意書を 1 通も出していないのも、公表されている事実である。0 件は淡色（--muted）にして
+ * 「選んでも空」だと分かるようにするだけで、選ぶことはできる（disabled にもしない。
+ * 空のタブを開いたときの「記録はありません。」自体が答えになる）。
+ *
+ * キーボード: 左右矢印で同じカテゴリ内を移動、Home/End で端へ。tabindex は選択中のタブだけ 0（ロービングタブインデックス）。
+ */
+function TabBar({ tabs, current, counts, onSelect }: { tabs: TabDef[]; current: Tab; counts: Counts; onSelect: (t: Tab) => void }) {
+  const groups = groupTabs(tabs);
+  return (
+    <div className="member-tabbar">
+      {groups.map((g) => (
+        <TabGroupBar key={g.category} group={g} current={current} counts={counts} onSelect={onSelect} />
+      ))}
+    </div>
+  );
+}
+
+function TabGroupBar({ group, current, counts, onSelect }: { group: TabGroup; current: Tab; counts: Counts; onSelect: (t: Tab) => void }) {
+  const headingId = `tabcat-${group.category}`;
+  const note = CATEGORY_NOTE[group.category];
+
+  /** 左右矢印・Home/End で同じカテゴリ内を移動する。移動先のタブを選び、フォーカスも移す（WAI-ARIA の tablist に合わせる） */
+  function onKeyDown(e: KeyboardEvent<HTMLButtonElement>, index: number) {
+    const last = group.tabs.length - 1;
+    const next = e.key === "ArrowRight" ? index + 1 : e.key === "ArrowLeft" ? index - 1 : e.key === "Home" ? 0 : e.key === "End" ? last : null;
+    if (next === null) return;
+    e.preventDefault();
+    const target = group.tabs[next < 0 ? last : next > last ? 0 : next]!;
+    onSelect(target.id);
+    (e.currentTarget.parentElement?.querySelector(`#tab-${target.id}`) as HTMLElement | null)?.focus();
+  }
+
+  return (
+    <div className="member-tabgroup" data-category={group.category}>
+      {group.labelled && (
+        <p className="member-tabcat" id={headingId}>
+          {CATEGORY_LABEL[group.category]}
+          {note && <span className="member-tabcat-note">{note}</span>}
+        </p>
+      )}
+      <div className="member-tabs" role="tablist" {...(group.labelled ? { "aria-labelledby": headingId } : { "aria-label": group.category === "all" ? "記録の絞り込み" : "記録の種類" })}>
+        {group.tabs.map((t, i) => {
+          const n = tabCount(t, counts);
+          const selected = current === t.id;
+          return (
+            <button
+              key={t.id}
+              type="button"
+              role="tab"
+              id={`tab-${t.id}`}
+              aria-selected={selected}
+              aria-controls="member-records"
+              tabIndex={selected ? 0 : -1}
+              className="member-tab"
+              data-empty={n === 0 ? "true" : undefined}
+              onClick={() => onSelect(t.id)}
+              onKeyDown={(e) => onKeyDown(e, i)}
+            >
+              <span className="member-tab-label">{t.label}</span>
+              <span className="member-tab-count num">{n.toLocaleString("ja-JP")}件</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -248,7 +381,8 @@ function ShugiinNotice() {
   );
 }
 
-type Counts = Record<TimelineEntry["kind"], number> & { submitted: number; supported: number };
+/** 表紙の件数帯とタブの件数はこれ 1 つから作る（数がずれない）。all は timeline の全件、submitted/supported は bill の内訳 */
+type Counts = Record<TimelineEntry["kind"], number> & { all: number; submitted: number; supported: number };
 
 function Cover({ detail, counts, assembly }: { detail: MemberDetail; counts: Counts; assembly: Assembly | null }) {
   const term = currentTerm(detail);
@@ -300,7 +434,7 @@ function Count({ n, label }: { n: number; label: string }) {
 }
 
 function countKinds(timeline: TimelineEntry[]): Counts {
-  const c: Counts = { vote: 0, bill: 0, stance: 0, question: 0, attendance: 0, speech: 0, localVote: 0, submitted: 0, supported: 0 };
+  const c: Counts = { vote: 0, bill: 0, stance: 0, question: 0, attendance: 0, speech: 0, localVote: 0, all: timeline.length, submitted: 0, supported: 0 };
   for (const e of timeline) {
     c[e.kind] += 1;
     if (e.kind === "bill") c[e.role === "提出者" ? "submitted" : "supported"] += 1;

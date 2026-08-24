@@ -41,7 +41,7 @@ describe("地方議員の議員ページ（#158）: 表紙と注記", () => {
 
   it("タブは「すべて」と「表決」だけ（国会の採決・提出法案・質問主意書は出さない）", () => {
     renderPage();
-    expect(screen.getAllByRole("tab").map((t) => t.textContent)).toEqual(["すべて", "表決"]);
+    expect(screen.getAllByRole("tab").map((t) => t.textContent)).toEqual(["すべて4件", "表決4件"]);
   });
 });
 
@@ -85,7 +85,7 @@ describe("地方議員の議員ページ: 表決の行は凡例付きの原文",
   it("表決タブは表で、日付・案件・表決（原文＋凡例）・方法・結果・出典", async () => {
     const user = userEvent.setup();
     renderPage();
-    await user.click(screen.getByRole("tab", { name: "表決" }));
+    await user.click(screen.getByRole("tab", { name: /^表決/ }));
     const table = screen.getByRole("table");
     expect(within(table).getAllByRole("columnheader").map((h) => h.textContent)).toEqual(["日付", "案件", "表決", "方法", "結果", "出典"]);
     const rows = within(table).getAllByRole("row").slice(1);
