@@ -14,8 +14,10 @@ import { MIE_ASSEMBLY } from "./sources/local/mie/site.ts";
 import { runMie } from "./sources/local/mie/index.ts";
 import { NARA_ASSEMBLY } from "./sources/local/nara/site.ts";
 import { runNara } from "./sources/local/nara/index.ts";
+import { SHIMANE_ASSEMBLY } from "./sources/local/shimane/site.ts";
+import { runShimane } from "./sources/local/shimane/index.ts";
 
-export { MIYAGI_ASSEMBLY, TOKUSHIMA_ASSEMBLY, TOTTORI_ASSEMBLY, MIE_ASSEMBLY, NARA_ASSEMBLY };
+export { MIYAGI_ASSEMBLY, TOKUSHIMA_ASSEMBLY, TOTTORI_ASSEMBLY, MIE_ASSEMBLY, NARA_ASSEMBLY, SHIMANE_ASSEMBLY };
 
 /** 議会ごとの取得部が返す形（buildLocalAssembly の入力になる部分）。 */
 export interface LocalSourceRun {
@@ -37,6 +39,7 @@ export const LOCAL_SOURCES: Record<string, LocalSource> = {
   tottori: { assembly: TOTTORI_ASSEMBLY, run: runTottori },
   mie: { assembly: MIE_ASSEMBLY, run: runMie },
   nara: { assembly: NARA_ASSEMBLY, run: runNara },
+  shimane: { assembly: SHIMANE_ASSEMBLY, run: runShimane },
 };
 
 /**
@@ -327,8 +330,10 @@ export async function validateLocalAssemblies(dir: string): Promise<string[]> {
       if (rc.method !== undefined && (typeof rc.method.raw !== "string" || typeof rc.method.legend !== "string" || rc.method.legend === "")) v.push(`${rel}: method.raw / method.legend required when method is present`);
       if (rc.committeeResult !== undefined && typeof rc.committeeResult !== "string") v.push(`${rel}: committeeResult must be a string`);
       if (typeof rc.result !== "string" || rc.result === "") v.push(`${rel}: result required`);
-      // counts はその欄がある PDF（宮城・鳥取）だけ。あれば voting / yes / no は数値、present は公表する議会（宮城）だけ
-      if (rc.counts !== undefined && ([rc.counts.voting, rc.counts.yes, rc.counts.no].some((n) => typeof n !== "number") || ("present" in rc.counts && typeof rc.counts.present !== "number"))) v.push(`${rel}: counts.voting / yes / no must be numbers (counts and present optional)`);
+      // counts はその欄がある PDF（宮城・鳥取・島根）だけ。あれば yes / no は数値、present（宮城）・voting（宮城・鳥取）は公表する議会だけ
+      if (rc.counts !== undefined && ([rc.counts.yes, rc.counts.no].some((n) => typeof n !== "number") || ("present" in rc.counts && typeof rc.counts.present !== "number") || ("voting" in rc.counts && typeof rc.counts.voting !== "number"))) v.push(`${rel}: counts.yes / no must be numbers (counts, present and voting optional)`);
+      // referredCommittees は付託委員会の欄がある議会（島根）だけ。あれば空でない文字列の空でない配列
+      if ("referredCommittees" in rc && (!Array.isArray(rc.referredCommittees) || rc.referredCommittees.length === 0 || rc.referredCommittees.some((c) => typeof c !== "string" || c === ""))) v.push(`${rel}: referredCommittees must be a non-empty array of non-empty strings when present`);
       if ("voteSubject" in rc && (typeof rc.voteSubject !== "string" || rc.voteSubject === "")) v.push(`${rel}: voteSubject must be a non-empty string when present`);
       if ("committeeReport" in rc && (typeof rc.committeeReport !== "string" || rc.committeeReport === "")) v.push(`${rel}: committeeReport must be a non-empty string when present`);
       checkSource(rel, rc);
