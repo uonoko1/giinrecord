@@ -1,0 +1,1592 @@
+{
+ "asOf": "2023-05-17",
+ "assemblyId": "pref-32",
+ "counts": {
+  "rollcalls": 112
+ },
+ "current": true,
+ "district": "松江",
+ "group": "自民党議員連盟",
+ "id": "p_32_giin28_iogawa",
+ "kana": "いおがわすみひさ",
+ "name": "五百川純寿",
+ "profileUrl": "https://www.pref.shimane.lg.jp/gikai/gaido/meibo/simeibetu/giin28_iogawa.html",
+ "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/gaido/meibo/matsue.html",
+ "terms": [
+  {
+   "asOf": "2023-05-17",
+   "district": "松江",
+   "group": "自民党議員連盟"
+  }
+ ],
+ "timeline": [
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "決定",
+   "rollCallId": "pref-32-499-20260702-その他表決-ー-1",
+   "sessionLabel": "令和8年6月定例会（第499回）",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/saikin/r0806/index.data/r0806_giinbetu_kekka.pdf",
+   "title": "議⾧辞職の件（日程追加）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "許可",
+   "rollCallId": "pref-32-499-20260702-その他表決-ー-2",
+   "sessionLabel": "令和8年6月定例会（第499回）",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/saikin/r0806/index.data/r0806_giinbetu_kekka.pdf",
+   "title": "議⾧辞職の許可",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "決定",
+   "rollCallId": "pref-32-499-20260702-その他表決-ー-3",
+   "sessionLabel": "令和8年6月定例会（第499回）",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/saikin/r0806/index.data/r0806_giinbetu_kekka.pdf",
+   "title": "副議⾧辞職の件（日程追加）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "許可",
+   "rollCallId": "pref-32-499-20260702-その他表決-ー-4",
+   "sessionLabel": "令和8年6月定例会（第499回）",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/saikin/r0806/index.data/r0806_giinbetu_kekka.pdf",
+   "title": "副議⾧辞職の許可",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "採択",
+   "rollCallId": "pref-32-499-20260702-請願-請願第17号",
+   "sessionLabel": "令和8年6月定例会（第499回）",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/saikin/r0806/index.data/r0806_giinbetu_kekka.pdf",
+   "title": "「再審法改正を求める意見書」採択について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "採択",
+   "rollCallId": "pref-32-499-20260702-請願-請願第29号",
+   "sessionLabel": "令和8年6月定例会（第499回）",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/saikin/r0806/index.data/r0806_giinbetu_kekka.pdf",
+   "title": "「地方財政の充実・強化を求める」請願平成25年6月議会で島根県議会が採択された請願は「慰安婦間題は性奴隷制の間題」などと、慰安婦強制連行説という嘘をより一層悪質な嘘に作り上げています。そしてそれを理由に「日本政府は河野談話を踏まえ、その内容を誠実に実行すること」、という具体的に何を求めて",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "不採択",
+   "rollCallId": "pref-32-499-20260702-請願-請願第30号",
+   "sessionLabel": "令和8年6月定例会（第499回）",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/saikin/r0806/index.data/r0806_giinbetu_kekka.pdf",
+   "title": "いるのか分からない意見書を出しています。仮に日本政府が根拠の無い事案で公式に謝罪をすれば、そのような卑屈な国は国際社会で信頼されなくなるでしょう。そして海外に建つ慰安婦像を容認したものとの誤解を生み、国際社会で日本悪玉論を展開する勢力に加担することになります。それは将来の世代を苦しめることになり、ひいては我が国の安全保障に深刻な事態をもたらすことになります。歴史認識の歪みは、当事国ではない他国との関係性をも歪んだものにしてしまいます。民主主義国家の間で確かな安全保障政策を構築するためには、「信頼しうる国である」ことが最も重要です。平成25年6月26日に採択した「日本軍「慰安婦」問題への誠実な対応を求める請願」および、これを基にして作成され政府に提出された意見書の撤回もしくは無効とする決議を求めます。",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "承認",
+   "rollCallId": "pref-32-499-20260702-議案-承認第3号",
+   "sessionLabel": "令和8年6月定例会（第499回）",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/saikin/r0806/index.data/r0806_giinbetu_kekka.pdf",
+   "title": "専決処分事件の報告及び承認について《令和７年度島根県一般会計補正予算（第13号）》",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "承認",
+   "rollCallId": "pref-32-499-20260702-議案-承認第4号",
+   "sessionLabel": "令和8年6月定例会（第499回）",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/saikin/r0806/index.data/r0806_giinbetu_kekka.pdf",
+   "title": "専決処分事件の報告及び承認について《令和７年度島根県立島根あさひ社会復帰促進センター診療所特別会計補正予算（第４号）》",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "承認",
+   "rollCallId": "pref-32-499-20260702-議案-承認第5号",
+   "sessionLabel": "令和8年6月定例会（第499回）",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/saikin/r0806/index.data/r0806_giinbetu_kekka.pdf",
+   "title": "専決処分事件の報告及び承認について《令和７年度島根県国民健康保険特別会計補正予算（第４号）》",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "承認",
+   "rollCallId": "pref-32-499-20260702-議案-承認第6号",
+   "sessionLabel": "令和8年6月定例会（第499回）",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/saikin/r0806/index.data/r0806_giinbetu_kekka.pdf",
+   "title": "専決処分事件の報告及び承認について《令和７年度島根県営住宅特別会計補正予算（第４号）》",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-499-20260702-議案-第77号",
+   "sessionLabel": "令和8年6月定例会（第499回）",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/saikin/r0806/index.data/r0806_giinbetu_kekka.pdf",
+   "title": "令和８年度島根県一般会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-499-20260702-議案-第78号",
+   "sessionLabel": "令和8年6月定例会（第499回）",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/saikin/r0806/index.data/r0806_giinbetu_kekka.pdf",
+   "title": "令和８年度島根県中小企業近代化資金特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-499-20260702-議案-第79号",
+   "sessionLabel": "令和8年6月定例会（第499回）",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/saikin/r0806/index.data/r0806_giinbetu_kekka.pdf",
+   "title": "令和８年度島根県病院事業会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-499-20260702-議案-第80号",
+   "sessionLabel": "令和8年6月定例会（第499回）",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/saikin/r0806/index.data/r0806_giinbetu_kekka.pdf",
+   "title": "特別職の職員の給与等に関する条例等の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-499-20260702-議案-第81号",
+   "sessionLabel": "令和8年6月定例会（第499回）",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/saikin/r0806/index.data/r0806_giinbetu_kekka.pdf",
+   "title": "特定地域の振興を促進するための県税の課税免除等に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-499-20260702-議案-第82号",
+   "sessionLabel": "令和8年6月定例会（第499回）",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/saikin/r0806/index.data/r0806_giinbetu_kekka.pdf",
+   "title": "島根県営住宅条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-499-20260702-議案-第83号",
+   "sessionLabel": "令和8年6月定例会（第499回）",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/saikin/r0806/index.data/r0806_giinbetu_kekka.pdf",
+   "title": "公害に係る紛争処理の手続に要する費用等に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-499-20260702-議案-第84号",
+   "sessionLabel": "令和8年6月定例会（第499回）",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/saikin/r0806/index.data/r0806_giinbetu_kekka.pdf",
+   "title": "島根県一時保護委託者の登録等に関する基準を定める条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-499-20260702-議案-第85号",
+   "sessionLabel": "令和8年6月定例会（第499回）",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/saikin/r0806/index.data/r0806_giinbetu_kekka.pdf",
+   "title": "島根県児童福祉施設の設備及び運営に関する基準を定める条例等の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-499-20260702-議案-第86号",
+   "sessionLabel": "令和8年6月定例会（第499回）",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/saikin/r0806/index.data/r0806_giinbetu_kekka.pdf",
+   "title": "権利の放棄について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-499-20260702-議案-第87号",
+   "sessionLabel": "令和8年6月定例会（第499回）",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/saikin/r0806/index.data/r0806_giinbetu_kekka.pdf",
+   "title": "財産の取得について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-499-20260702-議案-第88号",
+   "sessionLabel": "令和8年6月定例会（第499回）",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/saikin/r0806/index.data/r0806_giinbetu_kekka.pdf",
+   "title": "財産の取得について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-499-20260702-議案-第89号",
+   "sessionLabel": "令和8年6月定例会（第499回）",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/saikin/r0806/index.data/r0806_giinbetu_kekka.pdf",
+   "title": "契約の締結について《浜田養護学校整備（高等部棟建築）工事》",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-499-20260702-議案-第90号",
+   "sessionLabel": "令和8年6月定例会（第499回）",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/saikin/r0806/index.data/r0806_giinbetu_kekka.pdf",
+   "title": "令和８年度島根県一般会計補正予算（第２号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-32-499-20260702-議案-第91号",
+   "sessionLabel": "令和8年6月定例会（第499回）",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/saikin/r0806/index.data/r0806_giinbetu_kekka.pdf",
+   "title": "島根県公安委員会委員任命の同意について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-32-499-20260702-議案-第92号",
+   "sessionLabel": "令和8年6月定例会（第499回）",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/saikin/r0806/index.data/r0806_giinbetu_kekka.pdf",
+   "title": "島根県収用委員会委員及び予備委員任命の同意について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-499-20260702-議案-議員提出第4号",
+   "sessionLabel": "令和8年6月定例会（第499回）",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/saikin/r0806/index.data/r0806_giinbetu_kekka.pdf",
+   "title": "議会の議員の議員報酬、費用弁償及び期末手当支給条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-499-20260702-議案-議員提出第5号",
+   "sessionLabel": "令和8年6月定例会（第499回）",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/saikin/r0806/index.data/r0806_giinbetu_kekka.pdf",
+   "title": "再審制度の見直しに向けた刑事訴訟法の改正を求める意見書",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-499-20260702-議案-議員提出第6号",
+   "sessionLabel": "令和8年6月定例会（第499回）",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/saikin/r0806/index.data/r0806_giinbetu_kekka.pdf",
+   "title": "地方財政の充実・強化を求める意見書",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "不採択",
+   "rollCallId": "pref-32-2026-02-20260312-請願-請願第28号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "して最も多かったのが、「河野談話を否定できないとするならばあった可能性があったわけだから謝罪しなければならない」というものです。強制連行や性奴隷の有無が議論の焦点であるにも関わらず、「性奴隷制の問題」と決め付け、可能性があったから謝罪をするという行為は、事実認定という原因の特定と立証を無視したものです。これは民主主義国家の公的機関が、絶対に採用してはならない論理であり、証拠が無くとも日本人犯罪を捏造できるという前例を、島根県議会が残すことになります。そして令和5年9月議会では「未来志向の日韓関係に関する意見書」を可決され、国に提出されました。今回の請願書は、令和元年6月議会から提出させていただいた私ど",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "承認",
+   "rollCallId": "pref-32-2026-02-20260312-議案-承認第１号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "専決処分事件の報告及び承認について《令和７年度島根県一般会計補正予算（第9号）》",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "承認",
+   "rollCallId": "pref-32-2026-02-20260312-議案-承認第２号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "専決処分事件の報告及び承認について《令和７年度島根県中小企業制度融資等特別会計補正予算（第１号）》島根県議会が平成25年6月26日付で可決採択された“日本軍「慰安婦」問題への誠実な対応を求める請願”には慰安婦問題を「性奴隸制の問題」であると、絶対に容認してはならない虚偽が記載されています。そして、その請願の採択の取り消しを求める私共の請願への反論と",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第10号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和８年度島根県母子父子寡婦福祉資金特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第11号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和８年度島根県農林漁業改善資金特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第12号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和８年度島根県中小企業近代化資金特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第13号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和８年度島根県中小企業制度融資等特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第14号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和８年度島根県立中海水中貯木場特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第15号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和８年度島根県臨港地域整備特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第16号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和８年度島根県営住宅特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第17号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和８年度島根県病院事業会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第18号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和８年度島根県電気事業会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第19号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和８年度島根県工業用水道事業会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第1号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和７年度島根県一般会計補正予算（第11号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第20号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和８年度島根県水道事業会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第21号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和８年度島根県宅地造成事業会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第22号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和８年度島根県流域下水道事業会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第23号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "島根県行政手続条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第24号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "島根県公益認定等審議会条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第25号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "地方自治法の一部を改正する法律等の施行に伴う関係条例の整理に関する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第26号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "職員の給与に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第27号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "非常勤の職員等の報酬及び費用弁償支給条例等の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第28号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "職員の特殊勤務手当に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第29号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "島根県部設置条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第2号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和７年度島根県流域下水道事業会計補正予算（第４号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第30号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "島根県県税条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第31号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "県立学校の教育職員の給与に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第32号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "市町村立学校の教職員の給与等に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第33号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "県立学校の教育職員及び市町村立学校の教職員の特殊勤務手当に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第34号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "県立学校の職員定数条例及び市町村立学校の教職員定数条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第35号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "島根県立高等学校教育振興基金条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第36号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "島根県営住宅条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第37号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "知事の権限に属する事務の処理の特例に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第38号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "島根県国民健康保険条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第39号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "島根県児童福祉施設の設備及び運営に関する基準を定める条例及び島根県一時保護施設の設備及び運営に関する基準を定める条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第3号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和８年度島根県一般会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第40号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "島根県手数料条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第41号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "島根県動物の愛護及び管理に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第42号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "食品衛生法施行条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第43号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "島根県病院事業の設置等に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第44号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "島根県病院局職員の給与の種類及び基準に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第45号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "島根県家畜保健衛生所条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第46号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "包括外部監査契約の締結について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第47号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "直轄特定漁港漁場整備事業に対する県の負担の変更について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第48号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "直轄特定漁港漁場整備事業に対する県の負担について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第49号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "宍道湖流域下水道の維持管理に要する費用の市負担について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第4号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和８年度島根県公債管理特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第50号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "権利の放棄について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第51号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "契約の締結について《国道431号（森山西工区）防安交付金（改築）（仮称）森山トンネル工事》",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第52号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "契約の締結について《県立浜山公園陸上競技場ナイター照明新設工事》",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第53号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和７年度島根県一般会計補正予算（第12号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第54号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和７年度島根県公債管理特別会計補正予算（第２号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第55号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和７年度島根県証紙特別会計補正予算（第２号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第56号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和７年度島根県総務事務集中処理特別会計補正予算（第２号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第57号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和７年度島根県市町村振興資金特別会計補正予算（第２号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第58号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和７年度島根県立島根あさひ社会復帰促進センター診療所特別会計補正予算（第３号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第59号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和７年度島根県国民健康保険特別会計補正予算（第３号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第5号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和８年度島根県証紙特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第60号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和７年度島根県農林漁業改善資金特別会計補正予算（第２号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第61号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和７年度島根県中小企業近代化資金特別会計補正予算（第３号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第62号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和７年度島根県中小企業制度融資等特別会計補正予算（第２号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第63号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和７年度島根県立中海水中貯木場特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第64号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和７年度島根県臨港地域整備特別会計補正予算（第４号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第65号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和７年度島根県営住宅特別会計補正予算（第３号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第66号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和７年度島根県病院事業会計補正予算（第４号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第67号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和７年度島根県電気事業会計補正予算（第３号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第68号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和７年度島根県工業用水道事業会計補正予算（第３号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第69号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和７年度島根県水道事業会計補正予算（第３号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第6号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和８年度島根県総務事務集中処理特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第70号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和７年度島根県宅地造成事業会計補正予算（第３号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第71号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和７年度島根県流域下水道事業会計補正予算（第５号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第72号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "職員の給与に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第73号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "県立学校の教育職員の給与に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第74号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "市町村立学校の教職員の給与等に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第75号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "島根県県税条例等の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第76号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "島根県教育委員会教育⾧任命の同意について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第7号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和８年度島根県市町村振興資金特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第8号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和８年度島根県立島根あさひ社会復帰促進センター診療所特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-第9号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "令和８年度島根県国民健康保険特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-議員提出第1号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "もの請願書に対する議論の内容を、再検証し、令和5年の意見書については、議論を回避するためだけのものと、改めて指摘いたします。平成25年6月26日付で採択された“日本軍「慰安婦」問題への誠実な対応を求める請願”とこれを基にして政府に出された意見書を無効とする決議を求めます。議会の議員の議員報酬、費用弁償及び期末手当支給条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-議員提出第2号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "島根県議会委員会条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-32-2026-02-20260312-議案-議員提出第3号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf",
+   "title": "放課後児童クラブの充実を求める意見書",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  }
+ ]
+}
