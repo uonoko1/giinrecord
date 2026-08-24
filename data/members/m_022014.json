@@ -523,6 +523,16 @@
    "value": "賛成"
   },
   {
+   "billId": "221-参法-9",
+   "date": "2026-06-17",
+   "kind": "bill",
+   "role": "提出者",
+   "session": 221,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/221/meisai/m221100221009.htm",
+   "submitterText": "神谷宗幣君 外3名",
+   "title": "外国人総合政策庁の設置等による外国人政策の総合的な推進に関する法律案"
+  },
+  {
    "date": "2026-06-12",
    "groupValue": "賛成",
    "kind": "vote",
@@ -1073,6 +1083,36 @@
    "value": "反対"
   },
   {
+   "billId": "221-参法-7",
+   "date": "2026-04-02",
+   "kind": "bill",
+   "role": "提出者",
+   "session": 221,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/221/meisai/m221100221007.htm",
+   "submitterText": "神谷宗幣君 外3名",
+   "title": "刑法の一部を改正する法律案"
+  },
+  {
+   "billId": "221-参法-6",
+   "date": "2026-04-02",
+   "kind": "bill",
+   "role": "提出者",
+   "session": 221,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/221/meisai/m221100221006.htm",
+   "submitterText": "神谷宗幣君 外4名",
+   "title": "特定秘密の保護に関する法律及び重要経済安保情報の保護及び活用に関する法律の一部を改正する法律案"
+  },
+  {
+   "billId": "221-参法-5",
+   "date": "2026-04-02",
+   "kind": "bill",
+   "role": "提出者",
+   "session": 221,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/221/meisai/m221100221005.htm",
+   "submitterText": "神谷宗幣君 外4名",
+   "title": "防諜に関する施策の推進に関する法律案"
+  },
+  {
    "date": "2026-03-31",
    "groupValue": "賛成",
    "kind": "vote",
@@ -1469,6 +1509,36 @@
    "value": "反対"
   },
   {
+   "chars": 2539,
+   "date": "2025-12-16",
+   "excerpt": "参政党の神谷宗幣です。 参政党を代表し、令和七年度補正予算に対し、反対の立場で討論をいたします。 これまで三十年にわたって進められてきたコーポレートガバナンス改革によって、日本の大企業は株主利益の最大化を優先する経営を半ば強制されてきました。その結果、企業経営はコストカット経営を余儀なくされ、賃金は上がらず、下請は買いたたかれ、そうして捻出された利益は、配当や自社株買いなど、株主への還元に回されて",
+   "kind": "speech",
+   "meeting": "本会議 第10号",
+   "session": 219,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121915254X01020251216/8",
+   "speechId": "121915254X01020251216_008"
+  },
+  {
+   "billId": "219-参法-6",
+   "date": "2025-12-09",
+   "kind": "bill",
+   "role": "提出者",
+   "session": 219,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/219/meisai/m219100219006.htm",
+   "submitterText": "神谷宗幣君 外3名",
+   "title": "新型コロナウイルス感染症対策及びｍＲＮＡワクチン施策等検証委員会の設置等に関する法律案"
+  },
+  {
+   "chars": 3456,
+   "date": "2025-12-08",
+   "excerpt": "参政党の神谷宗幣です。 会派を代表して、補正予算について質問をいたします。 まず、補正予算とは、年度当初には予想できなかった支出に対応するための仕組みであり、災害対応や物価高対策など、本来、緊急不可避の支出に限定されるべきものです。しかし、今回の補正には、危機管理投資、成長投資、防衛力・外交力強化、ＧＸ推進、基金造成など、本来当初予算で議論すべき中長期的な政策が数多く含まれています。 今回、政府が",
+   "kind": "speech",
+   "meeting": "本会議 第9号",
+   "session": 219,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121915254X00920251208/28",
+   "speechId": "121915254X00920251208_028"
+  },
+  {
    "date": "2025-12-05",
    "groupValue": "賛成",
    "kind": "vote",
@@ -1799,6 +1869,90 @@
    "value": "反対"
   },
   {
+   "billId": "219-参法-5",
+   "date": "2025-11-25",
+   "kind": "bill",
+   "role": "提出者",
+   "session": 219,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/219/meisai/m219100219005.htm",
+   "submitterText": "神谷宗幣君 外4名",
+   "title": "特定秘密の保護に関する法律及び重要経済安保情報の保護及び活用に関する法律の一部を改正する法律案"
+  },
+  {
+   "billId": "219-参法-4",
+   "date": "2025-11-25",
+   "kind": "bill",
+   "role": "提出者",
+   "session": 219,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/219/meisai/m219100219004.htm",
+   "submitterText": "神谷宗幣君 外4名",
+   "title": "防諜に関する施策の推進に関する法律案"
+  },
+  {
+   "chars": 7341,
+   "date": "2025-11-06",
+   "excerpt": "参政党の神谷宗幣です。 会派を代表して、高市総理の所信表明に対して質問をいたします。 高市総理、第百四代内閣総理大臣就任、誠におめでとうございます。就任早々、トランプ大統領との会談を始めとする様々な外交活動に続いての国会での質疑、大変かと思いますが、よろしくお願いいたします。 本日は、党を代表して本会議場で質問に立つ初めての機会となりますので、冒頭、我々参政党のスタンスを説明してから質問に入りたい",
+   "kind": "speech",
+   "meeting": "本会議 第4号",
+   "session": 219,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121915254X00420251106/12",
+   "speechId": "121915254X00420251106_012"
+  },
+  {
+   "billId": "219-参法-3",
+   "date": "2025-10-27",
+   "kind": "bill",
+   "role": "提出者",
+   "session": 219,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/219/meisai/m219100219003.htm",
+   "submitterText": "神谷宗幣君 外3名",
+   "title": "刑法の一部を改正する法律案"
+  },
+  {
+   "answerDate": "2025-08-15",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/218/touh/t218004.htm",
+   "date": "2025-08-01",
+   "kind": "question",
+   "questionId": "218-sangiin-4",
+   "session": 218,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/218/meisai/m218004.htm",
+   "submitterText": "神谷 宗幣君",
+   "title": "共産主義及び文化的マルクス主義の浸透と国家制度への影響に関する質問主意書"
+  },
+  {
+   "answerDate": "2025-08-15",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/218/touh/t218003.htm",
+   "date": "2025-08-01",
+   "kind": "question",
+   "questionId": "218-sangiin-3",
+   "session": 218,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/218/meisai/m218003.htm",
+   "submitterText": "神谷 宗幣君",
+   "title": "フェンタニルを含む薬物問題及び外国勢力による影響工作への国家安全保障上の対応に関する質問主意書"
+  },
+  {
+   "answerDate": "2025-08-15",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/218/touh/t218002.htm",
+   "date": "2025-08-01",
+   "kind": "question",
+   "questionId": "218-sangiin-2",
+   "session": 218,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/218/meisai/m218002.htm",
+   "submitterText": "神谷 宗幣君",
+   "title": "ＳＮＳにおける言論操作及び政府答弁の整合性に関する質問主意書"
+  },
+  {
+   "answerDate": "2025-08-15",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/218/touh/t218001.htm",
+   "date": "2025-08-01",
+   "kind": "question",
+   "questionId": "218-sangiin-1",
+   "session": 218,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/218/meisai/m218001.htm",
+   "submitterText": "神谷 宗幣君",
+   "title": "戦後八十年に際する首相見解の形式及び位置付けに関する質問主意書"
+  },
+  {
    "date": "2025-06-20",
    "groupValue": "賛成",
    "kind": "vote",
@@ -1819,6 +1973,39 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0620-v001.htm",
    "title": "日程第１　独立行政法人男女共同参画機構法案（内閣提出、衆議院送付）",
    "value": "反対"
+  },
+  {
+   "answerDate": "2025-07-01",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217237.htm",
+   "date": "2025-06-19",
+   "kind": "question",
+   "questionId": "217-sangiin-237",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217237.htm",
+   "submitterText": "神谷 宗幣君",
+   "title": "「経営・管理」の在留資格を悪用した外国人移住の実態に関する再質問主意書"
+  },
+  {
+   "answerDate": "2025-07-01",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217236.htm",
+   "date": "2025-06-19",
+   "kind": "question",
+   "questionId": "217-sangiin-236",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217236.htm",
+   "submitterText": "神谷 宗幣君",
+   "title": "難民認定制度の濫用防止及び審査体制の適正化に関する質問主意書"
+  },
+  {
+   "answerDate": "2025-07-01",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217235.htm",
+   "date": "2025-06-19",
+   "kind": "question",
+   "questionId": "217-sangiin-235",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217235.htm",
+   "submitterText": "神谷 宗幣君",
+   "title": "同性婚に係る憲法解釈及び国民的議論に関する質問主意書"
   },
   {
    "date": "2025-06-18",
@@ -2052,6 +2239,17 @@
    "value": "賛成"
   },
   {
+   "answerDate": "2025-06-17",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217154.htm",
+   "date": "2025-06-06",
+   "kind": "question",
+   "questionId": "217-sangiin-154",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217154.htm",
+   "submitterText": "神谷 宗幣君",
+   "title": "教科書検定基準における近隣諸国条項及び中立性の確保に関する質問主意書"
+  },
+  {
    "date": "2025-06-04",
    "groupValue": "賛成",
    "kind": "vote",
@@ -2105,6 +2303,39 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0604-v001.htm",
    "title": "日程第１　株式会社地域経済活性化支援機構法の一部を改正する法律案（内閣提出、衆議院送付）",
    "value": "賛成"
+  },
+  {
+   "answerDate": "2025-06-13",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217136.htm",
+   "date": "2025-06-02",
+   "kind": "question",
+   "questionId": "217-sangiin-136",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217136.htm",
+   "submitterText": "神谷 宗幣君",
+   "title": "ハーバード大学の留学生受入れに係る安全保障上の懸念に関する質問主意書"
+  },
+  {
+   "answerDate": "2025-06-13",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217135.htm",
+   "date": "2025-06-02",
+   "kind": "question",
+   "questionId": "217-sangiin-135",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217135.htm",
+   "submitterText": "神谷 宗幣君",
+   "title": "再生可能エネルギー発電事業者の倒産・廃業及び太陽光パネル放置・撤去費用に関する質問主意書"
+  },
+  {
+   "answerDate": "2025-06-13",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217134.htm",
+   "date": "2025-06-02",
+   "kind": "question",
+   "questionId": "217-sangiin-134",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217134.htm",
+   "submitterText": "神谷 宗幣君",
+   "title": "中国製太陽光パネルに内蔵された通信機器及び日本のエネルギー安全保障上の対応に関する質問主意書"
   },
   {
    "date": "2025-05-30",
@@ -2624,6 +2855,17 @@
    "value": "賛成"
   },
   {
+   "answerDate": "2025-05-13",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217107.htm",
+   "date": "2025-04-28",
+   "kind": "question",
+   "questionId": "217-sangiin-107",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217107.htm",
+   "submitterText": "神谷 宗幣君",
+   "title": "我が国に設置された孔子学院及び孔子課堂に関する質問主意書"
+  },
+  {
    "date": "2025-04-25",
    "groupValue": "賛成",
    "kind": "vote",
@@ -2701,6 +2943,17 @@
    "value": "賛成"
   },
   {
+   "answerDate": "2025-05-09",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217104.htm",
+   "date": "2025-04-21",
+   "kind": "question",
+   "questionId": "217-sangiin-104",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217104.htm",
+   "submitterText": "神谷 宗幣君",
+   "title": "日中「友好交流」を通じた地方自治体・青少年・メディア等に対する中国の統一戦線工作・影響力工作に関する質問主意書"
+  },
+  {
    "date": "2025-04-18",
    "groupValue": "賛成",
    "kind": "vote",
@@ -2765,6 +3018,17 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0416-v001.htm",
    "title": "日程第１　自殺対策基本法の一部を改正する法律案（厚生労働委員長提出）",
    "value": "反対"
+  },
+  {
+   "answerDate": "2025-04-25",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217097.htm",
+   "date": "2025-04-16",
+   "kind": "question",
+   "questionId": "217-sangiin-97",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217097.htm",
+   "submitterText": "神谷 宗幣君",
+   "title": "戦後八十年に際する政府の対応及び有識者会議の在り方に関する質問主意書"
   },
   {
    "date": "2025-04-11",
@@ -2842,6 +3106,50 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0409-v001.htm",
    "title": "日程第１　風俗営業等の規制及び業務の適正化等に関する法律の一部を改正する法律案（内閣提出）",
    "value": "賛成"
+  },
+  {
+   "answerDate": "2025-04-18",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217091.htm",
+   "date": "2025-04-08",
+   "kind": "question",
+   "questionId": "217-sangiin-91",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217091.htm",
+   "submitterText": "神谷 宗幣君",
+   "title": "中国の反スパイ法等に基づく日本人及び在日中国人の拘束事案に係る危機意識の喚起と政府対応に関する質問主意書"
+  },
+  {
+   "answerDate": "2025-04-11",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217079.htm",
+   "date": "2025-04-02",
+   "kind": "question",
+   "questionId": "217-sangiin-79",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217079.htm",
+   "submitterText": "神谷 宗幣君",
+   "title": "「高度専門職」外国人受入れと安全保障上の懸念に関する質問主意書"
+  },
+  {
+   "answerDate": "2025-04-11",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217078.htm",
+   "date": "2025-04-02",
+   "kind": "question",
+   "questionId": "217-sangiin-78",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217078.htm",
+   "submitterText": "神谷 宗幣君",
+   "title": "ＬＧＢＴ理解増進法における「不当な差別」の定義の明確化に関する質問主意書"
+  },
+  {
+   "answerDate": "2025-04-11",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217077.htm",
+   "date": "2025-04-02",
+   "kind": "question",
+   "questionId": "217-sangiin-77",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217077.htm",
+   "submitterText": "神谷 宗幣君",
+   "title": "土地利用状況に関する報告を踏まえた安全保障と外国人土地取得規制に関する再質問主意書"
   },
   {
    "date": "2025-04-01",
@@ -3140,6 +3448,28 @@
    "value": "賛成"
   },
   {
+   "answerDate": "2025-04-04",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217071.htm",
+   "date": "2025-03-25",
+   "kind": "question",
+   "questionId": "217-sangiin-71",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217071.htm",
+   "submitterText": "神谷 宗幣君",
+   "title": "デジタル・ポジティブ・アクションに関する質問主意書"
+  },
+  {
+   "answerDate": "2025-04-04",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217070.htm",
+   "date": "2025-03-25",
+   "kind": "question",
+   "questionId": "217-sangiin-70",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217070.htm",
+   "submitterText": "神谷 宗幣君",
+   "title": "「経営・管理」の在留資格を悪用した外国人移住の実態に関する質問主意書"
+  },
+  {
    "date": "2025-03-14",
    "groupValue": "賛成",
    "kind": "vote",
@@ -3160,6 +3490,39 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0314-v001.htm",
    "title": "参議院規則の一部を改正する規則案（馬場成志君外７名発議）",
    "value": "賛成"
+  },
+  {
+   "answerDate": "2025-03-07",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217042.htm",
+   "date": "2025-02-25",
+   "kind": "question",
+   "questionId": "217-sangiin-42",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217042.htm",
+   "submitterText": "神谷 宗幣君",
+   "title": "国際機関における我が国の歴史及び文化の情報発信等に関する質問主意書"
+  },
+  {
+   "answerDate": "2025-03-07",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217039.htm",
+   "date": "2025-02-21",
+   "kind": "question",
+   "questionId": "217-sangiin-39",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217039.htm",
+   "submitterText": "神谷 宗幣君",
+   "title": "移民政策及び外国人の受入れに伴う財政・社会負担に関する質問主意書"
+  },
+  {
+   "answerDate": "2025-03-04",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217036.htm",
+   "date": "2025-02-20",
+   "kind": "question",
+   "questionId": "217-sangiin-36",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217036.htm",
+   "submitterText": "神谷 宗幣君",
+   "title": "食用赤色三号を始めとする食品添加物の安全性評価と使用規制に関する質問主意書"
   },
   {
    "date": "2025-02-19",
@@ -3291,6 +3654,72 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0219-v001.htm",
    "title": "日程第１　国家公務員等の任命に関する件「検査官（田中淳子君）」",
    "value": "反対"
+  },
+  {
+   "answerDate": "2025-02-21",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217024.htm",
+   "date": "2025-02-10",
+   "kind": "question",
+   "questionId": "217-sangiin-24",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217024.htm",
+   "submitterText": "神谷 宗幣君",
+   "title": "大学における外国人留学生の出身国の偏在と安全保障上の懸念に関する質問主意書"
+  },
+  {
+   "answerDate": "2025-02-04",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217005.htm",
+   "date": "2025-01-24",
+   "kind": "question",
+   "questionId": "217-sangiin-5",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217005.htm",
+   "submitterText": "神谷 宗幣君",
+   "title": "ガバメントクラウドとデータ主権及び経済安全保障に関する質問主意書"
+  },
+  {
+   "answerDate": "2025-02-04",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217004.htm",
+   "date": "2025-01-24",
+   "kind": "question",
+   "questionId": "217-sangiin-4",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217004.htm",
+   "submitterText": "神谷 宗幣君",
+   "title": "ＬＧＢＴ理解増進法等の急進的推進による社会的影響への懸念に関する質問主意書"
+  },
+  {
+   "answerDate": "2025-02-04",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217003.htm",
+   "date": "2025-01-24",
+   "kind": "question",
+   "questionId": "217-sangiin-3",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217003.htm",
+   "submitterText": "神谷 宗幣君",
+   "title": "外国資本による日本の鉱業権取得と国益に及ぼす影響に関する質問主意書"
+  },
+  {
+   "answerDate": "2025-02-04",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217002.htm",
+   "date": "2025-01-24",
+   "kind": "question",
+   "questionId": "217-sangiin-2",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217002.htm",
+   "submitterText": "神谷 宗幣君",
+   "title": "ＮＨＫ番組「緑なき島」に起因する事実に基づかない歴史情報の国際的拡散に関する質問主意書"
+  },
+  {
+   "answerDate": "2025-02-04",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217001.htm",
+   "date": "2025-01-24",
+   "kind": "question",
+   "questionId": "217-sangiin-1",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217001.htm",
+   "submitterText": "神谷 宗幣君",
+   "title": "土地利用状況に関する報告を踏まえた安全保障と外国人土地取得規制に関する質問主意書"
   },
   {
    "answerDate": "2025-01-07",

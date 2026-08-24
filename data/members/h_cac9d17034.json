@@ -403,6 +403,18 @@
    "title": "刑事訴訟法の一部を改正する法律案"
   },
   {
+   "answerDate": "2026-05-15",
+   "answerUrl": "https://www.shugiin.go.jp/internet/itdb_shitsumon.nsf/html/shitsumon/b221011.htm",
+   "date": "2026-04-30",
+   "kind": "question",
+   "questionId": "221-shugiin-11",
+   "session": 221,
+   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_shitsumon.nsf/html/shitsumon/221011.htm",
+   "status": "答弁受理",
+   "submitterText": "日野 紗里亜君",
+   "title": "交通事故等による被害を受けた胎児に係る法整備に関する質問主意書"
+  },
+  {
    "billId": "221-閣法-40",
    "date": "2026-04-24",
    "estimated": true,
@@ -518,6 +530,16 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "金融商品取引法及び資金決済に関する法律の一部を改正する法律案"
+  },
+  {
+   "chars": 5302,
+   "date": "2026-04-09",
+   "excerpt": "国民民主党・無所属クラブの日野紗里亜です。 会派を代表して質問します。（拍手） 私は、三つ子を含む四児の母です。お産も帝王切開も妊婦健診もお薬も、とてもお世話になりました。今、私や子供たちが元気に過ごせているのは、日本の医療と健康保険のおかげです。このすばらしい医療と健康保険を大切な子供たちに残したい。総理に質疑をさせていただきます。 まず、高市総理の現在の社会保障制度に対する認識についてお聞きし",
+   "kind": "speech",
+   "meeting": "本会議 第11号",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105254X01120260409/20",
+   "speechId": "122105254X01120260409_020"
   },
   {
    "billId": "221-閣法-56",

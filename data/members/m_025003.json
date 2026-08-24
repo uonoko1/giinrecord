@@ -910,6 +910,16 @@
    "value": "賛成"
   },
   {
+   "chars": 3723,
+   "date": "2026-05-15",
+   "excerpt": "参政党の安達悠司です。 会派を代表して、出入国管理及び難民認定法等の改正案について質問します。 日本版ＥＳＴＡの創設は、査証免除国の短期滞在者を対象に、入管前にオンライン審査を行うことで上陸審査を円滑化し、大量の外国人観光者の受入れに備える目的もあると考えられます。 政府は、平成二十八年以来、二〇三〇年までに訪日外国人旅行者数六千万人を目標に掲げてきました。令和七年の訪日外国人観光客は四千二百六十",
+   "kind": "speech",
+   "meeting": "本会議 第13号",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01320260515/19",
+   "speechId": "122115254X01320260515_019"
+  },
+  {
    "date": "2026-05-13",
    "groupValue": "賛成",
    "kind": "vote",
@@ -1788,6 +1798,28 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/209/209-1128-v001.htm",
    "title": "国家公務員等の任命に関する件「食品安全委員会委員（春日文子君）」",
    "value": "反対"
+  },
+  {
+   "answerDate": "2025-08-15",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/218/touh/t218009.htm",
+   "date": "2025-08-01",
+   "kind": "question",
+   "questionId": "218-sangiin-9",
+   "session": 218,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/218/meisai/m218009.htm",
+   "submitterText": "安達 悠司君",
+   "title": "憲法を一から考える教育に関する質問主意書"
+  },
+  {
+   "answerDate": "2025-08-15",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/218/touh/t218010.htm",
+   "date": "2025-08-01",
+   "kind": "question",
+   "questionId": "218-sangiin-10",
+   "session": 218,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/218/meisai/m218010.htm",
+   "submitterText": "安達 悠司君",
+   "title": "選挙演説妨害の取締強化に関する質問主意書"
   }
  ]
 }
