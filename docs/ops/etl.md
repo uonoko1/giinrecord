@@ -89,9 +89,9 @@ spike の結論は `docs/research/backfill-142-199.md`、契約は `docs/DATA_CO
   ```
 - **chunk をまたいでも前の回次は消えない**: 指定しなかった回次は `data/`（`meta.sessions`）から引き継がれる（`planSessions`。`packages/etl/test/sessions.test.ts` が固定している）。`concurrency: etl-daily` で直列化されるので、日次実行と重なっても待つだけ。
 - **取れない回次は飛ばしてログに残す**（全 58 回次の構造は事前確認していない）。ログの見どころ:
-  - `session N: roll call list not available, skipped (…)` — 一覧ページが 404 等（第141回以前は押しボタン投票の導入前で 404）
+  - `session N: roll call list not published, skipped (HTTP 404 …)` — 一覧ページが 404（第141回以前は押しボタン投票の導入前でページ自体が無い）。**404 以外（5xx・タイムアウト）は飛ばさず ETL を落とす**（取りこぼしを「無かった」と記録しないため）
   - `session N: X roll calls (Y with individual votes, Z standing votes skipped, W parse errors skipped)` — W が 0 でなければ個票の未知のレイアウト
-  - 最後に `sessions skipped (roll call list not available): …` と `roll call pages skipped (parse error): N in sessions …` を URL つきで再掲する。**推定で埋めないので、ここに出た回次は「まだ取れていない」という事実**。直すときはその URL を実 HTML のフィクスチャにしてテストから直す
+  - 最後に `sessions skipped (roll call list not published, 404): …` と `roll call pages skipped (parse error): N in sessions …` を URL つきで再掲する。**推定で埋めないので、ここに出た回次は「まだ取れていない」という事実**。直すときはその URL を実 HTML のフィクスチャにしてテストから直す
 - **未突合が大量に出るのは正常**。第142〜199回は回次別の参院名簿が公開されていない（第216回以降しか無い）ので、その期間の票は `memberId` が空のまま `unmatched/{session}.json` に載る（契約が「上限を設けない」と定めている既定の振る舞い。ETL は止まらない）。**氏名だけから議員を作ることも、氏名一致だけで現職に紐づけることもしない。**
 - 未突合は回次別ファイルに分かれる（#219）。`data/unmatched.json` に残るのは回次の引けない行（発言・委員会出席）だけなので、日次のサマリの `unmatched` の数字は分割後は小さくなる。全体の件数は ETL ログの `unmatched: N (see data/unmatched/{session}.json and data/unmatched.json)` と、その次の行の `by session: 142:2431 143:889 …` で見る。
 - 衆院の経過ページは古い回次で「衆議院審議時会派態度」の項目自体が無い（第142回で確認）。その議案は `shugiinGroupStance` を持たない ＝ 議員ページの `stance` 行にもならない。**「無い」を「全会派賛成」等に読み替えない。**

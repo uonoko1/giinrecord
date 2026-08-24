@@ -90,14 +90,17 @@ const parseFailures: { session: number; sourceUrl: string; message: string }[] =
 /** 一覧ページ自体が取れなかった回次（404 等）。 */
 const sessionFailures: { session: number; message: string }[] = [];
 for (const session of targets) {
-  // 一覧ページが 404 の回次（押しボタン投票の導入前＝第141回以前）は「無い」事実として飛ばす（#219）。
-  // ここで落とすとバックフィル全体が止まるので、回次単位で切り分けてログに残す。
+  // 一覧ページが 404 の回次（押しボタン投票の導入前＝第141回以前は vote_ind.htm 自体が無い）は
+  // 「ページが無い」事実として飛ばし、回次と理由をログに残す（#219）。ここで落とすとバックフィル全体が止まる。
+  // 404 以外（5xx・タイムアウト）は障害なので飛ばさず例外のまま落とす: 取りこぼしを「無かった」と記録しないため。
   let list;
   try {
     list = await listRollCalls(session);
   } catch (err) {
-    sessionFailures.push({ session, message: err instanceof Error ? err.message : String(err) });
-    console.warn(`session ${session}: roll call list not available, skipped (${err instanceof Error ? err.message : String(err)})`);
+    const message = err instanceof Error ? err.message : String(err);
+    if (!message.startsWith("HTTP 404 ")) throw err;
+    sessionFailures.push({ session, message });
+    console.warn(`session ${session}: roll call list not published, skipped (${message})`);
     continue;
   }
   // 一覧には起立採決（個人票が無い）のページも載る（第200〜216回。第210回・第216回は全件）。RollCall にはならないので件数だけ出す（#103）。
@@ -120,7 +123,7 @@ for (const session of targets) {
   console.log(`session ${session}: ${list.length} roll calls (${list.length - standing - failed} with individual votes, ${standing} standing votes skipped, ${failed} parse errors skipped)`);
 }
 if (sessionFailures.length) {
-  console.warn(`sessions skipped (roll call list not available): ${sessionFailures.map((f) => f.session).join(" ")}`);
+  console.warn(`sessions skipped (roll call list not published, 404): ${sessionFailures.map((f) => f.session).join(" ")}`);
 }
 if (parseFailures.length) {
   const bySession = [...new Set(parseFailures.map((f) => f.session))].sort((a, b) => a - b);
