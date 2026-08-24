@@ -1,0 +1,204 @@
+{
+ "assemblyId": "pref-24",
+ "counts": {
+  "cells": 17032,
+  "members": 47,
+  "rollcalls": 365,
+  "unknownCells": 0,
+  "unmatchedNames": 3
+ },
+ "fetchedAt": "2026-08-24T02:10:05.708Z",
+ "rosterAsOf": "2025-11-18",
+ "sessions": [
+  {
+   "pdfUrl": "https://www.pref.mie.lg.jp/common/content/001235880.pdf",
+   "pdfUrls": [
+    "https://www.pref.mie.lg.jp/common/content/001235880.pdf",
+    "https://www.pref.mie.lg.jp/common/content/001242584.pdf",
+    "https://www.pref.mie.lg.jp/common/content/001249930.pdf",
+    "https://www.pref.mie.lg.jp/common/content/001256778.pdf",
+    "https://www.pref.mie.lg.jp/common/content/001263901.pdf"
+   ],
+   "rollcalls": 110,
+   "sessionId": "r08",
+   "sessionLabel": "令和８年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/07976009017.htm",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.pref.mie.lg.jp/common/content/001175986.pdf",
+   "pdfUrls": [
+    "https://www.pref.mie.lg.jp/common/content/001175986.pdf",
+    "https://www.pref.mie.lg.jp/common/content/001182768.pdf",
+    "https://www.pref.mie.lg.jp/common/content/001190002.pdf",
+    "https://www.pref.mie.lg.jp/common/content/001197748.pdf",
+    "https://www.pref.mie.lg.jp/common/content/001205342.pdf",
+    "https://www.pref.mie.lg.jp/common/content/001223187.pdf",
+    "https://www.pref.mie.lg.jp/common/content/001228225.pdf",
+    "https://www.pref.mie.lg.jp/common/content/001232615.pdf"
+   ],
+   "rollcalls": 255,
+   "sessionId": "r07",
+   "sessionLabel": "令和７年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/07976009017.htm",
+   "unknownCells": 0
+  }
+ ],
+ "sources": [
+  {
+   "fetchedAt": "2026-08-24T02:10:05.708Z",
+   "name": "三重県議会 議員名簿（選挙区別５０音順）",
+   "url": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+  },
+  {
+   "fetchedAt": "2026-08-24T02:10:05.708Z",
+   "name": "三重県議会 選挙区別名簿",
+   "url": "https://www.pref.mie.lg.jp/KENGIKAI/08096011310.htm"
+  },
+  {
+   "fetchedAt": "2026-08-24T02:10:05.708Z",
+   "name": "三重県議会 議員の紹介（津市選挙区）",
+   "url": "https://www.pref.mie.lg.jp/KENGIKAI/08109011323.htm"
+  },
+  {
+   "fetchedAt": "2026-08-24T02:10:05.708Z",
+   "name": "三重県議会 議員の紹介（四日市市選挙区）",
+   "url": "https://www.pref.mie.lg.jp/KENGIKAI/08111011325.htm"
+  },
+  {
+   "fetchedAt": "2026-08-24T02:10:05.708Z",
+   "name": "三重県議会 議員の紹介（伊勢市・鳥羽市選挙区）",
+   "url": "https://www.pref.mie.lg.jp/KENGIKAI/08097011311.htm"
+  },
+  {
+   "fetchedAt": "2026-08-24T02:10:05.708Z",
+   "name": "三重県議会 議員の紹介（松阪市選挙区）",
+   "url": "https://www.pref.mie.lg.jp/KENGIKAI/08101011315.htm"
+  },
+  {
+   "fetchedAt": "2026-08-24T02:10:05.708Z",
+   "name": "三重県議会 議員の紹介（桑名市・桑名郡選挙区）",
+   "url": "https://www.pref.mie.lg.jp/KENGIKAI/08100011314.htm"
+  },
+  {
+   "fetchedAt": "2026-08-24T02:10:05.708Z",
+   "name": "三重県議会 議員の紹介（鈴鹿市選挙区）",
+   "url": "https://www.pref.mie.lg.jp/KENGIKAI/08106011320.htm"
+  },
+  {
+   "fetchedAt": "2026-08-24T02:10:05.708Z",
+   "name": "三重県議会 議員の紹介（名張市選挙区）",
+   "url": "https://www.pref.mie.lg.jp/KENGIKAI/08103011317.htm"
+  },
+  {
+   "fetchedAt": "2026-08-24T02:10:05.708Z",
+   "name": "三重県議会 議員の紹介（東紀州選挙区）",
+   "url": "https://www.pref.mie.lg.jp/KENGIKAI/08104011318.htm"
+  },
+  {
+   "fetchedAt": "2026-08-24T02:10:05.708Z",
+   "name": "三重県議会 議員の紹介（亀山市選挙区）",
+   "url": "https://www.pref.mie.lg.jp/KENGIKAI/08098011312.htm"
+  },
+  {
+   "fetchedAt": "2026-08-24T02:10:05.708Z",
+   "name": "三重県議会 議員の紹介（いなべ市・員弁郡選挙区）",
+   "url": "https://www.pref.mie.lg.jp/KENGIKAI/08095011309.htm"
+  },
+  {
+   "fetchedAt": "2026-08-24T02:10:05.708Z",
+   "name": "三重県議会 議員の紹介（志摩市選挙区）",
+   "url": "https://www.pref.mie.lg.jp/KENGIKAI/08105011319.htm"
+  },
+  {
+   "fetchedAt": "2026-08-24T02:10:05.708Z",
+   "name": "三重県議会 議員の紹介（伊賀市選挙区）",
+   "url": "https://www.pref.mie.lg.jp/KENGIKAI/08094011308.htm"
+  },
+  {
+   "fetchedAt": "2026-08-24T02:10:05.708Z",
+   "name": "三重県議会 議員の紹介（三重郡選挙区）",
+   "url": "https://www.pref.mie.lg.jp/KENGIKAI/08102011316.htm"
+  },
+  {
+   "fetchedAt": "2026-08-24T02:10:05.708Z",
+   "name": "三重県議会 議員の紹介（多気郡選挙区）",
+   "url": "https://www.pref.mie.lg.jp/KENGIKAI/08107011321.htm"
+  },
+  {
+   "fetchedAt": "2026-08-24T02:10:05.708Z",
+   "name": "三重県議会 議員の紹介（度会郡選挙区）",
+   "url": "https://www.pref.mie.lg.jp/KENGIKAI/08110011324.htm"
+  },
+  {
+   "fetchedAt": "2026-08-24T02:10:05.708Z",
+   "name": "三重県議会 議案審議結果一覧",
+   "url": "https://www.pref.mie.lg.jp/KENGIKAI/07976009017.htm"
+  },
+  {
+   "fetchedAt": "2026-08-24T02:10:05.708Z",
+   "name": "三重県議会 議員別の賛否等の状況（令和８年定例会、令和８年１月分）",
+   "url": "https://www.pref.mie.lg.jp/common/content/001235880.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-24T02:10:05.708Z",
+   "name": "三重県議会 議員別の賛否等の状況（令和８年定例会、令和８年２月分）",
+   "url": "https://www.pref.mie.lg.jp/common/content/001242584.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-24T02:10:05.708Z",
+   "name": "三重県議会 議員別の賛否等の状況（令和８年定例会、令和８年３月分）",
+   "url": "https://www.pref.mie.lg.jp/common/content/001249930.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-24T02:10:05.708Z",
+   "name": "三重県議会 議員別の賛否等の状況（令和８年定例会、令和８年５月分）",
+   "url": "https://www.pref.mie.lg.jp/common/content/001256778.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-24T02:10:05.708Z",
+   "name": "三重県議会 議員別の賛否等の状況（令和８年定例会、令和８年６月分）",
+   "url": "https://www.pref.mie.lg.jp/common/content/001263901.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-24T02:10:05.708Z",
+   "name": "三重県議会 議員別の賛否等の状況（令和７年定例会、令和７年１月分）",
+   "url": "https://www.pref.mie.lg.jp/common/content/001175986.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-24T02:10:05.708Z",
+   "name": "三重県議会 議員別の賛否等の状況（令和７年定例会、令和７年２月分）",
+   "url": "https://www.pref.mie.lg.jp/common/content/001182768.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-24T02:10:05.708Z",
+   "name": "三重県議会 議員別の賛否等の状況（令和７年定例会、令和７年３月分）",
+   "url": "https://www.pref.mie.lg.jp/common/content/001190002.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-24T02:10:05.708Z",
+   "name": "三重県議会 議員別の賛否等の状況（令和７年定例会、令和７年５月分）",
+   "url": "https://www.pref.mie.lg.jp/common/content/001197748.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-24T02:10:05.708Z",
+   "name": "三重県議会 議員別の賛否等の状況（令和７年定例会、令和７年６月分）",
+   "url": "https://www.pref.mie.lg.jp/common/content/001205342.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-24T02:10:05.708Z",
+   "name": "三重県議会 議員別の賛否等の状況（令和７年定例会、令和７年１０月分）",
+   "url": "https://www.pref.mie.lg.jp/common/content/001223187.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-24T02:10:05.708Z",
+   "name": "三重県議会 議員別の賛否等の状況（令和７年定例会、令和７年１１月分）",
+   "url": "https://www.pref.mie.lg.jp/common/content/001228225.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-24T02:10:05.708Z",
+   "name": "三重県議会 議員別の賛否等の状況（令和７年定例会、令和７年１２月分）",
+   "url": "https://www.pref.mie.lg.jp/common/content/001232615.pdf"
+  }
+ ]
+}
