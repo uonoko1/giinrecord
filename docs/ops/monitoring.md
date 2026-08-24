@@ -3,7 +3,7 @@
 Issue #135。外部 SaaS（UptimeRobot / Datadog / Sentry 等）は使わない。**ダッシュボードは無い。label `monitor` の open Issue 一覧が現在の状態**（0 件 = 正常）。
 
 ```
-GitHub Actions  monitor.yml ──10分おき──▶ https://giinrecord.jp          ┐ /, /members/, /data/meta.json, TLS 期限
+GitHub Actions  monitor.yml ──10分おき──▶ https://giinrecord.jp          ┐ /, /members/, /assemblies/, 議会ページ, /data/meta.json, TLS 期限
                             ──毎時────▶ https://staging.giinrecord.jp  ┘ deploy/monitor/probe.sh → run.sh → report.sh (gh)
                                                                               │ 2 回連続で失敗 → Issue "[monitor] <env>: <check>"
 VPS  root cron 5分  /usr/local/lib/gikailog-monitor/health.sh                 │ 復旧 → 自動 close
@@ -18,7 +18,7 @@ VPS  root cron 5分  /usr/local/lib/gikailog-monitor/health.sh                 �
 
 | check | 条件 | 失敗時に疑うもの |
 |---|---|---|
-| `http` | `/`・`/members/`・`/data/meta.json` が 200、HTML の `<title>` に『議員レコード』 | コンテナ停止（502）、ホスト nginx 停止、rsync 先が空（404）、DNS |
+| `http` | `/`・`/members/`・`/assemblies/`・`/data/meta.json` が 200、HTML の `<title>` に『議員レコード』。加えて**議会ページ `/assemblies/{id}`**（#248、下記） | コンテナ停止（502）、ホスト nginx 停止、rsync 先が空（404）、DNS、プリレンダー漏れ |
 | `data` | `meta.fetchedAt`（トップレベル＝ETL 実行時刻）が 48 時間以内 | `etl.yml` の失敗、data PR が未マージ、`deploy-data.yml` の失敗 |
 | `tls` | 証明書の残り 14 日以上 | certbot の自動更新が止まっている（`sudo certbot renew --dry-run`） |
 
@@ -28,6 +28,34 @@ VPS  root cron 5分  /usr/local/lib/gikailog-monitor/health.sh                 �
 - **2 回連続**（60 秒空けて再試行）で失敗した check だけ Issue にする（`deploy/monitor/run.sh`）。1 回だけの失敗は run のログに残るのみ。
 - Issue は title `[monitor] production: http` のように **環境 × check で 1 つ**。同名の open Issue があれば作らない（`deploy/monitor/report.sh`）。check が通れば「Recovered」コメントを付けて close する。
 - 本文に書くのは環境名・check・理由（パスと HTTP status、経過時間、残日数）・run へのリンクだけ。
+
+#### 議会ページの監視（#248）
+
+地方議会が 0→7 と増えるあいだ、`/assemblies/` も個別の議会ページも監視対象外だった（500 や 404 でも素通り）。いまは `http` check がここも見る。
+
+- **対象はハードコードしない。** probe は **`/assemblies/` のページに出ている `href="/assemblies/{id}"` リンクから id を列挙**し、`/assemblies/{id}` を叩く。議会が増えれば次の run から自動で監視対象になり、`probe.sh` に足し忘れることが起きない。`/assemblies/` にリンクが 1 本も無ければ、それ自体が `http` の失敗になる（黙って「議会 0 件だから全部 pass」にはならない）。
+- **なぜ `data/assemblies/index.json` を使わないか。** そのファイルは `apps/web/app/lib/dataset.ts` が `import.meta.glob` でビルド時に JS チャンクへバンドルしており、**`/data/` 配下に配信されない**。`/data/` に出るのは `apps/web/scripts/copy-member-data.ts` がコピーする `data/members/*.json` と `OPS_DATA_FILES`（`apps/web/app/lib/smoke.ts`）だけで、assemblies は含まれない。実際 `https://giinrecord.jp/data/assemblies/index.json` は **404**（`/data/meta.json` が 200 なのは #152 で明示的にコピー対象へ足したため）。**監視の情報源には「本番に実在するもの」しか使わないこと。**
+- **1 回の run で叩く議会ページは `PROBE_ASSEMBLY_SAMPLE`（既定 3）本だけ。** 10 分スロットごとに **sample 幅ずつ**ずらして巡回する（1 つずつだと前回と重複して一巡が 3 倍かかる）。**議会が何議会に増えても 1 run のリクエスト数は一定**（`/`・`/members/`・`/assemblies/`・`/data/meta.json` ＋ 議会ページ 3 ＝ **7 本**）。一巡は `ceil(議会数 / sample)` スロット＝ 9 議会なら 30 分。
+- **判定は既存と同じ厳しさ。** 200 であること、`<title>` に『議員レコード』が入っていること。プリレンダーが消えた場合、nginx は `/__spa-fallback.html` を 200 で返すが、**その `<title>` は `Loading...` でサイト名を含まない**ので、この既存判定だけで弾ける。
+  - 加えて **ページ本文がその議会の id を含むこと**も見る。これは唯一の防御ではなく**多層防御**（fallback の title が将来変わった場合への耐性、別の議会のページが返る取り違えの検知）。判定に**名前ではなく id を使う**のは、id が ASCII で HTML/JSON エスケープの影響を受けないため。名前で照合すると `A&B議会` が `A&amp;B議会` として配信されて誤検知する。
+- **Issue は増えない。** 失敗はすべて既存の `http` check に合流するので、Issue は従来どおり `[monitor] production: http` の 1 本。議会ごとに Issue が乱立することはない。理由の文字列にどのパスが落ちたかが入る。
+- 2 回のラウンド（60 秒あけて再試行）は**同じ議会ページ**を見る（`run.sh` が `PROBE_NOW` を固定する）。ずれると「2 回連続で失敗」が別々のページの話になってしまうため。
+
+##### 運用目標: 全議会を 60 分以内に一度は見る
+
+**リクエスト数を固定に保つことは目的ではなく手段**である。巡回方式は「1 run のコストを抑える」ためのものだが、議会数が増えるほど一巡が延び、**最悪検知遅延（＝ページが落ちてから Issue が開くまで）が一巡時間 ＋ 10 分程度**に伸びる。放置すると「監視している」という安心感だけがあって実効が無い状態になる。
+
+そこで運用目標を **「全議会を 60 分以内に一度は見る」** とする。議会が増えたら `PROBE_ASSEMBLY_SAMPLE` を引き上げてこれを維持すること。目安（一巡 = `ceil(n / sample)` × 10 分）:
+
+| 議会数 | 必要な sample | 1 run のリクエスト数 | 一巡 |
+|---|---|---|---|
+| 9（現在） | 3（既定のまま） | 7 | 30 分 |
+| 18 | 3 | 7 | 60 分 |
+| 30 | 5 | 9 | 60 分 |
+| 47（全都道府県） | 8 | 12 | 60 分 |
+| 67 | 12 | 16 | 60 分 |
+
+**現在の 9 議会・sample 3 は一巡 30 分・最悪検知遅延およそ 40 分**で目標内なので、既定値は 3 のまま変更しない。`18 議会を超えたら sample を上げる`のが次の判断ポイント。1 run が 20 リクエストを超えるようなら、巡回ではなく別の手段（議会ページのビルド時スモークテストなど）を検討したほうがよい。
 
 ### VPS 側（`deploy/monitor/health.sh`、root cron 5 分）
 
