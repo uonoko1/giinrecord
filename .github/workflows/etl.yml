@@ -22,7 +22,7 @@ env:
 jobs:
   etl:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 360   # バックフィル（17回次）は数時間かかる。日次は従来どおり数十分で終わる
     steps:
       - uses: actions/checkout@v4
 
