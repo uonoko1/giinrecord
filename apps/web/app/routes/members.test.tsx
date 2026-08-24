@@ -1,13 +1,15 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { Link, MemoryRouter } from "react-router";
+import { Link, MemoryRouter, useLocation, useNavigate } from "react-router";
 import { describe, expect, it } from "vitest";
 import { type Assembly, DIET_ASSEMBLIES } from "../lib/data-contract";
 import { dataset } from "../test-fixtures/dataset";
 import { members } from "../test-fixtures/members-index";
 import Members, { meta as routeMeta } from "./members";
 
-const EVALUATIVE_WORDS = ["おすすめ", "ランキング", "一致率"];
+// coverage.test.tsx と同じ禁止語に、このページ特有のもの（収録は 9 議会なので網羅を主張しない）を足す。
+// 語彙がずれていると片方だけがすり抜ける（#239: 「すべての議会の議員」がこのガードを素通りした）。
+const EVALUATIVE_WORDS = ["おすすめ", "ランキング", "一致率", "遅れ", "不十分", "優れ", "充実", "網羅", "すべての議会", "全国", "国会議員"];
 
 function renderMembers(list = members) {
   return render(
@@ -18,9 +20,11 @@ function renderMembers(list = members) {
 }
 
 describe("/members", () => {
-  it("見出し・件数「10 名」・評価語なし", () => {
+  it("絞り込み無しの見出しは表示中の集合を指す文言・件数「10 名」・評価語なし（#239）", () => {
     const { container } = renderMembers();
-    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("国会議員");
+    // 既定は現職のみ・収録済み9議会なので、「国会議員」とも「すべての議会」とも書かない
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("収録している議会の現職議員");
+    expect(screen.getByText("収録している議会の現職議員を五十音順に。氏名・ふりがな・議会・会派・選挙区でさがせます。")).toBeInTheDocument();
     expect(screen.getByText("10 名")).toBeInTheDocument();
     for (const word of EVALUATIVE_WORDS) expect(container.textContent).not.toContain(word);
   });
@@ -257,11 +261,12 @@ describe("/members", () => {
       expect(screen.getByRole("combobox", { name: "選挙区" })).toHaveValue("");
     });
 
-    it("該当しない選挙区なら 0 名と「該当する議員はいません」", () => {
+    it("名簿に無い選挙区は無視して全員を出す（でっち上げた選挙区名を見出しに出さない）", () => {
       renderAt("/members?district=%E5%AD%98%E5%9C%A8%E3%81%97%E3%81%AA%E3%81%84");
-      expect(screen.getByText("0 名")).toBeInTheDocument();
-      expect(screen.getByText("該当する議員はいません。")).toBeInTheDocument();
-      expect(screen.getByText("選挙区：存在しない")).toBeInTheDocument();
+      expect(screen.getByText("11 名")).toBeInTheDocument();
+      expect(screen.queryByText("選挙区：存在しない")).not.toBeInTheDocument();
+      expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("収録している議会の現職議員");
+      expect(screen.getByRole("combobox", { name: "選挙区" })).toHaveValue("");
     });
 
     it("クエリが後から変わっても（プリレンダーの DOM からの hydration 後を含む）select と絞り込みに反映する（#120）", async () => {
@@ -289,13 +294,239 @@ describe("/members", () => {
     renderMembers();
     expect(screen.getByText(/2026\.08\.22 06:00/)).toBeInTheDocument();
   });
+
+  describe("絞り込みが URL に入り、リロードで復元される（#239）", () => {
+    const tokushima: Assembly = { id: "pref-36", kind: "prefectural", name: "徳島県議会", prefCode: "36", sourceUrl: "https://www.pref.tokushima.lg.jp/" };
+    const local = { ...members[0], id: "p_36_000001", name: "徳島 太郎", kana: "とくしま たろう", assemblyId: "pref-36" as const, group: "自由民主党", district: "徳島市" };
+    const list = [...members, local];
+
+    /**
+     * 現在の URL を DOM に出して観測し（実ブラウザのアドレスバーに相当）、
+     * 戻る／進む用のボタンも置く。MemoryRouter は履歴スタックを持つので navigate(-1) が「戻る」と同じに動く。
+     */
+    function Url() {
+      const location = useLocation();
+      const navigate = useNavigate();
+      return (
+        <>
+          {/* <output> は暗黙の role=status を持つのでページ側の live region と紛れる。素の span にする */}
+          <span data-testid="url">{`${location.pathname}${location.search}`}</span>
+          <button type="button" onClick={() => navigate(-1)}>
+            戻る
+          </button>
+          <button type="button" onClick={() => navigate(1)}>
+            進む
+          </button>
+        </>
+      );
+    }
+
+    function renderAt(at = "/members") {
+      return render(
+        <MemoryRouter initialEntries={[at]}>
+          <Url />
+          <Members data={{ ...dataset, members: list, assemblies: [...DIET_ASSEMBLIES, tokushima] }} />
+        </MemoryRouter>,
+      );
+    }
+
+    const url = () => screen.getByTestId("url").textContent;
+
+    it("議会を選ぶと URL に ?assembly= が入り、見出し・説明・件数が一致する", async () => {
+      const user = userEvent.setup();
+      renderAt();
+      expect(url()).toBe("/members");
+      await user.selectOptions(screen.getByRole("combobox", { name: "議会" }), "pref-36");
+      expect(url()).toBe("/members?assembly=pref-36");
+      expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("徳島県議会の現職議員");
+      expect(screen.getByText("徳島県議会の現職議員を五十音順に。氏名・ふりがな・議会・会派・選挙区でさがせます。")).toBeInTheDocument();
+      expect(screen.getByText("1 名")).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: /徳島 太郎/ })).toBeInTheDocument();
+    });
+
+    it("会派・選挙区も URL に入り、見出しに並ぶ", async () => {
+      const user = userEvent.setup();
+      renderAt();
+      await user.selectOptions(screen.getByRole("combobox", { name: "議会" }), "pref-36");
+      await user.selectOptions(screen.getByRole("combobox", { name: "会派" }), "自由民主党");
+      expect(url()).toBe("/members?assembly=pref-36&group=%E8%87%AA%E7%94%B1%E6%B0%91%E4%B8%BB%E5%85%9A");
+      expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("徳島県議会・自由民主党の現職議員");
+      await user.selectOptions(screen.getByRole("combobox", { name: "選挙区" }), "徳島市");
+      expect(url()).toBe("/members?assembly=pref-36&group=%E8%87%AA%E7%94%B1%E6%B0%91%E4%B8%BB%E5%85%9A&district=%E5%BE%B3%E5%B3%B6%E5%B8%82");
+      expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("徳島県議会・自由民主党・徳島市の現職議員");
+      expect(screen.getByText("1 名")).toBeInTheDocument();
+    });
+
+    it("その URL を直接開くと（リロード相当）同じ状態が復元される", () => {
+      renderAt("/members?assembly=pref-36&group=%E8%87%AA%E7%94%B1%E6%B0%91%E4%B8%BB%E5%85%9A&district=%E5%BE%B3%E5%B3%B6%E5%B8%82");
+      expect(screen.getByRole("combobox", { name: "議会" })).toHaveValue("pref-36");
+      expect(screen.getByRole("combobox", { name: "会派" })).toHaveValue("自由民主党");
+      expect(screen.getByRole("combobox", { name: "選挙区" })).toHaveValue("徳島市");
+      expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("徳島県議会・自由民主党・徳島市の現職議員");
+      expect(screen.getByText("1 名")).toBeInTheDocument();
+    });
+
+    it("ブラウザの戻る／進むで前後の絞り込みに移る", async () => {
+      const user = userEvent.setup();
+      renderAt();
+      const assembly = screen.getByRole("combobox", { name: "議会" });
+      await user.selectOptions(assembly, "pref-36");
+      await user.selectOptions(screen.getByRole("combobox", { name: "会派" }), "自由民主党");
+      expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("徳島県議会・自由民主党の現職議員");
+
+      await user.click(screen.getByRole("button", { name: "戻る" }));
+      expect(url()).toBe("/members?assembly=pref-36");
+      expect(screen.getByRole("combobox", { name: "会派" })).toHaveValue("");
+      expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("徳島県議会の現職議員");
+
+      await user.click(screen.getByRole("button", { name: "戻る" }));
+      expect(url()).toBe("/members");
+      expect(screen.getByRole("combobox", { name: "議会" })).toHaveValue("");
+      expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("収録している議会の現職議員");
+      expect(screen.getByText("11 名")).toBeInTheDocument();
+
+      await user.click(screen.getByRole("button", { name: "進む" }));
+      expect(url()).toBe("/members?assembly=pref-36");
+      expect(screen.getByRole("combobox", { name: "議会" })).toHaveValue("pref-36");
+      expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("徳島県議会の現職議員");
+    });
+
+    it("議会を「すべて」に戻すと URL からクエリが消える", async () => {
+      const user = userEvent.setup();
+      renderAt("/members?assembly=pref-36");
+      await user.selectOptions(screen.getByRole("combobox", { name: "議会" }), "");
+      expect(url()).toBe("/members");
+      expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("収録している議会の現職議員");
+    });
+
+    it("氏名の検索は URL に入れない（打鍵ごとに履歴を積まない）", async () => {
+      const user = userEvent.setup();
+      renderAt();
+      await user.type(screen.getByRole("searchbox", { name: /氏名/ }), "とくしま");
+      expect(url()).toBe("/members");
+      expect(screen.getByText("1 名")).toBeInTheDocument();
+    });
+
+    it("「元職も含める」も URL に入り、見出しが件数と一致したまま変わる（#239 レビュー指摘 1a）", async () => {
+      const user = userEvent.setup();
+      const former = { ...local, id: "p_36_000002", name: "元 職太郎", kana: "もと しょくたろう", current: false as const };
+      render(
+        <MemoryRouter initialEntries={["/members"]}>
+          <Url />
+          <Members data={{ ...dataset, members: [...list, former], assemblies: [...DIET_ASSEMBLIES, tokushima] }} />
+        </MemoryRouter>,
+      );
+      expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("収録している議会の現職議員");
+      expect(screen.getByText("11 名")).toBeInTheDocument();
+
+      await user.click(screen.getByRole("checkbox", { name: "元職も含める" }));
+      expect(url()).toBe("/members?former=1");
+      // 見出しが「現職議員」のままだと 12 名の一覧に現職だけの見出しが付く（レビューで指摘された矛盾）
+      expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("収録している議会の議員（元職を含む）");
+      expect(screen.getByText("12 名")).toBeInTheDocument();
+
+      await user.click(screen.getByRole("checkbox", { name: "元職も含める" }));
+      expect(url()).toBe("/members");
+      expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("収録している議会の現職議員");
+    });
+
+    it("?former=1 の URL を開くとチェックが入った状態で復元される（#239 レビュー指摘 1a）", () => {
+      const former = { ...local, id: "p_36_000002", name: "元 職太郎", kana: "もと しょくたろう", current: false as const };
+      render(
+        <MemoryRouter initialEntries={["/members?former=1"]}>
+          <Url />
+          <Members data={{ ...dataset, members: [...list, former], assemblies: [...DIET_ASSEMBLIES, tokushima] }} />
+        </MemoryRouter>,
+      );
+      expect(screen.getByRole("checkbox", { name: "元職も含める" })).toBeChecked();
+      expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("収録している議会の議員（元職を含む）");
+      expect(screen.getByRole("link", { name: /元 職太郎/ })).toBeInTheDocument();
+    });
+
+    it("見出しと件数を role=status で読み上げる（絞り込みの変化が支援技術に届く）", async () => {
+      const user = userEvent.setup();
+      renderAt();
+      // toHaveTextContent は空白を正規化するので、全角スペースは半角として比較される
+      expect(screen.getByRole("status")).toHaveTextContent("収録している議会の現職議員 11 名");
+      await user.selectOptions(screen.getByRole("combobox", { name: "議会" }), "pref-36");
+      expect(screen.getByRole("status")).toHaveTextContent("徳島県議会の現職議員 1 名");
+    });
+
+    it("名簿に無い会派名は見出しに出さず「すべて」として扱う（#239 レビュー指摘 2）", () => {
+      renderAt(`/members?group=${encodeURIComponent("存在しない会派")}`);
+      expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("収録している議会の現職議員");
+      expect(screen.getByRole("heading", { level: 1 })).not.toHaveTextContent("存在しない会派");
+      expect(screen.getByRole("combobox", { name: "会派" })).toHaveValue("");
+      // 「存在しない会派の議員」という見出しの下に「該当する議員はいません」が出ない
+      expect(screen.queryByText("該当する議員はいません。")).not.toBeInTheDocument();
+      expect(screen.getByText("11 名")).toBeInTheDocument();
+    });
+
+    it("選んだ議会に無い会派・選挙区も無視する（他の議会にしか無い名前）（#239 レビュー指摘 2）", () => {
+      renderAt(`/members?assembly=pref-36&district=${encodeURIComponent("比例")}`);
+      expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("徳島県議会の現職議員");
+      expect(screen.getByRole("combobox", { name: "選挙区" })).toHaveValue("");
+      expect(screen.getByText("1 名")).toBeInTheDocument();
+    });
+
+    it("HTML らしき文字列を渡しても見出しにはテキストすら出さない（#239 レビュー指摘 2）", () => {
+      const { container } = renderAt(`/members?group=${encodeURIComponent("<img src=x onerror=alert(1)>")}`);
+      // container には URL を映す観測用の <output> も入るので、ページ本体（main）だけを見る
+      const main = container.querySelector("main");
+      expect(main?.textContent).not.toContain("onerror");
+      expect(main?.querySelector("img")).toBeNull();
+      expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("収録している議会の現職議員");
+    });
+  });
 });
 
 describe("meta()", () => {
-  it("title・canonical・OGP を持つ", () => {
-    const tags = routeMeta({ location: { pathname: "/members" } } as unknown as Parameters<typeof routeMeta>[0]);
-    expect(tags).toContainEqual({ title: "国会議員一覧 ・ 議員レコード" });
+  function metaAt(pathname: string, search = "") {
+    return routeMeta({ location: { pathname, search } } as unknown as Parameters<typeof routeMeta>[0]);
+  }
+  const titleOf = (tags: ReturnType<typeof metaAt>) => (tags.find((t) => "title" in t) as { title: string } | undefined)?.title;
+  const descOf = (tags: ReturnType<typeof metaAt>) => (tags.find((t) => (t as { name?: string }).name === "description") as { content: string } | undefined)?.content;
+
+  it("title・canonical・OGP を持つ。クエリ無しの title は表示中の集合を指す文言（#239）", () => {
+    const tags = metaAt("/members");
+    expect(tags).toContainEqual({ title: "収録している議会の現職議員 ・ 議員レコード" });
     expect(tags).toContainEqual({ tagName: "link", rel: "canonical", href: "/members" });
     expect(tags).toContainEqual({ property: "og:url", content: "/members" });
+    expect(tags).toContainEqual({ property: "og:title", content: "収録している議会の現職議員 ・ 議員レコード" });
+  });
+
+  it("?assembly= があれば title・description・OGP がその議会を指す（#239）", () => {
+    const tags = metaAt("/members", "?assembly=diet-shugiin");
+    expect(tags).toContainEqual({ title: "衆議院の現職議員 ・ 議員レコード" });
+    expect(tags).toContainEqual({ property: "og:title", content: "衆議院の現職議員 ・ 議員レコード" });
+    expect(tags).toContainEqual({ name: "description", content: "衆議院の現職議員を五十音順に。氏名・ふりがな・議会・会派・選挙区でさがせます。" });
+    expect(tags).toContainEqual({ property: "og:description", content: "衆議院の現職議員を五十音順に。氏名・ふりがな・議会・会派・選挙区でさがせます。" });
+  });
+
+  it("?former=1 は title・description にも出る（見出しと同じ）（#239）", () => {
+    expect(titleOf(metaAt("/members", "?former=1"))).toBe("収録している議会の議員（元職を含む） ・ 議員レコード");
+    expect(descOf(metaAt("/members", "?former=1"))).toBe("収録している議会の議員（元職を含む）を五十音順に。氏名・ふりがな・議会・会派・選挙区でさがせます。");
+  });
+
+  it("canonical はクエリを含めない（クエリ違いを別ページにしない）（#239）", () => {
+    expect(metaAt("/members", "?assembly=diet-sangiin&former=1")).toContainEqual({ tagName: "link", rel: "canonical", href: "/members" });
+  });
+
+  it("知らない議会 id は無視して既定の title に戻す（#239）", () => {
+    expect(metaAt("/members", "?assembly=pref-99")).toContainEqual({ title: "収録している議会の現職議員 ・ 議員レコード" });
+  });
+
+  it("名簿に無い会派名・選挙区名は title・description・OGP に出さない（#239 レビュー指摘）", () => {
+    const tags = metaAt("/members", "?group=%E5%AD%98%E5%9C%A8%E3%81%97%E3%81%AA%E3%81%84%E4%BC%9A%E6%B4%BE&district=%E5%AD%98%E5%9C%A8%E3%81%97%E3%81%AA%E3%81%84");
+    for (const tag of tags) {
+      const text = Object.values(tag).join(" ");
+      expect(text).not.toContain("存在しない");
+    }
+    expect(titleOf(tags)).toBe("収録している議会の現職議員 ・ 議員レコード");
+  });
+
+  it("HTML/スクリプトらしき文字列を渡しても meta には入らない（#239 レビュー指摘）", () => {
+    const tags = metaAt("/members", `?group=${encodeURIComponent("<img src=x onerror=alert(1)>")}`);
+    for (const tag of tags) expect(Object.values(tag).join(" ")).not.toContain("onerror");
   });
 });

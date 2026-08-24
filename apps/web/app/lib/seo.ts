@@ -77,3 +77,30 @@ export function seoMeta({ title, description, pathname, type = "website", origin
 /** Rasterized at build time from brand/og-image.svg (scripts/brand-assets.ts, #129). */
 export const OG_IMAGE_PATH = "/og-image.png";
 export const OG_IMAGE_SIZE = { width: 1200, height: 630 } as const;
+
+/**
+ * #239: the meta of a query-dependent page (`/members?assembly=…`) differs from the prerendered
+ * HTML, which was written without a query. React hydrates `<head>` by appending its own `<meta>`
+ * instead of rewriting the prerendered one, so the page ends up with two `description`s and two
+ * `og:*`s — the stale prerendered one first, the correct one last. `<title>` is not affected.
+ * Dropping every duplicate but the last leaves exactly the tags `meta()` returned.
+ *
+ * Pure and DOM-free so it can be tested: takes the tags in document order, returns the ones to remove.
+ */
+export function staleHeadTags<T>(tags: readonly T[], identity: (tag: T) => string | null): T[] {
+  const lastOf = new Map<string, T>();
+  for (const tag of tags) {
+    const key = identity(tag);
+    if (key !== null) lastOf.set(key, tag);
+  }
+  const keep = new Set(lastOf.values());
+  return tags.filter((tag) => identity(tag) !== null && !keep.has(tag));
+}
+
+/** `<meta name=description>` → "name:description"; `<meta property=og:url>` → "property:og:url". Anything else is left alone. */
+export function metaIdentity(el: { getAttribute(name: string): string | null }): string | null {
+  const name = el.getAttribute("name");
+  if (name) return `name:${name}`;
+  const property = el.getAttribute("property");
+  return property ? `property:${property}` : null;
+}

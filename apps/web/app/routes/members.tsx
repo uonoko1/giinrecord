@@ -6,15 +6,30 @@ import { SiteFooter } from "../components/SiteFooter";
 import { DIET_ASSEMBLIES } from "../lib/data-contract";
 import { type Dataset, dataset as bundled, type MemberSummary } from "../lib/dataset";
 import { formatDateTime } from "../lib/format";
-import { filterMembers, formatTermEnd, groupByKanaRow, memberAssemblyId } from "../lib/member-search";
-import { seoMeta } from "../lib/seo";
+import {
+  filterMembers,
+  formatTermEnd,
+  groupByKanaRow,
+  memberAssemblyId,
+  membersDescription,
+  membersHeading,
+  type MembersScope,
+  membersQueryString,
+  membersScopeFromQuery,
+} from "../lib/member-search";
+import { metaIdentity, seoMeta, staleHeadTags } from "../lib/seo";
 import "../styles/pages.css";
 import "./members.css";
 
-const DESCRIPTION = "参議院・衆議院の議員を五十音順に。氏名・ふりがな・議会・会派・選挙区でさがせます。";
-
+/**
+ * #239: <title>・description・OGP も絞り込みを反映する。クエリはプリレンダーされないので、
+ * ビルド時（クエリ無し）は「収録している議会の現職議員」、ブラウザで絞り込むと同じ meta が更新される。
+ * 会派・選挙区は名簿と照合してから使う（存在しない名前を <title>・og:title に出さない）。
+ * canonical は seoMeta が pathname だけから作る（クエリ違いを別ページにしない）。
+ */
 export function meta({ location }: MetaArgs) {
-  return seoMeta({ title: "国会議員一覧", description: DESCRIPTION, pathname: location.pathname });
+  const scope = membersScopeFromQuery(new URLSearchParams(location.search), bundled.assemblies ?? DIET_ASSEMBLIES, bundled.members);
+  return seoMeta({ title: membersHeading(scope), description: membersDescription(scope), pathname: location.pathname });
 }
 
 const collator = new Intl.Collator("ja");
@@ -25,55 +40,67 @@ function distinctSorted(values: string[]): string[] {
 }
 
 /**
+ * #239: クエリ付きで直接開いた（＝ブックマーク・共有リンク・リロード）とき、プリレンダーの HTML が持つ
+ * クエリ無しの description・og:* が head に残り、React が足した正しいものと二重になる（title は二重にならない）。
+ * 同じ name/property が複数あるとき最後の1つ（＝React が今書いたもの）だけを残す。
+ */
+function useSingleHeadMeta(deps: unknown[]) {
+  // deps は「meta() の出力が変わったか」の目印。変わるたびに head を掃除する。
+  useEffect(() => {
+    for (const el of staleHeadTags([...document.head.querySelectorAll("meta")], metaIdentity)) el.remove();
+  }, deps);
+}
+
+/**
  * index.json はビルド時にバンドルされ、以降はブラウザ内だけで絞り込む（追加フェッチなし）。
  * データ取得前（0名）でも落ちない。
  */
 export default function Members({ data = bundled }: { data?: Dataset }) {
-  // #112: Home の郵便番号入力から /members?district=<名簿の表記> で来る。プリレンダーは既存のまま、クエリはクライアント側で読む。
+  // #112 / #158 / #239: 議会・会派・選挙区・元職の有無は URL のクエリに持つ（?assembly=&group=&district=&former=1）。
+  // ブックマーク・共有・戻る／進むが効き、見出しと表示内容が必ず一致する。絞り込み自体はここまでにバンドル
+  // 済みの index.json に対して行うので、URL が変わってもサーバーへの往復は増えない（fetch も loader も無い）。
   const [params, setParams] = useSearchParams();
-  const districtParam = params.get("district") ?? "";
   const [query, setQuery] = useState("");
-  // #156: 院（参院／衆院）の絞り込みを「議会」に一般化。選択肢は assemblies/index.json の並び（国会2＋将来の地方議会）。既定はすべて。
-  const [assemblyId, setAssemblyId] = useState<AssemblyId | "">("");
-  // #158: 議会ページから /members?assembly=<id> で来る。district と同じ理由でマウント後に適用し、知らない id は無視する。
-  const assemblyParam = params.get("assembly") ?? "";
-  const [group, setGroup] = useState("");
-  // #120: 初期値は "" にして useEffect で適用する。プリレンダーの HTML は「すべて」が選ばれたままで、hydration は
-  // state が最初から districtParam だと DOM の selected を直さない（再描画が起きない）。マウント後に set して再描画させる。
-  // 同じ理由でクエリが後から変わったとき（戻る／進む）も追従する。
-  const [district, setDistrict] = useState("");
-  useEffect(() => setDistrict(districtParam), [districtParam]);
-  const [includeFormer, setIncludeFormer] = useState(false);
   const searchId = useId();
   const formerId = useId();
   const groupId = useId();
   const assemblyFieldId = useId();
   const districtId = useId();
 
+  // assemblies/index.json が無い（#156 より前の）データは国会の2議会として扱う。
+  const assemblies: readonly Assembly[] = data.assemblies ?? DIET_ASSEMBLIES;
+  const assemblyName = useMemo(() => new Map<string, string>(assemblies.map((a) => [a.id, a.name])), [assemblies]);
+
+  // #120: プリレンダーの HTML は「すべて」が選ばれたままで、hydration はクエリ由来の値を最初から持っていても
+  // DOM の selected を直さない（再描画が起きない）。だから描画にはこの state を使い、マウント後・クエリ変更後
+  // （戻る／進むを含む）に URL から同期して再描画させる。
+  const queried = useMemo(() => membersScopeFromQuery(params, assemblies, data.members), [params, assemblies, data.members]);
+  const [scope, setScope] = useState<MembersScope>({ assemblyId: "", assemblyName: undefined, group: "", district: "", includeFormer: false });
+  useEffect(() => setScope(queried), [queried]);
+  const { assemblyId, group, district, includeFormer } = scope;
+
+  /** 絞り込みを state と URL の両方に書く。履歴に積むのでブラウザの戻る／進むで前の絞り込みに戻る。 */
+  function applyScope(next: Pick<MembersScope, "assemblyId" | "group" | "district" | "includeFormer">) {
+    setScope({ ...next, assemblyName: assemblyName.get(next.assemblyId) });
+    setParams(membersQueryString(next));
+  }
+
   // 議会を切り替えると会派・選挙区の選択肢が変わる（参院の会派や選挙区はほぼ衆院に存在しない）ので、
   // 旧い選択を残すと select は「すべて」に見えるのに 0 名になる。議会の変更時はまとめてリセットする。
   function changeAssembly(next: AssemblyId | "") {
-    setAssemblyId(next);
-    setGroup("");
-    clearDistrict();
+    applyScope({ ...scope, assemblyId: next, group: "", district: "" });
   }
 
   function clearDistrict() {
-    setDistrict("");
-    if (districtParam) {
-      const next = new URLSearchParams(params);
-      next.delete("district");
-      setParams(next, { replace: true });
-    }
+    applyScope({ ...scope, district: "" });
   }
 
-  // assemblies/index.json が無い（#156 より前の）データは国会の2議会として扱う。
-  const assemblies: readonly Assembly[] = data.assemblies ?? DIET_ASSEMBLIES;
-  const assemblyName = useMemo(() => new Map(assemblies.map((a) => [a.id, a.name])), [assemblies]);
-  useEffect(() => {
-    const known = assemblies.find((a) => a.id === assemblyParam);
-    if (known) setAssemblyId(known.id);
-  }, [assemblyParam, assemblies]);
+  // 元職を外すと、元職しかいない会派・選挙区は選択肢から消える。選んだままだと select は「すべて」に見えるのに
+  // 0 名になるので、議会を切り替えたときと同じ理由でその絞り込みは落とす。
+  function changeIncludeFormer(next: boolean) {
+    applyScope(next ? { ...scope, includeFormer: true } : { ...scope, includeFormer: false, group: "", district: "" });
+  }
+
   // 既定はすべての議会・現職（最新回次の名簿に載っている人）のみ。元職は事実として残っているので、トグルで同じ一覧に出す。
   const all = useMemo(
     () => data.members.filter((m) => (!assemblyId || memberAssemblyId(m) === assemblyId) && (includeFormer || m.current !== false)),
@@ -83,14 +110,18 @@ export default function Members({ data = bundled }: { data?: Dataset }) {
   const districts = useMemo(() => distinctSorted(all.map((m) => m.district)), [all]);
   const hits = useMemo(() => filterMembers(all, { query, group, district }), [all, query, group, district]);
   const sections = useMemo(() => groupByKanaRow(hits), [hits]);
+  // 見出し・説明は「いま表示している一覧」そのもの。件数（hits.length）と同じ絞り込みから作る。
+  const heading = membersHeading(scope);
+  const description = membersDescription(scope);
+  useSingleHeadMeta([description]);
 
   return (
     <>
       <main className="page members">
         <header className="cover">
           <CoverBrand to="/" />
-          <h1 className="cover__title">国会議員</h1>
-          <p className="cover__lead">{DESCRIPTION}</p>
+          <h1 className="cover__title">{heading}</h1>
+          <p className="cover__lead">{description}</p>
         </header>
 
         {data.members.length === 0 ? (
@@ -126,7 +157,7 @@ export default function Members({ data = bundled }: { data?: Dataset }) {
                 </label>
                 <label className="members-field" htmlFor={groupId}>
                   <span className="members-field__label">会派</span>
-                  <select id={groupId} className="members-select" value={group} onChange={(e) => setGroup(e.target.value)}>
+                  <select id={groupId} className="members-select" value={group} onChange={(e) => applyScope({ ...scope, group: e.target.value })}>
                     <option value="">すべて</option>
                     {groups.map((g) => (
                       <option key={g} value={g}>
@@ -137,7 +168,7 @@ export default function Members({ data = bundled }: { data?: Dataset }) {
                 </label>
                 <label className="members-field" htmlFor={districtId}>
                   <span className="members-field__label">選挙区</span>
-                  <select id={districtId} className="members-select" value={district} onChange={(e) => setDistrict(e.target.value)}>
+                  <select id={districtId} className="members-select" value={district} onChange={(e) => applyScope({ ...scope, district: e.target.value })}>
                     <option value="">すべて</option>
                     {districts.map((d) => (
                       <option key={d} value={d}>
@@ -147,10 +178,10 @@ export default function Members({ data = bundled }: { data?: Dataset }) {
                   </select>
                 </label>
               </div>
-              {districtParam && (
+              {district && (
                 <p className="members-chips" aria-label="絞り込み中">
                   <span className="members-chip">
-                    <span>選挙区：{districtParam}</span>
+                    <span>選挙区：{district}</span>
                     <button type="button" className="members-chip__clear" aria-label="選挙区の絞り込みを解除" onClick={clearDistrict}>
                       ×
                     </button>
@@ -158,10 +189,18 @@ export default function Members({ data = bundled }: { data?: Dataset }) {
                 </p>
               )}
               <label className="members-check" htmlFor={formerId}>
-                <input id={formerId} type="checkbox" checked={includeFormer} onChange={(e) => setIncludeFormer(e.target.checked)} />
+                <input id={formerId} type="checkbox" checked={includeFormer} onChange={(e) => changeIncludeFormer(e.target.checked)} />
                 <span>元職も含める</span>
               </label>
-              <p className="members-count" aria-live="polite">
+              {/*
+                絞り込みを変えると <h1> とリード文が書き換わるが、見出しの差し替えは支援技術に通知されない。
+                件数だけでは「いま何の一覧を見ているか」が変わったことが伝わらないので、見出しと件数を
+                ひとつの文にして読み上げる。画面には出さない（見えている h1・件数と重複するため）。
+              */}
+              <p className="members-status" role="status">
+                {heading}　{hits.length.toLocaleString("ja-JP")} 名
+              </p>
+              <p className="members-count" aria-hidden="true">
                 <span className="num">{hits.length.toLocaleString("ja-JP")} 名</span>
                 {hits.length !== all.length && <span className="members-count__of">／ {all.length.toLocaleString("ja-JP")} 名</span>}
               </p>
