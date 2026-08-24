@@ -76,15 +76,46 @@ test("parseVotePdf: 議員提出議案の行も種別（結合セル）から取
   const last = june8.rows[june8.rows.length - 1];
   assert.equal(last.kind, "議員提出議案");
   assert.equal(last.number, "議発第12号");
-  assert.equal(last.result, "否決");
+  // 議決結果は上の行と同じなので原文が「〃」。前の行の「否決」で埋めない（原文主義）
+  assert.equal(last.result, "〃");
+  assert.equal(last.dateText, "〃");
   assert.equal(last.counts?.yes, 10);
   assert.equal(last.counts?.no, 25);
+  // 「〃」でない原文が入っている行もある（議発第8号の「否決」）
+  const hiketsu = june8.rows.find((r) => r.number === "議発第8号");
+  assert.equal(hiketsu?.result, "否決");
 });
 
 test("parseVotePdf: 凡例に無い値が出たら例外（丸めない）", () => {
   assert.throws(() => checkCellsAgainstLegend(["○", "△"], june8.legend.votes, "test"), /not in the legend/);
   // UNKNOWN_CELL は通す
   assert.doesNotThrow(() => checkCellsAgainstLegend(["○", UNKNOWN_CELL], june8.legend.votes, "test"));
+});
+
+test("parseVotePdf: 復元したセルが PDF 自身の賛成者数・反対者数と一致する（表復元の検算）", () => {
+  // PDF には行ごとに賛成者数・反対者数の欄がある。表から復元した ○ / × の数と食い違えば、
+  // 列のずれ・取りこぼしがあるということ（原文どうしの突き合わせなので推定は入らない）
+  for (const pdf of [june8, june7]) {
+    for (const row of pdf.rows) {
+      if (!row.counts) continue;
+      const yes = row.cells.filter((c) => c === "○").length;
+      const no = row.cells.filter((c) => c === "×").length;
+      assert.deepEqual({ yes, no }, row.counts, `${pdf.sessionLabel} ${row.number}`);
+    }
+  }
+});
+
+test("parseVotePdf: 抽出できなかったセルは無い（この 2 本の PDF は全セル読める）", () => {
+  assert.equal(june8.unknownCells, 0);
+  assert.equal(june7.unknownCells, 0);
+});
+
+test("parseVotePdf: 会期ごとに議員の顔ぶれ（並び・会派）は PDF から読む（名簿ではなく表決時点の原文）", () => {
+  // 令和7年6月は 武石利彦・田所裕介・橋本敏男 が居て、令和8年6月には居ない（改選・異動）
+  assert.ok(june7.members.some((m) => m.nameText === "武石利彦"));
+  assert.ok(!june8.members.some((m) => m.nameText === "武石利彦"));
+  assert.ok(june8.members.some((m) => m.nameText === "浜口卓也"));
+  assert.ok(!june7.members.some((m) => m.nameText === "浜口卓也"));
 });
 
 test("parseVotePdf: すべてのセルが凡例の値か不明のどちらか。ページごとの議員の並びは同じ", () => {
