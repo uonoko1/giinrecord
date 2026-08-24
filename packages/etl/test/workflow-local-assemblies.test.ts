@@ -37,9 +37,14 @@ test("local-assemblies.yml: 日次と同じイメージで local-cli.ts を ASSE
   assert.match(block, /-v "\$PWD\/data:\/app\/data"/);
 });
 
-test("local-assemblies.yml: data PR は別ブランチ名・別の失敗 Issue タイトルで、同じ concurrency group で直列化する", () => {
+test("local-assemblies.yml: data PR は別ブランチ名・別の失敗 Issue タイトル・ワークフロー固有の concurrency group（#201）", () => {
   assert.match(workflow, /DATA_BRANCH: data\/local-assemblies/);
-  assert.match(workflow, /concurrency:\s*\n\s*group: etl\b/);
+  // Sprint 10 レトロ: 日次（バックフィル）と group を共有していたためキャンセルされた。3本の group は互いに別名。
+  assert.match(workflow, /concurrency:\s*\n\s*group: etl-local-assemblies\b/);
+  const groupOf = (w: string) => w.match(/concurrency:\s*\n\s*group: (\S+)/)?.[1];
+  const groups = [workflow, districts, daily].map(groupOf);
+  assert.ok(groups.every(Boolean));
+  assert.equal(new Set(groups).size, 3, "concurrency group はワークフローごとに別名");
   const title = workflow.match(/FAILURE_ISSUE_TITLE: "([^"]+)"/)?.[1];
   const others = [districts, daily].map((w) => w.match(/FAILURE_ISSUE_TITLE: "([^"]+)"/)?.[1]);
   assert.ok(title);
