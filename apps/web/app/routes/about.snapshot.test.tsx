@@ -10,6 +10,8 @@ import { dataset } from "../test-fixtures/dataset";
  * #69 節ごとの分割は純粋なリファクタ。分割前の /about の描画結果を
  * app/test-fixtures/about/*.html に保存し、HTML とテキストが一致することを保証する。
  * フィクスチャは <main> の描画結果。サイト共通フッター（#167、<main> の外）は比較対象に含めない。
+ * #218 で FactsSection の収録範囲の記述（「1998年（第142回国会）以降。」）を /coverage へのリンクに置き換えたので、
+ * フィクスチャもその分だけ更新している（それ以外の文言は分割前のまま）。
  */
 const FIXTURE_DIR = join(__dirname, "../test-fixtures/about");
 const fixture = (name: string) => readFileSync(join(FIXTURE_DIR, name), "utf8");
