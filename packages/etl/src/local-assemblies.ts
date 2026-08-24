@@ -16,8 +16,10 @@ import { NARA_ASSEMBLY } from "./sources/local/nara/site.ts";
 import { runNara } from "./sources/local/nara/index.ts";
 import { SHIMANE_ASSEMBLY } from "./sources/local/shimane/site.ts";
 import { runShimane } from "./sources/local/shimane/index.ts";
+import { KOCHI_ASSEMBLY } from "./sources/local/kochi/site.ts";
+import { runKochi } from "./sources/local/kochi/index.ts";
 
-export { MIYAGI_ASSEMBLY, TOKUSHIMA_ASSEMBLY, TOTTORI_ASSEMBLY, MIE_ASSEMBLY, NARA_ASSEMBLY, SHIMANE_ASSEMBLY };
+export { MIYAGI_ASSEMBLY, TOKUSHIMA_ASSEMBLY, TOTTORI_ASSEMBLY, MIE_ASSEMBLY, NARA_ASSEMBLY, SHIMANE_ASSEMBLY, KOCHI_ASSEMBLY };
 
 /** 議会ごとの取得部が返す形（buildLocalAssembly の入力になる部分）。 */
 export interface LocalSourceRun {
@@ -40,6 +42,7 @@ export const LOCAL_SOURCES: Record<string, LocalSource> = {
   mie: { assembly: MIE_ASSEMBLY, run: runMie },
   nara: { assembly: NARA_ASSEMBLY, run: runNara },
   shimane: { assembly: SHIMANE_ASSEMBLY, run: runShimane },
+  kochi: { assembly: KOCHI_ASSEMBLY, run: runKochi },
 };
 
 /**
