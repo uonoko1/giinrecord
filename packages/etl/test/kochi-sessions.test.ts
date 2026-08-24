@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { parseSessionIndex, DECISION_URL } from "../src/sources/local/kochi/sessions.ts";
+import { resolveKochiUrl } from "../src/sources/local/kochi/site.ts";
 
 // 高知県議会「議員別賛否の状況」（Issue #220。2026-08-24 取得）。
 // /activity/decision.html の 1 ページに会期ごとの「令和８年６月定例会議決結果一覧表[PDF：146KB]」が新しい順に並ぶ。
@@ -46,4 +47,18 @@ test("parseSessionIndex: PDF は県議会の公式ホストのものだけ", () 
 
 test("parseSessionIndex: 会期が 1 つも無ければ例外（黙って空を返さない）", () => {
   assert.throws(() => parseSessionIndex("<html><body>なにも無い</body></html>", DECISION_URL), /no sessions/);
+});
+
+test("resolveKochiUrl: 取得先は県議会の公式ホスト（https）だけ。別ホスト・http・相対の遡りは例外", () => {
+  // 相対 URL は名簿・index と同じホストに解決される
+  assert.equal(resolveKochiUrl("/_files/00156424/0806.pdf", DECISION_URL), "https://gikai.pref.kochi.lg.jp/_files/00156424/0806.pdf");
+  // フラグメントは落とす
+  assert.equal(resolveKochiUrl("/activity/decision.html#top", DECISION_URL), "https://gikai.pref.kochi.lg.jp/activity/decision.html");
+  // ページに別ホストのリンクが混ざっても取りに行かない（許可リスト）
+  assert.throws(() => resolveKochiUrl("https://example.com/x.pdf", DECISION_URL), /not on gikai\.pref\.kochi\.lg\.jp/);
+  assert.throws(() => resolveKochiUrl("//example.com/x.pdf", DECISION_URL), /not on gikai\.pref\.kochi\.lg\.jp/);
+  // http へのダウングレードもしない
+  assert.throws(() => resolveKochiUrl("http://gikai.pref.kochi.lg.jp/x.pdf", DECISION_URL), /not on gikai\.pref\.kochi\.lg\.jp/);
+  // 「../」で外に出ても URL のホストは変わらない（パストラバーサルはホスト検査で塞がる）
+  assert.equal(resolveKochiUrl("/../../etc/passwd", DECISION_URL), "https://gikai.pref.kochi.lg.jp/etc/passwd");
 });
