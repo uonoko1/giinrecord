@@ -1,0 +1,18 @@
+[
+ {
+  "date": "2026-07-02",
+  "fetchedAt": "2026-08-24T12:14:22.177Z",
+  "id": "499",
+  "label": "令和8年6月定例会（第499回）",
+  "rollcalls": 30,
+  "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/saikin/r0806/"
+ },
+ {
+  "date": "2026-03-12",
+  "fetchedAt": "2026-08-24T12:14:22.177Z",
+  "id": "2026-02",
+  "label": "令和8年2月定例会",
+  "rollcalls": 82,
+  "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/"
+ }
+]

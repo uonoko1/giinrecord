@@ -1,0 +1,68 @@
+{
+ "assemblyId": "pref-29",
+ "counts": {
+  "cells": 5000,
+  "members": 40,
+  "rollcalls": 125,
+  "unknownCells": 0,
+  "unmatchedNames": 0
+ },
+ "fetchedAt": "2026-08-24T12:13:57.032Z",
+ "rosterAsOf": "2026-04-24",
+ "sessions": [
+  {
+   "pdfUrl": "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf",
+   "pdfUrls": [
+    "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf"
+   ],
+   "rollcalls": 37,
+   "sessionId": "2026-06",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/n161/p114029.html",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "pdfUrls": [
+    "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf"
+   ],
+   "rollcalls": 88,
+   "sessionId": "2026-02",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/n161/p114001.html",
+   "unknownCells": 0
+  }
+ ],
+ "sources": [
+  {
+   "fetchedAt": "2026-08-24T12:13:57.032Z",
+   "name": "奈良県議会 議員名簿（五十音順）",
+   "url": "https://www.pref.nara.lg.jp/n161/52534.html"
+  },
+  {
+   "fetchedAt": "2026-08-24T12:13:57.032Z",
+   "name": "奈良県議会 定例（臨時）県議会の概要",
+   "url": "https://www.pref.nara.lg.jp/n161/18579.html"
+  },
+  {
+   "fetchedAt": "2026-08-24T12:13:57.032Z",
+   "name": "奈良県議会 令和8年6月定例会の概要",
+   "url": "https://www.pref.nara.lg.jp/n161/p114029.html"
+  },
+  {
+   "fetchedAt": "2026-08-24T12:13:57.032Z",
+   "name": "奈良県議会 議員別の議案等に対する表決結果（令和8年6月定例会 2026-07-02議決分）",
+   "url": "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf"
+  },
+  {
+   "fetchedAt": "2026-08-24T12:13:57.032Z",
+   "name": "奈良県議会 令和8年2月定例会の概要",
+   "url": "https://www.pref.nara.lg.jp/n161/p114001.html"
+  },
+  {
+   "fetchedAt": "2026-08-24T12:13:57.032Z",
+   "name": "奈良県議会 議員別の議案等に対する表決結果（令和8年2月定例会 2026-03-25議決分）",
+   "url": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf"
+  }
+ ]
+}

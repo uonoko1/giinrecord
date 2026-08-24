@@ -1,0 +1,415 @@
+{
+ "assemblyId": "pref-29",
+ "date": "2026-03-25",
+ "id": "pref-29-2026-02-20260325-知事提出議案-議第116号",
+ "kind": "知事提出議案",
+ "number": "議第116号",
+ "page": 2,
+ "result": "原案可決",
+ "sessionId": "2026-02",
+ "sessionLabel": "令和8年2月定例会",
+ "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+ "title": "令和７年度地方独立行政法人奈良県立病院機構関係経費特別会計補正予算（第１号）",
+ "votes": [
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "p_29_52580",
+   "nameText": "永田恒",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "p_29_52557",
+   "nameText": "川口信",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "p_29_52536",
+   "nameText": "芦󠄀髙清友",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "p_29_52554",
+   "nameText": "金山成樹",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "p_29_59520",
+   "nameText": "疋田進一",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "p_29_63666",
+   "nameText": "若林かずみ",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "p_29_52564",
+   "nameText": "小村尚己",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "p_29_52558",
+   "nameText": "川口延良",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "p_29_52545",
+   "nameText": "池田慎久",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "p_29_52575",
+   "nameText": "西川",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "p_29_52583",
+   "nameText": "米田忠則",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "p_29_52570",
+   "nameText": "粒谷友示",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "p_29_52553",
+   "nameText": "荻田義雄",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "p_29_52573",
+   "nameText": "中野雅史",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党・無所属の会",
+   "memberId": "p_29_52543",
+   "nameText": "井岡正徳",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "日本維新の会",
+   "memberId": "p_29_63671",
+   "nameText": "星川大地",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "日本維新の会",
+   "memberId": "p_29_63674",
+   "nameText": "松木秀一郎",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "日本維新の会",
+   "memberId": "p_29_63675",
+   "nameText": "山田洋平",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "日本維新の会",
+   "memberId": "p_29_52555",
+   "nameText": "清田典章",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "日本維新の会",
+   "memberId": "p_29_52574",
+   "nameText": "関本真樹",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "日本維新の会",
+   "memberId": "p_29_52560",
+   "nameText": "福西広理",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "日本維新の会",
+   "memberId": "p_29_52561",
+   "nameText": "工藤将之",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "日本維新の会",
+   "memberId": "p_29_52563",
+   "nameText": "小林誠",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "日本維新の会",
+   "memberId": "p_29_52566",
+   "nameText": "佐藤光紀",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "日本維新の会",
+   "memberId": "p_29_52572",
+   "nameText": "中川崇",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "日本維新の会",
+   "memberId": "p_29_63673",
+   "nameText": "松尾勇臣",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_29_52571",
+   "nameText": "斎藤有紀",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_29_52547",
+   "nameText": "伊藤將也",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_29_52550",
+   "nameText": "浦西敦史",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_29_52546",
+   "nameText": "乾浩之",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_29_52569",
+   "nameText": "田中惟允",
+   "value": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_29_52548",
+   "nameText": "岩田国夫",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_29_52582",
+   "nameText": "山本進章",
+   "value": {
+    "legend": "欠席",
+    "mapped": "投票なし",
+    "raw": "欠"
+   }
+  },
+  {
+   "group": "公明党",
+   "memberId": "p_29_52544",
+   "nameText": "藤田幸代",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "公明党",
+   "memberId": "p_29_52559",
+   "nameText": "亀甲義明",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "公明党",
+   "memberId": "p_29_52551",
+   "nameText": "大国正博",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "日本共産党",
+   "memberId": "p_29_52581",
+   "nameText": "山村幸穂",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "無所属",
+   "memberId": "p_29_52579",
+   "nameText": "森山賀文",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "立憲民主党",
+   "memberId": "p_29_52577",
+   "nameText": "藤野良次",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "無所属",
+   "memberId": "p_29_52565",
+   "nameText": "阪口保",
+   "value": {
+    "legend": "欠席",
+    "mapped": "投票なし",
+    "raw": "欠"
+   }
+  }
+ ]
+}

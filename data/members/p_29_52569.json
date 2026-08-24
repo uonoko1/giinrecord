@@ -1,0 +1,1774 @@
+{
+ "asOf": "2026-04-24",
+ "assemblyId": "pref-29",
+ "counts": {
+  "rollcalls": 125
+ },
+ "current": true,
+ "district": "宇陀市・宇陀郡",
+ "group": "自由民主党",
+ "id": "p_29_52569",
+ "kana": "たなか ただみつ",
+ "name": "田中 惟允",
+ "profileUrl": "https://www.pref.nara.lg.jp/n161/52569.html",
+ "sourceUrl": "https://www.pref.nara.lg.jp/n161/52534.html",
+ "terms": [
+  {
+   "asOf": "2026-04-24",
+   "district": "宇陀市・宇陀郡",
+   "group": "自由民主党"
+  }
+ ],
+ "timeline": [
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-06-20260702-意見書-第4号",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf",
+   "title": "核兵器禁止条約第1回再検討会議へのオブザーバー参加を求める意見書",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-06-20260702-意見書-第5号",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf",
+   "title": "看護職員等の確保と有料職業紹介事業の適性化に関する意見書",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "報告受理",
+   "rollCallId": "pref-29-2026-06-20260702-知事提出議案-報第10号",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf",
+   "title": "奈良市場冷蔵株式会社の経営状況の報告について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "報告受理",
+   "rollCallId": "pref-29-2026-06-20260702-知事提出議案-報第11号",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf",
+   "title": "公益財団法人奈良県食肉公社の経営状況の報告について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "報告受理",
+   "rollCallId": "pref-29-2026-06-20260702-知事提出議案-報第12号",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf",
+   "title": "公益財団法人なら担い手・農地サポートセンターの経営状況の報告について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "報告受理",
+   "rollCallId": "pref-29-2026-06-20260702-知事提出議案-報第13号",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県土地開発公社の経営状況の報告について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "報告受理",
+   "rollCallId": "pref-29-2026-06-20260702-知事提出議案-報第14号",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf",
+   "title": "奈良生駒高速鉄道株式会社の経営状況の報告について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "報告受理",
+   "rollCallId": "pref-29-2026-06-20260702-知事提出議案-報第15号",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf",
+   "title": "公益財団法人奈良県暴力団追放県民センターの経営状況の報告について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "報告受理",
+   "rollCallId": "pref-29-2026-06-20260702-知事提出議案-報第16号",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県障害者計画に基づく手話の普及等に必要な施策の実施状況の報告について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "報告受理",
+   "rollCallId": "pref-29-2026-06-20260702-知事提出議案-報第17号",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf",
+   "title": "なら歯と口腔の健康づくり計画に基づく施策の実施状況の報告について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "報告受理",
+   "rollCallId": "pref-29-2026-06-20260702-知事提出議案-報第18号",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県公共交通基本計画に基づく施策の実施状況の報告について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "原案承認",
+   "rollCallId": "pref-29-2026-06-20260702-知事提出議案-報第19号",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf",
+   "title": "地方自治法第179条第１項の規定による専決処分の報告について奈良県税条例の一部を改正する条例合衆国軍隊及び合衆国軍隊の構成員等の所有する自動車に対する自動車税の賦課徴収の特例に関する条例の一部を改正する条例奈良県自動車税証紙条例の一部を改正する条例地方活力向上地域における県税の課税免除及び不均一課税に関する条例の一部を改正する条例損害賠償額の決定について損害賠償額の決定について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "報告受理",
+   "rollCallId": "pref-29-2026-06-20260702-知事提出議案-報第1号",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf",
+   "title": "令和７年度奈良県一般会計予算繰越計算書の報告について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "報告受理",
+   "rollCallId": "pref-29-2026-06-20260702-知事提出議案-報第20号",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf",
+   "title": "地方自治法第180条第１項の規定による専決処分の報告について奈良県手数料条例の一部を改正する条例奈良県幼保連携型認定こども園の学級の編制、職員、設備及び運営の基準に関する条例の一部を改正する条例県営住宅家賃の滞納者等に対する住宅明渡等請求申立てに関する訴訟事件について自動車事故にかかる損害賠償額の決定について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "報告受理",
+   "rollCallId": "pref-29-2026-06-20260702-知事提出議案-報第2号",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf",
+   "title": "令和７年度奈良県中央卸売市場事業費特別会計予算繰越計算書の報告について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "原案承認",
+   "rollCallId": "pref-29-2026-06-20260702-知事提出議案-報第38号",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf",
+   "title": "地方自治法第179条第１項の規定による専決処分の報告について令和７年度奈良県一般会計補正予算（第９号）",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "報告受理",
+   "rollCallId": "pref-29-2026-06-20260702-知事提出議案-報第3号",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf",
+   "title": "令和７年度奈良県流域下水道事業費特別会計予算繰越計算書の報告について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "報告受理",
+   "rollCallId": "pref-29-2026-06-20260702-知事提出議案-報第4号",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf",
+   "title": "公益財団法人奈良県人権センターの経営状況の報告について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "報告受理",
+   "rollCallId": "pref-29-2026-06-20260702-知事提出議案-報第5号",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf",
+   "title": "一般財団法人かがやきホームの経営状況の報告について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "報告受理",
+   "rollCallId": "pref-29-2026-06-20260702-知事提出議案-報第6号",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf",
+   "title": "一般財団法人奈良県健康づくり財団の経営状況の報告について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "報告受理",
+   "rollCallId": "pref-29-2026-06-20260702-知事提出議案-報第7号",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf",
+   "title": "公益財団法人奈良県生活衛生営業指導センターの経営状況の報告について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "報告受理",
+   "rollCallId": "pref-29-2026-06-20260702-知事提出議案-報第8号",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf",
+   "title": "公益財団法人奈良県地域産業振興センターの経営状況の報告について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "報告受理",
+   "rollCallId": "pref-29-2026-06-20260702-知事提出議案-報第9号",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf",
+   "title": "一般財団法人奈良県ビジターズビューローの経営状況の報告について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-06-20260702-知事提出議案-議第56号",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf",
+   "title": "令和８年度奈良県一般会計補正予算（第１号）",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-06-20260702-知事提出議案-議第57号",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf",
+   "title": "令和８年度奈良県中央卸売市場事業費特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-06-20260702-知事提出議案-議第58号",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県税条例の一部を改正する条例",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-06-20260702-知事提出議案-議第59号",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県立万葉文化館条例の一部を改正する条例",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-06-20260702-知事提出議案-議第60号",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県認定こども園の認定の要件に関する条例等の一部を改正する条例",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-06-20260702-知事提出議案-議第61号",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県幼保連携型認定こども園の学級の編制、職員、設備及び運営の基準に関する条例等の一部を改正する条例",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-06-20260702-知事提出議案-議第62号",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県児童福祉施設の設備及び運営の基準に関する条例等の一部を改正する条例",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-06-20260702-知事提出議案-議第63号",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県立都市公園条例の一部を改正する条例",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-06-20260702-知事提出議案-議第64号",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県条例の形式を左横書きに改正する条例",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-06-20260702-知事提出議案-議第65号",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf",
+   "title": "市町村負担金の徴収について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-06-20260702-知事提出議案-議第66号",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf",
+   "title": "住宅建設事業にかかる請負契約の変更について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-06-20260702-知事提出議案-議第67号",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf",
+   "title": "地方独立行政法人奈良県立病院機構中期目標の変更について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "原案同意",
+   "rollCallId": "pref-29-2026-06-20260702-知事提出議案-議第68号",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf",
+   "title": "副知事の選任について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-02",
+   "kind": "localVote",
+   "result": "原案同意",
+   "rollCallId": "pref-29-2026-06-20260702-知事提出議案-議第69号",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf",
+   "title": "監査委員の選任について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-意見書-第1号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "皇室の伝統に基づく安定的皇位継承の法制化を求める意見書",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-意見書-第2号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "外食・中食における「アレルギー表示」を推進する意見書",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-意見書-第3号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "脳脊髄液漏出症患者の救済を求める意見書",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-決議-第1号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "第85回国民スポーツ大会及び第30回全国パラスポーツ大会の開催に関する決議",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案承認",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-報第35号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "地方自治法第179条第１項の規定による専決処分の報告について令和７年度奈良県一般会計補正予算（第６号）",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案承認",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-報第36号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "地方自治法第179条第１項の規定による専決処分の報告について損害賠償額の決定について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "報告受理",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-報第37号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "地方自治法第180条第１項の規定による専決処分の報告について県営住宅家賃の滞納者等に対する住宅明渡等請求申立てに関する訴訟事件について自動車事故にかかる損害賠償額の決定について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第108号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "令和７年度奈良県一般会計補正予算（第７号）",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第109号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県住民基本台帳法施行条例の一部を改正する条例",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第10号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "令和８年度奈良県中央卸売市場事業費特別会計予算",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第110号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "知事及び副知事の給与及び旅費に関する条例等の一部を改正する条例",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第111号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県立高等学校等教育改革推進基金条例",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第113号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "令和７年度奈良県一般会計補正予算（第８号）",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第114号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "令和７年度公立大学法人奈良県立医科大学関係経費特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第115号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "令和７年度奈良県公債管理特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第116号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "令和７年度地方独立行政法人奈良県立病院機構関係経費特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第117号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "令和７年度奈良県国民健康保険事業費特別会計補正予算（第２号）",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第118号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "県立大学整備事業にかかる請負契約の締結について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第119号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "御所ＩＣ工業団地整備事業にかかる請負契約の締結について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第11号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "令和８年度奈良県公債管理特別会計予算",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第120号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "街路改良事業にかかる請負契約の締結について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第121号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "財産の処分について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第122号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "権利の放棄について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第123号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "権利の放棄について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第124号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "権利の放棄について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第125号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "権利の放棄について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第126号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "権利の放棄について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第127号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "権利の放棄について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第128号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "和解及び損害賠償額の決定について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第129号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "損害賠償額の決定について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第12号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "令和８年度奈良県育成奨学金貸付金特別会計予算",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案同意",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第130号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "教育委員会の委員の任命について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案同意",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第131号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "監査委員の選任について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第13号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "令和８年度地方独立行政法人奈良県立病院機構関係経費特別会計予算",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第14号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "令和８年度奈良県国民健康保険事業費特別会計予算",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第15号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "令和８年度奈良県流域下水道事業費特別会計予算",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第16号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県防災会議等の組織及び運営に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第17号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県公告式条例の一部を改正する条例",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第18号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県公益認定等審議会条例の一部を改正する条例",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第19号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県附属機関に関する条例等の一部を改正する条例",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第1号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "令和８年度奈良県一般会計予算",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第20号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県職員定数条例等の一部を改正する条例",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第21号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県行政手続条例の一部を改正する条例",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第22号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "知事等の給与の特例に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第23号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "一般職の職員の給与に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第24号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県手数料条例等の一部を改正する条例",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第25号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県税条例の一部を改正する条例",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第26号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県森林環境税条例の一部を改正する条例",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第27号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県男女共同参画推進条例の一部を改正する条例",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第28号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県認定こども園の認定の要件に関する条例等の一部を改正する条例",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第29号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県幼保連携型認定こども園の学級の編制、職員、設備及び運営の基準に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第2号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "令和８年度公立大学法人奈良県立医科大学関係経費特別会計予算",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第30号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県一時保護施設の設備及び運営の基準に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第31号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県保健研究センター及び奈良県景観・環境総合センター手数料条例及び奈良県附属機関に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第32号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県後期高齢者医療財政安定化基金条例の一部を改正する条例",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第33号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県国民健康保険保険給付費等交付金の交付及び国民健康保険事業費納付金の徴収に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第34号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県食品衛生法施行条例の一部を改正する条例",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第35号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県企業立地及び宿泊施設誘致を促進するための県税の特例に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第36号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県産業振興総合センター手数料条例及び奈良県附属機関に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第37号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県中央卸売市場条例の一部を改正する条例",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第38号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県農業研究開発センター分析手数料条例等の一部を改正する条例",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第39号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県国土利用計画審議会条例及び奈良県土地利用審査会条例の一部を改正する条例",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第3号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "令和８年度奈良県営競輪事業費特別会計予算",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第40号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県金属くず営業条例を廃止する等の条例",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第41号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県文化財保存活用基金条例",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第42号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県中小企業奨学金返還支援基金条例",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第43号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "御杖村の森林法に基づく事務を県が受託することについて",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第44号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "下北山村の森林法に基づく事務を県が受託することについて",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第45号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "包括外部監査契約の締結について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第46号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "第３期奈良県国土強靱化地域計画の策定について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第47号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県消費者基本計画の策定について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第48号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県協働推進指針の変更について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第49号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県男女共同参画プランの策定について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第4号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "令和８年度奈良県自動車駐車場及び奈良県自動車乗降場費特別会計予算",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第50号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "第２期奈良県森林環境の維持向上及び県産材の利用促進に関する指針の策定について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第51号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "第５期奈良県林業労働力の確保の促進に関する基本計画の策定について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第52号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "第２期奈良県豊かな食と農の振興計画の策定について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第53号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "第２期奈良県食品ロス削減推進計画の策定について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第54号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県農業総合研究センター畜産研究部研究開発中期運営方針の策定について",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第55号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "一般職の職員の給与に関する条例及び義務教育諸学校等の教育職員の給与等に関する特別措置に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第5号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "令和８年度奈良県母子父子寡婦福祉資金貸付金特別会計予算",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第6号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "令和８年度奈良県農業改良資金貸付金特別会計予算",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第7号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "令和８年度奈良県中小企業振興資金貸付金特別会計予算",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第8号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "令和８年度奈良県証紙収入特別会計予算",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-知事提出議案-議第9号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "令和８年度奈良県林業改善資金貸付金特別会計予算",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-議員提出議案-議第112号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県議会議員の議員報酬額、費用弁償額及び期末手当の額並びにその支給条例の一部を改正する条例",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-議員提出議案-議第132号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県議会議員の議員報酬額、費用弁償額及び期末手当の額並びにその支給条例の一部を改正する条例",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "date": "2026-03-25",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-02-20260325-議員提出議案-議第133号",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県議会会議規則の一部を改正する規則",
+   "vote": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  }
+ ]
+}
