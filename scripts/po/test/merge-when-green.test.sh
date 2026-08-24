@@ -165,8 +165,113 @@ EOF
   assert_eq 0 "$STATUS" "exit status: $ERR"
   assert_contains "$ERR" "could not update" "warns about the failed update"
   assert_contains "$LOG" "pr	merge	12" "still tries to merge (gh reports the real blocker)"
+  assert_not_contains "$LOG" "rev-parse" "no git fallback for a non-scope error"
 }
 test_case "merge: a failed update-branch is logged, not fatal" t_merge_update_branch_failure_is_not_fatal
+
+# #200: update-branch refused because the gh OAuth token lacks the workflow scope (the PR touches
+# .github/workflows/*) → merge origin/main locally in a temporary worktree and push over SSH
+t_merge_workflow_scope_fallback() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"BEHIND","url":"u"}' ;;
+    "pr view 12 --json mergeStateStatus"*) echo '{"mergeStateStatus":"CLEAN"}' ;;
+    "pr update-branch 12") echo 'GraphQL: refusing to allow an OAuth App to create or update workflow `.github/workflows/etl.yml` without `workflow` scope (updatePullRequestBranch)' >&2; exit 1 ;;
+    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+git_handle() {
+  case "$*" in
+    "rev-parse --show-toplevel") echo /repo ;;
+    "-C /repo fetch origin "*) : ;;
+    "-C /repo worktree add --detach "*" origin/feat/x") : ;;
+    "-C "*" merge --no-edit origin/main") echo "Merge made by the 'ort' strategy." ;;
+    "-C "*" push git@github.com:uonoko1/gikailog.git HEAD:refs/heads/feat/x") : ;;
+    "-C /repo worktree remove --force "*) : ;;
+    *) echo "unexpected git: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "exit status: $ERR"
+  assert_contains "$LOG" $'git\t-C\t/repo\tfetch\torigin' "fetches into the local checkout"
+  assert_contains "$LOG" $'merge\t--no-edit\torigin/main' "merges origin/main in the worktree"
+  assert_contains "$LOG" $'push\tgit@github.com:uonoko1/gikailog.git\tHEAD:refs/heads/feat/x' "pushes the PR head over SSH"
+  assert_contains "$LOG" $'worktree\tremove\t--force' "removes the temporary worktree"
+  assert_eq $'pr\tmerge\t12\t--squash\t--delete-branch' "$(tail -n 1 <<<"$LOG")" "PR merge is the last call"
+}
+test_case "merge: update-branch refused (workflow scope) → local merge + SSH push" t_merge_workflow_scope_fallback
+
+# #200: the local merge conflicts → abort cleanly, push NOTHING, exit non-zero with a clear message
+t_merge_workflow_scope_fallback_conflict() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"BEHIND","url":"u"}' ;;
+    "pr update-branch 12") echo 'refusing to allow an OAuth App to create or update workflow without `workflow` scope' >&2; exit 1 ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+git_handle() {
+  case "$*" in
+    "rev-parse --show-toplevel") echo /repo ;;
+    "-C /repo fetch origin "*) : ;;
+    "-C /repo worktree add --detach "*" origin/feat/x") : ;;
+    "-C "*" merge --no-edit origin/main") echo "CONFLICT (content): Merge conflict in a.txt" >&2; exit 1 ;;
+    "-C "*" merge --abort") : ;;
+    "-C /repo worktree remove --force "*) : ;;
+    *) echo "unexpected git: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "exit status"
+  assert_contains "$ERR" "resolve the conflict manually" "clear conflict message"
+  assert_contains "$LOG" $'merge\t--abort' "aborts the conflicted merge"
+  assert_contains "$LOG" $'worktree\tremove\t--force' "removes the temporary worktree"
+  assert_not_contains "$LOG" "push" "nothing is pushed"
+  assert_not_contains "$LOG" $'pr\tmerge' "never merges the PR"
+}
+test_case "merge: fallback merge conflict → abort with nothing pushed" t_merge_workflow_scope_fallback_conflict
+
+# #200: a failed SSH push is logged, not fatal (worktree still cleaned up; gh surfaces the blocker)
+t_merge_workflow_scope_push_failure_not_fatal() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"BEHIND","url":"u"}' ;;
+    "pr view 12 --json mergeStateStatus"*) echo '{"mergeStateStatus":"CLEAN"}' ;;
+    "pr update-branch 12") echo 'refusing to allow an OAuth App to create or update workflow without `workflow` scope' >&2; exit 1 ;;
+    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+git_handle() {
+  case "$*" in
+    "rev-parse --show-toplevel") echo /repo ;;
+    "-C /repo fetch origin "*) : ;;
+    "-C /repo worktree add --detach "*" origin/feat/x") : ;;
+    "-C "*" merge --no-edit origin/main") : ;;
+    "-C "*" push git@github.com:uonoko1/gikailog.git HEAD:refs/heads/feat/x") echo "Permission denied (publickey)." >&2; exit 128 ;;
+    "-C /repo worktree remove --force "*) : ;;
+    *) echo "unexpected git: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "exit status: $ERR"
+  assert_contains "$ERR" "push it manually" "warns about the failed push"
+  assert_contains "$LOG" $'worktree\tremove\t--force' "worktree cleaned up despite the push failure"
+  assert_contains "$LOG" $'pr\tmerge\t12' "still tries to merge (gh reports the real blocker)"
+}
+test_case "merge: fallback SSH push failure is logged, not fatal" t_merge_workflow_scope_push_failure_not_fatal
 
 t_merge_pending_then_pass() {
   local h; h=$(handler <<'EOF'

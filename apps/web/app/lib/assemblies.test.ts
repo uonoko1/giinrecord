@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { Assembly } from "@seiji-kiroku/shared";
 import disclosure from "../data/vote-disclosure.json";
+import rollCallIndex from "../test-fixtures/assemblies/data/assemblies/pref-31/rollcalls/index.json";
 import assembliesFixture from "../test-fixtures/assemblies/index.json";
 import localMember from "../test-fixtures/assemblies/member-local.json";
-import type { MemberDetail } from "./data-contract";
-import { DISCLOSURE_STATUSES, disclosureFor, findAssembly, isDietAssemblyId, isLocalMember, localAssemblies, localVoteTone, VOTE_DISCLOSURE, type VoteDisclosureRow } from "./assemblies";
+import tottoriMember from "../test-fixtures/assemblies/member-local-tottori.json";
+import type { LocalRollCallSubject, LocalVoteEntry, MemberDetail } from "./data-contract";
+import { DISCLOSURE_STATUSES, disclosureFor, findAssembly, isDietAssemblyId, isLocalMember, joinVoteSubjects, localAssemblies, localVoteTone, VOTE_DISCLOSURE, type VoteDisclosureRow, voteSubjectNote } from "./assemblies";
 
 const assemblies = assembliesFixture as Assembly[];
 
@@ -73,5 +75,46 @@ describe("localVoteTone: 判の色は mapped がある値だけ。それ以外�
   it("mapped が無ければ raw が ○ でも中立（推定しない）", () => {
     expect(localVoteTone({ raw: "○", legend: "賛成" })).toBe("raw");
     expect(localVoteTone({ raw: "棄", legend: "棄権" })).toBe("raw");
+  });
+});
+
+describe("voteSubjectNote（#204）: 請願・陳情の ○ を採択への賛成と読ませないための注記", () => {
+  it("「委員長報告に対する賛否」は「賛否の対象：委員長報告（<委員長報告の原文>）」", () => {
+    expect(voteSubjectNote({ voteSubject: "委員長報告に対する賛否", committeeReport: "不採択" })).toBe("賛否の対象：委員長報告（不採択）");
+    expect(voteSubjectNote({ voteSubject: "委員長報告に対する賛否", committeeReport: "研究留保" })).toBe("賛否の対象：委員長報告（研究留保）");
+    expect(voteSubjectNote({ voteSubject: "委員長報告に対する賛否" })).toBe("賛否の対象：委員長報告");
+  });
+  it("「議案に対する賛否」（議案そのものへの賛否＝既定の読み方）は注記しない", () => {
+    expect(voteSubjectNote({ voteSubject: "議案に対する賛否" })).toBeNull();
+    expect(voteSubjectNote({})).toBeNull();
+  });
+  it("知らない原文は言い換えずそのまま出す（推定しない）。委員長報告だけの行も落とさない", () => {
+    expect(voteSubjectNote({ voteSubject: "修正案に対する賛否" })).toBe("賛否の対象：修正案に対する賛否");
+    expect(voteSubjectNote({ voteSubject: "修正案に対する賛否", committeeReport: "不採択" })).toBe("賛否の対象：修正案に対する賛否 ・ 委員長報告：不採択");
+    expect(voteSubjectNote({ committeeReport: "不採択" })).toBe("委員長報告：不採択");
+  });
+});
+
+describe("joinVoteSubjects（#204）: rollcalls/index.json の voteSubject / committeeReport を rollCallId で timeline に結合する", () => {
+  // フィクスチャは結合後の形なので、いったん外して結合前（members/{id}.json）の形に戻す
+  const tottori = (tottoriMember as unknown as MemberDetail).timeline.map((e) => {
+    const { voteSubject: _v, committeeReport: _c, ...rest } = e as LocalVoteEntry;
+    return rest as LocalVoteEntry;
+  });
+
+  it("一致した行にだけ原文を写す。一致しない行はそのまま", () => {
+    const joined = joinVoteSubjects(tottori, rollCallIndex as LocalRollCallSubject[]);
+    const byId = new Map(joined.map((e) => [(e as LocalVoteEntry).rollCallId, e as LocalVoteEntry]));
+    expect(byId.get("pref-31-2026-06-20260629-陳情-8年-11")).toMatchObject({ voteSubject: "委員長報告に対する賛否", committeeReport: "不採択" });
+    expect(byId.get("pref-31-2026-06-20260629-知事提案-第10号")).toMatchObject({ voteSubject: "議案に対する賛否" });
+    expect("committeeReport" in byId.get("pref-31-2026-06-20260629-知事提案-第10号")!).toBe(false);
+  });
+  it("index が null／空なら timeline をそのまま返す（宮城など rollcalls/index.json の無い議会）", () => {
+    expect(joinVoteSubjects(tottori, null)).toEqual(tottori);
+    expect(joinVoteSubjects(tottori, [])).toEqual(tottori);
+  });
+  it("localVote 以外の行（国会議員の timeline）は触らない", () => {
+    const vote = { kind: "vote", date: "2026-01-01", rollCallId: "pref-31-2026-06-20260629-陳情-8年-11", title: "t", value: "賛成", sourceUrl: "https://example.com" } as unknown as MemberDetail["timeline"][number];
+    expect(joinVoteSubjects([vote], rollCallIndex as LocalRollCallSubject[])).toEqual([vote]);
   });
 });
