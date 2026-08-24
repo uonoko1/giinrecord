@@ -1,0 +1,73 @@
+[
+  {
+    "assemblyId": "pref-31",
+    "counts": {
+      "no": 0,
+      "voting": 34,
+      "yes": 34
+    },
+    "date": "2026-06-29",
+    "id": "pref-31-2026-06-20260629-知事提案-第10号",
+    "kind": "知事提案",
+    "method": {
+      "legend": "起立",
+      "raw": "起立"
+    },
+    "number": "第10号",
+    "page": 1,
+    "result": "可決",
+    "sessionId": "2026-06",
+    "sessionLabel": "令和8年6月定例会",
+    "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1422217/R8.6giketsukekka0629.pdf",
+    "title": "損害賠償に係る和解及び損害賠償の額の決定について",
+    "voteSubject": "議案に対する賛否"
+  },
+  {
+    "assemblyId": "pref-31",
+    "committeeReport": "研究留保",
+    "counts": {
+      "no": 11,
+      "voting": 34,
+      "yes": 23
+    },
+    "date": "2026-06-29",
+    "id": "pref-31-2026-06-20260629-陳情-7年-11",
+    "kind": "陳情",
+    "method": {
+      "legend": "起立",
+      "raw": "起立"
+    },
+    "number": "7年-11",
+    "page": 3,
+    "result": "研究留保",
+    "sessionId": "2026-06",
+    "sessionLabel": "令和8年6月定例会",
+    "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1422217/R8.6giketsukekka0629.pdf",
+    "title": "旧姓の通称使用の法制化を求める陳情",
+    "voteSubject": "委員長報告に対する賛否"
+  },
+  {
+    "assemblyId": "pref-31",
+    "committeeReport": "不採択",
+    "counts": {
+      "no": 11,
+      "voting": 34,
+      "yes": 23
+    },
+    "date": "2026-06-29",
+    "id": "pref-31-2026-06-20260629-陳情-8年-11",
+    "kind": "陳情",
+    "method": {
+      "legend": "起立",
+      "raw": "起立"
+    },
+    "number": "8年-11",
+    "page": 4,
+    "result": "不採択",
+    "sessionId": "2026-06",
+    "sessionLabel": "令和8年6月定例会",
+    "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1422217/R8.6giketsukekka0629.pdf",
+    "title": "ゆたかな学びの実現・教職員定数改善を図るための、2027年度政府予算に係る意見書採択について",
+    "voteSubject": "委員長報告に対する賛否"
+  }
+]

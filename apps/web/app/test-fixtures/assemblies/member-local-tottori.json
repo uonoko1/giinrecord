@@ -1,0 +1,74 @@
+{
+  "asOf": "2023-04-30",
+  "assemblyId": "pref-31",
+  "counts": {
+    "rollcalls": 3
+  },
+  "current": true,
+  "district": "鳥取市選挙区",
+  "group": "無所属",
+  "id": "p_31_item_1165926",
+  "kana": "ふくはま たかひろ",
+  "name": "福浜 隆宏",
+  "profileUrl": "https://www.pref.tottori.lg.jp/item/1165926.htm",
+  "sourceUrl": "https://www.pref.tottori.lg.jp/75928.htm",
+  "terms": [
+    {
+      "asOf": "2023-04-30",
+      "district": "鳥取市選挙区",
+      "group": "無所属"
+    }
+  ],
+  "timeline": [
+    {
+      "date": "2026-06-29",
+      "kind": "localVote",
+      "method": "起立",
+      "result": "可決",
+      "rollCallId": "pref-31-2026-06-20260629-知事提案-第10号",
+      "sessionLabel": "令和8年6月定例会",
+      "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1422217/R8.6giketsukekka0629.pdf",
+      "title": "損害賠償に係る和解及び損害賠償の額の決定について",
+      "vote": {
+        "legend": "賛成",
+        "mapped": "賛成",
+        "raw": "○"
+      },
+      "voteSubject": "議案に対する賛否"
+    },
+    {
+      "committeeReport": "研究留保",
+      "date": "2026-06-29",
+      "kind": "localVote",
+      "method": "起立",
+      "result": "研究留保",
+      "rollCallId": "pref-31-2026-06-20260629-陳情-7年-11",
+      "sessionLabel": "令和8年6月定例会",
+      "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1422217/R8.6giketsukekka0629.pdf",
+      "title": "旧姓の通称使用の法制化を求める陳情",
+      "vote": {
+        "legend": "賛成",
+        "mapped": "賛成",
+        "raw": "○"
+      },
+      "voteSubject": "委員長報告に対する賛否"
+    },
+    {
+      "committeeReport": "不採択",
+      "date": "2026-06-29",
+      "kind": "localVote",
+      "method": "起立",
+      "result": "不採択",
+      "rollCallId": "pref-31-2026-06-20260629-陳情-8年-11",
+      "sessionLabel": "令和8年6月定例会",
+      "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1422217/R8.6giketsukekka0629.pdf",
+      "title": "ゆたかな学びの実現・教職員定数改善を図るための、2027年度政府予算に係る意見書採択について",
+      "vote": {
+        "legend": "賛成",
+        "mapped": "賛成",
+        "raw": "○"
+      },
+      "voteSubject": "委員長報告に対する賛否"
+    }
+  ]
+}
