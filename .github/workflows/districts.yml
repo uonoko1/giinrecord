@@ -11,7 +11,7 @@ permissions:
   issues: write        # failure → auto Issue
   actions: write       # gh workflow run deploy-data.yml / approve pending runs
 concurrency:
-  group: etl           # 日次 ETL と直列化（同時に data PR を作らない）
+  group: etl-districts # ワークフロー固有（#201）。データ PR ブランチ（data/districts）が別なので他の ETL と並走できる。Deploy の直列化は deploy-site.yml の deploy-<dir> group が担う。
   cancel-in-progress: false
 env:
   DATA_BRANCH: data/districts

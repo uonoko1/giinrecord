@@ -33,11 +33,12 @@ test("districts.yml: ETL は日次と同じコンテナイメージで districts
   assert.match(block, /-v "\$PWD\/data:\/app\/data"/);
 });
 
-test("districts.yml: data PR は日次と別のブランチ名で、日次と同じ concurrency group で直列化する", () => {
+test("districts.yml: data PR は日次と別のブランチ名で、concurrency group はワークフロー固有（日次と並走できる。#201）", () => {
   assert.match(workflow, /DATA_BRANCH: data\/districts/);
   assert.doesNotMatch(workflow, /DATA_BRANCH: data\/refresh/);
-  assert.match(workflow, /concurrency:\s*\n\s*group: etl\b/);
-  assert.match(daily, /concurrency:\s*\n\s*group: etl\b/);
+  // Sprint 10 レトロ: group を共有すると待機中の run がキャンセルされる（バックフィルが殺された）。
+  assert.match(workflow, /concurrency:\s*\n\s*group: etl-districts\b/);
+  assert.match(daily, /concurrency:\s*\n\s*group: etl-daily\b/);
 });
 
 test("districts.yml: 失敗 Issue のタイトルは日次と別（同じ Issue にコメントが混ざらない）", () => {
