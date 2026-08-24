@@ -1,9 +1,10 @@
-import { Link, type MetaArgs } from "react-router";
+import { Link, type MetaArgs, useLoaderData } from "react-router";
 import { CoverBrand } from "../components/CoverBrand";
 import { SiteFooter } from "../components/SiteFooter";
 import { assemblyPath, bundledSessions } from "../lib/assemblies";
-import { buildCoverage, type Coverage, type DietCoverage, formatLocalSessionRange, formatSessionRange, hasSessionGaps, type LocalCoverage, rosterlessSessions, type SessionRange, shugiinQuestionCoverage } from "../lib/coverage";
+import { buildCoverage, type Coverage, type DietCoverage, formatLocalSessionRange, formatSessionRange, hasSessionGaps, linkedRecordCounts, type LocalCoverage, rosterlessSessions, rosterScope, type SessionRange, shugiinBillNameCoverage, type ShugiinBillNameStats, shugiinQuestionCoverage } from "../lib/coverage";
 import type { AssemblySession } from "../lib/data-contract";
+import { defaultDataDir, readShugiinBillNameStats } from "../lib/data-files";
 import { type Dataset, dataset as bundled } from "../lib/dataset";
 import { formatDate, formatDateTime } from "../lib/format";
 import { seoMeta } from "../lib/seo";
@@ -11,6 +12,17 @@ import "../styles/pages.css";
 import "./assemblies.css";
 
 const DESCRIPTION = "このサイトに入っている議会・回次・会期と、採決件数・議員数・取得元。すべてデータセットから数えた件数です。";
+
+/* ---------- data (build time only; ssr:false + prerender) ----------
+ * 議会・回次・件数は index.json のバンドルから数えるので loader は要らないが、衆院の議案の提出者・賛成者の
+ * 氏名（#251）は `bills/index.json` に無く、議案 1 件ずつの JSON にしかない。全部をブラウザに送らずに数えるため、
+ * ビルド時に Node で数えた結果だけを loader で渡す（/coverage は prerender.ts の STATIC_PATHS にあるので loader を置ける）。 */
+
+export type CoverageLoaderData = { shugiinBillNames: ShugiinBillNameStats | null };
+
+export async function loader(): Promise<CoverageLoaderData> {
+  return { shugiinBillNames: await readShugiinBillNameStats(defaultDataDir()) };
+}
 
 export function meta({ location }: MetaArgs) {
   return seoMeta({ title: "収録範囲", description: DESCRIPTION, pathname: location.pathname });
@@ -20,11 +32,24 @@ const n = (v: number) => v.toLocaleString("ja-JP");
 
 const KIND_LABEL = { national: "国会", prefectural: "都道府県議会", municipal: "政令指定都市議会" } as const;
 
+export default function CoverageRoute() {
+  const { shugiinBillNames } = useLoaderData<typeof loader>();
+  return <CoveragePage shugiinBillNames={shugiinBillNames} />;
+}
+
 /**
  * /coverage（#218）: どの議会のどこまでが入っているかを data/ から数えて並べる。
  * 件数・範囲はすべて buildCoverage がデータを数えた値で、この画面には数値を書かない。評価・解釈は書かない。
  */
-export default function CoveragePage({ data = bundled, sessions = bundledSessions() }: { data?: Dataset; sessions?: ReadonlyMap<string, AssemblySession[]> }) {
+export function CoveragePage({
+  data = bundled,
+  sessions = bundledSessions(),
+  shugiinBillNames = null,
+}: {
+  data?: Dataset;
+  sessions?: ReadonlyMap<string, AssemblySession[]>;
+  shugiinBillNames?: ShugiinBillNameStats | null;
+}) {
   const coverage = buildCoverage(data, sessions);
   return (
     <>
@@ -41,7 +66,7 @@ export default function CoveragePage({ data = bundled, sessions = bundledSession
         <LocalSection local={coverage.local} />
 
         <RosterlessSection meta={data.meta} />
-        <ShugiinQuestionsSection meta={data.meta} />
+        <ShugiinRosterSection data={data} billNames={shugiinBillNames} />
 
         <section className="section" aria-labelledby="coverage-not-recorded-heading">
           <h2 id="coverage-not-recorded-heading" className="section__title">
@@ -112,27 +137,99 @@ function SessionRangeCell({ range, unit }: { range: SessionRange | null; unit: s
 }
 
 /**
- * 衆院の質問主意書が議員ページに紐づく回次（#235）。衆議院は回次ごとの議員名簿を公開しておらず「現在」の
- * 1 回次分しか無い（#71）ので、質問主意書は全回次を取得していても、提出者を名簿に名寄せできるのはその 1 回次だけ。
- * 取得済みだが議員ページに出ない質問があるという事実をそのまま書く（隠さない）。回次はデータ（meta）から数える。
+ * 衆院の記録が議員ページに紐づく範囲（#235 / #251）。#235（質問主意書）と #251（提出者・賛成者）は
+ * 根本が同じ 1 つの事実（衆院の名簿は「現在」の 1 時点しかない）なので、節を分けずにまとめて 1 つの説明にする。
+ *
+ * 書くのは事実だけ:
+ * 1. 名簿が公開されている範囲の違い（衆院は 1 時点、参院は回次ごと）。**参院を「制約が無い」とは書かない**:
+ *    参院も最古の名簿より前は同じ制約下にあり、それはすぐ上の節（RosterlessSection）が書いている。
+ *    ここで「参院にはこの制約が無い」と書くと同じページの隣の節と矛盾する（#259 レビュー）。
+ * 2. そのため名簿の範囲外は氏名が一致しても本人と確認できないこと。氏名だけで紐づけない理由
+ * 3. 名簿にいちばん多くの氏名が載る回次で、議案の氏名のうち現在の名簿にある数（実数）
+ * 4. 種類ごとに議員ページに**実際に出ている件数**。取得した回次からの推論ではなく members/index.json の
+ *    counts の合計なので、0 件なら 0 件と書く（「第N回のぶんだけ出る」のような代理値の主張はしない。#259 レビュー）
+ * 数値はすべてデータを数えた値。評価・解釈は書かない。
  */
-function ShugiinQuestionsSection({ meta }: { meta: Dataset["meta"] }) {
-  const c = shugiinQuestionCoverage(meta);
-  const fetched = formatSessionRange(c?.fetched ?? null);
-  if (!c || !fetched || !c.linkedOnlyToRosterSession) return null;
+function ShugiinRosterSection({ data, billNames }: { data: Dataset; billNames: ShugiinBillNameStats | null }) {
+  const scope = rosterScope(data.meta);
+  const bills = shugiinBillNameCoverage(billNames);
+  const linked = linkedRecordCounts(data.members, "shugiin");
+  const questions = shugiinQuestionCoverage(data.meta);
+  const questionsFetched = formatSessionRange(questions?.fetched ?? null);
+  const sangiinRoster = formatSessionRange(scope.sangiin);
+  if (!scope.shugiin && !bills) return null;
   return (
-    <section className="section" aria-labelledby="coverage-shugiin-questions-heading">
-      <h2 id="coverage-shugiin-questions-heading" className="section__title">
-        衆議院の質問主意書が議員ページに紐づく回次
+    <section className="section" aria-labelledby="coverage-shugiin-roster-heading">
+      <h2 id="coverage-shugiin-roster-heading" className="section__title">
+        衆議院の記録が議員ページに紐づく範囲
       </h2>
       <p className="card__body">
-        衆議院は<strong>回次ごとの議員名簿を公開しておらず、「現在」の 1 回次分しかありません</strong>。そのため、質問主意書は{" "}
-        <span className="num">{fetched}</span> の一覧を取得していても、提出者を名簿に照合できるのは{" "}
-        <span className="num">第{c.rosterSession}回</span>のぶんだけで、
-        <strong>それ以外の回次の衆議院の質問主意書は議員ページに出ません</strong>。
-        氏名だけを手がかりに議員を作ることはしていません（同姓同名の別人を 1 人にしないため）。
-        参議院は回次ごとの名簿があるため、この制約はありません。
+        議員名簿が公開されている範囲は院によって違います。衆議院が公開している議員名簿は
+        <strong>「現在」の 1 時点だけで、回次ごとの名簿はありません</strong>。
+        {scope.shugiin && (
+          <>
+            {" "}
+            このサイトが持っている衆議院の名簿も
+            <a href={scope.shugiin.url} target="_blank" rel="noopener noreferrer">
+              議員一覧
+            </a>
+            の <span className="num">{formatDate(scope.shugiin.asOf)}</span> 現在の 1 枚です。
+          </>
+        )}
+        {sangiinRoster && scope.sangiin && (
+          <>
+            {" "}
+            参議院は回次ごとの名簿があり、このサイトが持っているのは <span className="num">{sangiinRoster}</span>（
+            <span className="num">{n(scope.sangiin.count)}</span> 回次）のぶんです。
+            <strong>それより前の回次に名簿が無いことは参議院も同じ</strong>で、上の「議員ページに紐づかない回次」に書いています。
+          </>
+        )}
       </p>
+      <p className="card__body">
+        名簿のある範囲の外では、議案の提出者・賛成者、質問主意書の提出者、会議録の発言者は、
+        <strong>氏名がこの名簿と一致しても、その人本人であることを一次資料から確認できません</strong>。
+        氏名だけを手がかりに議員に紐づけることはしていません（同姓同名の別人を 1 人にしないため）。
+      </p>
+      {bills?.largest && (
+        <p className="card__body">
+          衆議院の議案にいちばん多くの氏名が載る<span className="num">第{bills.largest.session}回</span>では、議案に載る提出者・賛成者{" "}
+          <span className="num">{n(bills.largest.names)}</span> 人のうち、現在の名簿にあるのは{" "}
+          <span className="num">{n(bills.largest.inRoster)}</span> 人です。残りの氏名は現在の名簿にありません。
+        </p>
+      )}
+      {bills && (
+        <p className="card__body">
+          衆議院の議案に載る提出者・賛成者の氏名は延べ <span className="num">{n(bills.names)}</span> 件あり、そのうち議員に紐づいているのは{" "}
+          <span className="num">{n(bills.linked)}</span> 件です。残る <span className="num">{n(bills.unlinked)}</span>{" "}
+          件の氏名は、議案のページには原文のまま載りますが、議員ページには出ません。
+          {bills.rosterDuplicateNames === 0 && (
+            <>
+              {" "}
+              現在の名簿 <span className="num">{n(bills.rosterMembers)}</span> 人のなかに同じ氏名の人はいません。
+            </>
+          )}
+        </p>
+      )}
+      {linked && (
+        <p className="card__body">
+          いま衆議院の議員ページに出ている記録は、提出・賛成した議案が <span className="num">{n(linked.bills)}</span> 件、
+          質問主意書が <span className="num">{n(linked.questions)}</span> 件、本会議の発言が{" "}
+          <span className="num">{n(linked.speeches)}</span> 件です。
+          {questionsFetched && linked.questions === 0 && (
+            <>
+              {" "}
+              質問主意書は <span className="num">{questionsFetched}</span> の一覧を取得していますが、
+              <strong>そのうち提出者を名簿に照合できたものはありません</strong>（取得した回次に載る氏名が、現在の名簿と照合できる回次のものではないため）。
+            </>
+          )}
+          {questionsFetched && linked.questions > 0 && (
+            <>
+              {" "}
+              質問主意書は <span className="num">{questionsFetched}</span> の一覧を取得しています。
+            </>
+          )}
+        </p>
+      )}
     </section>
   );
 }

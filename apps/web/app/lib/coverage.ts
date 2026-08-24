@@ -65,32 +65,125 @@ export function rosterlessSessions(meta: DatasetMeta | undefined): RosterlessSes
 }
 
 /**
- * 衆院の質問主意書が議員ページに紐づく範囲（#235）。
- * 衆議院は回次ごとの議員名簿を公開しておらず「現在」の 1 回次分しか無い（#71）ので、
- * 質問主意書は全回次を取得していても、提出者を名簿に名寄せできるのはその 1 回次だけ。
- * それ以外の回次の質問は取得済みでも議員ページには出ない（氏名だけから議員を作らないため）。
- * 「取得した回次」と「議員に紐づく回次」は別の事実なので、両方を数えて出す（隠さない）。
+ * 衆院の質問主意書が「取得した回次」（#235）。回次は `meta.sources` の出典名から数える。
+ * 議員ページに出るかどうかはここでは判断しない（取得と紐づきは別の事実で、紐づきは
+ * `linkedRecordCounts` が members/index.json の counts から実数で数える）。
  */
 export interface ShugiinQuestionCoverage {
-  /** 衆院名簿が覆う回次（`meta.sessions` の最大。ETL の memberSession と同じ） */
-  rosterSession: number;
-  /** 質問答弁情報を取得した回次のうち、名簿の回次以外の範囲。1 件も無ければ null */
+  /** 質問答弁情報を取得した回次の範囲。1 件も無ければ null */
   fetched: SessionRange | null;
-  /** 名簿の回次以外にも取得した回次があるか（＝紐づかない質問があるか） */
-  linkedOnlyToRosterSession: boolean;
 }
 
-/** `meta.sources` の「衆議院 質問答弁情報（第N回）」と `meta.sessions` から数える。出典が無ければ null（推定しない）。 */
+/** `meta.sources` の「衆議院 質問答弁情報（第N回）」から数える。出典が無ければ null（推定しない）。 */
 export function shugiinQuestionCoverage(meta: DatasetMeta | undefined): ShugiinQuestionCoverage | null {
   const fetched = (meta?.sources ?? [])
     .map((s) => /^衆議院 質問答弁情報（第(\d+)回）$/.exec(s.name)?.[1])
     .filter((n): n is string => n !== undefined)
     .map(Number);
-  const sessions = meta?.sessions ?? [];
-  if (fetched.length === 0 || sessions.length === 0) return null;
-  const rosterSession = Math.max(...sessions);
-  const notLinked = [...new Set(fetched)].filter((s) => s !== rosterSession).sort((a, b) => a - b);
-  return { rosterSession, fetched: sessionRange(fetched), linkedOnlyToRosterSession: notLinked.length > 0 };
+  if (fetched.length === 0) return null;
+  return { fetched: sessionRange(fetched) };
+}
+
+/**
+ * その院の議員ページに実際に出ている記録の件数（#251）。`members/index.json` の counts の合計で、
+ * 「議員ページに出る」ことそのものの実数。取得の有無や名簿の覆う回次からの推論ではないので、
+ * ETL の突合条件が変わっても、データを数え直せばそのまま追随する。
+ */
+export interface LinkedRecordCounts {
+  rollcalls: number;
+  bills: number;
+  speeches: number;
+  questions: number;
+}
+
+/** 院ごとに members/index.json の counts を合計する。その院の議員が 0 人なら null（無い事実を作らない）。 */
+export function linkedRecordCounts(members: readonly { house: House; counts: { rollcalls: number; bills: number; speeches: number; questions?: number } }[], house: House): LinkedRecordCounts | null {
+  const rows = members.filter((m) => m.house === house);
+  if (rows.length === 0) return null;
+  const sum = (pick: (c: (typeof rows)[number]["counts"]) => number | undefined) => rows.reduce((t, m) => t + (pick(m.counts) ?? 0), 0);
+  return { rollcalls: sum((c) => c.rollcalls), bills: sum((c) => c.bills), speeches: sum((c) => c.speeches), questions: sum((c) => c.questions) };
+}
+
+/**
+ * 両院の名簿が公開されている範囲の違い（#251）。衆院は「現在」の 1 時点だけ、参院は回次ごとだが最古の 1 回次より前は無い。
+ * どちらも「名簿のある範囲の外は紐づかない」という同じ制約下にあり、違うのは名簿が覆う範囲だけなので、
+ * 参院を「制約が無い」と書かないための材料としてこの 2 つを並べて持つ（すぐ上の節 RosterlessSection と矛盾させない）。
+ */
+export interface RosterScope {
+  /** 衆院の名簿の時点（出典名の原文）と URL。出典が無ければ null */
+  shugiin: { asOf: string; url: string } | null;
+  /** 参院の回次ごとの名簿がある回次（昇順）。1 件も無ければ空 */
+  sangiinSessions: number[];
+  /** 参院の名簿がある回次の範囲。1 件も無ければ null */
+  sangiin: SessionRange | null;
+}
+
+/** `meta.sources` の議員一覧の出典から、両院の名簿の範囲を取る。推定はしない。 */
+export function rosterScope(meta: DatasetMeta | undefined): RosterScope {
+  const sangiinSessions = [
+    ...new Set(
+      (meta?.sources ?? [])
+        .map((s) => /^参議院 議員一覧（第(\d+)回）$/.exec(s.name)?.[1])
+        .filter((n): n is string => n !== undefined)
+        .map(Number),
+    ),
+  ].sort((a, b) => a - b);
+  return { shugiin: shugiinRosterAsOf(meta), sangiinSessions, sangiin: sessionRange(sangiinSessions) };
+}
+
+/**
+ * 衆院の議員一覧の出典（`meta.sources` の「衆議院 議員一覧（{時点}現在）」）。参院が回次ごと（「第N回」）なのに対し、
+ * 衆院は時点が 1 つしか無いことが、出典の名前にそのまま出ている。時点の表記は出典の原文のまま返す（推定しない）。
+ */
+export function shugiinRosterAsOf(meta: DatasetMeta | undefined): { asOf: string; url: string } | null {
+  for (const s of meta?.sources ?? []) {
+    const asOf = /^衆議院 議員一覧（(.+)現在）$/.exec(s.name)?.[1];
+    if (asOf !== undefined) return { asOf, url: s.url };
+  }
+  return null;
+}
+
+/**
+ * 衆院の名簿が「現在」の 1 枚しかないこと（#71 / #245）の、データ上のあらわれ（#251）。
+ * `data/bills/{回次}/{id}.json` の提出者・賛成者の氏名（`submitterNames` / `supporterNames`）と、
+ * 名寄せできた memberId（`submitters` / `supporters`）を数えた結果を、そのまま持つ。
+ * 数えるのは Node 側（`data-files.ts` の `readShugiinBillNameStats`）で、ここは形と表示の判断だけ。
+ */
+export interface ShugiinBillNameStats {
+  /** 衆院の議案に載る提出者・賛成者の氏名の延べ数 */
+  names: number;
+  /** そのうち名簿の議員に紐づいた数（`submitters` / `supporters` の memberId の延べ数） */
+  linked: number;
+  /** 回次ごとの、その回次の議案に載る異なり氏名の数と、そのうち現在の名簿にある数 */
+  sessions: { session: number; names: number; inRoster: number }[];
+  /** 現在の名簿の衆院議員の数 */
+  rosterMembers: number;
+  /** 名簿の中で正規化後の氏名が重複する人数（0 なら完全同名は名簿に無い） */
+  rosterDuplicateNames: number;
+}
+
+/** 衆院の議案の氏名のうち、名簿に紐づいていない延べ数。 */
+export interface ShugiinBillNameCoverage extends ShugiinBillNameStats {
+  /** names - linked */
+  unlinked: number;
+  /**
+   * 「現在の名簿に居るのは何人か」を示す回次。異なり氏名がいちばん多い回次を選ぶ（同数なら新しい回次）。
+   * 回次を定数で書かず、データがいちばん厚い回次をデータから選ぶ。
+   */
+  largest: { session: number; names: number; inRoster: number } | null;
+}
+
+/**
+ * 数えた結果を表示用にまとめる。氏名が 1 件も無ければ null（無い事実を作らない）。
+ * 割合はここでは出さない（`inRoster` と `names` の実数だけを渡し、画面も実数で書く）。
+ */
+export function shugiinBillNameCoverage(stats: ShugiinBillNameStats | null | undefined): ShugiinBillNameCoverage | null {
+  if (!stats || stats.names === 0) return null;
+  const largest = stats.sessions.reduce<ShugiinBillNameStats["sessions"][number] | null>(
+    (best, s) => (best === null || s.names > best.names || (s.names === best.names && s.session > best.session) ? s : best),
+    null,
+  );
+  return { ...stats, unlinked: stats.names - stats.linked, largest };
 }
 
 /** 国会の 1 院（参議院・衆議院）の収録範囲 */
