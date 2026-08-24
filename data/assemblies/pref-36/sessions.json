@@ -1,0 +1,18 @@
+[
+ {
+  "date": "2026-07-03",
+  "fetchedAt": "2026-08-24T00:36:38.693Z",
+  "id": "2026-06",
+  "label": "令和8年6月定例会",
+  "rollcalls": 20,
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/honkaigi/r08/7314697/"
+ },
+ {
+  "date": "2026-03-11",
+  "fetchedAt": "2026-08-24T00:36:38.693Z",
+  "id": "2026-02",
+  "label": "令和8年2月定例会",
+  "rollcalls": 85,
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/honkaigi/r08/7310454/"
+ }
+]
