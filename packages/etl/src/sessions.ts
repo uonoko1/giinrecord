@@ -98,12 +98,25 @@ export function lostVoteMatches(previous: ReadonlyMap<string, number>, rollCalls
 }
 
 /**
- * 衆院本会議の発言を今回取得するか（#103 レビュー）。衆院名簿が覆う回次（memberSession = max(all)）が取得対象（targets）のときだけ。
- * memberSession が carried のとき（過去回次だけの手動実行）は readCarried がその回次の speech 行を引き継ぐので、
- * 取得すると同じ speechId が2行になる。引き継ぎに任せて取得しない（次の日次実行が取り直す）。
+ * 取得し直した発言と同じ speechId の引き継ぎ行を落とす（#236）。
+ *
+ * 衆院の名簿は回次ごとの公開が無く「現在」の 1 回次分しか無い（#71）ので、衆院本会議の発言は名簿が覆う回次
+ * （memberSession = max(all)）の分しか名寄せできない。この制約は #73 のときから変わっていない。
+ *
+ * #103 レビューではこれを「memberSession が targets のときだけ取得する」（shouldFetchShugiinSpeeches）で扱っていた。
+ * memberSession が carried になる実行（過去回次だけの手動実行・#219 のバックフィルの chunk）で取得すると、
+ * readCarried が引き継ぐ同じ回次の speech 行と重複して同じ speechId が 2 行になるためで、重複を避ける意図は正しい。
+ * だが「取得しない」で避けると衆院の発言が丸ごと前回出力頼みになり、引き継ぎが 1 度でも欠ければ
+ * （#103 以前の session の無い行、名簿から消えた memberId など）0 に落ちたまま自力では戻らない（#236 の実害）。
+ *
+ * そこで取得は常に行い、重複は「取得した speechId の引き継ぎ行を落とす」ことで防ぐ。
+ * 取得した方が新しい（今の名簿で名寄せし直した）ので、残すのは取得した行。取得が空なら何も落とさない
+ * （取り漏れで既に出ている発言を消さない）。
  */
-export function shouldFetchShugiinSpeeches(plan: SessionPlan): boolean {
-  return plan.targets.includes(Math.max(...plan.all));
+export function dropCarriedSpeeches(carried: readonly CarriedEntry[], fetched: readonly { id: string }[]): CarriedEntry[] {
+  const ids = new Set(fetched.map((s) => s.id));
+  if (ids.size === 0) return [...carried];
+  return carried.filter((c) => !(c.entry.kind === "speech" && ids.has(c.entry.speechId)));
 }
 
 function isCarriable(e: TimelineEntry): boolean {

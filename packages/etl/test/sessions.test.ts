@@ -1,10 +1,11 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, writeFile, rm } from "node:fs/promises";
+import { mkdtemp, mkdir, writeFile, rm, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { Bill, MemberDetail, RollCall, RollCallSummary } from "@seiji-kiroku/shared";
-import { planSessions, readCarried, decisionOfResult, lostVoteMatches, shouldFetchShugiinSpeeches } from "../src/sessions.ts";
+import type { Bill, MemberDetail, RollCall, RollCallSummary, TimelineEntry } from "@seiji-kiroku/shared";
+import { planSessions, readCarried, decisionOfResult, lostVoteMatches, dropCarriedSpeeches } from "../src/sessions.ts";
+import type { CarriedEntry } from "../src/aggregate.ts";
 import { stableJson } from "../src/json.ts";
 
 // Issue #103: 日次 ETL は直近 5 回次（DEFAULT_SESSIONS）だけ取得し、data/ に既にある他の回次（第200〜216回など）は
@@ -36,9 +37,9 @@ describe("planSessions: 今回取得する回次（targets）と引き継ぐ回�
     assert.deepEqual(onDisk, [142, 143, 144, 145, 146, 147, 148, 149, 150, 217, 218, 219, 220, 221]);
   });
 
-  test("バックフィルの chunk では最新回次が carried なので衆院本会議の発言を取得しない（二重行を作らない）", () => {
+  test("バックフィルの chunk でも最新回次（衆院名簿が覆う回次）は plan.all に残る", () => {
     const plan = planSessions([142, 143], [217, 218, 219, 220, 221]);
-    assert.equal(shouldFetchShugiinSpeeches(plan), false);
+    assert.equal(Math.max(...plan.all), 221);
   });
 });
 
@@ -139,14 +140,93 @@ describe("lostVoteMatches: 引き継いだ採決の再突合で memberId の付�
   });
 });
 
-describe("shouldFetchShugiinSpeeches: 衆院本会議の発言を今回取得するか（#103 レビュー）", () => {
-  // 衆院名簿が覆う回次（memberSession = max(all)）が carried のときに取得すると、
-  // readCarried が引き継ぐ同じ回次の speech 行と重複する（同じ speechId が2行）ので取得しない。
-  test("日次実行（memberSession が取得対象）は取得する", () => {
-    assert.equal(shouldFetchShugiinSpeeches(planSessions([], [200, 201, 217, 218, 219, 220, 221])), true);
-    assert.equal(shouldFetchShugiinSpeeches(planSessions([221], [])), true);
+describe("dropCarriedSpeeches: 取得した発言と同じ speechId の引き継ぎ行を落とす（#236）", () => {
+  // 衆院名簿は「現在」の1回次分しか無い（#71）ので、衆院本会議の発言は memberSession = max(all) の分だけ取得できる。
+  // その回次が carried（過去回次だけの手動実行）でも取得はする（#236: 取得しないと衆院発言が永久に 0 のままになりうる）。
+  // 二重行（同じ speechId が 2 行）は「取得した speechId の引き継ぎ行を落とす」ことで防ぐ。取得しないことで防いではいけない。
+  const speechEntry = (speechId: string, session: number): TimelineEntry =>
+    ({ kind: "speech", session, date: "2026-06-05", speechId, meeting: "本会議 第1号", excerpt: "抜粋", chars: 3, sourceUrl: `https://kokkai.ndl.go.jp/txt/${speechId.split("_")[0]}/1` });
+  const voteEntry: TimelineEntry = { kind: "vote", session: 221, date: "2026-06-05", rollCallId: "221-0605-v001", title: "案件", value: "賛成", result: "可決（賛成 1・反対 0）", sourceUrl: "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0605-v001.htm" };
+
+  test("取得した speechId の引き継ぎ行だけ落ち、他の回次・他の kind の行は残る", () => {
+    const carried: CarriedEntry[] = [
+      { memberId: "h_1", entry: speechEntry("122115254X00120260605_001", 221) },  // 取得し直した分（落ちる）
+      { memberId: "h_1", entry: speechEntry("120015254X00120191204_001", 200) },  // 別回次の発言（残る）
+      { memberId: "m_1", entry: voteEntry },                                       // 発言でない行（残る）
+    ];
+    const fetched = [{ id: "122115254X00120260605_001" }];
+    assert.deepEqual(dropCarriedSpeeches(carried, fetched).map((c) => [c.memberId, c.entry.kind, c.entry.session]), [["h_1", "speech", 200], ["m_1", "vote", 221]]);
   });
-  test("過去回次だけの手動実行（memberSession が carried）は取得せず、前回出力の speech 行を引き継ぐ", () => {
-    assert.equal(shouldFetchShugiinSpeeches(planSessions([200, 201], [217, 218, 219, 220, 221])), false);
+
+  test("取得が空なら引き継ぎ行はそのまま（取り漏れで既存の発言を消さない）", () => {
+    const carried: CarriedEntry[] = [{ memberId: "h_1", entry: speechEntry("122115254X00120260605_001", 221) }];
+    assert.deepEqual(dropCarriedSpeeches(carried, []), carried);
+  });
+});
+
+// #236 の回帰テスト（この分岐が再び「永久にスキップ」に戻らないように固定する）。
+// もとの条件「最新回次が targets に入っているときだけ取得する」は、最新回次が carried になる実行
+//（過去回次だけの手動実行・#219 のバックフィルの chunk）では成立しない。取得しないと衆院の発言は前回出力の
+// 引き継ぎ頼みになり、引き継ぎが1度でも欠ければ（#103 以前の session の無い行、名簿から消えた memberId）
+// 0 に落ちたまま自力では戻らない。実際に #236 ではバックフィルの実行で衆院議員 465 名の発言が全員 0 になった。
+describe("#236 回帰: 最新回次が carried の実行でも衆院の発言は残り、二重行にならない", () => {
+  const detail = (id: string, speechIds: readonly string[]): MemberDetail => ({
+    id, name: "衆 一郎", kana: "", house: "shugiin", terms: [{ house: "shugiin", group: "G", district: "東京", from: "", sessionFrom: 221 }],
+    sourceUrl: "https://www.shugiin.go.jp/internet/itdb_annai.nsf/html/statics/syu/1giin.htm",
+    timeline: speechIds.map((speechId) => ({
+      kind: "speech", session: 221, date: "2026-06-05", speechId, meeting: "本会議 第1号", excerpt: "抜粋", chars: 3,
+      sourceUrl: `https://kokkai.ndl.go.jp/txt/${speechId.split("_")[0]}/1`,
+    })),
+  });
+  const write = async (dir: string, d: MemberDetail) => {
+    await mkdir(join(dir, "members"), { recursive: true });
+    await writeFile(join(dir, "members", "index.json"), stableJson([{ id: d.id, name: d.name, kana: "", house: "shugiin", assemblyId: "diet-shugiin", group: "G", district: "東京", current: true, counts: { rollcalls: 0, bills: 0, speeches: d.timeline.length, questions: 0 } }]));
+    await writeFile(join(dir, "members", `${d.id}.json`), stableJson(d));
+  };
+  // 「前回の日次実行が入れた第221回の衆院発言 2 件」が data/ にある状態で、過去回次だけを指定して流す。
+  const IDS = ["122105254X00120260605_001", "122105254X00120260605_002"];
+
+  test("バックフィルの chunk（pnpm etl 200）でも、最新回次の衆院発言は 1 件ずつ残る", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "regress236-"));
+    try {
+      await write(dir, detail("h_1", IDS));
+      const plan = planSessions([200], [200, 221]);
+      assert.deepEqual(plan.carried, [221], "最新回次が carried になる実行を再現している");
+
+      const carried = await readCarried(dir, plan.carried);
+      assert.equal(carried.entries.length, 2, "前回出力の衆院発言 2 件を引き継いでいる");
+
+      // 修正後: 取得は必ず走る（memberSession = 221）。取得した分と引き継ぎ分を合わせても speechId は重複しない。
+      const fetched = IDS.map((id) => ({ id }));
+      const kept = dropCarriedSpeeches(carried.entries, fetched);
+      const speechIds = [...kept.filter((c) => c.entry.kind === "speech").map((c) => (c.entry as { speechId: string }).speechId), ...fetched.map((f) => f.id)];
+      assert.deepEqual(speechIds.sort(), [...IDS].sort(), "取得分だけが残り、同じ speechId が 2 行にならない");
+      assert.equal(speechIds.length, 2, "衆院の発言が 0 に落ちない（#236 の実害）");
+    } finally { await rm(dir, { recursive: true, force: true }); }
+  });
+
+  test("引き継ぎが空でも（#103 以前の session の無い行で引き継げなくても）取得分で発言は復元される", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "regress236-empty-"));
+    try {
+      // #103 以前の出力を模して session を落とす。readCarried は引き継げず withoutSession に数える。
+      const d = detail("h_1", IDS);
+      d.timeline = d.timeline.map((e) => { const { session: _s, ...rest } = e as Record<string, unknown>; return rest as never; });
+      await write(dir, d);
+
+      const carried = await readCarried(dir, [221]);
+      assert.equal(carried.entries.length, 0);
+      assert.equal(carried.withoutSession, 2, "session の無い行は引き継げない（#236 で発言が 0 になった経路）");
+
+      // 取得をやめていたらここで 0 のまま（修正前の挙動）。取得するので 2 件戻る。
+      const fetched = IDS.map((id) => ({ id }));
+      assert.equal(dropCarriedSpeeches(carried.entries, fetched).length + fetched.length, 2);
+    } finally { await rm(dir, { recursive: true, force: true }); }
+  });
+
+  test("cli.ts は衆院発言の取得を条件分岐で囲まない（取得を丸ごとスキップする述語を復活させない）", async () => {
+    const src = await readFile(new URL("../src/cli.ts", import.meta.url), "utf8");
+    assert.ok(/^const shugiinSpeeches = matchSpeeches\(await fetchSpeeches\(memberSession, "shugiin"\)/m.test(src), "衆院本会議の発言を memberSession で無条件に取得している");
+    assert.ok(!/shouldFetchShugiinSpeeches/.test(src), "取得を丸ごとスキップする条件が cli.ts に残っている（#236）");
+    assert.ok(/dropCarriedSpeeches\(/.test(src), "二重行は dropCarriedSpeeches で防ぐ");
   });
 });
