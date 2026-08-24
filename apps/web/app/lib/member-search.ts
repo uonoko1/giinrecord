@@ -2,7 +2,7 @@
  * /members の純粋ロジック（ブラウザで動く。Node API は使わない）。
  * 五十音の行分け・部分一致の絞り込み・任期満了の表記。評価や並び替えの「重み」は一切持たない。
  */
-import type { AssemblyId } from "@seiji-kiroku/shared";
+import type { Assembly, AssemblyId } from "@seiji-kiroku/shared";
 import { DIET_ASSEMBLY_IDS, type MemberSummary } from "./data-contract";
 
 /** 議員の所属議会。assemblyId が無い（#156 より前の）データは国会の院から `diet-{house}` を補う。 */
@@ -105,4 +105,85 @@ export function filterMembers(members: MemberSummary[], filter: MemberFilter): M
 export function formatTermEnd(iso: string | undefined): string | undefined {
   const m = iso && /^(\d{4})-(\d{2})/.exec(iso);
   return m ? `〜${m[1]}.${m[2]}` : undefined;
+}
+
+/**
+ * #239: /members の絞り込みは URL のクエリ（?assembly=&group=&district=&former=1）に持つ。
+ * 見出し・説明・title・OGP はこの値から作るので、ページの文言と表示内容が必ず一致する。
+ * 識別子（pref-32 / diet-sangiin など）は現行のまま使う（#240 で別途調査）。
+ */
+export interface MembersScope {
+  /** 議会 id。空文字はすべての議会 */
+  assemblyId: AssemblyId | "";
+  /** 議会 id に対応する名前（assemblies/index.json の原文）。未選択・未知の id は undefined */
+  assemblyName: string | undefined;
+  group: string;
+  district: string;
+  /** 元職（最新回次の名簿に載っていない人）も一覧に出すか。既定は現職のみ */
+  includeFormer: boolean;
+}
+
+/** 見出し・説明に並べる条件（議会名・会派・選挙区）。選ばれたものだけを名簿の表記のまま返す。 */
+function scopeLabels(scope: Pick<MembersScope, "assemblyName" | "group" | "district">): string[] {
+  return [scope.assemblyName, scope.group, scope.district].filter((v): v is string => Boolean(v));
+}
+
+/**
+ * 見出し・説明が指す集合の名前。絞り込み無しは「収録している議会の議員」。
+ *
+ * 「国会議員」とは書かない（地方議会の議員も含む）。「すべての議会」「全国」とも書かない:
+ * assemblies/index.json にあるのは 9 議会（国会2＋県議会7）で、全国 47 都道府県・1,700 超の市区町村を
+ * 網羅してはいない。/coverage（「収録範囲」「このサイトに入っている議会…」）と同じ語彙に揃える。
+ *
+ * 既定は現職のみを出すので「現職議員」と言い切る。「元職も含める」を入れたときは（元職を含む）を添える。
+ * どちらの軸も見出しに出るので、見出しといま並んでいる議員の集合は常に一致する。
+ */
+function scopeSubject(scope: Pick<MembersScope, "assemblyName" | "group" | "district" | "includeFormer">): string {
+  const labels = scopeLabels(scope);
+  const where = labels.length === 0 ? "収録している議会" : labels.join("・");
+  return scope.includeFormer ? `${where}の議員（元職を含む）` : `${where}の現職議員`;
+}
+
+/** <h1>・<title> の文言。いま表示している一覧そのものを指す。 */
+export function membersHeading(scope: Pick<MembersScope, "assemblyName" | "group" | "district" | "includeFormer">): string {
+  return scopeSubject(scope);
+}
+
+/** リード文・<meta name="description">・OGP の説明。見出しと同じ条件を並べる。評価語は入れない。 */
+export function membersDescription(scope: Pick<MembersScope, "assemblyName" | "group" | "district" | "includeFormer">): string {
+  return `${scopeSubject(scope)}を五十音順に。氏名・ふりがな・議会・会派・選挙区でさがせます。`;
+}
+
+/**
+ * URL のクエリ → 絞り込み。**実データに存在する値だけを受け付け、知らない値は無視する**（＝「すべて」）。
+ *
+ * assembly は assemblies/index.json、group と district は名簿（roster）と照合する。照合しないと
+ * `?group=存在しない会派` が h1・<title>・og:title にそのまま載り、「存在しない会派の議員」という
+ * 見出しの下に「該当する議員はいません」が出る（＝このページが直そうとしている不一致そのもの）。
+ * 照合する名簿は「議会と元職の絞り込みを適用したあとの集合」＝ select に実際に並ぶ選択肢と同じ。
+ */
+export function membersScopeFromQuery(params: URLSearchParams, assemblies: readonly Assembly[], roster: readonly MemberSummary[] = []): MembersScope {
+  const assembly = assemblies.find((a) => a.id === params.get("assembly"));
+  const assemblyId = assembly?.id ?? "";
+  const includeFormer = params.get("former") === "1";
+  // select の選択肢と同じ集合（議会と元職で絞ったあと）に無い会派・選挙区は通さない
+  const candidates = roster.filter((m) => (!assemblyId || memberAssemblyId(m) === assemblyId) && (includeFormer || m.current !== false));
+  const existing = (value: string | null, pick: (m: MemberSummary) => string): string => (value && candidates.some((m) => pick(m) === value) ? value : "");
+  return {
+    assemblyId,
+    assemblyName: assembly?.name,
+    group: existing(params.get("group"), (m) => m.group),
+    district: existing(params.get("district"), (m) => m.district),
+    includeFormer,
+  };
+}
+
+/** 絞り込み → URL のクエリ文字列（"?" は付けない）。選ばれていないものは書かないので、初期状態は `/members` のまま。 */
+export function membersQueryString(scope: Pick<MembersScope, "assemblyId" | "group" | "district" | "includeFormer">): string {
+  const params = new URLSearchParams();
+  if (scope.assemblyId) params.set("assembly", scope.assemblyId);
+  if (scope.group) params.set("group", scope.group);
+  if (scope.district) params.set("district", scope.district);
+  if (scope.includeFormer) params.set("former", "1");
+  return params.toString();
 }
