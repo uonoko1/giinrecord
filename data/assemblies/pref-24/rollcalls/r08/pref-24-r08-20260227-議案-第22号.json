@@ -1,0 +1,491 @@
+{
+ "assemblyId": "pref-24",
+ "counts": {
+  "no": 0,
+  "present": 45,
+  "voting": 44,
+  "yes": 44
+ },
+ "date": "2026-02-27",
+ "id": "pref-24-r08-20260227-議案-第22号",
+ "kind": "議案",
+ "number": "第22号",
+ "page": 1,
+ "result": "可決",
+ "sessionId": "r08",
+ "sessionLabel": "令和８年定例会",
+ "sourceUrl": "https://www.pref.mie.lg.jp/common/content/001242584.pdf",
+ "title": "三重県高等学校等教育改革促進基金条例案",
+ "votes": [
+  {
+   "group": "新政みえ",
+   "memberId": "p_24_ichino_shuuhei15",
+   "nameText": "市野 修平",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "新政みえ",
+   "memberId": "p_24_soga_masahiko15",
+   "nameText": "曽我 正彦",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "新政みえ",
+   "memberId": "p_24_igehara_hiroki15",
+   "nameText": "荊原 広樹",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "新政みえ",
+   "memberId": "p_24_itou_masayoshi15",
+   "nameText": "伊藤 雅慶",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "新政みえ",
+   "memberId": "p_24_seko_akira15",
+   "nameText": "世古 明",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "新政みえ",
+   "memberId": "p_24_yoshino_masahide15",
+   "nameText": "芳野 正英",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "新政みえ",
+   "memberId": "p_24_kawaguchi_madoka15",
+   "nameText": "川口 円",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "新政みえ",
+   "memberId": "p_24_kita_kenji15",
+   "nameText": "喜田 健児",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "新政みえ",
+   "memberId": "p_24_nakase_nobuyuki15",
+   "nameText": "中瀬 信之",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "新政みえ",
+   "memberId": "p_24_nakaseko_hatsumi15",
+   "nameText": "中瀬古初美",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "新政みえ",
+   "memberId": "p_24_hiro_koutarou15",
+   "nameText": "廣 耕太郎",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "新政みえ",
+   "memberId": "p_24_tanaka_tomonari15",
+   "nameText": "田中 智也",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "新政みえ",
+   "memberId": "p_24_hujine_masanori15",
+   "nameText": "藤根 正典",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "新政みえ",
+   "memberId": "p_24_morino_shinji15",
+   "nameText": "森野 真治",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "新政みえ",
+   "memberId": "p_24_sugimoto_yuya15",
+   "nameText": "杉本 熊野",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "新政みえ",
+   "memberId": "p_24_fujita_yoshimi15",
+   "nameText": "藤田 宜三",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "新政みえ",
+   "memberId": "p_24_inagaki_akiyoshi15",
+   "nameText": "稲垣 昭義",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "新政みえ",
+   "memberId": "p_24_hioki_masanobu15",
+   "nameText": "日沖 正信",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "新政みえ",
+   "memberId": "p_24_funahashi_hiroyuki15",
+   "nameText": "舟橋 裕幸",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_24_ichikawa_gakuto15",
+   "nameText": "市川 岳人",
+   "value": {
+    "legend": "欠席",
+    "mapped": "投票なし",
+    "raw": "欠"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_24_ryuujin_keisuke15",
+   "nameText": "龍神 啓介",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_24_matsuura_keiko15",
+   "nameText": "松浦 慶子",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_24_ishigaki_tomoya15",
+   "nameText": "石垣 智矢",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_24_yamazaki_hiroshi15",
+   "nameText": "山崎 博",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_24_tanaka_yuuji15",
+   "nameText": "田中 祐治",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_24_noguti_tadashi15",
+   "nameText": "野口 正",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_24_tanigawa_takaei15",
+   "nameText": "谷川 孝栄",
+   "value": {
+    "legend": "欠席",
+    "mapped": "投票なし",
+    "raw": "欠"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_24_ishida_narise15",
+   "nameText": "石田 成生",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_24_murabayashi_satoshi15",
+   "nameText": "村林 聡",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_24_nakajima_toshiki15",
+   "nameText": "中嶋 年規",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_24_aoki_kenjyun15",
+   "nameText": "青木 謙順",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_24_nakamori_hirohumi15",
+   "nameText": "中森 博文",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_24_yamamoto_norikazu15",
+   "nameText": "山本 教和",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_24_nishiba_nobuyuki15",
+   "nameText": "西場 信行",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_24_nakagawa_masami15",
+   "nameText": "中川 正美",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自民党県議団",
+   "memberId": "p_24_tujiuchi_yuuya15",
+   "nameText": "辻󠄀内 裕也",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自民党県議団",
+   "memberId": "p_24_nomura_yasuo15",
+   "nameText": "野村 保夫",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自民党県議団",
+   "memberId": "p_24_kobayashi_masato15",
+   "nameText": "小林 正人",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自民党県議団",
+   "memberId": "p_24_hattori_tomio15",
+   "nameText": "服部 富男",
+   "value": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "group": "自民党県議団",
+   "memberId": "p_24_tsuda_kenji15",
+   "nameText": "津田 健児",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "草莽",
+   "memberId": "p_24_kuramoto_takahiro15",
+   "nameText": "倉本 崇弘",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "草莽",
+   "memberId": "p_24_higashi_yutaka15",
+   "nameText": "東 豊",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "草莽",
+   "memberId": "p_24_nagata_takahisa15",
+   "nameText": "長田 隆尚",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "公明党",
+   "memberId": "p_24_yamauchi_michiaki15",
+   "nameText": "山内 道明",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "公明党",
+   "memberId": "p_24_imai_tomohiro15",
+   "nameText": "今井 智広",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "日本共産党",
+   "memberId": "p_24_yoshida_ayaka15",
+   "nameText": "吉田 紋華",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "参政党",
+   "memberId": "p_24_nanba_seiko15",
+   "nameText": "難波 聖子",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  }
+ ]
+}

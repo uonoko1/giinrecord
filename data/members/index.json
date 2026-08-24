@@ -13499,6 +13499,711 @@
   "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
  },
  {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "津市",
+  "group": "自由民主党",
+  "id": "p_24_aoki_kenjyun15",
+  "kana": "あおき けんじゅん",
+  "name": "青木 謙順",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08109011323.htm#aoki_kenjyun15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "鈴鹿市",
+  "group": "新政みえ",
+  "id": "p_24_fujita_yoshimi15",
+  "kana": "ふじた よしみ",
+  "name": "藤田 宜三",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08106011320.htm#fujita_yoshimi15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "津市",
+  "group": "新政みえ",
+  "id": "p_24_funahashi_hiroyuki15",
+  "kana": "ふなはし ひろゆき",
+  "name": "舟橋 裕幸",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08109011323.htm#funahashi_hiroyuki15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "三重郡",
+  "group": "自民党県議団",
+  "id": "p_24_hattori_tomio15",
+  "kana": "はっとり とみお",
+  "name": "服部 富男",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08102011316.htm#hattori_tomio15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "東紀州",
+  "group": "草莽",
+  "id": "p_24_higashi_yutaka15",
+  "kana": "ひがし ゆたか",
+  "name": "東 豊",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08104011318.htm#higashi_yutaka15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "いなべ市・員弁郡",
+  "group": "新政みえ",
+  "id": "p_24_hioki_masanobu15",
+  "kana": "ひおき まさのぶ",
+  "name": "日沖 正信",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08095011309.htm#hioki_masanobu15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "伊勢市・鳥羽市",
+  "group": "新政みえ",
+  "id": "p_24_hiro_koutarou15",
+  "kana": "ひろ こうたろう",
+  "name": "廣 耕太郎",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08097011311.htm#hiro_koutarou15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "東紀州",
+  "group": "新政みえ",
+  "id": "p_24_hujine_masanori15",
+  "kana": "ふじね まさのり",
+  "name": "藤根 正典",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08104011318.htm#hujine_masanori15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 230
+  },
+  "current": true,
+  "district": "伊賀市",
+  "group": "自由民主党",
+  "id": "p_24_ichikawa_gakuto15",
+  "kana": "いちかわ がくと",
+  "name": "市川 岳人",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08094011308.htm#ichikawa_gakuto15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 230
+  },
+  "current": true,
+  "district": "桑名市・桑名郡",
+  "group": "新政みえ",
+  "id": "p_24_ichino_shuuhei15",
+  "kana": "いちの しゅうへい",
+  "name": "市野 修平",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08100011314.htm#ichino_shuuhei15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "名張市",
+  "group": "新政みえ",
+  "id": "p_24_igehara_hiroki15",
+  "kana": "いげはら ひろき",
+  "name": "荊原 広樹",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08103011317.htm#igehara_hiroki15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "津市",
+  "group": "公明党",
+  "id": "p_24_imai_tomohiro15",
+  "kana": "いまい ともひろ",
+  "name": "今井 智広",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08109011323.htm#imai_tomohiro15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "四日市市",
+  "group": "新政みえ",
+  "id": "p_24_inagaki_akiyoshi15",
+  "kana": "いながき あきよし",
+  "name": "稲垣 昭義",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08111011325.htm#inagaki_akiyoshi15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "四日市市",
+  "group": "自由民主党",
+  "id": "p_24_ishida_narise15",
+  "kana": "いしだ なりせ",
+  "name": "石田 成生",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08111011325.htm#ishida_narise15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "いなべ市・員弁郡",
+  "group": "自由民主党",
+  "id": "p_24_ishigaki_tomoya15",
+  "kana": "いしがき ともや",
+  "name": "石垣 智矢",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08095011309.htm#ishigaki_tomoya15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "三重郡",
+  "group": "新政みえ",
+  "id": "p_24_itou_masayoshi15",
+  "kana": "いとう まさよし",
+  "name": "伊藤 雅慶",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08102011316.htm#itou_masayoshi15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "津市",
+  "group": "新政みえ",
+  "id": "p_24_kawaguchi_madoka15",
+  "kana": "かわぐち まどか",
+  "name": "川口 円",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08109011323.htm#kawaguchi_madoka15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "松阪市",
+  "group": "新政みえ",
+  "id": "p_24_kita_kenji15",
+  "kana": "きた けんじ",
+  "name": "喜田 健児",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08101011315.htm#kita_kenji15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "鈴鹿市",
+  "group": "自民党県議団",
+  "id": "p_24_kobayashi_masato15",
+  "kana": "こばやし まさと",
+  "name": "小林 正人",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08106011320.htm#kobayashi_masato15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "桑名市・桑名郡",
+  "group": "草莽",
+  "id": "p_24_kuramoto_takahiro15",
+  "kana": "くらもと たかひろ",
+  "name": "倉本 崇弘",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08100011314.htm#kuramoto_takahiro15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "多気郡",
+  "group": "自由民主党",
+  "id": "p_24_matsuura_keiko15",
+  "kana": "まつうら けいこ",
+  "name": "松浦 慶子",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08107011321.htm#matsuura_keiko15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "伊賀市",
+  "group": "新政みえ",
+  "id": "p_24_morino_shinji15",
+  "kana": "もりの しんじ",
+  "name": "森野 真治",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08094011308.htm#morino_shinji15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "度会郡",
+  "group": "自由民主党",
+  "id": "p_24_murabayashi_satoshi15",
+  "kana": "むらばやし さとし",
+  "name": "村林 聡",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08110011324.htm#murabayashi_satoshi15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "亀山市",
+  "group": "草莽",
+  "id": "p_24_nagata_takahisa15",
+  "kana": "ながた たかひさ",
+  "name": "長田 隆尚",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08098011312.htm#nagata_takahisa15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "伊勢市・鳥羽市",
+  "group": "自由民主党",
+  "id": "p_24_nakagawa_masami15",
+  "kana": "なかがわ まさみ",
+  "name": "中川 正美",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08097011311.htm#nakagawa_masami15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "志摩市",
+  "group": "自由民主党",
+  "id": "p_24_nakajima_toshiki15",
+  "kana": "なかじま としき",
+  "name": "中嶋 年規",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08105011319.htm#nakajima_toshiki15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "名張市",
+  "group": "自由民主党",
+  "id": "p_24_nakamori_hirohumi15",
+  "kana": "なかもり ひろふみ",
+  "name": "中森 博文",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08103011317.htm#nakamori_hirohumi15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "度会郡",
+  "group": "新政みえ",
+  "id": "p_24_nakase_nobuyuki15",
+  "kana": "なかせ のぶゆき",
+  "name": "中瀬 信之",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08110011324.htm#nakase_nobuyuki15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "松阪市",
+  "group": "新政みえ",
+  "id": "p_24_nakaseko_hatsumi15",
+  "kana": "なかせこ はつみ",
+  "name": "中瀬古 初美",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08101011315.htm#nakaseko_hatsumi15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 230
+  },
+  "current": true,
+  "district": "桑名市・桑名郡",
+  "group": "参政党",
+  "id": "p_24_nanba_seiko15",
+  "kana": "なんば せいこ",
+  "name": "難波 聖子",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08100011314.htm#nanba_seiko15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "多気郡",
+  "group": "自由民主党",
+  "id": "p_24_nishiba_nobuyuki15",
+  "kana": "にしば のぶゆき",
+  "name": "西場 信行",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08107011321.htm#nishiba_nobuyuki15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "松阪市",
+  "group": "自由民主党",
+  "id": "p_24_noguti_tadashi15",
+  "kana": "のぐち ただし",
+  "name": "野口 正",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08101011315.htm#noguti_tadashi15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "伊勢市・鳥羽市",
+  "group": "自民党県議団",
+  "id": "p_24_nomura_yasuo15",
+  "kana": "のむら やすお",
+  "name": "野村 保夫",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08097011311.htm#nomura_yasuo15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "津市",
+  "group": "自由民主党",
+  "id": "p_24_ryuujin_keisuke15",
+  "kana": "りゅうじん けいすけ",
+  "name": "龍神 啓介",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08109011323.htm#ryuujin_keisuke15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "伊勢市・鳥羽市",
+  "group": "新政みえ",
+  "id": "p_24_seko_akira15",
+  "kana": "せこ あきら",
+  "name": "世古 明",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08097011311.htm#seko_akira15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 230
+  },
+  "current": true,
+  "district": "鈴鹿市",
+  "group": "新政みえ",
+  "id": "p_24_soga_masahiko15",
+  "kana": "そが まさひこ",
+  "name": "曽我 正彦",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08106011320.htm#soga_masahiko15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "津市",
+  "group": "新政みえ",
+  "id": "p_24_sugimoto_yuya15",
+  "kana": "すぎもと ゆや",
+  "name": "杉本 熊野",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08109011323.htm#sugimoto_yuya15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "四日市市",
+  "group": "新政みえ",
+  "id": "p_24_tanaka_tomonari15",
+  "kana": "たなか ともなり",
+  "name": "田中 智也",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08111011325.htm#tanaka_tomonari15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "松阪市",
+  "group": "自由民主党",
+  "id": "p_24_tanaka_yuuji15",
+  "kana": "たなか ゆうじ",
+  "name": "田中 祐治",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08101011315.htm#tanaka_yuuji15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "東紀州",
+  "group": "自由民主党",
+  "id": "p_24_tanigawa_takaei15",
+  "kana": "たにがわ たかえい",
+  "name": "谷川 孝栄",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08104011318.htm#tanigawa_takaei15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "四日市市",
+  "group": "自民党県議団",
+  "id": "p_24_tsuda_kenji15",
+  "kana": "つだ けんじ",
+  "name": "津田 健児",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08111011325.htm#tsuda_kenji15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "桑名市・桑名郡",
+  "group": "自民党県議団",
+  "id": "p_24_tujiuchi_yuuya15",
+  "kana": "つじうち ゆうや",
+  "name": "辻内 裕也",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08100011314.htm#tujiuchi_yuuya15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "志摩市",
+  "group": "自由民主党",
+  "id": "p_24_yamamoto_norikazu15",
+  "kana": "やまもと のりかず",
+  "name": "山本 教和",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08105011319.htm#yamamoto_norikazu15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "四日市市",
+  "group": "公明党",
+  "id": "p_24_yamauchi_michiaki15",
+  "kana": "やまうち みちあき",
+  "name": "山内 道明",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08111011325.htm#yamauchi_michiaki15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "四日市市",
+  "group": "自由民主党",
+  "id": "p_24_yamazaki_hiroshi15",
+  "kana": "やまざき ひろし",
+  "name": "山崎 博",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08111011325.htm#yamazaki_hiroshi15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "津市",
+  "group": "日本共産党",
+  "id": "p_24_yoshida_ayaka15",
+  "kana": "よしだ あやか",
+  "name": "吉田 紋華",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08109011323.htm#yoshida_ayaka15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
+  "asOf": "2025-11-18",
+  "assemblyId": "pref-24",
+  "counts": {
+   "rollcalls": 365
+  },
+  "current": true,
+  "district": "四日市市",
+  "group": "新政みえ",
+  "id": "p_24_yoshino_masahide15",
+  "kana": "よしの まさひで",
+  "name": "芳野 正英",
+  "profileUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08111011325.htm#yoshino_masahide15",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
   "asOf": "2023-04-30",
   "assemblyId": "pref-31",
   "counts": {
