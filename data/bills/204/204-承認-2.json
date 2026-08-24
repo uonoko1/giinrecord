@@ -1,0 +1,32 @@
+{
+ "house": "shugiin",
+ "id": "204-承認-2",
+ "kind": "承認",
+ "number": 2,
+ "received": {
+  "sangiin": "2021-06-01",
+  "shugiin": "2021-04-16"
+ },
+ "result": {
+  "sangiin": "承認",
+  "shugiin": "承認"
+ },
+ "session": 204,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "全会一致",
+  "unanimous": true,
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主党・無所属",
+   "公明党",
+   "日本共産党",
+   "日本維新の会・無所属の会",
+   "国民民主党・無所属クラブ"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD22EE.htm",
+ "status": "両院承認",
+ "submitterText": "内閣",
+ "title": "特定船舶の入港の禁止に関する特別措置法第五条第一項の規定に基づき、特定船舶の入港禁止の実施につき承認を求めるの件"
+}

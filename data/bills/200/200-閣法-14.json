@@ -1,0 +1,34 @@
+{
+ "house": "shugiin",
+ "id": "200-閣法-14",
+ "kind": "閣法",
+ "number": 14,
+ "received": {
+  "sangiin": "2019-11-19",
+  "shugiin": "2019-10-18"
+ },
+ "result": {
+  "lawNumber": "72",
+  "promulgated": "2019-12-11",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 200,
+ "shugiinGroupStance": {
+  "no": [
+   "立憲民主・国民・社保・無所属フォーラム",
+   "日本共産党"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "公明党",
+   "日本維新の会",
+   "希望の党"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCE10A.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "公立の義務教育諸学校等の教育職員の給与等に関する特別措置法の一部を改正する法律案"
+}

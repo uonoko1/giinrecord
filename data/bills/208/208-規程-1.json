@@ -1,0 +1,37 @@
+{
+ "house": "shugiin",
+ "id": "208-規程-1",
+ "kind": "その他",
+ "kindText": "規程",
+ "number": 1,
+ "received": {
+  "shugiin": "2022-04-07"
+ },
+ "result": {
+  "shugiin": "可決"
+ },
+ "session": 208,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "全会一致",
+  "unanimous": true,
+  "yes": [
+   "自由民主党",
+   "立憲民主党・無所属",
+   "日本維新の会",
+   "公明党",
+   "国民民主党・無所属クラブ",
+   "日本共産党",
+   "有志の会",
+   "れいわ新選組"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD5882.htm",
+ "status": "本院可決",
+ "submitterNames": [
+  "山口俊一"
+ ],
+ "submitterText": "議院運営委員長",
+ "supporterNames": [],
+ "title": "衆議院憲法審査会規程の一部を改正する規程案"
+}

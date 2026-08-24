@@ -1,0 +1,31 @@
+{
+ "house": "shugiin",
+ "id": "211-閣法-12",
+ "kind": "閣法",
+ "number": 12,
+ "received": {
+  "shugiin": "2023-04-28"
+ },
+ "result": {
+  "shugiin": "同意"
+ },
+ "session": 211,
+ "shugiinGroupStance": {
+  "no": [
+   "日本共産党",
+   "有志の会",
+   "れいわ新選組"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主党・無所属",
+   "日本維新の会",
+   "公明党",
+   "国民民主党・無所属クラブ"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD847A.htm",
+ "status": "参議院回付案（同意）",
+ "title": "脱炭素成長型経済構造への円滑な移行の推進に関する法律案"
+}

@@ -1,0 +1,40 @@
+{
+ "house": "shugiin",
+ "id": "208-衆法-42",
+ "kind": "衆法",
+ "number": 42,
+ "received": {
+  "sangiin": "2022-05-25",
+  "shugiin": "2022-05-20"
+ },
+ "result": {
+  "lawNumber": "64",
+  "promulgated": "2022-06-13",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 208,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "全会一致",
+  "unanimous": true,
+  "yes": [
+   "自由民主党",
+   "立憲民主党・無所属",
+   "日本維新の会",
+   "公明党",
+   "国民民主党・無所属クラブ",
+   "日本共産党",
+   "有志の会",
+   "れいわ新選組"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD5A2E.htm",
+ "status": "成立",
+ "submitterNames": [
+  "橋本岳"
+ ],
+ "submitterText": "厚生労働委員長",
+ "supporterNames": [],
+ "title": "令和四年度子育て世帯生活支援特別給付金に係る差押禁止等に関する法律案"
+}

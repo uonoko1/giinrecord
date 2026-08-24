@@ -1,0 +1,38 @@
+{
+ "house": "shugiin",
+ "id": "200-衆法-7",
+ "kind": "衆法",
+ "number": 7,
+ "received": {
+  "sangiin": "2019-11-21",
+  "shugiin": "2019-11-19"
+ },
+ "result": {
+  "lawNumber": "64",
+  "promulgated": "2019-12-04",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 200,
+ "shugiinGroupStance": {
+  "no": [
+   "日本共産党"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主・国民・社保・無所属フォーラム",
+   "公明党",
+   "日本維新の会",
+   "希望の党"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCE492.htm",
+ "status": "成立",
+ "submitterNames": [
+  "大口善徳"
+ ],
+ "submitterText": "総務委員長",
+ "supporterNames": [],
+ "title": "地域人口の急減に対処するための特定地域づくり事業の推進に関する法律案"
+}

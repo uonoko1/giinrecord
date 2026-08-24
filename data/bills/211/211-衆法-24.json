@@ -1,0 +1,40 @@
+{
+ "house": "shugiin",
+ "id": "211-衆法-24",
+ "kind": "衆法",
+ "number": 24,
+ "received": {
+  "sangiin": "2023-06-08",
+  "shugiin": "2023-06-07"
+ },
+ "result": {
+  "lawNumber": "65",
+  "promulgated": "2023-06-16",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 211,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "全会一致",
+  "unanimous": true,
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主党・無所属",
+   "日本維新の会",
+   "公明党",
+   "国民民主党・無所属クラブ",
+   "日本共産党",
+   "有志の会",
+   "れいわ新選組"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD8606.htm",
+ "status": "成立",
+ "submitterNames": [
+  "三ッ林裕巳"
+ ],
+ "submitterText": "厚生労働委員長",
+ "supporterNames": [],
+ "title": "共生社会の実現を推進するための認知症基本法案"
+}

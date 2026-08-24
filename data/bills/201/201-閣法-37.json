@@ -1,0 +1,33 @@
+{
+ "house": "shugiin",
+ "id": "201-閣法-37",
+ "kind": "閣法",
+ "number": 37,
+ "received": {
+  "sangiin": "2020-11-19"
+ },
+ "result": {
+  "lawNumber": "74",
+  "promulgated": "2020-12-09",
+  "sangiin": "可決",
+  "shugiin": "修正"
+ },
+ "session": 201,
+ "shugiinGroupStance": {
+  "no": [
+   "立憲民主党・社民・無所属",
+   "日本共産党"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "公明党",
+   "日本維新の会・無所属の会",
+   "国民民主党・無所属クラブ"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD0686.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "種苗法の一部を改正する法律案"
+}

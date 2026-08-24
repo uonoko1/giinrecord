@@ -1,0 +1,34 @@
+{
+ "house": "shugiin",
+ "id": "208-条約-6",
+ "kind": "条約",
+ "number": 6,
+ "received": {
+  "sangiin": "2022-05-12",
+  "shugiin": "2022-03-08"
+ },
+ "result": {
+  "sangiin": "承認",
+  "shugiin": "承認"
+ },
+ "session": 208,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "全会一致",
+  "unanimous": true,
+  "yes": [
+   "自由民主党",
+   "立憲民主党・無所属",
+   "日本維新の会",
+   "公明党",
+   "国民民主党・無所属クラブ",
+   "日本共産党",
+   "有志の会",
+   "れいわ新選組"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD572A.htm",
+ "status": "両院承認",
+ "submitterText": "内閣",
+ "title": "千九百七十七年の漁船の安全のためのトレモリノス国際条約に関する千九百九十三年のトレモリノス議定書の規定の実施に関する二千十二年のケープタウン協定の締結について承認を求めるの件"
+}

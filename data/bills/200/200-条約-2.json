@@ -1,0 +1,32 @@
+{
+ "house": "shugiin",
+ "id": "200-条約-2",
+ "kind": "条約",
+ "number": 2,
+ "received": {
+  "sangiin": "2019-11-19",
+  "shugiin": "2019-10-15"
+ },
+ "result": {
+  "sangiin": "承認",
+  "shugiin": "承認"
+ },
+ "session": 200,
+ "shugiinGroupStance": {
+  "no": [
+   "立憲民主・国民・社保・無所属フォーラム",
+   "日本共産党"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "公明党",
+   "日本維新の会",
+   "希望の党"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCE0AA.htm",
+ "status": "両院承認",
+ "submitterText": "内閣",
+ "title": "デジタル貿易に関する日本国とアメリカ合衆国との間の協定の締結について承認を求めるの件"
+}

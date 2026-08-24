@@ -1,0 +1,36 @@
+{
+ "house": "shugiin",
+ "id": "213-閣法-50",
+ "kind": "閣法",
+ "number": 50,
+ "received": {
+  "sangiin": "2024-03-26",
+  "shugiin": "2024-03-08"
+ },
+ "result": {
+  "lawNumber": "15",
+  "promulgated": "2024-04-12",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 213,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "全会一致",
+  "unanimous": true,
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主党・無所属",
+   "日本維新の会・教育無償化を実現する会",
+   "公明党",
+   "日本共産党",
+   "国民民主党・無所属クラブ",
+   "有志の会",
+   "れいわ新選組"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDBD46.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "特定農産加工業経営改善臨時措置法の一部を改正する法律案"
+}

@@ -1,0 +1,36 @@
+{
+ "house": "shugiin",
+ "id": "211-閣法-48",
+ "kind": "閣法",
+ "number": 48,
+ "received": {
+  "sangiin": "2023-05-09",
+  "shugiin": "2023-03-07"
+ },
+ "result": {
+  "lawNumber": "56",
+  "promulgated": "2023-06-16",
+  "sangiin": "可決",
+  "shugiin": "修正"
+ },
+ "session": 211,
+ "shugiinGroupStance": {
+  "no": [
+   "立憲民主党・無所属",
+   "日本共産党",
+   "れいわ新選組"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "日本維新の会",
+   "公明党",
+   "国民民主党・無所属クラブ",
+   "有志の会"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD8216.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "出入国管理及び難民認定法及び日本国との平和条約に基づき日本の国籍を離脱した者等の出入国管理に関する特例法の一部を改正する法律案"
+}

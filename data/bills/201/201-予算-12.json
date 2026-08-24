@@ -1,0 +1,32 @@
+{
+ "house": "shugiin",
+ "id": "201-予算-12",
+ "kind": "予算",
+ "number": 12,
+ "received": {
+  "sangiin": "2020-06-10",
+  "shugiin": "2020-06-08"
+ },
+ "result": {
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 201,
+ "shugiinGroupStance": {
+  "no": [
+   "日本共産党"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主・国民・社保・無所属フォーラム",
+   "公明党",
+   "日本維新の会・無所属の会",
+   "希望の党"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCF3CE.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "令和二年度政府関係機関補正予算（機第２号）"
+}

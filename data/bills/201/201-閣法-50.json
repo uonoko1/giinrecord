@@ -1,0 +1,34 @@
+{
+ "house": "shugiin",
+ "id": "201-閣法-50",
+ "kind": "閣法",
+ "number": 50,
+ "received": {
+  "sangiin": "2020-06-02",
+  "shugiin": "2020-03-10"
+ },
+ "result": {
+  "lawNumber": "58",
+  "promulgated": "2020-06-19",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 201,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "全会一致",
+  "unanimous": true,
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主・国民・社保・無所属フォーラム",
+   "公明党",
+   "日本共産党",
+   "日本維新の会・無所属の会",
+   "希望の党"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCF1EA.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "中小企業の事業承継の促進のための中小企業における経営の承継の円滑化に関する法律等の一部を改正する法律案"
+}

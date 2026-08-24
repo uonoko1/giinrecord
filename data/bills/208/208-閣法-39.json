@@ -1,0 +1,36 @@
+{
+ "house": "shugiin",
+ "id": "208-閣法-39",
+ "kind": "閣法",
+ "number": 39,
+ "received": {
+  "sangiin": "2022-05-17",
+  "shugiin": "2022-02-25"
+ },
+ "result": {
+  "lawNumber": "76",
+  "promulgated": "2022-06-22",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 208,
+ "shugiinGroupStance": {
+  "no": [
+   "立憲民主党・無所属",
+   "日本維新の会",
+   "日本共産党",
+   "有志の会",
+   "れいわ新選組"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党",
+   "公明党",
+   "国民民主党・無所属クラブ"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD5516.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "こども家庭庁設置法の施行に伴う関係法律の整備に関する法律案"
+}

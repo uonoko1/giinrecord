@@ -1,0 +1,17 @@
+{
+ "house": "shugiin",
+ "id": "204-承諾-1DD21D2",
+ "kind": "その他",
+ "kindText": "承諾",
+ "received": {
+  "shugiin": "2021-03-16"
+ },
+ "result": {
+  "shugiin": "閉会中審査"
+ },
+ "session": 204,
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD21D2.htm",
+ "status": "衆議院で閉会中審査",
+ "submitterText": "内閣",
+ "title": "令和二年度特別会計予備費使用総調書及び各省各庁所管使用調書（その１）"
+}

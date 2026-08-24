@@ -1,0 +1,32 @@
+{
+ "house": "shugiin",
+ "id": "203-条約-1",
+ "kind": "条約",
+ "number": 1,
+ "received": {
+  "sangiin": "2020-11-24",
+  "shugiin": "2020-11-04"
+ },
+ "result": {
+  "sangiin": "承認",
+  "shugiin": "承認"
+ },
+ "session": 203,
+ "shugiinGroupStance": {
+  "no": [
+   "日本共産党"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主党・社民・無所属",
+   "公明党",
+   "日本維新の会・無所属の会",
+   "国民民主党・無所属クラブ"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD0AD6.htm",
+ "status": "両院承認",
+ "submitterText": "内閣",
+ "title": "包括的な経済上の連携に関する日本国とグレートブリテン及び北アイルランド連合王国との間の協定の締結について承認を求めるの件"
+}

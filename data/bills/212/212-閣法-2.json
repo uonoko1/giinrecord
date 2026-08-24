@@ -1,0 +1,36 @@
+{
+ "house": "shugiin",
+ "id": "212-閣法-2",
+ "kind": "閣法",
+ "number": 2,
+ "received": {
+  "sangiin": "2023-11-14",
+  "shugiin": "2023-10-20"
+ },
+ "result": {
+  "lawNumber": "74",
+  "promulgated": "2023-11-24",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 212,
+ "shugiinGroupStance": {
+  "no": [
+   "立憲民主党・無所属",
+   "日本維新の会",
+   "日本共産党",
+   "有志の会",
+   "れいわ新選組"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "公明党",
+   "国民民主党・無所属クラブ"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD9EB2.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "特別職の職員の給与に関する法律及び二千二十五年日本国際博覧会政府代表の設置に関する臨時措置法の一部を改正する法律案"
+}

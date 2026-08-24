@@ -1,0 +1,38 @@
+{
+ "house": "shugiin",
+ "id": "204-衆法-19",
+ "kind": "衆法",
+ "number": 19,
+ "received": {
+  "sangiin": "2021-05-25",
+  "shugiin": "2021-05-21"
+ },
+ "result": {
+  "lawNumber": "57",
+  "promulgated": "2021-06-04",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 204,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "全会一致",
+  "unanimous": true,
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主党・無所属",
+   "公明党",
+   "日本共産党",
+   "日本維新の会・無所属の会",
+   "国民民主党・無所属クラブ"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD2432.htm",
+ "status": "成立",
+ "submitterNames": [
+  "左藤章"
+ ],
+ "submitterText": "文部科学委員長",
+ "supporterNames": [],
+ "title": "教育職員等による児童生徒性暴力等の防止等に関する法律案"
+}

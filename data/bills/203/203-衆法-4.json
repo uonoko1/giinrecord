@@ -1,0 +1,38 @@
+{
+ "house": "shugiin",
+ "id": "203-衆法-4",
+ "kind": "衆法",
+ "number": 4,
+ "received": {
+  "sangiin": "2020-11-24",
+  "shugiin": "2020-11-20"
+ },
+ "result": {
+  "lawNumber": "72",
+  "promulgated": "2020-12-09",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 203,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "全会一致",
+  "unanimous": true,
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主党・社民・無所属",
+   "公明党",
+   "日本共産党",
+   "日本維新の会・無所属の会",
+   "国民民主党・無所属クラブ"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD0C66.htm",
+ "status": "成立",
+ "submitterNames": [
+  "木原誠二"
+ ],
+ "submitterText": "内閣委員長",
+ "supporterNames": [],
+ "title": "特定非営利活動促進法の一部を改正する法律案"
+}

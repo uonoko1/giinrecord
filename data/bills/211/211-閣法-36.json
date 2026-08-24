@@ -1,0 +1,36 @@
+{
+ "house": "shugiin",
+ "id": "211-閣法-36",
+ "kind": "閣法",
+ "number": 36,
+ "received": {
+  "sangiin": "2023-04-27",
+  "shugiin": "2023-03-03"
+ },
+ "result": {
+  "lawNumber": "45",
+  "promulgated": "2023-06-07",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 211,
+ "shugiinGroupStance": {
+  "no": [
+   "れいわ新選組"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主党・無所属",
+   "日本維新の会",
+   "公明党",
+   "国民民主党・無所属クラブ",
+   "日本共産党",
+   "有志の会"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD8102.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "孤独・孤立対策推進法案"
+}

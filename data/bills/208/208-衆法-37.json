@@ -1,0 +1,40 @@
+{
+ "house": "shugiin",
+ "id": "208-衆法-37",
+ "kind": "衆法",
+ "number": 37,
+ "received": {
+  "sangiin": "2022-05-17",
+  "shugiin": "2022-05-13"
+ },
+ "result": {
+  "lawNumber": "72",
+  "promulgated": "2022-06-17",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 208,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "全会一致",
+  "unanimous": true,
+  "yes": [
+   "自由民主党",
+   "立憲民主党・無所属",
+   "日本維新の会",
+   "公明党",
+   "国民民主党・無所属クラブ",
+   "日本共産党",
+   "有志の会",
+   "れいわ新選組"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD59FE.htm",
+ "status": "成立",
+ "submitterNames": [
+  "関芳弘"
+ ],
+ "submitterText": "環境委員長",
+ "supporterNames": [],
+ "title": "石綿による健康被害の救済に関する法律の一部を改正する法律案"
+}

@@ -1,0 +1,14 @@
+{
+ "house": "shugiin",
+ "id": "200-ＮＨＫ決算-1DCE4DE",
+ "kind": "その他",
+ "kindText": "ＮＨＫ決算",
+ "received": {
+  "shugiin": "2019-12-03"
+ },
+ "session": 200,
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCE4DE.htm",
+ "status": "未了",
+ "submitterText": "内閣",
+ "title": "日本放送協会平成三十年度財産目録、貸借対照表、損益計算書、資本等変動計算書及びキャッシュ・フロー計算書"
+}

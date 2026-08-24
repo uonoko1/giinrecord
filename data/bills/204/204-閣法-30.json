@@ -1,0 +1,34 @@
+{
+ "house": "shugiin",
+ "id": "204-閣法-30",
+ "kind": "閣法",
+ "number": 30,
+ "received": {
+  "sangiin": "2021-04-06",
+  "shugiin": "2021-02-09"
+ },
+ "result": {
+  "lawNumber": "39",
+  "promulgated": "2021-05-19",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 204,
+ "shugiinGroupStance": {
+  "no": [
+   "立憲民主党・無所属",
+   "日本共産党"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "公明党",
+   "日本維新の会・無所属の会",
+   "国民民主党・無所属クラブ"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD1CBA.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "預貯金者の意思に基づく個人番号の利用による預貯金口座の管理等に関する法律案"
+}

@@ -1,0 +1,38 @@
+{
+ "house": "shugiin",
+ "id": "201-衆法-6",
+ "kind": "衆法",
+ "number": 6,
+ "received": {
+  "sangiin": "2020-03-19",
+  "shugiin": "2020-03-18"
+ },
+ "result": {
+  "lawNumber": "7",
+  "promulgated": "2020-03-31",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 201,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "全会一致",
+  "unanimous": true,
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主・国民・社保・無所属フォーラム",
+   "公明党",
+   "日本共産党",
+   "日本維新の会・無所属の会",
+   "希望の党"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCF28A.htm",
+ "status": "成立",
+ "submitterNames": [
+  "山本幸三"
+ ],
+ "submitterText": "災害対策特別委員長",
+ "supporterNames": [],
+ "title": "地震防災対策強化地域における地震対策緊急整備事業に係る国の財政上の特別措置に関する法律の一部を改正する法律案"
+}
