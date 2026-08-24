@@ -1,0 +1,40 @@
+{
+ "house": "shugiin",
+ "id": "212-衆法-12",
+ "kind": "衆法",
+ "number": 12,
+ "received": {
+  "sangiin": "2023-11-24",
+  "shugiin": "2023-11-24"
+ },
+ "result": {
+  "lawNumber": "81",
+  "promulgated": "2023-11-29",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 212,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "全会一致",
+  "unanimous": true,
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主党・無所属",
+   "日本維新の会",
+   "公明党",
+   "国民民主党・無所属クラブ",
+   "日本共産党",
+   "有志の会",
+   "れいわ新選組"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDAA1E.htm",
+ "status": "成立",
+ "submitterNames": [
+  "谷公一"
+ ],
+ "submitterText": "地域活性化・こども政策・デジタル社会形成に関する特別委員長",
+ "supporterNames": [],
+ "title": "物価高騰対策給付金に係る差押禁止等に関する法律案"
+}

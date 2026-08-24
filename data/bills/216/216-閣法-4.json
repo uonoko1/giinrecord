@@ -1,0 +1,38 @@
+{
+ "house": "shugiin",
+ "id": "216-閣法-4",
+ "kind": "閣法",
+ "number": 4,
+ "received": {
+  "sangiin": "2024-12-19",
+  "shugiin": "2024-12-09"
+ },
+ "result": {
+  "lawNumber": "4",
+  "promulgated": "2025-01-08",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 216,
+ "shugiinGroupStance": {
+  "no": [
+   "れいわ新選組",
+   "日本共産党",
+   "参政党",
+   "日本保守党"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主党・無所属",
+   "日本維新の会",
+   "国民民主党・無所属クラブ",
+   "公明党",
+   "有志の会"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDA72.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "情報通信技術を活用した行政の推進等に関する法律の一部を改正する法律案"
+}

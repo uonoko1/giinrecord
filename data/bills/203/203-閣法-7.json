@@ -1,0 +1,34 @@
+{
+ "house": "shugiin",
+ "id": "203-閣法-7",
+ "kind": "閣法",
+ "number": 7,
+ "received": {
+  "sangiin": "2020-11-20",
+  "shugiin": "2020-11-06"
+ },
+ "result": {
+  "lawNumber": "67",
+  "promulgated": "2020-11-30",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 203,
+ "shugiinGroupStance": {
+  "no": [
+   "日本共産党",
+   "日本維新の会・無所属の会"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主党・社民・無所属",
+   "公明党",
+   "国民民主党・無所属クラブ"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD0B12.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "防衛省の職員の給与等に関する法律の一部を改正する法律案"
+}

@@ -1,0 +1,32 @@
+{
+ "house": "shugiin",
+ "id": "201-条約-14",
+ "kind": "条約",
+ "number": 14,
+ "received": {
+  "sangiin": "2020-05-26",
+  "shugiin": "2020-03-10"
+ },
+ "result": {
+  "sangiin": "承認",
+  "shugiin": "承認"
+ },
+ "session": 201,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "全会一致",
+  "unanimous": true,
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主・国民・社保・無所属フォーラム",
+   "公明党",
+   "日本共産党",
+   "日本維新の会・無所属の会",
+   "希望の党"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCF22A.htm",
+ "status": "両院承認",
+ "submitterText": "内閣",
+ "title": "刑を言い渡された者の移送に関する日本国とベトナム社会主義共和国との間の条約の締結について承認を求めるの件"
+}

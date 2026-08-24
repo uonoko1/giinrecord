@@ -1,0 +1,17 @@
+{
+ "house": "shugiin",
+ "id": "203-決算-1DD0CAA",
+ "kind": "その他",
+ "kindText": "決算",
+ "received": {
+  "shugiin": "2020-11-20"
+ },
+ "result": {
+  "shugiin": "閉会中審査"
+ },
+ "session": 203,
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD0CAA.htm",
+ "status": "衆議院で閉会中審査",
+ "submitterText": "内閣",
+ "title": "令和元年度政府関係機関決算書"
+}

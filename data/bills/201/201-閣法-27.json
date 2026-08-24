@@ -1,0 +1,34 @@
+{
+ "house": "shugiin",
+ "id": "201-閣法-27",
+ "kind": "閣法",
+ "number": 27,
+ "received": {
+  "sangiin": "2020-05-28",
+  "shugiin": "2020-02-28"
+ },
+ "result": {
+  "lawNumber": "53",
+  "promulgated": "2020-06-12",
+  "sangiin": "可決",
+  "shugiin": "修正"
+ },
+ "session": 201,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "全会一致",
+  "unanimous": true,
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主・国民・社保・無所属フォーラム",
+   "公明党",
+   "日本共産党",
+   "日本維新の会・無所属の会",
+   "希望の党"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCEFDE.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "聴覚障害者等による電話の利用の円滑化に関する法律案"
+}

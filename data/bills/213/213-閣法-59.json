@@ -1,0 +1,36 @@
+{
+ "house": "shugiin",
+ "id": "213-閣法-59",
+ "kind": "閣法",
+ "number": 59,
+ "received": {
+  "sangiin": "2024-05-21",
+  "shugiin": "2024-03-15"
+ },
+ "result": {
+  "lawNumber": "60",
+  "promulgated": "2024-06-21",
+  "sangiin": "可決",
+  "shugiin": "修正"
+ },
+ "session": 213,
+ "shugiinGroupStance": {
+  "no": [
+   "立憲民主党・無所属",
+   "日本共産党",
+   "れいわ新選組"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "日本維新の会・教育無償化を実現する会",
+   "公明党",
+   "国民民主党・無所属クラブ",
+   "有志の会"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDBF7A.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "出入国管理及び難民認定法及び外国人の技能実習の適正な実施及び技能実習生の保護に関する法律の一部を改正する法律案"
+}

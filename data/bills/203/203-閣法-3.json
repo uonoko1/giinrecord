@@ -1,0 +1,34 @@
+{
+ "house": "shugiin",
+ "id": "203-閣法-3",
+ "kind": "閣法",
+ "number": 3,
+ "received": {
+  "sangiin": "2020-11-20",
+  "shugiin": "2020-10-30"
+ },
+ "result": {
+  "lawNumber": "70",
+  "promulgated": "2020-12-04",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 203,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "全会一致",
+  "unanimous": true,
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主党・社民・無所属",
+   "公明党",
+   "日本共産党",
+   "日本維新の会・無所属の会",
+   "国民民主党・無所属クラブ"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD0A92.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "郵便法及び民間事業者による信書の送達に関する法律の一部を改正する法律案"
+}

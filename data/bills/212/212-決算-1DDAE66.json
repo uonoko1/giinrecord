@@ -1,0 +1,29 @@
+{
+ "house": "shugiin",
+ "id": "212-決算-1DDAE66",
+ "kind": "その他",
+ "kindText": "決算",
+ "result": {
+  "shugiin": "議決"
+ },
+ "session": 212,
+ "shugiinGroupStance": {
+  "no": [
+   "立憲民主党・無所属",
+   "日本維新の会・教育無償化を実現する会",
+   "日本共産党",
+   "国民民主党・無所属クラブ",
+   "有志の会",
+   "れいわ新選組"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "公明党"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDAE66.htm",
+ "status": "本院議了",
+ "submitterText": "内閣",
+ "title": "令和四年度一般会計歳入歳出決算"
+}

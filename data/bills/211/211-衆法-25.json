@@ -1,0 +1,40 @@
+{
+ "house": "shugiin",
+ "id": "211-衆法-25",
+ "kind": "衆法",
+ "number": 25,
+ "received": {
+  "sangiin": "2023-06-08",
+  "shugiin": "2023-06-07"
+ },
+ "result": {
+  "lawNumber": "72",
+  "promulgated": "2023-06-30",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 211,
+ "shugiinGroupStance": {
+  "no": [
+   "れいわ新選組"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主党・無所属",
+   "日本維新の会",
+   "公明党",
+   "国民民主党・無所属クラブ",
+   "日本共産党",
+   "有志の会"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD860E.htm",
+ "status": "成立",
+ "submitterNames": [
+  "塚田一郎"
+ ],
+ "submitterText": "財務金融委員長",
+ "supporterNames": [],
+ "title": "民間公益活動を促進するための休眠預金等に係る資金の活用に関する法律の一部を改正する法律案"
+}

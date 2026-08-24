@@ -1,0 +1,36 @@
+{
+ "house": "shugiin",
+ "id": "211-閣法-47",
+ "kind": "閣法",
+ "number": 47,
+ "received": {
+  "sangiin": "2023-05-25",
+  "shugiin": "2023-03-07"
+ },
+ "result": {
+  "lawNumber": "63",
+  "promulgated": "2023-06-16",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 211,
+ "shugiinGroupStance": {
+  "no": [
+   "日本共産党",
+   "れいわ新選組"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主党・無所属",
+   "日本維新の会",
+   "公明党",
+   "国民民主党・無所属クラブ",
+   "有志の会"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD8202.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "デジタル社会の形成を図るための規制改革を推進するためのデジタル社会形成基本法等の一部を改正する法律案"
+}

@@ -1,0 +1,32 @@
+{
+ "house": "shugiin",
+ "id": "204-条約-6",
+ "kind": "条約",
+ "number": 6,
+ "received": {
+  "sangiin": "2021-05-11",
+  "shugiin": "2021-03-05"
+ },
+ "result": {
+  "sangiin": "承認",
+  "shugiin": "承認"
+ },
+ "session": 204,
+ "shugiinGroupStance": {
+  "no": [
+   "日本共産党"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主党・無所属",
+   "公明党",
+   "日本維新の会・無所属の会",
+   "国民民主党・無所属クラブ"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD2052.htm",
+ "status": "両院承認",
+ "submitterText": "内閣",
+ "title": "所得に対する租税に関する二重課税の除去並びに脱税及び租税回避の防止のための日本国とジョージアとの間の条約の締結について承認を求めるの件"
+}

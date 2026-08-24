@@ -1,0 +1,27 @@
+{
+ "house": "shugiin",
+ "id": "197-国有財産-1DD0FCE",
+ "kind": "その他",
+ "kindText": "国有財産",
+ "result": {
+  "shugiin": "是認"
+ },
+ "session": 197,
+ "shugiinGroupStance": {
+  "no": [
+   "立憲民主党・無所属",
+   "日本維新の会・無所属の会",
+   "国民民主党・無所属クラブ"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "公明党",
+   "日本共産党"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD0FCE.htm",
+ "status": "本院議了",
+ "submitterText": "内閣",
+ "title": "平成二十九年度国有財産無償貸付状況総計算書"
+}

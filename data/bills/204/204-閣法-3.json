@@ -1,0 +1,34 @@
+{
+ "house": "shugiin",
+ "id": "204-閣法-3",
+ "kind": "閣法",
+ "number": 3,
+ "received": {
+  "sangiin": "2021-01-26",
+  "shugiin": "2021-01-18"
+ },
+ "result": {
+  "lawNumber": "4",
+  "promulgated": "2021-02-03",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 204,
+ "shugiinGroupStance": {
+  "no": [
+   "立憲民主党・無所属",
+   "日本共産党"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "公明党",
+   "日本維新の会・無所属の会",
+   "国民民主党・無所属クラブ"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD16D6.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "令和元年度歳入歳出の決算上の剰余金の処理の特例に関する法律案"
+}

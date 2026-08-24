@@ -1,0 +1,34 @@
+{
+ "house": "shugiin",
+ "id": "204-閣法-28",
+ "kind": "閣法",
+ "number": 28,
+ "received": {
+  "sangiin": "2021-04-06",
+  "shugiin": "2021-02-09"
+ },
+ "result": {
+  "lawNumber": "37",
+  "promulgated": "2021-05-19",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 204,
+ "shugiinGroupStance": {
+  "no": [
+   "立憲民主党・無所属",
+   "日本共産党"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "公明党",
+   "日本維新の会・無所属の会",
+   "国民民主党・無所属クラブ"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD1C92.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "デジタル社会の形成を図るための関係法律の整備に関する法律案"
+}

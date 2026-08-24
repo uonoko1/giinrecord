@@ -1,0 +1,36 @@
+{
+ "house": "shugiin",
+ "id": "210-閣法-18",
+ "kind": "閣法",
+ "number": 18,
+ "received": {
+  "sangiin": "2022-12-08",
+  "shugiin": "2022-11-18"
+ },
+ "result": {
+  "lawNumber": "99",
+  "promulgated": "2022-12-16",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 210,
+ "shugiinGroupStance": {
+  "no": [
+   "れいわ新選組"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党",
+   "立憲民主党・無所属",
+   "日本維新の会",
+   "公明党",
+   "国民民主党・無所属クラブ",
+   "日本共産党",
+   "有志の会"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD763A.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "消費者契約法及び独立行政法人国民生活センター法の一部を改正する法律案"
+}

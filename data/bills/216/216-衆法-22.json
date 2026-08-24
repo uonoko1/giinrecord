@@ -3,9 +3,15 @@
  "id": "216-衆法-22",
  "kind": "衆法",
  "number": 22,
+ "received": {
+  "shugiin": "2024-12-19"
+ },
+ "result": {
+  "shugiin": "閉会中審査"
+ },
  "session": 216,
- "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B3A.htm",
- "status": "未了",
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDD52.htm",
+ "status": "衆議院で閉会中審査",
  "submitterGroups": [
   "立憲民主党・無所属",
   "日本維新の会",
@@ -102,6 +108,7 @@
   "武正公一",
   "田嶋要",
   "辻英之",
+  "堤かなめ",
   "津村啓介",
   "手塚仁雄",
   "寺田学",
@@ -116,6 +123,7 @@
   "橋本慧悟",
   "長谷川嘉一",
   "波多野翼",
+  "馬場雄基",
   "原口一博",
   "伴野豊",
   "平岡秀夫",

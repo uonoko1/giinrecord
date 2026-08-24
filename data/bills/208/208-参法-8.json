@@ -1,0 +1,36 @@
+{
+ "house": "shugiin",
+ "id": "208-参法-8",
+ "kind": "参法",
+ "number": 8,
+ "received": {
+  "sangiin": "2022-04-12",
+  "shugiin": "2022-04-13"
+ },
+ "result": {
+  "lawNumber": "50",
+  "promulgated": "2022-05-25",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 208,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "全会一致",
+  "unanimous": true,
+  "yes": [
+   "自由民主党",
+   "立憲民主党・無所属",
+   "日本維新の会",
+   "公明党",
+   "国民民主党・無所属クラブ",
+   "日本共産党",
+   "有志の会",
+   "れいわ新選組"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD5916.htm",
+ "status": "成立",
+ "submitterText": "厚生労働委員長",
+ "title": "障害者による情報の取得及び利用並びに意思疎通に係る施策の推進に関する法律案"
+}

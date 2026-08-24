@@ -1,0 +1,34 @@
+{
+ "house": "shugiin",
+ "id": "201-閣法-2",
+ "kind": "閣法",
+ "number": 2,
+ "received": {
+  "sangiin": "2020-01-28",
+  "shugiin": "2020-01-20"
+ },
+ "result": {
+  "lawNumber": "3",
+  "promulgated": "2020-02-05",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 201,
+ "shugiinGroupStance": {
+  "no": [
+   "立憲民主・国民・社保・無所属フォーラム",
+   "日本共産党"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "公明党",
+   "日本維新の会",
+   "希望の党"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCEBDA.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "平成三十年度歳入歳出の決算上の剰余金の処理の特例に関する法律案"
+}

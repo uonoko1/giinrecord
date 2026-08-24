@@ -1,0 +1,40 @@
+{
+ "house": "shugiin",
+ "id": "211-衆法-12",
+ "kind": "衆法",
+ "number": 12,
+ "received": {
+  "sangiin": "2023-05-12",
+  "shugiin": "2023-05-11"
+ },
+ "result": {
+  "lawNumber": "42",
+  "promulgated": "2023-06-02",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 211,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "全会一致",
+  "unanimous": true,
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主党・無所属",
+   "日本維新の会",
+   "公明党",
+   "国民民主党・無所属クラブ",
+   "日本共産党",
+   "有志の会",
+   "れいわ新選組"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD84E6.htm",
+ "status": "成立",
+ "submitterNames": [
+  "橋本岳"
+ ],
+ "submitterText": "地域活性化・こども政策・デジタル社会形成に関する特別委員長",
+ "supporterNames": [],
+ "title": "令和五年三月予備費使用及び令和五年度予算に係る子育て関連給付金に係る差押禁止等に関する法律案"
+}

@@ -1,0 +1,14 @@
+{
+ "house": "shugiin",
+ "id": "200-決算-1DD0FDA",
+ "kind": "その他",
+ "kindText": "決算",
+ "result": {
+  "shugiin": "閉会中審査"
+ },
+ "session": 200,
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD0FDA.htm",
+ "status": "衆議院で閉会中審査",
+ "submitterText": "内閣",
+ "title": "平成三十年度国税収納金整理資金受払計算書"
+}

@@ -1,0 +1,36 @@
+{
+ "house": "shugiin",
+ "id": "213-閣法-20",
+ "kind": "閣法",
+ "number": 20,
+ "received": {
+  "sangiin": "2024-02-20",
+  "shugiin": "2024-02-16"
+ },
+ "result": {
+  "lawNumber": "1",
+  "promulgated": "2024-02-21",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 213,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "全会一致",
+  "unanimous": true,
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主党・無所属",
+   "日本維新の会・教育無償化を実現する会",
+   "公明党",
+   "日本共産党",
+   "国民民主党・無所属クラブ",
+   "有志の会",
+   "れいわ新選組"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDB85E.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "令和六年能登半島地震災害の被災者に係る所得税法及び災害被害者に対する租税の減免、徴収猶予等に関する法律の臨時特例に関する法律案"
+}

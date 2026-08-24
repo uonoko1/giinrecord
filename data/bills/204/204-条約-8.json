@@ -1,0 +1,32 @@
+{
+ "house": "shugiin",
+ "id": "204-条約-8",
+ "kind": "条約",
+ "number": 8,
+ "received": {
+  "sangiin": "2021-05-18",
+  "shugiin": "2021-03-05"
+ },
+ "result": {
+  "sangiin": "承認",
+  "shugiin": "承認"
+ },
+ "session": 204,
+ "shugiinGroupStance": {
+  "no": [
+   "日本共産党"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主党・無所属",
+   "公明党",
+   "日本維新の会・無所属の会",
+   "国民民主党・無所属クラブ"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD207A.htm",
+ "status": "両院承認",
+ "submitterText": "内閣",
+ "title": "原子力の平和的利用における協力のための日本国政府とグレート・ブリテン及び北部アイルランド連合王国政府との間の協定を改正する議定書の締結について承認を求めるの件"
+}

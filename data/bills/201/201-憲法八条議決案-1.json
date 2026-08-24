@@ -1,0 +1,33 @@
+{
+ "house": "shugiin",
+ "id": "201-憲法八条議決案-1",
+ "kind": "その他",
+ "kindText": "憲法八条議決案",
+ "number": 1,
+ "received": {
+  "sangiin": "2020-03-26",
+  "shugiin": "2020-03-13"
+ },
+ "result": {
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 201,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "全会一致",
+  "unanimous": true,
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主・国民・社保・無所属フォーラム",
+   "公明党",
+   "日本共産党",
+   "日本維新の会・無所属の会",
+   "希望の党"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCF286.htm",
+ "status": "両院議決",
+ "submitterText": "内閣",
+ "title": "日本国憲法第八条の規定による議決案"
+}

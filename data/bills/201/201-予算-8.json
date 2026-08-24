@@ -1,0 +1,32 @@
+{
+ "house": "shugiin",
+ "id": "201-予算-8",
+ "kind": "予算",
+ "number": 8,
+ "received": {
+  "sangiin": "2020-04-29",
+  "shugiin": "2020-04-27"
+ },
+ "result": {
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 201,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "全会一致",
+  "unanimous": true,
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主・国民・社保・無所属フォーラム",
+   "公明党",
+   "日本共産党",
+   "日本維新の会・無所属の会",
+   "希望の党"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCF2CA.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "令和二年度特別会計補正予算（特第１号）"
+}

@@ -1,0 +1,32 @@
+{
+ "house": "shugiin",
+ "id": "204-条約-11",
+ "kind": "条約",
+ "number": 11,
+ "received": {
+  "sangiin": "2021-05-11",
+  "shugiin": "2021-03-05"
+ },
+ "result": {
+  "sangiin": "承認",
+  "shugiin": "承認"
+ },
+ "session": 204,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "全会一致",
+  "unanimous": true,
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主党・無所属",
+   "公明党",
+   "日本共産党",
+   "日本維新の会・無所属の会",
+   "国民民主党・無所属クラブ"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD20B6.htm",
+ "status": "両院承認",
+ "submitterText": "内閣",
+ "title": "日本国における経済協力開発機構の特権及び免除に関する日本国政府と経済協力開発機構との間の協定の規定の適用範囲に関する交換公文を改正する交換公文の締結について承認を求めるの件"
+}

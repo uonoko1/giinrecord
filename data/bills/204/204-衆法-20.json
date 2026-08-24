@@ -1,0 +1,38 @@
+{
+ "house": "shugiin",
+ "id": "204-衆法-20",
+ "kind": "衆法",
+ "number": 20,
+ "received": {
+  "sangiin": "2021-06-01",
+  "shugiin": "2021-05-27"
+ },
+ "result": {
+  "lawNumber": "79",
+  "promulgated": "2021-06-18",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 204,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "全会一致",
+  "unanimous": true,
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主党・無所属",
+   "公明党",
+   "日本共産党",
+   "日本維新の会・無所属の会",
+   "国民民主党・無所属クラブ"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD2462.htm",
+ "status": "成立",
+ "submitterNames": [
+  "金子恭之"
+ ],
+ "submitterText": "災害対策特別委員長",
+ "supporterNames": [],
+ "title": "災害時等における船舶を活用した医療提供体制の整備の推進に関する法律案"
+}

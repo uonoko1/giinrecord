@@ -1,0 +1,38 @@
+{
+ "house": "shugiin",
+ "id": "200-衆法-9",
+ "kind": "衆法",
+ "number": 9,
+ "received": {
+  "sangiin": "2019-11-29",
+  "shugiin": "2019-11-28"
+ },
+ "result": {
+  "lawNumber": "74",
+  "promulgated": "2019-12-13",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 200,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "全会一致",
+  "unanimous": true,
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主・国民・社保・無所属フォーラム",
+   "公明党",
+   "日本共産党",
+   "日本維新の会",
+   "希望の党"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCE4AE.htm",
+ "status": "成立",
+ "submitterNames": [
+  "望月義夫"
+ ],
+ "submitterText": "災害対策特別委員長",
+ "supporterNames": [],
+ "title": "令和元年特定災害関連義援金に係る差押禁止等に関する法律案"
+}

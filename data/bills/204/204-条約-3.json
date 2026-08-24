@@ -1,0 +1,32 @@
+{
+ "house": "shugiin",
+ "id": "204-条約-3",
+ "kind": "条約",
+ "number": 3,
+ "received": {
+  "sangiin": "2021-04-27",
+  "shugiin": "2021-03-05"
+ },
+ "result": {
+  "sangiin": "承認",
+  "shugiin": "承認"
+ },
+ "session": 204,
+ "shugiinGroupStance": {
+  "no": [
+   "立憲民主党・無所属",
+   "日本共産党"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "公明党",
+   "日本維新の会・無所属の会",
+   "国民民主党・無所属クラブ"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD2016.htm",
+ "status": "両院承認",
+ "submitterText": "内閣",
+ "title": "日本国の自衛隊とインド軍隊との間における物品又は役務の相互の提供に関する日本国政府とインド共和国政府との間の協定の締結について承認を求めるの件"
+}

@@ -15,28 +15,5 @@
    "timesElected": 7
   }
  ],
- "timeline": [
-  {
-   "answerDate": "2026-07-31",
-   "answerUrl": "https://www.shugiin.go.jp/internet/itdb_shitsumon.nsf/html/shitsumon/b221040.htm",
-   "date": "2026-07-21",
-   "kind": "question",
-   "questionId": "221-shugiin-40",
-   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_shitsumon.nsf/html/shitsumon/221040.htm",
-   "status": "答弁受理",
-   "submitterText": "河村 たかし君",
-   "title": "動物の愛護及び管理に関する法律における動物愛護センターの業務の充実に関する質問主意書"
-  },
-  {
-   "answerDate": "2026-07-31",
-   "answerUrl": "https://www.shugiin.go.jp/internet/itdb_shitsumon.nsf/html/shitsumon/b221039.htm",
-   "date": "2026-07-21",
-   "kind": "question",
-   "questionId": "221-shugiin-39",
-   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_shitsumon.nsf/html/shitsumon/221039.htm",
-   "status": "答弁受理",
-   "submitterText": "河村 たかし君",
-   "title": "真の積極財政を実現するための財政法第四条等の改正に関する質問主意書"
-  }
- ]
+ "timeline": []
 }

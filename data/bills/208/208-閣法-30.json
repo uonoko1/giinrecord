@@ -1,0 +1,36 @@
+{
+ "house": "shugiin",
+ "id": "208-閣法-30",
+ "kind": "閣法",
+ "number": 30,
+ "received": {
+  "sangiin": "2022-04-07",
+  "shugiin": "2022-02-22"
+ },
+ "result": {
+  "lawNumber": "34",
+  "promulgated": "2022-04-27",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 208,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "全会一致",
+  "unanimous": true,
+  "yes": [
+   "自由民主党",
+   "立憲民主党・無所属",
+   "日本維新の会",
+   "公明党",
+   "国民民主党・無所属クラブ",
+   "日本共産党",
+   "有志の会",
+   "れいわ新選組"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD5476.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "東日本大震災の被災者に係る一般旅券の発給の特例に関する法律を廃止する法律案"
+}

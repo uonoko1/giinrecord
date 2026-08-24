@@ -1,0 +1,33 @@
+{
+ "house": "shugiin",
+ "id": "207-承諾-1DD4E82",
+ "kind": "その他",
+ "kindText": "承諾",
+ "received": {
+  "sangiin": "2022-04-12"
+ },
+ "result": {
+  "sangiin": "承諾",
+  "shugiin": "承諾"
+ },
+ "session": 207,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "全会一致",
+  "unanimous": true,
+  "yes": [
+   "自由民主党",
+   "立憲民主党・無所属",
+   "日本維新の会",
+   "公明党",
+   "国民民主党・無所属クラブ",
+   "日本共産党",
+   "有志の会",
+   "れいわ新選組"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD4E82.htm",
+ "status": "両院承諾",
+ "submitterText": "内閣",
+ "title": "令和二年度特別会計予算総則第十九条第一項の規定による経費増額総調書及び各省各庁所管経費増額調書"
+}

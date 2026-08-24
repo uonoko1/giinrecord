@@ -1,0 +1,14 @@
+{
+ "house": "shugiin",
+ "id": "207-決算-1DD5F12",
+ "kind": "その他",
+ "kindText": "決算",
+ "result": {
+  "shugiin": "閉会中審査"
+ },
+ "session": 207,
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD5F12.htm",
+ "status": "衆議院で閉会中審査",
+ "submitterText": "内閣",
+ "title": "令和二年度一般会計歳入歳出決算"
+}

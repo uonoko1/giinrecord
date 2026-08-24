@@ -1,0 +1,38 @@
+{
+ "house": "shugiin",
+ "id": "216-閣法-3",
+ "kind": "閣法",
+ "number": 3,
+ "received": {
+  "sangiin": "2024-12-12",
+  "shugiin": "2024-12-09"
+ },
+ "result": {
+  "lawNumber": "79",
+  "promulgated": "2024-12-25",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 216,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "全会一致",
+  "unanimous": true,
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主党・無所属",
+   "日本維新の会",
+   "国民民主党・無所属クラブ",
+   "公明党",
+   "れいわ新選組",
+   "日本共産党",
+   "有志の会",
+   "参政党",
+   "日本保守党"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDA5A.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "国家公務員の育児休業等に関する法律の一部を改正する法律案"
+}

@@ -1,0 +1,17 @@
+{
+ "house": "shugiin",
+ "id": "216-承諾-1DDD88A",
+ "kind": "その他",
+ "kindText": "承諾",
+ "received": {
+  "shugiin": "2024-11-29"
+ },
+ "result": {
+  "shugiin": "閉会中審査"
+ },
+ "session": 216,
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDD88A.htm",
+ "status": "衆議院で閉会中審査",
+ "submitterText": "内閣",
+ "title": "令和五年度特別会計予備費使用総調書及び各省各庁所管使用調書"
+}

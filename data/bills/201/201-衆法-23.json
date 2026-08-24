@@ -1,0 +1,38 @@
+{
+ "house": "shugiin",
+ "id": "201-衆法-23",
+ "kind": "衆法",
+ "number": 23,
+ "received": {
+  "sangiin": "2020-06-10",
+  "shugiin": "2020-06-09"
+ },
+ "result": {
+  "lawNumber": "56",
+  "promulgated": "2020-06-19",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 201,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "全会一致",
+  "unanimous": true,
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主・国民・社保・無所属フォーラム",
+   "公明党",
+   "日本共産党",
+   "日本維新の会・無所属の会",
+   "希望の党"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCF426.htm",
+ "status": "成立",
+ "submitterNames": [
+  "吉野正芳"
+ ],
+ "submitterText": "農林水産委員長",
+ "supporterNames": [],
+ "title": "防災重点農業用ため池に係る防災工事等の推進に関する特別措置法案"
+}

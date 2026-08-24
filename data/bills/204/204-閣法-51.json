@@ -1,0 +1,34 @@
+{
+ "house": "shugiin",
+ "id": "204-閣法-51",
+ "kind": "閣法",
+ "number": 51,
+ "received": {
+  "sangiin": "2021-05-11",
+  "shugiin": "2021-03-05"
+ },
+ "result": {
+  "lawNumber": "44",
+  "promulgated": "2021-05-26",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 204,
+ "shugiinGroupStance": {
+  "no": [
+   "日本共産党"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主党・無所属",
+   "公明党",
+   "日本維新の会・無所属の会",
+   "国民民主党・無所属クラブ"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD1F6E.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "地域の自主性及び自立性を高めるための改革の推進を図るための関係法律の整備に関する法律案"
+}

@@ -1,0 +1,38 @@
+{
+ "house": "shugiin",
+ "id": "201-衆法-2",
+ "kind": "衆法",
+ "number": 2,
+ "received": {
+  "sangiin": "2020-01-28",
+  "shugiin": "2020-01-28"
+ },
+ "result": {
+  "lawNumber": "2",
+  "promulgated": "2020-02-05",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 201,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "全会一致",
+  "unanimous": true,
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主・国民・社保・無所属フォーラム",
+   "公明党",
+   "日本共産党",
+   "日本維新の会",
+   "希望の党"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCED22.htm",
+ "status": "成立",
+ "submitterNames": [
+  "吉野正芳"
+ ],
+ "submitterText": "農林水産委員長",
+ "supporterNames": [],
+ "title": "家畜伝染病予防法の一部を改正する法律案"
+}

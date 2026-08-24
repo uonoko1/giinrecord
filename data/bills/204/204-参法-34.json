@@ -1,0 +1,34 @@
+{
+ "house": "shugiin",
+ "id": "204-参法-34",
+ "kind": "参法",
+ "number": 34,
+ "received": {
+  "sangiin": "2021-06-08",
+  "shugiin": "2021-06-09"
+ },
+ "result": {
+  "lawNumber": "67",
+  "promulgated": "2021-06-16",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 204,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "全会一致",
+  "unanimous": true,
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主党・無所属",
+   "公明党",
+   "日本共産党",
+   "日本維新の会・無所属の会",
+   "国民民主党・無所属クラブ"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD26A6.htm",
+ "status": "成立",
+ "submitterText": "内閣委員長",
+ "title": "政治分野における男女共同参画の推進に関する法律の一部を改正する法律案"
+}

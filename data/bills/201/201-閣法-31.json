@@ -1,0 +1,34 @@
+{
+ "house": "shugiin",
+ "id": "201-閣法-31",
+ "kind": "閣法",
+ "number": 31,
+ "received": {
+  "sangiin": "2020-04-16",
+  "shugiin": "2020-03-03"
+ },
+ "result": {
+  "lawNumber": "32",
+  "promulgated": "2020-05-27",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 201,
+ "shugiinGroupStance": {
+  "no": [
+   "日本共産党"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主・国民・社保・無所属フォーラム",
+   "公明党",
+   "日本維新の会・無所属の会",
+   "希望の党"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCF0A2.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "地域における一般乗合旅客自動車運送事業及び銀行業に係る基盤的なサービスの提供の維持を図るための私的独占の禁止及び公正取引の確保に関する法律の特例に関する法律案"
+}

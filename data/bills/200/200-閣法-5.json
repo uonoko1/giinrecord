@@ -1,0 +1,34 @@
+{
+ "house": "shugiin",
+ "id": "200-閣法-5",
+ "kind": "閣法",
+ "number": 5,
+ "received": {
+  "sangiin": "2019-11-07",
+  "shugiin": "2019-10-11"
+ },
+ "result": {
+  "lawNumber": "57",
+  "promulgated": "2019-11-27",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 200,
+ "shugiinGroupStance": {
+  "no": [
+   "日本共産党"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主・国民・社保・無所属フォーラム",
+   "公明党",
+   "日本維新の会",
+   "希望の党"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCE04A.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "農林水産物及び食品の輸出の促進に関する法律案"
+}

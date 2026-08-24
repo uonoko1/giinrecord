@@ -1,0 +1,34 @@
+{
+ "house": "shugiin",
+ "id": "203-閣法-5",
+ "kind": "閣法",
+ "number": 5,
+ "received": {
+  "sangiin": "2020-11-19",
+  "shugiin": "2020-11-06"
+ },
+ "result": {
+  "lawNumber": "65",
+  "promulgated": "2020-11-30",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 203,
+ "shugiinGroupStance": {
+  "no": [
+   "日本共産党"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主党・社民・無所属",
+   "公明党",
+   "日本維新の会・無所属の会",
+   "国民民主党・無所属クラブ"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD0AEA.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "一般職の職員の給与に関する法律等の一部を改正する法律案"
+}
