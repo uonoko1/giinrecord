@@ -4,7 +4,7 @@ import assembliesFixture from "../test-fixtures/assemblies/index.json";
 import localMembers from "../test-fixtures/assemblies/members-index.json";
 import sessionsFixture from "../test-fixtures/assemblies/sessions.json";
 import { dataset } from "../test-fixtures/dataset";
-import { buildCoverage, formatLocalSessionRange, formatSessionRange, hasSessionGaps, rosterlessSessions, sessionRange, shugiinQuestionCoverage } from "./coverage";
+import { buildCoverage, formatLocalSessionRange, formatSessionRange, hasSessionGaps, linkedRecordCounts, rosterlessSessions, rosterScope, sessionRange, shugiinBillNameCoverage, shugiinQuestionCoverage, shugiinRosterAsOf } from "./coverage";
 import type { AssemblySession } from "./data-contract";
 import type { Dataset, MemberSummary } from "./dataset";
 
@@ -67,10 +67,9 @@ describe("rosterlessSessions: 名簿の無い回次（#219 / #230）", () => {
   });
 });
 
-describe("shugiinQuestionCoverage: 衆院の質問主意書が議員ページに紐づく回次（#235）", () => {
-  // 衆院の議員名簿は「現在」の 1 回次分しか公開されていない（#71）ので、
-  // 質問主意書は全回次を取得していても、議員ページに紐づくのはその 1 回次だけ。
-  // 「取得した回次」と「議員に紐づく回次」を別の事実として出す（隠さない）。
+describe("shugiinQuestionCoverage: 衆院の質問主意書を取得した回次（#235）", () => {
+  // 「取得した回次」と「議員ページに出るか」は別の事実。ここは取得した回次だけを数え、
+  // 出るかどうかは linkedRecordCounts が実数で数える（代理値で「第N回のぶんだけ出る」と言わない。#259 レビュー）
   const meta = (fetched: number[], sessions: number[]) => ({
     fetchedAt: "2026-08-24T00:00:00.000Z",
     sessions,
@@ -80,19 +79,106 @@ describe("shugiinQuestionCoverage: 衆院の質問主意書が議員ページに
     ],
   });
 
-  it("名簿が覆う回次（meta.sessions の最大）だけが紐づき、取得した回次の範囲は別に持つ", () => {
-    const c = shugiinQuestionCoverage(meta([200, 210, 216], [200, 210, 216, 221]));
-    expect(c).toEqual({ rosterSession: 221, fetched: { from: 200, to: 216, count: 3 }, linkedOnlyToRosterSession: true });
+  it("出典から取得した回次の範囲を数える（meta.sessions からは推論しない）", () => {
+    expect(shugiinQuestionCoverage(meta([200, 210, 216], [200, 210, 216, 221]))).toEqual({ fetched: { from: 200, to: 216, count: 3 } });
   });
 
-  it("取得した回次が名簿の回次だけなら、紐づかない回次は無い", () => {
-    const c = shugiinQuestionCoverage(meta([221], [221]));
-    expect(c).toEqual({ rosterSession: 221, fetched: { from: 221, to: 221, count: 1 }, linkedOnlyToRosterSession: false });
+  it("1 回次だけなら from === to", () => {
+    expect(shugiinQuestionCoverage(meta([221], [221]))).toEqual({ fetched: { from: 221, to: 221, count: 1 } });
   });
 
   it("meta が無い・質問答弁情報の出典が無いなら null（推定しない）", () => {
     expect(shugiinQuestionCoverage(undefined)).toBeNull();
     expect(shugiinQuestionCoverage(meta([], [221]))).toBeNull();
+  });
+});
+
+describe("linkedRecordCounts: 議員ページに実際に出ている件数（#251）", () => {
+  // members/index.json の counts の合計そのもの。取得の有無や名簿の覆う回次から推論しない
+  const members = [
+    { house: "shugiin" as const, counts: { rollcalls: 0, bills: 3, speeches: 0, questions: 0 } },
+    { house: "shugiin" as const, counts: { rollcalls: 0, bills: 2, speeches: 5, questions: 0 } },
+    { house: "sangiin" as const, counts: { rollcalls: 10, bills: 1, speeches: 2, questions: 7 } },
+  ];
+
+  it("院ごとに counts を合計する", () => {
+    expect(linkedRecordCounts(members, "shugiin")).toEqual({ rollcalls: 0, bills: 5, speeches: 5, questions: 0 });
+    expect(linkedRecordCounts(members, "sangiin")).toEqual({ rollcalls: 10, bills: 1, speeches: 2, questions: 7 });
+  });
+
+  it("questions が無い（古い）データでは 0 として数える", () => {
+    expect(linkedRecordCounts([{ house: "shugiin" as const, counts: { rollcalls: 0, bills: 1, speeches: 0 } }], "shugiin")?.questions).toBe(0);
+  });
+
+  it("その院の議員が 0 人なら null（無い事実を作らない）", () => {
+    expect(linkedRecordCounts([], "shugiin")).toBeNull();
+  });
+});
+
+describe("rosterScope: 名簿が公開されている範囲の違い（#251）", () => {
+  const shugiin = { name: "衆議院 議員一覧（2026-02-18現在）", url: "https://www.shugiin.go.jp/internet/itdb_annai.nsf/html/statics/syu/1giin.htm", fetchedAt: "2026-08-24T00:00:00.000Z" };
+  const sangiin = (s: number) => ({ name: `参議院 議員一覧（第${s}回）`, url: `https://www.sangiin.go.jp/japanese/joho1/kousei/giin/${s}/giin.htm`, fetchedAt: "2026-08-24T00:00:00.000Z" });
+
+  it("衆院の 1 時点と、参院の回次ごとの名簿の範囲を両方持つ（参院を「制約なし」と書かないための材料）", () => {
+    const scope = rosterScope({ fetchedAt: "2026-08-24T00:00:00.000Z", sessions: [216, 221], sources: [shugiin, sangiin(216), sangiin(221)] });
+    expect(scope.shugiin).toEqual({ asOf: "2026-02-18", url: shugiin.url });
+    expect(scope.sangiinSessions).toEqual([216, 221]);
+    expect(scope.sangiin).toEqual({ from: 216, to: 221, count: 2 });
+  });
+
+  it("参院の名簿の出典が無ければ空（推定しない）", () => {
+    const scope = rosterScope({ fetchedAt: "2026-08-24T00:00:00.000Z", sessions: [221], sources: [shugiin] });
+    expect(scope.sangiinSessions).toEqual([]);
+    expect(scope.sangiin).toBeNull();
+  });
+});
+
+describe("shugiinRosterAsOf: 衆院の名簿は 1 時点しか無い（#251）", () => {
+  const source = { name: "衆議院 議員一覧（2026-02-18現在）", url: "https://www.shugiin.go.jp/internet/itdb_annai.nsf/html/statics/syu/1giin.htm", fetchedAt: "2026-08-24T00:00:00.000Z" };
+  const sangiin = { name: "参議院 議員一覧（第221回）", url: "https://www.sangiin.go.jp/japanese/joho1/kousei/giin/221/giin.htm", fetchedAt: "2026-08-24T00:00:00.000Z" };
+
+  it("出典の名前から時点と URL を取る（時点の表記は原文のまま）", () => {
+    expect(shugiinRosterAsOf({ fetchedAt: "2026-08-24T00:00:00.000Z", sessions: [221], sources: [sangiin, source] })).toEqual({ asOf: "2026-02-18", url: source.url });
+  });
+
+  it("参院の回次ごとの名簿（第N回）は拾わない", () => {
+    expect(shugiinRosterAsOf({ fetchedAt: "2026-08-24T00:00:00.000Z", sessions: [221], sources: [sangiin] })).toBeNull();
+  });
+
+  it("meta が無ければ null（推定しない）", () => {
+    expect(shugiinRosterAsOf(undefined)).toBeNull();
+  });
+});
+
+describe("shugiinBillNameCoverage: 議案の氏名の紐づき（#251）", () => {
+  const stats = {
+    names: 36493,
+    linked: 1353,
+    sessions: [
+      { session: 216, names: 296, inRoster: 145 },
+      { session: 217, names: 334, inRoster: 165 },
+      { session: 221, names: 271, inRoster: 270 },
+    ],
+    rosterMembers: 465,
+    rosterDuplicateNames: 0,
+  };
+
+  it("紐づいていない延べ数（names - linked）を出す", () => {
+    expect(shugiinBillNameCoverage(stats)?.unlinked).toBe(35140);
+  });
+
+  it("異なり氏名がいちばん多い回次を選ぶ（回次は定数で書かない）", () => {
+    expect(shugiinBillNameCoverage(stats)?.largest).toEqual({ session: 217, names: 334, inRoster: 165 });
+  });
+
+  it("異なり氏名の数が同じなら新しい回次を選ぶ", () => {
+    const tied = { ...stats, sessions: [{ session: 210, names: 300, inRoster: 20 }, { session: 219, names: 300, inRoster: 30 }] };
+    expect(shugiinBillNameCoverage(tied)?.largest?.session).toBe(219);
+  });
+
+  it("氏名が 1 件も無い・stats が無いなら null（無い事実を作らない）", () => {
+    expect(shugiinBillNameCoverage({ names: 0, linked: 0, sessions: [], rosterMembers: 465, rosterDuplicateNames: 0 })).toBeNull();
+    expect(shugiinBillNameCoverage(null)).toBeNull();
   });
 });
 

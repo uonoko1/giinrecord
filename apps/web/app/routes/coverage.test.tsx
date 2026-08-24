@@ -8,17 +8,19 @@ import assembliesFixture from "../test-fixtures/assemblies/index.json";
 import localMembers from "../test-fixtures/assemblies/members-index.json";
 import sessionsFixture from "../test-fixtures/assemblies/sessions.json";
 import { dataset } from "../test-fixtures/dataset";
-import CoveragePage, { meta as routeMeta } from "./coverage";
+import { CoveragePage, meta as routeMeta } from "./coverage";
+import type { ShugiinBillNameStats } from "../lib/coverage";
 
-const EVALUATIVE_WORDS = ["おすすめ", "ランキング", "一致率", "遅れ", "不十分", "優れ", "充実", "網羅"];
+/** #251: 事実の記述だけを載せる。言い訳・評価にあたる語もここで塞ぐ（「残念」「限界」「不十分」など） */
+const EVALUATIVE_WORDS = ["おすすめ", "ランキング", "一致率", "遅れ", "不十分", "優れ", "充実", "網羅", "残念", "限界", "やむを得", "しかたが", "仕方が", "できていません", "ご了承"];
 const assemblies = assembliesFixture as Assembly[];
 const sessions = new Map<string, AssemblySession[]>([["pref-04", sessionsFixture as AssemblySession[]]]);
 const withLocal: Dataset = { ...dataset, assemblies, members: [...dataset.members, ...(localMembers as MemberSummary[])] };
 
-function renderPage(data: Dataset = withLocal, s = sessions) {
+function renderPage(data: Dataset = withLocal, s = sessions, shugiinBillNames: ShugiinBillNameStats | null = null) {
   return render(
     <MemoryRouter>
-      <CoveragePage data={data} sessions={s} />
+      <CoveragePage data={data} sessions={s} shugiinBillNames={shugiinBillNames} />
     </MemoryRouter>,
   );
 }
@@ -140,6 +142,107 @@ describe("/coverage 収録範囲", () => {
     };
     renderPage({ ...withLocal, meta });
     expect(screen.queryByRole("region", { name: "議員ページに紐づかない回次" })).toBeNull();
+  });
+
+  // #251 / #235: 衆院の記録が議員ページに紐づく範囲。名簿が「現在」の 1 時点しかないという 1 つの事実にまとめる
+  describe("衆議院の記録が議員ページに紐づく範囲", () => {
+    const shugiinRosterSource = { name: "衆議院 議員一覧（2026-02-18現在）", url: "https://www.shugiin.go.jp/internet/itdb_annai.nsf/html/statics/syu/1giin.htm", fetchedAt: "2026-08-22T06:00:00+09:00" };
+    const sangiinRosterSources = [216, 221].map((s) => ({ name: `参議院 議員一覧（第${s}回）`, url: `https://www.sangiin.go.jp/japanese/joho1/kousei/giin/${s}/giin.htm`, fetchedAt: "2026-08-22T06:00:00+09:00" }));
+    const questionSources = [219, 220].map((s) => ({ name: `衆議院 質問答弁情報（第${s}回）`, url: `https://www.shugiin.go.jp/internet/itdb_shitsumon.nsf/html/shitsumon/kaiji${s}_l.htm`, fetchedAt: "2026-08-22T06:00:00+09:00" }));
+    const meta = { ...dataset.meta!, sources: [...dataset.meta!.sources, shugiinRosterSource, ...sangiinRosterSources, ...questionSources] };
+    /** 数値はすべてここから来る（画面にもコンポーネントにも定数を書かない）。実データとは別の値にして取り違えを検出する */
+    const billNames: ShugiinBillNameStats = {
+      names: 400,
+      linked: 30,
+      sessions: [
+        { session: 219, names: 40, inRoster: 5 },
+        { session: 221, names: 90, inRoster: 88 },
+        { session: 220, names: 90, inRoster: 60 },
+      ],
+      rosterMembers: 465,
+      rosterDuplicateNames: 0,
+    };
+    /** 議員ページに実際に出ている件数の材料（members/index.json の counts） */
+    const shugiinMembers: MemberSummary[] = [
+      { id: "h_1", name: "衆院 一郎", kana: "しゅういん いちろう", house: "shugiin", group: "自民", district: "東京1", counts: { rollcalls: 0, bills: 30, speeches: 0, questions: 0 } },
+    ];
+    const withShugiin = (extra: Partial<MemberSummary>[] = []) => ({
+      ...withLocal,
+      meta,
+      members: [...withLocal.members, ...shugiinMembers.map((m, i) => ({ ...m, ...extra[i] }))],
+    });
+    const section = () => screen.getByRole("region", { name: "衆議院の記録が議員ページに紐づく範囲" });
+
+    it("名簿が「現在」の 1 時点しかないことと、その時点を出典（meta）から出す", () => {
+      renderPage(withShugiin(), sessions, billNames);
+      expect(section()).toHaveTextContent("「現在」の 1 時点だけで、回次ごとの名簿はありません");
+      expect(section()).toHaveTextContent("2026.02.18");
+      expect(within(section()).getByRole("link", { name: "議員一覧" })).toHaveAttribute("href", shugiinRosterSource.url);
+    });
+
+    // #259 レビュー: 参院を「この制約が無い」と書くと、すぐ上の RosterlessSection（第216回より前は名簿が無い）と矛盾する
+    it("参院は「制約が無い」ではなく、名簿のある範囲をデータから出し、上の節と整合させる", () => {
+      renderPage(withShugiin(), sessions, billNames);
+      expect(section()).toHaveTextContent("第216—221回");
+      expect(section()).toHaveTextContent("それより前の回次に名簿が無いことは参議院も同じ");
+      // 「参議院にはこの制約はありません」と読める書き方をしない
+      expect(section().textContent).not.toContain("この制約はありません");
+    });
+
+    it("氏名が一致しても本人と確認できないことと、氏名だけで紐づけない理由を書く", () => {
+      renderPage(withShugiin(), sessions, billNames);
+      expect(section()).toHaveTextContent("氏名がこの名簿と一致しても、その人本人であることを一次資料から確認できません");
+      expect(section()).toHaveTextContent("同姓同名の別人を 1 人にしないため");
+    });
+
+    it("氏名がいちばん多い回次の実数（議案の氏名 / 現在の名簿にある数）をデータから出す", () => {
+      renderPage(withShugiin(), sessions, billNames);
+      expect(section()).toHaveTextContent("第221回");
+      expect(section()).toHaveTextContent("90 人のうち、現在の名簿にあるのは 88 人");
+      expect(section().textContent).not.toContain("%");
+    });
+
+    it("紐づいていない氏名の延べ件数を出す（延べ数・紐づき数・残り）", () => {
+      renderPage(withShugiin(), sessions, billNames);
+      expect(section()).toHaveTextContent("延べ 400 件");
+      expect(section()).toHaveTextContent("紐づいているのは 30 件");
+      expect(section()).toHaveTextContent("残る 370 件");
+      expect(section()).toHaveTextContent("現在の名簿 465 人のなかに同じ氏名の人はいません");
+    });
+
+    // #259 レビュー: 「第N回のぶんだけ出る」という代理値の主張をやめ、実際に出ている件数（counts の合計）を書く
+    it("議員ページに実際に出ている件数を members の counts から出す（0 件なら 0 件と書く）", () => {
+      renderPage(withShugiin(), sessions, billNames);
+      expect(section()).toHaveTextContent("提出・賛成した議案が 30 件");
+      expect(section()).toHaveTextContent("質問主意書が 0 件");
+      expect(section()).toHaveTextContent("本会議の発言が 0 件");
+      // 0 件なのに「第N回のぶんだけは出る」とは書かない
+      expect(section()).toHaveTextContent("そのうち提出者を名簿に照合できたものはありません");
+      expect(section().textContent).not.toMatch(/照合できるのは\s*第\d+回のぶんだけ/);
+    });
+
+    it("質問主意書が実際に紐づいていれば「照合できたものはありません」とは書かない", () => {
+      renderPage(withShugiin([{ counts: { rollcalls: 0, bills: 30, speeches: 12, questions: 4 } }]), sessions, billNames);
+      expect(section()).toHaveTextContent("質問主意書が 4 件");
+      expect(section()).toHaveTextContent("本会議の発言が 12 件");
+      expect(section().textContent).not.toContain("照合できたものはありません");
+    });
+
+    it("質問主意書（#235）は別の節にせず、同じ節に統合して書く", () => {
+      renderPage(withShugiin(), sessions, billNames);
+      expect(screen.queryByRole("region", { name: "衆議院の質問主意書が議員ページに紐づく回次" })).toBeNull();
+      expect(section()).toHaveTextContent("第219—220回");
+    });
+
+    it("名簿の出典も議案の氏名も無ければ、その節は出さない（無い事実を作らない）", () => {
+      renderPage(withLocal, sessions, null);
+      expect(screen.queryByRole("region", { name: "衆議院の記録が議員ページに紐づく範囲" })).toBeNull();
+    });
+
+    it("議案の氏名が 0 件なら件数の段落は出さない", () => {
+      renderPage(withShugiin(), sessions, { names: 0, linked: 0, sessions: [], rosterMembers: 465, rosterDuplicateNames: 0 });
+      expect(section().textContent).not.toContain("延べ");
+    });
   });
 
   it("地方議会のデータが無くても落ちない（国会だけ）", () => {

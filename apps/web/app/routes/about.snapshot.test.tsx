@@ -12,6 +12,7 @@ import { dataset } from "../test-fixtures/dataset";
  * フィクスチャは <main> の描画結果。サイト共通フッター（#167、<main> の外）は比較対象に含めない。
  * #218 で FactsSection の収録範囲の記述（「1998年（第142回国会）以降。」）を /coverage へのリンクに置き換えたので、
  * フィクスチャもその分だけ更新している（それ以外の文言は分割前のまま）。
+ * #251 で FactsSection に「衆議院の記録が議員ページに紐づく範囲」への導線を 1 行足したので、同じくその分だけ更新している。
  */
 const FIXTURE_DIR = join(__dirname, "../test-fixtures/about");
 const fixture = (name: string) => readFileSync(join(FIXTURE_DIR, name), "utf8");

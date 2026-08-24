@@ -5,9 +5,10 @@
  * still builds before the ETL has produced anything. Any other failure (malformed JSON,
  * permission errors) throws: a broken `data/` must fail the build, not silently drop pages.
  */
-import { readFile } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import type { Assembly } from "@seiji-kiroku/shared";
+import type { ShugiinBillNameStats } from "./coverage";
 import { DIET_ASSEMBLIES, type AssemblySession, type DatasetMeta, type LocalRollCallSubject, type MemberDetail, type MemberSummary, type RollCall, type RollCallSummary } from "./data-contract";
 
 /** `data/` at the repo root; override with SEIJI_DATA_DIR. cwd is apps/web during build. */
@@ -95,4 +96,78 @@ export async function readLocalRollCallIndex(dataDir: string, assemblyId: string
 
 export async function readMeta(dataDir: string): Promise<DatasetMeta | null> {
   return readJson<DatasetMeta>(path.join(dataDir, "meta.json"));
+}
+
+/**
+ * 名寄せの正規化。ETL の `normalizeName`（packages/etl/src/match-votes.ts）と同じ規則にそろえる:
+ * NFKC・空白（全角含む）の除去・異体字の最小限の吸収。ETL 側の表を増やしたらここも足す
+ * （そろっていないと、この画面の「現在の名簿にある数」だけが ETL の紐づけと食い違う）。
+ */
+const NAME_VARIANTS: Readonly<Record<string, string>> = { 髙: "高", 﨑: "崎", 德: "徳", 濵: "浜", 邊: "辺", 邉: "辺" };
+
+function normalizeName(s: string): string {
+  return s
+    .normalize("NFKC")
+    .replace(/[\s　]+/g, "")
+    .replace(/[髙﨑德濵邊邉]/g, (c) => NAME_VARIANTS[c] ?? c);
+}
+
+/** `data/bills/{回次}/{id}.json` のうち、氏名の数え上げに使う項目だけ。 */
+type BillNames = {
+  house?: string;
+  session?: number;
+  submitterNames?: string[];
+  supporterNames?: string[];
+  submitters?: string[];
+  supporters?: string[];
+};
+
+/**
+ * 衆院の議案の提出者・賛成者の氏名を数える（#251）。`bills/index.json` には氏名が無いので、
+ * 議案 1 件ずつの `bills/{回次}/{id}.json` を読んで数える（ビルド時。ブラウザには数えた結果だけが渡る）。
+ * - `names`: 氏名の延べ数、`linked`: そのうち名簿の議員に紐づいた数（memberId の延べ数）
+ * - `sessions`: 回次ごとの異なり氏名の数と、そのうち現在の名簿にある数（空白を除いた氏名の一致で数える）
+ * `bills/` が無ければ null（無い事実を作らない）。
+ */
+export async function readShugiinBillNameStats(dataDir: string): Promise<ShugiinBillNameStats | null> {
+  const billsDir = path.join(dataDir, "bills");
+  let entries: string[];
+  try {
+    entries = (await readdir(billsDir, { withFileTypes: true })).filter((e) => e.isDirectory() && SAFE_ID.test(e.name)).map((e) => e.name);
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") return null;
+    throw err;
+  }
+
+  const index = await readJson<MemberSummary[]>(path.join(dataDir, "members", "index.json"));
+  const rosterNames = (index ?? []).filter((m) => m.house === "shugiin").map((m) => normalizeName(m.name));
+  const roster = new Set(rosterNames);
+
+  let names = 0;
+  let linked = 0;
+  /** 回次 -> その回次の議案に載る異なり氏名（正規化後） */
+  const bySession = new Map<number, Set<string>>();
+  for (const dir of entries) {
+    const files = (await readdir(path.join(billsDir, dir))).filter((f) => f.endsWith(".json"));
+    for (const file of files) {
+      const bill = await readJson<BillNames>(path.join(billsDir, dir, file));
+      if (!bill || bill.house !== "shugiin" || typeof bill.session !== "number") continue;
+      const billNames = [...(bill.submitterNames ?? []), ...(bill.supporterNames ?? [])];
+      names += billNames.length;
+      linked += (bill.submitters?.length ?? 0) + (bill.supporters?.length ?? 0);
+      const set = bySession.get(bill.session) ?? new Set<string>();
+      for (const n of billNames) set.add(normalizeName(n));
+      bySession.set(bill.session, set);
+    }
+  }
+
+  return {
+    names,
+    linked,
+    sessions: [...bySession.entries()]
+      .map(([session, set]) => ({ session, names: set.size, inRoster: [...set].filter((n) => roster.has(n)).length }))
+      .sort((a, b) => a.session - b.session),
+    rosterMembers: rosterNames.length,
+    rosterDuplicateNames: rosterNames.length - roster.size,
+  };
 }
