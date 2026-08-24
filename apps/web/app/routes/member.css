@@ -43,9 +43,11 @@
 .member-tab { flex: 1 0 auto; min-width: 5.5em; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 10px 8px; background: none; border: 0; border-bottom: 2px solid transparent; font: inherit; font-size: 14px; color: var(--muted); cursor: pointer; white-space: nowrap; }
 .member-tab[aria-selected="true"] { font-weight: 700; color: var(--brass); border-bottom-color: var(--brass); }
 .member-tabgroup[data-category="group"] .member-tab[aria-selected="true"] { color: var(--est-fg); border-bottom-color: var(--est-line); }
-/* 件数。0 件のタブは淡色にするだけで隠さない・押せなくもしない（「無い」ことが情報だから） */
+/* 件数。0 件のタブは隠さない・押せなくもしない（「無い」ことが情報だから）。
+   区別は opacity ではなく破線の下線で付ける: --muted は --paper に対し 4.98:1（ライト）/ 5.77:1（ダーク）で
+   AA を満たすが、opacity を掛けると下回る（.7 でもライトは 2.82:1）。押せる要素なので彩度ではなく形で示す。 */
 .member-tab-count { font-size: 11px; font-weight: 400; color: var(--muted); }
-.member-tab[data-empty="true"] { opacity: 0.55; }
+.member-tab[data-empty="true"] .member-tab-count { text-decoration: underline dashed; text-underline-offset: 3px; text-decoration-color: var(--rule); }
 
 /* 回次ごとの折りたたみ（#103）。直近2回次は open。見出しは回次名と件数だけで、評価語は無い */
 .member-session { margin: 0; }
