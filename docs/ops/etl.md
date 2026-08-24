@@ -74,8 +74,28 @@ gh run watch                                   # 進捗
 | `pnpm --filter web smoke` | — | 5 秒（1,230 ページ・119,121 内部リンク） |
 
 - 日次実行（引数なし。直近 5 回次を取得し、第200〜216回は引き継ぎ）: 27 分（1,593 秒。第200〜216回を足す前とほぼ同じ。引き継ぎは 93 採決・6,451 行で数秒）。名簿の 404（第199〜215回、17 回）は 1 回 0.5 秒。
-- 引き継ぎで落ちるもの: 引き継ぐ回次の質問主意書・議案の**未突合行**（`unmatched.json` の `kind: "question"` / `"bill"`）はその回次を取得した実行にしか載らない（採決の未突合は再突合するので毎回載る）。第200〜216回の未突合質問（119 行）を見たいときは手動実行の Summary を見る。
+- 引き継ぎで落ちるもの: 引き継ぐ回次の質問主意書・議案の**未突合行**（`unmatched/{回次}.json` の `kind: "question"` / `"bill"`。#219 の分割前は `unmatched.json`）はその回次を取得した実行にしか載らない（採決の未突合は再突合するので毎回載る）。第200〜216回の未突合質問（119 行）を見たいときは手動実行の Summary を見る。
 - 手動実行の直後は第217〜221回の発言・質問主意書・委員会出席が（`session` の無い旧出力から引き継げず）一時的に減り、翌日の日次実行で戻る（上の注意）。2 回目以降の手動実行ではこの欠けは出ない。
+
+## 第142〜199回を足す（#219、バックフィル）
+spike の結論は `docs/research/backfill-142-199.md`、契約は `docs/DATA_CONTRACT.md`「回次」。**日次 ETL には載せない**（`DEFAULT_SESSIONS` は変えない。変えると毎日 58 回次を取り直す）。`etl.yml` の `workflow_dispatch` で**回次を分けて複数回**流す。
+
+- **1 回の dispatch に全 58 回次を渡さない**。第200〜216回（17 回次）の実測が 77 分なので、58 回次はおおよそ 4〜5 時間で、`timeout-minutes: 360`（6 時間）に収まる保証が無い（政府サイトの応答は日によって遅い）。**10〜15 回次ずつ**に分けると 1 回あたり 1 時間前後で、失敗したときのやり直しもその chunk だけで済む。
+  ```
+  gh workflow run etl.yml -f sessions="142 143 144 145 146 147 148 149 150 151"
+  # 前の run のデータ PR がマージされてから次を流す（同じ data/refresh ブランチを使うため）
+  gh workflow run etl.yml -f sessions="152 153 154 155 156 157 158 159 160 161"
+  #  … 199 まで繰り返す
+  ```
+- **chunk をまたいでも前の回次は消えない**: 指定しなかった回次は `data/`（`meta.sessions`）から引き継がれる（`planSessions`。`packages/etl/test/sessions.test.ts` が固定している）。`concurrency: etl-daily` で直列化されるので、日次実行と重なっても待つだけ。
+- **取れない回次は飛ばしてログに残す**（全 58 回次の構造は事前確認していない）。ログの見どころ:
+  - `session N: roll call list not published, skipped (HTTP 404 …)` — 一覧ページが 404（第141回以前は押しボタン投票の導入前でページ自体が無い）。**404 以外（5xx・タイムアウト）は飛ばさず ETL を落とす**（取りこぼしを「無かった」と記録しないため）
+  - `session N: X roll calls (Y with individual votes, Z standing votes skipped, W parse errors skipped)` — W が 0 でなければ個票の未知のレイアウト
+  - 最後に `sessions skipped (roll call list not published, 404): …` と `roll call pages skipped (parse error): N in sessions …` を URL つきで再掲する。**推定で埋めないので、ここに出た回次は「まだ取れていない」という事実**。直すときはその URL を実 HTML のフィクスチャにしてテストから直す
+- **未突合が大量に出るのは正常**。第142〜199回は回次別の参院名簿が公開されていない（第216回以降しか無い）ので、その期間の票は `memberId` が空のまま `unmatched/{session}.json` に載る（契約が「上限を設けない」と定めている既定の振る舞い。ETL は止まらない）。**氏名だけから議員を作ることも、氏名一致だけで現職に紐づけることもしない。**
+- 未突合は回次別ファイルに分かれる（#219）。`data/unmatched.json` に残るのは回次の引けない行（発言・委員会出席）だけなので、日次のサマリの `unmatched` の数字は分割後は小さくなる。全体の件数は ETL ログの `unmatched: N (see data/unmatched/{session}.json and data/unmatched.json)` と、その次の行の `by session: 142:2431 143:889 …` で見る。
+- 衆院の経過ページは古い回次で「衆議院審議時会派態度」の項目自体が無い（第142回で確認）。その議案は `shugiinGroupStance` を持たない ＝ 議員ページの `stance` 行にもならない。**「無い」を「全会派賛成」等に読み替えない。**
+- ローカルで先に試す: `pnpm etl 142 143`（初回は個票を全部取るので回次あたり数分。2 回目以降はキャッシュ）。
 
 ## コンテナで実行する（#86）
 CI と同じイメージ（`packages/etl/Dockerfile`、node:24-alpine、非 root の `node` ユーザー、secrets なし）をローカルでも使える。

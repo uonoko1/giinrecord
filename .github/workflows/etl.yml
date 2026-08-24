@@ -109,6 +109,8 @@ jobs:
           STATUS: ${{ job.status }}
         run: |
           count() { node -e 'const a=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));console.log(Array.isArray(a)?a.length:"?")' "$1" 2>/dev/null || echo "?"; }
+          # 未突合は回次別に分かれている（#219）。unmatched.json（回次の引けない行）と unmatched/*.json の合計を数える
+          count_unmatched() { node -e 'const fs=require("fs"),p=require("path");const n=(f)=>{try{const a=JSON.parse(fs.readFileSync(f,"utf8"));return Array.isArray(a)?a.length:0}catch{return 0}};let t=n("data/unmatched.json");try{for(const f of fs.readdirSync("data/unmatched"))if(f.endsWith(".json"))t+=n(p.join("data/unmatched",f))}catch{}console.log(t)' 2>/dev/null || echo "?"; }
           if [ -n "$PR" ]; then PR_CELL="#$PR"; else PR_CELL="なし（data/ に変更なし）"; fi
           {
             echo "## ETL"
@@ -117,7 +119,7 @@ jobs:
             echo "| 結果 | $STATUS |"
             echo "| データ PR | $PR_CELL |"
             echo "| 変更ファイル数 | ${CHANGED:-?} |"
-            echo "| unmatched（名寄せ不能） | $(count data/unmatched.json) |"
+            echo "| unmatched（名寄せ不能。unmatched.json + unmatched/*.json） | $(count_unmatched) |"
             echo "| unmatched-bills（審議結果と未突合の採決） | $(count data/unmatched-bills.json) |"
             echo
             echo "<details><summary>ETL ログの警告</summary>"

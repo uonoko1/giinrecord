@@ -6,12 +6,8 @@ import type { Aggregated } from "./aggregate.ts";
 import { DIET_ASSEMBLY_IDS } from "./assemblies.ts";
 import { isDietMemberRow, mergeAssemblies, mergeMemberIndex, readMemberIndex, validateLocalAssemblies } from "./local-assemblies.ts";
 import { stableJson } from "./json.ts";
-import type { GroupMismatch, Unmatched } from "./match-votes.ts";
-import type { UnmatchedSpeech } from "./match-speeches.ts";
-import type { UnmatchedBillProposer } from "./match-bills.ts";
-import type { UnmatchedShugiinBillName } from "./match-shugiin-bills.ts";
-import type { UnmatchedQuestionSubmitter } from "./match-questions.ts";
-import type { UnmatchedAttendee } from "./match-attendance.ts";
+import type { GroupMismatch } from "./match-votes.ts";
+import { readUnmatched, writeUnmatched, type UnmatchedRow } from "./unmatched.ts";
 import { toBillSummary } from "./sources/shugiin-bills.ts";
 import type { UnmatchedBill } from "./sources/sangiin-bills.ts";
 import { memberListUrl, type UnmatchedGroup } from "./sources/sangiin-members.ts";
@@ -37,8 +33,12 @@ export interface Dataset extends Aggregated {
   rollCallDetails: RollCall[];
   /** 議案（衆院 議案情報から。Issue #72）。`bills/{提出回次}/{id}.json` と `bills/index.json` になる。 */
   bills: Bill[];
-  /** 名寄せできなかった票（rollCallId）・発言（speechId）・参法の発議者 / 衆院 議案の提出者・賛成者（billId）・質問主意書の提出者（questionId）・委員会出席の発議者（meetingId）。 */
-  unmatched: (Unmatched | UnmatchedSpeech | UnmatchedBillProposer | UnmatchedShugiinBillName | UnmatchedQuestionSubmitter | UnmatchedAttendee)[];
+  /**
+   * 名寄せできなかった票（rollCallId）・発言（speechId）・参法の発議者 / 衆院 議案の提出者・賛成者（billId）・
+   * 質問主意書の提出者（questionId）・委員会出席の発議者（meetingId）。
+   * 書き出しは回次別（`unmatched/{session}.json`。回次の引けない行だけ `unmatched.json`。#219）。
+   */
+  unmatched: UnmatchedRow[];
   /** 議案情報の審議結果と突合できなかった採決（得票のみの result になる）。 */
   unmatchedBills: UnmatchedBill[];
   /** 対応表（sangiin-groups.ts）に無い会派略称。group には原文のまま入る（Issue #36）。 */
@@ -102,7 +102,8 @@ export async function writeDataset(dir: string, ds: Dataset): Promise<void> {
   const bills = sortBills(ds.bills);
   await put("bills/index.json", bills.map(toBillSummary));
   for (const b of bills) await put(`bills/${b.session}/${b.id}.json`, b);
-  await put("unmatched.json", ds.unmatched);
+  // 未突合は回次別に分ける（#219。第142〜199回は全票が未突合で単一ファイルだと百万行規模になる）
+  await writeUnmatched(dir, ds.unmatched);
   await put("unmatched-bills.json", ds.unmatchedBills);
   await put("unmatched-groups.json", ds.unmatchedGroups);
   await put("group-mismatch.json", ds.groupMismatch);
@@ -264,7 +265,7 @@ export async function validateDataset(dir: string): Promise<string[]> {
     if (m.counts.questions !== questions) v.push(`members/index.json ${m.id}: counts.questions ${m.counts.questions} !== timeline questions ${questions}`);
   }
 
-  const unmatched = (await read<Dataset["unmatched"]>("unmatched.json")) ?? [];
+  const unmatched = await readUnmatched(dir);
   const unmatchedKeys = new Set(unmatched.map((u) => ("rollCallId" in u ? `${u.rollCallId}\t${u.nameText}` : "")));
   const summaries = (await read<RollCallSummary[]>("rollcalls/index.json")) ?? [];
   let matchedVotes = 0;
@@ -282,7 +283,7 @@ export async function validateDataset(dir: string): Promise<string[]> {
     for (const vote of rc.votes) {
       if (!VOTE_VALUES.has(vote.value)) v.push(`${rel}: vote value must be 賛成/反対/投票なし, got ${vote.value} (${vote.nameText})`);
       if (vote.memberId === "") {
-        if (!unmatchedKeys.has(`${rc.id}\t${vote.nameText}`)) v.push(`${rel}: "${vote.nameText}" has empty memberId but is not listed in unmatched.json`);
+        if (!unmatchedKeys.has(`${rc.id}\t${vote.nameText}`)) v.push(`${rel}: "${vote.nameText}" has empty memberId but is not listed in unmatched.json / unmatched/{session}.json`);
       } else if (!ids.has(vote.memberId)) v.push(`${rel}: memberId ${vote.memberId} not in members/index.json`);
       else matchedVotes++;
     }

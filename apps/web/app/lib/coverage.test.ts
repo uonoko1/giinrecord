@@ -4,7 +4,7 @@ import assembliesFixture from "../test-fixtures/assemblies/index.json";
 import localMembers from "../test-fixtures/assemblies/members-index.json";
 import sessionsFixture from "../test-fixtures/assemblies/sessions.json";
 import { dataset } from "../test-fixtures/dataset";
-import { buildCoverage, formatLocalSessionRange, formatSessionRange, hasSessionGaps, sessionRange } from "./coverage";
+import { buildCoverage, formatLocalSessionRange, formatSessionRange, hasSessionGaps, rosterlessSessions, sessionRange } from "./coverage";
 import type { AssemblySession } from "./data-contract";
 import type { Dataset, MemberSummary } from "./dataset";
 
@@ -32,6 +32,38 @@ describe("sessionRange / formatSessionRange", () => {
     expect(formatSessionRange({ from: 200, to: 221, count: 11 })).toBe("第200—221回");
     expect(formatSessionRange({ from: 221, to: 221, count: 1 })).toBe("第221回");
     expect(formatSessionRange(null)).toBeNull();
+  });
+
+  // #219: 第142〜199回のバックフィル後も、範囲と実回次数の両方を出して連続収録と読ませない。
+  // 第160回・第199回のように採決が 1 件も無い回次があるので、遡っても歯抜けは残る。
+  it("第142回まで遡っても範囲は最小〜最大、歯抜けは歯抜けのまま出る", () => {
+    const backfilled = [142, 143, 145, 150, 170, 180, 190, 200, 201, 221];
+    const range = sessionRange(backfilled);
+    expect(range).toEqual({ from: 142, to: 221, count: 10 });
+    expect(hasSessionGaps(range)).toBe(true);
+    expect(formatSessionRange(range)).toBe("第142—221回");
+  });
+});
+
+describe("rosterlessSessions: 名簿の無い回次（#219 / #230）", () => {
+  const meta = (sessions: number[], rosterSessions: number[]) => ({
+    fetchedAt: "2026-08-24T00:00:00.000Z",
+    sessions,
+    sources: rosterSessions.map((s) => ({ name: `参議院 議員一覧（第${s}回）`, url: `https://www.sangiin.go.jp/japanese/joho1/kousei/giin/${s}/giin.htm`, fetchedAt: "2026-08-24T00:00:00.000Z" })),
+  });
+
+  it("最古の名簿より前の回次を、データ（meta.sources の議員一覧）から数える", () => {
+    const r = rosterlessSessions(meta([142, 150, 200, 216, 221], [216, 217, 221]));
+    expect(r).toEqual({ earliestRoster: 216, sessions: [142, 150, 200], range: { from: 142, to: 200, count: 3 } });
+  });
+
+  it("全回次に名簿があれば空（回次はハードコードしない）", () => {
+    expect(rosterlessSessions(meta([220, 221], [219, 220, 221]))?.sessions).toEqual([]);
+  });
+
+  it("meta が無い・議員一覧の出典が無いなら null（推定しない）", () => {
+    expect(rosterlessSessions(undefined)).toBeNull();
+    expect(rosterlessSessions(meta([142], []))).toBeNull();
   });
 });
 

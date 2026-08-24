@@ -115,6 +115,33 @@ describe("/coverage 収録範囲", () => {
     for (const word of EVALUATIVE_WORDS) expect(container.textContent).not.toContain(word);
   });
 
+  // #219 / #230: 名簿の無い回次があることと、少数が推定を含んで紐づいていることを事実として出す
+  it("名簿より前の回次があれば、紐づかない事実と推定を含む紐づけを出す（回次はデータから）", () => {
+    const meta = {
+      ...dataset.meta!,
+      sessions: [142, 150, 200, 216, 221],
+      sources: [...dataset.meta!.sources, { name: "参議院 議員一覧（第216回）", url: "https://www.sangiin.go.jp/japanese/joho1/kousei/giin/216/giin.htm", fetchedAt: "2026-08-22T06:00:00+09:00" }],
+    };
+    renderPage({ ...withLocal, meta });
+    const section = screen.getByRole("region", { name: "議員ページに紐づかない回次" });
+    expect(section).toHaveTextContent("第216回");
+    expect(section).toHaveTextContent("第142—200回");
+    expect(section).toHaveTextContent("ほとんどが議員ページには紐づいていません");
+    // 「少数は紐づいており、それは推定を含む」ことを隠さず書く
+    expect(section).toHaveTextContent("推定を含みます");
+    expect(section.textContent).toContain("在職開始日にあたる項目が無く");
+  });
+
+  it("名簿の無い回次が無ければ、その節は出さない（無い事実を作らない）", () => {
+    const meta = {
+      ...dataset.meta!,
+      sessions: [220, 221],
+      sources: [...dataset.meta!.sources, { name: "参議院 議員一覧（第220回）", url: "https://www.sangiin.go.jp/japanese/joho1/kousei/giin/220/giin.htm", fetchedAt: "2026-08-22T06:00:00+09:00" }],
+    };
+    renderPage({ ...withLocal, meta });
+    expect(screen.queryByRole("region", { name: "議員ページに紐づかない回次" })).toBeNull();
+  });
+
   it("地方議会のデータが無くても落ちない（国会だけ）", () => {
     renderPage({ ...dataset, assemblies: undefined }, new Map());
     expect(screen.getByRole("region", { name: "地方議会" })).toHaveTextContent("地方議会のデータはまだありません。");

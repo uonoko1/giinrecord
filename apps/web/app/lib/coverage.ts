@@ -3,7 +3,7 @@
  * 数値はここで数え、ページ側にも定数にも書かない（データが増えたら再ビルドで追随する）。
  * ブラウザでも動く（Node API は使わない）。
  */
-import type { Assembly, BillSummary, House } from "@seiji-kiroku/shared";
+import type { Assembly, BillSummary, DatasetMeta, House } from "@seiji-kiroku/shared";
 import { isDietAssemblyId } from "./assemblies";
 import { DIET_ASSEMBLIES, type AssemblySession } from "./data-contract";
 import type { Dataset } from "./dataset";
@@ -35,6 +35,33 @@ export function hasSessionGaps(range: SessionRange | null): boolean {
 export function formatSessionRange(range: SessionRange | null): string | null {
   if (!range) return null;
   return range.from === range.to ? `第${range.from}回` : `第${range.from}—${range.to}回`;
+}
+
+/**
+ * 回次ごとの参院名簿が公開されていない回次（#219 / #230）。
+ * 参院サイトの回次別名簿は最古の 1 回次分より前が 404 で、その回次の票は名簿に突合できない
+ * （＝議員ページに紐づかない）。どの回次かは `meta.sources` の「参議院 議員一覧（第N回）」から数える。
+ * 回次の数値はハードコードしない（データが増えたら再ビルドで追随する）。
+ */
+export interface RosterlessSessions {
+  /** 手元にある最古の名簿の回次 */
+  earliestRoster: number;
+  /** 名簿より前の回次（昇順）。`meta.sessions` のうち earliestRoster 未満のもの */
+  sessions: number[];
+  /** その範囲。1 件も無ければ null */
+  range: SessionRange | null;
+}
+
+/** `meta.sources` の「参議院 議員一覧（第N回）」から最古の名簿回次を取り、それより前の回次を数える。出典が無ければ null（推定しない）。 */
+export function rosterlessSessions(meta: DatasetMeta | undefined): RosterlessSessions | null {
+  const rosters = (meta?.sources ?? [])
+    .map((s) => /^参議院 議員一覧（第(\d+)回）$/.exec(s.name)?.[1])
+    .filter((n): n is string => n !== undefined)
+    .map(Number);
+  if (rosters.length === 0) return null;
+  const earliestRoster = Math.min(...rosters);
+  const sessions = [...new Set(meta?.sessions ?? [])].filter((s) => s < earliestRoster).sort((a, b) => a - b);
+  return { earliestRoster, sessions, range: sessionRange(sessions) };
 }
 
 /** 国会の 1 院（参議院・衆議院）の収録範囲 */
