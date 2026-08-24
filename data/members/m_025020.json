@@ -807,6 +807,17 @@
    "value": "賛成"
   },
   {
+   "answerDate": "2026-06-05",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/touh/t221051.htm",
+   "date": "2026-05-27",
+   "kind": "question",
+   "questionId": "221-sangiin-51",
+   "session": 221,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/meisai/m221051.htm",
+   "submitterText": "北村 晴男君",
+   "title": "福岡県議会の海外視察に関する質問主意書"
+  },
+  {
    "date": "2026-05-22",
    "groupValue": "賛成",
    "kind": "vote",

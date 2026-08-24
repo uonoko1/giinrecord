@@ -1790,6 +1790,28 @@
    "value": "賛成"
   },
   {
+   "answerDate": "2025-12-05",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/219/touh/t219052.htm",
+   "date": "2025-11-26",
+   "kind": "question",
+   "questionId": "219-sangiin-52",
+   "session": 219,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/219/meisai/m219052.htm",
+   "submitterText": "山添 拓君",
+   "title": "東京外かく環状道路の事業再評価に関する質問主意書"
+  },
+  {
+   "answerDate": "2025-11-21",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/219/touh/t219039.htm",
+   "date": "2025-11-12",
+   "kind": "question",
+   "questionId": "219-sangiin-39",
+   "session": 219,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/219/meisai/m219039.htm",
+   "submitterText": "山添 拓君",
+   "title": "東京二十三区の高額な火葬料金に関する質問主意書"
+  },
+  {
    "date": "2025-06-20",
    "groupValue": "反対",
    "kind": "vote",
@@ -3284,6 +3306,16 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0219-v001.htm",
    "title": "日程第１　国家公務員等の任命に関する件「検査官（田中淳子君）」",
    "value": "賛成"
+  },
+  {
+   "chars": 3027,
+   "date": "2025-02-12",
+   "excerpt": "日本共産党を代表し、石破総理の訪米報告について総理に質問します。 米国トランプ大統領との初めての首脳会談で総理に求められたのは、世界が直面する課題について認識し、解決に向けて話し合うとともに、批判すべきは率直に批判し、対等、平等な主権国家同士の信頼関係を構築することにありました。 ところが、現実にはどうだったか。パレスチナ・ガザ地区の住民を強制移住させる、パリ協定やＷＨＯ、人権理事会から離脱する、",
+   "kind": "speech",
+   "meeting": "本会議 第4号",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715254X00420250212/20",
+   "speechId": "121715254X00420250212_020"
   },
   {
    "billId": "216-参法-3",

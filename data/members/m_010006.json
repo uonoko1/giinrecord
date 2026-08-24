@@ -360,6 +360,16 @@
    "value": "賛成"
   },
   {
+   "billId": "221-参法-12",
+   "date": "2026-06-30",
+   "kind": "bill",
+   "role": "提出者",
+   "session": 221,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/221/meisai/m221100221012.htm",
+   "submitterText": "石川博崇君 外3名",
+   "title": "政治資金規正法の一部を改正する法律案"
+  },
+  {
    "date": "2026-06-26",
    "groupValue": "賛成",
    "kind": "vote",

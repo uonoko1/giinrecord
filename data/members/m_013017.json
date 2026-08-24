@@ -183,6 +183,17 @@
    "value": "賛成"
   },
   {
+   "answerDate": "2026-07-28",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/touh/t221093.htm",
+   "date": "2026-07-16",
+   "kind": "question",
+   "questionId": "221-sangiin-93",
+   "session": 221,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/meisai/m221093.htm",
+   "submitterText": "吉良 よし子君",
+   "title": "関東大震災時の朝鮮人虐殺事件に関する質問主意書"
+  },
+  {
    "date": "2026-07-15",
    "groupValue": "反対",
    "kind": "vote",
@@ -1580,6 +1591,16 @@
    "value": "反対"
   },
   {
+   "chars": 1523,
+   "date": "2025-12-03",
+   "excerpt": "日本共産党の吉良よし子です。 私は、会派を代表し、二〇二四年度決算について総理に質問をいたします。 本決算での税収は、七十五・二兆円と過去最大となりました。しかし、その内訳は、消費税が二十五兆円もあるのに対し、所得税二十一・二兆円、法人税十七・九兆円と、所得の少ない人ほど重い負担となる消費税が税収の大半を占め、もうかっている大企業と富裕層は優遇されています。不公正な税制により、所得再分配の機能が破",
+   "kind": "speech",
+   "meeting": "本会議 第7号",
+   "session": 219,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121915254X00720251203/38",
+   "speechId": "121915254X00720251203_038"
+  },
+  {
    "date": "2025-11-28",
    "groupValue": "賛成",
    "kind": "vote",
@@ -1996,6 +2017,16 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0611-v001.htm",
    "title": "日程第１　令和五年度一般会計歳入歳出決算、令和五年度特別会計歳入歳出決算、令和五年度国税収納金整理資金受払計算書、令和五年度政府関係機関決算書「委員長報告のとおり是認すること」",
    "value": "反対"
+  },
+  {
+   "chars": 2810,
+   "date": "2025-06-11",
+   "excerpt": "私は、日本共産党を代表して、公立の義務教育諸学校等の教育職員の給与等に関する特別措置法等の一部を改正する法律案に反対の討論を行います。 一九七一年、自民党政府がこの給特法を制定し、公立学校の教員に対し残業代支給を適用除外とした当時、日本共産党を含めた全ての野党がこれでは労働時間が無定量になってしまうと反対しました。事実、給特法が制定されて以降、政府はコスト意識がゼロになり、教員を増やさないまま業務",
+   "kind": "speech",
+   "meeting": "本会議 第26号",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715254X02620250611/29",
+   "speechId": "121715254X02620250611_029"
   },
   {
    "date": "2025-06-06",
@@ -2438,6 +2469,16 @@
    "value": "賛成"
   },
   {
+   "chars": 2790,
+   "date": "2025-05-21",
+   "excerpt": "日本共産党の吉良よし子です。 私は、会派を代表し、公立教員給与特別措置法改定案について、総理に質問をします。 学校の教員の忙しさが止まりません。 私たち教員は毎日心をすり減らして命を削って子供たちのために働いています。この四月に転勤した小学校では三十人の中学年の担任を一人でしています、支援員さんも学生ボランティアさんもいません、一人一人を大切にしてあげたいんですけど本当に限界があるんです。朝の四時",
+   "kind": "speech",
+   "meeting": "本会議 第20号",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715254X02020250521/51",
+   "speechId": "121715254X02020250521_051"
+  },
+  {
    "date": "2025-05-16",
    "groupValue": "反対",
    "kind": "vote",
@@ -2502,6 +2543,17 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0516-v001.htm",
    "title": "日程第１　行政手続における特定の個人を識別するための番号の利用等に関する法律及び住民基本台帳法の一部を改正する法律案（内閣提出、衆議院送付）",
    "value": "反対"
+  },
+  {
+   "answerDate": "2025-05-27",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217120.htm",
+   "date": "2025-05-16",
+   "kind": "question",
+   "questionId": "217-sangiin-120",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217120.htm",
+   "submitterText": "吉良 よし子君",
+   "title": "伊豆・小笠原諸島の医療・介護や物価高騰対策に関する質問主意書"
   },
   {
    "date": "2025-05-14",
@@ -2700,6 +2752,16 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0423-v001.htm",
    "title": "日程第１　所得に対する租税に関する二重課税の除去並びに脱税及び租税回避の防止のための日本国政府とウクライナ政府との間の条約の締結について承認を求めるの件（衆議院送付）",
    "value": "反対"
+  },
+  {
+   "billId": "217-参法-6",
+   "date": "2025-04-22",
+   "kind": "bill",
+   "role": "提出者",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/217/meisai/m217100217006.htm",
+   "submitterText": "吉良よし子君",
+   "title": "大深度地下の公共的使用に関する特別措置法の廃止に関する措置等に関する法律案"
   },
   {
    "date": "2025-04-18",
@@ -3140,6 +3202,16 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0326-v001.htm",
    "title": "国家公務員等の任命に関する件「公正取引委員会委員長（茶谷栄治君）」",
    "value": "反対"
+  },
+  {
+   "chars": 2945,
+   "date": "2025-03-26",
+   "excerpt": "日本共産党の吉良よし子です。 私は、会派を代表して、大学等修学支援法改正案について文部科学大臣に質問をいたします。 本法案は、高等教育費により理想の子供数を持てない状況を払拭するためとし、授業料の無償化などの支援対象を多子世帯へと拡大するとしています。しかし、なぜ拡大する範囲を多子世帯、三人以上の子供のいる世帯に限定するのですか。三人産まなければ支援しない、とにかく産めという姿勢は、余りに上から目",
+   "kind": "speech",
+   "meeting": "本会議 第8号",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715254X00820250326/44",
+   "speechId": "121715254X00820250326_044"
   },
   {
    "date": "2025-03-14",

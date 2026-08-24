@@ -64,6 +64,17 @@
    "value": "賛成"
   },
   {
+   "answerDate": "2025-06-27",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217201.htm",
+   "date": "2025-06-18",
+   "kind": "question",
+   "questionId": "217-sangiin-201",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217201.htm",
+   "submitterText": "紙 智子君",
+   "title": "海外先住民の遺骨返還に関する質問主意書"
+  },
+  {
    "date": "2025-06-13",
    "groupValue": "反対",
    "kind": "vote",
@@ -218,6 +229,16 @@
    "value": "反対"
   },
   {
+   "chars": 3000,
+   "date": "2025-06-11",
+   "excerpt": "日本共産党を代表して、二〇二三年度決算、二〇二三年度国有財産増減及び現在額総計算書の是認に反対、二〇二三年度国有財産無償貸付状況総計算書の是認に賛成、内閣に対する警告決議に賛成の立場から討論を行います。 二〇二三年度予算は、安保三文書に基づいて敵基地攻撃能力を保有し、五年間で四十三兆円にも上る大軍拡計画をスタートをさせた予算です。戦争国家づくり元年予算というべきものです。 この軍拡のあおりも受けて",
+   "kind": "speech",
+   "meeting": "本会議 第26号",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715254X02620250611/10",
+   "speechId": "121715254X02620250611_010"
+  },
+  {
    "date": "2025-06-06",
    "groupValue": "反対",
    "kind": "vote",
@@ -370,6 +391,16 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0530-v001.htm",
    "title": "日程第１　譲渡担保契約及び所有権留保契約に関する法律案（内閣提出、衆議院送付）",
    "value": "賛成"
+  },
+  {
+   "chars": 2903,
+   "date": "2025-05-30",
+   "excerpt": "日本共産党の紙智子です。 会派を代表して、食品等の流通の合理化及び取引の適正化に関する法律等改正案について質問いたします。 農政の焦点になっている米価の高騰についてお聞きします。 昨年の春先から、米不足が発生していると町のお米屋さんから訴えられました。私は昨年の六月に農水省に備蓄米の放出を求めましたが、米はあると言って応じませんでした。七月から深刻化しても、新米が出てくれば落ち着くと言い続けました",
+   "kind": "speech",
+   "meeting": "本会議 第23号",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715254X02320250530/15",
+   "speechId": "121715254X02320250530_015"
   },
   {
    "date": "2025-05-28",

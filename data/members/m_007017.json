@@ -182,6 +182,28 @@
    "value": "反対"
   },
   {
+   "answerDate": "2026-07-31",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/touh/t221099.htm",
+   "date": "2026-07-17",
+   "kind": "question",
+   "questionId": "221-sangiin-99",
+   "session": 221,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/meisai/m221099.htm",
+   "submitterText": "大島 九州男君",
+   "title": "独立行政法人地域医療機能推進機構のガバナンスに関する質問主意書"
+  },
+  {
+   "answerDate": "2026-07-31",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/touh/t221100.htm",
+   "date": "2026-07-17",
+   "kind": "question",
+   "questionId": "221-sangiin-100",
+   "session": 221,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/meisai/m221100.htm",
+   "submitterText": "大島 九州男君",
+   "title": "歯科医師国民健康保険組合の組合員の負担軽減に関する質問主意書"
+  },
+  {
    "date": "2026-07-15",
    "groupValue": "反対",
    "kind": "vote",

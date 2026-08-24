@@ -217,6 +217,17 @@
    "value": "賛成"
   },
   {
+   "answerDate": "2026-07-28",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/touh/t221080.htm",
+   "date": "2026-07-15",
+   "kind": "question",
+   "questionId": "221-sangiin-80",
+   "session": 221,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/meisai/m221080.htm",
+   "submitterText": "石橋 通宏君",
+   "title": "持続可能な開発目標（ＳＤＧｓ）の国内推進体制及び国際社会における主導的役割に関する質問主意書"
+  },
+  {
    "date": "2026-07-13",
    "groupValue": "賛成",
    "kind": "vote",
@@ -358,6 +369,28 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0708-v001.htm",
    "title": "日程第１　令和六年度一般会計歳入歳出決算、令和六年度特別会計歳入歳出決算、令和六年度国税収納金整理資金受払計算書、令和六年度政府関係機関決算書「委員長報告のとおり是認すること」",
    "value": "反対"
+  },
+  {
+   "answerDate": "2026-07-10",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/touh/t221059.htm",
+   "date": "2026-06-29",
+   "kind": "question",
+   "questionId": "221-sangiin-59",
+   "session": 221,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/meisai/m221059.htm",
+   "submitterText": "石橋 通宏君",
+   "title": "我が国における難民認定の状況に関する質問主意書"
+  },
+  {
+   "answerDate": "2026-07-10",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/touh/t221058.htm",
+   "date": "2026-06-29",
+   "kind": "question",
+   "questionId": "221-sangiin-58",
+   "session": 221,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/meisai/m221058.htm",
+   "submitterText": "石橋 通宏君",
+   "title": "我が国における難民認定の実態に関する質問主意書"
   },
   {
    "date": "2026-06-26",
@@ -1834,6 +1867,26 @@
    "value": "賛成"
   },
   {
+   "billId": "217-参法-11",
+   "date": "2025-06-18",
+   "kind": "bill",
+   "role": "提出者",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/217/meisai/m217100217011.htm",
+   "submitterText": "石橋通宏君 外2名",
+   "title": "出入国管理及び難民認定法及び外国人の技能実習の適正な実施及び技能実習生の保護に関する法律の一部を改正する法律の一部を改正する法律案"
+  },
+  {
+   "billId": "217-参法-10",
+   "date": "2025-06-18",
+   "kind": "bill",
+   "role": "提出者",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/217/meisai/m217100217010.htm",
+   "submitterText": "石橋通宏君 外2名",
+   "title": "出入国管理及び難民認定法の一部を改正する法律案"
+  },
+  {
    "date": "2025-06-13",
    "groupValue": "賛成",
    "kind": "vote",
@@ -1909,6 +1962,28 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0613-v001.htm",
    "title": "日程第１　スポーツ基本法及びスポーツにおけるドーピングの防止活動の推進に関する法律の一部を改正する法律案（衆議院提出）",
    "value": "賛成"
+  },
+  {
+   "answerDate": "2025-06-24",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217191.htm",
+   "date": "2025-06-13",
+   "kind": "question",
+   "questionId": "217-sangiin-191",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217191.htm",
+   "submitterText": "石橋 通宏君",
+   "title": "我が国における難民認定の状況に関する質問主意書"
+  },
+  {
+   "answerDate": "2025-06-24",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217190.htm",
+   "date": "2025-06-13",
+   "kind": "question",
+   "questionId": "217-sangiin-190",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217190.htm",
+   "submitterText": "石橋 通宏君",
+   "title": "ミャンマー国軍総司令官が実施を公言する総選挙に係る日本政府の態度に関する質問主意書"
   },
   {
    "date": "2025-06-11",
@@ -2142,6 +2217,22 @@
    "value": "賛成"
   },
   {
+   "bills": [
+    {
+     "billId": "217-参法-7",
+     "title": "労働安全衛生法及び特定受託事業者に係る取引の適正化等に関する法律の一部を改正する法律案"
+    }
+   ],
+   "date": "2025-05-29",
+   "estimated": false,
+   "kind": "attendance",
+   "meeting": "厚生労働委員会 第16号",
+   "meetingId": "121714260X01620250529_000",
+   "role": "発議者",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121714260X01620250529/0"
+  },
+  {
    "date": "2025-05-28",
    "groupValue": "賛成",
    "kind": "vote",
@@ -2241,6 +2332,22 @@
    "value": "賛成"
   },
   {
+   "bills": [
+    {
+     "billId": "217-参法-7",
+     "title": "労働安全衛生法及び特定受託事業者に係る取引の適正化等に関する法律の一部を改正する法律案"
+    }
+   ],
+   "date": "2025-05-27",
+   "estimated": false,
+   "kind": "attendance",
+   "meeting": "厚生労働委員会 第15号",
+   "meetingId": "121714260X01520250527_000",
+   "role": "発議者",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121714260X01520250527/0"
+  },
+  {
    "date": "2025-05-23",
    "groupValue": "賛成",
    "kind": "vote",
@@ -2305,6 +2412,22 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0523-v001.htm",
    "title": "日程第１　海洋法に関する国際連合条約に基づくいずれの国の管轄にも属さない区域における海洋の生物の多様性の保全及び持続可能な利用に関する協定の締結について承認を求めるの件（衆議院送付）",
    "value": "賛成"
+  },
+  {
+   "bills": [
+    {
+     "billId": "217-参法-7",
+     "title": "労働安全衛生法及び特定受託事業者に係る取引の適正化等に関する法律の一部を改正する法律案"
+    }
+   ],
+   "date": "2025-05-22",
+   "estimated": false,
+   "kind": "attendance",
+   "meeting": "厚生労働委員会 第14号",
+   "meetingId": "121714260X01420250522_000",
+   "role": "発議者",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121714260X01420250522/0"
   },
   {
    "date": "2025-05-21",
@@ -2646,6 +2769,17 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0425-v001.htm",
    "title": "日程第１　船員法等の一部を改正する法律案（内閣提出、衆議院送付）",
    "value": "賛成"
+  },
+  {
+   "billId": "217-参法-7",
+   "date": "2025-04-25",
+   "kind": "bill",
+   "role": "提出者",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/217/meisai/m217100217007.htm",
+   "status": "参議院 厚生労働委員会 未了",
+   "submitterText": "石橋通宏君 外2名",
+   "title": "労働安全衛生法及び特定受託事業者に係る取引の適正化等に関する法律の一部を改正する法律案"
   },
   {
    "date": "2025-04-23",

@@ -1383,6 +1383,17 @@
    "value": "賛成"
   },
   {
+   "answerDate": "2025-03-14",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217051.htm",
+   "date": "2025-03-03",
+   "kind": "question",
+   "questionId": "217-sangiin-51",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217051.htm",
+   "submitterText": "柳ヶ瀬 裕文君",
+   "title": "ねんきん定期便に記載されている老齢厚生年金額が実際の受給金額より少ない可能性等に関する質問主意書"
+  },
+  {
    "date": "2025-02-19",
    "groupValue": "賛成",
    "kind": "vote",
@@ -1513,6 +1524,49 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0219-v001.htm",
    "title": "日程第１　国家公務員等の任命に関する件「検査官（田中淳子君）」",
    "value": "賛成"
+  },
+  {
+   "chars": 3504,
+   "date": "2025-02-12",
+   "excerpt": "日本維新の会の柳ヶ瀬裕文です。 私は、会派を代表して、石破総理の米国訪問に関する報告に対し、石破総理及び岩屋外務大臣に質問をいたします。 石破総理、トランプ大統領との会談を乗り切った、乗り切られたということで、ひとまずその御労苦をねぎらいたいと思います。本当にお疲れさまでございました。 日米安全保障条約の第五条が尖閣諸島に適用されることを確認できたこと、また、自由で開かれたインド太平洋の実現に向け",
+   "kind": "speech",
+   "meeting": "本会議 第4号",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715254X00420250212/13",
+   "speechId": "121715254X00420250212_013"
+  },
+  {
+   "answerDate": "2025-02-04",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217012.htm",
+   "date": "2025-01-24",
+   "kind": "question",
+   "questionId": "217-sangiin-12",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217012.htm",
+   "submitterText": "柳ヶ瀬 裕文君",
+   "title": "日中ハイレベル人的・文化交流対話における中国側の発表文の解釈に関する質問主意書"
+  },
+  {
+   "answerDate": "2025-02-04",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217011.htm",
+   "date": "2025-01-24",
+   "kind": "question",
+   "questionId": "217-sangiin-11",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217011.htm",
+   "submitterText": "柳ヶ瀬 裕文君",
+   "title": "中国訪問中の岩屋毅外務大臣の発言に関する質問主意書"
+  },
+  {
+   "answerDate": "2025-02-04",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217010.htm",
+   "date": "2025-01-24",
+   "kind": "question",
+   "questionId": "217-sangiin-10",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217010.htm",
+   "submitterText": "柳ヶ瀬 裕文君",
+   "title": "税収弾性値の算出に用いる計算式等に関する質問主意書"
   },
   {
    "date": "2024-10-01",
