@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { assemblyPaths, memberPaths, readAssemblies, readAssemblySessions, readMemberDetail, readMeta, readRollCall, rollCallPaths } from "./data-files";
+import { assemblyPaths, memberPaths, readAssemblies, readAssemblySessions, readLocalRollCallIndex, readMemberDetail, readMeta, readRollCall, rollCallPaths } from "./data-files";
 
 const fixtures = fileURLToPath(new URL("../test-fixtures/data", import.meta.url));
 const missing = fileURLToPath(new URL("../test-fixtures/does-not-exist", import.meta.url));
@@ -129,5 +129,23 @@ describe("readAssemblySessions（#158）", () => {
   it("無い議会・パス区切りを含む id は null", async () => {
     expect(await readAssemblySessions(assemblyFixtures, "pref-99")).toBeNull();
     expect(await readAssemblySessions(assemblyFixtures, "../index")).toBeNull();
+  });
+});
+
+describe("readLocalRollCallIndex（#204）", () => {
+  it("assemblies/{id}/rollcalls/index.json を読み、voteSubject / committeeReport の原文をそのまま返す", async () => {
+    const index = await readLocalRollCallIndex(assemblyFixtures, "pref-31");
+    expect(index).toHaveLength(3);
+    const chinjo = index?.find((r) => r.id === "pref-31-2026-06-20260629-陳情-8年-11");
+    expect(chinjo?.voteSubject).toBe("委員長報告に対する賛否");
+    expect(chinjo?.committeeReport).toBe("不採択");
+    const giin = index?.find((r) => r.id === "pref-31-2026-06-20260629-知事提案-第10号");
+    expect(giin?.voteSubject).toBe("議案に対する賛否");
+    expect(giin?.committeeReport).toBeUndefined();
+  });
+  it("無い議会（宮城には rollcalls/index.json が無い）・パス区切りを含む id は null", async () => {
+    expect(await readLocalRollCallIndex(assemblyFixtures, "pref-04")).toBeNull();
+    expect(await readLocalRollCallIndex(assemblyFixtures, "pref-99")).toBeNull();
+    expect(await readLocalRollCallIndex(assemblyFixtures, "../pref-31")).toBeNull();
   });
 });

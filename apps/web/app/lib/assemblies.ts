@@ -5,7 +5,7 @@
  */
 import type { Assembly, AssemblyId, LocalVote } from "@seiji-kiroku/shared";
 import disclosure from "../data/vote-disclosure.json";
-import type { AssemblySession, MemberSummary } from "./data-contract";
+import type { AssemblySession, LocalRollCallSubject, MemberSummary, TimelineEntry } from "./data-contract";
 
 export function isDietAssemblyId(id: string): boolean {
   return id.startsWith("diet-");
@@ -75,6 +75,43 @@ const MAPPED_TONE = { 賛成: "yes", 反対: "no", 投票なし: "none" } as con
 /** 判の色。凡例から国会の値に対応づけられた（mapped がある）行だけ色を使い、それ以外は中立（raw）。raw の記号から推定しない */
 export function localVoteTone(vote: LocalVote): LocalVoteTone {
   return vote.mapped ? MAPPED_TONE[vote.mapped] : "raw";
+}
+
+/* ---------- 賛否の対象（voteSubject / committeeReport、#204） ---------- */
+
+/**
+ * `rollcalls/index.json` の `voteSubject`（表の節見出しの原文）/ `committeeReport`（委員長報告の原文）を
+ * rollCallId で timeline（localVote の行）に写す。一致しない行・localVote 以外の行は触らない。
+ */
+export function joinVoteSubjects(timeline: TimelineEntry[], index: readonly LocalRollCallSubject[] | null): TimelineEntry[] {
+  if (!index || index.length === 0) return timeline;
+  const byId = new Map(index.map((r) => [r.id, r]));
+  return timeline.map((e) => {
+    if (e.kind !== "localVote") return e;
+    const rc = byId.get(e.rollCallId);
+    if (!rc || (rc.voteSubject === undefined && rc.committeeReport === undefined)) return e;
+    return {
+      ...e,
+      ...(rc.voteSubject !== undefined ? { voteSubject: rc.voteSubject } : {}),
+      ...(rc.committeeReport !== undefined ? { committeeReport: rc.committeeReport } : {}),
+    };
+  });
+}
+
+/**
+ * 採決行の注記（#204）。鳥取の請願・陳情の ○ は「委員長報告（例：不採択）への賛成」であって
+ * 請願・陳情そのものへの賛成ではないので、「賛否の対象：委員長報告（不採択）」を事実として添える。
+ * - 「議案に対する賛否」（議案そのものへの賛否＝既定の読み方）は注記しない。
+ * - 知らない原文は言い換えずそのまま出す（推定しない）。committeeReport だけの行も落とさない。
+ */
+export function voteSubjectNote(e: { voteSubject?: string; committeeReport?: string }): string | null {
+  const { voteSubject, committeeReport } = e;
+  if (voteSubject === "委員長報告に対する賛否") return committeeReport === undefined ? "賛否の対象：委員長報告" : `賛否の対象：委員長報告（${committeeReport}）`;
+  const parts = [
+    voteSubject !== undefined && voteSubject !== "議案に対する賛否" ? `賛否の対象：${voteSubject}` : null,
+    committeeReport !== undefined ? `委員長報告：${committeeReport}` : null,
+  ].filter((p): p is string => p !== null);
+  return parts.length > 0 ? parts.join(" ・ ") : null;
 }
 
 /* ---------- 会期一覧（assemblies/{id}/sessions.json、ビルド時にバンドル） ---------- */

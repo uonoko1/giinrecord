@@ -24,8 +24,8 @@ test("local-assemblies.yml: 月 1 回の schedule と workflow_dispatch で動�
   assert.match(workflow, /workflow_dispatch:/);
 });
 
-test("local-assemblies.yml: 日次と同じイメージで local-cli.ts を ASSEMBLIES（miyagi=pref-04 tokushima=pref-36 tottori=pref-31 nara=pref-29）の順に走らせ、パイプの失敗を拾う（shell: bash）", () => {
-  assert.match(workflow, /ASSEMBLIES: "miyagi=pref-04 tokushima=pref-36 tottori=pref-31 nara=pref-29"/, "奈良県議会（#202）も同じループで走る");
+test("local-assemblies.yml: 日次と同じイメージで local-cli.ts を ASSEMBLIES（miyagi=pref-04 tokushima=pref-36 tottori=pref-31 mie=pref-24 nara=pref-29）の順に走らせ、パイプの失敗を拾う（shell: bash）", () => {
+  assert.match(workflow, /ASSEMBLIES: "miyagi=pref-04 tokushima=pref-36 tottori=pref-31 mie=pref-24 nara=pref-29"/, "三重（#203）・奈良（#202）も同じループで走る");
   const block = stepBlock("Run local assemblies ETL");
   assert.match(block, /for pair in \$ASSEMBLIES; do/);
   assert.match(block, /gikailog-etl:ci/);
@@ -37,9 +37,14 @@ test("local-assemblies.yml: 日次と同じイメージで local-cli.ts を ASSE
   assert.match(block, /-v "\$PWD\/data:\/app\/data"/);
 });
 
-test("local-assemblies.yml: data PR は別ブランチ名・別の失敗 Issue タイトルで、同じ concurrency group で直列化する", () => {
+test("local-assemblies.yml: data PR は別ブランチ名・別の失敗 Issue タイトル・ワークフロー固有の concurrency group（#201）", () => {
   assert.match(workflow, /DATA_BRANCH: data\/local-assemblies/);
-  assert.match(workflow, /concurrency:\s*\n\s*group: etl\b/);
+  // Sprint 10 レトロ: 日次（バックフィル）と group を共有していたためキャンセルされた。3本の group は互いに別名。
+  assert.match(workflow, /concurrency:\s*\n\s*group: etl-local-assemblies\b/);
+  const groupOf = (w: string) => w.match(/concurrency:\s*\n\s*group: (\S+)/)?.[1];
+  const groups = [workflow, districts, daily].map(groupOf);
+  assert.ok(groups.every(Boolean));
+  assert.equal(new Set(groups).size, 3, "concurrency group はワークフローごとに別名");
   const title = workflow.match(/FAILURE_ISSUE_TITLE: "([^"]+)"/)?.[1];
   const others = [districts, daily].map((w) => w.match(/FAILURE_ISSUE_TITLE: "([^"]+)"/)?.[1]);
   assert.ok(title);

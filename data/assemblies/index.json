@@ -19,6 +19,13 @@
   "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/meibo/index.html"
  },
  {
+  "id": "pref-24",
+  "kind": "prefectural",
+  "name": "三重県議会",
+  "prefCode": "24",
+  "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
+ },
+ {
   "id": "pref-31",
   "kind": "prefectural",
   "name": "鳥取県議会",
