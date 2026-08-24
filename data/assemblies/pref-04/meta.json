@@ -7,7 +7,7 @@
   "unknownCells": 0,
   "unmatchedNames": 3
  },
- "fetchedAt": "2026-08-24T02:09:19.232Z",
+ "fetchedAt": "2026-08-24T02:37:56.315Z",
  "rosterAsOf": "2026-04-23",
  "sessions": [
   {
@@ -29,32 +29,32 @@
  ],
  "sources": [
   {
-   "fetchedAt": "2026-08-24T02:09:19.232Z",
+   "fetchedAt": "2026-08-24T02:37:56.315Z",
    "name": "宮城県議会 議員名簿（会派別）",
    "url": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
   },
   {
-   "fetchedAt": "2026-08-24T02:09:19.232Z",
+   "fetchedAt": "2026-08-24T02:37:56.315Z",
    "name": "宮城県議会 議員名簿（選挙区別）",
    "url": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kubetu.html"
   },
   {
-   "fetchedAt": "2026-08-24T02:09:19.232Z",
+   "fetchedAt": "2026-08-24T02:37:56.315Z",
    "name": "宮城県議会 議員名簿（五十音順）",
    "url": "https://www.pref.miyagi.jp/site/kengikai/18meibo-gojuuon.html"
   },
   {
-   "fetchedAt": "2026-08-24T02:09:19.232Z",
+   "fetchedAt": "2026-08-24T02:37:56.315Z",
    "name": "宮城県議会 過去の本会議情報",
    "url": "https://www.pref.miyagi.jp/site/kengikai/kakohonkaigi.html"
   },
   {
-   "fetchedAt": "2026-08-24T02:09:19.232Z",
+   "fetchedAt": "2026-08-24T02:37:56.315Z",
    "name": "宮城県議会 各議員の表決状況（令和8年2月定例会（第399回））",
    "url": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf"
   },
   {
-   "fetchedAt": "2026-08-24T02:09:19.232Z",
+   "fetchedAt": "2026-08-24T02:37:56.315Z",
    "name": "宮城県議会 各議員の表決状況（令和7年11月定例会（第398回））",
    "url": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf"
   }
