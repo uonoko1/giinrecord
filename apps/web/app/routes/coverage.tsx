@@ -2,7 +2,7 @@ import { Link, type MetaArgs } from "react-router";
 import { CoverBrand } from "../components/CoverBrand";
 import { SiteFooter } from "../components/SiteFooter";
 import { assemblyPath, bundledSessions } from "../lib/assemblies";
-import { buildCoverage, type Coverage, type DietCoverage, formatLocalSessionRange, formatSessionRange, type LocalCoverage } from "../lib/coverage";
+import { buildCoverage, type Coverage, type DietCoverage, formatLocalSessionRange, formatSessionRange, hasSessionGaps, type LocalCoverage, type SessionRange } from "../lib/coverage";
 import type { AssemblySession } from "../lib/data-contract";
 import { type Dataset, dataset as bundled } from "../lib/dataset";
 import { formatDate, formatDateTime } from "../lib/format";
@@ -71,7 +71,7 @@ function TotalsSection({ coverage }: { coverage: Coverage }) {
       <h2 id="coverage-totals-heading" className="section__title">
         合計
       </h2>
-      <div className="figures">
+      <div className="figures coverage-totals">
         <div className="figure">
           <span className="figure__num">{n(totals.assemblies)}</span>
           <span className="figure__label">議会</span>
@@ -84,12 +84,34 @@ function TotalsSection({ coverage }: { coverage: Coverage }) {
           <span className="figure__num">{n(totals.dietRollcalls + totals.localRollcalls)}</span>
           <span className="figure__label">採決・表決</span>
         </div>
+        <div className="figure">
+          <span className="figure__num">{n(totals.bills)}</span>
+          <span className="figure__label">議案</span>
+        </div>
       </div>
     </section>
   );
 }
 
-/** 国会: 院ごとに回次の範囲・採決件数・議員数。衆院の個人票が無いことは事実として 1 文 */
+/**
+ * 回次の範囲の表示。実際に行のあった回次が範囲より少ない（歯抜け）ときは実数を添える。
+ * 例: 第200—221回のうち記名投票のある回次は 11（残りは起立採決などで個人票が無い）。連続収録と読ませない。
+ */
+function SessionRangeCell({ range, unit }: { range: SessionRange | null; unit: string }) {
+  const text = formatSessionRange(range);
+  if (!text || !range) return <>—</>;
+  return (
+    <>
+      {text}
+      {hasSessionGaps(range) && <span className="assemblies-status-note">うち{unit}のある回次 {n(range.count)}</span>}
+    </>
+  );
+}
+
+/**
+ * 国会: 院ごとに個人別の投票記録の有無・回次・件数・議員数。
+ * 「個人票が無い」と「データが無い」は別の事実なので、衆院は個人票を「なし」としつつ議案の収録範囲を同じ表に出す。
+ */
 function DietSection({ diet, metaSessions }: { diet: DietCoverage[]; metaSessions: Coverage["metaSessions"] }) {
   const metaRange = formatSessionRange(metaSessions);
   return (
@@ -97,9 +119,10 @@ function DietSection({ diet, metaSessions }: { diet: DietCoverage[]; metaSession
       <h2 id="coverage-diet-heading" className="section__title">
         国会
       </h2>
-      {metaRange && (
+      {metaRange && metaSessions && (
         <p className="note">
-          取得の対象にした回次: <span className="num">{metaRange}</span>
+          取得の対象にした回次: <span className="num">{metaRange}</span>（<span className="num">{n(metaSessions.count)}</span> 回次）。
+          下の表は、その対象のうち実際に記録のある回次と件数です。
         </p>
       )}
       <div className="assemblies-table-wrap">
@@ -107,38 +130,72 @@ function DietSection({ diet, metaSessions }: { diet: DietCoverage[]; metaSession
           <thead>
             <tr>
               <th scope="col">院</th>
-              <th scope="col">個人別の投票記録</th>
+              <th scope="col">記録の種類</th>
               <th scope="col">回次</th>
-              <th scope="col">採決</th>
+              <th scope="col">件数</th>
               <th scope="col">議員</th>
               <th scope="col">出典</th>
             </tr>
           </thead>
           <tbody>
             {diet.map((d) => (
-              <tr key={d.assemblyId}>
-                <th scope="row">
-                  <Link to={assemblyPath(d.assemblyId)}>{d.name}</Link>
-                </th>
-                <td>{d.individualVotes ? "あり（本会議の記名・押しボタン投票）" : "なし"}</td>
-                <td className="num">{formatSessionRange(d.rollcallSessions) ?? "—"}</td>
-                <td className="num">{d.individualVotes ? `${n(d.rollcalls)} 件` : "—"}</td>
-                <td className="num">{n(d.members)} 名</td>
-                <td>
-                  <a href={d.sourceUrl} target="_blank" rel="noopener noreferrer">
-                    議員一覧（公式）
-                  </a>
-                </td>
-              </tr>
+              <DietRows key={d.assemblyId} coverage={d} />
             ))}
           </tbody>
         </table>
       </div>
       <p className="note">
-        衆議院は本会議の個人別の投票記録を公表していません。議員ページに出る衆議院の会派の態度は、議案情報の「賛成会派／反対会派」にその議員の所属会派が載っていたことの記録で、
-        <b>推定</b>として個人の賛否（事実）と分けて表示します。
+        衆議院は本会議の個人別の投票記録を公表していません。議員ページに出る衆議院の会派の態度は、上の議案情報の「賛成会派／反対会派」に
+        その議員の所属会派が載っていたことの記録で、<b>推定</b>として個人の賛否（事実）と分けて表示します。
       </p>
     </section>
+  );
+}
+
+/**
+ * 1 院ぶんの行。個人別の投票（参院のみ）と議案情報は別の記録なので行を分ける
+ * （同じ行にすると「個人票が無い＝データが無い」と読めてしまう）。
+ */
+function DietRows({ coverage: d }: { coverage: DietCoverage }) {
+  const rows = [
+    {
+      key: "votes",
+      kind: d.individualVotes ? "個人別の投票（本会議の記名・押しボタン投票）" : "個人別の投票：なし（一次資料に個人票が無い）",
+      range: d.rollcallSessions,
+      unit: "記名投票",
+      count: d.individualVotes ? d.rollcalls : null,
+    },
+    { key: "bills", kind: "議案情報（提出者・賛成者・各院の結果）", range: d.billSessions, unit: "議案", count: d.bills > 0 ? d.bills : null },
+  ];
+  return (
+    <>
+      {rows.map((r, i) => (
+        <tr key={r.key}>
+          {i === 0 && (
+            <th scope="row" rowSpan={rows.length}>
+              <Link to={assemblyPath(d.assemblyId)}>{d.name}</Link>
+            </th>
+          )}
+          <td>{r.kind}</td>
+          <td className="num">
+            <SessionRangeCell range={r.range} unit={r.unit} />
+          </td>
+          <td className="num">{r.count === null ? "—" : `${n(r.count)} 件`}</td>
+          {i === 0 && (
+            <td className="num" rowSpan={rows.length}>
+              {n(d.members)} 名
+            </td>
+          )}
+          {i === 0 && (
+            <td rowSpan={rows.length}>
+              <a href={d.sourceUrl} target="_blank" rel="noopener noreferrer">
+                議員一覧（公式）
+              </a>
+            </td>
+          )}
+        </tr>
+      ))}
+    </>
   );
 }
 

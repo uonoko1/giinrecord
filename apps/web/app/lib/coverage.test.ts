@@ -4,7 +4,7 @@ import assembliesFixture from "../test-fixtures/assemblies/index.json";
 import localMembers from "../test-fixtures/assemblies/members-index.json";
 import sessionsFixture from "../test-fixtures/assemblies/sessions.json";
 import { dataset } from "../test-fixtures/dataset";
-import { buildCoverage, formatLocalSessionRange, formatSessionRange, sessionRange } from "./coverage";
+import { buildCoverage, formatLocalSessionRange, formatSessionRange, hasSessionGaps, sessionRange } from "./coverage";
 import type { AssemblySession } from "./data-contract";
 import type { Dataset, MemberSummary } from "./dataset";
 
@@ -13,23 +13,31 @@ const sessions = new Map<string, AssemblySession[]>([["pref-04", sessionsFixture
 const withLocal: Dataset = { ...dataset, assemblies, members: [...dataset.members, ...(localMembers as MemberSummary[])] };
 
 describe("sessionRange / formatSessionRange", () => {
-  it("最小と最大を取る（順不同でよい）", () => {
-    expect(sessionRange([221, 200, 210])).toEqual({ from: 200, to: 221 });
+  it("最小と最大に加えて、実際に行のあった回次の数（重複を除く）を持つ", () => {
+    expect(sessionRange([221, 200, 210])).toEqual({ from: 200, to: 221, count: 3 });
+    expect(sessionRange([221, 221, 220])).toEqual({ from: 220, to: 221, count: 2 });
   });
   it("空なら null、1 つなら from === to", () => {
     expect(sessionRange([])).toBeNull();
-    expect(sessionRange([221])).toEqual({ from: 221, to: 221 });
+    expect(sessionRange([221])).toEqual({ from: 221, to: 221, count: 1 });
+  });
+  it("歯抜け（範囲のうち 0 件の回次がある）を判定する", () => {
+    // 実データの参院: 第200—221回のうち記名投票のある回次は 11
+    expect(hasSessionGaps(sessionRange([200, 201, 204, 208, 209, 211, 213, 214, 217, 219, 221]))).toBe(true);
+    expect(hasSessionGaps(sessionRange([220, 221]))).toBe(false);
+    expect(hasSessionGaps(sessionRange([221]))).toBe(false);
+    expect(hasSessionGaps(null)).toBe(false);
   });
   it("表示は「第200—221回」、1 つなら「第221回」、空なら null", () => {
-    expect(formatSessionRange({ from: 200, to: 221 })).toBe("第200—221回");
-    expect(formatSessionRange({ from: 221, to: 221 })).toBe("第221回");
+    expect(formatSessionRange({ from: 200, to: 221, count: 11 })).toBe("第200—221回");
+    expect(formatSessionRange({ from: 221, to: 221, count: 1 })).toBe("第221回");
     expect(formatSessionRange(null)).toBeNull();
   });
 });
 
 describe("buildCoverage: 国会", () => {
-  it("meta.sessions の範囲をそのまま数える", () => {
-    expect(buildCoverage(withLocal, sessions).metaSessions).toEqual({ from: 220, to: 221 });
+  it("meta.sessions の範囲と回次数をそのまま数える", () => {
+    expect(buildCoverage(withLocal, sessions).metaSessions).toEqual({ from: 220, to: 221, count: 2 });
   });
 
   it("参議院は rollcalls/index.json の件数と回次の範囲を持ち、個人票あり", () => {
@@ -38,7 +46,7 @@ describe("buildCoverage: 国会", () => {
     expect(sangiin.house).toBe("sangiin");
     expect(sangiin.individualVotes).toBe(true);
     expect(sangiin.rollcalls).toBe(dataset.rollcalls.length);
-    expect(sangiin.rollcallSessions).toEqual({ from: 220, to: 221 });
+    expect(sangiin.rollcallSessions).toEqual({ from: 220, to: 221, count: 2 });
     expect(sangiin.members).toBe(3);
     expect(sangiin.sourceUrl).toBe(assemblies[0]!.sourceUrl);
   });
@@ -48,6 +56,23 @@ describe("buildCoverage: 国会", () => {
     expect(shugiin.individualVotes).toBe(false);
     expect(shugiin.rollcalls).toBe(0);
     expect(shugiin.rollcallSessions).toBeNull();
+  });
+
+  it("議案（bills/index.json）は house ごとに数える。衆院は個人票が無くても議案の収録範囲を持つ", () => {
+    const diet = buildCoverage(withLocal, sessions).diet;
+    const shugiin = diet.find((d) => d.assemblyId === "diet-shugiin")!;
+    expect(shugiin.bills).toBe(3);
+    expect(shugiin.billSessions).toEqual({ from: 219, to: 221, count: 2 }); // 220 は議案が無い＝歯抜け
+    expect(hasSessionGaps(shugiin.billSessions)).toBe(true);
+    // 参院の議案は fixture に無い（実データも bills/index.json は全て shugiin）
+    const sangiin = diet.find((d) => d.assemblyId === "diet-sangiin")!;
+    expect(sangiin.bills).toBe(0);
+    expect(sangiin.billSessions).toBeNull();
+  });
+
+  it("bills/index.json が無い古いデータでは議案 0 件（落ちない）", () => {
+    const diet = buildCoverage({ ...withLocal, bills: undefined }, sessions).diet;
+    expect(diet.every((d) => d.bills === 0 && d.billSessions === null)).toBe(true);
   });
 
   it("assemblyId の無い（#156 より前の）議員は house から国会の議会に数える", () => {
@@ -94,6 +119,7 @@ describe("buildCoverage: 合計", () => {
     expect(totals.localRollcalls).toBe(5);
     expect(totals.localMembers).toBe(3);
     expect(totals.assemblies).toBe(3);
+    expect(totals.bills).toBe(3);
   });
 
   it("assemblies/index.json が無い古いデータでは国会の 2 議会だけ", () => {

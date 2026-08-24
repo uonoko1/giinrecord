@@ -3,21 +3,32 @@
  * 数値はここで数え、ページ側にも定数にも書かない（データが増えたら再ビルドで追随する）。
  * ブラウザでも動く（Node API は使わない）。
  */
-import type { Assembly, House } from "@seiji-kiroku/shared";
+import type { Assembly, BillSummary, House } from "@seiji-kiroku/shared";
 import { isDietAssemblyId } from "./assemblies";
 import { DIET_ASSEMBLIES, type AssemblySession } from "./data-contract";
 import type { Dataset } from "./dataset";
 import { memberAssemblyId } from "./member-search";
 
-/** 回次の範囲（meta.sessions と rollcalls の session から数える）。データが空なら null */
+/**
+ * 回次の範囲。`from`—`to` は最小と最大で、`count` は実際に行のあった回次の数（重複を除く）。
+ * `to - from + 1 > count` なら歯抜け（その範囲のうち 0 件の回次がある）。連続収録と読ませないために両方持つ。
+ */
 export interface SessionRange {
   from: number;
   to: number;
+  /** 実際に行のあった回次の数（重複を除く） */
+  count: number;
 }
 
 export function sessionRange(sessions: readonly number[]): SessionRange | null {
   if (sessions.length === 0) return null;
-  return { from: Math.min(...sessions), to: Math.max(...sessions) };
+  const unique = new Set(sessions);
+  return { from: Math.min(...sessions), to: Math.max(...sessions), count: unique.size };
+}
+
+/** 範囲のうち行が 1 件も無い回次があるか（第200—221回のうち記名投票のある回次は 11、など） */
+export function hasSessionGaps(range: SessionRange | null): boolean {
+  return range !== null && range.to - range.from + 1 > range.count;
 }
 
 /** [200, 221] → "第200—221回"、1 つなら "第221回"。空なら null */
@@ -41,6 +52,10 @@ export interface DietCoverage {
   rollcallSessions: SessionRange | null;
   /** 個人別の投票記録が一次資料にあるか（参議院のみ true） */
   individualVotes: boolean;
+  /** その院の議案（bills/index.json）の件数。衆院の会派態度（推定）の裏づけになる資料 */
+  bills: number;
+  /** 議案のある回次の範囲。1 件も無ければ null */
+  billSessions: SessionRange | null;
 }
 
 /** 地方議会 1 つの収録範囲（sessions.json から数える） */
@@ -70,6 +85,8 @@ export interface Coverage {
     /** 国会の記名投票の件数（rollcalls/index.json の全行） */
     dietRollcalls: number;
     dietMembers: number;
+    /** 議案（bills/index.json）の件数 */
+    bills: number;
     localRollcalls: number;
     localMembers: number;
     assemblies: number;
@@ -94,20 +111,25 @@ export function buildCoverage(data: Dataset, sessionsByAssembly: ReadonlyMap<str
   }
 
   const rollcallSessions = sessionRange(data.rollcalls.map((r) => r.session));
+  const bills: readonly BillSummary[] = data.bills ?? [];
   const diet: DietCoverage[] = assemblies
     .filter((a) => isDietAssemblyId(a.id))
     .map((a) => {
       // rollcalls/index.json は参議院の本会議投票結果（個人別）。衆議院の個人票は一次資料に無い
       const individualVotes = a.id === "diet-sangiin";
+      const house = HOUSE_OF[a.id] ?? "sangiin";
+      const houseBills = bills.filter((b) => b.house === house);
       return {
         assemblyId: a.id,
-        house: HOUSE_OF[a.id] ?? "sangiin",
+        house,
         name: a.name,
         sourceUrl: a.sourceUrl,
         members: memberCount.get(a.id) ?? 0,
         rollcalls: individualVotes ? data.rollcalls.length : 0,
         rollcallSessions: individualVotes ? rollcallSessions : null,
         individualVotes,
+        bills: houseBills.length,
+        billSessions: sessionRange(houseBills.map((b) => b.session)),
       };
     });
 
@@ -138,6 +160,7 @@ export function buildCoverage(data: Dataset, sessionsByAssembly: ReadonlyMap<str
     totals: {
       dietRollcalls: diet.reduce((sum, d) => sum + d.rollcalls, 0),
       dietMembers: diet.reduce((sum, d) => sum + d.members, 0),
+      bills: bills.length,
       localRollcalls: local.reduce((sum, l) => sum + l.rollcalls, 0),
       localMembers: local.reduce((sum, l) => sum + l.members, 0),
       assemblies: assemblies.length,

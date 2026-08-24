@@ -27,10 +27,15 @@ describe("FactsSection", () => {
     expect(screen.getByText(/個人の賛否とは断定しません/)).toBeInTheDocument();
   });
 
-  it("収録範囲（回次・会期・件数）は /coverage へのリンクにし、ここに数値を書かない（#218）", () => {
+  it("押しボタン投票が1998年（第142回国会）に始まった制度の事実は残す（収録範囲ではない、#218）", () => {
+    renderSection();
+    expect(screen.getByText(/この投票方式は1998年（第142回国会）に始まりました。/)).toBeInTheDocument();
+  });
+
+  it("収録範囲（このサイトに入っている回次・会期・件数）は /coverage へのリンクにし、ここに数値を書かない（#218）", () => {
     const { container } = renderSection();
     expect(screen.getByRole("link", { name: "収録範囲" })).toHaveAttribute("href", "/coverage");
-    expect(container.textContent).not.toContain("第142回");
+    // 収録範囲の数え上げ（第200—221回 のようなレンジ）は About に置かない
     expect(container.textContent).not.toMatch(/第\d+—\d+回/);
   });
 

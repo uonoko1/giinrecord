@@ -28,41 +28,65 @@ describe("/coverage 収録範囲", () => {
     renderPage();
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("収録範囲");
     const totals = screen.getByRole("region", { name: "合計" });
-    expect(within(totals).getByText("3")).toBeInTheDocument(); // 議会 3（国会2＋宮城）
-    expect(within(totals).getByText("6")).toBeInTheDocument(); // 議員 3＋3
-    expect(within(totals).getByText("10")).toBeInTheDocument(); // 採決 5（国会）＋5（宮城）
+    /** ラベル（議会・議員・…）に対応する数値。同じ数でも取り違えない */
+    const figure = (label: string) => within(totals).getByText(label).closest(".figure")!.querySelector(".figure__num")!.textContent;
+    expect(figure("議会")).toBe("3"); // 国会2＋宮城
+    expect(figure("議員")).toBe("6"); // 3＋3
+    expect(figure("採決・表決")).toBe("10"); // 国会 5＋宮城 5
+    expect(figure("議案")).toBe("3");
   });
 
-  it("国会: 院ごとに回次・採決件数・議員数と議員一覧（公式）の出典を出す", () => {
-    renderPage();
+  /** 院ごとに「個人別の投票」と「議案情報」の2行。見出し行を除く */
+  function dietRows() {
     const table = screen.getByRole("table", { name: "国会の収録範囲" });
-    const rows = within(table).getAllByRole("row").slice(1);
-    expect(rows).toHaveLength(2);
-    const sangiin = rows[0]!;
-    expect(within(sangiin).getByRole("link", { name: "参議院" })).toHaveAttribute("href", "/assemblies/diet-sangiin");
-    expect(sangiin).toHaveTextContent("第220—221回");
-    expect(sangiin).toHaveTextContent("5 件");
-    expect(sangiin).toHaveTextContent("3 名");
-    const src = within(sangiin).getByRole("link", { name: "議員一覧（公式）" });
+    return within(table).getAllByRole("row").slice(1);
+  }
+
+  it("国会: 参院は個人別の投票の回次・件数・議員数と議員一覧（公式）の出典を出す", () => {
+    renderPage();
+    const rows = dietRows();
+    expect(rows).toHaveLength(4); // 2院 × (個人票 + 議案)
+    const votes = rows[0]!;
+    expect(within(votes).getByRole("link", { name: "参議院" })).toHaveAttribute("href", "/assemblies/diet-sangiin");
+    expect(votes).toHaveTextContent("個人別の投票（本会議の記名・押しボタン投票）");
+    expect(votes).toHaveTextContent("第220—221回");
+    expect(votes).toHaveTextContent("5 件");
+    expect(votes).toHaveTextContent("3 名");
+    const src = within(votes).getByRole("link", { name: "議員一覧（公式）" });
     expect(src).toHaveAttribute("href", assemblies[0]!.sourceUrl);
     expect(src.getAttribute("rel")).toMatch(/noopener/);
   });
 
-  it("衆議院は個人票が無いことを行にも注記にも事実として書き、参院の件数を書かない", () => {
+  it("衆議院は個人票「なし」を書きつつ、持っている議案情報の回次と件数を出す（データが無いとは書かない、#218 レビュー2）", () => {
     renderPage();
-    const table = screen.getByRole("table", { name: "国会の収録範囲" });
-    const shugiin = within(table).getAllByRole("row")[2]!;
-    expect(within(shugiin).getByRole("link", { name: "衆議院" })).toBeInTheDocument();
-    expect(shugiin).toHaveTextContent("なし");
-    expect(shugiin).not.toHaveTextContent("件");
+    const rows = dietRows();
+    const votes = rows[2]!;
+    expect(within(votes).getByRole("link", { name: "衆議院" })).toBeInTheDocument();
+    expect(votes).toHaveTextContent("個人別の投票：なし（一次資料に個人票が無い）");
+    // 個人票の行に参院の件数を流用しない
+    expect(votes).not.toHaveTextContent("5 件");
+    const bills = rows[3]!;
+    expect(bills).toHaveTextContent("議案情報（提出者・賛成者・各院の結果）");
+    expect(bills).toHaveTextContent("第219—221回");
+    expect(bills).toHaveTextContent("3 件");
     const diet = screen.getByRole("region", { name: "国会" });
     expect(diet).toHaveTextContent("衆議院は本会議の個人別の投票記録を公表していません");
     expect(diet).toHaveTextContent("推定");
   });
 
-  it("取得の対象にした回次を meta.sessions から出す", () => {
+  it("回次が歯抜けなら実回次数を添える（連続収録と読ませない、#218 レビュー3）", () => {
     renderPage();
-    expect(screen.getByRole("region", { name: "国会" })).toHaveTextContent("第220—221回");
+    // 衆院の議案は 219 と 221 のみ（220 は無い）＝ 範囲 3 に対し実回次 2
+    expect(dietRows()[3]!).toHaveTextContent("うち議案のある回次 2");
+    // 参院の採決は 220—221 が連続なので添えない
+    expect(dietRows()[0]!).not.toHaveTextContent("うち");
+  });
+
+  it("取得の対象にした回次は回次数つきで出し、実収録の表と役割を区別する", () => {
+    renderPage();
+    const diet = screen.getByRole("region", { name: "国会" });
+    expect(diet).toHaveTextContent("取得の対象にした回次: 第220—221回（2 回次）");
+    expect(diet).toHaveTextContent("実際に記録のある回次と件数");
   });
 
   it("地方議会: 名称・会期範囲・表決数・議員数と、会期ごとの取得元（一次資料）を出す", () => {

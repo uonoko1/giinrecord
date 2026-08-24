@@ -40,13 +40,18 @@ describe("About", () => {
     expect(screen.getByText("選挙公約との一致・不一致の判定")).toBeInTheDocument();
   });
 
-  it("収録範囲（回次・会期・件数）は /coverage へのリンクにし、About には数値を書かない（#218）", () => {
+  it("収録範囲（このサイトに入っている回次・会期・件数）は /coverage へのリンクにし、About には数え上げを書かない（#218）", () => {
     const { container } = renderAbout();
     const facts = within(screen.getByRole("region", { name: "何が事実で、何が推定か" }));
     expect(facts.getByRole("link", { name: "収録範囲" })).toHaveAttribute("href", "/coverage");
-    expect(container.textContent).not.toContain("第142回");
+    expect(container.textContent).not.toMatch(/第\d+—\d+回/);
     const footer = within(screen.getByRole("contentinfo"));
     expect(footer.getByRole("link", { name: "収録範囲" })).toHaveAttribute("href", "/coverage");
+  });
+
+  it("押しボタン投票の開始（1998年・第142回国会）は制度の事実として About に残す（#218）", () => {
+    renderAbout();
+    expect(screen.getByText(/この投票方式は1998年（第142回国会）に始まりました。/)).toBeInTheDocument();
   });
 
   it("評価語を含まない", () => {
