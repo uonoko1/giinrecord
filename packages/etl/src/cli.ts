@@ -19,7 +19,7 @@ import { attendancePageUrl, fetchCommitteeAttendance } from "./sources/kokkai-at
 import { matchAttendance, type MatchedAttendance } from "./match-attendance.ts";
 import { buildDataset, mergeRosters, rosterSessionsFor, type Roster } from "./aggregate.ts";
 import { dietAssemblies, readSessionsOnDisk, validateDataset, writeDataset } from "./dataset.ts";
-import { lostVoteMatches, planSessions, readCarried, shouldFetchShugiinSpeeches } from "./sessions.ts";
+import { dropCarriedSpeeches, lostVoteMatches, planSessions, readCarried } from "./sessions.ts";
 
 /**
  * ETL entry point. S1: House of Councillors members and roll-call votes. S2: plenary speeches (国会会議録API; 参院、#73 から衆院も).
@@ -201,6 +201,7 @@ unmatched.push(...questions.unmatched);
 // 発言: 国会会議録API（公開まで約1ヶ月のラグ。meta.sources[].fetchedAt が「いつ時点の会議録か」を示す）。
 // 参院本会議は全回次を参院名簿（回次ごと）に突合する。衆院本会議（Issue #73）は衆院名簿が「現在」の1回次分しか無いので、
 // 議案の名寄せと同じく名簿が覆う回次（memberSession）だけ取得・突合し、過去回次は取得しない（名簿に無い旧議員を同名の現職に紐づけない）。
+// その memberSession の分は plan の形（targets か carried か）に関わらず毎回取得する（#236。下の shugiinSpeeches）。
 const speeches: Speech[] = [];
 for (const session of targets) {
   const matched = matchSpeeches(await fetchSpeeches(session, "sangiin"), members, session);
@@ -210,17 +211,17 @@ for (const session of targets) {
   speeches.push(...matched.speeches);
   unmatched.push(...matched.unmatched);
 }
-// memberSession が carried のとき（過去回次だけの手動実行）は取得しない: readCarried がその回次の speech 行を引き継ぐので、
-// 取得すると同じ speechId が2行になる（validateDataset の duplicate speechId 違反。#103 レビュー）。次の日次実行が取り直す。
-if (shouldFetchShugiinSpeeches(plan)) {
-  const matched = matchSpeeches(await fetchSpeeches(memberSession, "shugiin"), shugiin.members, memberSession);
-  const matchedCount = matched.speeches.filter((s) => s.memberId).length;
-  const positioned = matched.speeches.filter((s) => s.memberId && s.position).length;
-  console.log(`session ${memberSession}: ${matched.speeches.length} shugiin speeches (${matchedCount} matched, ${positioned} with position; roster covers session ${memberSession} only)`);
-  speeches.push(...matched.speeches);
-  unmatched.push(...matched.unmatched);
-} else {
-  console.log(`session ${memberSession}: shugiin speeches not fetched (session is carried; carrying previous speech rows instead)`);
+// 衆院本会議は memberSession が carried の実行（過去回次だけの手動実行・#219 のバックフィルの chunk）でも取得する（#236）。
+// 取得をやめると衆院の発言が前回出力の引き継ぎ頼みになり、引き継ぎが1度でも欠ければ 0 のまま自力では戻らない。
+// 引き継ぎとの二重行（同じ speechId が2行。validateDataset の duplicate speechId 違反。#103 レビュー）は
+// dropCarriedSpeeches が「取得した speechId の引き継ぎ行を落とす」ことで防ぐ。
+const shugiinSpeeches = matchSpeeches(await fetchSpeeches(memberSession, "shugiin"), shugiin.members, memberSession);
+{
+  const matchedCount = shugiinSpeeches.speeches.filter((s) => s.memberId).length;
+  const positioned = shugiinSpeeches.speeches.filter((s) => s.memberId && s.position).length;
+  console.log(`session ${memberSession}: ${shugiinSpeeches.speeches.length} shugiin speeches (${matchedCount} matched, ${positioned} with position; roster covers session ${memberSession} only)`);
+  speeches.push(...shugiinSpeeches.speeches);
+  unmatched.push(...shugiinSpeeches.unmatched);
 }
 // 委員会出席（Issue #109）: 委員会会議録の冒頭「出席者」欄の「発議者」（参議院側だけ。案件に参法がある会議録だけ）を参院名簿に名寄せし、
 // timeline の attendance 行（「委員会に発議者として出席」）にする。出席した発議者は発議者全員ではないので Bill.submitters / bill 行には決して入れない。
@@ -235,8 +236,15 @@ for (const session of targets) {
 // 引き継ぐ回次の speech / question / attendance / 参法 bill 行（#103）。名簿から消えた memberId の行は付け先が無いので落とし、件数を出す
 // （その回次を指定して取り直せば現行名簿で名寄せし直される）。
 const memberIds = new Set(members.map((m) => m.id).concat(shugiin.members.map((m) => m.id)));
-const carriedEntries = carried.entries.filter((c) => memberIds.has(c.memberId));
-if (carried.entries.length) console.log(`carried: ${carriedEntries.length} timeline entries from sessions ${plan.carried.join(" ")}${carriedEntries.length < carried.entries.length ? ` (${carried.entries.length - carriedEntries.length} dropped: memberId no longer in rosters)` : ""}`);
+const carriedOnRoster = carried.entries.filter((c) => memberIds.has(c.memberId));
+// 取得し直した衆院発言と同じ speechId の引き継ぎ行は落とす（#236）。memberSession が carried の実行でこれが効く。
+const carriedEntries = dropCarriedSpeeches(carriedOnRoster, shugiinSpeeches.speeches);
+if (carried.entries.length) {
+  const offRoster = carried.entries.length - carriedOnRoster.length;
+  const refetched = carriedOnRoster.length - carriedEntries.length;
+  const why = [offRoster ? `${offRoster} dropped: memberId no longer in rosters` : "", refetched ? `${refetched} dropped: re-fetched shugiin speeches` : ""].filter(Boolean).join("; ");
+  console.log(`carried: ${carriedEntries.length} timeline entries from sessions ${plan.carried.join(" ")}${why ? ` (${why})` : ""}`);
+}
 // 未突合は ETL を止めず、運用者が確認するために列挙する（docs/DATA_CONTRACT.md）。
 if (unmatched.length) {
   const { bySession, rest } = shardUnmatched(unmatched);
@@ -266,7 +274,7 @@ await writeDataset(DATA, {
       { name: `衆議院 議員一覧（${shugiin.asOf ?? "取得日"}現在）`, url: shugiinMemberListUrl(1), fetchedAt },
       { name: "参議院 本会議投票結果", url: "https://www.sangiin.go.jp/japanese/touhyoulist/", fetchedAt },
       { name: "国会会議録検索システム 検索用API（参議院 本会議）", url: speechPageUrl(memberSession, 1, "sangiin"), fetchedAt },
-      ...(shouldFetchShugiinSpeeches(plan) ? [{ name: "国会会議録検索システム 検索用API（衆議院 本会議）", url: speechPageUrl(memberSession, 1, "shugiin"), fetchedAt }] : []),
+      { name: "国会会議録検索システム 検索用API（衆議院 本会議）", url: speechPageUrl(memberSession, 1, "shugiin"), fetchedAt },
       { name: "国会会議録検索システム 検索用API（参議院 委員会の出席者欄）", url: attendancePageUrl(memberSession), fetchedAt },
       ...targets.map((s) => ({ name: `参議院 議案情報（第${s}回）`, url: billListUrl(s), fetchedAt })),
       ...targets.map((s) => ({ name: `衆議院 議案情報（第${s}回）`, url: shugiinBillListUrl(s), fetchedAt })),
