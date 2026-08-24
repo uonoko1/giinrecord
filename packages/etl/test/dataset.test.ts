@@ -1,6 +1,6 @@
 import { test, describe, beforeEach } from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, mkdtempSync, readFileSync, writeFileSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import iconv from "iconv-lite";
@@ -174,6 +174,31 @@ describe("writeDataset / validateDataset: docs/DATA_CONTRACT.md の不変条件"
   test("group-mismatch.json の rollCallId が rollcalls/index.json に無ければ違反", async () => {
     patch<unknown[]>(dir, "group-mismatch.json", () => [{ ...MISMATCH, rollCallId: "999-0101-v999" }]);
     assert.match((await validateDataset(dir)).join("\n"), /group-mismatch\.json\[0\].*999-0101-v999/);
+    cleanup();
+  });
+
+  test("unmatched は回次別に分けて書く（#219）: 票は unmatched/{session}.json、回次の引けない行だけ unmatched.json", async () => {
+    const rows = [
+      { nameText: "阿部 正俊", group: "自由民主党", rollCallId: "142-0114-v001" },
+      { nameText: "寺澤 芳男", group: "民友連", speechId: "114215254X00219980114_002" },
+    ];
+    await writeDataset(dir, { ...realDataset(), unmatched: rows });
+    assert.deepEqual(readJson(dir, "unmatched/142.json"), [rows[0]]);
+    assert.deepEqual(readJson(dir, "unmatched.json"), [rows[1]]);
+    cleanup();
+  });
+
+  test("回次別ファイル（unmatched/{session}.json）に載っている票は違反にならない（#219）", async () => {
+    const rc = readJson<RollCall>(dir, "rollcalls/221/221-0605-v001.json");
+    patch<RollCall>(dir, "rollcalls/221/221-0605-v001.json", (r) => ({ ...r, votes: [{ ...r.votes[0], memberId: "" }, ...r.votes.slice(1)] }));
+    // unmatched.json ではなく回次別ファイルに載せる（分割後の既定の置き場所）
+    writeFileSync(join(dir, "unmatched.json"), stableJson([]));
+    mkdirSync(join(dir, "unmatched"), { recursive: true });
+    writeFileSync(join(dir, "unmatched", "221.json"), stableJson([{ nameText: rc.votes[0].nameText, group: rc.votes[0].group, rollCallId: rc.id }]));
+    // その票は timeline から消えるので、counts と timeline も合わせて更新してから検証する
+    patch<{ id: string; counts: { rollcalls: number } }[]>(dir, "members/index.json", (idx) => idx.map((m) => (m.id === rc.votes[0].memberId ? { ...m, counts: { ...m.counts, rollcalls: m.counts.rollcalls - 1 } } : m)));
+    patch<{ timeline: { rollCallId?: string }[] }>(dir, `members/${rc.votes[0].memberId}.json`, (d) => ({ ...d, timeline: d.timeline.filter((e) => e.rollCallId !== rc.id) }));
+    assert.deepEqual(await validateDataset(dir), []);
     cleanup();
   });
 

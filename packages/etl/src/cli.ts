@@ -1,21 +1,22 @@
 import { fileURLToPath } from "node:url";
 import type { Bill as SharedBill, Question, RollCall, Speech } from "@seiji-kiroku/shared";
-import { listRollCalls, parseRollCall, standingVoteNote } from "./sources/sangiin-votes.ts";
+import { listRollCalls, parseRollCall, RollCallParseError, standingVoteNote } from "./sources/sangiin-votes.ts";
 import { fetchMembers, memberListUrl, unmatchedGroups } from "./sources/sangiin-members.ts";
 import { fetchShugiinMembers, memberListUrl as shugiinMemberListUrl, unmatchedShugiinGroups } from "./sources/shugiin-members.ts";
 import { fetchText } from "./fetch.ts";
 import { fetchSpeeches, speechPageUrl } from "./sources/kokkai-speeches.ts";
-import { matchVotes, type GroupMismatch, type Unmatched } from "./match-votes.ts";
+import { matchVotes, type GroupMismatch } from "./match-votes.ts";
+import { shardUnmatched, type UnmatchedRow } from "./unmatched.ts";
 import { billListUrl, committeeBills, fetchBills, matchBillResults, toBillDecisions, type Bill } from "./sources/sangiin-bills.ts";
-import { matchSpeeches, type UnmatchedSpeech } from "./match-speeches.ts";
-import { matchBills, type UnmatchedBillProposer } from "./match-bills.ts";
+import { matchSpeeches } from "./match-speeches.ts";
+import { matchBills } from "./match-bills.ts";
 import { fetchShugiinBills, shugiinBillListUrl } from "./sources/shugiin-bills.ts";
-import { matchShugiinBills, type UnmatchedShugiinBillName } from "./match-shugiin-bills.ts";
+import { matchShugiinBills } from "./match-shugiin-bills.ts";
 import { fetchShugiinQuestions, shugiinQuestionListUrl } from "./sources/shugiin-questions.ts";
 import { fetchSangiinQuestions, sangiinQuestionListUrl } from "./sources/sangiin-questions.ts";
-import { matchQuestions, type UnmatchedQuestionSubmitter } from "./match-questions.ts";
+import { matchQuestions } from "./match-questions.ts";
 import { attendancePageUrl, fetchCommitteeAttendance } from "./sources/kokkai-attendance.ts";
-import { matchAttendance, type MatchedAttendance, type UnmatchedAttendee } from "./match-attendance.ts";
+import { matchAttendance, type MatchedAttendance } from "./match-attendance.ts";
 import { buildDataset, mergeRosters, rosterSessionsFor, type Roster } from "./aggregate.ts";
 import { dietAssemblies, readSessionsOnDisk, validateDataset, writeDataset } from "./dataset.ts";
 import { lostVoteMatches, planSessions, readCarried, shouldFetchShugiinSpeeches } from "./sessions.ts";
@@ -75,7 +76,7 @@ if (shugiinGroupsUnknown.length) {
 }
 
 const rollCalls: RollCall[] = [];
-const unmatched: (Unmatched | UnmatchedSpeech | UnmatchedBillProposer | UnmatchedShugiinBillName | UnmatchedQuestionSubmitter | UnmatchedAttendee)[] = [];
+const unmatched: UnmatchedRow[] = [];
 const groupMismatch: GroupMismatch[] = [];
 const addRollCall = (rc: RollCall) => {
   const matched = matchVotes(rc, members);
@@ -83,16 +84,51 @@ const addRollCall = (rc: RollCall) => {
   unmatched.push(...matched.unmatched);
   groupMismatch.push(...matched.groupMismatch);
 };
+// パースできなかったページ（未知のレイアウト等）。回次ごとに件数を出し、最後にまとめて再掲する（#219 のバックフィルで
+// どの回次が取れなかったかを運用者が特定できるように）。推定で埋めることはしない。
+const parseFailures: { session: number; sourceUrl: string; message: string }[] = [];
+/** 一覧ページ自体が取れなかった回次（404 等）。 */
+const sessionFailures: { session: number; message: string }[] = [];
 for (const session of targets) {
-  const list = await listRollCalls(session);
+  // 一覧ページが 404 の回次（押しボタン投票の導入前＝第141回以前は vote_ind.htm 自体が無い）は
+  // 「ページが無い」事実として飛ばし、回次と理由をログに残す（#219）。ここで落とすとバックフィル全体が止まる。
+  // 404 以外（5xx・タイムアウト）は障害なので飛ばさず例外のまま落とす: 取りこぼしを「無かった」と記録しないため。
+  let list;
+  try {
+    list = await listRollCalls(session);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (!message.startsWith("HTTP 404 ")) throw err;
+    sessionFailures.push({ session, message });
+    console.warn(`session ${session}: roll call list not published, skipped (${message})`);
+    continue;
+  }
   // 一覧には起立採決（個人票が無い）のページも載る（第200〜216回。第210回・第216回は全件）。RollCall にはならないので件数だけ出す（#103）。
   let standing = 0;
+  let failed = 0;
   for (const item of list) {
     const html = await fetchText(item.href);
     if (standingVoteNote(html) !== undefined) { standing++; continue; }
-    addRollCall(parseRollCall(html, item.href, session));
+    // 読めないページは飛ばしてログに残す（#219）。第142〜199回は全58回次の構造を事前確認していないので、
+    // 1ページの未知のレイアウトでバックフィル全体が落ちないようにする。読めた採決は普通に収録される。
+    try {
+      addRollCall(parseRollCall(html, item.href, session));
+    } catch (err) {
+      if (!(err instanceof RollCallParseError)) throw err;
+      failed++;
+      parseFailures.push({ session, sourceUrl: err.sourceUrl, message: err.message });
+      console.warn(`  skipped (parse error): ${err.message}`);
+    }
   }
-  console.log(`session ${session}: ${list.length} roll calls (${list.length - standing} with individual votes, ${standing} standing votes skipped)`);
+  console.log(`session ${session}: ${list.length} roll calls (${list.length - standing - failed} with individual votes, ${standing} standing votes skipped, ${failed} parse errors skipped)`);
+}
+if (sessionFailures.length) {
+  console.warn(`sessions skipped (roll call list not published, 404): ${sessionFailures.map((f) => f.session).join(" ")}`);
+}
+if (parseFailures.length) {
+  const bySession = [...new Set(parseFailures.map((f) => f.session))].sort((a, b) => a - b);
+  console.warn(`roll call pages skipped (parse error): ${parseFailures.length} in sessions ${bySession.join(" ")}`);
+  for (const f of parseFailures) console.warn(`  ${f.sourceUrl}: ${f.message}`);
 }
 // 引き継ぐ回次の採決（前回出力）。名簿は毎回取り直すので、票の氏名・会派を現行名簿で再突合する。
 for (const rc of carried.rollCalls) addRollCall(rc);
@@ -202,7 +238,12 @@ const memberIds = new Set(members.map((m) => m.id).concat(shugiin.members.map((m
 const carriedEntries = carried.entries.filter((c) => memberIds.has(c.memberId));
 if (carried.entries.length) console.log(`carried: ${carriedEntries.length} timeline entries from sessions ${plan.carried.join(" ")}${carriedEntries.length < carried.entries.length ? ` (${carried.entries.length - carriedEntries.length} dropped: memberId no longer in rosters)` : ""}`);
 // 未突合は ETL を止めず、運用者が確認するために列挙する（docs/DATA_CONTRACT.md）。
-if (unmatched.length) console.warn(`unmatched: ${unmatched.length} (see data/unmatched.json)`);
+if (unmatched.length) {
+  const { bySession, rest } = shardUnmatched(unmatched);
+  const perSession = [...bySession].sort((a, b) => a[0] - b[0]).map(([s, rows]) => `${s}:${rows.length}`).join(" ");
+  console.warn(`unmatched: ${unmatched.length} (see data/unmatched/{session}.json and data/unmatched.json)`);
+  console.warn(`  by session: ${perSession}${rest.length ? ` (no session: ${rest.length})` : ""}`);
+}
 // 氏名だけで紐づき、採決ページの会派がどの回次の名簿の会派とも違った票は data/group-mismatch.json に永続化する（Issue #24）。
 // 名簿に現れない会派改称・移籍なら正常、名簿にいない旧議員が同名の現職に紐づいていたら誤りなので、運用者がファイルで確認する。
 if (groupMismatch.length) console.warn(`group mismatch (matched by name only): ${groupMismatch.length} (see data/group-mismatch.json)`);
