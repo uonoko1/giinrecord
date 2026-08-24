@@ -1,3 +1,11 @@
+# 【非推奨】fingerprint による除外はコミットハッシュ単位のため、squash マージでハッシュが
+# 変わると無効化する（Sprint 11 レトロ / #216）。誤検知の抑止は .gitleaks.toml の
+# `[[rules.allowlists]]` regex 許可リストが正。
+#
+# 以下は過去互換のために残しているだけで、regex 許可リスト側だけで全履歴スキャンが
+# クリーンになることを確認済み（このファイルを空にした状態で `gitleaks detect` → no leaks found）。
+# 新たな誤検知が出た場合、ここに追記せず .gitleaks.toml の許可リストを更新すること。
+#
 # 奈良県公式サイト全ページ共通の「手話で電話」ウィジェットの公開リンク（denwa-relay-service.jp の公開 token パラメータ）。秘密情報ではない。
 d276a2638a03273d381be4184b916c52b5771829:packages/etl/test/fixtures/nara/52534.html:generic-api-key:839
 d276a2638a03273d381be4184b916c52b5771829:packages/etl/test/fixtures/nara/18579.html:generic-api-key:468

@@ -1,11 +1,26 @@
 # gitleaks 設定。既定ルールを継承し、誤検知だけを絞って許可する。
+#
+# 誤検知対応は「この regex 許可リストが正」（#216）。.gitleaksignore の fingerprint は
+# コミットハッシュ単位のため squash マージで無効化する（Sprint 11 レトロ）ので非推奨。
 [extend]
 useDefault = true
 
-[allowlist]
-description = "公式サイトの公開ページに埋め込まれた公開リンク（秘密ではない）"
-regexes = [
-  # 奈良県サイト等の全ページ共通「手話で電話」ウィジェットの公開 URL パラメータ
-  '''denwa-relay-service\.jp/web_inquiry/\?token=[0-9A-Za-z]+''',
-]
-paths = [ ]
+# 既定の generic-api-key ルールを「置き換える」のではなく、許可リストだけを追加する。
+# （id 一致で allowlists がマージされ、既定の正規表現・エントロピー判定はそのまま残る。
+#   検証: 合成シークレットのカナリアで既定設定と検出結果が一致することを確認済み）
+[[rules]]
+id = "generic-api-key"
+
+  [[rules.allowlists]]
+  description = "奈良県サイト等の全ページ共通「手話で電話」ウィジェットの公開リンク（秘密ではない）"
+  # 既定ルールのマッチは `token=<値>` までで URL のホスト名を含まないため、
+  # regexTarget = "line" にして「同じ行に公開ウィジェットの URL があること」を条件にする。
+  regexTarget = "line"
+  regexes = [
+    '''denwa-relay-service\.jp/web_inquiry/\?token=[0-9A-Za-z]+''',
+  ]
+  # regexTarget = "line" は行単位の許可なので、対象を ETL の HTML フィクスチャに限定する。
+  # （アプリ本体や設定ファイルの行が誤って許可されないようにするための二重の絞り込み）
+  paths = [
+    '''^packages/etl/test/fixtures/.*\.html$''',
+  ]
