@@ -26,6 +26,11 @@ fi
 
 TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
 
+# Both rounds must probe the SAME pages, or "failed twice in a row" is not about the same thing twice. probe.sh
+# picks its rotating sample of assembly pages (#248) from the 10-minute slot, and the retry is only 60 s later —
+# which would cross into the next slot ~10% of the time. Pinning PROBE_NOW here keeps round 2 on round 1's sample.
+export PROBE_NOW=${PROBE_NOW:-$(date +%s)}
+
 bash "$HERE/probe.sh" "$ORIGIN" > "$TMP/r1" || true
 echo "round 1:"; sed 's/^/  /' "$TMP/r1"
 if grep -q '^fail ' "$TMP/r1"; then
