@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Fake `curl` for scripts/po tests (used by the fake `ssh`). Records the invocation to $FAKE_GH_LOG
+# ("curl<TAB>args…") and answers via `curl_handle <url>` from $FAKE_GH_HANDLER, which prints the HTTP code on
+# the first line and the body after it. Honors `-o <file>` (body) and `-w <fmt>` (only %{http_code} is supported).
+set -euo pipefail
+line=$(IFS=$'\t'; echo "curl${IFS}$*")
+printf '%s\n' "${line//$'\n'/ }" >> "$FAKE_GH_LOG"
+# shellcheck source=/dev/null
+source "$FAKE_GH_HANDLER"
+OUT=""; FMT=""; URL=""; prev=""
+for a in "$@"; do
+  case "$prev" in
+    -o) OUT=$a ;;
+    -w) FMT=$a ;;
+  esac
+  case "$a" in
+    http://*|https://*) URL=$a ;;
+  esac
+  prev=$a
+done
+resp=$(curl_handle "$URL")
+code=${resp%%$'\n'*}
+body=${resp#*$'\n'}
+[[ "$body" == "$resp" ]] && body=""
+if [[ -n "$OUT" ]]; then printf '%s' "$body" > "$OUT"; fi
+[[ -n "$FMT" ]] && printf '%s' "${FMT//%\{http_code\}/$code}"
+exit 0

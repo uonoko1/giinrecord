@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Fake `ssh` for scripts/po tests. Records the invocation to $FAKE_GH_LOG ("ssh<TAB>args…") and runs the
+# remote command LOCALLY: the last argument is executed with `bash -c`, with stdin passed through, so a script
+# piped as `ssh host 'bash -s' < file` runs here with the fake `curl` (same dir) first on PATH.
+set -euo pipefail
+line=$(IFS=$'\t'; echo "ssh${IFS}$*")
+printf '%s\n' "${line//$'\n'/ }" >> "$FAKE_GH_LOG"
+cmd=${*: -1}
+exec bash -c "$cmd"
