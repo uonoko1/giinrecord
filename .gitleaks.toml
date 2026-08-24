@@ -1,0 +1,11 @@
+# gitleaks 設定。既定ルールを継承し、誤検知だけを絞って許可する。
+[extend]
+useDefault = true
+
+[allowlist]
+description = "公式サイトの公開ページに埋め込まれた公開リンク（秘密ではない）"
+regexes = [
+  # 奈良県サイト等の全ページ共通「手話で電話」ウィジェットの公開 URL パラメータ
+  '''denwa-relay-service\.jp/web_inquiry/\?token=[0-9A-Za-z]+''',
+]
+paths = [ ]

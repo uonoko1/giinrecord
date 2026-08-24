@@ -12,8 +12,10 @@ import { TOTTORI_ASSEMBLY } from "./sources/local/tottori/site.ts";
 import { runTottori } from "./sources/local/tottori/index.ts";
 import { MIE_ASSEMBLY } from "./sources/local/mie/site.ts";
 import { runMie } from "./sources/local/mie/index.ts";
+import { NARA_ASSEMBLY } from "./sources/local/nara/site.ts";
+import { runNara } from "./sources/local/nara/index.ts";
 
-export { MIYAGI_ASSEMBLY, TOKUSHIMA_ASSEMBLY, TOTTORI_ASSEMBLY, MIE_ASSEMBLY };
+export { MIYAGI_ASSEMBLY, TOKUSHIMA_ASSEMBLY, TOTTORI_ASSEMBLY, MIE_ASSEMBLY, NARA_ASSEMBLY };
 
 /** 議会ごとの取得部が返す形（buildLocalAssembly の入力になる部分）。 */
 export interface LocalSourceRun {
@@ -34,6 +36,7 @@ export const LOCAL_SOURCES: Record<string, LocalSource> = {
   tokushima: { assembly: TOKUSHIMA_ASSEMBLY, run: runTokushima },
   tottori: { assembly: TOTTORI_ASSEMBLY, run: runTottori },
   mie: { assembly: MIE_ASSEMBLY, run: runMie },
+  nara: { assembly: NARA_ASSEMBLY, run: runNara },
 };
 
 /**
