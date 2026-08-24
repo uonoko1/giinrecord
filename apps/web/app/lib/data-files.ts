@@ -8,7 +8,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import type { Assembly } from "@seiji-kiroku/shared";
-import { DIET_ASSEMBLIES, type AssemblySession, type DatasetMeta, type MemberDetail, type MemberSummary, type RollCall, type RollCallSummary } from "./data-contract";
+import { DIET_ASSEMBLIES, type AssemblySession, type DatasetMeta, type LocalRollCallSubject, type MemberDetail, type MemberSummary, type RollCall, type RollCallSummary } from "./data-contract";
 
 /** `data/` at the repo root; override with SEIJI_DATA_DIR. cwd is apps/web during build. */
 export function defaultDataDir(): string {
@@ -82,6 +82,15 @@ export async function assemblyPaths(dataDir: string): Promise<string[]> {
 export async function readAssemblySessions(dataDir: string, assemblyId: string): Promise<AssemblySession[] | null> {
   if (!SAFE_ID.test(assemblyId)) return null;
   return readJson<AssemblySession[]>(path.join(dataDir, "assemblies", assemblyId, "sessions.json"));
+}
+
+/**
+ * `assemblies/{id}/rollcalls/index.json`（LocalRollCallSummary[] のうち Web が読む項目、#204）。無ければ null。
+ * 議員ページが timeline に `voteSubject` / `committeeReport` を結合するために読む（joinVoteSubjects）。
+ */
+export async function readLocalRollCallIndex(dataDir: string, assemblyId: string): Promise<LocalRollCallSubject[] | null> {
+  if (!SAFE_ID.test(assemblyId)) return null;
+  return readJson<LocalRollCallSubject[]>(path.join(dataDir, "assemblies", assemblyId, "rollcalls", "index.json"));
 }
 
 export async function readMeta(dataDir: string): Promise<DatasetMeta | null> {

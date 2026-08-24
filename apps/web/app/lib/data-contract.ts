@@ -158,9 +158,26 @@ export type LocalVoteEntry = {
   method?: string;
   /** 議決結果の原文（例「可決」）。無ければ省略 */
   result?: string;
+  /**
+   * 賛否の対象の原文（表の節見出し。鳥取「議案に対する賛否」「委員長報告に対する賛否」。#204）。
+   * members/{id}.json には無く、ビルド時に `assemblies/{assemblyId}/rollcalls/index.json` から rollCallId で結合する（joinVoteSubjects）。
+   * 請願・陳情の ○ が「委員長報告（例：不採択）への賛成」である議会で、○ を採択への賛成と読ませないために表示する
+   */
+  voteSubject?: string;
+  /** 委員長報告の原文（請願・陳情の行。鳥取「不採択」「研究留保」…）。voteSubject と同じくビルド時に結合。無ければ省略 */
+  committeeReport?: string;
   sourceUrl: string;
 };
 export type TimelineEntry = VoteEntry | BillEntry | SpeechEntry | StanceEntry | QuestionEntry | AttendanceEntry | LocalVoteEntry;
+
+/** `assemblies/{assemblyId}/rollcalls/index.json`（LocalRollCallSummary[]）の1行のうち Web が読む項目（#204） */
+export interface LocalRollCallSubject {
+  id: string;
+  /** 賛否の対象の原文。無ければ省略 */
+  voteSubject?: string;
+  /** 委員長報告の原文。無ければ省略 */
+  committeeReport?: string;
+}
 
 /** `assemblies/{assemblyId}/sessions.json` の1行（地方議会の会期。新しい順）。#158 */
 export interface AssemblySession {

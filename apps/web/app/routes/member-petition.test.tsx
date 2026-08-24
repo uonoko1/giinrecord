@@ -14,7 +14,7 @@ import { MemberPage } from "./member";
  * フィクスチャは実データ（p_31_item_1165926 の timeline に rollcalls/index.json の voteSubject / committeeReport を
  * 結合した、loader の出力の形）。
  */
-const detail = tottoriMember as MemberDetail;
+const detail = tottoriMember as unknown as MemberDetail; // 実データどおり house を持たない（地方議員）
 const tottori: Assembly = { id: "pref-31", kind: "prefectural", name: "鳥取県議会", prefCode: "31", sourceUrl: "https://www.pref.tottori.lg.jp/75928.htm" };
 
 function renderPage(d: MemberDetail = detail) {

@@ -3,9 +3,9 @@ import { type LoaderFunctionArgs, type MetaArgs, useLoaderData } from "react-rou
 import { CompareAdd } from "../components/CompareAdd";
 import { SiteFooter } from "../components/SiteFooter";
 import type { Assembly } from "@seiji-kiroku/shared";
-import { assemblyPath, findAssembly, isLocalMember, localVoteTone } from "../lib/assemblies";
+import { assemblyPath, findAssembly, isLocalMember, joinVoteSubjects, localVoteTone, voteSubjectNote } from "../lib/assemblies";
 import type { BillEntry, BillRole, DatasetMeta, LocalVoteEntry, MemberDetail, QuestionEntry, StanceEntry, TimelineEntry, VoteEntry } from "../lib/data-contract";
-import { defaultDataDir, readAssemblies, readMemberDetail, readMeta } from "../lib/data-files";
+import { defaultDataDir, readAssemblies, readLocalRollCallIndex, readMemberDetail, readMeta } from "../lib/data-files";
 import { formatDate, formatDateTime, formatYearMonth } from "../lib/format";
 import { seoMeta } from "../lib/seo";
 import "./member.css";
@@ -22,8 +22,11 @@ export async function loader({ params }: LoaderFunctionArgs): Promise<MemberLoad
   const dir = defaultDataDir();
   const [detail, meta] = await Promise.all([readMemberDetail(dir, params.id ?? ""), readMeta(dir)]);
   if (!detail) throw new Response("Not Found", { status: 404 });
-  const assembly = isLocalMember(detail) ? findAssembly((await readAssemblies(dir)) ?? [], detail.assemblyId ?? "") ?? null : null;
-  return { detail, meta, assembly };
+  if (!isLocalMember(detail)) return { detail, meta, assembly: null };
+  // 地方議員（#158）: 議会の行に加え、採決行の注記（#204）のために rollcalls/index.json の voteSubject / committeeReport を timeline に結合する
+  const [assemblies, rollCallIndex] = await Promise.all([readAssemblies(dir), readLocalRollCallIndex(dir, detail.assemblyId ?? "")]);
+  const assembly = findAssembly(assemblies ?? [], detail.assemblyId ?? "") ?? null;
+  return { detail: { ...detail, timeline: joinVoteSubjects(detail.timeline, rollCallIndex) }, meta, assembly };
 }
 
 /**
@@ -491,7 +494,8 @@ function LocalVoteRow({ entry }: { entry: LocalVoteEntry }) {
       <div className="member-row-body">
         <p className="member-row-title">{entry.title}</p>
         <p className="member-row-meta">
-          <MetaLine parts={[legendText(entry.vote), entry.sessionLabel, entry.method, entry.result]} />
+          {/* 賛否の対象（#204）: 請願・陳情の ○ は委員長報告への賛成であって採択への賛成ではない。凡例の直後に添える */}
+          <MetaLine parts={[legendText(entry.vote), voteSubjectNote(entry), entry.sessionLabel, entry.method, entry.result]} />
           <ExternalLink href={entry.sourceUrl}>表決結果</ExternalLink>
         </p>
       </div>
@@ -578,6 +582,8 @@ function LocalVoteTable({ votes }: { votes: LocalVoteEntry[] }) {
               <td>
                 <LocalStamp vote={v.vote} />
                 <span className="member-note">{v.vote.legend}</span>
+                {/* 賛否の対象（#204）: 請願・陳情の ○ は委員長報告への賛成であって採択への賛成ではない */}
+                {voteSubjectNote(v) && <span className="member-note">{voteSubjectNote(v)}</span>}
               </td>
               <td>{v.method ?? "—"}</td>
               <td>{v.result ?? "—"}</td>

@@ -97,7 +97,7 @@ describe("voteSubjectNote（#204）: 請願・陳情の ○ を採択への賛�
 
 describe("joinVoteSubjects（#204）: rollcalls/index.json の voteSubject / committeeReport を rollCallId で timeline に結合する", () => {
   // フィクスチャは結合後の形なので、いったん外して結合前（members/{id}.json）の形に戻す
-  const tottori = (tottoriMember as MemberDetail).timeline.map((e) => {
+  const tottori = (tottoriMember as unknown as MemberDetail).timeline.map((e) => {
     const { voteSubject: _v, committeeReport: _c, ...rest } = e as LocalVoteEntry;
     return rest as LocalVoteEntry;
   });
