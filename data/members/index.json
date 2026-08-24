@@ -13497,5 +13497,1070 @@
   "name": "伊藤 吉浩",
   "profileUrl": "https://www.pref.miyagi.jp/site/kengikai/yoshihiro.html",
   "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
+ },
+ {
+  "asOf": "2023-04-30",
+  "assemblyId": "pref-31",
+  "counts": {
+   "rollcalls": 118
+  },
+  "current": true,
+  "district": "西伯郡選挙区",
+  "group": "自由民主党",
+  "id": "p_31_item_1025136",
+  "kana": "かしま いさお",
+  "name": "鹿島 功",
+  "profileUrl": "https://www.pref.tottori.lg.jp/item/1025136.htm",
+  "sourceUrl": "https://www.pref.tottori.lg.jp/75928.htm"
+ },
+ {
+  "asOf": "2023-04-30",
+  "assemblyId": "pref-31",
+  "counts": {
+   "rollcalls": 118
+  },
+  "current": true,
+  "district": "鳥取市選挙区",
+  "group": "民主とっとり",
+  "id": "p_31_item_1025137",
+  "kana": "おざき かおる",
+  "name": "尾崎 薫",
+  "profileUrl": "https://www.pref.tottori.lg.jp/item/1025137.htm",
+  "sourceUrl": "https://www.pref.tottori.lg.jp/75928.htm"
+ },
+ {
+  "asOf": "2023-04-30",
+  "assemblyId": "pref-31",
+  "counts": {
+   "rollcalls": 118
+  },
+  "current": true,
+  "district": "東伯郡選挙区",
+  "group": "民主とっとり",
+  "id": "p_31_item_1125474",
+  "kana": "いとう たもつ",
+  "name": "伊藤 保",
+  "profileUrl": "https://www.pref.tottori.lg.jp/item/1125474.htm",
+  "sourceUrl": "https://www.pref.tottori.lg.jp/75928.htm"
+ },
+ {
+  "asOf": "2023-04-30",
+  "assemblyId": "pref-31",
+  "counts": {
+   "rollcalls": 118
+  },
+  "current": true,
+  "district": "鳥取市選挙区",
+  "group": "無所属",
+  "id": "p_31_item_1165907",
+  "kana": "いちたに ともこ",
+  "name": "市谷 知子",
+  "profileUrl": "https://www.pref.tottori.lg.jp/item/1165907.htm",
+  "sourceUrl": "https://www.pref.tottori.lg.jp/75928.htm"
+ },
+ {
+  "asOf": "2023-04-30",
+  "assemblyId": "pref-31",
+  "counts": {
+   "rollcalls": 118
+  },
+  "current": true,
+  "district": "米子市選挙区",
+  "group": "自由民主党",
+  "id": "p_31_item_1165908",
+  "kana": "もり ゆみこ",
+  "name": "森 由美子",
+  "profileUrl": "https://www.pref.tottori.lg.jp/item/1165908.htm",
+  "sourceUrl": "https://www.pref.tottori.lg.jp/75928.htm"
+ },
+ {
+  "asOf": "2023-04-30",
+  "assemblyId": "pref-31",
+  "counts": {
+   "rollcalls": 118
+  },
+  "current": true,
+  "district": "日野郡選挙区",
+  "group": "自由民主党",
+  "id": "p_31_item_1165909",
+  "kana": "うちだ ひろみち",
+  "name": "内田 博長",
+  "profileUrl": "https://www.pref.tottori.lg.jp/item/1165909.htm",
+  "sourceUrl": "https://www.pref.tottori.lg.jp/75928.htm"
+ },
+ {
+  "asOf": "2023-04-30",
+  "assemblyId": "pref-31",
+  "counts": {
+   "rollcalls": 118
+  },
+  "current": true,
+  "district": "倉吉市選挙区",
+  "group": "民主とっとり",
+  "id": "p_31_item_1165910",
+  "kana": "おきはる ひでお",
+  "name": "興治 英夫",
+  "profileUrl": "https://www.pref.tottori.lg.jp/item/1165910.htm",
+  "sourceUrl": "https://www.pref.tottori.lg.jp/75928.htm"
+ },
+ {
+  "asOf": "2023-04-30",
+  "assemblyId": "pref-31",
+  "counts": {
+   "rollcalls": 118
+  },
+  "current": true,
+  "district": "鳥取市選挙区",
+  "group": "公明党",
+  "id": "p_31_item_1165911",
+  "kana": "ぎんなん やすとし",
+  "name": "銀杏 泰利",
+  "profileUrl": "https://www.pref.tottori.lg.jp/item/1165911.htm",
+  "sourceUrl": "https://www.pref.tottori.lg.jp/75928.htm"
+ },
+ {
+  "asOf": "2023-04-30",
+  "assemblyId": "pref-31",
+  "counts": {
+   "rollcalls": 118
+  },
+  "current": true,
+  "district": "東伯郡選挙区",
+  "group": "自由民主党",
+  "id": "p_31_item_1165912",
+  "kana": "ごどう まさのり",
+  "name": "語堂 正範",
+  "profileUrl": "https://www.pref.tottori.lg.jp/item/1165912.htm",
+  "sourceUrl": "https://www.pref.tottori.lg.jp/75928.htm"
+ },
+ {
+  "asOf": "2023-04-30",
+  "assemblyId": "pref-31",
+  "counts": {
+   "rollcalls": 118
+  },
+  "current": true,
+  "district": "米子市選挙区",
+  "group": "自由民主党",
+  "id": "p_31_item_1165913",
+  "kana": "さいき しょういち",
+  "name": "斉木 正一",
+  "profileUrl": "https://www.pref.tottori.lg.jp/item/1165913.htm",
+  "sourceUrl": "https://www.pref.tottori.lg.jp/75928.htm"
+ },
+ {
+  "asOf": "2023-04-30",
+  "assemblyId": "pref-31",
+  "counts": {
+   "rollcalls": 118
+  },
+  "current": true,
+  "district": "鳥取市選挙区",
+  "group": "民主とっとり",
+  "id": "p_31_item_1165915",
+  "kana": "さかの けいさぶろう",
+  "name": "坂野 経三郎",
+  "profileUrl": "https://www.pref.tottori.lg.jp/item/1165915.htm",
+  "sourceUrl": "https://www.pref.tottori.lg.jp/75928.htm"
+ },
+ {
+  "asOf": "2023-04-30",
+  "assemblyId": "pref-31",
+  "counts": {
+   "rollcalls": 118
+  },
+  "current": true,
+  "district": "鳥取市選挙区",
+  "group": "自由民主党",
+  "id": "p_31_item_1165916",
+  "kana": "しまたに りゅうじ",
+  "name": "島谷 龍司",
+  "profileUrl": "https://www.pref.tottori.lg.jp/item/1165916.htm",
+  "sourceUrl": "https://www.pref.tottori.lg.jp/75928.htm"
+ },
+ {
+  "asOf": "2023-04-30",
+  "assemblyId": "pref-31",
+  "counts": {
+   "rollcalls": 118
+  },
+  "current": true,
+  "district": "鳥取市選挙区",
+  "group": "自由民主党",
+  "id": "p_31_item_1165917",
+  "kana": "なかしま のりお",
+  "name": "中島 規夫",
+  "profileUrl": "https://www.pref.tottori.lg.jp/item/1165917.htm",
+  "sourceUrl": "https://www.pref.tottori.lg.jp/75928.htm"
+ },
+ {
+  "asOf": "2023-04-30",
+  "assemblyId": "pref-31",
+  "counts": {
+   "rollcalls": 118
+  },
+  "current": true,
+  "district": "米子市選挙区",
+  "group": "無所属",
+  "id": "p_31_item_1165919",
+  "kana": "にしむら みつこ",
+  "name": "西村 弥子",
+  "profileUrl": "https://www.pref.tottori.lg.jp/item/1165919.htm",
+  "sourceUrl": "https://www.pref.tottori.lg.jp/75928.htm"
+ },
+ {
+  "asOf": "2023-04-30",
+  "assemblyId": "pref-31",
+  "counts": {
+   "rollcalls": 118
+  },
+  "current": true,
+  "district": "米子市選挙区",
+  "group": "自由民主党",
+  "id": "p_31_item_1165921",
+  "kana": "のざか みちあき",
+  "name": "野坂 道明",
+  "profileUrl": "https://www.pref.tottori.lg.jp/item/1165921.htm",
+  "sourceUrl": "https://www.pref.tottori.lg.jp/75928.htm"
+ },
+ {
+  "asOf": "2023-04-30",
+  "assemblyId": "pref-31",
+  "counts": {
+   "rollcalls": 118
+  },
+  "current": true,
+  "district": "鳥取市選挙区",
+  "group": "自由民主党",
+  "id": "p_31_item_1165922",
+  "kana": "はまさき しんいち",
+  "name": "浜崎 晋一",
+  "profileUrl": "https://www.pref.tottori.lg.jp/item/1165922.htm",
+  "sourceUrl": "https://www.pref.tottori.lg.jp/75928.htm"
+ },
+ {
+  "asOf": "2023-04-30",
+  "assemblyId": "pref-31",
+  "counts": {
+   "rollcalls": 118
+  },
+  "current": true,
+  "district": "境港市選挙区",
+  "group": "自由民主党",
+  "id": "p_31_item_1165923",
+  "kana": "はまだ かずや",
+  "name": "浜田 一哉",
+  "profileUrl": "https://www.pref.tottori.lg.jp/item/1165923.htm",
+  "sourceUrl": "https://www.pref.tottori.lg.jp/75928.htm"
+ },
+ {
+  "asOf": "2023-04-30",
+  "assemblyId": "pref-31",
+  "counts": {
+   "rollcalls": 118
+  },
+  "current": true,
+  "district": "米子市選挙区",
+  "group": "民主とっとり",
+  "id": "p_31_item_1165924",
+  "kana": "はまだ たえこ",
+  "name": "浜田 妙子",
+  "profileUrl": "https://www.pref.tottori.lg.jp/item/1165924.htm",
+  "sourceUrl": "https://www.pref.tottori.lg.jp/75928.htm"
+ },
+ {
+  "asOf": "2023-04-30",
+  "assemblyId": "pref-31",
+  "counts": {
+   "rollcalls": 118
+  },
+  "current": true,
+  "district": "鳥取市選挙区",
+  "group": "無所属",
+  "id": "p_31_item_1165926",
+  "kana": "ふくはま たかひろ",
+  "name": "福浜 隆宏",
+  "profileUrl": "https://www.pref.tottori.lg.jp/item/1165926.htm",
+  "sourceUrl": "https://www.pref.tottori.lg.jp/75928.htm"
+ },
+ {
+  "asOf": "2023-04-30",
+  "assemblyId": "pref-31",
+  "counts": {
+   "rollcalls": 118
+  },
+  "current": true,
+  "district": "八頭郡選挙区",
+  "group": "自由民主党",
+  "id": "p_31_item_1165930",
+  "kana": "ふくた しゅんじ",
+  "name": "福田 俊史",
+  "profileUrl": "https://www.pref.tottori.lg.jp/item/1165930.htm",
+  "sourceUrl": "https://www.pref.tottori.lg.jp/75928.htm"
+ },
+ {
+  "asOf": "2023-04-30",
+  "assemblyId": "pref-31",
+  "counts": {
+   "rollcalls": 118
+  },
+  "current": true,
+  "district": "米子市選挙区",
+  "group": "無所属",
+  "id": "p_31_item_1165931",
+  "kana": "まつだ ただし",
+  "name": "松田 正",
+  "profileUrl": "https://www.pref.tottori.lg.jp/item/1165931.htm",
+  "sourceUrl": "https://www.pref.tottori.lg.jp/75928.htm"
+ },
+ {
+  "asOf": "2023-04-30",
+  "assemblyId": "pref-31",
+  "counts": {
+   "rollcalls": 118
+  },
+  "current": true,
+  "district": "境港市選挙区",
+  "group": "自由民主党",
+  "id": "p_31_item_1165934",
+  "kana": "やすだ よしき",
+  "name": "安田 由毅",
+  "profileUrl": "https://www.pref.tottori.lg.jp/item/1165934.htm",
+  "sourceUrl": "https://www.pref.tottori.lg.jp/75928.htm"
+ },
+ {
+  "asOf": "2023-04-30",
+  "assemblyId": "pref-31",
+  "counts": {
+   "rollcalls": 118
+  },
+  "current": true,
+  "district": "米子市選挙区",
+  "group": "無所属",
+  "id": "p_31_item_1165935",
+  "kana": "やまかわ ちほ",
+  "name": "山川 智帆",
+  "profileUrl": "https://www.pref.tottori.lg.jp/item/1165935.htm",
+  "sourceUrl": "https://www.pref.tottori.lg.jp/75928.htm"
+ },
+ {
+  "asOf": "2023-04-30",
+  "assemblyId": "pref-31",
+  "counts": {
+   "rollcalls": 118
+  },
+  "current": true,
+  "district": "鳥取市選挙区",
+  "group": "自由民主党",
+  "id": "p_31_item_1165936",
+  "kana": "やまもと あきこ",
+  "name": "山本 暁子",
+  "profileUrl": "https://www.pref.tottori.lg.jp/item/1165936.htm",
+  "sourceUrl": "https://www.pref.tottori.lg.jp/75928.htm"
+ },
+ {
+  "asOf": "2023-04-30",
+  "assemblyId": "pref-31",
+  "counts": {
+   "rollcalls": 118
+  },
+  "current": true,
+  "district": "岩美郡選挙区",
+  "group": "自由民主党",
+  "id": "p_31_item_1165937",
+  "kana": "ひろたに なおき",
+  "name": "広谷 直樹",
+  "profileUrl": "https://www.pref.tottori.lg.jp/item/1165937.htm",
+  "sourceUrl": "https://www.pref.tottori.lg.jp/75928.htm"
+ },
+ {
+  "asOf": "2023-04-30",
+  "assemblyId": "pref-31",
+  "counts": {
+   "rollcalls": 118
+  },
+  "current": true,
+  "district": "倉吉市選挙区",
+  "group": "自由民主党",
+  "id": "p_31_item_1165993",
+  "kana": "かわべ ひろし",
+  "name": "川部 洋",
+  "profileUrl": "https://www.pref.tottori.lg.jp/item/1165993.htm",
+  "sourceUrl": "https://www.pref.tottori.lg.jp/75928.htm"
+ },
+ {
+  "asOf": "2023-04-30",
+  "assemblyId": "pref-31",
+  "counts": {
+   "rollcalls": 118
+  },
+  "current": true,
+  "district": "鳥取市選挙区",
+  "group": "自由民主党",
+  "id": "p_31_item_967680",
+  "kana": "ひがしだ よしひろ",
+  "name": "東田 義博",
+  "profileUrl": "https://www.pref.tottori.lg.jp/item/967680.htm",
+  "sourceUrl": "https://www.pref.tottori.lg.jp/75928.htm"
+ },
+ {
+  "asOf": "2023-04-30",
+  "assemblyId": "pref-31",
+  "counts": {
+   "rollcalls": 118
+  },
+  "current": true,
+  "district": "鳥取市選挙区",
+  "group": "公明党",
+  "id": "p_31_item_967682",
+  "kana": "まえた しんいち",
+  "name": "前田 伸一",
+  "profileUrl": "https://www.pref.tottori.lg.jp/item/967682.htm",
+  "sourceUrl": "https://www.pref.tottori.lg.jp/75928.htm"
+ },
+ {
+  "asOf": "2023-04-30",
+  "assemblyId": "pref-31",
+  "counts": {
+   "rollcalls": 118
+  },
+  "current": true,
+  "district": "八頭郡選挙区",
+  "group": "無所属",
+  "id": "p_31_item_967683",
+  "kana": "まえずみ たかゆき",
+  "name": "前住 孝行",
+  "profileUrl": "https://www.pref.tottori.lg.jp/item/967683.htm",
+  "sourceUrl": "https://www.pref.tottori.lg.jp/75928.htm"
+ },
+ {
+  "asOf": "2023-04-30",
+  "assemblyId": "pref-31",
+  "counts": {
+   "rollcalls": 118
+  },
+  "current": true,
+  "district": "倉吉市選挙区",
+  "group": "自由民主党",
+  "id": "p_31_item_967684",
+  "kana": "とば きいち",
+  "name": "鳥羽 喜一",
+  "profileUrl": "https://www.pref.tottori.lg.jp/item/967684.htm",
+  "sourceUrl": "https://www.pref.tottori.lg.jp/75928.htm"
+ },
+ {
+  "asOf": "2023-04-30",
+  "assemblyId": "pref-31",
+  "counts": {
+   "rollcalls": 118
+  },
+  "current": true,
+  "district": "米子市選挙区",
+  "group": "自由民主党",
+  "id": "p_31_item_967685",
+  "kana": "かわかみ さだひろ",
+  "name": "河上 定弘",
+  "profileUrl": "https://www.pref.tottori.lg.jp/item/967685.htm",
+  "sourceUrl": "https://www.pref.tottori.lg.jp/75928.htm"
+ },
+ {
+  "asOf": "2023-04-30",
+  "assemblyId": "pref-31",
+  "counts": {
+   "rollcalls": 118
+  },
+  "current": true,
+  "district": "西伯郡選挙区",
+  "group": "民主とっとり",
+  "id": "p_31_item_967686",
+  "kana": "むらかみ たいじろう",
+  "name": "村上 泰二朗",
+  "profileUrl": "https://www.pref.tottori.lg.jp/item/967686.htm",
+  "sourceUrl": "https://www.pref.tottori.lg.jp/75928.htm"
+ },
+ {
+  "asOf": "2023-04-30",
+  "assemblyId": "pref-31",
+  "counts": {
+   "rollcalls": 118
+  },
+  "current": true,
+  "district": "米子市選挙区",
+  "group": "公明党",
+  "id": "p_31_item_967687",
+  "kana": "まえはら しげる",
+  "name": "前原 茂",
+  "profileUrl": "https://www.pref.tottori.lg.jp/item/967687.htm",
+  "sourceUrl": "https://www.pref.tottori.lg.jp/75928.htm"
+ },
+ {
+  "asOf": "2023-04-30",
+  "assemblyId": "pref-31",
+  "counts": {
+   "rollcalls": 118
+  },
+  "current": true,
+  "district": "東伯郡選挙区",
+  "group": "自由民主党",
+  "id": "p_31_item_967688",
+  "kana": "いりえ まこと",
+  "name": "入江 誠",
+  "profileUrl": "https://www.pref.tottori.lg.jp/item/967688.htm",
+  "sourceUrl": "https://www.pref.tottori.lg.jp/75928.htm"
+ },
+ {
+  "asOf": "2023-04-30",
+  "assemblyId": "pref-31",
+  "counts": {
+   "rollcalls": 118
+  },
+  "current": true,
+  "district": "鳥取市選挙区",
+  "group": "無所属",
+  "id": "p_31_item_967689",
+  "kana": "たまき ゆういち",
+  "name": "玉木 裕一",
+  "profileUrl": "https://www.pref.tottori.lg.jp/item/967689.htm",
+  "sourceUrl": "https://www.pref.tottori.lg.jp/75928.htm"
+ },
+ {
+  "asOf": "2026-08-24",
+  "assemblyId": "pref-36",
+  "counts": {
+   "rollcalls": 105
+  },
+  "current": true,
+  "district": "板野選挙区",
+  "group": "護民官",
+  "id": "p_36_fukawa",
+  "kana": "ふかわ あつし",
+  "name": "扶川 敦",
+  "profileUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/fukawa/",
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kaihabetu/"
+ },
+ {
+  "asOf": "2026-08-24",
+  "assemblyId": "pref-36",
+  "counts": {
+   "rollcalls": 105
+  },
+  "current": true,
+  "district": "徳島選挙区",
+  "group": "徳島県議会自由民主党",
+  "id": "p_36_fukuyama",
+  "kana": "ふくやま ひろし",
+  "name": "福山 博史",
+  "profileUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/fukuyama/",
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kaihabetu/"
+ },
+ {
+  "asOf": "2026-08-24",
+  "assemblyId": "pref-36",
+  "counts": {
+   "rollcalls": 105
+  },
+  "current": true,
+  "district": "那賀選挙区",
+  "group": "徳島県議会自由民主党",
+  "id": "p_36_furuno",
+  "kana": "ふるの つかさ",
+  "name": "古野 司",
+  "profileUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/furuno/",
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kaihabetu/"
+ },
+ {
+  "asOf": "2026-08-24",
+  "assemblyId": "pref-36",
+  "counts": {
+   "rollcalls": 105
+  },
+  "current": true,
+  "district": "鳴門選挙区",
+  "group": "徳島県議会自由民主党",
+  "id": "p_36_hara",
+  "kana": "はら てつじ",
+  "name": "原 徹臣",
+  "profileUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/hara/",
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kaihabetu/"
+ },
+ {
+  "asOf": "2026-08-24",
+  "assemblyId": "pref-36",
+  "counts": {
+   "rollcalls": 105
+  },
+  "current": true,
+  "district": "海部選挙区",
+  "group": "徳島県議会自由民主党",
+  "id": "p_36_hirayama",
+  "kana": "ひらやま なおみち",
+  "name": "平山 尚道",
+  "profileUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/hirayama/",
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kaihabetu/"
+ },
+ {
+  "asOf": "2026-08-24",
+  "assemblyId": "pref-36",
+  "counts": {
+   "rollcalls": 105
+  },
+  "current": true,
+  "district": "徳島選挙区",
+  "group": "自由民主党県民会議",
+  "id": "p_36_ikawa",
+  "kana": "いかわ りゅうじ",
+  "name": "井川 龍二",
+  "profileUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/ikawa/",
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kaihabetu/"
+ },
+ {
+  "asOf": "2026-08-24",
+  "assemblyId": "pref-36",
+  "counts": {
+   "rollcalls": 105
+  },
+  "current": true,
+  "district": "小松島・勝浦選挙区",
+  "group": "徳島県議会自由民主党",
+  "id": "p_36_imura",
+  "kana": "いむら やすひろ",
+  "name": "井村 保裕",
+  "profileUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/imura/",
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kaihabetu/"
+ },
+ {
+  "asOf": "2026-08-24",
+  "assemblyId": "pref-36",
+  "counts": {
+   "rollcalls": 105
+  },
+  "current": true,
+  "district": "三好第一選挙区",
+  "group": "自由民主党県民会議",
+  "id": "p_36_inoshita",
+  "kana": "いのした ひろのり",
+  "name": "井下 泰憲",
+  "profileUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/inoshita/",
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kaihabetu/"
+ },
+ {
+  "asOf": "2026-08-24",
+  "assemblyId": "pref-36",
+  "counts": {
+   "rollcalls": 105
+  },
+  "current": true,
+  "district": "徳島選挙区",
+  "group": "公明党徳島県議団",
+  "id": "p_36_kajiwara",
+  "kana": "かじわら かずや",
+  "name": "梶原 一哉",
+  "profileUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kajiwara/",
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kaihabetu/"
+ },
+ {
+  "asOf": "2026-08-24",
+  "assemblyId": "pref-36",
+  "counts": {
+   "rollcalls": 105
+  },
+  "current": true,
+  "district": "阿南選挙区",
+  "group": "徳島県議会自由民主党",
+  "id": "p_36_kami",
+  "kana": "かみ ひろゆき",
+  "name": "嘉見 博之",
+  "profileUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kami/",
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kaihabetu/"
+ },
+ {
+  "asOf": "2026-08-24",
+  "assemblyId": "pref-36",
+  "counts": {
+   "rollcalls": 105
+  },
+  "current": true,
+  "district": "吉野川選挙区",
+  "group": "徳島県議会自由民主党",
+  "id": "p_36_kawamata",
+  "kana": "かわまた たくみ",
+  "name": "川真田 琢巳",
+  "profileUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kawamata/",
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kaihabetu/"
+ },
+ {
+  "asOf": "2026-08-24",
+  "assemblyId": "pref-36",
+  "counts": {
+   "rollcalls": 105
+  },
+  "current": true,
+  "district": "美馬選挙区",
+  "group": "徳島県議会自由民主党",
+  "id": "p_36_kinoshita",
+  "kana": "きのした たかのり",
+  "name": "木下 賢功",
+  "profileUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kinoshita/",
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kaihabetu/"
+ },
+ {
+  "asOf": "2026-08-24",
+  "assemblyId": "pref-36",
+  "counts": {
+   "rollcalls": 105
+  },
+  "current": true,
+  "district": "徳島選挙区",
+  "group": "グローカルplus",
+  "id": "p_36_kishimoto",
+  "kana": "きしもと あつし",
+  "name": "岸本 淳志",
+  "profileUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kishimoto/",
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kaihabetu/"
+ },
+ {
+  "asOf": "2026-08-24",
+  "assemblyId": "pref-36",
+  "counts": {
+   "rollcalls": 105
+  },
+  "current": true,
+  "district": "名西選挙区",
+  "group": "グローカルplus",
+  "id": "p_36_kondou",
+  "kana": "こんどう さとる",
+  "name": "近藤 諭",
+  "profileUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kondou/",
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kaihabetu/"
+ },
+ {
+  "asOf": "2026-08-24",
+  "assemblyId": "pref-36",
+  "counts": {
+   "rollcalls": 105
+  },
+  "current": true,
+  "district": "三好第二選挙区",
+  "group": "徳島県議会自由民主党",
+  "id": "p_36_motoki",
+  "kana": "もとき あきお",
+  "name": "元木 章生",
+  "profileUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/motoki/",
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kaihabetu/"
+ },
+ {
+  "asOf": "2026-08-24",
+  "assemblyId": "pref-36",
+  "counts": {
+   "rollcalls": 105
+  },
+  "current": true,
+  "district": "小松島・勝浦選挙区",
+  "group": "新しい県政を創る会",
+  "id": "p_36_nagaike",
+  "kana": "ながいけ ふみたけ",
+  "name": "長池 文武",
+  "profileUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/nagaike/",
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kaihabetu/"
+ },
+ {
+  "asOf": "2026-08-24",
+  "assemblyId": "pref-36",
+  "counts": {
+   "rollcalls": 105
+  },
+  "current": true,
+  "district": "美馬選挙区",
+  "group": "グローカルplus",
+  "id": "p_36_namikoshi",
+  "kana": "なみこし けんいち",
+  "name": "浪越 憲一",
+  "profileUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/namikoshi/",
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kaihabetu/"
+ },
+ {
+  "asOf": "2026-08-24",
+  "assemblyId": "pref-36",
+  "counts": {
+   "rollcalls": 105
+  },
+  "current": true,
+  "district": "阿南選挙区",
+  "group": "新しい県政を創る会",
+  "id": "p_36_niki",
+  "kana": "にき よしひと",
+  "name": "仁木 啓人",
+  "profileUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/niki/",
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kaihabetu/"
+ },
+ {
+  "asOf": "2026-08-24",
+  "assemblyId": "pref-36",
+  "counts": {
+   "rollcalls": 105
+  },
+  "current": true,
+  "district": "徳島選挙区",
+  "group": "真政会",
+  "id": "p_36_oka",
+  "kana": "おか ゆうき",
+  "name": "岡 佑樹",
+  "profileUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/oka/",
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kaihabetu/"
+ },
+ {
+  "asOf": "2026-08-24",
+  "assemblyId": "pref-36",
+  "counts": {
+   "rollcalls": 105
+  },
+  "current": true,
+  "district": "鳴門選挙区",
+  "group": "徳島県議会自由民主党",
+  "id": "p_36_okada",
+  "kana": "おかだ りえ",
+  "name": "岡田 理絵",
+  "profileUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/okada/",
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kaihabetu/"
+ },
+ {
+  "asOf": "2026-08-24",
+  "assemblyId": "pref-36",
+  "counts": {
+   "rollcalls": 105
+  },
+  "current": true,
+  "district": "吉野川選挙区",
+  "group": "元気とくしま",
+  "id": "p_36_okadas",
+  "kana": "おかだ すすむ",
+  "name": "岡田 晋",
+  "profileUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/okadas/",
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kaihabetu/"
+ },
+ {
+  "asOf": "2026-08-24",
+  "assemblyId": "pref-36",
+  "counts": {
+   "rollcalls": 105
+  },
+  "current": true,
+  "district": "小松島・勝浦選挙区",
+  "group": "徳島県議会自由民主党",
+  "id": "p_36_okamoto",
+  "kana": "おかもと とみじ",
+  "name": "岡本 富治",
+  "profileUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/okamoto/",
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kaihabetu/"
+ },
+ {
+  "asOf": "2026-08-24",
+  "assemblyId": "pref-36",
+  "counts": {
+   "rollcalls": 105
+  },
+  "current": true,
+  "district": "阿波選挙区",
+  "group": "徳島県議会自由民主党",
+  "id": "p_36_ootsuka",
+  "kana": "おおつか あきひろ",
+  "name": "大塚 明廣",
+  "profileUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/ootsuka/",
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kaihabetu/"
+ },
+ {
+  "asOf": "2026-08-24",
+  "assemblyId": "pref-36",
+  "counts": {
+   "rollcalls": 105
+  },
+  "current": true,
+  "district": "鳴門選挙区",
+  "group": "真政会",
+  "id": "p_36_sakaguchi",
+  "kana": "さかぐち せいじ",
+  "name": "坂口 誠治",
+  "profileUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/sakaguchi/",
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kaihabetu/"
+ },
+ {
+  "asOf": "2026-08-24",
+  "assemblyId": "pref-36",
+  "counts": {
+   "rollcalls": 105
+  },
+  "current": true,
+  "district": "阿南選挙区",
+  "group": "徳島県議会自由民主党",
+  "id": "p_36_sawamoto",
+  "kana": "さわもと かつひこ",
+  "name": "沢本 勝彦",
+  "profileUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/sawamoto/",
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kaihabetu/"
+ },
+ {
+  "asOf": "2026-08-24",
+  "assemblyId": "pref-36",
+  "counts": {
+   "rollcalls": 105
+  },
+  "current": true,
+  "district": "海部選挙区",
+  "group": "徳島県議会自由民主党",
+  "id": "p_36_shigekiyo",
+  "kana": "しげきよ よしゆき",
+  "name": "重清 佳之",
+  "profileUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/shigekiyo/",
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kaihabetu/"
+ },
+ {
+  "asOf": "2026-08-24",
+  "assemblyId": "pref-36",
+  "counts": {
+   "rollcalls": 105
+  },
+  "current": true,
+  "district": "板野選挙区",
+  "group": "徳島県議会自由民主党",
+  "id": "p_36_shingai",
+  "kana": "しんがい ひろし",
+  "name": "眞貝 浩司",
+  "profileUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/shingai/",
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kaihabetu/"
+ },
+ {
+  "asOf": "2026-08-24",
+  "assemblyId": "pref-36",
+  "counts": {
+   "rollcalls": 105
+  },
+  "current": true,
+  "district": "徳島選挙区",
+  "group": "新しい県政を創る会",
+  "id": "p_36_shono",
+  "kana": "しょうの まさひこ",
+  "name": "庄野 昌彦",
+  "profileUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/shono/",
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kaihabetu/"
+ },
+ {
+  "asOf": "2026-08-24",
+  "assemblyId": "pref-36",
+  "counts": {
+   "rollcalls": 105
+  },
+  "current": true,
+  "district": "徳島選挙区",
+  "group": "日本維新の会",
+  "id": "p_36_sone",
+  "kana": "そね ひろし",
+  "name": "曽根 大志",
+  "profileUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/sone/",
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kaihabetu/"
+ },
+ {
+  "asOf": "2026-08-24",
+  "assemblyId": "pref-36",
+  "counts": {
+   "rollcalls": 105
+  },
+  "current": true,
+  "district": "徳島選挙区",
+  "group": "徳島県議会自由民主党",
+  "id": "p_36_sumi",
+  "kana": "すみ かずひと",
+  "name": "須見 一仁",
+  "profileUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/sumi/",
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kaihabetu/"
+ },
+ {
+  "asOf": "2026-08-24",
+  "assemblyId": "pref-36",
+  "counts": {
+   "rollcalls": 105
+  },
+  "current": true,
+  "district": "三好第一選挙区",
+  "group": "新しい県政を創る会",
+  "id": "p_36_takeuchi",
+  "kana": "たけうち よしのり",
+  "name": "竹内 義了",
+  "profileUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/takeuchi/",
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kaihabetu/"
+ },
+ {
+  "asOf": "2026-08-24",
+  "assemblyId": "pref-36",
+  "counts": {
+   "rollcalls": 105
+  },
+  "current": true,
+  "district": "板野選挙区",
+  "group": "自由民主党県民会議",
+  "id": "p_36_tatekawa",
+  "kana": "たてかわ のりひろ",
+  "name": "立川 了大",
+  "profileUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/tatekawa/",
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kaihabetu/"
+ },
+ {
+  "asOf": "2026-08-24",
+  "assemblyId": "pref-36",
+  "counts": {
+   "rollcalls": 105
+  },
+  "current": true,
+  "district": "阿南選挙区",
+  "group": "日本共産党",
+  "id": "p_36_tatsuta",
+  "kana": "たつた よしこ",
+  "name": "達田 良子",
+  "profileUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/tatsuta/",
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kaihabetu/"
+ },
+ {
+  "asOf": "2026-08-24",
+  "assemblyId": "pref-36",
+  "counts": {
+   "rollcalls": 105
+  },
+  "current": true,
+  "district": "阿波選挙区",
+  "group": "自由民主党県民会議",
+  "id": "p_36_terai",
+  "kana": "てらい しょうじ",
+  "name": "寺井 正邇",
+  "profileUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/terai/",
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kaihabetu/"
+ },
+ {
+  "asOf": "2026-08-24",
+  "assemblyId": "pref-36",
+  "counts": {
+   "rollcalls": 105
+  },
+  "current": true,
+  "district": "徳島選挙区",
+  "group": "新しい県政を創る会",
+  "id": "p_36_tojo",
+  "kana": "とうじょう きょうこ",
+  "name": "東条 恭子",
+  "profileUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/tojo/",
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kaihabetu/"
+ },
+ {
+  "asOf": "2026-08-24",
+  "assemblyId": "pref-36",
+  "counts": {
+   "rollcalls": 105
+  },
+  "current": true,
+  "district": "名西選挙区",
+  "group": "徳島県議会自由民主党",
+  "id": "p_36_yamanishi",
+  "kana": "やまにし くにお",
+  "name": "山西 国朗",
+  "profileUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/yamanishi/",
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kaihabetu/"
  }
 ]
