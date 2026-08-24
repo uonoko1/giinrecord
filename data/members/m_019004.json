@@ -41,6 +41,28 @@
    "value": "賛成"
   },
   {
+   "answerDate": "2025-07-01",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217222.htm",
+   "date": "2025-06-19",
+   "kind": "question",
+   "questionId": "217-sangiin-222",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217222.htm",
+   "submitterText": "石川 大我君",
+   "title": "男性のＤⅤ被害と自殺に関する質問主意書"
+  },
+  {
+   "answerDate": "2025-07-01",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217221.htm",
+   "date": "2025-06-19",
+   "kind": "question",
+   "questionId": "217-sangiin-221",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217221.htm",
+   "submitterText": "石川 大我君",
+   "title": "ＤＶからの避難等に関する質問主意書"
+  },
+  {
    "date": "2025-06-18",
    "groupValue": "賛成",
    "kind": "vote",
@@ -468,6 +490,16 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0528-v001.htm",
    "title": "国際協同組合年に当たり協同組合の振興を図る決議案（山本順三君外１６名発議）",
    "value": "賛成"
+  },
+  {
+   "chars": 4520,
+   "date": "2025-05-28",
+   "excerpt": "立憲民主・社民・無所属の石川大我です。 私は、会派を代表し、日本学術会議法案について質問をします。 まず、法案の経緯についてお尋ねします。 本法案は、七十六年にわたり続いてきた日本学術会議の在り方を根本的に変えるものです。二〇一五年に出された日本学術会議の新たな展望を考える有識者会議の報告書は「現在の制度は、日本学術会議に期待される機能に照らして相応しいものであり、これを変える積極的な理由は見出し",
+   "kind": "speech",
+   "meeting": "本会議 第22号",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715254X02220250528/13",
+   "speechId": "121715254X02220250528_013"
   },
   {
    "date": "2025-05-23",

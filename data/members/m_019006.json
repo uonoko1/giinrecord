@@ -304,6 +304,16 @@
    "value": "賛成"
   },
   {
+   "billId": "221-参法-16",
+   "date": "2026-07-09",
+   "kind": "bill",
+   "role": "提出者",
+   "session": 221,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/221/meisai/m221100221016.htm",
+   "submitterText": "打越さく良君 外9名",
+   "title": "国による全ての水俣病の被害者の救済の実現に向けた給付金等の支給に係る制度の創設に関する法律案"
+  },
+  {
    "date": "2026-07-08",
    "groupValue": "反対",
    "kind": "vote",
@@ -368,6 +378,17 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0708-v001.htm",
    "title": "日程第１　令和六年度一般会計歳入歳出決算、令和六年度特別会計歳入歳出決算、令和六年度国税収納金整理資金受払計算書、令和六年度政府関係機関決算書「委員長報告のとおり是認すること」",
    "value": "反対"
+  },
+  {
+   "answerDate": "2026-07-17",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/touh/t221069.htm",
+   "date": "2026-07-07",
+   "kind": "question",
+   "questionId": "221-sangiin-69",
+   "session": 221,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/meisai/m221069.htm",
+   "submitterText": "打越 さく良君",
+   "title": "生活保護における障害者加算に係る精神障害者保健福祉手帳の取扱いに関する質問主意書"
   },
   {
    "date": "2026-06-26",
@@ -918,6 +939,16 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0515-v001.htm",
    "title": "日程第１　投資の促進及び保護に関する日本国とセルビア共和国との間の協定の締結について承認を求めるの件（衆議院送付）",
    "value": "賛成"
+  },
+  {
+   "chars": 4696,
+   "date": "2026-05-15",
+   "excerpt": "立憲民主・無所属の打越さく良です。 私は、会派を代表し、ただいま議題となりました出入国管理及び難民認定法及び出入国管理及び難民認定法第二条第五号ロの旅券を所持する外国人の上陸申請の特例に関する法律の一部を改正する法律案について質問を行います。 歴代自民党政権は、必要なときは外国人労働者を受け入れて労働力として使い回し、都合が悪くなると規制を厳しくして追い返したりしてきました。こうした御都合主義が在",
+   "kind": "speech",
+   "meeting": "本会議 第13号",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01320260515/5",
+   "speechId": "122115254X01320260515_005"
   },
   {
    "date": "2026-05-13",
@@ -2700,6 +2731,16 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0423-v001.htm",
    "title": "日程第１　所得に対する租税に関する二重課税の除去並びに脱税及び租税回避の防止のための日本国政府とウクライナ政府との間の条約の締結について承認を求めるの件（衆議院送付）",
    "value": "賛成"
+  },
+  {
+   "chars": 4474,
+   "date": "2025-04-23",
+   "excerpt": "立憲民主・社民・無所属の打越さく良です。 私は、会派を代表し、情報通信技術の進展等に対応するための刑事訴訟法等の一部を改正する法律案について、鈴木馨祐法務大臣に質問を行います。 情報通信技術は、何よりも国民の権利利益の保護、実現のために活用されるべきであり、刑事手続における情報通信技術の利用の拡大が憲法上保障された国民の権利を侵害するようなことはあってはなりません。 本法案の作成に先立って設置され",
+   "kind": "speech",
+   "meeting": "本会議 第15号",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715254X01520250423/7",
+   "speechId": "121715254X01520250423_007"
   },
   {
    "date": "2025-04-18",

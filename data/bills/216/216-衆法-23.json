@@ -3,15 +3,9 @@
  "id": "216-衆法-23",
  "kind": "衆法",
  "number": 23,
- "received": {
-  "shugiin": "2024-12-20"
- },
- "result": {
-  "shugiin": "閉会中審査"
- },
  "session": 216,
- "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDD62.htm",
- "status": "衆議院で閉会中審査",
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0CAE.htm",
+ "status": "未了",
  "submitterGroups": [
   "立憲民主党・無所属",
   "国民民主党・無所属クラブ"
@@ -21,13 +15,14 @@
   "山井和則",
   "柚木道義",
   "伴野豊",
+  "岡本充功",
   "井坂信彦",
   "早稲田ゆき",
   "浅野哲",
   "田中健",
   "長友慎治"
  ],
- "submitterText": "中島 克仁君外八名",
+ "submitterText": "中島 克仁君外九名",
  "supporterNames": [
   "青柳陽一郎",
   "青山大人",
@@ -60,7 +55,6 @@
   "岡田悟",
   "岡田華子",
   "岡本あき子",
-  "岡本充功",
   "小川淳也",
   "奥野総一郎",
   "小熊慎司",
@@ -109,7 +103,6 @@
   "武正公一",
   "田嶋要",
   "辻英之",
-  "堤かなめ",
   "津村啓介",
   "手塚仁雄",
   "寺田学",
@@ -123,7 +116,6 @@
   "橋本慧悟",
   "長谷川嘉一",
   "波多野翼",
-  "馬場雄基",
   "原口一博",
   "平岡秀夫",
   "福田昭夫",
