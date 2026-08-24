@@ -19,7 +19,8 @@ import { attendancePageUrl, fetchCommitteeAttendance } from "./sources/kokkai-at
 import { matchAttendance, type MatchedAttendance } from "./match-attendance.ts";
 import { buildDataset, mergeRosters, rosterSessionsFor, type Roster } from "./aggregate.ts";
 import { dietAssemblies, readSessionsOnDisk, validateDataset, writeDataset } from "./dataset.ts";
-import { dropCarriedSpeeches, lostVoteMatches, planSessions, readCarried } from "./sessions.ts";
+import { dropCarriedSpeeches, lostTimelineEntries, lostVoteMatches, planSessions, readCarried } from "./sessions.ts";
+import { readMemberIndex } from "./local-assemblies.ts";
 
 /**
  * ETL entry point. S1: House of Councillors members and roll-call votes. S2: plenary speeches (国会会議録API; 参院、#73 から衆院も).
@@ -262,7 +263,10 @@ if (unmatched.length) {
 // 名簿に現れない会派改称・移籍なら正常、名簿にいない旧議員が同名の現職に紐づいていたら誤りなので、運用者がファイルで確認する。
 if (groupMismatch.length) console.warn(`group mismatch (matched by name only): ${groupMismatch.length} (see data/group-mismatch.json)`);
 
-await writeDataset(DATA, {
+// 前回出力の members/index.json。writeDataset が members/ を消す前に読む（消失検出用。#235）
+const previousIndex = await readMemberIndex(DATA);
+
+const dataset = {
   // 議会一覧（#156）: 国会の2行。members の assemblyId（diet-sangiin / diet-shugiin）はこの id を指す。
   assemblies: dietAssemblies(memberSession),
   ...buildDataset([...members, ...shugiin.members], rollCalls, decisions, speeches, proposed.entries, shugiinMatched.bills, questions.questions, attendance, carriedEntries),
@@ -288,7 +292,22 @@ await writeDataset(DATA, {
       ...targets.map((s) => ({ name: `参議院 質問主意書（第${s}回）`, url: sangiinQuestionListUrl(s), fetchedAt })),
     ],
   },
-});
+};
+
+// 前回出力にあった timeline 行が減っていたら、引き継ぎの取りこぼし（#235: #103 以前の出力の question 行 524 件が
+// carried で落ち、writeDataset の members/ 全消しで黙って消えた）。壊れた出力を書かずにここで止める。
+// 回次を減らす意図的な実行（data/ を消してからの再構築）は前回出力が無いので引っかからない。
+{
+  const lost = lostTimelineEntries(previousIndex, dataset.index);
+  if (lost.length) {
+    console.error(`timeline entries lost since the previous output (carried entries dropped?): ${lost.length}`);
+    for (const l of lost) console.error(`  ${l.assemblyId} ${l.kind}: ${l.before} -> ${l.after}`);
+    console.error("  data/ is unchanged. Re-run with the affected sessions (`pnpm etl <session>...`) to regenerate them.");
+    process.exit(1);
+  }
+}
+
+await writeDataset(DATA, dataset);
 
 // 契約違反のデータは公開しない: 違反があれば全部列挙して非0終了（CI が止まる）。
 const violations = await validateDataset(DATA);

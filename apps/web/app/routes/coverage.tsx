@@ -2,7 +2,7 @@ import { Link, type MetaArgs } from "react-router";
 import { CoverBrand } from "../components/CoverBrand";
 import { SiteFooter } from "../components/SiteFooter";
 import { assemblyPath, bundledSessions } from "../lib/assemblies";
-import { buildCoverage, type Coverage, type DietCoverage, formatLocalSessionRange, formatSessionRange, hasSessionGaps, type LocalCoverage, rosterlessSessions, type SessionRange } from "../lib/coverage";
+import { buildCoverage, type Coverage, type DietCoverage, formatLocalSessionRange, formatSessionRange, hasSessionGaps, type LocalCoverage, rosterlessSessions, type SessionRange, shugiinQuestionCoverage } from "../lib/coverage";
 import type { AssemblySession } from "../lib/data-contract";
 import { type Dataset, dataset as bundled } from "../lib/dataset";
 import { formatDate, formatDateTime } from "../lib/format";
@@ -41,6 +41,7 @@ export default function CoveragePage({ data = bundled, sessions = bundledSession
         <LocalSection local={coverage.local} />
 
         <RosterlessSection meta={data.meta} />
+        <ShugiinQuestionsSection meta={data.meta} />
 
         <section className="section" aria-labelledby="coverage-not-recorded-heading">
           <h2 id="coverage-not-recorded-heading" className="section__title">
@@ -107,6 +108,32 @@ function SessionRangeCell({ range, unit }: { range: SessionRange | null; unit: s
       {text}
       {hasSessionGaps(range) && <span className="assemblies-status-note">うち{unit}のある回次 {n(range.count)}</span>}
     </>
+  );
+}
+
+/**
+ * 衆院の質問主意書が議員ページに紐づく回次（#235）。衆議院は回次ごとの議員名簿を公開しておらず「現在」の
+ * 1 回次分しか無い（#71）ので、質問主意書は全回次を取得していても、提出者を名簿に名寄せできるのはその 1 回次だけ。
+ * 取得済みだが議員ページに出ない質問があるという事実をそのまま書く（隠さない）。回次はデータ（meta）から数える。
+ */
+function ShugiinQuestionsSection({ meta }: { meta: Dataset["meta"] }) {
+  const c = shugiinQuestionCoverage(meta);
+  const fetched = formatSessionRange(c?.fetched ?? null);
+  if (!c || !fetched || !c.linkedOnlyToRosterSession) return null;
+  return (
+    <section className="section" aria-labelledby="coverage-shugiin-questions-heading">
+      <h2 id="coverage-shugiin-questions-heading" className="section__title">
+        衆議院の質問主意書が議員ページに紐づく回次
+      </h2>
+      <p className="card__body">
+        衆議院は<strong>回次ごとの議員名簿を公開しておらず、「現在」の 1 回次分しかありません</strong>。そのため、質問主意書は{" "}
+        <span className="num">{fetched}</span> の一覧を取得していても、提出者を名簿に照合できるのは{" "}
+        <span className="num">第{c.rosterSession}回</span>のぶんだけで、
+        <strong>それ以外の回次の衆議院の質問主意書は議員ページに出ません</strong>。
+        氏名だけを手がかりに議員を作ることはしていません（同姓同名の別人を 1 人にしないため）。
+        参議院は回次ごとの名簿があるため、この制約はありません。
+      </p>
+    </section>
   );
 }
 
