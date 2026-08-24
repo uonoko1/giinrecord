@@ -87,7 +87,7 @@ export async function readGlyphPages(bytes: Buffer): Promise<PageGeometry[]> {
             }
             if (!g || typeof g !== "object") continue;
             const w = ((g.width ?? 0) / 1000) * fontSize * hScale;
-            const u = (g.unicode ?? "").replace(/[-]/g, "〓"); // 私用領域（外字）は読めない（原文に無い文字を作らない）
+            const u = (g.unicode ?? "").replace(/[\uE000-\uF8FF]/g, "〓"); // 私用領域（外字）は読めない（原文に無い文字を作らない）
             if (u.trim() !== "") {
               x0 ??= x;
               str += u;
