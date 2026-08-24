@@ -36,7 +36,7 @@ export function buildSitemap(paths: string[], { origin, lastmod }: SitemapOption
 }
 
 export function buildRobots(origin: string): string {
-  // staging.gikailog.jp (#127): nothing is crawlable, and no sitemap is advertised.
+  // staging.giinrecord.jp (#127): nothing is crawlable, and no sitemap is advertised.
   if (isStagingOrigin(origin)) return "User-agent: *\nDisallow: /\n";
   // /compare (#104) is query-driven, served from the SPA fallback and meta noindex; keep crawlers off it here too.
   const base = "User-agent: *\nAllow: /\nDisallow: /compare\n";

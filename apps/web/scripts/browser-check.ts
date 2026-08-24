@@ -8,7 +8,7 @@
  *   - the members search really filters (typing reduces the number of rows -> hydration happened)
  * Usage: pnpm --filter web browser-check -- --url http://127.0.0.1:8081
  * Requires a Chromium for Playwright: `pnpm --filter web exec playwright install --with-deps chromium` (CI: docker-web job).
- * PO: run the same command against https://gikailog.jp once the VPS has picked up the new site.conf.
+ * PO: run the same command against https://giinrecord.jp once the VPS has picked up the new site.conf.
  */
 import { readFile } from "node:fs/promises";
 import path from "node:path";

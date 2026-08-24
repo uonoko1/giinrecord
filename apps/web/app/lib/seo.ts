@@ -7,7 +7,7 @@
  * every URL is site-relative, so a build without a domain still works.
  */
 
-export const SITE_NAME = "議会ログ";
+export const SITE_NAME = "議員レコード";
 
 export function normalizeOrigin(raw: string | undefined): string {
   return (raw ?? "").trim().replace(/\/+$/, "");

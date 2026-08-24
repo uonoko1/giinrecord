@@ -81,7 +81,7 @@ export function ComparePage({ ids, load, meta }: { ids: string[]; load: (id: str
       <main className="compare">
         <header className="compare-cover">
           <p className="compare-cover-top">
-            <Link to="/">← 議会ログ</Link>
+            <Link to="/">← 議員レコード</Link>
           </p>
           <h1 className="compare-title">{TITLE}</h1>
           <p className="compare-lead">同じ採決・議案に対する記録を、議員ごとに横へ並べます。記録をそのまま置くだけで、評価や集計はしません。</p>

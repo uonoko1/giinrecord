@@ -54,7 +54,7 @@ describe.each(pages)("$name（#167）", ({ name, Page, meta, updated, path }) =>
 
   it("meta にタイトル・説明・canonical がある", () => {
     const tags = meta({ location: { pathname: path } } as never);
-    expect(tags).toContainEqual({ title: `${name} ・ 議会ログ` });
+    expect(tags).toContainEqual({ title: `${name} ・ 議員レコード` });
     expect(tags).toContainEqual(expect.objectContaining({ tagName: "link", rel: "canonical", href: path }));
     expect(tags).toContainEqual(expect.objectContaining({ name: "description" }));
   });

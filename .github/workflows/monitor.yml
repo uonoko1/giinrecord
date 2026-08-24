@@ -1,6 +1,6 @@
 name: Monitor
 # Issue #135: self-hosted monitoring, no SaaS. External probes of production (every 10 minutes) and staging
-# (hourly): HTTP 200 + 議会ログ in <title> for / and /members/, /data/meta.json with fetchedAt ≤ 48 h, TLS expiry ≥ 14 d.
+# (hourly): HTTP 200 + 議員レコード in <title> for / and /members/, /data/meta.json with fetchedAt ≤ 48 h, TLS expiry ≥ 14 d.
 # A check that fails twice in a row (60 s apart, deploy/monitor/run.sh) opens ONE Issue "[monitor] <env>: <check>"
 # (label monitor, deduplicated by title, deploy/monitor/report.sh) and the Issue is closed when the check passes again.
 # The VPS-side checks (containers, disk, nginx, rsync targets) live in deploy/monitor/health.sh (root cron).
@@ -27,20 +27,20 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - name: probe https://gikailog.jp (twice on failure) → Issues
+      - name: probe https://giinrecord.jp (twice on failure) → Issues
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: bash deploy/monitor/run.sh production https://gikailog.jp
+        run: bash deploy/monitor/run.sh production https://giinrecord.jp
   staging:
     if: github.event_name != 'schedule' || github.event.schedule == '7 * * * *'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - name: probe https://staging.gikailog.jp through Cloudflare Access (twice on failure) → Issues
+      - name: probe https://staging.giinrecord.jp through Cloudflare Access (twice on failure) → Issues
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MONITOR_REQUIRE_CF_ACCESS: "1"
           CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
           CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
-        run: bash deploy/monitor/run.sh staging https://staging.gikailog.jp
+        run: bash deploy/monitor/run.sh staging https://staging.giinrecord.jp

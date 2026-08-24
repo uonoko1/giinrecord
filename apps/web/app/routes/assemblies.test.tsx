@@ -82,7 +82,7 @@ describe("/assemblies 一覧", () => {
 
   it("meta: タイトル・説明・canonical", () => {
     const tags = routeMeta({ location: { pathname: "/assemblies" } } as Parameters<typeof routeMeta>[0]);
-    expect(tags).toContainEqual({ title: "議会一覧 ・ 議会ログ" });
+    expect(tags).toContainEqual({ title: "議会一覧 ・ 議員レコード" });
     expect(tags).toContainEqual({ tagName: "link", rel: "canonical", href: "/assemblies" });
   });
 });

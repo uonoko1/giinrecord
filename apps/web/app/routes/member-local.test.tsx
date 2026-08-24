@@ -103,7 +103,7 @@ describe("地方議員の議員ページ: meta", () => {
   });
   it("description に議会名を含み、評価語を含まない", () => {
     const tags = routeMeta({ data: { detail, meta, assembly: miyagi }, location: { pathname: "/members/p_04_000001" } } as unknown as Parameters<typeof routeMeta>[0]);
-    expect(tags).toContainEqual({ title: "宮城 太郎（宮城県議会・仙台市青葉区）の表決記録 ・ 議会ログ" });
+    expect(tags).toContainEqual({ title: "宮城 太郎（宮城県議会・仙台市青葉区）の表決記録 ・ 議員レコード" });
     const desc = (tags.find((t) => "name" in t && t.name === "description") as { content: string }).content;
     expect(desc).toContain("宮城県議会");
     expect(desc).toContain("凡例");

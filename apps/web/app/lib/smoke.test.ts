@@ -299,8 +299,8 @@ describe("checkNoExternalResources（#168: 第三者送信ゼロ。HTML と font
 
 describe("externalResourceUrls: self-origin and canonical", () => {
   it("canonical is not a fetched resource; SITE_ORIGIN absolute urls are internal", () => {
-    const html = '<link rel="canonical" href="https://gikailog.jp/x"/><link rel="stylesheet" href="https://gikailog.jp/a.css"/><script src="https://cdn.example.com/x.js"></script>';
-    expect(externalResourceUrls(html, "https://gikailog.jp")).toEqual(["https://cdn.example.com/x.js"]);
-    expect(externalResourceUrls(html, "")).toEqual(["https://gikailog.jp/a.css", "https://cdn.example.com/x.js"]);
+    const html = '<link rel="canonical" href="https://giinrecord.jp/x"/><link rel="stylesheet" href="https://giinrecord.jp/a.css"/><script src="https://cdn.example.com/x.js"></script>';
+    expect(externalResourceUrls(html, "https://giinrecord.jp")).toEqual(["https://cdn.example.com/x.js"]);
+    expect(externalResourceUrls(html, "")).toEqual(["https://giinrecord.jp/a.css", "https://cdn.example.com/x.js"]);
   });
 });

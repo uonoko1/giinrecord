@@ -36,8 +36,8 @@ case "$cmd" in
     for ((i=1;i<=$#;i++)); do [[ "${!i}" == "-K" ]] && { j=$((i+1)); { stat -c %A "${!j}"; cat "${!j}"; } > "$STUB_LOG.curlrc"; }; done
     case "$url" in
       */data/meta.json) printf '{\n "fetchedAt": "%s",\n "sources": [{"fetchedAt": "2020-01-01T00:00:00Z"}]\n}\n' "${H_FETCHED_AT:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}" > "$out"; printf '%s' "${H_CODE_META:-200}" ;;
-      */members/)       printf '<html><head><title>議員一覧 | %s</title></head></html>' "${H_TITLE:-議会ログ}" > "$out"; printf '%s' "${H_CODE_MEMBERS:-200}" ;;
-      */)               printf '<html><head><title>%s</title></head></html>' "${H_TITLE:-議会ログ}" > "$out"; printf '%s' "${H_CODE_ROOT:-200}" ;;
+      */members/)       printf '<html><head><title>議員一覧 | %s</title></head></html>' "${H_TITLE:-議員レコード}" > "$out"; printf '%s' "${H_CODE_MEMBERS:-200}" ;;
+      */)               printf '<html><head><title>%s</title></head></html>' "${H_TITLE:-議員レコード}" > "$out"; printf '%s' "${H_CODE_ROOT:-200}" ;;
       *) echo "unexpected url $url" >&2; exit 1 ;;
     esac ;;
   openssl)
@@ -85,71 +85,71 @@ t_syntax() { for s in probe report run; do bash -n "$MON/$s.sh" || fail "bash -n
 # ---- probe.sh ----
 t_probe_ok() {
   fresh p_ok
-  run_probe https://gikailog.jp || fail "exit $? $(cat "$P/out")"
+  run_probe https://giinrecord.jp || fail "exit $? $(cat "$P/out")"
   local out; out=$(cat "$P/out")
   assert_contains "$out" "ok http" "http ok"
   assert_contains "$out" "ok data" "data ok"
   assert_contains "$out" "ok tls" "tls ok"
-  assert_contains "$(cat "$LOG")" "https://gikailog.jp/members/" "members page probed"
-  assert_contains "$(cat "$LOG")" "https://gikailog.jp/data/meta.json" "meta probed"
-  assert_contains "$(cat "$LOG")" "-servername gikailog.jp" "TLS of the right host"
+  assert_contains "$(cat "$LOG")" "https://giinrecord.jp/members/" "members page probed"
+  assert_contains "$(cat "$LOG")" "https://giinrecord.jp/data/meta.json" "meta probed"
+  assert_contains "$(cat "$LOG")" "-servername giinrecord.jp" "TLS of the right host"
 }
 t_probe_http_status() {
   fresh p_http
-  H_CODE_MEMBERS=502 run_probe https://gikailog.jp && fail "expected non-zero"
+  H_CODE_MEMBERS=502 run_probe https://giinrecord.jp && fail "expected non-zero"
   assert_contains "$(cat "$P/out")" "fail http" "http fails"
   assert_contains "$(cat "$P/out")" "/members/ 502" "reason names path and status"
   assert_contains "$(cat "$P/out")" "ok tls" "tls still ok"
 }
 t_probe_title() {
   fresh p_title
-  H_TITLE="Welcome to nginx" run_probe https://gikailog.jp && fail "expected non-zero"
+  H_TITLE="Welcome to nginx" run_probe https://giinrecord.jp && fail "expected non-zero"
   assert_contains "$(cat "$P/out")" "fail http" "wrong title fails http"
   assert_contains "$(cat "$P/out")" "title" "reason mentions title"
 }
 t_probe_stale_data() {
   fresh p_stale
-  H_FETCHED_AT="2020-01-01T00:00:00.000Z" run_probe https://gikailog.jp && fail "expected non-zero"
+  H_FETCHED_AT="2020-01-01T00:00:00.000Z" run_probe https://giinrecord.jp && fail "expected non-zero"
   assert_contains "$(cat "$P/out")" "fail data" "stale data fails"
   assert_contains "$(cat "$P/out")" "ok http" "http still ok"
 }
 t_probe_data_within_window() {
   fresh p_fresh
-  H_FETCHED_AT="$(date -u -d '-40 hours' +%Y-%m-%dT%H:%M:%S.000Z)" run_probe https://gikailog.jp || fail "40h old is within 48h: $(cat "$P/out")"
+  H_FETCHED_AT="$(date -u -d '-40 hours' +%Y-%m-%dT%H:%M:%S.000Z)" run_probe https://giinrecord.jp || fail "40h old is within 48h: $(cat "$P/out")"
 }
 t_probe_meta_unparseable() {
   fresh p_meta
-  H_FETCHED_AT="not-a-date" run_probe https://gikailog.jp && fail "expected non-zero"
+  H_FETCHED_AT="not-a-date" run_probe https://giinrecord.jp && fail "expected non-zero"
   assert_contains "$(cat "$P/out")" "fail data" "unparseable fetchedAt fails data"
 }
 t_probe_tls_expiring() {
   fresh p_tls
-  H_NOT_AFTER="$(LC_ALL=C date -u -d '+10 days' '+%b %d %H:%M:%S %Y GMT')" run_probe https://gikailog.jp && fail "expected non-zero"
+  H_NOT_AFTER="$(LC_ALL=C date -u -d '+10 days' '+%b %d %H:%M:%S %Y GMT')" run_probe https://giinrecord.jp && fail "expected non-zero"
   assert_contains "$(cat "$P/out")" "fail tls" "10 days left fails"
   assert_contains "$(cat "$P/out")" "days" "reason says days"
 }
 t_probe_tls_unreadable() {
   fresh p_tls2
-  H_NOT_AFTER="" run_probe https://gikailog.jp && fail "expected non-zero"
+  H_NOT_AFTER="" run_probe https://giinrecord.jp && fail "expected non-zero"
   assert_contains "$(cat "$P/out")" "fail tls" "no notAfter fails tls"
 }
 t_probe_curl_down() {
   fresh p_down
-  H_CURL_EXIT=7 run_probe https://gikailog.jp && fail "expected non-zero"
+  H_CURL_EXIT=7 run_probe https://giinrecord.jp && fail "expected non-zero"
   assert_contains "$(cat "$P/out")" "fail http" "connection failure is http fail"
   assert_contains "$(cat "$P/out")" "fail data" "…and data cannot be checked"
 }
 t_probe_rejects_bad_origin() {
   fresh p_origin
-  if run_probe "http://gikailog.jp"; then fail "http origin accepted"; fi
-  if run_probe "https://gikailog.jp/path"; then fail "origin with path accepted"; fi
+  if run_probe "http://giinrecord.jp"; then fail "http origin accepted"; fi
+  if run_probe "https://giinrecord.jp/path"; then fail "origin with path accepted"; fi
   if run_probe; then fail "missing origin accepted"; fi
 }
 
 # ---- probe.sh: Cloudflare Access service token (#163) ----
 t_probe_cf_access_headers_via_config_file() {
   fresh p_cf
-  CF_ACCESS_CLIENT_ID=id-abc.access CF_ACCESS_CLIENT_SECRET=s3cr3t-xyz run_probe https://staging.gikailog.jp || fail "exit $? $(cat "$P/out")"
+  CF_ACCESS_CLIENT_ID=id-abc.access CF_ACCESS_CLIENT_SECRET=s3cr3t-xyz run_probe https://staging.giinrecord.jp || fail "exit $? $(cat "$P/out")"
   local log; log=$(cat "$LOG")
   assert_not_contains "$log" "s3cr3t-xyz" "secret never on the curl command line"
   assert_not_contains "$log" "id-abc.access" "client id never on the curl command line"
@@ -163,20 +163,20 @@ t_probe_cf_access_headers_via_config_file() {
 }
 t_probe_without_cf_access_sends_no_headers() {
   fresh p_nocf
-  run_probe https://gikailog.jp || fail "exit $? $(cat "$P/out")"
+  run_probe https://giinrecord.jp || fail "exit $? $(cat "$P/out")"
   assert_not_contains "$(cat "$LOG")" "-K" "no config file without a token"
   [ ! -f "$LOG.curlrc" ] || fail "no curl config written"
 }
 t_probe_rejects_half_token() {
   fresh p_half
-  if CF_ACCESS_CLIENT_ID=only-id run_probe https://staging.gikailog.jp; then fail "id without secret must be an error"; fi
+  if CF_ACCESS_CLIENT_ID=only-id run_probe https://staging.giinrecord.jp; then fail "id without secret must be an error"; fi
   assert_contains "$(cat "$P/out")" "CF_ACCESS_CLIENT_SECRET" "names the missing variable"
   assert_not_contains "$(cat "$P/out")" "only-id" "value not printed"
 }
 t_probe_rejects_token_with_newline_or_quote() {
   fresh p_badtok
-  if CF_ACCESS_CLIENT_ID=$'id\nheader = "X: y"' CF_ACCESS_CLIENT_SECRET=s run_probe https://staging.gikailog.jp; then fail "newline in token must be rejected (curl config injection)"; fi
-  if CF_ACCESS_CLIENT_ID=id CF_ACCESS_CLIENT_SECRET='s"x' run_probe https://staging.gikailog.jp; then fail "quote in token must be rejected"; fi
+  if CF_ACCESS_CLIENT_ID=$'id\nheader = "X: y"' CF_ACCESS_CLIENT_SECRET=s run_probe https://staging.giinrecord.jp; then fail "newline in token must be rejected (curl config injection)"; fi
+  if CF_ACCESS_CLIENT_ID=id CF_ACCESS_CLIENT_SECRET='s"x' run_probe https://staging.giinrecord.jp; then fail "quote in token must be rejected"; fi
   [ ! -f "$LOG.curlrc" ] || fail "no request made"
 }
 
@@ -220,14 +220,14 @@ t_report_ok_without_issue_is_noop() {
 # ---- run.sh ----
 t_run_skips_without_required_token() {
   fresh run_skip
-  MONITOR_REQUIRE_CF_ACCESS=1 run_run staging https://staging.gikailog.jp || fail "skip must exit 0: $(cat "$P/out")"
+  MONITOR_REQUIRE_CF_ACCESS=1 run_run staging https://staging.giinrecord.jp || fail "skip must exit 0: $(cat "$P/out")"
   assert_contains "$(cat "$P/out")" "::warning::" "GitHub warning annotation"
   assert_contains "$(cat "$P/out")" "CF_ACCESS_CLIENT_ID" "names the missing secret"
   assert_eq "" "$(cat "$LOG")" "no curl, no gh (an Issue must not be opened or closed blindly)"
 }
 t_run_probes_with_token() {
   fresh run_tok
-  MONITOR_REQUIRE_CF_ACCESS=1 CF_ACCESS_CLIENT_ID=id CF_ACCESS_CLIENT_SECRET=sec run_run staging https://staging.gikailog.jp || fail "exit $? $(cat "$P/out")"
+  MONITOR_REQUIRE_CF_ACCESS=1 CF_ACCESS_CLIENT_ID=id CF_ACCESS_CLIENT_SECRET=sec run_run staging https://staging.giinrecord.jp || fail "exit $? $(cat "$P/out")"
   assert_contains "$(cat "$LOG")" "curl " "probed"
   assert_contains "$(cat "$LOG")" "-K " "with the token headers"
   assert_not_contains "$(cat "$LOG")" "sec" "secret not in argv"
@@ -235,7 +235,7 @@ t_run_probes_with_token() {
 }
 t_run_all_ok_no_retry() {
   fresh run_ok
-  run_run production https://gikailog.jp || fail "exit $? $(cat "$P/out")"
+  run_run production https://giinrecord.jp || fail "exit $? $(cat "$P/out")"
   local log; log=$(cat "$LOG")
   assert_not_contains "$log" "sleep" "no second round when the first is clean"
   assert_not_contains "$log" "gh issue create" "nothing created"
@@ -243,10 +243,10 @@ t_run_all_ok_no_retry() {
 }
 t_run_reports_after_two_rounds() {
   fresh run_fail
-  H_CODE_ROOT=503 run_run production https://gikailog.jp && fail "expected non-zero"
+  H_CODE_ROOT=503 run_run production https://giinrecord.jp && fail "expected non-zero"
   local log; log=$(cat "$LOG")
   assert_contains "$log" "sleep" "second round after a pause"
-  assert_eq "2" "$(grep -c 'curl .*https://gikailog.jp/$' "$LOG")" "root probed twice"
+  assert_eq "2" "$(grep -c 'curl .*https://giinrecord.jp/$' "$LOG")" "root probed twice"
   assert_contains "$log" "gh issue create --title [monitor] production: http" "http issue created"
   assert_not_contains "$log" "gh issue create --title [monitor] production: tls" "tls not created"
   assert_not_contains "$log" "gh issue create --title [monitor] production: data" "data (ok) not created"
@@ -254,7 +254,7 @@ t_run_reports_after_two_rounds() {
 t_run_body_has_no_secrets_or_paths() {
   fresh run_body
   GITHUB_SERVER_URL=https://github.com GITHUB_REPOSITORY=example/repo GITHUB_RUN_ID=123 \
-    H_CODE_ROOT=503 run_run production https://gikailog.jp || true
+    H_CODE_ROOT=503 run_run production https://giinrecord.jp || true
   [ -f "$LOG.body" ] || { fail "no body file"; return; }
   local body; body=$(cat "$LOG.body")
   assert_contains "$body" "production" "environment named"
@@ -273,14 +273,14 @@ fi
 exec "$STUB_HANDLER_REAL" "$@"
 H
   chmod +x "$P/flap"
-  FLAP_MARK="$P/mark" STUB_HANDLER_REAL="$TMP/handler" STUB_HANDLER="$P/flap" run_run production https://gikailog.jp || fail "a one-off failure is not a failure: $(cat "$P/out")"
+  FLAP_MARK="$P/mark" STUB_HANDLER_REAL="$TMP/handler" STUB_HANDLER="$P/flap" run_run production https://giinrecord.jp || fail "a one-off failure is not a failure: $(cat "$P/out")"
   assert_not_contains "$(cat "$LOG")" "gh issue create" "not reported"
 }
 
 test_case "monitor scripts: bash -n" t_syntax
 test_case "probe: 正常なら http/data/tls すべて ok、/ /members/ /data/meta.json と TLS を見る" t_probe_ok
 test_case "probe: /members/ が 502 なら http が fail（パスと status を理由に）" t_probe_http_status
-test_case "probe: title に『議会ログ』が無ければ http が fail" t_probe_title
+test_case "probe: title に『議員レコード』が無ければ http が fail" t_probe_title
 test_case "probe: meta.fetchedAt が 48 時間より古ければ data が fail" t_probe_stale_data
 test_case "probe: fetchedAt が 40 時間前なら ok（境界内）" t_probe_data_within_window
 test_case "probe: fetchedAt が日付でなければ data が fail" t_probe_meta_unparseable

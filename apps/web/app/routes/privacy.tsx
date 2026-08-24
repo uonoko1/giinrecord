@@ -19,7 +19,7 @@ const THIRD_PARTY_FONT_NOTE: string | null = null; // #168 でフォントを自
 export function meta({ location }: MetaArgs) {
   return seoMeta({
     title: "プライバシーポリシー",
-    description: "議会ログのプライバシーポリシー。Cookie を使わず、IP アドレスとブラウザの種類を記録しません。計測はページ・参照元・日付の集計だけです。",
+    description: "議員レコードのプライバシーポリシー。Cookie を使わず、IP アドレスとブラウザの種類を記録しません。計測はページ・参照元・日付の集計だけです。",
     pathname: location.pathname,
   });
 }

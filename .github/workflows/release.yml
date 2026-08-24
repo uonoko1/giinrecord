@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       ref:
-        description: "Git ref (branch, tag or SHA) to release to https://gikailog.jp"
+        description: "Git ref (branch, tag or SHA) to release to https://giinrecord.jp"
         required: true
         type: string
         default: main

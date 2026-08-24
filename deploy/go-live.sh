@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# 議会ログ 本番切替（root で実行。再実行可）。共用 VPS の他サイトには触れない。
-#   ssh -t "${VPS_SSH_HOST:-sakura-vps}" 'sudo bash -s gikailog.jp' < deploy/go-live.sh     ← TTY が要る（certbot が対話）
+# 議員レコード 本番切替（root で実行。再実行可）。共用 VPS の他サイトには触れない。
+#   ssh -t "${VPS_SSH_HOST:-sakura-vps}" 'sudo bash -s giinrecord.jp' < deploy/go-live.sh     ← TTY が要る（certbot が対話）
 # 順序が重要：旧名の移行 → Docker → ポート空き検査（ss -tln）→ コンテナ起動（8081、常に --force-recreate）→
 #             ホスト nginx を proxy に切替 → certbot certonly（証明書が既にあればスキップ）→ ホスト nginx を TLS + redirect に → 計測。
 # staging.* のドメインは拒否（staging は deploy/staging-setup.sh、#141）。
@@ -76,7 +76,7 @@ migrate_legacy() {
 }
 
 main() {
-  local domain="${1:?usage: go-live.sh <domain>   (production apex, e.g. gikailog.jp; staging → deploy/staging-setup.sh)}"
+  local domain="${1:?usage: go-live.sh <domain>   (production apex, e.g. giinrecord.jp; staging → deploy/staging-setup.sh)}"
   case "$domain" in
     staging.*) echo "!! '$domain' は staging です。production の go-live ではなく deploy/staging-setup.sh を使う（本番 conf を書き換えないため拒否）" >&2; exit 1 ;;
   esac
@@ -133,7 +133,7 @@ main() {
 
   step "確認"
   curl -sI "https://$domain/" 2>/dev/null | head -1 || true
-  echo "done. 次は PO 側: GitHub Actions の Deploy を実行 → https://$domain/ で title に『議会ログ』、sitemap の <loc> が https://$domain/ で始まることを確認"
+  echo "done. 次は PO 側: GitHub Actions の Deploy を実行 → https://$domain/ で title に『議員レコード』、sitemap の <loc> が https://$domain/ で始まることを確認"
 }
 
 # テストからは GO_LIVE_NO_MAIN=1 で source して関数だけ使う

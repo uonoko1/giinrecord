@@ -5,7 +5,7 @@
 #     docker compose -f deploy/docker-compose.yml up -d
 #     → web         serves /var/www/gikailog/site    (rsync target of release.yml / deploy-data.yml) on 127.0.0.1:8081
 #     → web-staging serves /var/www/gikailog/staging (rsync target of deploy-staging.yml / deploy-data.yml) on 127.0.0.1:8083
-#       the host nginx proxies TLS traffic for gikailog.jp / staging.gikailog.jp to them (deploy/nginx-host-proxy.conf).
+#       the host nginx proxies TLS traffic for giinrecord.jp / staging.giinrecord.jp to them (deploy/nginx-host-proxy.conf).
 #   local / CI (same config, your own build output):
 #     pnpm build && SITE_DIR=$PWD/apps/web/build/client STAGING_SITE_DIR=$PWD/apps/web/build/client \
 #       docker compose -f deploy/docker-compose.yml up -d
@@ -14,7 +14,7 @@
 #
 # The site directories are mounted read-only: the containers never write to the deploy targets.
 # Nothing is published beyond loopback, so the containers are reachable only through the host proxy.
-# deploy/nginx/site.conf is shared: it adds X-Robots-Tag: noindex only when the Host is staging.gikailog.jp.
+# deploy/nginx/site.conf is shared: it adds X-Robots-Tag: noindex only when the Host is staging.giinrecord.jp.
 # Logging (Issue #189): site.conf has `access_log off`, so docker logs only carry nginx's own error output. The
 # json-file cap below rotates away anything older (including the pre-#189 access lines that recorded User-Agents).
 name: gikailog

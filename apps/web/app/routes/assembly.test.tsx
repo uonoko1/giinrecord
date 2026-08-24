@@ -116,7 +116,7 @@ describe("meta", () => {
   });
   it("canonical は /assemblies/{id}", () => {
     const tags = routeMeta({ location: { pathname: "/assemblies/diet-sangiin" }, params: { id: "diet-sangiin" } } as unknown as Parameters<typeof routeMeta>[0]);
-    expect(tags).toContainEqual({ title: "参議院 ・ 議会ログ" });
+    expect(tags).toContainEqual({ title: "参議院 ・ 議員レコード" });
     expect(tags).toContainEqual({ tagName: "link", rel: "canonical", href: "/assemblies/diet-sangiin" });
   });
 });

@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# 議会ログ staging（staging.gikailog.jp）の初回セットアップ（Issue #127、冪等化と安全装置 #141）。root で 1 回、再実行可。
+# 議員レコード staging（staging.giinrecord.jp）の初回セットアップ（Issue #127、冪等化と安全装置 #141）。root で 1 回、再実行可。
 #   ssh -t "${VPS_SSH_HOST:-sakura-vps}" 'sudo bash -s' < deploy/staging-setup.sh            ← TTY が要る（certbot が対話）
 #   ssh -t "${VPS_SSH_HOST:-sakura-vps}" 'sudo bash -s staging.example.test' < deploy/staging-setup.sh   （ドメインを変える場合）
 # 引数のドメインは staging. で始まるものだけ受け付ける（本番ドメインを渡すと本番 conf を書き換えてしまった事故の再発防止、#141）。
 # 前提：production が go-live.sh で構築済み（docker・/opt/gikailog・ホスト nginx の noip log_format）。
-# 人間の作業はこれと「DNS A: staging.gikailog.jp → VPS（gikailog.jp と同じアドレス。リポジトリには書かない、#133）」だけ（README.md）。
+# 人間の作業はこれと「DNS A: staging.giinrecord.jp → VPS（giinrecord.jp と同じアドレス。リポジトリには書かない、#133）」だけ（README.md）。
 # 順序：引数検証 → repo pull → staging web root → ポート空き検査（ss -tln）→ コンテナ（web-staging 8083、常に --force-recreate：
 #       bind mount の site.conf は git pull で inode が変わり、再作成しないと反映されない）→ Cloudflare allow-list（#163、
 #       snippet ＋週次 cron）→ ホスト nginx の proxy block → certbot certonly（証明書が既にあればスキップ）→
@@ -13,10 +13,10 @@
 #   テスト: deploy/test/staging-setup.test.sh（STAGING_SETUP_PREFIX で全パスを一時ディレクトリ配下に、docker 等はスタブ）
 set -euo pipefail
 
-usage() { echo "usage: staging-setup.sh [staging.<domain>]   (default staging.gikailog.jp; the domain must start with 'staging.')" >&2; }
+usage() { echo "usage: staging-setup.sh [staging.<domain>]   (default staging.giinrecord.jp; the domain must start with 'staging.')" >&2; }
 
 PREFIX="${STAGING_SETUP_PREFIX:-}"
-DOMAIN="${1:-staging.gikailog.jp}"
+DOMAIN="${1:-staging.giinrecord.jp}"
 PORT=8083
 SERVICE=web-staging
 REPO_DIR="$PREFIX/opt/gikailog"
@@ -47,7 +47,7 @@ main() {
 
   step "0/8 前提確認（production が go-live.sh で構築済みであること）"
   if ! command -v docker >/dev/null 2>&1 || [ ! -d "$REPO_DIR/.git" ]; then
-    echo "!! docker または $REPO_DIR が無い。先に production を構築する:  ssh -t \"\${VPS_SSH_HOST:-sakura-vps}\" 'sudo bash -s gikailog.jp' < deploy/go-live.sh" >&2
+    echo "!! docker または $REPO_DIR が無い。先に production を構築する:  ssh -t \"\${VPS_SSH_HOST:-sakura-vps}\" 'sudo bash -s giinrecord.jp' < deploy/go-live.sh" >&2
     exit 1
   fi
 

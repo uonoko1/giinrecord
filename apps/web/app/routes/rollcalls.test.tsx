@@ -72,8 +72,8 @@ describe("meta()", () => {
   const args = (session: number | undefined, pathname: string) =>
     ({ data: { rollcalls, session, meta }, location: { pathname } }) as unknown as Parameters<typeof routeMeta>[0];
   it("回次指定なら「第N回国会の採決」、無指定なら「本会議採決」", () => {
-    expect(routeMeta(args(221, "/rollcalls/221"))).toContainEqual({ title: "第221回国会の採決 ・ 議会ログ" });
-    expect(routeMeta(args(undefined, "/rollcalls"))).toContainEqual({ title: "本会議採決 ・ 議会ログ" });
+    expect(routeMeta(args(221, "/rollcalls/221"))).toContainEqual({ title: "第221回国会の採決 ・ 議員レコード" });
+    expect(routeMeta(args(undefined, "/rollcalls"))).toContainEqual({ title: "本会議採決 ・ 議員レコード" });
   });
   it("canonical はそのページのパス", () => {
     expect(routeMeta(args(221, "/rollcalls/221"))).toContainEqual({ tagName: "link", rel: "canonical", href: "/rollcalls/221" });

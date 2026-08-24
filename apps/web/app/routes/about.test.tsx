@@ -67,7 +67,7 @@ describe("About", () => {
     expect(link).toHaveAttribute("download");
     const section = screen.getByRole("region", { name: "検証する" });
     expect(section).toHaveTextContent("CC BY 4.0");
-    expect(section).toHaveTextContent("議会ログ");
+    expect(section).toHaveTextContent("議員レコード");
     expect(screen.getByRole("link", { name: "GitHub のデータ" })).toHaveAttribute("href", "https://github.com/uonoko1/gikailog/tree/main/data");
   });
 
@@ -128,7 +128,7 @@ describe("About", () => {
 describe("meta()", () => {
   it("title・description・canonical を持つ", () => {
     const tags = routeMeta({ location: { pathname: "/about" } } as unknown as Parameters<typeof routeMeta>[0]);
-    expect(tags).toContainEqual({ title: "このデータについて ・ 議会ログ" });
+    expect(tags).toContainEqual({ title: "このデータについて ・ 議員レコード" });
     expect(tags).toContainEqual({ name: "description", content: expect.any(String) });
     expect(tags).toContainEqual({ tagName: "link", rel: "canonical", href: "/about" });
   });

@@ -19,7 +19,7 @@ export function SiteFooter() {
         {/* Issue 191: 対応ブラウザでマウント後にだけ描画される。プリレンダー HTML には出ない */}
         <InstallLink />
       </nav>
-      <p className="site-footer__note">議会ログ ・ コード: MIT ・ データ: CC BY 4.0</p>
+      <p className="site-footer__note">議員レコード ・ コード: MIT ・ データ: CC BY 4.0</p>
     </footer>
   );
 }

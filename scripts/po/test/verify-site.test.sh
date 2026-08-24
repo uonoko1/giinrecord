@@ -7,10 +7,10 @@ site_handler() {
   handler <<EOF
 curl_handle() {
   case "\$1" in
-    *"/members/")   printf '%s\n%s' "$1" '<html><head><title>議員一覧 | 議会ログ</title></head></html>' ;;
+    *"/members/")   printf '%s\n%s' "$1" '<html><head><title>議員一覧 | 議員レコード</title></head></html>' ;;
     *"/data/meta.json") printf '200\n{"generatedAt":"2026-08-23T21:00:00Z"}' ;;
     *"/sitemap.xml")   printf '200\n<?xml version="1.0"?><urlset></urlset>' ;;
-    *) printf '200\n<html><head>\n<title>\n  議会ログ\n</title></head><body>x</body></html>' ;;
+    *) printf '200\n<html><head>\n<title>\n  議員レコード\n</title></head><body>x</body></html>' ;;
   esac
 }
 EOF
@@ -24,8 +24,8 @@ t_site_all_200() {
   assert_eq 0 "$STATUS" "exit status: $ERR"
   assert_contains "$OUT" "production" "production section"
   assert_contains "$OUT" "staging" "staging section"
-  assert_contains "$OUT" "200  /  議会ログ" "title extracted across newlines"
-  assert_contains "$OUT" "200  /members/  議員一覧 | 議会ログ" "members title"
+  assert_contains "$OUT" "200  /  議員レコード" "title extracted across newlines"
+  assert_contains "$OUT" "200  /members/  議員一覧 | 議員レコード" "members title"
   assert_contains "$OUT" "200  /data/meta.json  -" "no title → -"
   assert_contains "$OUT" "200  /sitemap.xml  -" "sitemap has no title"
   assert_contains "$OUT" "all 200" "summary"
@@ -33,11 +33,11 @@ t_site_all_200() {
   assert_eq 2 "$(ssh_calls)" "ssh calls"
   assert_contains "$LOG" $'ssh\tgikaiops\t' "default ssh host"
   # production: --resolve to loopback with the real hostname; staging: container port with Host header
-  assert_contains "$(grep -F 'https://gikailog.jp/about/' <<<"$LOG")" $'--resolve\tgikailog.jp:443:127.0.0.1\t' "production resolve"
-  assert_contains "$(grep -F 'http://127.0.0.1:8083/about/' <<<"$LOG")" $'-H\tHost: staging.gikailog.jp\t' "staging via container port"
+  assert_contains "$(grep -F 'https://giinrecord.jp/about/' <<<"$LOG")" $'--resolve\tgiinrecord.jp:443:127.0.0.1\t' "production resolve"
+  assert_contains "$(grep -F 'http://127.0.0.1:8083/about/' <<<"$LOG")" $'-H\tHost: staging.giinrecord.jp\t' "staging via container port"
   assert_not_contains "$LOG" $'\t-k\t' "never skips TLS verification"
   for p in / /about/ /terms /privacy /members/ /rollcalls/ /assemblies/ /data/meta.json /sitemap.xml; do
-    assert_contains "$LOG" "https://gikailog.jp$p" "production checks $p"
+    assert_contains "$LOG" "https://giinrecord.jp$p" "production checks $p"
     assert_contains "$LOG" "http://127.0.0.1:8083$p" "staging checks $p"
   done
 }
@@ -67,7 +67,7 @@ t_site_env_host() {
   VPS_SSH_HOST=other-alias run_script "$h" verify-site.sh staging
   assert_eq 0 "$STATUS" "exit status: $ERR"
   assert_contains "$LOG" $'ssh\tother-alias\t' "VPS_SSH_HOST respected"
-  assert_not_contains "$LOG" "https://gikailog.jp" "production not touched"
+  assert_not_contains "$LOG" "https://giinrecord.jp" "production not touched"
 }
 test_case "verify-site: VPS_SSH_HOST overrides the ssh alias; 'staging' checks staging only" t_site_env_host
 

@@ -93,11 +93,17 @@ jobs:
           fi
       - name: Browser check (#194) — no console error / CSP violation on /, /members/, /rollcalls/, a member page; members search filters
         run: pnpm --filter web browser-check -- --url http://127.0.0.1:8081
-      - name: Staging noindex — X-Robots-Tag only for Host staging.gikailog.jp (deploy/nginx/site.conf)
+      - name: Staging noindex — X-Robots-Tag only for Host staging.giinrecord.jp (deploy/nginx/site.conf)
         run: |
-          curl -sSI -H 'Host: staging.gikailog.jp' http://127.0.0.1:8083/ | tr -d '\r' | grep -i '^x-robots-tag: noindex, nofollow$'
-          ! curl -sSI -H 'Host: gikailog.jp' http://127.0.0.1:8081/ | grep -qi '^x-robots-tag' || (echo "production must not send X-Robots-Tag" && exit 1)
+          curl -sSI -H 'Host: staging.giinrecord.jp' http://127.0.0.1:8083/ | tr -d '\r' | grep -i '^x-robots-tag: noindex, nofollow$'
+          ! curl -sSI -H 'Host: giinrecord.jp' http://127.0.0.1:8081/ | grep -qi '^x-robots-tag' || (echo "production must not send X-Robots-Tag" && exit 1)
           ! curl -sSI http://127.0.0.1:8083/ | grep -qi '^x-robots-tag' || (echo "X-Robots-Tag must depend on Host, not on the port" && exit 1)
+      - name: Legacy domain 301 (#192) — gikailog.jp hosts redirect to giinrecord.jp, path preserved
+        run: |
+          curl -sSI -H 'Host: gikailog.jp' http://127.0.0.1:8081/members/ | tr -d '\r' | grep -i '^location: https://giinrecord.jp/members/$'
+          curl -sSI -H 'Host: www.gikailog.jp' http://127.0.0.1:8081/ | tr -d '\r' | grep -i '^location: https://giinrecord.jp/$'
+          curl -sSI -H 'Host: www.giinrecord.jp' http://127.0.0.1:8081/ | tr -d '\r' | grep -i '^location: https://giinrecord.jp/$'
+          curl -sSI -H 'Host: staging.gikailog.jp' http://127.0.0.1:8083/ | tr -d '\r' | grep -i '^location: https://staging.giinrecord.jp/$'
       - name: container logs
         if: always()
         run: docker compose -f deploy/docker-compose.yml logs --no-color | tail -50

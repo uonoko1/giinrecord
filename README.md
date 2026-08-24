@@ -1,6 +1,6 @@
-# 議会ログ (gikailog)
+# 議員レコード (gikailog)
 
-言ったことではなく、やったことを。 https://gikailog.jp
+言ったことではなく、やったことを。 https://giinrecord.jp
 
 国会議員が本会議でどう投票し、どの法案を出し、何を発言したか —— 衆参両院と国立国会図書館の**公式記録だけ**を、出典リンク付きでそのまま並べるサイトです。評価・採点・推薦はしません。
 
@@ -38,11 +38,11 @@ pnpm etl 221        # 第221回国会の参院投票結果を data/ に取得
 
 | 環境 | URL | いつ | ワークフロー |
 |---|---|---|---|
-| staging | https://staging.gikailog.jp（noindex） | `main` への push で自動 | `deploy-staging.yml` |
-| production | https://gikailog.jp | 手動リリース：Actions → **Release** → Run workflow（ref、既定 `main`）→ Environment `production` の承認 | `release.yml` |
+| staging | https://staging.giinrecord.jp（noindex） | `main` への push で自動 | `deploy-staging.yml` |
+| production | https://giinrecord.jp | 手動リリース：Actions → **Release** → Run workflow（ref、既定 `main`）→ Environment `production` の承認 | `release.yml` |
 | 両方（データのみ） | — | 日次 ETL の data PR がマージされたら自動 | `deploy-data.yml`（`etl.yml` / `districts.yml` が起動） |
 
-staging の初回構築で人間がやることは 2 つだけ：**DNS の A レコード `staging.gikailog.jp → VPS のアドレス`（`gikailog.jp` と同じ。IP はリポジトリに書かない、#133）** と、VPS で 1 回 `ssh -t "$VPS_SSH_HOST" 'sudo bash -s' < deploy/staging-setup.sh`（`VPS_SSH_HOST` は ssh エイリアス、既定 `sakura-vps`）。
+staging の初回構築で人間がやることは 2 つだけ：**DNS の A レコード `staging.giinrecord.jp → VPS のアドレス`（`giinrecord.jp` と同じ。IP はリポジトリに書かない、#133）** と、VPS で 1 回 `ssh -t "$VPS_SSH_HOST" 'sudo bash -s' < deploy/staging-setup.sh`（`VPS_SSH_HOST` は ssh エイリアス、既定 `sakura-vps`）。
 GitHub 側は Environment `staging` / `production-data` に `DEPLOY_*` secrets（`production` と同じ）、`production` に required reviewers。詳細は `deploy/README.md` と `docs/ops/deploy.md`。
 
 ## ライセンス

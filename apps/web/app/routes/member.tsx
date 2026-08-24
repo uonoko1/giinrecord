@@ -42,7 +42,7 @@ export function pageTitle(detail: MemberDetail, assembly: Assembly | null = null
 }
 
 export function meta({ data, location }: MetaArgs<typeof loader>) {
-  if (!data) return [{ title: "議会ログ" }];
+  if (!data) return [{ title: "議員レコード" }];
   const { detail, assembly = null } = data;
   return seoMeta({
     title: pageTitle(detail, assembly),
@@ -255,7 +255,7 @@ function Cover({ detail, counts, assembly }: { detail: MemberDetail; counts: Cou
   return (
     <header className="member-cover">
       <div className="member-cover-top">
-        <a href="/">← 議会ログ</a>
+        <a href="/">← 議員レコード</a>
       </div>
       <p className="member-kana">{detail.kana}</p>
       <h1 className="member-name">{detail.name}</h1>

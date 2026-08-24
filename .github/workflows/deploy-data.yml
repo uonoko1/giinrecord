@@ -5,7 +5,7 @@ name: Deploy data
 # The production job uses environment `production-data` (same secrets, NO required reviewers) so it never waits
 # for the release button.
 # Issue #134: production builds the code of the last release (tag `released`, moved by release.yml) with data/ taken
-# from main, so unreleased code merged to main stays off https://gikailog.jp. Before the first Release the tag does
+# from main, so unreleased code merged to main stays off https://giinrecord.jp. Before the first Release the tag does
 # not exist and production falls back to main. Staging always builds main — docs/ops/deploy.md.
 on:
   workflow_dispatch:
@@ -31,7 +31,7 @@ jobs:
     uses: ./.github/workflows/deploy-site.yml
     with:
       environment: staging
-      site_origin: https://staging.gikailog.jp
+      site_origin: https://staging.giinrecord.jp
       target_dir: staging
       ref: main
     secrets: inherit

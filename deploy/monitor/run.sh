@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # One monitoring round for one environment (Issue #135), called by .github/workflows/monitor.yml:
-#   run.sh <environment> <origin>        e.g. run.sh production https://gikailog.jp
+#   run.sh <environment> <origin>        e.g. run.sh production https://giinrecord.jp
 # probe.sh once; if anything failed, wait MONITOR_RETRY_SLEEP (60) seconds and probe again. A check counts as failed
 # only when it failed in BOTH rounds ("2 consecutive failures" within a single run — the schedule fires every
 # 10 minutes, so the previous run's outcome is not needed and a blip never opens an Issue). Then every check is

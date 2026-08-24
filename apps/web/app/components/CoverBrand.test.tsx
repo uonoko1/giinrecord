@@ -3,10 +3,10 @@ import { MemoryRouter } from "react-router";
 import { describe, expect, it } from "vitest";
 import { CoverBrand } from "./CoverBrand";
 
-describe("CoverBrand（表紙の「議会ログ」ロゴ、#129）", () => {
-  it("文字ロゴ「議会ログ」はそのまま、横に高さ 1em のマーク（装飾・aria-hidden）を置く", () => {
+describe("CoverBrand（表紙の「議員レコード」ロゴ、#129）", () => {
+  it("文字ロゴ「議員レコード」はそのまま、横に高さ 1em のマーク（装飾・aria-hidden）を置く", () => {
     const { container } = render(<CoverBrand />);
-    expect(screen.getByText("議会ログ")).toBeInTheDocument();
+    expect(screen.getByText("議員レコード")).toBeInTheDocument();
     const svg = container.querySelector("svg");
     expect(svg).not.toBeNull();
     expect(svg?.getAttribute("aria-hidden")).toBe("true");
@@ -28,7 +28,7 @@ describe("CoverBrand（表紙の「議会ログ」ロゴ、#129）", () => {
         <CoverBrand to="/" />
       </MemoryRouter>,
     );
-    expect(screen.getByRole("link", { name: "議会ログ" })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: "議員レコード" })).toHaveAttribute("href", "/");
   });
 
   it("to が無ければリンクにしない（トップページ自身）", () => {

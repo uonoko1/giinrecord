@@ -1,7 +1,7 @@
 # staging のアクセス制限（Cloudflare Access）
 
-Issue #163。`https://staging.gikailog.jp/` は**運営者だけ**が見られる（決定 2026-08-23、Basic 認証は却下）。
-production（`gikailog.jp`）は誰でも見られ、この文書の設定は一切かからない。
+Issue #163。`https://staging.giinrecord.jp/` は**運営者だけ**が見られる（決定 2026-08-23、Basic 認証は却下）。
+production（`giinrecord.jp`）は誰でも見られ、この文書の設定は一切かからない。
 
 ## 全体像
 
@@ -15,19 +15,19 @@ production（`gikailog.jp`）は誰でも見られ、この文書の設定は一
 | 層 | 誰が設定 | 何で | 役割 |
 |---|---|---|---|
 | Cloudflare Access | 人間（ダッシュボード） | この文書の手順 | 本人確認。通った要求にだけ `Cf-Access-Jwt-Assertion` を付けて origin へ |
-| IP allow-list | PO（VPS、root） | `deploy/cloudflare-allowlist.sh`（週次 cron） | Cloudflare を経由しない直接アクセス（VPS の IP を直接叩く、`Host: staging.gikailog.jp` を偽る）を deny |
-| ヘッダ検査 | `deploy/vps-setup.sh staging.gikailog.jp 8083` | staging の 443 `location /` | Cloudflare 経由でも Access を通っていない要求（DNS プロキシを誤って OFF にした等）を 403 |
+| IP allow-list | PO（VPS、root） | `deploy/cloudflare-allowlist.sh`（週次 cron） | Cloudflare を経由しない直接アクセス（VPS の IP を直接叩く、`Host: staging.giinrecord.jp` を偽る）を deny |
+| ヘッダ検査 | `deploy/vps-setup.sh staging.giinrecord.jp 8083` | staging の 443 `location /` | Cloudflare 経由でも Access を通っていない要求（DNS プロキシを誤って OFF にした等）を 403 |
 
 ## Cloudflare 側（人間。すべてダッシュボード、約 10 分）
 
-前提：`gikailog.jp` のゾーンが Cloudflare にあり、staging の証明書は Let's Encrypt 済み（`deploy/staging-setup.sh`）。
+前提：`giinrecord.jp` のゾーンが Cloudflare にあり、staging の証明書は Let's Encrypt 済み（`deploy/staging-setup.sh`）。
 
 1. **DNS**：`staging` の A レコードを **Proxied（オレンジ雲）** にする。production の `@` / `www` は当面 DNS only のまま。
 2. **SSL/TLS → Overview**：暗号化モード **Full (strict)**。origin は Let's Encrypt の正規証明書なので strict で通る。
    （ゾーン全体の設定。production を後でプロキシ ON にしても同じで良い）
 3. **Zero Trust → Access → Applications → Add an application → Self-hosted**
    - Application name: `gikailog staging`、Session duration: 24 時間程度
-   - Application domain: `staging.gikailog.jp`（パス無し）
+   - Application domain: `staging.giinrecord.jp`（パス無し）
    - Identity providers: **One-time PIN** だけ
    - Policy 1: Action **Allow**、Include: **Emails** = 運営者のメールアドレス（必要な人数分）
 4. **監視用 Service Token**（`.github/workflows/monitor.yml` が毎時 staging を叩くため）
@@ -35,8 +35,8 @@ production（`gikailog.jp`）は誰でも見られ、この文書の設定は一
    - 表示される **Client ID / Client Secret** を GitHub の **repository secrets** `CF_ACCESS_CLIENT_ID` / `CF_ACCESS_CLIENT_SECRET` に
      （Secret は作成時にしか表示されない。どこにも貼らない）
    - アプリの Policy に **Policy 2: Action Service Auth、Include: Service Token = gikailog-monitor** を追加
-5. 確認：シークレットウィンドウで `https://staging.gikailog.jp/` → Cloudflare のログイン画面 → PIN → サイトが出る。
-   `curl -sI https://staging.gikailog.jp/` は 302（Access のログインへ）。
+5. 確認：シークレットウィンドウで `https://staging.giinrecord.jp/` → Cloudflare のログイン画面 → PIN → サイトが出る。
+   `curl -sI https://staging.giinrecord.jp/` は 302（Access のログインへ）。
 
 ## VPS 側（PO が実行）
 
@@ -45,7 +45,7 @@ production（`gikailog.jp`）は誰でも見られ、この文書の設定は一
 scp deploy/cloudflare-allowlist.sh "${VPS_SSH_HOST:-sakura-vps}":/tmp/ && \
   ssh "${VPS_SSH_HOST:-sakura-vps}" 'sudo bash /tmp/cloudflare-allowlist.sh --install-cron && rm /tmp/cloudflare-allowlist.sh'
 # 2. staging の server block に include と 403 を入れる（冪等。production の conf には触れない）
-ssh "${VPS_SSH_HOST:-sakura-vps}" 'sudo bash -s staging.gikailog.jp 8083' < deploy/vps-setup.sh
+ssh "${VPS_SSH_HOST:-sakura-vps}" 'sudo bash -s staging.giinrecord.jp 8083' < deploy/vps-setup.sh
 ```
 
 `deploy/staging-setup.sh` を再実行しても同じことが起きる（step 5 と 8）。`vps-setup.sh` は snippet が無ければ **`deny all;` だけの placeholder**
@@ -61,7 +61,7 @@ root、`/usr/local/lib/gikailog-cloudflare-allowlist.sh` = root 所有のコピ�
 
 ```sh
 sudo nginx -T | grep -A3 'location / {' | grep -B1 -A2 cloudflare        # staging の 443 block だけに include と if がある
-curl -sk --resolve staging.gikailog.jp:443:127.0.0.1 https://staging.gikailog.jp/ -o /dev/null -w '%{http_code}\n'   # 403（loopback は allow-list 外）
+curl -sk --resolve staging.giinrecord.jp:443:127.0.0.1 https://staging.giinrecord.jp/ -o /dev/null -w '%{http_code}\n'   # 403（loopback は allow-list 外）
 ```
 
 ## 迂回防止の仕組みと限界（正直に）
@@ -70,13 +70,13 @@ curl -sk --resolve staging.gikailog.jp:443:127.0.0.1 https://staging.gikailog.jp
   レンジを増やした直後の最大 1 週間、新レンジからの要求だけが 403 になりうる（監視が `http` で気づく → `cloudflare-allowlist.sh` を手で実行）。
 - **`Cf-Access-Jwt-Assertion` の存在チェックのみ**：JWT の署名は検証していない。つまり **Cloudflare のレンジ内から来て、かつこのヘッダを
   付けた要求**は通る。それができるのは理論上「別の Cloudflare 利用者が自分のゾーンの origin をこの VPS に向け、Host を
-  `staging.gikailog.jp` に上書きし（Enterprise 機能）、さらに `Cf-*` ヘッダを注入できた場合」だけで、staging（公開予定の内容の
+  `staging.giinrecord.jp` に上書きし（Enterprise 機能）、さらに `Cf-*` ヘッダを注入できた場合」だけで、staging（公開予定の内容の
   プレビュー）の保護としては IP 制限との二重で実用上十分と判断した。厳密な検証（Cloudflare の JWKS で署名と `aud` を検証）が要るなら
   nginx の njs か `cloudflared` トンネル（origin を閉じる）に進む。
 - **Authenticated Origin Pulls**（Cloudflare の mTLS）は未設定。共用 VPS のホスト nginx に Cloudflare のクライアント CA を入れる変更は
   他サイトの block に波及しうるので、今はやらない。
 - staging の **コンテナ側**（`deploy/nginx/site.conf`、`X-Robots-Tag: noindex`）は変わらない。検索エンジンは Access に弾かれる上に noindex。
-- production は完全に無関係：`vps-setup.sh gikailog.jp 8081` が書く block に include も 403 も無い（`deploy/test/vps-setup.test.sh`、
+- production は完全に無関係：`vps-setup.sh giinrecord.jp 8081` が書く block に include も 403 も無い（`deploy/test/vps-setup.test.sh`、
   `packages/etl/test/deploy-docker.test.ts` が検証）。
 
 ## 監視（`.github/workflows/monitor.yml` の staging job）

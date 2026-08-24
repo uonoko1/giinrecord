@@ -7,21 +7,21 @@ The only cron job is the cookie-less access-log aggregation (`deploy/analytics/`
 
 ```
 internet ──443/80──▶ host nginx (certbot TLS)
-                       ├─ gikailog.jp          sites-available/gikailog.conf          proxy_pass http://127.0.0.1:8081
+                       ├─ giinrecord.jp          sites-available/gikailog.conf          proxy_pass http://127.0.0.1:8081
                        │     └─▶ web          nginx:alpine  /var/www/gikailog/site    ⇐ rsync: release.yml (manual), deploy-data.yml (daily data)
-                       └─ staging.gikailog.jp  sites-available/gikailog-staging.conf  proxy_pass http://127.0.0.1:8083
+                       └─ staging.giinrecord.jp  sites-available/gikailog-staging.conf  proxy_pass http://127.0.0.1:8083
                              └─▶ web-staging  nginx:alpine  /var/www/gikailog/staging ⇐ rsync: deploy-staging.yml (every push to main), deploy-data.yml
-                       both containers: deploy/nginx/site.conf (SPA fallback, cache, security headers; X-Robots-Tag noindex for Host staging.gikailog.jp)
+                       both containers: deploy/nginx/site.conf (SPA fallback, cache, security headers; X-Robots-Tag noindex for Host staging.giinrecord.jp)
 ```
 
 | file | role |
 |---|---|
 | `docker-compose.yml` | `web` (`127.0.0.1:8081:80`, `/var/www/gikailog/site`) and `web-staging` (`127.0.0.1:8083:80`, `/var/www/gikailog/staging`): `nginx:1.27-alpine`, site mounted read-only, healthcheck, `restart: unless-stopped`. `SITE_DIR` / `STAGING_SITE_DIR` override the mounts (local/CI) |
-| `nginx/site.conf` | config inside both containers — the former host server block, unchanged: `try_files … /__spa-fallback.html`, `/assets/` immutable 1y, `/data/` 1h, gzip, `X-Content-Type-Options` / `X-Frame-Options` / `Referrer-Policy` / CSP. Plus a `map $host` that adds `X-Robots-Tag: noindex, nofollow` only for `staging.gikailog.jp` |
+| `nginx/site.conf` | config inside both containers — the former host server block, unchanged: `try_files … /__spa-fallback.html`, `/assets/` immutable 1y, `/data/` 1h, gzip, `X-Content-Type-Options` / `X-Frame-Options` / `Referrer-Policy` / CSP. Plus a `map $host` that adds `X-Robots-Tag: noindex, nofollow` only for `staging.giinrecord.jp` |
 | `nginx-host-proxy.conf` | host nginx server blocks template: `:80` → 301 `https://DOMAIN` (www included), `:443` TLS → proxy. `vps-setup.sh <domain> [port]` writes the same text with `SERVER_NAMES` / `DOMAIN` / `PORT` / `LOG_NAME` substituted |
 | `vps-setup.sh` | one-time, sudo: web root, host server block, `noip` log format, `nginx -t` → reload (exit 1 on a broken config). Port `8081` (default) = production, `8083` = staging. **Installs nothing** |
 | `go-live.sh` | production go-live, root, idempotent (docker install, `/opt/gikailog` checkout, compose up, `vps-setup.sh`, certbot, analytics) |
-| `staging-setup.sh` | staging go-live, root, idempotent, after production exists: staging web root, compose up, `cloudflare-allowlist.sh --install-cron`, `vps-setup.sh staging.gikailog.jp 8083`, certbot |
+| `staging-setup.sh` | staging go-live, root, idempotent, after production exists: staging web root, compose up, `cloudflare-allowlist.sh --install-cron`, `vps-setup.sh staging.giinrecord.jp 8083`, certbot |
 | `cloudflare-allowlist.sh` | Issue #163: `/etc/nginx/snippets/gikailog-cloudflare-allow.conf` (`allow` Cloudflare's ips-v4/v6, `deny all`) from strictly validated ranges, atomic write, `nginx -t` gate with rollback, `--install-cron` = weekly root cron. Included by the **staging** 443 block only, which also returns 403 without `Cf-Access-Jwt-Assertion` (staging is behind Cloudflare Access: `docs/ops/staging-access.md`) |
 | `analytics/` | IP-less access-log aggregation of `gikailog.access.log` (production only; staging logs to `gikailog-staging.access.log` and is not aggregated) |
 
@@ -36,12 +36,12 @@ Who may do what on the shared host:
 
 The VPS is addressed by the ssh alias in `$VPS_SSH_HOST` (default `sakura-vps`, defined in your own
 `~/.ssh/config`); its IP address is deliberately not written anywhere in this repository (Issue #133) — the
-site is reachable as `gikailog.jp` once DNS is live.
+site is reachable as `giinrecord.jp` once DNS is live.
 
 ### production
 
 All of this (plus the `seiji-kiroku` → `gikailog` path migration, Issue #119) is automated by `deploy/go-live.sh`
-(`ssh -t "$VPS_SSH_HOST" 'sudo bash -s gikailog.jp' < deploy/go-live.sh`); the steps below are the manual equivalent.
+(`ssh -t "$VPS_SSH_HOST" 'sudo bash -s giinrecord.jp' < deploy/go-live.sh`); the steps below are the manual equivalent.
 
 ```sh
 VPS_SSH_HOST="${VPS_SSH_HOST:-sakura-vps}"
@@ -70,7 +70,7 @@ the containers and skip certbot when the certificate exists — see `docs/ops/de
 Two human actions, nothing else:
 
 ```sh
-# 1. DNS: A record  staging.gikailog.jp -> the VPS (same address as gikailog.jp; never commit it)
+# 1. DNS: A record  staging.giinrecord.jp -> the VPS (same address as giinrecord.jp; never commit it)
 # 2. (root, once; needs a TTY for certbot) staging web root, web-staging container, host proxy block on :8083, TLS
 ssh -t "$VPS_SSH_HOST" 'sudo bash -s' < deploy/staging-setup.sh
 ```
@@ -86,7 +86,7 @@ directories are bind-mounted, nothing to restart.
 
 | workflow | trigger | environment | builds | rsync target |
 |---|---|---|---|---|
-| `deploy-staging.yml` | every push to `main` | `staging` | `SITE_ORIGIN=https://staging.gikailog.jp` (robots `Disallow: /`, `<meta name=robots content=noindex>`) | `staging/` |
+| `deploy-staging.yml` | every push to `main` | `staging` | `SITE_ORIGIN=https://staging.giinrecord.jp` (robots `Disallow: /`, `<meta name=robots content=noindex>`) | `staging/` |
 | `release.yml` | Actions → Release → Run workflow, input `ref` (default `main`) | `production` — **required reviewers** = the approve button | `vars.SITE_ORIGIN` | `site/` |
 | `deploy-data.yml` | dispatched by `etl.yml` / `districts.yml` after the data PR merges (+ 06:30 JST safety net) | `staging` and `production-data` (no reviewers) | `main` | both |
 
@@ -110,7 +110,7 @@ pnpm build
 SITE_DIR=$PWD/apps/web/build/client STAGING_SITE_DIR=$PWD/apps/web/build/client docker compose -f deploy/docker-compose.yml up -d --wait
 pnpm --filter web smoke -- --url http://127.0.0.1:8081     # pages 200, SPA fallback, headers, Cache-Control
 pnpm --filter web smoke -- --url http://127.0.0.1:8083
-curl -sI -H 'Host: staging.gikailog.jp' http://127.0.0.1:8083/ | grep -i x-robots-tag   # noindex, nofollow
+curl -sI -H 'Host: staging.giinrecord.jp' http://127.0.0.1:8083/ | grep -i x-robots-tag   # noindex, nofollow
 docker compose -f deploy/docker-compose.yml down
 ```
 
