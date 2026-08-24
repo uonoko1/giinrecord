@@ -1,5 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { filterMembers, formatTermEnd, groupByKanaRow, kanaRow, memberAssemblyId } from "./member-search";
+import type { Assembly } from "@seiji-kiroku/shared";
+import {
+  filterMembers,
+  formatTermEnd,
+  groupByKanaRow,
+  kanaRow,
+  memberAssemblyId,
+  membersDescription,
+  membersHeading,
+  membersQueryString,
+  membersScopeFromQuery,
+} from "./member-search";
 import { members } from "../test-fixtures/members-index";
 
 describe("kanaRow: かなの先頭文字から五十音の行を決める", () => {
@@ -110,5 +121,63 @@ describe("formatTermEnd", () => {
   it("未設定や想定外の形式は undefined", () => {
     expect(formatTermEnd(undefined)).toBeUndefined();
     expect(formatTermEnd("不明")).toBeUndefined();
+  });
+});
+
+describe("membersHeading / membersDescription（#239: 見出し・説明が絞り込みを反映する）", () => {
+  it("絞り込み無しは全議会が対象と分かる見出しと説明。「国会議員」とは書かない", () => {
+    const scope = { assemblyName: undefined, group: "", district: "" };
+    expect(membersHeading(scope)).toBe("すべての議会の議員");
+    expect(membersDescription(scope)).toBe("国会（参議院・衆議院）と地方議会の議員を五十音順に。氏名・ふりがな・議会・会派・選挙区でさがせます。");
+    expect(membersHeading(scope)).not.toContain("国会議員");
+  });
+
+  it("議会を選ぶと議会名の見出しになる", () => {
+    expect(membersHeading({ assemblyName: "徳島県議会", group: "", district: "" })).toBe("徳島県議会の議員");
+    expect(membersHeading({ assemblyName: "参議院", group: "", district: "" })).toBe("参議院の議員");
+  });
+
+  it("会派・選挙区も見出しに入る（議会と組み合わせ可）", () => {
+    expect(membersHeading({ assemblyName: "徳島県議会", group: "自由民主党", district: "" })).toBe("徳島県議会・自由民主党の議員");
+    expect(membersHeading({ assemblyName: "参議院", group: "", district: "愛知" })).toBe("参議院・愛知の議員");
+    expect(membersHeading({ assemblyName: undefined, group: "立憲", district: "東京" })).toBe("立憲・東京の議員");
+  });
+
+  it("説明は選んだ条件をそのまま並べる。評価語・形容詞を入れない", () => {
+    const text = membersDescription({ assemblyName: "徳島県議会", group: "自由民主党", district: "徳島市" });
+    expect(text).toBe("徳島県議会・自由民主党・徳島市の議員を五十音順に。氏名・ふりがな・議会・会派・選挙区でさがせます。");
+    for (const word of ["おすすめ", "人気", "有力", "話題", "注目", "ランキング"]) expect(text).not.toContain(word);
+  });
+});
+
+describe("membersScopeFromQuery（#239: URL のクエリを絞り込みに読む）", () => {
+  const assemblies = [
+    { id: "diet-sangiin", kind: "national", name: "参議院", sourceUrl: "https://www.sangiin.go.jp/" },
+    { id: "pref-36", kind: "prefectural", name: "徳島県議会", prefCode: "36", sourceUrl: "https://www.pref.tokushima.lg.jp/" },
+  ] as unknown as Assembly[];
+
+  it("assembly・group・district を読み、議会 id は名前に解決する", () => {
+    expect(membersScopeFromQuery(new URLSearchParams("assembly=pref-36&group=自民&district=徳島市"), assemblies)).toEqual({
+      assemblyId: "pref-36",
+      assemblyName: "徳島県議会",
+      group: "自民",
+      district: "徳島市",
+    });
+  });
+
+  it("知らない議会 id は無視する（すべての議会として扱う）", () => {
+    expect(membersScopeFromQuery(new URLSearchParams("assembly=pref-99"), assemblies)).toEqual({ assemblyId: "", assemblyName: undefined, group: "", district: "" });
+  });
+
+  it("クエリが無ければすべて空", () => {
+    expect(membersScopeFromQuery(new URLSearchParams(""), assemblies)).toEqual({ assemblyId: "", assemblyName: undefined, group: "", district: "" });
+  });
+});
+
+describe("membersQueryString（#239: 絞り込みを URL に書く）", () => {
+  it("選んだものだけを assembly・group・district の順で並べる", () => {
+    expect(membersQueryString({ assemblyId: "pref-36", group: "自民", district: "徳島市" })).toBe("assembly=pref-36&group=%E8%87%AA%E6%B0%91&district=%E5%BE%B3%E5%B3%B6%E5%B8%82");
+    expect(membersQueryString({ assemblyId: "pref-36", group: "", district: "" })).toBe("assembly=pref-36");
+    expect(membersQueryString({ assemblyId: "", group: "", district: "" })).toBe("");
   });
 });

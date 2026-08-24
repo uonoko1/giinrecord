@@ -86,10 +86,56 @@ async function membersSearchFilters(page: Page): Promise<void> {
   console.log(`browser-check: members search ${before} -> ${after} rows`);
 }
 
+/**
+ * #239: 議会で絞り込むと URL に ?assembly= が入り、その URL をリロードすると同じ状態に戻る。
+ * 見出し・<title>・description はそのときの絞り込みを指し、プリレンダーのクエリ無しの meta が
+ * 残って二重にならない（title は 1 つ、description は 1 つ）。
+ */
+async function membersFilterGoesToUrl(page: Page): Promise<void> {
+  const assembly = page.locator("select.members-select").first();
+  const options = await assembly.locator("option").evaluateAll((els) => els.map((e) => (e as HTMLOptionElement).value));
+  const pick = options.find((v) => v !== "");
+  if (!pick) throw new Error("members: 議会の select に「すべて」以外の選択肢が無い");
+
+  await assembly.selectOption(pick);
+  await page.waitForFunction((v) => new URL(location.href).searchParams.get("assembly") === v, pick, { timeout: 5_000 });
+
+  const heading = (await page.locator("h1").textContent())?.trim() ?? "";
+  const label = (await assembly.locator(`option[value="${pick}"]`).textContent())?.trim() ?? "";
+  if (heading !== `${label}の議員`) throw new Error(`members: 見出しが絞り込みと合わない: 議会=${label} なのに h1="${heading}"`);
+
+  // リロード（＝ブックマークからの直接アクセスと同じ）で復元されること
+  const url = page.url();
+  await page.reload();
+  await page.waitForFunction(() => document.querySelectorAll("li.members-item").length > 0, null, { timeout: 10_000 });
+  await page.waitForFunction((h) => document.querySelector("h1")?.textContent?.trim() === h, heading, { timeout: 5_000 });
+  const restored = await page.locator("select.members-select").first().inputValue();
+  if (restored !== pick) throw new Error(`members: リロードで絞り込みが復元されない: ${url} なのに議会の select は "${restored}"`);
+
+  const head = await page.evaluate(() => ({
+    titles: [...document.querySelectorAll("title")].map((t) => t.textContent?.trim() ?? ""),
+    descs: [...document.querySelectorAll('meta[name="description"]')].map((m) => m.getAttribute("content") ?? ""),
+  }));
+  if (head.titles.length !== 1) throw new Error(`members: <title> が ${head.titles.length} 個ある: ${head.titles.join(" / ")}`);
+  if (head.descs.length !== 1) throw new Error(`members: description が ${head.descs.length} 個ある: ${head.descs.join(" / ")}`);
+  if (!head.titles[0].startsWith(heading)) throw new Error(`members: <title>「${head.titles[0]}」が見出し「${heading}」と合わない`);
+  if (!head.descs[0].startsWith(`${label}の議員`)) throw new Error(`members: description「${head.descs[0]}」が絞り込み（${label}）と合わない`);
+
+  console.log(`browser-check: members filter -> ${new URL(url).search} restored on reload (h1="${heading}")`);
+
+  // 戻るで絞り込み前に戻ること
+  await page.goBack();
+  await page.waitForFunction(() => new URL(location.href).searchParams.get("assembly") === null, null, { timeout: 5_000 });
+  const back = await page.locator("select.members-select").first().inputValue();
+  if (back !== "") throw new Error(`members: 戻るで絞り込みが解けない: 議会の select は "${back}"`);
+  console.log("browser-check: members filter -> back button clears the filter");
+}
+
 const memberId = await firstMemberId();
 const targets: { url: string; run?: (page: Page) => Promise<void> }[] = [
   { url: `${origin}/` },
   { url: `${origin}/members/`, run: membersSearchFilters },
+  { url: `${origin}/members/`, run: membersFilterGoesToUrl },
   { url: `${origin}/rollcalls/` },
   ...(memberId ? [{ url: `${origin}/members/${memberId}/` }] : []),
 ];
