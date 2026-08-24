@@ -1,5 +1,5 @@
 name: ETL local assemblies (monthly)
-# 地方議会（宮城県議会 pref-04 #157、徳島県議会 pref-36 #183、鳥取県議会 pref-31 #184、三重県議会 pref-24 #203、奈良県議会 pref-29 #202、島根県議会 pref-32 #221）の名簿と議員別表決の月次 ETL。議会は ASSEMBLIES に 1 行ずつ足す。議会は会期（定例会）単位で更新されるので月 1 回で足りる。
+# 地方議会（宮城県議会 pref-04 #157、徳島県議会 pref-36 #183、鳥取県議会 pref-31 #184、三重県議会 pref-24 #203、奈良県議会 pref-29 #202、島根県議会 pref-32 #221、高知県議会 pref-39 #220）の名簿と議員別表決の月次 ETL。議会は ASSEMBLIES に 1 行ずつ足す。議会は会期（定例会）単位で更新されるので月 1 回で足りる。
 # data PR の流れは districts.yml / 日次 etl.yml と同じ（docs/ops/etl.md）。ブランチ名と失敗 Issue のタイトルだけ別。
 on:
   schedule:
@@ -16,7 +16,7 @@ concurrency:
 env:
   DATA_BRANCH: data/local-assemblies
   # `pnpm etl:local <name>` の name と assemblyId（name=id の組。順に直列で走らせる）
-  ASSEMBLIES: "miyagi=pref-04 tokushima=pref-36 tottori=pref-31 mie=pref-24 nara=pref-29 shimane=pref-32"
+  ASSEMBLIES: "miyagi=pref-04 tokushima=pref-36 tottori=pref-31 mie=pref-24 nara=pref-29 shimane=pref-32 kochi=pref-39"
   FAILURE_ISSUE_TITLE: "地方議会 ETL 月次実行が失敗した（local-assemblies.yml）"
 jobs:
   local-assemblies:

@@ -11,7 +11,8 @@ import { DEFAULT_SESSIONS, dietAssemblies, readSessionsOnDisk } from "./dataset.
  * 名簿に寄せられない氏名は memberId 空で unmatched.json に出す。凡例に無い値が出たら非 0 終了。
  *   鳥取県議会（#184）: 議員名簿（1 ページ）× 直近 N 会期の「議案等の議決結果」ページの賛否 PDF（会期に複数）→ 同じ形で pref-31。
  *     PDF の氏名は姓だけ（「○○議員」）なので、名簿で 1 人に決まるときだけ寄せ、同姓が複数なら候補を unmatched.json に列挙する。
- * Usage: pnpm etl:local <miyagi|tokushima|tottori|mie|nara|shimane> [--sessions N]   (default N = 2)
+ *   高知県議会（#220）: 議員名簿（会派別、1 ページ）×「議員別賛否の状況」index の直近 N 会期の議決結果一覧 PDF → pref-39。
+ * Usage: pnpm etl:local <miyagi|tokushima|tottori|mie|nara|shimane|kochi> [--sessions N]   (default N = 2)
  */
 const DATA = fileURLToPath(new URL("../../../data/", import.meta.url));
 const args = process.argv.slice(2);
