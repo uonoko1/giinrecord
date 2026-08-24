@@ -1,9 +1,11 @@
+import { Link } from "react-router";
+
 /** デザインキャンバス「このデータについて」の本文をそのまま使う。 */
 const FACTS = [
   {
     kind: "事実",
     title: "参議院の記名・押しボタン投票",
-    body: "議員本人が押したボタンの記録。参議院公式サイト「本会議投票結果」をそのまま転記。1998年（第142回国会）以降。",
+    body: "議員本人が押したボタンの記録。参議院公式サイト「本会議投票結果」をそのまま転記。",
   },
   {
     kind: "事実",
@@ -33,6 +35,10 @@ export function FactsSection() {
           <p className="card__body">{f.body}</p>
         </article>
       ))}
+      {/* #218: 議会ごとの回次・会期・件数はデータから数えた /coverage に置き、ここには書かない */}
+      <p className="note">
+        入っている議会・回次・会期と件数は<Link to="/coverage">収録範囲</Link>にあります。
+      </p>
     </section>
   );
 }
