@@ -199,9 +199,14 @@ console.log(`questions: ${rawQuestions.length} total, ${questions.questions.filt
 unmatched.push(...questions.unmatched);
 
 // 発言: 国会会議録API（公開まで約1ヶ月のラグ。meta.sources[].fetchedAt が「いつ時点の会議録か」を示す）。
-// 参院本会議は全回次を参院名簿（回次ごと）に突合する。衆院本会議（Issue #73）は衆院名簿が「現在」の1回次分しか無いので、
-// 議案の名寄せと同じく名簿が覆う回次（memberSession）だけ取得・突合し、過去回次は取得しない（名簿に無い旧議員を同名の現職に紐づけない）。
-// その memberSession の分は plan の形（targets か carried か）に関わらず毎回取得する（#236。下の shugiinSpeeches）。
+// 参院本会議は全回次（targets）を回次ごとの参院名簿に突合する。
+//
+// 衆院本会議（Issue #73）については「どの回次を取るか」と「どの実行で取るか」は別の話なので、混ぜて読まない（#236 はこの混同から生まれた）。
+//   - 取得する回次（範囲）: memberSession の 1 回次だけ。衆院名簿は回次ごとの公開が無く「現在」の 1 回次分しか無い（#71）ため、
+//     議案の名寄せと同じく名簿が覆う回次しか突合できない。過去回次は取らない（名簿に無い旧議員を同名の現職に紐づけないため）。
+//     この範囲は #73 から変わっていない。
+//   - 取得する実行（実行条件）: 制限なし。memberSession が targets でも carried でも毎回取る（#236。下の shugiinSpeeches）。
+// 「範囲が 1 回次」は「毎回取る」と矛盾しない。毎回取るのは常に同じ memberSession の 1 回次分で、取る回次が増えるわけではない。
 const speeches: Speech[] = [];
 for (const session of targets) {
   const matched = matchSpeeches(await fetchSpeeches(session, "sangiin"), members, session);
@@ -211,10 +216,11 @@ for (const session of targets) {
   speeches.push(...matched.speeches);
   unmatched.push(...matched.unmatched);
 }
-// 衆院本会議は memberSession が carried の実行（過去回次だけの手動実行・#219 のバックフィルの chunk）でも取得する（#236）。
-// 取得をやめると衆院の発言が前回出力の引き継ぎ頼みになり、引き継ぎが1度でも欠ければ 0 のまま自力では戻らない。
-// 引き継ぎとの二重行（同じ speechId が2行。validateDataset の duplicate speechId 違反。#103 レビュー）は
-// dropCarriedSpeeches が「取得した speechId の引き継ぎ行を落とす」ことで防ぐ。
+// 上の「取得する実行」の実装。memberSession が carried になる実行（過去回次だけの手動実行・#219 のバックフィルの chunk）でも取得する（#236）。
+// かつては carried のとき取得を丸ごと止めていたが、そうすると衆院の発言が前回出力の引き継ぎ頼みになり、
+// 引き継ぎが1度でも欠ければ（#103 以前の session の無い行など）0 のまま自力では戻らない。
+// 止める理由だった引き継ぎとの二重行（同じ speechId が2行。validateDataset の duplicate speechId 違反。#103 レビュー）は、
+// 取得をやめる代わりに dropCarriedSpeeches が「取得した speechId の引き継ぎ行を落とす」ことで防ぐ。
 const shugiinSpeeches = matchSpeeches(await fetchSpeeches(memberSession, "shugiin"), shugiin.members, memberSession);
 {
   const matchedCount = shugiinSpeeches.speeches.filter((s) => s.memberId).length;
