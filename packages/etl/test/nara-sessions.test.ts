@@ -6,6 +6,8 @@ import { parseSessionIndex, parseSessionPage, SESSION_INDEX_URL } from "../src/s
 // 奈良県議会「定例（臨時）県議会の概要」（/n161/18579.html）と会期ページ（/n161/p114029.html など。2026-08-24 取得）。
 // index は #tmp_contents の ul に「令和8年6月定例会の概要」のリンクが新しい順。会期ページには
 // 「議員別の議案等に対する表決結果（PDF：…）」が議決日ごとに並ぶ（右ナビの「同じカテゴリから探す」は読まない）。
+// フィクスチャ内の「手話で電話」（denwa-relay-service.jp）ウィジェットの公開 token は
+// REDACTED に置換済み（#216）。全ページ共通のページ装飾でパース対象ではないため、解析結果には影響しない。
 const fixture = (name: string) => readFileSync(new URL(`./fixtures/nara/${name}`, import.meta.url), "utf8");
 const origin = "https://www.pref.nara.lg.jp";
 const index = parseSessionIndex(fixture("18579.html"), SESSION_INDEX_URL);

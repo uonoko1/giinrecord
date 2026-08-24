@@ -7,6 +7,8 @@ import { resolveNaraUrl } from "../src/sources/local/nara/site.ts";
 // 奈良県議会 議員名簿（五十音順、/n161/52534.html。2026-08-24 取得）。1 ページに全議員（table.datatable）。
 // 行 = [行見出し（あ行…）] 議員名（プロフィールへのリンク）・ふりがな・選挙区・当選回数・所属会派。
 // as-of は表の直後の「（令和8年4月24日現在）」。id はプロフィールページ /n161/{番号}.html の番号（氏名からは作らない）。
+// フィクスチャ内の「手話で電話」（denwa-relay-service.jp）ウィジェットの公開 token は
+// REDACTED に置換済み（#216）。全ページ共通のページ装飾でパース対象ではないため、解析結果には影響しない。
 const html = readFileSync(new URL("./fixtures/nara/52534.html", import.meta.url), "utf8");
 const roster = parseRoster(html);
 

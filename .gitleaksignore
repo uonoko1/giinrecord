@@ -1,9 +1,13 @@
-# 奈良県公式サイト全ページ共通の「手話で電話」ウィジェットの公開リンク（denwa-relay-service.jp の公開 token パラメータ）。秘密情報ではない。
-d276a2638a03273d381be4184b916c52b5771829:packages/etl/test/fixtures/nara/52534.html:generic-api-key:839
-d276a2638a03273d381be4184b916c52b5771829:packages/etl/test/fixtures/nara/18579.html:generic-api-key:468
-d276a2638a03273d381be4184b916c52b5771829:packages/etl/test/fixtures/nara/p114001.html:generic-api-key:478
-d276a2638a03273d381be4184b916c52b5771829:packages/etl/test/fixtures/nara/p114029.html:generic-api-key:482
-# squash マージ後の main 上のコミットに対する同じ誤検知（フィンガープリントはコミット単位のため両方必要）
+# 過去コミットに残る誤検知だけを抑止する。現在のフィクスチャは REDACTED 済みで、
+# 作業ツリーを素の default config でスキャンすると no leaks found（#216）。
+#
+# ここに残すのは main に既に固定された 7460628 の 4 件のみ。当該コミットはマージ済みで
+# 今後 squash され直すことがないため、Sprint 11 の「squash でハッシュが変わって無効化」
+# は再発しない（無効化していたのは、その時点でまだ PR 上にあったコミットを指していたため）。
+#
+# 新たな誤検知が出た場合はここに追記せず、まずフィクスチャ側の値をサニタイズすること。
+# gitleaks の allowlist は paths と regexes が AND ではなく OR で結合し、
+# paths を書いてもスコープを限定できないため使わない。
 7460628973edc886da1bd6688a6c8637d28724e0:packages/etl/test/fixtures/nara/18579.html:generic-api-key:468
 7460628973edc886da1bd6688a6c8637d28724e0:packages/etl/test/fixtures/nara/52534.html:generic-api-key:839
 7460628973edc886da1bd6688a6c8637d28724e0:packages/etl/test/fixtures/nara/p114001.html:generic-api-key:478
