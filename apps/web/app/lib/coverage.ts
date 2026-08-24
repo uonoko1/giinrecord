@@ -64,6 +64,35 @@ export function rosterlessSessions(meta: DatasetMeta | undefined): RosterlessSes
   return { earliestRoster, sessions, range: sessionRange(sessions) };
 }
 
+/**
+ * 衆院の質問主意書が議員ページに紐づく範囲（#235）。
+ * 衆議院は回次ごとの議員名簿を公開しておらず「現在」の 1 回次分しか無い（#71）ので、
+ * 質問主意書は全回次を取得していても、提出者を名簿に名寄せできるのはその 1 回次だけ。
+ * それ以外の回次の質問は取得済みでも議員ページには出ない（氏名だけから議員を作らないため）。
+ * 「取得した回次」と「議員に紐づく回次」は別の事実なので、両方を数えて出す（隠さない）。
+ */
+export interface ShugiinQuestionCoverage {
+  /** 衆院名簿が覆う回次（`meta.sessions` の最大。ETL の memberSession と同じ） */
+  rosterSession: number;
+  /** 質問答弁情報を取得した回次のうち、名簿の回次以外の範囲。1 件も無ければ null */
+  fetched: SessionRange | null;
+  /** 名簿の回次以外にも取得した回次があるか（＝紐づかない質問があるか） */
+  linkedOnlyToRosterSession: boolean;
+}
+
+/** `meta.sources` の「衆議院 質問答弁情報（第N回）」と `meta.sessions` から数える。出典が無ければ null（推定しない）。 */
+export function shugiinQuestionCoverage(meta: DatasetMeta | undefined): ShugiinQuestionCoverage | null {
+  const fetched = (meta?.sources ?? [])
+    .map((s) => /^衆議院 質問答弁情報（第(\d+)回）$/.exec(s.name)?.[1])
+    .filter((n): n is string => n !== undefined)
+    .map(Number);
+  const sessions = meta?.sessions ?? [];
+  if (fetched.length === 0 || sessions.length === 0) return null;
+  const rosterSession = Math.max(...sessions);
+  const notLinked = [...new Set(fetched)].filter((s) => s !== rosterSession).sort((a, b) => a - b);
+  return { rosterSession, fetched: sessionRange(fetched), linkedOnlyToRosterSession: notLinked.length > 0 };
+}
+
 /** 国会の 1 院（参議院・衆議院）の収録範囲 */
 export interface DietCoverage {
   assemblyId: string;

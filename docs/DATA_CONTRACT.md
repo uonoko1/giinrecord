@@ -145,6 +145,8 @@ interface AssemblySession { id: string; label: string; date: string; rollcalls: 
 - 名寄せは「氏名＋採決時点の会派」。氏名で1人に絞れるときは会派が食い違っても紐づけるが、投票結果ページの会派がその議員のどの回次の名簿の会派（略称・旧称を含む）とも一致しなければ `group-mismatch.json` に載る（`voteGroup` は投票ページの原文、`rosterGroup` は採決時点の名簿の会派。採決時点の名簿が無ければ手元の全会派を `/` で連結）。同姓同名は採決時点の会派で分け、分けられなければ `unmatched.json` に載る（別の回次の会派では推定しない）。`memberId` は `members/index.json` に、`rollCallId` は `rollcalls/index.json` に存在する。
 - `timeline` は日付降順（回次をまたいでも一つの timeline）。
 - `timeline` の全行が `session`（国会の回次）を持つ（#103）。vote は採決の回次（`rollCallId` の先頭 `{回次}-` と一致。`validateDataset` が検査する）、bill は議案の提出回次（`billId` の先頭）、speech は会議録の回次（API の `session`）、stance は議案の提出回次、question は質問の回次、attendance は会議の回次。Web の議員ページは `session` で回次ごとに折りたたむ（直近 2 回次を展開、それ以前は「第N回国会・件数」の見出しだけ）。`session` の無い行は #103 以前の出力で、Web は「回次不明」として最後にまとめる（推定しない）。
+  - **引き継ぎ（carried）での回次の復元（#235）**: `readCarried` は `session` の無い古い行を捨てず、id の先頭から回次を引いて引き継ぐ（`sessionOfEntry`）。引けるのは `questionId` = `{回次}-{house}-{番号}` と `billId` = `{提出回次}-{種別}-{番号}` の行（未突合の置き場所と同じ規約）。`speechId` / `meetingId` は NDL の会議録 id で回次を含まないので引けず、件数だけ警告に出す。2026-08-24 に、`session` を持たない question 行 524 件が carried で落ち、`writeDataset` の `members/` 全消しで**黙って消えた**（#235）。
+  - **消失の検出（#235）**: ETL は書き出す前に、前回出力の `members/index.json` と今回組み立てた index の `counts`（rollcalls / bills / speeches / questions）の合計を突き合わせ、**どれかが減っていたら `data/` を書かずに非0終了する**（`lostTimelineEntries`。採決に対する `lostVoteMatches` と同じ扱い）。増える・同じは正常。回次を減らす意図的な再構築は `data/` を消してから実行する（前回出力が無いので引っかからない）。
 - どのレコードも `sourceUrl` を持ち、衆参・NDL のドメインを指す。
 - `RollCallSummary.result` / `TimelineEntry(vote).result` は必ず得票「賛成 N・反対 N」を含む。参院 議案情報の審議結果（原文: 可決・否決・同意・是認 など）と紐づいた採決は「可決（賛成 N・反対 N）」の形。可否を多数決から推論しない。
 - 「投票なし」は欠席と棄権を区別しない。区別した表現を作らない。
@@ -161,6 +163,7 @@ interface AssemblySession { id: string; label: string; date: string; rollcalls: 
 - `questionId` は `{回次}-{house}-{番号}`（例 `221-shugiin-1`、`221-sangiin-12`。衆参で番号が独立なので院を含める）。`date` は提出日（衆院「質問主意書提出年月日」／参院「提出日」）。提出日の無いページは例外（日付を推定しない）。
 - `title` は件名、`submitterText` は提出者欄の原文（「緒方 林太郎君」。全角空白は半角1つ）、`status` は衆院の「経過状況」の原文（答弁受理・転送に至らず など。参院のページには無いので省略）、`answerDate` は答弁書受領日（衆院「答弁書受領年月日」／参院「答弁書受領日」）、`answerUrl` は答弁本文（HTML）。受領日が空欄なら `answerDate` も `answerUrl` も付けない（空欄は「未定または無し」で、未受領と言い切らない）。
 - 提出者は両院とも1人（第217〜221回に「外N名」の形は無い）。名寄せは `resolveMember`: 参院の質問は回次ごとの参院名簿に（その回次に効いている名簿の会派で同姓同名を分ける。詳細ページに会派は無いので分けられなければ `unmatched.json` に `kind: "question"`、`questionId` 付きで載る）。衆院の質問は衆院名簿に、経過ページの「会派名」で同姓同名を分ける。衆院名簿は「現在」の1回次分しか無い（#71）ので、議案と同じく名簿が覆う回次（`meta.sessions` の最大）の質問だけ名寄せし、過去回次は紐づけず `unmatched.json` にも出さない。
+- **衆院は名簿が覆う1回次分しか議員ページに出ない（既知の限界、#235）**: 上のとおり衆院の質問は全回次を取得していても、議員ページに紐づくのは名簿が覆う 1 回次だけ。取得済みだが出ない質問があるという事実は `/coverage`（`shugiinQuestionCoverage`）に明記して隠さない。全期間を覆うには回次別の衆院名簿（#71）が要る。参院は回次ごとの名簿があるのでこの制約は無い。
 - 質問はファイル（`questions/`）には書かず、名寄せ済みの提出者の timeline の `question` 行にだけなる。`counts.questions` はその数。未突合の質問はどこにも数えない。同日の並びは vote → bill → stance → question → speech。
 - 不変条件（`validateDataset`）: `question` 行の `sourceUrl` は衆院 経過ページ（`itdb_shitsumon.nsf/html/shitsumon/{数字}.htm`）か参院 詳細ページ（`kousei/syuisyo/{回次}/meisai/m….htm`）、`answerUrl` があれば衆参・NDL のドメイン、`counts.questions === timeline の question 行の数`。
 - Web は「質問主意書」タブ（日付／件名／答弁書／出典）と件数帯に出す。判は「質問」（提出・賛同・発言と同じ act 色。色で評価しない）。

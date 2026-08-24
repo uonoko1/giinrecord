@@ -1,6 +1,6 @@
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
-import type { Bill, BillSummary, MemberDetail, RollCall, RollCallSummary, TimelineEntry } from "@seiji-kiroku/shared";
+import type { Bill, BillSummary, MemberDetail, MemberSummary, RollCall, RollCallSummary, TimelineEntry } from "@seiji-kiroku/shared";
 import type { CarriedEntry } from "./aggregate.ts";
 import { DEFAULT_SESSIONS } from "./dataset.ts";
 import { isDietMemberRow, readMemberIndex } from "./local-assemblies.ts";
@@ -34,8 +34,78 @@ export interface Carried {
   bills: Bill[];
   /** carried の回次の timeline 行のうち、ファイルから作り直せないもの（speech / question / attendance / 参法の bill 行）。 */
   entries: CarriedEntry[];
-  /** session を持たない行の数（#103 以前の出力）。引き継げないので cli が警告し、その回次を指定して取り直してもらう。 */
+  /**
+   * 回次の引けない行の数（#103 以前の出力の speech / attendance）。引き継げないので cli が警告し、その回次を指定して取り直してもらう。
+   * question / 参法 bill 行は id から回次を引いて引き継ぐので、ここには数えない（#235）。
+   */
   withoutSession: number;
+}
+
+/**
+ * timeline の行の回次。`session` があればそれ、無ければ（#103 以前の出力）id の先頭から引く（#235）。
+ * 質問主意書（`questionId` = `{回次}-{house}-{番号}`）と参法（`billId` = `{提出回次}-{種別}-{番号}`）は
+ * id の先頭が回次なので引ける（DATA_CONTRACT「未突合の置き場所」の sessionOfUnmatched と同じ規約）。
+ * 発言（`speechId`）と委員会出席（`meetingId`）は NDL の会議録 id で回次を含まないので引けない（推定しない）。
+ */
+export function sessionOfEntry(entry: TimelineEntry): number | undefined {
+  if (typeof entry.session === "number") return entry.session;
+  const id = entry.kind === "question" ? entry.questionId : entry.kind === "bill" ? entry.billId : undefined;
+  if (id === undefined) return undefined;
+  const head = id.split("-")[0];
+  return /^\d+$/.test(head) ? Number(head) : undefined;
+}
+
+/**
+ * `members/index.json` の1行（国会の MemberSummary と地方議員の行が混ざる）。
+ * 地方議員の行は `counts` に rollcalls しか持たないので、国会の種別は省略可として読む。
+ */
+type CountedMemberRow = { assemblyId?: string; house?: string; counts?: Partial<MemberSummary["counts"]> };
+
+/** 前回出力より減った timeline 行の議会・種別と件数（lostTimelineEntries）。 */
+export interface LostEntries {
+  /** どの議会の行か（`diet-sangiin` / `diet-shugiin`。assemblyId の無い古い行は `diet-{house}` に寄せる） */
+  assemblyId: string;
+  kind: "rollcalls" | "bills" | "speeches" | "questions";
+  before: number;
+  after: number;
+}
+
+/**
+ * 前回出力（members/index.json）にあった timeline 行が今回の出力で減っていないか（#235）。
+ * `writeDataset` は members/ を毎回消して書き直すので、引き継ぎが壊れると出力から黙って消える
+ * （2026-08-24: #103 以前の出力の question 行 524 件が carried で落ち、誰も気づかないまま消えた）。
+ * 減っていたら cli が出力せずに非0終了する（lostVoteMatches と同じ扱い）。
+ * 増える・同じは正常（回次を足した、名寄せが良くなった）。地方議員の行は国会の counts を持たないので数えない。
+ *
+ * **院ごとに数える**のが要点: 2026-08-24 の事故では衆院の質問 42 件が消えた一方、同じ実行で
+ * 参院のバックフィルが 482 → 1374 に増えたため、両院を足した合計では**減っていない**（524 → 1374）。
+ * 合計だけを見ると片方の消失を反対側の増加が覆い隠すので、議会（院）ごとに突き合わせる。
+ */
+export function lostTimelineEntries(previous: readonly CountedMemberRow[], next: readonly CountedMemberRow[]): LostEntries[] {
+  const kinds = ["rollcalls", "bills", "speeches", "questions"] as const;
+  const totals = (rows: readonly CountedMemberRow[]): Map<string, Map<string, number>> => {
+    const out = new Map<string, Map<string, number>>();
+    for (const m of rows) {
+      if (!isDietMemberRow(m)) continue;
+      // assemblyId の無い古い行は house から議会を決める（推定ではなく契約どおりの対応: diet-{house}）
+      const assemblyId = m.assemblyId ?? (m.house ? `diet-${m.house}` : "diet-unknown");
+      const byKind = out.get(assemblyId) ?? new Map<string, number>();
+      for (const kind of kinds) byKind.set(kind, (byKind.get(kind) ?? 0) + (m.counts?.[kind] ?? 0));
+      out.set(assemblyId, byKind);
+    }
+    return out;
+  };
+  const before = totals(previous);
+  const after = totals(next);
+  const lost: LostEntries[] = [];
+  for (const [assemblyId, byKind] of [...before].sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))) {
+    for (const kind of kinds) {
+      const b = byKind.get(kind) ?? 0;
+      const a = after.get(assemblyId)?.get(kind) ?? 0;
+      if (a < b) lost.push({ assemblyId, kind, before: b, after: a });
+    }
+  }
+  return lost;
 }
 
 /** summarizeRollCall の逆: 「可決（賛成 N・反対 N）」→「可決」。得票だけの result からは何も戻さない（推定しない）。 */
@@ -74,8 +144,10 @@ export async function readCarried(dir: string, carried: readonly number[]): Prom
     const detail = await readJson<MemberDetail | undefined>(join(dir, "members", `${row.id}.json`), undefined);
     for (const entry of detail?.timeline ?? []) {
       if (!isCarriable(entry)) continue;
-      if (typeof entry.session !== "number") { withoutSession++; continue; }
-      if (set.has(entry.session)) entries.push({ memberId: row.id, entry });
+      // #103 以前の出力は session を持たない。id から引ける行（question / 参法 bill）は引いて引き継ぐ（#235）
+      const session = sessionOfEntry(entry);
+      if (session === undefined) { withoutSession++; continue; }
+      if (set.has(session)) entries.push({ memberId: row.id, entry: { ...entry, session } });
     }
   }
   return { rollCalls, decisions, matchedVotes, bills, entries, withoutSession };
