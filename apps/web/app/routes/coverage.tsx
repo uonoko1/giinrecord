@@ -2,7 +2,7 @@ import { Link, type MetaArgs } from "react-router";
 import { CoverBrand } from "../components/CoverBrand";
 import { SiteFooter } from "../components/SiteFooter";
 import { assemblyPath, bundledSessions } from "../lib/assemblies";
-import { buildCoverage, type Coverage, type DietCoverage, formatLocalSessionRange, formatSessionRange, hasSessionGaps, type LocalCoverage, type SessionRange } from "../lib/coverage";
+import { buildCoverage, type Coverage, type DietCoverage, formatLocalSessionRange, formatSessionRange, hasSessionGaps, type LocalCoverage, rosterlessSessions, type SessionRange } from "../lib/coverage";
 import type { AssemblySession } from "../lib/data-contract";
 import { type Dataset, dataset as bundled } from "../lib/dataset";
 import { formatDate, formatDateTime } from "../lib/format";
@@ -39,6 +39,8 @@ export default function CoveragePage({ data = bundled, sessions = bundledSession
         <TotalsSection coverage={coverage} />
         <DietSection diet={coverage.diet} metaSessions={coverage.metaSessions} />
         <LocalSection local={coverage.local} />
+
+        <RosterlessSection meta={data.meta} />
 
         <section className="section" aria-labelledby="coverage-not-recorded-heading">
           <h2 id="coverage-not-recorded-heading" className="section__title">
@@ -105,6 +107,40 @@ function SessionRangeCell({ range, unit }: { range: SessionRange | null; unit: s
       {text}
       {hasSessionGaps(range) && <span className="assemblies-status-note">うち{unit}のある回次 {n(range.count)}</span>}
     </>
+  );
+}
+
+/**
+ * 名簿の無い回次（#219 / #230）。参議院の回次ごとの議員名簿は最古の 1 回次分より前が公開されていないので、
+ * その回次の票はほとんどが議員ページに紐づかない。少数だけ現行名簿と氏名が一致して紐づくが、
+ * 名簿に在職開始日が無く在職を確認できないため、それは**推定を含む紐づけ**である。
+ * 事実として書き、評価しない。回次はデータ（meta）から数える（画面に数値を書かない）。
+ */
+function RosterlessSection({ meta }: { meta: Dataset["meta"] }) {
+  const rosterless = rosterlessSessions(meta);
+  const range = formatSessionRange(rosterless?.range ?? null);
+  if (!rosterless || !range || rosterless.sessions.length === 0) return null;
+  return (
+    <section className="section" aria-labelledby="coverage-rosterless-heading">
+      <h2 id="coverage-rosterless-heading" className="section__title">
+        議員ページに紐づかない回次
+      </h2>
+      <p className="card__body">
+        参議院の回次ごとの議員名簿は、<span className="num">第{rosterless.earliestRoster}回</span>より前が公開されていません。そのため{" "}
+        <span className="num">{range}</span>（<span className="num">{n(rosterless.sessions.length)}</span> 回次）の票は、
+        採決ページには氏名と当時の会派が載りますが、<strong>ほとんどが議員ページには紐づいていません</strong>。
+        氏名だけを手がかりに議員を作ることはしていません（同姓同名の別人を 1 人にしないため）。
+      </p>
+      <p className="card__body">
+        ただし、これらの回次の票のうち<strong>現在の名簿と氏名が一致する少数は、議員ページに紐づいています</strong>。
+        名簿には任期満了日はありますが在職開始日にあたる項目が無く、その議員がその回次に在職していたことを一次資料から確認できません。
+        つまりこの紐づけは<strong>推定を含みます</strong>。一律の見直しは作業中です（
+        <a href="https://github.com/uonoko1/gikailog/issues/230" target="_blank" rel="noopener noreferrer">
+          Issue #230
+        </a>
+        ）。
+      </p>
+    </section>
   );
 }
 

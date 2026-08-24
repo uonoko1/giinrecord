@@ -10,8 +10,9 @@ import { parseMemberList } from "../src/sources/sangiin-members.ts";
 /**
  * 第142〜199回への遡り（Issue #219、spike #217 = docs/research/backfill-142-199.md）。
  * 参院の投票結果ページは第142回（1998-01-14）から在り、HTML は現行の旧レイアウト（第200〜216回）と同じ。
- * 回次別の参院名簿は第216回以降にしか無いので、この期間の票は memberId を埋められない（unmatched）。
- * ここで固定するのは「1998〜2000年の実HTMLでもパーサが変更なしに通ること」と「票が m_ 空間に一切入らないこと」。
+ * 回次別の参院名簿は第216回以降にしか無いので、この期間の票はほぼ全部 memberId を埋められない（unmatched）。
+ * ここで固定するのは「1998〜2000年の実HTMLでもパーサが変更なしに通ること」と、
+ * 「現行名簿と氏名が一致する少数の票が m_ に紐づいてしまう」という**満たせていない事実**（#230 で解消する）。
  */
 const BASE = "https://www.sangiin.go.jp/japanese/touhyoulist";
 const fixture = (name: string) => readFileSync(new URL(`./fixtures/${name}.htm`, import.meta.url), "utf-8");
@@ -80,9 +81,9 @@ describe("実HTML: 第142回・第199回の一覧ページ", () => {
   });
 });
 
-describe("第142〜199回の票は m_ 空間に入らない（誤紐づけの回帰防止）", () => {
-  // 手元にある唯一の名簿は第221回のもの。第142回（1998年）の氏名が現職の m_ に紐づいたら誤り
-  // （名簿に初当選年が無いので、同姓同名か同一人物かを一次資料から確認できない）。
+describe("第142〜199回の票と m_ 空間（#219 の受け入れ条件と、満たせていない事実）", () => {
+  // 手元にある唯一の名簿は第221回のもの。第142回（1998年）の氏名が現職の m_ に紐づくのは推定を含む
+  // （名簿に termStart が無いので、その回次に在職していたことを一次資料から確認できない）。
   const members = parseMemberList(
     fixture("sangiin-giin-221"),
     "https://www.sangiin.go.jp/japanese/joho1/kousei/giin/221/giin.htm",
@@ -90,10 +91,12 @@ describe("第142〜199回の票は m_ 空間に入らない（誤紐づけの回
   );
   const matched = matchVotes(parseRollCall(fixture("142-0114-v001"), `${BASE}/142/142-0114-v001.htm`, 142), members);
 
-  // TODO(#219): 現行の resolveMember は「正規化氏名の候補が1人なら回次を名簿が覆っているか見ずに採用する」ため、
-  // 1998 年の票が現職 3 人（中曽根 弘文・橋本 聖子・山崎 正昭）に紐づく。これは第200〜215回でも同じで、
-  // 一様に厳格化すると公開済みの 18,401 票が unmatched に落ちて lostVoteMatches が ETL を止める。
-  // 契約（DATA_CONTRACT.md:204）とデータの両方を変える判断が要るので PO に確認中（issue #219 のコメント）。
+  // TODO(#230): 現行の resolveMember は「正規化氏名の候補が1人なら回次を名簿が覆っているか見ずに採用する」ため、
+  // 1998 年の票が現職 3 人（中曽根 弘文・橋本 聖子・山崎 正昭）に紐づく。名簿に termStart（在職開始日）が無く、
+  // その回次に在職していたことを一次資料から確認できないので、これは推定を含む紐づけ。
+  // 同じことが第200〜215回でも起きており（約 18,401 票）、一律に厳格化すると公開済みの紐づけが大量に外れて
+  // lostVoteMatches が ETL を止める。影響を測ってから独立に直す判断になったので #230 に切り出した（#219 の PO 判断）。
+  // それまでこの2つは todo のまま残す（隠さず、満たせていない事実を仕様として残す）。
   test.todo("全票の memberId が空（現職の名簿と氏名が一致しても第142回の票は紐づけない）", () => {
     const linked = matched.rollCall.votes.filter((v) => v.memberId !== "");
     assert.deepEqual(
@@ -113,6 +116,19 @@ describe("第142〜199回の票は m_ 空間に入らない（誤紐づけの回
     assert.ok(matched.unmatched.every((u) => u.nameText !== "" && u.group !== ""));
     // 当時の会派（第221回の名簿には無い）が原文のまま載る
     assert.ok(matched.unmatched.some((u) => u.group === "民友連"));
+  });
+
+  // 満たせていない事実を「隠さず仕様として残す」ためのテスト（#219 の PO 判断）。
+  // #230 でこの紐づけを解消したら件数は 0 になり、上の test.todo が通る（そのときこのテストは消す）。
+  test("【既知の未解決 #230】現行名簿と氏名が一致する少数の票は m_ に紐づく（推定を含む紐づけ）", () => {
+    const linked = matched.rollCall.votes.filter((v) => v.memberId !== "");
+    assert.equal(linked.length, 3, "推定を含む紐づけの件数が変わった（#230 の対応か、名簿の変化）");
+    assert.deepEqual(
+      linked.map((v) => v.nameText).sort(),
+      ["中曽根 弘文", "山崎 正昭", "橋本 聖子"].sort(),
+    );
+    // 残りは全部 unmatched（氏名と当時の会派は事実として残る）
+    assert.equal(matched.unmatched.length, matched.rollCall.votes.length - linked.length);
   });
 
   test("氏名だけから Member を作らない（名簿に無い氏名は m_ を持たない）", () => {
