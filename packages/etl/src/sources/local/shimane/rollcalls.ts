@@ -82,14 +82,18 @@ export function toLocalRollCalls(
   const unmatched = new Map<string, LocalUnmatchedName>();
   const baseIds = new Map<string, number>();
   const candidateByName = new Map<string, { id: string; name: string }[]>();
+  // 議決結果一覧の議案番号を全角・半角を寄せた形（NFKC）で引けるようにする
+  const resultsByNumber = new Map([...dates.results].map(([number, row]) => [number.normalize("NFKC"), row] as const));
   for (const { pdf, pdfUrl } of sources) {
     const resolved = pdf.members.map((m) => matchName(m, roster));
     pdf.members.forEach((m, i) => {
       if (resolved[i].memberId === "" && resolved[i].candidates.length > 0) candidateByName.set(m, resolved[i].candidates);
     });
     for (const row of pdf.rows) {
-      // 議決日: 議案は議決結果一覧から、載らない行（請願・その他表決）は会期の最終議決日
-      const hit = dates.results.get(row.number);
+      // 議決日: 議案は議決結果一覧から、載らない行（請願・その他表決）は会期の最終議決日。
+      // 番号の突き合わせは全角・半角を寄せて（NFKC）行う。同じ会期でも 2 本の PDF で
+      // 数字の全角・半角が違うことがある（令和8年2月は議員別が「承認第１号」、議決結果一覧が「承認第1号」）。
+      const hit = resultsByNumber.get(row.number.normalize("NFKC"));
       if (hit && hit.result !== row.result) {
         throw new Error(`${row.number}: 議決結果 differs: 議員別採決結果一覧 "${row.result}" vs 議決結果一覧 "${hit.result}"`);
       }
