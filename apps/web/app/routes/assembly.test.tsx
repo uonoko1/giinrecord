@@ -83,7 +83,7 @@ describe("/assemblies/{id} 国会", () => {
     renderPage("diet-shugiin");
     expect(screen.getByRole("link", { name: /議員一覧/ })).toHaveAttribute("href", "/members?assembly=diet-shugiin");
     expect(screen.queryByRole("link", { name: /本会議採決/ })).toBeNull();
-    expect(screen.getByText(/個人の投票記録が公開されていません/)).toBeInTheDocument();
+    expect(screen.getByText(/本会議の個人別の投票記録を公表していません/)).toBeInTheDocument();
   });
   it("assemblies/index.json が無い古いデータでも国会の2議会は表示できる", () => {
     renderPage("diet-shugiin", dataset, new Map());

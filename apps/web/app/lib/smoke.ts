@@ -32,7 +32,7 @@ export interface SmokeReport {
   failures: string[];
 }
 
-export const REQUIRED_PAGES = ["index.html", "about/index.html", "terms/index.html", "privacy/index.html", "members/index.html", "assemblies/index.html"];
+export const REQUIRED_PAGES = ["index.html", "about/index.html", "coverage/index.html", "terms/index.html", "privacy/index.html", "members/index.html", "assemblies/index.html"];
 
 const HREF_RE = /\bhref\s*=\s*(?:"([^"]*)"|'([^']*)')/g;
 

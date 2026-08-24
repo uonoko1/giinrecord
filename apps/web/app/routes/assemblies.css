@@ -34,3 +34,10 @@
 .assembly-sessions { width: 100%; border-collapse: collapse; font-size: 13px; }
 .assembly-sessions th, .assembly-sessions td { padding: 8px 8px; border-bottom: 1px solid var(--rule); text-align: left; vertical-align: top; }
 .assembly-sessions thead th { font-size: 11px; letter-spacing: 0.1em; color: var(--muted); font-weight: 400; }
+
+/* 収録範囲 /coverage（#218）。議会ごとのまとまり */
+.coverage-assembly { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--rule); }
+.coverage-assembly:first-of-type { margin-top: 12px; }
+.coverage-assembly__name { font-family: var(--font-head); font-size: 17px; font-weight: 700; margin: 0 0 8px; }
+/* 収録範囲の合計は4項目（議会・議員・採決/表決・議案）。共有の .figures（3列固定）を上書きし、狭い画面でも折り返す */
+.coverage-totals { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }

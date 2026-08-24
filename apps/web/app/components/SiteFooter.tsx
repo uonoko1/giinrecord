@@ -11,6 +11,7 @@ export function SiteFooter() {
     <footer className="site-footer">
       <nav className="site-footer__links" aria-label="サイト情報">
         <a href="/about">このデータについて</a>
+        <a href="/coverage">収録範囲</a>
         <a href="/terms">利用規約</a>
         <a href="/privacy">プライバシーポリシー</a>
         <a href={REPO_URL} target="_blank" rel="noopener noreferrer">

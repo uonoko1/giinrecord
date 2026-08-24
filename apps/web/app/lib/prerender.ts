@@ -5,7 +5,7 @@
  */
 import { assemblyPaths, memberPaths, rollCallPaths } from "./data-files";
 
-export const STATIC_PATHS = ["/", "/about", "/terms", "/privacy"];
+export const STATIC_PATHS = ["/", "/about", "/coverage", "/terms", "/privacy"];
 
 /** Without data/ only the static pages exist; every data-backed path comes from the index.json files under data/. */
 export async function prerenderPaths(dataDir: string): Promise<string[]> {

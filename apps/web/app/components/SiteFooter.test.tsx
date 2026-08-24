@@ -15,6 +15,11 @@ describe("SiteFooter（#167）", () => {
     expect(screen.getByRole("link", { name: "このデータについて" })).toHaveAttribute("href", "/about");
   });
 
+  it("収録範囲（/coverage、#218）への内部リンクを持つ", () => {
+    renderFooter();
+    expect(screen.getByRole("link", { name: "収録範囲" })).toHaveAttribute("href", "/coverage");
+  });
+
   it("GitHub は外部リンクで noopener noreferrer", () => {
     renderFooter();
     const link = screen.getByRole("link", { name: "GitHub" });
