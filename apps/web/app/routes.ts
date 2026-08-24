@@ -14,6 +14,7 @@ const hasRollCallData = existsSync(path.join(defaultDataDir(), "rollcalls", "ind
 export default [
   index("routes/home.tsx"),
   route("about", "routes/about.tsx"),
+  route("coverage", "routes/coverage.tsx"), // #218: 収録範囲。loader 無し（index.json をバンドル）
   route("terms", "routes/terms.tsx"), // #167
   route("privacy", "routes/privacy.tsx"), // #167
   route("members", "routes/members.tsx"),

@@ -104,7 +104,7 @@ function DietSections({ assembly, data }: { assembly: Assembly; data: Dataset })
           <span className="entry__sub">　{data.rollcalls.length.toLocaleString("ja-JP")} 件</span>
         </Link>
       )}
-      {!sangiin && <p className="note">衆議院は個人の投票記録が公開されていません。所属会派の態度は「推定」として区別して示します。</p>}
+      {!sangiin && <p className="note">衆議院は本会議の個人別の投票記録を公表していません。所属会派の態度は「推定」として区別して示します。</p>}
     </section>
   );
 }
