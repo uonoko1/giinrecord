@@ -4,7 +4,7 @@
 #   scp deploy/cloudflare-allowlist.sh "${VPS_SSH_HOST:-sakura-vps}":/tmp/ && ssh "${VPS_SSH_HOST:-sakura-vps}" \
 #     'sudo bash /tmp/cloudflare-allowlist.sh --install-cron && rm /tmp/cloudflare-allowlist.sh'         # + weekly cron
 #
-# staging.gikailog.jp sits behind Cloudflare Access (the Cloudflare proxy, orange cloud). The origin must refuse
+# staging.giinrecord.jp sits behind Cloudflare Access (the Cloudflare proxy, orange cloud). The origin must refuse
 # everything that does not come through Cloudflare, otherwise Access is bypassed by talking to the VPS directly.
 # This script turns https://www.cloudflare.com/ips-v4 and /ips-v6 into
 #   /etc/nginx/snippets/gikailog-cloudflare-allow.conf        allow <cidr>; … deny all;

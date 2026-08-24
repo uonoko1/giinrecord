@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Host-nginx setup for one site on the SHARED host (Issue #85; staging #127; idempotent + safety checks #141). Run as:
 #   ssh "${VPS_SSH_HOST:-sakura-vps}" 'sudo bash -s <domain> [port]' < deploy/vps-setup.sh
-#     port 8081 (default) = production: gikailog.jp         → /var/www/gikailog/site,    sites-available/gikailog.conf
-#     port 8083           = staging:    staging.gikailog.jp → /var/www/gikailog/staging, sites-available/gikailog-staging.conf
+#     port 8081 (default) = production: giinrecord.jp         → /var/www/gikailog/site,    sites-available/gikailog.conf
+#     port 8083           = staging:    staging.giinrecord.jp → /var/www/gikailog/staging, sites-available/gikailog-staging.conf
 #   The domain must NOT start with "staging." for 8081 and MUST start with "staging." for 8083 (#141: a staging
 #   setup run with the production domain once rewrote the production conf).
 #

@@ -42,7 +42,7 @@ const EXPECTED_HEADERS = [
   "add_header X-Frame-Options DENY always;",
   "add_header Referrer-Policy strict-origin-when-cross-origin always;",
   `add_header Content-Security-Policy "default-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; connect-src 'self'" always;`,
-  // #127: "" on production hosts (nginx omits add_header with an empty value), "noindex, nofollow" for staging.gikailog.jp
+  // #127: "" on production hosts (nginx omits add_header with an empty value), "noindex, nofollow" for staging.giinrecord.jp
   "add_header X-Robots-Tag $robots_tag always;",
 ];
 
@@ -57,8 +57,17 @@ test("site.conf: セキュリティヘッダと CSP は旧 server block と完�
   assert.deepEqual(headerLines(siteConf), EXPECTED_HEADERS);
 });
 
-test("site.conf: staging.gikailog.jp 宛てだけ X-Robots-Tag: noindex, nofollow（Host で判定。同じ conf を両コンテナで使う）", () => {
-  assert.match(siteConf, /map \$host \$robots_tag \{\s*default "";\s*staging\.gikailog\.jp "noindex, nofollow";\s*\}/);
+test("site.conf: staging.giinrecord.jp 宛てだけ X-Robots-Tag: noindex, nofollow（Host で判定。同じ conf を両コンテナで使う）", () => {
+  assert.match(siteConf, /map \$host \$robots_tag \{\s*default "";\s*staging\.giinrecord\.jp "noindex, nofollow";\s*\}/);
+});
+
+// Rename #192（議員レコード / giinrecord.jp）: 旧ドメインは 1 年以上維持し、パスを保って新ドメインへ 301。
+test("site.conf: www と旧ドメイン（gikailog.jp / www.gikailog.jp / staging.gikailog.jp）は 301、apex は default_server が配信する", () => {
+  assert.match(siteConf, /server_name www\.giinrecord\.jp;\s*return 301 https:\/\/giinrecord\.jp\$request_uri;/);
+  assert.match(siteConf, /server_name gikailog\.jp www\.gikailog\.jp;\s*return 301 https:\/\/giinrecord\.jp\$request_uri;/);
+  assert.match(siteConf, /server_name staging\.gikailog\.jp;\s*return 301 https:\/\/staging\.giinrecord\.jp\$request_uri;/);
+  assert.match(siteConf, /listen 80 default_server;/);
+  assert.doesNotMatch(siteConf, /server_name giinrecord\.jp[ ;]/, "the new apex must be served by default_server, not redirected");
 });
 
 test("site.conf: キャッシュ方針は旧 server block と同一（/assets/ immutable 1年、/data/ 1時間）", () => {
@@ -192,12 +201,12 @@ test("vps-setup.sh: port 8083 なら staging の conf 名・web root・ログ名
     assert.equal(r.status, 0, r.stderr);
     return r.stdout;
   };
-  const prod = render("gikailog.jp", "8081");
-  assert.match(prod, /server_name gikailog\.jp www\.gikailog\.jp;/);
+  const prod = render("giinrecord.jp", "8081");
+  assert.match(prod, /server_name giinrecord\.jp www\.giinrecord\.jp;/);
   assert.match(prod, /proxy_pass http:\/\/127\.0\.0\.1:8081;/);
   assert.match(prod, /access_log \/var\/log\/nginx\/gikailog\.access\.log noip;/);
-  const staging = render("staging.gikailog.jp", "8083");
-  assert.match(staging, /server_name staging\.gikailog\.jp;/);
+  const staging = render("staging.giinrecord.jp", "8083");
+  assert.match(staging, /server_name staging\.giinrecord\.jp;/);
   assert.doesNotMatch(staging, /www\./);
   assert.match(staging, /proxy_pass http:\/\/127\.0\.0\.1:8083;/);
   assert.match(staging, /access_log \/var\/log\/nginx\/gikailog-staging\.access\.log noip;/);
@@ -225,7 +234,7 @@ test("ci.yml: docker compose config → up → URL モード smoke を 8081 と 
   assert.match(ci, /smoke -- --url http:\/\/127\.0\.0\.1:8081/);
   assert.match(ci, /smoke -- --url http:\/\/127\.0\.0\.1:8083/);
   assert.match(ci, /STAGING_SITE_DIR:/);
-  assert.match(ci, /Host: staging\.gikailog\.jp/);
+  assert.match(ci, /Host: staging\.giinrecord\.jp/);
   assert.match(ci, /x-robots-tag: noindex, nofollow/i);
 });
 
@@ -243,11 +252,11 @@ test("deploy-site.yml: 再利用ワークフロー。environment / site_origin /
   assert.doesNotMatch(uncommented(deploySite), /docker/);
 });
 
-test("deploy-staging.yml: main への push で environment staging、SITE_ORIGIN=https://staging.gikailog.jp、rsync 先 staging", () => {
+test("deploy-staging.yml: main への push で environment staging、SITE_ORIGIN=https://staging.giinrecord.jp、rsync 先 staging", () => {
   assert.match(deployStaging, /push:\s*\n\s*branches: \[main\]/);
   assert.match(deployStaging, /uses: \.\/\.github\/workflows\/deploy-site\.yml/);
   assert.match(deployStaging, /environment: staging/);
-  assert.match(deployStaging, /site_origin: https:\/\/staging\.gikailog\.jp/);
+  assert.match(deployStaging, /site_origin: https:\/\/staging\.giinrecord\.jp/);
   assert.match(deployStaging, /target_dir: staging/);
   assert.doesNotMatch(deployStaging, /production/);
 });

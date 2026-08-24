@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="議会ログ">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="議員レコード">
   <!-- 案 D「時系列」: 縦の軸に記録の点、最新（最下）の点だけ真鍮 -->
   <g stroke="#26364a" stroke-width="7" stroke-linecap="round">
     <line x1="30" y1="14" x2="30" y2="86"/>

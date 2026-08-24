@@ -34,13 +34,13 @@ describe("public/logo.svg（マーク単体）", () => {
   });
 });
 
-describe("public/logo-wordmark.svg（マーク＋明朝「議会ログ」をパス化）", () => {
+describe("public/logo-wordmark.svg（マーク＋明朝「議員レコード」をパス化）", () => {
   const src = read("public/logo-wordmark.svg");
   it("SVG として解釈でき、text 要素を使わない（フォント非依存）", () => {
     const svg = parseSvg(src);
     expect(svg.querySelectorAll("path").length).toBeGreaterThan(0);
     expect(src).not.toContain("<text");
-    expect(svg.getAttribute("aria-label")).toBe("議会ログ");
+    expect(svg.getAttribute("aria-label")).toBe("議員レコード");
   });
   it("墨藍と真鍮を使う", () => {
     expect(src).toContain(BRAND.ink);
@@ -93,9 +93,9 @@ describe("brand/og-image.svg（1200×630、紙地に左へマーク、右に明�
 });
 
 describe("public/site.webmanifest", () => {
-  it("name 議会ログ、theme_color 墨藍、background 紙、192/512 のアイコン", () => {
+  it("name 議員レコード、theme_color 墨藍、background 紙、192/512 のアイコン", () => {
     const m = JSON.parse(read("public/site.webmanifest")) as Record<string, unknown>;
-    expect(m.name).toBe("議会ログ");
+    expect(m.name).toBe("議員レコード");
     expect(m.theme_color).toBe(BRAND.ink);
     expect(m.background_color).toBe(BRAND.paper);
     const icons = m.icons as { src: string; sizes: string }[];

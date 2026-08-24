@@ -20,12 +20,12 @@ export function LogoMark({ height = "1em" }: { height?: string | number }) {
   );
 }
 
-/** 表紙の「議会ログ」文字ロゴ。マークを 1em で横に添える。`to` があればリンク（トップ以外のページ）。 */
+/** 表紙の「議員レコード」文字ロゴ。マークを 1em で横に添える。`to` があればリンク（トップ以外のページ）。 */
 export function CoverBrand({ to }: { to?: string }) {
   const inner = (
     <>
       <LogoMark />
-      <span>議会ログ</span>
+      <span>議員レコード</span>
     </>
   );
   return <div className="cover__brand">{to ? <Link to={to}>{inner}</Link> : inner}</div>;

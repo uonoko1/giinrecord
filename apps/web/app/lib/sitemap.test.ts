@@ -33,7 +33,7 @@ describe("buildRobots", () => {
     expect(buildRobots("")).toBe("User-agent: *\nAllow: /\nDisallow: /compare\n");
   });
   it("staging origin では全面 Disallow で、Sitemap 行も出さない（#127）", () => {
-    expect(buildRobots("https://staging.gikailog.jp")).toBe("User-agent: *\nDisallow: /\n");
+    expect(buildRobots("https://staging.giinrecord.jp")).toBe("User-agent: *\nDisallow: /\n");
   });
 });
 

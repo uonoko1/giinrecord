@@ -92,7 +92,7 @@ describe("meta()", () => {
   const args = { data: { rollCall, meta }, location: { pathname: "/rollcalls/221/r_1" } } as unknown as Parameters<typeof routeMeta>[0];
   it("title は案件名", () => {
     const tags = routeMeta(args);
-    expect(tags).toContainEqual({ title: `${rollCall.title} ・ 議会ログ` });
+    expect(tags).toContainEqual({ title: `${rollCall.title} ・ 議員レコード` });
     expect(tags).toContainEqual({ name: "description", content: expect.stringContaining("2026.07.24") });
   });
   it("canonical と OGP（article）を持つ", () => {
@@ -102,7 +102,7 @@ describe("meta()", () => {
   });
   it("data が無ければサイト名だけ", () => {
     expect(routeMeta({ data: undefined, location: { pathname: "/x" } } as unknown as Parameters<typeof routeMeta>[0])).toEqual([
-      { title: "議会ログ" },
+      { title: "議員レコード" },
     ]);
   });
 });

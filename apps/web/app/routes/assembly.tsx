@@ -21,7 +21,7 @@ export function meta({ location, params }: MetaArgs) {
   const assembly = findAssembly(bundled.assemblies ?? DIET_ASSEMBLIES, params.id ?? "");
   return seoMeta({
     title: pageTitle(assembly),
-    description: assembly ? `${assembly.name}の議員一覧と会期。公式記録から出典つきで並べます。評価はしません。` : "議会ログの議会ページ。",
+    description: assembly ? `${assembly.name}の議員一覧と会期。公式記録から出典つきで並べます。評価はしません。` : "議員レコードの議会ページ。",
     pathname: location.pathname,
   });
 }

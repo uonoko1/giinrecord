@@ -1,5 +1,5 @@
 name: Deploy (staging)
-# Issue #127: every push to main goes to https://staging.gikailog.jp automatically (noindex build).
+# Issue #127: every push to main goes to https://staging.giinrecord.jp automatically (noindex build).
 # Production is released by hand from release.yml. Daily data reaches both through deploy-data.yml.
 on:
   push:
@@ -12,7 +12,7 @@ jobs:
     uses: ./.github/workflows/deploy-site.yml
     with:
       environment: staging
-      site_origin: https://staging.gikailog.jp
+      site_origin: https://staging.giinrecord.jp
       target_dir: staging
       ref: ${{ github.sha }}
     secrets: inherit

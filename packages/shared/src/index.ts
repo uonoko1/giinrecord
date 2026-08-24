@@ -1,5 +1,5 @@
 /**
- * Shared data model for 議会ログ.
+ * Shared data model for 議員レコード.
  * Every record carries `sourceUrl` — the primary source it was transcribed from.
  * The site renders facts only; nothing here encodes an evaluation.
  */

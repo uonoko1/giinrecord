@@ -3,11 +3,11 @@
 #   PO check after a deploy (Sprint 9 retro, #182): the PO's own network returns curl 000 intermittently, so the
 #   main URLs are fetched FROM the VPS over `ssh $VPS_SSH_HOST` (default `gikaiops`) and listed as
 #   "<code>  <path>  <title>" per environment. Read-only; nothing on the VPS is changed. No secrets involved.
-#   - production: `curl --resolve gikailog.jp:443:127.0.0.1 https://gikailog.jp<path>` — the host nginx block with
+#   - production: `curl --resolve giinrecord.jp:443:127.0.0.1 https://giinrecord.jp<path>` — the host nginx block with
 #     the real hostname, TLS certificate verified (no -k).
 #   - staging: the host nginx 443 block only admits Cloudflare (docs/ops/staging-access.md, #163); a loopback
 #     request is 403 BY DESIGN. So staging is checked at the container port, `http://127.0.0.1:8083<path>` with
-#     `Host: staging.gikailog.jp` (same path deploy.md uses). This verifies the deployed build, not Cloudflare Access.
+#     `Host: staging.giinrecord.jp` (same path deploy.md uses). This verifies the deployed build, not Cloudflare Access.
 #   Exit 0 only when every URL is 200; 1 when any is not (the line is marked NG); 2 on a usage error.
 # Env: VPS_SSH_HOST (ssh alias; default gikaiops), STAGING_PORT (default 8083).
 set -euo pipefail
@@ -58,9 +58,9 @@ check() {
 
 RC=0
 if [[ "$TARGET" == production || "$TARGET" == all ]]; then
-  check production "https://gikailog.jp" --resolve "gikailog.jp:443:127.0.0.1" || RC=1
+  check production "https://giinrecord.jp" --resolve "giinrecord.jp:443:127.0.0.1" || RC=1
 fi
 if [[ "$TARGET" == staging || "$TARGET" == all ]]; then
-  check staging "http://127.0.0.1:$STAGING_PORT" -H "Host: staging.gikailog.jp" || RC=1
+  check staging "http://127.0.0.1:$STAGING_PORT" -H "Host: staging.giinrecord.jp" || RC=1
 fi
 exit $RC

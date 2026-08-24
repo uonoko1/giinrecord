@@ -3,8 +3,8 @@
 Issue #135。外部 SaaS（UptimeRobot / Datadog / Sentry 等）は使わない。**ダッシュボードは無い。label `monitor` の open Issue 一覧が現在の状態**（0 件 = 正常）。
 
 ```
-GitHub Actions  monitor.yml ──10分おき──▶ https://gikailog.jp          ┐ /, /members/, /data/meta.json, TLS 期限
-                            ──毎時────▶ https://staging.gikailog.jp  ┘ deploy/monitor/probe.sh → run.sh → report.sh (gh)
+GitHub Actions  monitor.yml ──10分おき──▶ https://giinrecord.jp          ┐ /, /members/, /data/meta.json, TLS 期限
+                            ──毎時────▶ https://staging.giinrecord.jp  ┘ deploy/monitor/probe.sh → run.sh → report.sh (gh)
                                                                               │ 2 回連続で失敗 → Issue "[monitor] <env>: <check>"
 VPS  root cron 5分  /usr/local/lib/gikailog-monitor/health.sh                 │ 復旧 → 自動 close
        コンテナ healthy・ディスク・nginx・rsync 先の鮮度                        │
@@ -18,7 +18,7 @@ VPS  root cron 5分  /usr/local/lib/gikailog-monitor/health.sh                 �
 
 | check | 条件 | 失敗時に疑うもの |
 |---|---|---|
-| `http` | `/`・`/members/`・`/data/meta.json` が 200、HTML の `<title>` に『議会ログ』 | コンテナ停止（502）、ホスト nginx 停止、rsync 先が空（404）、DNS |
+| `http` | `/`・`/members/`・`/data/meta.json` が 200、HTML の `<title>` に『議員レコード』 | コンテナ停止（502）、ホスト nginx 停止、rsync 先が空（404）、DNS |
 | `data` | `meta.fetchedAt`（トップレベル＝ETL 実行時刻）が 48 時間以内 | `etl.yml` の失敗、data PR が未マージ、`deploy-data.yml` の失敗 |
 | `tls` | 証明書の残り 14 日以上 | certbot の自動更新が止まっている（`sudo certbot renew --dry-run`） |
 
