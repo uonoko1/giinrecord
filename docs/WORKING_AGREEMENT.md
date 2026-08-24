@@ -47,4 +47,5 @@
 - 依存：新規依存の追加理由、`pnpm audit` に high 以上が無い
 
 CI が機械的に見る分（`.github/workflows/security.yml`、Issue #133）: gitleaks（PR 差分／週次の全履歴）、`scripts/ci/forbidden-patterns.sh`（鍵ヘッダ・トークン形式・追跡された `.env`・公開 IP（除外ディレクトリなし）・secret `FORBIDDEN_PATTERNS` の正規表現。secret が無いと fork PR 以外では失敗）、`scripts/ci/audit.sh`（high 以上。例外は `scripts/ci/audit-ignore.txt` に期限と理由つき）。
+シェルは `bash scripts/ci/shellcheck.sh` で lint（Issue #154）。対象（`scripts/**`・`deploy/**` の `*.sh` と bash/sh shebang の拡張子なしファイル）はこのスクリプトだけが列挙し、CI も同じコマンドを呼ぶ。PR 前に手元で実行する（`--list` で対象確認）。
 他サイト名の禁止パターンは**リポジトリに書かず** repo secret `FORBIDDEN_PATTERNS`（改行区切りの正規表現）に置く。VPS の IP も書かない（ssh は `$VPS_SSH_HOST`、既定 `sakura-vps`）。nginx の reload は `if nginx -t; then systemctl reload nginx; else exit 1; fi` の形（`deploy/test/nginx-reload.test.sh`）。報告窓口は `SECURITY.md`。
