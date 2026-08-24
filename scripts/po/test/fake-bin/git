@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Fake `git` for scripts/po tests. Records the invocation to $FAKE_GH_LOG ("git<TAB>args…") and
+# answers via the `git_handle` function defined in $FAKE_GH_HANDLER (same contract as the fake
+# `gh`, minus the --jq handling: git output is consumed verbatim).
+set -euo pipefail
+line=$(IFS=$'\t'; echo "git${IFS}$*")
+printf '%s\n' "${line//$'\n'/ }" >> "$FAKE_GH_LOG"
+# shellcheck source=/dev/null
+source "$FAKE_GH_HANDLER"
+git_handle "$@"

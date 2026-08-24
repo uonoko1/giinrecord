@@ -2,13 +2,17 @@
 # merge-when-green.sh <pr>
 #   1. refuse unless the PR is OPEN and not a draft
 #   2. `gh pr update-branch` when it is BEHIND main
+#      if that is refused because the gh OAuth token lacks the `workflow` scope (the PR touches
+#      .github/workflows/*), fall back to merging origin/main into the PR head in a temporary
+#      worktree and pushing over SSH (#200); a merge conflict aborts with nothing pushed
 #   3. poll `gh pr checks` until every check is pass/skipping (fail/cancel → abort)
 #      main may move while we wait (another PR merged → BEHIND, strict status checks block the
 #      merge): every poll re-checks mergeStateStatus and runs update-branch again (#89, like etl.yml)
 #      while waiting on data/refresh only: approve `action_required` workflow runs
 #   4. `gh pr merge --squash --delete-branch`
 # Env: POLL_INTERVAL (s, default 20), POLL_MAX (default 60), PO_REPO (owner/name override).
-# Only destructive operation: the squash merge (+ head branch deletion) of the given PR.
+# Destructive operations: the squash merge (+ head branch deletion) of the given PR, and — only
+# in the workflow-scope fallback — a merge commit of origin/main pushed to the PR head branch.
 set -euo pipefail
 # shellcheck source-path=SCRIPTDIR
 # shellcheck source=lib.sh
@@ -30,14 +34,54 @@ log "PR #$PR ($HEAD) state=$STATE draft=$DRAFT mergeState=$MERGE_STATE $URL"
 [[ "$DRAFT" == "false" ]] || die "PR #$PR is a draft; mark it ready for review first"
 
 # --- 2. bring up to date ----------------------------------------------------------------------
+# merge_main_locally — fallback for `gh pr update-branch` being refused because the gh OAuth
+# token lacks the `workflow` scope (the PR touches .github/workflows/*, #200). Merges
+# origin/main into the PR head in a temporary worktree and pushes it over SSH (SSH keys are not
+# limited by OAuth scopes). A merge conflict aborts cleanly: nothing is pushed, the worktree is
+# removed, and the script exits with a message; other failures are logged, not fatal.
+merge_main_locally() {
+  local root tmp wt
+  root=$(git rev-parse --show-toplevel 2>/dev/null) \
+    || { log "not inside a git checkout; update PR #$PR manually"; return 0; }
+  log "update-branch refused (workflow scope) → merging origin/main locally and pushing via SSH"
+  git -C "$root" fetch origin \
+      "+refs/heads/main:refs/remotes/origin/main" "+refs/heads/$HEAD:refs/remotes/origin/$HEAD" \
+    || { log "git fetch failed; update PR #$PR manually"; return 0; }
+  tmp=$(mktemp -d)
+  wt="$tmp/wt"
+  if ! git -C "$root" worktree add --detach "$wt" "origin/$HEAD"; then
+    rm -rf "$tmp"
+    log "could not create a temporary worktree; update PR #$PR manually"
+    return 0
+  fi
+  if ! git -C "$wt" merge --no-edit origin/main; then
+    git -C "$wt" merge --abort || true
+    git -C "$root" worktree remove --force "$wt" || true
+    rm -rf "$tmp"
+    die "origin/main conflicts with $HEAD — resolve the conflict manually (nothing was pushed)"
+  fi
+  git -C "$wt" push "git@github.com:$REPO.git" "HEAD:refs/heads/$HEAD" \
+    || log "SSH push of the merged $HEAD failed — push it manually"
+  git -C "$root" worktree remove --force "$wt" || true
+  rm -rf "$tmp"
+}
+
 # update_if_behind [state] → 0 when an update was attempted (checks will re-run), 1 otherwise.
-# A failed update is logged, not fatal: the merge step then surfaces the real blocker.
+# A failed update is logged, not fatal: the merge step then surfaces the real blocker. The one
+# exception is the workflow-scope refusal, which is handled by merge_main_locally (see above).
 update_if_behind() {
-  local state=${1:-}
+  local state=${1:-} err
   [[ -n "$state" ]] || state=$(gh pr view "$PR" --json mergeStateStatus -q .mergeStateStatus)
   [[ "$state" == "BEHIND" ]] || return 1
   log "branch is behind main → gh pr update-branch"
-  gh pr update-branch "$PR" || log "could not update branch (conflicts? update it manually)"
+  if ! err=$(gh pr update-branch "$PR" 2>&1); then
+    [[ -n "$err" ]] && printf '%s\n' "$err" >&2
+    if [[ "$err" == *workflow*scope* ]]; then
+      merge_main_locally
+    else
+      log "could not update branch (conflicts? update it manually)"
+    fi
+  fi
   return 0
 }
 update_if_behind "$MERGE_STATE" || true
