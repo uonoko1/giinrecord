@@ -10,6 +10,8 @@ import { mapLegend, matchName, nameKey, toLocalRollCalls } from "../src/sources/
 // - 名寄せ: 空白・異体字セレクタを除き字形違い（髙/高）を寄せた完全一致 → 無ければ部分列一致（1 人に決まるときだけ）。
 //   PDF の文字層は一部の字が落ちる（「芦髙清友」の外字「芦」、「西川均」の「均」）。推定で補わず、規則で寄せる。
 // - mapped は凡例の文言が完全一致するときだけ。棄権（「退」表決を棄権）には付けない。
+// フィクスチャ内の「手話で電話」（denwa-relay-service.jp）ウィジェットの公開 token は
+// REDACTED に置換済み（#216）。全ページ共通のページ装飾でパース対象ではないため、解析結果には影響しない。
 const fixture = (name: string) => readFileSync(new URL(`./fixtures/nara/${name}`, import.meta.url));
 const roster = parseRoster(fixture("52534.html").toString("utf8")).members;
 const june = await parseVotePdf(fixture("20260702_giinbetsu_hyoketsu.pdf"));

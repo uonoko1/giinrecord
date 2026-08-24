@@ -1,11 +1,10 @@
-# gitleaks 設定。既定ルールを継承し、誤検知だけを絞って許可する。
+# gitleaks 設定。既定ルールをそのまま使う。
+#
+# 誤検知は「フィクスチャ側で発生源を消す」方針（#216）。過去にあった奈良県サイトの
+# 公開ウィジェット token は fixtures 内で REDACTED に置換済みで、許可リストは不要。
+# fingerprint（.gitleaksignore）は squash マージでハッシュが変わり無効化するため使わない。
+# 新たな誤検知が出た場合、まずフィクスチャのサニタイズを検討し、
+# allowlist は最後の手段とする（allowlist の paths と regexes は AND ではなく OR で
+# 結合するため、paths を書いてもスコープを限定できない点に注意）。
 [extend]
 useDefault = true
-
-[allowlist]
-description = "公式サイトの公開ページに埋め込まれた公開リンク（秘密ではない）"
-regexes = [
-  # 奈良県サイト等の全ページ共通「手話で電話」ウィジェットの公開 URL パラメータ
-  '''denwa-relay-service\.jp/web_inquiry/\?token=[0-9A-Za-z]+''',
-]
-paths = [ ]

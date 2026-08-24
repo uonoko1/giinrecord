@@ -34,6 +34,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_ENABLE_SUMMARY: "true"
+          # 誤検知の許可は .gitleaks.toml の regex 許可リストが正（#216）。リポジトリ直下の
+          # 設定は暗黙にも読まれるが、読み込みを保証するため GITLEAKS_CONFIG で明示する。
+          # .gitleaksignore の fingerprint は squash マージでハッシュが変わり無効化する。
+          GITLEAKS_CONFIG: ${{ github.workspace }}/.gitleaks.toml
 
   forbidden-patterns:
     runs-on: ubuntu-latest
