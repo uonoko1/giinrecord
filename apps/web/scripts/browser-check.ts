@@ -154,6 +154,46 @@ async function membersRejectsUnknownFilters(page: Page): Promise<void> {
   console.log(`browser-check: members unknown ?group/?district ignored (h1="${seen.h1}")`);
 }
 
+/**
+ * 議員ページのタブ（#238）: カテゴリ分けしたタブがハイドレーション後に実際に切り替わり、
+ * スマホ幅でページ本体が横スクロールしないことを実機で確かめる。
+ * 件数 0 のタブも押せる（「無い」ことが情報なので隠さない）ことをここで確認する。
+ */
+async function memberTabsSwitch(page: Page): Promise<void> {
+  await page.setViewportSize({ width: 375, height: 800 });
+  const tabs = page.locator('[role="tab"]');
+  await tabs.first().waitFor({ timeout: 10_000 });
+  const count = await tabs.count();
+  if (count < 2) throw new Error(`member tabs: タブが ${count} 個しかない`);
+
+  // 全タブに件数が出ている（ヘッダの数値と整合することは vitest 側で検査する）
+  for (let i = 0; i < count; i++) {
+    const text = (await tabs.nth(i).innerText()).replace(/\s+/g, " ");
+    if (!/\d件$/.test(text)) throw new Error(`member tabs: 件数の無いタブがある: "${text}"`);
+  }
+
+  // ハイドレーション後にタブが切り替わる: 選択中のタブが変わり、tabpanel の aria-labelledby も追随する
+  const before = await page.locator('[role="tab"][aria-selected="true"]').innerText();
+  await tabs.nth(1).click();
+  await page.waitForFunction(
+    (prev) => document.querySelector('[role="tab"][aria-selected="true"]')?.textContent?.replace(/\s+/g, " ") !== prev,
+    before.replace(/\s+/g, " "),
+    { timeout: 5_000 },
+  );
+  const selected = await page.locator('[role="tab"][aria-selected="true"]');
+  const selectedId = await selected.getAttribute("id");
+  const labelledBy = await page.locator('[role="tabpanel"]').getAttribute("aria-labelledby");
+  if (selectedId !== labelledBy) throw new Error(`member tabs: tabpanel の aria-labelledby=${labelledBy} が選択中のタブ ${selectedId} と合わない`);
+
+  // スマホ幅でページ本体が横スクロールしない（タブ列の中だけがスクロールする）
+  const overflow = await page.evaluate(() => ({
+    doc: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    strips: [...document.querySelectorAll(".member-tabs")].map((e) => [e.scrollWidth, e.clientWidth] as const),
+  }));
+  if (overflow.doc > 0) throw new Error(`member tabs: 375px でページが横に ${overflow.doc}px はみ出す`);
+  console.log(`browser-check: member tabs ${count} tabs, switched to ${selectedId}, no page overflow at 375px (strips ${JSON.stringify(overflow.strips)})`);
+}
+
 const memberId = await firstMemberId();
 const targets: { url: string; run?: (page: Page) => Promise<void> }[] = [
   { url: `${origin}/` },
@@ -161,7 +201,7 @@ const targets: { url: string; run?: (page: Page) => Promise<void> }[] = [
   { url: `${origin}/members/`, run: membersFilterGoesToUrl },
   { url: `${origin}/members/`, run: membersRejectsUnknownFilters },
   { url: `${origin}/rollcalls/` },
-  ...(memberId ? [{ url: `${origin}/members/${memberId}/` }] : []),
+  ...(memberId ? [{ url: `${origin}/members/${memberId}/` }, { url: `${origin}/members/${memberId}/`, run: memberTabsSwitch }] : []),
 ];
 
 const browser = await chromium.launch();

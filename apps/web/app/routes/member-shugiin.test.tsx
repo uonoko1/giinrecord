@@ -60,9 +60,16 @@ describe("衆院議員ページ 会派の態度（推定）", () => {
     renderPage();
     expect(document.querySelectorAll('[data-tone="yes"], [data-tone="no"]')).toHaveLength(0);
   });
-  it("タブは すべて / 提出法案 / 会派の態度 / 質問主意書 / 発言（採決タブは無い）", () => {
+  it("タブは 本人の記録（すべて / 提出法案 / 質問主意書 / 発言）と 所属会派の記録（会派の態度）に分かれ、採決タブは無い（#238）", () => {
     renderPage();
-    expect(screen.getAllByRole("tab").map((t) => t.textContent)).toEqual(["すべて", "提出法案", "会派の態度", "質問主意書", "発言"]);
+    expect(screen.getAllByRole("tab").map((t) => t.textContent)).toEqual([
+      "すべて6件",
+      "提出法案2件",
+      "質問主意書1件",
+      "発言1件",
+      "会派の態度2件",
+    ]);
+    expect(screen.queryByRole("tab", { name: /^採決/ })).not.toBeInTheDocument();
   });
   it("衆院の question 行は経過状況の原文（答弁受理）を出し、出典は衆院 経過ページ", () => {
     renderPage();
@@ -73,7 +80,7 @@ describe("衆院議員ページ 会派の態度（推定）", () => {
   });
   it("会派の態度タブは stance 行だけを出し、注記を添える", async () => {
     renderPage();
-    await userEvent.click(screen.getByRole("tab", { name: "会派の態度" }));
+    await userEvent.click(screen.getByRole("tab", { name: /^会派の態度/ }));
     const panel = screen.getByRole("tabpanel");
     expect(within(panel).getAllByRole("listitem")).toHaveLength(2);
     expect(within(panel).getByText(/会派の態度であり、本人の投票ではありません/)).toBeInTheDocument();
@@ -85,7 +92,7 @@ describe("衆院議員ページ 会派の態度（推定）", () => {
       timeline: Array.from({ length: 25 }, (_, i) => ({ ...base, billId: `221-閣法-${i + 1}`, title: `法案 ${i + 1}`, date: `2026-01-${String(25 - i).padStart(2, "0")}` })),
     };
     render(<MemberPage detail={many} meta={meta} />);
-    await userEvent.click(screen.getByRole("tab", { name: "会派の態度" }));
+    await userEvent.click(screen.getByRole("tab", { name: /^会派の態度/ }));
     const panel = screen.getByRole("tabpanel");
     expect(within(panel).getAllByRole("listitem")).toHaveLength(20);
     const more = within(panel).getByRole("button", { name: "さらに表示（残り5件）" });
@@ -95,12 +102,12 @@ describe("衆院議員ページ 会派の態度（推定）", () => {
   });
   it("会派の態度が 20 件以下なら「さらに表示」は出ない", async () => {
     renderPage();
-    await userEvent.click(screen.getByRole("tab", { name: "会派の態度" }));
+    await userEvent.click(screen.getByRole("tab", { name: /^会派の態度/ }));
     expect(screen.queryByRole("button", { name: /さらに表示/ })).not.toBeInTheDocument();
   });
   it("提出法案タブは 提出者・賛成者 の行を出す", async () => {
     renderPage();
-    await userEvent.click(screen.getByRole("tab", { name: "提出法案" }));
+    await userEvent.click(screen.getByRole("tab", { name: /^提出法案/ }));
     expect(screen.getByLabelText("提出")).toBeInTheDocument();
     expect(screen.getByLabelText("賛同")).toBeInTheDocument();
   });

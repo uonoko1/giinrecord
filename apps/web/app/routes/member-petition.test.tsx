@@ -50,7 +50,7 @@ describe("地方議員の表決タブの表: 賛否の対象の注記（#204）"
   it("表決の列に「賛否の対象：委員長報告（不採択）」を出す", async () => {
     const user = userEvent.setup();
     renderPage();
-    await user.click(screen.getByRole("tab", { name: "表決" }));
+    await user.click(screen.getByRole("tab", { name: /^表決/ }));
     const table = screen.getByRole("table");
     const row = within(table).getByText(/ゆたかな学びの実現/).closest("tr")!;
     expect(row).toHaveTextContent("賛否の対象：委員長報告（不採択）");
@@ -59,7 +59,7 @@ describe("地方議員の表決タブの表: 賛否の対象の注記（#204）"
   it("「議案に対する賛否」の行には注記を出さない", async () => {
     const user = userEvent.setup();
     renderPage();
-    await user.click(screen.getByRole("tab", { name: "表決" }));
+    await user.click(screen.getByRole("tab", { name: /^表決/ }));
     const table = screen.getByRole("table");
     const row = within(table).getByText(/損害賠償に係る和解/).closest("tr")!;
     expect(row).not.toHaveTextContent("賛否の対象");

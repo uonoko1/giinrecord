@@ -57,7 +57,7 @@ describe("MemberPage 回次ごとの折りたたみ（すべて）", () => {
 describe("MemberPage 回次ごとの折りたたみ（採決タブ）", () => {
   it("採決の表も回次ごとに分かれ、直近2回次だけ open", async () => {
     const { container } = renderPage();
-    await userEvent.click(screen.getByRole("tab", { name: "採決" }));
+    await userEvent.click(screen.getByRole("tab", { name: /^採決/ }));
     const sections = [...container.querySelectorAll("details.member-session")];
     expect(sections).toHaveLength(4);
     expect(sections.map((s) => s.hasAttribute("open"))).toEqual([true, true, false, false]);
