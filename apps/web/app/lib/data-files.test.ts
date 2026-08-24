@@ -205,4 +205,19 @@ describe("readShugiinBillNameStats（#251）", () => {
   it("bills/ が無ければ null（無い事実を作らない）", async () => {
     expect(await readShugiinBillNameStats(missing)).toBeNull();
   });
+
+  // #259 レビュー: ETL の normalizeName は異体字も畳み込む。ここだけ畳み込まないと画面の数値が ETL の紐づけとずれる
+  it("異体字（髙﨑德濵邊邉）は ETL の normalizeName と同じように畳み込んで突合する", async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), "seiji-variants-"));
+    await mkdir(path.join(dir, "members"));
+    await writeFile(
+      path.join(dir, "members", "index.json"),
+      JSON.stringify([{ id: "h_1", name: "高橋 辺子", kana: "たかはし へんこ", house: "shugiin", group: "自民", district: "東京1", counts: { rollcalls: 0, bills: 1, speeches: 0 } }]),
+    );
+    await mkdir(path.join(dir, "bills", "221"), { recursive: true });
+    // 議案側は異体字（髙・邊）。畳み込めば名簿の「高橋 辺子」と一致する
+    await writeFile(path.join(dir, "bills", "221", "221-衆法-1.json"), JSON.stringify({ id: "221-衆法-1", house: "shugiin", session: 221, title: "法案", submitterNames: ["髙橋邊子"] }));
+    const stats = await readShugiinBillNameStats(dir);
+    expect(stats?.sessions).toEqual([{ session: 221, names: 1, inRoster: 1 }]);
+  });
 });

@@ -98,9 +98,18 @@ export async function readMeta(dataDir: string): Promise<DatasetMeta | null> {
   return readJson<DatasetMeta>(path.join(dataDir, "meta.json"));
 }
 
-/** 名寄せの正規化（ETL の normalizeName と同じ前処理のうち、氏名の突合に効く空白の除去と NFKC）。 */
+/**
+ * 名寄せの正規化。ETL の `normalizeName`（packages/etl/src/match-votes.ts）と同じ規則にそろえる:
+ * NFKC・空白（全角含む）の除去・異体字の最小限の吸収。ETL 側の表を増やしたらここも足す
+ * （そろっていないと、この画面の「現在の名簿にある数」だけが ETL の紐づけと食い違う）。
+ */
+const NAME_VARIANTS: Readonly<Record<string, string>> = { 髙: "高", 﨑: "崎", 德: "徳", 濵: "浜", 邊: "辺", 邉: "辺" };
+
 function normalizeName(s: string): string {
-  return s.normalize("NFKC").replace(/[\s　]+/g, "");
+  return s
+    .normalize("NFKC")
+    .replace(/[\s　]+/g, "")
+    .replace(/[髙﨑德濵邊邉]/g, (c) => NAME_VARIANTS[c] ?? c);
 }
 
 /** `data/bills/{回次}/{id}.json` のうち、氏名の数え上げに使う項目だけ。 */
