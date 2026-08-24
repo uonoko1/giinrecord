@@ -33,6 +33,16 @@ describe("sessionRange / formatSessionRange", () => {
     expect(formatSessionRange({ from: 221, to: 221, count: 1 })).toBe("第221回");
     expect(formatSessionRange(null)).toBeNull();
   });
+
+  // #219: 第142〜199回のバックフィル後も、範囲と実回次数の両方を出して連続収録と読ませない。
+  // 第160回・第199回のように採決が 1 件も無い回次があるので、遡っても歯抜けは残る。
+  it("第142回まで遡っても範囲は最小〜最大、歯抜けは歯抜けのまま出る", () => {
+    const backfilled = [142, 143, 145, 150, 170, 180, 190, 200, 201, 221];
+    const range = sessionRange(backfilled);
+    expect(range).toEqual({ from: 142, to: 221, count: 10 });
+    expect(hasSessionGaps(range)).toBe(true);
+    expect(formatSessionRange(range)).toBe("第142—221回");
+  });
 });
 
 describe("buildCoverage: 国会", () => {

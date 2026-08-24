@@ -23,7 +23,9 @@ data/
   bills/
     index.json                      BillSummary[]    議案一覧用（軽量）。提出回次の降順・id 昇順
     {session}/{billId}.json         Bill             議案ページ用（提出者・賛成者・各院の結果・衆院の会派態度）。{session} は提出回次
-  unmatched.json                    名寄せできなかった氏名表記の一覧（票: rollCallId / 発言: speechId / 参法の発議者・衆院議案の提出者と賛成者: billId（後者は kind: "bill" 付き）/ 質問主意書の提出者: questionId（kind: "question"）/ 委員会出席の発議者: meetingId（kind: "attendance"）。運用者が確認する）
+  unmatched.json                    名寄せできなかった氏名表記のうち**回次が引けない行**（発言: speechId / 委員会出席の発議者: meetingId（kind: "attendance"）。NDL の会議録 id は回次を含まない）
+  unmatched/
+    {session}.json                  名寄せできなかった氏名表記のうち**回次が引ける行**（票: rollCallId / 参法の発議者・衆院議案の提出者と賛成者: billId（後者は kind: "bill" 付き）/ 質問主意書の提出者: questionId（kind: "question"））。回次別に分ける（#219）
   unmatched-bills.json              議案情報の審議結果と紐づかなかった採決の一覧（人事案件・決議など。得票のみの result になる）
   unmatched-groups.json             名簿の会派略称のうち対応表（sangiin-groups.ts）に無いものの一覧（group は原文のまま公開され、運用者が対応表に追記する）
   group-mismatch.json               氏名で1人に紐づいたが、投票結果ページの会派がその議員のどの回次の名簿の会派とも一致しなかった票の一覧 {memberId, nameText, voteGroup, rosterGroup, rollCallId}（運用者が確認する）
@@ -207,7 +209,9 @@ interface DistrictsMeta {
 
 ## 回次
 - ETL がネットワークから取得するのは**指定された回次**（無ければ既定の直近 5 回次）だけ（#103、`packages/etl/src/sessions.ts`）。`meta.sessions` に既にある他の回次（carried）は前回出力から引き継ぐ: 採決は `rollcalls/{session}/` を読み、票の氏名・会派を今回の名簿で**再突合**する（名簿は取得回次 ∪ 引き継ぐ回次の全回次分に加え、連続するブロックごとにその1つ前の回次の分も毎回取る（`rosterSessionsFor`）。回次が飛んでいても第217回の再突合に第216回の名簿が要る。再突合で memberId の付いた票が前回出力より減ったら名簿の取り漏れなので、ETL は書き出さずに非0終了する（`lostVoteMatches`））。審議結果は `rollcalls/index.json` の `result`（「可決（賛成 N・反対 N）」）から原文を戻す。議案は `bills/` の全部を先に入れ取得分で上書きする。speech / question / attendance / 参法の bill 行は `members/{id}.json` の `session` が引き継ぐ回次の行をそのまま戻す（名簿から消えた memberId の行は落とし件数をログに出す）。`meta.sessions` は 取得 ∪ 引き継ぎ。部分実行で他回次の出力は消えず、日次実行（既定 5 回次）は第200〜216回を毎日取り直さない。回次を減らすときは `data/` を消してから実行する。
-- 第215回以前は回次ごとの参院名簿（`giin/{N}/giin.htm`）が公開されていない（404）。ETL は「名簿が無い」事実として飛ばし（`fetchMembers` → undefined）、その回次の採決は手元の名簿（第216回以降）で突合する。紐づかない氏名（第216回より前に退任した議員など）は `unmatched.json` に載る（上限を設けない。古い回次ほど多い）。氏名だけから Member を作ることはしない（同名の別人を 1 人にしない）。
+- 第215回以前は回次ごとの参院名簿（`giin/{N}/giin.htm`）が公開されていない（404）。ETL は「名簿が無い」事実として飛ばし（`fetchMembers` → undefined）、その回次の採決は手元の名簿（第216回以降）で突合する。紐づかない氏名（第216回より前に退任した議員など）は未突合として載る（上限を設けない。古い回次ほど多い）。氏名だけから Member を作ることはしない（同名の別人を 1 人にしない）。
+- **未突合の置き場所（#219）**: 行から回次が引ければ `unmatched/{session}.json`、引けなければ `unmatched.json`（発言の `speechId`・委員会出席の `meetingId` は NDL の会議録 id で回次を含まない）。回次は id の先頭（`rollCallId` = `{回次}-MMDD-vNNN`、`billId` = `{提出回次}-{種別}-{番号}`、`questionId` = `{回次}-{house}-{番号}`）から引き、読めなければ回次なしとして `unmatched.json` に残す（推定して分けない）。第142〜199回は全票が未突合になるので単一ファイルだと百万行規模になり、差分のレビューもリポジトリの肥大も実務上つらい。分けるのは**ファイルの持ち方だけ**で、「上限を設けない」「氏名だけから Member を作らない」は変えない。`validateDataset` は両方を読んで突き合わせるので、#219 より前の出力（`unmatched.json` に票が入っている）もそのまま検証できる。未突合が 1 件も無い回次のファイルは書かない（前回の残骸は毎回消す）。`unmatched.json` は 0 件でも空配列で書く（`OPS_DATA_FILES` として Web のビルドがコピーする）。
+- **第142〜199回（#219、spike は `docs/research/backfill-142-199.md`）**: 参院の本会議投票結果は第142回（1998-01-14）から在り、HTML は旧レイアウト（第200〜216回）と同じなのでパーサは無改修で読む（第141回以前は `vote_ind.htm` が 404 ＝押しボタン投票の導入前）。取得は日次 ETL ではなく `etl.yml` の手動 dispatch で、回次を分けて複数回流す（`docs/ops/etl.md`）。`DEFAULT_SESSIONS` は変えない。一覧ページが取れない回次と、個票がパースできないページ（`RollCallParseError`）は**飛ばして回次・URL をログに出す**（全58回次の構造は事前確認していない。推定で埋めない）。衆院の経過ページは回次によって「衆議院審議時会派態度」の項目自体が無く、その議案は `shugiinGroupStance` を持たない（「無い」を「全会派賛成」等に読み替えない）。
 - 投票結果一覧（`touhyoulist/{N}/vote_ind.htm`）には**起立採決**のページ（個人票が無く「起立採決により可決されました」等の 1 行だけ。第200〜216回に多く、第210回・第216回は全件）も載る。個人票が無いので `RollCall` にはせず、ETL は件数をログに出して飛ばす（`standingVoteNote`）。第217回以降の一覧は押しボタン投票だけ。
 - 採決が 0 件の回次（特別国会など）は `rollcalls/{session}/` を作らない。`meta.sessions` には載る。
 

@@ -21,6 +21,25 @@ describe("planSessions: 今回取得する回次（targets）と引き継ぐ回�
     assert.deepEqual(planSessions([221, 221], []), { targets: [221], carried: [], all: [221] });
     assert.deepEqual(planSessions([], []).carried, []);
   });
+
+  // #219: 第142〜199回のバックフィルは 1 回の dispatch（timeout 360m）に収まらないことがあるので、
+  // 回次を分けて複数回 dispatch する。前の chunk で入れた回次が次の chunk で消えないことを固定する。
+  test("回次を分けて複数回 dispatch しても、前の chunk の回次は carried として残る", () => {
+    let onDisk = [217, 218, 219, 220, 221];
+    const chunks = [[142, 143, 144], [145, 146, 147], [148, 149, 150]];
+    for (const chunk of chunks) {
+      const plan = planSessions(chunk, onDisk);
+      assert.deepEqual(plan.targets, chunk, "指定した chunk だけを取得する");
+      for (const s of onDisk) assert.ok(plan.carried.includes(s), `回次 ${s} が引き継がれていない`);
+      onDisk = plan.all;
+    }
+    assert.deepEqual(onDisk, [142, 143, 144, 145, 146, 147, 148, 149, 150, 217, 218, 219, 220, 221]);
+  });
+
+  test("バックフィルの chunk では最新回次が carried なので衆院本会議の発言を取得しない（二重行を作らない）", () => {
+    const plan = planSessions([142, 143], [217, 218, 219, 220, 221]);
+    assert.equal(shouldFetchShugiinSpeeches(plan), false);
+  });
 });
 
 describe("decisionOfResult: rollcalls/index.json の result から議案情報の審議結果（原文）を戻す", () => {
