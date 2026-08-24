@@ -47,6 +47,36 @@ gh run watch                                   # 進捗
 ```
 ローカルでは `pnpm etl 221` → `git diff --stat data/` で同じものが再現できる。
 
+## 過去回次（第200〜216回）を足す（#103）
+- 日次 ETL（schedule / 引数なし）が**取得する**のは既定の直近 5 回次だけ（`etl.yml` の `SESSIONS` 既定値と `DEFAULT_SESSIONS`。変えない）。`data/` に既にある他の回次は前回出力から引き継ぐ（採決は今回の名簿で再突合、審議結果は `rollcalls/index.json` から、議案は `bills/` から、発言・質問主意書・委員会出席・参法の提出は `members/{id}.json` の `session` 付きの行から。`docs/DATA_CONTRACT.md`「回次」）。毎日全回次を取り直すことはない。
+- 過去回次は `workflow_dispatch` で 1 回だけ走らせ、データ PR として取り込む:
+  ```
+  gh workflow run etl.yml -f sessions="200 201 202 203 204 205 206 207 208 209 210 211 212 213 214 215 216"
+  ```
+  このとき直近 5 回次は引き継ぎになり、衆院本会議の発言（名簿が覆う最新回次の分）も取得せず前回出力から引き継ぐ（取得すると引き継ぎと重複するため。ログに `shugiin speeches not fetched (session is carried …)`）。**注意**: #103 より前の出力には `session` の無い timeline 行があり（ログに `carried: N timeline entries without session … cannot be carried`）、その分の発言・質問主意書・委員会出席は引き継げない。過去回次の手動実行のあと、翌日の日次実行（直近 5 回次を取り直す）で復元されるので、手動実行の PR と翌日の PR をセットで見る。先に日次実行を一度通して（全行に `session` が付く）から過去回次を足せば欠けは出ない。
+- 名簿は取得回次 ∪ 引き継ぐ回次と、連続するブロックごとの1つ前の回次の分を毎回取る（回次が飛んでいても第217回の再突合には第216回の名簿が要る）。引き継いだ採決の再突合で memberId の付いた票が前回より減ったら（ログに `carried roll calls lost matched votes …`）名簿の取り漏れなので、ETL は書き出さずに非0終了する。
+- 第215回以前は回次ごとの参院名簿が公開されていない（`giin/{N}/giin.htm` が 404。ログに `no roster published (404)`）。その回次の採決は第216回以降の名簿で突合するので、2024年以前に退任した議員の票は `unmatched.json` に載る（上限なし。件数は Summary で見る）。氏名だけから議員を作ることはしない。
+- 投票結果一覧には**起立採決**（個人票なし）のページも載る。ログの `session N: X roll calls (Y with individual votes, Z standing votes skipped)` の Z がそれで、`rollcalls/` には入らない。第210回・第216回は全件が起立採決。
+- ローカルで再現: `pnpm etl 200 … 216`（初回は投票結果ページを全部取るので回次あたり数分。2 回目以降はキャッシュ）。
+
+### 計測（2026-08-24、手元。第200〜221回）
+| 項目 | 第217〜221回（main） | 第200〜221回 |
+|---|---|---|
+| `pnpm etl 200 … 216`（手動、初回） | — | 77 分（4,596 秒。投票結果・議案・質問主意書の取得待ちがほぼ全部。2 回目以降は投票結果ページがキャッシュされる） |
+| 投票結果一覧の件数 / うち押しボタン投票 | 287 / 287 | 1,062 / 380（第200〜216回の 775 件中 93 件だけが押しボタン、682 件は起立採決） |
+| `data/` | 1,743 ファイル | 3,326 ファイル・106 MB（members 828・rollcalls 380・bills 1,941） |
+| `unmatched.json` | 数件 | 4,846 行（vote 4,726: 第200回 2,006・第201回 1,829・第204回 283 …。名簿の無い回次の退任議員） |
+| `group-mismatch.json` | 211 行 | 10,639 行（第200〜201回の会派名が今の名簿と違う: 「自由民主党・国民の声」「立憲・国民．新緑風会・社民」など） |
+| `pnpm build`（prerender 1,229 ページ） | — | 38 秒 |
+| `sitemap.xml` | — | 1,229 URL・94 KB |
+| `data-archive.zip` | — | 11.6 MB（上限 50 MiB） |
+| `build/client` | — | 439 MB（members 247 MB・rollcalls 82 MB・data 92 MB） |
+| `pnpm --filter web smoke` | — | 5 秒（1,230 ページ・119,121 内部リンク） |
+
+- 日次実行（引数なし。直近 5 回次を取得し、第200〜216回は引き継ぎ）: 27 分（1,593 秒。第200〜216回を足す前とほぼ同じ。引き継ぎは 93 採決・6,451 行で数秒）。名簿の 404（第199〜215回、17 回）は 1 回 0.5 秒。
+- 引き継ぎで落ちるもの: 引き継ぐ回次の質問主意書・議案の**未突合行**（`unmatched.json` の `kind: "question"` / `"bill"`）はその回次を取得した実行にしか載らない（採決の未突合は再突合するので毎回載る）。第200〜216回の未突合質問（119 行）を見たいときは手動実行の Summary を見る。
+- 手動実行の直後は第217〜221回の発言・質問主意書・委員会出席が（`session` の無い旧出力から引き継げず）一時的に減り、翌日の日次実行で戻る（上の注意）。2 回目以降の手動実行ではこの欠けは出ない。
+
 ## コンテナで実行する（#86）
 CI と同じイメージ（`packages/etl/Dockerfile`、node:24-alpine、非 root の `node` ユーザー、secrets なし）をローカルでも使える。
 `data/` と `packages/etl/.cache` は bind mount なので、`pnpm etl` と同じ場所に同じファイルを書く。
@@ -84,9 +114,12 @@ docker run --rm --user "$(id -u):$(id -g)" -v "$PWD/data:/app/data" -v "$PWD/pac
 - 手動: `gh workflow run districts.yml`。ローカル: `pnpm etl:districts`（約 40 秒。総務省 PDF 47 本は `.cache/` にキャッシュ、KEN_ALL と HTML は毎回取得）。
 - 失敗モード: 「matches no municipality」＝別表の単位が KEN_ALL に無い（市町村合併・区の再編 → `static-areas.ts` の `RENAMED_MUNICIPALITIES` に出典付きで追記）、「expected 47 prefecture PDFs」「not found on the download page」「expected 14 bureaus」＝ページのレイアウト変化（`docs/research/districts.md` の URL を確認してパーサーとフィクスチャを直す）、「district numbers not consecutive」「unbalanced parentheses」＝PDF のレイアウト変化。いずれも data/ は書かれない（書いた後の不変条件違反も PR にならない）。
 
-## 地方議会 ETL（月次、`.github/workflows/local-assemblies.yml`、#157）
-- 毎月 5 日 05:00 JST（議会は定例会ごとに更新されるので月 1 回で足りる）と `workflow_dispatch`。日次と同じイメージで `--entrypoint node … src/local-cli.ts miyagi` を走らせ、`data/assemblies/pref-04/`（meta・sessions・rollcalls・unmatched）、`data/members/` の pref-04 の議員（index の行と `p_04_*.json`）、`data/assemblies/index.json` の pref-04 の行だけを書く（国会の行は触らない。日次 ETL も地方の行を残す）。data PR の流れは選挙区 ETL と同じで、ブランチは `data/local-assemblies`、失敗 Issue のタイトルは「地方議会 ETL 月次実行が失敗した（local-assemblies.yml）」。`concurrency: etl` で日次・選挙区と直列化する。
-- 対象は宮城県議会（`docs/DATA_CONTRACT.md`「地方議会」）。名簿 3 ページ＋会期 index＋直近 2 会期の会期ページ（HTML、毎回取得）と表決 PDF（実行中だけ `.cache/`）。取得は `www.pref.miyagi.jp` だけ・UA `gikailog-etl/0.1`・1 秒以上間隔・robots.txt 遵守（`packages/etl/src/sources/local/polite-fetch.ts`。2026-08 時点で robots.txt は 404）。
-- Summary に名簿の掲載日・議員数・表決（議案）数・セル数（議員数×議案数）・**不明セル数**（置けなかったセルを推定せず「不明」にした数。2026-08 時点で 0）・**名簿に寄せられなかった氏名の数**（2026-08 時点で 3: 第398回の PDF にだけ出る、その後に名簿から消えた人）を出す。不明セルが 0 でなくなったら PDF のレイアウト変化（列幅・フォント）を疑い、`unmatched.json` が増えたら辞職・補選を疑う（どちらも事実として公開され、推定はしない）。
-- 手動: `gh workflow run local-assemblies.yml`。ローカル: `pnpm etl:local miyagi`（約 20 秒。`--sessions N` で会期数。既定 2）。
-- 失敗モード: 「is not in the legend」＝凡例に無い値（PDF の凡例が増えた → `mapLegend` の対応を確認して `docs/DATA_CONTRACT.md` に追記。凡例の意味が「票を投じていない」と読めなければ mapped は付けない）、「member columns differ from page 1」「column N header … does not match」「header rules not found」＝PDF のレイアウト変化、「is in 会派別 but not in …」「do not add up to 定数」＝名簿 3 ページの食い違い（サイトの更新途中なら翌日に再実行）、「expected at most one 各議員の表決状況 link」「expected exactly one PDF link」＝会期 index／会期ページの変化、「fetch refused」＝許可ホスト外か robots.txt の Disallow。いずれも data/ は書かれない。
+## 地方議会 ETL（月次、`.github/workflows/local-assemblies.yml`、#157 宮城・#183 徳島・#184 鳥取）
+- 毎月 5 日 05:00 JST（議会は定例会ごとに更新されるので月 1 回で足りる）と `workflow_dispatch`。日次と同じイメージで `--entrypoint node … src/local-cli.ts <name>` を `ASSEMBLIES`（`miyagi=pref-04 tokushima=pref-36 tottori=pref-31`。議会を足すときはここと `packages/etl/src/local-assemblies.ts` の `LOCAL_SOURCES` に 1 行）の順に走らせ、議会ごとに `data/assemblies/{id}/`（meta・sessions・rollcalls・unmatched）、`data/members/` のその議会の議員（index の行と `p_{prefCode}_*.json`）、`data/assemblies/index.json` のその議会の行だけを書く（国会の行も他の議会の行も触らない。日次 ETL も地方の行を残す）。data PR の流れは選挙区 ETL と同じで、ブランチは `data/local-assemblies`、失敗 Issue のタイトルは「地方議会 ETL 月次実行が失敗した（local-assemblies.yml）」。`concurrency: etl` で日次・選挙区と直列化する。
+- 宮城県議会（`docs/DATA_CONTRACT.md`「地方議会」）: 名簿 3 ページ＋会期 index＋直近 2 会期の会期ページ（HTML、毎回取得）と表決 PDF（実行中だけ `.cache/`）。取得は `www.pref.miyagi.jp` だけ・UA `gikailog-etl/0.1`・1 秒以上間隔・robots.txt 遵守（`packages/etl/src/sources/local/polite-fetch.ts`。2026-08 時点で robots.txt は 404）。
+- 徳島県議会（#183）: 議員紹介 2 ページ（会派別・選挙区別）＋定例会の概要（今年。足りなければ前年の年ページ）＋直近 2 会期の会期ページと、採決日ごとの表決 PDF（2月定例会は 3 本）。取得は `www.pref.tokushima.lg.jp` だけ（robots.txt は `/system` などを Disallow。`/gikai/` と `/file/attachment/` は対象外）。名簿に掲載日が無いので as-of は取得日（JST）。表決方法・人数の欄が無いので `method` / `counts` は書かない。PDF の表復元は宮城と同じ罫線方式（共通部は `sources/local/pdf-table.ts`）。
+- 鳥取県議会（#184）: 取得は `www.pref.tottori.lg.jp` だけ（robots.txt は `/secure/221685/` などを Disallow。議決結果ページと賛否 PDF `/secure/{番号}/…` は対象外。毎回読んで従う）。名簿 1 ページ＋会期 index＋会期ページ（議決結果の無い会期も見て飛ばす）＋議決結果ページ（HTML、毎回取得）と賛否 PDF（会期に 4 本ほど。同じ内容の複製も URL が違えば取る。実行中だけ `.cache/`）。2026-08 時点で 118 件（6月定例会 30・2月定例会 88）、不明セル 0、unmatched 0。鳥取の PDF は姓だけなので、名簿に同姓が増えると unmatched が増える（候補は `unmatched.json` の `candidates` に列挙され、ETL は選ばない）。
+- Summary に議会ごとの名簿の as-of（宮城は掲載日、徳島は取得日、鳥取は各議員の項目の掲載日の最新）・議員数・表決（議案）数・セル数（議員数×議案数）・**不明セル数**（置けなかったセルを推定せず「不明」にした数。2026-08 時点で 0）・**名簿に寄せられなかった氏名の数**（2026-08 時点で宮城 3: 第398回の PDF にだけ出る、その後に名簿から消えた人。徳島 0、鳥取 0）を出す。不明セルが 0 でなくなったら PDF のレイアウト変化（列幅・フォント）を疑い、`unmatched.json` が増えたら辞職・補選を疑う（どちらも事実として公開され、推定はしない）。
+- 手動: `gh workflow run local-assemblies.yml`。ローカル: `pnpm etl:local miyagi` / `pnpm etl:local tokushima`（各 20 秒前後）、`pnpm etl:local tottori`（約 40 秒）。`--sessions N` で会期数。既定 2。
+- 失敗モード: 「is not in the legend」＝凡例に無い値（PDF の凡例が増えた → `mapLegend` の対応を確認して `docs/DATA_CONTRACT.md` に追記。凡例の意味が「票を投じていない」と読めなければ mapped は付けない）、「member columns differ from page 1」「column N header … does not match」「header rules not found」＝PDF のレイアウト変化、「is in 会派別 but not in …」「do not add up to 定数」＝名簿 3 ページの食い違い（サイトの更新途中なら翌日に再実行）、「expected at most one 各議員の表決状況 link」「expected exactly one PDF link」＝会期 index／会期ページの変化、徳島は「expected one year heading」「no 各議員の表決態度 PDF」「PDF title says … but the link says …」（会期 index・会期ページ・PDF 表題の変化）、「legend (※ 「○」…) not found」「ditto … has no matching phrase」「section headings above the table」（PDF の節・凡例の形の変化）、「所属会派 … in 選挙区別 but … in 会派別」（名簿 2 ページの食い違い）、「fetch refused」＝許可ホスト外か robots.txt の Disallow。いずれも data/ は書かれない。
+- 失敗モード（鳥取）: 「no 議決結果 link yet (skip)」は会期中で正常。「has no vote PDF links」＝議決結果ページはあるが PDF がまだ無い、「content differs between PDFs」＝同じ議案の複製 PDF の内容が食い違う（どちらが正しいか推定しないので止める。県に確認）、「does not end with 議員」「expected N columns left/right of the vote area」「group headings are not contiguous」＝PDF のレイアウト変化、「会派 … must be exactly one」＝名簿のカテゴリ変化、「PDF says … session index says …」＝会期 index と PDF 見出しの不一致。
