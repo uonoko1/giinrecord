@@ -26,6 +26,13 @@
   "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
  },
  {
+  "id": "pref-29",
+  "kind": "prefectural",
+  "name": "奈良県議会",
+  "prefCode": "29",
+  "sourceUrl": "https://www.pref.nara.lg.jp/n161/52534.html"
+ },
+ {
   "id": "pref-31",
   "kind": "prefectural",
   "name": "鳥取県議会",
@@ -33,10 +40,24 @@
   "sourceUrl": "https://www.pref.tottori.lg.jp/75928.htm"
  },
  {
+  "id": "pref-32",
+  "kind": "prefectural",
+  "name": "島根県議会",
+  "prefCode": "32",
+  "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/gaido/meibo/tiku.html"
+ },
+ {
   "id": "pref-36",
   "kind": "prefectural",
   "name": "徳島県議会",
   "prefCode": "36",
   "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/"
+ },
+ {
+  "id": "pref-39",
+  "kind": "prefectural",
+  "name": "高知県議会",
+  "prefCode": "39",
+  "sourceUrl": "https://gikai.pref.kochi.lg.jp/member/categories/"
  }
 ]

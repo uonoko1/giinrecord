@@ -1,0 +1,1480 @@
+{
+ "asOf": "2026-07-30",
+ "assemblyId": "pref-39",
+ "counts": {
+  "rollcalls": 104
+ },
+ "current": true,
+ "district": "南国市",
+ "group": "日本共産党",
+ "id": "p_39_34",
+ "kana": "おかだ よしひで",
+ "name": "岡田 芳秀",
+ "profileUrl": "https://gikai.pref.kochi.lg.jp/member/categories/",
+ "sourceUrl": "https://gikai.pref.kochi.lg.jp/member/categories/",
+ "terms": [
+  {
+   "asOf": "2026-07-30",
+   "district": "南国市",
+   "group": "日本共産党"
+  }
+ ],
+ "timeline": [
+  {
+   "date": "2026-07-10",
+   "kind": "localVote",
+   "result": "承認",
+   "rollCallId": "pref-39-2026-06-20260710-知事提出議案-報第1号",
+   "sessionLabel": "令和８年６月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00156424/0806.pdf",
+   "title": "令和７年度高知県一般会計補正予算の専決処分報告",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-10",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-06-20260710-知事提出議案-報第2号",
+   "sessionLabel": "令和８年６月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00156424/0806.pdf",
+   "title": "高知県税条例等の一部を改正する条例の専決処分報告",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-10",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-06-20260710-知事提出議案-第10号",
+   "sessionLabel": "令和８年６月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00156424/0806.pdf",
+   "title": "国道494号（第二川ノ内組橋上部工）防災・安全交付金工事請負契約の締結に関する議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-10",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-39-2026-06-20260710-知事提出議案-第11号",
+   "sessionLabel": "令和８年６月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00156424/0806.pdf",
+   "title": "高知県教育委員会の委員の任命についての同意議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-10",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-39-2026-06-20260710-知事提出議案-第1号",
+   "sessionLabel": "令和８年６月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00156424/0806.pdf",
+   "title": "令和８年度高知県一般会計予算",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-07-10",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-39-2026-06-20260710-知事提出議案-第2号",
+   "sessionLabel": "令和８年６月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00156424/0806.pdf",
+   "title": "職員の給与に関する条例等の一部を改正する条例議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-10",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-06-20260710-知事提出議案-第3号",
+   "sessionLabel": "令和８年６月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00156424/0806.pdf",
+   "title": "公益的法人等への職員の派遣等に関する条例の一部を改正する条例議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-10",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-06-20260710-知事提出議案-第4号",
+   "sessionLabel": "令和８年６月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00156424/0806.pdf",
+   "title": "高知県税条例の一部を改正する条例議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-10",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-06-20260710-知事提出議案-第5号",
+   "sessionLabel": "令和８年６月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00156424/0806.pdf",
+   "title": "高知県地方活力向上地域における県税の特例措置に関する条例の一部を改正する条例議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-10",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-06-20260710-知事提出議案-第6号",
+   "sessionLabel": "令和８年６月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00156424/0806.pdf",
+   "title": "高知県指定障害児通所支援事業者等が行う障害児通所支援の事業等の人員、設備及び運営に関する基準等を定める条例の一部を改正する条例議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-10",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-06-20260710-知事提出議案-第7号",
+   "sessionLabel": "令和８年６月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00156424/0806.pdf",
+   "title": "高知県認定こども園条例等の一部を改正する条例議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-10",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-06-20260710-知事提出議案-第8号",
+   "sessionLabel": "令和８年６月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00156424/0806.pdf",
+   "title": "高知空港国際線ターミナルビルの指定管理者の指定に関する議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-10",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-06-20260710-知事提出議案-第9号",
+   "sessionLabel": "令和８年６月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00156424/0806.pdf",
+   "title": "県有財産（災害対応車両）の取得に関する議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-10",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-06-20260710-議員提出議案-議発第10号",
+   "sessionLabel": "令和８年６月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00156424/0806.pdf",
+   "title": "全てのケアラーに対する包括的な支援と法的枠組みの整備を求める意見書議案",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-07-10",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-06-20260710-議員提出議案-議発第11号",
+   "sessionLabel": "令和８年６月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00156424/0806.pdf",
+   "title": "奨学金返済負担の軽減及び金利上昇への支援強化を求める意見書議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-10",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-06-20260710-議員提出議案-議発第12号",
+   "sessionLabel": "令和８年６月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00156424/0806.pdf",
+   "title": "令和８年度一般会計補正予算新高知県民体育館整備事業に関する附帯決議議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-10",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-39-2026-06-20260710-議員提出議案-議発第1号",
+   "sessionLabel": "令和８年６月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00156424/0806.pdf",
+   "title": "議員を派遣することについて議会の決定を求める議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-10",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-06-20260710-議員提出議案-議発第4号",
+   "sessionLabel": "令和８年６月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00156424/0806.pdf",
+   "title": "軽油引取税の課税免除特例措置の堅持を求める意見書議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-10",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-06-20260710-議員提出議案-議発第5号",
+   "sessionLabel": "令和８年６月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00156424/0806.pdf",
+   "title": "ドナーミルクの利用拡大を求める意見書議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-10",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-39-2026-06-20260710-議員提出議案-議発第6号",
+   "sessionLabel": "令和８年６月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00156424/0806.pdf",
+   "title": "住まいの安定と居住支援の抜本的強化を求める意見書議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-10",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-06-20260710-議員提出議案-議発第7号",
+   "sessionLabel": "令和８年６月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00156424/0806.pdf",
+   "title": "中東情勢を踏まえた地域産業及び国民生活への緊急措置を求める意見書議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-10",
+   "kind": "localVote",
+   "result": "否決",
+   "rollCallId": "pref-39-2026-06-20260710-議員提出議案-議発第8号",
+   "sessionLabel": "令和８年６月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00156424/0806.pdf",
+   "title": "核兵器禁止条約第１回再検討会議へのオブザーバー参加を求める意見書議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-10",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-06-20260710-議員提出議案-議発第9号",
+   "sessionLabel": "令和８年６月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00156424/0806.pdf",
+   "title": "衆議院議員定数の維持を求める意見書議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "承認",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-報第1号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和７年度高知県一般会計補正予算の専決処分報告",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第10号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和８年度高知県災害救助基金特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第11号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和８年度高知県母子父子寡婦福祉資金特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第12号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和８年度高知県中小企業近代化資金助成事業特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第13号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和８年度高知県流通団地及び工業団地造成事業特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第14号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和８年度高知県農業改良資金助成事業特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第15号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和８年度高知県県営林事業特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第16号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和８年度高知県林業・木材産業改善資金助成事業特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第17号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和８年度高知県沿岸漁業改善資金助成事業特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第18号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和８年度高知県港湾整備事業特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第19号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和８年度高知県高等学校等奨学金特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第1号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和８年度高知県一般会計予算",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第20号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和８年度高知県流域下水道事業会計予算",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第21号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和８年度高知県電気事業会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第22号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和８年度高知県工業用水道事業会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第23号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和８年度高知県病院事業会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第24号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和７年度高知県一般会計補正予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第25号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和７年度高知県収入証紙等管理特別会計補正予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第26号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和７年度高知県旅費集中管理特別会計補正予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第27号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和７年度高知県用品等調達特別会計補正予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第28号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和７年度高知県会計事務集中管理特別会計補正予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第29号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和７年度高知県県債管理特別会計補正予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第2号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和８年度高知県収入証紙等管理特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第30号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和７年度高知県土地取得事業特別会計補正予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第31号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和７年度高知県国民健康保険事業特別会計補正予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第32号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和７年度高知県災害救助基金特別会計補正予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第33号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和７年度高知県中小企業近代化資金助成事業特別会計補正予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第34号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和７年度高知県流通団地及び工業団地造成事業特別会計補正予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第35号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和７年度高知県県営林事業特別会計補正予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第36号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和７年度高知県沿岸漁業改善資金助成事業特別会計補正予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第37号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和７年度高知県港湾整備事業特別会計補正予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第38号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和７年度高知県高等学校等奨学金特別会計補正予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第39号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和７年度高知県流域下水道事業会計補正予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第3号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和８年度高知県給与等集中管理特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第40号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和７年度高知県工業用水道事業会計補正予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第41号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和７年度高知県病院事業会計補正予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第42号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "高知空港国際線ターミナルビルの設置及び管理に関する条例議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第43号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "高知県地域未来基金条例議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第44号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "高知県立東部地域多機能支援施設の設置及び管理に関する条例議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第45号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "高知県高等学校等教育改革促進基金条例議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第46号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "高知県収入証紙条例を廃止する等の条例議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第47号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "高知県公告式条例の一部を改正する条例議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第48号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "高知県行政手続条例の一部を改正する条例議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第49号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "高知県公益認定等審議会条例の一部を改正する条例議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第4号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和８年度高知県旅費集中管理特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第50号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "高知県議会議員の議員報酬、費用弁償及び期末手当に関する条例等の一部を改正する条例議案",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第51号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "職員の旅費に関する条例の一部を改正する条例の一部を改正する条例議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第52号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "高知県税条例等の一部を改正する条例議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第53号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "高知県住民基本台帳法施行条例の一部を改正する条例議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第54号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "高知県国民健康保険法施行条例の一部を改正する条例議案",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第55号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "高知県後期高齢者医療財政安定化基金条例の一部を改正する条例議案",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第56号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "高知県手数料徴収条例の一部を改正する条例議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第57号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "高知県立療育福祉センターの設置及び管理に関する条例の一部を改正する条例議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第58号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "高知県立県民体育館の設置及び管理に関する条例の一部を改正する条例議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第59号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "高知県立武道館の設置及び管理に関する条例の一部を改正する条例議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第5号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和８年度高知県用品等調達特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第60号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "高知県立弓道場の設置及び管理に関する条例の一部を改正する条例議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第61号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "高知県道路占用料徴収条例の一部を改正する条例議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第62号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "高知県職員定数条例の一部を改正する条例議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第63号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "高知県警察の設置及び定員に関する条例の一部を改正する条例議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第64号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "高知県が当事者である訴えの提起に関する議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第65号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "須崎斎場運営一部事務組合と高知県との間の行政不服審査法第81条第１項の機関の事務の受託に関する議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第66号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "高知県立高知城歴史博物館の指定管理者の指定に関する議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第67号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "四国カルスト県立自然公園公園施設の指定管理者の指定に関する議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第68号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "県が行う土地改良事業に対する市町村の負担の一部変更に関する議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第69号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "県が行う土地改良事業に対する市町村の負担の一部変更に関する議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第6号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和８年度高知県会計事務集中管理特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第70号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "包括外部監査契約の締結に関する議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第71号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "国道493号（北川道路・柏木トンネル）道路改築工事請負契約の締結に関する議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第72号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "春遠ダム（春遠第１ダム）本体建設工事請負契約の一部を変更する契約の締結に関する議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第73号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "高知県監査委員の選任についての同意議案（奥村氏）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第74号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "高知県人事委員会の委員の選任についての同意議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第75号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "高知県監査委員の選任についての同意議案（下村議員）",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第7号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和８年度高知県県債管理特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第8号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和８年度高知県土地取得事業特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-知事提出議案-第9号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "令和８年度高知県国民健康保険事業特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-39-2026-02-20260324-議員提出議案-議発第1号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "情報通信技術を活用した高知県議会の活動の推進に関する条例の一部を改正する条例議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-02-20260324-議員提出議案-議発第2号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "自衛隊員の処遇改善及び退職自衛官の再就職促進に関する意見書議案",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "否決",
+   "rollCallId": "pref-39-2026-02-20260324-議員提出議案-議発第3号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "外交努力により中東地域の早期事態収拾を求める意見書議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-39-2026-02-20260324-議員提出議案-議発第4号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "中東情勢の早期沈静化と国民生活・地域経済への万全の対応を求める意見書議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "result": "否決",
+   "rollCallId": "pref-39-2026-02-20260324-議員提出議案-議発第5号",
+   "sessionLabel": "令和８年２月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf",
+   "title": "非核三原則の堅持と法制化を求める意見書議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  }
+ ]
+}
