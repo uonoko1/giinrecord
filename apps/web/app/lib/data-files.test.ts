@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { assemblyPaths, memberPaths, readAssemblies, readAssemblySessions, readLocalRollCallIndex, readMemberDetail, readMeta, readRollCall, rollCallPaths } from "./data-files";
+import { assemblyPaths, memberPaths, readAssemblies, readAssemblySessions, readLocalRollCallIndex, readMemberDetail, readMeta, readRollCall, readShugiinBillNameStats, rollCallPaths } from "./data-files";
 
 const fixtures = fileURLToPath(new URL("../test-fixtures/data", import.meta.url));
 const missing = fileURLToPath(new URL("../test-fixtures/does-not-exist", import.meta.url));
@@ -147,5 +147,62 @@ describe("readLocalRollCallIndex（#204）", () => {
     expect(await readLocalRollCallIndex(assemblyFixtures, "pref-04")).toBeNull();
     expect(await readLocalRollCallIndex(assemblyFixtures, "pref-99")).toBeNull();
     expect(await readLocalRollCallIndex(assemblyFixtures, "../pref-31")).toBeNull();
+  });
+});
+
+describe("readShugiinBillNameStats（#251）", () => {
+  /** bills/{回次}/{id}.json と members/index.json を置いた一時ディレクトリ */
+  async function billsDataDir(): Promise<string> {
+    const dir = await mkdtemp(path.join(tmpdir(), "seiji-bills-"));
+    await mkdir(path.join(dir, "members"));
+    await writeFile(
+      path.join(dir, "members", "index.json"),
+      JSON.stringify([
+        { id: "h_1", name: "中島 克仁", kana: "なかじま かつひと", house: "shugiin", group: "立憲", district: "山梨1", counts: { rollcalls: 0, bills: 1, speeches: 0 } },
+        { id: "h_2", name: "阿部 知子", kana: "あべ ともこ", house: "shugiin", group: "立憲", district: "神奈川12", counts: { rollcalls: 0, bills: 1, speeches: 0 } },
+        // 参院議員は衆院の名簿に数えない
+        { id: "m_1", name: "東 徹", kana: "あずま とおる", house: "sangiin", group: "維新", district: "大阪", counts: { rollcalls: 0, bills: 0, speeches: 0 } },
+      ]),
+    );
+    await mkdir(path.join(dir, "bills", "221"), { recursive: true });
+    await mkdir(path.join(dir, "bills", "217"), { recursive: true });
+    await writeFile(
+      path.join(dir, "bills", "221", "221-衆法-1.json"),
+      JSON.stringify({ id: "221-衆法-1", house: "shugiin", session: 221, title: "法案", submitterNames: ["中島克仁"], submitters: ["h_1"], supporterNames: ["阿部知子", "東徹君"], supporters: ["h_2"] }),
+    );
+    // 名簿の回次より前: 氏名だけあって紐づかない
+    await writeFile(
+      path.join(dir, "bills", "217", "217-衆法-1.json"),
+      JSON.stringify({ id: "217-衆法-1", house: "shugiin", session: 217, title: "古い法案", submitterNames: ["中島克仁", "退任 太郎"], supporterNames: ["別人 花子"] }),
+    );
+    // 参院の議案は数えない
+    await writeFile(path.join(dir, "bills", "217", "217-参法-1.json"), JSON.stringify({ id: "217-参法-1", house: "sangiin", session: 217, title: "参法", submitterNames: ["東徹"] }));
+    return dir;
+  }
+
+  it("衆院の議案の氏名の延べ数と、紐づいた memberId の延べ数を数える（参院の議案は数えない）", async () => {
+    const stats = await readShugiinBillNameStats(await billsDataDir());
+    expect(stats?.names).toBe(6); // 221: 3、217: 3
+    expect(stats?.linked).toBe(2); // 221 の submitters 1 + supporters 1
+  });
+
+  it("回次ごとに、異なり氏名の数と現在の名簿にある数を数える（氏名は空白を除いて突合）", async () => {
+    const stats = await readShugiinBillNameStats(await billsDataDir());
+    expect(stats?.sessions).toEqual([
+      // 「退任 太郎」「別人 花子」は名簿に無い
+      { session: 217, names: 3, inRoster: 1 },
+      // 「東徹君」は「君」が残っているので名簿の氏名と一致しない（docs/research/shugiin-roster.md の注）
+      { session: 221, names: 3, inRoster: 2 },
+    ]);
+  });
+
+  it("衆院の名簿の人数と、名簿のなかで氏名が重複する人数を数える", async () => {
+    const stats = await readShugiinBillNameStats(await billsDataDir());
+    expect(stats?.rosterMembers).toBe(2); // 参院議員は数えない
+    expect(stats?.rosterDuplicateNames).toBe(0);
+  });
+
+  it("bills/ が無ければ null（無い事実を作らない）", async () => {
+    expect(await readShugiinBillNameStats(missing)).toBeNull();
   });
 });

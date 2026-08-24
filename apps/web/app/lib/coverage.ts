@@ -93,6 +93,61 @@ export function shugiinQuestionCoverage(meta: DatasetMeta | undefined): ShugiinQ
   return { rosterSession, fetched: sessionRange(fetched), linkedOnlyToRosterSession: notLinked.length > 0 };
 }
 
+/**
+ * 衆院の議員一覧の出典（`meta.sources` の「衆議院 議員一覧（{時点}現在）」）。参院が回次ごと（「第N回」）なのに対し、
+ * 衆院は時点が 1 つしか無いことが、出典の名前にそのまま出ている。時点の表記は出典の原文のまま返す（推定しない）。
+ */
+export function shugiinRosterAsOf(meta: DatasetMeta | undefined): { asOf: string; url: string } | null {
+  for (const s of meta?.sources ?? []) {
+    const asOf = /^衆議院 議員一覧（(.+)現在）$/.exec(s.name)?.[1];
+    if (asOf !== undefined) return { asOf, url: s.url };
+  }
+  return null;
+}
+
+/**
+ * 衆院の名簿が「現在」の 1 枚しかないこと（#71 / #245）の、データ上のあらわれ（#251）。
+ * `data/bills/{回次}/{id}.json` の提出者・賛成者の氏名（`submitterNames` / `supporterNames`）と、
+ * 名寄せできた memberId（`submitters` / `supporters`）を数えた結果を、そのまま持つ。
+ * 数えるのは Node 側（`data-files.ts` の `readShugiinBillNameStats`）で、ここは形と表示の判断だけ。
+ */
+export interface ShugiinBillNameStats {
+  /** 衆院の議案に載る提出者・賛成者の氏名の延べ数 */
+  names: number;
+  /** そのうち名簿の議員に紐づいた数（`submitters` / `supporters` の memberId の延べ数） */
+  linked: number;
+  /** 回次ごとの、その回次の議案に載る異なり氏名の数と、そのうち現在の名簿にある数 */
+  sessions: { session: number; names: number; inRoster: number }[];
+  /** 現在の名簿の衆院議員の数 */
+  rosterMembers: number;
+  /** 名簿の中で正規化後の氏名が重複する人数（0 なら完全同名は名簿に無い） */
+  rosterDuplicateNames: number;
+}
+
+/** 衆院の議案の氏名のうち、名簿に紐づいていない延べ数。 */
+export interface ShugiinBillNameCoverage extends ShugiinBillNameStats {
+  /** names - linked */
+  unlinked: number;
+  /**
+   * 「現在の名簿に居るのは何人か」を示す回次。異なり氏名がいちばん多い回次を選ぶ（同数なら新しい回次）。
+   * 回次を定数で書かず、データがいちばん厚い回次をデータから選ぶ。
+   */
+  largest: { session: number; names: number; inRoster: number } | null;
+}
+
+/**
+ * 数えた結果を表示用にまとめる。氏名が 1 件も無ければ null（無い事実を作らない）。
+ * 割合はここでは出さない（`inRoster` と `names` の実数だけを渡し、画面も実数で書く）。
+ */
+export function shugiinBillNameCoverage(stats: ShugiinBillNameStats | null | undefined): ShugiinBillNameCoverage | null {
+  if (!stats || stats.names === 0) return null;
+  const largest = stats.sessions.reduce<ShugiinBillNameStats["sessions"][number] | null>(
+    (best, s) => (best === null || s.names > best.names || (s.names === best.names && s.session > best.session) ? s : best),
+    null,
+  );
+  return { ...stats, unlinked: stats.names - stats.linked, largest };
+}
+
 /** 国会の 1 院（参議院・衆議院）の収録範囲 */
 export interface DietCoverage {
   assemblyId: string;

@@ -201,6 +201,9 @@ const targets: { url: string; run?: (page: Page) => Promise<void> }[] = [
   { url: `${origin}/members/`, run: membersFilterGoesToUrl },
   { url: `${origin}/members/`, run: membersRejectsUnknownFilters },
   { url: `${origin}/rollcalls/` },
+  // #251: /coverage は loader を持つようになった（議案の氏名の数え上げ）。ハイドレーション時に .data を引くので、
+  // その取得が壊れていないことをここで見る（loader 無しのページでは起きない失敗）
+  { url: `${origin}/coverage/` },
   ...(memberId ? [{ url: `${origin}/members/${memberId}/` }, { url: `${origin}/members/${memberId}/`, run: memberTabsSwitch }] : []),
 ];
 

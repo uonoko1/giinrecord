@@ -4,7 +4,7 @@ import assembliesFixture from "../test-fixtures/assemblies/index.json";
 import localMembers from "../test-fixtures/assemblies/members-index.json";
 import sessionsFixture from "../test-fixtures/assemblies/sessions.json";
 import { dataset } from "../test-fixtures/dataset";
-import { buildCoverage, formatLocalSessionRange, formatSessionRange, hasSessionGaps, rosterlessSessions, sessionRange, shugiinQuestionCoverage } from "./coverage";
+import { buildCoverage, formatLocalSessionRange, formatSessionRange, hasSessionGaps, rosterlessSessions, sessionRange, shugiinBillNameCoverage, shugiinQuestionCoverage, shugiinRosterAsOf } from "./coverage";
 import type { AssemblySession } from "./data-contract";
 import type { Dataset, MemberSummary } from "./dataset";
 
@@ -93,6 +93,55 @@ describe("shugiinQuestionCoverage: 衆院の質問主意書が議員ページに
   it("meta が無い・質問答弁情報の出典が無いなら null（推定しない）", () => {
     expect(shugiinQuestionCoverage(undefined)).toBeNull();
     expect(shugiinQuestionCoverage(meta([], [221]))).toBeNull();
+  });
+});
+
+describe("shugiinRosterAsOf: 衆院の名簿は 1 時点しか無い（#251）", () => {
+  const source = { name: "衆議院 議員一覧（2026-02-18現在）", url: "https://www.shugiin.go.jp/internet/itdb_annai.nsf/html/statics/syu/1giin.htm", fetchedAt: "2026-08-24T00:00:00.000Z" };
+  const sangiin = { name: "参議院 議員一覧（第221回）", url: "https://www.sangiin.go.jp/japanese/joho1/kousei/giin/221/giin.htm", fetchedAt: "2026-08-24T00:00:00.000Z" };
+
+  it("出典の名前から時点と URL を取る（時点の表記は原文のまま）", () => {
+    expect(shugiinRosterAsOf({ fetchedAt: "2026-08-24T00:00:00.000Z", sessions: [221], sources: [sangiin, source] })).toEqual({ asOf: "2026-02-18", url: source.url });
+  });
+
+  it("参院の回次ごとの名簿（第N回）は拾わない", () => {
+    expect(shugiinRosterAsOf({ fetchedAt: "2026-08-24T00:00:00.000Z", sessions: [221], sources: [sangiin] })).toBeNull();
+  });
+
+  it("meta が無ければ null（推定しない）", () => {
+    expect(shugiinRosterAsOf(undefined)).toBeNull();
+  });
+});
+
+describe("shugiinBillNameCoverage: 議案の氏名の紐づき（#251）", () => {
+  const stats = {
+    names: 36493,
+    linked: 1353,
+    sessions: [
+      { session: 216, names: 296, inRoster: 145 },
+      { session: 217, names: 334, inRoster: 165 },
+      { session: 221, names: 271, inRoster: 270 },
+    ],
+    rosterMembers: 465,
+    rosterDuplicateNames: 0,
+  };
+
+  it("紐づいていない延べ数（names - linked）を出す", () => {
+    expect(shugiinBillNameCoverage(stats)?.unlinked).toBe(35140);
+  });
+
+  it("異なり氏名がいちばん多い回次を選ぶ（回次は定数で書かない）", () => {
+    expect(shugiinBillNameCoverage(stats)?.largest).toEqual({ session: 217, names: 334, inRoster: 165 });
+  });
+
+  it("異なり氏名の数が同じなら新しい回次を選ぶ", () => {
+    const tied = { ...stats, sessions: [{ session: 210, names: 300, inRoster: 20 }, { session: 219, names: 300, inRoster: 30 }] };
+    expect(shugiinBillNameCoverage(tied)?.largest?.session).toBe(219);
+  });
+
+  it("氏名が 1 件も無い・stats が無いなら null（無い事実を作らない）", () => {
+    expect(shugiinBillNameCoverage({ names: 0, linked: 0, sessions: [], rosterMembers: 465, rosterDuplicateNames: 0 })).toBeNull();
+    expect(shugiinBillNameCoverage(null)).toBeNull();
   });
 });
 

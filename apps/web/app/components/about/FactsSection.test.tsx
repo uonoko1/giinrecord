@@ -39,6 +39,13 @@ describe("FactsSection", () => {
     expect(container.textContent).not.toMatch(/第\d+—\d+回/);
   });
 
+  it("衆院の記録が紐づく範囲は /coverage の節へのリンクにし、理由も数値もここに書かない（#251）", () => {
+    const { container } = renderSection();
+    expect(screen.getByRole("link", { name: /衆議院の記録が議員ページに紐づく範囲/ })).toHaveAttribute("href", "/coverage#coverage-shugiin-roster-heading");
+    // 名簿が 1 枚しかないという説明は /coverage に 1 つだけ置く（About には重複させない）
+    expect(container.textContent).not.toContain("名簿");
+  });
+
   it("事実と推定でタグのクラスが異なる（色の意味は良し悪しではない）", () => {
     renderSection();
     expect(screen.getAllByText("事実")[0]).toHaveClass("tag--fact");

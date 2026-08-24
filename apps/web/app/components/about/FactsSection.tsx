@@ -39,6 +39,11 @@ export function FactsSection() {
       <p className="note">
         入っている議会・回次・会期と件数は<Link to="/coverage">収録範囲</Link>にあります。
       </p>
+      {/* #251: 衆院の記録が議員ページに紐づく範囲（名簿が「現在」の 1 枚しかない）は数えた実数つきで /coverage にある。説明はそちらに 1 つだけ置き、ここからは導線だけ */}
+      <p className="note">
+        衆議院の提出法案・質問主意書・発言が議員ページに紐づく範囲は
+        <Link to="/coverage#coverage-shugiin-roster-heading">収録範囲「衆議院の記録が議員ページに紐づく範囲」</Link>にあります。
+      </p>
     </section>
   );
 }
