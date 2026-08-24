@@ -151,36 +151,36 @@ t_keeps_both_when_new_path_already_exists() {
 
 t_main_happy_path() {
   fresh main; ready_layout
-  DNS_OK=1 run_main gikailog.jp || fail "exit $? $(cat "$P/out")"
+  DNS_OK=1 run_main giinrecord.jp || fail "exit $? $(cat "$P/out")"
   local log; log=$(cat "$LOG")
   assert_contains "$log" "docker compose -f $P/opt/gikailog/deploy/docker-compose.yml up -d --wait --force-recreate" "containers always recreated (bind-mounted site.conf inode)"
-  assert_contains "$log" "vps-setup.sh gikailog.jp" "host proxy block"
-  assert_contains "$log" "certbot certonly --nginx -d gikailog.jp -d www.gikailog.jp" "certonly for apex + www; no --redirect (template owns the redirects)"
+  assert_contains "$log" "vps-setup.sh giinrecord.jp" "host proxy block"
+  assert_contains "$log" "certbot certonly --nginx -d giinrecord.jp -d www.giinrecord.jp" "certonly for apex + www; no --redirect (template owns the redirects)"
   assert_not_contains "$log" "--redirect" "no certbot-managed redirect"
   assert_order "$log" "ss -tln" "up -d" "port check before the container is started"
   assert_order "$log" "up -d" "vps-setup.sh" "container before host proxy"
   assert_order "$log" "vps-setup.sh" "certbot" "bootstrap block before certbot"
-  assert_order "$(tac <<<"$log")" "vps-setup.sh gikailog.jp" "certbot" "vps-setup.sh again after certbot (TLS + redirect blocks)"
+  assert_order "$(tac <<<"$log")" "vps-setup.sh giinrecord.jp" "certbot" "vps-setup.sh again after certbot (TLS + redirect blocks)"
   assert_order "$log" "certbot" "vps-analytics-setup.sh" "analytics last"
 }
 
 t_main_skips_certbot_when_cert_exists() {
-  fresh cert; ready_layout; with_cert gikailog.jp
-  DNS_OK=1 run_main gikailog.jp || fail "exit $? $(cat "$P/out")"
+  fresh cert; ready_layout; with_cert giinrecord.jp
+  DNS_OK=1 run_main giinrecord.jp || fail "exit $? $(cat "$P/out")"
   assert_not_contains "$(cat "$LOG")" "certbot" "no duplicate certificate (-0001)"
   assert_contains "$(cat "$P/out")" "certificate" "operator is told"
 }
 
 t_main_rejects_staging_domain() {
   fresh stg; ready_layout
-  if DNS_OK=1 run_main staging.gikailog.jp; then fail "staging domain must be rejected (use staging-setup.sh)"; fi
+  if DNS_OK=1 run_main staging.giinrecord.jp; then fail "staging domain must be rejected (use staging-setup.sh)"; fi
   assert_contains "$(cat "$P/out")" "staging-setup.sh" "points at the staging script"
   assert_eq "" "$(cat "$LOG")" "nothing run"
 }
 
 t_main_refuses_when_port_taken() {
   fresh busy; ready_layout
-  if SS_OUT='LISTEN 0 511 127.0.0.1:8081 0.0.0.0:*\n' DNS_OK=1 run_main gikailog.jp; then fail "must refuse: 127.0.0.1:8081 taken by another process"; fi
+  if SS_OUT='LISTEN 0 511 127.0.0.1:8081 0.0.0.0:*\n' DNS_OK=1 run_main giinrecord.jp; then fail "must refuse: 127.0.0.1:8081 taken by another process"; fi
   assert_contains "$(cat "$P/out")" "8081" "message names the port"
   assert_not_contains "$(cat "$LOG")" "up -d" "container not started"
   assert_not_contains "$(cat "$LOG")" "vps-setup.sh" "host nginx untouched"
@@ -188,7 +188,7 @@ t_main_refuses_when_port_taken() {
 
 t_main_port_taken_by_own_container_is_fine() {
   fresh own; ready_layout
-  SS_OUT='LISTEN 0 511 127.0.0.1:8081 0.0.0.0:*\n' OWN_CONTAINER=1 DNS_OK=1 run_main gikailog.jp || fail "exit $? $(cat "$P/out")"
+  SS_OUT='LISTEN 0 511 127.0.0.1:8081 0.0.0.0:*\n' OWN_CONTAINER=1 DNS_OK=1 run_main giinrecord.jp || fail "exit $? $(cat "$P/out")"
   assert_contains "$(cat "$LOG")" "up -d --wait --force-recreate" "re-run converges"
 }
 

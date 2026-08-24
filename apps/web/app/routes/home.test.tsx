@@ -149,7 +149,7 @@ describe("Home", () => {
 describe("meta()", () => {
   it("title はサイト名、canonical と OGP（website）を持つ", () => {
     const tags = routeMeta({ location: { pathname: "/" } } as unknown as Parameters<typeof routeMeta>[0]);
-    expect(tags).toContainEqual({ title: "議会ログ" });
+    expect(tags).toContainEqual({ title: "議員レコード" });
     expect(tags).toContainEqual({ tagName: "link", rel: "canonical", href: "/" });
     expect(tags).toContainEqual({ property: "og:type", content: "website" });
     expect(tags).toContainEqual({ name: "description", content: expect.stringContaining("評価はしません") });

@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # External probe of one site origin (Issue #135), run from GitHub Actions (.github/workflows/monitor.yml via run.sh)
-# — or by hand: bash deploy/monitor/probe.sh https://gikailog.jp
+# — or by hand: bash deploy/monitor/probe.sh https://giinrecord.jp
 #
 # Checks → one line per check on stdout, "ok <check>" or "fail <check> <reason>"; exit 1 if anything failed:
-#   http   GET /, /members/ and /data/meta.json answer 200, and both HTML pages carry 議会ログ in <title>
+#   http   GET /, /members/ and /data/meta.json answer 200, and both HTML pages carry 議員レコード in <title>
 #          (a 200 from a default nginx page or a wrong site would otherwise pass)
 #   data   meta.fetchedAt (top-level, the ETL's run time) is at most PROBE_MAX_AGE_HOURS (48) old — the daily ETL +
 #          deploy-data.yml is alive
@@ -21,7 +21,7 @@ ORIGIN=${1:-}
 MAX_AGE_HOURS=${PROBE_MAX_AGE_HOURS:-48}
 TLS_MIN_DAYS=${PROBE_TLS_MIN_DAYS:-14}
 TIMEOUT=${PROBE_TIMEOUT:-20}
-TITLE_MUST_CONTAIN=${PROBE_TITLE:-議会ログ}
+TITLE_MUST_CONTAIN=${PROBE_TITLE:-議員レコード}
 
 # origin = https://<host> only (no path, no http): the paths are appended here and the host is reused for TLS
 if [[ ! "$ORIGIN" =~ ^https://[A-Za-z0-9.-]+$ ]]; then

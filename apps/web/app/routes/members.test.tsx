@@ -294,7 +294,7 @@ describe("/members", () => {
 describe("meta()", () => {
   it("title・canonical・OGP を持つ", () => {
     const tags = routeMeta({ location: { pathname: "/members" } } as unknown as Parameters<typeof routeMeta>[0]);
-    expect(tags).toContainEqual({ title: "国会議員一覧 ・ 議会ログ" });
+    expect(tags).toContainEqual({ title: "国会議員一覧 ・ 議員レコード" });
     expect(tags).toContainEqual({ tagName: "link", rel: "canonical", href: "/members" });
     expect(tags).toContainEqual({ property: "og:url", content: "/members" });
   });

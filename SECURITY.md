@@ -2,7 +2,7 @@
 
 ## 脆弱性の報告
 
-議会ログ（gikailog.jp）のセキュリティ上の問題を見つけた方は、**GitHub Security Advisories** から非公開で報告してください。
+議員レコード（giinrecord.jp）のセキュリティ上の問題を見つけた方は、**GitHub Security Advisories** から非公開で報告してください。
 
 - 報告窓口: https://github.com/uonoko1/gikailog/security/advisories/new （「Report a vulnerability」）
 - 公開の Issue・PR・SNS には**書かないでください**。修正前に公開されると利用者と共用サーバーの他サイトに影響します。
@@ -12,7 +12,7 @@
 
 | 対象 | 内容 |
 |---|---|
-| Web サイト | `https://gikailog.jp` で配信している静的サイト（`apps/web/`）。XSS、CSP/ヘッダの不備、外部への意図しない通信、URL 組み立ての不備など |
+| Web サイト | `https://giinrecord.jp` で配信している静的サイト（`apps/web/`）。XSS、CSP/ヘッダの不備、外部への意図しない通信、URL 組み立ての不備など |
 | ETL | `packages/etl/`。取得先ドメインの許可リスト外へのアクセス、`data/` 以外への書き込み、パストラバーサルなど |
 | デプロイ・運用 | `deploy/`、`.github/workflows/`、`scripts/`。権限昇格、共用 VPS の他サイトへの影響、秘密情報の露出 |
 | リポジトリ | コミット履歴・フィクスチャ・ログに含まれる鍵・トークン・サーバー情報 |
@@ -41,10 +41,10 @@
 
 ## Reporting a vulnerability (English)
 
-Please report security issues in 議会ログ (gikailog.jp) **privately** through GitHub Security Advisories:
+Please report security issues in 議員レコード (giinrecord.jp) **privately** through GitHub Security Advisories:
 https://github.com/uonoko1/gikailog/security/advisories/new. Do not open a public Issue.
 
-**Scope**: the static site at `https://gikailog.jp` (`apps/web/`), the ETL (`packages/etl/`), the deploy and CI
+**Scope**: the static site at `https://giinrecord.jp` (`apps/web/`), the ETL (`packages/etl/`), the deploy and CI
 tooling (`deploy/`, `.github/workflows/`, `scripts/`), and anything in the repository history (keys, tokens,
 server details). Out of scope: the content of the public Diet records themselves, and third-party services.
 

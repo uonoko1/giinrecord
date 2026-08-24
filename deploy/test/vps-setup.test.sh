@@ -46,7 +46,7 @@ run_setup() { PATH="$BIN:$PATH" bash "$SCRIPT" "$@" > "$P/out" 2>&1; }
 certbot_conf() {
   cat <<'C'
 server {
-    server_name gikailog.jp www.gikailog.jp;
+    server_name giinrecord.jp www.giinrecord.jp;
     access_log /var/log/nginx/gikailog.access.log noip;
 
     location / {
@@ -57,22 +57,22 @@ server {
 
     listen [::]:443 ssl ipv6only=on; # managed by Certbot
     listen 443 ssl; # managed by Certbot
-    ssl_certificate /etc/letsencrypt/live/gikailog.jp/fullchain.pem; # managed by Certbot
-    ssl_certificate_key /etc/letsencrypt/live/gikailog.jp/privkey.pem; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/giinrecord.jp/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/giinrecord.jp/privkey.pem; # managed by Certbot
     include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
 }
 server {
-    if ($host = www.gikailog.jp) {
-        return 301 https://gikailog.jp$request_uri;
+    if ($host = www.giinrecord.jp) {
+        return 301 https://giinrecord.jp$request_uri;
     }
-    if ($host = gikailog.jp) {
+    if ($host = giinrecord.jp) {
         return 301 https://$host$request_uri;
     } # managed by Certbot
 
     listen 80;
     listen [::]:80;
-    server_name gikailog.jp www.gikailog.jp;
+    server_name giinrecord.jp www.giinrecord.jp;
     access_log /var/log/nginx/gikailog.access.log noip;
     return 404; # managed by Certbot
 }
@@ -88,10 +88,10 @@ t_syntax() { bash -n "$SCRIPT" || fail "bash -n"; }
 
 t_bootstrap_without_cert() {
   fresh boot
-  run_setup gikailog.jp || fail "exit $? $(cat "$P/out")"
+  run_setup giinrecord.jp || fail "exit $? $(cat "$P/out")"
   [[ -f "$CONF" ]] || { fail "conf written"; return; }
   local c; c=$(cat "$CONF")
-  assert_contains "$c" "server_name gikailog.jp www.gikailog.jp;" "both names"
+  assert_contains "$c" "server_name giinrecord.jp www.giinrecord.jp;" "both names"
   assert_contains "$c" "proxy_pass http://127.0.0.1:8081;" "plain proxy on :80 so certbot can run"
   assert_not_contains "$c" "listen 443" "no TLS block before the certificate exists"
   assert_not_contains "$c" "return 301" "no redirect before TLS exists (site must stay reachable)"
@@ -100,16 +100,16 @@ t_bootstrap_without_cert() {
   [[ -L "$P/etc/nginx/sites-enabled/gikailog.conf" ]] || fail "enabled symlink"
   assert_contains "$(cat "$LOG")" "nginx -t" "config tested"
   assert_contains "$(cat "$LOG")" "systemctl reload nginx" "reloaded"
-  assert_contains "$(cat "$P/out")" "certbot certonly --nginx -d gikailog.jp -d www.gikailog.jp" "operator is told the certbot command"
+  assert_contains "$(cat "$P/out")" "certbot certonly --nginx -d giinrecord.jp -d www.giinrecord.jp" "operator is told the certbot command"
 }
 
 t_full_template_with_cert() {
-  fresh tls; with_cert gikailog.jp
-  run_setup gikailog.jp || fail "exit $? $(cat "$P/out")"
+  fresh tls; with_cert giinrecord.jp
+  run_setup giinrecord.jp || fail "exit $? $(cat "$P/out")"
   local c; c=$(cat "$CONF")
   assert_contains "$c" "listen 443 ssl;" "TLS block"
-  assert_contains "$c" "ssl_certificate /etc/letsencrypt/live/gikailog.jp/fullchain.pem;" "cert path of the apex"
-  assert_contains "$c" "return 301 https://gikailog.jp\$request_uri;" "80: www and apex -> https apex"
+  assert_contains "$c" "ssl_certificate /etc/letsencrypt/live/giinrecord.jp/fullchain.pem;" "cert path of the apex"
+  assert_contains "$c" "return 301 https://giinrecord.jp\$request_uri;" "80: www and apex -> https apex"
   assert_contains "$c" "proxy_pass http://127.0.0.1:8081;" "443 proxies to the container"
   assert_not_contains "$c" "SERVER_NAMES" "placeholder"; assert_not_contains "$c" "DOMAIN" "placeholder"
   assert_not_contains "$c" "PORT" "placeholder"; assert_not_contains "$c" "LOG_NAME" "placeholder"
@@ -120,41 +120,41 @@ t_full_template_with_cert() {
 }
 
 t_rerun_is_noop() {
-  fresh twice; with_cert gikailog.jp
-  run_setup gikailog.jp || fail "first: $(cat "$P/out")"
+  fresh twice; with_cert giinrecord.jp
+  run_setup giinrecord.jp || fail "first: $(cat "$P/out")"
   local before; before=$(cat "$CONF")
-  run_setup gikailog.jp || fail "second: $(cat "$P/out")"
+  run_setup giinrecord.jp || fail "second: $(cat "$P/out")"
   assert_eq "$before" "$(cat "$CONF")" "second run writes the same conf"
 }
 
 t_protects_certbot_conf() {
-  fresh certbot; with_cert gikailog.jp
+  fresh certbot; with_cert giinrecord.jp
   certbot_conf > "$CONF"
   local before; before=$(cat "$CONF")
-  run_setup gikailog.jp || fail "exit $? $(cat "$P/out")"
+  run_setup giinrecord.jp || fail "exit $? $(cat "$P/out")"
   assert_eq "$(certbot_conf | with_error_log)" "$(cat "$CONF")" "certbot-managed conf untouched except the #189 error_log lines"
   assert_contains "$(cat "$P/out")" "managed by Certbot" "operator is told why"
   assert_contains "$(cat "$LOG")" "nginx -t" "still tested"
   local after; after=$(cat "$CONF")
-  run_setup gikailog.jp || fail "second: $(cat "$P/out")"
+  run_setup giinrecord.jp || fail "second: $(cat "$P/out")"
   assert_eq "$after" "$(cat "$CONF")" "re-run is a no-op (error_log inserted once)"
   assert_eq "2" "$(grep -c "$ERR_LOG_PROD" "$CONF")" "one error_log per server block"
   [[ "$before" != "$after" ]] || fail "error_log was inserted"
 }
 
 t_certbot_conf_with_error_log_untouched() {
-  fresh certbotlog; with_cert gikailog.jp
+  fresh certbotlog; with_cert giinrecord.jp
   certbot_conf | with_error_log > "$CONF"
   local before; before=$(cat "$CONF")
-  run_setup gikailog.jp || fail "exit $? $(cat "$P/out")"
+  run_setup giinrecord.jp || fail "exit $? $(cat "$P/out")"
   assert_eq "$before" "$(cat "$CONF")" "conf that already has error_log is left as is"
   assert_eq "gikailog.conf" "$(ls "$P/etc/nginx/sites-available/")" "no temp file left in sites-available"
 }
 
 t_certbot_conf_only_port_rewritten() {
-  fresh port; with_cert gikailog.jp
+  fresh port; with_cert giinrecord.jp
   certbot_conf | sed 's/8081/8085/' > "$CONF"
-  run_setup gikailog.jp || fail "exit $? $(cat "$P/out")"
+  run_setup giinrecord.jp || fail "exit $? $(cat "$P/out")"
   local c; c=$(cat "$CONF")
   assert_contains "$c" "proxy_pass http://127.0.0.1:8081;" "proxy port rewritten"
   assert_not_contains "$c" "8085" "old port gone"
@@ -163,7 +163,7 @@ t_certbot_conf_only_port_rewritten() {
 
 t_staging_port_requires_staging_domain() {
   fresh stgarg
-  if run_setup gikailog.jp 8083; then fail "8083 with the production domain must be rejected"; fi
+  if run_setup giinrecord.jp 8083; then fail "8083 with the production domain must be rejected"; fi
   assert_contains "$(cat "$P/out")" "staging." "message names the rule"
   [[ ! -e "$CONF" && ! -e "$STG_CONF" ]] || fail "nothing written"
   assert_eq "" "$(cat "$LOG")" "nothing run"
@@ -171,18 +171,18 @@ t_staging_port_requires_staging_domain() {
 
 t_production_port_rejects_staging_domain() {
   fresh prodarg
-  if run_setup staging.gikailog.jp; then fail "staging domain on the production port must be rejected"; fi
+  if run_setup staging.giinrecord.jp; then fail "staging domain on the production port must be rejected"; fi
   [[ ! -e "$CONF" ]] || fail "nothing written"
 }
 
 t_staging_conf() {
-  fresh stg; with_cert staging.gikailog.jp
-  run_setup staging.gikailog.jp 8083 || fail "exit $? $(cat "$P/out")"
+  fresh stg; with_cert staging.giinrecord.jp
+  run_setup staging.giinrecord.jp 8083 || fail "exit $? $(cat "$P/out")"
   local c; c=$(cat "$STG_CONF")
-  assert_contains "$c" "server_name staging.gikailog.jp;" "no www for staging"
+  assert_contains "$c" "server_name staging.giinrecord.jp;" "no www for staging"
   assert_contains "$c" "proxy_pass http://127.0.0.1:8083;" "staging port"
   assert_contains "$c" "gikailog-staging.access.log noip" "staging log"
-  assert_contains "$c" "/etc/letsencrypt/live/staging.gikailog.jp/" "staging cert"
+  assert_contains "$c" "/etc/letsencrypt/live/staging.giinrecord.jp/" "staging cert"
   assert_eq "2" "$(grep -c "$ERR_LOG_STG" "$STG_CONF")" "#189 staging error_log in both blocks"
   [[ ! -e "$CONF" ]] || fail "production conf untouched"
 }
@@ -194,8 +194,8 @@ CF_403='if ($http_cf_access_jwt_assertion = "") { return 403; }'
 with_snippet() { mkdir -p "$P/etc/nginx/snippets"; printf 'allow 10.0.0.0/8;\ndeny all;\n' > "$P/etc/nginx/snippets/gikailog-cloudflare-allow.conf"; }
 
 t_staging_conf_has_cf_gate() {
-  fresh cfstg; with_cert staging.gikailog.jp; with_snippet
-  run_setup staging.gikailog.jp 8083 || fail "exit $? $(cat "$P/out")"
+  fresh cfstg; with_cert staging.giinrecord.jp; with_snippet
+  run_setup staging.giinrecord.jp 8083 || fail "exit $? $(cat "$P/out")"
   local c; c=$(cat "$STG_CONF")
   assert_contains "$c" "$CF_INCLUDE" "allow-list included"
   assert_contains "$c" "$CF_403" "requests without the Access JWT header get 403"
@@ -208,8 +208,8 @@ t_staging_conf_has_cf_gate() {
 }
 
 t_production_conf_has_no_cf_gate() {
-  fresh cfprod; with_cert gikailog.jp; with_snippet
-  run_setup gikailog.jp || fail "exit $? $(cat "$P/out")"
+  fresh cfprod; with_cert giinrecord.jp; with_snippet
+  run_setup giinrecord.jp || fail "exit $? $(cat "$P/out")"
   local c; c=$(cat "$CONF")
   assert_not_contains "$c" "cloudflare" "production is not restricted to Cloudflare"
   assert_not_contains "$c" "cf_access" "production does not require the Access header"
@@ -218,8 +218,8 @@ t_production_conf_has_no_cf_gate() {
 }
 
 t_staging_without_snippet_fails_closed() {
-  fresh cfnosnip; with_cert staging.gikailog.jp
-  run_setup staging.gikailog.jp 8083 || fail "exit $? $(cat "$P/out")"
+  fresh cfnosnip; with_cert staging.giinrecord.jp
+  run_setup staging.giinrecord.jp 8083 || fail "exit $? $(cat "$P/out")"
   local snip="$P/etc/nginx/snippets/gikailog-cloudflare-allow.conf"
   [[ -f "$snip" ]] || { fail "placeholder snippet written so nginx -t passes"; return; }
   assert_eq "deny all;" "$(grep -v '^#' "$snip")" "placeholder denies everything (fail closed, never open)"
@@ -229,7 +229,7 @@ t_staging_without_snippet_fails_closed() {
 
 t_staging_bootstrap_has_no_gate() {
   fresh cfboot
-  run_setup staging.gikailog.jp 8083 || fail "exit $? $(cat "$P/out")"
+  run_setup staging.giinrecord.jp 8083 || fail "exit $? $(cat "$P/out")"
   assert_not_contains "$(cat "$STG_CONF")" "cloudflare" "no gate before the certificate (certbot challenge must pass)"
 }
 
@@ -237,7 +237,7 @@ t_staging_bootstrap_has_no_gate() {
 certbot_staging_conf() {
   cat <<'C'
 server {
-    server_name staging.gikailog.jp;
+    server_name staging.giinrecord.jp;
     access_log /var/log/nginx/gikailog-staging.access.log noip;
 
     location / {
@@ -248,18 +248,18 @@ server {
 
     listen [::]:443 ssl; # managed by Certbot
     listen 443 ssl; # managed by Certbot
-    ssl_certificate /etc/letsencrypt/live/staging.gikailog.jp/fullchain.pem; # managed by Certbot
-    ssl_certificate_key /etc/letsencrypt/live/staging.gikailog.jp/privkey.pem; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/staging.giinrecord.jp/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/staging.giinrecord.jp/privkey.pem; # managed by Certbot
     include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
 }
 server {
-    if ($host = staging.gikailog.jp) {
+    if ($host = staging.giinrecord.jp) {
         return 301 https://$host$request_uri;
     } # managed by Certbot
 
     listen 80;
     listen [::]:80;
-    server_name staging.gikailog.jp;
+    server_name staging.giinrecord.jp;
     access_log /var/log/nginx/gikailog-staging.access.log noip;
     return 404; # managed by Certbot
 }
@@ -267,9 +267,9 @@ C
 }
 
 t_certbot_staging_conf_gets_gate() {
-  fresh cfcertbot; with_cert staging.gikailog.jp; with_snippet
+  fresh cfcertbot; with_cert staging.giinrecord.jp; with_snippet
   certbot_staging_conf > "$STG_CONF"
-  run_setup staging.gikailog.jp 8083 || fail "exit $? $(cat "$P/out")"
+  run_setup staging.giinrecord.jp 8083 || fail "exit $? $(cat "$P/out")"
   local c; c=$(cat "$STG_CONF")
   assert_contains "$c" "$CF_INCLUDE" "include inserted"
   assert_contains "$c" "$CF_403" "403 rule inserted"
@@ -283,7 +283,7 @@ t_certbot_staging_conf_gets_gate() {
         $CF_403
         proxy_pass http://127.0.0.1:8083;" "inserted at the top of location /"
   local before; before=$(cat "$STG_CONF"); : > "$LOG"
-  run_setup staging.gikailog.jp 8083 || fail "second: $(cat "$P/out")"
+  run_setup staging.giinrecord.jp 8083 || fail "second: $(cat "$P/out")"
   assert_eq "$before" "$(cat "$STG_CONF")" "idempotent"
   assert_eq "1" "$(grep -c 'gikailog-cloudflare-allow' "$STG_CONF")" "included once"
   assert_eq "2" "$(grep -c "$ERR_LOG_STG" "$STG_CONF")" "#189 error_log inserted into both certbot server blocks"
@@ -291,20 +291,20 @@ t_certbot_staging_conf_gets_gate() {
 }
 
 t_certbot_production_conf_gets_no_gate() {
-  fresh cfcertbotprod; with_cert gikailog.jp; with_snippet
+  fresh cfcertbotprod; with_cert giinrecord.jp; with_snippet
   certbot_conf > "$CONF"
-  run_setup gikailog.jp || fail "exit $? $(cat "$P/out")"
+  run_setup giinrecord.jp || fail "exit $? $(cat "$P/out")"
   assert_eq "$(certbot_conf | with_error_log)" "$(cat "$CONF")" "production certbot conf untouched (except #189 error_log)"
 }
 
 t_unknown_port() {
   fresh badport
-  if run_setup gikailog.jp 9000; then fail "unknown port must be rejected"; fi
+  if run_setup giinrecord.jp 9000; then fail "unknown port must be rejected"; fi
 }
 
 t_broken_config_not_reloaded() {
-  fresh broken; with_cert gikailog.jp
-  if PATH="$BAD:$BIN:$PATH" bash "$SCRIPT" gikailog.jp > "$P/out" 2>&1; then fail "must exit 1"; fi
+  fresh broken; with_cert giinrecord.jp
+  if PATH="$BAD:$BIN:$PATH" bash "$SCRIPT" giinrecord.jp > "$P/out" 2>&1; then fail "must exit 1"; fi
   assert_not_contains "$(cat "$LOG")" "systemctl" "no reload"
 }
 

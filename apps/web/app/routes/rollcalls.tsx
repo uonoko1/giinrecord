@@ -28,7 +28,7 @@ function pageTitle(session: number | undefined): string {
 }
 
 export function meta({ data, location }: MetaArgs<typeof loader>) {
-  if (!data) return [{ title: "議会ログ" }];
+  if (!data) return [{ title: "議員レコード" }];
   return seoMeta({
     title: pageTitle(data.session),
     description: "参議院本会議の記名投票を日付順に並べます。各採決で全議員の票を会派ごとに見られます。",
@@ -70,7 +70,7 @@ export function RollCallsPage({
       <main className="rollcall">
         <header className="rollcall-cover">
           <div className="rollcall-cover-top">
-            <Link to="/">← 議会ログ</Link>
+            <Link to="/">← 議員レコード</Link>
           </div>
           <p className="rollcall-date">
             <span>参議院本会議 ・ 記名投票</span>

@@ -36,7 +36,7 @@ describe("VerifySection（#166）", () => {
   it("一括取得の説明は短く、ビルドの話を書かない", () => {
     render(<VerifySection />);
     const section = screen.getByRole("region", { name: "検証する" });
-    expect(section).toHaveTextContent("毎日更新。CC BY 4.0。出典として「議会ログ」と一次資料（参議院・衆議院・国立国会図書館）を明記してください。個人・非営利・商用いずれも同じ条件です。");
+    expect(section).toHaveTextContent("毎日更新。CC BY 4.0。出典として「議員レコード」と一次資料（参議院・衆議院・国立国会図書館）を明記してください。個人・非営利・商用いずれも同じ条件です。");
     for (const word of ["ビルド", "作り直され", "zip", "LICENSE", "README"]) {
       expect(section.textContent).not.toContain(word);
     }

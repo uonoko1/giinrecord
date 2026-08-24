@@ -6,19 +6,19 @@ Issue #85・#127。構成と初回セットアップは `deploy/README.md`。こ
 
 | 環境 | URL | 配信元 | コード | データ |
 |---|---|---|---|---|
-| staging | https://staging.gikailog.jp | `web-staging`（127.0.0.1:8083）← `/var/www/gikailog/staging` | `main` への push で自動（`deploy-staging.yml`） | 自動（`deploy-data.yml`） |
-| production | https://gikailog.jp | `web`（127.0.0.1:8081）← `/var/www/gikailog/site` | 手動リリース（`release.yml`、成功時にタグ `released` を更新） | 自動（`deploy-data.yml`：コードは `released`、`data/` は `main`） |
+| staging | https://staging.giinrecord.jp | `web-staging`（127.0.0.1:8083）← `/var/www/gikailog/staging` | `main` への push で自動（`deploy-staging.yml`） | 自動（`deploy-data.yml`） |
+| production | https://giinrecord.jp | `web`（127.0.0.1:8081）← `/var/www/gikailog/site` | 手動リリース（`release.yml`、成功時にタグ `released` を更新） | 自動（`deploy-data.yml`：コードは `released`、`data/` は `main`） |
 
 - 3 つとも再利用ワークフロー `deploy-site.yml`（`pnpm build` → `rsync --delete`）を呼ぶだけ。違いは Environment・`SITE_ORIGIN`・rsync 先・（production-data だけ）`data_ref: main` の overlay。
-- staging ビルド（`SITE_ORIGIN=https://staging.gikailog.jp`）は `robots.txt` が `Disallow: /`、全ページに `<meta name="robots" content="noindex, nofollow">`（`apps/web/app/lib/seo.ts`）。さらにコンテナの `site.conf` が Host `staging.gikailog.jp` に `X-Robots-Tag: noindex, nofollow` を付ける。
+- staging ビルド（`SITE_ORIGIN=https://staging.giinrecord.jp`）は `robots.txt` が `Disallow: /`、全ページに `<meta name="robots" content="noindex, nofollow">`（`apps/web/app/lib/seo.ts`）。さらにコンテナの `site.conf` が Host `staging.giinrecord.jp` に `X-Robots-Tag: noindex, nofollow` を付ける。
 - GitHub Environment：`staging`、`production`（**required reviewers = 承認ボタン**。PO が設定）、`production-data`（reviewers 無し）。3 つとも同じ `DEPLOY_*` secrets。
 
 ### リリース手順（production）
 
-1. staging（https://staging.gikailog.jp/）で確認する。`main` の最新は push 後数分で出ている（Actions → Deploy (staging)）。
+1. staging（https://staging.giinrecord.jp/）で確認する。`main` の最新は push 後数分で出ている（Actions → Deploy (staging)）。
 2. Actions → **Release** → Run workflow。`ref` は既定 `main`（タグや SHA も可）→ Run。
 3. `production` Environment の承認待ちになる → Review deployments → Approve。
-4. 完了後 https://gikailog.jp/ で確認（title『議会ログ』、`curl -sI https://gikailog.jp/ | grep -i x-robots-tag` が空、sitemap の `<loc>` が `https://gikailog.jp/`）。
+4. 完了後 https://giinrecord.jp/ で確認（title『議員レコード』、`curl -sI https://giinrecord.jp/ | grep -i x-robots-tag` が空、sitemap の `<loc>` が `https://giinrecord.jp/`）。
 
 ロールバックは「前の SHA を `ref` にして Release」。
 
@@ -39,7 +39,7 @@ ETL の data PR がマージされると `etl.yml` / `districts.yml` が `gh wor
 - 静的ファイルは `deploy-site.yml` が `rsync --delete` で `/var/www/gikailog/site/`（production）と `/var/www/gikailog/staging/`（staging）に置く（所有者 `ubuntu`）。**ここは変えない**。
 - それぞれを `web` / `web-staging` コンテナ（`nginx:alpine`、`deploy/docker-compose.yml`、同じ `site.conf`）が**読み取り専用**で bind mount し、`127.0.0.1:8081` / `127.0.0.1:8083` だけに公開する。
 - ホスト nginx（共用。他サイトも同居）は `server_name` ごとの block で TLS を終端し `proxy_pass` するだけ（`deploy/nginx-host-proxy.conf`、`sites-available/gikailog.conf` と `gikailog-staging.conf`）。SPA fallback・キャッシュ・セキュリティヘッダ・staging の noindex は全部コンテナ側 `deploy/nginx/site.conf`。
-- www→apex：ホスト側 `:80` block は www も apex も `https://gikailog.jp` へ 301（テンプレートで定義。certbot の `--redirect` は使わない）。`:443` は両ホスト名を proxy し、https の www→apex 301 はコンテナの `site.conf`（#141）。
+- www→apex：ホスト側 `:80` block は www も apex も `https://giinrecord.jp` へ 301（テンプレートで定義。certbot の `--redirect` は使わない）。`:443` は両ホスト名を proxy し、https の www→apex 301 はコンテナの `site.conf`（#141）。
 - 権限：`ubuntu`（CI の rsync 鍵）は docker を触れない。docker のインストールと `docker compose` は人間が sudo／docker 権限で行う。
 - デプロイでコンテナの再起動は不要（bind mount なので rsync 直後から新ファイルが配信される）。**ただし `site.conf` / `docker-compose.yml` の変更は `git pull` だけでは反映されない**：bind mount した単一ファイルは `git pull` で inode が変わり、コンテナは古い inode を掴んだまま。必ず `docker compose ... up -d --force-recreate`（setup 系スクリプトは常にこれを付ける、#141）。
 
@@ -55,7 +55,7 @@ default-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src '
 - **`script-src` は `'self' 'unsafe-inline'`**（#194）。React Router のプリレンダリング HTML は inline `<script>` を 8 個持つ（hydration context の `window.__reactRouterContext`、`themeInit`、install capture）。`'self'` だけだとこれが全部遮断され、本番でハイドレーションが起きず検索・郵便番号・テーマ切替・比較が動かなかった（2026-08-24 の障害）。
 - **ハッシュ方式（`'sha256-…'`）は採らない**：hydration context はページごと（loader data）・ビルドごとに中身が変わるので 1,100 ページ × ビルドごとのハッシュ一覧を nginx に渡すことになり維持できない。nonce は動的サーバが要る（静的配信 + nginx では不可）。ユーザー生成コンテンツが無い静的サイトなので inline 許可の実害は小さい。`'unsafe-eval'` は許可しない。
 - **ヘッダだけでは検出できない**ので、CI の `docker-web` ジョブは URL smoke の後に `pnpm --filter web browser-check -- --url http://127.0.0.1:8081`（`apps/web/scripts/browser-check.ts`、Playwright chromium）を実行する：`/`・`/members/`・`/rollcalls/`・議員ページ 1 つを開き、console error と `securitypolicyviolation` が 0、`/members/` の検索入力で行数が減ることを確認。
-- **本番反映後の確認（PO）**：VPS で `git pull && docker compose -f deploy/docker-compose.yml up -d --force-recreate` の後、手元で `pnpm --filter web exec playwright install --with-deps chromium`（初回のみ）→ `pnpm --filter web browser-check -- --url https://gikailog.jp`。
+- **本番反映後の確認（PO）**：VPS で `git pull && docker compose -f deploy/docker-compose.yml up -d --force-recreate` の後、手元で `pnpm --filter web exec playwright install --with-deps chromium`（初回のみ）→ `pnpm --filter web browser-check -- --url https://giinrecord.jp`。
 
 ## 改名の移行（#119、seiji-kiroku → gikailog）
 
@@ -85,7 +85,7 @@ curl -sI https://DOMAIN/ | grep -i -E "content-security|x-frame" # 外から見�
 1. `packages/etl/test/deploy-docker.test.ts`（ヘッダ・キャッシュの固定値）と `apps/web/app/lib/smoke-url.ts`（URL モード smoke の期待値）を先に直す。
 2. `deploy/nginx/site.conf` / `deploy/docker-compose.yml` を変更。CI の `docker-web` ジョブが `compose config → up → smoke --url → browser-check --url`（Playwright）で検証する。
 3. マージ後、VPS で `git pull && docker compose -f deploy/docker-compose.yml up -d --force-recreate`（`up -d` だけでは古い `site.conf` のまま）。
-4. ホスト側 `deploy/nginx-host-proxy.conf` を変える場合は `vps-setup.sh` の heredoc も同じ内容にする（テストが同一性を検査）。反映は `sudo bash deploy/vps-setup.sh gikailog.jp`（staging は `staging.gikailog.jp 8083`）の再実行。**certbot 管理の conf（`# managed by Certbot` を含む、#141 以前に構築したホスト）は書き換えず `proxy_pass` のポートだけ合わせる**ので、そのホストでは `sudo nano /etc/nginx/sites-available/gikailog.conf` → `sudo nginx -t && sudo systemctl reload nginx`。テンプレートへ移行したいときは `sudo certbot certonly`（既存証明書があるので実際には不要）→ conf を退避して削除 → `vps-setup.sh` 再実行。
+4. ホスト側 `deploy/nginx-host-proxy.conf` を変える場合は `vps-setup.sh` の heredoc も同じ内容にする（テストが同一性を検査）。反映は `sudo bash deploy/vps-setup.sh giinrecord.jp`（staging は `staging.giinrecord.jp 8083`）の再実行。**certbot 管理の conf（`# managed by Certbot` を含む、#141 以前に構築したホスト）は書き換えず `proxy_pass` のポートだけ合わせる**ので、そのホストでは `sudo nano /etc/nginx/sites-available/gikailog.conf` → `sudo nginx -t && sudo systemctl reload nginx`。テンプレートへ移行したいときは `sudo certbot certonly`（既存証明書があるので実際には不要）→ conf を退避して削除 → `vps-setup.sh` 再実行。
 
 ## setup スクリプトの冪等性と安全装置（#141）
 
@@ -100,7 +100,7 @@ curl -sI https://DOMAIN/ | grep -i -E "content-security|x-frame" # 外から見�
 | ホスト conf の保護 | `vps-setup.sh` は `# managed by Certbot` を含む既存 conf を書き換えない（`proxy_pass` のポートだけ同期）。証明書が無ければ `:80` の proxy block だけ（certbot の challenge 用）、あればテンプレート全体（`:80` 301 + `:443` proxy）を書く。setup スクリプトは certbot の後にもう一度 `vps-setup.sh` を呼ぶ |
 | 他サイト | `sites-available/gikailog*.conf` と `conf.d/gikailog-noip-log.conf` 以外に書かない |
 
-本番ホストの現状（2026-08-23）：`sites-available/gikailog.conf` は certbot 管理 + 手編集（`:80` で www も `https://gikailog.jp` へ、www の 443 block は削除して 1 つの 443 block が両ホスト名を持つ）。テンプレートはこの挙動を再現しており、`go-live.sh gikailog.jp` の再実行は conf を変えない（no-op）。テストは `bash deploy/test/vps-setup.test.sh`、`go-live.test.sh`、`staging-setup.test.sh`（root・docker・nginx・certbot は不要、全部スタブ）。
+本番ホストの現状（2026-08-23）：`sites-available/gikailog.conf` は certbot 管理 + 手編集（`:80` で www も `https://giinrecord.jp` へ、www の 443 block は削除して 1 つの 443 block が両ホスト名を持つ）。テンプレートはこの挙動を再現しており、`go-live.sh giinrecord.jp` の再実行は conf を変えない（no-op）。テストは `bash deploy/test/vps-setup.test.sh`、`go-live.test.sh`、`staging-setup.test.sh`（root・docker・nginx・certbot は不要、全部スタブ）。
 
 ## 失敗モード
 
@@ -111,10 +111,10 @@ curl -sI https://DOMAIN/ | grep -i -E "content-security|x-frame" # 外から見�
 | `up` で `bind source path does not exist` | `/var/www/gikailog/site` が無い | `vps-setup.sh` を再実行（ディレクトリ作成は冪等） |
 | `git pull` したのに `site.conf` の変更が効かない | bind mount の inode 問題 | `docker compose -f deploy/docker-compose.yml up -d --force-recreate` |
 | setup スクリプトが `port 8081/8083 は別のプロセスが LISTEN 中` で止まる | 共用ホストの別プロセス（他サイト）がそのポートを使っている | `ss -tlnp` で確認。他サイトなら `docker-compose.yml` と `vps-setup.sh` のポートを変える PBI を切る。自分の古いコンテナなら `docker compose ps` → `down` |
-| `https://www.gikailog.jp` が証明書エラー | 443 block の `server_name` に www が無い（手編集時） | `nginx -T \| grep server_name`。テンプレート（`deploy/nginx-host-proxy.conf`）は両名を持つ |
+| `https://www.giinrecord.jp` が証明書エラー | 443 block の `server_name` に www が無い（手編集時） | `nginx -T \| grep server_name`。テンプレート（`deploy/nginx-host-proxy.conf`）は両名を持つ |
 | ヘルスチェックが unhealthy | `site.conf` の構文エラー | `docker compose logs web`。`docker compose exec web nginx -t` |
 | ヘッダが付かない／CSP が違う | `site.conf` の変更漏れ（ホスト側には add_header が無い） | CI の `docker-web` が落ちているはず。`site.conf` を修正して `up -d --force-recreate` |
-| ページは表示されるが検索・郵便番号・テーマ切替・比較が動かない | CSP が inline `<script>` を遮断している（#194）。DevTools console に `violates the following Content Security Policy directive 'script-src …'` | `curl -sI https://gikailog.jp/ \| grep -i content-security` が `script-src 'self' 'unsafe-inline'` か確認。古ければ `git pull && up -d --force-recreate`。`pnpm --filter web browser-check -- --url https://gikailog.jp` で再確認 |
+| ページは表示されるが検索・郵便番号・テーマ切替・比較が動かない | CSP が inline `<script>` を遮断している（#194）。DevTools console に `violates the following Content Security Policy directive 'script-src …'` | `curl -sI https://giinrecord.jp/ \| grep -i content-security` が `script-src 'self' 'unsafe-inline'` か確認。古ければ `git pull && up -d --force-recreate`。`pnpm --filter web browser-check -- --url https://giinrecord.jp` で再確認 |
 | `/assets/` に CSP が無い | nginx の仕様（location 内の `add_header` は server の add_header を継承しない）。旧 server block でも同じ挙動 | 仕様どおり（HTML ページには付く）。変えるなら site.conf と smoke-url.ts を同時に |
 | アクセス集計 TSV が空 | ホスト block の `access_log … noip` が消えた（手編集時） | `nginx -T \| grep gikailog.access.log`。`deploy/nginx-host-proxy.conf` と突き合わせる |
 | `docker` コマンドで permission denied | そのユーザーに docker 権限が無い | docker 権限のあるユーザーで実行。**`ubuntu` には付与しない** |

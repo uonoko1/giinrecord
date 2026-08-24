@@ -1,7 +1,7 @@
 name: Deploy site (reusable)
 # Issue #127. Build the static site from `ref` with SITE_ORIGIN=`site_origin` and rsync it to
 # /var/www/gikailog/<target_dir>/ on the VPS as the deploy user. Called by:
-#   deploy-staging.yml  push main            → environment staging          target_dir staging  (https://staging.gikailog.jp)
+#   deploy-staging.yml  push main            → environment staging          target_dir staging  (https://staging.giinrecord.jp)
 #   release.yml         workflow_dispatch    → environment production       target_dir site     (required reviewers = the release button)
 #   deploy-data.yml     dispatched by etl.yml → staging + production-data   (daily data, no approval; docs/ops/deploy.md)
 # Issue #134: optional `data_ref` overlays data/ from that ref onto the checkout (production-data: code = tag `released`,
@@ -16,7 +16,7 @@ on:
         required: true
         type: string
       site_origin:
-        description: "SITE_ORIGIN for the build (https://staging.gikailog.jp → robots Disallow + noindex)"
+        description: "SITE_ORIGIN for the build (https://staging.giinrecord.jp → robots Disallow + noindex)"
         required: true
         type: string
       target_dir:

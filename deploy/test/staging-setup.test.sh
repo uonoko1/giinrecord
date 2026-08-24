@@ -69,15 +69,15 @@ t_happy_path_order() {
   assert_contains "$log" "git -C $P/opt/gikailog pull -q --ff-only" "repo updated (compose + site.conf)"
   assert_contains "$log" "install -d -o ubuntu -g deploygroup -m 2775 $P/var/www/gikailog/staging" "staging web root for the deploy user"
   assert_contains "$log" "docker compose -f $P/opt/gikailog/deploy/docker-compose.yml up -d --wait --force-recreate" "both containers recreated (bind-mounted site.conf: inode changes on git pull)"
-  assert_contains "$log" "vps-setup.sh staging.gikailog.jp 8083" "host proxy block for staging on port 8083"
-  assert_contains "$log" "certbot certonly --nginx -d staging.gikailog.jp" "TLS for the staging hostname only, certonly (no conf editing by certbot)"
+  assert_contains "$log" "vps-setup.sh staging.giinrecord.jp 8083" "host proxy block for staging on port 8083"
+  assert_contains "$log" "certbot certonly --nginx -d staging.giinrecord.jp" "TLS for the staging hostname only, certonly (no conf editing by certbot)"
   assert_not_contains "$log" "www.staging" "no www for staging"
   assert_not_contains "$log" "--redirect" "redirect comes from the template, not certbot"
   assert_order "$log" "ss -tln" "docker compose -f" "port check before the container is started"
   assert_order "$log" "docker compose -f" "vps-setup.sh" "container before host proxy (no 502 window)"
   assert_order "$log" "vps-setup.sh" "certbot" "bootstrap proxy block before certbot (challenge on :80)"
-  assert_order "$(tac <<<"$log")" "vps-setup.sh staging.gikailog.jp 8083" "certbot" "vps-setup.sh again after certbot: TLS + redirect blocks"
-  [[ $(grep -c "vps-setup.sh staging.gikailog.jp 8083" <<<"$log" || true) -eq 2 ]] || fail "vps-setup.sh runs before and after certbot"
+  assert_order "$(tac <<<"$log")" "vps-setup.sh staging.giinrecord.jp 8083" "certbot" "vps-setup.sh again after certbot: TLS + redirect blocks"
+  [[ $(grep -c "vps-setup.sh staging.giinrecord.jp 8083" <<<"$log" || true) -eq 2 ]] || fail "vps-setup.sh runs before and after certbot"
   # #163: the Cloudflare allow-list (+ weekly cron) exists before the block that includes it is written
   assert_contains "$log" "cloudflare-allowlist.sh --install-cron" "Cloudflare allow-list generated and its cron installed"
   assert_order "$log" "cloudflare-allowlist.sh" "vps-setup.sh" "allow-list before the staging block that includes it (never the deny-all placeholder)"
@@ -92,7 +92,7 @@ t_custom_domain() {
 
 t_rejects_non_staging_domain() {
   local d
-  for d in gikailog.jp www.gikailog.jp stg.example.test; do
+  for d in giinrecord.jp www.giinrecord.jp stg.example.test; do
     fresh "reject-$d"; docker_present
     if DNS_OK=1 run_setup "$d"; then fail "$d must be rejected"; fi
     assert_contains "$(cat "$P/out")" "staging." "$d: message names the rule"
@@ -105,12 +105,12 @@ t_skips_certbot_without_dns() {
   fresh nodns; docker_present
   run_setup || fail "exit $? $(cat "$P/out")"
   assert_not_contains "$(cat "$LOG")" "certbot" "certbot not attempted before DNS resolves"
-  assert_contains "$(cat "$P/out")" "certbot certonly --nginx -d staging.gikailog.jp" "operator is told the command to run later"
+  assert_contains "$(cat "$P/out")" "certbot certonly --nginx -d staging.giinrecord.jp" "operator is told the command to run later"
 }
 
 t_skips_certbot_when_cert_exists() {
   fresh hascert; docker_present
-  mkdir -p "$P/etc/letsencrypt/live/staging.gikailog.jp"; : > "$P/etc/letsencrypt/live/staging.gikailog.jp/fullchain.pem"
+  mkdir -p "$P/etc/letsencrypt/live/staging.giinrecord.jp"; : > "$P/etc/letsencrypt/live/staging.giinrecord.jp/fullchain.pem"
   DNS_OK=1 run_setup || fail "exit $? $(cat "$P/out")"
   assert_not_contains "$(cat "$LOG")" "certbot" "no second certificate (-0001) when one exists"
   assert_contains "$(cat "$P/out")" "certificate" "operator is told it was skipped"

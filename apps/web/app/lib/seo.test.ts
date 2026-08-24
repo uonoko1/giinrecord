@@ -39,18 +39,18 @@ describe("seoMeta", () => {
     origin: "https://example.test",
   });
   it("title / description / canonical / OGP を一式返す", () => {
-    expect(tags).toContainEqual({ title: "藤川 政人（参議院・愛知）の投票記録 ・ 議会ログ" });
+    expect(tags).toContainEqual({ title: "藤川 政人（参議院・愛知）の投票記録 ・ 議員レコード" });
     expect(tags).toContainEqual({ name: "description", content: "説明" });
     expect(tags).toContainEqual({ tagName: "link", rel: "canonical", href: "https://example.test/members/m_1" });
-    expect(tags).toContainEqual({ property: "og:title", content: "藤川 政人（参議院・愛知）の投票記録 ・ 議会ログ" });
+    expect(tags).toContainEqual({ property: "og:title", content: "藤川 政人（参議院・愛知）の投票記録 ・ 議員レコード" });
     expect(tags).toContainEqual({ property: "og:description", content: "説明" });
     expect(tags).toContainEqual({ property: "og:type", content: "article" });
     expect(tags).toContainEqual({ property: "og:url", content: "https://example.test/members/m_1" });
-    expect(tags).toContainEqual({ property: "og:site_name", content: "議会ログ" });
+    expect(tags).toContainEqual({ property: "og:site_name", content: "議員レコード" });
   });
   it("title が無ければサイト名だけ、type は既定で website、origin 未設定なら相対", () => {
     const t = seoMeta({ description: "d", pathname: "/", origin: "" });
-    expect(t).toContainEqual({ title: "議会ログ" });
+    expect(t).toContainEqual({ title: "議員レコード" });
     expect(t).toContainEqual({ property: "og:type", content: "website" });
     expect(t).toContainEqual({ tagName: "link", rel: "canonical", href: "/" });
     expect(t).toContainEqual({ property: "og:url", content: "/" });
@@ -72,22 +72,22 @@ describe("og:image（#129）", () => {
   });
 });
 
-// Issue #127: staging.gikailog.jp はクローラに拾わせない（robots Disallow + <meta name=robots content=noindex>）。
+// Issue #127: staging.giinrecord.jp はクローラに拾わせない（robots Disallow + <meta name=robots content=noindex>）。
 describe("isStagingOrigin / robotsMeta", () => {
-  it("SITE_ORIGIN=https://staging.gikailog.jp は staging", () => {
-    expect(isStagingOrigin("https://staging.gikailog.jp")).toBe(true);
-    expect(isStagingOrigin("https://staging.gikailog.jp/")).toBe(true);
+  it("SITE_ORIGIN=https://staging.giinrecord.jp は staging", () => {
+    expect(isStagingOrigin("https://staging.giinrecord.jp")).toBe(true);
+    expect(isStagingOrigin("https://staging.giinrecord.jp/")).toBe(true);
   });
   it("本番・未設定・staging を含むだけのホストは staging ではない", () => {
-    expect(isStagingOrigin("https://gikailog.jp")).toBe(false);
+    expect(isStagingOrigin("https://giinrecord.jp")).toBe(false);
     expect(isStagingOrigin("")).toBe(false);
     expect(isStagingOrigin(undefined)).toBe(false);
-    expect(isStagingOrigin("https://notstaging.gikailog.jp")).toBe(false);
-    expect(isStagingOrigin("https://gikailog.jp/staging")).toBe(false);
+    expect(isStagingOrigin("https://notstaging.giinrecord.jp")).toBe(false);
+    expect(isStagingOrigin("https://giinrecord.jp/staging")).toBe(false);
   });
   it("staging のときだけ noindex, nofollow の robots meta を返す", () => {
-    expect(robotsMeta("https://staging.gikailog.jp")).toEqual({ name: "robots", content: "noindex, nofollow" });
-    expect(robotsMeta("https://gikailog.jp")).toBeNull();
+    expect(robotsMeta("https://staging.giinrecord.jp")).toEqual({ name: "robots", content: "noindex, nofollow" });
+    expect(robotsMeta("https://giinrecord.jp")).toBeNull();
     expect(robotsMeta("")).toBeNull();
   });
 });

@@ -21,7 +21,7 @@ const CC_BY_URL = "https://creativecommons.org/licenses/by/4.0/deed.ja";
 export function meta({ location }: MetaArgs) {
   return seoMeta({
     title: "利用規約",
-    description: "議会ログの利用規約。公式記録の転記であること、正確性の扱い、データとコードのライセンス、運営費の方針、準拠法。",
+    description: "議員レコードの利用規約。公式記録の転記であること、正確性の扱い、データとコードのライセンス、運営費の方針、準拠法。",
     pathname: location.pathname,
   });
 }
@@ -44,7 +44,7 @@ export default function Terms() {
             このサイトは何か
           </h2>
           <p className="body">
-            議会ログは、参議院・衆議院・国立国会図書館が公開する公式記録を転記して並べたサイトです。記録をそのまま置くだけで、評価・採点・推薦はしません。すべての記録に出典へのリンクがあります。
+            議員レコードは、参議院・衆議院・国立国会図書館が公開する公式記録を転記して並べたサイトです。記録をそのまま置くだけで、評価・採点・推薦はしません。すべての記録に出典へのリンクがあります。
           </p>
         </section>
 
@@ -72,7 +72,7 @@ export default function Terms() {
               <a href={CC_BY_URL} target="_blank" rel="noopener noreferrer">
                 CC BY 4.0
               </a>
-              。出典として「議会ログ」と、元の一次資料へのリンクを表示してください。
+              。出典として「議員レコード」と、元の一次資料へのリンクを表示してください。
             </li>
             <li>コード：MIT ライセンス。</li>
             <li>
