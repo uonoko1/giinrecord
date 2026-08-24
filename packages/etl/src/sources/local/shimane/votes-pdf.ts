@@ -1,18 +1,23 @@
-import { cluster, joinVertical, readPages, type Item } from "../pdf-table.ts";
+import { cluster, joinVertical, readPages, type Item, type PageGeometry } from "../pdf-table.ts";
 
 /**
- * 島根県議会「議員別採決結果一覧」PDF の表復元（Issue #221）。
+ * 島根県議会「議員別採決結果一覧」PDF の表復元（Issue #221、会期ごとの差分は #232）。
  *
  * この PDF には罫線がベクタで入っているが、引かれているのは「用紙全体の格子」だけで
  * 1 議案 1 行の高さとは一致しない（件名が 2 行の議案・付託委員会が 4 つの議案は行が高い）。
  * そこで罫線ではなく文字の位置で表を復元する。手がかりは次のとおりで、どれも推定ではなく PDF に書かれている:
  *   - 列: 議員の欄は等間隔（約 11.9pt）の縦書き 1 文字幅。1 ページ目の氏名の x をまとめたものが議員の列。
- *         左側は 議案番号 / 件名 / 付託委員会 / 採決結果 / 賛成 / 反対 の 6 列で、x の範囲が決まっている。
+ *         左側は 議案番号 / 件名 / 付託委員会 / 採決結果 / 賛成 / 反対 の 6 列（→ Columns）。
  *   - 行: 議案番号の欄（1 議案に 1 つ、行の中心）を行の基準にする。件名・票のセルもその中心に揃っている。
  *         付託委員会は 1 議案に複数（最大 4）あり、等間隔に積まれたブロックの中心が行の中心に揃う
  *         （＝ブロックごとにまとめてから、中心が最も近い議案番号の行に入れる）。
  * 「議⾧」「除斥」は 1 セルの中の縦書き 2 文字なので、同じ列の近い y をまとめて 1 つのセルにする。
  * どの行にも置けない文字が出たら、そのセルは UNKNOWN_CELL（「不明」）にして数える（推定しない）。
+ *
+ * **同じ議会でも会期ごとに PDF の作りが違う**ので、決め打ちにせずその PDF から毎回引き直す（#232）:
+ *   - 表の幅・位置（列の x）が違う → ヘッダの文字の位置と、本文の文字の書き出しから引く（Columns）
+ *   - 節見出し「（議案）」…が 1 つも無い会期がある → kind は議案番号の欄のヘッダの語と番号の接頭辞から（kindOf）
+ *   - 隣り合う 2 つの欄の中身が 1 つの文字列で書かれている行がある → 欄の変わり目の空白で切る（splitAtBoundary）
  *
  * 議決日はこの PDF に書かれていないので、同じ会期ページの「議決結果一覧」PDF（parseResultsPdf）から
  * 議案番号ごとに読む。請願・その他表決は議決結果一覧に載らないので、呼ぶ側（rollcalls.ts）が会期の最終議決日を使う。
@@ -24,7 +29,10 @@ export const UNKNOWN_CELL = "不明";
 export const UNKNOWN_LEGEND = "抽出不能";
 
 export interface VoteRow {
-  /** 節見出しの原文から「（）」を外したもの（「議案」「請願」「その他表決」） */
+  /**
+   * 節見出しの原文から「（）」を外したもの（「議案」「請願」「その他表決」）。
+   * 節見出しの無い会期は、議案番号の欄のヘッダの語と番号の接頭辞から（kindOf）。
+   */
   kind: string;
   /** 議案等番号の原文（「第77号」「承認第3号」「議員提出第4号」「請願第17号」。番号の無い行は原文の「ー」） */
   number: string;
@@ -55,13 +63,138 @@ export interface VotePdf {
   unknownCells: number;
 }
 
-/** 左側の列（x の範囲）。PDF のヘッダ（議案番号 / 件 名 / 付託委員会 / 採決結果 / 賛成 / 反対）の位置から。 */
-const NUMBER_X = [30, 85] as const;
-const TITLE_X = [85, 262] as const;
-const REFERRED_X = [262, 335] as const;
-const RESULT_X = [335, 371] as const;
-const YES_X = [371, 390] as const;
-const NO_X = [390, 402] as const;
+/**
+ * 左側の列の x の範囲。会期によって表の幅・位置が違う（令和8年6月は 議案番号 の中心が x=62.9、
+ * 令和8年2月は x=66.2 と、表全体が右に寄って少し広い）ので、x を決め打ちにせず
+ * **その PDF のヘッダの文字の位置**から毎回引き直す。手がかりはどれも PDF に書かれているもの:
+ *   議案番号（請願だけの節のページでは「番号」）/ 件 名 / 付託委員会 / 採決結果 / 賛 成 / 反 対。
+ * ただし 議案番号｜件名 と 件名｜付託委員会 の境目はヘッダの中心の中点では足りない
+ * （どちらも欄の左端に寄せて書かれ、ヘッダ「件 名」「付託委員会」はセルの中心にある）ので、
+ * 本文の文字が実際に書き出される x から引く（boundaryBetween / leftAlignedBoundary）。
+ */
+interface Columns {
+  number: readonly [number, number];
+  title: readonly [number, number];
+  /** 件名の文字が実際に書き出される x。番号の文字列がここまで届いていれば件名も同じ文字列に入っている */
+  titleLeft: number;
+  /** 付託委員会の文字が実際に書き出される x。件名の文字列がここまで届いていれば付託委員会も同じ文字列に入っている */
+  referredLeft: number;
+  referred: readonly [number, number];
+  result: readonly [number, number];
+  yes: readonly [number, number];
+  no: readonly [number, number];
+  /** 議員の欄の左端（反対の欄の右端） */
+  membersFrom: number;
+  /** 議案番号の欄のヘッダの原文（「議案番号」「番号」）。節見出しが無い PDF の kind の手がかり */
+  numberHeader: string;
+}
+
+/** ヘッダの文字を探す縦の許容差（「賛 成」は 2 行に分かれて上下にずれる）。 */
+const HEADER_Y = 26;
+/**
+ * 欄の境目を決めるとき、これより狭い隙間しかなければ失敗（表の形が変わったのを黙って通さない）。
+ * 実測の隙間は 議案番号｜件名 が 32pt 以上、件名｜付託委員会 が 2.7pt（6月）・2.8pt（2月）と幅が違うので、
+ * 狭いほうに合わせた値。欄が詰まって見分けられなくなった場合に落とすための下限で、余裕の確認ではない。
+ */
+const MIN_COLUMN_GAP = 2;
+
+const center = (i: Item): number => i.x + i.w / 2;
+
+/** 1 ページのヘッダの文字の位置から左側の列の x の範囲を引く。 */
+function columnsOf(page: PageGeometry, head: Item, pageNo: number): Omit<Columns, "number" | "title" | "titleLeft" | "referredLeft"> & { numberCenter: number; titleCenter: number; resultCenter: number } {
+  const at = (s: string): Item | undefined => page.items.find((i) => i.str === s && Math.abs(i.y - head.y) < HEADER_Y);
+  const numberHead = at("議案番号") ?? at("番号");
+  const ken = at("件");
+  const mei = at("名");
+  const result = at("採決結果");
+  const yes = at("賛");
+  const no = at("反");
+  if (!numberHead) throw new Error(`page ${pageNo}: 議案番号 header not found`);
+  if (!ken || !mei) throw new Error(`page ${pageNo}: 件名 header not found`);
+  if (!result) throw new Error(`page ${pageNo}: 採決結果 header not found`);
+  if (!yes || !no) throw new Error(`page ${pageNo}: 賛成/反対 header not found`);
+  const referredC = center(head);
+  const resultC = center(result);
+  const yesC = center(yes);
+  const noC = center(no);
+  const mid = (a: number, b: number): number => (a + b) / 2;
+  const yesNo = mid(yesC, noC);
+  return {
+    referred: [mid(center(ken) + (center(mei) - center(ken)) / 2, referredC), mid(referredC, resultC)],
+    result: [mid(referredC, resultC), mid(resultC, yesC)],
+    yes: [mid(resultC, yesC), yesNo],
+    no: [yesNo, noC + (noC - yesNo)],
+    membersFrom: noC + (noC - yesNo),
+    numberHeader: numberHead.str,
+    numberCenter: center(numberHead),
+    titleCenter: mid(center(ken), center(mei)),
+    resultCenter: resultC,
+  };
+}
+
+/**
+ * 隣り合う 2 つの欄の境目を、本文の文字が実際に書き出される x から引く。
+ * 左右の欄の内側 [lo, hi) にある本文の文字の左端 x を並べ、一番広い隙間
+ * （左の欄の文字の終わりと右の欄の書き出しの間の余白）の真ん中を境目にする。
+ * 隙間が狭ければ（＝2 つの欄が見分けられなければ）失敗する（表の形が変わったのを黙って通さない）。
+ * `right` は右の欄の文字が実際に書き出される x。左の欄の文字列がここまで届いていれば、
+ * その 1 つの文字列に右の欄の中身も入っている（令和8年2月の PDF にある結合された文字列）。
+ */
+function boundaryBetween(pages: PageGeometry[], heads: Item[], lo: number, hi: number, what: string): { boundary: number; right: number } {
+  const xs: number[] = [];
+  for (const [pi, page] of pages.entries()) {
+    for (const i of page.items) {
+      if (i.y < heads[pi].y - HEADER_GAP && i.x > lo && i.x < hi) xs.push(i.x);
+    }
+  }
+  const groups = cluster(xs, 1);
+  let gap = 0;
+  let boundary = 0;
+  let right = 0;
+  for (let i = 0; i + 1 < groups.length; i++) {
+    if (groups[i + 1] - groups[i] > gap) {
+      gap = groups[i + 1] - groups[i];
+      boundary = (groups[i] + groups[i + 1]) / 2;
+      right = groups[i + 1];
+    }
+  }
+  if (gap < MIN_COLUMN_GAP) throw new Error(`${what} columns cannot be told apart (widest gap ${gap.toFixed(1)}pt)`);
+  return { boundary, right };
+}
+
+/**
+ * 件名の欄と付託委員会の欄の境目。件名は欄の左端（titleLeft）から書かれて行ごとに長さが違い
+ * （2 行にわたる件名の続きの行は途中の x から始まることもある）、付託委員会は 1 議案に 1〜4 個、
+ * どれも自分の欄の左端に揃えて書かれる。そこで
+ *   付託委員会の書き出し = 件名の書き出しより右にある本文の文字の左端のうち、
+ *                          同じ x に一番多く並んでいるもの（＝全議案ぶん揃っている欄の左端）
+ * を取り、その手前までを件名の欄にする。境目は「件名の右端の最大」と「付託委員会の書き出し」の中点。
+ * 件名が付託委員会の書き出しまで届いている行（＝2 つの欄が 1 つの文字列になっている行）は、
+ * 右端の最大を取るときには数えない（その行は後で境目で切り分ける）。
+ */
+function leftAlignedBoundary(pages: PageGeometry[], heads: Item[], titleCenter: number, hi: number, titleLeft: number, what: string): { boundary: number; right: number } {
+  const inBody = (i: Item, pi: number): boolean => i.y < heads[pi].y - HEADER_GAP;
+  const lefts: number[] = [];
+  for (const [pi, page] of pages.entries()) {
+    for (const i of page.items) if (inBody(i, pi) && i.x > titleCenter && i.x < hi) lefts.push(i.x);
+  }
+  const groups = cluster(lefts, 1);
+  if (groups.length === 0) throw new Error(`${what} columns cannot be told apart (no 付託委員会 text found)`);
+  const count = (x: number): number => lefts.filter((v) => Math.abs(v - x) <= 1).length;
+  // 一番多く並んでいる x。同数なら左のものを取る（付託委員会の欄は必ず全議案ぶん並ぶ）
+  const right = groups.reduce((best, x) => (count(x) > count(best) ? x : best), groups[0]);
+  let titleRight = titleLeft;
+  for (const [pi, page] of pages.entries()) {
+    for (const i of page.items) {
+      if (!inBody(i, pi) || i.x < titleLeft || i.x >= right) continue;
+      if (i.x + i.w > right) continue; // 欄をまたいで結合された文字列は数えない
+      titleRight = Math.max(titleRight, i.x + i.w);
+    }
+  }
+  const gap = right - titleRight;
+  if (gap < MIN_COLUMN_GAP) throw new Error(`${what} columns cannot be told apart (widest gap ${gap.toFixed(1)}pt)`);
+  return { boundary: (titleRight + right) / 2, right };
+}
 
 /** 凡例の行（「○」･･･賛成、…）。 */
 const LEGEND_LINE = /「(.+?)」\s*[･・.]{2,}\s*([^、。]+)/g;
@@ -76,6 +209,35 @@ const GICHO_CELL = /^議[長⾧]$/;
 /** 議長は採決に加わらない、という注記（凡例の記号一覧には「議⾧」が無いので、これを凡例の根拠にする）。 */
 const GICHO_NOTE = /議[長⾧]の職務を行う者は採決に加わりません/;
 
+/** ヘッダ行と本文の境目（ヘッダの y からこれだけ下が本文）。 */
+const HEADER_GAP = 6;
+
+/**
+ * 議案番号の欄のヘッダの原文（「議案番号」「番号」）→ その表が何の表かの語。
+ * 節見出しの無い PDF（令和8年2月定例会）で kind の手がかりにする。
+ */
+const NUMBER_HEADER_KIND: Record<string, string> = { "議案番号": "議案" };
+/**
+ * 議案等番号の原文の接頭辞のうち、それ自体が別の種別を名乗っているもの。
+ * 「請願第28号」は請願であって議案ではない（議決結果一覧 PDF にも載らない）。
+ * 「承認第N号」「議員提出第N号」は 6月の PDF では（議案）の節にあるので、議案のまま扱う。
+ */
+const SELF_NAMED_KIND = ["請願", "陳情"] as const;
+
+/**
+ * 行の kind。節見出し（「（議案）」「（請願）」「（その他表決）」）があればそれが原文なのでそのまま使う。
+ * 令和8年2月定例会の PDF には節見出しが無く、全部が「議案番号」という 1 つの表になっているので、
+ * その欄のヘッダの語（「議案番号」→「議案」）を使い、番号自身が別の種別を名乗っている行
+ * （「請願第28号」）だけはその接頭辞を使う。どちらも PDF に書かれている語で、推定で足した語ではない。
+ */
+function kindOf(section: string | undefined, numberHeader: string, number: string, pageNo: number): string {
+  if (section !== undefined) return section;
+  const self = SELF_NAMED_KIND.find((k) => number.startsWith(k));
+  if (self) return self;
+  const kind = NUMBER_HEADER_KIND[numberHeader];
+  if (!kind) throw new Error(`page ${pageNo} ${number}: no 節見出し and 議案番号 header "${numberHeader}" does not say what the table is`);
+  return kind;
+}
 /** 縦書きのセル（議⾧・除斥）をまとめる距離。1 文字ぶん（約 11.4pt）より少し大きく。 */
 const CELL_GAP = 13;
 /** 付託委員会のブロックをまとめる距離（1 行ぶんの行送り）。 */
@@ -86,6 +248,39 @@ const inX = (it: Item, [lo, hi]: readonly [number, number]): boolean => it.x >= 
 /** テキストを詰める（PDF の行内の空白は落とす。原文の文字は変えない）。 */
 const joinText = (items: Item[]): string => [...items].sort((a, b) => b.y - a.y || a.x - b.x).map((i) => i.str).join("").replace(/\s+/g, "");
 
+/**
+ * 隣り合う 2 つの欄の中身が 1 つの文字列として書かれているとき、それを 2 つに切り分ける。
+ * 令和8年2月定例会の PDF にはこの形の行がある（6月の PDF では欄ごとに別の文字列になっている）:
+ *   「議 員 提 出 第 2 号 島根県議会委員会条例の一部を改正する条例」（議案番号＋件名）
+ *   「非常勤の職員等の報酬及び費用弁償支給条例等の一部を改正する条例 総務委員会」（件名＋付託委員会）
+ * どちらも欄の変わり目に**空白**が入っている（左の欄の中身・空白・右の欄の中身）。
+ * 切れ目は「右側に空白がもう出てこない最後の空白」＝欄の変わり目の空白とする
+ * （議案番号の「議 員 提 出 第 2 号 」は字間に空白を入れて書かれているので、
+ * 一番近い空白ではなく最後の空白でなければ番号の途中で切れてしまう）。
+ * 空白が無ければどこが変わり目か決められないので切らない（推定で切らない）。
+ * 切ったあとの x・幅は、文字列全体を等幅とみなした概算（行に入れるための位置決めにしか使わない）。
+ */
+function splitAtBoundary(it: Item, boundary: number): { left: Item; right: Item } | undefined {
+  const chars = [...it.str];
+  if (chars.length < 2) return undefined;
+  const isSpace = (c: string): boolean => c === " " || c === "　";
+  // 右側に空白がもう出てこない最後の空白の位置（その次の文字から右の欄）
+  let n = -1;
+  for (let i = chars.length - 1; i >= 0; i--) {
+    if (isSpace(chars[i])) { n = i + 1; break; }
+  }
+  if (n <= 0 || n >= chars.length) return undefined;
+  const leftStr = chars.slice(0, n).join("");
+  const rightStr = chars.slice(n).join("");
+  if (leftStr.trim() === "" || rightStr.trim() === "") return undefined;
+  // 切ったあとの右側は、右の欄の書き出し（boundary の右）に置く。
+  // 左右の文字幅が違う（番号は字間を空けた細い字、件名は全角）ので、等幅の概算では位置が出せない。
+  return {
+    left: { ...it, str: leftStr, w: boundary - it.x, cx: (it.x + boundary) / 2 },
+    right: { ...it, str: rightStr, x: boundary, w: it.x + it.w - boundary, cx: (boundary + it.x + it.w) / 2 },
+  };
+}
+
 export async function parseVotePdf(bytes: Buffer): Promise<VotePdf> {
   const pages = await readPages(bytes);
   if (pages.length === 0) throw new Error("empty PDF");
@@ -93,11 +288,36 @@ export async function parseVotePdf(bytes: Buffer): Promise<VotePdf> {
   // 議員の列: 票の欄の x にある縦書きの氏名。氏名は 1 ページ目のヘッダ（付託委員会の行）をまたいで
   // 下にも伸びる（姓が上、名が下）ので、境目はヘッダではなく「一番上の票の行」より上とする。
   // 見出し・凡例・注記も同じ x にあるが、そちらは 1 アイテムに長い文字列が入っているので 1 文字かどうかで分ける。
-  const head0 = pages[0].items.find((i) => i.str === "付託委員会");
-  if (!head0) throw new Error("page 1: 付託委員会 header not found");
-  const topVoteY = Math.max(...pages[0].items.filter((i) => i.x >= NO_X[1] && (i.str === "○" || i.str === "●")).map((i) => i.y));
+  const heads = pages.map((page, pi) => {
+    const head = page.items.find((i) => i.str === "付託委員会");
+    if (!head) throw new Error(`page ${pi + 1}: 付託委員会 header not found`);
+    return head;
+  });
+  // 列の x はこの PDF のヘッダの位置から引く（会期によって表の幅・位置が違う）
+  const raw = pages.map((page, pi) => columnsOf(page, heads[pi], pi + 1));
+  // 議案番号｜件名 の境目は、ヘッダの中心の中点では足りない（件名は欄の左端に寄せて書かれ、
+  // ヘッダ「件 名」はセルの中心にある）ので、その間にある本文の文字の左端から引く
+  const numberTitle = boundaryBetween(pages, heads, raw[0].numberCenter - 40, raw[0].titleCenter, "議案番号 and 件名");
+  // 件名｜付託委員会 の境目。付託委員会も欄の左端に寄せて書かれるので、
+  // ヘッダの中心より左に本文の書き出しがある。件名の右端と付託委員会の書き出しの間を取る
+  const titleReferred = leftAlignedBoundary(pages, heads, raw[0].titleCenter, raw[0].referred[1], numberTitle.right, "件名 and 付託委員会");
+  const cols: Columns[] = raw.map((r) => ({
+    number: [0, numberTitle.boundary],
+    title: [numberTitle.boundary, titleReferred.boundary],
+    titleLeft: numberTitle.right,
+    referredLeft: titleReferred.right,
+    referred: [titleReferred.boundary, r.referred[1]],
+    result: r.result,
+    yes: r.yes,
+    no: r.no,
+    membersFrom: r.membersFrom,
+    numberHeader: r.numberHeader,
+  }));
+
+  const head0 = heads[0];
+  const topVoteY = Math.max(...pages[0].items.filter((i) => i.x >= cols[0].membersFrom && (i.str === "○" || i.str === "●")).map((i) => i.y));
   if (!Number.isFinite(topVoteY)) throw new Error("page 1: no ○/● vote cell found");
-  const isNameChar = (i: Item): boolean => i.x >= NO_X[1] && i.y > topVoteY + 6 && [...i.str].length === 1;
+  const isNameChar = (i: Item): boolean => i.x >= cols[0].membersFrom && i.y > topVoteY + 6 && [...i.str].length === 1;
   const nameItems = pages[0].items.filter(isNameChar);
   if (nameItems.length === 0) throw new Error("page 1: no member name column found");
   const colX = cluster(nameItems.map((i) => i.x), 2);
@@ -123,25 +343,49 @@ export async function parseVotePdf(bytes: Buffer): Promise<VotePdf> {
   let unknownCells = 0;
   let section: string | undefined;
   for (const [pi, page] of pages.entries()) {
-    const head = page.items.find((i) => i.str === "付託委員会");
-    if (!head) throw new Error(`page ${pi + 1}: 付託委員会 header not found`);
-    // 節見出し（（議案）（請願）（その他表決））はヘッダより上にある。無いページは前のページの続き
+    const head = heads[pi];
+    const band = cols[pi];
+    // 節見出し（（議案）（請願）（その他表決））はヘッダより上にある。無いページは前のページの続き。
+    // 令和8年2月定例会の PDF には節見出しがそもそも 1 つも無く、全部が「議案番号」の 1 つの表になっている
+    // （そのぶん kind は議案番号の欄のヘッダの語と、番号の原文の接頭辞から読む。下の kindOf を見よ）。
     for (const it of page.items.filter((i) => i.y > head.y && [...i.str].length > 1).sort((a, b) => b.y - a.y)) {
       const m = it.str.trim().match(SECTION);
       if (m && !/^[０-９0-9]/.test(m[1])) section = m[1];
     }
-    if (!section) throw new Error(`page ${pi + 1}: 節見出し（議案）… not found`);
     // ヘッダ行より下がデータ。ヘッダ（付託委員会）の y をそのまま境目にする。
     // 表の下の注記（「※請願17、29号の…」）は表のセルではないので、notes に移してデータから外す。
-    const top = head.y - 6;
+    const top = head.y - HEADER_GAP;
     const body: Item[] = [];
     for (const i of page.items) {
       if (i.y >= top) continue;
       if (FOOTNOTE.test(i.str)) { if (!notes.includes(i.str.trim())) notes.push(i.str.trim()); continue; }
       body.push(i);
     }
+    // 議案番号 / 件名 / 付託委員会 の 3 つの欄。令和8年2月定例会の PDF には
+    // 「議 員 提 出 第 2 号 島根県議会委員会条例の一部を改正する条例」（番号＋件名）や
+    // 「非常勤の職員等の報酬及び費用弁償支給条例等の一部を改正する条例 総務委員会」（件名＋付託委員会）のように、
+    // 2 つの欄の中身が 1 つの文字列として書かれている行がある（6月の PDF では欄ごとに別の文字列）。
+    // 右隣の欄の書き出しまで届いている文字列だけを、欄の境目で切り分ける（原文の文字は変えない）。
+    const numItems: Item[] = [];
+    const titleItems: Item[] = [];
+    const refItems: Item[] = [];
+    const place = (i: Item): void => {
+      if (i.str.trim() === "") return;
+      // 欄をまたぐ結合された文字列は、右隣の欄の書き出しまで届いているかで見分ける
+      // （「請願第17号」のように欄から少しはみ出すだけの文字列は切らない）
+      if (i.x < band.number[1] && i.x + i.w > band.titleLeft) {
+        const split = splitAtBoundary(i, band.number[1]);
+        if (split) { numItems.push(split.left); place(split.right); return; }
+      } else if (i.x < band.title[1] && i.x + i.w > band.referredLeft) {
+        const split = splitAtBoundary(i, band.title[1]);
+        if (split) { titleItems.push(split.left); place(split.right); return; }
+      }
+      if (i.x < band.number[1]) numItems.push(i);
+      else if (i.x < band.title[1]) titleItems.push(i);
+      else if (inX(i, band.referred)) refItems.push(i);
+    };
+    for (const i of body) if (i.x < band.referred[1]) place(i);
     // 行の基準: 議案番号の欄（1 議案に 1 つ）
-    const numItems = body.filter((i) => inX(i, NUMBER_X) && i.str.trim() !== "");
     const anchors = cluster(numItems.map((i) => i.y), 4).sort((a, b) => b - a);
     if (anchors.length === 0) continue;
     const nearest = (y: number): number => anchors.reduce((best, a) => (Math.abs(a - y) < Math.abs(best - y) ? a : best), anchors[0]);
@@ -152,13 +396,13 @@ export async function parseVotePdf(bytes: Buffer): Promise<VotePdf> {
       return map;
     };
     const numByRow = own(numItems);
-    const titleByRow = own(body.filter((i) => inX(i, TITLE_X)));
-    const resultByRow = own(body.filter((i) => inX(i, RESULT_X)));
-    const yesByRow = own(body.filter((i) => inX(i, YES_X)));
-    const noByRow = own(body.filter((i) => inX(i, NO_X)));
+    const titleByRow = own(titleItems);
+    const resultByRow = own(body.filter((i) => inX(i, band.result)));
+    const yesByRow = own(body.filter((i) => inX(i, band.yes)));
+    const noByRow = own(body.filter((i) => inX(i, band.no)));
 
     // 付託委員会: 等間隔に積まれたブロックごとにまとめ、ブロックの中心が最も近い行に入れる
-    const refItems = body.filter((i) => inX(i, REFERRED_X)).sort((a, b) => b.y - a.y);
+    refItems.sort((a, b) => b.y - a.y);
     const refByRow = new Map<number, string[]>(anchors.map((a) => [a, [] as string[]]));
     const blocks: Item[][] = [];
     for (const it of refItems) {
@@ -172,9 +416,9 @@ export async function parseVotePdf(bytes: Buffer): Promise<VotePdf> {
     }
 
     // 票のセル。縦書きの氏名はヘッダ行より下まで伸びるので、票の欄は「一番上の票の行」より下だけを見る。
-    const pageTopVoteY = Math.max(...body.filter((i) => i.x >= NO_X[1] && (i.str === "○" || i.str === "●")).map((i) => i.y));
+    const pageTopVoteY = Math.max(...body.filter((i) => i.x >= band.membersFrom && (i.str === "○" || i.str === "●")).map((i) => i.y));
     if (!Number.isFinite(pageTopVoteY)) throw new Error(`page ${pi + 1}: no ○/● vote cell found`);
-    const voteItems = body.filter((i) => i.x >= NO_X[1] && i.y < pageTopVoteY + 6);
+    const voteItems = body.filter((i) => i.x >= band.membersFrom && i.y < pageTopVoteY + 6);
     // 1 議案 1 票の欄（○ ●）は行の中心にある
     const markByRow = new Map<number, Map<number, Item>>(anchors.map((a) => [a, new Map<number, Item>()]));
     // 「議⾧」「除斥」は縦書き 2 文字の結合セルで、○ ● の無い行をまとめて覆う（議長は複数の議案にわたって議長のまま）。
@@ -230,7 +474,7 @@ export async function parseVotePdf(bytes: Buffer): Promise<VotePdf> {
         unknownCells++;
         return UNKNOWN_CELL;
       });
-      rows.push({ kind: section, number, title, referredCommittees, result, counts: { yes: Number(yesText), no: Number(noText) }, cells, page: pi + 1 });
+      rows.push({ kind: kindOf(section, band.numberHeader, number, pi + 1), number, title, referredCommittees, result, counts: { yes: Number(yesText), no: Number(noText) }, cells, page: pi + 1 });
     }
   }
   if (rows.length === 0) throw new Error("no rows found in the PDF");
