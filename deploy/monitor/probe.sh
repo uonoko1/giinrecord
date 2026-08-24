@@ -7,14 +7,20 @@
 #          in <title> (a 200 from a default nginx page or a wrong site would otherwise pass)
 #          Issue #248: the assembly pages (/assemblies/<id>) are part of this same check, so a 500 or a missing
 #          prerender on a local assembly is noticed — and a failure there opens the one "http" Issue, not one per
-#          assembly. The list is NOT hard-coded: /data/assemblies/index.json — the very file the site serves to its
-#          own front-end — is fetched and its "id" values are the paths to probe, so a new assembly is monitored the
-#          moment it ships. At most PROBE_ASSEMBLY_SAMPLE (3) of them are fetched per run, rotating through the list
-#          in file order (one step per 10-minute slot), which keeps a round at a fixed, small number of requests
-#          however many assemblies exist while still covering every assembly within a few rounds. Each page must
-#          answer 200 AND carry the site name AND the assembly's own name: nginx answers 200 with the SPA fallback
-#          (try_files … /__spa-fallback.html) for ANY unknown path, so the site name alone cannot tell a live page
-#          from a vanished prerender — only the assembly's own name in the <title> can.
+#          assembly. The list is NOT hard-coded and needs no new deployment artefact: the /assemblies/ page fetched
+#          just above already links to every assembly the site publishes, so its href="/assemblies/<id>" links are
+#          the paths to probe. A new assembly is monitored from the moment it ships, at no extra request.
+#          (data/assemblies/index.json cannot be used: dataset.ts bundles it into a JS chunk at build time and it is
+#          never served under /data/ — copy-member-data.ts copies only data/members/*.json and OPS_DATA_FILES — so
+#          /data/assemblies/index.json is a 404 in production. Verified against the live site.)
+#          At most PROBE_ASSEMBLY_SAMPLE (3) pages are fetched per run, rotating through the list (one step per
+#          10-minute slot), which keeps a round at a fixed, small number of requests however many assemblies exist
+#          while still covering every assembly within a few rounds. See docs/ops/monitoring.md for the operational
+#          target ("every assembly at least once an hour") that decides when the sample size has to grow.
+#          A missing prerender is already caught by the site-name check: nginx answers ANY unknown path with
+#          /__spa-fallback.html, whose <title> is "Loading..." — no site name, so it fails. The extra check that the
+#          page mentions its own id is defence in depth (a wrong page served for the right URL, or a future
+#          fallback that did carry the site name), not the primary defence.
 #   data   meta.fetchedAt (top-level, the ETL's run time) is at most PROBE_MAX_AGE_HOURS (48) old — the daily ETL +
 #          deploy-data.yml is alive
 #   tls    the certificate presented for the origin's host is valid for at least PROBE_TLS_MIN_DAYS (14) more days
@@ -74,49 +80,59 @@ fetch() {
 # has_title <file> [needle] → the first <title> contains <needle> (default: the site name)
 has_title() { tr -d '\n' < "$1" | grep -o '<title>[^<]*</title>' | head -1 | grep -q -F -- "${2:-$TITLE_MUST_CONTAIN}"; }
 
-# check_page <path> [extra] → appends to http_reasons unless the page answers 200 and its <title> carries the site
-# name — plus <extra> when given (the assembly's own name; see the SPA-fallback note in the header)
+# check_page <path> [outfile] → appends to http_reasons unless the page answers 200 and its <title> carries the site
+# name. <outfile> keeps the body for the caller (the assembly list is parsed for its links); default is scratch.
 check_page() {
-  local path=$1 extra=${2:-} f="$TMP/page" code
+  local path=$1 f=${2:-$TMP/page} code
   code=$(fetch "$path" "$f")
-  if [ "$code" != 200 ]; then http_reasons+=("$path $code"); return; fi
-  if ! has_title "$f"; then http_reasons+=("$path title lacks ${TITLE_MUST_CONTAIN}"); return; fi
-  if [ -n "$extra" ] && ! has_title "$f" "$extra"; then http_reasons+=("$path title is not this page"); fi
+  if [ "$code" != 200 ]; then http_reasons+=("$path $code"); return 1; fi
+  if ! has_title "$f"; then http_reasons+=("$path title lacks ${TITLE_MUST_CONTAIN}"); return 1; fi
 }
 
 # ---- http ----
 http_reasons=()
-for path in / /members/ /assemblies/; do check_page "$path"; done
+check_page / || true
+check_page /members/ || true
+ALIST="$TMP/assemblies.html"; assemblies_ok=0
+check_page /assemblies/ "$ALIST" && assemblies_ok=1
 META="$TMP/meta.json"; meta_code=$(fetch /data/meta.json "$META")
 [ "$meta_code" = 200 ] || http_reasons+=("/data/meta.json $meta_code")
 
 # ---- assembly pages (#248) ----
-# The list comes from the site's own /data/assemblies/index.json, so a new assembly is probed the moment it ships —
-# nothing here to keep in sync by hand. Failures land in the same "http" check: one Issue per environment, not per
-# assembly, so the existing dedup/auto-close in report.sh keeps working unchanged.
-if [ "$ASSEMBLY_SAMPLE" -gt 0 ]; then
-  AIDX="$TMP/assemblies.json"; aidx_code=$(fetch /data/assemblies/index.json "$AIDX")
-  if [ "$aidx_code" != 200 ]; then
-    http_reasons+=("/data/assemblies/index.json $aidx_code")
+# Where the list comes from: the /assemblies/ page that was just fetched above — its links ARE the assemblies the
+# site is publishing. Nothing is hard-coded, so a new assembly is probed from the moment it ships, and it costs no
+# extra request. (data/assemblies/index.json is NOT an option: it is bundled into a JS chunk at build time and is
+# never served under /data/ — only data/members/*.json and OPS_DATA_FILES are copied there. Probing it would 404
+# on every run.) A vanished prerender is caught by the site-name title check alone: nginx serves
+# /__spa-fallback.html for any unknown path, and its <title> is "Loading...", which has no site name in it.
+if [ "$ASSEMBLY_SAMPLE" -gt 0 ] && [ "$assemblies_ok" = 1 ]; then
+  # ids only: the link text is layout-dependent (an id can appear both as "宮城" and "宮城県議会"), the id is not.
+  mapfile -t assemblies < <(tr -d '\n' < "$ALIST" \
+    | grep -o 'href="/assemblies/[A-Za-z0-9._-]\+"' \
+    | sed 's|^href="/assemblies/||; s|"$||' | awk '!seen[$0]++' || true)
+  n=${#assemblies[@]}
+  if [ "$n" -eq 0 ]; then
+    http_reasons+=("/assemblies/ links to no assembly")
   else
-    # "<id> <name>" per entry, in file order — no jq or python3 needed on the runner
-    mapfile -t assemblies < <(tr -d '\n' < "$AIDX" \
-      | grep -o '"id" *: *"[^"]*"[^{]*"name" *: *"[^"]*"' \
-      | sed 's/^"id" *: *"\([^"]*\)".*"name" *: *"\([^"]*\)"$/\1 \2/' || true)
-    n=${#assemblies[@]}
-    if [ "$n" -eq 0 ]; then
-      http_reasons+=("/data/assemblies/index.json lists no assembly")
-    else
-      # Rotate through the list (one step per 10-minute slot = one step per run): a run stays at a fixed small
-      # number of requests however many assemblies exist, and every assembly is still covered within a few runs.
-      # PROBE_NOW pins the slot for the tests; the schedule provides it in production.
-      offset=$(( (${PROBE_NOW:-$(date +%s)} / 600) % n ))
-      take=$(( ASSEMBLY_SAMPLE < n ? ASSEMBLY_SAMPLE : n ))
-      for ((i = 0; i < take; i++)); do
-        entry=${assemblies[$(( (offset + i) % n ))]}
-        check_page "/assemblies/${entry%% *}" "${entry#* }"
-      done
-    fi
+    # Rotate through the list (one step per 10-minute slot = one step per run): a run stays at a fixed small
+    # number of requests however many assemblies exist, and every assembly is still covered within a few runs.
+    # PROBE_NOW pins the slot for the tests and across run.sh's two rounds; the clock provides it otherwise.
+    take=$(( ASSEMBLY_SAMPLE < n ? ASSEMBLY_SAMPLE : n ))
+    # Step by `take`, not by 1: consecutive runs must probe DISJOINT blocks, or a sample of 3 stepping by 1 would
+    # re-probe two thirds of the previous run and take 3x longer to cover everything.
+    offset=$(( (${PROBE_NOW:-$(date +%s)} / 600) * take % n ))
+    for ((i = 0; i < take; i++)); do
+      id=${assemblies[$(( (offset + i) % n ))]}
+      # Defence in depth on top of the site name: the page must also mention its own id, so serving the wrong
+      # assembly's page (or a future fallback that did carry the site name) is still caught.
+      # Deliberately the id, not the name: ids are ASCII ([A-Za-z0-9._-]) and are never HTML- or JSON-escaped, so
+      # this stays a plain literal comparison. Matching a name would have to cope with &amp; and friends —
+      # "A&B議会" is served as "A&amp;B議会" and a literal grep would report a false failure.
+      f="$TMP/page"
+      if check_page "/assemblies/$id" "$f" && ! grep -q -F -- "$id" "$f"; then
+        http_reasons+=("/assemblies/$id is not this assembly's page")
+      fi
+    done
   fi
 fi
 if [ ${#http_reasons[@]} -eq 0 ]; then ok http; else fail http "$(IFS=';'; echo "${http_reasons[*]}")"; fi
