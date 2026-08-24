@@ -1,0 +1,34 @@
+{
+ "house": "shugiin",
+ "id": "200-閣法-10",
+ "kind": "閣法",
+ "number": 10,
+ "received": {
+  "sangiin": "2019-11-26",
+  "shugiin": "2019-10-18"
+ },
+ "result": {
+  "lawNumber": "70",
+  "promulgated": "2019-12-11",
+  "sangiin": "可決",
+  "shugiin": "修正"
+ },
+ "session": 200,
+ "shugiinGroupStance": {
+  "no": [
+   "日本共産党"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主・国民・社保・無所属フォーラム",
+   "公明党",
+   "日本維新の会",
+   "希望の党"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCE0CA.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "会社法の一部を改正する法律案"
+}

@@ -1,0 +1,36 @@
+{
+ "house": "shugiin",
+ "id": "211-閣法-59",
+ "kind": "閣法",
+ "number": 59,
+ "received": {
+  "sangiin": "2023-05-30",
+  "shugiin": "2023-03-14"
+ },
+ "result": {
+  "lawNumber": "67",
+  "promulgated": "2023-06-23",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 211,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "全会一致",
+  "unanimous": true,
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主党・無所属",
+   "日本維新の会",
+   "公明党",
+   "国民民主党・無所属クラブ",
+   "日本共産党",
+   "有志の会",
+   "れいわ新選組"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD8382.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "性的な姿態を撮影する行為等の処罰及び押収物に記録された性的な姿態の影像に係る電磁的記録の消去等に関する法律案"
+}

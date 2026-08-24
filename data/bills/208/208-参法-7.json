@@ -1,0 +1,36 @@
+{
+ "house": "shugiin",
+ "id": "208-参法-7",
+ "kind": "参法",
+ "number": 7,
+ "received": {
+  "sangiin": "2022-04-12",
+  "shugiin": "2022-04-13"
+ },
+ "result": {
+  "lawNumber": "52",
+  "promulgated": "2022-05-25",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 208,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "全会一致",
+  "unanimous": true,
+  "yes": [
+   "自由民主党",
+   "立憲民主党・無所属",
+   "日本維新の会",
+   "公明党",
+   "国民民主党・無所属クラブ",
+   "日本共産党",
+   "有志の会",
+   "れいわ新選組"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD58FA.htm",
+ "status": "成立",
+ "submitterText": "厚生労働委員長",
+ "title": "困難な問題を抱える女性への支援に関する法律案"
+}

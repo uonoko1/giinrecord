@@ -1,0 +1,40 @@
+{
+ "house": "shugiin",
+ "id": "210-衆法-9",
+ "kind": "衆法",
+ "number": 9,
+ "received": {
+  "sangiin": "2022-11-04",
+  "shugiin": "2022-11-02"
+ },
+ "result": {
+  "lawNumber": "79",
+  "promulgated": "2022-11-09",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 210,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "全会一致",
+  "unanimous": true,
+  "yes": [
+   "自由民主党",
+   "立憲民主党・無所属",
+   "日本維新の会",
+   "公明党",
+   "国民民主党・無所属クラブ",
+   "日本共産党",
+   "有志の会",
+   "れいわ新選組"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD7576.htm",
+ "status": "成立",
+ "submitterNames": [
+  "大西英男"
+ ],
+ "submitterText": "内閣委員長",
+ "supporterNames": [],
+ "title": "令和四年度電力・ガス・食料品等価格高騰緊急支援給付金に係る差押禁止等に関する法律案"
+}

@@ -1,0 +1,29 @@
+{
+ "house": "shugiin",
+ "id": "203-ＮＨＫ決算-1DD703E",
+ "kind": "その他",
+ "kindText": "ＮＨＫ決算",
+ "result": {
+  "shugiin": "異議がない"
+ },
+ "session": 203,
+ "shugiinGroupStance": {
+  "no": [
+   "日本共産党",
+   "れいわ新選組"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党",
+   "立憲民主党・無所属",
+   "日本維新の会",
+   "公明党",
+   "国民民主党・無所属クラブ",
+   "有志の会"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD703E.htm",
+ "status": "本院議了",
+ "submitterText": "内閣",
+ "title": "日本放送協会令和元年度財産目録、貸借対照表、損益計算書、資本等変動計算書及びキャッシュ・フロー計算書"
+}

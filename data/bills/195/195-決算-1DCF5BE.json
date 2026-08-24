@@ -1,0 +1,14 @@
+{
+ "house": "shugiin",
+ "id": "195-決算-1DCF5BE",
+ "kind": "その他",
+ "kindText": "決算",
+ "result": {
+  "shugiin": "閉会中審査"
+ },
+ "session": 195,
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCF5BE.htm",
+ "status": "衆議院で閉会中審査",
+ "submitterText": "内閣",
+ "title": "平成二十八年度政府関係機関決算書"
+}

@@ -3,9 +3,15 @@
  "id": "216-衆法-10",
  "kind": "衆法",
  "number": 10,
+ "received": {
+  "shugiin": "2024-12-09"
+ },
+ "result": {
+  "shugiin": "閉会中審査"
+ },
  "session": 216,
- "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDD8A.htm",
- "status": "撤回",
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDC5E.htm",
+ "status": "衆議院で閉会中審査",
  "submitterGroups": [
   "立憲民主党・無所属",
   "有志の会",

@@ -1,0 +1,32 @@
+{
+ "house": "shugiin",
+ "id": "204-承認-1",
+ "kind": "承認",
+ "number": 1,
+ "received": {
+  "sangiin": "2021-03-23",
+  "shugiin": "2021-02-05"
+ },
+ "result": {
+  "sangiin": "承認",
+  "shugiin": "承認"
+ },
+ "session": 204,
+ "shugiinGroupStance": {
+  "no": [
+   "日本共産党",
+   "日本維新の会・無所属の会"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主党・無所属",
+   "公明党",
+   "国民民主党・無所属クラブ"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD1C3A.htm",
+ "status": "両院承認",
+ "submitterText": "内閣",
+ "title": "放送法第七十条第二項の規定に基づき、承認を求めるの件"
+}

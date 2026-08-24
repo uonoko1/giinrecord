@@ -1,0 +1,36 @@
+{
+ "house": "shugiin",
+ "id": "208-閣法-37",
+ "kind": "閣法",
+ "number": 37,
+ "received": {
+  "sangiin": "2022-04-07",
+  "shugiin": "2022-02-25"
+ },
+ "result": {
+  "lawNumber": "43",
+  "promulgated": "2022-05-18",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 208,
+ "shugiinGroupStance": {
+  "no": [
+   "日本共産党",
+   "れいわ新選組"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党",
+   "立憲民主党・無所属",
+   "日本維新の会",
+   "公明党",
+   "国民民主党・無所属クラブ",
+   "有志の会"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD54EE.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "経済施策を一体的に講ずることによる安全保障の確保の推進に関する法律案"
+}

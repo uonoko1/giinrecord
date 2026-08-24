@@ -1,0 +1,36 @@
+{
+ "house": "shugiin",
+ "id": "213-閣法-37",
+ "kind": "閣法",
+ "number": 37,
+ "received": {
+  "sangiin": "2024-04-19",
+  "shugiin": "2024-03-01"
+ },
+ "result": {
+  "lawNumber": "39",
+  "promulgated": "2024-05-24",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 213,
+ "shugiinGroupStance": {
+  "no": [
+   "日本共産党"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主党・無所属",
+   "日本維新の会・教育無償化を実現する会",
+   "公明党",
+   "国民民主党・無所属クラブ",
+   "有志の会",
+   "れいわ新選組"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDBAF6.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "風力発電設備の設置等による電波の伝搬障害を回避し電波を用いた自衛隊等の円滑かつ安全な活動を確保するための措置に関する法律案"
+}

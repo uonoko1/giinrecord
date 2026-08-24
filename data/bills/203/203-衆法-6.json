@@ -1,0 +1,38 @@
+{
+ "house": "shugiin",
+ "id": "203-衆法-6",
+ "kind": "衆法",
+ "number": 6,
+ "received": {
+  "sangiin": "2020-11-24",
+  "shugiin": "2020-11-20"
+ },
+ "result": {
+  "lawNumber": "71",
+  "promulgated": "2020-12-09",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 203,
+ "shugiinGroupStance": {
+  "no": [
+   "日本共産党"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主党・社民・無所属",
+   "公明党",
+   "日本維新の会・無所属の会",
+   "国民民主党・無所属クラブ"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD0C62.htm",
+ "status": "成立",
+ "submitterNames": [
+  "左藤章"
+ ],
+ "submitterText": "文部科学委員長",
+ "supporterNames": [],
+ "title": "スポーツ振興投票の実施等に関する法律及び独立行政法人日本スポーツ振興センター法の一部を改正する法律案"
+}

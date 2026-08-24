@@ -1,0 +1,17 @@
+{
+ "house": "shugiin",
+ "id": "208-承諾-1DD57BE",
+ "kind": "その他",
+ "kindText": "承諾",
+ "received": {
+  "shugiin": "2022-03-18"
+ },
+ "result": {
+  "shugiin": "閉会中審査"
+ },
+ "session": 208,
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD57BE.htm",
+ "status": "衆議院で閉会中審査",
+ "submitterText": "内閣",
+ "title": "令和三年度特別会計予算総則第十九条第一項の規定による経費増額総調書及び各省各庁所管経費増額調書（その１）"
+}

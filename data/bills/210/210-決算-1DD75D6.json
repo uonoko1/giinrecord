@@ -1,0 +1,17 @@
+{
+ "house": "shugiin",
+ "id": "210-決算-1DD75D6",
+ "kind": "その他",
+ "kindText": "決算",
+ "received": {
+  "shugiin": "2022-11-18"
+ },
+ "result": {
+  "shugiin": "閉会中審査"
+ },
+ "session": 210,
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD75D6.htm",
+ "status": "衆議院で閉会中審査",
+ "submitterText": "内閣",
+ "title": "令和三年度一般会計歳入歳出決算"
+}

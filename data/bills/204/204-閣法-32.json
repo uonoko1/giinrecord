@@ -1,0 +1,34 @@
+{
+ "house": "shugiin",
+ "id": "204-閣法-32",
+ "kind": "閣法",
+ "number": 32,
+ "received": {
+  "sangiin": "2021-03-18",
+  "shugiin": "2021-02-09"
+ },
+ "result": {
+  "lawNumber": "6",
+  "promulgated": "2021-03-31",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 204,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "全会一致",
+  "unanimous": true,
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主党・無所属",
+   "公明党",
+   "日本共産党",
+   "日本維新の会・無所属の会",
+   "国民民主党・無所属クラブ"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD1CE2.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "在外公館の名称及び位置並びに在外公館に勤務する外務公務員の給与に関する法律の一部を改正する法律案"
+}

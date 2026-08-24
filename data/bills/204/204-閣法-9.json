@@ -1,0 +1,34 @@
+{
+ "house": "shugiin",
+ "id": "204-閣法-9",
+ "kind": "閣法",
+ "number": 9,
+ "received": {
+  "sangiin": "2021-03-02",
+  "shugiin": "2021-01-29"
+ },
+ "result": {
+  "lawNumber": "7",
+  "promulgated": "2021-03-31",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 204,
+ "shugiinGroupStance": {
+  "no": [
+   "日本共産党",
+   "日本維新の会・無所属の会",
+   "国民民主党・無所属クラブ"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主党・無所属",
+   "公明党"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD178A.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "地方税法等の一部を改正する法律案"
+}

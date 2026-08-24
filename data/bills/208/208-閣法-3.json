@@ -1,0 +1,36 @@
+{
+ "house": "shugiin",
+ "id": "208-閣法-3",
+ "kind": "閣法",
+ "number": 3,
+ "received": {
+  "sangiin": "2022-02-22",
+  "shugiin": "2022-01-28"
+ },
+ "result": {
+  "lawNumber": "1",
+  "promulgated": "2022-03-31",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 208,
+ "shugiinGroupStance": {
+  "no": [
+   "立憲民主党・無所属",
+   "日本共産党",
+   "有志の会",
+   "れいわ新選組"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党",
+   "日本維新の会",
+   "公明党",
+   "国民民主党・無所属クラブ"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD50D2.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "地方税法等の一部を改正する法律案"
+}

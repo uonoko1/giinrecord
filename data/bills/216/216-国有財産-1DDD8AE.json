@@ -1,0 +1,17 @@
+{
+ "house": "shugiin",
+ "id": "216-国有財産-1DDD8AE",
+ "kind": "その他",
+ "kindText": "国有財産",
+ "received": {
+  "shugiin": "2024-11-29"
+ },
+ "result": {
+  "shugiin": "閉会中審査"
+ },
+ "session": 216,
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDD8AE.htm",
+ "status": "衆議院で閉会中審査",
+ "submitterText": "内閣",
+ "title": "令和五年度国有財産増減及び現在額総計算書"
+}

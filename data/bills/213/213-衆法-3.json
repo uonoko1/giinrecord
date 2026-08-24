@@ -1,0 +1,40 @@
+{
+ "house": "shugiin",
+ "id": "213-衆法-3",
+ "kind": "衆法",
+ "number": 3,
+ "received": {
+  "sangiin": "2024-03-14",
+  "shugiin": "2024-03-13"
+ },
+ "result": {
+  "lawNumber": "10",
+  "promulgated": "2024-03-30",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 213,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "全会一致",
+  "unanimous": true,
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主党・無所属",
+   "日本維新の会・教育無償化を実現する会",
+   "公明党",
+   "日本共産党",
+   "国民民主党・無所属クラブ",
+   "有志の会",
+   "れいわ新選組"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDBEBA.htm",
+ "status": "成立",
+ "submitterNames": [
+  "谷公一"
+ ],
+ "submitterText": "地域活性化・こども政策・デジタル社会形成に関する特別委員長",
+ "supporterNames": [],
+ "title": "令和六年度出産・子育て応援給付金に係る差押禁止等に関する法律案"
+}

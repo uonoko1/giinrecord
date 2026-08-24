@@ -1,0 +1,34 @@
+{
+ "house": "shugiin",
+ "id": "201-閣法-11",
+ "kind": "閣法",
+ "number": 11,
+ "received": {
+  "sangiin": "2020-03-17",
+  "shugiin": "2020-02-04"
+ },
+ "result": {
+  "lawNumber": "13",
+  "promulgated": "2020-03-31",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 201,
+ "shugiinGroupStance": {
+  "no": [
+   "日本共産党"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主・国民・社保・無所属フォーラム",
+   "公明党",
+   "日本維新の会・無所属の会",
+   "希望の党"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCEDB2.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "労働基準法の一部を改正する法律案"
+}

@@ -1,0 +1,34 @@
+{
+ "house": "shugiin",
+ "id": "213-予算-1",
+ "kind": "予算",
+ "number": 1,
+ "received": {
+  "sangiin": "2024-03-02",
+  "shugiin": "2024-01-26"
+ },
+ "result": {
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 213,
+ "shugiinGroupStance": {
+  "no": [
+   "立憲民主党・無所属",
+   "日本維新の会・教育無償化を実現する会",
+   "日本共産党",
+   "国民民主党・無所属クラブ",
+   "有志の会",
+   "れいわ新選組"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "公明党"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDB52A.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "令和六年度一般会計予算"
+}

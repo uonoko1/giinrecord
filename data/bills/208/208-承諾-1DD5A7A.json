@@ -1,0 +1,17 @@
+{
+ "house": "shugiin",
+ "id": "208-承諾-1DD5A7A",
+ "kind": "その他",
+ "kindText": "承諾",
+ "received": {
+  "shugiin": "2022-05-20"
+ },
+ "result": {
+  "shugiin": "閉会中審査"
+ },
+ "session": 208,
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD5A7A.htm",
+ "status": "衆議院で閉会中審査",
+ "submitterText": "内閣",
+ "title": "令和三年度特別会計予備費使用総調書及び各省各庁所管使用調書（その２）"
+}

@@ -1,0 +1,32 @@
+{
+ "house": "shugiin",
+ "id": "201-予算-3",
+ "kind": "予算",
+ "number": 3,
+ "received": {
+  "sangiin": "2020-01-28",
+  "shugiin": "2020-01-20"
+ },
+ "result": {
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 201,
+ "shugiinGroupStance": {
+  "no": [
+   "立憲民主・国民・社保・無所属フォーラム",
+   "日本共産党"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党・無所属の会",
+   "公明党",
+   "日本維新の会",
+   "希望の党"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCEBAE.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "令和元年度政府関係機関補正予算（機第１号）"
+}

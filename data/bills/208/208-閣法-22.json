@@ -1,0 +1,36 @@
+{
+ "house": "shugiin",
+ "id": "208-閣法-22",
+ "kind": "閣法",
+ "number": 22,
+ "received": {
+  "sangiin": "2022-03-17",
+  "shugiin": "2022-02-08"
+ },
+ "result": {
+  "lawNumber": "39",
+  "promulgated": "2022-05-09",
+  "sangiin": "可決",
+  "shugiin": "可決"
+ },
+ "session": 208,
+ "shugiinGroupStance": {
+  "no": [
+   "れいわ新選組"
+  ],
+  "stanceText": "多数",
+  "yes": [
+   "自由民主党",
+   "立憲民主党・無所属",
+   "日本維新の会",
+   "公明党",
+   "国民民主党・無所属クラブ",
+   "日本共産党",
+   "有志の会"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD5376.htm",
+ "status": "成立",
+ "submitterText": "内閣",
+ "title": "情報通信技術を利用する方法による国の歳入等の納付に関する法律案"
+}

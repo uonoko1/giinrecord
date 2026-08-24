@@ -1,0 +1,33 @@
+{
+ "house": "shugiin",
+ "id": "211-承認-3",
+ "kind": "承認",
+ "number": 3,
+ "received": {
+  "sangiin": "2023-06-13",
+  "shugiin": "2023-04-18"
+ },
+ "result": {
+  "sangiin": "承認",
+  "shugiin": "承認"
+ },
+ "session": 211,
+ "shugiinGroupStance": {
+  "no": [],
+  "stanceText": "全会一致",
+  "unanimous": true,
+  "yes": [
+   "自由民主党・無所属の会",
+   "立憲民主党・無所属",
+   "日本維新の会",
+   "公明党",
+   "国民民主党・無所属クラブ",
+   "日本共産党",
+   "有志の会"
+  ]
+ },
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD8472.htm",
+ "status": "両院承認",
+ "submitterText": "内閣",
+ "title": "外国為替及び外国貿易法第十条第二項の規定に基づき、北朝鮮を仕向地とする貨物の輸出及び北朝鮮を原産地又は船積地域とする貨物の輸入につき承認義務を課する等の措置を講じたことについて承認を求めるの件"
+}
