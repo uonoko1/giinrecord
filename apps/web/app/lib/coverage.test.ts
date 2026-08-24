@@ -4,7 +4,7 @@ import assembliesFixture from "../test-fixtures/assemblies/index.json";
 import localMembers from "../test-fixtures/assemblies/members-index.json";
 import sessionsFixture from "../test-fixtures/assemblies/sessions.json";
 import { dataset } from "../test-fixtures/dataset";
-import { buildCoverage, formatLocalSessionRange, formatSessionRange, hasSessionGaps, rosterlessSessions, sessionRange } from "./coverage";
+import { buildCoverage, formatLocalSessionRange, formatSessionRange, hasSessionGaps, rosterlessSessions, sessionRange, shugiinQuestionCoverage } from "./coverage";
 import type { AssemblySession } from "./data-contract";
 import type { Dataset, MemberSummary } from "./dataset";
 
@@ -64,6 +64,35 @@ describe("rosterlessSessions: 名簿の無い回次（#219 / #230）", () => {
   it("meta が無い・議員一覧の出典が無いなら null（推定しない）", () => {
     expect(rosterlessSessions(undefined)).toBeNull();
     expect(rosterlessSessions(meta([142], []))).toBeNull();
+  });
+});
+
+describe("shugiinQuestionCoverage: 衆院の質問主意書が議員ページに紐づく回次（#235）", () => {
+  // 衆院の議員名簿は「現在」の 1 回次分しか公開されていない（#71）ので、
+  // 質問主意書は全回次を取得していても、議員ページに紐づくのはその 1 回次だけ。
+  // 「取得した回次」と「議員に紐づく回次」を別の事実として出す（隠さない）。
+  const meta = (fetched: number[], sessions: number[]) => ({
+    fetchedAt: "2026-08-24T00:00:00.000Z",
+    sessions,
+    sources: [
+      { name: "衆議院 議員一覧（2026-02-18現在）", url: "https://www.shugiin.go.jp/internet/itdb_annai.nsf/html/statics/syu/1giin.htm", fetchedAt: "2026-08-24T00:00:00.000Z" },
+      ...fetched.map((s) => ({ name: `衆議院 質問答弁情報（第${s}回）`, url: `https://www.shugiin.go.jp/internet/itdb_shitsumon.nsf/html/shitsumon/kaiji${s}_l.htm`, fetchedAt: "2026-08-24T00:00:00.000Z" })),
+    ],
+  });
+
+  it("名簿が覆う回次（meta.sessions の最大）だけが紐づき、取得した回次の範囲は別に持つ", () => {
+    const c = shugiinQuestionCoverage(meta([200, 210, 216], [200, 210, 216, 221]));
+    expect(c).toEqual({ rosterSession: 221, fetched: { from: 200, to: 216, count: 3 }, linkedOnlyToRosterSession: true });
+  });
+
+  it("取得した回次が名簿の回次だけなら、紐づかない回次は無い", () => {
+    const c = shugiinQuestionCoverage(meta([221], [221]));
+    expect(c).toEqual({ rosterSession: 221, fetched: { from: 221, to: 221, count: 1 }, linkedOnlyToRosterSession: false });
+  });
+
+  it("meta が無い・質問答弁情報の出典が無いなら null（推定しない）", () => {
+    expect(shugiinQuestionCoverage(undefined)).toBeNull();
+    expect(shugiinQuestionCoverage(meta([], [221]))).toBeNull();
   });
 });
 
