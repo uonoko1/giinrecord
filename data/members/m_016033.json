@@ -2835,6 +2835,28 @@
    "value": "賛成"
   },
   {
+   "answerDate": "2025-04-15",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217089.htm",
+   "date": "2025-04-04",
+   "kind": "question",
+   "questionId": "217-sangiin-89",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217089.htm",
+   "submitterText": "平山 佐知子君",
+   "title": "犬猫等のブリーダーに係る免許制導入に関する質問主意書"
+  },
+  {
+   "answerDate": "2025-04-15",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/touh/t217088.htm",
+   "date": "2025-04-04",
+   "kind": "question",
+   "questionId": "217-sangiin-88",
+   "session": 217,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/217/meisai/m217088.htm",
+   "submitterText": "平山 佐知子君",
+   "title": "犬肉の輸入統計に関する質問主意書"
+  },
+  {
    "date": "2025-04-01",
    "groupValue": "賛成",
    "kind": "vote",

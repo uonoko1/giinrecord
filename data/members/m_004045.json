@@ -173,6 +173,17 @@
    "value": "賛成"
   },
   {
+   "answerDate": "2026-07-31",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/touh/t221101.htm",
+   "date": "2026-07-17",
+   "kind": "question",
+   "questionId": "221-sangiin-101",
+   "session": 221,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/meisai/m221101.htm",
+   "submitterText": "仁比 聡平君",
+   "title": "独立行政法人地域医療機能推進機構が運営する病院に関する再質問主意書"
+  },
+  {
    "date": "2026-07-15",
    "groupValue": "反対",
    "kind": "vote",
@@ -358,6 +369,17 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0708-v001.htm",
    "title": "日程第１　令和六年度一般会計歳入歳出決算、令和六年度特別会計歳入歳出決算、令和六年度国税収納金整理資金受払計算書、令和六年度政府関係機関決算書「委員長報告のとおり是認すること」",
    "value": "反対"
+  },
+  {
+   "answerDate": "2026-07-10",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/touh/t221066.htm",
+   "date": "2026-07-01",
+   "kind": "question",
+   "questionId": "221-sangiin-66",
+   "session": 221,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/meisai/m221066.htm",
+   "submitterText": "仁比 聡平君",
+   "title": "独立行政法人地域医療機能推進機構が運営する病院に関する質問主意書"
   },
   {
    "date": "2026-06-26",
@@ -1337,6 +1359,17 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0323-v001.htm",
    "title": "日程第１　国家公務員等の任命に関する件「人事官（菅原晶子君）」",
    "value": "反対"
+  },
+  {
+   "answerDate": "2025-12-26",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/219/touh/t219080.htm",
+   "date": "2025-12-17",
+   "kind": "question",
+   "questionId": "219-sangiin-80",
+   "session": 219,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/219/meisai/m219080.htm",
+   "submitterText": "仁比 聡平君",
+   "title": "佐賀県警におけるＤＮＡ型鑑定に係る不正行為に関する質問主意書"
   },
   {
    "date": "2025-12-16",
@@ -2648,6 +2681,16 @@
    "value": "賛成"
   },
   {
+   "chars": 2974,
+   "date": "2025-04-25",
+   "excerpt": "日本共産党の仁比聡平です。 会派を代表して、災害対策基本法等改正案について質問いたします。 本改正案が、避難所の生活環境の改善とともに、壊れた自宅や車中泊など避難所以外の支援を明確に位置付け、特に福祉サービスの提供を災害救助法に明記することはとても大切です。 衆議院で兵庫県立大学大学院教授の阪本真由美参考人は、高齢者、障害者が災害関連死に至るリスクは極めて高い、避難生活の環境を改善しない限り関連死",
+   "kind": "speech",
+   "meeting": "本会議 第16号",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715254X01620250425/23",
+   "speechId": "121715254X01620250425_023"
+  },
+  {
    "date": "2025-04-23",
    "groupValue": "反対",
    "kind": "vote",
@@ -2690,6 +2733,16 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0423-v001.htm",
    "title": "日程第１　所得に対する租税に関する二重課税の除去並びに脱税及び租税回避の防止のための日本国政府とウクライナ政府との間の条約の締結について承認を求めるの件（衆議院送付）",
    "value": "反対"
+  },
+  {
+   "chars": 3238,
+   "date": "2025-04-23",
+   "excerpt": "日本共産党の仁比聡平です。 会派を代表して、刑事デジタルプライバシー侵害法案というべき刑事訴訟法等改定案について質問いたします。 本法案は、情報通信技術の進展に対応するとして、形があり、そこにあるものではなく、形のない、今日際限なく蓄積される巨大サーバーやクラウド上の個人情報、電子データ自体を初めて捜索、差押えの対象とする電磁的記録提供命令を創設するものです。 プロバイダーなど電気通信事業者は、提",
+   "kind": "speech",
+   "meeting": "本会議 第15号",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715254X01520250423/17",
+   "speechId": "121715254X01520250423_017"
   },
   {
    "date": "2025-04-18",

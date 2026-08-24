@@ -20,7 +20,7 @@
   "assemblyId": "diet-sangiin",
   "counts": {
    "bills": 0,
-   "questions": 2,
+   "questions": 8,
    "rollcalls": 380,
    "speeches": 14
   },
@@ -39,7 +39,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 2
+   "speeches": 5
   },
   "current": true,
   "district": "鳥取・島根",
@@ -56,7 +56,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 307,
-   "speeches": 3
+   "speeches": 4
   },
   "current": true,
   "district": "比例",
@@ -73,7 +73,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 260,
-   "speeches": 1
+   "speeches": 3
   },
   "current": false,
   "district": "比例",
@@ -121,10 +121,10 @@
  {
   "assemblyId": "diet-sangiin",
   "counts": {
-   "bills": 1,
+   "bills": 2,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 1
+   "speeches": 3
   },
   "current": true,
   "district": "福岡",
@@ -141,7 +141,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 307,
-   "speeches": 2
+   "speeches": 7
   },
   "current": true,
   "district": "神奈川",
@@ -158,7 +158,7 @@
    "bills": 43,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 18
+   "speeches": 20
   },
   "current": true,
   "district": "大阪",
@@ -192,7 +192,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 3
+   "speeches": 5
   },
   "current": true,
   "district": "比例",
@@ -206,10 +206,10 @@
  {
   "assemblyId": "diet-sangiin",
   "counts": {
-   "bills": 7,
+   "bills": 9,
    "questions": 2,
    "rollcalls": 219,
-   "speeches": 17
+   "speeches": 22
   },
   "current": false,
   "district": "比例",
@@ -243,7 +243,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 219,
-   "speeches": 15
+   "speeches": 16
   },
   "current": false,
   "district": "埼玉",
@@ -260,7 +260,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 2
+   "speeches": 7
   },
   "current": true,
   "district": "兵庫",
@@ -274,10 +274,10 @@
  {
   "assemblyId": "diet-sangiin",
   "counts": {
-   "bills": 2,
-   "questions": 6,
+   "bills": 8,
+   "questions": 7,
    "rollcalls": 380,
-   "speeches": 12
+   "speeches": 16
   },
   "current": true,
   "district": "愛知",
@@ -328,7 +328,7 @@
    "bills": 5,
    "questions": 0,
    "rollcalls": 219,
-   "speeches": 4
+   "speeches": 5
   },
   "current": false,
   "district": "比例",
@@ -345,7 +345,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 9
+   "speeches": 10
   },
   "current": true,
   "district": "千葉",
@@ -379,7 +379,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 219,
-   "speeches": 2
+   "speeches": 3
   },
   "current": false,
   "district": "岡山",
@@ -396,7 +396,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 11
+   "speeches": 13
   },
   "current": true,
   "district": "比例",
@@ -411,9 +411,9 @@
   "assemblyId": "diet-sangiin",
   "counts": {
    "bills": 0,
-   "questions": 79,
+   "questions": 156,
    "rollcalls": 380,
-   "speeches": 4
+   "speeches": 6
   },
   "current": true,
   "district": "宮城",
@@ -428,9 +428,9 @@
   "assemblyId": "diet-sangiin",
   "counts": {
    "bills": 0,
-   "questions": 3,
+   "questions": 5,
    "rollcalls": 219,
-   "speeches": 3
+   "speeches": 4
   },
   "current": false,
   "district": "比例",
@@ -444,7 +444,7 @@
  {
   "assemblyId": "diet-sangiin",
   "counts": {
-   "bills": 0,
+   "bills": 1,
    "questions": 0,
    "rollcalls": 380,
    "speeches": 2
@@ -464,7 +464,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 3
+   "speeches": 4
   },
   "current": true,
   "district": "比例",
@@ -478,8 +478,8 @@
  {
   "assemblyId": "diet-sangiin",
   "counts": {
-   "bills": 8,
-   "questions": 11,
+   "bills": 11,
+   "questions": 16,
    "rollcalls": 380,
    "speeches": 10
   },
@@ -515,7 +515,7 @@
    "bills": 2,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 17
+   "speeches": 20
   },
   "current": true,
   "district": "比例",
@@ -532,7 +532,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 2
+   "speeches": 6
   },
   "current": true,
   "district": "千葉",
@@ -549,7 +549,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 307,
-   "speeches": 4
+   "speeches": 7
   },
   "current": true,
   "district": "比例",
@@ -583,7 +583,7 @@
    "bills": 1,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 14
+   "speeches": 16
   },
   "current": true,
   "district": "比例",
@@ -600,7 +600,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 1
+   "speeches": 2
   },
   "current": true,
   "district": "北海道",
@@ -614,10 +614,10 @@
  {
   "assemblyId": "diet-sangiin",
   "counts": {
-   "bills": 0,
+   "bills": 1,
    "questions": 0,
    "rollcalls": 307,
-   "speeches": 2
+   "speeches": 3
   },
   "current": true,
   "district": "比例",
@@ -634,7 +634,7 @@
    "bills": 0,
    "questions": 1,
    "rollcalls": 380,
-   "speeches": 12
+   "speeches": 13
   },
   "current": true,
   "district": "埼玉",
@@ -682,10 +682,10 @@
  {
   "assemblyId": "diet-sangiin",
   "counts": {
-   "bills": 0,
-   "questions": 9,
+   "bills": 1,
+   "questions": 10,
    "rollcalls": 380,
-   "speeches": 5
+   "speeches": 7
   },
   "current": true,
   "district": "新潟",
@@ -702,7 +702,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 6
+   "speeches": 8
   },
   "current": true,
   "district": "比例",
@@ -753,7 +753,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 370,
-   "speeches": 10
+   "speeches": 13
   },
   "current": true,
   "district": "比例",
@@ -770,7 +770,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 5
+   "speeches": 6
   },
   "current": true,
   "district": "比例",
@@ -804,7 +804,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 10
+   "speeches": 20
   },
   "current": true,
   "district": "岡山",
@@ -870,7 +870,7 @@
   "assemblyId": "diet-sangiin",
   "counts": {
    "bills": 0,
-   "questions": 1,
+   "questions": 3,
    "rollcalls": 307,
    "speeches": 1
   },
@@ -889,7 +889,7 @@
    "bills": 0,
    "questions": 4,
    "rollcalls": 142,
-   "speeches": 0
+   "speeches": 1
   },
   "current": false,
   "district": "比例",
@@ -974,7 +974,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 307,
-   "speeches": 2
+   "speeches": 5
   },
   "current": true,
   "district": "比例",
@@ -1008,7 +1008,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 307,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "茨城",
@@ -1025,7 +1025,7 @@
    "bills": 0,
    "questions": 6,
    "rollcalls": 380,
-   "speeches": 3
+   "speeches": 6
   },
   "current": true,
   "district": "比例",
@@ -1059,7 +1059,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 3
+   "speeches": 24
   },
   "current": true,
   "district": "比例",
@@ -1076,7 +1076,7 @@
    "bills": 11,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 12
+   "speeches": 14
   },
   "current": true,
   "district": "兵庫",
@@ -1093,7 +1093,7 @@
    "bills": 0,
    "questions": 1,
    "rollcalls": 380,
-   "speeches": 3
+   "speeches": 5
   },
   "current": true,
   "district": "北海道",
@@ -1110,7 +1110,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 307,
-   "speeches": 7
+   "speeches": 11
   },
   "current": true,
   "district": "比例",
@@ -1124,10 +1124,10 @@
  {
   "assemblyId": "diet-sangiin",
   "counts": {
-   "bills": 0,
-   "questions": 128,
+   "bills": 8,
+   "questions": 157,
    "rollcalls": 307,
-   "speeches": 0
+   "speeches": 3
   },
   "current": true,
   "district": "比例",
@@ -1159,9 +1159,9 @@
   "assemblyId": "diet-sangiin",
   "counts": {
    "bills": 0,
-   "questions": 28,
+   "questions": 29,
    "rollcalls": 219,
-   "speeches": 8
+   "speeches": 10
   },
   "current": false,
   "district": "比例",
@@ -1178,7 +1178,7 @@
    "bills": 1,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 10
+   "speeches": 12
   },
   "current": true,
   "district": "比例",
@@ -1193,9 +1193,9 @@
   "assemblyId": "diet-sangiin",
   "counts": {
    "bills": 1,
-   "questions": 17,
+   "questions": 19,
    "rollcalls": 219,
-   "speeches": 8
+   "speeches": 10
   },
   "current": false,
   "district": "比例",
@@ -1229,7 +1229,7 @@
    "bills": 0,
    "questions": 5,
    "rollcalls": 370,
-   "speeches": 6
+   "speeches": 7
   },
   "current": true,
   "district": "岩手",
@@ -1246,7 +1246,7 @@
    "bills": 0,
    "questions": 1,
    "rollcalls": 380,
-   "speeches": 2
+   "speeches": 3
   },
   "current": true,
   "district": "比例",
@@ -1260,10 +1260,10 @@
  {
   "assemblyId": "diet-sangiin",
   "counts": {
-   "bills": 0,
-   "questions": 0,
+   "bills": 1,
+   "questions": 2,
    "rollcalls": 380,
-   "speeches": 14
+   "speeches": 18
   },
   "current": true,
   "district": "東京",
@@ -1280,7 +1280,7 @@
    "bills": 0,
    "questions": 1,
    "rollcalls": 380,
-   "speeches": 6
+   "speeches": 7
   },
   "current": true,
   "district": "比例",
@@ -1297,7 +1297,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 11
+   "speeches": 15
   },
   "current": true,
   "district": "山口",
@@ -1314,7 +1314,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 307,
-   "speeches": 2
+   "speeches": 4
   },
   "current": true,
   "district": "比例",
@@ -1331,7 +1331,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 307,
-   "speeches": 2
+   "speeches": 5
   },
   "current": true,
   "district": "比例",
@@ -1348,7 +1348,7 @@
    "bills": 0,
    "questions": 56,
    "rollcalls": 380,
-   "speeches": 6
+   "speeches": 9
   },
   "current": true,
   "district": "埼玉",
@@ -1365,7 +1365,7 @@
    "bills": 1,
    "questions": 1,
    "rollcalls": 219,
-   "speeches": 18
+   "speeches": 21
   },
   "current": false,
   "district": "京都",
@@ -1397,9 +1397,9 @@
   "assemblyId": "diet-sangiin",
   "counts": {
    "bills": 0,
-   "questions": 0,
+   "questions": 1,
    "rollcalls": 380,
-   "speeches": 11
+   "speeches": 14
   },
   "current": true,
   "district": "比例",
@@ -1413,10 +1413,10 @@
  {
   "assemblyId": "diet-sangiin",
   "counts": {
-   "bills": 1,
-   "questions": 116,
+   "bills": 3,
+   "questions": 130,
    "rollcalls": 380,
-   "speeches": 5
+   "speeches": 15
   },
   "current": true,
   "district": "千葉",
@@ -1450,7 +1450,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 307,
-   "speeches": 3
+   "speeches": 6
   },
   "current": true,
   "district": "比例",
@@ -1467,7 +1467,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 12
+   "speeches": 13
   },
   "current": true,
   "district": "長崎",
@@ -1484,7 +1484,7 @@
    "bills": 0,
    "questions": 8,
    "rollcalls": 380,
-   "speeches": 6
+   "speeches": 8
   },
   "current": true,
   "district": "福岡",
@@ -1535,7 +1535,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 219,
-   "speeches": 10
+   "speeches": 11
   },
   "current": false,
   "district": "神奈川",
@@ -1586,7 +1586,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 219,
-   "speeches": 2
+   "speeches": 3
   },
   "current": false,
   "district": "比例",
@@ -1603,7 +1603,7 @@
    "bills": 0,
    "questions": 1,
    "rollcalls": 380,
-   "speeches": 8
+   "speeches": 9
   },
   "current": true,
   "district": "愛知",
@@ -1618,7 +1618,7 @@
   "assemblyId": "diet-sangiin",
   "counts": {
    "bills": 0,
-   "questions": 20,
+   "questions": 27,
    "rollcalls": 306,
    "speeches": 0
   },
@@ -1671,7 +1671,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 2
+   "speeches": 8
   },
   "current": true,
   "district": "愛知",
@@ -1722,7 +1722,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 4
+   "speeches": 6
   },
   "current": true,
   "district": "比例",
@@ -1739,7 +1739,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 219,
-   "speeches": 3
+   "speeches": 7
   },
   "current": false,
   "district": "比例",
@@ -1754,9 +1754,9 @@
   "assemblyId": "diet-sangiin",
   "counts": {
    "bills": 0,
-   "questions": 68,
+   "questions": 82,
    "rollcalls": 380,
-   "speeches": 6
+   "speeches": 7
   },
   "current": true,
   "district": "東京",
@@ -1773,7 +1773,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 307,
-   "speeches": 3
+   "speeches": 5
   },
   "current": true,
   "district": "比例",
@@ -1788,9 +1788,9 @@
   "assemblyId": "diet-sangiin",
   "counts": {
    "bills": 0,
-   "questions": 2,
+   "questions": 4,
    "rollcalls": 380,
-   "speeches": 18
+   "speeches": 23
   },
   "current": true,
   "district": "比例",
@@ -1807,7 +1807,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 2
+   "speeches": 4
   },
   "current": true,
   "district": "福岡",
@@ -1909,7 +1909,7 @@
    "bills": 0,
    "questions": 2,
    "rollcalls": 380,
-   "speeches": 7
+   "speeches": 9
   },
   "current": true,
   "district": "長野",
@@ -1924,7 +1924,7 @@
   "assemblyId": "diet-sangiin",
   "counts": {
    "bills": 0,
-   "questions": 41,
+   "questions": 42,
    "rollcalls": 378,
    "speeches": 5
   },
@@ -1943,7 +1943,7 @@
    "bills": 1,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 152
+   "speeches": 1425
   },
   "current": true,
   "district": "埼玉",
@@ -1994,7 +1994,7 @@
    "bills": 3,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 12
+   "speeches": 13
   },
   "current": true,
   "district": "青森",
@@ -2011,7 +2011,7 @@
    "bills": 1,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 12
+   "speeches": 17
   },
   "current": true,
   "district": "比例",
@@ -2028,7 +2028,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 370,
-   "speeches": 12
+   "speeches": 15
   },
   "current": true,
   "district": "比例",
@@ -2045,7 +2045,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 9
+   "speeches": 10
   },
   "current": true,
   "district": "大阪",
@@ -2059,10 +2059,10 @@
  {
   "assemblyId": "diet-sangiin",
   "counts": {
-   "bills": 0,
+   "bills": 2,
    "questions": 1,
    "rollcalls": 307,
-   "speeches": 2
+   "speeches": 5
   },
   "current": true,
   "district": "埼玉",
@@ -2096,7 +2096,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 136,
-   "speeches": 0
+   "speeches": 1
   },
   "current": false,
   "district": "比例",
@@ -2164,7 +2164,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 219,
-   "speeches": 1
+   "speeches": 8
   },
   "current": false,
   "district": "青森",
@@ -2198,7 +2198,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 2
+   "speeches": 4
   },
   "current": true,
   "district": "比例",
@@ -2212,10 +2212,10 @@
  {
   "assemblyId": "diet-sangiin",
   "counts": {
-   "bills": 1,
+   "bills": 3,
    "questions": 0,
    "rollcalls": 307,
-   "speeches": 6
+   "speeches": 14
   },
   "current": true,
   "district": "比例",
@@ -2232,7 +2232,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 6
+   "speeches": 7
   },
   "current": true,
   "district": "東京",
@@ -2249,7 +2249,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 219,
-   "speeches": 22
+   "speeches": 23
   },
   "current": false,
   "district": "東京",
@@ -2283,7 +2283,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 219,
-   "speeches": 1
+   "speeches": 8
   },
   "current": false,
   "district": "比例",
@@ -2298,9 +2298,9 @@
   "assemblyId": "diet-sangiin",
   "counts": {
    "bills": 0,
-   "questions": 25,
+   "questions": 33,
    "rollcalls": 307,
-   "speeches": 1
+   "speeches": 7
   },
   "current": true,
   "district": "比例",
@@ -2317,7 +2317,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 10
+   "speeches": 11
   },
   "current": true,
   "district": "和歌山",
@@ -2368,7 +2368,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 219,
-   "speeches": 0
+   "speeches": 3
   },
   "current": false,
   "district": "富山",
@@ -2385,7 +2385,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 307,
-   "speeches": 0
+   "speeches": 2
   },
   "current": true,
   "district": "茨城",
@@ -2436,7 +2436,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 219,
-   "speeches": 9
+   "speeches": 11
   },
   "current": false,
   "district": "千葉",
@@ -2451,7 +2451,7 @@
   "assemblyId": "diet-sangiin",
   "counts": {
    "bills": 0,
-   "questions": 10,
+   "questions": 11,
    "rollcalls": 380,
    "speeches": 0
   },
@@ -2521,7 +2521,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 10
+   "speeches": 12
   },
   "current": true,
   "district": "徳島・高知",
@@ -2555,7 +2555,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 65
+   "speeches": 69
   },
   "current": true,
   "district": "千葉",
@@ -2587,9 +2587,9 @@
   "assemblyId": "diet-sangiin",
   "counts": {
    "bills": 1,
-   "questions": 0,
+   "questions": 3,
    "rollcalls": 307,
-   "speeches": 13
+   "speeches": 15
   },
   "current": true,
   "district": "比例",
@@ -2606,7 +2606,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 219,
-   "speeches": 15
+   "speeches": 16
   },
   "current": false,
   "district": "比例",
@@ -2640,7 +2640,7 @@
    "bills": 0,
    "questions": 1,
    "rollcalls": 380,
-   "speeches": 1
+   "speeches": 2
   },
   "current": true,
   "district": "埼玉",
@@ -2672,7 +2672,7 @@
   "assemblyId": "diet-sangiin",
   "counts": {
    "bills": 0,
-   "questions": 4,
+   "questions": 7,
    "rollcalls": 219,
    "speeches": 4
   },
@@ -2706,9 +2706,9 @@
   "assemblyId": "diet-sangiin",
   "counts": {
    "bills": 0,
-   "questions": 10,
+   "questions": 11,
    "rollcalls": 312,
-   "speeches": 3
+   "speeches": 4
   },
   "current": true,
   "district": "長野",
@@ -2742,7 +2742,7 @@
    "bills": 0,
    "questions": 3,
    "rollcalls": 380,
-   "speeches": 17
+   "speeches": 20
   },
   "current": true,
   "district": "山形",
@@ -2759,7 +2759,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 6
+   "speeches": 9
   },
   "current": true,
   "district": "北海道",
@@ -2793,7 +2793,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 7
+   "speeches": 9
   },
   "current": true,
   "district": "熊本",
@@ -2824,10 +2824,10 @@
  {
   "assemblyId": "diet-sangiin",
   "counts": {
-   "bills": 9,
+   "bills": 12,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 10
+   "speeches": 12
   },
   "current": true,
   "district": "比例",
@@ -2842,7 +2842,7 @@
   "assemblyId": "diet-sangiin",
   "counts": {
    "bills": 0,
-   "questions": 335,
+   "questions": 475,
    "rollcalls": 219,
    "speeches": 4
   },
@@ -2861,7 +2861,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 1
+   "speeches": 5
   },
   "current": true,
   "district": "比例",
@@ -2878,7 +2878,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 149,
-   "speeches": 8
+   "speeches": 9
   },
   "current": false,
   "district": "比例",
@@ -2895,7 +2895,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 9
+   "speeches": 10
   },
   "current": true,
   "district": "比例",
@@ -2910,7 +2910,7 @@
   "assemblyId": "diet-sangiin",
   "counts": {
    "bills": 0,
-   "questions": 4,
+   "questions": 6,
    "rollcalls": 380,
    "speeches": 0
   },
@@ -2946,7 +2946,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 8
+   "speeches": 26
   },
   "current": true,
   "district": "佐賀",
@@ -2961,9 +2961,9 @@
   "assemblyId": "diet-sangiin",
   "counts": {
    "bills": 0,
-   "questions": 13,
+   "questions": 37,
    "rollcalls": 380,
-   "speeches": 8
+   "speeches": 9
   },
   "current": true,
   "district": "比例",
@@ -2980,7 +2980,7 @@
    "bills": 1,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 12
+   "speeches": 19
   },
   "current": true,
   "district": "京都",
@@ -3014,7 +3014,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 1
+   "speeches": 5
   },
   "current": true,
   "district": "愛知",
@@ -3031,7 +3031,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 1
+   "speeches": 5
   },
   "current": true,
   "district": "比例",
@@ -3048,7 +3048,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 140,
-   "speeches": 1
+   "speeches": 2
   },
   "current": false,
   "district": "比例",
@@ -3062,10 +3062,10 @@
  {
   "assemblyId": "diet-sangiin",
   "counts": {
-   "bills": 7,
+   "bills": 9,
    "questions": 2,
    "rollcalls": 380,
-   "speeches": 8
+   "speeches": 11
   },
   "current": true,
   "district": "山形",
@@ -3099,7 +3099,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 307,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "北海道",
@@ -3133,7 +3133,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 307,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "福島",
@@ -3184,7 +3184,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 1
+   "speeches": 5
   },
   "current": true,
   "district": "比例",
@@ -3201,7 +3201,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 4
+   "speeches": 12
   },
   "current": true,
   "district": "静岡",
@@ -3216,9 +3216,9 @@
   "assemblyId": "diet-sangiin",
   "counts": {
    "bills": 0,
-   "questions": 166,
+   "questions": 184,
    "rollcalls": 380,
-   "speeches": 8
+   "speeches": 13
   },
   "current": true,
   "district": "神奈川",
@@ -3235,7 +3235,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 1
+   "speeches": 2
   },
   "current": true,
   "district": "大阪",
@@ -3252,7 +3252,7 @@
    "bills": 3,
    "questions": 9,
    "rollcalls": 377,
-   "speeches": 7
+   "speeches": 8
   },
   "current": true,
   "district": "神奈川",
@@ -3269,7 +3269,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 1
+   "speeches": 2
   },
   "current": true,
   "district": "宮崎",
@@ -3286,7 +3286,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 307,
-   "speeches": 3
+   "speeches": 5
   },
   "current": true,
   "district": "比例",
@@ -3320,7 +3320,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 2
+   "speeches": 5
   },
   "current": true,
   "district": "福岡",
@@ -3337,7 +3337,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 3
+   "speeches": 4
   },
   "current": true,
   "district": "神奈川",
@@ -3388,7 +3388,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 5
+   "speeches": 9
   },
   "current": true,
   "district": "神奈川",
@@ -3405,7 +3405,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 219,
-   "speeches": 0
+   "speeches": 7
   },
   "current": false,
   "district": "香川",
@@ -3422,7 +3422,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 6
+   "speeches": 9
   },
   "current": true,
   "district": "比例",
@@ -3437,9 +3437,9 @@
   "assemblyId": "diet-sangiin",
   "counts": {
    "bills": 0,
-   "questions": 42,
+   "questions": 57,
    "rollcalls": 146,
-   "speeches": 4
+   "speeches": 5
   },
   "current": false,
   "district": "神奈川",
@@ -3473,7 +3473,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 219,
-   "speeches": 0
+   "speeches": 1
   },
   "current": false,
   "district": "比例",
@@ -3490,7 +3490,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 5
+   "speeches": 11
   },
   "current": true,
   "district": "比例",
@@ -3507,7 +3507,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 6
+   "speeches": 8
   },
   "current": true,
   "district": "広島",
@@ -3524,7 +3524,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 1
+   "speeches": 5
   },
   "current": true,
   "district": "石川",
@@ -3541,7 +3541,7 @@
    "bills": 0,
    "questions": 3,
    "rollcalls": 307,
-   "speeches": 3
+   "speeches": 5
   },
   "current": true,
   "district": "比例",
@@ -3575,7 +3575,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 9
+   "speeches": 12
   },
   "current": true,
   "district": "広島",
@@ -3609,7 +3609,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 219,
-   "speeches": 16
+   "speeches": 17
   },
   "current": false,
   "district": "山梨",
@@ -3658,9 +3658,9 @@
   "assemblyId": "diet-sangiin",
   "counts": {
    "bills": 2,
-   "questions": 0,
+   "questions": 4,
    "rollcalls": 219,
-   "speeches": 12
+   "speeches": 13
   },
   "current": false,
   "district": "比例",
@@ -3677,7 +3677,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 136,
-   "speeches": 1
+   "speeches": 2
   },
   "current": false,
   "district": "比例",
@@ -3711,7 +3711,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 2
+   "speeches": 3
   },
   "current": true,
   "district": "福井",
@@ -3745,7 +3745,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 219,
-   "speeches": 10
+   "speeches": 12
   },
   "current": false,
   "district": "比例",
@@ -3760,9 +3760,9 @@
   "assemblyId": "diet-sangiin",
   "counts": {
    "bills": 3,
-   "questions": 7,
+   "questions": 9,
    "rollcalls": 380,
-   "speeches": 25
+   "speeches": 26
   },
   "current": true,
   "district": "東京",
@@ -3779,7 +3779,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 3
+   "speeches": 5
   },
   "current": true,
   "district": "比例",
@@ -3830,7 +3830,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 1
+   "speeches": 2
   },
   "current": true,
   "district": "比例",
@@ -3847,7 +3847,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 307,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "長崎",
@@ -3896,9 +3896,9 @@
   "assemblyId": "diet-sangiin",
   "counts": {
    "bills": 0,
-   "questions": 30,
+   "questions": 57,
    "rollcalls": 187,
-   "speeches": 0
+   "speeches": 2
   },
   "current": false,
   "district": "東京",
@@ -3932,7 +3932,7 @@
    "bills": 0,
    "questions": 1,
    "rollcalls": 380,
-   "speeches": 5
+   "speeches": 7
   },
   "current": true,
   "district": "岩手",
@@ -3983,7 +3983,7 @@
    "bills": 0,
    "questions": 14,
    "rollcalls": 380,
-   "speeches": 9
+   "speeches": 14
   },
   "current": true,
   "district": "比例",
@@ -4017,7 +4017,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 219,
-   "speeches": 5
+   "speeches": 14
   },
   "current": false,
   "district": "比例",
@@ -4051,7 +4051,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 219,
-   "speeches": 11
+   "speeches": 15
   },
   "current": false,
   "district": "比例",
@@ -4068,7 +4068,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 380,
-   "speeches": 1
+   "speeches": 2
   },
   "current": true,
   "district": "岐阜",
@@ -4100,9 +4100,9 @@
   "assemblyId": "diet-sangiin",
   "counts": {
    "bills": 0,
-   "questions": 0,
+   "questions": 2,
    "rollcalls": 161,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "比例",
@@ -4119,7 +4119,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 161,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "比例",
@@ -4185,7 +4185,7 @@
   "assemblyId": "diet-sangiin",
   "counts": {
    "bills": 0,
-   "questions": 0,
+   "questions": 14,
    "rollcalls": 161,
    "speeches": 0
   },
@@ -4221,7 +4221,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 161,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "比例",
@@ -4255,7 +4255,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 161,
-   "speeches": 0
+   "speeches": 2
   },
   "current": true,
   "district": "東京",
@@ -4289,7 +4289,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 161,
-   "speeches": 0
+   "speeches": 2
   },
   "current": true,
   "district": "埼玉",
@@ -4321,9 +4321,9 @@
   "assemblyId": "diet-sangiin",
   "counts": {
    "bills": 0,
-   "questions": 0,
+   "questions": 10,
    "rollcalls": 161,
-   "speeches": 0
+   "speeches": 2
   },
   "current": true,
   "district": "比例",
@@ -4337,7 +4337,7 @@
  {
   "assemblyId": "diet-sangiin",
   "counts": {
-   "bills": 0,
+   "bills": 3,
    "questions": 0,
    "rollcalls": 161,
    "speeches": 0
@@ -4408,7 +4408,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 161,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "東京",
@@ -4423,7 +4423,7 @@
   "assemblyId": "diet-sangiin",
   "counts": {
    "bills": 0,
-   "questions": 0,
+   "questions": 1,
    "rollcalls": 161,
    "speeches": 0
   },
@@ -4459,7 +4459,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 161,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "比例",
@@ -4476,7 +4476,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 161,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "三重",
@@ -4493,7 +4493,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 161,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "比例",
@@ -4510,7 +4510,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 161,
-   "speeches": 0
+   "speeches": 2
   },
   "current": true,
   "district": "山梨",
@@ -4544,7 +4544,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 161,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "千葉",
@@ -4561,7 +4561,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 161,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "茨城",
@@ -4578,7 +4578,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 161,
-   "speeches": 0
+   "speeches": 3
   },
   "current": true,
   "district": "比例",
@@ -4612,7 +4612,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 161,
-   "speeches": 0
+   "speeches": 2
   },
   "current": true,
   "district": "東京",
@@ -4629,7 +4629,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 161,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "比例",
@@ -4695,7 +4695,7 @@
   "assemblyId": "diet-sangiin",
   "counts": {
    "bills": 0,
-   "questions": 0,
+   "questions": 14,
    "rollcalls": 161,
    "speeches": 0
   },
@@ -4765,7 +4765,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 161,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "京都",
@@ -4799,7 +4799,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 161,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "富山",
@@ -4833,7 +4833,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 161,
-   "speeches": 0
+   "speeches": 3
   },
   "current": true,
   "district": "比例",
@@ -4847,10 +4847,10 @@
  {
   "assemblyId": "diet-sangiin",
   "counts": {
-   "bills": 0,
+   "bills": 1,
    "questions": 0,
    "rollcalls": 161,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "香川",
@@ -4882,7 +4882,7 @@
   "assemblyId": "diet-sangiin",
   "counts": {
    "bills": 0,
-   "questions": 0,
+   "questions": 6,
    "rollcalls": 161,
    "speeches": 0
   },
@@ -4950,9 +4950,9 @@
   "assemblyId": "diet-sangiin",
   "counts": {
    "bills": 0,
-   "questions": 0,
+   "questions": 2,
    "rollcalls": 161,
-   "speeches": 0
+   "speeches": 2
   },
   "current": true,
   "district": "比例",
@@ -4969,7 +4969,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 161,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "愛知",
@@ -4986,7 +4986,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 161,
-   "speeches": 0
+   "speeches": 3
   },
   "current": true,
   "district": "大阪",
@@ -5105,7 +5105,7 @@
    "bills": 0,
    "questions": 15,
    "rollcalls": 238,
-   "speeches": 3
+   "speeches": 4
   },
   "current": true,
   "district": "大分",
@@ -5120,7 +5120,7 @@
   "assemblyId": "diet-sangiin",
   "counts": {
    "bills": 0,
-   "questions": 0,
+   "questions": 16,
    "rollcalls": 161,
    "speeches": 0
   },
@@ -5137,7 +5137,7 @@
   "assemblyId": "diet-sangiin",
   "counts": {
    "bills": 0,
-   "questions": 8,
+   "questions": 10,
    "rollcalls": 243,
    "speeches": 9
   },
@@ -5256,7 +5256,7 @@
    "bills": 5,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "大阪14",
@@ -5304,7 +5304,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 11
   },
   "current": true,
   "district": "鳥取2",
@@ -5480,7 +5480,7 @@
    "bills": 5,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "（比）東京",
@@ -5526,7 +5526,7 @@
   "assemblyId": "diet-shugiin",
   "counts": {
    "bills": 7,
-   "questions": 0,
+   "questions": 4,
    "rollcalls": 0,
    "speeches": 0
   },
@@ -5592,7 +5592,7 @@
    "bills": 5,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "大阪10",
@@ -5624,7 +5624,7 @@
    "bills": 7,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 2
   },
   "current": true,
   "district": "（比）近畿",
@@ -5640,7 +5640,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 47
   },
   "current": true,
   "district": "（比）北関東",
@@ -5784,7 +5784,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "三重3",
@@ -5864,7 +5864,7 @@
    "bills": 19,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "（比）東京",
@@ -5960,7 +5960,7 @@
    "bills": 5,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "（比）近畿",
@@ -6024,7 +6024,7 @@
    "bills": 7,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "（比）東海",
@@ -6088,7 +6088,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 5
   },
   "current": true,
   "district": "大阪1",
@@ -6216,7 +6216,7 @@
    "bills": 5,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "大阪13",
@@ -6280,7 +6280,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 9
   },
   "current": true,
   "district": "滋賀2",
@@ -6360,7 +6360,7 @@
    "bills": 19,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "（比）北海道",
@@ -6408,7 +6408,7 @@
    "bills": 4,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "大阪15",
@@ -6552,7 +6552,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 5
   },
   "current": true,
   "district": "兵庫6",
@@ -6568,7 +6568,7 @@
    "bills": 7,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "（比）北関東",
@@ -6648,7 +6648,7 @@
    "bills": 7,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 2
   },
   "current": true,
   "district": "（比）東京",
@@ -6662,7 +6662,7 @@
   "assemblyId": "diet-shugiin",
   "counts": {
    "bills": 0,
-   "questions": 0,
+   "questions": 5,
    "rollcalls": 0,
    "speeches": 0
   },
@@ -6696,7 +6696,7 @@
    "bills": 7,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "（比）東京",
@@ -6726,9 +6726,9 @@
   "assemblyId": "diet-shugiin",
   "counts": {
    "bills": 7,
-   "questions": 0,
+   "questions": 3,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "香川1",
@@ -6808,7 +6808,7 @@
    "bills": 19,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "（比）北陸信越",
@@ -6838,7 +6838,7 @@
   "assemblyId": "diet-shugiin",
   "counts": {
    "bills": 7,
-   "questions": 0,
+   "questions": 1,
    "rollcalls": 0,
    "speeches": 0
   },
@@ -6872,7 +6872,7 @@
    "bills": 1,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "宮城5",
@@ -6936,7 +6936,7 @@
    "bills": 7,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "（比）東京",
@@ -7176,7 +7176,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "熊本4",
@@ -7208,7 +7208,7 @@
    "bills": 4,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "（比）南関東",
@@ -7240,7 +7240,7 @@
    "bills": 7,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "北海道10",
@@ -7256,7 +7256,7 @@
    "bills": 5,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 2
   },
   "current": true,
   "district": "（比）北陸信越",
@@ -7288,7 +7288,7 @@
    "bills": 5,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "（比）南関東",
@@ -7366,7 +7366,7 @@
   "assemblyId": "diet-shugiin",
   "counts": {
    "bills": 0,
-   "questions": 0,
+   "questions": 2,
    "rollcalls": 0,
    "speeches": 0
   },
@@ -7400,7 +7400,7 @@
    "bills": 1,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "青森2",
@@ -7416,7 +7416,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 3
   },
   "current": true,
   "district": "静岡7",
@@ -7560,7 +7560,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 5
   },
   "current": true,
   "district": "熊本1",
@@ -7624,7 +7624,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 3
   },
   "current": true,
   "district": "愛知4",
@@ -7752,7 +7752,7 @@
    "bills": 5,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "大阪16",
@@ -7784,7 +7784,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 4
   },
   "current": true,
   "district": "神奈川11",
@@ -7832,7 +7832,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "山口1",
@@ -7880,7 +7880,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 5
   },
   "current": true,
   "district": "沖縄1",
@@ -7912,7 +7912,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 21
   },
   "current": true,
   "district": "（比）近畿",
@@ -7944,7 +7944,7 @@
    "bills": 7,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "（比）南関東",
@@ -7960,7 +7960,7 @@
    "bills": 19,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "（比）九州",
@@ -8184,7 +8184,7 @@
    "bills": 1,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 4
   },
   "current": true,
   "district": "新潟3",
@@ -8232,7 +8232,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 3
   },
   "current": true,
   "district": "熊本3",
@@ -8296,7 +8296,7 @@
    "bills": 19,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "（比）東北",
@@ -8360,7 +8360,7 @@
    "bills": 4,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "愛媛1",
@@ -8616,7 +8616,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "岩手2",
@@ -8680,7 +8680,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 4
   },
   "current": true,
   "district": "山形2",
@@ -8792,7 +8792,7 @@
    "bills": 1,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 2
   },
   "current": true,
   "district": "兵庫3",
@@ -8888,7 +8888,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 41
   },
   "current": true,
   "district": "奈良2",
@@ -8904,7 +8904,7 @@
    "bills": 1,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "島根1",
@@ -9032,7 +9032,7 @@
    "bills": 5,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 7
   },
   "current": true,
   "district": "（比）東京",
@@ -9096,7 +9096,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 4
   },
   "current": true,
   "district": "滋賀3",
@@ -9110,7 +9110,7 @@
   "assemblyId": "diet-shugiin",
   "counts": {
    "bills": 7,
-   "questions": 0,
+   "questions": 1,
    "rollcalls": 0,
    "speeches": 0
   },
@@ -9142,7 +9142,7 @@
   "assemblyId": "diet-shugiin",
   "counts": {
    "bills": 3,
-   "questions": 0,
+   "questions": 1,
    "rollcalls": 0,
    "speeches": 0
   },
@@ -9192,7 +9192,7 @@
    "bills": 20,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 3
   },
   "current": true,
   "district": "（比）東海",
@@ -9272,7 +9272,7 @@
    "bills": 2,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "（比）近畿",
@@ -9288,7 +9288,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "大阪19",
@@ -9336,7 +9336,7 @@
    "bills": 20,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 2
   },
   "current": true,
   "district": "香川2",
@@ -9528,7 +9528,7 @@
    "bills": 7,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "（比）南関東",
@@ -9592,7 +9592,7 @@
    "bills": 2,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 7
   },
   "current": true,
   "district": "秋田1",
@@ -9608,7 +9608,7 @@
    "bills": 2,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "（比）近畿",
@@ -9640,7 +9640,7 @@
    "bills": 3,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 4
   },
   "current": true,
   "district": "（比）北関東",
@@ -9704,7 +9704,7 @@
    "bills": 7,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "（比）北陸信越",
@@ -9784,7 +9784,7 @@
    "bills": 1,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "群馬1",
@@ -9864,7 +9864,7 @@
    "bills": 4,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "大阪11",
@@ -9878,9 +9878,9 @@
   "assemblyId": "diet-shugiin",
   "counts": {
    "bills": 7,
-   "questions": 0,
+   "questions": 9,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "（比）東京",
@@ -9896,7 +9896,7 @@
    "bills": 20,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "宮崎2",
@@ -9960,7 +9960,7 @@
    "bills": 7,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "（比）近畿",
@@ -10152,7 +10152,7 @@
    "bills": 6,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "大阪6",
@@ -10168,7 +10168,7 @@
    "bills": 1,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "石川3",
@@ -10200,7 +10200,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 2
   },
   "current": true,
   "district": "宮城3",
@@ -10214,9 +10214,9 @@
   "assemblyId": "diet-shugiin",
   "counts": {
    "bills": 7,
-   "questions": 0,
+   "questions": 1,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 3
   },
   "current": true,
   "district": "（比）北陸信越",
@@ -10296,7 +10296,7 @@
    "bills": 1,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 4
   },
   "current": true,
   "district": "愛知6",
@@ -10422,7 +10422,7 @@
   "assemblyId": "diet-shugiin",
   "counts": {
    "bills": 7,
-   "questions": 0,
+   "questions": 1,
    "rollcalls": 0,
    "speeches": 0
   },
@@ -10440,7 +10440,7 @@
    "bills": 20,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "（比）東海",
@@ -10502,9 +10502,9 @@
   "assemblyId": "diet-shugiin",
   "counts": {
    "bills": 19,
-   "questions": 0,
+   "questions": 1,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "（比）北関東",
@@ -10520,7 +10520,7 @@
    "bills": 5,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "愛媛3",
@@ -10552,7 +10552,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "福岡6",
@@ -10616,7 +10616,7 @@
    "bills": 7,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "（比）九州",
@@ -10648,7 +10648,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 5
   },
   "current": true,
   "district": "山口3",
@@ -10680,7 +10680,7 @@
    "bills": 5,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "（比）近畿",
@@ -10710,9 +10710,9 @@
   "assemblyId": "diet-shugiin",
   "counts": {
    "bills": 19,
-   "questions": 0,
+   "questions": 1,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "愛知7",
@@ -10744,7 +10744,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 5
   },
   "current": true,
   "district": "広島2",
@@ -10792,7 +10792,7 @@
    "bills": 6,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 2
   },
   "current": true,
   "district": "（比）中国",
@@ -10824,7 +10824,7 @@
    "bills": 19,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "（比）南関東",
@@ -10856,7 +10856,7 @@
    "bills": 7,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "（比）北関東",
@@ -10936,7 +10936,7 @@
    "bills": 1,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 5
   },
   "current": true,
   "district": "兵庫4",
@@ -11048,7 +11048,7 @@
    "bills": 1,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "岩手3",
@@ -11080,7 +11080,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "栃木1",
@@ -11112,7 +11112,7 @@
    "bills": 5,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 2
   },
   "current": true,
   "district": "（比）九州",
@@ -11160,7 +11160,7 @@
    "bills": 1,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 6
   },
   "current": true,
   "district": "佐賀2",
@@ -11192,7 +11192,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "岐阜5",
@@ -11352,7 +11352,7 @@
    "bills": 2,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "（比）九州",
@@ -11432,7 +11432,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 3
   },
   "current": true,
   "district": "千葉13",
@@ -11592,7 +11592,7 @@
    "bills": 5,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 3
   },
   "current": true,
   "district": "（比）東京",
@@ -11608,7 +11608,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "大阪4",
@@ -11688,7 +11688,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 4
   },
   "current": true,
   "district": "鹿児島1",
@@ -11734,9 +11734,9 @@
   "assemblyId": "diet-shugiin",
   "counts": {
    "bills": 19,
-   "questions": 0,
+   "questions": 1,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 2
   },
   "current": true,
   "district": "（比）近畿",
@@ -11752,7 +11752,7 @@
    "bills": 5,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "（比）北関東",
@@ -11816,7 +11816,7 @@
    "bills": 19,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "秋田3",
@@ -11880,7 +11880,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 3
   },
   "current": true,
   "district": "栃木5",
@@ -11896,7 +11896,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 514
   },
   "current": true,
   "district": "千葉11",
@@ -11912,7 +11912,7 @@
    "bills": 21,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "（比）東京",
@@ -11960,7 +11960,7 @@
    "bills": 1,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "鹿児島4",
@@ -12056,7 +12056,7 @@
    "bills": 2,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 3
   },
   "current": true,
   "district": "徳島2",
@@ -12088,7 +12088,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "兵庫12",
@@ -12104,7 +12104,7 @@
    "bills": 7,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "（比）四国",
@@ -12136,7 +12136,7 @@
    "bills": 1,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 7
   },
   "current": true,
   "district": "岡山2",
@@ -12216,7 +12216,7 @@
    "bills": 7,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "（比）近畿",
@@ -12246,7 +12246,7 @@
   "assemblyId": "diet-shugiin",
   "counts": {
    "bills": 0,
-   "questions": 0,
+   "questions": 6,
    "rollcalls": 0,
    "speeches": 0
   },
@@ -12328,7 +12328,7 @@
    "bills": 3,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 3
   },
   "current": true,
   "district": "（比）東京",
@@ -12360,7 +12360,7 @@
    "bills": 7,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "（比）九州",
@@ -12518,9 +12518,9 @@
   "assemblyId": "diet-shugiin",
   "counts": {
    "bills": 7,
-   "questions": 0,
+   "questions": 5,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "（比）南関東",
@@ -12536,7 +12536,7 @@
    "bills": 5,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 5
   },
   "current": true,
   "district": "（比）東北",
@@ -12648,7 +12648,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 0
+   "speeches": 1
   },
   "current": true,
   "district": "千葉6",

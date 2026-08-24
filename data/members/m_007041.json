@@ -1799,6 +1799,16 @@
    "value": "賛成"
   },
   {
+   "chars": 586,
+   "date": "2025-08-01",
+   "excerpt": "退任に当たりまして、一言御挨拶を申し上げます。 ただいま、山崎正昭先生から御厚情あふれるお言葉をいただきまして、心より感謝を申し上げます。 令和四年八月三日に参議院副議長の大任を仰せ付かり、三年にわたる任期中、さきに勇退された尾辻前議長、そして関口議長の温かな御配慮を始め、議員各位のお力添えを賜りまして、この責務を全うすることができました。ここに謹んで御礼を申し上げる次第でございます。 副議長就任",
+   "kind": "speech",
+   "meeting": "本会議 第1号",
+   "session": 218,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121815254X00120250801/20",
+   "speechId": "121815254X00120250801_020"
+  },
+  {
    "date": "2025-06-20",
    "groupValue": "賛成",
    "kind": "vote",
@@ -3291,6 +3301,39 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0219-v001.htm",
    "title": "日程第１　国家公務員等の任命に関する件「検査官（田中淳子君）」",
    "value": "賛成"
+  },
+  {
+   "chars": 19,
+   "date": "2025-01-29",
+   "excerpt": "熊谷裕人君。 〔熊谷裕人君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第3号",
+   "position": "副議長",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715254X00320250129/18",
+   "speechId": "121715254X00320250129_018"
+  },
+  {
+   "chars": 17,
+   "date": "2025-01-29",
+   "excerpt": "小池晃君。 〔小池晃君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第3号",
+   "position": "副議長",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715254X00320250129/15",
+   "speechId": "121715254X00320250129_015"
+  },
+  {
+   "chars": 56,
+   "date": "2025-01-29",
+   "excerpt": "休憩前に引き続き、会議を開きます。 国務大臣の演説に対する質疑を続けます。川合孝典君。 〔川合孝典君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第3号",
+   "position": "副議長",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715254X00320250129/9",
+   "speechId": "121715254X00320250129_009"
   },
   {
    "chars": 21,

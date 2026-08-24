@@ -789,6 +789,16 @@
    "value": "賛成"
   },
   {
+   "chars": 553,
+   "date": "2026-05-29",
+   "excerpt": "ただいま議題となりました法律案につきまして、経済産業委員会における審査の経過と結果を御報告申し上げます。 本法律案は、国内投資の促進による事業の高付加価値化と、海外需要開拓や安定的な原材料の確保を通じた供給網の強靱化を一体的に推し進めるとともに、事業活動の基盤となる産業用地の整備や担い手の確保に資する生活基盤の維持を図るため、大胆な投資促進税制による国内成長投資の促進、産業の担い手の確保に資する生",
+   "kind": "speech",
+   "meeting": "本会議 第17号",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01720260529/58",
+   "speechId": "122115254X01720260529_058"
+  },
+  {
    "date": "2026-05-27",
    "groupValue": "賛成",
    "kind": "vote",
@@ -1788,6 +1798,36 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/209/209-1128-v001.htm",
    "title": "国家公務員等の任命に関する件「食品安全委員会委員（春日文子君）」",
    "value": "賛成"
+  },
+  {
+   "billId": "219-参法-2",
+   "date": "2025-10-21",
+   "kind": "bill",
+   "role": "提出者",
+   "session": 219,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/219/meisai/m219100219002.htm",
+   "submitterText": "浜口誠君 外1名",
+   "title": "地方税法の一部を改正する法律案"
+  },
+  {
+   "billId": "219-参法-1",
+   "date": "2025-10-21",
+   "kind": "bill",
+   "role": "提出者",
+   "session": 219,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/219/meisai/m219100219001.htm",
+   "submitterText": "浜口誠君 外1名",
+   "title": "所得税法の一部を改正する法律案"
+  },
+  {
+   "billId": "218-参法-1",
+   "date": "2025-08-01",
+   "kind": "bill",
+   "role": "提出者",
+   "session": 218,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/218/meisai/m218100218001.htm",
+   "submitterText": "浜口誠君 外1名",
+   "title": "障害のあるこどもに係る公的給付の所得制限の撤廃のために早急に講ずべき措置に関する法律案"
   },
   {
    "date": "2025-06-20",
@@ -2987,6 +3027,16 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0331-v001.htm",
    "title": "令和七年度一般会計予算「委員長報告のとおり修正議決すること」",
    "value": "反対"
+  },
+  {
+   "chars": 3177,
+   "date": "2025-03-31",
+   "excerpt": "国民民主党・新緑風会の浜口誠です。 会派を代表して、令和七年度予算案に対して反対討論を行います。 まず、ミャンマー地震に対して申し上げます。 被災した皆様、亡くなられた皆様に心からお見舞いとお悔やみを申し上げます。 政府として、邦人の安否確認、救出に万全を期すとともに、被災した国々への支援に向け、国際社会と連携した対応を強く求めます。 さて、参議院において予算委員会での議論が行われているにもかかわ",
+   "kind": "speech",
+   "meeting": "本会議 第9号",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715254X00920250331/9",
+   "speechId": "121715254X00920250331_009"
   },
   {
    "date": "2025-03-26",

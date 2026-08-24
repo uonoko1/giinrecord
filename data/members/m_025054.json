@@ -822,6 +822,16 @@
    "value": "賛成"
   },
   {
+   "chars": 3168,
+   "date": "2026-05-22",
+   "excerpt": "参政党の松田学でございます。 私は、会派を代表しまして、議題となっている防災庁設置法案及び関係法律の整備等に関する法律案に関連して質問いたします。 危機管理は国家の重要機能であります。国の存在意義は、いざというときの危機管理にあるとも言えます。しかし、長年にわたる新自由主義の考え方や行革、地方分権の下、何事も民間に、市場に、あるいは地方にという流れの中で、我が国の政策全般の中で国家機能の方は等閑視",
+   "kind": "speech",
+   "meeting": "本会議 第15号",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01520260522/22",
+   "speechId": "122115254X01520260522_022"
+  },
+  {
    "date": "2026-05-20",
    "groupValue": "賛成",
    "kind": "vote",
@@ -1570,6 +1580,16 @@
    "value": "賛成"
   },
   {
+   "chars": 3596,
+   "date": "2025-12-01",
+   "excerpt": "参政党の松田学です。 参政党は、その名のとおり、国民自らが政治に参加することを通じて、今の様々な制度や社会の仕組みを国民を起点とした考え方で組み替え、国民の国民による国民のための政治を目指す政党です。 その観点から、まず経済政策においては、まずは国民を豊かにするということで経済成長を実現するという立場から、現在では四五％以上まで高まっております国民負担率を三五％まで引き下げるということを参院選でも",
+   "kind": "speech",
+   "meeting": "本会議 第6号",
+   "session": 219,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121915254X00620251201/20",
+   "speechId": "121915254X00620251201_020"
+  },
+  {
    "date": "2025-11-28",
    "groupValue": "賛成",
    "kind": "vote",
@@ -1788,6 +1808,28 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/209/209-1128-v001.htm",
    "title": "国家公務員等の任命に関する件「食品安全委員会委員（春日文子君）」",
    "value": "反対"
+  },
+  {
+   "answerDate": "2025-08-15",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/218/touh/t218019.htm",
+   "date": "2025-08-04",
+   "kind": "question",
+   "questionId": "218-sangiin-19",
+   "session": 218,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/218/meisai/m218019.htm",
+   "submitterText": "松田 学君",
+   "title": "我が国の領土保全を脅かす中国海警船舶の接続水域長期巡航への対応に関する質問主意書"
+  },
+  {
+   "answerDate": "2025-08-15",
+   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/218/touh/t218018.htm",
+   "date": "2025-08-04",
+   "kind": "question",
+   "questionId": "218-sangiin-18",
+   "session": 218,
+   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/218/meisai/m218018.htm",
+   "submitterText": "松田 学君",
+   "title": "外国人及び外国系法人による土地取得規制に関する質問主意書"
   }
  ]
 }
