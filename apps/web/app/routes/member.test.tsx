@@ -108,7 +108,7 @@ describe("MemberPage 提出法案の行", () => {
 describe("MemberPage 提出法案タブ", () => {
   it("日付／件名／立場／審議状況／出典の表になる", async () => {
     renderPage();
-    await userEvent.click(screen.getByRole("tab", { name: "提出法案" }));
+    await userEvent.click(screen.getByRole("tab", { name: /^提出法案/ }));
     const table = screen.getByRole("table");
     expect(within(table).getAllByRole("columnheader").map((th) => th.textContent)).toEqual(["日付", "件名", "立場", "審議状況", "出典"]);
     const rows = within(table).getAllByRole("row");
@@ -140,7 +140,7 @@ describe("MemberPage 質問主意書（#106）", () => {
   });
   it("「質問主意書」タブは 日付／件名／答弁書／出典 の表になる", async () => {
     renderPage();
-    await userEvent.click(screen.getByRole("tab", { name: "質問主意書" }));
+    await userEvent.click(screen.getByRole("tab", { name: /^質問主意書/ }));
     const table = screen.getByRole("table");
     expect(within(table).getAllByRole("columnheader").map((th) => th.textContent)).toEqual(["日付", "件名", "答弁書", "出典"]);
     const rows = within(table).getAllByRole("row");
@@ -155,7 +155,7 @@ describe("MemberPage 質問主意書（#106）", () => {
 describe("MemberPage 採決タブ", () => {
   it("本人／会派／結果の表になる", async () => {
     renderPage();
-    await userEvent.click(screen.getByRole("tab", { name: "採決" }));
+    await userEvent.click(screen.getByRole("tab", { name: /^採決/ }));
     const table = screen.getByRole("table");
     expect(within(table).getAllByRole("columnheader").map((th) => th.textContent)).toEqual([
       "日付",

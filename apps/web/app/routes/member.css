@@ -23,10 +23,31 @@
 .compare-add-button[aria-pressed="true"] { background: var(--brass-on-cover); color: var(--cover); }
 .compare-add-note { width: 100%; opacity: 0.85; }
 
-/* タブ */
-.member-tabs { display: flex; margin-top: 10px; padding: 0 20px; border-bottom: 1px solid var(--rule); }
-.member-tab { flex: 1; padding: 12px 0 10px; background: none; border: 0; border-bottom: 2px solid transparent; font: inherit; font-size: 14px; color: var(--muted); cursor: pointer; }
+/* タブ（#238: カテゴリ分け）
+   色は構造にだけ使う: カテゴリ見出しと選択中のタブは --brass、0 件は --muted。賛否の善悪には使わない。
+   推定のカテゴリ（会派の態度）は判・注記と同じ破線＋薄地（--est-*）で、本人の記録と地続きに見えないようにする。 */
+.member-tabbar { margin-top: 10px; }
+.member-tabgroup + .member-tabgroup { margin-top: 10px; }
+/* 「すべて」だけの列（衆院）: 本人の記録・会派の記録のどちらにも属さないので、単独で置き左寄せにする */
+.member-tabgroup[data-category="all"] .member-tabs { border-bottom: 0; }
+.member-tabgroup[data-category="all"] .member-tab { flex: 0 0 auto; align-items: flex-start; }
+/* カテゴリ見出し。カテゴリが 2 つ以上あるページ（衆院）でだけ出る */
+.member-tabcat { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; padding: 0 20px 4px; font-family: var(--font-head); font-size: 12px; font-weight: 700; letter-spacing: 0.08em; color: var(--brass); }
+.member-tabcat-note { font-family: var(--font-body); font-size: 11px; font-weight: 400; letter-spacing: 0; color: var(--muted); }
+/* 推定のカテゴリ: 見出しは中立色にし、タブ列を破線で囲って本人の記録と分ける */
+.member-tabgroup[data-category="group"] .member-tabcat { color: var(--est-fg); }
+.member-tabgroup[data-category="group"] .member-tabs { margin: 0 20px; padding: 0; border: 1px dashed var(--est-line); background: var(--est-bg); }
+/* スマホ優先: タブが増えたら横スクロール（縦には折り返さない）。1 つのタブは縮みすぎないように最小幅を持たせる */
+.member-tabs { display: flex; padding: 0 20px; border-bottom: 1px solid var(--rule); overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.member-tabs::-webkit-scrollbar { display: none; }
+.member-tab { flex: 1 0 auto; min-width: 5.5em; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 10px 8px; background: none; border: 0; border-bottom: 2px solid transparent; font: inherit; font-size: 14px; color: var(--muted); cursor: pointer; white-space: nowrap; }
 .member-tab[aria-selected="true"] { font-weight: 700; color: var(--brass); border-bottom-color: var(--brass); }
+.member-tabgroup[data-category="group"] .member-tab[aria-selected="true"] { color: var(--est-fg); border-bottom-color: var(--est-line); }
+/* 件数。0 件のタブは隠さない・押せなくもしない（「無い」ことが情報だから）。
+   区別は opacity ではなく破線の下線で付ける: --muted は --paper に対し 4.98:1（ライト）/ 5.77:1（ダーク）で
+   AA を満たすが、opacity を掛けると下回る（.7 でもライトは 2.82:1）。押せる要素なので彩度ではなく形で示す。 */
+.member-tab-count { font-size: 11px; font-weight: 400; color: var(--muted); }
+.member-tab[data-empty="true"] .member-tab-count { text-decoration: underline dashed; text-underline-offset: 3px; text-decoration-color: var(--rule); }
 
 /* 回次ごとの折りたたみ（#103）。直近2回次は open。見出しは回次名と件数だけで、評価語は無い */
 .member-session { margin: 0; }
