@@ -34,12 +34,14 @@ const deployData = read(".github/workflows/deploy-data.yml");
 /**
  * 旧 deploy/nginx-gikailog.conf の add_header 行（順序・値とも同一であること）＋ #127 の X-Robots-Tag。
  * #168: フォントを自サイト配信にしたので CSP から fonts.googleapis.com / fonts.gstatic.com を外し、font-src 'self'。
+ * #194: script-src に 'unsafe-inline'。React Router のプリレンダリング HTML は inline <script>（hydration context・themeInit）を
+ * 持ち、内容がページ・ビルドごとに変わるためハッシュ方式は不可。'self' だけだと本番でクライアント JS が一切動かなかった。
  */
 const EXPECTED_HEADERS = [
   "add_header X-Content-Type-Options nosniff always;",
   "add_header X-Frame-Options DENY always;",
   "add_header Referrer-Policy strict-origin-when-cross-origin always;",
-  `add_header Content-Security-Policy "default-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; script-src 'self'; connect-src 'self'" always;`,
+  `add_header Content-Security-Policy "default-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; connect-src 'self'" always;`,
   // #127: "" on production hosts (nginx omits add_header with an empty value), "noindex, nofollow" for staging.gikailog.jp
   "add_header X-Robots-Tag $robots_tag always;",
 ];
@@ -70,6 +72,22 @@ test("site.conf: CSP はどの外部ホストも許可しない（#168 フォン
   assert.match(csp, /font-src 'self'/);
 });
 
+// Issue #194: 'self' だけの script-src は React Router の inline <script>（hydration context）を遮断し、検索・郵便番号・テーマ・
+// 比較が全部動かなかった。inline は許可、外部ホスト・eval は不許可のまま。
+test("site.conf: script-src は 'self' 'unsafe-inline'（inline hydration script を通す）。unsafe-eval や外部ホストは無い（#194）", () => {
+  const csp = headerLines(siteConf).find((l) => /Content-Security-Policy/.test(l)) ?? "";
+  assert.match(csp, /script-src 'self' 'unsafe-inline';/);
+  assert.doesNotMatch(csp, /unsafe-eval/);
+});
+
+test("ci.yml: docker-web は URL smoke の後に Playwright（chromium）の browser-check を 8081 に対して実行する（#194）", () => {
+  const job = ci.slice(ci.indexOf("  docker-web:"));
+  assert.match(job, /playwright install --with-deps chromium/);
+  assert.match(job, /actions\/cache@v4[\s\S]*?ms-playwright/, "chromium download is cached");
+  assert.match(job, /browser-check -- --url http:\/\/127\.0\.0\.1:8081/);
+  assert.ok(job.indexOf("smoke -- --url http://127.0.0.1:8081") < job.indexOf("browser-check -- --url"), "browser-check runs after the URL smoke");
+});
+
 test("site.conf: /fonts/ は 1 週間キャッシュ（ハッシュ無しのファイル名なので immutable にはしない）", () => {
   assert.match(siteConf, /location \/fonts\/ \{\s*add_header Cache-Control "public, max-age=604800";/);
 });
@@ -77,6 +95,29 @@ test("site.conf: /fonts/ は 1 週間キャッシュ（ハッシュ無しのフ�
 test("site.conf: プリレンダリング + SPA fallback の try_files と gzip は旧 server block と同一", () => {
   assert.match(siteConf, /try_files \$uri \$uri\/index\.html \/__spa-fallback\.html;/);
   assert.match(siteConf, /gzip_types text\/css application\/javascript application\/json image\/svg\+xml;/);
+});
+
+// Issue #189: the container nginx must not log requests at all (the default combined format writes the User-Agent
+// to stdout / docker logs, contradicting the privacy policy). Only the host nginx keeps its IP-less "noip" log.
+test("site.conf: access_log off を server 全体に（既定 combined 形式は User-Agent を docker logs に残す #189）", () => {
+  const code = uncommented(siteConf);
+  const main = code.slice(code.indexOf("listen 80 default_server"));
+  const server = main.slice(0, main.indexOf("location /"));
+  assert.match(server, /^\s*access_log off;$/m, "access_log off at server level, not only in /__health");
+  assert.doesNotMatch(code, /access_log\s+\/|log_format/, "no access log file anywhere in the container conf");
+});
+
+test("docker-compose: json-file の logging に max-size / max-file の上限（古い docker logs はローテーションで消える #189）", () => {
+  assert.match(compose, /^x-web: &web\n(?:.*\n)*?\s+logging:\n\s+driver: json-file\n\s+options:\n\s+max-size: "\d+[kmg]"\n\s+max-file: "\d+"/m);
+});
+
+test("ホスト proxy: 自サイトの server block ごとに error_log（crit のみ。接続元 IP は診断ログに短期間だけ残る #189）", () => {
+  const code = uncommented(hostProxy);
+  const lines = code.match(/^\s*error_log \/var\/log\/nginx\/LOG_NAME\.error\.log crit;$/gm) ?? [];
+  assert.equal(lines.length, 2, "one error_log per server block (:80 and :443)");
+  const fromScript = setup.match(/^\s*error_log \/var\/log\/nginx\/LOG_NAME\.error\.log crit;$/gm) ?? [];
+  assert.ok(fromScript.length >= 3, "template (2 blocks) + bootstrap block in vps-setup.sh");
+  assert.match(setup, /^ensure_error_log\(\)/m, "certbot-managed confs get the line inserted idempotently");
 });
 
 test("ホスト nginx は proxy_pass http://127.0.0.1:PORT（vps-setup.sh が 8081/8083 を埋める）だけで、静的配信もヘッダ付与もしない", () => {

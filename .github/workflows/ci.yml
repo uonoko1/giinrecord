@@ -49,6 +49,9 @@ jobs:
     # the smoke test over HTTP (status, SPA fallback, security headers, Cache-Control).
     # Issue #127: both services (web :8081, web-staging :8083) come up from the same build; the staging
     # X-Robots-Tag is keyed on the Host header, so it is checked with curl against either container.
+    # Issue #194: headers alone missed a CSP that blocked every inline <script> (no hydration in production), so
+    # apps/web/scripts/browser-check.ts opens the served pages in headless Chromium (Playwright) and fails on any
+    # console error / CSP violation and when the members search does not filter.
     needs: check
     runs-on: ubuntu-latest
     env:
@@ -72,6 +75,24 @@ jobs:
         run: pnpm --filter web smoke -- --url http://127.0.0.1:8081
       - name: Smoke (URL mode, staging container :8083)
         run: pnpm --filter web smoke -- --url http://127.0.0.1:8083
+      - name: Playwright version
+        id: playwright
+        run: echo "version=$(pnpm --filter web exec playwright --version | tr -d ' ')" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      - name: Install Chromium for Playwright
+        # browsers come from the cache; the OS deps (fonts, libs) are cheap and always installed
+        run: |
+          if [ "${{ steps.playwright-cache.outputs.cache-hit }}" = "true" ]; then
+            pnpm --filter web exec playwright install-deps chromium
+          else
+            pnpm --filter web exec playwright install --with-deps chromium
+          fi
+      - name: Browser check (#194) — no console error / CSP violation on /, /members/, /rollcalls/, a member page; members search filters
+        run: pnpm --filter web browser-check -- --url http://127.0.0.1:8081
       - name: Staging noindex — X-Robots-Tag only for Host staging.gikailog.jp (deploy/nginx/site.conf)
         run: |
           curl -sSI -H 'Host: staging.gikailog.jp' http://127.0.0.1:8083/ | tr -d '\r' | grep -i '^x-robots-tag: noindex, nofollow$'

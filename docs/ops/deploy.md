@@ -43,6 +43,20 @@ ETL の data PR がマージされると `etl.yml` / `districts.yml` が `gh wor
 - 権限：`ubuntu`（CI の rsync 鍵）は docker を触れない。docker のインストールと `docker compose` は人間が sudo／docker 権限で行う。
 - デプロイでコンテナの再起動は不要（bind mount なので rsync 直後から新ファイルが配信される）。**ただし `site.conf` / `docker-compose.yml` の変更は `git pull` だけでは反映されない**：bind mount した単一ファイルは `git pull` で inode が変わり、コンテナは古い inode を掴んだまま。必ず `docker compose ... up -d --force-recreate`（setup 系スクリプトは常にこれを付ける、#141）。
 
+## CSP の方針（#168、#194）
+
+`deploy/nginx/site.conf` の `Content-Security-Policy`：
+
+```
+default-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; connect-src 'self'
+```
+
+- **外部ホストはどの directive にも書かない**（#168 でフォントを自サイト配信にして以来。第三者送信ゼロ）。`packages/etl/test/deploy-docker.test.ts` が `https?://` を含まないことを検査する。
+- **`script-src` は `'self' 'unsafe-inline'`**（#194）。React Router のプリレンダリング HTML は inline `<script>` を 8 個持つ（hydration context の `window.__reactRouterContext`、`themeInit`、install capture）。`'self'` だけだとこれが全部遮断され、本番でハイドレーションが起きず検索・郵便番号・テーマ切替・比較が動かなかった（2026-08-24 の障害）。
+- **ハッシュ方式（`'sha256-…'`）は採らない**：hydration context はページごと（loader data）・ビルドごとに中身が変わるので 1,100 ページ × ビルドごとのハッシュ一覧を nginx に渡すことになり維持できない。nonce は動的サーバが要る（静的配信 + nginx では不可）。ユーザー生成コンテンツが無い静的サイトなので inline 許可の実害は小さい。`'unsafe-eval'` は許可しない。
+- **ヘッダだけでは検出できない**ので、CI の `docker-web` ジョブは URL smoke の後に `pnpm --filter web browser-check -- --url http://127.0.0.1:8081`（`apps/web/scripts/browser-check.ts`、Playwright chromium）を実行する：`/`・`/members/`・`/rollcalls/`・議員ページ 1 つを開き、console error と `securitypolicyviolation` が 0、`/members/` の検索入力で行数が減ることを確認。
+- **本番反映後の確認（PO）**：VPS で `git pull && docker compose -f deploy/docker-compose.yml up -d --force-recreate` の後、手元で `pnpm --filter web exec playwright install --with-deps chromium`（初回のみ）→ `pnpm --filter web browser-check -- --url https://gikailog.jp`。
+
 ## 改名の移行（#119、seiji-kiroku → gikailog）
 
 VPS 上のパス・conf・compose project はすべて `gikailog` 名（`/opt/gikailog`、`/var/www/gikailog/site`、`sites-available/gikailog.conf`、`conf.d/gikailog-noip-log.conf`、`cron.d/gikailog-analytics`、コンテナ `gikailog-web-1`）。旧名が残っているホストでは `deploy/go-live.sh` の step 0 が冪等に移行する：
@@ -69,7 +83,7 @@ curl -sI https://DOMAIN/ | grep -i -E "content-security|x-frame" # 外から見�
 ## 設定を変えるとき
 
 1. `packages/etl/test/deploy-docker.test.ts`（ヘッダ・キャッシュの固定値）と `apps/web/app/lib/smoke-url.ts`（URL モード smoke の期待値）を先に直す。
-2. `deploy/nginx/site.conf` / `deploy/docker-compose.yml` を変更。CI の `docker-web` ジョブが `compose config → up → smoke --url` で検証する。
+2. `deploy/nginx/site.conf` / `deploy/docker-compose.yml` を変更。CI の `docker-web` ジョブが `compose config → up → smoke --url → browser-check --url`（Playwright）で検証する。
 3. マージ後、VPS で `git pull && docker compose -f deploy/docker-compose.yml up -d --force-recreate`（`up -d` だけでは古い `site.conf` のまま）。
 4. ホスト側 `deploy/nginx-host-proxy.conf` を変える場合は `vps-setup.sh` の heredoc も同じ内容にする（テストが同一性を検査）。反映は `sudo bash deploy/vps-setup.sh gikailog.jp`（staging は `staging.gikailog.jp 8083`）の再実行。**certbot 管理の conf（`# managed by Certbot` を含む、#141 以前に構築したホスト）は書き換えず `proxy_pass` のポートだけ合わせる**ので、そのホストでは `sudo nano /etc/nginx/sites-available/gikailog.conf` → `sudo nginx -t && sudo systemctl reload nginx`。テンプレートへ移行したいときは `sudo certbot certonly`（既存証明書があるので実際には不要）→ conf を退避して削除 → `vps-setup.sh` 再実行。
 
@@ -99,7 +113,8 @@ curl -sI https://DOMAIN/ | grep -i -E "content-security|x-frame" # 外から見�
 | setup スクリプトが `port 8081/8083 は別のプロセスが LISTEN 中` で止まる | 共用ホストの別プロセス（他サイト）がそのポートを使っている | `ss -tlnp` で確認。他サイトなら `docker-compose.yml` と `vps-setup.sh` のポートを変える PBI を切る。自分の古いコンテナなら `docker compose ps` → `down` |
 | `https://www.gikailog.jp` が証明書エラー | 443 block の `server_name` に www が無い（手編集時） | `nginx -T \| grep server_name`。テンプレート（`deploy/nginx-host-proxy.conf`）は両名を持つ |
 | ヘルスチェックが unhealthy | `site.conf` の構文エラー | `docker compose logs web`。`docker compose exec web nginx -t` |
-| ヘッダが付かない／CSP が違う | `site.conf` の変更漏れ（ホスト側には add_header が無い） | CI の `docker-web` が落ちているはず。`site.conf` を修正して `up -d` |
+| ヘッダが付かない／CSP が違う | `site.conf` の変更漏れ（ホスト側には add_header が無い） | CI の `docker-web` が落ちているはず。`site.conf` を修正して `up -d --force-recreate` |
+| ページは表示されるが検索・郵便番号・テーマ切替・比較が動かない | CSP が inline `<script>` を遮断している（#194）。DevTools console に `violates the following Content Security Policy directive 'script-src …'` | `curl -sI https://gikailog.jp/ \| grep -i content-security` が `script-src 'self' 'unsafe-inline'` か確認。古ければ `git pull && up -d --force-recreate`。`pnpm --filter web browser-check -- --url https://gikailog.jp` で再確認 |
 | `/assets/` に CSP が無い | nginx の仕様（location 内の `add_header` は server の add_header を継承しない）。旧 server block でも同じ挙動 | 仕様どおり（HTML ページには付く）。変えるなら site.conf と smoke-url.ts を同時に |
 | アクセス集計 TSV が空 | ホスト block の `access_log … noip` が消えた（手編集時） | `nginx -T \| grep gikailog.access.log`。`deploy/nginx-host-proxy.conf` と突き合わせる |
 | `docker` コマンドで permission denied | そのユーザーに docker 権限が無い | docker 権限のあるユーザーで実行。**`ubuntu` には付与しない** |

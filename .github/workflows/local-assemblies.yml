@@ -1,5 +1,5 @@
 name: ETL local assemblies (monthly)
-# 地方議会（宮城県議会 pref-04）の名簿と議員別表決の月次 ETL（Issue #157）。議会は会期（定例会）単位で更新されるので月 1 回で足りる。
+# 地方議会（宮城県議会 pref-04 #157、徳島県議会 pref-36 #183、鳥取県議会 pref-31 #184）の名簿と議員別表決の月次 ETL。議会は ASSEMBLIES に 1 行ずつ足す。議会は会期（定例会）単位で更新されるので月 1 回で足りる。
 # data PR の流れは districts.yml / 日次 etl.yml と同じ（docs/ops/etl.md）。ブランチ名と失敗 Issue のタイトルだけ別。
 on:
   schedule:
@@ -15,6 +15,8 @@ concurrency:
   cancel-in-progress: false
 env:
   DATA_BRANCH: data/local-assemblies
+  # `pnpm etl:local <name>` の name と assemblyId（name=id の組。順に直列で走らせる）
+  ASSEMBLIES: "miyagi=pref-04 tokushima=pref-36 tottori=pref-31"
   FAILURE_ISSUE_TITLE: "地方議会 ETL 月次実行が失敗した（local-assemblies.yml）"
 jobs:
   local-assemblies:
@@ -42,9 +44,13 @@ jobs:
         shell: bash
         run: |
           mkdir -p packages/etl/.cache
-          docker run --rm --user "$(id -u):$(id -g)" \
-            -v "$PWD/data:/app/data" -v "$PWD/packages/etl/.cache:/app/packages/etl/.cache" \
-            --entrypoint node gikailog-etl:ci --import tsx src/local-cli.ts miyagi 2>&1 | tee etl.log
+          for pair in $ASSEMBLIES; do
+            name="${pair%%=*}"
+            echo "### $name (${pair#*=})" | tee -a etl.log
+            docker run --rm --user "$(id -u):$(id -g)" \
+              -v "$PWD/data:/app/data" -v "$PWD/packages/etl/.cache:/app/packages/etl/.cache" \
+              --entrypoint node gikailog-etl:ci --import tsx src/local-cli.ts "$name" 2>&1 | tee -a etl.log
+          done
 
       - name: Open / update data PR
         id: pr
@@ -66,7 +72,7 @@ jobs:
           NUMBER=$(gh pr list --head "$DATA_BRANCH" --state open --json number -q ".[0].number")
           if [ -z "$NUMBER" ]; then
             gh pr create --base main --head "$DATA_BRANCH" --title "data: local assemblies $STAMP" \
-              --body "Automated local assemblies ETL output (宮城県議会 名簿 × 各議員の表決状況 PDF → data/members/ の pref-04 の議員と data/assemblies/pref-04/). Validated by validateLocalAssemblies in the ETL run. 不明セル（推定せず残した数）と名寄せできなかった氏名は data/assemblies/pref-04/meta.json・unmatched.json。" --label etl
+              --body "Automated local assemblies ETL output (宮城県議会 pref-04・徳島県議会 pref-36: 名簿 × 各議員の表決 PDF → data/members/ の地方議員と data/assemblies/{id}/). Validated by validateLocalAssemblies in the ETL run. 不明セル（推定せず残した数）と名寄せできなかった氏名は data/assemblies/{id}/meta.json・unmatched.json." --label etl
             NUMBER=$(gh pr list --head "$DATA_BRANCH" --state open --json number -q ".[0].number")
           fi
           test -n "$NUMBER"   # PR が無ければここで失敗させる（サイレント失敗対策）
@@ -81,21 +87,22 @@ jobs:
           CHANGED: ${{ steps.pr.outputs.changed }}
           STATUS: ${{ job.status }}
         run: |
-          field() { node -e 'const m=JSON.parse(require("fs").readFileSync("data/assemblies/pref-04/meta.json","utf8"));console.log(process.argv[1].split(".").reduce((o,k)=>o?.[k],m)??"?")' "$1" 2>/dev/null || echo "?"; }
+          field() { node -e 'const m=JSON.parse(require("fs").readFileSync("data/assemblies/"+process.argv[2]+"/meta.json","utf8"));console.log(process.argv[1].split(".").reduce((o,k)=>o?.[k],m)??"?")' "$1" "$2" 2>/dev/null || echo "?"; }
           if [ -n "$PR" ]; then PR_CELL="#$PR"; else PR_CELL="なし（data/ に変更なし）"; fi
           {
-            echo "## ETL local assemblies（宮城県議会 pref-04）"
+            echo "## ETL local assemblies（$ASSEMBLIES）"
             echo "| 項目 | 値 |"
             echo "|---|---|"
             echo "| 結果 | $STATUS |"
             echo "| データ PR | $PR_CELL |"
             echo "| 変更ファイル数 | ${CHANGED:-?} |"
-            echo "| 名簿の掲載日 | $(field rosterAsOf) |"
-            echo "| 議員 | $(field counts.members) |"
-            echo "| 表決（議案） | $(field counts.rollcalls) |"
-            echo "| セル（議員数×議案数） | $(field counts.cells) |"
-            echo "| 不明セル（推定せず「不明」にした数） | $(field counts.unknownCells) |"
-            echo "| 名簿に寄せられなかった氏名（unmatched.json） | $(field counts.unmatchedNames) |"
+            echo
+            echo "| 議会 | 名簿の as-of | 議員 | 表決（議案） | セル（議員数×議案数） | 不明セル（推定せず「不明」にした数） | 名簿に寄せられなかった氏名（unmatched.json） |"
+            echo "|---|---|---|---|---|---|---|"
+            for pair in $ASSEMBLIES; do
+              id="${pair#*=}"
+              echo "| $id | $(field rosterAsOf "$id") | $(field counts.members "$id") | $(field counts.rollcalls "$id") | $(field counts.cells "$id") | $(field counts.unknownCells "$id") | $(field counts.unmatchedNames "$id") |"
+            done
             echo
             echo "<details><summary>ETL ログ</summary>"
             echo
@@ -149,7 +156,7 @@ jobs:
             const { data } = await github.rest.issues.create({
               ...context.repo, title, labels: ["etl", "infra"],
               body: [
-                "地方議会 ETL ワークフロー（月次、宮城県議会）が失敗しました。",
+                "地方議会 ETL ワークフロー（月次、宮城県議会・徳島県議会）が失敗しました。",
                 "",
                 `- 実行: ${runUrl}`,
                 "- 手順と失敗モード: docs/ops/etl.md（地方議会 ETL の節）",
