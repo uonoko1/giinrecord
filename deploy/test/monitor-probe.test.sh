@@ -21,12 +21,28 @@ STUB
 done
 
 # Handler: a healthy site unless H_* says otherwise.
-#   H_CODE_<path-ish>  HTTP status for / (H_CODE_ROOT), /members/ (H_CODE_MEMBERS), /data/meta.json (H_CODE_META)
+#   H_CODE_<path-ish>  HTTP status for / (H_CODE_ROOT), /members/ (H_CODE_MEMBERS), /data/meta.json (H_CODE_META),
+#                      /assemblies/ (H_CODE_ASSEMBLIES), /data/assemblies/index.json (H_CODE_AINDEX) and any single
+#                      assembly page (H_CODE_ASSEMBLY)
 #   H_TITLE            <title> text of the HTML pages;  H_FETCHED_AT  meta.fetchedAt;  H_NOT_AFTER  certificate notAfter
+#   H_AINDEX           body served for /data/assemblies/index.json (#248)
+#   H_ASSEMBLY_TITLE   <title> of an assembly page; default is the assembly's own name, as the real site renders it
+#                      ("" emulates the SPA fallback: 200 + the site name, but not this page)
 #   H_OPEN             JSON array gh returns for the open-issue search;  H_CURL_EXIT  make curl fail outright
 cat > "$TMP/handler" <<'H'
 #!/usr/bin/env bash
 cmd=$1; shift
+DEFAULT_AINDEX='[
+ {"id": "diet-sangiin", "kind": "national", "name": "参議院"},
+ {"id": "pref-04", "kind": "prefectural", "name": "宮城県議会"},
+ {"id": "pref-24", "kind": "prefectural", "name": "三重県議会"},
+ {"id": "pref-29", "kind": "prefectural", "name": "奈良県議会"}
+]'
+# name of the assembly with this id, as the served index.json spells it (the page title must contain it)
+assembly_name() {
+  printf '%s' "${H_AINDEX:-$DEFAULT_AINDEX}" | tr -d '\n' \
+    | grep -o "\"id\" *: *\"$1\"[^{]*\"name\" *: *\"[^\"]*\"" | sed 's/.*"name" *: *"\([^"]*\)"$/\1/'
+}
 case "$cmd" in
   curl)
     [ -n "${H_CURL_EXIT:-}" ] && exit "$H_CURL_EXIT"
@@ -36,6 +52,12 @@ case "$cmd" in
     for ((i=1;i<=$#;i++)); do [[ "${!i}" == "-K" ]] && { j=$((i+1)); { stat -c %A "${!j}"; cat "${!j}"; } > "$STUB_LOG.curlrc"; }; done
     case "$url" in
       */data/meta.json) printf '{\n "fetchedAt": "%s",\n "sources": [{"fetchedAt": "2020-01-01T00:00:00Z"}]\n}\n' "${H_FETCHED_AT:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}" > "$out"; printf '%s' "${H_CODE_META:-200}" ;;
+      */data/assemblies/index.json)   # #248: the site's own list of assemblies, which drives the page probes
+        printf '%s' "${H_AINDEX:-$DEFAULT_AINDEX}" > "$out"; printf '%s' "${H_CODE_AINDEX:-200}" ;;
+      */assemblies/)    printf '<html><head><title>議会一覧 ・ %s</title></head></html>' "${H_TITLE:-議員レコード}" > "$out"; printf '%s' "${H_CODE_ASSEMBLIES:-200}" ;;
+      */assemblies/*)   # a real assembly page carries its own name; H_ASSEMBLY_TITLE="" is the SPA fallback
+        printf '<html><head><title>%s ・ %s</title></head></html>' "${H_ASSEMBLY_TITLE-$(assembly_name "${url##*/assemblies/}")}" "${H_TITLE:-議員レコード}" > "$out"
+        printf '%s' "${H_CODE_ASSEMBLY:-200}" ;;
       */members/)       printf '<html><head><title>議員一覧 | %s</title></head></html>' "${H_TITLE:-議員レコード}" > "$out"; printf '%s' "${H_CODE_MEMBERS:-200}" ;;
       */)               printf '<html><head><title>%s</title></head></html>' "${H_TITLE:-議員レコード}" > "$out"; printf '%s' "${H_CODE_ROOT:-200}" ;;
       *) echo "unexpected url $url" >&2; exit 1 ;;
@@ -68,6 +90,7 @@ fresh() {
   P="$TMP/$1"; mkdir -p "$P"; LOG="$P/stub.log"; : > "$LOG"; rm -f "$LOG.body" "$LOG.curlrc"
   export STUB_LOG="$LOG" STUB_HANDLER="$TMP/handler"
   unset H_CODE_ROOT H_CODE_MEMBERS H_CODE_META H_TITLE H_FETCHED_AT H_NOT_AFTER H_OPEN H_CURL_EXIT
+  unset H_CODE_ASSEMBLIES H_CODE_AINDEX H_CODE_ASSEMBLY H_AINDEX H_ASSEMBLY_TITLE PROBE_ASSEMBLY_SAMPLE PROBE_NOW
   unset CF_ACCESS_CLIENT_ID CF_ACCESS_CLIENT_SECRET MONITOR_REQUIRE_CF_ACCESS
 }
 run_probe()  { PATH="$BIN:$PATH" bash "$MON/probe.sh" "$@" > "$P/out" 2>&1; }
@@ -146,6 +169,88 @@ t_probe_rejects_bad_origin() {
   if run_probe; then fail "missing origin accepted"; fi
 }
 
+# ---- probe.sh: assembly pages (#248) ----
+t_probe_probes_assemblies_index_page() {
+  fresh p_asm_index
+  run_probe https://giinrecord.jp || fail "exit $? $(cat "$P/out")"
+  grep -qE "https://giinrecord\.jp/assemblies/$" "$LOG" || fail "the assembly list page is probed"
+}
+t_probe_assemblies_page_status() {
+  fresh p_asm_500
+  H_CODE_ASSEMBLIES=500 run_probe https://giinrecord.jp && fail "expected non-zero"
+  assert_contains "$(cat "$P/out")" "fail http" "/assemblies/ 500 fails http"
+  assert_contains "$(cat "$P/out")" "/assemblies/ 500" "reason names path and status"
+}
+# The list of assembly pages is not hard-coded: it comes from the site's own index.json, so a new assembly is
+# monitored without touching probe.sh.
+t_probe_assembly_pages_come_from_index_json() {
+  fresh p_asm_follow
+  run_probe https://giinrecord.jp || fail "exit $? $(cat "$P/out")"
+  local log; log=$(cat "$LOG")
+  assert_contains "$log" "https://giinrecord.jp/data/assemblies/index.json" "the index is fetched"
+  # 4 assemblies in the stub index, sample 3 → exactly 3 assembly pages, all of them from that index
+  assert_eq "3" "$(grep -cE 'curl .*https://giinrecord\.jp/assemblies/[a-z0-9-]+$' "$LOG")" "sample size honoured"
+  local probed; probed=$(grep -oE 'https://giinrecord\.jp/assemblies/[a-z0-9-]+$' "$LOG" | sed 's|.*/assemblies/||')
+  local id
+  for id in $probed; do
+    assert_contains "diet-sangiin pref-04 pref-24 pref-29" "$id" "probed id is one from index.json"
+  done
+}
+t_probe_new_assembly_is_picked_up_without_code_change() {
+  fresh p_asm_new
+  # a brand new assembly, alone in the index → it must be probed although probe.sh never heard of it
+  H_AINDEX='[{"id": "pref-99", "kind": "prefectural", "name": "新県議会"}]' run_probe https://giinrecord.jp || fail "exit $? $(cat "$P/out")"
+  assert_contains "$(cat "$LOG")" "https://giinrecord.jp/assemblies/pref-99" "the new assembly is probed"
+}
+t_probe_assembly_page_status() {
+  fresh p_asm_page
+  H_CODE_ASSEMBLY=500 run_probe https://giinrecord.jp && fail "expected non-zero"
+  assert_contains "$(cat "$P/out")" "fail http" "a broken assembly page fails http"
+  assert_contains "$(cat "$P/out")" "/assemblies/" "reason names the assembly path"
+  assert_contains "$(cat "$P/out")" "500" "reason names the status"
+  assert_contains "$(cat "$P/out")" "ok tls" "tls still ok"
+}
+# nginx answers 200 + the SPA fallback for ANY unknown path, so a vanished prerender is only visible by the title
+# not being this page's.
+t_probe_spa_fallback_on_assembly_page_fails() {
+  fresh p_asm_fallback
+  H_ASSEMBLY_TITLE="" run_probe https://giinrecord.jp && fail "expected non-zero"
+  assert_contains "$(cat "$P/out")" "fail http" "200 + site name but wrong page fails http"
+  assert_contains "$(cat "$P/out")" "/assemblies/" "reason names the assembly path"
+}
+t_probe_assembly_index_unavailable_fails() {
+  fresh p_asm_noindex
+  H_CODE_AINDEX=404 run_probe https://giinrecord.jp && fail "expected non-zero"
+  assert_contains "$(cat "$P/out")" "/data/assemblies/index.json 404" "the missing index itself is the reason"
+  assert_not_contains "$(cat "$LOG")" "/assemblies/pref-" "no page probed when the list is unknown"
+}
+t_probe_empty_assembly_index_fails() {
+  fresh p_asm_empty
+  H_AINDEX='[]' run_probe https://giinrecord.jp && fail "expected non-zero"
+  assert_contains "$(cat "$P/out")" "fail http" "an empty index is a failure, not a silent pass"
+}
+# The rotation keeps a run cheap but must still reach every assembly: with sample 1 and 4 assemblies, the four
+# 10-minute slots probe four different ids.
+t_probe_rotation_covers_every_assembly() {
+  fresh p_asm_rot
+  local seen="" slot id
+  for slot in 0 1 2 3; do
+    : > "$LOG"
+    PROBE_ASSEMBLY_SAMPLE=1 PROBE_NOW=$(( slot * 600 )) run_probe https://giinrecord.jp || fail "exit $? $(cat "$P/out")"
+    id=$(grep -oE 'https://giinrecord\.jp/assemblies/[a-z0-9-]+$' "$LOG" | sed 's|.*/assemblies/||' | head -1)
+    [ -n "$id" ] || { fail "slot $slot probed no assembly"; return; }
+    assert_not_contains "$seen" "$id" "slot $slot probes an assembly the earlier slots did not"
+    seen="$seen $id"
+  done
+}
+t_probe_sample_zero_skips_assembly_pages() {
+  fresh p_asm_off
+  PROBE_ASSEMBLY_SAMPLE=0 run_probe https://giinrecord.jp || fail "exit $? $(cat "$P/out")"
+  local log; log=$(cat "$LOG")
+  assert_not_contains "$log" "/data/assemblies/index.json" "the index is not even fetched"
+  grep -qE "https://giinrecord\.jp/assemblies/$" "$LOG" || fail "the list page is still probed"
+}
+
 # ---- probe.sh: Cloudflare Access service token (#163) ----
 t_probe_cf_access_headers_via_config_file() {
   fresh p_cf
@@ -159,7 +264,9 @@ t_probe_cf_access_headers_via_config_file() {
   assert_contains "$rc" "-rw-------" "config file mode 600"
   assert_contains "$rc" 'header = "CF-Access-Client-Id: id-abc.access"' "client id header"
   assert_contains "$rc" 'header = "CF-Access-Client-Secret: s3cr3t-xyz"' "client secret header"
-  assert_eq "3" "$(grep -c 'curl .*-K ' "$LOG")" "every request carries the headers"
+  # / /members/ /assemblies/ /data/meta.json /data/assemblies/index.json + PROBE_ASSEMBLY_SAMPLE (3) pages = 8
+  assert_eq "$(grep -c '^curl ' "$LOG")" "$(grep -c 'curl .*-K ' "$LOG")" "every request carries the headers"
+  assert_eq "8" "$(grep -c '^curl ' "$LOG")" "requests per run stay at the documented budget"
 }
 t_probe_without_cf_access_sends_no_headers() {
   fresh p_nocf
@@ -262,6 +369,18 @@ t_run_body_has_no_secrets_or_paths() {
   assert_contains "$body" "https://github.com/example/repo/actions/runs/123" "run link"
   assert_not_contains "$body" "$TMP" "no local paths"
 }
+# #248: the rotating sample must not rotate between the two rounds — otherwise "failed twice in a row" would be
+# comparing two different sets of pages (and a broken assembly probed only in round 1 would never be reported).
+t_run_both_rounds_probe_the_same_assemblies() {
+  fresh run_same
+  # the retry is 60 s later; PROBE_NOW is pinned at the very end of a slot, where the slot would otherwise flip
+  PROBE_NOW=599 PROBE_ASSEMBLY_SAMPLE=1 H_CODE_ROOT=503 run_run production https://giinrecord.jp && fail "expected non-zero"
+  local ids uniq
+  ids=$(grep -oE 'https://giinrecord\.jp/assemblies/[a-z0-9-]+$' "$LOG" | sed 's|.*/assemblies/||')
+  assert_eq "2" "$(echo "$ids" | grep -c .)" "one assembly page per round"
+  uniq=$(echo "$ids" | sort -u | grep -c .)
+  assert_eq "1" "$uniq" "both rounds probed the same assembly"
+}
 t_run_transient_failure_not_reported() {
   fresh run_flap
   # first round fails, second round is fine → handler flips on a marker file
@@ -288,6 +407,16 @@ test_case "probe: 証明書の残りが 14 日未満なら tls が fail" t_probe
 test_case "probe: 証明書が読めなければ tls が fail" t_probe_tls_unreadable
 test_case "probe: 接続できなければ http と data が fail" t_probe_curl_down
 test_case "probe: origin は https のホストのみ（パス付き・http・無しは拒否）" t_probe_rejects_bad_origin
+test_case "probe: /assemblies/ も見る（#248）" t_probe_probes_assemblies_index_page
+test_case "probe: /assemblies/ が 500 なら http が fail" t_probe_assemblies_page_status
+test_case "probe: 議会ページの一覧は index.json 由来（ハードコードしない）" t_probe_assembly_pages_come_from_index_json
+test_case "probe: index.json に新しい議会が増えればコード変更なしで probe 対象になる" t_probe_new_assembly_is_picked_up_without_code_change
+test_case "probe: 議会ページが 500 なら http が fail（パスと status を理由に）" t_probe_assembly_page_status
+test_case "probe: 議会ページが SPA fallback（200＋サイト名だが別ページ）なら fail" t_probe_spa_fallback_on_assembly_page_fails
+test_case "probe: index.json が 404 ならそれ自体が理由、議会ページは probe しない" t_probe_assembly_index_unavailable_fails
+test_case "probe: index.json が空配列なら fail（黙って pass しない）" t_probe_empty_assembly_index_fails
+test_case "probe: 巡回で全議会をいずれ網羅する（1 回あたりの本数は固定）" t_probe_rotation_covers_every_assembly
+test_case "probe: PROBE_ASSEMBLY_SAMPLE=0 なら議会ページは見ない（/assemblies/ は見る）" t_probe_sample_zero_skips_assembly_pages
 test_case "probe: CF_ACCESS_CLIENT_ID/SECRET があれば curl の設定ファイル（600）経由でヘッダを付け、argv と出力に秘密を出さない" t_probe_cf_access_headers_via_config_file
 test_case "probe: トークンが無ければヘッダも設定ファイルも無し" t_probe_without_cf_access_sends_no_headers
 test_case "probe: ID と SECRET の片方だけはエラー（値は出さない）" t_probe_rejects_half_token
@@ -302,6 +431,7 @@ test_case "run: MONITOR_REQUIRE_CF_ACCESS=1 でトークンがあれば普通に
 test_case "run: 全部 ok なら 2 回目を走らせず、作成もしない" t_run_all_ok_no_retry
 test_case "run: 2 回連続で fail した check だけ Issue" t_run_reports_after_two_rounds
 test_case "run: Issue 本文は環境名・理由・run へのリンクのみ（ローカルパス無し）" t_run_body_has_no_secrets_or_paths
+test_case "run: 2 回のラウンドは同じ議会ページを見る（巡回が途中でずれない・#248）" t_run_both_rounds_probe_the_same_assemblies
 test_case "run: 1 回だけの失敗は報告しない" t_run_transient_failure_not_reported
 
 echo; echo "passed: $PASS  failed: $FAIL"

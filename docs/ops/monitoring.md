@@ -3,7 +3,7 @@
 Issue #135。外部 SaaS（UptimeRobot / Datadog / Sentry 等）は使わない。**ダッシュボードは無い。label `monitor` の open Issue 一覧が現在の状態**（0 件 = 正常）。
 
 ```
-GitHub Actions  monitor.yml ──10分おき──▶ https://giinrecord.jp          ┐ /, /members/, /data/meta.json, TLS 期限
+GitHub Actions  monitor.yml ──10分おき──▶ https://giinrecord.jp          ┐ /, /members/, /assemblies/, 議会ページ, /data/meta.json, TLS 期限
                             ──毎時────▶ https://staging.giinrecord.jp  ┘ deploy/monitor/probe.sh → run.sh → report.sh (gh)
                                                                               │ 2 回連続で失敗 → Issue "[monitor] <env>: <check>"
 VPS  root cron 5分  /usr/local/lib/gikailog-monitor/health.sh                 │ 復旧 → 自動 close
@@ -18,7 +18,7 @@ VPS  root cron 5分  /usr/local/lib/gikailog-monitor/health.sh                 �
 
 | check | 条件 | 失敗時に疑うもの |
 |---|---|---|
-| `http` | `/`・`/members/`・`/data/meta.json` が 200、HTML の `<title>` に『議員レコード』 | コンテナ停止（502）、ホスト nginx 停止、rsync 先が空（404）、DNS |
+| `http` | `/`・`/members/`・`/assemblies/`・`/data/meta.json` が 200、HTML の `<title>` に『議員レコード』。加えて**議会ページ `/assemblies/{id}`**（#248、下記） | コンテナ停止（502）、ホスト nginx 停止、rsync 先が空（404）、DNS、プリレンダー漏れ |
 | `data` | `meta.fetchedAt`（トップレベル＝ETL 実行時刻）が 48 時間以内 | `etl.yml` の失敗、data PR が未マージ、`deploy-data.yml` の失敗 |
 | `tls` | 証明書の残り 14 日以上 | certbot の自動更新が止まっている（`sudo certbot renew --dry-run`） |
 
@@ -28,6 +28,16 @@ VPS  root cron 5分  /usr/local/lib/gikailog-monitor/health.sh                 �
 - **2 回連続**（60 秒空けて再試行）で失敗した check だけ Issue にする（`deploy/monitor/run.sh`）。1 回だけの失敗は run のログに残るのみ。
 - Issue は title `[monitor] production: http` のように **環境 × check で 1 つ**。同名の open Issue があれば作らない（`deploy/monitor/report.sh`）。check が通れば「Recovered」コメントを付けて close する。
 - 本文に書くのは環境名・check・理由（パスと HTTP status、経過時間、残日数）・run へのリンクだけ。
+
+#### 議会ページの監視（#248）
+
+地方議会が 0→7 と増えるあいだ、`/assemblies/` も個別の議会ページも監視対象外だった（500 や 404 でも素通り）。いまは `http` check がここも見る。
+
+- **対象はハードコードしない。** probe は本番が配信している **`/data/assemblies/index.json` を取得して `id` を列挙**し、`/assemblies/{id}` を叩く。議会が増えれば次の run から自動で監視対象になり、`probe.sh` に足し忘れることが起きない。index.json 自体が 404 だったり空配列だったりすれば、それ自体が `http` の失敗になる（黙って「議会 0 件だから全部 pass」にはならない）。
+- **1 回の run で叩く議会ページは `PROBE_ASSEMBLY_SAMPLE`（既定 3）本だけ。** 10 分スロットごとに 1 つずつずらして巡回するので、**議会が何議会に増えても 1 run のリクエスト数は一定**（`/`・`/members/`・`/assemblies/`・`meta.json`・`assemblies/index.json` ＋ 3 = **7 本**）。9 議会なら 30 分で全議会を一巡する。全議会を毎回叩くと議会数に比例して重くなるため、この形にしている。
+- **判定は既存と同じ厳しさ＋1つ。** 200 であること、`<title>` に『議員レコード』が入っていること。加えて **その議会の名前が `<title>` に入っていること**。nginx は未知のパスに `/__spa-fallback.html` を 200 で返す（`try_files $uri $uri/index.html /__spa-fallback.html`）ので、プリレンダーが消えても「200＋サイト名」は通ってしまう。議会名まで見て初めて「そのページが実在する」と言える。
+- **Issue は増えない。** 失敗はすべて既存の `http` check に合流するので、Issue は従来どおり `[monitor] production: http` の 1 本。議会ごとに Issue が乱立することはない。理由の文字列にどのパスが落ちたかが入る。
+- 2 回のラウンド（60 秒あけて再試行）は**同じ議会ページ**を見る（`run.sh` が `PROBE_NOW` を固定する）。ずれると「2 回連続で失敗」が別々のページの話になってしまうため。
 
 ### VPS 側（`deploy/monitor/health.sh`、root cron 5 分）
 

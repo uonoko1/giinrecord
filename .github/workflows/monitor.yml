@@ -1,6 +1,9 @@
 name: Monitor
 # Issue #135: self-hosted monitoring, no SaaS. External probes of production (every 10 minutes) and staging
-# (hourly): HTTP 200 + 議員レコード in <title> for / and /members/, /data/meta.json with fetchedAt ≤ 48 h, TLS expiry ≥ 14 d.
+# (hourly): HTTP 200 + 議員レコード in <title> for /, /members/ and /assemblies/, /data/meta.json with fetchedAt ≤ 48 h,
+# TLS expiry ≥ 14 d. Issue #248: the assembly pages are probed too — the list comes from the site's own
+# /data/assemblies/index.json (so new assemblies are covered automatically) and a rotating sample of 3 per run keeps
+# the request count fixed however many assemblies exist.
 # A check that fails twice in a row (60 s apart, deploy/monitor/run.sh) opens ONE Issue "[monitor] <env>: <check>"
 # (label monitor, deduplicated by title, deploy/monitor/report.sh) and the Issue is closed when the check passes again.
 # The VPS-side checks (containers, disk, nginx, rsync targets) live in deploy/monitor/health.sh (root cron).
