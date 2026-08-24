@@ -17,5 +17,19 @@
   "name": "宮城県議会",
   "prefCode": "04",
   "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/meibo/index.html"
+ },
+ {
+  "id": "pref-31",
+  "kind": "prefectural",
+  "name": "鳥取県議会",
+  "prefCode": "31",
+  "sourceUrl": "https://www.pref.tottori.lg.jp/75928.htm"
+ },
+ {
+  "id": "pref-36",
+  "kind": "prefectural",
+  "name": "徳島県議会",
+  "prefCode": "36",
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/"
  }
 ]

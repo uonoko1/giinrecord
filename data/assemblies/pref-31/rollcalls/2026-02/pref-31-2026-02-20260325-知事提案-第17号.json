@@ -1,0 +1,375 @@
+{
+ "assemblyId": "pref-31",
+ "counts": {
+  "no": 1,
+  "voting": 34,
+  "yes": 33
+ },
+ "date": "2026-03-25",
+ "id": "pref-31-2026-02-20260325-知事提案-第17号",
+ "kind": "知事提案",
+ "method": {
+  "legend": "起立",
+  "raw": "起立"
+ },
+ "number": "第17号",
+ "page": 2,
+ "result": "可決",
+ "sessionId": "2026-02",
+ "sessionLabel": "令和8年2月定例会",
+ "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1412311/R8.2giketsukekka0325.pdf",
+ "title": "令和８年度鳥取県天神川流域下水道事業会計予算",
+ "voteSubject": "議案に対する賛否",
+ "votes": [
+  {
+   "group": "自由民主党",
+   "memberId": "p_31_item_967688",
+   "nameText": "入江議員",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_31_item_967685",
+   "nameText": "河上議員",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_31_item_967684",
+   "nameText": "鳥羽議員",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_31_item_1165908",
+   "nameText": "森議員",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_31_item_1165936",
+   "nameText": "山本議員",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_31_item_1165916",
+   "nameText": "島谷議員",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_31_item_1025136",
+   "nameText": "鹿島議員",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_31_item_1165922",
+   "nameText": "浜崎議員",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_31_item_1165913",
+   "nameText": "斉木議員",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_31_item_1165921",
+   "nameText": "野坂議員",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_31_item_1165909",
+   "nameText": "内田博議員",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_31_item_1165993",
+   "nameText": "川部議員",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_31_item_1165937",
+   "nameText": "広谷議員",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_31_item_1165917",
+   "nameText": "中島議員",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_31_item_1165934",
+   "nameText": "安田議員",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_31_item_1165912",
+   "nameText": "語堂議員",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_31_item_967680",
+   "nameText": "東田議員",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_31_item_1165923",
+   "nameText": "浜田一議員",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_31_item_1165930",
+   "nameText": "福田議員",
+   "value": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "group": "民主とっとり",
+   "memberId": "p_31_item_967686",
+   "nameText": "村上議員",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "民主とっとり",
+   "memberId": "p_31_item_1165915",
+   "nameText": "坂野議員",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "民主とっとり",
+   "memberId": "p_31_item_1165924",
+   "nameText": "浜田妙議員",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "民主とっとり",
+   "memberId": "p_31_item_1025137",
+   "nameText": "尾崎議員",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "民主とっとり",
+   "memberId": "p_31_item_1165910",
+   "nameText": "興治議員",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "民主とっとり",
+   "memberId": "p_31_item_1125474",
+   "nameText": "伊藤議員",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "公明党",
+   "memberId": "p_31_item_967682",
+   "nameText": "前田議員",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "公明党",
+   "memberId": "p_31_item_967687",
+   "nameText": "前原議員",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "公明党",
+   "memberId": "p_31_item_1165911",
+   "nameText": "銀杏議員",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "無所属",
+   "memberId": "p_31_item_967689",
+   "nameText": "玉木議員",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "無所属",
+   "memberId": "p_31_item_967683",
+   "nameText": "前住議員",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "無所属",
+   "memberId": "p_31_item_1165919",
+   "nameText": "西村議員",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "無所属",
+   "memberId": "p_31_item_1165935",
+   "nameText": "山川議員",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "無所属",
+   "memberId": "p_31_item_1165931",
+   "nameText": "松田議員",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "無所属",
+   "memberId": "p_31_item_1165926",
+   "nameText": "福浜議員",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "無所属",
+   "memberId": "p_31_item_1165907",
+   "nameText": "市谷議員",
+   "value": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  }
+ ]
+}
