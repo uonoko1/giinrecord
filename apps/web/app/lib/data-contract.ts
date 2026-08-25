@@ -35,8 +35,19 @@ export interface MemberSummary {
   counts: { rollcalls: number; bills: number; speeches: number; questions?: number };
 }
 
+/**
+ * `members/{id}.json`。**`timeline` に `speech` 行は入らない（#242）**。
+ * 発言は `members/{id}/speeches.json`（`MemberSpeeches`）にあり、議員ページは発言タブを開いたときに実行時 fetch する。
+ * 件数は `Member.counts.speeches` に残るので、取りに行く前でもタブの件数は出せる。
+ */
 export interface MemberDetail extends Member {
   timeline: TimelineEntry[];
+}
+
+/** `members/{id}/speeches.json`（#242）。その議員の発言だけを日付降順で持つ。無いファイル＝0 件。 */
+export interface MemberSpeeches {
+  id: string;
+  speeches: SpeechEntry[];
 }
 
 export type VoteEntry = {

@@ -24,6 +24,24 @@ describe("speechPageUrl: 国会会議録API speech の URL", () => {
     assert.equal(u.searchParams.get("nameOfMeeting"), "本会議");
     assert.equal(new URL(speechPageUrl(221, 1, "sangiin")).searchParams.get("nameOfHouse"), "参議院");
   });
+
+  /**
+   * Issue #242: 委員会も収録する。API は nameOfMeeting を外すだけで委員会・分科会・審査会・連合審査会・
+   * 公聴会・調査会を同じ形で返す（#263 が第221回 70,544 件で確認、#242 が第201・204回の分科会で確認）。
+   */
+  test('scope "all" は nameOfMeeting を付けない（委員会を含む全会議。#242）', () => {
+    const u = new URL(speechPageUrl(221, 1, "shugiin", "all"));
+    assert.equal(u.searchParams.get("nameOfMeeting"), null);
+    assert.equal(u.searchParams.get("nameOfHouse"), "衆議院");
+    assert.equal(u.searchParams.get("sessionFrom"), "221");
+    assert.equal(u.searchParams.get("sessionTo"), "221");
+    assert.equal(u.searchParams.get("maximumRecords"), "100");
+  });
+
+  test('scope の既定は "plenary"（本会議のみ）で、既存の URL と byte-identical（#242 が既定の挙動を変えない）', () => {
+    assert.equal(speechPageUrl(221, 1, "sangiin"), speechPageUrl(221, 1, "sangiin", "plenary"));
+    assert.equal(new URL(speechPageUrl(200, 301, "shugiin", "plenary")).searchParams.get("nameOfMeeting"), "本会議");
+  });
 });
 
 describe("parseSpeechPage: house 引数（Issue #73）", () => {
@@ -133,6 +151,82 @@ describe("parseSpeechPage: 実レスポンス（第221回 衆院本会議、Issu
     const sangiin = fixture("kokkai-speech-221-p1");
     assert.deepEqual(parseSpeechPage(sangiin), parseSpeechPage(sangiin, "sangiin"));
     assert.equal(speechPageUrl(221, 1), speechPageUrl(221, 1, "sangiin"));
+  });
+});
+
+/**
+ * 実レスポンス（第204回 衆院 予算委員会第一分科会、Issue #242）。
+ * 取得: 2026-08-25, UA gikailog-etl/0.1, speechPageUrl(204, 1, "shugiin") に nameOfMeeting=分科会 を足したもの。
+ * 1ページ100件のうち、先頭30件と speakerRole の付く5件（参考人）を speechID 順に残した35件。
+ *
+ * #263 は第221回（特別会）を全量取得したが、その回次には分科会が1件も無かったため
+ * 「分科会のレコードの形は未確認」と flag していた。#242 でその1点を実データで確認する。
+ * 作りの違う2つ以上の実データでテストする（docs/WORKING_AGREEMENT.md）ため、
+ * 本会議のフィクスチャ（第221回 参院・衆院）と並べて同じパーサに通す。
+ */
+describe("parseSpeechPage: 実レスポンス（第204回 衆院 予算委員会第一分科会、Issue #242）", () => {
+  const page = parseSpeechPage(fixture("kokkai-speech-shugiin-204-bunkakai-p1"), "shugiin");
+
+  test("本会議と同じパーサで読める（改造不要）: speechOrder 0 を除いた34件", () => {
+    assert.equal(page.numberOfRecords, 3861);
+    assert.equal(page.speeches.length, 35 - 1);
+    assert.ok(page.speeches.every((s) => s.house === "shugiin" && s.speakerText !== "会議録情報"));
+  });
+
+  test("会議名は原文（「予算委員会第一分科会 第2号」）。本会議と区別できる", () => {
+    assert.ok(page.speeches.every((s) => s.meeting === "予算委員会第一分科会 第2号"));
+  });
+
+  test("分科会の主査（議員）は会派を持ち、名寄せの材料になる", () => {
+    const s = page.speeches.find((x) => x.id === "120405266X00220210226_001")!;
+    assert.equal(s.speakerText, "藤原崇");
+    assert.equal(s.group, "自由民主党・無所属の会");
+    assert.equal(s.position, undefined);
+    assert.equal(s.date, "2021-02-26");
+    assert.equal(s.session, 204);
+    assert.equal(s.sourceUrl, "https://kokkai.ndl.go.jp/txt/120405266X00220210226/1");
+    assert.ok(s.excerpt.startsWith("これより予算委員会第一分科会を開会いたします。"));
+  });
+
+  test("政府参考人は会派を持たず position（原文の肩書き）だけを持つ", () => {
+    const s = page.speeches.find((x) => x.id === "120405266X00220210226_007")!;
+    assert.equal(s.speakerText, "梶尾雅宏");
+    assert.equal(s.group, undefined);
+    assert.equal(s.position, "内閣官房内閣審議官");
+  });
+
+  test("参考人（speakerRole=参考人）も会派を持たず position だけを持つ（#263 が全量で観測した性質）", () => {
+    const s = page.speeches.find((x) => x.id === "120405266X00220210226_073")!;
+    assert.equal(s.speakerText, "尾身茂");
+    assert.equal(s.group, undefined);
+    assert.equal(s.position, "独立行政法人地域医療機能推進機構理事長");
+  });
+
+  test("話者表示（○◯◯主査 / ○◯◯政府参考人 / ○◯◯参考人）は全件 excerpt から落ちる", () => {
+    assert.ok(page.speeches.every((s) => !s.excerpt.startsWith("○")));
+  });
+
+  /**
+   * #230 と #242 の境界。#230 以降 `matchSpeeches` は回次を呼び出し側から受け取らず、
+   * **発言レコード自身の `session` と `date`** を `resolveMember` に渡して在職を確認する
+   * （`resolveMember(index, nameText, group, { session, date })`）。
+   * どちらかが欠けると `tenureVerified` が判定できず、**その発言は例外にもならず黙って未突合になる**。
+   * 委員会のレコードでも必ず埋まっていることを固定する（実データでの確認: 第219回の衆参 20,162 件・
+   * 第204回の分科会 34 件で欠け 0。2026-08-25 実測）。
+   */
+  test("委員会のレコードも session（整数）と date（YYYY-MM-DD）を必ず持つ（#230 の在職確認の入力）", () => {
+    assert.ok(page.speeches.length > 0);
+    for (const s of page.speeches) {
+      assert.equal(s.session, 204, s.id);
+      assert.match(s.date, /^\d{4}-\d{2}-\d{2}$/, s.id);
+    }
+  });
+
+  test("session が無いレコードは例外（黙って未突合にしない）", () => {
+    const rec = { speechID: "x_001", speechOrder: 1, speaker: "誰か", nameOfMeeting: "予算委員会第一分科会", issue: "第2号", date: "2021-02-26", speech: "○誰か　本文", speechURL: "https://kokkai.ndl.go.jp/txt/x/1" };
+    assert.throws(() => parseSpeechPage({ numberOfRecords: 1, nextRecordPosition: null, speechRecord: [rec] }, "shugiin"), /session/);
+    const { date: _drop, ...noDate } = { ...rec, session: 204 };
+    assert.throws(() => parseSpeechPage({ numberOfRecords: 1, nextRecordPosition: null, speechRecord: [noDate] }, "shugiin"), /date/);
   });
 });
 

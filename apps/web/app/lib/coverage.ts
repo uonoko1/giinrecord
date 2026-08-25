@@ -85,6 +85,43 @@ export function shugiinQuestionCoverage(meta: DatasetMeta | undefined): ShugiinQ
 }
 
 /**
+ * 発言の収録範囲（#242）。国会会議録検索システムの出典（`meta.sources`）から、
+ * **どの会議を取っているか**（本会議だけか、委員会も含むか）を院ごとに読む。
+ *
+ * 推定しない: 出典 URL の `nameOfMeeting` パラメータを見て、
+ * 付いていなければ「本会議と委員会」、`本会議` が付いていれば「本会議のみ」と読むだけ。
+ * 出典が無ければ null（無い事実を作らない）。
+ *
+ * 「どの回次まで遡っているか」はここでは扱わない。名簿の覆う範囲で決まる別の事実で、
+ * 上の `rosterScope` / `RosterlessSection` / `ShugiinRosterSection` が既に書いている。
+ */
+export interface SpeechCoverage {
+  house: House;
+  /** 委員会（分科会・審査会・連合審査会・公聴会・調査会を含む）も取っているか */
+  committees: boolean;
+  url: string;
+}
+
+/** `meta.sources` の「国会会議録検索システム 検索用API（{院} …）」から、院ごとに会議の範囲を読む。 */
+export function speechCoverage(meta: DatasetMeta | undefined): SpeechCoverage[] {
+  const out: SpeechCoverage[] = [];
+  for (const s of meta?.sources ?? []) {
+    const houseName = /^国会会議録検索システム 検索用API（(参議院|衆議院) [^）]*）$/.exec(s.name)?.[1];
+    if (!houseName) continue;
+    // 会議録の出典は「委員会の出席者欄」（#109）にもあるので、URL で発言 API のものだけを採る
+    let url: URL;
+    try { url = new URL(s.url); } catch { continue; }
+    if (!url.pathname.endsWith("/api/speech")) continue;
+    if (url.searchParams.get("speaker") === "会議録情報") continue; // #109 の出席者欄
+    const house: House = houseName === "参議院" ? "sangiin" : "shugiin";
+    if (out.some((x) => x.house === house)) continue;
+    // nameOfMeeting が付いていなければ全会議（本会議＋委員会）。付いていればその会議だけ
+    out.push({ house, committees: url.searchParams.get("nameOfMeeting") === null, url: s.url });
+  }
+  return out;
+}
+
+/**
  * その院の議員ページに実際に出ている記録の件数（#251）。`members/index.json` の counts の合計で、
  * 「議員ページに出る」ことそのものの実数。取得の有無や名簿の覆う回次からの推論ではないので、
  * ETL の突合条件が変わっても、データを数え直せばそのまま追随する。

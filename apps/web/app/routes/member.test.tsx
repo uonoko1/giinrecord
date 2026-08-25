@@ -1,15 +1,25 @@
 import { render, screen, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
-import type { MemberDetail } from "../lib/data-contract";
+import type { MemberDetail, MemberSpeeches, SpeechEntry } from "../lib/data-contract";
 import member from "../test-fixtures/member.json";
+import memberSpeeches from "../test-fixtures/member-speeches.json";
 import meta from "../test-fixtures/meta.json";
-import { MemberPage, meta as routeMeta } from "./member";
+import { MemberPage, meta as routeMeta, speechesDataUrl } from "./member";
 
 const detail = member as MemberDetail;
+/** 発言は #242 で `members/{id}/speeches.json` に分かれ、発言タブを開いたときに実行時 fetch される */
+const speeches = (memberSpeeches as MemberSpeeches).speeches as SpeechEntry[];
+const loadSpeeches = async (): Promise<SpeechEntry[]> => speeches;
 
 function renderPage() {
-  return render(<MemberPage detail={detail} meta={meta} />);
+  return render(<MemberPage detail={detail} meta={meta} speechCount={speeches.length} loadSpeeches={loadSpeeches} />);
+}
+
+/** 発言タブを開いて実行時 fetch の完了を待つ（#242） */
+async function openSpeechTab() {
+  await userEvent.click(screen.getByRole("tab", { name: /発言/ }));
+  await screen.findAllByRole("link", { name: "会議録" });
 }
 
 describe("MemberPage 表紙", () => {
@@ -27,7 +37,8 @@ describe("MemberPage 時系列", () => {
     expect(screen.getByLabelText("反対")).toBeInTheDocument();
     expect(screen.getByLabelText("投票なし")).toBeInTheDocument();
     expect(screen.getByLabelText("提出")).toBeInTheDocument();
-    expect(screen.getAllByLabelText("発言")).toHaveLength(3);
+    // 発言は「すべて」には出ない（#242: 実行時 fetch なので、開いていない間は 1 バイトも取らない）
+    expect(screen.queryAllByLabelText("発言")).toHaveLength(0);
   });
   it("会派と本人が異なる行は「会派は{値}」と明記する", () => {
     renderPage();
@@ -46,7 +57,7 @@ describe("MemberPage 時系列", () => {
   it("全行に sourceUrl へのリンク（新規タブ・noopener）がある", () => {
     renderPage();
     const links = within(screen.getByRole("tabpanel")).getAllByRole("link", { name: /参院投票結果|議案情報|会議録/ });
-    expect(links).toHaveLength(7);
+    expect(links).toHaveLength(4);
     for (const a of links) {
       expect(a).toHaveAttribute("target", "_blank");
       expect(a.getAttribute("rel")).toMatch(/noopener/);
@@ -56,28 +67,95 @@ describe("MemberPage 時系列", () => {
 });
 
 describe("MemberPage 発言行の役職", () => {
-  it("役職付きの発言は役職を原文のまま表示する", () => {
+  it("役職付きの発言は役職を原文のまま表示する", async () => {
     renderPage();
+    await openSpeechTab();
     const row = screen.getByText(/道路法等の一部を改正する法律案/).closest("li")!;
     expect(within(row).getByText("国土交通大臣")).toBeInTheDocument();
     expect(row).toHaveAttribute("data-position", "国土交通大臣");
   });
-  it("議長の議事進行発言は「議長」と明記して区別する", () => {
+  it("議長の議事進行発言は「議長」と明記して区別する", async () => {
     renderPage();
+    await openSpeechTab();
     const row = screen.getByText(/ただいまから会議を開きます/).closest("li")!;
     expect(within(row).getByText("議長")).toBeInTheDocument();
     expect(row).toHaveAttribute("data-position", "議長");
   });
-  it("役職の無い発言には役職ラベルを出さない", () => {
+  it("役職の無い発言には役職ラベルを出さない", async () => {
     renderPage();
+    await openSpeechTab();
     const row = screen.getByText(/予算委員会における審査の経過と結果/).closest("li")!;
     expect(row).not.toHaveAttribute("data-position");
     expect(within(row).queryByText(/議長|大臣/)).not.toBeInTheDocument();
   });
-  it("表紙の本会議発言の数は役職付きも含める", () => {
+  it("表紙の発言の数は役職付きも含める（ビルド時に数えた speeches.json の行数。#242）", () => {
     renderPage();
-    const dt = screen.getByText("本会議発言");
-    expect(dt.nextElementSibling).toHaveTextContent("3");
+    const dt = within(screen.getByRole("banner")).getByText("発言");
+    expect(dt.nextElementSibling).toHaveTextContent(String(speeches.length));
+  });
+});
+
+/*
+ * Issue #242: 委員会の発言を収録する＋データサイズ対策。
+ *
+ * 発言を timeline に置いたままだと、`ssr: false` のプリレンダーが**折りたたんだ回次も含め HTML に全件焼き込む**
+ * （#263 の実測: HTML は元 JSON の 2.15 倍）ので、`members/{id}/speeches.json` に分けるだけでは
+ * モバイルの転送量は 1 バイトも減らない。ここで固定するのは「開くまで取りに行かない」ことと、
+ * 「本会議と委員会が会議名の原文で区別できる」ことの 2 点。
+ */
+describe("MemberPage 発言タブ（#242: 実行時 fetch）", () => {
+  it("発言タブを開くまで取りに行かない（開いて初めて 1 回だけ呼ぶ）", async () => {
+    let calls = 0;
+    render(<MemberPage detail={detail} meta={meta} speechCount={speeches.length} loadSpeeches={async () => { calls++; return speeches; }} />);
+    expect(calls).toBe(0);
+    await userEvent.click(screen.getByRole("tab", { name: /発言/ }));
+    await screen.findAllByRole("link", { name: "会議録" });
+    expect(calls).toBe(1);
+    // 他のタブへ移って戻っても取り直さない
+    await userEvent.click(screen.getByRole("tab", { name: /すべて/ }));
+    await userEvent.click(screen.getByRole("tab", { name: /発言/ }));
+    expect(calls).toBe(1);
+  });
+
+  it("本会議と委員会の両方を出し、会議名は会議録の原文（どこで発言したかが分かる）", async () => {
+    renderPage();
+    await openSpeechTab();
+    const panel = screen.getByRole("tabpanel");
+    expect(within(panel).getAllByText(/参議院本会議/).length).toBeGreaterThan(0);
+    expect(within(panel).getByText(/国土交通委員会 第5号/)).toBeInTheDocument();
+    expect(within(panel).getByText(/本会議と委員会の発言です/)).toBeInTheDocument();
+  });
+
+  it("委員会の発言も一次資料（会議録）へのリンクを持つ", async () => {
+    renderPage();
+    await openSpeechTab();
+    const row = screen.getByText(/参考人の皆様に御質問申し上げます/).closest("li")!;
+    const link = within(row).getByRole("link", { name: "会議録" });
+    expect(link).toHaveAttribute("href", "https://kokkai.ndl.go.jp/txt/121714311X00520250325/12");
+    expect(link).toHaveAttribute("target", "_blank");
+  });
+
+  it("読み込み中と失敗はそれぞれ別の文を出す（黙って 0 件にしない）", async () => {
+    const { unmount } = render(<MemberPage detail={detail} meta={meta} speechCount={speeches.length} loadSpeeches={() => new Promise(() => {})} />);
+    await userEvent.click(screen.getByRole("tab", { name: /発言/ }));
+    expect(await screen.findByText(/発言を読み込んでいます/)).toBeInTheDocument();
+    unmount();
+
+    render(<MemberPage detail={detail} meta={meta} speechCount={speeches.length} loadSpeeches={async () => { throw new Error("HTTP 500"); }} />);
+    await userEvent.click(screen.getByRole("tab", { name: /発言/ }));
+    expect(await screen.findByText(/発言を読み込めませんでした/)).toBeInTheDocument();
+  });
+
+  it("発言 0 件の議員は取りに行かず「記録はありません。」を出す", async () => {
+    let calls = 0;
+    render(<MemberPage detail={detail} meta={meta} speechCount={0} loadSpeeches={async () => { calls++; return []; }} />);
+    await userEvent.click(screen.getByRole("tab", { name: /発言/ }));
+    expect(await screen.findByText("記録はありません。")).toBeInTheDocument();
+    expect(calls).toBe(0);
+  });
+
+  it("fetch 先は /data/members/{id}/speeches.json（nginx が gzip を掛ける application/json）", () => {
+    expect(speechesDataUrl("m_014002")).toBe("/data/members/m_014002/speeches.json");
   });
 });
 
