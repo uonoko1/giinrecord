@@ -29,7 +29,11 @@ env:
 jobs:
   etl:
     runs-on: ubuntu-latest
-    timeout-minutes: 360   # バックフィル（17回次）は数時間かかる。日次は従来どおり数十分で終わる
+    # 作り直し（rebuild=yes、全22回次）は実測 5 時間超（2026-08-25 の run 32853869643）。
+    # 360 分ではほぼ張り付くうえ、data/ を消した後は chunk に分けられないので
+    # タイムアウト＝その回が全損する（キャッシュ保存ステップにも到達しない）。
+    # 日次は従来どおり数十分で終わるので、上限を上げても影響しない。
+    timeout-minutes: 480
     steps:
       - uses: actions/checkout@v4
 
