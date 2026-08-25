@@ -51,13 +51,13 @@ describe("buildDataset: carried（対象外の回次の行を members/{id}.json 
   const carried: CarriedEntry[] = [{ memberId: "m_1", entry: old }];
 
   test("引き継いだ speech 行はそのまま speeches.json に入り、counts に数える（#242: 行き先が変わっても引き継ぎは止めない）", () => {
-    const ds = buildDataset(members, [rollCall("221-0605-v001", 221, "2026-06-05", "m_1")], new Map(), [], [], [], [], [], carried);
+    const ds = buildDataset(members, [rollCall("221-0605-v001", 221, "2026-06-05", "m_1")], new Map(), [], [], [], [], [], [], carried);
     const m1 = ds.details[0];
     assert.deepEqual(m1.timeline.map((e) => [e.kind, e.session, e.date]), [["vote", 221, "2026-06-05"]]);
     assert.deepEqual(ds.speeches[0].speeches, [old]);
     assert.equal(ds.index[0].counts.speeches, 1);
   });
   test("名簿にない memberId の引き継ぎ行は例外（黙って捨てない。cli が先に除いて警告する）", () => {
-    assert.throws(() => buildDataset(members, [], new Map(), [], [], [], [], [], [{ memberId: "m_9", entry: old }]), /m_9/);
+    assert.throws(() => buildDataset(members, [], new Map(), [], [], [], [], [], [], [{ memberId: "m_9", entry: old }]), /m_9/);
   });
 });

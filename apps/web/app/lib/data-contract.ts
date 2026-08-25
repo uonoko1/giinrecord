@@ -179,7 +179,37 @@ export type LocalVoteEntry = {
   committeeReport?: string;
   sourceUrl: string;
 };
-export type TimelineEntry = VoteEntry | BillEntry | SpeechEntry | StanceEntry | QuestionEntry | AttendanceEntry | LocalVoteEntry;
+/**
+ * 委員会等に委員長・理事・委員などとして出席した事実（会議録の冒頭「出席委員」「出席者」欄、#244）。
+ *
+ * **在任期間ではない。** 会議録に書かれているのは「その日、この役職で出席した」だけで、就任日・退任日は無く、
+ * 欠席した日は載らない。したがって firstDate から lastDate の間ずっとその役職だったとは言えない。
+ * 画面は「出席 N 回」「最初の出席 …」「最新の出席 …」のように**出席の事実**として出し、
+ * 範囲を意味する表記（「〜」「期間」「在任」）は使わない（PO の判断、#244）。
+ */
+export type CommitteeRoleEntry = {
+  kind: "committeeRole";
+  /** 国会の回次（#103）。回次ごとの折りたたみに使う。 */
+  session: number;
+  estimated: false;
+  /** timeline の並びに使う日付＝出席した最初の会議の日（firstDate と同じ値）。就任日ではない。 */
+  date: string;
+  /** 委員会等の名前の原文（例「内閣委員会」「憲法審査会」）。 */
+  committee: string;
+  /** 出席委員欄の役職の原文（例「委員長」「理事」「委員」「幹事」「会長」）。丸めない。 */
+  role: string;
+  /** その回次・その委員会・その役職で出席した会議の回数。 */
+  meetings: number;
+  /** 出席した最初の会議の日付。**就任日ではない。** */
+  firstDate: string;
+  /** 出席した最新の会議の日付。**退任日ではない。** */
+  lastDate: string;
+  /** firstDate の会議録情報の speechID。 */
+  meetingId: string;
+  /** firstDate の会議録の冒頭情報の URL。 */
+  sourceUrl: string;
+};
+export type TimelineEntry = VoteEntry | BillEntry | SpeechEntry | StanceEntry | QuestionEntry | AttendanceEntry | CommitteeRoleEntry | LocalVoteEntry;
 
 /** `assemblies/{assemblyId}/rollcalls/index.json`（LocalRollCallSummary[]）の1行のうち Web が読む項目（#204） */
 export interface LocalRollCallSubject {

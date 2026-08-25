@@ -63,13 +63,14 @@ describe("衆院議員ページ 会派の態度（推定）", () => {
     renderPage();
     expect(document.querySelectorAll('[data-tone="yes"], [data-tone="no"]')).toHaveLength(0);
   });
-  it("タブは 本人の記録（すべて / 提出法案 / 質問主意書 / 発言）と 所属会派の記録（会派の態度）に分かれ、採決タブは無い（#238）", () => {
+  it("タブは 本人の記録（すべて / 提出法案 / 質問主意書 / 発言 / 委員会の役職）と 所属会派の記録（会派の態度）に分かれ、採決タブは無い（#238 / #244）", () => {
     renderPage();
     expect(screen.getAllByRole("tab").map((t) => t.textContent)).toEqual([
       "すべて5件",   // 発言は timeline に無い（#242）
       "提出法案2件",
       "質問主意書1件",
       "発言1件",
+      "委員会の役職0件",
       "会派の態度2件",
     ]);
     expect(screen.queryByRole("tab", { name: /^採決/ })).not.toBeInTheDocument();

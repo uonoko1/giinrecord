@@ -251,6 +251,17 @@ export async function validateDataset(dir: string): Promise<string[]> {
         if (e.role !== "発議者") v.push(`${rel} timeline[${i}]: attendance role must be 発議者, got ${String((e as { role: unknown }).role)}`);
         if (!ATTENDANCE_SOURCE.test(e.sourceUrl)) v.push(`${rel} timeline[${i}]: attendance sourceUrl must be the 会議録 (kokkai.ndl.go.jp/txt/), got ${e.sourceUrl}`);
       }
+      if (e.kind === "committeeRole") {
+        // 委員会の役職（事実、#244）。**在任期間ではなく出席の事実**なので、
+        // firstDate <= lastDate、meetings >= 1、date == firstDate を不変条件にする（範囲を作らない）。
+        if (e.estimated !== false) v.push(`${rel} timeline[${i}]: committeeRole row must have estimated: false`);
+        if (e.committee === "" || /\s第.*号$/.test(e.committee)) v.push(`${rel} timeline[${i}]: committeeRole committee must be the 委員会名 without 号, got ${JSON.stringify(e.committee)}`);
+        if (e.role === "") v.push(`${rel} timeline[${i}]: committeeRole role must not be empty`);
+        if (!(Number.isInteger(e.meetings) && e.meetings >= 1)) v.push(`${rel} timeline[${i}]: committeeRole meetings must be an integer >= 1, got ${String(e.meetings)}`);
+        if (e.firstDate > e.lastDate) v.push(`${rel} timeline[${i}]: committeeRole firstDate ${e.firstDate} must not be after lastDate ${e.lastDate}`);
+        if (e.date !== e.firstDate) v.push(`${rel} timeline[${i}]: committeeRole date must equal firstDate (出席した最初の会議の日), got ${e.date} !== ${e.firstDate}`);
+        if (!ATTENDANCE_SOURCE.test(e.sourceUrl)) v.push(`${rel} timeline[${i}]: committeeRole sourceUrl must be the 会議録 (kokkai.ndl.go.jp/txt/), got ${e.sourceUrl}`);
+      }
       if (e.kind === "vote") {
         votes++;
         if (!VOTE_VALUES.has(e.value)) v.push(`${rel} timeline[${i}]: vote value must be 賛成/反対/投票なし, got ${e.value}`);

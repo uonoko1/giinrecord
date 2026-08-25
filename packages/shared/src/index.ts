@@ -367,7 +367,40 @@ export type AttendanceEntry = {
   /** 会議録の冒頭情報の URL（kokkai.ndl.go.jp/txt/…）。 */
   sourceUrl: string;
 };
-export type TimelineEntry = VoteEntry | BillEntry | SpeechEntry | StanceEntry | QuestionEntry | AttendanceEntry;
+/**
+ * 委員会等に委員長・理事・委員などとして出席した事実（国会会議録の冒頭「出席委員」「出席者」欄。Issue #244）。
+ *
+ * **在任期間ではない。** 会議録の出席委員欄に書かれているのは「その日、この役職で出席した」という事実だけで、
+ * 就任日・退任日は書かれておらず、欠席した日は載らない。したがって `firstDate` から `lastDate` の間ずっと
+ * その役職だったとは言えないし、`firstDate` より前・`lastDate` より後に在任していなかったとも言えない。
+ * Web は「委員として出席」「出席 N 回（最初 … / 最新 …）」のように**出席の事実**として表示し、
+ * 範囲を意味する表記（「〜」「期間」）は使わない（PO の判断、#244）。
+ *
+ * 1 行 = 1 人 × 1 回次 × 1 委員会 × 1 役職。役職が変われば（委員 → 理事）別の行になる。
+ */
+export type CommitteeRoleEntry = {
+  kind: "committeeRole";
+  /** 国会の回次（採決・議案・会議録・質問の回次）。Web の議員ページが回次ごとに折りたたむ（#103）。 */
+  session: number;
+  estimated: false;
+  /** timeline の並びに使う日付＝**出席した最初の会議の日**（`firstDate` と同じ値）。就任日ではない。 */
+  date: string;
+  /** 委員会等の名前の原文（例「内閣委員会」「憲法審査会」「予算委員会」）。 */
+  committee: string;
+  /** 出席委員欄の役職の原文（例「委員長」「理事」「委員」「幹事」「会長」「委員長代理理事」）。丸めない。 */
+  role: string;
+  /** その回次・その委員会・その役職で出席した会議の回数。 */
+  meetings: number;
+  /** 出席した最初の会議の日付（ISO）。**就任日ではない。** */
+  firstDate: string;
+  /** 出席した最新の会議の日付（ISO）。**退任日ではない。** */
+  lastDate: string;
+  /** firstDate の会議録情報の speechID（例 "121714889X02520250620_000"）。 */
+  meetingId: string;
+  /** firstDate の会議録の冒頭情報の URL（kokkai.ndl.go.jp/txt/…）。一次資料。 */
+  sourceUrl: string;
+};
+export type TimelineEntry = VoteEntry | BillEntry | SpeechEntry | StanceEntry | QuestionEntry | AttendanceEntry | CommitteeRoleEntry;
 
 /** Row of `data/rollcalls/index.json` (採決一覧用). */
 /* ---------- 選挙区（data/districts/、Issue #111 / #112） ---------- */

@@ -23,7 +23,7 @@ data/
   bills/
     index.json                      BillSummary[]    議案一覧用（軽量）。提出回次の降順・id 昇順
     {session}/{billId}.json         Bill             議案ページ用（提出者・賛成者・各院の結果・衆院の会派態度）。{session} は提出回次
-  unmatched.json                    名寄せできなかった氏名表記のうち**回次が引けない行**（発言: speechId / 委員会出席の発議者: meetingId（kind: "attendance"）。NDL の会議録 id は回次を含まない）
+  unmatched.json                    名寄せできなかった氏名表記のうち**回次が引けない行**（発言: speechId / 委員会出席の発議者: meetingId（kind: "attendance"）/ 委員会の役職: meetingId（kind: "committee"）。NDL の会議録 id は回次を含まない）
   unmatched/
     {session}.json                  名寄せできなかった氏名表記のうち**回次が引ける行**（票: rollCallId / 参法の発議者・衆院議案の提出者と賛成者: billId（後者は kind: "bill" 付き）/ 質問主意書の提出者: questionId（kind: "question"））。回次別に分ける（#219）
   unmatched-bills.json              議案情報の審議結果と紐づかなかった採決の一覧（人事案件・決議など。得票のみの result になる）
@@ -46,7 +46,8 @@ type TimelineEntry =
   | { kind: "speech"; session: number; date: string; speechId: string; meeting: string; excerpt: string; chars: number; position?: string; sourceUrl: string }
   | { kind: "stance"; estimated: true; session: number; date: string; billId: string; title: string; group: string; stance: "賛成" | "反対"; stanceText: string; status?: string; sourceUrl: string } // 推定（衆院の会派態度）
   | { kind: "question"; session: number; date: string; questionId: string; title: string; submitterText?: string; status?: string; answerDate?: string; answerUrl?: string; sourceUrl: string } // 質問主意書（事実）
-  | { kind: "attendance"; estimated: false; session: number; date: string; meetingId: string; meeting: string; role: "発議者"; bills: { billId: string; title: string }[]; sourceUrl: string }; // 委員会に発議者として出席（事実。提出者ではない）
+  | { kind: "attendance"; estimated: false; session: number; date: string; meetingId: string; meeting: string; role: "発議者"; bills: { billId: string; title: string }[]; sourceUrl: string } // 委員会に発議者として出席（事実。提出者ではない）
+  | { kind: "committeeRole"; estimated: false; session: number; date: string; committee: string; role: string; meetings: number; firstDate: string; lastDate: string; meetingId: string; sourceUrl: string }; // 委員会の委員長・理事・委員として出席（事実。在任期間ではない）
 interface RollCallSummary { id: string; session: number; date: string; title: string; totals: { total: number; yes: number; no: number }; result: string }
 ```
 
@@ -144,7 +145,7 @@ interface AssemblySession { id: string; label: string; date: string; rollcalls: 
 - 採決時点の会派は回次で引く（`groupAt(member, session)`）。名簿は会期後のスナップショットなので、第 N 回の採決には第 N 回の名簿の term、無ければ（会期中の辞職・任期満了）手元で最も新しい過去の回次の term を使う。後の回次の名簿しか無ければ「不明」とし、会派移動の時期を推定しない。
 - 名寄せは「氏名＋採決時点の会派」。氏名で1人に絞れるときは会派が食い違っても紐づけるが、投票結果ページの会派がその議員のどの回次の名簿の会派（略称・旧称を含む）とも一致しなければ `group-mismatch.json` に載る（`voteGroup` は投票ページの原文、`rosterGroup` は採決時点の名簿の会派。採決時点の名簿が無ければ手元の全会派を `/` で連結）。同姓同名は採決時点の会派で分け、分けられなければ `unmatched.json` に載る（別の回次の会派では推定しない）。`memberId` は `members/index.json` に、`rollCallId` は `rollcalls/index.json` に存在する。
 - `timeline` は日付降順（回次をまたいでも一つの timeline）。
-- `timeline` の全行が `session`（国会の回次）を持つ（#103）。vote は採決の回次（`rollCallId` の先頭 `{回次}-` と一致。`validateDataset` が検査する）、bill は議案の提出回次（`billId` の先頭）、speech は会議録の回次（API の `session`）、stance は議案の提出回次、question は質問の回次、attendance は会議の回次。Web の議員ページは `session` で回次ごとに折りたたむ（直近 2 回次を展開、それ以前は「第N回国会・件数」の見出しだけ）。`session` の無い行は #103 以前の出力で、Web は「回次不明」として最後にまとめる（推定しない）。
+- `timeline` の全行が `session`（国会の回次）を持つ（#103）。vote は採決の回次（`rollCallId` の先頭 `{回次}-` と一致。`validateDataset` が検査する）、bill は議案の提出回次（`billId` の先頭）、speech は会議録の回次（API の `session`）、stance は議案の提出回次、question は質問の回次、attendance は会議の回次、committeeRole は会議の回次。Web の議員ページは `session` で回次ごとに折りたたむ（直近 2 回次を展開、それ以前は「第N回国会・件数」の見出しだけ）。`session` の無い行は #103 以前の出力で、Web は「回次不明」として最後にまとめる（推定しない）。
   - **引き継ぎ（carried）での回次の復元（#235）**: `readCarried` は `session` の無い古い行を捨てず、id の先頭から回次を引いて引き継ぐ（`sessionOfEntry`）。引けるのは `questionId` = `{回次}-{house}-{番号}` と `billId` = `{提出回次}-{種別}-{番号}` の行（未突合の置き場所と同じ規約）。`speechId` / `meetingId` は NDL の会議録 id で回次を含まないので引けず、件数だけ警告に出す。2026-08-24 に、`session` を持たない question 行 524 件が carried で落ち、`writeDataset` の `members/` 全消しで**黙って消えた**（#235）。
   - **消失の検出（#235）**: ETL は書き出す前に、前回出力の `members/index.json` と今回組み立てた index の `counts`（rollcalls / bills / speeches / questions）の合計を突き合わせ、**どれかが減っていたら `data/` を書かずに非0終了する**（`lostTimelineEntries`。採決に対する `lostVoteMatches` と同じ扱い）。増える・同じは正常。回次を減らす意図的な再構築は `data/` を消してから実行する（前回出力が無いので引っかからない）。
   - **回次粒度の消失の検出（#256）**: 上の合計（議会 × 種別）は、**同じ院・同じ種別の中の入れ替わり**を素通りさせる（第221回の衆院発言 851 件が消え、第200回のバックフィルが同数入れば合計は変わらない）。そこで ETL は同じ場所で、前回出力の `members/{id}.json` の timeline を **議会 × 回次 × 種別**でも数え、この粒度で減っていたら同じく `data/` を書かずに非0終了する（`lostSessionEntries`）。回次は行の `session` だけを見る（`sessionOfEntry` のような id からの復元はしない。引ける行と引けない行で粒度が混ざると偽陽性になる）。`session` の無い #103 以前の行は数えず、合計側の `lostTimelineEntries` だけが覆う。**この検出が保証しないこと**: (a) 同じ議会・回次・種別の中で行が別のものに**すり替わる**こと（`speechId` / `questionId` の同一性は見ていない）、(b) 行の**中身**の劣化（`date` / `title` / `sourceUrl` / 紐づけ先議員の入れ替わり）。どちらも件数が変わらないので、これは**件数だけの検算**であることを忘れないこと。偽陽性の範囲は #235 と同じ（回次を減らす再構築は `data/` を消してから実行する。改選で名簿から消えた議員の行が落ちる分は回次を鍵に足しても増えない）。データ提供元の訂正で正当に減るときも止まるので、その場合は差分を確認したうえで `data/` を消して作り直す。
@@ -182,6 +183,24 @@ interface AssemblySession { id: string; label: string; date: string; rollcalls: 
 - 名寄せは `resolveMember`（会議の回次に効いている参院名簿）。出席者欄に会派は無いので同姓同名は絞れず `unmatched.json` に `kind: "attendance"`、`meetingId` 付きで載る。会議録の公開は約 1 か月遅れる（本会議発言と同じ。`meta.sources[]` の fetchedAt が時点）。
 - `counts` には数えない（`counts.bills` は `bill` 行だけ）。同日の並びは vote → bill → stance → question → attendance → speech。
 - 不変条件（`validateDataset`）: `attendance` 行は `house === "sangiin"` の議員にだけ付く、`estimated === false`、`role === "発議者"`、`sourceUrl` は `https://kokkai.ndl.go.jp/txt/{id}/{n}`。
+
+## 委員会の役職（timeline の `committeeRole` 行、Issue #244）
+- **事実**だが**在任期間ではない**。出典は国会会議録検索システム 検索用API（`https://kokkai.ndl.go.jp/api/speech?nameOfHouse={院}&speaker=会議録情報&sessionFrom={回次}&sessionTo={回次}`）の speechOrder 0（会議録情報）。会議録の冒頭「出席委員」（衆）「出席者は左のとおり。」（参）欄に載る**委員長・理事・委員などの役職と氏名**を採る。`sourceUrl` は会議録の冒頭情報（`https://kokkai.ndl.go.jp/txt/{会議録ID}/0`）。
+- **会議録に在任期間は書かれていない。** 書かれているのは「その日、この役職で出席した」という事実だけで、就任日・退任日は無く、欠席した日は載らない。したがって `firstDate` から `lastDate` の間ずっとその役職だったとは言えないし、その外側に在任していなかったとも言えない。**期間を作らない**（#244 の PO 判断。issue の受け入れ条件にあった「期間を原文で」は一次資料に無いので満たしていない）。
+  - 持つのは出席の事実だけ: `meetings`（その回次・その委員会・その役職で出席した会議の回数）、`firstDate` / `lastDate`（出席した最初 / 最新の会議の日）、`date` は `firstDate` と同じ値（timeline の並びに使う）。
+  - Web は「◯◯委員会 委員長として出席」「出席 N 回・最初の出席 …・最新の出席 …」と出す。**範囲を意味する表記（「〜」「期間」「在任」「就任」）は使わない。**
+- 1 行 = 1 人 × 1 回次 × 1 委員会 × 1 役職。役職が変われば（委員 → 理事）別の行にする（役職の変化は事実なので丸めない）。`committee` は会議名から号を落とした原文（「内閣委員会 第25号」→「内閣委員会」）、`role` は出席委員欄の原文（`委員長` `理事` `委員` `幹事` `会長` `小委員長` `小委員` `委員長代理理事`）。**丸めない**（審査会・調査会は「委員長」ではなく `会長`、その理事は `幹事`。#243 調査 PR #278）。
+- 院で書式が違う（`docs/research/individual-records.md` §4-A）:
+  - **衆**: `　出席委員` から氏名行（末尾が `君`）が続き、氏名行でない行で終わる。**1 行 2 名の 2 段組**で役職は氏名の前に付く。全角空白は姓名の区切りにも段組の区切りにも使われ、**空白の数では切れない**（第204・217回の実測: `君` 直後の空白 run は 1/2/3/4 個、姓名の区切りは 1/2/3 個で重なる）。「1 名は必ず `君` で終わり、その `君` の次は行末か全角空白」で切る（氏名に `君` を含む `畑野　君枝君` を 2 名に割らないため）。役職と氏名の間に空白が無い行もある（`理事おおつき紅葉君`）。
+  - **参**: `出席者は左のとおり。` から `本日の会議に付した案件` まで。1 行 1 名。**インデント（全角空白の数）で切る**: 4 が委員の役職見出し（`委　員` `理　事` `幹　事` `小委員`）と行内役職（`委員長` `会　長` `小委員長`）、3 が委員以外の見出し（国務大臣・事務局側・政府参考人・**衆議院議員**…）。委員の氏名行は 15 か 16、委員以外は 7（第204・217回の実測 13,525 行で重ならない）。`委　員` の並びの後に区切りを挟んで議長・副議長が続く会議録（議院運営委員会）があるのでインデントでも切る。
+- **本会議の会議録情報からは作らない**（出席委員欄が無い）。本会議の本文に出る「予算委員長坂本哲志君解任決議案」のような案件名から役職を作ってはいけない（#243 調査 PR #278 §7）。出席委員欄の中だけを読む。
+- 名寄せは `resolveMember`（**会議の院の名簿**、`{ session, date }` を渡す。#230）。会議録に会派は書かれていないので**同姓同名は絞れず**、`unmatched.json` に `kind: "committee"`、`meetingId` 付きで載る（推測で紐づけない。`match-shugiin-bills.ts` / `attendance` と同じ条件）。会議録の公開は約 1 か月遅れる。
+- `counts` には数えない（`counts` は採決・議案・発言・質問主意書の 4 つのまま）。同日の並びは vote → bill → stance → question → attendance → committeeRole → speech。
+- 不変条件（`validateDataset`）: `estimated === false`、`committee` は空でなく号を含まない、`role` は空でない、`meetings >= 1` の整数、`firstDate <= lastDate`、`date === firstDate`、`sourceUrl` は `https://kokkai.ndl.go.jp/txt/{id}/{n}`。
+- **並び順**: `matchCommitteeRoles` の出力は memberId → 回次 → 委員会名 → 役職の順。文字列の比較は**コードポイント順**（`cmp = (a, b) => a < b ? -1 : a > b ? 1 : 0`）で行い、**`localeCompare` は使わない**。`localeCompare` は実行環境のロケールで結果が変わり、日本語の委員会名では実際に順序が入れ替わる（`ja-JP` は読み順「憲法 < 内閣 < 予算」、`en-US` はコードポイント順「予算 < 内閣 < 憲法」）。2026-08-25 に**手元で緑・CI で赤**として実際に発現した（#244）。`packages/etl/src` 全体をテスト（`stable-order.test.ts`）で検査している。
+  なお `members/{id}.json` の timeline 自体は `buildDataset` が日付降順に並べ直し、`validateDataset` が「降順であること」を検査する（この並びとは別）。
+- **引き継ぎ（carried）と消失検出**: `committeeRole` は `isCarriable`（`sessions.ts`）で**引き継ぐ**。ファイルから作り直せない行なので、引き継がないと回次を絞った実行で `writeDataset` が `members/` を消した後に戻らない（#235 と同型）。
+  さらに `counts` を持たない種別なので、`counts` を読む `lostTimelineEntries`（#235）は**構造的に見られない**。`sessionCounts` は timeline を直接数えるので、**`counts` を増やさずに** `lostSessionEntries`（#256）で消失を検出する（種別名 `committeeRoles`）。**`counts` に入れないことと、消失検出に載せないことは別**で、後者は穴なので塞いである。
 
 ## 議案（`bills/`、Issue #72）
 - 出典は衆議院 議案情報。一覧 `https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/kaiji{審議回次}.htm` から各議案の経過ページ `…/gian/keika/{id}.htm` を辿る（どちらも Shift_JIS）。`sourceUrl` は必ず経過ページ。`house` は `"shugiin"`。
