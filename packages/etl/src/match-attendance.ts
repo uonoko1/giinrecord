@@ -37,7 +37,7 @@ export function matchAttendance(meetings: readonly CommitteeMeeting[], members: 
   const unmatched: UnmatchedAttendee[] = [];
   for (const mt of meetings) {
     for (const a of mt.attendees) {
-      const member = resolveMember(index, a.nameText, undefined, mt.session);
+      const member = resolveMember(index, a.nameText, undefined, { session: mt.session, date: mt.date });
       if (member) entries.push({ memberId: member.id, nameText: a.nameText, session: mt.session, meetingId: mt.id, meeting: mt.meeting, date: mt.date, role: a.role, bills: mt.bills, sourceUrl: mt.sourceUrl });
       else unmatched.push({ kind: "attendance", nameText: a.nameText, group: "", meetingId: mt.id });
     }

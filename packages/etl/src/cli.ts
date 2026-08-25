@@ -19,7 +19,7 @@ import { attendancePageUrl, fetchCommitteeAttendance } from "./sources/kokkai-at
 import { matchAttendance, type MatchedAttendance } from "./match-attendance.ts";
 import { buildDataset, mergeRosters, rosterSessionsFor, type Roster } from "./aggregate.ts";
 import { dietAssemblies, readSessionsOnDisk, validateDataset, writeDataset } from "./dataset.ts";
-import { dropCarriedSpeeches, lostSessionEntries, lostTimelineEntries, lostVoteMatches, planSessions, readCarried, readSessionCounts } from "./sessions.ts";
+import { carriedTenureVerified, dropCarriedSpeeches, lostSessionEntries, lostTimelineEntries, lostVoteMatches, planSessions, readCarried, readSessionCounts } from "./sessions.ts";
 import { readMemberIndex } from "./local-assemblies.ts";
 
 /**
@@ -210,7 +210,7 @@ unmatched.push(...questions.unmatched);
 // 「範囲が 1 回次」は「毎回取る」と矛盾しない。毎回取るのは常に同じ memberSession の 1 回次分で、取る回次が増えるわけではない。
 const speeches: Speech[] = [];
 for (const session of targets) {
-  const matched = matchSpeeches(await fetchSpeeches(session, "sangiin"), members, session);
+  const matched = matchSpeeches(await fetchSpeeches(session, "sangiin"), members);
   const matchedCount = matched.speeches.filter((s) => s.memberId).length;
   const positioned = matched.speeches.filter((s) => s.memberId && s.position).length;
   console.log(`session ${session}: ${matched.speeches.length} sangiin speeches (${matchedCount} matched, ${positioned} with position)`);
@@ -222,7 +222,7 @@ for (const session of targets) {
 // 引き継ぎが1度でも欠ければ（#103 以前の session の無い行など）0 のまま自力では戻らない。
 // 止める理由だった引き継ぎとの二重行（同じ speechId が2行。validateDataset の duplicate speechId 違反。#103 レビュー）は、
 // 取得をやめる代わりに dropCarriedSpeeches が「取得した speechId の引き継ぎ行を落とす」ことで防ぐ。
-const shugiinSpeeches = matchSpeeches(await fetchSpeeches(memberSession, "shugiin"), shugiin.members, memberSession);
+const shugiinSpeeches = matchSpeeches(await fetchSpeeches(memberSession, "shugiin"), shugiin.members);
 {
   const matchedCount = shugiinSpeeches.speeches.filter((s) => s.memberId).length;
   const positioned = shugiinSpeeches.speeches.filter((s) => s.memberId && s.position).length;
@@ -242,14 +242,16 @@ for (const session of targets) {
 }
 // 引き継ぐ回次の speech / question / attendance / 参法 bill 行（#103）。名簿から消えた memberId の行は付け先が無いので落とし、件数を出す
 // （その回次を指定して取り直せば現行名簿で名寄せし直される）。
-const memberIds = new Set(members.map((m) => m.id).concat(shugiin.members.map((m) => m.id)));
-const carriedOnRoster = carried.entries.filter((c) => memberIds.has(c.memberId));
+// 引き継ぎは前回出力の memberId をそのまま戻すので、採決（再突合する）と違って名寄せがやり直されない。
+// #230 より前の出力に入っている「在職未確認の氏名一致」の行をそのまま戻さないよう、今の名簿で在職を確認し直す。
+// 落ちた行はその回次を取り直せば現行の名寄せで作り直される（紐づかなければ unmatched に載る）。
+const carriedOnRoster = carriedTenureVerified(carried.entries, [...members, ...shugiin.members]);
 // 取得し直した衆院発言と同じ speechId の引き継ぎ行は落とす（#236）。memberSession が carried の実行でこれが効く。
 const carriedEntries = dropCarriedSpeeches(carriedOnRoster, shugiinSpeeches.speeches);
 if (carried.entries.length) {
   const offRoster = carried.entries.length - carriedOnRoster.length;
   const refetched = carriedOnRoster.length - carriedEntries.length;
-  const why = [offRoster ? `${offRoster} dropped: memberId no longer in rosters` : "", refetched ? `${refetched} dropped: re-fetched shugiin speeches` : ""].filter(Boolean).join("; ");
+  const why = [offRoster ? `${offRoster} dropped: memberId no longer in rosters, or tenure not verifiable for that session (#230)` : "", refetched ? `${refetched} dropped: re-fetched shugiin speeches` : ""].filter(Boolean).join("; ");
   console.log(`carried: ${carriedEntries.length} timeline entries from sessions ${plan.carried.join(" ")}${why ? ` (${why})` : ""}`);
 }
 // 未突合は ETL を止めず、運用者が確認するために列挙する（docs/DATA_CONTRACT.md）。
