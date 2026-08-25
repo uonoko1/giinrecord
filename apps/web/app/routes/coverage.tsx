@@ -2,7 +2,7 @@ import { Link, type MetaArgs, useLoaderData } from "react-router";
 import { CoverBrand } from "../components/CoverBrand";
 import { SiteFooter } from "../components/SiteFooter";
 import { assemblyPath, bundledSessions } from "../lib/assemblies";
-import { buildCoverage, type Coverage, type DietCoverage, formatLocalSessionRange, formatSessionRange, hasSessionGaps, linkedRecordCounts, type LocalCoverage, rosterlessSessions, rosterScope, type SessionRange, shugiinBillNameCoverage, type ShugiinBillNameStats, shugiinQuestionCoverage } from "../lib/coverage";
+import { buildCoverage, type Coverage, type DietCoverage, formatLocalSessionRange, formatSessionRange, hasSessionGaps, linkedRecordCounts, type LocalCoverage, rosterlessSessions, rosterScope, type SessionRange, shugiinBillNameCoverage, type ShugiinBillNameStats, shugiinQuestionCoverage, speechCoverage } from "../lib/coverage";
 import type { AssemblySession } from "../lib/data-contract";
 import { defaultDataDir, readShugiinBillNameStats } from "../lib/data-files";
 import { type Dataset, dataset as bundled } from "../lib/dataset";
@@ -65,6 +65,7 @@ export function CoveragePage({
         <DietSection diet={coverage.diet} metaSessions={coverage.metaSessions} />
         <LocalSection local={coverage.local} />
 
+        <SpeechSection data={data} />
         <RosterlessSection meta={data.meta} />
         <ShugiinRosterSection data={data} billNames={shugiinBillNames} />
 
@@ -213,7 +214,7 @@ function ShugiinRosterSection({ data, billNames }: { data: Dataset; billNames: S
       {linked && (
         <p className="card__body">
           いま衆議院の議員ページに出ている記録は、提出・賛成した議案が <span className="num">{n(linked.bills)}</span> 件、
-          質問主意書が <span className="num">{n(linked.questions)}</span> 件、本会議の発言が{" "}
+          質問主意書が <span className="num">{n(linked.questions)}</span> 件、発言が{" "}
           <span className="num">{n(linked.speeches)}</span> 件です。
           {questionsFetched && linked.questions === 0 && (
             <>
@@ -228,6 +229,70 @@ function ShugiinRosterSection({ data, billNames }: { data: Dataset; billNames: S
               質問主意書は <span className="num">{questionsFetched}</span> の一覧を取得しています。
             </>
           )}
+        </p>
+      )}
+    </section>
+  );
+}
+
+/**
+ * 発言の収録範囲（#242）。書くのは 2 つの事実だけで、どちらもデータから読む（回次も件数もここには書かない）:
+ *
+ * 1. **どの会議まで取っているか**（本会議だけか、委員会も含むか）。`meta.sources` の会議録 API の URL に
+ *    `nameOfMeeting` が付いているかで決まる（`speechCoverage`）。
+ * 2. **議員ページに実際に出ている件数**（`linkedRecordCounts`。members/index.json の counts の合計）。
+ *
+ * 「どこまで遡っているか」は院で違う（参院は回次ごとの名簿がある範囲、衆院は名簿が覆う 1 回次だけ）が、
+ * それは名簿の範囲の話で、すぐ下の 2 節（RosterlessSection / ShugiinRosterSection）が既に書いている。
+ * ここで回次を書くと同じことを 2 か所で言うことになるので、**そちらへ案内するだけ**にする。
+ */
+function SpeechSection({ data }: { data: Dataset }) {
+  const scopes = speechCoverage(data.meta);
+  if (scopes.length === 0) return null;
+  const sangiin = linkedRecordCounts(data.members, "sangiin");
+  const shugiin = linkedRecordCounts(data.members, "shugiin");
+  const committees = scopes.filter((c) => c.committees).map((c) => (c.house === "sangiin" ? "参議院" : "衆議院"));
+  const plenaryOnly = scopes.filter((c) => !c.committees).map((c) => (c.house === "sangiin" ? "参議院" : "衆議院"));
+  return (
+    <section className="section" aria-labelledby="coverage-speech-heading">
+      <h2 id="coverage-speech-heading" className="section__title">
+        発言をどの会議まで収録しているか
+      </h2>
+      <p className="card__body">
+        発言は
+        <a href={scopes[0].url} target="_blank" rel="noopener noreferrer">
+          国会会議録検索システム 検索用API
+        </a>
+        から取っています。
+        {committees.length > 0 && (
+          <>
+            {" "}
+            <strong>{committees.join("・")}は本会議だけでなく委員会も収録しています</strong>
+            （分科会・審査会・連合審査会・公聴会・調査会を含みます）。会議名は会議録の原文のまま各行に出すので、本会議か委員会かは議員ページで見分けられます。
+          </>
+        )}
+        {plenaryOnly.length > 0 && <> {plenaryOnly.join("・")}は本会議だけを収録しています。</>}
+      </p>
+      <p className="card__body">
+        委員会の会議録には、議員でない発言者（政府参考人・参考人・公述人など）も載ります。
+        <strong>会派の記載がない発言者は議員に紐づけません</strong>（同姓同名の別人を議員にしないため）。
+        議員に紐づかなかった発言は、会議録には残りますが議員ページには出ません。
+      </p>
+      {(sangiin || shugiin) && (
+        <p className="card__body">
+          いま議員ページに出ている発言は、
+          {sangiin && (
+            <>
+              参議院が <span className="num">{n(sangiin.speeches)}</span> 件
+            </>
+          )}
+          {sangiin && shugiin && "、"}
+          {shugiin && (
+            <>
+              衆議院が <span className="num">{n(shugiin.speeches)}</span> 件
+            </>
+          )}
+          です。どの回次まで遡れるかは院ごとの議員名簿が公開されている範囲で決まります（下の 2 つの節）。
         </p>
       )}
     </section>

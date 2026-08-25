@@ -4,8 +4,9 @@ import { NDL_API_INTERVAL_MS, fetchText, sleep } from "../fetch.ts";
 /**
  * 国会会議録検索システム 検索用API（https://kokkai.ndl.go.jp/api.html）。
  * S2 は参議院・本会議のみ。Issue #73 で衆議院・本会議も対象にした（house 引数）。
+ * Issue #242 で委員会も対象にできるようにした（scope 引数）。
  * 会議録の公開には約1ヶ月のラグがある（meta.sources[].fetchedAt で明示する）。
- * Verified 2026-08-22.
+ * Verified 2026-08-22（本会議）/ 2026-08-25（委員会・分科会）。
  */
 const API = "https://kokkai.ndl.go.jp/api/speech";
 export const PAGE_SIZE = 100;
@@ -20,10 +21,26 @@ export const EXCERPT_CHARS = 200;
 /** API の nameOfHouse（会議録の院名の原文）。 */
 const HOUSE_NAME: Record<House, string> = { sangiin: "参議院", shugiin: "衆議院" };
 
-export function speechPageUrl(session: number, startRecord = 1, house: House = "sangiin"): string {
+/**
+ * 取得する会議の範囲（Issue #242）。
+ * - `"plenary"`: `nameOfMeeting=本会議`。#73 以来の既定で、既存の出力と同じ URL になる。
+ * - `"all"`: `nameOfMeeting` を付けない。委員会・分科会・審査会・連合審査会・公聴会・調査会が同じ形で返る。
+ *
+ * `"all"` が本会議と同じ形で返ることは実データで確認済み:
+ * - #263 が第221回（衆参 70,544 件・全量）でキーセットが 1 種類（21キー固定・欠損は null）であることを確認。
+ * - #242 が第201・204回の分科会（第221回は特別会で分科会が 1 件も無く #263 が未確認と flag した箇所）を確認。
+ *   キーセットは第221回と同一、`speechOrder: 0` の会議録情報が先頭に付き、本文は `○話者　` で始まる。
+ *   フィクスチャは `test/fixtures/kokkai-speech-shugiin-204-bunkakai-p1.json`。
+ * 確認していないこと: 両院協議会は衆参の第204・208・213回で `numberOfRecords: 0` だった（2026-08-25 実測）。
+ * 全回次で 0 かは確認していないので「この API に載っていない」とは断定しない。
+ */
+export type SpeechScope = "plenary" | "all";
+
+export function speechPageUrl(session: number, startRecord = 1, house: House = "sangiin", scope: SpeechScope = "plenary"): string {
   const u = new URL(API);
   u.searchParams.set("nameOfHouse", HOUSE_NAME[house]);
-  u.searchParams.set("nameOfMeeting", "本会議");
+  // scope が "all" のときは nameOfMeeting を付けない（付けないことが「全会議」の指定になる）。
+  if (scope === "plenary") u.searchParams.set("nameOfMeeting", "本会議");
   u.searchParams.set("sessionFrom", String(session));
   u.searchParams.set("sessionTo", String(session));
   u.searchParams.set("recordPacking", "json");
@@ -110,12 +127,17 @@ export function toExcerpt(speech: string): { excerpt: string; chars: number } {
   return { excerpt: cps.slice(0, EXCERPT_CHARS).join(""), chars: cps.length };
 }
 
-/** 回次の本会議発言（house の院）を全ページ取得する。リクエスト間隔 ≥ REQUEST_INTERVAL_MS。会議録は追加公開されるのでキャッシュしない。 */
-export async function fetchSpeeches(session: number, house: House = "sangiin"): Promise<Speech[]> {
+/**
+ * 回次の発言（house の院、scope の会議）を全ページ取得する。リクエスト間隔 ≥ REQUEST_INTERVAL_MS。
+ * 会議録は追加公開されるのでキャッシュしない。
+ * scope が "all"（#242）だと 1 回次で数百ページになる（第221回は衆院 334・参院 372 ページ＝#263 の実測）ので、
+ * 全回次を 1 回の実行で流さず #219 と同じ分割 dispatch にする（docs/ops/etl.md）。
+ */
+export async function fetchSpeeches(session: number, house: House = "sangiin", scope: SpeechScope = "plenary"): Promise<Speech[]> {
   const out: Speech[] = [];
   let start: number | null = 1;
   while (start !== null) {
-    const page = parseSpeechPage(JSON.parse(await fetchText(speechPageUrl(session, start, house), "utf-8", { noCache: true })), house);
+    const page = parseSpeechPage(JSON.parse(await fetchText(speechPageUrl(session, start, house, scope), "utf-8", { noCache: true })), house);
     out.push(...page.speeches);
     start = page.nextRecordPosition;
     if (start !== null) await sleep(REQUEST_INTERVAL_MS);

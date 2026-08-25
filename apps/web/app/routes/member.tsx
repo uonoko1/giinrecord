@@ -1,11 +1,11 @@
-import { type KeyboardEvent, useState } from "react";
+import { type KeyboardEvent, useEffect, useRef, useState } from "react";
 import { type LoaderFunctionArgs, type MetaArgs, useLoaderData } from "react-router";
 import { CompareAdd } from "../components/CompareAdd";
 import { SiteFooter } from "../components/SiteFooter";
 import type { Assembly } from "@seiji-kiroku/shared";
 import { assemblyPath, findAssembly, isLocalMember, joinVoteSubjects, localVoteTone, voteSubjectNote } from "../lib/assemblies";
-import type { BillEntry, BillRole, DatasetMeta, LocalVoteEntry, MemberDetail, QuestionEntry, StanceEntry, TimelineEntry, VoteEntry } from "../lib/data-contract";
-import { defaultDataDir, readAssemblies, readLocalRollCallIndex, readMemberDetail, readMeta } from "../lib/data-files";
+import type { BillEntry, BillRole, DatasetMeta, LocalVoteEntry, MemberDetail, MemberSpeeches, QuestionEntry, SpeechEntry, StanceEntry, TimelineEntry, VoteEntry } from "../lib/data-contract";
+import { defaultDataDir, readAssemblies, readLocalRollCallIndex, readMemberDetail, readMemberSpeechCount, readMeta } from "../lib/data-files";
 import { formatDate, formatDateTime, formatYearMonth } from "../lib/format";
 import { seoMeta } from "../lib/seo";
 import "./member.css";
@@ -15,18 +15,37 @@ import "./member.css";
  * `loader` is valid only on routes that are actually prerendered. The generated
  * `./+types/member` therefore cannot be relied on; argument types are declared by hand. */
 
-/** assembly は地方議員（#158）のときだけ引く（assemblies/index.json の行。無ければ null）。国会議員は null */
-export type MemberLoaderData = { detail: MemberDetail; meta: DatasetMeta | null; assembly: Assembly | null };
+/**
+ * assembly は地方議員（#158）のときだけ引く（assemblies/index.json の行。無ければ null）。国会議員は null。
+ * speechCount は `members/{id}/speeches.json` の行数（#242）。**発言そのものはここに載せない**:
+ * 載せるとプリレンダーが HTML に全件焼き込み、分割した意味が無くなる（#263 の実測: HTML は元 JSON の 2.15 倍）。
+ * 件数だけあればタブの件数と表紙の件数帯は出せるので、本文は発言タブを開いたときに実行時 fetch する。
+ */
+export type MemberLoaderData = { detail: MemberDetail; meta: DatasetMeta | null; assembly: Assembly | null; speechCount: number };
 
 export async function loader({ params }: LoaderFunctionArgs): Promise<MemberLoaderData> {
   const dir = defaultDataDir();
-  const [detail, meta] = await Promise.all([readMemberDetail(dir, params.id ?? ""), readMeta(dir)]);
+  const id = params.id ?? "";
+  const [detail, meta, speechCount] = await Promise.all([readMemberDetail(dir, id), readMeta(dir), readMemberSpeechCount(dir, id)]);
   if (!detail) throw new Response("Not Found", { status: 404 });
-  if (!isLocalMember(detail)) return { detail, meta, assembly: null };
+  if (!isLocalMember(detail)) return { detail, meta, assembly: null, speechCount };
   // 地方議員（#158）: 議会の行に加え、採決行の注記（#204）のために rollcalls/index.json の voteSubject / committeeReport を timeline に結合する
   const [assemblies, rollCallIndex] = await Promise.all([readAssemblies(dir), readLocalRollCallIndex(dir, detail.assemblyId ?? "")]);
   const assembly = findAssembly(assemblies ?? [], detail.assemblyId ?? "") ?? null;
-  return { detail: { ...detail, timeline: joinVoteSubjects(detail.timeline, rollCallIndex) }, meta, assembly };
+  return { detail: { ...detail, timeline: joinVoteSubjects(detail.timeline, rollCallIndex) }, meta, assembly, speechCount };
+}
+
+/** 発言の実行時 fetch 先（#242）。nginx が gzip を掛ける application/json（deploy/nginx/site.conf）。 */
+export function speechesDataUrl(id: string): string {
+  return `/data/members/${encodeURIComponent(id)}/speeches.json`;
+}
+
+/** 発言タブを開いたときに取りに行く。404（発言 0 件でファイルが無い）は空として扱う（契約どおり。エラーにしない）。 */
+async function fetchSpeeches(id: string): Promise<SpeechEntry[]> {
+  const res = await fetch(speechesDataUrl(id));
+  if (res.status === 404) return [];
+  if (!res.ok) throw new Error(`${speechesDataUrl(id)}: HTTP ${res.status}`);
+  return ((await res.json()) as MemberSpeeches).speeches ?? [];
 }
 
 /**
@@ -49,8 +68,8 @@ export function meta({ data, location }: MetaArgs<typeof loader>) {
     description: isLocalMember(detail)
       ? `${affiliation(detail, assembly)}。本会議の表決を議会の公表（凡例付きの原文）から出典付きで並べます。`
       : detail.house === "shugiin"
-        ? `${affiliation(detail)}。提出法案・賛同法案・質問主意書・本会議発言と、所属会派の態度（推定）を公式記録から出典付きで並べます。`
-        : `${affiliation(detail)}。本会議の採決・提出法案・質問主意書・発言を公式記録から出典付きで並べます。`,
+        ? `${affiliation(detail)}。提出法案・賛同法案・質問主意書・本会議と委員会の発言と、所属会派の態度（推定）を公式記録から出典付きで並べます。`
+        : `${affiliation(detail)}。本会議の採決・提出法案・質問主意書・本会議と委員会の発言を公式記録から出典付きで並べます。`,
     pathname: location.pathname,
     type: "article",
   });
@@ -58,7 +77,7 @@ export function meta({ data, location }: MetaArgs<typeof loader>) {
 
 export default function MemberRoute() {
   const loaderData = useLoaderData<typeof loader>();
-  return <MemberPage detail={loaderData.detail} meta={loaderData.meta} assembly={loaderData.assembly ?? null} />;
+  return <MemberPage detail={loaderData.detail} meta={loaderData.meta} assembly={loaderData.assembly ?? null} speechCount={loaderData.speechCount ?? 0} loadSpeeches={fetchSpeeches} />;
 }
 
 /* ---------- page ---------- */
@@ -189,18 +208,49 @@ export function groupBySession(entries: TimelineEntry[]): SessionGroup[] {
   return keys.map((session, i) => ({ session, entries: map.get(session)!, expanded: i < EXPANDED_SESSIONS }));
 }
 
-export function MemberPage({ detail, meta, assembly = null }: { detail: MemberDetail; meta: DatasetMeta | null; assembly?: Assembly | null }) {
+/** 発言の読み込み状態（#242）。タブを開くまでは "idle"（取りに行かない）。 */
+type SpeechState = { status: "idle" | "loading" } | { status: "ready"; speeches: SpeechEntry[] } | { status: "error"; message: string };
+
+/**
+ * 議員ページ。
+ *
+ * 発言（#242）だけは `detail.timeline` に入っておらず、発言タブを開いたときに `loadSpeeches` で取りに行く。
+ * プリレンダー（`ssr: false`）は timeline を折りたたんだ回次も含めて HTML に全件書き出すので
+ * （#263 の実測: HTML は元 JSON の 2.15 倍）、発言を timeline に置いたままでは
+ * ファイルを分けても転送量は 1 バイトも減らない。**プリレンダーから外すことが効き所**である。
+ * 件数（`speechCount`）はビルド時に数えて渡すので、取りに行く前でもタブと表紙の件数は正しい。
+ *
+ * `loadSpeeches` を引数にしているのは compare.tsx（`load`）と同じ理由で、テストが fetch を差し替えられるようにするため。
+ */
+export function MemberPage({ detail, meta, assembly = null, speechCount = 0, loadSpeeches }: { detail: MemberDetail; meta: DatasetMeta | null; assembly?: Assembly | null; speechCount?: number; loadSpeeches?: (id: string) => Promise<SpeechEntry[]> }) {
   const local = isLocalMember(detail);
   const [tab, setTabState] = useState<Tab>("all");
   const [stanceExpanded, setStanceExpanded] = useState(false);
+  const [speechState, setSpeechState] = useState<SpeechState>({ status: "idle" });
   const setTab = (t: Tab) => {
     setTabState(t);
     setStanceExpanded(false);
   };
-  const all = tab === "all" ? detail.timeline : detail.timeline.filter((e) => e.kind === tab);
+  // 発言タブを最初に開いたときだけ取りに行く（開かなければ 1 バイトも取らない。他のタブへ移って戻っても取り直さない）。
+  // 「取りに行ったか」は ref で持つ: state に持つと effect の依存が状態遷移で変わり、
+  // idle → loading の再実行が自分自身の cleanup に当たって結果が捨てられる（loading のまま止まる）。
+  const requested = useRef(false);
+  useEffect(() => {
+    if (tab !== "speech" || requested.current || !loadSpeeches || speechCount === 0) return;
+    requested.current = true;
+    let cancelled = false;
+    setSpeechState({ status: "loading" });
+    loadSpeeches(detail.id).then(
+      (loaded) => { if (!cancelled) setSpeechState({ status: "ready", speeches: loaded }); },
+      (err: unknown) => { if (!cancelled) setSpeechState({ status: "error", message: err instanceof Error ? err.message : String(err) }); },
+    );
+    return () => { cancelled = true; };
+  }, [tab, loadSpeeches, speechCount, detail.id]);
+  const speeches = speechState.status === "ready" ? speechState.speeches : [];
+  const all = tab === "speech" ? speeches : tab === "all" ? detail.timeline : detail.timeline.filter((e) => e.kind === tab);
   const folded = tab === "stance" && !stanceExpanded && all.length > STANCE_FOLD;
   const entries = folded ? all.slice(0, STANCE_FOLD) : all;
-  const counts = countKinds(detail.timeline);
+  const counts = { ...countKinds(detail.timeline), speech: speechCount };
 
   return (
     <>
@@ -210,7 +260,23 @@ export function MemberPage({ detail, meta, assembly = null }: { detail: MemberDe
         <TabBar tabs={local ? LOCAL_TABS : TABS[detail.house]} current={tab} counts={counts} onSelect={setTab} />
         <section id="member-records" role="tabpanel" aria-labelledby={`tab-${tab}`}>
           {tab === "stance" && <p className="member-tab-note">所属会派が議案情報の賛成会派・反対会派に載っていた記録です。会派の態度であり、本人の投票ではありません。</p>}
-          {entries.length === 0 ? (
+          {/* 発言は本会議だけでなく委員会も収録している（#242）。どこで発言したかは会議名を原文で各行に出す */}
+          {tab === "speech" && speechCount > 0 && <p className="member-tab-note">本会議と委員会の発言です。会議名は会議録の原文をそのまま出します。</p>}
+          {/*
+            発言は timeline ではなく members/{id}/speeches.json にあり（#242）、発言タブを開いたときに取りに行く。
+            そのため既定の「すべて」には発言が出ない。利用者から見える挙動なので事実を 1 文書く（評価語は入れない）。
+            0 件の議員には出さない（無い記録の案内はしない）。
+          */}
+          {tab === "all" && speechCount > 0 && (
+            <p className="member-tab-note">
+              発言は「発言」タブにあります（<span className="num">{speechCount.toLocaleString("ja-JP")}</span> 件）。
+            </p>
+          )}
+          {tab === "speech" && speechState.status === "loading" ? (
+            <p className="member-empty">発言を読み込んでいます…</p>
+          ) : tab === "speech" && speechState.status === "error" ? (
+            <p className="member-empty">発言を読み込めませんでした。時間をおいて開き直してください。</p>
+          ) : entries.length === 0 ? (
             <p className="member-empty">記録はありません。</p>
           ) : tab === "localVote" ? (
             <LocalVoteTable votes={entries.filter((e): e is LocalVoteEntry => e.kind === "localVote")} />
@@ -406,14 +472,14 @@ function Cover({ detail, counts, assembly }: { detail: MemberDetail; counts: Cou
           <Count n={counts.submitted} label="提出法案" />
           <Count n={counts.supported} label="賛同法案" />
           <Count n={counts.question} label="質問主意書" />
-          <Count n={counts.speech} label="本会議発言" />
+          <Count n={counts.speech} label="発言" />
         </dl>
       ) : (
         <dl className="member-counts">
           <Count n={counts.vote} label="記名採決" />
           <Count n={counts.bill} label="提出法案" />
           <Count n={counts.question} label="質問主意書" />
-          <Count n={counts.speech} label="本会議発言" />
+          <Count n={counts.speech} label="発言" />
         </dl>
       )}
       <p className="member-profile">
@@ -434,6 +500,7 @@ function Count({ n, label }: { n: number; label: string }) {
 }
 
 function countKinds(timeline: TimelineEntry[]): Counts {
+  // speech は timeline に無い（#242。MemberPage が speechCount で上書きする）。all は timeline の全件で、発言は含まない
   const c: Counts = { vote: 0, bill: 0, stance: 0, question: 0, attendance: 0, speech: 0, localVote: 0, all: timeline.length, submitted: 0, supported: 0 };
   for (const e of timeline) {
     c[e.kind] += 1;

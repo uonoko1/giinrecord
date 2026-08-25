@@ -4,18 +4,21 @@ import { describe, expect, it } from "vitest";
 import type { MemberDetail } from "../lib/data-contract";
 import sangiin from "../test-fixtures/member.json";
 import shugiin from "../test-fixtures/member-shugiin.json";
+import shugiinSpeeches from "../test-fixtures/member-shugiin-speeches.json";
 import meta from "../test-fixtures/meta.json";
 import { MemberPage, meta as routeMeta } from "./member";
 
 const detail = shugiin as MemberDetail;
-const renderPage = () => render(<MemberPage detail={detail} meta={meta} />);
+/** 発言は #242 で members/{id}/speeches.json に移った。件数はビルド時に数えて渡す */
+const speechCount = shugiinSpeeches.speeches.length;
+const renderPage = () => render(<MemberPage detail={detail} meta={meta} speechCount={speechCount} />);
 
 describe("衆院議員ページ 表紙（#73）", () => {
-  it("件数帯は 提出法案 / 賛同法案 / 本会議発言 で、記名採決の枠を出さない", () => {
+  it("件数帯は 提出法案 / 賛同法案 / 質問主意書 / 発言 で、記名採決の枠を出さない（#242 で委員会も入るので「本会議発言」とは言わない）", () => {
     renderPage();
     const counts = screen.getByRole("heading", { level: 1 }).closest("header")!;
     const terms = within(counts).getAllByRole("term").map((t) => t.textContent);
-    expect(terms).toEqual(["提出法案", "賛同法案", "質問主意書", "本会議発言"]);
+    expect(terms).toEqual(["提出法案", "賛同法案", "質問主意書", "発言"]);
     expect(within(counts).queryByText("記名採決")).not.toBeInTheDocument();
     const defs = within(counts).getAllByRole("definition").map((d) => d.textContent);
     expect(defs).toEqual(["1", "1", "1", "1"]);
@@ -63,7 +66,7 @@ describe("衆院議員ページ 会派の態度（推定）", () => {
   it("タブは 本人の記録（すべて / 提出法案 / 質問主意書 / 発言）と 所属会派の記録（会派の態度）に分かれ、採決タブは無い（#238）", () => {
     renderPage();
     expect(screen.getAllByRole("tab").map((t) => t.textContent)).toEqual([
-      "すべて6件",
+      "すべて5件",   // 発言は timeline に無い（#242）
       "提出法案2件",
       "質問主意書1件",
       "発言1件",

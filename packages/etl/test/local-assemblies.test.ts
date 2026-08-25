@@ -143,7 +143,7 @@ test("writeDataset（国会の日次 ETL）は assemblies/index.json の地方�
     await writeFile(join(dir, "assemblies", "pref-04", rel), stableJson(value));
   }
   const ds = {
-    assemblies: dietAssemblies(221), index: [], details: [], rollCalls: [], rollCallDetails: [], bills: [],
+    assemblies: dietAssemblies(221), index: [], details: [], speeches: [], rollCalls: [], rollCallDetails: [], bills: [],
     unmatched: [], unmatchedBills: [], unmatchedGroups: [], groupMismatch: [],
     meta: { fetchedAt: "2026-08-24T00:00:00.000Z", sources: [], sessions: [221] },
   };

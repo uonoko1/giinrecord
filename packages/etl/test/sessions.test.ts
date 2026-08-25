@@ -117,6 +117,86 @@ describe("readCarried: 前回出力（data/）から引き継ぐ回次の採決�
       await rm(dir, { recursive: true, force: true });
     }
   });
+
+  /*
+   * Issue #242: 発言は timeline から members/{id}/speeches.json に移った。readCarried は読む先が変わる。
+   *
+   * ここは #235（質問主意書 524 件が黙って消えた）と #236（衆院発言が引き継ぎ頼みで 0 のまま戻らなくなった）が
+   * どちらも起きた場所なので、**両方の形式**を実際のファイルで固定する:
+   *   - 新形式（#242 以降の出力）: members/{id}/speeches.json から読む
+   *   - 旧形式（#242 以前の出力）: members/{id}.json の timeline に speech 行がある。**初回実行は必ずこの状態**なので、
+   *     ここで落とすと全議員の発言が 1 回で消える。
+   * 両方あるときは新形式だけを読む（同じ speechId が 2 行になるのを防ぐ）。
+   */
+  const speechFile = (id: string, rows: TimelineEntry[]) => ({ id, speeches: rows });
+  const s200: TimelineEntry = { kind: "speech", session: 200, date: "2019-12-04", speechId: "120015254X00120191204_001", meeting: "本会議 第1号", excerpt: "抜粋", chars: 3, sourceUrl: "https://kokkai.ndl.go.jp/txt/120015254X00120191204/1" };
+  const s221: TimelineEntry = { kind: "speech", session: 221, date: "2026-06-05", speechId: "122115254X00120260605_001", meeting: "本会議 第1号", excerpt: "抜粋", chars: 3, sourceUrl: "https://kokkai.ndl.go.jp/txt/122115254X00120260605/1" };
+  /** 委員会の発言（#242）。会議名が原文で長いこと以外は本会議と同じ形。 */
+  const c200: TimelineEntry = { kind: "speech", session: 200, date: "2019-12-03", speechId: "120014911X00120191203_005", meeting: "内閣委員会 第1号", excerpt: "抜粋", chars: 300, position: "内閣府大臣官房審議官", sourceUrl: "https://kokkai.ndl.go.jp/txt/120014911X00120191203/5" };
+
+  /** 引き継ぎだけを見るための最小の data/（採決・議案なし）。timeline は detailTimeline、発言は speeches で置く。 */
+  async function withData(detailTimeline: TimelineEntry[], speeches: TimelineEntry[] | null, run: (dir: string) => Promise<void>) {
+    const dir = await mkdtemp(join(tmpdir(), "carried-"));
+    try {
+      await mkdir(join(dir, "members"), { recursive: true });
+      await writeFile(join(dir, "members", "index.json"), stableJson([{ id: "m_1", name: "一 郎", kana: "", house: "sangiin", assemblyId: "diet-sangiin", group: "G", district: "東京", current: true, counts: { rollcalls: 0, bills: 0, speeches: speeches?.length ?? detailTimeline.filter((e) => e.kind === "speech").length, questions: 0 } }]));
+      await writeFile(join(dir, "members", "m_1.json"), stableJson({ ...detail, timeline: detailTimeline }));
+      if (speeches) {
+        await mkdir(join(dir, "members", "m_1"), { recursive: true });
+        await writeFile(join(dir, "members", "m_1", "speeches.json"), stableJson(speechFile("m_1", speeches)));
+      }
+      await run(dir);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  }
+
+  test("新形式（#242）: carried の回次の発言を members/{id}/speeches.json から引き継ぐ", async () => {
+    await withData([], [s221, c200, s200], async (dir) => {
+      const carried = await readCarried(dir, [200]);
+      assert.deepEqual(carried.entries.map((c) => [c.memberId, c.entry.kind, c.entry.session, (c.entry as { speechId: string }).speechId]), [
+        ["m_1", "speech", 200, "120014911X00120191203_005"],
+        ["m_1", "speech", 200, "120015254X00120191204_001"],
+      ]);
+      assert.equal(carried.withoutSession, 0);
+    });
+  });
+
+  test("委員会の発言（position 付き・会議名が原文）もそのまま引き継ぐ（再解釈しない。#242）", async () => {
+    await withData([], [c200], async (dir) => {
+      const carried = await readCarried(dir, [200]);
+      assert.deepEqual(carried.entries[0].entry, c200);
+    });
+  });
+
+  test("旧形式（#242 以前の出力）: timeline の speech 行も引き継ぐ（初回実行で全議員の発言が消えない）", async () => {
+    await withData([s221, s200], null, async (dir) => {
+      const carried = await readCarried(dir, [200]);
+      assert.deepEqual(carried.entries.map((c) => (c.entry as { speechId: string }).speechId), ["120015254X00120191204_001"]);
+    });
+  });
+
+  test("新旧が両方あれば新形式だけを読む（同じ speechId が2行にならない）", async () => {
+    await withData([s200], [s200], async (dir) => {
+      const carried = await readCarried(dir, [200]);
+      assert.deepEqual(carried.entries.map((c) => (c.entry as { speechId: string }).speechId), ["120015254X00120191204_001"]);
+    });
+  });
+
+  test("speeches.json に session を持たない古い行があれば引き継がず件数だけ報告する（推定しない。#235 と同じ規則）", async () => {
+    const noSession = { kind: "speech", date: "2019-12-05", speechId: "120015254X00220191205_001", meeting: "本会議 第2号", excerpt: "抜粋", chars: 3, sourceUrl: "https://kokkai.ndl.go.jp/txt/120015254X00220191205/1" } as never as TimelineEntry;
+    await withData([], [s200, noSession], async (dir) => {
+      const carried = await readCarried(dir, [200]);
+      assert.equal(carried.entries.length, 1);
+      assert.equal(carried.withoutSession, 1);
+    });
+  });
+
+  test("carried でない回次の発言は引き継がない（取得し直す回次の分は取得側が入れる）", async () => {
+    await withData([], [s221, s200], async (dir) => {
+      assert.deepEqual((await readCarried(dir, [221])).entries.map((c) => (c.entry as { speechId: string }).speechId), ["122115254X00120260605_001"]);
+    });
+  });
 });
 
 /*
@@ -358,7 +438,8 @@ describe("#236 回帰: 最新回次が carried の実行でも衆院の発言は
 
   test("cli.ts は衆院発言の取得を条件分岐で囲まない（取得を丸ごとスキップする述語を復活させない）", async () => {
     const src = await readFile(new URL("../src/cli.ts", import.meta.url), "utf8");
-    assert.ok(/^const shugiinSpeeches = matchSpeeches\(await fetchSpeeches\(memberSession, "shugiin"\)/m.test(src), "衆院本会議の発言を memberSession で無条件に取得している");
+    // #242 で第4引数（会議の範囲 SPEECH_SCOPE）が付いた。守るのは「条件分岐で囲まないこと」であって引数の数ではない
+    assert.ok(/^const shugiinSpeeches = matchSpeeches\(await fetchSpeeches\(memberSession, "shugiin"[^)]*\)/m.test(src), "衆院の発言を memberSession で無条件に取得している");
     assert.ok(!/shouldFetchShugiinSpeeches/.test(src), "取得を丸ごとスキップする条件が cli.ts に残っている（#236）");
     assert.ok(/dropCarriedSpeeches\(/.test(src), "二重行は dropCarriedSpeeches で防ぐ");
   });
@@ -442,6 +523,55 @@ describe("lostSessionEntries: 議会 × 回次 × 種別で前回出力より減
     } finally {
       await rm(dir, { recursive: true, force: true });
     }
+  });
+
+  /*
+   * Issue #242 の移行で最も危ないところ。発言が timeline から members/{id}/speeches.json に移るので、
+   * 数え方が片方しか見ていないと「発言が全部消えた」という**偽陽性**で ETL が毎回止まるか、
+   * 逆に二重計上で本物の消失を見逃す。旧形式・新形式・両方あるとき、の 3 通りで同じ値が出ることを固定する。
+   */
+  test("sessionCounts: 発言は members/{id}/speeches.json から数える（新形式。#242）", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "session-counts-"));
+    try {
+      await mkdir(join(dir, "members", "m_1"), { recursive: true });
+      await writeFile(join(dir, "members", "index.json"), stableJson([{ id: "m_1", name: "一 郎", kana: "", house: "sangiin", assemblyId: "diet-sangiin", group: "G", district: "東京", current: true, counts: { rollcalls: 0, bills: 0, speeches: 2, questions: 0 } }]));
+      await writeFile(join(dir, "members", "m_1.json"), stableJson(detail("m_1", "sangiin", [])));
+      await writeFile(join(dir, "members", "m_1", "speeches.json"), stableJson({ id: "m_1", speeches: [entry("speech", 221, 1), entry("speech", 200, 1)] }));
+      const counts = await readSessionCounts(dir);
+      assert.equal(counts.get("diet-sangiin\t221\tspeeches"), 1);
+      assert.equal(counts.get("diet-sangiin\t200\tspeeches"), 1);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("sessionCounts: 旧形式（timeline の speech 行）と新形式で同じ値になる（移行で偽陽性を出さない。#242）", async () => {
+    const rows = [entry("speech", 221, 1), entry("speech", 200, 1)];
+    const legacy = sessionCounts([detail("m_1", "sangiin", rows)]);
+    const split = sessionCounts([{ ...detail("m_1", "sangiin", []), speeches: rows }]);
+    assert.deepEqual([...split].sort(), [...legacy].sort());
+    // 旧形式の前回出力 → 新形式の今回出力で、消失として検出されない
+    assert.deepEqual(lostSessionEntries(legacy, [{ ...detail("m_1", "sangiin", []), speeches: rows }]), []);
+  });
+
+  test("sessionCounts: 新旧が両方あれば speeches.json 側だけを数える（二重計上しない。#242）", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "session-counts-"));
+    try {
+      await mkdir(join(dir, "members", "m_1"), { recursive: true });
+      await writeFile(join(dir, "members", "index.json"), stableJson([{ id: "m_1", name: "一 郎", kana: "", house: "sangiin", assemblyId: "diet-sangiin", group: "G", district: "東京", current: true, counts: { rollcalls: 0, bills: 0, speeches: 1, questions: 0 } }]));
+      await writeFile(join(dir, "members", "m_1.json"), stableJson(detail("m_1", "sangiin", [entry("speech", 221, 1)])));
+      await writeFile(join(dir, "members", "m_1", "speeches.json"), stableJson({ id: "m_1", speeches: [entry("speech", 221, 1)] }));
+      assert.equal((await readSessionCounts(dir)).get("diet-sangiin\t221\tspeeches"), 1);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("発言が本当に減れば新形式でも検出する（偽陰性にしない。#242）", () => {
+    const before = sessionCounts([{ ...detail("m_1", "sangiin", []), speeches: [entry("speech", 221, 1), entry("speech", 221, 2)] }]);
+    assert.deepEqual(lostSessionEntries(before, [{ ...detail("m_1", "sangiin", []), speeches: [entry("speech", 221, 1)] }]), [
+      { assemblyId: "diet-sangiin", session: 221, kind: "speeches", before: 2, after: 1 },
+    ]);
   });
 });
 

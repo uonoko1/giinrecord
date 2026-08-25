@@ -148,7 +148,12 @@ const speech = (id: string, memberId: string | undefined, date: string, extra: P
   excerpt: `抜粋 ${id}`, chars: 300, sourceUrl: `https://kokkai.ndl.go.jp/txt/${id.split("_")[0]}/${Number(id.split("_")[1])}`, ...extra,
 });
 
-describe("buildDataset: speech を timeline に入れる", () => {
+/**
+ * Issue #242: 発言は `members/{id}.json` の timeline ではなく `members/{id}/speeches.json`
+ * （`Aggregated.speeches`）に入る。timeline に置いたままだとプリレンダーが折りたたんだ回次も含め
+ * HTML に全件焼き込むため（#263 の実測: HTML は元 JSON の 2.15 倍）、ファイルを分けても軽くならない。
+ */
+describe("buildDataset: speech は speeches.json に分ける（#242）", () => {
   const members = [member("m_1", "一 郎"), member("m_2", "二 郎", "立憲")];
   const rcs = [rollCall("221-0605-v001", "2026-06-05", [vote("m_1", "賛成")])];
   const speeches = [
@@ -157,57 +162,79 @@ describe("buildDataset: speech を timeline に入れる", () => {
     speech("122115254X01920260605_010", undefined, "2026-06-05", { position: "内閣総理大臣" }),
   ];
   const ds = buildDataset(members, rcs, new Map(), speeches);
+  const speechesOf = (id: string) => ds.speeches.find((x) => x.id === id)?.speeches ?? [];
 
   test("speech エントリは speechId・会議名・冒頭抜粋・文字数・出典URL を持ち、要約や評価は持たない", () => {
-    const m1 = ds.details.find((d) => d.id === "m_1")!;
-    assert.deepEqual(m1.timeline.find((e) => e.kind === "speech" && e.speechId === "122115254X01920260605_002"), {
+    assert.deepEqual(speechesOf("m_1").find((e) => e.speechId === "122115254X01920260605_002"), {
       kind: "speech", session: 221, date: "2026-06-05", speechId: "122115254X01920260605_002", meeting: "本会議 第1号",
       excerpt: "抜粋 122115254X01920260605_002", chars: 300, sourceUrl: "https://kokkai.ndl.go.jp/txt/122115254X01920260605/2",
     });
   });
 
-  test("vote と speech が混ざっても timeline は日付降順（不変条件）。同日は vote → speech の順", () => {
-    const m1 = ds.details.find((d) => d.id === "m_1")!;
-    const later = buildDataset(members, rcs, new Map(), [...speeches, speech("122115254X02020260610_009", "m_1", "2026-06-10")]);
-    assert.deepEqual(later.details.find((d) => d.id === "m_1")!.timeline.map((e) => [e.kind, e.date]), [["speech", "2026-06-10"], ["speech", "2026-06-10"], ["vote", "2026-06-05"], ["speech", "2026-06-05"]]);
-    assert.deepEqual(m1.timeline.map((e) => [e.kind, e.date]), [["speech", "2026-06-10"], ["vote", "2026-06-05"], ["speech", "2026-06-05"]]);
+  test("timeline に speech 行は入らない（#242。発言は speeches.json 側）", () => {
+    assert.ok(ds.details.every((d) => d.timeline.every((e) => e.kind !== "speech")));
+    assert.deepEqual(ds.details.find((d) => d.id === "m_1")!.timeline.map((e) => [e.kind, e.date]), [["vote", "2026-06-05"]]);
   });
 
-  test("議長・大臣など position 付きの発言も timeline に入り、position を原文のまま載せる（役職としての発言も記録）", () => {
-    const m1 = ds.details.find((d) => d.id === "m_1")!;
-    assert.deepEqual(m1.timeline.find((e) => e.kind === "speech" && e.speechId === "122115254X02020260610_004"), {
+  test("speeches.json も timeline と同じ日付降順。同日は speechId の降順で安定する", () => {
+    const later = buildDataset(members, rcs, new Map(), [...speeches, speech("122115254X02020260610_009", "m_1", "2026-06-10")]);
+    assert.deepEqual(later.speeches.find((x) => x.id === "m_1")!.speeches.map((e) => [e.date, e.speechId]), [
+      ["2026-06-10", "122115254X02020260610_009"],
+      ["2026-06-10", "122115254X02020260610_004"],
+      ["2026-06-05", "122115254X01920260605_002"],
+    ]);
+  });
+
+  test("議長・大臣など position 付きの発言も記録し、position を原文のまま載せる（役職としての発言も事実）", () => {
+    assert.deepEqual(speechesOf("m_1").find((e) => e.speechId === "122115254X02020260610_004"), {
       kind: "speech", session: 221, date: "2026-06-10", speechId: "122115254X02020260610_004", meeting: "本会議 第1号",
       excerpt: "抜粋 122115254X02020260610_004", chars: 300, position: "議長", sourceUrl: "https://kokkai.ndl.go.jp/txt/122115254X02020260610/4",
     });
   });
 
+  test("委員会の発言も同じ speeches.json に入り、会議名は原文（本会議と区別できる。#242）", () => {
+    const d = buildDataset(members, [], new Map(), [
+      speech("122104911X00120260514_001", "m_1", "2026-05-14", { meeting: "内閣委員会経済産業委員会連合審査会 第1号" }),
+      speech("122115254X01920260605_002", "m_1", "2026-06-05", { meeting: "本会議 第19号" }),
+    ]);
+    assert.deepEqual(d.speeches[0].speeches.map((e) => e.meeting), ["本会議 第19号", "内閣委員会経済産業委員会連合審査会 第1号"]);
+  });
+
   test("position が空文字の発言は position を載せない（キーを作らない）", () => {
     const d = buildDataset(members, [], new Map(), [speech("x_001", "m_1", "2026-06-05", { position: "" })]);
-    assert.deepEqual(Object.keys(d.details[0].timeline[0]).includes("position"), false);
+    assert.deepEqual(Object.keys(d.speeches[0].speeches[0]).includes("position"), false);
     assert.equal(d.index[0].counts.speeches, 1);
   });
 
-  test("衆院本会議の発言は衆院議員（h_）の timeline に入り、counts.speeches に数える（Issue #107）", () => {
+  test("衆院の発言は衆院議員（h_）の speeches.json に入り、counts.speeches に数える（Issue #107）", () => {
     const h = { ...member("h_1", "衆 一郎", "自由民主党・無所属の会"), house: "shugiin" as const, terms: [{ house: "shugiin" as const, group: "自由民主党・無所属の会", district: "東京1", from: "", sessionFrom: 221 }] };
     const d = buildDataset([h], [], new Map(), [speech("122105254X03520260724_002", "h_1", "2026-07-24", { house: "shugiin" })]);
     assert.equal(d.index[0].counts.speeches, 1);
-    assert.equal(d.details[0].timeline[0].kind, "speech");
+    assert.equal(d.speeches[0].speeches[0].kind, "speech");
   });
 
-  test("発言の院と議員の院が違えば例外（衆院本会議の発言を参院議員に付けない）", () => {
+  test("発言の院と議員の院が違えば例外（衆院の発言を参院議員に付けない）", () => {
     assert.throws(() => buildDataset(members, [], new Map(), [speech("122105254X03520260724_002", "m_1", "2026-07-24", { house: "shugiin" })]), /house/);
   });
 
-  test("memberId の無い発言（名簿にいない大臣など）は timeline に入れない", () => {
-    assert.ok(ds.details.every((d) => d.timeline.every((e) => e.kind !== "speech" || e.speechId !== "122115254X01920260605_010")));
+  test("memberId の無い発言（名簿にいない政府参考人・大臣など）はどこにも入れない", () => {
+    assert.ok(ds.speeches.every((x) => x.speeches.every((e) => e.speechId !== "122115254X01920260605_010")));
   });
 
-  test("counts.speeches は timeline の speech 数（position 付きの発言も含める。内訳は持たない）", () => {
+  test("counts.speeches は speeches.json の行数（position 付きの発言も含める。内訳は持たない）", () => {
     assert.deepEqual(ds.index.map((m) => [m.id, m.counts.speeches]), [["m_1", 2], ["m_2", 0]]);
+    assert.equal(speechesOf("m_1").length, 2);
+  });
+
+  test("発言 0 件の議員は speeches の行を作らない（無い＝0 件。空ファイルを置かない）", () => {
+    assert.deepEqual(ds.speeches.map((x) => x.id), ["m_1"]);
+    assert.deepEqual(speechesOf("m_2"), []);
   });
 
   test("speeches を省略しても従来どおり（後方互換）", () => {
-    assert.deepEqual(buildDataset(members, rcs).index.map((m) => m.counts.speeches), [0, 0]);
+    const d = buildDataset(members, rcs);
+    assert.deepEqual(d.index.map((m) => m.counts.speeches), [0, 0]);
+    assert.deepEqual(d.speeches, []);
   });
 
   test("名簿にない memberId の発言は例外（名寄せの不整合を黙って捨てない）", () => {
@@ -337,11 +364,12 @@ describe("buildDataset: 衆院 Bill から timeline を作る", () => {
     assert.equal(row?.kind === "stance" && row.stanceText, "全会一致");
   });
 
-  test("timeline は日付降順、同日は vote → bill → stance → speech", () => {
+  test("timeline は日付降順、同日は vote → bill → stance（speech は speeches.json 側。#242）", () => {
     const d = buildDataset([hMember("h_1", "自由民主党・無所属の会")], [], new Map(),
       [speech("x_001", "h_1", "2026-03-02", { house: "shugiin" })],
       [], [shugiinBill("221-衆法-1", { submitters: ["h_1"] }), shugiinBill("221-閣法-3", { kind: "閣法", shugiinGroupStance: { stanceText: "多数", yes: ["自由民主党・無所属の会"], no: [] } })]);
-    assert.deepEqual(d.details[0].timeline.map((e) => e.kind), ["bill", "stance", "speech"]);
+    assert.deepEqual(d.details[0].timeline.map((e) => e.kind), ["bill", "stance"]);
+    assert.deepEqual(d.speeches[0].speeches.map((e) => e.kind), ["speech"]);
   });
 
   test("counts.bills は bill 行の数（stance は数えない）", () => {
