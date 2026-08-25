@@ -32,7 +32,7 @@ describe("matchSpeeches: 衆院本会議の発言を衆院名簿に突合する�
 
   test("衆院名簿（正式名称の会派）に氏名＋会派で紐づき h_ の memberId が入る", () => {
     const s: Speech = { ...speech("h_001", "落合貴之", "中道改革連合・無所属"), house: "shugiin" };
-    const { speeches, unmatched } = matchSpeeches([s], [shugiinMember("h_000001", "落合 貴之", "中道改革連合・無所属")], 221);
+    const { speeches, unmatched } = matchSpeeches([s], [shugiinMember("h_000001", "落合 貴之", "中道改革連合・無所属")]);
     assert.equal(speeches[0].memberId, "h_000001");
     assert.equal(speeches[0].house, "shugiin");
     assert.deepEqual(unmatched, []);
@@ -41,7 +41,7 @@ describe("matchSpeeches: 衆院本会議の発言を衆院名簿に突合する�
   test("衆院の同姓同名はその回次の名簿の会派で分ける", () => {
     const members = [shugiinMember("h_1", "山田 太郎", "自由民主党・無所属の会"), shugiinMember("h_2", "山田 太郎", "日本維新の会")];
     const s: Speech = { ...speech("h_001", "山田太郎", "日本維新の会"), house: "shugiin" };
-    assert.equal(matchSpeeches([s], members, 221).speeches[0].memberId, "h_2");
+    assert.equal(matchSpeeches([s], members).speeches[0].memberId, "h_2");
   });
 });
 
@@ -64,14 +64,16 @@ describe("matchSpeeches: 発言者名＋会派で名寄せ（matchVotes と同�
     assert.equal(speeches[0].memberId, "m_2");
   });
 
-  test("同姓同名は回次を渡すとその回次に効いている名簿の会派（groupAt）で分離する（Issue #24）", () => {
+  test("同姓同名は発言の回次に効いている名簿の会派（groupAt）で分離する（Issue #24 / #230）", () => {
     const members = [
       member("m_1", "山田 太郎", "自民", { terms: [{ house: "sangiin", group: "立憲民主・無所属", district: "", from: "", sessionFrom: 221, sessionTo: 221 }, { house: "sangiin", group: "自由民主党・無所属の会", district: "", from: "", sessionFrom: 219, sessionTo: 220 }] }),
       member("m_2", "山田 太郎", "立憲", { terms: [{ house: "sangiin", group: "自由民主党・無所属の会", district: "", from: "", sessionFrom: 221, sessionTo: 221 }] }),
     ];
-    const { speeches } = matchSpeeches([speech("a_001", "山田太郎", "立憲民主・無所属")], members, 221);
+    const { speeches } = matchSpeeches([speech("a_001", "山田太郎", "立憲民主・無所属")], members);
     assert.equal(speeches[0].memberId, "m_1");
-    const older = matchSpeeches([speech("a_001", "山田太郎", "自由民主党・無所属の会")], members, 219);
+    // 発言そのものの回次（第219回）で引く。m_1 は第219〜220回の名簿で 自由民主党・無所属の会。
+    // m_2 は第221回の名簿にしかおらず、第219回の在職を確認できないので候補から外れる（#230）。
+    const older = matchSpeeches([{ ...speech("a_001", "山田太郎", "自由民主党・無所属の会"), session: 219, date: "2025-12-01" }], members);
     assert.equal(older.speeches[0].memberId, "m_1");
   });
 
@@ -120,7 +122,7 @@ describe("matchSpeeches: 実データ（第221回 衆院本会議 1ページ目 
   const members = ROSTER_PAGES.flatMap((p) =>
     parseShugiinMemberList(decodeRosterPage(readFileSync(new URL(`./fixtures/shugiin-giin-20260218-${p}.htm`, import.meta.url))), `https://www.shugiin.go.jp/internet/itdb_annai.nsf/html/statics/syu/${p}giin.htm`, 221));
   const page = parseSpeechPage(JSON.parse(fixture("kokkai-speech-shugiin-221-p1.json")), "shugiin");
-  const { speeches, unmatched } = matchSpeeches(page.speeches, members, 221);
+  const { speeches, unmatched } = matchSpeeches(page.speeches, members);
 
   test("position の無い発言はすべて衆院名簿（h_）に紐づき、unmatched は空", () => {
     assert.equal(members.length, 465);
@@ -139,7 +141,7 @@ describe("matchSpeeches: 実データ（第221回 衆院本会議 1ページ目 
 
   test("衆院名簿に参院の発言を渡しても紐づかない（院を取り違えない）", () => {
     const sangiin = parseSpeechPage(JSON.parse(fixture("kokkai-speech-221-p1.json")));
-    const r = matchSpeeches(sangiin.speeches.filter((s) => s.speakerText === "藤川政人"), members, 221);
+    const r = matchSpeeches(sangiin.speeches.filter((s) => s.speakerText === "藤川政人"), members);
     assert.equal(r.speeches.length, 1);
     assert.ok(r.speeches.every((s) => !s.memberId));
   });

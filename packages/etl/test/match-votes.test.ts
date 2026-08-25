@@ -2,7 +2,7 @@ import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import type { Member, MemberTerm, RollCall } from "@seiji-kiroku/shared";
-import { matchVotes, normalizeName } from "../src/match-votes.ts";
+import { indexByName, matchVotes, normalizeName, resolveMember } from "../src/match-votes.ts";
 import { parseRollCall } from "../src/sources/sangiin-votes.ts";
 import { parseMemberList } from "../src/sources/sangiin-members.ts";
 
@@ -150,17 +150,17 @@ describe("matchVotes: 氏名＋採決時点の会派（groupAt）のマトリク
     { label: "一意な氏名・どの回次の会派とも違う → 氏名で一致させ、group-mismatch に採決回次の会派を記録",
       members: [withTerms("m_1", "木村 英子", [t("いのちの党", 221), t("れいわ新選組", 217, 220)])],
       vote: vote("木村 英子", "日本共産党"), memberId: "m_1", unmatched: false, mismatch: "いのちの党" },
-    { label: "一意な氏名・採決回次に効く名簿が無く（後の回次のみ）会派も違う → 一致させ、rosterGroup は手元の全会派",
+    { label: "一意な氏名・名簿が後の回次にしかない → 未突合（在職を確認できない。#230）",
       members: [withTerms("m_1", "木村 英子", [t("いのちの党", 223), t("れいわ新選組", 222)])],
-      vote: vote("木村 英子", "日本共産党"), memberId: "m_1", unmatched: false, mismatch: "いのちの党/れいわ新選組" },
+      vote: vote("木村 英子", "日本共産党"), memberId: "", unmatched: true },
     { label: "同姓同名・採決回次の会派で1人に絞れる → 一致",
       members: [withTerms("m_1", "鈴木 一郎", [t("自由民主党・無所属の会", 221)]), withTerms("m_2", "鈴木 一郎", [t("立憲民主・無所属", 221)])],
       vote: vote("鈴木 一郎", "立憲民主・無所属"), memberId: "m_2", unmatched: false },
     { label: "同姓同名・採決回次の会派は名簿の略称/旧称でも一致（自由民主党 ← 自民）",
       members: [withTerms("m_1", "鈴木 一郎", [t("自民", 221)]), withTerms("m_2", "鈴木 一郎", [t("立憲", 221)])],
       vote: vote("鈴木 一郎", "自由民主党"), memberId: "m_1", unmatched: false },
-    { label: "同姓同名・片方は採決回次より後の名簿にしか無い（groupAt なし）→ 効いている名簿の側に一致",
-      members: [withTerms("m_1", "鈴木 一郎", [t("立憲民主・無所属", 222)]), withTerms("m_2", "鈴木 一郎", [t("立憲民主・無所属", 219, 220)])],
+    { label: "同姓同名・片方は採決回次より後の名簿にしか無い（在職未確認）→ 覆っている側に一致",
+      members: [withTerms("m_1", "鈴木 一郎", [t("立憲民主・無所属", 222)]), withTerms("m_2", "鈴木 一郎", [t("立憲民主・無所属", 219, 221)])],
       vote: vote("鈴木 一郎", "立憲民主・無所属"), memberId: "m_2", unmatched: false },
     { label: "同姓同名・採決回次の会派が両方に一致 → 未突合",
       members: [withTerms("m_1", "鈴木 一郎", [t("自由民主党・無所属の会", 221)]), withTerms("m_2", "鈴木 一郎", [t("自由民主党・無所属の会", 221)])],
@@ -179,4 +179,69 @@ describe("matchVotes: 氏名＋採決時点の会派（groupAt）のマトリク
       ]);
     });
   }
+});
+
+describe("在職を確認できない氏名一致は紐づけない（#230）", () => {
+  const t = (group: string, sessionFrom: number, sessionTo?: number, to?: string): MemberTerm =>
+    ({ house: "sangiin", group, district: "", from: "", sessionFrom, ...(sessionTo === undefined ? {} : { sessionTo }), ...(to === undefined ? {} : { to }) });
+  const withTerms = (id: string, name: string, terms: MemberTerm[]) => member(id, name, "", { terms });
+  const rc221 = (nameText: string, group: string) => rollCall([{ nameText, group }]);
+
+  test("(a) その回次を名簿が覆っている → 紐づく", () => {
+    const members = [withTerms("m_1", "青木 一彦", [t("自由民主党・無所属の会", 216, 221)])];
+    const { rollCall: rc } = matchVotes(rc221("青木 一彦", "自由民主党・無所属の会"), members);
+    assert.equal(rc.votes[0].memberId, "m_1");
+  });
+
+  test("(b) 前の回次の名簿に載り、任期満了日が採決日以後 → 紐づく（会期中に名簿から消えた議員）", () => {
+    // 第216回の名簿にいて任期満了 2026-07-28。第221回（2026-06-05）の採決の時点では任期内。
+    const members = [withTerms("m_1", "山東 昭子", [t("自由民主党・無所属の会", 216, 216, "2026-07-28")])];
+    const { rollCall: rc, unmatched } = matchVotes(rc221("山東 昭子", "自由民主党・無所属の会"), members);
+    assert.equal(rc.votes[0].memberId, "m_1");
+    assert.deepEqual(unmatched, []);
+  });
+
+  test("前の回次の名簿に載るが任期満了日が採決日より前 → 紐づけない（任期が切れている）", () => {
+    const members = [withTerms("m_1", "山東 昭子", [t("自由民主党・無所属の会", 216, 216, "2026-01-31")])];
+    const { rollCall: rc, unmatched } = matchVotes(rc221("山東 昭子", "自由民主党・無所属の会"), members);
+    assert.equal(rc.votes[0].memberId, "");
+    assert.equal(unmatched.length, 1);
+  });
+
+  test("名簿が後の回次にしか無い（採決より後に初当選）→ 紐づけない（在職を確認できない）", () => {
+    const members = [withTerms("m_1", "鈴木 一郎", [t("自由民主党・無所属の会", 222, 223, "2032-07-25")])];
+    const { rollCall: rc, unmatched } = matchVotes(rc221("鈴木 一郎", "自由民主党・無所属の会"), members);
+    assert.equal(rc.votes[0].memberId, "");
+    assert.equal(unmatched.length, 1);
+  });
+
+  test("任期満了日が名簿に無い過去の回次の票 → 紐づけない（推定しない）", () => {
+    const members = [withTerms("m_1", "鈴木 一郎", [t("自由民主党・無所属の会", 222, 223)])];
+    const { rollCall: rc } = matchVotes(rc221("鈴木 一郎", "自由民主党・無所属の会"), members);
+    assert.equal(rc.votes[0].memberId, "");
+  });
+
+  test("紐づかなかった票は氏名と会派を事実として unmatched に残す（記録を失わない）", () => {
+    const members = [withTerms("m_1", "鈴木 一郎", [t("自由民主党・無所属の会", 222)])];
+    const { unmatched } = matchVotes(rc221("鈴木 一郎", "民友連"), members);
+    assert.deepEqual(unmatched, [{ nameText: "鈴木 一郎", group: "民友連", rollCallId: "221-0605-v001" }]);
+  });
+
+  test("在職を確認できない候補は同姓同名の絞り込みからも外れる（会派が一致しても採らない）", () => {
+    const members = [
+      withTerms("m_1", "鈴木 一郎", [t("自由民主党・無所属の会", 222)]),          // 第221回には在職未確認
+      withTerms("m_2", "鈴木 一郎", [t("自由民主党・無所属の会", 216, 221)]),      // 第221回を覆う
+    ];
+    const { rollCall: rc } = matchVotes(rc221("鈴木 一郎", "自由民主党・無所属の会"), members);
+    assert.equal(rc.votes[0].memberId, "m_2");
+  });
+
+  test("回次の分からない呼び出し（議案ページなど）は名簿が覆う回次でしか紐づけない", () => {
+    const covered = [withTerms("m_1", "青木 一彦", [t("自由民主党・無所属の会", 216, 221)])];
+    const index = indexByName(covered);
+    // session を渡さなければ「どの回次の記録か」が分からないので、在職確認のしようがない → 紐づけない
+    assert.equal(resolveMember(index, "青木 一彦", undefined)?.id, undefined);
+    // 回次を渡せば覆っているか確認できる
+    assert.equal(resolveMember(index, "青木 一彦", undefined, { session: 221 })?.id, "m_1");
+  });
 });

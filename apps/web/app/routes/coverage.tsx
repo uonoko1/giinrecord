@@ -236,8 +236,9 @@ function ShugiinRosterSection({ data, billNames }: { data: Dataset; billNames: S
 
 /**
  * 名簿の無い回次（#219 / #230）。参議院の回次ごとの議員名簿は最古の 1 回次分より前が公開されていないので、
- * その回次の票はほとんどが議員ページに紐づかない。少数だけ現行名簿と氏名が一致して紐づくが、
- * 名簿に在職開始日が無く在職を確認できないため、それは**推定を含む紐づけ**である。
+ * その回次の票は議員ページに紐づかない。#230 より前は「現行名簿と氏名が一致する少数」が在職未確認のまま
+ * 紐づいており、この節はそれを「推定を含む」と書いていた。#230 でその経路を塞いだので、いまは紐づかない。
+ * 氏名・当時の会派・採決ページへのリンクは残る（記録は失われない）ことも併せて書く。
  * 事実として書き、評価しない。回次はデータ（meta）から数える（画面に数値を書かない）。
  */
 function RosterlessSection({ meta }: { meta: Dataset["meta"] }) {
@@ -252,17 +253,17 @@ function RosterlessSection({ meta }: { meta: Dataset["meta"] }) {
       <p className="card__body">
         参議院の回次ごとの議員名簿は、<span className="num">第{rosterless.earliestRoster}回</span>より前が公開されていません。そのため{" "}
         <span className="num">{range}</span>（<span className="num">{n(rosterless.sessions.length)}</span> 回次）の票は、
-        採決ページには氏名と当時の会派が載りますが、<strong>ほとんどが議員ページには紐づいていません</strong>。
-        氏名だけを手がかりに議員を作ることはしていません（同姓同名の別人を 1 人にしないため）。
+        採決ページには氏名と当時の会派が載りますが、<strong>議員ページには紐づいていません</strong>。
+        氏名だけを手がかりに議員に紐づけることはしていません（同姓同名の別人を 1 人にしないため）。
       </p>
       <p className="card__body">
-        ただし、これらの回次の票のうち<strong>現在の名簿と氏名が一致する少数は、議員ページに紐づいています</strong>。
-        名簿には任期満了日はありますが在職開始日にあたる項目が無く、その議員がその回次に在職していたことを一次資料から確認できません。
-        つまりこの紐づけは<strong>推定を含みます</strong>。一律の見直しは作業中です（
+        現在の名簿と氏名が一致する票も同じです。名簿には任期満了日はありますが<strong>在職開始日にあたる項目が無く</strong>、
+        その議員がその回次に在職していたことを一次資料から確認できないためです。
+        <strong>在職を確認できない氏名一致では紐づけません</strong>（
         <a href="https://github.com/uonoko1/gikailog/issues/230" target="_blank" rel="noopener noreferrer">
           Issue #230
         </a>
-        ）。
+        ）。紐づかなかった票も、氏名・当時の会派・採決ページへのリンクはそのまま残ります。
       </p>
     </section>
   );

@@ -117,8 +117,8 @@ describe("/coverage 収録範囲", () => {
     for (const word of EVALUATIVE_WORDS) expect(container.textContent).not.toContain(word);
   });
 
-  // #219 / #230: 名簿の無い回次があることと、少数が推定を含んで紐づいていることを事実として出す
-  it("名簿より前の回次があれば、紐づかない事実と推定を含む紐づけを出す（回次はデータから）", () => {
+  // #219 / #230: 名簿の無い回次があることと、氏名が一致しても紐づけない理由を事実として出す
+  it("名簿より前の回次があれば、紐づかない事実とその理由を出す（回次はデータから）", () => {
     const meta = {
       ...dataset.meta!,
       sessions: [142, 150, 200, 216, 221],
@@ -128,10 +128,14 @@ describe("/coverage 収録範囲", () => {
     const section = screen.getByRole("region", { name: "議員ページに紐づかない回次" });
     expect(section).toHaveTextContent("第216回");
     expect(section).toHaveTextContent("第142—200回");
-    expect(section).toHaveTextContent("ほとんどが議員ページには紐づいていません");
-    // 「少数は紐づいており、それは推定を含む」ことを隠さず書く
-    expect(section).toHaveTextContent("推定を含みます");
+    expect(section).toHaveTextContent("議員ページには紐づいていません");
+    // #230: 氏名が一致しても在職を確認できなければ紐づけない、を理由つきで書く
+    expect(section).toHaveTextContent("在職を確認できない氏名一致では紐づけません");
     expect(section.textContent).toContain("在職開始日にあたる項目が無く");
+    // 記録が失われないことも書く（一次資料へのリンクは残る）
+    expect(section.textContent).toContain("採決ページへのリンクはそのまま残ります");
+    // 「推定を含む紐づけがある」とはもう書かない（#230 で解消した）
+    expect(section.textContent).not.toContain("推定を含みます");
   });
 
   it("名簿の無い回次が無ければ、その節は出さない（無い事実を作らない）", () => {
