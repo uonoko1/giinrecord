@@ -36,8 +36,9 @@ describe("buildDataset: timeline の各行に session が付く", () => {
   const m1 = ds.details.find((d) => d.id === "m_1")!;
   const h1 = ds.details.find((d) => d.id === "h_1")!;
 
-  test("vote は採決の回次、bill（参法）は billId の回次、speech は会議録の回次、question は質問の回次、attendance は会議の回次", () => {
-    assert.deepEqual(m1.timeline.map((e) => [e.kind, e.session]), [["question", 210], ["attendance", 205], ["vote", 200], ["speech", 201], ["bill", 200]]);
+  test("vote は採決の回次、bill（参法）は billId の回次、question は質問の回次、attendance は会議の回次。speech は speeches.json 側で会議録の回次（#242）", () => {
+    assert.deepEqual(m1.timeline.map((e) => [e.kind, e.session]), [["question", 210], ["attendance", 205], ["vote", 200], ["bill", 200]]);
+    assert.deepEqual(ds.speeches.find((x) => x.id === "m_1")!.speeches.map((e) => [e.kind, e.session]), [["speech", 201]]);
   });
   test("衆院の bill 行・stance 行は議案の提出回次", () => {
     assert.deepEqual(h1.timeline.map((e) => [e.kind, e.session]), [["bill", 216], ["stance", 216]]);
@@ -49,11 +50,11 @@ describe("buildDataset: carried（対象外の回次の行を members/{id}.json 
   const old: TimelineEntry = { kind: "speech", session: 203, date: "2020-11-01", speechId: "120315254X00120201101_001", meeting: "本会議 第1号", excerpt: "古い抜粋", chars: 5, sourceUrl: "https://kokkai.ndl.go.jp/txt/120315254X00120201101/1" };
   const carried: CarriedEntry[] = [{ memberId: "m_1", entry: old }];
 
-  test("引き継いだ行はそのまま timeline に入り、日付順に並び、counts に数える", () => {
+  test("引き継いだ speech 行はそのまま speeches.json に入り、counts に数える（#242: 行き先が変わっても引き継ぎは止めない）", () => {
     const ds = buildDataset(members, [rollCall("221-0605-v001", 221, "2026-06-05", "m_1")], new Map(), [], [], [], [], [], carried);
     const m1 = ds.details[0];
-    assert.deepEqual(m1.timeline.map((e) => [e.kind, e.session, e.date]), [["vote", 221, "2026-06-05"], ["speech", 203, "2020-11-01"]]);
-    assert.deepEqual(m1.timeline[1], old);
+    assert.deepEqual(m1.timeline.map((e) => [e.kind, e.session, e.date]), [["vote", 221, "2026-06-05"]]);
+    assert.deepEqual(ds.speeches[0].speeches, [old]);
     assert.equal(ds.index[0].counts.speeches, 1);
   });
   test("名簿にない memberId の引き継ぎ行は例外（黙って捨てない。cli が先に除いて警告する）", () => {

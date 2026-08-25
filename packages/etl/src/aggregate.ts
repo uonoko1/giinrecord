@@ -1,4 +1,4 @@
-import type { Bill, Member, MemberDetail, MemberSummary, MemberTerm, Question, RollCall, RollCallSummary, Speech, TimelineEntry, VoteValue } from "@seiji-kiroku/shared";
+import type { Bill, Member, MemberDetail, MemberSpeeches, MemberSummary, MemberTerm, Question, RollCall, RollCallSummary, Speech, SpeechEntry, TimelineEntry, VoteValue } from "@seiji-kiroku/shared";
 import { toSummary } from "./sources/sangiin-members.ts";
 import { groupAt } from "./group-history.ts";
 import { assemblyIdOf } from "./assemblies.ts";
@@ -9,8 +9,14 @@ import type { MatchedAttendance } from "./match-attendance.ts";
 export interface Aggregated {
   /** `members/index.json`。counts を埋めたもの。 */
   index: MemberSummary[];
-  /** `members/{id}.json`。名簿の全員分（票のない議員も timeline 空で含む）。 */
+  /** `members/{id}.json`。名簿の全員分（票のない議員も timeline 空で含む）。timeline に speech 行は入らない（#242）。 */
   details: MemberDetail[];
+  /**
+   * `members/{id}/speeches.json`（#242）。発言のある議員だけ（0 件の議員は行を作らない）。
+   * timeline から分けたのはプリレンダーをやめるため（#263 の実測: HTML は元 JSON の 2.15 倍で、
+   * timeline に置いたままではファイルを分けても転送量が変わらない）。
+   */
+  speeches: MemberSpeeches[];
   /** `rollcalls/index.json`。日付降順。 */
   rollCalls: RollCallSummary[];
 }
@@ -101,12 +107,14 @@ export function summarizeRollCall(rc: RollCall, decision?: string): RollCallSumm
 }
 
 /**
- * 名簿と突合済みの採決・発言から、議員ごとの timeline と一覧を組み立てる。
- * - memberId が空（未突合）の票・memberId の無い発言は unmatched.json 側で扱うので timeline には入れない。
+ * 名簿と突合済みの採決・発言から、議員ごとの timeline（`members/{id}.json`）・発言（`members/{id}/speeches.json`）・一覧を組み立てる。
+ * - memberId が空（未突合）の票・memberId の無い発言は unmatched.json 側で扱うのでどこにも入れない。
  * - 名簿にない memberId は名寄せの不整合なので例外にする（黙って捨てない）。
  * - 並びは日付降順。同日は kind（vote → bill → stance → question → attendance → speech）、次に採決 id / 発言 id の降順で安定させる（差分最小化）。
- * - 議長・大臣など position 付きの発言（議事進行・政府答弁）も事実として timeline に入れ、position を原文のまま載せる。
- *   counts.speeches は役職付きも含めた数（内訳は持たない）。区別は web が position を表示して行う。
+ * - 発言（#242）は timeline ではなく speeches（`members/{id}/speeches.json`）に入る。並びは timeline と同じ日付降順。
+ *   会議名は会議録の原文（「本会議 第19号」「予算委員会第一分科会 第2号」）なので、本会議と委員会は表示で区別できる。
+ *   議長・大臣・委員長など position 付きの発言（議事進行・政府答弁・委員長報告）も事実として入れ、position を原文のまま載せる。
+ *   counts.speeches は役職付きも含めた数（内訳は持たない）。区別は web が position と会議名を表示して行う。
  * - 提出法案（matchBills の出力）は提出日の bill 行になり、sourceUrl は議案ページ。counts.bills はその数。
  * - 衆院 議案（shugiinBills、#73）: 名寄せ済みの submitters / supporters は 提出者 / 賛成者 の bill 行（事実）。
  *   shugiinGroupStance の賛成会派／反対会派に、その議員の提出回次の会派（groupAt）が載っていれば stance 行（推定、estimated: true）。
@@ -152,15 +160,19 @@ export function buildDataset(
     }
   }
   const houseOf = new Map(members.map((m) => [m.id, m.house]));
+  // 発言は timeline とは別の入れ物に集める（#242）。timelineOf は「名簿に無い memberId は例外」の検査に使う。
+  const speechesOf = new Map<string, SpeechEntry[]>();
   for (const s of speeches) {
     if (!s.memberId) continue;
-    const timeline = timelineOf(s.memberId, `speech ${s.id} ("${s.speakerText}")`);
-    // 発言の院と議員の院は一致していなければならない（衆院本会議の発言を同名の参院議員に付けない。Issue #107）。
+    timelineOf(s.memberId, `speech ${s.id} ("${s.speakerText}")`);
+    // 発言の院と議員の院は一致していなければならない（衆院の発言を同名の参院議員に付けない。Issue #107）。
     if (houseOf.get(s.memberId) !== s.house) throw new Error(`speech ${s.id} ("${s.speakerText}", ${s.house}) refers to member ${s.memberId} of house ${String(houseOf.get(s.memberId))}`);
-    timeline.push({
+    const list = speechesOf.get(s.memberId) ?? [];
+    list.push({
       kind: "speech", session: s.session, date: s.date, speechId: s.id, meeting: s.meeting, excerpt: s.excerpt, chars: s.chars,
       ...(s.position ? { position: s.position } : {}), sourceUrl: s.sourceUrl,
     });
+    speechesOf.set(s.memberId, list);
   }
   for (const b of bills) {
     timelineOf(b.memberId, `bill ${b.billId}`).push({
@@ -206,16 +218,28 @@ export function buildDataset(
     timeline.push({ kind: "attendance", estimated: false, session: a.session, date: a.date, meetingId: a.meetingId, meeting: a.meeting, role: a.role, bills: a.bills.map((b) => ({ ...b })), sourceUrl: a.sourceUrl });
   }
   // 対象外の回次から引き継ぐ行（#103）。そのまま入れる（再解釈しない）。名簿に無い memberId は他の行と同じく例外。
-  for (const c of carried) timelineOf(c.memberId, `carried ${c.entry.kind} (session ${c.entry.session})`).push(c.entry);
+  // speech の引き継ぎ行は timeline ではなく speeches に入れる（#242。行き先が変わっても引き継ぎ自体は止めない）。
+  for (const c of carried) {
+    const timeline = timelineOf(c.memberId, `carried ${c.entry.kind} (session ${c.entry.session})`);
+    if (c.entry.kind === "speech") speechesOf.set(c.memberId, [...(speechesOf.get(c.memberId) ?? []), c.entry]);
+    else timeline.push(c.entry);
+  }
   // assemblyId（#156）は国会の名簿パーサが付けないので集約で補う（toSummary も同じ assemblyIdOf）。index と detail で同じ値（validateDataset が一致を検査する）。
   const details = members.map((m): MemberDetail => ({ ...m, assemblyId: assemblyIdOf(m), timeline: [...timelines.get(m.id)!].sort(byDateDesc) }));
+  // 発言のある議員だけ（#242）。並びは timeline と同じ（日付降順 → speechId の降順）。members の順で決定的にする。
+  const speechFiles = members
+    .filter((m) => (speechesOf.get(m.id)?.length ?? 0) > 0)
+    .map((m): MemberSpeeches => ({ id: m.id, speeches: [...speechesOf.get(m.id)!].sort(byDateDesc) }));
   const index = members.map((m) => {
     const s = toSummary(m);
     const timeline = timelines.get(m.id)!;
     const count = (kind: TimelineEntry["kind"]) => timeline.filter((e) => e.kind === kind).length;
-    return { ...s, counts: { rollcalls: count("vote"), bills: count("bill"), speeches: count("speech"), questions: count("question") } };
+    // counts.speeches は speeches.json の行数（timeline には speech 行が無い。#242）。
+    // /coverage の linkedRecordCounts がこの値を数えている（#251）ので、speeches.json と一致していなければならない
+    // （validateDataset の不変条件）。
+    return { ...s, counts: { rollcalls: count("vote"), bills: count("bill"), speeches: speechesOf.get(m.id)?.length ?? 0, questions: count("question") } };
   });
-  return { index, details, rollCalls: rollCalls.map(summarize).sort(byDateDesc) };
+  return { index, details, speeches: speechFiles, rollCalls: rollCalls.map(summarize).sort(byDateDesc) };
 }
 
 /** 参法の billId `{回次}-{種別}-{番号}`（docs/DATA_CONTRACT.md）の回次。形が違えば例外（推定しない）。 */

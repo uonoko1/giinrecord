@@ -6,7 +6,9 @@ import type { MemberDetail, TimelineEntry } from "../lib/data-contract";
 import assembliesFixture from "../test-fixtures/assemblies/index.json";
 import localMember from "../test-fixtures/assemblies/member-local.json";
 import sangiinMember from "../test-fixtures/member.json";
+import sangiinSpeeches from "../test-fixtures/member-speeches.json";
 import shugiinMember from "../test-fixtures/member-shugiin.json";
+import shugiinSpeeches from "../test-fixtures/member-shugiin-speeches.json";
 import meta from "../test-fixtures/meta.json";
 import { MemberPage, groupTabs } from "./member";
 
@@ -15,6 +17,9 @@ const EVALUATIVE_WORDS = ["おすすめ", "ランキング", "一致率", "遅�
 
 const sangiin = sangiinMember as MemberDetail;
 const shugiin = shugiinMember as MemberDetail;
+/** 発言は #242 で timeline から members/{id}/speeches.json に移った。件数はビルド時に数えて渡す */
+const sangiinSpeechCount = sangiinSpeeches.speeches.length;
+const shugiinSpeechCount = shugiinSpeeches.speeches.length;
 const local = localMember as MemberDetail;
 const miyagi = (assembliesFixture as Assembly[])[2]!;
 
@@ -23,13 +28,13 @@ const tabByLabel = (label: string) => screen.getByRole("tab", { name: new RegExp
 
 describe("議員ページのタブのカテゴリ（#238）: 衆院", () => {
   it("「本人の記録」と「所属会派の記録（推定）」の 2 つのカテゴリに分かれる", () => {
-    render(<MemberPage detail={shugiin} meta={meta} />);
+    render(<MemberPage detail={shugiin} meta={meta} speechCount={shugiinSpeechCount} />);
     const headings = [...document.querySelectorAll(".member-tabcat")].map((h) => h.textContent);
     expect(headings).toEqual(["本人の記録", "所属会派の記録（推定）本人の投票ではありません"]);
   });
 
   it("会派の態度は「所属会派の記録（推定）」の側にあり、本人の記録のタブ列には入らない", () => {
-    render(<MemberPage detail={shugiin} meta={meta} />);
+    render(<MemberPage detail={shugiin} meta={meta} speechCount={shugiinSpeechCount} />);
     const selfList = screen.getByRole("tablist", { name: "本人の記録" });
     const groupList = screen.getByRole("tablist", { name: /所属会派の記録（推定）/ });
     expect(within(selfList).getAllByRole("tab").map((t) => t.textContent)).toEqual(["提出法案2件", "質問主意書1件", "発言1件"]);
@@ -39,27 +44,28 @@ describe("議員ページのタブのカテゴリ（#238）: 衆院", () => {
   });
 
   it("「すべて」はどちらのカテゴリにも入らない（本人の記録と会派の記録の両方を含むため）", () => {
-    render(<MemberPage detail={shugiin} meta={meta} />);
+    render(<MemberPage detail={shugiin} meta={meta} speechCount={shugiinSpeechCount} />);
     const selfList = screen.getByRole("tablist", { name: "本人の記録" });
     expect(within(selfList).queryByRole("tab", { name: /^すべて/ })).not.toBeInTheDocument();
     const allTab = tabByLabel("すべて");
     expect(allTab.closest(".member-tabgroup")).toHaveAttribute("data-category", "all");
-    // 「すべて」の件数は timeline の全件（提出2 + 会派2 + 質問1 + 発言1）
-    expect(allTab).toHaveTextContent("6件");
+    // 「すべて」の件数は timeline の全件（提出2 + 会派2 + 質問1）。発言は timeline に無い（#242）
+    expect(allTab).toHaveTextContent("5件");
   });
 
   it("カテゴリの見出しとタブのラベルに評価語を含まない", () => {
-    const { container } = render(<MemberPage detail={shugiin} meta={meta} />);
+    const { container } = render(<MemberPage detail={shugiin} meta={meta} speechCount={shugiinSpeechCount} />);
     for (const word of EVALUATIVE_WORDS) expect(container.textContent).not.toContain(word);
   });
 });
 
 describe("議員ページのタブのカテゴリ（#238）: 参院・地方はカテゴリが 1 つなので見出しを出さない", () => {
   it("参院はカテゴリ見出しが無く、タブ列は 1 本のまま", () => {
-    render(<MemberPage detail={sangiin} meta={meta} />);
+    render(<MemberPage detail={sangiin} meta={meta} speechCount={sangiinSpeechCount} />);
     expect(document.querySelectorAll(".member-tabcat")).toHaveLength(0);
     expect(screen.getAllByRole("tablist")).toHaveLength(1);
-    expect(tabNames()).toEqual(["すべて8件", "採決2件", "提出法案2件", "質問主意書1件", "発言3件"]);
+    // 「すべて」は timeline の件数。発言は timeline に無い（#242）ので含まれない
+    expect(tabNames()).toEqual(["すべて5件", "採決2件", "提出法案2件", "質問主意書1件", "発言4件"]);
   });
 
   it("地方はカテゴリ見出しが無く、表決だけ（過剰な装飾をしない）", () => {
@@ -72,13 +78,13 @@ describe("議員ページのタブのカテゴリ（#238）: 参院・地方は�
 
 describe("議員ページのタブの件数（#238）", () => {
   it("タブの件数は表紙の件数帯と一致する（同じ数え方）", () => {
-    render(<MemberPage detail={sangiin} meta={meta} />);
+    render(<MemberPage detail={sangiin} meta={meta} speechCount={sangiinSpeechCount} />);
     const cover = screen.getByRole("banner");
     for (const [coverLabel, tabLabel] of [
       ["記名採決", "採決"],
       ["提出法案", "提出法案"],
       ["質問主意書", "質問主意書"],
-      ["本会議発言", "発言"],
+      ["発言", "発言"],
     ] as const) {
       const n = within(cover).getByText(coverLabel, { selector: "dt" }).nextElementSibling!.textContent;
       expect(tabByLabel(tabLabel)).toHaveTextContent(`${n}件`);
@@ -86,14 +92,14 @@ describe("議員ページのタブの件数（#238）", () => {
   });
 
   it("衆院も表紙の件数帯とタブの件数が一致する（提出法案は提出者・賛成者の合計）", () => {
-    render(<MemberPage detail={shugiin} meta={meta} />);
+    render(<MemberPage detail={shugiin} meta={meta} speechCount={shugiinSpeechCount} />);
     const cover = screen.getByRole("banner");
     const submitted = Number(within(cover).getByText("提出法案", { selector: "dt" }).nextElementSibling!.textContent);
     const supported = Number(within(cover).getByText("賛同法案", { selector: "dt" }).nextElementSibling!.textContent);
     expect(tabByLabel("提出法案")).toHaveTextContent(`${submitted + supported}件`);
     for (const [coverLabel, tabLabel] of [
       ["質問主意書", "質問主意書"],
-      ["本会議発言", "発言"],
+      ["発言", "発言"],
     ] as const) {
       const n = within(cover).getByText(coverLabel, { selector: "dt" }).nextElementSibling!.textContent;
       expect(tabByLabel(tabLabel)).toHaveTextContent(`${n}件`);
@@ -101,9 +107,9 @@ describe("議員ページのタブの件数（#238）", () => {
   });
 
   it("件数 0 のタブは隠さず、淡色（data-empty）で出す。「無い」ことが事実だから", async () => {
-    // 発言・質問主意書が 1 件も無い衆院議員（実データではよくある）
-    const noSpeech: MemberDetail = { ...shugiin, timeline: shugiin.timeline.filter((e) => e.kind !== "speech" && e.kind !== "question") };
-    render(<MemberPage detail={noSpeech} meta={meta} />);
+    // 発言・質問主意書が 1 件も無い衆院議員（実データではよくある）。発言は speechCount 0 で表す（#242）
+    const noSpeech: MemberDetail = { ...shugiin, timeline: shugiin.timeline.filter((e) => e.kind !== "question") };
+    render(<MemberPage detail={noSpeech} meta={meta} speechCount={0} />);
     const speech = tabByLabel("発言");
     expect(speech).toBeInTheDocument();
     expect(speech).toHaveTextContent("0件");
@@ -115,20 +121,20 @@ describe("議員ページのタブの件数（#238）", () => {
   });
 
   it("件数が 1 件以上のタブには data-empty を付けない", () => {
-    render(<MemberPage detail={shugiin} meta={meta} />);
+    render(<MemberPage detail={shugiin} meta={meta} speechCount={shugiinSpeechCount} />);
     expect(tabByLabel("提出法案")).not.toHaveAttribute("data-empty");
   });
 });
 
 describe("議員ページのタブのキーボード操作（#238）", () => {
   it("選択中のタブだけが tabindex=0（ロービングタブインデックス）", () => {
-    render(<MemberPage detail={sangiin} meta={meta} />);
+    render(<MemberPage detail={sangiin} meta={meta} speechCount={sangiinSpeechCount} />);
     expect(tabByLabel("すべて")).toHaveAttribute("tabindex", "0");
     expect(tabByLabel("採決")).toHaveAttribute("tabindex", "-1");
   });
 
   it("右矢印で次のタブへ移り、内容も切り替わる", async () => {
-    render(<MemberPage detail={sangiin} meta={meta} />);
+    render(<MemberPage detail={sangiin} meta={meta} speechCount={sangiinSpeechCount} />);
     tabByLabel("すべて").focus();
     await userEvent.keyboard("{ArrowRight}");
     const vote = tabByLabel("採決");
@@ -138,7 +144,7 @@ describe("議員ページのタブのキーボード操作（#238）", () => {
   });
 
   it("左矢印は端で反対の端へ回り、End は最後・Home は最初へ移る", async () => {
-    render(<MemberPage detail={sangiin} meta={meta} />);
+    render(<MemberPage detail={sangiin} meta={meta} speechCount={sangiinSpeechCount} />);
     tabByLabel("すべて").focus();
     await userEvent.keyboard("{ArrowLeft}");
     expect(tabByLabel("発言")).toHaveAttribute("aria-selected", "true");
@@ -149,7 +155,7 @@ describe("議員ページのタブのキーボード操作（#238）", () => {
   });
 
   it("衆院は矢印キーがカテゴリ内で完結する（本人の記録から会派の記録へ飛び移らない）", async () => {
-    render(<MemberPage detail={shugiin} meta={meta} />);
+    render(<MemberPage detail={shugiin} meta={meta} speechCount={shugiinSpeechCount} />);
     tabByLabel("発言").focus(); // 「本人の記録」の最後のタブ
     await userEvent.keyboard("{ArrowRight}");
     expect(tabByLabel("提出法案")).toHaveAttribute("aria-selected", "true"); // 同じカテゴリの先頭に回る
@@ -180,7 +186,7 @@ describe("groupTabs（#238）", () => {
 
 describe("タブを切り替えても記録の中身が入れ替わらない（#238 で分類しても行の対応は変わらない）", () => {
   it("参院: 採決タブに出る件名は timeline の vote 行の件名と同じ", async () => {
-    render(<MemberPage detail={sangiin} meta={meta} />);
+    render(<MemberPage detail={sangiin} meta={meta} speechCount={sangiinSpeechCount} />);
     await userEvent.click(tabByLabel("採決"));
     const expected = sangiin.timeline.filter((e): e is Extract<TimelineEntry, { kind: "vote" }> => e.kind === "vote").map((e) => e.title);
     const table = screen.getByRole("table");
@@ -192,7 +198,7 @@ describe("タブを切り替えても記録の中身が入れ替わらない（#
   });
 
   it("衆院: 会派の態度タブに出るのは stance 行だけで、提出法案タブには stance 行が出ない", async () => {
-    render(<MemberPage detail={shugiin} meta={meta} />);
+    render(<MemberPage detail={shugiin} meta={meta} speechCount={shugiinSpeechCount} />);
     await userEvent.click(tabByLabel("会派の態度"));
     let panel = screen.getByRole("tabpanel");
     expect(within(panel).getAllByRole("listitem")).toHaveLength(2);

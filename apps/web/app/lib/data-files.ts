@@ -9,7 +9,7 @@ import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import type { Assembly } from "@seiji-kiroku/shared";
 import type { ShugiinBillNameStats } from "./coverage";
-import { DIET_ASSEMBLIES, type AssemblySession, type DatasetMeta, type LocalRollCallSubject, type MemberDetail, type MemberSummary, type RollCall, type RollCallSummary } from "./data-contract";
+import { DIET_ASSEMBLIES, type AssemblySession, type DatasetMeta, type LocalRollCallSubject, type MemberDetail, type MemberSpeeches, type MemberSummary, type RollCall, type RollCallSummary } from "./data-contract";
 
 /** `data/` at the repo root; override with SEIJI_DATA_DIR. cwd is apps/web during build. */
 export function defaultDataDir(): string {
@@ -38,6 +38,18 @@ export async function memberPaths(dataDir: string): Promise<string[]> {
 export async function readMemberDetail(dataDir: string, id: string): Promise<MemberDetail | null> {
   if (!SAFE_ID.test(id)) return null;
   return readJson<MemberDetail>(path.join(dataDir, "members", `${id}.json`));
+}
+
+/**
+ * 発言の**件数だけ**を `members/{id}/speeches.json` から読む（#242）。
+ * ビルド時に本文まで読むが、返すのは数だけなのでプリレンダーされる HTML には発言が焼き込まれない
+ * （そこが #242 の目的。#263 の実測では HTML は元 JSON の 2.15 倍になる）。
+ * ファイルが無ければ 0（契約: ETL は 0 件のファイルを作らない）。
+ */
+export async function readMemberSpeechCount(dataDir: string, id: string): Promise<number> {
+  if (!SAFE_ID.test(id)) return 0;
+  const file = await readJson<MemberSpeeches>(path.join(dataDir, "members", id, "speeches.json"));
+  return file?.speeches?.length ?? 0;
 }
 
 /**

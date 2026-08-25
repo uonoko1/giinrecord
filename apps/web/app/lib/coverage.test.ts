@@ -4,7 +4,7 @@ import assembliesFixture from "../test-fixtures/assemblies/index.json";
 import localMembers from "../test-fixtures/assemblies/members-index.json";
 import sessionsFixture from "../test-fixtures/assemblies/sessions.json";
 import { dataset } from "../test-fixtures/dataset";
-import { buildCoverage, formatLocalSessionRange, formatSessionRange, hasSessionGaps, linkedRecordCounts, rosterlessSessions, rosterScope, sessionRange, shugiinBillNameCoverage, shugiinQuestionCoverage, shugiinRosterAsOf } from "./coverage";
+import { buildCoverage, formatLocalSessionRange, formatSessionRange, hasSessionGaps, linkedRecordCounts, rosterlessSessions, rosterScope, sessionRange, shugiinBillNameCoverage, shugiinQuestionCoverage, shugiinRosterAsOf, speechCoverage } from "./coverage";
 import type { AssemblySession } from "./data-contract";
 import type { Dataset, MemberSummary } from "./dataset";
 
@@ -64,6 +64,36 @@ describe("rosterlessSessions: 名簿の無い回次（#219 / #230）", () => {
   it("meta が無い・議員一覧の出典が無いなら null（推定しない）", () => {
     expect(rosterlessSessions(undefined)).toBeNull();
     expect(rosterlessSessions(meta([142], []))).toBeNull();
+  });
+});
+
+describe("speechCoverage: 発言をどの会議まで取っているか（#242）", () => {
+  const at = "2026-08-25T00:00:00.000Z";
+  const src = (name: string, url: string) => ({ name, url, fetchedAt: at });
+  const API = "https://kokkai.ndl.go.jp/api/speech";
+  const metaOf = (sources: { name: string; url: string; fetchedAt: string }[]) => ({ fetchedAt: at, sessions: [221], sources });
+
+  it("nameOfMeeting が付いていなければ委員会も取っている（#242）", () => {
+    const m = metaOf([
+      src("国会会議録検索システム 検索用API（参議院 本会議・委員会）", `${API}?nameOfHouse=%E5%8F%82%E8%AD%B0%E9%99%A2&sessionFrom=221&sessionTo=221&recordPacking=json`),
+      src("国会会議録検索システム 検索用API（衆議院 本会議・委員会）", `${API}?nameOfHouse=%E8%A1%86%E8%AD%B0%E9%99%A2&sessionFrom=221&sessionTo=221&recordPacking=json`),
+    ]);
+    expect(speechCoverage(m).map((c) => [c.house, c.committees])).toEqual([["sangiin", true], ["shugiin", true]]);
+  });
+
+  it("nameOfMeeting=本会議 が付いていれば本会議だけ（#242 以前の出力もそのまま読める）", () => {
+    const m = metaOf([src("国会会議録検索システム 検索用API（参議院 本会議）", `${API}?nameOfHouse=%E5%8F%82%E8%AD%B0%E9%99%A2&nameOfMeeting=%E6%9C%AC%E4%BC%9A%E8%AD%B0&sessionFrom=221&sessionTo=221`)]);
+    expect(speechCoverage(m).map((c) => [c.house, c.committees])).toEqual([["sangiin", false]]);
+  });
+
+  it("委員会の出席者欄（#109）の出典は発言ではないので数えない", () => {
+    const m = metaOf([src("国会会議録検索システム 検索用API（参議院 委員会の出席者欄）", `${API}?nameOfHouse=%E5%8F%82%E8%AD%B0%E9%99%A2&speaker=%E4%BC%9A%E8%AD%B0%E9%8C%B2%E6%83%85%E5%A0%B1&any=%E7%99%BA%E8%AD%B0%E8%80%85&sessionFrom=221&sessionTo=221`)]);
+    expect(speechCoverage(m)).toEqual([]);
+  });
+
+  it("meta が無い・会議録の出典が無ければ空（推定しない）", () => {
+    expect(speechCoverage(undefined)).toEqual([]);
+    expect(speechCoverage(metaOf([src("参議院 議員一覧（第221回）", "https://www.sangiin.go.jp/japanese/joho1/kousei/giin/221/giin.htm")]))).toEqual([]);
   });
 });
 

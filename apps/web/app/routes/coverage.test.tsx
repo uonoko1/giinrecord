@@ -149,6 +149,53 @@ describe("/coverage 収録範囲", () => {
   });
 
   // #251 / #235: 衆院の記録が議員ページに紐づく範囲。名簿が「現在」の 1 時点しかないという 1 つの事実にまとめる
+  /*
+   * Issue #242: 委員会の発言を収録する。/coverage には「どの会議まで取っているか」を書く。
+   * 回次（どこまで遡るか）はここでは書かない。名簿の範囲の話で、下の 2 節が既に書いているため。
+   */
+  describe("発言をどの会議まで収録しているか（#242）", () => {
+    const speechSrc = (house: "参議院" | "衆議院", scope: "all" | "plenary") => ({
+      name: `国会会議録検索システム 検索用API（${house} ${scope === "all" ? "本会議・委員会" : "本会議"}）`,
+      url: `https://kokkai.ndl.go.jp/api/speech?nameOfHouse=${encodeURIComponent(house)}${scope === "plenary" ? "&nameOfMeeting=%E6%9C%AC%E4%BC%9A%E8%AD%B0" : ""}&sessionFrom=221&sessionTo=221`,
+      fetchedAt: "2026-08-25T00:00:00.000Z",
+    });
+    const withSpeeches = (scope: "all" | "plenary"): Dataset => ({
+      ...withLocal,
+      meta: { ...withLocal.meta!, sources: [...withLocal.meta!.sources, speechSrc("参議院", scope), speechSrc("衆議院", scope)] },
+    });
+    const section = () => screen.getByRole("region", { name: "発言をどの会議まで収録しているか" });
+
+    it("委員会も取っていることと、会議名が原文で見分けられることを書く", () => {
+      renderPage(withSpeeches("all"), sessions);
+      expect(section()).toHaveTextContent("参議院・衆議院は本会議だけでなく委員会も収録しています");
+      expect(section()).toHaveTextContent("分科会・審査会・連合審査会・公聴会・調査会");
+      expect(section()).toHaveTextContent("会議名は会議録の原文のまま各行に出す");
+    });
+
+    it("議員でない発言者（政府参考人・参考人・公述人）を議員に紐づけないことを書く", () => {
+      renderPage(withSpeeches("all"), sessions);
+      expect(section()).toHaveTextContent("政府参考人・参考人・公述人");
+      expect(section()).toHaveTextContent("会派の記載がない発言者は議員に紐づけません");
+    });
+
+    it("議員ページに出ている発言の件数は members の counts の合計から出す（推論しない）", () => {
+      renderPage(withSpeeches("all"), sessions);
+      // 参院フィクスチャの counts.speeches は 1 + 0 + 2 = 3
+      expect(section()).toHaveTextContent("参議院が 3 件");
+    });
+
+    it("本会議だけを取っている出力（#242 以前）はそのとおりに書く", () => {
+      renderPage(withSpeeches("plenary"), sessions);
+      expect(section()).toHaveTextContent("参議院・衆議院は本会議だけを収録しています");
+      expect(section().textContent).not.toContain("委員会も収録しています");
+    });
+
+    it("会議録 API の出典が無ければ節そのものを出さない（無い事実を作らない）", () => {
+      renderPage(withLocal, sessions);
+      expect(screen.queryByRole("region", { name: "発言をどの会議まで収録しているか" })).toBeNull();
+    });
+  });
+
   describe("衆議院の記録が議員ページに紐づく範囲", () => {
     const shugiinRosterSource = { name: "衆議院 議員一覧（2026-02-18現在）", url: "https://www.shugiin.go.jp/internet/itdb_annai.nsf/html/statics/syu/1giin.htm", fetchedAt: "2026-08-22T06:00:00+09:00" };
     const sangiinRosterSources = [216, 221].map((s) => ({ name: `参議院 議員一覧（第${s}回）`, url: `https://www.sangiin.go.jp/japanese/joho1/kousei/giin/${s}/giin.htm`, fetchedAt: "2026-08-22T06:00:00+09:00" }));
@@ -219,7 +266,7 @@ describe("/coverage 収録範囲", () => {
       renderPage(withShugiin(), sessions, billNames);
       expect(section()).toHaveTextContent("提出・賛成した議案が 30 件");
       expect(section()).toHaveTextContent("質問主意書が 0 件");
-      expect(section()).toHaveTextContent("本会議の発言が 0 件");
+      expect(section()).toHaveTextContent("発言が 0 件");
       // 0 件なのに「第N回のぶんだけは出る」とは書かない
       expect(section()).toHaveTextContent("そのうち提出者を名簿に照合できたものはありません");
       expect(section().textContent).not.toMatch(/照合できるのは\s*第\d+回のぶんだけ/);
@@ -228,7 +275,7 @@ describe("/coverage 収録範囲", () => {
     it("質問主意書が実際に紐づいていれば「照合できたものはありません」とは書かない", () => {
       renderPage(withShugiin([{ counts: { rollcalls: 0, bills: 30, speeches: 12, questions: 4 } }]), sessions, billNames);
       expect(section()).toHaveTextContent("質問主意書が 4 件");
-      expect(section()).toHaveTextContent("本会議の発言が 12 件");
+      expect(section()).toHaveTextContent("発言が 12 件");
       expect(section().textContent).not.toContain("照合できたものはありません");
     });
 

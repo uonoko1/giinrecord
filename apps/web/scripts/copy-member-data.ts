@@ -2,6 +2,9 @@
  * Post-build step (Issue #104, runs after `react-router build`, cwd: apps/web):
  * copies data/members/*.json to build/client/data/members/ so /compare can fetch
  * /data/members/{id}.json at runtime (nginx serves /data/ with a 1h cache, same as the archive).
+ * Also copies data/members/{id}/speeches.json (Issue #242) so the member page can fetch the speech tab
+ * at runtime. Speeches are deliberately NOT prerendered: `ssr: false` bakes the whole timeline into the
+ * HTML (2.15x the source JSON, measured in #263), so splitting the file only helps if the page fetches it.
  * 772 member files are too much to bundle into one chunk, and the page is query-driven
  * (not prerendered), so the JSON stays as plain static files. Nothing to copy → no-op.
  *
@@ -25,14 +28,28 @@ function isEnoent(err: unknown): boolean {
 }
 
 let names: string[] = [];
+/** `members/{id}/speeches.json`（#242）。ディレクトリを持つ議員だけ（発言 0 件の議員のファイルは無い） */
+let speechDirs: string[] = [];
 try {
-  names = (await readdir(src)).filter((f) => f.endsWith(".json") && f !== "index.json").sort();
+  const entries = await readdir(src, { withFileTypes: true });
+  names = entries.filter((e) => e.isFile() && e.name.endsWith(".json") && e.name !== "index.json").map((e) => e.name).sort();
+  speechDirs = entries.filter((e) => e.isDirectory()).map((e) => e.name).sort();
 } catch (err) {
   if (!isEnoent(err)) throw err;
 }
 await mkdir(dst, { recursive: true });
 for (const name of names) await copyFile(path.join(src, name), path.join(dst, name));
-console.log(`member data: ${names.length} files -> ${dst}`);
+let speechFiles = 0;
+for (const id of speechDirs) {
+  try {
+    await mkdir(path.join(dst, id), { recursive: true });
+    await copyFile(path.join(src, id, "speeches.json"), path.join(dst, id, "speeches.json"));
+    speechFiles++;
+  } catch (err) {
+    if (!isEnoent(err)) throw err;
+  }
+}
+console.log(`member data: ${names.length} files + ${speechFiles} speeches.json -> ${dst}`);
 
 const opsDst = path.join(buildDir, "data");
 const copied: string[] = [];

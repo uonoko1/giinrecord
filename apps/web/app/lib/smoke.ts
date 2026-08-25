@@ -16,6 +16,8 @@ export type BuildFiles = Map<string, string>;
 export interface ExpectedData {
   /** ids from data/members/index.json, or null when that file is absent */
   memberIds: string[] | null;
+  /** 発言のある議員の id（data/members/{id}/speeches.json があるもの。#242）。data/ が無ければ省略／null */
+  speechMemberIds?: string[] | null;
   /** entries from data/rollcalls/index.json, or null when that file is absent */
   rollCalls: { session: number; id: string }[] | null;
   /** data/assemblies/index.json の id。ファイルが無ければ省略／null → 国会の2議会（prerender の fallback と同じ、#158） */
@@ -92,14 +94,23 @@ export interface MemberDataReport {
   failures: string[];
 }
 
-/** ビルドが /data/members/{id}.json に置くべきファイル（/compare が実行時に fetch する、Issue #104）。 */
+/**
+ * ビルドが /data/members/ に置くべきファイル。
+ * - `{id}.json`: /compare が実行時に fetch する（#104）
+ * - `{id}/speeches.json`: 議員ページの発言タブが実行時に fetch する（#242）。発言のある議員のぶんだけ
+ */
 export function expectedMemberDataFiles(data: ExpectedData): string[] {
-  return (data.memberIds ?? []).map((id) => `data/members/${id}.json`);
+  return [
+    ...(data.memberIds ?? []).map((id) => `data/members/${id}.json`),
+    ...(data.speechMemberIds ?? []).map((id) => `data/members/${id}/speeches.json`),
+  ];
 }
 
 /**
  * /compare（#104）は議員の JSON をバンドルせず、ビルド時に data/members/*.json を build/client/data/members/ へ
  * コピーしたものを fetch する（scripts/copy-member-data.ts）。index.json の全 id 分が無ければ失敗。
+ * 議員ページの発言タブ（#242）も同じ経路で `{id}/speeches.json` を fetch するので、そちらも欠けていれば失敗。
+ * ここが抜けると「発言タブを開いても 404 で空」という、ビルドは通るのに画面だけ壊れる形になる。
  */
 export function checkMemberData(files: BuildFiles, data: ExpectedData): MemberDataReport {
   const expected = expectedMemberDataFiles(data);

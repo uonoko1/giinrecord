@@ -4,7 +4,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync, rmSync
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import iconv from "iconv-lite";
-import type { Assembly, Bill, BillSummary, MemberSummary, RollCall, RollCallSummary } from "@seiji-kiroku/shared";
+import type { Assembly, Bill, BillSummary, MemberSummary, RollCall, RollCallSummary, Speech } from "@seiji-kiroku/shared";
 import { buildDataset } from "../src/aggregate.ts";
 import { DIET_ASSEMBLY_IDS, dietAssemblies, readSessionsOnDisk, resolveSessions, writeDataset, validateDataset, type Dataset } from "../src/dataset.ts";
 import { stableJson } from "../src/json.ts";
@@ -12,6 +12,8 @@ import { matchVotes } from "../src/match-votes.ts";
 import { parseRollCall } from "../src/sources/sangiin-votes.ts";
 import { parseMemberList } from "../src/sources/sangiin-members.ts";
 import { parseShugiinBill } from "../src/sources/shugiin-bills.ts";
+import { parseSpeechPage } from "../src/sources/kokkai-speeches.ts";
+import { matchSpeeches } from "../src/match-speeches.ts";
 
 const fixture = (name: string) => readFileSync(new URL(`./fixtures/${name}.htm`, import.meta.url), "utf-8");
 const BASE = "https://www.sangiin.go.jp/japanese/touhyoulist/221";
@@ -24,11 +26,22 @@ const ROSTER = "https://www.sangiin.go.jp/japanese/joho1/kousei/giin/221/giin.ht
 /** 実在する議員（m_007006）と採決で作る group-mismatch の1行（Issue #24）。 */
 const MISMATCH = { memberId: "m_007006", nameText: "テスト 太郎", voteGroup: "れいわ新選組", rosterGroup: "いのちの党", rollCallId: "221-0605-v001" };
 
+/**
+ * 実フィクスチャの発言（#242）。第221回 参院本会議の1ページ目を実データのままパースし、
+ * 本番と同じ名寄せ（matchSpeeches）に通す。SPEAKER（m_003005 = 関口 昌一、議長）に 50 行紐づく。
+ * 名簿 247 人のうち 222 人は 0 件のまま残るので、「speeches.json を作らない」ことも実データで検査できる。
+ */
+const SPEAKER = "m_003005";
+function realSpeeches(members: ReturnType<typeof parseMemberList>): Speech[] {
+  const page = parseSpeechPage(JSON.parse(readFileSync(new URL("./fixtures/kokkai-speech-221-p1.json", import.meta.url), "utf-8")) as unknown);
+  return matchSpeeches(page.speeches, members).speeches;
+}
+
 function realDataset(): Dataset {
   const members = parseMemberList(fixture("sangiin-giin-221"), ROSTER, 221);
   const rollCalls = ["221-0605-v001", "221-0724-v001"].map((id) => matchVotes(parseRollCall(fixture(id), `${BASE}/${id}.htm`, 221), members).rollCall);
   return {
-    ...buildDataset(members, rollCalls),
+    ...buildDataset(members, rollCalls, new Map(), realSpeeches(members)),
     assemblies: dietAssemblies(221),
     rollCallDetails: rollCalls,
     bills: [realBill("1DE153E", "衆議院で閉会中審査"), realBill("1DE14D6", "成立"), realBill("1DE115E", "衆議院で閉会中審査")],
@@ -272,11 +285,60 @@ describe("writeDataset / validateDataset: docs/DATA_CONTRACT.md の不変条件"
     cleanup();
   });
 
-  test("同じ speechId の speech 行が1人の timeline に2度あれば違反（#103 レビュー: carried と取得の重複）", async () => {
+  /* ---------- 発言（members/{id}/speeches.json、#242） ---------- */
+
+  test("発言は members/{id}/speeches.json に書き、timeline には speech 行を置かない（#242）", () => {
+    const detail = readJson<{ timeline: { kind: string }[] }>(dir, `members/${SPEAKER}.json`);
+    assert.ok(detail.timeline.every((e) => e.kind !== "speech"));
+    const file = readJson<{ id: string; speeches: { kind: string; speechId: string }[] }>(dir, `members/${SPEAKER}/speeches.json`);
+    assert.equal(file.id, SPEAKER);
+    assert.ok(file.speeches.length > 0);
+    assert.ok(file.speeches.every((e) => e.kind === "speech"));
+    // stableJson で書く（キーソート・インデント1・末尾改行）
+    const text = readFileSync(join(dir, "members", SPEAKER, "speeches.json"), "utf-8");
+    assert.equal(text, stableJson(JSON.parse(text)));
+    cleanup();
+  });
+
+  test("発言 0 件の議員は speeches.json を作らない（無い＝0 件。空ファイルを置かない。#242）", () => {
+    const idx = readJson<MemberSummary[]>(dir, "members/index.json");
+    const zero = idx.find((m) => m.counts.speeches === 0)!;
+    assert.ok(zero, "発言 0 件の議員がフィクスチャにいること");
+    assert.equal(existsSync(join(dir, "members", zero.id, "speeches.json")), false);
+    cleanup();
+  });
+
+  test("同じ speechId の speech 行が1人の speeches.json に2度あれば違反（#103 レビュー: carried と取得の重複）", async () => {
     const speech = { kind: "speech", session: 221, date: "2026-06-05", speechId: "122115254X00120260605_001", meeting: "本会議 第1号", excerpt: "抜粋", chars: 3, sourceUrl: "https://kokkai.ndl.go.jp/txt/122115254X00120260605/1" };
-    patch<{ timeline: Record<string, unknown>[] }>(dir, "members/m_007006.json", (d) => ({ ...d, timeline: [speech, { ...speech }, ...d.timeline] }));
-    patch<MemberSummary[]>(dir, "members/index.json", (rows) => rows.map((m) => (m.id === "m_007006" ? { ...m, counts: { ...m.counts, speeches: 2 } } : m)));
-    assert.match((await validateDataset(dir)).join("\n"), /m_007006.*duplicate speechId 122115254X00120260605_001/);
+    patch<{ id: string; speeches: Record<string, unknown>[] }>(dir, `members/${SPEAKER}/speeches.json`, (f) => ({ ...f, speeches: [speech, { ...speech }] }));
+    patch<MemberSummary[]>(dir, "members/index.json", (rows) => rows.map((m) => (m.id === SPEAKER ? { ...m, counts: { ...m.counts, speeches: 2 } } : m)));
+    assert.match((await validateDataset(dir)).join("\n"), new RegExp(`${SPEAKER}.*duplicate speechId 122115254X00120260605_001`));
+    cleanup();
+  });
+
+  test("speeches.json の id が members/index.json の id と違えば違反（#242）", async () => {
+    patch<{ id: string }>(dir, `members/${SPEAKER}/speeches.json`, (f) => ({ ...f, id: "m_000000" }));
+    assert.match((await validateDataset(dir)).join("\n"), new RegExp(`members/${SPEAKER}/speeches\\.json: id`));
+    cleanup();
+  });
+
+  test("speeches.json が日付降順でなければ違反（timeline と同じ不変条件。#242）", async () => {
+    patch<{ speeches: { date: string }[] }>(dir, `members/${SPEAKER}/speeches.json`, (f) => ({ ...f, speeches: [...f.speeches].reverse() }));
+    const out = (await validateDataset(dir)).join("\n");
+    assert.match(out, new RegExp(`members/${SPEAKER}/speeches\\.json: not in descending date order`));
+    cleanup();
+  });
+
+  test("speech 行の sourceUrl が会議録（kokkai.ndl.go.jp/txt/）でなければ違反（#242）", async () => {
+    patch<{ speeches: { sourceUrl: string }[] }>(dir, `members/${SPEAKER}/speeches.json`, (f) => ({ ...f, speeches: f.speeches.map((e) => ({ ...e, sourceUrl: "https://www.sangiin.go.jp/x.htm" })) }));
+    assert.match((await validateDataset(dir)).join("\n"), new RegExp(`members/${SPEAKER}/speeches\\.json.*sourceUrl must be the 会議録`));
+    cleanup();
+  });
+
+  test("members/index.json に無い議員の speeches.json は前回実行の残骸として違反（#242）", async () => {
+    mkdirSync(join(dir, "members/m_999999"), { recursive: true });
+    writeFileSync(join(dir, "members/m_999999/speeches.json"), stableJson({ id: "m_999999", speeches: [] }));
+    assert.match((await validateDataset(dir)).join("\n"), /members\/m_999999\/speeches\.json: not in members\/index\.json/);
     cleanup();
   });
 
@@ -304,9 +366,9 @@ describe("writeDataset / validateDataset: docs/DATA_CONTRACT.md の不変条件"
     cleanup();
   });
 
-  test("counts.speeches が timeline の speech 数と食い違えば違反", async () => {
-    patch<{ id: string; counts: { speeches: number } }[]>(dir, "members/index.json", (idx) => idx.map((m) => (m.id === "m_007006" ? { ...m, counts: { ...m.counts, speeches: 99 } } : m)));
-    assert.match((await validateDataset(dir)).join("\n"), /m_007006.*counts\.speeches/);
+  test("counts.speeches が speeches.json の行数と食い違えば違反（/coverage の件数が嘘にならないように。#242 / #251）", async () => {
+    patch<{ id: string; counts: { speeches: number } }[]>(dir, "members/index.json", (idx) => idx.map((m) => (m.id === SPEAKER ? { ...m, counts: { ...m.counts, speeches: 99 } } : m)));
+    assert.match((await validateDataset(dir)).join("\n"), new RegExp(`${SPEAKER}.*counts\\.speeches`));
     cleanup();
   });
 

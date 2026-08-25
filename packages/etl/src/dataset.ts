@@ -1,7 +1,7 @@
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import type { Dirent } from "node:fs";
 import { join } from "node:path";
-import type { Assembly, Bill, BillSummary, DatasetMeta, MemberDetail, MemberSummary, RollCall, RollCallSummary } from "@seiji-kiroku/shared";
+import type { Assembly, Bill, BillSummary, DatasetMeta, MemberDetail, MemberSpeeches, MemberSummary, RollCall, RollCallSummary } from "@seiji-kiroku/shared";
 import type { Aggregated } from "./aggregate.ts";
 import { DIET_ASSEMBLY_IDS } from "./assemblies.ts";
 import { isDietMemberRow, mergeAssemblies, mergeMemberIndex, readMemberIndex, validateLocalAssemblies } from "./local-assemblies.ts";
@@ -93,6 +93,9 @@ export async function writeDataset(dir: string, ds: Dataset): Promise<void> {
   // members/index.json も地方議会の ETL と共有する。既にある地方議員の行（assemblyId が diet- 以外）は残す（無ければ国会の行だけ＝byte-identical）。#157
   await put("members/index.json", mergeMemberIndex(ds.index, localMembers));
   for (const d of ds.details) await put(`members/${d.id}.json`, d);
+  // 発言は別ファイル（#242）。0 件の議員のファイルは作らない（無い＝0 件）。
+  // members/ は上で全消ししているので、前回あって今回 0 件になった議員のファイルは残らない。
+  for (const sp of ds.speeches) await put(`members/${sp.id}/speeches.json`, sp);
   for (const [id, text] of localDetails) {
     await mkdir(join(dir, "members"), { recursive: true });
     await writeFile(join(dir, "members", `${id}.json`), text);
@@ -138,6 +141,8 @@ const STANCE_VALUES = new Set(["賛成", "反対"]);
 const QUESTION_SOURCE = /^https:\/\/(?:www\.shugiin\.go\.jp\/internet\/itdb_shitsumon\.nsf\/html\/shitsumon\/\d+\.htm|www\.sangiin\.go\.jp\/japanese\/joho1\/kousei\/syuisyo\/\d+\/meisai\/m\d+\.htm)$/;
 /** attendance 行の sourceUrl は国会会議録検索システムの会議録（冒頭情報）。 */
 const ATTENDANCE_SOURCE = /^https:\/\/kokkai\.ndl\.go\.jp\/txt\/[0-9A-Za-z]+\/\d+$/;
+/** speech 行の sourceUrl は会議録の該当発言（本会議も委員会も同じ形。#263 が第221回 69,872 件で1形式だけと確認）。 */
+const SPEECH_SOURCE = ATTENDANCE_SOURCE;
 /** bills/ の id は `{提出回次}-{種別原文}-{番号 or 経過ページ id}`。 */
 const BILL_ID = /^(\d+)-[^-]+-[^-]+$/;
 
@@ -210,22 +215,16 @@ export async function validateDataset(dir: string): Promise<string[]> {
     if (d.assemblyId !== m.assemblyId) v.push(`${rel}: assemblyId ${String(d.assemblyId)} !== index ${String(m.assemblyId)}`);
     checkSource(rel, d);
     let votes = 0;
-    let speeches = 0;
     let bills = 0;
     let questions = 0;
-    const speechIds = new Set<string>();
     for (let i = 0; i < d.timeline.length; i++) {
       const e = d.timeline[i];
       checkSource(rel, e, ` timeline[${i}]`);
       // 回次（#103）: 全行が持つ。vote 行は採決 id の回次（{回次}-MMDD-vNNN）と一致する（Web の回次ごとの折りたたみと carried の鍵）
       if (!Number.isInteger(e.session)) v.push(`${rel} timeline[${i}]: session must be an integer, got ${String(e.session)}`);
       else if (e.kind === "vote" && String(e.session) !== e.rollCallId.split("-")[0]) v.push(`${rel} timeline[${i}]: vote session ${e.session} !== rollCallId ${e.rollCallId}`);
-      if (e.kind === "speech") {
-        speeches++;
-        // 同じ発言が2行になるのは引き継ぎ（carried）と取得の重複（#103 レビュー: memberSession が carried なのに衆院発言を取得した等）
-        if (speechIds.has(e.speechId)) v.push(`${rel} timeline[${i}]: duplicate speechId ${e.speechId}`);
-        speechIds.add(e.speechId);
-      }
+      // speech 行は timeline には入らない（#242。発言は members/{id}/speeches.json 側）
+      if (e.kind === "speech") v.push(`${rel} timeline[${i}]: speech rows belong in members/${m.id}/speeches.json, not timeline (#242)`);
       if (e.kind === "bill") {
         bills++;
         if (!BILL_SOURCE.test(e.sourceUrl) && !KEIKA_SOURCE.test(e.sourceUrl)) v.push(`${rel} timeline[${i}]: bill sourceUrl must be the 議案ページ (kousei/gian/{session}/meisai/ or gian/keika/), got ${e.sourceUrl}`);
@@ -261,8 +260,10 @@ export async function validateDataset(dir: string): Promise<string[]> {
     voteCounts.set(m.id, votes);
     if (m.counts.rollcalls !== votes) v.push(`members/index.json ${m.id}: counts.rollcalls ${m.counts.rollcalls} !== timeline votes ${votes}`);
     if (m.counts.bills !== bills) v.push(`members/index.json ${m.id}: counts.bills ${m.counts.bills} !== timeline bills ${bills}`);
-    if (m.counts.speeches !== speeches) v.push(`members/index.json ${m.id}: counts.speeches ${m.counts.speeches} !== timeline speeches ${speeches}`);
     if (m.counts.questions !== questions) v.push(`members/index.json ${m.id}: counts.questions ${m.counts.questions} !== timeline questions ${questions}`);
+    // 発言（#242）: members/{id}/speeches.json。無いファイル＝0 件（推定ではなく契約: writeDataset は 0 件のファイルを作らない）。
+    // counts.speeches はこの行数と一致していなければならない。/coverage の linkedRecordCounts がこの counts を数えている（#251）。
+    v.push(...(await validateSpeeches(dir, read, m.counts.speeches, m.id)));
   }
 
   const unmatched = await readUnmatched(dir);
@@ -334,7 +335,11 @@ export async function validateDataset(dir: string): Promise<string[]> {
     }
   }
   for (const rel of await listJsonFiles(dir, "members")) {
-    if (rel !== "members/index.json" && !ids.has(rel.slice("members/".length, -".json".length))) v.push(`${rel}: not in members/index.json (stale file from a previous run?)`);
+    if (rel === "members/index.json") continue;
+    // members/{id}/speeches.json（#242）と members/{id}.json のどちらも、id が index に無ければ前回実行の残骸
+    const m = rel.match(/^members\/([^/]+)(?:\.json|\/speeches\.json)$/);
+    if (!m) { v.push(`${rel}: unexpected file under members/ (expected members/{id}.json or members/{id}/speeches.json)`); continue; }
+    if (!ids.has(m[1])) v.push(`${rel}: not in members/index.json (stale file from a previous run?)`);
   }
   const summaryFiles = new Set(summaries.map((s) => `rollcalls/${s.session}/${s.id}.json`));
   for (const rel of await listJsonFiles(dir, "rollcalls")) {
@@ -344,6 +349,45 @@ export async function validateDataset(dir: string): Promise<string[]> {
   if (countSum !== matchedVotes) v.push(`Σ counts.rollcalls ${countSum} !== matched votes across all roll calls ${matchedVotes}`);
   // 地方議会（assemblies/{id}/、#157）。ディレクトリがある議会だけ検査する
   v.push(...(await validateLocalAssemblies(dir)));
+  return v;
+}
+
+
+/**
+ * `members/{id}/speeches.json`（#242）の不変条件。
+ * - ファイルが無い ＝ 発言 0 件（writeDataset は 0 件のファイルを作らない）。counts.speeches が 0 でなければ違反。
+ * - `id` は members/index.json の id と一致する。
+ * - 全行 `kind: "speech"`、`session` は整数、日付降順（timeline と同じ）、
+ *   同じ `speechId` は1人に1行（引き継ぎ carried と取得の二重行を防ぐ。#103 レビュー / #236）。
+ * - `sourceUrl` は会議録の該当発言（kokkai.ndl.go.jp/txt/{会議録ID}/{speechOrder}）。
+ * - 行数は counts.speeches と一致する（/coverage の件数がこの counts を数えている。#251）。
+ */
+async function validateSpeeches(dir: string, read: <T>(rel: string) => Promise<T | undefined>, expected: number, id: string): Promise<string[]> {
+  const v: string[] = [];
+  const rel = `members/${id}/speeches.json`;
+  let exists = true;
+  try { await readFile(join(dir, rel), "utf-8"); } catch { exists = false; }
+  if (!exists) {
+    if (expected !== 0) v.push(`members/index.json ${id}: counts.speeches ${expected} but ${rel} is missing (0 speeches must have no file)`);
+    return v;
+  }
+  const file = await read<MemberSpeeches>(rel);
+  if (!file) return v;
+  if (file.id !== id) v.push(`${rel}: id ${String(file.id)} !== ${id}`);
+  const rows = Array.isArray(file.speeches) ? file.speeches : undefined;
+  if (!rows) { v.push(`${rel}: speeches must be an array`); return v; }
+  if (rows.length === 0) v.push(`${rel}: 0 speeches must have no file (writeDataset does not create empty ones)`);
+  const seen = new Set<string>();
+  for (let i = 0; i < rows.length; i++) {
+    const e = rows[i];
+    if (e.kind !== "speech") { v.push(`${rel}[${i}]: kind must be "speech", got ${String(e.kind)}`); continue; }
+    if (!Number.isInteger(e.session)) v.push(`${rel}[${i}]: session must be an integer, got ${String(e.session)}`);
+    if (seen.has(e.speechId)) v.push(`${rel}[${i}]: duplicate speechId ${e.speechId}`);
+    seen.add(e.speechId);
+    if (!SPEECH_SOURCE.test(e.sourceUrl)) v.push(`${rel}[${i}]: sourceUrl must be the 会議録 (kokkai.ndl.go.jp/txt/), got ${String(e.sourceUrl)}`);
+    if (i > 0 && rows[i - 1].date < e.date) v.push(`${rel}: not in descending date order at [${i}]`);
+  }
+  if (expected !== rows.length) v.push(`members/index.json ${id}: counts.speeches ${expected} !== ${rel} rows ${rows.length}`);
   return v;
 }
 

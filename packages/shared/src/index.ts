@@ -233,8 +233,28 @@ export interface DatasetMeta {
 }
 
 /** `data/members/{id}.json`: the member plus every record of theirs, newest first (docs/DATA_CONTRACT.md). */
+/**
+ * `members/{id}.json`。
+ *
+ * **`timeline` に `speech` 行は入らない（Issue #242）**。発言は `members/{id}/speeches.json`
+ * （`MemberSpeeches`）に分けてあり、議員ページは発言タブを開いたときに実行時 fetch する。
+ * 分けた理由は「ファイルを分ける」ためではなく**プリレンダーをやめる**ためで、
+ * `ssr: false` のプリレンダーは折りたたんだ回次も含め timeline を全件 HTML に焼き込むので
+ * （#263 の実測: HTML は元 JSON の 2.15 倍）、timeline に置いたままでは分割しても転送量が変わらない。
+ * 件数は `MemberSummary.counts.speeches` に残るので、発言を取りに行く前でも件数は出せる。
+ */
 export interface MemberDetail extends Member {
   timeline: TimelineEntry[];
+}
+
+/**
+ * `members/{id}/speeches.json`（Issue #242）。その議員の発言だけを日付降順（timeline と同じ並び）で持つ。
+ * 発言のある議員だけファイルを作る（0 件の議員のファイルは作らない。無い＝0 件）。
+ * 行数は `MemberSummary.counts.speeches` と一致する（`validateDataset` の不変条件）。
+ */
+export interface MemberSpeeches {
+  id: MemberId;
+  speeches: SpeechEntry[];
 }
 
 export type VoteEntry = {

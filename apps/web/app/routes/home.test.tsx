@@ -24,6 +24,20 @@ describe("Home", () => {
     expect(screen.getByText(/公式記録だけを、そのまま並べます。評価はしません。/)).toBeInTheDocument();
   });
 
+  /*
+   * #242 で発言の収録範囲が本会議だけでなく委員会も含むようになった。
+   * 「本会議でどう投票し、…何を発言したか」は「本会議で」が 3 つの動詞に等しく係って読めるため、
+   * 発言まで本会議に限られると読める。投票（本会議のみ公表される事実）と発言（本会議＋委員会）を
+   * 文として分ける。トップページの lead と meta description の両方に出る文なので、ここで固定する。
+   */
+  it("方針文は投票（本会議のみ）と発言（本会議＋委員会）を混同させない", () => {
+    renderHome();
+    const lead = screen.getByText(/公式記録だけを、そのまま並べます。/);
+    expect(lead).toHaveTextContent("本会議でどう投票したか");
+    expect(lead).toHaveTextContent("本会議と委員会で何を発言したか");
+    expect(lead.textContent).not.toContain("本会議でどう投票し、どの法案を出し、何を発言したか");
+  });
+
   it("評価語を含まない", () => {
     const { container } = renderHome();
     for (const word of EVALUATIVE_WORDS) {

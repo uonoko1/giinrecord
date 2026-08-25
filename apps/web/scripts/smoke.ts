@@ -46,6 +46,14 @@ async function readExpected(dataDir: string): Promise<ExpectedData> {
   } catch (err) {
     if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
   }
+  // 発言のある議員（#242）: data/members/{id}/ ディレクトリがあるもの。無いのは発言 0 件（契約どおり）
+  let speechMemberIds: string[] | null = null;
+  try {
+    const entries = await readdir(path.join(dataDir, "members"), { withFileTypes: true });
+    speechMemberIds = entries.filter((e) => e.isDirectory()).map((e) => e.name).sort();
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
+  }
   let rollCalls: ExpectedData["rollCalls"] = null;
   const rc = await readRollCallIndex(dataDir);
   if (rc.length > 0) rollCalls = rc.map((r) => ({ session: r.session, id: r.id }));
@@ -71,7 +79,7 @@ async function readExpected(dataDir: string): Promise<ExpectedData> {
       if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
     }
   }
-  return { memberIds, rollCalls, assemblyIds, districts, opsFiles };
+  return { memberIds, speechMemberIds, rollCalls, assemblyIds, districts, opsFiles };
 }
 
 const buildDir = process.env.BUILD_DIR ?? path.resolve(process.cwd(), "build/client");

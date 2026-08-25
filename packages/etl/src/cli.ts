@@ -4,7 +4,7 @@ import { listRollCalls, parseRollCall, RollCallParseError, standingVoteNote } fr
 import { fetchMembers, memberListUrl, unmatchedGroups } from "./sources/sangiin-members.ts";
 import { fetchShugiinMembers, memberListUrl as shugiinMemberListUrl, unmatchedShugiinGroups } from "./sources/shugiin-members.ts";
 import { fetchText } from "./fetch.ts";
-import { fetchSpeeches, speechPageUrl } from "./sources/kokkai-speeches.ts";
+import { fetchSpeeches, speechPageUrl, type SpeechScope } from "./sources/kokkai-speeches.ts";
 import { matchVotes, type GroupMismatch } from "./match-votes.ts";
 import { shardUnmatched, type UnmatchedRow } from "./unmatched.ts";
 import { billListUrl, committeeBills, fetchBills, matchBillResults, toBillDecisions, type Bill } from "./sources/sangiin-bills.ts";
@@ -37,6 +37,12 @@ import { readMemberIndex } from "./local-assemblies.ts";
  * 部分実行で他回次の出力は消えず、日次実行が毎日全回次を取り直すこともない。
  */
 const DATA = fileURLToPath(new URL("../../../data/", import.meta.url));
+/**
+ * 取得する会議の範囲（Issue #242）。"all" = nameOfMeeting を付けない ＝ 本会議に加えて委員会・分科会・
+ * 審査会・連合審査会・公聴会・調査会。委員会を含めるのは「議員が何をしたか」を個人の記録として残すため
+ * （衆院議員 465 名中 195 名は個人の行為が 1 行も無かった。#237）。
+ */
+const SPEECH_SCOPE: SpeechScope = "all";
 const requested = process.argv.slice(2).map(Number).filter(Boolean);
 const plan = planSessions(requested, await readSessionsOnDisk(DATA));
 const targets = plan.targets;
@@ -200,17 +206,27 @@ console.log(`questions: ${rawQuestions.length} total, ${questions.questions.filt
 unmatched.push(...questions.unmatched);
 
 // 発言: 国会会議録API（公開まで約1ヶ月のラグ。meta.sources[].fetchedAt が「いつ時点の会議録か」を示す）。
-// 参院本会議は全回次（targets）を回次ごとの参院名簿に突合する。
+// 参院は全回次（targets）を回次ごとの参院名簿に突合する。
 //
-// 衆院本会議（Issue #73）については「どの回次を取るか」と「どの実行で取るか」は別の話なので、混ぜて読まない（#236 はこの混同から生まれた）。
+// 会議の範囲（Issue #242）: 本会議だけでなく**委員会・分科会・審査会・連合審査会・公聴会・調査会**も取る（SPEECH_SCOPE = "all"）。
+// API は nameOfMeeting を外すだけで同じ形のレコードを返す（#263 が第221回 70,544 件・#242 が第201・204回の分科会で確認）。
+// 会議名は原文（`meeting`）に入るので、本会議と委員会は表示で区別できる。
+// 委員会には議員でない発言者（政府参考人・局長・参考人・公述人）が混ざるが、会派（speakerGroup）を持たないので
+// 現行の matchSpeeches が名簿に突合できず、position を持つため unmatched にも載らない（既存の規則がそのまま効く）。
+//
+// 量（#263 の実測）: 1 回次で衆参あわせて 706 ページ・約 12 分（間隔 2 秒なら約 24 分）。22 回次は約 8,000 ページ。
+// **一括では取らない**。#219 と同じく回次を分けて dispatch する（docs/ops/etl.md）。既定の 5 回次を 1 回で流すと
+// etl.yml の timeout-minutes: 360 に収まらないことがある。
+//
+// 衆院（Issue #73 / #242）については「どの回次を取るか」と「どの実行で取るか」は別の話なので、混ぜて読まない（#236 はこの混同から生まれた）。
 //   - 取得する回次（範囲）: memberSession の 1 回次だけ。衆院名簿は回次ごとの公開が無く「現在」の 1 回次分しか無い（#71）ため、
 //     議案の名寄せと同じく名簿が覆う回次しか突合できない。過去回次は取らない（名簿に無い旧議員を同名の現職に紐づけないため）。
-//     この範囲は #73 から変わっていない。
+//     この範囲は #73 から変わっていない。**委員会を足しても変わらない**（サイズの都合ではなく DATA_CONTRACT の原則）。
 //   - 取得する実行（実行条件）: 制限なし。memberSession が targets でも carried でも毎回取る（#236。下の shugiinSpeeches）。
 // 「範囲が 1 回次」は「毎回取る」と矛盾しない。毎回取るのは常に同じ memberSession の 1 回次分で、取る回次が増えるわけではない。
 const speeches: Speech[] = [];
 for (const session of targets) {
-  const matched = matchSpeeches(await fetchSpeeches(session, "sangiin"), members);
+  const matched = matchSpeeches(await fetchSpeeches(session, "sangiin", SPEECH_SCOPE), members);
   const matchedCount = matched.speeches.filter((s) => s.memberId).length;
   const positioned = matched.speeches.filter((s) => s.memberId && s.position).length;
   console.log(`session ${session}: ${matched.speeches.length} sangiin speeches (${matchedCount} matched, ${positioned} with position)`);
@@ -222,7 +238,7 @@ for (const session of targets) {
 // 引き継ぎが1度でも欠ければ（#103 以前の session の無い行など）0 のまま自力では戻らない。
 // 止める理由だった引き継ぎとの二重行（同じ speechId が2行。validateDataset の duplicate speechId 違反。#103 レビュー）は、
 // 取得をやめる代わりに dropCarriedSpeeches が「取得した speechId の引き継ぎ行を落とす」ことで防ぐ。
-const shugiinSpeeches = matchSpeeches(await fetchSpeeches(memberSession, "shugiin"), shugiin.members);
+const shugiinSpeeches = matchSpeeches(await fetchSpeeches(memberSession, "shugiin", SPEECH_SCOPE), shugiin.members);
 {
   const matchedCount = shugiinSpeeches.speeches.filter((s) => s.memberId).length;
   const positioned = shugiinSpeeches.speeches.filter((s) => s.memberId && s.position).length;
@@ -287,8 +303,8 @@ const dataset = {
       ...rosterSessions.map((s) => ({ name: `参議院 議員一覧（第${s}回）`, url: memberListUrl(s), fetchedAt })),
       { name: `衆議院 議員一覧（${shugiin.asOf ?? "取得日"}現在）`, url: shugiinMemberListUrl(1), fetchedAt },
       { name: "参議院 本会議投票結果", url: "https://www.sangiin.go.jp/japanese/touhyoulist/", fetchedAt },
-      { name: "国会会議録検索システム 検索用API（参議院 本会議）", url: speechPageUrl(memberSession, 1, "sangiin"), fetchedAt },
-      { name: "国会会議録検索システム 検索用API（衆議院 本会議）", url: speechPageUrl(memberSession, 1, "shugiin"), fetchedAt },
+      { name: "国会会議録検索システム 検索用API（参議院 本会議・委員会）", url: speechPageUrl(memberSession, 1, "sangiin", SPEECH_SCOPE), fetchedAt },
+      { name: "国会会議録検索システム 検索用API（衆議院 本会議・委員会）", url: speechPageUrl(memberSession, 1, "shugiin", SPEECH_SCOPE), fetchedAt },
       { name: "国会会議録検索システム 検索用API（参議院 委員会の出席者欄）", url: attendancePageUrl(memberSession), fetchedAt },
       ...targets.map((s) => ({ name: `参議院 議案情報（第${s}回）`, url: billListUrl(s), fetchedAt })),
       ...targets.map((s) => ({ name: `衆議院 議案情報（第${s}回）`, url: shugiinBillListUrl(s), fetchedAt })),
@@ -316,7 +332,9 @@ const dataset = {
 // 保証するのは「議会 × 回次 × 種別の行数が減らないこと」だけで、同じ回次の中で行がすり替わる場合や
 // 行の中身の劣化は見ていない（sessions.ts の lostSessionEntries のコメント）。
 {
-  const lost = lostSessionEntries(previousSessionCounts, dataset.details);
+  // 発言は timeline ではなく speeches（#242）。両方を渡さないと「発言が全部消えた」という偽陽性で毎回止まる。
+  const speechesById = new Map(dataset.speeches.map((sp) => [sp.id, sp.speeches]));
+  const lost = lostSessionEntries(previousSessionCounts, dataset.details.map((d) => ({ ...d, speeches: speechesById.get(d.id) ?? [] })));
   if (lost.length) {
     console.error(`timeline entries lost for a specific session since the previous output (carried entries dropped?): ${lost.length}`);
     for (const l of lost) console.error(`  ${l.assemblyId} session ${l.session} ${l.kind}: ${l.before} -> ${l.after}`);

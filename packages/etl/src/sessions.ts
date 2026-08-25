@@ -1,6 +1,6 @@
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
-import type { Bill, BillSummary, Member, MemberDetail, MemberSummary, RollCall, RollCallSummary, TimelineEntry } from "@seiji-kiroku/shared";
+import type { Bill, BillSummary, Member, MemberDetail, MemberSpeeches, MemberSummary, RollCall, RollCallSummary, TimelineEntry } from "@seiji-kiroku/shared";
 import type { CarriedEntry } from "./aggregate.ts";
 import { DEFAULT_SESSIONS } from "./dataset.ts";
 import { isDietMemberRow, readMemberIndex } from "./local-assemblies.ts";
@@ -124,20 +124,27 @@ export interface LostSessionEntries {
 /** timeline の kind → counts の種別。stance / attendance は counts を持たないので数えない（契約どおり）。 */
 const COUNTED_KIND = { vote: "rollcalls", bill: "bills", speech: "speeches", question: "questions" } as const;
 
+/** sessionCounts / lostSessionEntries が数える1議員分。#242 以降、発言は timeline ではなく speeches に入る。 */
+export interface CountedDetail { id?: string; assemblyId?: string; house?: string; timeline?: readonly TimelineEntry[]; speeches?: readonly TimelineEntry[] }
+
 /**
- * `members/{id}.json` の timeline を議会 × 回次 × 種別で数える（#256）。
+ * `members/{id}.json` の timeline と `members/{id}/speeches.json` の発言を議会 × 回次 × 種別で数える（#256 / #242）。
  * 回次は行の `session`（#103 以降は全行が持つ）だけを見る。`sessionOfEntry` のように id から引くことはしない:
  * 引ける行（question / 参法 bill）と引けない行（speech / attendance）で粒度が混ざると、
  * 「前回は引けたが今回は引けない」といった見かけの減少で偽陽性を出すため。回次の無い行は数えず、
  * 議会 × 種別の合計を見る `lostTimelineEntries` が引き続き覆う。
+ *
+ * `speeches` は #242 で発言が別ファイルになったぶん（`speeches: "speeches"` と同じ種別に数える）。
+ * timeline に speech 行がある古い出力（#242 以前）も同じ数え方になるので、
+ * **移行の前後で同じ値が出る**（ここがずれると「発言が全部消えた」という偽陽性で ETL が止まる）。
  */
-export function sessionCounts(details: readonly { assemblyId?: string; house?: string; timeline?: readonly TimelineEntry[] }[]): SessionCounts {
+export function sessionCounts(details: readonly CountedDetail[]): SessionCounts {
   const out: SessionCounts = new Map();
   for (const d of details) {
     if (!isDietMemberRow(d)) continue;
     // assemblyId の無い古い行は house から議会を決める（推定ではなく契約どおりの対応: diet-{house}）
     const assemblyId = d.assemblyId ?? (d.house ? `diet-${d.house}` : "diet-unknown");
-    for (const e of d.timeline ?? []) {
+    for (const e of [...(d.timeline ?? []), ...(d.speeches ?? [])]) {
       const kind = COUNTED_KIND[e.kind as keyof typeof COUNTED_KIND];
       if (!kind) continue;
       if (typeof e.session !== "number") continue; // #103 以前の行。回次を推定しない
@@ -148,12 +155,18 @@ export function sessionCounts(details: readonly { assemblyId?: string; house?: s
   return out;
 }
 
-/** 前回出力（`dir/members/`）の timeline を議会 × 回次 × 種別で数える。members/ が無ければ空（初回実行）。 */
+/**
+ * 前回出力（`dir/members/`）の timeline と発言を議会 × 回次 × 種別で数える。members/ が無ければ空（初回実行）。
+ * 発言は `members/{id}/speeches.json`（#242）から読む。無ければ timeline 側にある古い出力（#242 以前）を数える。
+ */
 export async function readSessionCounts(dir: string): Promise<SessionCounts> {
-  const details: MemberDetail[] = [];
+  const details: CountedDetail[] = [];
   for (const row of (await readMemberIndex(dir)).filter(isDietMemberRow)) {
     const detail = await readJson<MemberDetail | undefined>(join(dir, "members", `${row.id}.json`), undefined);
-    if (detail) details.push(detail);
+    if (!detail) continue;
+    const file = await readJson<MemberSpeeches | undefined>(join(dir, "members", row.id, "speeches.json"), undefined);
+    // 新形式があれば timeline 側の speech 行は見ない（両方あるときの二重計上を防ぐ）
+    details.push(file ? { ...detail, timeline: detail.timeline.filter((e) => e.kind !== "speech"), speeches: file.speeches ?? [] } : detail);
   }
   return sessionCounts(details);
 }
@@ -177,7 +190,7 @@ export async function readSessionCounts(dir: string): Promise<SessionCounts> {
  * （前回出力が無いので引っかからない）。改選で名簿から消えた議員の行が落ちる分は #235 で受け入れた偽陽性と同じ範囲で、
  * 回次を鍵に足しても増えない（同じ行が同じ回次で減るだけ）。
  */
-export function lostSessionEntries(previous: SessionCounts, next: readonly { assemblyId?: string; house?: string; timeline?: readonly TimelineEntry[] }[]): LostSessionEntries[] {
+export function lostSessionEntries(previous: SessionCounts, next: readonly CountedDetail[]): LostSessionEntries[] {
   const after = sessionCounts(next);
   const lost: LostSessionEntries[] = [];
   for (const [key, before] of previous) {
@@ -223,7 +236,15 @@ export async function readCarried(dir: string, carried: readonly number[]): Prom
   let withoutSession = 0;
   for (const row of (await readMemberIndex(dir)).filter(isDietMemberRow)) {
     const detail = await readJson<MemberDetail | undefined>(join(dir, "members", `${row.id}.json`), undefined);
-    for (const entry of detail?.timeline ?? []) {
+    // 発言は members/{id}/speeches.json（#242）。
+    // #242 以前の出力（初回実行で必ずこの状態になる）は timeline に speech 行があるので、そちらも読む。
+    // 両方あるときは speeches.json だけを読む（同じ speechId が 2 行になり validateDataset の duplicate 違反になる）。
+    // ここで読み落とすと全議員の発言が 1 回の実行で消える（#235 と同型の事故）ので、旧形式を黙って捨てない。
+    const speechFile = await readJson<MemberSpeeches | undefined>(join(dir, "members", row.id, "speeches.json"), undefined);
+    const rows: TimelineEntry[] = speechFile
+      ? [...(detail?.timeline ?? []).filter((e) => e.kind !== "speech"), ...(speechFile.speeches ?? [])]
+      : (detail?.timeline ?? []);
+    for (const entry of rows) {
       if (!isCarriable(entry)) continue;
       // #103 以前の出力は session を持たない。id から引ける行（question / 参法 bill）は引いて引き継ぐ（#235）
       const session = sessionOfEntry(entry);
