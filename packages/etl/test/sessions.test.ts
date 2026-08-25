@@ -4,7 +4,7 @@ import { mkdtemp, mkdir, writeFile, rm, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Bill, MemberDetail, RollCall, RollCallSummary, TimelineEntry } from "@seiji-kiroku/shared";
-import { planSessions, readCarried, decisionOfResult, lostVoteMatches, lostTimelineEntries, sessionOfEntry, dropCarriedSpeeches } from "../src/sessions.ts";
+import { planSessions, readCarried, decisionOfResult, lostVoteMatches, lostTimelineEntries, lostSessionEntries, readSessionCounts, sessionCounts, sessionOfEntry, dropCarriedSpeeches } from "../src/sessions.ts";
 import type { CarriedEntry } from "../src/aggregate.ts";
 import { stableJson } from "../src/json.ts";
 
@@ -361,5 +361,86 @@ describe("#236 回帰: 最新回次が carried の実行でも衆院の発言は
     assert.ok(/^const shugiinSpeeches = matchSpeeches\(await fetchSpeeches\(memberSession, "shugiin"\)/m.test(src), "衆院本会議の発言を memberSession で無条件に取得している");
     assert.ok(!/shouldFetchShugiinSpeeches/.test(src), "取得を丸ごとスキップする条件が cli.ts に残っている（#236）");
     assert.ok(/dropCarriedSpeeches\(/.test(src), "二重行は dropCarriedSpeeches で防ぐ");
+  });
+});
+
+/*
+ * #256: lostTimelineEntries の残る穴。
+ * lostTimelineEntries は議会（院）×種別の合計しか見ないので、同じ院・同じ種別の中で
+ * 「第221回が消え、第200回のバックフィルが同数入った」入れ替わりは合計が保たれて素通りする。
+ * 回次まで含めた粒度（議会 × 回次 × 種別）で突き合わせて塞ぐ。
+ */
+describe("lostSessionEntries: 議会 × 回次 × 種別で前回出力より減っていないか（#256）", () => {
+  const entry = (kind: "speech" | "question", session: number, n: number): TimelineEntry =>
+    kind === "speech"
+      ? { kind: "speech", session, date: "2025-01-24", speechId: `s${session}-${n}`, meeting: "本会議", excerpt: "…", chars: 3, sourceUrl: "https://kokkai.ndl.go.jp/txt/122105254X00120250124/1" }
+      : { kind: "question", session, date: "2025-01-24", title: "質問主意書", questionId: `${session}-shugiin-${n}`, sourceUrl: `https://www.shugiin.go.jp/internet/itdb_shitsumon.nsf/html/shitsumon/${session}${n}.htm` };
+
+  const detail = (id: string, house: "sangiin" | "shugiin", timeline: TimelineEntry[]): MemberDetail =>
+    ({ id, name: id, kana: "", house, assemblyId: `diet-${house}`, group: "G", district: "東京", current: true, terms: [], timeline, sourceUrl: "https://www.sangiin.go.jp/japanese/joho1/kousei/giin/221/giin.htm" }) as unknown as MemberDetail;
+
+  const countsOf = (details: readonly MemberDetail[]) => sessionCounts(details);
+
+  test("#256 の穴そのもの: 同じ院・同じ種別で第221回が消え第200回が同数入った入れ替わりを検出する", () => {
+    const before = [detail("h_1", "shugiin", [entry("question", 221, 1), entry("question", 221, 2)])];
+    const after = [detail("h_1", "shugiin", [entry("question", 200, 1), entry("question", 200, 2)])];
+    // 院×種別の合計は 2 → 2 で変わらないので、lostTimelineEntries は素通りする（これが #256）
+    assert.deepEqual(lostTimelineEntries(
+      [{ id: "h_1", house: "shugiin", assemblyId: "diet-shugiin", counts: { rollcalls: 0, bills: 0, speeches: 0, questions: 2 } } as never],
+      [{ id: "h_1", house: "shugiin", assemblyId: "diet-shugiin", counts: { rollcalls: 0, bills: 0, speeches: 0, questions: 2 } } as never],
+    ), []);
+    assert.deepEqual(lostSessionEntries(countsOf(before), after), [
+      { assemblyId: "diet-shugiin", session: 221, kind: "questions", before: 2, after: 0 },
+    ]);
+  });
+
+  test("同じ回次で議員が入れ替わっても、その回次の合計が保たれていれば消失ではない（改選・名寄せの移動）", () => {
+    const before = [detail("m_1", "sangiin", [entry("speech", 221, 1), entry("speech", 221, 2)])];
+    const after = [detail("m_1", "sangiin", [entry("speech", 221, 1)]), detail("m_2", "sangiin", [entry("speech", 221, 2)])];
+    assert.deepEqual(lostSessionEntries(countsOf(before), after), []);
+  });
+
+  test("増える・同じは正常（回次を足した・名寄せが良くなった）。初回実行（前回が空）は常に空", () => {
+    const before = [detail("m_1", "sangiin", [entry("question", 221, 1)])];
+    const after = [detail("m_1", "sangiin", [entry("question", 221, 1), entry("question", 221, 2), entry("question", 200, 1)])];
+    assert.deepEqual(lostSessionEntries(countsOf(before), after), []);
+    assert.deepEqual(lostSessionEntries(new Map(), after), []);
+  });
+
+  test("回次を指定した部分実行でも、対象外の回次は引き継がれるので止まらない（偽陽性を増やさない）", () => {
+    // `pnpm etl 221` = targets 221 / carried 200。第200回の行は readCarried が戻すので減らない
+    const before = [detail("m_1", "sangiin", [entry("speech", 221, 1), entry("speech", 200, 1)])];
+    const after = [detail("m_1", "sangiin", [entry("speech", 221, 1), entry("speech", 221, 2), entry("speech", 200, 1)])];
+    assert.deepEqual(lostSessionEntries(countsOf(before), after), []);
+  });
+
+  test("複数の回次・種別が減れば全部返す（議会・回次・種別の順に並ぶ）", () => {
+    const before = [detail("h_1", "shugiin", [entry("speech", 221, 1), entry("question", 220, 1), entry("question", 220, 2)]), detail("m_1", "sangiin", [entry("speech", 221, 1)])];
+    const after = [detail("h_1", "shugiin", [entry("question", 220, 1)]), detail("m_1", "sangiin", [entry("speech", 221, 1)])];
+    assert.deepEqual(lostSessionEntries(countsOf(before), after), [
+      { assemblyId: "diet-shugiin", session: 220, kind: "questions", before: 2, after: 1 },
+      { assemblyId: "diet-shugiin", session: 221, kind: "speeches", before: 1, after: 0 },
+    ]);
+  });
+
+  test("回次の無い行（#103 以前の出力）は回次を推定せず数えない。合計側の lostTimelineEntries が引き続き見る", () => {
+    const legacy = { kind: "speech", date: "2025-01-24", speechId: "sX", meeting: "本会議", excerpt: "…", chars: 3, sourceUrl: "https://kokkai.ndl.go.jp/txt/122105254X00120250124/1" } as unknown as TimelineEntry;
+    const before = [detail("m_1", "sangiin", [legacy])];
+    assert.deepEqual(lostSessionEntries(countsOf(before), [detail("m_1", "sangiin", [])]), []);
+  });
+
+  test("sessionCounts: 前回出力の members/{id}.json から議会 × 回次 × 種別の件数を読む", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "session-counts-"));
+    try {
+      await mkdir(join(dir, "members"), { recursive: true });
+      const rows = [{ id: "h_1", name: "衆 議員", kana: "", house: "shugiin", assemblyId: "diet-shugiin", group: "G", district: "東京", current: true, counts: { rollcalls: 0, bills: 0, speeches: 0, questions: 2 } }];
+      await writeFile(join(dir, "members", "index.json"), stableJson(rows));
+      await writeFile(join(dir, "members", "h_1.json"), stableJson(detail("h_1", "shugiin", [entry("question", 221, 1), entry("question", 200, 1)])));
+      const counts = await readSessionCounts(dir);
+      assert.equal(counts.get("diet-shugiin\t221\tquestions"), 1);
+      assert.equal(counts.get("diet-shugiin\t200\tquestions"), 1);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
   });
 });
