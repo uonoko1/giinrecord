@@ -34,6 +34,9 @@ async function firstMemberId(): Promise<string | null> {
   }
 }
 
+/** CSP_LISTENER がページ側に用意するヘルパ（#260）。waitForFunction の中からだけ呼ぶ。 */
+declare function assemblySelectValue(): string | null;
+
 interface PageResult {
   url: string;
   consoleErrors: string[];
@@ -47,6 +50,9 @@ const CSP_LISTENER = `
   document.addEventListener("securitypolicyviolation", (e) => {
     window.__cspViolations.push(e.violatedDirective + " blocked " + (e.blockedURI || "inline") + " at " + e.sourceFile + ":" + e.lineNumber);
   });
+  // #260: 待ち条件から議会の select の「いま描画されている値」を読むための共通ヘルパ。
+  // URL は History API で即座に変わるが、select は React の再描画を待たないと追随しない。
+  window.assemblySelectValue = () => document.querySelector("select.members-select")?.value ?? null;
 `;
 
 async function visit(page: Page, url: string, run?: (page: Page) => Promise<void>): Promise<PageResult> {
@@ -98,7 +104,9 @@ async function membersFilterGoesToUrl(page: Page): Promise<void> {
   if (!pick) throw new Error("members: 議会の select に「すべて」以外の選択肢が無い");
 
   await assembly.selectOption(pick);
-  await page.waitForFunction((v) => new URL(location.href).searchParams.get("assembly") === v, pick, { timeout: 5_000 });
+  // #260: URL だけを待って DOM を読むと、History API の更新と React の再描画の競合で稀に落ちる。
+  // 待つべきは「URL と、それに追随した DOM の両方」なので、select が期待値になるところまで待つ。
+  await page.waitForFunction((v) => new URL(location.href).searchParams.get("assembly") === v && assemblySelectValue() === v, pick, { timeout: 10_000 });
 
   const heading = (await page.locator("h1").textContent())?.trim() ?? "";
   const label = (await assembly.locator(`option[value="${pick}"]`).textContent())?.trim() ?? "";
@@ -108,7 +116,12 @@ async function membersFilterGoesToUrl(page: Page): Promise<void> {
   const url = page.url();
   await page.reload();
   await page.waitForFunction(() => document.querySelectorAll("li.members-item").length > 0, null, { timeout: 10_000 });
-  await page.waitForFunction((h) => document.querySelector("h1")?.textContent?.trim() === h, heading, { timeout: 5_000 });
+  // #260: 見出しだけでなく select も期待値になるまで待つ（読むのは select なので、待つ対象も select）
+  await page.waitForFunction(
+    ([h, v]) => document.querySelector("h1")?.textContent?.trim() === h && assemblySelectValue() === v,
+    [heading, pick] as const,
+    { timeout: 10_000 },
+  );
   const restored = await page.locator("select.members-select").first().inputValue();
   if (restored !== pick) throw new Error(`members: リロードで絞り込みが復元されない: ${url} なのに議会の select は "${restored}"`);
 
@@ -125,7 +138,9 @@ async function membersFilterGoesToUrl(page: Page): Promise<void> {
 
   // 戻るで絞り込み前に戻ること
   await page.goBack();
-  await page.waitForFunction(() => new URL(location.href).searchParams.get("assembly") === null, null, { timeout: 5_000 });
+  // #260: ここが元のフレークの発生源。goBack() は URL を先に変え、select は次の再描画で「すべて」に戻る。
+  // URL だけを待って select を読むとその隙間に入り込むので、select が空になるところまで待つ。
+  await page.waitForFunction(() => new URL(location.href).searchParams.get("assembly") === null && assemblySelectValue() === "", null, { timeout: 10_000 });
   const back = await page.locator("select.members-select").first().inputValue();
   if (back !== "") throw new Error(`members: 戻るで絞り込みが解けない: 議会の select は "${back}"`);
   console.log("browser-check: members filter -> back button clears the filter");
@@ -139,7 +154,13 @@ async function membersFilterGoesToUrl(page: Page): Promise<void> {
 async function membersRejectsUnknownFilters(page: Page): Promise<void> {
   const fake = "存在しない会派X9Z";
   await page.goto(`${origin}/members/?group=${encodeURIComponent(fake)}&district=${encodeURIComponent(fake)}`);
-  await page.waitForFunction(() => document.querySelectorAll("li.members-item").length > 0, null, { timeout: 10_000 });
+  // #260: 行が出ただけでは足りない。検査するのは会派の select と見出しなので、ハイドレーションが
+  // クエリを select に反映し終える（＝無効な会派名を捨てたと分かる）ところまで待ってから読む。
+  await page.waitForFunction(
+    () => document.querySelectorAll("li.members-item").length > 0 && document.querySelectorAll("select.members-select").length >= 2,
+    null,
+    { timeout: 10_000 },
+  );
 
   const seen = await page.evaluate(() => ({
     h1: document.querySelector("h1")?.textContent?.trim() ?? "",
@@ -175,10 +196,16 @@ async function memberTabsSwitch(page: Page): Promise<void> {
   // ハイドレーション後にタブが切り替わる: 選択中のタブが変わり、tabpanel の aria-labelledby も追随する
   const before = await page.locator('[role="tab"][aria-selected="true"]').innerText();
   await tabs.nth(1).click();
+  // #260: 選択中のタブが変わっただけでなく、この後で読む tabpanel の aria-labelledby が
+  // その新しいタブを指すところまで待つ（読む対象を待つ）。
   await page.waitForFunction(
-    (prev) => document.querySelector('[role="tab"][aria-selected="true"]')?.textContent?.replace(/\s+/g, " ") !== prev,
+    (prev) => {
+      const tab = document.querySelector('[role="tab"][aria-selected="true"]');
+      if (!tab || tab.textContent?.replace(/\s+/g, " ") === prev) return false;
+      return document.querySelector('[role="tabpanel"]')?.getAttribute("aria-labelledby") === tab.id;
+    },
     before.replace(/\s+/g, " "),
-    { timeout: 5_000 },
+    { timeout: 10_000 },
   );
   const selected = await page.locator('[role="tab"][aria-selected="true"]');
   const selectedId = await selected.getAttribute("id");
