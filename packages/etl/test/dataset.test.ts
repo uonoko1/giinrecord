@@ -455,6 +455,36 @@ describe("writeDataset / validateDataset: docs/DATA_CONTRACT.md の不変条件"
     cleanup();
   });
 
+  test("committeeRole 行（委員会の役職、#244）: estimated は false・委員会名は号を含まない・meetings は 1 以上・firstDate <= lastDate・date は firstDate・sourceUrl は会議録。counts には数えない", async () => {
+    const role = (extra: Record<string, unknown> = {}) => ({
+      kind: "committeeRole", estimated: false, session: 221, date: "2026-07-30", committee: "内閣委員会", role: "委員長",
+      meetings: 12, firstDate: "2026-07-30", lastDate: "2026-07-30", meetingId: "121714889X02520250620_000",
+      sourceUrl: "https://kokkai.ndl.go.jp/txt/121714889X02520250620/0", ...extra,
+    });
+    patch<{ timeline: unknown[] }>(dir, "members/m_007006.json", (d) => ({ ...d, timeline: [role(), ...d.timeline] }));
+    assert.deepEqual(await validateDataset(dir), []);
+    const first = (extra: Record<string, unknown>) =>
+      patch<{ timeline: unknown[] }>(dir, "members/m_007006.json", (d) => ({ ...d, timeline: [role(extra), ...d.timeline.slice(1)] }));
+    first({ estimated: true });
+    assert.match((await validateDataset(dir)).join("\n"), /m_007006.*timeline\[0\].*estimated: false/);
+    // 会議名の号を落とし忘れた（「内閣委員会 第25号」のまま）ら違反。委員会名は号を含まない原文
+    first({ committee: "内閣委員会 第25号" });
+    assert.match((await validateDataset(dir)).join("\n"), /m_007006.*timeline\[0\].*committeeRole committee/);
+    first({ role: "" });
+    assert.match((await validateDataset(dir)).join("\n"), /m_007006.*timeline\[0\].*committeeRole role/);
+    first({ meetings: 0 });
+    assert.match((await validateDataset(dir)).join("\n"), /m_007006.*timeline\[0\].*committeeRole meetings/);
+    // 出席日を逆に入れた（期間として組み立てようとした）ら違反
+    first({ firstDate: "2026-07-30", lastDate: "2026-02-10", date: "2026-07-30" });
+    assert.match((await validateDataset(dir)).join("\n"), /m_007006.*timeline\[0\].*firstDate .* must not be after lastDate/);
+    // date は「出席した最初の会議の日」でなければならない（並びに使う日を最新の出席日にしない）
+    first({ date: "2026-07-30", firstDate: "2026-02-10", lastDate: "2026-07-30" });
+    assert.match((await validateDataset(dir)).join("\n"), /m_007006.*timeline\[0\].*committeeRole date must equal firstDate/);
+    first({ sourceUrl: `${BASE}/221-0605-v001.htm` });
+    assert.match((await validateDataset(dir)).join("\n"), /m_007006.*timeline\[0\].*committeeRole sourceUrl/);
+    cleanup();
+  });
+
   test("rollcalls/index.json の行に対応する採決ファイルが無ければ違反", async () => {
     rmSync(join(dir, "rollcalls/221/221-0724-v001.json"));
     assert.match((await validateDataset(dir)).join("\n"), /221-0724-v001\.json/);
