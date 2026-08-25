@@ -3,9 +3,10 @@
 ## 流れ
 
 ```
-06:00 JST schedule / workflow_dispatch(sessions)
+06:00 JST schedule / workflow_dispatch(sessions, rebuild)
   0. docker build           packages/etl/Dockerfile → gikailog-etl:ci（GHCR に push しない。レイヤーは type=gha キャッシュ）
   1. actions/cache/restore  packages/etl/.cache（key: etl-cache-YYYY-MM-DD、restore-keys で前日以前から復元）
+  1.5 rebuild=yes のときだけ  scripts/ci/etl-rebuild-prepare.sh が国会側の data/ を消す（#284。既定は何もしない。下の「作り直し」の節）
   2. docker run [sessions]  data/ と packages/etl/.cache を bind mount、runner の uid で実行 → data/ を書き、validateDataset が違反を見つけたら非0終了
   3. actions/cache/save     失敗しても保存（if: always）
   4. data PR                git diff に変更があれば data/refresh に force push → open PR が無ければ作成 → `gh pr merge --auto`
@@ -114,7 +115,8 @@ gh run watch                                   # 進捗
 >   （24,610 行）を正しく捕まえ、`data/` を書かずに非0終了する。**これは異常ではない。**
 > - 失敗時のエラーは `Re-run with the affected sessions (pnpm etl <session>...)` と案内するが、
 >   **今回はその案内に従ってはいけない**（意図的な減少なので、回次を指定して再実行しても同じ検出で止まる）。
->   下記の「`data/` を消してから作り直す」を使う。
+>   下記の作り直し（`gh workflow run etl.yml -f rebuild=yes -f sessions="…全22回次…"`、または
+>   ローカルで `scripts/ci/etl-rebuild-prepare.sh` → `pnpm etl …`）を使う。
 > - **公開中のサイトは作り直しまで古い紐づけを表示し続ける。** コードは紐づけを拒否するようになったが、
 >   配信しているのは前回の出力である。
 >
@@ -126,14 +128,31 @@ gh run watch                                   # 進捗
 
 紐づけの規則を厳しくする変更は、**正しく動くほど前回出力より行が減る**ので、3 つの消失検出（`lostVoteMatches` / `lostTimelineEntries` / `lostSessionEntries`）に必ず引っかかり、ETL は `data/` を書かずに非0終了する。これは検出の誤りではなく、設計どおりの動作である。**検出を緩めるフラグは足さない**（同じ緩めが後日の本当の事故の見落としになる）。
 
-意図的な減少を通すときは、既存の escape hatch（`data/` を消してから作り直す。前回出力が無いので 3 つとも引っかからない）を使う:
+意図的な減少を通すときは、既存の escape hatch（国会側の `data/` を消してから作り直す。前回出力が無いので 3 つとも引っかからない）を使う。**ワークフローから流す方法（下）と、ローカルで流す方法（その下）のどちらでもよい。消す範囲は同じで、`scripts/ci/etl-rebuild-prepare.sh` が唯一の実装。**
+
+### ワークフローから流す（#284）
+
+`etl.yml` の `workflow_dispatch` に `rebuild` 入力がある。**`rebuild` に `yes` と入れたときだけ**、ETL の前に国会側の `data/` を消す:
 
 ```
-rm -rf data/members data/rollcalls data/bills data/unmatched data/unmatched.json data/meta.json
+gh workflow run etl.yml \
+  -f rebuild=yes \
+  -f sessions="200 201 202 203 204 205 206 207 208 209 210 211 212 213 214 215 216 217 218 219 220 221"
+```
+
+- **既定では発火しない。** cron 実行と、`sessions` だけを指定した通常の手動実行では `rebuild` が空になり、`Wipe Diet data (rebuild only)` ステップは何も消さずに終わる。発火する値は `yes` だけで、`true` / `YES` / ` yes` などは発火しない（`scripts/ci/test/etl-rebuild-prepare.test.sh` が固定している）。
+- **回次が全 22 回次に足りなければ、消す前に非0終了する。** `data/` を消してから既定の 5 回次だけ流すと、残り 17 回次を引き継ぐ元が無くなり永久に失われるため。
+- 消した内訳（パスと件数）はステップのログと Job Summary に出る。データ PR は通常どおり `data/refresh` に作られ、削除もその PR に含まれる（`git add data` は削除を stage する）。
+
+### ローカルで流す
+
+```
+DATA_DIR=data scripts/ci/etl-rebuild-prepare.sh yes "200 201 202 203 204 205 206 207 208 209 210 211 212 213 214 215 216 217 218 219 220 221"
 pnpm etl 200 201 202 203 204 205 206 207 208 209 210 211 212 213 214 215 216 217 218 219 220 221
 ```
 
-- 地方議会（`data/assemblies/`・`p_*` の議員）は日次 ETL が書かないので消さない。消すのは国会側だけ。
+- **`rm -rf data/members` としてはいけない**（2026-08-25 の修正前まで、この節はそう書いていた）。`data/members/` は国会（`m_*` 参院 / `h_*` 衆院）と地方議会（`p_*`）が**同じディレクトリを共有している**（#157）。`writeDataset` は地方の行を「消す前に読んで書き戻す」ことで守っているので、ディレクトリごと先に消すとその読み取りが空振りし、地方議員の detail（2026-08-25 の `data/` で 285 件）と `members/index.json` の地方の行が復元されないまま失われる。
+- 消すのは国会側だけ: `data/rollcalls` `data/bills` `data/unmatched` `data/unmatched.json` `data/meta.json` と、`data/members/` のうち `m_*` `h_*`（detail と `#242` の発言ディレクトリ）、および `members/index.json` の国会の行（`isDietMemberRow`＝`assemblyId` が無いか `diet-` で始まる行）。**地方議会（`data/assemblies/`・`data/members/p_*`・`members/index.json` の地方の行）は日次 ETL が書かないので消さない。**
 - **1 回の dispatch で全 22 回次を渡す。chunk に分けてはいけない。**
   `planSessions` の `carried` は前回出力から作るので、`data/` を消すと指定しなかった回次を
   引き継ぐ元が無い。分けて流すと 2 回目以降で前の chunk が消え、しかも**最初の実行には

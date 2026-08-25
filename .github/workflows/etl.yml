@@ -8,6 +8,13 @@ on:
         description: "Diet session numbers (space separated). Empty = current."
         required: false
         default: ""
+      rebuild:
+        # 名寄せを厳格化したあとの作り直し（docs/ops/etl.md「#230」）。既定は空で、cron 実行にも
+        # sessions だけの手動実行にも入らない。"yes" と打ったときだけ発火する（boolean や choice の
+        # 既定値でうっかり入る形にしない）。中身は scripts/ci/etl-rebuild-prepare.sh。
+        description: 'Rebuild: 国会側の data/ を消してから流す。"yes" のときだけ。sessions に全22回次が必要'
+        required: false
+        default: ""
 permissions:
   contents: write
   pull-requests: write
@@ -53,6 +60,17 @@ jobs:
       # ETL の非0終了が tee の exit 0 に隠れてデータ PR まで進んでしまう）。
       # data/ と .cache は bind mount。runner の uid で動かすので、書かれたファイルはそのまま git add / cache save できる。
       # .cache は restore が空振りしたときに docker が root で作らないよう先に mkdir する。
+      # rebuild を明示したときだけ国会側の data/ を消す（#284）。既定（cron / sessions だけの手動実行）は
+      # 何も消さずに exit 0 する。回次が全22回次に足りなければ、消す前に非0終了する
+      # （消してから既定の5回次だけ流すと残り17回次を引き継ぐ元が無くなる）。
+      # 検証は scripts/ci/test/etl-rebuild-prepare.test.sh（CI の bash tests で毎回走る）。
+      - name: Wipe Diet data (rebuild only)
+        shell: bash
+        env:
+          REBUILD: ${{ github.event.inputs.rebuild }}
+          SESSIONS: ${{ github.event.inputs.sessions }}
+        run: bash scripts/ci/etl-rebuild-prepare.sh "$REBUILD" "$SESSIONS"
+
       - name: Run ETL
         shell: bash
         env:
@@ -107,6 +125,7 @@ jobs:
           PR: ${{ steps.pr.outputs.number }}
           CHANGED: ${{ steps.pr.outputs.changed }}
           STATUS: ${{ job.status }}
+          REBUILD: ${{ github.event.inputs.rebuild }}
         run: |
           count() { node -e 'const a=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));console.log(Array.isArray(a)?a.length:"?")' "$1" 2>/dev/null || echo "?"; }
           # 未突合は回次別に分かれている（#219）。unmatched.json（回次の引けない行）と unmatched/*.json の合計を数える
@@ -117,6 +136,7 @@ jobs:
             echo "| 項目 | 値 |"
             echo "|---|---|"
             echo "| 結果 | $STATUS |"
+            if [ "$REBUILD" = "yes" ]; then echo "| 種別 | rebuild（国会側の data/ を消してから作り直した。消した内訳は上の表） |"; fi
             echo "| データ PR | $PR_CELL |"
             echo "| 変更ファイル数 | ${CHANGED:-?} |"
             echo "| unmatched（名寄せ不能。unmatched.json + unmatched/*.json） | $(count_unmatched) |"
