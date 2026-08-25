@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import iconv from "iconv-lite";
 import { parseRollCall, parseRollCallList, standingVoteNote } from "../src/sources/sangiin-votes.ts";
 import { parseShugiinBill, parseShugiinBillList, shugiinBillListUrl } from "../src/sources/shugiin-bills.ts";
-import { matchVotes } from "../src/match-votes.ts";
+import { matchVotes, tenureVerified } from "../src/match-votes.ts";
 import { parseMemberList } from "../src/sources/sangiin-members.ts";
 
 /**
@@ -91,13 +91,9 @@ describe("第142〜199回の票と m_ 空間（#219 の受け入れ条件と、�
   );
   const matched = matchVotes(parseRollCall(fixture("142-0114-v001"), `${BASE}/142/142-0114-v001.htm`, 142), members);
 
-  // TODO(#230): 現行の resolveMember は「正規化氏名の候補が1人なら回次を名簿が覆っているか見ずに採用する」ため、
-  // 1998 年の票が現職 3 人（中曽根 弘文・橋本 聖子・山崎 正昭）に紐づく。名簿に termStart（在職開始日）が無く、
-  // その回次に在職していたことを一次資料から確認できないので、これは推定を含む紐づけ。
-  // 同じことが第200〜215回でも起きており（約 18,401 票）、一律に厳格化すると公開済みの紐づけが大量に外れて
-  // lostVoteMatches が ETL を止める。影響を測ってから独立に直す判断になったので #230 に切り出した（#219 の PO 判断）。
-  // それまでこの2つは todo のまま残す（隠さず、満たせていない事実を仕様として残す）。
-  test.todo("全票の memberId が空（現職の名簿と氏名が一致しても第142回の票は紐づけない）", () => {
+  // #230 で解消済み。resolveMember は在職を名簿から確認できない候補を落とすようになった。
+  // 第221回の名簿しか無いので、1998 年の票はどの候補も在職を確認できず、全票が unmatched に載る。
+  test("全票の memberId が空（現職の名簿と氏名が一致しても第142回の票は紐づけない）", () => {
     const linked = matched.rollCall.votes.filter((v) => v.memberId !== "");
     assert.deepEqual(
       linked.map((v) => `${v.nameText}=${v.memberId}`),
@@ -106,7 +102,7 @@ describe("第142〜199回の票と m_ 空間（#219 の受け入れ条件と、�
     );
   });
 
-  test.todo("全票が unmatched に載る（氏名と当時の会派は事実として残る）", () => {
+  test("全票が unmatched に載る（氏名と当時の会派は事実として残る）", () => {
     assert.equal(matched.unmatched.length, matched.rollCall.votes.length);
   });
 
@@ -118,17 +114,14 @@ describe("第142〜199回の票と m_ 空間（#219 の受け入れ条件と、�
     assert.ok(matched.unmatched.some((u) => u.group === "民友連"));
   });
 
-  // 満たせていない事実を「隠さず仕様として残す」ためのテスト（#219 の PO 判断）。
-  // #230 でこの紐づけを解消したら件数は 0 になり、上の test.todo が通る（そのときこのテストは消す）。
-  test("【既知の未解決 #230】現行名簿と氏名が一致する少数の票は m_ に紐づく（推定を含む紐づけ）", () => {
-    const linked = matched.rollCall.votes.filter((v) => v.memberId !== "");
-    assert.equal(linked.length, 3, "推定を含む紐づけの件数が変わった（#230 の対応か、名簿の変化）");
-    assert.deepEqual(
-      linked.map((v) => v.nameText).sort(),
-      ["中曽根 弘文", "山崎 正昭", "橋本 聖子"].sort(),
-    );
-    // 残りは全部 unmatched（氏名と当時の会派は事実として残る）
-    assert.equal(matched.unmatched.length, matched.rollCall.votes.length - linked.length);
+  // #219 の時点では、名簿と氏名が一致する 3 人（中曽根 弘文・橋本 聖子・山崎 正昭）が
+  // 在職未確認のまま紐づいていた。#230 でその経路を塞いだので、いまは 0 件（上の 2 つのテストがそれを固定する）。
+  test("在職を確認できない候補は会派が一致しても紐づかない（#230）", () => {
+    const nakasone = members.find((m) => m.name.replace(/\s/g, "") === "中曽根弘文");
+    assert.ok(nakasone, "第221回の名簿に中曽根 弘文がいる前提のテスト（名簿が変わったら見直す）");
+    // 第221回の名簿にしか無いので、第142回（1998年）の在職は一次資料から確認できない
+    assert.equal(tenureVerified(nakasone, { session: 142, date: "1998-01-14" }), false);
+    assert.equal(tenureVerified(nakasone, { session: 221, date: "2026-06-05" }), true);
   });
 
   test("氏名だけから Member を作らない（名簿に無い氏名は m_ を持たない）", () => {

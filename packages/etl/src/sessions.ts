@@ -1,9 +1,10 @@
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
-import type { Bill, BillSummary, MemberDetail, MemberSummary, RollCall, RollCallSummary, TimelineEntry } from "@seiji-kiroku/shared";
+import type { Bill, BillSummary, Member, MemberDetail, MemberSummary, RollCall, RollCallSummary, TimelineEntry } from "@seiji-kiroku/shared";
 import type { CarriedEntry } from "./aggregate.ts";
 import { DEFAULT_SESSIONS } from "./dataset.ts";
 import { isDietMemberRow, readMemberIndex } from "./local-assemblies.ts";
+import { tenureVerified } from "./match-votes.ts";
 
 /**
  * 回次の扱い（Issue #103）。
@@ -285,4 +286,24 @@ async function listJson(dir: string): Promise<string[]> {
 
 async function readJson<T>(file: string, fallback: T): Promise<T> {
   try { return JSON.parse(await readFile(file, "utf8")) as T; } catch { return fallback; }
+}
+
+/**
+ * 引き継いだ timeline 行のうち、**その時点の在職を今の名簿から確認できる**行だけを残す（#230）。
+ *
+ * 引き継ぎ（readCarried）は前回出力の `memberId` をそのまま戻すので、採決（rollcalls/ を再突合する）と違って
+ * speech / question / attendance / 参法 bill の行は**名寄せをやり直さない**。#230 より前の出力には
+ * 在職未確認の氏名一致で付いた行が入っているので、そのまま戻すと厳格化した名寄せの結果と食い違う
+ * （取得し直した回次だけが直り、引き継いだ回次は古い紐づけのまま残る）。
+ *
+ * 落とした行は消えるのではなく、その回次を取り直せば現行の名寄せで作り直される（紐づかなければ unmatched に載る）。
+ * 判定は `resolveMember` と同じ `tenureVerified` を使う（1 か所で定義する）。
+ */
+export function carriedTenureVerified(carried: readonly CarriedEntry[], members: readonly Member[]): CarriedEntry[] {
+  const byId = new Map(members.map((m) => [m.id, m]));
+  return carried.filter((c) => {
+    const member = byId.get(c.memberId);
+    if (member === undefined) return false;
+    return tenureVerified(member, { session: c.entry.session, date: c.entry.date });
+  });
 }

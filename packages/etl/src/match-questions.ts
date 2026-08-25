@@ -28,7 +28,7 @@ export function matchQuestions(questions: readonly Question[], members: readonly
     if (q.house === "shugiin" && !shugiinCovered.has(q.session)) return { ...q };
     const ids: MemberId[] = [];
     for (const nameText of q.submitterNames) {
-      const member = resolveMember(index[q.house], nameText, q.group, q.session);
+      const member = resolveMember(index[q.house], nameText, q.group, { session: q.session, date: q.date });
       if (member) ids.push(member.id);
       else unmatched.push({ kind: "question", nameText, group: q.group ?? "", questionId: q.id });
     }

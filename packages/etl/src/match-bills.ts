@@ -30,6 +30,7 @@ export interface MatchedBill {
  * - 議案ページに載る氏名は筆頭発議者だけ（「外N名」の氏名は公表されていない）。載っている人だけを 提出者 にし、人数は submitterText の原文で示す。
  *   賛成者の氏名も公表されていないので、この関数が 賛成者 を作ることはない（型としては残す）。
  * - 議案ページに会派が無いので、同姓同名は絞れず unmatched に載せる（推測しない）。
+ * - 提出回次と提出日でその時点の在職を名簿から確認できた人にだけ紐づける（#230。確認できなければ unmatched。氏名は残る）。
  * - 提出日の無い参法は timeline に置けないので例外（上流 HTML の変化を黙って飲まない）。
  * 注: #24 で衆法・会派の扱いを広げるときもこの関数は純粋なまま保つ。
  */
@@ -42,7 +43,7 @@ export function matchBills(bills: readonly Bill[], members: readonly Member[]): 
     if (bill.proposers.length === 0) continue;
     if (!bill.submittedOn) throw new Error(`${bill.id}: 提出日がありません (${bill.sourceUrl})`);
     for (const nameText of bill.proposers) {
-      const member = resolveMember(index, nameText, undefined);
+      const member = resolveMember(index, nameText, undefined, { session: bill.session, date: bill.submittedOn });
       if (!member) {
         unmatched.push({ nameText, group: "", billId: bill.id });
         continue;

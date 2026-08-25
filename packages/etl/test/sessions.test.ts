@@ -3,8 +3,8 @@ import assert from "node:assert/strict";
 import { mkdtemp, mkdir, writeFile, rm, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { Bill, MemberDetail, RollCall, RollCallSummary, TimelineEntry } from "@seiji-kiroku/shared";
-import { planSessions, readCarried, decisionOfResult, lostVoteMatches, lostTimelineEntries, lostSessionEntries, readSessionCounts, sessionCounts, sessionOfEntry, dropCarriedSpeeches } from "../src/sessions.ts";
+import type { Bill, Member, MemberDetail, RollCall, RollCallSummary, TimelineEntry } from "@seiji-kiroku/shared";
+import { planSessions, readCarried, decisionOfResult, lostVoteMatches, lostTimelineEntries, lostSessionEntries, readSessionCounts, sessionCounts, sessionOfEntry, dropCarriedSpeeches, carriedTenureVerified } from "../src/sessions.ts";
 import type { CarriedEntry } from "../src/aggregate.ts";
 import { stableJson } from "../src/json.ts";
 
@@ -442,5 +442,36 @@ describe("lostSessionEntries: 議会 × 回次 × 種別で前回出力より減
     } finally {
       await rm(dir, { recursive: true, force: true });
     }
+  });
+});
+
+describe("carriedTenureVerified: 引き継ぎ行も今の名簿で在職を確認し直す（#230）", () => {
+  const member = (id: string, sessionFrom: number, sessionTo: number, to?: string): Member => ({
+    id, name: "山田 太郎", kana: "", house: "sangiin",
+    terms: [{ house: "sangiin", group: "自由民主党・無所属の会", district: "", from: "", sessionFrom, sessionTo, ...(to ? { to } : {}) }],
+    sourceUrl: "https://www.sangiin.go.jp/japanese/joho1/kousei/giin/221/giin.htm",
+  });
+  const entry = (session: number, date: string): CarriedEntry => ({
+    memberId: "m_1",
+    entry: { kind: "question", session, date, questionId: `${session}-sangiin-1`, title: "件名", role: "提出者", sourceUrl: "https://www.sangiin.go.jp/x" } as TimelineEntry,
+  });
+
+  test("名簿がその回次を覆っていれば残る", () => {
+    assert.deepEqual(carriedTenureVerified([entry(217, "2025-03-01")], [member("m_1", 216, 221)]), [entry(217, "2025-03-01")]);
+  });
+
+  test("名簿が後の回次にしか無い行は落ちる（#230 より前の出力に入っている在職未確認の紐づけ）", () => {
+    assert.deepEqual(carriedTenureVerified([entry(200, "2019-11-15")], [member("m_1", 216, 221, "2028-07-25")]), []);
+  });
+
+  test("前の回次の名簿に載り任期満了日が行の日付以後なら残る（会期中に名簿から消えた議員）", () => {
+    assert.deepEqual(
+      carriedTenureVerified([entry(217, "2025-03-01")], [member("m_1", 216, 216, "2025-07-28")]),
+      [entry(217, "2025-03-01")],
+    );
+  });
+
+  test("名簿から消えた memberId の行は落ちる（従来どおり。付け先が無い）", () => {
+    assert.deepEqual(carriedTenureVerified([entry(217, "2025-03-01")], [member("m_2", 216, 221)]), []);
   });
 });

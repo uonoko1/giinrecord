@@ -41,9 +41,10 @@ export function normalizeName(s: string): string {
 /**
  * 投票の氏名表記を Member に突合して memberId を埋める純粋関数（Issue #3, #24）。
  * 1. 正規化氏名（通称 name / 本名 legalName のどちらか）が一致する候補を集める
- * 2. 候補が複数なら、採決ページの会派と「採決の回次に効いている名簿の会派」（groupAt）で絞る（同姓同名の分離）
- * 3. 1人に絞れなければ memberId は "" のまま unmatched に載せる（例外にしない）
- * 候補が1人のときは会派が食い違っても採用するが、どの回次の名簿の会派とも一致しなければ groupMismatch に載せる:
+ * 2. 採決の時点の在職を名簿から確認できない候補を落とす（#230。`tenureVerified`）
+ * 3. 残りが複数なら、採決ページの会派と「採決の回次に効いている名簿の会派」（groupAt）で絞る（同姓同名の分離）
+ * 4. 1人に絞れなければ memberId は "" のまま unmatched に載せる（例外にしない）
+ * 在職を確認できて候補が1人のときは会派が食い違っても採用するが、どの回次の名簿の会派とも一致しなければ groupMismatch に載せる:
  * 名簿は会期後のスナップショットで、採決後に会派が改称・移籍すると同一人物でも会派表記が食い違うため
  * （第221回: れいわ新選組 → いのちの党。第220回の名簿が「れ新」なら一致扱い）。名簿にいない旧議員が
  * 同名の現職に紐づく誤りもここに現れるので、運用者は data/group-mismatch.json を確認する。
@@ -59,7 +60,7 @@ export function matchVotes(
   const seen = new Map<MemberId, string>();
 
   const votes = rollCall.votes.map((vote) => {
-    const member = resolveMember(byName, vote.nameText, vote.group, rollCall.session);
+    const member = resolveMember(byName, vote.nameText, vote.group, { session: rollCall.session, date: rollCall.date });
     if (!member) {
       unmatched.push({ nameText: vote.nameText, group: vote.group, rollCallId: rollCall.id });
       return { ...vote, memberId: "" };
@@ -80,17 +81,58 @@ export function matchVotes(
 }
 
 /**
+ * 記録がいつのものかを表す文脈（#230）。在職の確認にはこの両方を使う。
+ * `session` は記録の回次、`date` は記録の日付（ISO。採決日・議案提出日・会議の日）。
+ * `date` が無い記録は名簿の覆う回次だけで確認する（任期満了日と比べようがないため）。
+ */
+export interface RecordAt {
+  session: number;
+  /** ISO date。無ければ (b) の確認（任期満了日との比較）は行わない */
+  date?: string;
+}
+
+/**
+ * その記録の時点で在職していたことを**名簿（一次資料）から確認できる**か（#230）。
+ *
+ * 名簿には任期満了日（`to`）はあるが在職開始日にあたる項目が無いので、「その回次に在職していた」ことは
+ * 次のどちらかでしか確認できない。どちらでもなければ、氏名が一致しても在職は未確認であり、紐づけない（推定しない）。
+ *
+ * (a) **名簿がその回次を覆っている**: `sessionFrom <= session <= sessionTo`。
+ *     その回次の議員一覧に載っている＝その回次の議員であることが一次資料に書いてある。
+ * (b) **より前の回次の名簿に載っていて、任期満了日が記録の日付以後**: `sessionTo < session` かつ `to >= date`。
+ *     参院の議員一覧は会期後のスナップショットなので、会期中に辞職・任期満了した議員は次の回次の一覧に載らない
+ *     （groupAt の注記と同じ事情）。前の回次の一覧に載っている＝その時点までに既に議員であり、
+ *     任期満了日がまだ来ていない＝その日にも任期中である。どちらも名簿に書いてある事実。
+ *
+ * (b) が「前の回次の名簿」を要求するのが要点。任期満了日だけを見ると、2028年に任期が切れる現職が
+ * 1998年の票に「任期満了日 >= 1998年」で通ってしまう。初当選より前かどうかは名簿から分からない。
+ */
+export function tenureVerified(member: Member, at: RecordAt): boolean {
+  return member.terms.some((t) => {
+    const to = t.sessionTo ?? t.sessionFrom;
+    if (t.sessionFrom <= at.session && at.session <= to) return true;              // (a)
+    return to < at.session && at.date !== undefined && !!t.to && t.to >= at.date;  // (b)
+  });
+}
+
+/**
  * 氏名表記と会派から名簿の1人を決める（matchVotes / matchSpeeches / matchBills で共通）。
  * 1. 正規化氏名（通称 name / 本名 legalName）が一致する候補を集める
- * 2. 候補が複数なら会派で絞る（同姓同名の分離）。session があればその回次に効いている名簿の会派（groupAt）だけを見る。
- *    session が無ければ（議案ページなど回次の文脈が無い呼び出し）どの回次の会派でも可。会派が無ければ絞れない
- * 3. 1人に絞れなければ undefined
+ * 2. **その記録の時点の在職を名簿から確認できない候補を落とす**（#230。`tenureVerified`）。
+ *    `at` を渡さない呼び出しは「いつの記録か」が分からず在職を確認しようがないので、候補は残らない
+ * 3. 残りが複数なら会派で絞る（同姓同名の分離）。その回次に効いている名簿の会派（groupAt）だけを見る。会派が無ければ絞れない
+ * 4. 1人に絞れなければ undefined
+ *
+ * 2 で落ちた候補は会派が一致していても採らない（#230）。同姓同名の別人に記録が付くのを避けるため、
+ * 在職未確認の候補は「候補ですらない」ものとして扱う。落ちた氏名は呼び出し側が unmatched に載せる（記録は失わない）。
  */
-export function resolveMember(index: NameIndex, nameText: string, group: string | undefined, session?: number): Member | undefined {
-  const candidates = index.get(normalizeName(nameText)) ?? [];
+export function resolveMember(index: NameIndex, nameText: string, group: string | undefined, at?: RecordAt): Member | undefined {
+  const named = index.get(normalizeName(nameText)) ?? [];
+  const candidates = at === undefined ? [] : named.filter((m) => tenureVerified(m, at));
   if (candidates.length === 1) return candidates[0];
+  if (candidates.length === 0 || at === undefined) return undefined;
   const voteGroup = group ?? "";
-  const byGroup = candidates.filter((m) => (session === undefined ? inAnyTerm(m, voteGroup) : inGroupAt(m, voteGroup, session)));
+  const byGroup = candidates.filter((m) => inGroupAt(m, voteGroup, at.session));
   return byGroup.length === 1 ? byGroup[0] : undefined;
 }
 

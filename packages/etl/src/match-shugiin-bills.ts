@@ -26,11 +26,12 @@ export function matchShugiinBills(bills: readonly Bill[], members: readonly Memb
   const covered = rosterCoveredSessions(shugiin);
   const index = indexByName(shugiin);
   const unmatched: UnmatchedShugiinBillName[] = [];
-  const resolve = (billId: string, names: readonly string[] | undefined): MemberId[] | undefined => {
+  const resolve = (bill: Bill, names: readonly string[] | undefined): MemberId[] | undefined => {
     if (!names) return undefined;
+    const billId = bill.id;
     const ids: MemberId[] = [];
     for (const nameText of names) {
-      const member = resolveMember(index, nameText, undefined);
+      const member = resolveMember(index, nameText, undefined, { session: bill.session, date: bill.received?.shugiin });
       if (member) ids.push(member.id);
       else unmatched.push({ kind: "bill", nameText, group: "", billId });
     }
@@ -38,8 +39,8 @@ export function matchShugiinBills(bills: readonly Bill[], members: readonly Memb
   };
   const out = bills.map((bill) => {
     if (!covered.has(bill.session)) return { ...bill };
-    const submitters = resolve(bill.id, bill.submitterNames);
-    const supporters = resolve(bill.id, bill.supporterNames);
+    const submitters = resolve(bill, bill.submitterNames);
+    const supporters = resolve(bill, bill.supporterNames);
     return { ...bill, ...(submitters ? { submitters } : {}), ...(supporters ? { supporters } : {}) };
   });
   return { bills: out, unmatched };
