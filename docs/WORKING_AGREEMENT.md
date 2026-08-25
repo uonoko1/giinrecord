@@ -30,6 +30,16 @@
 - ETL と Web は `data/` のファイル契約（`docs/DATA_CONTRACT.md`）だけで結合する。
 - 共有ファイル（`routes.ts`, `tokens.css`, `shared/src/index.ts`, `vitest.setup.ts`, `.gitignore`, `package.json` 群, `react-router.config.ts`）の変更は担当 PBI を1つに限定し、他は読み取りのみ。必要なら Issue に「共有ファイル変更あり」と書き、PO が順序を決める。
 - フィクスチャは `packages/etl/test/fixtures/` と `apps/web/app/test-fixtures/` に置き、他人のフィクスチャを書き換えない。
+- **並列で実装するときは `git worktree` で作業ツリーを分ける**（Sprint 14 の事故）。
+  - 上の3項目は**ファイルの衝突**を防ぐが、**git のブランチ状態は作業ツリー1つにつき1つ**しかない。
+    同じクローンで複数のエージェントが動くと、`git checkout` が**他人の作業中のブランチを切り替えてしまう**。
+  - 実際に起きたこと：3つの実装が同一クローンで動き、あるブランチが**別の無関係なコミットで上書き**された
+    （reflog から復旧）。さらに PO が、動作中のエージェントの未追跡ファイルを「残骸」と誤認して**削除**した。
+  - ルール：**`git checkout` でブランチを切り替えない**。commit する段になったら
+    `git worktree add <scratchpad>/wt-<issue番号> -b <branch> origin/main` で専用ツリーを作ってそこで commit / push。
+  - **作業用の一時ファイルはリポジトリ内に置かない**（scratchpad に置く）。
+    リポジトリ内の未追跡ファイルは、他者から「残骸」と区別できない。
+  - **他人のブランチに force push しない。** push 前に `git ls-remote --heads origin <branch>` で存在を確認する。
 
 ## テスト方針（t-wada に怒られないために）
 - テストは仕様である。テスト名は「何が・どうなる」を日本語で書いてよい。
