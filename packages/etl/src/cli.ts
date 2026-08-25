@@ -1,5 +1,5 @@
 import { fileURLToPath } from "node:url";
-import type { Bill as SharedBill, Question, RollCall, Speech } from "@seiji-kiroku/shared";
+import type { Bill as SharedBill, House, Member, Question, RollCall, Speech } from "@seiji-kiroku/shared";
 import { listRollCalls, parseRollCall, RollCallParseError, standingVoteNote } from "./sources/sangiin-votes.ts";
 import { fetchMembers, memberListUrl, unmatchedGroups } from "./sources/sangiin-members.ts";
 import { fetchShugiinMembers, memberListUrl as shugiinMemberListUrl, unmatchedShugiinGroups } from "./sources/shugiin-members.ts";
@@ -261,16 +261,23 @@ for (const session of targets) {
 // 委員会の役職（Issue #244）: 会議録の冒頭「出席委員」「出席者」欄の委員長・理事・委員を衆参それぞれの名簿に名寄せし、
 // timeline の committeeRole 行にする。会議録に会派は書かれていないので同姓同名は絞れず unmatched に載る（推測で紐づけない。#230）。
 // 記録するのは**出席の事実**であって在任期間ではない（会議録に就任日・退任日は無い。PO の判断、#244）。
+//
+// 取得する回次の範囲は発言（#73 / #242）と同じ理由で院ごとに違う。混ぜて読まない:
+//   - 参院: targets の全回次。参院名簿は回次ごとに公開があり、その回次の在職を確認できる。
+//   - 衆院: memberSession の 1 回次だけ。衆院名簿は「現在」の 1 回次分しか無い（#71）ので、
+//     過去回次を取っても `tenureVerified` が候補を落として全件 unmatched になるだけ。取りに行かない。
 const committeeRoles: MatchedCommitteeRole[] = [];
-for (const session of targets) {
-  for (const [house, roster] of [["sangiin", members], ["shugiin", shugiin.members]] as const) {
-    const rosters = await fetchCommitteeRosters(session, house);
-    const matched = matchCommitteeRoles(rosters, roster);
-    const attendees = rosters.reduce((n, r) => n + r.members.length, 0);
-    console.log(`session ${session}: ${rosters.length} ${house} committee rosters, ${attendees} attendee names (${matched.entries.length} committeeRole entries matched, ${matched.unmatched.length} unmatched)`);
-    committeeRoles.push(...matched.entries);
-    unmatched.push(...matched.unmatched);
-  }
+const rosterTargets: [number, House, Member[]][] = [
+  ...targets.map((s): [number, House, Member[]] => [s, "sangiin", members]),
+  [memberSession, "shugiin", shugiin.members],
+];
+for (const [session, house, roster] of rosterTargets) {
+  const rosters = await fetchCommitteeRosters(session, house);
+  const matched = matchCommitteeRoles(rosters, roster);
+  const attendees = rosters.reduce((n, r) => n + r.members.length, 0);
+  console.log(`session ${session}: ${rosters.length} ${house} committee rosters, ${attendees} attendee names (${matched.entries.length} committeeRole entries matched, ${matched.unmatched.length} unmatched${house === "shugiin" ? `; roster covers session ${memberSession} only` : ""})`);
+  committeeRoles.push(...matched.entries);
+  unmatched.push(...matched.unmatched);
 }
 // 引き継ぐ回次の speech / question / attendance / 参法 bill 行（#103）。名簿から消えた memberId の行は付け先が無いので落とし、件数を出す
 // （その回次を指定して取り直せば現行名簿で名寄せし直される）。
