@@ -77,7 +77,6 @@ VPS 上のパス・conf・cron・compose project はすべて `giinrecord` 名�
 
 **削除するもの**（新名は各 setup スクリプトが書き直す。残すと二重に効く）:
 
-- `sites-{enabled,available}/gikailog.conf`・`gikailog-staging.conf` — 残すと同じ `server_name` の 443 が 2 つになり、nginx は先に読んだ方を使う（`nginx -t` は通るので気づけない）
 - `conf.d/gikailog-noip-log.conf` — 残すと `log_format noip` が二重定義になり `nginx -t` が "duplicate log_format" で落ちる
 - `snippets/gikailog-cloudflare-allow.conf` — 誰も include しない死んだファイルになる
 - `cron.d/gikailog-analytics`・`gikailog-monitor`・`gikailog-cloudflare-allowlist` — 残すと新旧が同時に走り、監視 Issue の二重オープン・集計の二重実行になる
@@ -93,7 +92,25 @@ VPS 上のパス・conf・cron・compose project はすべて `giinrecord` 名�
 
 **順序**（1 つ抜けるとデプロイか監視が黙って死ぬ）: `go-live.sh` を実行（step 0 が上表を処理し、compose を落とす）→ `authorized_keys` を書き換え → `deploy/cloudflare-allowlist.sh --install-cron` を新名で実行（先に走らせないと `vps-setup.sh` の `ensure_cf_snippet` が fail-closed で `deny all;` を書き、staging が全 403 になる）→ `go-live.sh` の残り step が `vps-setup.sh` / compose up / analytics を新名で作る → `deploy/monitor/setup.sh` を再実行。
 
-**手で触らないもの**: 旧ドメイン `gikailog.jp` の certbot 証明書と 301（`deploy/nginx/site.conf`。#192 で 1 年維持と決めた。2027-08 までは撤去しない）。`/var/log/nginx/gikailog.access.log.1` 以降の logrotate 済み過去世代（14 日で自然に消える。その間 `daily.sh` の集計対象からは外れ、改名日をまたぐ 1 日分は欠測しうる）。
+**消さないもの（重要）**: `sites-{available,enabled}/gikailog.conf` と `gikailog-staging.conf`。**ファイル名が旧称なだけで、中身は旧ドメインを 301 する現役の設定**であり、残骸ではない。
+
+```
+$ ls /etc/nginx/sites-enabled/          # VPS 実測 2026-08-26
+giinrecord.conf          → server_name giinrecord.jp          （現行の配信）
+gikailog.conf            → server_name gikailog.jp            （旧ドメインの 301）
+giinrecord-staging.conf  → server_name staging.giinrecord.jp
+gikailog-staging.conf    → server_name staging.gikailog.jp    （旧ドメインの 301）
+
+$ curl -sSI https://gikailog.jp/members/
+HTTP/1.1 301 Moved Permanently
+Location: https://giinrecord.jp/members/
+```
+
+4 つとも有効で、**`server_name` が違うので重複していない**（同一 `server_name` の 443 が 2 つできるという心配は当たらない）。#192 で旧ドメインは 1 年維持（2027-08 まで）と決めているので、**消すと旧 URL からの転送が止まる**。`migrate_legacy()` はこの 4 つに触れず、`deploy/test/go-live.test.sh` の「旧ドメイン 301 の conf は消さない」が削除の再混入を防ぐ。
+
+> 不揃い: `sites-enabled/gikailog.conf` だけ実ファイルで、他 3 つはシンボリックリンク（実測）。動作に影響はないので本 PR では揃えていない。
+
+**手で触らないもの**: 旧ドメイン `gikailog.jp` の certbot 証明書とコンテナ側の 301（`deploy/nginx/site.conf`。#192 で 1 年維持と決めた。2027-08 までは撤去しない）。`/var/log/nginx/gikailog.access.log.1` 以降の logrotate 済み過去世代（14 日で自然に消える。その間 `daily.sh` の集計対象からは外れ、改名日をまたぐ 1 日分は欠測しうる）。
 
 テストは `bash deploy/test/go-live.test.sh`（`GO_LIVE_PREFIX` で全パスを一時ディレクトリ配下に、docker 等はスタブ）。
 

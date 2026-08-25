@@ -47,10 +47,15 @@ old_layout() {
     "$P/etc/nginx/sites-available" "$P/etc/nginx/sites-enabled" "$P/etc/nginx/conf.d" \
     "$P/etc/nginx/snippets" "$P/etc/cron.d" "$P/etc/gikailog" "$P/var/lib/gikailog-monitor" \
     "$P/var/log/nginx" "$P/usr/local/lib/gikailog-analytics" "$P/usr/local/lib/gikailog-monitor"
-  echo "server { root /var/www/gikailog/site; }" > "$P/etc/nginx/sites-available/gikailog.conf"
-  ln -s "$P/etc/nginx/sites-available/gikailog.conf" "$P/etc/nginx/sites-enabled/gikailog.conf"
-  echo "server { root /var/www/gikailog/staging; }" > "$P/etc/nginx/sites-available/gikailog-staging.conf"
+  # The old-name site confs are the legacy-domain 301s, not leftovers (measured on the VPS 2026-08-26).
+  # sites-enabled/gikailog.conf is a real file there; the other three are symlinks — the fixture keeps that asymmetry.
+  echo "server { server_name gikailog.jp; return 301 https://giinrecord.jp\$request_uri; }" > "$P/etc/nginx/sites-available/gikailog.conf"
+  cp "$P/etc/nginx/sites-available/gikailog.conf" "$P/etc/nginx/sites-enabled/gikailog.conf"
+  echo "server { server_name staging.gikailog.jp; return 301 https://staging.giinrecord.jp\$request_uri; }" > "$P/etc/nginx/sites-available/gikailog-staging.conf"
   ln -s "$P/etc/nginx/sites-available/gikailog-staging.conf" "$P/etc/nginx/sites-enabled/gikailog-staging.conf"
+  # The new-name confs coexist: different server_name, so they never collided with the old ones.
+  echo "server { server_name giinrecord.jp; root /var/www/giinrecord/site; }" > "$P/etc/nginx/sites-available/giinrecord.conf"
+  ln -s "$P/etc/nginx/sites-available/giinrecord.conf" "$P/etc/nginx/sites-enabled/giinrecord.conf"
   echo "log_format noip '...';" > "$P/etc/nginx/conf.d/gikailog-noip-log.conf"
   echo "allow 10.0.0.0/8; deny all;" > "$P/etc/nginx/snippets/gikailog-cloudflare-allow.conf"
   echo "10 0 * * * root /usr/local/lib/gikailog-analytics/daily.sh" > "$P/etc/cron.d/gikailog-analytics"
@@ -143,10 +148,6 @@ t_moves_logs() {
 t_removes_old_nginx_and_cron() {
   fresh nginx; old_layout
   run_migrate || fail "exit $? $(cat "$P/out")"
-  assert_missing "$P/etc/nginx/sites-enabled/gikailog.conf" "old enabled symlink removed"
-  assert_missing "$P/etc/nginx/sites-available/gikailog.conf" "old available conf removed (would give the same server_name two 443 blocks)"
-  assert_missing "$P/etc/nginx/sites-enabled/gikailog-staging.conf" "old staging symlink removed"
-  assert_missing "$P/etc/nginx/sites-available/gikailog-staging.conf" "old staging conf removed"
   assert_missing "$P/etc/nginx/conf.d/gikailog-noip-log.conf" "old log_format removed (would duplicate noip)"
   assert_missing "$P/etc/nginx/snippets/gikailog-cloudflare-allow.conf" "old cloudflare snippet removed"
   assert_missing "$P/etc/cron.d/gikailog-analytics" "old analytics cron removed"
@@ -154,6 +155,20 @@ t_removes_old_nginx_and_cron() {
   assert_missing "$P/etc/cron.d/gikailog-cloudflare-allowlist" "old allowlist cron removed"
   # nginx is NOT reloaded here: the new server block is written (and nginx -t'd) by vps-setup.sh right after.
   assert_not_contains "$(cat "$LOG")" "systemctl" "no nginx reload during migration"
+}
+
+# The old-name site confs are the gikailog.jp / staging.gikailog.jp 301s (#192: kept for a year, until 2027-08).
+# Their server_name differs from the new-name confs, so they never duplicated anything. Deleting them kills the old URLs.
+t_keeps_legacy_domain_redirects() {
+  fresh legacy; old_layout
+  run_migrate || fail "exit $? $(cat "$P/out")"
+  assert_exists "$P/etc/nginx/sites-available/gikailog.conf" "legacy-domain 301 conf kept"
+  assert_exists "$P/etc/nginx/sites-enabled/gikailog.conf" "legacy-domain 301 stays enabled"
+  assert_exists "$P/etc/nginx/sites-available/gikailog-staging.conf" "legacy staging 301 conf kept"
+  assert_exists "$P/etc/nginx/sites-enabled/gikailog-staging.conf" "legacy staging 301 stays enabled"
+  assert_contains "$(cat "$P/etc/nginx/sites-enabled/gikailog.conf")" "301" "content untouched"
+  # and the new-name confs are still there next to them
+  assert_exists "$P/etc/nginx/sites-enabled/giinrecord.conf" "current site conf untouched"
 }
 
 # migrate_legacy() cannot touch authorized_keys, the certbot-managed conf, Cloudflare's dashboard or the OS user.
@@ -264,7 +279,8 @@ test_case "main: 8081 を使っているのが自分のコンテナなら続行"
 test_case "移行: /opt, /var/www, /usr/local/lib の旧ディレクトリを新名へ mv" t_moves_old_dirs
 test_case "移行: monitor.token と open-issue 状態を中身ごと持ち越す" t_moves_monitor_token_and_state
 test_case "移行: 監視・集計・nginx のログを新名へ mv" t_moves_logs
-test_case "移行: 旧 nginx conf・snippet と旧 cron 3 本を削除、reload はしない" t_removes_old_nginx_and_cron
+test_case "移行: 旧 log_format・snippet と旧 cron 3 本を削除、reload はしない" t_removes_old_nginx_and_cron
+test_case "移行: 旧ドメイン 301 の conf（gikailog{,-staging}.conf）は消さない" t_keeps_legacy_domain_redirects
 test_case "移行: 自動化できない手作業（authorized_keys・certbot・Cloudflare・OS ユーザー）を印字する" t_prints_manual_steps
 test_case "移行: 旧 compose project (gikailog) が残っていれば down --remove-orphans" t_removes_old_compose_project
 test_case "移行: 旧 compose project が無ければ docker を触らない" t_no_compose_teardown_when_absent

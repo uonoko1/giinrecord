@@ -15,6 +15,7 @@
 #     - Cloudflare ダッシュボードの Access Application 名 / Service Token 名
 #     - OS ユーザー gikaiops → giinops
 #   /etc/gikailog/ は monitor.token（fine-grained PAT）ごと mv する。移行後に権限と存在を人が確認する。
+#   sites-{available,enabled}/gikailog{,-staging}.conf は**消さない**（旧ドメインの 301。migrate_legacy() 内に理由）。
 #   テスト: deploy/test/go-live.test.sh（GO_LIVE_PREFIX で全パスを一時ディレクトリ配下に、docker 等はスタブ）
 set -euo pipefail
 
@@ -87,14 +88,15 @@ migrate_legacy() {
   move_if_legacy "$PREFIX/var/log/nginx/$OLD-staging.access.log" "$PREFIX/var/log/nginx/$NEW-staging.access.log"
   move_if_legacy "$PREFIX/var/log/nginx/$OLD-staging.error.log" "$PREFIX/var/log/nginx/$NEW-staging.error.log"
 
-  # 2. 新名で作り直されるもの（rm）。残すと二重に効いて壊れる。
-  # 旧ホスト nginx の server block。vps-setup.sh が直後に新 conf を書いて nginx -t → reload するので、
-  # ここでは reload しない。旧 conf を残すと同じ server_name の 443 が 2 つになり、nginx は先に読んだ方を
-  # 使う（nginx -t は通るので気づけない）。
-  remove_if_legacy "$PREFIX/etc/nginx/sites-enabled/$OLD.conf"
-  remove_if_legacy "$PREFIX/etc/nginx/sites-available/$OLD.conf"
-  remove_if_legacy "$PREFIX/etc/nginx/sites-enabled/$OLD-staging.conf"
-  remove_if_legacy "$PREFIX/etc/nginx/sites-available/$OLD-staging.conf"
+  # 2. 新名で作り直されるもの（rm）。残すと新旧が並んで壊れる。
+  # sites-{available,enabled}/gikailog{,-staging}.conf は消さない。ファイル名が旧称なだけで、中身は
+  # 旧ドメイン gikailog.jp / staging.gikailog.jp を新ドメインへ 301 する現役の設定
+  # （2026-08-26 に VPS 実測: 4 つとも sites-enabled にあり、`curl -sSI https://gikailog.jp/members/` は
+  # giinrecord.jp へ 301 を返す）。新名の giinrecord{,-staging}.conf とは server_name が違うので重複しない。
+  # #192 で「旧ドメインは 1 年維持」と決めた（docs/sprints/sprint-11.md、2027-08 まで）。消すと旧 URL が死ぬ。
+  # vps-setup.sh は新名の conf だけを書き、直後に nginx -t → reload するので、ここでは reload しない。
+  #
+  # 以下はドメインと無関係な名前の重複なので削除してよい。
   # conf.d の log_format は新旧が並ぶと nginx -t が "duplicate log_format" で落ちる。
   remove_if_legacy "$PREFIX/etc/nginx/conf.d/$OLD-noip-log.conf"
   # Cloudflare allowlist snippet。旧名は誰も include しない死んだファイルになる。新名は
