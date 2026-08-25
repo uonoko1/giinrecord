@@ -1,7 +1,7 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { committeePageUrl, parseCommitteeRosterPage, parseRosterHeader } from "../src/sources/kokkai-committee.ts";
+import { committeePageUrl, parseCommitteeRosterPage, parseRosterHeader, parseShugiinLine } from "../src/sources/kokkai-committee.ts";
 
 const fixture = (name: string) => JSON.parse(readFileSync(new URL(`./fixtures/${name}.json`, import.meta.url), "utf-8")) as unknown;
 
@@ -216,6 +216,28 @@ describe("審査会・調査会の役職は「会長」で、委員長に丸め�
     const chosa = page.rosters.find((r) => r.meeting === "国際経済・外交に関する調査会 第8号")!;
     assert.equal(chosa.members.filter((m) => m.role === "会長").length, 1);
     assert.equal(chosa.members.some((m) => m.role === "委員長"), false);
+  });
+});
+
+describe("parseShugiinLine: 役職の剥がし方（INLINE_ROLES のホワイトリスト）", () => {
+  test("役職と氏名の間に空白があってもなくても同じ 1 名になる", () => {
+    assert.deepEqual(parseShugiinLine("　　　理事　おおつき紅葉君"), [{ role: "理事", nameText: "おおつき紅葉" }]);
+    assert.deepEqual(parseShugiinLine("　　　理事おおつき紅葉君"), [{ role: "理事", nameText: "おおつき紅葉" }]);
+  });
+
+  test("役職を剥がした結果が空にならない（役職だけの行は例外にする。氏名を捏造しない）", () => {
+    assert.throws(() => parseShugiinLine("　　　理事　君"), /氏名がありません/);
+  });
+
+  test("「君」で終わらない行は例外（黙って空を返さない）", () => {
+    assert.throws(() => parseShugiinLine("　　　理事　黄川田仁志"), /「君」で終わらない/);
+  });
+
+  test("役職の無い行は「委員」になる（衆院の出席委員欄は委員の役職欄が空）", () => {
+    assert.deepEqual(parseShugiinLine("　　　　　　石原　宏高君　　　　井野　俊郎君"), [
+      { role: "委員", nameText: "石原宏高" },
+      { role: "委員", nameText: "井野俊郎" },
+    ]);
   });
 });
 
