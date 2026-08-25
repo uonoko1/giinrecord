@@ -6,6 +6,7 @@ import { buildDataset, groupMajority, summarizeRollCall } from "../src/aggregate
 import { matchVotes } from "../src/match-votes.ts";
 import type { MatchedBill } from "../src/match-bills.ts";
 import type { MatchedAttendance } from "../src/match-attendance.ts";
+import type { MatchedCommitteeRole } from "../src/match-committee.ts";
 import { parseRollCall } from "../src/sources/sangiin-votes.ts";
 import { parseMemberList } from "../src/sources/sangiin-members.ts";
 
@@ -472,5 +473,59 @@ describe("buildDataset: 委員会出席（発議者）を attendance 行とし�
   test("名簿にない memberId は例外。衆院議員（house=shugiin）に付けようとしても例外（参院の委員会の発議者は参議院議員）", () => {
     assert.throws(() => buildDataset(members, [], new Map(), [], [], [], [], [attendance("m_9", "2026-07-09")]), /m_9/);
     assert.throws(() => buildDataset([hMember("h_1", "自由民主党・無所属の会")], [], new Map(), [], [], [], [], [attendance("h_1", "2026-07-09")]), /h_1.*shugiin/);
+  });
+});
+
+/* ---------- 委員会の役職（#244）: 会議録の出席委員欄の委員長・理事・委員。在任期間ではなく出席の事実 ---------- */
+
+const committeeRole = (memberId: string, extra: Partial<MatchedCommitteeRole> = {}): MatchedCommitteeRole => ({
+  memberId, nameText: "和田政宗", session: 221, house: "sangiin", committee: "内閣委員会", role: "委員長", meetings: 1,
+  firstDate: "2026-07-09", lastDate: "2026-07-09",
+  firstMeetingId: "1221148890000_000", lastMeetingId: "1221148890000_000",
+  sourceUrl: "https://kokkai.ndl.go.jp/txt/1221148890000/0",
+  ...extra,
+});
+
+describe("buildDataset: 委員会の役職を committeeRole 行として timeline に入れる（#244）", () => {
+  const members = [member("m_1", "和田 政宗")];
+  const ds = buildDataset(members, [], new Map(), [], [], [], [], [], [
+    committeeRole("m_1"),
+    committeeRole("m_1", { committee: "予算委員会", role: "理事", meetings: 12, firstDate: "2026-02-10", lastDate: "2026-06-18",
+      firstMeetingId: "1221152610000_000", lastMeetingId: "1221152610099_000", sourceUrl: "https://kokkai.ndl.go.jp/txt/1221152610000/0" }),
+  ]);
+
+  test("committeeRole 行は estimated: false・委員会名と役職の原文・出席回数・最初/最新の出席日・出典（会議録）を持つ", () => {
+    assert.deepEqual(ds.details[0].timeline.filter((e) => e.kind === "committeeRole"), [
+      { kind: "committeeRole", estimated: false, session: 221, date: "2026-07-09", committee: "内閣委員会", role: "委員長", meetings: 1,
+        firstDate: "2026-07-09", lastDate: "2026-07-09", meetingId: "1221148890000_000", sourceUrl: "https://kokkai.ndl.go.jp/txt/1221148890000/0" },
+      { kind: "committeeRole", estimated: false, session: 221, date: "2026-02-10", committee: "予算委員会", role: "理事", meetings: 12,
+        firstDate: "2026-02-10", lastDate: "2026-06-18", meetingId: "1221152610000_000", sourceUrl: "https://kokkai.ndl.go.jp/txt/1221152610000/0" },
+    ]);
+  });
+
+  test("並びに使う date は出席した最初の会議の日（firstDate）。就任日ではないので lastDate では並べない", () => {
+    const roles = ds.details[0].timeline.filter((e) => e.kind === "committeeRole");
+    assert.deepEqual(roles.map((e) => e.date), roles.map((e) => e.firstDate));
+  });
+
+  test("counts には数えない（counts は採決・議案・発言・質問主意書の 4 つのまま）", () => {
+    assert.deepEqual(ds.index[0].counts, { rollcalls: 0, bills: 0, speeches: 0, questions: 0 });
+  });
+
+  test("同日は attendance の後・speech の前（kind の並び順）", () => {
+    const same = buildDataset([member("m_1", "舟山 康江")], [rollCall("221-0709-v001", "2026-07-09", [vote("m_1", "賛成")])], new Map(), [], [], [], [],
+      [attendance("m_1", "2026-07-09")], [committeeRole("m_1", { nameText: "舟山康江" })]);
+    assert.deepEqual(same.details[0].timeline.map((e) => e.kind), ["vote", "attendance", "committeeRole"]);
+  });
+
+  test("衆院議員にも付く（衆院の委員会は衆院名簿で名寄せ済み）", () => {
+    const ds2 = buildDataset([hMember("h_1", "自由民主党・無所属の会")], [], new Map(), [], [], [], [], [],
+      [committeeRole("h_1", { house: "shugiin", nameText: "大岡敏孝" })]);
+    assert.equal(ds2.details[0].timeline.filter((e) => e.kind === "committeeRole").length, 1);
+  });
+
+  test("名簿にない memberId は例外。会議の院と名簿の院が食い違っても例外（黙って捨てない）", () => {
+    assert.throws(() => buildDataset(members, [], new Map(), [], [], [], [], [], [committeeRole("m_9")]), /m_9/);
+    assert.throws(() => buildDataset(members, [], new Map(), [], [], [], [], [], [committeeRole("m_1", { house: "shugiin" })]), /m_1.*sangiin.*shugiin/);
   });
 });

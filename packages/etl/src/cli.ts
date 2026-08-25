@@ -17,6 +17,8 @@ import { fetchSangiinQuestions, sangiinQuestionListUrl } from "./sources/sangiin
 import { matchQuestions } from "./match-questions.ts";
 import { attendancePageUrl, fetchCommitteeAttendance } from "./sources/kokkai-attendance.ts";
 import { matchAttendance, type MatchedAttendance } from "./match-attendance.ts";
+import { committeePageUrl, fetchCommitteeRosters } from "./sources/kokkai-committee.ts";
+import { matchCommitteeRoles, type MatchedCommitteeRole } from "./match-committee.ts";
 import { buildDataset, mergeRosters, rosterSessionsFor, type Roster } from "./aggregate.ts";
 import { dietAssemblies, readSessionsOnDisk, validateDataset, writeDataset } from "./dataset.ts";
 import { carriedTenureVerified, dropCarriedSpeeches, lostSessionEntries, lostTimelineEntries, lostVoteMatches, planSessions, readCarried, readSessionCounts } from "./sessions.ts";
@@ -256,6 +258,20 @@ for (const session of targets) {
   attendance.push(...matched.entries);
   unmatched.push(...matched.unmatched);
 }
+// 委員会の役職（Issue #244）: 会議録の冒頭「出席委員」「出席者」欄の委員長・理事・委員を衆参それぞれの名簿に名寄せし、
+// timeline の committeeRole 行にする。会議録に会派は書かれていないので同姓同名は絞れず unmatched に載る（推測で紐づけない。#230）。
+// 記録するのは**出席の事実**であって在任期間ではない（会議録に就任日・退任日は無い。PO の判断、#244）。
+const committeeRoles: MatchedCommitteeRole[] = [];
+for (const session of targets) {
+  for (const [house, roster] of [["sangiin", members], ["shugiin", shugiin.members]] as const) {
+    const rosters = await fetchCommitteeRosters(session, house);
+    const matched = matchCommitteeRoles(rosters, roster);
+    const attendees = rosters.reduce((n, r) => n + r.members.length, 0);
+    console.log(`session ${session}: ${rosters.length} ${house} committee rosters, ${attendees} attendee names (${matched.entries.length} committeeRole entries matched, ${matched.unmatched.length} unmatched)`);
+    committeeRoles.push(...matched.entries);
+    unmatched.push(...matched.unmatched);
+  }
+}
 // 引き継ぐ回次の speech / question / attendance / 参法 bill 行（#103）。名簿から消えた memberId の行は付け先が無いので落とし、件数を出す
 // （その回次を指定して取り直せば現行名簿で名寄せし直される）。
 // 引き継ぎは前回出力の memberId をそのまま戻すので、採決（再突合する）と違って名寄せがやり直されない。
@@ -289,7 +305,7 @@ const previousSessionCounts = await readSessionCounts(DATA);
 const dataset = {
   // 議会一覧（#156）: 国会の2行。members の assemblyId（diet-sangiin / diet-shugiin）はこの id を指す。
   assemblies: dietAssemblies(memberSession),
-  ...buildDataset([...members, ...shugiin.members], rollCalls, decisions, speeches, proposed.entries, shugiinMatched.bills, questions.questions, attendance, carriedEntries),
+  ...buildDataset([...members, ...shugiin.members], rollCalls, decisions, speeches, proposed.entries, shugiinMatched.bills, questions.questions, attendance, committeeRoles, carriedEntries),
   rollCallDetails: rollCalls,
   bills: shugiinMatched.bills,
   unmatched,
@@ -306,6 +322,8 @@ const dataset = {
       { name: "国会会議録検索システム 検索用API（参議院 本会議・委員会）", url: speechPageUrl(memberSession, 1, "sangiin", SPEECH_SCOPE), fetchedAt },
       { name: "国会会議録検索システム 検索用API（衆議院 本会議・委員会）", url: speechPageUrl(memberSession, 1, "shugiin", SPEECH_SCOPE), fetchedAt },
       { name: "国会会議録検索システム 検索用API（参議院 委員会の出席者欄）", url: attendancePageUrl(memberSession), fetchedAt },
+      { name: "国会会議録検索システム 検索用API（参議院 委員会の出席委員欄）", url: committeePageUrl(memberSession, "sangiin"), fetchedAt },
+      { name: "国会会議録検索システム 検索用API（衆議院 委員会の出席委員欄）", url: committeePageUrl(memberSession, "shugiin"), fetchedAt },
       ...targets.map((s) => ({ name: `参議院 議案情報（第${s}回）`, url: billListUrl(s), fetchedAt })),
       ...targets.map((s) => ({ name: `衆議院 議案情報（第${s}回）`, url: shugiinBillListUrl(s), fetchedAt })),
       ...targets.map((s) => ({ name: `衆議院 質問答弁情報（第${s}回）`, url: shugiinQuestionListUrl(s), fetchedAt })),

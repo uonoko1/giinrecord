@@ -4,7 +4,7 @@ import { CompareAdd } from "../components/CompareAdd";
 import { SiteFooter } from "../components/SiteFooter";
 import type { Assembly } from "@seiji-kiroku/shared";
 import { assemblyPath, findAssembly, isLocalMember, joinVoteSubjects, localVoteTone, voteSubjectNote } from "../lib/assemblies";
-import type { BillEntry, BillRole, DatasetMeta, LocalVoteEntry, MemberDetail, MemberSpeeches, QuestionEntry, SpeechEntry, StanceEntry, TimelineEntry, VoteEntry } from "../lib/data-contract";
+import type { BillEntry, BillRole, CommitteeRoleEntry, DatasetMeta, LocalVoteEntry, MemberDetail, MemberSpeeches, QuestionEntry, SpeechEntry, StanceEntry, TimelineEntry, VoteEntry } from "../lib/data-contract";
 import { defaultDataDir, readAssemblies, readLocalRollCallIndex, readMemberDetail, readMemberSpeechCount, readMeta } from "../lib/data-files";
 import { formatDate, formatDateTime, formatYearMonth } from "../lib/format";
 import { seoMeta } from "../lib/seo";
@@ -120,19 +120,21 @@ export interface TabDef {
 }
 
 /** 参院: 個人の記名採決がある。衆院: 個人投票は公開されていないので採決タブの代わりに「会派の態度」（推定）。 */
-const TABS: Record<MemberDetail["house"], TabDef[]> = {
+export const TABS: Record<MemberDetail["house"], TabDef[]> = {
   sangiin: [
     { id: "all", label: "すべて", category: "all", kind: null },
     { id: "vote", label: "採決", category: "self", kind: "vote" },
     { id: "bill", label: "提出法案", category: "self", kind: "bill" },
     { id: "question", label: "質問主意書", category: "self", kind: "question" },
     { id: "speech", label: "発言", category: "self", kind: "speech" },
+    { id: "committeeRole", label: "委員会の役職", category: "self", kind: "committeeRole" },
   ],
   shugiin: [
     { id: "all", label: "すべて", category: "all", kind: null },
     { id: "bill", label: "提出法案", category: "self", kind: "bill" },
     { id: "question", label: "質問主意書", category: "self", kind: "question" },
     { id: "speech", label: "発言", category: "self", kind: "speech" },
+    { id: "committeeRole", label: "委員会の役職", category: "self", kind: "committeeRole" },
     { id: "stance", label: "会派の態度", category: "group", kind: "stance" },
   ],
 };
@@ -262,6 +264,11 @@ export function MemberPage({ detail, meta, assembly = null, speechCount = 0, loa
           {tab === "stance" && <p className="member-tab-note">所属会派が議案情報の賛成会派・反対会派に載っていた記録です。会派の態度であり、本人の投票ではありません。</p>}
           {/* 発言は本会議だけでなく委員会も収録している（#242）。どこで発言したかは会議名を原文で各行に出す */}
           {tab === "speech" && speechCount > 0 && <p className="member-tab-note">本会議と委員会の発言です。会議名は会議録の原文をそのまま出します。</p>}
+          {tab === "committeeRole" && (
+            <p className="member-tab-note">
+              会議録の出席委員欄に載った役職です。在任期間ではありません（会議録に就任日・退任日は書かれておらず、欠席した日は載りません）。
+            </p>
+          )}
           {/*
             発言は timeline ではなく members/{id}/speeches.json にあり（#242）、発言タブを開いたときに取りに行く。
             そのため既定の「すべて」には発言が出ない。利用者から見える挙動なので事実を 1 文書く（評価語は入れない）。
@@ -501,7 +508,7 @@ function Count({ n, label }: { n: number; label: string }) {
 
 function countKinds(timeline: TimelineEntry[]): Counts {
   // speech は timeline に無い（#242。MemberPage が speechCount で上書きする）。all は timeline の全件で、発言は含まない
-  const c: Counts = { vote: 0, bill: 0, stance: 0, question: 0, attendance: 0, speech: 0, localVote: 0, all: timeline.length, submitted: 0, supported: 0 };
+  const c: Counts = { vote: 0, bill: 0, stance: 0, question: 0, attendance: 0, committeeRole: 0, speech: 0, localVote: 0, all: timeline.length, submitted: 0, supported: 0 };
   for (const e of timeline) {
     c[e.kind] += 1;
     if (e.kind === "bill") c[e.role === "提出者" ? "submitted" : "supported"] += 1;
@@ -551,6 +558,9 @@ function entryKey(e: TimelineEntry): string {
       return `question:${e.questionId}`;
     case "attendance":
       return `attendance:${e.meetingId}`;
+    case "committeeRole":
+      // 同じ会議録（同じ日の同じ会議）で委員会・役職が違う行が並びうるので、両方を鍵に入れる
+      return `committeeRole:${e.meetingId}:${e.committee}:${e.role}`;
     case "speech":
       return `speech:${e.speechId}`;
     case "localVote":
@@ -642,6 +652,22 @@ function Row({ entry }: { entry: TimelineEntry }) {
           </div>
         </li>
       );
+    case "committeeRole":
+      /* 委員会の役職（#244）。会議録の出席委員欄に載った委員長・理事・委員。
+         **在任期間ではなく出席の事実**なので、「〜」「期間」のような範囲を意味する表記は使わず、
+         「出席 N 回」「最初の出席 …／最新の出席 …」と、**出席日であることが表記自体から分かる**ように書く（PO の判断）。 */
+      return (
+        <li className="member-row">
+          <Stamp value="出席" />
+          <div className="member-row-body">
+            <p className="member-row-title">{`${entry.committee} ${entry.role}として出席`}</p>
+            <p className="member-row-meta">
+              <MetaLine parts={committeeRoleParts(entry)} />
+              <ExternalLink href={entry.sourceUrl}>会議録</ExternalLink>
+            </p>
+          </div>
+        </li>
+      );
     case "speech":
       return (
         /* position は会議録の speakerPosition 原文（例: 議長・国土交通大臣）。役職として行った発言である事実をそのまま見せる。 */
@@ -660,6 +686,18 @@ function Row({ entry }: { entry: TimelineEntry }) {
         </li>
       );
   }
+}
+
+/**
+ * 委員会の役職の行の meta（#244）。**在任期間を作らない。**
+ * 出席が 1 回なら「出席 1 回・出席 {日付}」、2 回以上なら「出席 N 回・最初の出席 {日付}・最新の出席 {日付}」。
+ * どちらも「出席」という語が日付に付いていて、範囲（「〜」）にはならない。
+ */
+export function committeeRoleParts(entry: CommitteeRoleEntry): string[] {
+  const times = `出席 ${entry.meetings.toLocaleString("ja-JP")} 回`;
+  return entry.firstDate === entry.lastDate
+    ? [times, `出席 ${entry.firstDate}`]
+    : [times, `最初の出席 ${entry.firstDate}`, `最新の出席 ${entry.lastDate}`];
 }
 
 /**

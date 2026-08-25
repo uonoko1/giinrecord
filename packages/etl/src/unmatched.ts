@@ -7,10 +7,11 @@ import type { UnmatchedBillProposer } from "./match-bills.ts";
 import type { UnmatchedShugiinBillName } from "./match-shugiin-bills.ts";
 import type { UnmatchedQuestionSubmitter } from "./match-questions.ts";
 import type { UnmatchedAttendee } from "./match-attendance.ts";
+import type { UnmatchedCommitteeMember } from "./match-committee.ts";
 
 /** `unmatched.json` / `unmatched/{session}.json` の1行（名寄せできなかった氏名表記）。 */
 export type UnmatchedRow =
-  | Unmatched | UnmatchedSpeech | UnmatchedBillProposer | UnmatchedShugiinBillName | UnmatchedQuestionSubmitter | UnmatchedAttendee;
+  | Unmatched | UnmatchedSpeech | UnmatchedBillProposer | UnmatchedShugiinBillName | UnmatchedQuestionSubmitter | UnmatchedAttendee | UnmatchedCommitteeMember;
 
 /** 回次別に分けた未突合を置くディレクトリ（`data/unmatched/`）。 */
 export const UNMATCHED_DIR = "unmatched";
@@ -19,7 +20,7 @@ export const UNMATCHED_DIR = "unmatched";
  * 未突合の行から回次を引く（Issue #219）。
  * 票（`rollCallId` = `{回次}-MMDD-vNNN`）・議案の提出者/発議者（`billId` = `{提出回次}-{種別}-{番号}`）・
  * 質問主意書の提出者（`questionId` = `{回次}-{house}-{番号}`）は id の先頭が回次なので引ける。
- * 発言（`speechId`）と委員会出席（`meetingId`）は NDL の会議録 id（`114215254X00219980114`）で回次を含まないので引けない。
+ * 発言（`speechId`）と委員会出席・委員会の役職（`meetingId`）は NDL の会議録 id（`114215254X00219980114`）で回次を含まないので引けない。
  * 引けない行は捨てず `unmatched.json` に残す（件数が小さく、回次を推定して分けることはしない）。
  */
 export function sessionOfUnmatched(row: UnmatchedRow): number | undefined {
