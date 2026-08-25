@@ -68,8 +68,8 @@ export function meta({ data, location }: MetaArgs<typeof loader>) {
     description: isLocalMember(detail)
       ? `${affiliation(detail, assembly)}。本会議の表決を議会の公表（凡例付きの原文）から出典付きで並べます。`
       : detail.house === "shugiin"
-        ? `${affiliation(detail)}。提出法案・賛同法案・質問主意書・本会議発言と、所属会派の態度（推定）を公式記録から出典付きで並べます。`
-        : `${affiliation(detail)}。本会議の採決・提出法案・質問主意書・発言を公式記録から出典付きで並べます。`,
+        ? `${affiliation(detail)}。提出法案・賛同法案・質問主意書・本会議と委員会の発言と、所属会派の態度（推定）を公式記録から出典付きで並べます。`
+        : `${affiliation(detail)}。本会議の採決・提出法案・質問主意書・本会議と委員会の発言を公式記録から出典付きで並べます。`,
     pathname: location.pathname,
     type: "article",
   });
@@ -262,6 +262,16 @@ export function MemberPage({ detail, meta, assembly = null, speechCount = 0, loa
           {tab === "stance" && <p className="member-tab-note">所属会派が議案情報の賛成会派・反対会派に載っていた記録です。会派の態度であり、本人の投票ではありません。</p>}
           {/* 発言は本会議だけでなく委員会も収録している（#242）。どこで発言したかは会議名を原文で各行に出す */}
           {tab === "speech" && speechCount > 0 && <p className="member-tab-note">本会議と委員会の発言です。会議名は会議録の原文をそのまま出します。</p>}
+          {/*
+            発言は timeline ではなく members/{id}/speeches.json にあり（#242）、発言タブを開いたときに取りに行く。
+            そのため既定の「すべて」には発言が出ない。利用者から見える挙動なので事実を 1 文書く（評価語は入れない）。
+            0 件の議員には出さない（無い記録の案内はしない）。
+          */}
+          {tab === "all" && speechCount > 0 && (
+            <p className="member-tab-note">
+              発言は「発言」タブにあります（<span className="num">{speechCount.toLocaleString("ja-JP")}</span> 件）。
+            </p>
+          )}
           {tab === "speech" && speechState.status === "loading" ? (
             <p className="member-empty">発言を読み込んでいます…</p>
           ) : tab === "speech" && speechState.status === "error" ? (

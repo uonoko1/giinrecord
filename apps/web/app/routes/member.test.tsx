@@ -157,6 +157,30 @@ describe("MemberPage 発言タブ（#242: 実行時 fetch）", () => {
   it("fetch 先は /data/members/{id}/speeches.json（nginx が gzip を掛ける application/json）", () => {
     expect(speechesDataUrl("m_014002")).toBe("/data/members/m_014002/speeches.json");
   });
+
+  /*
+   * 実行時 fetch にしたことで、既定の「すべて」タブに発言が出なくなる（timeline から発言が離れたため）。
+   * 利用者から見える挙動の変更なので、画面に 1 文だけ事実を書く。評価語は入れない
+   * （「少ない」「不十分」等は EVALUATIVE_WORDS ガードが member-tabs.test.tsx にある）。
+   */
+  it("「すべて」タブに、発言は発言タブにある旨を出す（既定の表示から発言が外れたことを黙って変えない）", () => {
+    renderPage();
+    const panel = screen.getByRole("tabpanel");
+    const note = within(panel).getByText(/発言は「発言」タブにあります/).closest("p")!;
+    // 件数も添える（何件あるのに出ていないのかが分かる）
+    expect(note).toHaveTextContent(`発言は「発言」タブにあります（${speeches.length} 件）。`);
+  });
+
+  it("発言 0 件の議員の「すべて」タブにはその案内を出さない（無い記録の案内をしない）", () => {
+    render(<MemberPage detail={detail} meta={meta} speechCount={0} loadSpeeches={loadSpeeches} />);
+    expect(screen.queryByText(/発言は「発言」タブにあります/)).not.toBeInTheDocument();
+  });
+
+  it("発言タブを開いている間はその案内を出さない（そこに出ているので）", async () => {
+    renderPage();
+    await openSpeechTab();
+    expect(screen.queryByText(/発言は「発言」タブにあります/)).not.toBeInTheDocument();
+  });
 });
 
 describe("MemberPage 提出法案の行", () => {
