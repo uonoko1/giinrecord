@@ -8,7 +8,13 @@ import { formatDateTime } from "../lib/format";
 import { seoMeta } from "../lib/seo";
 import "../styles/pages.css";
 
-const DESCRIPTION = "国会議員が本会議でどう投票し、どの法案を出し、何を発言したか。公式記録だけを、そのまま並べます。評価はしません。";
+/**
+ * トップページの lead と meta description。
+ * #242 で発言の収録範囲が本会議だけでなく委員会も含むようになったので、投票と発言を文として分ける
+ * （「本会議で」が 3 つの動詞に等しく係ると、発言まで本会議に限られると読めるため）。
+ * 個人別の投票が公表されるのは本会議だけなので、そちらは「本会議で」を保つ。
+ */
+const DESCRIPTION = "国会議員が本会議でどう投票したか、どの法案を出したか、本会議と委員会で何を発言したか。公式記録だけを、そのまま並べます。評価はしません。";
 
 export function meta({ location }: MetaArgs) {
   return seoMeta({ description: DESCRIPTION, pathname: location.pathname });
