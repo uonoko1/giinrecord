@@ -37,7 +37,7 @@ describe("議員ページのタブのカテゴリ（#238）: 衆院", () => {
     render(<MemberPage detail={shugiin} meta={meta} speechCount={shugiinSpeechCount} />);
     const selfList = screen.getByRole("tablist", { name: "本人の記録" });
     const groupList = screen.getByRole("tablist", { name: /所属会派の記録（推定）/ });
-    expect(within(selfList).getAllByRole("tab").map((t) => t.textContent)).toEqual(["提出法案2件", "質問主意書1件", "発言1件"]);
+    expect(within(selfList).getAllByRole("tab").map((t) => t.textContent)).toEqual(["提出法案2件", "質問主意書1件", "発言1件", "委員会の役職0件"]);
     expect(within(groupList).getAllByRole("tab").map((t) => t.textContent)).toEqual(["会派の態度2件"]);
     // 推定のタブ列は判・冒頭の注記と同じ est の見た目で、本人の記録と地続きに見えない
     expect(groupList.closest(".member-tabgroup")).toHaveAttribute("data-category", "group");
@@ -65,7 +65,7 @@ describe("議員ページのタブのカテゴリ（#238）: 参院・地方は�
     expect(document.querySelectorAll(".member-tabcat")).toHaveLength(0);
     expect(screen.getAllByRole("tablist")).toHaveLength(1);
     // 「すべて」は timeline の件数。発言は timeline に無い（#242）ので含まれない
-    expect(tabNames()).toEqual(["すべて5件", "採決2件", "提出法案2件", "質問主意書1件", "発言4件"]);
+    expect(tabNames()).toEqual(["すべて5件", "採決2件", "提出法案2件", "質問主意書1件", "発言4件", "委員会の役職0件"]);
   });
 
   it("地方はカテゴリ見出しが無く、表決だけ（過剰な装飾をしない）", () => {
@@ -147,16 +147,16 @@ describe("議員ページのタブのキーボード操作（#238）", () => {
     render(<MemberPage detail={sangiin} meta={meta} speechCount={sangiinSpeechCount} />);
     tabByLabel("すべて").focus();
     await userEvent.keyboard("{ArrowLeft}");
-    expect(tabByLabel("発言")).toHaveAttribute("aria-selected", "true");
+    expect(tabByLabel("委員会の役職")).toHaveAttribute("aria-selected", "true");
     await userEvent.keyboard("{Home}");
     expect(tabByLabel("すべて")).toHaveAttribute("aria-selected", "true");
     await userEvent.keyboard("{End}");
-    expect(tabByLabel("発言")).toHaveAttribute("aria-selected", "true");
+    expect(tabByLabel("委員会の役職")).toHaveAttribute("aria-selected", "true");
   });
 
   it("衆院は矢印キーがカテゴリ内で完結する（本人の記録から会派の記録へ飛び移らない）", async () => {
     render(<MemberPage detail={shugiin} meta={meta} speechCount={shugiinSpeechCount} />);
-    tabByLabel("発言").focus(); // 「本人の記録」の最後のタブ
+    tabByLabel("委員会の役職").focus(); // 「本人の記録」の最後のタブ
     await userEvent.keyboard("{ArrowRight}");
     expect(tabByLabel("提出法案")).toHaveAttribute("aria-selected", "true"); // 同じカテゴリの先頭に回る
     expect(tabByLabel("会派の態度")).toHaveAttribute("aria-selected", "false");

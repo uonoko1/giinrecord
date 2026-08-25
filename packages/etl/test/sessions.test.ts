@@ -69,6 +69,9 @@ describe("readCarried: 前回出力（data/）から引き継ぐ回次の採決�
       { kind: "bill", session: 200, date: "2019-11-01", billId: "200-衆法-1", title: "衆法", role: "賛成者", sourceUrl: "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1E6B.htm" },
       { kind: "question", session: 200, date: "2019-11-01", questionId: "200-sangiin-1", title: "質問", sourceUrl: "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/200/meisai/m200001.htm" },
       { kind: "attendance", estimated: false, session: 200, date: "2019-11-01", meetingId: "120015007X00120191101_000", meeting: "委員会 第1号", role: "発議者", bills: [], sourceUrl: "https://kokkai.ndl.go.jp/txt/120015007X00120191101/0" },
+      // 委員会の役職（#244）。counts を持たない種別なので、引き継ぎから漏れると lostTimelineEntries / lostSessionEntries の
+      // どちらにも引っかからず、黙って消える（#235 と同型）。引き継ぐことをここで固定する
+      { kind: "committeeRole", estimated: false, session: 200, date: "2019-11-05", committee: "内閣委員会", role: "委員長", meetings: 3, firstDate: "2019-11-05", lastDate: "2019-12-03", meetingId: "120014889X00120191105_000", sourceUrl: "https://kokkai.ndl.go.jp/txt/120014889X00120191105/0" },
       // 古いデータ（#103 以前）の行: session が無い。引き継げないので件数だけ報告する
       { kind: "speech", date: "2019-12-05", speechId: "120015254X00220191205_001", meeting: "本会議 第2号", excerpt: "抜粋", chars: 3, sourceUrl: "https://kokkai.ndl.go.jp/txt/120015254X00220191205/1" } as never,
     ],
@@ -102,6 +105,7 @@ describe("readCarried: 前回出力（data/）から引き継ぐ回次の採決�
         ["m_1", "bill", 200, true],
         ["m_1", "question", 200, false],
         ["m_1", "attendance", 200, false],
+        ["m_1", "committeeRole", 200, false],
       ]);
       assert.equal(carried.withoutSession, 1);
     } finally {
@@ -472,6 +476,26 @@ describe("lostSessionEntries: 議会 × 回次 × 種別で前回出力より減
     ), []);
     assert.deepEqual(lostSessionEntries(countsOf(before), after), [
       { assemblyId: "diet-shugiin", session: 221, kind: "questions", before: 2, after: 0 },
+    ]);
+  });
+
+  test("委員会の役職（#244）も消失検出に載る: counts を持たない種別なので、ここが唯一の検出経路", () => {
+    // committeeRole は counts に無い（設計どおり）ので lostTimelineEntries は構造的に見られない。
+    // sessionCounts は timeline を直接数えるので、counts を増やさずに検出できる。
+    const role = (session: number, committee: string): TimelineEntry =>
+      ({ kind: "committeeRole", estimated: false, session, date: "2026-02-10", committee, role: "委員長", meetings: 3,
+         firstDate: "2026-02-10", lastDate: "2026-06-18", meetingId: `${session}-${committee}`,
+         sourceUrl: "https://kokkai.ndl.go.jp/txt/121714889X02520250620/0" }) as unknown as TimelineEntry;
+    const before = [detail("h_1", "shugiin", [role(221, "内閣委員会"), role(221, "予算委員会")])];
+    const after = [detail("h_1", "shugiin", [role(221, "内閣委員会")])];
+    // counts は committeeRole を数えないので、合計側（#235）は素通りする
+    assert.deepEqual(lostTimelineEntries(
+      [{ id: "h_1", house: "shugiin", assemblyId: "diet-shugiin", counts: { rollcalls: 0, bills: 0, speeches: 0, questions: 0 } } as never],
+      [{ id: "h_1", house: "shugiin", assemblyId: "diet-shugiin", counts: { rollcalls: 0, bills: 0, speeches: 0, questions: 0 } } as never],
+    ), []);
+    // 回次側（#256）が拾う
+    assert.deepEqual(lostSessionEntries(countsOf(before), after), [
+      { assemblyId: "diet-shugiin", session: 221, kind: "committeeRoles", before: 2, after: 1 },
     ]);
   });
 

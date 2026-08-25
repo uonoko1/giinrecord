@@ -4,6 +4,7 @@ import { groupAt } from "./group-history.ts";
 import { assemblyIdOf } from "./assemblies.ts";
 import type { MatchedBill } from "./match-bills.ts";
 import type { MatchedAttendance } from "./match-attendance.ts";
+import type { MatchedCommitteeRole } from "./match-committee.ts";
 
 /** 集約結果（純粋関数の出力）。ファイルへの書き出しは dataset.ts が担う。 */
 export interface Aggregated {
@@ -110,7 +111,7 @@ export function summarizeRollCall(rc: RollCall, decision?: string): RollCallSumm
  * 名簿と突合済みの採決・発言から、議員ごとの timeline（`members/{id}.json`）・発言（`members/{id}/speeches.json`）・一覧を組み立てる。
  * - memberId が空（未突合）の票・memberId の無い発言は unmatched.json 側で扱うのでどこにも入れない。
  * - 名簿にない memberId は名寄せの不整合なので例外にする（黙って捨てない）。
- * - 並びは日付降順。同日は kind（vote → bill → stance → question → attendance → speech）、次に採決 id / 発言 id の降順で安定させる（差分最小化）。
+ * - 並びは日付降順。同日は kind（vote → bill → stance → question → attendance → committeeRole → speech）、次に採決 id / 発言 id の降順で安定させる（差分最小化）。
  * - 発言（#242）は timeline ではなく speeches（`members/{id}/speeches.json`）に入る。並びは timeline と同じ日付降順。
  *   会議名は会議録の原文（「本会議 第19号」「予算委員会第一分科会 第2号」）なので、本会議と委員会は表示で区別できる。
  *   議長・大臣・委員長など position 付きの発言（議事進行・政府答弁・委員長報告）も事実として入れ、position を原文のまま載せる。
@@ -124,6 +125,9 @@ export function summarizeRollCall(rc: RollCall, decision?: string): RollCallSumm
  *   counts.questions はその数。未突合（submitters 無し）の質問は unmatched.json 側で扱うので timeline には入れない。
  * - 委員会出席（matchAttendance の出力、#109）: 会議録の出席者欄の「発議者」を attendance 行（事実、estimated: false）にする。
  *   出席した発議者は発議者全員ではないので bill 行（提出者）にはせず、counts にも数えない。参院の委員会の発議者は参議院議員なので衆院議員に付けば例外。
+ * - 委員会の役職（matchCommitteeRoles の出力、#244）: 会議録の出席委員欄の委員長・理事・委員を committeeRole 行（事実、estimated: false）にする。
+ *   **在任期間ではなく出席の事実**なので、date は出席した最初の会議の日（firstDate）にし、回数と最初/最新の出席日を持つ。
+ *   衆参どちらの議員にも付く（会議の院の名簿で名寄せ済み）。counts には数えない（counts は採決・議案・発言・質問主意書の 4 つのまま）。
  */
 export function buildDataset(
   members: readonly Member[],
@@ -139,6 +143,8 @@ export function buildDataset(
   questions: readonly Question[] = [],
   /** 委員会に発議者として出席した記録（matchAttendance の出力。memberId は参院名簿）。 */
   attendance: readonly MatchedAttendance[] = [],
+  /** 委員会の委員長・理事・委員として出席した記録（matchCommitteeRoles の出力。memberId は会議の院の名簿）。#244 */
+  committeeRoles: readonly MatchedCommitteeRole[] = [],
   /** 対象外の回次から引き継ぐ行（#103）。memberId は名簿に無ければ例外。 */
   carried: readonly CarriedEntry[] = [],
 ): Aggregated {
@@ -217,6 +223,18 @@ export function buildDataset(
     if (houseOf.get(a.memberId) !== "sangiin") throw new Error(`attendance ${a.meetingId} ("${a.nameText}") refers to member ${a.memberId} of house ${String(houseOf.get(a.memberId))} (参院の委員会の発議者は参議院議員)`);
     timeline.push({ kind: "attendance", estimated: false, session: a.session, date: a.date, meetingId: a.meetingId, meeting: a.meeting, role: a.role, bills: a.bills.map((b) => ({ ...b })), sourceUrl: a.sourceUrl });
   }
+  for (const c of committeeRoles) {
+    const what = `committeeRole ${c.firstMeetingId} ("${c.nameText}")`;
+    const timeline = timelineOf(c.memberId, what);
+    // 会議の院の名簿で名寄せしてあるので、院が食い違ったら名寄せの不整合（黙って捨てない）。
+    if (houseOf.get(c.memberId) !== c.house) throw new Error(`${what} refers to member ${c.memberId} of house ${String(houseOf.get(c.memberId))} (会議の院は ${c.house})`);
+    timeline.push({
+      kind: "committeeRole", estimated: false, session: c.session,
+      // 並びに使う date は「出席した最初の会議の日」。就任日ではない（会議録に就任日は無い）。
+      date: c.firstDate, committee: c.committee, role: c.role, meetings: c.meetings,
+      firstDate: c.firstDate, lastDate: c.lastDate, meetingId: c.firstMeetingId, sourceUrl: c.sourceUrl,
+    });
+  }
   // 対象外の回次から引き継ぐ行（#103）。そのまま入れる（再解釈しない）。名簿に無い memberId は他の行と同じく例外。
   // speech の引き継ぎ行は timeline ではなく speeches に入れる（#242。行き先が変わっても引き継ぎ自体は止めない）。
   for (const c of carried) {
@@ -250,7 +268,7 @@ function sessionOfBillId(billId: string): number {
 }
 
 type Sortable = { date: string; kind?: TimelineEntry["kind"]; id?: string; rollCallId?: string; speechId?: string; billId?: string; questionId?: string; meetingId?: string };
-const KIND_ORDER: Record<TimelineEntry["kind"], number> = { vote: 0, bill: 1, stance: 2, question: 3, attendance: 4, speech: 5 };
+const KIND_ORDER: Record<TimelineEntry["kind"], number> = { vote: 0, bill: 1, stance: 2, question: 3, attendance: 4, committeeRole: 5, speech: 6 };
 const sortKey = (x: Sortable) => x.rollCallId ?? x.speechId ?? x.billId ?? x.questionId ?? x.meetingId ?? x.id ?? "";
 const byDateDesc = (a: Sortable, b: Sortable) =>
   cmp(b.date, a.date) || KIND_ORDER[a.kind ?? "vote"] - KIND_ORDER[b.kind ?? "vote"] || cmp(sortKey(b), sortKey(a));
