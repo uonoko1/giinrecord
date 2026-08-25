@@ -1,5 +1,5 @@
 import type { House, Speech } from "@seiji-kiroku/shared";
-import { fetchText, sleep } from "../fetch.ts";
+import { NDL_API_INTERVAL_MS, fetchText, sleep } from "../fetch.ts";
 
 /**
  * 国会会議録検索システム 検索用API（https://kokkai.ndl.go.jp/api.html）。
@@ -9,8 +9,11 @@ import { fetchText, sleep } from "../fetch.ts";
  */
 const API = "https://kokkai.ndl.go.jp/api/speech";
 export const PAGE_SIZE = 100;
-/** 連続リクエストの間隔（API の利用規約: 短時間の大量アクセスを避ける）。 */
-export const REQUEST_INTERVAL_MS = 1000;
+/**
+ * 連続リクエストの間隔。値と根拠は `fetch.ts` の `NDL_API_INTERVAL_MS`
+ * （API の利用条件が「データを取得し終えてから数秒程度空けて」と明示している。#231）。
+ */
+export const REQUEST_INTERVAL_MS = NDL_API_INTERVAL_MS;
 /** 冒頭抜粋の長さ（コードポイント）。要約はしない。 */
 export const EXCERPT_CHARS = 200;
 

@@ -1,6 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
-import { sleep } from "../../fetch.ts";
+import { POLITENESS_FLOOR_MS, sleep } from "../../fetch.ts";
 
 /**
  * 地方議会サイト向けの丁寧な取得（Issue #157）。
@@ -10,7 +10,8 @@ import { sleep } from "../../fetch.ts";
  * - PDF（URL 固定）だけ .cache/ にキャッシュする。HTML は毎回取得。
  */
 const UA = "gikailog-etl/0.1 (+https://github.com/uonoko1/gikailog)";
-const MIN_INTERVAL_MS = 1000;
+/** 値と根拠は `fetch.ts`。#231 で国会側も同じ下限に揃えた。 */
+const MIN_INTERVAL_MS = POLITENESS_FLOOR_MS;
 const CACHE_DIR = new URL("../../../.cache/", import.meta.url);
 
 export interface RobotsRules {
