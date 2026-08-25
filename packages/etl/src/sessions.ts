@@ -116,13 +116,22 @@ export type SessionCounts = Map<string, number>;
 export interface LostSessionEntries {
   assemblyId: string;
   session: number;
-  kind: "rollcalls" | "bills" | "speeches" | "questions";
+  /** `committeeRoles` は counts に無い種別（#244）。counts を読む lostTimelineEntries では見えず、ここだけが検出経路。 */
+  kind: "rollcalls" | "bills" | "speeches" | "questions" | "committeeRoles";
   before: number;
   after: number;
 }
 
-/** timeline の kind → counts の種別。stance / attendance は counts を持たないので数えない（契約どおり）。 */
-const COUNTED_KIND = { vote: "rollcalls", bill: "bills", speech: "speeches", question: "questions" } as const;
+/**
+ * timeline の kind → 数える種別。stance / attendance は数えない（契約どおり）。
+ *
+ * `committeeRoles`（#244）だけは `MemberSummary.counts` に**無い**種別。
+ * `counts` を増やさないのは #244 の設計判断（出席回数を件数として見せない）だが、
+ * `counts` に無い＝`lostTimelineEntries`（index.json の counts を読む）が**構造的に見られない**ということでもある。
+ * `sessionCounts` は timeline を直接数えるので、**counts を増やさずに消失検出だけ効かせられる**。
+ * ここから外すと committeeRole は「消えても誰も気づかない」種別に戻る（#235 と同型）。
+ */
+const COUNTED_KIND = { vote: "rollcalls", bill: "bills", speech: "speeches", question: "questions", committeeRole: "committeeRoles" } as const;
 
 /** sessionCounts / lostSessionEntries が数える1議員分。#242 以降、発言は timeline ではなく speeches に入る。 */
 export interface CountedDetail { id?: string; assemblyId?: string; house?: string; timeline?: readonly TimelineEntry[]; speeches?: readonly TimelineEntry[] }
@@ -293,9 +302,20 @@ export function dropCarriedSpeeches(carried: readonly CarriedEntry[], fetched: r
   return carried.filter((c) => !(c.entry.kind === "speech" && ids.has(c.entry.speechId)));
 }
 
+/**
+ * 引き継げる行か（前回出力から作り直せない行だけ引き継ぐ）。
+ *
+ * **新しい種別を timeline に足したら、ここに足すかどうかを必ず判断する。**
+ * 足し忘れると回次を絞った実行で `writeDataset` が `members/` を全消しした後に戻らず、黙って消える（#235）。
+ * `committeeRole`（#244）は `counts` を持たない種別なので、漏れても `lostSessionEntries` が
+ * 気づかない（下の COUNTED_KIND に無い）。**消失検出が空振りする種別ほど、ここに足す必要がある。**
+ *
+ * vote / stance を引き継がないのは「消しても良い」からではなく、**ファイルから作り直せる**ため:
+ * vote は `rollcalls/{session}/` を現行名簿で再突合し、stance は `bills/` の会派態度から組み直す。
+ */
 function isCarriable(e: TimelineEntry): boolean {
   switch (e.kind) {
-    case "speech": case "question": case "attendance": return true;
+    case "speech": case "question": case "attendance": case "committeeRole": return true;
     case "bill": return SANGIIN_BILL_SOURCE.test(e.sourceUrl);
     default: return false;
   }

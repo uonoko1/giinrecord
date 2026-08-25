@@ -53,12 +53,18 @@ describe("MemberPage 委員会の役職の行（committeeRole、#244）", () => 
     expect(link.getAttribute("rel")).toMatch(/noopener/);
   });
 
+  it("日付はページ共通の表記（formatDate。2026.02.10）で、生の ISO を混ぜない", () => {
+    renderPage();
+    const row = rowOf(/内閣委員会 委員長として出席/);
+    expect(row.textContent).not.toMatch(/\d{4}-\d{2}-\d{2}/);
+  });
+
   it("出席の回数と、最初／最新の**出席日**であることが表記自体から分かる（在任期間と読ませない）", () => {
     renderPage();
     const row = rowOf(/内閣委員会 委員長として出席/);
     expect(within(row).getByText(/出席 12 回/)).toBeInTheDocument();
-    expect(within(row).getByText(/最初の出席 2026-02-10/)).toBeInTheDocument();
-    expect(within(row).getByText(/最新の出席 2026-06-18/)).toBeInTheDocument();
+    expect(within(row).getByText(/最初の出席 2026\.02\.10/)).toBeInTheDocument();
+    expect(within(row).getByText(/最新の出席 2026\.06\.18/)).toBeInTheDocument();
   });
 
   it("範囲を意味する表記を出さない（「〜」「期間」「就任」「在任」「から」）", () => {
@@ -75,7 +81,20 @@ describe("MemberPage 委員会の役職の行（committeeRole、#244）", () => 
     const row = rowOf(/憲法審査会 委員として出席/);
     expect(within(row).getByText(/出席 1 回/)).toBeInTheDocument();
     expect(within(row).queryByText(/最新の出席/)).not.toBeInTheDocument();
-    expect(within(row).getByText(/出席 2026-06-04/)).toBeInTheDocument();
+    expect(within(row).getByText(/出席 2026\.06\.04/)).toBeInTheDocument();
+  });
+
+  it("実レンダリング HTML の全文に範囲を意味する語が 1 件も無い（表示側の最終検算）", () => {
+    // 個別の assert は「その行に無い」を見るが、これはページ全体の HTML を見る。
+    // 「期間を作らない」は #244 の最重要の判断なので、表示の最終形で検算する
+    const { container } = renderPage();
+    const html = container.innerHTML;
+    for (const w of ["〜", "～", "期間", "在任", "就任", "退任"]) {
+      expect(html, `禁止語 ${w} が出た`).not.toContain(w);
+    }
+    expect(container.textContent).toContain("出席 12 回");
+    expect(container.textContent).toContain("最初の出席 2026.02.10");
+    expect(container.textContent).toContain("最新の出席 2026.06.18");
   });
 
   it("推定の判（est）や「推定」の文言は付かない（事実の行）", () => {

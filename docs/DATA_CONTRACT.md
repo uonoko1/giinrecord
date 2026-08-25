@@ -197,6 +197,8 @@ interface AssemblySession { id: string; label: string; date: string; rollcalls: 
 - 名寄せは `resolveMember`（**会議の院の名簿**、`{ session, date }` を渡す。#230）。会議録に会派は書かれていないので**同姓同名は絞れず**、`unmatched.json` に `kind: "committee"`、`meetingId` 付きで載る（推測で紐づけない。`match-shugiin-bills.ts` / `attendance` と同じ条件）。会議録の公開は約 1 か月遅れる。
 - `counts` には数えない（`counts` は採決・議案・発言・質問主意書の 4 つのまま）。同日の並びは vote → bill → stance → question → attendance → committeeRole → speech。
 - 不変条件（`validateDataset`）: `estimated === false`、`committee` は空でなく号を含まない、`role` は空でない、`meetings >= 1` の整数、`firstDate <= lastDate`、`date === firstDate`、`sourceUrl` は `https://kokkai.ndl.go.jp/txt/{id}/{n}`。
+- **引き継ぎ（carried）と消失検出**: `committeeRole` は `isCarriable`（`sessions.ts`）で**引き継ぐ**。ファイルから作り直せない行なので、引き継がないと回次を絞った実行で `writeDataset` が `members/` を消した後に戻らない（#235 と同型）。
+  さらに `counts` を持たない種別なので、`counts` を読む `lostTimelineEntries`（#235）は**構造的に見られない**。`sessionCounts` は timeline を直接数えるので、**`counts` を増やさずに** `lostSessionEntries`（#256）で消失を検出する（種別名 `committeeRoles`）。**`counts` に入れないことと、消失検出に載せないことは別**で、後者は穴なので塞いである。
 
 ## 議案（`bills/`、Issue #72）
 - 出典は衆議院 議案情報。一覧 `https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/kaiji{審議回次}.htm` から各議案の経過ページ `…/gian/keika/{id}.htm` を辿る（どちらも Shift_JIS）。`sourceUrl` は必ず経過ページ。`house` は `"shugiin"`。

@@ -695,9 +695,10 @@ function Row({ entry }: { entry: TimelineEntry }) {
  */
 export function committeeRoleParts(entry: CommitteeRoleEntry): string[] {
   const times = `出席 ${entry.meetings.toLocaleString("ja-JP")} 回`;
+  // 日付はページ共通の表記（formatDate。答弁書受領日と同じ扱い）。生の ISO を混ぜない
   return entry.firstDate === entry.lastDate
-    ? [times, `出席 ${entry.firstDate}`]
-    : [times, `最初の出席 ${entry.firstDate}`, `最新の出席 ${entry.lastDate}`];
+    ? [times, `出席 ${formatDate(entry.firstDate)}`]
+    : [times, `最初の出席 ${formatDate(entry.firstDate)}`, `最新の出席 ${formatDate(entry.lastDate)}`];
 }
 
 /**
