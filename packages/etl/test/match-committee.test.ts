@@ -117,17 +117,59 @@ describe("matchCommitteeRoles: 出席委員欄の氏名を名簿に名寄せす�
     assert.equal(unmatched.length, 1);
   });
 
-  test("並びは memberId → 回次 → 委員会名 → 役職で安定（差分を小さくするため）", () => {
+  test("並びは memberId → 回次 → 委員会名 → 役職で安定（コードポイント順。ロケールに依存しない）", () => {
     const rosters = [
       roster([{ role: "理事", nameText: "山本啓介" }, { role: "委員", nameText: "和田政宗" }], { id: "A", date: "2025-04-01", meeting: "内閣委員会 第1号" }),
       roster([{ role: "委員", nameText: "山本啓介" }], { id: "B", date: "2025-04-02", meeting: "予算委員会 第1号" }),
     ];
     const { entries } = matchCommitteeRoles(rosters, [member("m_2", "山本 啓介", "自民"), member("m_1", "和田 政宗", "自民")]);
+    // 委員会名はコードポイント順（予 U+4E88 < 内 U+5185 < 憲 U+61B2）。
+    // `localeCompare` だと ja-JP で読み順（憲法 < 内閣 < 予算）になり、手元と CI で並びが変わる
     assert.deepEqual(entries.map((e) => [e.memberId, e.committee, e.role]), [
       ["m_1", "内閣委員会", "委員"],
-      ["m_2", "内閣委員会", "理事"],
       ["m_2", "予算委員会", "委員"],
+      ["m_2", "内閣委員会", "理事"],
     ]);
+  });
+});
+
+describe("matchCommitteeRoles: 並びが実行環境のロケールに依存しない（2026-08-25 に CI で検出）", () => {
+  /**
+   * 手元（LANG=ja_JP）で緑・CI（LANG 未設定＝en-US）で赤になった。原因は `localeCompare` で、
+   * 日本語の委員会名を **ja-JP では読み順**（けんぽう < ないかく < よさん）、
+   * **en-US ではコードポイント順**（予 < 内 < 憲）に並べるため。
+   * 本番でも実行環境しだいで議員ページの表示順が変わるので、フレークではなく実装の欠陥だった。
+   *
+   * このテストは **`Intl` のロケールを実際に切り替えて**、どちらでも同じ並びになることを確かめる
+   * （`localeCompare` に戻すと落ちることを確認済み）。
+   */
+  const roleOf = (committee: string) => roster([{ role: "委員", nameText: "山本啓介" }], { id: `id-${committee}`, meeting: `${committee} 第1号` });
+  // 読み順とコードポイント順が食い違う 3 つ（ja-JP: 憲法 < 内閣 < 予算 ／ codepoint: 予算 < 内閣 < 憲法）
+  const committees = ["予算委員会", "内閣委員会", "憲法審査会"];
+
+  const order = () => matchCommitteeRoles(committees.map(roleOf), [member("m_1", "山本 啓介", "自民")]).entries.map((e) => e.committee);
+
+  /**
+   * **このテストは「実行環境のロケール」に依存してはならない。**
+   * 事故の教訓そのもので、`LANG` に頼った検査は「CI のロケールでだけ通る」形になり、
+   * `localeCompare` に戻す退行を CI が見逃す（実際に確認した: `localeCompare` に戻すと
+   * ja_JP では 4 件落ちるが、CI と同じ en-US では 16 件すべて通ってしまう）。
+   * そこで **ロケールを問わず不変な性質**（コードポイント順であること）を直接固定する。
+   */
+  test("並びはコードポイント順（どのロケールで実行しても同じ）", () => {
+    assert.deepEqual(order(), ["予算委員会", "内閣委員会", "憲法審査会"]);
+  });
+
+  test("読み順（ja-JP の localeCompare）とは違う並びである＝localeCompare を使っていない", () => {
+    // ja-JP の読み順は けんぽう < ないかく < よさん。実装がこの順を返したら localeCompare に戻っている
+    const byReading = [...committees].sort((a, b) => a.localeCompare(b, "ja-JP"));
+    assert.deepEqual(byReading, ["憲法審査会", "内閣委員会", "予算委員会"], "前提: ja-JP の読み順はこの並び");
+    assert.notDeepEqual(order(), byReading, "実装が ja-JP の読み順を返した（localeCompare に戻っている）");
+  });
+
+  test("並びが「明示した規則」と一致する（規則をテストに書き写さず、規則から導く）", () => {
+    const cmp = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
+    assert.deepEqual(order(), [...committees].sort(cmp));
   });
 });
 
@@ -153,13 +195,14 @@ describe("matchCommitteeRoles: 実データ（第217回 参議院の名簿 × �
 
   test("委員長 和田政宗 に「内閣委員会・委員長」と「憲法審査会・委員」の 2 行が付く（同じ人の別の委員会は別の行。名指しで固定）", () => {
     const wada = entries.filter((e) => e.nameText === "和田政宗");
+    // 並びは委員会名のコードポイント順（内 U+5185 < 憲 U+61B2）。日付順ではない
     assert.deepEqual(wada.map((e) => [e.committee, e.role, e.firstDate, e.meetings]), [
-      ["憲法審査会", "委員", "2025-06-04", 1],
       ["内閣委員会", "委員長", "2025-06-20", 1],
+      ["憲法審査会", "委員", "2025-06-04", 1],
     ]);
     assert.equal(wada[0].session, 217);
     assert.equal(wada[0].house, "sangiin");
-    assert.equal(wada[1].sourceUrl, "https://kokkai.ndl.go.jp/txt/121714889X02520250620/0");
+    assert.equal(wada[0].sourceUrl, "https://kokkai.ndl.go.jp/txt/121714889X02520250620/0");
   });
 
   test("議院運営委員会 第31号の議長・副議長（関口昌一・長浜博行）は記録に入らない（parseRosterHeader の regression を名寄せ側でも固定）", () => {

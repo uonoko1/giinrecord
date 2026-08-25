@@ -197,6 +197,8 @@ interface AssemblySession { id: string; label: string; date: string; rollcalls: 
 - 名寄せは `resolveMember`（**会議の院の名簿**、`{ session, date }` を渡す。#230）。会議録に会派は書かれていないので**同姓同名は絞れず**、`unmatched.json` に `kind: "committee"`、`meetingId` 付きで載る（推測で紐づけない。`match-shugiin-bills.ts` / `attendance` と同じ条件）。会議録の公開は約 1 か月遅れる。
 - `counts` には数えない（`counts` は採決・議案・発言・質問主意書の 4 つのまま）。同日の並びは vote → bill → stance → question → attendance → committeeRole → speech。
 - 不変条件（`validateDataset`）: `estimated === false`、`committee` は空でなく号を含まない、`role` は空でない、`meetings >= 1` の整数、`firstDate <= lastDate`、`date === firstDate`、`sourceUrl` は `https://kokkai.ndl.go.jp/txt/{id}/{n}`。
+- **並び順**: `matchCommitteeRoles` の出力は memberId → 回次 → 委員会名 → 役職の順。文字列の比較は**コードポイント順**（`cmp = (a, b) => a < b ? -1 : a > b ? 1 : 0`）で行い、**`localeCompare` は使わない**。`localeCompare` は実行環境のロケールで結果が変わり、日本語の委員会名では実際に順序が入れ替わる（`ja-JP` は読み順「憲法 < 内閣 < 予算」、`en-US` はコードポイント順「予算 < 内閣 < 憲法」）。2026-08-25 に**手元で緑・CI で赤**として実際に発現した（#244）。`packages/etl/src` 全体をテスト（`stable-order.test.ts`）で検査している。
+  なお `members/{id}.json` の timeline 自体は `buildDataset` が日付降順に並べ直し、`validateDataset` が「降順であること」を検査する（この並びとは別）。
 - **引き継ぎ（carried）と消失検出**: `committeeRole` は `isCarriable`（`sessions.ts`）で**引き継ぐ**。ファイルから作り直せない行なので、引き継がないと回次を絞った実行で `writeDataset` が `members/` を消した後に戻らない（#235 と同型）。
   さらに `counts` を持たない種別なので、`counts` を読む `lostTimelineEntries`（#235）は**構造的に見られない**。`sessionCounts` は timeline を直接数えるので、**`counts` を増やさずに** `lostSessionEntries`（#256）で消失を検出する（種別名 `committeeRoles`）。**`counts` に入れないことと、消失検出に載せないことは別**で、後者は穴なので塞いである。
 

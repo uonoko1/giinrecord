@@ -96,9 +96,15 @@ export function matchCommitteeRoles(
     }
   }
 
-  // 並びは memberId から 回次・委員会名・役職。差分を小さくするため（取得順に依存させない）。
+  // 並びは memberId → 回次 → 委員会名 → 役職。取得順（API のページ順）に依存させないため。
+  //
+  // **`localeCompare` を使わない。** 文字列の比較は必ずコードポイント順（`cmp`）で行う。
+  // `localeCompare` は実行環境のロケール（ICU）で結果が変わり、日本語の委員会名では
+  // 実際に順序が入れ替わる: `ja-JP` では読み順（憲法 < 内閣 < 予算）、`en-US` では
+  // コードポイント順（予算 < 内閣 < 憲法）になる。手元と CI で並びが変わり、
+  // 本番でも実行環境しだいで議員ページの表示順が変わる（2026-08-25 に CI で実際に検出）。
   const entries = [...byKey.values()].sort((a, b) =>
-    a.memberId.localeCompare(b.memberId) || a.session - b.session || a.committee.localeCompare(b.committee) || a.role.localeCompare(b.role));
+    cmp(a.memberId, b.memberId) || a.session - b.session || cmp(a.committee, b.committee) || cmp(a.role, b.role));
   return { entries, unmatched };
 }
 
@@ -111,6 +117,9 @@ export function committeeName(meeting: string): string {
   const i = meeting.indexOf(" ");
   return (i < 0 ? meeting : meeting.slice(0, i)).trim();
 }
+
+/** 文字列の比較（コードポイント順）。ロケールに依存しないよう `localeCompare` は使わない（`aggregate.ts` と同じ流儀）。 */
+const cmp = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 
 const isBefore = (r: CommitteeRoster, date: string, id: string): boolean => r.date < date || (r.date === date && r.id < id);
 const isAfter = (r: CommitteeRoster, date: string, id: string): boolean => r.date > date || (r.date === date && r.id > id);
