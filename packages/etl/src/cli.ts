@@ -19,7 +19,7 @@ import { attendancePageUrl, fetchCommitteeAttendance } from "./sources/kokkai-at
 import { matchAttendance, type MatchedAttendance } from "./match-attendance.ts";
 import { buildDataset, mergeRosters, rosterSessionsFor, type Roster } from "./aggregate.ts";
 import { dietAssemblies, readSessionsOnDisk, validateDataset, writeDataset } from "./dataset.ts";
-import { dropCarriedSpeeches, lostTimelineEntries, lostVoteMatches, planSessions, readCarried } from "./sessions.ts";
+import { dropCarriedSpeeches, lostSessionEntries, lostTimelineEntries, lostVoteMatches, planSessions, readCarried, readSessionCounts } from "./sessions.ts";
 import { readMemberIndex } from "./local-assemblies.ts";
 
 /**
@@ -263,8 +263,10 @@ if (unmatched.length) {
 // 名簿に現れない会派改称・移籍なら正常、名簿にいない旧議員が同名の現職に紐づいていたら誤りなので、運用者がファイルで確認する。
 if (groupMismatch.length) console.warn(`group mismatch (matched by name only): ${groupMismatch.length} (see data/group-mismatch.json)`);
 
-// 前回出力の members/index.json。writeDataset が members/ を消す前に読む（消失検出用。#235）
+// 前回出力の members/index.json と、その timeline の 議会 × 回次 × 種別 の件数。
+// writeDataset が members/ を消す前に読む（消失検出用。#235 / #256）
 const previousIndex = await readMemberIndex(DATA);
+const previousSessionCounts = await readSessionCounts(DATA);
 
 const dataset = {
   // 議会一覧（#156）: 国会の2行。members の assemblyId（diet-sangiin / diet-shugiin）はこの id を指す。
@@ -302,6 +304,20 @@ const dataset = {
   if (lost.length) {
     console.error(`timeline entries lost since the previous output (carried entries dropped?): ${lost.length}`);
     for (const l of lost) console.error(`  ${l.assemblyId} ${l.kind}: ${l.before} -> ${l.after}`);
+    console.error("  data/ is unchanged. Re-run with the affected sessions (`pnpm etl <session>...`) to regenerate them.");
+    process.exit(1);
+  }
+}
+
+// 上の合計（議会 × 種別）は、同じ院・同じ種別の中の入れ替わり —「第221回が消え、第200回のバックフィルが
+// 同数入った」— を素通りさせる（#256）。回次まで鍵にして、その粒度の後退で止める。
+// 保証するのは「議会 × 回次 × 種別の行数が減らないこと」だけで、同じ回次の中で行がすり替わる場合や
+// 行の中身の劣化は見ていない（sessions.ts の lostSessionEntries のコメント）。
+{
+  const lost = lostSessionEntries(previousSessionCounts, dataset.details);
+  if (lost.length) {
+    console.error(`timeline entries lost for a specific session since the previous output (carried entries dropped?): ${lost.length}`);
+    for (const l of lost) console.error(`  ${l.assemblyId} session ${l.session} ${l.kind}: ${l.before} -> ${l.after}`);
     console.error("  data/ is unchanged. Re-run with the affected sessions (`pnpm etl <session>...`) to regenerate them.");
     process.exit(1);
   }

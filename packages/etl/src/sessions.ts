@@ -108,6 +108,86 @@ export function lostTimelineEntries(previous: readonly CountedMemberRow[], next:
   return lost;
 }
 
+/** 議会 × 回次 × 種別の件数（lostSessionEntries）。鍵は `{assemblyId}\t{session}\t{kind}`。 */
+export type SessionCounts = Map<string, number>;
+
+/** 前回出力より減った timeline 行の議会・回次・種別と件数（lostSessionEntries）。 */
+export interface LostSessionEntries {
+  assemblyId: string;
+  session: number;
+  kind: "rollcalls" | "bills" | "speeches" | "questions";
+  before: number;
+  after: number;
+}
+
+/** timeline の kind → counts の種別。stance / attendance は counts を持たないので数えない（契約どおり）。 */
+const COUNTED_KIND = { vote: "rollcalls", bill: "bills", speech: "speeches", question: "questions" } as const;
+
+/**
+ * `members/{id}.json` の timeline を議会 × 回次 × 種別で数える（#256）。
+ * 回次は行の `session`（#103 以降は全行が持つ）だけを見る。`sessionOfEntry` のように id から引くことはしない:
+ * 引ける行（question / 参法 bill）と引けない行（speech / attendance）で粒度が混ざると、
+ * 「前回は引けたが今回は引けない」といった見かけの減少で偽陽性を出すため。回次の無い行は数えず、
+ * 議会 × 種別の合計を見る `lostTimelineEntries` が引き続き覆う。
+ */
+export function sessionCounts(details: readonly { assemblyId?: string; house?: string; timeline?: readonly TimelineEntry[] }[]): SessionCounts {
+  const out: SessionCounts = new Map();
+  for (const d of details) {
+    if (!isDietMemberRow(d)) continue;
+    // assemblyId の無い古い行は house から議会を決める（推定ではなく契約どおりの対応: diet-{house}）
+    const assemblyId = d.assemblyId ?? (d.house ? `diet-${d.house}` : "diet-unknown");
+    for (const e of d.timeline ?? []) {
+      const kind = COUNTED_KIND[e.kind as keyof typeof COUNTED_KIND];
+      if (!kind) continue;
+      if (typeof e.session !== "number") continue; // #103 以前の行。回次を推定しない
+      const key = `${assemblyId}\t${e.session}\t${kind}`;
+      out.set(key, (out.get(key) ?? 0) + 1);
+    }
+  }
+  return out;
+}
+
+/** 前回出力（`dir/members/`）の timeline を議会 × 回次 × 種別で数える。members/ が無ければ空（初回実行）。 */
+export async function readSessionCounts(dir: string): Promise<SessionCounts> {
+  const details: MemberDetail[] = [];
+  for (const row of (await readMemberIndex(dir)).filter(isDietMemberRow)) {
+    const detail = await readJson<MemberDetail | undefined>(join(dir, "members", `${row.id}.json`), undefined);
+    if (detail) details.push(detail);
+  }
+  return sessionCounts(details);
+}
+
+/**
+ * 前回出力にあった timeline 行が、**議会 × 回次 × 種別**の粒度で今回減っていないか（#256）。
+ *
+ * `lostTimelineEntries`（#235）は議会 × 種別の合計しか見ないので、同じ院・同じ種別の中の
+ * 入れ替わり —「第221回の質問 42 件が消え、第200回のバックフィル 42 件が入った」— は
+ * 合計が保たれて素通りする。回次を鍵に加えて、その穴だけを塞ぐ。
+ *
+ * **保証すること**: ある議会のある回次のある種別の行数が前回より減っていたら止まる。
+ * **保証しないこと**（どれも合計が同じ回次・同じ種別に留まるので、この検出では見えない）:
+ * - 同じ議会・回次・種別の中で行が別のものに**すり替わる**（第221回の発言 A が消え、別の発言 B が同数入った）。
+ *   行の同一性（speechId / questionId 単位）は見ていない。件数だけを見る検算であることを忘れないこと。
+ * - 行の**中身**の劣化（date / title / sourceUrl / 紐づけ先議員の入れ替わり）。
+ * - 回次を持たない行（#103 以前の出力）の消失。回次を推定せず数えないので、こちらは
+ *   `lostTimelineEntries` の合計側だけが覆う。
+ *
+ * 偽陽性の扱いは `lostTimelineEntries` と同じ: 回次を減らす意図的な再構築は `data/` を消してから実行する
+ * （前回出力が無いので引っかからない）。改選で名簿から消えた議員の行が落ちる分は #235 で受け入れた偽陽性と同じ範囲で、
+ * 回次を鍵に足しても増えない（同じ行が同じ回次で減るだけ）。
+ */
+export function lostSessionEntries(previous: SessionCounts, next: readonly { assemblyId?: string; house?: string; timeline?: readonly TimelineEntry[] }[]): LostSessionEntries[] {
+  const after = sessionCounts(next);
+  const lost: LostSessionEntries[] = [];
+  for (const [key, before] of previous) {
+    const a = after.get(key) ?? 0;
+    if (a >= before) continue;
+    const [assemblyId, session, kind] = key.split("\t");
+    lost.push({ assemblyId, session: Number(session), kind: kind as LostSessionEntries["kind"], before, after: a });
+  }
+  return lost.sort((x, y) => (x.assemblyId < y.assemblyId ? -1 : x.assemblyId > y.assemblyId ? 1 : 0) || x.session - y.session || (x.kind < y.kind ? -1 : x.kind > y.kind ? 1 : 0));
+}
+
 /** summarizeRollCall の逆: 「可決（賛成 N・反対 N）」→「可決」。得票だけの result からは何も戻さない（推定しない）。 */
 export function decisionOfResult(result: string): string | undefined {
   return result.match(/^(.+?)（賛成 \d+・反対 \d+）$/)?.[1];
