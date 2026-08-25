@@ -90,7 +90,7 @@ test("runTottori + buildLocalAssembly + writeLocalAssembly: 契約どおりに�
   assert.deepEqual(built.sessions.map((s) => [s.id, s.date, s.rollcalls]), [["2026-06", "2026-06-29", 30]]);
   assert.equal(built.details.find((d) => d.id === "p_31_item_1165923")!.counts.rollcalls, 0, "姓だけで決められない人には票を付けない");
   assert.equal(built.details.find((d) => d.id === "p_31_item_967688")!.counts.rollcalls, 30);
-  const dir = await mkdtemp(join(tmpdir(), "gikailog-tottori-"));
+  const dir = await mkdtemp(join(tmpdir(), "giinrecord-tottori-"));
   await writeLocalAssembly(dir, built);
   assert.deepEqual(await validateLocalAssemblies(dir), []);
   const rc = JSON.parse(readFileSync(join(dir, "assemblies", "pref-31", "rollcalls", "2026-06", "pref-31-2026-06-20260629-陳情-7年-11.json"), "utf8"));

@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import iconv from "iconv-lite";
 
-const UA = "gikailog-etl/0.1 (+https://github.com/uonoko1/gikailog)";
+const UA = "giinrecord-etl/0.1 (+https://github.com/uonoko1/giinrecord)";
 const CACHE_DIR = new URL("../.cache/", import.meta.url);
 
 /**

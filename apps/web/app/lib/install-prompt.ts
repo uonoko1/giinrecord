@@ -9,9 +9,9 @@ import { useCallback, useEffect, useState } from "react";
  */
 
 /** 捕捉した beforeinstallprompt を置く window のプロパティ名 */
-export const INSTALL_PROMPT_KEY = "__gikailogInstallPrompt";
+export const INSTALL_PROMPT_KEY = "__giinrecordInstallPrompt";
 /** インラインスクリプトが捕捉時に window へ dispatch するカスタムイベント名（ハイドレーション後に捕捉された場合の通知） */
-export const INSTALL_PROMPT_EVENT = "gikailog:installprompt";
+export const INSTALL_PROMPT_EVENT = "giinrecord:installprompt";
 
 /** Chrome/Edge が出す非標準イベント。TS の lib.dom には無い。 */
 export interface BeforeInstallPromptEvent extends Event {

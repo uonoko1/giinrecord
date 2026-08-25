@@ -72,7 +72,7 @@ describe("利用規約の内容", () => {
     expect(text).toContain("MIT");
     expect(text).toContain("運営者の自費");
     expect(text).toContain("日本法");
-    expect(screen.getByRole("link", { name: "誤りを報告" })).toHaveAttribute("href", "https://github.com/uonoko1/gikailog/issues/new");
+    expect(screen.getByRole("link", { name: "誤りを報告" })).toHaveAttribute("href", "https://github.com/uonoko1/giinrecord/issues/new");
   });
 });
 
@@ -88,7 +88,7 @@ describe("利用規約の運営費（#174）", () => {
     expect(items[1]).toContain("政党・候補者・業界団体からは受け取っていません");
     expect(items[2]).toContain("政治カテゴリを除外した広告");
     expect(items[2]).toContain("このページに明記");
-    expect(SUPPORT_URL).toBe("https://github.com/uonoko1/gikailog");
+    expect(SUPPORT_URL).toBe("https://github.com/uonoko1/giinrecord");
     expect(screen.getByRole("link", { name: "支援する" })).toHaveAttribute("href", SUPPORT_URL);
   });
 
@@ -111,7 +111,7 @@ describe("プライバシーポリシーの内容", () => {
     expect(text).toContain("User-Agent");
     expect(text).toContain("リファラ");
     expect(text).toContain("localStorage");
-    expect(screen.getByRole("link", { name: "GitHub Issues" })).toHaveAttribute("href", "https://github.com/uonoko1/gikailog/issues");
+    expect(screen.getByRole("link", { name: "GitHub Issues" })).toHaveAttribute("href", "https://github.com/uonoko1/giinrecord/issues");
   });
 
   it("#189 staging の段落が無く、エラーログに接続元 IP が短期間残ることを注記し、更新日が 2026-08-24 以降", () => {

@@ -28,7 +28,7 @@ test("local-assemblies.yml: 日次と同じイメージで local-cli.ts を ASSE
   assert.match(workflow, /ASSEMBLIES: "miyagi=pref-04 tokushima=pref-36 tottori=pref-31 mie=pref-24 nara=pref-29 shimane=pref-32 kochi=pref-39"/, "三重（#203）・奈良（#202）・島根（#221）・高知（#220）も同じループで走る");
   const block = stepBlock("Run local assemblies ETL");
   assert.match(block, /for pair in \$ASSEMBLIES; do/);
-  assert.match(block, /gikailog-etl:ci/);
+  assert.match(block, /giinrecord-etl:ci/);
   assert.match(block, /--entrypoint node/);
   assert.match(block, /src\/local-cli\.ts "\$name"/);
   assert.match(block, /\| tee -a etl\.log/);

@@ -4,7 +4,7 @@
 
 議員レコード（giinrecord.jp）のセキュリティ上の問題を見つけた方は、**GitHub Security Advisories** から非公開で報告してください。
 
-- 報告窓口: https://github.com/uonoko1/gikailog/security/advisories/new （「Report a vulnerability」）
+- 報告窓口: https://github.com/uonoko1/giinrecord/security/advisories/new （「Report a vulnerability」）
 - 公開の Issue・PR・SNS には**書かないでください**。修正前に公開されると利用者と共用サーバーの他サイトに影響します。
 - 報告には、再現手順・影響範囲・（あれば）修正案を含めてください。PoC は最小限で構いません。
 
@@ -42,7 +42,7 @@
 ## Reporting a vulnerability (English)
 
 Please report security issues in 議員レコード (giinrecord.jp) **privately** through GitHub Security Advisories:
-https://github.com/uonoko1/gikailog/security/advisories/new. Do not open a public Issue.
+https://github.com/uonoko1/giinrecord/security/advisories/new. Do not open a public Issue.
 
 **Scope**: the static site at `https://giinrecord.jp` (`apps/web/`), the ETL (`packages/etl/`), the deploy and CI
 tooling (`deploy/`, `.github/workflows/`, `scripts/`), and anything in the repository history (keys, tokens,

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Host-nginx setup for one site on the SHARED host (Issue #85; staging #127; idempotent + safety checks #141). Run as:
 #   ssh "${VPS_SSH_HOST:-sakura-vps}" 'sudo bash -s <domain> [port]' < deploy/vps-setup.sh
-#     port 8081 (default) = production: giinrecord.jp         → /var/www/gikailog/site,    sites-available/gikailog.conf
-#     port 8083           = staging:    staging.giinrecord.jp → /var/www/gikailog/staging, sites-available/gikailog-staging.conf
+#     port 8081 (default) = production: giinrecord.jp         → /var/www/giinrecord/site,    sites-available/giinrecord.conf
+#     port 8083           = staging:    staging.giinrecord.jp → /var/www/giinrecord/staging, sites-available/giinrecord-staging.conf
 #   The domain must NOT start with "staging." for 8081 and MUST start with "staging." for 8083 (#141: a staging
 #   setup run with the production domain once rewrote the production conf).
 #
@@ -11,7 +11,7 @@
 #      bind-mounted read-only into the web / web-staging container
 #   2. writes the host nginx server blocks for this site (deploy/nginx-host-proxy.conf with SERVER_NAMES / DOMAIN /
 #      PORT / LOG_NAME substituted): :80 → 301 https://<domain> (www too), :443 TLS → proxy_pass http://127.0.0.1:<port>
-#        - staging (8083) only, Issue #163: the 443 `location /` includes /etc/nginx/snippets/gikailog-cloudflare-allow.conf
+#        - staging (8083) only, Issue #163: the 443 `location /` includes /etc/nginx/snippets/giinrecord-cloudflare-allow.conf
 #          (Cloudflare ranges, deploy/cloudflare-allowlist.sh; a deny-all placeholder is written when it is missing) and
 #          returns 403 without the Cf-Access-Jwt-Assertion header. A certbot-managed staging conf gets the same two
 #          lines inserted into its location / (ensure_staging_cf_gate). Production never gets either.
@@ -55,8 +55,8 @@ reload_nginx() {
 # site_vars <port>: sets NAME (conf + log name) and SITE_DIR for the port; rejects anything but 8081/8083.
 site_vars() {
   case "$1" in
-    8081) NAME=gikailog; SITE_DIR=/var/www/gikailog/site ;;
-    8083) NAME=gikailog-staging; SITE_DIR=/var/www/gikailog/staging ;;
+    8081) NAME=giinrecord; SITE_DIR=/var/www/giinrecord/site ;;
+    8083) NAME=giinrecord-staging; SITE_DIR=/var/www/giinrecord/staging ;;
     *) echo "vps-setup.sh: port must be 8081 (production) or 8083 (staging), got '$1'" >&2; return 1 ;;
   esac
 }
@@ -78,7 +78,7 @@ server_names() { if [ "$2" = 8081 ]; then echo "$1 www.$1"; else echo "$1"; fi; 
 # deploy/cloudflare-allowlist.sh) AND carry the Cloudflare Access JWT header; everything else is 403/denied.
 # Production gets neither. The snippet must exist or nginx -t fails, so a fail-closed placeholder is written when
 # it is missing (ensure_cf_snippet).
-CF_SNIPPET=/etc/nginx/snippets/gikailog-cloudflare-allow.conf
+CF_SNIPPET=/etc/nginx/snippets/giinrecord-cloudflare-allow.conf
 CF_GATE_INCLUDE="include $CF_SNIPPET;"
 # shellcheck disable=SC2016  # nginx variable, not shell
 CF_GATE_403='if ($http_cf_access_jwt_assertion = "") { return 403; }'
@@ -255,10 +255,10 @@ main() {
   check_domain "$DOMAIN" "$PORT"
   SITE_CONF=/etc/nginx/sites-available/$NAME.conf
 
-  install -d -o "$DEPLOY_USER" -g deploygroup -m 2775 "$PREFIX/var/www/gikailog" "$PREFIX$SITE_DIR"
+  install -d -o "$DEPLOY_USER" -g deploygroup -m 2775 "$PREFIX/var/www/giinrecord" "$PREFIX$SITE_DIR"
 
-  cat > "$PREFIX/etc/nginx/conf.d/gikailog-noip-log.conf" <<'CONF'
-# Access-log format WITHOUT the client IP and WITHOUT the user agent (gikailog, Issue #58).
+  cat > "$PREFIX/etc/nginx/conf.d/giinrecord-noip-log.conf" <<'CONF'
+# Access-log format WITHOUT the client IP and WITHOUT the user agent (giinrecord, Issue #58).
 log_format noip '- - [$time_local] "$request" $status $body_bytes_sent "$http_referer" "-"';
 CONF
 
@@ -271,8 +271,8 @@ host nginx ready: $DOMAIN -> http://127.0.0.1:$PORT (container). Site root: $SIT
 
 Next, as a user WITH docker privileges (not $DEPLOY_USER):
   1. install docker + compose plugin (https://docs.docker.com/engine/install/ubuntu/), if not yet present
-  2. git clone https://github.com/uonoko1/gikailog.git /opt/gikailog   (only deploy/ is used)
-  3. docker compose -f /opt/gikailog/deploy/docker-compose.yml up -d --force-recreate
+  2. git clone https://github.com/uonoko1/giinrecord.git /opt/giinrecord   (only deploy/ is used)
+  3. docker compose -f /opt/giinrecord/deploy/docker-compose.yml up -d --force-recreate
   4. curl -sI http://127.0.0.1:$PORT/ | head -1      # HTTP/1.1 200 once a deploy workflow has rsynced a build
 MSG
   if ! cert_exists "$DOMAIN"; then

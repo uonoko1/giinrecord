@@ -28,16 +28,16 @@ assert_order() { # assert_order <log> <first> <second> <msg>
   [[ -n "$a" && -n "$b" && "$a" -lt "$b" ]] || fail "$4: expected [$2] before [$3]"
 }
 
-# fresh <name> → P (prefix), LOG, and a fake /opt/gikailog checkout whose vps-setup.sh only records its arguments
+# fresh <name> → P (prefix), LOG, and a fake /opt/giinrecord checkout whose vps-setup.sh only records its arguments
 fresh() {
   P="$TMP/$1"; mkdir -p "$P"; LOG="$P/stub.log"; : > "$LOG"
   export STAGING_SETUP_PREFIX="$P" STUB_LOG="$LOG"
-  mkdir -p "$P/opt/gikailog/.git" "$P/opt/gikailog/deploy"
-  : > "$P/opt/gikailog/deploy/docker-compose.yml"
+  mkdir -p "$P/opt/giinrecord/.git" "$P/opt/giinrecord/deploy"
+  : > "$P/opt/giinrecord/deploy/docker-compose.yml"
   # shellcheck disable=SC2016  # the stub expands $* / $STUB_LOG when it runs, not here
-  printf '#!/usr/bin/env bash\necho "vps-setup.sh $*" >> "$STUB_LOG"\n' > "$P/opt/gikailog/deploy/vps-setup.sh"
+  printf '#!/usr/bin/env bash\necho "vps-setup.sh $*" >> "$STUB_LOG"\n' > "$P/opt/giinrecord/deploy/vps-setup.sh"
   # shellcheck disable=SC2016
-  printf '#!/usr/bin/env bash\necho "cloudflare-allowlist.sh $*" >> "$STUB_LOG"\n' > "$P/opt/gikailog/deploy/cloudflare-allowlist.sh"
+  printf '#!/usr/bin/env bash\necho "cloudflare-allowlist.sh $*" >> "$STUB_LOG"\n' > "$P/opt/giinrecord/deploy/cloudflare-allowlist.sh"
 }
 run_setup() {
   PATH="$BIN:$PATH" bash "$SCRIPT" "$@" > "$P/out" 2>&1
@@ -66,9 +66,9 @@ t_happy_path_order() {
   fresh happy; docker_present
   DNS_OK=1 run_setup || fail "exit $? $(cat "$P/out")"
   local log; log=$(cat "$LOG")
-  assert_contains "$log" "git -C $P/opt/gikailog pull -q --ff-only" "repo updated (compose + site.conf)"
-  assert_contains "$log" "install -d -o ubuntu -g deploygroup -m 2775 $P/var/www/gikailog/staging" "staging web root for the deploy user"
-  assert_contains "$log" "docker compose -f $P/opt/gikailog/deploy/docker-compose.yml up -d --wait --force-recreate" "both containers recreated (bind-mounted site.conf: inode changes on git pull)"
+  assert_contains "$log" "git -C $P/opt/giinrecord pull -q --ff-only" "repo updated (compose + site.conf)"
+  assert_contains "$log" "install -d -o ubuntu -g deploygroup -m 2775 $P/var/www/giinrecord/staging" "staging web root for the deploy user"
+  assert_contains "$log" "docker compose -f $P/opt/giinrecord/deploy/docker-compose.yml up -d --wait --force-recreate" "both containers recreated (bind-mounted site.conf: inode changes on git pull)"
   assert_contains "$log" "vps-setup.sh staging.giinrecord.jp 8083" "host proxy block for staging on port 8083"
   assert_contains "$log" "certbot certonly --nginx -d staging.giinrecord.jp" "TLS for the staging hostname only, certonly (no conf editing by certbot)"
   assert_not_contains "$log" "www.staging" "no www for staging"
@@ -127,12 +127,12 @@ t_refuses_when_port_taken_by_someone_else() {
 t_port_taken_by_own_container_is_fine() {
   fresh own; docker_present
   SS_OUT='LISTEN 0 511 127.0.0.1:8083 0.0.0.0:*\n' OWN_CONTAINER=1 DNS_OK=1 run_setup || fail "exit $? $(cat "$P/out")"
-  assert_contains "$(cat "$LOG")" "docker compose -f $P/opt/gikailog/deploy/docker-compose.yml up -d --wait --force-recreate" "re-run converges"
+  assert_contains "$(cat "$LOG")" "docker compose -f $P/opt/giinrecord/deploy/docker-compose.yml up -d --wait --force-recreate" "re-run converges"
 }
 
 t_requires_production_setup_first() {
   fresh nodocker
-  rm -rf "$P/opt/gikailog"
+  rm -rf "$P/opt/giinrecord"
   if PATH="$TMP/empty:/usr/bin:/bin" bash "$SCRIPT" > "$P/out" 2>&1; then fail "should fail without docker / repo"; fi
   assert_contains "$(cat "$P/out")" "go-live.sh" "points at the production setup"
   assert_not_contains "$(cat "$LOG")" "certbot" "nothing else attempted"
@@ -142,7 +142,7 @@ t_never_touches_production_paths() {
   fresh prod; docker_present
   DNS_OK=1 run_setup || fail "exit $? $(cat "$P/out")"
   local log; log=$(cat "$LOG")
-  assert_not_contains "$log" "/var/www/gikailog/site" "production web root untouched"
+  assert_not_contains "$log" "/var/www/giinrecord/site" "production web root untouched"
   assert_not_contains "$log" "8081" "production port not reconfigured"
   assert_not_contains "$log" "gpasswd" "no group changes"
 }
@@ -152,7 +152,7 @@ t_idempotent_second_run() {
   DNS_OK=1 run_setup || fail "first: $(cat "$P/out")"
   : > "$LOG"
   DNS_OK=1 run_setup || fail "second: $(cat "$P/out")"
-  assert_contains "$(cat "$LOG")" "docker compose -f $P/opt/gikailog/deploy/docker-compose.yml up -d --wait --force-recreate" "second run still converges"
+  assert_contains "$(cat "$LOG")" "docker compose -f $P/opt/giinrecord/deploy/docker-compose.yml up -d --wait --force-recreate" "second run still converges"
 }
 
 test_case "staging-setup.sh: bash -n" t_syntax
@@ -163,7 +163,7 @@ test_case "DNS が引けなければ certbot は実行せずコマンドを案�
 test_case "証明書が既にあれば certbot を実行しない（-0001 を作らない）" t_skips_certbot_when_cert_exists
 test_case "127.0.0.1:8083 が他プロセスに使われていれば起動前に止まる（ss -tln）" t_refuses_when_port_taken_by_someone_else
 test_case "8083 を使っているのが自分のコンテナなら続行する" t_port_taken_by_own_container_is_fine
-test_case "docker も /opt/gikailog も無ければ go-live.sh を案内して失敗する" t_requires_production_setup_first
+test_case "docker も /opt/giinrecord も無ければ go-live.sh を案内して失敗する" t_requires_production_setup_first
 test_case "production のパス・ポート・グループには触れない" t_never_touches_production_paths
 test_case "2 回目も同じことをして失敗しない（冪等）" t_idempotent_second_run
 

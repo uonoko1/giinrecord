@@ -31,7 +31,7 @@ t_site_all_200() {
   assert_contains "$OUT" "all 200" "summary"
   # one ssh per environment, to the default host
   assert_eq 2 "$(ssh_calls)" "ssh calls"
-  assert_contains "$LOG" $'ssh\tgikaiops\t' "default ssh host"
+  assert_contains "$LOG" $'ssh\tgiinops\t' "default ssh host"
   # production: --resolve to loopback with the real hostname; staging: container port with Host header
   assert_contains "$(grep -F 'https://giinrecord.jp/about/' <<<"$LOG")" $'--resolve\tgiinrecord.jp:443:127.0.0.1\t' "production resolve"
   assert_contains "$(grep -F 'http://127.0.0.1:8083/about/' <<<"$LOG")" $'-H\tHost: staging.giinrecord.jp\t' "staging via container port"
