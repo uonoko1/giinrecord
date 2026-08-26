@@ -11,6 +11,8 @@
 #   3. /var/log/giinrecord-monitor.log (600)          the check log;  /var/lib/giinrecord-monitor/ (700) open-issue state
 #   4. ~ubuntu/monitor/ (700, owner ubuntu)         health.sh installs latest.json there, 600, owner ubuntu
 #   5. /etc/cron.d/giinrecord-monitor                 */5 minutes, as root
+#   6. /etc/logrotate.d/giinrecord-monitor            rotation for the log in 3 (Issue #288). Names only this
+#                                                   file — the VPS is shared, a glob would take co-tenants' logs.
 #
 # MONITOR_SETUP_PREFIX roots every path at a temp dir for the tests (deploy/test/monitor-setup.test.sh);
 # MONITOR_OWNER overrides the deploy user (default ubuntu).
@@ -27,6 +29,7 @@ LOG=/var/log/giinrecord-monitor.log
 STATE_DIR=/var/lib/giinrecord-monitor
 LATEST_DIR=/home/$OWNER/monitor
 CRON=/etc/cron.d/giinrecord-monitor
+LOGROTATE=/etc/logrotate.d/giinrecord-monitor
 
 # chown only as root (the tests run as a normal user inside $PREFIX)
 CHOWN_ROOT=(); CHOWN_OWNER=()
@@ -54,7 +57,15 @@ MONITOR_OWNER=$OWNER
 CRON
 chmod 644 "$PREFIX$CRON"
 
+# Rotation for $LOG (Issue #288): without it the log grew without bound — Ubuntu's rsyslog config lists
+# specific file names and does not rotate /var/log/*.log. Copied, not generated, so the committed fixture in
+# deploy/monitor/logrotate.conf is exactly what lands on the VPS (and is what the tests read).
+# Mode 644: logrotate skips any config that is group- or other-writable.
+install -d "${CHOWN_ROOT[@]}" -m 755 "$PREFIX$(dirname "$LOGROTATE")"
+install "${CHOWN_ROOT[@]}" -m 644 "$HERE/logrotate.conf" "$PREFIX$LOGROTATE"
+
 echo "monitoring installed: $TOOLS/health.sh, $CRON (every 5 min, root), log $LOG, latest.json in $LATEST_DIR"
+echo "logrotate: $LOGROTATE (monthly, keep 12, maxsize 32M) — rotates $LOG only"
 if [ -f "$PREFIX$TOKEN_FILE" ]; then
   chmod 600 "$PREFIX$TOKEN_FILE"
   echo "token: $TOKEN_FILE present (mode 600). Issues will be opened on failures."
