@@ -75,7 +75,12 @@ jobs:
           SESSIONS: ${{ github.event.inputs.sessions }}
         run: bash scripts/ci/etl-rebuild-prepare.sh "$REBUILD" "$SESSIONS"
 
+      # ステップ単位の timeout を job（480分）より短く置く。job の timeout に当たると
+      # **後続ステップごと打ち切られ、if: always() の cache/save にも到達しない**
+      # （2026-08-25 の run 32853869643 が実際にそうなり、359分ぶんの取得が丸ごと失われた）。
+      # ここで先に打ち切れば、取得済みページを .cache に保存してから終われる。
       - name: Run ETL
+        timeout-minutes: 420
         shell: bash
         env:
           SESSIONS: ${{ github.event.inputs.sessions || '217 218 219 220 221' }}
