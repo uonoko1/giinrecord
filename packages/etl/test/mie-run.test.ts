@@ -95,7 +95,7 @@ test("runMie + buildLocalAssembly + writeLocalAssembly: 契約どおりに書け
   assert.equal(fujita.counts.rollcalls, 110);
   const rc = built.rollCalls.find((r) => r.id === "pref-24-r08-20260519-議案-第78号")!;
   assert.deepEqual(rc.votes[8].value, { raw: "除", legend: "除斥", mapped: "投票なし" });
-  const dir = await mkdtemp(join(tmpdir(), "gikailog-mie-"));
+  const dir = await mkdtemp(join(tmpdir(), "giinrecord-mie-"));
   await writeLocalAssembly(dir, built);
   assert.deepEqual(await validateLocalAssemblies(dir), []);
   const detail = JSON.parse(readFileSync(join(dir, "members", "p_24_aoki_kenjyun15.json"), "utf8"));

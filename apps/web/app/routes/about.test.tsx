@@ -69,7 +69,7 @@ describe("About", () => {
 
   it("検証するのリンクはリポジトリ URL を指す", () => {
     renderAbout();
-    const repo = "https://github.com/uonoko1/gikailog";
+    const repo = "https://github.com/uonoko1/giinrecord";
     expect(screen.getByRole("link", { name: "ソースコード" })).toHaveAttribute("href", repo);
     expect(screen.getByRole("link", { name: "誤りを報告" })).toHaveAttribute("href", `${repo}/issues/new`);
   });
@@ -82,7 +82,7 @@ describe("About", () => {
     const section = screen.getByRole("region", { name: "検証する" });
     expect(section).toHaveTextContent("CC BY 4.0");
     expect(section).toHaveTextContent("議員レコード");
-    expect(screen.getByRole("link", { name: "GitHub のデータ" })).toHaveAttribute("href", "https://github.com/uonoko1/gikailog/tree/main/data");
+    expect(screen.getByRole("link", { name: "GitHub のデータ" })).toHaveAttribute("href", "https://github.com/uonoko1/giinrecord/tree/main/data");
   });
 
   it("データが無くても落ちない", () => {

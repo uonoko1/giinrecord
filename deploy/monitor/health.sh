@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
-# VPS-side health check (Issue #135). Runs as ROOT from /etc/cron.d/gikailog-monitor every 5 minutes
+# VPS-side health check (Issue #135). Runs as ROOT from /etc/cron.d/giinrecord-monitor every 5 minutes
 # (installed by deploy/monitor/setup.sh). No SaaS, no agent: a few local commands, one log file, and — only when
 # something is wrong twice in a row — a GitHub Issue through the REST API with curl.
 #
 # Checks (name → what fails):
-#   container-web / container-web-staging   docker healthcheck of gikailog-web-1 / gikailog-web-staging-1 is not "healthy"
+#   container-web / container-web-staging   docker healthcheck of giinrecord-web-1 / giinrecord-web-staging-1 is not "healthy"
 #   nginx                                   host nginx is not `systemctl is-active`
 #   disk                                    filesystem of the web root is used more than MONITOR_DISK_MAX % (85)
 #   site-production / site-staging          rsync target missing, or its data/meta.json older than MONITOR_STALE_HOURS (48)
 #
 # Outputs:
-#   $MONITOR_LOG (/var/log/gikailog-monitor.log, root 600): one line per run, "<UTC time> OK" or "<UTC time> FAIL <check>: <why>; …"
+#   $MONITOR_LOG (/var/log/giinrecord-monitor.log, root 600): one line per run, "<UTC time> OK" or "<UTC time> FAIL <check>: <why>; …"
 #   $MONITOR_LATEST_DIR/latest.json (~ubuntu/monitor/latest.json, owner ubuntu, 600): {"checkedAt","ok","failures"}
 #   GitHub Issue "[monitor] vps: <check>" (label monitor) after 2 consecutive failing runs; closed again on recovery.
 #   Dedup: the issue number is kept in $MONITOR_STATE_DIR (root); if that is lost, open issues with the same title
@@ -22,14 +22,14 @@
 #   Tests: deploy/test/monitor-health.test.sh (docker/systemctl/df/curl are stubs, paths come from the env below)
 set -euo pipefail
 
-LOG="${MONITOR_LOG:-/var/log/gikailog-monitor.log}"
-STATE_DIR="${MONITOR_STATE_DIR:-/var/lib/gikailog-monitor}"
-TOKEN_FILE="${MONITOR_TOKEN_FILE:-/etc/gikailog/monitor.token}"
-SITE_DIR="${MONITOR_SITE_DIR:-/var/www/gikailog/site}"
-STAGING_DIR="${MONITOR_STAGING_DIR:-/var/www/gikailog/staging}"
+LOG="${MONITOR_LOG:-/var/log/giinrecord-monitor.log}"
+STATE_DIR="${MONITOR_STATE_DIR:-/var/lib/giinrecord-monitor}"
+TOKEN_FILE="${MONITOR_TOKEN_FILE:-/etc/giinrecord/monitor.token}"
+SITE_DIR="${MONITOR_SITE_DIR:-/var/www/giinrecord/site}"
+STAGING_DIR="${MONITOR_STAGING_DIR:-/var/www/giinrecord/staging}"
 LATEST_DIR="${MONITOR_LATEST_DIR:-/home/ubuntu/monitor}"
 OWNER="${MONITOR_OWNER:-ubuntu}"
-REPO="${MONITOR_REPO:-uonoko1/gikailog}"
+REPO="${MONITOR_REPO:-uonoko1/giinrecord}"
 API="${MONITOR_API:-https://api.github.com}"
 DISK_MAX="${MONITOR_DISK_MAX:-85}"
 STALE_HOURS="${MONITOR_STALE_HOURS:-48}"
@@ -69,8 +69,8 @@ check_site() { # check_site <check> <dir>
   [ "$age_h" -le "$STALE_HOURS" ] || failure "$1" "data ${age_h}h old"
 }
 
-check_container container-web gikailog-web-1
-check_container container-web-staging gikailog-web-staging-1
+check_container container-web giinrecord-web-1
+check_container container-web-staging giinrecord-web-staging-1
 check_nginx
 check_disk
 check_site site-production "$SITE_DIR"

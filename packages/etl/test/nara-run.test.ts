@@ -74,7 +74,7 @@ test("runNara + buildLocalAssembly + writeLocalAssembly: 契約どおりに書�
   const ashitaka = built.details.find((d) => d.id === "p_29_52536")!;
   assert.equal(ashitaka.timeline.length, 125);
   assert.equal(ashitaka.timeline[0].date, "2026-07-02");
-  const dir = await mkdtemp(join(tmpdir(), "gikailog-nara-"));
+  const dir = await mkdtemp(join(tmpdir(), "giinrecord-nara-"));
   await writeLocalAssembly(dir, built);
   assert.deepEqual(await validateLocalAssemblies(dir), []);
   const rc = JSON.parse(readFileSync(join(dir, "assemblies", "pref-29", "rollcalls", "2026-02", "pref-29-2026-02-20260325-決議-第1号.json"), "utf8"));

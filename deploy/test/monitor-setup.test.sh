@@ -34,33 +34,33 @@ t_syntax() { bash -n "$SCRIPT" || fail "bash -n"; }
 t_installs_everything() {
   fresh all
   run_setup || fail "exit $? $(cat "$P/out")"
-  assert_exists "$P/usr/local/lib/gikailog-monitor/health.sh" "health.sh installed from the checkout"
-  assert_eq "755" "$(stat -c %a "$P/usr/local/lib/gikailog-monitor/health.sh")" "health.sh mode"
-  assert_exists "$P/etc/gikailog" "token dir"
-  assert_eq "700" "$(stat -c %a "$P/etc/gikailog")" "token dir is private"
-  assert_missing "$P/etc/gikailog/monitor.token" "no token is invented"
-  assert_exists "$P/var/log/gikailog-monitor.log" "log file"
-  assert_eq "600" "$(stat -c %a "$P/var/log/gikailog-monitor.log")" "log is root-only"
-  assert_exists "$P/var/lib/gikailog-monitor" "state dir"
-  assert_eq "700" "$(stat -c %a "$P/var/lib/gikailog-monitor")" "state dir is root-only"
+  assert_exists "$P/usr/local/lib/giinrecord-monitor/health.sh" "health.sh installed from the checkout"
+  assert_eq "755" "$(stat -c %a "$P/usr/local/lib/giinrecord-monitor/health.sh")" "health.sh mode"
+  assert_exists "$P/etc/giinrecord" "token dir"
+  assert_eq "700" "$(stat -c %a "$P/etc/giinrecord")" "token dir is private"
+  assert_missing "$P/etc/giinrecord/monitor.token" "no token is invented"
+  assert_exists "$P/var/log/giinrecord-monitor.log" "log file"
+  assert_eq "600" "$(stat -c %a "$P/var/log/giinrecord-monitor.log")" "log is root-only"
+  assert_exists "$P/var/lib/giinrecord-monitor" "state dir"
+  assert_eq "700" "$(stat -c %a "$P/var/lib/giinrecord-monitor")" "state dir is root-only"
   assert_exists "$P/home/$ME/monitor" "latest.json dir for the deploy user"
   assert_eq "700" "$(stat -c %a "$P/home/$ME/monitor")" "latest dir mode"
-  local cron; cron=$(cat "$P/etc/cron.d/gikailog-monitor")
+  local cron; cron=$(cat "$P/etc/cron.d/giinrecord-monitor")
   assert_contains "$cron" "*/5 * * * * root" "every 5 minutes as root"
-  assert_contains "$cron" "/usr/local/lib/gikailog-monitor/health.sh" "runs the root-owned copy, not the checkout"
-  assert_contains "$cron" ">> /var/log/gikailog-monitor.log" "cron output to the log"
+  assert_contains "$cron" "/usr/local/lib/giinrecord-monitor/health.sh" "runs the root-owned copy, not the checkout"
+  assert_contains "$cron" ">> /var/log/giinrecord-monitor.log" "cron output to the log"
   assert_not_contains "$cron" "$P" "cron lines are real paths, not the test prefix"
-  assert_eq "644" "$(stat -c %a "$P/etc/cron.d/gikailog-monitor")" "cron.d mode"
+  assert_eq "644" "$(stat -c %a "$P/etc/cron.d/giinrecord-monitor")" "cron.d mode"
   assert_contains "$(cat "$P/out")" "monitor.token" "operator is told how to place the token"
 }
 
 t_idempotent() {
   fresh twice
   run_setup || fail "first: $(cat "$P/out")"
-  echo "keep" > "$P/etc/gikailog/monitor.token"; chmod 600 "$P/etc/gikailog/monitor.token"
+  echo "keep" > "$P/etc/giinrecord/monitor.token"; chmod 600 "$P/etc/giinrecord/monitor.token"
   run_setup || fail "second: $(cat "$P/out")"
-  assert_eq "keep" "$(cat "$P/etc/gikailog/monitor.token")" "existing token untouched"
-  assert_eq "1" "$(grep -c health.sh "$P/etc/cron.d/gikailog-monitor")" "cron line not duplicated"
+  assert_eq "keep" "$(cat "$P/etc/giinrecord/monitor.token")" "existing token untouched"
+  assert_eq "1" "$(grep -c health.sh "$P/etc/cron.d/giinrecord-monitor")" "cron line not duplicated"
 }
 
 t_refuses_symlinked_latest_dir() {
@@ -68,7 +68,7 @@ t_refuses_symlinked_latest_dir() {
   mkdir -p "$P/elsewhere"; ln -s "$P/elsewhere" "$P/home/$ME/monitor"
   run_setup && fail "expected non-zero"
   assert_contains "$(cat "$P/out")" "symlink" "says why"
-  assert_missing "$P/etc/cron.d/gikailog-monitor" "no cron installed on refusal"
+  assert_missing "$P/etc/cron.d/giinrecord-monitor" "no cron installed on refusal"
 }
 
 t_warns_when_token_missing() {
@@ -79,9 +79,9 @@ t_warns_when_token_missing() {
 
 t_no_secrets_in_cron_or_output() {
   fresh secrets
-  mkdir -p "$P/etc/gikailog"; echo "github_pat_TESTONLY" > "$P/etc/gikailog/monitor.token"
+  mkdir -p "$P/etc/giinrecord"; echo "github_pat_TESTONLY" > "$P/etc/giinrecord/monitor.token"
   run_setup || fail "exit $?"
-  assert_not_contains "$(cat "$P/out")$(cat "$P/etc/cron.d/gikailog-monitor")" "github_pat_TESTONLY" "token value never printed"
+  assert_not_contains "$(cat "$P/out")$(cat "$P/etc/cron.d/giinrecord-monitor")" "github_pat_TESTONLY" "token value never printed"
 }
 
 test_case "setup.sh: bash -n" t_syntax

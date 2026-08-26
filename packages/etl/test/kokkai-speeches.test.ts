@@ -156,7 +156,7 @@ describe("parseSpeechPage: 実レスポンス（第221回 衆院本会議、Issu
 
 /**
  * 実レスポンス（第204回 衆院 予算委員会第一分科会、Issue #242）。
- * 取得: 2026-08-25, UA gikailog-etl/0.1, speechPageUrl(204, 1, "shugiin") に nameOfMeeting=分科会 を足したもの。
+ * 取得: 2026-08-25, UA giinrecord-etl/0.1, speechPageUrl(204, 1, "shugiin") に nameOfMeeting=分科会 を足したもの。
  * 1ページ100件のうち、先頭30件と speakerRole の付く5件（参考人）を speechID 順に残した35件。
  *
  * #263 は第221回（特別会）を全量取得したが、その回次には分科会が1件も無かったため

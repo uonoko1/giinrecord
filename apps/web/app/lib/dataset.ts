@@ -65,4 +65,4 @@ export function formatSessions(sessions: number[]): string | undefined {
   return lo === hi ? `第${lo}回` : `第${lo}—${hi}回`;
 }
 
-export const REPO_URL = "https://github.com/uonoko1/gikailog";
+export const REPO_URL = "https://github.com/uonoko1/giinrecord";

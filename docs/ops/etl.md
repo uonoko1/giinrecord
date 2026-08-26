@@ -4,7 +4,7 @@
 
 ```
 06:00 JST schedule / workflow_dispatch(sessions, rebuild)
-  0. docker build           packages/etl/Dockerfile → gikailog-etl:ci（GHCR に push しない。レイヤーは type=gha キャッシュ）
+  0. docker build           packages/etl/Dockerfile → giinrecord-etl:ci（GHCR に push しない。レイヤーは type=gha キャッシュ）
   1. actions/cache/restore  packages/etl/.cache（key: etl-cache-YYYY-MM-DD、restore-keys で前日以前から復元）
   1.5 rebuild=yes のときだけ  scripts/ci/etl-rebuild-prepare.sh が国会側の data/ を消す（#284。既定は何もしない。下の「作り直し」の節）
   2. docker run [sessions]  data/ と packages/etl/.cache を bind mount、runner の uid で実行 → data/ を書き、validateDataset が違反を見つけたら非0終了
@@ -29,7 +29,7 @@
 
 - #231 以前は国会 HTML が 0.5 秒・地方議会が 1 秒という**二重基準**で、経緯で別々に実装されたもの。1 秒に揃えた。
 - 会議録 API だけ 2 秒にしたのは、**提供元自身が明示的に要求している**唯一のケースだから。以前の 1 秒はこの要求を満たしていなかった。
-- UA は `gikailog-etl/0.1 (+https://github.com/uonoko1/gikailog)` のまま（GitHub リポジトリが連絡先として機能する）。
+- UA は `giinrecord-etl/0.1 (+https://github.com/uonoko1/giinrecord)`（GitHub リポジトリが連絡先として機能する）。リポジトリ改名にあわせて `gikailog-etl/0.1 (+https://github.com/uonoko1/gikailog)` から変更した（#288）。robots.txt の照合 UA 名も `giinrecord-etl` になる。改名前に取得元が `gikailog-etl` を名指しした robots.txt ルールを書いていた場合、そのルールは適用されなくなる（2026-08 時点で取得元 6 サイトのうち robots.txt に当プロジェクトを名指しした記述は確認していない）。
 
 ### 確認したこと・できなかったこと（2026-08-25）
 
@@ -317,8 +317,8 @@ ETL_UID=$(id -u) ETL_GID=$(id -g) docker compose -f deploy/docker-compose.etl.ym
 # サイト側の compose（#85）と重ねる場合
 docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.etl.yml run --rm etl 221
 # compose を使わない場合
-docker build -f packages/etl/Dockerfile -t gikailog-etl .
-docker run --rm --user "$(id -u):$(id -g)" -v "$PWD/data:/app/data" -v "$PWD/packages/etl/.cache:/app/packages/etl/.cache" gikailog-etl 221
+docker build -f packages/etl/Dockerfile -t giinrecord-etl .
+docker run --rm --user "$(id -u):$(id -g)" -v "$PWD/data:/app/data" -v "$PWD/packages/etl/.cache:/app/packages/etl/.cache" giinrecord-etl 221
 ```
 
 - `ETL_UID`/`ETL_GID` を省くと 1000:1000（イメージ内の `node`）で動く。ホストの uid が 1000 でないなら必ず渡す（root や別 uid のファイルが data/ に残ると `git add` と次の `pnpm etl` で困る）。CI は `--user "$(id -u):$(id -g)"` で runner の uid に合わせている。
@@ -346,7 +346,7 @@ docker run --rm --user "$(id -u):$(id -g)" -v "$PWD/data:/app/data" -v "$PWD/pac
 
 ## 地方議会 ETL（月次、`.github/workflows/local-assemblies.yml`、#157 宮城・#183 徳島・#184 鳥取・#203 三重）
 - 毎月 5 日 05:00 JST（議会は定例会ごとに更新されるので月 1 回で足りる）と `workflow_dispatch`。日次と同じイメージで `--entrypoint node … src/local-cli.ts <name>` を `ASSEMBLIES`（`miyagi=pref-04 tokushima=pref-36 tottori=pref-31 mie=pref-24`。議会を足すときはここと `packages/etl/src/local-assemblies.ts` の `LOCAL_SOURCES` に 1 行）の順に走らせ、議会ごとに `data/assemblies/{id}/`（meta・sessions・rollcalls・unmatched）、`data/members/` のその議会の議員（index の行と `p_{prefCode}_*.json`）、`data/assemblies/index.json` のその議会の行だけを書く（国会の行も他の議会の行も触らない。日次 ETL も地方の行を残す）。data PR の流れは選挙区 ETL と同じで、ブランチは `data/local-assemblies`、失敗 Issue のタイトルは「地方議会 ETL 月次実行が失敗した（local-assemblies.yml）」。`concurrency: etl` で日次・選挙区と直列化する。
-- 宮城県議会（`docs/DATA_CONTRACT.md`「地方議会」）: 名簿 3 ページ＋会期 index＋直近 2 会期の会期ページ（HTML、毎回取得）と表決 PDF（実行中だけ `.cache/`）。取得は `www.pref.miyagi.jp` だけ・UA `gikailog-etl/0.1`・1 秒以上間隔・robots.txt 遵守（`packages/etl/src/sources/local/polite-fetch.ts`。2026-08 時点で robots.txt は 404）。
+- 宮城県議会（`docs/DATA_CONTRACT.md`「地方議会」）: 名簿 3 ページ＋会期 index＋直近 2 会期の会期ページ（HTML、毎回取得）と表決 PDF（実行中だけ `.cache/`）。取得は `www.pref.miyagi.jp` だけ・UA `giinrecord-etl/0.1`・1 秒以上間隔・robots.txt 遵守（`packages/etl/src/sources/local/polite-fetch.ts`。2026-08 時点で robots.txt は 404）。
 - 徳島県議会（#183）: 議員紹介 2 ページ（会派別・選挙区別）＋定例会の概要（今年。足りなければ前年の年ページ）＋直近 2 会期の会期ページと、採決日ごとの表決 PDF（2月定例会は 3 本）。取得は `www.pref.tokushima.lg.jp` だけ（robots.txt は `/system` などを Disallow。`/gikai/` と `/file/attachment/` は対象外）。名簿に掲載日が無いので as-of は取得日（JST）。表決方法・人数の欄が無いので `method` / `counts` は書かない。PDF の表復元は宮城と同じ罫線方式（共通部は `sources/local/pdf-table.ts`）。
 - 鳥取県議会（#184）: 取得は `www.pref.tottori.lg.jp` だけ（robots.txt は `/secure/221685/` などを Disallow。議決結果ページと賛否 PDF `/secure/{番号}/…` は対象外。毎回読んで従う）。名簿 1 ページ＋会期 index＋会期ページ（議決結果の無い会期も見て飛ばす）＋議決結果ページ（HTML、毎回取得）と賛否 PDF（会期に 4 本ほど。同じ内容の複製も URL が違えば取る。実行中だけ `.cache/`）。2026-08 時点で 118 件（6月定例会 30・2月定例会 88）、不明セル 0、unmatched 0。鳥取の PDF は姓だけなので、名簿に同姓が増えると unmatched が増える（候補は `unmatched.json` の `candidates` に列挙され、ETL は選ばない）。
 - 三重県議会（#203）: 取得は `www.pref.mie.lg.jp` だけ（robots.txt の Disallow は 1 つの PDF のみで名簿・賛否は対象外。毎回読んで従う）。名簿は 選挙区別５０音順 1 ページ＋選挙区別名簿 → 15 選挙区ページ（`a name` の slug が id の元）、会期は「議案審議結果一覧」1 ページ → 月別の賛否 PDF（通年議会なので 1 会期＝1 年分。--sessions 2 の既定で令和8年・令和7年の 13 本）。PDF は 1 ページに全議案×全議員（47 列、列幅 約15pt）の高密度の表で、文字はオペレータ列から 1 命令 1 アイテムで読む（`mie/glyphs.ts`。getTextContent は令和8年5月分で隣の列の「辻󠄀」を前の氏名に結合して位置を失う）。表決方法の欄が無いので `method` は書かない。
@@ -357,7 +357,7 @@ docker run --rm --user "$(id -u):$(id -g)" -v "$PWD/data:/app/data" -v "$PWD/pac
 - 失敗モード（三重）: 「選挙区ページで N 人」「ふりがな/所属会派 missing」「定数の合計 … !== ５０音順の定数」＝名簿 2 系統の食い違い（サイトの更新途中なら翌日に再実行）、「賛否 link … is not 令和N年M月」「PDF title says … but the link says …」＝会期 index と PDF の不一致、「column N header … !==」「expected one group-bottom rule」「member columns differ from page 1」「議案等番号 … is not {種別}第N号」＝PDF のレイアウト変化、「unsupported text-positioning op」「rotated/scaled text matrix」＝PDF の作り（描画命令）の変化（`mie/glyphs.ts` の前提が崩れた）。いずれも data/ は書かれない。
 ## 地方議会 ETL（月次、`.github/workflows/local-assemblies.yml`、#157 宮城・#183 徳島・#184 鳥取・#202 奈良）
 - 毎月 5 日 05:00 JST（議会は定例会ごとに更新されるので月 1 回で足りる）と `workflow_dispatch`。日次と同じイメージで `--entrypoint node … src/local-cli.ts <name>` を `ASSEMBLIES`（`miyagi=pref-04 tokushima=pref-36 tottori=pref-31 mie=pref-24 nara=pref-29 kochi=pref-39`。議会を足すときはここと `packages/etl/src/local-assemblies.ts` の `LOCAL_SOURCES` に 1 行）の順に走らせ、議会ごとに `data/assemblies/{id}/`（meta・sessions・rollcalls・unmatched）、`data/members/` のその議会の議員（index の行と `p_{prefCode}_*.json`）、`data/assemblies/index.json` のその議会の行だけを書く（国会の行も他の議会の行も触らない。日次 ETL も地方の行を残す）。data PR の流れは選挙区 ETL と同じで、ブランチは `data/local-assemblies`、失敗 Issue のタイトルは「地方議会 ETL 月次実行が失敗した（local-assemblies.yml）」。`concurrency: etl` で日次・選挙区と直列化する。
-- 宮城県議会（`docs/DATA_CONTRACT.md`「地方議会」）: 名簿 3 ページ＋会期 index＋直近 2 会期の会期ページ（HTML、毎回取得）と表決 PDF（実行中だけ `.cache/`）。取得は `www.pref.miyagi.jp` だけ・UA `gikailog-etl/0.1`・1 秒以上間隔・robots.txt 遵守（`packages/etl/src/sources/local/polite-fetch.ts`。2026-08 時点で robots.txt は 404）。
+- 宮城県議会（`docs/DATA_CONTRACT.md`「地方議会」）: 名簿 3 ページ＋会期 index＋直近 2 会期の会期ページ（HTML、毎回取得）と表決 PDF（実行中だけ `.cache/`）。取得は `www.pref.miyagi.jp` だけ・UA `giinrecord-etl/0.1`・1 秒以上間隔・robots.txt 遵守（`packages/etl/src/sources/local/polite-fetch.ts`。2026-08 時点で robots.txt は 404）。
 - 徳島県議会（#183）: 議員紹介 2 ページ（会派別・選挙区別）＋定例会の概要（今年。足りなければ前年の年ページ）＋直近 2 会期の会期ページと、採決日ごとの表決 PDF（2月定例会は 3 本）。取得は `www.pref.tokushima.lg.jp` だけ（robots.txt は `/system` などを Disallow。`/gikai/` と `/file/attachment/` は対象外）。名簿に掲載日が無いので as-of は取得日（JST）。表決方法・人数の欄が無いので `method` / `counts` は書かない。PDF の表復元は宮城と同じ罫線方式（共通部は `sources/local/pdf-table.ts`）。
 - 鳥取県議会（#184）: 取得は `www.pref.tottori.lg.jp` だけ（robots.txt は `/secure/221685/` などを Disallow。議決結果ページと賛否 PDF `/secure/{番号}/…` は対象外。毎回読んで従う）。名簿 1 ページ＋会期 index＋会期ページ（議決結果の無い会期も見て飛ばす）＋議決結果ページ（HTML、毎回取得）と賛否 PDF（会期に 4 本ほど。同じ内容の複製も URL が違えば取る。実行中だけ `.cache/`）。2026-08 時点で 118 件（6月定例会 30・2月定例会 88）、不明セル 0、unmatched 0。鳥取の PDF は姓だけなので、名簿に同姓が増えると unmatched が増える（候補は `unmatched.json` の `candidates` に列挙され、ETL は選ばない）。
 - 奈良県議会（#202）: 取得は `www.pref.nara.lg.jp` だけ（robots.txt は `/documents/22137/*` を Disallow。名簿・会期ページ・表決 PDF は対象外。毎回読んで従う）。名簿（五十音順、1 ページ。as-of はページの「（令和8年4月24日現在）」）＋会期 index `/n161/18579.html`＋会期ページ（表決 PDF の無い会期＝会期中は飛ばす。HTML は毎回取得）と「議員別の議案等に対する表決結果」PDF（議決日ごとに 1 本。実行中だけ `.cache/`）。2026-08 時点で 125 件（6月定例会 37・2月定例会 88）、不明セル 0、unmatched 0。奈良の PDF は文字層で一部の字が落ちる（「芦髙清友」の外字「芦」、「西川均」の「均」）ので、完全一致 → 部分列一致（1 人に決まるときだけ）で寄せる（`docs/DATA_CONTRACT.md`）。

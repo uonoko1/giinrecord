@@ -57,7 +57,7 @@ test("buildLocalAssembly: 議員ごとの timeline（新しい順）と counts�
 });
 
 test("writeLocalAssembly + validateLocalAssemblies: 契約どおりのパスに stableJson で書き、違反 0", async () => {
-  const dir = await mkdtemp(join(tmpdir(), "gikailog-local-"));
+  const dir = await mkdtemp(join(tmpdir(), "giinrecord-local-"));
   const members = [member("p_04_a", "柚木 貴光")];
   const rcs = [rollCall("pref-04-398-20251217-発議案-8", "2025-12-17", [{ memberId: "p_04_a", nameText: "柚木 貴光", group: "自由民主党・県民会議", value: yes }])];
   rcs[0].counts = { present: 1, voting: 1, yes: 1, no: 0 };
@@ -85,7 +85,7 @@ test("writeLocalAssembly + validateLocalAssemblies: 契約どおりのパスに 
 });
 
 test("validateLocalAssemblies: sourceUrl のホストが議会の公式ホストでない・凡例の無い値・議員数×議案数≠セル数・index に無い memberId を違反にする", async () => {
-  const dir = await mkdtemp(join(tmpdir(), "gikailog-local-"));
+  const dir = await mkdtemp(join(tmpdir(), "giinrecord-local-"));
   const members = [member("p_04_a", "柚木 貴光")];
   const rcs = [rollCall("pref-04-398-20251217-発議案-8", "2025-12-17", [{ memberId: "p_04_a", nameText: "柚木 貴光", group: "自由民主党・県民会議", value: yes }])];
   rcs[0].counts = { present: 1, voting: 1, yes: 1, no: 0 };
@@ -110,7 +110,7 @@ test("validateLocalAssemblies: sourceUrl のホストが議会の公式ホスト
 });
 
 test("writeLocalAssembly: members/index.json は国会の行を残し、自分の議会の行だけ入れ替える（名簿から消えた人の detail も消す）", async () => {
-  const dir = await mkdtemp(join(tmpdir(), "gikailog-local-"));
+  const dir = await mkdtemp(join(tmpdir(), "giinrecord-local-"));
   await mkdir(join(dir, "members"), { recursive: true });
   const diet = { id: "m_x", name: "国会 太郎", kana: "こっかい たろう", house: "sangiin", assemblyId: "diet-sangiin", group: "g", district: "d", current: true, counts: { rollcalls: 0, bills: 0, speeches: 0, questions: 0 } };
   await writeFile(join(dir, "members", "index.json"), stableJson([diet]));
@@ -130,7 +130,7 @@ test("writeLocalAssembly: members/index.json は国会の行を残し、自分�
 });
 
 test("writeDataset（国会の日次 ETL）は assemblies/index.json の地方議会の行を残す。地方の行が無ければ国会の 2 行だけ（byte-identical）", async () => {
-  const dir = await mkdtemp(join(tmpdir(), "gikailog-local-"));
+  const dir = await mkdtemp(join(tmpdir(), "giinrecord-local-"));
   await mkdir(join(dir, "assemblies"), { recursive: true });
   await writeFile(join(dir, "assemblies", "index.json"), stableJson([...dietAssemblies(221), MIYAGI_ASSEMBLY]));
   await mkdir(join(dir, "members"), { recursive: true });
@@ -152,7 +152,7 @@ test("writeDataset（国会の日次 ETL）は assemblies/index.json の地方�
   const index = JSON.parse(await readFile(join(dir, "assemblies", "index.json"), "utf8")) as Assembly[];
   assert.deepEqual(index.map((a) => a.id), ["diet-sangiin", "diet-shugiin", "pref-04"]);
   assert.deepEqual((JSON.parse(await readFile(join(dir, "members", "index.json"), "utf8")) as { id: string }[]).map((m) => m.id), ["p_04_a"], "members/index.json の地方議員の行を残す");
-  const dir2 = await mkdtemp(join(tmpdir(), "gikailog-local-"));
+  const dir2 = await mkdtemp(join(tmpdir(), "giinrecord-local-"));
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await writeDataset(dir2, ds as any);
   assert.equal(await readFile(join(dir2, "assemblies", "index.json"), "utf8"), stableJson(dietAssemblies(221)));

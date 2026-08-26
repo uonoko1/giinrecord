@@ -1,6 +1,6 @@
 name: Release
 # Issue #127: the production release button. Actions → Release → Run workflow (ref, default main) → the
-# `production` environment's required reviewers approve → build with vars.SITE_ORIGIN → rsync to /var/www/gikailog/site/.
+# `production` environment's required reviewers approve → build with vars.SITE_ORIGIN → rsync to /var/www/giinrecord/site/.
 # Nothing else writes production code; daily data goes through deploy-data.yml (environment production-data, no approval).
 # Issue #134: after a successful release the lightweight tag `released` is moved to the released sha, so deploy-data.yml
 # builds that code (not main) and lays main's data/ on top. Ref updates made with GITHUB_TOKEN trigger no other workflow.

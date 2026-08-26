@@ -96,7 +96,7 @@ test("runKochi + buildLocalAssembly + writeLocalAssembly: 契約どおりに書�
     ["2026-06", "令和８年６月定例会", "2026-07-10", 23],
     ["2025-06", "令和７年６月定例会", "2025-06-27", 24],
   ]);
-  const dir = await mkdtemp(join(tmpdir(), "gikailog-kochi-"));
+  const dir = await mkdtemp(join(tmpdir(), "giinrecord-kochi-"));
   await writeLocalAssembly(dir, built);
   assert.deepEqual(await validateLocalAssemblies(dir), []);
   // 表決の原本に一次資料（PDF）の URL が入る

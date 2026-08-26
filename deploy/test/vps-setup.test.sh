@@ -36,8 +36,8 @@ fresh() {
   P="$TMP/$1"; mkdir -p "$P/etc/nginx/sites-available" "$P/etc/nginx/sites-enabled" "$P/etc/nginx/conf.d"
   LOG="$P/stub.log"; : > "$LOG"
   export VPS_SETUP_PREFIX="$P" STUB_LOG="$LOG"
-  CONF="$P/etc/nginx/sites-available/gikailog.conf"
-  STG_CONF="$P/etc/nginx/sites-available/gikailog-staging.conf"
+  CONF="$P/etc/nginx/sites-available/giinrecord.conf"
+  STG_CONF="$P/etc/nginx/sites-available/giinrecord-staging.conf"
 }
 with_cert() { mkdir -p "$P/etc/letsencrypt/live/$1"; : > "$P/etc/letsencrypt/live/$1/fullchain.pem"; }
 run_setup() { PATH="$BIN:$PATH" bash "$SCRIPT" "$@" > "$P/out" 2>&1; }
@@ -47,7 +47,7 @@ certbot_conf() {
   cat <<'C'
 server {
     server_name giinrecord.jp www.giinrecord.jp;
-    access_log /var/log/nginx/gikailog.access.log noip;
+    access_log /var/log/nginx/giinrecord.access.log noip;
 
     location / {
         proxy_pass http://127.0.0.1:8081;
@@ -73,7 +73,7 @@ server {
     listen 80;
     listen [::]:80;
     server_name giinrecord.jp www.giinrecord.jp;
-    access_log /var/log/nginx/gikailog.access.log noip;
+    access_log /var/log/nginx/giinrecord.access.log noip;
     return 404; # managed by Certbot
 }
 C
@@ -81,8 +81,8 @@ C
 
 # Issue #189: what a certbot-managed conf looks like after ensure_error_log (one error_log after each access_log).
 with_error_log() { sed -E 's#^( *)access_log /var/log/nginx/([a-z-]+)\.access\.log noip;$#&\n\1error_log /var/log/nginx/\2.error.log crit;#'; }
-ERR_LOG_PROD="error_log /var/log/nginx/gikailog.error.log crit;"
-ERR_LOG_STG="error_log /var/log/nginx/gikailog-staging.error.log crit;"
+ERR_LOG_PROD="error_log /var/log/nginx/giinrecord.error.log crit;"
+ERR_LOG_STG="error_log /var/log/nginx/giinrecord-staging.error.log crit;"
 
 t_syntax() { bash -n "$SCRIPT" || fail "bash -n"; }
 
@@ -95,9 +95,9 @@ t_bootstrap_without_cert() {
   assert_contains "$c" "proxy_pass http://127.0.0.1:8081;" "plain proxy on :80 so certbot can run"
   assert_not_contains "$c" "listen 443" "no TLS block before the certificate exists"
   assert_not_contains "$c" "return 301" "no redirect before TLS exists (site must stay reachable)"
-  assert_contains "$c" "access_log /var/log/nginx/gikailog.access.log noip;" "noip log"
+  assert_contains "$c" "access_log /var/log/nginx/giinrecord.access.log noip;" "noip log"
   assert_contains "$c" "$ERR_LOG_PROD" "#189 error_log crit in the bootstrap block"
-  [[ -L "$P/etc/nginx/sites-enabled/gikailog.conf" ]] || fail "enabled symlink"
+  [[ -L "$P/etc/nginx/sites-enabled/giinrecord.conf" ]] || fail "enabled symlink"
   assert_contains "$(cat "$LOG")" "nginx -t" "config tested"
   assert_contains "$(cat "$LOG")" "systemctl reload nginx" "reloaded"
   assert_contains "$(cat "$P/out")" "certbot certonly --nginx -d giinrecord.jp -d www.giinrecord.jp" "operator is told the certbot command"
@@ -148,7 +148,7 @@ t_certbot_conf_with_error_log_untouched() {
   local before; before=$(cat "$CONF")
   run_setup giinrecord.jp || fail "exit $? $(cat "$P/out")"
   assert_eq "$before" "$(cat "$CONF")" "conf that already has error_log is left as is"
-  assert_eq "gikailog.conf" "$(ls "$P/etc/nginx/sites-available/")" "no temp file left in sites-available"
+  assert_eq "giinrecord.conf" "$(ls "$P/etc/nginx/sites-available/")" "no temp file left in sites-available"
 }
 
 t_certbot_conf_only_port_rewritten() {
@@ -181,17 +181,17 @@ t_staging_conf() {
   local c; c=$(cat "$STG_CONF")
   assert_contains "$c" "server_name staging.giinrecord.jp;" "no www for staging"
   assert_contains "$c" "proxy_pass http://127.0.0.1:8083;" "staging port"
-  assert_contains "$c" "gikailog-staging.access.log noip" "staging log"
+  assert_contains "$c" "giinrecord-staging.access.log noip" "staging log"
   assert_contains "$c" "/etc/letsencrypt/live/staging.giinrecord.jp/" "staging cert"
   assert_eq "2" "$(grep -c "$ERR_LOG_STG" "$STG_CONF")" "#189 staging error_log in both blocks"
   [[ ! -e "$CONF" ]] || fail "production conf untouched"
 }
 
 # ---- Issue #163: Cloudflare gate on staging only ----
-CF_INCLUDE="include /etc/nginx/snippets/gikailog-cloudflare-allow.conf;"
+CF_INCLUDE="include /etc/nginx/snippets/giinrecord-cloudflare-allow.conf;"
 # shellcheck disable=SC2016  # nginx variable, not shell
 CF_403='if ($http_cf_access_jwt_assertion = "") { return 403; }'
-with_snippet() { mkdir -p "$P/etc/nginx/snippets"; printf 'allow 10.0.0.0/8;\ndeny all;\n' > "$P/etc/nginx/snippets/gikailog-cloudflare-allow.conf"; }
+with_snippet() { mkdir -p "$P/etc/nginx/snippets"; printf 'allow 10.0.0.0/8;\ndeny all;\n' > "$P/etc/nginx/snippets/giinrecord-cloudflare-allow.conf"; }
 
 t_staging_conf_has_cf_gate() {
   fresh cfstg; with_cert staging.giinrecord.jp; with_snippet
@@ -202,9 +202,9 @@ t_staging_conf_has_cf_gate() {
   assert_not_contains "$c" "CF_GATE" "placeholder replaced"
   # the gate is inside the 443 proxy location, not in the :80 redirect block
   assert_contains "${c#*listen 443}" "$CF_INCLUDE" "gate in the 443 block"
-  assert_not_contains "${c%%listen 443*}" "gikailog-cloudflare-allow" "no gate in the :80 redirect block"
-  assert_eq "1" "$(grep -c 'gikailog-cloudflare-allow' "$STG_CONF")" "included once"
-  assert_eq "deny all;" "$(tail -1 "$P/etc/nginx/snippets/gikailog-cloudflare-allow.conf")" "existing snippet untouched"
+  assert_not_contains "${c%%listen 443*}" "giinrecord-cloudflare-allow" "no gate in the :80 redirect block"
+  assert_eq "1" "$(grep -c 'giinrecord-cloudflare-allow' "$STG_CONF")" "included once"
+  assert_eq "deny all;" "$(tail -1 "$P/etc/nginx/snippets/giinrecord-cloudflare-allow.conf")" "existing snippet untouched"
 }
 
 t_production_conf_has_no_cf_gate() {
@@ -220,7 +220,7 @@ t_production_conf_has_no_cf_gate() {
 t_staging_without_snippet_fails_closed() {
   fresh cfnosnip; with_cert staging.giinrecord.jp
   run_setup staging.giinrecord.jp 8083 || fail "exit $? $(cat "$P/out")"
-  local snip="$P/etc/nginx/snippets/gikailog-cloudflare-allow.conf"
+  local snip="$P/etc/nginx/snippets/giinrecord-cloudflare-allow.conf"
   [[ -f "$snip" ]] || { fail "placeholder snippet written so nginx -t passes"; return; }
   assert_eq "deny all;" "$(grep -v '^#' "$snip")" "placeholder denies everything (fail closed, never open)"
   assert_contains "$(cat "$P/out")" "cloudflare-allowlist.sh" "operator is told to generate the real list"
@@ -238,7 +238,7 @@ certbot_staging_conf() {
   cat <<'C'
 server {
     server_name staging.giinrecord.jp;
-    access_log /var/log/nginx/gikailog-staging.access.log noip;
+    access_log /var/log/nginx/giinrecord-staging.access.log noip;
 
     location / {
         proxy_pass http://127.0.0.1:8083;
@@ -260,7 +260,7 @@ server {
     listen 80;
     listen [::]:80;
     server_name staging.giinrecord.jp;
-    access_log /var/log/nginx/gikailog-staging.access.log noip;
+    access_log /var/log/nginx/giinrecord-staging.access.log noip;
     return 404; # managed by Certbot
 }
 C
@@ -285,9 +285,9 @@ t_certbot_staging_conf_gets_gate() {
   local before; before=$(cat "$STG_CONF"); : > "$LOG"
   run_setup staging.giinrecord.jp 8083 || fail "second: $(cat "$P/out")"
   assert_eq "$before" "$(cat "$STG_CONF")" "idempotent"
-  assert_eq "1" "$(grep -c 'gikailog-cloudflare-allow' "$STG_CONF")" "included once"
+  assert_eq "1" "$(grep -c 'giinrecord-cloudflare-allow' "$STG_CONF")" "included once"
   assert_eq "2" "$(grep -c "$ERR_LOG_STG" "$STG_CONF")" "#189 error_log inserted into both certbot server blocks"
-  assert_not_contains "$c" "gikailog.error.log" "staging never gets the production log name"
+  assert_not_contains "$c" "giinrecord.error.log" "staging never gets the production log name"
 }
 
 t_certbot_production_conf_gets_no_gate() {
@@ -317,7 +317,7 @@ test_case "certbot 管理の conf でも proxy_pass のポートだけは直す"
 test_case "#189 error_log が既にある certbot 管理の conf には何もしない" t_certbot_conf_with_error_log_untouched
 test_case "8083 は staging.* のドメインだけ受け付ける" t_staging_port_requires_staging_domain
 test_case "8081 は staging.* のドメインを拒否する" t_production_port_rejects_staging_domain
-test_case "staging: www 無し・8083・gikailog-staging.conf、production の conf には触れない" t_staging_conf
+test_case "staging: www 無し・8083・giinrecord-staging.conf、production の conf には触れない" t_staging_conf
 test_case "8081/8083 以外のポートは拒否" t_unknown_port
 test_case "#163 staging の 443 location / に Cloudflare allow-list の include と JWT ヘッダ無し 403" t_staging_conf_has_cf_gate
 test_case "#163 production の conf には Cloudflare の制限を入れない" t_production_conf_has_no_cf_gate

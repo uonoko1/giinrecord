@@ -1,7 +1,7 @@
 # ETL image (Issue #86). Build from the repo root:
-#   docker build -f packages/etl/Dockerfile -t gikailog-etl .
+#   docker build -f packages/etl/Dockerfile -t giinrecord-etl .
 # Run (data/ and the HTML cache are bind mounts; run as the host uid so the files stay yours):
-#   docker run --rm --user "$(id -u):$(id -g)" -v "$PWD/data:/app/data" -v "$PWD/packages/etl/.cache:/app/packages/etl/.cache" gikailog-etl 221
+#   docker run --rm --user "$(id -u):$(id -g)" -v "$PWD/data:/app/data" -v "$PWD/packages/etl/.cache:/app/packages/etl/.cache" giinrecord-etl 221
 # or `docker compose -f deploy/docker-compose.etl.yml run --rm etl 221`.
 # Only the pnpm workspace is copied (see .dockerignore): no data/, no .cache, no .env, no secrets.
 FROM node:24-alpine AS deps

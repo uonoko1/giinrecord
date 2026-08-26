@@ -5,13 +5,13 @@
 # with mode 600. Nothing else is exposed: ubuntu gets no read access to /var/log/nginx.
 #
 #   usage: daily.sh [YYYY-MM-DD]      (default: yesterday, in the server's local time = nginx $time_local)
-#   env:   ANALYTICS_LOG    nginx access log (default /var/log/nginx/gikailog.access.log)
+#   env:   ANALYTICS_LOG    nginx access log (default /var/log/nginx/giinrecord.access.log)
 #          ANALYTICS_OUT    output dir (default $HOME/analytics)
 #          ANALYTICS_OWNER  user who owns the TSV (default: current user; cron sets ubuntu)
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LOG="${ANALYTICS_LOG:-/var/log/nginx/gikailog.access.log}"
+LOG="${ANALYTICS_LOG:-/var/log/nginx/giinrecord.access.log}"
 OUT_DIR="${ANALYTICS_OUT:-$HOME/analytics}"
 OWNER="${ANALYTICS_OWNER:-$(id -un)}"
 DAY="${1:-$(date -d yesterday +%F)}"

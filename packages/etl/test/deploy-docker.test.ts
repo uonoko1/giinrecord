@@ -7,8 +7,8 @@ import { dirname, resolve } from "node:path";
 
 // Issue #85: web は nginx コンテナ（docker compose）で配信し、共用 VPS のホスト nginx は proxy_pass + TLS だけにする。
 // 受け入れ基準「セキュリティヘッダ・CSP・キャッシュが現状と同一（diff をテスト）」を、
-// 旧 server block（deploy/nginx-gikailog.conf, Sprint 1〜5 で本番運用）の値をここに固定して検証する。
-// Issue #127: staging（web-staging, 127.0.0.1:8083, /var/www/gikailog/staging）を同じ site.conf で足し、
+// 旧 server block（deploy/nginx-seiji-kiroku.conf, Sprint 1〜5 で本番運用）の値をここに固定して検証する。
+// Issue #127: staging（web-staging, 127.0.0.1:8083, /var/www/giinrecord/staging）を同じ site.conf で足し、
 // main push → staging 自動、production は release.yml の承認付き手動リリース。
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, "../../..");
@@ -32,7 +32,7 @@ const release = read(".github/workflows/release.yml");
 const deployData = read(".github/workflows/deploy-data.yml");
 
 /**
- * 旧 deploy/nginx-gikailog.conf の add_header 行（順序・値とも同一であること）＋ #127 の X-Robots-Tag。
+ * 旧 deploy/nginx-seiji-kiroku.conf の add_header 行（順序・値とも同一であること）＋ #127 の X-Robots-Tag。
  * #168: フォントを自サイト配信にしたので CSP から fonts.googleapis.com / fonts.gstatic.com を外し、font-src 'self'。
  * #194: script-src に 'unsafe-inline'。React Router のプリレンダリング HTML は inline <script>（hydration context・themeInit）を
  * 持ち、内容がページ・ビルドごとに変わるためハッシュ方式は不可。'self' だけだと本番でクライアント JS が一切動かなかった。
@@ -148,11 +148,11 @@ test("docker-compose: nginx:alpine を 127.0.0.1:8081 にだけ公開し、サ�
   assert.match(compose, /restart: unless-stopped/);
 });
 
-test("docker-compose: 本番は /var/www/gikailog/site（rsync 先は不変）、ローカルは SITE_DIR で apps/web/build/client", () => {
-  assert.match(compose, /\$\{SITE_DIR:-\/var\/www\/gikailog\/site\}/);
+test("docker-compose: 本番は /var/www/giinrecord/site（rsync 先は不変）、ローカルは SITE_DIR で apps/web/build/client", () => {
+  assert.match(compose, /\$\{SITE_DIR:-\/var\/www\/giinrecord\/site\}/);
 });
 
-test("docker-compose: web-staging は 127.0.0.1:8083 だけに公開し、/var/www/gikailog/staging を同じ site.conf で読み取り専用配信する", () => {
+test("docker-compose: web-staging は 127.0.0.1:8083 だけに公開し、/var/www/giinrecord/staging を同じ site.conf で読み取り専用配信する", () => {
   const at = compose.indexOf("web-staging:");
   assert.ok(at > 0, "web-staging service missing");
   const staging = compose.slice(at);
@@ -160,7 +160,7 @@ test("docker-compose: web-staging は 127.0.0.1:8083 だけに公開し、/var/w
   assert.match(compose, /^x-web: &web\n\s+image: nginx:[\d.]*-?alpine/m);
   assert.match(staging, /<<: \*web/);
   assert.match(staging, /"127\.0\.0\.1:8083:80"/);
-  assert.match(staging, /\$\{STAGING_SITE_DIR:-\/var\/www\/gikailog\/staging\}:\/usr\/share\/nginx\/html:ro/);
+  assert.match(staging, /\$\{STAGING_SITE_DIR:-\/var\/www\/giinrecord\/staging\}:\/usr\/share\/nginx\/html:ro/);
   assert.match(staging, /\.\/nginx\/site\.conf:\/etc\/nginx\/conf\.d\/default\.conf:ro/);
   assert.doesNotMatch(compose, /"0\.0\.0\.0:|^\s*- "8083:80"/m);
 });
@@ -173,7 +173,7 @@ test("vps-setup.sh: 何もインストールせず docker を実行もしない�
 
 test("vps-setup.sh: ホスト proxy の server block を書き、web root を作り、docker compose の手順を表示する", () => {
   assert.match(setup, /proxy_pass http:\/\/127\.0\.0\.1:PORT;/);
-  assert.match(setup, /\/var\/www\/gikailog\/site/);
+  assert.match(setup, /\/var\/www\/giinrecord\/site/);
   assert.match(setup, /docker compose -f .*docker-compose\.yml up -d/);
   assert.doesNotMatch(setup, /^\s*root \/var\/www/m, "host nginx must not serve the files directly");
 });
@@ -189,12 +189,12 @@ test("vps-setup.sh と nginx-host-proxy.conf の server block は同一（ファ
   );
 });
 
-// Issue #127: vps-setup.sh <domain> [port] — 8081 = production (gikailog.conf, site/), 8083 = staging (gikailog-staging.conf, staging/).
+// Issue #127: vps-setup.sh <domain> [port] — 8081 = production (giinrecord.conf, site/), 8083 = staging (giinrecord-staging.conf, staging/).
 // deploy/test/render-host-proxy.sh は同じ関数で server block を stdout に描くだけ（root 不要）。
 test("vps-setup.sh: port 8083 なら staging の conf 名・web root・ログ名（8081 が既定）。置換後に placeholder が残らない", () => {
   assert.match(setupCode, /PORT="\$\{2:-8081\}"/);
-  assert.match(setup, /8081\)\s*NAME=gikailog;\s*SITE_DIR=\/var\/www\/gikailog\/site/);
-  assert.match(setup, /8083\)\s*NAME=gikailog-staging;\s*SITE_DIR=\/var\/www\/gikailog\/staging/);
+  assert.match(setup, /8081\)\s*NAME=giinrecord;\s*SITE_DIR=\/var\/www\/giinrecord\/site/);
+  assert.match(setup, /8083\)\s*NAME=giinrecord-staging;\s*SITE_DIR=\/var\/www\/giinrecord\/staging/);
   assert.match(setup, /SITE_CONF=\/etc\/nginx\/sites-available\/\$NAME\.conf/);
   const render = (domain: string, port: string) => {
     const r = spawnSync("bash", [resolve(root, "deploy/test/render-host-proxy.sh"), domain, port], { encoding: "utf8" });
@@ -204,15 +204,15 @@ test("vps-setup.sh: port 8083 なら staging の conf 名・web root・ログ名
   const prod = render("giinrecord.jp", "8081");
   assert.match(prod, /server_name giinrecord\.jp www\.giinrecord\.jp;/);
   assert.match(prod, /proxy_pass http:\/\/127\.0\.0\.1:8081;/);
-  assert.match(prod, /access_log \/var\/log\/nginx\/gikailog\.access\.log noip;/);
+  assert.match(prod, /access_log \/var\/log\/nginx\/giinrecord\.access\.log noip;/);
   const staging = render("staging.giinrecord.jp", "8083");
   assert.match(staging, /server_name staging\.giinrecord\.jp;/);
   assert.doesNotMatch(staging, /www\./);
   assert.match(staging, /proxy_pass http:\/\/127\.0\.0\.1:8083;/);
-  assert.match(staging, /access_log \/var\/log\/nginx\/gikailog-staging\.access\.log noip;/);
+  assert.match(staging, /access_log \/var\/log\/nginx\/giinrecord-staging\.access\.log noip;/);
   for (const out of [prod, staging]) assert.doesNotMatch(out, /\bPORT\b|LOG_NAME|\bDOMAIN\b|SERVER_NAMES|CF_GATE/);
   // Issue #163: only the staging 443 location / is gated (Cloudflare ranges + Cf-Access-Jwt-Assertion); production is open
-  assert.match(staging, /include \/etc\/nginx\/snippets\/gikailog-cloudflare-allow\.conf;/);
+  assert.match(staging, /include \/etc\/nginx\/snippets\/giinrecord-cloudflare-allow\.conf;/);
   assert.match(staging, /if \(\$http_cf_access_jwt_assertion = ""\) \{ return 403; \}/);
   assert.doesNotMatch(prod, /cloudflare|cf_access|403/);
   assert.match(hostProxy, /^CF_GATE$/m, "the template keeps the CF_GATE placeholder in the 443 location /");
@@ -247,7 +247,7 @@ test("deploy-site.yml: 再利用ワークフロー。environment / site_origin /
   assert.match(deploySite, /SITE_ORIGIN: \$\{\{ inputs\.site_origin \}\}/);
   assert.match(deploySite, /ref: \$\{\{ inputs\.ref \}\}/);
   assert.match(deploySite, /rsync -az --delete --exclude '\.well-known'/);
-  assert.match(deploySite, /\/var\/www\/gikailog\/\$TARGET_DIR\//);
+  assert.match(deploySite, /\/var\/www\/giinrecord\/\$TARGET_DIR\//);
   assert.match(deploySite, /TARGET_DIR: \$\{\{ inputs\.target_dir \}\}/);
   assert.doesNotMatch(uncommented(deploySite), /docker/);
 });
@@ -324,16 +324,16 @@ test("staging-setup.sh: 1 回だけの root 作業のテスト（deploy/test/sta
   assert.equal(r.status, 0, r.stdout + r.stderr);
 });
 
-// Issue #119: 改名（seiji-kiroku → gikailog）の追従。パス・conf 名・project name は新名で、go-live.sh は旧環境を移行する。
-test("compose project / パス / nginx conf / 計測 cron はすべて gikailog 名", () => {
-  assert.match(compose, /^name: gikailog$/m);
+// Issue #119: 改名（seiji-kiroku → giinrecord）の追従。パス・conf 名・project name は新名で、go-live.sh は旧環境を移行する。
+test("compose project / パス / nginx conf / 計測 cron はすべて giinrecord 名", () => {
+  assert.match(compose, /^name: giinrecord$/m);
   assert.match(setup, /\/etc\/nginx\/sites-available\/\$NAME\.conf/);
-  assert.match(setup, /\/etc\/nginx\/conf\.d\/gikailog-noip-log\.conf/);
-  assert.match(deploySite, /\/var\/www\/gikailog\//);
+  assert.match(setup, /\/etc\/nginx\/conf\.d\/giinrecord-noip-log\.conf/);
+  assert.match(deploySite, /\/var\/www\/giinrecord\//);
   const analytics = read("deploy/analytics/vps-analytics-setup.sh");
-  assert.match(analytics, /\/etc\/cron\.d\/gikailog-analytics/);
-  assert.match(analytics, /\/usr\/local\/lib\/gikailog-analytics/);
-  assert.match(analytics, /\/var\/log\/nginx\/gikailog\.access\.log/);
+  assert.match(analytics, /\/etc\/cron\.d\/giinrecord-analytics/);
+  assert.match(analytics, /\/usr\/local\/lib\/giinrecord-analytics/);
+  assert.match(analytics, /\/var\/log\/nginx\/giinrecord\.access\.log/);
   for (const f of [
     "deploy/go-live.sh",
     "deploy/staging-setup.sh",

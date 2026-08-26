@@ -21,7 +21,7 @@ run_script() {
   echo 0 > "$TMP/counter"
   set +e
   PATH="$HERE/fake-bin:$PATH" FAKE_GH_LOG="$TMP/gh.log" FAKE_GH_HANDLER="$handler" FAKE_COUNTER="$TMP/counter" \
-    POLL_INTERVAL=0 POLL_MAX=5 PO_REPO=uonoko1/gikailog \
+    POLL_INTERVAL=0 POLL_MAX=5 PO_REPO=uonoko1/giinrecord \
     bash "$PO_DIR/$script" "$@" > "$TMP/out" 2> "$TMP/err"
   # shellcheck disable=SC2034
   STATUS=$?

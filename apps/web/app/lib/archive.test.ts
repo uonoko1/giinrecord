@@ -62,8 +62,8 @@ describe("archiveReadme", () => {
     const text = archiveReadme(meta);
     expect(text).toContain("CC BY 4.0");
     expect(text).toContain("https://creativecommons.org/licenses/by/4.0/");
-    expect(text).toContain("議員レコード (gikailog)");
-    expect(text).toContain("https://github.com/uonoko1/gikailog");
+    expect(text).toContain("議員レコード (giinrecord)");
+    expect(text).toContain("https://github.com/uonoko1/giinrecord");
     expect(text).toContain("参議院 本会議投票結果");
     expect(text).toContain("https://www.sangiin.go.jp/x");
     expect(text).toContain("2026-08-22T13:49:50.028Z");
@@ -73,7 +73,7 @@ describe("archiveReadme", () => {
   it("meta が無くてもライセンスと帰属表示は書く", () => {
     const text = archiveReadme(undefined);
     expect(text).toContain("CC BY 4.0");
-    expect(text).toContain("議員レコード (gikailog)");
+    expect(text).toContain("議員レコード (giinrecord)");
   });
 
   it("評価語を含まない", () => {

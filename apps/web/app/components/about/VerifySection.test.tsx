@@ -4,7 +4,7 @@ import { MemoryRouter } from "react-router";
 import { describe, expect, it } from "vitest";
 import { VerifySection } from "./VerifySection";
 
-const repo = "https://github.com/uonoko1/gikailog";
+const repo = "https://github.com/uonoko1/giinrecord";
 
 /** 費目・金額・未確定の表現は書かない（#160）。 */
 const BANNED_WORDS = ["VPS", "ドメイン", "未算出", "取得予定", "月額", "円"];

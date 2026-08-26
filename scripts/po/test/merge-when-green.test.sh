@@ -189,7 +189,7 @@ git_handle() {
     "-C /repo fetch origin "*) : ;;
     "-C /repo worktree add --detach "*" origin/feat/x") : ;;
     "-C "*" merge --no-edit origin/main") echo "Merge made by the 'ort' strategy." ;;
-    "-C "*" push git@github.com:uonoko1/gikailog.git HEAD:refs/heads/feat/x") : ;;
+    "-C "*" push git@github.com:uonoko1/giinrecord.git HEAD:refs/heads/feat/x") : ;;
     "-C /repo worktree remove --force "*) : ;;
     *) echo "unexpected git: $*" >&2; exit 99 ;;
   esac
@@ -200,7 +200,7 @@ EOF
   assert_eq 0 "$STATUS" "exit status: $ERR"
   assert_contains "$LOG" $'git\t-C\t/repo\tfetch\torigin' "fetches into the local checkout"
   assert_contains "$LOG" $'merge\t--no-edit\torigin/main' "merges origin/main in the worktree"
-  assert_contains "$LOG" $'push\tgit@github.com:uonoko1/gikailog.git\tHEAD:refs/heads/feat/x' "pushes the PR head over SSH"
+  assert_contains "$LOG" $'push\tgit@github.com:uonoko1/giinrecord.git\tHEAD:refs/heads/feat/x' "pushes the PR head over SSH"
   assert_contains "$LOG" $'worktree\tremove\t--force' "removes the temporary worktree"
   assert_eq $'pr\tmerge\t12\t--squash\t--delete-branch' "$(tail -n 1 <<<"$LOG")" "PR merge is the last call"
 }
@@ -258,7 +258,7 @@ git_handle() {
     "-C /repo fetch origin "*) : ;;
     "-C /repo worktree add --detach "*" origin/feat/x") : ;;
     "-C "*" merge --no-edit origin/main") : ;;
-    "-C "*" push git@github.com:uonoko1/gikailog.git HEAD:refs/heads/feat/x") echo "Permission denied (publickey)." >&2; exit 128 ;;
+    "-C "*" push git@github.com:uonoko1/giinrecord.git HEAD:refs/heads/feat/x") echo "Permission denied (publickey)." >&2; exit 128 ;;
     "-C /repo worktree remove --force "*) : ;;
     *) echo "unexpected git: $*" >&2; exit 99 ;;
   esac
@@ -338,9 +338,9 @@ handle() {
     "pr view 33 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"data/refresh","mergeStateStatus":"BLOCKED","url":"u"}' ;;
     "pr checks 33 --json"*)
       if [ "$(bump)" -lt 2 ]; then echo '[]'; exit 1; else echo '[{"name":"check","bucket":"pass"}]'; fi ;;
-    "api repos/uonoko1/gikailog/actions/runs?branch=data/refresh&status=action_required"*) echo '{"workflow_runs":[{"id":101},{"id":102}]}' ;;
-    "api -X POST repos/uonoko1/gikailog/actions/runs/101/approve") echo ok ;;
-    "api -X POST repos/uonoko1/gikailog/actions/runs/102/approve") echo "forbidden" >&2; exit 1 ;;
+    "api repos/uonoko1/giinrecord/actions/runs?branch=data/refresh&status=action_required"*) echo '{"workflow_runs":[{"id":101},{"id":102}]}' ;;
+    "api -X POST repos/uonoko1/giinrecord/actions/runs/101/approve") echo ok ;;
+    "api -X POST repos/uonoko1/giinrecord/actions/runs/102/approve") echo "forbidden" >&2; exit 1 ;;
     "pr merge 33 --squash --delete-branch") echo merged ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac

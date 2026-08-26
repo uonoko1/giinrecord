@@ -6,10 +6,10 @@ Issue #135。外部 SaaS（UptimeRobot / Datadog / Sentry 等）は使わない�
 GitHub Actions  monitor.yml ──10分おき──▶ https://giinrecord.jp          ┐ /, /members/, /assemblies/, 議会ページ, /data/meta.json, TLS 期限
                             ──毎時────▶ https://staging.giinrecord.jp  ┘ deploy/monitor/probe.sh → run.sh → report.sh (gh)
                                                                               │ 2 回連続で失敗 → Issue "[monitor] <env>: <check>"
-VPS  root cron 5分  /usr/local/lib/gikailog-monitor/health.sh                 │ 復旧 → 自動 close
+VPS  root cron 5分  /usr/local/lib/giinrecord-monitor/health.sh                 │ 復旧 → 自動 close
        コンテナ healthy・ディスク・nginx・rsync 先の鮮度                        │
-       → /var/log/gikailog-monitor.log, ~ubuntu/monitor/latest.json           │
-       → curl で Issues API（/etc/gikailog/monitor.token、無ければ通知なし） ──┘ Issue "[monitor] vps: <check>"
+       → /var/log/giinrecord-monitor.log, ~ubuntu/monitor/latest.json           │
+       → curl で Issues API（/etc/giinrecord/monitor.token、無ければ通知なし） ──┘ Issue "[monitor] vps: <check>"
 ```
 
 ## 何を見ているか
@@ -64,10 +64,10 @@ VPS  root cron 5分  /usr/local/lib/gikailog-monitor/health.sh                 �
 | `container-web` / `container-web-staging` | `docker inspect` の Health が `healthy` | `docker compose ps`、`docker compose logs web`、`site.conf` の構文（`docs/ops/deploy.md` 失敗モード） |
 | `nginx` | `systemctl is-active nginx` が `active` | `systemctl status nginx`、`nginx -t` |
 | `disk` | web root のあるファイルシステム使用率 ≤ 85% | `journalctl --vacuum`、docker の `json-file` ログ、他サイトの増分（共用 VPS） |
-| `site-production` / `site-staging` | `/var/www/gikailog/{site,staging}/data/meta.json` が存在し更新 48 時間以内 | `deploy-data.yml` / Release / Deploy (staging) の失敗、rrsync の鍵 |
+| `site-production` / `site-staging` | `/var/www/giinrecord/{site,staging}/data/meta.json` が存在し更新 48 時間以内 | `deploy-data.yml` / Release / Deploy (staging) の失敗、rrsync の鍵 |
 
-- 結果は毎回 `/var/log/gikailog-monitor.log`（root 600）に 1 行（`<UTC> OK` / `<UTC> FAIL <check>: <理由>; …`）。最新の結果は `~ubuntu/monitor/latest.json`（owner ubuntu、600）にも置く（`{"checkedAt","ok","failures":[…]}`）。
-- 2 回連続（10 分）で失敗した check は Issue `[monitor] vps: <check>`。Issue 番号は `/var/lib/gikailog-monitor/issue.<check>`（root）に覚え、消えていても同名の open Issue を採用して重複させない。復旧でコメント＋close。
+- 結果は毎回 `/var/log/giinrecord-monitor.log`（root 600）に 1 行（`<UTC> OK` / `<UTC> FAIL <check>: <理由>; …`）。最新の結果は `~ubuntu/monitor/latest.json`（owner ubuntu、600）にも置く（`{"checkedAt","ok","failures":[…]}`）。
+- 2 回連続（10 分）で失敗した check は Issue `[monitor] vps: <check>`。Issue 番号は `/var/lib/giinrecord-monitor/issue.<check>`（root）に覚え、消えていても同名の open Issue を採用して重複させない。復旧でコメント＋close。
 - **トークンが無い・API が失敗しても監視は止まらない**（ログに `note:` を 1 行書くだけ。終了コードは check の結果のみ）。
 - Issue 本文は check 名と時刻のみ。ホスト名・IP・ユーザー名・パスは書かない。
 
@@ -78,24 +78,24 @@ VPS  root cron 5分  /usr/local/lib/gikailog-monitor/health.sh                 �
 何もしない。`monitor.yml` は `GITHUB_TOKEN`（`issues: write`）で動き、label `monitor` は初回の Issue 作成時に `gh label create --force` で作られる。
 マージ後に Actions → Monitor → Run workflow で 1 回手動実行し、両 job が green（Issue が増えない）ことを確認する。
 
-### VPS 側（PO が `gikaiops` で）
+### VPS 側（PO が `giinops` で）
 
 ```sh
 VPS_SSH_HOST="${VPS_SSH_HOST:-sakura-vps}"
 # 1. 最新の main を VPS の checkout に
-ssh "$VPS_SSH_HOST" 'cd /opt/gikailog && sudo git pull --ff-only'
-# 2. 冪等セットアップ（root 所有の health.sh、/etc/gikailog（700）、log、state、~ubuntu/monitor、cron.d）
-ssh "$VPS_SSH_HOST" 'sudo bash /opt/gikailog/deploy/monitor/setup.sh'
+ssh "$VPS_SSH_HOST" 'cd /opt/giinrecord && sudo git pull --ff-only'
+# 2. 冪等セットアップ（root 所有の health.sh、/etc/giinrecord（700）、log、state、~ubuntu/monitor、cron.d）
+ssh "$VPS_SSH_HOST" 'sudo bash /opt/giinrecord/deploy/monitor/setup.sh'
 # 3. fine-grained PAT を置く（root 600）。GitHub → Settings → Developer settings → Fine-grained tokens:
 #    Repository access = このリポジトリのみ、Permissions = Issues: Read and write のみ、期限は 1 年以内
 ssh -t "$VPS_SSH_HOST"                    # VPS のシェルで（トークンをコマンド行・履歴に残さない）:
-#   sudo sh -c 'umask 077; read -r t; printf "%s\n" "$t" > /etc/gikailog/monitor.token'   ← 空行のプロンプトに貼り付けて Enter
+#   sudo sh -c 'umask 077; read -r t; printf "%s\n" "$t" > /etc/giinrecord/monitor.token'   ← 空行のプロンプトに貼り付けて Enter
 # 4. 確認（手動実行。OK なら何も出力しない）
-ssh "$VPS_SSH_HOST" 'sudo /usr/local/lib/gikailog-monitor/health.sh; sudo tail -3 /var/log/gikailog-monitor.log'
+ssh "$VPS_SSH_HOST" 'sudo /usr/local/lib/giinrecord-monitor/health.sh; sudo tail -3 /var/log/giinrecord-monitor.log'
 ssh "$VPS_SSH_HOST" 'cat ~/monitor/latest.json'   # ubuntu として読める
 ```
 
-`setup.sh` はパッケージを入れず、nginx・docker・sudoers に触れない。`health.sh` は `/opt/gikailog` の checkout から root 所有の `/usr/local/lib/gikailog-monitor/` に**コピー**される（root の cron が他ユーザーの書ける場所を実行しないため。analytics と同じ設計）。`health.sh` を変えたら `setup.sh` をもう一度走らせる。
+`setup.sh` はパッケージを入れず、nginx・docker・sudoers に触れない。`health.sh` は `/opt/giinrecord` の checkout から root 所有の `/usr/local/lib/giinrecord-monitor/` に**コピー**される（root の cron が他ユーザーの書ける場所を実行しないため。analytics と同じ設計）。`health.sh` を変えたら `setup.sh` をもう一度走らせる。
 
 トークンのローテーション：新しい PAT を同じ手順 3 で上書きするだけ。古い PAT は GitHub 側で revoke。
 
@@ -105,9 +105,9 @@ ssh "$VPS_SSH_HOST" 'cat ~/monitor/latest.json'   # ubuntu として読める
 # 状態 = open Issue
 gh issue list --label monitor --state open
 # VPS のログ
-ssh "$VPS_SSH_HOST" 'sudo tail -20 /var/log/gikailog-monitor.log'
+ssh "$VPS_SSH_HOST" 'sudo tail -20 /var/log/giinrecord-monitor.log'
 # 一時停止（メンテナンスで誤報させたくないとき）
-ssh "$VPS_SSH_HOST" 'sudo mv /etc/cron.d/gikailog-monitor /root/gikailog-monitor.cron.off'   # 戻すときは逆
+ssh "$VPS_SSH_HOST" 'sudo mv /etc/cron.d/giinrecord-monitor /root/giinrecord-monitor.cron.off'   # 戻すときは逆
 #   Actions 側: Actions → Monitor → … → Disable workflow（終わったら Enable）
 ```
 

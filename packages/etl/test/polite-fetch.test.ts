@@ -4,8 +4,8 @@ import { isAllowedByRobots, parseRobots, PoliteFetcher } from "../src/sources/lo
 
 // 地方議会サイト向けの丁寧な取得（Issue #157）: 許可ホストだけ・robots.txt 遵守。
 
-test("parseRobots: User-agent: * と gikailog-etl の Disallow を集める（他の UA のブロックは無視）", () => {
-  const rules = parseRobots(["User-agent: GPTBot", "Disallow: /", "", "User-agent: *", "Disallow: /secure/", "Disallow:", "# comment", "User-agent: gikailog-etl", "Disallow: /private/*"].join("\n"));
+test("parseRobots: User-agent: * と giinrecord-etl の Disallow を集める（他の UA のブロックは無視）", () => {
+  const rules = parseRobots(["User-agent: GPTBot", "Disallow: /", "", "User-agent: *", "Disallow: /secure/", "Disallow:", "# comment", "User-agent: giinrecord-etl", "Disallow: /private/*"].join("\n"));
   assert.deepEqual(rules.disallow, ["/secure/", "/private/*"]);
   assert.equal(isAllowedByRobots(rules, "https://www.pref.miyagi.jp/site/kengikai/x.html"), true);
   assert.equal(isAllowedByRobots(rules, "https://www.pref.miyagi.jp/secure/1/x.pdf"), false);
