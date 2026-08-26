@@ -38,7 +38,7 @@ t_fixtures_exist() {
 }
 
 # The one rule the shared VPS makes non-negotiable: only this project's own log files may be named.
-# A glob would silently pull in daichisakai / livegt logs the next time someone drops a file in /var/log.
+# A glob would silently pull in a co-tenant site's logs the next time someone drops a file in /var/log.
 t_only_this_projects_logs() {
   local f body
   for f in "$MONITOR_FIXTURE" "$ANALYTICS_FIXTURE"; do
