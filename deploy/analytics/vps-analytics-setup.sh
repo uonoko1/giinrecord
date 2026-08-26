@@ -9,6 +9,11 @@
 #   4. creates the root-owned script dir /usr/local/lib/giinrecord-analytics and ~ubuntu/analytics (700)
 #   5. installs /etc/cron.d/giinrecord-analytics: 00:10 daily, as ROOT, aggregates yesterday and hands
 #      only the TSV to ubuntu (install -o ubuntu -m 600)
+#   6. installs /etc/logrotate.d/giinrecord-analytics (Issue #288): the cron log below matched no logrotate
+#      config and grew without bound. Names that one file only — the VPS is shared with other sites, and a
+#      glob under /var/log would rotate their logs too. Kept byte-identical to deploy/analytics/logrotate.conf
+#      (this script is also run piped over stdin, `sudo bash -s`, so it cannot read a file from the checkout);
+#      deploy/test/logrotate.test.sh fails if the two drift apart.
 #
 # Deliberately NOT done: adding ubuntu to the adm group. ubuntu is the CI deploy-key user (deploy-site.yml rsync);
 # adm would let a leaked key read every log on the shared VPS (other sites' access logs with IP/UA, auth.log,
@@ -65,6 +70,36 @@ ANALYTICS_OWNER=$OWNER
 10 0 * * * root test -x $TOOLS/daily.sh && $TOOLS/daily.sh >> $CRON_LOG 2>&1
 CRON
 chmod 644 /etc/cron.d/giinrecord-analytics
+
+# Rotation for $CRON_LOG (Issue #288). Mode 644: logrotate skips configs that are group/other-writable.
+cat > /etc/logrotate.d/giinrecord-analytics <<'LOGROTATE'
+# logrotate for the analytics cron log (Issue #288). Installed to /etc/logrotate.d/giinrecord-analytics by
+# deploy/analytics/vps-analytics-setup.sh; checked by deploy/test/logrotate.test.sh.
+#
+# This is the *cron output* of daily.sh (one line per daily run, plus any error it printed) — not the nginx
+# access log, which /etc/logrotate.d/nginx already rotates. It matched no logrotate config either.
+#
+# The VPS is shared with other sites, so exactly one file is named here — never a glob under /var/log.
+#
+# Size and retention, from the log itself (measured 2026-08-27): 221 bytes since it was created on
+# 2026-08-23, i.e. ~55 bytes/day at one cron run per day (10 0 * * *). At that rate a year is a few tens of
+# KB, so retention here is about keeping the record, not about disk: monthly x 12 matches the monitor log so
+# both roll on the same rhythm and one operator note covers both. maxsize 32M is the same runaway guard
+# (a daily.sh that starts erroring on every line).
+/var/log/giinrecord-analytics.log {
+    monthly
+    maxsize 32M
+    rotate 12
+    missingok
+    notifempty
+    compress
+    delaycompress
+    # Written by root's cron and 600 root:root while live; su root root keeps the archives off the adm group.
+    su root root
+    create 0600 root root
+}
+LOGROTATE
+chmod 644 /etc/logrotate.d/giinrecord-analytics
 
 echo "analytics ready. Install scripts (root-owned, so the root cron never runs anything ubuntu can edit):"
 echo "  scp deploy/analytics/{aggregate,daily}.sh \"\${VPS_SSH_HOST:-sakura-vps}\":/tmp/ && ssh \"\${VPS_SSH_HOST:-sakura-vps}\" 'sudo install -o root -g root -m 755 /tmp/aggregate.sh /tmp/daily.sh $TOOLS/ && rm /tmp/aggregate.sh /tmp/daily.sh'"

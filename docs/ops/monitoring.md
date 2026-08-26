@@ -66,7 +66,7 @@ VPS  root cron 5分  /usr/local/lib/giinrecord-monitor/health.sh                
 | `disk` | web root のあるファイルシステム使用率 ≤ 85% | `journalctl --vacuum`、docker の `json-file` ログ、他サイトの増分（共用 VPS） |
 | `site-production` / `site-staging` | `/var/www/giinrecord/{site,staging}/data/meta.json` が存在し更新 48 時間以内 | `deploy-data.yml` / Release / Deploy (staging) の失敗、rrsync の鍵 |
 
-- 結果は毎回 `/var/log/giinrecord-monitor.log`（root 600）に 1 行（`<UTC> OK` / `<UTC> FAIL <check>: <理由>; …`）。最新の結果は `~ubuntu/monitor/latest.json`（owner ubuntu、600）にも置く（`{"checkedAt","ok","failures":[…]}`）。
+- 結果は毎回 `/var/log/giinrecord-monitor.log`（root 600）に 1 行（`<UTC> OK` / `<UTC> FAIL <check>: <理由>; …`）。このログは `/etc/logrotate.d/giinrecord-monitor`（monthly・12 世代・`maxsize 32M`、#288）で回る。肥大の確認手順は `docs/ops/log-rotation.md`。最新の結果は `~ubuntu/monitor/latest.json`（owner ubuntu、600）にも置く（`{"checkedAt","ok","failures":[…]}`）。
 - 2 回連続（10 分）で失敗した check は Issue `[monitor] vps: <check>`。Issue 番号は `/var/lib/giinrecord-monitor/issue.<check>`（root）に覚え、消えていても同名の open Issue を採用して重複させない。復旧でコメント＋close。
 - **トークンが無い・API が失敗しても監視は止まらない**（ログに `note:` を 1 行書くだけ。終了コードは check の結果のみ）。
 - Issue 本文は check 名と時刻のみ。ホスト名・IP・ユーザー名・パスは書かない。
