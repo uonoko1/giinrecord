@@ -381,6 +381,19 @@
    "title": "金融商品取引法及び資金決済に関する法律の一部を改正する法律案"
   },
   {
+   "committee": "経済産業委員会",
+   "date": "2026-04-08",
+   "estimated": false,
+   "firstDate": "2026-04-08",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104080X00120260408_000",
+   "meetings": 16,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104080X00120260408/0"
+  },
+  {
    "billId": "221-閣法-56",
    "date": "2026-04-07",
    "estimated": true,
@@ -1005,6 +1018,19 @@
    "title": "予算委員長坂本哲志君解任決議案"
   },
   {
+   "committee": "予算委員会",
+   "date": "2026-03-12",
+   "estimated": false,
+   "firstDate": "2026-03-12",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-12",
+   "meetingId": "122105261X01020260312_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X01020260312/0"
+  },
+  {
    "billId": "221-閣法-23",
    "date": "2026-03-10",
    "estimated": true,
@@ -1380,6 +1406,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "東日本大震災復興及び原子力問題調査特別委員会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122105387X00120260220_000",
+   "meetings": 3,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105387X00120260220/0"
   }
  ]
 }

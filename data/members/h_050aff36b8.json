@@ -256,6 +256,19 @@
    "title": "令和八年度一般会計補正予算（第１号）"
   },
   {
+   "committee": "決算行政監視委員会",
+   "date": "2026-05-27",
+   "estimated": false,
+   "firstDate": "2026-05-27",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104127X00120260527_000",
+   "meetings": 3,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104127X00120260527/0"
+  },
+  {
    "billId": "221-衆法-10",
    "date": "2026-05-26",
    "estimated": true,
@@ -1268,6 +1281,19 @@
    "stanceText": "多数",
    "status": "両院承認",
    "title": "放送法第七十条第二項の規定に基づき、承認を求めるの件"
+  },
+  {
+   "committee": "予算委員会",
+   "date": "2026-03-02",
+   "estimated": false,
+   "firstDate": "2026-03-02",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-27",
+   "meetingId": "122105261X00320260302_000",
+   "meetings": 3,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00320260302/0"
   },
   {
    "billId": "221-閣法-9",

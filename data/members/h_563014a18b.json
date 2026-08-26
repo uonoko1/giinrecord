@@ -1107,6 +1107,19 @@
    "title": "インテリジェンスに係る態勢の整備の推進に関する法律案"
   },
   {
+   "committee": "農林水産委員会",
+   "date": "2026-03-10",
+   "estimated": false,
+   "firstDate": "2026-03-10",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122105007X00120260310_000",
+   "meetings": 16,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105007X00120260310/0"
+  },
+  {
    "billId": "221-閣法-18",
    "date": "2026-03-06",
    "estimated": true,
@@ -1391,6 +1404,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "憲法審査会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104183X00120260220_000",
+   "meetings": 14,
+   "role": "幹事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104183X00120260220/0"
   }
  ]
 }

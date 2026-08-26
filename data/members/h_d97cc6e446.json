@@ -169,6 +169,19 @@
    "title": "国立国会図書館法及び国立国会図書館法の規定により行政各部門に置かれる支部図書館及びその職員に関する法律の一部を改正する法律案"
   },
   {
+   "committee": "環境委員会",
+   "date": "2026-06-12",
+   "estimated": false,
+   "firstDate": "2026-06-12",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-12",
+   "meetingId": "122104006X01320260612_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104006X01320260612/0"
+  },
+  {
    "billId": "221-衆法-13",
    "date": "2026-06-11",
    "estimated": true,
@@ -258,6 +271,19 @@
    "title": "国会議員の歳費、旅費及び手当等に関する法律の一部を改正する法律案"
   },
   {
+   "committee": "国土交通委員会",
+   "date": "2026-05-22",
+   "estimated": false,
+   "firstDate": "2026-05-22",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-22",
+   "meetingId": "122104319X01020260522_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104319X01020260522/0"
+  },
+  {
    "billId": "221-閣法-62",
    "date": "2026-05-15",
    "estimated": true,
@@ -310,6 +336,19 @@
    "title": "人工衛星等の打上げ及び人工衛星の管理に関する法律等の一部を改正する法律案"
   },
   {
+   "committee": "文部科学委員会",
+   "date": "2026-04-24",
+   "estimated": false,
+   "firstDate": "2026-04-24",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-24",
+   "meetingId": "122105124X00820260424_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105124X00820260424/0"
+  },
+  {
    "billId": "221-衆法-8",
    "date": "2026-04-22",
    "estimated": true,
@@ -321,6 +360,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "食育基本法の一部を改正する法律案"
+  },
+  {
+   "committee": "経済産業委員会",
+   "date": "2026-04-22",
+   "estimated": false,
+   "firstDate": "2026-04-22",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-29",
+   "meetingId": "122104080X00520260422_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104080X00520260422/0"
   },
   {
    "billId": "221-閣法-52",
@@ -412,6 +464,32 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "金融商品取引法及び資金決済に関する法律の一部を改正する法律案"
+  },
+  {
+   "committee": "内閣委員会",
+   "date": "2026-04-10",
+   "estimated": false,
+   "firstDate": "2026-04-10",
+   "kind": "committeeRole",
+   "lastDate": "2026-04-10",
+   "meetingId": "122104889X00320260410_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104889X00320260410/0"
+  },
+  {
+   "committee": "厚生労働委員会",
+   "date": "2026-04-10",
+   "estimated": false,
+   "firstDate": "2026-04-10",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-10",
+   "meetingId": "122104260X00220260410_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104260X00220260410/0"
   },
   {
    "billId": "221-閣法-56",
@@ -1129,6 +1207,45 @@
    "title": "インテリジェンスに係る態勢の整備の推進に関する法律案"
   },
   {
+   "committee": "農林水産委員会",
+   "date": "2026-03-10",
+   "estimated": false,
+   "firstDate": "2026-03-10",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122105007X00120260310_000",
+   "meetings": 16,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105007X00120260310/0"
+  },
+  {
+   "committee": "総務委員会",
+   "date": "2026-03-10",
+   "estimated": false,
+   "firstDate": "2026-03-10",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-10",
+   "meetingId": "122104601X00320260310_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104601X00320260310/0"
+  },
+  {
+   "committee": "災害対策特別委員会",
+   "date": "2026-03-10",
+   "estimated": false,
+   "firstDate": "2026-03-10",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104339X00220260310_000",
+   "meetings": 9,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104339X00220260310/0"
+  },
+  {
    "billId": "221-閣法-18",
    "date": "2026-03-06",
    "estimated": true,
@@ -1413,6 +1530,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "政治改革に関する特別委員会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104575X00120260220_000",
+   "meetings": 12,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104575X00120260220/0"
   }
  ]
 }

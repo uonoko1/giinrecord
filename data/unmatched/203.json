@@ -1,0 +1,381 @@
+[
+ {
+  "billId": "203-参法-1",
+  "group": "",
+  "nameText": "東徹"
+ },
+ {
+  "billId": "203-参法-2",
+  "group": "",
+  "nameText": "東徹"
+ },
+ {
+  "billId": "203-参法-3",
+  "group": "",
+  "nameText": "東徹"
+ },
+ {
+  "billId": "203-参法-4",
+  "group": "",
+  "nameText": "東徹"
+ },
+ {
+  "billId": "203-参法-5",
+  "group": "",
+  "nameText": "石井章"
+ },
+ {
+  "billId": "203-参法-6",
+  "group": "",
+  "nameText": "浅田均"
+ },
+ {
+  "billId": "203-参法-7",
+  "group": "",
+  "nameText": "浅田均"
+ },
+ {
+  "billId": "203-参法-8",
+  "group": "",
+  "nameText": "浅田均"
+ },
+ {
+  "billId": "203-参法-9",
+  "group": "",
+  "nameText": "東徹"
+ },
+ {
+  "billId": "203-参法-10",
+  "group": "",
+  "nameText": "浅田均"
+ },
+ {
+  "billId": "203-参法-11",
+  "group": "",
+  "nameText": "浅田均"
+ },
+ {
+  "billId": "203-参法-12",
+  "group": "",
+  "nameText": "東徹"
+ },
+ {
+  "billId": "203-参法-13",
+  "group": "",
+  "nameText": "秋野公造"
+ },
+ {
+  "billId": "203-参法-14",
+  "group": "",
+  "nameText": "音喜多駿"
+ },
+ {
+  "billId": "203-参法-15",
+  "group": "",
+  "nameText": "浅田均"
+ },
+ {
+  "billId": "203-参法-16",
+  "group": "",
+  "nameText": "松沢成文"
+ },
+ {
+  "billId": "203-参法-17",
+  "group": "",
+  "nameText": "片山大介"
+ },
+ {
+  "billId": "203-参法-18",
+  "group": "",
+  "nameText": "片山大介"
+ },
+ {
+  "billId": "203-参法-19",
+  "group": "",
+  "nameText": "音喜多駿"
+ },
+ {
+  "billId": "203-参法-20",
+  "group": "",
+  "nameText": "浅田均"
+ },
+ {
+  "billId": "203-参法-21",
+  "group": "",
+  "nameText": "浅田均"
+ },
+ {
+  "billId": "203-参法-22",
+  "group": "",
+  "nameText": "東徹"
+ },
+ {
+  "billId": "203-参法-23",
+  "group": "",
+  "nameText": "舟山康江"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "有田 芳生",
+  "questionId": "203-sangiin-1"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "有田 芳生",
+  "questionId": "203-sangiin-2"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "有田 芳生",
+  "questionId": "203-sangiin-3"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "小沼 巧",
+  "questionId": "203-sangiin-4"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "熊谷 裕人",
+  "questionId": "203-sangiin-5"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "熊谷 裕人",
+  "questionId": "203-sangiin-6"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "有田 芳生",
+  "questionId": "203-sangiin-7"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "熊谷 裕人",
+  "questionId": "203-sangiin-8"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "浜田 聡",
+  "questionId": "203-sangiin-9"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "熊谷 裕人",
+  "questionId": "203-sangiin-10"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "蓮舫",
+  "questionId": "203-sangiin-11"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "鈴木 宗男",
+  "questionId": "203-sangiin-12"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "鈴木 宗男",
+  "questionId": "203-sangiin-13"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "浜田 聡",
+  "questionId": "203-sangiin-14"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "浜田 聡",
+  "questionId": "203-sangiin-15"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "浜田 聡",
+  "questionId": "203-sangiin-16"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "浜田 聡",
+  "questionId": "203-sangiin-17"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "浜田 聡",
+  "questionId": "203-sangiin-18"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "浜田 聡",
+  "questionId": "203-sangiin-19"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "徳永 エリ",
+  "questionId": "203-sangiin-20"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "浜田 聡",
+  "questionId": "203-sangiin-21"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "牧山 ひろえ",
+  "questionId": "203-sangiin-22"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "塩村 あやか",
+  "questionId": "203-sangiin-23"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "平山 佐知子",
+  "questionId": "203-sangiin-24"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "浜田 聡",
+  "questionId": "203-sangiin-25"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "勝部 賢志",
+  "questionId": "203-sangiin-26"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "紙 智子",
+  "questionId": "203-sangiin-27"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "田島 麻衣子",
+  "questionId": "203-sangiin-28"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "浜田 聡",
+  "questionId": "203-sangiin-29"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "浜田 聡",
+  "questionId": "203-sangiin-30"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "浜田 聡",
+  "questionId": "203-sangiin-31"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "浜田 聡",
+  "questionId": "203-sangiin-32"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "浜田 聡",
+  "questionId": "203-sangiin-33"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "牧山 ひろえ",
+  "questionId": "203-sangiin-34"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "牧山 ひろえ",
+  "questionId": "203-sangiin-35"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "小西 洋之",
+  "questionId": "203-sangiin-36"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "小西 洋之",
+  "questionId": "203-sangiin-37"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "小西 洋之",
+  "questionId": "203-sangiin-38"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "小西 洋之",
+  "questionId": "203-sangiin-39"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "小西 洋之",
+  "questionId": "203-sangiin-40"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "小西 洋之",
+  "questionId": "203-sangiin-41"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "小西 洋之",
+  "questionId": "203-sangiin-42"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "小西 洋之",
+  "questionId": "203-sangiin-43"
+ },
+ {
+  "group": "",
+  "kind": "question",
+  "nameText": "小西 洋之",
+  "questionId": "203-sangiin-44"
+ }
+]

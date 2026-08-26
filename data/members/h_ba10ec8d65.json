@@ -1267,6 +1267,19 @@
    "title": "放送法第七十条第二項の規定に基づき、承認を求めるの件"
   },
   {
+   "committee": "文部科学委員会",
+   "date": "2026-03-03",
+   "estimated": false,
+   "firstDate": "2026-03-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122105124X00120260303_000",
+   "meetings": 14,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105124X00120260303/0"
+  },
+  {
    "billId": "221-衆法-1",
    "date": "2026-03-02",
    "kind": "bill",

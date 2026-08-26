@@ -887,26 +887,6 @@
    "value": "反対"
   },
   {
-   "chars": 47,
-   "date": "2026-05-22",
-   "excerpt": "そのことを強く訴えて、質問を終わりにいたします。（拍手） 〔内閣総理大臣高市早苗君登壇、拍手〕",
-   "kind": "speech",
-   "meeting": "本会議 第15号",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01520260522/30",
-   "speechId": "122115254X01520260522_030"
-  },
-  {
-   "chars": 2079,
-   "date": "2026-05-22",
-   "excerpt": "れいわ新選組、奥田ふみよです。 党を代表して、ただいま議題に上がりました防災庁設置法案について質問いたします。 能登半島地震、奥能登豪雨から三年がたっています。被災者がいまだに苦しんでいるのは、公助が圧倒的に足りないからです。水道などライフラインの復旧は入札不調が相次ぎ、住宅再建も事業者が足りない。政府は、全国から業者を集めようともしなかった。ボランティアやＮＰＯに頼るばかりで、その人たちに必要経",
-   "kind": "speech",
-   "meeting": "本会議 第15号",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01520260522/28",
-   "speechId": "122115254X01520260522_028"
-  },
-  {
    "date": "2026-05-20",
    "groupValue": "反対",
    "kind": "vote",
@@ -1004,6 +984,19 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0513-v001.htm",
    "title": "日程第１　物資の流通の効率化に関する法律の一部を改正する法律案（内閣提出、衆議院送付）",
    "value": "反対"
+  },
+  {
+   "committee": "決算委員会",
+   "date": "2026-05-13",
+   "estimated": false,
+   "firstDate": "2026-05-13",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-27",
+   "meetingId": "122114103X00220260513_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122114103X00220260513/0"
   },
   {
    "date": "2026-04-24",
@@ -1116,6 +1109,19 @@
    "value": "賛成"
   },
   {
+   "committee": "憲法審査会",
+   "date": "2026-04-15",
+   "estimated": false,
+   "firstDate": "2026-04-15",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-24",
+   "meetingId": "122114183X00120260415_000",
+   "meetings": 4,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122114183X00120260415/0"
+  },
+  {
    "date": "2026-04-07",
    "groupValue": "反対",
    "kind": "vote",
@@ -1147,6 +1153,19 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0407-v001.htm",
    "title": "令和八年度一般会計予算",
    "value": "反対"
+  },
+  {
+   "committee": "沖縄・北方問題及び地方に関する特別委員会",
+   "date": "2026-04-01",
+   "estimated": false,
+   "firstDate": "2026-04-01",
+   "kind": "committeeRole",
+   "lastDate": "2026-04-01",
+   "meetingId": "122115382X00220260401_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115382X00220260401/0"
   },
   {
    "date": "2026-03-31",
@@ -1424,6 +1443,19 @@
    "value": "反対"
   },
   {
+   "committee": "環境委員会",
+   "date": "2026-03-19",
+   "estimated": false,
+   "firstDate": "2026-03-19",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-26",
+   "meetingId": "122114006X00120260319_000",
+   "meetings": 8,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122114006X00120260319/0"
+  },
+  {
    "answerDate": "2026-03-24",
    "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/touh/t221013.htm",
    "date": "2026-03-12",
@@ -1433,6 +1465,19 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/221/meisai/m221013.htm",
    "submitterText": "奥田 ふみよ君",
    "title": "参議院本会議における質疑に対する高市内閣総理大臣の答弁に関する質問主意書"
+  },
+  {
+   "committee": "予算委員会",
+   "date": "2026-02-26",
+   "estimated": false,
+   "firstDate": "2026-02-26",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122115261X00120260226_000",
+   "meetings": 4,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115261X00120260226/0"
   },
   {
    "answerDate": "2026-02-03",
@@ -1466,6 +1511,58 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/220/meisai/m220002.htm",
    "submitterText": "奥田 ふみよ君",
    "title": "災害ＮＰＯや民間ボランティア団体等による重機を活用した障害物除去に関する質問主意書"
+  },
+  {
+   "committee": "こども・子育て・若者活躍に関する特別委員会",
+   "date": "2026-01-23",
+   "estimated": false,
+   "firstDate": "2026-01-23",
+   "kind": "committeeRole",
+   "lastDate": "2026-01-23",
+   "meetingId": "122015386X00120260123_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 220,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122015386X00120260123/0"
+  },
+  {
+   "committee": "予算委員会",
+   "date": "2026-01-23",
+   "estimated": false,
+   "firstDate": "2026-01-23",
+   "kind": "committeeRole",
+   "lastDate": "2026-01-23",
+   "meetingId": "122015261X00120260123_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 220,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122015261X00120260123/0"
+  },
+  {
+   "committee": "環境委員会",
+   "date": "2026-01-23",
+   "estimated": false,
+   "firstDate": "2026-01-23",
+   "kind": "committeeRole",
+   "lastDate": "2026-01-23",
+   "meetingId": "122014006X00120260123_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 220,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122014006X00120260123/0"
+  },
+  {
+   "committee": "行政監視委員会",
+   "date": "2025-12-17",
+   "estimated": false,
+   "firstDate": "2025-12-17",
+   "kind": "committeeRole",
+   "lastDate": "2025-12-17",
+   "meetingId": "121914281X00120251217_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 219,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121914281X00120251217/0"
   },
   {
    "date": "2025-12-16",
@@ -1809,114 +1906,69 @@
    "value": "賛成"
   },
   {
-   "date": "2025-11-28",
-   "groupValue": "賛成",
-   "kind": "vote",
-   "result": "賛成 244・反対 0",
-   "rollCallId": "209-1128-v010",
-   "session": 209,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/209/209-1128-v010.htm",
-   "title": "日程第１　租税特別措置法及び東日本大震災の被災者等に係る国税関係法律の臨時特例に関する法律の一部を改正する法律案（衆議院提出）",
-   "value": "賛成"
+   "committee": "総務委員会",
+   "date": "2025-11-20",
+   "estimated": false,
+   "firstDate": "2025-11-20",
+   "kind": "committeeRole",
+   "lastDate": "2025-12-17",
+   "meetingId": "121914601X00120251120_000",
+   "meetings": 5,
+   "role": "委員",
+   "session": 219,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121914601X00120251120/0"
   },
   {
-   "date": "2025-11-28",
-   "groupValue": "反対",
-   "kind": "vote",
-   "result": "賛成 238・反対 6",
-   "rollCallId": "209-1128-v009",
-   "session": 209,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/209/209-1128-v009.htm",
-   "title": "国家公務員等の任命に関する件「公害健康被害補償不服審査会委員（星景子君）」",
-   "value": "反対"
+   "committee": "デジタル社会の形成及び人工知能の活用等に関する特別委員会",
+   "date": "2025-10-21",
+   "estimated": false,
+   "firstDate": "2025-10-21",
+   "kind": "committeeRole",
+   "lastDate": "2025-12-17",
+   "meetingId": "121915385X00120251021_000",
+   "meetings": 4,
+   "role": "委員",
+   "session": 219,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121915385X00120251021/0"
   },
   {
-   "date": "2025-11-28",
-   "groupValue": "反対",
-   "kind": "vote",
-   "result": "賛成 214・反対 28",
-   "rollCallId": "209-1128-v008",
-   "session": 209,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/209/209-1128-v008.htm",
-   "title": "国家公務員等の任命に関する件「運輸審議会委員（大石美奈子君）」",
-   "value": "反対"
+   "committee": "予算委員会",
+   "date": "2025-09-12",
+   "estimated": false,
+   "firstDate": "2025-09-12",
+   "kind": "committeeRole",
+   "lastDate": "2025-09-12",
+   "meetingId": "121815261X00120250912_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 218,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121815261X00120250912/0"
   },
   {
-   "date": "2025-11-28",
-   "groupValue": "反対",
-   "kind": "vote",
-   "result": "賛成 236・反対 9",
-   "rollCallId": "209-1128-v007",
-   "session": 209,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/209/209-1128-v007.htm",
-   "title": "国家公務員等の任命に関する件「日本放送協会経営委員会委員（前田香織君及び榊原陽子君）」",
-   "value": "反対"
+   "committee": "総務委員会",
+   "date": "2025-08-05",
+   "estimated": false,
+   "firstDate": "2025-08-05",
+   "kind": "committeeRole",
+   "lastDate": "2025-08-05",
+   "meetingId": "121814601X00120250805_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 218,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121814601X00120250805/0"
   },
   {
-   "date": "2025-11-28",
-   "groupValue": "反対",
-   "kind": "vote",
-   "result": "賛成 227・反対 18",
-   "rollCallId": "209-1128-v006",
-   "session": 209,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/209/209-1128-v006.htm",
-   "title": "国家公務員等の任命に関する件「日本放送協会経営委員会委員（岩井睦雄君）」",
-   "value": "反対"
-  },
-  {
-   "date": "2025-11-28",
-   "groupValue": "反対",
-   "kind": "vote",
-   "result": "賛成 230・反対 15",
-   "rollCallId": "209-1128-v005",
-   "session": 209,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/209/209-1128-v005.htm",
-   "title": "国家公務員等の任命に関する件「電波監理審議会委員（大久保哲夫君）」",
-   "value": "反対"
-  },
-  {
-   "date": "2025-11-28",
-   "groupValue": "賛成",
-   "kind": "vote",
-   "result": "賛成 245・反対 0",
-   "rollCallId": "209-1128-v004",
-   "session": 209,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/209/209-1128-v004.htm",
-   "title": "国家公務員等の任命に関する件「証券取引等監視委員会委員長（中原亮一君）、同委員（加藤さゆり君及び橋本尚君）、電気通信紛争処理委員会委員（笠井之彦君、三尾美枝子君、小塚荘一郎君、中條祐介君及び前原賀代君）、中央更生保護審査会委員（久保美紀君）及び運輸安全委員会委員（堂園正人君、古川敦君、大野寛之君、鈴木美緒君及び新妻実保子君）」",
-   "value": "賛成"
-  },
-  {
-   "date": "2025-11-28",
-   "groupValue": "賛成",
-   "kind": "vote",
-   "result": "賛成 237・反対 8",
-   "rollCallId": "209-1128-v003",
-   "session": 209,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/209/209-1128-v003.htm",
-   "title": "国家公務員等の任命に関する件「個人情報保護委員会委員（新保史生君）」",
-   "value": "賛成"
-  },
-  {
-   "date": "2025-11-28",
-   "groupValue": "反対",
-   "kind": "vote",
-   "result": "賛成 230・反対 14",
-   "rollCallId": "209-1128-v002",
-   "session": 209,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/209/209-1128-v002.htm",
-   "title": "国家公務員等の任命に関する件「個人情報保護委員会委員（藤村明子君、木田俊昭君及び藤井英治君）及び運輸審議会委員（堀川義弘君）」",
-   "value": "反対"
-  },
-  {
-   "date": "2025-11-28",
-   "groupValue": "賛成",
-   "kind": "vote",
-   "result": "賛成 229・反対 15",
-   "rollCallId": "209-1128-v001",
-   "session": 209,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/209/209-1128-v001.htm",
-   "title": "国家公務員等の任命に関する件「食品安全委員会委員（春日文子君）」",
-   "value": "賛成"
+   "committee": "行政監視委員会",
+   "date": "2025-08-05",
+   "estimated": false,
+   "firstDate": "2025-08-05",
+   "kind": "committeeRole",
+   "lastDate": "2025-08-05",
+   "meetingId": "121814281X00120250805_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 218,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121814281X00120250805/0"
   },
   {
    "answerDate": "2025-08-15",
@@ -1928,6 +1980,19 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/218/meisai/m218015.htm",
    "submitterText": "奥田 ふみよ君",
    "title": "老齢労働者及び老齢事業主の窮状に鑑みた基礎年金早期引上げの必要性に関する質問主意書"
+  },
+  {
+   "committee": "地方創生及びデジタル社会の形成等に関する特別委員会",
+   "date": "2025-08-01",
+   "estimated": false,
+   "firstDate": "2025-08-01",
+   "kind": "committeeRole",
+   "lastDate": "2025-08-05",
+   "meetingId": "121815360X00120250801_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 218,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121815360X00120250801/0"
   }
  ]
 }

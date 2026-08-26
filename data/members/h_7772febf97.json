@@ -56,16 +56,6 @@
    "title": "皇室典範等の一部を改正する法律案"
   },
   {
-   "chars": 644,
-   "date": "2026-06-30",
-   "excerpt": "情報監視審査会は、去る二十五日、審査会規程に基づき、令和七年年次報告書を取りまとめ、森議長に提出いたしました。 以下、その概要を御報告いたします。 今回の報告書の対象期間は、令和七年五月一日から本年五月三十一日までであります。 まず、調査の経過について申し上げます。 令和七年五月、重要経済安保情報保護活用法の施行に伴い、当審査会は、特定秘密に加え、重要経済安保情報に係る行政運用の常時監視を行うこと",
-   "kind": "speech",
-   "meeting": "本会議 第29号",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105254X02920260630/4",
-   "speechId": "122105254X02920260630_004"
-  },
-  {
    "billId": "221-衆法-27",
    "date": "2026-06-24",
    "estimated": true,
@@ -1236,6 +1226,19 @@
    "title": "放送法第七十条第二項の規定に基づき、承認を求めるの件"
   },
   {
+   "committee": "文部科学委員会",
+   "date": "2026-03-03",
+   "estimated": false,
+   "firstDate": "2026-03-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-03",
+   "meetingId": "122105124X00120260303_000",
+   "meetings": 10,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105124X00120260303/0"
+  },
+  {
    "billId": "221-閣法-9",
    "date": "2026-02-27",
    "estimated": true,
@@ -1390,6 +1393,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "情報監視審査会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-25",
+   "meetingId": "122104541X00120260220_000",
+   "meetings": 2,
+   "role": "会長",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104541X00120260220/0"
   }
  ]
 }

@@ -223,6 +223,19 @@
    "title": "令和八年度一般会計補正予算（第１号）"
   },
   {
+   "committee": "消費者問題に関する特別委員会",
+   "date": "2026-05-28",
+   "estimated": false,
+   "firstDate": "2026-05-28",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104536X00220260528_000",
+   "meetings": 3,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104536X00220260528/0"
+  },
+  {
    "billId": "221-衆法-10",
    "date": "2026-05-26",
    "estimated": true,
@@ -275,6 +288,19 @@
    "title": "刑事訴訟法の一部を改正する法律案"
   },
   {
+   "committee": "安全保障委員会",
+   "date": "2026-05-12",
+   "estimated": false,
+   "firstDate": "2026-05-12",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-12",
+   "meetingId": "122103815X00620260512_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122103815X00620260512/0"
+  },
+  {
    "billId": "221-閣法-40",
    "date": "2026-04-24",
    "estimated": true,
@@ -299,6 +325,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "食育基本法の一部を改正する法律案"
+  },
+  {
+   "committee": "厚生労働委員会",
+   "date": "2026-04-21",
+   "estimated": false,
+   "firstDate": "2026-04-21",
+   "kind": "committeeRole",
+   "lastDate": "2026-04-21",
+   "meetingId": "122104260X00520260421_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104260X00520260421/0"
   },
   {
    "billId": "221-閣法-52",
@@ -990,6 +1029,19 @@
    "title": "国家情報会議設置法案"
   },
   {
+   "committee": "文部科学委員会",
+   "date": "2026-03-13",
+   "estimated": false,
+   "firstDate": "2026-03-13",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-13",
+   "meetingId": "122105124X00620260313_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105124X00620260313/0"
+  },
+  {
    "billId": "221-衆法-5",
    "date": "2026-03-12",
    "estimated": true,
@@ -1183,6 +1235,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "防災庁設置法案"
+  },
+  {
+   "committee": "国土交通委員会",
+   "date": "2026-03-06",
+   "estimated": false,
+   "firstDate": "2026-03-06",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104319X00120260306_000",
+   "meetings": 14,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104319X00120260306/0"
   },
   {
    "billId": "221-閣法-12",
@@ -1391,6 +1456,45 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "地域活性化・こども政策・デジタル社会形成に関する特別委員会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-02-20",
+   "meetingId": "122105367X00120260220_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105367X00120260220/0"
+  },
+  {
+   "committee": "消費者問題に関する特別委員会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-02-20",
+   "meetingId": "122104536X00120260220_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104536X00120260220/0"
+  },
+  {
+   "committee": "憲法審査会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-18",
+   "meetingId": "122104183X00120260220_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104183X00120260220/0"
   }
  ]
 }

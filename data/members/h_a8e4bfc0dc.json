@@ -1207,6 +1207,19 @@
    "title": "防災庁設置法案"
   },
   {
+   "committee": "外務委員会",
+   "date": "2026-03-04",
+   "estimated": false,
+   "firstDate": "2026-03-04",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122103968X00120260304_000",
+   "meetings": 13,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122103968X00120260304/0"
+  },
+  {
    "billId": "221-閣法-12",
    "date": "2026-03-03",
    "estimated": true,
@@ -1413,6 +1426,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "憲法審査会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104183X00120260220_000",
+   "meetings": 14,
+   "role": "幹事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104183X00120260220/0"
   }
  ]
 }

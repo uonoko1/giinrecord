@@ -447,16 +447,6 @@
    "title": "金融商品取引法及び資金決済に関する法律の一部を改正する法律案"
   },
   {
-   "chars": 3781,
-   "date": "2026-04-09",
-   "excerpt": "中道改革連合の早稲田ゆきです。 私は、健康保険法改正案につきまして、中道改革連合を代表して質問いたします。（拍手） まず冒頭、中東情勢の正常化は世界にとって、我が国の国益、とりわけ安心、安全な医療提供体制の確保に最重要課題であります。 総理、報道によれば、イラン大統領との電話会談を行われたということですが、永続的な停戦の働きかけ、ホルムズ海峡の安全航行確保に向けて、どのような具体的な成果があったの",
-   "kind": "speech",
-   "meeting": "本会議 第11号",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105254X01120260409/13",
-   "speechId": "122105254X01120260409_013"
-  },
-  {
    "billId": "221-閣法-56",
    "date": "2026-04-07",
    "estimated": true,
@@ -611,6 +601,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "民法等の一部を改正する法律案"
+  },
+  {
+   "committee": "厚生労働委員会",
+   "date": "2026-04-03",
+   "estimated": false,
+   "firstDate": "2026-04-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104260X00120260403_000",
+   "meetings": 20,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104260X00120260403/0"
   },
   {
    "billId": "221-閣法-41",
@@ -1206,6 +1209,19 @@
    "title": "インテリジェンスに係る態勢の整備の推進に関する法律案"
   },
   {
+   "committee": "予算委員会公聴会",
+   "date": "2026-03-10",
+   "estimated": false,
+   "firstDate": "2026-03-10",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-10",
+   "meetingId": "122105262X00120260310_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105262X00120260310/0"
+  },
+  {
    "billId": "221-閣法-18",
    "date": "2026-03-06",
    "estimated": true,
@@ -1282,6 +1298,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "防災庁設置法案"
+  },
+  {
+   "committee": "予算委員会",
+   "date": "2026-03-05",
+   "estimated": false,
+   "firstDate": "2026-03-05",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-12",
+   "meetingId": "122105261X00620260305_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00620260305/0"
   },
   {
    "billId": "221-閣法-12",
@@ -1501,6 +1530,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "地域活性化・こども政策・デジタル社会形成に関する特別委員会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122105367X00120260220_000",
+   "meetings": 13,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105367X00120260220/0"
   }
  ]
 }

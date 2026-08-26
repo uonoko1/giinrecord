@@ -17,6 +17,19 @@
  ],
  "timeline": [
   {
+   "committee": "政治改革に関する特別委員会",
+   "date": "2026-07-24",
+   "estimated": false,
+   "firstDate": "2026-07-24",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104575X01220260724_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104575X01220260724/0"
+  },
+  {
    "billId": "221-衆法-38",
    "date": "2026-07-22",
    "estimated": true,
@@ -384,16 +397,6 @@
    "title": "自動車の運転により人を死傷させる行為等の処罰に関する法律及び道路交通法の一部を改正する法律案"
   },
   {
-   "chars": 2777,
-   "date": "2026-04-14",
-   "excerpt": "日本維新の会の黒田征樹です。 会派を代表して、防災庁設置法案及び防災庁設置法の施行に伴う関係法律の整備等に関する法律案について質問いたします。（拍手） 冒頭、これまで日本各地で発生した災害により犠牲となられました方々に謹んで哀悼の意を表し、今なお復興の途上にある被災者の皆様に心よりお見舞いを申し上げます。 日本は世界有数の災害大国です。しかし同時に、世界最高水準の防災技術と経験が蓄積された国でもあ",
-   "kind": "speech",
-   "meeting": "本会議 第12号",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105254X01220260414/20",
-   "speechId": "122105254X01220260414_020"
-  },
-  {
    "billId": "221-閣法-60",
    "date": "2026-04-10",
    "estimated": true,
@@ -600,6 +603,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "民法等の一部を改正する法律案"
+  },
+  {
+   "committee": "内閣委員会",
+   "date": "2026-04-03",
+   "estimated": false,
+   "firstDate": "2026-04-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-12",
+   "meetingId": "122104889X00120260403_000",
+   "meetings": 18,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104889X00120260403/0"
   },
   {
    "billId": "221-閣法-41",
@@ -1445,6 +1461,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "災害対策特別委員会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104339X00120260220_000",
+   "meetings": 10,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104339X00120260220/0"
   }
  ]
 }

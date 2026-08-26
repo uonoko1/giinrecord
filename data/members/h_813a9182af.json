@@ -537,14 +537,17 @@
    "title": "民法等の一部を改正する法律案"
   },
   {
-   "chars": 1479,
-   "date": "2026-04-02",
-   "excerpt": "自由民主党・無所属の会の鳩山二郎です。 ただいま議題となりました国家情報会議設置法案について、会派を代表して質問いたします。（拍手） 現在、安全保障環境は戦後最も困難な状況にあります。ロシアによるウクライナ侵略は四年以上継続しているほか、中国の軍事活動の活発化、北朝鮮の核・ミサイル開発の加速化、中東情勢の不安定化など、安全保障環境は厳しく複雑なものとなっています。 また、我が国が直面する脅威は、こ",
-   "kind": "speech",
-   "meeting": "本会議 第10号",
+   "committee": "内閣委員会",
+   "date": "2026-04-03",
+   "estimated": false,
+   "firstDate": "2026-04-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-12",
+   "meetingId": "122104889X00120260403_000",
+   "meetings": 19,
+   "role": "理事",
    "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105254X01020260402/5",
-   "speechId": "122105254X01020260402_005"
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104889X00120260403/0"
   },
   {
    "billId": "221-閣法-41",
@@ -1106,6 +1109,19 @@
    "title": "インテリジェンスに係る態勢の整備の推進に関する法律案"
   },
   {
+   "committee": "予算委員会公聴会",
+   "date": "2026-03-10",
+   "estimated": false,
+   "firstDate": "2026-03-10",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-10",
+   "meetingId": "122105262X00120260310_000",
+   "meetings": 1,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105262X00120260310/0"
+  },
+  {
    "billId": "221-閣法-18",
    "date": "2026-03-06",
    "estimated": true,
@@ -1275,6 +1291,19 @@
    "title": "金融機能の強化のための特別措置に関する法律等の一部を改正する法律案"
   },
   {
+   "committee": "予算委員会",
+   "date": "2026-02-26",
+   "estimated": false,
+   "firstDate": "2026-02-26",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-27",
+   "meetingId": "122105261X00120260226_000",
+   "meetings": 17,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00120260226/0"
+  },
+  {
    "billId": "221-閣法-6",
    "date": "2026-02-20",
    "estimated": true,
@@ -1390,6 +1419,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "沖縄及び北方問題に関する特別委員会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-02-20",
+   "meetingId": "122103895X00120260220_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122103895X00120260220/0"
   }
  ]
 }
