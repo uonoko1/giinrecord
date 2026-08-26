@@ -1,5 +1,5 @@
 import type { House, Speech } from "@seiji-kiroku/shared";
-import { NDL_API_INTERVAL_MS, fetchText, sleep } from "../fetch.ts";
+import { NDL_API_INTERVAL_MS, fetchText, sleep, lastFetchHitNetwork } from "../fetch.ts";
 
 /**
  * 国会会議録検索システム 検索用API（https://kokkai.ndl.go.jp/api.html）。
@@ -140,7 +140,8 @@ export async function fetchSpeeches(session: number, house: House = "sangiin", s
     const page = parseSpeechPage(JSON.parse(await fetchText(speechPageUrl(session, start, house, scope), "utf-8", { noCache: true, session })), house);
     out.push(...page.speeches);
     start = page.nextRecordPosition;
-    if (start !== null) await sleep(REQUEST_INTERVAL_MS);
+    // キャッシュ命中（#294）ではリクエストを出していないので待たない。間隔が律速するのはリクエスト。
+    if (start !== null && lastFetchHitNetwork()) await sleep(REQUEST_INTERVAL_MS);
   }
   return out;
 }

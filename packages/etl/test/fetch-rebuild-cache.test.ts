@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { mkdtemp, rm, readdir, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { fetchText, cacheClosedSessionsEnabled, shouldUseCache, setCacheDirForTest, setLatestSession, latestSession } from "../src/fetch.ts";
+import { fetchText, cacheClosedSessionsEnabled, shouldUseCache, setCacheDirForTest, setLatestSession, latestSession, lastFetchHitNetwork } from "../src/fetch.ts";
 
 /**
  * Issue #294: `data/` を消してからの作り直しを、繰り返す dispatch で前進させる。
@@ -220,5 +220,49 @@ describe("日次実行の経路で取りこぼしが起きない（#294 の安�
     await fetchText(URL_A, "utf-8", { noCache: true, session: 217 });
     await fetchText(URL_A, "utf-8", { noCache: true, session: 217 });
     assert.equal(calls.length, 2, "日次実行の経路でキャッシュが効いてしまっている（追記を取り逃す）");
+  });
+});
+
+describe("キャッシュ命中では待たない（#294 の前進量）", () => {
+  /**
+   * NDL の利用条件は「**データを取得し終えてから**数秒程度空けて次のリクエストを」であり、
+   * 律速するのは**リクエスト**である。キャッシュ命中はリクエストを発生させないので、
+   * そこで 2 秒待つ理由は無い。
+   *
+   * これは前進量に直接効く。参院 22 回次の会議録は約 3,751 ページ（#263 の 4,085 から
+   * 衆院 1 回次ぶん 334 を引いた数）で、**命中しても 2 秒待つと待ちだけで約 2.1 時間**を使い、
+   * 330 分の枠のうち丸ごとそのぶんが前進に使えなくなる。
+   *
+   * `lastFetchHitNetwork()` は「直前の fetchText が実際にネットワークへ出たか」を返す。
+   * 呼び出し側（会議録 API のページング 3 箇所）はこれが true のときだけ待つ。
+   */
+  test("キャッシュから返したときは lastFetchHitNetwork() が false", async () => {
+    process.env.ETL_CACHE_CLOSED_SESSIONS = "1";
+    setLatestSession(221);
+    await fetchText(URL_A, "utf-8", { noCache: true, session: 200 });
+    assert.equal(lastFetchHitNetwork(), true, "1 回目はネットワークに出るはず");
+    await fetchText(URL_A, "utf-8", { noCache: true, session: 200 });
+    assert.equal(lastFetchHitNetwork(), false, "2 回目はキャッシュ命中なので false のはず");
+  });
+
+  test("フラグが無ければ常にネットワークへ出る（従来どおり待つ）", async () => {
+    delete process.env.ETL_CACHE_CLOSED_SESSIONS;
+    setLatestSession(221);
+    await fetchText(URL_A, "utf-8", { noCache: true, session: 200 });
+    assert.equal(lastFetchHitNetwork(), true);
+    await fetchText(URL_A, "utf-8", { noCache: true, session: 200 });
+    assert.equal(lastFetchHitNetwork(), true);
+  });
+});
+
+describe("会議録 API のページングは命中時に待たない（#294）", () => {
+  test("3 箇所すべてが lastFetchHitNetwork() で待ちを条件づけている", async () => {
+    const dirUrl = new URL("../src/sources/", import.meta.url);
+    const files = ["kokkai-speeches.ts", "kokkai-attendance.ts", "kokkai-committee.ts"];
+    for (const name of files) {
+      const src = await readFile(new URL(name, dirUrl), "utf-8");
+      const line = src.split("\n").find((l) => l.includes("sleep(REQUEST_INTERVAL_MS)")) ?? "";
+      assert.match(line, /lastFetchHitNetwork\(\)/, `${name}: キャッシュ命中でも待ってしまう（前進量が落ちる）`);
+    }
   });
 });

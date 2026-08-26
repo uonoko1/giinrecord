@@ -1,4 +1,4 @@
-import { fetchText, sleep } from "../fetch.ts";
+import { fetchText, sleep, lastFetchHitNetwork } from "../fetch.ts";
 import { REQUEST_INTERVAL_MS } from "./kokkai-speeches.ts";
 
 /**
@@ -159,7 +159,8 @@ export async function fetchCommitteeAttendance(session: number): Promise<Committ
     const page = parseAttendancePage(JSON.parse(await fetchText(attendancePageUrl(session, start), "utf-8", { noCache: true, session })), session);
     out.push(...page.meetings);
     start = page.nextRecordPosition;
-    if (start !== null) await sleep(REQUEST_INTERVAL_MS);
+    // キャッシュ命中（#294）ではリクエストを出していないので待たない。間隔が律速するのはリクエスト。
+    if (start !== null && lastFetchHitNetwork()) await sleep(REQUEST_INTERVAL_MS);
   }
   return out;
 }

@@ -55,6 +55,22 @@ export function setLatestSession(session: number | undefined): void { latest = s
 export function latestSession(): number | undefined { return latest; }
 
 /**
+ * 直前の `fetchText` / `fetchTextOr404` が実際にネットワークへ出たか。
+ *
+ * 取得間隔を律速するのは**リクエスト**である（NDL の利用条件も「データを取得し終えてから
+ * 数秒程度空けて次のリクエストを」と、リクエストを主語にしている）。キャッシュ命中は
+ * リクエストを発生させないので、そこで待つ理由が無い。
+ *
+ * 会議録 API のページング（`kokkai-speeches` / `kokkai-attendance` / `kokkai-committee`）は
+ * これが `true` のときだけ待つ。参院 22 回次で約 3,751 ページあり、命中しても待つと
+ * **待ちだけで約 2.1 時間**を使ってしまうため、作り直しの前進量に直接効く。
+ *
+ * 単純な逐次実行を前提にしたモジュール状態である（ETL は並列取得をしない）。
+ */
+let hitNetwork = false;
+export function lastFetchHitNetwork(): boolean { return hitNetwork; }
+
+/**
  * この取得をディスクキャッシュから読んでよいか。判定はここ 1 か所に置く。
  *
  * 真になるのは「フラグが立っていて、取得対象の回次が分かっていて、それが最新回次より古い」ときだけ。
@@ -132,8 +148,13 @@ export async function fetchTextOr404(url: string, encoding: "utf-8" | "shift_jis
     latestSession: opts.latestSession ?? latest,
   });
   if (!opts.noCache || rebuildCache) {
-    try { return await readFile(file, "utf-8"); } catch { /* miss */ }
+    try {
+      const cached = await readFile(file, "utf-8");
+      hitNetwork = false; // 命中: リクエストを出していないので呼び出し側は待たなくてよい
+      return cached;
+    } catch { /* miss */ }
   }
+  hitNetwork = true;
   const res = await fetch(url, { headers: { "User-Agent": UA } });
   if (res.status === 404) {
     await sleep(HTML_INTERVAL_MS);
