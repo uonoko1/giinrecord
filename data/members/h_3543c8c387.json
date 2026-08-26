@@ -158,6 +158,19 @@
    "title": "国立国会図書館法及び国立国会図書館法の規定により行政各部門に置かれる支部図書館及びその職員に関する法律の一部を改正する法律案"
   },
   {
+   "committee": "政治改革に関する特別委員会",
+   "date": "2026-06-16",
+   "estimated": false,
+   "firstDate": "2026-06-16",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-16",
+   "meetingId": "122104575X00420260616_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104575X00420260616/0"
+  },
+  {
    "billId": "221-衆法-13",
    "date": "2026-06-11",
    "estimated": true,
@@ -169,6 +182,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "郵政民営化法等の一部を改正する法律案"
+  },
+  {
+   "committee": "厚生労働委員会",
+   "date": "2026-06-10",
+   "estimated": false,
+   "firstDate": "2026-06-10",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-10",
+   "meetingId": "122104260X01420260610_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104260X01420260610/0"
   },
   {
    "billId": "221-閣法-63",
@@ -236,6 +262,19 @@
    "title": "国会議員の歳費、旅費及び手当等に関する法律の一部を改正する法律案"
   },
   {
+   "committee": "農林水産委員会",
+   "date": "2026-05-20",
+   "estimated": false,
+   "firstDate": "2026-05-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-20",
+   "meetingId": "122105007X01020260520_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105007X01020260520/0"
+  },
+  {
    "billId": "221-閣法-62",
    "date": "2026-05-15",
    "estimated": true,
@@ -273,6 +312,19 @@
    "stanceText": "少数",
    "status": "本院議了",
    "title": "刑事訴訟法の一部を改正する法律案"
+  },
+  {
+   "committee": "環境委員会",
+   "date": "2026-05-15",
+   "estimated": false,
+   "firstDate": "2026-05-15",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-15",
+   "meetingId": "122104006X00820260515_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104006X00820260515/0"
   },
   {
    "billId": "221-閣法-40",
@@ -340,6 +392,19 @@
    "title": "自動車の運転により人を死傷させる行為等の処罰に関する法律及び道路交通法の一部を改正する法律案"
   },
   {
+   "committee": "地域活性化・こども政策・デジタル社会形成に関する特別委員会",
+   "date": "2026-04-14",
+   "estimated": false,
+   "firstDate": "2026-04-14",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122105367X00220260414_000",
+   "meetings": 12,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105367X00220260414/0"
+  },
+  {
    "billId": "221-閣法-60",
    "date": "2026-04-10",
    "estimated": true,
@@ -390,6 +455,32 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "金融商品取引法及び資金決済に関する法律の一部を改正する法律案"
+  },
+  {
+   "committee": "内閣委員会",
+   "date": "2026-04-08",
+   "estimated": false,
+   "firstDate": "2026-04-08",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-15",
+   "meetingId": "122104889X00220260408_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104889X00220260408/0"
+  },
+  {
+   "committee": "経済産業委員会",
+   "date": "2026-04-08",
+   "estimated": false,
+   "firstDate": "2026-04-08",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104080X00120260408_000",
+   "meetings": 17,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104080X00120260408/0"
   },
   {
    "billId": "221-閣法-56",
@@ -1185,6 +1276,19 @@
    "title": "防災庁設置法案"
   },
   {
+   "committee": "財務金融委員会",
+   "date": "2026-03-06",
+   "estimated": false,
+   "firstDate": "2026-03-06",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-06",
+   "meetingId": "122104376X00320260306_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104376X00320260306/0"
+  },
+  {
    "billId": "221-閣法-12",
    "date": "2026-03-03",
    "estimated": true,
@@ -1235,6 +1339,19 @@
    "stanceText": "多数",
    "status": "両院承認",
    "title": "放送法第七十条第二項の規定に基づき、承認を求めるの件"
+  },
+  {
+   "committee": "総務委員会",
+   "date": "2026-03-03",
+   "estimated": false,
+   "firstDate": "2026-03-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104601X00120260303_000",
+   "meetings": 14,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104601X00120260303/0"
   },
   {
    "billId": "221-閣法-9",
@@ -1391,6 +1508,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "東日本大震災復興及び原子力問題調査特別委員会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-02-20",
+   "meetingId": "122105387X00120260220_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105387X00120260220/0"
   }
  ]
 }

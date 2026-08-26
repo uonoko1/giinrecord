@@ -56,6 +56,19 @@
    "title": "皇室典範等の一部を改正する法律案"
   },
   {
+   "committee": "憲法審査会",
+   "date": "2026-06-25",
+   "estimated": false,
+   "firstDate": "2026-06-25",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-25",
+   "meetingId": "122104183X01120260625_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104183X01120260625/0"
+  },
+  {
    "billId": "221-衆法-28",
    "date": "2026-06-24",
    "kind": "bill",
@@ -182,6 +195,19 @@
    "title": "郵政民営化法等の一部を改正する法律案"
   },
   {
+   "committee": "政治改革に関する特別委員会",
+   "date": "2026-06-11",
+   "estimated": false,
+   "firstDate": "2026-06-11",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104575X00220260611_000",
+   "meetings": 10,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104575X00220260611/0"
+  },
+  {
    "billId": "221-衆法-12",
    "date": "2026-06-10",
    "kind": "bill",
@@ -245,6 +271,19 @@
    "title": "令和八年度一般会計補正予算（第１号）"
   },
   {
+   "committee": "消費者問題に関する特別委員会",
+   "date": "2026-05-28",
+   "estimated": false,
+   "firstDate": "2026-05-28",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104536X00220260528_000",
+   "meetings": 3,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104536X00220260528/0"
+  },
+  {
    "billId": "221-衆法-10",
    "date": "2026-05-26",
    "estimated": true,
@@ -256,6 +295,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "国会議員の歳費、旅費及び手当等に関する法律の一部を改正する法律案"
+  },
+  {
+   "committee": "農林水産委員会",
+   "date": "2026-05-26",
+   "estimated": false,
+   "firstDate": "2026-05-26",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-26",
+   "meetingId": "122105007X01120260526_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105007X01120260526/0"
   },
   {
    "billId": "221-閣法-62",
@@ -297,6 +349,32 @@
    "title": "刑事訴訟法の一部を改正する法律案"
   },
   {
+   "committee": "総務委員会",
+   "date": "2026-05-12",
+   "estimated": false,
+   "firstDate": "2026-05-12",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-12",
+   "meetingId": "122104601X01020260512_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104601X01020260512/0"
+  },
+  {
+   "committee": "地域活性化・こども政策・デジタル社会形成に関する特別委員会",
+   "date": "2026-05-08",
+   "estimated": false,
+   "firstDate": "2026-05-08",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-15",
+   "meetingId": "122105367X00520260508_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105367X00520260508/0"
+  },
+  {
    "billId": "221-閣法-40",
    "date": "2026-04-24",
    "estimated": true,
@@ -310,6 +388,32 @@
    "title": "人工衛星等の打上げ及び人工衛星の管理に関する法律等の一部を改正する法律案"
   },
   {
+   "committee": "法務委員会",
+   "date": "2026-04-24",
+   "estimated": false,
+   "firstDate": "2026-04-24",
+   "kind": "committeeRole",
+   "lastDate": "2026-04-24",
+   "meetingId": "122105206X00720260424_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105206X00720260424/0"
+  },
+  {
+   "committee": "内閣委員会",
+   "date": "2026-04-24",
+   "estimated": false,
+   "firstDate": "2026-04-24",
+   "kind": "committeeRole",
+   "lastDate": "2026-04-24",
+   "meetingId": "122104889X00820260424_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104889X00820260424/0"
+  },
+  {
    "billId": "221-衆法-8",
    "date": "2026-04-22",
    "estimated": true,
@@ -321,6 +425,32 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "食育基本法の一部を改正する法律案"
+  },
+  {
+   "committee": "経済産業委員会",
+   "date": "2026-04-22",
+   "estimated": false,
+   "firstDate": "2026-04-22",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-12",
+   "meetingId": "122104080X00520260422_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104080X00520260422/0"
+  },
+  {
+   "committee": "環境委員会",
+   "date": "2026-04-21",
+   "estimated": false,
+   "firstDate": "2026-04-21",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-22",
+   "meetingId": "122104006X00520260421_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104006X00520260421/0"
   },
   {
    "billId": "221-閣法-52",
@@ -360,6 +490,19 @@
    "stanceText": "全会一致",
    "status": "成立",
    "title": "自動車の運転により人を死傷させる行為等の処罰に関する法律及び道路交通法の一部を改正する法律案"
+  },
+  {
+   "committee": "厚生労働委員会",
+   "date": "2026-04-17",
+   "estimated": false,
+   "firstDate": "2026-04-17",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-27",
+   "meetingId": "122104260X00420260417_000",
+   "meetings": 4,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104260X00420260417/0"
   },
   {
    "billId": "221-閣法-60",
@@ -1259,6 +1402,19 @@
    "title": "放送法第七十条第二項の規定に基づき、承認を求めるの件"
   },
   {
+   "committee": "財務金融委員会",
+   "date": "2026-03-03",
+   "estimated": false,
+   "firstDate": "2026-03-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104376X00120260303_000",
+   "meetings": 13,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104376X00120260303/0"
+  },
+  {
    "billId": "221-閣法-9",
    "date": "2026-02-27",
    "estimated": true,
@@ -1413,6 +1569,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "災害対策特別委員会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-12",
+   "meetingId": "122104339X00120260220_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104339X00120260220/0"
   }
  ]
 }

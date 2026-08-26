@@ -269,6 +269,19 @@
    "title": "国会議員の歳費、旅費及び手当等に関する法律の一部を改正する法律案"
   },
   {
+   "committee": "法務委員会",
+   "date": "2026-05-22",
+   "estimated": false,
+   "firstDate": "2026-05-22",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-22",
+   "meetingId": "122105206X01220260522_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105206X01220260522/0"
+  },
+  {
    "billId": "221-閣法-62",
    "date": "2026-05-15",
    "estimated": true,
@@ -306,6 +319,19 @@
    "stanceText": "少数",
    "status": "本院議了",
    "title": "刑事訴訟法の一部を改正する法律案"
+  },
+  {
+   "committee": "国家基本政策委員会",
+   "date": "2026-05-14",
+   "estimated": false,
+   "firstDate": "2026-05-14",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-14",
+   "meetingId": "122104292X00120260514_000",
+   "meetings": 1,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104292X00120260514/0"
   },
   {
    "billId": "221-閣法-40",
@@ -1049,6 +1075,19 @@
    "title": "予算委員長坂本哲志君解任決議案"
   },
   {
+   "committee": "予算委員会",
+   "date": "2026-03-12",
+   "estimated": false,
+   "firstDate": "2026-03-12",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-12",
+   "meetingId": "122105261X01020260312_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X01020260312/0"
+  },
+  {
    "billId": "221-閣法-23",
    "date": "2026-03-10",
    "estimated": true,
@@ -1307,16 +1346,6 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "金融機能の強化のための特別措置に関する法律等の一部を改正する法律案"
-  },
-  {
-   "chars": 10642,
-   "date": "2026-02-24",
-   "excerpt": "日本維新の会の中司宏です。 会派を代表し、高市総理の施政方針に対し、総理に質問させていただきます。（拍手） 国の根幹に関わる重要政策の大転換、これこそが、自由民主党と日本維新の会との連立による高市政権が成し遂げなければならない課題です。 高市総理は、解散・総選挙に際し、国論を二分するような大胆な政策にも果敢に挑戦し、連立政権合意書に書かれた大きな政策転換を成し遂げるため、国民の信を問うと述べられま",
-   "kind": "speech",
-   "meeting": "本会議 第3号",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105254X00320260224/11",
-   "speechId": "122105254X00320260224_011"
   },
   {
    "billId": "221-閣法-6",

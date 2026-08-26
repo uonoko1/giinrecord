@@ -248,6 +248,19 @@
    "title": "国会議員の歳費、旅費及び手当等に関する法律の一部を改正する法律案"
   },
   {
+   "committee": "農林水産委員会",
+   "date": "2026-05-20",
+   "estimated": false,
+   "firstDate": "2026-05-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-20",
+   "meetingId": "122105007X01020260520_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105007X01020260520/0"
+  },
+  {
    "billId": "221-閣法-62",
    "date": "2026-05-15",
    "estimated": true,
@@ -285,6 +298,19 @@
    "stanceText": "少数",
    "status": "本院議了",
    "title": "刑事訴訟法の一部を改正する法律案"
+  },
+  {
+   "committee": "国土交通委員会",
+   "date": "2026-05-15",
+   "estimated": false,
+   "firstDate": "2026-05-15",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-15",
+   "meetingId": "122104319X00920260515_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104319X00920260515/0"
   },
   {
    "billId": "221-閣法-40",
@@ -402,6 +428,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "金融商品取引法及び資金決済に関する法律の一部を改正する法律案"
+  },
+  {
+   "committee": "憲法審査会",
+   "date": "2026-04-09",
+   "estimated": false,
+   "firstDate": "2026-04-09",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104183X00220260409_000",
+   "meetings": 13,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104183X00220260409/0"
   },
   {
    "billId": "221-閣法-56",
@@ -1247,6 +1286,32 @@
    "stanceText": "多数",
    "status": "両院承認",
    "title": "放送法第七十条第二項の規定に基づき、承認を求めるの件"
+  },
+  {
+   "committee": "財務金融委員会",
+   "date": "2026-03-03",
+   "estimated": false,
+   "firstDate": "2026-03-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104376X00120260303_000",
+   "meetings": 13,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104376X00120260303/0"
+  },
+  {
+   "committee": "予算委員会",
+   "date": "2026-03-02",
+   "estimated": false,
+   "firstDate": "2026-03-02",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-12",
+   "meetingId": "122105261X00320260302_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00320260302/0"
   },
   {
    "billId": "221-閣法-9",

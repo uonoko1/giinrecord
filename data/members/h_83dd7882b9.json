@@ -378,6 +378,19 @@
    "title": "金融商品取引法及び資金決済に関する法律の一部を改正する法律案"
   },
   {
+   "committee": "安全保障委員会",
+   "date": "2026-04-09",
+   "estimated": false,
+   "firstDate": "2026-04-09",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122103815X00220260409_000",
+   "meetings": 8,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122103815X00220260409/0"
+  },
+  {
    "billId": "221-閣法-56",
    "date": "2026-04-07",
    "estimated": true,
@@ -1232,6 +1245,19 @@
    "stanceText": "多数",
    "status": "両院承認",
    "title": "放送法第七十条第二項の規定に基づき、承認を求めるの件"
+  },
+  {
+   "committee": "予算委員会",
+   "date": "2026-03-02",
+   "estimated": false,
+   "firstDate": "2026-03-02",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-27",
+   "meetingId": "122105261X00320260302_000",
+   "meetings": 3,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00320260302/0"
   },
   {
    "billId": "221-閣法-9",

@@ -340,6 +340,19 @@
    "title": "自動車の運転により人を死傷させる行為等の処罰に関する法律及び道路交通法の一部を改正する法律案"
   },
   {
+   "committee": "経済産業委員会",
+   "date": "2026-04-17",
+   "estimated": false,
+   "firstDate": "2026-04-17",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104080X00420260417_000",
+   "meetings": 10,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104080X00420260417/0"
+  },
+  {
    "billId": "221-閣法-60",
    "date": "2026-04-10",
    "estimated": true,
