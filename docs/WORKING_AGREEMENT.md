@@ -111,6 +111,16 @@
     `stable-order.test.ts` は `packages/etl/src` のソースを検査して `.localeCompare(` を禁じる
     （`member.css.test.ts` が tokens.css から比を計算して opacity を禁じるのと同じ流儀）。
   - 文字列の並びは**コードポイント順**（`cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0)`）で統一する。
+- **既存のガード（CI の検査スクリプト）を、実装より先に読む**（Sprint 15・#288 の教訓）。
+  - #288 では共用 VPS の他サイト名をテストのコメントと docs に書き、`forbidden-patterns` が CI で 2 件 hard fail した。
+  - **`scripts/ci/forbidden-patterns.sh` のコメントに目的が明記されている**（何を禁じ、なぜ禁じるか）。
+    実装前にこれを読んでいれば書かずに済んだ。
+  - **`FORBIDDEN_PATTERNS` は repo secret なので、ローカルでは警告のみ・CI でだけ hard fail する。**
+    ローカル green は根拠にならない。CI と同条件の再現は:
+    `FORBIDDEN_PATTERNS=$'<names>' FORBIDDEN_PATTERNS_REQUIRED=true bash scripts/ci/forbidden-patterns.sh`
+  - **PO の指示に書かれた語も、そのまま書いてよいとは限らない。**
+    #288 は PO がタスク指示に他サイト名を書いたのが発端だった（指示文はリポジトリに転記されうる）。
+    **指示に具体名があっても、リポジトリのガードが禁じているなら書かない。**
 
 ## セキュリティレビュー（OSS 前提・必須）
 レビュアーは毎 PR で以下を**実際に grep／実行して**確認し、1つでも該当すれば blocking：
