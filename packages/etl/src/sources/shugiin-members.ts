@@ -34,6 +34,8 @@ export async function fetchShugiinMembers(session: number): Promise<{ members: M
   let asOf: string | undefined;
   for (const page of ROSTER_PAGES) {
     const url = memberListUrl(page);
+    // **session を渡さない**（#294）。衆院名簿の URL には回次が無く、常に「現在」の名簿を返すので、
+    // 回次で古さを判定できない。作り直しのキャッシュ（ETL_CACHE_CLOSED_SESSIONS）でも毎回取得する。
     const html = await fetchText(url, "shift_jis", { noCache: true });
     asOf ??= parseAsOf(html);
     members.push(...parseShugiinMemberList(html, url, session));

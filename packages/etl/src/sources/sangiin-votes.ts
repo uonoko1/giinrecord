@@ -8,7 +8,7 @@ export interface RollCallListItem { href: string; title: string; dateJa: string 
 
 /** List roll-call result pages for a Diet session. Verified 2026-08-22. */
 export async function listRollCalls(session: number): Promise<RollCallListItem[]> {
-  return parseRollCallList(await fetchText(`${BASE}/${session}/vote_ind.htm`, "utf-8", { noCache: true }), session);
+  return parseRollCallList(await fetchText(`${BASE}/${session}/vote_ind.htm`, "utf-8", { noCache: true, session }), session);
 }
 
 /**

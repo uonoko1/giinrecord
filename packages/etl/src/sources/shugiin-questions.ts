@@ -107,10 +107,10 @@ export function parseSubmitterNames(text: string): string[] {
 /** 一覧→各経過ページを順に取得して Question[] にする。経過ページは答弁の受領で内容が変わるのでキャッシュしない。 */
 export async function fetchShugiinQuestions(session: number): Promise<Question[]> {
   const listUrl = shugiinQuestionListUrl(session);
-  const items = parseShugiinQuestionList(await fetchText(listUrl, "shift_jis", { noCache: true }), listUrl);
+  const items = parseShugiinQuestionList(await fetchText(listUrl, "shift_jis", { noCache: true, session }), listUrl);
   const out: Question[] = [];
   for (const item of items) {
-    out.push(parseShugiinQuestion(await fetchText(item.href, "shift_jis", { noCache: true }), item.href, item));
+    out.push(parseShugiinQuestion(await fetchText(item.href, "shift_jis", { noCache: true, session }), item.href, item));
   }
   return out;
 }

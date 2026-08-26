@@ -95,9 +95,9 @@ export function parseSangiinQuestion(html: string, sourceUrl: string, links: { q
 /** 一覧→各詳細ページを順に取得して Question[] にする。詳細ページは答弁の受領で内容が変わるのでキャッシュしない。 */
 export async function fetchSangiinQuestions(session: number): Promise<Question[]> {
   const listUrl = sangiinQuestionListUrl(session);
-  const items = parseSangiinQuestionList(await fetchText(listUrl, "utf-8", { noCache: true }), listUrl);
+  const items = parseSangiinQuestionList(await fetchText(listUrl, "utf-8", { noCache: true, session }), listUrl);
   const out: Question[] = [];
-  for (const item of items) out.push(parseSangiinQuestion(await fetchText(item.href, "utf-8", { noCache: true }), item.href, item));
+  for (const item of items) out.push(parseSangiinQuestion(await fetchText(item.href, "utf-8", { noCache: true, session }), item.href, item));
   return out;
 }
 
