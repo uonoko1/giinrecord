@@ -53,10 +53,14 @@ jobs:
       # 回次一覧 vote_ind.htm・議員名簿・議案ページ・会議録 API は ETL 側が noCache で毎回取得する（packages/etl/src/fetch.ts）。
       - id: date
         run: echo "today=$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+      # key は **わざと一致しない値**にして、restore-keys の前方一致（= 最も新しい etl-cache-* を拾う）を
+      # 必ず通す。key に `etl-cache-<日付>` を書くと完全一致が優先され、save 側が run ごとに一意な
+      # `etl-cache-<日付>-<run_id>-<attempt>`（#293）で保存した**新しいキャッシュが永久に使われない**。
+      # 2026-08-26 の run 32992404355 がこれで古い 93MB を復元し、153MB を無視して 139MB に後退した。
       - uses: actions/cache/restore@v4
         with:
           path: packages/etl/.cache
-          key: etl-cache-${{ steps.date.outputs.today }}
+          key: etl-cache-never-matches-${{ github.run_id }}
           restore-keys: etl-cache-
 
       # `shell: bash` を明示すると `bash -eo pipefail` になる（既定の `bash -e {0}` は pipefail なしで、
