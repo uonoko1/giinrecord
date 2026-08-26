@@ -261,7 +261,7 @@ export async function fetchCommitteeRosters(session: number, house: House): Prom
   const out: CommitteeRoster[] = [];
   let start: number | null = 1;
   while (start !== null) {
-    const page = parseCommitteeRosterPage(JSON.parse(await fetchText(committeePageUrl(session, house, start), "utf-8", { noCache: true })), session, house);
+    const page = parseCommitteeRosterPage(JSON.parse(await fetchText(committeePageUrl(session, house, start), "utf-8", { noCache: true, session })), session, house);
     out.push(...page.rosters);
     start = page.nextRecordPosition;
     if (start !== null) await sleep(REQUEST_INTERVAL_MS);

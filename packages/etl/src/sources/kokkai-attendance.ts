@@ -156,7 +156,7 @@ export async function fetchCommitteeAttendance(session: number): Promise<Committ
   const out: CommitteeMeeting[] = [];
   let start: number | null = 1;
   while (start !== null) {
-    const page = parseAttendancePage(JSON.parse(await fetchText(attendancePageUrl(session, start), "utf-8", { noCache: true })), session);
+    const page = parseAttendancePage(JSON.parse(await fetchText(attendancePageUrl(session, start), "utf-8", { noCache: true, session })), session);
     out.push(...page.meetings);
     start = page.nextRecordPosition;
     if (start !== null) await sleep(REQUEST_INTERVAL_MS);

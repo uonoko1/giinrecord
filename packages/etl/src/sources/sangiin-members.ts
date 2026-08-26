@@ -16,7 +16,7 @@ export const memberListUrl = (session: number) => `${BASE}/${session}/giin.htm`;
  */
 export async function fetchMembers(session: number): Promise<Member[] | undefined> {
   const url = memberListUrl(session);
-  const html = await fetchTextOr404(url, "utf-8", { noCache: true });
+  const html = await fetchTextOr404(url, "utf-8", { noCache: true, session });
   return html === undefined ? undefined : parseMemberList(html, url, session);
 }
 

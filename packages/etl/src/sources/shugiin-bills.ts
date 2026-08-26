@@ -169,9 +169,9 @@ export function toBillSummary(b: Bill): BillSummary {
  */
 export async function fetchShugiinBills(session: number): Promise<Bill[]> {
   const listUrl = shugiinBillListUrl(session);
-  const items = parseShugiinBillList(await fetchText(listUrl, "shift_jis", { noCache: true }), listUrl);
+  const items = parseShugiinBillList(await fetchText(listUrl, "shift_jis", { noCache: true, session }), listUrl);
   const out: Bill[] = [];
-  for (const item of items) out.push(parseShugiinBill(await fetchText(item.href, "shift_jis", { noCache: true }), item.href, item));
+  for (const item of items) out.push(parseShugiinBill(await fetchText(item.href, "shift_jis", { noCache: true, session }), item.href, item));
   return out;
 }
 

@@ -137,7 +137,7 @@ export async function fetchSpeeches(session: number, house: House = "sangiin", s
   const out: Speech[] = [];
   let start: number | null = 1;
   while (start !== null) {
-    const page = parseSpeechPage(JSON.parse(await fetchText(speechPageUrl(session, start, house, scope), "utf-8", { noCache: true })), house);
+    const page = parseSpeechPage(JSON.parse(await fetchText(speechPageUrl(session, start, house, scope), "utf-8", { noCache: true, session })), house);
     out.push(...page.speeches);
     start = page.nextRecordPosition;
     if (start !== null) await sleep(REQUEST_INTERVAL_MS);
