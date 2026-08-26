@@ -121,6 +121,19 @@
    "title": "有人国境離島地域の保全及び特定有人国境離島地域に係る地域社会の維持に関する特別措置法の一部を改正する法律案"
   },
   {
+   "committee": "厚生労働委員会",
+   "date": "2026-06-24",
+   "estimated": false,
+   "firstDate": "2026-06-24",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-24",
+   "meetingId": "122104260X01720260624_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104260X01720260624/0"
+  },
+  {
    "billId": "221-衆法-18",
    "date": "2026-06-16",
    "estimated": true,
@@ -212,6 +225,19 @@
    "title": "令和八年度一般会計補正予算（第１号）"
   },
   {
+   "committee": "東日本大震災復興及び原子力問題調査特別委員会",
+   "date": "2026-05-28",
+   "estimated": false,
+   "firstDate": "2026-05-28",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-28",
+   "meetingId": "122105387X00320260528_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105387X00320260528/0"
+  },
+  {
    "billId": "221-衆法-10",
    "date": "2026-05-26",
    "estimated": true,
@@ -275,6 +301,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "人工衛星等の打上げ及び人工衛星の管理に関する法律等の一部を改正する法律案"
+  },
+  {
+   "committee": "環境委員会",
+   "date": "2026-04-24",
+   "estimated": false,
+   "firstDate": "2026-04-24",
+   "kind": "committeeRole",
+   "lastDate": "2026-04-24",
+   "meetingId": "122104006X00620260424_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104006X00620260424/0"
   },
   {
    "billId": "221-衆法-8",
@@ -1226,6 +1265,19 @@
    "title": "放送法第七十条第二項の規定に基づき、承認を求めるの件"
   },
   {
+   "committee": "財務金融委員会",
+   "date": "2026-03-03",
+   "estimated": false,
+   "firstDate": "2026-03-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104376X00120260303_000",
+   "meetings": 13,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104376X00120260303/0"
+  },
+  {
    "billId": "221-閣法-9",
    "date": "2026-02-27",
    "estimated": true,
@@ -1380,6 +1432,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "消費者問題に関する特別委員会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104536X00120260220_000",
+   "meetings": 4,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104536X00120260220/0"
   }
  ]
 }

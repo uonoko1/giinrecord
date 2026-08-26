@@ -43,6 +43,19 @@
    "title": "医療的ケア児及びその家族に対する支援に関する法律の一部を改正する法律案"
   },
   {
+   "committee": "議院運営委員会",
+   "date": "2026-07-10",
+   "estimated": false,
+   "firstDate": "2026-07-10",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-10",
+   "meetingId": "122104024X03420260710_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104024X03420260710/0"
+  },
+  {
    "billId": "221-閣法-64",
    "date": "2026-06-30",
    "estimated": true,
@@ -184,6 +197,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計補正予算（第１号）"
+  },
+  {
+   "committee": "決算行政監視委員会",
+   "date": "2026-05-27",
+   "estimated": false,
+   "firstDate": "2026-05-27",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104127X00120260527_000",
+   "meetings": 3,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104127X00120260527/0"
   },
   {
    "billId": "221-衆法-10",
@@ -1354,6 +1380,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "消費者問題に関する特別委員会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104536X00120260220_000",
+   "meetings": 4,
+   "role": "委員長",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104536X00120260220/0"
   }
  ]
 }

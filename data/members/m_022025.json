@@ -690,16 +690,6 @@
    "value": "賛成"
   },
   {
-   "chars": 556,
-   "date": "2026-06-03",
-   "excerpt": "ただいま議題となりました地域公共交通の活性化及び再生に関する法律の一部を改正する法律案につきまして、国土交通委員会における審査の経過と結果を御報告申し上げます。 本法律案は、近年における地域旅客運送サービスを取り巻く厳しい状況に鑑み、その持続可能な提供の確保に資する関係者の連携と協働による取組を一層推進するため、地域公共交通特定事業について、休廃止されたバス路線等における運送を地方公共団体の支援に",
-   "kind": "speech",
-   "meeting": "本会議 第18号",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01820260603/32",
-   "speechId": "122115254X01820260603_032"
-  },
-  {
    "date": "2026-05-29",
    "groupValue": "賛成",
    "kind": "vote",
@@ -865,16 +855,6 @@
    "value": "賛成"
   },
   {
-   "chars": 602,
-   "date": "2026-05-20",
-   "excerpt": "ただいま議題となりました都市再生特別措置法等の一部を改正する法律案につきまして、国土交通委員会における審査の経過と結果を御報告申し上げます。 本法律案は、都市の魅力及び活力の向上を通じて都市の再生を図るため、公共公益施設の整備及び管理に関する協定制度、そして、市町村が定める区域において地域固有の魅力の維持及び向上のために必要な措置を講ずる制度並びに都市機能誘導区域に誘導施設の維持に寄与する業務施設",
-   "kind": "speech",
-   "meeting": "本会議 第14号",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01420260520/30",
-   "speechId": "122115254X01420260520_030"
-  },
-  {
    "date": "2026-05-15",
    "groupValue": "賛成",
    "kind": "vote",
@@ -950,16 +930,6 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0513-v001.htm",
    "title": "日程第１　物資の流通の効率化に関する法律の一部を改正する法律案（内閣提出、衆議院送付）",
    "value": "賛成"
-  },
-  {
-   "chars": 388,
-   "date": "2026-05-13",
-   "excerpt": "ただいま議題となりました物資の流通の効率化に関する法律の一部を改正する法律案につきまして、国土交通委員会における審査の経過と結果を御報告申し上げます。 本法律案は、最近における物資の流通をめぐる経済的社会的事情の変化を踏まえ、貨物自動車相互間の中継輸送を促進するため、貨物自動車中継輸送事業について、計画の認定及び実施に必要な関係法律の規定による許可等の特例等の措置を講じようとするものであります。 ",
-   "kind": "speech",
-   "meeting": "本会議 第12号",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01220260513/32",
-   "speechId": "122115254X01220260513_032"
   },
   {
    "date": "2026-04-24",
@@ -1070,6 +1040,19 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0417-v001.htm",
    "title": "日程第１　南極地域の環境の保護に関する法律の一部を改正する法律案（内閣提出）",
    "value": "賛成"
+  },
+  {
+   "committee": "憲法審査会",
+   "date": "2026-04-15",
+   "estimated": false,
+   "firstDate": "2026-04-15",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-24",
+   "meetingId": "122114183X00120260415_000",
+   "meetings": 4,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122114183X00120260415/0"
   },
   {
    "date": "2026-04-07",
@@ -1259,16 +1242,6 @@
    "value": "賛成"
   },
   {
-   "chars": 498,
-   "date": "2026-03-31",
-   "excerpt": "ただいま議題となりました法律案につきまして、国土交通委員会における審査の経過と結果を御報告申し上げます。 本法律案は、軽油引取税の当分の間税率の廃止後における運輸事業振興助成交付金の取扱いについて、所要の措置を講じようとするものであり、現下の軽油を燃料とする自動車を用いて行われる運輸事業をめぐる状況に鑑み、令和十三年三月三十一日までの間、引き続き運輸事業振興助成交付金を交付しようとするものでありま",
-   "kind": "speech",
-   "meeting": "本会議 第7号",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00720260331/27",
-   "speechId": "122115254X00720260331_027"
-  },
-  {
    "date": "2026-03-30",
    "groupValue": "賛成",
    "kind": "vote",
@@ -1423,6 +1396,32 @@
    "title": "ホルムズ海峡を巡る情勢と存立危機事態の関係に関する質問主意書"
   },
   {
+   "committee": "国土交通委員会",
+   "date": "2026-02-26",
+   "estimated": false,
+   "firstDate": "2026-02-26",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-23",
+   "meetingId": "122114319X00120260226_000",
+   "meetings": 15,
+   "role": "委員長",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122114319X00120260226/0"
+  },
+  {
+   "committee": "国土交通委員会",
+   "date": "2026-01-23",
+   "estimated": false,
+   "firstDate": "2026-01-23",
+   "kind": "committeeRole",
+   "lastDate": "2026-01-23",
+   "meetingId": "122014319X00120260123_000",
+   "meetings": 1,
+   "role": "委員長",
+   "session": 220,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122014319X00120260123/0"
+  },
+  {
    "date": "2025-12-16",
    "groupValue": "賛成",
    "kind": "vote",
@@ -1575,26 +1574,6 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/219/219-1205-v001.htm",
    "title": "日程第１　気象業務法及び水防法の一部を改正する法律案（内閣提出、衆議院送付）",
    "value": "賛成"
-  },
-  {
-   "chars": 427,
-   "date": "2025-12-05",
-   "excerpt": "ただいま議題となりました法律案につきまして、今度は国土交通委員長として、国土交通委員会における審査の経過と結果を御報告いたします。 本法律案は、水災による被害の軽減を図るため、洪水の特別警報の創設、国土交通大臣等が共同して行う高潮の予報及び警報の創設、河川管理者等による氾濫等の通報の実施等の措置を講ずるとともに、情報通信技術の進展を踏まえ、予報業務の利用者の保護を図るため、外国法人等が行う予報業務",
-   "kind": "speech",
-   "meeting": "本会議 第8号",
-   "session": 219,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121915254X00820251205/12",
-   "speechId": "121915254X00820251205_012"
-  },
-  {
-   "chars": 1889,
-   "date": "2025-12-05",
-   "excerpt": "立憲民主党の辻元清美です。 ただいま、院議をもちまして永年在職議員表彰を賜り、誠に光栄に存じます。本当に皆様ありがとうございました。 初めに、関口昌一議長、そして、温かい御祝辞を賜りました松山政司自民党参議院会長に厚く御礼を申し上げます。そして、同時に表彰されます山谷えり子議員、おめでとうございます。 私は、一九六〇年、奈良県吉野郡の山合いの町で生まれ、大阪、名古屋で育ちました。 父方の祖父は戦死",
-   "kind": "speech",
-   "meeting": "本会議 第8号",
-   "session": 219,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121915254X00820251205/6",
-   "speechId": "121915254X00820251205_006"
   },
   {
    "date": "2025-12-03",
@@ -1795,114 +1774,17 @@
    "value": "賛成"
   },
   {
-   "date": "2025-11-28",
-   "groupValue": "賛成",
-   "kind": "vote",
-   "result": "賛成 244・反対 0",
-   "rollCallId": "209-1128-v010",
-   "session": 209,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/209/209-1128-v010.htm",
-   "title": "日程第１　租税特別措置法及び東日本大震災の被災者等に係る国税関係法律の臨時特例に関する法律の一部を改正する法律案（衆議院提出）",
-   "value": "賛成"
-  },
-  {
-   "date": "2025-11-28",
-   "groupValue": "賛成",
-   "kind": "vote",
-   "result": "賛成 238・反対 6",
-   "rollCallId": "209-1128-v009",
-   "session": 209,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/209/209-1128-v009.htm",
-   "title": "国家公務員等の任命に関する件「公害健康被害補償不服審査会委員（星景子君）」",
-   "value": "賛成"
-  },
-  {
-   "date": "2025-11-28",
-   "groupValue": "賛成",
-   "kind": "vote",
-   "result": "賛成 214・反対 28",
-   "rollCallId": "209-1128-v008",
-   "session": 209,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/209/209-1128-v008.htm",
-   "title": "国家公務員等の任命に関する件「運輸審議会委員（大石美奈子君）」",
-   "value": "賛成"
-  },
-  {
-   "date": "2025-11-28",
-   "groupValue": "賛成",
-   "kind": "vote",
-   "result": "賛成 236・反対 9",
-   "rollCallId": "209-1128-v007",
-   "session": 209,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/209/209-1128-v007.htm",
-   "title": "国家公務員等の任命に関する件「日本放送協会経営委員会委員（前田香織君及び榊原陽子君）」",
-   "value": "賛成"
-  },
-  {
-   "date": "2025-11-28",
-   "groupValue": "賛成",
-   "kind": "vote",
-   "result": "賛成 227・反対 18",
-   "rollCallId": "209-1128-v006",
-   "session": 209,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/209/209-1128-v006.htm",
-   "title": "国家公務員等の任命に関する件「日本放送協会経営委員会委員（岩井睦雄君）」",
-   "value": "賛成"
-  },
-  {
-   "date": "2025-11-28",
-   "groupValue": "賛成",
-   "kind": "vote",
-   "result": "賛成 230・反対 15",
-   "rollCallId": "209-1128-v005",
-   "session": 209,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/209/209-1128-v005.htm",
-   "title": "国家公務員等の任命に関する件「電波監理審議会委員（大久保哲夫君）」",
-   "value": "賛成"
-  },
-  {
-   "date": "2025-11-28",
-   "groupValue": "賛成",
-   "kind": "vote",
-   "result": "賛成 245・反対 0",
-   "rollCallId": "209-1128-v004",
-   "session": 209,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/209/209-1128-v004.htm",
-   "title": "国家公務員等の任命に関する件「証券取引等監視委員会委員長（中原亮一君）、同委員（加藤さゆり君及び橋本尚君）、電気通信紛争処理委員会委員（笠井之彦君、三尾美枝子君、小塚荘一郎君、中條祐介君及び前原賀代君）、中央更生保護審査会委員（久保美紀君）及び運輸安全委員会委員（堂園正人君、古川敦君、大野寛之君、鈴木美緒君及び新妻実保子君）」",
-   "value": "賛成"
-  },
-  {
-   "date": "2025-11-28",
-   "groupValue": "賛成",
-   "kind": "vote",
-   "result": "賛成 237・反対 8",
-   "rollCallId": "209-1128-v003",
-   "session": 209,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/209/209-1128-v003.htm",
-   "title": "国家公務員等の任命に関する件「個人情報保護委員会委員（新保史生君）」",
-   "value": "賛成"
-  },
-  {
-   "date": "2025-11-28",
-   "groupValue": "賛成",
-   "kind": "vote",
-   "result": "賛成 230・反対 14",
-   "rollCallId": "209-1128-v002",
-   "session": 209,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/209/209-1128-v002.htm",
-   "title": "国家公務員等の任命に関する件「個人情報保護委員会委員（藤村明子君、木田俊昭君及び藤井英治君）及び運輸審議会委員（堀川義弘君）」",
-   "value": "賛成"
-  },
-  {
-   "date": "2025-11-28",
-   "groupValue": "賛成",
-   "kind": "vote",
-   "result": "賛成 229・反対 15",
-   "rollCallId": "209-1128-v001",
-   "session": 209,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/209/209-1128-v001.htm",
-   "title": "国家公務員等の任命に関する件「食品安全委員会委員（春日文子君）」",
-   "value": "賛成"
+   "committee": "憲法審査会",
+   "date": "2025-11-26",
+   "estimated": false,
+   "firstDate": "2025-11-26",
+   "kind": "committeeRole",
+   "lastDate": "2025-12-17",
+   "meetingId": "121914183X00120251126_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 219,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121914183X00120251126/0"
   },
   {
    "answerDate": "2025-12-02",
@@ -1936,6 +1818,58 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/219/meisai/m219048.htm",
    "submitterText": "辻元 清美君",
    "title": "高市内閣総理大臣の「台湾有事」答弁における台湾の帰属及び国家性の認識並びに台湾の「我が国と密接な関係にある他国」該当性に関する質問主意書"
+  },
+  {
+   "committee": "国土交通委員会",
+   "date": "2025-11-18",
+   "estimated": false,
+   "firstDate": "2025-11-18",
+   "kind": "committeeRole",
+   "lastDate": "2025-12-17",
+   "meetingId": "121914319X00120251118_000",
+   "meetings": 5,
+   "role": "委員長",
+   "session": 219,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121914319X00120251118/0"
+  },
+  {
+   "committee": "経済産業委員会",
+   "date": "2025-08-05",
+   "estimated": false,
+   "firstDate": "2025-08-05",
+   "kind": "committeeRole",
+   "lastDate": "2025-08-05",
+   "meetingId": "121814080X00120250805_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 218,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121814080X00120250805/0"
+  },
+  {
+   "committee": "政治改革に関する特別委員会",
+   "date": "2025-08-01",
+   "estimated": false,
+   "firstDate": "2025-08-01",
+   "kind": "committeeRole",
+   "lastDate": "2025-08-05",
+   "meetingId": "121814575X00120250801_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 218,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121814575X00120250801/0"
+  },
+  {
+   "committee": "憲法審査会",
+   "date": "2025-08-01",
+   "estimated": false,
+   "firstDate": "2025-08-01",
+   "kind": "committeeRole",
+   "lastDate": "2025-08-01",
+   "meetingId": "121814183X00120250801_000",
+   "meetings": 1,
+   "role": "幹事",
+   "session": 218,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121814183X00120250801/0"
   },
   {
    "date": "2025-06-20",
@@ -2983,6 +2917,19 @@
    "value": "賛成"
   },
   {
+   "committee": "憲法審査会",
+   "date": "2025-04-02",
+   "estimated": false,
+   "firstDate": "2025-04-02",
+   "kind": "committeeRole",
+   "lastDate": "2025-06-18",
+   "meetingId": "121714183X00120250402_000",
+   "meetings": 6,
+   "role": "幹事",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121714183X00120250402/0"
+  },
+  {
    "date": "2025-04-01",
    "groupValue": "賛成",
    "kind": "vote",
@@ -3135,6 +3082,19 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0331-v001.htm",
    "title": "令和七年度一般会計予算「委員長報告のとおり修正議決すること」",
    "value": "反対"
+  },
+  {
+   "committee": "予算委員会",
+   "date": "2025-03-27",
+   "estimated": false,
+   "firstDate": "2025-03-27",
+   "kind": "committeeRole",
+   "lastDate": "2025-03-27",
+   "meetingId": "121715261X01320250327_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715261X01320250327/0"
   },
   {
    "date": "2025-03-26",
@@ -3302,6 +3262,19 @@
    "value": "賛成"
   },
   {
+   "committee": "経済産業委員会",
+   "date": "2025-03-13",
+   "estimated": false,
+   "firstDate": "2025-03-13",
+   "kind": "committeeRole",
+   "lastDate": "2025-06-20",
+   "meetingId": "121714080X00120250313_000",
+   "meetings": 15,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121714080X00120250313/0"
+  },
+  {
    "date": "2025-02-19",
    "groupValue": "賛成",
    "kind": "vote",
@@ -3434,6 +3407,32 @@
    "value": "賛成"
   },
   {
+   "committee": "政治改革に関する特別委員会",
+   "date": "2025-01-24",
+   "estimated": false,
+   "firstDate": "2025-01-24",
+   "kind": "committeeRole",
+   "lastDate": "2025-05-23",
+   "meetingId": "121714575X00120250124_000",
+   "meetings": 4,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121714575X00120250124/0"
+  },
+  {
+   "committee": "憲法審査会",
+   "date": "2024-12-24",
+   "estimated": false,
+   "firstDate": "2024-12-24",
+   "kind": "committeeRole",
+   "lastDate": "2024-12-24",
+   "meetingId": "121614183X00120241224_000",
+   "meetings": 1,
+   "role": "幹事",
+   "session": 216,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121614183X00120241224/0"
+  },
+  {
    "answerDate": "2024-12-27",
    "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/216/touh/t216037.htm",
    "date": "2024-12-18",
@@ -3445,388 +3444,30 @@
    "title": "震災時の備蓄と国家の責任に関する質問主意書"
   },
   {
-   "chars": 7806,
-   "date": "2024-12-03",
-   "excerpt": "立憲民主党の辻元清美です。 会派を代表し、石破総理大臣の所信表明演説に対し、質問をいたします。 衆議院では、与党過半数割れになりました。与党多数で押し切る国会ではなく、与野党、国民の見えるところでオープンに、しっかり議論をして、合意形成をしてほしいという民意が示されました。 そこで、総理、約束してください。与党多数の本院参議院、参議院は与党が多数ですけれども、この参議院でも、熟議と公開、よろしいで",
-   "kind": "speech",
-   "meeting": "本会議 第3号",
+   "committee": "経済産業委員会",
+   "date": "2024-12-10",
+   "estimated": false,
+   "firstDate": "2024-12-10",
+   "kind": "committeeRole",
+   "lastDate": "2024-12-24",
+   "meetingId": "121614080X00120241210_000",
+   "meetings": 3,
+   "role": "委員",
    "session": 216,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121615254X00320241203/2",
-   "speechId": "121615254X00320241203_002"
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121614080X00120241210/0"
   },
   {
-   "date": "2024-10-01",
-   "groupValue": "反対",
-   "kind": "vote",
-   "result": "賛成 146・反対 96",
-   "rollCallId": "214-1001-v001",
-   "session": 214,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/214/214-1001-v001.htm",
-   "title": "日程第２　会期の件",
-   "value": "反対"
-  },
-  {
-   "answerDate": "2024-06-21",
-   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/213/touh/t213173.htm",
-   "date": "2024-06-12",
-   "kind": "question",
-   "questionId": "213-sangiin-173",
-   "session": 213,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/213/meisai/m213173.htm",
-   "submitterText": "辻元 清美君",
-   "title": "離婚後共同親権と児童虐待に関する質問主意書"
-  },
-  {
-   "date": "2024-03-28",
-   "groupValue": "反対",
-   "kind": "vote",
-   "result": "可決（賛成 146・反対 98）",
-   "rollCallId": "213-0328-v014",
-   "session": 213,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/213/213-0328-v014.htm",
-   "title": "令和六年度政府関係機関予算",
-   "value": "反対"
-  },
-  {
-   "date": "2024-03-28",
-   "groupValue": "反対",
-   "kind": "vote",
-   "result": "可決（賛成 146・反対 98）",
-   "rollCallId": "213-0328-v013",
-   "session": 213,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/213/213-0328-v013.htm",
-   "title": "令和六年度特別会計予算",
-   "value": "反対"
-  },
-  {
-   "date": "2024-03-28",
-   "groupValue": "反対",
-   "kind": "vote",
-   "result": "可決（賛成 146・反対 98）",
-   "rollCallId": "213-0328-v012",
-   "session": 213,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/213/213-0328-v012.htm",
-   "title": "令和六年度一般会計予算",
-   "value": "反対"
-  },
-  {
-   "answerDate": "2024-02-27",
-   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/213/touh/t213032.htm",
-   "date": "2024-02-15",
-   "kind": "question",
-   "questionId": "213-sangiin-32",
-   "session": 213,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/213/meisai/m213032.htm",
-   "submitterText": "辻元 清美君",
-   "title": "イージス・システム搭載艦の費用に関する質問主意書"
-  },
-  {
-   "answerDate": "2023-12-22",
-   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/212/touh/t212112.htm",
-   "date": "2023-12-12",
-   "kind": "question",
-   "questionId": "212-sangiin-112",
-   "session": 212,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/212/meisai/m212112.htm",
-   "submitterText": "辻元 清美君",
-   "title": "大阪・関西万博の情報公開に関する質問主意書"
-  },
-  {
-   "answerDate": "2023-12-22",
-   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/212/touh/t212111.htm",
-   "date": "2023-12-12",
-   "kind": "question",
-   "questionId": "212-sangiin-111",
-   "session": 212,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/212/meisai/m212111.htm",
-   "submitterText": "辻元 清美君",
-   "title": "修学旅行等における大阪・関西万博の活用に関する質問主意書"
-  },
-  {
-   "answerDate": "2023-12-22",
-   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/212/touh/t212110.htm",
-   "date": "2023-12-12",
-   "kind": "question",
-   "questionId": "212-sangiin-110",
-   "session": 212,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/212/meisai/m212110.htm",
-   "submitterText": "辻元 清美君",
-   "title": "ライドシェアについての河野太郎大臣の「相関関係」発言とＵｂｅｒ Ｊａｐａｎ提出資料に関する質問主意書"
-  },
-  {
-   "answerDate": "2023-12-19",
-   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/212/touh/t212084.htm",
-   "date": "2023-12-07",
-   "kind": "question",
-   "questionId": "212-sangiin-84",
-   "session": 212,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/212/meisai/m212084.htm",
-   "submitterText": "辻元 清美君",
-   "title": "離婚後共同親権制の導入に係る課題等に関する質問主意書"
-  },
-  {
-   "answerDate": "2023-12-01",
-   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/212/touh/t212055.htm",
-   "date": "2023-11-17",
-   "kind": "question",
-   "questionId": "212-sangiin-55",
-   "session": 212,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/212/meisai/m212055.htm",
-   "submitterText": "辻元 清美君",
-   "title": "自衛官又は自衛官候補生の募集事務に関する質問主意書"
-  },
-  {
-   "answerDate": "2023-10-31",
-   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/212/touh/t212018.htm",
-   "date": "2023-10-20",
-   "kind": "question",
-   "questionId": "212-sangiin-18",
-   "session": 212,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/212/meisai/m212018.htm",
-   "submitterText": "辻元 清美君",
-   "title": "ライドシェアをめぐる世界各国の犯罪事案等と禁止・規制事例に関する質問主意書"
-  },
-  {
-   "answerDate": "2023-06-27",
-   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/211/touh/t211111.htm",
-   "date": "2023-06-15",
-   "kind": "question",
-   "questionId": "211-sangiin-111",
-   "session": 211,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/211/meisai/m211111.htm",
-   "submitterText": "辻元 清美君",
-   "title": "原子力発電所の劣化状況の点検・評価・審査に関する再質問主意書"
-  },
-  {
-   "date": "2023-06-07",
-   "groupValue": "賛成",
-   "kind": "vote",
-   "result": "否決（賛成 61・反対 183）",
-   "rollCallId": "211-0607-v001",
-   "session": 211,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/211/211-0607-v001.htm",
-   "title": "法務大臣齋藤健君問責決議案（石橋通宏君発議）",
-   "value": "賛成"
-  },
-  {
-   "date": "2023-06-02",
-   "groupValue": "賛成",
-   "kind": "vote",
-   "result": "否決（賛成 60・反対 181）",
-   "rollCallId": "211-0602-v001",
-   "session": 211,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/211/211-0602-v001.htm",
-   "title": "法務委員長杉久武君解任決議案（牧山ひろえ君発議）",
-   "value": "賛成"
-  },
-  {
-   "answerDate": "2023-06-09",
-   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/211/touh/t211086.htm",
-   "date": "2023-05-31",
-   "kind": "question",
-   "questionId": "211-sangiin-86",
-   "session": 211,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/211/meisai/m211086.htm",
-   "submitterText": "辻元 清美君",
-   "title": "原子力規制委員会と原子力規制庁の独立性に関する再質問主意書"
-  },
-  {
-   "answerDate": "2023-05-26",
-   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/211/touh/t211076.htm",
-   "date": "2023-05-17",
-   "kind": "question",
-   "questionId": "211-sangiin-76",
-   "session": 211,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/211/meisai/m211076.htm",
-   "submitterText": "辻元 清美君",
-   "title": "性同一性に対する政府の認識に関する質問主意書"
-  },
-  {
-   "answerDate": "2023-05-19",
-   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/211/touh/t211072.htm",
-   "date": "2023-05-10",
-   "kind": "question",
-   "questionId": "211-sangiin-72",
-   "session": 211,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/211/meisai/m211072.htm",
-   "submitterText": "辻元 清美君",
-   "title": "性自認に対しての政府の認識に関する質問主意書"
-  },
-  {
-   "answerDate": "2023-05-19",
-   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/211/touh/t211071.htm",
-   "date": "2023-05-10",
-   "kind": "question",
-   "questionId": "211-sangiin-71",
-   "session": 211,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/211/meisai/m211071.htm",
-   "submitterText": "辻元 清美君",
-   "title": "原子力発電所の再稼働と電気料金の関係に関する質問主意書"
-  },
-  {
-   "answerDate": "2023-05-16",
-   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/211/touh/t211067.htm",
-   "date": "2023-05-02",
-   "kind": "question",
-   "questionId": "211-sangiin-67",
-   "session": 211,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/211/meisai/m211067.htm",
-   "submitterText": "辻元 清美君",
-   "title": "岸田文雄内閣総理大臣の広島・長崎における外国人の原爆被害状況の認識に関する質問主意書"
-  },
-  {
-   "date": "2023-03-28",
-   "groupValue": "反対",
-   "kind": "vote",
-   "result": "可決（賛成 148・反対 95）",
-   "rollCallId": "211-0328-v003",
-   "session": 211,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/211/211-0328-v003.htm",
-   "title": "日程第３　令和五年度政府関係機関予算",
-   "value": "反対"
-  },
-  {
-   "date": "2023-03-28",
-   "groupValue": "反対",
-   "kind": "vote",
-   "result": "可決（賛成 148・反対 95）",
-   "rollCallId": "211-0328-v002",
-   "session": 211,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/211/211-0328-v002.htm",
-   "title": "日程第２　令和五年度特別会計予算",
-   "value": "反対"
-  },
-  {
-   "date": "2023-03-28",
-   "groupValue": "反対",
-   "kind": "vote",
-   "result": "可決（賛成 148・反対 95）",
-   "rollCallId": "211-0328-v001",
-   "session": 211,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/211/211-0328-v001.htm",
-   "title": "日程第１　令和五年度一般会計予算",
-   "value": "反対"
-  },
-  {
-   "date": "2023-03-15",
-   "groupValue": "賛成",
-   "kind": "vote",
-   "result": "除名（賛成 235・反対 1）",
-   "rollCallId": "211-0315-v001",
-   "session": 211,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/211/211-0315-v001.htm",
-   "title": "日程第１　議員ガーシー君懲罰事犯の件（委員長報告のとおり「除名」とすること）",
-   "value": "賛成"
-  },
-  {
-   "answerDate": "2023-03-24",
-   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/211/touh/t211038.htm",
-   "date": "2023-03-13",
-   "kind": "question",
-   "questionId": "211-sangiin-38",
-   "session": 211,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/211/meisai/m211038.htm",
-   "submitterText": "辻元 清美君",
-   "title": "原子力発電所の劣化状況の点検・評価・審査に関する質問主意書"
-  },
-  {
-   "answerDate": "2023-03-14",
-   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/211/touh/t211034.htm",
-   "date": "2023-03-03",
-   "kind": "question",
-   "questionId": "211-sangiin-34",
-   "session": 211,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/211/meisai/m211034.htm",
-   "submitterText": "辻元 清美君",
-   "title": "原子力規制委員会と原子力規制庁の独立性に関する質問主意書"
-  },
-  {
-   "answerDate": "2022-12-20",
-   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/210/touh/t210064.htm",
-   "date": "2022-12-08",
-   "kind": "question",
-   "questionId": "210-sangiin-64",
-   "session": 210,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/210/meisai/m210064.htm",
-   "submitterText": "辻元 清美君",
-   "title": "原子炉の耐用年数に関する質問主意書"
-  },
-  {
-   "answerDate": "2022-12-16",
-   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/210/touh/t210056.htm",
-   "date": "2022-12-07",
-   "kind": "question",
-   "questionId": "210-sangiin-56",
-   "session": 210,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/210/meisai/m210056.htm",
-   "submitterText": "辻元 清美君",
-   "title": "旧統一教会の「関連団体」に関する質問主意書"
-  },
-  {
-   "answerDate": "2022-12-13",
-   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/210/touh/t210052.htm",
-   "date": "2022-12-02",
-   "kind": "question",
-   "questionId": "210-sangiin-52",
-   "session": 210,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/210/meisai/m210052.htm",
-   "submitterText": "辻元 清美君",
-   "title": "石綿健康被害救済基金の治療研究への活用に関する質問主意書"
-  },
-  {
-   "answerDate": "2022-12-09",
-   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/210/touh/t210049.htm",
-   "date": "2022-11-30",
-   "kind": "question",
-   "questionId": "210-sangiin-49",
-   "session": 210,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/210/meisai/m210049.htm",
-   "submitterText": "辻元 清美君",
-   "title": "今後の経済見通しや政府が「百六万円の壁」と説明してきたことの正当性及び年金額の変動等に関する質問主意書"
-  },
-  {
-   "answerDate": "2022-12-09",
-   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/210/touh/t210048.htm",
-   "date": "2022-11-29",
-   "kind": "question",
-   "questionId": "210-sangiin-48",
-   "session": 210,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/210/meisai/m210048.htm",
-   "submitterText": "辻元 清美君",
-   "title": "岸田文雄内閣総理大臣の広島・長崎における外国人の原爆被害状況の認識に関する質問主意書"
-  },
-  {
-   "answerDate": "2022-08-15",
-   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/209/touh/t209014.htm",
-   "date": "2022-08-05",
-   "kind": "question",
-   "questionId": "209-sangiin-14",
-   "session": 209,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/209/meisai/m209014.htm",
-   "submitterText": "辻元 清美君",
-   "title": "公安調査庁「内外情勢の回顧と展望」における特異集団の記述に関する質問主意書"
-  },
-  {
-   "answerDate": "2022-08-15",
-   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/209/touh/t209011.htm",
-   "date": "2022-08-04",
-   "kind": "question",
-   "questionId": "209-sangiin-11",
-   "session": 209,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/209/meisai/m209011.htm",
-   "submitterText": "辻元 清美君",
-   "title": "安倍晋三元総理の国葬儀当日における弔意表明に関する質問主意書"
-  },
-  {
-   "answerDate": "2022-08-15",
-   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/209/touh/t209010.htm",
-   "date": "2022-08-04",
-   "kind": "question",
-   "questionId": "209-sangiin-10",
-   "session": 209,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/209/meisai/m209010.htm",
-   "submitterText": "辻元 清美君",
-   "title": "安倍晋三元総理の国葬儀等についての基準に関する質問主意書"
+   "committee": "政治改革に関する特別委員会",
+   "date": "2024-11-28",
+   "estimated": false,
+   "firstDate": "2024-11-28",
+   "kind": "committeeRole",
+   "lastDate": "2024-12-24",
+   "meetingId": "121614575X00120241128_000",
+   "meetings": 4,
+   "role": "委員",
+   "session": 216,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121614575X00120241128/0"
   }
  ]
 }

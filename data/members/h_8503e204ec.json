@@ -264,6 +264,19 @@
    "title": "自動車盗難対策等の推進に関する法律案"
   },
   {
+   "committee": "厚生労働委員会",
+   "date": "2026-06-19",
+   "estimated": false,
+   "firstDate": "2026-06-19",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-19",
+   "meetingId": "122104260X01620260619_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104260X01620260619/0"
+  },
+  {
    "billId": "221-衆法-17",
    "date": "2026-06-16",
    "kind": "bill",
@@ -297,6 +310,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "国立国会図書館法及び国立国会図書館法の規定により行政各部門に置かれる支部図書館及びその職員に関する法律の一部を改正する法律案"
+  },
+  {
+   "committee": "内閣委員会",
+   "date": "2026-06-12",
+   "estimated": false,
+   "firstDate": "2026-06-12",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-12",
+   "meetingId": "122104889X01920260612_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104889X01920260612/0"
   },
   {
    "billId": "221-衆法-13",
@@ -466,16 +492,6 @@
    "stanceText": "全会一致",
    "status": "成立",
    "title": "自動車の運転により人を死傷させる行為等の処罰に関する法律及び道路交通法の一部を改正する法律案"
-  },
-  {
-   "chars": 4598,
-   "date": "2026-04-14",
-   "excerpt": "国民民主党・無所属クラブの佐々木真琴です。 会派を代表して、ただいま議題となりました防災庁設置法案について質問いたします。（拍手） 中学二年生のとき、岩手県宮古市で東日本大震災を経験しました。中学校の坂の下まで津波が押し寄せ、通学路は見る影もなく、祖父母の家も流されました。母と連絡がつかない数日間、避難所での生活、車のエンジンをつけてはニュースを見てまた切って、弟と二人で毛布をかけて夜を明かした日",
-   "kind": "speech",
-   "meeting": "本会議 第12号",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105254X01220260414/23",
-   "speechId": "122105254X01220260414_023"
   },
   {
    "billId": "221-閣法-60",
@@ -1278,6 +1294,19 @@
    "title": "インテリジェンスに係る態勢の整備の推進に関する法律案"
   },
   {
+   "committee": "農林水産委員会",
+   "date": "2026-03-10",
+   "estimated": false,
+   "firstDate": "2026-03-10",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-09",
+   "meetingId": "122105007X00120260310_000",
+   "meetings": 3,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105007X00120260310/0"
+  },
+  {
    "billId": "221-閣法-18",
    "date": "2026-03-06",
    "estimated": true,
@@ -1354,6 +1383,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "防災庁設置法案"
+  },
+  {
+   "committee": "外務委員会",
+   "date": "2026-03-04",
+   "estimated": false,
+   "firstDate": "2026-03-04",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122103968X00120260304_000",
+   "meetings": 14,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122103968X00120260304/0"
   },
   {
    "billId": "221-閣法-12",
@@ -1573,6 +1615,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "災害対策特別委員会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104339X00120260220_000",
+   "meetings": 10,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104339X00120260220/0"
   }
  ]
 }

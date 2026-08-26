@@ -436,16 +436,6 @@
    "title": "金融商品取引法及び資金決済に関する法律の一部を改正する法律案"
   },
   {
-   "chars": 2876,
-   "date": "2026-04-09",
-   "excerpt": "日本維新の会の伊東信久です。 私は、党を代表して、健康保険法等の一部を改正する法律案について質問いたします。（拍手） 医療保険制度は、国民皆保険という我が国の社会保障の根幹を成す仕組みです。いつでもどこでも必要な医療を受けられる、この私たちの当たり前は、日本の社会的安定と経済成長を支えてきました。他方で、少子高齢化の進行、医療技術の高度化、物価、人件費の上昇、そして現役世代人口の減少、これらが同時",
-   "kind": "speech",
-   "meeting": "本会議 第11号",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105254X01120260409/17",
-   "speechId": "122105254X01120260409_017"
-  },
-  {
    "billId": "221-閣法-56",
    "date": "2026-04-07",
    "estimated": true,
@@ -600,6 +590,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "民法等の一部を改正する法律案"
+  },
+  {
+   "committee": "厚生労働委員会",
+   "date": "2026-04-03",
+   "estimated": false,
+   "firstDate": "2026-04-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104260X00120260403_000",
+   "meetings": 20,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104260X00120260403/0"
   },
   {
    "billId": "221-閣法-41",
@@ -1237,6 +1240,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "防災庁設置法案"
+  },
+  {
+   "committee": "予算委員会",
+   "date": "2026-03-05",
+   "estimated": false,
+   "firstDate": "2026-03-05",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-05",
+   "meetingId": "122105261X00620260305_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00620260305/0"
   },
   {
    "billId": "221-閣法-12",

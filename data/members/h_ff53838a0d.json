@@ -295,14 +295,17 @@
    "title": "人工衛星等の打上げ及び人工衛星の管理に関する法律等の一部を改正する法律案"
   },
   {
-   "chars": 1306,
+   "committee": "憲法審査会",
    "date": "2026-04-23",
-   "excerpt": "参政党の川裕一郎です。 会派を代表し、国家情報会議設置法案に賛成の立場から討論を行います。（拍手） 本法案が我が国のインテリジェンス機能を強化をし、情報収集、分析体制を整備する点は評価いたします。国際情勢が不確実性を増し、安全保障と経済が一体不可分となる中で、国家として主体的に情報を把握し意思決定を行う基盤の強化は不可欠であり、本法案は必要な第一歩であります。 しかしながら、現実の脅威に対する踏み",
-   "kind": "speech",
-   "meeting": "本会議 第15号",
+   "estimated": false,
+   "firstDate": "2026-04-23",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104183X00420260423_000",
+   "meetings": 9,
+   "role": "委員",
    "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105254X01520260423/24",
-   "speechId": "122105254X01520260423_024"
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104183X00420260423/0"
   },
   {
    "billId": "221-衆法-8",
@@ -355,16 +358,6 @@
    "stanceText": "全会一致",
    "status": "成立",
    "title": "自動車の運転により人を死傷させる行為等の処罰に関する法律及び道路交通法の一部を改正する法律案"
-  },
-  {
-   "chars": 1818,
-   "date": "2026-04-14",
-   "excerpt": "参政党の川裕一郎です。 会派を代表し、防災庁設置法及び関係法案に関して質問をいたします。（拍手） 私は、石川県民であり、能登半島地震を体験した一人として、本法案が日本の防災力を高める大きな一歩になり得ることを前向きに受け止めさせていただいております。その上で、実効性ある組織とするために、幾つか確認と提案をいたします。 まず、地方自治体との関係と支援の在り方です。 災害対応の最前線は、市町村、都道府",
-   "kind": "speech",
-   "meeting": "本会議 第12号",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105254X01220260414/26",
-   "speechId": "122105254X01220260414_026"
   },
   {
    "billId": "221-閣法-60",
@@ -573,6 +566,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "民法等の一部を改正する法律案"
+  },
+  {
+   "committee": "内閣委員会",
+   "date": "2026-04-03",
+   "estimated": false,
+   "firstDate": "2026-04-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-12",
+   "meetingId": "122104889X00120260403_000",
+   "meetings": 19,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104889X00120260403/0"
   },
   {
    "billId": "221-閣法-41",
@@ -1223,6 +1229,19 @@
    "title": "防災庁設置法案"
   },
   {
+   "committee": "予算委員会",
+   "date": "2026-03-06",
+   "estimated": false,
+   "firstDate": "2026-03-06",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-12",
+   "meetingId": "122105261X00720260306_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00720260306/0"
+  },
+  {
    "billId": "221-閣法-12",
    "date": "2026-03-03",
    "estimated": true,
@@ -1273,6 +1292,19 @@
    "stanceText": "多数",
    "status": "両院承認",
    "title": "放送法第七十条第二項の規定に基づき、承認を求めるの件"
+  },
+  {
+   "committee": "財務金融委員会",
+   "date": "2026-03-03",
+   "estimated": false,
+   "firstDate": "2026-03-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-03",
+   "meetingId": "122104376X00120260303_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104376X00120260303/0"
   },
   {
    "billId": "221-閣法-9",
@@ -1429,6 +1461,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "北朝鮮による拉致問題等に関する特別委員会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122105253X00120260220_000",
+   "meetings": 3,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105253X00120260220/0"
   }
  ]
 }

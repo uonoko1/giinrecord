@@ -393,16 +393,6 @@
    "title": "金融商品取引法及び資金決済に関する法律の一部を改正する法律案"
   },
   {
-   "chars": 1893,
-   "date": "2026-04-09",
-   "excerpt": "自由民主党の高階恵美子です。 会派を代表し、ただいま議題となりました健康保険法等の一部を改正する法律案について質問します。（拍手） 日本は、国民の皆様の御理解の下、皆保険制度によってどこに住んでいても質の高い医療が受けられる社会保障を維持し、世界最長寿国を実現してきました。診断、治療技術の高度化や優れた医薬品、医療機器類の開発は、病から命を守り、あるいは、何らかの慢性疾患の治療を継続しながら社会生",
-   "kind": "speech",
-   "meeting": "本会議 第11号",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105254X01120260409/9",
-   "speechId": "122105254X01120260409_009"
-  },
-  {
    "billId": "221-閣法-56",
    "date": "2026-04-07",
    "estimated": true,
@@ -557,6 +547,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "民法等の一部を改正する法律案"
+  },
+  {
+   "committee": "厚生労働委員会",
+   "date": "2026-04-03",
+   "estimated": false,
+   "firstDate": "2026-04-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104260X00120260403_000",
+   "meetings": 20,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104260X00120260403/0"
   },
   {
    "billId": "221-閣法-41",
@@ -1027,6 +1030,19 @@
    "title": "予算委員長坂本哲志君解任決議案"
   },
   {
+   "committee": "外務委員会",
+   "date": "2026-03-11",
+   "estimated": false,
+   "firstDate": "2026-03-11",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-11",
+   "meetingId": "122103968X00320260311_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122103968X00320260311/0"
+  },
+  {
    "billId": "221-閣法-23",
    "date": "2026-03-10",
    "estimated": true,
@@ -1118,6 +1134,19 @@
    "title": "インテリジェンスに係る態勢の整備の推進に関する法律案"
   },
   {
+   "committee": "財務金融委員会",
+   "date": "2026-03-10",
+   "estimated": false,
+   "firstDate": "2026-03-10",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-10",
+   "meetingId": "122104376X00420260310_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104376X00420260310/0"
+  },
+  {
    "billId": "221-閣法-18",
    "date": "2026-03-06",
    "estimated": true,
@@ -1194,6 +1223,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "防災庁設置法案"
+  },
+  {
+   "committee": "予算委員会",
+   "date": "2026-03-06",
+   "estimated": false,
+   "firstDate": "2026-03-06",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-11",
+   "meetingId": "122105261X00720260306_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00720260306/0"
   },
   {
    "billId": "221-閣法-12",
@@ -1402,6 +1444,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "憲法審査会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104183X00120260220_000",
+   "meetings": 14,
+   "role": "幹事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104183X00120260220/0"
   }
  ]
 }

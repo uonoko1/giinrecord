@@ -210,16 +210,6 @@
    "title": "国会議員の歳費、旅費及び手当等に関する法律の一部を改正する法律案"
   },
   {
-   "chars": 977,
-   "date": "2026-05-26",
-   "excerpt": "参政党の谷浩一郎です。 会派を代表し、ただいま議題となりました二法案に対し、反対の立場から討論いたします。（拍手） 我が党は、データ利活用が行政の効率化や国民の利便性向上に資することを否定するものではありません。しかし、本法案は、国民の重要な個人情報、そして我が国のデジタル主権を損なうおそれがあり、利活用と保護のバランスを著しく欠いたものであります。 反対の第一の理由は、我が国のデジタル主権が失わ",
-   "kind": "speech",
-   "meeting": "本会議 第20号",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105254X02020260526/7",
-   "speechId": "122105254X02020260526_007"
-  },
-  {
    "billId": "221-閣法-62",
    "date": "2026-05-15",
    "estimated": true,
@@ -530,6 +520,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "民法等の一部を改正する法律案"
+  },
+  {
+   "committee": "安全保障委員会",
+   "date": "2026-04-03",
+   "estimated": false,
+   "firstDate": "2026-04-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122103815X00120260403_000",
+   "meetings": 9,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122103815X00120260403/0"
   },
   {
    "billId": "221-閣法-41",
@@ -1011,6 +1014,19 @@
    "title": "予算委員長坂本哲志君解任決議案"
   },
   {
+   "committee": "外務委員会",
+   "date": "2026-03-11",
+   "estimated": false,
+   "firstDate": "2026-03-11",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-13",
+   "meetingId": "122103968X00320260311_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122103968X00320260311/0"
+  },
+  {
    "billId": "221-閣法-23",
    "date": "2026-03-10",
    "estimated": true,
@@ -1178,6 +1194,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "防災庁設置法案"
+  },
+  {
+   "committee": "予算委員会",
+   "date": "2026-03-04",
+   "estimated": false,
+   "firstDate": "2026-03-04",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-04",
+   "meetingId": "122105261X00520260304_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00520260304/0"
   },
   {
    "billId": "221-閣法-12",
@@ -1386,6 +1415,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "地域活性化・こども政策・デジタル社会形成に関する特別委員会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122105367X00120260220_000",
+   "meetings": 12,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105367X00120260220/0"
   }
  ]
 }

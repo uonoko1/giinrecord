@@ -548,6 +548,19 @@
    "title": "民法等の一部を改正する法律案"
   },
   {
+   "committee": "法務委員会",
+   "date": "2026-04-03",
+   "estimated": false,
+   "firstDate": "2026-04-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-26",
+   "meetingId": "122105206X00120260403_000",
+   "meetings": 13,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105206X00120260403/0"
+  },
+  {
    "billId": "221-閣法-41",
    "date": "2026-03-31",
    "estimated": true,
@@ -990,16 +1003,6 @@
    "title": "国家情報会議設置法案"
   },
   {
-   "chars": 2143,
-   "date": "2026-03-13",
-   "excerpt": "自由民主党の藤原崇です。 私は、自由民主党・無所属の会を代表し、令和八年度一般会計予算案外二案に対し、賛成の立場から討論を行います。（拍手） 日本経済は、名目ＧＤＰが七百兆円に近づいている中、直近二年の賃上げ率は連続で五％を上回るなど、成長型経済に移行する兆しがあります。一方、我が国は、静かな有事というべき人口減少や、デフレから一転した物価高、戦後最も厳しく複雑な安全保障環境に直面しております。 ",
-   "kind": "speech",
-   "meeting": "本会議 第6号",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105254X00620260313/30",
-   "speechId": "122105254X00620260313_030"
-  },
-  {
    "billId": "221-衆法-5",
    "date": "2026-03-12",
    "estimated": true,
@@ -1115,6 +1118,19 @@
    "stanceText": "少数",
    "status": "本院議了",
    "title": "インテリジェンスに係る態勢の整備の推進に関する法律案"
+  },
+  {
+   "committee": "予算委員会公聴会",
+   "date": "2026-03-10",
+   "estimated": false,
+   "firstDate": "2026-03-10",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-10",
+   "meetingId": "122105262X00120260310_000",
+   "meetings": 1,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105262X00120260310/0"
   },
   {
    "billId": "221-閣法-18",
@@ -1284,6 +1300,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "金融機能の強化のための特別措置に関する法律等の一部を改正する法律案"
+  },
+  {
+   "committee": "予算委員会",
+   "date": "2026-02-26",
+   "estimated": false,
+   "firstDate": "2026-02-26",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-27",
+   "meetingId": "122105261X00120260226_000",
+   "meetings": 17,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00120260226/0"
   },
   {
    "billId": "221-閣法-6",

@@ -1337,6 +1337,19 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0323-v001.htm",
    "title": "日程第１　国家公務員等の任命に関する件「人事官（菅原晶子君）」",
    "value": "投票なし"
+  },
+  {
+   "committee": "厚生労働委員会",
+   "date": "2026-03-19",
+   "estimated": false,
+   "firstDate": "2026-03-19",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122114260X00120260319_000",
+   "meetings": 20,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122114260X00120260319/0"
   }
  ]
 }

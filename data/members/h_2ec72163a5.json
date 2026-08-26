@@ -307,6 +307,19 @@
    "title": "刑事訴訟法の一部を改正する法律案"
   },
   {
+   "committee": "国家基本政策委員会",
+   "date": "2026-05-14",
+   "estimated": false,
+   "firstDate": "2026-05-14",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-14",
+   "meetingId": "122104292X00120260514_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104292X00120260514/0"
+  },
+  {
    "billId": "221-閣法-40",
    "date": "2026-04-24",
    "estimated": true,
@@ -1352,14 +1365,17 @@
    "title": "金融機能の強化のための特別措置に関する法律等の一部を改正する法律案"
   },
   {
-   "chars": 10537,
-   "date": "2026-02-24",
-   "excerpt": "中道改革連合代表の小川淳也です。 会派を代表し、高市総理大臣に質問いたします。（拍手） 総理、まずは御就任おめでとうございます。心より敬意と祝意を申し上げます。 先日、総理が施政方針で述べられたとおり、挑戦なき国に未来はありません。守るだけの政治に希望はありません。二十二世紀の日本が平和で豊かであるように。私どもも全く同じ思いです。 是非総理、成長のスイッチを押し続けてください。私たちは、成長に加",
-   "kind": "speech",
-   "meeting": "本会議 第3号",
+   "committee": "予算委員会",
+   "date": "2026-02-27",
+   "estimated": false,
+   "firstDate": "2026-02-27",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-04",
+   "meetingId": "122105261X00220260227_000",
+   "meetings": 3,
+   "role": "委員",
    "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105254X00320260224/3",
-   "speechId": "122105254X00320260224_003"
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00220260227/0"
   },
   {
    "billId": "221-閣法-6",

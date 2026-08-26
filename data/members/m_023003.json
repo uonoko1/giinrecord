@@ -746,16 +746,6 @@
    "value": "賛成"
   },
   {
-   "chars": 4873,
-   "date": "2025-05-14",
-   "excerpt": "立憲民主・社民・無所属の大椿ゆうこです。 私は、会派を代表し、公益通報者保護法改定案について質問をします。 一連の兵庫県文書問題によって、公益通報者保護法が広く一般に知られるようになりました。今回の法改定に多くの人々が関心を持っています。齋藤元彦知事によるパワーハラスメント等について公益通報を行った元西播磨県民局長は、その後、自ら命を絶つという取り返しの付かない結果となってしまいました。お亡くなり",
-   "kind": "speech",
-   "meeting": "本会議 第18号",
-   "session": 217,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715254X01820250514/5",
-   "speechId": "121715254X01820250514_005"
-  },
-  {
    "date": "2025-05-09",
    "groupValue": "賛成",
    "kind": "vote",
@@ -998,6 +988,19 @@
    "value": "賛成"
   },
   {
+   "committee": "憲法審査会",
+   "date": "2025-04-16",
+   "estimated": false,
+   "firstDate": "2025-04-16",
+   "kind": "committeeRole",
+   "lastDate": "2025-04-16",
+   "meetingId": "121714183X00220250416_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121714183X00220250416/0"
+  },
+  {
    "date": "2025-04-11",
    "groupValue": "賛成",
    "kind": "vote",
@@ -1073,6 +1076,19 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0409-v001.htm",
    "title": "日程第１　風俗営業等の規制及び業務の適正化等に関する法律の一部を改正する法律案（内閣提出）",
    "value": "賛成"
+  },
+  {
+   "committee": "決算委員会",
+   "date": "2025-04-07",
+   "estimated": false,
+   "firstDate": "2025-04-07",
+   "kind": "committeeRole",
+   "lastDate": "2025-06-09",
+   "meetingId": "121714103X00120250407_000",
+   "meetings": 8,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121714103X00120250407/0"
   },
   {
    "date": "2025-04-01",
@@ -1372,6 +1388,19 @@
    "value": "賛成"
   },
   {
+   "committee": "予算委員会",
+   "date": "2025-03-26",
+   "estimated": false,
+   "firstDate": "2025-03-26",
+   "kind": "committeeRole",
+   "lastDate": "2025-03-26",
+   "meetingId": "121715261X01220250326_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715261X01220250326/0"
+  },
+  {
    "date": "2025-03-14",
    "groupValue": "賛成",
    "kind": "vote",
@@ -1526,6 +1555,32 @@
    "value": "賛成"
   },
   {
+   "committee": "厚生労働委員会",
+   "date": "2025-01-28",
+   "estimated": false,
+   "firstDate": "2025-01-28",
+   "kind": "committeeRole",
+   "lastDate": "2025-06-20",
+   "meetingId": "121714260X00120250128_000",
+   "meetings": 23,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121714260X00120250128/0"
+  },
+  {
+   "committee": "消費者問題に関する特別委員会",
+   "date": "2025-01-24",
+   "estimated": false,
+   "firstDate": "2025-01-24",
+   "kind": "committeeRole",
+   "lastDate": "2025-06-02",
+   "meetingId": "121714536X00120250124_000",
+   "meetings": 8,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121714536X00120250124/0"
+  },
+  {
    "answerDate": "2025-01-10",
    "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/216/touh/t216048.htm",
    "date": "2024-12-23",
@@ -1537,103 +1592,43 @@
    "title": "医療・介護・福祉におけるディーセント・ワークと行政の指導・監督に関する質問主意書"
   },
   {
-   "date": "2024-10-01",
-   "groupValue": "反対",
-   "kind": "vote",
-   "result": "賛成 146・反対 96",
-   "rollCallId": "214-1001-v001",
-   "session": 214,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/214/214-1001-v001.htm",
-   "title": "日程第２　会期の件",
-   "value": "反対"
+   "committee": "消費者問題に関する特別委員会",
+   "date": "2024-12-20",
+   "estimated": false,
+   "firstDate": "2024-12-20",
+   "kind": "committeeRole",
+   "lastDate": "2024-12-24",
+   "meetingId": "121614536X00220241220_000",
+   "meetings": 3,
+   "role": "委員",
+   "session": 216,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121614536X00220241220/0"
   },
   {
-   "answerDate": "2024-06-28",
-   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/213/touh/t213178.htm",
-   "date": "2024-06-17",
-   "kind": "question",
-   "questionId": "213-sangiin-178",
-   "session": 213,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/213/meisai/m213178.htm",
-   "submitterText": "大椿 ゆうこ君",
-   "title": "「自由権規約委員会第七回日本定期報告審査に係る総括所見」及び「ＩＬＯ／ユネスコ教職員勧告適用合同専門家委員会第十三会期・第十四会期最終報告書」への日本政府の対応に関する質問主意書"
+   "committee": "決算委員会",
+   "date": "2024-12-20",
+   "estimated": false,
+   "firstDate": "2024-12-20",
+   "kind": "committeeRole",
+   "lastDate": "2024-12-24",
+   "meetingId": "121614103X00120241220_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 216,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121614103X00120241220/0"
   },
   {
-   "date": "2024-03-28",
-   "groupValue": "反対",
-   "kind": "vote",
-   "result": "可決（賛成 146・反対 98）",
-   "rollCallId": "213-0328-v014",
-   "session": 213,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/213/213-0328-v014.htm",
-   "title": "令和六年度政府関係機関予算",
-   "value": "反対"
-  },
-  {
-   "date": "2024-03-28",
-   "groupValue": "反対",
-   "kind": "vote",
-   "result": "可決（賛成 146・反対 98）",
-   "rollCallId": "213-0328-v013",
-   "session": 213,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/213/213-0328-v013.htm",
-   "title": "令和六年度特別会計予算",
-   "value": "反対"
-  },
-  {
-   "date": "2024-03-28",
-   "groupValue": "反対",
-   "kind": "vote",
-   "result": "可決（賛成 146・反対 98）",
-   "rollCallId": "213-0328-v012",
-   "session": 213,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/213/213-0328-v012.htm",
-   "title": "令和六年度一般会計予算",
-   "value": "反対"
-  },
-  {
-   "answerDate": "2024-03-12",
-   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/213/touh/t213058.htm",
-   "date": "2024-02-29",
-   "kind": "question",
-   "questionId": "213-sangiin-58",
-   "session": 213,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/213/meisai/m213058.htm",
-   "submitterText": "大椿 ゆうこ君",
-   "title": "辺野古新基地建設に係る埋立てに用いる土砂等の採取に関する質問主意書"
-  },
-  {
-   "answerDate": "2023-12-15",
-   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/212/touh/t212079.htm",
-   "date": "2023-12-05",
-   "kind": "question",
-   "questionId": "212-sangiin-79",
-   "session": 212,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/212/meisai/m212079.htm",
-   "submitterText": "大椿 ゆうこ君",
-   "title": "中小企業等協同組合法及び独占禁止法に関する質問主意書"
-  },
-  {
-   "date": "2023-06-07",
-   "groupValue": "賛成",
-   "kind": "vote",
-   "result": "否決（賛成 61・反対 183）",
-   "rollCallId": "211-0607-v001",
-   "session": 211,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/211/211-0607-v001.htm",
-   "title": "法務大臣齋藤健君問責決議案（石橋通宏君発議）",
-   "value": "賛成"
-  },
-  {
-   "date": "2023-06-02",
-   "groupValue": "賛成",
-   "kind": "vote",
-   "result": "否決（賛成 60・反対 181）",
-   "rollCallId": "211-0602-v001",
-   "session": 211,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/211/211-0602-v001.htm",
-   "title": "法務委員長杉久武君解任決議案（牧山ひろえ君発議）",
-   "value": "賛成"
+   "committee": "厚生労働委員会",
+   "date": "2024-12-10",
+   "estimated": false,
+   "firstDate": "2024-12-10",
+   "kind": "committeeRole",
+   "lastDate": "2024-12-24",
+   "meetingId": "121614260X00120241210_000",
+   "meetings": 3,
+   "role": "委員",
+   "session": 216,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121614260X00120241210/0"
   }
  ]
 }

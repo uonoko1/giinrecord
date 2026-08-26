@@ -121,6 +121,19 @@
    "title": "有人国境離島地域の保全及び特定有人国境離島地域に係る地域社会の維持に関する特別措置法の一部を改正する法律案"
   },
   {
+   "committee": "経済産業委員会",
+   "date": "2026-06-17",
+   "estimated": false,
+   "firstDate": "2026-06-17",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-17",
+   "meetingId": "122104080X01420260617_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104080X01420260617/0"
+  },
+  {
    "billId": "221-衆法-18",
    "date": "2026-06-16",
    "estimated": true,
@@ -145,6 +158,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "国立国会図書館法及び国立国会図書館法の規定により行政各部門に置かれる支部図書館及びその職員に関する法律の一部を改正する法律案"
+  },
+  {
+   "committee": "消費者問題に関する特別委員会",
+   "date": "2026-06-16",
+   "estimated": false,
+   "firstDate": "2026-06-16",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-16",
+   "meetingId": "122104536X00320260616_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104536X00320260616/0"
   },
   {
    "billId": "221-衆法-13",
@@ -212,6 +238,19 @@
    "title": "令和八年度一般会計補正予算（第１号）"
   },
   {
+   "committee": "決算行政監視委員会",
+   "date": "2026-06-03",
+   "estimated": false,
+   "firstDate": "2026-06-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-03",
+   "meetingId": "122104127X00220260603_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104127X00220260603/0"
+  },
+  {
    "billId": "221-衆法-10",
    "date": "2026-05-26",
    "estimated": true,
@@ -264,6 +303,71 @@
    "title": "刑事訴訟法の一部を改正する法律案"
   },
   {
+   "committee": "国土交通委員会",
+   "date": "2026-05-15",
+   "estimated": false,
+   "firstDate": "2026-05-15",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-15",
+   "meetingId": "122104319X00920260515_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104319X00920260515/0"
+  },
+  {
+   "committee": "憲法審査会",
+   "date": "2026-05-14",
+   "estimated": false,
+   "firstDate": "2026-05-14",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-14",
+   "meetingId": "122104183X00520260514_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104183X00520260514/0"
+  },
+  {
+   "committee": "農林水産委員会",
+   "date": "2026-05-13",
+   "estimated": false,
+   "firstDate": "2026-05-13",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-13",
+   "meetingId": "122105007X00920260513_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105007X00920260513/0"
+  },
+  {
+   "committee": "災害対策特別委員会",
+   "date": "2026-05-12",
+   "estimated": false,
+   "firstDate": "2026-05-12",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-12",
+   "meetingId": "122104339X00820260512_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104339X00820260512/0"
+  },
+  {
+   "committee": "法務委員会",
+   "date": "2026-05-08",
+   "estimated": false,
+   "firstDate": "2026-05-08",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-08",
+   "meetingId": "122105206X00820260508_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105206X00820260508/0"
+  },
+  {
    "billId": "221-閣法-40",
    "date": "2026-04-24",
    "estimated": true,
@@ -275,6 +379,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "人工衛星等の打上げ及び人工衛星の管理に関する法律等の一部を改正する法律案"
+  },
+  {
+   "committee": "地域活性化・こども政策・デジタル社会形成に関する特別委員会",
+   "date": "2026-04-23",
+   "estimated": false,
+   "firstDate": "2026-04-23",
+   "kind": "committeeRole",
+   "lastDate": "2026-04-23",
+   "meetingId": "122105367X00420260423_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105367X00420260423/0"
   },
   {
    "billId": "221-衆法-8",
@@ -327,6 +444,32 @@
    "stanceText": "全会一致",
    "status": "成立",
    "title": "自動車の運転により人を死傷させる行為等の処罰に関する法律及び道路交通法の一部を改正する法律案"
+  },
+  {
+   "committee": "内閣委員会",
+   "date": "2026-04-16",
+   "estimated": false,
+   "firstDate": "2026-04-16",
+   "kind": "committeeRole",
+   "lastDate": "2026-04-24",
+   "meetingId": "122104889X00520260416_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104889X00520260416/0"
+  },
+  {
+   "committee": "総務委員会",
+   "date": "2026-04-16",
+   "estimated": false,
+   "firstDate": "2026-04-16",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-12",
+   "meetingId": "122104601X00820260416_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104601X00820260416/0"
   },
   {
    "billId": "221-閣法-60",
@@ -535,6 +678,32 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "民法等の一部を改正する法律案"
+  },
+  {
+   "committee": "厚生労働委員会",
+   "date": "2026-04-03",
+   "estimated": false,
+   "firstDate": "2026-04-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104260X00120260403_000",
+   "meetings": 20,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104260X00120260403/0"
+  },
+  {
+   "committee": "環境委員会",
+   "date": "2026-04-03",
+   "estimated": false,
+   "firstDate": "2026-04-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104006X00120260403_000",
+   "meetings": 9,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104006X00120260403/0"
   },
   {
    "billId": "221-閣法-41",
@@ -1380,6 +1549,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "東日本大震災復興及び原子力問題調査特別委員会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-28",
+   "meetingId": "122105387X00120260220_000",
+   "meetings": 3,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105387X00120260220/0"
   }
  ]
 }

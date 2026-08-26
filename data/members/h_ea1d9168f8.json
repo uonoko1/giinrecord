@@ -56,16 +56,6 @@
    "title": "皇室典範等の一部を改正する法律案"
   },
   {
-   "chars": 509,
-   "date": "2026-06-26",
-   "excerpt": "ただいま議題となりました法律案につきまして、政治改革に関する特別委員会における審査の経過及び結果を御報告申し上げます。 本案は、選挙に関するインターネット等の利用の状況に対応するため、電子メールを利用する方法による文書図画の頒布に係る規制の廃止、インターネット等を利用する方法により人工知能関連技術を利用して作成された画像等が掲載された文書図画を頒布する者の表示義務及び選挙に関しインターネット等を利",
-   "kind": "speech",
-   "meeting": "本会議 第28号",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105254X02820260626/7",
-   "speechId": "122105254X02820260626_007"
-  },
-  {
    "billId": "221-衆法-27",
    "date": "2026-06-24",
    "estimated": true,
@@ -1184,6 +1174,19 @@
    "title": "防災庁設置法案"
   },
   {
+   "committee": "国土交通委員会",
+   "date": "2026-03-06",
+   "estimated": false,
+   "firstDate": "2026-03-06",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104319X00120260306_000",
+   "meetings": 14,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104319X00120260306/0"
+  },
+  {
    "billId": "221-閣法-12",
    "date": "2026-03-03",
    "estimated": true,
@@ -1390,6 +1393,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "政治改革に関する特別委員会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104575X00120260220_000",
+   "meetings": 12,
+   "role": "委員長",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104575X00120260220/0"
   }
  ]
 }

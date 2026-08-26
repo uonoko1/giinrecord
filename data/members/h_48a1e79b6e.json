@@ -169,6 +169,19 @@
    "title": "郵政民営化法等の一部を改正する法律案"
   },
   {
+   "committee": "農林水産委員会",
+   "date": "2026-06-09",
+   "estimated": false,
+   "firstDate": "2026-06-09",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-09",
+   "meetingId": "122105007X01320260609_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105007X01320260609/0"
+  },
+  {
    "billId": "221-衆法-11",
    "date": "2026-06-05",
    "estimated": true,
@@ -219,6 +232,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "国会議員の歳費、旅費及び手当等に関する法律の一部を改正する法律案"
+  },
+  {
+   "committee": "総務委員会",
+   "date": "2026-05-26",
+   "estimated": false,
+   "firstDate": "2026-05-26",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-26",
+   "meetingId": "122104601X01120260526_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104601X01120260526/0"
   },
   {
    "billId": "221-衆法-9",
@@ -295,16 +321,6 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "食育基本法の一部を改正する法律案"
-  },
-  {
-   "chars": 4346,
-   "date": "2026-04-21",
-   "excerpt": "中道改革連合・無所属の山崎正恭です。（拍手） 冒頭、昨日の三陸沖を震源とする地震で被災された方々に心よりお見舞い申し上げます。 気象庁及び内閣府防災は、今回の地震を受け、北海道・三陸沖後発地震注意情報を発表しています。私自身、我が国で暮らす皆様の命を守るため、正確な情報を収集し、全力で行動してまいる所存です。政府におかれましても、最優先で、徹底した対策を行っていただくよう強く求めます。 改めまして",
-   "kind": "speech",
-   "meeting": "本会議 第14号",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105254X01420260421/5",
-   "speechId": "122105254X01420260421_005"
   },
   {
    "billId": "221-衆法-7",
@@ -1276,6 +1292,32 @@
    "title": "放送法第七十条第二項の規定に基づき、承認を求めるの件"
   },
   {
+   "committee": "予算委員会",
+   "date": "2026-03-03",
+   "estimated": false,
+   "firstDate": "2026-03-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-03",
+   "meetingId": "122105261X00420260303_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00420260303/0"
+  },
+  {
+   "committee": "文部科学委員会",
+   "date": "2026-03-03",
+   "estimated": false,
+   "firstDate": "2026-03-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122105124X00120260303_000",
+   "meetings": 14,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105124X00120260303/0"
+  },
+  {
    "billId": "221-衆法-1",
    "date": "2026-03-02",
    "kind": "bill",
@@ -1441,6 +1483,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "地域活性化・こども政策・デジタル社会形成に関する特別委員会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122105367X00120260220_000",
+   "meetings": 13,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105367X00120260220/0"
   }
  ]
 }

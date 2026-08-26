@@ -532,16 +532,6 @@
    "title": "金融商品取引法及び資金決済に関する法律の一部を改正する法律案"
   },
   {
-   "chars": 5302,
-   "date": "2026-04-09",
-   "excerpt": "国民民主党・無所属クラブの日野紗里亜です。 会派を代表して質問します。（拍手） 私は、三つ子を含む四児の母です。お産も帝王切開も妊婦健診もお薬も、とてもお世話になりました。今、私や子供たちが元気に過ごせているのは、日本の医療と健康保険のおかげです。このすばらしい医療と健康保険を大切な子供たちに残したい。総理に質疑をさせていただきます。 まず、高市総理の現在の社会保障制度に対する認識についてお聞きし",
-   "kind": "speech",
-   "meeting": "本会議 第11号",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105254X01120260409/20",
-   "speechId": "122105254X01120260409_020"
-  },
-  {
    "billId": "221-閣法-56",
    "date": "2026-04-07",
    "estimated": true,
@@ -696,6 +686,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "民法等の一部を改正する法律案"
+  },
+  {
+   "committee": "厚生労働委員会",
+   "date": "2026-04-03",
+   "estimated": false,
+   "firstDate": "2026-04-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104260X00120260403_000",
+   "meetings": 20,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104260X00120260403/0"
   },
   {
    "billId": "221-閣法-41",
@@ -1368,6 +1371,19 @@
    "title": "防災庁設置法案"
   },
   {
+   "committee": "予算委員会",
+   "date": "2026-03-06",
+   "estimated": false,
+   "firstDate": "2026-03-06",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-06",
+   "meetingId": "122105261X00720260306_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00720260306/0"
+  },
+  {
    "billId": "221-閣法-12",
    "date": "2026-03-03",
    "estimated": true,
@@ -1585,6 +1601,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "地域活性化・こども政策・デジタル社会形成に関する特別委員会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122105367X00120260220_000",
+   "meetings": 13,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105367X00120260220/0"
   }
  ]
 }

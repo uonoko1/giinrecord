@@ -118,24 +118,17 @@
    "title": "賃金上昇を上回る所得税の負担増加に対処するために所得税に関し講ずべき措置に関する法律案"
   },
   {
-   "chars": 91,
-   "date": "2026-07-15",
-   "excerpt": "民主主義への信頼は、公正なルールによって支えられています。その信頼を守るために、本法案への賛同を皆さんにお願い申し上げ、私の討論といたします。 御清聴ありがとうございました。（拍手）",
-   "kind": "speech",
-   "meeting": "本会議 第32号",
+   "committee": "地域活性化・こども政策・デジタル社会形成に関する特別委員会",
+   "date": "2026-07-13",
+   "estimated": false,
+   "firstDate": "2026-07-13",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-15",
+   "meetingId": "122105367X01220260713_000",
+   "meetings": 3,
+   "role": "委員",
    "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105254X03220260715/14",
-   "speechId": "122105254X03220260715_014"
-  },
-  {
-   "chars": 3177,
-   "date": "2026-07-15",
-   "excerpt": "国民民主党の向山好一でございます。 私は、会派を代表いたしまして、ただいま議題となりました副首都法案に対して反対の立場から、そして大都市法改正案に対しては賛成の立場から討論をさせていただきたいと思います。（拍手） まず申し上げたいのは、私たちは副首都の必要性そのものを否定するわけではありません。 私は、阪神・淡路大震災を経験した神戸を地元としております。あの震災のとき、首都東京の機能が維持されてい",
-   "kind": "speech",
-   "meeting": "本会議 第32号",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105254X03220260715/12",
-   "speechId": "122105254X03220260715_012"
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105367X01220260713/0"
   },
   {
    "billId": "221-衆法-29",
@@ -383,6 +376,19 @@
    "title": "令和八年度一般会計補正予算（第１号）"
   },
   {
+   "committee": "懲罰委員会",
+   "date": "2026-06-02",
+   "estimated": false,
+   "firstDate": "2026-06-02",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-02",
+   "meetingId": "122104780X00120260602_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104780X00120260602/0"
+  },
+  {
    "billId": "221-衆法-10",
    "date": "2026-05-26",
    "estimated": true,
@@ -459,6 +465,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "食育基本法の一部を改正する法律案"
+  },
+  {
+   "committee": "国土交通委員会",
+   "date": "2026-04-22",
+   "estimated": false,
+   "firstDate": "2026-04-22",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-03",
+   "meetingId": "122104319X00620260422_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104319X00620260422/0"
   },
   {
    "billId": "221-閣法-52",
@@ -706,6 +725,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "民法等の一部を改正する法律案"
+  },
+  {
+   "committee": "環境委員会",
+   "date": "2026-04-03",
+   "estimated": false,
+   "firstDate": "2026-04-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104006X00120260403_000",
+   "meetings": 15,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104006X00120260403/0"
   },
   {
    "billId": "221-閣法-41",
@@ -1376,6 +1408,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "防災庁設置法案"
+  },
+  {
+   "committee": "予算委員会",
+   "date": "2026-03-04",
+   "estimated": false,
+   "firstDate": "2026-03-04",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-04",
+   "meetingId": "122105261X00520260304_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00520260304/0"
   },
   {
    "billId": "221-閣法-12",

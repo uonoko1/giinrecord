@@ -470,6 +470,19 @@
    "value": "賛成"
   },
   {
+   "committee": "厚生労働委員会",
+   "date": "2025-05-27",
+   "estimated": false,
+   "firstDate": "2025-05-27",
+   "kind": "committeeRole",
+   "lastDate": "2025-06-11",
+   "meetingId": "121714260X01520250527_000",
+   "meetings": 3,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121714260X01520250527/0"
+  },
+  {
    "date": "2025-05-23",
    "groupValue": "賛成",
    "kind": "vote",
@@ -534,6 +547,19 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0523-v001.htm",
    "title": "日程第１　海洋法に関する国際連合条約に基づくいずれの国の管轄にも属さない区域における海洋の生物の多様性の保全及び持続可能な利用に関する協定の締結について承認を求めるの件（衆議院送付）",
    "value": "賛成"
+  },
+  {
+   "committee": "国土交通委員会",
+   "date": "2025-05-22",
+   "estimated": false,
+   "firstDate": "2025-05-22",
+   "kind": "committeeRole",
+   "lastDate": "2025-05-22",
+   "meetingId": "121714319X01520250522_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121714319X01520250522/0"
   },
   {
    "date": "2025-05-21",
@@ -745,6 +771,19 @@
    "value": "賛成"
   },
   {
+   "committee": "内閣委員会、総務委員会、外交防衛委員会連合審査会",
+   "date": "2025-05-13",
+   "estimated": false,
+   "firstDate": "2025-05-13",
+   "kind": "committeeRole",
+   "lastDate": "2025-05-13",
+   "meetingId": "121715381X00120250513_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715381X00120250513/0"
+  },
+  {
    "date": "2025-05-09",
    "groupValue": "賛成",
    "kind": "vote",
@@ -877,6 +916,32 @@
    "value": "賛成"
   },
   {
+   "committee": "内閣委員会",
+   "date": "2025-04-24",
+   "estimated": false,
+   "firstDate": "2025-04-24",
+   "kind": "committeeRole",
+   "lastDate": "2025-04-24",
+   "meetingId": "121714889X01120250424_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121714889X01120250424/0"
+  },
+  {
+   "committee": "外交防衛委員会",
+   "date": "2025-04-24",
+   "estimated": false,
+   "firstDate": "2025-04-24",
+   "kind": "committeeRole",
+   "lastDate": "2025-06-05",
+   "meetingId": "121713950X01020250424_000",
+   "meetings": 3,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121713950X01020250424/0"
+  },
+  {
    "date": "2025-04-23",
    "groupValue": "賛成",
    "kind": "vote",
@@ -919,6 +984,19 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0423-v001.htm",
    "title": "日程第１　所得に対する租税に関する二重課税の除去並びに脱税及び租税回避の防止のための日本国政府とウクライナ政府との間の条約の締結について承認を求めるの件（衆議院送付）",
    "value": "賛成"
+  },
+  {
+   "committee": "決算委員会",
+   "date": "2025-04-21",
+   "estimated": false,
+   "firstDate": "2025-04-21",
+   "kind": "committeeRole",
+   "lastDate": "2025-05-12",
+   "meetingId": "121714103X00420250421_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121714103X00420250421/0"
   },
   {
    "date": "2025-04-18",
@@ -1031,6 +1109,19 @@
    "value": "賛成"
   },
   {
+   "committee": "東日本大震災復興特別委員会",
+   "date": "2025-04-11",
+   "estimated": false,
+   "firstDate": "2025-04-11",
+   "kind": "committeeRole",
+   "lastDate": "2025-04-11",
+   "meetingId": "121714858X00420250411_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121714858X00420250411/0"
+  },
+  {
    "date": "2025-04-09",
    "groupValue": "賛成",
    "kind": "vote",
@@ -1064,6 +1155,19 @@
    "value": "賛成"
   },
   {
+   "committee": "憲法審査会",
+   "date": "2025-04-02",
+   "estimated": false,
+   "firstDate": "2025-04-02",
+   "kind": "committeeRole",
+   "lastDate": "2025-04-02",
+   "meetingId": "121714183X00120250402_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121714183X00120250402/0"
+  },
+  {
    "date": "2025-04-01",
    "groupValue": "賛成",
    "kind": "vote",
@@ -1073,6 +1177,19 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0401-v001.htm",
    "title": "日程第１　放送法第七十条第二項の規定に基づき、承認を求めるの件（衆議院送付）",
    "value": "賛成"
+  },
+  {
+   "committee": "総務委員会",
+   "date": "2025-04-01",
+   "estimated": false,
+   "firstDate": "2025-04-01",
+   "kind": "committeeRole",
+   "lastDate": "2025-05-20",
+   "meetingId": "121714601X00620250401_000",
+   "meetings": 3,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121714601X00620250401/0"
   },
   {
    "date": "2025-03-31",
@@ -1361,6 +1478,32 @@
    "value": "賛成"
   },
   {
+   "committee": "政治改革に関する特別委員会",
+   "date": "2025-03-25",
+   "estimated": false,
+   "firstDate": "2025-03-25",
+   "kind": "committeeRole",
+   "lastDate": "2025-03-25",
+   "meetingId": "121714575X00220250325_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121714575X00220250325/0"
+  },
+  {
+   "committee": "農林水産委員会",
+   "date": "2025-03-24",
+   "estimated": false,
+   "firstDate": "2025-03-24",
+   "kind": "committeeRole",
+   "lastDate": "2025-03-27",
+   "meetingId": "121715007X00320250324_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715007X00320250324/0"
+  },
+  {
    "date": "2025-03-14",
    "groupValue": "賛成",
    "kind": "vote",
@@ -1383,14 +1526,30 @@
    "value": "賛成"
   },
   {
-   "chars": 3106,
-   "date": "2025-03-12",
-   "excerpt": "公明党の高橋次郎です。 私は、自由民主党、公明党を代表して、所得税法等の一部を改正する法律案について質問いたします。 まず初めに、岩手県大船渡市での山林火災で被災された皆様に心よりお見舞い申し上げます。皆様の生活となりわい再建とともに、発災から十四年たった東日本大震災被災地の皆様、昨年の能登半島地震で被災された皆様に、今後も心から寄り添い続け、国会と地方議員がしっかり連携し、地域の再建に全力で取り",
-   "kind": "speech",
-   "meeting": "本会議 第6号",
+   "committee": "予算委員会",
+   "date": "2025-03-05",
+   "estimated": false,
+   "firstDate": "2025-03-05",
+   "kind": "committeeRole",
+   "lastDate": "2025-04-21",
+   "meetingId": "121715261X00220250305_000",
+   "meetings": 5,
+   "role": "委員",
    "session": 217,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715254X00620250312/8",
-   "speechId": "121715254X00620250312_008"
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715261X00220250305/0"
+  },
+  {
+   "committee": "行政監視委員会",
+   "date": "2025-02-26",
+   "estimated": false,
+   "firstDate": "2025-02-26",
+   "kind": "committeeRole",
+   "lastDate": "2025-06-04",
+   "meetingId": "121714281X00120250226_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121714281X00120250226/0"
   },
   {
    "date": "2025-02-19",
@@ -1523,6 +1682,123 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0219-v001.htm",
    "title": "日程第１　国家公務員等の任命に関する件「検査官（田中淳子君）」",
    "value": "賛成"
+  },
+  {
+   "committee": "資源エネルギー・持続可能社会に関する調査会",
+   "date": "2025-02-05",
+   "estimated": false,
+   "firstDate": "2025-02-05",
+   "kind": "committeeRole",
+   "lastDate": "2025-06-04",
+   "meetingId": "121715364X00120250205_000",
+   "meetings": 5,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715364X00120250205/0"
+  },
+  {
+   "committee": "環境委員会",
+   "date": "2025-01-28",
+   "estimated": false,
+   "firstDate": "2025-01-28",
+   "kind": "committeeRole",
+   "lastDate": "2025-06-20",
+   "meetingId": "121714006X00120250128_000",
+   "meetings": 10,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121714006X00120250128/0"
+  },
+  {
+   "committee": "消費者問題に関する特別委員会",
+   "date": "2025-01-24",
+   "estimated": false,
+   "firstDate": "2025-01-24",
+   "kind": "committeeRole",
+   "lastDate": "2025-06-02",
+   "meetingId": "121714536X00120250124_000",
+   "meetings": 8,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121714536X00120250124/0"
+  },
+  {
+   "committee": "議院運営委員会",
+   "date": "2025-01-24",
+   "estimated": false,
+   "firstDate": "2025-01-24",
+   "kind": "committeeRole",
+   "lastDate": "2025-06-21",
+   "meetingId": "121714024X00120250124_000",
+   "meetings": 31,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121714024X00120250124/0"
+  },
+  {
+   "committee": "資源エネルギー・持続可能社会に関する調査会",
+   "date": "2024-12-24",
+   "estimated": false,
+   "firstDate": "2024-12-24",
+   "kind": "committeeRole",
+   "lastDate": "2024-12-24",
+   "meetingId": "121615364X00120241224_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 216,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121615364X00120241224/0"
+  },
+  {
+   "committee": "東日本大震災復興特別委員会",
+   "date": "2024-12-23",
+   "estimated": false,
+   "firstDate": "2024-12-23",
+   "kind": "committeeRole",
+   "lastDate": "2024-12-23",
+   "meetingId": "121614858X00320241223_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 216,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121614858X00320241223/0"
+  },
+  {
+   "committee": "環境委員会",
+   "date": "2024-12-10",
+   "estimated": false,
+   "firstDate": "2024-12-10",
+   "kind": "committeeRole",
+   "lastDate": "2024-12-24",
+   "meetingId": "121614006X00120241210_000",
+   "meetings": 3,
+   "role": "委員",
+   "session": 216,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121614006X00120241210/0"
+  },
+  {
+   "committee": "消費者問題に関する特別委員会",
+   "date": "2024-11-28",
+   "estimated": false,
+   "firstDate": "2024-11-28",
+   "kind": "committeeRole",
+   "lastDate": "2024-12-24",
+   "meetingId": "121614536X00120241128_000",
+   "meetings": 4,
+   "role": "委員",
+   "session": 216,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121614536X00120241128/0"
+  },
+  {
+   "committee": "議院運営委員会",
+   "date": "2024-11-28",
+   "estimated": false,
+   "firstDate": "2024-11-28",
+   "kind": "committeeRole",
+   "lastDate": "2025-01-23",
+   "meetingId": "121614024X00120241128_000",
+   "meetings": 9,
+   "role": "委員",
+   "session": 216,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121614024X00120241128/0"
   }
  ]
 }

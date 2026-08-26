@@ -319,6 +319,19 @@
    "title": "刑事訴訟法の一部を改正する法律案"
   },
   {
+   "committee": "地域活性化・こども政策・デジタル社会形成に関する特別委員会",
+   "date": "2026-05-12",
+   "estimated": false,
+   "firstDate": "2026-05-12",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-12",
+   "meetingId": "122105367X00620260512_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105367X00620260512/0"
+  },
+  {
    "answerDate": "2026-05-15",
    "answerUrl": "https://www.shugiin.go.jp/internet/itdb_shitsumon.nsf/html/shitsumon/b221012.htm",
    "date": "2026-05-01",
@@ -329,16 +342,6 @@
    "status": "答弁受理",
    "submitterText": "長妻 昭君",
    "title": "孤立死及び非正規公務員に関する質問主意書"
-  },
-  {
-   "chars": 3952,
-   "date": "2026-04-28",
-   "excerpt": "中道改革連合の長妻昭です。（拍手） 本日午前、中道改革連合、立憲民主、公明の三党で、木原官房長官に、イラン戦争の影響で深刻化する物価高や物資不足に対応するため、二〇二六年度補正予算案の早期編成を要請をいたしました。これは、私たちが一万件以上寄せられた個人、法人の意見等を基に喫緊の課題であると判断したものです。真摯に取り組んでいただきたい。 改めまして、ただいま議題となりました経済安全保障改正法案及",
-   "kind": "speech",
-   "meeting": "本会議 第16号",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105254X01620260428/35",
-   "speechId": "122105254X01620260428_035"
   },
   {
    "billId": "221-閣法-40",
@@ -647,6 +650,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "民法等の一部を改正する法律案"
+  },
+  {
+   "committee": "内閣委員会",
+   "date": "2026-04-03",
+   "estimated": false,
+   "firstDate": "2026-04-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-12",
+   "meetingId": "122104889X00120260403_000",
+   "meetings": 19,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104889X00120260403/0"
   },
   {
    "answerDate": "2026-04-10",
@@ -1254,6 +1270,19 @@
    "title": "インテリジェンスに係る態勢の整備の推進に関する法律案"
   },
   {
+   "committee": "予算委員会公聴会",
+   "date": "2026-03-10",
+   "estimated": false,
+   "firstDate": "2026-03-10",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-10",
+   "meetingId": "122105262X00120260310_000",
+   "meetings": 1,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105262X00120260310/0"
+  },
+  {
    "billId": "221-閣法-18",
    "date": "2026-03-06",
    "estimated": true,
@@ -1432,6 +1461,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "金融機能の強化のための特別措置に関する法律等の一部を改正する法律案"
+  },
+  {
+   "committee": "予算委員会",
+   "date": "2026-02-26",
+   "estimated": false,
+   "firstDate": "2026-02-26",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-27",
+   "meetingId": "122105261X00120260226_000",
+   "meetings": 17,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00120260226/0"
   },
   {
    "billId": "221-閣法-6",

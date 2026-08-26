@@ -688,14 +688,17 @@
    "title": "民法等の一部を改正する法律案"
   },
   {
-   "chars": 5912,
-   "date": "2026-04-02",
-   "excerpt": "国民民主党・無所属クラブの橋本幹彦です。 私は、会派を代表して、ただいま議題となりました国家情報会議設置法案について、高市総理に質問します。（拍手） 本法案は、我が国のインテリジェンスに関する改革の一環として提出されています。そもそも、インテリジェンスとは、国と国民の安全を守るための施策の一つであり、安全保障の施策の証拠となる情報の収集、整理、分析及び活用を行うものです。安全保障のための施策は、時",
-   "kind": "speech",
-   "meeting": "本会議 第10号",
+   "committee": "安全保障委員会",
+   "date": "2026-04-03",
+   "estimated": false,
+   "firstDate": "2026-04-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122103815X00120260403_000",
+   "meetings": 9,
+   "role": "理事",
    "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105254X01020260402/17",
-   "speechId": "122105254X01020260402_017"
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122103815X00120260403/0"
   },
   {
    "billId": "221-閣法-41",
@@ -1418,6 +1421,19 @@
    "stanceText": "多数",
    "status": "両院承認",
    "title": "放送法第七十条第二項の規定に基づき、承認を求めるの件"
+  },
+  {
+   "committee": "予算委員会",
+   "date": "2026-03-03",
+   "estimated": false,
+   "firstDate": "2026-03-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-03",
+   "meetingId": "122105261X00420260303_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00420260303/0"
   },
   {
    "billId": "221-衆法-1",

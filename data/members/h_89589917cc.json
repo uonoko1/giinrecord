@@ -43,6 +43,19 @@
    "title": "医療的ケア児及びその家族に対する支援に関する法律の一部を改正する法律案"
   },
   {
+   "committee": "議院運営委員会",
+   "date": "2026-07-10",
+   "estimated": false,
+   "firstDate": "2026-07-10",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-10",
+   "meetingId": "122104024X03420260710_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104024X03420260710/0"
+  },
+  {
    "billId": "221-閣法-64",
    "date": "2026-06-30",
    "estimated": true,
@@ -262,6 +275,19 @@
    "stanceText": "少数",
    "status": "本院議了",
    "title": "刑事訴訟法の一部を改正する法律案"
+  },
+  {
+   "committee": "国家基本政策委員会",
+   "date": "2026-05-14",
+   "estimated": false,
+   "firstDate": "2026-05-14",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-14",
+   "meetingId": "122104292X00120260514_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104292X00120260514/0"
   },
   {
    "billId": "221-閣法-40",
@@ -1263,6 +1289,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "金融機能の強化のための特別措置に関する法律等の一部を改正する法律案"
+  },
+  {
+   "committee": "予算委員会",
+   "date": "2026-02-27",
+   "estimated": false,
+   "firstDate": "2026-02-27",
+   "kind": "committeeRole",
+   "lastDate": "2026-02-27",
+   "meetingId": "122105261X00220260227_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00220260227/0"
   },
   {
    "billId": "221-閣法-6",

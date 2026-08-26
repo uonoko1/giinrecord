@@ -17,6 +17,19 @@
  ],
  "timeline": [
   {
+   "committee": "憲法審査会",
+   "date": "2026-07-24",
+   "estimated": false,
+   "firstDate": "2026-07-24",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104183X01420260724_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104183X01420260724/0"
+  },
+  {
    "billId": "221-衆法-38",
    "date": "2026-07-22",
    "estimated": true,
@@ -54,6 +67,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "皇室典範等の一部を改正する法律案"
+  },
+  {
+   "committee": "議院運営委員会",
+   "date": "2026-06-30",
+   "estimated": false,
+   "firstDate": "2026-06-30",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-30",
+   "meetingId": "122104024X03320260630_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104024X03320260630/0"
   },
   {
    "billId": "221-衆法-28",
@@ -267,14 +293,17 @@
    "title": "令和八年度一般会計補正予算（第１号）"
   },
   {
-   "chars": 2905,
-   "date": "2026-06-03",
-   "excerpt": "日本維新の会の原山大亮です。 会派を代表して、令和八年度補正予算について、高市総理大臣に質問をいたします。（拍手） 総理は、責任ある積極財政の重要な要素として、補正予算を前提とした予算編成手法との決別を訴え、必要な措置は当初予算で講ずる旨の方針を明確にされており、今般の補正予算も、その観点から、必要最小限の危機対応に絞って計上されたと考えています。 しかし、コロナ禍での危機対応による補正予算の膨張",
-   "kind": "speech",
-   "meeting": "本会議 第22号",
+   "committee": "厚生労働委員会",
+   "date": "2026-05-29",
+   "estimated": false,
+   "firstDate": "2026-05-29",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104260X01320260529_000",
+   "meetings": 2,
+   "role": "委員",
    "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105254X02220260603/17",
-   "speechId": "122105254X02220260603_017"
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104260X01320260529/0"
   },
   {
    "billId": "221-衆法-10",
@@ -288,6 +317,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "国会議員の歳費、旅費及び手当等に関する法律の一部を改正する法律案"
+  },
+  {
+   "committee": "農林水産委員会",
+   "date": "2026-05-20",
+   "estimated": false,
+   "firstDate": "2026-05-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122105007X01020260520_000",
+   "meetings": 7,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105007X01020260520/0"
   },
   {
    "billId": "221-閣法-62",
@@ -600,6 +642,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "民法等の一部を改正する法律案"
+  },
+  {
+   "committee": "法務委員会",
+   "date": "2026-04-03",
+   "estimated": false,
+   "firstDate": "2026-04-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-08",
+   "meetingId": "122105206X00120260403_000",
+   "meetings": 8,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105206X00120260403/0"
   },
   {
    "billId": "221-閣法-41",
@@ -1070,6 +1125,19 @@
    "title": "予算委員長坂本哲志君解任決議案"
   },
   {
+   "committee": "災害対策特別委員会",
+   "date": "2026-03-12",
+   "estimated": false,
+   "firstDate": "2026-03-12",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-12",
+   "meetingId": "122104339X00320260312_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104339X00320260312/0"
+  },
+  {
    "billId": "221-閣法-23",
    "date": "2026-03-10",
    "estimated": true,
@@ -1159,6 +1227,45 @@
    "stanceText": "少数",
    "status": "本院議了",
    "title": "インテリジェンスに係る態勢の整備の推進に関する法律案"
+  },
+  {
+   "committee": "総務委員会",
+   "date": "2026-03-10",
+   "estimated": false,
+   "firstDate": "2026-03-10",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104601X00320260310_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104601X00320260310/0"
+  },
+  {
+   "committee": "予算委員会",
+   "date": "2026-03-09",
+   "estimated": false,
+   "firstDate": "2026-03-09",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-09",
+   "meetingId": "122105261X00820260309_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00820260309/0"
+  },
+  {
+   "committee": "文部科学委員会",
+   "date": "2026-03-09",
+   "estimated": false,
+   "firstDate": "2026-03-09",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-09",
+   "meetingId": "122105124X00320260309_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105124X00320260309/0"
   },
   {
    "billId": "221-閣法-18",
@@ -1445,6 +1552,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "地域活性化・こども政策・デジタル社会形成に関する特別委員会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-14",
+   "meetingId": "122105367X00120260220_000",
+   "meetings": 7,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105367X00120260220/0"
   }
  ]
 }

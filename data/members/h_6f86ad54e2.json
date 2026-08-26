@@ -258,16 +258,6 @@
    "title": "刑事訴訟法の一部を改正する法律案"
   },
   {
-   "chars": 1820,
-   "date": "2026-04-28",
-   "excerpt": "チームみらいの河合道雄です。 会派を代表いたしまして、経済安全保障推進法並びにＪＢＩＣ法の改正案について質問をいたします。（拍手） 経済安全保障法制については、国際秩序の変化に加え、ＡＩの急速な進化を踏まえて議論をする必要がございます。 チームみらいとして、今国会の様々な質疑にて何度も主張いたしましたが、ＡＩの急速な変化を踏まえた経済安全保障体制の構築が急務と考え、その問題意識から質問をいたします",
-   "kind": "speech",
-   "meeting": "本会議 第16号",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105254X01620260428/51",
-   "speechId": "122105254X01620260428_051"
-  },
-  {
    "billId": "221-閣法-40",
    "date": "2026-04-24",
    "estimated": true,
@@ -394,6 +384,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "金融商品取引法及び資金決済に関する法律の一部を改正する法律案"
+  },
+  {
+   "committee": "経済産業委員会",
+   "date": "2026-04-08",
+   "estimated": false,
+   "firstDate": "2026-04-08",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104080X00120260408_000",
+   "meetings": 15,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104080X00120260408/0"
   },
   {
    "billId": "221-閣法-56",
@@ -1252,6 +1255,19 @@
    "title": "放送法第七十条第二項の規定に基づき、承認を求めるの件"
   },
   {
+   "committee": "文部科学委員会",
+   "date": "2026-03-03",
+   "estimated": false,
+   "firstDate": "2026-03-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122105124X00120260303_000",
+   "meetings": 14,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105124X00120260303/0"
+  },
+  {
    "billId": "221-閣法-9",
    "date": "2026-02-27",
    "estimated": true,
@@ -1406,6 +1422,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "東日本大震災復興及び原子力問題調査特別委員会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-02-20",
+   "meetingId": "122105387X00120260220_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105387X00120260220/0"
   }
  ]
 }

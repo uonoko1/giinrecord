@@ -186,6 +186,19 @@
    "title": "日本国憲法の改正手続に関する法律の一部を改正する法律案"
   },
   {
+   "committee": "予算委員会",
+   "date": "2026-06-04",
+   "estimated": false,
+   "firstDate": "2026-06-04",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-04",
+   "meetingId": "122105261X01420260604_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X01420260604/0"
+  },
+  {
    "billId": "221-予算-8",
    "date": "2026-06-03",
    "estimated": true,
@@ -262,6 +275,19 @@
    "stanceText": "少数",
    "status": "本院議了",
    "title": "刑事訴訟法の一部を改正する法律案"
+  },
+  {
+   "committee": "国家基本政策委員会",
+   "date": "2026-05-14",
+   "estimated": false,
+   "firstDate": "2026-05-14",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-14",
+   "meetingId": "122104292X00120260514_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104292X00120260514/0"
   },
   {
    "billId": "221-閣法-40",
@@ -1174,16 +1200,6 @@
    "title": "防災庁設置法案"
   },
   {
-   "chars": 1969,
-   "date": "2026-03-05",
-   "excerpt": "自由民主党の高村正大です。 自由民主党・無所属の会、日本維新の会を代表して、ただいま議題となりました四法案について質問をいたします。（拍手） まず、特例公債法について伺います。 特例公債法は、我が国財政の規範の特例を定めるものであります。責任ある積極財政の動向に世界が注目する中、責任と積極の二つのせめぎ合いが、この改正法案において財政法の規範と特例の関係性としてどう投影されるのかという点は、責任あ",
-   "kind": "speech",
-   "meeting": "本会議 第5号",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105254X00520260305/5",
-   "speechId": "122105254X00520260305_005"
-  },
-  {
    "billId": "221-閣法-12",
    "date": "2026-03-03",
    "estimated": true,
@@ -1234,6 +1250,19 @@
    "stanceText": "多数",
    "status": "両院承認",
    "title": "放送法第七十条第二項の規定に基づき、承認を求めるの件"
+  },
+  {
+   "committee": "財務金融委員会",
+   "date": "2026-03-03",
+   "estimated": false,
+   "firstDate": "2026-03-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104376X00120260303_000",
+   "meetings": 13,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104376X00120260303/0"
   },
   {
    "billId": "221-閣法-9",
@@ -1390,6 +1419,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "沖縄及び北方問題に関する特別委員会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122103895X00120260220_000",
+   "meetings": 4,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122103895X00120260220/0"
   }
  ]
 }

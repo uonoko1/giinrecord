@@ -811,16 +811,6 @@
    "value": "賛成"
   },
   {
-   "chars": 2554,
-   "date": "2026-05-27",
-   "excerpt": "公明党の窪田哲也です。 会派を代表して、経済安全保障推進法及びＪＢＩＣ法の一部改正案について質疑を行います。 経済の武器化が進行する中、我が国は、二〇二二年五月に成立した経済安全保障推進法に基づき、経済面から国民の安全を守るための取組を進めてきました。公明党は、その前提として、日本経済の原動力である自由経済と安全保障を両立させることの重要性をかねてから主張してきました。自由経済の主な担い手である中",
-   "kind": "speech",
-   "meeting": "本会議 第16号",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01620260527/15",
-   "speechId": "122115254X01620260527_015"
-  },
-  {
    "date": "2026-05-22",
    "groupValue": "賛成",
    "kind": "vote",
@@ -830,6 +820,19 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0522-v001.htm",
    "title": "日程第１　携帯音声通信事業者による契約者等の本人確認等及び携帯音声通信役務の不正な利用の防止に関する法律の一部を改正する法律案（内閣提出、衆議院送付）",
    "value": "賛成"
+  },
+  {
+   "committee": "内閣委員会、法務委員会、外交防衛委員会連合審査会",
+   "date": "2026-05-21",
+   "estimated": false,
+   "firstDate": "2026-05-21",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-21",
+   "meetingId": "122115388X00120260521_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115388X00120260521/0"
   },
   {
    "date": "2026-05-20",
@@ -929,16 +932,6 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0513-v001.htm",
    "title": "日程第１　物資の流通の効率化に関する法律の一部を改正する法律案（内閣提出、衆議院送付）",
    "value": "賛成"
-  },
-  {
-   "chars": 2786,
-   "date": "2026-05-08",
-   "excerpt": "公明党の窪田哲也です。 会派を代表して、政府提出の国家情報会議設置法案について、高市総理と木原官房長官に質疑を行います。 現下の国際情勢から、政策決定に資するインテリジェンス機能の強化は必要です。しかし、戦前の教訓や情報機関による過去の人権侵害事案などから、プライバシーの保護や政治的中立性を担保すべきとの声があるのも事実です。高市総理自らが強調されるように、国論を二分する政策だけに、議論の深化と国",
-   "kind": "speech",
-   "meeting": "本会議 第11号",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X01120260508/14",
-   "speechId": "122115254X01120260508_014"
   },
   {
    "date": "2026-04-24",
@@ -1082,16 +1075,6 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0407-v001.htm",
    "title": "令和八年度一般会計予算",
    "value": "反対"
-  },
-  {
-   "chars": 2100,
-   "date": "2026-04-07",
-   "excerpt": "公明党の窪田哲也です。 私は、会派を代表して、政府提出の令和八年度予算三案に反対の立場から討論をいたします。 米トランプ政権が突如始めたイラン攻撃によって、中東にエネルギーを依存する各国は大混乱に陥り、平和と民主的秩序は試練に立たされています。そうした中で、国民の命と暮らし、幾世代にわたって受け継がれてきた社会の営みをどう守り抜くのか、その責任と覚悟が一人一人の政治家に厳しく問われています。 予算",
-   "kind": "speech",
-   "meeting": "本会議 第8号",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X00820260407/13",
-   "speechId": "122115254X00820260407_013"
   },
   {
    "date": "2026-03-31",
@@ -1281,6 +1264,32 @@
    "value": "賛成"
   },
   {
+   "committee": "予算委員会公聴会",
+   "date": "2026-03-24",
+   "estimated": false,
+   "firstDate": "2026-03-24",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-24",
+   "meetingId": "122115262X00120260324_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115262X00120260324/0"
+  },
+  {
+   "committee": "内閣委員会",
+   "date": "2026-03-24",
+   "estimated": false,
+   "firstDate": "2026-03-24",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122114889X00120260324_000",
+   "meetings": 21,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122114889X00120260324/0"
+  },
+  {
    "date": "2026-03-23",
    "groupValue": "賛成",
    "kind": "vote",
@@ -1367,6 +1376,97 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0323-v001.htm",
    "title": "日程第１　国家公務員等の任命に関する件「人事官（菅原晶子君）」",
    "value": "賛成"
+  },
+  {
+   "committee": "国際問題に関する調査会",
+   "date": "2026-03-04",
+   "estimated": false,
+   "firstDate": "2026-03-04",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122114308X00120260304_000",
+   "meetings": 7,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122114308X00120260304/0"
+  },
+  {
+   "committee": "予算委員会",
+   "date": "2026-02-26",
+   "estimated": false,
+   "firstDate": "2026-02-26",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122115261X00120260226_000",
+   "meetings": 10,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115261X00120260226/0"
+  },
+  {
+   "committee": "沖縄・北方問題及び地方に関する特別委員会",
+   "date": "2026-02-18",
+   "estimated": false,
+   "firstDate": "2026-02-18",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-03",
+   "meetingId": "122115382X00120260218_000",
+   "meetings": 6,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115382X00120260218/0"
+  },
+  {
+   "committee": "沖縄・北方問題及び地方に関する特別委員会",
+   "date": "2026-01-23",
+   "estimated": false,
+   "firstDate": "2026-01-23",
+   "kind": "committeeRole",
+   "lastDate": "2026-01-23",
+   "meetingId": "122015382X00120260123_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 220,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122015382X00120260123/0"
+  },
+  {
+   "committee": "予算委員会",
+   "date": "2026-01-23",
+   "estimated": false,
+   "firstDate": "2026-01-23",
+   "kind": "committeeRole",
+   "lastDate": "2026-01-23",
+   "meetingId": "122015261X00120260123_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 220,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122015261X00120260123/0"
+  },
+  {
+   "committee": "内閣委員会",
+   "date": "2026-01-23",
+   "estimated": false,
+   "firstDate": "2026-01-23",
+   "kind": "committeeRole",
+   "lastDate": "2026-01-23",
+   "meetingId": "122014889X00120260123_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 220,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122014889X00120260123/0"
+  },
+  {
+   "committee": "国際問題に関する調査会",
+   "date": "2026-01-23",
+   "estimated": false,
+   "firstDate": "2026-01-23",
+   "kind": "committeeRole",
+   "lastDate": "2026-01-23",
+   "meetingId": "122014308X00120260123_000",
+   "meetings": 1,
+   "role": "理事",
+   "session": 220,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122014308X00120260123/0"
   },
   {
    "date": "2025-12-16",
@@ -1710,114 +1810,95 @@
    "value": "賛成"
   },
   {
-   "date": "2025-11-28",
-   "groupValue": "賛成",
-   "kind": "vote",
-   "result": "賛成 244・反対 0",
-   "rollCallId": "209-1128-v010",
-   "session": 209,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/209/209-1128-v010.htm",
-   "title": "日程第１　租税特別措置法及び東日本大震災の被災者等に係る国税関係法律の臨時特例に関する法律の一部を改正する法律案（衆議院提出）",
-   "value": "賛成"
+   "committee": "内閣委員会",
+   "date": "2025-11-18",
+   "estimated": false,
+   "firstDate": "2025-11-18",
+   "kind": "committeeRole",
+   "lastDate": "2025-12-17",
+   "meetingId": "121914889X00120251118_000",
+   "meetings": 7,
+   "role": "委員",
+   "session": 219,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121914889X00120251118/0"
   },
   {
-   "date": "2025-11-28",
-   "groupValue": "賛成",
-   "kind": "vote",
-   "result": "賛成 238・反対 6",
-   "rollCallId": "209-1128-v009",
-   "session": 209,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/209/209-1128-v009.htm",
-   "title": "国家公務員等の任命に関する件「公害健康被害補償不服審査会委員（星景子君）」",
-   "value": "賛成"
+   "committee": "予算委員会",
+   "date": "2025-11-13",
+   "estimated": false,
+   "firstDate": "2025-11-13",
+   "kind": "committeeRole",
+   "lastDate": "2025-12-17",
+   "meetingId": "121915261X00220251113_000",
+   "meetings": 6,
+   "role": "委員",
+   "session": 219,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121915261X00220251113/0"
   },
   {
-   "date": "2025-11-28",
-   "groupValue": "賛成",
-   "kind": "vote",
-   "result": "賛成 214・反対 28",
-   "rollCallId": "209-1128-v008",
-   "session": 209,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/209/209-1128-v008.htm",
-   "title": "国家公務員等の任命に関する件「運輸審議会委員（大石美奈子君）」",
-   "value": "賛成"
+   "committee": "沖縄・北方問題及び地方に関する特別委員会",
+   "date": "2025-10-21",
+   "estimated": false,
+   "firstDate": "2025-10-21",
+   "kind": "committeeRole",
+   "lastDate": "2025-12-17",
+   "meetingId": "121915382X00120251021_000",
+   "meetings": 3,
+   "role": "委員",
+   "session": 219,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121915382X00120251021/0"
   },
   {
-   "date": "2025-11-28",
-   "groupValue": "賛成",
-   "kind": "vote",
-   "result": "賛成 236・反対 9",
-   "rollCallId": "209-1128-v007",
-   "session": 209,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/209/209-1128-v007.htm",
-   "title": "国家公務員等の任命に関する件「日本放送協会経営委員会委員（前田香織君及び榊原陽子君）」",
-   "value": "賛成"
+   "committee": "国際問題に関する調査会",
+   "date": "2025-10-21",
+   "estimated": false,
+   "firstDate": "2025-10-21",
+   "kind": "committeeRole",
+   "lastDate": "2025-12-17",
+   "meetingId": "121914308X00120251021_000",
+   "meetings": 2,
+   "role": "理事",
+   "session": 219,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121914308X00120251021/0"
   },
   {
-   "date": "2025-11-28",
-   "groupValue": "賛成",
-   "kind": "vote",
-   "result": "賛成 227・反対 18",
-   "rollCallId": "209-1128-v006",
-   "session": 209,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/209/209-1128-v006.htm",
-   "title": "国家公務員等の任命に関する件「日本放送協会経営委員会委員（岩井睦雄君）」",
-   "value": "賛成"
+   "committee": "農林水産委員会",
+   "date": "2025-08-05",
+   "estimated": false,
+   "firstDate": "2025-08-05",
+   "kind": "committeeRole",
+   "lastDate": "2025-08-05",
+   "meetingId": "121815007X00120250805_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 218,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121815007X00120250805/0"
   },
   {
-   "date": "2025-11-28",
-   "groupValue": "賛成",
-   "kind": "vote",
-   "result": "賛成 230・反対 15",
-   "rollCallId": "209-1128-v005",
-   "session": 209,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/209/209-1128-v005.htm",
-   "title": "国家公務員等の任命に関する件「電波監理審議会委員（大久保哲夫君）」",
-   "value": "賛成"
+   "committee": "決算委員会",
+   "date": "2025-08-05",
+   "estimated": false,
+   "firstDate": "2025-08-05",
+   "kind": "committeeRole",
+   "lastDate": "2025-08-05",
+   "meetingId": "121814103X00120250805_000",
+   "meetings": 1,
+   "role": "理事",
+   "session": 218,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121814103X00120250805/0"
   },
   {
-   "date": "2025-11-28",
-   "groupValue": "賛成",
-   "kind": "vote",
-   "result": "賛成 245・反対 0",
-   "rollCallId": "209-1128-v004",
-   "session": 209,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/209/209-1128-v004.htm",
-   "title": "国家公務員等の任命に関する件「証券取引等監視委員会委員長（中原亮一君）、同委員（加藤さゆり君及び橋本尚君）、電気通信紛争処理委員会委員（笠井之彦君、三尾美枝子君、小塚荘一郎君、中條祐介君及び前原賀代君）、中央更生保護審査会委員（久保美紀君）及び運輸安全委員会委員（堂園正人君、古川敦君、大野寛之君、鈴木美緒君及び新妻実保子君）」",
-   "value": "賛成"
-  },
-  {
-   "date": "2025-11-28",
-   "groupValue": "賛成",
-   "kind": "vote",
-   "result": "賛成 237・反対 8",
-   "rollCallId": "209-1128-v003",
-   "session": 209,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/209/209-1128-v003.htm",
-   "title": "国家公務員等の任命に関する件「個人情報保護委員会委員（新保史生君）」",
-   "value": "賛成"
-  },
-  {
-   "date": "2025-11-28",
-   "groupValue": "賛成",
-   "kind": "vote",
-   "result": "賛成 230・反対 14",
-   "rollCallId": "209-1128-v002",
-   "session": 209,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/209/209-1128-v002.htm",
-   "title": "国家公務員等の任命に関する件「個人情報保護委員会委員（藤村明子君、木田俊昭君及び藤井英治君）及び運輸審議会委員（堀川義弘君）」",
-   "value": "賛成"
-  },
-  {
-   "date": "2025-11-28",
-   "groupValue": "賛成",
-   "kind": "vote",
-   "result": "賛成 229・反対 15",
-   "rollCallId": "209-1128-v001",
-   "session": 209,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/209/209-1128-v001.htm",
-   "title": "国家公務員等の任命に関する件「食品安全委員会委員（春日文子君）」",
-   "value": "賛成"
+   "committee": "北朝鮮による拉致問題等に関する特別委員会",
+   "date": "2025-08-01",
+   "estimated": false,
+   "firstDate": "2025-08-01",
+   "kind": "committeeRole",
+   "lastDate": "2025-08-05",
+   "meetingId": "121815253X00120250801_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 218,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121815253X00120250801/0"
   },
   {
    "date": "2025-06-20",
@@ -1939,6 +2020,19 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0613-v001.htm",
    "title": "日程第１　スポーツ基本法及びスポーツにおけるドーピングの防止活動の推進に関する法律の一部を改正する法律案（衆議院提出）",
    "value": "賛成"
+  },
+  {
+   "committee": "国土交通委員会",
+   "date": "2025-06-12",
+   "estimated": false,
+   "firstDate": "2025-06-12",
+   "kind": "committeeRole",
+   "lastDate": "2025-06-12",
+   "meetingId": "121714319X01920250612_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121714319X01920250612/0"
   },
   {
    "date": "2025-06-11",
@@ -2337,6 +2431,19 @@
    "value": "賛成"
   },
   {
+   "committee": "政府開発援助等及び沖縄・北方問題に関する特別委員会",
+   "date": "2025-05-23",
+   "estimated": false,
+   "firstDate": "2025-05-23",
+   "kind": "committeeRole",
+   "lastDate": "2025-05-23",
+   "meetingId": "121715359X00620250523_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715359X00620250523/0"
+  },
+  {
    "date": "2025-05-21",
    "groupValue": "賛成",
    "kind": "vote",
@@ -2645,6 +2752,19 @@
    "value": "賛成"
   },
   {
+   "committee": "外交防衛委員会",
+   "date": "2025-05-08",
+   "estimated": false,
+   "firstDate": "2025-05-08",
+   "kind": "committeeRole",
+   "lastDate": "2025-05-08",
+   "meetingId": "121713950X01120250508_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121713950X01120250508/0"
+  },
+  {
    "date": "2025-04-25",
    "groupValue": "賛成",
    "kind": "vote",
@@ -2722,6 +2842,19 @@
    "value": "賛成"
   },
   {
+   "committee": "内閣委員会",
+   "date": "2025-04-22",
+   "estimated": false,
+   "firstDate": "2025-04-22",
+   "kind": "committeeRole",
+   "lastDate": "2025-05-27",
+   "meetingId": "121714889X01020250422_000",
+   "meetings": 3,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121714889X01020250422/0"
+  },
+  {
    "date": "2025-04-18",
    "groupValue": "賛成",
    "kind": "vote",
@@ -2753,6 +2886,19 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0418-v001.htm",
    "title": "日程第１　電波法及び放送法の一部を改正する法律案（内閣提出、衆議院送付）",
    "value": "賛成"
+  },
+  {
+   "committee": "総務委員会",
+   "date": "2025-04-17",
+   "estimated": false,
+   "firstDate": "2025-04-17",
+   "kind": "committeeRole",
+   "lastDate": "2025-06-05",
+   "meetingId": "121714601X00820250417_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121714601X00820250417/0"
   },
   {
    "date": "2025-04-16",
@@ -2863,6 +3009,19 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0409-v001.htm",
    "title": "日程第１　風俗営業等の規制及び業務の適正化等に関する法律の一部を改正する法律案（内閣提出）",
    "value": "賛成"
+  },
+  {
+   "committee": "決算委員会",
+   "date": "2025-04-07",
+   "estimated": false,
+   "firstDate": "2025-04-07",
+   "kind": "committeeRole",
+   "lastDate": "2025-06-09",
+   "meetingId": "121714103X00120250407_000",
+   "meetings": 9,
+   "role": "理事",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121714103X00120250407/0"
   },
   {
    "date": "2025-04-01",
@@ -3162,6 +3321,19 @@
    "value": "賛成"
   },
   {
+   "committee": "東日本大震災復興特別委員会",
+   "date": "2025-03-25",
+   "estimated": false,
+   "firstDate": "2025-03-25",
+   "kind": "committeeRole",
+   "lastDate": "2025-03-25",
+   "meetingId": "121714858X00320250325_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121714858X00320250325/0"
+  },
+  {
    "date": "2025-03-14",
    "groupValue": "賛成",
    "kind": "vote",
@@ -3182,6 +3354,32 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0314-v001.htm",
    "title": "参議院規則の一部を改正する規則案（馬場成志君外７名発議）",
    "value": "賛成"
+  },
+  {
+   "committee": "農林水産委員会",
+   "date": "2025-03-11",
+   "estimated": false,
+   "firstDate": "2025-03-11",
+   "kind": "committeeRole",
+   "lastDate": "2025-06-20",
+   "meetingId": "121715007X00120250311_000",
+   "meetings": 15,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715007X00120250311/0"
+  },
+  {
+   "committee": "予算委員会",
+   "date": "2025-03-05",
+   "estimated": false,
+   "firstDate": "2025-03-05",
+   "kind": "committeeRole",
+   "lastDate": "2025-03-18",
+   "meetingId": "121715261X00220250305_000",
+   "meetings": 3,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715261X00220250305/0"
   },
   {
    "date": "2025-02-19",
@@ -3316,134 +3514,56 @@
    "value": "賛成"
   },
   {
-   "date": "2024-10-01",
-   "groupValue": "賛成",
-   "kind": "vote",
-   "result": "賛成 146・反対 96",
-   "rollCallId": "214-1001-v001",
-   "session": 214,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/214/214-1001-v001.htm",
-   "title": "日程第２　会期の件",
-   "value": "賛成"
+   "committee": "北朝鮮による拉致問題等に関する特別委員会",
+   "date": "2025-01-24",
+   "estimated": false,
+   "firstDate": "2025-01-24",
+   "kind": "committeeRole",
+   "lastDate": "2025-03-21",
+   "meetingId": "121715253X00120250124_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715253X00120250124/0"
   },
   {
-   "chars": 1518,
-   "date": "2024-04-19",
-   "excerpt": "公明党の窪田哲也です。 公明党を代表して、ただいまの報告に対し、岸田総理に質問をいたします。 我が国の近現代史を俯瞰するとき、七十七年を一区切りとする捉え方があります。明治維新から一九四五年の敗戦まで七十七年。これは、敗戦から今日までとほぼ同じ長さです。黒船の来航をきっかけとした明治維新、そして米国と戦った太平洋戦争の終結。二つの七十七年を経た節目での総理の訪米に歴史的意義を感じずにはいられません",
-   "kind": "speech",
-   "meeting": "本会議 第13号",
-   "session": 213,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121315254X01320240419/29",
-   "speechId": "121315254X01320240419_029"
+   "committee": "決算委員会",
+   "date": "2024-12-20",
+   "estimated": false,
+   "firstDate": "2024-12-20",
+   "kind": "committeeRole",
+   "lastDate": "2024-12-24",
+   "meetingId": "121614103X00120241220_000",
+   "meetings": 2,
+   "role": "理事",
+   "session": 216,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121614103X00120241220/0"
   },
   {
-   "date": "2024-03-28",
-   "groupValue": "賛成",
-   "kind": "vote",
-   "result": "可決（賛成 146・反対 98）",
-   "rollCallId": "213-0328-v014",
-   "session": 213,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/213/213-0328-v014.htm",
-   "title": "令和六年度政府関係機関予算",
-   "value": "賛成"
+   "committee": "農林水産委員会",
+   "date": "2024-12-10",
+   "estimated": false,
+   "firstDate": "2024-12-10",
+   "kind": "committeeRole",
+   "lastDate": "2024-12-24",
+   "meetingId": "121615007X00120241210_000",
+   "meetings": 3,
+   "role": "委員",
+   "session": 216,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121615007X00120241210/0"
   },
   {
-   "date": "2024-03-28",
-   "groupValue": "賛成",
-   "kind": "vote",
-   "result": "可決（賛成 146・反対 98）",
-   "rollCallId": "213-0328-v013",
-   "session": 213,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/213/213-0328-v013.htm",
-   "title": "令和六年度特別会計予算",
-   "value": "賛成"
-  },
-  {
-   "date": "2024-03-28",
-   "groupValue": "賛成",
-   "kind": "vote",
-   "result": "可決（賛成 146・反対 98）",
-   "rollCallId": "213-0328-v012",
-   "session": 213,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/213/213-0328-v012.htm",
-   "title": "令和六年度一般会計予算",
-   "value": "賛成"
-  },
-  {
-   "date": "2023-06-07",
-   "groupValue": "反対",
-   "kind": "vote",
-   "result": "否決（賛成 61・反対 183）",
-   "rollCallId": "211-0607-v001",
-   "session": 211,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/211/211-0607-v001.htm",
-   "title": "法務大臣齋藤健君問責決議案（石橋通宏君発議）",
-   "value": "反対"
-  },
-  {
-   "date": "2023-06-02",
-   "groupValue": "反対",
-   "kind": "vote",
-   "result": "否決（賛成 60・反対 181）",
-   "rollCallId": "211-0602-v001",
-   "session": 211,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/211/211-0602-v001.htm",
-   "title": "法務委員長杉久武君解任決議案（牧山ひろえ君発議）",
-   "value": "反対"
-  },
-  {
-   "chars": 2694,
-   "date": "2023-04-19",
-   "excerpt": "公明党の窪田哲也です。 質問に入る前に、陸上自衛隊第八師団長ら隊員十人が乗ったヘリが沖縄県宮古島周辺で消息を絶った事故で、新たに隊員一人と見られる男性が発見され、海中から見付かったのは六人となりました。このうち死亡が確認された五人の御冥福を心からお祈り申し上げますとともに、残る不明者四人についても、一日も早い発見を願い、質問に移らせていただきます。 ただいま議題となりました全世代対応型の持続可能な",
-   "kind": "speech",
-   "meeting": "本会議 第16号",
-   "session": 211,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121115254X01620230419/13",
-   "speechId": "121115254X01620230419_013"
-  },
-  {
-   "date": "2023-03-28",
-   "groupValue": "賛成",
-   "kind": "vote",
-   "result": "可決（賛成 148・反対 95）",
-   "rollCallId": "211-0328-v003",
-   "session": 211,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/211/211-0328-v003.htm",
-   "title": "日程第３　令和五年度政府関係機関予算",
-   "value": "賛成"
-  },
-  {
-   "date": "2023-03-28",
-   "groupValue": "賛成",
-   "kind": "vote",
-   "result": "可決（賛成 148・反対 95）",
-   "rollCallId": "211-0328-v002",
-   "session": 211,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/211/211-0328-v002.htm",
-   "title": "日程第２　令和五年度特別会計予算",
-   "value": "賛成"
-  },
-  {
-   "date": "2023-03-28",
-   "groupValue": "賛成",
-   "kind": "vote",
-   "result": "可決（賛成 148・反対 95）",
-   "rollCallId": "211-0328-v001",
-   "session": 211,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/211/211-0328-v001.htm",
-   "title": "日程第１　令和五年度一般会計予算",
-   "value": "賛成"
-  },
-  {
-   "date": "2023-03-15",
-   "groupValue": "賛成",
-   "kind": "vote",
-   "result": "除名（賛成 235・反対 1）",
-   "rollCallId": "211-0315-v001",
-   "session": 211,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/211/211-0315-v001.htm",
-   "title": "日程第１　議員ガーシー君懲罰事犯の件（委員長報告のとおり「除名」とすること）",
-   "value": "賛成"
+   "committee": "北朝鮮による拉致問題等に関する特別委員会",
+   "date": "2024-11-28",
+   "estimated": false,
+   "firstDate": "2024-11-28",
+   "kind": "committeeRole",
+   "lastDate": "2024-12-24",
+   "meetingId": "121615253X00120241128_000",
+   "meetings": 4,
+   "role": "委員",
+   "session": 216,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121615253X00120241128/0"
   }
  ]
 }
