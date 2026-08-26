@@ -8,7 +8,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import type { Assembly } from "@seiji-kiroku/shared";
-import type { ShugiinBillNameStats } from "./coverage";
+import type { SangiinVoteLinkStats, ShugiinBillNameStats } from "./coverage";
 import { DIET_ASSEMBLIES, type AssemblySession, type DatasetMeta, type LocalRollCallSubject, type MemberDetail, type MemberSpeeches, type MemberSummary, type RollCall, type RollCallSummary } from "./data-contract";
 
 /** `data/` at the repo root; override with SEIJI_DATA_DIR. cwd is apps/web during build. */
@@ -181,5 +181,50 @@ export async function readShugiinBillNameStats(dataDir: string): Promise<Shugiin
       .sort((a, b) => a.session - b.session),
     rosterMembers: rosterNames.length,
     rosterDuplicateNames: rosterNames.length - roster.size,
+  };
+}
+
+/** `data/rollcalls/{回次}/{id}.json` のうち、票の数え上げに使う項目だけ。 */
+type RollCallVotes = { session?: number; votes?: { memberId?: string }[] };
+
+/**
+ * 参院の票が議員に紐づいているかを回次ごとに数える（#274）。`rollcalls/index.json` には票が無いので、
+ * 採決 1 件ずつの `rollcalls/{回次}/{id}.json` を読んで数える（ビルド時。ブラウザには数えた結果だけが渡る）。
+ * `memberId` が空文字の票が「議員ページに出ていない票」で、これは ETL の突合結果そのもの
+ * （在職を確認できたかの判定を読み直すのではなく、判定の結果を数える）。
+ * `rollcalls/` が無ければ null（無い事実を作らない）。
+ */
+export async function readSangiinVoteLinkStats(dataDir: string): Promise<SangiinVoteLinkStats | null> {
+  const dir = path.join(dataDir, "rollcalls");
+  let entries: string[];
+  try {
+    entries = (await readdir(dir, { withFileTypes: true })).filter((e) => e.isDirectory() && SAFE_ID.test(e.name)).map((e) => e.name);
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") return null;
+    throw err;
+  }
+
+  let votes = 0;
+  let linked = 0;
+  /** 回次 -> その回次の票の延べ数と紐づいた数 */
+  const bySession = new Map<number, { votes: number; linked: number }>();
+  for (const sub of entries) {
+    const files = (await readdir(path.join(dir, sub))).filter((f) => f.endsWith(".json"));
+    for (const file of files) {
+      const rollCall = await readJson<RollCallVotes>(path.join(dir, sub, file));
+      if (!rollCall || typeof rollCall.session !== "number") continue;
+      const rows = rollCall.votes ?? [];
+      const hit = rows.filter((v) => !!v.memberId).length;
+      votes += rows.length;
+      linked += hit;
+      const acc = bySession.get(rollCall.session) ?? { votes: 0, linked: 0 };
+      bySession.set(rollCall.session, { votes: acc.votes + rows.length, linked: acc.linked + hit });
+    }
+  }
+
+  return {
+    votes,
+    linked,
+    sessions: [...bySession.entries()].map(([session, c]) => ({ session, ...c })).sort((a, b) => a.session - b.session),
   };
 }
