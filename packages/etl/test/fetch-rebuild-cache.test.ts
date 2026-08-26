@@ -204,3 +204,21 @@ describe("回次を渡し忘れない（#294 の回帰防止）", () => {
     assert.deepEqual(offenders, [], `noCache の取得に session を渡すこと（#294）:\n${offenders.join("\n")}`);
   });
 });
+
+describe("日次実行の経路で取りこぼしが起きない（#294 の安全性）", () => {
+  /**
+   * 日次実行（既定の直近 5 回次）でも `memberSession` は 221 なので、第217〜220回は
+   * 「最新回次より古い」に**該当してしまう**。ここでキャッシュが効くと、
+   * 直近回次に後から入る追記を取り逃す（会議録の公開には約 1 ヶ月のラグがある）。
+   *
+   * それを防いでいるのは回次の判定ではなく**フラグ**である。
+   * `etl.yml` が cron に `ETL_CACHE_CLOSED_SESSIONS` を渡さないことと、この 2 つで担保する。
+   */
+  test("フラグが無ければ、直近回次（217）でもキャッシュは効かない", async () => {
+    delete process.env.ETL_CACHE_CLOSED_SESSIONS;
+    setLatestSession(221); // 日次実行と同じ状態
+    await fetchText(URL_A, "utf-8", { noCache: true, session: 217 });
+    await fetchText(URL_A, "utf-8", { noCache: true, session: 217 });
+    assert.equal(calls.length, 2, "日次実行の経路でキャッシュが効いてしまっている（追記を取り逃す）");
+  });
+});
