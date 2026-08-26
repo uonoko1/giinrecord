@@ -48,7 +48,7 @@ PV として数える行：`GET` かつ `200`/`304` かつ HTML ページ（`/as
 
 - cron は **root** で動かし、`/var/log/nginx` を読むのは root だけ。`daily.sh` が `install -o ubuntu -m 600` で **集計 TSV 1 ファイルだけ**を ubuntu に渡す。
 - root が実行するスクリプトは **root 所有の `/usr/local/lib/giinrecord-analytics/`** に置く（`~ubuntu` 配下を root の cron から実行すると、漏れた鍵で root 昇格できてしまう）。更新は `sudo install`。
-- root は ubuntu 所有のディレクトリにリダイレクト（`>`）で書かない（`~/analytics` がシンボリックリンクなら中止、TSV は `mktemp` → `install`）。cron のログは `/var/log/giinrecord-analytics.log`（root 600）。
+- root は ubuntu 所有のディレクトリにリダイレクト（`>`）で書かない（`~/analytics` がシンボリックリンクなら中止、TSV は `mktemp` → `install`）。cron のログは `/var/log/giinrecord-analytics.log`（root 600）で、`/etc/logrotate.d/giinrecord-analytics`（monthly・12 世代、#288。→ `docs/ops/log-rotation.md`）で回る。
 
 ## 初回セットアップ
 
@@ -65,7 +65,7 @@ ssh "$VPS_SSH_HOST" 'sudo ANALYTICS_OUT=/home/ubuntu/analytics ANALYTICS_OWNER=u
 ssh "$VPS_SSH_HOST" 'ls -l ~/analytics'                                      # -rw------- ubuntu ubuntu
 ```
 
-`access_log /var/log/nginx/giinrecord.access.log noip;` は `vps-setup.sh` が書く proxy block に最初から入っている（certbot が複製した 443 ブロックにも入る）。analytics の setup はその 1 行が無ければ中止する（空の TSV を黙って作らない）。ログローテーションは Ubuntu 既定の `/etc/logrotate.d/nginx`（daily, 14 世代, delaycompress）に乗る。`daily.sh` は `.log` `.log.1` `.log.2.gz` を読んで日付で絞るので、ローテーション時刻と cron の順序に依存しない。
+`access_log /var/log/nginx/giinrecord.access.log noip;` は `vps-setup.sh` が書く proxy block に最初から入っている（certbot が複製した 443 ブロックにも入る）。analytics の setup はその 1 行が無ければ中止する（空の TSV を黙って作らない）。ログローテーションは Ubuntu 既定の `/etc/logrotate.d/nginx`（daily, 14 世代, delaycompress）に乗る。（**nginx のアクセスログの話**。cron 自身のログは別で、#288 で回すようにした）`daily.sh` は `.log` `.log.1` `.log.2.gz` を読んで日付で絞るので、ローテーション時刻と cron の順序に依存しない。
 
 ## 見方
 
