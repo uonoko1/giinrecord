@@ -29,7 +29,10 @@ env:
 jobs:
   etl:
     runs-on: ubuntu-latest
-    timeout-minutes: 360   # バックフィル（17回次）は数時間かかる。日次は従来どおり数十分で終わる
+    # **GitHub ホステッドランナーのジョブ上限は 6 時間（360分）で、timeout-minutes では超えられない**
+    # （480 を指定した run 32890265206 がきっかり 360 分で cancelled になった）。
+    # 作り直しは実測 359 分で上限に張り付くので **1 回では完走できない前提**で運用する。
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
 
@@ -71,7 +74,12 @@ jobs:
           SESSIONS: ${{ github.event.inputs.sessions }}
         run: bash scripts/ci/etl-rebuild-prepare.sh "$REBUILD" "$SESSIONS"
 
+      # ステップ単位の timeout を job（360分＝GitHub の上限）より短く置く。job の timeout に当たると
+      # **後続ステップごと打ち切られ、if: always() の cache/save にも到達しない**
+      # （2026-08-25 の run 32853869643 が実際にそうなり、359分ぶんの取得が丸ごと失われた）。
+      # ここで先に打ち切れば、取得済みページを .cache に保存してから終われる。
       - name: Run ETL
+        timeout-minutes: 330
         shell: bash
         env:
           SESSIONS: ${{ github.event.inputs.sessions || '217 218 219 220 221' }}
@@ -83,11 +91,15 @@ jobs:
             giinrecord-etl:ci $SESSIONS 2>&1 | tee etl.log
 
       # 失敗しても取得済みページは次回に活かす（job が失敗すると actions/cache の自動保存は走らない）。
+      # key は run ごとに一意にする。**同じ key が既にあると actions/cache/save は黙って
+      # スキップし、ステップは success と表示される**（run 32919656778 の 6 時間ぶんが
+      # これで失われ、キャッシュは 93MB のまま増えなかった）。
+      # restore 側は restore-keys: etl-cache- の前方一致なので、次の run は最新から始まる。
       - uses: actions/cache/save@v4
         if: always()
         with:
           path: packages/etl/.cache
-          key: etl-cache-${{ steps.date.outputs.today }}
+          key: etl-cache-${{ steps.date.outputs.today }}-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Open / update data PR
         id: pr
