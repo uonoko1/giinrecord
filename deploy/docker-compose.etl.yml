@@ -10,7 +10,7 @@ services:
     build:
       context: ..
       dockerfile: packages/etl/Dockerfile
-    image: gikailog-etl:local
+    image: giinrecord-etl:local
     user: "${ETL_UID:-1000}:${ETL_GID:-1000}"
     volumes:
       - ../data:/app/data

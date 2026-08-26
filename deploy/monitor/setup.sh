@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 # One-time (idempotent) VPS setup of the self-hosted monitoring (Issue #135). Root, from a checkout of this repo:
-#   sudo bash /opt/gikailog/deploy/monitor/setup.sh
+#   sudo bash /opt/giinrecord/deploy/monitor/setup.sh
 #
 # What it does — and nothing else (no packages, no nginx change, no docker change, no new sudo rights):
-#   1. /usr/local/lib/gikailog-monitor/health.sh   root-owned copy of deploy/monitor/health.sh (the root cron must never
+#   1. /usr/local/lib/giinrecord-monitor/health.sh   root-owned copy of deploy/monitor/health.sh (the root cron must never
 #                                                   execute a file a non-root user could edit)
-#   2. /etc/gikailog/ (700)                         place for monitor.token — a fine-grained PAT with Issues: write on
+#   2. /etc/giinrecord/ (700)                         place for monitor.token — a fine-grained PAT with Issues: write on
 #                                                   this repository only. The PO creates it and copies it here (600).
 #                                                   Never created or printed by this script; health.sh fails soft without it.
-#   3. /var/log/gikailog-monitor.log (600)          the check log;  /var/lib/gikailog-monitor/ (700) open-issue state
+#   3. /var/log/giinrecord-monitor.log (600)          the check log;  /var/lib/giinrecord-monitor/ (700) open-issue state
 #   4. ~ubuntu/monitor/ (700, owner ubuntu)         health.sh installs latest.json there, 600, owner ubuntu
-#   5. /etc/cron.d/gikailog-monitor                 */5 minutes, as root
+#   5. /etc/cron.d/giinrecord-monitor                 */5 minutes, as root
 #
 # MONITOR_SETUP_PREFIX roots every path at a temp dir for the tests (deploy/test/monitor-setup.test.sh);
 # MONITOR_OWNER overrides the deploy user (default ubuntu).
@@ -20,13 +20,13 @@ HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 PREFIX=${MONITOR_SETUP_PREFIX:-}
 OWNER=${MONITOR_OWNER:-ubuntu}
 
-TOOLS=/usr/local/lib/gikailog-monitor
-TOKEN_DIR=/etc/gikailog
+TOOLS=/usr/local/lib/giinrecord-monitor
+TOKEN_DIR=/etc/giinrecord
 TOKEN_FILE=$TOKEN_DIR/monitor.token
-LOG=/var/log/gikailog-monitor.log
-STATE_DIR=/var/lib/gikailog-monitor
+LOG=/var/log/giinrecord-monitor.log
+STATE_DIR=/var/lib/giinrecord-monitor
 LATEST_DIR=/home/$OWNER/monitor
-CRON=/etc/cron.d/gikailog-monitor
+CRON=/etc/cron.d/giinrecord-monitor
 
 # chown only as root (the tests run as a normal user inside $PREFIX)
 CHOWN_ROOT=(); CHOWN_OWNER=()
@@ -46,7 +46,7 @@ chmod 600 "$PREFIX$LOG"
 
 # Real paths in the cron file even under the test prefix: the file is a fixture of what lands on the VPS.
 cat > "$PREFIX$CRON" <<CRON
-# gikailog self-hosted monitoring (Issue #135): containers healthy, disk, nginx, rsync targets fresh.
+# giinrecord self-hosted monitoring (Issue #135): containers healthy, disk, nginx, rsync targets fresh.
 # Runs as root every 5 minutes; writes $LOG and $LATEST_DIR/latest.json (owner $OWNER, 600);
 # opens/closes GitHub Issues through the token in $TOKEN_FILE (fail-soft when absent). docs/ops/monitoring.md
 MONITOR_OWNER=$OWNER

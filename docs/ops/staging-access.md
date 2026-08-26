@@ -7,7 +7,7 @@ production（`giinrecord.jp`）は誰でも見られ、この文書の設定は�
 
 ```
 ブラウザ ──▶ Cloudflare（DNS プロキシ ON）──▶ Access（メール One-time PIN か Service Token）──▶ VPS のホスト nginx（staging block）
-                                                                                              ├─ allow <Cloudflare の IP レンジ>; deny all;   … /etc/nginx/snippets/gikailog-cloudflare-allow.conf
+                                                                                              ├─ allow <Cloudflare の IP レンジ>; deny all;   … /etc/nginx/snippets/giinrecord-cloudflare-allow.conf
                                                                                               ├─ Cf-Access-Jwt-Assertion ヘッダが無ければ 403
                                                                                               └─ proxy_pass http://127.0.0.1:8083（web-staging コンテナ）
 ```
@@ -22,26 +22,32 @@ production（`giinrecord.jp`）は誰でも見られ、この文書の設定は�
 
 前提：`giinrecord.jp` のゾーンが Cloudflare にあり、staging の証明書は Let's Encrypt 済み（`deploy/staging-setup.sh`）。
 
+> **改名（gikailog → giinrecord）で残っている手作業**: ダッシュボード上の名前はリポジトリからは変えられない。
+> 既存の Access Application は `gikailog staging`、Service Token は `gikailog-monitor` のまま。
+> Application 名はその場で改名できる（動作に影響しない）。**Service Token は改名できないので、名前を揃えるなら
+> 下の「Service Token のローテーション」の手順で `giinrecord-monitor` を新規発行して差し替える**
+> （`CF_ACCESS_CLIENT_ID` / `CF_ACCESS_CLIENT_SECRET` の更新を伴う）。名前だけの問題なので急がなくてよい。
+
 1. **DNS**：`staging` の A レコードを **Proxied（オレンジ雲）** にする。production の `@` / `www` は当面 DNS only のまま。
 2. **SSL/TLS → Overview**：暗号化モード **Full (strict)**。origin は Let's Encrypt の正規証明書なので strict で通る。
    （ゾーン全体の設定。production を後でプロキシ ON にしても同じで良い）
 3. **Zero Trust → Access → Applications → Add an application → Self-hosted**
-   - Application name: `gikailog staging`、Session duration: 24 時間程度
+   - Application name: `giinrecord staging`、Session duration: 24 時間程度
    - Application domain: `staging.giinrecord.jp`（パス無し）
    - Identity providers: **One-time PIN** だけ
    - Policy 1: Action **Allow**、Include: **Emails** = 運営者のメールアドレス（必要な人数分）
 4. **監視用 Service Token**（`.github/workflows/monitor.yml` が毎時 staging を叩くため）
-   - Zero Trust → Access → **Service Auth → Service Tokens → Create**：名前 `gikailog-monitor`、期限は 1 年
+   - Zero Trust → Access → **Service Auth → Service Tokens → Create**：名前 `giinrecord-monitor`、期限は 1 年
    - 表示される **Client ID / Client Secret** を GitHub の **repository secrets** `CF_ACCESS_CLIENT_ID` / `CF_ACCESS_CLIENT_SECRET` に
      （Secret は作成時にしか表示されない。どこにも貼らない）
-   - アプリの Policy に **Policy 2: Action Service Auth、Include: Service Token = gikailog-monitor** を追加
+   - アプリの Policy に **Policy 2: Action Service Auth、Include: Service Token = giinrecord-monitor** を追加
 5. 確認：シークレットウィンドウで `https://staging.giinrecord.jp/` → Cloudflare のログイン画面 → PIN → サイトが出る。
    `curl -sI https://staging.giinrecord.jp/` は 302（Access のログインへ）。
 
 ## VPS 側（PO が実行）
 
 ```sh
-# 1. Cloudflare の IP レンジ → /etc/nginx/snippets/gikailog-cloudflare-allow.conf（allow … ; deny all;）＋ 週次 root cron
+# 1. Cloudflare の IP レンジ → /etc/nginx/snippets/giinrecord-cloudflare-allow.conf（allow … ; deny all;）＋ 週次 root cron
 scp deploy/cloudflare-allowlist.sh "${VPS_SSH_HOST:-sakura-vps}":/tmp/ && \
   ssh "${VPS_SSH_HOST:-sakura-vps}" 'sudo bash /tmp/cloudflare-allowlist.sh --install-cron && rm /tmp/cloudflare-allowlist.sh'
 # 2. staging の server block に include と 403 を入れる（冪等。production の conf には触れない）
@@ -53,8 +59,8 @@ ssh "${VPS_SSH_HOST:-sakura-vps}" 'sudo bash -s staging.giinrecord.jp 8083' < de
 
 `cloudflare-allowlist.sh` の安全装置：取得した各行が厳密な CIDR 構文でなければ何も書かない（HTML のエラーページや `;` の混入を nginx
 設定にしない）、空リストは拒否（Cloudflare 自身を deny してしまう）、同じディレクトリの一時ファイルから rename（原子的）、`nginx -t` が
-落ちれば前の snippet に戻して reload しない、内容が同じなら reload しない。cron は `/etc/cron.d/gikailog-cloudflare-allowlist`（月曜 04:20、
-root、`/usr/local/lib/gikailog-cloudflare-allowlist.sh` = root 所有のコピーを実行。deploy ユーザーが編集できるファイルを root cron が
+落ちれば前の snippet に戻して reload しない、内容が同じなら reload しない。cron は `/etc/cron.d/giinrecord-cloudflare-allowlist`（月曜 04:20、
+root、`/usr/local/lib/giinrecord-cloudflare-allowlist.sh` = root 所有のコピーを実行。deploy ユーザーが編集できるファイルを root cron が
 実行しない）。
 
 確認（VPS 上）：
@@ -90,7 +96,7 @@ curl -sk --resolve staging.giinrecord.jp:443:127.0.0.1 https://staging.giinrecor
 
 ## Service Token のローテーション（1 年ごと、または漏洩時）
 
-1. Zero Trust → Access → Service Auth → Service Tokens → **Create**（新トークン `gikailog-monitor-YYYYMM`）
+1. Zero Trust → Access → Service Auth → Service Tokens → **Create**（新トークン `giinrecord-monitor-YYYYMM`）
 2. アプリの Service Auth ポリシーに新トークンを**追加**（旧トークンはまだ残す）
 3. GitHub repository secrets `CF_ACCESS_CLIENT_ID` / `CF_ACCESS_CLIENT_SECRET` を新しい値に更新
 4. Actions → Monitor → **Run workflow** で staging job が green（`::warning::` 無し）なのを確認

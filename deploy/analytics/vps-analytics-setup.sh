@@ -5,9 +5,9 @@
 # What it does:
 #   1. installs gawk (aggregate.sh uses gawk's match(s, re, arr))
 #   2. defines the IP-less log_format "noip" (http{} context)
-#   3. checks the gikailog server block logs to the dedicated IP-less access log (written by vps-setup.sh)
-#   4. creates the root-owned script dir /usr/local/lib/gikailog-analytics and ~ubuntu/analytics (700)
-#   5. installs /etc/cron.d/gikailog-analytics: 00:10 daily, as ROOT, aggregates yesterday and hands
+#   3. checks the giinrecord server block logs to the dedicated IP-less access log (written by vps-setup.sh)
+#   4. creates the root-owned script dir /usr/local/lib/giinrecord-analytics and ~ubuntu/analytics (700)
+#   5. installs /etc/cron.d/giinrecord-analytics: 00:10 daily, as ROOT, aggregates yesterday and hands
 #      only the TSV to ubuntu (install -o ubuntu -m 600)
 #
 # Deliberately NOT done: adding ubuntu to the adm group. ubuntu is the CI deploy-key user (deploy-site.yml rsync);
@@ -30,16 +30,16 @@ reload_nginx() {
 
 main() {
 OWNER=ubuntu
-SITE_CONF=/etc/nginx/sites-available/gikailog.conf
-ACCESS_LOG=/var/log/nginx/gikailog.access.log
-TOOLS=/usr/local/lib/gikailog-analytics
+SITE_CONF=/etc/nginx/sites-available/giinrecord.conf
+ACCESS_LOG=/var/log/nginx/giinrecord.access.log
+TOOLS=/usr/local/lib/giinrecord-analytics
 OUT_DIR="/home/$OWNER/analytics"
-CRON_LOG=/var/log/gikailog-analytics.log
+CRON_LOG=/var/log/giinrecord-analytics.log
 
 command -v gawk >/dev/null || { apt-get update -qq && apt-get install -y -qq gawk; }
 
-cat > /etc/nginx/conf.d/gikailog-noip-log.conf <<'CONF'
-# Access-log format WITHOUT the client IP and WITHOUT the user agent (gikailog, Issue #58).
+cat > /etc/nginx/conf.d/giinrecord-noip-log.conf <<'CONF'
+# Access-log format WITHOUT the client IP and WITHOUT the user agent (giinrecord, Issue #58).
 log_format noip '- - [$time_local] "$request" $status $body_bytes_sent "$http_referer" "-"';
 CONF
 
@@ -57,14 +57,14 @@ install -d -o "$OWNER" -g "$OWNER" -m 700 "$OUT_DIR"
 touch "$CRON_LOG" && chmod 600 "$CRON_LOG"
 
 # The scripts themselves are installed separately with sudo install (see docs/ops/analytics.md); this only sets the cron.
-cat > /etc/cron.d/gikailog-analytics <<CRON
-# gikailog cookie-less analytics: aggregate yesterday's nginx log (no IP) into $OUT_DIR/YYYY-MM-DD.tsv.
+cat > /etc/cron.d/giinrecord-analytics <<CRON
+# giinrecord cookie-less analytics: aggregate yesterday's nginx log (no IP) into $OUT_DIR/YYYY-MM-DD.tsv.
 # Runs as root (reads /var/log/nginx); daily.sh hands the TSV to $OWNER with mode 600 and nothing else.
 ANALYTICS_OUT=$OUT_DIR
 ANALYTICS_OWNER=$OWNER
 10 0 * * * root test -x $TOOLS/daily.sh && $TOOLS/daily.sh >> $CRON_LOG 2>&1
 CRON
-chmod 644 /etc/cron.d/gikailog-analytics
+chmod 644 /etc/cron.d/giinrecord-analytics
 
 echo "analytics ready. Install scripts (root-owned, so the root cron never runs anything ubuntu can edit):"
 echo "  scp deploy/analytics/{aggregate,daily}.sh \"\${VPS_SSH_HOST:-sakura-vps}\":/tmp/ && ssh \"\${VPS_SSH_HOST:-sakura-vps}\" 'sudo install -o root -g root -m 755 /tmp/aggregate.sh /tmp/daily.sh $TOOLS/ && rm /tmp/aggregate.sh /tmp/daily.sh'"

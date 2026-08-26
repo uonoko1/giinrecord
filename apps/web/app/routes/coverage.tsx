@@ -325,7 +325,7 @@ function RosterlessSection({ meta }: { meta: Dataset["meta"] }) {
         現在の名簿と氏名が一致する票も同じです。名簿には任期満了日はありますが<strong>在職開始日にあたる項目が無く</strong>、
         その議員がその回次に在職していたことを一次資料から確認できないためです。
         <strong>在職を確認できない氏名一致では紐づけません</strong>（
-        <a href="https://github.com/uonoko1/gikailog/issues/230" target="_blank" rel="noopener noreferrer">
+        <a href="https://github.com/uonoko1/giinrecord/issues/230" target="_blank" rel="noopener noreferrer">
           Issue #230
         </a>
         ）。紐づかなかった票も、氏名・当時の会派・採決ページへのリンクはそのまま残ります。
