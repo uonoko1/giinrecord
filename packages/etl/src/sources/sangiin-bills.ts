@@ -185,9 +185,9 @@ function statusOf(root: HTMLElement): string | undefined {
  */
 export async function fetchBills(session: number): Promise<Bill[]> {
   const listUrl = billListUrl(session);
-  const items = parseBillList(await fetchText(listUrl, "utf-8", { noCache: true }), listUrl);
+  const items = parseBillList(await fetchText(listUrl, "utf-8", { noCache: true, session }), listUrl);
   const out: Bill[] = [];
-  for (const item of items) out.push(parseBill(await fetchText(item.href, "utf-8", { noCache: true }), item.href));
+  for (const item of items) out.push(parseBill(await fetchText(item.href, "utf-8", { noCache: true, session }), item.href));
   return out;
 }
 

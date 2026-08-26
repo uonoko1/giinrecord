@@ -3,7 +3,7 @@ import type { Bill as SharedBill, House, Member, Question, RollCall, Speech } fr
 import { listRollCalls, parseRollCall, RollCallParseError, standingVoteNote } from "./sources/sangiin-votes.ts";
 import { fetchMembers, memberListUrl, unmatchedGroups } from "./sources/sangiin-members.ts";
 import { fetchShugiinMembers, memberListUrl as shugiinMemberListUrl, unmatchedShugiinGroups } from "./sources/shugiin-members.ts";
-import { fetchText } from "./fetch.ts";
+import { cacheClosedSessionsEnabled, fetchText, setLatestSession } from "./fetch.ts";
 import { fetchSpeeches, speechPageUrl, type SpeechScope } from "./sources/kokkai-speeches.ts";
 import { matchVotes, type GroupMismatch } from "./match-votes.ts";
 import { shardUnmatched, type UnmatchedRow } from "./unmatched.ts";
@@ -57,6 +57,13 @@ if (carried.withoutSession) console.warn(`carried: ${carried.withoutSession} tim
 // 名簿ページは各回次の終了後時点なので、最小回次の1つ前の名簿も取って会期中に退任した議員を覆う（rosterSessionsFor）。
 // 引き継ぐ回次の採決も現行名簿で再突合するので、名簿は targets ∪ carried の全回次分を取る（第215回以前は公開されておらず 404 → 無い事実として飛ばす）。
 const memberSession = Math.max(...plan.all);
+// 作り直し（#294）で「最新回次以外はキャッシュから読む」を判定するための基準。
+// 実測（2026-08-26）で追記が入るのは最新回次だけだったので、これより古い回次だけを対象にする。
+// ETL_CACHE_CLOSED_SESSIONS=1 を立てた実行以外では、この値を設定してもキャッシュは使われない。
+setLatestSession(memberSession);
+if (cacheClosedSessionsEnabled()) {
+  console.log(`cache: ETL_CACHE_CLOSED_SESSIONS=1 (sessions < ${memberSession} are read from .cache when present; session ${memberSession} is always re-fetched)`);
+}
 const rosterSessions: number[] = [];
 const rosters: Roster[] = [];
 for (const session of rosterSessionsFor(plan.all)) {

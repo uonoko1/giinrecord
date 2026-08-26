@@ -83,10 +83,16 @@ jobs:
         shell: bash
         env:
           SESSIONS: ${{ github.event.inputs.sessions || '217 218 219 220 221' }}
+          # 作り直し（#294）のときだけ、**最新回次より古い回次**の取得を .cache から読む。
+          # 日次 cron・sessions だけの手動実行では rebuild が空なので '' になり、無効のまま
+          # （fetch.ts の cacheClosedSessionsEnabled は "1" のときだけ true）。
+          # 日次 ETL の鮮度の振る舞いを変えないことがこの分岐の目的である。
+          ETL_CACHE_CLOSED_SESSIONS: ${{ github.event.inputs.rebuild == 'yes' && '1' || '' }}
         run: |
           mkdir -p packages/etl/.cache
           # shellcheck disable=SC2086  # SESSIONS は空白区切りの回次リスト
           docker run --rm --user "$(id -u):$(id -g)" \
+            -e ETL_CACHE_CLOSED_SESSIONS \
             -v "$PWD/data:/app/data" -v "$PWD/packages/etl/.cache:/app/packages/etl/.cache" \
             giinrecord-etl:ci $SESSIONS 2>&1 | tee etl.log
 
