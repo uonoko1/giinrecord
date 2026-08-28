@@ -360,6 +360,19 @@
    "value": "賛成"
   },
   {
+   "committee": "決算委員会",
+   "date": "2026-07-06",
+   "estimated": false,
+   "firstDate": "2026-07-06",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-06",
+   "meetingId": "122114103X00920260706_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122114103X00920260706/0"
+  },
+  {
    "date": "2026-06-26",
    "groupValue": "賛成",
    "kind": "vote",
