@@ -96,6 +96,19 @@
    "value": "賛成"
   },
   {
+   "committee": "沖縄・北方問題及び地方に関する特別委員会、総務委員会連合審査会",
+   "date": "2026-07-23",
+   "estimated": false,
+   "firstDate": "2026-07-23",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-23",
+   "meetingId": "122115391X00120260723_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115391X00120260723/0"
+  },
+  {
    "date": "2026-07-17",
    "groupValue": "賛成",
    "kind": "vote",
@@ -827,9 +840,9 @@
    "estimated": false,
    "firstDate": "2026-05-21",
    "kind": "committeeRole",
-   "lastDate": "2026-05-26",
+   "lastDate": "2026-06-11",
    "meetingId": "122114006X00820260521_000",
-   "meetings": 2,
+   "meetings": 3,
    "role": "委員",
    "session": 221,
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122114006X00820260521/0"
@@ -939,9 +952,9 @@
    "estimated": false,
    "firstDate": "2026-05-11",
    "kind": "committeeRole",
-   "lastDate": "2026-07-06",
+   "lastDate": "2026-07-24",
    "meetingId": "122114103X00120260511_000",
-   "meetings": 9,
+   "meetings": 10,
    "role": "理事",
    "session": 221,
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122114103X00120260511/0"
@@ -1396,9 +1409,9 @@
    "estimated": false,
    "firstDate": "2026-02-18",
    "kind": "committeeRole",
-   "lastDate": "2026-05-22",
+   "lastDate": "2026-07-23",
    "meetingId": "122115382X00120260218_000",
-   "meetings": 5,
+   "meetings": 7,
    "role": "委員",
    "session": 221,
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115382X00120260218/0"
