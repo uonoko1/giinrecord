@@ -96,6 +96,19 @@
    "value": "賛成"
   },
   {
+   "committee": "沖縄・北方問題及び地方に関する特別委員会、総務委員会連合審査会",
+   "date": "2026-07-23",
+   "estimated": false,
+   "firstDate": "2026-07-23",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-23",
+   "meetingId": "122115391X00120260723_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115391X00120260723/0"
+  },
+  {
    "committee": "総務委員会",
    "date": "2026-07-23",
    "estimated": false,
@@ -657,6 +670,19 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0610-v001.htm",
    "title": "日程第１　学校教育法等の一部を改正する法律案（内閣提出、衆議院送付）",
    "value": "賛成"
+  },
+  {
+   "committee": "環境委員会",
+   "date": "2026-06-09",
+   "estimated": false,
+   "firstDate": "2026-06-09",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-09",
+   "meetingId": "122114006X01120260609_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122114006X01120260609/0"
   },
   {
    "date": "2026-06-05",

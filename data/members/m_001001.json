@@ -96,6 +96,32 @@
    "value": "反対"
   },
   {
+   "committee": "沖縄・北方問題及び地方に関する特別委員会、総務委員会連合審査会",
+   "date": "2026-07-23",
+   "estimated": false,
+   "firstDate": "2026-07-23",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-23",
+   "meetingId": "122115391X00120260723_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115391X00120260723/0"
+  },
+  {
+   "committee": "沖縄・北方問題及び地方に関する特別委員会",
+   "date": "2026-07-22",
+   "estimated": false,
+   "firstDate": "2026-07-22",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-23",
+   "meetingId": "122115382X00720260722_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115382X00720260722/0"
+  },
+  {
    "date": "2026-07-17",
    "groupValue": "反対",
    "kind": "vote",
