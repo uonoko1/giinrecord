@@ -3,7 +3,7 @@ import "./styles/tokens.css";
 import { THEME_STORAGE_KEY } from "./components/ThemeToggle";
 import { BRAND } from "./lib/brand-colors";
 import { installPromptInit } from "./lib/install-prompt";
-import { robotsMeta, siteOrigin } from "./lib/seo";
+import { robotsMeta, SITE_NAME, siteOrigin } from "./lib/seo";
 
 /** staging build (#127): every page carries noindex; null on production / origin-less builds. */
 const robots = robotsMeta(siteOrigin());
@@ -31,7 +31,13 @@ export const THEME_COLOR = BRAND.ink;
 /** 保存済みテーマをハイドレーション前に html へ付与し、ちらつきを防ぐ。 */
 const themeInit = `try{var t=localStorage.getItem(${JSON.stringify(THEME_STORAGE_KEY)});if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}`;
 
-export default function Root() {
+/**
+ * HTML の外枠。Root と HydrateFallback の両方がこれを描く。
+ * root ルートに HydrateFallback を置くと、React Router は **Root の代わりに** それを描く（Outlet の中身が
+ * 差し替わるのではない）ので、フォールバック側も `<html>` から `<Scripts />` まで自分で書く必要がある。
+ * 片方だけが shell を持つと SPA モードのビルドが `Did you forget to include <Scripts/>` で落ちる。
+ */
+function Document({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ja">
       <head>
@@ -46,10 +52,40 @@ export default function Root() {
         <Links />
       </head>
       <body>
-        <Outlet />
+        {children}
         <ScrollRestoration />
         <Scripts />
       </body>
     </html>
+  );
+}
+
+/**
+ * Issue #325: ハイドレーション前に見せる画面。定義しないと React Router が自前の既定フォールバックを使い、
+ * プリレンダー無しのページ（/__spa-fallback.html）が `<html lang="en">` / `<title>Loading...</title>` になり、
+ * さらに `💿 Hey developer …` を本番のコンソールに出していた。
+ * nginx はこの HTML を 404 の本文としても返す（deploy/nginx/site.conf の error_page）ので、
+ * <title> にサイト名が入ること（外形監視 probe.sh の検査）と noindex が要る。両方 meta() が付ける。
+ */
+export function HydrateFallback() {
+  return (
+    <Document>
+      <main className="page" aria-busy="true">
+        <p className="note">読み込んでいます…</p>
+      </main>
+    </Document>
+  );
+}
+
+/** 404 の本文にもなる shell（#325）なので、既定の <title> はサイト名入り・noindex にする。 */
+export function meta() {
+  return [{ title: SITE_NAME }, { name: "robots", content: "noindex" }];
+}
+
+export default function Root() {
+  return (
+    <Document>
+      <Outlet />
+    </Document>
   );
 }

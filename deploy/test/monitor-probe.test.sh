@@ -26,14 +26,17 @@ done
 #   H_TITLE            <title> text of the HTML pages;  H_FETCHED_AT  meta.fetchedAt;  H_NOT_AFTER  certificate notAfter
 #   H_IDS              ids the /assemblies/ page links to (#248), space separated — this is what probe.sh enumerates
 #   H_ASSEMBLY_BODY    body served for an assembly page; default is what the real site renders
-#                      ("$SPA_FALLBACK" emulates nginx's /__spa-fallback.html: 200, <title>Loading...</title>)
+#                      ("$SPA_FALLBACK" emulates nginx's /__spa-fallback.html — the body nginx now serves for an
+#                       unknown path; #325 made that a **404**, so pair it with H_CODE_ASSEMBLY=404)
 #   H_OPEN             JSON array gh returns for the open-issue search;  H_CURL_EXIT  make curl fail outright
 cat > "$TMP/handler" <<'H'
 #!/usr/bin/env bash
 cmd=$1; shift
 IDS=${H_IDS:-"diet-sangiin pref-04 pref-24 pref-29"}
-# What nginx really returns for an unknown path (try_files … /__spa-fallback.html); no site name in the title.
-SPA_FALLBACK='<html><head><title>Loading...</title></head><body></body></html>'
+# What nginx really returns for an unknown path. #325: the status is 404 and the body is the SPA shell, whose
+# <title> now DOES carry the site name (root.tsx's HydrateFallback + meta). So the title check no longer rejects it —
+# the status check does, and that is the stronger of the two. Both cases are pinned below.
+SPA_FALLBACK='<html lang="ja"><head><title>議員レコード</title><meta name="robots" content="noindex"></head><body></body></html>'
 # The real /assemblies/ page: a link per assembly. The link text is deliberately NOT the full name here — on the
 # live site an id appears both as "宮城" and "宮城県議会" — so the test pins that probe.sh keys on the id only.
 assembly_list_html() {
@@ -214,14 +217,24 @@ t_probe_assembly_page_status() {
   assert_contains "$(cat "$P/out")" "500" "reason names the status"
   assert_contains "$(cat "$P/out")" "ok tls" "tls still ok"
 }
-# nginx answers ANY unknown path with /__spa-fallback.html — 200, <title>Loading...</title>. No site name, so the
-# existing title check alone rejects it. This pins that a vanished prerender is caught.
+# A vanished prerender: nginx answers the unknown path with the SPA shell. #325 made that a 404, so the status
+# check rejects it. This is what the live site does today and is the primary defence.
 t_probe_spa_fallback_on_assembly_page_fails() {
   fresh p_asm_fallback
   # shellcheck disable=SC2016  # literal placeholder: the stub handler substitutes $SPA_FALLBACK, not this shell
+  H_ASSEMBLY_BODY='$SPA_FALLBACK' H_CODE_ASSEMBLY=404 run_probe https://giinrecord.jp && fail "expected non-zero"
+  assert_contains "$(cat "$P/out")" "fail http" "a 404 from a vanished prerender fails http"
+  assert_contains "$(cat "$P/out")" "404" "…and the reason names the status"
+}
+# Defence in depth for #325: even if some future change served the SPA shell with **200** again, the shell has no
+# assembly id in it, so the id check still rejects it. (Before #325 the title check did this job; the shell's
+# <title> now carries the site name, so that check alone would pass — this pins that the probe does not go blind.)
+t_probe_spa_fallback_with_200_still_fails() {
+  fresh p_asm_fallback_200
+  # shellcheck disable=SC2016  # literal placeholder: the stub handler substitutes $SPA_FALLBACK, not this shell
   H_ASSEMBLY_BODY='$SPA_FALLBACK' run_probe https://giinrecord.jp && fail "expected non-zero"
-  assert_contains "$(cat "$P/out")" "fail http" "the SPA fallback fails http"
-  assert_contains "$(cat "$P/out")" "title lacks" "…because its title has no site name"
+  assert_contains "$(cat "$P/out")" "fail http" "the SPA shell served with 200 still fails http"
+  assert_contains "$(cat "$P/out")" "is not this assembly" "…because the shell does not name the assembly"
 }
 # Defence in depth: 200 + the site name, but the body is some other assembly's page.
 t_probe_wrong_assembly_page_fails() {
@@ -441,7 +454,8 @@ test_case "probe: 議会ページの一覧は /assemblies/ のリンク由来（
 test_case "probe: 本番に無い /data/assemblies/index.json は取りに行かない（回帰防止）" t_probe_never_fetches_the_unserved_index_json
 test_case "probe: 議会が増えればコード変更なしで probe 対象になる" t_probe_new_assembly_is_picked_up_without_code_change
 test_case "probe: 議会ページが 500 なら http が fail（パスと status を理由に）" t_probe_assembly_page_status
-test_case "probe: 議会ページが SPA fallback（title が Loading...）なら fail" t_probe_spa_fallback_on_assembly_page_fails
+test_case "probe: 議会ページが消えて SPA fallback の 404 になったら fail（#325）" t_probe_spa_fallback_on_assembly_page_fails
+test_case "probe: SPA fallback が 200 で返っても、議会 id が無いので fail（#325 の二重の守り）" t_probe_spa_fallback_with_200_still_fails
 test_case "probe: 200＋サイト名でも別の議会のページなら fail（多層防御）" t_probe_wrong_assembly_page_fails
 test_case "probe: /assemblies/ にリンクが無ければ fail（黙って pass しない）" t_probe_list_page_without_links_fails
 test_case "probe: /assemblies/ が壊れていれば議会ページは probe しない" t_probe_no_pages_probed_when_list_is_broken
