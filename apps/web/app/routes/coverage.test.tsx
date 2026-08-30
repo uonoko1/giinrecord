@@ -9,7 +9,7 @@ import localMembers from "../test-fixtures/assemblies/members-index.json";
 import sessionsFixture from "../test-fixtures/assemblies/sessions.json";
 import { dataset } from "../test-fixtures/dataset";
 import { CoveragePage, meta as routeMeta } from "./coverage";
-import type { ShugiinBillNameStats } from "../lib/coverage";
+import type { SangiinVoteLinkStats, ShugiinBillNameStats } from "../lib/coverage";
 
 /** #251: 事実の記述だけを載せる。言い訳・評価にあたる語もここで塞ぐ（「残念」「限界」「不十分」など） */
 const EVALUATIVE_WORDS = ["おすすめ", "ランキング", "一致率", "遅れ", "不十分", "優れ", "充実", "網羅", "残念", "限界", "やむを得", "しかたが", "仕方が", "できていません", "ご了承"];
@@ -17,10 +17,10 @@ const assemblies = assembliesFixture as Assembly[];
 const sessions = new Map<string, AssemblySession[]>([["pref-04", sessionsFixture as AssemblySession[]]]);
 const withLocal: Dataset = { ...dataset, assemblies, members: [...dataset.members, ...(localMembers as MemberSummary[])] };
 
-function renderPage(data: Dataset = withLocal, s = sessions, shugiinBillNames: ShugiinBillNameStats | null = null) {
+function renderPage(data: Dataset = withLocal, s = sessions, shugiinBillNames: ShugiinBillNameStats | null = null, sangiinVotes: SangiinVoteLinkStats | null = null) {
   return render(
     <MemoryRouter>
-      <CoveragePage data={data} sessions={s} shugiinBillNames={shugiinBillNames} />
+      <CoveragePage data={data} sessions={s} shugiinBillNames={shugiinBillNames} sangiinVotes={sangiinVotes} />
     </MemoryRouter>,
   );
 }
@@ -146,6 +146,102 @@ describe("/coverage 収録範囲", () => {
     };
     renderPage({ ...withLocal, meta });
     expect(screen.queryByRole("region", { name: "議員ページに紐づかない回次" })).toBeNull();
+  });
+
+  /*
+   * #274: 第215回以前の記録が議員ページに出ない理由と件数を書く。
+   * 調査（docs/research/sangiin-tenure.md）で、参院サイトには在職開始日にあたる一次資料が無いことが分かった。
+   * 書くのは事実だけ:「参院サイトに在職開始日は無い」「他の一次資料は未調査」「記録は残る」「件数はデータから数える」
+   */
+  describe("在職を確認できない理由と件数（#274）", () => {
+    const rosterlessMeta = {
+      ...dataset.meta!,
+      sessions: [200, 201, 204, 216, 221],
+      sources: [...dataset.meta!.sources, { name: "参議院 議員一覧（第216回）", url: "https://www.sangiin.go.jp/japanese/joho1/kousei/giin/216/giin.htm", fetchedAt: "2026-08-22T06:00:00+09:00" }],
+    };
+    /** 数値はすべてここから来る（画面にもコンポーネントにも定数を書かない） */
+    const votes: SangiinVoteLinkStats = {
+      votes: 1000,
+      linked: 700,
+      sessions: [
+        { session: 200, votes: 300, linked: 100 },
+        { session: 201, votes: 200, linked: 200 },
+        { session: 204, votes: 100, linked: 0 },
+        { session: 221, votes: 400, linked: 400 },
+      ],
+    };
+    const render274 = (v: SangiinVoteLinkStats | null = votes) => renderPage({ ...withLocal, meta: rosterlessMeta }, sessions, null, v);
+    const section = () => screen.getByRole("region", { name: "議員ページに紐づかない回次" });
+
+    it("在職開始日が名簿だけでなく参議院の議員個人ページにも無いことを書く", () => {
+      render274();
+      expect(section()).toHaveTextContent("参議院の議員個人ページ");
+      expect(section()).toHaveTextContent("当選年");
+      expect(section().textContent).toContain("月日がありません");
+    });
+
+    it("参院サイト以外の一次資料は調べていないことを、その範囲を限って書く", () => {
+      render274();
+      expect(section()).toHaveTextContent("参議院のサイト以外の一次資料は調べていません");
+      // 「どこにも無い」「回復できない」と言い切らない
+      expect(section().textContent).not.toContain("どこにもありません");
+      expect(section().textContent).not.toContain("回復できません");
+    });
+
+    it("紐づかない票の件数と、その回次をデータから数えて出す（定数を埋め込まない）", () => {
+      render274();
+      // 名簿より前の 3 回次の票 600 のうち、紐づいているのは 300、紐づいていないのは 300
+      expect(section()).toHaveTextContent("延べ 600 件");
+      expect(section()).toHaveTextContent("紐づいているのは 300 件");
+      expect(section()).toHaveTextContent("残る 300 件");
+      expect(section().textContent).not.toContain("%");
+    });
+
+    // 数字を書くなら測り方を添える（docs/WORKING_AGREEMENT.md）
+    it("件数には測り方を添える（どのデータを何で数えたか）", () => {
+      render274();
+      expect(section()).toHaveTextContent("いま配信しているデータの採決 1 件ずつを数えた結果");
+      expect(section()).toHaveTextContent("票に議員の id が入っているかを数えています");
+    });
+
+    it("名簿より前でも紐づく票があることを、突合の規則として書く（一律に出ないとは書かない）", () => {
+      render274();
+      expect(section()).toHaveTextContent("第200—204回");
+      expect(section()).toHaveTextContent("任期満了日が採決の日以後である");
+      expect(section()).toHaveTextContent("名簿より前の回次の票が一律に出ないわけではありません");
+    });
+
+    /*
+     * data/ の作り直し（docs/ops/etl.md）が済むと、この回次の票は 0 件まで減りうる。
+     * 数えた結果をそのまま書くので、0 件になれば 0 件と出る（代理値や固定値に置き換えない）。
+     */
+    it("紐づいた票が 0 件でも、数えた結果をそのまま 0 件と書く", () => {
+      render274({ votes: 600, linked: 0, sessions: [{ session: 200, votes: 600, linked: 0 }] });
+      expect(section()).toHaveTextContent("紐づいているのは 0 件");
+      expect(section()).toHaveTextContent("残る 600 件");
+    });
+
+    it("記録そのものは残ることを、票以外の記録も含めて書く", () => {
+      render274();
+      expect(section().textContent).toContain("採決ページへのリンクはそのまま残ります");
+      expect(section()).toHaveTextContent("発言・議案・質問主意書");
+    });
+
+    it("数えた結果が無ければ件数の段落は出さない（節そのものと理由は残す）", () => {
+      render274(null);
+      expect(section()).toHaveTextContent("議員ページには紐づいていません");
+      expect(section().textContent).not.toContain("延べ");
+    });
+
+    it("紐づいていない票が 1 件も無ければ件数の段落は出さない（無い事実を作らない）", () => {
+      render274({ votes: 600, linked: 600, sessions: [{ session: 200, votes: 600, linked: 600 }] });
+      expect(section().textContent).not.toContain("残る");
+    });
+
+    it("評価語を含まない", () => {
+      const { container } = render274();
+      for (const word of EVALUATIVE_WORDS) expect(container.textContent).not.toContain(word);
+    });
   });
 
   // #251 / #235: 衆院の記録が議員ページに紐づく範囲。名簿が「現在」の 1 時点しかないという 1 つの事実にまとめる

@@ -2,9 +2,9 @@ import { Link, type MetaArgs, useLoaderData } from "react-router";
 import { CoverBrand } from "../components/CoverBrand";
 import { SiteFooter } from "../components/SiteFooter";
 import { assemblyPath, bundledSessions } from "../lib/assemblies";
-import { buildCoverage, type Coverage, type DietCoverage, formatLocalSessionRange, formatSessionRange, hasSessionGaps, linkedRecordCounts, type LocalCoverage, rosterlessSessions, rosterScope, type SessionRange, shugiinBillNameCoverage, type ShugiinBillNameStats, shugiinQuestionCoverage, speechCoverage } from "../lib/coverage";
+import { buildCoverage, type Coverage, type DietCoverage, formatLocalSessionRange, formatSessionRange, hasSessionGaps, linkedRecordCounts, type LocalCoverage, rosterlessSessions, rosterScope, sangiinUnlinkedVotes, type SangiinVoteLinkStats, type SessionRange, shugiinBillNameCoverage, type ShugiinBillNameStats, shugiinQuestionCoverage, speechCoverage } from "../lib/coverage";
 import type { AssemblySession } from "../lib/data-contract";
-import { defaultDataDir, readShugiinBillNameStats } from "../lib/data-files";
+import { defaultDataDir, readSangiinVoteLinkStats, readShugiinBillNameStats } from "../lib/data-files";
 import { type Dataset, dataset as bundled } from "../lib/dataset";
 import { formatDate, formatDateTime } from "../lib/format";
 import { seoMeta } from "../lib/seo";
@@ -18,10 +18,11 @@ const DESCRIPTION = "このサイトに入っている議会・回次・会期�
  * 氏名（#251）は `bills/index.json` に無く、議案 1 件ずつの JSON にしかない。全部をブラウザに送らずに数えるため、
  * ビルド時に Node で数えた結果だけを loader で渡す（/coverage は prerender.ts の STATIC_PATHS にあるので loader を置ける）。 */
 
-export type CoverageLoaderData = { shugiinBillNames: ShugiinBillNameStats | null };
+export type CoverageLoaderData = { shugiinBillNames: ShugiinBillNameStats | null; sangiinVotes: SangiinVoteLinkStats | null };
 
 export async function loader(): Promise<CoverageLoaderData> {
-  return { shugiinBillNames: await readShugiinBillNameStats(defaultDataDir()) };
+  const dataDir = defaultDataDir();
+  return { shugiinBillNames: await readShugiinBillNameStats(dataDir), sangiinVotes: await readSangiinVoteLinkStats(dataDir) };
 }
 
 export function meta({ location }: MetaArgs) {
@@ -33,8 +34,8 @@ const n = (v: number) => v.toLocaleString("ja-JP");
 const KIND_LABEL = { national: "国会", prefectural: "都道府県議会", municipal: "政令指定都市議会" } as const;
 
 export default function CoverageRoute() {
-  const { shugiinBillNames } = useLoaderData<typeof loader>();
-  return <CoveragePage shugiinBillNames={shugiinBillNames} />;
+  const { shugiinBillNames, sangiinVotes } = useLoaderData<typeof loader>();
+  return <CoveragePage shugiinBillNames={shugiinBillNames} sangiinVotes={sangiinVotes} />;
 }
 
 /**
@@ -45,10 +46,12 @@ export function CoveragePage({
   data = bundled,
   sessions = bundledSessions(),
   shugiinBillNames = null,
+  sangiinVotes = null,
 }: {
   data?: Dataset;
   sessions?: ReadonlyMap<string, AssemblySession[]>;
   shugiinBillNames?: ShugiinBillNameStats | null;
+  sangiinVotes?: SangiinVoteLinkStats | null;
 }) {
   const coverage = buildCoverage(data, sessions);
   return (
@@ -66,7 +69,7 @@ export function CoveragePage({
         <LocalSection local={coverage.local} />
 
         <SpeechSection data={data} />
-        <RosterlessSection meta={data.meta} />
+        <RosterlessSection meta={data.meta} votes={sangiinVotes} />
         <ShugiinRosterSection data={data} billNames={shugiinBillNames} />
 
         <section className="section" aria-labelledby="coverage-not-recorded-heading">
@@ -300,15 +303,29 @@ function SpeechSection({ data }: { data: Dataset }) {
 }
 
 /**
- * 名簿の無い回次（#219 / #230）。参議院の回次ごとの議員名簿は最古の 1 回次分より前が公開されていないので、
- * その回次の票は議員ページに紐づかない。#230 より前は「現行名簿と氏名が一致する少数」が在職未確認のまま
- * 紐づいており、この節はそれを「推定を含む」と書いていた。#230 でその経路を塞いだので、いまは紐づかない。
- * 氏名・当時の会派・採決ページへのリンクは残る（記録は失われない）ことも併せて書く。
- * 事実として書き、評価しない。回次はデータ（meta）から数える（画面に数値を書かない）。
+ * 名簿の無い回次（#219 / #230 / #274）。参議院の回次ごとの議員名簿は最古の 1 回次分より前が公開されていないので、
+ * その回次の票の多くは議員ページに紐づかない。#230 より前は「現行名簿と氏名が一致する少数」が在職未確認のまま
+ * 紐づいており、この節はそれを「推定を含む」と書いていた。#230 でその経路を塞いだ。
+ *
+ * #274 で足したのは 3 つで、どれも事実だけを書く:
+ * 1. **在職開始日が参議院のどこに無いか**。名簿だけでなく議員個人ページにも無い（あるのは当選年で月日が無い）。
+ *    調査は #274（`docs/research/sangiin-tenure.md`）。**主張の範囲は参議院のサイトに限る**: 他の一次資料は調べていないので、
+ *    「どこにも無い」「回復できない」とは書かない（実態より強い主張をしない）。
+ * 2. **紐づかない票の件数**。`readSangiinVoteLinkStats` が `rollcalls/{回次}/{id}.json` を数えた結果で、
+ *    `memberId` の有無という突合結果そのもの。定数も代理値も書かない（データが変われば再ビルドで追随する）。
+ *    件数には**測り方**（何を何で数えたか）を添える。
+ *    書くのは数えた事実だけで、**個々の票がなぜ紐づいたか**は書かない: 数えているのは `memberId` の有無で、
+ *    その理由は数えていない（`data/` の作り直し前は #230 より前の規則で紐づいた票が残っている。docs/ops/etl.md）。
+ *    紐づく余地があること自体は突合の規則から言えるので、そちらは上の段落に**規則として**書く。
+ * 3. **記録そのものは残る**こと。票以外（発言・議案・質問主意書）も同じで、一次資料へのリンクは生きている。
+ *
+ * 事実として書き、評価しない。回次も件数もデータから数える（画面に数値を書かない）。
  */
-function RosterlessSection({ meta }: { meta: Dataset["meta"] }) {
+function RosterlessSection({ meta, votes }: { meta: Dataset["meta"]; votes: SangiinVoteLinkStats | null }) {
   const rosterless = rosterlessSessions(meta);
   const range = formatSessionRange(rosterless?.range ?? null);
+  const counted = sangiinUnlinkedVotes(votes, rosterless);
+  const countedRange = formatSessionRange(counted?.range ?? null);
   if (!rosterless || !range || rosterless.sessions.length === 0) return null;
   return (
     <section className="section" aria-labelledby="coverage-rosterless-heading">
@@ -318,7 +335,7 @@ function RosterlessSection({ meta }: { meta: Dataset["meta"] }) {
       <p className="card__body">
         参議院の回次ごとの議員名簿は、<span className="num">第{rosterless.earliestRoster}回</span>より前が公開されていません。そのため{" "}
         <span className="num">{range}</span>（<span className="num">{n(rosterless.sessions.length)}</span> 回次）の票は、
-        採決ページには氏名と当時の会派が載りますが、<strong>議員ページには紐づいていません</strong>。
+        採決ページには氏名と当時の会派が載りますが、<strong>その多くが議員ページには紐づいていません</strong>。
         氏名だけを手がかりに議員に紐づけることはしていません（同姓同名の別人を 1 人にしないため）。
       </p>
       <p className="card__body">
@@ -328,7 +345,33 @@ function RosterlessSection({ meta }: { meta: Dataset["meta"] }) {
         <a href="https://github.com/uonoko1/giinrecord/issues/230" target="_blank" rel="noopener noreferrer">
           Issue #230
         </a>
-        ）。紐づかなかった票も、氏名・当時の会派・採決ページへのリンクはそのまま残ります。
+        ）。名簿より前の回次でも、<strong>より前の回次の名簿に載っていて、任期満了日が採決の日以後である</strong>ことを
+        名簿から確認できれば紐づけます。この確認ができる票がどれだけあるかは回次によって違うので、
+        名簿より前の回次の票が一律に出ないわけではありません。
+      </p>
+      <p className="card__body">
+        在職開始日は<strong>参議院の議員個人ページにもありません</strong>。個人ページに載る在職の手がかりは
+        <span className="num">当選年</span>（「昭和61年、平成4年、10年…」）だけで、<strong>月日がありません</strong>。
+        参議院の通常選挙は会期の途中に行われるので、当選した年には選挙の前の回次と後の回次の両方があり、
+        年だけではどちらの回次から在職していたかが決まりません（
+        <a href="https://github.com/uonoko1/giinrecord/issues/274" target="_blank" rel="noopener noreferrer">
+          Issue #274
+        </a>
+        に調査の記録があります）。ここで書いているのは参議院のサイトに載っている情報についてで、
+        <strong>参議院のサイト以外の一次資料は調べていません</strong>。
+      </p>
+      {counted && countedRange && counted.unlinked > 0 && (
+        <p className="card__body">
+          名簿より前の <span className="num">{countedRange}</span> にある票は延べ <span className="num">{n(counted.votes)}</span> 件で、
+          そのうち議員に紐づいているのは <span className="num">{n(counted.linked)}</span> 件、
+          残る <span className="num">{n(counted.unlinked)}</span> 件は<strong>議員ページに出ていません</strong>。
+          この数は、いま配信しているデータの採決 1 件ずつを数えた結果です（票に議員の id が入っているかを数えています）。
+        </p>
+      )}
+      <p className="card__body">
+        紐づかなかった票も、氏名・当時の会派・採決ページへのリンクはそのまま残ります。
+        <strong>発言・議案・質問主意書</strong>も同じで、議員に紐づかなかったものは各記録のページに原文のまま載り、
+        一次資料へのリンクも残ります。
       </p>
     </section>
   );

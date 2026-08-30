@@ -142,6 +142,57 @@ export function linkedRecordCounts(members: readonly { house: House; counts: { r
 }
 
 /**
+ * 参院の票が議員に紐づいているかを回次ごとに数えた結果（#274）。数えるのは Node 側
+ * （`data-files.ts` の `readSangiinVoteLinkStats`）で、ここは形と表示の判断だけ。
+ */
+export interface SangiinVoteLinkStats {
+  /** 票の延べ数 */
+  votes: number;
+  /** そのうち議員に紐づいた数（`memberId` のある票） */
+  linked: number;
+  /** 回次ごとの、票の延べ数と紐づいた数 */
+  sessions: { session: number; votes: number; linked: number }[];
+}
+
+/**
+ * 最古の名簿より前の回次にある票のうち、議員ページに出ていない数（#274）。
+ *
+ * 名簿の無い回次でも票がすべて紐づかないわけではない。`tenureVerified` の規則(b)
+ * （より前の回次の名簿に載っていて、任期満了日が採決の日以後）で紐づく票があるので、
+ * 「名簿より前＝出ない」とは書かず、**紐づいた数と紐づかなかった数を分けて数える**。
+ * `unlinkedRange` は紐づかない票が実際にある回次だけの範囲で、票が全部紐づいた回次は入れない。
+ */
+export interface SangiinUnlinkedVotes {
+  /** 名簿より前の回次にある票の延べ数 */
+  votes: number;
+  /** そのうち議員に紐づいた数 */
+  linked: number;
+  /** そのうち議員に紐づいていない数（votes - linked） */
+  unlinked: number;
+  /** 名簿より前で票のある回次の範囲 */
+  range: SessionRange;
+  /** 紐づかない票が実際にある回次の範囲。1 回次も無ければ null */
+  unlinkedRange: SessionRange | null;
+}
+
+/** 数えた結果と `rosterlessSessions` から、名簿より前の回次の票を数える。材料が欠ければ null（推定しない）。 */
+export function sangiinUnlinkedVotes(stats: SangiinVoteLinkStats | null | undefined, rosterless: RosterlessSessions | null | undefined): SangiinUnlinkedVotes | null {
+  if (!stats || !rosterless) return null;
+  const before = stats.sessions.filter((s) => s.session < rosterless.earliestRoster);
+  const range = sessionRange(before.map((s) => s.session));
+  if (!range) return null;
+  const votes = before.reduce((t, s) => t + s.votes, 0);
+  const linked = before.reduce((t, s) => t + s.linked, 0);
+  return {
+    votes,
+    linked,
+    unlinked: votes - linked,
+    range,
+    unlinkedRange: sessionRange(before.filter((s) => s.votes > s.linked).map((s) => s.session)),
+  };
+}
+
+/**
  * 両院の名簿が公開されている範囲の違い（#251）。衆院は「現在」の 1 時点だけ、参院は回次ごとだが最古の 1 回次より前は無い。
  * どちらも「名簿のある範囲の外は紐づかない」という同じ制約下にあり、違うのは名簿が覆う範囲だけなので、
  * 参院を「制約が無い」と書かないための材料としてこの 2 つを並べて持つ（すぐ上の節 RosterlessSection と矛盾させない）。

@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { assemblyPaths, memberPaths, readAssemblies, readAssemblySessions, readLocalRollCallIndex, readMemberDetail, readMeta, readRollCall, readShugiinBillNameStats, rollCallPaths } from "./data-files";
+import { assemblyPaths, memberPaths, readAssemblies, readAssemblySessions, readLocalRollCallIndex, readMemberDetail, readMeta, readRollCall, readSangiinVoteLinkStats, readShugiinBillNameStats, rollCallPaths } from "./data-files";
 
 const fixtures = fileURLToPath(new URL("../test-fixtures/data", import.meta.url));
 const missing = fileURLToPath(new URL("../test-fixtures/does-not-exist", import.meta.url));
@@ -219,5 +219,54 @@ describe("readShugiinBillNameStats（#251）", () => {
     await writeFile(path.join(dir, "bills", "221", "221-衆法-1.json"), JSON.stringify({ id: "221-衆法-1", house: "shugiin", session: 221, title: "法案", submitterNames: ["髙橋邊子"] }));
     const stats = await readShugiinBillNameStats(dir);
     expect(stats?.sessions).toEqual([{ session: 221, names: 1, inRoster: 1 }]);
+  });
+});
+
+describe("readSangiinVoteLinkStats（#274）", () => {
+  /** rollcalls/{回次}/{id}.json を置いた一時ディレクトリ */
+  async function votesDataDir(): Promise<string> {
+    const dir = await mkdtemp(path.join(tmpdir(), "seiji-votes-"));
+    await mkdir(path.join(dir, "rollcalls", "200"), { recursive: true });
+    await mkdir(path.join(dir, "rollcalls", "221"), { recursive: true });
+    await writeFile(
+      path.join(dir, "rollcalls", "200", "200-1115-v001.json"),
+      JSON.stringify({
+        id: "200-1115-v001",
+        session: 200,
+        date: "2019-11-15",
+        votes: [
+          { nameText: "足立 敏之", group: "自民", value: "賛成", memberId: "" },
+          { nameText: "阿達 雅志", group: "自民", value: "賛成", memberId: "m_014002" },
+          { nameText: "岡田 広", group: "自民", value: "賛成", memberId: "" },
+        ],
+      }),
+    );
+    await writeFile(
+      path.join(dir, "rollcalls", "200", "200-1115-v002.json"),
+      JSON.stringify({ id: "200-1115-v002", session: 200, date: "2019-11-15", votes: [{ nameText: "宇都 隆史", group: "自民", value: "反対", memberId: "" }] }),
+    );
+    await writeFile(
+      path.join(dir, "rollcalls", "221", "221-0605-v001.json"),
+      JSON.stringify({ id: "221-0605-v001", session: 221, date: "2026-06-05", votes: [{ nameText: "阿達 雅志", group: "自民", value: "賛成", memberId: "m_014002" }] }),
+    );
+    return dir;
+  }
+
+  it("回次ごとに、票の延べ数と議員に紐づいた数を数える", async () => {
+    const stats = await readSangiinVoteLinkStats(await votesDataDir());
+    expect(stats?.sessions).toEqual([
+      { session: 200, votes: 4, linked: 1 },
+      { session: 221, votes: 1, linked: 1 },
+    ]);
+  });
+
+  it("全体の延べ数と紐づいた数も返す", async () => {
+    const stats = await readSangiinVoteLinkStats(await votesDataDir());
+    expect(stats?.votes).toBe(5);
+    expect(stats?.linked).toBe(2);
+  });
+
+  it("rollcalls/ が無ければ null（無い事実を作らない）", async () => {
+    expect(await readSangiinVoteLinkStats(missing)).toBeNull();
   });
 });
