@@ -44,7 +44,14 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     concurrency:
-      group: deploy-${{ inputs.target_dir }}
+      # Issue #308: deploy 鍵は authorized_keys の command= で `rrsync /var/www/giinrecord` に
+      # 固定されており、rrsync は **制限ルート全体**に flock(LOCK_EX|LOCK_NB) を掛ける。
+      # site/ と staging/ は同じロックを奪い合うので、target_dir ごとに group を分けていると
+      # すり抜けて `rrsync error: Another instance of rrsync is already accessing this directory.`
+      # → `connection unexpectedly closed (0 bytes received)` で落ちる（直近10 run で2回）。
+      # group はロックの単位に合わせる。deploy-site.yml の呼び出し元3つ
+      # （deploy-staging.yml / deploy-data.yml / release.yml）すべてがこれ1つで直列化される。
+      group: deploy-vps
       cancel-in-progress: false
     outputs:
       sha: ${{ steps.head.outputs.sha }}
