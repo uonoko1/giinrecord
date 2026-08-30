@@ -137,18 +137,22 @@ function tenureCarriedOver(member: Member, at: RecordAt): boolean {
  */
 export function resolveMember(index: NameIndex, nameText: string, group: string | undefined, at?: RecordAt): Member | undefined {
   const named = index.get(normalizeName(nameText)) ?? [];
-  const verified = at === undefined ? [] : named.filter((m) => tenureVerified(m, at));
-  // #320: 院を移った議員は、移る前の名簿の行が (b) で残る（参院の `to` は選挙で決まる任期なので、
-  // 途中で辞職しても消えない）。(a) は「その回次の議員一覧に載っている」という**直接の記載**、
-  // (b) は「前の回次に載っていて任期が残る」という**推論**なので、両方が立つときは (a) を採る。
-  // 在職確認を緩めてはいない（どちらも確認済みの候補で、その中の優先順位を決めているだけ）。
-  const direct = at === undefined ? [] : verified.filter((m) => rosterCovers(m, at));
-  const candidates = direct.length > 0 ? direct : verified;
+  const candidates = at === undefined ? [] : named.filter((m) => tenureVerified(m, at));
   if (candidates.length === 1) return candidates[0];
   if (candidates.length === 0 || at === undefined) return undefined;
   const voteGroup = group ?? "";
   const byGroup = candidates.filter((m) => inGroupAt(m, voteGroup, at.session));
-  return byGroup.length === 1 ? byGroup[0] : undefined;
+  if (byGroup.length === 1) return byGroup[0];
+  // #320: ここまでで絞れないのは、会派まで同じ候補が複数あるとき。院を移った議員は、移る前の名簿の行が
+  // (b) で残るので（参院の `to` は選挙で決まる任期満了日で、途中で辞職しても消えない）、同一人物の
+  // 2 行が会派も同じまま並ぶ。(a) は「その回次の議員一覧に載っている」という**直接の記載**、
+  // (b) は「前の回次に載っていて任期が残る」という**推論**なので、(a) の行を採る。
+  //
+  // 会派で絞ったあとに置くのが要点。先に (a) で絞ると、**会派が違う別人**（(a) で立つ）が
+  // 正しい候補（(b) で立つ）を押しのける。会派は名簿に書いてある事実で、(a)/(b) の別より強い手がかり。
+  const tied = byGroup.length > 1 ? byGroup : candidates;
+  const direct = tied.filter((m) => rosterCovers(m, at));
+  return direct.length === 1 ? direct[0] : undefined;
 }
 
 export type NameIndex = Map<string, Member[]>;

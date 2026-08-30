@@ -252,6 +252,19 @@ describe("在職を確認できない氏名一致は紐づけない（#230）", 
     assert.equal(rc.votes[0].memberId, "h_1");
   });
 
+  // #320 レビュー: (a) の優先を**会派で絞る前**に置くと、会派の違う別人が正しい候補を押しのける。
+  // 会派は名簿に書いてある事実で、(a)/(b) の別より強い手がかりなので、必ず会派を先に見る。
+  test("会派が違う同姓同名は、(a) の優先より会派で絞るほうが先（#320 の退行防止）", () => {
+    const shugiinTerm: MemberTerm = { house: "shugiin", group: "立憲民主・無所属", district: "", from: "", sessionFrom: 221 };
+    const members = [
+      withTerms("m_1", "山田 太郎", [t("自由民主党・無所属の会", 216, 220, "2028-07-25")]), // (b) で立つ
+      withTerms("h_1", "山田 太郎", [shugiinTerm]),                                          // (a) で立つが会派が違う
+    ];
+    // (b) 側の会派で照会したら (b) 側に紐づく。(a) を先に効かせると h_1 になってしまう
+    assert.equal(matchVotes(rc221("山田 太郎", "自由民主党・無所属の会"), members).rollCall.votes[0].memberId, "m_1");
+    assert.equal(matchVotes(rc221("山田 太郎", "立憲民主・無所属"), members).rollCall.votes[0].memberId, "h_1");
+  });
+
   // 同姓同名の**別人**（任期が重なる。実在: 鬼木誠は衆院と参院に別人がいて会派も違う）。
   // どちらも (a) で立つので #320 の優先では絞れず、会派で絞る従来の手順に落ちる。
   test("両方が (a) で立つ同姓同名は、会派で絞る（#320 で変えない）", () => {
