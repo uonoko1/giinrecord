@@ -381,6 +381,19 @@
    "title": "金融商品取引法及び資金決済に関する法律の一部を改正する法律案"
   },
   {
+   "committee": "経済産業委員会",
+   "date": "2026-04-08",
+   "estimated": false,
+   "firstDate": "2026-04-08",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104080X00120260408_000",
+   "meetings": 17,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104080X00120260408/0"
+  },
+  {
    "billId": "221-閣法-56",
    "date": "2026-04-07",
    "estimated": true,

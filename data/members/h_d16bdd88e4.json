@@ -87,6 +87,19 @@
    "status": "答弁受理",
    "submitterText": "山本 ジョージ君",
    "title": "西サハラに関する質問主意書"
+  },
+  {
+   "committee": "決算行政監視委員会",
+   "date": "2026-05-27",
+   "estimated": false,
+   "firstDate": "2026-05-27",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104127X00120260527_000",
+   "meetings": 3,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104127X00120260527/0"
   }
  ]
 }

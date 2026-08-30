@@ -225,16 +225,6 @@
    "title": "国会議員の歳費、旅費及び手当等に関する法律の一部を改正する法律案"
   },
   {
-   "chars": 2475,
-   "date": "2026-05-26",
-   "excerpt": "自由民主党の谷川とむです。 私は、自由民主党・無所属の会を代表し、ただいま議題となりました内閣提出の刑事訴訟法の一部を改正する法律案について質問いたします。（拍手） 言うまでもなく、冤罪、罪を犯していない者が処罰されることはあってはなりません。有罪の確定判決が誤っている場合には、速やかに救済する必要があります。そのための手段として、再審制度は極めて重要な意義を有しています。 他方で、再審制度につい",
-   "kind": "speech",
-   "meeting": "本会議 第20号",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105254X02020260526/45",
-   "speechId": "122105254X02020260526_045"
-  },
-  {
    "billId": "221-閣法-62",
    "date": "2026-05-15",
    "estimated": true,
@@ -337,6 +327,19 @@
    "stanceText": "全会一致",
    "status": "成立",
    "title": "自動車の運転により人を死傷させる行為等の処罰に関する法律及び道路交通法の一部を改正する法律案"
+  },
+  {
+   "committee": "地域活性化・こども政策・デジタル社会形成に関する特別委員会",
+   "date": "2026-04-14",
+   "estimated": false,
+   "firstDate": "2026-04-14",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122105367X00220260414_000",
+   "meetings": 10,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105367X00220260414/0"
   },
   {
    "billId": "221-閣法-60",
@@ -545,6 +548,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "民法等の一部を改正する法律案"
+  },
+  {
+   "committee": "法務委員会",
+   "date": "2026-04-03",
+   "estimated": false,
+   "firstDate": "2026-04-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-26",
+   "meetingId": "122105206X00120260403_000",
+   "meetings": 13,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105206X00120260403/0"
   },
   {
    "billId": "221-閣法-41",
@@ -1106,6 +1122,19 @@
    "title": "インテリジェンスに係る態勢の整備の推進に関する法律案"
   },
   {
+   "committee": "予算委員会公聴会",
+   "date": "2026-03-10",
+   "estimated": false,
+   "firstDate": "2026-03-10",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-10",
+   "meetingId": "122105262X00120260310_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105262X00120260310/0"
+  },
+  {
    "billId": "221-閣法-18",
    "date": "2026-03-06",
    "estimated": true,
@@ -1275,6 +1304,19 @@
    "title": "金融機能の強化のための特別措置に関する法律等の一部を改正する法律案"
   },
   {
+   "committee": "予算委員会",
+   "date": "2026-02-27",
+   "estimated": false,
+   "firstDate": "2026-02-27",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-27",
+   "meetingId": "122105261X00220260227_000",
+   "meetings": 16,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00220260227/0"
+  },
+  {
    "billId": "221-閣法-6",
    "date": "2026-02-20",
    "estimated": true,
@@ -1390,6 +1432,32 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "議院運営委員会図書館運営小委員会",
+   "date": "2026-02-19",
+   "estimated": false,
+   "firstDate": "2026-02-19",
+   "kind": "committeeRole",
+   "lastDate": "2026-02-19",
+   "meetingId": "122104040X00120260219_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104040X00120260219/0"
+  },
+  {
+   "committee": "議院運営委員会",
+   "date": "2026-02-18",
+   "estimated": false,
+   "firstDate": "2026-02-18",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104024X00120260218_000",
+   "meetings": 34,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104024X00120260218/0"
   }
  ]
 }

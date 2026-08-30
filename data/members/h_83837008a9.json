@@ -427,16 +427,6 @@
    "title": "人工衛星等の打上げ及び人工衛星の管理に関する法律等の一部を改正する法律案"
   },
   {
-   "chars": 3268,
-   "date": "2026-04-23",
-   "excerpt": "国民民主党・無所属クラブの野村美穂です。 私は、会派を代表して、国民民主党提出のインテリジェンス態勢整備推進法案及び内閣提出の国家情報会議設置法案の両案について、賛成の立場から討論をいたします。（拍手） インテリジェンスとは、国と国民の安全を守るための施策の一つであり、安全保障の施策の証拠となる情報の収集、整理、分析及び活用を行うものです。安全保障のための施策は、時の政権の思いつきで行われるべきも",
-   "kind": "speech",
-   "meeting": "本会議 第15号",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105254X01520260423/22",
-   "speechId": "122105254X01520260423_022"
-  },
-  {
    "billId": "221-衆法-8",
    "date": "2026-04-22",
    "estimated": true,
@@ -695,6 +685,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "民法等の一部を改正する法律案"
+  },
+  {
+   "committee": "内閣委員会",
+   "date": "2026-04-03",
+   "estimated": false,
+   "firstDate": "2026-04-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-12",
+   "meetingId": "122104889X00120260403_000",
+   "meetings": 19,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104889X00120260403/0"
   },
   {
    "billId": "221-閣法-41",
@@ -1289,6 +1292,19 @@
    "title": "インテリジェンスに係る態勢の整備の推進に関する法律案"
   },
   {
+   "committee": "国土交通委員会",
+   "date": "2026-03-10",
+   "estimated": false,
+   "firstDate": "2026-03-10",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-10",
+   "meetingId": "122104319X00220260310_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104319X00220260310/0"
+  },
+  {
    "billId": "221-閣法-18",
    "date": "2026-03-06",
    "estimated": true,
@@ -1584,6 +1600,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "政治改革に関する特別委員会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104575X00120260220_000",
+   "meetings": 9,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104575X00120260220/0"
   }
  ]
 }

@@ -264,6 +264,19 @@
    "title": "刑事訴訟法の一部を改正する法律案"
   },
   {
+   "committee": "地域活性化・こども政策・デジタル社会形成に関する特別委員会",
+   "date": "2026-05-14",
+   "estimated": false,
+   "firstDate": "2026-05-14",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-14",
+   "meetingId": "122105367X00720260514_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105367X00720260514/0"
+  },
+  {
    "billId": "221-閣法-40",
    "date": "2026-04-24",
    "estimated": true,
@@ -1005,6 +1018,19 @@
    "title": "予算委員長坂本哲志君解任決議案"
   },
   {
+   "committee": "予算委員会",
+   "date": "2026-03-12",
+   "estimated": false,
+   "firstDate": "2026-03-12",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-12",
+   "meetingId": "122105261X01020260312_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X01020260312/0"
+  },
+  {
    "billId": "221-閣法-23",
    "date": "2026-03-10",
    "estimated": true,
@@ -1224,6 +1250,19 @@
    "stanceText": "多数",
    "status": "両院承認",
    "title": "放送法第七十条第二項の規定に基づき、承認を求めるの件"
+  },
+  {
+   "committee": "文部科学委員会",
+   "date": "2026-03-03",
+   "estimated": false,
+   "firstDate": "2026-03-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122105124X00120260303_000",
+   "meetings": 14,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105124X00120260303/0"
   },
   {
    "billId": "221-閣法-9",

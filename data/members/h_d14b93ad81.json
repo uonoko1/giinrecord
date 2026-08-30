@@ -154,6 +154,19 @@
    "title": "有人国境離島地域の保全及び特定有人国境離島地域に係る地域社会の維持に関する特別措置法の一部を改正する法律案"
   },
   {
+   "committee": "政治改革に関する特別委員会",
+   "date": "2026-06-18",
+   "estimated": false,
+   "firstDate": "2026-06-18",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-18",
+   "meetingId": "122104575X00520260618_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104575X00520260618/0"
+  },
+  {
    "billId": "221-衆法-18",
    "date": "2026-06-16",
    "kind": "bill",
@@ -748,16 +761,6 @@
    "title": "令和八年度一般会計暫定予算"
   },
   {
-   "chars": 3046,
-   "date": "2026-03-26",
-   "excerpt": "日本維新の会の青柳仁士です。 会派を代表し、高市総理の帰朝報告について質問します。（拍手） まず冒頭、高市総理を始め関係閣僚及び外務省の皆様の御尽力に敬意を表します。 今回の訪米では、トランプ大統領との会談を通じ、日米同盟の揺るぎない結束が改めて確認されました。両首脳は、強固な信頼関係の下、経済、安全保障など幅広い分野で質の高い協力を具体的に進め、同盟を更なる高みに引き上げていくことで一致しました",
-   "kind": "speech",
-   "meeting": "本会議 第8号",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105254X00820260326/14",
-   "speechId": "122105254X00820260326_014"
-  },
-  {
    "billId": "221-閣法-36",
    "date": "2026-03-24",
    "estimated": true,
@@ -1239,6 +1242,19 @@
    "title": "防災庁設置法案"
   },
   {
+   "committee": "外務委員会",
+   "date": "2026-03-04",
+   "estimated": false,
+   "firstDate": "2026-03-04",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122103968X00120260304_000",
+   "meetings": 15,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122103968X00120260304/0"
+  },
+  {
    "billId": "221-閣法-12",
    "date": "2026-03-03",
    "estimated": true,
@@ -1445,6 +1461,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "災害対策特別委員会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104339X00120260220_000",
+   "meetings": 10,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104339X00120260220/0"
   }
  ]
 }

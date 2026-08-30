@@ -17,6 +17,19 @@
  ],
  "timeline": [
   {
+   "committee": "北朝鮮による拉致問題等に関する特別委員会",
+   "date": "2026-07-24",
+   "estimated": false,
+   "firstDate": "2026-07-24",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122105253X00320260724_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105253X00320260724/0"
+  },
+  {
    "billId": "221-衆法-38",
    "date": "2026-07-22",
    "estimated": true,
@@ -236,6 +249,19 @@
    "title": "国会議員の歳費、旅費及び手当等に関する法律の一部を改正する法律案"
   },
   {
+   "committee": "法務委員会",
+   "date": "2026-05-26",
+   "estimated": false,
+   "firstDate": "2026-05-26",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-26",
+   "meetingId": "122105206X01320260526_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105206X01320260526/0"
+  },
+  {
    "billId": "221-閣法-62",
    "date": "2026-05-15",
    "estimated": true,
@@ -286,6 +312,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "人工衛星等の打上げ及び人工衛星の管理に関する法律等の一部を改正する法律案"
+  },
+  {
+   "committee": "文部科学委員会",
+   "date": "2026-04-24",
+   "estimated": false,
+   "firstDate": "2026-04-24",
+   "kind": "committeeRole",
+   "lastDate": "2026-04-24",
+   "meetingId": "122105124X00820260424_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105124X00820260424/0"
   },
   {
    "billId": "221-衆法-8",
@@ -704,16 +743,6 @@
    "title": "令和八年度一般会計暫定予算"
   },
   {
-   "chars": 2290,
-   "date": "2026-03-26",
-   "excerpt": "自由民主党の中曽根康隆です。 私は、自由民主党・無所属の会を代表して、高市総理の訪米報告について、全て総理に質問をいたします。（拍手） まず、今般、国際情勢がますます厳しさを増し、イランをめぐる情勢もある中、日本の総理として訪米され、トランプ大統領と対面での日米首脳会談を実施されたことは、大変意義深かったと考えております。この度の訪問により、両首脳は、互いの強固な信頼関係の下、日米同盟を更なる高み",
-   "kind": "speech",
-   "meeting": "本会議 第8号",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105254X00820260326/6",
-   "speechId": "122105254X00820260326_006"
-  },
-  {
    "billId": "221-閣法-36",
    "date": "2026-03-24",
    "estimated": true,
@@ -1117,6 +1146,19 @@
    "title": "インテリジェンスに係る態勢の整備の推進に関する法律案"
   },
   {
+   "committee": "予算委員会公聴会",
+   "date": "2026-03-10",
+   "estimated": false,
+   "firstDate": "2026-03-10",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-10",
+   "meetingId": "122105262X00120260310_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105262X00120260310/0"
+  },
+  {
    "billId": "221-閣法-18",
    "date": "2026-03-06",
    "estimated": true,
@@ -1195,6 +1237,19 @@
    "title": "防災庁設置法案"
   },
   {
+   "committee": "外務委員会",
+   "date": "2026-03-06",
+   "estimated": false,
+   "firstDate": "2026-03-06",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122103968X00220260306_000",
+   "meetings": 12,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122103968X00220260306/0"
+  },
+  {
    "billId": "221-閣法-12",
    "date": "2026-03-03",
    "estimated": true,
@@ -1245,6 +1300,19 @@
    "stanceText": "多数",
    "status": "両院承認",
    "title": "放送法第七十条第二項の規定に基づき、承認を求めるの件"
+  },
+  {
+   "committee": "予算委員会",
+   "date": "2026-03-02",
+   "estimated": false,
+   "firstDate": "2026-03-02",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-02",
+   "meetingId": "122105261X00320260302_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00320260302/0"
   },
   {
    "billId": "221-閣法-9",
@@ -1401,6 +1469,71 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "北朝鮮による拉致問題等に関する特別委員会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-02",
+   "meetingId": "122105253X00120260220_000",
+   "meetings": 2,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105253X00120260220/0"
+  },
+  {
+   "committee": "政治改革に関する特別委員会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-02-20",
+   "meetingId": "122104575X00120260220_000",
+   "meetings": 1,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104575X00120260220/0"
+  },
+  {
+   "committee": "憲法審査会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-02-20",
+   "meetingId": "122104183X00120260220_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104183X00120260220/0"
+  },
+  {
+   "committee": "議院運営委員会庶務小委員会",
+   "date": "2026-02-19",
+   "estimated": false,
+   "firstDate": "2026-02-19",
+   "kind": "committeeRole",
+   "lastDate": "2026-02-19",
+   "meetingId": "122104037X00120260219_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104037X00120260219/0"
+  },
+  {
+   "committee": "議院運営委員会",
+   "date": "2026-02-18",
+   "estimated": false,
+   "firstDate": "2026-02-18",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104024X00120260218_000",
+   "meetings": 39,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104024X00120260218/0"
   }
  ]
 }

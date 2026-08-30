@@ -118,6 +118,19 @@
    "title": "賃金上昇を上回る所得税の負担増加に対処するために所得税に関し講ずべき措置に関する法律案"
   },
   {
+   "committee": "厚生労働委員会",
+   "date": "2026-07-15",
+   "estimated": false,
+   "firstDate": "2026-07-15",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-15",
+   "meetingId": "122104260X01920260715_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104260X01920260715/0"
+  },
+  {
    "billId": "221-衆法-29",
    "date": "2026-07-10",
    "estimated": true,
@@ -273,6 +286,19 @@
    "status": "衆議院で閉会中審査",
    "submitterText": "橋本 幹彦君外三名",
    "title": "自動車盗難対策等の推進に関する法律案"
+  },
+  {
+   "committee": "議院運営委員会院内の警察及び秩序に関する小委員会",
+   "date": "2026-06-19",
+   "estimated": false,
+   "firstDate": "2026-06-19",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-19",
+   "meetingId": "122104025X00120260619_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104025X00120260619/0"
   },
   {
    "billId": "221-衆法-17",
@@ -1357,6 +1383,19 @@
    "title": "防災庁設置法案"
   },
   {
+   "committee": "国土交通委員会",
+   "date": "2026-03-06",
+   "estimated": false,
+   "firstDate": "2026-03-06",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104319X00120260306_000",
+   "meetings": 14,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104319X00120260306/0"
+  },
+  {
    "billId": "221-閣法-12",
    "date": "2026-03-03",
    "estimated": true,
@@ -1418,6 +1457,19 @@
    "status": "衆議院で閉会中審査",
    "submitterText": "落合 貴之君外四名",
    "title": "政治資金規正法の一部を改正する法律案"
+  },
+  {
+   "committee": "予算委員会",
+   "date": "2026-03-02",
+   "estimated": false,
+   "firstDate": "2026-03-02",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-02",
+   "meetingId": "122105261X00320260302_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00320260302/0"
   },
   {
    "billId": "221-閣法-9",
@@ -1574,6 +1626,45 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "議院運営委員会図書館運営小委員会",
+   "date": "2026-02-19",
+   "estimated": false,
+   "firstDate": "2026-02-19",
+   "kind": "committeeRole",
+   "lastDate": "2026-02-19",
+   "meetingId": "122104040X00120260219_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104040X00120260219/0"
+  },
+  {
+   "committee": "議院運営委員会庶務小委員会",
+   "date": "2026-02-19",
+   "estimated": false,
+   "firstDate": "2026-02-19",
+   "kind": "committeeRole",
+   "lastDate": "2026-02-19",
+   "meetingId": "122104037X00120260219_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104037X00120260219/0"
+  },
+  {
+   "committee": "議院運営委員会",
+   "date": "2026-02-18",
+   "estimated": false,
+   "firstDate": "2026-02-18",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104024X00120260218_000",
+   "meetings": 37,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104024X00120260218/0"
   }
  ]
 }

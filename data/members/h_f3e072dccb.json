@@ -182,16 +182,6 @@
    "title": "日本国憲法の改正手続に関する法律の一部を改正する法律案"
   },
   {
-   "chars": 2078,
-   "date": "2026-06-04",
-   "excerpt": "中道改革連合・無所属の福重隆浩です。 私は、会派を代表して、ただいま議題となりました令和八年度予算二案につきまして、反対の立場から討論をいたします。（拍手） 冒頭、さきの当初予算の審議に引き続き、今回も政府・与党が数の力に物を言わせて国会審議をないがしろにしたことについて、苦言を呈したいと思います。 そもそも、我々は、二月に発生した中東情勢の緊迫化による国民生活への影響を早い段階から予見し、当初予",
-   "kind": "speech",
-   "meeting": "本会議 第23号",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105254X02320260604/8",
-   "speechId": "122105254X02320260604_008"
-  },
-  {
    "billId": "221-予算-8",
    "date": "2026-06-03",
    "estimated": true,
@@ -355,6 +345,19 @@
    "stanceText": "全会一致",
    "status": "成立",
    "title": "自動車の運転により人を死傷させる行為等の処罰に関する法律及び道路交通法の一部を改正する法律案"
+  },
+  {
+   "committee": "総務委員会",
+   "date": "2026-04-14",
+   "estimated": false,
+   "firstDate": "2026-04-14",
+   "kind": "committeeRole",
+   "lastDate": "2026-04-14",
+   "meetingId": "122104601X00720260414_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104601X00720260414/0"
   },
   {
    "billId": "221-閣法-60",
@@ -1224,6 +1227,19 @@
    "title": "防災庁設置法案"
   },
   {
+   "committee": "国土交通委員会",
+   "date": "2026-03-06",
+   "estimated": false,
+   "firstDate": "2026-03-06",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104319X00120260306_000",
+   "meetings": 14,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104319X00120260306/0"
+  },
+  {
    "billId": "221-閣法-12",
    "date": "2026-03-03",
    "estimated": true,
@@ -1441,6 +1457,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "政治改革に関する特別委員会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104575X00120260220_000",
+   "meetings": 7,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104575X00120260220/0"
   }
  ]
 }

@@ -225,6 +225,19 @@
    "title": "国会議員の歳費、旅費及び手当等に関する法律の一部を改正する法律案"
   },
   {
+   "committee": "文部科学委員会",
+   "date": "2026-05-22",
+   "estimated": false,
+   "firstDate": "2026-05-22",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-22",
+   "meetingId": "122105124X01020260522_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105124X01020260522/0"
+  },
+  {
    "billId": "221-閣法-62",
    "date": "2026-05-15",
    "estimated": true,
@@ -1094,6 +1107,19 @@
    "stanceText": "少数",
    "status": "本院議了",
    "title": "インテリジェンスに係る態勢の整備の推進に関する法律案"
+  },
+  {
+   "committee": "農林水産委員会",
+   "date": "2026-03-10",
+   "estimated": false,
+   "firstDate": "2026-03-10",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122105007X00120260310_000",
+   "meetings": 16,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105007X00120260310/0"
   },
   {
    "billId": "221-閣法-18",
