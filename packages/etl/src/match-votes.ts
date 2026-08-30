@@ -108,10 +108,19 @@ export interface RecordAt {
  * 1998年の票に「任期満了日 >= 1998年」で通ってしまう。初当選より前かどうかは名簿から分からない。
  */
 export function tenureVerified(member: Member, at: RecordAt): boolean {
+  return rosterCovers(member, at) || tenureCarriedOver(member, at);
+}
+
+/** (a) その回次の議員一覧に載っている（名簿の直接の記載）。 */
+function rosterCovers(member: Member, at: RecordAt): boolean {
+  return member.terms.some((t) => t.sessionFrom <= at.session && at.session <= (t.sessionTo ?? t.sessionFrom));
+}
+
+/** (b) より前の回次の名簿に載っていて、任期満了日が記録の日付以後（名簿の記載からの推論）。 */
+function tenureCarriedOver(member: Member, at: RecordAt): boolean {
   return member.terms.some((t) => {
     const to = t.sessionTo ?? t.sessionFrom;
-    if (t.sessionFrom <= at.session && at.session <= to) return true;              // (a)
-    return to < at.session && at.date !== undefined && !!t.to && t.to >= at.date;  // (b)
+    return to < at.session && at.date !== undefined && !!t.to && t.to >= at.date;
   });
 }
 
@@ -133,7 +142,22 @@ export function resolveMember(index: NameIndex, nameText: string, group: string 
   if (candidates.length === 0 || at === undefined) return undefined;
   const voteGroup = group ?? "";
   const byGroup = candidates.filter((m) => inGroupAt(m, voteGroup, at.session));
-  return byGroup.length === 1 ? byGroup[0] : undefined;
+  if (byGroup.length === 1) return byGroup[0];
+  // #320: ここまでで絞れないのは、会派まで同じ候補が複数あるとき。院を移った議員は、移る前の名簿の行が
+  // (b) で残るので（参院の `to` は選挙で決まる任期満了日で、途中で辞職しても消えない）、同一人物の
+  // 2 行が会派も同じまま並ぶ。(a) は「その回次の議員一覧に載っている」という**直接の記載**、
+  // (b) は「前の回次に載っていて任期が残る」という**推論**なので、(a) の行を採る。
+  //
+  // 会派で絞ったあとに置くのが要点。先に (a) で絞ると、**会派が違う別人**（(a) で立つ）が
+  // 正しい候補（(b) で立つ）を押しのける。会派は名簿に書いてある事実で、(a)/(b) の別より強い手がかり。
+  // 会派で 2 人以上に絞れたときだけ (a) を決め手にする。会派で絞れていない
+  // （`byGroup` が空 = 会派が渡ってこない経路、または会派が一致しない）ときに
+  // (a) を効かせると、**会派の違う別人**に確信を持って紐づいてしまう。
+  // 会派なしの経路（match-bills / match-committee / match-shugiin-bills / match-attendance）は
+  // 従来どおり「絞れないので紐づけない」に落とす（#230 の原則を緩めない）。
+  if (byGroup.length < 2) return undefined;
+  const direct = byGroup.filter((m) => rosterCovers(m, at));
+  return direct.length === 1 ? direct[0] : undefined;
 }
 
 export type NameIndex = Map<string, Member[]>;
