@@ -150,8 +150,13 @@ export function resolveMember(index: NameIndex, nameText: string, group: string 
   //
   // 会派で絞ったあとに置くのが要点。先に (a) で絞ると、**会派が違う別人**（(a) で立つ）が
   // 正しい候補（(b) で立つ）を押しのける。会派は名簿に書いてある事実で、(a)/(b) の別より強い手がかり。
-  const tied = byGroup.length > 1 ? byGroup : candidates;
-  const direct = tied.filter((m) => rosterCovers(m, at));
+  // 会派で 2 人以上に絞れたときだけ (a) を決め手にする。会派で絞れていない
+  // （`byGroup` が空 = 会派が渡ってこない経路、または会派が一致しない）ときに
+  // (a) を効かせると、**会派の違う別人**に確信を持って紐づいてしまう。
+  // 会派なしの経路（match-bills / match-committee / match-shugiin-bills / match-attendance）は
+  // 従来どおり「絞れないので紐づけない」に落とす（#230 の原則を緩めない）。
+  if (byGroup.length < 2) return undefined;
+  const direct = byGroup.filter((m) => rosterCovers(m, at));
   return direct.length === 1 ? direct[0] : undefined;
 }
 

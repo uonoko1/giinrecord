@@ -265,6 +265,35 @@ describe("在職を確認できない氏名一致は紐づけない（#230）", 
     assert.equal(matchVotes(rc221("山田 太郎", "立憲民主・無所属"), members).rollCall.votes[0].memberId, "h_1");
   });
 
+  // #320 レビュー: 会派が渡ってこない経路（match-bills / match-committee / match-shugiin-bills /
+  // match-attendance は group に undefined を渡す）で (a) を効かせると、**会派の違う別人**に
+  // 確信を持って紐づく。会派で絞れていないときは従来どおり「紐づけない」に落とす。
+  test("会派が分からない経路では (a) を決め手にしない（#230 を緩めない）", () => {
+    const shugiinTerm: MemberTerm = { house: "shugiin", group: "自由民主党・無所属の会", district: "", from: "", sessionFrom: 221 };
+    const members = [
+      withTerms("m_1", "鬼木 誠", [t("立憲民主・無所属", 216, 220, "2028-07-25")]), // (b) で立つ別人
+      withTerms("h_1", "鬼木 誠", [shugiinTerm]),                                    // (a) で立つ
+    ];
+    const index = indexByName(members);
+    // 会派が無ければどちらか決められない。推測しない
+    assert.equal(resolveMember(index, "鬼木 誠", undefined, { session: 221, date: "2026-06-17" }), undefined);
+  });
+
+  // #320 レビュー: 「会派で絞った結果を使う」ことを固定する。`tied = candidates` に変えると
+  // 会派で絞れていない候補にまで (a) が効いてしまう（レビューで見つかったすり抜け）。
+  test("(a) の決め手は、会派で絞れた候補の中だけで使う（#320 の設計）", () => {
+    const sameGroup = "自由民主党・無所属の会";
+    const shugiinTerm: MemberTerm = { house: "shugiin", group: sameGroup, district: "", from: "", sessionFrom: 221 };
+    const members = [
+      withTerms("m_1", "青山 繁晴", [t(sameGroup, 216, 218, "2028-07-25")]), // (b)。会派は一致
+      withTerms("h_1", "青山 繁晴", [shugiinTerm]),                          // (a)。会派は一致
+      withTerms("h_2", "青山 繁晴", [{ ...shugiinTerm, group: "立憲民主・無所属" }]), // (a) だが会派が違う
+    ];
+    const index = indexByName(members);
+    // 会派で m_1 と h_1 に絞られ、その中で (a) の h_1 を採る。h_2 は会派で外れる
+    assert.equal(resolveMember(index, "青山 繁晴", sameGroup, { session: 221, date: "2026-06-17" })?.id, "h_1");
+  });
+
   // 同姓同名の**別人**（任期が重なる。実在: 鬼木誠は衆院と参院に別人がいて会派も違う）。
   // どちらも (a) で立つので #320 の優先では絞れず、会派で絞る従来の手順に落ちる。
   test("両方が (a) で立つ同姓同名は、会派で絞る（#320 で変えない）", () => {
