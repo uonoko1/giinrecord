@@ -555,6 +555,19 @@
    "title": "民法等の一部を改正する法律案"
   },
   {
+   "committee": "安全保障委員会",
+   "date": "2026-04-03",
+   "estimated": false,
+   "firstDate": "2026-04-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122103815X00120260403_000",
+   "meetings": 9,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122103815X00120260403/0"
+  },
+  {
    "billId": "221-閣法-41",
    "date": "2026-03-31",
    "estimated": true,
@@ -709,16 +722,6 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計暫定予算"
-  },
-  {
-   "chars": 4842,
-   "date": "2026-03-26",
-   "excerpt": "中道改革連合・無所属の河西宏一です。（拍手） まず、この度の日米首脳会談に当たり、総理を始め、御尽力をいただいた政府関係者の皆様に心から敬意と感謝を申し上げます。 今回の会談は、イラン情勢のみならず、激変する世界情勢における日米関係の在り方、トランプ関税も踏まえた経済安全保障の推進、極東への米国の関与など、国益を懸けた重要課題が焦点となりました。 トランプ大統領は、改めて、ホルムズ海峡における航行",
-   "kind": "speech",
-   "meeting": "本会議 第8号",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105254X00820260326/9",
-   "speechId": "122105254X00820260326_009"
   },
   {
    "billId": "221-閣法-36",
@@ -1224,6 +1227,19 @@
    "title": "防災庁設置法案"
   },
   {
+   "committee": "予算委員会",
+   "date": "2026-03-04",
+   "estimated": false,
+   "firstDate": "2026-03-04",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-04",
+   "meetingId": "122105261X00520260304_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00520260304/0"
+  },
+  {
    "billId": "221-閣法-12",
    "date": "2026-03-03",
    "estimated": true,
@@ -1441,6 +1457,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "憲法審査会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104183X00120260220_000",
+   "meetings": 14,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104183X00120260220/0"
   }
  ]
 }

@@ -1,5 +1,5 @@
 import type { House } from "@seiji-kiroku/shared";
-import { NDL_API_INTERVAL_MS, fetchText, sleep } from "../fetch.ts";
+import { NDL_API_INTERVAL_MS, fetchText, sleep, lastFetchHitNetwork } from "../fetch.ts";
 
 /**
  * 委員会等の「出席委員／出席者」欄に載る委員長・理事・委員（Issue #244、調査は docs/research/individual-records.md §4-A）。
@@ -261,10 +261,11 @@ export async function fetchCommitteeRosters(session: number, house: House): Prom
   const out: CommitteeRoster[] = [];
   let start: number | null = 1;
   while (start !== null) {
-    const page = parseCommitteeRosterPage(JSON.parse(await fetchText(committeePageUrl(session, house, start), "utf-8", { noCache: true })), session, house);
+    const page = parseCommitteeRosterPage(JSON.parse(await fetchText(committeePageUrl(session, house, start), "utf-8", { noCache: true, session })), session, house);
     out.push(...page.rosters);
     start = page.nextRecordPosition;
-    if (start !== null) await sleep(REQUEST_INTERVAL_MS);
+    // キャッシュ命中（#294）ではリクエストを出していないので待たない。間隔が律速するのはリクエスト。
+    if (start !== null && lastFetchHitNetwork()) await sleep(REQUEST_INTERVAL_MS);
   }
   return out;
 }

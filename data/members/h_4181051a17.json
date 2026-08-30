@@ -132,6 +132,19 @@
    "title": "有人国境離島地域の保全及び特定有人国境離島地域に係る地域社会の維持に関する特別措置法の一部を改正する法律案"
   },
   {
+   "committee": "沖縄及び北方問題に関する特別委員会",
+   "date": "2026-06-19",
+   "estimated": false,
+   "firstDate": "2026-06-19",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122103895X00220260619_000",
+   "meetings": 3,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122103895X00220260619/0"
+  },
+  {
    "billId": "221-衆法-18",
    "date": "2026-06-16",
    "kind": "bill",
@@ -299,6 +312,19 @@
    "title": "人工衛星等の打上げ及び人工衛星の管理に関する法律等の一部を改正する法律案"
   },
   {
+   "committee": "災害対策特別委員会",
+   "date": "2026-04-23",
+   "estimated": false,
+   "firstDate": "2026-04-23",
+   "kind": "committeeRole",
+   "lastDate": "2026-04-23",
+   "meetingId": "122104339X00620260423_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104339X00620260423/0"
+  },
+  {
    "billId": "221-衆法-8",
    "date": "2026-04-22",
    "estimated": true,
@@ -310,6 +336,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "食育基本法の一部を改正する法律案"
+  },
+  {
+   "committee": "文部科学委員会",
+   "date": "2026-04-22",
+   "estimated": false,
+   "firstDate": "2026-04-22",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-24",
+   "meetingId": "122105124X00720260422_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105124X00720260422/0"
   },
   {
    "billId": "221-閣法-52",
@@ -557,6 +596,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "民法等の一部を改正する法律案"
+  },
+  {
+   "committee": "環境委員会",
+   "date": "2026-04-03",
+   "estimated": false,
+   "firstDate": "2026-04-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104006X00120260403_000",
+   "meetings": 15,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104006X00120260403/0"
   },
   {
    "billId": "221-閣法-41",
@@ -1001,16 +1053,6 @@
    "title": "国家情報会議設置法案"
   },
   {
-   "chars": 1673,
-   "date": "2026-03-13",
-   "excerpt": "自由民主党・無所属の会、とかしきなおみです。 ただいま議題となりました予算委員長坂本哲志君解任決議案に対し、与党を代表して、反対の立場から討論を行います。（拍手） 思い起こせば、特別国会が始まった矢先の二月二十四日、中道の小川代表は代表質問の冒頭でこう語られました。首相が施政方針演説で述べたとおり、挑戦なき国に未来はない、守るだけの政治に希望はない、二十二世紀の日本が平和で豊かであるように、私ども",
-   "kind": "speech",
-   "meeting": "本会議 第6号",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105254X00620260313/8",
-   "speechId": "122105254X00620260313_008"
-  },
-  {
    "billId": "221-衆法-5",
    "date": "2026-03-12",
    "estimated": true,
@@ -1126,6 +1168,19 @@
    "stanceText": "少数",
    "status": "本院議了",
    "title": "インテリジェンスに係る態勢の整備の推進に関する法律案"
+  },
+  {
+   "committee": "予算委員会公聴会",
+   "date": "2026-03-10",
+   "estimated": false,
+   "firstDate": "2026-03-10",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-10",
+   "meetingId": "122105262X00120260310_000",
+   "meetings": 1,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105262X00120260310/0"
   },
   {
    "billId": "221-閣法-18",
@@ -1295,6 +1350,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "金融機能の強化のための特別措置に関する法律等の一部を改正する法律案"
+  },
+  {
+   "committee": "予算委員会",
+   "date": "2026-02-26",
+   "estimated": false,
+   "firstDate": "2026-02-26",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-27",
+   "meetingId": "122105261X00120260226_000",
+   "meetings": 17,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00120260226/0"
   },
   {
    "billId": "221-閣法-6",

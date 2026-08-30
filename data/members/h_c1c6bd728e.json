@@ -182,6 +182,19 @@
    "title": "郵政民営化法等の一部を改正する法律案"
   },
   {
+   "committee": "政治改革に関する特別委員会",
+   "date": "2026-06-11",
+   "estimated": false,
+   "firstDate": "2026-06-11",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104575X00220260611_000",
+   "meetings": 10,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104575X00220260611/0"
+  },
+  {
    "billId": "221-衆法-12",
    "date": "2026-06-10",
    "kind": "bill",
@@ -295,6 +308,32 @@
    "stanceText": "少数",
    "status": "本院議了",
    "title": "刑事訴訟法の一部を改正する法律案"
+  },
+  {
+   "committee": "憲法審査会",
+   "date": "2026-05-14",
+   "estimated": false,
+   "firstDate": "2026-05-14",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-14",
+   "meetingId": "122104183X00520260514_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104183X00520260514/0"
+  },
+  {
+   "committee": "経済産業委員会",
+   "date": "2026-05-13",
+   "estimated": false,
+   "firstDate": "2026-05-13",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-13",
+   "meetingId": "122104080X00720260513_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104080X00720260513/0"
   },
   {
    "billId": "221-閣法-40",
@@ -412,6 +451,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "金融商品取引法及び資金決済に関する法律の一部を改正する法律案"
+  },
+  {
+   "committee": "内閣委員会",
+   "date": "2026-04-08",
+   "estimated": false,
+   "firstDate": "2026-04-08",
+   "kind": "committeeRole",
+   "lastDate": "2026-04-16",
+   "meetingId": "122104889X00220260408_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104889X00220260408/0"
   },
   {
    "billId": "221-閣法-56",
@@ -1259,6 +1311,19 @@
    "title": "放送法第七十条第二項の規定に基づき、承認を求めるの件"
   },
   {
+   "committee": "文部科学委員会",
+   "date": "2026-03-03",
+   "estimated": false,
+   "firstDate": "2026-03-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122105124X00120260303_000",
+   "meetings": 13,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105124X00120260303/0"
+  },
+  {
    "billId": "221-閣法-9",
    "date": "2026-02-27",
    "estimated": true,
@@ -1413,6 +1478,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "地域活性化・こども政策・デジタル社会形成に関する特別委員会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-02-20",
+   "meetingId": "122105367X00120260220_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105367X00120260220/0"
   }
  ]
 }

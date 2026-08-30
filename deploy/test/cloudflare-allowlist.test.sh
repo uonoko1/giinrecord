@@ -56,7 +56,7 @@ fresh() {
   LOG="$P/stub.log"; : > "$LOG"
   export CF_ALLOWLIST_PREFIX="$P" STUB_LOG="$LOG" STUB_HANDLER="$TMP/handler"
   unset H_V4 H_V6 H_CURL_EXIT H_NGINX_EXIT
-  SNIPPET="$P/etc/nginx/snippets/gikailog-cloudflare-allow.conf"
+  SNIPPET="$P/etc/nginx/snippets/giinrecord-cloudflare-allow.conf"
 }
 run_it() { PATH="$BIN:$PATH" bash "$SCRIPT" "$@" > "$P/out" 2>&1; }
 
@@ -141,14 +141,14 @@ t_first_install_with_broken_config_leaves_no_snippet() {
 t_install_cron() {
   fresh cron
   run_it --install-cron || fail "exit $? $(cat "$P/out")"
-  local cron="$P/etc/cron.d/gikailog-cloudflare-allowlist" lib="$P/usr/local/lib/gikailog-cloudflare-allowlist.sh"
+  local cron="$P/etc/cron.d/giinrecord-cloudflare-allowlist" lib="$P/usr/local/lib/giinrecord-cloudflare-allowlist.sh"
   [[ -f "$cron" ]] || { fail "cron file"; return; }
   [[ -f "$lib" && -x "$lib" ]] || { fail "script copied to a root-owned location for the cron"; return; }
   assert_eq "-rwxr-xr-x" "$(stat -c %A "$lib")" "lib mode 755"
   assert_eq "-rw-r--r--" "$(stat -c %A "$cron")" "cron mode 644"
   local c; c=$(cat "$cron")
   assert_contains "$c" " root " "runs as root"
-  assert_contains "$c" "/usr/local/lib/gikailog-cloudflare-allowlist.sh" "runs the installed copy, not the repo checkout"
+  assert_contains "$c" "/usr/local/lib/giinrecord-cloudflare-allowlist.sh" "runs the installed copy, not the repo checkout"
   [[ "$(grep -v '^#' "$cron" | grep -c ' root ')" == 1 ]] || fail "exactly one job"
   grep -v '^#' "$cron" | grep ' root ' | grep -qE '^[0-9]+ [0-9]+ \* \* [0-9]' || fail "weekly schedule (day-of-week set)"
   [[ -f "$SNIPPET" ]] || fail "snippet generated on install too"

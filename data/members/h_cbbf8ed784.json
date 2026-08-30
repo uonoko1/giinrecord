@@ -17,6 +17,19 @@
  ],
  "timeline": [
   {
+   "committee": "北朝鮮による拉致問題等に関する特別委員会",
+   "date": "2026-07-24",
+   "estimated": false,
+   "firstDate": "2026-07-24",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122105253X00320260724_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105253X00320260724/0"
+  },
+  {
    "billId": "221-衆法-38",
    "date": "2026-07-22",
    "estimated": true,
@@ -264,6 +277,19 @@
    "title": "刑事訴訟法の一部を改正する法律案"
   },
   {
+   "committee": "憲法審査会",
+   "date": "2026-05-14",
+   "estimated": false,
+   "firstDate": "2026-05-14",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-28",
+   "meetingId": "122104183X00520260514_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104183X00520260514/0"
+  },
+  {
    "billId": "221-閣法-40",
    "date": "2026-04-24",
    "estimated": true,
@@ -275,6 +301,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "人工衛星等の打上げ及び人工衛星の管理に関する法律等の一部を改正する法律案"
+  },
+  {
+   "committee": "法務委員会",
+   "date": "2026-04-24",
+   "estimated": false,
+   "firstDate": "2026-04-24",
+   "kind": "committeeRole",
+   "lastDate": "2026-04-24",
+   "meetingId": "122105206X00720260424_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105206X00720260424/0"
   },
   {
    "billId": "221-衆法-8",
@@ -379,6 +418,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "金融商品取引法及び資金決済に関する法律の一部を改正する法律案"
+  },
+  {
+   "committee": "経済産業委員会",
+   "date": "2026-04-08",
+   "estimated": false,
+   "firstDate": "2026-04-08",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104080X00120260408_000",
+   "meetings": 17,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104080X00120260408/0"
   },
   {
    "billId": "221-閣法-56",
@@ -1096,6 +1148,19 @@
    "title": "インテリジェンスに係る態勢の整備の推進に関する法律案"
   },
   {
+   "committee": "財務金融委員会",
+   "date": "2026-03-10",
+   "estimated": false,
+   "firstDate": "2026-03-10",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-10",
+   "meetingId": "122104376X00420260310_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104376X00420260310/0"
+  },
+  {
    "billId": "221-閣法-18",
    "date": "2026-03-06",
    "estimated": true,
@@ -1380,6 +1445,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "東日本大震災復興及び原子力問題調査特別委員会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122105387X00120260220_000",
+   "meetings": 4,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105387X00120260220/0"
   }
  ]
 }

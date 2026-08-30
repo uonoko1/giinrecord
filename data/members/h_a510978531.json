@@ -271,16 +271,6 @@
    "title": "刑事訴訟法の一部を改正する法律案"
   },
   {
-   "chars": 2821,
-   "date": "2026-04-28",
-   "excerpt": "中道改革連合の浜地雅一です。 会派を代表し、健康保険法の一部改正案に対し、賛成の討論を行います。（拍手） 世界に冠たる国民皆保険制度の下、我が国の医療保険は国民の健康と生活基盤を支える重要なインフラとして機能してきました。しかし、世界一速い少子高齢化の進行、特に、医療の高度化、薬剤の高額化が進む中、今後も適切な医療提供体制を維持できるのか、強い危機感を持っております。全世代型社会保障が叫ばれて久し",
-   "kind": "speech",
-   "meeting": "本会議 第16号",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105254X01620260428/13",
-   "speechId": "122105254X01620260428_013"
-  },
-  {
    "billId": "221-閣法-40",
    "date": "2026-04-24",
    "estimated": true,
@@ -563,6 +553,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "民法等の一部を改正する法律案"
+  },
+  {
+   "committee": "厚生労働委員会",
+   "date": "2026-04-03",
+   "estimated": false,
+   "firstDate": "2026-04-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104260X00120260403_000",
+   "meetings": 20,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104260X00120260403/0"
   },
   {
    "billId": "221-閣法-41",
@@ -1276,6 +1279,19 @@
    "title": "放送法第七十条第二項の規定に基づき、承認を求めるの件"
   },
   {
+   "committee": "予算委員会",
+   "date": "2026-03-03",
+   "estimated": false,
+   "firstDate": "2026-03-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-03",
+   "meetingId": "122105261X00420260303_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00420260303/0"
+  },
+  {
    "billId": "221-衆法-1",
    "date": "2026-03-02",
    "kind": "bill",
@@ -1441,6 +1457,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "情報監視審査会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-25",
+   "meetingId": "122104541X00120260220_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104541X00120260220/0"
   }
  ]
 }

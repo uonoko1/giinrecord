@@ -217,16 +217,6 @@
    "value": "反対"
   },
   {
-   "chars": 2765,
-   "date": "2025-06-11",
-   "excerpt": "日本維新の会の山口和之です。 会派を代表して、令和五年度決算、国有財産増減及び現在額総計算書並びに国有財産無償貸付状況総計算書の是認に反対、そして、内閣に対する警告決議案には賛成の立場で討論をいたします。 今、日本の政府債務残高はＧＤＰ比で約二五〇％超という異常事態に達しており、国と地方を合わせた借金は千二百兆円もの規模に膨らんでいます。これらの国債発行は、日銀による発行残高の約半分、計五百八十八",
-   "kind": "speech",
-   "meeting": "本会議 第26号",
-   "session": 217,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715254X02620250611/6",
-   "speechId": "121715254X02620250611_006"
-  },
-  {
    "date": "2025-06-06",
    "groupValue": "賛成",
    "kind": "vote",
@@ -1074,6 +1064,19 @@
    "value": "賛成"
   },
   {
+   "committee": "決算委員会",
+   "date": "2025-04-07",
+   "estimated": false,
+   "firstDate": "2025-04-07",
+   "kind": "committeeRole",
+   "lastDate": "2025-06-09",
+   "meetingId": "121714103X00120250407_000",
+   "meetings": 8,
+   "role": "理事",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121714103X00120250407/0"
+  },
+  {
    "date": "2025-04-01",
    "groupValue": "賛成",
    "kind": "vote",
@@ -1525,14 +1528,69 @@
    "value": "賛成"
   },
   {
-   "chars": 3333,
+   "committee": "国民生活・経済及び地方に関する調査会",
+   "date": "2025-02-19",
+   "estimated": false,
+   "firstDate": "2025-02-19",
+   "kind": "committeeRole",
+   "lastDate": "2025-02-19",
+   "meetingId": "121715363X00320250219_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715363X00320250219/0"
+  },
+  {
+   "committee": "厚生労働委員会",
+   "date": "2025-01-28",
+   "estimated": false,
+   "firstDate": "2025-01-28",
+   "kind": "committeeRole",
+   "lastDate": "2025-06-20",
+   "meetingId": "121714260X00120250128_000",
+   "meetings": 23,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121714260X00120250128/0"
+  },
+  {
+   "committee": "東日本大震災復興特別委員会",
+   "date": "2025-01-24",
+   "estimated": false,
+   "firstDate": "2025-01-24",
+   "kind": "committeeRole",
+   "lastDate": "2025-04-11",
+   "meetingId": "121714858X00120250124_000",
+   "meetings": 4,
+   "role": "理事",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121714858X00120250124/0"
+  },
+  {
+   "committee": "決算委員会",
    "date": "2024-12-20",
-   "excerpt": "日本維新の会、山口和之です。 会派を代表して、令和五年度決算報告について石破総理に質問いたします。 質問の前に、日本維新の会の基本方針、国民の皆様とのお約束を申し上げます。 日本維新の会は、徹底的な改革を志向する政党ですが、そのゆえんは、次世代のための政党として、家庭環境によらない教育機会の創出、社会保障制度における世代間不公平の是正などを掲げ、我が国の将来を担う次世代への十分な投資を可能とする政",
-   "kind": "speech",
-   "meeting": "本会議 第7号",
+   "estimated": false,
+   "firstDate": "2024-12-20",
+   "kind": "committeeRole",
+   "lastDate": "2024-12-24",
+   "meetingId": "121614103X00120241220_000",
+   "meetings": 2,
+   "role": "理事",
    "session": 216,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121615254X00720241220/20",
-   "speechId": "121615254X00720241220_020"
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121614103X00120241220/0"
+  },
+  {
+   "committee": "厚生労働委員会",
+   "date": "2024-12-10",
+   "estimated": false,
+   "firstDate": "2024-12-10",
+   "kind": "committeeRole",
+   "lastDate": "2024-12-24",
+   "meetingId": "121614260X00120241210_000",
+   "meetings": 3,
+   "role": "委員",
+   "session": 216,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121614260X00120241210/0"
   }
  ]
 }

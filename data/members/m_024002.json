@@ -745,6 +745,19 @@
    "value": "賛成"
   },
   {
+   "committee": "内閣委員会、総務委員会、外交防衛委員会連合審査会",
+   "date": "2025-05-13",
+   "estimated": false,
+   "firstDate": "2025-05-13",
+   "kind": "committeeRole",
+   "lastDate": "2025-05-13",
+   "meetingId": "121715381X00120250513_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715381X00120250513/0"
+  },
+  {
    "date": "2025-05-09",
    "groupValue": "賛成",
    "kind": "vote",
@@ -1361,6 +1374,19 @@
    "value": "賛成"
   },
   {
+   "committee": "国土交通委員会",
+   "date": "2025-03-25",
+   "estimated": false,
+   "firstDate": "2025-03-25",
+   "kind": "committeeRole",
+   "lastDate": "2025-03-25",
+   "meetingId": "121714319X00520250325_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121714319X00520250325/0"
+  },
+  {
    "date": "2025-03-14",
    "groupValue": "賛成",
    "kind": "vote",
@@ -1381,6 +1407,32 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0314-v001.htm",
    "title": "参議院規則の一部を改正する規則案（馬場成志君外７名発議）",
    "value": "賛成"
+  },
+  {
+   "committee": "予算委員会公聴会",
+   "date": "2025-03-13",
+   "estimated": false,
+   "firstDate": "2025-03-13",
+   "kind": "committeeRole",
+   "lastDate": "2025-03-13",
+   "meetingId": "121715262X00120250313_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715262X00120250313/0"
+  },
+  {
+   "committee": "内閣委員会",
+   "date": "2025-03-11",
+   "estimated": false,
+   "firstDate": "2025-03-11",
+   "kind": "committeeRole",
+   "lastDate": "2025-06-20",
+   "meetingId": "121714889X00120250311_000",
+   "meetings": 24,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121714889X00120250311/0"
   },
   {
    "date": "2025-02-19",
@@ -1515,36 +1567,69 @@
    "value": "賛成"
   },
   {
-   "chars": 3141,
-   "date": "2024-12-17",
-   "excerpt": "立憲民主・社民・無所属の奥村政佳です。 まず冒頭、今回、衆議院における予算案の審議において、与党が我が立憲民主党の修正要求に応じ、二十八年ぶりに予算案を修正、能登半島への支援一千億円が実質的に増額されました。さらには、補正予算案での修正は戦後初、新たな歴史の一ページがしっかりと刻まれました。衆議院予算委員会の安住委員長を始め、与野党理事、委員、修正案提出者、皆様に深く敬意を表します。 今回議題とな",
-   "kind": "speech",
-   "meeting": "本会議 第6号",
+   "committee": "予算委員会",
+   "date": "2025-01-29",
+   "estimated": false,
+   "firstDate": "2025-01-29",
+   "kind": "committeeRole",
+   "lastDate": "2025-06-20",
+   "meetingId": "121715261X00120250129_000",
+   "meetings": 14,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715261X00120250129/0"
+  },
+  {
+   "committee": "東日本大震災復興特別委員会",
+   "date": "2025-01-24",
+   "estimated": false,
+   "firstDate": "2025-01-24",
+   "kind": "committeeRole",
+   "lastDate": "2025-04-11",
+   "meetingId": "121714858X00120250124_000",
+   "meetings": 4,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121714858X00120250124/0"
+  },
+  {
+   "committee": "内閣委員会",
+   "date": "2024-12-10",
+   "estimated": false,
+   "firstDate": "2024-12-10",
+   "kind": "committeeRole",
+   "lastDate": "2024-12-24",
+   "meetingId": "121614889X00120241210_000",
+   "meetings": 4,
+   "role": "委員",
    "session": 216,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121615254X00620241217/12",
-   "speechId": "121615254X00620241217_012"
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121614889X00120241210/0"
   },
   {
-   "date": "2024-10-01",
-   "groupValue": "反対",
-   "kind": "vote",
-   "result": "賛成 146・反対 96",
-   "rollCallId": "214-1001-v001",
-   "session": 214,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/214/214-1001-v001.htm",
-   "title": "日程第２　会期の件",
-   "value": "反対"
+   "committee": "予算委員会",
+   "date": "2024-12-06",
+   "estimated": false,
+   "firstDate": "2024-12-06",
+   "kind": "committeeRole",
+   "lastDate": "2024-12-24",
+   "meetingId": "121615261X00120241206_000",
+   "meetings": 6,
+   "role": "委員",
+   "session": 216,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121615261X00120241206/0"
   },
   {
-   "answerDate": "2024-06-28",
-   "answerUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/213/touh/t213189.htm",
-   "date": "2024-06-18",
-   "kind": "question",
-   "questionId": "213-sangiin-189",
-   "session": 213,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/joho1/kousei/syuisyo/213/meisai/m213189.htm",
-   "submitterText": "奥村 政佳君",
-   "title": "日本における台風観測の精度向上に向けた政府の取組に関する質問主意書"
+   "committee": "東日本大震災復興特別委員会",
+   "date": "2024-11-28",
+   "estimated": false,
+   "firstDate": "2024-11-28",
+   "kind": "committeeRole",
+   "lastDate": "2024-12-24",
+   "meetingId": "121614858X00120241128_000",
+   "meetings": 4,
+   "role": "委員",
+   "session": 216,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121614858X00120241128/0"
   }
  ]
 }

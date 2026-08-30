@@ -35,8 +35,8 @@ case "$cmd" in
   docker)   # docker inspect -f {{.State.Health.Status}} <name>
     name=${*: -1}
     case "$name" in
-      gikailog-web-1)         echo "${H_WEB-healthy}" ;;
-      gikailog-web-staging-1) echo "${H_STAGING-healthy}" ;;
+      giinrecord-web-1)         echo "${H_WEB-healthy}" ;;
+      giinrecord-web-staging-1) echo "${H_STAGING-healthy}" ;;
       *) echo "Error: No such object: $name" >&2; exit 1 ;;
     esac ;;
   systemctl) echo "${H_NGINX:-active}"; [ "${H_NGINX:-active}" = active ] ;;

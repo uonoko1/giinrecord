@@ -548,6 +548,19 @@
    "title": "民法等の一部を改正する法律案"
   },
   {
+   "committee": "安全保障委員会",
+   "date": "2026-04-03",
+   "estimated": false,
+   "firstDate": "2026-04-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122103815X00120260403_000",
+   "meetings": 9,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122103815X00120260403/0"
+  },
+  {
    "billId": "221-閣法-41",
    "date": "2026-03-31",
    "estimated": true,
@@ -1016,6 +1029,19 @@
    "title": "予算委員長坂本哲志君解任決議案"
   },
   {
+   "committee": "予算委員会",
+   "date": "2026-03-12",
+   "estimated": false,
+   "firstDate": "2026-03-12",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-12",
+   "meetingId": "122105261X01020260312_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X01020260312/0"
+  },
+  {
    "billId": "221-閣法-23",
    "date": "2026-03-10",
    "estimated": true,
@@ -1391,6 +1417,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "北朝鮮による拉致問題等に関する特別委員会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122105253X00120260220_000",
+   "meetings": 3,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105253X00120260220/0"
   }
  ]
 }

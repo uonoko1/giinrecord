@@ -221,14 +221,17 @@
    "title": "国会議員の歳費、旅費及び手当等に関する法律の一部を改正する法律案"
   },
   {
-   "chars": 3000,
-   "date": "2026-05-26",
-   "excerpt": "中道改革連合の犬飼明佳です。 私は、中道改革連合・無所属を代表し、ただいま議題となりました個人情報の保護に関する法律等の一部を改正する法律案について、反対の立場から討論を行います。（拍手） ＡＩ開発競争が激化する中、我が国の国際競争力を強化しなければなりません。その必要性については、私たちも十分認識をしております。一方、個人情報保護法の本来の目的は、個人の権利利益の保護にあります。だからこそ、目指",
-   "kind": "speech",
-   "meeting": "本会議 第20号",
+   "committee": "文部科学委員会",
+   "date": "2026-05-20",
+   "estimated": false,
+   "firstDate": "2026-05-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-20",
+   "meetingId": "122105124X00920260520_000",
+   "meetings": 1,
+   "role": "委員",
    "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105254X02020260526/5",
-   "speechId": "122105254X02020260526_005"
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105124X00920260520/0"
   },
   {
    "billId": "221-衆法-9",
@@ -1044,6 +1047,19 @@
    "title": "予算委員長坂本哲志君解任決議案"
   },
   {
+   "committee": "予算委員会",
+   "date": "2026-03-11",
+   "estimated": false,
+   "firstDate": "2026-03-11",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-04",
+   "meetingId": "122105261X00920260311_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00920260311/0"
+  },
+  {
    "billId": "221-衆法-2",
    "date": "2026-03-10",
    "kind": "bill",
@@ -1222,6 +1238,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "防災庁設置法案"
+  },
+  {
+   "committee": "国土交通委員会",
+   "date": "2026-03-06",
+   "estimated": false,
+   "firstDate": "2026-03-06",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104319X00120260306_000",
+   "meetings": 14,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104319X00120260306/0"
   },
   {
    "billId": "221-閣法-12",
@@ -1441,6 +1470,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "地域活性化・こども政策・デジタル社会形成に関する特別委員会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122105367X00120260220_000",
+   "meetings": 11,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105367X00120260220/0"
   }
  ]
 }

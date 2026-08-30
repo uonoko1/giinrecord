@@ -30,6 +30,19 @@
    "title": "建築士法の一部を改正する法律案"
   },
   {
+   "committee": "経済産業委員会",
+   "date": "2026-07-15",
+   "estimated": false,
+   "firstDate": "2026-07-15",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-15",
+   "meetingId": "122104080X01620260715_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104080X01620260715/0"
+  },
+  {
    "billId": "221-衆法-29",
    "date": "2026-07-10",
    "estimated": true,
@@ -182,6 +195,19 @@
    "title": "郵政民営化法等の一部を改正する法律案"
   },
   {
+   "committee": "政治改革に関する特別委員会",
+   "date": "2026-06-11",
+   "estimated": false,
+   "firstDate": "2026-06-11",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104575X00220260611_000",
+   "meetings": 10,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104575X00220260611/0"
+  },
+  {
    "billId": "221-衆法-12",
    "date": "2026-06-10",
    "kind": "bill",
@@ -245,6 +271,32 @@
    "title": "令和八年度一般会計補正予算（第１号）"
   },
   {
+   "committee": "決算行政監視委員会",
+   "date": "2026-06-03",
+   "estimated": false,
+   "firstDate": "2026-06-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-03",
+   "meetingId": "122104127X00220260603_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104127X00220260603/0"
+  },
+  {
+   "committee": "消費者問題に関する特別委員会",
+   "date": "2026-05-28",
+   "estimated": false,
+   "firstDate": "2026-05-28",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104536X00220260528_000",
+   "meetings": 3,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104536X00220260528/0"
+  },
+  {
    "billId": "221-衆法-10",
    "date": "2026-05-26",
    "estimated": true,
@@ -297,6 +349,19 @@
    "title": "刑事訴訟法の一部を改正する法律案"
   },
   {
+   "committee": "国土交通委員会",
+   "date": "2026-05-15",
+   "estimated": false,
+   "firstDate": "2026-05-15",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-22",
+   "meetingId": "122104319X00920260515_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104319X00920260515/0"
+  },
+  {
    "billId": "221-閣法-40",
    "date": "2026-04-24",
    "estimated": true,
@@ -308,6 +373,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "人工衛星等の打上げ及び人工衛星の管理に関する法律等の一部を改正する法律案"
+  },
+  {
+   "committee": "災害対策特別委員会",
+   "date": "2026-04-23",
+   "estimated": false,
+   "firstDate": "2026-04-23",
+   "kind": "committeeRole",
+   "lastDate": "2026-04-28",
+   "meetingId": "122104339X00620260423_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104339X00620260423/0"
   },
   {
    "billId": "221-衆法-8",
@@ -360,6 +438,45 @@
    "stanceText": "全会一致",
    "status": "成立",
    "title": "自動車の運転により人を死傷させる行為等の処罰に関する法律及び道路交通法の一部を改正する法律案"
+  },
+  {
+   "committee": "内閣委員会",
+   "date": "2026-04-16",
+   "estimated": false,
+   "firstDate": "2026-04-16",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-10",
+   "meetingId": "122104889X00520260416_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104889X00520260416/0"
+  },
+  {
+   "committee": "憲法審査会",
+   "date": "2026-04-16",
+   "estimated": false,
+   "firstDate": "2026-04-16",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-11",
+   "meetingId": "122104183X00320260416_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104183X00320260416/0"
+  },
+  {
+   "committee": "地域活性化・こども政策・デジタル社会形成に関する特別委員会",
+   "date": "2026-04-14",
+   "estimated": false,
+   "firstDate": "2026-04-14",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-14",
+   "meetingId": "122105367X00220260414_000",
+   "meetings": 3,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105367X00220260414/0"
   },
   {
    "billId": "221-閣法-60",
@@ -568,6 +685,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "民法等の一部を改正する法律案"
+  },
+  {
+   "committee": "厚生労働委員会",
+   "date": "2026-04-03",
+   "estimated": false,
+   "firstDate": "2026-04-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104260X00120260403_000",
+   "meetings": 20,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104260X00120260403/0"
   },
   {
    "billId": "221-閣法-41",
@@ -1012,6 +1142,19 @@
    "title": "国家情報会議設置法案"
   },
   {
+   "committee": "外務委員会",
+   "date": "2026-03-13",
+   "estimated": false,
+   "firstDate": "2026-03-13",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-13",
+   "meetingId": "122103968X00420260313_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122103968X00420260313/0"
+  },
+  {
    "billId": "221-衆法-5",
    "date": "2026-03-12",
    "estimated": true,
@@ -1127,6 +1270,19 @@
    "stanceText": "少数",
    "status": "本院議了",
    "title": "インテリジェンスに係る態勢の整備の推進に関する法律案"
+  },
+  {
+   "committee": "総務委員会",
+   "date": "2026-03-10",
+   "estimated": false,
+   "firstDate": "2026-03-10",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-12",
+   "meetingId": "122104601X00320260310_000",
+   "meetings": 4,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104601X00320260310/0"
   },
   {
    "billId": "221-閣法-18",
@@ -1413,6 +1569,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "東日本大震災復興及び原子力問題調査特別委員会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-02-20",
+   "meetingId": "122105387X00120260220_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105387X00120260220/0"
   }
  ]
 }

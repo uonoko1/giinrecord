@@ -1,5 +1,5 @@
 import type { House, Speech } from "@seiji-kiroku/shared";
-import { NDL_API_INTERVAL_MS, fetchText, sleep } from "../fetch.ts";
+import { NDL_API_INTERVAL_MS, fetchText, sleep, lastFetchHitNetwork } from "../fetch.ts";
 
 /**
  * 国会会議録検索システム 検索用API（https://kokkai.ndl.go.jp/api.html）。
@@ -129,18 +129,29 @@ export function toExcerpt(speech: string): { excerpt: string; chars: number } {
 
 /**
  * 回次の発言（house の院、scope の会議）を全ページ取得する。リクエスト間隔 ≥ REQUEST_INTERVAL_MS。
- * 会議録は追加公開されるのでキャッシュしない。
- * scope が "all"（#242）だと 1 回次で数百ページになる（第221回は衆院 334・参院 372 ページ＝#263 の実測）ので、
- * 全回次を 1 回の実行で流さず #219 と同じ分割 dispatch にする（docs/ops/etl.md）。
+ *
+ * **キャッシュ**: 既定では使わない（会議録は追加公開されるため）。ただし作り直し（#294）で
+ * `ETL_CACHE_CLOSED_SESSIONS=1` を立てたときだけ、**最新回次より古い回次**はキャッシュから読む。
+ * 「追加公開される」のが実測で確かめられたのは最新回次だけで、第200〜220回は
+ * サンプルした 11 回次すべてが 24 時間で不変だった（2026-08-26。docs/ops/etl.md）。
+ * 命中したページでは待たない（リクエストを出していないため。`lastFetchHitNetwork`）。
+ *
+ * **1 回の実行に渡す回次**: scope が "all"（#242）だと 1 回次で数百ページになる
+ * （第221回は衆院 334・参院 372 ページ＝#263 の実測）ので、**通常の回次追加**は
+ * #219 と同じ分割 dispatch にする（docs/ops/etl.md）。
+ * **`data/` を消してからの作り直しは別**で、分割できない（`planSessions` の carried が
+ * 前回出力から作られるため）。作り直しは全 22 回次を 1 回で渡し、上のキャッシュで
+ * 繰り返しながら前進させる。この 2 つを混ぜて読まないこと。
  */
 export async function fetchSpeeches(session: number, house: House = "sangiin", scope: SpeechScope = "plenary"): Promise<Speech[]> {
   const out: Speech[] = [];
   let start: number | null = 1;
   while (start !== null) {
-    const page = parseSpeechPage(JSON.parse(await fetchText(speechPageUrl(session, start, house, scope), "utf-8", { noCache: true })), house);
+    const page = parseSpeechPage(JSON.parse(await fetchText(speechPageUrl(session, start, house, scope), "utf-8", { noCache: true, session })), house);
     out.push(...page.speeches);
     start = page.nextRecordPosition;
-    if (start !== null) await sleep(REQUEST_INTERVAL_MS);
+    // キャッシュ命中（#294）ではリクエストを出していないので待たない。間隔が律速するのはリクエスト。
+    if (start !== null && lastFetchHitNetwork()) await sleep(REQUEST_INTERVAL_MS);
   }
   return out;
 }

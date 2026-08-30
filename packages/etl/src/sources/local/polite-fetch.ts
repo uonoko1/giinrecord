@@ -6,21 +6,21 @@ import { POLITENESS_FLOOR_MS, sleep } from "../../fetch.ts";
  * 地方議会サイト向けの丁寧な取得（Issue #157）。
  * - 取得先は呼び出し側が渡す許可ホストだけ（それ以外は例外）。
  * - UA を明記し、同じホストへの取得は ≥ 1 秒空ける。
- * - robots.txt を読み、このパスが User-agent: * か gikailog-etl に対して Disallow なら取得しない（404 なら制限なし）。
+ * - robots.txt を読み、このパスが User-agent: * か giinrecord-etl に対して Disallow なら取得しない（404 なら制限なし）。
  * - PDF（URL 固定）だけ .cache/ にキャッシュする。HTML は毎回取得。
  */
-const UA = "gikailog-etl/0.1 (+https://github.com/uonoko1/gikailog)";
+const UA = "giinrecord-etl/0.1 (+https://github.com/uonoko1/giinrecord)";
 /** 値と根拠は `fetch.ts`。#231 で国会側も同じ下限に揃えた。 */
 const MIN_INTERVAL_MS = POLITENESS_FLOOR_MS;
 const CACHE_DIR = new URL("../../../.cache/", import.meta.url);
 
 export interface RobotsRules {
-  /** このホストで取得してはいけないパスの接頭辞（User-agent: * と gikailog-etl の Disallow の和。Allow は見ない＝保守的） */
+  /** このホストで取得してはいけないパスの接頭辞（User-agent: * と giinrecord-etl の Disallow の和。Allow は見ない＝保守的） */
   disallow: string[];
 }
 
 /** robots.txt の最小限の読み方。該当 User-agent ブロックの Disallow を集める。空の Disallow は無視。 */
-export function parseRobots(text: string, agent = "gikailog-etl"): RobotsRules {
+export function parseRobots(text: string, agent = "giinrecord-etl"): RobotsRules {
   const disallow: string[] = [];
   let applies = false;
   let sawAgentLine = false;

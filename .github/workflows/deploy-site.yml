@@ -1,6 +1,6 @@
 name: Deploy site (reusable)
 # Issue #127. Build the static site from `ref` with SITE_ORIGIN=`site_origin` and rsync it to
-# /var/www/gikailog/<target_dir>/ on the VPS as the deploy user. Called by:
+# /var/www/giinrecord/<target_dir>/ on the VPS as the deploy user. Called by:
 #   deploy-staging.yml  push main            → environment staging          target_dir staging  (https://staging.giinrecord.jp)
 #   release.yml         workflow_dispatch    → environment production       target_dir site     (required reviewers = the release button)
 #   deploy-data.yml     dispatched by etl.yml → staging + production-data   (daily data, no approval; docs/ops/deploy.md)
@@ -20,7 +20,7 @@ on:
         required: true
         type: string
       target_dir:
-        description: "Directory under /var/www/gikailog/ to rsync into (site | staging)"
+        description: "Directory under /var/www/giinrecord/ to rsync into (site | staging)"
         required: true
         type: string
       ref:
@@ -83,7 +83,7 @@ jobs:
           printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
           rsync -az --delete --exclude '.well-known' \
             -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes" \
-            apps/web/build/client/ "$USER@$HOST:$TARGET_DIR/"   # deploy 鍵は rrsync /var/www/gikailog に制限（deploy/ops-user-setup.sh）
+            apps/web/build/client/ "$USER@$HOST:$TARGET_DIR/"   # deploy 鍵は rrsync /var/www/giinrecord に制限（deploy/ops-user-setup.sh）
       - name: Summary
         env:
           ENVIRONMENT: ${{ inputs.environment }}
@@ -92,4 +92,4 @@ jobs:
           REF: ${{ inputs.ref }}
           DATA_REF: ${{ inputs.data_ref }}
         run: |
-          echo "deployed ref \`$REF\` ($(git rev-parse HEAD))${DATA_REF:+ + data/ from \`$DATA_REF\`} to \`/var/www/gikailog/$TARGET_DIR/\` (environment $ENVIRONMENT, SITE_ORIGIN=${ORIGIN:-(relative)})" >> "$GITHUB_STEP_SUMMARY"
+          echo "deployed ref \`$REF\` ($(git rev-parse HEAD))${DATA_REF:+ + data/ from \`$DATA_REF\`} to \`/var/www/giinrecord/$TARGET_DIR/\` (environment $ENVIRONMENT, SITE_ORIGIN=${ORIGIN:-(relative)})" >> "$GITHUB_STEP_SUMMARY"

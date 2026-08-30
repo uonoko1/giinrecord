@@ -7,28 +7,28 @@ The only cron job is the cookie-less access-log aggregation (`deploy/analytics/`
 
 ```
 internet ──443/80──▶ host nginx (certbot TLS)
-                       ├─ giinrecord.jp          sites-available/gikailog.conf          proxy_pass http://127.0.0.1:8081
-                       │     └─▶ web          nginx:alpine  /var/www/gikailog/site    ⇐ rsync: release.yml (manual), deploy-data.yml (daily data)
-                       └─ staging.giinrecord.jp  sites-available/gikailog-staging.conf  proxy_pass http://127.0.0.1:8083
-                             └─▶ web-staging  nginx:alpine  /var/www/gikailog/staging ⇐ rsync: deploy-staging.yml (every push to main), deploy-data.yml
+                       ├─ giinrecord.jp          sites-available/giinrecord.conf          proxy_pass http://127.0.0.1:8081
+                       │     └─▶ web          nginx:alpine  /var/www/giinrecord/site    ⇐ rsync: release.yml (manual), deploy-data.yml (daily data)
+                       └─ staging.giinrecord.jp  sites-available/giinrecord-staging.conf  proxy_pass http://127.0.0.1:8083
+                             └─▶ web-staging  nginx:alpine  /var/www/giinrecord/staging ⇐ rsync: deploy-staging.yml (every push to main), deploy-data.yml
                        both containers: deploy/nginx/site.conf (SPA fallback, cache, security headers; X-Robots-Tag noindex for Host staging.giinrecord.jp)
 ```
 
 | file | role |
 |---|---|
-| `docker-compose.yml` | `web` (`127.0.0.1:8081:80`, `/var/www/gikailog/site`) and `web-staging` (`127.0.0.1:8083:80`, `/var/www/gikailog/staging`): `nginx:1.27-alpine`, site mounted read-only, healthcheck, `restart: unless-stopped`. `SITE_DIR` / `STAGING_SITE_DIR` override the mounts (local/CI) |
+| `docker-compose.yml` | `web` (`127.0.0.1:8081:80`, `/var/www/giinrecord/site`) and `web-staging` (`127.0.0.1:8083:80`, `/var/www/giinrecord/staging`): `nginx:1.27-alpine`, site mounted read-only, healthcheck, `restart: unless-stopped`. `SITE_DIR` / `STAGING_SITE_DIR` override the mounts (local/CI) |
 | `nginx/site.conf` | config inside both containers — the former host server block, unchanged: `try_files … /__spa-fallback.html`, `/assets/` immutable 1y, `/data/` 1h, gzip, `X-Content-Type-Options` / `X-Frame-Options` / `Referrer-Policy` / CSP. Plus a `map $host` that adds `X-Robots-Tag: noindex, nofollow` only for `staging.giinrecord.jp` |
 | `nginx-host-proxy.conf` | host nginx server blocks template: `:80` → 301 `https://DOMAIN` (www included), `:443` TLS → proxy. `vps-setup.sh <domain> [port]` writes the same text with `SERVER_NAMES` / `DOMAIN` / `PORT` / `LOG_NAME` substituted |
 | `vps-setup.sh` | one-time, sudo: web root, host server block, `noip` log format, `nginx -t` → reload (exit 1 on a broken config). Port `8081` (default) = production, `8083` = staging. **Installs nothing** |
-| `go-live.sh` | production go-live, root, idempotent (docker install, `/opt/gikailog` checkout, compose up, `vps-setup.sh`, certbot, analytics) |
+| `go-live.sh` | production go-live, root, idempotent (docker install, `/opt/giinrecord` checkout, compose up, `vps-setup.sh`, certbot, analytics) |
 | `staging-setup.sh` | staging go-live, root, idempotent, after production exists: staging web root, compose up, `cloudflare-allowlist.sh --install-cron`, `vps-setup.sh staging.giinrecord.jp 8083`, certbot |
-| `cloudflare-allowlist.sh` | Issue #163: `/etc/nginx/snippets/gikailog-cloudflare-allow.conf` (`allow` Cloudflare's ips-v4/v6, `deny all`) from strictly validated ranges, atomic write, `nginx -t` gate with rollback, `--install-cron` = weekly root cron. Included by the **staging** 443 block only, which also returns 403 without `Cf-Access-Jwt-Assertion` (staging is behind Cloudflare Access: `docs/ops/staging-access.md`) |
-| `analytics/` | IP-less access-log aggregation of `gikailog.access.log` (production only; staging logs to `gikailog-staging.access.log` and is not aggregated) |
+| `cloudflare-allowlist.sh` | Issue #163: `/etc/nginx/snippets/giinrecord-cloudflare-allow.conf` (`allow` Cloudflare's ips-v4/v6, `deny all`) from strictly validated ranges, atomic write, `nginx -t` gate with rollback, `--install-cron` = weekly root cron. Included by the **staging** 443 block only, which also returns 403 without `Cf-Access-Jwt-Assertion` (staging is behind Cloudflare Access: `docs/ops/staging-access.md`) |
+| `analytics/` | IP-less access-log aggregation of `giinrecord.access.log` (production only; staging logs to `giinrecord-staging.access.log` and is not aggregated) |
 
 Who may do what on the shared host:
 
 - **`ubuntu`** = the CI deploy-key user (`deploy-site.yml` rsync, key restricted with `restrict,no-pty`). It owns
-  `/var/www/gikailog/site` and `/var/www/gikailog/staging` and nothing else. It is **not** in the `docker` group and
+  `/var/www/giinrecord/site` and `/var/www/giinrecord/staging` and nothing else. It is **not** in the `docker` group and
   never will be — docker-group membership is root-equivalent, and a leaked deploy key must remain a file-copy key.
 - **a human with sudo** installs Docker, runs `docker compose`, runs certbot. None of that is automated.
 
@@ -40,7 +40,7 @@ site is reachable as `giinrecord.jp` once DNS is live.
 
 ### production
 
-All of this (plus the `seiji-kiroku` → `gikailog` path migration, Issue #119) is automated by `deploy/go-live.sh`
+All of this (plus the `gikailog` → `giinrecord` path migration; the same shape as #119's `seiji-kiroku` → `gikailog`) is automated by `deploy/go-live.sh`
 (`ssh -t "$VPS_SSH_HOST" 'sudo bash -s giinrecord.jp' < deploy/go-live.sh`); the steps below are the manual equivalent.
 
 ```sh
@@ -50,8 +50,8 @@ ssh "$VPS_SSH_HOST" 'sudo bash -s DOMAIN' < deploy/vps-setup.sh
 # 2. (human, sudo) Docker Engine + compose plugin, if not present: https://docs.docker.com/engine/install/ubuntu/
 #    Do NOT add `ubuntu` to the docker group.
 # 3. (human with docker privileges) start the containers from a checkout of this repo
-ssh "$VPS_SSH_HOST" 'git clone https://github.com/uonoko1/gikailog.git /opt/gikailog'   # or git pull
-ssh "$VPS_SSH_HOST" 'docker compose -f /opt/gikailog/deploy/docker-compose.yml up -d --force-recreate'
+ssh "$VPS_SSH_HOST" 'git clone https://github.com/uonoko1/giinrecord.git /opt/giinrecord'   # or git pull
+ssh "$VPS_SSH_HOST" 'docker compose -f /opt/giinrecord/deploy/docker-compose.yml up -d --force-recreate'
 ssh "$VPS_SSH_HOST" 'curl -sI http://127.0.0.1:8081/ | head -1'                               # 200 once a build was rsynced
 # 4. DNS: A record  DOMAIN -> the VPS (address from the hosting panel; never commit it)
 # 5. TLS (after DNS propagates) — certonly: certbot does not edit nginx config (the template owns the redirects)
@@ -76,12 +76,12 @@ ssh -t "$VPS_SSH_HOST" 'sudo bash -s' < deploy/staging-setup.sh
 ```
 
 Then on GitHub: Environment `staging` with the same `DEPLOY_*` secrets as `production` (and `production-data`, see
-below), and the first `Deploy (staging)` run fills `/var/www/gikailog/staging`.
+below), and the first `Deploy (staging)` run fills `/var/www/giinrecord/staging`.
 
 ## Continuous deploy
 
 All three workflows call the reusable `.github/workflows/deploy-site.yml` (build with `SITE_ORIGIN` → `rsync --delete`
-to `/var/www/gikailog/<target_dir>/` as user `ubuntu`). The containers serve the new files immediately — the
+to `/var/www/giinrecord/<target_dir>/` as user `ubuntu`). The containers serve the new files immediately — the
 directories are bind-mounted, nothing to restart.
 
 | workflow | trigger | environment | builds | rsync target |
@@ -91,8 +91,13 @@ directories are bind-mounted, nothing to restart.
 | `deploy-data.yml` | dispatched by `etl.yml` / `districts.yml` after the data PR merges (+ 06:30 JST safety net) | `staging` and `production-data` (no reviewers) | `main` | both |
 
 GitHub Environment secrets (identical in `staging`, `production`, `production-data`): `DEPLOY_SSH_KEY`, `DEPLOY_HOST`,
-`DEPLOY_USER`, `DEPLOY_KNOWN_HOSTS`. To rotate the key: `ssh-keygen -t ed25519 -C "gikailog github-actions deploy"`,
-replace the line tagged `gikailog github-actions` in `~ubuntu/.ssh/authorized_keys`, update `DEPLOY_SSH_KEY` everywhere.
+`DEPLOY_USER`, `DEPLOY_KNOWN_HOSTS`. To rotate the key: `ssh-keygen -t ed25519 -C "giinrecord github-actions deploy"`,
+replace the line tagged `giinrecord github-actions` in `~ubuntu/.ssh/authorized_keys`, update `DEPLOY_SSH_KEY` everywhere.
+
+> **Rename (gikailog → giinrecord)**: the key line on the VPS still reads `gikailog github-actions deploy` and
+> `command="/usr/bin/rrsync /var/www/gikailog"` until a human edits it. `deploy/ops-user-setup.sh` only matches the
+> new comment, so it silently does nothing until then — and the rsync itself fails once `/var/www` is renamed.
+> `deploy/go-live.sh` step 0 prints this as a manual step; the procedure is in `docs/ops/deploy.md`.
 
 ## Changing nginx config or the image
 

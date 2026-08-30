@@ -1,4 +1,4 @@
-# 議員レコード (gikailog)
+# 議員レコード (giinrecord)
 
 言ったことではなく、やったことを。 https://giinrecord.jp
 

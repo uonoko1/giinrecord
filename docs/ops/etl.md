@@ -4,7 +4,7 @@
 
 ```
 06:00 JST schedule / workflow_dispatch(sessions, rebuild)
-  0. docker build           packages/etl/Dockerfile → gikailog-etl:ci（GHCR に push しない。レイヤーは type=gha キャッシュ）
+  0. docker build           packages/etl/Dockerfile → giinrecord-etl:ci（GHCR に push しない。レイヤーは type=gha キャッシュ）
   1. actions/cache/restore  packages/etl/.cache（key: etl-cache-YYYY-MM-DD、restore-keys で前日以前から復元）
   1.5 rebuild=yes のときだけ  scripts/ci/etl-rebuild-prepare.sh が国会側の data/ を消す（#284。既定は何もしない。下の「作り直し」の節）
   2. docker run [sessions]  data/ と packages/etl/.cache を bind mount、runner の uid で実行 → data/ を書き、validateDataset が違反を見つけたら非0終了
@@ -29,7 +29,7 @@
 
 - #231 以前は国会 HTML が 0.5 秒・地方議会が 1 秒という**二重基準**で、経緯で別々に実装されたもの。1 秒に揃えた。
 - 会議録 API だけ 2 秒にしたのは、**提供元自身が明示的に要求している**唯一のケースだから。以前の 1 秒はこの要求を満たしていなかった。
-- UA は `gikailog-etl/0.1 (+https://github.com/uonoko1/gikailog)` のまま（GitHub リポジトリが連絡先として機能する）。
+- UA は `giinrecord-etl/0.1 (+https://github.com/uonoko1/giinrecord)`（GitHub リポジトリが連絡先として機能する）。リポジトリ改名にあわせて `gikailog-etl/0.1 (+https://github.com/uonoko1/gikailog)` から変更した（#288）。robots.txt の照合 UA 名も `giinrecord-etl` になる。改名前に取得元が `gikailog-etl` を名指しした robots.txt ルールを書いていた場合、そのルールは適用されなくなる（2026-08 時点で取得元 6 サイトのうち robots.txt に当プロジェクトを名指しした記述は確認していない）。
 
 ### 確認したこと・できなかったこと（2026-08-25）
 
@@ -144,11 +144,68 @@ gh workflow run etl.yml \
 - **回次が全 22 回次に足りなければ、消す前に非0終了する。** `data/` を消してから既定の 5 回次だけ流すと、残り 17 回次を引き継ぐ元が無くなり永久に失われるため。
 - 消した内訳（パスと件数）はステップのログと Job Summary に出る。データ PR は通常どおり `data/refresh` に作られ、削除もその PR に含まれる（`git add data` は削除を stage する）。
 
+### 作り直しのキャッシュ（`ETL_CACHE_CLOSED_SESSIONS`、#294）
+
+**作り直しは 1 回では完走しない**（上の 360 分の上限）。#294 は「**繰り返せば確実に前進する**」ように、
+**最新回次より古い回次の取得だけ** `.cache` から読めるようにした。
+
+- **既定では無効。** `etl.yml` は `rebuild=yes` の dispatch にだけ `ETL_CACHE_CLOSED_SESSIONS=1` を立てる
+  （`github.event.inputs.rebuild == 'yes' && '1' || ''`）。cron 実行と `sessions` だけの手動実行では
+  空になり、**日次 ETL の取得の振る舞いは 1 バイトも変わらない**。発火する値は `"1"` だけ。
+- **キャッシュするのは `session < memberSession` の取得だけ。** `memberSession`（`meta.sessions` の最大）
+  そのものは常に取り直す。回次の分からない取得（衆院名簿は URL に回次が無く常に「現在」を返す）も
+  常に取り直す。
+- ローカルで作り直すときも同じ: `ETL_CACHE_CLOSED_SESSIONS=1 pnpm etl 200 … 221`。
+
+#### なぜ「最新回次以外」で切れるのか（2026-08-26 の実測）
+
+`docs/research/committee-speeches.md` の 2026-08-25 実測（全 22 回次の `numberOfRecords`）を基準に、
+翌 2026-08-26T13:46Z に同じ API へ問い合わせて差分を見た
+（UA は `fetch.ts` と同じ `giinrecord-etl/0.1`、間隔 3 秒、計 15 リクエスト）:
+
+| 回次（参院） | 08-25 | 08-26 | 差 |
+|---|---|---|---|
+| 200 / 202 / 205 / 208 / 213 / 214 / 216 / 217 / 218 / 219 / 220 | （研究 doc の値） | 同じ | **すべて 0** |
+| **221（最新）** | 37,164 | **37,318** | **+154** |
+
+`sessionFrom=222` は 0 件で、第221回が現時点の最新回次である。
+
+**日付では切れない**: 第221回の最新レコードの日付は **2026-02-18**（半年前）だった。
+増分は「最近開かれた会議が公開された」のではなく、**古い会議録への後からの追記・訂正**である。
+したがって「日付が古いからキャッシュしてよい」は成り立たず、**安全に切れるのは回次の単位だけ**。
+
+#### キャッシュ命中では待たない
+
+会議録 API のページングは以前、**命中かどうかに関わらず 2 秒待って**いた。
+取得間隔を律速するのはリクエストであり（NDL の利用条件も「データを取得し終えてから
+数秒程度空けて次の**リクエスト**を」とリクエストを主語にしている）、命中は
+リクエストを発生させないので待つ理由が無い。参院 22 回次は約 3,751 ページ
+（#263 の 4,085 − 衆院 1 回次ぶん 334）で、**命中しても待つと待ちだけで約 2.1 時間**を使う。
+
+`lastFetchHitNetwork()`（`fetch.ts`）が「直前の取得が実際にネットワークへ出たか」を返し、
+ページング 3 箇所はこれが `true` のときだけ待つ。**フラグが無ければ常に `true`** なので、
+日次 ETL の待ち時間は変わらない。**間隔の定数（`NDL_API_INTERVAL_MS` = 2 秒）は縮めていない。**
+
+#### この仕組みで解けないこと（実態より強く書かない）
+
+- **1 回目の実行は依然として完走しない。** キャッシュが空だからである。
+  解けるのは「**2 回目以降が前進すること**」だけで、「1 回で終わること」ではない。
+- **何回の dispatch で終わるかは予測できない。** 1 回あたりどれだけ進むかは相手の応答時間次第で、
+  実測していない。進捗は `gh api repos/<owner>/<repo>/actions/caches` の**サイズの増加**で見る
+  （ステップの `success` は保存された証拠にならない。上の節）。
+- **キャッシュ量は未測定。** 現在 93MB で、参院 22 回次の会議録ページが乗れば数百MB規模になる見込み
+  （GitHub Actions cache の上限はリポジトリあたり 10GB）。**上限に当たるかは測っていない。**
+- **「過去回次は増えない」は 11 回次 × 24 時間の観測**であって、証明ではない。
+  だから既定で無効にし、作り直しという特殊な作業にだけ明示的に効かせる。
+  作り直しの後、通常の日次実行が全回次を取り直すことはないが、
+  引き継ぎ（`carried`）ではなく取得が必要になった回次は `sessions` を指定して取り直せばよい。
+
 ### ローカルで流す
 
 ```
 DATA_DIR=data scripts/ci/etl-rebuild-prepare.sh yes "200 201 202 203 204 205 206 207 208 209 210 211 212 213 214 215 216 217 218 219 220 221"
-pnpm etl 200 201 202 203 204 205 206 207 208 209 210 211 212 213 214 215 216 217 218 219 220 221
+# 2 回目以降を前進させるなら ETL_CACHE_CLOSED_SESSIONS=1 を付ける（#294。最新回次は常に取り直す）
+ETL_CACHE_CLOSED_SESSIONS=1 pnpm etl 200 201 202 203 204 205 206 207 208 209 210 211 212 213 214 215 216 217 218 219 220 221
 ```
 
 - **`rm -rf data/members` としてはいけない**（2026-08-25 の修正前まで、この節はそう書いていた）。`data/members/` は国会（`m_*` 参院 / `h_*` 衆院）と地方議会（`p_*`）が**同じディレクトリを共有している**（#157）。`writeDataset` は地方の行を「消す前に読んで書き戻す」ことで守っているので、ディレクトリごと先に消すとその読み取りが空振りし、地方議員の detail（2026-08-25 の `data/` で 285 件）と `members/index.json` の地方の行が復元されないまま失われる。
@@ -157,8 +214,56 @@ pnpm etl 200 201 202 203 204 205 206 207 208 209 210 211 212 213 214 215 216 217
   `planSessions` の `carried` は前回出力から作るので、`data/` を消すと指定しなかった回次を
   引き継ぐ元が無い。分けて流すと 2 回目以降で前の chunk が消え、しかも**最初の実行には
   前回出力が無いので消失検出も止められない**（前回出力との比較が成り立たない）。
-- 所要は **約 3 時間 53 分**（#242 で委員会発言が入った後の実測ベースの見積り。内訳は上の表）。
-  `timeout-minutes: 360` に収まる。`.cache/` が残っていれば短くなる。
+> **【重要・2026-08-25 の実測】GitHub ホステッドランナーのジョブ上限は 6 時間（360分）で、
+> `timeout-minutes` では超えられない。** 480 を指定した run 32890265206 は**きっかり 360 分**で
+> `cancelled` になった。作り直しは実測 359 分でこの上限に張り付くため、**1 回では完走できない**。
+>
+> **運用**: `Run ETL` のステップ timeout（330分）で先に打ち切り、`.cache` を保存してから終わる。
+> 2 回目以降は `Wipe Diet data` が再び `data/` を消すが、**キャッシュは消さない**。
+>
+> > **【訂正 2026-08-26・#294】** この節は当初「同じ dispatch をもう一度流せば取得済みページは
+> > キャッシュから読むので続きから進む」と書いていたが、**作業量の大半についてこれは事実ではなかった**。
+> > `{ noCache: true }` は会議録 API だけでなく議案・質問主意書・名簿・採決一覧にも付いており
+> > （実装を確認した時点で 14 箇所 / 10 ファイル）、キャッシュから読まれるのは
+> > **個票の投票結果ページだけ**だった。つまり前段（名簿・議案・質問主意書）の 3 時間半は
+> > 毎回ゼロから取り直しで、cache/save の key を直した後も同じである。
+> > **これを実際にキャッシュから読ませるのが #294**（上の「作り直しのキャッシュ」）。
+>
+> 実績: 1 回目（run 32853869643）はステップ timeout が無く、キャッシュも保存されずに全損。
+> 2 回目（run 32890265206）は 360 分で打ち切られ、キャッシュ 93MB を保存。
+> 3 回目（run 32919656778）も 360 分で打ち切られたが、**キャッシュが 93MB のまま増えなかった**。
+>
+> **原因**: `actions/cache/save` は**同じ key が既にあると黙ってスキップし、ステップは success と表示される**。
+> key が `etl-cache-<日付>` だったので、同じ日の 2 回目以降は保存されない。
+> 3 回目の 6 時間ぶんの取得はこれで失われた。**`success` は保存された証拠にならない。**
+>
+> 対策: save の key に `${{ github.run_id }}-${{ github.run_attempt }}` を足して run ごとに一意にした。
+> restore は `restore-keys: etl-cache-` の前方一致なので、次の run は最新のキャッシュから始まる。
+> **キャッシュが実際に育っているかは `gh api repos/<owner>/<repo>/actions/caches` のサイズで確認する。**
+
+> **【2026-08-25〜26 の実測】1 回の dispatch では完走できない。**
+>
+> - **GitHub ホステッドランナーのジョブ上限は 6 時間（360分）**で、`timeout-minutes` では超えられない
+>   （480 を指定した run 32890265206 が**きっかり 360 分**で `cancelled`）。作り直しは実測 359 分で張り付く。
+> - **`actions/cache/save` は同じ key が既にあると黙ってスキップし、ステップは `success` と表示される。**
+>   key が `etl-cache-<日付>` だったため同じ日の 2 回目以降は保存されず、
+>   run 32919656778 の 6 時間ぶんが失われた（キャッシュは 93MB のまま増えなかった）。
+>   → save の key に `run_id`・`run_attempt` を足して一意にした。
+>
+> **運用**: `Run ETL` を 330 分で先に打ち切り、残り 30 分で `.cache` を保存して終わる。
+> `Wipe Diet data` は毎回 `data/` を消すが**キャッシュは消さない**。
+> **同じ dispatch を繰り返し流すと少しずつ進むのは、#294 で `ETL_CACHE_CLOSED_SESSIONS=1` を
+> 立てた場合だけ**である（それ以前は前段の取得がキャッシュされず、繰り返しても前進しなかった。上の訂正）。
+>
+> **確認**: 進んでいるかは `gh api repos/<owner>/<repo>/actions/caches` の**サイズの増加**で見る。
+> ステップの `success` は保存された証拠にならない。
+
+- **所要は実測で 5 時間超**（2026-08-25 の run 32853869643。**`timeout-minutes: 360` にほぼ張り付く**）。
+  当初「約 3 時間 53 分」と見積もったが、**応答時間を 0.7 秒/req と置いたのが楽観的**だった（実測は 1.2〜1.5 秒相当）。
+  `.cache/` が残っていれば短くなるが、**タイムアウトするとキャッシュ保存ステップに到達しないので次回もゼロから**になる。
+  - **`data/` を消してからの作り直しは chunk に分けられない**（上記）ので、**タイムアウト＝その回の作業が全損**する。
+  - 実行前に `timeout-minutes` の引き上げを検討する。**本番の `data/`（`main`）は無傷**なので、
+    失敗しても壊れるのは `data/refresh` ブランチだけ（そこにも書かれずに終わる）。
 - 走らせたあと `git diff --stat data/` で減った件数を確認し、**PR に数字を書く**（何がどれだけ減ったか。「意図した減少」であることを事実として残す）。
 - 作り直しの後は、次の日次実行から通常どおり引き継ぎが効く。引き継ぎ行にも在職の確認がかかる（`carriedTenureVerified`）ので、古い紐づけが引き継ぎ経由で戻ってくることはない。
 
@@ -217,8 +322,12 @@ spike の結論は `docs/research/backfill-142-199.md`、契約は `docs/DATA_CO
 > **【訂正 2026-08-25】** この表は当初「約 8,000 ページ・約 6 時間・timeout を超える」と書いていたが、
 > **衆参の全回次を取る前提で数えた誤り**だった。実際には **衆院は `memberSession` の 1 回次だけ**しか
 > 取らない（`DATA_CONTRACT.md` の `TimelineEntry(speech)`。衆院名簿が「現在」の 1 枚しか無いため。#71）。
-> 参院 22 回次＋衆院 1 回次で数え直すと **4,085 ページ・約 3 時間 6 分**で、`timeout-minutes: 360` に収まる。
-> 採決・議案・質問主意書（HTML、1 秒間隔）と委員会名簿を足した**作り直し全体でも約 3 時間 53 分**。
+> 参院 22 回次＋衆院 1 回次で数え直すと **4,085 ページ**。
+>
+> **【再訂正 2026-08-25】** 上の「約 3 時間 6 分」「全体で約 3 時間 53 分」も**まだ楽観的だった**。
+> 応答時間を 0.7 秒/req と置いていたが、実測（run 32853869643）では **5 時間を超えた**。
+> ページ数（4,085）は正しいので、**待ち時間ではなく応答時間の見積りが外れた**。
+> 実運用の目安は **1 ページあたり 2 秒（間隔）＋ 1.2〜1.5 秒（応答）**。
 
 **通常の追加なら回次を分ける**（#219 のバックフィルと同じ）。間隔は縮めない。
 
@@ -273,8 +382,8 @@ ETL_UID=$(id -u) ETL_GID=$(id -g) docker compose -f deploy/docker-compose.etl.ym
 # サイト側の compose（#85）と重ねる場合
 docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.etl.yml run --rm etl 221
 # compose を使わない場合
-docker build -f packages/etl/Dockerfile -t gikailog-etl .
-docker run --rm --user "$(id -u):$(id -g)" -v "$PWD/data:/app/data" -v "$PWD/packages/etl/.cache:/app/packages/etl/.cache" gikailog-etl 221
+docker build -f packages/etl/Dockerfile -t giinrecord-etl .
+docker run --rm --user "$(id -u):$(id -g)" -v "$PWD/data:/app/data" -v "$PWD/packages/etl/.cache:/app/packages/etl/.cache" giinrecord-etl 221
 ```
 
 - `ETL_UID`/`ETL_GID` を省くと 1000:1000（イメージ内の `node`）で動く。ホストの uid が 1000 でないなら必ず渡す（root や別 uid のファイルが data/ に残ると `git add` と次の `pnpm etl` で困る）。CI は `--user "$(id -u):$(id -g)"` で runner の uid に合わせている。
@@ -302,7 +411,7 @@ docker run --rm --user "$(id -u):$(id -g)" -v "$PWD/data:/app/data" -v "$PWD/pac
 
 ## 地方議会 ETL（月次、`.github/workflows/local-assemblies.yml`、#157 宮城・#183 徳島・#184 鳥取・#203 三重）
 - 毎月 5 日 05:00 JST（議会は定例会ごとに更新されるので月 1 回で足りる）と `workflow_dispatch`。日次と同じイメージで `--entrypoint node … src/local-cli.ts <name>` を `ASSEMBLIES`（`miyagi=pref-04 tokushima=pref-36 tottori=pref-31 mie=pref-24`。議会を足すときはここと `packages/etl/src/local-assemblies.ts` の `LOCAL_SOURCES` に 1 行）の順に走らせ、議会ごとに `data/assemblies/{id}/`（meta・sessions・rollcalls・unmatched）、`data/members/` のその議会の議員（index の行と `p_{prefCode}_*.json`）、`data/assemblies/index.json` のその議会の行だけを書く（国会の行も他の議会の行も触らない。日次 ETL も地方の行を残す）。data PR の流れは選挙区 ETL と同じで、ブランチは `data/local-assemblies`、失敗 Issue のタイトルは「地方議会 ETL 月次実行が失敗した（local-assemblies.yml）」。`concurrency: etl` で日次・選挙区と直列化する。
-- 宮城県議会（`docs/DATA_CONTRACT.md`「地方議会」）: 名簿 3 ページ＋会期 index＋直近 2 会期の会期ページ（HTML、毎回取得）と表決 PDF（実行中だけ `.cache/`）。取得は `www.pref.miyagi.jp` だけ・UA `gikailog-etl/0.1`・1 秒以上間隔・robots.txt 遵守（`packages/etl/src/sources/local/polite-fetch.ts`。2026-08 時点で robots.txt は 404）。
+- 宮城県議会（`docs/DATA_CONTRACT.md`「地方議会」）: 名簿 3 ページ＋会期 index＋直近 2 会期の会期ページ（HTML、毎回取得）と表決 PDF（実行中だけ `.cache/`）。取得は `www.pref.miyagi.jp` だけ・UA `giinrecord-etl/0.1`・1 秒以上間隔・robots.txt 遵守（`packages/etl/src/sources/local/polite-fetch.ts`。2026-08 時点で robots.txt は 404）。
 - 徳島県議会（#183）: 議員紹介 2 ページ（会派別・選挙区別）＋定例会の概要（今年。足りなければ前年の年ページ）＋直近 2 会期の会期ページと、採決日ごとの表決 PDF（2月定例会は 3 本）。取得は `www.pref.tokushima.lg.jp` だけ（robots.txt は `/system` などを Disallow。`/gikai/` と `/file/attachment/` は対象外）。名簿に掲載日が無いので as-of は取得日（JST）。表決方法・人数の欄が無いので `method` / `counts` は書かない。PDF の表復元は宮城と同じ罫線方式（共通部は `sources/local/pdf-table.ts`）。
 - 鳥取県議会（#184）: 取得は `www.pref.tottori.lg.jp` だけ（robots.txt は `/secure/221685/` などを Disallow。議決結果ページと賛否 PDF `/secure/{番号}/…` は対象外。毎回読んで従う）。名簿 1 ページ＋会期 index＋会期ページ（議決結果の無い会期も見て飛ばす）＋議決結果ページ（HTML、毎回取得）と賛否 PDF（会期に 4 本ほど。同じ内容の複製も URL が違えば取る。実行中だけ `.cache/`）。2026-08 時点で 118 件（6月定例会 30・2月定例会 88）、不明セル 0、unmatched 0。鳥取の PDF は姓だけなので、名簿に同姓が増えると unmatched が増える（候補は `unmatched.json` の `candidates` に列挙され、ETL は選ばない）。
 - 三重県議会（#203）: 取得は `www.pref.mie.lg.jp` だけ（robots.txt の Disallow は 1 つの PDF のみで名簿・賛否は対象外。毎回読んで従う）。名簿は 選挙区別５０音順 1 ページ＋選挙区別名簿 → 15 選挙区ページ（`a name` の slug が id の元）、会期は「議案審議結果一覧」1 ページ → 月別の賛否 PDF（通年議会なので 1 会期＝1 年分。--sessions 2 の既定で令和8年・令和7年の 13 本）。PDF は 1 ページに全議案×全議員（47 列、列幅 約15pt）の高密度の表で、文字はオペレータ列から 1 命令 1 アイテムで読む（`mie/glyphs.ts`。getTextContent は令和8年5月分で隣の列の「辻󠄀」を前の氏名に結合して位置を失う）。表決方法の欄が無いので `method` は書かない。
@@ -313,7 +422,7 @@ docker run --rm --user "$(id -u):$(id -g)" -v "$PWD/data:/app/data" -v "$PWD/pac
 - 失敗モード（三重）: 「選挙区ページで N 人」「ふりがな/所属会派 missing」「定数の合計 … !== ５０音順の定数」＝名簿 2 系統の食い違い（サイトの更新途中なら翌日に再実行）、「賛否 link … is not 令和N年M月」「PDF title says … but the link says …」＝会期 index と PDF の不一致、「column N header … !==」「expected one group-bottom rule」「member columns differ from page 1」「議案等番号 … is not {種別}第N号」＝PDF のレイアウト変化、「unsupported text-positioning op」「rotated/scaled text matrix」＝PDF の作り（描画命令）の変化（`mie/glyphs.ts` の前提が崩れた）。いずれも data/ は書かれない。
 ## 地方議会 ETL（月次、`.github/workflows/local-assemblies.yml`、#157 宮城・#183 徳島・#184 鳥取・#202 奈良）
 - 毎月 5 日 05:00 JST（議会は定例会ごとに更新されるので月 1 回で足りる）と `workflow_dispatch`。日次と同じイメージで `--entrypoint node … src/local-cli.ts <name>` を `ASSEMBLIES`（`miyagi=pref-04 tokushima=pref-36 tottori=pref-31 mie=pref-24 nara=pref-29 kochi=pref-39`。議会を足すときはここと `packages/etl/src/local-assemblies.ts` の `LOCAL_SOURCES` に 1 行）の順に走らせ、議会ごとに `data/assemblies/{id}/`（meta・sessions・rollcalls・unmatched）、`data/members/` のその議会の議員（index の行と `p_{prefCode}_*.json`）、`data/assemblies/index.json` のその議会の行だけを書く（国会の行も他の議会の行も触らない。日次 ETL も地方の行を残す）。data PR の流れは選挙区 ETL と同じで、ブランチは `data/local-assemblies`、失敗 Issue のタイトルは「地方議会 ETL 月次実行が失敗した（local-assemblies.yml）」。`concurrency: etl` で日次・選挙区と直列化する。
-- 宮城県議会（`docs/DATA_CONTRACT.md`「地方議会」）: 名簿 3 ページ＋会期 index＋直近 2 会期の会期ページ（HTML、毎回取得）と表決 PDF（実行中だけ `.cache/`）。取得は `www.pref.miyagi.jp` だけ・UA `gikailog-etl/0.1`・1 秒以上間隔・robots.txt 遵守（`packages/etl/src/sources/local/polite-fetch.ts`。2026-08 時点で robots.txt は 404）。
+- 宮城県議会（`docs/DATA_CONTRACT.md`「地方議会」）: 名簿 3 ページ＋会期 index＋直近 2 会期の会期ページ（HTML、毎回取得）と表決 PDF（実行中だけ `.cache/`）。取得は `www.pref.miyagi.jp` だけ・UA `giinrecord-etl/0.1`・1 秒以上間隔・robots.txt 遵守（`packages/etl/src/sources/local/polite-fetch.ts`。2026-08 時点で robots.txt は 404）。
 - 徳島県議会（#183）: 議員紹介 2 ページ（会派別・選挙区別）＋定例会の概要（今年。足りなければ前年の年ページ）＋直近 2 会期の会期ページと、採決日ごとの表決 PDF（2月定例会は 3 本）。取得は `www.pref.tokushima.lg.jp` だけ（robots.txt は `/system` などを Disallow。`/gikai/` と `/file/attachment/` は対象外）。名簿に掲載日が無いので as-of は取得日（JST）。表決方法・人数の欄が無いので `method` / `counts` は書かない。PDF の表復元は宮城と同じ罫線方式（共通部は `sources/local/pdf-table.ts`）。
 - 鳥取県議会（#184）: 取得は `www.pref.tottori.lg.jp` だけ（robots.txt は `/secure/221685/` などを Disallow。議決結果ページと賛否 PDF `/secure/{番号}/…` は対象外。毎回読んで従う）。名簿 1 ページ＋会期 index＋会期ページ（議決結果の無い会期も見て飛ばす）＋議決結果ページ（HTML、毎回取得）と賛否 PDF（会期に 4 本ほど。同じ内容の複製も URL が違えば取る。実行中だけ `.cache/`）。2026-08 時点で 118 件（6月定例会 30・2月定例会 88）、不明セル 0、unmatched 0。鳥取の PDF は姓だけなので、名簿に同姓が増えると unmatched が増える（候補は `unmatched.json` の `candidates` に列挙され、ETL は選ばない）。
 - 奈良県議会（#202）: 取得は `www.pref.nara.lg.jp` だけ（robots.txt は `/documents/22137/*` を Disallow。名簿・会期ページ・表決 PDF は対象外。毎回読んで従う）。名簿（五十音順、1 ページ。as-of はページの「（令和8年4月24日現在）」）＋会期 index `/n161/18579.html`＋会期ページ（表決 PDF の無い会期＝会期中は飛ばす。HTML は毎回取得）と「議員別の議案等に対する表決結果」PDF（議決日ごとに 1 本。実行中だけ `.cache/`）。2026-08 時点で 125 件（6月定例会 37・2月定例会 88）、不明セル 0、unmatched 0。奈良の PDF は文字層で一部の字が落ちる（「芦髙清友」の外字「芦」、「西川均」の「均」）ので、完全一致 → 部分列一致（1 人に決まるときだけ）で寄せる（`docs/DATA_CONTRACT.md`）。

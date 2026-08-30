@@ -132,6 +132,19 @@
    "title": "有人国境離島地域の保全及び特定有人国境離島地域に係る地域社会の維持に関する特別措置法の一部を改正する法律案"
   },
   {
+   "committee": "文部科学委員会",
+   "date": "2026-06-24",
+   "estimated": false,
+   "firstDate": "2026-06-24",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-24",
+   "meetingId": "122105124X01320260624_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105124X01320260624/0"
+  },
+  {
    "billId": "221-衆法-18",
    "date": "2026-06-16",
    "estimated": true,
@@ -273,6 +286,19 @@
    "stanceText": "少数",
    "status": "本院議了",
    "title": "刑事訴訟法の一部を改正する法律案"
+  },
+  {
+   "committee": "国家基本政策委員会",
+   "date": "2026-05-14",
+   "estimated": false,
+   "firstDate": "2026-05-14",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-14",
+   "meetingId": "122104292X00120260514_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104292X00120260514/0"
   },
   {
    "billId": "221-閣法-40",
@@ -1016,6 +1042,19 @@
    "title": "予算委員長坂本哲志君解任決議案"
   },
   {
+   "committee": "予算委員会",
+   "date": "2026-03-11",
+   "estimated": false,
+   "firstDate": "2026-03-11",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-27",
+   "meetingId": "122105261X00920260311_000",
+   "meetings": 9,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00920260311/0"
+  },
+  {
    "billId": "221-閣法-23",
    "date": "2026-03-10",
    "estimated": true,
@@ -1105,6 +1144,19 @@
    "stanceText": "少数",
    "status": "本院議了",
    "title": "インテリジェンスに係る態勢の整備の推進に関する法律案"
+  },
+  {
+   "committee": "農林水産委員会",
+   "date": "2026-03-10",
+   "estimated": false,
+   "firstDate": "2026-03-10",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-16",
+   "meetingId": "122105007X00120260310_000",
+   "meetings": 14,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105007X00120260310/0"
   },
   {
    "billId": "221-閣法-18",
@@ -1391,6 +1443,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "災害対策特別委員会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-14",
+   "meetingId": "122104339X00120260220_000",
+   "meetings": 9,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104339X00120260220/0"
   }
  ]
 }

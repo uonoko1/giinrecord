@@ -25,7 +25,7 @@ PV・ページ・リファラ・日付だけ分かればよいので、最も軽
 ```
 deploy/analytics/
   nginx-noip-log.conf       log_format noip（参考。setup が /etc/nginx/conf.d/ に同じ内容を書く）
-  vps-analytics-setup.sh    sudo で 1 回：gawk、log_format、access_log、/usr/local/lib/gikailog-analytics、cron
+  vps-analytics-setup.sh    sudo で 1 回：gawk、log_format、access_log、/usr/local/lib/giinrecord-analytics、cron
   daily.sh                  cron が root で実行：前日分を集計し ~ubuntu/analytics/YYYY-MM-DD.tsv を ubuntu 所有 600 で置く
   aggregate.sh              純粋な集計（stdin/ファイル → TSV）。packages/etl/test/analytics-aggregate.test.ts が仕様
 ```
@@ -47,8 +47,8 @@ PV として数える行：`GET` かつ `200`/`304` かつ HTML ページ（`/as
 `ubuntu` は deploy-site.yml（deploy-staging / release / deploy-data）が rsync に使う **CI デプロイ鍵のユーザー**。このユーザーを `adm` グループに入れると、鍵が漏れたときに共有 VPS 上の**全ログ**（他サイトの nginx アクセスログ＝IP/UA 入り、`auth.log`、`syslog`）が読めてしまい、この PR の目的（個人情報を持たない）に反する。そのため
 
 - cron は **root** で動かし、`/var/log/nginx` を読むのは root だけ。`daily.sh` が `install -o ubuntu -m 600` で **集計 TSV 1 ファイルだけ**を ubuntu に渡す。
-- root が実行するスクリプトは **root 所有の `/usr/local/lib/gikailog-analytics/`** に置く（`~ubuntu` 配下を root の cron から実行すると、漏れた鍵で root 昇格できてしまう）。更新は `sudo install`。
-- root は ubuntu 所有のディレクトリにリダイレクト（`>`）で書かない（`~/analytics` がシンボリックリンクなら中止、TSV は `mktemp` → `install`）。cron のログは `/var/log/gikailog-analytics.log`（root 600）。
+- root が実行するスクリプトは **root 所有の `/usr/local/lib/giinrecord-analytics/`** に置く（`~ubuntu` 配下を root の cron から実行すると、漏れた鍵で root 昇格できてしまう）。更新は `sudo install`。
+- root は ubuntu 所有のディレクトリにリダイレクト（`>`）で書かない（`~/analytics` がシンボリックリンクなら中止、TSV は `mktemp` → `install`）。cron のログは `/var/log/giinrecord-analytics.log`（root 600）で、`/etc/logrotate.d/giinrecord-analytics`（monthly・12 世代、#288。→ `docs/ops/log-rotation.md`）で回る。
 
 ## 初回セットアップ
 
@@ -58,14 +58,14 @@ ssh "$VPS_SSH_HOST" 'sudo bash -s' < deploy/analytics/vps-analytics-setup.sh
 # 2. スクリプトを root 所有で配置（更新時も同じ。~ubuntu 配下には置かない）
 VPS_SSH_HOST="${VPS_SSH_HOST:-sakura-vps}"   # ssh alias of the VPS (your ~/.ssh/config; the IP is not in the repo, #133)
 scp deploy/analytics/aggregate.sh deploy/analytics/daily.sh "$VPS_SSH_HOST":/tmp/
-ssh "$VPS_SSH_HOST" 'sudo install -o root -g root -m 755 /tmp/aggregate.sh /tmp/daily.sh /usr/local/lib/gikailog-analytics/ && rm /tmp/aggregate.sh /tmp/daily.sh'
+ssh "$VPS_SSH_HOST" 'sudo install -o root -g root -m 755 /tmp/aggregate.sh /tmp/daily.sh /usr/local/lib/giinrecord-analytics/ && rm /tmp/aggregate.sh /tmp/daily.sh'
 # 3. 確認
-ssh "$VPS_SSH_HOST" 'sudo tail -3 /var/log/nginx/gikailog.access.log'   # 行頭が "- - [" で IP が無いこと
-ssh "$VPS_SSH_HOST" 'sudo ANALYTICS_OUT=/home/ubuntu/analytics ANALYTICS_OWNER=ubuntu /usr/local/lib/gikailog-analytics/daily.sh "$(date +%F)"' # 今日分を手動集計
+ssh "$VPS_SSH_HOST" 'sudo tail -3 /var/log/nginx/giinrecord.access.log'   # 行頭が "- - [" で IP が無いこと
+ssh "$VPS_SSH_HOST" 'sudo ANALYTICS_OUT=/home/ubuntu/analytics ANALYTICS_OWNER=ubuntu /usr/local/lib/giinrecord-analytics/daily.sh "$(date +%F)"' # 今日分を手動集計
 ssh "$VPS_SSH_HOST" 'ls -l ~/analytics'                                      # -rw------- ubuntu ubuntu
 ```
 
-`access_log /var/log/nginx/gikailog.access.log noip;` は `vps-setup.sh` が書く proxy block に最初から入っている（certbot が複製した 443 ブロックにも入る）。analytics の setup はその 1 行が無ければ中止する（空の TSV を黙って作らない）。ログローテーションは Ubuntu 既定の `/etc/logrotate.d/nginx`（daily, 14 世代, delaycompress）に乗る。`daily.sh` は `.log` `.log.1` `.log.2.gz` を読んで日付で絞るので、ローテーション時刻と cron の順序に依存しない。
+`access_log /var/log/nginx/giinrecord.access.log noip;` は `vps-setup.sh` が書く proxy block に最初から入っている（certbot が複製した 443 ブロックにも入る）。analytics の setup はその 1 行が無ければ中止する（空の TSV を黙って作らない）。ログローテーションは Ubuntu 既定の `/etc/logrotate.d/nginx`（daily, 14 世代, delaycompress）に乗る。（**nginx のアクセスログの話**。cron 自身のログは別で、#288 で回すようにした）`daily.sh` は `.log` `.log.1` `.log.2.gz` を読んで日付で絞るので、ローテーション時刻と cron の順序に依存しない。
 
 ## 見方
 
@@ -82,11 +82,11 @@ ssh "$VPS_SSH_HOST" 'cat ~/analytics/2026-09-*.tsv | awk -F"\t" "\$1!=\"date\"{r
 
 | 症状 | 原因 | 対応 |
 |---|---|---|
-| `/var/log/gikailog-analytics.log` に `Permission denied` | cron が root で動いていない（`/etc/cron.d` の行が `root` でない）／`~/analytics` を ubuntu が作り直して `daily.sh` が書けない | setup を再実行（cron.d を書き直す）。`ls -ld ~ubuntu/analytics` がシンボリックリンクなら削除 |
+| `/var/log/giinrecord-analytics.log` に `Permission denied` | cron が root で動いていない（`/etc/cron.d` の行が `root` でない）／`~/analytics` を ubuntu が作り直して `daily.sh` が書けない | setup を再実行（cron.d を書き直す）。`ls -ld ~ubuntu/analytics` がシンボリックリンクなら削除 |
 | `daily.sh: refusing symlinked …` | `~ubuntu/analytics` がシンボリックリンク（root が追従しないよう中止） | リンクを消して setup を再実行 |
 | `~/analytics/*.tsv` が ubuntu で読めない | `ANALYTICS_OWNER` が cron.d に無い／手動で root 実行したとき env を付け忘れた | `sudo chown ubuntu:ubuntu ~ubuntu/analytics/*.tsv`、setup を再実行 |
-| `test -x …/daily.sh` で何も起きない | スクリプトが `/usr/local/lib/gikailog-analytics/` に無い（`~/gikailog-analytics` に置いた） | 手順 2 の `sudo install` をやり直す |
-| TSV がヘッダーだけ | その日のアクセスが無い／`access_log … noip` が効いていない | `nginx -T \| grep gikailog.access.log`。`sites-available` を書き直した場合（vps-setup.sh 再実行）は setup も再実行 |
+| `test -x …/daily.sh` で何も起きない | スクリプトが `/usr/local/lib/giinrecord-analytics/` に無い（`~/giinrecord-analytics` に置いた） | 手順 2 の `sudo install` をやり直す |
+| TSV がヘッダーだけ | その日のアクセスが無い／`access_log … noip` が効いていない | `nginx -T \| grep giinrecord.access.log`。`sites-available` を書き直した場合（vps-setup.sh 再実行）は setup も再実行 |
 | 行頭に IP が出ている | `log_format noip` が読み込まれていない（`conf.d` が include されていない） | `nginx -T \| grep noip`。無ければ `nginx.conf` の `include /etc/nginx/conf.d/*.conf;` を確認 |
 | `gawk: not found` | mawk しか無い | `sudo apt-get install gawk`（setup に含まれる） |
 

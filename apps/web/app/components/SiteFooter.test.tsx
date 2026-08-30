@@ -23,7 +23,7 @@ describe("SiteFooter（#167）", () => {
   it("GitHub は外部リンクで noopener noreferrer", () => {
     renderFooter();
     const link = screen.getByRole("link", { name: "GitHub" });
-    expect(link).toHaveAttribute("href", "https://github.com/uonoko1/gikailog");
+    expect(link).toHaveAttribute("href", "https://github.com/uonoko1/giinrecord");
     expect(link).toHaveAttribute("rel", "noopener noreferrer");
   });
 
