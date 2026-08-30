@@ -274,6 +274,19 @@ describe("/coverage 収録範囲", () => {
       expect(section()).toHaveTextContent("会派の記載がない発言者は議員に紐づけません");
     });
 
+    /*
+     * Issue #313: 会議録の院は**会議の院**であって発言者の院ではない。参議院の会議には衆院議員が
+     * 大臣・副大臣として答弁に立ち、連合審査会にも出る（逆も同じ）。読者が「参議院の会議録＝参院議員の発言」と
+     * 読んでしまわないよう、他院の議員の発言も紐づけること、ただし**その議員の院の名簿がその回次を覆う場合だけ**
+     * であることを書く。「活動がない」「発言していない」とは書かない（収録と突合の範囲だけを書く）。
+     */
+    it("他院の議員の発言も、その議員の院の名簿が覆う回次なら紐づけることを書く（#313）", () => {
+      renderPage(withSpeeches("all"), sessions);
+      expect(section()).toHaveTextContent("他院の議員");
+      expect(section()).toHaveTextContent("発言した議員の院の名簿がその回次を覆っている場合にかぎり議員ページに紐づけます");
+      expect(section()).toHaveTextContent("覆っていない回次の発言は、会議録には残りますが議員ページには出ません");
+    });
+
     it("議員ページに出ている発言の件数は members の counts の合計から出す（推論しない）", () => {
       renderPage(withSpeeches("all"), sessions);
       // 参院フィクスチャの counts.speeches は 1 + 0 + 2 = 3

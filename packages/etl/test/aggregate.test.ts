@@ -214,8 +214,32 @@ describe("buildDataset: speech は speeches.json に分ける（#242）", () => 
     assert.equal(d.speeches[0].speeches[0].kind, "speech");
   });
 
-  test("発言の院と議員の院が違えば例外（衆院の発言を参院議員に付けない）", () => {
-    assert.throws(() => buildDataset(members, [], new Map(), [speech("122105254X03520260724_002", "m_1", "2026-07-24", { house: "shugiin" })]), /house/);
+  /*
+   * Issue #313: 会議録の院と議員の院は**一致しない場合がある**。参議院の会議には衆院議員が
+   * 大臣・副大臣として答弁に立ち、連合審査会にも出る（逆も同じ）。#107 の「院が違えば例外」は
+   * その事実と矛盾するので外した。**代わりに守るのは在職の確認**（#230）で、そちらのほうが強い:
+   * 院が一致していても在職が確認できない回次に紐づけるのは、#230 で外した 24,610 行と同じ誤りだから。
+   */
+  test("参議院の会議録の発言を衆院議員に付けられる（他院の議員の答弁・連合審査会。#313）", () => {
+    const h = { ...member("h_1", "衆 一郎", "自由民主党・無所属の会"), house: "shugiin" as const, terms: [{ house: "shugiin" as const, group: "自由民主党・無所属の会", district: "東京1", from: "", sessionFrom: 221 }] };
+    const d = buildDataset([h], [], new Map(), [speech("122115254X01920260605_002", "h_1", "2026-06-05", { house: "sangiin" })]);
+    assert.equal(d.index[0].counts.speeches, 1);
+    assert.equal(d.speeches[0].speeches[0].speechId, "122115254X01920260605_002");
+  });
+
+  test("その回次の在職を名簿から確認できない議員に発言を付けようとすると例外（#230 / #313）", () => {
+    // 衆院名簿は第221回しか覆っていない。第217回の発言を付けるのは在職未確認の紐づけ
+    const h = { ...member("h_1", "衆 一郎", "自由民主党・無所属の会"), house: "shugiin" as const, terms: [{ house: "shugiin" as const, group: "自由民主党・無所属の会", district: "東京1", from: "", sessionFrom: 221 }] };
+    assert.throws(
+      () => buildDataset([h], [], new Map(), [speech("121714260X02220250617_180", "h_1", "2025-06-17", { house: "sangiin", session: 217 })]),
+      /tenure/,
+      "名簿が覆わない回次の発言が素通りしている（#230 の厳しさが失われている）");
+  });
+
+  test("院が同じでも在職を確認できなければ例外（院の一致は在職の確認の代わりにならない）", () => {
+    assert.throws(
+      () => buildDataset(members, [], new Map(), [speech("121715254X01920250605_002", "m_1", "2025-06-05", { session: 217 })]),
+      /tenure/);
   });
 
   test("memberId の無い発言（名簿にいない政府参考人・大臣など）はどこにも入れない", () => {
