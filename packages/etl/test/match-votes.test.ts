@@ -236,6 +236,88 @@ describe("在職を確認できない氏名一致は紐づけない（#230）", 
     assert.equal(rc.votes[0].memberId, "m_2");
   });
 
+  // #320: 参院から衆院へ移った議員。参院の名簿の `to`（任期満了日）は**選挙で決まる任期**なので、
+  // 途中で辞職して衆院へ移っても残る。そのため (b) が古い参院の行を「在職」と判定し、
+  // 衆院の行（(a) で確認できる）と 2 候補になって絞れず、記録が紐づかなくなっていた。
+  //
+  // (a) は「その回次の議員一覧に載っている」という**直接の記載**、(b) は「前の回次に載っていて任期が残る」
+  // という**推論**である。両方が立つときは (a) を採る。在職確認を緩めてはいない（どちらも確認済みの候補）。
+  test("院を移った議員は、その回次の名簿に直接載っている側に紐づく（#320）", () => {
+    const shugiinTerm: MemberTerm = { house: "shugiin", group: "自由民主党・無所属の会", district: "兵庫8", from: "", sessionFrom: 221 };
+    const members = [
+      withTerms("h_1", "青山 繁晴", [shugiinTerm]),                                        // (a) 第221回を直接覆う
+      withTerms("m_1", "青山 繁晴", [t("自由民主党・無所属の会", 216, 218, "2028-07-25")]), // (b) 任期は残るが名簿は218まで
+    ];
+    const { rollCall: rc } = matchVotes(rc221("青山 繁晴", "自由民主党・無所属の会"), members);
+    assert.equal(rc.votes[0].memberId, "h_1");
+  });
+
+  // #320 レビュー: (a) の優先を**会派で絞る前**に置くと、会派の違う別人が正しい候補を押しのける。
+  // 会派は名簿に書いてある事実で、(a)/(b) の別より強い手がかりなので、必ず会派を先に見る。
+  test("会派が違う同姓同名は、(a) の優先より会派で絞るほうが先（#320 の退行防止）", () => {
+    const shugiinTerm: MemberTerm = { house: "shugiin", group: "立憲民主・無所属", district: "", from: "", sessionFrom: 221 };
+    const members = [
+      withTerms("m_1", "山田 太郎", [t("自由民主党・無所属の会", 216, 220, "2028-07-25")]), // (b) で立つ
+      withTerms("h_1", "山田 太郎", [shugiinTerm]),                                          // (a) で立つが会派が違う
+    ];
+    // (b) 側の会派で照会したら (b) 側に紐づく。(a) を先に効かせると h_1 になってしまう
+    assert.equal(matchVotes(rc221("山田 太郎", "自由民主党・無所属の会"), members).rollCall.votes[0].memberId, "m_1");
+    assert.equal(matchVotes(rc221("山田 太郎", "立憲民主・無所属"), members).rollCall.votes[0].memberId, "h_1");
+  });
+
+  // #320 レビュー: 会派が渡ってこない経路（match-bills / match-committee / match-shugiin-bills /
+  // match-attendance は group に undefined を渡す）で (a) を効かせると、**会派の違う別人**に
+  // 確信を持って紐づく。会派で絞れていないときは従来どおり「紐づけない」に落とす。
+  test("会派が分からない経路では (a) を決め手にしない（#230 を緩めない）", () => {
+    const shugiinTerm: MemberTerm = { house: "shugiin", group: "自由民主党・無所属の会", district: "", from: "", sessionFrom: 221 };
+    const members = [
+      withTerms("m_1", "鬼木 誠", [t("立憲民主・無所属", 216, 220, "2028-07-25")]), // (b) で立つ別人
+      withTerms("h_1", "鬼木 誠", [shugiinTerm]),                                    // (a) で立つ
+    ];
+    const index = indexByName(members);
+    // 会派が無ければどちらか決められない。推測しない
+    assert.equal(resolveMember(index, "鬼木 誠", undefined, { session: 221, date: "2026-06-17" }), undefined);
+  });
+
+  // #320 レビュー: 「会派で絞った結果を使う」ことを固定する。`tied = candidates` に変えると
+  // 会派で絞れていない候補にまで (a) が効いてしまう（レビューで見つかったすり抜け）。
+  test("(a) の決め手は、会派で絞れた候補の中だけで使う（#320 の設計）", () => {
+    const sameGroup = "自由民主党・無所属の会";
+    const shugiinTerm: MemberTerm = { house: "shugiin", group: sameGroup, district: "", from: "", sessionFrom: 221 };
+    const members = [
+      withTerms("m_1", "青山 繁晴", [t(sameGroup, 216, 218, "2028-07-25")]), // (b)。会派は一致
+      withTerms("h_1", "青山 繁晴", [shugiinTerm]),                          // (a)。会派は一致
+      withTerms("h_2", "青山 繁晴", [{ ...shugiinTerm, group: "立憲民主・無所属" }]), // (a) だが会派が違う
+    ];
+    const index = indexByName(members);
+    // 会派で m_1 と h_1 に絞られ、その中で (a) の h_1 を採る。h_2 は会派で外れる
+    assert.equal(resolveMember(index, "青山 繁晴", sameGroup, { session: 221, date: "2026-06-17" })?.id, "h_1");
+  });
+
+  // 同姓同名の**別人**（任期が重なる。実在: 鬼木誠は衆院と参院に別人がいて会派も違う）。
+  // どちらも (a) で立つので #320 の優先では絞れず、会派で絞る従来の手順に落ちる。
+  test("両方が (a) で立つ同姓同名は、会派で絞る（#320 で変えない）", () => {
+    const shugiinTerm: MemberTerm = { house: "shugiin", group: "自由民主党・無所属の会", district: "福岡2", from: "", sessionFrom: 221 };
+    const members = [
+      withTerms("h_1", "鬼木 誠", [shugiinTerm]),
+      withTerms("m_1", "鬼木 誠", [t("立憲民主・無所属", 216, 221)]),
+    ];
+    assert.equal(matchVotes(rc221("鬼木 誠", "自由民主党・無所属の会"), members).rollCall.votes[0].memberId, "h_1");
+    assert.equal(matchVotes(rc221("鬼木 誠", "立憲民主・無所属"), members).rollCall.votes[0].memberId, "m_1");
+  });
+
+  // 会派まで同じなら絞れない。推測で紐づけない（#230）。
+  test("両方が (a) で立ち会派も同じなら紐づけない（#320 で変えない）", () => {
+    const shugiinTerm: MemberTerm = { house: "shugiin", group: "自由民主党・無所属の会", district: "福岡2", from: "", sessionFrom: 221 };
+    const members = [
+      withTerms("h_1", "鬼木 誠", [shugiinTerm]),
+      withTerms("m_1", "鬼木 誠", [t("自由民主党・無所属の会", 216, 221)]),
+    ];
+    const out = matchVotes(rc221("鬼木 誠", "自由民主党・無所属の会"), members);
+    assert.equal(out.rollCall.votes[0].memberId, "");   // 紐づけない
+    assert.equal(out.unmatched.length, 1);              // 記録は失わない（unmatched に載る）
+  });
+
   test("回次の分からない呼び出し（議案ページなど）は名簿が覆う回次でしか紐づけない", () => {
     const covered = [withTerms("m_1", "青木 一彦", [t("自由民主党・無所属の会", 216, 221)])];
     const index = indexByName(covered);
