@@ -3,7 +3,7 @@
  * 実ファイルシステムは使わず、Map で表した偽のビルドディレクトリに対して検証する。
  */
 import { describe, expect, it } from "vitest";
-import { checkBrandAssets, checkBuild, checkDistrictData, checkMemberData, checkNoExternalResources, checkOpsData, checkSitemap, externalResourceUrls, extractInternalHrefs, OPS_DATA_FILES, resolveHrefTarget, formatReport, type BuildFiles } from "./smoke";
+import { checkBrandAssets, checkBuild, checkDistrictData, checkMemberData, checkNoExternalResources, checkOpsData, checkSitemap, checkSpaFallback, externalResourceUrls, extractInternalHrefs, OPS_DATA_FILES, resolveHrefTarget, formatReport, SPA_FALLBACK_FILE, type BuildFiles } from "./smoke";
 
 const html = (links: string[]) => `<html><body>${links.map((l) => `<a href="${l}">x</a>`).join("")}</body></html>`;
 
@@ -306,5 +306,45 @@ describe("externalResourceUrls: self-origin and canonical", () => {
     const html = '<link rel="canonical" href="https://giinrecord.jp/x"/><link rel="stylesheet" href="https://giinrecord.jp/a.css"/><script src="https://cdn.example.com/x.js"></script>';
     expect(externalResourceUrls(html, "https://giinrecord.jp")).toEqual(["https://cdn.example.com/x.js"]);
     expect(externalResourceUrls(html, "")).toEqual(["https://giinrecord.jp/a.css", "https://cdn.example.com/x.js"]);
+  });
+});
+
+/**
+ * Issue #325: nginx が 404 の本文として返す /__spa-fallback.html は、
+ * React Router の既定フォールバック（`<html lang="en">`, `<title>Loading...</title>`,
+ * `💿 Hey developer` の console.log）のままだった。root.tsx の HydrateFallback を
+ * 定義すると自分の shell が使われるので、ビルド成果物側でそれを固定する。
+ */
+describe("checkSpaFallback（#325）", () => {
+  const good =
+    '<!DOCTYPE html><html lang="ja"><head><title>ページが見つかりません ・ 議員レコード</title>' +
+    '<meta name="robots" content="noindex"/></head><body><p>読み込み中</p></body></html>';
+
+  it("lang=ja・サイト名入りの title・noindex がそろっていれば失敗なし", () => {
+    expect(checkSpaFallback(new Map([[SPA_FALLBACK_FILE, good]])).failures).toEqual([]);
+  });
+
+  it("ファイルが無ければ失敗（nginx の error_page が指す先）", () => {
+    expect(checkSpaFallback(new Map()).failures).toEqual([`missing page: ${SPA_FALLBACK_FILE}`]);
+  });
+
+  it('lang="en" なら失敗（日本語サイトなので ja）', () => {
+    const r = checkSpaFallback(new Map([[SPA_FALLBACK_FILE, good.replace('lang="ja"', 'lang="en"')]]));
+    expect(r.failures).toContain(`${SPA_FALLBACK_FILE}: <html lang="en"> (expected lang="ja")`);
+  });
+
+  it("<title>Loading...</title> のままなら失敗（外形監視のサイト名検査も通らない）", () => {
+    const r = checkSpaFallback(new Map([[SPA_FALLBACK_FILE, good.replace(/<title>[^<]*<\/title>/, "<title>Loading...</title>")]]));
+    expect(r.failures).toContain(`${SPA_FALLBACK_FILE}: <title>Loading...</title> lacks the site name`);
+  });
+
+  it("noindex が無ければ失敗（404 の本文を索引させない）", () => {
+    const r = checkSpaFallback(new Map([[SPA_FALLBACK_FILE, good.replace(/<meta name="robots"[^>]*>/, "")]]));
+    expect(r.failures).toContain(`${SPA_FALLBACK_FILE}: no <meta name="robots" content="noindex">`);
+  });
+
+  it("開発者向けメッセージ（💿 Hey developer）が本文に残っていれば失敗", () => {
+    const r = checkSpaFallback(new Map([[SPA_FALLBACK_FILE, good.replace("</body>", '<script>console.log("💿 Hey developer 👋.")</script></body>')]]));
+    expect(r.failures).toContain(`${SPA_FALLBACK_FILE}: React Router の既定フォールバック（Hey developer）が残っている`);
   });
 });

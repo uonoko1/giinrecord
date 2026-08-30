@@ -8,6 +8,7 @@
 import type { ZipDistricts } from "@seiji-kiroku/shared";
 import { DIET_ASSEMBLIES } from "./data-contract";
 import { DISTRICTS_DATA_PATH, zipShardUrl } from "./districts";
+import { SITE_NAME } from "./seo";
 import { sitemapLocs } from "./sitemap";
 
 /** relative path (posix, no leading slash) -> file content */
@@ -87,6 +88,34 @@ export function checkBuild(files: BuildFiles, data: ExpectedData): SmokeReport {
     }
   }
   return { checkedPages, checkedLinks, failures };
+}
+
+/**
+ * nginx が 404 の本文として返すファイル（deploy/nginx/site.conf の `error_page 404`）。#325
+ * React Router がプリレンダー無しのルート用に書き出す SPA shell そのもの。
+ */
+export const SPA_FALLBACK_FILE = "__spa-fallback.html";
+
+/**
+ * Issue #325: この shell は 404 の本文であり、/compare（#104）の本文でもある。
+ * HydrateFallback を定義するまで、React Router の既定フォールバックがそのまま出ていた：
+ * `<html lang="en">`（日本語サイトなのに en）、`<title>Loading...</title>`（サイト名が無いので
+ * 外形監視 deploy/monitor/probe.sh の title 検査も通らない）、そして本番のコンソールに出る
+ * `💿 Hey developer` の console.log。ビルド成果物側でそれを固定する。
+ */
+export function checkSpaFallback(files: BuildFiles): { failures: string[] } {
+  const html = files.get(SPA_FALLBACK_FILE);
+  if (html === undefined) return { failures: [`missing page: ${SPA_FALLBACK_FILE}`] };
+  const failures: string[] = [];
+  const lang = html.match(/<html[^>]*\blang="([^"]*)"/)?.[1];
+  if (lang !== "ja") failures.push(`${SPA_FALLBACK_FILE}: <html lang="${lang ?? ""}"> (expected lang="ja")`);
+  const title = html.match(/<title[^>]*>([^<]*)<\/title>/)?.[1] ?? "";
+  if (!title.includes(SITE_NAME)) failures.push(`${SPA_FALLBACK_FILE}: <title>${title}</title> lacks the site name`);
+  if (!/<meta[^>]+name="robots"[^>]+content="[^"]*noindex/.test(html)) {
+    failures.push(`${SPA_FALLBACK_FILE}: no <meta name="robots" content="noindex">`);
+  }
+  if (html.includes("Hey developer")) failures.push(`${SPA_FALLBACK_FILE}: React Router の既定フォールバック（Hey developer）が残っている`);
+  return { failures };
 }
 
 export interface MemberDataReport {

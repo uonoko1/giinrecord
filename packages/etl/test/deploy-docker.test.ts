@@ -101,9 +101,56 @@ test("site.conf: /fonts/ は 1 週間キャッシュ（ハッシュ無しのフ�
   assert.match(siteConf, /location \/fonts\/ \{\s*add_header Cache-Control "public, max-age=604800";/);
 });
 
-test("site.conf: プリレンダリング + SPA fallback の try_files と gzip は旧 server block と同一", () => {
-  assert.match(siteConf, /try_files \$uri \$uri\/index\.html \/__spa-fallback\.html;/);
-  assert.match(siteConf, /gzip_types text\/css application\/javascript application\/json image\/svg\+xml;/);
+// Issue #325: 存在しない URL が 200 を返していた（try_files の最後が /__spa-fallback.html だったため、
+// タイプミスの議員 URL も外部の古いリンクも「中身のあるページ」として索引されうる）。
+// 直し方は「try_files の最後を =404 にし、error_page 404 で fallback の本文を 404 のまま返す」。
+// ただし /compare（#104）はクエリ依存でプリレンダーされないので、明示的に 200 で fallback を返す location が要る。
+test("site.conf: プリレンダー済みは try_files、未知のパスは =404（本文は SPA fallback、ステータスは 404 のまま #325）", () => {
+  const code = uncommented(siteConf);
+  assert.match(code, /location \/ \{\s*try_files \$uri \$uri\/index\.html =404;/, "try_files の最後は =404");
+  assert.doesNotMatch(code, /try_files [^;]*\/__spa-fallback\.html;/, "try_files で fallback に落とすと 200 になる");
+  assert.match(code, /error_page 404 \/__spa-fallback\.html;/, "404 の本文は SPA fallback（catch-all ルートが 404 画面を描く）");
+  assert.match(code, /location = \/__spa-fallback\.html \{[^}]*internal;/, "fallback 自体は直接取得させない");
+  assert.match(code, /gzip_types text\/css application\/javascript application\/json image\/svg\+xml;/);
+});
+
+// Issue #104: /compare はクエリ依存でプリレンダーしない。#325 で未知パスを 404 にしたので、
+// /compare だけは「fallback の本文を 200 で返す」location を明示しないと壊れる。
+test("site.conf: /compare はプリレンダー無しでも 200（クエリ依存の SPA ページ #104 / #325）", () => {
+  const code = uncommented(siteConf);
+  const block = code.match(/location = \/compare \{[\s\S]*?\n {4}\}/)?.[0];
+  assert.ok(block, "location = /compare がある");
+  assert.match(block, /try_files \/__spa-fallback\.html =404;/, "fallback の本文をそのまま 200 で返す（rewrite ではなく try_files。=404 は shell が消えたときの保険）");
+  assert.doesNotMatch(block, /return 404/, "/compare を無条件に 404 にしてはいけない");
+  // `=` の完全一致であること: `location /compare {` だと /compare/anything まで 200 になる
+  assert.match(code, /location = \/compare \{/, "前方一致ではなく完全一致");
+});
+
+// Issue #325: 設定ファイルの文字列（上の 2 件）と、合成 docroot での実機検査（deploy/test/nginx-404.test.sh）に加えて、
+// **本物のビルド成果物**に対して CI が curl で確かめる。合成 docroot は「プリレンダー済みページの形」を真似ただけで、
+// 本物のビルドが同じ形をしている保証は無い（prerender.ts が変われば変わる）。docker-web は artifact の
+// build/client をそのまま配信しているので、そこで叩くのが最後の砦になる。
+test("ci.yml: docker-web は本物のビルドに対して、未知パスが 404・プリレンダー済みと /compare が 200 であることを curl で確かめる（#325）", () => {
+  const job = ci.slice(ci.indexOf("  docker-web:"));
+  const step = job.slice(job.indexOf("Not found (#325)"), job.indexOf("Legacy domain 301"));
+  assert.ok(step.length > 0, "Not found (#325) のステップがある");
+  // プリレンダー済み: 退行していないこと
+  for (const p of ["/", "/members/", "/coverage/", "/assemblies/", "/rollcalls/"]) {
+    assert.match(step, new RegExp(`expect ${p.replace(/\//g, "\\/")}\\s+200`), `${p} が 200 であることを確かめる`);
+  }
+  // 実在の議員 id は data/ から取る（ハードコードした id は data の作り直しで消える）
+  assert.match(step, /MEMBER=\$\(basename/, "議員 id はビルド成果物から取る");
+  assert.match(step, /expect "\/members\/\$MEMBER\/"\s+200/);
+  // #104: プリレンダー無しの実在ルート
+  assert.match(step, /expect '\/compare\?m=[^']*'\s+200/, "/compare が 200 であることを確かめる");
+  // #325: 存在しないパス
+  assert.match(step, /expect \/this-does-not-exist\/\s+404/);
+  assert.match(step, /expect \/__spa-fallback\.html\s+404/, "fallback を直接は取れない");
+  // 404 の本文（ステータスだけ 404 で中身は出す）
+  assert.match(step, /lang="ja"/);
+  assert.match(step, /noindex/);
+  assert.match(step, /Hey developer/, "開発者向けメッセージが出ていないことを確かめる");
+  assert.ok(job.indexOf("Not found (#325)") > job.indexOf("docker compose -f deploy/docker-compose.yml up"), "コンテナを起動した後で叩く");
 });
 
 // Issue #189: the container nginx must not log requests at all (the default combined format writes the User-Agent

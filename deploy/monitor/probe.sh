@@ -17,10 +17,11 @@
 #          10-minute slot), which keeps a round at a fixed, small number of requests however many assemblies exist
 #          while still covering every assembly within a few rounds. See docs/ops/monitoring.md for the operational
 #          target ("every assembly at least once an hour") that decides when the sample size has to grow.
-#          A missing prerender is already caught by the site-name check: nginx answers ANY unknown path with
-#          /__spa-fallback.html, whose <title> is "Loading..." — no site name, so it fails. The extra check that the
-#          page mentions its own id is defence in depth (a wrong page served for the right URL, or a future
-#          fallback that did carry the site name), not the primary defence.
+#          A missing prerender is caught by the status check: since #325 nginx answers an unknown path with 404
+#          (the SPA shell as the body), so `code != 200` fails it. The check that the page mentions its own id is
+#          defence in depth — it catches a wrong page served for the right URL, and it is what would still catch a
+#          regression that served the shell with 200 again (the shell's <title> now carries the site name, so the
+#          title check alone would pass; deploy/test/monitor-probe.test.sh pins both cases).
 #   data   meta.fetchedAt (top-level, the ETL's run time) is at most PROBE_MAX_AGE_HOURS (48) old — the daily ETL +
 #          deploy-data.yml is alive
 #   tls    the certificate presented for the origin's host is valid for at least PROBE_TLS_MIN_DAYS (14) more days
@@ -103,8 +104,9 @@ META="$TMP/meta.json"; meta_code=$(fetch /data/meta.json "$META")
 # site is publishing. Nothing is hard-coded, so a new assembly is probed from the moment it ships, and it costs no
 # extra request. (data/assemblies/index.json is NOT an option: it is bundled into a JS chunk at build time and is
 # never served under /data/ — only data/members/*.json and OPS_DATA_FILES are copied there. Probing it would 404
-# on every run.) A vanished prerender is caught by the site-name title check alone: nginx serves
-# /__spa-fallback.html for any unknown path, and its <title> is "Loading...", which has no site name in it.
+# on every run.) A vanished prerender is caught by the status check: since #325 nginx answers an unknown path
+# with 404, and check_page fails on anything but 200. The id check below still catches a 200 that serves the
+# shell (or another assembly's page).
 if [ "$ASSEMBLY_SAMPLE" -gt 0 ] && [ "$assemblies_ok" = 1 ]; then
   # ids only: the link text is layout-dependent (an id can appear both as "宮城" and "宮城県議会"), the id is not.
   mapfile -t assemblies < <(tr -d '\n' < "$ALIST" \

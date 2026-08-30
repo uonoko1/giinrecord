@@ -55,17 +55,24 @@ const CSP_LISTENER = `
   window.assemblySelectValue = () => document.querySelector("select.members-select")?.value ?? null;
 `;
 
-async function visit(page: Page, url: string, run?: (page: Page) => Promise<void>): Promise<PageResult> {
+async function visit(page: Page, url: string, run?: (page: Page) => Promise<void>, expectStatus = 200): Promise<PageResult> {
   const r: PageResult = { url, consoleErrors: [], pageErrors: [], cspViolations: [] };
+  // #325: 404 を期待して開くページでは、ブラウザ自身が文書の 404 を
+  // "Failed to load resource: … 404 (Not Found)" として console error に流す。それは期待どおりの応答であって
+  // ページの不具合ではないので、その 1 行だけ除く（他の 404 — 壊れたアセット等 — は今までどおり失敗にする）。
+  const ownStatusNoise = expectStatus !== 200 ? new RegExp(`status of ${expectStatus}\\b`) : null;
   const onConsole = (m: ConsoleMessage) => {
-    if (m.type() === "error") r.consoleErrors.push(m.text());
+    if (m.type() === "error" && !(ownStatusNoise?.test(m.text()) && m.location().url === url)) r.consoleErrors.push(m.text());
+    // #325: React Router の既定フォールバックは console.log（error ではない）で
+    // `💿 Hey developer 👋 …` を本番の利用者のコンソールに出していた。error だけ見ていると気づけない。
+    if (m.text().includes("Hey developer")) r.pageErrors.push(`React Router の既定フォールバックのメッセージがコンソールに出た: ${m.text()}`);
   };
   const onPageError = (e: Error) => r.pageErrors.push(e.message);
   page.on("console", onConsole);
   page.on("pageerror", onPageError);
   try {
     const res = await page.goto(url, { waitUntil: "networkidle", timeout: 30_000 });
-    if (!res || res.status() !== 200) r.pageErrors.push(`status ${res?.status() ?? "none"} (expected 200)`);
+    if (!res || res.status() !== expectStatus) r.pageErrors.push(`status ${res?.status() ?? "none"} (expected ${expectStatus})`);
     if (run) await run(page);
   } catch (err) {
     r.pageErrors.push(err instanceof Error ? err.message : String(err));
@@ -221,8 +228,30 @@ async function memberTabsSwitch(page: Page): Promise<void> {
   console.log(`browser-check: member tabs ${count} tabs, switched to ${selectedId}, no page overflow at 375px (strips ${JSON.stringify(overflow.strips)})`);
 }
 
+/**
+ * #325: 存在しない URL。nginx が 404 で SPA shell を返し、catch-all ルートが「見つかりません」を描く。
+ * ステータスが 404 であることは smoke / deploy/test/nginx-404.test.sh が見るが、
+ * **その 404 の本文でクライアント JS が動き、画面が出るか**はブラウザでしか分からない
+ * （404 の本文だとアセットの相対解決や CSP が違う、という壊れ方がありうる）。
+ * 開発者向けの `💿 Hey developer` が出ないことも、ここが唯一の実測点。
+ */
+async function notFoundScreenRenders(page: Page): Promise<void> {
+  await page.waitForFunction(() => document.querySelector("h1")?.textContent?.includes("見つかりません") ?? false, null, { timeout: 10_000 });
+  const seen = await page.evaluate(() => ({
+    lang: document.documentElement.lang,
+    title: document.title,
+    robots: document.querySelector('meta[name="robots"]')?.getAttribute("content") ?? "",
+    hrefs: [...document.querySelectorAll("a")].map((a) => a.getAttribute("href") ?? ""),
+  }));
+  if (seen.lang !== "ja") throw new Error(`404: <html lang="${seen.lang}">（ja であること）`);
+  if (!seen.title.includes("見つかりません")) throw new Error(`404: <title>「${seen.title}」が 404 を指していない`);
+  if (!seen.robots.includes("noindex")) throw new Error(`404: robots="${seen.robots}"（noindex であること）`);
+  if (!seen.hrefs.includes("/coverage")) throw new Error(`404: /coverage への導線が無い: ${seen.hrefs.join(" ")}`);
+  console.log(`browser-check: 404 screen rendered (lang=${seen.lang}, title="${seen.title}", robots=${seen.robots})`);
+}
+
 const memberId = await firstMemberId();
-const targets: { url: string; run?: (page: Page) => Promise<void> }[] = [
+const targets: { url: string; run?: (page: Page) => Promise<void>; status?: number }[] = [
   { url: `${origin}/` },
   { url: `${origin}/members/`, run: membersSearchFilters },
   { url: `${origin}/members/`, run: membersFilterGoesToUrl },
@@ -232,6 +261,10 @@ const targets: { url: string; run?: (page: Page) => Promise<void> }[] = [
   // その取得が壊れていないことをここで見る（loader 無しのページでは起きない失敗）
   { url: `${origin}/coverage/` },
   ...(memberId ? [{ url: `${origin}/members/${memberId}/` }, { url: `${origin}/members/${memberId}/`, run: memberTabsSwitch }] : []),
+  // #325: 存在しない URL は 404 を返し、その本文で catch-all ルートが描かれる
+  { url: `${origin}/__browser-check-no-such-page__/`, run: notFoundScreenRenders, status: 404 },
+  // #104: プリレンダーしない実在ルート。#325 の =404 で壊しやすいので、200 で JS が動くことを実機で見る
+  ...(memberId ? [{ url: `${origin}/compare?m=${memberId}` }] : []),
 ];
 
 const browser = await chromium.launch();
@@ -241,7 +274,7 @@ try {
   await context.addInitScript(CSP_LISTENER);
   const page = await context.newPage();
   for (const t of targets) {
-    const r = await visit(page, t.url, t.run);
+    const r = await visit(page, t.url, t.run, t.status ?? 200);
     for (const e of r.cspViolations) failures.push(`${r.url}: CSP violation: ${e}`);
     for (const e of r.consoleErrors) failures.push(`${r.url}: console error: ${e}`);
     for (const e of r.pageErrors) failures.push(`${r.url}: ${e}`);

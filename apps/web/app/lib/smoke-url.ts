@@ -18,7 +18,13 @@ export interface ServedResponse {
 export interface UrlSmokeTargets {
   /** site-relative page URLs that must return 200 */
   pages: string[];
-  /** a path that is not a page; must return 200 through the SPA fallback (null = skip) */
+  /**
+   * Real routes that are deliberately NOT pre-rendered (/compare, #104): no HTML file exists for them,
+   * so they are served from the SPA shell and must still return 200. Kept apart from `unknown`,
+   * which must return 404 (#325) — the two used to be the same case.
+   */
+  spa: string[];
+  /** a path that is not a route at all; must return 404 (#325; it used to be 200 via the SPA fallback) */
   unknown: string | null;
   /** one hashed asset (null = none built) */
   asset: string | null;
@@ -41,6 +47,12 @@ export const EXPECTED_CACHE_CONTROL = {
 
 export const UNKNOWN_PATH = "/__smoke-no-such-page__/";
 
+/**
+ * #104: /compare is query-driven and not pre-rendered. #325 made unknown paths 404, so this is exactly the
+ * route a careless `=404` breaks; the smoke test fetches it on every run.
+ */
+export const SPA_ONLY_PATHS = ["/compare?m=m_1,m_2"];
+
 /** `members/m_1/index.html` -> `/members/m_1/`; `index.html` -> `/` */
 function pageUrl(file: string): string {
   const dir = file.replace(/index\.html$/, "");
@@ -52,6 +64,7 @@ export function urlSmokeTargets(pageFiles: string[], otherFiles: string[]): UrlS
   const data = otherFiles.find((f) => f.startsWith("data/")) ?? null;
   return {
     pages: pageFiles.map(pageUrl),
+    spa: [...SPA_ONLY_PATHS],
     unknown: UNKNOWN_PATH,
     asset: asset ? `/${asset}` : null,
     data: data ? `/${data}` : null,
@@ -91,10 +104,19 @@ export function checkServed(got: Map<string, ServedResponse>, t: UrlSmokeTargets
     // #168: the served HTML must not load anything off-site (Google Fonts etc.)
     for (const u of externalResourceUrls(r.body)) failures.push(`${url}: external resource ${u}`);
   }
+  // #104: not pre-rendered but a real route — 200 from the SPA shell. Checked before `unknown` because
+  // this is the regression a `try_files … =404` introduces.
+  for (const url of t.spa ?? []) {
+    const r = take(url);
+    if (!r) continue;
+    if (r.status !== 200) failures.push(`${url}: status ${r.status} (expected 200)`);
+    expectSecurityHeaders(url, r, failures);
+  }
+  // #325: an unknown path must be 404, not 200 — a 200 makes search engines index a page that does not exist.
   if (t.unknown) {
     const r = take(t.unknown);
     if (r) {
-      if (r.status !== 200) failures.push(`${t.unknown}: status ${r.status} (expected 200 via SPA fallback)`);
+      if (r.status !== 404) failures.push(`${t.unknown}: status ${r.status} (expected 404)`);
       expectSecurityHeaders(t.unknown, r, failures);
     }
   }

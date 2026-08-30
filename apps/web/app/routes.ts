@@ -26,4 +26,7 @@ export default [
   route("assemblies/:id", "routes/assembly.tsx"),
   ...(hasMemberData ? [route("members/:id", "routes/member.tsx")] : []),
   ...(hasRollCallData ? [route("rollcalls/:session?", "routes/rollcalls.tsx"), route("rollcalls/:session/:id", "routes/rollcall.tsx")] : []),
+  // #325: どのルートにも一致しない URL。**必ず最後**（React Router は上から照合するので、前に置くと実在ルートを飲み込む）。
+  // nginx はこの本文を 404 で返す（deploy/nginx/site.conf の try_files … =404 + error_page）。/compare と同じく noindex。
+  route("*", "routes/not-found.tsx"),
 ] satisfies RouteConfig;

@@ -22,7 +22,7 @@ import type { ZipDistricts } from "@seiji-kiroku/shared";
 import { ARCHIVE_NAME, checkArchive, collectDataFiles } from "../app/lib/archive";
 import { defaultDataDir, readAssemblies, readRollCallIndex } from "../app/lib/data-files";
 import { DISTRICTS_DATA_PATH, zipPrefix } from "../app/lib/districts";
-import { checkBrandAssets, checkBuild, checkDistrictData, checkMemberData, checkNoExternalResources, checkOpsData, checkSitemap, FONTS_CSS, formatReport, OPS_DATA_FILES, type BuildFiles, type ExpectedData } from "../app/lib/smoke";
+import { checkBrandAssets, checkBuild, checkDistrictData, checkMemberData, checkNoExternalResources, checkOpsData, checkSitemap, checkSpaFallback, FONTS_CSS, formatReport, OPS_DATA_FILES, SPA_FALLBACK_FILE, type BuildFiles, type ExpectedData } from "../app/lib/smoke";
 import { checkServed, urlSmokeTargets, type ServedResponse } from "../app/lib/smoke-url";
 
 async function listBuild(root: string): Promise<BuildFiles> {
@@ -93,6 +93,8 @@ const districtData = checkDistrictData(files, data);
 const brandAssets = checkBrandAssets(files);
 const opsData = checkOpsData(files, data);
 const external = checkNoExternalResources(files);
+// #325: nginx が 404 の本文として返す SPA shell（lang=ja / サイト名入り title / noindex / 開発者向けメッセージ無し）
+const spaFallback = checkSpaFallback(files);
 
 /** Upper bound for the bulk zip. data/ is ~41 MB raw (5 sessions) and deflates to a few MB; raise deliberately when sessions grow. */
 const ARCHIVE_MAX_BYTES = Number(process.env.ARCHIVE_MAX_BYTES ?? 50 * 1024 * 1024);
@@ -135,19 +137,20 @@ if (baseUrl) {
     all.filter((f) => f.endsWith("index.html")),
     all.filter((f) => !f.endsWith(".html")),
   );
-  const urls = [...targets.pages, targets.unknown, targets.asset, targets.data].filter((u): u is string => u !== null);
+  const urls = [...targets.pages, ...targets.spa, targets.unknown, targets.asset, targets.data].filter((u): u is string => u !== null);
   const served = checkServed(await fetchAll(baseUrl, urls), targets);
   servedFailures = served.failures;
   console.log(`smoke: url=${baseUrl} ${served.checked} urls fetched`);
 }
 
-const report = { ...pages, failures: [...pages.failures, ...sitemap.failures, ...memberData.failures, ...districtData.failures, ...brandAssets.failures, ...opsData.failures, ...external.failures, ...archiveFailures, ...servedFailures] };
+const report = { ...pages, failures: [...pages.failures, ...sitemap.failures, ...memberData.failures, ...districtData.failures, ...brandAssets.failures, ...opsData.failures, ...external.failures, ...spaFallback.failures, ...archiveFailures, ...servedFailures] };
 console.log(`smoke: build=${buildDir} data=${dataDir} members=${data.memberIds?.length ?? "none"} rollcalls=${data.rollCalls?.length ?? "none"} assemblies=${data.assemblyIds?.length ?? "none"}`);
 console.log(`smoke: sitemap.xml ${sitemap.checkedUrls} urls checked`);
 console.log(`smoke: data/members ${memberData.checkedFiles} member files checked`);
 console.log(`smoke: data/districts ${districtData.checkedFiles} shard files checked (sample zip ${data.districts?.sample.zip ?? "none"})`);
 console.log(`smoke: brand assets ${brandAssets.checkedFiles} files checked (favicon / manifest / og-image)`);
 console.log(`smoke: data/ ops files ${opsData.checkedFiles} checked (${data.opsFiles?.join(", ") || "none"})`);
+console.log(`smoke: ${SPA_FALLBACK_FILE} checked (404 body: lang=ja, site name in <title>, noindex — #325)`);
 console.log(`smoke: external resources: ${external.checkedFiles} files checked (html + ${FONTS_CSS})`);
 console.log(`smoke: archive=${archivePath} size=${archive?.length ?? "missing"} dataFiles=${dataFileCount} max=${ARCHIVE_MAX_BYTES}`);
 console.log(formatReport(report));
