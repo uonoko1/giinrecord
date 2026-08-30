@@ -5,7 +5,7 @@ import type { MemberDetail, MemberSpeeches, SpeechEntry } from "../lib/data-cont
 import member from "../test-fixtures/member.json";
 import memberSpeeches from "../test-fixtures/member-speeches.json";
 import meta from "../test-fixtures/meta.json";
-import { MemberPage, meta as routeMeta, speechesDataUrl } from "./member";
+import { MemberPage, SPEECH_FOLD, meta as routeMeta, speechesDataUrl } from "./member";
 
 const detail = member as MemberDetail;
 /** 発言は #242 で `members/{id}/speeches.json` に分かれ、発言タブを開いたときに実行時 fetch される */
@@ -157,6 +157,86 @@ describe("MemberPage 発言タブ（#242: 実行時 fetch）", () => {
   it("fetch 先は /data/members/{id}/speeches.json（nginx が gzip を掛ける application/json）", () => {
     expect(speechesDataUrl("m_014002")).toBe("/data/members/m_014002/speeches.json");
   });
+
+  /*
+   * #326: 発言は最多 1,454 件（m_003005。data/members 配下の speeches.json を走査、2026-08-30）で、
+   * 折りたたみが効いていないと全件を一度に描画する。origin/main と本ブランチを同じ機械で
+   * 交互に 5 回ずつ測ると（幅 390px・4x CPU throttle、`vite preview`）、一覧が出るまでの中央値は
+   * 429ms → 174ms、最長 long task は 562ms → 246ms、DOM ノードは 10,664 → 1,619 になった。
+   * stance（#88）と同じ流儀で先頭 SPEECH_FOLD 件だけ出し、「さらに表示」で残りを出す。
+   */
+  /*
+   * 折りたたみのテストは百件単位の行を実際に描くので、既定の 5s では
+   * フルスイート（ワーカー並列）で足りずタイムアウトする。行数を減らすと
+   * 「何件で頭打ちになるか」を見られなくなるので、行数ではなく待ち時間を延ばす。
+   */
+  const HEAVY_TIMEOUT = 30_000;
+
+  const speechAt = (i: number, session: number): SpeechEntry => ({
+    ...speeches[0],
+    session,
+    speechId: `sp_${i}`,
+    sourceUrl: `https://kokkai.ndl.go.jp/txt/sp/${i}`,
+    excerpt: `発言 ${i} の冒頭`,
+  });
+  /** 回次ごとの details（#103）に散らないよう 1 回次にまとめた n 件 */
+  const manySpeeches = (n: number, session = 217): SpeechEntry[] => Array.from({ length: n }, (_, i) => speechAt(i, session));
+
+  const renderWithSpeeches = (list: SpeechEntry[]) =>
+    render(<MemberPage detail={detail} meta={meta} speechCount={list.length} loadSpeeches={async () => list} />);
+
+  it(`発言タブは ${SPEECH_FOLD} 件で折りたたみ、「さらに表示」で残りを出す（#326）`, async () => {
+    const list = manySpeeches(SPEECH_FOLD + 5);
+    renderWithSpeeches(list);
+    await openSpeechTab();
+    const panel = screen.getByRole("tabpanel");
+    expect(within(panel).getAllByRole("listitem")).toHaveLength(SPEECH_FOLD);
+    const more = within(panel).getByRole("button", { name: "さらに表示（残り5件）" });
+    await userEvent.click(more);
+    expect(within(panel).getAllByRole("listitem")).toHaveLength(SPEECH_FOLD + 5);
+    expect(within(panel).queryByRole("button", { name: /さらに表示/ })).not.toBeInTheDocument();
+  }, HEAVY_TIMEOUT);
+
+  it(`発言が ${SPEECH_FOLD} 件以下なら「さらに表示」は出ない（#326）`, async () => {
+    renderWithSpeeches(manySpeeches(SPEECH_FOLD));
+    await openSpeechTab();
+    expect(screen.queryByRole("button", { name: /さらに表示/ })).not.toBeInTheDocument();
+  }, HEAVY_TIMEOUT);
+
+  /*
+   * 折りたたみの目的は「一度に作る DOM を減らす」ことなので、
+   * 最多件数（1,454）でも初回に出る行が SPEECH_FOLD 件で頭打ちになることを、実測の最大値で確かめる。
+   * 件数だけを見るテストだと slice を外しても「さらに表示」の有無で気づけないため、行数そのものを見る。
+   */
+  it("最多件数（1,454 件）でも初回に描画する行は SPEECH_FOLD 件で頭打ちになる（#326）", async () => {
+    renderWithSpeeches(manySpeeches(1454));
+    await openSpeechTab();
+    const panel = screen.getByRole("tabpanel");
+    expect(within(panel).getAllByRole("listitem")).toHaveLength(SPEECH_FOLD);
+    expect(within(panel).getByRole("button", { name: `さらに表示（残り${(1454 - SPEECH_FOLD).toLocaleString("ja-JP")}件）` })).toBeInTheDocument();
+  }, HEAVY_TIMEOUT);
+
+  /* 折りたたみは新しい順の先頭から。#242 の excerpt（原文冒頭）を捨てないことも併せて見る */
+  it("折りたたんで出すのは先頭の SPEECH_FOLD 件で、excerpt を出す（#326 / #242）", async () => {
+    renderWithSpeeches(manySpeeches(SPEECH_FOLD + 3));
+    await openSpeechTab();
+    const panel = screen.getByRole("tabpanel");
+    expect(within(panel).getByText(/発言 0 の冒頭/)).toBeInTheDocument();
+    expect(within(panel).getByText(new RegExp(`発言 ${SPEECH_FOLD - 1} の冒頭`))).toBeInTheDocument();
+    expect(within(panel).queryByText(new RegExp(`発言 ${SPEECH_FOLD} の冒頭`))).not.toBeInTheDocument();
+  }, HEAVY_TIMEOUT);
+
+  /* タブを移ると畳み直す（stance と同じ。setTab が展開状態を戻す） */
+  it("発言タブを開き直すと畳み直す（#326）", async () => {
+    renderWithSpeeches(manySpeeches(SPEECH_FOLD + 5));
+    await openSpeechTab();
+    const panel = screen.getByRole("tabpanel");
+    await userEvent.click(within(panel).getByRole("button", { name: /さらに表示/ }));
+    expect(within(panel).getAllByRole("listitem")).toHaveLength(SPEECH_FOLD + 5);
+    await userEvent.click(screen.getByRole("tab", { name: /すべて/ }));
+    await userEvent.click(screen.getByRole("tab", { name: /発言/ }));
+    expect(within(screen.getByRole("tabpanel")).getAllByRole("listitem")).toHaveLength(SPEECH_FOLD);
+  }, HEAVY_TIMEOUT);
 
   /*
    * 実行時 fetch にしたことで、既定の「すべて」タブに発言が出なくなる（timeline から発言が離れたため）。
