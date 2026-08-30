@@ -184,6 +184,29 @@ function assemblyLabel(detail: MemberDetail, assembly: Assembly | null): string 
 /** 会派の態度（推定）は1人あたり100行前後になるので、最初は 20 件だけ出し「さらに表示」で残りを出す（#88）。 */
 export const STANCE_FOLD = 20;
 
+/**
+ * 発言（#242）の折りたたみ（#326）。stance と同じ流儀（先頭 N 件＋「さらに表示」）だが、**件数は分ける**。
+ *
+ * stance の 20 と揃えないのは、発言が回次ごとの details（#103）に入るためである。
+ * stance は平らな一覧なので 20 でも「最初の 20 件」がそのまま読めるが、発言を 20 で切ると
+ * 最新の回次の頭だけ（m_003005 の第221回は 379 件）を見せて残りを隠すことになり、
+ * 回次ごとの折りたたみが働く前に「さらに表示」を押させる。
+ * 200 でも最大の回次は出し切れない（379 件）が、発言数の中央値は 68 件なので大半の議員は
+ * 1 回で全件が出る（697 名中 200 件を超えるのは 155 名。data/members 配下の speeches.json を走査、2026-08-30）。
+ *
+ * 折りたたむ根拠（実測、2026-08-30。Chromium・幅 390px・4x CPU throttle。
+ * `vite preview` で origin/main と本ブランチを同じ機械で交互に 5 回ずつ、
+ * 発言タブを押してから 1 行目が出るまでを計測）:
+ *
+ *   | 対象（m_003005・1,454 件） | 一覧まで(中央値) | 最長 long task(中央値) | TBT(中央値) | DOM ノード |
+ *   | origin/main（折りたたみ無し） | 429ms | 562ms | 757ms | 10,664 |
+ *   | 本ブランチ（200 件で折りたたみ） | 174ms | 246ms | 203ms |  1,619 |
+ *
+ * 200 にしたのは、最新の回次（第221回=379 件）を出し切ることより「一度に作る DOM を頭打ちにする」ことを
+ * 優先しつつ、押した直後に読み始められる分量を残すため。
+ */
+export const SPEECH_FOLD = 200;
+
 /** 回次ごとの折りたたみ（#103）: 直近この数の回次だけ展開し、それ以前は見出し（第N回国会・件数）だけにする。 */
 export const EXPANDED_SESSIONS = 2;
 
@@ -227,11 +250,11 @@ type SpeechState = { status: "idle" | "loading" } | { status: "ready"; speeches:
 export function MemberPage({ detail, meta, assembly = null, speechCount = 0, loadSpeeches }: { detail: MemberDetail; meta: DatasetMeta | null; assembly?: Assembly | null; speechCount?: number; loadSpeeches?: (id: string) => Promise<SpeechEntry[]> }) {
   const local = isLocalMember(detail);
   const [tab, setTabState] = useState<Tab>("all");
-  const [stanceExpanded, setStanceExpanded] = useState(false);
+  const [foldExpanded, setFoldExpanded] = useState(false);
   const [speechState, setSpeechState] = useState<SpeechState>({ status: "idle" });
   const setTab = (t: Tab) => {
     setTabState(t);
-    setStanceExpanded(false);
+    setFoldExpanded(false);
   };
   // 発言タブを最初に開いたときだけ取りに行く（開かなければ 1 バイトも取らない。他のタブへ移って戻っても取り直さない）。
   // 「取りに行ったか」は ref で持つ: state に持つと effect の依存が状態遷移で変わり、
@@ -250,8 +273,10 @@ export function MemberPage({ detail, meta, assembly = null, speechCount = 0, loa
   }, [tab, loadSpeeches, speechCount, detail.id]);
   const speeches = speechState.status === "ready" ? speechState.speeches : [];
   const all = tab === "speech" ? speeches : tab === "all" ? detail.timeline : detail.timeline.filter((e) => e.kind === tab);
-  const folded = tab === "stance" && !stanceExpanded && all.length > STANCE_FOLD;
-  const entries = folded ? all.slice(0, STANCE_FOLD) : all;
+  // 折りたたむ件数はタブごとに違う（stance: #88 / speech: #326）。それ以外のタブは折りたたまない。
+  const foldAt = tab === "stance" ? STANCE_FOLD : tab === "speech" ? SPEECH_FOLD : null;
+  const folded = foldAt !== null && !foldExpanded && all.length > foldAt;
+  const entries = folded ? all.slice(0, foldAt) : all;
   const counts = { ...countKinds(detail.timeline), speech: speechCount };
 
   return (
@@ -311,8 +336,8 @@ export function MemberPage({ detail, meta, assembly = null, speechCount = 0, loa
           )}
           {folded && (
             <p className="member-more">
-              <button type="button" className="member-more-button" onClick={() => setStanceExpanded(true)}>
-                さらに表示（残り{(all.length - STANCE_FOLD).toLocaleString("ja-JP")}件）
+              <button type="button" className="member-more-button" onClick={() => setFoldExpanded(true)}>
+                さらに表示（残り{(all.length - (foldAt ?? 0)).toLocaleString("ja-JP")}件）
               </button>
             </p>
           )}
