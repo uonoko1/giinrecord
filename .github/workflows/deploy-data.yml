@@ -36,7 +36,14 @@ jobs:
       ref: main
     secrets: inherit
   production:
-    needs: resolve
+    # Issue #308: staging と同時に同じホストへ rsync すると、どちらか一方が
+    # `connection unexpectedly closed (0 bytes received)` で落ちることがある
+    # （落ちる側は固定されていない）。原因は未特定だが、同時実行は全ての失敗に
+    # 共通する条件なので直列化する。本番データの反映が staging のぶん遅れるだけで、
+    # 失敗を隠すリトライではない。
+    needs: [resolve, staging]
+    # staging が落ちても本番データの反映は止めない（直列化が目的で、依存が目的ではない）
+    if: always() && needs.resolve.result == 'success'
     uses: ./.github/workflows/deploy-site.yml
     with:
       environment: production-data

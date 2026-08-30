@@ -81,7 +81,13 @@ jobs:
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
           printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519
           printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
-          rsync -az --delete --exclude '.well-known' \
+          # Issue #308: 断続的に `connection unexpectedly closed (0 bytes received)` で落ちる。
+          # 原因が未特定なので、まず「失敗した瞬間に何が起きていたか」を採れるようにする。
+          # --timeout: 無応答のまま固まらず、必ずログを残して落とす（リトライではない）
+          # --stats: 転送量と所要を残し、成功時との差を見られるようにする
+          # 注: deploy 鍵は authorized_keys の command= で rrsync に固定されているので、
+          #     失敗時に ssh で VPS の状態を採ることはできない（別の手段が要る）
+          rsync -az --delete --exclude '.well-known' --timeout=120 --stats \
             -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes" \
             apps/web/build/client/ "$USER@$HOST:$TARGET_DIR/"   # deploy 鍵は rrsync /var/www/giinrecord に制限（deploy/ops-user-setup.sh）
       - name: Summary
