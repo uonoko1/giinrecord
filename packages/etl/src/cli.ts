@@ -8,7 +8,7 @@ import { fetchSpeeches, speechPageUrl, type SpeechScope } from "./sources/kokkai
 import { matchVotes, type GroupMismatch } from "./match-votes.ts";
 import { shardUnmatched, type UnmatchedRow } from "./unmatched.ts";
 import { billListUrl, committeeBills, fetchBills, matchBillResults, toBillDecisions, type Bill } from "./sources/sangiin-bills.ts";
-import { matchSpeeches } from "./match-speeches.ts";
+import { matchSpeeches, speechRosters } from "./match-speeches.ts";
 import { matchBills } from "./match-bills.ts";
 import { fetchShugiinBills, shugiinBillListUrl } from "./sources/shugiin-bills.ts";
 import { matchShugiinBills } from "./match-shugiin-bills.ts";
@@ -233,9 +233,15 @@ unmatched.push(...questions.unmatched);
 //     この範囲は #73 から変わっていない。**委員会を足しても変わらない**（サイズの都合ではなく DATA_CONTRACT の原則）。
 //   - 取得する実行（実行条件）: 制限なし。memberSession が targets でも carried でも毎回取る（#236。下の shugiinSpeeches）。
 // 「範囲が 1 回次」は「毎回取る」と矛盾しない。毎回取るのは常に同じ memberSession の 1 回次分で、取る回次が増えるわけではない。
+//
+// 名簿は**両院ぶんを渡す**（#313。speechRosters）。会議録は会議の院で分かれるが発言者はその院の議員とは限らない
+// （大臣・副大臣としての答弁、連合審査会など）。参院の会議録を参院名簿だけに突合していたため、そこに出た衆院議員の
+// 発言が全部落ちていた（data/unmatched.json 692 行はすべて参議院の会議録）。衆院側も同じ理由で両院ぶんを渡す。
+// 在職の確認（#230）は名簿を足しても緩まない: 衆院名簿が覆わない回次（第217・219回）は tenureVerified が候補を落とす。
+const speechMembers = speechRosters(members, shugiin.members);
 const speeches: Speech[] = [];
 for (const session of targets) {
-  const matched = matchSpeeches(await fetchSpeeches(session, "sangiin", SPEECH_SCOPE), members);
+  const matched = matchSpeeches(await fetchSpeeches(session, "sangiin", SPEECH_SCOPE), speechMembers);
   const matchedCount = matched.speeches.filter((s) => s.memberId).length;
   const positioned = matched.speeches.filter((s) => s.memberId && s.position).length;
   console.log(`session ${session}: ${matched.speeches.length} sangiin speeches (${matchedCount} matched, ${positioned} with position)`);
@@ -247,7 +253,7 @@ for (const session of targets) {
 // 引き継ぎが1度でも欠ければ（#103 以前の session の無い行など）0 のまま自力では戻らない。
 // 止める理由だった引き継ぎとの二重行（同じ speechId が2行。validateDataset の duplicate speechId 違反。#103 レビュー）は、
 // 取得をやめる代わりに dropCarriedSpeeches が「取得した speechId の引き継ぎ行を落とす」ことで防ぐ。
-const shugiinSpeeches = matchSpeeches(await fetchSpeeches(memberSession, "shugiin", SPEECH_SCOPE), shugiin.members);
+const shugiinSpeeches = matchSpeeches(await fetchSpeeches(memberSession, "shugiin", SPEECH_SCOPE), speechMembers);
 {
   const matchedCount = shugiinSpeeches.speeches.filter((s) => s.memberId).length;
   const positioned = shugiinSpeeches.speeches.filter((s) => s.memberId && s.position).length;

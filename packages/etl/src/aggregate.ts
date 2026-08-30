@@ -2,6 +2,7 @@ import type { Bill, Member, MemberDetail, MemberSpeeches, MemberSummary, MemberT
 import { toSummary } from "./sources/sangiin-members.ts";
 import { groupAt } from "./group-history.ts";
 import { assemblyIdOf } from "./assemblies.ts";
+import { tenureVerified } from "./match-votes.ts";
 import type { MatchedBill } from "./match-bills.ts";
 import type { MatchedAttendance } from "./match-attendance.ts";
 import type { MatchedCommitteeRole } from "./match-committee.ts";
@@ -166,13 +167,24 @@ export function buildDataset(
     }
   }
   const houseOf = new Map(members.map((m) => [m.id, m.house]));
+  const memberOf = new Map(members.map((m) => [m.id, m]));
   // 発言は timeline とは別の入れ物に集める（#242）。timelineOf は「名簿に無い memberId は例外」の検査に使う。
   const speechesOf = new Map<string, SpeechEntry[]>();
   for (const s of speeches) {
     if (!s.memberId) continue;
     timelineOf(s.memberId, `speech ${s.id} ("${s.speakerText}")`);
-    // 発言の院と議員の院は一致していなければならない（衆院の発言を同名の参院議員に付けない。Issue #107）。
-    if (houseOf.get(s.memberId) !== s.house) throw new Error(`speech ${s.id} ("${s.speakerText}", ${s.house}) refers to member ${s.memberId} of house ${String(houseOf.get(s.memberId))}`);
+    // 発言の院と議員の院が一致することは求めない（Issue #313）。会議録の院は**会議の院**であって発言者の院ではなく、
+    // 参議院の会議には衆院議員が大臣・副大臣として答弁に立ち、連合審査会にも出る（逆も同じ）。
+    // #107 で置いた「院が違えば例外」はこの事実と矛盾するので外した。
+    //
+    // 代わりに、**その回次の在職を名簿から確認できること**を求める（#230。tenureVerified）。院の一致よりこちらが強い:
+    // 同姓同名の別人に記録を付ける誤りは院が一致していても起きるし（#230 で外した 24,610 行がそれ）、
+    // 逆に院が違っても在職が確認できていれば一次資料に書いてある事実だからである。
+    // matchSpeeches（resolveMember）は既に同じ確認をしている。ここは引き継ぎ行（carried）も含めた最後の砦。
+    const speaker = memberOf.get(s.memberId)!;
+    if (!tenureVerified(speaker, { session: s.session, date: s.date })) {
+      throw new Error(`speech ${s.id} ("${s.speakerText}", session ${s.session}) refers to member ${s.memberId} whose tenure in that session is not verifiable from the roster (#230)`);
+    }
     const list = speechesOf.get(s.memberId) ?? [];
     list.push({
       kind: "speech", session: s.session, date: s.date, speechId: s.id, meeting: s.meeting, excerpt: s.excerpt, chars: s.chars,

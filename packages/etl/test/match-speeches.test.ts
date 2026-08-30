@@ -2,9 +2,10 @@ import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import type { Member, Speech } from "@seiji-kiroku/shared";
-import { matchSpeeches } from "../src/match-speeches.ts";
+import { matchSpeeches, speechRosters } from "../src/match-speeches.ts";
 import { parseSpeechPage } from "../src/sources/kokkai-speeches.ts";
 import { parseMemberList } from "../src/sources/sangiin-members.ts";
+import { normalizeName } from "../src/match-votes.ts";
 import { decodeRosterPage, parseShugiinMemberList, ROSTER_PAGES } from "../src/sources/shugiin-members.ts";
 
 const fixture = (name: string) => readFileSync(new URL(`./fixtures/${name}`, import.meta.url), "utf-8");
@@ -144,5 +145,153 @@ describe("matchSpeeches: 実データ（第221回 衆院本会議 1ページ目 
     const r = matchSpeeches(sangiin.speeches.filter((s) => s.speakerText === "藤川政人"), members);
     assert.equal(r.speeches.length, 1);
     assert.ok(r.speeches.every((s) => !s.memberId));
+  });
+});
+
+/*
+ * Issue #313: 参議院の会議録には**衆院議員の発言も載る**（大臣・副大臣としての答弁、連合審査会など）。逆も同じ。
+ * 参院側の発言を参院名簿だけに突合していたため、そこに出た衆院議員が全部落ちていた（`data/unmatched.json` 692 行はすべて参議院の会議録）。
+ *
+ * 直し方は matchSpeeches の規則を変えることではなく、**呼び出し側が両院の名簿を渡す**ことである。
+ * 在職の確認（tenureVerified。#230）も同姓同名の扱いも resolveMember がそのまま効くので、名簿を足しても緩まない:
+ *   - 衆院名簿は第221回しか覆っていないので、第217・219回の発言は候補が在職未確認で落ち unmatched に残る
+ *   - 両院に同姓同名がいれば（実データで 7 組ある）会派で絞れなければ紐づけない
+ */
+describe("matchSpeeches: 他院の議員の発言を両院の名簿で突合する（Issue #313）", () => {
+  const sangiinMember = (id: string, name: string, group: string, sessionFrom = 216, sessionTo: number | undefined = 221): Member => ({
+    id, name, kana: "", house: "sangiin",
+    terms: [{ house: "sangiin", group, district: "", from: "", sessionFrom, ...(sessionTo === undefined ? {} : { sessionTo }) }],
+    sourceUrl: ROSTER,
+  });
+  const shugiinMember = (id: string, name: string, group: string): Member => ({
+    id, name, kana: "", house: "shugiin",
+    terms: [{ house: "shugiin", group, district: "", from: "", sessionFrom: 221 }],
+    sourceUrl: "https://www.shugiin.go.jp/internet/itdb_annai.nsf/html/statics/syu/1giin.htm",
+  });
+
+  test("参議院の会議録に出た衆院議員（大臣）に、衆院名簿を渡せば h_ の memberId が入る", () => {
+    const s = speech("a_001", "赤澤亮正", "自由民主党・無所属の会", "経済産業大臣");
+    const both = [sangiinMember("m_1", "青木 一彦", "自民"), shugiinMember("h_1", "赤澤 亮正", "自由民主党・無所属の会")];
+    assert.equal(matchSpeeches([s], both).speeches[0].memberId, "h_1");
+    // 参院名簿だけなら紐づかない（これが 391 行の欠落。position があるので unmatched にも載らない）
+    const sangiinOnly = matchSpeeches([s], [sangiinMember("m_1", "青木 一彦", "自民")]);
+    assert.equal(sangiinOnly.speeches[0].memberId, undefined);
+    assert.deepEqual(sangiinOnly.unmatched, []);
+  });
+
+  test("position の無い衆院議員の発言（連合審査会など）も両院の名簿で紐づき unmatched から消える", () => {
+    const s = speech("a_002", "簗和生", "自由民主党・無所属の会");
+    const both = [sangiinMember("m_1", "青木 一彦", "自民"), shugiinMember("h_2", "簗 和生", "自由民主党・無所属の会")];
+    const r = matchSpeeches([s], both);
+    assert.equal(r.speeches[0].memberId, "h_2");
+    assert.deepEqual(r.unmatched, []);
+    // 参院名簿だけなら unmatched に載る（いまの 692 行の出方）
+    assert.deepEqual(matchSpeeches([s], [sangiinMember("m_1", "青木 一彦", "自民")]).unmatched,
+      [{ nameText: "簗和生", group: "自由民主党・無所属の会", speechId: "a_002" }]);
+  });
+
+  test("衆議院の会議録に出た参院議員（大臣）も、参院名簿を渡せば m_ の memberId が入る（逆向きも要る）", () => {
+    const s: Speech = { ...speech("h_003", "片山さつき", "自由民主党・無所属の会", "財務大臣"), house: "shugiin" };
+    const both = [shugiinMember("h_1", "赤澤 亮正", "自由民主党・無所属の会"), sangiinMember("m_2", "片山 さつき", "自民")];
+    assert.equal(matchSpeeches([s], both).speeches[0].memberId, "m_2");
+    assert.equal(matchSpeeches([s], [shugiinMember("h_1", "赤澤 亮正", "自由民主党・無所属の会")]).speeches[0].memberId, undefined);
+  });
+
+  test("名簿が覆っていない回次は、両院の名簿を渡しても紐づかない（在職の確認は #230 のまま。第217回の 301 行は増えない）", () => {
+    // 衆院名簿は第221回しか覆っていない。第217回の発言は tenureVerified の (a) も (b) も成り立たない
+    const s: Speech = { ...speech("a_003", "世耕弘成", "自由民主党・無所属の会"), session: 217, date: "2025-06-17" };
+    const both = [sangiinMember("m_1", "青木 一彦", "自民"), shugiinMember("h_3", "世耕 弘成", "自由民主党・無所属の会")];
+    const r = matchSpeeches([s], both);
+    assert.equal(r.speeches[0].memberId, undefined);
+    assert.deepEqual(r.unmatched, [{ nameText: "世耕弘成", group: "自由民主党・無所属の会", speechId: "a_003" }]);
+  });
+
+  test("両院に同姓同名がいて会派でも絞れなければ紐づけない（unmatched に残す）", () => {
+    const both = [sangiinMember("m_4", "鬼木 誠", "自由民主党・無所属の会"), shugiinMember("h_4", "鬼木 誠", "自由民主党・無所属の会")];
+    const r = matchSpeeches([speech("a_004", "鬼木誠", "自由民主党・無所属の会")], both);
+    assert.equal(r.speeches[0].memberId, undefined);
+    assert.deepEqual(r.unmatched, [{ nameText: "鬼木誠", group: "自由民主党・無所属の会", speechId: "a_004" }]);
+  });
+
+  test("両院に同姓同名がいても、その回次に効いている名簿の会派が違えば分けられる", () => {
+    const both = [sangiinMember("m_5", "和田 政宗", "自民"), shugiinMember("h_5", "和田 政宗", "日本維新の会")];
+    assert.equal(matchSpeeches([speech("a_005", "和田政宗", "日本維新の会")], both).speeches[0].memberId, "h_5");
+    assert.equal(matchSpeeches([speech("a_006", "和田政宗", "自由民主党・無所属の会")], both).speeches[0].memberId, "m_5");
+  });
+});
+
+describe("matchSpeeches: 実データ（第221回 参議院 1ページ目 × 両院の名簿、Issue #313）", () => {
+  const sangiin = parseMemberList(fixture("sangiin-giin-221.htm"), ROSTER, 221);
+  const shugiin = ROSTER_PAGES.flatMap((p) =>
+    parseShugiinMemberList(decodeRosterPage(readFileSync(new URL(`./fixtures/shugiin-giin-20260218-${p}.htm`, import.meta.url))), `https://www.shugiin.go.jp/internet/itdb_annai.nsf/html/statics/syu/${p}giin.htm`, 221));
+  const page = parseSpeechPage(JSON.parse(fixture("kokkai-speech-221-p1.json")));
+
+  test("参院名簿だけでは衆院議員の大臣答弁に memberId が入らない（欠落の再現）", () => {
+    const { speeches } = matchSpeeches(page.speeches, sangiin);
+    const takaichi = speeches.filter((s) => s.speakerText === "高市早苗");
+    assert.ok(takaichi.length > 0);
+    assert.ok(takaichi.every((s) => !s.memberId));
+  });
+
+  test("両院の名簿を渡すと衆院議員の発言に h_ の memberId が入り、参院議員の紐づけは変わらない", () => {
+    const before = matchSpeeches(page.speeches, sangiin);
+    const after = matchSpeeches(page.speeches, [...sangiin, ...shugiin]);
+
+    // 参院名簿で紐づいていた行は 1 行も変わらない（両院の名簿を足しても既存の紐づけを奪わない）
+    const beforeLinked = before.speeches.filter((s) => s.memberId);
+    assert.ok(beforeLinked.length > 0);
+    for (const s of beforeLinked) assert.equal(after.speeches.find((x) => x.id === s.id)!.memberId, s.memberId, s.id);
+
+    // 増えるのは衆院議員（h_）の行だけ
+    const gained = after.speeches.filter((s) => s.memberId && !before.speeches.find((x) => x.id === s.id)!.memberId);
+    assert.ok(gained.length > 0);
+    assert.ok(gained.every((s) => s.memberId!.startsWith("h_")), gained.map((s) => `${s.speakerText}:${s.memberId}`).join(","));
+    assert.ok(gained.some((s) => s.speakerText === "高市早苗"));
+    assert.equal(after.speeches.find((s) => s.speakerText === "高市早苗")!.memberId, shugiin.find((m) => m.name === "高市 早苗")!.id);
+
+    // unmatched は増えない
+    assert.ok(after.unmatched.length <= before.unmatched.length);
+  });
+
+  test("両院の名簿に同姓同名は実在する（この修正が同姓同名を新たに持ち込むことを示す）", () => {
+    const dup = sangiin.filter((m) => shugiin.some((h) => normalizeName(h.name) === normalizeName(m.name)));
+    assert.ok(dup.length > 0, "参院名簿と衆院名簿に同じ氏名の議員がいる");
+    // 会派でも絞れなければ resolveMember は undefined を返す（上のユニットテストで確認済み）
+  });
+
+  /*
+   * ここが #313 の本体。上のテストは matchSpeeches に何を渡すかを**テスト自身が決めている**ので、
+   * cli.ts が片院の名簿に戻っても落ちない（#244 / #308 で「テストが偽の安心を与えた」のと同じ形）。
+   * 落ちるようにするため、cli.ts が実際に渡す名簿（speechRosters）を通して同じことを確かめる。
+   */
+  test("speechRosters が返す名簿で突合すると、衆院議員の発言に h_ が入る（cli.ts が渡すもの）", () => {
+    const { speeches } = matchSpeeches(page.speeches, speechRosters(sangiin, shugiin));
+    const takaichi = speeches.filter((s) => s.speakerText === "高市早苗");
+    assert.ok(takaichi.length > 0);
+    assert.ok(takaichi.every((s) => s.memberId === shugiin.find((m) => m.name === "高市 早苗")!.id),
+      "speechRosters が衆院名簿を落としている（参院の会議録に出た衆院議員が紐づかない）");
+  });
+
+  test("speechRosters は両院の全員を落とさずに並べる", () => {
+    const both = speechRosters(sangiin, shugiin);
+    assert.equal(both.length, sangiin.length + shugiin.length);
+    assert.ok(sangiin.every((m) => both.includes(m)), "参院名簿が落ちている");
+    assert.ok(shugiin.every((m) => both.includes(m)), "衆院名簿が落ちている");
+  });
+});
+
+/*
+ * cli.ts は行儀の良い関数ではなく import で走る手続きなので、テストから呼べない。
+ * 渡している名簿が片院に戻っていないことは、他の cli.ts のテスト（sessions.test.ts の #236）と同じく原文で押さえる。
+ */
+describe("cli.ts: 発言の突合には両院の名簿を渡す（Issue #313）", () => {
+  const src = readFileSync(new URL("../src/cli.ts", import.meta.url), "utf8");
+
+  test("参院・衆院どちらの発言も speechRosters が作った名簿に突合している", () => {
+    assert.ok(/const speechMembers = speechRosters\(members, shugiin\.members\);/.test(src),
+      "両院の名簿を speechRosters で 1 つにしていない");
+    const calls = [...src.matchAll(/matchSpeeches\(await fetchSpeeches\([^)]*\), ([A-Za-z.]+)\)/g)].map((m) => m[1]);
+    assert.deepEqual(calls, ["speechMembers", "speechMembers"],
+      "発言の突合に片院の名簿を渡している（参院の会議録に出た衆院議員が落ちる。#313）");
   });
 });

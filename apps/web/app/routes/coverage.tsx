@@ -245,6 +245,9 @@ function ShugiinRosterSection({ data, billNames }: { data: Dataset; billNames: S
  *    `nameOfMeeting` が付いているかで決まる（`speechCoverage`）。
  * 2. **議員ページに実際に出ている件数**（`linkedRecordCounts`。members/index.json の counts の合計）。
  *
+ * 他院の議員の発言（#313）はここに書く。会議録の院は会議の院であって発言者の院ではないという、収録と突合の範囲の事実である。
+ * 書くのは「紐づけるのは名簿が覆う回次だけ」であって、「活動がない」「発言していない」ではない（中立性の原則）。
+ *
  * 「どこまで遡っているか」は院で違う（参院は回次ごとの名簿がある範囲、衆院は名簿が覆う 1 回次だけ）が、
  * それは名簿の範囲の話で、すぐ下の 2 節（RosterlessSection / ShugiinRosterSection）が既に書いている。
  * ここで回次を書くと同じことを 2 か所で言うことになるので、**そちらへ案内するだけ**にする。
@@ -280,6 +283,13 @@ function SpeechSection({ data }: { data: Dataset }) {
         委員会の会議録には、議員でない発言者（政府参考人・参考人・公述人など）も載ります。
         <strong>会派の記載がない発言者は議員に紐づけません</strong>（同姓同名の別人を議員にしないため）。
         議員に紐づかなかった発言は、会議録には残りますが議員ページには出ません。
+      </p>
+      <p className="card__body">
+        会議録は<strong>会議の院</strong>で分かれますが、発言した人がその院の議員とは限りません。
+        参議院の会議には<strong>他院の議員</strong>が大臣・副大臣として答弁に立ち、連合審査会にも出ます（逆も同じです）。
+        こうした発言も、
+        <strong>発言した議員の院の名簿がその回次を覆っている場合にかぎり議員ページに紐づけます</strong>。
+        覆っていない回次の発言は、会議録には残りますが議員ページには出ません。
       </p>
       {(sangiin || shugiin) && (
         <p className="card__body">
