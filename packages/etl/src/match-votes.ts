@@ -108,10 +108,19 @@ export interface RecordAt {
  * 1998年の票に「任期満了日 >= 1998年」で通ってしまう。初当選より前かどうかは名簿から分からない。
  */
 export function tenureVerified(member: Member, at: RecordAt): boolean {
+  return rosterCovers(member, at) || tenureCarriedOver(member, at);
+}
+
+/** (a) その回次の議員一覧に載っている（名簿の直接の記載）。 */
+function rosterCovers(member: Member, at: RecordAt): boolean {
+  return member.terms.some((t) => t.sessionFrom <= at.session && at.session <= (t.sessionTo ?? t.sessionFrom));
+}
+
+/** (b) より前の回次の名簿に載っていて、任期満了日が記録の日付以後（名簿の記載からの推論）。 */
+function tenureCarriedOver(member: Member, at: RecordAt): boolean {
   return member.terms.some((t) => {
     const to = t.sessionTo ?? t.sessionFrom;
-    if (t.sessionFrom <= at.session && at.session <= to) return true;              // (a)
-    return to < at.session && at.date !== undefined && !!t.to && t.to >= at.date;  // (b)
+    return to < at.session && at.date !== undefined && !!t.to && t.to >= at.date;
   });
 }
 
@@ -128,7 +137,13 @@ export function tenureVerified(member: Member, at: RecordAt): boolean {
  */
 export function resolveMember(index: NameIndex, nameText: string, group: string | undefined, at?: RecordAt): Member | undefined {
   const named = index.get(normalizeName(nameText)) ?? [];
-  const candidates = at === undefined ? [] : named.filter((m) => tenureVerified(m, at));
+  const verified = at === undefined ? [] : named.filter((m) => tenureVerified(m, at));
+  // #320: 院を移った議員は、移る前の名簿の行が (b) で残る（参院の `to` は選挙で決まる任期なので、
+  // 途中で辞職しても消えない）。(a) は「その回次の議員一覧に載っている」という**直接の記載**、
+  // (b) は「前の回次に載っていて任期が残る」という**推論**なので、両方が立つときは (a) を採る。
+  // 在職確認を緩めてはいない（どちらも確認済みの候補で、その中の優先順位を決めているだけ）。
+  const direct = at === undefined ? [] : verified.filter((m) => rosterCovers(m, at));
+  const candidates = direct.length > 0 ? direct : verified;
   if (candidates.length === 1) return candidates[0];
   if (candidates.length === 0 || at === undefined) return undefined;
   const voteGroup = group ?? "";
