@@ -121,6 +121,19 @@
    "title": "有人国境離島地域の保全及び特定有人国境離島地域に係る地域社会の維持に関する特別措置法の一部を改正する法律案"
   },
   {
+   "committee": "議院運営委員会院内の警察及び秩序に関する小委員会",
+   "date": "2026-06-19",
+   "estimated": false,
+   "firstDate": "2026-06-19",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-19",
+   "meetingId": "122104025X00120260619_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104025X00120260619/0"
+  },
+  {
    "billId": "221-衆法-18",
    "date": "2026-06-16",
    "kind": "bill",
@@ -223,6 +236,32 @@
    "title": "令和八年度一般会計補正予算（第１号）"
   },
   {
+   "committee": "懲罰委員会",
+   "date": "2026-06-02",
+   "estimated": false,
+   "firstDate": "2026-06-02",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-02",
+   "meetingId": "122104780X00120260602_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104780X00120260602/0"
+  },
+  {
+   "committee": "東日本大震災復興及び原子力問題調査特別委員会",
+   "date": "2026-05-28",
+   "estimated": false,
+   "firstDate": "2026-05-28",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122105387X00320260528_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105387X00320260528/0"
+  },
+  {
    "billId": "221-衆法-10",
    "date": "2026-05-26",
    "estimated": true,
@@ -273,6 +312,19 @@
    "stanceText": "少数",
    "status": "本院議了",
    "title": "刑事訴訟法の一部を改正する法律案"
+  },
+  {
+   "committee": "国家基本政策委員会",
+   "date": "2026-05-14",
+   "estimated": false,
+   "firstDate": "2026-05-14",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-14",
+   "meetingId": "122104292X00120260514_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104292X00120260514/0"
   },
   {
    "billId": "221-閣法-40",
@@ -390,6 +442,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "金融商品取引法及び資金決済に関する法律の一部を改正する法律案"
+  },
+  {
+   "committee": "憲法審査会",
+   "date": "2026-04-09",
+   "estimated": false,
+   "firstDate": "2026-04-09",
+   "kind": "committeeRole",
+   "lastDate": "2026-04-09",
+   "meetingId": "122104183X00220260409_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104183X00220260409/0"
   },
   {
    "billId": "221-閣法-56",
@@ -1185,6 +1250,19 @@
    "title": "防災庁設置法案"
   },
   {
+   "committee": "国土交通委員会",
+   "date": "2026-03-06",
+   "estimated": false,
+   "firstDate": "2026-03-06",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104319X00120260306_000",
+   "meetings": 14,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104319X00120260306/0"
+  },
+  {
    "billId": "221-閣法-12",
    "date": "2026-03-03",
    "estimated": true,
@@ -1391,6 +1469,45 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "東日本大震災復興及び原子力問題調査特別委員会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-02-20",
+   "meetingId": "122105387X00120260220_000",
+   "meetings": 1,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105387X00120260220/0"
+  },
+  {
+   "committee": "議院運営委員会庶務小委員会",
+   "date": "2026-02-19",
+   "estimated": false,
+   "firstDate": "2026-02-19",
+   "kind": "committeeRole",
+   "lastDate": "2026-02-19",
+   "meetingId": "122104037X00120260219_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104037X00120260219/0"
+  },
+  {
+   "committee": "議院運営委員会",
+   "date": "2026-02-18",
+   "estimated": false,
+   "firstDate": "2026-02-18",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104024X00120260218_000",
+   "meetings": 39,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104024X00120260218/0"
   }
  ]
 }

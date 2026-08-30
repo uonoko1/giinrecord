@@ -329,6 +329,19 @@
    "title": "自動車の運転により人を死傷させる行為等の処罰に関する法律及び道路交通法の一部を改正する法律案"
   },
   {
+   "committee": "憲法審査会",
+   "date": "2026-04-16",
+   "estimated": false,
+   "firstDate": "2026-04-16",
+   "kind": "committeeRole",
+   "lastDate": "2026-04-16",
+   "meetingId": "122104183X00320260416_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104183X00320260416/0"
+  },
+  {
    "billId": "221-閣法-60",
    "date": "2026-04-10",
    "estimated": true,
@@ -1174,6 +1187,19 @@
    "title": "防災庁設置法案"
   },
   {
+   "committee": "国土交通委員会",
+   "date": "2026-03-06",
+   "estimated": false,
+   "firstDate": "2026-03-06",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104319X00120260306_000",
+   "meetings": 14,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104319X00120260306/0"
+  },
+  {
    "billId": "221-閣法-12",
    "date": "2026-03-03",
    "estimated": true,
@@ -1224,6 +1250,19 @@
    "stanceText": "多数",
    "status": "両院承認",
    "title": "放送法第七十条第二項の規定に基づき、承認を求めるの件"
+  },
+  {
+   "committee": "予算委員会",
+   "date": "2026-03-03",
+   "estimated": false,
+   "firstDate": "2026-03-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-06",
+   "meetingId": "122105261X00420260303_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00420260303/0"
   },
   {
    "billId": "221-閣法-9",

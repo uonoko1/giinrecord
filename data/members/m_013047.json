@@ -745,6 +745,19 @@
    "value": "賛成"
   },
   {
+   "committee": "経済産業委員会",
+   "date": "2025-05-13",
+   "estimated": false,
+   "firstDate": "2025-05-13",
+   "kind": "committeeRole",
+   "lastDate": "2025-06-20",
+   "meetingId": "121714080X00720250513_000",
+   "meetings": 9,
+   "role": "理事",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121714080X00720250513/0"
+  },
+  {
    "date": "2025-05-09",
    "groupValue": "賛成",
    "kind": "vote",
@@ -985,6 +998,19 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/217/217-0416-v001.htm",
    "title": "日程第１　自殺対策基本法の一部を改正する法律案（厚生労働委員長提出）",
    "value": "賛成"
+  },
+  {
+   "committee": "決算委員会",
+   "date": "2025-04-14",
+   "estimated": false,
+   "firstDate": "2025-04-14",
+   "kind": "committeeRole",
+   "lastDate": "2025-04-14",
+   "meetingId": "121714103X00320250414_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121714103X00320250414/0"
   },
   {
    "date": "2025-04-11",
@@ -1383,14 +1409,30 @@
    "value": "賛成"
   },
   {
-   "chars": 3107,
+   "committee": "予算委員会",
    "date": "2025-03-12",
-   "excerpt": "日本維新の会の藤巻健史です。 会派を代表して、石破内閣総理大臣に質問いたします。 まず、所得税法等の一部を改正する法律案の立法趣旨を明確にしていただきたいと思います。 働き止めを回避するための税制改革、改正なのか、それとも国民の手取りを増やすための税制改革なのかという点です。 政府は百三万円を働き止めの壁だと認識しているのでしょうか。壁と聞くと、それ以上働くと税引き後収入が減ってしまうとの印象を持",
-   "kind": "speech",
-   "meeting": "本会議 第6号",
+   "estimated": false,
+   "firstDate": "2025-03-12",
+   "kind": "committeeRole",
+   "lastDate": "2025-04-21",
+   "meetingId": "121715261X00620250312_000",
+   "meetings": 2,
+   "role": "委員",
    "session": 217,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715254X00620250312/12",
-   "speechId": "121715254X00620250312_012"
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715261X00620250312/0"
+  },
+  {
+   "committee": "財政金融委員会",
+   "date": "2025-03-11",
+   "estimated": false,
+   "firstDate": "2025-03-11",
+   "kind": "committeeRole",
+   "lastDate": "2025-06-03",
+   "meetingId": "121714370X00120250311_000",
+   "meetings": 10,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121714370X00120250311/0"
   },
   {
    "date": "2025-02-19",
@@ -1525,58 +1567,69 @@
    "value": "賛成"
   },
   {
-   "chars": 3514,
-   "date": "2024-12-09",
-   "excerpt": "日本維新の会の藤巻健史です。会派を代表して質問いたします。 財政法二十九条では、補正予算は「予算作成後に生じた事由に基づき特に緊要となつた経費の支出」に限り認めるとなっています。日本維新の会は、毎年、国の歳出は本予算策定時に十分熟議した上で決定するべきものであり、補正予算は緊要の支出に限るとの財政法どおりの指摘をしています。 しかしながら、毎年、十分な熟議がなされず安易に大きな補正予算が組まれ、そ",
-   "kind": "speech",
-   "meeting": "本会議 第5号",
+   "committee": "資源エネルギー・持続可能社会に関する調査会",
+   "date": "2025-02-05",
+   "estimated": false,
+   "firstDate": "2025-02-05",
+   "kind": "committeeRole",
+   "lastDate": "2025-06-04",
+   "meetingId": "121715364X00120250205_000",
+   "meetings": 5,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715364X00120250205/0"
+  },
+  {
+   "committee": "地方創生及びデジタル社会の形成等に関する特別委員会",
+   "date": "2025-01-24",
+   "estimated": false,
+   "firstDate": "2025-01-24",
+   "kind": "committeeRole",
+   "lastDate": "2025-05-14",
+   "meetingId": "121715360X00120250124_000",
+   "meetings": 8,
+   "role": "委員",
+   "session": 217,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121715360X00120250124/0"
+  },
+  {
+   "committee": "資源エネルギー・持続可能社会に関する調査会",
+   "date": "2024-12-24",
+   "estimated": false,
+   "firstDate": "2024-12-24",
+   "kind": "committeeRole",
+   "lastDate": "2024-12-24",
+   "meetingId": "121615364X00120241224_000",
+   "meetings": 1,
+   "role": "委員",
    "session": 216,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121615254X00520241209/17",
-   "speechId": "121615254X00520241209_017"
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121615364X00120241224/0"
   },
   {
-   "date": "2024-10-01",
-   "groupValue": "反対",
-   "kind": "vote",
-   "result": "賛成 146・反対 96",
-   "rollCallId": "214-1001-v001",
-   "session": 214,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/214/214-1001-v001.htm",
-   "title": "日程第２　会期の件",
-   "value": "反対"
+   "committee": "財政金融委員会",
+   "date": "2024-12-10",
+   "estimated": false,
+   "firstDate": "2024-12-10",
+   "kind": "committeeRole",
+   "lastDate": "2024-12-24",
+   "meetingId": "121614370X00120241210_000",
+   "meetings": 3,
+   "role": "委員",
+   "session": 216,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121614370X00120241210/0"
   },
   {
-   "date": "2024-03-28",
-   "groupValue": "反対",
-   "kind": "vote",
-   "result": "可決（賛成 146・反対 98）",
-   "rollCallId": "213-0328-v014",
-   "session": 213,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/213/213-0328-v014.htm",
-   "title": "令和六年度政府関係機関予算",
-   "value": "反対"
-  },
-  {
-   "date": "2024-03-28",
-   "groupValue": "反対",
-   "kind": "vote",
-   "result": "可決（賛成 146・反対 98）",
-   "rollCallId": "213-0328-v013",
-   "session": 213,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/213/213-0328-v013.htm",
-   "title": "令和六年度特別会計予算",
-   "value": "反対"
-  },
-  {
-   "date": "2024-03-28",
-   "groupValue": "反対",
-   "kind": "vote",
-   "result": "可決（賛成 146・反対 98）",
-   "rollCallId": "213-0328-v012",
-   "session": 213,
-   "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/213/213-0328-v012.htm",
-   "title": "令和六年度一般会計予算",
-   "value": "反対"
+   "committee": "東日本大震災復興特別委員会",
+   "date": "2024-11-28",
+   "estimated": false,
+   "firstDate": "2024-11-28",
+   "kind": "committeeRole",
+   "lastDate": "2024-12-24",
+   "meetingId": "121614858X00120241128_000",
+   "meetings": 4,
+   "role": "委員",
+   "session": 216,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/121614858X00120241128/0"
   }
  ]
 }
