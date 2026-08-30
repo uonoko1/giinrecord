@@ -11,7 +11,7 @@ permissions:
   issues: write        # failure → auto Issue
   actions: write       # gh workflow run deploy-data.yml / approve pending runs
 concurrency:
-  group: etl-local-assemblies # ワークフロー固有（#201）。データ PR ブランチ（data/local-assemblies）が別なので他の ETL と並走できる。Deploy の直列化は deploy-site.yml の deploy-<dir> group が担う。
+  group: etl-local-assemblies # ワークフロー固有（#201）。データ PR ブランチ（data/local-assemblies）が別なので他の ETL と並走できる。Deploy の直列化は deploy-site.yml の deploy-vps group が担う（#308: rrsync のロックは制限ルート全体に掛かるので dir ごとでは足りない）。
   cancel-in-progress: false
 env:
   DATA_BRANCH: data/local-assemblies
