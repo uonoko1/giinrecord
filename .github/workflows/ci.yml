@@ -98,6 +98,42 @@ jobs:
           curl -sSI -H 'Host: staging.giinrecord.jp' http://127.0.0.1:8083/ | tr -d '\r' | grep -i '^x-robots-tag: noindex, nofollow$'
           ! curl -sSI -H 'Host: giinrecord.jp' http://127.0.0.1:8081/ | grep -qi '^x-robots-tag' || (echo "production must not send X-Robots-Tag" && exit 1)
           ! curl -sSI http://127.0.0.1:8083/ | grep -qi '^x-robots-tag' || (echo "X-Robots-Tag must depend on Host, not on the port" && exit 1)
+      - name: Not found (#325) — unknown URLs are 404, every pre-rendered route is still 200, /compare stays 200
+        run: |
+          set -euo pipefail
+          BASE=http://127.0.0.1:8081
+          # A real member id from the built site: the 404 rule must not touch pre-rendered pages.
+          MEMBER=$(basename "$(find apps/web/build/client/members -mindepth 1 -maxdepth 1 -type d | sort | head -1)")
+          echo "member sample: $MEMBER"
+          status() { curl -sS -o /dev/null -w '%{http_code}' "$BASE$1"; }
+          expect() {
+            got=$(status "$1")
+            if [ "$got" != "$2" ]; then echo "FAIL $1 -> $got (expected $2)"; exit 1; fi
+            echo "ok   $1 -> $got"
+          }
+          # pre-rendered routes: unchanged
+          expect /                          200
+          expect /members/                  200
+          expect "/members/$MEMBER/"        200
+          expect /coverage/                 200
+          expect /assemblies/               200
+          expect /rollcalls/                200
+          expect /about/                    200
+          # #104: query-driven, deliberately not pre-rendered — the route a careless =404 breaks
+          expect '/compare?m=m_1,m_2'       200
+          # #325: not a route at all
+          expect /this-does-not-exist/      404
+          expect /bills/                    404
+          expect /search/                   404
+          expect /members/m_no_such_member/ 404
+          expect /__spa-fallback.html       404
+          # the 404 must still carry a body: lang=ja, the site name, noindex, and no developer message
+          body=$(curl -sS "$BASE/this-does-not-exist/")
+          echo "$body" | grep -q '<html lang="ja"' || (echo "404 body: lang is not ja" && exit 1)
+          echo "$body" | grep -q '議員レコード' || (echo "404 body: <title> lacks the site name" && exit 1)
+          echo "$body" | grep -q 'noindex' || (echo "404 body: no noindex" && exit 1)
+          ! echo "$body" | grep -q 'Hey developer' || (echo "404 body: React Router default fallback" && exit 1)
+          echo "ok   404 body: lang=ja, site name, noindex, no developer message"
       - name: Legacy domain 301 (#192) — gikailog.jp hosts redirect to giinrecord.jp, path preserved
         run: |
           curl -sSI -H 'Host: gikailog.jp' http://127.0.0.1:8081/members/ | tr -d '\r' | grep -i '^location: https://giinrecord.jp/members/$'
