@@ -4,7 +4,7 @@ import assembliesFixture from "../test-fixtures/assemblies/index.json";
 import localMembers from "../test-fixtures/assemblies/members-index.json";
 import sessionsFixture from "../test-fixtures/assemblies/sessions.json";
 import { dataset } from "../test-fixtures/dataset";
-import { buildCoverage, formatLocalSessionRange, formatSessionRange, hasSessionGaps, linkedRecordCounts, rosterlessSessions, rosterScope, sessionRange, shugiinBillNameCoverage, shugiinQuestionCoverage, shugiinRosterAsOf, speechCoverage } from "./coverage";
+import { buildCoverage, formatLocalSessionRange, formatSessionRange, hasSessionGaps, linkedRecordCounts, rosterlessSessions, rosterScope, sangiinUnlinkedVotes, sessionRange, shugiinBillNameCoverage, shugiinQuestionCoverage, shugiinRosterAsOf, speechCoverage } from "./coverage";
 import type { AssemblySession } from "./data-contract";
 import type { Dataset, MemberSummary } from "./dataset";
 
@@ -311,5 +311,43 @@ describe("buildCoverage: 合計", () => {
     expect(c.metaSessions).toBeNull();
     expect(c.totals.dietRollcalls).toBe(0);
     expect(c.diet.every((d) => d.members === 0)).toBe(true);
+  });
+});
+
+describe("sangiinUnlinkedVotes: 名簿より前の回次で議員に紐づいていない票（#274）", () => {
+  const rosterless = { earliestRoster: 216, sessions: [200, 201, 204], range: { from: 200, to: 204, count: 3 } };
+  const stats = {
+    votes: 100,
+    linked: 60,
+    sessions: [
+      { session: 200, votes: 30, linked: 10 },
+      { session: 201, votes: 20, linked: 20 }, // 名簿より前でも全部紐づいている回次がある
+      { session: 204, votes: 10, linked: 0 },
+      { session: 221, votes: 40, linked: 30 }, // 名簿のある回次は数えない
+    ],
+  };
+
+  it("名簿より前の回次の票だけを数え、そのうち紐づいていない数を出す", () => {
+    const r = sangiinUnlinkedVotes(stats, rosterless);
+    expect(r).toEqual({ votes: 60, linked: 30, unlinked: 30, range: { from: 200, to: 204, count: 3 }, unlinkedRange: { from: 200, to: 204, count: 2 } });
+  });
+
+  it("紐づいていない票のある回次だけを unlinkedRange に入れる（全部紐づいた回次は入れない）", () => {
+    // 第201回は 20 票すべて紐づいているので、紐づかない回次の範囲には入らない
+    expect(sangiinUnlinkedVotes(stats, rosterless)?.unlinkedRange).toEqual({ from: 200, to: 204, count: 2 });
+  });
+
+  it("紐づいていない票が 1 件も無ければ unlinkedRange は null（無い事実を作らない）", () => {
+    const all = { votes: 30, linked: 30, sessions: [{ session: 200, votes: 30, linked: 30 }] };
+    expect(sangiinUnlinkedVotes(all, rosterless)).toEqual({ votes: 30, linked: 30, unlinked: 0, range: { from: 200, to: 200, count: 1 }, unlinkedRange: null });
+  });
+
+  it("名簿より前の回次に票が 1 件も無ければ null", () => {
+    expect(sangiinUnlinkedVotes({ votes: 40, linked: 30, sessions: [{ session: 221, votes: 40, linked: 30 }] }, rosterless)).toBeNull();
+  });
+
+  it("数えた結果が無い・名簿の出典が無いなら null（推定しない）", () => {
+    expect(sangiinUnlinkedVotes(null, rosterless)).toBeNull();
+    expect(sangiinUnlinkedVotes(stats, null)).toBeNull();
   });
 });
