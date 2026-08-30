@@ -333,6 +333,25 @@ describe("/coverage 収録範囲", () => {
     });
     const section = () => screen.getByRole("region", { name: "衆議院の記録が議員ページに紐づく範囲" });
 
+    // #316: 衆院サイト以外の一次資料（国会会議録・総選挙の結果・官報）も調べたうえで無い、と書く。
+    // #274 が参院について「参議院のサイト以外の一次資料は調べていません」と主張の範囲を限定したのと対になる。
+    it("衆院サイト以外の一次資料も調べたうえで無い、と書く（#316）", () => {
+      renderPage(withShugiin(), sessions, billNames);
+      const t = section().textContent ?? "";
+      expect(t).toContain("衆議院のサイト以外");
+      // 調べた先を名指しする（「探したが無かった」だけでは、何を探したか分からない）
+      expect(t).toContain("国会会議録");
+      expect(t).toContain("総選挙の結果");
+      expect(t).toContain("官報");
+      // 総選挙の結果が使えたとしても在職の確認にはならない、という限界まで書く
+      expect(t).toMatch(/辞職|補欠選挙/);
+      // 調査の記録への導線
+      expect(within(section()).getByRole("link", { name: /shugiin-tenure-sessions/ })).toHaveAttribute(
+        "href",
+        "https://github.com/uonoko1/giinrecord/blob/main/docs/research/shugiin-tenure-sessions.md",
+      );
+    });
+
     it("名簿が「現在」の 1 時点しかないことと、その時点を出典（meta）から出す", () => {
       renderPage(withShugiin(), sessions, billNames);
       expect(section()).toHaveTextContent("「現在」の 1 時点だけで、回次ごとの名簿はありません");

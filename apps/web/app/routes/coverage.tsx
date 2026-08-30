@@ -194,6 +194,30 @@ function ShugiinRosterSection({ data, billNames }: { data: Dataset; billNames: S
         <strong>氏名がこの名簿と一致しても、その人本人であることを一次資料から確認できません</strong>。
         氏名だけを手がかりに議員に紐づけることはしていません（同姓同名の別人を 1 人にしないため）。
       </p>
+      {/* #316: 衆院サイト以外の一次資料も調べたうえで無い、と書く。#274 が参院について「参議院のサイト以外の
+          一次資料は調べていません」と主張の範囲を限定したのと対。robots.txt / 利用規約の話と WARP（#250 待ち）は
+          利用者向けの情報ではないので書かない（docs/research/shugiin-tenure-sessions.md 7 節）。 */}
+      <p className="card__body">
+        回次ごとの名簿にあたるものが<strong>衆議院のサイト以外にもないか</strong>を調べました。
+        <strong>国会会議録</strong>には発言者の会派が記録されていますが、記録されるのは発言した人だけで、
+        その回次に議員だった人の一覧にはなりません。<strong>総選挙の結果</strong>（総務省）には当選した人の氏名がありますが、
+        投票用紙に書く通称で記載されており、議員名簿の氏名とは別の表記です。比例代表の当選者は、
+        資料の形の都合で当選・落選の別を機械的に読み取れません。<strong>官報</strong>は、
+        発行から 90 日を過ぎた過去の分が公開の対象外です。
+      </p>
+      <p className="card__body">
+        総選挙の結果が使えたとしても、それは<strong>その総選挙で当選した人</strong>であって、
+        会期の途中の辞職・死去・補欠選挙・繰上補充は反映されません。
+        このサイトは、確認できないものを推測で補うことはしていません。調査の記録は{" "}
+        <a
+          href="https://github.com/uonoko1/giinrecord/blob/main/docs/research/shugiin-tenure-sessions.md"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          docs/research/shugiin-tenure-sessions.md
+        </a>
+        にあります。
+      </p>
       {bills?.largest && (
         <p className="card__body">
           衆議院の議案にいちばん多くの氏名が載る<span className="num">第{bills.largest.session}回</span>では、議案に載る提出者・賛成者{" "}
