@@ -17,8 +17,22 @@ case "$PUBKEY" in ssh-ed25519\ *|ssh-rsa\ *|ecdsa-sha2-*) ;; *) echo "public key
 # 改名（gikailog → giinrecord）: このスクリプトは冪等に「作る」だけで旧ユーザーを消さない。
 # 旧 gikaiops が残っていると sudo 可能な運用ユーザーが 2 つ並存するので、動作確認のあと人が消す
 # （deluser --remove-home gikaiops && rm -f /etc/sudoers.d/90-gikaiops）。docs/ops/deploy.md「改名の移行」。
-if [ "$OPS" != gikaiops ] && id gikaiops >/dev/null 2>&1; then
-  echo "!! 旧運用ユーザー gikaiops が残っています。$OPS の動作確認後に削除してください（sudoers も）" >&2
+# 警告は「残っています」では読み流される（#336：実際に読み流し、NOPASSWD:ALL を持つ旧ユーザーが
+# 生きたまま数日放置された）。**旧ユーザーが実際に何を許可されているかを調べて**、危険なら言い切る。
+LEGACY_OPS=gikaiops
+if [ "$OPS" != "$LEGACY_OPS" ] && id "$LEGACY_OPS" >/dev/null 2>&1; then
+  legacy_sudo=$(sudo -n -l -U "$LEGACY_OPS" 2>/dev/null || true)
+  if printf '%s' "$legacy_sudo" | grep -Eq 'NOPASSWD:[[:space:]]*ALL'; then
+    cat >&2 <<WARN
+!! 危険: 旧運用ユーザー $LEGACY_OPS が **NOPASSWD: ALL**（無制限の root）を持ったまま生きています。
+!! $OPS をどれだけ絞っても、$LEGACY_OPS にログインできる鍵があれば迂回されます（#336）。
+!! $OPS の動作確認ができ次第、次を実行してください:
+!!     sudo rm -f /etc/sudoers.d/[0-9][0-9]-$LEGACY_OPS
+!!     sudo deluser --remove-home $LEGACY_OPS
+WARN
+  else
+    echo "!! 旧運用ユーザー $LEGACY_OPS が残っています。$OPS の動作確認後に削除してください（sudoers も）" >&2
+  fi
 fi
 id "$OPS" >/dev/null 2>&1 || adduser --disabled-password --gecos "giinrecord ops" "$OPS"
 install -d -m 700 "$PREFIX/home/$OPS/.ssh"
