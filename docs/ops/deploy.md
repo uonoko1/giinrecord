@@ -199,3 +199,11 @@ allowlist は「コマンドを固定したから安全」なのではなく、*
 - **`tee <nginx conf>` + `systemctl reload nginx` は実質 root 相当**と考えること。nginx master は root で動くので、conf に `location /x { root /; }` を書いて reload すれば任意ファイルを HTTP で公開でき、`ssl_certificate_key` に他サイトの秘密鍵を指定でき、`access_log` の書き込み先を通じて root 権限でファイルを作れる。`nginx -t` はこれらを検査しない。**共用ホストなので影響は自サイトに閉じない。** 将来は「`giinops` 所有の場所に書かせ、危険ディレクティブを検査する root 側スクリプトを1本だけ許可する」形に寄せたい（#335）
 - `ubuntu` の CI deploy 鍵：`command="/usr/bin/rrsync /var/www/giinrecord"` ＋ `restrict`。rsync で `/var/www/giinrecord` 配下に書くこと以外できない（漏洩しても root 化不可）。`deploy-site.yml` の宛先はこの root 相対（`site/`・`staging/`）
 - `ubuntu` のパスワード sudo は変更しない
+- **`ubuntu`（uid 1000）は OS 初期アカウントで、共用 VPS の同居サイトも使っている**（2026-09-01 に判明）。
+  `deploy/go-live.sh` の `gpasswd -d ubuntu docker`（CI の deploy 鍵に root 相当を渡さないための正しい措置）が、
+  **同居サイトの docker デプロイを巻き添えで壊した**（`permission denied ... /var/run/docker.sock`）。
+  設計は変えない——共用ホストで `ubuntu` に docker 権限を残す方が危険なので——が、
+  **共用ユーザー・共用グループへの変更は、ファイルと同じく「他サイトに触る」行為**だと認識すること。
+  自サイト専用のユーザーに権限を付ける方が、干渉しないぶん安全。
+  - 調査の型：`/etc/group-` `/etc/passwd-`（変更前のバックアップ）と現在を diff すると、
+    「自分がやったか」を推測でなく証拠で答えられる
