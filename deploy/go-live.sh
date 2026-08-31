@@ -148,7 +148,10 @@ main() {
     apt-get update -qq && apt-get install -y -qq docker-ce docker-ce-cli containerd.io docker-compose-plugin
   fi
   docker --version; docker compose version
-  # deploy ユーザーには docker 権限を与えない（docker グループ = root 相当）
+  # deploy ユーザーには docker 権限を与えない（docker グループ = root 相当）。
+  # 注意: ubuntu は OS 初期アカウントで、共用 VPS の同居サイトも使っている。この行は 2026-08-26 に
+  # 同居サイトの docker デプロイを巻き添えで壊した（docs/ops/deploy.md「運用ユーザーと鍵の権限」）。
+  # それでも外す方が正しい（共用ホストで CI の鍵に root 相当を残さない）。戻さないこと。
   if id -nG ubuntu | grep -qw docker; then gpasswd -d ubuntu docker; fi
 
   step "2/8 リポジトリ（compose ファイル用）を $REPO_DIR に取得"
