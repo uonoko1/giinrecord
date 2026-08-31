@@ -145,6 +145,18 @@
   - **マージは成果ではない。** 本番へのデプロイは `release.yml` の手動実行だけなので、
     DoD の「本番の URL で確認できる」は **`release.yml` を実行して URL を叩くまで**を指す
     （作り直しは 08-29 に成功していたが、本番の最後のリリースは 08-24 で6日ぶん届いていなかった）。
+  - **`release.yml` も「本番に届いた」の証明にはならない**（#325、2026-08-31）。
+    `release.yml` が rsync するのは**ビルド成果物だけ**で、**`deploy/` は対象外**である。
+    `deploy/nginx/site.conf` と `deploy/docker-compose.yml` は VPS の `/opt/giinrecord`
+    （root 所有の git チェックアウト）から **bind mount** されており、反映には別の操作が要る:
+    `cd /opt/giinrecord && sudo git pull && sudo docker compose -f deploy/docker-compose.yml up -d --force-recreate`
+    （`--force-recreate` が要る理由は `docs/ops/deploy.md:44`。bind mount した単一ファイルは
+    `git pull` で inode が変わり、コンテナは古い inode を掴んだまま）。
+  - **`deploy/` を触る PR には、VPS 側の反映手順を PR 本文に書く。** #325 では web 側の3点
+    （`lang`・`title`・console.log）だけが release で届き、**nginx のステータスコードだけが
+    数時間ずれて届いた**。PO は本番を叩いて初めて気づいた。
+  - **自動クローズされた issue が「完了」とは限らない。** #325 は PR のマージで閉じたが、
+    本番はまだ 200 を返していた。**本番で確かめるまでは開け直す。**
 - **稼働中のホスト上の実体を指す文字列は、リポジトリの中だけでは正しさを判定できない**
   （#287 の改名、2026-08-25）。
   - 移行スクリプトが `sites-available/gikailog.conf` を「旧名だから残骸」と判断して削除する実装になっていた。
