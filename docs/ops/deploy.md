@@ -88,7 +88,7 @@ VPS 上のパス・conf・cron・compose project はすべて `giinrecord` 名�
 2. `/etc/giinrecord/monitor.token` — `mv` は自動化されているが、fine-grained PAT なので移行後に `sudo ls -l /etc/giinrecord/monitor.token`（600、root）で存在と権限を確認する。失われると `health.sh` はフェイルソフトし、**無言で監視が効かなくなる**。
 3. 本番の nginx conf は certbot 管理 + 手編集で、`vps-setup.sh` は書き換えない設計。`sites-available/giinrecord.conf` への改名と certbot の管理対象名の整合は手作業。
 4. Cloudflare ダッシュボード — Access Application 名 `gikailog staging`、Service Token 名 `gikailog-monitor`（`docs/ops/staging-access.md`）。リポジトリからは触れない。Service Token 名の変更はトークン再発行を伴う。
-5. OS ユーザー `gikaiops` → `giinops` — `ops-user-setup.sh` は冪等に「作る」だけで旧ユーザーを消さないので、そのまま実行すると NOPASSWD sudo ユーザーが 2 つ並存する。「新ユーザー作成 → 鍵移行 → 動作確認 → 旧ユーザー削除 + `/etc/sudoers.d/90-gikaiops` 削除」の 4 段で行う。sudoers は `visudo -cf` で検証し、別セッションで root を開いたまま作業する。
+5. OS ユーザー `gikaiops` → `giinops`（**2026-09-01 に完了**、#336）— `ops-user-setup.sh` は冪等に「作る」だけで旧ユーザーを消さないので、そのまま実行すると sudo 可能な運用ユーザーが 2 つ並存する。**実際この移行は途中で止まり、`gikaiops` が `NOPASSWD:ALL` を持ったまま数日生きていた**（しかも同じ鍵でログインできた）。`giinops` をどれだけ絞っても迂回できる状態だったので、`giinops` の allowlist 化（#333）は単体では意味を成していなかった。**新ユーザーを絞ったら、旧ユーザーを消すまでが1つの作業。**「新ユーザー作成 → 鍵移行 → 動作確認 → 旧ユーザー削除 + `/etc/sudoers.d/90-gikaiops` 削除」の 4 段で行う。sudoers は `visudo -cf` で検証し、別セッションで root を開いたまま作業する。
 
 **順序**（1 つ抜けるとデプロイか監視が黙って死ぬ）: `go-live.sh` を実行（step 0 が上表を処理し、compose を落とす）→ `authorized_keys` を書き換え → `deploy/cloudflare-allowlist.sh --install-cron` を新名で実行（先に走らせないと `vps-setup.sh` の `ensure_cf_snippet` が fail-closed で `deny all;` を書き、staging が全 403 になる）→ `go-live.sh` の残り step が `vps-setup.sh` / compose up / analytics を新名で作る → `deploy/monitor/setup.sh` を再実行。
 

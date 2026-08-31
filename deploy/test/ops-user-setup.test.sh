@@ -19,7 +19,19 @@ PUBKEY="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAITESTKEYFIXTUREONLYNOTAREALKEY ops@t
 TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
 BIN="$TMP/bin"; mkdir -p "$BIN"
 for cmd in adduser usermod chown; do printf '#!/usr/bin/env bash\nexit 0\n' > "$BIN/$cmd"; chmod +x "$BIN/$cmd"; done
-printf '#!/usr/bin/env bash\nexit 1\n' > "$BIN/id"; chmod +x "$BIN/id"
+# id: 既定は「居ない」(exit 1)。H_LEGACY_EXISTS=1 のとき gikaiops だけ「居る」ことにする
+cat > "$BIN/id" <<'IDSTUB'
+#!/usr/bin/env bash
+if [ -n "${H_LEGACY_EXISTS:-}" ] && [ "${*: -1}" = gikaiops ]; then exit 0; fi
+exit 1
+IDSTUB
+chmod +x "$BIN/id"
+# sudo: -l -U <user> の問い合わせにだけ答える。H_LEGACY_SUDO の中身をそのまま返す
+cat > "$BIN/sudo" <<'SUDOSTUB'
+#!/usr/bin/env bash
+printf '%s\n' "${H_LEGACY_SUDO:-}"
+SUDOSTUB
+chmod +x "$BIN/sudo"
 
 ok()  { PASS=$((PASS+1)); echo "  ok   - $1"; }
 bad() { FAIL=$((FAIL+1)); echo "  FAIL - $1"; }
@@ -168,6 +180,32 @@ if [ "$AFTER" = "$EXPECTED" ]; then ok "2回流しても allowlist は同じ"; e
 # 権限
 MODE=$(stat -c '%a' "$SUDOERS_DIR/90-giinops")
 if [ "$MODE" = 440 ]; then ok "sudoers は 0440"; else bad "sudoers の権限が $MODE（sudo は 0440 以外を無視する）"; fi
+
+
+# #336: 旧運用ユーザーが NOPASSWD:ALL を持ったまま残ると、新ユーザーをどれだけ絞っても迂回できる。
+# 「残っています」という穏当な警告は実際に読み流されたので、危険な場合は言い切ることを検査する。
+echo "== 旧運用ユーザーの警告 =="
+warn_output() {  # warn_output <H_LEGACY_EXISTS> <H_LEGACY_SUDO> → stderr
+  local p="$TMP/warn$RANDOM"
+  mkdir -p "$p/home/ubuntu/.ssh"; : > "$p/home/ubuntu/.ssh/authorized_keys"
+  PATH="$BIN:$PATH" OPS_SETUP_PREFIX="$p" H_LEGACY_EXISTS="$1" H_LEGACY_SUDO="$2" \
+    bash "$SCRIPT" "$PUBKEY" 2>"$p/stderr" >/dev/null || true
+  cat "$p/stderr"
+}
+
+OUT=$(warn_output 1 "(ALL) NOPASSWD: ALL")
+if printf '%s' "$OUT" | grep -q '危険'; then ok "旧ユーザーが NOPASSWD:ALL なら「危険」と言い切る"
+else bad "NOPASSWD:ALL を持つ旧ユーザーを危険と伝えていない: $OUT"; fi
+if printf '%s' "$OUT" | grep -q 'deluser'; then ok "消し方（deluser）を示す"
+else bad "消し方を示していない"; fi
+
+OUT=$(warn_output 1 "(ALL) NOPASSWD: /usr/bin/true")
+if printf '%s' "$OUT" | grep -q '残っています'; then ok "無制限でない旧ユーザーは通常の警告"
+else bad "旧ユーザーが居るのに警告が出ない: $OUT"; fi
+
+OUT=$(warn_output "" "")
+if printf '%s' "$OUT" | grep -q '旧運用ユーザー'; then bad "旧ユーザーが居ないのに警告が出る: $OUT"
+else ok "旧ユーザーが居なければ何も言わない"; fi
 
 echo
 echo "pass=$PASS fail=$FAIL skip=$SKIP"
