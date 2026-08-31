@@ -65,7 +65,7 @@ fresh() {
   export STUB_LOG="$LOG" STUB_HANDLER="$TMP/handler"
   export MONITOR_LOG="$P/monitor.log" MONITOR_STATE_DIR="$P/state" MONITOR_TOKEN_FILE="$P/token" \
     MONITOR_SITE_DIR="$P/site" MONITOR_STAGING_DIR="$P/staging" MONITOR_LATEST_DIR="$P/home/monitor" \
-    MONITOR_REPO="example/repo" MONITOR_OWNER="$ME"
+    MONITOR_REPO="example/repo" MONITOR_OWNER="$ME" MONITOR_CHECKOUT_DIR="$P/nonexistent-checkout"
   unset H_WEB H_STAGING H_NGINX H_DISK H_API_LIST H_API_RESP
 }
 run_health() { PATH="$BIN:$PATH" bash "$SCRIPT" > "$P/out" 2>&1; }
@@ -182,6 +182,38 @@ t_refuses_symlinked_latest_dir() {
   assert_missing "$P/elsewhere/latest.json" "nothing written through the symlink"
 }
 
+
+# #333: allowlist の安全性は「checkout を giinops が書けない」前提の上に立つ。前提そのものを監視する。
+t_checkout_owner_absent_is_ok() {
+  fresh chkabsent
+  run_health || fail "exit $? $(cat "$P/out")"
+  assert_contains "$(cat "$P/monitor.log")" " OK" "checkout が無い構成では何も言わない"
+}
+
+# ALL_CHECKS から漏れたチェックは「ログには出るが Issue にならない」＝実質無いのと同じになる。
+# 検出できるチェック名がすべて報告経路（ALL_CHECKS）に載っていることを、健康診断そのものに問う。
+t_every_failable_check_is_reportable() {
+  fresh reportable
+  local declared detected
+  declared=$(sed -n 's/^ALL_CHECKS=(\(.*\))$/\1/p' "$SCRIPT" | tr ' ' '\n' | sort -u)
+  # failure "<name>" / failure <name> の第1引数を実装から拾う
+  detected=$(grep -oE 'failure "?[a-z-]+' "$SCRIPT" | sed -e 's/failure "\?//' \
+    | grep -v '^\$' | sort -u)
+  local missing
+  missing=$(comm -13 <(echo "$declared") <(echo "$detected"))
+  [ -z "$missing" ] || fail "ALL_CHECKS に載っていない（=Issue にならない）チェックがある: $(echo "$missing" | tr '\n' ' ')"
+}
+
+t_checkout_owner_foreign_file_is_a_failure() {
+  fresh chkforeign
+  # テストは非 root なので「root 所有の checkout」は作れない。代わりに
+  # 「自分が所有するファイルがある」= find ! -user root が非空、という同じ条件を作る。
+  export MONITOR_CHECKOUT_DIR="$P/checkout"
+  mkdir -p "$P/checkout/deploy"; echo x > "$P/checkout/deploy/docker-compose.yml"
+  run_health && fail "expected non-zero when the checkout has non-root files"
+  assert_contains "$(cat "$P/monitor.log")" "checkout-owner" "checkout-owner を異常として報告する"
+}
+
 test_case "health.sh: bash -n" t_syntax
 test_case "正常: OK をログし latest.json（600）を書き、API は呼ばない" t_all_ok
 test_case "異常: コンテナ unhealthy・nginx inactive・ディスク>85% をそれぞれ検出" t_detects_each_failure
@@ -193,6 +225,9 @@ test_case "通知: 状態ファイルが無くても同名の open Issue があ�
 test_case "復旧: コメントして close、状態を消す" t_closes_on_recovery
 test_case "通知失敗: curl が失敗しても監視は続く" t_curl_failure_does_not_abort
 test_case "latest.json: 置き場がシンボリックリンクなら書かない" t_refuses_symlinked_latest_dir
+test_case "報告: 検出できるチェックはすべて ALL_CHECKS に載っている" t_every_failable_check_is_reportable
+test_case "checkout: 無い構成では何も言わない" t_checkout_owner_absent_is_ok
+test_case "checkout: root 以外が所有するファイルがあれば異常（#333 の前提）" t_checkout_owner_foreign_file_is_a_failure
 
 echo; echo "passed: $PASS  failed: $FAIL"
 [[ $FAIL == 0 ]]

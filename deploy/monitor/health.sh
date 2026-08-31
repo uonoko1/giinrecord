@@ -8,6 +8,7 @@
 #   nginx                                   host nginx is not `systemctl is-active`
 #   disk                                    filesystem of the web root is used more than MONITOR_DISK_MAX % (85)
 #   site-production / site-staging          rsync target missing, or its data/meta.json older than MONITOR_STALE_HOURS (48)
+#   checkout-owner                          /opt/giinrecord に root 以外が所有するファイルがある（#333 の前提が崩れた）
 #
 # Outputs:
 #   $MONITOR_LOG (/var/log/giinrecord-monitor.log, root 600): one line per run, "<UTC time> OK" or "<UTC time> FAIL <check>: <why>; …"
@@ -33,6 +34,7 @@ REPO="${MONITOR_REPO:-uonoko1/giinrecord}"
 API="${MONITOR_API:-https://api.github.com}"
 DISK_MAX="${MONITOR_DISK_MAX:-85}"
 STALE_HOURS="${MONITOR_STALE_HOURS:-48}"
+CHECKOUT_DIR="${MONITOR_CHECKOUT_DIR:-/opt/giinrecord}"
 FAILS_BEFORE_REPORT="${MONITOR_FAILS_BEFORE_REPORT:-2}"
 NOW_ISO=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 NOW_EPOCH=$(date +%s)
@@ -40,7 +42,7 @@ NOW_EPOCH=$(date +%s)
 FAILED=()            # check names that failed this run
 declare -A WHY=()    # check name → short reason (for the log only)
 failure() { FAILED+=("$1"); WHY[$1]=$2; }
-ALL_CHECKS=(container-web container-web-staging nginx disk site-production site-staging)
+ALL_CHECKS=(container-web container-web-staging nginx disk site-production site-staging checkout-owner)
 
 # ---- checks -------------------------------------------------------------------------------------------------------
 check_container() { # check_container <check> <container name>
@@ -60,6 +62,15 @@ check_disk() {
   if [ -z "$used" ]; then failure disk "df failed"; return; fi
   [ "$used" -le "$DISK_MAX" ] || failure disk "${used}% used"
 }
+# #333: giinops の sudo allowlist（git pull / docker compose up を root で実行できる）が安全なのは、
+# $CHECKOUT_DIR 配下を giinops が1バイトも書けないという前提の上でだけ。書けるファイルが1つでもあれば
+# .git/config の core.pager や docker-compose.yml を書き換えて root を取れる。前提そのものを監視する。
+check_checkout_owner() {
+  local n
+  [ -d "$CHECKOUT_DIR" ] || return 0   # この VPS に checkout が無い構成なら何も言わない
+  n=$(find "$CHECKOUT_DIR" ! -user root 2>/dev/null | head -20 | grep -c . || true)
+  [ "$n" = 0 ] || failure checkout-owner "${n}+ files not owned by root"
+}
 check_site() { # check_site <check> <dir>
   local meta="$2/data/meta.json" mtime age_h
   if [ ! -d "$2" ]; then failure "$1" "directory missing"; return; fi
@@ -75,6 +86,7 @@ check_nginx
 check_disk
 check_site site-production "$SITE_DIR"
 check_site site-staging "$STAGING_DIR"
+check_checkout_owner
 
 # ---- log + latest.json --------------------------------------------------------------------------------------------
 log() { printf '%s %s\n' "$NOW_ISO" "$*" >> "$LOG"; }
