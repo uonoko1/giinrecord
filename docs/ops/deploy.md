@@ -196,6 +196,6 @@ allowlist は「コマンドを固定したから安全」なのではなく、*
 | 環境変数が sudo に渡らない（`env_reset` / `!setenv`） | `docker-compose.yml` の `${SITE_DIR:-...}` に `SITE_DIR=/` を渡すと、**ホストの `/` を root 権限のコンテナに mount** できる。`:ro` でも `/etc/shadow` や他サイトのファイルを読める | 生成 sudoers の `Defaults:giinops env_reset, !setenv, use_pty`（テストが検査） |
 | `main` への push 権限 = この VPS の root 権限 | `git pull` 自体は実行しないが、pull した `docker-compose.yml` を直後に root で `up` する。**GitHub の書き込み権限が信頼境界**になっている | ブランチ保護 |
 
-- **`tee <nginx conf>` + `systemctl reload nginx` は実質 root 相当**と考えること。nginx master は root で動くので、conf に `location /x { root /; }` を書いて reload すれば任意ファイルを HTTP で公開でき、`ssl_certificate_key` に他サイトの秘密鍵を指定でき、`access_log` の書き込み先を通じて root 権限でファイルを作れる。`nginx -t` はこれらを検査しない。**共用ホストなので影響は自サイトに閉じない。** 将来は「`giinops` 所有の場所に書かせ、危険ディレクティブを検査する root 側スクリプトを1本だけ許可する」形に寄せたい（未着手）
+- **`tee <nginx conf>` + `systemctl reload nginx` は実質 root 相当**と考えること。nginx master は root で動くので、conf に `location /x { root /; }` を書いて reload すれば任意ファイルを HTTP で公開でき、`ssl_certificate_key` に他サイトの秘密鍵を指定でき、`access_log` の書き込み先を通じて root 権限でファイルを作れる。`nginx -t` はこれらを検査しない。**共用ホストなので影響は自サイトに閉じない。** 将来は「`giinops` 所有の場所に書かせ、危険ディレクティブを検査する root 側スクリプトを1本だけ許可する」形に寄せたい（#335）
 - `ubuntu` の CI deploy 鍵：`command="/usr/bin/rrsync /var/www/giinrecord"` ＋ `restrict`。rsync で `/var/www/giinrecord` 配下に書くこと以外できない（漏洩しても root 化不可）。`deploy-site.yml` の宛先はこの root 相対（`site/`・`staging/`）
 - `ubuntu` のパスワード sudo は変更しない
