@@ -131,7 +131,14 @@ curl -sI https://DOMAIN/ | grep -i -E "content-security|x-frame" # 外から見�
 
 1. `packages/etl/test/deploy-docker.test.ts`（ヘッダ・キャッシュの固定値）と `apps/web/app/lib/smoke-url.ts`（URL モード smoke の期待値）を先に直す。
 2. `deploy/nginx/site.conf` / `deploy/docker-compose.yml` を変更。CI の `docker-web` ジョブが `compose config → up → smoke --url → browser-check --url`（Playwright）で検証する。
-3. マージ後、VPS で `git pull && docker compose -f deploy/docker-compose.yml up -d --force-recreate`（`up -d` だけでは古い `site.conf` のまま）。
+3. マージ後、VPS で反映する（`up -d` だけでは古い `site.conf` のまま）。`/opt/giinrecord` は root 所有なので `sudo` が要る。`giinops` はこの 2 コマンドだけ NOPASSWD 許可されている（#333）ので、手元から非対話で叩ける:
+
+   ```sh
+   ssh giinops@<host> 'sudo -n git -C /opt/giinrecord pull \
+     && sudo -n docker compose -f /opt/giinrecord/deploy/docker-compose.yml up -d --force-recreate'
+   ```
+
+   `ubuntu` でやる場合はパスワード sudo なので `ssh -t`（TTY）が必要。
 4. ホスト側 `deploy/nginx-host-proxy.conf` を変える場合は `vps-setup.sh` の heredoc も同じ内容にする（テストが同一性を検査）。反映は `sudo bash deploy/vps-setup.sh giinrecord.jp`（staging は `staging.giinrecord.jp 8083`）の再実行。**certbot 管理の conf（`# managed by Certbot` を含む、#141 以前に構築したホスト）は書き換えず `proxy_pass` のポートだけ合わせる**ので、そのホストでは `sudo nano /etc/nginx/sites-available/giinrecord.conf` → `sudo nginx -t && sudo systemctl reload nginx`。テンプレートへ移行したいときは `sudo certbot certonly`（既存証明書があるので実際には不要）→ conf を退避して削除 → `vps-setup.sh` 再実行。
 
 ## setup スクリプトの冪等性と安全装置（#141）
@@ -174,6 +181,21 @@ curl -sI https://DOMAIN/ | grep -i -E "content-security|x-frame" # 外から見�
 - コンテナからログを外に出さない（IP を含む。集計はホスト側の IP 無しログだけ、`docs/ops/analytics.md`）。
 
 ## 運用ユーザーと鍵の権限（2026-08-23）
-- `giinops`：NOPASSWD sudo。鍵は運用者の1本のみ（`deploy/ops-user-setup.sh`）。PO はこのユーザーで root 作業（setup スクリプト、監視）を非対話で実行する
+- `giinops`：**コマンドを固定した NOPASSWD sudo の allowlist**（`NOPASSWD:ALL` ではない、#333）。鍵は運用者の1本のみ（`deploy/ops-user-setup.sh` が生成。サーバー上で手編集しない）。PO はこのユーザーで許可済みの root 作業を非対話で実行する
+  - 中身は `ssh giinops@<host> 'sudo -n -l'` で確認できる。**追加してよいのは引数まで書ききれるコマンドだけ**——`bash /tmp/*.sh` のようなワイルドカードは任意コード実行なので `NOPASSWD:ALL` と変わらない（実際 `91-giinops` にこの形が残っていた、#333）
+  - `deploy/` の反映（#325）に必要な 2 つを含む：`git -C /opt/giinrecord pull` と `docker compose -f /opt/giinrecord/deploy/docker-compose.yml up -d --force-recreate`
+  - 検査は `deploy/test/ops-user-setup.test.sh`（CI の `deploy/test/*.test.sh` に入る）。**許可行の集合を完全一致で照合する**ので、許可を1つ足すとテストが落ちる＝レビューを必ず通る
+
+### この allowlist が安全である前提（崩れたら root 昇格しうる、#333）
+
+allowlist は「コマンドを固定したから安全」なのではなく、**次の前提の上で**安全である。前提が崩れれば昇格経路になる。
+
+| 前提 | なぜ必要か | 確認 |
+|---|---|---|
+| `/opt/giinrecord` 配下を `giinops` が1バイトも書けない（全て root 所有） | 書けると `.git/config` の `core.pager` や `docker-compose.yml` 自体を書き換えて、root で実行させられる | `ssh giinops@<host> 'find /opt/giinrecord ! -user root \| head'` が空 |
+| 環境変数が sudo に渡らない（`env_reset` / `!setenv`） | `docker-compose.yml` の `${SITE_DIR:-...}` に `SITE_DIR=/` を渡すと、**ホストの `/` を root 権限のコンテナに mount** できる。`:ro` でも `/etc/shadow` や他サイトのファイルを読める | 生成 sudoers の `Defaults:giinops env_reset, !setenv, use_pty`（テストが検査） |
+| `main` への push 権限 = この VPS の root 権限 | `git pull` 自体は実行しないが、pull した `docker-compose.yml` を直後に root で `up` する。**GitHub の書き込み権限が信頼境界**になっている | ブランチ保護 |
+
+- **`tee <nginx conf>` + `systemctl reload nginx` は実質 root 相当**と考えること。nginx master は root で動くので、conf に `location /x { root /; }` を書いて reload すれば任意ファイルを HTTP で公開でき、`ssl_certificate_key` に他サイトの秘密鍵を指定でき、`access_log` の書き込み先を通じて root 権限でファイルを作れる。`nginx -t` はこれらを検査しない。**共用ホストなので影響は自サイトに閉じない。** 将来は「`giinops` 所有の場所に書かせ、危険ディレクティブを検査する root 側スクリプトを1本だけ許可する」形に寄せたい（未着手）
 - `ubuntu` の CI deploy 鍵：`command="/usr/bin/rrsync /var/www/giinrecord"` ＋ `restrict`。rsync で `/var/www/giinrecord` 配下に書くこと以外できない（漏洩しても root 化不可）。`deploy-site.yml` の宛先はこの root 相対（`site/`・`staging/`）
 - `ubuntu` のパスワード sudo は変更しない
