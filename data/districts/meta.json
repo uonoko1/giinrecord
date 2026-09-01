@@ -1,278 +1,278 @@
 {
  "asOf": {
-  "kenAll": "2026-07-31",
+  "kenAll": "2026-08-31",
   "shugiinDistricts": "2022-12-28"
  },
  "counts": {
   "municipalities": 1892,
   "shugiinDistricts": 289,
   "splitMunicipalities": 33,
-  "zips": 120682
+  "zips": 120717
  },
- "fetchedAt": "2026-08-23T08:01:29.817Z",
+ "fetchedAt": "2026-09-01T22:29:31.548Z",
  "sources": [
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "日本郵便 郵便番号データ（KEN_ALL）ダウンロードページ",
    "url": "https://www.post.japanpost.jp/service/search/zipcode/download/kogaki-zip.html"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "日本郵便 郵便番号データ（KEN_ALL.CSV、全国一括）",
    "url": "https://www.post.japanpost.jp/service/search/zipcode/download/kogaki/zip/ken_all.zip"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区の区割りの改定等について（令和4年改定）",
    "url": "https://www.soumu.go.jp/senkyo/senkyo_s/news/senkyo/shu_kuwari/shu_kuwari_4.html"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（北海道）",
    "url": "https://www.soumu.go.jp/main_content/000853801.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（青森県）",
    "url": "https://www.soumu.go.jp/main_content/000853803.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（岩手県）",
    "url": "https://www.soumu.go.jp/main_content/000853804.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（宮城県）",
    "url": "https://www.soumu.go.jp/main_content/000853805.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（秋田県）",
    "url": "https://www.soumu.go.jp/main_content/000853806.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（山形県）",
    "url": "https://www.soumu.go.jp/main_content/000853807.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（福島県）",
    "url": "https://www.soumu.go.jp/main_content/000853808.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（茨城県）",
    "url": "https://www.soumu.go.jp/main_content/000853809.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（栃木県）",
    "url": "https://www.soumu.go.jp/main_content/000853810.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（群馬県）",
    "url": "https://www.soumu.go.jp/main_content/000853811.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（埼玉県）",
    "url": "https://www.soumu.go.jp/main_content/000853812.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（千葉県）",
    "url": "https://www.soumu.go.jp/main_content/000853813.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（東京都）",
    "url": "https://www.soumu.go.jp/main_content/000853814.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（神奈川県）",
    "url": "https://www.soumu.go.jp/main_content/000853816.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（新潟県）",
    "url": "https://www.soumu.go.jp/main_content/000853817.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（富山県）",
    "url": "https://www.soumu.go.jp/main_content/000853818.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（石川県）",
    "url": "https://www.soumu.go.jp/main_content/000853819.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（福井県）",
    "url": "https://www.soumu.go.jp/main_content/000853820.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（山梨県）",
    "url": "https://www.soumu.go.jp/main_content/000853821.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（長野県）",
    "url": "https://www.soumu.go.jp/main_content/000853822.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（岐阜県）",
    "url": "https://www.soumu.go.jp/main_content/000853826.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（静岡県）",
    "url": "https://www.soumu.go.jp/main_content/000853827.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（愛知県）",
    "url": "https://www.soumu.go.jp/main_content/000853828.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（三重県）",
    "url": "https://www.soumu.go.jp/main_content/000853829.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（滋賀県）",
    "url": "https://www.soumu.go.jp/main_content/000853831.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（京都府）",
    "url": "https://www.soumu.go.jp/main_content/000853832.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（大阪府）",
    "url": "https://www.soumu.go.jp/main_content/000853834.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（兵庫県）",
    "url": "https://www.soumu.go.jp/main_content/000853835.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（奈良県）",
    "url": "https://www.soumu.go.jp/main_content/000853836.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（和歌山県）",
    "url": "https://www.soumu.go.jp/main_content/000853837.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（鳥取県）",
    "url": "https://www.soumu.go.jp/main_content/000853851.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（島根県）",
    "url": "https://www.soumu.go.jp/main_content/000853852.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（岡山県）",
    "url": "https://www.soumu.go.jp/main_content/000853853.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（広島県）",
    "url": "https://www.soumu.go.jp/main_content/000853854.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（山口県）",
    "url": "https://www.soumu.go.jp/main_content/000853855.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（徳島県）",
    "url": "https://www.soumu.go.jp/main_content/000853856.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（香川県）",
    "url": "https://www.soumu.go.jp/main_content/000853857.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（愛媛県）",
    "url": "https://www.soumu.go.jp/main_content/000853858.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（高知県）",
    "url": "https://www.soumu.go.jp/main_content/000853859.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（福岡県）",
    "url": "https://www.soumu.go.jp/main_content/000853860.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（佐賀県）",
    "url": "https://www.soumu.go.jp/main_content/000853861.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（長崎県）",
    "url": "https://www.soumu.go.jp/main_content/000853862.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（熊本県）",
    "url": "https://www.soumu.go.jp/main_content/000853863.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（大分県）",
    "url": "https://www.soumu.go.jp/main_content/000853864.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（宮崎県）",
    "url": "https://www.soumu.go.jp/main_content/000853866.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（鹿児島県）",
    "url": "https://www.soumu.go.jp/main_content/000853867.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "総務省 衆議院小選挙区選出議員の選挙区（沖縄県）",
    "url": "https://www.soumu.go.jp/main_content/000853868.pdf"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "北海道 総合振興局・振興局の所管市町村",
    "url": "https://www.pref.hokkaido.lg.jp/gyosei/shicho/index.html"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "東京都支庁設置条例（支庁の所管区域）",
    "url": "https://www.reiki.metro.tokyo.lg.jp/reiki/reiki_honbun/g101RG00000150.html"
   },
   {
-   "fetchedAt": "2026-08-23T08:01:29.817Z",
+   "fetchedAt": "2026-09-01T22:29:31.548Z",
    "name": "静岡県 区の再編（別表の旧区名と現在の区の対応）",
    "url": "https://www.city.hamamatsu.shizuoka.jp/kikaku/kuseido/index.html"
   }
