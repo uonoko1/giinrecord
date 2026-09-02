@@ -44,13 +44,19 @@ log "PR #$PR ($HEAD) state=$STATE draft=$DRAFT mergeState=$MERGE_STATE head=${HE
 # 「base が無い」で通らず、PR を出し直すことになった。作業が消えるわけではないが、
 # 気づかなければ「レビュー中だったはずの PR」が黙って消える。
 # 先に上の PR の base を切り替えてもらう（それだけで安全にマージできる）ので、ここでは中断する。
-STACKED=$(gh pr list --repo "$REPO" --base "$HEAD" --state open --json number -q '.[].number' | tr '\n' ' ')
-STACKED=${STACKED% }
-if [[ -n "$STACKED" ]]; then
-  die "PR #$PR ($HEAD) を base にしている open PR があります: ${STACKED// /, }
+# **起動時とマージ直前の両方**で確かめる。起動時だけだと、CI を待っている数分の間に
+# 誰かが上に PR を積んだ場合を取り逃がす（assert_head_unchanged はマージ直前に毎回
+# 呼ぶのに、こちらだけ1回では非対称）。
+assert_no_stacked_prs() {
+  local stacked
+  stacked=$(gh pr list --repo "$REPO" --base "$HEAD" --state open --json number -q '.[].number' | tr '\n' ' ')
+  stacked=${stacked% }
+  [[ -n "$stacked" ]] || return 0
+  die "PR #$PR ($HEAD) を base にしている open PR があります: ${stacked// /, }
        このままマージするとブランチが消え、それらの PR は GitHub に CLOSED にされます（reopen できません）。
        先に  gh pr edit <番号> --base main  で base を切り替えてください。"
-fi
+}
+assert_no_stacked_prs
 
 # --- 2. bring up to date ----------------------------------------------------------------------
 # merge_main_locally — fallback for `gh pr update-branch` being refused because the gh OAuth
@@ -91,6 +97,14 @@ merge_main_locally() {
 
 # repin_head — 我々自身がブランチを進めた後（update-branch / ローカルマージ）に基準を取り直す。
 # これをしないと、自分で動かした HEAD を「他人が push した」と誤検出して毎回中断してしまう。
+#
+# **既知の限界（塞げていない窓）**: `gh pr update-branch` は新しい oid を返さないので、
+# ここは「今の HEAD」を読み直すしかない。**update-branch が成功してから、この API 読みが
+# 返るまで**の1リクエスト分（サブ秒）に人が push すると、それを自分の更新として飲み込む。
+# 完全に塞ぐには「新しい HEAD の親に旧 HEAD_OID が含まれるか」まで見る必要がある。
+# 窓が極めて狭いのと、docs/WORKING_AGREEMENT.md の「マージ処理を走らせたらそのブランチには
+# 触らない」が一次防御になっているので、いまは受け入れている。**「成功時だけ repin すれば
+# 完全に安全」ではない**ことを、次に読む人のために書いておく。
 repin_head() {
   local oid
   oid=$(gh pr view "$PR" --json headRefOid -q .headRefOid 2>/dev/null || true)
@@ -198,7 +212,8 @@ wait_for_green
 # **時間で決め打ちせず、状態が緑に戻るまで待つ**（上限は通算の POLL_MAX）。
 log "squash-merging PR #$PR and deleting $HEAD"
 for attempt in 1 2 3; do
-  assert_head_unchanged   # 待っている間に push されたコミットを取り残さない（#392）
+  assert_head_unchanged     # 待っている間に push されたコミットを取り残さない（#392）
+  assert_no_stacked_prs     # 待っている間に上へ積まれた PR を巻き添えにしない（#392）
   if gh pr merge "$PR" --squash --delete-branch; then
     echo "merged PR #$PR ($HEAD) $URL"
     exit 0

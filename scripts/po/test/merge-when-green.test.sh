@@ -114,8 +114,10 @@ EOF
   run_script "$h" merge-when-green.sh 12
   assert_eq 0 "$STATUS" "exit status: $ERR"
   # 積まれた PR の確認（#392）が先、その後に update-branch。ブランチを進める前に安全確認を済ませる
-  local order; order=$(grep -oE 'pr	list|pr	update-branch|pr	merge' <<<"$LOG" | head -3 | tr '\n' '|')
-  assert_eq "pr	list|pr	update-branch|pr	merge|" "$order" "stacked-PR check, then update-branch, then merge"
+  local order; order=$(grep -oE 'pr	list|pr	update-branch|pr	merge' <<<"$LOG" | head -2 | tr '\n' '|')
+  assert_eq "pr	list|pr	update-branch|" "$order" "stacked-PR check runs before update-branch (before we move the branch)"
+  # マージ直前にもう一度確かめる（待っている間に積まれた PR を巻き添えにしない）
+  assert_eq 2 "$(grep -c 'pr	list' <<<"$LOG" || true)" "checked again just before merging, not only at startup"
   assert_contains "$LOG" "pr	merge	12" "merged afterwards"
   assert_eq 1 "$(grep -c 'pr	update-branch' <<<"$LOG")" "updated exactly once"
 }
@@ -648,3 +650,122 @@ EOF
   assert_eq 1 "$([[ "$(grep -c '^sleep' <<<"$LOG" || true)" -ge 2 ]] && echo 1 || echo 0)" "slept between merge attempts (not a 0-second retry)"
 }
 test_case "merge: チェックが緑のままでも再試行の前に必ず待つ（#392 レビュー指摘）" t_merge_retry_always_waits_at_least_once
+
+# レビュー指摘（2回目）: merge_main_locally の**早期 return**（checkout の外 / fetch 失敗 /
+# worktree を作れない）は「ブランチを1バイトも進めていない」ので repin してはいけない。
+# 3箇所とも `return 1` に直したが、**変異が素通りしていた**（C 経路の修正の大半が無検査だった）。
+t_merge_local_fallback_no_op_does_not_repin() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"BEHIND","url":"u","headRefOid":"oid1"}' ;;
+    "pr view 12 --json mergeStateStatus"*) echo '{"mergeStateStatus":"CLEAN"}' ;;
+    "pr update-branch 12") echo 'refusing to allow an OAuth App to create or update workflow without `workflow` scope' >&2; exit 1 ;;
+    "pr view 12 --json headRefOid"*) echo '{"headRefOid":"oid2"}' ;;   # その窓で人が push した
+    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+git_handle() {
+  # checkout の中にいない（rev-parse が失敗）→ ローカルマージは**何もできずに戻る**
+  case "$*" in
+    "rev-parse --show-toplevel") echo "not a git repository" >&2; exit 128 ;;
+    *) echo "unexpected git: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "aborts"
+  assert_contains "$ERR" "HEAD がこの処理の開始後に動きました" "a no-op fallback is not our update"
+  assert_not_contains "$LOG" $'pr\tmerge' "never merges"
+  assert_not_contains "$LOG" "worktree" "did not even get as far as a worktree"
+}
+test_case "merge: ローカルマージが何もできなかった窓の push も飲み込まない（#392 レビュー指摘2回目）" t_merge_local_fallback_no_op_does_not_repin
+
+# 同じく: fetch に失敗した場合（checkout はあるが更新できていない）
+t_merge_local_fallback_fetch_failure_does_not_repin() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"BEHIND","url":"u","headRefOid":"oid1"}' ;;
+    "pr view 12 --json mergeStateStatus"*) echo '{"mergeStateStatus":"CLEAN"}' ;;
+    "pr update-branch 12") echo 'refusing to allow an OAuth App to create or update workflow without `workflow` scope' >&2; exit 1 ;;
+    "pr view 12 --json headRefOid"*) echo '{"headRefOid":"oid2"}' ;;
+    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+git_handle() {
+  case "$*" in
+    "rev-parse --show-toplevel") echo /repo ;;
+    "-C /repo fetch origin "*) echo "could not read from remote" >&2; exit 128 ;;
+    *) echo "unexpected git: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "aborts"
+  assert_contains "$ERR" "HEAD がこの処理の開始後に動きました" "a failed fetch is not our update"
+  assert_not_contains "$LOG" $'pr\tmerge' "never merges"
+}
+test_case "merge: fetch に失敗した窓の push も飲み込まない（#392 レビュー指摘2回目）" t_merge_local_fallback_fetch_failure_does_not_repin
+
+# 同じく: worktree を作れなかった場合
+t_merge_local_fallback_worktree_failure_does_not_repin() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"BEHIND","url":"u","headRefOid":"oid1"}' ;;
+    "pr view 12 --json mergeStateStatus"*) echo '{"mergeStateStatus":"CLEAN"}' ;;
+    "pr update-branch 12") echo 'refusing to allow an OAuth App to create or update workflow without `workflow` scope' >&2; exit 1 ;;
+    "pr view 12 --json headRefOid"*) echo '{"headRefOid":"oid2"}' ;;
+    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+git_handle() {
+  case "$*" in
+    "rev-parse --show-toplevel") echo /repo ;;
+    "-C /repo fetch origin "*) : ;;
+    "-C /repo worktree add --detach "*) echo "fatal: could not create work tree" >&2; exit 128 ;;
+    *) echo "unexpected git: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "aborts"
+  assert_contains "$ERR" "HEAD がこの処理の開始後に動きました" "a failed worktree is not our update"
+  assert_not_contains "$LOG" $'pr\tmerge' "never merges"
+}
+test_case "merge: worktree を作れなかった窓の push も飲み込まない（#392 レビュー指摘2回目）" t_merge_local_fallback_worktree_failure_does_not_repin
+
+# レビュー指摘（PO 代理）: 積まれた PR の確認は起動時に1回だけで、
+# **CI を待っている数分の間に誰かが上に PR を積んだ場合を取り逃がしていた**。
+# assert_head_unchanged はマージ直前に毎回呼ぶのに、こちらだけ1回では非対称だった。
+t_merge_detects_a_pr_stacked_while_waiting() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"BLOCKED","url":"u","headRefOid":"oid1"}' ;;
+    "pr view 12 --json mergeStateStatus"*) echo '{"mergeStateStatus":"CLEAN"}' ;;
+    "pr view 12 --json headRefOid"*) echo '{"headRefOid":"oid1"}' ;;
+    "pr list --repo uonoko1/giinrecord --base feat/x --state open --json number"*)
+      # 起動時は誰も積んでいない。CI を待っている間に #13 が積まれた
+      if grep -q "pr	checks" "$FAKE_GH_LOG"; then echo '[{"number":13}]'; else echo '[]'; fi ;;
+    "pr checks 12 --json"*)
+      if [ "$(bump)" -lt 2 ]; then echo '[{"name":"check","bucket":"pending"}]'; exit 8
+      else echo '[{"name":"check","bucket":"pass"}]'; fi ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "aborts"
+  assert_contains "$ERR" "13" "names the PR that was stacked while we waited"
+  assert_not_contains "$LOG" $'pr\tmerge' "never merges (that would close #13)"
+}
+test_case "merge: 待っている間に積まれた PR も検出する（PO 代理の指摘）" t_merge_detects_a_pr_stacked_while_waiting
