@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { MemoryRouter } from "react-router";
 import { describe, expect, it, vi } from "vitest";
@@ -114,7 +114,7 @@ describe("RollCallsPage 折りたたみ（#363）", () => {
 
   it("「さらに表示」で全件出る", async () => {
     renderMany(many(380));
-    await userEvent.click(screen.getByRole("button", { name: /さらに表示/ }));
+    fireEvent.click(screen.getByRole("button", { name: /さらに表示/ }));
     expect(rows()).toBe(380);
     expect(screen.queryByRole("button", { name: /さらに表示/ })).not.toBeInTheDocument();
   });

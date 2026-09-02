@@ -35,14 +35,22 @@ function applyTheme(theme: Theme) {
 export function ThemeToggle() {
   // SSR/プリレンダー時は常に system。マウント後に保存値を読む。
   const [theme, setTheme] = useState<Theme>("system");
+  // プリレンダー HTML に <input> を出さない（Issue 365）。JS が無い環境では
+  // ラジオを押しても何も起きないので、**動かない操作子を置かない**。
+  // InstallLink（Issue 191）と同じく、マウント後にだけ描画する。
+  // home.test.tsx の「プリレンダーの HTML に <input> を含まない」がこれを検査している。
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const stored = readStored();
     if (stored !== "system") {
       setTheme(stored);
       applyTheme(stored);
     }
   }, []);
+
+  if (!mounted) return null;
 
   const choose = (t: Theme) => {
     setTheme(t);

@@ -67,3 +67,6 @@
 .install-link { display: inline-flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
 .install-link__button { appearance: none; background: none; border: 0; padding: 0; margin: 0; font: inherit; color: var(--link); text-decoration: underline; cursor: pointer; }
 .install-link__hint { font-size: 12px; color: var(--muted); }
+
+/* テーマ切替（#365）。フッターの「サイト情報」の下に、控えめに置く。 */
+.site-footer__theme { display: flex; justify-content: center; padding: 4px 0 0; }

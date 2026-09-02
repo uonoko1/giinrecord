@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import type { Assembly } from "@seiji-kiroku/shared";
@@ -172,29 +172,29 @@ describe("地方議員の表決タブの折りたたみ（#361）", () => {
   it("200 件を超えたら折りたたみ、残り件数を出す", async () => {
     render(<MemberPage detail={withVotes(365)} meta={meta} assembly={miyagi} />);
     // 「すべて」タブのままだと ALL_FOLD（#361）が効くので、表決タブを開いて localVote 側を検査する
-    await userEvent.click(screen.getByRole("tab", { name: /表決/ }));
+    fireEvent.click(screen.getByRole("tab", { name: /表決/ }));
     expect(tableRows()).toBe(200);
     expect(screen.getByRole("button", { name: "さらに表示（残り165件）" })).toBeInTheDocument();
   });
 
   it("「さらに表示」で全件出る", async () => {
     render(<MemberPage detail={withVotes(365)} meta={meta} assembly={miyagi} />);
-    await userEvent.click(screen.getByRole("tab", { name: /表決/ }));
-    await userEvent.click(screen.getByRole("button", { name: /さらに表示/ }));
+    fireEvent.click(screen.getByRole("tab", { name: /表決/ }));
+    fireEvent.click(screen.getByRole("button", { name: /さらに表示/ }));
     expect(tableRows()).toBe(365);
     expect(screen.queryByRole("button", { name: /さらに表示/ })).not.toBeInTheDocument();
   });
 
   it("200 件以下なら折りたたまない（中央値 118 件の議員は従来どおり）", async () => {
     render(<MemberPage detail={withVotes(118)} meta={meta} assembly={miyagi} />);
-    await userEvent.click(screen.getByRole("tab", { name: /表決/ }));
+    fireEvent.click(screen.getByRole("tab", { name: /表決/ }));
     expect(tableRows()).toBe(118);
     expect(screen.queryByRole("button", { name: /さらに表示/ })).not.toBeInTheDocument();
   });
 
   it("ちょうど 200 件なら折りたたまない（境界）", async () => {
     render(<MemberPage detail={withVotes(200)} meta={meta} assembly={miyagi} />);
-    await userEvent.click(screen.getByRole("tab", { name: /表決/ }));
+    fireEvent.click(screen.getByRole("tab", { name: /表決/ }));
     expect(tableRows()).toBe(200);
     expect(screen.queryByRole("button", { name: /さらに表示/ })).not.toBeInTheDocument();
   });
