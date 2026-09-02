@@ -65,4 +65,7 @@ export function formatSessions(sessions: number[]): string | undefined {
   return lo === hi ? `第${lo}回` : `第${lo}—${hi}回`;
 }
 
-export const REPO_URL = "https://github.com/uonoko1/giinrecord";
+// Issue 406: 実体は site.ts に移した（データに触れない定数を dataset.ts に置くと、
+// それを1つ import しただけで eager glob のデータ全体が同じチャンクに入る）。
+// ここは互換のための re-export。**新しい import は site.ts から**。
+export { REPO_URL } from "./site";

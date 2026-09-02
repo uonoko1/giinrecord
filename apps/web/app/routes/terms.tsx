@@ -1,7 +1,7 @@
 import type { MetaArgs } from "react-router";
 import { CoverBrand } from "../components/CoverBrand";
 import { SiteFooter } from "../components/SiteFooter";
-import { REPO_URL } from "../lib/dataset";
+import { REPO_URL } from "../lib/site";
 import { seoMeta } from "../lib/seo";
 import "../styles/pages.css";
 
