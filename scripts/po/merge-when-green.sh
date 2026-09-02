@@ -10,6 +10,11 @@
 #      merge): every poll re-checks mergeStateStatus and runs update-branch again (#89, like etl.yml)
 #      while waiting on data/refresh only: approve `action_required` workflow runs
 #   4. `gh pr merge --squash --delete-branch`
+#      refused by the strict base-branch policy → update the branch and **wait for the checks to
+#      re-run** before trying again (#392); a fixed sleep is not enough (docker-web takes 1-3 min)
+# Before every merge attempt: re-read the PR head and refuse if it moved since we started (#392).
+# Before touching anything: refuse if another open PR is based on this branch (#392) — merging
+# deletes the head branch, which closes those PRs.
 # Env: POLL_INTERVAL (s, default 20), POLL_MAX (default 60), PO_REPO (owner/name override).
 # Destructive operations: the squash merge (+ head branch deletion) of the given PR, and — only
 # in the workflow-scope fallback — a merge commit of origin/main pushed to the PR head branch.
@@ -25,13 +30,27 @@ PR=$1
 REPO=$(po_repo)
 
 # --- 1. state ---------------------------------------------------------------------------------
-IFS=$'\t' read -r STATE DRAFT HEAD MERGE_STATE URL < <(
-  gh pr view "$PR" --json state,isDraft,headRefName,mergeStateStatus,url \
-    -q '[.state, (.isDraft|tostring), .headRefName, .mergeStateStatus, .url] | @tsv'
+IFS=$'\t' read -r STATE DRAFT HEAD MERGE_STATE URL HEAD_OID < <(
+  gh pr view "$PR" --json state,isDraft,headRefName,mergeStateStatus,url,headRefOid \
+    -q '[.state, (.isDraft|tostring), .headRefName, .mergeStateStatus, .url, .headRefOid] | @tsv'
 )
-log "PR #$PR ($HEAD) state=$STATE draft=$DRAFT mergeState=$MERGE_STATE $URL"
+log "PR #$PR ($HEAD) state=$STATE draft=$DRAFT mergeState=$MERGE_STATE head=${HEAD_OID:0:7} $URL"
 [[ "$STATE" == "OPEN" ]] || die "PR #$PR is $STATE, not OPEN"
 [[ "$DRAFT" == "false" ]] || die "PR #$PR is a draft; mark it ready for review first"
+
+# 別の open PR がこのブランチを base にしていないか（#392）。
+# 我々は `--delete-branch` でマージするので、**その瞬間 GitHub は上に積まれた PR を CLOSED にする**。
+# 実際に踏んだ: #390 をマージしたら、#390 を base にしていた #391 が閉じ、`gh pr reopen` も
+# 「base が無い」で通らず、PR を出し直すことになった。作業が消えるわけではないが、
+# 気づかなければ「レビュー中だったはずの PR」が黙って消える。
+# 先に上の PR の base を切り替えてもらう（それだけで安全にマージできる）ので、ここでは中断する。
+STACKED=$(gh pr list --repo "$REPO" --base "$HEAD" --state open --json number -q '.[].number' | tr '\n' ' ')
+STACKED=${STACKED% }
+if [[ -n "$STACKED" ]]; then
+  die "PR #$PR ($HEAD) を base にしている open PR があります: ${STACKED// /, }
+       このままマージするとブランチが消え、それらの PR は GitHub に CLOSED にされます（reopen できません）。
+       先に  gh pr edit <番号> --base main  で base を切り替えてください。"
+fi
 
 # --- 2. bring up to date ----------------------------------------------------------------------
 # merge_main_locally — fallback for `gh pr update-branch` being refused because the gh OAuth
@@ -66,6 +85,31 @@ merge_main_locally() {
   rm -rf "$tmp"
 }
 
+# repin_head — 我々自身がブランチを進めた後（update-branch / ローカルマージ）に基準を取り直す。
+# これをしないと、自分で動かした HEAD を「他人が push した」と誤検出して毎回中断してしまう。
+repin_head() {
+  local oid
+  oid=$(gh pr view "$PR" --json headRefOid -q .headRefOid 2>/dev/null || true)
+  [[ -n "$oid" ]] && HEAD_OID=$oid
+  return 0
+}
+
+# assert_head_unchanged — マージ直前に呼ぶ。起動時（またはこちらが更新した時点）の HEAD と
+# 今の HEAD がずれていたら**中断する**（#392）。
+# PR #389 で踏んだ: マージ処理を起動した後に同じブランチへ push したところ、スクリプトが
+# **古い方をマージしてブランチを削除**した。commit は手元に残っていたので cherry-pick で
+# 復旧できたが、気づかなければ失われていた。
+# 新しい方を勝手にマージしないこと：**検査は古い HEAD に対して走っている**ので、
+# 追加分は誰にも検査されないままマージされる。人がやり直すのが正しい。
+assert_head_unchanged() {
+  local now
+  now=$(gh pr view "$PR" --json headRefOid -q .headRefOid)
+  [[ "$now" == "$HEAD_OID" ]] && return 0
+  die "PR #$PR ($HEAD) の HEAD がこの処理の開始後に動きました（${HEAD_OID:0:7} → ${now:0:7}）。
+       追加されたコミットは検査を通っていないので、マージしません。
+       新しい HEAD で流し直してください: scripts/po/merge-when-green.sh $PR"
+}
+
 # update_if_behind [state] → 0 when an update was attempted (checks will re-run), 1 otherwise.
 # A failed update is logged, not fatal: the merge step then surfaces the real blocker. The one
 # exception is the workflow-scope refusal, which is handled by merge_main_locally (see above).
@@ -82,6 +126,7 @@ update_if_behind() {
       log "could not update branch (conflicts? update it manually)"
     fi
   fi
+  repin_head   # 自分で進めた分は「他人の push」ではない
   return 0
 }
 update_if_behind "$MERGE_STATE" || true
@@ -96,48 +141,59 @@ approve_pending_runs() {
   done
 }
 
+# wait_for_green — チェックが全部 pass/skipping になるまで待つ。POLL_MAX を通算で使い切る
+# （マージ拒否のたびに待ち直すので、上限をリセットすると無限に粘れてしまう）。
 i=0
-while true; do
-  i=$((i + 1))
-  # exit 8 = checks pending, exit 1 = a check failed or no checks yet; output still carries the facts
-  checks=$(gh pr checks "$PR" --json name,bucket -q '.[] | "\(.bucket)\t\(.name)"' || true)
-  failed=$(awk -F'\t' '$1=="fail"||$1=="cancel"{print $2}' <<<"$checks")
-  pending=$(awk -F'\t' '$1=="pending"{print $2}' <<<"$checks")
-  total=$(grep -c . <<<"$checks" || true)
-  if [[ -n "$failed" ]]; then
-    die "checks failed on PR #$PR: $(tr '\n' ' ' <<<"$failed")"
-  fi
-  if [[ -z "$pending" && "$total" -gt 0 ]]; then
-    if update_if_behind; then
-      log "[$i/$POLL_MAX] checks were green on an old base; waiting for them to re-run"
-    else
-      log "all $total checks green"
-      break
+wait_for_green() {
+  while true; do
+    i=$((i + 1))
+    # exit 8 = checks pending, exit 1 = a check failed or no checks yet; output still carries the facts
+    checks=$(gh pr checks "$PR" --json name,bucket -q '.[] | "\(.bucket)\t\(.name)"' || true)
+    failed=$(awk -F'\t' '$1=="fail"||$1=="cancel"{print $2}' <<<"$checks")
+    pending=$(awk -F'\t' '$1=="pending"{print $2}' <<<"$checks")
+    total=$(grep -c . <<<"$checks" || true)
+    if [[ -n "$failed" ]]; then
+      die "checks failed on PR #$PR: $(tr '\n' ' ' <<<"$failed")"
     fi
-  else
-    if [[ "$total" -eq 0 ]]; then log "[$i/$POLL_MAX] no checks reported yet"; else log "[$i/$POLL_MAX] pending: $(tr '\n' ' ' <<<"$pending")"; fi
-    update_if_behind || true
-    if [[ "$HEAD" == "$DATA_BRANCH" ]]; then approve_pending_runs; fi
-  fi
-  if [[ "$i" -ge "$POLL_MAX" ]]; then
-    die "timed out after $POLL_MAX polls waiting for checks on PR #$PR"
-  fi
-  sleep "$POLL_INTERVAL"
-done
+    if [[ -z "$pending" && "$total" -gt 0 ]]; then
+      if update_if_behind; then
+        log "[$i/$POLL_MAX] checks were green on an old base; waiting for them to re-run"
+      else
+        log "all $total checks green"
+        break
+      fi
+    else
+      if [[ "$total" -eq 0 ]]; then log "[$i/$POLL_MAX] no checks reported yet"; else log "[$i/$POLL_MAX] pending: $(tr '\n' ' ' <<<"$pending")"; fi
+      update_if_behind || true
+      if [[ "$HEAD" == "$DATA_BRANCH" ]]; then approve_pending_runs; fi
+    fi
+    if [[ "$i" -ge "$POLL_MAX" ]]; then
+      die "timed out after $POLL_MAX polls waiting for checks on PR #$PR"
+    fi
+    sleep "$POLL_INTERVAL"
+  done
+}
+wait_for_green
 
 # --- 4. merge ---------------------------------------------------------------------------------
 # 保護は `strict: true`（main に追いついていることが必須）なので、**チェックが緑になってから
 # マージするまでの間に別の PR が main に入るとその瞬間だけ古くなり**、GitHub は
 # "the base branch policy prohibits the merge" で拒む（mergeStateStatus は CLEAN のまま）。
 # 実際に踏んだ（#384）。1 回で諦めず、取り込み直して数回試す。
+# 取り込み直した後は **チェックが再実行される** ので、待たずに再試行すると BLOCKED で拒まれる。
+# 実際に踏んだ（#392、PR #390）: update-branch の直後に固定 sleep で3回試して全部失敗し、
+# `mergeStateStatus` は UNSTABLE、`docker-web` が pending のままだった。
+# POLL_INTERVAL×3 ≒ 1分しか待たないのに、docker-web は 1〜3 分かかる。
+# **時間で決め打ちせず、状態が緑に戻るまで待つ**（上限は通算の POLL_MAX）。
 log "squash-merging PR #$PR and deleting $HEAD"
 for attempt in 1 2 3; do
+  assert_head_unchanged   # 待っている間に push されたコミットを取り残さない（#392）
   if gh pr merge "$PR" --squash --delete-branch; then
     echo "merged PR #$PR ($HEAD) $URL"
     exit 0
   fi
   [[ "$attempt" == 3 ]] && die "merge refused 3 times for PR #$PR (see the message above)"
-  log "merge refused (attempt $attempt/3); updating the branch and retrying"
-  gh pr update-branch "$PR" >/dev/null 2>&1 || true
-  sleep "$POLL_INTERVAL"
+  log "merge refused (attempt $attempt/3); updating the branch and waiting for the checks to re-run"
+  if gh pr update-branch "$PR" >/dev/null 2>&1; then repin_head; fi
+  wait_for_green
 done
