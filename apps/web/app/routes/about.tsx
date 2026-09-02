@@ -9,7 +9,7 @@ import "../styles/pages.css";
 export function meta({ location }: MetaArgs) {
   return seoMeta({
     title: "このデータについて",
-    description: "このサイトが扱う記録の範囲と出典、事実と推定の区別、検証の方法。参議院・衆議院・国立国会図書館の公式記録だけを使います。",
+    description: "このサイトが扱う記録の範囲と出典、事実と推定の区別、検証の方法。参議院・衆議院・国立国会図書館と地方議会の公式記録だけを使います。",
     pathname: location.pathname,
   });
 }
