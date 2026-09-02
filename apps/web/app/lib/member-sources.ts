@@ -1,3 +1,4 @@
+import { isLocalMember } from "./assemblies";
 import type { DatasetSource, MemberDetail, SourceKind } from "./data-contract";
 
 /**
@@ -20,6 +21,13 @@ export function memberSources(sources: DatasetSource[], detail: MemberDetail, sp
   // 絞り込みを諦めて全件返す——「絞れない」ときに黙って隠すより、多く出す方が安全side。
   // 次回の ETL で meta.json が更新されれば、この分岐は通らなくなる。
   if (sources.some((s) => !s.house || !s.kind)) return sources;
+
+  // 地方議会の議員（#158）は `house` を持たず、記録も localVote だけなので、院でも種別でも
+  // 1件も一致しない = **出典が空になる**（実データで 285 名 / 1,057 名が該当した）。
+  // 出典欄を空にするのは「出典を絞る」より悪い。国会の出典は元々この議員のものではないので、
+  // ここでは絞らず従来どおり返す。**その議会自身の出典（assemblies/{id}/meta.json）を出すのが
+  // 本来の姿だが、それは別の変更**（#341）。
+  if (isLocalMember(detail)) return sources;
 
   const kinds = usedKinds(detail, speechCount);
   return sources.filter((s) => matchesHouse(s, detail) && kinds.has(s.kind));
