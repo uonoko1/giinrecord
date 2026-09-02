@@ -5,11 +5,11 @@ import { SiteFooter } from "../components/SiteFooter";
 import type { Assembly } from "@seiji-kiroku/shared";
 import { assemblyPath, findAssembly, isLocalMember, joinVoteSubjects, localVoteTone, voteSubjectNote } from "../lib/assemblies";
 import type { BillEntry, BillRole, CommitteeRoleEntry, DatasetMeta, LocalVoteEntry, MemberDetail, MemberSpeeches, QuestionEntry, SpeechEntry, StanceEntry, TimelineEntry, VoteEntry } from "../lib/data-contract";
-import { defaultDataDir, readAssemblies, readLocalRollCallIndex, readMemberDetail, readMemberSpeechCount, readMeta } from "../lib/data-files";
+import { defaultDataDir, readAssemblies, readLocalAssemblyMeta, readLocalRollCallIndex, readMemberDetail, readMemberSpeechCount, readMeta } from "../lib/data-files";
 import { formatDate, formatDateTime, formatYearMonth } from "../lib/format";
 import { seoMeta } from "../lib/seo";
 import "./member.css";
-import { memberSources } from "../lib/member-sources";
+import { memberSources, type PlainSource } from "../lib/member-sources";
 
 /* ---------- data (runs at build time only; ssr:false + prerender) ----------
  * routes.ts registers this route only when data/ exists, because under ssr:false a
@@ -22,18 +22,24 @@ import { memberSources } from "../lib/member-sources";
  * 載せるとプリレンダーが HTML に全件焼き込み、分割した意味が無くなる（#263 の実測: HTML は元 JSON の 2.15 倍）。
  * 件数だけあればタブの件数と表紙の件数帯は出せるので、本文は発言タブを開いたときに実行時 fetch する。
  */
-export type MemberLoaderData = { detail: MemberDetail; meta: DatasetMeta | null; assembly: Assembly | null; speechCount: number };
+export type MemberLoaderData = { detail: MemberDetail; meta: DatasetMeta | null; assembly: Assembly | null; speechCount: number; localSources: PlainSource[] | null };
 
 export async function loader({ params }: LoaderFunctionArgs): Promise<MemberLoaderData> {
   const dir = defaultDataDir();
   const id = params.id ?? "";
   const [detail, meta, speechCount] = await Promise.all([readMemberDetail(dir, id), readMeta(dir), readMemberSpeechCount(dir, id)]);
   if (!detail) throw new Response("Not Found", { status: 404 });
-  if (!isLocalMember(detail)) return { detail, meta, assembly: null, speechCount };
+  if (!isLocalMember(detail)) return { detail, meta, assembly: null, speechCount, localSources: null };
   // 地方議員（#158）: 議会の行に加え、採決行の注記（#204）のために rollcalls/index.json の voteSubject / committeeReport を timeline に結合する
-  const [assemblies, rollCallIndex] = await Promise.all([readAssemblies(dir), readLocalRollCallIndex(dir, detail.assemblyId ?? "")]);
+  // 出典はその議会自身のもの（#346）。国会の `data/meta.json` の出典はこの議員のものではない。
+  const [assemblies, rollCallIndex, localMeta] = await Promise.all([
+    readAssemblies(dir),
+    readLocalRollCallIndex(dir, detail.assemblyId ?? ""),
+    readLocalAssemblyMeta(dir, detail.assemblyId ?? ""),
+  ]);
   const assembly = findAssembly(assemblies ?? [], detail.assemblyId ?? "") ?? null;
-  return { detail: { ...detail, timeline: joinVoteSubjects(detail.timeline, rollCallIndex) }, meta, assembly, speechCount };
+  const localSources = localMeta?.sources ?? null;
+  return { detail: { ...detail, timeline: joinVoteSubjects(detail.timeline, rollCallIndex) }, meta, assembly, speechCount, localSources };
 }
 
 /** 発言の実行時 fetch 先（#242）。nginx が gzip を掛ける application/json（deploy/nginx/site.conf）。 */
@@ -78,7 +84,7 @@ export function meta({ data, location }: MetaArgs<typeof loader>) {
 
 export default function MemberRoute() {
   const loaderData = useLoaderData<typeof loader>();
-  return <MemberPage detail={loaderData.detail} meta={loaderData.meta} assembly={loaderData.assembly ?? null} speechCount={loaderData.speechCount ?? 0} loadSpeeches={fetchSpeeches} />;
+  return <MemberPage detail={loaderData.detail} meta={loaderData.meta} assembly={loaderData.assembly ?? null} speechCount={loaderData.speechCount ?? 0} localSources={loaderData.localSources ?? null} loadSpeeches={fetchSpeeches} />;
 }
 
 /* ---------- page ---------- */
@@ -248,7 +254,7 @@ type SpeechState = { status: "idle" | "loading" } | { status: "ready"; speeches:
  *
  * `loadSpeeches` を引数にしているのは compare.tsx（`load`）と同じ理由で、テストが fetch を差し替えられるようにするため。
  */
-export function MemberPage({ detail, meta, assembly = null, speechCount = 0, loadSpeeches }: { detail: MemberDetail; meta: DatasetMeta | null; assembly?: Assembly | null; speechCount?: number; loadSpeeches?: (id: string) => Promise<SpeechEntry[]> }) {
+export function MemberPage({ detail, meta, assembly = null, speechCount = 0, localSources = null, loadSpeeches }: { detail: MemberDetail; meta: DatasetMeta | null; assembly?: Assembly | null; speechCount?: number; localSources?: PlainSource[] | null; loadSpeeches?: (id: string) => Promise<SpeechEntry[]> }) {
   const local = isLocalMember(detail);
   const [tab, setTabState] = useState<Tab>("all");
   const [foldExpanded, setFoldExpanded] = useState(false);
@@ -343,7 +349,7 @@ export function MemberPage({ detail, meta, assembly = null, speechCount = 0, loa
             </p>
           )}
         </section>
-        <SourceLine meta={meta} detail={detail} speechCount={speechCount} />
+        <SourceLine meta={meta} detail={detail} speechCount={speechCount} localSources={localSources} />
       </main>
       <SiteFooter />
     </>
@@ -1015,8 +1021,9 @@ function ExternalLink({ href, children }: { href: string; children: React.ReactN
  * `meta.sources` を丸ごと出すと、衆院議員のページに参院の議員一覧・議案情報・質問主意書が並ぶ。
  * 「引いていない資料を出典として並べる」のは、全行に一次資料を付けるという約束に反する。
  */
-function SourceLine({ meta, detail, speechCount }: { meta: DatasetMeta | null; detail: MemberDetail; speechCount: number }) {
-  const sources = memberSources(meta?.sources ?? [], detail, speechCount);
+function SourceLine({ meta, detail, speechCount, localSources }: { meta: DatasetMeta | null; detail: MemberDetail; speechCount: number; localSources: PlainSource[] | null }) {
+  // 地方議員はその議会自身の出典（#346）。国会の meta.sources はこの議員のものではない。
+  const sources: PlainSource[] = localSources ?? memberSources(meta?.sources ?? [], detail, speechCount);
   return (
     <footer className="member-source">
       <p>
