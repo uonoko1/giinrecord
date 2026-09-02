@@ -105,10 +105,30 @@ merge_main_locally() {
 # 窓が極めて狭いのと、docs/WORKING_AGREEMENT.md の「マージ処理を走らせたらそのブランチには
 # 触らない」が一次防御になっているので、いまは受け入れている。**「成功時だけ repin すれば
 # 完全に安全」ではない**ことを、次に読む人のために書いておく。
+# **実地で踏んだ**（PR #396 のマージ時）: `gh pr update-branch` が返った直後に読むと、
+# GitHub 側にまだ新しい commit が見えておらず**古い oid が返る**。そのまま基準にすると、
+# 次の assert_head_unchanged が「自分で作ったマージコミット」を他人の push と誤検出して中断した。
+#
+# 「変わったら採用」では**自分の更新と他人の push を区別できない**（レビューが指摘した窓）。
+# `update-branch` が作るのは**旧 HEAD を親に持つマージコミット**なので、**親を見て確かめる**:
+# 新しい HEAD の親に旧 HEAD_OID が含まれていれば、それは我々が作らせたもの。
+# 含まれなければ（＝人が直接 push した）**基準を動かさず**、assert_head_unchanged に判断を委ねる。
 repin_head() {
-  local oid
-  oid=$(gh pr view "$PR" --json headRefOid -q .headRefOid 2>/dev/null || true)
-  [[ -n "$oid" ]] && HEAD_OID=$oid
+  local oid before=$HEAD_OID attempt parents
+  for attempt in 1 2 3; do
+    oid=$(gh pr view "$PR" --json headRefOid -q .headRefOid 2>/dev/null || true)
+    if [[ -n "$oid" && "$oid" != "$before" ]]; then
+      parents=$(gh api "repos/$REPO/commits/$oid" -q '.parents[].sha' 2>/dev/null || true)
+      if [[ $'\n'"$parents"$'\n' == *$'\n'"$before"$'\n'* ]]; then
+        HEAD_OID=$oid   # 旧 HEAD を親に持つ = update-branch が作ったもの
+        return 0
+      fi
+      log "note: $oid does not have $before as a parent — not ours; leaving the guard to decide"
+      return 0
+    fi
+    sleep 2   # API にまだ見えていないだけかもしれないので、数回だけ待つ
+  done
+  log "note: the branch head still reads $before after the update; not re-pinning"
   return 0
 }
 
