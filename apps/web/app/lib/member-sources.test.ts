@@ -105,4 +105,30 @@ describe("memberSources: そのページが実際に使った出典だけを出�
     // 参院議員でも衆院の出典が残る = 絞り込みを諦めている。出典ゼロよりはるかにまし
     expect(memberSources(legacy, member("sangiin"), 0)).toHaveLength(2);
   });
+
+  // 条件式の「どの部分が効いているか」を固定する。両方欠けたケースだけでは
+  // `||`→`&&`、`some`→`every`、片方しか見ない、のどれもが素通りした（レビュー指摘）
+  it("house だけ欠けていてもフォールバックする", () => {
+    const half = [
+      { name: "参議院 議員一覧", url: "https://www.sangiin.go.jp/x", fetchedAt: "x", kind: "roster" },
+      ...meta.sources,
+    ] as unknown as DatasetSource[];
+    expect(memberSources(half, member("sangiin"), 0)).toHaveLength(half.length);
+  });
+
+  it("kind だけ欠けていてもフォールバックする", () => {
+    const half = [
+      { name: "参議院 議員一覧", url: "https://www.sangiin.go.jp/x", fetchedAt: "x", house: "sangiin" },
+      ...meta.sources,
+    ] as unknown as DatasetSource[];
+    expect(memberSources(half, member("sangiin"), 0)).toHaveLength(half.length);
+  });
+
+  it("全件が属性を持っていれば、ちゃんと絞る（フォールバックに落ちない）", () => {
+    // `some`→`every` にすると、実データのように全件が属性を持つとき絞り込みが死ぬ。
+    // 「絞れている」ことをここで固定する
+    const got = memberSources(meta.sources, member("sangiin"), 0);
+    expect(got.length).toBeLessThan(meta.sources.length);
+    expect(names(got)).toEqual(["参議院 議員一覧"]);
+  });
 });
