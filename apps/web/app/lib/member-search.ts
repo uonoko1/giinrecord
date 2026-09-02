@@ -187,3 +187,31 @@ export function membersQueryString(scope: Pick<MembersScope, "assemblyId" | "gro
   if (scope.includeFormer) params.set("former", "1");
   return params.toString();
 }
+
+/**
+ * 一覧の初期表示は先頭 N 名まで（Issue #340）。
+ *
+ * `/members/` は現職 997 名を一度に描画していた（DOM 5,619 / 高さ 71,410px = スマホで85画面）。
+ * 読み込み自体は速く検索も効くので「壊れている」わけではないが、
+ * ページの説明どおり**五十音順に眺めて探す**使い方をすると延々とスクロールすることになる。
+ *
+ * 行（あ行・か行…）の途中で切ると見出しだけの空グループが出るので、**行の区切りは保つ**。
+ * N を超えた行はまるごと落とす（先頭の行が N より大きければ、その行だけは出す）。
+ */
+export const MEMBERS_FOLD = 200;
+
+export function foldKanaGroups(groups: KanaGroup[], limit: number): { groups: KanaGroup[]; hidden: number } {
+  const total = groups.reduce((n, g) => n + g.members.length, 0);
+  if (total <= limit) return { groups, hidden: 0 };
+
+  const kept: KanaGroup[] = [];
+  let shown = 0;
+  for (const g of groups) {
+    // 1 行目だけは limit を超えても出す（何も出ないのを避ける）
+    if (shown > 0 && shown + g.members.length > limit) break;
+    kept.push(g);
+    shown += g.members.length;
+    if (shown >= limit) break;
+  }
+  return { groups: kept, hidden: total - shown };
+}

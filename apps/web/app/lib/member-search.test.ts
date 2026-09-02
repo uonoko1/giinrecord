@@ -3,6 +3,7 @@ import type { Assembly } from "@seiji-kiroku/shared";
 import {
   filterMembers,
   formatTermEnd,
+  foldKanaGroups,
   groupByKanaRow,
   kanaRow,
   memberAssemblyId,
@@ -262,5 +263,39 @@ describe("membersQueryString（#239: 絞り込みを URL に書く）", () => {
     const roster = [{ ...members[0], assemblyId: "pref-36" as const, group: "自由民主党", district: "徳島市", current: false as const }];
     const scope = { assemblyId: "pref-36" as const, assemblyName: "徳島県議会", group: "自由民主党", district: "徳島市", includeFormer: true };
     expect(membersScopeFromQuery(new URLSearchParams(membersQueryString(scope)), assemblies, roster)).toEqual(scope);
+  });
+});
+
+describe("foldKanaGroups: 一覧の初期表示を先頭N名までにする（#340）", () => {
+  const g = (row: string, n: number) => ({ row, members: Array.from({ length: n }, (_, i) => ({ id: `${row}${i}`, kana: row })) }) as never;
+
+  it("合計が limit 以下ならそのまま（隠さない）", () => {
+    const groups = [g("あ行", 50), g("か行", 40)];
+    expect(foldKanaGroups(groups, 200)).toEqual({ groups, hidden: 0 });
+  });
+
+  it("limit を超えたら行の区切りで切り、残り人数を返す", () => {
+    const groups = [g("あ行", 120), g("か行", 100), g("さ行", 80)];
+    const r = foldKanaGroups(groups, 200);
+    // か行を足すと 220 > 200 なので、あ行だけ。見出しだけの空グループは作らない
+    expect(r.groups.map((x) => x.row)).toEqual(["あ行"]);
+    expect(r.hidden).toBe(180);
+  });
+
+  it("ちょうど limit に達したらそこで止める", () => {
+    const r = foldKanaGroups([g("あ行", 120), g("か行", 80), g("さ行", 50)], 200);
+    expect(r.groups.map((x) => x.row)).toEqual(["あ行", "か行"]);
+    expect(r.hidden).toBe(50);
+  });
+
+  it("1行目が limit より大きくても、その行は出す（何も出ないのを避ける）", () => {
+    const r = foldKanaGroups([g("あ行", 500), g("か行", 10)], 200);
+    expect(r.groups.map((x) => x.row)).toEqual(["あ行"]);
+    expect(r.hidden).toBe(10);
+  });
+
+  it("行の中身は削らない（途中で切って見出しと数が食い違うのを防ぐ）", () => {
+    const r = foldKanaGroups([g("あ行", 120), g("か行", 100)], 200);
+    expect(r.groups[0].members).toHaveLength(120);
   });
 });
