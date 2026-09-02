@@ -110,6 +110,28 @@ describe("Home", () => {
     expect(section).toHaveTextContent("衆議院は個人の投票記録が公開されていないため、会派の態度として別に扱います");
   });
 
+  // #351: 元職を足すと参院が 307 名になり、**定数248を超える**。読者は「参議院議員が307人いる」と読む。
+  // fixture に元職が1人も居なかったので、この分岐は検査されていなかった（Sprint 18 レトロの形）。
+  it("元職（current: false）は数えない。定数を超える人数を出さない", () => {
+    const former = { ...dataset.members[0], id: "m_former1", name: "元職 一郎", kana: "もとしょく いちろう", current: false };
+    const former2 = { ...dataset.members[0], id: "m_former2", name: "元職 二郎", kana: "もとしょく じろう", current: false };
+    renderHome({ ...dataset, members: [...dataset.members, former, former2] });
+    const section = screen.getByRole("region", { name: "このサイトにあるもの" });
+    const figures = within(section).getAllByText(/議員$/).map((el) => `${el.previousElementSibling?.textContent} ${el.textContent}`);
+    // 現職3名のまま（元職2名を足して 5 にしない）
+    expect(figures).toContain("3 参議院議員");
+    expect(figures).not.toContain("5 参議院議員");
+  });
+
+  it("current を持たない古いデータは現職として数える（/members の既定と同じ扱い）", () => {
+    const noFlag = { ...dataset.members[0], id: "m_noflag", name: "旗なし 三郎", kana: "はたなし さぶろう" };
+    delete (noFlag as { current?: boolean }).current;
+    renderHome({ ...dataset, members: [...dataset.members, noFlag] });
+    const section = screen.getByRole("region", { name: "このサイトにあるもの" });
+    const figures = within(section).getAllByText(/議員$/).map((el) => `${el.previousElementSibling?.textContent} ${el.textContent}`);
+    expect(figures).toContain("4 参議院議員");
+  });
+
   it("規模に地方議会の数を出す（assemblies/index.json の national 以外。無ければ［集計中］）。議会一覧へのリンクがある（#158）", () => {
     const miyagi = { id: "pref-04" as const, kind: "prefectural" as const, name: "宮城県議会", prefCode: "04", sourceUrl: "https://www.pref.miyagi.jp/site/kengikai/meibo/index.html" };
     renderHome({ ...dataset, assemblies: [...DIET_ASSEMBLIES, miyagi] });
