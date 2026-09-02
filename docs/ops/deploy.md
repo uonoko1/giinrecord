@@ -179,6 +179,22 @@ curl -sI https://DOMAIN/ | grep -i -E "content-security|x-frame" # 外から見�
 - コンテナに TLS を持たせない（certbot はホスト nginx の担当。共用ホストで 80/443 を奪わない）。
 - `ubuntu` を `docker` グループに入れない。deploy-site.yml から `docker` を呼ばない。
 - **ホスト nginx の `http` ブロックに何も書かない**（#386）。共用ホストなので、グローバルな指定は同居サイトの挙動まで変える。`server_tokens off` のような指定も **`server` ブロック内**に置く。
+
+### certbot 管理の conf に `server_tokens off` を入れる（#386・人の作業）
+
+`vps-setup.sh` は **certbot 管理の conf を書き換えない**（本番の再実行は no-op であることをテストが固定している）。
+本番ホストがその形なら、テンプレートを直しても届かないので**人が1行足す**:
+
+```sh
+ssh -t sakura-vps 'sudo bash -c "
+  grep -q \"server_tokens off;\" /etc/nginx/sites-available/giinrecord.conf ||
+    sed -i \"/server_name /a\\    server_tokens off;\" /etc/nginx/sites-available/giinrecord.conf
+  nginx -t && systemctl reload nginx"'
+```
+
+確認: `curl -sI https://giinrecord.jp/ | grep -i ^server` が `Server: nginx`（バージョン無し）になる。
+
+**`http` ブロックには書かない。** 共用ホストなので、同居サイトの挙動まで変わる。
 - コンテナからログを外に出さない（IP を含む。集計はホスト側の IP 無しログだけ、`docs/ops/analytics.md`）。
 
 ## 運用ユーザーと鍵の権限（2026-08-23）
