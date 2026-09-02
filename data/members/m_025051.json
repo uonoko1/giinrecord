@@ -106,6 +106,26 @@
      "title": "特別市の設置に係る制度の整備の推進に関する法律案"
     }
    ],
+   "date": "2026-07-24",
+   "estimated": false,
+   "kind": "attendance",
+   "meeting": "沖縄・北方問題及び地方に関する特別委員会 第9号",
+   "meetingId": "122115382X00920260724_000",
+   "role": "発議者",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115382X00920260724/0"
+  },
+  {
+   "bills": [
+    {
+     "billId": "221-参法-18",
+     "title": "大都市地域における特別区の設置に関する法律の一部を改正する法律案"
+    },
+    {
+     "billId": "221-参法-20",
+     "title": "特別市の設置に係る制度の整備の推進に関する法律案"
+    }
+   ],
    "date": "2026-07-23",
    "estimated": false,
    "kind": "attendance",
