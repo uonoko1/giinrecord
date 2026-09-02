@@ -136,6 +136,10 @@ server {
     ssl_session_cache shared:LOG_NAME:1m;
     ssl_session_tickets off;
 
+    # HSTS（Issue 387）。443 の server ブロックだけ。includeSubDomains と preload は付けない
+    # （preload は取り消せない。旧ドメインの 301 が現役なので巻き込めない）。max-age は段階的に上げる
+    add_header Strict-Transport-Security "max-age=86400" always;
+
     location / {
 CF_GATE
         proxy_pass http://127.0.0.1:PORT;

@@ -99,6 +99,8 @@ t_bootstrap_without_cert() {
   assert_contains "$c" "$ERR_LOG_PROD" "#189 error_log crit in the bootstrap block"
   # Issue 386: bootstrap ブロックも実際に配信するので、ここにも要る
   assert_contains "$c" "server_tokens off;" "server_tokens off in the bootstrap block"
+  # Issue 387: bootstrap は :80 だけ。HSTS は平文では意味が無いので出さない
+  assert_not_contains "$c" "Strict-Transport-Security" "no HSTS on the plain-http bootstrap block"
   [[ -L "$P/etc/nginx/sites-enabled/giinrecord.conf" ]] || fail "enabled symlink"
   assert_contains "$(cat "$LOG")" "nginx -t" "config tested"
   assert_contains "$(cat "$LOG")" "systemctl reload nginx" "reloaded"
@@ -121,6 +123,14 @@ t_full_template_with_cert() {
   assert_eq "2" "$(grep -c "$ERR_LOG_PROD" "$CONF")" "#189 error_log crit in both server blocks"
   # Issue 386: 80 と 443 の**両方**の server ブロックに入る。http ブロックには置かない（共用ホスト）
   assert_eq "2" "$(grep -c "server_tokens off;" "$CONF")" "server_tokens off in both server blocks"
+  # Issue 387: HSTS は **443 の1ブロックだけ**（:80 は平文なので付けない）
+  assert_eq "1" "$(grep -c "Strict-Transport-Security" "$CONF")" "HSTS only on the TLS server block"
+  # preload はブラウザに焼き込まれ取り消せない。旧ドメイン gikailog.jp の 301 が現役なので巻き込めない。
+  # コメント行には注意書きとしてこれらの語が出るので、**add_header の行だけ**を見る
+  hsts_line=$(grep "add_header Strict-Transport-Security" "$CONF" || true)
+  assert_not_contains "$hsts_line" "preload" "never preload (cannot be undone)"
+  assert_not_contains "$hsts_line" "includeSubDomains" "no includeSubDomains (subdomains not surveyed)"
+  assert_contains "$hsts_line" "max-age=" "HSTS carries a max-age"
   assert_not_contains "$(cat "$CONF")" "http {" "no http block (never set directives globally on a shared host)"
 }
 

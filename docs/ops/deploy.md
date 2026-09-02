@@ -181,6 +181,47 @@ curl -sI https://DOMAIN/ | grep -i -E "content-security|x-frame" # 外から見�
 - **ホスト nginx の `http` ブロックに何も書かない**（#386）。共用ホストなので、グローバルな指定は同居サイトの挙動まで変える。`server_tokens off` のような指定も **`server` ブロック内**に置く。
 - コンテナからログを外に出さない（IP を含む。集計はホスト側の IP 無しログだけ、`docs/ops/analytics.md`）。
 
+### ホスト nginx のヘッダを反映する（#386 + #387・人の作業・**1回で両方入る**）
+
+`server_tokens off`（#386）と HSTS（#387）はどちらもホスト側の conf なので、
+**`vps-setup.sh` の1回の再実行で両方入る**。
+
+```sh
+# production（staging も直すなら 2 行目も）
+ssh -t sakura-vps 'sudo bash -s giinrecord.jp' < deploy/vps-setup.sh
+ssh -t sakura-vps 'sudo bash -s staging.giinrecord.jp 8083' < deploy/vps-setup.sh
+```
+
+確認:
+
+```sh
+curl -sI https://giinrecord.jp/ | grep -iE '^server:|strict-transport'
+#   Server: nginx                                  ← バージョンと OS が消えた
+#   Strict-Transport-Security: max-age=86400       ← preload / includeSubDomains は付かない
+```
+
+**2026-09-02 の実測で production の conf は certbot 管理ではない**ので、この再実行だけで入る
+（下の「certbot 管理の conf に…」は将来そうなった場合の手順）。
+
+### HSTS の max-age を上げる・下げる（#387・人の作業）
+
+いまは **`max-age=86400`（1日）**。いきなり1年にしない——HTTPS で配信できなくなったとき、
+その期間ブラウザが HTTP を拒む。**1日なら実害の上限が読める。**
+
+**上げる**（数週間、問題が無ければ）: `deploy/nginx-host-proxy.conf` と `deploy/vps-setup.sh` の
+`max-age=86400` を `max-age=31536000` にして PR → マージ → 下の反映手順。中間段階は要らない。
+
+**下げる・撤去する**（HTTPS で配信できなくなったとき）:
+
+1. `max-age=0` にして反映する。**削除ではなく 0 を送る**——ヘッダを消すと、
+   既に受け取ったブラウザは古い値を覚えたままになる。0 を送って初めて忘れる
+2. 反映後、**そのブラウザが一度 HTTPS で接続するまで**は古い値のまま。
+   だから `max-age` は短く保つ意味がある
+
+**`includeSubDomains` と `preload` は付けない。** `preload` はブラウザに焼き込まれ、
+**このリポジトリからは取り消せない**（HSTS preload list からの削除は別途申請が要り、数か月かかる）。
+旧ドメイン `gikailog.jp` の 301 が現役なので、巻き込むと戻せない。テストで固定してある。
+
 ### certbot 管理の conf に `server_tokens off` を入れる（#386・人の作業）
 
 `vps-setup.sh` は **certbot 管理の conf を書き換えない**（本番の再実行は no-op であることをテストが固定している）。
