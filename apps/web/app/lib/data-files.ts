@@ -8,7 +8,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import type { Assembly } from "@seiji-kiroku/shared";
-import type { SangiinVoteLinkStats, ShugiinBillNameStats } from "./coverage";
+import type { SangiinVoteLinkStats, ShugiinBillNameStats, UnmatchedSpeechStats } from "./coverage";
 import { DIET_ASSEMBLIES, type AssemblySession, type DatasetMeta, type LocalAssemblyMeta, type LocalRollCallSubject, type MemberDetail, type MemberSpeeches, type MemberSummary, type RollCall, type RollCallSummary } from "./data-contract";
 
 /** `data/` at the repo root; override with SEIJI_DATA_DIR. cwd is apps/web during build. */
@@ -152,6 +152,30 @@ type BillNames = {
  * - `sessions`: 回次ごとの異なり氏名の数と、そのうち現在の名簿にある数（空白を除いた氏名の一致で数える）
  * `bills/` が無ければ null（無い事実を作らない）。
  */
+/**
+ * `data/unmatched.json` の発言（Issue 370）を数える。議案の未突合と同じ形で /coverage に出すため。
+ * 回次は行が持つ `session`（発言そのものの回次。会議録 API の値）を使う——**speechId から復元しない**。
+ * ファイルが無い・発言の行が無ければ null（無い事実を作らない）。
+ */
+export async function readUnmatchedSpeechStats(dataDir: string): Promise<UnmatchedSpeechStats | null> {
+  const rows = await readJson<{ speechId?: string; nameText?: string; session?: number }[]>(path.join(dataDir, "unmatched.json"));
+  if (!rows) return null;
+  const speeches = rows.filter((r) => typeof r.speechId === "string");
+  if (speeches.length === 0) return null;
+
+  const bySession = new Map<number, number>();
+  const speakers = new Set<string>();
+  for (const r of speeches) {
+    if (r.nameText) speakers.add(r.nameText);
+    if (typeof r.session === "number") bySession.set(r.session, (bySession.get(r.session) ?? 0) + 1);
+  }
+  return {
+    speeches: speeches.length,
+    speakers: speakers.size,
+    sessions: [...bySession.entries()].map(([session, n]) => ({ session, speeches: n })).sort((a, b) => b.speeches - a.speeches || b.session - a.session),
+  };
+}
+
 export async function readShugiinBillNameStats(dataDir: string): Promise<ShugiinBillNameStats | null> {
   const billsDir = path.join(dataDir, "bills");
   let entries: string[];

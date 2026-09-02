@@ -6,6 +6,12 @@ export interface UnmatchedSpeech {
   nameText: string;
   group: string;
   speechId: string;
+  /**
+   * その発言の回次（Issue 370）。`/coverage` が「紐づけられなかった発言が第N回に何件あるか」を
+   * 数えて出すために要る。**speechId から復元しない**——ここには発言そのものの回次
+   * （会議録 API のレコードの値）が既にあるので、それをそのまま持つ。
+   */
+  session: number;
 }
 
 /**
@@ -43,7 +49,7 @@ export function matchSpeeches(speeches: readonly Speech[], members: readonly Mem
   const out = speeches.map((s) => {
     const member = resolveMember(index, s.speakerText, s.group, { session: s.session, date: s.date });
     if (member) return { ...s, memberId: member.id };
-    if (!s.position) unmatched.push({ nameText: s.speakerText, group: s.group ?? "", speechId: s.id });
+    if (!s.position) unmatched.push({ nameText: s.speakerText, group: s.group ?? "", speechId: s.id, session: s.session });
     return { ...s };
   });
   return { speeches: out, unmatched };
