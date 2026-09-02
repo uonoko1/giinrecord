@@ -23,11 +23,22 @@ export function meta({ location }: MetaArgs) {
 const RECENT_LIMIT = 4;
 const PENDING = "［集計中］";
 
+/**
+ * その院の**現職**か（#351）。`current: false` は任期満了などで退任した議員で、
+ * 収録は続けるが「今この議会にいる人数」には数えない。
+ * `current` を持たない古いデータは現職として扱う（`/members` の既定と同じ扱い）。
+ */
+export const isCurrent = (house: "sangiin" | "shugiin") => (m: { house?: string; current?: boolean }) =>
+  m.house === house && m.current !== false;
+
 export default function Home({ data = bundled }: { data?: Dataset }) {
   const recent = [...data.rollcalls].sort((a, b) => b.date.localeCompare(a.date)).slice(0, RECENT_LIMIT);
   const latestSession = data.meta?.sessions.length ? Math.max(...data.meta.sessions) : undefined;
-  const sangiinCount = data.members.filter((m) => m.house === "sangiin").length;
-  const shugiinCount = data.members.filter((m) => m.house === "shugiin").length;
+  // 数えるのは**現職だけ**（#351）。元職を足すと参院が 307 名になり、**定数248を超える**。
+  // 読者は「参議院議員が307人いる」と読むし、`/members` の既定（現職のみ247名）とも食い違う。
+  // 元職を収録していること自体は /coverage が「議員 307 名」として別に書いている。
+  const sangiinCount = data.members.filter(isCurrent("sangiin")).length;
+  const shugiinCount = data.members.filter(isCurrent("shugiin")).length;
   // #158: 地方議会の数（assemblies/index.json の national 以外）。index が無い古いデータでは集計中
   const localCount = data.assemblies ? localAssemblies(data.assemblies).length : undefined;
 
