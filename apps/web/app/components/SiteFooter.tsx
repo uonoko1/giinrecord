@@ -1,5 +1,6 @@
 import { REPO_URL } from "../lib/dataset";
 import { InstallLink } from "./InstallLink";
+import { ThemeToggle } from "./ThemeToggle";
 import "../styles/pages.css";
 
 /**
@@ -20,6 +21,12 @@ export function SiteFooter() {
         {/* Issue 191: 対応ブラウザでマウント後にだけ描画される。プリレンダー HTML には出ない */}
         <InstallLink />
       </nav>
+      {/* Issue 365: ThemeToggle は Issue 16 で実装されていたが、どのページにも描かれていなかった
+          （保存済みテーマを読む init は root.tsx にあるのに、保存する手段が無かった）。
+          ヘッダはページごとに作りが違い CoverBrand の意匠を崩すので、全ページ共通のここに置く。 */}
+      <div className="site-footer__theme">
+        <ThemeToggle />
+      </div>
       <p className="site-footer__note">議員レコード ・ コード: MIT ・ データ: CC BY 4.0</p>
     </footer>
   );
