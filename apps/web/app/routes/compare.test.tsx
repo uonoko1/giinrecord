@@ -117,10 +117,38 @@ describe("ComparePage 異常系", () => {
     expect(within(table).getAllByRole("columnheader")).toHaveLength(4); // 案件・阿達・大椿・出典
     expect(screen.getByText(/zzz.*見つかりません/)).toBeInTheDocument();
   });
-  it("取得日時と出典を出す", async () => {
+  // #353: 出典は**並べている議員が実際に使うものだけ**。以前は meta.sources 33件を丸ごと出しており、
+  // 誰も選んでいないときですら33本のリンクが並んでいた（記録が1行も無いのに）。
+  it("取得日時と、並べた議員が実際に使う出典だけを出す", async () => {
     renderPage(["m_014002", "m_023003"]);
     await screen.findByRole("table", { name: "採決（事実）" });
     expect(screen.getByText(/取得 /)).toBeInTheDocument();
+
+    const footer = document.querySelector(".compare-source") as HTMLElement;
+    const names = within(footer).getAllByRole("link").map((a) => a.textContent);
+    expect(names.length).toBeGreaterThan(0);
+    // どちらも参院議員なので、衆院の出典は1件も出ない
+    const hrefs = within(footer).getAllByRole("link").map((a) => a.getAttribute("href") ?? "");
+    expect(hrefs.filter((h) => h.includes("shugiin.go.jp"))).toEqual([]);
+    // データセット全体（33件）を丸ごと出していない
+    expect(names.length).toBeLessThan((meta.sources ?? []).length);
+  });
+
+  it("誰も選んでいなければ出典を出さない（記録が無いのに出典だけ並べない）", async () => {
+    renderPage([]);
+    const footer = document.querySelector(".compare-source") as HTMLElement;
+    expect(within(footer).queryAllByRole("link")).toEqual([]);
+    expect(footer.textContent).not.toContain("出典：");
+  });
+
+  it("衆院議員を混ぜると、その議員が使う衆院の出典も足される（和集合）", async () => {
+    renderPage(["m_014002", "h_41f223ac28"]);
+    // 表の種類は院の組み合わせで変わるので、出典が出そろうのを直接待つ
+    await screen.findByText(/取得 /);
+    const footer = document.querySelector(".compare-source") as HTMLElement;
+    const hrefs = within(footer).getAllByRole("link").map((a) => a.getAttribute("href") ?? "");
+    expect(hrefs.some((h) => h.includes("sangiin.go.jp"))).toBe(true);
+    expect(hrefs.some((h) => h.includes("shugiin.go.jp"))).toBe(true);
   });
 });
 

@@ -58,3 +58,23 @@ function usedKinds(detail: MemberDetail, speechCount: number): Set<SourceKind> {
   }
   return kinds;
 }
+
+/**
+ * 複数の議員を並べるページ（`/compare`）の出典（#353）。
+ * それぞれの議員が実際に使う出典の**和集合**を、`sources` の並び順で返す。
+ * 誰も選んでいなければ**空**（記録が1行も無いのに出典だけ並べない）。
+ *
+ * 発言の件数はページが持っていないので、`speechCount` は渡された議員ごとの値
+ * （分からなければ 0）。0 のときは会議録の出典が落ちるだけで、多く出すことはない。
+ */
+export function membersSources(
+  sources: DatasetSource[],
+  members: { detail: MemberDetail; speechCount?: number }[],
+): DatasetSource[] {
+  if (members.length === 0) return [];
+  const used = new Set<string>();
+  for (const { detail, speechCount } of members) {
+    for (const s of memberSources(sources, detail, speechCount ?? 0)) used.add(s.url);
+  }
+  return sources.filter((s) => used.has(s.url));
+}

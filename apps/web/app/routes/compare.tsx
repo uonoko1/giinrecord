@@ -16,6 +16,7 @@ import { dataset } from "../lib/dataset";
 import { formatDate, formatDateTime } from "../lib/format";
 import { SITE_NAME } from "../lib/seo";
 import "./compare.css";
+import { membersSources } from "../lib/member-sources";
 
 export const TITLE = "議員の記録を並べる";
 
@@ -93,7 +94,7 @@ export function ComparePage({ ids, load, meta }: { ids: string[]; load: (id: str
         ) : (
           <Body members={state.members} missing={state.missing} />
         )}
-        <Footer meta={meta} />
+        <Footer meta={meta} members={state.status === "ready" ? state.members : []} />
       </main>
       <SiteFooter />
     </>
@@ -300,18 +301,26 @@ function ExternalLink({ href, children }: { href: string; children: React.ReactN
   );
 }
 
-function Footer({ meta }: { meta: DatasetMeta | null }) {
+/**
+ * 出典は**並べている議員が実際に使うものだけ**（#353、#339 と同じ考え方）。
+ * 誰も選んでいなければ出典の行そのものを出さない——記録が1行も無いのに
+ * 「出典」と称するリンクを33本並べるのは、全行に一次資料を付けるという約束に反する。
+ */
+function Footer({ meta, members }: { meta: DatasetMeta | null; members: MemberDetail[] }) {
+  const sources = membersSources(meta?.sources ?? [], members.map((detail) => ({ detail })));
   return (
     <footer className="compare-source">
+      {sources.length > 0 && (
       <p>
         出典：
-        {(meta?.sources ?? []).map((s, i) => (
+        {sources.map((s, i) => (
           <span key={s.url}>
             {i > 0 && " ・ "}
             <ExternalLink href={s.url}>{s.name}</ExternalLink>
           </span>
         ))}
       </p>
+      )}
       <p className="num">{meta ? `取得 ${formatDateTime(meta.fetchedAt)}` : "データ未取得"}</p>
       <p>評価はしません。記録をそのまま並べています。</p>
     </footer>
