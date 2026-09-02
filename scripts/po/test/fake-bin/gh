@@ -9,6 +9,35 @@ printf '%s\n' "${line//$'\n'/ }" >> "$FAKE_GH_LOG"   # multi-line args (GraphQL)
 # shellcheck source=/dev/null
 source "$FAKE_GH_HANDLER"
 
+# #392 で足した読み取り専用の2つの問い合わせは**どのテストの経路でも通る**ので、
+# ハンドラが答えなかった場合の既定をここに置く（15 個のハンドラ全部に同じ節を書き足さない）。
+# 既定は「何も起きていない」側:
+#   - このブランチを base にした open PR は無い（空リスト）
+#   - HEAD は動いていない（起動時に読んだ値をそのまま返す。既定は "oid1"）
+# **その2つを検査するテストはハンドラ側で明示的に上書きする**（handle が先に見られる）。
+# 既定が検査を素通しさせていないことは、上書きしたテストが落ちることで確かめている。
+handle_with_defaults() {
+  local rc=0 err
+  # handle は `exit 99` で知らない呼び出しを知らせるので、**サブシェルで**呼ぶ
+  # （そのままだとこの fake gh 自体が終了して、既定に回らない）
+  set +e
+  ( handle "$@" ) 2>"$FAKE_UNHANDLED"
+  rc=$?
+  set -e
+  [[ "$rc" == 0 ]] && return 0
+  err=$(cat "$FAKE_UNHANDLED")
+  # ハンドラが「知らない呼び出し」として落ちたときだけ既定に回す。
+  # 本物の失敗（exit 1 / 8 など）はそのまま通す
+  if [[ "$rc" == 99 && "$err" == unexpected:* ]]; then
+    case "$*" in
+      "pr list --repo "*" --base "*" --state open --json number"*) echo '[]'; return 0 ;;
+      "pr view "*"--json headRefOid"*) echo '{"headRefOid":"oid1"}'; return 0 ;;
+    esac
+  fi
+  [[ -n "$err" ]] && printf '%s\n' "$err" >&2
+  return "$rc"
+}
+
 JQ=""
 prev=""
 for a in "$@"; do
@@ -16,10 +45,10 @@ for a in "$@"; do
   prev=$a
 done
 
-if [[ -z "$JQ" ]]; then handle "$@"; exit $?; fi
+if [[ -z "$JQ" ]]; then handle_with_defaults "$@"; exit $?; fi
 
 set +e
-out=$(handle "$@")
+out=$(handle_with_defaults "$@")
 rc=$?
 set -e
 [[ -n "$out" ]] && jq -r "$JQ" <<<"$out"

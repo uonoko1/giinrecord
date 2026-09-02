@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Fake `sleep` for scripts/po tests: records the call to $FAKE_GH_LOG and returns immediately.
+# 「待ったかどうか」をテストで見られるようにするため（#392 のレビュー指摘: 待ち直しが
+# 0 回で素通りしていた）。実際には待たないのでテストは速いまま。
+printf 'sleep\t%s\n' "$*" >> "$FAKE_GH_LOG"
