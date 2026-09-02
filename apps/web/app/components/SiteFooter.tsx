@@ -1,4 +1,4 @@
-import { REPO_URL } from "../lib/dataset";
+import { REPO_URL } from "../lib/site";
 import { InstallLink } from "./InstallLink";
 import { ThemeToggle } from "./ThemeToggle";
 import "../styles/pages.css";

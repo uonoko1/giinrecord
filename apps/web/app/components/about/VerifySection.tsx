@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 import { ARCHIVE_PATH } from "../../lib/archive-path";
-import { REPO_URL } from "../../lib/dataset";
+import { REPO_URL } from "../../lib/site";
 
 /** 節「検証する」。ソースコード・データ一括取得・誤り報告へのリンクとライセンス。末尾に運営費の1文（#174、詳細は /terms）。 */
 export function VerifySection() {
