@@ -6,6 +6,7 @@ import { sessionsDesc, sortByDateDesc } from "../lib/rollcall";
 import { seoMeta } from "../lib/seo";
 import "./rollcall.css";
 import { SiteFooter } from "../components/SiteFooter";
+import { MoreButton } from "../components/MoreButton";
 import { useState } from "react";
 
 /* ---------- data (build time only; ssr:false + prerender) ----------
@@ -127,13 +128,12 @@ export function RollCallsPage({
             ))}
           </ul>
         )}
-        {folded && (
-          <p className="rollcalls-more">
-            <button type="button" className="rollcalls-more-button" onClick={() => setExpanded(true)}>
-              さらに表示（残り{(all.length - ROLLCALLS_FOLD).toLocaleString("ja-JP")}件）
-            </button>
-          </p>
-        )}
+        <MoreButton
+          hidden={folded ? all.length - ROLLCALLS_FOLD : 0}
+          unit="件"
+          className="rollcalls"
+          onExpand={() => setExpanded(true)}
+        />
 
         <footer className="rollcall-source">
           <p className="num">{meta ? `取得 ${formatDateTime(meta.fetchedAt)}` : "データ未取得"}</p>
