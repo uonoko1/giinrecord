@@ -143,6 +143,20 @@ async function membersFilterGoesToUrl(page: Page): Promise<void> {
 
   console.log(`browser-check: members filter -> ${new URL(url).search} restored on reload (h1="${heading}")`);
 
+  // テーマ切替（Issue 365）。docs/ops/deploy.md は CSP 障害の症状として「テーマ切替が動かない」を
+  // 挙げているが、**押して確かめる検査が無かった**（切替 UI 自体が長らく描画されていなかった）。
+  // 押して data-theme が付き、リロードしても保たれるところまで見る。
+  await page.locator("footer .site-footer__theme input[value=dark]").click();
+  await page.waitForFunction(() => document.documentElement.getAttribute("data-theme") === "dark", null, { timeout: 5_000 });
+  await page.reload();
+  // themeInit（root.tsx の inline script）がハイドレーション前に付け直す。CSP に遮断されるとここで落ちる
+  await page.waitForFunction(() => document.documentElement.getAttribute("data-theme") === "dark", null, { timeout: 5_000 });
+  const paper = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--paper").trim());
+  if (!paper) throw new Error("theme: --paper が読めない（tokens.css が当たっていない）");
+  await page.locator("footer .site-footer__theme input[value=system]").click();
+  await page.waitForFunction(() => !document.documentElement.hasAttribute("data-theme"), null, { timeout: 5_000 });
+  console.log(`browser-check: theme toggle -> dark (--paper=${paper}) survives reload, system clears it`);
+
   // 戻るで絞り込み前に戻ること
   await page.goBack();
   // #260: ここが元のフレークの発生源。goBack() は URL を先に変え、select は次の再描画で「すべて」に戻る。
