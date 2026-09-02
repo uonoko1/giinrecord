@@ -375,10 +375,14 @@ t_run_skips_without_required_token() {
 }
 t_run_probes_with_token() {
   fresh run_tok
-  MONITOR_REQUIRE_CF_ACCESS=1 CF_ACCESS_CLIENT_ID=id CF_ACCESS_CLIENT_SECRET=sec run_run staging https://staging.giinrecord.jp || fail "exit $? $(cat "$P/out")"
+  # 秘密の値は**ログに偶然現れない sentinel** にする（Issue 377）。
+  # 以前は "sec" という3文字で、mktemp のランダム名などに紛れ込めば偽陽性になりえた。
+  # 「秘密が argv に出ていない」ことを検査したいのであって、短い文字列の不在を見たいのではない。
+  local secret="s3cr3t-sentinel-do-not-log"
+  MONITOR_REQUIRE_CF_ACCESS=1 CF_ACCESS_CLIENT_ID=id CF_ACCESS_CLIENT_SECRET="$secret" run_run staging https://staging.giinrecord.jp || fail "exit $? $(cat "$P/out")"
   assert_contains "$(cat "$LOG")" "curl " "probed"
   assert_contains "$(cat "$LOG")" "-K " "with the token headers"
-  assert_not_contains "$(cat "$LOG")" "sec" "secret not in argv"
+  assert_not_contains "$(cat "$LOG")" "$secret" "secret not in argv"
   assert_not_contains "$(cat "$P/out")" "::warning::" "no warning"
 }
 t_run_all_ok_no_retry() {
