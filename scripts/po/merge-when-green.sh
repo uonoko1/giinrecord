@@ -61,17 +61,17 @@ fi
 merge_main_locally() {
   local root tmp wt
   root=$(git rev-parse --show-toplevel 2>/dev/null) \
-    || { log "not inside a git checkout; update PR #$PR manually"; return 0; }
+    || { log "not inside a git checkout; update PR #$PR manually"; return 1; }
   log "update-branch refused (workflow scope) → merging origin/main locally and pushing via SSH"
   git -C "$root" fetch origin \
       "+refs/heads/main:refs/remotes/origin/main" "+refs/heads/$HEAD:refs/remotes/origin/$HEAD" \
-    || { log "git fetch failed; update PR #$PR manually"; return 0; }
+    || { log "git fetch failed; update PR #$PR manually"; return 1; }
   tmp=$(mktemp -d)
   wt="$tmp/wt"
   if ! git -C "$root" worktree add --detach "$wt" "origin/$HEAD"; then
     rm -rf "$tmp"
     log "could not create a temporary worktree; update PR #$PR manually"
-    return 0
+    return 1
   fi
   if ! git -C "$wt" merge --no-edit origin/main; then
     git -C "$wt" merge --abort || true
@@ -79,10 +79,14 @@ merge_main_locally() {
     rm -rf "$tmp"
     die "origin/main conflicts with $HEAD — resolve the conflict manually (nothing was pushed)"
   fi
+  # push できたかを**返り値で伝える**（#392 のレビュー指摘）。呼び出し側はこれを見て
+  # repin するかを決める。失敗したのに repin すると、その窓の他人の push を飲み込む。
+  local pushed=0
   git -C "$wt" push "git@github.com:$REPO.git" "HEAD:refs/heads/$HEAD" \
-    || log "SSH push of the merged $HEAD failed — push it manually"
+    || { pushed=1; log "SSH push of the merged $HEAD failed — push it manually"; }
   git -C "$root" worktree remove --force "$wt" || true
   rm -rf "$tmp"
+  return "$pushed"
 }
 
 # repin_head — 我々自身がブランチを進めた後（update-branch / ローカルマージ）に基準を取り直す。
@@ -118,15 +122,22 @@ update_if_behind() {
   [[ -n "$state" ]] || state=$(gh pr view "$PR" --json mergeStateStatus -q .mergeStateStatus)
   [[ "$state" == "BEHIND" ]] || return 1
   log "branch is behind main → gh pr update-branch"
-  if ! err=$(gh pr update-branch "$PR" 2>&1); then
+  # **成功したときだけ** repin する（#392 のレビュー指摘）。
+  # 無条件に repin すると、更新が失敗した場合も「今の HEAD」を読み直してしまい、
+  # **その窓で人が push したコミットを自分の更新として飲み込む**。
+  # assert_head_unchanged が守るはずの #389 が、そのまま戻ってくる経路だった。
+  # 特に起きやすいのは、ポーリング中に main が動いて BEHIND になる普通の筋。
+  if err=$(gh pr update-branch "$PR" 2>&1); then
+    repin_head   # 自分で進めた分は「他人の push」ではない
+  else
     [[ -n "$err" ]] && printf '%s\n' "$err" >&2
     if [[ "$err" == *workflow*scope* ]]; then
-      merge_main_locally
+      # ローカルマージ + SSH push。**push が成功したときだけ** repin する
+      if merge_main_locally; then repin_head; fi
     else
       log "could not update branch (conflicts? update it manually)"
     fi
   fi
-  repin_head   # 自分で進めた分は「他人の push」ではない
   return 0
 }
 update_if_behind "$MERGE_STATE" || true
@@ -195,5 +206,12 @@ for attempt in 1 2 3; do
   [[ "$attempt" == 3 ]] && die "merge refused 3 times for PR #$PR (see the message above)"
   log "merge refused (attempt $attempt/3); updating the branch and waiting for the checks to re-run"
   if gh pr update-branch "$PR" >/dev/null 2>&1; then repin_head; fi
+  # **必ず1回は待つ**（#392 のレビュー指摘）。GitHub がチェックを pending に落とすまでには
+  # 数秒〜十数秒あり、その間は「前回の緑」がまだ見える。wait_for_green は緑を見た瞬間に
+  # break するので、**待ち直しが 0 回で素通りする**（実測: 3回のマージ試行が 0 秒で終わった）。
+  # 直す前の固定 sleep より短くなっていた——#390 の再現条件そのもの。
+  i=$((i + 1))
+  [[ "$i" -ge "$POLL_MAX" ]] && die "timed out after $POLL_MAX polls waiting for checks on PR #$PR"
+  sleep "$POLL_INTERVAL"
   wait_for_green
 done

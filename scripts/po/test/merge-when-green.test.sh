@@ -463,8 +463,11 @@ EOF
   run_script "$h" merge-when-green.sh 12
   assert_eq 1 "$STATUS" "gives up"
   assert_contains "$ERR" "timed out" "timeout, not an infinite retry"
-  # POLL_MAX=5（run.sh）を通算で使い切る。リセットしていたら 5 を超える
-  assert_eq 5 "$(grep -c $'pr\tchecks' <<<"$LOG" || true)" "POLL_MAX polls in total, not per attempt"
+  # POLL_MAX=5（run.sh）を通算で使い切る。リセットしていたら待ち続けて 5 を超える。
+  # 再試行前の「必ず1回待つ」も同じ予算から引くので、checks の回数は 5 を**超えない**
+  local polls; polls=$(grep -c $'pr\tchecks' <<<"$LOG" || true)
+  assert_eq 1 "$([[ "$polls" -le 5 ]] && echo 1 || echo 0)" "checks polls ($polls) stay within POLL_MAX=5"
+  assert_eq 1 "$([[ "$polls" -ge 3 ]] && echo 1 || echo 0)" "but it did keep polling ($polls), not give up at once"
 }
 test_case "merge: 待ち直しでも POLL_MAX は通算（#392）" t_merge_retry_wait_shares_poll_budget
 
@@ -535,3 +538,113 @@ EOF
   assert_not_contains "$LOG" $'pr\tchecks' "does not wait for checks first"
 }
 test_case "merge: このブランチに積まれた open PR があれば中断する（#392）" t_merge_refuses_when_prs_are_stacked_on_it
+
+# レビュー指摘（重大1）: repin_head が `update-branch` の成否に関わらず呼ばれていたため、
+# **更新に失敗した窓で人が push したコミットを自分の更新として飲み込んでいた**。
+# assert_head_unchanged が守るはずの #389 が、そのまま戻る経路だった。
+t_merge_failed_update_does_not_swallow_a_foreign_push() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"BEHIND","url":"u","headRefOid":"oid1"}' ;;
+    "pr view 12 --json mergeStateStatus"*) echo '{"mergeStateStatus":"CLEAN"}' ;;
+    "pr update-branch 12") echo "merge conflict" >&2; exit 1 ;;   # 更新は失敗した（何も push していない）
+    "pr view 12 --json headRefOid"*) echo '{"headRefOid":"oid2"}' ;;   # なのに HEAD が動いている＝他人の push
+    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "aborts"
+  assert_contains "$ERR" "HEAD がこの処理の開始後に動きました" "treats it as someone else's push"
+  assert_not_contains "$LOG" $'pr\tmerge' "never merges a head it did not create"
+}
+test_case "merge: update-branch が失敗した窓の push を飲み込まない（#392 レビュー指摘）" t_merge_failed_update_does_not_swallow_a_foreign_push
+
+# 同じ穴のもう1つの入口: workflow-scope フォールバックの push が失敗したのに repin してしまう
+t_merge_failed_ssh_push_does_not_swallow_a_foreign_push() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"BEHIND","url":"u","headRefOid":"oid1"}' ;;
+    "pr view 12 --json mergeStateStatus"*) echo '{"mergeStateStatus":"CLEAN"}' ;;
+    "pr update-branch 12") echo 'refusing to allow an OAuth App to create or update workflow without `workflow` scope' >&2; exit 1 ;;
+    "pr view 12 --json headRefOid"*) echo '{"headRefOid":"oid2"}' ;;
+    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+git_handle() {
+  case "$*" in
+    "rev-parse --show-toplevel") echo /repo ;;
+    "-C /repo fetch origin "*) : ;;
+    "-C /repo worktree add --detach "*" origin/feat/x") : ;;
+    "-C "*" merge --no-edit origin/main") : ;;
+    "-C "*" push git@github.com:uonoko1/giinrecord.git HEAD:refs/heads/feat/x") echo "Permission denied (publickey)." >&2; exit 128 ;;
+    "-C /repo worktree remove --force "*) : ;;
+    *) echo "unexpected git: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "aborts"
+  assert_contains "$ERR" "HEAD がこの処理の開始後に動きました" "a failed push is not our update"
+  assert_not_contains "$LOG" $'pr\tmerge' "never merges"
+}
+test_case "merge: SSH push が失敗した窓の push も飲み込まない（#392 レビュー指摘）" t_merge_failed_ssh_push_does_not_swallow_a_foreign_push
+
+# レビュー指摘（重大2の対）: HEAD の確認は**再試行のたび**に効く。
+# 待ち時間中の push こそがこのガードの主目的なので、attempt 1 だけの検査では守れない
+t_merge_head_checked_on_every_attempt() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "pr view 12 --json mergeStateStatus"*) echo '{"mergeStateStatus":"CLEAN"}' ;;
+    "pr view 12 --json headRefOid"*)
+      # 1回目の確認は一致。update-branch は成功しないので repin されず、
+      # 2回目（再試行の直前）に人の push が見える
+      if grep -q update-branch "$FAKE_GH_LOG"; then echo '{"headRefOid":"oid2"}'; else echo '{"headRefOid":"oid1"}'; fi ;;
+    "pr update-branch 12") echo "merge conflict" >&2; exit 1 ;;
+    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    "pr merge 12 --squash --delete-branch") echo "X the base branch policy prohibits the merge." >&2; exit 1 ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "aborts on the retry"
+  assert_contains "$ERR" "HEAD がこの処理の開始後に動きました" "the guard runs on later attempts too"
+  # 1回目は実際にマージを試み、2回目は HEAD の確認で止まる
+  assert_eq 1 "$(grep -c $'pr\tmerge\t12' <<<"$LOG" || true)" "merged once, then stopped before the second attempt"
+}
+test_case "merge: HEAD の確認は再試行のたびに効く（#392 レビュー指摘）" t_merge_head_checked_on_every_attempt
+
+# レビュー指摘（重大2）: update-branch の後、GitHub がチェックを pending に落とすまでは
+# 「前回の緑」が見える。wait_for_green は緑を見た瞬間 break するので、**必ず1回は待つ**
+t_merge_retry_always_waits_at_least_once() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "pr view 12 --json mergeStateStatus"*) echo '{"mergeStateStatus":"CLEAN"}' ;;
+    "pr view 12 --json headRefOid"*) echo '{"headRefOid":"oid1"}' ;;
+    "pr update-branch 12") echo updated ;;
+    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;   # ずっと緑（pending に落ちる前）
+    "pr merge 12 --squash --delete-branch") echo "X the base branch policy prohibits the merge." >&2; exit 1 ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  # SLEEP_LOG に sleep の呼び出しを記録させる（fake-bin/sleep）
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "gives up rather than hammering the API"
+  # 待たずに素通りしていたら sleep が1回も呼ばれない
+  assert_eq 1 "$([[ "$(grep -c '^sleep' <<<"$LOG" || true)" -ge 2 ]] && echo 1 || echo 0)" "slept between merge attempts (not a 0-second retry)"
+}
+test_case "merge: チェックが緑のままでも再試行の前に必ず待つ（#392 レビュー指摘）" t_merge_retry_always_waits_at_least_once
