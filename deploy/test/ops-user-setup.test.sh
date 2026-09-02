@@ -214,6 +214,75 @@ OUT=$(warn_output "" "")
 if printf '%s' "$OUT" | grep -q '旧運用ユーザー'; then bad "旧ユーザーが居ないのに警告が出る: $OUT"
 else ok "旧ユーザーが居なければ何も言わない"; fi
 
+# Issue 375: allowlist を更新するだけの再実行では、鍵を渡し直さなくてよい。
+# 鍵をコマンドラインに置くと sudo が /var/log/auth.log にコマンド全体を記録するので、
+# **公開鍵が平文でログに残る**（秘密ではないが、残す理由も無い。ps とシェル履歴にも出る）。
+echo
+echo "鍵を省略した再実行（#375）"
+
+P="$TMP/rerun"
+mkdir -p "$P/home/ubuntu/.ssh"; : > "$P/home/ubuntu/.ssh/authorized_keys"
+# 1回目: 鍵を渡して作る
+PATH="$BIN:$PATH" OPS_SETUP_PREFIX="$P" bash "$SCRIPT" "$PUBKEY" >/dev/null 2>&1
+# 2回目: 鍵を渡さずに流し直す
+if PATH="$BIN:$PATH" OPS_SETUP_PREFIX="$P" bash "$SCRIPT" >"$P/out" 2>"$P/err"; then
+  ok "鍵を省略しても成功する（allowlist の更新だけを流し直せる）"
+else
+  bad "鍵を省略した再実行が失敗した: $(cat "$P/err")"
+fi
+if [ "$(cat "$P/home/giinops/.ssh/authorized_keys")" = "$PUBKEY" ]; then
+  ok "既にある鍵をそのまま使う（消したり変えたりしない）"
+else
+  bad "鍵が変わってしまった: $(cat "$P/home/giinops/.ssh/authorized_keys")"
+fi
+if [ "$(grep -c . "$P/home/giinops/.ssh/authorized_keys")" = 1 ]; then
+  ok "鍵は1行のまま（重複して増えない）"
+else
+  bad "鍵が増えた: $(cat "$P/home/giinops/.ssh/authorized_keys")"
+fi
+if grep -q '既にある鍵' "$P/err"; then ok "鍵を引き継いだことを伝える"
+else bad "鍵を引き継いだことを言わない: $(cat "$P/err")"; fi
+
+# authorized_keys に**複数行ある状態**で省略されたら、1行目だけを使う。
+# `cat` で全部読むと、`>` の上書きでファイルが壊れるうえ、鍵の検査も通らなくなる
+# （テストの前提が1行だけだと、head -n1 を cat に変える変異が素通りする）
+P4="$TMP/rerun-multi"
+mkdir -p "$P4/home/ubuntu/.ssh" "$P4/home/giinops/.ssh"
+: > "$P4/home/ubuntu/.ssh/authorized_keys"
+printf '%s\n%s\n' "$PUBKEY" "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAASECONDKEYSHOULDNOTBEUSED other@host" > "$P4/home/giinops/.ssh/authorized_keys"
+if PATH="$BIN:$PATH" OPS_SETUP_PREFIX="$P4" bash "$SCRIPT" >/dev/null 2>"$P4/err"; then
+  if [ "$(cat "$P4/home/giinops/.ssh/authorized_keys")" = "$PUBKEY" ]; then
+    ok "既存が複数行でも1行目だけを使う（残りは落とす）"
+  else
+    bad "複数行を読んでしまった: $(cat "$P4/home/giinops/.ssh/authorized_keys")"
+  fi
+else
+  bad "既存が複数行の再実行が失敗した: $(cat "$P4/err")"
+fi
+
+# 鍵がまだ無いのに省略したら、**作らずに**使い方を出して終わる
+P2="$TMP/firstrun"
+mkdir -p "$P2/home/ubuntu/.ssh"; : > "$P2/home/ubuntu/.ssh/authorized_keys"
+if PATH="$BIN:$PATH" OPS_SETUP_PREFIX="$P2" bash "$SCRIPT" >/dev/null 2>"$P2/err"; then
+  bad "鍵が無いのに省略して成功してしまった"
+else
+  if grep -q 'usage' "$P2/err"; then ok "初回に鍵を省略したら使い方を出して終わる"
+  else bad "初回の鍵省略で usage が出ない: $(cat "$P2/err")"; fi
+fi
+if [ ! -e "$P2/etc/sudoers.d/90-giinops" ]; then ok "初回の鍵省略では sudoers を書かない"
+else bad "鍵が無いのに sudoers を書いた"; fi
+
+# **複数行の鍵は受け付けない**。`>` で上書きするので、渡されたら authorized_keys が壊れる
+P3="$TMP/multiline"
+mkdir -p "$P3/home/ubuntu/.ssh"; : > "$P3/home/ubuntu/.ssh/authorized_keys"
+if PATH="$BIN:$PATH" OPS_SETUP_PREFIX="$P3" bash "$SCRIPT" "$PUBKEY
+$PUBKEY" >/dev/null 2>"$P3/err"; then
+  bad "複数行の鍵を受け入れてしまった"
+else
+  if grep -q '1行' "$P3/err"; then ok "複数行の鍵は1行で渡すよう言って断る"
+  else bad "複数行を断る理由を言わない: $(cat "$P3/err")"; fi
+fi
+
 echo
 echo "pass=$PASS fail=$FAIL skip=$SKIP"
 [ "$FAIL" = 0 ]
