@@ -214,6 +214,28 @@ export const STANCE_FOLD = 20;
  */
 export const SPEECH_FOLD = 200;
 
+/**
+ * 地方議会の表決（#361）。`speech` と同じ 200 件で折りたたむ。
+ *
+ * `stance`（会派の態度）が 20 件なのは**推定であって本人の記録ではない**から控えめに出しているため。
+ * `localVote` は**本人の表決＝事実**なので、同じ事実である `speech` と同じ扱いにする。
+ *
+ * 実データ（地方議員 285 名）: 中央値 118 件、200 件超が 47 名、最大 365 件（芳野正英・三重県議会）。
+ * 200 なら中央値の議員は折りたたまれず、多い 47 名にだけ効く。
+ * 最大の議員は本番で 365 件・DOM 2,407・**スマホで 40 画面**だった。
+ */
+export const LOCAL_VOTE_FOLD = 200;
+
+/**
+ * 既定の「すべて」タブ（#361）。**議員ページを開いて最初に見えるのがここ**なので、
+ * 折りたたみが無いと最初の描画がそのまま最大になる。
+ *
+ * 実データ: 国会議員 182 名・地方議員 47 名が 200 件超。最大は 394 件（石垣のりこ・参議院）で、
+ * 本番のスマホ幅で DOM 3,062・**26 画面**だった。
+ * kind が混ざるタブだが、「一度に作る DOM を頭打ちにする」という #326 の判断はそのまま当てはまる。
+ */
+export const ALL_FOLD = 200;
+
 /** 回次ごとの折りたたみ（#103）: 直近この数の回次だけ展開し、それ以前は見出し（第N回国会・件数）だけにする。 */
 export const EXPANDED_SESSIONS = 2;
 
@@ -280,8 +302,14 @@ export function MemberPage({ detail, meta, assembly = null, speechCount = 0, loc
   }, [tab, loadSpeeches, speechCount, detail.id]);
   const speeches = speechState.status === "ready" ? speechState.speeches : [];
   const all = tab === "speech" ? speeches : tab === "all" ? detail.timeline : detail.timeline.filter((e) => e.kind === tab);
-  // 折りたたむ件数はタブごとに違う（stance: #88 / speech: #326）。それ以外のタブは折りたたまない。
-  const foldAt = tab === "stance" ? STANCE_FOLD : tab === "speech" ? SPEECH_FOLD : null;
+  // 折りたたむ件数はタブごとに違う（stance: #88 / speech: #326 / localVote と すべて: #361）。
+  // stance だけ 20 なのは推定であって本人の記録ではないから。事実のタブは 200 でそろえる。
+  const foldAt =
+    tab === "stance" ? STANCE_FOLD
+    : tab === "speech" ? SPEECH_FOLD
+    : tab === "localVote" ? LOCAL_VOTE_FOLD
+    : tab === "all" ? ALL_FOLD
+    : null;
   const folded = foldAt !== null && !foldExpanded && all.length > foldAt;
   const entries = folded ? all.slice(0, foldAt) : all;
   const counts = { ...countKinds(detail.timeline), speech: speechCount };
