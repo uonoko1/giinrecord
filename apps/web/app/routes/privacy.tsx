@@ -6,7 +6,7 @@ import { seoMeta } from "../lib/seo";
 import "../styles/pages.css";
 
 /** このポリシーの最終更新日（YYYY-MM-DD）。本文を変えたら更新する。 */
-export const PRIVACY_UPDATED = "2026-08-24";
+export const PRIVACY_UPDATED = "2026-09-02";
 
 const ISSUES_URL = `${REPO_URL}/issues`;
 
@@ -76,6 +76,12 @@ export default function Privacy() {
           </h2>
           <p className="body">
             比較ページで選んだ議員の一覧と、表示テーマ（明・暗）の設定を、ブラウザの localStorage に保存します。これらは閲覧者の端末内にだけあり、サーバーには送られません。ブラウザのサイトデータを消せばなくなります。
+          </p>
+          {/* Issue 380: 節の見出しが「ブラウザに保存するもの」なのに、実際に保存されている
+              sessionStorage の記述が無かった。中身が無害でも、書いていないものが保存されている状態にしない。 */}
+          <p className="body">
+            ページを移動したときにスクロール位置を戻すため、その位置（画面の何ピクセル目か）を sessionStorage
+            に保存します。閲覧したページの名前や URL は残らず、タブを閉じると消えます。これもサーバーには送られません。
           </p>
         </section>
 
