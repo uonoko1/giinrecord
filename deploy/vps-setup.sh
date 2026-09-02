@@ -136,6 +136,13 @@ server {
     ssl_session_cache shared:LOG_NAME:1m;
     ssl_session_tickets off;
 
+    # HSTS（Issue 387）。443 の server ブロックだけ。includeSubDomains と preload は付けない
+    # （preload は取り消せない。旧ドメインの 301 が現役なので巻き込めない）。max-age は段階的に上げる
+    add_header Strict-Transport-Security "max-age=86400" always;
+
+    # !! location 側に add_header を1つでも足すと、この server の add_header は全部消える（実測）。
+    #    nginx の add_header の継承は置換で、警告も出ない。足すなら server レベルの分も書き写すこと。
+
     location / {
 CF_GATE
         proxy_pass http://127.0.0.1:PORT;
@@ -234,6 +241,12 @@ ensure_error_log() {
 }
 
 # write_site_conf <domain> <port> <conf>: decides between "leave certbot's file alone", full template and bootstrap.
+# Issue 386（server_tokens off）は**certbot 管理の conf には入れない**。
+# ensure_error_log（#189）と同じ形の挿入関数を書くこともできるが、
+# 「certbot 管理の conf は書き換えない（本番の再実行は no-op）」という保証をテストが固定しており、
+# 挿入関数を増やすほどその保証が薄れる。#189 は「ログに IP を残さない」という
+# プライバシー上の必須要件だったので例外的に入れた。バージョン隠しはそこまでの緊急性が無い。
+# 本番ホストが certbot 管理なら、**人が1行足す**（docs/ops/deploy.md に手順を書いた）。
 write_site_conf() {
   local domain=$1 port=$2 conf=$3
   if [ -f "$conf" ] && grep -q "managed by Certbot" "$conf"; then

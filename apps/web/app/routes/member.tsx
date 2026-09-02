@@ -2,6 +2,7 @@ import { type KeyboardEvent, useEffect, useRef, useState } from "react";
 import { type LoaderFunctionArgs, type MetaArgs, useLoaderData } from "react-router";
 import { CompareAdd } from "../components/CompareAdd";
 import { SiteFooter } from "../components/SiteFooter";
+import { MoreButton } from "../components/MoreButton";
 import type { Assembly } from "@seiji-kiroku/shared";
 import { assemblyPath, findAssembly, isLocalMember, joinVoteSubjects, localVoteTone, voteSubjectNote } from "../lib/assemblies";
 import type { BillEntry, BillRole, CommitteeRoleEntry, DatasetMeta, LocalVoteEntry, MemberDetail, MemberSpeeches, QuestionEntry, SpeechEntry, StanceEntry, TimelineEntry, VoteEntry } from "../lib/data-contract";
@@ -369,13 +370,12 @@ export function MemberPage({ detail, meta, assembly = null, speechCount = 0, loc
               </details>
             ))
           )}
-          {folded && (
-            <p className="member-more">
-              <button type="button" className="member-more-button" onClick={() => setFoldExpanded(true)}>
-                さらに表示（残り{(all.length - (foldAt ?? 0)).toLocaleString("ja-JP")}件）
-              </button>
-            </p>
-          )}
+          <MoreButton
+            hidden={folded ? all.length - (foldAt ?? 0) : 0}
+            unit="件"
+            className="member"
+            onExpand={() => setFoldExpanded(true)}
+          />
         </section>
         <SourceLine meta={meta} detail={detail} speechCount={speechCount} localSources={localSources} />
       </main>

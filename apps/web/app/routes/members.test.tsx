@@ -559,6 +559,21 @@ describe("/members 折りたたみ（#340）", () => {
     expect(screen.queryByRole("button", { name: /さらに表示/ })).not.toBeInTheDocument();
   });
 
+  // Issue 393: 押すとボタンが消え、フォーカスが <body> に落ちていた。
+  // キーボード / スクリーンリーダーの利用者は文書の先頭へ戻され、続きを読むには頭からたどり直すことになる。
+  // **3箇所それぞれで**確かめる（1箇所だけ検査して他を落としたことが実際にある）。
+  it("押した後、フォーカスが body に落ちず、続きの手前に移る（Issue 393）", async () => {
+    renderMembers(many);
+    const button = screen.getByRole("button", { name: /さらに表示/ });
+    button.focus();
+    expect(document.activeElement).toBe(button);
+
+    await userEvent.click(button);
+
+    expect(document.activeElement).not.toBe(document.body);
+    expect((document.activeElement as HTMLElement).textContent).toContain("続きを表示しました");
+  });
+
   it("絞り込んでいる間は折りたたまない（絞った結果が 200 名を超えても全件出す）", async () => {
     // 折りたたみが**実際に効く**形にする: あ行120・か行120・さ行120（計360）なら初期はあ行だけ。
     // そこで「会派K」で絞ると か行120 + さ行120 = 240 名 > 200 が残る。
@@ -608,10 +623,14 @@ describe("/members 折りたたみ（#340）", () => {
     expect(screen.getByRole("status").textContent).not.toContain("表示中");
   });
 
-  it("「さらに表示」は aria-expanded と aria-controls を持つ", () => {
+  // Issue 393: aria-expanded は**外した**。このボタンは押すと消えるので、`true` になる瞬間が無い。
+  // ハードコードの `false` は「まだ展開できます」と言い続けることになり、状態を偽る。
+  // 展開されたことは、跡地に残る role="status" が伝える（MoreButton.tsx）。
+  // aria-controls は残す（どの領域が増えるかを指すもので、状態とは別）。
+  it("「さらに表示」は aria-controls で対象の領域を指し、状態を偽る aria-expanded は持たない", () => {
     renderMembers(many);
     const btn = screen.getByRole("button", { name: /さらに表示/ });
-    expect(btn).toHaveAttribute("aria-expanded", "false");
+    expect(btn).not.toHaveAttribute("aria-expanded");
     expect(btn.getAttribute("aria-controls")).toBeTruthy();
     expect(document.getElementById(btn.getAttribute("aria-controls") as string)).toBeInTheDocument();
   });

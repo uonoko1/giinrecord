@@ -97,6 +97,10 @@ t_bootstrap_without_cert() {
   assert_not_contains "$c" "return 301" "no redirect before TLS exists (site must stay reachable)"
   assert_contains "$c" "access_log /var/log/nginx/giinrecord.access.log noip;" "noip log"
   assert_contains "$c" "$ERR_LOG_PROD" "#189 error_log crit in the bootstrap block"
+  # Issue 386: bootstrap ブロックも実際に配信するので、ここにも要る
+  assert_contains "$c" "server_tokens off;" "server_tokens off in the bootstrap block"
+  # Issue 387: bootstrap は :80 だけ。HSTS は平文では意味が無いので出さない
+  assert_not_contains "$c" "Strict-Transport-Security" "no HSTS on the plain-http bootstrap block"
   [[ -L "$P/etc/nginx/sites-enabled/giinrecord.conf" ]] || fail "enabled symlink"
   assert_contains "$(cat "$LOG")" "nginx -t" "config tested"
   assert_contains "$(cat "$LOG")" "systemctl reload nginx" "reloaded"
@@ -117,6 +121,17 @@ t_full_template_with_cert() {
   assert_contains "$c" "location / {
         return 301" "redirect inside location /"
   assert_eq "2" "$(grep -c "$ERR_LOG_PROD" "$CONF")" "#189 error_log crit in both server blocks"
+  # Issue 386: 80 と 443 の**両方**の server ブロックに入る。http ブロックには置かない（共用ホスト）
+  assert_eq "2" "$(grep -c "server_tokens off;" "$CONF")" "server_tokens off in both server blocks"
+  # Issue 387: HSTS は **443 の1ブロックだけ**（:80 は平文なので付けない）
+  assert_eq "1" "$(grep -c "Strict-Transport-Security" "$CONF")" "HSTS only on the TLS server block"
+  # preload はブラウザに焼き込まれ取り消せない。旧ドメイン gikailog.jp の 301 が現役なので巻き込めない。
+  # コメント行には注意書きとしてこれらの語が出るので、**add_header の行だけ**を見る
+  hsts_line=$(grep "add_header Strict-Transport-Security" "$CONF" || true)
+  assert_not_contains "$hsts_line" "preload" "never preload (cannot be undone)"
+  assert_not_contains "$hsts_line" "includeSubDomains" "no includeSubDomains (subdomains not surveyed)"
+  assert_contains "$hsts_line" "max-age=" "HSTS carries a max-age"
+  assert_not_contains "$(cat "$CONF")" "http {" "no http block (never set directives globally on a shared host)"
 }
 
 t_rerun_is_noop() {
@@ -187,6 +202,15 @@ t_staging_conf() {
   # 共用ホストなので http ブロックに入れてはいけない（グローバルに効き同居サイトの挙動を変える。Issue 338）。
   # 生成される conf は server ブロックだけなので、http ブロックそのものが現れないことで担保する
   assert_not_contains "$c" "http {" "no http block (shared host: never set directives globally)"
+  # Issue 387: staging **にも** HSTS を入れる（決めて固定する。無検査で通さない）。
+  # staging も https 配信で、Cloudflare Access の裏でも同一オリジンのリスクは同じ。
+  # ただし `includeSubDomains` は本番同様に付けない（このホスト自身にだけ効かせる）。
+  # 443 の location / は Cloudflare の snippet を include するが、そこに add_header は無いので
+  # server レベルの HSTS は消えない（deploy/cloudflare-allowlist.sh で確認済み）。
+  hsts_stg=$(echo "$c" | grep "add_header Strict-Transport-Security" || true)
+  assert_contains "$hsts_stg" "max-age=" "HSTS on staging too"
+  assert_not_contains "$hsts_stg" "preload" "never preload on staging either"
+  assert_not_contains "$hsts_stg" "includeSubDomains" "no includeSubDomains on staging either"
   assert_contains "$c" "/etc/letsencrypt/live/staging.giinrecord.jp/" "staging cert"
   assert_eq "2" "$(grep -c "$ERR_LOG_STG" "$STG_CONF")" "#189 staging error_log in both blocks"
   [[ ! -e "$CONF" ]] || fail "production conf untouched"
