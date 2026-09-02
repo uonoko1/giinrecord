@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { memberSources } from "./member-sources";
+import { memberSources, membersSources } from "./member-sources";
 import type { DatasetSource, MemberDetail, TimelineEntry } from "./data-contract";
 import meta from "../test-fixtures/meta";
 
@@ -130,5 +130,43 @@ describe("memberSources: そのページが実際に使った出典だけを出�
     const got = memberSources(meta.sources, member("sangiin"), 0);
     expect(got.length).toBeLessThan(meta.sources.length);
     expect(names(got)).toEqual(["参議院 議員一覧"]);
+  });
+});
+
+describe("membersSources: 複数議員を並べるページの出典（#353）", () => {
+  it("誰も選んでいなければ空（記録が無いのに出典だけ並べない）", () => {
+    expect(membersSources(meta.sources, [])).toEqual([]);
+  });
+
+  it("1人なら memberSources と同じ", () => {
+    const m = member("sangiin", [entry("vote")]);
+    expect(names(membersSources(meta.sources, [{ detail: m }]))).toEqual(names(memberSources(meta.sources, m, 0)));
+  });
+
+  it("2人ぶんの和集合を返す（衆参を混ぜると両方出る）", () => {
+    const got = membersSources(meta.sources, [
+      { detail: member("sangiin", [entry("vote")]) },
+      { detail: member("shugiin", [entry("stance")]) },
+    ]);
+    expect(names(got)).toEqual(["参議院 本会議投票結果", "参議院 議員一覧", "衆議院 議員一覧", "衆議院 議案情報"].sort());
+  });
+
+  it("重複は1回だけ（同じ院の2人で議員一覧が2つ出ない）", () => {
+    const got = membersSources(meta.sources, [
+      { detail: member("sangiin", [entry("vote")]) },
+      { detail: member("sangiin", [entry("vote")]) },
+    ]);
+    expect(names(got)).toEqual(["参議院 本会議投票結果", "参議院 議員一覧"].sort());
+  });
+
+  it("並び順は sources の順を保つ（議員の指定順で入れ替わらない）", () => {
+    const a = membersSources(meta.sources, [{ detail: member("shugiin", [entry("stance")]) }, { detail: member("sangiin", [entry("vote")]) }]);
+    const b = membersSources(meta.sources, [{ detail: member("sangiin", [entry("vote")]) }, { detail: member("shugiin", [entry("stance")]) }]);
+    expect(a.map((s) => s.url)).toEqual(b.map((s) => s.url));
+  });
+
+  it("発言があれば会議録の出典も足される", () => {
+    const got = membersSources(meta.sources, [{ detail: member("sangiin"), speechCount: 5 }]);
+    expect(names(got)).toContain("国会会議録検索システム（参議院 本会議・委員会）");
   });
 });
