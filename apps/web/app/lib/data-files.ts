@@ -9,7 +9,7 @@ import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import type { Assembly } from "@seiji-kiroku/shared";
 import type { SangiinVoteLinkStats, ShugiinBillNameStats } from "./coverage";
-import { DIET_ASSEMBLIES, type AssemblySession, type DatasetMeta, type LocalRollCallSubject, type MemberDetail, type MemberSpeeches, type MemberSummary, type RollCall, type RollCallSummary } from "./data-contract";
+import { DIET_ASSEMBLIES, type AssemblySession, type DatasetMeta, type LocalAssemblyMeta, type LocalRollCallSubject, type MemberDetail, type MemberSpeeches, type MemberSummary, type RollCall, type RollCallSummary } from "./data-contract";
 
 /** `data/` at the repo root; override with SEIJI_DATA_DIR. cwd is apps/web during build. */
 export function defaultDataDir(): string {
@@ -80,6 +80,17 @@ export async function readRollCall(dataDir: string, session: string, id: string)
 /** `assemblies/index.json`（#156）。無い（古いデータ）なら null */
 export async function readAssemblies(dataDir: string): Promise<Assembly[] | null> {
   return readJson<Assembly[]>(path.join(dataDir, "assemblies", "index.json"));
+}
+
+/**
+ * `assemblies/{id}/meta.json`（地方議会の取得日時・出典、#158）。無ければ null。
+ * 議員ページはこれで**その議会自身の出典**を出す（#346）。国会の出典（`data/meta.json`）は出さない。
+ */
+export async function readLocalAssemblyMeta(dataDir: string, assemblyId: string): Promise<LocalAssemblyMeta | null> {
+  // 空ガードは早期 return のためだけ（外すと assemblies/meta.json を読みに行くが、それも存在しないので
+  // 結果は同じ＝等価変異。テストで固定できないことの説明であって、テストが弱いわけではない）
+  if (!assemblyId) return null;
+  return readJson<LocalAssemblyMeta>(path.join(dataDir, "assemblies", assemblyId, "meta.json"));
 }
 
 /**

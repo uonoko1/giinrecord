@@ -1,0 +1,11 @@
+{
+ "assemblyId": "pref-04",
+ "counts": { "cells": 100, "members": 59, "rollcalls": 10, "unknownCells": 0, "unmatchedNames": 0 },
+ "fetchedAt": "2026-08-24T12:12:38.778Z",
+ "rosterAsOf": "2026-05-01",
+ "sessions": [],
+ "sources": [
+  { "fetchedAt": "2026-08-24T12:12:38.778Z", "name": "宮城県議会 議員名簿（会派別）", "url": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html" },
+  { "fetchedAt": "2026-08-24T12:12:38.778Z", "name": "宮城県議会 会議録", "url": "https://www.pref.miyagi.jp/site/kengikai/kaigiroku.html" }
+ ]
+}

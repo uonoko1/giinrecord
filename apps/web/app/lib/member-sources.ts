@@ -2,6 +2,12 @@ import { isLocalMember } from "./assemblies";
 import type { DatasetSource, MemberDetail, SourceKind } from "./data-contract";
 
 /**
+ * 出典欄が描画に必要とする最小の形。国会の `DatasetSource`（house/kind つき）も、
+ * 地方議会の出典（`assemblies/{id}/meta.json`、house/kind を持たない）も、どちらもこれを満たす。
+ */
+export type PlainSource = { name: string; url: string; fetchedAt: string };
+
+/**
  * その議員ページが実際に使った出典だけに絞る（Issue #339）。
  *
  * 以前は `meta.sources`（データセット全体の33件）を丸ごと出していたので、衆院議員のページに
@@ -18,15 +24,12 @@ import type { DatasetSource, MemberDetail, SourceKind } from "./data-contract";
 export function memberSources(sources: DatasetSource[], detail: MemberDetail, speechCount: number): DatasetSource[] {
   // #339 より前に作られた meta.json には house / kind が無い。そのまま絞ると**全件落ちて出典が空になる**
   // （出典を減らすつもりが、1件も出さない = 約束をもっと強く破る）。属性を持たない出典が1件でもあれば
-  // 絞り込みを諦めて全件返す——「絞れない」ときに黙って隠すより、多く出す方が安全side。
+  // 絞り込みを諦めて全件返す——「絞れない」ときに黙って隠すより、多く出す方が安全側。
   // 次回の ETL で meta.json が更新されれば、この分岐は通らなくなる。
   if (sources.some((s) => !s.house || !s.kind)) return sources;
 
-  // 地方議会の議員（#158）は `house` を持たず、記録も localVote だけなので、院でも種別でも
-  // 1件も一致しない = **出典が空になる**（実データで 285 名 / 1,057 名が該当した）。
-  // 出典欄を空にするのは「出典を絞る」より悪い。国会の出典は元々この議員のものではないので、
-  // ここでは絞らず従来どおり返す。**その議会自身の出典（assemblies/{id}/meta.json）を出すのが
-  // 本来の姿だが、それは別の変更**（#346）。
+  // 地方議会の議員はここに来ない（#346）。議員ページが議会自身の出典を先に選ぶため。
+  // ただしこの関数を国会以外で直に呼ばれても壊れないよう、念のため素通しする。
   if (isLocalMember(detail)) return sources;
 
   const kinds = usedKinds(detail, speechCount);

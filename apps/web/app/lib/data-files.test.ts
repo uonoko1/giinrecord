@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { assemblyPaths, memberPaths, readAssemblies, readAssemblySessions, readLocalRollCallIndex, readMemberDetail, readMeta, readRollCall, readSangiinVoteLinkStats, readShugiinBillNameStats, rollCallPaths } from "./data-files";
+import { assemblyPaths, memberPaths, readAssemblies, readLocalAssemblyMeta, readAssemblySessions, readLocalRollCallIndex, readMemberDetail, readMeta, readRollCall, readSangiinVoteLinkStats, readShugiinBillNameStats, rollCallPaths } from "./data-files";
 
 const fixtures = fileURLToPath(new URL("../test-fixtures/data", import.meta.url));
 const missing = fileURLToPath(new URL("../test-fixtures/does-not-exist", import.meta.url));
@@ -96,6 +96,19 @@ describe("readMeta", () => {
   });
   it("壊れた JSON は throw する", async () => {
     await expect(readMeta(await brokenDataDir())).rejects.toThrow(SyntaxError);
+  });
+});
+
+describe("readLocalAssemblyMeta（#346）: 地方議員の出典はその議会自身のもの", () => {
+  it("assemblies/{id}/meta.json の出典を読む", async () => {
+    const m = await readLocalAssemblyMeta(assemblyFixtures, "pref-04");
+    expect(m?.sources.map((s) => s.name)).toEqual(["宮城県議会 議員名簿（会派別）", "宮城県議会 会議録"]);
+  });
+  it("その議会の meta.json が無ければ null（無い出典を作らない）", async () => {
+    expect(await readLocalAssemblyMeta(assemblyFixtures, "pref-99")).toBeNull();
+  });
+  it("assemblyId が空なら null", async () => {
+    expect(await readLocalAssemblyMeta(assemblyFixtures, "")).toBeNull();
   });
 });
 
