@@ -128,3 +128,53 @@ describe("HydrateFallback（#325）", () => {
     expect(tags).toContainEqual({ name: "robots", content: "noindex" });
   });
 });
+
+/**
+ * Issue 394: skip link（「本文へ移動」）。
+ *
+ * 無いと、キーボード利用者は**ページを開くたびに**ヘッダのリンクを全部たどってから本文に着く。
+ * 議員ページはタブが6つあるので、その手前を毎回通ることになる。
+ *
+ * axe はこれを**必須項目として出さない**（本番 13 ページの計測は違反 0 件だった）。
+ * 「計測が緑」は「問題が無い」ではない、の例になった。
+ */
+describe("skip link（Issue 394）", () => {
+  async function html(component: "Root" | "HydrateFallback"): Promise<string> {
+    vi.resetModules();
+    vi.stubEnv("SITE_ORIGIN", "https://giinrecord.jp");
+    const quiet = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      const mod = await import("./root");
+      const Component = component === "Root" ? mod.default : mod.HydrateFallback;
+      const { createRoutesStub } = await import("react-router");
+      const { renderToStaticMarkup } = await import("react-dom/server");
+      const Stub = createRoutesStub([{ path: "/", Component }]);
+      return renderToStaticMarkup(<Stub initialEntries={["/"]} />);
+    } finally {
+      quiet.mockRestore();
+      vi.unstubAllEnvs();
+    }
+  }
+
+  it("body の**最初**にある（Tab を1回押せば届く）", async () => {
+    const body = (await html("Root")).split("<body>")[1];
+    expect(body.trimStart()).toMatch(/^<a [^>]*class="skip-link"/);
+  });
+
+  it("本文へのアンカーで、その id を持つ要素が同じ文書にある", async () => {
+    const out = await html("Root");
+    const href = out.match(/class="skip-link" href="#([^"]+)"/)?.[1] ?? out.match(/href="#([^"]+)"[^>]*class="skip-link"/)?.[1];
+    expect(href).toBeTruthy();
+    expect(out).toContain(`id="${href}"`);
+  });
+
+  it("HydrateFallback にもある（読み込み中の画面でも本文へ飛べる）", async () => {
+    expect(await html("HydrateFallback")).toContain('class="skip-link"');
+  });
+
+  it("移動先はフォーカスを受け取れる（tabindex=-1）", async () => {
+    const out = await html("Root");
+    const href = out.match(/href="#([^"]+)"/)?.[1];
+    expect(out).toMatch(new RegExp(`id="${href}"[^>]*tabindex="-1"|tabindex="-1"[^>]*id="${href}"`));
+  });
+});
