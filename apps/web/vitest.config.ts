@@ -1,5 +1,26 @@
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
-  test: { environment: "jsdom", include: ["app/**/*.test.{ts,tsx}"], setupFiles: ["./vitest.setup.ts"] },
+  test: {
+    environment: "jsdom",
+    include: ["app/**/*.test.{ts,tsx}"],
+    setupFiles: ["./vitest.setup.ts"],
+    /*
+     * Issue 400: 既定の 5000ms では、折りたたみの境界テスト（200 行の表を描く）が
+     * **不定期に落ちていた**。原因は遅い実装ではなく**並行実行の取り合い**:
+     *
+     *     単独で走らせたとき: 224ms
+     *     ワークスペース全体を並行で走らせたとき: 5000ms 超（18 倍以上）
+     *
+     * 折りたたみの境界は「FOLD 件ちょうど」を描かないと検査にならないので、
+     * **これ以上データを減らせない**（減らすと境界を検査しなくなる）。
+     * fixture は定数から導く形にして 394 → 206 まで落としたうえで、
+     * 残りは上限を上げて受ける。**遅い実装を隠すためではない**——単独では 224ms で終わる。
+     *
+     * 20000ms の根拠: 並行実行時の実測で、折りたたみ系のいちばん遅いテストが **7.6 秒**
+     * （既定の 5000ms を超えるのでこれが flaky の正体）。倍以上の余裕を取りつつ、
+     * **本当に遅い実装が入れば落ちる**幅にしてある。
+     */
+    testTimeout: 20000,
+  },
 });

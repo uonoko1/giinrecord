@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { RollCallSummary } from "../lib/data-contract";
 import index from "../test-fixtures/data/rollcalls/index.json";
 import meta from "../test-fixtures/meta";
-import { RollCallsPage, meta as routeMeta } from "./rollcalls";
+import { ROLLCALLS_FOLD, RollCallsPage, meta as routeMeta } from "./rollcalls";
 
 const rollcalls = index as RollCallSummary[];
 
@@ -86,12 +86,17 @@ describe("meta()", () => {
  * 回次で絞っている間は折りたたまない（最大の回次でも 120 件。#340 と同じ考え方）。
  */
 describe("RollCallsPage 折りたたみ（#363）", () => {
+  // Issue 400: 件数は **ROLLCALLS_FOLD から導く**。以前は 380/250 を直に書いていて、
+  // 数百行の描画が 5 秒のタイムアウト境界に乗り、不定期に落ちていた（実測 4.5〜8.0 秒）。
+  // 定数から導くと、**折りたたみの閾値を変えてもテストの意味が変わらない**という利点もある。
+  const TOTAL = ROLLCALLS_FOLD + 6; // 折りたたみが起きる最小限（残り 6 件）
+  const IN_SESSION = ROLLCALLS_FOLD + 3; // 絞った結果も FOLD を**超える**（絞ると折りたたまない、を検査するため）
   const many = (n: number): RollCallSummary[] =>
     Array.from({ length: n }, (_, i) => ({
       ...(rollcalls[0] as RollCallSummary),
       id: `221-0724-v${String(i).padStart(3, "0")}`,
       title: `議案 ${i}`,
-      session: i < 250 ? 221 : 220,
+      session: i < IN_SESSION ? 221 : 220,
     }));
   const renderMany = (list: RollCallSummary[], session?: number) =>
     render(
@@ -101,21 +106,21 @@ describe("RollCallsPage 折りたたみ（#363）", () => {
     );
   const rows = () => screen.getAllByRole("listitem").length;
 
-  it("回次「すべて」で 200 件を超えたら折りたたみ、残り件数を出す", () => {
-    renderMany(many(380));
-    expect(rows()).toBe(200);
-    expect(screen.getByRole("button", { name: "さらに表示（残り180件）" })).toBeInTheDocument();
+  it("回次「すべて」で FOLD 件を超えたら折りたたみ、残り件数を出す", () => {
+    renderMany(many(TOTAL));
+    expect(rows()).toBe(ROLLCALLS_FOLD);
+    expect(screen.getByRole("button", { name: `さらに表示（残り${TOTAL - ROLLCALLS_FOLD}件）` })).toBeInTheDocument();
   });
 
-  it("件数の表示は折りたたんでも全件（380件）のまま", () => {
-    renderMany(many(380));
-    expect(screen.getByText("380件")).toBeInTheDocument();
+  it("件数の表示は折りたたんでも全件のまま", () => {
+    renderMany(many(TOTAL));
+    expect(screen.getByText(`${TOTAL}件`)).toBeInTheDocument();
   });
 
   it("「さらに表示」で全件出る", async () => {
-    renderMany(many(380));
+    renderMany(many(TOTAL));
     fireEvent.click(screen.getByRole("button", { name: /さらに表示/ }));
-    expect(rows()).toBe(380);
+    expect(rows()).toBe(TOTAL);
     expect(screen.queryByRole("button", { name: /さらに表示/ })).not.toBeInTheDocument();
   });
 
@@ -123,7 +128,7 @@ describe("RollCallsPage 折りたたみ（#363）", () => {
   // キーボード / スクリーンリーダーの利用者は文書の先頭へ戻され、続きを読むには頭からたどり直すことになる。
   // **3箇所それぞれで**確かめる（1箇所だけ検査して他を落としたことが実際にある）。
   it("押した後、フォーカスが body に落ちず、続きの手前に移る（Issue 393）", async () => {
-    renderMany(many(380));
+    renderMany(many(TOTAL));
     const button = screen.getByRole("button", { name: /さらに表示/ });
     button.focus();
     expect(document.activeElement).toBe(button);
@@ -134,15 +139,20 @@ describe("RollCallsPage 折りたたみ（#363）", () => {
     expect((document.activeElement as HTMLElement).textContent).toContain("続きを表示しました");
   });
 
-  it("回次で絞っている間は折りたたまない（250 件 > 200 でも全件）", () => {
-    renderMany(many(380), 221);
-    expect(rows()).toBe(250);
+  it("回次で絞っている間は折りたたまない（絞った結果が FOLD を超えても全件）", () => {
+    renderMany(many(TOTAL), 221);
+    expect(IN_SESSION).toBeGreaterThan(ROLLCALLS_FOLD); // 絞った結果が閾値を超えていること自体を確かめる
+    expect(rows()).toBe(IN_SESSION);
     expect(screen.queryByRole("button", { name: /さらに表示/ })).not.toBeInTheDocument();
   });
 
-  it("200 件以下なら折りたたまない（境界）", () => {
-    renderMany(many(200));
-    expect(rows()).toBe(200);
+  // 等価変異の記録（作業合意「落ちない変異が等価変異ならそう書いて残す」）:
+  // `> ROLLCALLS_FOLD` を `>=` にしてもこのテストは落ちない。FOLD ちょうどのとき
+  // `slice(0, FOLD)` は全件を返し、残りが 0 件なので MoreButton も描かれない——**挙動が同じ**。
+  // テストが弱いのではなく、その2つが区別できないという事実の記録。
+  it("FOLD 件ちょうどなら折りたたまない（境界）", () => {
+    renderMany(many(ROLLCALLS_FOLD));
+    expect(rows()).toBe(ROLLCALLS_FOLD);
     expect(screen.queryByRole("button", { name: /さらに表示/ })).not.toBeInTheDocument();
   });
 });

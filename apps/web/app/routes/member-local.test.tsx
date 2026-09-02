@@ -6,7 +6,7 @@ import type { MemberDetail } from "../lib/data-contract";
 import assembliesFixture from "../test-fixtures/assemblies/index.json";
 import localMember from "../test-fixtures/assemblies/member-local.json";
 import meta from "../test-fixtures/meta";
-import { MemberPage, meta as routeMeta, pageTitle } from "./member";
+import { ALL_FOLD, LOCAL_VOTE_FOLD, MemberPage, meta as routeMeta, pageTitle } from "./member";
 
 const detail = localMember as MemberDetail;
 const miyagi = (assembliesFixture as Assembly[])[2]!;
@@ -162,26 +162,32 @@ describe("地方議員の表決タブの折りたたみ（#361）", () => {
   // 数える対象が違うので分ける（listitem で数えると表決タブが常に 0 になり、検査にならない）
   const listRows = () => screen.getAllByRole("listitem").length;
   const tableRows = () => screen.getAllByRole("row").length - 1; // ヘッダ行を除く
+  // Issue 400: 件数は **定数から導く**。以前は 365 を直に書いていて、
+  // 数百行の描画が 5 秒のタイムアウト境界に乗り、不定期に落ちていた（実測 4.5〜8.0 秒）。
+  // 「すべて」と「表決」で閾値が別なので、**両方を超える**件数にする
+  const TOTAL = Math.max(ALL_FOLD, LOCAL_VOTE_FOLD) + 6;
+  // 等価変異の記録: `LOCAL_VOTE_FOLD` を `ALL_FOLD` に差し替えても落ちない——**いまは両方 200** だから。
+  // 片方を変えれば落ちるので、「2つが別の定数である」ことは守られている。
 
-  it("既定の「すべて」タブでも 200 件で折りたたむ", () => {
-    render(<MemberPage detail={withVotes(365)} meta={meta} assembly={miyagi} />);
-    expect(listRows()).toBe(200);
-    expect(screen.getByRole("button", { name: "さらに表示（残り165件）" })).toBeInTheDocument();
+  it("既定の「すべて」タブでも FOLD 件で折りたたむ", () => {
+    render(<MemberPage detail={withVotes(TOTAL)} meta={meta} assembly={miyagi} />);
+    expect(listRows()).toBe(ALL_FOLD);
+    expect(screen.getByRole("button", { name: `さらに表示（残り${TOTAL - ALL_FOLD}件）` })).toBeInTheDocument();
   });
 
-  it("200 件を超えたら折りたたみ、残り件数を出す", async () => {
-    render(<MemberPage detail={withVotes(365)} meta={meta} assembly={miyagi} />);
+  it("FOLD 件を超えたら折りたたみ、残り件数を出す", async () => {
+    render(<MemberPage detail={withVotes(TOTAL)} meta={meta} assembly={miyagi} />);
     // 「すべて」タブのままだと ALL_FOLD（#361）が効くので、表決タブを開いて localVote 側を検査する
     fireEvent.click(screen.getByRole("tab", { name: /表決/ }));
-    expect(tableRows()).toBe(200);
-    expect(screen.getByRole("button", { name: "さらに表示（残り165件）" })).toBeInTheDocument();
+    expect(tableRows()).toBe(LOCAL_VOTE_FOLD);
+    expect(screen.getByRole("button", { name: `さらに表示（残り${TOTAL - LOCAL_VOTE_FOLD}件）` })).toBeInTheDocument();
   });
 
   it("「さらに表示」で全件出る", async () => {
-    render(<MemberPage detail={withVotes(365)} meta={meta} assembly={miyagi} />);
+    render(<MemberPage detail={withVotes(TOTAL)} meta={meta} assembly={miyagi} />);
     fireEvent.click(screen.getByRole("tab", { name: /表決/ }));
     fireEvent.click(screen.getByRole("button", { name: /さらに表示/ }));
-    expect(tableRows()).toBe(365);
+    expect(tableRows()).toBe(TOTAL);
     expect(screen.queryByRole("button", { name: /さらに表示/ })).not.toBeInTheDocument();
   });
 
@@ -192,10 +198,10 @@ describe("地方議員の表決タブの折りたたみ（#361）", () => {
     expect(screen.queryByRole("button", { name: /さらに表示/ })).not.toBeInTheDocument();
   });
 
-  it("ちょうど 200 件なら折りたたまない（境界）", async () => {
-    render(<MemberPage detail={withVotes(200)} meta={meta} assembly={miyagi} />);
+  it("ちょうど FOLD 件なら折りたたまない（境界）", async () => {
+    render(<MemberPage detail={withVotes(LOCAL_VOTE_FOLD)} meta={meta} assembly={miyagi} />);
     fireEvent.click(screen.getByRole("tab", { name: /表決/ }));
-    expect(tableRows()).toBe(200);
+    expect(tableRows()).toBe(LOCAL_VOTE_FOLD);
     expect(screen.queryByRole("button", { name: /さらに表示/ })).not.toBeInTheDocument();
   });
 });
