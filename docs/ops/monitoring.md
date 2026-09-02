@@ -3,7 +3,7 @@
 Issue #135。外部 SaaS（UptimeRobot / Datadog / Sentry 等）は使わない。**ダッシュボードは無い。label `monitor` の open Issue 一覧が現在の状態**（0 件 = 正常）。
 
 ```
-GitHub Actions  monitor.yml ──10分おき──▶ https://giinrecord.jp          ┐ /, /members/, /assemblies/, 議会ページ, /data/meta.json, TLS 期限
+GitHub Actions  monitor.yml ──10分おき(名目)──▶ https://giinrecord.jp          ┐ /, /members/, /assemblies/, 議会ページ, /data/meta.json, TLS 期限
                             ──毎時────▶ https://staging.giinrecord.jp  ┘ deploy/monitor/probe.sh → run.sh → report.sh (gh)
                                                                               │ 2 回連続で失敗 → Issue "[monitor] <env>: <check>"
 VPS  root cron 5分  /usr/local/lib/giinrecord-monitor/health.sh                 │ 復旧 → 自動 close
@@ -55,9 +55,38 @@ VPS  root cron 5分  /usr/local/lib/giinrecord-monitor/health.sh                
 | 47（全都道府県） | 8 | 12 | 60 分 |
 | 67 | 12 | 16 | 60 分 |
 
-**現在の 9 議会・sample 3 は一巡 30 分・最悪検知遅延およそ 40 分**で目標内なので、既定値は 3 のまま変更しない。`18 議会を超えたら sample を上げる`のが次の判断ポイント。1 run が 20 リクエストを超えるようなら、巡回ではなく別の手段（議会ページのビルド時スモークテストなど）を検討したほうがよい。
+**現在の 9 議会・sample 3 は一巡 30 分**で、上の表のとおり目標内である。`18 議会を超えたら sample を上げる`のが次の判断ポイント。1 run が 20 リクエストを超えるようなら、巡回ではなく別の手段（議会ページのビルド時スモークテストなど）を検討したほうがよい。
+
+> **ただし上の一巡時間は「10 分おきに走る」前提の計算で、実際はそうなっていない**（Issue 373）。
+> GitHub Actions の `schedule` は保証されたスケジューラではなく、公式ドキュメントが
+> 「高負荷時には遅延またはスキップされる」と明記している。`*/10` のような高頻度 cron ほど間引かれる。
+>
+> 直近 60 件の実行間隔の実測（2026-08-27 09:27 〜 09-02 14:20）:
+>
+> | | 値 |
+> |---|---|
+> | 中央値 | **119 分** |
+> | 最大 | **676 分（11 時間 15 分）** |
+> | 10 分以内だった割合 | **3%** |
+> | 60 分を超えた間隔 | **42 回 / 59 回** |
+>
+> したがって **`monitor.yml` の側では「60 分以内に一度は見る」を約束できない**。
+> 上の表は「間引かれなければこうなる」という上限であって、実効の保証ではない。
+> **落ちたことに確実に気づく役目は VPS 側の cron（下）が負う**。`monitor.yml` は
+> 「**外から**（GitHub のネットワークから）見えるか」を、間隔の保証なしに確かめるものと位置づける。
 
 ### VPS 側（`deploy/monitor/health.sh`、root cron 5 分）
+
+**落ちたことに確実に気づく役目はこちらが負う**（Issue 373）。GitHub Actions の `schedule` と違い、
+VPS の cron は自前のマシンなので間引かれない。実測（`/var/log/giinrecord-monitor.log` の更新時刻）:
+
+```
+2026-09-03 00:40:01
+2026-09-03 00:45:02   ← ちょうど 5 分
+```
+
+**間隔の保証はここにある**。`monitor.yml` は「外から見えるか」を間隔の保証なしに確かめる補助。
+
 
 | check | 条件 | 失敗時に疑うもの |
 |---|---|---|
