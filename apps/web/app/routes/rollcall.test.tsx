@@ -2,7 +2,7 @@ import { render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { describe, expect, it } from "vitest";
 import type { RollCall } from "../lib/data-contract";
-import meta from "../test-fixtures/meta.json";
+import meta from "../test-fixtures/meta";
 import fixture from "../test-fixtures/rollcall.json";
 import { RollCallPage, meta as routeMeta } from "./rollcall";
 

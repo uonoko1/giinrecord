@@ -5,7 +5,7 @@ import type { Assembly } from "@seiji-kiroku/shared";
 import type { MemberDetail } from "../lib/data-contract";
 import localMember from "../test-fixtures/assemblies/member-local.json";
 import tottoriMember from "../test-fixtures/assemblies/member-local-tottori.json";
-import meta from "../test-fixtures/meta.json";
+import meta from "../test-fixtures/meta";
 import { MemberPage } from "./member";
 
 /**

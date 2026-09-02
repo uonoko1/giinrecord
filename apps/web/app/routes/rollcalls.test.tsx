@@ -4,7 +4,7 @@ import { MemoryRouter } from "react-router";
 import { describe, expect, it, vi } from "vitest";
 import type { RollCallSummary } from "../lib/data-contract";
 import index from "../test-fixtures/data/rollcalls/index.json";
-import meta from "../test-fixtures/meta.json";
+import meta from "../test-fixtures/meta";
 import { RollCallsPage, meta as routeMeta } from "./rollcalls";
 
 const rollcalls = index as RollCallSummary[];

@@ -9,6 +9,7 @@ import { defaultDataDir, readAssemblies, readLocalRollCallIndex, readMemberDetai
 import { formatDate, formatDateTime, formatYearMonth } from "../lib/format";
 import { seoMeta } from "../lib/seo";
 import "./member.css";
+import { memberSources } from "../lib/member-sources";
 
 /* ---------- data (runs at build time only; ssr:false + prerender) ----------
  * routes.ts registers this route only when data/ exists, because under ssr:false a
@@ -342,7 +343,7 @@ export function MemberPage({ detail, meta, assembly = null, speechCount = 0, loa
             </p>
           )}
         </section>
-        <SourceLine meta={meta} />
+        <SourceLine meta={meta} detail={detail} speechCount={speechCount} />
       </main>
       <SiteFooter />
     </>
@@ -1009,12 +1010,18 @@ function ExternalLink({ href, children }: { href: string; children: React.ReactN
   );
 }
 
-function SourceLine({ meta }: { meta: DatasetMeta | null }) {
+/**
+ * 出典は**そのページが実際に使ったものだけ**を出す（#339）。
+ * `meta.sources` を丸ごと出すと、衆院議員のページに参院の議員一覧・議案情報・質問主意書が並ぶ。
+ * 「引いていない資料を出典として並べる」のは、全行に一次資料を付けるという約束に反する。
+ */
+function SourceLine({ meta, detail, speechCount }: { meta: DatasetMeta | null; detail: MemberDetail; speechCount: number }) {
+  const sources = memberSources(meta?.sources ?? [], detail, speechCount);
   return (
     <footer className="member-source">
       <p>
         出典：
-        {(meta?.sources ?? []).map((s, i) => (
+        {sources.map((s, i) => (
           <span key={s.url}>
             {i > 0 && " ・ "}
             <ExternalLink href={s.url}>{s.name}</ExternalLink>

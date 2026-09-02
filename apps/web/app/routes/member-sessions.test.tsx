@@ -3,7 +3,7 @@ import { userEvent } from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import type { MemberDetail, TimelineEntry } from "../lib/data-contract";
 import member from "../test-fixtures/member.json";
-import meta from "../test-fixtures/meta.json";
+import meta from "../test-fixtures/meta";
 import { EXPANDED_SESSIONS, MemberPage, groupBySession } from "./member";
 
 // Issue #103: 第200回以降の採決が入ると1人の timeline が数百行になる。回次（国会の回次）ごとに折りたたみ、直近2回次だけ展開する。

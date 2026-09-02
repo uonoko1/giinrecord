@@ -6,6 +6,7 @@ import { join } from "node:path";
 import iconv from "iconv-lite";
 import type { Assembly, Bill, BillSummary, MemberSummary, RollCall, RollCallSummary, Speech } from "@seiji-kiroku/shared";
 import { buildDataset } from "../src/aggregate.ts";
+import type { DatasetMeta } from "@seiji-kiroku/shared";
 import { DIET_ASSEMBLY_IDS, dietAssemblies, readSessionsOnDisk, resolveSessions, writeDataset, validateDataset, type Dataset } from "../src/dataset.ts";
 import { stableJson } from "../src/json.ts";
 import { matchVotes } from "../src/match-votes.ts";
@@ -49,7 +50,7 @@ function realDataset(): Dataset {
     unmatchedBills: [{ rollCallId: "221-0724-v001", title: rollCalls[1].title, sourceUrl: rollCalls[1].sourceUrl }],
     unmatchedGroups: [{ group: "新党", memberIds: ["m_000001"], sourceUrl: ROSTER }],
     groupMismatch: [MISMATCH],
-    meta: { fetchedAt: "2026-08-22T00:00:00.000Z", sessions: [221], sources: [{ name: "参議院 議員一覧", url: ROSTER, fetchedAt: "2026-08-22T00:00:00.000Z" }] },
+    meta: { fetchedAt: "2026-08-22T00:00:00.000Z", sessions: [221], sources: [{ name: "参議院 議員一覧", url: ROSTER, fetchedAt: "2026-08-22T00:00:00.000Z", house: "sangiin", kind: "roster" }] },
   };
 }
 
@@ -96,6 +97,38 @@ describe("writeDataset / validateDataset: docs/DATA_CONTRACT.md の不変条件"
     assert.ok(idx.length > 0);
     for (const m of idx) assert.equal(m.assemblyId, "diet-sangiin", m.id);
     assert.equal(readJson<{ assemblyId: string }>(dir, "members/m_007006.json").assemblyId, "diet-sangiin");
+    cleanup();
+  });
+
+  // #339: 出典の house / kind は議員ページの絞り込みが依存する。欠けたり不正だと
+  // 絞り込みが黙って無効化される（あるいは全件落ちて出典が空になる）ので、ここで止める。
+  // この検査ブロックを丸ごと消しても全テストが通る状態だった（レビュー指摘）
+  test("meta.json の出典に house が無ければ違反", async () => {
+    patch<DatasetMeta>(dir, "meta.json", (m) => ({ ...m, sources: m.sources.map(({ house: _h, ...rest }) => rest as never) }));
+    assert.match((await validateDataset(dir)).join("\n"), /house must be sangiin\/shugiin\/both/);
+    cleanup();
+  });
+
+  test("meta.json の出典に kind が無ければ違反", async () => {
+    patch<DatasetMeta>(dir, "meta.json", (m) => ({ ...m, sources: m.sources.map(({ kind: _k, ...rest }) => rest as never) }));
+    assert.match((await validateDataset(dir)).join("\n"), /kind must be one of/);
+    cleanup();
+  });
+
+  test("meta.json の出典の house / kind が知らない値なら違反（typo・余分な空白を止める）", async () => {
+    patch<DatasetMeta>(dir, "meta.json", (m) => ({ ...m, sources: m.sources.map((s) => ({ ...s, house: "sangiin " as never, kind: "bogus" as never })) }));
+    const out = (await validateDataset(dir)).join("\n");
+    assert.match(out, /house must be sangiin\/shugiin\/both, got sangiin /);
+    assert.match(out, /kind must be one of .*got bogus/);
+    cleanup();
+  });
+
+  test("meta.json の出典の house が URL と食い違えば違反（付け間違いは目で見つからない）", async () => {
+    patch<DatasetMeta>(dir, "meta.json", (m) => ({
+      ...m,
+      sources: m.sources.map((s) => ({ ...s, house: "shugiin" as const, url: "https://www.sangiin.go.jp/japanese/joho1/kousei/giin/221/giin.htm" })),
+    }));
+    assert.match((await validateDataset(dir)).join("\n"), /house=shugiin but url is/);
     cleanup();
   });
 
