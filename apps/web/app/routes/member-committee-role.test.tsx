@@ -2,7 +2,7 @@ import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import type { CommitteeRoleEntry, MemberDetail } from "../lib/data-contract";
 import member from "../test-fixtures/member.json";
-import meta from "../test-fixtures/meta.json";
+import meta from "../test-fixtures/meta";
 import { MemberPage } from "./member";
 
 /**

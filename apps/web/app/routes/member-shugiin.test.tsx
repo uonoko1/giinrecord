@@ -5,7 +5,7 @@ import type { MemberDetail } from "../lib/data-contract";
 import sangiin from "../test-fixtures/member.json";
 import shugiin from "../test-fixtures/member-shugiin.json";
 import shugiinSpeeches from "../test-fixtures/member-shugiin-speeches.json";
-import meta from "../test-fixtures/meta.json";
+import meta from "../test-fixtures/meta";
 import { MemberPage, meta as routeMeta } from "./member";
 
 const detail = shugiin as MemberDetail;

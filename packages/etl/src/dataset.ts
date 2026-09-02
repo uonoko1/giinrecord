@@ -136,6 +136,8 @@ const MISMATCH_KEYS = ["memberId", "nameText", "voteGroup", "rosterGroup", "roll
 const KEIKA_SOURCE = /^https:\/\/www\.shugiin\.go\.jp\/internet\/itdb_gian\.nsf\/html\/gian\/keika\/[^/]+\.htm$/;
 /** bill 行の sourceUrl は参院 議案情報の議案詳細ページ（提出者・審議状況の一次資料）か衆院の経過ページ。 */
 const BILL_SOURCE = /^https:\/\/www\.sangiin\.go\.jp\/japanese\/joho1\/kousei\/gian\/\d+\/meisai\/m\d+\.htm$/;
+const SOURCE_HOUSES = new Set(["sangiin", "shugiin", "both"]);
+const SOURCE_KINDS = new Set(["roster", "vote", "speech", "committee", "bill", "question"]);
 const STANCE_VALUES = new Set(["賛成", "反対"]);
 /** question 行の sourceUrl は衆院 質問答弁情報の経過ページか参院 質問主意書の詳細ページ（提出日・提出者の一次資料、#106）。 */
 const QUESTION_SOURCE = /^https:\/\/(?:www\.shugiin\.go\.jp\/internet\/itdb_shitsumon\.nsf\/html\/shitsumon\/\d+\.htm|www\.sangiin\.go\.jp\/japanese\/joho1\/kousei\/syuisyo\/\d+\/meisai\/m\d+\.htm)$/;
@@ -174,6 +176,17 @@ export async function validateDataset(dir: string): Promise<string[]> {
 
   const meta = await read<DatasetMeta>("meta.json");
   if (meta && (typeof meta.fetchedAt !== "string" || !Array.isArray(meta.sessions))) v.push("meta.json: fetchedAt / sessions required");
+  // 出典の house / kind（#339）: 議員ページはこれで出典を絞る。欠けていると絞れず、
+  // 衆院議員のページに参院の出典が並ぶ（絞り込みが黙って無効化される）ので、ここで止める。
+  for (const [i, s] of (meta?.sources ?? []).entries()) {
+    if (!SOURCE_HOUSES.has(s.house)) v.push(`meta.json sources[${i}] (${s.name}): house must be sangiin/shugiin/both, got ${s.house}`);
+    if (!SOURCE_KINDS.has(s.kind)) v.push(`meta.json sources[${i}] (${s.name}): kind must be one of ${[...SOURCE_KINDS].join("/")}, got ${s.kind}`);
+    // house は URL とも一致していなければならない（付け間違いは目で見つからない）
+    const host = s.house === "sangiin" ? "sangiin.go.jp" : s.house === "shugiin" ? "shugiin.go.jp" : null;
+    if (host && !s.url.includes(host) && !s.url.includes("kokkai.ndl.go.jp")) {
+      v.push(`meta.json sources[${i}] (${s.name}): house=${s.house} but url is ${s.url}`);
+    }
+  }
 
   // assemblies/index.json（#156）: id 一意、kind は3値、prefCode は地方だけ（2桁の団体コード）、sourceUrl は https。
   // 国会の2行は衆参のドメインでなければならない。地方の sourceUrl のホストは、その議会のレコードの許可ホストになる（地方 ETL 以降）。

@@ -10,7 +10,7 @@ import adachi from "../test-fixtures/compare/m_014002.json";
 import otsubaki from "../test-fixtures/compare/m_023003.json";
 import aisawa from "../test-fixtures/compare/h_41f223ac28.json";
 import aoki from "../test-fixtures/compare/h_dcf5bd65bf.json";
-import meta from "../test-fixtures/meta.json";
+import meta from "../test-fixtures/meta";
 import { ComparePage, memberDataUrl, meta as routeMeta } from "./compare";
 
 const fixtures: Record<string, MemberDetail> = Object.fromEntries(

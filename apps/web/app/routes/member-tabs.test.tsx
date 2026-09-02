@@ -9,7 +9,7 @@ import sangiinMember from "../test-fixtures/member.json";
 import sangiinSpeeches from "../test-fixtures/member-speeches.json";
 import shugiinMember from "../test-fixtures/member-shugiin.json";
 import shugiinSpeeches from "../test-fixtures/member-shugiin-speeches.json";
-import meta from "../test-fixtures/meta.json";
+import meta from "../test-fixtures/meta";
 import { MemberPage, groupTabs } from "./member";
 
 /** 分類のラベルは事実だけを述べる。評価・比較の語を入れない（他ページと同じガード） */

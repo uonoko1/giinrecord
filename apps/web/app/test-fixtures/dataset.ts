@@ -10,13 +10,17 @@ export const dataset: Dataset = {
         name: "参議院 本会議投票結果",
         url: "https://www.sangiin.go.jp/japanese/joho1/kousei/vote/221/221-0000/votelist.html",
         fetchedAt: "2026-08-22T06:00:00+09:00",
+        house: "sangiin",
+        kind: "vote",
       },
       {
         name: "衆参 議案情報",
         url: "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/menu.htm",
         fetchedAt: "2026-08-22T06:00:00+09:00",
+        house: "shugiin",
+        kind: "bill",
       },
-      { name: "国会会議録検索システム", url: "https://kokkai.ndl.go.jp/", fetchedAt: "2026-08-22T06:00:00+09:00" },
+      { name: "国会会議録検索システム", url: "https://kokkai.ndl.go.jp/", fetchedAt: "2026-08-22T06:00:00+09:00", house: "sangiin", kind: "speech" },
     ],
   },
   members: [

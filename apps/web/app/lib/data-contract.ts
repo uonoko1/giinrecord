@@ -3,9 +3,9 @@
  * These mirror the types the contract says will be added to `packages/shared`;
  * once they land there (ETL PBI), replace this file with re-exports.
  */
-import type { Assembly, AssemblyId, AssemblyKind, DatasetMeta, DietAssemblyId, House, LocalVote, Member, MemberId, RollCall, RollCallSummary, VoteValue } from "@seiji-kiroku/shared";
+import type { Assembly, AssemblyId, AssemblyKind, DatasetMeta, DatasetSource, DietAssemblyId, House, LocalVote, Member, MemberId, RollCall, RollCallSummary, SourceHouse, SourceKind, VoteValue } from "@seiji-kiroku/shared";
 
-export type { Assembly, AssemblyId, AssemblyKind, DatasetMeta, DietAssemblyId, LocalVote, RollCall, RollCallSummary, VoteValue };
+export type { Assembly, AssemblyId, AssemblyKind, DatasetMeta, DatasetSource, DietAssemblyId, LocalVote, RollCall, RollCallSummary, SourceHouse, SourceKind, VoteValue };
 
 /** 国会の2議会の id（院 → 議会 id）。ETL の `assemblies.ts` と同じ値（shared は型だけなので定数は両側に持つ）。#156 */
 export const DIET_ASSEMBLY_IDS: Readonly<Record<House, DietAssemblyId>> = { sangiin: "diet-sangiin", shugiin: "diet-shugiin" };

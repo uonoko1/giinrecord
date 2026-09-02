@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import type { MemberDetail, MemberSpeeches, SpeechEntry } from "../lib/data-contract";
 import member from "../test-fixtures/member.json";
 import memberSpeeches from "../test-fixtures/member-speeches.json";
-import meta from "../test-fixtures/meta.json";
+import meta from "../test-fixtures/meta";
 import { MemberPage, SPEECH_FOLD, meta as routeMeta, speechesDataUrl } from "./member";
 
 const detail = member as MemberDetail;
@@ -353,13 +353,31 @@ describe("MemberPage 採決タブ", () => {
 });
 
 describe("MemberPage フッター", () => {
-  it("出典3つと取得日時を出す", () => {
+  // #339: 出典は「そのページが実際に使ったもの」だけ。この fixture は参院議員で
+  // vote / question / bill と発言を持つので、出るべき集合は一意に決まる。
+  // 集合そのものを完全一致で見る（denylist では絞り込みの劣化を素通しするため。#333 の学び）
+  it("出典はこの議員が実際に使ったものだけを、取得日時とともに出す", () => {
     renderPage();
     const footer = screen.getByText(/^出典/).closest("footer") as HTMLElement;
-    expect(within(footer).getByRole("link", { name: "参議院" })).toHaveAttribute("href", "https://www.sangiin.go.jp/");
-    expect(within(footer).getByRole("link", { name: "衆議院" })).toBeInTheDocument();
-    expect(within(footer).getByRole("link", { name: /国立国会図書館/ })).toBeInTheDocument();
+    const names = within(footer).getAllByRole("link").map((a) => a.textContent);
+    expect([...names].sort()).toEqual(
+      [
+        "参議院 本会議投票結果",
+        "参議院 議員一覧",
+        "参議院 議案情報",
+        "参議院 質問主意書",
+        "国会会議録検索システム（参議院 本会議・委員会）",
+      ].sort(),
+    );
+    expect(within(footer).getByRole("link", { name: "参議院 議員一覧" })).toHaveAttribute("href", "https://www.sangiin.go.jp/");
     expect(within(footer).getByText(/2025\.04\.01/)).toBeInTheDocument();
+  });
+
+  it("衆院の出典は1件も出ない（参院議員のページなので、引いていない資料）", () => {
+    renderPage();
+    const footer = screen.getByText(/^出典/).closest("footer") as HTMLElement;
+    const hrefs = within(footer).getAllByRole("link").map((a) => a.getAttribute("href") ?? "");
+    expect(hrefs.filter((h) => h.includes("shugiin.go.jp"))).toEqual([]);
   });
 });
 

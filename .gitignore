@@ -13,3 +13,4 @@ packages/etl/.cache/
 .claude/
 # React Router の生成型（ビルドのたびに書き換わる）
 apps/web/.react-router/
+.playwright-mcp/

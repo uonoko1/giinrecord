@@ -226,9 +226,26 @@ export interface Question {
   sourceUrl: string;
 }
 
+/**
+ * 出典が「どの院の、どんな記録のために引いたか」（#339）。
+ * 議員ページはこれで出典を絞る——衆院議員のページに参院の議員一覧を出さないため。
+ * `house: "both"` は院をまたぐ出典（現状なし。将来 内閣提出法案などが該当しうる）。
+ */
+export type SourceHouse = "sangiin" | "shugiin" | "both";
+/** roster=議員一覧 / vote=投票結果 / speech=会議録(発言) / committee=会議録(委員会) / bill=議案情報 / question=質問主意書 */
+export type SourceKind = "roster" | "vote" | "speech" | "committee" | "bill" | "question";
+
+export interface DatasetSource {
+  name: string;
+  url: string;
+  fetchedAt: string;
+  house: SourceHouse;
+  kind: SourceKind;
+}
+
 export interface DatasetMeta {
   fetchedAt: string;   // ISO datetime
-  sources: { name: string; url: string; fetchedAt: string }[];
+  sources: DatasetSource[];
   sessions: number[];
 }
 
