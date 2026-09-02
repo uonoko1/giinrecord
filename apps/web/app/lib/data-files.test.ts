@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { assemblyPaths, memberPaths, readAssemblies, readLocalAssemblyMeta, readAssemblySessions, readLocalRollCallIndex, readMemberDetail, readMeta, readRollCall, readSangiinVoteLinkStats, readShugiinBillNameStats, rollCallPaths } from "./data-files";
+import { assemblyPaths, memberPaths, readAssemblies, readLocalAssemblyMeta, readAssemblySessions, readLocalRollCallIndex, readMemberDetail, readMeta, readRollCall, readSangiinVoteLinkStats, readShugiinBillNameStats, readUnmatchedSpeechStats, rollCallPaths } from "./data-files";
 
 const fixtures = fileURLToPath(new URL("../test-fixtures/data", import.meta.url));
 const missing = fileURLToPath(new URL("../test-fixtures/does-not-exist", import.meta.url));
@@ -281,5 +281,26 @@ describe("readSangiinVoteLinkStats（#274）", () => {
 
   it("rollcalls/ が無ければ null（無い事実を作らない）", async () => {
     expect(await readSangiinVoteLinkStats(missing)).toBeNull();
+  });
+});
+
+describe("readUnmatchedSpeechStats（#370）: 紐づけられなかった発言を数える", () => {
+  it("発言の行だけを数える（票・議案の行は数えない）", async () => {
+    const r = await readUnmatchedSpeechStats(fixtures);
+    // fixture は発言3件（世耕2・重徳1）＋票1件＋議案1件。発言だけ数えて 3 / 2 名
+    expect(r).toEqual({
+      speeches: 3,
+      speakers: 2,
+      sessions: [{ session: 217, speeches: 2 }, { session: 219, speeches: 1 }],
+    });
+  });
+
+  it("回次は件数の多い順（同数なら新しい回次）", async () => {
+    const r = await readUnmatchedSpeechStats(fixtures);
+    expect(r?.sessions.map((x) => x.session)).toEqual([217, 219]);
+  });
+
+  it("unmatched.json が無ければ null（無い事実を作らない）", async () => {
+    expect(await readUnmatchedSpeechStats(missing)).toBeNull();
   });
 });

@@ -226,7 +226,7 @@ describe("writeDataset / validateDataset: docs/DATA_CONTRACT.md の不変条件"
   test("unmatched は回次別に分けて書く（#219）: 票は unmatched/{session}.json、回次の引けない行だけ unmatched.json", async () => {
     const rows = [
       { nameText: "阿部 正俊", group: "自由民主党", rollCallId: "142-0114-v001" },
-      { nameText: "寺澤 芳男", group: "民友連", speechId: "114215254X00219980114_002" },
+      { nameText: "寺澤 芳男", group: "民友連", speechId: "114215254X00219980114_002", session: 221 },
     ];
     await writeDataset(dir, { ...realDataset(), unmatched: rows });
     assert.deepEqual(readJson(dir, "unmatched/142.json"), [rows[0]]);

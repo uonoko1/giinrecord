@@ -14,7 +14,8 @@ import { stableJson } from "../src/json.ts";
  * 契約（上限を設けない・氏名だけから Member を作らない）は変えない。変えるのはファイルの持ち方だけ。
  */
 const vote = (session: number, n: string) => ({ nameText: n, group: "自由民主党", rollCallId: `${session}-0114-v001` });
-const speech = (n: string) => ({ nameText: n, group: "自由民主党", speechId: "114215254X00219980114_001" });
+// Issue 370: 発言の行は session を持つ（回次別ファイルへの分け方は変えない。下のテストが固定している）
+const speech = (n: string) => ({ nameText: n, group: "自由民主党", speechId: "114215254X00219980114_001", session: 142 });
 const attendee = (n: string) => ({ kind: "attendance" as const, nameText: n, group: "", meetingId: "114215254X00219980114" });
 const billProposer = (session: number, n: string) => ({ nameText: n, group: "", billId: `${session}-参法-16` });
 const question = (session: number, n: string) => ({ kind: "question" as const, nameText: n, group: "", questionId: `${session}-sangiin-12` });

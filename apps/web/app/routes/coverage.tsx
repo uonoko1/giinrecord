@@ -2,9 +2,9 @@ import { Link, type MetaArgs, useLoaderData } from "react-router";
 import { CoverBrand } from "../components/CoverBrand";
 import { SiteFooter } from "../components/SiteFooter";
 import { assemblyPath, bundledSessions } from "../lib/assemblies";
-import { buildCoverage, type Coverage, type DietCoverage, formatLocalSessionRange, formatSessionRange, hasSessionGaps, linkedRecordCounts, type LocalCoverage, rosterlessSessions, rosterScope, sangiinUnlinkedVotes, type SangiinVoteLinkStats, type SessionRange, shugiinBillNameCoverage, type ShugiinBillNameStats, shugiinQuestionCoverage, speechCoverage } from "../lib/coverage";
+import { buildCoverage, type Coverage, type DietCoverage, formatLocalSessionRange, formatSessionRange, hasSessionGaps, linkedRecordCounts, type LocalCoverage, rosterlessSessions, rosterScope, sangiinUnlinkedVotes, type SangiinVoteLinkStats, type SessionRange, shugiinBillNameCoverage, type ShugiinBillNameStats, shugiinQuestionCoverage, speechCoverage, type UnmatchedSpeechStats, unmatchedSpeechCoverage } from "../lib/coverage";
 import type { AssemblySession } from "../lib/data-contract";
-import { defaultDataDir, readSangiinVoteLinkStats, readShugiinBillNameStats } from "../lib/data-files";
+import { defaultDataDir, readSangiinVoteLinkStats, readShugiinBillNameStats, readUnmatchedSpeechStats } from "../lib/data-files";
 import { type Dataset, dataset as bundled } from "../lib/dataset";
 import { formatDate, formatDateTime } from "../lib/format";
 import { seoMeta } from "../lib/seo";
@@ -18,11 +18,15 @@ const DESCRIPTION = "このサイトに入っている議会・回次・会期�
  * 氏名（#251）は `bills/index.json` に無く、議案 1 件ずつの JSON にしかない。全部をブラウザに送らずに数えるため、
  * ビルド時に Node で数えた結果だけを loader で渡す（/coverage は prerender.ts の STATIC_PATHS にあるので loader を置ける）。 */
 
-export type CoverageLoaderData = { shugiinBillNames: ShugiinBillNameStats | null; sangiinVotes: SangiinVoteLinkStats | null };
+export type CoverageLoaderData = { shugiinBillNames: ShugiinBillNameStats | null; sangiinVotes: SangiinVoteLinkStats | null; unmatchedSpeeches: UnmatchedSpeechStats | null };
 
 export async function loader(): Promise<CoverageLoaderData> {
   const dataDir = defaultDataDir();
-  return { shugiinBillNames: await readShugiinBillNameStats(dataDir), sangiinVotes: await readSangiinVoteLinkStats(dataDir) };
+  return {
+    shugiinBillNames: await readShugiinBillNameStats(dataDir),
+    sangiinVotes: await readSangiinVoteLinkStats(dataDir),
+    unmatchedSpeeches: await readUnmatchedSpeechStats(dataDir),
+  };
 }
 
 export function meta({ location }: MetaArgs) {
@@ -34,8 +38,8 @@ const n = (v: number) => v.toLocaleString("ja-JP");
 const KIND_LABEL = { national: "国会", prefectural: "都道府県議会", municipal: "政令指定都市議会" } as const;
 
 export default function CoverageRoute() {
-  const { shugiinBillNames, sangiinVotes } = useLoaderData<typeof loader>();
-  return <CoveragePage shugiinBillNames={shugiinBillNames} sangiinVotes={sangiinVotes} />;
+  const { shugiinBillNames, sangiinVotes, unmatchedSpeeches } = useLoaderData<typeof loader>();
+  return <CoveragePage shugiinBillNames={shugiinBillNames} sangiinVotes={sangiinVotes} unmatchedSpeeches={unmatchedSpeeches} />;
 }
 
 /**
@@ -47,11 +51,13 @@ export function CoveragePage({
   sessions = bundledSessions(),
   shugiinBillNames = null,
   sangiinVotes = null,
+  unmatchedSpeeches = null,
 }: {
   data?: Dataset;
   sessions?: ReadonlyMap<string, AssemblySession[]>;
   shugiinBillNames?: ShugiinBillNameStats | null;
   sangiinVotes?: SangiinVoteLinkStats | null;
+  unmatchedSpeeches?: UnmatchedSpeechStats | null;
 }) {
   const coverage = buildCoverage(data, sessions);
   return (
@@ -68,7 +74,7 @@ export function CoveragePage({
         <DietSection diet={coverage.diet} metaSessions={coverage.metaSessions} />
         <LocalSection local={coverage.local} />
 
-        <SpeechSection data={data} />
+        <SpeechSection data={data} unmatchedSpeeches={unmatchedSpeeches} />
         <RosterlessSection meta={data.meta} votes={sangiinVotes} />
         <ShugiinRosterSection data={data} billNames={shugiinBillNames} />
 
@@ -276,8 +282,9 @@ function ShugiinRosterSection({ data, billNames }: { data: Dataset; billNames: S
  * それは名簿の範囲の話で、すぐ下の 2 節（RosterlessSection / ShugiinRosterSection）が既に書いている。
  * ここで回次を書くと同じことを 2 か所で言うことになるので、**そちらへ案内するだけ**にする。
  */
-function SpeechSection({ data }: { data: Dataset }) {
+function SpeechSection({ data, unmatchedSpeeches }: { data: Dataset; unmatchedSpeeches: UnmatchedSpeechStats | null }) {
   const scopes = speechCoverage(data.meta);
+  const unmatched = unmatchedSpeechCoverage(unmatchedSpeeches);
   if (scopes.length === 0) return null;
   const sangiin = linkedRecordCounts(data.members, "sangiin");
   const shugiin = linkedRecordCounts(data.members, "shugiin");
@@ -315,6 +322,31 @@ function SpeechSection({ data }: { data: Dataset }) {
         <strong>発言した議員の院の名簿がその回次を覆っている場合にかぎり議員ページに紐づけます</strong>。
         覆っていない回次の発言は、会議録には残りますが議員ページには出ません。
       </p>
+      {/* Issue 370: 議案は「X 人のうち名簿にあるのは Y 人」と数を出しているのに、発言は数が無かった。
+          データ（unmatched.json）を数えた実数だけを出す。割合も推定も出さない。 */}
+      {unmatched && (
+        <p className="card__body">
+          いま議員ページに紐づけられていない発言は
+          <span className="num"> {n(unmatched.speeches)} </span>件（
+          <span className="num">{n(unmatched.speakers)}</span> 名分）です
+          {unmatched.sessions.length > 0 && (
+            <>
+              （
+              {unmatched.sessions.map((x, i) => (
+                <span key={x.session}>
+                  {i > 0 && "、"}第<span className="num">{x.session}</span>回 <span className="num">{n(x.speeches)}</span> 件
+                </span>
+              ))}
+              ）
+            </>
+          )}
+          。会議録には残っており、
+          <a href={scopes[0].url} target="_blank" rel="noopener noreferrer">
+            検索用API
+          </a>
+          からたどれます。
+        </p>
+      )}
       {(sangiin || shugiin) && (
         <p className="card__body">
           いま議員ページに出ている発言は、
