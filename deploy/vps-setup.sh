@@ -234,6 +234,12 @@ ensure_error_log() {
 }
 
 # write_site_conf <domain> <port> <conf>: decides between "leave certbot's file alone", full template and bootstrap.
+# Issue 386（server_tokens off）は**certbot 管理の conf には入れない**。
+# ensure_error_log（#189）と同じ形の挿入関数を書くこともできるが、
+# 「certbot 管理の conf は書き換えない（本番の再実行は no-op）」という保証をテストが固定しており、
+# 挿入関数を増やすほどその保証が薄れる。#189 は「ログに IP を残さない」という
+# プライバシー上の必須要件だったので例外的に入れた。バージョン隠しはそこまでの緊急性が無い。
+# 本番ホストが certbot 管理なら、**人が1行足す**（docs/ops/deploy.md に手順を書いた）。
 write_site_conf() {
   local domain=$1 port=$2 conf=$3
   if [ -f "$conf" ] && grep -q "managed by Certbot" "$conf"; then
