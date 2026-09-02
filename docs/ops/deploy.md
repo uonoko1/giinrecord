@@ -178,6 +178,7 @@ curl -sI https://DOMAIN/ | grep -i -E "content-security|x-frame" # 外から見�
 
 - コンテナに TLS を持たせない（certbot はホスト nginx の担当。共用ホストで 80/443 を奪わない）。
 - `ubuntu` を `docker` グループに入れない。deploy-site.yml から `docker` を呼ばない。
+- **ホスト nginx の `http` ブロックに何も書かない**（#386）。共用ホストなので、グローバルな指定は同居サイトの挙動まで変える。`server_tokens off` のような指定も **`server` ブロック内**に置く。
 - コンテナからログを外に出さない（IP を含む。集計はホスト側の IP 無しログだけ、`docs/ops/analytics.md`）。
 
 ## 運用ユーザーと鍵の権限（2026-08-23）
