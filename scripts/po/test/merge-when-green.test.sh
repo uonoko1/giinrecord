@@ -503,6 +503,7 @@ handle() {
     "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"BEHIND","url":"u","headRefOid":"oid1"}' ;;
     "pr view 12 --json mergeStateStatus"*) echo '{"mergeStateStatus":"CLEAN"}' ;;
     "pr view 12 --json headRefOid"*) echo '{"headRefOid":"oid2"}' ;;   # update-branch でマージコミットが乗った
+    "api repos/uonoko1/giinrecord/commits/oid2"*) echo '{"parents":[{"sha":"oid1"},{"sha":"main1"}]}' ;;   # 旧 HEAD を親に持つ
     "pr update-branch 12") echo updated ;;
     "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
     "pr merge 12 --squash --delete-branch") echo merged ;;
@@ -769,3 +770,61 @@ EOF
   assert_not_contains "$LOG" $'pr\tmerge' "never merges (that would close #13)"
 }
 test_case "merge: 待っている間に積まれた PR も検出する（PO 代理の指摘）" t_merge_detects_a_pr_stacked_while_waiting
+
+# **実地で踏んだ**（PR #396 のマージ時）: `gh pr update-branch` が返った直後に
+# headRefOid を読むと、GitHub 側にまだ新しい commit が見えておらず**古い oid が返る**。
+# そのまま基準にすると、次の assert_head_unchanged が
+# 「自分で作ったマージコミット」を他人の push と誤検出して中断する。
+# 安全側に倒れるので事故にはならないが、BEHIND のたびに1回止まる。
+t_merge_repin_waits_for_the_new_head_to_appear() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"BEHIND","url":"u","headRefOid":"oid1"}' ;;
+    "pr view 12 --json mergeStateStatus"*) echo '{"mergeStateStatus":"CLEAN"}' ;;
+    "pr view 12 --json headRefOid"*)
+      # update-branch の直後（repin の1回目）はまだ古い oid が見える。2回目から新しい oid になる。
+      # **1回しか読まない実装**だと基準が oid1 のまま残り、マージ直前に読む oid2 と食い違って中断する
+      if [ "$(bump)" -eq 1 ]; then echo '{"headRefOid":"oid1"}'; else echo '{"headRefOid":"oid2"}'; fi ;;
+    "api repos/uonoko1/giinrecord/commits/oid2"*) echo '{"parents":[{"sha":"oid1"},{"sha":"main1"}]}' ;;
+    "pr update-branch 12") echo updated ;;
+    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "merges instead of stopping on its own update: $ERR"
+  assert_not_contains "$ERR" "動きました" "does not mistake its own merge commit for someone else's push"
+  assert_contains "$LOG" $'pr\tmerge\t12' "merged"
+}
+test_case "merge: update-branch 直後にまだ古い oid が見えても誤検出しない（実地で踏んだ）" t_merge_repin_waits_for_the_new_head_to_appear
+
+# **「変わったら採用」では自分の更新と他人の push を区別できない**（レビューが指摘した窓）。
+# update-branch が作るのは旧 HEAD を親に持つマージコミットなので、**親を見て確かめる**。
+# 親に旧 HEAD が無ければ人が直接 push したものなので、基準を動かさずガードに委ねる
+t_merge_repin_gives_up_and_defers_to_the_guard() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"BEHIND","url":"u","headRefOid":"oid1"}' ;;
+    "pr view 12 --json mergeStateStatus"*) echo '{"mergeStateStatus":"CLEAN"}' ;;
+    "pr view 12 --json headRefOid"*) echo '{"headRefOid":"human1"}' ;;
+    # 人が直接 push したコミット。**旧 HEAD（oid1）を親に持たない**ので、我々の更新ではない。
+    # 「変わったら採用」で飲み込むと、検査を通っていない HEAD を基準にしてマージしてしまう
+    "api repos/uonoko1/giinrecord/commits/human1"*) echo '{"parents":[{"sha":"somethingelse"}]}' ;;
+    "pr update-branch 12") echo updated ;;
+    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "still stops for a real foreign push"
+  assert_contains "$ERR" "動きました" "the guard is not disabled by the retry"
+  assert_not_contains "$LOG" $'pr\tmerge' "never merges"
+}
+test_case "merge: 旧 HEAD を親に持たない commit は自分の更新として採用しない（#392 レビュー指摘）" t_merge_repin_gives_up_and_defers_to_the_guard
