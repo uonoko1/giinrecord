@@ -126,6 +126,18 @@ while true; do
 done
 
 # --- 4. merge ---------------------------------------------------------------------------------
+# 保護は `strict: true`（main に追いついていることが必須）なので、**チェックが緑になってから
+# マージするまでの間に別の PR が main に入るとその瞬間だけ古くなり**、GitHub は
+# "the base branch policy prohibits the merge" で拒む（mergeStateStatus は CLEAN のまま）。
+# 実際に踏んだ（#384）。1 回で諦めず、取り込み直して数回試す。
 log "squash-merging PR #$PR and deleting $HEAD"
-gh pr merge "$PR" --squash --delete-branch
-echo "merged PR #$PR ($HEAD) $URL"
+for attempt in 1 2 3; do
+  if gh pr merge "$PR" --squash --delete-branch; then
+    echo "merged PR #$PR ($HEAD) $URL"
+    exit 0
+  fi
+  [[ "$attempt" == 3 ]] && die "merge refused 3 times for PR #$PR (see the message above)"
+  log "merge refused (attempt $attempt/3); updating the branch and retrying"
+  gh pr update-branch "$PR" >/dev/null 2>&1 || true
+  sleep "$POLL_INTERVAL"
+done
