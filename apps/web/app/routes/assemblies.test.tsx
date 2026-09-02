@@ -29,7 +29,8 @@ describe("/assemblies 一覧", () => {
     expect(links.map((a) => a.getAttribute("href"))).toEqual(["/assemblies/diet-sangiin", "/assemblies/diet-shugiin", "/assemblies/pref-04"]);
     expect(within(list).getByText("宮城県議会")).toBeInTheDocument();
     const miyagi = within(list).getByText("宮城県議会").closest("li")!;
-    expect(within(miyagi).getByText(/3 名/)).toBeInTheDocument();
+    // 現職だけを数える（#355）。fixture は現職2＋元職1なので 2 名
+    expect(within(miyagi).getByText(/2 名/)).toBeInTheDocument();
   });
 
   it("assemblies/index.json が無い古いデータでは国会の2議会だけ", () => {

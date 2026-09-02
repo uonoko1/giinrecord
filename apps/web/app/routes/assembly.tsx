@@ -10,6 +10,7 @@ import { memberAssemblyId } from "../lib/member-search";
 import { seoMeta } from "../lib/seo";
 import "../styles/pages.css";
 import "./assemblies.css";
+import { isCurrentMember } from "../lib/members-count";
 
 const KIND_LABEL = { national: "国会", prefectural: "都道府県議会", municipal: "政令指定都市議会" } as const;
 
@@ -41,6 +42,10 @@ export function AssemblyPage({ id, data = bundled, sessions = bundledSessions() 
   const assembly = findAssembly(data.assemblies ?? DIET_ASSEMBLIES, id);
   if (!assembly) return <NotFound />;
   const members = data.members.filter((m) => memberAssemblyId(m) === assembly.id);
+  // 見出しの人数は**現職だけ**（#355）。議会名のすぐ下に出るので「その議会の議員数」として読まれ、
+  // 元職を足すと参院が 307 名 = 定数248超えになる。
+  // 一覧そのものは元職も「元職」の印つきで載せる（収録していることを示すため。設計どおり）。
+  const currentCount = members.filter(isCurrentMember).length;
   return (
     <>
       <main className="page assembly">
@@ -50,7 +55,7 @@ export function AssemblyPage({ id, data = bundled, sessions = bundledSessions() 
           <p className="cover__lead">
             <span>{KIND_LABEL[assembly.kind]}</span>
             {" ・ "}
-            <span className="num">{members.length.toLocaleString("ja-JP")} 名</span>
+            <span className="num">{currentCount.toLocaleString("ja-JP")} 名</span>
           </p>
           <p className="note">
             <a href={assembly.sourceUrl} target="_blank" rel="noopener noreferrer">
