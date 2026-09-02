@@ -110,6 +110,8 @@ server {
     listen 80;
     listen [::]:80;
     server_name SERVER_NAMES;
+    # Issue 386: Server ヘッダからバージョンと OS を消す。http ブロックには置かない（同居サイトに波及する）
+    server_tokens off;
     access_log /var/log/nginx/LOG_NAME.access.log noip;
     error_log /var/log/nginx/LOG_NAME.error.log crit;
 
@@ -121,6 +123,8 @@ server {
     listen 443 ssl;
     listen [::]:443 ssl;
     server_name SERVER_NAMES;
+    # Issue 386: Server ヘッダからバージョンと OS を消す。http ブロックには置かない（同居サイトに波及する）
+    server_tokens off;
     access_log /var/log/nginx/LOG_NAME.access.log noip;
     error_log /var/log/nginx/LOG_NAME.error.log crit;
 
@@ -156,6 +160,8 @@ server {
     listen 80;
     listen [::]:80;
     server_name SERVER_NAMES;
+    # Issue 386: Server ヘッダからバージョンと OS を消す。http ブロックには置かない（同居サイトに波及する）
+    server_tokens off;
     access_log /var/log/nginx/LOG_NAME.access.log noip;
     error_log /var/log/nginx/LOG_NAME.error.log crit;
 

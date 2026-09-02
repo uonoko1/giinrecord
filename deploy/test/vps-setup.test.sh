@@ -182,6 +182,11 @@ t_staging_conf() {
   assert_contains "$c" "server_name staging.giinrecord.jp;" "no www for staging"
   assert_contains "$c" "proxy_pass http://127.0.0.1:8083;" "staging port"
   assert_contains "$c" "giinrecord-staging.access.log noip" "staging log"
+  # Issue 386: Server ヘッダからバージョンと OS を消す。**共用ホストなので http ブロックには置かない**
+  assert_contains "$c" "server_tokens off;" "server_tokens off in the server block"
+  # 共用ホストなので http ブロックに入れてはいけない（グローバルに効き同居サイトの挙動を変える。Issue 338）。
+  # 生成される conf は server ブロックだけなので、http ブロックそのものが現れないことで担保する
+  assert_not_contains "$c" "http {" "no http block (shared host: never set directives globally)"
   assert_contains "$c" "/etc/letsencrypt/live/staging.giinrecord.jp/" "staging cert"
   assert_eq "2" "$(grep -c "$ERR_LOG_STG" "$STG_CONF")" "#189 staging error_log in both blocks"
   [[ ! -e "$CONF" ]] || fail "production conf untouched"

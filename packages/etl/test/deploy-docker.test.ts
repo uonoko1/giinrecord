@@ -57,6 +57,12 @@ test("site.conf: セキュリティヘッダと CSP は旧 server block と完�
   assert.deepEqual(headerLines(siteConf), EXPECTED_HEADERS);
 });
 
+// Issue 386: Server ヘッダに nginx のバージョンと OS が出ていた（`nginx/1.18.0 (Ubuntu)`）。
+// このプロジェクトはサーバー情報をリポジトリに書かないルールを敷いているのに、HTTP ヘッダで配っていた。
+test("site.conf: server_tokens off でバージョンを出さない（Issue 386）", () => {
+  assert.match(siteConf, /^server_tokens off;$/m);
+});
+
 test("site.conf: staging.giinrecord.jp 宛てだけ X-Robots-Tag: noindex, nofollow（Host で判定。同じ conf を両コンテナで使う）", () => {
   assert.match(siteConf, /map \$host \$robots_tag \{\s*default "";\s*staging\.giinrecord\.jp "noindex, nofollow";\s*\}/);
 });
