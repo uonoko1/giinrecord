@@ -8,6 +8,8 @@ import { type Dataset, dataset as bundled, type MemberSummary } from "../lib/dat
 import { formatDateTime } from "../lib/format";
 import {
   filterMembers,
+  foldKanaGroups,
+  MEMBERS_FOLD,
   formatTermEnd,
   groupByKanaRow,
   memberAssemblyId,
@@ -109,7 +111,16 @@ export default function Members({ data = bundled }: { data?: Dataset }) {
   const groups = useMemo(() => distinctSorted(all.map((m) => m.group)), [all]);
   const districts = useMemo(() => distinctSorted(all.map((m) => m.district)), [all]);
   const hits = useMemo(() => filterMembers(all, { query, group, district }), [all, query, group, district]);
-  const sections = useMemo(() => groupByKanaRow(hits), [hits]);
+  const allSections = useMemo(() => groupByKanaRow(hits), [hits]);
+  // 絞り込んでいる間は折りたたまない（#340）。絞った結果が 200 名を超えることは稀で、
+  // 絞った上でさらに「さらに表示」を押させるのは煩わしい。全件を眺めるときだけ効かせる。
+  const filtering = query !== "" || group !== "" || district !== "";
+  const [expanded, setExpanded] = useState(false);
+  const fold = useMemo(
+    () => (filtering || expanded ? { groups: allSections, hidden: 0 } : foldKanaGroups(allSections, MEMBERS_FOLD)),
+    [allSections, filtering, expanded],
+  );
+  const sections = fold.groups;
   // 見出し・説明は「いま表示している一覧」そのもの。件数（hits.length）と同じ絞り込みから作る。
   const heading = membersHeading(scope);
   const description = membersDescription(scope);
@@ -222,6 +233,13 @@ export default function Members({ data = bundled }: { data?: Dataset }) {
                     </ul>
                   </div>
                 ))
+              )}
+              {fold.hidden > 0 && (
+                <p className="members-more">
+                  <button type="button" className="members-more-button" onClick={() => setExpanded(true)}>
+                    さらに表示（残り{fold.hidden.toLocaleString("ja-JP")}名）
+                  </button>
+                </p>
               )}
             </section>
           </>
