@@ -80,3 +80,54 @@ describe("meta()", () => {
     expect(routeMeta(args(undefined, "/rollcalls"))).toContainEqual({ property: "og:url", content: "/rollcalls" });
   });
 });
+
+/**
+ * #363: 回次「すべて」は本番で 380 件・スマホ 43 画面だった。200 件で折りたたむ。
+ * 回次で絞っている間は折りたたまない（最大の回次でも 120 件。#340 と同じ考え方）。
+ */
+describe("RollCallsPage 折りたたみ（#363）", () => {
+  const many = (n: number): RollCallSummary[] =>
+    Array.from({ length: n }, (_, i) => ({
+      ...(rollcalls[0] as RollCallSummary),
+      id: `221-0724-v${String(i).padStart(3, "0")}`,
+      title: `議案 ${i}`,
+      session: i < 250 ? 221 : 220,
+    }));
+  const renderMany = (list: RollCallSummary[], session?: number) =>
+    render(
+      <MemoryRouter>
+        <RollCallsPage rollcalls={list} session={session} onSessionChange={vi.fn()} meta={meta} />
+      </MemoryRouter>,
+    );
+  const rows = () => screen.getAllByRole("listitem").length;
+
+  it("回次「すべて」で 200 件を超えたら折りたたみ、残り件数を出す", () => {
+    renderMany(many(380));
+    expect(rows()).toBe(200);
+    expect(screen.getByRole("button", { name: "さらに表示（残り180件）" })).toBeInTheDocument();
+  });
+
+  it("件数の表示は折りたたんでも全件（380件）のまま", () => {
+    renderMany(many(380));
+    expect(screen.getByText("380件")).toBeInTheDocument();
+  });
+
+  it("「さらに表示」で全件出る", async () => {
+    renderMany(many(380));
+    await userEvent.click(screen.getByRole("button", { name: /さらに表示/ }));
+    expect(rows()).toBe(380);
+    expect(screen.queryByRole("button", { name: /さらに表示/ })).not.toBeInTheDocument();
+  });
+
+  it("回次で絞っている間は折りたたまない（250 件 > 200 でも全件）", () => {
+    renderMany(many(380), 221);
+    expect(rows()).toBe(250);
+    expect(screen.queryByRole("button", { name: /さらに表示/ })).not.toBeInTheDocument();
+  });
+
+  it("200 件以下なら折りたたまない（境界）", () => {
+    renderMany(many(200));
+    expect(rows()).toBe(200);
+    expect(screen.queryByRole("button", { name: /さらに表示/ })).not.toBeInTheDocument();
+  });
+});

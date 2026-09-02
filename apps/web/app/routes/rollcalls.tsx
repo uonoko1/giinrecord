@@ -6,6 +6,7 @@ import { sessionsDesc, sortByDateDesc } from "../lib/rollcall";
 import { seoMeta } from "../lib/seo";
 import "./rollcall.css";
 import { SiteFooter } from "../components/SiteFooter";
+import { useState } from "react";
 
 /* ---------- data (build time only; ssr:false + prerender) ----------
  * `/rollcalls` and `/rollcalls/:session` share this route; both are prerendered
@@ -51,6 +52,13 @@ export default function RollCallsRoute() {
 
 /* ---------- page ---------- */
 
+/**
+ * 採決一覧の折りたたみ（#363）。他の一覧（発言・議員一覧・議員ページ）と同じ 200 件。
+ * 実データ: 回次「すべて」で 380 件（本番のスマホ幅で DOM 1,600・**43 画面**）。
+ * 最大の回次は第221回の 120 件なので、回次で絞れば常に全件出る。
+ */
+export const ROLLCALLS_FOLD = 200;
+
 export function RollCallsPage({
   rollcalls,
   session,
@@ -63,7 +71,13 @@ export function RollCallsPage({
   meta: DatasetMeta | null;
 }) {
   const sessions = sessionsDesc(rollcalls);
-  const rows = sortByDateDesc(session === undefined ? rollcalls : rollcalls.filter((r) => r.session === session));
+  const all = sortByDateDesc(session === undefined ? rollcalls : rollcalls.filter((r) => r.session === session));
+  // 回次「すべて」は 380 件になり、スマホで 43 画面ぶんスクロールする（#363）。
+  // 回次で絞っている間は折りたたまない——最大の回次でも 120 件で、絞った上でさらに
+  // ボタンを押させるのは煩わしい（#340 の議員一覧と同じ考え方）。
+  const [expanded, setExpanded] = useState(false);
+  const folded = session === undefined && !expanded && all.length > ROLLCALLS_FOLD;
+  const rows = folded ? all.slice(0, ROLLCALLS_FOLD) : all;
 
   return (
     <>
@@ -94,7 +108,7 @@ export function RollCallsPage({
               ))}
             </select>
           </label>
-          <span className="rollcalls-count num">{rows.length}件</span>
+          <span className="rollcalls-count num">{all.length}件</span>
         </div>
 
         {rows.length === 0 ? (
@@ -112,6 +126,13 @@ export function RollCallsPage({
               </li>
             ))}
           </ul>
+        )}
+        {folded && (
+          <p className="rollcalls-more">
+            <button type="button" className="rollcalls-more-button" onClick={() => setExpanded(true)}>
+              さらに表示（残り{(all.length - ROLLCALLS_FOLD).toLocaleString("ja-JP")}件）
+            </button>
+          </p>
         )}
 
         <footer className="rollcall-source">
