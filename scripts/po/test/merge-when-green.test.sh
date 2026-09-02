@@ -67,6 +67,35 @@ EOF
 }
 test_case "merge: all checks green → squash merge + delete branch" t_merge_green_merges
 
+# Issue 384: 保護は strict:true（main に追いついていることが必須）なので、チェックが緑になってから
+# マージするまでの間に別の PR が main に入ると、その瞬間だけ古くなって
+# "the base branch policy prohibits the merge" で拒まれる（mergeStateStatus は CLEAN のまま）。
+# 実際に踏んだ。1 回で諦めず、取り込み直して再試行する。
+t_merge_retries_when_base_policy_refuses() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u"}' ;;
+    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    "pr merge 12 --squash --delete-branch")
+      # 1 回目だけ拒む（GitHub の実際のメッセージ）。2 回目以降はログに update-branch が残っている
+      if grep -q update-branch "$FAKE_GH_LOG"; then echo merged; else
+        echo "X Pull request uonoko1/giinrecord#12 is not mergeable: the base branch policy prohibits the merge." >&2
+        exit 1
+      fi ;;
+    "pr update-branch 12") echo updated ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  POLL_INTERVAL=0 run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "retried and merged: $ERR"
+  assert_contains "$LOG" "pr	update-branch	12" "took main in before retrying"
+  assert_eq 2 "$(grep -c 'pr	merge	12' <<<"$LOG")" "merge attempted twice"
+}
+test_case "merge: base branch policy で拒まれたら取り込み直して再試行（#384）" t_merge_retries_when_base_policy_refuses
+
 t_merge_behind_updates_first() {
   local h; h=$(handler <<'EOF'
 handle() {
