@@ -17,6 +17,19 @@
  ],
  "timeline": [
   {
+   "committee": "議院運営委員会庶務小委員会",
+   "date": "2026-08-26",
+   "estimated": false,
+   "firstDate": "2026-08-26",
+   "kind": "committeeRole",
+   "lastDate": "2026-08-26",
+   "meetingId": "122104037X00220260826_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104037X00220260826/0"
+  },
+  {
    "billId": "221-衆法-38",
    "date": "2026-07-22",
    "estimated": true,
@@ -1504,9 +1517,9 @@
    "estimated": false,
    "firstDate": "2026-02-19",
    "kind": "committeeRole",
-   "lastDate": "2026-02-19",
+   "lastDate": "2026-08-26",
    "meetingId": "122104040X00120260219_000",
-   "meetings": 1,
+   "meetings": 2,
    "role": "委員",
    "session": 221,
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104040X00120260219/0"
