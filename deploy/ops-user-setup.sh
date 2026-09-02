@@ -81,6 +81,10 @@ $OPS ALL=(ALL) NOPASSWD: /usr/bin/rm -f /var/log/nginx/giinrecord-staging.error.
 # git は -C で対象を固定して pull だけ。docker compose は -f でこの compose ファイルに固定する
 $OPS ALL=(ALL) NOPASSWD: /usr/bin/git -C $CHECKOUT pull
 $OPS ALL=(ALL) NOPASSWD: /usr/bin/docker compose -f $CHECKOUT/deploy/docker-compose.yml up -d --force-recreate
+# 状態の確認（Issue 375）。読み取り専用で何も変えない。「直せるが見られない」状態を避ける。
+# **logs は足さない**: コンテナの nginx ログは IP を含む（docs/ops/analytics.md の方針。
+# 集計はホスト側の IP 無しログだけ）。読めてしまうと方針の抜け道になる。
+$OPS ALL=(ALL) NOPASSWD: /usr/bin/docker compose -f $CHECKOUT/deploy/docker-compose.yml ps
 EOF
 chmod 440 "$SUDOERS"; visudo -cf "$SUDOERS" >/dev/null
 

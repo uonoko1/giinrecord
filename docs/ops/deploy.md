@@ -184,6 +184,9 @@ curl -sI https://DOMAIN/ | grep -i -E "content-security|x-frame" # 外から見�
 - `giinops`：**コマンドを固定した NOPASSWD sudo の allowlist**（`NOPASSWD:ALL` ではない、#333）。鍵は運用者の1本のみ（`deploy/ops-user-setup.sh` が生成。サーバー上で手編集しない）。PO はこのユーザーで許可済みの root 作業を非対話で実行する
   - 中身は `ssh giinops@<host> 'sudo -n -l'` で確認できる。**追加してよいのは引数まで書ききれるコマンドだけ**——`bash /tmp/*.sh` のようなワイルドカードは任意コード実行なので `NOPASSWD:ALL` と変わらない（実際 `91-giinops` にこの形が残っていた、#333）
   - `deploy/` の反映（#325）に必要な 2 つを含む：`git -C /opt/giinrecord pull` と `docker compose -f /opt/giinrecord/deploy/docker-compose.yml up -d --force-recreate`
+  - 状態の確認に `docker compose -f ... ps` も許可する（#375）。**`logs` は許可しない**——
+    コンテナの nginx ログは IP を含む（`docs/ops/analytics.md`）。ログが要るほどの障害は
+    `ubuntu` のパスワード sudo（人間の作業）で見る
   - 検査は `deploy/test/ops-user-setup.test.sh`（CI の `deploy/test/*.test.sh` に入る）。**許可行の集合を完全一致で照合する**ので、許可を1つ足すとテストが落ちる＝レビューを必ず通る
 
 ### この allowlist が安全である前提（崩れたら root 昇格しうる、#333）
