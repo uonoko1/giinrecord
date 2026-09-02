@@ -21,6 +21,9 @@ export const UNMATCHED_DIR = "unmatched";
  * 票（`rollCallId` = `{回次}-MMDD-vNNN`）・議案の提出者/発議者（`billId` = `{提出回次}-{種別}-{番号}`）・
  * 質問主意書の提出者（`questionId` = `{回次}-{house}-{番号}`）は id の先頭が回次なので引ける。
  * 発言（`speechId`）と委員会出席・委員会の役職（`meetingId`）は NDL の会議録 id（`114215254X00219980114`）で回次を含まないので引けない。
+ * 発言は Issue 370 で `session`（発言そのものの回次。会議録 API の値）を行に持たせたが、**分け方は変えない**:
+ * `unmatched.json` は Web のビルドがコピーして /coverage が読む唯一のファイルで、
+ * ここから発言を回次別ファイルへ移すと /coverage から見えなくなる。件数も小さい（301 行）。
  * 引けない行は捨てず `unmatched.json` に残す（件数が小さく、回次を推定して分けることはしない）。
  */
 export function sessionOfUnmatched(row: UnmatchedRow): number | undefined {

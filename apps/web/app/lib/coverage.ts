@@ -250,6 +250,33 @@ export interface ShugiinBillNameStats {
   rosterDuplicateNames: number;
 }
 
+/**
+ * `data/unmatched.json`（議員に紐づけられなかった発言）を数えた結果（Issue 370）。
+ *
+ * 議案は「第N回では X 人のうち名簿にあるのは Y 人」と数を出しているのに、発言は
+ * 「議員ページには出ません」と書くだけで**件数が無かった**。同じ性質の欠落なので同じ形で出す。
+ *
+ * 落ちている理由は**衆院の名簿が「現在」の1時点しかない**こと（Issue 251 / 316）で、
+ * 氏名だけを手がかりに紐づけることはしない（同姓同名かつ同一会派の組が実在する。Issue 369）。
+ */
+export interface UnmatchedSpeechStats {
+  /** 紐づけられなかった発言の件数 */
+  speeches: number;
+  /** その発言をした異なり人数（氏名の異なり） */
+  speakers: number;
+  /** 回次ごとの件数。多い順 */
+  sessions: { session: number; speeches: number }[];
+}
+
+/**
+ * 数えた結果を表示用にまとめる。1 件も無ければ null（無い事実を作らない）。
+ * 割合は出さない（実数だけ）。
+ */
+export function unmatchedSpeechCoverage(stats: UnmatchedSpeechStats | null | undefined): UnmatchedSpeechStats | null {
+  if (!stats || stats.speeches === 0) return null;
+  return stats;
+}
+
 /** 衆院の議案の氏名のうち、名簿に紐づいていない延べ数。 */
 export interface ShugiinBillNameCoverage extends ShugiinBillNameStats {
   /** names - linked */
