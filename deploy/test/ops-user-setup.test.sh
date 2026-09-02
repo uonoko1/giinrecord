@@ -64,11 +64,12 @@ EXPECTED=$(sort <<'EXP'
 /usr/bin/rm -f /var/log/nginx/giinrecord-staging.error.log
 /usr/bin/git -C /opt/giinrecord pull
 /usr/bin/docker compose -f /opt/giinrecord/deploy/docker-compose.yml up -d --force-recreate
+/usr/bin/docker compose -f /opt/giinrecord/deploy/docker-compose.yml ps
 EXP
 )
 
 if [ "$ACTUAL" = "$EXPECTED" ]; then
-  ok "許可コマンドは期待した 7 行ちょうど"
+  ok "許可コマンドは期待した 8 行ちょうど"
 else
   bad "許可コマンドの集合が期待と違う"
   echo "--- 期待にあって実際に無い ---"; comm -23 <(echo "$EXPECTED") <(echo "$ACTUAL") | sed 's/^/      /'
@@ -113,6 +114,11 @@ else ok "docker は compose の固定操作のみ"; fi
 if echo "$ALL_FILES" | grep -E 'NOPASSWD:' | grep -q '/tee '; then
   bad "nginx conf を書く許可（tee）がある（#335: 実質 root 相当）"
 else ok "nginx conf を書く許可（tee）を与えない"; fi
+
+# Issue 375: docker compose logs は足さない（コンテナの nginx ログは IP を含む）
+if echo "$ALL_FILES" | grep -E 'NOPASSWD:.*docker' | grep -q ' logs'; then
+  bad "docker compose logs を許可している（IP を含むログが読める）"
+else ok "docker compose logs は許可しない"; fi
 
 # Alias による間接化（Cmnd_Alias OPS = /usr/bin/env のような迂回）
 if echo "$ALL_FILES" | grep -Eq '^[[:space:]]*(Cmnd_Alias|User_Alias|Runas_Alias|Host_Alias)'; then
