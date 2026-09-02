@@ -119,6 +119,21 @@ describe("RollCallsPage 折りたたみ（#363）", () => {
     expect(screen.queryByRole("button", { name: /さらに表示/ })).not.toBeInTheDocument();
   });
 
+  // Issue 393: 押すとボタンが消え、フォーカスが <body> に落ちていた。
+  // キーボード / スクリーンリーダーの利用者は文書の先頭へ戻され、続きを読むには頭からたどり直すことになる。
+  // **3箇所それぞれで**確かめる（1箇所だけ検査して他を落としたことが実際にある）。
+  it("押した後、フォーカスが body に落ちず、続きの手前に移る（Issue 393）", async () => {
+    renderMany(many(380));
+    const button = screen.getByRole("button", { name: /さらに表示/ });
+    button.focus();
+    expect(document.activeElement).toBe(button);
+
+    fireEvent.click(button);
+
+    expect(document.activeElement).not.toBe(document.body);
+    expect((document.activeElement as HTMLElement).textContent).toContain("続きを表示しました");
+  });
+
   it("回次で絞っている間は折りたたまない（250 件 > 200 でも全件）", () => {
     renderMany(many(380), 221);
     expect(rows()).toBe(250);

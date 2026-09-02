@@ -3,6 +3,7 @@ import { Link, type MetaArgs, useSearchParams } from "react-router";
 import type { Assembly, AssemblyId } from "@seiji-kiroku/shared";
 import { CoverBrand } from "../components/CoverBrand";
 import { SiteFooter } from "../components/SiteFooter";
+import { MoreButton } from "../components/MoreButton";
 import { DIET_ASSEMBLIES } from "../lib/data-contract";
 import { type Dataset, dataset as bundled, type MemberSummary } from "../lib/dataset";
 import { formatDateTime } from "../lib/format";
@@ -238,13 +239,7 @@ export default function Members({ data = bundled }: { data?: Dataset }) {
                   </div>
                 ))
               )}
-              {fold.hidden > 0 && (
-                <p className="members-more">
-                  <button type="button" className="members-more-button" aria-expanded={false} aria-controls={listId} onClick={() => setExpanded(true)}>
-                    さらに表示（残り{fold.hidden.toLocaleString("ja-JP")}名）
-                  </button>
-                </p>
-              )}
+              <MoreButton hidden={fold.hidden} unit="名" className="members" controls={listId} onExpand={() => setExpanded(true)} />
             </section>
           </>
         )}
