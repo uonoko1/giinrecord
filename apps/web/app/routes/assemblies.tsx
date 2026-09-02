@@ -10,6 +10,7 @@ import { memberAssemblyId } from "../lib/member-search";
 import { seoMeta } from "../lib/seo";
 import "../styles/pages.css";
 import "./assemblies.css";
+import { isCurrentMember } from "../lib/members-count";
 
 const DESCRIPTION = "参議院・衆議院と地方議会の一覧。各議会が議員ごとの表決をどの形で公開しているかを、確認したページの出典つきで並べます。評価はしません。";
 
@@ -34,8 +35,11 @@ const KIND_LABEL = { prefectural: "都道府県議会", municipal: "政令指定
 export default function Assemblies({ data = bundled }: { data?: Dataset }) {
   const assemblies: readonly Assembly[] = data.assemblies ?? DIET_ASSEMBLIES;
   const known = new Set(assemblies.map((a) => a.id));
+  // 数えるのは**現職だけ**（#355）。元職を足すと参院が 307 名になり定数248を超える。
+  // 収録範囲（/coverage）は別で、あちらは元職を含めて数えるのが正しい。
   const memberCount = new Map<string, number>();
   for (const m of data.members) {
+    if (!isCurrentMember(m)) continue;
     const id = memberAssemblyId(m);
     memberCount.set(id, (memberCount.get(id) ?? 0) + 1);
   }
