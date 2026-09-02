@@ -82,7 +82,7 @@ describe("matchSpeeches: 発言者名＋会派で名寄せ（matchVotes と同�
     const members = [member("m_1", "山田 太郎", "自民"), member("m_2", "山田 太郎", "自民")];
     const { speeches, unmatched } = matchSpeeches([speech("a_001", "山田太郎", "自由民主党・無所属の会")], members);
     assert.equal(speeches[0].memberId, undefined);
-    assert.deepEqual(unmatched, [{ nameText: "山田太郎", group: "自由民主党・無所属の会", speechId: "a_001" }]);
+    assert.deepEqual(unmatched, [{ nameText: "山田太郎", group: "自由民主党・無所属の会", speechId: "a_001", session: 221 }]);
   });
 
   test("議長・大臣など position がある発言も名簿にいれば memberId が入り、position は保持する", () => {
@@ -99,7 +99,7 @@ describe("matchSpeeches: 発言者名＋会派で名寄せ（matchVotes と同�
 
   test("position が無く名簿にもいない発言者は unmatched に載せる（運用者が確認する）", () => {
     const { unmatched } = matchSpeeches([speech("a_001", "存在しない人", "自由民主党・無所属の会")], [member("m_1", "青木 一彦", "自民")]);
-    assert.deepEqual(unmatched, [{ nameText: "存在しない人", group: "自由民主党・無所属の会", speechId: "a_001" }]);
+    assert.deepEqual(unmatched, [{ nameText: "存在しない人", group: "自由民主党・無所属の会", speechId: "a_001", session: 221 }]);
   });
 
   test("会派が無い（null）発言者でも氏名で1人に絞れれば紐づける", () => {
@@ -187,7 +187,7 @@ describe("matchSpeeches: 他院の議員の発言を両院の名簿で突合す�
     assert.deepEqual(r.unmatched, []);
     // 参院名簿だけなら unmatched に載る（いまの 692 行の出方）
     assert.deepEqual(matchSpeeches([s], [sangiinMember("m_1", "青木 一彦", "自民")]).unmatched,
-      [{ nameText: "簗和生", group: "自由民主党・無所属の会", speechId: "a_002" }]);
+      [{ nameText: "簗和生", group: "自由民主党・無所属の会", speechId: "a_002", session: 221 }]);
   });
 
   test("衆議院の会議録に出た参院議員（大臣）も、参院名簿を渡せば m_ の memberId が入る（逆向きも要る）", () => {
@@ -203,14 +203,14 @@ describe("matchSpeeches: 他院の議員の発言を両院の名簿で突合す�
     const both = [sangiinMember("m_1", "青木 一彦", "自民"), shugiinMember("h_3", "世耕 弘成", "自由民主党・無所属の会")];
     const r = matchSpeeches([s], both);
     assert.equal(r.speeches[0].memberId, undefined);
-    assert.deepEqual(r.unmatched, [{ nameText: "世耕弘成", group: "自由民主党・無所属の会", speechId: "a_003" }]);
+    assert.deepEqual(r.unmatched, [{ nameText: "世耕弘成", group: "自由民主党・無所属の会", speechId: "a_003", session: 217 }]);
   });
 
   test("両院に同姓同名がいて会派でも絞れなければ紐づけない（unmatched に残す）", () => {
     const both = [sangiinMember("m_4", "鬼木 誠", "自由民主党・無所属の会"), shugiinMember("h_4", "鬼木 誠", "自由民主党・無所属の会")];
     const r = matchSpeeches([speech("a_004", "鬼木誠", "自由民主党・無所属の会")], both);
     assert.equal(r.speeches[0].memberId, undefined);
-    assert.deepEqual(r.unmatched, [{ nameText: "鬼木誠", group: "自由民主党・無所属の会", speechId: "a_004" }]);
+    assert.deepEqual(r.unmatched, [{ nameText: "鬼木誠", group: "自由民主党・無所属の会", speechId: "a_004", session: 221 }]);
   });
 
   test("両院に同姓同名がいても、その回次に効いている名簿の会派が違えば分けられる", () => {

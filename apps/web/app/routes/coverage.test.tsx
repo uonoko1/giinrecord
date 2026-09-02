@@ -451,3 +451,49 @@ describe("/coverage 収録範囲", () => {
     expect(tags).toContainEqual({ tagName: "link", rel: "canonical", href: "/coverage" });
   });
 });
+
+/**
+ * Issue 370: 議案は「X 人のうち名簿にあるのは Y 人」と数を出しているのに、
+ * 発言は「議員ページには出ません」と書くだけで件数が無かった。
+ */
+describe("紐づけられなかった発言の件数（#370）", () => {
+  const stats = { speeches: 301, speakers: 55, sessions: [{ session: 217, speeches: 251 }, { session: 219, speeches: 50 }] };
+  const section = () => screen.getByRole("region", { name: "発言をどの会議まで収録しているか" });
+
+  it("件数・人数・回次ごとの内訳を実数で出す", () => {
+    render(<MemoryRouter><CoveragePage unmatchedSpeeches={stats} /></MemoryRouter>);
+    const t = section().textContent ?? "";
+    expect(t).toContain("301");
+    expect(t).toContain("55");
+    expect(t).toContain("217");
+    expect(t).toContain("251");
+    expect(t).toContain("219");
+  });
+
+  it("会議録から辿れることを書く（記録が失われていないと分かるように）", () => {
+    render(<MemoryRouter><CoveragePage unmatchedSpeeches={stats} /></MemoryRouter>);
+    expect(section().textContent).toContain("会議録には残って");
+  });
+
+  it("0 件・null なら何も出さない（無い事実を作らない）", () => {
+    for (const v of [null, { speeches: 0, speakers: 0, sessions: [] }]) {
+      const { unmount } = render(<MemoryRouter><CoveragePage unmatchedSpeeches={v} /></MemoryRouter>);
+      expect(section().textContent).not.toContain("紐づけられていない発言");
+      unmount();
+    }
+  });
+
+  // #339 と同じ移行の形: session を持たない古い unmatched.json でも件数は出す
+  it("回次の内訳が無くても件数と人数は出す（session を持たない古いデータ）", () => {
+    render(<MemoryRouter><CoveragePage unmatchedSpeeches={{ speeches: 301, speakers: 55, sessions: [] }} /></MemoryRouter>);
+    const t = section().textContent ?? "";
+    expect(t).toContain("301");
+    expect(t).toContain("55");
+    expect(t).not.toContain("第217回");
+  });
+
+  it("評価語を含まない", () => {
+    const { container } = render(<MemoryRouter><CoveragePage unmatchedSpeeches={stats} /></MemoryRouter>);
+    for (const w of EVALUATIVE_WORDS) expect(container.textContent).not.toContain(w);
+  });
+});
