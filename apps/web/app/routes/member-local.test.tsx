@@ -141,3 +141,61 @@ describe("地方議員の出典（#346）", () => {
     expect(within(footer()).getAllByRole("link").length).toBeGreaterThan(0);
   });
 });
+
+/**
+ * #361: 地方議員の表決タブは折りたたまれていなかった。実データの最大は 365 件で、
+ * 本番のスマホ幅で **40 画面**ぶんスクロールしていた（DOM 2,407）。
+ * `speech` と同じ 200 件で折りたたむ（`localVote` は本人の表決＝事実なので、
+ * 推定である `stance` の 20 件ではなく事実である `speech` に合わせる）。
+ */
+describe("地方議員の表決タブの折りたたみ（#361）", () => {
+  const withVotes = (n: number): MemberDetail => ({
+    ...detail,
+    timeline: Array.from({ length: n }, (_, i) => ({
+      ...(detail.timeline[0] as object),
+      rollCallId: `pref-04-2026-${String(i).padStart(4, "0")}`,
+      title: `議案 ${i}`,
+    })),
+  }) as MemberDetail;
+
+  // 「すべて」タブは Timeline（リスト）、「表決」タブは LocalVoteTable（表）で描画される。
+  // 数える対象が違うので分ける（listitem で数えると表決タブが常に 0 になり、検査にならない）
+  const listRows = () => screen.getAllByRole("listitem").length;
+  const tableRows = () => screen.getAllByRole("row").length - 1; // ヘッダ行を除く
+
+  it("既定の「すべて」タブでも 200 件で折りたたむ", () => {
+    render(<MemberPage detail={withVotes(365)} meta={meta} assembly={miyagi} />);
+    expect(listRows()).toBe(200);
+    expect(screen.getByRole("button", { name: "さらに表示（残り165件）" })).toBeInTheDocument();
+  });
+
+  it("200 件を超えたら折りたたみ、残り件数を出す", async () => {
+    render(<MemberPage detail={withVotes(365)} meta={meta} assembly={miyagi} />);
+    // 「すべて」タブのままだと ALL_FOLD（#361）が効くので、表決タブを開いて localVote 側を検査する
+    await userEvent.click(screen.getByRole("tab", { name: /表決/ }));
+    expect(tableRows()).toBe(200);
+    expect(screen.getByRole("button", { name: "さらに表示（残り165件）" })).toBeInTheDocument();
+  });
+
+  it("「さらに表示」で全件出る", async () => {
+    render(<MemberPage detail={withVotes(365)} meta={meta} assembly={miyagi} />);
+    await userEvent.click(screen.getByRole("tab", { name: /表決/ }));
+    await userEvent.click(screen.getByRole("button", { name: /さらに表示/ }));
+    expect(tableRows()).toBe(365);
+    expect(screen.queryByRole("button", { name: /さらに表示/ })).not.toBeInTheDocument();
+  });
+
+  it("200 件以下なら折りたたまない（中央値 118 件の議員は従来どおり）", async () => {
+    render(<MemberPage detail={withVotes(118)} meta={meta} assembly={miyagi} />);
+    await userEvent.click(screen.getByRole("tab", { name: /表決/ }));
+    expect(tableRows()).toBe(118);
+    expect(screen.queryByRole("button", { name: /さらに表示/ })).not.toBeInTheDocument();
+  });
+
+  it("ちょうど 200 件なら折りたたまない（境界）", async () => {
+    render(<MemberPage detail={withVotes(200)} meta={meta} assembly={miyagi} />);
+    await userEvent.click(screen.getByRole("tab", { name: /表決/ }));
+    expect(tableRows()).toBe(200);
+    expect(screen.queryByRole("button", { name: /さらに表示/ })).not.toBeInTheDocument();
+  });
+});
