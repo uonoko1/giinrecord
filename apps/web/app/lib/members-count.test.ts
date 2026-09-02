@@ -6,7 +6,7 @@ import { isCurrentMember, isCurrentOf } from "./members-count";
  * ルート経由のテストはあるが、**ここ自体のテストが無かった**ので足す。
  * 数え方が変わると「参議院議員 307」（定数248超え）のような誤りが復活する。
  */
-const m = (o: Partial<{ house: string; current: boolean }>) => o as Parameters<typeof isCurrentMember>[0];
+const m = (o: Partial<{ house: string; current: boolean }>) => o as Parameters<ReturnType<typeof isCurrentOf>>[0];
 
 describe("isCurrentMember", () => {
   it("current: false は現職でない（元職）", () => {
