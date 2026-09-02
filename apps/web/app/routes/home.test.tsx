@@ -38,6 +38,21 @@ describe("Home", () => {
     expect(lead.textContent).not.toContain("本会議でどう投票し、どの法案を出し、何を発言したか");
   });
 
+  // #358: このリード文は seoMeta() にも渡るので、検索結果とソーシャルカードにも出る。
+  // 地方議会（7議会・285名・1,089件の表決）を収録しているのに国会だけを指していると、
+  // 検索から来た人に「書いてあることと違う」と感じさせる。
+  it("リード文と meta description が、国会と地方議会の両方を指す", () => {
+    renderHome();
+    const lead = screen.getByText(/公式記録だけを、そのまま並べます。/);
+    expect(lead).toHaveTextContent("国会議員");
+    expect(lead).toHaveTextContent("地方議会");
+
+    // meta() が返す description も同じ文言であること（片方だけ直すのを防ぐ）
+    const tags = routeMeta({ location: { pathname: "/" } } as unknown as Parameters<typeof routeMeta>[0]);
+    const description = tags.find((t): t is { name: string; content: string } => "name" in t && t.name === "description");
+    expect(description?.content).toContain("地方議会");
+  });
+
   it("評価語を含まない", () => {
     const { container } = renderHome();
     for (const word of EVALUATIVE_WORDS) {

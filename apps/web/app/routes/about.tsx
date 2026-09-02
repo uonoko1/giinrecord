@@ -22,7 +22,7 @@ export default function About({ data = bundled }: { data?: Dataset }) {
         <header className="cover">
           <CoverBrand to="/" />
           <h1 className="cover__title">このデータについて</h1>
-          <p className="cover__lead">このサイトは国会の公式記録を整形して並べるだけです。評価・採点・推薦はしません。すべての行に出典があります。</p>
+          <p className="cover__lead">このサイトは国会と地方議会の公式記録を整形して並べるだけです。評価・採点・推薦はしません。すべての行に出典があります。</p>
         </header>
 
         <FactsSection />

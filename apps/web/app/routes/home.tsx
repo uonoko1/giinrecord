@@ -15,7 +15,9 @@ import { isCurrentOf } from "../lib/members-count";
  * （「本会議で」が 3 つの動詞に等しく係ると、発言まで本会議に限られると読めるため）。
  * 個人別の投票が公表されるのは本会議だけなので、そちらは「本会議で」を保つ。
  */
-const DESCRIPTION = "国会議員が本会議でどう投票したか、どの法案を出したか、本会議と委員会で何を発言したか。公式記録だけを、そのまま並べます。評価はしません。";
+// トップのリード文であり、SEO の meta description でもある（seoMeta に渡している）。
+// #358: 地方議会（7議会・285名・1,089件の表決）も収録しているので、国会だけを指す文言にしない。
+const DESCRIPTION = "国会議員が本会議でどう投票したか、どの法案を出したか、本会議と委員会で何を発言したか。地方議会は議員ごとの表決を。公式記録だけを、そのまま並べます。評価はしません。";
 
 export function meta({ location }: MetaArgs) {
   return seoMeta({ description: DESCRIPTION, pathname: location.pathname });
