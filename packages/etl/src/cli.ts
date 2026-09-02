@@ -335,19 +335,21 @@ const dataset = {
   meta: {
     fetchedAt,
     sessions: plan.all,
+    // house / kind は議員ページが出典を絞るために使う（#339）。
+    // 「その議員の院」かつ「その議員が実際に持つ記録の種別」の出典だけを出す。
     sources: [
-      ...rosterSessions.map((s) => ({ name: `参議院 議員一覧（第${s}回）`, url: memberListUrl(s), fetchedAt })),
-      { name: `衆議院 議員一覧（${shugiin.asOf ?? "取得日"}現在）`, url: shugiinMemberListUrl(1), fetchedAt },
-      { name: "参議院 本会議投票結果", url: "https://www.sangiin.go.jp/japanese/touhyoulist/", fetchedAt },
-      { name: "国会会議録検索システム 検索用API（参議院 本会議・委員会）", url: speechPageUrl(memberSession, 1, "sangiin", SPEECH_SCOPE), fetchedAt },
-      { name: "国会会議録検索システム 検索用API（衆議院 本会議・委員会）", url: speechPageUrl(memberSession, 1, "shugiin", SPEECH_SCOPE), fetchedAt },
-      { name: "国会会議録検索システム 検索用API（参議院 委員会の出席者欄）", url: attendancePageUrl(memberSession), fetchedAt },
-      { name: "国会会議録検索システム 検索用API（参議院 委員会の出席委員欄）", url: committeePageUrl(memberSession, "sangiin"), fetchedAt },
-      { name: "国会会議録検索システム 検索用API（衆議院 委員会の出席委員欄）", url: committeePageUrl(memberSession, "shugiin"), fetchedAt },
-      ...targets.map((s) => ({ name: `参議院 議案情報（第${s}回）`, url: billListUrl(s), fetchedAt })),
-      ...targets.map((s) => ({ name: `衆議院 議案情報（第${s}回）`, url: shugiinBillListUrl(s), fetchedAt })),
-      ...targets.map((s) => ({ name: `衆議院 質問答弁情報（第${s}回）`, url: shugiinQuestionListUrl(s), fetchedAt })),
-      ...targets.map((s) => ({ name: `参議院 質問主意書（第${s}回）`, url: sangiinQuestionListUrl(s), fetchedAt })),
+      ...rosterSessions.map((s) => ({ name: `参議院 議員一覧（第${s}回）`, url: memberListUrl(s), fetchedAt, house: "sangiin" as const, kind: "roster" as const })),
+      { name: `衆議院 議員一覧（${shugiin.asOf ?? "取得日"}現在）`, url: shugiinMemberListUrl(1), fetchedAt, house: "shugiin" as const, kind: "roster" as const },
+      { name: "参議院 本会議投票結果", url: "https://www.sangiin.go.jp/japanese/touhyoulist/", fetchedAt, house: "sangiin" as const, kind: "vote" as const },
+      { name: "国会会議録検索システム 検索用API（参議院 本会議・委員会）", url: speechPageUrl(memberSession, 1, "sangiin", SPEECH_SCOPE), fetchedAt, house: "sangiin" as const, kind: "speech" as const },
+      { name: "国会会議録検索システム 検索用API（衆議院 本会議・委員会）", url: speechPageUrl(memberSession, 1, "shugiin", SPEECH_SCOPE), fetchedAt, house: "shugiin" as const, kind: "speech" as const },
+      { name: "国会会議録検索システム 検索用API（参議院 委員会の出席者欄）", url: attendancePageUrl(memberSession), fetchedAt, house: "sangiin" as const, kind: "committee" as const },
+      { name: "国会会議録検索システム 検索用API（参議院 委員会の出席委員欄）", url: committeePageUrl(memberSession, "sangiin"), fetchedAt, house: "sangiin" as const, kind: "committee" as const },
+      { name: "国会会議録検索システム 検索用API（衆議院 委員会の出席委員欄）", url: committeePageUrl(memberSession, "shugiin"), fetchedAt, house: "shugiin" as const, kind: "committee" as const },
+      ...targets.map((s) => ({ name: `参議院 議案情報（第${s}回）`, url: billListUrl(s), fetchedAt, house: "sangiin" as const, kind: "bill" as const })),
+      ...targets.map((s) => ({ name: `衆議院 議案情報（第${s}回）`, url: shugiinBillListUrl(s), fetchedAt, house: "shugiin" as const, kind: "bill" as const })),
+      ...targets.map((s) => ({ name: `衆議院 質問答弁情報（第${s}回）`, url: shugiinQuestionListUrl(s), fetchedAt, house: "shugiin" as const, kind: "question" as const })),
+      ...targets.map((s) => ({ name: `参議院 質問主意書（第${s}回）`, url: sangiinQuestionListUrl(s), fetchedAt, house: "sangiin" as const, kind: "question" as const })),
     ],
   },
 };

@@ -5,7 +5,7 @@ import type { Assembly } from "@seiji-kiroku/shared";
 import type { MemberDetail } from "../lib/data-contract";
 import assembliesFixture from "../test-fixtures/assemblies/index.json";
 import localMember from "../test-fixtures/assemblies/member-local.json";
-import meta from "../test-fixtures/meta.json";
+import meta from "../test-fixtures/meta";
 import { MemberPage, meta as routeMeta, pageTitle } from "./member";
 
 const detail = localMember as MemberDetail;

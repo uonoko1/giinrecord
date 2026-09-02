@@ -8,6 +8,7 @@ import path from "node:path";
 import { inflateRawSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
 import { ARCHIVE_NAME, ARCHIVE_PATH, archiveReadme, buildZip, checkArchive, collectDataFiles, readZipDirectory } from "./archive";
+import { source } from "../test-fixtures/source";
 
 const entries = [
   { path: "rollcalls/index.json", data: Buffer.from("[]") },
@@ -55,7 +56,7 @@ describe("archiveReadme", () => {
   const meta = {
     fetchedAt: "2026-08-22T13:49:50.028Z",
     sessions: [217, 221],
-    sources: [{ name: "参議院 本会議投票結果", url: "https://www.sangiin.go.jp/x", fetchedAt: "2026-08-22T13:49:50.028Z" }],
+    sources: [source({ name: "参議院 本会議投票結果", url: "https://www.sangiin.go.jp/x", fetchedAt: "2026-08-22T13:49:50.028Z", kind: "vote" })],
   };
 
   it("ライセンス・出典・帰属表示・取得時刻を書く", () => {

@@ -2,7 +2,7 @@ import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import type { AttendanceEntry, MemberDetail } from "../lib/data-contract";
 import member from "../test-fixtures/member.json";
-import meta from "../test-fixtures/meta.json";
+import meta from "../test-fixtures/meta";
 import { MemberPage } from "./member";
 
 /** 委員会に発議者として出席した記録（#109）。出席した発議者は発議者全員ではないので、提出法案（bill 行）とは別の kind。 */

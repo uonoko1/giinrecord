@@ -10,6 +10,7 @@ import sessionsFixture from "../test-fixtures/assemblies/sessions.json";
 import { dataset } from "../test-fixtures/dataset";
 import { CoveragePage, meta as routeMeta } from "./coverage";
 import type { SangiinVoteLinkStats, ShugiinBillNameStats } from "../lib/coverage";
+import { source } from "../test-fixtures/source";
 
 /** #251: 事実の記述だけを載せる。言い訳・評価にあたる語もここで塞ぐ（「残念」「限界」「不十分」など） */
 const EVALUATIVE_WORDS = ["おすすめ", "ランキング", "一致率", "遅れ", "不十分", "優れ", "充実", "網羅", "残念", "限界", "やむを得", "しかたが", "仕方が", "できていません", "ご了承"];
@@ -122,7 +123,7 @@ describe("/coverage 収録範囲", () => {
     const meta = {
       ...dataset.meta!,
       sessions: [142, 150, 200, 216, 221],
-      sources: [...dataset.meta!.sources, { name: "参議院 議員一覧（第216回）", url: "https://www.sangiin.go.jp/japanese/joho1/kousei/giin/216/giin.htm", fetchedAt: "2026-08-22T06:00:00+09:00" }],
+      sources: [...dataset.meta!.sources, source({ name: "参議院 議員一覧（第216回）", url: "https://www.sangiin.go.jp/japanese/joho1/kousei/giin/216/giin.htm", fetchedAt: "2026-08-22T06:00:00+09:00" })],
     };
     renderPage({ ...withLocal, meta });
     const section = screen.getByRole("region", { name: "議員ページに紐づかない回次" });
@@ -142,7 +143,7 @@ describe("/coverage 収録範囲", () => {
     const meta = {
       ...dataset.meta!,
       sessions: [220, 221],
-      sources: [...dataset.meta!.sources, { name: "参議院 議員一覧（第220回）", url: "https://www.sangiin.go.jp/japanese/joho1/kousei/giin/220/giin.htm", fetchedAt: "2026-08-22T06:00:00+09:00" }],
+      sources: [...dataset.meta!.sources, source({ name: "参議院 議員一覧（第220回）", url: "https://www.sangiin.go.jp/japanese/joho1/kousei/giin/220/giin.htm", fetchedAt: "2026-08-22T06:00:00+09:00" })],
     };
     renderPage({ ...withLocal, meta });
     expect(screen.queryByRole("region", { name: "議員ページに紐づかない回次" })).toBeNull();
@@ -157,7 +158,7 @@ describe("/coverage 収録範囲", () => {
     const rosterlessMeta = {
       ...dataset.meta!,
       sessions: [200, 201, 204, 216, 221],
-      sources: [...dataset.meta!.sources, { name: "参議院 議員一覧（第216回）", url: "https://www.sangiin.go.jp/japanese/joho1/kousei/giin/216/giin.htm", fetchedAt: "2026-08-22T06:00:00+09:00" }],
+      sources: [...dataset.meta!.sources, source({ name: "参議院 議員一覧（第216回）", url: "https://www.sangiin.go.jp/japanese/joho1/kousei/giin/216/giin.htm", fetchedAt: "2026-08-22T06:00:00+09:00" })],
     };
     /** 数値はすべてここから来る（画面にもコンポーネントにも定数を書かない） */
     const votes: SangiinVoteLinkStats = {
@@ -250,11 +251,14 @@ describe("/coverage 収録範囲", () => {
    * 回次（どこまで遡るか）はここでは書かない。名簿の範囲の話で、下の 2 節が既に書いているため。
    */
   describe("発言をどの会議まで収録しているか（#242）", () => {
-    const speechSrc = (house: "参議院" | "衆議院", scope: "all" | "plenary") => ({
-      name: `国会会議録検索システム 検索用API（${house} ${scope === "all" ? "本会議・委員会" : "本会議"}）`,
-      url: `https://kokkai.ndl.go.jp/api/speech?nameOfHouse=${encodeURIComponent(house)}${scope === "plenary" ? "&nameOfMeeting=%E6%9C%AC%E4%BC%9A%E8%AD%B0" : ""}&sessionFrom=221&sessionTo=221`,
-      fetchedAt: "2026-08-25T00:00:00.000Z",
-    });
+    const speechSrc = (house: "参議院" | "衆議院", scope: "all" | "plenary") =>
+      source({
+        name: `国会会議録検索システム 検索用API（${house} ${scope === "all" ? "本会議・委員会" : "本会議"}）`,
+        url: `https://kokkai.ndl.go.jp/api/speech?nameOfHouse=${encodeURIComponent(house)}${scope === "plenary" ? "&nameOfMeeting=%E6%9C%AC%E4%BC%9A%E8%AD%B0" : ""}&sessionFrom=221&sessionTo=221`,
+        fetchedAt: "2026-08-25T00:00:00.000Z",
+        house: house === "参議院" ? "sangiin" : "shugiin",
+        kind: "speech",
+      });
     const withSpeeches = (scope: "all" | "plenary"): Dataset => ({
       ...withLocal,
       meta: { ...withLocal.meta!, sources: [...withLocal.meta!.sources, speechSrc("参議院", scope), speechSrc("衆議院", scope)] },
@@ -306,9 +310,9 @@ describe("/coverage 収録範囲", () => {
   });
 
   describe("衆議院の記録が議員ページに紐づく範囲", () => {
-    const shugiinRosterSource = { name: "衆議院 議員一覧（2026-02-18現在）", url: "https://www.shugiin.go.jp/internet/itdb_annai.nsf/html/statics/syu/1giin.htm", fetchedAt: "2026-08-22T06:00:00+09:00" };
-    const sangiinRosterSources = [216, 221].map((s) => ({ name: `参議院 議員一覧（第${s}回）`, url: `https://www.sangiin.go.jp/japanese/joho1/kousei/giin/${s}/giin.htm`, fetchedAt: "2026-08-22T06:00:00+09:00" }));
-    const questionSources = [219, 220].map((s) => ({ name: `衆議院 質問答弁情報（第${s}回）`, url: `https://www.shugiin.go.jp/internet/itdb_shitsumon.nsf/html/shitsumon/kaiji${s}_l.htm`, fetchedAt: "2026-08-22T06:00:00+09:00" }));
+    const shugiinRosterSource = source({ name: "衆議院 議員一覧（2026-02-18現在）", url: "https://www.shugiin.go.jp/internet/itdb_annai.nsf/html/statics/syu/1giin.htm", fetchedAt: "2026-08-22T06:00:00+09:00" });
+    const sangiinRosterSources = [216, 221].map((s) => source({ name: `参議院 議員一覧（第${s}回）`, url: `https://www.sangiin.go.jp/japanese/joho1/kousei/giin/${s}/giin.htm`, fetchedAt: "2026-08-22T06:00:00+09:00" }));
+    const questionSources = [219, 220].map((s) => source({ name: `衆議院 質問答弁情報（第${s}回）`, url: `https://www.shugiin.go.jp/internet/itdb_shitsumon.nsf/html/shitsumon/kaiji${s}_l.htm`, kind: "question", fetchedAt: "2026-08-22T06:00:00+09:00" }));
     const meta = { ...dataset.meta!, sources: [...dataset.meta!.sources, shugiinRosterSource, ...sangiinRosterSources, ...questionSources] };
     /** 数値はすべてここから来る（画面にもコンポーネントにも定数を書かない）。実データとは別の値にして取り違えを検出する */
     const billNames: ShugiinBillNameStats = {
