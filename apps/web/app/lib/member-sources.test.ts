@@ -82,9 +82,19 @@ describe("memberSources: そのページが実際に使った出典だけを出�
     expect(names(memberSources([...meta.sources, both], member("shugiin"), 0))).toContain("両院 共通");
   });
 
-  it("地方議会の記録（localVote）は国会の出典を呼ばない", () => {
+  it("国会議員が localVote を持っていても、国会の出典は呼ばない（種別の対応が無い）", () => {
     const got = memberSources(meta.sources, member("sangiin", [entry("localVote")]), 0);
     expect(names(got)).toEqual(["参議院 議員一覧"]);
+  });
+
+  // #339 の実装で見つけたバグ: 地方議員は house を持たず記録も localVote だけなので、
+  // 院でも種別でも一致せず**出典が空**になっていた（実データで 285名 / 1,057名）。
+  // 出典欄を空にするのは「絞る」より悪い。地方議員は絞らない。
+  it("地方議会の議員は絞らない（出典を空にしない）", () => {
+    const local = { id: "p_04_x", name: "地方 議員", kana: "ちほう ぎいん", assemblyId: "pref-04", terms: [], sourceUrl: "https://example.invalid/", timeline: [{ kind: "localVote" }] } as unknown as MemberDetail;
+    const got = memberSources(meta.sources, local, 0);
+    expect(got).toHaveLength(meta.sources.length);
+    expect(got.length).toBeGreaterThan(0);
   });
   // #339 の移行期: 属性を持たない古い meta.json でも「出典が空」にはしない
   it("house / kind を持たない古い出典が混ざっていたら、絞らず全件出す（空にしない）", () => {
