@@ -182,13 +182,24 @@ test("ホスト proxy: 自サイトの server block ごとに error_log（crit �
   assert.match(setup, /^ensure_error_log\(\)/m, "certbot-managed confs get the line inserted idempotently");
 });
 
-test("ホスト nginx は proxy_pass http://127.0.0.1:PORT（vps-setup.sh が 8081/8083 を埋める）だけで、静的配信もヘッダ付与もしない", () => {
+test("ホスト nginx は proxy_pass http://127.0.0.1:PORT（vps-setup.sh が 8081/8083 を埋める）だけで、静的配信をしない", () => {
   const code = uncommented(hostProxy);
   assert.match(code, /proxy_pass http:\/\/127\.0\.0\.1:PORT;/);
   assert.match(code, /access_log \/var\/log\/nginx\/LOG_NAME\.access\.log noip;/);
   assert.doesNotMatch(code, /^\s*root\s/m);
-  assert.doesNotMatch(code, /add_header/);
   assert.doesNotMatch(code, /try_files/);
+});
+
+// #387: 「ホストはヘッダを付けない」（元は add_header 全部を禁じていた）の唯一の例外が HSTS。
+// **TLS を終端しているのはホストだけ**なので、コンテナからは付けようがない
+// （コンテナは 127.0.0.1 の平文で受けており、ブラウザが見ているのが https かを知らない）。
+// それ以外のヘッダは今もコンテナ側（deploy/nginx/site.conf）の担当。
+// この検査を「add_header を全部禁止」に戻すと HSTS が消えるので、**例外を1つだけ**にして固定する。
+test("ホスト nginx が付けるヘッダは HSTS だけ（TLS 終端がホストにしか無いため。#387）", () => {
+  const code = uncommented(hostProxy);
+  const headers = code.match(/^\s*add_header\s+(\S+)/gm) ?? [];
+  const names = headers.map((h) => h.trim().split(/\s+/)[1]);
+  assert.deepEqual(names, ["Strict-Transport-Security"], "HSTS 以外のヘッダはコンテナ側の担当");
 });
 
 test("docker-compose: nginx:alpine を 127.0.0.1:8081 にだけ公開し、サイトは読み取り専用 bind mount、healthcheck と restart あり", () => {
