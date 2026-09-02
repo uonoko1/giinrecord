@@ -181,6 +181,31 @@ curl -sI https://DOMAIN/ | grep -i -E "content-security|x-frame" # 外から見�
 - **ホスト nginx の `http` ブロックに何も書かない**（#386）。共用ホストなので、グローバルな指定は同居サイトの挙動まで変える。`server_tokens off` のような指定も **`server` ブロック内**に置く。
 - コンテナからログを外に出さない（IP を含む。集計はホスト側の IP 無しログだけ、`docs/ops/analytics.md`）。
 
+### certbot 管理の conf に `server_tokens off` を入れる（#386・人の作業）
+
+`vps-setup.sh` は **certbot 管理の conf を書き換えない**（本番の再実行は no-op であることをテストが固定している）。
+**まず本番ホストがその形かを確かめる**（そうでなければ `vps-setup.sh` の再実行だけで入り、手編集は要らない）:
+
+```sh
+ssh sakura-vps 'grep -c "managed by Certbot" /etc/nginx/sites-available/giinrecord.conf'
+```
+
+`0` なら手編集は不要——`vps-setup.sh` を再実行するだけでよい。`1` 以上なら**人が1行足す**:
+
+> **2026-09-02 の実測: production は `0`**（certbot 管理**ではない**）。
+> つまり現状は `vps-setup.sh` の再実行だけで入る。下の手編集は、将来 certbot 管理に変わった場合の手順。
+
+```sh
+ssh -t sakura-vps 'sudo bash -c "
+  grep -q \"server_tokens off;\" /etc/nginx/sites-available/giinrecord.conf ||
+    sed -i \"/server_name /a\\    server_tokens off;\" /etc/nginx/sites-available/giinrecord.conf
+  nginx -t && systemctl reload nginx"'
+```
+
+確認: `curl -sI https://giinrecord.jp/ | grep -i ^server` が `Server: nginx`（バージョン無し）になる。
+
+**`http` ブロックには書かない。** 共用ホストなので、同居サイトの挙動まで変わる。
+
 ## 運用ユーザーと鍵の権限（2026-08-23）
 - `giinops`：**コマンドを固定した NOPASSWD sudo の allowlist**（`NOPASSWD:ALL` ではない、#333）。鍵は運用者の1本のみ（`deploy/ops-user-setup.sh` が生成。サーバー上で手編集しない）。PO はこのユーザーで許可済みの root 作業を非対話で実行する
   - 中身は `ssh giinops@<host> 'sudo -n -l'` で確認できる。**追加してよいのは引数まで書ききれるコマンドだけ**——`bash /tmp/*.sh` のようなワイルドカードは任意コード実行なので `NOPASSWD:ALL` と変わらない（実際 `91-giinops` にこの形が残っていた、#333）
