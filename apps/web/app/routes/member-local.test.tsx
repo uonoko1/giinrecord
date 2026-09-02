@@ -109,3 +109,35 @@ describe("地方議員の議員ページ: meta", () => {
     expect(desc).toContain("凡例");
   });
 });
+
+/**
+ * #346: 地方議員の出典は**その議会自身のもの**。国会の出典（data/meta.json）はこの議員のものではない。
+ * #339 で国会議員の出典を絞ったとき、地方議員は house も一致する種別も無いので
+ * **出典が空**になっていた（実データで285名）。ここはその続き。
+ */
+describe("地方議員の出典（#346）", () => {
+  const localSources = [
+    { name: "宮城県議会 議員名簿（会派別）", url: "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html", fetchedAt: "2026-08-24T12:12:38.778Z" },
+    { name: "宮城県議会 会議録", url: "https://www.pref.miyagi.jp/site/kengikai/kaigiroku.html", fetchedAt: "2026-08-24T12:12:38.778Z" },
+  ];
+  const footer = () => screen.getByText(/^出典/).closest("footer") as HTMLElement;
+
+  it("その議会の出典だけを出す（集合の完全一致）", () => {
+    render(<MemberPage detail={detail} meta={meta} assembly={miyagi} localSources={localSources} />);
+    expect(within(footer()).getAllByRole("link").map((a) => a.textContent)).toEqual(
+      ["宮城県議会 議員名簿（会派別）", "宮城県議会 会議録"],
+    );
+  });
+
+  it("国会の出典は1件も出ない", () => {
+    render(<MemberPage detail={detail} meta={meta} assembly={miyagi} localSources={localSources} />);
+    const hrefs = within(footer()).getAllByRole("link").map((a) => a.getAttribute("href") ?? "");
+    expect(hrefs.filter((h) => h.includes("sangiin.go.jp") || h.includes("shugiin.go.jp") || h.includes("ndl.go.jp"))).toEqual([]);
+  });
+
+  it("議会の出典が取れないときは出典を空にしない（国会の出典に落ちる）", () => {
+    // 空にするのは「無関係な出典が並ぶ」より悪い（#339 の学び）
+    render(<MemberPage detail={detail} meta={meta} assembly={miyagi} localSources={null} />);
+    expect(within(footer()).getAllByRole("link").length).toBeGreaterThan(0);
+  });
+});
