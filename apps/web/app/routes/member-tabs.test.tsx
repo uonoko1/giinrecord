@@ -10,7 +10,7 @@ import sangiinSpeeches from "../test-fixtures/member-speeches.json";
 import shugiinMember from "../test-fixtures/member-shugiin.json";
 import shugiinSpeeches from "../test-fixtures/member-shugiin-speeches.json";
 import meta from "../test-fixtures/meta";
-import { MemberPage, groupTabs } from "./member";
+import { MemberPage, groupTabs, ALL_FOLD } from "./member";
 
 /** 分類のラベルは事実だけを述べる。評価・比較の語を入れない（他ページと同じガード） */
 const EVALUATIVE_WORDS = ["おすすめ", "ランキング", "一致率", "遅れ", "不十分", "優れ", "充実", "網羅", "積極", "熱心", "怠", "少ない", "多い"];
@@ -225,25 +225,28 @@ describe("「すべて」タブの折りたたみ（#361）", () => {
     })),
   }) as MemberDetail;
   const rows = () => screen.getAllByRole("listitem").length;
+  // Issue 400: 件数は **ALL_FOLD から導く**。以前は 394 を直に書いていて、
+  // 数百行の描画が 5 秒のタイムアウト境界に乗り、不定期に落ちていた（実測 4.5〜8.0 秒）
+  const TOTAL = ALL_FOLD + 6;
 
-  it("200 件を超えたら折りたたみ、残り件数を出す", () => {
-    render(<MemberPage detail={many(394)} meta={meta} speechCount={0} />);
+  it("FOLD 件を超えたら折りたたみ、残り件数を出す", () => {
+    render(<MemberPage detail={many(TOTAL)} meta={meta} speechCount={0} />);
     expect(screen.getByRole("tab", { selected: true }).textContent).toContain("すべて");
-    expect(rows()).toBe(200);
-    expect(screen.getByRole("button", { name: "さらに表示（残り194件）" })).toBeInTheDocument();
+    expect(rows()).toBe(ALL_FOLD);
+    expect(screen.getByRole("button", { name: `さらに表示（残り${TOTAL - ALL_FOLD}件）` })).toBeInTheDocument();
   });
 
   it("「さらに表示」で全件出る", async () => {
-    render(<MemberPage detail={many(394)} meta={meta} speechCount={0} />);
+    render(<MemberPage detail={many(TOTAL)} meta={meta} speechCount={0} />);
     await userEvent.click(screen.getByRole("button", { name: /さらに表示/ }));
-    expect(rows()).toBe(394);
+    expect(rows()).toBe(TOTAL);
   });
 
   // Issue 393: 押すとボタンが消え、フォーカスが <body> に落ちていた。
   // キーボード / スクリーンリーダーの利用者は文書の先頭へ戻され、続きを読むには頭からたどり直すことになる。
   // **3箇所それぞれで**確かめる（1箇所だけ検査して他を落としたことが実際にある）。
   it("押した後、フォーカスが body に落ちず、続きの手前に移る（Issue 393）", async () => {
-    render(<MemberPage detail={many(394)} meta={meta} speechCount={0} />);
+    render(<MemberPage detail={many(TOTAL)} meta={meta} speechCount={0} />);
     const button = screen.getByRole("button", { name: /さらに表示/ });
     button.focus();
     expect(document.activeElement).toBe(button);
@@ -254,9 +257,9 @@ describe("「すべて」タブの折りたたみ（#361）", () => {
     expect((document.activeElement as HTMLElement).textContent).toContain("続きを表示しました");
   });
 
-  it("200 件以下なら折りたたまない（境界）", () => {
-    render(<MemberPage detail={many(200)} meta={meta} speechCount={0} />);
-    expect(rows()).toBe(200);
+  it("FOLD 件ちょうどなら折りたたまない（境界）", () => {
+    render(<MemberPage detail={many(ALL_FOLD)} meta={meta} speechCount={0} />);
+    expect(rows()).toBe(ALL_FOLD);
     expect(screen.queryByRole("button", { name: /さらに表示/ })).not.toBeInTheDocument();
   });
 });
