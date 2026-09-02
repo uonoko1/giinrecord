@@ -209,3 +209,39 @@ describe("タブを切り替えても記録の中身が入れ替わらない（#
     expect(panel.querySelectorAll('[data-estimated="true"]')).toHaveLength(0);
   });
 });
+
+/**
+ * #361: 既定の「すべて」タブが折りたたまれていなかった。**開いて最初に見えるのがここ**なので、
+ * 折りたたみが無いと最初の描画がそのまま最大になる。実データで国会議員182名・地方議員47名が200件超、
+ * 最大394件（本番のスマホ幅で DOM 3,062・26画面）。
+ */
+describe("「すべて」タブの折りたたみ（#361）", () => {
+  const many = (n: number): MemberDetail => ({
+    ...shugiin,
+    timeline: Array.from({ length: n }, (_, i) => ({
+      ...(shugiin.timeline[0] as object),
+      billId: `221-衆法-${i}`,
+      title: `法律案 ${i}`,
+    })),
+  }) as MemberDetail;
+  const rows = () => screen.getAllByRole("listitem").length;
+
+  it("200 件を超えたら折りたたみ、残り件数を出す", () => {
+    render(<MemberPage detail={many(394)} meta={meta} speechCount={0} />);
+    expect(screen.getByRole("tab", { selected: true }).textContent).toContain("すべて");
+    expect(rows()).toBe(200);
+    expect(screen.getByRole("button", { name: "さらに表示（残り194件）" })).toBeInTheDocument();
+  });
+
+  it("「さらに表示」で全件出る", async () => {
+    render(<MemberPage detail={many(394)} meta={meta} speechCount={0} />);
+    await userEvent.click(screen.getByRole("button", { name: /さらに表示/ }));
+    expect(rows()).toBe(394);
+  });
+
+  it("200 件以下なら折りたたまない（境界）", () => {
+    render(<MemberPage detail={many(200)} meta={meta} speechCount={0} />);
+    expect(rows()).toBe(200);
+    expect(screen.queryByRole("button", { name: /さらに表示/ })).not.toBeInTheDocument();
+  });
+});
