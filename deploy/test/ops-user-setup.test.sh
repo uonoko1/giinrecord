@@ -60,11 +60,6 @@ EXPECTED=$(sort <<'EXP'
 /usr/sbin/nginx -t
 /usr/bin/systemctl reload nginx
 /usr/bin/systemctl status nginx
-/usr/bin/tee /etc/nginx/sites-available/giinrecord.conf
-/usr/bin/tee /etc/nginx/sites-available/giinrecord-staging.conf
-/usr/bin/tee /etc/nginx/snippets/giinrecord-cloudflare-allow.conf
-/usr/bin/tee /etc/nginx/sites-available/gikailog.conf
-/usr/bin/tee /etc/nginx/sites-available/gikailog-staging.conf
 /usr/bin/rm -f /var/log/nginx/giinrecord-staging.access.log
 /usr/bin/rm -f /var/log/nginx/giinrecord-staging.error.log
 /usr/bin/git -C /opt/giinrecord pull
@@ -73,7 +68,7 @@ EXP
 )
 
 if [ "$ACTUAL" = "$EXPECTED" ]; then
-  ok "許可コマンドは期待した 12 行ちょうど"
+  ok "許可コマンドは期待した 7 行ちょうど"
 else
   bad "許可コマンドの集合が期待と違う"
   echo "--- 期待にあって実際に無い ---"; comm -23 <(echo "$EXPECTED") <(echo "$ACTUAL") | sed 's/^/      /'
@@ -112,6 +107,12 @@ else ok "シェル/インタプリタ系を許可していない"; fi
 if echo "$ALL_FILES" | grep -E 'NOPASSWD:.*docker' | grep -Eq ' (run|exec|cp) '; then
   bad "docker run/exec/cp を許可している"
 else ok "docker は compose の固定操作のみ"; fi
+
+# #335: nginx conf を書ける = 実質 root 相当（nginx master は root。`location /x { root /; }` で
+# 任意ファイルを HTTP 公開でき、他サイトの TLS 秘密鍵も読める。`nginx -t` は検査しない）
+if echo "$ALL_FILES" | grep -E 'NOPASSWD:' | grep -q '/tee '; then
+  bad "nginx conf を書く許可（tee）がある（#335: 実質 root 相当）"
+else ok "nginx conf を書く許可（tee）を与えない"; fi
 
 # Alias による間接化（Cmnd_Alias OPS = /usr/bin/env のような迂回）
 if echo "$ALL_FILES" | grep -Eq '^[[:space:]]*(Cmnd_Alias|User_Alias|Runas_Alias|Host_Alias)'; then

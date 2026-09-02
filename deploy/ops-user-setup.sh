@@ -64,16 +64,16 @@ cat > "$SUDOERS" <<EOF
 # docker-compose.yml の \${SITE_DIR:-...} は SITE_DIR=/ でホスト root を root 権限のコンテナに
 # bind mount できてしまうので、環境変数が渡らないことが安全性の前提になっている（#333）。
 Defaults:$OPS env_reset, !setenv, use_pty
-# nginx（ホスト側・共用）: 検証と reload、自サイトの conf だけ
+# nginx（ホスト側・共用）: 検証と reload だけ。
+# conf を書く許可（tee）は与えない（#335）。nginx master は root で動くので、conf に任意の内容を
+# 書ける者は任意ファイルを HTTP 公開でき、他サイトの TLS 秘密鍵も読め、ログの書き込み先を通じて
+# root 権限でファイルを作れる。nginx -t はこれらを検査しない = 実質 root 相当。
+# 共用ホストなので影響は自サイトに閉じない。詳しくは docs/ops/deploy.md。
+# conf を書く作業（vps-setup.sh / cloudflare-allowlist.sh）は元から root として実行しており、
+# この許可を使っていなかった。
 $OPS ALL=(ALL) NOPASSWD: /usr/sbin/nginx -t
 $OPS ALL=(ALL) NOPASSWD: /usr/bin/systemctl reload nginx
 $OPS ALL=(ALL) NOPASSWD: /usr/bin/systemctl status nginx
-$OPS ALL=(ALL) NOPASSWD: /usr/bin/tee /etc/nginx/sites-available/giinrecord.conf
-$OPS ALL=(ALL) NOPASSWD: /usr/bin/tee /etc/nginx/sites-available/giinrecord-staging.conf
-$OPS ALL=(ALL) NOPASSWD: /usr/bin/tee /etc/nginx/snippets/giinrecord-cloudflare-allow.conf
-# 旧ドメイン（gikailog.jp）の 301 conf。名前が旧称なだけで現役（docs/ops/deploy.md「消さないもの」）
-$OPS ALL=(ALL) NOPASSWD: /usr/bin/tee /etc/nginx/sites-available/gikailog.conf
-$OPS ALL=(ALL) NOPASSWD: /usr/bin/tee /etc/nginx/sites-available/gikailog-staging.conf
 # staging のログ掃除（本番ログは対象外。集計は analytics の担当）
 $OPS ALL=(ALL) NOPASSWD: /usr/bin/rm -f /var/log/nginx/giinrecord-staging.access.log
 $OPS ALL=(ALL) NOPASSWD: /usr/bin/rm -f /var/log/nginx/giinrecord-staging.error.log
