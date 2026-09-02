@@ -97,6 +97,8 @@ t_bootstrap_without_cert() {
   assert_not_contains "$c" "return 301" "no redirect before TLS exists (site must stay reachable)"
   assert_contains "$c" "access_log /var/log/nginx/giinrecord.access.log noip;" "noip log"
   assert_contains "$c" "$ERR_LOG_PROD" "#189 error_log crit in the bootstrap block"
+  # Issue 386: bootstrap ブロックも実際に配信するので、ここにも要る
+  assert_contains "$c" "server_tokens off;" "server_tokens off in the bootstrap block"
   [[ -L "$P/etc/nginx/sites-enabled/giinrecord.conf" ]] || fail "enabled symlink"
   assert_contains "$(cat "$LOG")" "nginx -t" "config tested"
   assert_contains "$(cat "$LOG")" "systemctl reload nginx" "reloaded"
@@ -117,6 +119,9 @@ t_full_template_with_cert() {
   assert_contains "$c" "location / {
         return 301" "redirect inside location /"
   assert_eq "2" "$(grep -c "$ERR_LOG_PROD" "$CONF")" "#189 error_log crit in both server blocks"
+  # Issue 386: 80 と 443 の**両方**の server ブロックに入る。http ブロックには置かない（共用ホスト）
+  assert_eq "2" "$(grep -c "server_tokens off;" "$CONF")" "server_tokens off in both server blocks"
+  assert_not_contains "$(cat "$CONF")" "http {" "no http block (never set directives globally on a shared host)"
 }
 
 t_rerun_is_noop() {
