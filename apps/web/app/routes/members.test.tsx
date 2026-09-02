@@ -530,3 +530,94 @@ describe("meta()", () => {
     for (const tag of tags) expect(Object.values(tag).join(" ")).not.toContain("onerror");
   });
 });
+
+/**
+ * #340: 一覧は 997 名を一度に描画していた（スマホで85画面）。初期表示を先頭 200 名までにする。
+ * 「行の区切りを保つ」「絞り込み中は折りたたまない」の2つが設計の要点なので、その両方を見る。
+ */
+describe("/members 折りたたみ（#340）", () => {
+  // あ行 150 名・か行 150 名。合計 300 > 200 なので、あ行だけが出るはず
+  const many = [
+    ...Array.from({ length: 150 }, (_, i) => ({ id: `m_a${i}`, name: `あ${i}`, kana: `あいうえ${i}`, house: "sangiin", group: "会派A", district: "東京", counts: { rollcalls: 0, bills: 0, speeches: 0 } })),
+    ...Array.from({ length: 150 }, (_, i) => ({ id: `m_k${i}`, name: `か${i}`, kana: `かきくけ${i}`, house: "sangiin", group: "会派K", district: "大阪", counts: { rollcalls: 0, bills: 0, speeches: 0 } })),
+  ] as never;
+
+  const rows = () => screen.getAllByRole("listitem").length;
+
+  it("200 名を超えたら行の区切りで折りたたみ、残り人数を出す", () => {
+    renderMembers(many);
+    expect(rows()).toBe(150); // か行を足すと 300 > 200 なので、あ行だけ
+    expect(screen.getByRole("button", { name: "さらに表示（残り150名）" })).toBeInTheDocument();
+    // 見出しだけの空グループを作らない
+    expect(screen.queryByRole("heading", { name: "か行" })).not.toBeInTheDocument();
+  });
+
+  it("「さらに表示」で全員出る", async () => {
+    renderMembers(many);
+    await userEvent.click(screen.getByRole("button", { name: /さらに表示/ }));
+    expect(rows()).toBe(300);
+    expect(screen.queryByRole("button", { name: /さらに表示/ })).not.toBeInTheDocument();
+  });
+
+  it("絞り込んでいる間は折りたたまない（絞った結果が 200 名を超えても全件出す）", async () => {
+    // 折りたたみが**実際に効く**形にする: あ行120・か行120・さ行120（計360）なら初期はあ行だけ。
+    // そこで「会派K」で絞ると か行120 + さ行120 = 240 名 > 200 が残る。
+    // 絞り込み中も折りたたむ実装だと、ここで か行だけ（120名）に切れて落ちる。
+    const wide = [
+      ...Array.from({ length: 120 }, (_, i) => ({ id: `m_a${i}`, name: `あ${i}`, kana: `あいうえ${i}`, house: "sangiin", group: "会派A", district: "東京", counts: { rollcalls: 0, bills: 0, speeches: 0 } })),
+      ...Array.from({ length: 120 }, (_, i) => ({ id: `m_k${i}`, name: `か${i}`, kana: `かきくけ${i}`, house: "sangiin", group: "会派K", district: "大阪", counts: { rollcalls: 0, bills: 0, speeches: 0 } })),
+      ...Array.from({ length: 120 }, (_, i) => ({ id: `m_s${i}`, name: `さ${i}`, kana: `さしすせ${i}`, house: "sangiin", group: "会派K", district: "京都", counts: { rollcalls: 0, bills: 0, speeches: 0 } })),
+    ] as never;
+    renderMembers(wide);
+    expect(rows()).toBe(120); // 折りたたみが効いている（あ行だけ）
+
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: "会派" }), "会派K");
+    expect(rows()).toBe(240); // 200 を超えても絞り込み中は全件
+    expect(screen.queryByRole("button", { name: /さらに表示/ })).not.toBeInTheDocument();
+  });
+
+  // 絞り込みの3経路（氏名検索・会派・選挙区）それぞれで折りたたみが解除されることを見る。
+  // 会派だけで確かめていたので、query / district を `filtering` から外す変異が素通りしていた（レビュー指摘）
+  it.each([
+    ["氏名検索", async () => await userEvent.type(screen.getByRole("searchbox", { name: /氏名/ }), "かきくけ")],
+    ["会派", async () => await userEvent.selectOptions(screen.getByRole("combobox", { name: "会派" }), "会派K")],
+    ["選挙区", async () => await userEvent.selectOptions(screen.getByRole("combobox", { name: "選挙区" }), "大阪")],
+  ])("%s で絞っている間は折りたたまない", async (_label, act) => {
+    // か行120 + さ行120 = 240 名が残る絞り方にする（200 を超えないと折りたたみの有無を区別できない）
+    const wide = [
+      ...Array.from({ length: 120 }, (_, i) => ({ id: `m_a${i}`, name: `あ${i}`, kana: `あいうえ${i}`, house: "sangiin", group: "会派A", district: "東京", counts: { rollcalls: 0, bills: 0, speeches: 0 } })),
+      ...Array.from({ length: 120 }, (_, i) => ({ id: `m_k${i}`, name: `かきくけ${i}`, kana: `かきくけ${i}`, house: "sangiin", group: "会派K", district: "大阪", counts: { rollcalls: 0, bills: 0, speeches: 0 } })),
+      ...Array.from({ length: 120 }, (_, i) => ({ id: `m_s${i}`, name: `かきくけさ${i}`, kana: `さしすせ${i}`, house: "sangiin", group: "会派K", district: "大阪", counts: { rollcalls: 0, bills: 0, speeches: 0 } })),
+    ] as never;
+    renderMembers(wide);
+    expect(rows()).toBe(120); // 折りたたみが効いている
+    await act();
+    expect(rows()).toBe(240); // 200 を超えても全件
+    expect(screen.queryByRole("button", { name: /さらに表示/ })).not.toBeInTheDocument();
+  });
+
+  // 折りたたみ中は「該当997名」だけを読み上げると、直列に読む利用者は
+  // 実 DOM に無い人数まで辿れると思って読み進めることになる（レビュー指摘）
+  it("折りたたみ中は、該当人数と表示中の人数の両方を読み上げる", () => {
+    renderMembers(many);
+    expect(screen.getByRole("status")).toHaveTextContent("300 名（うち 150 名を表示中）");
+  });
+
+  it("折りたたんでいないときは表示中の人数を言わない（冗長にしない）", () => {
+    renderMembers();
+    expect(screen.getByRole("status").textContent).not.toContain("表示中");
+  });
+
+  it("「さらに表示」は aria-expanded と aria-controls を持つ", () => {
+    renderMembers(many);
+    const btn = screen.getByRole("button", { name: /さらに表示/ });
+    expect(btn).toHaveAttribute("aria-expanded", "false");
+    expect(btn.getAttribute("aria-controls")).toBeTruthy();
+    expect(document.getElementById(btn.getAttribute("aria-controls") as string)).toBeInTheDocument();
+  });
+
+  it("200 名以下なら折りたたまない", () => {
+    renderMembers();
+    expect(screen.queryByRole("button", { name: /さらに表示/ })).not.toBeInTheDocument();
+  });
+});

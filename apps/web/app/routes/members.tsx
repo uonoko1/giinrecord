@@ -8,6 +8,8 @@ import { type Dataset, dataset as bundled, type MemberSummary } from "../lib/dat
 import { formatDateTime } from "../lib/format";
 import {
   filterMembers,
+  foldKanaGroups,
+  MEMBERS_FOLD,
   formatTermEnd,
   groupByKanaRow,
   memberAssemblyId,
@@ -63,6 +65,7 @@ export default function Members({ data = bundled }: { data?: Dataset }) {
   const [query, setQuery] = useState("");
   const searchId = useId();
   const formerId = useId();
+  const listId = useId();
   const groupId = useId();
   const assemblyFieldId = useId();
   const districtId = useId();
@@ -109,7 +112,16 @@ export default function Members({ data = bundled }: { data?: Dataset }) {
   const groups = useMemo(() => distinctSorted(all.map((m) => m.group)), [all]);
   const districts = useMemo(() => distinctSorted(all.map((m) => m.district)), [all]);
   const hits = useMemo(() => filterMembers(all, { query, group, district }), [all, query, group, district]);
-  const sections = useMemo(() => groupByKanaRow(hits), [hits]);
+  const allSections = useMemo(() => groupByKanaRow(hits), [hits]);
+  // 絞り込んでいる間は折りたたまない（#340）。絞った結果が 200 名を超えることは稀で、
+  // 絞った上でさらに「さらに表示」を押させるのは煩わしい。全件を眺めるときだけ効かせる。
+  const filtering = query !== "" || group !== "" || district !== "";
+  const [expanded, setExpanded] = useState(false);
+  const fold = useMemo(
+    () => (filtering || expanded ? { groups: allSections, hidden: 0 } : foldKanaGroups(allSections, MEMBERS_FOLD)),
+    [allSections, filtering, expanded],
+  );
+  const sections = fold.groups;
   // 見出し・説明は「いま表示している一覧」そのもの。件数（hits.length）と同じ絞り込みから作る。
   const heading = membersHeading(scope);
   const description = membersDescription(scope);
@@ -197,8 +209,11 @@ export default function Members({ data = bundled }: { data?: Dataset }) {
                 件数だけでは「いま何の一覧を見ているか」が変わったことが伝わらないので、見出しと件数を
                 ひとつの文にして読み上げる。画面には出さない（見えている h1・件数と重複するため）。
               */}
+              {/* 折りたたみ中は「該当◯名／表示◯名」を読み上げる。実 DOM に無い人数だけを伝えると、
+                  直列に読む利用者は該当分を最後まで辿れると思って読み進めることになる（#340） */}
               <p className="members-status" role="status">
                 {heading}　{hits.length.toLocaleString("ja-JP")} 名
+                {fold.hidden > 0 && `（うち ${(hits.length - fold.hidden).toLocaleString("ja-JP")} 名を表示中）`}
               </p>
               <p className="members-count" aria-hidden="true">
                 <span className="num">{hits.length.toLocaleString("ja-JP")} 名</span>
@@ -206,7 +221,7 @@ export default function Members({ data = bundled }: { data?: Dataset }) {
               </p>
             </section>
 
-            <section className="section" aria-label="議員一覧">
+            <section className="section" aria-label="議員一覧" id={listId}>
               {sections.length === 0 ? (
                 <p className="note">該当する議員はいません。</p>
               ) : (
@@ -222,6 +237,13 @@ export default function Members({ data = bundled }: { data?: Dataset }) {
                     </ul>
                   </div>
                 ))
+              )}
+              {fold.hidden > 0 && (
+                <p className="members-more">
+                  <button type="button" className="members-more-button" aria-expanded={false} aria-controls={listId} onClick={() => setExpanded(true)}>
+                    さらに表示（残り{fold.hidden.toLocaleString("ja-JP")}名）
+                  </button>
+                </p>
               )}
             </section>
           </>
