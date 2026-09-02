@@ -6,6 +6,7 @@ import { buildCoverage, type Coverage, type DietCoverage, formatLocalSessionRang
 import type { AssemblySession } from "../lib/data-contract";
 import { defaultDataDir, readSangiinVoteLinkStats, readShugiinBillNameStats, readUnmatchedSpeechStats } from "../lib/data-files";
 import { type Dataset, dataset as bundled } from "../lib/dataset";
+import { bills as bundledBills } from "../lib/bills";
 import { formatDate, formatDateTime } from "../lib/format";
 import { seoMeta } from "../lib/seo";
 import "../styles/pages.css";
@@ -46,8 +47,15 @@ export default function CoverageRoute() {
  * /coverage（#218）: どの議会のどこまでが入っているかを data/ から数えて並べる。
  * 件数・範囲はすべて buildCoverage がデータを数えた値で、この画面には数値を書かない。評価・解釈は書かない。
  */
+/**
+ * Issue 408: `bills` は `dataset` に入っていない（gzip 60KB あり、使うのはこの画面だけ）。
+ * **この画面だけが `lib/bills.ts` から読む**ので、他のページはそれを読まずに済む。
+ * `data` を明示的に渡された場合（テスト）は、その中の `bills` を尊重する。
+ */
+const withBills = (d: Dataset): Dataset => (d.bills === undefined ? { ...d, bills: bundledBills } : d);
+
 export function CoveragePage({
-  data = bundled,
+  data = withBills(bundled),
   sessions = bundledSessions(),
   shugiinBillNames = null,
   sangiinVotes = null,

@@ -49,6 +49,52 @@ describe("データを使わないファイルは dataset.ts を import しな�
     expect(read("lib/dataset.ts")).toMatch(/import\.meta\.glob<[^>]*>\([^)]*eager:\s*true/);
   });
 
+  /*
+   * Issue 408: `bills/index.json` は5つのデータのうち**いちばん大きく**（gzip 60KB）、
+   * **使うのは /coverage だけ**。`dataset` に入れると5つが1チャンクにまとまるので、
+   * `/about`（meta の 1KB だけが要る）まで 60KB を読むことになっていた。
+   *
+   *     /          238 KB → 181 KB
+   *     /about     230 KB → 173 KB
+   *     /members   245 KB → 188 KB
+   *     /coverage  249 KB → 249 KB   ← 実際に使うので変わらない（これは正しい）
+   */
+  it("dataset.ts は bills を eager に読まない（lib/bills.ts の担当）", () => {
+    const src = read("lib/dataset.ts");
+    expect(src).not.toMatch(/import\.meta\.glob[^;]*bills\/index\.json/);
+  });
+
+  it("bills を読むのは lib/bills.ts だけ", () => {
+    const importers = ["lib/bills.ts", "lib/dataset.ts", "routes/coverage.tsx", "routes/home.tsx", "routes/members.tsx", "routes/about.tsx"]
+      .filter((f) => /import\.meta\.glob[^;]*bills\/index\.json/.test(read(f)));
+    expect(importers).toEqual(["lib/bills.ts"]);
+  });
+
+  it("/coverage 以外のページは lib/bills.ts を import しない", () => {
+    for (const f of ["routes/home.tsx", "routes/members.tsx", "routes/about.tsx", "routes/assemblies.tsx", "routes/compare.tsx", "components/SiteFooter.tsx"]) {
+      expect(read(f), f).not.toMatch(/from\s+"[^"]*\/bills"/);
+    }
+  });
+
+  /*
+   * Issue 408: `/coverage` のテストは**全部 `data` を明示的に渡す**ので、
+   * **既定の経路（本番が通る道）を誰も通っていなかった**。
+   * `withBills` を外して bills が黙って 0 件になる変異を入れても、46件すべて緑のままだった。
+   *
+   * 「記録が出ない」は利用者から見えない失敗なので、**既定の値そのもの**を検査する。
+   */
+  it("bundled な bills が空でない（/coverage の既定が黙って 0 件にならない）", async () => {
+    const { bills } = await import("./bills");
+    expect(Array.isArray(bills)).toBe(true);
+    expect(bills.length).toBeGreaterThan(0);
+    expect(bills[0]).toHaveProperty("house");
+  });
+
+  it("dataset には bills が入っていない（入れると全ページが読む）", async () => {
+    const { dataset } = await import("./dataset");
+    expect(dataset.bills).toBeUndefined();
+  });
+
   it("archive-path.ts の重複した REPO_URL が site.ts と一致する", () => {
     // 同じ理由（dataset.ts を import できない）で複製されている定数。ずれると出典リンクが割れる
     const m = read("lib/archive-path.ts").match(/REPO_URL\s*=\s*"([^"]+)"/);

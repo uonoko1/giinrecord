@@ -34,7 +34,11 @@ export interface Dataset {
   assemblies?: Assembly[];
   members: MemberSummary[];
   rollcalls: RollCallSummary[];
-  /** `bills/index.json`（議案。衆院の会派態度の裏づけ）。無い（古い）データなら空 */
+  /**
+   * `bills/index.json`（議案。衆院の会派態度の裏づけ）。無い（古い）データなら空。
+   * **`dataset` には入っていない**（Issue 408）。要るところが `lib/bills.ts` から直接読む。
+   * 型に残してあるのは、テストや `/coverage` が `Dataset` の形で渡すため。
+   */
   bills?: BillSummary[];
 }
 
@@ -43,8 +47,6 @@ const metaFiles = import.meta.glob<DatasetMeta>("../../../../data/meta.json", { 
 const assemblyFiles = import.meta.glob<Assembly[]>("../../../../data/assemblies/index.json", { eager: true, import: "default" });
 const memberFiles = import.meta.glob<MemberSummary[]>("../../../../data/members/index.json", { eager: true, import: "default" });
 const rollcallFiles = import.meta.glob<RollCallSummary[]>("../../../../data/rollcalls/index.json", { eager: true, import: "default" });
-const billFiles = import.meta.glob<BillSummary[]>("../../../../data/bills/index.json", { eager: true, import: "default" });
-
 function first<T>(files: Record<string, T>): T | undefined {
   return Object.values(files)[0];
 }
@@ -54,7 +56,8 @@ export const dataset: Dataset = {
   assemblies: first(assemblyFiles),
   members: first(memberFiles) ?? [],
   rollcalls: first(rollcallFiles) ?? [],
-  bills: first(billFiles) ?? [],
+  // Issue 408: bills は **ここに入れない**。いちばん大きく（gzip 60KB）、使うのは /coverage だけ
+  // なのに、この5つは1つのチャンクにまとまるので全ページが読むことになる。lib/bills.ts を見ること。
 };
 
 /** [220, 221] → "第220—221回"、[221] → "第221回" */

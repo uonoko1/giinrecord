@@ -497,3 +497,32 @@ describe("紐づけられなかった発言の件数（#370）", () => {
     for (const w of EVALUATIVE_WORDS) expect(container.textContent).not.toContain(w);
   });
 });
+
+/**
+ * Issue 408: `bills` を `dataset` から切り出した（gzip 60KB、使うのはこの画面だけ）。
+ *
+ * **この画面のテストは全部 `data` を明示的に渡すので、既定の経路＝本番が通る道を
+ * 誰も通っていなかった。** `withBills` を外して bills が黙って 0 件になる変異を入れても、
+ * 46 件すべて緑のままだった。
+ *
+ * 「記録が出ない」は利用者から見ても分からない失敗なので、**既定で描いて確かめる**。
+ */
+describe("/coverage の既定（bundled）で議案が出る（Issue 408）", () => {
+  it("data を渡さずに描くと、議案の行に件数が出る（両院とも）", async () => {
+    const { bills } = await import("../lib/bills");
+    render(
+      <MemoryRouter>
+        <CoveragePage />
+      </MemoryRouter>,
+    );
+    // 「議案情報（…）」の行は衆参で2つ出る。件数が無いと「—」になるので、**数字**が出ることを見る
+    const rows = screen.getAllByText(/議案情報/).map((el) => el.closest("tr"));
+    expect(rows.length).toBeGreaterThan(0);
+    // 3行のうち件数が出るのは国会の分だけでよい（地方議会は議案データを持たないので「—」が正しい）。
+    // **1行も数字が出ない**のが、bills が届いていない状態
+    const withNumbers = rows.filter((r) => /[0-9]/.test(r?.textContent ?? ""));
+    expect(withNumbers.length, "議案の行に件数が1つも出ていない（bills が届いていない）").toBeGreaterThan(0);
+    // そもそも bundled な bills が空でないことも見る（空なら上も「—」になる）
+    expect(bills.length).toBeGreaterThan(0);
+  });
+});
