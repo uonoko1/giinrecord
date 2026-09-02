@@ -47,7 +47,9 @@ describe("/assemblies/{id} 地方議会", () => {
     expect(row).toHaveTextContent("みやぎ県民の声");
     expect(row).toHaveTextContent("石巻市・牡鹿郡");
     expect(links[1]!.closest("li")).toHaveTextContent("元職");
-    expect(screen.getByText("3 名")).toBeInTheDocument();
+    // 見出しの人数は**現職だけ**（#355）。一覧には元職も「元職」の印つきで載る（3人並ぶ）
+    expect(screen.getByText("2 名")).toBeInTheDocument();
+    expect(links).toHaveLength(3);
   });
 
   it("会期一覧: sessions.json の並びのまま、会期の原文・議決日・表決件数・出典（公式）", () => {
