@@ -37,6 +37,9 @@ const themeInit = `try{var t=localStorage.getItem(${JSON.stringify(THEME_STORAGE
  * 差し替わるのではない）ので、フォールバック側も `<html>` から `<Scripts />` まで自分で書く必要がある。
  * 片方だけが shell を持つと SPA モードのビルドが `Did you forget to include <Scripts/>` で落ちる。
  */
+/** skip link の飛び先。ルートごとの <main> に id を振らずに済むよう、shell 側で1つ持つ */
+const MAIN_ID = "main";
+
 function Document({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ja">
@@ -52,7 +55,18 @@ function Document({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        {children}
+        {/*
+          Issue 394: skip link。無いと、キーボード利用者は**ページを開くたびに**ヘッダのリンクを
+          全部たどってから本文に着く（議員ページはタブが6つあるので、その手前を毎回通る）。
+          body の最初に置くので Tab 1回で届き、フォーカスが当たったときだけ見える（pages.css）。
+          axe はこれを必須項目として出さない——本番 13 ページの計測は違反 0 件だった。
+        */}
+        <a className="skip-link" href={`#${MAIN_ID}`}>
+          本文へ移動
+        </a>
+        <div id={MAIN_ID} tabIndex={-1}>
+          {children}
+        </div>
         <ScrollRestoration />
         <Scripts />
       </body>
