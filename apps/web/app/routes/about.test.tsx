@@ -16,6 +16,25 @@ function renderAbout(data = dataset) {
   );
 }
 
+/**
+ * Issue 383: meta description は**検索結果に出る文言**で、本文とは別に書かれている。
+ * #358 で本文を直したとき、こちらを取りこぼした（「国会」の語を使っていないので grep に当たらなかった）。
+ */
+describe("/about の meta description（#383）", () => {
+  it("収録範囲に地方議会を含む（国会だけと言わない）", () => {
+    const tags = routeMeta({ location: { pathname: "/about" } } as unknown as Parameters<typeof routeMeta>[0]);
+    const d = tags.find((t): t is { name: string; content: string } => "name" in t && t.name === "description");
+    expect(d?.content).toContain("地方議会");
+    expect(d?.content).toContain("国立国会図書館");
+  });
+
+  it("「だけを使います」という限定は保つ（外部の解析や推定を混ぜない約束）", () => {
+    const tags = routeMeta({ location: { pathname: "/about" } } as unknown as Parameters<typeof routeMeta>[0]);
+    const d = tags.find((t): t is { name: string; content: string } => "name" in t && t.name === "description");
+    expect(d?.content).toContain("だけを使います");
+  });
+});
+
 describe("About", () => {
   it("方針文と各節の見出しがある", () => {
     renderAbout();
