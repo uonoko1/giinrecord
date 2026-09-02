@@ -6,7 +6,7 @@ import { seoMeta } from "../lib/seo";
 import "../styles/pages.css";
 
 /** この規約の最終更新日（YYYY-MM-DD）。本文を変えたら更新する。 */
-export const TERMS_UPDATED = "2026-08-23";
+export const TERMS_UPDATED = "2026-09-02";
 
 const ISSUE_NEW_URL = `${REPO_URL}/issues/new`;
 
@@ -44,7 +44,7 @@ export default function Terms() {
             このサイトは何か
           </h2>
           <p className="body">
-            議員レコードは、参議院・衆議院・国立国会図書館が公開する公式記録を転記して並べたサイトです。記録をそのまま置くだけで、評価・採点・推薦はしません。すべての記録に出典へのリンクがあります。
+            議員レコードは、参議院・衆議院・国立国会図書館と、収録している地方議会が公開する公式記録を転記して並べたサイトです。記録をそのまま置くだけで、評価・採点・推薦はしません。すべての記録に出典へのリンクがあります。
           </p>
         </section>
 
