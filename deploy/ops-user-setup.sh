@@ -1,17 +1,33 @@
 #!/usr/bin/env bash
 # 運用ユーザー giinops（コマンド限定の NOPASSWD sudo、鍵1本のみ）を作り、CI の deploy 鍵（ubuntu）を rsync 専用に縮小する。
-# 共用 VPS の他ユーザー・他サイトには触れない。root で1回：
-#   sudo bash ops-user-setup.sh "<運用者の公開鍵1行>"
+# 共用 VPS の他ユーザー・他サイトには触れない。root で:
+#   初回:       sudo bash ops-user-setup.sh "<運用者の公開鍵1行>"
+#   再実行:     sudo bash ops-user-setup.sh          ← 鍵は既にあるものを使う（allowlist の更新だけ）
 #   テスト: deploy/test/ops-user-setup.test.sh（OPS_SETUP_PREFIX で全パスを一時ディレクトリ配下に、adduser 等はスタブ）
 set -euo pipefail
-PUBKEY="${1:?usage: ops-user-setup.sh '<ssh public key line>'}"
 OPS=giinops
 DEPLOY_USER=ubuntu
 SITE_ROOT=/var/www/giinrecord
 CHECKOUT=/opt/giinrecord   # deploy/ を bind mount 元として持つ root 所有の checkout
 PREFIX="${OPS_SETUP_PREFIX:-}"   # テスト専用。本番は空
 
-case "$PUBKEY" in ssh-ed25519\ *|ssh-rsa\ *|ecdsa-sha2-*) ;; *) echo "public key が不正" >&2; exit 1;; esac
+# 鍵は引数で渡す。**allowlist を更新するだけの再実行では省略できる**（既にある鍵をそのまま使う）。
+# 鍵をコマンドラインに置くと、sudo が /var/log/auth.log にコマンド全体を記録するので
+# **公開鍵が平文でログに残る**（秘密ではないが、残す理由も無い）。ps とシェル履歴にも出る。
+# allowlist の更新（#375 のような）はこの理由で毎回鍵を渡し直す必要が無い。
+PUBKEY="${1:-}"
+if [ -z "$PUBKEY" ]; then
+  EXISTING="$PREFIX/home/$OPS/.ssh/authorized_keys"
+  [ -r "$EXISTING" ] || { echo "usage: ops-user-setup.sh '<ssh public key line>'（初回は鍵が要ります）" >&2; exit 2; }
+  PUBKEY=$(head -n1 "$EXISTING")
+  echo "既にある鍵をそのまま使います（$EXISTING の1行目）。鍵を差し替えるときは引数で渡してください。" >&2
+fi
+# **1行だけ**を受け取る。複数行を渡すと authorized_keys が壊れる（`>` で上書きするため）
+case "$PUBKEY" in
+  *$'\n'*) echo "public key は1行で渡してください（複数行は authorized_keys を壊します）" >&2; exit 1;;
+  ssh-ed25519\ *|ssh-rsa\ *|ecdsa-sha2-*) ;;
+  *) echo "public key が不正" >&2; exit 1;;
+esac
 
 # 1. 運用ユーザー（ログインシェルあり、パスワードなし＝鍵のみ）
 # 改名（gikailog → giinrecord）: このスクリプトは冪等に「作る」だけで旧ユーザーを消さない。
