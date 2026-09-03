@@ -70,18 +70,31 @@ describe("データを使わないファイルは dataset.ts を import しな�
   });
 
   /*
-   * Issue 408: `bills/index.json` は5つのデータのうち**いちばん大きく**（gzip 60KB）、
+   * Issue 408: `bills/index.json` は5つのデータのうち**いちばん大きく**（gzip 55KB）、
    * **使うのは /coverage だけ**。`dataset` に入れると5つが1チャンクにまとまるので、
-   * `/about`（meta の 1KB だけが要る）まで 60KB を読むことになっていた。
+   * `/about`（meta の 1KB だけが要る）まで 55KB を読むことになっていた。
    *
    *     /          238 KB → 181 KB
    *     /about     230 KB → 173 KB
    *     /members   245 KB → 188 KB
    *     /coverage  249 KB → 249 KB   ← 実際に使うので変わらない（これは正しい）
+   *
+   * Issue 411: その `/coverage` も、議案について使うのは `house` と `session` だけだった。
+   * ETL が出す集計（`bills/by-session.json`、gzip 231B）に切り替えたので、
+   * **`bills/index.json` はもうどの画面も eager に読まない**。
    */
   it("dataset.ts は bills を eager に読まない（lib/bills.ts の担当）", () => {
     const src = read("lib/dataset.ts");
     expect(src).not.toMatch(/import\.meta\.glob[^;]*bills\/index\.json/);
+  });
+
+  /*
+   * Issue 411 の受け入れ条件そのもの: `bills/index.json` を eager に読むファイルは**1つも無い**。
+   * ここが緩むと 55KB が黙って戻ってくる（誰も気づかない性質の後退なので、名前で固定する）。
+   */
+  it("bills/index.json を eager に読むファイルはもう無い（#411）", () => {
+    const GLOB = /import\.meta\.glob[^;]*bills\/index\.json/;
+    expect(sources().filter(({ src }) => GLOB.test(src)).map(({ rel }) => rel)).toEqual([]);
   });
 
   /*
@@ -99,8 +112,8 @@ describe("データを使わないファイルは dataset.ts を import しな�
     expect(offenders.map((o) => o.rel)).toEqual([]);
   });
 
-  it("bills/index.json を eager に読むのは lib/bills.ts だけ", () => {
-    const GLOB = /import\.meta\.glob[^;]*bills\/index\.json/;
+  it("bills/by-session.json を eager に読むのは lib/bills.ts だけ（#411）", () => {
+    const GLOB = /import\.meta\.glob[^;]*bills\/by-session\.json/;
     const readers = sources().filter(({ src }) => GLOB.test(src)).map(({ rel }) => rel);
     expect(readers).toEqual(["app/lib/bills.ts"]);
   });

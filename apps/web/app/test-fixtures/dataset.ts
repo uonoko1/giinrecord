@@ -1,4 +1,4 @@
-import type { BillSummary } from "@seiji-kiroku/shared";
+import type { BillSessionCount } from "@seiji-kiroku/shared";
 import type { Dataset } from "../lib/dataset";
 
 /** Home / About 用の最小データ。採決はわざと日付順にしていない（降順ソートを検証するため）。 */
@@ -38,11 +38,11 @@ export const dataset: Dataset = {
   ],
 };
 
-// Issue 408: bills は Dataset に入っていない（60KB あり、使うのは /coverage だけ）。
-// テストは必要なところでこれを明示的に渡す。
-// bills/index.json は衆院の議案情報（会派態度の裏づけ）。回次 219 は採決が無く、議案だけがある回次（歯抜けの検証用）
-export const bills: BillSummary[] = [
-    { id: "221-閣法-1", session: 221, kind: "閣法", house: "shugiin", title: "令和八年度一般会計予算", status: "成立", sourceUrl: "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE14C2.htm" },
-    { id: "221-閣法-2", session: 221, kind: "閣法", house: "shugiin", title: "刑法の一部を改正する法律案", status: "成立", sourceUrl: "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE14C3.htm" },
-    { id: "219-閣法-1", session: 219, kind: "閣法", house: "shugiin", title: "古い議案", status: "成立", sourceUrl: "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE14C4.htm" },
+// Issue 408: 議案は Dataset に入っていない（使うのは /coverage だけ）。テストは必要なところでこれを明示的に渡す。
+// Issue 411: /coverage が読むのは全件ではなく **院・回次ごとの件数**（bills/by-session.json）。
+// 衆院の議案情報（会派態度の裏づけ）で、回次 219 は採決が無く議案だけがある回次（歯抜けの検証用）。
+// house 昇順・回次昇順（ETL の billsBySession と同じ並び）。0 件の回次の行は無い
+export const billsBySession: BillSessionCount[] = [
+    { house: "shugiin", session: 219, count: 1 },
+    { house: "shugiin", session: 221, count: 2 },
 ];

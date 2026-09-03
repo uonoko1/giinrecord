@@ -1,7 +1,7 @@
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import type { Dirent } from "node:fs";
 import { join } from "node:path";
-import type { Assembly, Bill, BillSummary, DatasetMeta, MemberDetail, MemberSpeeches, MemberSummary, RollCall, RollCallSummary } from "@seiji-kiroku/shared";
+import type { Assembly, Bill, BillSessionCount, BillSummary, DatasetMeta, MemberDetail, MemberSpeeches, MemberSummary, RollCall, RollCallSummary } from "@seiji-kiroku/shared";
 import type { Aggregated } from "./aggregate.ts";
 import { DIET_ASSEMBLY_IDS } from "./assemblies.ts";
 import { isDietMemberRow, mergeAssemblies, mergeMemberIndex, readMemberIndex, validateLocalAssemblies } from "./local-assemblies.ts";
@@ -103,7 +103,10 @@ export async function writeDataset(dir: string, ds: Dataset): Promise<void> {
   await put("rollcalls/index.json", ds.rollCalls);
   for (const rc of ds.rollCallDetails) await put(`rollcalls/${rc.session}/${rc.id}.json`, rc);
   const bills = sortBills(ds.bills);
-  await put("bills/index.json", bills.map(toBillSummary));
+  const billIndex = bills.map(toBillSummary);
+  await put("bills/index.json", billIndex);
+  // #411: /coverage は議案の house と session しか使わない。全件（gzip 55KB）の代わりに読む集計
+  await put("bills/by-session.json", billsBySession(billIndex));
   for (const b of bills) await put(`bills/${b.session}/${b.id}.json`, b);
   // 未突合は回次別に分ける（#219。第142〜199回は全票が未突合で単一ファイルだと百万行規模になる）
   await writeUnmatched(dir, ds.unmatched);
@@ -147,6 +150,21 @@ const ATTENDANCE_SOURCE = /^https:\/\/kokkai\.ndl\.go\.jp\/txt\/[0-9A-Za-z]+\/\d
 const SPEECH_SOURCE = ATTENDANCE_SOURCE;
 /** bills/ の id は `{提出回次}-{種別原文}-{番号 or 経過ページ id}`。 */
 const BILL_ID = /^(\d+)-[^-]+-[^-]+$/;
+
+/**
+ * `bills/by-session.json`（#411）: `bills/index.json` を院・回次ごとに数えた行。house 昇順・回次昇順（決定的な並び）。
+ * 0 件の (house, session) の行は作らない（行が無い＝0 件。`/coverage` の回次の範囲は行のある回次だけから数える）。
+ */
+export function billsBySession(bills: readonly Pick<BillSummary, "house" | "session">[]): BillSessionCount[] {
+  const rows = new Map<string, BillSessionCount>();
+  for (const b of bills) {
+    const key = `${b.house}\t${b.session}`;
+    const row = rows.get(key);
+    if (row) row.count++;
+    else rows.set(key, { house: b.house, session: b.session, count: 1 });
+  }
+  return [...rows.values()].sort((a, b) => (a.house < b.house ? -1 : a.house > b.house ? 1 : a.session - b.session));
+}
 
 /** bills/index.json の順: 提出回次の降順、同じ回次では id の昇順（決定的な並び）。 */
 export function sortBills(bills: readonly Bill[]): Bill[] {
@@ -338,9 +356,15 @@ export async function validateDataset(dir: string): Promise<string[]> {
       for (const id of b[key] ?? []) if (!ids.has(id)) v.push(`${rel}: ${key} memberId ${id} not in members/index.json`);
     }
   }
+  // bills/by-session.json（#411）は index.json から機械的に導ける集計。食い違えば /coverage が違う件数を出すので止める
+  const bySession = await read<BillSessionCount[]>("bills/by-session.json");
+  if (bySession === undefined) v.push("bills/by-session.json: missing (/coverage reads it instead of bills/index.json)");
+  else if (stableJson(bySession) !== stableJson(billsBySession(billIndex))) {
+    v.push("bills/by-session.json: does not match bills/index.json (recount by house and session)");
+  }
   const billFiles = new Set(billIndex.map((s) => `bills/${s.session}/${s.id}.json`));
   for (const rel of await listJsonFiles(dir, "bills")) {
-    if (rel !== "bills/index.json" && !billFiles.has(rel)) v.push(`${rel}: not in bills/index.json (stale file from a previous run?)`);
+    if (rel !== "bills/index.json" && rel !== "bills/by-session.json" && !billFiles.has(rel)) v.push(`${rel}: not in bills/index.json (stale file from a previous run?)`);
   }
   // group-mismatch.json: 行の形と、memberId / rollCallId が公開データ上に実在することを検査（Issue #24）
   const mismatch = await read<unknown>("group-mismatch.json");

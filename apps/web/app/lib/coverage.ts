@@ -3,7 +3,7 @@
  * 数値はここで数え、ページ側にも定数にも書かない（データが増えたら再ビルドで追随する）。
  * ブラウザでも動く（Node API は使わない）。
  */
-import type { Assembly, BillSummary, DatasetMeta, House } from "@seiji-kiroku/shared";
+import type { Assembly, BillSessionCount, DatasetMeta, House } from "@seiji-kiroku/shared";
 import { isDietAssemblyId } from "./assemblies";
 import { DIET_ASSEMBLIES, type AssemblySession } from "./data-contract";
 import type { Dataset } from "./dataset";
@@ -316,7 +316,7 @@ export interface DietCoverage {
   rollcallSessions: SessionRange | null;
   /** 個人別の投票記録が一次資料にあるか（参議院のみ true） */
   individualVotes: boolean;
-  /** その院の議案（bills/index.json）の件数。衆院の会派態度（推定）の裏づけになる資料 */
+  /** その院の議案の件数（bills/by-session.json の count の合計）。衆院の会派態度（推定）の裏づけになる資料 */
   bills: number;
   /** 議案のある回次の範囲。1 件も無ければ null */
   billSessions: SessionRange | null;
@@ -349,7 +349,7 @@ export interface Coverage {
     /** 国会の記名投票の件数（rollcalls/index.json の全行） */
     dietRollcalls: number;
     dietMembers: number;
-    /** 議案（bills/index.json）の件数 */
+    /** 議案の件数（bills/by-session.json の count の合計） */
     bills: number;
     localRollcalls: number;
     localMembers: number;
@@ -367,11 +367,15 @@ const HOUSE_OF: Record<string, House> = { "diet-sangiin": "sangiin", "diet-shugi
  * どの数もデータの行を数えた結果で、推定や定数は使わない。
  */
 /**
- * Issue 408: `bills` は `Dataset` に入っていない（60KB あり、使うのはこの画面だけ）。
+ * Issue 408: `bills` は `Dataset` に入っていない（gzip 55KB あり、使うのはこの画面だけ）。
  * **必須の引数**で受け取るので、渡し忘れは**コンパイルエラー**になる
  * （optional にすると `?? []` で静かに 0 件になる。レビュー指摘）。
+ *
+ * Issue 411: 受け取るのは議案の全件ではなく**院・回次ごとの件数**（`bills/by-session.json`）。
+ * この画面が議案について使うのは `house` と `session` だけで、件数と回次の範囲はその集計から出る。
+ * 件数は行の `count` を足し、回次の範囲は行のある回次から数える（0 件の回次の行は無い）。
  */
-export function buildCoverage(data: Dataset, sessionsByAssembly: ReadonlyMap<string, AssemblySession[]>, bills: readonly BillSummary[]): Coverage {
+export function buildCoverage(data: Dataset, sessionsByAssembly: ReadonlyMap<string, AssemblySession[]>, billsBySession: readonly BillSessionCount[]): Coverage {
   const assemblies: readonly Assembly[] = data.assemblies ?? DIET_ASSEMBLIES;
   const memberCount = new Map<string, number>();
   for (const m of data.members) {
@@ -386,7 +390,7 @@ export function buildCoverage(data: Dataset, sessionsByAssembly: ReadonlyMap<str
       // rollcalls/index.json は参議院の本会議投票結果（個人別）。衆議院の個人票は一次資料に無い
       const individualVotes = a.id === "diet-sangiin";
       const house = HOUSE_OF[a.id] ?? "sangiin";
-      const houseBills = bills.filter((b) => b.house === house);
+      const houseBills = billsBySession.filter((b) => b.house === house);
       return {
         assemblyId: a.id,
         house,
@@ -396,7 +400,7 @@ export function buildCoverage(data: Dataset, sessionsByAssembly: ReadonlyMap<str
         rollcalls: individualVotes ? data.rollcalls.length : 0,
         rollcallSessions: individualVotes ? rollcallSessions : null,
         individualVotes,
-        bills: houseBills.length,
+        bills: houseBills.reduce((sum, b) => sum + b.count, 0),
         billSessions: sessionRange(houseBills.map((b) => b.session)),
       };
     });
@@ -428,7 +432,7 @@ export function buildCoverage(data: Dataset, sessionsByAssembly: ReadonlyMap<str
     totals: {
       dietRollcalls: diet.reduce((sum, d) => sum + d.rollcalls, 0),
       dietMembers: diet.reduce((sum, d) => sum + d.members, 0),
-      bills: bills.length,
+      bills: billsBySession.reduce((sum, b) => sum + b.count, 0),
       localRollcalls: local.reduce((sum, l) => sum + l.rollcalls, 0),
       localMembers: local.reduce((sum, l) => sum + l.members, 0),
       assemblies: assemblies.length,

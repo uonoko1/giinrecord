@@ -147,6 +147,18 @@ export interface BillSummary {
   sourceUrl: string;
 }
 
+/**
+ * Row of `data/bills/by-session.json`（#411）: 院・回次ごとの議案の件数。`bills/index.json` から機械的に導く。
+ * `/coverage` は議案の `house` と `session` しか使わないのに全件（gzip 55KB）を読んでいたので、
+ * 件数だけの集計を別ファイルにした。件数が 0 の (house, session) の行は書かない（行が無い＝0 件）。
+ */
+export interface BillSessionCount {
+  house: House;
+  session: number;
+  /** その院・回次の `bills/index.json` の行数（1 以上） */
+  count: number;
+}
+
 export type VoteValue = "賛成" | "反対" | "投票なし";
 
 /**

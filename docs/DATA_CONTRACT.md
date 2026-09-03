@@ -211,6 +211,9 @@ interface AssemblySession { id: string; label: string; date: string; rollcalls: 
 - `submitters` / `supporters`（memberId）は衆院の名簿に名寄せできた人だけ。名寄せするのは名簿が覆う回次（衆院議員の term の `sessionFrom`..`sessionTo`）に提出された議案だけで、衆院は「現在」の名簿しか無い（#71）ので実際には最新回次（`meta.sessions` の最大）の議案に限られる。それ以外の回次の議案・名簿が無い間は付かず、氏名は `submitterNames` / `supporterNames` に残る（unmatched.json にも流さない。名簿が覆う回次で紐づかない氏名だけ `kind: "bill"` で unmatched.json に載る）。経過ページに個人の会派は無いので同姓同名は絞れず unmatched に載せる。
 - **推定**: `shugiinGroupStance: { stanceText, yes, no, unanimous? }` は経過ページ「衆議院審議時会派態度／賛成会派／反対会派」の原文（会派名の配列）。衆議院は個人別の投票を公開していないため、**会派の態度から個人の賛否を読み取るのは推定であり、事実（参院の個人票 `RollCall.votes`）とは型で分ける。`RollCall` には入れない。** Web で出すときは「推定（会派の態度）」と明記し、個人の「賛成／反対」とは別の表現にする（色で善悪を示さない）。`unanimous` はページが「全会一致」と書いているときだけ `true`。「多数」で反対会派が空欄のものは全会一致とみなさない（推論しない）。欄が空（未審議・閉会中審査）なら `shugiinGroupStance` は無い。
 - 不変条件（`validateDataset`）: `bills/index.json` の id は一意、各行に対応する `bills/{session}/{id}.json` があり id・session・house が一致する、`sourceUrl` は衆参・NDL のドメイン、`submitters`/`supporters` の memberId は `members/index.json` に存在する、`unanimous` は `stanceText === "全会一致"` のときだけ、index に無いファイル（前回の残骸）は違反。`bills/` は毎回全部書き直す。
+- **`bills/by-session.json`（#411）**: `bills/index.json` を院・回次ごとに数えた行（`{ house, session, count }`）。`house` 昇順・回次昇順で、**件数が 0 の (house, session) の行は書かない**（行が無い＝0 件）。
+  `/coverage` は議案について `house` と `session` しか使わないのに `bills/index.json` 全件（raw 573KB / gzip 55KB）を読んでいたので、この集計（raw 1.5KB / gzip 231B）だけを読むようにした。`bills/index.json` は議員ページ側の紐づけで使うので残る。
+  不変条件（`validateDataset`）: **`bills/index.json` を数え直した結果と完全に一致すること**、および**ファイルが存在すること**。食い違えば `/coverage` が違う件数を出すので違反にする（「記録が出ない」より重い、利用者から検出できない虚偽）。
 - timeline の `bill` 行は参法（参院 議案情報）に加え、衆院の Bill の `submitters` / `supporters`（名簿に名寄せできた衆院議員）からも作る（#73）。`role` は 提出者 / 賛成者、`date` は衆議院の議案受理年月日（`received.shugiin`）、`sourceUrl` は経過ページ、`submitterText` は「議案提出者」欄の原文。受理日の無い議案は行にしない（日付を推定しない）。
 
 ## 会派の態度（timeline の `stance` 行、Issue #73）

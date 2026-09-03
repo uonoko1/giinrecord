@@ -1,17 +1,20 @@
-import type { BillSummary } from "@seiji-kiroku/shared";
+import type { BillSessionCount } from "@seiji-kiroku/shared";
 
 /**
- * `bills/index.json`（議案。衆院の会派態度の裏づけ）。Issue 408
+ * `bills/by-session.json`（院・回次ごとの議案の件数）。Issue 411
  *
- * **`dataset.ts` から切り出してある。** `dataset.ts` は5つの JSON を1つのオブジェクトに
- * まとめて eager に取り込むので、**どれか1つを使うページは5つ全部を読む**。
- * `bills` はその中でいちばん大きく（gzip 60KB）、**使うのは `/coverage` だけ**だった。
+ * **`/coverage` が議案について使うのは `house` と `session` だけ**なのに、
+ * 以前はここが `bills/index.json` 全件（raw 573KB / gzip 55KB）を読んでいた。
+ * `id` / `kind` / `title` / `status` / `sourceUrl` は**この画面で一度も読まれない**。
  *
- * 切り出す前は `/about`（`meta` の 1KB だけが要る）まで 60KB を読んでいた。
+ * ETL が `bills/index.json` を院・回次ごとに数えた 25 行（raw 1.5KB / gzip 231B）を出し、
+ * ここはそれだけを読む。集計が index.json と一致することは ETL 側
+ * （`validateDataset` の `bills/by-session.json` の検査）が固定する。
  *
- * ここを import してよいのは、**実際に議案の一覧が要るところだけ**。
- * 件数だけなら `members[].counts.bills` にある（そちらはデータを読まない）。
+ * `bills/index.json` そのものは議員ページ側の紐づけで使うので残っている。
+ * ここを import してよいのは、**院・回次ごとの議案の件数が要るところだけ**。
+ * 議員 1 人あたりの件数なら `members[].counts.bills` にある（そちらはデータを読まない）。
  */
-const billFiles = import.meta.glob<BillSummary[]>("../../../../data/bills/index.json", { eager: true, import: "default" });
+const billFiles = import.meta.glob<BillSessionCount[]>("../../../../data/bills/by-session.json", { eager: true, import: "default" });
 
-export const bills: BillSummary[] = Object.values(billFiles)[0] ?? [];
+export const billsBySession: BillSessionCount[] = Object.values(billFiles)[0] ?? [];
