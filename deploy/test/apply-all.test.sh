@@ -39,18 +39,18 @@ LOG=$(cat "$TMP/log")
 
 # 3本とも流れているか
 n=$(grep -c '^ssh' <<<"$LOG" || true)
-[ "$n" = 4 ] && ok "ssh は4回（反映3回 + 確認1回）" || bad "ssh の回数が違う: $n"
+if [ "$n" = 4 ]; then ok "ssh は4回（反映3回 + 確認1回）"; else bad "ssh の回数が違う: $n"; fi
 
-grep -q 'sudo bash -s giinrecord.jp' <<<"$LOG" && ok "production を giinrecord.jp で流す" || bad "production の引数が違う"
-grep -q 'sudo bash -s staging.giinrecord.jp 8083' <<<"$LOG" && ok "staging を staging.giinrecord.jp 8083 で流す" || bad "staging の引数が違う"
+if grep -q 'sudo bash -s giinrecord.jp' <<<"$LOG"; then ok "production を giinrecord.jp で流す"; else bad "production の引数が違う"; fi
+if grep -q 'sudo bash -s staging.giinrecord.jp 8083' <<<"$LOG"; then ok "staging を staging.giinrecord.jp 8083 で流す"; else bad "staging の引数が違う"; fi
 
 # #141 の事故: staging の設定を production のドメインで流すと production の conf を壊す。
 # **production に 8083 を渡していない / staging にポートを付け忘れていない**ことを見る
 # `giinrecord.jp 8083` は `staging.giinrecord.jp 8083` にも一致してしまうので、
 # **staging. が付いていない giinrecord.jp** に 8083 が続く形だけを見る（最初これで誤検出した）
-grep -qE 'bash -s giinrecord\.jp 8083' <<<"$LOG" && bad "production に 8083 を渡している（#141 の事故）" || ok "production にポートを渡さない"
+if grep -qE 'bash -s giinrecord\.jp 8083' <<<"$LOG"; then bad "production に 8083 を渡している（#141 の事故）"; else ok "production にポートを渡さない"; fi
 # 行末はタブ（STDIN: が続く）なので `$` は使えない。タブか行末で終わることを見る
-grep -qE 'bash -s staging\.giinrecord\.jp(\t|$)' <<<"$LOG" && bad "staging にポートが無い" || ok "staging には 8083 を付ける"
+if grep -qE 'bash -s staging\.giinrecord\.jp(\t|$)' <<<"$LOG"; then bad "staging にポートが無い"; else ok "staging には 8083 を付ける"; fi
 
 # 順序: production → staging → allowlist
 order=$(grep '^ssh' <<<"$LOG" | grep -oE 'giinrecord\.jp|staging\.giinrecord\.jp 8083|sudo bash -s$|sudo -n -l' | tr '\n' '|')
@@ -60,20 +60,20 @@ case "$order" in
 esac
 
 # 渡しているファイルが合っているか（標準入力の中身で見る）
-grep -q 'STDIN:#!/usr/bin/env bash' <<<"$LOG" && ok "スクリプトを標準入力で渡している" || bad "標準入力にスクリプトが渡っていない"
+if grep -q 'STDIN:#!/usr/bin/env bash' <<<"$LOG"; then ok "スクリプトを標準入力で渡している"; else bad "標準入力にスクリプトが渡っていない"; fi
 # 引数無しの `sudo bash -s`（鍵を渡さない）がちょうど1回。行末はタブなので `$` ではなくタブで見る
-[ "$(grep -cF $'sudo bash -s\tSTDIN' <<<"$LOG")" = 1 ] && ok "allowlist は鍵を渡さずに流す（#403: auth.log に公開鍵を残さない）" || bad "allowlist の引数が違う"
+if [ "$(grep -cF $'sudo bash -s\tSTDIN' <<<"$LOG")" = 1 ]; then ok "allowlist は鍵を渡さずに流す（#403: auth.log に公開鍵を残さない）"; else bad "allowlist の引数が違う"; fi
 
 # 反映のあとに確認する（「流した」で終わりにしない）
 last=$(grep -oE '^(ssh|curl)' <<<"$LOG" | tail -2 | tr '\n' ' ')
-[ "$last" = "curl ssh " ] && ok "最後に curl と ssh で確認する" || bad "確認していない: $last"
+if [ "$last" = "curl ssh " ]; then ok "最後に curl と ssh で確認する"; else bad "確認していない: $last"; fi
 
 # ホストは VPS_SSH_HOST で差し替えられる
 run other-host
-grep -q 'other-host' "$TMP/log" && ok "VPS_SSH_HOST でホストを差し替えられる" || bad "ホストが固定されている"
+if grep -q 'other-host' "$TMP/log"; then ok "VPS_SSH_HOST でホストを差し替えられる"; else bad "ホストが固定されている"; fi
 
 # 何をするかを先に見せる
-grep -q '3つを順に実行します' "$TMP/out" && ok "実行内容を先に表示する" || bad "実行内容を表示していない"
+if grep -q '3つを順に実行します' "$TMP/out"; then ok "実行内容を先に表示する"; else bad "実行内容を表示していない"; fi
 
 echo
 echo "pass=$PASS fail=$FAIL"
