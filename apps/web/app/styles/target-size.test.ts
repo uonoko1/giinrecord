@@ -134,3 +134,38 @@ describe("320px 幅で横スクロールしない（WCAG 1.4.10・Issue 412）",
     expect(declarationsFor(read("routes/assemblies.css"), ".assemblies-table-wrap")).toMatch(/overflow-x:\s*auto/);
   });
 });
+
+/**
+ * Issue 423（#413 の第2段階）: ページ下部の移動リンク（`.links` の中）。
+ *
+ * ビルドした本体を 390px で測ると **15箇所すべてが高さ 13px** だった
+ * （`font-size: 13px`、padding 0。このフォントは line-height normal が 1.0 で、文字の高さがそのまま箱になる）。
+ *
+ * `.links a` に `padding-block: 6px` を足して 25px にする。**押せる範囲だけ**を広げ、行間は変えないため、
+ * `.links` の縦の gap を padding の分（6px × 2）だけ減らす——フッター（#416）と同じやり方。
+ *
+ * ここでは line-height を 1.2 ではなく **1.0 とみなす**（実測どおり）。1.2 で見積もると padding 5px でも
+ * 通ってしまうが、実物は 23px で足りない。
+ */
+describe("ページ下部の移動リンク（.links）が 24px を満たす（Issue 423）", () => {
+  const pages = read("styles/pages.css");
+  const FONT_SIZE = 13;
+  const ORIGINAL_GAP = 16; // 直す前の `.links { gap: 16px }`。見た目の間隔はこれを保つ
+
+  function paddingBlock(decls: string): number {
+    return Number(decls.match(/padding-(?:block|top):\s*(\d+)px/)?.[1] ?? 0);
+  }
+
+  it("リンクの高さが 24px 以上（文字 13px + 上下の padding）", () => {
+    const pb = paddingBlock(declarationsFor(pages, ".links a"));
+    expect(pb * 2 + FONT_SIZE).toBeGreaterThanOrEqual(MINIMUM);
+  });
+
+  it("縦の gap を padding の分だけ減らしてあり、行と行の見た目の間隔は 16px のまま", () => {
+    const pb = paddingBlock(declarationsFor(pages, ".links a"));
+    const gap = declarationsFor(pages, ".links").match(/gap:\s*(\d+)px(?:\s+(\d+)px)?/);
+    expect(gap, ".links の gap が読めない").toBeTruthy();
+    const rowGap = Number(gap![1]);
+    expect(rowGap + pb * 2).toBe(ORIGINAL_GAP);
+  });
+});

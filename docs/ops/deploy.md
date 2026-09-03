@@ -198,6 +198,26 @@ bash deploy/apply-all.sh   # 3件（#386 / #387 / #375）をまとめて。実�
 > `deploy/apply-all.sh` は base64 にしてコマンド行で渡し、プロセス置換で実行します
 > （標準入力を使わないので tty が生きる。サーバー上にファイルも残さない）。
 
+> **`VPS_SSH_HOST` は2つの意味で使われています。export したまま流さないでください。**
+>
+> | スクリプト | `VPS_SSH_HOST` の意味 | 既定 |
+> |---|---|---|
+> | `deploy/apply-all.sh` / `deploy/run-remote.sh` | **ホストの alias**（ユーザーは付けない。ssh config 側の `User` で入る） | `sakura-vps` |
+> | `scripts/po/verify-site.sh` | **ユーザー名を含む alias** | `giinops` |
+>
+> `verify-site.sh` のつもりで `VPS_SSH_HOST=giinops` を export したまま `apply-all.sh` を流すと、
+> 最後の確認が `ssh -l giinops giinops` になって失敗します（反映の3本も `giinops` という
+> ホストを探しに行きます）。片方を叩くときは `VPS_SSH_HOST=… bash …` とその場で渡してください。
+>
+> また `apply-all.sh` の最後の確認は `ssh -l giinops "$HOST"` の形で、**alias の
+> HostName・鍵・ポートはそのまま使い、ユーザーだけ差し替えます**（#426）。
+> これは **`giinops` が alias と同じ鍵・ホスト・ポートで入れる**ことが前提です
+> （`deploy/ops-user-setup.sh` は運用者の鍵1本を `giinops` に置くので、通常は成り立ちます）。
+> 別の鍵やポートを使っているなら、ssh config に `giinops` 用のエントリを足したうえで
+> `ssh giinops@<host> 'sudo -n -l'` で allowlist を直接見てください。
+> ホスト名を alias から取り出して表示する形（`ssh -G`）にしていないのは、取り出した値が
+> 画面に出ると **IP がそのまま issue に貼られる**からです（#133）。
+
 確認:
 
 ```sh

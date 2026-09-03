@@ -36,6 +36,17 @@
 - ETL と Web は `data/` のファイル契約（`docs/DATA_CONTRACT.md`）だけで結合する。
 - 共有ファイル（`routes.ts`, `tokens.css`, `shared/src/index.ts`, `vitest.setup.ts`, `.gitignore`, `package.json` 群, `react-router.config.ts`）の変更は担当 PBI を1つに限定し、他は読み取りのみ。必要なら Issue に「共有ファイル変更あり」と書き、PO が順序を決める。
 - フィクスチャは `packages/etl/test/fixtures/` と `apps/web/app/test-fixtures/` に置き、他人のフィクスチャを書き換えない。
+- **共有リポジトリの `git stash` を触らない**（2026-09-04）。
+  - worktree は作業ツリーを分けるが、**`git stash` はリポジトリ共有**（`.git/refs/stash` は1本）。
+    ファイルもブランチも分けたのに、stash だけが全員で1つのスタックを共有している。
+  - 実際に起きた: #411 の担当が作業中、**別ブランチの stash（`WIP on fix/387-hsts`）が消えた**。
+    自分の stash しか pop していないと言うので、並行作業中の誰かが `stash pop` で
+    **他人のものを取った**と考えられる（`pop` は「一番上」を取るので、誰のものかを見ない）。
+  - 今回は**実害ゼロ**だった（消えた内容は #386/#387 で、既に本番に出ていた）。
+    dangling commit にも残っていた（`git stash apply <sha>` で復旧できる）。**次は失われうる。**
+  - **やること**: サブエージェントは `git stash` を使わない。退避が要るなら**自分のブランチに WIP コミット**する
+    （worktree ごとにブランチは分かれているので衝突しない）。
+    PO も、他人の作業中に `git stash pop` / `drop` を打たない。
 - **並列で実装するときは `git worktree` で作業ツリーを分ける**（Sprint 14 の事故）。
   - 上の3項目は**ファイルの衝突**を防ぐが、**git のブランチ状態は作業ツリー1つにつき1つ**しかない。
     同じクローンで複数のエージェントが動くと、`git checkout` が**他人の作業中のブランチを切り替えてしまう**。
