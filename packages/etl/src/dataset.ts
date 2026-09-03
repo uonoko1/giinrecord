@@ -358,7 +358,8 @@ export async function validateDataset(dir: string): Promise<string[]> {
   }
   // bills/by-session.json（#411）は index.json から機械的に導ける集計。食い違えば /coverage が違う件数を出すので止める
   const bySession = await read<BillSessionCount[]>("bills/by-session.json");
-  if (bySession !== undefined && stableJson(bySession) !== stableJson(billsBySession(billIndex))) {
+  if (bySession === undefined) v.push("bills/by-session.json: missing (/coverage reads it instead of bills/index.json)");
+  else if (stableJson(bySession) !== stableJson(billsBySession(billIndex))) {
     v.push("bills/by-session.json: does not match bills/index.json (recount by house and session)");
   }
   const billFiles = new Set(billIndex.map((s) => `bills/${s.session}/${s.id}.json`));

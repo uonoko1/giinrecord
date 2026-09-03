@@ -9,7 +9,7 @@ import type { Dataset, MemberSummary } from "../lib/dataset";
 import assembliesFixture from "../test-fixtures/assemblies/index.json";
 import localMembers from "../test-fixtures/assemblies/members-index.json";
 import sessionsFixture from "../test-fixtures/assemblies/sessions.json";
-import { bills, dataset } from "../test-fixtures/dataset";
+import { billsBySession, dataset } from "../test-fixtures/dataset";
 import { CoveragePage, meta as routeMeta } from "./coverage";
 import type { SangiinVoteLinkStats, ShugiinBillNameStats } from "../lib/coverage";
 import { source } from "../test-fixtures/source";
@@ -23,9 +23,9 @@ const withLocal: Dataset = { ...dataset, assemblies, members: [...dataset.member
 function renderPage(data: Dataset = withLocal, s = sessions, shugiinBillNames: ShugiinBillNameStats | null = null, sangiinVotes: SangiinVoteLinkStats | null = null) {
   return render(
     <MemoryRouter>
-      {/* Issue 408: bills は Dataset に入っていないので明示的に渡す。
+      {/* Issue 408/411: 議案の集計は Dataset に入っていないので明示的に渡す。
           渡さないと本物の bundled データが使われ、fixture の件数と食い違う */}
-      <CoveragePage data={data} sessions={s} bills={bills} shugiinBillNames={shugiinBillNames} sangiinVotes={sangiinVotes} />
+      <CoveragePage data={data} sessions={s} billsBySession={billsBySession} shugiinBillNames={shugiinBillNames} sangiinVotes={sangiinVotes} />
     </MemoryRouter>,
   );
 }
@@ -511,9 +511,9 @@ describe("紐づけられなかった発言の件数（#370）", () => {
  *
  * 「記録が出ない」は利用者から見ても分からない失敗なので、**既定で描いて確かめる**。
  */
-describe("/coverage の既定（bundled）で議案が出る（Issue 408）", () => {
+describe("/coverage の既定（bundled）で議案が出る（Issue 408 / 411）", () => {
   it("data を渡さずに描くと、衆議院の行に議案の実件数が出る", async () => {
-    const { bills: bundledBills } = await import("../lib/bills");
+    const { billsBySession: bundled } = await import("../lib/bills");
     render(
       <MemoryRouter>
         <CoveragePage />
@@ -537,14 +537,23 @@ describe("/coverage の既定（bundled）で議案が出る（Issue 408）", ()
     const countCell = cells.find((t) => /^[\d,]+\s*議案$|[\d,]+\s*件\s*$/.test(t.trim())) ?? cells.at(-1) ?? "";
     const shown = Number((countCell.match(/([\d,]+)/)?.[1] ?? "").replace(/,/g, ""));
 
-    // **期待値を bundledBills から作ってはいけない**（レビュー指摘）。
-    // bills が痩せれば期待値も一緒に痩せるので、1,941 → 101 のような**部分欠損が永久に検出できない**
-    // （実際 95% 欠損させても全件緑だった）。**ファイルという独立した経路**と突き合わせる。
+    // **期待値を bundled（集計）から作ってはいけない**（レビュー指摘）。
+    // 集計が痩せれば期待値も一緒に痩せるので、1,941 → 101 のような**部分欠損が永久に検出できない**
+    // （実際 95% 欠損させても全件緑だった）。
+    //
+    // Issue 411: /coverage は集計（bills/by-session.json）を読むようになったので、
+    // 独立した経路は **bills/index.json そのもの**にする。集計を経由せず生の議案を数えた値と
+    // 画面の数字を突き合わせるので、**集計が間違っていれば（画面と一緒に間違っても）ここで落ちる**。
     const fromFile: { house: string }[] = JSON.parse(readFileSync(join(import.meta.dirname, "../../../../data/bills/index.json"), "utf8"));
     const expected = fromFile.filter((b) => b.house === "shugiin").length;
     expect(shown).toBe(expected);
 
-    // バンドル経路とファイルが一致すること自体も見る（片方だけ痩せたら落ちる）
-    expect(bundledBills.length).toBe(fromFile.length);
+    // 集計の合計が index.json の行数と一致すること自体も見る（片方だけ痩せたら落ちる）。
+    // 回次の範囲も index.json から直に数えた値と突き合わせる（件数が合っても回次がずれたら落ちる）
+    expect(bundled.reduce((t, r) => t + r.count, 0)).toBe(fromFile.length);
+    const sessionsFromFile = [...new Set((fromFile as { house: string; session: number }[]).filter((b) => b.house === "shugiin").map((b) => b.session))].sort((a, b) => a - b);
+    const shownRange = cells.find((t) => /第[\d,]+—[\d,]+回/.test(t)) ?? "";
+    expect(shownRange).toContain(`第${sessionsFromFile[0]}—${sessionsFromFile.at(-1)}回`);
+    expect(bundled.filter((r) => r.house === "shugiin").map((r) => r.session).sort((a, b) => a - b)).toEqual(sessionsFromFile);
   });
 });
