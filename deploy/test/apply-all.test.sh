@@ -19,11 +19,9 @@ BIN="$TMP/bin"; mkdir -p "$BIN"
 # ssh: 呼び出しを記録し、標準入力の1行目（どのスクリプトが渡されたか）も残す
 cat > "$BIN/ssh" <<'STUB'
 #!/usr/bin/env bash
-# 標準入力がリダイレクトされているときだけ読む（確認用の `ssh ... 'sudo -n -l'` は
-# 標準入力を渡さないので、無条件に読むとそこで固まる。実際に固まった）
-first=""
-if [ ! -t 0 ]; then first=$(head -n 1 2>/dev/null || true); fi
-printf 'ssh\t%s\tSTDIN:%s\n' "$*" "${first:0:40}" >> "$SSH_LOG"
+# 標準入力は**使わない**（`< script` は tty を潰して sudo が落ちるため、
+# base64 にしてコマンド行で渡す形に変えた）。標準入力を読むとここで固まる
+printf 'ssh\t%s\n' "$*" >> "$SSH_LOG"
 STUB
 cat > "$BIN/curl" <<'STUB'
 #!/usr/bin/env bash
@@ -41,28 +39,33 @@ LOG=$(cat "$TMP/log")
 n=$(grep -c '^ssh' <<<"$LOG" || true)
 if [ "$n" = 4 ]; then ok "ssh は4回（反映3回 + 確認1回）"; else bad "ssh の回数が違う: $n"; fi
 
-if grep -q 'sudo bash -s giinrecord.jp' <<<"$LOG"; then ok "production を giinrecord.jp で流す"; else bad "production の引数が違う"; fi
-if grep -q 'sudo bash -s staging.giinrecord.jp 8083' <<<"$LOG"; then ok "staging を staging.giinrecord.jp 8083 で流す"; else bad "staging の引数が違う"; fi
+if grep -qE 'base64 -d\) giinrecord\.jp$' <<<"$LOG"; then ok "production を giinrecord.jp で流す"; else bad "production の引数が違う"; fi
+if grep -qE 'base64 -d\) staging\.giinrecord\.jp 8083$' <<<"$LOG"; then ok "staging を staging.giinrecord.jp 8083 で流す"; else bad "staging の引数が違う"; fi
 
 # #141 の事故: staging の設定を production のドメインで流すと production の conf を壊す。
 # **production に 8083 を渡していない / staging にポートを付け忘れていない**ことを見る
 # `giinrecord.jp 8083` は `staging.giinrecord.jp 8083` にも一致してしまうので、
 # **staging. が付いていない giinrecord.jp** に 8083 が続く形だけを見る（最初これで誤検出した）
-if grep -qE 'bash -s giinrecord\.jp 8083' <<<"$LOG"; then bad "production に 8083 を渡している（#141 の事故）"; else ok "production にポートを渡さない"; fi
+if grep -qE 'base64 -d\) giinrecord\.jp 8083' <<<"$LOG"; then bad "production に 8083 を渡している（#141 の事故）"; else ok "production にポートを渡さない"; fi
 # 行末はタブ（STDIN: が続く）なので `$` は使えない。タブか行末で終わることを見る
-if grep -qE 'bash -s staging\.giinrecord\.jp(\t|$)' <<<"$LOG"; then bad "staging にポートが無い"; else ok "staging には 8083 を付ける"; fi
+if grep -qE 'base64 -d\) staging\.giinrecord\.jp$' <<<"$LOG"; then bad "staging にポートが無い"; else ok "staging には 8083 を付ける"; fi
 
 # 順序: production → staging → allowlist
-order=$(grep '^ssh' <<<"$LOG" | grep -oE 'giinrecord\.jp|staging\.giinrecord\.jp 8083|sudo bash -s$|sudo -n -l' | tr '\n' '|')
+order=$(grep '^ssh' <<<"$LOG" | grep -oE 'staging\.giinrecord\.jp 8083|giinrecord\.jp$|sudo -n -l' | tr '\n' '|')
 case "$order" in
   giinrecord.jp\|staging.giinrecord.jp\ 8083\|*) ok "production → staging の順" ;;
   *) bad "順序が違う: $order" ;;
 esac
 
 # 渡しているファイルが合っているか（標準入力の中身で見る）
-if grep -q 'STDIN:#!/usr/bin/env bash' <<<"$LOG"; then ok "スクリプトを標準入力で渡している"; else bad "標準入力にスクリプトが渡っていない"; fi
+# **`< script` は使わない。** それをやると tty が潰れて sudo がパスワードを読めない
+# （実際にユーザーの手元で `sudo: a terminal is required` で落ちた）
+if grep -qE 'base64 -d\)' <<<"$LOG"; then ok "スクリプトを base64 でコマンド行に渡す（標準入力を使わない）"; else bad "base64 で渡していない"; fi
+if grep -qE '\ba<' <<<"$(cat "$SCRIPT")"; then bad "内部で標準入力リダイレクトを使っている"; else ok "標準入力リダイレクトを使わない"; fi
+if grep -qE 'ssh [^|]*<[^(]' <<<"$(grep -v '^#' "$SCRIPT")"; then bad "ssh に < でファイルを渡している（tty が潰れる）"; else ok "ssh に < でファイルを渡さない"; fi
 # 引数無しの `sudo bash -s`（鍵を渡さない）がちょうど1回。行末はタブなので `$` ではなくタブで見る
-if [ "$(grep -cF $'sudo bash -s\tSTDIN' <<<"$LOG")" = 1 ]; then ok "allowlist は鍵を渡さずに流す（#403: auth.log に公開鍵を残さない）"; else bad "allowlist の引数が違う"; fi
+# allowlist は**引数なし**（鍵を渡さない。#403: sudo が auth.log に公開鍵を残す）
+if [ "$(grep -cE 'base64 -d\) *$' <<<"$LOG")" = 1 ]; then ok "allowlist は鍵を渡さずに流す（#403: auth.log に公開鍵を残さない）"; else bad "allowlist の引数が違う"; fi
 
 # 反映のあとに確認する（「流した」で終わりにしない）
 last=$(grep -oE '^(ssh|curl)' <<<"$LOG" | tail -2 | tr '\n' ' ')

@@ -187,10 +187,16 @@ curl -sI https://DOMAIN/ | grep -i -E "content-security|x-frame" # 外から見�
 **`vps-setup.sh` の1回の再実行で両方入る**。
 
 ```sh
-# production（staging も直すなら 2 行目も）
-ssh -t sakura-vps 'sudo bash -s giinrecord.jp' < deploy/vps-setup.sh
-ssh -t sakura-vps 'sudo bash -s staging.giinrecord.jp 8083' < deploy/vps-setup.sh
+# production と staging の両方を反映する
+bash deploy/apply-all.sh   # 3件（#386 / #387 / #375）をまとめて。実行後に自分で確認まで出す
 ```
+
+> **`ssh -t <host> 'sudo bash -s ...' < script` は動きません。**
+> `< script` で標準入力がファイルになるので `-t` が tty を割り当てられず、
+> `sudo` がパスワードを読めずに落ちます（`sudo: a terminal is required to read the password`）。
+> 以前このドキュメントにその形が書かれていましたが、**元から動かない組み合わせ**でした。
+> `deploy/apply-all.sh` は base64 にしてコマンド行で渡し、プロセス置換で実行します
+> （標準入力を使わないので tty が生きる。サーバー上にファイルも残さない）。
 
 確認:
 
