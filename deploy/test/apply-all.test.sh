@@ -39,16 +39,16 @@ LOG=$(cat "$TMP/log")
 n=$(grep -c '^ssh' <<<"$LOG" || true)
 if [ "$n" = 4 ]; then ok "ssh は4回（反映3回 + 確認1回）"; else bad "ssh の回数が違う: $n"; fi
 
-if grep -qE 'base64 -d\) giinrecord\.jp$' <<<"$LOG"; then ok "production を giinrecord.jp で流す"; else bad "production の引数が違う"; fi
-if grep -qE 'base64 -d\) staging\.giinrecord\.jp 8083$' <<<"$LOG"; then ok "staging を staging.giinrecord.jp 8083 で流す"; else bad "staging の引数が違う"; fi
+if grep -qE "' _ giinrecord\.jp$" <<<"$LOG"; then ok "production を giinrecord.jp で流す"; else bad "production の引数が違う"; fi
+if grep -qE "' _ staging\.giinrecord\.jp 8083$" <<<"$LOG"; then ok "staging を staging.giinrecord.jp 8083 で流す"; else bad "staging の引数が違う"; fi
 
 # #141 の事故: staging の設定を production のドメインで流すと production の conf を壊す。
 # **production に 8083 を渡していない / staging にポートを付け忘れていない**ことを見る
 # `giinrecord.jp 8083` は `staging.giinrecord.jp 8083` にも一致してしまうので、
 # **staging. が付いていない giinrecord.jp** に 8083 が続く形だけを見る（最初これで誤検出した）
-if grep -qE 'base64 -d\) giinrecord\.jp 8083' <<<"$LOG"; then bad "production に 8083 を渡している（#141 の事故）"; else ok "production にポートを渡さない"; fi
+if grep -qE "' _ giinrecord\.jp 8083" <<<"$LOG"; then bad "production に 8083 を渡している（#141 の事故）"; else ok "production にポートを渡さない"; fi
 # 行末はタブ（STDIN: が続く）なので `$` は使えない。タブか行末で終わることを見る
-if grep -qE 'base64 -d\) staging\.giinrecord\.jp$' <<<"$LOG"; then bad "staging にポートが無い"; else ok "staging には 8083 を付ける"; fi
+if grep -qE "' _ staging\.giinrecord\.jp$" <<<"$LOG"; then bad "staging にポートが無い"; else ok "staging には 8083 を付ける"; fi
 
 # 順序: production → staging → allowlist
 order=$(grep '^ssh' <<<"$LOG" | grep -oE 'staging\.giinrecord\.jp 8083|giinrecord\.jp$|sudo -n -l' | tr '\n' '|')
@@ -65,7 +65,7 @@ if grep -qE '\ba<' <<<"$(cat "$SCRIPT")"; then bad "内部で標準入力リダ�
 if grep -qE 'ssh [^|]*<[^(]' <<<"$(grep -v '^#' "$SCRIPT")"; then bad "ssh に < でファイルを渡している（tty が潰れる）"; else ok "ssh に < でファイルを渡さない"; fi
 # 引数無しの `sudo bash -s`（鍵を渡さない）がちょうど1回。行末はタブなので `$` ではなくタブで見る
 # allowlist は**引数なし**（鍵を渡さない。#403: sudo が auth.log に公開鍵を残す）
-if [ "$(grep -cE 'base64 -d\) *$' <<<"$LOG")" = 1 ]; then ok "allowlist は鍵を渡さずに流す（#403: auth.log に公開鍵を残さない）"; else bad "allowlist の引数が違う"; fi
+if [ "$(grep -cE "' _$" <<<"$LOG")" = 1 ]; then ok "allowlist は鍵を渡さずに流す（#403: auth.log に公開鍵を残さない）"; else bad "allowlist の引数が違う"; fi
 
 # 反映のあとに確認する（「流した」で終わりにしない）
 last=$(grep -oE '^(ssh|curl)' <<<"$LOG" | tail -2 | tr '\n' ' ')
