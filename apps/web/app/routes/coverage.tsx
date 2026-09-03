@@ -2,7 +2,9 @@ import { Link, type MetaArgs, useLoaderData } from "react-router";
 import { CoverBrand } from "../components/CoverBrand";
 import { SiteFooter } from "../components/SiteFooter";
 import { assemblyPath, bundledSessions } from "../lib/assemblies";
+import { bills as bundledBills } from "../lib/bills";
 import { buildCoverage, type Coverage, type DietCoverage, formatLocalSessionRange, formatSessionRange, hasSessionGaps, linkedRecordCounts, type LocalCoverage, rosterlessSessions, rosterScope, sangiinUnlinkedVotes, type SangiinVoteLinkStats, type SessionRange, shugiinBillNameCoverage, type ShugiinBillNameStats, shugiinQuestionCoverage, speechCoverage, type UnmatchedSpeechStats, unmatchedSpeechCoverage } from "../lib/coverage";
+import type { BillSummary } from "@seiji-kiroku/shared";
 import type { AssemblySession } from "../lib/data-contract";
 import { defaultDataDir, readSangiinVoteLinkStats, readShugiinBillNameStats, readUnmatchedSpeechStats } from "../lib/data-files";
 import { type Dataset, dataset as bundled } from "../lib/dataset";
@@ -49,17 +51,21 @@ export default function CoverageRoute() {
 export function CoveragePage({
   data = bundled,
   sessions = bundledSessions(),
+  // Issue 408: bills は Dataset に入っていない（60KB あり、この画面だけが使う）。
+  // 差し替えられるように prop にしておく（テストが件数を作れる）
+  bills = bundledBills,
   shugiinBillNames = null,
   sangiinVotes = null,
   unmatchedSpeeches = null,
 }: {
   data?: Dataset;
   sessions?: ReadonlyMap<string, AssemblySession[]>;
+  bills?: readonly BillSummary[];
   shugiinBillNames?: ShugiinBillNameStats | null;
   sangiinVotes?: SangiinVoteLinkStats | null;
   unmatchedSpeeches?: UnmatchedSpeechStats | null;
 }) {
-  const coverage = buildCoverage(data, sessions);
+  const coverage = buildCoverage(data, sessions, bills);
   return (
     <>
       <main className="page assemblies">
