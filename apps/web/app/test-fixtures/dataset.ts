@@ -1,3 +1,4 @@
+import type { BillSummary } from "@seiji-kiroku/shared";
 import type { Dataset } from "../lib/dataset";
 
 /** Home / About 用の最小データ。採決はわざと日付順にしていない（降順ソートを検証するため）。 */
@@ -35,10 +36,13 @@ export const dataset: Dataset = {
     { id: "221-0717-v002", session: 221, date: "2026-07-17", title: "ヒトゲノム編集胚等の取扱いの規制に関する法律案", totals: { total: 240, yes: 230, no: 10 }, result: "可決" },
     { id: "220-0101-v001", session: 220, date: "2026-01-01", title: "一番古い案件", totals: { total: 240, yes: 120, no: 120 }, result: "否決" },
   ],
-  // bills/index.json は衆院の議案情報（会派態度の裏づけ）。回次 219 は採決が無く、議案だけがある回次（歯抜けの検証用）
-  bills: [
+};
+
+// Issue 408: bills は Dataset に入っていない（60KB あり、使うのは /coverage だけ）。
+// テストは必要なところでこれを明示的に渡す。
+// bills/index.json は衆院の議案情報（会派態度の裏づけ）。回次 219 は採決が無く、議案だけがある回次（歯抜けの検証用）
+export const bills: BillSummary[] = [
     { id: "221-閣法-1", session: 221, kind: "閣法", house: "shugiin", title: "令和八年度一般会計予算", status: "成立", sourceUrl: "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE14C2.htm" },
     { id: "221-閣法-2", session: 221, kind: "閣法", house: "shugiin", title: "刑法の一部を改正する法律案", status: "成立", sourceUrl: "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE14C3.htm" },
     { id: "219-閣法-1", session: 219, kind: "閣法", house: "shugiin", title: "古い議案", status: "成立", sourceUrl: "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE14C4.htm" },
-  ],
-};
+];

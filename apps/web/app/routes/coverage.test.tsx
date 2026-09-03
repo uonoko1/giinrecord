@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { describe, expect, it } from "vitest";
@@ -7,7 +9,7 @@ import type { Dataset, MemberSummary } from "../lib/dataset";
 import assembliesFixture from "../test-fixtures/assemblies/index.json";
 import localMembers from "../test-fixtures/assemblies/members-index.json";
 import sessionsFixture from "../test-fixtures/assemblies/sessions.json";
-import { dataset } from "../test-fixtures/dataset";
+import { bills, dataset } from "../test-fixtures/dataset";
 import { CoveragePage, meta as routeMeta } from "./coverage";
 import type { SangiinVoteLinkStats, ShugiinBillNameStats } from "../lib/coverage";
 import { source } from "../test-fixtures/source";
@@ -21,7 +23,9 @@ const withLocal: Dataset = { ...dataset, assemblies, members: [...dataset.member
 function renderPage(data: Dataset = withLocal, s = sessions, shugiinBillNames: ShugiinBillNameStats | null = null, sangiinVotes: SangiinVoteLinkStats | null = null) {
   return render(
     <MemoryRouter>
-      <CoveragePage data={data} sessions={s} shugiinBillNames={shugiinBillNames} sangiinVotes={sangiinVotes} />
+      {/* Issue 408: bills は Dataset に入っていないので明示的に渡す。
+          渡さないと本物の bundled データが使われ、fixture の件数と食い違う */}
+      <CoveragePage data={data} sessions={s} bills={bills} shugiinBillNames={shugiinBillNames} sangiinVotes={sangiinVotes} />
     </MemoryRouter>,
   );
 }
@@ -495,5 +499,52 @@ describe("紐づけられなかった発言の件数（#370）", () => {
   it("評価語を含まない", () => {
     const { container } = render(<MemoryRouter><CoveragePage unmatchedSpeeches={stats} /></MemoryRouter>);
     for (const w of EVALUATIVE_WORDS) expect(container.textContent).not.toContain(w);
+  });
+});
+
+/**
+ * Issue 408: `bills` を `dataset` から切り出した（gzip 60KB、使うのはこの画面だけ）。
+ *
+ * **この画面のテストは全部 `data` を明示的に渡すので、既定の経路＝本番が通る道を
+ * 誰も通っていなかった。** `withBills` を外して bills が黙って 0 件になる変異を入れても、
+ * 46 件すべて緑のままだった。
+ *
+ * 「記録が出ない」は利用者から見ても分からない失敗なので、**既定で描いて確かめる**。
+ */
+describe("/coverage の既定（bundled）で議案が出る（Issue 408）", () => {
+  it("data を渡さずに描くと、衆議院の行に議案の実件数が出る", async () => {
+    const { bills: bundledBills } = await import("../lib/bills");
+    render(
+      <MemoryRouter>
+        <CoveragePage />
+      </MemoryRouter>,
+    );
+
+    // 議案の行は **DietRows の中だけ**（国会の2行）。地方議会にはこの行が無い。
+    // データは全件が house: "shugiin" なので、**件数が出るのは衆議院の1行だけ**が正しい
+    // （最初「3行あって地方議会は—」と書いたが、3つ目は本文中の散文で行ではなかった。レビュー指摘）。
+    const shugiin = screen
+      .getAllByText(/議案情報/)
+      .map((el) => el.closest("tr"))
+      .find((r) => (r?.textContent ?? "").includes("件"));
+    expect(shugiin, "議案の件数が出ている行が無い（bills が届いていない）").toBeTruthy();
+
+    // **件数そのものを見る。** 「1件でも出れば合格」だと、1,941 件が 1 件に減っても通ってしまう
+    // （実際に部分欠損の変異が全部緑だった。レビュー指摘）。
+    // textContent を丸ごと正規表現に掛けると「うち議案のある回次 25」と「1,941 件」が
+    // 繋がって "251,941 件" に見える（最初これで 251941 を拾って落ちた）。**セル単位**で見る
+    const cells = [...(shugiin?.querySelectorAll("td") ?? [])].map((td) => td.textContent ?? "");
+    const countCell = cells.find((t) => /^[\d,]+\s*議案$|[\d,]+\s*件\s*$/.test(t.trim())) ?? cells.at(-1) ?? "";
+    const shown = Number((countCell.match(/([\d,]+)/)?.[1] ?? "").replace(/,/g, ""));
+
+    // **期待値を bundledBills から作ってはいけない**（レビュー指摘）。
+    // bills が痩せれば期待値も一緒に痩せるので、1,941 → 101 のような**部分欠損が永久に検出できない**
+    // （実際 95% 欠損させても全件緑だった）。**ファイルという独立した経路**と突き合わせる。
+    const fromFile: { house: string }[] = JSON.parse(readFileSync(join(import.meta.dirname, "../../../../data/bills/index.json"), "utf8"));
+    const expected = fromFile.filter((b) => b.house === "shugiin").length;
+    expect(shown).toBe(expected);
+
+    // バンドル経路とファイルが一致すること自体も見る（片方だけ痩せたら落ちる）
+    expect(bundledBills.length).toBe(fromFile.length);
   });
 });

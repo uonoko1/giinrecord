@@ -366,7 +366,12 @@ const HOUSE_OF: Record<string, House> = { "diet-sangiin": "sangiin", "diet-shugi
  * - 地方: 議員数は同じく members/index.json、採決と会期は assemblies/{id}/sessions.json
  * どの数もデータの行を数えた結果で、推定や定数は使わない。
  */
-export function buildCoverage(data: Dataset, sessionsByAssembly: ReadonlyMap<string, AssemblySession[]>): Coverage {
+/**
+ * Issue 408: `bills` は `Dataset` に入っていない（60KB あり、使うのはこの画面だけ）。
+ * **必須の引数**で受け取るので、渡し忘れは**コンパイルエラー**になる
+ * （optional にすると `?? []` で静かに 0 件になる。レビュー指摘）。
+ */
+export function buildCoverage(data: Dataset, sessionsByAssembly: ReadonlyMap<string, AssemblySession[]>, bills: readonly BillSummary[]): Coverage {
   const assemblies: readonly Assembly[] = data.assemblies ?? DIET_ASSEMBLIES;
   const memberCount = new Map<string, number>();
   for (const m of data.members) {
@@ -375,7 +380,6 @@ export function buildCoverage(data: Dataset, sessionsByAssembly: ReadonlyMap<str
   }
 
   const rollcallSessions = sessionRange(data.rollcalls.map((r) => r.session));
-  const bills: readonly BillSummary[] = data.bills ?? [];
   const diet: DietCoverage[] = assemblies
     .filter((a) => isDietAssemblyId(a.id))
     .map((a) => {
