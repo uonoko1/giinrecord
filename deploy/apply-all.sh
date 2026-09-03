@@ -71,7 +71,13 @@ else
   if [ "$rc" = 255 ]; then
     echo "  （giinops として接続できませんでした。鍵か VPS_SSH_HOST を確認: ssh -l giinops $HOST）"
   else
-    echo "  （実行できませんでした: allowlist に無いか、docker が落ちています。exit=$rc: $(head -n1 "$err")）"
+    # **stderr の1行目を出さない**（#426 のレビュー）。known_hosts に無いホストだと
+    # `Warning: Permanently added '<IP>' (ED25519) to the list of known hosts.` が先に来るので、
+    # 1行目をそのまま出すと **IP が画面に出て、この出力が issue に貼られる**。
+    # 拾うのは sudo 自身が出した行だけ（`sudo: …`）。無ければ理由は付けない。
+    why=$(grep -m1 '^sudo:' "$err" || true)
+    if [ -n "$why" ]; then why=": $why"; fi
+    echo "  （実行できませんでした: allowlist に無いか、docker が落ちています。exit=$rc$why）"
   fi
 fi
 
