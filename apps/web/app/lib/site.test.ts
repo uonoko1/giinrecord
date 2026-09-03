@@ -20,16 +20,22 @@ import { REPO_URL } from "./site";
  * `stable-order.test.ts` が `.localeCompare(` を禁じるのと同じ流儀。
  */
 const app = join(import.meta.dirname, "..");
+/** 走査の起点は `apps/web`（`app/` だけだと vite.config.ts などが対象外になる。レビュー指摘） */
+const webRoot = join(app, "..");
 const read = (p: string) => readFileSync(join(app, p), "utf8");
 
 /** app/ 配下の .ts / .tsx を全部読む（テストと型定義は除く）。列挙漏れを作らないため */
 function sources(): { rel: string; src: string }[] {
+  const SKIP = new Set(["node_modules", "build", ".react-router", "test-fixtures"]);
   const out: { rel: string; src: string }[] = [];
   const walk = (dir: string) => {
-    for (const e of readdirSync(join(app, dir), { withFileTypes: true })) {
+    for (const e of readdirSync(join(webRoot, dir), { withFileTypes: true })) {
+      if (SKIP.has(e.name)) continue;
       const rel = dir ? `${dir}/${e.name}` : e.name;
       if (e.isDirectory()) walk(rel);
-      else if (/\.tsx?$/.test(e.name) && !/\.test\.tsx?$/.test(e.name) && !e.name.endsWith(".d.ts")) out.push({ rel, src: read(rel) });
+      else if (/\.tsx?$/.test(e.name) && !/\.test\.tsx?$/.test(e.name) && !e.name.endsWith(".d.ts")) {
+        out.push({ rel, src: readFileSync(join(webRoot, rel), "utf8") });
+      }
     }
   };
   walk("");
@@ -43,7 +49,7 @@ const DATA_FREE = [
   "routes/terms.tsx",
   "routes/privacy.tsx",
   "lib/site.ts",
-];
+];   // これらは read()（app/ 起点）で読む。上の sources() は apps/web 起点なので混同しない
 
 describe("データを使わないファイルは dataset.ts を import しない（Issue 406）", () => {
   it.each(DATA_FREE)("%s", (path) => {
@@ -86,7 +92,7 @@ describe("データを使わないファイルは dataset.ts を import しな�
    * 動的 import・再エクスポート・`import * as` も拾う（3つとも素通りしていた）。
    */
   it("bills を参照してよいのは lib/bills.ts と routes/coverage.tsx だけ", () => {
-    const ALLOWED = new Set(["lib/bills.ts", "routes/coverage.tsx"]);
+    const ALLOWED = new Set(["app/lib/bills.ts", "app/routes/coverage.tsx"]);
     // `from "…/bills"` / `import("…/bills")` / `require("…/bills")` を拾う
     const REF = /(?:from\s*|import\s*\(\s*|require\s*\(\s*)["'][^"']*\/bills["']/;
     const offenders = sources().filter(({ rel, src }) => !ALLOWED.has(rel) && REF.test(src));
@@ -96,7 +102,7 @@ describe("データを使わないファイルは dataset.ts を import しな�
   it("bills/index.json を eager に読むのは lib/bills.ts だけ", () => {
     const GLOB = /import\.meta\.glob[^;]*bills\/index\.json/;
     const readers = sources().filter(({ src }) => GLOB.test(src)).map(({ rel }) => rel);
-    expect(readers).toEqual(["lib/bills.ts"]);
+    expect(readers).toEqual(["app/lib/bills.ts"]);
   });
 
   it("archive-path.ts の重複した REPO_URL が site.ts と一致する", () => {

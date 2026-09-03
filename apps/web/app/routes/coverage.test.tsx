@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { describe, expect, it } from "vitest";
@@ -534,8 +536,15 @@ describe("/coverage の既定（bundled）で議案が出る（Issue 408）", ()
     const cells = [...(shugiin?.querySelectorAll("td") ?? [])].map((td) => td.textContent ?? "");
     const countCell = cells.find((t) => /^[\d,]+\s*議案$|[\d,]+\s*件\s*$/.test(t.trim())) ?? cells.at(-1) ?? "";
     const shown = Number((countCell.match(/([\d,]+)/)?.[1] ?? "").replace(/,/g, ""));
-    const expected = bundledBills.filter((b) => b.house === "shugiin").length;
+
+    // **期待値を bundledBills から作ってはいけない**（レビュー指摘）。
+    // bills が痩せれば期待値も一緒に痩せるので、1,941 → 101 のような**部分欠損が永久に検出できない**
+    // （実際 95% 欠損させても全件緑だった）。**ファイルという独立した経路**と突き合わせる。
+    const fromFile: { house: string }[] = JSON.parse(readFileSync(join(import.meta.dirname, "../../../../data/bills/index.json"), "utf8"));
+    const expected = fromFile.filter((b) => b.house === "shugiin").length;
     expect(shown).toBe(expected);
-    expect(expected).toBeGreaterThan(100); // 実データがそもそも空でないこと
+
+    // バンドル経路とファイルが一致すること自体も見る（片方だけ痩せたら落ちる）
+    expect(bundledBills.length).toBe(fromFile.length);
   });
 });
