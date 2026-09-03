@@ -4,10 +4,10 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync, rmSync
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import iconv from "iconv-lite";
-import type { Assembly, Bill, BillSummary, MemberSummary, RollCall, RollCallSummary, Speech } from "@seiji-kiroku/shared";
+import type { Assembly, Bill, BillSessionCount, BillSummary, MemberSummary, RollCall, RollCallSummary, Speech } from "@seiji-kiroku/shared";
 import { buildDataset } from "../src/aggregate.ts";
 import type { DatasetMeta } from "@seiji-kiroku/shared";
-import { DIET_ASSEMBLY_IDS, dietAssemblies, readSessionsOnDisk, resolveSessions, writeDataset, validateDataset, type Dataset } from "../src/dataset.ts";
+import { DIET_ASSEMBLY_IDS, billsBySession, dietAssemblies, readSessionsOnDisk, resolveSessions, writeDataset, validateDataset, type Dataset } from "../src/dataset.ts";
 import { stableJson } from "../src/json.ts";
 import { matchVotes } from "../src/match-votes.ts";
 import { parseRollCall } from "../src/sources/sangiin-votes.ts";
@@ -626,6 +626,73 @@ describe("writeDataset / validateDataset: docs/DATA_CONTRACT.md の不変条件"
     await writeDataset(dir, { ...realDataset(), bills: [] });
     assert.equal(readFileSync(join(dir, "bills/index.json"), "utf-8"), "[]\n");
     assert.equal(existsSync(join(dir, "bills/221")), false);
+    assert.deepEqual(await validateDataset(dir), []);
+    cleanup();
+  });
+
+  /*
+   * #411: /coverage は議案の house と session しか使わないのに bills/index.json 全件（gzip 55KB）を読んでいた。
+   * ETL が (house, session, count) の集計を bills/by-session.json に書き、/coverage はそれだけを読む。
+   * **集計が index.json から機械的に導けること**をここで固定する。期待値は billsBySession を通さず、
+   * 書かれた index.json をテスト側で素朴に数えて作る（同じ関数で期待値を作ると、関数の誤りが両側に出て検出できない）。
+   */
+  test("bills/by-session.json: 院・回次ごとの件数を書き、bills/index.json をそのまま数えた結果と一致する（#411）", () => {
+    const index = readJson<BillSummary[]>(dir, "bills/index.json");
+    const expected = new Map<string, number>();
+    for (const b of index) expected.set(`${b.house}\t${b.session}`, (expected.get(`${b.house}\t${b.session}`) ?? 0) + 1);
+    const rows = readJson<BillSessionCount[]>(dir, "bills/by-session.json");
+    assert.deepEqual(new Map(rows.map((r) => [`${r.house}\t${r.session}`, r.count])), expected);
+    // 合計は index.json の行数（1 件も取りこぼさない）
+    assert.equal(rows.reduce((t, r) => t + r.count, 0), index.length);
+    // 実フィクスチャの内訳: 第221回 2 件（衆法-1・閣法-3）、第219回 1 件（決算）。house 昇順・回次昇順
+    assert.deepEqual(rows, [
+      { house: "shugiin", session: 219, count: 1 },
+      { house: "shugiin", session: 221, count: 2 },
+    ]);
+    const text = readFileSync(join(dir, "bills/by-session.json"), "utf-8");
+    assert.equal(text, stableJson(JSON.parse(text)));
+    cleanup();
+  });
+
+  test("billsBySession: 院ごと・回次ごとに数え、house 昇順・回次昇順で並べる。0 件の行は作らない", () => {
+    const row = (house: "sangiin" | "shugiin", session: number) => ({ house, session });
+    assert.deepEqual(billsBySession([row("shugiin", 221), row("sangiin", 221), row("shugiin", 219), row("shugiin", 221), row("sangiin", 200)]), [
+      { house: "sangiin", session: 200, count: 1 },
+      { house: "sangiin", session: 221, count: 1 },
+      { house: "shugiin", session: 219, count: 1 },
+      { house: "shugiin", session: 221, count: 2 },
+    ]);
+    assert.deepEqual(billsBySession([]), []);
+  });
+
+  test("bills/by-session.json が無ければ違反（無いと /coverage が黙って 0 件になる。#411）", async () => {
+    rmSync(join(dir, "bills/by-session.json"));
+    assert.match((await validateDataset(dir)).join("\n"), /bills\/by-session\.json: missing/);
+    cleanup();
+  });
+
+  test("bills/by-session.json の件数が index.json と食い違えば違反（多くても少なくても、行が欠けても余っても）", async () => {
+    const original = readFileSync(join(dir, "bills/by-session.json"), "utf-8");
+    const mutations: [string, (rows: BillSessionCount[]) => BillSessionCount[]][] = [
+      ["件数が 1 多い", (rows) => rows.map((r) => (r.session === 221 ? { ...r, count: r.count + 1 } : r))],
+      ["件数が 1 少ない", (rows) => rows.map((r) => (r.session === 221 ? { ...r, count: r.count - 1 } : r))],
+      ["回次の行が欠ける", (rows) => rows.filter((r) => r.session !== 219)],
+      ["無い回次の行が余る", (rows) => [...rows, { house: "shugiin", session: 220, count: 1 }]],
+      ["院が違う", (rows) => rows.map((r) => (r.session === 219 ? { ...r, house: "sangiin" } : r))],
+      ["並びが違う（回次降順）", (rows) => [...rows].reverse()],
+    ];
+    for (const [label, mutate] of mutations) {
+      patch<BillSessionCount[]>(dir, "bills/by-session.json", mutate);
+      assert.match((await validateDataset(dir)).join("\n"), /bills\/by-session\.json: does not match bills\/index\.json/, label);
+      writeFileSync(join(dir, "bills/by-session.json"), original);
+    }
+    assert.deepEqual(await validateDataset(dir), []);
+    cleanup();
+  });
+
+  test("議案 0 件なら bills/by-session.json も [] で、違反にならない（#411）", async () => {
+    await writeDataset(dir, { ...realDataset(), bills: [] });
+    assert.equal(readFileSync(join(dir, "bills/by-session.json"), "utf-8"), "[]\n");
     assert.deepEqual(await validateDataset(dir), []);
     cleanup();
   });
