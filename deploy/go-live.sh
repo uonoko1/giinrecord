@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # 議員レコード 本番切替（root で実行。再実行可）。共用 VPS の他サイトには触れない。
-#   ssh -t "${VPS_SSH_HOST:-sakura-vps}" 'sudo bash -s giinrecord.jp' < deploy/go-live.sh     ← TTY が要る（certbot が対話）
+#   bash deploy/run-remote.sh deploy/go-live.sh giinrecord.jp     ← TTY が要る（certbot が対話）。
+#   （`ssh -t ... < script` は標準入力が tty でなくなり sudo が落ちる。run-remote.sh が正しい形、#419）
 # 順序が重要：旧名の移行 → Docker → ポート空き検査（ss -tln）→ コンテナ起動（8081、常に --force-recreate）→
 #             ホスト nginx を proxy に切替 → certbot certonly（証明書が既にあればスキップ）→ ホスト nginx を TLS + redirect に → 計測。
 # staging.* のドメインは拒否（staging は deploy/staging-setup.sh、#141）。

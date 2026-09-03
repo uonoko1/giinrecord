@@ -275,7 +275,7 @@ allowlist は「コマンドを固定したから安全」なのではなく、*
 - **`giinops` に nginx conf を書く許可（`tee`）は与えない**（#335、2026-09-02 に削除）。nginx master は root で動くので、conf に任意の内容を書ける者は `location /x { root /; }` で任意ファイルを HTTP 公開でき、`ssl_certificate_key` に他サイトの秘密鍵を指定でき、`access_log` の書き込み先を通じて root 権限でファイルを作れる。`nginx -t` はこれらを検査しない＝**実質 root 相当**。共用ホストなので影響は自サイトに閉じない。
   - **消しても誰も困らなかった。** conf を書く作業（`vps-setup.sh` / `cloudflare-allowlist.sh`）は元から `ssh <host> 'sudo bash -s' < script` で root として実行しており、この許可を使っていなかった。**「使っていない強い権限」が一番危ない**（誰も気づかない）
   - `giinops` に残る nginx の許可は `nginx -t` / `systemctl reload nginx` / `systemctl status nginx` の3つだけ。設定を書き換えられないので、reload できても内容は変えられない
-  - conf を変えるときは従来どおり `ssh -t <host> 'sudo bash -s ...' < deploy/vps-setup.sh`（`ubuntu` のパスワード sudo）
+  - conf を変えるときは `bash deploy/run-remote.sh deploy/vps-setup.sh <domain> [port]`（`ubuntu` のパスワード sudo）
 - `ubuntu` の CI deploy 鍵：`command="/usr/bin/rrsync /var/www/giinrecord"` ＋ `restrict`。rsync で `/var/www/giinrecord` 配下に書くこと以外できない（漏洩しても root 化不可）。`deploy-site.yml` の宛先はこの root 相対（`site/`・`staging/`）
 - `ubuntu` のパスワード sudo は変更しない
 - **`ubuntu`（uid 1000）は OS 初期アカウントで、共用 VPS の同居サイトも使っている**（2026-09-01 に判明）。

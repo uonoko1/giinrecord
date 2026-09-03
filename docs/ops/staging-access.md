@@ -51,7 +51,7 @@ production（`giinrecord.jp`）は誰でも見られ、この文書の設定は�
 scp deploy/cloudflare-allowlist.sh "${VPS_SSH_HOST:-sakura-vps}":/tmp/ && \
   ssh "${VPS_SSH_HOST:-sakura-vps}" 'sudo bash /tmp/cloudflare-allowlist.sh --install-cron && rm /tmp/cloudflare-allowlist.sh'
 # 2. staging の server block に include と 403 を入れる（冪等。production の conf には触れない）
-ssh "${VPS_SSH_HOST:-sakura-vps}" 'sudo bash -s staging.giinrecord.jp 8083' < deploy/vps-setup.sh
+bash deploy/run-remote.sh deploy/vps-setup.sh staging.giinrecord.jp 8083
 ```
 
 `deploy/staging-setup.sh` を再実行しても同じことが起きる（step 5 と 8）。`vps-setup.sh` は snippet が無ければ **`deny all;` だけの placeholder**

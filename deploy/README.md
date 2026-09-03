@@ -41,12 +41,12 @@ site is reachable as `giinrecord.jp` once DNS is live.
 ### production
 
 All of this (plus the `gikailog` → `giinrecord` path migration; the same shape as #119's `seiji-kiroku` → `gikailog`) is automated by `deploy/go-live.sh`
-(`ssh -t "$VPS_SSH_HOST" 'sudo bash -s giinrecord.jp' < deploy/go-live.sh`); the steps below are the manual equivalent.
+(`bash deploy/run-remote.sh deploy/go-live.sh giinrecord.jp`); the steps below are the manual equivalent.
 
 ```sh
 VPS_SSH_HOST="${VPS_SSH_HOST:-sakura-vps}"
 # 1. (human, sudo) host nginx block + web root. Installs nothing. DOMAIN = the hostname that will point here.
-ssh "$VPS_SSH_HOST" 'sudo bash -s DOMAIN' < deploy/vps-setup.sh
+bash deploy/run-remote.sh deploy/vps-setup.sh DOMAIN
 # 2. (human, sudo) Docker Engine + compose plugin, if not present: https://docs.docker.com/engine/install/ubuntu/
 #    Do NOT add `ubuntu` to the docker group.
 # 3. (human with docker privileges) start the containers from a checkout of this repo
@@ -57,7 +57,7 @@ ssh "$VPS_SSH_HOST" 'curl -sI http://127.0.0.1:8081/ | head -1'                 
 # 5. TLS (after DNS propagates) — certonly: certbot does not edit nginx config (the template owns the redirects)
 ssh "$VPS_SSH_HOST" "sudo certbot certonly --nginx -d DOMAIN -d www.DOMAIN --deploy-hook 'systemctl reload nginx'"
 # 6. (human, sudo) again: now that the certificate exists it writes the :80 redirect + :443 proxy blocks
-ssh "$VPS_SSH_HOST" 'sudo bash -s DOMAIN' < deploy/vps-setup.sh
+bash deploy/run-remote.sh deploy/vps-setup.sh DOMAIN
 ```
 
 Re-running `vps-setup.sh` is safe (idempotent, Issue #141): without a certificate it writes a plain `:80` proxy block, with one the
@@ -72,7 +72,7 @@ Two human actions, nothing else:
 ```sh
 # 1. DNS: A record  staging.giinrecord.jp -> the VPS (same address as giinrecord.jp; never commit it)
 # 2. (root, once; needs a TTY for certbot) staging web root, web-staging container, host proxy block on :8083, TLS
-ssh -t "$VPS_SSH_HOST" 'sudo bash -s' < deploy/staging-setup.sh
+bash deploy/run-remote.sh deploy/staging-setup.sh
 ```
 
 Then on GitHub: Environment `staging` with the same `DEPLOY_*` secrets as `production` (and `production-data`, see
