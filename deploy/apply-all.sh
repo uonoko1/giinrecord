@@ -50,12 +50,33 @@ run "3/3 giinops の sudo allowlist"  "$HERE/ops-user-setup.sh"
 echo "── 確認"
 echo "Server ヘッダと HSTS:"
 curl -sI https://giinrecord.jp/ | grep -iE '^server:|strict-transport' || echo "  （取得できませんでした）"
-echo "giinops の allowlist（docker compose ... ps があるか）:"
-ssh "$HOST" 'sudo -n -l' 2>/dev/null | grep -c 'docker compose .* ps' \
-  | sed 's/^/  docker compose ps の行数: /' || echo "  （確認できませんでした）"
+echo "giinops の allowlist（sudo -n で docker compose ps を実行できるか）:"
+# **giinops として**入って、allowlist の行そのものを実行する（#426）。
+#   - `ssh "$HOST" 'sudo -n -l'` は alias の設定（ubuntu）で入るので、ubuntu の sudoers を見て
+#     「0」と誤表示していた。見たいのは giinops の allowlist。
+#   - alias の HostName・鍵・ポートはそのまま使い、ユーザーだけ `-l giinops` で差し替える。
+#     ホスト名を alias から取り出す形（ssh -G）にしないのは、取り出した値が画面に出ると IP が
+#     残る（この確認の出力は issue に貼られる）から。
+#   - 行数を数えるより「実行できたか」の方が確実で、0 件（拒否）と接続失敗を分けられる:
+#     ssh 自身の失敗は終了コード 255、sudo の拒否はそれ以外。
+#   - ps の出力は bind した IP を含むので、そのまま表示せずコンテナの数だけ出す。
+# コマンドは deploy/ops-user-setup.sh が書く allowlist の行と**一字一句同じ**でないと sudo が通らない。
+COMPOSE_PS='sudo -n docker compose -f /opt/giinrecord/deploy/docker-compose.yml ps'
+err=$(mktemp); trap 'rm -f "$err"' EXIT   # stderr は混ぜない（ssh の警告を行数に数えない。IP を含むこともある）
+if out=$(ssh -l giinops "$HOST" "$COMPOSE_PS" 2>"$err"); then
+  n=$(printf '%s\n' "$out" | tail -n +2 | grep -c . || true)   # 1行目はヘッダ
+  echo "  docker compose ps: 実行できた（コンテナ ${n} 件）"
+else
+  rc=$?
+  if [ "$rc" = 255 ]; then
+    echo "  （giinops として接続できませんでした。鍵か VPS_SSH_HOST を確認: ssh -l giinops $HOST）"
+  else
+    echo "  （実行できませんでした: allowlist に無いか、docker が落ちています。exit=$rc: $(head -n1 "$err")）"
+  fi
+fi
 
 echo
 echo "期待する結果:"
 echo "  Server: nginx                                  ← バージョンと OS が消えている"
 echo "  Strict-Transport-Security: max-age=86400"
-echo "  docker compose ps の行数: 1"
+echo "  docker compose ps: 実行できた（コンテナ 2 件）    ← web と web-staging"

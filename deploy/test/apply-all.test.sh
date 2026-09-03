@@ -22,6 +22,21 @@ cat > "$BIN/ssh" <<'STUB'
 # 標準入力は**使わない**（`< script` は tty を潰して sudo が落ちるため、
 # base64 にしてコマンド行で渡す形に変えた）。標準入力を読むとここで固まる
 printf 'ssh\t%s\n' "$*" >> "$SSH_LOG"
+# 確認の ssh（docker compose ps）だけ、SSH_CHECK_MODE で結果を切り替える（#426）:
+#   ok     … allowlist が入っていて実行できた（ヘッダ + コンテナ2行。stderr に ssh の警告も出す）
+#   empty  … 実行できたがコンテナが 0 件（ヘッダだけ）
+#   down   … giinops として接続できない（ssh 自身の失敗。終了コード 255）
+#   denied … 接続はできたが sudo が拒否（allowlist に無い。終了コード 1）
+case "$*" in
+  *"docker compose"*)
+    case "${SSH_CHECK_MODE:-ok}" in
+      down)   echo "ssh: connect to host x port 22: Connection refused" >&2; exit 255 ;;
+      denied) echo "sudo: a password is required" >&2; exit 1 ;;
+      empty)  printf 'NAME  IMAGE  STATUS\n' ;;
+      *)      echo "Warning: Permanently added 'x' (ED25519) to the list of known hosts." >&2
+              printf 'NAME  IMAGE  STATUS\ngiinrecord-web-1  nginx  Up\ngiinrecord-web-staging-1  nginx  Up\n' ;;
+    esac ;;
+esac
 STUB
 cat > "$BIN/curl" <<'STUB'
 #!/usr/bin/env bash
@@ -30,7 +45,8 @@ echo "Server: nginx"
 STUB
 chmod +x "$BIN/ssh" "$BIN/curl"
 
-run() { : > "$TMP/log"; PATH="$BIN:$PATH" SSH_LOG="$TMP/log" VPS_SSH_HOST="${1:-test-host}" bash "$SCRIPT" >"$TMP/out" 2>&1; }
+# 終了コードは RC に残す（確認の失敗で set -e に殺されないことも見たい）
+run() { : > "$TMP/log"; RC=0; PATH="$BIN:$PATH" SSH_LOG="$TMP/log" SSH_CHECK_MODE="${SSH_CHECK_MODE:-ok}" VPS_SSH_HOST="${1:-test-host}" bash "$SCRIPT" >"$TMP/out" 2>&1 || RC=$?; }
 
 run
 LOG=$(cat "$TMP/log")
@@ -51,7 +67,7 @@ if grep -qE "' _ giinrecord\.jp 8083" <<<"$LOG"; then bad "production に 8083 �
 if grep -qE "' _ staging\.giinrecord\.jp$" <<<"$LOG"; then bad "staging にポートが無い"; else ok "staging には 8083 を付ける"; fi
 
 # 順序: production → staging → allowlist
-order=$(grep '^ssh' <<<"$LOG" | grep -oE 'staging\.giinrecord\.jp 8083|giinrecord\.jp$|sudo -n -l' | tr '\n' '|')
+order=$(grep '^ssh' <<<"$LOG" | grep -oE 'staging\.giinrecord\.jp 8083|giinrecord\.jp$|docker compose' | tr '\n' '|')
 case "$order" in
   giinrecord.jp\|staging.giinrecord.jp\ 8083\|*) ok "production → staging の順" ;;
   *) bad "順序が違う: $order" ;;
@@ -70,6 +86,45 @@ if [ "$(grep -cE "' _$" <<<"$LOG")" = 1 ]; then ok "allowlist は鍵を渡さず
 # 反映のあとに確認する（「流した」で終わりにしない）
 last=$(grep -oE '^(ssh|curl)' <<<"$LOG" | tail -2 | tr '\n' ' ')
 if [ "$last" = "curl ssh " ]; then ok "最後に curl と ssh で確認する"; else bad "確認していない: $last"; fi
+
+# #426: 確認の ssh は **giinops として**入る。`ssh "$HOST"` は alias の設定（ubuntu）で入るので、
+# ubuntu の sudoers を見て「0」と誤表示していた。alias の HostName・鍵・ポートはそのまま使い、
+# ユーザーだけ -l で差し替える（ホスト名を取り出して表示すると IP が画面に出るので、しない）
+check=$(grep '^ssh' <<<"$LOG" | grep 'docker compose' || true)
+if [ "$(wc -l <<<"$check")" = 1 ] && grep -qE '^ssh\s+-l giinops test-host ' <<<"$check"; then ok "確認は giinops として入る（-l giinops <alias>）"; else bad "確認が giinops として入っていない: $check"; fi
+if grep -qE '^ssh\s+test-host .*sudo -n -l' <<<"$LOG"; then bad "ubuntu として sudo -n -l を見ている（#426 の誤表示）"; else ok "ubuntu の sudoers を見ない"; fi
+# 行数を数えるのではなく **allowlist の行そのもの**（ops-user-setup.sh が書く docker compose ps）を実行する。
+# ops-user-setup.sh の CHECKOUT を変えたらここも変わるべきなので、期待値はそこから組み立てる
+checkout=$(grep -oE '^CHECKOUT=[^ ]+' "$HERE/../ops-user-setup.sh" | cut -d= -f2)
+want="sudo -n docker compose -f $checkout/deploy/docker-compose.yml ps"
+if [ -n "$checkout" ] && grep -qF "$want" <<<"$check"; then ok "allowlist の行そのもの（$want）を実行して確かめる"; else bad "確認コマンドが allowlist の行と違う: $check"; fi
+if grep -q 'docker compose ps: 実行できた（コンテナ 2 件）' "$TMP/out"; then ok "実行できたら「実行できた（コンテナ N 件）」と出す"; else bad "実行できた表示が無い: $(grep -A2 'giinops の allowlist' "$TMP/out")"; fi
+# ヘッダの1行を数えない: ok モードの出力はヘッダ + 2 行。stderr の警告（IP を含むことがある）も数えない
+if grep -q 'コンテナ 3 件' "$TMP/out"; then bad "ヘッダ行か stderr の警告をコンテナとして数えている"; else ok "ヘッダ行と stderr を数えない"; fi
+if grep -q 'Permanently added' "$TMP/out"; then bad "ssh の stderr をそのまま表示している"; else ok "実行できたときは ssh の stderr を表示しない"; fi
+# ps の出力（bind した IP を含む）をそのまま画面に出さない。#426 のように出力が issue に貼られる。
+# **empty モードの前に見る**（最初 empty の後ろに置いて、変異 M8 が通ってしまった＝fixture の順序ミス）
+if grep -q 'giinrecord-web-1' "$TMP/out"; then bad "docker compose ps の出力をそのまま表示している（IP が貼られる）"; else ok "ps の出力をそのまま表示しない"; fi
+# コンテナ 0 件でも「実行できた（0 件）」。接続失敗と区別する（#426 の受け入れ条件）
+SSH_CHECK_MODE=empty run
+if grep -q 'docker compose ps: 実行できた（コンテナ 0 件）' "$TMP/out"; then ok "0 件でも「実行できた（コンテナ 0 件）」と出す（接続失敗と区別）"; else bad "0 件の表示が違う: $(grep -A1 'giinops の allowlist' "$TMP/out" | tail -1)"; fi
+if [ "$RC" = 0 ]; then ok "0 件でもスクリプトは 0 で終わる（grep -c の 1 を set -e に拾わせない）"; else bad "0 件でスクリプトが exit=$RC で死ぬ"; fi
+
+# 接続できない（255）と、接続できたが実行できない（allowlist に無い）を**区別**する
+SSH_CHECK_MODE=down run
+down=$(grep -A1 'giinops の allowlist' "$TMP/out" | tail -1)
+if grep -q '接続できませんでした' <<<"$down"; then ok "giinops として接続できないときはそう言う"; else bad "接続失敗の表示が違う: $down"; fi
+if grep -q '実行できた' <<<"$down"; then bad "接続できないのに実行できたと出る"; else ok "接続失敗を実行できたと言わない"; fi
+SSH_CHECK_MODE=denied run
+denied=$(grep -A1 'giinops の allowlist' "$TMP/out" | tail -1)
+if grep -q '実行できませんでした' <<<"$denied"; then ok "sudo に拒否されたときは「実行できませんでした」"; else bad "拒否の表示が違う: $denied"; fi
+if grep -q '接続できませんでした' <<<"$denied"; then bad "拒否を接続失敗と言っている（区別できていない）"; else ok "拒否を接続失敗と混同しない"; fi
+if grep -q 'a password is required' "$TMP/out"; then ok "拒否の理由（sudo の1行）を添える"; else bad "拒否の理由が出ない"; fi
+if [ "$down" = "$denied" ]; then bad "接続失敗と拒否の表示が同じ"; else ok "接続失敗と拒否の表示が違う"; fi
+# どちらの失敗でもスクリプト自体は最後（期待する結果）まで進む（確認は情報で、反映は済んでいる）
+if grep -q '期待する結果' "$TMP/out"; then ok "確認が失敗しても最後まで表示する"; else bad "確認の失敗で止まる"; fi
+if [ "$RC" = 0 ]; then ok "確認が失敗してもスクリプトは 0 で終わる"; else bad "確認の失敗で exit=$RC"; fi
+if grep -q 'docker compose ps: 実行できた' "$TMP/out"; then ok "期待する結果に「実行できた」を書く"; else bad "期待する結果が古い（行数: 1）"; fi
 
 # ホストは VPS_SSH_HOST で差し替えられる
 run other-host
