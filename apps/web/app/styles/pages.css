@@ -71,12 +71,18 @@
 
 /* サイト共通フッター（#167）。各ページの <main> の後ろに置く。色は tokens.css の変数だけ */
 .site-footer { max-width: 640px; margin: 0 auto; padding: 16px 20px 32px; border-top: 1px solid var(--rule); display: flex; flex-direction: column; gap: 8px; font-size: 12px; color: var(--muted); }
-.site-footer__links { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.site-footer__links { display: flex; flex-wrap: wrap; gap: 0 16px; }
+/* Issue 413（WCAG 2.5.8）: 押せる範囲は 24×24 px 以上。文字は 12px なので上下に 6px ずつ足す。
+   **見た目の間隔は変えない**ため、上の gap を 6px → 0 にして padding で置き換えている
+   （padding は押せる範囲になるが、gap はならない）。 */
+.site-footer__links a,
+.install-link__button { display: inline-block; padding-block: 6px; }
 .site-footer__note { margin: 0; }
 
 /* 「ホーム画面に追加」（#191）。JS で判定後にだけ描画。ボタンだがリンクと同じ見た目にする */
 .install-link { display: inline-flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
 .install-link__button { appearance: none; background: none; border: 0; padding: 0; margin: 0; font: inherit; color: var(--link); text-decoration: underline; cursor: pointer; }
+.install-link__button { padding-block: 6px; }   /* Issue 413: 上の padding: 0 を打ち消す（同じ詳細度なので後勝ち） */
 .install-link__hint { font-size: 12px; color: var(--muted); }
 
 /* テーマ切替（#365）。フッターの「サイト情報」の下に、控えめに置く。 */
