@@ -828,3 +828,75 @@ EOF
   assert_not_contains "$LOG" $'pr\tmerge' "never merges"
 }
 test_case "merge: 旧 HEAD を親に持たない commit は自分の更新として採用しない（#392 レビュー指摘）" t_merge_repin_gives_up_and_defers_to_the_guard
+
+# #414: BEHIND でない状態（BLOCKED = CI 待ち）の間に、**自分以外**が main を取り込むと
+# HEAD が動く（GitHub の "Update branch"、auto-update）。update_if_behind は BEHIND の
+# ときしか走らないので repin されず、マージのたびに中断していた（PR #409 で2回踏んだ）。
+t_merge_accepts_a_merge_of_main_done_elsewhere() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"BLOCKED","url":"u","headRefOid":"oid1"}' ;;
+    "pr view 12 --json mergeStateStatus"*) echo '{"mergeStateStatus":"BLOCKED"}' ;;
+    "pr view 12 --json headRefOid"*) echo '{"headRefOid":"merged1"}' ;;   # 誰かが main を取り込んだ
+    # **旧 HEAD を親に持つマージコミット**（親が2つ）＝ 取り込んだだけ
+    "api repos/uonoko1/giinrecord/commits/merged1"*) echo '{"parents":[{"sha":"oid1"},{"sha":"main9"}]}' ;;
+    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "continues instead of stopping: $ERR"
+  assert_contains "$ERR" "updated with main elsewhere" "says what happened"
+  assert_contains "$LOG" $'pr\tmerge\t12' "merged"
+}
+test_case "merge: 自分以外が main を取り込んだだけなら続行する（#414）" t_merge_accepts_a_merge_of_main_done_elsewhere
+
+# **親に旧 HEAD がある = 安全、ではない。** 旧 HEAD の上に**普通のコミット**を積んだ場合も
+# 親には旧 HEAD が入る。その追加分は検査を通っていないので、従来どおり中断する
+t_merge_still_stops_for_a_plain_commit_on_top() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"BLOCKED","url":"u","headRefOid":"oid1"}' ;;
+    "pr view 12 --json mergeStateStatus"*) echo '{"mergeStateStatus":"BLOCKED"}' ;;
+    "pr view 12 --json headRefOid"*) echo '{"headRefOid":"pushed1"}' ;;   # 人が push した
+    # **親が1つ**（普通のコミット）。旧 HEAD を親に持つが、取り込みではない
+    "api repos/uonoko1/giinrecord/commits/pushed1"*) echo '{"parents":[{"sha":"oid1"}]}' ;;
+    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "still aborts"
+  assert_contains "$ERR" "HEAD がこの処理の開始後に動きました" "treats it as an unreviewed push"
+  assert_not_contains "$LOG" $'pr\tmerge' "never merges the unchecked commit"
+}
+test_case "merge: 旧 HEAD の上の普通のコミットは、親が一致しても中断する（#414）" t_merge_still_stops_for_a_plain_commit_on_top
+
+# 旧 HEAD を親に持たないマージコミット（別の枝の取り込み）も中断する
+t_merge_stops_for_a_merge_not_based_on_us() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"BLOCKED","url":"u","headRefOid":"oid1"}' ;;
+    "pr view 12 --json mergeStateStatus"*) echo '{"mergeStateStatus":"BLOCKED"}' ;;
+    "pr view 12 --json headRefOid"*) echo '{"headRefOid":"other1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/other1"*) echo '{"parents":[{"sha":"somethingelse"},{"sha":"main9"}]}' ;;
+    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "aborts"
+  assert_contains "$ERR" "HEAD がこの処理の開始後に動きました" "not a merge of our head"
+  assert_not_contains "$LOG" $'pr\tmerge' "never merges"
+}
+test_case "merge: 旧 HEAD を親に持たないマージコミットは中断する（#414）" t_merge_stops_for_a_merge_not_based_on_us
