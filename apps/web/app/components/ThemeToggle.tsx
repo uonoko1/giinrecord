@@ -66,7 +66,8 @@ export function ThemeToggle() {
           <label
             key={o.value}
             style={{
-              padding: "4px 10px",
+              // Issue 413（WCAG 2.5.8）: 押せる範囲を 24px 以上に。12px の文字（行の高さ ≒14.4px）+ 上下 5px
+              padding: "5px 10px",
               borderRadius: 3,
               fontSize: 12,
               cursor: "pointer",
