@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # 議員レコード staging（staging.giinrecord.jp）の初回セットアップ（Issue #127、冪等化と安全装置 #141）。root で 1 回、再実行可。
-#   ssh -t "${VPS_SSH_HOST:-sakura-vps}" 'sudo bash -s' < deploy/staging-setup.sh            ← TTY が要る（certbot が対話）
-#   ssh -t "${VPS_SSH_HOST:-sakura-vps}" 'sudo bash -s staging.example.test' < deploy/staging-setup.sh   （ドメインを変える場合）
+#   bash deploy/run-remote.sh deploy/staging-setup.sh                        ← TTY が要る（certbot が対話）
+#   bash deploy/run-remote.sh deploy/staging-setup.sh staging.example.test   （ドメインを変える場合）
+#   （`ssh -t ... < script` は標準入力が tty でなくなり sudo が落ちる。run-remote.sh が正しい形、#419）
 # 引数のドメインは staging. で始まるものだけ受け付ける（本番ドメインを渡すと本番 conf を書き換えてしまった事故の再発防止、#141）。
 # 前提：production が go-live.sh で構築済み（docker・/opt/giinrecord・ホスト nginx の noip log_format）。
 # 人間の作業はこれと「DNS A: staging.giinrecord.jp → VPS（giinrecord.jp と同じアドレス。リポジトリには書かない、#133）」だけ（README.md）。
@@ -47,7 +48,7 @@ main() {
 
   step "0/8 前提確認（production が go-live.sh で構築済みであること）"
   if ! command -v docker >/dev/null 2>&1 || [ ! -d "$REPO_DIR/.git" ]; then
-    echo "!! docker または $REPO_DIR が無い。先に production を構築する:  ssh -t \"\${VPS_SSH_HOST:-sakura-vps}\" 'sudo bash -s giinrecord.jp' < deploy/go-live.sh" >&2
+    echo "!! docker または $REPO_DIR が無い。先に production を構築する:  bash deploy/run-remote.sh deploy/go-live.sh giinrecord.jp" >&2
     exit 1
   fi
 

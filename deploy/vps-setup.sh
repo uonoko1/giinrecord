@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Host-nginx setup for one site on the SHARED host (Issue #85; staging #127; idempotent + safety checks #141). Run as:
-#   ssh "${VPS_SSH_HOST:-sakura-vps}" 'sudo bash -s <domain> [port]' < deploy/vps-setup.sh
+#   bash deploy/run-remote.sh deploy/vps-setup.sh <domain> [port]
+#   （`ssh ... 'sudo bash -s' < script` は sudo がパスワードを読めず落ちる。run-remote.sh が正しい形、#419）
 #     port 8081 (default) = production: giinrecord.jp         → /var/www/giinrecord/site,    sites-available/giinrecord.conf
 #     port 8083           = staging:    staging.giinrecord.jp → /var/www/giinrecord/staging, sites-available/giinrecord-staging.conf
 #   The domain must NOT start with "staging." for 8081 and MUST start with "staging." for 8083 (#141: a staging
