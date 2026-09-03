@@ -106,3 +106,31 @@ describe("議員一覧の行は、会派名が長くても名前のリンクを�
     expect(d).toMatch(/flex:/);
   });
 });
+
+/**
+ * WCAG 1.4.10（Reflow、AA）: 320px 相当の幅で**2方向のスクロールを要求しない**。Issue 412
+ *
+ * 320px は実機幅であると同時に、**400% 拡大時の 1280px と等価**（弱視の利用者の設定）。
+ * 横スクロールが要ると、1行読むたびに左右に振らされる。
+ *
+ * `/coverage` は 8px はみ出していた。原因は `.figures` の `repeat(3, 1fr)` で、
+ * **`1fr` は min-content を下限に持つ**ため、数字が長い（1,469 など）と
+ * 3列の合計が親を超える。`minmax(0, 1fr)` で下限を外す。
+ *
+ * `.assemblies-table` は `overflow-x: auto` の箱に入っているので**対象外**
+ * （ページ全体が横に動くのが問題で、表の中だけが動くのは許容される）。
+ */
+describe("320px 幅で横スクロールしない（WCAG 1.4.10・Issue 412）", () => {
+  const pages = read("styles/pages.css");
+
+  it(".figures の列は min-content を下限に持たない", () => {
+    const d = declarationsFor(pages, ".figures");
+    expect(d).toMatch(/grid-template-columns:[^;]*minmax\(/);
+    // `repeat(3, 1fr)` のように下限が min-content のままだと、長い数字で溢れる
+    expect(d).not.toMatch(/grid-template-columns:\s*repeat\(\s*\d+\s*,\s*1fr\s*\)/);
+  });
+
+  it("表は横スクロールできる箱に入っている（表の中だけが動くのは許容）", () => {
+    expect(declarationsFor(read("routes/assemblies.css"), ".assemblies-table-wrap")).toMatch(/overflow-x:\s*auto/);
+  });
+});
