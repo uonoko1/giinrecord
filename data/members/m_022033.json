@@ -186,6 +186,19 @@
    "value": "賛成"
   },
   {
+   "committee": "経済産業委員会",
+   "date": "2026-07-16",
+   "estimated": false,
+   "firstDate": "2026-07-16",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-16",
+   "meetingId": "122114080X01420260716_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122114080X01420260716/0"
+  },
+  {
    "date": "2026-07-15",
    "groupValue": "賛成",
    "kind": "vote",
@@ -459,6 +472,19 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0619-v001.htm",
    "title": "日程第１　日本国の自衛隊とフィリピンの軍隊との間における物品又は役務の相互の提供に関する日本国政府とフィリピン共和国政府との間の協定の締結について承認を求めるの件（衆議院送付）",
    "value": "賛成"
+  },
+  {
+   "committee": "災害対策及び東日本大震災復興特別委員会",
+   "date": "2026-06-19",
+   "estimated": false,
+   "firstDate": "2026-06-19",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-19",
+   "meetingId": "122115384X00720260619_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115384X00720260619/0"
   },
   {
    "date": "2026-06-17",
