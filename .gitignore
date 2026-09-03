@@ -10,7 +10,10 @@ dist/
 .DS_Store
 # ETL working files (raw HTML cache). Normalized data under data/ IS committed.
 packages/etl/.cache/
-.claude/
+# .claude/settings.local.json には共用 VPS の同居サイト名（deny ルール）が入るので追跡しない。
+# agents/（スクラムの役割定義）は共有する。README を除く .claude/ 直下と worktrees/ は無視。
+.claude/*
+!.claude/agents/
 # React Router の生成型（ビルドのたびに書き換わる）
 apps/web/.react-router/
 .playwright-mcp/
