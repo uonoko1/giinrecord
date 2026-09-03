@@ -25,8 +25,11 @@ printf '#!/usr/bin/env bash\necho "it'"'"'s a test" with spaces\n' > "$TMP/s.sh"
 # script を渡すと ssh -t で sudo bash <(...) の形で実行する
 : > "$TMP/log"; PATH="$BIN:$PATH" SSH_LOG="$TMP/log" VPS_SSH_HOST=h bash "$SCRIPT" "$TMP/s.sh" giinrecord.jp 8083 >/dev/null 2>&1
 LOG=$(cat "$TMP/log")
-if grep -q '^ssh	-t h sudo bash <(echo ' <<<"$LOG"; then ok "ssh -t で sudo bash <(…) の形"; else bad "形が違う: $LOG"; fi
-if grep -q 'base64 -d) giinrecord.jp 8083' <<<"$LOG"; then ok "引数を末尾に渡す"; else bad "引数が渡っていない"; fi
+# **プロセス置換は sudo の内側**。外側（`sudo bash <(…)`）だと sudo が fd を閉じて
+# `bash: /dev/fd/63: No such file or directory` になる（ユーザーの手元で実際に落ちた）
+if grep -q "^ssh	-t h sudo bash -c 'bash <(echo " <<<"$LOG"; then ok "プロセス置換を sudo の内側で作る（sudo bash -c 'bash <(…)'）"; else bad "形が違う: $LOG"; fi
+if grep -qE "^ssh	-t h sudo bash <\(" <<<"$LOG"; then bad "プロセス置換が sudo の外側にある（fd が閉じる）"; else ok "sudo の外側でプロセス置換していない"; fi
+if grep -q '_ giinrecord.jp 8083' <<<"$LOG"; then ok "引数を \$@ 経由で末尾に渡す"; else bad "引数が渡っていない"; fi
 # **標準入力を使っていない**（< script が無い）
 if grep -qE '<[^(]' <<<"$LOG"; then bad "標準入力リダイレクトを使っている"; else ok "標準入力リダイレクトを使わない（tty を潰さない）"; fi
 # base64 を戻すと元のスクリプトになる（引用符も空白も壊れない）
