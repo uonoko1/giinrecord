@@ -2,11 +2,12 @@ import { Link, type MetaArgs, useLoaderData } from "react-router";
 import { CoverBrand } from "../components/CoverBrand";
 import { SiteFooter } from "../components/SiteFooter";
 import { assemblyPath, bundledSessions } from "../lib/assemblies";
+import { bills as bundledBills } from "../lib/bills";
 import { buildCoverage, type Coverage, type DietCoverage, formatLocalSessionRange, formatSessionRange, hasSessionGaps, linkedRecordCounts, type LocalCoverage, rosterlessSessions, rosterScope, sangiinUnlinkedVotes, type SangiinVoteLinkStats, type SessionRange, shugiinBillNameCoverage, type ShugiinBillNameStats, shugiinQuestionCoverage, speechCoverage, type UnmatchedSpeechStats, unmatchedSpeechCoverage } from "../lib/coverage";
+import type { BillSummary } from "@seiji-kiroku/shared";
 import type { AssemblySession } from "../lib/data-contract";
 import { defaultDataDir, readSangiinVoteLinkStats, readShugiinBillNameStats, readUnmatchedSpeechStats } from "../lib/data-files";
 import { type Dataset, dataset as bundled } from "../lib/dataset";
-import { bills as bundledBills } from "../lib/bills";
 import { formatDate, formatDateTime } from "../lib/format";
 import { seoMeta } from "../lib/seo";
 import "../styles/pages.css";
@@ -47,27 +48,24 @@ export default function CoverageRoute() {
  * /coverage（#218）: どの議会のどこまでが入っているかを data/ から数えて並べる。
  * 件数・範囲はすべて buildCoverage がデータを数えた値で、この画面には数値を書かない。評価・解釈は書かない。
  */
-/**
- * Issue 408: `bills` は `dataset` に入っていない（gzip 60KB あり、使うのはこの画面だけ）。
- * **この画面だけが `lib/bills.ts` から読む**ので、他のページはそれを読まずに済む。
- * `data` を明示的に渡された場合（テスト）は、その中の `bills` を尊重する。
- */
-const withBills = (d: Dataset): Dataset => (d.bills === undefined ? { ...d, bills: bundledBills } : d);
-
 export function CoveragePage({
-  data = withBills(bundled),
+  data = bundled,
   sessions = bundledSessions(),
+  // Issue 408: bills は Dataset に入っていない（60KB あり、この画面だけが使う）。
+  // 差し替えられるように prop にしておく（テストが件数を作れる）
+  bills = bundledBills,
   shugiinBillNames = null,
   sangiinVotes = null,
   unmatchedSpeeches = null,
 }: {
   data?: Dataset;
   sessions?: ReadonlyMap<string, AssemblySession[]>;
+  bills?: readonly BillSummary[];
   shugiinBillNames?: ShugiinBillNameStats | null;
   sangiinVotes?: SangiinVoteLinkStats | null;
   unmatchedSpeeches?: UnmatchedSpeechStats | null;
 }) {
-  const coverage = buildCoverage(data, sessions);
+  const coverage = buildCoverage(data, sessions, bills);
   return (
     <>
       <main className="page assemblies">

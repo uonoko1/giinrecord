@@ -1,4 +1,4 @@
-import type { Assembly, AssemblyId, BillSummary, DatasetMeta, House, MemberId } from "@seiji-kiroku/shared";
+import type { Assembly, AssemblyId, DatasetMeta, House, MemberId } from "@seiji-kiroku/shared";
 
 /**
  * Read side of docs/DATA_CONTRACT.md. The summary shapes below mirror the
@@ -34,12 +34,12 @@ export interface Dataset {
   assemblies?: Assembly[];
   members: MemberSummary[];
   rollcalls: RollCallSummary[];
-  /**
-   * `bills/index.json`（議案。衆院の会派態度の裏づけ）。無い（古い）データなら空。
-   * **`dataset` には入っていない**（Issue 408）。要るところが `lib/bills.ts` から直接読む。
-   * 型に残してあるのは、テストや `/coverage` が `Dataset` の形で渡すため。
+  /*
+   * Issue 408: `bills` は**この型に無い**。`dataset` に入れると5つが1チャンクにまとまり、
+   * 全ページが 60KB を読むため（使うのは /coverage だけ）。**lib/bills.ts を見ること。**
+   * 型に optional で残すと `dataset.bills ?? []` が**型エラーにならず静かに 0 件**になるので、
+   * 消してある（レビュー指摘）。議案が要る関数は bills を**必須の引数**で受け取る。
    */
-  bills?: BillSummary[];
 }
 
 /** `data/` is bundled at build time; a missing file simply yields an empty dataset. */

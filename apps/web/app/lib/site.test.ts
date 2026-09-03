@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { REPO_URL } from "./site";
@@ -21,6 +21,20 @@ import { REPO_URL } from "./site";
  */
 const app = join(import.meta.dirname, "..");
 const read = (p: string) => readFileSync(join(app, p), "utf8");
+
+/** app/ 配下の .ts / .tsx を全部読む（テストと型定義は除く）。列挙漏れを作らないため */
+function sources(): { rel: string; src: string }[] {
+  const out: { rel: string; src: string }[] = [];
+  const walk = (dir: string) => {
+    for (const e of readdirSync(join(app, dir), { withFileTypes: true })) {
+      const rel = dir ? `${dir}/${e.name}` : e.name;
+      if (e.isDirectory()) walk(rel);
+      else if (/\.tsx?$/.test(e.name) && !/\.test\.tsx?$/.test(e.name) && !e.name.endsWith(".d.ts")) out.push({ rel, src: read(rel) });
+    }
+  };
+  walk("");
+  return out;
+}
 
 /** データを使わない（使うべきでない）ファイル。ここが dataset.ts に触れると全ページが重くなる */
 const DATA_FREE = [
@@ -64,35 +78,25 @@ describe("データを使わないファイルは dataset.ts を import しな�
     expect(src).not.toMatch(/import\.meta\.glob[^;]*bills\/index\.json/);
   });
 
-  it("bills を読むのは lib/bills.ts だけ", () => {
-    const importers = ["lib/bills.ts", "lib/dataset.ts", "routes/coverage.tsx", "routes/home.tsx", "routes/members.tsx", "routes/about.tsx"]
-      .filter((f) => /import\.meta\.glob[^;]*bills\/index\.json/.test(read(f)));
-    expect(importers).toEqual(["lib/bills.ts"]);
-  });
-
-  it("/coverage 以外のページは lib/bills.ts を import しない", () => {
-    for (const f of ["routes/home.tsx", "routes/members.tsx", "routes/about.tsx", "routes/assemblies.tsx", "routes/compare.tsx", "components/SiteFooter.tsx"]) {
-      expect(read(f), f).not.toMatch(/from\s+"[^"]*\/bills"/);
-    }
-  });
-
   /*
-   * Issue 408: `/coverage` のテストは**全部 `data` を明示的に渡す**ので、
-   * **既定の経路（本番が通る道）を誰も通っていなかった**。
-   * `withBills` を外して bills が黙って 0 件になる変異を入れても、46件すべて緑のままだった。
+   * **allowlist で検査する**（レビュー指摘）。最初はファイル名を6つ列挙していたが、
+   * `app/routes/` には14ファイルあり、一覧に無い `member.tsx` が `bills` を import しても
+   * 誰も文句を言わなかった。**denylist は書き漏れたものを素通しする**（#333 の学び）。
    *
-   * 「記録が出ない」は利用者から見えない失敗なので、**既定の値そのもの**を検査する。
+   * 動的 import・再エクスポート・`import * as` も拾う（3つとも素通りしていた）。
    */
-  it("bundled な bills が空でない（/coverage の既定が黙って 0 件にならない）", async () => {
-    const { bills } = await import("./bills");
-    expect(Array.isArray(bills)).toBe(true);
-    expect(bills.length).toBeGreaterThan(0);
-    expect(bills[0]).toHaveProperty("house");
+  it("bills を参照してよいのは lib/bills.ts と routes/coverage.tsx だけ", () => {
+    const ALLOWED = new Set(["lib/bills.ts", "routes/coverage.tsx"]);
+    // `from "…/bills"` / `import("…/bills")` / `require("…/bills")` を拾う
+    const REF = /(?:from\s*|import\s*\(\s*|require\s*\(\s*)["'][^"']*\/bills["']/;
+    const offenders = sources().filter(({ rel, src }) => !ALLOWED.has(rel) && REF.test(src));
+    expect(offenders.map((o) => o.rel)).toEqual([]);
   });
 
-  it("dataset には bills が入っていない（入れると全ページが読む）", async () => {
-    const { dataset } = await import("./dataset");
-    expect(dataset.bills).toBeUndefined();
+  it("bills/index.json を eager に読むのは lib/bills.ts だけ", () => {
+    const GLOB = /import\.meta\.glob[^;]*bills\/index\.json/;
+    const readers = sources().filter(({ src }) => GLOB.test(src)).map(({ rel }) => rel);
+    expect(readers).toEqual(["lib/bills.ts"]);
   });
 
   it("archive-path.ts の重複した REPO_URL が site.ts と一致する", () => {
