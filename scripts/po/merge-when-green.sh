@@ -113,17 +113,31 @@ merge_main_locally() {
 # `update-branch` が作るのは**旧 HEAD を親に持つマージコミット**なので、**親を見て確かめる**:
 # 新しい HEAD の親に旧 HEAD_OID が含まれていれば、それは我々が作らせたもの。
 # 含まれなければ（＝人が直接 push した）**基準を動かさず**、assert_head_unchanged に判断を委ねる。
+# is_our_merge_commit <new-oid> <old-oid> → 0 なら「main を取り込んだだけ」
+# `update-branch`（および GitHub の "Update branch"）が作るのは
+# **旧 HEAD を親に持つマージコミット**。それだけを我々の更新とみなす。
+#
+# **親に旧 HEAD がある = 安全、ではない**（#414）: 誰かが旧 HEAD の上に普通のコミットを
+# 積んだ場合も親には旧 HEAD が入る。その追加分は検査を通っていないのでマージしてはいけない。
+# 区別のため**親が2つ以上あること**も要求する（マージコミットかどうか）。
+is_our_merge_commit() {
+  local oid=$1 before=$2 parents n
+  parents=$(gh api "repos/$REPO/commits/$oid" -q '.parents[].sha' 2>/dev/null || true)
+  n=$(grep -c . <<<"$parents" || true)
+  [[ "$n" -ge 2 ]] || return 1                                   # 普通のコミットは受け入れない
+  [[ $'\n'"$parents"$'\n' == *$'\n'"$before"$'\n'* ]]          # 旧 HEAD を親に持つか
+}
+
 repin_head() {
-  local oid before=$HEAD_OID attempt parents
+  local oid before=$HEAD_OID attempt
   for attempt in 1 2 3; do
     oid=$(gh pr view "$PR" --json headRefOid -q .headRefOid 2>/dev/null || true)
     if [[ -n "$oid" && "$oid" != "$before" ]]; then
-      parents=$(gh api "repos/$REPO/commits/$oid" -q '.parents[].sha' 2>/dev/null || true)
-      if [[ $'\n'"$parents"$'\n' == *$'\n'"$before"$'\n'* ]]; then
-        HEAD_OID=$oid   # 旧 HEAD を親に持つ = update-branch が作ったもの
+      if is_our_merge_commit "$oid" "$before"; then
+        HEAD_OID=$oid   # 旧 HEAD を親に持つマージコミット = 取り込んだだけ
         return 0
       fi
-      log "note: $oid does not have $before as a parent — not ours; leaving the guard to decide"
+      log "note: $oid is not a merge of $before — not ours; leaving the guard to decide"
       return 0
     fi
     sleep 2   # API にまだ見えていないだけかもしれないので、数回だけ待つ
@@ -143,6 +157,15 @@ assert_head_unchanged() {
   local now
   now=$(gh pr view "$PR" --json headRefOid -q .headRefOid)
   [[ "$now" == "$HEAD_OID" ]] && return 0
+  # **自分で動かしていない取り込み**（GitHub の "Update branch"、auto-update）でも HEAD は動く。
+  # `update_if_behind` は BEHIND のときしか走らないので、BLOCKED（CI 待ち）の間に
+  # 取り込まれると repin されず、ここで毎回止まっていた（#414。PR #409 で2回踏んだ）。
+  # **旧 HEAD を親に持つマージコミット**なら取り込んだだけなので、基準を進めて続行する。
+  if is_our_merge_commit "$now" "$HEAD_OID"; then
+    log "branch was updated with main elsewhere ($HEAD_OID → $now); continuing"
+    HEAD_OID=$now
+    return 0
+  fi
   die "PR #$PR ($HEAD) の HEAD がこの処理の開始後に動きました（${HEAD_OID:0:7} → ${now:0:7}）。
        追加されたコミットは検査を通っていないので、マージしません。
        新しい HEAD で流し直してください: scripts/po/merge-when-green.sh $PR"
