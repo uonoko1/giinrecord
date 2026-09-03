@@ -33,28 +33,12 @@ sudo のパスワードを3回聞かれます。
 
 EOS
 
-# run <説明> <スクリプト> [引数...]
-#
-# **`ssh -t ... < script` は使えない**（実測で判明）。`< script` で標準入力がファイルになるので
-# `-t` が tty を割り当てられず、`sudo` がパスワードを読めずに落ちる:
-#
-#     Pseudo-terminal will not be allocated because stdin is not a terminal.
-#     sudo: a terminal is required to read the password
-#
-# docs/ops/deploy.md にもこの形が書かれていたが、**元から動かない組み合わせ**だった。
-#
-# 代わりに **base64 にしてコマンド行で渡し、プロセス置換で実行する**。
-# 標準入力を一切使わないので tty が生きる。base64 にするのは、スクリプト内の
-# シングルクォート（vps-setup.sh に 39 個ある）で引用が壊れるのを避けるため。
-#
-# **サーバー上にファイルを残さない**（`/tmp` にスクリプトを置いて実行する形は、
-# 誰でも書ける場所なので root 昇格に使える。#333 で塞いだ経路）。
+# run <説明> <スクリプト> [引数...] — 実際の呼び出しは deploy/run-remote.sh（#419）。
+# `ssh -t ... < script` が動かない理由と正しい形はそちらに1箇所だけ書く。
 run() {
-  local label=$1 script=$2; shift 2
+  local label=$1; shift
   echo "── $label"
-  local b64; b64=$(base64 -w0 < "$script")
-  # shellcheck disable=SC2029  # 展開はローカルで行う（b64 と引数はこのファイル由来）
-  ssh -t "$HOST" "sudo bash <(echo $b64 | base64 -d) $*"
+  bash "$HERE/run-remote.sh" "$@"
   echo
 }
 

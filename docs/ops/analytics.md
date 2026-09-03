@@ -54,7 +54,7 @@ PV として数える行：`GET` かつ `200`/`304` かつ HTML ページ（`/as
 
 ```sh
 # 1. sudo で nginx と cron を設定（冪等。2 回走らせても access_log 行は増えない）
-ssh "$VPS_SSH_HOST" 'sudo bash -s' < deploy/analytics/vps-analytics-setup.sh
+bash deploy/run-remote.sh deploy/analytics/vps-analytics-setup.sh
 # 2. スクリプトを root 所有で配置（更新時も同じ。~ubuntu 配下には置かない）
 VPS_SSH_HOST="${VPS_SSH_HOST:-sakura-vps}"   # ssh alias of the VPS (your ~/.ssh/config; the IP is not in the repo, #133)
 scp deploy/analytics/aggregate.sh deploy/analytics/daily.sh "$VPS_SSH_HOST":/tmp/

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # One-time VPS setup for cookie-less analytics (Issue #58). Needs sudo once.
-#   ssh "${VPS_SSH_HOST:-sakura-vps}" 'sudo bash -s' < deploy/analytics/vps-analytics-setup.sh
+#   bash deploy/run-remote.sh deploy/analytics/vps-analytics-setup.sh
 #
 # What it does:
 #   1. installs gawk (aggregate.sh uses gawk's match(s, re, arr))

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Cloudflare IP allow-list for the host nginx (Issue #163). Run as root on the VPS:
-#   ssh "${VPS_SSH_HOST:-sakura-vps}" 'sudo bash -s' < deploy/cloudflare-allowlist.sh                  # update once
+#   bash deploy/run-remote.sh deploy/cloudflare-allowlist.sh                                        # update once
 #   scp deploy/cloudflare-allowlist.sh "${VPS_SSH_HOST:-sakura-vps}":/tmp/ && ssh "${VPS_SSH_HOST:-sakura-vps}" \
 #     'sudo bash /tmp/cloudflare-allowlist.sh --install-cron && rm /tmp/cloudflare-allowlist.sh'         # + weekly cron
 #
