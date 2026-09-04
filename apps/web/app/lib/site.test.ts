@@ -118,6 +118,45 @@ describe("データを使わないファイルは dataset.ts を import しな�
     expect(readers).toEqual(["app/lib/bills.ts"]);
   });
 
+  /*
+   * Issue 441: `members/index.json` は 1,057 行 / raw 259KB / gzip 40KB。
+   * `dataset` に入っていたので、**数えるだけの画面まで 40KB を読んでいた**:
+   *
+   *     /            212 KB
+   *     /assemblies/ 219 KB
+   *     /coverage/   224 KB
+   *
+   * ETL の集計（`members/by-assembly.json`、gzip 187B）に切り替えたので、
+   * `dataset.ts` はもう名簿を eager に読まない。全件が要る画面（/members・/assemblies/{id}）は
+   * `lib/members.ts` から読む。
+   */
+  it("dataset.ts は members を eager に読まない（lib/members.ts の担当。#441）", () => {
+    const src = read("lib/dataset.ts");
+    expect(src).not.toMatch(/import\.meta\.glob[^;]*members\/index\.json/);
+  });
+
+  it("members/index.json を eager に読むのは lib/members.ts だけ（#441）", () => {
+    const GLOB = /import\.meta\.glob[^;]*members\/index\.json/;
+    expect(sources().filter(({ src }) => GLOB.test(src)).map(({ rel }) => rel)).toEqual(["app/lib/members.ts"]);
+  });
+
+  it("members/by-assembly.json を eager に読むのは lib/members-by-assembly.ts だけ（#441）", () => {
+    const GLOB = /import\.meta\.glob[^;]*members\/by-assembly\.json/;
+    expect(sources().filter(({ src }) => GLOB.test(src)).map(({ rel }) => rel)).toEqual(["app/lib/members-by-assembly.ts"]);
+  });
+
+  /*
+   * **allowlist で検査する**（bills と同じ流儀。#411）。名簿の全件が要るのは
+   * 一覧を描く `/members` と、その議会の議員を並べる `/assemblies/{id}` だけ。
+   * ここに名前が増えたら、その画面が 40KB を読み始めたということ。
+   */
+  it("lib/members.ts（名簿の全件）を参照してよいのは /members と /assemblies/{id} だけ（#441）", () => {
+    const ALLOWED = new Set(["app/lib/members.ts", "app/routes/members.tsx", "app/routes/assembly.tsx"]);
+    const REF = /(?:from\s*|import\s*\(\s*|require\s*\(\s*)["'][^"']*\/members["']/;
+    const offenders = sources().filter(({ rel, src }) => !ALLOWED.has(rel) && REF.test(src));
+    expect(offenders.map((o) => o.rel)).toEqual([]);
+  });
+
   it("archive-path.ts の重複した REPO_URL が site.ts と一致する", () => {
     // 同じ理由（dataset.ts を import できない）で複製されている定数。ずれると出典リンクが割れる
     const m = read("lib/archive-path.ts").match(/REPO_URL\s*=\s*"([^"]+)"/);

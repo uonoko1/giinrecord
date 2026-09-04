@@ -6,6 +6,7 @@ import { SiteFooter } from "../components/SiteFooter";
 import { MoreButton } from "../components/MoreButton";
 import { DIET_ASSEMBLIES } from "../lib/data-contract";
 import { type Dataset, dataset as bundled, type MemberSummary } from "../lib/dataset";
+import { members as bundledMembers } from "../lib/members";
 import { formatDateTime } from "../lib/format";
 import {
   filterMembers,
@@ -31,7 +32,7 @@ import "./members.css";
  * canonical は seoMeta が pathname だけから作る（クエリ違いを別ページにしない）。
  */
 export function meta({ location }: MetaArgs) {
-  const scope = membersScopeFromQuery(new URLSearchParams(location.search), bundled.assemblies ?? DIET_ASSEMBLIES, bundled.members);
+  const scope = membersScopeFromQuery(new URLSearchParams(location.search), bundled.assemblies ?? DIET_ASSEMBLIES, bundledMembers);
   return seoMeta({ title: membersHeading(scope), description: membersDescription(scope), pathname: location.pathname });
 }
 
@@ -58,7 +59,12 @@ function useSingleHeadMeta(deps: unknown[]) {
  * index.json はビルド時にバンドルされ、以降はブラウザ内だけで絞り込む（追加フェッチなし）。
  * データ取得前（0名）でも落ちない。
  */
-export default function Members({ data = bundled }: { data?: Dataset }) {
+/**
+ * Issue 441: 名簿の全件（`members/index.json`）は `Dataset` から出して **lib/members.ts** に分けた
+ * （数えるだけの `/`・`/assemblies`・`/coverage` まで gzip 40KB を読んでいたため）。
+ * **この画面は従来どおり全件を読む**——一覧に `name`・`kana`・`group`・`district`・`termEnd` を全部出すので。
+ */
+export default function Members({ data = bundled, members = bundledMembers }: { data?: Dataset; members?: readonly MemberSummary[] }) {
   // #112 / #158 / #239: 議会・会派・選挙区・元職の有無は URL のクエリに持つ（?assembly=&group=&district=&former=1）。
   // ブックマーク・共有・戻る／進むが効き、見出しと表示内容が必ず一致する。絞り込み自体はここまでにバンドル
   // 済みの index.json に対して行うので、URL が変わってもサーバーへの往復は増えない（fetch も loader も無い）。
@@ -78,7 +84,7 @@ export default function Members({ data = bundled }: { data?: Dataset }) {
   // #120: プリレンダーの HTML は「すべて」が選ばれたままで、hydration はクエリ由来の値を最初から持っていても
   // DOM の selected を直さない（再描画が起きない）。だから描画にはこの state を使い、マウント後・クエリ変更後
   // （戻る／進むを含む）に URL から同期して再描画させる。
-  const queried = useMemo(() => membersScopeFromQuery(params, assemblies, data.members), [params, assemblies, data.members]);
+  const queried = useMemo(() => membersScopeFromQuery(params, assemblies, members), [params, assemblies, members]);
   const [scope, setScope] = useState<MembersScope>({ assemblyId: "", assemblyName: undefined, group: "", district: "", includeFormer: false });
   useEffect(() => setScope(queried), [queried]);
   const { assemblyId, group, district, includeFormer } = scope;
@@ -107,8 +113,8 @@ export default function Members({ data = bundled }: { data?: Dataset }) {
 
   // 既定はすべての議会・現職（最新回次の名簿に載っている人）のみ。元職は事実として残っているので、トグルで同じ一覧に出す。
   const all = useMemo(
-    () => data.members.filter((m) => (!assemblyId || memberAssemblyId(m) === assemblyId) && (includeFormer || m.current !== false)),
-    [data.members, assemblyId, includeFormer],
+    () => members.filter((m) => (!assemblyId || memberAssemblyId(m) === assemblyId) && (includeFormer || m.current !== false)),
+    [members, assemblyId, includeFormer],
   );
   const groups = useMemo(() => distinctSorted(all.map((m) => m.group)), [all]);
   const districts = useMemo(() => distinctSorted(all.map((m) => m.district)), [all]);
@@ -137,7 +143,7 @@ export default function Members({ data = bundled }: { data?: Dataset }) {
           <p className="cover__lead">{description}</p>
         </header>
 
-        {data.members.length === 0 ? (
+        {members.length === 0 ? (
           <section className="section">
             <p className="note">取得前です。</p>
           </section>

@@ -1,4 +1,5 @@
-import type { BillSessionCount } from "@seiji-kiroku/shared";
+import type { BillSessionCount, MemberAssemblyCount } from "@seiji-kiroku/shared";
+import type { MemberSummary } from "../lib/dataset";
 import type { Dataset } from "../lib/dataset";
 
 /** Home / About 用の最小データ。採決はわざと日付順にしていない（降順ソートを検証するため）。 */
@@ -24,11 +25,6 @@ export const dataset: Dataset = {
       { name: "国会会議録検索システム", url: "https://kokkai.ndl.go.jp/", fetchedAt: "2026-08-22T06:00:00+09:00", house: "sangiin", kind: "speech" },
     ],
   },
-  members: [
-    { id: "m_000001", name: "藤川 政人", kana: "ふじかわ まさひと", house: "sangiin", group: "自由民主党", district: "愛知", counts: { rollcalls: 5, bills: 0, speeches: 1 } },
-    { id: "m_000002", name: "山田 太郎", kana: "やまだ たろう", house: "sangiin", group: "自由民主党", district: "比例", counts: { rollcalls: 5, bills: 1, speeches: 0 } },
-    { id: "m_000003", name: "佐藤 花子", kana: "さとう はなこ", house: "sangiin", group: "立憲民主・社民", district: "東京", counts: { rollcalls: 5, bills: 0, speeches: 2 } },
-  ],
   rollcalls: [
     { id: "221-0605-v001", session: 221, date: "2026-06-05", title: "令和八年度一般会計補正予算（第１号）", totals: { total: 242, yes: 148, no: 94 }, result: "可決" },
     { id: "221-0724-v001", session: 221, date: "2026-07-24", title: "日本国憲法の改正手続に関する法律の一部を改正する法律案", totals: { total: 240, yes: 200, no: 40 }, result: "可決" },
@@ -45,4 +41,19 @@ export const dataset: Dataset = {
 export const billsBySession: BillSessionCount[] = [
     { house: "shugiin", session: 219, count: 1 },
     { house: "shugiin", session: 221, count: 2 },
+];
+
+// Issue 441: 名簿の全件も Dataset に入っていない（全件が要るのは /members と /assemblies/{id} だけ）。
+// 全件が要るテストはこれを明示的に渡す。
+export const members: MemberSummary[] = [
+  { id: "m_000001", name: "藤川 政人", kana: "ふじかわ まさひと", house: "sangiin", group: "自由民主党", district: "愛知", counts: { rollcalls: 5, bills: 0, speeches: 1 } },
+  { id: "m_000002", name: "山田 太郎", kana: "やまだ たろう", house: "sangiin", group: "自由民主党", district: "比例", counts: { rollcalls: 5, bills: 1, speeches: 0 } },
+  { id: "m_000003", name: "佐藤 花子", kana: "さとう はなこ", house: "sangiin", group: "立憲民主・社民", district: "東京", counts: { rollcalls: 5, bills: 0, speeches: 2 } },
+];
+
+// Issue 441: /・/assemblies・/coverage が読むのは全件ではなく **議会ごとの人数**（members/by-assembly.json）。
+// **`current` と `total` は違う数**（元職を含むかどうか）なので、上の members から機械的に導いた値は入れない
+// ——テストがこの違いを見分けられるように、元職のいる形をここで作る。assemblyId 昇順（ETL の membersByAssembly と同じ並び）
+export const membersByAssembly: MemberAssemblyCount[] = [
+  { assemblyId: "diet-sangiin", current: 3, total: 4 },
 ];

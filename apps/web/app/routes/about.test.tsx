@@ -105,7 +105,7 @@ describe("About", () => {
   });
 
   it("データが無くても落ちない", () => {
-    renderAbout({ meta: undefined, members: [], rollcalls: [] });
+    renderAbout({ meta: undefined, rollcalls: [] });
     expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument();
   });
 
