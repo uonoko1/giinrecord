@@ -14,8 +14,21 @@
  * `font-family` の**継承もしない**。`.x{font-family:var(--font-head)}` の子は `""` を返す）。
  * ここでは必要な2プロパティ（font-family / font-weight）だけを自前でカスケードする。
  */
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { HEAD_FONT_VAR, headFontChars, headFontWeightRules } from "./head-font-chars";
+import { HEAD_FONT_VAR, headFontChars, headFontShorthandRules, headFontWeightRules } from "./head-font-chars";
+
+/** app/ 以下の CSS を全部集める（font-weight-match.test.ts と同じ集め方） */
+function cssFiles(dir: string): string[] {
+  const out: string[] = [];
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, e.name);
+    if (e.isDirectory()) out.push(...cssFiles(full));
+    else if (e.name.endsWith(".css")) out.push(full);
+  }
+  return out;
+}
 
 const css = `
 :root { --font-head: "Shippori Mincho", serif; --font-body: "BIZ UDPGothic", sans-serif; }
@@ -107,5 +120,30 @@ describe("headFontWeightRules（どの規則が明朝700 を要求している�
 
   it("見出し家族の CSS 変数名は tokens.css と同じ", () => {
     expect(HEAD_FONT_VAR).toBe("--font-head");
+  });
+});
+
+describe("読まない書き方が増えたら、黙って取りこぼさずに落ちる", () => {
+  /**
+   * `font:` ショートハンドは family も weight も一度に決めるので、
+   * `font-family` / `font-weight` だけを見るこの実装からは**見えない**。
+   * #472 が CSS と TSX の両方で同じ穴を実際に踏んでいる
+   * （`font: 13px/1.4 var(--font-head)` は **400 と 1 文字も書かずに** 400 を要求する）。
+   *
+   * **サブセットにとって、見えない指定は「その字が集まらない」＝黙ってシステム書体になることを意味する。**
+   * だから「対応していない」ではなく「**増えたら落ちる**」にしておく。
+   */
+  it("`font:` ショートハンドを拾える（inherit は親と同じなので数えない）", () => {
+    expect(headFontShorthandRules(".a { font: 700 13px/1.5 var(--font-head); }")).toEqual([".a"]);
+    expect(headFontShorthandRules(".b { font: inherit; }")).toEqual([]);
+  });
+
+  it("いまのアプリの CSS に `font:` ショートハンドは無い（増えたら head-font-chars の対応が要る）", () => {
+    const css = cssFiles(join(import.meta.dirname, "..")).map((f) => readFileSync(f, "utf8")).join("\n");
+    expect(css.length).toBeGreaterThan(10_000);
+    expect(
+      headFontShorthandRules(css),
+      "`font:` ショートハンドが増えた。headFontChars はこれを読まないので、その要素の字がサブセットから漏れる（#472 と同じ穴）",
+    ).toEqual([]);
   });
 });
