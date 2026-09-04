@@ -12,6 +12,8 @@
 #   4. `gh pr merge --squash --delete-branch`
 #      refused by the strict base-branch policy → update the branch and **wait for the checks to
 #      re-run** before trying again (#392); a fixed sleep is not enough (docker-web takes 1-3 min)
+#      a non-zero exit does NOT mean "not merged": re-read the PR state and finish successfully
+#      when our verified head is already MERGED (#434)
 # Before every merge attempt: re-read the PR head and refuse if it moved since we started (#392).
 # Before touching anything: refuse if another open PR is based on this branch (#392) — merging
 # deletes the head branch, which closes those PRs.
@@ -253,11 +255,88 @@ wait_for_green
 # `mergeStateStatus` は UNSTABLE、`docker-web` が pending のままだった。
 # POLL_INTERVAL×3 ≒ 1分しか待たないのに、docker-web は 1〜3 分かかる。
 # **時間で決め打ちせず、状態が緑に戻るまで待つ**（上限は通算の POLL_MAX）。
+# `gh pr merge` の**非ゼロを「マージされなかった」と読んではいけない**（#434）。
+# 実地で1日に5回踏んだ（PR #428/#429/#430/#432/#437）: `mergeStateStatus` が UNKNOWN
+# （GitHub がマージ可能性を計算中）の間に叩くと、**実際にはマージされるのに非ゼロで返る**。
+# 10 秒×6 回待っても UNKNOWN のままだったので「待てば解決」ではない。**結果を読む**。
+# もう1つの経路: マージ自体は成功したが `--delete-branch` の**ローカル**ブランチ削除が
+# 「used by worktree at ...」で失敗した場合も非ゼロになる。これも成功である。
+#
+# assert_merged_by_us — マージ後の PR を読み、**我々の成功として報告してよいか**を返す。
+#   0: 我々が検査した HEAD がマージされた（成功として終わってよい）
+#   1: まだ OPEN（本当に拒まれた。従来どおり再試行 → die）
+#   die: MERGED だが別の commit / CLOSED（どちらも再試行してはいけない）
+#
+# **なぜ state=MERGED だけでは足りないか**（「成功として扱う」が緩すぎないかの線引き）:
+# MERGED は「誰かがマージした」しか意味しない。他人が新しいコミットを push してから
+# マージしていた場合も MERGED になり、そのとき main に入ったのは**我々が緑を確認していない
+# commit** である。#392/#414 で守ってきた「検査を通った HEAD だけがマージされる」という
+# 不変条件を、ここで黙って崩すことになる。
+# そこで **マージ後も読める headRefOid が、直前に assert_head_unchanged で確かめた
+# $HEAD_OID と一致すること**まで確かめる。一致すれば、たとえ手を下したのが他人でも
+# **main に入った中身は我々が検査したものと同一**なので、成功と報告してよい
+# （squash マージなので main 側の SHA は変わるが、入る差分は head の内容そのもの）。
+# 一致しなければ「マージはされたが我々の成功ではない」と伝えて止める——PO に
+# 「何がマージされたのか」を必ず見に行かせるためで、黙って 0 で終わるより安全。
+#
+# **state を読めなかった場合**（#446）: `gh pr view` が API エラー等で失敗すると、`read` は
+# 何も読めずに `state` が空のまま返る（この関数は `if` の中で呼ばれるので `set -e` は効かない）。
+# 空を catch-all に落とすと「PR #12 はマージ中に  になりました」と**空白**が出て、
+# PO に何が起きたのか伝わらなかった。止まること自体は安全（成功と誤報しない）なので、
+# **動作は変えず、言葉だけを直す**。allowlist 構造（OPEN / MERGED / 空 / それ以外は die）は
+# そのまま: 空を足しても、**未知の state は catch-all で die** に倒れる。
+#
+# **空 oid を一致とみなさない**（#446）: `[[ "$oid" == "$HEAD_OID" ]]` は両方空だと真になる。
+# レビューでは実際に到達する経路を見つけられなかった（起動時に空 oid が返るなら
+# assert_head_unchanged 等が先に壊れるはず）が、偽の一致は「**検査を通っていない HEAD を
+# 成功と報告する**」という、このスクリプトで一番出してはいけない結果になる。
+# `-n` の1つで塞げるので塞ぐ——「到達しないから直さない」ではなく「安いから塞ぐ」。
+assert_merged_by_us() {
+  local state oid merge_err=${1:-}
+  IFS=$'\t' read -r state oid < <(
+    gh pr view "$PR" --json state,headRefOid -q '[.state, .headRefOid] | @tsv'
+  )
+  case "$state" in
+    OPEN) return 1 ;;   # 本当に拒まれた
+    MERGED)
+      # 空 oid 同士を一致とみなさない（$HEAD_OID も空なら "" == "" が真になってしまう）
+      if [[ -n "$oid" && "$oid" == "$HEAD_OID" ]]; then
+        log "gh pr merge は非ゼロで返りましたが PR #$PR は MERGED です（検査した HEAD ${HEAD_OID:0:7} のまま）。成功として扱います"
+        # ローカルブランチの残存は、**削除が失敗したときだけ**言う（#446）。
+        # UNKNOWN 由来の非ゼロでは削除は成功しているので、毎回出すと余計な確認をさせる。
+        if [[ "$merge_err" == *"delete local branch"* ]]; then
+          log "（ローカルブランチ $HEAD の削除に失敗しています: worktree が使っている可能性があります。手で消してください）"
+        fi
+        return 0
+      fi
+      die "PR #$PR は MERGED ですが、マージされたのは別の commit です（検査した ${HEAD_OID:0:7} → ${oid:0:7}）。
+       我々が緑を確認していない変更が main に入っている可能性があります。$URL を確認してください。" ;;
+    "")
+      die "PR #$PR の state を読めませんでした（gh pr view が失敗: API エラー？）。
+       マージされたかどうかを確認できないので、ここで止めます。$URL を確認してください。" ;;
+    *)
+      die "PR #$PR はマージ中に $state になりました（マージされていません）。$URL を確認してください。" ;;
+  esac
+}
+
 log "squash-merging PR #$PR and deleting $HEAD"
 for attempt in 1 2 3; do
   assert_head_unchanged     # 待っている間に push されたコミットを取り残さない（#392）
   assert_no_stacked_prs     # 待っている間に上へ積まれた PR を巻き添えにしない（#392）
-  if gh pr merge "$PR" --squash --delete-branch; then
+  # 非ゼロだったときに「なぜ非ゼロなのか」を assert_merged_by_us に渡せるよう、
+  # gh の出力を控えておく（ローカルブランチ削除の失敗かどうかの判定に使う。#446）。
+  # `set -e` があるので rc は `|| merge_rc=$?` で受ける（代入と同じ行に書くと rc が消える）
+  merge_rc=0
+  merge_err=$(gh pr merge "$PR" --squash --delete-branch 2>&1) || merge_rc=$?
+  # gh が言ったことは**成功・失敗どちらでも**そのまま見せる（stderr へ。stdout は結果の一行だけ）。
+  # 控えるのは判定に使うためで、隠すためではない
+  if [[ -n "$merge_err" ]]; then printf '%s\n' "$merge_err" >&2; fi
+  if [[ "$merge_rc" -eq 0 ]]; then
+    echo "merged PR #$PR ($HEAD) $URL"
+    exit 0
+  fi
+  # 非ゼロ。**再試行する前に、本当にマージされていないかを確かめる**（#434）
+  if assert_merged_by_us "$merge_err"; then
     echo "merged PR #$PR ($HEAD) $URL"
     exit 0
   fi

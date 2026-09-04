@@ -571,6 +571,21 @@ describe("/coverage の既定（bundled）で議案が出る（Issue 408 / 411�
     const shownRange = cells.find((t) => /第[\d,]+—[\d,]+回/.test(t)) ?? "";
     expect(shownRange).toContain(`第${sessionsFromFile[0]}—${sessionsFromFile.at(-1)}回`);
     expect(bundled.filter((r) => r.house === "shugiin").map((r) => r.session).sort((a, b) => a - b)).toEqual(sessionsFromFile);
+
+    // Issue 435: **合計・行数・回次の範囲がすべて合っていても、中身が入れ替わっていることがある。**
+    // 205回 87件 / 206回 62件 を 205回 62件 / 206回 87件 に入れ替える変異は、合計 1,941 も
+    // 回次の範囲 195—221 も異なり数 25 も変えないので、上の検査を全部素通りする（#411 のレビュー指摘）。
+    //
+    // 高知 PR #225（列ずれを合計の一致で見逃した）と同じ構造なので、**回次ごとの count** を
+    // index.json から独立に数えて突き合わせる。期待値は集計を経由しない（経由すると
+    // 集計の誤りが両側に出て永久に検出できない）。
+    const expectedBySession = new Map<number, number>();
+    for (const b of fromFile as { house: string; session: number }[]) {
+      if (b.house !== "shugiin") continue;
+      expectedBySession.set(b.session, (expectedBySession.get(b.session) ?? 0) + 1);
+    }
+    const actualBySession = new Map(bundled.filter((r) => r.house === "shugiin").map((r) => [r.session, r.count] as const));
+    expect(Object.fromEntries([...actualBySession].sort(([a], [b]) => a - b))).toEqual(Object.fromEntries([...expectedBySession].sort(([a], [b]) => a - b)));
   });
 });
 
