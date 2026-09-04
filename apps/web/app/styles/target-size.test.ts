@@ -82,6 +82,26 @@ function declarationsFor(css: string, selector: string): string {
  */
 const LINE_HEIGHT_NORMAL = 1;
 
+/**
+ * ## 実物を測るときの落とし穴（#431 で 2 つとも踏んだ。測る前に読むこと）
+ *
+ * `docs/research/target-size-inline.md` は「`document.fonts.ready` を待つ」までしか
+ * 書いていない。**それだけでは足りない。**
+ *
+ * 1. **ページごとに新しいタブを開く。**
+ *    1 つのタブで SPA 遷移しながら測ると、**フォント適用途中の値が混ざる**
+ *    （テーマ切替で 22px と 27px が混在した）。新しいタブなら 8/8 で 22px に揃う。
+ *    `document.fonts.ready` は**遷移後の再適用までは待ってくれない**。
+ *
+ * 2. **本番と同じフォントを全部読み込ませる。**
+ *    再現用の小さな HTML に woff2 を数枚だけ読ませて測ると、
+ *    **`unicode-range` に無い文字がフォールバックに落ちて別の数字が出る。**
+ *    実際に「昼」「夜」（U+663C / U+591C）を含むスライスを読み忘れ、
+ *    フォールバック（比 1.385）の 27px を「実測」と誤って報告した。
+ *    **必ず `CSS.getPlatformFontsForNode` で「実際に描画に使われた face」を確認する。**
+ *    face が `BIZ UDPGothic` 単独でなければ、その数字は本番の値ではない。
+ */
+
 /** `12px` のような長さを読む。px 以外の単位（rem/em/%）は**読めないものとして扱う**（0 とみなさない） */
 function px(value: string): number | undefined {
   const m = /^(-?[\d.]+)px$/.exec(value.trim());
@@ -112,40 +132,51 @@ function lastValue(decls: string, prop: string): string | undefined {
  *
  * 読めない単位（`rem` など）が混じったら `undefined` を返す——**0 とみなして
  * 「足りている」側に倒すことをしない**。
+ *
+ * **宣言は出現順にたどる**（= カスケードの後勝ち）。プロパティ種別ごとの固定順で解決すると、
+ * `.install-link__button` のように `padding-block: 6px` … `padding: 0` … `padding-block: 6px`
+ * と 3 つのルールに分かれている場合に**後勝ちを取り違える**（最後の行を消しても緑のままだった。
+ * 実測では 29px → 17px に落ちる）。
  */
 function paddingBlockPair(decls: string): { top: number; bottom: number } | undefined {
-  let top: number | undefined;
-  let bottom: number | undefined;
+  let top = 0;
+  let bottom = 0;
   let unreadable = false;
 
-  const take = (v: string | undefined, pick: (parts: string[]) => [string, string]) => {
-    if (v === undefined) return;
-    const parts = v.split(/\s+/).filter(Boolean);
-    // `var(...)` や `calc(...)` は解けない
-    if (parts.length < 1 || parts.length > 4 || /[(),]/.test(v)) { unreadable = true; return; }
-    const [t, b] = pick(parts);
-    const pt = px(t), pb = px(b);
-    if (pt === undefined || pb === undefined) { unreadable = true; return; }
-    top = pt; bottom = pb;
-  };
+  /** まとめ書きから上下を取る。padding: 上 右 下 左 / 上 左右 下 / 上下 左右 / 全部 */
+  const topBottom = (parts: string[]): [string, string] =>
+    parts.length === 1 ? [parts[0], parts[0]]
+      : parts.length === 2 ? [parts[0], parts[0]]
+      : [parts[0], parts[2]];
 
-  // 効く順に上書きしていく（`padding` → `padding-block` → 片側指定）
-  // padding: 上 右 下 左 / 上下 左右 / 上 左右 下 / 全部
-  take(lastValue(decls, "padding"), (p) =>
-    p.length === 1 ? [p[0], p[0]] : p.length === 2 || p.length === 3 ? [p[0], p.length === 3 ? p[2] : p[0]] : [p[0], p[2]]);
-  // padding-block: 上 下 / 上下
-  take(lastValue(decls, "padding-block"), (p) => (p.length === 1 ? [p[0], p[0]] : [p[0], p[1]]));
+  // **宣言の出現順にたどる**（= カスケードの後勝ち）。プロパティ種別ごとの固定順で
+  // 解決すると、`padding-block: 6px` … `padding: 0` … の並びで後ろの `padding: 0` を
+  // 先に潰してしまい、**後勝ちを取り違える**（#431 のレビューで発覚）。
+  for (const d of decls.split(";")) {
+    const m = /^\s*(padding(?:-block(?:-start|-end)?|-top|-bottom)?)\s*:\s*(.+)$/.exec(d);
+    if (m === null) continue;
+    const [prop, value] = [m[1], m[2].trim()];
+    // `var(...)` / `calc(...)` は解けない
+    if (/[(),]/.test(value)) { unreadable = true; continue; }
+    const parts = value.split(/\s+/).filter(Boolean);
+    if (parts.length < 1 || parts.length > 4) { unreadable = true; continue; }
 
-  for (const [prop, side] of [["padding-block-start", "top"], ["padding-top", "top"], ["padding-block-end", "bottom"], ["padding-bottom", "bottom"]] as const) {
-    const v = lastValue(decls, prop);
-    if (v === undefined) continue;
-    const n = px(v);
-    if (n === undefined) { unreadable = true; continue; }
-    if (side === "top") top = n; else bottom = n;
+    if (prop === "padding" || prop === "padding-block") {
+      const [t, b] = prop === "padding"
+        ? topBottom(parts)
+        : (parts.length === 1 ? [parts[0], parts[0]] : [parts[0], parts[1]]);
+      const [pt, pb] = [px(t), px(b)];
+      if (pt === undefined || pb === undefined) { unreadable = true; continue; }
+      top = pt; bottom = pb;
+    } else {
+      const n = px(parts[0]);
+      if (n === undefined || parts.length !== 1) { unreadable = true; continue; }
+      if (prop === "padding-top" || prop === "padding-block-start") top = n;
+      else bottom = n;
+    }
   }
 
-  if (unreadable) return undefined;
-  return { top: top ?? 0, bottom: bottom ?? 0 };
+  return unreadable ? undefined : { top, bottom };
 }
 
 /**
@@ -156,17 +187,20 @@ function paddingBlockPair(decls: string): { top: number; bottom: number } | unde
  * 1. **間隔を見ていない。** WCAG 2.5.8 は「大きさ **または** 間隔」で、
  *    小さくても隣のターゲットの中心まで 24px 以上あれば **Spacing 例外で合格**する。
  *    **ここが 24 を割ること＝違反、ではない。** 実際、テーマ切替のラベルは
- *    大きさ 27px・間隔 36px で、どちらでも合格している。
+ *    **大きさ 22px（足りない）・間隔 36px（合格）** で、間隔のほうで合格している。
  *    「大きさが足りない」と出たら、`docs/research/target-size-inline.md` の判断基準に沿って
  *    間隔を測ること。間隔まで自動で見たいなら (C) の実測しかない（下記）。
  * 2. **ソースの CSS を読んでいるだけで、描画された箱ではない。** よって:
- *    - **親の flex / grid による引き伸ばし**が見えない。テーマ切替のラベルは
- *      見積もり 22px だが、実物は `align-items: stretch` で**兄弟に合わせて 27px** になる。
+ *    - **親の flex / grid による引き伸ばし**が見えない（`align-items: stretch` なら
+ *      兄弟の高さに揃う）。**このサイトで現に起きてはいない**——テーマ切替の `fieldset` に
+ *      `align-items` の指定は無く、computed も `normal`。見積もり 22px と実測 22px は一致する。
  *    - **継承が自動では解けない。** `font-size` は呼ぶ側が「どの親から継承するか」を選んで
  *      CSS から読んで渡している（数値の決め打ちはしない。#431）。継承元を取り違えても気づけない。
  *    - **折り返し**が見えない。2行になれば箱は倍近くなる（安全側なので許容している）。
- *    - **和欧混在でフォントが替わる**のが見えない。`OS に合わせる` は Latin 部分が
- *      別の face に落ちて行の箱が 17px になる（`LINE_HEIGHT_NORMAL` は日本語の 1.0）。
+ *    - **フォントが替われば比も替わる**のが見えない。`LINE_HEIGHT_NORMAL` は
+ *      BIZ UDPGothic の 1.0 なので、配信スライスに無い文字でフォールバックが混ざると
+ *      行の箱は**これより大きく**なる（比 1.385）。**安全側にずれる**ので通す側には倒れない。
+ *      なお `OS に合わせる` の和欧混在は実際には face が替わらない（latin スライスも配信している）。
  *    - `border` / `box-sizing` / メディアクエリの中の上書きが見えない。
  * 3. **ここに書いたセレクタしか見ていない。** 新しく押せるものが増えても自動では気づかない。
  *
@@ -236,8 +270,7 @@ describe("押せる範囲の**大きさ**が 24px 以上（WCAG 2.5.8・Issue 41
    * `ThemeToggle.tsx` は CSS ファイルを持たず inline style で書かれている。
    *
    *     大きさ（このソースから見積もれる値）  5px × 2 + 12px = 22px  ← 24 に**足りない**
-   *     大きさ（390px の Chromium で実測）    32 × 27px            ← 親 fieldset の
-   *                                                                 stretch で伸びる
+   *     大きさ（本番・390px で実測）          32 × 22px            ← 見積もりと一致
    *     隣のラベルの中心までの距離（実測）      36px                 ← Spacing 例外に**合格**
    *
    * かつてここは `padding × 2 + fontSize × 1.2` = 24.4 で「24 を満たす」と通していた。
