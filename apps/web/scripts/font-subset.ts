@@ -106,9 +106,13 @@ try {
     `--output-file=${out}`,
     "--flavor=woff2",
     `--unicodes=${unicodes}`,
-    // Google のスライスと同じ扱いにする: レイアウト機能は縦組み・異体字を残し、名前表は最小限
+    // Google が配るスライスと同じ中身にする（実測で確かめた設定、2026-09-05）:
+    // ・`--layout-features=*` — 縦組み（vert/vrt2）・異体字（aalt など）を落とさない
+    // ・ヒンティングは既定で残る（`hinting` の既定は True）。上流の TTF には fpgm/prep/cvt は無く、
+    //   ttfautohint の指示は glyf に入っている。Google のスライスも同じ表構成だった
+    // ・`--name-IDs=*` — 名前表を残す（`getPlatformFontsForNode` に出る名前が変わらない）
+    // ・DSIG は署名で、サブセットすると意味が無くなる（Google のスライスにも無い）
     "--layout-features=*",
-    "--no-hinting=false",
     "--desubroutinize",
     "--name-IDs=*",
     "--notdef-outline",
