@@ -59,7 +59,11 @@
    Shippori Mincho に 400 が無いので CSS のマッチング規則で **500 が選ばれる**。
    実測: /members/m_003005 で shippori-mincho-500 が 2件 38 KB 読まれ、
    CSS.getPlatformFontsForNode が "Shippori Mincho Medium" で描画していた。
-   数字と「件」だけなので、本文ゴシックで設計方針から外れない。回次名（.member-session-name）は明朝のまま。 */
+   設計方針の「数字: Shippori Mincho」は**大きく見せる数**（.figure__num / .member-count dd / .members-count）
+   のことで、見出しに添える小さい件数ではない。ワイヤーフレームでも .num は tabular-nums だけを意味し、
+   明朝にしたい数字は class="m num" と明示している（件数は class="num" 単独＝ゴシック）。
+   前例は .members-count__of（明朝の .members-count の隣の件数。元から --font-body を明示）。
+   回次名（.member-session-name）は明朝 700 のまま。 */
 .member-session-count { font-family: var(--font-body); font-size: 12px; font-weight: 400; color: var(--muted); }
 
 /* 時系列 */
