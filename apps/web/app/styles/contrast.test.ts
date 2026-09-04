@@ -145,6 +145,30 @@ describe("コントラスト（Issue 394）", () => {
  *
  * 地の色は「その文字がどの箱の上に乗るか」で決めた。`background` の指定が無い（＝紙の上）ものと、
  * ダークで `background: transparent` になるものは、**地を `--paper` として測る**。
+ *
+ * **入れ子の地を数え直した（Issue 476）。**
+ * 上の 4 手順は前景しか数えておらず、**地を「紙」と決めつけていた**ので `--est-bg` の上の 3 組を落としていた。
+ * 地の数え方（apps/web、node_modules 除く）:
+ *   5. 地を敷く規則の全部   `grep -rnoE '(background|background-color|background-image)\s*:[^;]+' --include='*.css'`
+ *                       → 29 件。うち `none`/`transparent` が 7 件で、**地を敷くのは 22 件**。
+ *                       `background-color` は **0 件**、`linear-gradient`/`url()` も **0 件**（画像の地は無い）
+ *   6. TSX の inline の地  `grep -rnE 'background[^-]' --include='*.tsx'` → 4 件。
+ *                       Cover.tsx（--cover）／ThemeToggle.tsx（--ink か transparent）／
+ *                       Tabs.tsx（none）／Stamp.tsx（`var(--${t}-bg)`）。**CSS だけ数えると 4. の Stamp と
+ *                       ThemeToggle の --ink を落とす**ので別に数えた
+ *   7. 擬似要素の地        `::before`/`::after` は member.css:56,57 の 2 件だけで、**地は敷かない**
+ *                       （`content` と `color: var(--brass)` のみ。地は親の紙）
+ *   8. 地のトークンは 10 種  --paper / --est-bg / --cover / --ink / --yes-bg / --no-bg / --none-bg /
+ *                       --act-bg / --brass-on-cover の 9 種（CSS）＋ ThemeToggle の --ink（6. で重複）
+ *   9. 各々の箱の中で `color` を上書きしない子を数える → 落ちていたのは **`--est-bg` の中の 3 組だけ**
+ *
+ * **本番実測でも確かめた**（getComputedStyle で親を遡って実効背景を求め、テキストノードを持つ全要素を走査）。
+ * `/` `/about` `/coverage` `/members` `/members/h_41f223ac28` `/members/m_003005` `/compare`
+ * `/rollcalls` `/assemblies` の 9 ページ × ライト/ダークで、実効背景として出たのは
+ * HTML / cover / member-cover / compare-cover / rollcall-cover / skip-link（--cover）/
+ * member-tabs・member-notice（--est-bg）/ member-stamp / zip__button・tag--fact・LABEL（--ink）/
+ * members-select・SELECT（--paper）の 12 種だけで、**--est-bg 以外に表から漏れた地は無かった**。
+ * **4.5 を下回る組は 1 件も無い**（最小は 4.5095 の `brass on paper`）。
  */
 describe("文字色として使うトークンは全部 AA（4.5:1）を満たす（Issue 471）", () => {
   /** [前景トークン, 地のトークン, どこで使われているか] */
@@ -170,6 +194,27 @@ describe("文字色として使うトークンは全部 AA（4.5:1）を満た�
     ["none-fg", "none-bg", "member.css:87 .member-stamp[data-tone=\"none\"]"],
     ["act-fg", "act-bg", "member.css:88 .member-stamp[data-tone=\"act\"]"],
     ["est-fg", "est-bg", "member.css:92,94 / compare.css:35（推定の判）、member.css:45（.member-tabs が est-bg を敷く）"],
+    /*
+     * **入れ子の地（--est-bg）の上に乗る文字。Issue 476**
+     *
+     * #471 で 17 組を数えたとき、**地は「紙」だと思い込んでいた**。実際には `--est-bg` を敷く箱の
+     * 中に、地を上書きしない文字が入る（`.member-tab` は `background: none` なので親の地が透ける）。
+     * 本番 `/members/h_41f223ac28` を getComputedStyle で走査すると `bgFrom` が `HTML` ではなく
+     * `member-tabs` で出る:
+     *
+     *     .member-tab-label   fg rgb(107,104,96)  bg rgb(240,238,233)  比 4.7988
+     *     .member-notice      fg rgb(27,26,24)    bg rgb(240,238,233)  比 14.9986
+     *     .member-notice a    fg rgb(58,74,94)    bg rgb(240,238,233)  比 7.8032
+     *
+     * この 3 組が無いと **`--est-bg: #f0eee9` → `#cfcabf` にしても 53 件全部が緑のまま**通り、
+     * 実 UI では `muted on est-bg` が 3.4057 に落ちて AA 違反が静かに入る。
+     */
+    ["muted", "est-bg", "member.css:43 .member-tab / :49 .member-tab-count（member.css:39 の .member-tabs[group] が est-bg を敷く）"],
+    ["ink", "est-bg", "member.css:96 .member-notice / compare.css:16 .compare-note-est"],
+    // 上の 2 つは #476 の本文にある。**この 1 つは追加で見つけたもの**:
+    // .member-notice / .compare-note-est の**中にリンクがある**（member.tsx:494,501,513 / compare.tsx:154）。
+    // `a { color: var(--link) }`（tokens.css:55）が効くので `link on est-bg` も実在する（本番実測 7.8032）
+    ["link", "est-bg", "member.tsx:494,501,513 / compare.tsx:154 の <a>（tokens.css:55 の a { color: var(--link) }）"],
   ];
 
   /** ダークでは判の地が `transparent` になる。その場合は紙が透けるので地は --paper */
@@ -204,6 +249,44 @@ describe("文字色として使うトークンは全部 AA（4.5:1）を満た�
   // ダークの brass は墨の上で 8.81。ライトだけ足してダークを忘れていないことを名指しで残す
   it("ダークの brass は墨色の上で十分（8.81）", () => {
     expect(contrast(darkToken("brass"), darkToken("paper"))).toBeCloseTo(8.81, 1);
+  });
+
+  /*
+   * **入れ子の地の余裕を名指しで記録する（Issue 476）。**
+   * `--est-bg` の上の `--muted` は 4.7988 で、AA まで 0.2988 しかない。
+   * `--est-bg` を 1 段階暗くする（`#f0eee9` → `#efedE8`）と 4.7845 まで落ちる。
+   * 本番実測（`/members/h_41f223ac28` の `.member-tab-label`）と同じ値をここに置いて、
+   * 「地を暗くしたら静かに割る」を見えるようにする。
+   */
+  it("ライトの muted は est-bg の上で 4.7988（AA まで余裕 0.2988 しかない）", () => {
+    expect(contrast(lightToken("muted"), lightToken("est-bg"))).toBeCloseTo(4.7988, 3);
+  });
+
+  it("est-bg を暗くすると（#cfcabf）muted が AA を割る＝上の検査は本当に効いている", () => {
+    // #476 が挙げた変異そのもの。表に muted on est-bg が無かったときは、これでも 53 件が緑のままだった
+    expect(contrast(lightToken("muted"), "#cfcabf")).toBeLessThan(4.5);
+    expect(contrast(lightToken("muted"), "#cfcabf")).toBeCloseTo(3.4057, 3);
+  });
+
+  /*
+   * **入れ子の地を敷く箱が実在することを CSS で固定する。**
+   * 上の表は「`--est-bg` の上に `--muted` が乗る」を前提にしているが、その前提は CSS 側にある。
+   * `.member-tabs` から `background: var(--est-bg)` が消えたら、この 3 組は測る意味を失う
+   * （そのときは表を直すべきで、黙って通してはいけない）。
+   */
+  it(".member-tabs[group] が --est-bg を敷き、その中の .member-tab は地を上書きしない", () => {
+    const member = readFileSync(join(import.meta.dirname, "..", "routes", "member.css"), "utf8");
+    expect(member).toMatch(/\.member-tabgroup\[data-category="group"\] \.member-tabs\s*\{[^}]*background:\s*var\(--est-bg\)/);
+    expect(member).toMatch(/^\.member-tab \{[^}]*background:\s*none[^}]*color:\s*var\(--muted\)/m);
+  });
+
+  it(".member-notice は --est-bg を敷き、その上に --ink の文字と（--link の）リンクが乗る", () => {
+    const member = readFileSync(join(import.meta.dirname, "..", "routes", "member.css"), "utf8");
+    const memberTsx = readFileSync(join(import.meta.dirname, "..", "routes", "member.tsx"), "utf8");
+    expect(member).toMatch(/\.member-notice\s*\{[^}]*color:\s*var\(--ink\)[^}]*background:\s*var\(--est-bg\)/);
+    // リンクが中に入る（＝ link on est-bg が実在する）。tokens.css の a { color: var(--link) } が効く
+    expect(memberTsx).toMatch(/className="member-notice"[\s\S]{0,900}?<a href=/);
+    expect(tokens).toMatch(/^a \{[^}]*color:\s*var\(--link\)/m);
   });
 
   /*
