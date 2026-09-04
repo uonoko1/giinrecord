@@ -116,6 +116,24 @@ describe("checkServed", () => {
     expect(r.failures).toContain('/data/members/index.json: header cache-control missing (expected "public, max-age=3600")');
   });
 
+  // #482: 以前は「location の add_header が server 階層を置き換えるので Cache-Control しか付かない。仕様」
+  // として **/assets/ と /data/ のセキュリティヘッダを見ていなかった**。それは仕様ではなく穴で、
+  // 本番の /assets/*.js には CSP も nosniff も出ていなかった。site.conf で location ごとに複製して直したので、
+  // ここでも見る。**このテストが、複製の消し忘れ・付け忘れを捕まえる。**
+  it("/assets/ と /data/ にもセキュリティヘッダが要る（add_header は継承されない・#482）", () => {
+    const got = new Map([
+      ["/", res()],
+      // Cache-Control だけ付いた応答 = location に add_header を書いて外側を消してしまった状態
+      ["/assets/a.js", res({ headers: { "cache-control": "public, max-age=31536000, immutable" } })],
+      ["/data/members/index.json", res({ headers: { "cache-control": "public, max-age=3600" } })],
+    ]);
+    const r = checkServed(got, { ...base, pages: ["/"], unknown: null });
+    expect(r.failures).toContain('/assets/a.js: header content-security-policy missing (expected "' + sec["content-security-policy"] + '")');
+    expect(r.failures).toContain('/assets/a.js: header x-content-type-options missing (expected "nosniff")');
+    expect(r.failures).toContain('/assets/a.js: header permissions-policy missing (expected "' + sec["permissions-policy"] + '")');
+    expect(r.failures).toContain('/data/members/index.json: header x-frame-options missing (expected "DENY")');
+  });
+
   it("取得できなかった URL は失敗として報告する", () => {
     const r = checkServed(new Map(), { ...base, pages: ["/"], unknown: null, asset: null, data: null });
     expect(r.failures).toEqual(["/: no response"]);
