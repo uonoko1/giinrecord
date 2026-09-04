@@ -6,7 +6,7 @@
  * 取得（HTTP）は scripts/fonts.ts が行い、ここは純粋関数だけを試験する。
  */
 import { describe, expect, it } from "vitest";
-import { FONT_FAMILIES, parseGoogleFontsCss, renderFontsCss, sliceFileName } from "./self-hosted-fonts";
+import { FONT_FAMILIES, parseFontsCss, parseGoogleFontsCss, renderFontsCss, sliceFileName } from "./self-hosted-fonts";
 
 const css = `
 /* [0] */
@@ -103,6 +103,47 @@ describe("renderFontsCss", () => {
   });
   it("ライセンス（SIL OFL）の所在をコメントで示す", () => {
     expect(out).toMatch(/OFL\.txt/);
+  });
+});
+
+describe("parseFontsCss（自分が書いた fonts.css を読み戻す）", () => {
+  /**
+   * #477: 明朝 700 の 122 面をサブセット 1 面に差し替えるとき、**残す 370 面を数え直したくない**。
+   * `renderFontsCss` が書いたものをそのまま読み戻せれば、差し替えは「その family/weight を外して 1 面足す」で済む。
+   * `parseGoogleFontsCss` は使えない（あちらは `src` が **外部の絶対 URL** であることを前提にしていて、
+   * ローカルのファイル名 `url(shippori-mincho-700.0.woff2)` から slice を取れない）。
+   */
+  it("renderFontsCss の出力を読み戻すと、同じ face の一覧になる（往復して変わらない）", () => {
+    const faces = parseGoogleFontsCss(css);
+    const local = faces.map((f) => ({ ...f, sourceUrl: sliceFileName(f) }));
+    expect(parseFontsCss(renderFontsCss(faces))).toEqual(expect.arrayContaining(local));
+    expect(parseFontsCss(renderFontsCss(faces))).toHaveLength(faces.length);
+  });
+
+  it("読み戻したものをもう一度書くと、本文が 1 バイトも変わらない（再生成が冪等）", () => {
+    const once = renderFontsCss(parseGoogleFontsCss(css));
+    expect(renderFontsCss(parseFontsCss(once))).toBe(once);
+  });
+
+  it("番号を持たない slice（latin / subset）も名前で読み戻せる", () => {
+    const one = parseFontsCss(renderFontsCss([{ family: "Shippori Mincho", weight: 700, slice: "subset", unicodeRange: "U+4E00", sourceUrl: "" }]));
+    expect(one).toEqual([{ family: "Shippori Mincho", weight: 700, slice: "subset", unicodeRange: "U+4E00", sourceUrl: "shippori-mincho-700.subset.woff2" }]);
+  });
+
+  /**
+   * **この検査は一度弱かった。** 最初 `url(https://fonts.gstatic.com/s/x.woff2)` に差し替えて
+   * `/https/` が投げられることだけを見ていたが、それは**ファイル名の規則に合わない**ので
+   * どのみち投げる。外部 URL の判定を消しても**テストは緑のままだった**（変異で確認）。
+   * 外部 URL でも**ファイル名の規則には合う**形に差し替えて、判定そのものを試す。
+   */
+  it("外部 URL が混ざっていたら拒否する（自サイト配信が崩れたことに気づく、#168）", () => {
+    const bad = renderFontsCss(parseGoogleFontsCss(css)).replace("url(biz-udpgothic-400.0.woff2)", "url(https://fonts.gstatic.com/biz-udpgothic-400.0.woff2)");
+    expect(() => parseFontsCss(bad)).toThrow(/not a local file/);
+  });
+
+  it("プロトコル相対（//host/…）も外部として拒否する", () => {
+    const bad = renderFontsCss(parseGoogleFontsCss(css)).replace("url(biz-udpgothic-400.0.woff2)", "url(//fonts.gstatic.com/biz-udpgothic-400.0.woff2)");
+    expect(() => parseFontsCss(bad)).toThrow(/not a local file/);
   });
 });
 
