@@ -21,3 +21,7 @@ apps/web/.react-router/
 # 異常終了すると残る。残しておかないと復旧できないので消さないが、コミットもしない。
 *.mutate-sv
 *.mutate-sv.md5
+
+# #477: 明朝700 サブセットの HTML 走査キャッシュ
+# （低負荷で約2分、高負荷では45分以上かかる。途中で落ちても捨てないため）
+apps/web/.font-subset-html-chars.txt
