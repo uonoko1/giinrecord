@@ -378,19 +378,60 @@ describe("readLinkedRecordCounts（#251 / #441 / #451）: 議員ページに出�
  *
  * ビルドを流さないと出ない失敗なので、ソースの形でここに固定する。
  */
-describe("linked-counts.ts は型以外を import しない（#451 / #441 の罠）", () => {
+describe("linked-counts.ts は型以外を持ち込まない（#451 / #441 の罠）", () => {
   const src = readFileSync(fileURLToPath(new URL("./linked-counts.ts", import.meta.url)), "utf8");
+  /** コメントを落としたソース。doc コメントに書いた注意書き自体を拾わないため（下で説明） */
+  const code = src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
 
-  it("import 行はすべて `import type`（値を持ち込むと tsx のビルドスクリプトが glob で落ちる）", () => {
-    const imports = src.split("\n").filter((l) => /^\s*import\s/.test(l));
-    expect(imports.length, "import 行が 1 つも無い（このテストが何も見ていない）").toBeGreaterThan(0);
-    expect(imports.filter((l) => !/^\s*import\s+type\s/.test(l))).toEqual([]);
+  /**
+   * **モジュールを読み込んだ時点で他のモジュールを引き込む行**を全部集める。
+   *
+   * `import ... from` だけでは足りない（#451 レビューで PO が実際に破った）。
+   * `export { isDietAssemblyId } from "./assemblies";` の 1 行で tsx のビルド経路は
+   * `import.meta.glob is not a function` で落ちるのに、`/^\s*import\s/` に一致しないので
+   * **935 件が全部緑のまま素通りした**。だから `export ... from` も同じ制約下に置く。
+   *
+   * 型だけの形（`import type` / `export type`）は TypeScript が実行時の import を消すので安全。
+   * インラインの `import { type X }` は**残る**（値の import 文として出る）ので許さない。
+   */
+  const bindings = code.split("\n").filter((l) => /^\s*(import|export)\b[^;]*\bfrom\s/.test(l) || /^\s*import\s+["']/.test(l));
+  /** 型だけを運ぶ行（`import type ... from` / `export type ... from`）。これだけが許される */
+  const typeOnly = (l: string) => /^\s*(import|export)\s+type\s/.test(l);
+
+  it("`import ... from` も `export ... from` も、型だけを運ぶ形しか無い", () => {
+    // 1 行も拾っていなければ、この検査は何も見ていない（正規表現を壊したときに気づく）
+    expect(bindings.length, "モジュールを引き込む行が 1 つも無い（この検査が何も見ていない）").toBeGreaterThan(0);
+    expect(
+      bindings.filter((l) => !typeOnly(l)),
+      "値を持ち込む行があります。`linked-counts.ts` は tsx で直に走るビルドスクリプトから読まれるので、" +
+        "`assemblies.ts` のような `import.meta.glob` に触るモジュールが 1 本でも繋がると " +
+        "`pnpm --filter web build` が `import.meta.glob is not a function` で落ちます（#441 が実際に踏んだ罠）。" +
+        "型だけが要るなら `import type` / `export type` にしてください",
+    ).toEqual([]);
+  });
+
+  /**
+   * **この検査は静的な形だけを見ている。** `await import("./assemblies")`（動的 import）は
+   * モジュールの読み込み時には評価されないので、**ここを通り抜けます**。
+   *
+   * 塞いでいないのは、危険の質が違うから: 静的 import は**ビルドスクリプトが起動した瞬間に**落ちるが、
+   * 動的 import は**その行が実際に呼ばれたときだけ**落ちる。#441 が踏んだのは前者で、
+   * このファイルには動的 import を書く理由が今のところ無い（純関数しか置かない方針）。
+   *
+   * それでも書きたくなったら、**それは「このファイルに置くべきでないものを置こうとしている」合図**。
+   * 計算だけを残して、読み込みは呼び出し側（`data-files.ts` / 画面）に置くこと。
+   */
+  it("動的 import も書かない（静的な形しか検査できないので、そもそも置かない）", () => {
+    expect(
+      code,
+      "動的 import（`import(...)`）が書かれています。この検査は静的な形しか見ないので通り抜けますが、" +
+        "呼ばれたときに glob で落ちます。読み込みは呼び出し側に置いてください",
+    ).not.toMatch(/\bimport\s*\(/);
   });
 
   it("import.meta.glob を直に使わない（コメントで名前を出すのは可）", () => {
-    // コメントは落とす。このファイルの doc コメント自身が「glob に触るな」と書いていて、
+    // コメントは落として見る。このファイルの doc コメント自身が「glob に触るな」と書いていて、
     // 素の文字列検索だと**注意書きを書いたこと自体で落ちる**（実際に落ちた）
-    const code = src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
     expect(code).not.toContain("import.meta.glob");
     // コメントを落としても中身は残っている（正規表現がファイルを空にしていない）
     expect(code).toContain("export function linkedRecordCounts");
