@@ -15,7 +15,7 @@ export interface FontFamilySpec {
 
 /** Heading = Shippori Mincho, body = BIZ UDPGothic (tokens.css --font-head / --font-body). */
 export const FONT_FAMILIES: readonly FontFamilySpec[] = [
-  { family: "Shippori Mincho", weights: [500, 700, 800] },
+  { family: "Shippori Mincho", weights: [700, 800] },
   { family: "BIZ UDPGothic", weights: [400, 700] },
 ];
 

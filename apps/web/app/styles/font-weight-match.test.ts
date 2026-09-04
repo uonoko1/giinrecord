@@ -6,9 +6,14 @@ import { FONT_FAMILIES } from "../lib/self-hosted-fonts";
 /**
  * 見出し家族（Shippori Mincho）に無いウェイトを要求すると、**書いていない face が読まれる**（#452 → #454）
  *
- * `FONT_FAMILIES` の Shippori Mincho は **500 / 700 / 800** しか持たない。
+ * `FONT_FAMILIES` の Shippori Mincho は **700 / 800** しか持たない（#452 で 500 を外した）。
  * CSS のフォントマッチング規則（CSS Fonts 4 §5.2）は、要求が 400 のとき
- * **まず 400 以下を降順、無ければ 400 より上を昇順**に探す。400 以下が無いので **500 が選ばれる**。
+ * **まず 400 以下を降順、無ければ 400 より上を昇順**に探す。400 以下が無いので
+ * **一番軽い上のウェイトが選ばれる**。#454 の時点では 500、**500 を外した今は 700** である。
+ *
+ * **落ち先が太くなったぶん、この検査は前より効いている。**
+ * #454 のときは「書いていない 500 が読まれる（転送量が増える）」だったが、
+ * 500 が無い今は **700 に落ちて字が太くなる＝見た目が変わる**。
  *
  * 実際に起きていたこと（本番実測、390px、`document.fonts.ready` + 2.3s、`response.body().length`）:
  *
@@ -17,6 +22,9 @@ import { FONT_FAMILIES } from "../lib/self-hosted-fonts";
  *
  *     /members/m_003005   shippori-mincho-500.latin.woff2 + .114.woff2  2件 / 38 KB
  *     CSS.getPlatformFontsForNode → "Shippori Mincho Medium" が 3〜4 glyph を描画
+ *
+ * #452 で 500 を外す前に、全 15 ページ + タブ切替・`<details>` 展開・「さらに表示」まで押して
+ * 実測し直し、**`shippori-mincho-500` は 0 件・`Medium` の描画も 0**（3回とも一致）を確認している。
  *
  * **`font-weight: 500` と書いた箇所はリポジトリに1件も無い。** grep では見つからない経路である。
  * 子が `font-family` を書いていないと、**CSS を読むだけでは親が誰か分からない**のがこの罠の本体。
@@ -83,7 +91,7 @@ describe("見出し家族が持たないウェイトを、家族を書かずに�
 
   it("CSS の規則を読めている", () => {
     expect(all.length).toBeGreaterThan(100);
-    expect(headWeights).toEqual([500, 700, 800]);
+    expect(headWeights).toEqual([700, 800]);
   });
 
   it("Shippori Mincho に無いウェイトを書く規則は、font-family も同じ規則で書く", () => {

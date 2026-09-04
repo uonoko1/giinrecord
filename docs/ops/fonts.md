@@ -8,7 +8,7 @@ Issue #168。Google Fonts は訪問者の IP を Google に送るため、Shippo
 
 | もの | 場所 |
 |---|---|
-| woff2（unicode-range 分割、614 ファイル） | `apps/web/public/fonts/<family>-<weight>.<slice>.woff2` |
+| woff2（unicode-range 分割、492 ファイル） | `apps/web/public/fonts/<family>-<weight>.<slice>.woff2` |
 | `@font-face` 一覧（`font-display: swap`） | `apps/web/public/fonts/fonts.css`（`root.tsx` が `<link rel=stylesheet href=/fonts/fonts.css>`） |
 | ライセンス（SIL OFL 1.1、両ファミリー分） | `apps/web/public/fonts/OFL.txt` |
 | 生成スクリプト | `apps/web/scripts/fonts.ts`（`pnpm --filter web fonts`、手動実行。ビルドでは動かない） |
@@ -22,24 +22,40 @@ latin / latin-ext / cyrillic / greek-ext）を使う。ブラウザはページ�
 スクリプトは Google Fonts の CSS を woff2 対応ブラウザとして取得し、各スライスをそのままダウンロードして
 ローカル名に付け替え、`fonts.css` を書き出す。字形・ヒンティング・分割境界は従来と同一なので見た目は変わらない。
 
-`fonts.css` はスライス番号順（同じ unicode-range を持つ 5 面が隣接）に並べ、gzip が効くようにしている
-（508KB → 転送 約 44KB）。
+`fonts.css` はスライス番号順（同じ unicode-range を持つ 4 面が隣接）に並べ、gzip が効くようにしている
+（407KB → 転送 約 41KB）。
 
-## サイズ（2026-08 生成時）
+> **この並びは意図的なので崩さないこと。** #452 で 122 面を削ったとき、raw は 20% 減った（508→407KB）のに
+> **gzip 後は 4% しか減らなかった**（43,843→42,068 B）。削った面は隣と unicode-range が完全に一致していて、
+> **gzip が最も効いていた部分**だったため。転送量を語るときは必ず gzip 後（`encodedBodySize`）を見る。
+
+## サイズ（2026-09 生成時）
 
 | ウェイト | スライス数 | 合計 |
 |---|---|---|
-| Shippori Mincho 500 | 122 | 3.7MB |
 | Shippori Mincho 700 | 122 | 3.7MB |
 | Shippori Mincho 800 | 122 | 3.7MB |
-| BIZ UDPGothic 400 | 124 | 2.8MB |
-| BIZ UDPGothic 700 | 124 | 2.8MB |
-| 合計（リポジトリに含める） | 614 | 16.4MB |
+| BIZ UDPGothic 400 | 124 | 2.7MB |
+| BIZ UDPGothic 700 | 124 | 2.7MB |
+| 合計（リポジトリに含める） | 492 | 12.8MB |
 
-1 ページの初回表示で実際に転送される量は、そのページの文字が当たるスライス分だけ。トップページの文字集合で
-本文ウェイト 1 面あたり 30 スライス・約 420KB が上限（太字・見出しは現れる文字が少ないので数スライス）。
+**Shippori Mincho 500 は #452 で外した**（614 面 16.4MB → 492 面 12.8MB）。
+サイト上のどこからも要求されていないことを、全 15 ページ ×3 回 + タブ切替・折りたたみ展開で
+実測して確認したうえで削除している（`docs/research/font-transfer.md` §5-5）。
+
+> **ウェイトを増減するときは `docs/research/font-transfer.md` §5-5 と §9 を先に読むこと。**
+> 要求したウェイトの face が無いと、ブラウザは**一番近い別のウェイトで描く**（CSS Fonts 4 §5.2）。
+> 500 を外した今、`--font-head` に `font-weight: 400` を書くと **700 に落ちて字が太くなる**。
+> `apps/web/app/styles/font-weight-match.test.ts` が CSS 側でこれを止めている。
+
+1 ページの初回表示で実際に転送される量は、そのページの文字が当たるスライス分だけ。
 これは Google Fonts から読み込んでいた従来と同じ量で、Issue の目標（300KB）には届いていない。さらに減らすには
 スライスではなく頻度ベースの独自サブセット（pyftsubset）が必要で、別 Issue とする。
+
+> **ここに「トップページは約 420KB が上限」と書いていたのは誤り。** #449 の調査（`docs/research/font-transfer.md` §2）が
+> 本番を 3 回測って **`/` は 65 件 931KB、`/members` は 118 件 1,950KB** であることを確認している。
+> 低い値が出るのは `response.allHeaders()["content-length"]` を読んだときの取りこぼしで、
+> **`.woff2` は `response.body().length` で測ること。** 最新の数字は §2 を見る。
 
 ## 更新手順
 

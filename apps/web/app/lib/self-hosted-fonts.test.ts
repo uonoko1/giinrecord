@@ -96,10 +96,10 @@ describe("renderFontsCss", () => {
       { family: "Shippori Mincho", weight: 700, slice: "latin", unicodeRange: "U+0000-00ff", sourceUrl: "" },
       { family: "Shippori Mincho", weight: 700, slice: "10", unicodeRange: "U+0001", sourceUrl: "" },
       { family: "BIZ UDPGothic", weight: 400, slice: "2", unicodeRange: "U+0000", sourceUrl: "" },
-      { family: "Shippori Mincho", weight: 500, slice: "2", unicodeRange: "U+0000", sourceUrl: "" },
+      { family: "Shippori Mincho", weight: 800, slice: "2", unicodeRange: "U+0000", sourceUrl: "" },
     ];
     const order = [...renderFontsCss(many).matchAll(/url\(([^)]+)\)/g)].map((m) => m[1]);
-    expect(order).toEqual(["shippori-mincho-500.2.woff2", "biz-udpgothic-400.2.woff2", "shippori-mincho-700.10.woff2", "shippori-mincho-700.latin.woff2"]);
+    expect(order).toEqual(["shippori-mincho-800.2.woff2", "biz-udpgothic-400.2.woff2", "shippori-mincho-700.10.woff2", "shippori-mincho-700.latin.woff2"]);
   });
   it("ライセンス（SIL OFL）の所在をコメントで示す", () => {
     expect(out).toMatch(/OFL\.txt/);
@@ -107,9 +107,16 @@ describe("renderFontsCss", () => {
 });
 
 describe("FONT_FAMILIES", () => {
-  it("見出しは Shippori Mincho 500/700/800、本文は BIZ UDPGothic 400/700", () => {
+  /**
+   * #452: 500 は**サイトのどこからも要求されていない**ので外した（全 15 ページ + タブ/折りたたみ展開で実測、
+   * `shippori-mincho-500` の woff2 は 0 件、`CSS.getPlatformFontsForNode` にも `Medium` は出ない）。
+   * 外したことで `--font-head` に 400 を書いたときの落ち先が **500 から 700 に変わる**ので、
+   * `app/styles/font-weight-match.test.ts` の不変条件（家族を書かないウェイト指定を禁じる）が
+   * **前より効いている**。ここを増やすときは向こうの検査も一緒に読むこと。
+   */
+  it("見出しは Shippori Mincho 700/800、本文は BIZ UDPGothic 400/700", () => {
     expect(FONT_FAMILIES).toEqual([
-      { family: "Shippori Mincho", weights: [500, 700, 800] },
+      { family: "Shippori Mincho", weights: [700, 800] },
       { family: "BIZ UDPGothic", weights: [400, 700] },
     ]);
   });
