@@ -263,3 +263,60 @@ describe("一覧の行の中のリンクは Spacing 例外に当たるので直�
     expect(offenders, "行の中のリンクは WCAG 2.5.8 の Spacing 例外に当たる。docs/research/target-size-rows.md を読むこと").toEqual([]);
   });
 });
+
+/**
+ * 散文の中のリンク 46 箇所の判断（Issue 425・#413 第4段階）。判断の記録は `docs/research/target-size-inline.md`。
+ *
+ * **46 箇所は 1 箇所も直していない。全部が WCAG 2.5.8 の例外に当たる。**
+ *
+ * 2.5.8 は「24×24 未満を全部大きくしろ」ではない。**小さくても隣と離れていれば合格する**（Spacing 例外:
+ * 24px 直径の円を各ターゲットの中心に置いて重ならなければよい ＝ 隣の中心まで 24px 以上）。
+ * 実測した 46 箇所の**最小の間隔は 52px**（必要な 24px の 2 倍以上）。うち 14 箇所は文の中にあるので
+ * Inline 例外（"inline targets in sentences"）にも当たる。
+ *
+ * ここで守るのは**大きさではなく間隔**である。行間を変えずに満たしているので、
+ * 「24 にするための padding」を足す必要はない——足すと当たり判定が隣の行にかぶって**今より悪くなる**。
+ */
+describe("散文の中のリンクは例外に当たるので直さない（WCAG 2.5.8・Issue 425）", () => {
+  const assemblies = read("routes/assemblies.css");
+  const pages = read("styles/pages.css");
+
+  /**
+   * 一番余裕が無いのが `/coverage` と `/assemblies/pref-31` の「表決結果（公式）」で、
+   * 縦に並ぶ間隔が **52px**。これは `.assembly-sessions` の td の padding で決まっている。
+   * ここを詰めると Spacing 例外を外れて**本当に違反になる**ので、padding を減らさせない。
+   * （行の高さ = padding 上下 + 2 行ぶんの文字。13px × 1.2 × 2 ≒ 31px なので padding 8px で 47px 以上。）
+   */
+  it("表の行の間隔が 24px を割らない（Spacing 例外の根拠）", () => {
+    const decls = declarationsFor(assemblies, ".assembly-sessions td");
+    const pad = Number(decls.match(/padding:\s*(\d+)px/)?.[1] ?? 0);
+    expect(pad, ".assembly-sessions td の padding が読めない").toBeGreaterThan(0);
+    // 1 行だけの行でも中心間が 24px 以上あること: padding*2 + 文字の高さ(13*1.2)
+    expect(pad * 2 + 13 * 1.2).toBeGreaterThanOrEqual(MINIMUM);
+  });
+
+  /**
+   * **例外に当たるものを「直す」と受け入れない**（Issue 425）。散文のリンクに padding や min-height を
+   * 足すと行間が崩れて読みにくくなる。Understanding 文書も "It is more important to set the
+   * line height to a value that improves readability" と書いている。
+   * ここは CSSOM に全ルールを見せて、文章の中のリンクを狙った指定が増えていないかを見る。
+   */
+  it("文の中のリンク（.note / .card__body / .body）に padding や min-height を足していない", () => {
+    const offenders: string[] = [];
+    for (const css of [pages, assemblies]) {
+      const style = document.createElement("style");
+      style.textContent = css;
+      document.head.appendChild(style);
+      for (const r of [...style.sheet!.cssRules]) {
+        if (!(r instanceof CSSStyleRule)) continue;
+        // 「散文のブロック」の中の a を狙ったルールだけを見る（.links や .row は #423 #424 の担当なので除く）
+        for (const sel of r.selectorText.split(",").map((t) => t.trim())) {
+          if (!/\.(note|card__body|body)\b/.test(sel) || !/\ba\b|a$/.test(sel)) continue;
+          if (/padding|min-height|display:\s*inline-block/.test(r.style.cssText)) offenders.push(`${sel} { ${r.style.cssText} }`);
+        }
+      }
+      style.remove();
+    }
+    expect(offenders, "散文の中のリンクは WCAG 2.5.8 の Inline 例外に当たる。docs/research/target-size-inline.md を読むこと").toEqual([]);
+  });
+});
