@@ -58,7 +58,11 @@ function declarationsFor(css: string, selector: string): string {
     if (r.selectorText.split(",").map((t) => t.trim()).includes(selector)) out.push(r.style.cssText);
   }
   style.remove();
-  return out.join(";");
+  // **`cssText` は末尾に `;` を含む**（jsdom 26 で確認: `"color: red;"`）。そのまま `";"` で
+  // 繋ぐと `"color: red;;font-weight: 700;"` と**空の宣言**ができ、**CSSOM に食わせ直したとき
+  // それ以降が丸ごと捨てられる**（実測で `font-weight` が `""` になる）。#456 では実際に
+  // これで変異 M3・M4 が生き残った。**空白で繋ぐ**——`;` は各 `cssText` が既に持っている。
+  return out.map((t) => t.trim()).filter(Boolean).join(" ");
 }
 
 /**
@@ -569,5 +573,78 @@ describe("散文の中のリンクは例外に当たるので直さない（WCAG
       style.remove();
     }
     expect(offenders, "散文の中のリンクは WCAG 2.5.8 の Inline 例外に当たる。docs/research/target-size-inline.md を読むこと").toEqual([]);
+  });
+});
+
+/**
+ * `declarationsFor` そのものの検査（Issue 465）。
+ *
+ * **ここが静かに壊れると、上の検査すべてが素通りする。**
+ * `r.style.cssText` は**末尾に `;` を含む**（jsdom 26 で確認: `"color: red;"`）。
+ * それを `";"` で繋ぐと `"color: red;;font-weight: 700;"` になり、**空の宣言**ができる。
+ * 空宣言に当たると **jsdom の CSSOM はそれ以降を丸ごと捨てる**
+ * （実測: `font-weight` が `""` になる）。
+ *
+ * 現状の呼ばれ方では 1 つの規則しか当たらないので露見していないが、
+ * **まとめ書きや後勝ちの打ち消しが増えた瞬間に**、2 つ目以降の宣言が消える。
+ * #456 では実際にこれで変異 M3・M4 が生き残り、**原因は実装ではなくこのヘルパ**だった。
+ */
+describe("declarationsFor が複数の規則の宣言を落とさない（Issue 465）", () => {
+  const CSS = `
+    .two { font-size: 12px; }
+    .two { padding-block: 6px; }
+    .other { color: blue; }
+  `;
+
+  it("2 つの規則が当たったとき、両方の宣言が読める", () => {
+    const decls = declarationsFor(CSS, ".two");
+    expect(lastValue(decls, "font-size"), `1 つ目の規則が読めない: ${decls}`).toBe("12px");
+    expect(lastValue(decls, "padding-block"), `2 つ目の規則が読めない: ${decls}`).toBe("6px");
+  });
+
+  it("結果に空の宣言が無い（あると CSSOM に食わせたとき以降が捨てられる）", () => {
+    const decls = declarationsFor(CSS, ".two");
+    const empties = decls.split(";").filter((d, i, a) => d.trim() === "" && i < a.length - 1);
+    expect(empties, `空の宣言がある: ${JSON.stringify(decls)}`).toEqual([]);
+  });
+
+  /**
+   * **CSSOM に往復させても両方残る。** #461 のレビュアーはこの形で穴を見つけた。
+   * `split(";")` で読む現在の呼び出し側は空宣言に耐えるが、
+   * ブラウザと同じ解析に戻した瞬間に**黙って落ちる**ので、ここで固定しておく。
+   */
+  it("CSSOM に食わせ直しても両方の宣言が生き残る", () => {
+    const probe = document.createElement("div");
+    probe.style.cssText = declarationsFor(CSS, ".two");
+    expect(probe.style.getPropertyValue("font-size")).toBe("12px");
+    expect(probe.style.getPropertyValue("padding-block"), "空宣言の後ろが捨てられている").toBe("6px");
+  });
+
+  /** 宣言どうしが**くっつかない**こと。`join("")` だと `…12px;padding-block` と繋がって読めなくなる */
+  it("宣言どうしが区切られている（隣り合う値が繋がらない）", () => {
+    const decls = declarationsFor(".s { color: red } .s { font-size: 12px }", ".s");
+    expect(decls).toMatch(/;\s+font-size/);
+  });
+
+  /**
+   * **中身が空の規則**（`.x { }` や、コメントだけの規則）が混ざっても空の宣言を作らない。
+   * jsdom はこれを `cssText === ""` で返す（実測: `.e { } .e { color: red }` → `["", "color: red;"]`）ので、
+   * 落としておかないと繋いだ結果の先頭に空宣言が残る。
+   */
+  it("中身が空の規則が混ざっても空の宣言を作らない", () => {
+    const decls = declarationsFor(".e { } .e { color: red } .e { /* だけ */ }", ".e");
+    expect(decls).toBe("color: red;");
+    const probe = document.createElement("div");
+    probe.style.cssText = decls;
+    expect(probe.style.getPropertyValue("color")).toBe("red");
+  });
+
+  it("後勝ちの打ち消しが 2 つの規則にまたがっても正しく解ける", () => {
+    const decls = declarationsFor(".p { padding-block: 6px; } .p { padding: 0; }", ".p");
+    expect(paddingBlockPair(decls)).toEqual({ top: 0, bottom: 0 });
+  });
+
+  it("当たらないセレクタでは空文字を返す", () => {
+    expect(declarationsFor(CSS, ".nope")).toBe("");
   });
 });
