@@ -32,6 +32,21 @@ Issue #453。`docs/research/font-transfer.md` §8-2 / §8-3 で切り出した2�
 **「氏名」が名指しで挙がっている。**「見出し」の一種として巻き込まれたのではなく、
 **独立した項目として書かれている。**
 
+> **追記（Issue #462）**: 執筆時点では「承認済み」の裏付けがリポジトリに無かったが、
+> **裏が取れた。** `design/wireframes/Search.dc.html` と `Votes.dc.html` は、
+> どちらも**採用案「A 台帳」**である（`canvas.json` が両方を採用ページに置き、
+> 配色が `tokens.css` と一致する）。**この節の議論の土台は崩れていない。**
+> 21 ファイルの分類と根拠は [`design/wireframes/README.md`](../../design/wireframes/README.md) を見ること。
+>
+> ただし**下の `design/wireframes/Votes.dc.html:52` は行番号が 1 つずれている（正しくは 51 行目）。**
+> 引用の中身と主張（議案名はゴシックで `font-weight` の指定が無い）は正しい。
+>
+> **この参照が採用案を指していることは、テストでは守られていない。**
+> `wireframe-refs.test.ts` はパスの実在と README への記載しか見ないので、
+> **引用先を不採用案（`HomeE` や `BoldSearch`）に書き換えても緑のまま通る。**
+> ここのファイル名を変えるときは、必ず `design/wireframes/README.md` で
+> **採用案かどうかを人が確かめること。**
+
 承認済みのワイヤーフレーム `design/wireframes/Search.dc.html`（`/members` にあたる画面）でも、
 一覧の議員名は**明朝 700 で組まれている**:
 
