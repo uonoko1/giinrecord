@@ -58,7 +58,11 @@ function declarationsFor(css: string, selector: string): string {
     if (r.selectorText.split(",").map((t) => t.trim()).includes(selector)) out.push(r.style.cssText);
   }
   style.remove();
-  return out.join(";");
+  // **`cssText` は末尾に `;` を含む**（jsdom 26 で確認: `"color: red;"`）。そのまま `";"` で
+  // 繋ぐと `"color: red;;font-weight: 700;"` と**空の宣言**ができ、**CSSOM に食わせ直したとき
+  // それ以降が丸ごと捨てられる**（実測で `font-weight` が `""` になる）。#456 では実際に
+  // これで変異 M3・M4 が生き残った。**空白で繋ぐ**——`;` は各 `cssText` が既に持っている。
+  return out.map((t) => t.trim()).filter(Boolean).join(" ");
 }
 
 /**
@@ -120,6 +124,55 @@ function lastValue(decls: string, prop: string): string | undefined {
     if (m) found = m[1].trim();
   }
   return found;
+}
+
+/**
+ * **`line-height` は継承する。** だから「その要素に書いてあるか」だけを見てはいけない。
+ *
+ * ここが #470 の穴だった。`.row` の行の高さは `.row` と `.row a` からしか `line-height` を
+ * 読んでおらず、しかも **`.row a` という規則は `pages.css` に 1 つも無い**。よって
+ * `.rows { line-height: 0.5 }` を足して**実物の行が半分に潰れても、検査は緑のまま**だった。
+ *
+ * `.assembly-sessions td` 側が `line-height: 0.1` を捕まえていたのは継承を解いていたからではなく、
+ * **たまたま変異を td 自身（= 読んでいる規則）に入れたから**である。親の
+ * `.assembly-sessions { line-height: 0.1 }` は**そちらも同じく素通りしていた**（実際に確認した）。
+ * つまり「`.row` だけの非対称」ではなく、**全ての呼び出しに共通の穴**だった。
+ *
+ * 引数は**内側から外側の順**にセレクタを並べたもの（`[".row a", ".row", ".rows"]`）。
+ * CSS の継承と同じく、**最も内側で宣言されているものが勝つ**。どこにも無ければ `undefined` を
+ * 返し、呼び出し側が `LINE_HEIGHT_NORMAL` に倒す。
+ *
+ * **セレクタが 1 つも当たらない場合も `undefined`** になる。存在しないセレクタ（`.row a`）を
+ * 鎖に混ぜても壊れないが、**それに気づけないのが元の穴**なので、鎖には必ず
+ * 「実際に font-size を継承している親」を含めること。
+ *
+ * 見えないままなのは**メディアクエリの中の上書き**（`declarationsFor` が `CSSStyleRule` しか
+ * 見ないため）と、`line-height: inherit` のような明示的な継承値。
+ */
+function inheritedLineHeight(css: string, chain: readonly string[]): string | undefined {
+  for (const selector of chain) {
+    const lh = lastValue(declarationsFor(css, selector), "line-height");
+    if (lh !== undefined) return lh;
+  }
+  return undefined;
+}
+
+/**
+ * 宣言列のうしろに 1 つ宣言を足す（**後勝ちさせる**ため）。
+ *
+ * **`;` で素朴に繋がない**——#465（PR #467）と**同じ穴**を自分で作ることになる。
+ * `declarationsFor` が返す文字列は `cssText` 由来で**末尾に `;` が付いている**ので、
+ * `decls + ";line-height: 0.5"` は `…tabular-nums;;line-height: 0.5` と**空の宣言**を挟む。
+ * これを CSSOM に食わせ直すと**それ以降が丸ごと捨てられる**（実測: 再パースすると
+ * `line-height` が `""` になり、足したはずの値が消える）。
+ *
+ * いまの `sizeOnlyHeight` は正規表現の `lastValue` で読むので**たまたま**動くが、
+ * **読み手が CSSOM に替わった瞬間に静かに壊れる**類の書き方なので、ここで直しておく。
+ */
+function withDeclaration(decls: string, prop: string, value: string | undefined): string {
+  if (value === undefined) return decls;
+  const head = decls.trim().replace(/;$/, "");
+  return head === "" ? `${prop}: ${value}` : `${head}; ${prop}: ${value}`;
 }
 
 /**
@@ -439,15 +492,25 @@ describe("一覧の行の中のリンクは Spacing 例外に当たるので直�
    * **`line-height` は呼び出し側の決め打ちではなく CSS から読む**（#431）。
    * 以前は引数の既定値 1 を使っていたので、CSS に `line-height: 0.1` を足されても
    * テストの計算は 1 のままで、**実物が縮んでも気づかなかった**。
-   * 指定が無いときだけ `LINE_HEIGHT_NORMAL`（このフォントの実測 1.0）を使う。
+   *
+   * さらに **`line-height` は継承する**（#470）。以前はリンク側の宣言 1 つしか見ておらず、
+   * しかも `.row a` という規則は存在しないので、`.rows { line-height: 0.5 }` が素通りしていた。
+   * いまは `lineHeightChain`（**内側から外側の順**）を渡し、`inheritedLineHeight` に
+   * CSS の継承と同じ順で解かせる。どこにも宣言が無いときだけ `LINE_HEIGHT_NORMAL`
+   * （このフォントの実測 1.0）に倒れる。
+   *
+   * padding は**行の箱のもの**を使う（リンクではなく行が中心間距離を決めるため）ので、
+   * 継承で解いた `line-height` を行の宣言のうしろに足して**後勝ち**させる。
    */
-  const centerDistance = (rowDecls: string, fontSize: number, linkDecls = "") =>
-    sizeOnlyHeight(rowDecls + ";" + lineHeightOnly(linkDecls), fontSize);
-
-  /** リンク側の `line-height` だけを行の宣言に持ち込む（padding は行のものを使うため） */
-  const lineHeightOnly = (decls: string): string => {
-    const lh = lastValue(decls, "line-height");
-    return lh === undefined ? "" : `line-height: ${lh}`;
+  const centerDistance = (
+    css: string,
+    rowSelector: string,
+    fontSize: number,
+    lineHeightChain: readonly string[],
+  ) => {
+    const lh = inheritedLineHeight(css, lineHeightChain);
+    const decls = withDeclaration(declarationsFor(css, rowSelector), "line-height", lh);
+    return sizeOnlyHeight(decls, fontSize);
   };
 
   /**
@@ -458,24 +521,27 @@ describe("一覧の行の中のリンクは Spacing 例外に当たるので直�
   it(".row の行間が 24px を割らない（Spacing 例外の根拠・余裕は 6px しかない）", () => {
     const pad = paddingBlock(declarationsFor(pages, ".row"));
     expect(pad, ".row の上下 padding が読めない").toBeDefined();
-    // `.rows { font-size: 13px }` を継承する。line-height は normal（実測 1.0）
+    // `.rows { font-size: 13px }` を継承する。line-height も**同じ鎖から**読む（#470）——
+    // `.row a` は規則が存在しないので、ここを `.row a` だけにすると親の指定が届かない。
     const fontSize = px(declarationsFor(pages, ".rows"), "font-size");
     expect(fontSize, ".rows の font-size が読めない").toBe(13);
-    expect(centerDistance(declarationsFor(pages, ".row"), fontSize!)).toBeGreaterThanOrEqual(MINIMUM);
+    expect(centerDistance(pages, ".row", fontSize!, [".row a", ".row", ".rows"])).toBeGreaterThanOrEqual(MINIMUM);
   });
 
   it(".rollcalls-item の行間が 24px を割らない", () => {
     const link = declarationsFor(rollcall, ".rollcalls-item a");
     const fontSize = px(link, "font-size");
     expect(fontSize, ".rollcalls-item a の font-size が読めない").toBe(14.5);
-    expect(centerDistance(declarationsFor(rollcall, ".rollcalls-item"), fontSize!, link)).toBeGreaterThanOrEqual(MINIMUM);
+    expect(centerDistance(rollcall, ".rollcalls-item", fontSize!, [".rollcalls-item a", ".rollcalls-item", ".rollcalls-list"]))
+      .toBeGreaterThanOrEqual(MINIMUM);
   });
 
   it(".list__item の行間が 24px を割らない", () => {
     const link = declarationsFor(pages, ".list__item a");
     const fontSize = px(link, "font-size");
     expect(fontSize, ".list__item a の font-size が読めない").toBe(14);
-    expect(centerDistance(declarationsFor(pages, ".list__item"), fontSize!, link)).toBeGreaterThanOrEqual(MINIMUM);
+    expect(centerDistance(pages, ".list__item", fontSize!, [".list__item a", ".list__item", ".list"]))
+      .toBeGreaterThanOrEqual(MINIMUM);
   });
 
   /**
@@ -542,8 +608,13 @@ describe("散文の中のリンクは例外に当たるので直さない（WCAG
     // `.assembly-sessions { font-size: 13px }` を継承する
     const fontSize = Number(declarationsFor(assemblies, ".assembly-sessions").match(/font-size:\s*([\d.]+)px/)?.[1]);
     expect(fontSize, ".assembly-sessions の font-size が読めない").toBe(13);
+    // **`line-height` も同じ鎖から読む**（#470）。ここは td 自身の宣言だけを見ていたので、
+    // `.assembly-sessions td { line-height: 0.1 }` は捕まえられても、
+    // **親の `.assembly-sessions { line-height: 0.1 }` は素通りしていた**（実際に確認した）。
+    const lh = inheritedLineHeight(assemblies, [".assembly-sessions td", ".assembly-sessions"]);
     // 1 行だけの行でも中心間が 24px 以上あること
-    expect(sizeOnlyHeight(decls, fontSize)).toBeGreaterThanOrEqual(MINIMUM);
+    expect(sizeOnlyHeight(withDeclaration(decls, "line-height", lh), fontSize))
+      .toBeGreaterThanOrEqual(MINIMUM);
   });
 
   /**
@@ -569,5 +640,78 @@ describe("散文の中のリンクは例外に当たるので直さない（WCAG
       style.remove();
     }
     expect(offenders, "散文の中のリンクは WCAG 2.5.8 の Inline 例外に当たる。docs/research/target-size-inline.md を読むこと").toEqual([]);
+  });
+});
+
+/**
+ * `declarationsFor` そのものの検査（Issue 465）。
+ *
+ * **ここが静かに壊れると、上の検査すべてが素通りする。**
+ * `r.style.cssText` は**末尾に `;` を含む**（jsdom 26 で確認: `"color: red;"`）。
+ * それを `";"` で繋ぐと `"color: red;;font-weight: 700;"` になり、**空の宣言**ができる。
+ * 空宣言に当たると **jsdom の CSSOM はそれ以降を丸ごと捨てる**
+ * （実測: `font-weight` が `""` になる）。
+ *
+ * 現状の呼ばれ方では 1 つの規則しか当たらないので露見していないが、
+ * **まとめ書きや後勝ちの打ち消しが増えた瞬間に**、2 つ目以降の宣言が消える。
+ * #456 では実際にこれで変異 M3・M4 が生き残り、**原因は実装ではなくこのヘルパ**だった。
+ */
+describe("declarationsFor が複数の規則の宣言を落とさない（Issue 465）", () => {
+  const CSS = `
+    .two { font-size: 12px; }
+    .two { padding-block: 6px; }
+    .other { color: blue; }
+  `;
+
+  it("2 つの規則が当たったとき、両方の宣言が読める", () => {
+    const decls = declarationsFor(CSS, ".two");
+    expect(lastValue(decls, "font-size"), `1 つ目の規則が読めない: ${decls}`).toBe("12px");
+    expect(lastValue(decls, "padding-block"), `2 つ目の規則が読めない: ${decls}`).toBe("6px");
+  });
+
+  it("結果に空の宣言が無い（あると CSSOM に食わせたとき以降が捨てられる）", () => {
+    const decls = declarationsFor(CSS, ".two");
+    const empties = decls.split(";").filter((d, i, a) => d.trim() === "" && i < a.length - 1);
+    expect(empties, `空の宣言がある: ${JSON.stringify(decls)}`).toEqual([]);
+  });
+
+  /**
+   * **CSSOM に往復させても両方残る。** #461 のレビュアーはこの形で穴を見つけた。
+   * `split(";")` で読む現在の呼び出し側は空宣言に耐えるが、
+   * ブラウザと同じ解析に戻した瞬間に**黙って落ちる**ので、ここで固定しておく。
+   */
+  it("CSSOM に食わせ直しても両方の宣言が生き残る", () => {
+    const probe = document.createElement("div");
+    probe.style.cssText = declarationsFor(CSS, ".two");
+    expect(probe.style.getPropertyValue("font-size")).toBe("12px");
+    expect(probe.style.getPropertyValue("padding-block"), "空宣言の後ろが捨てられている").toBe("6px");
+  });
+
+  /** 宣言どうしが**くっつかない**こと。`join("")` だと `…12px;padding-block` と繋がって読めなくなる */
+  it("宣言どうしが区切られている（隣り合う値が繋がらない）", () => {
+    const decls = declarationsFor(".s { color: red } .s { font-size: 12px }", ".s");
+    expect(decls).toMatch(/;\s+font-size/);
+  });
+
+  /**
+   * **中身が空の規則**（`.x { }` や、コメントだけの規則）が混ざっても空の宣言を作らない。
+   * jsdom はこれを `cssText === ""` で返す（実測: `.e { } .e { color: red }` → `["", "color: red;"]`）ので、
+   * 落としておかないと繋いだ結果の先頭に空宣言が残る。
+   */
+  it("中身が空の規則が混ざっても空の宣言を作らない", () => {
+    const decls = declarationsFor(".e { } .e { color: red } .e { /* だけ */ }", ".e");
+    expect(decls).toBe("color: red;");
+    const probe = document.createElement("div");
+    probe.style.cssText = decls;
+    expect(probe.style.getPropertyValue("color")).toBe("red");
+  });
+
+  it("後勝ちの打ち消しが 2 つの規則にまたがっても正しく解ける", () => {
+    const decls = declarationsFor(".p { padding-block: 6px; } .p { padding: 0; }", ".p");
+    expect(paddingBlockPair(decls)).toEqual({ top: 0, bottom: 0 });
+  });
+
+  it("当たらないセレクタでは空文字を返す", () => {
+    expect(declarationsFor(CSS, ".nope")).toBe("");
   });
 });
