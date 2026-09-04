@@ -900,3 +900,137 @@ EOF
   assert_not_contains "$LOG" $'pr\tmerge' "never merges"
 }
 test_case "merge: 旧 HEAD を親に持たないマージコミットは中断する（#414）" t_merge_stops_for_a_merge_not_based_on_us
+
+# ---- #434: マージ成功を「拒否された」と誤報しない ------------------------------------------
+# `mergeStateStatus` が UNKNOWN（GitHub がマージ可能性を計算中）の間に `gh pr merge` を叩くと、
+# **実際にはマージされるのに非ゼロで返る**。実地で PR #428/#429/#430/#432/#437 の5件で踏んだ。
+# 非ゼロを見たら、**PR の今の state を読んでから**判断する。
+t_merge_nonzero_but_actually_merged() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*)
+      # 1回目（起動時）は OPEN。マージ後の確認では MERGED を返す
+      if grep -q 'pr	merge' "$FAKE_GH_LOG"; then
+        echo '{"state":"MERGED","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"UNKNOWN","url":"u","headRefOid":"oid1"}'
+      else
+        echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"UNKNOWN","url":"u","headRefOid":"oid1"}'
+      fi ;;
+    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    "pr merge 12 --squash --delete-branch")
+      echo "X Pull request uonoko1/giinrecord#12 is not mergeable: the merge commit cannot be cleanly created." >&2
+      exit 1 ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "非ゼロでも MERGED なら成功: $ERR"
+  assert_contains "$OUT" "merged PR #12" "成功として報告する"
+  assert_eq 1 "$(grep -c 'pr	merge	12' <<<"$LOG")" "1回で止める（再試行しない）"
+  assert_not_contains "$ERR" "merge refused 3 times" "誤報しない"
+}
+test_case "merge: 非ゼロで返っても state=MERGED なら成功として終わる（#434）" t_merge_nonzero_but_actually_merged
+
+# 本当に失敗したときは従来どおり die する（成功扱いが緩すぎないことの裏）。
+t_merge_nonzero_and_still_open_dies() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    "pr update-branch 12") echo updated ;;
+    "pr merge 12 --squash --delete-branch")
+      echo "X Pull request uonoko1/giinrecord#12 is not mergeable: the base branch policy prohibits the merge." >&2
+      exit 1 ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "OPEN のままなら失敗"
+  assert_contains "$ERR" "merge refused 3 times" "従来どおり die する"
+  assert_eq 3 "$(grep -c 'pr	merge	12' <<<"$LOG")" "3回試す"
+}
+test_case "merge: 非ゼロで state=OPEN のままなら従来どおり die（#434）" t_merge_nonzero_and_still_open_dies
+
+# **緩すぎないための線引き**: MERGED でも、マージされたのが**我々が検査した HEAD でない**なら
+# 成功と報告しない。他人が新しいコミットを push してからマージした場合がこれにあたる。
+# 「検査を通った commit だけがマージされる」という #392/#414 の不変条件を、ここでも守る。
+t_merge_merged_with_a_different_head_is_not_our_success() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*)
+      if grep -q 'pr	merge' "$FAKE_GH_LOG"; then
+        echo '{"state":"MERGED","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"UNKNOWN","url":"u","headRefOid":"other9"}'
+      else
+        echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"UNKNOWN","url":"u","headRefOid":"oid1"}'
+      fi ;;
+    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    "pr merge 12 --squash --delete-branch") echo "X refused" >&2; exit 1 ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "別の HEAD がマージされていたら成功と報告しない"
+  assert_contains "$ERR" "別の commit" "何が起きたかを説明する"
+  assert_eq 1 "$(grep -c 'pr	merge	12' <<<"$LOG")" "MERGED なので再試行はしない"
+}
+test_case "merge: MERGED でも検査した HEAD と違うなら成功と報告しない（#434）" t_merge_merged_with_a_different_head_is_not_our_success
+
+# CLOSED（マージされずに閉じられた）は成功でも「再試行してよい状態」でもない。すぐ止める。
+t_merge_closed_while_waiting_stops() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*)
+      if grep -q 'pr	merge' "$FAKE_GH_LOG"; then
+        echo '{"state":"CLOSED","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"UNKNOWN","url":"u","headRefOid":"oid1"}'
+      else
+        echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"UNKNOWN","url":"u","headRefOid":"oid1"}'
+      fi ;;
+    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    "pr merge 12 --squash --delete-branch") echo "X refused" >&2; exit 1 ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "CLOSED は失敗"
+  assert_contains "$ERR" "CLOSED" "state を報告する"
+  assert_eq 1 "$(grep -c 'pr	merge	12' <<<"$LOG")" "再試行しない"
+}
+test_case "merge: マージ中に CLOSED になったら再試行せず止める（#434）" t_merge_closed_while_waiting_stops
+
+# ローカルブランチの削除に失敗しても（worktree が使っている）、マージ自体は成功している。
+# 警告に留める（実地で踏んだ）。
+t_merge_local_branch_delete_failure_is_a_warning() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*)
+      if grep -q 'pr	merge' "$FAKE_GH_LOG"; then
+        echo '{"state":"MERGED","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"UNKNOWN","url":"u","headRefOid":"oid1"}'
+      else
+        echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"UNKNOWN","url":"u","headRefOid":"oid1"}'
+      fi ;;
+    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    "pr merge 12 --squash --delete-branch")
+      echo "failed to delete local branch feat/x: used by worktree at /somewhere" >&2
+      exit 1 ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "マージは成功している: $ERR"
+  assert_contains "$OUT" "merged PR #12" "成功として報告する"
+}
+test_case "merge: --delete-branch のローカル削除失敗は警告に留める（#434）" t_merge_local_branch_delete_failure_is_a_warning
