@@ -12,7 +12,7 @@
 .assemblies-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .assemblies-table caption { padding: 8px 0; text-align: left; font-family: var(--font-head); font-size: 15px; font-weight: 700; color: var(--brass); border-bottom: 1.5px solid var(--brass); }
 .assemblies-table th, .assemblies-table td { padding: 8px 8px; border-bottom: 1px solid var(--rule); text-align: left; vertical-align: top; }
-.assemblies-table thead th { font-size: 11px; letter-spacing: 0.1em; color: var(--muted); font-weight: 400; white-space: nowrap; }
+.assemblies-table thead th { font-family: var(--font-body); font-size: 11px; letter-spacing: 0.1em; color: var(--muted); font-weight: 400; white-space: nowrap; }
 .assemblies-table tbody th { font-weight: 700; white-space: nowrap; }
 /* 状態は文言で区別する。公開だけを太字にし、色で良し悪しを示さない */
 .assemblies-status { white-space: nowrap; }
@@ -33,7 +33,7 @@
 .assembly-member__meta { font-size: 12px; color: var(--muted); text-align: right; flex-shrink: 0; }
 .assembly-sessions { width: 100%; border-collapse: collapse; font-size: 13px; }
 .assembly-sessions th, .assembly-sessions td { padding: 8px 8px; border-bottom: 1px solid var(--rule); text-align: left; vertical-align: top; }
-.assembly-sessions thead th { font-size: 11px; letter-spacing: 0.1em; color: var(--muted); font-weight: 400; }
+.assembly-sessions thead th { font-family: var(--font-body); font-size: 11px; letter-spacing: 0.1em; color: var(--muted); font-weight: 400; }
 
 /* 収録範囲 /coverage（#218）。議会ごとのまとまり */
 .coverage-assembly { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--rule); }
