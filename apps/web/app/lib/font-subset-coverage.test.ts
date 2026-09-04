@@ -112,6 +112,25 @@ describe("明朝700 のサブセットが data/ を覆っている（#477）", (
     expect(incomplete, `${incomplete.length} 名の氏名に、サブセットに無い字がある`).toEqual([]);
   });
 
+  /**
+   * **サブセットに「入れたのに収録されない字」が 1 つある。U+2FA7（⾧、康熙部首の『長』）。**
+   *
+   * 島根県議会の表決の判（`.member-stamp`、明朝700）に `議⾧` として入っている。
+   * 通常の「長」U+9577 ではなく**部首の異体**で、一次資料の表記がそうなっている（丸めない）。
+   *
+   * **これはサブセットの不具合ではない。Shippori Mincho がこの字を持っていない**
+   * （実測: 既存の 122 スライスのどれにも無く、上流 TTF にも無い。BIZ UDPGothic にも無い）。
+   * **つまり差し替える前から、この 1 字はシステム書体で描かれていた。**
+   *
+   * ここで固定しておくのは、**将来これを見た人が「サブセットが壊れている」と誤解しないため**である。
+   * 収録字数（`.txt`）と実際に font が持つ字数が 1 つずれるのは、この字のせい。
+   */
+  it("フォント自身が持たない字は、要求しても収録されない（U+2FA7 は差し替え前から明朝で描けていない）", () => {
+    expect(committed.has("\u2FA7")).toBe(true); // 要求はしている（明朝700 の要素に出る字なので）
+    const woff2 = readFileSync(path.join(fontsDir, SUBSET_FILE));
+    expect(woff2.length).toBeGreaterThan(100_000); // 中身の検査は font-subset.ts の実行時に行う
+  });
+
   it.runIf(hasData)("目に見えない字（空白の類）が 1 つも落ちていない", () => {
     const invisible = [...dataHeadChars(readHeadFontDataSource(dataDir))].filter((c) => /\s/u.test(c) || c === "　");
     expect(invisible.length, "data/ の明朝700 の欄に空白が 1 つも無い（区切りの取り方が変わった可能性）").toBeGreaterThan(0);
