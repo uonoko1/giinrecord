@@ -29,6 +29,26 @@ jobs:
           curl -sSfL https://raw.githubusercontent.com/rhysd/actionlint/v1.7.7/scripts/download-actionlint.bash | bash -s 1.7.7 /tmp >/dev/null
           /tmp/actionlint -color
       - run: pnpm typecheck
+      # #464: apps/web/app/routes/rollcalls-bill-weight.browser.test.tsx は
+      # 実ブラウザの computed style を読む（jsdom は継承も @media も解かないので使えない）。
+      # ブラウザは 1 回起動して page.setContent で測るだけ——サーバもビルドも要らないので
+      # `pnpm test` の中に置ける。ここに Chromium が無いと **そのテストだけが落ちる**。
+      # docker-web ジョブと同じキャッシュの形（キーはバージョンなので両ジョブで共有される）。
+      - name: Playwright version
+        id: playwright
+        run: echo "version=$(pnpm --filter web exec playwright --version | tr -d ' ')" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      - name: Install Chromium for Playwright
+        run: |
+          if [ "${{ steps.playwright-cache.outputs.cache-hit }}" = "true" ]; then
+            pnpm --filter web exec playwright install-deps chromium
+          else
+            pnpm --filter web exec playwright install --with-deps chromium
+          fi
       - run: pnpm test
       - run: pnpm build
         env: { SITE_ORIGIN: "${{ vars.SITE_ORIGIN }}" } # unset → relative URLs (#57); set the repo variable once the domain is decided (#15)
