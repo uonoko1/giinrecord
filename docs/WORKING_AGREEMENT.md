@@ -144,6 +144,20 @@
     「同一」と書いた**のが実際だった。判断は変わらなかっただけで、変わる可能性はあった。
     **やること**: 一覧・繰り返しのあるものを比べるときは、**目で見た範囲ではなく全要素を機械で測る**。
     目で見た範囲しか確かめていないなら、**そう書く**（「画面に見えている範囲では」）。
+  - **CI の状態は commit を固定して読む**（2026-09-05、PO が 1 日に 2 回読み違えた）。
+    - **1 回目**: `gh pr checks` の `pending` を待ち続けたが、実体は **`cancelled`** だった
+      （PO 自身の push で新しい run が始まり、古いものが自動キャンセルされていた）。
+      **`gh pr checks` の表示では pending と cancelled が区別できない。**
+    - **2 回目**: `gh run rerun <id>` で緑にしたが、**その run の commit は PR の HEAD ではなかった。**
+      branch protection が読むのは `commits/<PR の HEAD>/check-runs` なので、
+      **古い commit が緑になっても PR は BLOCKED のまま。**
+    - **やること**:
+      ```sh
+      sha=$(gh pr view <N> --json headRefOid --jq .headRefOid)
+      gh api "repos/<owner>/<repo>/commits/$sha/check-runs" \
+        --jq '.check_runs[]|"\(.name) \(.status)/\(.conclusion)"'
+      ```
+      **`gh run view <id>` の緑は、その run の commit が PR の HEAD だとは限らない。**
   - **「3 回測って一致」は必要だが十分ではない**（2026-09-05、#477）。
     **3 回とも待ちが足りなければ、3 回とも同じ嘘の値で一致する。**
     - #477 は `networkidle` + `document.fonts.ready` まで待っても、3 回のうち 1 回
