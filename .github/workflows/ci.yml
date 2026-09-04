@@ -72,6 +72,10 @@ jobs:
     # Issue #194: headers alone missed a CSP that blocked every inline <script> (no hydration in production), so
     # apps/web/scripts/browser-check.ts opens the served pages in headless Chromium (Playwright) and fails on any
     # console error / CSP violation and when the members search does not filter.
+    # Issue #479: the same script also opens 4 pages with `javaScriptEnabled: false`. `ssr: false` + `prerender`
+    # means the HTML written at build time is all a crawler / a JS-less reader ever gets, and a broken prerender
+    # config produces an empty shell that the JS-enabled checks above hydrate back into shape. The expected text
+    # comes from data/ (member name, bill title, tally, the primary-source link), not from a character count.
     needs: check
     runs-on: ubuntu-latest
     env:
@@ -111,7 +115,7 @@ jobs:
           else
             pnpm --filter web exec playwright install --with-deps chromium
           fi
-      - name: Browser check (#194) — no console error / CSP violation on /, /members/, /rollcalls/, a member page; members search filters
+      - name: Browser check (#194) — no console error / CSP violation on /, /members/, /rollcalls/, a member page; members search filters; and (#479) the records are readable with JavaScript disabled
         run: pnpm --filter web browser-check -- --url http://127.0.0.1:8081
       - name: Staging noindex — X-Robots-Tag only for Host staging.giinrecord.jp (deploy/nginx/site.conf)
         run: |
