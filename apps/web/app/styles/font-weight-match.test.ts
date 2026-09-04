@@ -80,13 +80,38 @@ function rules(): Rule[] {
   return out;
 }
 
-function weightOf(body: string): number | undefined {
+/**
+ * **CSS 全体で有効なキーワード**（CSS Cascade 5 §7）。`font` にも `font-weight` にも書ける。
+ *
+ * これらは**どの家族にも face を要求しない**——親から継ぐ（`inherit`）か、
+ * カスケードを巻き戻す（`initial` / `unset` / `revert` / `revert-layer`）だけである。
+ * だから**検査の対象外**であって、「読めなかった」ではない。**この区別が #484 の本体。**
+ *
+ * `revert-layer` は今このリポジトリでは意味を持たない（`@layer` が **0 件**、grep で確認）が、
+ * **書かれれば他の4つとまったく同じ**に誤検出される。含めない理由が無いので含める。
+ */
+const CSS_WIDE_KEYWORDS = /^(inherit|initial|unset|revert|revert-layer)$/;
+
+/**
+ * `font-weight` の値から**要求されるウェイト**を読む。
+ *
+ * **`undefined` には 2 つの意味がある**（#484 で分けた。混ぜると誤検出になる）:
+ *
+ * - `CSS_WIDE_KEYWORDS`  → **要求しない**。検査の対象外。呼び出し側は**読み飛ばす**
+ * - `lighter` / `bolder` → **親の computed weight からの相対**（CSS Fonts 4 §2.7）。
+ *   親を知らないと決まらないので、**「静的に読めない」で正しい**。`undefined` のまま報告に出す
+ *
+ * **同じ `undefined` を CSS 側は「読み飛ばす」・TSX 側は「読めない」と解釈していた**のが
+ * #484 の誤検出の原因なので、**戻り値で区別する**（`"skip"` は対象外の印）。
+ */
+function weightOf(body: string): number | undefined | "skip" {
   const m = /(?:^|[;\s])font-weight\s*:\s*([^;]+)/.exec(body);
   if (!m) return undefined;
   const v = m[1]!.trim();
   if (v === "normal") return 400;
   if (v === "bold") return 700;
-  if (v === "inherit" || v === "initial" || v === "unset" || v === "lighter" || v === "bolder") return undefined;
+  if (CSS_WIDE_KEYWORDS.test(v)) return "skip"; // 継承・巻き戻し。face を要求しない
+  if (v === "lighter" || v === "bolder") return undefined; // 親に依存する。読めないものとして報告に出す
   const n = Number.parseInt(v, 10);
   return Number.isNaN(n) ? undefined : n;
 }
@@ -103,7 +128,9 @@ describe("見出し家族が持たないウェイトを、家族を書かずに�
     const offenders = all
       .filter((r) => {
         const w = weightOf(r.body);
-        if (w === undefined || headWeights.includes(w)) return false;
+        // `"skip"` は継承・巻き戻し（face を要求しない）、`undefined` は読めなかった値。
+        // **CSS 側はどちらも従来どおり読み飛ばす**——ここの振る舞いは #484 で変えていない。
+        if (w === undefined || w === "skip" || headWeights.includes(w)) return false;
         return !/(?:^|[;\s])font-family\s*:/.test(r.body) && !/(?:^|[;\s])font\s*:/.test(r.body);
       })
       .map((r) => `${r.file}: ${r.selector}`);
@@ -126,7 +153,7 @@ describe("見出し家族が持たないウェイトを、家族を書かずに�
     for (const r of all) {
       for (const [, value] of r.body.matchAll(/(?:^|[;\s])font\s*:\s*([^;]+)/g)) {
         const v = value.trim();
-        if (/^(inherit|initial|unset|revert)$/.test(v)) continue; // 継承・巻き戻しは 400 を要求しない
+        if (CSS_WIDE_KEYWORDS.test(v)) continue; // 継承・巻き戻しは 400 を要求しない（`revert-layer` も #484 で入れた）
         const parsed = parseFontShorthand(v);
         if (parsed === undefined) continue; // caption/menu などのシステム指定。家族も自前ではない
         const family = parsed.family === undefined ? undefined : familyOfValue(parsed.family);
@@ -137,6 +164,33 @@ describe("見出し家族が持たないウェイトを、家族を書かずに�
       }
     }
     expect(offenders).toEqual([]);
+  });
+
+  /**
+   * **キーワードの集合そのものを釘で打つ**（#484 の変異テストで見つけた穴）。
+   *
+   * 上の検査群は「違反をソースに書いたら落ちる」ことは示すが、**`CSS_WIDE_KEYWORDS` が広すぎても
+   * 気づかない**。実際「**何にでも当たる正規表現**」に変えても 9 tests は緑のままで、
+   * そのとき `fontWeight: "500"` を `--font-head` に書いても**ウェイトの検査は落ちなくなる**
+   * （落ちるのは件数の assertion だけ＝**別の理由で偶然落ちている**）。だからここで直接固定する。
+   *
+   * **通すもの**: face を要求しない CSS 全体キーワード（CSS Cascade 5 §7）。
+   * **通さないもの**: 実際のウェイト（`400`）・`normal` / `bold`・
+   * **親に依存する `lighter` / `bolder`**（CSS Fonts 4 §2.7。**静的には読めないので報告に出すのが正しい**）。
+   */
+  it("CSS 全体キーワードだけを対象外にする（広すぎても狭すぎても駄目）", () => {
+    const skipped = ["inherit", "initial", "unset", "revert", "revert-layer"];
+    const notSkipped = ["400", "500", "700", "normal", "bold", "lighter", "bolder", "13px/1.4 var(--font-head)", "caption"];
+    expect(skipped.filter((v) => !CSS_WIDE_KEYWORDS.test(v)), "対象外にすべきキーワードを検査してしまう").toEqual([]);
+    expect(notSkipped.filter((v) => CSS_WIDE_KEYWORDS.test(v)), "検査すべき値を対象外にしている（守りが緩む）").toEqual([]);
+
+    // `lighter` / `bolder` は `inherit` と**同じ `undefined` に見えても意味が違う**。
+    // 「読めない」として報告に出す側であることを固定する（#484 でここを分けた）。
+    expect(weightOf("font-weight: inherit"), "継承は対象外の印を返す").toBe("skip");
+    expect(weightOf("font-weight: lighter"), "相対指定は『読めない』のままにする").toBeUndefined();
+    expect(weightOf("font-weight: bolder"), "相対指定は『読めない』のままにする").toBeUndefined();
+    expect(weightOf("font-weight: bold")).toBe(700);
+    expect(weightOf("font-weight: normal")).toBe(400);
   });
 
   it("件数（.member-session-count）は本文家族を明示する", () => {
@@ -280,7 +334,9 @@ function parseFontShorthand(value: string): { weight: number | undefined; family
   let weight: number | undefined;
   for (const token of before.trim().split(/\s+/).filter(Boolean)) {
     const w = weightOf(`font-weight: ${token}`);
-    if (w !== undefined) weight = w;
+    // ショートハンドの内側に CSS 全体キーワードは書けない（単独でしか使えない）ので `"skip"` は来ない。
+    // 来ても weight としては数えない。
+    if (w !== undefined && w !== "skip") weight = w;
   }
   return { weight, family: family === "" ? undefined : family };
 }
@@ -309,12 +365,21 @@ function inlineStyles(): InlineStyle[] {
     /** 識別子を 1 段だけたどる。循環しないよう深追いしない（実在するのは 1 段だけ） */
     const deref = (expr: ts.Expression): ts.Expression => (ts.isIdentifier(expr) ? (consts.get(expr.text) ?? expr) : expr);
 
-    /** その式が要求しうる font-weight。三項は**両枝**、識別子は 1 段たどる。読めなければ `undefined` を混ぜる */
+    /**
+     * その式が要求しうる font-weight。三項は**両枝**、識別子は 1 段たどる。読めなければ `undefined` を混ぜる。
+     *
+     * **`fontWeight: "inherit"` は face を要求しないので、何も返さない**（#484）。
+     * ここが `undefined` を返していたため、**正しい書き方が「静的に読めない値」として落ちていた**——
+     * CSS 側は同じ `undefined` を読み飛ばしていたので、**CSS に書けば通り TSX に書くと落ちる**非対称だった。
+     */
     const weightsOf = (expr: ts.Expression): (number | undefined)[] => {
       const e = deref(expr);
       if (ts.isConditionalExpression(e)) return [...weightsOf(e.whenTrue), ...weightsOf(e.whenFalse)];
       if (ts.isNumericLiteral(e)) return [Number(e.text)];
-      if (ts.isStringLiteral(e) || ts.isNoSubstitutionTemplateLiteral(e)) return [weightOf(`font-weight: ${e.text}`)];
+      if (ts.isStringLiteral(e) || ts.isNoSubstitutionTemplateLiteral(e)) {
+        const w = weightOf(`font-weight: ${e.text}`);
+        return w === "skip" ? [] : [w]; // 継承・巻き戻しは**要求として数えない**
+      }
       return [undefined]; // B2: props / useState / 関数呼び出しなど、静的には読めない
     };
 
@@ -342,6 +407,10 @@ function inlineStyles(): InlineStyle[] {
           // A6: ショートハンド。**family を供給するかどうかまで見る**（供給しないなら hasFamily を立てない）
           const v = deref(prop.initializer);
           const text = ts.isStringLiteral(v) || ts.isNoSubstitutionTemplateLiteral(v) ? v.text : undefined;
+          // **#484: `font: "inherit"` は完全に正しい書き方**（CSS では 11 箇所使っている）。
+          // `parseFontShorthand` は `<size>` を見つけられず `undefined` を返すので、
+          // ここで読み飛ばさないと**「静的に読めない値」として落ちる**。CSS 側と同じ扱いにそろえる。
+          if (text !== undefined && CSS_WIDE_KEYWORDS.test(text.trim())) continue;
           const parsed = text === undefined ? undefined : parseFontShorthand(text);
           if (parsed === undefined) {
             entry.weights.push(undefined); // 読めないショートハンドは読めないものとして報告に出す
