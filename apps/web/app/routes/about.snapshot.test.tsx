@@ -43,7 +43,7 @@ describe("About（分割前との一致）", () => {
   });
 
   it("meta なしの描画 HTML が分割前と一致する", () => {
-    const main = renderAbout({ meta: undefined, members: [], rollcalls: [] });
+    const main = renderAbout({ meta: undefined, rollcalls: [] });
     expect(main.outerHTML).toBe(fixture("without-meta.html"));
   });
 });

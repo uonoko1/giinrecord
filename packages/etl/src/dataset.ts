@@ -1,10 +1,11 @@
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import type { Dirent } from "node:fs";
 import { join } from "node:path";
-import type { Assembly, Bill, BillSessionCount, BillSummary, DatasetMeta, MemberDetail, MemberSpeeches, MemberSummary, RollCall, RollCallSummary } from "@seiji-kiroku/shared";
+import type { Assembly, Bill, BillSessionCount, BillSummary, DatasetMeta, MemberAssemblyCount, MemberDetail, MemberSpeeches, MemberSummary, RollCall, RollCallSummary } from "@seiji-kiroku/shared";
 import type { Aggregated } from "./aggregate.ts";
 import { DIET_ASSEMBLY_IDS } from "./assemblies.ts";
-import { isDietMemberRow, mergeAssemblies, mergeMemberIndex, readMemberIndex, validateLocalAssemblies } from "./local-assemblies.ts";
+import { isDietMemberRow, membersByAssembly, mergeAssemblies, mergeMemberIndex, readMemberIndex, validateLocalAssemblies } from "./local-assemblies.ts";
+export { membersByAssembly } from "./local-assemblies.ts";
 import { stableJson } from "./json.ts";
 import type { GroupMismatch } from "./match-votes.ts";
 import { readUnmatched, writeUnmatched, type UnmatchedRow } from "./unmatched.ts";
@@ -91,7 +92,10 @@ export async function writeDataset(dir: string, ds: Dataset): Promise<void> {
   // assemblies/index.json は地方議会の ETL（local-assemblies.ts）と共有する。既にある地方議会の行は残す（無ければ国会の 2 行だけ）。#157
   await put("assemblies/index.json", mergeAssemblies(ds.assemblies, await readLocalAssemblyRows(dir)));
   // members/index.json も地方議会の ETL と共有する。既にある地方議員の行（assemblyId が diet- 以外）は残す（無ければ国会の行だけ＝byte-identical）。#157
-  await put("members/index.json", mergeMemberIndex(ds.index, localMembers));
+  const memberIndex = mergeMemberIndex(ds.index, localMembers);
+  await put("members/index.json", memberIndex);
+  // #441: /・/assemblies・/coverage は「議会ごとに何人か」しか使わない。全件（gzip 40KB）の代わりに読む集計
+  await put("members/by-assembly.json", membersByAssembly(memberIndex));
   for (const d of ds.details) await put(`members/${d.id}.json`, d);
   // 発言は別ファイル（#242）。0 件の議員のファイルは作らない（無い＝0 件）。
   // members/ は上で全消ししているので、前回あって今回 0 件になった議員のファイルは残らない。
@@ -235,6 +239,14 @@ export async function validateDataset(dir: string): Promise<string[]> {
     // 所属議会（#156）: assemblies/index.json に実在し、国会議員は house と一致する（diet-{house}）。
     if (typeof m.assemblyId !== "string" || !assemblyIds.has(m.assemblyId)) v.push(`members/index.json ${m.id}: assemblyId ${String(m.assemblyId)} not in assemblies/index.json`);
     else if ((m.house === "sangiin" || m.house === "shugiin") && m.assemblyId !== DIET_ASSEMBLY_IDS[m.house]) v.push(`members/index.json ${m.id}: assemblyId ${m.assemblyId} does not match house ${m.house} (expected ${DIET_ASSEMBLY_IDS[m.house]})`);
+  }
+  // members/by-assembly.json（#441）は index.json から機械的に導ける集計。食い違えば
+  // /・/assemblies・/coverage が違う人数を出す（利用者から検出できない虚偽）ので止める。
+  // stableJson の比較なので、議会間で人数を入れ替えても（合計が同じでも）落ちる（#435 の穴を作らない）
+  const byAssembly = await read<MemberAssemblyCount[]>("members/by-assembly.json");
+  if (byAssembly === undefined) v.push("members/by-assembly.json: missing (/, /assemblies, /coverage read it instead of members/index.json)");
+  else if (stableJson(byAssembly) !== stableJson(membersByAssembly(index))) {
+    v.push("members/by-assembly.json: does not match members/index.json (recount by assembly: current = current !== false, total = all rows)");
   }
   const voteCounts = new Map<string, number>();
   for (const m of index) {
@@ -383,7 +395,7 @@ export async function validateDataset(dir: string): Promise<string[]> {
     }
   }
   for (const rel of await listJsonFiles(dir, "members")) {
-    if (rel === "members/index.json") continue;
+    if (rel === "members/index.json" || rel === "members/by-assembly.json") continue; // by-assembly.json は #441 の集計（上で index.json と突き合わせている）
     // members/{id}/speeches.json（#242）と members/{id}.json のどちらも、id が index に無ければ前回実行の残骸
     const m = rel.match(/^members\/([^/]+)(?:\.json|\/speeches\.json)$/);
     if (!m) { v.push(`${rel}: unexpected file under members/ (expected members/{id}.json or members/{id}/speeches.json)`); continue; }

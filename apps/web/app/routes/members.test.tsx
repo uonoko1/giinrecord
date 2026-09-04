@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Link, MemoryRouter, useLocation, useNavigate } from "react-router";
@@ -14,7 +16,7 @@ const EVALUATIVE_WORDS = ["おすすめ", "ランキング", "一致率", "遅�
 function renderMembers(list = members) {
   return render(
     <MemoryRouter>
-      <Members data={{ ...dataset, members: list }} />
+      <Members data={dataset} members={list} />
     </MemoryRouter>,
   );
 }
@@ -190,7 +192,7 @@ describe("/members", () => {
       const local = { ...members[0], id: "p_04_000001", name: "宮城 太郎", kana: "みやぎ たろう", assemblyId: "pref-04" as const, group: "自由民主党・県民会議", district: "仙台市青葉区" };
       render(
         <MemoryRouter>
-          <Members data={{ ...dataset, members: [...both, local], assemblies: [...DIET_ASSEMBLIES, miyagi] }} />
+          <Members data={{ ...dataset, assemblies: [...DIET_ASSEMBLIES, miyagi] }} members={[...both, local]} />
         </MemoryRouter>,
       );
       const assembly = screen.getByRole("combobox", { name: "議会" });
@@ -209,7 +211,7 @@ describe("/members", () => {
     function renderAt(url: string) {
       return render(
         <MemoryRouter initialEntries={[url]}>
-          <Members data={{ ...dataset, members: [...members, shugiin] }} />
+          <Members data={dataset} members={[...members, shugiin]} />
         </MemoryRouter>,
       );
     }
@@ -231,7 +233,7 @@ describe("/members", () => {
     function renderAt(url: string, list = [...members, shugiin]) {
       return render(
         <MemoryRouter initialEntries={[url]}>
-          <Members data={{ ...dataset, members: list }} />
+          <Members data={dataset} members={list} />
         </MemoryRouter>,
       );
     }
@@ -274,7 +276,7 @@ describe("/members", () => {
       render(
         <MemoryRouter initialEntries={["/members"]}>
           <Link to="/members?district=%E6%9D%B1%E4%BA%AC1">東京1 へ</Link>
-          <Members data={{ ...dataset, members: [...members, shugiin] }} />
+          <Members data={dataset} members={[...members, shugiin]} />
         </MemoryRouter>,
       );
       expect(screen.getByRole("combobox", { name: "選挙区" })).toHaveValue("");
@@ -325,7 +327,7 @@ describe("/members", () => {
       return render(
         <MemoryRouter initialEntries={[at]}>
           <Url />
-          <Members data={{ ...dataset, members: list, assemblies: [...DIET_ASSEMBLIES, tokushima] }} />
+          <Members data={{ ...dataset, assemblies: [...DIET_ASSEMBLIES, tokushima] }} members={list} />
         </MemoryRouter>,
       );
     }
@@ -413,7 +415,7 @@ describe("/members", () => {
       render(
         <MemoryRouter initialEntries={["/members"]}>
           <Url />
-          <Members data={{ ...dataset, members: [...list, former], assemblies: [...DIET_ASSEMBLIES, tokushima] }} />
+          <Members data={{ ...dataset, assemblies: [...DIET_ASSEMBLIES, tokushima] }} members={[...list, former]} />
         </MemoryRouter>,
       );
       expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("収録している議会の現職議員");
@@ -435,7 +437,7 @@ describe("/members", () => {
       render(
         <MemoryRouter initialEntries={["/members?former=1"]}>
           <Url />
-          <Members data={{ ...dataset, members: [...list, former], assemblies: [...DIET_ASSEMBLIES, tokushima] }} />
+          <Members data={{ ...dataset, assemblies: [...DIET_ASSEMBLIES, tokushima] }} members={[...list, former]} />
         </MemoryRouter>,
       );
       expect(screen.getByRole("checkbox", { name: "元職も含める" })).toBeChecked();
@@ -638,5 +640,46 @@ describe("/members 折りたたみ（#340）", () => {
   it("200 名以下なら折りたたまない", () => {
     renderMembers();
     expect(screen.queryByRole("button", { name: /さらに表示/ })).not.toBeInTheDocument();
+  });
+});
+
+/**
+ * Issue 441: 名簿の全件は `dataset` から **lib/members.ts** に切り出した。
+ * **この画面は減らさない。** ここのテストは全部 `members` を明示的に渡すので、
+ * 既定の経路（＝本番が通る道）を誰も通っていない——`bundledMembers` を空にする変異を入れても
+ * 73 件すべて緑のままだった（#408 で /coverage に起きたのと同じ穴）。
+ * 「一覧が空になる」は利用者から見て「まだ取得前」と区別が付かないので、**既定で描いて確かめる**。
+ */
+describe("/members の既定（bundled）で名簿の全件が出る（Issue 441）", () => {
+  const rawMembers: { current?: boolean }[] = JSON.parse(readFileSync(join(import.meta.dirname, "../../../../data/members/index.json"), "utf8"));
+
+  it("members を渡さずに描くと、現職の人数が members/index.json を直に数えた値と一致する", () => {
+    render(
+      <MemoryRouter>
+        <Members />
+      </MemoryRouter>,
+    );
+    // 既定は現職のみ（元職はトグル）。**件数そのものを見る**——「1 名でも出れば合格」だと
+    // 1,057 行が 1 行に痩せても通る（#411 のレビュー指摘）
+    const current = rawMembers.filter((m) => m.current !== false).length;
+    expect(screen.getByText(`${current.toLocaleString("ja-JP")} 名`)).toBeInTheDocument();
+    expect(screen.queryByText("取得前です。")).toBeNull();
+  });
+
+  /*
+   * **元職も届いていること**を別に見る（現職だけに痩せる変異は上のテストを素通りする——
+   * 期待値が現職の数だからで、実際に `lib/members.ts` を現職だけに絞る変異が緑のままだった）。
+   * 元職は「収録しているのに出ない」＝利用者から検出できない欠落なので、名指しで固定する。
+   */
+  it("元職も届いている（トグルを入れると元職を含む全件になる）", async () => {
+    render(
+      <MemoryRouter>
+        <Members />
+      </MemoryRouter>,
+    );
+    await userEvent.click(screen.getByLabelText(/元職も含める/));
+    expect(screen.getByText(`${rawMembers.length.toLocaleString("ja-JP")} 名`)).toBeInTheDocument();
+    // 実データは元職が居る（現職だけなら 2 つの数が同じになり、この検査が意味を失う）
+    expect(rawMembers.length).toBeGreaterThan(rawMembers.filter((m) => m.current !== false).length);
   });
 });

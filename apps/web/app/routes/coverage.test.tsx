@@ -3,29 +3,47 @@ import { join } from "node:path";
 import { render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { describe, expect, it } from "vitest";
-import type { Assembly } from "@seiji-kiroku/shared";
+import type { Assembly, MemberAssemblyCount } from "@seiji-kiroku/shared";
 import type { AssemblySession } from "../lib/data-contract";
-import type { Dataset, MemberSummary } from "../lib/dataset";
+import type { Dataset } from "../lib/dataset";
 import assembliesFixture from "../test-fixtures/assemblies/index.json";
-import localMembers from "../test-fixtures/assemblies/members-index.json";
 import sessionsFixture from "../test-fixtures/assemblies/sessions.json";
 import { billsBySession, dataset } from "../test-fixtures/dataset";
 import { CoveragePage, meta as routeMeta } from "./coverage";
-import type { SangiinVoteLinkStats, ShugiinBillNameStats } from "../lib/coverage";
+import type { LinkedRecordCounts, SangiinVoteLinkStats, ShugiinBillNameStats } from "../lib/coverage";
 import { source } from "../test-fixtures/source";
 
 /** #251: 事実の記述だけを載せる。言い訳・評価にあたる語もここで塞ぐ（「残念」「限界」「不十分」など） */
 const EVALUATIVE_WORDS = ["おすすめ", "ランキング", "一致率", "遅れ", "不十分", "優れ", "充実", "網羅", "残念", "限界", "やむを得", "しかたが", "仕方が", "できていません", "ご了承"];
 const assemblies = assembliesFixture as Assembly[];
 const sessions = new Map<string, AssemblySession[]>([["pref-04", sessionsFixture as AssemblySession[]]]);
-const withLocal: Dataset = { ...dataset, assemblies, members: [...dataset.members, ...(localMembers as MemberSummary[])] };
+const withLocal: Dataset = { ...dataset, assemblies };
+/*
+ * #441: 議員数は名簿の全件ではなく **議会ごとの人数**（members/by-assembly.json）から来る。
+ * この画面が読むのは **total**（元職を含む）。`current` はわざと違う数にしてある
+ * （同じ数だと、どちらの列を読んでいるか見分けられない）
+ */
+const byAssembly: MemberAssemblyCount[] = [
+  { assemblyId: "diet-sangiin", current: 2, total: 3 },
+  { assemblyId: "pref-04", current: 2, total: 3 },
+];
+/** #441: 院ごとの「議員ページに出ている件数」は loader（Node 側）から来る。参院の fixture は counts.speeches が 1+0+2=3 */
+const linkedFixture = { sangiin: { rollcalls: 15, bills: 1, speeches: 3, questions: 0 }, shugiin: null };
 
-function renderPage(data: Dataset = withLocal, s = sessions, shugiinBillNames: ShugiinBillNameStats | null = null, sangiinVotes: SangiinVoteLinkStats | null = null) {
+function renderPage(
+  data: Dataset = withLocal,
+  s = sessions,
+  shugiinBillNames: ShugiinBillNameStats | null = null,
+  sangiinVotes: SangiinVoteLinkStats | null = null,
+  linked: { sangiin: LinkedRecordCounts | null; shugiin: LinkedRecordCounts | null } = linkedFixture,
+  members: readonly MemberAssemblyCount[] = byAssembly,
+) {
   return render(
     <MemoryRouter>
       {/* Issue 408/411: 議案の集計は Dataset に入っていないので明示的に渡す。
+          Issue 441: 議員の集計（人数）と loader 由来の件数も同じ理由で明示的に渡す。
           渡さないと本物の bundled データが使われ、fixture の件数と食い違う */}
-      <CoveragePage data={data} sessions={s} billsBySession={billsBySession} shugiinBillNames={shugiinBillNames} sangiinVotes={sangiinVotes} />
+      <CoveragePage data={data} sessions={s} billsBySession={billsBySession} membersByAssembly={members} shugiinBillNames={shugiinBillNames} sangiinVotes={sangiinVotes} linked={linked} />
     </MemoryRouter>,
   );
 }
@@ -330,21 +348,19 @@ describe("/coverage 収録範囲", () => {
       rosterMembers: 465,
       rosterDuplicateNames: 0,
     };
-    /** 議員ページに実際に出ている件数の材料（members/index.json の counts） */
-    const shugiinMembers: MemberSummary[] = [
-      { id: "h_1", name: "衆院 一郎", kana: "しゅういん いちろう", house: "shugiin", group: "自民", district: "東京1", counts: { rollcalls: 0, bills: 30, speeches: 0, questions: 0 } },
-    ];
-    const withShugiin = (extra: Partial<MemberSummary>[] = []) => ({
-      ...withLocal,
-      meta,
-      members: [...withLocal.members, ...shugiinMembers.map((m, i) => ({ ...m, ...extra[i] }))],
-    });
+    /**
+     * 議員ページに実際に出ている件数（#251）。#441 でこれは loader（Node 側で members/index.json の
+     * counts を合計する `readLinkedRecordCounts`）から来るようになったので、テストもその形で渡す。
+     */
+    const shugiinLinked: LinkedRecordCounts = { rollcalls: 0, bills: 30, speeches: 0, questions: 0 };
+    const withShugiin = () => ({ ...withLocal, meta });
+    const linkedWith = (extra: Partial<LinkedRecordCounts> = {}) => ({ sangiin: linkedFixture.sangiin, shugiin: { ...shugiinLinked, ...extra } });
     const section = () => screen.getByRole("region", { name: "衆議院の記録が議員ページに紐づく範囲" });
 
     // #316: 衆院サイト以外の一次資料（国会会議録・総選挙の結果・官報）も調べたうえで無い、と書く。
     // #274 が参院について「参議院のサイト以外の一次資料は調べていません」と主張の範囲を限定したのと対になる。
     it("衆院サイト以外の一次資料も調べたうえで無い、と書く（#316）", () => {
-      renderPage(withShugiin(), sessions, billNames);
+      renderPage(withShugiin(), sessions, billNames, null, linkedWith());
       const t = section().textContent ?? "";
       expect(t).toContain("衆議院のサイト以外");
       // 調べた先を名指しする（「探したが無かった」だけでは、何を探したか分からない）
@@ -361,7 +377,7 @@ describe("/coverage 収録範囲", () => {
     });
 
     it("名簿が「現在」の 1 時点しかないことと、その時点を出典（meta）から出す", () => {
-      renderPage(withShugiin(), sessions, billNames);
+      renderPage(withShugiin(), sessions, billNames, null, linkedWith());
       expect(section()).toHaveTextContent("「現在」の 1 時点だけで、回次ごとの名簿はありません");
       expect(section()).toHaveTextContent("2026.02.18");
       expect(within(section()).getByRole("link", { name: "議員一覧" })).toHaveAttribute("href", shugiinRosterSource.url);
@@ -369,7 +385,7 @@ describe("/coverage 収録範囲", () => {
 
     // #259 レビュー: 参院を「この制約が無い」と書くと、すぐ上の RosterlessSection（第216回より前は名簿が無い）と矛盾する
     it("参院は「制約が無い」ではなく、名簿のある範囲をデータから出し、上の節と整合させる", () => {
-      renderPage(withShugiin(), sessions, billNames);
+      renderPage(withShugiin(), sessions, billNames, null, linkedWith());
       expect(section()).toHaveTextContent("第216—221回");
       expect(section()).toHaveTextContent("それより前の回次に名簿が無いことは参議院も同じ");
       // 「参議院にはこの制約はありません」と読める書き方をしない
@@ -377,20 +393,20 @@ describe("/coverage 収録範囲", () => {
     });
 
     it("氏名が一致しても本人と確認できないことと、氏名だけで紐づけない理由を書く", () => {
-      renderPage(withShugiin(), sessions, billNames);
+      renderPage(withShugiin(), sessions, billNames, null, linkedWith());
       expect(section()).toHaveTextContent("氏名がこの名簿と一致しても、その人本人であることを一次資料から確認できません");
       expect(section()).toHaveTextContent("同姓同名の別人を 1 人にしないため");
     });
 
     it("氏名がいちばん多い回次の実数（議案の氏名 / 現在の名簿にある数）をデータから出す", () => {
-      renderPage(withShugiin(), sessions, billNames);
+      renderPage(withShugiin(), sessions, billNames, null, linkedWith());
       expect(section()).toHaveTextContent("第221回");
       expect(section()).toHaveTextContent("90 人のうち、現在の名簿にあるのは 88 人");
       expect(section().textContent).not.toContain("%");
     });
 
     it("紐づいていない氏名の延べ件数を出す（延べ数・紐づき数・残り）", () => {
-      renderPage(withShugiin(), sessions, billNames);
+      renderPage(withShugiin(), sessions, billNames, null, linkedWith());
       expect(section()).toHaveTextContent("延べ 400 件");
       expect(section()).toHaveTextContent("紐づいているのは 30 件");
       expect(section()).toHaveTextContent("残る 370 件");
@@ -399,7 +415,7 @@ describe("/coverage 収録範囲", () => {
 
     // #259 レビュー: 「第N回のぶんだけ出る」という代理値の主張をやめ、実際に出ている件数（counts の合計）を書く
     it("議員ページに実際に出ている件数を members の counts から出す（0 件なら 0 件と書く）", () => {
-      renderPage(withShugiin(), sessions, billNames);
+      renderPage(withShugiin(), sessions, billNames, null, linkedWith());
       expect(section()).toHaveTextContent("提出・賛成した議案が 30 件");
       expect(section()).toHaveTextContent("質問主意書が 0 件");
       expect(section()).toHaveTextContent("発言が 0 件");
@@ -409,14 +425,14 @@ describe("/coverage 収録範囲", () => {
     });
 
     it("質問主意書が実際に紐づいていれば「照合できたものはありません」とは書かない", () => {
-      renderPage(withShugiin([{ counts: { rollcalls: 0, bills: 30, speeches: 12, questions: 4 } }]), sessions, billNames);
+      renderPage(withShugiin(), sessions, billNames, null, linkedWith({ speeches: 12, questions: 4 }));
       expect(section()).toHaveTextContent("質問主意書が 4 件");
       expect(section()).toHaveTextContent("発言が 12 件");
       expect(section().textContent).not.toContain("照合できたものはありません");
     });
 
     it("質問主意書（#235）は別の節にせず、同じ節に統合して書く", () => {
-      renderPage(withShugiin(), sessions, billNames);
+      renderPage(withShugiin(), sessions, billNames, null, linkedWith());
       expect(screen.queryByRole("region", { name: "衆議院の質問主意書が議員ページに紐づく回次" })).toBeNull();
       expect(section()).toHaveTextContent("第219—220回");
     });
@@ -427,7 +443,7 @@ describe("/coverage 収録範囲", () => {
     });
 
     it("議案の氏名が 0 件なら件数の段落は出さない", () => {
-      renderPage(withShugiin(), sessions, { names: 0, linked: 0, sessions: [], rosterMembers: 465, rosterDuplicateNames: 0 });
+      renderPage(withShugiin(), sessions, { names: 0, linked: 0, sessions: [], rosterMembers: 465, rosterDuplicateNames: 0 }, null, linkedWith());
       expect(section().textContent).not.toContain("延べ");
     });
   });
@@ -438,7 +454,7 @@ describe("/coverage 収録範囲", () => {
   });
 
   it("データが空でも落ちない", () => {
-    renderPage({ meta: undefined, members: [], rollcalls: [] }, new Map());
+    renderPage({ meta: undefined, rollcalls: [] }, new Map(), null, null, { sangiin: null, shugiin: null }, []);
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("収録範囲");
   });
 
@@ -570,5 +586,62 @@ describe("/coverage の既定（bundled）で議案が出る（Issue 408 / 411�
     }
     const actualBySession = new Map(bundled.filter((r) => r.house === "shugiin").map((r) => [r.session, r.count] as const));
     expect(Object.fromEntries([...actualBySession].sort(([a], [b]) => a - b))).toEqual(Object.fromEntries([...expectedBySession].sort(([a], [b]) => a - b)));
+  });
+});
+
+/**
+ * Issue 441: `members/index.json`（1,057 行・gzip 40KB）を `dataset` から切り出した。
+ * #411 と同じ理由で、**既定の経路＝本番が通る道**をここで通す。
+ *
+ * **期待値は集計（by-assembly.json）から作らない。** 生の `members/index.json` を直に数える。
+ * 集計から作ると、集計の誤りが期待値と画面の両方に出て**永久に検出できない**。
+ */
+describe("/coverage の既定（bundled）で議員数が出る（Issue 441）", () => {
+  /** 生の members/index.json（集計を通さない独立した経路） */
+  const rawMembers: { house?: string; assemblyId?: string; current?: boolean }[] = JSON.parse(
+    readFileSync(join(import.meta.dirname, "../../../../data/members/index.json"), "utf8"),
+  );
+  const rawTotal = (assemblyId: string) => rawMembers.filter((m) => (m.assemblyId ?? `diet-${m.house}`) === assemblyId).length;
+  /** 生の assemblies/index.json（fixture ではなく、既定の経路が実際に描く議会） */
+  const rawAssemblies: Assembly[] = JSON.parse(readFileSync(join(import.meta.dirname, "../../../../data/assemblies/index.json"), "utf8"));
+
+  it("data を渡さずに描くと、議会ごとの議員数が members/index.json を直に数えた値と一致する", async () => {
+    const { membersByAssembly: bundled } = await import("../lib/members-by-assembly");
+    render(
+      <MemoryRouter>
+        <CoveragePage />
+      </MemoryRouter>,
+    );
+
+    /** 国会の表: その院の行に出ている「N 名」 */
+    const dietRow = (name: string) => {
+      const row = screen.getAllByText(name).map((el) => el.closest("tr")).find((r) => /[\d,]+\s*名/.test(r?.textContent ?? ""))!;
+      return Number(((row.textContent ?? "").match(/([\d,]+)\s*名/)?.[1] ?? "").replace(/,/g, ""));
+    };
+    /** 地方議会の節（aria-label に議会名）で「議員」の行に出ている「N 名」 */
+    const localCount = (name: string) => {
+      const region = screen.getByRole("region", { name });
+      const dd = within(region).getByText("議員").closest(".assembly-facts__item")!.querySelector("dd")!;
+      return Number(((dd.textContent ?? "").match(/([\d,]+)/)?.[1] ?? "").replace(/,/g, ""));
+    };
+
+    // **収録範囲は元職も含めて数える**（total）。現職だけ（current）を出したら落ちる:
+    // 実データは参議院が current 247 / total 307 と違う数
+    expect(dietRow("参議院")).toBe(rawTotal("diet-sangiin"));
+    expect(dietRow("衆議院")).toBe(rawTotal("diet-shugiin"));
+    // **議会を取り違えれば別の議会の人数が出る**（合計は変わらない。#435）ので、地方議会も 1 つずつ見る
+    for (const a of rawAssemblies.filter((x) => x.kind !== "national")) {
+      expect([a.id, localCount(a.name)]).toEqual([a.id, rawTotal(a.id)]);
+    }
+
+    // 合計（議員）も生の行数と一致する（1 人も取りこぼさない）
+    const totals = screen.getByRole("region", { name: "合計" });
+    const figure = (label: string) => Number((within(totals).getByText(label).closest(".figure")!.querySelector(".figure__num")!.textContent ?? "").replace(/,/g, ""));
+    expect(figure("議員")).toBe(rawMembers.length);
+
+    // 集計そのものも生の index.json と突き合わせる（**議会間の入れ替えは合計では見えない**ので議会ごとに）。#435
+    for (const row of bundled) expect([row.assemblyId, row.total]).toEqual([row.assemblyId, rawTotal(row.assemblyId)]);
+    expect(bundled.reduce((t, r) => t + r.total, 0)).toBe(rawMembers.length);
+    expect(bundled.reduce((t, r) => t + r.current, 0)).toBe(rawMembers.filter((m) => m.current !== false).length);
   });
 });

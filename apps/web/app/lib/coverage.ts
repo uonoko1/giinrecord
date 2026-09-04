@@ -3,11 +3,10 @@
  * 数値はここで数え、ページ側にも定数にも書かない（データが増えたら再ビルドで追随する）。
  * ブラウザでも動く（Node API は使わない）。
  */
-import type { Assembly, BillSessionCount, DatasetMeta, House } from "@seiji-kiroku/shared";
+import type { Assembly, BillSessionCount, DatasetMeta, House, MemberAssemblyCount } from "@seiji-kiroku/shared";
 import { isDietAssemblyId } from "./assemblies";
 import { DIET_ASSEMBLIES, type AssemblySession } from "./data-contract";
 import type { Dataset } from "./dataset";
-import { memberAssemblyId } from "./member-search";
 
 /**
  * 回次の範囲。`from`—`to` は最小と最大で、`count` は実際に行のあった回次の数（重複を除く）。
@@ -374,14 +373,22 @@ const HOUSE_OF: Record<string, House> = { "diet-sangiin": "sangiin", "diet-shugi
  * Issue 411: 受け取るのは議案の全件ではなく**院・回次ごとの件数**（`bills/by-session.json`）。
  * この画面が議案について使うのは `house` と `session` だけで、件数と回次の範囲はその集計から出る。
  * 件数は行の `count` を足し、回次の範囲は行のある回次から数える（0 件の回次の行は無い）。
+ *
+ * Issue 441: 議員も同じで、受け取るのは名簿の全件ではなく**議会ごとの人数**（`members/by-assembly.json`）。
+ * ここが使うのは `total`（**元職を含む**行数）——収録範囲は「何を収録しているか」なので、
+ * 名簿から消えた元職も数えるのが正しい。`/` と `/assemblies` の `current`（現職のみ）とは
+ * **意図的に違う**（#351/#355。元職を足すと参議院が 307 名になり定数248を超えるので、あちらは数えない）。
+ * どちらも `bills` と同じく**必須の引数**にしてある（optional にすると渡し忘れが `?? []` で
+ * 静かに 0 名になる。#408 のレビュー指摘）。
  */
-export function buildCoverage(data: Dataset, sessionsByAssembly: ReadonlyMap<string, AssemblySession[]>, billsBySession: readonly BillSessionCount[]): Coverage {
+export function buildCoverage(
+  data: Dataset,
+  sessionsByAssembly: ReadonlyMap<string, AssemblySession[]>,
+  billsBySession: readonly BillSessionCount[],
+  membersByAssembly: readonly MemberAssemblyCount[],
+): Coverage {
   const assemblies: readonly Assembly[] = data.assemblies ?? DIET_ASSEMBLIES;
-  const memberCount = new Map<string, number>();
-  for (const m of data.members) {
-    const id = memberAssemblyId(m);
-    memberCount.set(id, (memberCount.get(id) ?? 0) + 1);
-  }
+  const memberCount = new Map<string, number>(membersByAssembly.map((r) => [r.assemblyId, r.total]));
 
   const rollcallSessions = sessionRange(data.rollcalls.map((r) => r.session));
   const diet: DietCoverage[] = assemblies

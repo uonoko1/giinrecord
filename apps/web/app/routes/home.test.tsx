@@ -1,20 +1,29 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { render, screen, within } from "@testing-library/react";
 import { renderToString } from "react-dom/server";
 import { MemoryRouter } from "react-router";
 import { describe, expect, it } from "vitest";
 import Home, { meta as routeMeta } from "./home";
 import { DIET_ASSEMBLIES } from "../lib/data-contract";
-import { dataset } from "../test-fixtures/dataset";
+import { dataset, membersByAssembly } from "../test-fixtures/dataset";
+import type { MemberAssemblyCount } from "@seiji-kiroku/shared";
 
 const EVALUATIVE_WORDS = ["おすすめ", "ランキング", "一致率"];
 const CAMPAIGN_WORDS = ["応援", "守る", "守ろう", "ぜひ", "お願いします", "あなたの力", "みんなで"];
 
-function renderHome(data = dataset) {
+function renderHome(data = dataset, byAssembly: readonly MemberAssemblyCount[] = membersByAssembly) {
   return render(
     <MemoryRouter>
-      <Home data={data} />
+      <Home data={data} membersByAssembly={byAssembly} />
     </MemoryRouter>,
   );
+}
+
+/** 「N 参議院議員」の形で、規模の節に出ている人数を全部拾う */
+function figures() {
+  const section = screen.getByRole("region", { name: "このサイトにあるもの" });
+  return within(section).getAllByText(/議員$/).map((el) => `${el.previousElementSibling?.textContent} ${el.textContent}`);
 }
 
 describe("Home", () => {
@@ -116,35 +125,43 @@ describe("Home", () => {
   });
 
   it("規模に衆議院議員数を出し、衆院の注記の文言を保つ", () => {
-    const shugiin = { ...dataset.members[0], id: "h_000001", name: "衆 太郎", kana: "しゅう たろう", house: "shugiin" as const };
-    renderHome({ ...dataset, members: [...dataset.members, shugiin, { ...shugiin, id: "h_000002" }] });
-    const section = screen.getByRole("region", { name: "このサイトにあるもの" });
-    const figures = within(section).getAllByText(/議員$/).map((el) => `${el.previousElementSibling?.textContent} ${el.textContent}`);
-    expect(figures).toContain("3 参議院議員");
-    expect(figures).toContain("2 衆議院議員");
-    expect(section).toHaveTextContent("衆議院は個人の投票記録が公開されていないため、会派の態度として別に扱います");
+    renderHome(dataset, [...membersByAssembly, { assemblyId: "diet-shugiin", current: 2, total: 2 }]);
+    expect(figures()).toContain("3 参議院議員");
+    expect(figures()).toContain("2 衆議院議員");
+    expect(screen.getByRole("region", { name: "このサイトにあるもの" })).toHaveTextContent("衆議院は個人の投票記録が公開されていないため、会派の態度として別に扱います");
   });
 
-  // #351: 元職を足すと参院が 307 名になり、**定数248を超える**。読者は「参議院議員が307人いる」と読む。
-  // fixture に元職が1人も居なかったので、この分岐は検査されていなかった（Sprint 18 レトロの形）。
-  it("元職（current: false）は数えない。定数を超える人数を出さない", () => {
-    const former = { ...dataset.members[0], id: "m_former1", name: "元職 一郎", kana: "もとしょく いちろう", current: false };
-    const former2 = { ...dataset.members[0], id: "m_former2", name: "元職 二郎", kana: "もとしょく じろう", current: false };
-    renderHome({ ...dataset, members: [...dataset.members, former, former2] });
-    const section = screen.getByRole("region", { name: "このサイトにあるもの" });
-    const figures = within(section).getAllByText(/議員$/).map((el) => `${el.previousElementSibling?.textContent} ${el.textContent}`);
-    // 現職3名のまま（元職2名を足して 5 にしない）
-    expect(figures).toContain("3 参議院議員");
-    expect(figures).not.toContain("5 参議院議員");
+  /*
+   * #351: 元職を足すと参院が 307 名になり、**定数248を超える**。読者は「参議院議員が307人いる」と読む。
+   * #441 で数えるのは ETL（`members/by-assembly.json` の `current` と `total`）になったので、
+   * この画面の責任は「**どちらの列を読むか**」に変わった。current（現職）を読み、total（元職を含む）を読まない。
+   * fixture の diet-sangiin は current 3 / total 4 で、**わざと違う数**にしてある（同じ数だと見分けられない）。
+   */
+  it("現職（current）を出す。元職を含む total は出さない", () => {
+    renderHome(dataset, [{ assemblyId: "diet-sangiin", current: 3, total: 4 }]);
+    expect(figures()).toContain("3 参議院議員");
+    expect(figures()).not.toContain("4 参議院議員");
   });
 
-  it("current を持たない古いデータは現職として数える（/members の既定と同じ扱い）", () => {
-    const noFlag = { ...dataset.members[0], id: "m_noflag", name: "旗なし 三郎", kana: "はたなし さぶろう" };
-    delete (noFlag as { current?: boolean }).current;
-    renderHome({ ...dataset, members: [...dataset.members, noFlag] });
+  it("院を取り違えない（参院の数を衆院に出さない）", () => {
+    renderHome(dataset, [
+      { assemblyId: "diet-sangiin", current: 247, total: 307 },
+      { assemblyId: "diet-shugiin", current: 465, total: 465 },
+    ]);
+    expect(figures()).toContain("247 参議院議員");
+    expect(figures()).toContain("465 衆議院議員");
+  });
+
+  it("その議会の行が無ければ［集計中］（0 と書かない）", () => {
+    renderHome(dataset, [{ assemblyId: "diet-sangiin", current: 3, total: 4 }]);
     const section = screen.getByRole("region", { name: "このサイトにあるもの" });
-    const figures = within(section).getAllByText(/議員$/).map((el) => `${el.previousElementSibling?.textContent} ${el.textContent}`);
-    expect(figures).toContain("4 参議院議員");
+    expect(within(section).getByText("衆議院議員").previousElementSibling).toHaveTextContent("［集計中］");
+  });
+
+  it("地方議会の行は院の人数に混ぜない（#441）", () => {
+    renderHome(dataset, [...membersByAssembly, { assemblyId: "pref-04", current: 56, total: 56 }]);
+    expect(figures()).toContain("3 参議院議員");
+    expect(figures()).not.toContain("59 参議院議員");
   });
 
   it("規模に地方議会の数を出す（assemblies/index.json の national 以外。無ければ［集計中］）。議会一覧へのリンクがある（#158）", () => {
@@ -174,7 +191,7 @@ describe("Home", () => {
   });
 
   it("データが無くても落ちず、規模は［集計中］になる", () => {
-    renderHome({ meta: undefined, members: [], rollcalls: [] });
+    renderHome({ meta: undefined, rollcalls: [] }, []);
     expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "このサイトにあるもの" })).toHaveTextContent("［集計中］");
   });
@@ -204,5 +221,36 @@ describe("meta()", () => {
     expect(tags).toContainEqual({ tagName: "link", rel: "canonical", href: "/" });
     expect(tags).toContainEqual({ property: "og:type", content: "website" });
     expect(tags).toContainEqual({ name: "description", content: expect.stringContaining("評価はしません") });
+  });
+});
+
+/**
+ * Issue 441: `members/index.json`（gzip 40KB）を `dataset` から切り出した。
+ * **既定の経路＝本番が通る道**をここで通す（#411 / #408 の学び。全部 prop を渡すテストしか無いと、
+ * 既定が黙って 0 名になっても全部緑のまま）。
+ *
+ * **期待値は集計（by-assembly.json）から作らない。** 生の `members/index.json` を直に数える。
+ */
+describe("/ の既定（bundled）で議員数が出る（Issue 441）", () => {
+  const rawMembers: { house?: string; current?: boolean }[] = JSON.parse(
+    readFileSync(join(import.meta.dirname, "../../../../data/members/index.json"), "utf8"),
+  );
+  const rawCurrent = (house: string) => rawMembers.filter((m) => m.house === house && m.current !== false).length;
+
+  it("data も集計も渡さずに描くと、現職の人数が members/index.json を直に数えた値と一致する", () => {
+    render(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>,
+    );
+    const shown = (label: string) => {
+      const section = screen.getByRole("region", { name: "このサイトにあるもの" });
+      return Number((within(section).getByText(label).previousElementSibling?.textContent ?? "").replace(/,/g, ""));
+    };
+    // **現職だけ**（#351）。元職を含む total を出したら落ちる: 実データは参院が current 247 / total 307
+    expect(shown("参議院議員")).toBe(rawCurrent("sangiin"));
+    expect(shown("衆議院議員")).toBe(rawCurrent("shugiin"));
+    // 元職を足した数（定数248超え）を出していないことを名指しで固定する
+    expect(shown("参議院議員")).not.toBe(rawMembers.filter((m) => m.house === "sangiin").length);
   });
 });

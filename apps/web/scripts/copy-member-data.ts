@@ -28,11 +28,16 @@ function isEnoent(err: unknown): boolean {
 }
 
 let names: string[] = [];
+/*
+ * ここが集めるのは**議員 1 人ずつの JSON**（/compare が実行時に fetch する）。
+ * index.json（一覧）と by-assembly.json（#441 の集計）は議員のファイルではなく、
+ * どちらもビルド時にバンドルされるので配らない。
+ */
 /** `members/{id}/speeches.json`（#242）。ディレクトリを持つ議員だけ（発言 0 件の議員のファイルは無い） */
 let speechDirs: string[] = [];
 try {
   const entries = await readdir(src, { withFileTypes: true });
-  names = entries.filter((e) => e.isFile() && e.name.endsWith(".json") && e.name !== "index.json").map((e) => e.name).sort();
+  names = entries.filter((e) => e.isFile() && e.name.endsWith(".json") && e.name !== "index.json" && e.name !== "by-assembly.json").map((e) => e.name).sort();
   speechDirs = entries.filter((e) => e.isDirectory()).map((e) => e.name).sort();
 } catch (err) {
   if (!isEnoent(err)) throw err;

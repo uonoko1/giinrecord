@@ -159,6 +159,26 @@ export interface BillSessionCount {
   count: number;
 }
 
+/**
+ * Row of `data/members/by-assembly.json`（#441）: 議会ごとの議員の人数。`members/index.json` から機械的に導く。
+ * `/`・`/assemblies`・`/coverage` は「議会ごとに何人か」しか使わないのに全件（gzip 40KB）を読んでいたので、
+ * 人数だけの集計を別ファイルにした。行は `assemblyId` の昇順（決定的な並び）。
+ *
+ * **`current` と `total` の 2 つを持つ理由**（この違いは意図的。片方だけにしないこと）:
+ * - `current`: `current !== false` の行数。「今この議会にいる人数」。`/` と `/assemblies` はこちらを出す
+ *   （元職を足すと参議院が 307 名になり**定数248を超える**。#351/#355）。
+ * - `total`: その議会の全行数（元職を含む）。「何を収録しているか」なので `/coverage` はこちらを出す。
+ *
+ * 0 人の議会の行は書かない（行が無い＝0 人）。
+ */
+export interface MemberAssemblyCount {
+  assemblyId: AssemblyId;
+  /** `current !== false` の行数（現職）。0 以上（全員元職なら 0 になりうる） */
+  current: number;
+  /** その議会の `members/index.json` の行数（元職を含む）。1 以上 */
+  total: number;
+}
+
 export type VoteValue = "賛成" | "反対" | "投票なし";
 
 /**

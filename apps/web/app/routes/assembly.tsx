@@ -5,6 +5,7 @@ import { SiteFooter } from "../components/SiteFooter";
 import { bundledSessions, disclosureFor, findAssembly, isDietAssemblyId, VOTE_DISCLOSURE } from "../lib/assemblies";
 import { type AssemblySession, DIET_ASSEMBLIES } from "../lib/data-contract";
 import { type Dataset, dataset as bundled, type MemberSummary } from "../lib/dataset";
+import { members as bundledMembers } from "../lib/members";
 import { formatDate, formatDateTime } from "../lib/format";
 import { memberAssemblyId } from "../lib/member-search";
 import { seoMeta } from "../lib/seo";
@@ -31,17 +32,21 @@ export function meta({ location, params }: MetaArgs) {
  * /assemblies/{id}（#158）。データは index.json をビルド時にバンドルし、URL の id で引く（loader 無し）。
  * 国会は既存の一覧（/members?assembly=）と採決（/rollcalls）へ送り、地方議会はここで議員と会期を並べる。
  */
-export default function AssemblyRoute({ data = bundled, sessions }: { data?: Dataset; sessions?: ReadonlyMap<string, AssemblySession[]> }) {
+export default function AssemblyRoute({ data = bundled, sessions, allMembers }: { data?: Dataset; sessions?: ReadonlyMap<string, AssemblySession[]>; allMembers?: readonly MemberSummary[] }) {
   const { id = "" } = useParams();
-  return <AssemblyPage id={id} data={data} sessions={sessions} />;
+  return <AssemblyPage id={id} data={data} sessions={sessions} allMembers={allMembers} />;
 }
 
 const collator = new Intl.Collator("ja");
 
-export function AssemblyPage({ id, data = bundled, sessions = bundledSessions() }: { id: string; data?: Dataset; sessions?: ReadonlyMap<string, AssemblySession[]> }) {
+/**
+ * Issue 441: 名簿の全件（`members/index.json`）は `Dataset` から出して **lib/members.ts** に分けた。
+ * **この画面は従来どおり全件を読む**——議員 1 人ずつの氏名・ふりがな・会派・選挙区を並べるので。
+ */
+export function AssemblyPage({ id, data = bundled, sessions = bundledSessions(), allMembers = bundledMembers }: { id: string; data?: Dataset; sessions?: ReadonlyMap<string, AssemblySession[]>; allMembers?: readonly MemberSummary[] }) {
   const assembly = findAssembly(data.assemblies ?? DIET_ASSEMBLIES, id);
   if (!assembly) return <NotFound />;
-  const members = data.members.filter((m) => memberAssemblyId(m) === assembly.id);
+  const members = allMembers.filter((m) => memberAssemblyId(m) === assembly.id);
   // 見出しの人数は**現職だけ**（#355）。議会名のすぐ下に出るので「その議会の議員数」として読まれ、
   // 元職を足すと参院が 307 名 = 定数248超えになる。
   // 一覧そのものは元職も「元職」の印つきで載せる（収録していることを示すため。設計どおり）。

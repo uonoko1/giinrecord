@@ -8,7 +8,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import type { Assembly } from "@seiji-kiroku/shared";
-import type { SangiinVoteLinkStats, ShugiinBillNameStats, UnmatchedSpeechStats } from "./coverage";
+import type { LinkedRecordCounts, SangiinVoteLinkStats, ShugiinBillNameStats, UnmatchedSpeechStats } from "./coverage";
 import { DIET_ASSEMBLIES, type AssemblySession, type DatasetMeta, type LocalAssemblyMeta, type LocalRollCallSubject, type MemberDetail, type MemberSpeeches, type MemberSummary, type RollCall, type RollCallSummary } from "./data-contract";
 
 /** `data/` at the repo root; override with SEIJI_DATA_DIR. cwd is apps/web during build. */
@@ -115,6 +115,32 @@ export async function readAssemblySessions(dataDir: string, assemblyId: string):
 export async function readLocalRollCallIndex(dataDir: string, assemblyId: string): Promise<LocalRollCallSubject[] | null> {
   if (!SAFE_ID.test(assemblyId)) return null;
   return readJson<LocalRollCallSubject[]>(path.join(dataDir, "assemblies", assemblyId, "rollcalls", "index.json"));
+}
+
+/**
+ * 院ごとの「議員ページに実際に出ている件数」（#251）を `members/index.json` の counts から数える（#441）。
+ *
+ * 数えるのは**ビルド時の Node 側**で、ブラウザに渡るのは合計 2 組だけ。`readSangiinVoteLinkStats` /
+ * `readShugiinBillNameStats` と同じ形にしてあるのは、この 4 つの数のためだけに名簿全件（gzip 40KB）を
+ * ブラウザへ送らないため（#441 の目的そのもの）。議会ごとの人数は別に `members/by-assembly.json`
+ * （ETL の集計）から読む。
+ *
+ * `members/index.json` が無ければ両院とも null（無い事実を作らない）。
+ *
+ * `coverage.ts` の `linkedRecordCounts` を呼ばずにここで数えるのは、**このファイルが tsx で直に走る
+ * ビルドスクリプト（sitemap / build-archive / …）から読まれる**から。`coverage.ts` は
+ * `assemblies.ts` 経由で `import.meta.glob`（Vite 専用）に触るので、値として import すると
+ * `import.meta.glob is not a function` でビルドが落ちる。型だけの import に留める。
+ */
+export async function readLinkedRecordCounts(dataDir: string): Promise<{ sangiin: LinkedRecordCounts | null; shugiin: LinkedRecordCounts | null }> {
+  const index = await readJson<MemberSummary[]>(path.join(dataDir, "members", "index.json"));
+  const forHouse = (house: string): LinkedRecordCounts | null => {
+    const rows = (index ?? []).filter((m) => m.house === house);
+    if (rows.length === 0) return null; // その院の議員が 0 人なら null（無い事実を作らない）
+    const sum = (pick: (c: MemberSummary["counts"]) => number | undefined) => rows.reduce((t, m) => t + (pick(m.counts) ?? 0), 0);
+    return { rollcalls: sum((c) => c.rollcalls), bills: sum((c) => c.bills), speeches: sum((c) => c.speeches), questions: sum((c) => c.questions) };
+  };
+  return { sangiin: forHouse("sangiin"), shugiin: forHouse("shugiin") };
 }
 
 export async function readMeta(dataDir: string): Promise<DatasetMeta | null> {

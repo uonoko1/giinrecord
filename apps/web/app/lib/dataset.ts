@@ -32,9 +32,15 @@ export interface Dataset {
   meta?: DatasetMeta;
   /** `assemblies/index.json`（#156）。無い（古いデータ）なら国会の2議会（DIET_ASSEMBLIES）として扱う */
   assemblies?: Assembly[];
-  members: MemberSummary[];
   rollcalls: RollCallSummary[];
   /*
+   * Issue 441: `members` も**この型に無い**（#408 の `bills` と同じ理由）。名簿は全件で
+   * 1,057 行 / raw 259KB / gzip 40KB あり、`dataset` に入れると 4 つが 1 チャンクにまとまって
+   * **全ページが 40KB を読む**。実際に全件が要るのは `/members` と `/assemblies/{id}` だけで、
+   * `/`・`/assemblies`・`/coverage` が使うのは「議会ごとに何人か」だけだった（**lib/members-by-assembly.ts**）。
+   * 全件が要る画面は **lib/members.ts** から読む。
+   * `bills` と同じく optional で残さない: `dataset.members ?? []` が**型エラーにならず静かに 0 名**になるため。
+   *
    * Issue 408: `bills` は**この型に無い**。`dataset` に入れると5つが1チャンクにまとまり、
    * 全ページが 60KB を読むため（使うのは /coverage だけ）。**lib/bills.ts を見ること。**
    * 型に optional で残すと `dataset.bills ?? []` が**型エラーにならず静かに 0 件**になるので、
@@ -45,7 +51,6 @@ export interface Dataset {
 /** `data/` is bundled at build time; a missing file simply yields an empty dataset. */
 const metaFiles = import.meta.glob<DatasetMeta>("../../../../data/meta.json", { eager: true, import: "default" });
 const assemblyFiles = import.meta.glob<Assembly[]>("../../../../data/assemblies/index.json", { eager: true, import: "default" });
-const memberFiles = import.meta.glob<MemberSummary[]>("../../../../data/members/index.json", { eager: true, import: "default" });
 const rollcallFiles = import.meta.glob<RollCallSummary[]>("../../../../data/rollcalls/index.json", { eager: true, import: "default" });
 function first<T>(files: Record<string, T>): T | undefined {
   return Object.values(files)[0];
@@ -54,7 +59,6 @@ function first<T>(files: Record<string, T>): T | undefined {
 export const dataset: Dataset = {
   meta: first(metaFiles),
   assemblies: first(assemblyFiles),
-  members: first(memberFiles) ?? [],
   rollcalls: first(rollcallFiles) ?? [],
   // Issue 408: bills は **ここに入れない**。いちばん大きく（gzip 60KB）、使うのは /coverage だけ
   // なのに、この5つは1つのチャンクにまとまるので全ページが読むことになる。lib/bills.ts を見ること。

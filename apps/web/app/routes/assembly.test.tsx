@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { render, screen, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { describe, expect, it } from "vitest";
@@ -7,18 +9,20 @@ import type { Dataset, MemberSummary } from "../lib/dataset";
 import assembliesFixture from "../test-fixtures/assemblies/index.json";
 import localMembers from "../test-fixtures/assemblies/members-index.json";
 import sessionsFixture from "../test-fixtures/assemblies/sessions.json";
-import { dataset } from "../test-fixtures/dataset";
+import { dataset, members } from "../test-fixtures/dataset";
 import AssemblyRoute, { AssemblyPage, meta as routeMeta, pageTitle } from "./assembly";
 
 const EVALUATIVE_WORDS = ["おすすめ", "ランキング", "一致率", "遅れ", "不十分", "優れ"];
 const assemblies = assembliesFixture as Assembly[];
-const withLocal: Dataset = { ...dataset, assemblies, members: [...dataset.members, ...(localMembers as MemberSummary[])] };
+const withLocal: Dataset = { ...dataset, assemblies };
+// #441: この画面は**全件を読む**（議員 1 人ずつを並べるので）。名簿は Dataset ではなく別の prop で渡す
+const allMembers: MemberSummary[] = [...members, ...(localMembers as MemberSummary[])];
 const sessions = new Map<string, AssemblySession[]>([["pref-04", sessionsFixture as AssemblySession[]]]);
 
-function renderPage(id: string, data: Dataset = withLocal, s = sessions) {
+function renderPage(id: string, data: Dataset = withLocal, s = sessions, m: readonly MemberSummary[] = allMembers) {
   return render(
     <MemoryRouter>
-      <AssemblyPage id={id} data={data} sessions={s} />
+      <AssemblyPage id={id} data={data} sessions={s} allMembers={m} />
     </MemoryRouter>,
   );
 }
@@ -103,7 +107,7 @@ describe("/assemblies/{id} 無い id", () => {
     render(
       <MemoryRouter initialEntries={["/assemblies/pref-04"]}>
         <Routes>
-          <Route path="/assemblies/:id" element={<AssemblyRoute data={withLocal} sessions={sessions} />} />
+          <Route path="/assemblies/:id" element={<AssemblyRoute data={withLocal} sessions={sessions} allMembers={allMembers} />} />
         </Routes>
       </MemoryRouter>,
     );
@@ -120,5 +124,26 @@ describe("meta", () => {
     const tags = routeMeta({ location: { pathname: "/assemblies/diet-sangiin" }, params: { id: "diet-sangiin" } } as unknown as Parameters<typeof routeMeta>[0]);
     expect(tags).toContainEqual({ title: "参議院 ・ 議員レコード" });
     expect(tags).toContainEqual({ tagName: "link", rel: "canonical", href: "/assemblies/diet-sangiin" });
+  });
+});
+
+/**
+ * Issue 441: 名簿の全件は `dataset` から **lib/members.ts** に切り出した。
+ * **この画面も減らさない。** 上のテストは全部 `allMembers` を明示的に渡すので、
+ * 既定の経路を誰も通っていなかった（`bundledMembers` を空にする変異が全部緑だった）。
+ */
+describe("/assemblies/{id} の既定（bundled）で議員が並ぶ（Issue 441）", () => {
+  const rawMembers: { house?: string; assemblyId?: string }[] = JSON.parse(readFileSync(join(import.meta.dirname, "../../../../data/members/index.json"), "utf8"));
+
+  it("allMembers を渡さずに描くと、その議会の議員数が members/index.json を直に数えた値と一致する", () => {
+    render(
+      <MemoryRouter>
+        <AssemblyPage id="pref-04" />
+      </MemoryRouter>,
+    );
+    // **議会を取り違えれば別の議会の人数が出る**（#435）ので、pref-04 の行だけを数えた値と突き合わせる
+    const expected = rawMembers.filter((m) => (m.assemblyId ?? `diet-${m.house}`) === "pref-04").length;
+    expect(screen.getAllByRole("listitem").length).toBeGreaterThanOrEqual(expected);
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("宮城県議会");
   });
 });

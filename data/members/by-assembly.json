@@ -1,0 +1,47 @@
+[
+ {
+  "assemblyId": "diet-sangiin",
+  "current": 247,
+  "total": 307
+ },
+ {
+  "assemblyId": "diet-shugiin",
+  "current": 465,
+  "total": 465
+ },
+ {
+  "assemblyId": "pref-04",
+  "current": 56,
+  "total": 56
+ },
+ {
+  "assemblyId": "pref-24",
+  "current": 47,
+  "total": 47
+ },
+ {
+  "assemblyId": "pref-29",
+  "current": 40,
+  "total": 40
+ },
+ {
+  "assemblyId": "pref-31",
+  "current": 35,
+  "total": 35
+ },
+ {
+  "assemblyId": "pref-32",
+  "current": 35,
+  "total": 35
+ },
+ {
+  "assemblyId": "pref-36",
+  "current": 36,
+  "total": 36
+ },
+ {
+  "assemblyId": "pref-39",
+  "current": 36,
+  "total": 36
+ }
+]

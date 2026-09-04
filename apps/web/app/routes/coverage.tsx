@@ -3,11 +3,12 @@ import { CoverBrand } from "../components/CoverBrand";
 import { SiteFooter } from "../components/SiteFooter";
 import { assemblyPath, bundledSessions } from "../lib/assemblies";
 import { billsBySession as bundledBillsBySession } from "../lib/bills";
-import { buildCoverage, type Coverage, type DietCoverage, formatLocalSessionRange, formatSessionRange, hasSessionGaps, linkedRecordCounts, type LocalCoverage, rosterlessSessions, rosterScope, sangiinUnlinkedVotes, type SangiinVoteLinkStats, type SessionRange, shugiinBillNameCoverage, type ShugiinBillNameStats, shugiinQuestionCoverage, speechCoverage, type UnmatchedSpeechStats, unmatchedSpeechCoverage } from "../lib/coverage";
-import type { BillSessionCount } from "@seiji-kiroku/shared";
+import { buildCoverage, type Coverage, type DietCoverage, formatLocalSessionRange, formatSessionRange, hasSessionGaps, type LinkedRecordCounts, type LocalCoverage, rosterlessSessions, rosterScope, sangiinUnlinkedVotes, type SangiinVoteLinkStats, type SessionRange, shugiinBillNameCoverage, type ShugiinBillNameStats, shugiinQuestionCoverage, speechCoverage, type UnmatchedSpeechStats, unmatchedSpeechCoverage } from "../lib/coverage";
+import type { BillSessionCount, MemberAssemblyCount } from "@seiji-kiroku/shared";
 import type { AssemblySession } from "../lib/data-contract";
-import { defaultDataDir, readSangiinVoteLinkStats, readShugiinBillNameStats, readUnmatchedSpeechStats } from "../lib/data-files";
+import { defaultDataDir, readLinkedRecordCounts, readSangiinVoteLinkStats, readShugiinBillNameStats, readUnmatchedSpeechStats } from "../lib/data-files";
 import { type Dataset, dataset as bundled } from "../lib/dataset";
+import { membersByAssembly as bundledMembersByAssembly } from "../lib/members-by-assembly";
 import { formatDate, formatDateTime } from "../lib/format";
 import { seoMeta } from "../lib/seo";
 import "../styles/pages.css";
@@ -20,7 +21,13 @@ const DESCRIPTION = "このサイトに入っている議会・回次・会期�
  * 氏名（#251）は `bills/index.json` に無く、議案 1 件ずつの JSON にしかない。全部をブラウザに送らずに数えるため、
  * ビルド時に Node で数えた結果だけを loader で渡す（/coverage は prerender.ts の STATIC_PATHS にあるので loader を置ける）。 */
 
-export type CoverageLoaderData = { shugiinBillNames: ShugiinBillNameStats | null; sangiinVotes: SangiinVoteLinkStats | null; unmatchedSpeeches: UnmatchedSpeechStats | null };
+export type CoverageLoaderData = {
+  shugiinBillNames: ShugiinBillNameStats | null;
+  sangiinVotes: SangiinVoteLinkStats | null;
+  unmatchedSpeeches: UnmatchedSpeechStats | null;
+  /** 院ごとの「議員ページに実際に出ている件数」（#251）。#441 でここ（Node 側）に移した */
+  linked: { sangiin: LinkedRecordCounts | null; shugiin: LinkedRecordCounts | null };
+};
 
 export async function loader(): Promise<CoverageLoaderData> {
   const dataDir = defaultDataDir();
@@ -28,6 +35,8 @@ export async function loader(): Promise<CoverageLoaderData> {
     shugiinBillNames: await readShugiinBillNameStats(dataDir),
     sangiinVotes: await readSangiinVoteLinkStats(dataDir),
     unmatchedSpeeches: await readUnmatchedSpeechStats(dataDir),
+    // #441: 名簿全件（gzip 40KB）をブラウザに送らずに数えるため、合計だけをビルド時に作る
+    linked: await readLinkedRecordCounts(dataDir),
   };
 }
 
@@ -40,8 +49,8 @@ const n = (v: number) => v.toLocaleString("ja-JP");
 const KIND_LABEL = { national: "国会", prefectural: "都道府県議会", municipal: "政令指定都市議会" } as const;
 
 export default function CoverageRoute() {
-  const { shugiinBillNames, sangiinVotes, unmatchedSpeeches } = useLoaderData<typeof loader>();
-  return <CoveragePage shugiinBillNames={shugiinBillNames} sangiinVotes={sangiinVotes} unmatchedSpeeches={unmatchedSpeeches} />;
+  const { shugiinBillNames, sangiinVotes, unmatchedSpeeches, linked } = useLoaderData<typeof loader>();
+  return <CoveragePage shugiinBillNames={shugiinBillNames} sangiinVotes={sangiinVotes} unmatchedSpeeches={unmatchedSpeeches} linked={linked} />;
 }
 
 /**
@@ -55,18 +64,24 @@ export function CoveragePage({
   // Issue 411: 全件（gzip 55KB）ではなく院・回次ごとの件数（gzip 231B）だけを読む。
   // 差し替えられるように prop にしておく（テストが件数を作れる）
   billsBySession = bundledBillsBySession,
+  // Issue 441: 議員も全件（gzip 40KB）ではなく議会ごとの人数（gzip 187B）だけを読む。
+  // ここが出すのは **total**（元職を含む）——収録範囲は「何を収録しているか」なので元職も数える
+  membersByAssembly = bundledMembersByAssembly,
   shugiinBillNames = null,
   sangiinVotes = null,
   unmatchedSpeeches = null,
+  linked = { sangiin: null, shugiin: null },
 }: {
   data?: Dataset;
   sessions?: ReadonlyMap<string, AssemblySession[]>;
   billsBySession?: readonly BillSessionCount[];
+  membersByAssembly?: readonly MemberAssemblyCount[];
   shugiinBillNames?: ShugiinBillNameStats | null;
   sangiinVotes?: SangiinVoteLinkStats | null;
   unmatchedSpeeches?: UnmatchedSpeechStats | null;
+  linked?: { sangiin: LinkedRecordCounts | null; shugiin: LinkedRecordCounts | null };
 }) {
-  const coverage = buildCoverage(data, sessions, billsBySession);
+  const coverage = buildCoverage(data, sessions, billsBySession, membersByAssembly);
   return (
     <>
       <main className="page assemblies">
@@ -81,9 +96,9 @@ export function CoveragePage({
         <DietSection diet={coverage.diet} metaSessions={coverage.metaSessions} />
         <LocalSection local={coverage.local} />
 
-        <SpeechSection data={data} unmatchedSpeeches={unmatchedSpeeches} />
+        <SpeechSection data={data} unmatchedSpeeches={unmatchedSpeeches} linked={linked} />
         <RosterlessSection meta={data.meta} votes={sangiinVotes} />
-        <ShugiinRosterSection data={data} billNames={shugiinBillNames} />
+        <ShugiinRosterSection data={data} billNames={shugiinBillNames} linked={linked.shugiin} />
 
         <section className="section" aria-labelledby="coverage-not-recorded-heading">
           <h2 id="coverage-not-recorded-heading" className="section__title">
@@ -167,10 +182,9 @@ function SessionRangeCell({ range, unit }: { range: SessionRange | null; unit: s
  *    counts の合計なので、0 件なら 0 件と書く（「第N回のぶんだけ出る」のような代理値の主張はしない。#259 レビュー）
  * 数値はすべてデータを数えた値。評価・解釈は書かない。
  */
-function ShugiinRosterSection({ data, billNames }: { data: Dataset; billNames: ShugiinBillNameStats | null }) {
+function ShugiinRosterSection({ data, billNames, linked }: { data: Dataset; billNames: ShugiinBillNameStats | null; linked: LinkedRecordCounts | null }) {
   const scope = rosterScope(data.meta);
   const bills = shugiinBillNameCoverage(billNames);
-  const linked = linkedRecordCounts(data.members, "shugiin");
   const questions = shugiinQuestionCoverage(data.meta);
   const questionsFetched = formatSessionRange(questions?.fetched ?? null);
   const sangiinRoster = formatSessionRange(scope.sangiin);
@@ -289,12 +303,11 @@ function ShugiinRosterSection({ data, billNames }: { data: Dataset; billNames: S
  * それは名簿の範囲の話で、すぐ下の 2 節（RosterlessSection / ShugiinRosterSection）が既に書いている。
  * ここで回次を書くと同じことを 2 か所で言うことになるので、**そちらへ案内するだけ**にする。
  */
-function SpeechSection({ data, unmatchedSpeeches }: { data: Dataset; unmatchedSpeeches: UnmatchedSpeechStats | null }) {
+function SpeechSection({ data, unmatchedSpeeches, linked }: { data: Dataset; unmatchedSpeeches: UnmatchedSpeechStats | null; linked: { sangiin: LinkedRecordCounts | null; shugiin: LinkedRecordCounts | null } }) {
   const scopes = speechCoverage(data.meta);
   const unmatched = unmatchedSpeechCoverage(unmatchedSpeeches);
   if (scopes.length === 0) return null;
-  const sangiin = linkedRecordCounts(data.members, "sangiin");
-  const shugiin = linkedRecordCounts(data.members, "shugiin");
+  const { sangiin, shugiin } = linked;
   const committees = scopes.filter((c) => c.committees).map((c) => (c.house === "sangiin" ? "参議院" : "衆議院"));
   const plenaryOnly = scopes.filter((c) => !c.committees).map((c) => (c.house === "sangiin" ? "参議院" : "衆議院"));
   return (

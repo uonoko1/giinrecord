@@ -1,7 +1,7 @@
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type {
-  Assembly, AssemblySession, LocalAssemblyMeta, LocalMember, LocalMemberDetail, LocalRollCall, LocalRollCallSummary, LocalUnmatchedName, LocalVoteEntry, MemberSummary,
+  Assembly, AssemblyId, AssemblySession, LocalAssemblyMeta, LocalMember, LocalMemberDetail, LocalRollCall, LocalRollCallSummary, LocalUnmatchedName, LocalVoteEntry, MemberAssemblyCount, MemberSummary,
 } from "@seiji-kiroku/shared";
 import { stableJson } from "./json.ts";
 import { MIYAGI_ASSEMBLY } from "./sources/local/miyagi/site.ts";
@@ -181,6 +181,29 @@ export function mergeMemberIndex(national: readonly (MemberSummary | LocalMember
 }
 
 /**
+ * `members/by-assembly.json`（#441）: `members/index.json` を議会ごとに数えた行。assemblyId 昇順（決定的な並び）。
+ * 0 人の議会の行は作らない（行が無い＝0 人）。
+ *
+ * **`current` と `total` の 2 つを出す**のは、画面によって数えるものが違うから（どちらも事実）:
+ * - `current`（`current !== false` の行数）は「今この議会にいる人数」。`/` と `/assemblies` が出す。
+ *   元職を足すと参議院が 307 名になり**定数248を超える**（#351/#355）。
+ * - `total`（全行数）は「何を収録しているか」。`/coverage` が出す（`buildCoverage` のコメント）。
+ *
+ * assemblyId が無い古い行は `diet-{house}` として数える（Web の `memberAssemblyId` と同じ規則）。
+ */
+export function membersByAssembly(members: readonly { house?: string; assemblyId?: string; current?: boolean }[]): MemberAssemblyCount[] {
+  const rows = new Map<string, MemberAssemblyCount>();
+  for (const m of members) {
+    const assemblyId = (m.assemblyId ?? `diet-${String(m.house)}`) as AssemblyId;
+    const row = rows.get(assemblyId) ?? { assemblyId, current: 0, total: 0 };
+    row.total++;
+    if (m.current !== false) row.current++;
+    rows.set(assemblyId, row);
+  }
+  return [...rows.values()].sort((a, b) => (a.assemblyId < b.assemblyId ? -1 : a.assemblyId > b.assemblyId ? 1 : 0));
+}
+
+/**
  * 書き込み先は data/assemblies/{assemblyId}/ と、members/ のうち自分の議会の議員。assemblies/index.json・members/index.json は自分の行を入れ替える。
  * index.json にまだ国会の 2 行が無ければ（#156 以降の日次 ETL が一度も走っていない）`national` で補う（Web が国会の議員を引けなくならないように）。
  */
@@ -205,7 +228,11 @@ export async function writeLocalAssembly(dir: string, ds: LocalAssemblyDataset, 
     if (m.assemblyId === ds.assembly.id && !keep.has(m.id)) await rm(join(dir, "members", `${m.id}.json`), { force: true });
   }
   const others = existingMembers.filter((m) => m.assemblyId !== ds.assembly.id);
-  await put(join(dir, "members", "index.json"), mergeMemberIndex(others, [...others, ...ds.index]));
+  const memberIndex = mergeMemberIndex(others, [...others, ...ds.index]);
+  await put(join(dir, "members", "index.json"), memberIndex);
+  // #441: members/index.json を書いた側が集計も書く。片方だけ更新すると /・/assemblies・/coverage が
+  // 古い人数を出す（validateDataset が食い違いで止めるが、そこまで行かせない）
+  await put(join(dir, "members", "by-assembly.json"), membersByAssembly(memberIndex));
   for (const d of ds.details) await put(join(dir, "members", `${d.id}.json`), d);
 
   const existing = await readAssemblies(dir);

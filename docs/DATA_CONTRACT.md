@@ -141,6 +141,11 @@ interface AssemblySession { id: string; label: string; date: string; rollcalls: 
 - `Σ groups[].size === votes.length`（会派人数と個人票の件数は一致する）。
 - `MemberSummary.group` は会派の正式名称（投票結果ページと同じ表記。名簿の略称「自民」「い党」等は ETL が解決する）。解決できなかった略称は原文のまま入り `unmatched-groups.json` に載る。
 - `MemberSummary.current` は最新回次（`meta.sessions` の最大）の名簿に載っているか。辞職・任期満了・補選で入れ替わった議員も `false` のまま残り、票の事実は消えない。Web の `/members` は既定で現職のみを出し、トグルで元職も出す。
+- **`members/by-assembly.json`（#441）**: `members/index.json` を議会ごとに数えた行（`{ assemblyId, current, total }`）。`assemblyId` 昇順で、**0 人の議会の行は書かない**（行が無い＝0 人）。`assemblyId` の無い古い行は `diet-{house}` として数える。
+  `current` は `current !== false` の行数（現職）、`total` はその議会の全行数（**元職を含む**）。**2 つある理由**は画面で数えるものが違うから: `/` と `/assemblies` は「今この議会にいる人数」なので `current`（元職を足すと参議院が 307 名になり**定数248を超える**。#351/#355）、`/coverage` は「何を収録しているか」なので `total`。この違いは意図的で、どちらも事実。
+  `/`・`/assemblies`・`/coverage` は議員について「議会ごとに何人か」しか使わないのに `members/index.json` 全件（1,057 行 / raw 259KB / gzip 40KB）を読んでいたので、この集計（raw 602B / gzip 187B）だけを読むようにした。`members/index.json` は `/members` の一覧と `/assemblies/{id}` で使うので残る（**あちらは全件が要る**）。
+  書くのは `members/index.json` を書く側（国会の日次 ETL の `writeDataset` と地方 ETL の `writeLocalAssembly`）の両方。
+  不変条件（`validateDataset`）: **`members/index.json` を数え直した結果と完全に一致すること**、および**ファイルが存在すること**。`stableJson` どうしの比較なので、**議会間で人数を入れ替えても（合計が同じでも）違反になる**（#435 と同じ穴を作らない）。食い違えば 3 ページが違う人数を出すので違反にする（「記録が出ない」より重い、利用者から検出できない虚偽）。
 - `Member.terms` は回次ごとの名簿の (会派, 選挙区, 任期満了) を新しい順に並べ、隣接する回次で同じなら1つに畳む（`sessionFrom`〜`sessionTo`）。氏名・かなは最新回次の表記。
 - 採決時点の会派は回次で引く（`groupAt(member, session)`）。名簿は会期後のスナップショットなので、第 N 回の採決には第 N 回の名簿の term、無ければ（会期中の辞職・任期満了）手元で最も新しい過去の回次の term を使う。後の回次の名簿しか無ければ「不明」とし、会派移動の時期を推定しない。
 - 名寄せは「氏名＋採決時点の会派」。氏名で1人に絞れるときは会派が食い違っても紐づけるが、投票結果ページの会派がその議員のどの回次の名簿の会派（略称・旧称を含む）とも一致しなければ `group-mismatch.json` に載る（`voteGroup` は投票ページの原文、`rosterGroup` は採決時点の名簿の会派。採決時点の名簿が無ければ手元の全会派を `/` で連結）。同姓同名は採決時点の会派で分け、分けられなければ `unmatched.json` に載る（別の回次の会派では推定しない）。`memberId` は `members/index.json` に、`rollCallId` は `rollcalls/index.json` に存在する。

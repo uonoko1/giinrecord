@@ -4,10 +4,10 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync, rmSync
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import iconv from "iconv-lite";
-import type { Assembly, Bill, BillSessionCount, BillSummary, MemberSummary, RollCall, RollCallSummary, Speech } from "@seiji-kiroku/shared";
+import type { Assembly, Bill, BillSessionCount, BillSummary, MemberAssemblyCount, MemberSummary, RollCall, RollCallSummary, Speech } from "@seiji-kiroku/shared";
 import { buildDataset } from "../src/aggregate.ts";
 import type { DatasetMeta } from "@seiji-kiroku/shared";
-import { DIET_ASSEMBLY_IDS, billsBySession, dietAssemblies, readSessionsOnDisk, resolveSessions, writeDataset, validateDataset, type Dataset } from "../src/dataset.ts";
+import { DIET_ASSEMBLY_IDS, billsBySession, dietAssemblies, membersByAssembly, readSessionsOnDisk, resolveSessions, writeDataset, validateDataset, type Dataset } from "../src/dataset.ts";
 import { stableJson } from "../src/json.ts";
 import { matchVotes } from "../src/match-votes.ts";
 import { parseRollCall } from "../src/sources/sangiin-votes.ts";
@@ -694,6 +694,95 @@ describe("writeDataset / validateDataset: docs/DATA_CONTRACT.md の不変条件"
     await writeDataset(dir, { ...realDataset(), bills: [] });
     assert.equal(readFileSync(join(dir, "bills/by-session.json"), "utf-8"), "[]\n");
     assert.deepEqual(await validateDataset(dir), []);
+    cleanup();
+  });
+
+  /*
+   * #441: /・/assemblies・/coverage は「議会ごとに何人か」しか使わないのに members/index.json 全件
+   * （1,057 行・gzip 40KB）を読んでいた。ETL が (assemblyId, current, total) の集計を
+   * members/by-assembly.json に書き、3 ページはそれだけを読む。
+   * **集計が index.json から機械的に導けること**をここで固定する。期待値は membersByAssembly を通さず、
+   * 書かれた index.json をテスト側で素朴に数えて作る（同じ関数で期待値を作ると、関数の誤りが両側に出て検出できない）。
+   */
+  test("members/by-assembly.json: 議会ごとの人数を書き、members/index.json をそのまま数えた結果と一致する（#441）", () => {
+    const index = readJson<MemberSummary[]>(dir, "members/index.json");
+    const expected = new Map<string, { current: number; total: number }>();
+    for (const m of index) {
+      const id = m.assemblyId ?? `diet-${m.house}`;
+      const row = expected.get(id) ?? { current: 0, total: 0 };
+      row.total++;
+      if (m.current !== false) row.current++;
+      expected.set(id, row);
+    }
+    const rows = readJson<MemberAssemblyCount[]>(dir, "members/by-assembly.json");
+    assert.deepEqual(new Map(rows.map((r) => [r.assemblyId, { current: r.current, total: r.total }])), expected);
+    // total の合計は index.json の行数（1 人も取りこぼさない）
+    assert.equal(rows.reduce((t, r) => t + r.total, 0), index.length);
+    // 実フィクスチャ（参院 第221回 名簿 247 人。元職なし）
+    assert.deepEqual(rows, [{ assemblyId: "diet-sangiin", current: 247, total: 247 }]);
+    const text = readFileSync(join(dir, "members/by-assembly.json"), "utf-8");
+    assert.equal(text, stableJson(JSON.parse(text)));
+    cleanup();
+  });
+
+  test("membersByAssembly: 議会ごとに数え、current は current !== false・total は全行。assemblyId 昇順で、0 人の行は作らない（#441）", () => {
+    const m = (assemblyId: string, current?: boolean) => ({ assemblyId, house: "sangiin", ...(current === undefined ? {} : { current }) });
+    assert.deepEqual(
+      membersByAssembly([m("pref-04"), m("diet-sangiin"), m("diet-sangiin", false), m("diet-shugiin", true), m("pref-04", false), m("diet-sangiin", true)]),
+      [
+        { assemblyId: "diet-sangiin", current: 2, total: 3 },
+        { assemblyId: "diet-shugiin", current: 1, total: 1 },
+        { assemblyId: "pref-04", current: 1, total: 2 },
+      ],
+    );
+    assert.deepEqual(membersByAssembly([]), []);
+    // assemblyId が無い古い行は diet-{house}（Web の memberAssemblyId と同じ規則）
+    assert.deepEqual(membersByAssembly([{ house: "shugiin" }]), [{ assemblyId: "diet-shugiin", current: 1, total: 1 }]);
+  });
+
+  test("members/by-assembly.json が無ければ違反（無いと /・/assemblies・/coverage が黙って 0 名になる。#441）", async () => {
+    rmSync(join(dir, "members/by-assembly.json"));
+    assert.match((await validateDataset(dir)).join("\n"), /members\/by-assembly\.json: missing/);
+    cleanup();
+  });
+
+  test("members/by-assembly.json の人数が index.json と食い違えば違反（合計が変わらない議会間の入れ替えも。#441/#435）", async () => {
+    // 議会が 1 つだけのフィクスチャでは「入れ替え」が作れないので、地方議会の行を足した index.json で試す。
+    // 地方の行は house を持たない（LocalMember）ので、集計側の diet-{house} 補完には落ちない
+    const original = readJson<MemberSummary[]>(dir, "members/index.json");
+    const local = (id: string, assemblyId: string, current: boolean) => ({
+      id, assemblyId, name: `テスト ${id}`, kana: "てすと", group: "会派", district: "選挙区",
+      profileUrl: "https://www.pref.miyagi.jp/x.html", current, asOf: "2026-01-01",
+      sourceUrl: "https://www.pref.miyagi.jp/x.html", counts: { rollcalls: 0 },
+    });
+    // pref-04 に 3 人（うち現職 2）、pref-24 に 1 人（現職 1）
+    const withLocal = [...original, local("p_04_a", "pref-04", true), local("p_04_b", "pref-04", true), local("p_04_c", "pref-04", false), local("p_24_a", "pref-24", true)];
+    writeFileSync(join(dir, "members/index.json"), stableJson(withLocal));
+    writeFileSync(join(dir, "members/by-assembly.json"), stableJson(membersByAssembly(withLocal)));
+    const baseline = readFileSync(join(dir, "members/by-assembly.json"), "utf-8");
+    // 地方の行は assemblies/index.json と members/{id}.json を持たないので、そちら由来の違反は出る。
+    // ここで見たいのは by-assembly の検査なので、その1行が出るか出ないかだけを見る
+    const MSG = /members\/by-assembly\.json: does not match members\/index\.json/;
+    assert.doesNotMatch((await validateDataset(dir)).join("\n"), MSG, "食い違いが無いときは出ない");
+
+    const mutations: [string, (rows: MemberAssemblyCount[]) => MemberAssemblyCount[]][] = [
+      ["current が 1 多い", (rows) => rows.map((r) => (r.assemblyId === "pref-04" ? { ...r, current: r.current + 1 } : r))],
+      ["current が 1 少ない", (rows) => rows.map((r) => (r.assemblyId === "pref-04" ? { ...r, current: r.current - 1 } : r))],
+      ["total が 1 多い", (rows) => rows.map((r) => (r.assemblyId === "pref-04" ? { ...r, total: r.total + 1 } : r))],
+      ["total が 1 少ない", (rows) => rows.map((r) => (r.assemblyId === "pref-04" ? { ...r, total: r.total - 1 } : r))],
+      ["議会の行が欠ける", (rows) => rows.filter((r) => r.assemblyId !== "pref-24")],
+      ["無い議会の行が余る", (rows) => [...rows, { assemblyId: "pref-99" as MemberAssemblyCount["assemblyId"], current: 1, total: 1 }]],
+      // #435 と同じ穴（合計は変わらないのに中身が入れ替わる）を作らない
+      ["議会間で人数を入れ替える（合計不変）", (rows) => rows.map((r) => (r.assemblyId === "pref-04" ? { ...r, current: 1, total: 1 } : r.assemblyId === "pref-24" ? { ...r, current: 2, total: 3 } : r))],
+      ["current と total を入れ替える（合計不変）", (rows) => rows.map((r) => (r.assemblyId === "pref-04" ? { ...r, current: r.total, total: r.current } : r))],
+      ["並びが違う（assemblyId 降順）", (rows) => [...rows].reverse()],
+      ["空", () => []],
+    ];
+    for (const [label, mutate] of mutations) {
+      patch<MemberAssemblyCount[]>(dir, "members/by-assembly.json", mutate);
+      assert.match((await validateDataset(dir)).join("\n"), MSG, label);
+      writeFileSync(join(dir, "members/by-assembly.json"), baseline);
+    }
     cleanup();
   });
 
