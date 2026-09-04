@@ -38,6 +38,9 @@ export const EXPECTED_SECURITY_HEADERS: Record<string, string> = {
   "referrer-policy": "strict-origin-when-cross-origin",
   "content-security-policy":
     "default-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; connect-src 'self'",
+  // #482: 使っていないと数えた 17 個のブラウザ機能を空 allowlist で閉じる
+  "permissions-policy":
+    "accelerometer=(), autoplay=(), camera=(), display-capture=(), encrypted-media=(), fullscreen=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), usb=(), xr-spatial-tracking=()",
 };
 
 export const EXPECTED_CACHE_CONTROL = {
@@ -124,8 +127,11 @@ export function checkServed(got: Map<string, ServedResponse>, t: UrlSmokeTargets
     const r = take(t.asset);
     if (r) {
       if (r.status !== 200) failures.push(`${t.asset}: status ${r.status} (expected 200)`);
-      // nginx: add_header in a location replaces the server-level set, so /assets/ and /data/ carry
-      // only Cache-Control — same as the production block has always done. Not checked here.
+      // #482: ここは以前「location の add_header が server 階層を置き換えるので Cache-Control しか
+      // 付かない。仕様なので見ない」としていたが、**それは仕様ではなく穴だった**——本番の
+      // /assets/*.js には CSP も nosniff も出ていなかった。site.conf 側で location ごとに
+      // ヘッダを複製して直したので、ここでも**必ず確かめる**（実機での確認は deploy/test/nginx-headers.test.sh）。
+      expectSecurityHeaders(t.asset, r, failures);
       expectHeader(t.asset, r, "cache-control", EXPECTED_CACHE_CONTROL.assets, failures);
     }
   }
@@ -133,6 +139,7 @@ export function checkServed(got: Map<string, ServedResponse>, t: UrlSmokeTargets
     const r = take(t.data);
     if (r) {
       if (r.status !== 200) failures.push(`${t.data}: status ${r.status} (expected 200)`);
+      expectSecurityHeaders(t.data, r, failures);  // #482: /assets/ と同じ理由
       expectHeader(t.data, r, "cache-control", EXPECTED_CACHE_CONTROL.data, failures);
     }
   }

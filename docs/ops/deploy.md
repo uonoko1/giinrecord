@@ -129,7 +129,12 @@ docker compose -f deploy/docker-compose.yml up -d --force-recreate   # 設定変
 docker compose -f deploy/docker-compose.yml restart web            # staging は web-staging
 docker compose -f deploy/docker-compose.yml pull && docker compose -f deploy/docker-compose.yml up -d   # イメージ更新
 curl -sI http://127.0.0.1:8081/ | head -1                      # コンテナ直叩き（staging は 8083）
-curl -sI https://DOMAIN/ | grep -i -E "content-security|x-frame" # 外から見たヘッダ
+curl -sI https://DOMAIN/ | grep -i -E "content-security|x-frame" # 外から見たヘッダ（**トップだけ見ても足りない**。下記）
+# ヘッダは location ごとに確かめる（#482）。add_header は継承されず、Cache-Control を持つ
+# /assets/ /data/ /fonts/ は自前で持っていないと丸腰になる。実際 #482 以前はそうなっていた。
+for p in / /data/meta.json "$(curl -sS https://DOMAIN/ | grep -oE '/assets/[A-Za-z0-9._-]+\.js' | head -1)"; do
+  echo "== $p"; curl -sSI "https://DOMAIN$p" | grep -icE 'content-security|permissions-policy|x-frame|x-content-type|referrer-policy'
+done   # それぞれ 5 が出れば正しい
 ```
 
 ## 設定を変えるとき
@@ -229,6 +234,9 @@ bash deploy/apply-all.sh   # 3件（#386 / #387 / #375）をまとめて。実�
 curl -sI https://giinrecord.jp/ | grep -iE '^server:|strict-transport'
 #   Server: nginx                                  ← バージョンと OS が消えた
 #   Strict-Transport-Security: max-age=86400       ← preload / includeSubDomains は付かない
+# HSTS は**ホスト nginx**が付ける（TLS 終端がホストにしか無いため。#387）。だから
+# add_header 継承の罠（#482）の外にあり、/assets/ でも消えなかった——**逆に言うと、
+# HSTS が出ていることは他のヘッダが出ている証拠にならない**。上の location ごとの確認を使うこと。
 ```
 
 **2026-09-02 の実測で production の conf は certbot 管理ではない**ので、この再実行だけで入る

@@ -36,15 +36,24 @@ const deployData = read(".github/workflows/deploy-data.yml");
  * #168: フォントを自サイト配信にしたので CSP から fonts.googleapis.com / fonts.gstatic.com を外し、font-src 'self'。
  * #194: script-src に 'unsafe-inline'。React Router のプリレンダリング HTML は inline <script>（hydration context・themeInit）を
  * 持ち、内容がページ・ビルドごとに変わるためハッシュ方式は不可。'self' だけだと本番でクライアント JS が一切動かなかった。
+ * #482: Permissions-Policy を追加。**このかたまりは 4 か所に複製されている**——server 階層と、
+ * 独自の add_header（Cache-Control）を持つ 3 つの location（/assets/ /data/ /fonts/）。
+ * nginx の add_header は継承されず、ある階層に1つでもあれば外側は全部無効になるので、複製しないと
+ * JS・CSS・JSON・フォントにヘッダが1つも付かない（#482 以前の本番が実際にそうだった）。
  */
 const EXPECTED_HEADERS = [
   "add_header X-Content-Type-Options nosniff always;",
   "add_header X-Frame-Options DENY always;",
   "add_header Referrer-Policy strict-origin-when-cross-origin always;",
   `add_header Content-Security-Policy "default-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; connect-src 'self'" always;`,
+  // #482: 使っていないと数えた 17 個のブラウザ機能を空 allowlist で閉じる（数え方は PR に）。
+  `add_header Permissions-Policy "accelerometer=(), autoplay=(), camera=(), display-capture=(), encrypted-media=(), fullscreen=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), usb=(), xr-spatial-tracking=()" always;`,
   // #127: "" on production hosts (nginx omits add_header with an empty value), "noindex, nofollow" for staging.giinrecord.jp
   "add_header X-Robots-Tag $robots_tag always;",
 ];
+
+/** add_header の**かたまり**が現れる回数。#482 以降は 4（server + Cache-Control を持つ 3 location）。 */
+const HEADER_BLOCKS = 4;
 
 function headerLines(conf: string): string[] {
   return conf
@@ -53,8 +62,27 @@ function headerLines(conf: string): string[] {
     .filter((l) => l.startsWith("add_header ") && !/Cache-Control/.test(l));
 }
 
-test("site.conf: セキュリティヘッダと CSP は旧 server block と完全一致（+ staging 用 X-Robots-Tag）", () => {
-  assert.deepEqual(headerLines(siteConf), EXPECTED_HEADERS);
+test("site.conf: セキュリティヘッダと CSP は旧 server block と完全一致（+ staging 用 X-Robots-Tag・#482 の複製 4 か所）", () => {
+  const lines = headerLines(siteConf);
+  // 4 か所とも同じ順序・同じ値であること（1 か所だけ直して他を忘れる、が一番ありそうな壊れ方）
+  assert.equal(lines.length, EXPECTED_HEADERS.length * HEADER_BLOCKS, "add_header のかたまりは server + 3 location の 4 つ");
+  for (let i = 0; i < HEADER_BLOCKS; i++) {
+    assert.deepEqual(lines.slice(i * EXPECTED_HEADERS.length, (i + 1) * EXPECTED_HEADERS.length), EXPECTED_HEADERS, `${i + 1} 番目のかたまり`);
+  }
+});
+
+// #482: 独自の add_header を持つ location は、セキュリティヘッダを**自分でも**持っていなければならない
+// （持たないと外側が消えて、そのパスだけ丸腰になる）。実際に配信して確かめるのは deploy/test/nginx-headers.test.sh。
+test("site.conf: Cache-Control を足す location は、セキュリティヘッダも自前で持つ（add_header は継承されない・#482）", () => {
+  const blocks = siteConf.match(/location [^{]*\{[^}]*\}/g) ?? [];
+  const withCacheControl = blocks.filter((b) => /add_header Cache-Control/.test(b));
+  assert.equal(withCacheControl.length, 3, "/assets/ /data/ /fonts/");
+  for (const b of withCacheControl) {
+    const name = b.slice(0, b.indexOf("{"));
+    for (const h of EXPECTED_HEADERS) {
+      assert.ok(b.includes(h), `${name.trim()} に ${h.slice(0, 40)}… が無い`);
+    }
+  }
 });
 
 // Issue 386: Server ヘッダに nginx のバージョンと OS が出ていた（`nginx/1.18.0 (Ubuntu)`）。
@@ -77,8 +105,9 @@ test("site.conf: www と旧ドメイン（gikailog.jp / www.gikailog.jp / stagin
 });
 
 test("site.conf: キャッシュ方針は旧 server block と同一（/assets/ immutable 1年、/data/ 1時間）", () => {
-  assert.match(siteConf, /location \/assets\/ \{\s*add_header Cache-Control "public, max-age=31536000, immutable";/);
-  assert.match(siteConf, /location \/data\/ \{\s*add_header Cache-Control "public, max-age=3600";/);
+  // #482 でセキュリティヘッダの複製が間に入ったので、location 名と Cache-Control の隣接は見ない（値だけ固定する）
+  assert.match(siteConf, /add_header Cache-Control "public, max-age=31536000, immutable";/);
+  assert.match(siteConf, /add_header Cache-Control "public, max-age=3600";/);
 });
 
 test("site.conf: CSP はどの外部ホストも許可しない（#168 フォント自サイト配信。第三者送信ゼロ）", () => {
@@ -104,7 +133,8 @@ test("ci.yml: docker-web は URL smoke の後に Playwright（chromium）の bro
 });
 
 test("site.conf: /fonts/ は 1 週間キャッシュ（ハッシュ無しのファイル名なので immutable にはしない）", () => {
-  assert.match(siteConf, /location \/fonts\/ \{\s*add_header Cache-Control "public, max-age=604800";/);
+  // #482: セキュリティヘッダの複製が location 名と Cache-Control の間に入ったので隣接は見ない（値だけ固定）
+  assert.match(siteConf, /add_header Cache-Control "public, max-age=604800";/);
 });
 
 // Issue #325: 存在しない URL が 200 を返していた（try_files の最後が /__spa-fallback.html だったため、
