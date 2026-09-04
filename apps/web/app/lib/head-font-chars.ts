@@ -49,6 +49,32 @@ function declaration(body: string, name: string): string | undefined {
   return m?.[1]?.trim();
 }
 
+/**
+ * `font:` ショートハンド（`font: 700 13px/1.5 var(--font-head)`）を書いた規則。
+ *
+ * **ここは読まない。読まないことを黙らせないために数える。**
+ * `font:` は family も weight も一度に決めるので、`font-family` / `font-weight` だけを見る
+ * この実装からは**見えない**。#472 が CSS と TSX の両方で同じ穴を実際に踏んでいる
+ * （`font: 13px/1.4 var(--font-head)` は **400 と 1 文字も書かずに** 400 を要求する）。
+ *
+ * いまのリポジトリに本物のショートハンドは無い（実測: `font: inherit` が 2 件だけで、
+ * これは「親と同じ」なので歩き方を変えない）。**増えたら `headFontShorthandRules` が拾い、
+ * `head-font-chars.test.ts` が落ちる。** 静かに字を取りこぼすより、落ちるほうがよい。
+ */
+export function headFontShorthandRules(css: string): string[] {
+  const out: string[] = [];
+  const stripped = css.replace(/\/\*[\s\S]*?\*\//g, "");
+  for (const [, rawSelector, body] of stripped.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    const v = declaration(body ?? "", "font");
+    if (v === undefined || v === "inherit") continue;
+    for (const sel of (rawSelector ?? "").split(",")) {
+      const t = sel.trim();
+      if (t && !t.startsWith("@")) out.push(t);
+    }
+  }
+  return out;
+}
+
 /** CSS 全文から「font-family か font-weight を決めている規則」だけを、書かれた順に取り出す。 */
 function parseRules(css: string): Rule[] {
   const out: Rule[] = [];
