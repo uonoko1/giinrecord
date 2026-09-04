@@ -16,11 +16,16 @@ Issue #85・#127。構成と初回セットアップは `deploy/README.md`。こ
 ### リリース手順（production）
 
 1. staging（https://staging.giinrecord.jp/）で確認する。`main` の最新は push 後数分で出ている（Actions → Deploy (staging)）。
-2. Actions → **Release** → Run workflow。`ref` は既定 `main`（タグや SHA も可）→ Run。
+2. Actions → **Release** → Run workflow。`ref` は既定 `main`（タグや **40 桁のフル SHA** も可）→ Run。
+   - **短縮 SHA は通らない**（2026-09-05 に実際に失敗）。`actions/checkout` は `ref` を
+     `+refs/heads/<ref>*:…` の形で fetch するので、**ブランチ名・タグ名・フル SHA しか解決できない。**
+     短縮 SHA を渡すと `The process '/usr/bin/git' failed with exit code 1` で 3 回リトライして落ちる
+     （**checkout の失敗なので、原因がリリース内容だと誤読しやすい**）。
+     `git rev-parse origin/main` の出力をそのまま渡す。
 3. `production` Environment の承認待ちになる → Review deployments → Approve。
 4. 完了後 https://giinrecord.jp/ で確認（title『議員レコード』、`curl -sI https://giinrecord.jp/ | grep -i x-robots-tag` が空、sitemap の `<loc>` が `https://giinrecord.jp/`）。
 
-ロールバックは「前の SHA を `ref` にして Release」。
+ロールバックは「前の SHA を `ref` にして Release」（**フル SHA で**。上記のとおり短縮形は通らない）。
 
 ### 日次データ（`deploy-data.yml`）
 
