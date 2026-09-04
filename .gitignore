@@ -17,3 +17,6 @@ packages/etl/.cache/
 # React Router の生成型（ビルドのたびに書き換わる）
 apps/web/.react-router/
 .playwright-mcp/
+
+# #477: 明朝700 サブセットの HTML 走査キャッシュ（数十分かかるので途中で落ちても捨てない）
+apps/web/.font-subset-html-chars.txt

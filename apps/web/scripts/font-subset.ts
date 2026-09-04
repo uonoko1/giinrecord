@@ -45,7 +45,7 @@ import { JSDOM } from "jsdom";
 import { dataHeadChars } from "../app/lib/head-font-data-chars";
 import { readHeadFontDataSource } from "../app/lib/head-font-data-source";
 import { headFontChars } from "../app/lib/head-font-chars";
-import { formatSubsetChars, SUBSET_CHARS_FILE, SUBSET_FAMILY, SUBSET_FILE, SUBSET_WEIGHT, subsetFace } from "../app/lib/font-subset";
+import { formatSubsetChars, parseSubsetChars, SUBSET_CHARS_FILE, SUBSET_FAMILY, SUBSET_FILE, SUBSET_WEIGHT, subsetFace } from "../app/lib/font-subset";
 import { defaultDataDir } from "../app/lib/data-files";
 import { parseFontsCss, renderFontsCss } from "../app/lib/self-hosted-fonts";
 
@@ -82,7 +82,22 @@ async function readBuiltHtmlChars(): Promise<Set<string>> {
 const md5 = (buf: Buffer | string) => createHash("md5").update(buf).digest("hex");
 
 // ---- 1. 収録する字を決める --------------------------------------------------
-const fromHtml = await readBuiltHtmlChars();
+/**
+ * HTML 全ページの走査は実測で数十分かかる（1,466 ページ）。**途中で落ちると全部やり直しになる**
+ * ので、結果を `HTML_CHARS_CACHE`（既定 `.font-subset-html-chars.txt`、git 管理外）に置き、
+ * 次からはそれを読む。**ビルドし直したら消すこと**（`--fresh` で無視して取り直す）。
+ */
+const cachePath = process.env.HTML_CHARS_CACHE ?? path.resolve(process.cwd(), ".font-subset-html-chars.txt");
+const fresh = process.argv.includes("--fresh");
+let fromHtml: Set<string>;
+const cached = fresh ? null : await readFile(cachePath, "utf8").catch(() => null);
+if (cached !== null) {
+  fromHtml = parseSubsetChars(cached);
+  console.log(`font-subset: reusing ${fromHtml.size} chars from ${path.basename(cachePath)} (--fresh to rescan the build)`);
+} else {
+  fromHtml = await readBuiltHtmlChars();
+  await writeFile(cachePath, formatSubsetChars(fromHtml));
+}
 const fromData = dataHeadChars(readHeadFontDataSource(dataDir));
 const chars = new Set([...fromHtml, ...fromData]);
 const onlyInData = [...fromData].filter((c) => !fromHtml.has(c));
