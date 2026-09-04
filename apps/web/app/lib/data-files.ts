@@ -8,7 +8,10 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import type { Assembly } from "@seiji-kiroku/shared";
-import type { LinkedRecordCounts, SangiinVoteLinkStats, ShugiinBillNameStats, UnmatchedSpeechStats } from "./coverage";
+import type { SangiinVoteLinkStats, ShugiinBillNameStats, UnmatchedSpeechStats } from "./coverage";
+// #451: 計算は `linked-counts.ts`（型以外を import しない）に 1 つだけ置く。`coverage.ts` は
+// `import.meta.glob` に触るので値として import できない——型だけの import に留めること。
+import { type LinkedRecordCounts, linkedRecordCounts } from "./linked-counts";
 import { DIET_ASSEMBLIES, type AssemblySession, type DatasetMeta, type LocalAssemblyMeta, type LocalRollCallSubject, type MemberDetail, type MemberSpeeches, type MemberSummary, type RollCall, type RollCallSummary } from "./data-contract";
 
 /** `data/` at the repo root; override with SEIJI_DATA_DIR. cwd is apps/web during build. */
@@ -120,27 +123,23 @@ export async function readLocalRollCallIndex(dataDir: string, assemblyId: string
 /**
  * 院ごとの「議員ページに実際に出ている件数」（#251）を `members/index.json` の counts から数える（#441）。
  *
- * 数えるのは**ビルド時の Node 側**で、ブラウザに渡るのは合計 2 組だけ。`readSangiinVoteLinkStats` /
+ * 読むのは**ビルド時の Node 側**で、ブラウザに渡るのは合計 2 組だけ。`readSangiinVoteLinkStats` /
  * `readShugiinBillNameStats` と同じ形にしてあるのは、この 4 つの数のためだけに名簿全件（gzip 40KB）を
  * ブラウザへ送らないため（#441 の目的そのもの）。議会ごとの人数は別に `members/by-assembly.json`
  * （ETL の集計）から読む。
  *
  * `members/index.json` が無ければ両院とも null（無い事実を作らない）。
  *
- * `coverage.ts` の `linkedRecordCounts` を呼ばずにここで数えるのは、**このファイルが tsx で直に走る
- * ビルドスクリプト（sitemap / build-archive / …）から読まれる**から。`coverage.ts` は
- * `assemblies.ts` 経由で `import.meta.glob`（Vite 専用）に触るので、値として import すると
- * `import.meta.glob is not a function` でビルドが落ちる。型だけの import に留める。
+ * **数える計算そのものはここには無い**（#451）。`linked-counts.ts` の `linkedRecordCounts` を呼ぶ。
+ * #441 では `coverage.ts` の同名の関数を書き写していたが、書き写した側にテストが無く、
+ * `questions` を 0 に固定しても web の 925 件が全部緑のままだった。
+ * `coverage.ts` を値として import できないのは変わらない（`assemblies.ts` 経由で `import.meta.glob`
+ * に触るので、tsx で直に走るビルドスクリプトが `import.meta.glob is not a function` で落ちる）が、
+ * `linked-counts.ts` は型以外を import しないので**両方から呼べる**。
  */
 export async function readLinkedRecordCounts(dataDir: string): Promise<{ sangiin: LinkedRecordCounts | null; shugiin: LinkedRecordCounts | null }> {
-  const index = await readJson<MemberSummary[]>(path.join(dataDir, "members", "index.json"));
-  const forHouse = (house: string): LinkedRecordCounts | null => {
-    const rows = (index ?? []).filter((m) => m.house === house);
-    if (rows.length === 0) return null; // その院の議員が 0 人なら null（無い事実を作らない）
-    const sum = (pick: (c: MemberSummary["counts"]) => number | undefined) => rows.reduce((t, m) => t + (pick(m.counts) ?? 0), 0);
-    return { rollcalls: sum((c) => c.rollcalls), bills: sum((c) => c.bills), speeches: sum((c) => c.speeches), questions: sum((c) => c.questions) };
-  };
-  return { sangiin: forHouse("sangiin"), shugiin: forHouse("shugiin") };
+  const index = (await readJson<MemberSummary[]>(path.join(dataDir, "members", "index.json"))) ?? [];
+  return { sangiin: linkedRecordCounts(index, "sangiin"), shugiin: linkedRecordCounts(index, "shugiin") };
 }
 
 export async function readMeta(dataDir: string): Promise<DatasetMeta | null> {

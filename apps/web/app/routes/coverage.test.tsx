@@ -645,3 +645,127 @@ describe("/coverage の既定（bundled）で議員数が出る（Issue 441）",
     expect(bundled.reduce((t, r) => t + r.current, 0)).toBe(rawMembers.filter((m) => m.current !== false).length);
   });
 });
+
+/**
+ * Issue 451: `/coverage` の「議員ページに出ている件数」は #441 で `data-files.ts` の
+ * `readLinkedRecordCounts` に移ったが、**テストは移らなかった**（`coverage.ts` の側に 6 件残り、
+ * 本番が通る道に 0 件）。`questions` を 0 に固定する変異で web の 925 件が全部緑のまま通り、
+ * ビルドすると画面の「42」が「0」に変わったうえに
+ * **「そのうち提出者を名簿に照合できたものはありません」という事実に反する文が増えた**。
+ *
+ * #408 / #441 と同じ系統の 3 例目なので、同じ形で塞ぐ: **本番の loader をそのまま呼び、
+ * 出た数字を生の `data/members/index.json` から独立に数えた値と突き合わせる。**
+ * 計算がどのファイルに移っても、画面の数字が変われば落ちる。
+ *
+ * **期待値を実装から作らない**（`readLinkedRecordCounts` も `linkedRecordCounts` も呼ばない）。
+ * 実装から作ると、実装が壊れたときに期待値も一緒に壊れて永久に検出できない。
+ */
+describe("/coverage の loader（本番経路）で議員ページに出ている件数が出る（Issue 451）", () => {
+  /** 生の members/index.json。実装を経由しない独立した経路 */
+  const rawMembers: { house?: string; counts?: { rollcalls?: number; bills?: number; speeches?: number; questions?: number } }[] = JSON.parse(
+    readFileSync(join(import.meta.dirname, "../../../../data/members/index.json"), "utf8"),
+  );
+  /** その院の counts をここで直に足す（`reduce` を実装と共有しない） */
+  const rawSum = (house: string, key: "rollcalls" | "bills" | "speeches" | "questions") => {
+    let t = 0;
+    for (const m of rawMembers) if (m.house === house) t += m.counts?.[key] ?? 0;
+    return t;
+  };
+  /** 画面に出る数字は 3 桁区切り（`toLocaleString("ja-JP")`）。生の数からその表記を作る */
+  const shown = (v: number) => v.toLocaleString("ja-JP");
+
+  /**
+   * **落ちたときに「実データが変わったのか、実装が壊れたのか」を読む人が区別できるようにする**（#451 レビュー）。
+   *
+   * このテストは実データ（`data/members/index.json`）を期待値の源にしているので、
+   * ETL の正常な更新でも落ちうる。落ちた人が最初に見るべきものを失敗メッセージ自体に書く:
+   * **生データが何件だったか**が出ていれば、そこで即座に切り分けられる
+   * （生データが 0 件なら実データの変化、生データは 42 件のままなのに画面が 0 件なら実装の退行）。
+   */
+  const why = (house: string, key: "rollcalls" | "bills" | "speeches" | "questions") =>
+    `${house} の ${key}: data/members/index.json を直に数えると ${rawSum(house, key)} 件。` +
+    `この数と食い違うなら実装の退行。実データ側が変わったのなら data/ の更新を確認したうえで、この期待値ではなく **画面の説明文が実態に合っているか** を先に見ること`;
+
+  it("loader が返す件数が、members/index.json を直に数えた値と一致する", async () => {
+    const { loader } = await import("./coverage");
+    const { linked } = await loader();
+    // **4 項目 × 2 院をまとめて見る。** 1 項目でも取り違えたら落ちる。
+    // 差分は vitest が項目ごとに出すので、どの項目がずれたかは失敗出力からそのまま読める
+    expect(linked.sangiin, "参議院: loader の件数が data/members/index.json を直に数えた値と違う").toEqual({ rollcalls: rawSum("sangiin", "rollcalls"), bills: rawSum("sangiin", "bills"), speeches: rawSum("sangiin", "speeches"), questions: rawSum("sangiin", "questions") });
+    expect(linked.shugiin, "衆議院: loader の件数が data/members/index.json を直に数えた値と違う").toEqual({ rollcalls: rawSum("shugiin", "rollcalls"), bills: rawSum("shugiin", "bills"), speeches: rawSum("shugiin", "speeches"), questions: rawSum("shugiin", "questions") });
+    // 院ごとに違う数であること自体も確かめる。同じ数なら `house` フィルタを外す変異が素通りするので、
+    // このテスト自体が効かない（fixture ではなく実データなので、崩れたらここで気づく）。
+    // ここが落ちたときは**実装ではなく実データ側**——「このテストがもう house を検査できていない」の合図
+    expect(linked.sangiin?.questions, `両院の questions が同じ数になり、house フィルタを外す変異を検出できなくなった。${why("sangiin", "questions")} / ${why("shugiin", "questions")}`).not.toBe(linked.shugiin?.questions);
+    expect(linked.sangiin?.speeches, `両院の speeches が同じ数になり、house フィルタを外す変異を検出できなくなった。${why("sangiin", "speeches")} / ${why("shugiin", "speeches")}`).not.toBe(linked.shugiin?.speeches);
+  });
+
+  it("loader の結果で描くと、画面の可視テキストにその件数がそのまま出る", async () => {
+    const { loader } = await import("./coverage");
+    const { linked, shugiinBillNames } = await loader();
+    render(
+      <MemoryRouter>
+        {/* bundled の data / 集計はそのまま（本番と同じ）。linked と議案の氏名だけ loader から渡す */}
+        <CoveragePage shugiinBillNames={shugiinBillNames} linked={linked} />
+      </MemoryRouter>,
+    );
+
+    // 1. 発言の節: 両院の発言件数が出る
+    const speech = screen.getByRole("region", { name: "発言をどの会議まで収録しているか" });
+    expect(speech, why("sangiin", "speeches")).toHaveTextContent(`参議院が ${shown(rawSum("sangiin", "speeches"))} 件`);
+    expect(speech, why("shugiin", "speeches")).toHaveTextContent(`衆議院が ${shown(rawSum("shugiin", "speeches"))} 件`);
+
+    // 2. 衆院の節: 議案・質問主意書・発言の 3 つ。**「42」が「0」に変わったら落ちるのはここ**
+    const roster = screen.getByRole("region", { name: "衆議院の記録が議員ページに紐づく範囲" });
+    expect(roster, why("shugiin", "bills")).toHaveTextContent(`提出・賛成した議案が ${shown(rawSum("shugiin", "bills"))} 件`);
+    expect(roster, why("shugiin", "questions")).toHaveTextContent(`質問主意書が ${shown(rawSum("shugiin", "questions"))} 件`);
+    expect(roster, why("shugiin", "speeches")).toHaveTextContent(`発言が ${shown(rawSum("shugiin", "speeches"))} 件`);
+  });
+
+  /**
+   * **件数が変わると付く説明文まで変わる。** 質問主意書が 0 件のときだけ
+   * 「そのうち提出者を名簿に照合できたものはありません」が出る分岐で、
+   * #451 の変異はこれを**実際に 42 件あるのに**表示させていた（利用者から検出できない虚偽）。
+   * 数字だけでなく**この文の有無**も本番経路で固定する。
+   */
+  it("質問主意書が 1 件以上あるかぎり、「照合できたものはありません」とは書かない", async () => {
+    const { loader } = await import("./coverage");
+    const { linked, shugiinBillNames } = await loader();
+    render(
+      <MemoryRouter>
+        <CoveragePage shugiinBillNames={shugiinBillNames} linked={linked} />
+      </MemoryRouter>,
+    );
+    const roster = screen.getByRole("region", { name: "衆議院の記録が議員ページに紐づく範囲" });
+    /*
+     * **前提を先に検査する。** ここが落ちたら「実装の退行」ではなく「実データが変わった」で、
+     * 対応が正反対（前者は実装を直す、後者は画面の説明文が実態に合っているかを見る）。
+     * 前提と結果を別々の expect にしてあるのは、**どちらで落ちたかを失敗行から区別する**ため。
+     */
+    expect(
+      rawSum("shugiin", "questions"),
+      "data/members/index.json から数えた衆院の questions が 0 件でした。これは実装の退行ではなく **実データが変わった** 合図です。" +
+        "そのとき /coverage には「そのうち提出者を名簿に照合できたものはありません」が出ます——" +
+        "それが実態として正しいかを確かめたうえで、この前提（0 件より多い）を更新してください",
+    ).toBeGreaterThan(0);
+    // ここから下は実装の検査。上の前提が立っているのに落ちたなら **実装の退行**
+    expect(
+      roster.textContent,
+      `衆院の質問主意書は ${rawSum("shugiin", "questions")} 件あるのに「照合できたものはありません」と書かれています（事実に反する文）。${why("shugiin", "questions")}`,
+    ).not.toContain("照合できたものはありません");
+    // 出るのは「取得しています」の側
+    expect(roster, why("shugiin", "questions")).toHaveTextContent("の一覧を取得しています");
+
+    /*
+     * **数字と説明文が食い違っていないことまで見る。**
+     * この 2 つは別の式から出ている（数字は `{n(linked.questions)}`、文の有無は
+     * `linked.questions === 0` の分岐）。**片方だけ壊すと、両者が矛盾したまま画面に出る**
+     * ——「質問主意書が 0 件です」と書きながら「取得しています」と続く、といった状態。
+     * 実際に `{n(linked.questions)}` → `{n(0)}` の変異でこの節はそうなった（文の側は無傷だった）。
+     * 説明文の分岐を検査するここで、**同じ節の数字も** 生データと突き合わせる。
+     */
+    expect(roster, `説明文は「${rawSum("shugiin", "questions")} 件ある」前提で書かれているのに、同じ節の数字がそれと違います（数字と文が矛盾している）。${why("shugiin", "questions")}`).toHaveTextContent(
+      `質問主意書が ${shown(rawSum("shugiin", "questions"))} 件`,
+    );
+  });
+});
