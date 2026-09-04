@@ -384,47 +384,84 @@ describe("linked-counts.ts は型以外を持ち込まない（#451 / #441 の�
   const code = src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
 
   /**
-   * **モジュールを読み込んだ時点で他のモジュールを引き込む行**を全部集める。
+   * **「モジュールを読み込んだ時点で他のモジュールを引き込むか」だけを見る。**
    *
-   * `import ... from` だけでは足りない（#451 レビューで PO が実際に破った）。
-   * `export { isDietAssemblyId } from "./assemblies";` の 1 行で tsx のビルド経路は
-   * `import.meta.glob is not a function` で落ちるのに、`/^\s*import\s/` に一致しないので
-   * **935 件が全部緑のまま素通りした**。だから `export ... from` も同じ制約下に置く。
+   * #451 のレビューで**2 回破られた**。どちらも**検査の側が構文を仮定していた**のが原因:
    *
-   * 型だけの形（`import type` / `export type`）は TypeScript が実行時の import を消すので安全。
-   * インラインの `import { type X }` は**残る**（値の import 文として出る）ので許さない。
+   * 1. 1 回目: `/^\s*import\s/` で「import 行」だけを見ていた
+   *    → `export { isDietAssemblyId } from "./assemblies";` が素通り
+   * 2. 2 回目: `import` の後ろの形は直したが、**`code.split("\n")` の行単位**のままだった。
+   *    「行の先頭から」「セミコロンを含まず」「`from` の後に空白」という 3 つの仮定が残り、
+   *    **複数行 import**（`import {\n  a,\n  b,\n} from "..."`）・行頭セミコロン・同じ行に 2 文・
+   *    空白なし（`export{x}from"..."`）が素通りした。**5 形すべてで実際にビルドが落ちた**
+   *    （`npx tsx apps/web/scripts/sitemap.ts` → `glob is not a function`）のにテストは 936 件全緑。
+   *
+   * とくに**複数行 import は Prettier が名前 2 つ以上で必ず生成する形**で、奇をてらった書き方ではない。
+   * **次に誰かが普通にコードを書いたら破れる**状態だった。
+   *
+   * そこで**行を単位にするのをやめた**。やることは 2 つだけ:
+   *   (1) **型だけを運ぶ文を先に消す**（`import type` / `export type` を、モジュール指定子の
+   *       文字列まで。終端をセミコロンに頼らない——**ASI で省略できる**ため。
+   *       省略された `import type ... from "./d"` の次行に値 import を置く形は実際にビルドを壊した）
+   *   (2) 残りに**モジュール指定子を伴う形**（`from "..."` / `import "..."`）が 1 つでも出たら落とす
+   *
+   * 改行・インデント・セミコロン・空白の有無に依存しないので、上の 5 形が一度に塞がる。
    */
-  const bindings = code.split("\n").filter((l) => /^\s*(import|export)\b[^;]*\bfrom\s/.test(l) || /^\s*import\s+["']/.test(l));
-  /** 型だけを運ぶ行（`import type ... from` / `export type ... from`）。これだけが許される */
-  const typeOnly = (l: string) => /^\s*(import|export)\s+type\s/.test(l);
+  /** 型だけを運ぶ文を除去したソース。ここに残るものは実行時にモジュールを引き込む */
+  const withoutTypeOnly = code.replace(/\b(?:import|export)\s+type\b[^"']*(?:"[^"]*"|'[^']*')?\s*;?/g, " ");
+  /** モジュール指定子を伴う形（`from "..."` / `import "..."`）。`export ... from` もここに入る */
+  const BINDING = /\b(?:from\s*["']|import\s*["'])/;
 
-  it("`import ... from` も `export ... from` も、型だけを運ぶ形しか無い", () => {
-    // 1 行も拾っていなければ、この検査は何も見ていない（正規表現を壊したときに気づく）
-    expect(bindings.length, "モジュールを引き込む行が 1 つも無い（この検査が何も見ていない）").toBeGreaterThan(0);
+  it("型だけを運ぶ形しか無い（行・空白・セミコロンの書き方に依存せず検査する）", () => {
+    // 型の import を消す前は必ず何か拾えるはず。拾えないなら正規表現を壊している（検査が何も見ていない）
+    expect(BINDING.test(code), "モジュールを引き込む形が 1 つも無い（この検査が何も見ていない）").toBe(true);
     expect(
-      bindings.filter((l) => !typeOnly(l)),
-      "値を持ち込む行があります。`linked-counts.ts` は tsx で直に走るビルドスクリプトから読まれるので、" +
+      withoutTypeOnly.match(new RegExp(BINDING.source + '[^"\']*["\'][^"\']*["\']', "g")) ?? [],
+      "値を持ち込む形があります。`linked-counts.ts` は tsx で直に走るビルドスクリプトから読まれるので、" +
         "`assemblies.ts` のような `import.meta.glob` に触るモジュールが 1 本でも繋がると " +
-        "`pnpm --filter web build` が `import.meta.glob is not a function` で落ちます（#441 が実際に踏んだ罠）。" +
+        "`npx tsx apps/web/scripts/sitemap.ts` が `import.meta.glob is not a function` で落ちます（#441 が実際に踏んだ罠）。" +
         "型だけが要るなら `import type` / `export type` にしてください",
     ).toEqual([]);
   });
 
   /**
+   * **型だけの形は通ること**も同じ強さで確かめる（#451 レビュー）。
+   * 禁止の検査は**厳しすぎても壊れる**——`export type * from` や複数行の `import type` を
+   * 落とすようになったら、正しい書き方ができなくなる。**塞ぐ側と通す側の両方を固定する。**
+   */
+  it("型だけの形（複数行・`export type * from`・コメント内）は通す（厳しすぎて壊さない）", () => {
+    const passes = (s: string) => !BINDING.test(s.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "").replace(/\b(?:import|export)\s+type\b[^"']*(?:"[^"]*"|'[^']*')?\s*;?/g, " "));
+    expect(passes('import type { A } from "./a";'), "1 行の import type").toBe(true);
+    expect(passes('import type {\n  A,\n  B,\n} from "./a";'), "複数行の import type（Prettier の既定）").toBe(true);
+    expect(passes('export type { A } from "./a";'), "export type ... from").toBe(true);
+    expect(passes('export type * from "./a";'), "export type * from").toBe(true);
+    expect(passes('export type {} from "./a";'), "export type {} from").toBe(true);
+    expect(passes('// import { x } from "./assemblies";\n/* export { y } from "./z"; */'), "コメント内の import").toBe(true);
+    // 逆向き: 値を持ち込む形は必ず落ちる（この判定関数自体が甘くなっていないか）
+    expect(passes('import {\n  x,\n} from "./assemblies";'), "複数行の値 import は落ちる").toBe(false);
+    expect(passes('export{x}from"./assemblies";'), "空白なしの export ... from は落ちる").toBe(false);
+    expect(passes('import type { A } from "./a"\nimport { x } from "./assemblies";'), "ASI（セミコロン省略）の次行の値 import は落ちる").toBe(false);
+  });
+
+  /**
    * **この検査は静的な形だけを見ている。** `await import("./assemblies")`（動的 import）は
-   * モジュールの読み込み時には評価されないので、**ここを通り抜けます**。
+   * モジュールの読み込み時には評価されないので、上の検査は通り抜けます（ここで別に落とす）。
    *
-   * 塞いでいないのは、危険の質が違うから: 静的 import は**ビルドスクリプトが起動した瞬間に**落ちるが、
+   * 危険の質が違う: 静的 import は**ビルドスクリプトが起動した瞬間に**落ちるが、
    * 動的 import は**その行が実際に呼ばれたときだけ**落ちる。#441 が踏んだのは前者で、
    * このファイルには動的 import を書く理由が今のところ無い（純関数しか置かない方針）。
    *
    * それでも書きたくなったら、**それは「このファイルに置くべきでないものを置こうとしている」合図**。
    * 計算だけを残して、読み込みは呼び出し側（`data-files.ts` / 画面）に置くこと。
+   *
+   * `require()` は塞いでいない。**黙って壊れないから**——実測すると
+   * `ReferenceError: Cannot determine intended module format ...` で即座に落ち、
+   * typecheck も通らない。**静かに間違うものだけを検査する。**
    */
-  it("動的 import も書かない（静的な形しか検査できないので、そもそも置かない）", () => {
+  it("動的 import も書かない（静的な形の検査を通り抜けるので、別に落とす）", () => {
     expect(
       code,
-      "動的 import（`import(...)`）が書かれています。この検査は静的な形しか見ないので通り抜けますが、" +
+      "動的 import（`import(...)`）が書かれています。上の検査は静的な形しか見ないので通り抜けますが、" +
         "呼ばれたときに glob で落ちます。読み込みは呼び出し側に置いてください",
     ).not.toMatch(/\bimport\s*\(/);
   });
