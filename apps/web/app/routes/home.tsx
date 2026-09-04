@@ -7,7 +7,8 @@ import { type Dataset, dataset as bundled, formatSessions, REPO_URL } from "../l
 import { formatDateTime } from "../lib/format";
 import { seoMeta } from "../lib/seo";
 import "../styles/pages.css";
-import { isCurrentOf } from "../lib/members-count";
+import { currentMembersOfHouse, membersByAssembly as bundledMembersByAssembly } from "../lib/members-by-assembly";
+import type { MemberAssemblyCount } from "@seiji-kiroku/shared";
 
 /**
  * トップページの lead と meta description。
@@ -26,14 +27,19 @@ export function meta({ location }: MetaArgs) {
 const RECENT_LIMIT = 4;
 const PENDING = "［集計中］";
 
-export default function Home({ data = bundled }: { data?: Dataset }) {
+/**
+ * Issue 441: 議員について使うのは「院ごとに現職が何人か」の 2 つの数だけ。
+ * `members/index.json` 全件（gzip 40KB）ではなく ETL の集計（`members/by-assembly.json`、gzip 187B）を読む。
+ * 差し替えられるように prop にしておく（テストが人数を作れる）。
+ */
+export default function Home({ data = bundled, membersByAssembly = bundledMembersByAssembly }: { data?: Dataset; membersByAssembly?: readonly MemberAssemblyCount[] }) {
   const recent = [...data.rollcalls].sort((a, b) => b.date.localeCompare(a.date)).slice(0, RECENT_LIMIT);
   const latestSession = data.meta?.sessions.length ? Math.max(...data.meta.sessions) : undefined;
   // 数えるのは**現職だけ**（#351）。元職を足すと参院が 307 名になり、**定数248を超える**。
   // 読者は「参議院議員が307人いる」と読むし、`/members` の既定（現職のみ247名）とも食い違う。
   // 元職を収録していること自体は /coverage が「議員 307 名」として別に書いている。
-  const sangiinCount = data.members.filter(isCurrentOf("sangiin")).length;
-  const shugiinCount = data.members.filter(isCurrentOf("shugiin")).length;
+  const sangiinCount = currentMembersOfHouse(membersByAssembly, "sangiin");
+  const shugiinCount = currentMembersOfHouse(membersByAssembly, "shugiin");
   // #158: 地方議会の数（assemblies/index.json の national 以外）。index が無い古いデータでは集計中
   const localCount = data.assemblies ? localAssemblies(data.assemblies).length : undefined;
 

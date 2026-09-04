@@ -1,18 +1,26 @@
 import { describe, expect, it } from "vitest";
-import type { Assembly } from "@seiji-kiroku/shared";
+import type { Assembly, MemberAssemblyCount } from "@seiji-kiroku/shared";
 import assembliesFixture from "../test-fixtures/assemblies/index.json";
-import localMembers from "../test-fixtures/assemblies/members-index.json";
 import sessionsFixture from "../test-fixtures/assemblies/sessions.json";
 import { billsBySession, dataset } from "../test-fixtures/dataset";
 import { buildCoverage, formatLocalSessionRange, formatSessionRange, hasSessionGaps, linkedRecordCounts, rosterlessSessions, rosterScope, sangiinUnlinkedVotes, sessionRange, shugiinBillNameCoverage, shugiinQuestionCoverage, shugiinRosterAsOf, speechCoverage } from "./coverage";
 import type { AssemblySession } from "./data-contract";
-import type { Dataset, MemberSummary } from "./dataset";
+import type { Dataset } from "./dataset";
 import { source } from "../test-fixtures/source";
 import type { DatasetSource } from "./data-contract";
 
 const assemblies = assembliesFixture as Assembly[];
 const sessions = new Map<string, AssemblySession[]>([["pref-04", sessionsFixture as AssemblySession[]]]);
-const withLocal: Dataset = { ...dataset, assemblies, members: [...dataset.members, ...(localMembers as MemberSummary[])] };
+const withLocal: Dataset = { ...dataset, assemblies };
+/*
+ * #441: 議員数は名簿の全件ではなく **議会ごとの人数**（members/by-assembly.json）から来る。
+ * この画面（/coverage）が読むのは **total**（元職を含む）——収録範囲は「何を収録しているか」なので。
+ * `current` はわざと違う数にしてある（total を読んでいることが見分けられるように）。
+ */
+const byAssembly: MemberAssemblyCount[] = [
+  { assemblyId: "diet-sangiin", current: 2, total: 3 },
+  { assemblyId: "pref-04", current: 2, total: 3 },
+];
 
 describe("sessionRange / formatSessionRange", () => {
   it("最小と最大に加えて、実際に行のあった回次の数（重複を除く）を持つ", () => {
@@ -216,11 +224,11 @@ describe("shugiinBillNameCoverage: 議案の氏名の紐づき（#251）", () =>
 
 describe("buildCoverage: 国会", () => {
   it("meta.sessions の範囲と回次数をそのまま数える", () => {
-    expect(buildCoverage(withLocal, sessions, billsBySession).metaSessions).toEqual({ from: 220, to: 221, count: 2 });
+    expect(buildCoverage(withLocal, sessions, billsBySession, byAssembly).metaSessions).toEqual({ from: 220, to: 221, count: 2 });
   });
 
   it("参議院は rollcalls/index.json の件数と回次の範囲を持ち、個人票あり", () => {
-    const sangiin = buildCoverage(withLocal, sessions, billsBySession).diet.find((d) => d.assemblyId === "diet-sangiin")!;
+    const sangiin = buildCoverage(withLocal, sessions, billsBySession, byAssembly).diet.find((d) => d.assemblyId === "diet-sangiin")!;
     expect(sangiin.name).toBe("参議院");
     expect(sangiin.house).toBe("sangiin");
     expect(sangiin.individualVotes).toBe(true);
@@ -231,14 +239,14 @@ describe("buildCoverage: 国会", () => {
   });
 
   it("衆議院は個人票が無いので採決 0 件・回次の範囲なし（参院の件数を流用しない）", () => {
-    const shugiin = buildCoverage(withLocal, sessions, billsBySession).diet.find((d) => d.assemblyId === "diet-shugiin")!;
+    const shugiin = buildCoverage(withLocal, sessions, billsBySession, byAssembly).diet.find((d) => d.assemblyId === "diet-shugiin")!;
     expect(shugiin.individualVotes).toBe(false);
     expect(shugiin.rollcalls).toBe(0);
     expect(shugiin.rollcallSessions).toBeNull();
   });
 
   it("議案は house ごとに数える（by-session.json の count の合計）。衆院は個人票が無くても議案の収録範囲を持つ", () => {
-    const diet = buildCoverage(withLocal, sessions, billsBySession).diet;
+    const diet = buildCoverage(withLocal, sessions, billsBySession, byAssembly).diet;
     const shugiin = diet.find((d) => d.assemblyId === "diet-shugiin")!;
     expect(shugiin.bills).toBe(3);
     expect(shugiin.billSessions).toEqual({ from: 219, to: 221, count: 2 }); // 220 は議案が無い＝歯抜け
@@ -250,20 +258,41 @@ describe("buildCoverage: 国会", () => {
   });
 
   it("bills/by-session.json が無い古いデータでは議案 0 件（落ちない）", () => {
-    const diet = buildCoverage(withLocal, sessions, []).diet;
+    const diet = buildCoverage(withLocal, sessions, [], byAssembly).diet;
     expect(diet.every((d) => d.bills === 0 && d.billSessions === null)).toBe(true);
   });
 
-  it("assemblyId の無い（#156 より前の）議員は house から国会の議会に数える", () => {
-    const diet = buildCoverage({ ...dataset, assemblies }, new Map(), billsBySession).diet;
+  /*
+   * #441: 議員数は集計の **total**（元職を含む）。`current` を読むと収録範囲が実際より小さく出る。
+   * fixture は diet-sangiin が current 2 / total 3 と**わざと違う数**にしてある。
+   */
+  it("議員数は元職を含む total を数える（現職だけの current ではない）", () => {
+    const diet = buildCoverage(withLocal, sessions, billsBySession, byAssembly).diet;
     expect(diet.find((d) => d.assemblyId === "diet-sangiin")!.members).toBe(3);
+    expect(diet.find((d) => d.assemblyId === "diet-sangiin")!.members).not.toBe(2);
+  });
+
+  it("集計に行の無い議会は 0 名（無い＝0 人。落ちない）", () => {
+    const diet = buildCoverage(withLocal, new Map(), billsBySession, byAssembly).diet;
     expect(diet.find((d) => d.assemblyId === "diet-shugiin")!.members).toBe(0);
+  });
+
+  /* #435 と同じ穴（合計は同じなのに中身が入れ替わる）を作らない */
+  it("議会ごとに正しい行を引く（国会と地方で人数が入れ替わらない）", () => {
+    const c = buildCoverage(withLocal, sessions, billsBySession, [
+      { assemblyId: "diet-sangiin", current: 247, total: 307 },
+      { assemblyId: "pref-04", current: 56, total: 56 },
+    ]);
+    expect(c.diet.find((d) => d.assemblyId === "diet-sangiin")!.members).toBe(307);
+    expect(c.local.find((l) => l.assemblyId === "pref-04")!.members).toBe(56);
+    expect(c.totals.dietMembers).toBe(307);
+    expect(c.totals.localMembers).toBe(56);
   });
 });
 
 describe("buildCoverage: 地方議会", () => {
   it("会期一覧から採決数・会期数・最新/最古の会期・取得元を数える", () => {
-    const miyagi = buildCoverage(withLocal, sessions, billsBySession).local.find((l) => l.assemblyId === "pref-04")!;
+    const miyagi = buildCoverage(withLocal, sessions, billsBySession, byAssembly).local.find((l) => l.assemblyId === "pref-04")!;
     expect(miyagi.name).toBe("宮城県議会");
     expect(miyagi.kind).toBe("prefectural");
     expect(miyagi.members).toBe(3);
@@ -275,7 +304,7 @@ describe("buildCoverage: 地方議会", () => {
   });
 
   it("会期一覧が無い議会は 0 件で載る（落とさない）", () => {
-    const miyagi = buildCoverage(withLocal, new Map(), billsBySession).local.find((l) => l.assemblyId === "pref-04")!;
+    const miyagi = buildCoverage(withLocal, new Map(), billsBySession, byAssembly).local.find((l) => l.assemblyId === "pref-04")!;
     expect(miyagi.rollcalls).toBe(0);
     expect(miyagi.sessions).toBe(0);
     expect(miyagi.sessionRange).toBeNull();
@@ -283,16 +312,16 @@ describe("buildCoverage: 地方議会", () => {
   });
 
   it("会期の表示は原文のまま「古い 〜 新しい」、1 会期なら 1 つだけ", () => {
-    const miyagi = buildCoverage(withLocal, sessions, billsBySession).local.find((l) => l.assemblyId === "pref-04")!;
+    const miyagi = buildCoverage(withLocal, sessions, billsBySession, byAssembly).local.find((l) => l.assemblyId === "pref-04")!;
     expect(formatLocalSessionRange(miyagi)).toBe("第398回（令和7年11月定例会） 〜 第399回（令和8年2月定例会）");
     const one = new Map<string, AssemblySession[]>([["pref-04", [(sessionsFixture as AssemblySession[])[0]!]]]);
-    expect(formatLocalSessionRange(buildCoverage(withLocal, one, billsBySession).local[0]!)).toBe("第399回（令和8年2月定例会）");
+    expect(formatLocalSessionRange(buildCoverage(withLocal, one, billsBySession, byAssembly).local[0]!)).toBe("第399回（令和8年2月定例会）");
   });
 });
 
 describe("buildCoverage: 合計", () => {
   it("国会・地方それぞれの採決数と議員数、議会数を数える", () => {
-    const { totals } = buildCoverage(withLocal, sessions, billsBySession);
+    const { totals } = buildCoverage(withLocal, sessions, billsBySession, byAssembly);
     expect(totals.dietRollcalls).toBe(dataset.rollcalls.length);
     expect(totals.dietMembers).toBe(3);
     expect(totals.localRollcalls).toBe(5);
@@ -302,14 +331,14 @@ describe("buildCoverage: 合計", () => {
   });
 
   it("assemblies/index.json が無い古いデータでは国会の 2 議会だけ", () => {
-    const c = buildCoverage({ ...dataset, assemblies: undefined }, new Map(), billsBySession);
+    const c = buildCoverage({ ...dataset, assemblies: undefined }, new Map(), billsBySession, byAssembly);
     expect(c.diet.map((d) => d.assemblyId)).toEqual(["diet-sangiin", "diet-shugiin"]);
     expect(c.local).toEqual([]);
     expect(c.totals.assemblies).toBe(2);
   });
 
   it("データが空でも落ちない", () => {
-    const c = buildCoverage({ meta: undefined, members: [], rollcalls: [] }, new Map(), billsBySession);
+    const c = buildCoverage({ meta: undefined, rollcalls: [] }, new Map(), billsBySession, []);
     expect(c.metaSessions).toBeNull();
     expect(c.totals.dietRollcalls).toBe(0);
     expect(c.diet.every((d) => d.members === 0)).toBe(true);

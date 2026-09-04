@@ -6,11 +6,11 @@ import { assemblyPath, DISCLOSURE_STATUSES, type DisclosureStatus, VOTE_DISCLOSU
 import { DIET_ASSEMBLIES } from "../lib/data-contract";
 import { type Dataset, dataset as bundled } from "../lib/dataset";
 import { formatDate } from "../lib/format";
-import { memberAssemblyId } from "../lib/member-search";
 import { seoMeta } from "../lib/seo";
 import "../styles/pages.css";
 import "./assemblies.css";
-import { isCurrentMember } from "../lib/members-count";
+import { currentMembersOf, membersByAssembly as bundledMembersByAssembly } from "../lib/members-by-assembly";
+import type { MemberAssemblyCount } from "@seiji-kiroku/shared";
 
 const DESCRIPTION = "参議院・衆議院と地方議会の一覧。各議会が議員ごとの表決をどの形で公開しているかを、確認したページの出典つきで並べます。評価はしません。";
 
@@ -32,17 +32,14 @@ const KIND_LABEL = { prefectural: "都道府県議会", municipal: "政令指定
  * /assemblies: このサイトにある議会（assemblies/index.json。無ければ国会の2議会）と、
  * 47 都道府県 + 20 政令市の「個人別表決の公開状況」（#128 の調査表）。どちらも事実としてそのまま並べる。
  */
-export default function Assemblies({ data = bundled }: { data?: Dataset }) {
+/**
+ * Issue 441: 議員について使うのは「議会ごとに現職が何人か」だけ。
+ * `members/index.json` 全件（gzip 40KB）ではなく ETL の集計（`members/by-assembly.json`、gzip 187B）を読む。
+ * 差し替えられるように prop にしておく（テストが人数を作れる）。
+ */
+export default function Assemblies({ data = bundled, membersByAssembly = bundledMembersByAssembly }: { data?: Dataset; membersByAssembly?: readonly MemberAssemblyCount[] }) {
   const assemblies: readonly Assembly[] = data.assemblies ?? DIET_ASSEMBLIES;
   const known = new Set(assemblies.map((a) => a.id));
-  // 数えるのは**現職だけ**（#355）。元職を足すと参院が 307 名になり定数248を超える。
-  // 収録範囲（/coverage）は別で、あちらは元職を含めて数えるのが正しい。
-  const memberCount = new Map<string, number>();
-  for (const m of data.members) {
-    if (!isCurrentMember(m)) continue;
-    const id = memberAssemblyId(m);
-    memberCount.set(id, (memberCount.get(id) ?? 0) + 1);
-  }
 
   return (
     <>
@@ -64,7 +61,9 @@ export default function Assemblies({ data = bundled }: { data?: Dataset }) {
                 <div className="list__meta">
                   {a.kind === "national" ? "国会" : KIND_LABEL[a.kind]}
                   {" ・ "}
-                  <b className="num">{(memberCount.get(a.id) ?? 0).toLocaleString("ja-JP")} 名</b>
+                  {/* 数えるのは**現職だけ**（#355）。元職を足すと参院が 307 名になり定数248を超える。
+                      収録範囲（/coverage）は別で、あちらは元職を含めて数えるのが正しい */}
+                  <b className="num">{currentMembersOf(membersByAssembly, a.id).toLocaleString("ja-JP")} 名</b>
                 </div>
               </li>
             ))}
