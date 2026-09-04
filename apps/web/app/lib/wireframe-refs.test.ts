@@ -13,6 +13,15 @@ import { describe, expect, it } from "vitest";
  *
  * 中身の「採用/不採用」まではテストしない。判断は人がするもので、
  * 文字列一致で守ると README の文面を縛るだけの無意味なテストになる。
+ *
+ * **この検査が守らないこと（過信しないこと）**:
+ *   - **docs の参照先が採用案かどうかは守らない。** 引用先を実在する不採用案
+ *     （Votes -> HomeE、Search -> BoldSearch）に差し替えても**このテストは緑のまま通る。**
+ *     どちらも実在し README にも載っているため。#456 が懸念した案や、
+ *     README が「取り違えるな」と警告している不採用版に差し替わっても気づけない。
+ *   - canvas.json の artboard を消しても、Votes を page-alt（不採用）へ移しても落ちない。
+ *   - README に実在しないファイル名を書き足しても落ちない（README -> ディスクの向きが無い）。
+ * 採用/不採用の判断は **design/wireframes/README.md を人が読むこと。**（同 §8 に一覧がある）
  */
 
 const repo = join(__dirname, "..", "..", "..", "..");
