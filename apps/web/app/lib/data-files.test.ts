@@ -368,18 +368,18 @@ describe("readLinkedRecordCounts（#251 / #441 / #451）: 議員ページに出�
 });
 
 /**
- * #451: `linkedRecordCounts` は `members-count.ts` に 1 つだけ置き、この画面（Vite）と
+ * #451: `linkedRecordCounts` は `linked-counts.ts` に 1 つだけ置き、この画面（Vite）と
  * `data-files.ts`（tsx で直に走るビルドスクリプトから読まれる）の**両方が同じ関数を呼ぶ**。
  *
- * これが成り立つのは `members-count.ts` が**型以外を import しない**からで、値の import を
+ * これが成り立つのは `linked-counts.ts` が**型以外を import しない**からで、値の import を
  * 1 つ足しただけで `import.meta.glob` に触る経路が繋がりうる（`coverage.ts` は `assemblies.ts`
  * 経由で実際に触る）。そうなると `pnpm --filter web build` の tsx スクリプトが
  * `import.meta.glob is not a function` で落ちる——**#441 の担当者が実際に踏んだ罠**。
  *
  * ビルドを流さないと出ない失敗なので、ソースの形でここに固定する。
  */
-describe("members-count.ts は型以外を import しない（#451 / #441 の罠）", () => {
-  const src = readFileSync(fileURLToPath(new URL("./members-count.ts", import.meta.url)), "utf8");
+describe("linked-counts.ts は型以外を import しない（#451 / #441 の罠）", () => {
+  const src = readFileSync(fileURLToPath(new URL("./linked-counts.ts", import.meta.url)), "utf8");
 
   it("import 行はすべて `import type`（値を持ち込むと tsx のビルドスクリプトが glob で落ちる）", () => {
     const imports = src.split("\n").filter((l) => /^\s*import\s/.test(l));

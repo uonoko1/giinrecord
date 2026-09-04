@@ -9,9 +9,9 @@ import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import type { Assembly } from "@seiji-kiroku/shared";
 import type { SangiinVoteLinkStats, ShugiinBillNameStats, UnmatchedSpeechStats } from "./coverage";
-// #451: 計算は `members-count.ts`（型以外を import しない）に 1 つだけ置く。`coverage.ts` は
+// #451: 計算は `linked-counts.ts`（型以外を import しない）に 1 つだけ置く。`coverage.ts` は
 // `import.meta.glob` に触るので値として import できない——型だけの import に留めること。
-import { type LinkedRecordCounts, linkedRecordCounts } from "./members-count";
+import { type LinkedRecordCounts, linkedRecordCounts } from "./linked-counts";
 import { DIET_ASSEMBLIES, type AssemblySession, type DatasetMeta, type LocalAssemblyMeta, type LocalRollCallSubject, type MemberDetail, type MemberSpeeches, type MemberSummary, type RollCall, type RollCallSummary } from "./data-contract";
 
 /** `data/` at the repo root; override with SEIJI_DATA_DIR. cwd is apps/web during build. */
@@ -130,12 +130,12 @@ export async function readLocalRollCallIndex(dataDir: string, assemblyId: string
  *
  * `members/index.json` が無ければ両院とも null（無い事実を作らない）。
  *
- * **数える計算そのものはここには無い**（#451）。`members-count.ts` の `linkedRecordCounts` を呼ぶ。
+ * **数える計算そのものはここには無い**（#451）。`linked-counts.ts` の `linkedRecordCounts` を呼ぶ。
  * #441 では `coverage.ts` の同名の関数を書き写していたが、書き写した側にテストが無く、
  * `questions` を 0 に固定しても web の 925 件が全部緑のままだった。
  * `coverage.ts` を値として import できないのは変わらない（`assemblies.ts` 経由で `import.meta.glob`
  * に触るので、tsx で直に走るビルドスクリプトが `import.meta.glob is not a function` で落ちる）が、
- * `members-count.ts` は型以外を import しないので**両方から呼べる**。
+ * `linked-counts.ts` は型以外を import しないので**両方から呼べる**。
  */
 export async function readLinkedRecordCounts(dataDir: string): Promise<{ sangiin: LinkedRecordCounts | null; shugiin: LinkedRecordCounts | null }> {
   const index = (await readJson<MemberSummary[]>(path.join(dataDir, "members", "index.json"))) ?? [];

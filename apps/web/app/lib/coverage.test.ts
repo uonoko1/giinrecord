@@ -134,7 +134,7 @@ describe("shugiinQuestionCoverage: 衆院の質問主意書を取得した回次
 });
 
 /**
- * #451: この 6 件は `coverage.ts` から import しているが、**実体は `members-count.ts` にある**
+ * #451: この 6 件は `coverage.ts` から import しているが、**実体は `linked-counts.ts` にある**
  * （`coverage.ts` は再 export するだけ）。#441 で `/coverage` の件数が `data-files.ts` の
  * `readLinkedRecordCounts` に移ったとき、計算だけが書き写されて**このテストは移らなかった**——
  * 本番が通る道に 1 件も無いまま、`questions` を 0 に固定しても 925 件が全部緑だった。

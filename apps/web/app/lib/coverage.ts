@@ -123,12 +123,12 @@ export function speechCoverage(meta: DatasetMeta | undefined): SpeechCoverage[] 
 /**
  * その院の議員ページに実際に出ている記録の件数（#251）。
  *
- * **計算の実体は `members-count.ts` にある**（#451）。この画面（Vite 側）と、tsx で直に走る
+ * **計算の実体は `linked-counts.ts` にある**（#451）。この画面（Vite 側）と、tsx で直に走る
  * ビルドスクリプトから読まれる `data-files.ts` の両方が**同じ 1 つの関数**を呼ぶ。
  * `coverage.ts` は `assemblies.ts` 経由で `import.meta.glob`（Vite 専用）に触るので、
  * `data-files.ts` はここを値として import できない——だから計算を持つのはここではない。
  */
-export { linkedRecordCounts, type LinkedRecordCounts } from "./members-count";
+export { linkedRecordCounts, type LinkedRecordCounts } from "./linked-counts";
 
 /**
  * 参院の票が議員に紐づいているかを回次ごとに数えた結果（#274）。数えるのは Node 側
