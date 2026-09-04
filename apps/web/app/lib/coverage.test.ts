@@ -133,7 +133,17 @@ describe("shugiinQuestionCoverage: 衆院の質問主意書を取得した回次
   });
 });
 
-describe("linkedRecordCounts: 議員ページに実際に出ている件数（#251）", () => {
+/**
+ * #451: この 6 件は `coverage.ts` から import しているが、**実体は `members-count.ts` にある**
+ * （`coverage.ts` は再 export するだけ）。#441 で `/coverage` の件数が `data-files.ts` の
+ * `readLinkedRecordCounts` に移ったとき、計算だけが書き写されて**このテストは移らなかった**——
+ * 本番が通る道に 1 件も無いまま、`questions` を 0 に固定しても 925 件が全部緑だった。
+ *
+ * いまは計算が 1 か所しか無いので、ここが落ちれば `data-files.ts` 経由の本番も一緒に落ちる。
+ * 本番経路そのものは `data-files.test.ts` の `readLinkedRecordCounts` と
+ * `routes/coverage.test.tsx` の loader のテストが別に見ている（計算がどこへ移っても効く）。
+ */
+describe("linkedRecordCounts: 議員ページに実際に出ている件数（#251 / #451）", () => {
   // members/index.json の counts の合計そのもの。取得の有無や名簿の覆う回次から推論しない
   const members = [
     { house: "shugiin" as const, counts: { rollcalls: 0, bills: 3, speeches: 0, questions: 0 } },

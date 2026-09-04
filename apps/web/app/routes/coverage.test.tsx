@@ -645,3 +645,88 @@ describe("/coverage の既定（bundled）で議員数が出る（Issue 441）",
     expect(bundled.reduce((t, r) => t + r.current, 0)).toBe(rawMembers.filter((m) => m.current !== false).length);
   });
 });
+
+/**
+ * Issue 451: `/coverage` の「議員ページに出ている件数」は #441 で `data-files.ts` の
+ * `readLinkedRecordCounts` に移ったが、**テストは移らなかった**（`coverage.ts` の側に 6 件残り、
+ * 本番が通る道に 0 件）。`questions` を 0 に固定する変異で web の 925 件が全部緑のまま通り、
+ * ビルドすると画面の「42」が「0」に変わったうえに
+ * **「そのうち提出者を名簿に照合できたものはありません」という事実に反する文が増えた**。
+ *
+ * #408 / #441 と同じ系統の 3 例目なので、同じ形で塞ぐ: **本番の loader をそのまま呼び、
+ * 出た数字を生の `data/members/index.json` から独立に数えた値と突き合わせる。**
+ * 計算がどのファイルに移っても、画面の数字が変われば落ちる。
+ *
+ * **期待値を実装から作らない**（`readLinkedRecordCounts` も `linkedRecordCounts` も呼ばない）。
+ * 実装から作ると、実装が壊れたときに期待値も一緒に壊れて永久に検出できない。
+ */
+describe("/coverage の loader（本番経路）で議員ページに出ている件数が出る（Issue 451）", () => {
+  /** 生の members/index.json。実装を経由しない独立した経路 */
+  const rawMembers: { house?: string; counts?: { rollcalls?: number; bills?: number; speeches?: number; questions?: number } }[] = JSON.parse(
+    readFileSync(join(import.meta.dirname, "../../../../data/members/index.json"), "utf8"),
+  );
+  /** その院の counts をここで直に足す（`reduce` を実装と共有しない） */
+  const rawSum = (house: string, key: "rollcalls" | "bills" | "speeches" | "questions") => {
+    let t = 0;
+    for (const m of rawMembers) if (m.house === house) t += m.counts?.[key] ?? 0;
+    return t;
+  };
+  /** 画面に出る数字は 3 桁区切り（`toLocaleString("ja-JP")`）。生の数からその表記を作る */
+  const shown = (v: number) => v.toLocaleString("ja-JP");
+
+  it("loader が返す件数が、members/index.json を直に数えた値と一致する", async () => {
+    const { loader } = await import("./coverage");
+    const { linked } = await loader();
+    // **4 項目 × 2 院をまとめて見る。** 1 項目でも取り違えたら落ちる
+    expect(linked.sangiin).toEqual({ rollcalls: rawSum("sangiin", "rollcalls"), bills: rawSum("sangiin", "bills"), speeches: rawSum("sangiin", "speeches"), questions: rawSum("sangiin", "questions") });
+    expect(linked.shugiin).toEqual({ rollcalls: rawSum("shugiin", "rollcalls"), bills: rawSum("shugiin", "bills"), speeches: rawSum("shugiin", "speeches"), questions: rawSum("shugiin", "questions") });
+    // 院ごとに違う数であること自体も確かめる。同じ数なら `house` フィルタを外す変異が素通りするので、
+    // このテスト自体が効かない（fixture ではなく実データなので、崩れたらここで気づく）
+    expect(linked.sangiin?.questions).not.toBe(linked.shugiin?.questions);
+    expect(linked.sangiin?.speeches).not.toBe(linked.shugiin?.speeches);
+  });
+
+  it("loader の結果で描くと、画面の可視テキストにその件数がそのまま出る", async () => {
+    const { loader } = await import("./coverage");
+    const { linked, shugiinBillNames } = await loader();
+    render(
+      <MemoryRouter>
+        {/* bundled の data / 集計はそのまま（本番と同じ）。linked と議案の氏名だけ loader から渡す */}
+        <CoveragePage shugiinBillNames={shugiinBillNames} linked={linked} />
+      </MemoryRouter>,
+    );
+
+    // 1. 発言の節: 両院の発言件数が出る
+    const speech = screen.getByRole("region", { name: "発言をどの会議まで収録しているか" });
+    expect(speech).toHaveTextContent(`参議院が ${shown(rawSum("sangiin", "speeches"))} 件`);
+    expect(speech).toHaveTextContent(`衆議院が ${shown(rawSum("shugiin", "speeches"))} 件`);
+
+    // 2. 衆院の節: 議案・質問主意書・発言の 3 つ。**「42」が「0」に変わったら落ちるのはここ**
+    const roster = screen.getByRole("region", { name: "衆議院の記録が議員ページに紐づく範囲" });
+    expect(roster).toHaveTextContent(`提出・賛成した議案が ${shown(rawSum("shugiin", "bills"))} 件`);
+    expect(roster).toHaveTextContent(`質問主意書が ${shown(rawSum("shugiin", "questions"))} 件`);
+    expect(roster).toHaveTextContent(`発言が ${shown(rawSum("shugiin", "speeches"))} 件`);
+  });
+
+  /**
+   * **件数が変わると付く説明文まで変わる。** 質問主意書が 0 件のときだけ
+   * 「そのうち提出者を名簿に照合できたものはありません」が出る分岐で、
+   * #451 の変異はこれを**実際に 42 件あるのに**表示させていた（利用者から検出できない虚偽）。
+   * 数字だけでなく**この文の有無**も本番経路で固定する。
+   */
+  it("質問主意書が 1 件以上あるかぎり、「照合できたものはありません」とは書かない", async () => {
+    const { loader } = await import("./coverage");
+    const { linked, shugiinBillNames } = await loader();
+    render(
+      <MemoryRouter>
+        <CoveragePage shugiinBillNames={shugiinBillNames} linked={linked} />
+      </MemoryRouter>,
+    );
+    const roster = screen.getByRole("region", { name: "衆議院の記録が議員ページに紐づく範囲" });
+    // 前提: 実データでは衆院の質問主意書が 1 件以上ある（0 になったらこの前提ごと落ちる）
+    expect(rawSum("shugiin", "questions")).toBeGreaterThan(0);
+    expect(roster.textContent).not.toContain("照合できたものはありません");
+    // 出るのは「取得しています」の側
+    expect(roster).toHaveTextContent("の一覧を取得しています");
+  });
+});

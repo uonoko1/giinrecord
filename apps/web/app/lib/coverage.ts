@@ -121,24 +121,14 @@ export function speechCoverage(meta: DatasetMeta | undefined): SpeechCoverage[] 
 }
 
 /**
- * その院の議員ページに実際に出ている記録の件数（#251）。`members/index.json` の counts の合計で、
- * 「議員ページに出る」ことそのものの実数。取得の有無や名簿の覆う回次からの推論ではないので、
- * ETL の突合条件が変わっても、データを数え直せばそのまま追随する。
+ * その院の議員ページに実際に出ている記録の件数（#251）。
+ *
+ * **計算の実体は `members-count.ts` にある**（#451）。この画面（Vite 側）と、tsx で直に走る
+ * ビルドスクリプトから読まれる `data-files.ts` の両方が**同じ 1 つの関数**を呼ぶ。
+ * `coverage.ts` は `assemblies.ts` 経由で `import.meta.glob`（Vite 専用）に触るので、
+ * `data-files.ts` はここを値として import できない——だから計算を持つのはここではない。
  */
-export interface LinkedRecordCounts {
-  rollcalls: number;
-  bills: number;
-  speeches: number;
-  questions: number;
-}
-
-/** 院ごとに members/index.json の counts を合計する。その院の議員が 0 人なら null（無い事実を作らない）。 */
-export function linkedRecordCounts(members: readonly { house: House; counts: { rollcalls: number; bills: number; speeches: number; questions?: number } }[], house: House): LinkedRecordCounts | null {
-  const rows = members.filter((m) => m.house === house);
-  if (rows.length === 0) return null;
-  const sum = (pick: (c: (typeof rows)[number]["counts"]) => number | undefined) => rows.reduce((t, m) => t + (pick(m.counts) ?? 0), 0);
-  return { rollcalls: sum((c) => c.rollcalls), bills: sum((c) => c.bills), speeches: sum((c) => c.speeches), questions: sum((c) => c.questions) };
-}
+export { linkedRecordCounts, type LinkedRecordCounts } from "./members-count";
 
 /**
  * 参院の票が議員に紐づいているかを回次ごとに数えた結果（#274）。数えるのは Node 側

@@ -1,10 +1,11 @@
 // @vitest-environment node
+import { readFileSync } from "node:fs";
 import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { assemblyPaths, memberPaths, readAssemblies, readLocalAssemblyMeta, readAssemblySessions, readLocalRollCallIndex, readMemberDetail, readMeta, readRollCall, readSangiinVoteLinkStats, readShugiinBillNameStats, readUnmatchedSpeechStats, rollCallPaths } from "./data-files";
+import { assemblyPaths, memberPaths, readAssemblies, readLocalAssemblyMeta, readAssemblySessions, readLocalRollCallIndex, readLinkedRecordCounts, readMemberDetail, readMeta, readRollCall, readSangiinVoteLinkStats, readShugiinBillNameStats, readUnmatchedSpeechStats, rollCallPaths } from "./data-files";
 
 const fixtures = fileURLToPath(new URL("../test-fixtures/data", import.meta.url));
 const missing = fileURLToPath(new URL("../test-fixtures/does-not-exist", import.meta.url));
@@ -302,5 +303,96 @@ describe("readUnmatchedSpeechStats（#370）: 紐づけられなかった発言�
 
   it("unmatched.json が無ければ null（無い事実を作らない）", async () => {
     expect(await readUnmatchedSpeechStats(missing)).toBeNull();
+  });
+});
+
+/**
+ * #451: `/coverage` の「議員ページに出ている件数」は #441 でこの関数に移ったが、**テストが 1 件も無かった**。
+ * `questions` を 0 に固定しても web の 925 件が全部緑のまま通り、ビルドすると画面の「42」が「0」に変わり、
+ * さらに「そのうち提出者を名簿に照合できたものはありません」という**事実に反する文が増えた**。
+ *
+ * fixture は**両院を混ぜ、4 項目とも院ごとに違う数**にしてある。同じ数だとどの項目・どちらの院を
+ * 読んでいるか見分けられず、`house` フィルタを外す変異も項目を取り違える変異も素通りする。
+ */
+describe("readLinkedRecordCounts（#251 / #441 / #451）: 議員ページに出ている件数", () => {
+  /**
+   * 院ごとの合計（この数を手で足したもの。実装を呼んで作らない）:
+   *   sangiin  rollcalls 10+5=15 / bills 1+2=3   / speeches 2+0=2  / questions 7+0=7
+   *   shugiin  rollcalls 0+0=0   / bills 3+40=43 / speeches 5+8=13 / questions 42+0=42
+   * `questions` は #106 以降のデータにしか無いので、**持たない行**（衆院の 2 人目）も混ぜてある。
+   */
+  async function membersDataDir(): Promise<string> {
+    const dir = await mkdtemp(path.join(tmpdir(), "seiji-linked-"));
+    await mkdir(path.join(dir, "members"));
+    await writeFile(
+      path.join(dir, "members", "index.json"),
+      JSON.stringify([
+        { id: "m_1", name: "参議 一郎", house: "sangiin", counts: { rollcalls: 10, bills: 1, speeches: 2, questions: 7 } },
+        { id: "m_2", name: "参議 二郎", house: "sangiin", counts: { rollcalls: 5, bills: 2, speeches: 0, questions: 0 } },
+        { id: "m_3", name: "衆議 三郎", house: "shugiin", counts: { rollcalls: 0, bills: 3, speeches: 5, questions: 42 } },
+        { id: "m_4", name: "衆議 四郎", house: "shugiin", counts: { rollcalls: 0, bills: 40, speeches: 8 } },
+      ]),
+    );
+    return dir;
+  }
+
+  it("院ごとに counts の 4 項目を合計する（両院が混ざらない）", async () => {
+    const linked = await readLinkedRecordCounts(await membersDataDir());
+    // `toEqual` で **4 項目まとめて**見る。1 項目だけ見ると他の 3 項目の変異が素通りする
+    expect(linked.sangiin).toEqual({ rollcalls: 15, bills: 3, speeches: 2, questions: 7 });
+    expect(linked.shugiin).toEqual({ rollcalls: 0, bills: 43, speeches: 13, questions: 42 });
+  });
+
+  it("questions を持たない（#106 より前の）行は 0 として数える（欠測にしない）", async () => {
+    // 衆院の 2 人目は counts.questions が無い。それでも合計は 1 人目の 42 のままで、NaN や undefined にならない
+    const linked = await readLinkedRecordCounts(await membersDataDir());
+    expect(linked.shugiin?.questions).toBe(42);
+  });
+
+  it("その院の議員が 0 人なら null（無い事実を作らない）", async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), "seiji-linked-empty-"));
+    await mkdir(path.join(dir, "members"));
+    await writeFile(path.join(dir, "members", "index.json"), JSON.stringify([{ id: "m_1", name: "参議 一郎", house: "sangiin", counts: { rollcalls: 1, bills: 0, speeches: 0, questions: 0 } }]));
+    const linked = await readLinkedRecordCounts(dir);
+    expect(linked.shugiin).toBeNull(); // 0 件ではなく null。「衆院の記録は 0 件」という無い事実を作らない
+    expect(linked.sangiin).not.toBeNull();
+  });
+
+  it("members/index.json が無ければ両院とも null（無い事実を作らない）", async () => {
+    expect(await readLinkedRecordCounts(missing)).toEqual({ sangiin: null, shugiin: null });
+  });
+
+  it("index.json が壊れていれば黙らずに throw する（0 件にしない）", async () => {
+    await expect(readLinkedRecordCounts(await brokenDataDir())).rejects.toThrow(SyntaxError);
+  });
+});
+
+/**
+ * #451: `linkedRecordCounts` は `members-count.ts` に 1 つだけ置き、この画面（Vite）と
+ * `data-files.ts`（tsx で直に走るビルドスクリプトから読まれる）の**両方が同じ関数を呼ぶ**。
+ *
+ * これが成り立つのは `members-count.ts` が**型以外を import しない**からで、値の import を
+ * 1 つ足しただけで `import.meta.glob` に触る経路が繋がりうる（`coverage.ts` は `assemblies.ts`
+ * 経由で実際に触る）。そうなると `pnpm --filter web build` の tsx スクリプトが
+ * `import.meta.glob is not a function` で落ちる——**#441 の担当者が実際に踏んだ罠**。
+ *
+ * ビルドを流さないと出ない失敗なので、ソースの形でここに固定する。
+ */
+describe("members-count.ts は型以外を import しない（#451 / #441 の罠）", () => {
+  const src = readFileSync(fileURLToPath(new URL("./members-count.ts", import.meta.url)), "utf8");
+
+  it("import 行はすべて `import type`（値を持ち込むと tsx のビルドスクリプトが glob で落ちる）", () => {
+    const imports = src.split("\n").filter((l) => /^\s*import\s/.test(l));
+    expect(imports.length, "import 行が 1 つも無い（このテストが何も見ていない）").toBeGreaterThan(0);
+    expect(imports.filter((l) => !/^\s*import\s+type\s/.test(l))).toEqual([]);
+  });
+
+  it("import.meta.glob を直に使わない（コメントで名前を出すのは可）", () => {
+    // コメントは落とす。このファイルの doc コメント自身が「glob に触るな」と書いていて、
+    // 素の文字列検索だと**注意書きを書いたこと自体で落ちる**（実際に落ちた）
+    const code = src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+    expect(code).not.toContain("import.meta.glob");
+    // コメントを落としても中身は残っている（正規表現がファイルを空にしていない）
+    expect(code).toContain("export function linkedRecordCounts");
   });
 });
