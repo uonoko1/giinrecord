@@ -30,7 +30,12 @@
 .rollcalls-count { color: var(--muted); }
 .rollcalls-list { list-style: none; margin: 0; padding: 0 20px; }
 .rollcalls-item { padding: 12px 0; border-bottom: 1px solid var(--rule); display: flex; flex-direction: column; gap: 4px; }
-.rollcalls-item a { color: var(--ink); font-size: 14.5px; line-height: 1.5; font-weight: 700; text-decoration: none; }
+/* 議案名は太字にしない（#456、判断は #453 / docs/research/typography-judgment.md）。
+   設計方針にもワイヤーフレーム（design/wireframes/Votes.dc.html:52 はゴシックで weight 未指定）にも
+   太字にする根拠が無い。#33 の初回実装から入っていた 700 を外して設計どおりに戻した。
+   ここに 700 を書き戻すと BIZ UDPGothic 700 のスライスを別に読むので /rollcalls が +302 KB になる
+   （実測 888 → 1,190 KB）。検査は rollcalls-bill-weight.test.ts。 */
+.rollcalls-item a { color: var(--ink); font-size: 14.5px; line-height: 1.5; text-decoration: none; }
 .rollcalls-item a:hover { text-decoration: underline; }
 .rollcalls-meta { font-size: 12px; color: var(--muted); }
 .rollcalls-meta time { color: var(--brass); font-weight: 700; }
