@@ -372,17 +372,6 @@ describe("readLinkedRecordCounts（#251 / #441 / #451）: 議員ページに出�
  * #451: `linkedRecordCounts` は `linked-counts.ts` に 1 つだけ置き、この画面（Vite）と
  * `data-files.ts`（tsx で直に走るビルドスクリプトから読まれる）の**両方が同じ関数を呼ぶ**。
  *
- * これが成り立つのは `linked-counts.ts` が**型以外を import しない**からで、値の import を
- * 1 つ足しただけで `import.meta.glob` に触る経路が繋がりうる（`coverage.ts` は `assemblies.ts`
- * 経由で実際に触る）。そうなると `pnpm --filter web build` の tsx スクリプトが
- * `import.meta.glob is not a function` で落ちる——**#441 の担当者が実際に踏んだ罠**。
- *
- * ビルドを流さないと出ない失敗なので、ソースの形でここに固定する。
- */
-/**
- * #451: `linkedRecordCounts` は `linked-counts.ts` に 1 つだけ置き、この画面（Vite）と
- * `data-files.ts`（tsx で直に走るビルドスクリプトから読まれる）の**両方が同じ関数を呼ぶ**。
- *
  * これが成り立つのは `linked-counts.ts` が**型以外を持ち込まない**からで、値の import を
  * 1 つ足しただけで `import.meta.glob` に触る経路が繋がりうる（`coverage.ts` は `assemblies.ts`
  * 経由で実際に触る）。そうなると `pnpm --filter web build` の tsx スクリプトが
@@ -522,6 +511,11 @@ describe("linked-counts.ts は型以外を持ち込まない（#451 / #441 の�
       "文字列リテラル内の import（正規表現版はここで誤検出した）": 'export const help = \'import { a } from "./assemblies"\';',
       "テンプレートリテラル内の import": 'export const help = `import { a } from "./assemblies"`;',
       "束縛が空（TS が消すのでビルドは落ちない。実測で確認）": 'import {} from "./assemblies";\nexport {} from "./assemblies";',
+      // CommonJS の 2 形は**検出しないのが正しい**（上のコメントの理由）。
+      // 「検出しない」ことをテストで固定しておくと、次に検査を広げる人が
+      // **これを穴だと思って塞ぎ、通すべき書き方まで落とす**のを止められる
+      "require（黙って壊れないので対象外。実測 ReferenceError）": 'const a = require("./assemblies");',
+      "import-equals（同上。実測 ERR_AMBIGUOUS_MODULE_SYNTAX）": 'import a = require("./assemblies");',
       "from の無いローカル export": "export const x = 1;\nexport { x };",
       "import が 1 つも無い": "export function f() { return 1; }",
     };
@@ -539,9 +533,17 @@ describe("linked-counts.ts は型以外を持ち込まない（#451 / #441 の�
    * それ自体が「置くべきでないものを置こうとしている」合図**だから。
    * 計算だけを残して、読み込みは呼び出し側（`data-files.ts` / 画面）に置くこと。
    *
-   * `require()` は塞いでいない。**黙って壊れないから**——実測すると
-   * `ReferenceError: Cannot determine intended module format ...` で即座に落ち、
-   * typecheck も通らない。**静かに間違うものだけを検査する。**
+   * **CommonJS の 2 形は塞いでいない。どちらも「黙って壊れない」から**（実測）:
+   *
+   * - `require("./x")` → `ReferenceError: Cannot determine intended module format ...`
+   *   で即座に落ち、typecheck も通らない
+   * - `import a = require("./x")`（TS の import-equals） → 本番のビルド経路
+   *   （`npx tsx apps/web/scripts/sitemap.ts`）が `ERR_AMBIGUOUS_MODULE_SYNTAX` で即座に落ちる。
+   *   **ただし typecheck は通る**ので、捕まえるのは CI の `pnpm build` の側
+   *
+   * **静かに間違うものだけを検査する。** どちらも起動した瞬間に大きな音を立てて壊れるので、
+   * ここで重ねて検査する価値が無い（検査を増やすほど、通すべき書き方まで落とす危険が増える）。
+   * **穴として残しているのではない**——次に読む人が「検出できていない」と読まないように書いておく。
    */
   it("動的 import も書かない（AST で式の中まで見る）", () => {
     const dynamicImports = (code: string): string[] => {
