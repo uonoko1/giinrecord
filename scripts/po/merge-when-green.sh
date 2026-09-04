@@ -12,6 +12,8 @@
 #   4. `gh pr merge --squash --delete-branch`
 #      refused by the strict base-branch policy → update the branch and **wait for the checks to
 #      re-run** before trying again (#392); a fixed sleep is not enough (docker-web takes 1-3 min)
+#      a non-zero exit does NOT mean "not merged": re-read the PR state and finish successfully
+#      when our verified head is already MERGED (#434)
 # Before every merge attempt: re-read the PR head and refuse if it moved since we started (#392).
 # Before touching anything: refuse if another open PR is based on this branch (#392) — merging
 # deletes the head branch, which closes those PRs.
@@ -253,11 +255,59 @@ wait_for_green
 # `mergeStateStatus` は UNSTABLE、`docker-web` が pending のままだった。
 # POLL_INTERVAL×3 ≒ 1分しか待たないのに、docker-web は 1〜3 分かかる。
 # **時間で決め打ちせず、状態が緑に戻るまで待つ**（上限は通算の POLL_MAX）。
+# `gh pr merge` の**非ゼロを「マージされなかった」と読んではいけない**（#434）。
+# 実地で1日に5回踏んだ（PR #428/#429/#430/#432/#437）: `mergeStateStatus` が UNKNOWN
+# （GitHub がマージ可能性を計算中）の間に叩くと、**実際にはマージされるのに非ゼロで返る**。
+# 10 秒×6 回待っても UNKNOWN のままだったので「待てば解決」ではない。**結果を読む**。
+# もう1つの経路: マージ自体は成功したが `--delete-branch` の**ローカル**ブランチ削除が
+# 「used by worktree at ...」で失敗した場合も非ゼロになる。これも成功である。
+#
+# assert_merged_by_us — マージ後の PR を読み、**我々の成功として報告してよいか**を返す。
+#   0: 我々が検査した HEAD がマージされた（成功として終わってよい）
+#   1: まだ OPEN（本当に拒まれた。従来どおり再試行 → die）
+#   die: MERGED だが別の commit / CLOSED（どちらも再試行してはいけない）
+#
+# **なぜ state=MERGED だけでは足りないか**（「成功として扱う」が緩すぎないかの線引き）:
+# MERGED は「誰かがマージした」しか意味しない。他人が新しいコミットを push してから
+# マージしていた場合も MERGED になり、そのとき main に入ったのは**我々が緑を確認していない
+# commit** である。#392/#414 で守ってきた「検査を通った HEAD だけがマージされる」という
+# 不変条件を、ここで黙って崩すことになる。
+# そこで **マージ後も読める headRefOid が、直前に assert_head_unchanged で確かめた
+# $HEAD_OID と一致すること**まで確かめる。一致すれば、たとえ手を下したのが他人でも
+# **main に入った中身は我々が検査したものと同一**なので、成功と報告してよい
+# （squash マージなので main 側の SHA は変わるが、入る差分は head の内容そのもの）。
+# 一致しなければ「マージはされたが我々の成功ではない」と伝えて止める——PO に
+# 「何がマージされたのか」を必ず見に行かせるためで、黙って 0 で終わるより安全。
+assert_merged_by_us() {
+  local state oid
+  IFS=$'\t' read -r state oid < <(
+    gh pr view "$PR" --json state,headRefOid -q '[.state, .headRefOid] | @tsv'
+  )
+  case "$state" in
+    OPEN) return 1 ;;   # 本当に拒まれた
+    MERGED)
+      if [[ "$oid" == "$HEAD_OID" ]]; then
+        log "gh pr merge は非ゼロで返りましたが PR #$PR は MERGED です（検査した HEAD ${HEAD_OID:0:7} のまま）。成功として扱います"
+        log "（ローカルブランチ $HEAD が残っている場合があります: worktree が使っていると削除に失敗します。手で消してください）"
+        return 0
+      fi
+      die "PR #$PR は MERGED ですが、マージされたのは別の commit です（検査した ${HEAD_OID:0:7} → ${oid:0:7}）。
+       我々が緑を確認していない変更が main に入っている可能性があります。$URL を確認してください。" ;;
+    *)
+      die "PR #$PR はマージ中に $state になりました（マージされていません）。$URL を確認してください。" ;;
+  esac
+}
+
 log "squash-merging PR #$PR and deleting $HEAD"
 for attempt in 1 2 3; do
   assert_head_unchanged     # 待っている間に push されたコミットを取り残さない（#392）
   assert_no_stacked_prs     # 待っている間に上へ積まれた PR を巻き添えにしない（#392）
   if gh pr merge "$PR" --squash --delete-branch; then
+    echo "merged PR #$PR ($HEAD) $URL"
+    exit 0
+  fi
+  # 非ゼロ。**再試行する前に、本当にマージされていないかを確かめる**（#434）
+  if assert_merged_by_us; then
     echo "merged PR #$PR ($HEAD) $URL"
     exit 0
   fi
