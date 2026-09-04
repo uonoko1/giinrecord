@@ -46,7 +46,7 @@
 /* 件数。0 件のタブは隠さない・押せなくもしない（「無い」ことが情報だから）。
    区別は opacity ではなく破線の下線で付ける: --muted は --paper に対し 4.98:1（ライト）/ 5.77:1（ダーク）で
    AA を満たすが、opacity を掛けると下回る（.7 でもライトは 2.82:1）。押せる要素なので彩度ではなく形で示す。 */
-.member-tab-count { font-size: 11px; font-weight: 400; color: var(--muted); }
+.member-tab-count { font-family: var(--font-body); font-size: 11px; font-weight: 400; color: var(--muted); }
 .member-tab[data-empty="true"] .member-tab-count { text-decoration: underline dashed; text-underline-offset: 3px; text-decoration-color: var(--rule); }
 
 /* 回次ごとの折りたたみ（#103）。直近2回次は open。見出しは回次名と件数だけで、評価語は無い */
@@ -55,7 +55,12 @@
 .member-session-head::-webkit-details-marker { display: none; }
 .member-session-head::before { content: "▸"; font-size: 12px; color: var(--brass); }
 .member-session[open] > .member-session-head::before { content: "▾"; }
-.member-session-count { font-size: 12px; font-weight: 400; color: var(--muted); }
+/* 件数は本文家族を**明示する**（#454）。書かないと親 .member-session-head の var(--font-head) を継承し、
+   Shippori Mincho に 400 が無いので CSS のマッチング規則で **500 が選ばれる**。
+   実測: /members/m_003005 で shippori-mincho-500 が 2件 38 KB 読まれ、
+   CSS.getPlatformFontsForNode が "Shippori Mincho Medium" で描画していた。
+   数字と「件」だけなので、本文ゴシックで設計方針から外れない。回次名（.member-session-name）は明朝のまま。 */
+.member-session-count { font-family: var(--font-body); font-size: 12px; font-weight: 400; color: var(--muted); }
 
 /* 時系列 */
 .member-day { padding: 0 20px; }
@@ -99,7 +104,7 @@
 .member-table-wrap { overflow-x: auto; padding: 12px 20px 0; }
 .member-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .member-table th, .member-table td { padding: 10px 8px; border-bottom: 1px solid var(--rule); text-align: left; vertical-align: top; }
-.member-table th { font-size: 11px; letter-spacing: 0.1em; color: var(--muted); font-weight: 400; }
+.member-table th { font-family: var(--font-body); font-size: 11px; letter-spacing: 0.1em; color: var(--muted); font-weight: 400; }
 .member-note { display: block; margin-top: 4px; font-size: 11px; color: var(--muted); }
 
 /* 出典 */
