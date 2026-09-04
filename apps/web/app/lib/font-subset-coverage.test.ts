@@ -68,8 +68,18 @@ describe("明朝700 のサブセットが data/ を覆っている（#477）", (
     expect(missing, `明朝700 のサブセットに ${missing.length} 字足りない: ${missing.join("")}（docs/ops/fonts.md の手順で作り直す）`).toEqual([]);
   });
 
-  it.runIf(hasData)("全角空白（U+3000）が入っている — 落とすと 218 名が 1 グリフだけ書体が変わる", () => {
-    // #468 の失敗2。箱の比較では 997 件すべて 0 差で、検出できなかった
-    expect(committed.has("　")).toBe(true);
+  /**
+   * #468 の失敗2: 氏名の間の空白を対象から外して、229 名中 **218 名が 1 グリフだけ**
+   * フォールバックした。**箱の比較では検出できなかった**（997 件すべて 0 差）。
+   *
+   * **ただし、いまの `data/` の氏名の区切りは U+3000 ではなく U+0020 だった**（実測 2026-09-05、
+   * `index.json` の 1,013 件すべて U+20。U+3000 は 1 件も無い）。
+   * 調査は「全角空白」と書いているので、**字を名指しで固定すると、実態と違うものを守ることになる**。
+   * だから名指しではなく「**目に見えない字が 1 つも欠けていない**」を検査する。
+   */
+  it.runIf(hasData)("目に見えない字（空白の類）が 1 つも落ちていない", () => {
+    const invisible = [...dataHeadChars(readHeadFontDataSource(dataDir))].filter((c) => /\s/u.test(c) || c === "　");
+    expect(invisible.length, "data/ の明朝700 の欄に空白が 1 つも無い（区切りの取り方が変わった可能性）").toBeGreaterThan(0);
+    expect(invisible.filter((c) => !committed.has(c))).toEqual([]);
   });
 });
