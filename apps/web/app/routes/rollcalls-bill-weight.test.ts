@@ -38,6 +38,26 @@ import { describe, expect, it } from "vitest";
  * 自前の正規表現だと、まとめ書き（`.a, .b { … }`）や後勝ちの打ち消しを取りこぼす。
  * **`font-weight` が「無い」ことだけでなく、「効いている値が 400 相当であること」**を見る——
  * どこかに `.rollcalls-item a` を含むまとめ書きで 700 を足されても捕まえるため。
+ *
+ * ## このファイルが守る範囲は狭い（#464）。番人は隣のブラウザ版
+ *
+ * **ここは `.rollcalls-item a` という「セレクタ文字列が完全一致する規則」しか見ない。**
+ * #464 でレビュアーが実ブラウザで測ったところ、**6 通りの書き方が素通り**した——
+ * 親（`.rollcalls-item` / `.rollcalls-list`）からの継承、ショートハンド（`font:`）、
+ * 子結合子（`.rollcalls-item > a`）、型セレクタ付き（`li.rollcalls-item a`）、`@media` の中。
+ * どれも本番では議案名の computed `font-weight` を **400 → 700 に戻す**（＝ +302 KB が復活する）のに、
+ * このファイルは緑のままだった。
+ *
+ * **その 6 通りを捕まえるのは `rollcalls-bill-weight.browser.test.tsx`**（実ブラウザの computed style）。
+ * こちらは**ブラウザ無しで走る速い検査**として残してある:
+ *
+ * - 直接書き戻す / まとめ書き（`.a, .rollcalls-item a { … }`）/ 別ルールで後から足す
+ *   ——この 3 通りは**ここでも捕まる**（#456 で守ると宣言した範囲）
+ * - `.members-item__name`（議員名の明朝 700。**別ページ**）は、ブラウザ版が
+ *   `/rollcalls` の 1 ページしか描かないので**ここだけが守っている**
+ *
+ * **`font-weight` の退行を止める番人はブラウザ版のほう。**
+ * ここが緑であることは「破られていない」の証明にならない（#464 がまさにそれだった）。
  */
 const app = join(import.meta.dirname, "..");
 const read = (p: string) => readFileSync(join(app, p), "utf8");
