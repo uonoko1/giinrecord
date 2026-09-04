@@ -34,6 +34,15 @@ import { parseSubsetChars, SUBSET_CHARS_FILE, SUBSET_FILE } from "./font-subset"
 const fontsDir = path.resolve(import.meta.dirname, "../../public/fonts");
 const dataDir = defaultDataDir();
 
+function readJson<T>(file: string): T | null {
+  try {
+    return JSON.parse(readFileSync(file, "utf8")) as T;
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") return null;
+    throw err;
+  }
+}
+
 const hasData = (() => {
   try {
     return statSync(path.join(dataDir, "members", "index.json")).isFile();
@@ -77,6 +86,32 @@ describe("明朝700 のサブセットが data/ を覆っている（#477）", (
    * 調査は「全角空白」と書いているので、**字を名指しで固定すると、実態と違うものを守ることになる**。
    * だから名指しではなく「**目に見えない字が 1 つも欠けていない**」を検査する。
    */
+  /**
+   * **`data/` を見ずにビルド済み HTML だけで作ると、1,057 名中 204 名の氏名に欠けが出る**（実測 2026-09-05）。
+   *
+   *     HTML のみ  644 字 -> 欠けの出る議員 204 / 1057（衛藤 晟一・小沼 巧・片山 さつき …）
+   *     data のみ  877 字 -> 0 / 1057
+   *     和集合     943 字 -> 0 / 1057
+   *
+   * `/members` は 200 件で折りたたまれ（#340）、議員ページのタブも折りたたまれるので、
+   * **HTML には 229 名ぶんしか入っていない**。#468 の調査は「20 件のサンプル + ページ走査」で
+   * 字を集めており、**その方法では原理的に集まらない字がある**。
+   *
+   * 逆に **HTML にしか無い字も 66 字ある**（`.tag` の「事実」「推定」など、`data/` に無い静的な語）。
+   * これが調査の「失敗1」（議員名の字だけで作って `/` `/coverage` `/assemblies` が
+   * システムフォントに落ちた）の正体である。**どちらか片方では必ず足りない。**
+   *
+   * ここでは `data/` 側だけを検査する（HTML はビルドが要る）。この検査が守るのは
+   * 「**新しい議員が入って字が増えたら落ちる**」ことであって、静的な語が増える経路ではない。
+   * そちらは `scripts/font-subset.ts` の再実行が見る。**強い主張をしない。**
+   */
+  it.runIf(hasData)("議員 1,057 名全員の氏名が、1 字残らずサブセットに入っている", () => {
+    const index = readJson<{ name?: string }[]>(path.join(dataDir, "members", "index.json")) ?? [];
+    expect(index.length).toBeGreaterThan(1000);
+    const incomplete = index.filter((m) => [...(m.name ?? "")].some((c) => !committed.has(c))).map((m) => m.name);
+    expect(incomplete, `${incomplete.length} 名の氏名に、サブセットに無い字がある`).toEqual([]);
+  });
+
   it.runIf(hasData)("目に見えない字（空白の類）が 1 つも落ちていない", () => {
     const invisible = [...dataHeadChars(readHeadFontDataSource(dataDir))].filter((c) => /\s/u.test(c) || c === "　");
     expect(invisible.length, "data/ の明朝700 の欄に空白が 1 つも無い（区切りの取り方が変わった可能性）").toBeGreaterThan(0);
