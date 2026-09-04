@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import ts from "typescript";
 import { describe, expect, it } from "vitest";
 
 /**
@@ -70,6 +71,205 @@ export function luminance(hex: string): number {
 export function contrast(a: string, b: string): number {
   const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
   return (hi + 0.05) / (lo + 0.05);
+}
+
+/* ==========================================================================
+ * 入れ子の地を「CSS のテキスト」ではなく **CSSOM に解かせて**求める。Issue 483
+ * ========================================================================== */
+
+/**
+ * **自前で CSS を解析しない。** #483 の穴はここだった:
+ *
+ *     expect(member).toMatch(/^\.member-tab \{[^}]*background:\s*none[^}]*color:\s*var\(--muted\)/m)
+ *
+ * この正規表現は `background: none` が `color` より**前**にあることを要求するだけで、
+ * **後ろに足された宣言も、別規則からの上書きも見ない**。レビュアーが実測した素通り（63 件緑のまま）:
+ *
+ *     .member-tab の宣言の末尾に background: var(--paper) を足す      → 素通り（後勝ち）
+ *     .member-tab { background: var(--paper) } をファイル末尾に追記    → 素通り（後勝ち）
+ *     .member-tabs .member-tab { background: var(--paper) } を追記    → 素通り（詳細度で勝つ）
+ *     .member-tab に box-shadow: inset 0 0 0 100px var(--paper)      → 素通り
+ *
+ * `target-size.test.ts` の `declarationsFor` が既にこう書いていた:
+ * 「**自前で CSS を解析しない**——実際に正規表現を 2 回書き直して 2 回とも取りこぼした」。
+ * **#472 / #481 / #483 が 1 日に 3 件、同じ理由で素通りして、それを 3 度目に証明した**
+ * （`docs/WORKING_AGREEMENT.md`「CSS や TS を『テキストとして』正規表現で読まない」）。
+ *
+ * そこで**本物の CSS を jsdom に食わせ、本物と同じ形の DOM を組み、`getComputedStyle` に聞く**。
+ * 後勝ち・詳細度・継承は**ブラウザと同じ実装**が解く。実測（jsdom 26）:
+ *
+ *     .member-tab（素のまま）  background = "rgba(0, 0, 0, 0)"   ← 塗らない。親の地が透ける
+ *     上の変異 1・2・3 のどれか  background = "var(--paper)"      ← **どれでも見える**
+ *
+ * ## ここで見ないもの（塞がない形は「なぜ見ていないか」を書く。#451 の学び）
+ *
+ * - **`box-shadow` の実効色**。`inset 0 0 0 100px var(--paper)` は実 UI では地を塗り潰すが、
+ *   これは**どの実装の `getComputedStyle` でも解けない**——影は `background` に合成されず、
+ *   `boxShadow` が影の指定をそのまま返すだけで、それが箱を覆うかは**実際に描いて画素を見ないと**
+ *   決まらない（#464 の Playwright を持ち込んでも `getComputedStyle` のままでは同じ。
+ *   スクリーンショットの画素を読むところまで行けば解けるが、**そこまでの重さは要らない**）。
+ *   **代わりに `box-shadow` が付いていたら答えを返さず落とす**——「地は --est-bg だ」と
+ *   言い切れなくなったことを黙って通さないため。**「答えられない」と言えれば守りとしては足りる。**
+ * - **`@media` の中の上書き**。jsdom の `getComputedStyle` は `CSSMediaRule` を評価しない
+ *   （実測: `@media (min-width: 1px) { .member-tab { background: var(--paper) } }` は素通りする）。
+ *   `member.css` / `compare.css` に `@media` は **1 つも無い**ので、いまは穴ではない。
+ *   `tokens.css` の `@media (prefers-color-scheme: dark)` はトークンの値の話で、
+ *   **どの箱が地を敷くかは変えない**（ダークの値そのものは `darkToken` 側で別に固定してある）。
+ * - **inline style**。ここで組む DOM は `className` だけを持つ。`member.tsx` / `compare.tsx` の
+ *   該当箇所に `style=` は無い（`grep -c 'style=' member.tsx compare.tsx` → 0 / 0）。
+ */
+const NOT_PAINTED = new Set(["", "none", "transparent", "rgba(0, 0, 0, 0)"]);
+
+/** 本番と同じ CSS を全部読む。地は別のファイルの規則から敷かれることがあるので**まとめて**食わせる */
+const ALL_CSS = ["styles/tokens.css", "styles/pages.css", "routes/member.css", "routes/compare.css"]
+  .map((p) => readFileSync(join(import.meta.dirname, "..", p), "utf8"))
+  .join("\n");
+
+/** `var(--muted)` → `"muted"`。トークン 1 つでない値（`#fff`・`red`・複数）は `undefined` */
+function tokenName(value: string): string | undefined {
+  const m = /^var\(\s*--([a-z-]+)\s*\)$/.exec(value.trim());
+  return m ? m[1] : undefined;
+}
+
+/** 本物の CSS を敷いた上に、本物と同じ形の DOM を組む */
+function mount(html: string): void {
+  document.head.innerHTML = "";
+  document.body.innerHTML = "";
+  const style = document.createElement("style");
+  style.textContent = ALL_CSS;
+  document.head.appendChild(style);
+  document.body.innerHTML = html;
+}
+
+/**
+ * その要素の文字が実際に乗る地のトークン名を、**祖先を遡って**求める。
+ *
+ * 地を塗らない（`none` / `transparent` / 未指定）要素は親の地が透けるので、そのまま上へ。
+ * どこにも当たらなければ紙（`--paper`）。**「たぶん紙」で済ませない**ために、
+ * 地を敷いているのにトークン 1 つで書かれていない要素に当たったら**落とす**
+ * （`#fff` 直書きなどはこの検査の前提を崩すので、黙って通さない）。
+ */
+function backgroundTokenOf(el: Element): string {
+  for (let n: Element | null = el; n; n = n.parentElement) {
+    const cs = getComputedStyle(n);
+    const shadow = cs.boxShadow.trim();
+    if (!NOT_PAINTED.has(shadow)) {
+      // 上の doc コメント参照: 影の実効色は解けない。**答えられないことを落として示す**
+      throw new Error(`${describe_(n)} に box-shadow がある（地を塗り潰しうるので、地を断定できない）: ${shadow}`);
+    }
+    /*
+     * **`background` だけを読まない。** jsdom で実測すると `background-color: var(--paper)` を
+     * 単独で書いた要素は `cs.background` が **`""`（空）**になり、`cs.backgroundColor` にしか出ない。
+     * `background` だけ見ると**その 1 行で静かに素通りする**——#483 で直しているのと**同じ形の穴**を
+     * 自分で作ることになる。ショートハンド・`background-color`・`background-image` を**全部**見る。
+     */
+    const painted = [cs.background, cs.backgroundColor, cs.backgroundImage].map((v) => v.trim()).filter((v) => !NOT_PAINTED.has(v));
+    if (painted.length === 0) continue; // 塗らない ＝ 親の地が透ける
+    // 同じ地が `background` と `background-color` の両方から出ることがあるので、種類で数える
+    const kinds = new Set(painted.map((v) => tokenName(v) ?? `(トークンでない: ${v})`));
+    if (kinds.size !== 1) throw new Error(`${describe_(n)} の地が 1 つに決まらない: ${[...kinds].join(" / ")}`);
+    const [only] = kinds;
+    if (only.startsWith("(")) throw new Error(`${describe_(n)} の地が var(--トークン) 1 つで書かれていない: ${only}`);
+    return only;
+  }
+  return "paper"; // どの祖先も塗っていない ＝ 紙の上
+}
+
+/** その要素の文字色のトークン名（**継承も CSSOM が解く**） */
+function colorTokenOf(el: Element): string {
+  const c = getComputedStyle(el).color.trim();
+  const t = tokenName(c);
+  if (!t) throw new Error(`${describe_(el)} の文字色が var(--トークン) 1 つで書かれていない: ${c}`);
+  return t;
+}
+
+/** 落ちたときにどの要素かを言えるようにする（`describe` は vitest のものと衝突するので別名） */
+function describe_(el: Element): string {
+  const cls = (el as HTMLElement).className;
+  return cls ? `.${String(cls).split(/\s+/).join(".")}` : el.tagName.toLowerCase();
+}
+
+/**
+ * `.tsx` の JSX から「`className` にこのクラスを持つ要素」を **TypeScript の parser で**探し、
+ * その**部分木の中に**目的のタグがあるかを見る。
+ *
+ * **窓つき正規表現（`className="x"[\s\S]{0,900}?<a href=`）を使わない。**
+ * #483 で実際に破れた: `.member-notice` の中のリンクを 2 つとも `<span>` に替えても、
+ * **窓が次の要素まで伸びて `<a href="/">← 議員レコード</a>`（member.tsx:525）を拾い**、
+ * 検査は緑のままだった。窓は「どこで要素が終わるか」を知らないので、**必ずこうなる**
+ * （`docs/WORKING_AGREEMENT.md`「CSS や TS を『テキストとして』正規表現で読まない」）。
+ */
+function jsxElementsWithClass(file: string, className: string): ts.JsxElement[] {
+  const source = ts.createSourceFile(file, readFileSync(file, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const found: ts.JsxElement[] = [];
+  const visit = (node: ts.Node): void => {
+    if (ts.isJsxElement(node)) {
+      for (const attr of node.openingElement.attributes.properties) {
+        if (!ts.isJsxAttribute(attr) || attr.name.getText() !== "className") continue;
+        const v = attr.initializer;
+        // `className="member-notice"` の形だけを見る（このリポジトリの該当箇所は全部この形）。
+        // 動的（`className={…}`）になったら**見つからない ＝ 落ちる**ので、静かには通らない
+        if (!v || !ts.isStringLiteral(v)) continue;
+        if (v.text.split(/\s+/).includes(className)) found.push(node);
+      }
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+  return found;
+}
+
+/**
+ * その JSX 要素の**部分木の中**にリンクがあるか。
+ *
+ * `<a>` そのものだけでなく、**`<a>` を返すことがこのファイルで確かめられる小さな部品**も数える。
+ * `member.tsx` の `ExternalLink` がそれで（`member.tsx:1039-1045` が `<a href target="_blank">` を返す）、
+ * 最初の注記（`member.tsx:489`）は `<ExternalLink>` と `<a>` の両方を持つ。
+ * **部品の中身は別に確かめる**（下の `rendersAnchor`）——名前だけで「リンクだろう」と決めない。
+ *
+ * 見ないままなのは、**別ファイルから import した部品**が `<a>` を返す場合。
+ * `member.tsx` / `compare.tsx` の注記の中に、そういう部品は現時点で無い
+ * （中身は `<a>` / `<ExternalLink>` / 素の文字列だけ）。増えたら**見つからない ＝ 落ちる**ので、
+ * 静かに通ることはない。
+ */
+function hasLink(el: ts.JsxElement, localAnchorComponents: ReadonlySet<string>): boolean {
+  let hit = false;
+  const isLinkTag = (name: string) => name === "a" || localAnchorComponents.has(name);
+  const visit = (node: ts.Node): void => {
+    if (hit) return;
+    if (node !== el && ts.isJsxElement(node) && isLinkTag(node.openingElement.tagName.getText())) hit = true;
+    else if (ts.isJsxSelfClosingElement(node) && isLinkTag(node.tagName.getText())) hit = true;
+    ts.forEachChild(node, visit);
+  };
+  ts.forEachChild(el, visit);
+  return hit;
+}
+
+/**
+ * そのファイルの中で定義されていて、**`<a>` を返す**部品の名前を集める。
+ * 「`ExternalLink` という名前だからリンクだろう」で済ませず、**parser に中身を見せて確かめる**。
+ */
+function componentsThatRenderAnchor(file: string): Set<string> {
+  const source = ts.createSourceFile(file, readFileSync(file, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const names = new Set<string>();
+  const returnsAnchor = (node: ts.Node): boolean => {
+    let hit = false;
+    const visit = (n: ts.Node): void => {
+      if (hit) return;
+      if (ts.isJsxElement(n) && n.openingElement.tagName.getText() === "a") hit = true;
+      else if (ts.isJsxSelfClosingElement(n) && n.tagName.getText() === "a") hit = true;
+      ts.forEachChild(n, visit);
+    };
+    ts.forEachChild(node, visit);
+    return hit;
+  };
+  const visit = (node: ts.Node): void => {
+    // 大文字始まりの関数宣言だけを部品とみなす（JSX の慣習。小文字は素の HTML タグ）
+    if (ts.isFunctionDeclaration(node) && node.name && /^[A-Z]/.test(node.name.text) && returnsAnchor(node)) names.add(node.name.text);
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+  return names;
 }
 
 describe("コントラスト（Issue 394）", () => {
@@ -269,24 +469,117 @@ describe("文字色として使うトークンは全部 AA（4.5:1）を満た�
   });
 
   /*
-   * **入れ子の地を敷く箱が実在することを CSS で固定する。**
-   * 上の表は「`--est-bg` の上に `--muted` が乗る」を前提にしているが、その前提は CSS 側にある。
-   * `.member-tabs` から `background: var(--est-bg)` が消えたら、この 3 組は測る意味を失う
-   * （そのときは表を直すべきで、黙って通してはいけない）。
+   * **入れ子の地の前提そのものを、CSSOM に解かせて固定する（Issue 483）。**
+   *
+   * 上の 3 組は「`--est-bg` の箱の中に、地を上書きしない文字が入る」を前提にしている。
+   * その前提が崩れたら（誰かが `.member-tab` に紙を敷いたら）**上の 3 組は測る意味を失う**——
+   * `--est-bg` を暗くしても実 UI は紙のままなので、**検査は落ちるべきでないのに落ち**、
+   * 逆に `--paper` を暗くしても**落ちるべきなのに落ちない**。
+   *
+   * #483 まではこれを正規表現で見ていて、**後勝ちの上書きを 1 つも見ていなかった**
+   * （上の `backgroundTokenOf` の doc コメントに、素通りした変異 4 つを列挙してある）。
+   * ここでは**本物の CSS を jsdom に食わせ、本物と同じ形の DOM を組み**、
+   * 「この文字の地は結局どのトークンか」を `getComputedStyle` に答えさせる。
+   *
+   * DOM は `member.tsx:442-462` / `member.tsx:489,510` / `compare.tsx:152` の写しである。
+   * **形が本番とずれたら検査は無意味になる**ので、下の「印が実在する」検査で
+   * クラス名が `.tsx` に残っていることも一緒に固定する。
    */
-  it(".member-tabs[group] が --est-bg を敷き、その中の .member-tab は地を上書きしない", () => {
-    const member = readFileSync(join(import.meta.dirname, "..", "routes", "member.css"), "utf8");
-    expect(member).toMatch(/\.member-tabgroup\[data-category="group"\] \.member-tabs\s*\{[^}]*background:\s*var\(--est-bg\)/);
-    expect(member).toMatch(/^\.member-tab \{[^}]*background:\s*none[^}]*color:\s*var\(--muted\)/m);
+  /** `member.tsx:435-464` の会派タブ（`data-category="group"` のとき `.member-tabs` が `--est-bg` を敷く） */
+  const TABS_HTML = `
+    <div class="member-tabgroup" data-category="group">
+      <p class="member-tabcat">記録の種類</p>
+      <div class="member-tabs" role="tablist">
+        <button type="button" role="tab" class="member-tab" aria-selected="false">
+          <span class="member-tab-label">本会議</span><span class="member-tab-count num">3件</span>
+        </button>
+      </div>
+    </div>`;
+  /** `member.tsx:489,510` の注記（中にリンクが入る）と `compare.tsx:152` の推定注記 */
+  const NOTICE_HTML = `
+    <p class="member-notice">この議会の記録です。<a href="/assemblies/pref-01">議会ページ</a></p>
+    <p class="compare-note compare-note-est">推定の記録です。<a href="/about">記録の範囲について</a></p>`;
+
+  /**
+   * 表（`textPairs`）の `est-bg` の組が、実際の DOM でもその通りに出ること。
+   * **[前景トークン, 地のトークン, その文字を持つ要素のセレクタ]**
+   */
+  const nested: readonly (readonly [string, string, string])[] = [
+    ["muted", "est-bg", ".member-tab-label"],
+    ["muted", "est-bg", ".member-tab-count"],
+    ["ink", "est-bg", ".member-notice"],
+    ["link", "est-bg", ".member-notice a"],
+    ["ink", "est-bg", ".compare-note-est"],
+    ["link", "est-bg", ".compare-note-est a"],
+  ];
+
+  it.each(nested)("%s on %s が実際に出る: %s（CSSOM が解いた実効背景）", (fg, bg, selector) => {
+    mount(TABS_HTML + NOTICE_HTML);
+    const el = document.querySelector(selector);
+    expect(el, `${selector} が DOM に無い`).not.toBeNull();
+    expect(colorTokenOf(el!), `${selector} の文字色`).toBe(fg);
+    expect(backgroundTokenOf(el!), `${selector} の実効背景`).toBe(bg);
   });
 
-  it(".member-notice は --est-bg を敷き、その上に --ink の文字と（--link の）リンクが乗る", () => {
-    const member = readFileSync(join(import.meta.dirname, "..", "routes", "member.css"), "utf8");
-    const memberTsx = readFileSync(join(import.meta.dirname, "..", "routes", "member.tsx"), "utf8");
-    expect(member).toMatch(/\.member-notice\s*\{[^}]*color:\s*var\(--ink\)[^}]*background:\s*var\(--est-bg\)/);
-    // リンクが中に入る（＝ link on est-bg が実在する）。tokens.css の a { color: var(--link) } が効く
-    expect(memberTsx).toMatch(/className="member-notice"[\s\S]{0,900}?<a href=/);
-    expect(tokens).toMatch(/^a \{[^}]*color:\s*var\(--link\)/m);
+  /*
+   * **上の検査が「地が紙になった」を見逃さないことを、ここで示す。**
+   * `backgroundTokenOf` は祖先を遡るだけなので、`.member-tab` 自身が地を敷けば `paper` を返す。
+   * 検査の効きを言葉で主張せずに、**同じ関数に紙を敷いた CSS を食わせて確かめる**。
+   */
+  it("入れ子の中の要素が地を敷いたら、実効背景は est-bg ではなくなる（検査が効いている証明）", () => {
+    mount(TABS_HTML);
+    expect(backgroundTokenOf(document.querySelector(".member-tab-label")!)).toBe("est-bg");
+    // 後勝ち（宣言の末尾に足す）でも、詳細度で勝つ別規則でも、同じように見える
+    for (const extra of [".member-tab { background: var(--paper); }", ".member-tabs .member-tab { background: var(--paper); }"]) {
+      const patch = document.createElement("style");
+      patch.textContent = extra;
+      document.head.appendChild(patch);
+      expect(backgroundTokenOf(document.querySelector(".member-tab-label")!), extra).toBe("paper");
+      patch.remove();
+    }
+  });
+
+  it("box-shadow が付いたら「地を断定できない」として落とす（実効色は jsdom では解けない）", () => {
+    mount(TABS_HTML);
+    const patch = document.createElement("style");
+    patch.textContent = ".member-tab { box-shadow: inset 0 0 0 100px var(--paper); }";
+    document.head.appendChild(patch);
+    expect(() => backgroundTokenOf(document.querySelector(".member-tab-label")!)).toThrow(/box-shadow/);
+  });
+
+  /*
+   * **DOM の写しが本番とずれていないことを固定する。**
+   * 上の検査は `mount` した写しに対して行うので、`.tsx` 側でクラス名が変わったり、
+   * `.member-notice` の中からリンクが消えたりすると、**写しだけが緑のまま残る**。
+   * そこで「この形が `.tsx` に実在する」を **TypeScript の parser で**別に確かめる。
+   */
+  it.each([
+    ["member.tsx", "member-notice"],
+    ["compare.tsx", "compare-note-est"],
+  ])("%s の .%s が実在し、その中にリンクが入る（＝ link on est-bg が実在する）", (file, cls) => {
+    const path = join(import.meta.dirname, "..", "routes", file);
+    const els = jsxElementsWithClass(path, cls);
+    expect(els.length, `${file} に className="${cls}" の要素が無い`).toBeGreaterThan(0);
+    const linkComponents = componentsThatRenderAnchor(path);
+    // **全部の**注記の中にリンクがあること（1 つでも残っていれば通る、にしない）
+    for (const el of els) {
+      const line = el.getSourceFile().getLineAndCharacterOfPosition(el.getStart()).line + 1;
+      expect(hasLink(el, linkComponents), `${file}:${line} の .${cls} にリンクが無い`).toBe(true);
+    }
+  });
+
+  it("会派タブの形（.member-tabs / .member-tab-label / .member-tab-count）が member.tsx に実在する", () => {
+    const file = join(import.meta.dirname, "..", "routes", "member.tsx");
+    // `.member-tabs` の中に `.member-tab` があり、その中にラベルと件数がある——写しと同じ入れ子
+    const [tabs] = jsxElementsWithClass(file, "member-tabs");
+    expect(tabs, "member.tsx に className=\"member-tabs\" が無い").toBeDefined();
+    for (const cls of ["member-tab", "member-tab-label", "member-tab-count"]) {
+      expect(jsxElementsWithClass(file, cls).length, `member.tsx に .${cls} が無い`).toBeGreaterThan(0);
+    }
+    // `--est-bg` を敷くのは `.member-tabgroup[data-category="group"]` なので、その属性も実在すること
+    const [group] = jsxElementsWithClass(file, "member-tabgroup");
+    expect(group, "member.tsx に .member-tabgroup が無い").toBeDefined();
+    expect(group.openingElement.attributes.properties.some((p) => ts.isJsxAttribute(p) && p.name.getText() === "data-category")).toBe(true);
   });
 
   /*
