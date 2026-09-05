@@ -502,6 +502,27 @@ const ELSEWHERE: Record<string, string> = {
  */
 const ELSEWHERE_KEYS = ["Cache-Control", "X-Robots-Tag"];
 
+/**
+ * **どのファイルがそのヘッダの実配信検査を持つか**を名指しで固定する。
+ *
+ * **なぜ「どこかにあること」では足りないか**（PR #526 のレビュー + 自分で追加検証）:
+ *   - **W1**: `nginx-headers.test.sh` を消し、`nginx-404.test.sh` に**コメント1行**足すだけで黙った
+ *   - **W1b**: コメント除去を入れたら、`: Permissions-Policy ...` と**本文1行**にすれば黙った
+ *   - **W1c**: 実配信の形（`Permissions-Policy:`）を要求したら、**その文字列を本文に書く**だけで黙った
+ * **文字列一致である限り、その文字列を書けば偽装できる。** 追いかけっこは終わらない。
+ *
+ * 止め方は「**担当を名指しする**」こと。`Permissions-Policy` を実配信で見る係は
+ * `nginx-headers.test.sh` だと固定する。**その係が消えたら、他のファイルに何を書いても通らない。**
+ * 係を変えるには、ここを書き換える——それは「誰が守るかを変えた」と diff に残る。
+ */
+const HEADER_OWNERS: Record<string, string[]> = {
+  "Content-Security-Policy": ["nginx-404.test.sh", "nginx-headers.test.sh"],
+  "Permissions-Policy": ["nginx-headers.test.sh"],
+  "Referrer-Policy": ["nginx-headers.test.sh"],
+  "X-Content-Type-Options": ["nginx-404.test.sh", "nginx-headers.test.sh"],
+  "X-Frame-Options": ["nginx-404.test.sh", "nginx-headers.test.sh"],
+};
+
 test("#513 経路3: 実配信検査の例外集合そのものを固定する（例外を増やして骨抜きにできない）", () => {
   assert.deepEqual(
     Object.keys(ELSEWHERE).sort(),
@@ -515,7 +536,35 @@ ci.yml の逐語行として書くこと（その行が消えれば下のテス�
   );
 });
 
-test("#513 経路3: site.conf が送るヘッダは、実物の nginx を叩く deploy テストに1つ残らず現れる", () => {
+/** 担当表を、表の外にもう一度書く（#484）。 */
+const HEADER_OWNERS_PINNED: Record<string, string[]> = {
+  "Content-Security-Policy": ["nginx-404.test.sh", "nginx-headers.test.sh"],
+  "Permissions-Policy": ["nginx-headers.test.sh"],
+  "Referrer-Policy": ["nginx-headers.test.sh"],
+  "X-Content-Type-Options": ["nginx-404.test.sh", "nginx-headers.test.sh"],
+  "X-Frame-Options": ["nginx-404.test.sh", "nginx-headers.test.sh"],
+};
+
+test("#513 経路3: ヘッダの担当表そのものを固定する（担当を書き換えて骨抜きにできない）", () => {
+  // ELSEWHERE と HEADER_OWNERS を合わせて、site.conf の全ヘッダが**漏れなく1度ずつ**割り当たること。
+  const assigned = [...Object.keys(HEADER_OWNERS), ...Object.keys(ELSEWHERE)].sort();
+  assert.deepEqual(
+    assigned,
+    headersInSiteConf(),
+    `site.conf のヘッダと、担当表（HEADER_OWNERS + ELSEWHERE）が食い違う。
+  site.conf : ${headersInSiteConf().join(", ")}
+  担当表    : ${assigned.join(", ")}
+ヘッダを足したら担当を決めること。担当表から外すのは「誰も実配信で見ない」と決めること。`,
+  );
+  assert.deepEqual(
+    HEADER_OWNERS,
+    HEADER_OWNERS_PINNED,
+    `ヘッダの担当表が変わっている。担当を別ファイルに移すと、そのファイルに
+文字列を書くだけで元の担当を消せてしまう（W1c で実測）。両方を書き換えること。`,
+  );
+});
+
+test("#513 経路3: site.conf が送るヘッダは、名指しした担当が実配信で1つ残らず見ている", () => {
   const live = liveNginxTests();
   const headers = headersInSiteConf();
   const src = sources();
@@ -540,9 +589,19 @@ test("#513 経路3: site.conf が送るヘッダは、実物の nginx を叩く 
     // 1 行足すだけで経路3 が黙った）。要求するのは **HTTP の実配信の形**——
     // `Header:` というレスポンス行の形で、しかも**実際に走る本文**（コメント除去済み）に
     // あること。ヘッダ名を裸で書き散らしても、この形にはならない。
+    // **担当を名指しで要求する**（文字列一致だけだと、その文字列を書けば偽装できる。W1c で実測）。
+    const owners = HEADER_OWNERS[h];
+    if (owners === undefined) {
+      findings.push(`${h}: 実配信検査の担当が HEADER_OWNERS に無い（site.conf は送っている）`);
+      continue;
+    }
     const wire = new RegExp(`${h}:`, "i");
-    const covered = live.some((t) => wire.test(src.get(t) ?? ""));
-    if (!covered) findings.push(`${h}: 実配信で \`${h}:\` を見る deploy テストが無い（site.conf は送っている）`);
+    for (const o of owners) {
+      if (!live.includes(o))
+        findings.push(`${h}: 担当の ${o} が「実配信を叩く生きたテスト」として数えられない（削除/骨抜き）`);
+      else if (!wire.test(src.get(o) ?? ""))
+        findings.push(`${h}: 担当の ${o} が \`${h}:\` を実配信で見ていない`);
+    }
   }
   const skipped = headers.filter((h) => !audited.includes(h));
   assert.deepEqual(
