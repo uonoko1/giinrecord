@@ -1179,9 +1179,14 @@ describe("ウェイトの判定そのもの（#506）", () => {
    * `caption` / `icon` / `menu` / `message-box` / `small-caption` / `status-bar` は
    * **`<system-family-name>`** で、`<font-size>` を含まないので `sizeAt` は当たらない。
    *
-   * **見本が仕様の値として本当に有効か**は jsdom の CSSOM に確かめさせた（自分で判定しない）——
-   * 下の 13 通りのサイズは `el.style.setProperty("font", v)` が**そのまま返す**（＝ CSS の実装が受け付ける）。
-   * `caption` / `menu` は**空文字が返る**（jsdom はシステムフォント指定を実装していない）。
+   * **見本が仕様の値として本当に有効か**は jsdom の CSSOM に確かめさせた（自分で判定しない）。
+   * `el.style.setProperty("font", v)` に **13 通りのサイズ**（`13px/1.4` `larger` `smaller`
+   * `small` `medium` `large` `x-small` `xx-small` `x-large` `xx-large` `1.5rem` `2em` `120%` を
+   * それぞれ `var(--font-head)` と組にしたもの）を入れると、**13 通りとも入力がそのまま返る**
+   * ＝ CSS の実装が `font` ショートハンドとして受け付ける。
+   * 対照として `caption` / `menu` は**空文字が返る**（jsdom はシステムフォント指定を実装していない）。
+   *
+   * 下の表は**19 行・相異なる入力 15 通り**（同じ入力で別の枝を釘打つ行があるため、行数と入力数は一致しない）。
    *
    * ## なぜ「戻り値そのもの」を突き合わせるのか
    *
@@ -1235,7 +1240,16 @@ describe("ウェイトの判定そのもの（#506）", () => {
         .map((r) => `${r.name}: parseFontShorthand(${JSON.stringify(r.value)}) = ${JSON.stringify(r.got)}（期待: ${JSON.stringify(r.want)}）`);
       expect(wrong, "sizeAt の枝が死んでいます。読めない `font:` は丸ごと読み飛ばされ、ウェイトの検査が黙って効かなくなります").toEqual([]);
       // **表が痩せたら落とす**（#499: 個数ではなく中身を固定する、の個数側）。
-      // 中身は上の突き合わせが固定しているので、ここは「枝の数だけ見本がある」ことを言う
+      //
+      // **恒真ではないことを実測した**（#506「恒真な assertion を書かない」）。
+      // 「この行を消して結果が変わるか」だけでは不十分だった——**単独で消しても 32/32 緑**で、
+      // それは**他に何も変えていないから**であって、この行が無意味だからではない。
+      // **正しい問いは「この行だけが捕まえる変異があるか」**なので、そちらを測った:
+      //
+      //     見本を 2 件、期待値ごと対で消す（S08 larger + S09 smaller）→ **1 failed**（上の突き合わせは 0 件のまま緑）
+      //     同じ変異 ＋ この行を無害化                                  → **32/32 緑**
+      //
+      // **この行だけが番人**である。中身は上の突き合わせが固定しているので、ここは「枝の数だけ見本がある」ことを言う
       expect(Object.keys(SIZE_BRANCHES), "sizeAt の枝は 18 選択肢 + `x?` の optional 1 本 = 19").toHaveLength(19);
     });
 
@@ -1256,6 +1270,8 @@ describe("ウェイトの判定そのもの（#506）", () => {
     it("システムフォント指定 6 語は『読めない』（undefined）として返す", () => {
       const wrong = SYSTEM_FONTS.filter((v) => parseFontShorthand(v) !== undefined).map((v) => `${v}: ${JSON.stringify(parseFontShorthand(v))}`);
       expect(wrong, "システムフォント指定を『サイズが読めた』と誤読しています（small-caption の中の small など）").toEqual([]);
+      // 実測: `SYSTEM_FONTS` を `["caption"]` 1 語に痩せさせると **1 failed**、
+      // この行も無害化すると **32/32 緑**（＝この行だけが痩せを捕まえる）
       expect(SYSTEM_FONTS, "CSS Fonts 4 §6.6 の <system-family-name> は 6 語").toHaveLength(6);
     });
 
@@ -1324,7 +1340,9 @@ describe("ウェイトの判定そのもの（#506）", () => {
         .filter((r) => r.got !== r.want)
         .map((r) => `${r.name}: familyOfValue(${JSON.stringify(r.value)}) = ${JSON.stringify(r.got)}（期待: ${JSON.stringify(r.want)}）`);
       expect(wrong, "familyOfValue が壊れると shorthandMissingWeights は『自前の家族ではない』として黙って読み飛ばします").toEqual([]);
-      expect(Object.keys(家族)).toHaveLength(14);
+      // 上の `SIZE_BRANCHES` と同じ実測をした:
+      // 見本 2 件（F12 / F13）を期待値ごと消すと **1 failed**、この行も無害化すると **32/32 緑**
+      expect(Object.keys(家族), "見本が痩せている").toHaveLength(14);
     });
 
     /**
@@ -1342,6 +1360,12 @@ describe("ウェイトの判定そのもの（#506）", () => {
       // **`FONT_FAMILIES` に実在する家族だけを指していること。**
       // 指し先が配信していない家族になると `weightsOfFamily` が空を返し、
       // **どんなウェイトを書いても「その家族は持たない」＝全部違反**になって誤検出が増える
+      //
+      // **上の `toEqual` とこの下の 2 行は、別々の変異を捕まえる**（実測。どちらも恒真ではない）:
+      //   `TOKEN_FAMILY` に 3 件目を足し、F04 の見本を別のトークン名に替える
+      //     → **上の `toEqual` だけが落ちる**（1 failed）
+      //   さらに上の `toEqual` の期待値にも 3 件目を足す
+      //     → **下の `実在しない` だけが落ちる**（1 failed。`--font-mono: Helvetica` を名指しする）
       const 実在しない = Object.entries(TOKEN_FAMILY).filter(([, f]) => !FONT_FAMILIES.some((x) => x.family === f));
       expect(実在しない, "TOKEN_FAMILY が配信していない家族を指している").toEqual([]);
     });
