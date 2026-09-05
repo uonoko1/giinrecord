@@ -215,19 +215,24 @@ function auditedOffenders(
    * **実測（本物の違反を植えた状態。`npx tsx apps/web/scripts/sitemap.ts` が
    * `glob is not a function` で本当に落ちる状態で測った）:**
    *
-   *     絞る場所                                          差分   origin/main   この形
-   *     `reached` の定義（Issue の 1 行）                  1 行   **6/6 緑**    4 / 6 落ちる
-   *     `reachedWith`（一覧の作り方）                      1 行   —             5 / 6 落ちる
-   *     `reachableFrom` の走査                             1 行   —             4 / 6 落ちる
-   *     `judge` のループ / 判定式 / `wronglyCleared`        1 行   —             4〜5 / 6 落ちる
-   *     `entriesReaching` の走査 / 判定 / 返り値            1 行   —             4〜5 / 6 落ちる
-   *     `entries`（入口）                                  1 行   —             4 / 6 落ちる
-   *     一覧 + 2 本目の返り値を**両方**（Issue が予告した形）2 行   **6/6 緑**    5 / 6 落ちる
+   *     絞る場所                                             差分   origin/main   この形
+   *     `reached` の定義（Issue の 1 行）                     1 行   **6/6 緑**    2 / 6 落ちる
+   *     `reachedWith`（一覧の作り方）                         1 行   —             5 / 6 落ちる
+   *     `reachableFrom` の走査                                1 行   —             4 / 6 落ちる
+   *     `judge` のループ                                      1 行   —             5 / 6 落ちる
+   *     `judge` の判定式 / `wronglyCleared`                    1 行   —             4 / 6 落ちる
+   *     `entriesReaching` の走査 / 判定                        1 行   —             5 / 6 落ちる
+   *     `entriesReaching` の返り値 / `byEntry`                 1 行   —             4〜5 / 6 落ちる
+   *     `entries`（入口）                                     1 行   —             4 / 6 落ちる
+   *     一覧 + 2 本目の返り値を**両方**（Issue が予告した形）  2 行   **6/6 緑**    3 / 6 落ちる
+   *
+   * 落ちた `it` は**巻き添えではない**: `reached` の定義を絞ったとき落ちるのは
+   * **「辿り着くモジュールは import.meta.glob を式として書いていない」自身**（`it` 単位で確認）。
    *
    * **残っている抜け道（塞げていない。隠れては通れない、が原理的には通る）:**
    * 述語を**対照だけ避けるように書く**——`filter((r) => readFile !== undefined || !r.file.includes("assemblies"))`
    * のように「差し替えた `readFile` が来たときは絞らない」と書き、2 本目も同じく絞ると
-   * **5/6 緑まで行く**（残る 1 件は一覧の増減が捕まえる。実測）。
+   * **1 / 6 しか落ちない**（残る 1 件は一覧の増減が捕まえる。実測）。
    * これは #504 の線引きで言う「**そのレイヤでは塞げない**」側ではなく、
    * 「**コストが上がったので、そこで止めてよい**」側——`readFile !== undefined ||` は
    * **何のためにも見えない条件**で、レビューで目に見える。
