@@ -15,6 +15,11 @@
  * | 発言の役職（会議録の原文） | `.member-position` | 議員ページの発言タブ（**HTML に焼き込まれない**、#242） |
  * | 採決の会派名 | `.rollcall-group-name` | `/rollcalls/:session/:id` |
  * | 地方議会の判の原文 | `.member-stamp` | 議員ページの表決タブ |
+ * | 議会名 | `.coverage-assembly__name` | `/coverage`（ETL が県議会を足す経路） |
+ *
+ * **この表と実装が食い違うと、検査は緑のままサブセットが足りなくなる。**
+ * `head-font-data-source.test.ts` が、4 欄すべてが実 `data/` に対して非空であることを固定している
+ * （**源が痩せたら鳴る**。#520 のレビューで「`speakerPositions` を潰しても 7 tests 全部緑」だった穴）。
  */
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
@@ -48,9 +53,11 @@ export function readHeadFontDataSource(dataDir: string): HeadFontDataSource {
     if (!session.isDirectory()) continue;
     for (const f of listDir(path.join(dataDir, "rollcalls", session.name))) {
       if (!f.isFile() || !f.name.endsWith(".json")) continue;
-      for (const g of readJson<{ groups?: { group?: string }[] }>(path.join(dataDir, "rollcalls", session.name, f.name))?.groups ?? []) {
-        if (g.group) rollCallGroups.push(g.group);
-      }
+      const rc = readJson<{ groups?: { group?: string }[]; votes?: { group?: string }[] }>(path.join(dataDir, "rollcalls", session.name, f.name));
+      for (const g of rc?.groups ?? []) if (g.group) rollCallGroups.push(g.group);
+      // `votes[].group` にしか無い会派も `.rollcall-group-name` で描かれる（`unlistedGroups()`）。
+      // ここを読まないと「票にだけ現れた新しい会派」が静かにシステム書体になる（#520 のレビュー指摘）
+      for (const v of rc?.votes ?? []) if (v.group) rollCallGroups.push(v.group);
     }
   }
 
@@ -67,5 +74,9 @@ export function readHeadFontDataSource(dataDir: string): HeadFontDataSource {
       }
     }
   }
-  return { members, speakerPositions, rollCallGroups, localVoteMarks };
+  // `/coverage` は議会名を明朝700（`.coverage-assembly__name`）で描く。
+  // ETL が新しい県議会を足す経路なので、読まないと追加のたびに気づけない穴になる（#520 のレビュー指摘）
+  const assemblyNames = (readJson<{ name?: string }[]>(path.join(dataDir, "assemblies", "index.json")) ?? []).flatMap((a) => (a.name ? [a.name] : []));
+
+  return { members, speakerPositions, rollCallGroups, localVoteMarks, assemblyNames };
 }
