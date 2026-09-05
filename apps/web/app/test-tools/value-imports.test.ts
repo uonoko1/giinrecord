@@ -226,6 +226,12 @@ describe("entriesReaching: 入口ごとに「違反に辿り着くか」だけ�
     expect(entriesReaching([path.join(dir, "entry.ts")], hit), "型だけの import を辿っている").toEqual([]);
   });
 
+  /*
+   * **この変異は「落ちる」ではなく「止まらない」**（実測）。
+   * `visited` を殺すと `stack` が無限に伸び、vitest が **exit 144（OOM）** で死ぬ。
+   * 緑にはならないので検出はできているが、**メッセージは出ない**。
+   * ここに見本を置いてあるのは、そのとき「どのテストで止まったか」が分かるようにするため。
+   */
   it("循環（a → b → a）でも止まる", async () => {
     const dir = await mkdtemp(path.join(tmpdir(), "giin-er-cycle-"));
     await writeFile(path.join(dir, "entry.ts"), 'import { a } from "./a";\nexport const e = a;\n');
