@@ -300,6 +300,74 @@ function sizeOnlyHeight(decls: string, fontSize: number): number {
 
 const MINIMUM = 24;
 
+/**
+ * **「例外に当たるものを直そうとしていないか」の判定**（#424 / #425）。
+ *
+ * WCAG 2.5.8 の Spacing / Inline 例外に当たるリンクは、**大きさを 24px にしてはいけない**
+ * （`docs/research/target-size-rows.md` / `target-size-inline.md` で「やらない」と決めた。
+ * padding を足すと行が間延びし、負の margin で押し戻すと当たり判定が隣の行にかぶって
+ * **今より押し間違えやすくなる**）。ここはその「直してしまった跡」を探す。
+ *
+ * ## なぜ関数に切り出したか（#506）
+ *
+ * 元は 2 つの `it` の中に、for ループ + インラインの正規表現として書かれていた。
+ * **現に違反が 0 件なので、判定を殺しても全部緑になった**——実測:
+ *
+ *     `if (/padding|min-height|…/.test(...))` を `if (false)` に  → **24/24 全部緑**
+ *     セレクタの絞り込み（`if (!/^\.(row|…)/.test(sel)) continue`）を `continue;` に → **24/24 全部緑**
+ *
+ * 「違反を書けば落ちる」は、**検査が生きている証明にならない**（#484）。
+ * 関数にして、下の `describe` で**判定そのものに yes / no の見本を当てる**（#500 の `isTildeAlias` と同じ）。
+ *
+ * ## 判定は 2 つある。どちらも殺せた
+ *
+ *     どの規則を見るか   `selector` … 「行の中のリンク」「散文の中のリンク」を狙った規則か
+ *     何を違反とするか   `declaration` … padding / min-height / 負の margin / inline-block
+ *
+ * **`selector` 側の除外は意図的**である。`.links a`（#423）と `.row`（行そのもの。#424）は
+ * **padding を足すのが正しい**担当なので、ここで拾ってはいけない。
+ * だから「セレクタを広げれば安全」ではなく、**広げると誤検出になる**。下の見本で両方向を固定する。
+ */
+const TARGET_LINK_RULES = {
+  /** 一覧の行の中のリンク（#424）。`.row a` / `.rollcalls-item a` / `.list__item a` */
+  行: {
+    /** **先頭一致**にしてある。`.links a` を `.list__item a` と読み違えないため */
+    selector: /^\.(row|rollcalls-item|list__item)\s+a\b/,
+    /** 負の `margin-block` だけを見る（正の margin は当たり判定を広げないので無害） */
+    declaration: /padding|min-height|margin-block:\s*-/,
+    reason: "行の中のリンクは WCAG 2.5.8 の Spacing 例外に当たる。docs/research/target-size-rows.md を読むこと",
+  },
+  /** 散文の中のリンク（#425）。`.note a` / `.card__body a` / `.body a` */
+  散文: {
+    selector: /^(?=.*\.(note|card__body|body)\b)(?=.*(?:\ba\b|a$)).*$/,
+    /** `display: inline-block` も見る——inline の箱を block にすると padding が効いて行間が崩れる */
+    declaration: /padding|min-height|display:\s*inline-block/,
+    reason: "散文の中のリンクは WCAG 2.5.8 の Inline 例外に当たる。docs/research/target-size-inline.md を読むこと",
+  },
+} as const;
+
+/**
+ * `css` の中から、その種類の「例外に当たるリンクを直してしまった規則」を挙げる。
+ * 返すのは `セレクタ { 宣言 }` の文字列——**何件かではなく、どれか**を言えるようにする（#485）。
+ */
+function forbiddenTargetFixes(css: string, kind: keyof typeof TARGET_LINK_RULES, label = ""): string[] {
+  const { selector, declaration } = TARGET_LINK_RULES[kind];
+  const style = document.createElement("style");
+  style.textContent = css;
+  document.head.appendChild(style);
+  const offenders: string[] = [];
+  for (const r of [...style.sheet!.cssRules]) {
+    if (!(r instanceof CSSStyleRule)) continue;
+    for (const sel of r.selectorText.split(",").map((t) => t.trim())) {
+      if (!selector.test(sel)) continue;
+      if (declaration.test(r.style.cssText)) offenders.push(`${label}${sel} { ${r.style.cssText} }`);
+    }
+  }
+  style.remove();
+  return offenders;
+}
+
+
 describe("押せる範囲の**大きさ**が 24px 以上（WCAG 2.5.8・Issue 413）", () => {
   const pages = read("styles/pages.css");
 
@@ -568,22 +636,11 @@ describe("一覧の行の中のリンクは Spacing 例外に当たるので直�
    * どちらも `docs/research/target-size-rows.md` で「やらない」と決めた。
    */
   it("行の中のリンクに padding / min-height / 負の margin を足していない", () => {
-    const offenders: string[] = [];
-    for (const [name, css] of [["pages.css", pages], ["rollcall.css", rollcall]] as const) {
-      const style = document.createElement("style");
-      style.textContent = css;
-      document.head.appendChild(style);
-      for (const r of style.sheet!.cssRules) {
-        if (!(r instanceof CSSStyleRule)) continue;
-        for (const sel of r.selectorText.split(",").map((t) => t.trim())) {
-          // 「行の中のリンク」を狙ったルールだけを見る。`.links a`（#423）は別の担当なので除く
-          if (!/^\.(row|rollcalls-item|list__item)\s+a\b/.test(sel)) continue;
-          if (/padding|min-height|margin-block:\s*-/.test(r.style.cssText)) offenders.push(`${name}: ${sel} { ${r.style.cssText} }`);
-        }
-      }
-      style.remove();
-    }
-    expect(offenders, "行の中のリンクは WCAG 2.5.8 の Spacing 例外に当たる。docs/research/target-size-rows.md を読むこと").toEqual([]);
+    const offenders = [
+      ...forbiddenTargetFixes(pages, "行", "pages.css: "),
+      ...forbiddenTargetFixes(rollcall, "行", "rollcall.css: "),
+    ];
+    expect(offenders, TARGET_LINK_RULES.行.reason).toEqual([]);
   });
 });
 
@@ -641,22 +698,11 @@ describe("散文の中のリンクは例外に当たるので直さない（WCAG
    * ここは CSSOM に全ルールを見せて、文章の中のリンクを狙った指定が増えていないかを見る。
    */
   it("文の中のリンク（.note / .card__body / .body）に padding や min-height を足していない", () => {
-    const offenders: string[] = [];
-    for (const css of [pages, assemblies]) {
-      const style = document.createElement("style");
-      style.textContent = css;
-      document.head.appendChild(style);
-      for (const r of [...style.sheet!.cssRules]) {
-        if (!(r instanceof CSSStyleRule)) continue;
-        // 「散文のブロック」の中の a を狙ったルールだけを見る（.links や .row は #423 #424 の担当なので除く）
-        for (const sel of r.selectorText.split(",").map((t) => t.trim())) {
-          if (!/\.(note|card__body|body)\b/.test(sel) || !/\ba\b|a$/.test(sel)) continue;
-          if (/padding|min-height|display:\s*inline-block/.test(r.style.cssText)) offenders.push(`${sel} { ${r.style.cssText} }`);
-        }
-      }
-      style.remove();
-    }
-    expect(offenders, "散文の中のリンクは WCAG 2.5.8 の Inline 例外に当たる。docs/research/target-size-inline.md を読むこと").toEqual([]);
+    const offenders = [
+      ...forbiddenTargetFixes(pages, "散文", "pages.css: "),
+      ...forbiddenTargetFixes(assemblies, "散文", "assemblies.css: "),
+    ];
+    expect(offenders, TARGET_LINK_RULES.散文.reason).toEqual([]);
   });
 });
 
@@ -730,5 +776,140 @@ describe("declarationsFor が複数の規則の宣言を落とさない（Issue 
 
   it("当たらないセレクタでは空文字を返す", () => {
     expect(declarationsFor(CSS, ".nope")).toBe("");
+  });
+});
+
+/**
+ * **`forbiddenTargetFixes` そのものの検査**（#506）。
+ *
+ * 上の 2 つの `it` は「違反 0 件」を主張するテストなので、**判定が何を返しても緑になる**。
+ * 実測（この describe を足す前）:
+ *
+ *     宣言側の判定 `if (/padding|min-height|…/.test(...))` を `if (false)` に  → **24/24 全部緑**
+ *     セレクタ側の絞り込み `if (!/^\.(row|…)/.test(sel)) continue` を `continue;` に → **24/24 全部緑**
+ *
+ * だから**判定に直接 yes / no の見本を当てる**（#500 の `isTildeAlias` と同じ処置）。
+ *
+ * **「拾わない」側も同じ重さで書く。** ここを広げると、
+ * `padding` を足すのが**正しい** `.links a`（#423）や `.row` 自身（#424）を違反と呼び、
+ * **WCAG を満たす実装を落とす**。#413 で「110 箇所が違反」と誤って起票したのと同じ誤り方になる。
+ */
+describe("forbiddenTargetFixes: 例外に当たるリンクを「直した跡」の判定（#506）", () => {
+  /** **拾わなければならない**（例外に当たるリンクの大きさを広げてしまった書き方） */
+  const 行の違反: Record<string, string> = {
+    "padding-block を足す": ".row a { padding-block: 6px; }",
+    "padding をまとめ書きで足す": ".row a { padding: 6px 0; }",
+    "padding-top だけ足す": ".row a { padding-top: 6px; }",
+    "min-height を足す": ".row a { min-height: 24px; }",
+    "負の margin-block で押し戻す": ".row a { padding-block: 6px; margin-block: -6px; }",
+    "rollcalls-item のリンク": ".rollcalls-item a { padding-block: 6px; }",
+    "list__item のリンク": ".list__item a { min-height: 24px; }",
+    "まとめ書きのセレクタ（片方だけが対象）": ".foo, .row a { padding-block: 6px; }",
+    "子孫が深いセレクタ": ".row a span { padding: 4px; }",
+    "疑似クラス付き": ".row a:hover { padding: 4px; }",
+  };
+
+  it("行の中のリンクを広げる 10 通りを、どれも見落とさない", () => {
+    const missed = Object.entries(行の違反)
+      .filter(([, css]) => forbiddenTargetFixes(css, "行").length === 0)
+      .map(([name]) => name);
+    expect(missed, "行の中のリンクを広げる書き方を見落としている（判定が死んでいる可能性）").toEqual([]);
+    expect(Object.keys(行の違反)).toHaveLength(10);
+  });
+
+  /**
+   * **拾ってはいけない**もの。ここが落ちたら**正しい実装を違反と呼んでいる**。
+   * とくに `.links a` と `.row` 自身は、**padding を足すのが仕様**（#423 / #424）。
+   */
+  const 行の非違反: Record<string, string> = {
+    "`.links a` は padding を足すのが正しい（#423）": ".links a { padding-block: 6px; }",
+    "`.row` 自身の padding は行の高さそのもの（#424）": ".row { padding: 8px 0; }",
+    "`.rollcalls-item` 自身": ".rollcalls-item { padding: 12px 0; }",
+    "リンクだが padding 以外しか書いていない": ".row a { color: var(--ink); text-decoration: none; }",
+    "正の margin-block（当たり判定を広げない）": ".row a { margin-block: 6px; }",
+    "対象外のセレクタ": ".card a { padding: 6px; }",
+    "リンクでない子": ".row span { padding: 6px; }",
+    "空の規則": ".row a { }",
+  };
+
+  it("padding を足すのが正しい場所（.links a / 行そのもの）を違反と呼ばない", () => {
+    const wrong = Object.entries(行の非違反)
+      .filter(([, css]) => forbiddenTargetFixes(css, "行").length > 0)
+      .map(([name, css]) => `${name}: ${forbiddenTargetFixes(css, "行").join(" / ")}`);
+    expect(wrong, "WCAG を満たしている実装を違反として拾っている（誤検出）").toEqual([]);
+    expect(Object.keys(行の非違反)).toHaveLength(8);
+  });
+
+  const 散文の違反: Record<string, string> = {
+    "note の中のリンクに padding": ".note a { padding: 4px; }",
+    "card__body の中のリンク": ".card__body a { padding-block: 6px; }",
+    "body の中のリンク": ".body a { min-height: 24px; }",
+    "inline-block にする（padding が効くようになる）": ".note a { display: inline-block; }",
+    "まとめ書きのセレクタ": ".x, .note a { padding: 4px; }",
+    "疑似クラス付き": ".note a:focus { padding: 4px; }",
+  };
+
+  it("散文の中のリンクを広げる 6 通りを、どれも見落とさない", () => {
+    const missed = Object.entries(散文の違反)
+      .filter(([, css]) => forbiddenTargetFixes(css, "散文").length === 0)
+      .map(([name]) => name);
+    expect(missed, "散文の中のリンクを広げる書き方を見落としている").toEqual([]);
+    expect(Object.keys(散文の違反)).toHaveLength(6);
+  });
+
+  const 散文の非違反: Record<string, string> = {
+    "note 自身の padding（箱の余白。リンクの大きさではない）": ".note { padding: 12px; }",
+    "card__body 自身": ".card__body { padding: 16px; }",
+    "note の中のリンクだが padding 以外": ".note a { text-decoration: underline; }",
+    "note の中の a でない子": ".note strong { padding: 2px; }",
+    "`.links a`（#423 の担当）": ".links a { padding-block: 6px; }",
+    "`display: inline`（block にしていない）": ".note a { display: inline; }",
+  };
+
+  it("箱そのものの padding や、リンク以外を違反と呼ばない", () => {
+    const wrong = Object.entries(散文の非違反)
+      .filter(([, css]) => forbiddenTargetFixes(css, "散文").length > 0)
+      .map(([name, css]) => `${name}: ${forbiddenTargetFixes(css, "散文").join(" / ")}`);
+    expect(wrong, "散文側で誤検出している").toEqual([]);
+    expect(Object.keys(散文の非違反)).toHaveLength(6);
+  });
+
+  /**
+   * **落ちた理由が狙ったものであること**（#485: 「落ちた」だけ見ると格下げに気づけない）。
+   * セレクタと宣言をそのまま返しているので、**どこを直せばよいか**が失敗メッセージから読める。
+   */
+  it("挙げる内容がセレクタと宣言を名指しする（件数だけでない）", () => {
+    expect(forbiddenTargetFixes(".row a { padding-block: 6px; }", "行", "pages.css: "))
+      .toEqual(["pages.css: .row a { padding-block: 6px; }"]);
+    // まとめ書きは**当たったセレクタだけ**を挙げる（`.foo` は挙げない）
+    expect(forbiddenTargetFixes(".foo, .row a { min-height: 24px; }", "行"))
+      .toEqual([".row a { min-height: 24px; }"]);
+  });
+
+  /**
+   * **種類が入れ替わっていないこと**（#499: allowlist は「痩せたら落とす」だけでなく
+   * 「中身が入れ替わったら落とす」まで）。`行` と `散文` は見るセレクタも宣言も違う。
+   */
+  it("行と散文は別の判定である（取り違えると片方が素通りする）", () => {
+    expect(forbiddenTargetFixes(".row a { padding: 6px; }", "散文"), "行のリンクを散文の判定で拾っている").toEqual([]);
+    expect(forbiddenTargetFixes(".note a { display: inline-block; }", "行"), "散文だけの禁止（inline-block）を行で拾っている").toEqual([]);
+    expect(Object.keys(TARGET_LINK_RULES)).toEqual(["行", "散文"]);
+  });
+
+  /** **走査が空振りしていないこと。** CSS を渡しても 1 つも規則を見ていないなら、判定は永久に緑 */
+  it("前提: 本番の CSS から規則を実際に読めている", () => {
+    const pages = read("styles/pages.css");
+    const style = document.createElement("style");
+    style.textContent = pages;
+    document.head.appendChild(style);
+    const rules = [...style.sheet!.cssRules].filter((r) => r instanceof CSSStyleRule);
+    style.remove();
+    expect(rules.length, "pages.css から規則を 1 つも読めていない（判定以前に空振り）").toBeGreaterThan(50);
+    // 「行の中のリンク」を狙った規則が現に存在する（セレクタの綴りが本番と合っている）
+    const rowLinks = rules.filter((r) =>
+      (r as CSSStyleRule).selectorText.split(",").some((t) => TARGET_LINK_RULES.行.selector.test(t.trim())),
+    );
+    expect(rowLinks.length, ".row a / .list__item a を狙った規則が pages.css に 1 つも無い（綴りが本番とずれている）")
+      .toBeGreaterThan(0);
   });
 });
