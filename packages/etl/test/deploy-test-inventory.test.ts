@@ -420,6 +420,109 @@ test("#513 経路2: 被覆の例外集合そのものを固定する（例外を
   assert.deepEqual(noReason, [], `理由の無い例外（場所取りだけ）: ${noReason.join(", ")}`);
 });
 
+/**
+ * **どの deploy テストが、その本番ファイルの主担当か**を名指しで固定する。
+ *
+ * **なぜ「どれかが名指ししていれば良い」では足りないか**（PR #526 のレビュー + 自分で全 14 本を測り直した）:
+ *   「削除 + 台帳を指示どおり全部更新」を **14 本すべて**に当てたところ、**7 本が 12 pass / 0 fail**
+ *   （`cloudflare-allowlist` / `monitor-health` / `monitor-setup` / `nginx-reload` /
+ *    `ops-user-setup` / `staging-setup` / `vps-setup`）。
+ *   **他のテストが同じ subject をたまたま名指ししている**ので、被覆が満たされたままだった。
+ *   これは #504「名前を固定した は 値を固定した ではない」の被覆版——
+ *   **「誰かが触っている」は「その検査が生きている」ではない。**
+ *
+ * 主担当は「そのファイルを検査するために書かれたテスト」。付随的な言及とは区別する。
+ */
+const SUBJECT_OWNERS: Record<string, string> = {
+  "deploy/analytics/daily.sh": "go-live.test.sh",
+  "deploy/analytics/logrotate.conf": "logrotate.test.sh",
+  "deploy/analytics/vps-analytics-setup.sh": "logrotate.test.sh",
+  "deploy/apply-all.sh": "apply-all.test.sh",
+  "deploy/cloudflare-allowlist.sh": "cloudflare-allowlist.test.sh",
+  "deploy/go-live.sh": "go-live.test.sh",
+  "deploy/monitor/health.sh": "monitor-health.test.sh",
+  "deploy/monitor/logrotate.conf": "logrotate.test.sh",
+  "deploy/monitor/probe.sh": "monitor-probe.test.sh",
+  "deploy/monitor/report.sh": "monitor-probe.test.sh",
+  "deploy/monitor/run.sh": "monitor-probe.test.sh",
+  "deploy/monitor/setup.sh": "monitor-setup.test.sh",
+  "deploy/nginx/site.conf": "nginx-headers.test.sh",
+  "deploy/ops-user-setup.sh": "ops-user-setup.test.sh",
+  "deploy/run-remote.sh": "run-remote.test.sh",
+  "deploy/staging-setup.sh": "staging-setup.test.sh",
+  "deploy/vps-setup.sh": "vps-setup.test.sh",
+};
+
+/**
+ * 担当表を表の外にもう一度書く（#484）。
+ * **`{ ...SUBJECT_OWNERS }` にしてはいけない**——自己参照になって、片方を書き換えれば両方変わる
+ * （#499「期待値はハードコードする。検査対象から生成すると、対象が痩せれば期待値も一緒に痩せる」）。
+ */
+const SUBJECT_OWNERS_PINNED: Record<string, string> = {
+  "deploy/analytics/daily.sh": "go-live.test.sh",
+  "deploy/analytics/logrotate.conf": "logrotate.test.sh",
+  "deploy/analytics/vps-analytics-setup.sh": "logrotate.test.sh",
+  "deploy/apply-all.sh": "apply-all.test.sh",
+  "deploy/cloudflare-allowlist.sh": "cloudflare-allowlist.test.sh",
+  "deploy/go-live.sh": "go-live.test.sh",
+  "deploy/monitor/health.sh": "monitor-health.test.sh",
+  "deploy/monitor/logrotate.conf": "logrotate.test.sh",
+  "deploy/monitor/probe.sh": "monitor-probe.test.sh",
+  "deploy/monitor/report.sh": "monitor-probe.test.sh",
+  "deploy/monitor/run.sh": "monitor-probe.test.sh",
+  "deploy/monitor/setup.sh": "monitor-setup.test.sh",
+  "deploy/nginx/site.conf": "nginx-headers.test.sh",
+  "deploy/ops-user-setup.sh": "ops-user-setup.test.sh",
+  "deploy/run-remote.sh": "run-remote.test.sh",
+  "deploy/staging-setup.sh": "staging-setup.test.sh",
+  "deploy/vps-setup.sh": "vps-setup.test.sh",
+};
+
+test("#513 経路2: 本番ファイルの主担当表そのものを固定する（担当を付け替えて骨抜きにできない）", () => {
+  // 母集団 = 例外 + 主担当。漏れも重複も許さない。
+  const covered = [...Object.keys(SUBJECT_OWNERS), ...Object.keys(UNCOVERED)].sort();
+  assert.deepEqual(
+    covered,
+    DEPLOY_SUBJECTS_PINNED,
+    `deploy/ の本番ファイルと、担当表（SUBJECT_OWNERS + UNCOVERED）が食い違う。
+  母集団  : ${DEPLOY_SUBJECTS_PINNED.join(", ")}
+  担当表  : ${covered.join(", ")}
+本番ファイルを足したら主担当を決めること。`,
+  );
+  assert.deepEqual(SUBJECT_OWNERS, SUBJECT_OWNERS_PINNED, "主担当表が変わっている。両方を書き換えること。");
+});
+
+test("#513 経路2: 名指しした主担当が、生きたテストとしてその本番ファイルを見ている", () => {
+  const src = sources();
+  const live = new Map(INVENTORY.map((e) => [e.file, e.minAssertions]));
+  const findings: string[] = [];
+  const audited: string[] = [];
+  for (const [subject, owner] of Object.entries(SUBJECT_OWNERS)) {
+    audited.push(subject);
+    const body = src.get(owner);
+    if (body === undefined) {
+      findings.push(`${subject}: 主担当の ${owner} が存在しない（削除された）`);
+      continue;
+    }
+    if (assertionSites(body) < (live.get(owner) ?? 1))
+      findings.push(`${subject}: 主担当の ${owner} が骨抜きになっている（走る assertion が足りない）`);
+    const base = subject.slice("deploy/".length);
+    const name = base.slice(base.lastIndexOf("/") + 1);
+    if (!body.includes(base) && !body.includes(name))
+      findings.push(`${subject}: 主担当の ${owner} が実行される本文でこれを名指ししていない`);
+  }
+  const skipped = Object.keys(SUBJECT_OWNERS).filter((k) => !audited.includes(k));
+  assert.deepEqual(
+    { findings, skipped },
+    { findings: [], skipped: [] },
+    `本番ファイルの主担当が、生きたテストとして機能していない。
+${findings.map((f) => `  - ${f}`).join("\n") || "  （検出なし）"}
+  数え上げから飛ばした: ${skipped.join(", ") || "なし"}
+
+**「他のテストがたまたま名指ししている」では守りにならない**（実測: 7 本がそれで素通りしていた）。`,
+  );
+});
+
 test("#513 経路2: deploy/ の本番スクリプト・設定は、どれかの deploy テストから名指しされている", () => {
   const src = sources();
   const subjects = deploySubjects();
