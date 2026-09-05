@@ -58,6 +58,36 @@ test_case() {
 
 t_syntax() { bash -n "$SCRIPT" || fail "bash -n branch-protection.sh"; }
 
+# The guard's REQUIRED_CHECKS and the cases below are both in the two files of this PR, so weakening them TOGETHER
+# passes: a review demonstrated that dropping `gitleaks` from the guard's list AND from the loop below gives
+# 15 passed / shellcheck rc=0 while secret scanning is no longer required to merge (#521 review).
+# This case takes the expected set from a THIRD place that neither file controls — the CI workflows that define the
+# jobs. `gitleaks` / `forbidden-patterns` / `audit` are job ids in .github/workflows/security.yml and `check` is one
+# in ci.yml; a required status check is named after the job that reports it. To drop one from the guard now, the
+# job itself has to be deleted from the workflow, which is a visible change in a third file
+# (WORKING_AGREEMENT: 防御は「不可能にすること」ではなく「隠れて通れなくすること」／経路が2つ以上あるものは
+#  それぞれ別々に釘打つ).
+# NOTE: this is a SUBSET assertion in one direction only — every security job must be required. `docker-web` is a
+# job in ci.yml that is deliberately NOT a required check, so "every job must appear" would be wrong.
+t_required_checks_match_workflows() {
+  local want got missing=""
+  # job ids = the two-space-indented keys AFTER the top-level `jobs:` line (sed range), so `permissions:` and
+  # `concurrency:` above it are not mistaken for jobs. Plus `check`, the job ci.yml defines.
+  want=$( { sed -n '/^jobs:/,$p' "$HERE/../../.github/workflows/security.yml" \
+              | grep -oE '^  [a-z][a-z0-9-]*:' | tr -d ' :'
+           echo check; } | sort -u)
+  [ -n "$want" ] || { fail "workflow から job 名を1つも取れなかった（この検査自体が空振りしている）"; return; }
+  # the list the guard actually enforces
+  got=$(sed -n 's/^REQUIRED_CHECKS=(\(.*\))$/\1/p' "$SCRIPT" | tr ' ' '\n' | sort -u)
+  [ -n "$got" ] || { fail "REQUIRED_CHECKS を読み取れなかった"; return; }
+  local w
+  while read -r w; do
+    [ -z "$w" ] && continue
+    grep -qxF "$w" <<<"$got" || missing="$missing $w"
+  done <<<"$want"
+  [ -z "$missing" ] || fail "CI の job なのに必須チェックに入っていない:$missing (guard: $(tr '\n' ' ' <<<"$got"))"
+}
+
 t_healthy() {
   fresh healthy
   run_guard uonoko1/giinrecord main
@@ -224,6 +254,7 @@ t_no_secret_in_output() {
 
 echo "== deploy/monitor/branch-protection.sh =="
 test_case "syntax"                                   t_syntax
+test_case "必須チェックの一覧が CI の job 定義と一致する"    t_required_checks_match_workflows
 test_case "設定が正しいとき ok で終わる"                  t_healthy
 test_case "enforce_admins が false なら落ちる"          t_enforce_admins_off
 test_case "必須チェックが1つでも欠けたら落ちる（4通り）"     t_missing_check
