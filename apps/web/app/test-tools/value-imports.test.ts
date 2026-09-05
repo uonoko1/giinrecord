@@ -1,9 +1,10 @@
 // @vitest-environment node
+import { readFileSync } from "node:fs";
 import { mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { dynamicImports, metaGlobs, reachableFrom, resolveRelative, valueImports } from "./value-imports";
+import { dynamicImports, entriesReaching, metaGlobs, reachableFrom, resolveRelative, valueImports } from "./value-imports";
 
 /**
  * **検査そのものを検査する。**（#451 の最大の学び: 検査器自身のテストが無かったので、
@@ -165,5 +166,79 @@ describe("reachableFrom: 入口から推移的に辿る", () => {
     await writeFile(path.join(dir, "a.ts"), 'import { b } from "./b";\nexport const a = b;\n');
     await writeFile(path.join(dir, "b.ts"), 'import { a } from "./a";\nexport const b = 1;\n');
     expect(reachableFrom([path.join(dir, "entry.ts")]).map((r) => path.basename(r.file))).toEqual(["a.ts", "b.ts"]);
+  });
+});
+
+/**
+ * **`entriesReaching` は `reachableFrom` の言い換えではない**（#514）。
+ *
+ * `reachableFrom` は「辿り着くモジュールの一覧」を返す。**一覧を基準にすると、
+ * 一覧を 1 行絞る変異が基準ごと痩せて全部が整合する**（#514 で実測。6/6 緑）。
+ * `entriesReaching` は**一覧を作らず**、入口 1 本ごとに
+ * 「`find` が当たるソースに辿り着いたか」だけを返す。
+ *
+ * ここは**その関数自身**のテスト。呼び出し側（`tsx-build-scripts.test.ts`）の
+ * 見張りをすり抜けるために**この関数の中を絞る**変異があり得るので、
+ * 「2 段目まで辿る」「型だけは辿らない」「入口自身は検査しない」「循環で止まる」を
+ * それぞれ**その形だけが効く見本**で押さえる。
+ */
+describe("entriesReaching: 入口ごとに「違反に辿り着くか」だけを答える（#514）", () => {
+  const hit = (source: string): unknown[] => (source.includes("BAD") ? ["BAD"] : []);
+
+  const tree = async (): Promise<string> => {
+    const dir = await mkdtemp(path.join(tmpdir(), "giin-er-"));
+    await writeFile(path.join(dir, "entry.ts"), 'import { a } from "./one";\nexport const e = a;\n');
+    await writeFile(path.join(dir, "one.ts"), 'import { b } from "./two";\nexport const a = b;\n');
+    await writeFile(path.join(dir, "two.ts"), "export const b = 1; // BAD\n");
+    await writeFile(path.join(dir, "clean.ts"), 'import { c } from "./three";\nexport const d = c;\n');
+    await writeFile(path.join(dir, "three.ts"), "export const c = 2;\n");
+    return dir;
+  };
+
+  it("2 段目の違反も見つける（1 段だけ見る実装なら落ちる）", async () => {
+    const dir = await tree();
+    const hits = entriesReaching([path.join(dir, "entry.ts")], hit);
+    expect(hits.map((h) => path.basename(h.hit)), "2 段目の two.ts を見落としている").toEqual(["two.ts"]);
+  });
+
+  it("違反に辿り着かない入口は返さない（何にでも当たる実装なら落ちる）", async () => {
+    const dir = await tree();
+    expect(entriesReaching([path.join(dir, "clean.ts")], hit)).toEqual([]);
+  });
+
+  it("入口ごとに 1 件返す（複数の入口が同じ違反に届いても、どの入口かが分かる）", async () => {
+    const dir = await tree();
+    await writeFile(path.join(dir, "entry2.ts"), 'import { a } from "./one";\nexport const f = a;\n');
+    const hits = entriesReaching([path.join(dir, "entry.ts"), path.join(dir, "entry2.ts")], hit);
+    expect(hits.map((h) => path.basename(h.entry)).sort()).toEqual(["entry.ts", "entry2.ts"]);
+  });
+
+  it("入口自身は検査しない（入口は tsx が直に走らせる。対象は「その先」）", async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), "giin-er-self-"));
+    await writeFile(path.join(dir, "entry.ts"), "export const e = 1; // BAD\n");
+    expect(entriesReaching([path.join(dir, "entry.ts")], hit), "入口自身を違反として挙げている").toEqual([]);
+  });
+
+  it("型だけの import は辿らない（実行時に存在しないので glob に繋がらない）", async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), "giin-er-type-"));
+    await writeFile(path.join(dir, "entry.ts"), 'import type { T } from "./bad";\nexport const e: T = 1 as T;\n');
+    await writeFile(path.join(dir, "bad.ts"), "export type T = number; // BAD\n");
+    expect(entriesReaching([path.join(dir, "entry.ts")], hit), "型だけの import を辿っている").toEqual([]);
+  });
+
+  it("循環（a → b → a）でも止まる", async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), "giin-er-cycle-"));
+    await writeFile(path.join(dir, "entry.ts"), 'import { a } from "./a";\nexport const e = a;\n');
+    await writeFile(path.join(dir, "a.ts"), 'import { b } from "./b";\nexport const a = b;\n');
+    await writeFile(path.join(dir, "b.ts"), 'import { a } from "./a";\nexport const b = 1;\n');
+    expect(entriesReaching([path.join(dir, "entry.ts")], hit)).toEqual([]);
+  });
+
+  it("`readFile` を差し替えた世界で見つける（実ファイルに触らずに違反を合成できること）", async () => {
+    const dir = await tree();
+    const entry = path.join(dir, "clean.ts");
+    const three = path.join(dir, "three.ts");
+    const read = (f: string): string => (f === three ? "export const c = 2; // BAD\n" : readFileSync(f, "utf8"));
+    expect(entriesReaching([entry], hit, read).map((h) => path.basename(h.hit)), "差し替えた `readFile` を使っていない").toEqual(["three.ts"]);
   });
 });
