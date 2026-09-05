@@ -53,11 +53,51 @@ const actualFiles = (): string[] =>
     .filter((n) => n.endsWith(".test.sh"))
     .sort();
 
-/** deploy/test/*.test.sh の本文（名前 → 中身）。**実在するもの**から作る。 */
+/**
+ * シェルスクリプトから**コメント行を落とす**。
+ *
+ * **レビュー（PR #526）で破られた点**: ここが無かったとき、逐語一致（`String.includes`）は
+ * **コメントと実行される本文を区別できなかった**。実測——14 本すべてを
+ * ```
+ * { echo '#!/usr/bin/env bash'; sed 's/^/# /' "$f"; echo 'exit 0'; } > "$f"
+ * ```
+ * で「全部コメント + exit 0」に潰しても、**9 pass / 0 fail**（assertion は 1 つも残っていない）。
+ * `nginx-headers.test.sh` は 238 行 → 10 行のスタブになってなお緑だった。
+ *
+ * **同じファイルの中で扱いが非対称だった**のが原因: `headersInSiteConf()` は
+ * `^\s*#` を除いていたのに、`.sh` 側だけ素の全文を見ていた。
+ */
+function stripComments(src: string): string {
+  return src
+    .split("\n")
+    .filter((l) => !/^\s*#/.test(l))
+    .join("\n");
+}
+
+/** deploy/test/*.test.sh の**実行される本文**（コメントを落としたもの）。判定はすべてこちらで行う。 */
 function sources(): Map<string, string> {
   const m = new Map<string, string>();
-  for (const f of actualFiles()) m.set(f, read(`deploy/test/${f}`));
+  for (const f of actualFiles()) m.set(f, stripComments(read(`deploy/test/${f}`)));
   return m;
+}
+
+/**
+ * **実際に走る assertion の呼び出し**を数える。
+ * コメントに逃がした本文は `stripComments` で消えているので、ここには残らない。
+ * ヘルパの**定義行**（`ok() { ... }`）は呼び出しではないので除く。
+ *
+ * 数え方（機械で列挙している。目視で数えていない）:
+ *   - 判定ヘルパの呼び出し: `test_case` / `assert_*` / `ok` / `bad` / `fail`（行頭・`;` `&&` `||` `then` `else` `do` の直後）
+ *   - 数え上げ直書き: `PASS=$((PASS+1))`
+ */
+function assertionSites(body: string): number {
+  const withoutDefs = body
+    .split("\n")
+    .filter((l) => !/^\s*(ok|bad|fail|skip|test_case|assert_[a-z_]+)\s*\(\)/.test(l))
+    .join("\n");
+  const re =
+    /(?:^|[;&|(]|\bthen\b|\belse\b|\bdo\b)\s*(?:test_case|assert_[a-z_]+|ok|bad|fail)\s+["$\w]|PASS=\$\(\(PASS\+1\)\)/g;
+  return [...withoutDefs.matchAll(re)].length;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -69,18 +109,19 @@ function sources(): Map<string, string> {
  * - `anchors` : そのテストが**現に検査していること**を名指しする、ファイル中の逐語文字列。
  *               assertion を抜くと消える。#481: 失敗は「何件」ではなく「どれが」で出す。
  */
-const INVENTORY: { file: string; anchors: string[] }[] = [
-  { file: "apply-all.test.sh", anchors: ["apply-all.sh", "allowlist", "8083"] },
+const INVENTORY: { file: string; anchors: string[]; minAssertions: number }[] = [
+  { file: "apply-all.test.sh", anchors: ["apply-all.sh", "allowlist", "8083"], minAssertions: 64 },
   {
     file: "cloudflare-allowlist.test.sh",
     anchors: ["cloudflare-allowlist.sh", "nginx -t failed"],
+    minAssertions: 26,
   },
-  { file: "go-live.test.sh", anchors: ["go-live.sh"] },
-  { file: "logrotate.test.sh", anchors: ["logrotate.conf", "monitor/setup.sh"] },
-  { file: "monitor-health.test.sh", anchors: ["monitor/health.sh"] },
-  { file: "monitor-probe.test.sh", anchors: ["probe.sh"] },
-  { file: "monitor-setup.test.sh", anchors: ["monitor/setup.sh"] },
-  { file: "nginx-404.test.sh", anchors: ["nginx/site.conf", "__spa-fallback.html", "docker"] },
+  { file: "go-live.test.sh", anchors: ["go-live.sh"], minAssertions: 20 },
+  { file: "logrotate.test.sh", anchors: ["logrotate.conf", "monitor/setup.sh"], minAssertions: 8 },
+  { file: "monitor-health.test.sh", anchors: ["monitor/health.sh"], minAssertions: 13 },
+  { file: "monitor-probe.test.sh", anchors: ["probe.sh"], minAssertions: 49 },
+  { file: "monitor-setup.test.sh", anchors: ["monitor/setup.sh"], minAssertions: 8 },
+  { file: "nginx-404.test.sh", anchors: ["nginx/site.conf", "__spa-fallback.html", "docker"], minAssertions: 4 },
   {
     file: "nginx-headers.test.sh",
     // #513 が「これが消えると失われる」と名指ししたものを、そのまま釘にする。
@@ -94,12 +135,13 @@ const INVENTORY: { file: string; anchors: string[] }[] = [
       "SECURITY_HEADERS", // #504: 個数ではなく要素そのものを順序込みで固定
       "REQUIRED_SECURITY_HEADERS",
     ],
+    minAssertions: 8,
   },
-  { file: "nginx-reload.test.sh", anchors: ["vps-setup.sh", "nginx -t failed"] },
-  { file: "ops-user-setup.test.sh", anchors: ["ops-user-setup.sh", "NOPASSWD", "visudo"] },
-  { file: "run-remote.test.sh", anchors: ["run-remote.sh"] },
-  { file: "staging-setup.test.sh", anchors: ["staging-setup.sh"] },
-  { file: "vps-setup.test.sh", anchors: ["vps-setup.sh"] },
+  { file: "nginx-reload.test.sh", anchors: ["vps-setup.sh", "nginx -t failed"], minAssertions: 2 },
+  { file: "ops-user-setup.test.sh", anchors: ["ops-user-setup.sh", "NOPASSWD", "visudo"], minAssertions: 69 },
+  { file: "run-remote.test.sh", anchors: ["run-remote.sh"], minAssertions: 22 },
+  { file: "staging-setup.test.sh", anchors: ["staging-setup.sh"], minAssertions: 15 },
+  { file: "vps-setup.test.sh", anchors: ["vps-setup.sh"], minAssertions: 30 },
 ];
 
 /**
@@ -116,6 +158,69 @@ const EXPECTED_COUNT = 14;
  * 14 本が使う3つの書き方を**逐語で**列挙する（正規表現で緩めない）。
  */
 const GATES = ['[ "$FAIL" = 0 ]', "[[ $FAIL == 0 ]]", '[ "$FAIL" -eq 0 ]'];
+
+/**
+ * **検査器自身が持つ allowlist を固定する**（#484）。
+ * `UNCOVERED_KEYS` / `ELSEWHERE_KEYS` は固定したのに、**`GATES` と `anchors` は未固定だった**——
+ * レビュー（PR #526）の実測:
+ *   - `GATES` に `"exit"` を 1 語足すだけで、全 14 本の出口を `exit 0` にしても **9 pass / 0 fail**
+ *   - `anchors` を全部 `["bash"]` に差し替えるだけで **9 pass / 0 fail**
+ * **allowlist が 3 つあって、2 つしか釘打っていなかった。**
+ */
+const GATES_PINNED = ['[ "$FAIL" = 0 ]', "[[ $FAIL == 0 ]]", '[ "$FAIL" -eq 0 ]'];
+
+/** 台帳の anchors・下限を、台帳の外にもう一度書く（同上）。 */
+const INVENTORY_PINNED: Record<string, { anchors: string[]; minAssertions: number }> = {
+  "apply-all.test.sh": { anchors: ["apply-all.sh", "allowlist", "8083"], minAssertions: 64 },
+  "cloudflare-allowlist.test.sh": {
+    anchors: ["cloudflare-allowlist.sh", "nginx -t failed"],
+    minAssertions: 26,
+  },
+  "go-live.test.sh": { anchors: ["go-live.sh"], minAssertions: 20 },
+  "logrotate.test.sh": { anchors: ["logrotate.conf", "monitor/setup.sh"], minAssertions: 8 },
+  "monitor-health.test.sh": { anchors: ["monitor/health.sh"], minAssertions: 13 },
+  "monitor-probe.test.sh": { anchors: ["probe.sh"], minAssertions: 49 },
+  "monitor-setup.test.sh": { anchors: ["monitor/setup.sh"], minAssertions: 8 },
+  "nginx-404.test.sh": {
+    anchors: ["nginx/site.conf", "__spa-fallback.html", "docker"],
+    minAssertions: 4,
+  },
+  "nginx-headers.test.sh": {
+    anchors: [
+      "nginx/site.conf",
+      "docker",
+      "LOCATIONS",
+      "WANT_LOCS",
+      "add_header",
+      "Permissions-Policy",
+      "SECURITY_HEADERS",
+      "REQUIRED_SECURITY_HEADERS",
+    ],
+    minAssertions: 8,
+  },
+  "nginx-reload.test.sh": { anchors: ["vps-setup.sh", "nginx -t failed"], minAssertions: 2 },
+  "ops-user-setup.test.sh": {
+    anchors: ["ops-user-setup.sh", "NOPASSWD", "visudo"],
+    minAssertions: 69,
+  },
+  "run-remote.test.sh": { anchors: ["run-remote.sh"], minAssertions: 22 },
+  "staging-setup.test.sh": { anchors: ["staging-setup.sh"], minAssertions: 15 },
+  "vps-setup.test.sh": { anchors: ["vps-setup.sh"], minAssertions: 30 },
+};
+
+test("#513 経路1: 検査器の allowlist（GATES・anchors・assertion の下限）そのものを固定する", () => {
+  assert.deepEqual(GATES, GATES_PINNED, `GATES が変わっている（出口として認める書き方の集合）。
+  いま: ${GATES.join(" / ")}
+  固定: ${GATES_PINNED.join(" / ")}
+ここに 1 語（例えば "exit"）足すだけで、全 14 本を exit 0 に差し替えても検査は黙る（実測）。`);
+
+  const table = Object.fromEntries(
+    INVENTORY.map((e) => [e.file, { anchors: e.anchors, minAssertions: e.minAssertions }]),
+  );
+  assert.deepEqual(table, INVENTORY_PINNED, `台帳の anchors / assertion 下限が変わっている。
+台帳（INVENTORY）と固定値（INVENTORY_PINNED）の両方を書き換えないと通らない。
+片方だけ緩めて検査を黙らせる道を塞ぐためにある（#484）。`);
+});
 
 test("#513 経路1: 台帳は実在するファイル集合と一致する（消しても足しても落ちる）", () => {
   const expected = INVENTORY.map((e) => e.file).sort();
@@ -177,7 +282,7 @@ test("#513 経路1: 各 *.test.sh は検査項目を名指ししている（空�
   const src = sources();
   const findings: string[] = [];
   const audited: string[] = [];
-  for (const { file, anchors } of INVENTORY) {
+  for (const { file, anchors, minAssertions: min } of INVENTORY) {
     const s = src.get(file);
     audited.push(file);
     if (s === undefined) {
@@ -186,6 +291,10 @@ test("#513 経路1: 各 *.test.sh は検査項目を名指ししている（空�
     }
     if (anchors.length === 0) findings.push(`${file}: anchors が空（何も守っていない宣言に等しい）`);
     for (const a of anchors) if (!s.includes(a)) findings.push(`${file}: 検査項目 [${a}] が消えている`);
+    // **逐語一致だけでは、本文をコメントにして exit 0 を足すだけで通った**（PR #526 のレビュー、14/14）。
+    // 実際に走る assertion の数に下限を置く。コメントに逃がした本文はここで 0 になる。
+    const n = assertionSites(s);
+    if (n < min) findings.push(`${file}: 実際に走る assertion が ${n} 個（最低 ${min} 個。減らすなら台帳も直すこと）`);
   }
   const skipped = INVENTORY.map((e) => e.file).filter((f) => !audited.includes(f));
   assert.deepEqual(
@@ -245,6 +354,55 @@ const UNCOVERED_KEYS = [
   "deploy/analytics/nginx-noip-log.conf",
   "deploy/nginx-host-proxy.conf",
 ];
+
+/**
+ * **母集団そのものを固定する。**
+ *
+ * **レビュー（PR #526）で破られた点**: 経路2 は「期待値の出どころが `deploy/` の実ファイル」を
+ * 売りにしていたが、**その実ファイル集合が痩せれば期待値も一緒に痩せる**（#499 の形）。実測:
+ *   - **W3**: `git mv deploy/monitor infra/monitor`（テストは一切触らない）+ monitor 系 3 本を削除 → **9 pass / 0 fail**
+ *   - **W4**: `deploy/monitor/probe.sh` → `probe`（拡張子を外す）→ 数え上げから外れて黙る
+ * **例外側（UNCOVERED_KEYS）だけ固定して、母集団を固定していなかった。**
+ */
+const DEPLOY_SUBJECTS_PINNED = [
+  "deploy/analytics/aggregate.sh",
+  "deploy/analytics/daily.sh",
+  "deploy/analytics/logrotate.conf",
+  "deploy/analytics/nginx-noip-log.conf",
+  "deploy/analytics/vps-analytics-setup.sh",
+  "deploy/apply-all.sh",
+  "deploy/cloudflare-allowlist.sh",
+  "deploy/go-live.sh",
+  "deploy/monitor/health.sh",
+  "deploy/monitor/logrotate.conf",
+  "deploy/monitor/probe.sh",
+  "deploy/monitor/report.sh",
+  "deploy/monitor/run.sh",
+  "deploy/monitor/setup.sh",
+  "deploy/nginx-host-proxy.conf",
+  "deploy/nginx/site.conf",
+  "deploy/ops-user-setup.sh",
+  "deploy/run-remote.sh",
+  "deploy/staging-setup.sh",
+  "deploy/vps-setup.sh",
+];
+
+test("#513 経路2: 被覆の母集団そのものを固定する（deploy/ を移動・改名して痩せさせられない）", () => {
+  const actual = deploySubjects();
+  const gone = DEPLOY_SUBJECTS_PINNED.filter((f) => !actual.includes(f));
+  const added = actual.filter((f) => !DEPLOY_SUBJECTS_PINNED.includes(f));
+  assert.deepEqual(
+    { gone, added },
+    { gone: [], added: [] },
+    `deploy/ の本番ファイル集合（被覆の母集団）が変わっている。
+  消えた/移動した/改名された: ${gone.join(", ") || "なし"}
+  増えた                    : ${added.join(", ") || "なし"}
+
+**母集団が痩せると、被覆の期待値も一緒に痩せる。**
+deploy/ の外に出した／拡張子を外したなら、それは「deploy テストの守備範囲から外した」ということ。
+本当にそうするなら DEPLOY_SUBJECTS_PINNED も書き換えて、diff に意図を残すこと。`,
+  );
+});
 
 test("#513 経路2: 被覆の例外集合そのものを固定する（例外を増やして骨抜きにできない）", () => {
   assert.deepEqual(
