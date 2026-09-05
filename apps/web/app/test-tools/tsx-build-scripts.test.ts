@@ -171,9 +171,9 @@ function auditedOffenders(
    * **結果は見張りとして脇に置かず、返す違反者リストに合流させる**（#507 で学んだ形）。
    * この行を消すと検出そのものが減るので、「見張りだけ消す」ができない。
    */
-  const viaEntries = entriesReaching(entries, find).map(
-    ({ entry, hit, via }) => `${rel(hit)}（入口 ${path.basename(entry)} から辿った道: ${trail(via)}）`,
-  );
+  // **呼び出しは 1 回だけにする。** 2 回呼ぶと、片方だけ絞る変異が書けてしまう
+  const byEntry = entriesReaching(entries, find);
+  const viaEntries = byEntry.map(({ entry, hit, via }) => `${rel(hit)}（入口 ${path.basename(entry)} から辿った道: ${trail(via)}）`);
 
   /*
    * **一覧（`reached`）が 2 本目の経路より痩せていないか。**
@@ -181,9 +181,7 @@ function auditedOffenders(
    * 入っていなければ `reached` が絞られている。
    * この見張りを消しても、上の `viaEntries` が違反者として残るので黙らない。
    */
-  const hidden = entriesReaching(entries, find)
-    .map(({ hit }) => rel(hit))
-    .filter((f) => !reached.some((r) => rel(r.file) === f));
+  const hidden = byEntry.map(({ hit }) => rel(hit)).filter((f) => !reached.some((r) => rel(r.file) === f));
   expect(hidden, "入口から辿ると届くのに、`reached` の一覧に入っていないモジュール（`reached` が絞られています）").toEqual([]);
 
   /*
