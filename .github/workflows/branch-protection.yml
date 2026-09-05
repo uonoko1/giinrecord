@@ -23,6 +23,13 @@ on:
       - "deploy/monitor/branch-protection.sh"
       - "deploy/test/branch-protection.test.sh"
   workflow_dispatch:
+# GITHUB_TOKEN に branch protection の読み取り権限は与えられない。
+# `administration: read` を書いて実測したところ、GitHub はワークフローを**構文として拒否**した:
+#   HTTP 422: failed to parse workflow: (Line: 31, Col: 3): Unexpected value 'administration'
+# `administration` は GITHUB_TOKEN の permissions に存在しないキーで、書くと**この workflow 自体が
+# 一切動かなくなる**（#540）。読み取りには fine-grained PAT が要る——**人間の作業**で、
+# 手順は docs/ops/deploy.md「main の保護設定」。PAT が置かれるまでは exit 2（読めない）として
+# 報告し続ける。**何も見ていない状態にはしない。**
 permissions:
   contents: read
   issues: write
@@ -39,30 +46,82 @@ jobs:
         run: bash deploy/test/branch-protection.test.sh
       # PR では実際の設定を読まない: fork からの PR に issues:write は渡らず、Issue の開閉もしたくない。
       # 設定そのものの確認は schedule と workflow_dispatch でやる。
+      # 2つの結果を、2つの別々の Issue として扱う（#540）。
+      #   exit 1 = 設定が弱い        → "[monitor] repo: main の保護設定"
+      #   exit 2 = 設定を読めなかった → "[monitor] repo: main の保護設定を読めない"
+      # 同じタイトルにすると、片方が開いている間もう片方が開けない（report.sh はタイトルを同一性に使う）。
+      # #540 は「読めなかった」のに「弱まっている」という本文で開いた。毎朝それが出ると本物と区別が付かない。
+      #
+      # stderr は $out に混ぜない（`2>&1` にしない）。gh の API エラーには Authorization ヘッダが混ざりうるが、
+      # $out は公開 Issue の本文にそのまま入る。stderr は job のログにだけ出す。
       - name: check main's protection → Issue
         if: github.event_name != 'pull_request'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # branch protection の読み取りには管理権限が要る。まず GITHUB_TOKEN の administration: read で試し、
+          # それで足りなければ人間が置く fine-grained PAT を使う（手順は docs/ops/deploy.md「main の保護設定」）。
+          # secret が無ければ空文字になり `||` で GITHUB_TOKEN に落ちる。
+          GH_TOKEN: ${{ secrets.BRANCH_PROTECTION_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
+          # `set +e` が要る: Actions の既定シェルは `bash -e {0}` で、`out=$(…)` が非 0 を返した時点で
+          # **その場で終了する**。実測では exit 2 のまま case に入らず、Issue を1つも開かなかった
+          # （run 33987618134）。ここは非 0 を「値」として扱う場所なので -e を切る。
+          set +e
           set -uo pipefail
-          title="[monitor] repo: main の保護設定"
-          if out=$(bash deploy/monitor/branch-protection.sh "$GITHUB_REPOSITORY" main 2>&1); then
-            echo "$out"
-            bash deploy/monitor/report.sh "$title" ok
-          else
-            echo "$out"
-            {
-              echo "**main の branch protection が弱まっている。** CI を通さずに main へ入れる状態かもしれない（#521）。"
-              echo
-              echo '```'
-              echo "$out"
-              echo '```'
-              echo
-              echo "- run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-              echo
-              echo "直し方と、緊急時に一時的に外すときの手順は \`docs/ops/deploy.md\`「main の保護設定」。"
-              echo "検査が通るようになれば、この Issue は自動で閉じる。"
-            } > body.md
-            bash deploy/monitor/report.sh "$title" fail body.md
-            exit 1
-          fi
+          weak_title="[monitor] repo: main の保護設定"
+          unreadable_title="[monitor] repo: main の保護設定を読めない"
+          run_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          # Issue の本文はリポジトリの外に書く。以前ここを `body.md` にしていて、
+          # このステップを手元で流したときの残骸を**実際にコミットしてしまった**（PR を出す前の
+          # `git diff origin/main HEAD --stat` で気づいた）。RUNNER_TEMP は Actions でのみ設定される。
+          body_file="${RUNNER_TEMP:-$(mktemp -d)}/branch-protection-body.md"
+          out=$(bash deploy/monitor/branch-protection.sh "$GITHUB_REPOSITORY" main); rc=$?
+          echo "$out"
+          case $rc in
+            0)
+              # どちらの Issue も閉じる
+              bash deploy/monitor/report.sh "$weak_title" ok
+              bash deploy/monitor/report.sh "$unreadable_title" ok
+              ;;
+            1)
+              {
+                echo "**main の branch protection が弱まっている。** CI を通さずに main へ入れる状態かもしれない（#521）。"
+                echo
+                echo '```'
+                echo "$out"
+                echo '```'
+                echo
+                echo "- run: $run_url"
+                echo
+                echo "直し方と、緊急時に一時的に外すときの手順は \`docs/ops/deploy.md\`「main の保護設定」。"
+                echo "検査が通るようになれば、この Issue は自動で閉じる。"
+              } > "$body_file"
+              bash deploy/monitor/report.sh "$weak_title" fail "$body_file"
+              exit 1
+              ;;
+            2)
+              # 読めなかっただけで、設定が弱いとは限らない。**弱まっている側の Issue は触らない**
+              # （開いていれば開いたまま、閉じていれば閉じたまま。判定できていないので勝手に閉じない）。
+              {
+                echo "**main の保護設定を読めなかった。** 設定が弱いかどうかは**判定できていない**（#540）。"
+                echo
+                echo '```'
+                echo "$out"
+                echo '```'
+                echo
+                echo "- run: $run_url"
+                echo
+                echo "**理由は run のログ（stderr）にある。** 認証情報が混ざりうるのでここには転記しない。"
+                echo "原因は権限のことが多い。**\`GITHUB_TOKEN\` では branch protection を読めない**"
+                echo "（\`permissions:\` に \`administration: read\` を書くのは**誤り**。GitHub が workflow を"
+                echo "構文として拒否して、この検査ごと動かなくなる）。**fine-grained PAT が要る＝人間の作業。**"
+                echo "手順は \`docs/ops/deploy.md\`「main の保護設定」。"
+                echo "読めるようになれば、この Issue は自動で閉じる。"
+              } > "$body_file"
+              bash deploy/monitor/report.sh "$unreadable_title" fail "$body_file"
+              exit 1
+              ;;
+            *)
+              echo "::error::branch-protection.sh が想定外の終了コード $rc を返した"
+              exit 1
+              ;;
+          esac
