@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { readdirSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
@@ -39,31 +39,20 @@ import { moduleSpecifiers } from "./value-imports";
 const webRoot = path.resolve(fileURLToPath(import.meta.url), "../../.."); // app/test-tools/x.test.ts → apps/web
 
 /**
- * **検査対象は `tsconfig.json` 自身に決めさせる。**
- *
- * 手で歩くと、**除外を 1 つ足して、それを見張っているアサーションも一緒に消せば黙る**
- * （実際に変異で確かめた: `scripts` を SKIP に足して前提の 1 行を消すと、
- * `scripts/sitemap.ts` の `~/` を**6 件全部緑のまま見逃した**）。
- * #490 で「対象を手で並べると漏れる」と学んだのと同じ形。
- *
- * `tsc` が型検査するファイルと、この検査が見るファイルが**同じ集合**であるべきなので、
- * TypeScript に `include` を展開させてそれを使う。**狭めるには tsconfig を書き換えるしかなく、
- * そのときは型検査の対象も一緒に狭まるので、黙って狭めることはできない。**
- *
- * 生成物（`node_modules` / `build` / `.react-router`）だけ外す。
- * **テストファイルも fixture も含める**——`~/` はテストファイル自身の読み込みも壊す（実測）。
- */
-/**
  * **検査対象は `tsconfig.json` 自身に決めさせる。除外リストを持たない。**
  *
  * 手で歩くと、**除外を 1 つ足して、それを見張っているアサーションも一緒に消せば黙る**
- * （変異で実際に確かめた: `scripts` を除外して前提の 1 行を消すと、
+ * （変異で実際に確かめた: `scripts` を除外して見張りも消すと、
  * `scripts/sitemap.ts` の `~/` を**全部緑のまま見逃した**）。
  * #490 で「対象を手で並べると漏れる」と学んだのと同じ形。
  *
  * `tsc` が型検査するファイルと、この検査が見るファイルを**同じ集合**にする。
- * **狭めるには tsconfig を書き換えるしかなく、そのときは型検査の対象も一緒に狭まる**ので、
- * 黙って狭めることはできない。
+ *
+ * **ただし「tsconfig 由来にした」だけでは、見張りごと消せば黙る性質は消えない**
+ * （レビュー指摘。実測: 対象を狭めて見張り 2 件を両方消すと **24 件全部緑で見逃した**）。
+ * 効いているのは**下の「`~/` を書かない」テストが、自分が読んだファイルを
+ * その場で tsconfig と突き合わせている**ことのほう。
+ * ここで tsconfig 由来にした利点は、**失敗が具体的なファイルを名指しする**ことにある。
  *
  * 除外は 1 つも書かない。TypeScript が既定で `node_modules` を外し、
  * `build` / `.react-router` にはこの条件に合う自作ソースが無い（実測で 0 件）。
@@ -123,13 +112,40 @@ describe("`~/` エイリアスを書かない（#500）", () => {
     expect(missing, "tsc が型検査するのに、この検査が見ていないファイルがあります").toEqual([]);
   });
 
+  /**
+   * **入口だけでなく、出口も固定する（レビュー指摘 Z2）。**
+   *
+   * 対象を `tsconfig` に決めさせても、**本体が `files` を全部使ったかは別の話**だった。
+   * 実際に、この 1 行を足すだけで `app/routes/about.tsx` の `~/` を**26 件全部緑のまま見逃した**:
+   *
+   *     for (const file of files) {
+   *       if (!file.includes("/app/lib/")) continue;   // ← 見張りを 1 つも消さずに黙る
+   *
+   * 上の 2 件の見張りは **`sources()` の戻り値**しか見ておらず、
+   * 「対象を tsconfig に決めさせた」という保証が**入口までしか届いていなかった**。
+   * #485 の「入口を釘打っても、値側は壊せる」と同じ形。
+   *
+   * そこで**実際に読んだファイルを数え上げ、同じテストの中で** tsconfig 由来の集合と突き合わせる。
+   * **見張りを別のテストに置かない**のは、`it` ごと消せば黙るから
+   * （N5 完全版で実測: 対象を狭めて見張り 2 件を両方消すと **24 件全部緑で見逃した**）。
+   */
   it("`~/` で始まる import を書かない（どの実行環境でも解決できない）", () => {
     const offenders: string[] = [];
+    const scanned: string[] = [];
     for (const file of files) {
+      scanned.push(rel(file));
       for (const spec of moduleSpecifiers(readFileSync(file, "utf8"), file)) {
         if (isTildeAlias(spec)) offenders.push(`${rel(file)}: "${spec}"`);
       }
     }
+    // **出口の固定**: 本体が実際に読んだのは、tsconfig が型検査する集合そのものか
+    const parsed = ts.parseJsonConfigFileContent(ts.readConfigFile(path.join(webRoot, "tsconfig.json"), ts.sys.readFile).config, ts.sys, webRoot);
+    const everything = parsed.fileNames.filter((f) => /\.tsx?$/.test(f)).map(rel);
+    expect(everything.length, "tsconfig が .ts / .tsx を 1 つも返していない（この検査が空振り）").toBeGreaterThan(100);
+    expect(
+      [...scanned].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)),
+      "tsc が型検査するファイルの一部を読み飛ばしています（ループの中で除外していませんか）",
+    ).toEqual([...everything].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)));
     expect(
       offenders,
       "`~/` は tsc だけが解決し、vitest も Vite ビルドも tsx も解決できません" +
@@ -160,14 +176,18 @@ describe("`~/` エイリアスを書かない（#500）", () => {
 });
 
 /**
- * **検査そのものを検査する。**（#451 の最大の学び: 検査器自身のテストが無かったので、
- * 検査が 3 度壊れて 3 度とも緑だった）
- */
-/**
- * **判定そのものを検査する。** これが無いと、判定を殺しても
+ * **判定そのものを検査する。**（#451 の最大の学び: 検査器自身のテストが無かったので、
+ * 検査が 3 度壊れて 3 度とも緑だった） これが無いと、判定を殺しても
  * （現に `~/` が 0 件なので）全部緑のまま通る——**実際に変異で確認した**。
  */
 describe("isTildeAlias: `~` エイリアスの判定（#500）", () => {
+  /**
+   * 裸の `"~"` だけは理由が違う（レビュー指摘）。削除前の `paths: {"~/*": ...}` は
+   * `~/` で始まるものしか対象にしないので、**`"~"` はそもそも解決対象ではなかった**。
+   * つまり「どの実行環境でも解決できない」という他の形の理由づけは当てはまらない。
+   * **害の無い過剰検出**として意図的に含めている——`"~"` 単体を import する正当な書き方は無く、
+   * 書かれていたら `~/` の書き損じである可能性が高いため。
+   */
   it("`~/` で始まるもの と `~` そのものを true と言う", () => {
     const yes = ["~/lib/assemblies", "~/lib/a.ts", "~/", "~"];
     expect(
