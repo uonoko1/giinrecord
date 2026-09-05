@@ -12,8 +12,9 @@
  */
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { chromium, type ConsoleMessage, type Page } from "playwright";
-import { defaultDataDir } from "../app/lib/data-files";
+import { chromium, type Browser, type ConsoleMessage, type Page } from "playwright";
+import { defaultDataDir, readMemberDetail, readRollCallIndex } from "../app/lib/data-files";
+import { checkNoJs, NOJS_PAGE_COUNT, type NoJsExpectation, type NoJsSnapshot } from "../app/lib/nojs";
 
 const urlFlag = process.argv.indexOf("--url");
 const baseUrl = urlFlag >= 0 ? process.argv[urlFlag + 1] : undefined;
@@ -264,6 +265,83 @@ async function notFoundScreenRenders(page: Page): Promise<void> {
   console.log(`browser-check: 404 screen rendered (lang=${seen.lang}, title="${seen.title}", robots=${seen.robots})`);
 }
 
+/**
+ * #479: **JS を切っても記録が読めること。**
+ *
+ * このサイトは `ssr: false` + `prerender`（react-router.config.ts）で、**本番にサーバは無い**。
+ * 利用者に届くのは**ビルド時に書き出した HTML 1 枚**なので、そこに中身が入っていなければ
+ * JS を切った利用者にも、検索エンジンのクローラにも、アーカイブにも**何も残らない**。
+ * `prerender` の設定を1つ間違えると（`prerenderPaths` が空を返す、`ssr` を変える）
+ * その HTML は**静かに空の SPA shell になる**——ビルドは通り、`smoke` も通る
+ * （`smoke` が見るのは **HTML ファイルが在ること**で、**中身が在ること**ではない）。
+ *
+ * 上の検査はすべて **JS 有効**なので、shell が返っていてもハイドレーションが中身を描いて緑になる。
+ * **JS を切って初めて、プリレンダーが書いたものだけが見える。**
+ *
+ * 見るのは代表的な 4 ページだけ（CI を重くしない）。**文字数は見ない**——
+ * 期待値は `data/` から取り、**そのページの記録がそのとおり出ているか**を見る（app/lib/nojs.ts）。
+ */
+async function noJsExpectations(dataDir: string, id: string | null): Promise<NoJsExpectation[]> {
+  const rollcalls = await readRollCallIndex(dataDir);
+  const rc = rollcalls[0] ?? null;
+  const detail = id ? await readMemberDetail(dataDir, id) : null;
+  const out: NoJsExpectation[] = [];
+
+  // 一覧: 先頭の採決の議案名と日付が出ていて、その詳細ページへ**リンクで辿れる**
+  // （JS 無効では「もっと見る」は押せないので、折り返し前に出ているものだけを期待する）
+  if (rc) {
+    out.push({
+      path: "/rollcalls/",
+      label: "採決一覧",
+      texts: [rc.title],
+      times: [rc.date],
+      links: [`/rollcalls/${rc.session}/${rc.id}`],
+      sourceUrl: null, // 一覧の出典は各詳細ページ側にある
+    });
+    // 詳細: 議案名・日付・**一次資料への出典リンク**（全行に一次資料リンク、が原則）
+    out.push({
+      path: `/rollcalls/${rc.session}/${rc.id}/`,
+      label: "採決ページ",
+      // 議案名と、**その採決の票数**（`totals`。ページは index.json の `result` の文言ではなく
+      // 賛否の数を描く）。数が出ていれば、そのページに焼かれたのが**この採決の記録**だと分かる
+      texts: [rc.title, `賛成 ${rc.totals.yes}`, `反対 ${rc.totals.no}`],
+      times: [rc.date],
+      sourceUrl: rc.sourceUrl, // 期待するホストは data/ から取る（allowlist を手書きしない）
+    });
+  }
+
+  // 議員一覧: 先頭の議員の氏名が出ていて、その議員ページへリンクで辿れる
+  if (detail) {
+    out.push({ path: "/members/", label: "議員一覧", texts: [detail.name], links: [`/members/${detail.id}`], sourceUrl: null });
+    // 議員ページ（動的ルート）: **一覧だけ通って詳細が空**という壊れ方をここで捕まえる。
+    // 氏名・かな・所属議会の出典リンクまで見るので、別人の HTML が焼かれていても落ちる。
+    // sourceUrl は国会（sangiin/shugiin）とは限らない: 全 1,057 名の 27% は地方議会のホスト。
+    // data/ から取るので、先頭が地方議員になっても偽陽性にならない
+    out.push({ path: `/members/${detail.id}/`, label: "議員ページ", texts: [detail.name, detail.kana], sourceUrl: detail.sourceUrl });
+  }
+  return out;
+}
+
+/** JS 無効で開いて、描画されている本文・リンク・日付だけを読む。 */
+async function noJsSnapshot(browser: Browser, url: string): Promise<NoJsSnapshot> {
+  // JS 無効の context。ここが検査の要点なので、他の検査と context を共有しない
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  try {
+    // #479: JS 無効では networkidle が来ないことがある。待つのは DOM が出来たところまで
+    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30_000 });
+    return await page.evaluate(() => ({
+      url: location.href,
+      // innerText: **描画されている**文字だけ（display:none の中身を数えない）
+      text: document.body?.innerText ?? "",
+      hrefs: [...document.querySelectorAll("a[href]")].map((a) => (a as HTMLAnchorElement).href),
+      times: [...document.querySelectorAll("time[datetime]")].map((t) => t.getAttribute("datetime") ?? ""),
+    }));
+  } finally {
+    await context.close();
+  }
+}
+
 const memberId = await firstMemberId();
 const targets: { url: string; run?: (page: Page) => Promise<void>; status?: number }[] = [
   { url: `${origin}/` },
@@ -293,6 +371,29 @@ try {
     for (const e of r.consoleErrors) failures.push(`${r.url}: console error: ${e}`);
     for (const e of r.pageErrors) failures.push(`${r.url}: ${e}`);
     console.log(`browser-check: ${r.url} csp=${r.cspViolations.length} console=${r.consoleErrors.length} errors=${r.pageErrors.length}`);
+  }
+
+  // #479: JS 無効。同じ browser を使い回すので起動は 1 回のまま（ページを 4 枚開くだけ）
+  const expectations = await noJsExpectations(defaultDataDir(), memberId);
+  // ページ数が欠けていないか（4 ページ固定）は checkNoJs が見る。0 個のときはページを開く意味も無いので先に抜ける
+  if (expectations.length === 0) {
+    failures.push(`no-js: data/ から期待値が 1 つも作れなかった（JS 無効の検査が何も見ていない。${NOJS_PAGE_COUNT} ページであること）`);
+  } else {
+    const got = new Map<string, NoJsSnapshot>();
+    for (const e of expectations) {
+      try {
+        got.set(e.path, await noJsSnapshot(browser, `${origin}${e.path}`));
+      } catch (err) {
+        failures.push(`no-js: ${e.path} を開けなかった: ${err instanceof Error ? err.message : String(err)}`);
+      }
+    }
+    const report = checkNoJs(got, expectations, origin);
+    for (const f of report.failures) failures.push(`no-js: ${f}`);
+    for (const e of expectations) {
+      const snap = got.get(e.path);
+      if (snap) console.log(`browser-check: no-js ${e.path} (${e.label}) text=${snap.text.length}chars links=${snap.hrefs.length} time=${snap.times.length}`);
+    }
+    console.log(`browser-check: no-js ${report.checked} page(s) checked, ${report.failures.length} failure(s)`);
   }
 } finally {
   await browser.close();
