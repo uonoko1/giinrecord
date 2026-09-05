@@ -56,8 +56,9 @@ branch protection は**このリポジトリの中身ではない**ので、弱�
 `.github/workflows/branch-protection.yml` が**毎日**（06:23 JST）
 `deploy/monitor/branch-protection.sh` を走らせ、弱まっていれば
 Issue `[monitor] repo: main の保護設定` を開く（直れば自動で閉じる）。
-見張っているのは `enforce_admins` / `strict` / **必須チェック 4 件の名前** /
-`allow_force_pushes` / `allow_deletions`。手元で確かめるなら:
+見張っているのは `enforce_admins` / `strict` / **必須チェック 4 件の名前と、それを報告するアプリ** /
+`allow_force_pushes` / `allow_deletions` / `restrictions`（名指しのアカウントに push を許す設定）/
+`bypass_pull_request_allowances`。手元で確かめるなら:
 
 ```sh
 bash deploy/monitor/branch-protection.sh uonoko1/giinrecord main
@@ -87,6 +88,10 @@ gh api repos/uonoko1/giinrecord/branches/main/protection --jq .enforce_admins.en
 
 **戻し忘れても気づける**のがこの手順の要点で、`enforce_admins` が false のまま朝を迎えると
 Issue が開く。**「気をつけて戻す」には頼らない。**
+
+なお、この見張りが読めなかったとき（API 障害・権限喪失・保護そのものの消失）は
+**必ず落ちる**（「読めない」を ok に倒さない）。そのとき gh のエラー文は
+**Issue 本文に転記しない** — 認証情報が混ざりうるため、理由は run のログ側に置く。
 
 ### 日次データ（`deploy-data.yml`）
 
