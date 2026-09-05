@@ -48,7 +48,15 @@ fresh() {
   unset H_PROTECTION H_GH_EXIT H_GH_STDERR
 }
 # Runs the guard and records its exit code in $RC (never aborts the suite under `set -e`).
-run_guard() { RC=0; PATH="$BIN:$PATH" bash "$SCRIPT" "$@" > "$P/out" 2>&1 || RC=$?; OUT=$(cat "$P/out"); }
+# stdout and stderr are captured SEPARATELY and on purpose: stdout is what branch-protection.yml copies into a
+# public Issue body, stderr only reaches the job log. Merging them here (`2>&1`) would make every assertion about
+# "must not be printed" meaningless, since a leak on stdout and a diagnostic on stderr would look the same.
+#   $OUT = stdout   $ERR = stderr
+run_guard() {
+  RC=0
+  PATH="$BIN:$PATH" bash "$SCRIPT" "$@" > "$P/out" 2> "$P/err" || RC=$?
+  OUT=$(cat "$P/out"); ERR=$(cat "$P/err")
+}
 
 test_case() {
   local name=$1; shift; CURRENT_FAILED=0
@@ -263,6 +271,36 @@ t_no_protection_at_all() {
   assert_not_contains "$OUT" "ok " "must not report ok"
 }
 
+# "could not read" and "is weak" are DIFFERENT outcomes and must not share an exit code (#540). The workflow keys
+# the Issue title off this, and #540 was opened saying the protection was weak while it was in fact intact — the
+# token simply lacked `administration: read`. A wrong alarm every morning cannot be told from a real one.
+t_unreadable_is_exit_2() {
+  fresh unreadable_rc
+  H_GH_EXIT=1 H_GH_STDERR="gh: Resource not accessible by integration (HTTP 403)" run_guard uonoko1/giinrecord main
+  [[ $RC == 2 ]] || fail "expected exit 2 when the settings cannot be read, got $RC"
+  # it must NOT claim the settings are weak — that has not been determined
+  assert_not_contains "$OUT" "弱まっている" "must not claim the settings are weak when they were never read"
+  assert_contains "$OUT" "判定できていない" "says the verdict could not be reached"
+}
+
+# A weakened setting keeps exit 1, so the two cases stay distinguishable in both directions.
+t_weak_is_exit_1() {
+  fresh weak_rc
+  H_PROTECTION=${DEFAULT_PROTECTION/'"enforce_admins":{"enabled":true}'/'"enforce_admins":{"enabled":false}'} \
+    run_guard uonoko1/giinrecord main
+  [[ $RC == 1 ]] || fail "expected exit 1 when a setting is weak, got $RC"
+}
+
+# The reason must be findable. The first fix sent gh's message to /dev/null, so the guard said "see the run log"
+# while the run log did not contain it either — an instruction that could not be followed (#507). It belongs on
+# stderr: the job log gets it, the public Issue body does not.
+t_reason_on_stderr_not_stdout() {
+  fresh reason
+  H_GH_EXIT=1 H_GH_STDERR="gh: Resource not accessible by integration (HTTP 403)" run_guard uonoko1/giinrecord main
+  assert_contains "$ERR" "Resource not accessible by integration" "the API error reaches stderr (the job log)"
+  assert_not_contains "$OUT" "Resource not accessible by integration" "…but never stdout (the public Issue body)"
+}
+
 # Everything this script prints on stdout is copied verbatim into a PUBLIC GitHub Issue body by
 # branch-protection.yml, and gh echoes the Authorization header in some API failures. An earlier revision tried to
 # redact it with `sed -E 's/gh[pousr]_[A-Za-z0-9]+/<redacted>/g'`, which is a denylist: it caught `ghp_…` and let
@@ -301,6 +339,9 @@ test_case "PR 要件の bypass 許可が付いたら落ちる"          t_bypass
 test_case "必須チェックを報告するアプリが変わったら落ちる"    t_app_id_swapped
 test_case "実際の app_id は通す"                         t_app_id_healthy
 test_case "保護そのものが無い（API 404）なら落ちる"        t_no_protection_at_all
+test_case "読めなかったときは exit 2（弱いとは言わない）"    t_unreadable_is_exit_2
+test_case "設定が弱いときは exit 1"                       t_weak_is_exit_1
+test_case "失敗の理由は stderr に出る（stdout には出ない）"  t_reason_on_stderr_not_stdout
 test_case "トークンを出力に出さない（6形式）"              t_no_secret_in_output
 
 echo "-- $PASS passed, $FAIL failed"
