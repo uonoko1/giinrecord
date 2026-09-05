@@ -663,6 +663,87 @@ describe("文字色として使うトークンは全部 AA（4.5:1）を満た�
     }
   });
 
+  /*
+   * **at-rule に包むだけで素通りした 3 形が、いま落ちること（Issue 498）。**
+   *
+   * `mount` の中で検査するので**上の 6 件がそのまま落ちる**が、それだけだと
+   * 「何が落としたか」が本文に残らない。ここで**同じ関数に食わせて、名指しで**固定する。
+   *
+   * **同時に「なぜこの検査が要るか」も毎回測り直す**——jsdom が将来 at-rule を評価するように
+   * なったら、この検査は不要になる。`getComputedStyle` が**いまも見ていない**ことを
+   * 一緒に確かめておかないと、「効いている」と思い込んだまま形骸化する（#484 の学び）。
+   */
+  it.each([
+    ["@media", "@media (min-width: 1px) { .member-tab { background: var(--paper); } }", "CSSMediaRule"],
+    ["@supports", "@supports (display: flex) { .member-tab { background: var(--paper); } }", "CSSSupportsRule"],
+    ["@layer", "@layer x { .member-tab { background: var(--paper); } }", "CSSLayerBlockRule"],
+    // 一段包むだけで逃げられないこと（`unreadableRules` は再帰する）
+    ["入れ子の @supports", "@media (min-width: 1px) { @supports (display: flex) { .member-tab { background: var(--paper); } } }", "CSSMediaRule"],
+    // 新しい at-rule。**名指しで除いていない**ので、知らないまま落ちるのが正しい（allowlist の効き目）
+    ["@container", "@container (min-width: 1px) { .member-tab { background: var(--paper); } }", "CSSContainerRule"],
+  ])("%s に包んだ上書きを「読めない」として落とす", (_name, css, kind) => {
+    // (1) `getComputedStyle` はいまもこれを見ていない ＝ この検査が無ければ素通りする
+    mount(TABS_HTML);
+    const patch = document.createElement("style");
+    patch.textContent = css;
+    document.head.appendChild(patch);
+    expect(backgroundTokenOf(document.querySelector(".member-tab-label")!), "getComputedStyle が at-rule を評価するようになったなら、この検査は作り直す").toBe("est-bg");
+    patch.remove();
+    // (2) それを allowlist が捕まえる
+    const bad = unreadableRules(css, false);
+    expect(bad.join(" ")).toContain(kind);
+    // (3) `tokens.css` 向けの緩めを付けても、`:root` のトークン再定義でない限り通さない
+    expect(unreadableRules(css, true).join(" ")).toContain(kind);
+  });
+
+  /*
+   * **`tokens.css` の `@media (prefers-color-scheme: dark)` は実在する。落としてはいけない。**
+   * 通す理由は「`tokens.css` だから」ではなく「**`:root` にカスタムプロパティしか設定していない**」
+   * ことなので、**中身をすり替えたら落ちる**ところまで固定する（#499 の学び）。
+   */
+  it("tokens.css の @media (prefers-color-scheme: dark) は誤検出しない（ただし中身がすり替わったら落ちる）", () => {
+    const real = CSS_TEXTS.find(([f]) => f === TOKENS_FILE)?.[1];
+    expect(real, "tokens.css が読めていない").toBeDefined();
+    // 本物をそのまま食わせて、読めない規則が 0 件であること
+    expect(unreadableRules(real!, true)).toEqual([]);
+    // その `@media` が**実在する**こと（消えたのに緑、を防ぐ）
+    expect(unreadableRules(real!, false).some((r) => r.startsWith("CSSMediaRule:"))).toBe(true);
+    // 中身のすり替え: 箱に地を敷く規則が 1 つ混ざれば落ちる
+    const swapped = '@media (prefers-color-scheme: dark) { :root { --paper: #111; } .member-tab { background: var(--paper); } }';
+    expect(unreadableRules(swapped, true).join(" ")).toContain("CSSMediaRule");
+    // 空の `@media` を「無害」と数えない
+    expect(unreadableRules("@media (prefers-color-scheme: dark) { :root { } }", true).join(" ")).toContain("CSSMediaRule");
+  });
+
+  /*
+   * **jsdom がシートごと落とす形**（`@scope` と CSS の入れ子）。`sheet` が `null` になり、
+   * `document.styleSheets.length` が **0** になる（実測）——**CSS が一つも効かない**状態で
+   * `getComputedStyle` が答えるので、「規則が無い」と「シートが死んだ」が見分けられない。
+   * **黙って空集合を返さない**ことをここで固定する。
+   */
+  it.each([
+    ["@scope", "@scope (.member-tabs) { .member-tab { background: var(--paper); } }"],
+    ["CSS の入れ子", ".member-tabs { & .member-tab { background: var(--paper); } }"],
+  ])("%s のように jsdom が解析できない CSS は「読めなかった」として落とす", (_name, css) => {
+    const style = document.createElement("style");
+    style.textContent = css;
+    document.head.appendChild(style);
+    expect(style.sheet, "jsdom が解析できるようになったなら、この検査は作り直す").toBeNull();
+    style.remove();
+    expect(unreadableRules(css, true).join(" ")).toContain("解析できなかった");
+  });
+
+  /**
+   * **allowlist そのものを固定する**（#484: 通すこともテストしないと、緩めても気づけない）。
+   * 期待値はハードコードする——`UNDERSTOOD_RULE_TYPES` から生成すると自己参照になり、
+   * 緩めたときに期待値も一緒に緩む（#499）。
+   */
+  it("読めるとみなす規則は CSSStyleRule だけ（allowlist を広げたら落ちる）", () => {
+    expect([...UNDERSTOOD_RULE_TYPES].sort()).toEqual(["CSSStyleRule"]);
+    // 素の規則は通る（通すこともテストする）
+    expect(unreadableRules(".member-tab { background: var(--paper); }", false)).toEqual([]);
+  });
+
   it("box-shadow が付いたら「地を断定できない」として落とす（実効色は jsdom では解けない）", () => {
     mount(TABS_HTML);
     const patch = document.createElement("style");
