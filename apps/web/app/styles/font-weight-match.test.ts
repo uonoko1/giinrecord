@@ -335,15 +335,22 @@ interface InlineStyle {
 }
 
 /**
- * **`parseFontShorthand` / `familyOfValue` には、まだ直接の見本表が無い**（#517）。
+ * **`parseFontShorthand` / `familyOfValue` の見本表は下の `describe` にある**（#517 で足した）。
  *
- * `weightOf` や `forbiddenTargetFixes` には見本表を付けたのに、**同じファイルの隣の関数に
- * 付けていない**という取りこぼしである。この 2 つは**本番の CSS / TSX 経由でしか叩かれていない**ので、
- * 「現に違反 0 件なら判定を殺しても緑」という #506 の穴がそのまま残っている。
+ * `weightOf` や上の判定群には見本表を付けたのに、**同じファイルの隣の 2 関数には付けていなかった**。
+ * この 2 つは**本番の CSS / TSX 経由でしか叩かれていない**ので、
+ * 「現に違反 0 件なら判定を殺しても緑」という #506 の穴がそのまま残っていた。
  *
- * とくに `parseFontShorthand` の `sizeAt` は **1 本の正規表現に `|` が 13 本**あり、
- * **#506 で「枝を全部数えた」と言ったときに丸ごと数え落とした**（実測: `larger` の枝を落としても
- * **26/26 緑・web 全体 1119 件も緑**）。**「全部数えた」の保証は、数えた範囲までしか届かない。**
+ * **#517 の着手前に、`sizeAt` の 19 枝を 1 本ずつ落として実測した**（枝の数え方は下の describe を見る）:
+ *
+ *     落ちた   6 枝: `^` / サイズ直前の `\s` / 数値サイズ全体 / 単位 px / 直後の `/` / 直後の `\s`
+ *     素通り  13 枝: rem em % larger smaller x?x-全体 x?x-small x?x-large x? small medium large `$`
+ *
+ * **13 枝が 1 ビットも守られていなかった。** `font: larger var(--font-head)` と書かれると
+ * `parseFontShorthand` が `undefined` を返し、**`shorthandMissingWeights` が丸ごと読み飛ばす**——
+ * 「見出し家族が持たない face を要求している」規則が**検査を素通りして本番に載る**経路である。
+ *
+ * **「全部数えた」の保証は、数えた範囲までしか届かない**（#506 はこの正規表現を丸ごと数え落とした）。
  */
 /** `var(--font-head)` / `var(--font-body)` が指す自サイト配信の家族。tokens.css の定義と対応する */
 const TOKEN_FAMILY: Record<string, string> = {
@@ -1134,6 +1141,209 @@ describe("ウェイトの判定そのもの（#506）", () => {
       expect(weightsOfFamily("BIZ UDPGothic"), "本文家族のウェイトが変わった").toEqual([400, 700]);
       expect(weightsOfFamily("存在しない家族")).toEqual([]);
       expect(headWeights, "headWeights が FONT_FAMILIES から外れている").toEqual([700, 800]);
+    });
+  });
+
+  /**
+   * **`parseFontShorthand` / `familyOfValue` の見本表**（#517）。
+   *
+   * `weightOf` や上の判定群には見本表を付けたのに、**同じファイルの隣の 2 関数には付けていなかった**。
+   * この 2 つは**本番の CSS / TSX 経由でしか叩かれていない**——そして本番の `font:` は
+   * **11 箇所すべて `font: inherit`**（grep で数えた）で、`inherit` は `parseFontShorthand` を
+   * **呼ぶ前に** `CSS_WIDE_KEYWORDS` で弾かれる。つまり**本番の経路はこの関数に一度も到達しない。**
+   *
+   * ## `sizeAt` の枝を数えた（測り方も書く。#506 で 18 と 13 に食い違った）
+   *
+   *     const sizeAt = /(^|\s)(-?[\d.]+(?:px|rem|em|%)|larger|smaller|x?x-(?:small|large)|small|medium|large)(\/|\s|$)/
+   *
+   * **機械で数えた**（正規表現のソースを走査。エスケープと文字クラスの中は除く）:
+   *
+   * | 測り方 | 数 |
+   * |---|---|
+   * | リテラルの `|`（エスケープ外・文字クラス外） | **13 本** |
+   * | 選択肢の数（`(^|\s)` を 2 と数える） | **18 本** |
+   * | 上に `x?` の optional を足す | **19 本** |
+   *
+   * **どちらが正しいかではなく、どちらも測り方を書けば済む**（#506 の結論）。
+   * 下の表は**19 通り**——**選択肢 18 本 + `x?` の optional 1 本**を 1 つずつ落とせる形にした。
+   *
+   * ## `<font-size>` の値は仕様から数え上げた（CSS Fonts 4 §3.5）
+   *
+   *     <absolute-size> = xx-small | x-small | small | medium | large | x-large | xx-large
+   *     <relative-size> = larger | smaller
+   *     <length-percentage>
+   *
+   * `font` ショートハンドの文法は
+   * `[ <font-style> || <font-variant-css2> || <font-weight> || <font-width> ]? <font-size> [ / <line-height> ]? <font-family>`
+   * で、**省略された下位項目は初期値に戻る**（＝ weight を省くと **400**。CSS Fonts 4 §2.7 / §6.6）。
+   * `caption` / `icon` / `menu` / `message-box` / `small-caption` / `status-bar` は
+   * **`<system-family-name>`** で、`<font-size>` を含まないので `sizeAt` は当たらない。
+   *
+   * **見本が仕様の値として本当に有効か**は jsdom の CSSOM に確かめさせた（自分で判定しない）——
+   * 下の 13 通りのサイズは `el.style.setProperty("font", v)` が**そのまま返す**（＝ CSS の実装が受け付ける）。
+   * `caption` / `menu` は**空文字が返る**（jsdom はシステムフォント指定を実装していない）。
+   *
+   * ## なぜ「戻り値そのもの」を突き合わせるのか
+   *
+   * 呼び出し側（`shorthandMissingWeights`）から見ると、
+   * **`undefined`（サイズが見つからない）と `{ weight: undefined, family: undefined }`（見つかったが family 無し）は
+   * どちらも「違反 0 件」に潰れる**。実測: `medium` の枝と `$` の枝はこの 2 つの差しか生まないので、
+   * **呼び出し側で見ている限り絶対に落とせない**。だから**この表は `parseFontShorthand` を直接叩く。**
+   */
+  describe("parseFontShorthand: font ショートハンドの size / weight / family（#517）", () => {
+    /**
+     * **`sizeAt` の枝ごとに、その枝だけが効く見本**（作業合意「枝ごとに、その枝だけが効く見本を置く」）。
+     *
+     * `[入力, 期待する戻り値]`。**戻り値そのものを固定する**ので、
+     * `{weight, family}` の中身が変わっても `undefined` に化けても、どちらも落ちる。
+     */
+    const SIZE_BRANCHES: Record<string, [string, ReturnType<typeof parseFontShorthand>]> = {
+      // --- (^|\s): サイズの直前 ---
+      "S01 ^: 値の先頭がサイズ（前置きが無い）": ["13px var(--font-head)", { weight: undefined, family: "var(--font-head)" }],
+      "S02 \\s: 前置きの後の空白の次がサイズ": ["500 13px var(--font-head)", { weight: 500, family: "var(--font-head)" }],
+      // --- 数値サイズと単位 ---
+      "S03 数値サイズ全体": ["13px var(--font-head)", { weight: undefined, family: "var(--font-head)" }],
+      "S04 単位 px": ["13px var(--font-head)", { weight: undefined, family: "var(--font-head)" }],
+      "S05 単位 rem": ["1.5rem var(--font-head)", { weight: undefined, family: "var(--font-head)" }],
+      "S06 単位 em": ["2em var(--font-head)", { weight: undefined, family: "var(--font-head)" }],
+      "S07 単位 %": ["120% var(--font-head)", { weight: undefined, family: "var(--font-head)" }],
+      // --- <relative-size>（CSS Fonts 4 §3.5） ---
+      "S08 larger": ["larger var(--font-head)", { weight: undefined, family: "var(--font-head)" }],
+      "S09 smaller": ["smaller var(--font-head)", { weight: undefined, family: "var(--font-head)" }],
+      // --- <absolute-size> のうち x?x- で書かれている 4 語 ---
+      "S10 x?x-(?:small|large) 全体": ["xx-large var(--font-head)", { weight: undefined, family: "var(--font-head)" }],
+      "S11 x?x- の small": ["xx-small var(--font-head)", { weight: undefined, family: "var(--font-head)" }],
+      "S12 x?x- の large": ["xx-large var(--font-head)", { weight: undefined, family: "var(--font-head)" }],
+      // **`x?` の optional は「x 1 個」でしか効かない。** `xx-` の見本では落ちない
+      "S13 x? の optional（x-large は x が 1 個）": ["x-large var(--font-head)", { weight: undefined, family: "var(--font-head)" }],
+      // --- <absolute-size> の残り 3 語 ---
+      "S14 small": ["small var(--font-head)", { weight: undefined, family: "var(--font-head)" }],
+      "S15 medium": ["medium var(--font-head)", { weight: undefined, family: "var(--font-head)" }],
+      "S16 large": ["large var(--font-head)", { weight: undefined, family: "var(--font-head)" }],
+      // --- (\/|\s|$): サイズの直後 ---
+      "S17 /: line-height が続く": ["13px/1.4 var(--font-head)", { weight: undefined, family: "var(--font-head)" }],
+      "S18 \\s: family が続く": ["13px var(--font-head)", { weight: undefined, family: "var(--font-head)" }],
+      // **`$` の枝は「family を書かない `font:`」でしか効かない。**
+      // 呼び出し側から見ると `undefined` と区別が付かないので、**ここでしか釘打てない**
+      "S19 $: 値の末尾がサイズ（family 無し）": ["300 13px", { weight: 300, family: undefined }],
+    };
+
+    it("19 通りのサイズの書き方を、どれも同じように読む（枝ごとに 1 見本）", () => {
+      const wrong = Object.entries(SIZE_BRANCHES)
+        .map(([name, [value, want]]) => ({ name, value, want, got: parseFontShorthand(value) }))
+        .filter((r) => JSON.stringify(r.got) !== JSON.stringify(r.want))
+        .map((r) => `${r.name}: parseFontShorthand(${JSON.stringify(r.value)}) = ${JSON.stringify(r.got)}（期待: ${JSON.stringify(r.want)}）`);
+      expect(wrong, "sizeAt の枝が死んでいます。読めない `font:` は丸ごと読み飛ばされ、ウェイトの検査が黙って効かなくなります").toEqual([]);
+      // **表が痩せたら落とす**（#499: 個数ではなく中身を固定する、の個数側）。
+      // 中身は上の突き合わせが固定しているので、ここは「枝の数だけ見本がある」ことを言う
+      expect(Object.keys(SIZE_BRANCHES), "sizeAt の枝は 18 選択肢 + `x?` の optional 1 本 = 19").toHaveLength(19);
+    });
+
+    /**
+     * **`<system-family-name>` は読めないものとして報告に出す**（CSS Fonts 4 §6.6）。
+     *
+     * `caption` / `icon` / `menu` / `message-box` / `small-caption` / `status-bar` の 6 語は
+     * **`<font-size>` を含まない**ので `sizeAt` が当たらない。**家族も自前ではない**ので、
+     * 「読めない」として `undefined` を返すのが正しい（呼び出し側が `weights` に `undefined` を積み、
+     * B2 の番人が拾う）。
+     *
+     * **`small-caption` は `small` を含む**——`sizeAt` に単語境界が無ければ
+     * **`small` に当たってしまい、システム指定を「サイズ small のショートハンド」と誤読する**。
+     * `(\/|\s|$)` が直後を要求しているので当たらない。**その保証をここで釘打つ。**
+     */
+    const SYSTEM_FONTS = ["caption", "icon", "menu", "message-box", "small-caption", "status-bar"];
+
+    it("システムフォント指定 6 語は『読めない』（undefined）として返す", () => {
+      const wrong = SYSTEM_FONTS.filter((v) => parseFontShorthand(v) !== undefined).map((v) => `${v}: ${JSON.stringify(parseFontShorthand(v))}`);
+      expect(wrong, "システムフォント指定を『サイズが読めた』と誤読しています（small-caption の中の small など）").toEqual([]);
+      expect(SYSTEM_FONTS, "CSS Fonts 4 §6.6 の <system-family-name> は 6 語").toHaveLength(6);
+    });
+
+    it("サイズが無い値は undefined（読み飛ばさず、読めないものとして報告に出す）", () => {
+      // `font: bold var(--font-head)` は**文法違反**（`<font-size>` が必須）。読めないのが正しい
+      expect(parseFontShorthand("bold var(--font-head)")).toBeUndefined();
+      expect(parseFontShorthand("")).toBeUndefined();
+      // **単位の無い数値はサイズではない**（`font: 700 var(--font-head)` も文法違反）
+      expect(parseFontShorthand("700 var(--font-head)")).toBeUndefined();
+    });
+
+    it("weight は size より前の最後の 1 つ（style / variant / stretch を跨いでも拾う）", () => {
+      // docblock が「実測した端の形」として並べているもの。**表にして固定する**
+      expect(parseFontShorthand("400 14px/1.5 var(--font-body)")).toEqual({ weight: 400, family: "var(--font-body)" });
+      expect(parseFontShorthand('italic small-caps 700 14px/1.2 "Shippori Mincho"')).toEqual({ weight: 700, family: '"Shippori Mincho"' });
+      // `normal` は style / variant / weight のどれにも当たるが、**省略された下位項目は初期値に戻る**ので 400 で正しい
+      expect(parseFontShorthand("normal 12px sans-serif")).toEqual({ weight: 400, family: "sans-serif" });
+      expect(parseFontShorthand("bold 13px var(--font-head)")).toEqual({ weight: 700, family: "var(--font-head)" });
+      // **line-height は family に混ぜない**（`/1.4` を剥がす処理が効いていること）
+      expect(parseFontShorthand("13px/1.4 var(--font-head)")).toEqual({ weight: undefined, family: "var(--font-head)" });
+      // **weight を省くと family だけが残る**。呼び出し側が `?? 400` で 400 要求に変える（A6b）
+      expect(parseFontShorthand("13px var(--font-head)")).toEqual({ weight: undefined, family: "var(--font-head)" });
+    });
+  });
+
+  /**
+   * **`familyOfValue` の見本表**（#517）。
+   *
+   * `parseFontShorthand` と同じく**本番の CSS / TSX 経由でしか叩かれていない**。
+   * この関数が `undefined` を返すと `shorthandMissingWeights` は
+   * **「自サイト配信の家族を指していない」として `continue` する**——
+   * つまり**壊れると検査が黙って素通りする**側であって、誤検出になる側ではない。
+   */
+  describe("familyOfValue: family 値が自サイト配信の家族を指すか（#517）", () => {
+    /** `[入力, 期待する戻り値]`。**戻り値そのものを固定する** */
+    const 家族: Record<string, [string, string | undefined]> = {
+      // --- var() トークンの枝（TOKEN_FAMILY の 2 件を 1 つずつ） ---
+      "F01 var(--font-head) → 見出し家族": ["var(--font-head)", "Shippori Mincho"],
+      "F02 var(--font-body) → 本文家族": ["var(--font-body)", "BIZ UDPGothic"],
+      // **`\s*` の枝**: `var( --font-head )` は CSS として合法（関数記法の中の空白）
+      "F03 var( --font-head ) 空白入り": ["var( --font-head )", "Shippori Mincho"],
+      // **表に無いトークンは undefined**（`TOKEN_FAMILY[token]` の索引が外れる）
+      "F04 var(--font-mono)（表に無い）": ["var(--font-mono)", undefined],
+      // **var() が先勝ちすること**: 後ろに直書き家族があっても、var() のほうを返す
+      "F05 var() が先、フォールバックに直書き": ["var(--font-body), serif", "BIZ UDPGothic"],
+      // --- 直書きの家族名の枝 ---
+      "F06 引用符なしの直書き": ["Shippori Mincho", "Shippori Mincho"],
+      "F07 二重引用符つき": ['"Shippori Mincho"', "Shippori Mincho"],
+      "F08 単引用符つき": ["'BIZ UDPGothic'", "BIZ UDPGothic"],
+      // **`split(",")[0]` の枝**: 先頭の家族だけを見る（実際に最初に試される家族）
+      "F09 カンマ区切りの先頭を採る": ['"Shippori Mincho", serif', "Shippori Mincho"],
+      // **先頭が自前でなければ undefined**——後ろに自前の家族があっても採らない。
+      // **最初に試されるのは先頭**なので、後ろを採ると「使われない face」を検査対象にしてしまう
+      "F10 先頭が自前でない（後ろに自前があっても採らない）": ["sans-serif, BIZ UDPGothic", undefined],
+      // **`.trim()` の枝**: `font-family: A, B` を split すると 2 番目以降に空白が付く形の裏返し
+      "F11 前後の空白を落とす": ["  BIZ UDPGothic  ", "BIZ UDPGothic"],
+      // --- 自サイト配信でない家族 ---
+      "F12 総称ファミリー": ["sans-serif", undefined],
+      "F13 配信していない実在の家族": ["Helvetica", undefined],
+      "F14 空文字": ["", undefined],
+    };
+
+    it("14 通りの family 値を、どれも同じように読む", () => {
+      const wrong = Object.entries(家族)
+        .map(([name, [value, want]]) => ({ name, value, want, got: familyOfValue(value) }))
+        .filter((r) => r.got !== r.want)
+        .map((r) => `${r.name}: familyOfValue(${JSON.stringify(r.value)}) = ${JSON.stringify(r.got)}（期待: ${JSON.stringify(r.want)}）`);
+      expect(wrong, "familyOfValue が壊れると shorthandMissingWeights は『自前の家族ではない』として黙って読み飛ばします").toEqual([]);
+      expect(Object.keys(家族)).toHaveLength(14);
+    });
+
+    /**
+     * **`TOKEN_FAMILY` の表そのものを固定する**（#499: 個数だけでなく中身、順序込みで）。
+     *
+     * 上の突き合わせは `--font-head` / `--font-body` の 2 件を通すが、
+     * **表に 3 件目を足しても、値を入れ替えても**（`--font-head` → `BIZ UDPGothic`）
+     * F01/F02 のどちらかが落ちるだけで**表が痩せたことには気づけない**。要素そのものを固定する。
+     */
+    it("TOKEN_FAMILY の中身が tokens.css の定義と一致する", () => {
+      expect(TOKEN_FAMILY, "トークンと家族の対応が変わった（tokens.css と食い違っていませんか）").toEqual({
+        "--font-head": "Shippori Mincho",
+        "--font-body": "BIZ UDPGothic",
+      });
+      // **`FONT_FAMILIES` に実在する家族だけを指していること。**
+      // 指し先が配信していない家族になると `weightsOfFamily` が空を返し、
+      // **どんなウェイトを書いても「その家族は持たない」＝全部違反**になって誤検出が増える
+      const 実在しない = Object.entries(TOKEN_FAMILY).filter(([, f]) => !FONT_FAMILIES.some((x) => x.family === f));
+      expect(実在しない, "TOKEN_FAMILY が配信していない家族を指している").toEqual([]);
     });
   });
 });
