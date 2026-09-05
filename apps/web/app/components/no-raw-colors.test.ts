@@ -37,6 +37,21 @@ import { describe, expect, it } from "vitest";
  *   属性など、色を変える別の書き方は拾わない。
  * - **`var()` の中身が tokens.css に実在するかを見ていない。**
  *   `var(--typo-name)` は素通りする（存在しない変数は無指定に落ちる）。
+ * - **これは denylist なので、列挙していない色記法は素通りする。**
+ *   **「など」で丸めない**——次の人が漏れに気づけないため、**素通りする形を名指しで置く**。
+ *   レビューの実測（#506）で、現に素通りするのは次の **7 つ**:
+ *
+ *       oklch(…)              CSS Color 4 の知覚均等色空間
+ *       color-mix(…)          CSS Color 5 の混色
+ *       lab(…)                CSS Color 4
+ *       lch(…)                CSS Color 4
+ *       hwb(…)                CSS Color 4
+ *       color(display-p3 …)   CSS Color 4 の色空間指定
+ *       rebeccapurple         **名前付き色**。`RAW_COLOR_FORMS` は 7 語しか列挙していないが、
+ *                             CSS の名前付き色は **148 語**ある。`rebeccapurple` の漏れは
+ *                             **denylist の弱さがそのまま出た形**である
+ *
+ *   足すときは `RAW_COLOR_FORMS` と、その数を固定している下の `it` を両方直すこと。
  */
 const dir = __dirname;
 const sources = readdirSync(dir).filter((f) => /\.tsx?$/.test(f) && !/\.test\.tsx?$/.test(f));

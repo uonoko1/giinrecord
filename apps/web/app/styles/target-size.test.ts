@@ -321,7 +321,7 @@ const MINIMUM = 24;
  *
  * ## 判定は 2 つある。どちらも殺せた
  *
- *     どの規則を見るか   `selector` … 「行の中のリンク」「散文の中のリンク」を狙った規則か
+ *     どの規則を見るか   `selector` + `selectorLink` … 「行の中のリンク」「散文の中のリンク」を狙った規則か
  *     何を違反とするか   `declaration` … padding / min-height / 負の margin / inline-block
  *
  * **`selector` 側の除外は意図的**である。`.links a`（#423）と `.row`（行そのもの。#424）は
@@ -333,13 +333,38 @@ const TARGET_LINK_RULES = {
   行: {
     /** **先頭一致**にしてある。`.links a` を `.list__item a` と読み違えないため */
     selector: /^\.(row|rollcalls-item|list__item)\s+a\b/,
+    /** 行側は `selector` 1 本でリンクまで見ている（`\s+a\b` を含む）ので、こちらは常に真 */
+    selectorLink: /(?:)/,
     /** 負の `margin-block` だけを見る（正の margin は当たり判定を広げないので無害） */
     declaration: /padding|min-height|margin-block:\s*-/,
     reason: "行の中のリンクは WCAG 2.5.8 の Spacing 例外に当たる。docs/research/target-size-rows.md を読むこと",
   },
   /** 散文の中のリンク（#425）。`.note a` / `.card__body a` / `.body a` */
   散文: {
-    selector: /^(?=.*\.(note|card__body|body)\b)(?=.*(?:\ba\b|a$)).*$/,
+    /**
+     * **2 本に分けたまま `&&` で見る。1 本の先読みにまとめてはいけない。**
+     *
+     * 一度 `/^(?=.*\.(note|…)\b)(?=.*(?:\ba\b|a$)).*$/` にまとめたが、**振る舞いが変わった**（#506 のレビュー）。
+     * **`.` は `\n` にマッチせず、`.*` は改行をまたげない**のに、
+     * **jsdom は `selectorText` の改行を保持する**（実測: `".note\n  a"`）。本番 CSS への実測:
+     *
+     *     `.note a { padding-block: 6px; }`（1 行）    → どちらも落ちる
+     *     `.note\n  a { padding-block: 6px; }`（2 行）  → 2 本なら落ちる／まとめると **31/31 緑で見逃す**
+     *
+     * `pages.css` には**現に複数行セレクタが在る**（`.site-footer__links a,` の折り返し）ので、
+     * **「まだ起きていない」だけ**で、いつ書かれてもおかしくない。
+     *
+     * **見本 20 通り・本番 CSS のセレクタで「差分 0 件」を確認したが、それは等価性の証明ではなかった**——
+     * 見本に改行を含むセレクタが 1 つも無かったからである。
+     * **「まだ誰もそう書いていない」の確認を、等価性の証明と取り違えない。**
+     */
+    selector: /\.(note|card__body|body)\b/,
+    /**
+     * **ブロッククラスの位置を先頭に固定しない**（先頭一致にすると入れ子の前置きが外れる）。
+     * `.card .note a` / `main .note a` / `article .card__body a` は**どれも散文の中のリンク**である。
+     * 実測: `selector` を `/^\.(note|…)\b.*(?:\ba\b|a$)/` に変えると **31/31 緑**で素通りした。
+     */
+    selectorLink: /\ba\b|a$/,
     /** `display: inline-block` も見る——inline の箱を block にすると padding が効いて行間が崩れる */
     declaration: /padding|min-height|display:\s*inline-block/,
     reason: "散文の中のリンクは WCAG 2.5.8 の Inline 例外に当たる。docs/research/target-size-inline.md を読むこと",
@@ -351,7 +376,7 @@ const TARGET_LINK_RULES = {
  * 返すのは `セレクタ { 宣言 }` の文字列——**何件かではなく、どれか**を言えるようにする（#485）。
  */
 function forbiddenTargetFixes(css: string, kind: keyof typeof TARGET_LINK_RULES, label = ""): string[] {
-  const { selector, declaration } = TARGET_LINK_RULES[kind];
+  const { selector, selectorLink, declaration } = TARGET_LINK_RULES[kind];
   const style = document.createElement("style");
   style.textContent = css;
   document.head.appendChild(style);
@@ -359,7 +384,8 @@ function forbiddenTargetFixes(css: string, kind: keyof typeof TARGET_LINK_RULES,
   for (const r of [...style.sheet!.cssRules]) {
     if (!(r instanceof CSSStyleRule)) continue;
     for (const sel of r.selectorText.split(",").map((t) => t.trim())) {
-      if (!selector.test(sel)) continue;
+      // **2 本を `&&` で見る。`.*` でまとめない**——改行を含むセレクタで振る舞いが変わる（上の docblock）
+      if (!selector.test(sel) || !selectorLink.test(sel)) continue;
       if (declaration.test(r.style.cssText)) offenders.push(`${label}${sel} { ${r.style.cssText} }`);
     }
   }
@@ -807,14 +833,16 @@ describe("forbiddenTargetFixes: 例外に当たるリンクを「直した跡」
     "まとめ書きのセレクタ（片方だけが対象）": ".foo, .row a { padding-block: 6px; }",
     "子孫が深いセレクタ": ".row a span { padding: 4px; }",
     "疑似クラス付き": ".row a:hover { padding: 4px; }",
+    /** まとめ書きが**改行で折り返している**形（`pages.css` に現に在る書き方）。`.*` でまとめると見逃す */
+    "まとめ書きが改行で折り返している": ".foo,\n  .row a { padding-block: 6px; }",
   };
 
-  it("行の中のリンクを広げる 10 通りを、どれも見落とさない", () => {
+  it("行の中のリンクを広げる 11 通りを、どれも見落とさない", () => {
     const missed = Object.entries(行の違反)
       .filter(([, css]) => forbiddenTargetFixes(css, "行").length === 0)
       .map(([name]) => name);
     expect(missed, "行の中のリンクを広げる書き方を見落としている（判定が死んでいる可能性）").toEqual([]);
-    expect(Object.keys(行の違反)).toHaveLength(10);
+    expect(Object.keys(行の違反)).toHaveLength(11);
   });
 
   /**
@@ -847,14 +875,22 @@ describe("forbiddenTargetFixes: 例外に当たるリンクを「直した跡」
     "inline-block にする（padding が効くようになる）": ".note a { display: inline-block; }",
     "まとめ書きのセレクタ": ".x, .note a { padding: 4px; }",
     "疑似クラス付き": ".note a:focus { padding: 4px; }",
+    // **ブロッククラスが先頭でない形**。これが無いと「先頭一致にする」変異が 31/31 緑で生き残る（実測）
+    "入れ子の前置きがある（.card .note a）": ".card .note a { padding: 4px; }",
+    "要素セレクタの前置き（main .note a）": "main .note a { padding: 4px; }",
+    "article の中の card__body": "article .card__body a { padding-block: 6px; }",
+    // **改行を含むセレクタ**。jsdom は `selectorText` の改行を保持する（実測 `".note\n  a"`）ので、
+    // `.*` でまとめた正規表現だと**改行をまたげずに見逃す**。これが無いと気づけない
+    "セレクタが改行で折り返している": ".note\n  a { padding: 4px; }",
+    "まとめ書きが改行で折り返している": ".card__body,\n  .note a { padding: 4px; }",
   };
 
-  it("散文の中のリンクを広げる 6 通りを、どれも見落とさない", () => {
+  it("散文の中のリンクを広げる 11 通りを、どれも見落とさない", () => {
     const missed = Object.entries(散文の違反)
       .filter(([, css]) => forbiddenTargetFixes(css, "散文").length === 0)
       .map(([name]) => name);
     expect(missed, "散文の中のリンクを広げる書き方を見落としている").toEqual([]);
-    expect(Object.keys(散文の違反)).toHaveLength(6);
+    expect(Object.keys(散文の違反)).toHaveLength(11);
   });
 
   const 散文の非違反: Record<string, string> = {
@@ -872,6 +908,35 @@ describe("forbiddenTargetFixes: 例外に当たるリンクを「直した跡」
       .map(([name, css]) => `${name}: ${forbiddenTargetFixes(css, "散文").join(" / ")}`);
     expect(wrong, "散文側で誤検出している").toEqual([]);
     expect(Object.keys(散文の非違反)).toHaveLength(6);
+  });
+
+  /**
+   * **2 件目以降を落とさない**（#485: 「落ちた」だけ見ると格下げに気づけない）。
+   *
+   * **同じ変異を、自分が切り出した関数にも当て直す**（#506 のレビュー指摘）。
+   * `no-raw-colors` で `break` が 20/20 緑で生き残るのを見つけたのに、
+   * **ここには当てていなかった**。実測でどちらも **31/31 緑**で生き残った:
+   *
+   *     `offenders.push(...)` の直後に `break`（同じ規則の 2 セレクタ目が出ない）
+   *     1 件見つけたら外側の rules ループを `break`（2 つ目の規則が出ない）
+   *
+   * だから**「1 つの CSS に違反規則が 2 つ」「1 つのまとめ書きに違反セレクタが 2 つ」**を両方置く。
+   */
+  it("同じ CSS の 2 件目以降も落とさない（規則が 2 つ・まとめ書きが 2 つ）", () => {
+    // 規則が 2 つ（外側のループを止めると 2 つ目が出ない）
+    expect(
+      forbiddenTargetFixes(".row a { padding: 4px; } .list__item a { min-height: 24px; }", "行"),
+      "2 つ目の規則を落としている（rules のループを止めていませんか）",
+    ).toEqual([".row a { padding: 4px; }", ".list__item a { min-height: 24px; }"]);
+    // まとめ書きの中に対象が 2 つ（内側のループを止めると 2 つ目が出ない）
+    expect(
+      forbiddenTargetFixes(".row a, .list__item a { padding: 4px; }", "行"),
+      "まとめ書きの 2 つ目のセレクタを落としている（push の直後で止めていませんか）",
+    ).toEqual([".row a { padding: 4px; }", ".list__item a { padding: 4px; }"]);
+    // 散文側も同じ
+    expect(forbiddenTargetFixes(".note a { padding: 4px; } .card__body a { min-height: 24px; }", "散文"))
+      .toHaveLength(2);
+    expect(forbiddenTargetFixes(".note a, .card__body a { padding: 4px; }", "散文")).toHaveLength(2);
   });
 
   /**

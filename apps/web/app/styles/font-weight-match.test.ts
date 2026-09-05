@@ -960,6 +960,25 @@ describe("ウェイトの判定そのもの（#506）", () => {
       "他の宣言に紛れている": "color: var(--ink); font: 13px var(--font-head);",
     };
 
+    /**
+     * **2 件目以降を落とさない**（#485 の格下げ）。
+     *
+     * **同じ変異を、自分が切り出した関数にも当て直す**（#506 のレビュー指摘。今日 4 回目の同じ失敗）。
+     * `no-raw-colors` で `break` が 20/20 緑で生き残るのを見つけたのに、**ここには当てていなかった**。
+     * 実測: `out.push(...)` の直後に `break` を入れると **25/25 緑で生き残る**——
+     * 見本が「1 つの body に `font:` が 1 つ」しか無かったため。
+     */
+    it("1 つの規則に `font:` が 2 つあっても、2 件目を落とさない", () => {
+      const both = shorthandMissingWeights("font: 13px var(--font-head); color: var(--ink); font: 500 15px var(--font-head);");
+      expect(both, "2 件目の `font:` を落としている（1 件目で止めていませんか）").toEqual([
+        { value: "13px var(--font-head)", family: "Shippori Mincho", weight: 400 },
+        { value: "500 15px var(--font-head)", family: "Shippori Mincho", weight: 500 },
+      ]);
+      // 1 件目が正しく、2 件目だけが違反の場合も拾う
+      expect(shorthandMissingWeights("font: 700 13px var(--font-head); font: 15px var(--font-head);"))
+        .toHaveLength(1);
+    });
+
     it("6 通りを、どれも見落とさない", () => {
       const missed = Object.entries(違反)
         .filter(([, body]) => shorthandMissingWeights(body).length === 0)
