@@ -150,7 +150,7 @@ t_install_cron() {
   assert_contains "$c" " root " "runs as root"
   assert_contains "$c" "/usr/local/lib/giinrecord-cloudflare-allowlist.sh" "runs the installed copy, not the repo checkout"
   [[ "$(grep -v '^#' "$cron" | grep -c ' root ')" == 1 ]] || fail "exactly one job"
-  grep -v '^#' "$cron" | grep ' root ' | grep -qE '^[0-9]+ [0-9]+ \* \* [0-9]' || fail "weekly schedule (day-of-week set)"
+  grep -qE '^[0-9]+ [0-9]+ \* \* [0-9]' < <(grep -v '^#' "$cron" | grep ' root ') || fail "weekly schedule (day-of-week set)"
   [[ -f "$SNIPPET" ]] || fail "snippet generated on install too"
   cmp -s "$SCRIPT" "$lib" || fail "installed copy is the script itself"
 }

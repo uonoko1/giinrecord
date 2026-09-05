@@ -22,7 +22,7 @@
 # しかも**「一致を期待する」側だけが壊れる**ので、
 # 「一致しないことを期待する」検査（NOPASSWD:ALL が無いこと等）は静かに通り続ける。
 #
-# shellcheck はこの形を報告しない（#527 で実測、rc=0）。だからここで検査する。
+# なお shellcheck はこの形を報告しない（#527 で実測、rc=0）。だからここで検査する。
 #   bash deploy/test/pipefail-sigpipe.test.sh
 set -euo pipefail
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)

@@ -10,7 +10,7 @@ list_targets() {
   local f
   find scripts deploy -type d -name node_modules -prune -o -type f -print | while IFS= read -r f; do
     if [[ $f == *.sh ]]; then echo "$f"
-    elif [[ $f != */*.* ]] && head -c 64 "$f" 2>/dev/null | head -n1 | grep -qE '^#!.*(/| )(ba)?sh( |$)'; then echo "$f"
+    elif [[ $f != */*.* ]] && grep -qE '^#!.*(/| )(ba)?sh( |$)' < <(head -n1 < <(head -c 64 "$f" 2>/dev/null)); then echo "$f"
     fi
   done | LC_ALL=C sort
 }

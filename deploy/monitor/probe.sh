@@ -79,7 +79,12 @@ fetch() {
   printf '%s' "$code"
 }
 # has_title <file> [needle] → the first <title> contains <needle> (default: the site name)
-has_title() { tr -d '\n' < "$1" | grep -o '<title>[^<]*</title>' | head -1 | grep -q -F -- "${2:-$TITLE_MUST_CONTAIN}"; }
+has_title() {  # #527: パイプの末尾に head/grep -q を置かない（SIGPIPE + pipefail で確率的に偽になる）
+  local titles first
+  titles=$(grep -o '<title>[^<]*</title>' < <(tr -d '\n' < "$1")) || return 1
+  first=$(head -1 <<<"$titles")
+  grep -q -F -- "${2:-$TITLE_MUST_CONTAIN}" <<<"$first"
+}
 
 # check_page <path> [outfile] → appends to http_reasons unless the page answers 200 and its <title> carries the site
 # name. <outfile> keeps the body for the caller (the assembly list is parsed for its links); default is scratch.
