@@ -33,7 +33,9 @@ chmod +x "$BIN/gh"
 
 # The settings as they must be. This is the shape the real API returns (verified against
 # `gh api repos/<owner>/<repo>/branches/main/protection` on 2026-09-06).
+# shellcheck disable=SC2089,SC2090  # 中の " は JSON の一部。常に単一の値として渡すので再分割されない
 DEFAULT_PROTECTION='{"required_status_checks":{"strict":true,"checks":[{"context":"check"},{"context":"gitleaks"},{"context":"forbidden-patterns"},{"context":"audit"}]},"enforce_admins":{"enabled":true},"allow_force_pushes":{"enabled":false},"allow_deletions":{"enabled":false}}'
+# shellcheck disable=SC2090
 export DEFAULT_PROTECTION
 
 fail() { echo "    x $1"; CURRENT_FAILED=1; }
@@ -74,15 +76,26 @@ t_enforce_admins_off() {
 }
 
 # --- the required checks: the SET, not the count (#499: an allowlist must pin its contents) -------------------
+# The fixture builder is a function, not two chained ${VAR/…} expansions on one command: in `A=${A/x/} A=${A/y/} cmd`
+# the second expansion does NOT see the first assignment (shellcheck SC2097/SC2098). Written that way, removing
+# `check` — the FIRST element, the only one with no leading comma — silently removed nothing, and the test still
+# passed because the guard's success message happens to contain the word "check". A vacuous pass.
+without_check() {
+  local ctx=$1 json=$DEFAULT_PROTECTION
+  json=${json/",{\"context\":\"$ctx\"}"/}   # any element but the first
+  json=${json/"{\"context\":\"$ctx\"},"/}   # the first element
+  printf '%s' "$json"
+}
 t_missing_check() {
-  local ctx
+  local ctx json
   for ctx in check gitleaks forbidden-patterns audit; do
     fresh "missing_$ctx"
-    H_PROTECTION=${DEFAULT_PROTECTION/",{\"context\":\"$ctx\"}"/} \
-      H_PROTECTION=${H_PROTECTION/"{\"context\":\"$ctx\"},"/} \
-      run_guard uonoko1/giinrecord main
+    json=$(without_check "$ctx")
+    # the fixture must really have lost it, or the case below proves nothing
+    [[ "$json" != *"\"context\":\"$ctx\""* ]] || fail "fixture for '$ctx' still lists it: $json"
+    H_PROTECTION=$json run_guard uonoko1/giinrecord main
     [[ $RC != 0 ]] || fail "expected non-zero when required check '$ctx' is gone"
-    assert_contains "$OUT" "$ctx" "names the missing check '$ctx'"
+    assert_contains "$OUT" "'$ctx'" "names the missing check '$ctx'"
   done
 }
 
