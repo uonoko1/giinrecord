@@ -446,7 +446,14 @@ function readInlineStyles(rel: string, text: string): InlineStyle[] {
           if (dashed(prop.name.text) === "font-weight") entry.weights.push(...weightsOf(prop.name));
           continue;
         }
-        if (!ts.isPropertyAssignment(prop)) continue; // メソッド・getter は style に来ない
+        // **P29: getter は実際に `style` に渡せて、React も読む**（`el.style` へコピーするときに評価される）。
+        // 以前ここは「メソッド・getter は style に来ない」と書いて `continue` していたが、**その根拠が誤り**だった。
+        // 値は実行時にしか決まらないので、**「読めない」として記録する**（黙って捨てない）。
+        if (!ts.isPropertyAssignment(prop)) {
+          const n = ts.isIdentifier(prop.name) || ts.isStringLiteral(prop.name) ? prop.name.text : undefined;
+          if (n === undefined || dashed(n) === "font-weight" || dashed(n) === "font") unreadable(`${where} 読めない値（getter/メソッド）`);
+          continue;
+        }
         const name = ts.isIdentifier(prop.name) || ts.isStringLiteral(prop.name) ? prop.name.text : undefined;
         // M5・M6: **計算プロパティ** `{ [k]: 400 }`。キーが読めない以上 `font-weight` **かもしれない**ので、
         // 落とす側に倒す。**解いて 400 と読むこともできるが、やらない**——
@@ -562,6 +569,21 @@ function readInlineStyles(rel: string, text: string): InlineStyle[] {
         const line = source.getLineAndCharacterOfPosition(node.getStart()).line + 1;
         readSpreadAttr(node.expression, `${rel}:${line} {...}`);
       }
+      // **P25・P3: `createElement` / `cloneElement` の props も style の入口。**
+      // JSX は結局これに変換されるので、**同じものを別の綴りで書いているだけ**。
+      // 本番に 0 件（grep 済み）だが、**React の一級 API** で MDX・動的タグ・ライブラリ移植から普通に入る。
+      // 属性名を見るだけの検査には掛からないので、**props の位置を直接読む**。
+      if (ts.isCallExpression(node)) {
+        const callee = node.expression;
+        const fn = ts.isPropertyAccessExpression(callee) ? callee.name.text : ts.isIdentifier(callee) ? callee.text : undefined;
+        if (fn === "createElement" || fn === "cloneElement") {
+          const props = node.arguments[1]; // createElement(type, props, …) / cloneElement(el, props, …)
+          if (props !== undefined) {
+            const line = source.getLineAndCharacterOfPosition(node.getStart()).line + 1;
+            readSpreadAttr(props, `${rel}:${line} ${fn}`);
+          }
+        }
+      }
       // A1・A2: `style={…}` に渡された式
       if (ts.isJsxAttribute(node) && node.name.getText() === "style" && node.initializer && ts.isJsxExpression(node.initializer) && node.initializer.expression) {
         const line = source.getLineAndCharacterOfPosition(node.getStart()).line + 1;
@@ -657,7 +679,7 @@ describe("TSX の inline style も同じ規則で守る（#472）", () => {
  *
  * PR #480 は `style={…}` の中身が**オブジェクトリテラルのときだけ**読み、
  * **当たらなかった式を何も記録せずに捨てていた**。`weights` に 1 件も積まれないので、
- * 「静的に読めない値は落とす」番人（B2）も鳴らず、**下の 16 通りが全部素通りしていた**
+ * 「静的に読めない値は落とす」番人（B2）も鳴らず、**下の 16 通りが全部素通りしていた**（さらに 5 形をレビューで追加）
  * （レビュアーが 7 通り・担当者が数え直して 9 通り追加。いずれも `entries: 0` を実測）。
  *
  * **#451 の再演**——構文の形で禁止すると裏口から破られる。#480 は parser を使っており
@@ -700,6 +722,20 @@ describe("style= に渡された読めない式を、黙って捨てない（#48
     "M7 as never": ["const A = () => <span style={{ fontWeight: 400 } as never}>x</span>;", 解ける],
     "M8 non-null assertion": ["const A = () => <span style={{ fontWeight: 400 }!}>x</span>;", 解ける],
     "M12 短縮プロパティ": ["const fontWeight = 400;\nconst A = () => <span style={{ fontWeight }}>x</span>;", 解ける],
+    // **M13: 値側の「読めない」を釘打つ。**
+    // 上の 16 形は**どれも `style=` の入口側**で先に捕まるので、
+    // `weightsOf` の `[undefined]`（＝値が静的に読めないという報告）を消しても**誰も落ちない**。
+    // **入口を釘打っても、値側を釘打っていなければ値側は壊せる**——
+    // この PR が塞いだ「黙って捨てる」と**同じ形の穴**が、この PR 自身に空いていた（レビュー指摘）。
+    "M13 値が props（値側の読めない）": ["const A = ({ w }) => <span style={{ fontWeight: w }}>x</span>;", 読めない],
+    // **W1: `unwrap` が「重なるので 1 回では足りない」という docblock の主張を釘打つ。**
+    // 1 段だけ剥がす実装だと、この形だけが「読めない」に格下げされる（他の形は 1 段で足りてしまう）。
+    "W1 ラッパが 2 重（as + !）": ["const A = () => <span style={({ fontWeight: 400 } as CSSProperties)!}>x</span>;", 解ける],
+    // **P29: getter は実際に `style` に渡せて React も読む。** 値は実行時にしか決まらない
+    "P29 getter": ["const A = () => <span style={{ get fontWeight() { return 400; } }}>x</span>;", 読めない],
+    // **P25・P3: JSX はこれに変換される。同じものを別の綴りで書いているだけ**
+    "P25 createElement": ["const A = () => React.createElement('span', { style: { fontWeight: 400 } });", 解ける],
+    "P3 cloneElement": ["const A = (el) => React.cloneElement(el, { style: { fontWeight: 400 } });", 解ける],
   };
 
   /** **通らなければならない**書き方。ここが落ちたら**正しいコードを落としている**（誤検出） */
@@ -726,7 +762,7 @@ describe("style= に渡された読めない式を、黙って捨てない（#48
     return "素通り";
   };
 
-  it("16 通りの書き方が、どれも素通りしない", () => {
+  it("21 通りの書き方が、どれも素通りしない", () => {
     // **素通りした形の名前を出す。**「何件」ではなく「どれが」でないと直す場所が分からない
     const slipped = Object.entries(MUST_FAIL)
       .filter(([name, [src]]) => verdictOf(name, src) === "素通り")
