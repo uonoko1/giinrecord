@@ -828,6 +828,18 @@ describe("forbiddenTargetFixes: 例外に当たるリンクを「直した跡」
     "padding-top だけ足す": ".row a { padding-top: 6px; }",
     "min-height を足す": ".row a { min-height: 24px; }",
     "負の margin-block で押し戻す": ".row a { padding-block: 6px; margin-block: -6px; }",
+    /**
+     * **負の margin だけ**（`padding` を伴わない形）。
+     *
+     * 上の見本は `padding` と負の margin を**両方**書いているので、**`padding` の枝だけで拾えてしまい、
+     * `margin-block:\s*-` の枝が一度も効かない**。実測: `declaration` から `margin-block:\s*-` を
+     * 落とす変異が **32/32 緑で生き残った**（#506 のレビュー）。
+     *
+     * **枝ごとに「その枝だけが効く形」を置く。** これを置かないと、
+     * 3 本の `|` のうち 1 本が死んでいても気づけない。
+     */
+    "負の margin だけ（padding を伴わない）": ".row a { margin-block: -6px; }",
+    "負の margin-top だけ": ".row a { margin-block: -6px 0; }",
     "rollcalls-item のリンク": ".rollcalls-item a { padding-block: 6px; }",
     "list__item のリンク": ".list__item a { min-height: 24px; }",
     "まとめ書きのセレクタ（片方だけが対象）": ".foo, .row a { padding-block: 6px; }",
@@ -837,12 +849,12 @@ describe("forbiddenTargetFixes: 例外に当たるリンクを「直した跡」
     "まとめ書きが改行で折り返している": ".foo,\n  .row a { padding-block: 6px; }",
   };
 
-  it("行の中のリンクを広げる 11 通りを、どれも見落とさない", () => {
+  it("行の中のリンクを広げる 13 通りを、どれも見落とさない", () => {
     const missed = Object.entries(行の違反)
       .filter(([, css]) => forbiddenTargetFixes(css, "行").length === 0)
       .map(([name]) => name);
     expect(missed, "行の中のリンクを広げる書き方を見落としている（判定が死んでいる可能性）").toEqual([]);
-    expect(Object.keys(行の違反)).toHaveLength(11);
+    expect(Object.keys(行の違反)).toHaveLength(13);
   });
 
   /**

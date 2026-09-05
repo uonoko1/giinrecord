@@ -222,8 +222,13 @@ describe("見出し家族が持たないウェイトを、家族を書かずに�
     // `lighter` / `bolder` は `inherit` と**同じ `undefined` に見えても意味が違う**。
     // 「読めない」として報告に出す側であることを固定する（#484 でここを分けた）。
     expect(weightOf("font-weight: inherit"), "継承は対象外の印を返す").toBe("skip");
-    expect(weightOf("font-weight: lighter"), "相対指定は『読めない』のままにする").toBeUndefined();
-    expect(weightOf("font-weight: bolder"), "相対指定は『読めない』のままにする").toBeUndefined();
+    // **`lighter` / `bolder` は「対象外（`"skip"`）」ではなく「読めない（`undefined`）」**。
+    // `toBeUndefined()` だけでは**どの枝で undefined になったか**は分からない（`parseInt` 落ちでも undefined）が、
+    // ここで見たいのは **`"skip"` に格下げされていないこと**なので、`"skip"` でないことも明示する（#485）。
+    for (const v of ["lighter", "bolder"]) {
+      expect(weightOf(`font-weight: ${v}`), `${v} は『読めない』のままにする`).toBeUndefined();
+      expect(weightOf(`font-weight: ${v}`), `${v} を対象外（skip）に格下げしている`).not.toBe("skip");
+    }
     expect(weightOf("font-weight: bold")).toBe(700);
     expect(weightOf("font-weight: normal")).toBe(400);
   });
@@ -923,7 +928,17 @@ describe("ウェイトの判定そのもの（#506）", () => {
       "800（Mincho が持つ）": "font-weight: 800;",
       "bold（= 700）": "font-weight: bold;",
       "400 だが family を同じ規則で書いている": "font-family: var(--font-body); font-weight: 400;",
-      "400 だが font ショートハンドで家族を供給": "font: 400 13px var(--font-body);",
+      /**
+       * **`font:` ショートハンドの枝だけが効く形**（#506 のレビューで学んだ「枝ごとに 1 形」）。
+       *
+       * `font: 400 13px var(--font-body);` **だけ**では足りない——**`font-weight:` が無いので
+       * `weightOf` が `undefined` を返して早期 return し、`font:` の枝に一度も到達しない**。
+       * 実測: その形だけだと `!/font\s*:/` の枝を落とす変異が **26/26 緑で生き残った**。
+       *
+       * **`font-weight` を明示したうえで、家族を `font:` ショートハンドだけが供給している**形にする。
+       * こうすると「`font-family:` は無いが `font:` はある」＝**`font:` の枝だけが違反を止めている**。
+       */
+      "400 だが font ショートハンドで家族を供給": "font: 13px var(--font-body); font-weight: 400;",
       "font-weight を書いていない": "color: var(--ink); font-size: 13px;",
       "inherit（親を継ぐ。face を要求しない）": "font-weight: inherit;",
       "initial": "font-weight: initial;",
@@ -931,6 +946,20 @@ describe("ウェイトの判定そのもの（#506）", () => {
       "revert": "font-weight: revert;",
       "revert-layer": "font-weight: revert-layer;",
       "lighter（親依存で読めない。CSS 側は読み飛ばす）": "font-weight: lighter;",
+      /**
+       * **`|| v === "bolder"` を落とす変異は 26/26 緑のまま。これは等価変異である**（#506 で確認）。
+       *
+       * 枝を落としても、最後の `Number.parseInt("bolder", 10)` が **`NaN`** を返し、
+       * `Number.isNaN(n) ? undefined : n` で**同じ `undefined` に落ちる**（実測）。
+       * **観測できる振る舞いが 1 ビットも変わらないので、落とせるテストは書けない。**
+       *
+       * **無理に落とすテストを書かない**——`weightOf` の内部の分岐を覗くようなテストは
+       * 実装に貼り付くだけで、守っているものが増えない。
+       * **落ちない理由が等価変異だと分かったら、そう書いて残す**（作業合意）。
+       *
+       * ただし `"skip"` への**格下げ**は観測できるので、下の `weightOf` の直接検査で
+       * `not.toBe("skip")` まで固定してある（#485: 「落ちた」だけ見ると格下げに気づけない）。
+       */
       "bolder（同上）": "font-weight: bolder;",
       "空の規則": "",
     };
