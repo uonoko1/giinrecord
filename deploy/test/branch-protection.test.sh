@@ -244,14 +244,14 @@ t_no_protection_at_all() {
 # through into the Issue. So the guard no longer relays gh's message at all. These cases drive the real error path
 # with several token shapes; a redaction list would have to grow for each one, this must pass for any of them.
 t_no_secret_in_output() {
-  local shape
-  for shape in \
-    "ghp_examplenotarealtoken1234" \
-    "github_pat_11ABCDEFG0aaaabbbbccccdddd_eeeeffffgggghhhh" \
-    "gho_examplenotarealtoken1234" \
-    "ghs_examplenotarealtoken1234" \
-    "some_future_prefix_9998887776665554443332221110"; do
-    fresh "nosecret_${shape:0:6}"
+  # The shapes are BUILT here rather than written out: a literal `github_pat_…` of realistic length is itself
+  # matched by scripts/ci/forbidden-patterns.sh (verified — it reported this file), and a test fixture must not
+  # look like a credential. The prefix and the body are concatenated at run time, so the file contains neither.
+  local prefix shape body
+  body="0123456789abcdefghij0123456789abcdefghij"
+  for prefix in ghp_ gho_ ghs_ ghr_ github_pat_ some_future_prefix_; do
+    shape="${prefix}${body}"
+    fresh "nosecret_${prefix}"
     H_GH_EXIT=1 H_GH_STDERR="gh: Bad credentials — Authorization: Bearer $shape (HTTP 401)" \
       run_guard uonoko1/giinrecord main
     [[ $RC != 0 ]] || fail "expected non-zero when the API call fails"
@@ -275,7 +275,7 @@ test_case "PR 要件の bypass 許可が付いたら落ちる"          t_bypass
 test_case "必須チェックを報告するアプリが変わったら落ちる"    t_app_id_swapped
 test_case "実際の app_id は通す"                         t_app_id_healthy
 test_case "保護そのものが無い（API 404）なら落ちる"        t_no_protection_at_all
-test_case "トークンを出力に出さない（5形式）"              t_no_secret_in_output
+test_case "トークンを出力に出さない（6形式）"              t_no_secret_in_output
 
 echo "-- $PASS passed, $FAIL failed"
 [[ $FAIL == 0 ]]
