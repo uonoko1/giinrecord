@@ -82,6 +82,21 @@ scan() {
   ' "$pretty"
 }
 
+# collect_offenders <file> → "<file>:<行>\t<本文>" を 0 行以上出す。
+# **本番の走査も、検査器自身のテストも、必ずこの関数を通る。**
+# 片方だけが通る形にすると、こちらを空にする変異が自己テストに映らない（#527 で実測 24/0）。
+collect_offenders() {
+  local f=$1 n line
+  # **自分が実際に走査したファイルを、検出と同じ関数の中で記録する。**
+  # 記録を呼び出し側に置くと、ループの手前で `continue` するだけの変異（#500 の Z2 型）が
+  # 記録に映らず、検査だけが静かに縮む（#527 で実測 24/0 で素通り）。
+  [ -z "${SCANNED_LOG:-}" ] || echo "$f" >> "$SCANNED_LOG"
+  while IFS=$'\t' read -r n line; do
+    [ -n "$n" ] || continue
+    printf '%s:%s\t%s\n' "$f" "$n" "$line"
+  done < <(scan "$f")
+}
+
 # ---------------------------------------------------------------------------
 # 0. 検査器自身のテスト。落とすべき形／通すべき形を並べて固定する。
 #    「違反を書けば落ちる」だけでは、緩めたときに気づけない（#484）。
@@ -92,8 +107,11 @@ selfcheck() {  # selfcheck <落とすべき=bad|通すべき=good> <名前> <本
   local want=$1 name=$2 body=$3 f="$SELF/case.sh" got
   { echo '#!/usr/bin/env bash'; echo 'set -euo pipefail'; printf '%s\n' "$body"; } > "$f"
   # scan は $ROOT からの相対パスを取るので、一時的に ROOT を差し替える
+  # **本番の走査と同じ collect_offenders を通す。**
+  # 自己テストが scan() を直に呼ぶと、collect_offenders のループを空にする変異
+  # （BODY_TO_NOP）が自己テストに映らず、検査だけが静かに死ぬ（#527 で実測 24/0 で素通り）。
   local saved=$ROOT; ROOT=$SELF
-  got=$(scan "case.sh" | grep -c . || true)
+  got=$(SCANNED_LOG='' collect_offenders "case.sh" | grep -c . || true)
   ROOT=$saved
   if [ "$want" = bad ] && [ "$got" -ge 1 ]; then ok "検査器: $name を検出する"
   elif [ "$want" = good ] && [ "$got" = 0 ]; then ok "検査器: $name を誤検出しない"
@@ -138,22 +156,31 @@ echo "   検査対象: ${#FILES[@]} ファイル（scripts/ci/shellcheck.sh --li
 
 OFFENDERS="$TMP/offenders"; : > "$OFFENDERS"
 CHECKED="$TMP/checked"; : > "$CHECKED"
+WANT="$TMP/want"; : > "$WANT"
 for f in "${FILES[@]}"; do
   # pipefail を使っていないファイルは、この事故が起きない（実測 0/3000）
   grep -q 'pipefail' "$ROOT/$f" 2>/dev/null || continue
-  echo "$f" >> "$CHECKED"
-  while IFS=$'\t' read -r n line; do
-    [ -n "$n" ] || continue
-    printf '%s:%s\t%s\n' "$f" "$n" "$line" >> "$OFFENDERS"
-  done < <(scan "$f")
+  echo "$f" >> "$WANT"                       # 走査されるべき集合（入口）
+  SCANNED_LOG="$CHECKED" collect_offenders "$f" >> "$OFFENDERS"
 done
 
+NWANT=$(grep -c . "$WANT" || true)
 NCHECKED=$(grep -c . "$CHECKED" || true)
-# 入口（対象集合）を固定する。痩せたら落とす（#499/#500 の教訓）。
-if [ "$NCHECKED" -ge 25 ]; then
-  ok "pipefail を使うファイルを $NCHECKED 件走査した"
+# 入口（対象集合）を固定する。痩せたら落とす（#499）。
+if [ "$NWANT" -ge 25 ]; then
+  ok "pipefail を使うファイルが $NWANT 件ある（入口）"
 else
-  bad "走査したファイルが $NCHECKED 件しかない（対象集合が痩せている）"
+  bad "pipefail を使うファイルが $NWANT 件しかない（対象集合が痩せている）"
+fi
+# **出口も固定する**（#500 の Z2）。入口を数えるだけでは、
+# ループの中で黙って飛ばす変異（`case "$f" in deploy/test/*) continue;;`）に気づけない。
+# 件数ではなくファイル名そのものを突き合わせる（件数だけでは入れ替えを見逃す。#499）。
+MISSED=$(comm -23 <(sort -u "$WANT") <(sort -u "$CHECKED"))
+if [ -z "$MISSED" ]; then
+  ok "入口の $NWANT 件を、検出器が 1 件残らず走査した（出口）"
+else
+  bad "走査されなかったファイルがある（入口 $NWANT 件 / 走査 $NCHECKED 件）:"
+  printf '%s\n' "$MISSED" | sed 's/^/      /'
 fi
 
 NOFF=$(grep -c . "$OFFENDERS" || true)
