@@ -33,7 +33,18 @@ import { dirname, resolve } from "node:path";
 //      どちらも**期待値を deploy/ の本番ファイルから導く**ので、
 //      黙らせるには**本番の設定・スクリプトのほうを消す**しかない（それは diff で見える）。
 //
-//   経路1（台帳）  : 名前の集合・出口・逐語アンカー。ハードコード。編集で縮む。
+//   経路1（台帳）  : 名前の集合・出口・アンカー・assertion の下限。ハードコード。編集で縮む。
+//   経路4（横断）  : 1 本の本番ファイルに紐づかない守り（`reload_nginx` など）。
+//                    期待値の出どころは **その性質を使っている本番スクリプト**。台帳を消しても縮まない。
+//
+// **判定はすべて「コメントを落とした本文」に対して行う**（`sources()` が既にそうしている）。
+// PR #526 のレビューが `sed 's/^/# /'` で全 14 本を「コメント + exit 0」に潰し、**9 pass / 0 fail** を出した。
+// 逐語一致はコメントと実行される本文を区別できない。**それに加えて、実際に走る assertion の数に下限を置く。**
+//
+// **「どこかにあれば良い」もやめた。担当を名指しする。**
+// 文字列一致である限り、その文字列を書けば偽装できる（実測 W1c: 実配信の形
+// `Permissions-Policy:` を別ファイルの本文に書くだけで経路3 が黙った）。追いかけっこは終わらない。
+// `HEADER_OWNERS` / `SUBJECT_OWNERS` で「誰が守る係か」を固定し、**その係が消えたら落ちる**ようにした。
 //   経路2（被覆）  : deploy/ の本番スクリプト／設定は、**どれか**の deploy テストから名指しされていること。
 //                    期待値の出どころは **deploy/ の実ファイル**。台帳を消しても縮まない。
 //   経路3（能力）  : site.conf が送る**セキュリティヘッダ1つ1つ**について、
@@ -77,7 +88,8 @@ function stripComments(src: string): string {
 /** deploy/test/*.test.sh の**実行される本文**（コメントを落としたもの）。判定はすべてこちらで行う。 */
 function sources(): Map<string, string> {
   const m = new Map<string, string>();
-  for (const f of actualFiles()) m.set(f, stripComments(read(`deploy/test/${f}`)));
+  for (const f of actualFiles())
+    m.set(f, stripComments(read(`deploy/test/${f}`)));
   return m;
 }
 
@@ -93,7 +105,9 @@ function sources(): Map<string, string> {
 function assertionSites(body: string): number {
   const withoutDefs = body
     .split("\n")
-    .filter((l) => !/^\s*(ok|bad|fail|skip|test_case|assert_[a-z_]+)\s*\(\)/.test(l))
+    .filter(
+      (l) => !/^\s*(ok|bad|fail|skip|test_case|assert_[a-z_]+)\s*\(\)/.test(l),
+    )
     .join("\n");
   const re =
     /(?:^|[;&|(]|\bthen\b|\belse\b|\bdo\b)\s*(?:test_case|assert_[a-z_]+|ok|bad|fail)\s+["$\w]|PASS=\$\(\(PASS\+1\)\)/g;
@@ -109,40 +123,77 @@ function assertionSites(body: string): number {
  * - `anchors` : そのテストが**現に検査していること**を名指しする、ファイル中の逐語文字列。
  *               assertion を抜くと消える。#481: 失敗は「何件」ではなく「どれが」で出す。
  */
-const INVENTORY: { file: string; anchors: string[]; minAssertions: number }[] = [
-  { file: "apply-all.test.sh", anchors: ["apply-all.sh", "allowlist", "8083"], minAssertions: 64 },
-  {
-    file: "cloudflare-allowlist.test.sh",
-    anchors: ["cloudflare-allowlist.sh", "nginx -t failed"],
-    minAssertions: 26,
-  },
-  { file: "go-live.test.sh", anchors: ["go-live.sh"], minAssertions: 20 },
-  { file: "logrotate.test.sh", anchors: ["logrotate.conf", "monitor/setup.sh"], minAssertions: 8 },
-  { file: "monitor-health.test.sh", anchors: ["monitor/health.sh"], minAssertions: 13 },
-  { file: "monitor-probe.test.sh", anchors: ["probe.sh"], minAssertions: 49 },
-  { file: "monitor-setup.test.sh", anchors: ["monitor/setup.sh"], minAssertions: 8 },
-  { file: "nginx-404.test.sh", anchors: ["nginx/site.conf", "__spa-fallback.html", "docker"], minAssertions: 4 },
-  {
-    file: "nginx-headers.test.sh",
-    // #513 が「これが消えると失われる」と名指ししたものを、そのまま釘にする。
-    anchors: [
-      "nginx/site.conf",
-      "docker",
-      "LOCATIONS", // location の網羅（#499: allowlist をやめ site.conf から全 location を拾う）
-      "WANT_LOCS", // その数え上げ自身の検査（独立な数え方との突き合わせ）
-      "add_header", // add_header の継承の罠（内側に1つあると外側が全部消える）
-      "Permissions-Policy", // 17 機能
-      "SECURITY_HEADERS", // #504: 個数ではなく要素そのものを順序込みで固定
-      "REQUIRED_SECURITY_HEADERS",
-    ],
-    minAssertions: 8,
-  },
-  { file: "nginx-reload.test.sh", anchors: ["vps-setup.sh", "nginx -t failed"], minAssertions: 2 },
-  { file: "ops-user-setup.test.sh", anchors: ["ops-user-setup.sh", "NOPASSWD", "visudo"], minAssertions: 69 },
-  { file: "run-remote.test.sh", anchors: ["run-remote.sh"], minAssertions: 22 },
-  { file: "staging-setup.test.sh", anchors: ["staging-setup.sh"], minAssertions: 15 },
-  { file: "vps-setup.test.sh", anchors: ["vps-setup.sh"], minAssertions: 30 },
-];
+const INVENTORY: { file: string; anchors: string[]; minAssertions: number }[] =
+  [
+    {
+      file: "apply-all.test.sh",
+      anchors: ["apply-all.sh", "allowlist", "8083"],
+      minAssertions: 64,
+    },
+    {
+      file: "cloudflare-allowlist.test.sh",
+      anchors: ["cloudflare-allowlist.sh", "nginx -t failed"],
+      minAssertions: 26,
+    },
+    { file: "go-live.test.sh", anchors: ["go-live.sh"], minAssertions: 20 },
+    {
+      file: "logrotate.test.sh",
+      anchors: ["logrotate.conf", "monitor/setup.sh"],
+      minAssertions: 8,
+    },
+    {
+      file: "monitor-health.test.sh",
+      anchors: ["monitor/health.sh"],
+      minAssertions: 13,
+    },
+    { file: "monitor-probe.test.sh", anchors: ["probe.sh"], minAssertions: 49 },
+    {
+      file: "monitor-setup.test.sh",
+      anchors: ["monitor/setup.sh"],
+      minAssertions: 8,
+    },
+    {
+      file: "nginx-404.test.sh",
+      anchors: ["nginx/site.conf", "__spa-fallback.html", "docker"],
+      minAssertions: 4,
+    },
+    {
+      file: "nginx-headers.test.sh",
+      // #513 が「これが消えると失われる」と名指ししたものを、そのまま釘にする。
+      anchors: [
+        "nginx/site.conf",
+        "docker",
+        "LOCATIONS", // location の網羅（#499: allowlist をやめ site.conf から全 location を拾う）
+        "WANT_LOCS", // その数え上げ自身の検査（独立な数え方との突き合わせ）
+        "add_header", // add_header の継承の罠（内側に1つあると外側が全部消える）
+        "Permissions-Policy", // 17 機能
+        "SECURITY_HEADERS", // #504: 個数ではなく要素そのものを順序込みで固定
+        "REQUIRED_SECURITY_HEADERS",
+      ],
+      minAssertions: 8,
+    },
+    {
+      file: "nginx-reload.test.sh",
+      anchors: ["vps-setup.sh", "nginx -t failed"],
+      minAssertions: 2,
+    },
+    {
+      file: "ops-user-setup.test.sh",
+      anchors: ["ops-user-setup.sh", "NOPASSWD", "visudo"],
+      minAssertions: 69,
+    },
+    {
+      file: "run-remote.test.sh",
+      anchors: ["run-remote.sh"],
+      minAssertions: 22,
+    },
+    {
+      file: "staging-setup.test.sh",
+      anchors: ["staging-setup.sh"],
+      minAssertions: 15,
+    },
+    { file: "vps-setup.test.sh", anchors: ["vps-setup.sh"], minAssertions: 30 },
+  ];
 
 /**
  * **台帳の行数を、台帳の外にもう一度書く。**
@@ -167,18 +218,34 @@ const GATES = ['[ "$FAIL" = 0 ]', "[[ $FAIL == 0 ]]", '[ "$FAIL" -eq 0 ]'];
  *   - `anchors` を全部 `["bash"]` に差し替えるだけで **9 pass / 0 fail**
  * **allowlist が 3 つあって、2 つしか釘打っていなかった。**
  */
-const GATES_PINNED = ['[ "$FAIL" = 0 ]', "[[ $FAIL == 0 ]]", '[ "$FAIL" -eq 0 ]'];
+const GATES_PINNED = [
+  '[ "$FAIL" = 0 ]',
+  "[[ $FAIL == 0 ]]",
+  '[ "$FAIL" -eq 0 ]',
+];
 
 /** 台帳の anchors・下限を、台帳の外にもう一度書く（同上）。 */
-const INVENTORY_PINNED: Record<string, { anchors: string[]; minAssertions: number }> = {
-  "apply-all.test.sh": { anchors: ["apply-all.sh", "allowlist", "8083"], minAssertions: 64 },
+const INVENTORY_PINNED: Record<
+  string,
+  { anchors: string[]; minAssertions: number }
+> = {
+  "apply-all.test.sh": {
+    anchors: ["apply-all.sh", "allowlist", "8083"],
+    minAssertions: 64,
+  },
   "cloudflare-allowlist.test.sh": {
     anchors: ["cloudflare-allowlist.sh", "nginx -t failed"],
     minAssertions: 26,
   },
   "go-live.test.sh": { anchors: ["go-live.sh"], minAssertions: 20 },
-  "logrotate.test.sh": { anchors: ["logrotate.conf", "monitor/setup.sh"], minAssertions: 8 },
-  "monitor-health.test.sh": { anchors: ["monitor/health.sh"], minAssertions: 13 },
+  "logrotate.test.sh": {
+    anchors: ["logrotate.conf", "monitor/setup.sh"],
+    minAssertions: 8,
+  },
+  "monitor-health.test.sh": {
+    anchors: ["monitor/health.sh"],
+    minAssertions: 13,
+  },
   "monitor-probe.test.sh": { anchors: ["probe.sh"], minAssertions: 49 },
   "monitor-setup.test.sh": { anchors: ["monitor/setup.sh"], minAssertions: 8 },
   "nginx-404.test.sh": {
@@ -198,7 +265,10 @@ const INVENTORY_PINNED: Record<string, { anchors: string[]; minAssertions: numbe
     ],
     minAssertions: 8,
   },
-  "nginx-reload.test.sh": { anchors: ["vps-setup.sh", "nginx -t failed"], minAssertions: 2 },
+  "nginx-reload.test.sh": {
+    anchors: ["vps-setup.sh", "nginx -t failed"],
+    minAssertions: 2,
+  },
   "ops-user-setup.test.sh": {
     anchors: ["ops-user-setup.sh", "NOPASSWD", "visudo"],
     minAssertions: 69,
@@ -209,17 +279,28 @@ const INVENTORY_PINNED: Record<string, { anchors: string[]; minAssertions: numbe
 };
 
 test("#513 経路1: 検査器の allowlist（GATES・anchors・assertion の下限）そのものを固定する", () => {
-  assert.deepEqual(GATES, GATES_PINNED, `GATES が変わっている（出口として認める書き方の集合）。
+  assert.deepEqual(
+    GATES,
+    GATES_PINNED,
+    `GATES が変わっている（出口として認める書き方の集合）。
   いま: ${GATES.join(" / ")}
   固定: ${GATES_PINNED.join(" / ")}
-ここに 1 語（例えば "exit"）足すだけで、全 14 本を exit 0 に差し替えても検査は黙る（実測）。`);
+ここに 1 語（例えば "exit"）足すだけで、全 14 本を exit 0 に差し替えても検査は黙る（実測）。`,
+  );
 
   const table = Object.fromEntries(
-    INVENTORY.map((e) => [e.file, { anchors: e.anchors, minAssertions: e.minAssertions }]),
+    INVENTORY.map((e) => [
+      e.file,
+      { anchors: e.anchors, minAssertions: e.minAssertions },
+    ]),
   );
-  assert.deepEqual(table, INVENTORY_PINNED, `台帳の anchors / assertion 下限が変わっている。
+  assert.deepEqual(
+    table,
+    INVENTORY_PINNED,
+    `台帳の anchors / assertion 下限が変わっている。
 台帳（INVENTORY）と固定値（INVENTORY_PINNED）の両方を書き換えないと通らない。
-片方だけ緩めて検査を黙らせる道を塞ぐためにある（#484）。`);
+片方だけ緩めて検査を黙らせる道を塞ぐためにある（#484）。`,
+  );
 });
 
 test("#513 経路1: 台帳は実在するファイル集合と一致する（消しても足しても落ちる）", () => {
@@ -262,12 +343,15 @@ test("#513 経路1: 各 *.test.sh は失敗を exit status に変える出口を
       offenders.push(`${file}: ファイルが無い`);
       continue;
     }
-    if (!GATES.some((g) => s.includes(g))) offenders.push(`${file}: 出口が無い`);
+    if (!GATES.some((g) => s.includes(g)))
+      offenders.push(`${file}: 出口が無い`);
   }
   // #507: 「何件通ったか」ではなく「無罪と判定したものを検査器に掛け直す」。
   // 監査は judge の申告ではなく**対象集合そのもの**を起点に回す（ループごと飛ばされた1件を拾うため）。
   // 監査の結果は脇に置かず、**検出そのものに合流させる**（脇に置くと「監査だけ消す」で黙る）。
-  const skipped = INVENTORY.map((e) => e.file).filter((f) => !audited.includes(f));
+  const skipped = INVENTORY.map((e) => e.file).filter(
+    (f) => !audited.includes(f),
+  );
   assert.deepEqual(
     { offenders, skipped },
     { offenders: [], skipped: [] },
@@ -289,14 +373,22 @@ test("#513 経路1: 各 *.test.sh は検査項目を名指ししている（空�
       findings.push(`${file}: ファイルが無い`);
       continue;
     }
-    if (anchors.length === 0) findings.push(`${file}: anchors が空（何も守っていない宣言に等しい）`);
-    for (const a of anchors) if (!s.includes(a)) findings.push(`${file}: 検査項目 [${a}] が消えている`);
+    if (anchors.length === 0)
+      findings.push(`${file}: anchors が空（何も守っていない宣言に等しい）`);
+    for (const a of anchors)
+      if (!s.includes(a))
+        findings.push(`${file}: 検査項目 [${a}] が消えている`);
     // **逐語一致だけでは、本文をコメントにして exit 0 を足すだけで通った**（PR #526 のレビュー、14/14）。
     // 実際に走る assertion の数に下限を置く。コメントに逃がした本文はここで 0 になる。
     const n = assertionSites(s);
-    if (n < min) findings.push(`${file}: 実際に走る assertion が ${n} 個（最低 ${min} 個。減らすなら台帳も直すこと）`);
+    if (n < min)
+      findings.push(
+        `${file}: 実際に走る assertion が ${n} 個（最低 ${min} 個。減らすなら台帳も直すこと）`,
+      );
   }
-  const skipped = INVENTORY.map((e) => e.file).filter((f) => !audited.includes(f));
+  const skipped = INVENTORY.map((e) => e.file).filter(
+    (f) => !audited.includes(f),
+  );
   assert.deepEqual(
     { findings, skipped },
     { findings: [], skipped: [] },
@@ -337,10 +429,12 @@ function deploySubjects(): string[] {
  */
 const UNCOVERED: Record<string, string> = {
   // ホスト側 nginx の proxy_pass 断片。値は packages/etl/test/deploy-docker.test.ts が固定する係。
-  "deploy/nginx-host-proxy.conf": "文字列の検査は deploy-docker.test.ts が持つ（実配信の対象外）",
+  "deploy/nginx-host-proxy.conf":
+    "文字列の検査は deploy-docker.test.ts が持つ（実配信の対象外）",
   // アクセスログの集計。本番の配信にも設定にも触らない後処理。
   "deploy/analytics/aggregate.sh": "配信・設定に触らない後処理（#288 の集計）",
-  "deploy/analytics/nginx-noip-log.conf": "log_format の断片。vps-analytics-setup.sh 経由で入る",
+  "deploy/analytics/nginx-noip-log.conf":
+    "log_format の断片。vps-analytics-setup.sh 経由で入る",
 };
 
 /**
@@ -417,7 +511,11 @@ test("#513 経路2: 被覆の例外集合そのものを固定する（例外を
   const noReason = Object.entries(UNCOVERED)
     .filter(([, why]) => why.trim().length === 0)
     .map(([k]) => k);
-  assert.deepEqual(noReason, [], `理由の無い例外（場所取りだけ）: ${noReason.join(", ")}`);
+  assert.deepEqual(
+    noReason,
+    [],
+    `理由の無い例外（場所取りだけ）: ${noReason.join(", ")}`,
+  );
 });
 
 /**
@@ -480,7 +578,10 @@ const SUBJECT_OWNERS_PINNED: Record<string, string> = {
 
 test("#513 経路2: 本番ファイルの主担当表そのものを固定する（担当を付け替えて骨抜きにできない）", () => {
   // 母集団 = 例外 + 主担当。漏れも重複も許さない。
-  const covered = [...Object.keys(SUBJECT_OWNERS), ...Object.keys(UNCOVERED)].sort();
+  const covered = [
+    ...Object.keys(SUBJECT_OWNERS),
+    ...Object.keys(UNCOVERED),
+  ].sort();
   assert.deepEqual(
     covered,
     DEPLOY_SUBJECTS_PINNED,
@@ -489,7 +590,11 @@ test("#513 経路2: 本番ファイルの主担当表そのものを固定する
   担当表  : ${covered.join(", ")}
 本番ファイルを足したら主担当を決めること。`,
   );
-  assert.deepEqual(SUBJECT_OWNERS, SUBJECT_OWNERS_PINNED, "主担当表が変わっている。両方を書き換えること。");
+  assert.deepEqual(
+    SUBJECT_OWNERS,
+    SUBJECT_OWNERS_PINNED,
+    "主担当表が変わっている。両方を書き換えること。",
+  );
 });
 
 test("#513 経路2: 名指しした主担当が、生きたテストとしてその本番ファイルを見ている", () => {
@@ -505,13 +610,19 @@ test("#513 経路2: 名指しした主担当が、生きたテストとしてそ
       continue;
     }
     if (assertionSites(body) < (live.get(owner) ?? 1))
-      findings.push(`${subject}: 主担当の ${owner} が骨抜きになっている（走る assertion が足りない）`);
+      findings.push(
+        `${subject}: 主担当の ${owner} が骨抜きになっている（走る assertion が足りない）`,
+      );
     const base = subject.slice("deploy/".length);
     const name = base.slice(base.lastIndexOf("/") + 1);
     if (!body.includes(base) && !body.includes(name))
-      findings.push(`${subject}: 主担当の ${owner} が実行される本文でこれを名指ししていない`);
+      findings.push(
+        `${subject}: 主担当の ${owner} が実行される本文でこれを名指ししていない`,
+      );
   }
-  const skipped = Object.keys(SUBJECT_OWNERS).filter((k) => !audited.includes(k));
+  const skipped = Object.keys(SUBJECT_OWNERS).filter(
+    (k) => !audited.includes(k),
+  );
   assert.deepEqual(
     { findings, skipped },
     { findings: [], skipped: [] },
@@ -533,8 +644,11 @@ test("#513 経路2: deploy/ の本番スクリプト・設定は、どれかの 
     if (s in UNCOVERED) continue;
     const base = s.slice("deploy/".length);
     const name = base.slice(base.lastIndexOf("/") + 1);
-    const covered = [...src.values()].some((t) => t.includes(base) || t.includes(name));
-    if (!covered) findings.push(`${s}: これを名指しする deploy テストが1本も無い`);
+    const covered = [...src.values()].some(
+      (t) => t.includes(base) || t.includes(name),
+    );
+    if (!covered)
+      findings.push(`${s}: これを名指しする deploy テストが1本も無い`);
   }
   // 監査: 数え上げた対象を1件も飛ばしていないこと。検出と同じ assertion に合流させる（#507）。
   const skipped = subjects.filter((s) => !audited.includes(s));
@@ -562,7 +676,8 @@ function headersInSiteConf(): string[] {
     .filter((l) => !/^\s*#/.test(l))
     .join("\n");
   const names = new Set<string>();
-  for (const m of conf.matchAll(/add_header\s+([A-Za-z][A-Za-z0-9-]*)/g)) names.add(m[1]);
+  for (const m of conf.matchAll(/add_header\s+([A-Za-z][A-Za-z0-9-]*)/g))
+    names.add(m[1]);
   return [...names].sort();
 }
 
@@ -577,7 +692,12 @@ function liveNginxTests(): string[] {
   const out: string[] = [];
   for (const [name, s] of sources()) {
     // 判定は**コメントを落とした本文**に対して行う（sources() が既にそうなっている）。
-    if (!s.includes("docker run") || !s.includes("curl") || !s.includes("site.conf")) continue;
+    if (
+      !s.includes("docker run") ||
+      !s.includes("curl") ||
+      !s.includes("site.conf")
+    )
+      continue;
     // **抜け殻を「実配信のテスト」と数えない**: 台帳の下限を満たす assertion が実際に走ること。
     // これが無いと、骨抜きにしたファイルが供給側として数えられてしまう。
     if (assertionSites(s) < (floor.get(name) ?? 1)) continue;
@@ -650,7 +770,10 @@ const HEADER_OWNERS_PINNED: Record<string, string[]> = {
 
 test("#513 経路3: ヘッダの担当表そのものを固定する（担当を書き換えて骨抜きにできない）", () => {
   // ELSEWHERE と HEADER_OWNERS を合わせて、site.conf の全ヘッダが**漏れなく1度ずつ**割り当たること。
-  const assigned = [...Object.keys(HEADER_OWNERS), ...Object.keys(ELSEWHERE)].sort();
+  const assigned = [
+    ...Object.keys(HEADER_OWNERS),
+    ...Object.keys(ELSEWHERE),
+  ].sort();
   assert.deepEqual(
     assigned,
     headersInSiteConf(),
@@ -674,7 +797,8 @@ test("#513 経路3: site.conf が送るヘッダは、名指しした担当が�
   const findings: string[] = [];
   const audited: string[] = [];
 
-  if (live.length === 0) findings.push("実物の nginx を起動して叩く deploy テストが1本も無い");
+  if (live.length === 0)
+    findings.push("実物の nginx を起動して叩く deploy テストが1本も無い");
 
   const ci = read(".github/workflows/ci.yml");
   for (const h of headers) {
@@ -685,7 +809,9 @@ test("#513 経路3: site.conf が送るヘッダは、名指しした担当が�
       // 「docker-web が見ているから」で外したものは、docker-web が本当に見ていることを確かめる。
       // ci.yml からその行が消えれば、例外は例外でなくなり、ここが落ちる。
       if (!ci.includes(elsewhere))
-        findings.push(`${h}: deploy テストの対象外にした根拠 [${elsewhere}] が ci.yml から消えている`);
+        findings.push(
+          `${h}: deploy テストの対象外にした根拠 [${elsewhere}] が ci.yml から消えている`,
+        );
       continue;
     }
     // **ヘッダ名がどこかに出てくる**では足りない（PR #526 のレビュー実測 W1: 別ファイルに
@@ -695,13 +821,17 @@ test("#513 経路3: site.conf が送るヘッダは、名指しした担当が�
     // **担当を名指しで要求する**（文字列一致だけだと、その文字列を書けば偽装できる。W1c で実測）。
     const owners = HEADER_OWNERS[h];
     if (owners === undefined) {
-      findings.push(`${h}: 実配信検査の担当が HEADER_OWNERS に無い（site.conf は送っている）`);
+      findings.push(
+        `${h}: 実配信検査の担当が HEADER_OWNERS に無い（site.conf は送っている）`,
+      );
       continue;
     }
     const wire = new RegExp(`${h}:`, "i");
     for (const o of owners) {
       if (!live.includes(o))
-        findings.push(`${h}: 担当の ${o} が「実配信を叩く生きたテスト」として数えられない（削除/骨抜き）`);
+        findings.push(
+          `${h}: 担当の ${o} が「実配信を叩く生きたテスト」として数えられない（削除/骨抜き）`,
+        );
       else if (!wire.test(src.get(o) ?? ""))
         findings.push(`${h}: 担当の ${o} が \`${h}:\` を実配信で見ていない`);
     }
@@ -740,7 +870,12 @@ nginx の add_header は**継承されない**ので、文字列を読むだけ�
  * 期待値の出どころは **deploy/ の本番スクリプト**（`reload_nginx` を使っているファイル）なので、
  * 台帳を編集しても縮まない。
  */
-const CROSSCUTTING: { property: string; owner: string; usedBy: string[]; why: string }[] = [
+const CROSSCUTTING: {
+  property: string;
+  owner: string;
+  usedBy: string[];
+  why: string;
+}[] = [
   {
     property: "reload_nginx",
     owner: "nginx-reload.test.sh",
@@ -775,11 +910,17 @@ test("#513 経路4: 横断する性質を使う本番スクリプトには、そ
       continue;
     }
     if (assertionSites(body) < (floor.get(owner) ?? 1))
-      findings.push(`${property}: ${owner} が骨抜きになっている（走る assertion が足りない）`);
+      findings.push(
+        `${property}: ${owner} が骨抜きになっている（走る assertion が足りない）`,
+      );
     if (!body.includes(property))
-      findings.push(`${property}: ${owner} が実行される本文で ${property} を見ていない`);
+      findings.push(
+        `${property}: ${owner} が実行される本文で ${property} を見ていない`,
+      );
   }
-  const skipped = CROSSCUTTING.map((c) => c.property).filter((c) => !audited.includes(c));
+  const skipped = CROSSCUTTING.map((c) => c.property).filter(
+    (c) => !audited.includes(c),
+  );
   assert.deepEqual(
     { findings, skipped },
     { findings: [], skipped: [] },
