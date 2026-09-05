@@ -328,7 +328,7 @@ const ELSEWHERE: Record<string, string> = {
   // Host ヘッダで切り替わるので、単一コンテナを叩く deploy テストでは形が合わない（#127）。
   "X-Robots-Tag": "grep -i '^x-robots-tag: noindex, nofollow$'",
   // キャッシュ方針。apps/web の smoke（URL モード）が 8081 / 8083 の両方で見ている。
-  "Cache-Control": "pnpm --filter web smoke -- --url http://127.0.0.1:8081",
+  "Cache-Control": "pnpm --filter web smoke -- --url",
 };
 
 /**
