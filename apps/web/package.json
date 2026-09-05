@@ -12,7 +12,8 @@
     "test": "vitest run",
     "smoke": "tsx scripts/smoke.ts",
     "browser-check": "tsx scripts/browser-check.ts",
-    "fonts": "tsx scripts/fonts.ts"
+    "fonts": "tsx scripts/fonts.ts",
+    "font-subset": "tsx scripts/font-subset.ts"
   },
   "dependencies": {
     "@react-router/node": "^7.18.0",

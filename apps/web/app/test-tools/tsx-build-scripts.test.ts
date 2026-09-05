@@ -149,7 +149,7 @@ describe("tsx で走るビルドスクリプトから import.meta.glob に繋が
     expect(
       entries.map((e) => path.basename(e)),
       "scripts/*.ts の顔ぶれ",
-    ).toEqual(["brand-assets.ts", "browser-check.ts", "build-archive.ts", "copy-member-data.ts", "fonts.ts", "shard-districts.ts", "sitemap.ts", "smoke.ts"]);
+    ).toEqual(["brand-assets.ts", "browser-check.ts", "build-archive.ts", "copy-member-data.ts", "font-subset.ts", "fonts.ts", "shard-districts.ts", "sitemap.ts", "smoke.ts"]);
     // package.json が実際に tsx で走らせているものが、入口に全部入っていること。
     // 入口を手で並べると漏れる（それが #490 そのもの）ので、**走査の結果を宣言の側と突き合わせる**
     const pkg = readFileSync(path.join(webRoot, "package.json"), "utf8");
@@ -178,6 +178,12 @@ describe("tsx で走るビルドスクリプトから import.meta.glob に繋が
       "app/lib/data-contract.ts",
       "app/lib/data-files.ts",
       "app/lib/districts.ts",
+      // #477: 明朝700 のサブセットを作る `scripts/font-subset.ts` が引き込む 4 本。
+      // いずれも `import.meta.glob` 0 件・動的 import 0 件（足すときに確かめた）。
+      "app/lib/font-subset.ts",
+      "app/lib/head-font-chars.ts",
+      "app/lib/head-font-data-chars.ts",
+      "app/lib/head-font-data-source.ts",
       "app/lib/icons.ts",
       "app/lib/linked-counts.ts",
       "app/lib/nojs.ts",
