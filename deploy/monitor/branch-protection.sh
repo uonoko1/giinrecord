@@ -103,6 +103,7 @@ done
 # Only the three security contexts are pinned: `check` is required with app_id null ("any app"), and demanding a
 # particular app for it would report the current, healthy configuration as broken.
 for want in gitleaks forbidden-patterns audit; do
+  # shellcheck disable=SC2016  # $c is jq syntax, bound by --arg below, not expanded by the shell
   got=$(field '.required_status_checks.checks[]? | select(.context == $c) | .app_id | tostring' --arg c "$want")
   # missing context is already reported above; only complain when it is present and reported by another app
   [ -z "$got" ] || [ "$got" = "$SECURITY_APP_ID" ] \
