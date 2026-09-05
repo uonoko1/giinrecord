@@ -1,0 +1,68 @@
+name: Branch protection
+# Issue #521: main の保護設定が弱まっていないかを見張る。
+#
+# なぜ要るか: branch protection は GitHub の**設定**であって、このリポジトリの中身ではない。
+# 弱めるのは API 1 回で済み、diff にもレビューにも CI にも一切現れない。実際 `enforce_admins` は false のまま
+# 放置され、必須チェックを1つも通していない commit が 3 つ main に入った（#521）。
+# push は成功し、git は `remote: Bypassed rule violations for refs/heads/main` としか言わない。
+#
+# この workflow は素通りを不可能にはしない（それは enforce_admins の仕事で、管理者はいつでも戻せる）。
+# **隠れて通れなくする**: 弱まっていれば次の実行で Issue が開く。
+# 作業合意「防御は不可能にすることではなく、隠れて通れなくすること」。
+#
+# 検査そのものは deploy/monitor/branch-protection.sh（テスト: deploy/test/branch-protection.test.sh）。
+# Issue の開閉は monitor.yml と同じ deploy/monitor/report.sh に任せる（タイトルが同一性なので溜まらない）。
+# 直し方と緊急時の逃げ道は docs/ops/deploy.md「main の保護設定」。
+on:
+  schedule:
+    - cron: "23 21 * * *"   # 毎日 06:23 JST。monitor.yml の 10 分刻みとぶつからない分を選ぶ
+  pull_request:
+    # 検査そのものを触る PR では、その場で走らせて壊れていないことを見る
+    paths:
+      - ".github/workflows/branch-protection.yml"
+      - "deploy/monitor/branch-protection.sh"
+      - "deploy/test/branch-protection.test.sh"
+  workflow_dispatch:
+permissions:
+  contents: read
+  issues: write
+concurrency:
+  group: branch-protection
+  cancel-in-progress: false
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: unit tests (gh is a stub, no network)
+        run: bash deploy/test/branch-protection.test.sh
+      # PR では実際の設定を読まない: fork からの PR に issues:write は渡らず、Issue の開閉もしたくない。
+      # 設定そのものの確認は schedule と workflow_dispatch でやる。
+      - name: check main's protection → Issue
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -uo pipefail
+          title="[monitor] repo: main の保護設定"
+          if out=$(bash deploy/monitor/branch-protection.sh "$GITHUB_REPOSITORY" main 2>&1); then
+            echo "$out"
+            bash deploy/monitor/report.sh "$title" ok
+          else
+            echo "$out"
+            {
+              echo "**main の branch protection が弱まっている。** CI を通さずに main へ入れる状態かもしれない（#521）。"
+              echo
+              echo '```'
+              echo "$out"
+              echo '```'
+              echo
+              echo "- run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+              echo
+              echo "直し方と、緊急時に一時的に外すときの手順は \`docs/ops/deploy.md\`「main の保護設定」。"
+              echo "検査が通るようになれば、この Issue は自動で閉じる。"
+            } > body.md
+            bash deploy/monitor/report.sh "$title" fail body.md
+            exit 1
+          fi

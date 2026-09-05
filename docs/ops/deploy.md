@@ -27,6 +27,80 @@ Issue #85・#127。構成と初回セットアップは `deploy/README.md`。こ
 
 ロールバックは「前の SHA を `ref` にして Release」（**フル SHA で**。上記のとおり短縮形は通らない）。
 
+## main の保護設定（#521）
+
+`main` は branch protection で守られており、**必須チェック 4 件（`check` / `gitleaks` /
+`forbidden-patterns` / `audit`）を通さないと入らない**。2026-09-06 までは `enforce_admins` が
+`false` で、**管理者（PO）だけは 1 件も通さずに直 push できていた**。実際にそれで 3 コミット入っている
+（#521）。`enforce_admins` を `true` にして塞いだ。
+
+**push が拒否されたかどうかは、`remote:` の行ではなく終了コードで見る。**
+素通りできていたときの push は**成功**していて、こう出ていた（拒否ではない）:
+
+```
+remote: Bypassed rule violations for refs/heads/main:
+remote: - 4 of 4 required status checks are expected.
+```
+
+いまは同じ push がこうなる（実測。終了コード 1、`main` は動かない）:
+
+```
+remote: error: GH006: Protected branch update failed for refs/heads/main.
+remote: - 4 of 4 required status checks are expected.
+ ! [remote rejected]   HEAD -> main (protected branch hook declined)
+```
+
+### 設定が弱まっていないかの見張り
+
+branch protection は**このリポジトリの中身ではない**ので、弱めても diff にもレビューにも CI にも出ない。
+`.github/workflows/branch-protection.yml` が**毎日**（06:23 JST）
+`deploy/monitor/branch-protection.sh` を走らせ、弱まっていれば
+Issue `[monitor] repo: main の保護設定` を開く（直れば自動で閉じる）。
+見張っているのは `enforce_admins` / `strict` / **必須チェック 4 件の名前と、それを報告するアプリ** /
+`allow_force_pushes` / `allow_deletions` / `restrictions`（名指しのアカウントに push を許す設定）/
+`bypass_pull_request_allowances`。手元で確かめるなら:
+
+```sh
+bash deploy/monitor/branch-protection.sh uonoko1/giinrecord main
+```
+
+### 緊急時（本番が壊れていて hotfix を急ぐとき）
+
+**まず「main を直す」以外で済まないか見る。** 本番の切り戻しは main を触らずにできる:
+
+- **リリースの巻き戻し**が最短。Actions → Release に**ひとつ前のフル SHA** を渡す（上の「リリース手順」）。
+  `release.yml` は `workflow_dispatch` で任意の ref を取るので、**branch protection とは無関係**に動く。
+- `deploy/` の反映（`/opt/giinrecord` の `git pull`）も main への push を必要としない。
+
+**それでも main を直す必要があるとき**は、PR を作って**必須チェックが緑になってからマージする**
+（`scripts/po/merge-when-green.sh <pr>`）。CI は数分で終わる。
+
+**CI の完了を待てないほど急ぐ場合だけ**、保護を一時的に外す。**外したら必ず戻す**:
+
+```sh
+# 1. 外す（管理者のみ）
+gh api -X DELETE repos/uonoko1/giinrecord/branches/main/protection/enforce_admins
+# 2. 直す・push する
+# 3. すぐ戻す（戻し忘れは翌朝の branch-protection.yml が Issue で知らせる）
+gh api -X POST   repos/uonoko1/giinrecord/branches/main/protection/enforce_admins
+gh api repos/uonoko1/giinrecord/branches/main/protection --jq .enforce_admins.enabled   # → true
+```
+
+**戻し忘れても気づける**のがこの手順の要点で、`enforce_admins` が false のまま朝を迎えると
+Issue が開く。**「気をつけて戻す」には頼らない。**
+
+なお、この見張りが読めなかったとき（API 障害・権限喪失・保護そのものの消失）は
+**必ず落ちる**（「読めない」を ok に倒さない）。そのとき gh のエラー文は
+**Issue 本文に転記しない** — 認証情報が混ざりうるため、理由は run のログ側に置く。
+
+**塞げていないことが分かっている点**（#521。移設先は #526 の TypeScript 側）:
+必須チェックの一覧は `.github/workflows` の job 定義と突き合わせているが、**片方向だけ**である。
+job を**改名**すると落ちる（実測 `exit 1`）が、job を**丸ごと消す**と落ちない（実測 `exit 0`）——
+消すと突き合わせる側の集合が痩せ、部分集合の判定が自動的に満たされるため。
+双方向にするには `docker-web`（意図的に必須にしていない job）のような例外の allowlist が要り、
+その allowlist もまた固定が要る。**推論（未実測）**だが、job を消しても必須 context は
+branch protection 側に残るので、報告する者がいなくなって**マージが止まる**方向に倒れるはずである。
+
 ### 日次データ（`deploy-data.yml`）
 
 ETL の data PR がマージされると `etl.yml` / `districts.yml` が `gh workflow run deploy-data.yml --ref main` を起動し、staging と production（Environment `production-data`、承認なし）の両方に配る。
