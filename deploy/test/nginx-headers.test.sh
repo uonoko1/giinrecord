@@ -142,6 +142,10 @@ SECURITY_HEADERS=(
 #   - Permissions-Policy      → 下の t_permissions_policy_value が 17 機能を1つずつ実配信で見る
 # 残る3つ（X-Content-Type-Options / X-Frame-Options / Referrer-Policy）は他に値を見る係が
 # いないので、**ここで値まで釘を打つ**。
+#
+# `exit 1` の前に **`FAIL` を数えてから**落ちる。`exit 1` だけに頼ると、それを消しただけで
+# 「FAIL ... と表示しながら 16 passed, 0 failed・exit 0」になる（#504 の担当が変異で実測）。
+# 最後の `[ "$FAIL" -eq 0 ]` が二重の受け皿になる = **表示と終了コードが食い違わない**。
 REQUIRED_SECURITY_HEADERS=(
   'X-Content-Type-Options: nosniff'
   'X-Frame-Options: DENY'
@@ -151,13 +155,13 @@ REQUIRED_SECURITY_HEADERS=(
 )
 if [ "${#SECURITY_HEADERS[@]}" -ne "${#REQUIRED_SECURITY_HEADERS[@]}" ]; then
   echo "FAIL 要求するセキュリティヘッダが ${#REQUIRED_SECURITY_HEADERS[@]} 種でない（${#SECURITY_HEADERS[@]} 種）。増減するなら理由を site.conf のコメントと REQUIRED_SECURITY_HEADERS の両方に書くこと"
-  exit 1
+  FAIL=$((FAIL+1)); exit 1
 fi
 for i in "${!REQUIRED_SECURITY_HEADERS[@]}"; do
   if [ "${SECURITY_HEADERS[$i]}" != "${REQUIRED_SECURITY_HEADERS[$i]}" ]; then
     echo "FAIL SECURITY_HEADERS[$i] が [${SECURITY_HEADERS[$i]}]（[${REQUIRED_SECURITY_HEADERS[$i]}] を期待）"
     echo "     個数を保ったままヘッダ名や値を差し替えると、実配信からそのヘッダが消えても検査は緑になる（#504）"
-    exit 1
+    FAIL=$((FAIL+1)); exit 1
   fi
 done
 echo "ok   要求するセキュリティヘッダは ${#REQUIRED_SECURITY_HEADERS[@]} 種、名前も値も一致（空・痩せ・同数すり替えを塞ぐ）"; PASS=$((PASS+1))
