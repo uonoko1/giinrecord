@@ -1036,4 +1036,61 @@ describe("forbiddenTargetFixes: 例外に当たるリンクを「直した跡」
     expect(rowLinks.length, ".row a / .list__item a を狙った規則が pages.css に 1 つも無い（綴りが本番とずれている）")
       .toBeGreaterThan(0);
   });
+
+  /**
+   * **`selectorLink` が「`a` 要素を指すセレクタ」だけに当たること**（#518）。
+   *
+   * 見本だけで固定すると、**見本に無い形**（本番にしか無い綴り）で偽陽性が出ても気づけない。
+   * だから**本番の CSS 全ファイルのセレクタ**を実際に流して、
+   * **`selectorLink` が当たったセレクタが、本当に `a` 要素を指しているか**を 1 件ずつ検算する。
+   *
+   * 「`a` 要素を指す」の判定は**正規表現ではなく CSSOM に聞く**（#472 / #481 / #483 の教訓。
+   * `matches()` は実際の要素で試すので、綴りの変種に左右されない）。
+   * `<a>` に当たらず `<span>` にだけ当たるなら、それは `a` 要素ではない。
+   *
+   * **`a$` を戻すとここが落ちる**——本番に `__kana` / `__meta` で終わるクラスが現に在るため。
+   */
+  it("selectorLink が当たるのは a 要素を指すセレクタだけ（本番 CSS 全件で検算）", () => {
+    const cssFiles = ["styles/pages.css", "routes/assemblies.css", "routes/members.css"];
+    const { selectorLink } = TARGET_LINK_RULES.散文;
+
+    // `sel` の末尾の単純セレクタが `a` 要素に当たるかを、CSSOM の `matches()` で確かめる。
+    // 祖先の条件は落として、**一番右の単純セレクタだけ**を <a> と <span> に当てる。
+    const rightmost = (sel: string) => sel.split(/[\s>+~]+/).filter(Boolean).at(-1) ?? "";
+    const targetsAnchor = (sel: string): boolean => {
+      const right = rightmost(sel);
+      const a = document.createElement("a");
+      const span = document.createElement("span");
+      try {
+        // 疑似クラス・疑似要素は落として、要素の型だけを見る
+        const bare = right.replace(/::?[\w-]+(\([^)]*\))?/g, "") || "*";
+        return a.matches(bare) && !span.matches(bare);
+      } catch {
+        return false; // 読めないセレクタは「a 要素と言い切れない」側に倒す
+      }
+    };
+
+    // 前提: 走査が空振りしていない
+    const all: string[] = [];
+    for (const f of cssFiles) {
+      const style = document.createElement("style");
+      style.textContent = read(f);
+      document.head.appendChild(style);
+      for (const r of [...style.sheet!.cssRules]) {
+        if (r instanceof CSSStyleRule) all.push(...r.selectorText.split(",").map((t) => t.trim()));
+      }
+      style.remove();
+    }
+    expect(all.length, "本番 CSS からセレクタを 1 つも読めていない（検算が空振り）").toBeGreaterThan(100);
+
+    // 本題: `selectorLink` が当たったのに `a` 要素ではないもの＝偽陽性の芽
+    const falsePositives = all.filter((sel) => selectorLink.test(sel) && !targetsAnchor(sel));
+    expect(falsePositives, "selectorLink が a 要素でないセレクタに当たっている（偽陽性）").toEqual([]);
+
+    // 対照: `a` 要素を指すセレクタは 1 件も取りこぼさない（枝を痩せさせすぎていない）
+    const missed = all.filter((sel) => targetsAnchor(sel) && !selectorLink.test(sel));
+    expect(missed, "a 要素を指すセレクタを selectorLink が取りこぼしている").toEqual([]);
+    expect(all.filter(targetsAnchor).length, "本番 CSS に a 要素を指すセレクタが 1 つも無い（対照が空）")
+      .toBeGreaterThan(0);
+  });
 });
