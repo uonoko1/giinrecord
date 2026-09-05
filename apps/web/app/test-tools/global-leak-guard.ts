@@ -39,6 +39,7 @@ const HAS_DOM = typeof window !== "undefined" && typeof document !== "undefined"
 
 type Snapshot = {
   windowKeys: string[];
+  navigatorKeys: string[];
   documentElementAttrs: string[];
   bodyHTML: string;
   headHTML: string;
@@ -60,10 +61,37 @@ type Snapshot = {
  */
 export const IGNORED_WINDOW_KEYS: readonly string[] = ["IS_REACT_ACT_ENVIRONMENT"];
 
+/**
+ * 見張りの対象から外す `navigator` のキー。**テストが置いたものは 1 つも入れない。**
+ *
+ * `clipboard` は @testing-library/user-event が `userEvent.setup()` で
+ * `navigator` に差し込むスタブ。ライブラリ自身が後始末を持っているが、
+ * その登録は `globalThis.afterEach` / `globalThis.afterAll` が**在るときだけ**行われる
+ * （`dist/esm/utils/dataTransfer/Clipboard.js` 末尾）。
+ * このリポジトリは `globals: true` を使っていないので**どちらも undefined**（実測で確認）で、
+ * 後始末は一度も登録されない。外す関数は `dist/` の奥にあり、パッケージの入口から
+ * export されていない（実測: `dist/esm/index.js` に名前が出てこない）ので、**呼びに行かない。**
+ *
+ * **残るのはスタブの存在だけでなく、中身もである**: `attachClipboardStubToView` は
+ * 既にスタブが付いていれば早期 return するので、`userEvent.setup()` を呼び直しても作り直されない。
+ * ただし**このリポジトリはクリップボードを読み書きするコードを持たない**
+ * （実測: `app/` に `navigator.clipboard` / `writeText` / `userEvent.copy` の出現 0 件）ので、
+ * 中身は常に空のまま。**書くコードが入ったらこの allowlist を外して、外し方を決め直すこと。**
+ *
+ * **この集合そのものを `global-leak-guard.test.ts` が固定している**（#484 の学び）。
+ */
+export const IGNORED_NAVIGATOR_KEYS: readonly string[] = ["clipboard"];
+
 function ownKeys(o: object): string[] {
-  return [...Object.getOwnPropertyNames(o), ...Object.getOwnPropertySymbols(o).map((s) => s.toString())]
-    .filter((k) => !IGNORED_WINDOW_KEYS.includes(k))
-    .sort();
+  return [...Object.getOwnPropertyNames(o), ...Object.getOwnPropertySymbols(o).map((s) => s.toString())].sort();
+}
+
+function windowKeys(): string[] {
+  return ownKeys(window).filter((k) => !IGNORED_WINDOW_KEYS.includes(k));
+}
+
+function navigatorKeys(): string[] {
+  return ownKeys(navigator).filter((k) => !IGNORED_NAVIGATOR_KEYS.includes(k));
 }
 
 function storageDump(s: Storage): string {
@@ -77,7 +105,10 @@ function storageDump(s: Storage): string {
 
 export function snapshotGlobals(): Snapshot {
   return {
-    windowKeys: ownKeys(window),
+    windowKeys: windowKeys(),
+    // `Object.defineProperty(navigator, …)` は navigator 自身に own プロパティを生やす。
+    // `vi.unstubAllGlobals()` では戻らないので、ここで数える（`standalone` など）。
+    navigatorKeys: navigatorKeys(),
     documentElementAttrs: Array.from(document.documentElement.attributes)
       .map((a) => `${a.name}=${a.value}`)
       .sort(),
@@ -99,6 +130,8 @@ export function describeDrift(before: Snapshot, after: Snapshot): string[] {
   const removed = before.windowKeys.filter((k) => !after.windowKeys.includes(k));
   for (const k of added) out.push(`window に増えた: ${k}`);
   for (const k of removed) out.push(`window から消えた: ${k}`);
+  for (const k of after.navigatorKeys.filter((k) => !before.navigatorKeys.includes(k))) out.push(`navigator に増えた: ${k}`);
+  for (const k of before.navigatorKeys.filter((k) => !after.navigatorKeys.includes(k))) out.push(`navigator から消えた: ${k}`);
   const attrAdded = after.documentElementAttrs.filter((a) => !before.documentElementAttrs.includes(a));
   const attrRemoved = before.documentElementAttrs.filter((a) => !after.documentElementAttrs.includes(a));
   for (const a of attrAdded) out.push(`<html> に増えた属性: ${a}`);
