@@ -120,14 +120,26 @@ function judge(find: (source: string, file: string) => unknown[]): { offenders: 
 }
 
 /**
- * **判決が `reached` の全件に行き渡ったことを、検査と同じ `it` の中で確かめる。**
- * 有罪 + 無罪 = 対象数。絞り込みで落とした 1 件はどちらにも入らないので、この等式が崩れる。
+ * **判決を、検査と同じ `it` の中で監査して「本当の違反者」を返す（#507）。**
+ *
+ * `judge` の結果をそのまま信じない。**戻り値を素通しせず、ここで作り直す**:
+ *
+ * 1. **全件に判決が出たか**（有罪 + 無罪 = 対象数。顔ぶれまで突き合わせる）
+ * 2. **無罪判決の監査** — 無罪と言われた 1 件ずつを**検査器に掛け直す**。
+ *    判定式を狭める変異は、その 1 件を有罪から**無罪に移す**だけなので
+ *    件数も顔ぶれも変わらない（実測で素通りした）。引き直して初めて現れる。
+ * 3. **陽性対照** — 検査器が常に `[]` を返す変異だと、全件が無罪で緑になる（#451）
+ *
+ * **返す違反者リストは、この監査の結果から作る。** `judge` が挙げた有罪に、
+ * 監査で見つかった「無罪と偽られた違反」を足す。
+ * こうすると**監査を消すことが検出そのものを消すことになる**ので、
+ * 「見張りだけ消して黙らせる」ができない（#500 の N5 完全版で学んだ形）。
  */
-function expectJudgedEverything(
+function auditedOffenders(
   { offenders, cleared }: { offenders: string[]; cleared: string[] },
   find: (source: string, file: string) => unknown[],
   positiveSource: string,
-): void {
+): string[] {
   expect(reached.length, "辿り着いたモジュールが 0 件（走査が空）").toBeGreaterThan(0);
   expect(
     cleared.length + offenders.length,
@@ -137,24 +149,23 @@ function expectJudgedEverything(
   expect([...cleared, ...offenders.map((o) => o.replace(/（辿った道: .*$/, ""))].sort(), "無罪と有罪を合わせても reached にならない").toEqual(
     reached.map((r) => rel(r.file)).sort(),
   );
-  /*
-   * **無罪判決の監査（#507 の要）。** ここまでは「判決が全件に出たか」しか見ておらず、
-   * **判決の中身が正しいか**を見ていない。判定式に `!file.includes("assemblies") &&` を足すと、
-   * その 1 件は有罪から**無罪に移る**だけで件数も顔ぶれも変わらない——実測で **glob 検査が素通りした**。
-   *
-   * そこで**無罪と言われた 1 件ずつを、検査器で引き直す**。判定を狭めた変異は、
-   * 「無罪のはずのファイルから検査器が違反を見つける」形でここに現れる。
-   * この引き直しは `judge` の外（呼び出し側の `it` の中）で行うので、
-   * **`judge` の中をどう狭めても逃げられない**。
-   */
-  const wrongly = cleared.filter((f) => find(readFileSync(path.join(webRoot, f), "utf8"), path.join(webRoot, f)).length > 0);
-  expect(wrongly, "「違反なし」と判定されたのに、検査器に掛け直すと違反が出るファイルがあります（判定を絞っていませんか）").toEqual([]);
-  /*
-   * **陽性対照**: **呼び出し側が渡してきた検査器そのもの**を、確実に陽性になるソースに当てる。
-   * これが無いと、検査器が常に `[]` を返す変異でも「全件が無罪」で緑になる
-   * （#451 の学び: 検査器自身を検査しないと、検査が死んでも緑）。
-   */
+  // 陽性対照: 呼び出し側が渡してきた検査器そのものを、確実に陽性になるソースに当てる
   expect(find(positiveSource, "positive-control.ts"), "検査器が既知の陽性ソースに何も見つけない（検査器が死んでいる）").not.toEqual([]);
+  /*
+   * **監査は `judge` の申告ではなく `reached` を起点に回す（#507 の要）。**
+   *
+   * `cleared` を監査すると、**ループごと飛ばされた 1 件は `cleared` にも入らない**ので
+   * 監査の目にも入らない（実測: ループに `continue` を足し、上の 2 つの見張りも殺すと **6 / 6 緑**）。
+   * そこで「有罪として挙がってこなかった `reached` の全件」——つまり
+   * **`judge` が何と言おうと、無罪扱いになる全部**——を検査器に掛け直す。
+   * 飛ばしても、無罪に移しても、違反者リストから外しても、**すべてここに現れる**。
+   */
+  const accused = new Set(offenders.map((o) => o.replace(/（辿った道: .*$/, "")));
+  const wronglyCleared = reached
+    .map((r) => rel(r.file))
+    .filter((f) => !accused.has(f))
+    .filter((f) => find(readFileSync(path.join(webRoot, f), "utf8"), path.join(webRoot, f)).length > 0);
+  return [...offenders, ...wronglyCleared.map((f) => `${f}（無罪扱いだが、検査器に掛け直すと違反が出る）`)].sort();
 }
 
 describe("tsx で走るビルドスクリプトから import.meta.glob に繋がらない（#441 / #451 / #490）", () => {
@@ -209,8 +220,7 @@ describe("tsx で走るビルドスクリプトから import.meta.glob に繋が
   });
 
   it("辿り着くモジュールは import.meta.glob を式として書いていない", () => {
-    const { offenders, cleared } = judge(metaGlobs);
-    expectJudgedEverything({ offenders, cleared }, metaGlobs, GLOB_POSITIVE);
+    const offenders = auditedOffenders(judge(metaGlobs), metaGlobs, GLOB_POSITIVE);
     expect(
       offenders,
       "tsx で直に走るビルドスクリプトから `import.meta.glob` に辿り着きます。" +
@@ -220,8 +230,7 @@ describe("tsx で走るビルドスクリプトから import.meta.glob に繋が
   });
 
   it("辿り着くモジュールは動的 import も書かない（呼ばれたときに落ちる）", () => {
-    const { offenders, cleared } = judge(dynamicImports);
-    expectJudgedEverything({ offenders, cleared }, dynamicImports, DYNAMIC_POSITIVE);
+    const offenders = auditedOffenders(judge(dynamicImports), dynamicImports, DYNAMIC_POSITIVE);
     expect(offenders, "動的 import（`import(...)`）は、その行が呼ばれたときに glob で落ちます。読み込みは呼び出し側に置いてください").toEqual([]);
   });
 
@@ -239,12 +248,12 @@ describe("tsx で走るビルドスクリプトから import.meta.glob に繋が
     /*
      * **出口の固定（#507）**: 一覧との照合ではなく、**辿り着いた全件に glob 検査を当てた結果**で判定する。
      * 名前の一覧（`globOwners`）だけで見ると、一覧に無い glob 持ちが増えたときに素通りする。
-     * 判定表を使うので、判定を狭めれば下の `expectJudgedEverything` が落ちる。
+     * 判決を監査してから使うので、判定を狭めれば `auditedOffenders` が落ちる。
      */
-    const { offenders, cleared } = judge(metaGlobs);
-    expectJudgedEverything({ offenders, cleared }, metaGlobs, GLOB_POSITIVE);
+    const scan = judge(metaGlobs);
+    const offenders = auditedOffenders(scan, metaGlobs, GLOB_POSITIVE);
     expect(
-      [...offenders, ...cleared.filter((f) => globOwners.includes(f))],
+      [...offenders, ...scan.cleared.filter((f) => globOwners.includes(f))],
       "glob を持つモジュールに辿り着いています",
     ).toEqual([]);
   });
