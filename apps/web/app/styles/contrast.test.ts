@@ -110,20 +110,117 @@ export function contrast(a: string, b: string): number {
  *   スクリーンショットの画素を読むところまで行けば解けるが、**そこまでの重さは要らない**）。
  *   **代わりに `box-shadow` が付いていたら答えを返さず落とす**——「地は --est-bg だ」と
  *   言い切れなくなったことを黙って通さないため。**「答えられない」と言えれば守りとしては足りる。**
- * - **`@media` の中の上書き**。jsdom の `getComputedStyle` は `CSSMediaRule` を評価しない
- *   （実測: `@media (min-width: 1px) { .member-tab { background: var(--paper) } }` は素通りする）。
- *   `member.css` / `compare.css` に `@media` は **1 つも無い**ので、いまは穴ではない。
- *   `tokens.css` の `@media (prefers-color-scheme: dark)` はトークンの値の話で、
- *   **どの箱が地を敷くかは変えない**（ダークの値そのものは `darkToken` 側で別に固定してある）。
+ * - **at-rule の中の上書き**。jsdom の `getComputedStyle` は at-rule の中身を評価しない。
+ *   `@media` だけの話ではなく、**`@supports` も `@layer` も同じ**（Issue 498。#492 は
+ *   `@media` しか挙げていなかったが、レビュアーが 3 形とも 72 件緑で素通りすることを実測した）。
+ *   **いまは「見ない」ではなく「入ってきたら落とす」**——`mount` が `assertAllCssReadable` を
+ *   呼び、`CSSStyleRule` 以外に出会ったら答えを返さずに落とす（`box-shadow` と同じ流儀）。
+ *   `tokens.css` の `@media (prefers-color-scheme: dark)` だけは**実在するので通す**が、
+ *   「`tokens.css` だから」ではなく「**`:root` にカスタムプロパティしか設定していないから**」通す。
+ *   これはトークンの値の話で、**どの箱が地を敷くかは変えない**（値は `darkToken` 側で別に固定）。
  * - **inline style**。ここで組む DOM は `className` だけを持つ。`member.tsx` / `compare.tsx` の
  *   該当箇所に `style=` は無い（`grep -c 'style=' member.tsx compare.tsx` → 0 / 0）。
  */
 const NOT_PAINTED = new Set(["", "none", "transparent", "rgba(0, 0, 0, 0)"]);
 
 /** 本番と同じ CSS を全部読む。地は別のファイルの規則から敷かれることがあるので**まとめて**食わせる */
-const ALL_CSS = ["styles/tokens.css", "styles/pages.css", "routes/member.css", "routes/compare.css"]
-  .map((p) => readFileSync(join(import.meta.dirname, "..", p), "utf8"))
-  .join("\n");
+const TOKENS_FILE = "styles/tokens.css";
+const CSS_FILES = [TOKENS_FILE, "styles/pages.css", "routes/member.css", "routes/compare.css"] as const;
+const CSS_TEXTS: readonly (readonly [string, string])[] = CSS_FILES.map((p) => [p, readFileSync(join(import.meta.dirname, "..", p), "utf8")] as const);
+const ALL_CSS = CSS_TEXTS.map(([, text]) => text).join("\n");
+
+/* --------------------------------------------------------------------------
+ * `getComputedStyle` が見ない領域に規則が入ったことを知る（Issue 498）
+ * -------------------------------------------------------------------------- */
+
+/**
+ * **jsdom の `getComputedStyle` は at-rule の中身を評価しない。**
+ * 実測（jsdom 26。下の「素通りする形」の検査が同じことを毎回測り直す）:
+ *
+ *     @media (min-width: 1px)   { .member-tab { background: var(--paper) } }  → 素通りした
+ *     @supports (display: flex) { .member-tab { background: var(--paper) } }  → 素通りした
+ *     @layer x                  { .member-tab { background: var(--paper) } }  → 素通りした
+ *
+ * **実 UI では地が紙になるのに、72 件が緑のままだった**（#492 のレビュアーが実測）。
+ * ここは #481 のような実ブラウザを持ち込まない——知りたいのは
+ * 「**この検査が見ていない領域に規則が入ったか**」だけで、それは CSSOM で足りる
+ * （実ブラウザは +14 秒。`docs/WORKING_AGREEMENT.md` の「見ない範囲を残すのは構わない。書かないのが問題」）。
+ *
+ * **allowlist にする。** 「`CSSStyleRule` 以外を弾く」ではなく
+ * 「**`CSSStyleRule` だけを許す**」と書く。`@media` / `@supports` / `@layer` を名指しで
+ * 除ける形（暗黙の denylist）だと、`@container` / `@scope` のような**新しい at-rule が来るたびに穴が増える**
+ * （#333 / #499 の学び）。実測で `CSSContainerRule` も `CSSScopeRule` も存在するので、これは机上の心配ではない。
+ */
+const UNDERSTOOD_RULE_TYPES: ReadonlySet<string> = new Set(["CSSStyleRule"]);
+
+/**
+ * `tokens.css` の `@media (prefers-color-scheme: dark)` は**実在するので落としてはいけない**。
+ *
+ * ただし「`tokens.css` なら何でも許す」にはしない——それだと
+ * `@media` の中身を `.member-tab { background: var(--paper) }` にすり替えたときに黙る
+ * （**allowlist は「痩せたら落とす」だけでなく「中身が入れ替わったら落とす」まで**。#499 の学び）。
+ * 許すのは「**`:root` にカスタムプロパティだけを設定する規則**」に限る。
+ * これはトークンの**値**の話で、**どの箱が地を敷くかは変えない**ので、
+ * `backgroundTokenOf` が解く「実効背景がどのトークンか」には影響しない
+ * （ダークの値そのものは `darkToken` / `mediaDarkToken` 側で別に固定してある）。
+ */
+function onlyRedefinesRootTokens(rule: CSSStyleRule): boolean {
+  if (!/^:root\b/.test(rule.selectorText.trim())) return false;
+  /*
+   * 宣言は**名前を列挙して**見る（`cssText` を正規表現で読まない。#465 → #470 の罠）。
+   * jsdom の `CSSStyleDeclaration` は `item()` を持たないが**反復可能**で、実測すると
+   * `--paper` / `--ink` のようなカスタムプロパティ名がそのまま出る（`background` なども同様）。
+   */
+  const names = Array.from(rule.style as Iterable<string>);
+  if (names.length === 0) return false; // 空の規則を「無害」と数えない
+  return names.every((name) => name.startsWith("--"));
+}
+
+/**
+ * その CSS の中で、**この検査が読めない規則**を全部集めて名前で返す（空なら全部読めた）。
+ *
+ * `cssText` を繋いで正規表現で見ない（#465 → #470 の罠）。**CSSOM のオブジェクトを歩く**。
+ * `@media` の中に `@supports` が入る形があるので**再帰**する——トップレベルだけ見ると
+ * 一段包むだけで素通りする。
+ */
+function unreadableRules(css: string, allowRootTokenAtRules: boolean): string[] {
+  const style = document.createElement("style");
+  style.textContent = css;
+  document.head.appendChild(style);
+  try {
+    const sheet = style.sheet;
+    /*
+     * **`sheet` が `null` になることがある。** 実測: `@scope (.x) { … }` と CSS の入れ子（`& …`）は
+     * jsdom が**シートまるごと落とす**（`document.styleSheets.length` が 0 になる）。
+     * そうなると `mount` した CSS が**一つも効かない**まま `getComputedStyle` が答えるので、
+     * 「読めなかった」ではなく「読んだ結果」に見えてしまう。**黙って空集合を返さない。**
+     */
+    if (!sheet) return ["シートを jsdom が解析できなかった（@scope や CSS の入れ子など。CSS が一つも効かない状態になる）"];
+    const unreadable: string[] = [];
+    const walk = (rules: CSSRuleList): void => {
+      for (const rule of Array.from(rules)) {
+        const kind = rule.constructor.name;
+        if (UNDERSTOOD_RULE_TYPES.has(kind)) continue;
+        if (allowRootTokenAtRules && kind === "CSSMediaRule") {
+          const inner = (rule as CSSMediaRule).cssRules;
+          // 中身が「:root にカスタムプロパティだけ」なら、地の話に影響しないので通す
+          if (inner.length > 0 && Array.from(inner).every((r) => r.constructor.name === "CSSStyleRule" && onlyRedefinesRootTokens(r as CSSStyleRule))) continue;
+        }
+        unreadable.push(`${kind}: ${firstLine(rule)}`);
+        if ("cssRules" in rule) walk((rule as CSSGroupingRule).cssRules);
+      }
+    };
+    walk(sheet.cssRules);
+    return unreadable;
+  } finally {
+    style.remove();
+  }
+}
+
+/** 落ちたときにどの規則かを言えるように、前置き（`@media (…)`）だけを出す */
+function firstLine(rule: CSSRule): string {
+  return rule.cssText.split("{")[0].trim().slice(0, 80);
+}
 
 /** `var(--muted)` → `"muted"`。トークン 1 つでない値（`#fff`・`red`・複数）は `undefined` */
 function tokenName(value: string): string | undefined {
@@ -131,14 +228,41 @@ function tokenName(value: string): string | undefined {
   return m ? m[1] : undefined;
 }
 
-/** 本物の CSS を敷いた上に、本物と同じ形の DOM を組む */
+/**
+ * 本物の CSS を敷いた上に、本物と同じ形の DOM を組む。
+ *
+ * **敷く前に、その CSS が全部読めることを確かめる**（Issue 498）。
+ * `getComputedStyle` は at-rule の中身を評価しないので、読めない規則を含んだまま
+ * 答えさせると「**規則が無い**」と「**規則はあるが見ていない**」が区別できない。
+ * 別の `it` に置くと `it` ごと消して黙らせられるので、**実効背景を聞く経路そのものに置く**
+ * （#500 の「入口を固定したら、出口も固定する」）。
+ */
 function mount(html: string): void {
+  assertAllCssReadable();
   document.head.innerHTML = "";
   document.body.innerHTML = "";
   const style = document.createElement("style");
   style.textContent = ALL_CSS;
   document.head.appendChild(style);
   document.body.innerHTML = html;
+}
+
+/**
+ * `mount` が食わせる CSS を**ファイルごとに**検査し、読めない規則があれば落とす。
+ *
+ * ファイルごとに見るのは、**`tokens.css` の `@media (prefers-color-scheme: dark)` だけ**を
+ * 「`:root` のトークン再定義」として通すため（`unreadableRules` の doc コメント）。
+ * まとめて 1 枚のシートにすると、`member.css` に足された `@media` も同じ緩めに乗ってしまう。
+ */
+function assertAllCssReadable(): void {
+  for (const [file, text] of CSS_TEXTS) {
+    const bad = unreadableRules(text, file === TOKENS_FILE);
+    if (bad.length > 0) {
+      throw new Error(
+        `${file} に、この検査が読めない規則がある（getComputedStyle は中身を評価しないので、地を断定できない）:\n  ${bad.join("\n  ")}`,
+      );
+    }
+  }
 }
 
 /**
