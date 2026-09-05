@@ -14,7 +14,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { chromium, type Browser, type ConsoleMessage, type Page } from "playwright";
 import { defaultDataDir, readMemberDetail, readRollCallIndex } from "../app/lib/data-files";
-import { checkNoJs, type NoJsExpectation, type NoJsSnapshot } from "../app/lib/nojs";
+import { checkNoJs, NOJS_PAGE_COUNT, type NoJsExpectation, type NoJsSnapshot } from "../app/lib/nojs";
 
 const urlFlag = process.argv.indexOf("--url");
 const baseUrl = urlFlag >= 0 ? process.argv[urlFlag + 1] : undefined;
@@ -296,7 +296,7 @@ async function noJsExpectations(dataDir: string, id: string | null): Promise<NoJ
       texts: [rc.title],
       times: [rc.date],
       links: [`/rollcalls/${rc.session}/${rc.id}`],
-      source: false, // 一覧の出典は各詳細ページ側にある
+      sourceUrl: null, // 一覧の出典は各詳細ページ側にある
     });
     // 詳細: 議案名・日付・**一次資料への出典リンク**（全行に一次資料リンク、が原則）
     out.push({
@@ -306,16 +306,18 @@ async function noJsExpectations(dataDir: string, id: string | null): Promise<NoJ
       // 賛否の数を描く）。数が出ていれば、そのページに焼かれたのが**この採決の記録**だと分かる
       texts: [rc.title, `賛成 ${rc.totals.yes}`, `反対 ${rc.totals.no}`],
       times: [rc.date],
-      source: true,
+      sourceUrl: rc.sourceUrl, // 期待するホストは data/ から取る（allowlist を手書きしない）
     });
   }
 
   // 議員一覧: 先頭の議員の氏名が出ていて、その議員ページへリンクで辿れる
   if (detail) {
-    out.push({ path: "/members/", label: "議員一覧", texts: [detail.name], links: [`/members/${detail.id}`], source: false });
+    out.push({ path: "/members/", label: "議員一覧", texts: [detail.name], links: [`/members/${detail.id}`], sourceUrl: null });
     // 議員ページ（動的ルート）: **一覧だけ通って詳細が空**という壊れ方をここで捕まえる。
     // 氏名・かな・所属議会の出典リンクまで見るので、別人の HTML が焼かれていても落ちる。
-    out.push({ path: `/members/${detail.id}/`, label: "議員ページ", texts: [detail.name, detail.kana], source: true });
+    // sourceUrl は国会（sangiin/shugiin）とは限らない: 全 1,057 名の 27% は地方議会のホスト。
+    // data/ から取るので、先頭が地方議員になっても偽陽性にならない
+    out.push({ path: `/members/${detail.id}/`, label: "議員ページ", texts: [detail.name, detail.kana], sourceUrl: detail.sourceUrl });
   }
   return out;
 }
@@ -373,9 +375,9 @@ try {
 
   // #479: JS 無効。同じ browser を使い回すので起動は 1 回のまま（ページを 4 枚開くだけ）
   const expectations = await noJsExpectations(defaultDataDir(), memberId);
+  // ページ数が欠けていないか（4 ページ固定）は checkNoJs が見る。0 個のときはページを開く意味も無いので先に抜ける
   if (expectations.length === 0) {
-    // data/ が読めないと期待値が作れない。「検査するものが無いから緑」を作らない
-    failures.push("no-js: data/ から期待値が 1 つも作れなかった（JS 無効の検査が何も見ていない）");
+    failures.push(`no-js: data/ から期待値が 1 つも作れなかった（JS 無効の検査が何も見ていない。${NOJS_PAGE_COUNT} ページであること）`);
   } else {
     const got = new Map<string, NoJsSnapshot>();
     for (const e of expectations) {

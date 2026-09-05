@@ -52,8 +52,26 @@
  * だから本文とは別に、**議会の公式ドメインへのリンクが在ること**を独立して見る。
  */
 
-/** 出典として認める一次資料のホスト。議会自身の公表ページだけ。 */
-export const SOURCE_HOSTS = ["www.sangiin.go.jp", "www.shugiin.go.jp"];
+/**
+ * 出典として期待するホストは**手書きしない**。`data/` の `sourceUrl` から取る（#479 のレビュー指摘）。
+ *
+ * 最初は `["www.sangiin.go.jp", "www.shugiin.go.jp"]` を allowlist として書いていたが、
+ * **実測すると全 1,057 名のうち 285 名（27%）は地方議会の 7 ホスト**
+ * （`www.pref.miyagi.jp`, `www.pref.mie.lg.jp`, `www.pref.nara.lg.jp`, `www.pref.tokushima.lg.jp`,
+ * `gikai.pref.kochi.lg.jp`, `www.pref.tottori.lg.jp`, `www.pref.shimane.lg.jp`）である。
+ * 検査が開く議員は `members/index.json` の先頭で、**この index は id 順ではない**ので、
+ * ETL の並び順が変われば先頭が地方議員になりうる。そのとき allowlist 方式は
+ * **記録が完全に読めているのに落ちる**（実測: `/members/p_04_amasita/` はリンク 176 本、
+ * その中に `https://www.pref.miyagi.jp/...` が実在するのに「出典リンクが無い」と落ちた）。
+ * **偽陽性は `docker-web` を赤くして、正常な本番リリースを止める。**
+ *
+ * さらに allowlist は**それ自体が固定されていない**（#484 の再発）:
+ * `SOURCE_HOSTS` に `cdn.example.net` を足しても検査は 12/12 緑のままだった。
+ *
+ * なので**そのページが出典として持っているはずの URL**（`detail.sourceUrl` /
+ * `rollCall.sourceUrl`）のホストを期待値にする。地方議会にも自動で追随し、
+ * 「別のどこかへのリンクで代用する」形も通らない。
+ */
 
 /** ページから読み取った、JS 無効時の DOM の要点。scripts/browser-check.ts が集める。 */
 export interface NoJsSnapshot {
@@ -83,10 +101,11 @@ export interface NoJsExpectation {
   /** この site-relative なパスへの内部リンクが在ること（一覧 → 詳細の導線） */
   links?: string[];
   /**
-   * 一次資料への出典リンクが在ることを求めるか。`true` なら SOURCE_HOSTS の
-   * いずれかへのリンクが 1 本以上必要。
+   * このページが出典として指しているはずの URL（`data/` の `sourceUrl` そのもの）。
+   * `null` なら出典リンクを求めない（一覧ページ。出典は各詳細ページ側にある）。
+   * **ホストを手書きしない**ので、国会でも地方議会でも同じ検査が効く。
    */
-  source: boolean;
+  sourceUrl: string | null;
 }
 
 /** `hrefs` の絶対 URL のうち、この origin のものを site-relative なパスに直す */
@@ -107,16 +126,41 @@ function internalPaths(hrefs: string[], origin: string): string[] {
 /** 末尾の `/` の有無を吸収して比べる（`/members/m_1` と `/members/m_1/` は同じページ） */
 const normalize = (p: string) => (p.length > 1 ? p.replace(/\/+$/, "") : p);
 
-/** 一次資料（議会の公式ページ）へのリンクだけを返す */
-export function sourceLinks(hrefs: string[]): string[] {
+/**
+ * `sourceUrl` と**同じホスト**を指すリンクだけを返す。
+ * ホストの厳密一致で見る（`new URL(href).host`）ので、
+ * `https://evil.example/?u=www.sangiin.go.jp` のような「文字列として含む」形は弾かれる。
+ */
+export function sourceLinks(hrefs: string[], sourceUrl: string): string[] {
+  let want: string;
+  try {
+    want = new URL(sourceUrl).host;
+  } catch {
+    return [];
+  }
   return hrefs.filter((href) => {
     try {
-      return SOURCE_HOSTS.includes(new URL(href).host);
+      return new URL(href).host === want;
     } catch {
       return false;
     }
   });
 }
+
+/**
+ * 検査するページ数は**この数に固定する**（#479 のレビュー指摘）。
+ *
+ * 最初は「期待値が 0 個なら落とす」だけを守っていたが、それでは**足りなかった**:
+ * 期待値は `rc`（採決）と `detail`（議員）の 2 つの `if` で作られるので、
+ * `data/rollcalls/index.json` が `[]` になると**採決の 2 ページが黙って消え**、
+ * 残り 2 ページだけで `0 failure` = 緑になる（レビュアーの実測:
+ * `no-js 2 page(s) checked, 0 failure(s)`）。
+ *
+ * **#451「検査器自身のテストが無いと、検査が死んでも緑」と同じ形**であり、
+ * 自分が塞いだ穴（`texts.length === 0`）の**一段上に同じ穴**が残っていた。
+ * 「検査するものが無いから緑」を作らない、という方針をこの層にも当てる。
+ */
+export const NOJS_PAGE_COUNT = 4;
 
 export interface NoJsReport {
   checked: number;
@@ -130,6 +174,15 @@ export interface NoJsReport {
 export function checkNoJs(got: Map<string, NoJsSnapshot>, expectations: NoJsExpectation[], origin: string): NoJsReport {
   const failures: string[] = [];
   let checked = 0;
+
+  // 検査そのものが半分消えていないか。data/ の一部が欠けると期待値を作る `if` が
+  // 素通りして、残ったページだけで緑になる（#451 と同じ形）
+  if (expectations.length !== NOJS_PAGE_COUNT) {
+    failures.push(
+      `検査するページが ${expectations.length} ページしかない（${NOJS_PAGE_COUNT} ページであること）。` +
+        `data/ の一部が読めておらず、検査が黙って縮んでいる: ${expectations.map((e) => e.label).join(", ") || "無し"}`,
+    );
+  }
 
   for (const e of expectations) {
     checked++;
@@ -166,9 +219,17 @@ export function checkNoJs(got: Map<string, NoJsSnapshot>, expectations: NoJsExpe
       }
     }
 
-    // 一次資料リンク（全行に一次資料リンク、が原則）
-    if (e.source && sourceLinks(snap.hrefs).length === 0) {
-      failures.push(`${where}: JS 無効で一次資料（${SOURCE_HOSTS.join(" / ")}）への出典リンクが 1 本も無い（リンク ${snap.hrefs.length} 本）`);
+    // 一次資料リンク（全行に一次資料リンク、が原則）。
+    // 期待するホストは data/ の sourceUrl から取るので、地方議会のページでも偽陽性にならない
+    if (e.sourceUrl && sourceLinks(snap.hrefs, e.sourceUrl).length === 0) {
+      const host = (() => {
+        try {
+          return new URL(e.sourceUrl).host;
+        } catch {
+          return e.sourceUrl;
+        }
+      })();
+      failures.push(`${where}: JS 無効で一次資料（${host}）への出典リンクが 1 本も無い（リンク ${snap.hrefs.length} 本）`);
     }
   }
 
