@@ -38,7 +38,7 @@ step() { printf '\n\033[1m== %s\033[0m\n' "$*"; }
 # （共用 VPS：他サイトのポートを奪わない。Sprint 7 で 8080/8082 が使用中で 2 回やり直した）。staging-setup.sh と同じ。
 ensure_port_free() {
   local port=$1 service=$2
-  if ss -tln | grep -qE "[]:]$port\s"; then
+  if grep -qE "[]:]$port\s" < <(ss -tln); then
     if [ -n "$(docker compose -f "$COMPOSE" ps -q "$service" 2>/dev/null)" ]; then
       echo "127.0.0.1:$port は自分のコンテナ（$service）が使用中。再作成します"
     else
@@ -111,7 +111,7 @@ migrate_legacy() {
 
   # 3. 旧 compose project（project name = コンテナ名・ネットワーク名の接頭辞）。
   # 落とさないと旧コンテナが 127.0.0.1:8081 / 8083 を掴んだままで、ensure_port_free が exit 1 する。
-  if command -v docker >/dev/null 2>&1 && docker network ls --format '{{.Name}}' 2>/dev/null | grep -qx "${OLD}_default"; then
+  if command -v docker >/dev/null 2>&1 && grep -qx "${OLD}_default" < <(docker network ls --format '{{.Name}}' 2>/dev/null); then
     echo "migrate: docker compose project $OLD -> down"
     docker compose -p "$OLD" down --remove-orphans || echo "!! could not remove compose project $OLD; continuing" >&2
   fi
@@ -153,7 +153,7 @@ main() {
   # 注意: ubuntu は OS 初期アカウントで、共用 VPS の同居サイトも使っている。この行は 2026-08-26 に
   # 同居サイトの docker デプロイを巻き添えで壊した（docs/ops/deploy.md「運用ユーザーと鍵の権限」）。
   # それでも外す方が正しい（共用ホストで CI の鍵に root 相当を残さない）。戻さないこと。
-  if id -nG ubuntu | grep -qw docker; then gpasswd -d ubuntu docker; fi
+  if grep -qw docker < <(id -nG ubuntu); then gpasswd -d ubuntu docker; fi
 
   step "2/8 リポジトリ（compose ファイル用）を $REPO_DIR に取得"
   if [ -d "$REPO_DIR/.git" ]; then
@@ -169,7 +169,7 @@ main() {
 
   step "4/8 web コンテナ起動（127.0.0.1:$PORT、$SITE を読み取り専用で配信。常に --force-recreate: bind mount の site.conf は pull で inode が変わる）"
   docker compose -f "$COMPOSE" up -d --wait --force-recreate
-  curl -sI "http://127.0.0.1:$PORT/" | head -1 || true
+  head -1 < <(curl -sI "http://127.0.0.1:$PORT/") || true
 
   step "5/8 ホスト nginx を proxy_pass に切替（$domain）"
   bash "$REPO_DIR/deploy/vps-setup.sh" "$domain"
@@ -190,7 +190,7 @@ main() {
   bash "$REPO_DIR/deploy/analytics/vps-analytics-setup.sh" || echo "!! 計測セットアップに失敗（後で単独実行可）"
 
   step "確認"
-  curl -sI "https://$domain/" 2>/dev/null | head -1 || true
+  head -1 < <(curl -sI "https://$domain/" 2>/dev/null) || true
   echo "done. 次は PO 側: GitHub Actions の Deploy を実行 → https://$domain/ で title に『議員レコード』、sitemap の <loc> が https://$domain/ で始まることを確認"
 }
 
