@@ -56,20 +56,75 @@ const EXPECTED_HEADERS = [
 const HEADER_BLOCKS = 4;
 
 /**
- * add_header の行（Cache-Control を**除いた**もの）。#489: 除外は「ヘッダ名がちょうど Cache-Control」
- * だけに限る。以前は `!/Cache-Control/`（行全体の部分一致）で、`add_header X-Cache-Control-Debug "on";`
- * のような**別のヘッダ**まで数えなかった。数え落とすと、その location で継承が消えているのに
- * 総数が合ってしまい**検査が黙って通る**（#486 のレビューが 39/39 pass を実測）。
- * 逆に除き足りない（Cache-Control を数えてしまう）場合は総数が増えて落ちるだけなので、
- * **迷ったら数える側**に倒している。nginx は空白の連続・タブ・ヘッダ名のクォート・小文字を許し、
- * `;` 区切りで 1 行に複数書けるので、そのすべてを扱う（実機で確認済み・#489）。
+ * nginx 設定を**ディレクティブ単位**に切る。#499 まではここが `conf.split("\n")` で、
+ * **行を先に切ってから** add_header を探していた。nginx にとって改行はただの空白なので、
+ *
+ *     location /downloads/ {
+ *         add_header
+ *           X-Multi "yes";
+ *     }
+ *
+ * は完全に合法（`nginx -t` は通り、**実際に X-Multi だけが出て、外側のセキュリティヘッダ 6 個が
+ * 全部消える**——docker で配信して確認した・#499）。行を先に切る数え方はこれを**原理的に**拾えず、
+ * 旧版・#489 版とも **0 と数えて 40/40 pass** していた（#482 の本番バグと同じ経路が全レイヤ素通り）。
+ *
+ * だから改行に頼らず、nginx と同じ切り方をする:
+ *  - `#` から行末まではコメント。**ただしクォートの中は除く**（CSP の値に `#` は無いが、将来入りうる）。
+ *    コメントはディレクティブの**途中**にも書ける（`add_header # x` + 改行 + `X-Foo "1";` は合法。実機確認済み）。
+ *  - `"` `'` の中では `;` `{` `}` `#` はただの文字（`add_header X-Val "a;b";` は 1 つのディレクティブ。実機確認済み）。
+ *  - ディレクティブは `;` で終わる。`{` `}` はブロックの境目で、やはりディレクティブを切る。
+ * 返すのは「空白を1個に潰した」1 行表現。**改行やインデントの違いで見逃さない**ためで、
+ * これにより上の複数行 add_header は `add_header X-Multi "yes";` として数えられる。
+ */
+function directives(conf: string): string[] {
+  const out: string[] = [];
+  let cur = "";
+  let quote = "";
+  for (let i = 0; i < conf.length; i++) {
+    const c = conf[i];
+    if (quote) {
+      cur += c;
+      if (c === "\\") {
+        cur += conf[++i] ?? "";
+      } else if (c === quote) {
+        quote = "";
+      }
+      continue;
+    }
+    if (c === '"' || c === "'") {
+      quote = c;
+      cur += c;
+    } else if (c === "#") {
+      while (i < conf.length && conf[i] !== "\n") i++;
+      cur += " ";
+    } else if (c === ";") {
+      out.push(cur + ";");
+      cur = "";
+    } else if (c === "{" || c === "}") {
+      out.push(cur);
+      cur = "";
+    } else {
+      cur += c;
+    }
+  }
+  out.push(cur);
+  return out.map((d) => d.replace(/\s+/g, " ").trim()).filter((d) => d !== "" && d !== ";");
+}
+
+/**
+ * add_header のディレクティブ（Cache-Control を**除いた**もの）。#489: 除外は「ヘッダ名がちょうど
+ * Cache-Control」だけに限る。以前は `!/Cache-Control/`（行全体の部分一致）で、
+ * `add_header X-Cache-Control-Debug "on";` のような**別のヘッダ**まで数えなかった。数え落とすと、
+ * その location で継承が消えているのに総数が合ってしまい**検査が黙って通る**
+ * （#486 のレビューが 39/39 pass を実測）。逆に除き足りない（Cache-Control を数えてしまう）場合は
+ * 総数が増えて落ちるだけなので、**迷ったら数える側**に倒している。
+ * #499: 行分割をやめて directives() を通すので、改行・タブ・インデント・途中コメント・
+ * 1 行に複数（`;` 区切り）のどれも同じ形に正規化されてから数える。
  */
 function headerLines(conf: string): string[] {
-  return conf
-    .split("\n")
-    .flatMap((l) => l.split(/;\s*(?=add_header\b)/))
-    .map((l) => l.trim())
-    .filter((l) => /^add_header\s/.test(l) && !/^add_header\s+"?Cache-Control"?[\s;]/i.test(l));
+  return directives(conf).filter(
+    (d) => /^add_header\s/.test(d) && !/^add_header\s+"?Cache-Control"?["\s;]/i.test(d),
+  );
 }
 
 // #489: **この検査器自身のテスト。** headerLines() は「Cache-Control **だけ**を除く」係で、
@@ -108,6 +163,51 @@ test("headerLines(): Cache-Control だけを除き、他の add_header は書き
   assert.equal(headerLines(`add_header X-One "1"; add_header Cache-Control "x";`).length, 1, "1 行 2 つのうち Cache-Control だけ除く");
   // add_header ではないディレクティブは数えない（expires だけの location は継承を壊さないので誤検出しない）
   assert.deepEqual(headerLines("expires 1h;\nmore_set_headers \"X-Foo: bar\";\nproxy_set_header X-Foo bar;"), []);
+});
+
+// #499: **改行をまたぐ add_header。** nginx にとって改行はただの空白なので下は全部合法で、
+// **実際に配信され、その location の外側の add_header を全部消す**（docker で確認した。PR に実測）。
+// #499 以前の headerLines() は `split("\n")` を先にしていたので、これらを**全部 0 と数えた**——
+// site.conf に足しても 40/40 pass、nginx-headers.test.sh も 13/0 で、**全レイヤ素通り**だった。
+test("headerLines(): 改行をまたぐ add_header を数え落とさない（#499 の本体・全レイヤ素通りの経路）", () => {
+  // 数えるべきもの。どれも nginx が受理し、実際にヘッダを出す（実機確認済み）
+  for (const [name, conf] of [
+    ["ディレクティブ名の直後で改行", 'add_header\n  X-Multi "yes";'],
+    ["名前と値の間で改行", 'add_header X-Multi\n  "yes";'],
+    ["値の前後で改行 + 名前がクォート", 'add_header\n  "X-Quoted-Name"\n  "4";'],
+    ["always だけ次の行", 'add_header X-Multi "yes"\n  always;'],
+    ["タブとスペースの混在で改行", 'add_header\t\n\t X-Multi\t"yes";'],
+    ["途中にコメントを挟む", 'add_header # なぜ足したか\n  X-Comment "3";'],
+    ["1 行に 2 つ + 2 つ目が改行をまたぐ", 'add_header X-One "1"; add_header\n    X-Two "2";'],
+  ] as const) {
+    assert.equal(headerLines(conf).length, name.startsWith("1 行に 2 つ") ? 2 : 1, `数えるべき: ${name}`);
+  }
+  // 数えた結果は「空白を潰した 1 行」に正規化されている（EXPECTED_HEADERS と比べられる形）
+  assert.deepEqual(headerLines('add_header\n  X-Multi\n  "yes"\n  always;'), ['add_header X-Multi "yes" always;']);
+  // 改行をまたぐ Cache-Control は**除く**（除きすぎを避けるための対称の確認）
+  assert.deepEqual(headerLines('add_header\n  Cache-Control "public, max-age=1";'), []);
+  assert.deepEqual(headerLines('add_header\n  "Cache-Control"\n  "x";'), []);
+  // クォートの中の `;` はディレクティブの終わりではない（実機で X-Val: a;b が出る）
+  assert.deepEqual(headerLines('add_header X-Val "a;b";'), ['add_header X-Val "a;b";']);
+  // クォートの中の `{` `}` `#` もただの文字
+  assert.deepEqual(headerLines('add_header X-Braces "{}";'), ['add_header X-Braces "{}";']);
+  assert.deepEqual(headerLines('add_header X-Hash "a#b";'), ['add_header X-Hash "a#b";']);
+  // コメント行の中の add_header は数えない（site.conf は add_header を解説するコメントを大量に持つ）
+  assert.deepEqual(headerLines('# add_header X-Comment "no";'), []);
+  assert.deepEqual(headerLines('    #   add_header X-Frame-Options DENY always;'), []);
+  // ブロックの境目でディレクティブは切れる（`}` の直後に書いても混ざらない）
+  assert.equal(headerLines('location /a/ { add_header X-A "1"; }\nlocation /b/ { add_header X-B "2"; }').length, 2);
+});
+
+// #499 の補足（PR #497 本文の表 #4 の訂正）:
+// PR #497 の本文は「タブ区切りの add_header を Issue 案が**数える（過検出）**」と書いたが、**誤り**。
+// 実測は「**除外**」——旧版も Issue 案も `startsWith("add_header ")`（末尾は**スペース**）に
+// 落ちるため、`add_header\tCache-Control\t"x";` を**丸ごと弾いていた**。
+// 過検出（＝余分に数えて落ちる）は安全側だが、除外は**危険側**（継承が消えているのに総数が合う）。
+// #489 で `/^add_header\s/` にしたので現在は数える。上の「タブとスペースの混在で改行」がその固定。
+test("headerLines(): タブ区切りの add_header を数える（#497 本文の表 #4 の訂正・#499）", () => {
+  assert.equal(headerLines('add_header\tX-Foo\t"bar";').length, 1, "タブ区切りは危険側の除外だった。数えること");
+  assert.deepEqual(headerLines('add_header\tCache-Control\t"x";'), [], "Cache-Control はタブ区切りでも除く");
 });
 
 test("site.conf: セキュリティヘッダと CSP は旧 server block と完全一致（+ staging 用 X-Robots-Tag・#482 の複製 4 か所）", () => {
