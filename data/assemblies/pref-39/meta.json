@@ -7,18 +7,18 @@
   "unknownCells": 0,
   "unmatchedNames": 0
  },
- "fetchedAt": "2026-08-24T12:14:46.410Z",
+ "fetchedAt": "2026-09-04T22:18:08.741Z",
  "rosterAsOf": "2026-07-30",
  "sessions": [
   {
-   "pdfUrl": "https://gikai.pref.kochi.lg.jp/_files/00156424/0806.pdf",
+   "pdfUrl": "https://gikai.pref.kochi.lg.jp/_files/00157346/080710.pdf",
    "pdfUrls": [
-    "https://gikai.pref.kochi.lg.jp/_files/00156424/0806.pdf"
+    "https://gikai.pref.kochi.lg.jp/_files/00157346/080710.pdf"
    ],
    "rollcalls": 23,
    "sessionId": "2026-06",
    "sessionLabel": "令和８年６月定例会",
-   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00156424/0806.pdf",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00157346/080710.pdf",
    "unknownCells": 0
   },
   {
@@ -35,22 +35,22 @@
  ],
  "sources": [
   {
-   "fetchedAt": "2026-08-24T12:14:46.410Z",
+   "fetchedAt": "2026-09-04T22:18:08.741Z",
    "name": "高知県議会 議員名簿（会派別）",
    "url": "https://gikai.pref.kochi.lg.jp/member/categories/"
   },
   {
-   "fetchedAt": "2026-08-24T12:14:46.410Z",
+   "fetchedAt": "2026-09-04T22:18:08.741Z",
    "name": "高知県議会 議員別賛否の状況",
    "url": "https://gikai.pref.kochi.lg.jp/activity/decision.html"
   },
   {
-   "fetchedAt": "2026-08-24T12:14:46.410Z",
+   "fetchedAt": "2026-09-04T22:18:08.741Z",
    "name": "高知県議会 令和８年６月定例会議決結果一覧",
-   "url": "https://gikai.pref.kochi.lg.jp/_files/00156424/0806.pdf"
+   "url": "https://gikai.pref.kochi.lg.jp/_files/00157346/080710.pdf"
   },
   {
-   "fetchedAt": "2026-08-24T12:14:46.410Z",
+   "fetchedAt": "2026-09-04T22:18:08.741Z",
    "name": "高知県議会 令和８年２月定例会議決結果一覧",
    "url": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf"
   }
