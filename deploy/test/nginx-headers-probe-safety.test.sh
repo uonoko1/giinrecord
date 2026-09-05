@@ -1,0 +1,218 @@
+#!/usr/bin/env bash
+# Issue #505: nginx-headers.test.sh のプローブ生成にパストラバーサルがあった。
+#
+# **何が起きていたか**（origin/main で再現した実測）:
+# nginx-headers.test.sh は site.conf の location を機械的に拾い（#499）、前方一致の location には
+# プローブ用のファイルを置く。その置き先が `mkdir -p "$ROOT$pfx"` と**無検証の文字列連結**だった。
+# site.conf に `location /../../pbi505-escaped/` を書くと:
+#     -- 17 passed, 0 failed（exit 0）
+#     $ find /tmp -maxdepth 3 -name 'pbi505-escaped'
+#     /tmp/pbi505-escaped        ← $TMP の外。cleanup の rm -rf "$TMP" では消えない
+# `..` は「ファイルシステムの根を超えると根で止まる」ので、`../` を十分並べれば
+# **書ける場所ならどこにでも**届く（実測: `/tmp/pbi505-B` に着地した）。
+#
+# **なぜ攻撃経路ではないか**: site.conf は自分たちが書くファイルで、外部から `..` を注入される
+# 経路は無い。実害は「テスト実行が $TMP の外にゴミを残す」程度。
+# **それでも塞ぐ理由**: 検査が「意図しない場所を読み書きしうる」状態は、レビューで
+# 気づけない形の間違いを許す。**隠れて通れなくする**（作業合意「防御は不可能にすることではなく、
+# 隠れて通れなくすること」）。
+#
+# **なぜ `..` を弾く1行ではなく allowlist か**（作業合意 #333）:
+# denylist は綴りの変種に原理的に勝てない。`..` だけを弾いても、絶対パス風・`~`・シェルメタ文字・
+# 空白・改行はそのままプローブ生成に流れる。だから nginx-headers.test.sh 側は
+# **「通してよい形」を書き出して完全一致で照合**し、さらに**実際の書き先が $ROOT の下に
+# 収まっていること**を別に確かめる（経路が2つあるものは、それぞれ別々に釘打つ・#485）。
+#
+# このファイルは**その検査器自身の検査**（#451）。悪い location を1つずつ食わせて
+# 「落ちること」を、良い location を食わせて「通ること」を固定する。
+# 落ちる側だけ試すと、正しい書き方まで落とす検査ができあがる（#451 のレビューの教訓）。
+#
+#   bash deploy/test/nginx-headers-probe-safety.test.sh
+# docker は要らない（プローブ生成は docker 起動より前に走り、不正な location はそこで落ちる）。
+set -euo pipefail
+HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+DEPLOY=$(cd "$HERE/.." && pwd)
+TARGET="$HERE/nginx-headers.test.sh"
+CONF_REAL="$DEPLOY/nginx/site.conf"
+PASS=0; FAIL=0
+
+TMP=$(mktemp -d)
+# 逃がしたファイルの着地点を観測するための「檻」。$TMP 自身の外に出たかを見たいので、
+# 檻の中に作業ディレクトリを掘り、檻の直下に何か現れたら traversal が起きたと判定する。
+CAGE="$TMP/cage"; mkdir -p "$CAGE"
+cleanup() { rm -rf "$TMP"; }
+trap cleanup EXIT
+
+fail() { echo "    x $1"; CURRENT_FAILED=1; }
+test_case() {
+  local name=$1; shift; CURRENT_FAILED=0
+  "$@"
+  if [ "$CURRENT_FAILED" = 0 ]; then PASS=$((PASS+1)); echo "ok   $name"
+  else FAIL=$((FAIL+1)); echo "FAIL $name"; fi
+}
+
+# mkconf <location 指定> → **本物の site.conf に、その location 1 つだけを差し込んだ**設定を作る。
+# 最小の conf を自作すると、add_header が無いせいでヘッダ検査が落ち、**狙っていない理由で落ちる**
+# （実測: 自作の最小 conf では 15 形中 14 形が「ヘッダが無い」で落ち、プローブ生成が拒んだのか
+#  区別できなかった）。作業合意「『落ちた』ではなく『狙った理由で落ちた』を確かめる」（#451）。
+# 本物に差し込めば、**差分はその location 1 つだけ**なので、落ちた理由をその location に帰せる。
+mkconf() {
+  local loc=$1 out="$TMP/conf.$$.$RANDOM"
+  # location /assets/ の直前に差し込む（server ブロックの中で、他の location と同じ階層）。
+  awk -v loc="$loc" '
+    !done && /^[[:space:]]*location \/assets\/ \{/ {
+      printf "    location %s {\n        try_files $uri =404;\n    }\n", loc
+      done = 1
+    }
+    { print }
+  ' "$CONF_REAL" > "$out"
+  printf '%s' "$out"
+}
+
+# run_target <conf> → STATUS / OUT。プローブ生成は docker より前なので、docker が無くても
+# 不正な location はここで落ちる。docker がある環境では skip されずに最後まで走る。
+run_target() {
+  local conf=$1
+  set +e
+  ( cd "$CAGE" && TMPDIR="$CAGE" SITE_CONF="$conf" bash "$TARGET" ) > "$TMP/out" 2>&1
+  STATUS=$?
+  set -e
+  OUT=$(cat "$TMP/out")
+}
+
+# 逃走の検知は **2 通り**でやる。片方だけでは足りないことを実測した:
+#   (1) 檻の直下に出たか  … `..` が数段のとき（実測 /...../ は檻の直下 pbi505-escaped に着地）
+#   (2) マーカー名で広く探す … `..` を十分並べると**根で止まって檻の外**に着地する
+#       （origin/main で `/../..(略)../tmp/pbi505-deep/` が **/tmp/pbi505-deep** に着地したのを実測）。
+#       檻を見ているだけでは 0 件に見え、**逃げたのに緑**になる。
+# 見本の location はすべて `pbi505-` で始まる名前を使い、その名前が檻の外に現れたら逃走とみなす。
+escaped_entries() {
+  find "$CAGE" -mindepth 1 -maxdepth 1 -not -name 'tmp.*' 2>/dev/null
+  # 檻の外（親をたどって根まで）に pbi505-* が現れていないか。/ 全体を舐めると遅いので、
+  # `..` が着地しうる祖先ディレクトリの直下だけを見る。
+  local d="$CAGE"
+  while [ "$d" != "/" ]; do
+    d=$(dirname "$d")
+    find "$d" -mindepth 1 -maxdepth 1 -name 'pbi505-*' 2>/dev/null
+  done
+}
+
+# ---- 落とすべき location（それぞれ「どの経路で危ないか」が違う） ----
+# 名前 => location 指定。**形の数ではなく、通る経路の数**を意識して選んである（#485）:
+#   - `..` 系          : $ROOT の外に書ける（実際に再現した本体）
+#   - `~` / 絶対パス風  : $ROOT の中には収まるが、意図しない名前のディレクトリを掘る
+#   - シェルメタ・空白・改行: 引用が1つ外れた瞬間に評価される形。今は引用されているが、
+#                        「今は安全」を検査に頼らず、形そのものを拒む
+BAD_LOCATIONS=(
+  'dotdot_dir|/../../pbi505-escaped/'
+  'dotdot_deep|/../../../../../../../../../../pbi505-deep/'
+  'dotdot_file|/../pbi505-escaped.txt'
+  'dotdot_middle|/assets/../../pbi505-escaped/'
+  'dotdot_prefix_caret|^~ /../../pbi505-escaped/'
+  'tilde|/~/pbi505/'
+  'cmdsubst|/$(touch /tmp/pbi505-cmdsubst)/'
+  'backtick|/`touch /tmp/pbi505-backtick`/'
+  'semicolon|/x;y/'
+  'space|/a b/'
+  'glob_star|/*/'
+  'pipe|/a|b/'
+  'redirect|/a>b/'
+  'no_leading_slash|assets/'
+  'backslash|/a\b/'
+)
+
+t_bad_locations_fail() {
+  local entry name loc conf before after
+  for entry in "${BAD_LOCATIONS[@]}"; do
+    name=${entry%%|*}; loc=${entry#*|}
+    conf=$(mkconf "$loc")
+    before=$(escaped_entries | wc -l)
+    run_target "$conf"
+    after=$(escaped_entries | wc -l)
+    [ "$STATUS" -ne 0 ] || fail "$name [$loc]: 終了コードが 0（落ちていない）"
+    case "$OUT" in *FAIL*) ;; *) fail "$name [$loc]: 出力に FAIL が無い";; esac
+    [ "$before" = "$after" ] || fail "$name [$loc]: 作業ディレクトリの外に $((after-before)) 件できた: $(escaped_entries | tr '\n' ' ')"
+    rm -f "$conf"
+  done
+}
+
+# ---- 通すべき location（厳しすぎて正しい書き方を落としていないか・#451） ----
+# 実際に site.conf に書いてある形と、nginx の location 修飾子のうちこのテストが扱える形。
+GOOD_LOCATIONS=(
+  'root|/'
+  'prefix_dir|/assets/'
+  'prefix_dir_nested|/a/b/c/'
+  'prefix_file|/robots.txt'
+  'exact|= /compare'
+  'exact_file|= /__spa-fallback.html'
+  'caret_prefix|^~ /fonts/'
+  'hyphen_underscore_dot|/a-b_c.d/'
+)
+
+t_good_locations_pass_probe_generation() {
+  local entry name loc conf
+  for entry in "${GOOD_LOCATIONS[@]}"; do
+    name=${entry%%|*}; loc=${entry#*|}
+    conf=$(mkconf "$loc")
+    run_target "$conf"
+    # docker が無ければ skip して 0、あれば nginx を起動して最後まで走る。どちらでも
+    # 「プローブ生成が location を拒んだ」という失敗は出てはいけない。
+    case "$OUT" in
+      *'安全でない location'*|*'未対応の location'*)
+        fail "$name [$loc]: 正しい形なのにプローブ生成が拒んだ: $(printf '%s' "$OUT" | grep -E '安全でない|未対応' | head -1)";;
+    esac
+    rm -f "$conf"
+  done
+}
+
+# ---- 改行を含む location（行単位の抽出では現れないが、抽出を変えたときに効く） ----
+# 作業合意「正規表現をまとめる変更は、見本に改行・入れ子・複数件を必ず含めてから」（#506）。
+# 今の抽出は行単位なので改行入りの location は grep の時点で分割されるが、**抽出を変えた将来**に
+# 素通りしないよう、見本として置く。落ちる理由は問わない（拒むか、拾えず数が合わないか）。
+t_newline_location_does_not_escape() {
+  local conf="$TMP/conf.newline" before after
+  {
+    echo 'server {'
+    echo '    listen 80;'
+    printf '    location /..\n/../pbi505-newline/ {\n'
+    echo '        try_files $uri =404;'
+    echo '    }'
+    echo '}'
+  } > "$conf"
+  before=$(escaped_entries | wc -l)
+  run_target "$conf"
+  after=$(escaped_entries | wc -l)
+  [ "$STATUS" -ne 0 ] || fail "改行入り location で終了コードが 0（落ちていない）"
+  [ "$before" = "$after" ] || fail "改行入り location で作業ディレクトリの外に $((after-before)) 件できた"
+}
+
+# ---- 正常な site.conf では、これまで通り全部通る（既存 16 件を弱めていないこと） ----
+# ここでは件数までは見ない（docker の有無で変わる）。**プローブ生成が本物の site.conf を
+# 1 つも拒まないこと**だけを固定する。件数の固定は nginx-headers.test.sh 自身が持っている。
+t_real_site_conf_is_accepted() {
+  run_target "$DEPLOY/nginx/site.conf"
+  case "$OUT" in
+    *'安全でない location'*) fail "本物の site.conf をプローブ生成が拒んだ: $(printf '%s' "$OUT" | grep '安全でない' | head -3)";;
+  esac
+  case "$OUT" in
+    *'未対応の location'*) fail "本物の site.conf に未対応の location がある: $(printf '%s' "$OUT" | grep '未対応' | head -3)";;
+  esac
+}
+
+# ---- 検査そのものが生きているか（#451: 検査器のテストが無いと、検査が死んでも緑） ----
+# 上の t_bad_locations_fail は「落ちること」を見るが、**何件見たか**を見ていないと
+# BAD_LOCATIONS=() に書き換えるだけで黙る。件数をハードコードして突き合わせる
+# （検査対象から生成すると自己参照になり、対象が痩せれば期待値も一緒に痩せる・#499）。
+t_fixture_counts_are_pinned() {
+  [ "${#BAD_LOCATIONS[@]}" -eq 15 ] || fail "落とすべき location の見本が ${#BAD_LOCATIONS[@]} 件（15 件を期待）。減らすなら理由を書くこと"
+  [ "${#GOOD_LOCATIONS[@]}" -eq 8 ]  || fail "通すべき location の見本が ${#GOOD_LOCATIONS[@]} 件（8 件を期待）。減らすなら理由を書くこと"
+}
+
+test_case "不正な location は素通りせず落ちる（$( : )${#BAD_LOCATIONS[@]} 形）" t_bad_locations_fail
+test_case "正しい location はプローブ生成に拒まれない（${#GOOD_LOCATIONS[@]} 形）" t_good_locations_pass_probe_generation
+test_case "改行を含む location でも作業ディレクトリの外に出ない" t_newline_location_does_not_escape
+test_case "本物の site.conf はそのまま通る" t_real_site_conf_is_accepted
+test_case "見本の件数が固定されている（見本を空にしたら落ちる）" t_fixture_counts_are_pinned
+
+echo "-- $PASS passed, $FAIL failed"
+[ "$FAIL" -eq 0 ]
