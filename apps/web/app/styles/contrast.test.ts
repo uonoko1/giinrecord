@@ -682,10 +682,21 @@ describe("文字色として使うトークンは全部 AA（4.5:1）を満た�
     // 新しい at-rule。**名指しで除いていない**ので、知らないまま落ちるのが正しい（allowlist の効き目）
     ["@container", "@container (min-width: 1px) { .member-tab { background: var(--paper); } }", "CSSContainerRule"],
   ])("%s に包んだ上書きを「読めない」として落とす", (_name, css, kind) => {
-    // (1) `getComputedStyle` はいまもこれを見ていない ＝ この検査が無ければ素通りする
-    mount(TABS_HTML);
+    /*
+     * (1) `getComputedStyle` はいまもこれを見ていない ＝ この検査が無ければ素通りする。
+     *
+     * **本番の CSS を敷かずに測る。** 本番を敷くと、`member.css` への**別の**変異
+     * （末尾に `.member-tab { background: var(--paper) }` を足すなど）でもここが落ち、
+     * **「at-rule が見えていない」以外の理由で落ちた**ことになる（#485 の「落ちた理由が
+     * 狙ったものであること」）。ここで知りたいのは jsdom の性質だけなので、
+     * **at-rule と、それが上書きしようとする素の規則だけ**を敷いて比べる。
+     */
+    document.head.innerHTML = "";
+    document.body.innerHTML = TABS_HTML;
     const patch = document.createElement("style");
-    patch.textContent = css;
+    // `.member-tab { background: none }` は本番の `member.css` と同じ（これが無いと
+    // `<button>` の UA 既定 `buttonface` が出て、at-rule と関係なく落ちる）
+    patch.textContent = `.member-tabs { background: var(--est-bg); } .member-tab { background: none; }\n${css}`;
     document.head.appendChild(patch);
     expect(backgroundTokenOf(document.querySelector(".member-tab-label")!), "getComputedStyle が at-rule を評価するようになったなら、この検査は作り直す").toBe("est-bg");
     patch.remove();
