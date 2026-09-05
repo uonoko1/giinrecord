@@ -34,7 +34,7 @@ chmod +x "$BIN/gh"
 # The settings as they must be. This is the shape the real API returns (verified against
 # `gh api repos/<owner>/<repo>/branches/main/protection` on 2026-09-06).
 # shellcheck disable=SC2089,SC2090  # 中の " は JSON の一部。常に単一の値として渡すので再分割されない
-DEFAULT_PROTECTION='{"required_status_checks":{"strict":true,"checks":[{"context":"check"},{"context":"gitleaks"},{"context":"forbidden-patterns"},{"context":"audit"}]},"enforce_admins":{"enabled":true},"allow_force_pushes":{"enabled":false},"allow_deletions":{"enabled":false}}'
+DEFAULT_PROTECTION='{"required_status_checks":{"strict":true,"checks":[{"context":"check","app_id":null},{"context":"gitleaks","app_id":15368},{"context":"forbidden-patterns","app_id":15368},{"context":"audit","app_id":15368}]},"enforce_admins":{"enabled":true},"allow_force_pushes":{"enabled":false},"allow_deletions":{"enabled":false}}'
 # shellcheck disable=SC2090
 export DEFAULT_PROTECTION
 
@@ -76,14 +76,20 @@ t_enforce_admins_off() {
 }
 
 # --- the required checks: the SET, not the count (#499: an allowlist must pin its contents) -------------------
-# The fixture builder is a function, not two chained ${VAR/…} expansions on one command: in `A=${A/x/} A=${A/y/} cmd`
-# the second expansion does NOT see the first assignment (shellcheck SC2097/SC2098). Written that way, removing
-# `check` — the FIRST element, the only one with no leading comma — silently removed nothing, and the test still
-# passed because the guard's success message happens to contain the word "check". A vacuous pass.
+# Two substitutions are needed because the first element of the array has no leading comma: `,{"context":"x"}`
+# removes any element but the first, `{"context":"x"},` removes the first one.
+#
+# This is a plain function, not two chained prefix assignments (`A=${A/x/} A=${A/y/} cmd`). An earlier revision of
+# this file used the chained form and its comment claimed the second expansion could not see the first assignment.
+# THAT CLAIM WAS WRONG — it was measured afterwards and bash does apply them left to right:
+#   $ probe(){ echo "[$B]"; };  B=x;  B=first B=${B}-second probe   →   [first-second]
+# so the old fixture really did remove `check`, and it was not passing vacuously. shellcheck's SC2097/SC2098 warn
+# that the construct is hard to read and not portable, not that it misbehaves in bash. The function is kept anyway:
+# it is clearer, and the fixture self-check below is worth having on its own.
 without_check() {
   local ctx=$1 json=$DEFAULT_PROTECTION
-  json=${json/",{\"context\":\"$ctx\"}"/}   # any element but the first
-  json=${json/"{\"context\":\"$ctx\"},"/}   # the first element
+  # elements carry an app_id, so match up to the closing brace of the element
+  json=$(printf '%s' "$json" | sed -E "s/,\{\"context\":\"$ctx\"[^}]*\}//; s/\{\"context\":\"$ctx\"[^}]*\},//")
   printf '%s' "$json"
 }
 t_missing_check() {
@@ -104,7 +110,7 @@ t_missing_check() {
 # required at all.
 t_swapped_check() {
   fresh swapped
-  H_PROTECTION=${DEFAULT_PROTECTION/'{"context":"gitleaks"}'/'{"context":"some-other-job"}'} \
+  H_PROTECTION=${DEFAULT_PROTECTION/'{"context":"gitleaks","app_id":15368}'/'{"context":"some-other-job","app_id":15368}'} \
     run_guard uonoko1/giinrecord main
   [[ $RC != 0 ]] || fail "expected non-zero when gitleaks is swapped for another context (count still 4)"
   assert_contains "$OUT" "gitleaks" "names the check that went missing"
@@ -113,7 +119,7 @@ t_swapped_check() {
 # An extra required check is not a weakening — it must not fail, or the guard would fight every new CI job.
 t_extra_check_is_ok() {
   fresh extra
-  H_PROTECTION=${DEFAULT_PROTECTION/'{"context":"audit"}'/'{"context":"audit"},{"context":"brand-new-job"}'} \
+  H_PROTECTION=${DEFAULT_PROTECTION/'{"context":"audit","app_id":15368}'/'{"context":"audit","app_id":15368},{"context":"brand-new-job","app_id":null}'} \
     run_guard uonoko1/giinrecord main
   [[ $RC == 0 ]] || fail "an ADDITIONAL required check must not fail the guard, got $RC: $OUT"
 }
@@ -141,6 +147,50 @@ t_deletion_on() {
   assert_contains "$OUT" "deletion" "names the setting"
 }
 
+# `restrictions` names the users/teams/apps allowed to push to the branch. It is ABSENT on a healthy main (verified
+# against the live API on 2026-09-06), and adding it is one API call with no diff anywhere — so a review found the
+# guard reported ok while one named user could push straight to main. Its mere presence is the weakening; the
+# contents do not matter, and the names are deliberately not printed (they are people).
+t_restrictions_present() {
+  fresh restrictions
+  H_PROTECTION=${DEFAULT_PROTECTION/'"enforce_admins"'/'"restrictions":{"users":[{"login":"someone"}],"teams":[],"apps":[]},"enforce_admins"'} \
+    run_guard uonoko1/giinrecord main
+  [[ $RC != 0 ]] || fail "expected non-zero when restrictions grants push access to specific accounts"
+  assert_contains "$OUT" "restrictions" "names the setting"
+  assert_not_contains "$OUT" "someone" "must not print who was allowed (personal data)"
+}
+
+# Same idea one level down: a PR-review bypass list lets named accounts merge around the requirements.
+t_bypass_allowances_present() {
+  fresh bypass
+  H_PROTECTION=${DEFAULT_PROTECTION/'"enforce_admins"'/'"required_pull_request_reviews":{"bypass_pull_request_allowances":{"users":[{"login":"someone"}],"teams":[],"apps":[]}},"enforce_admins"'} \
+    run_guard uonoko1/giinrecord main
+  [[ $RC != 0 ]] || fail "expected non-zero when bypass_pull_request_allowances names anyone"
+  assert_contains "$OUT" "bypass" "names the setting"
+  assert_not_contains "$OUT" "someone" "must not print who was allowed (personal data)"
+}
+
+# A required context is identified by name AND by the app that reports it. Keeping the name while pointing it at a
+# different app_id means some other integration can report `gitleaks` as green (#504: 名前を固定した is not
+# 値を固定した). The healthy values are: `check` is reported by Actions (app_id null in the API's checks array is
+# not what we see — the live response gives 15368 for the security jobs and null for `check`), so this pins the
+# app_id of each context to what the live API returned on 2026-09-06.
+t_app_id_swapped() {
+  fresh app_id
+  H_PROTECTION='{"required_status_checks":{"strict":true,"checks":[{"context":"check","app_id":null},{"context":"gitleaks","app_id":99999},{"context":"forbidden-patterns","app_id":15368},{"context":"audit","app_id":15368}]},"enforce_admins":{"enabled":true},"allow_force_pushes":{"enabled":false},"allow_deletions":{"enabled":false}}' \
+    run_guard uonoko1/giinrecord main
+  [[ $RC != 0 ]] || fail "expected non-zero when a required context is reported by a different app"
+  assert_contains "$OUT" "gitleaks" "names the context whose app changed"
+}
+
+# The healthy fixture carries the real app_ids, so the guard must accept them.
+t_app_id_healthy() {
+  fresh app_id_ok
+  H_PROTECTION='{"required_status_checks":{"strict":true,"checks":[{"context":"check","app_id":null},{"context":"gitleaks","app_id":15368},{"context":"forbidden-patterns","app_id":15368},{"context":"audit","app_id":15368}]},"enforce_admins":{"enabled":true},"allow_force_pushes":{"enabled":false},"allow_deletions":{"enabled":false}}' \
+    run_guard uonoko1/giinrecord main
+  [[ $RC == 0 ]] || fail "the live app_ids must be accepted, got $RC: $OUT"
+}
+
 # Protection removed entirely: the API answers 404. "No protection at all" is the WORST case, so it must never be
 # mistaken for "nothing to report" (#484: a check that only fails on a written violation is not alive).
 t_no_protection_at_all() {
@@ -150,12 +200,26 @@ t_no_protection_at_all() {
   assert_not_contains "$OUT" "ok " "must not report ok"
 }
 
-# The guard must not leak the token or server details into the Issue body / logs it produces.
+# Everything this script prints on stdout is copied verbatim into a PUBLIC GitHub Issue body by
+# branch-protection.yml, and gh echoes the Authorization header in some API failures. An earlier revision tried to
+# redact it with `sed -E 's/gh[pousr]_[A-Za-z0-9]+/<redacted>/g'`, which is a denylist: it caught `ghp_…` and let
+# `github_pat_…` (the current fine-grained format — it contains `_`, so `[A-Za-z0-9]+` does not even match it)
+# through into the Issue. So the guard no longer relays gh's message at all. These cases drive the real error path
+# with several token shapes; a redaction list would have to grow for each one, this must pass for any of them.
 t_no_secret_in_output() {
-  fresh nosecret
-  H_PROTECTION=${DEFAULT_PROTECTION/'"enforce_admins":{"enabled":true}'/'"enforce_admins":{"enabled":false}'} \
-    GH_TOKEN=ghp_examplenotarealtoken run_guard uonoko1/giinrecord main
-  assert_not_contains "$OUT" "ghp_examplenotarealtoken" "token never printed"
+  local shape
+  for shape in \
+    "ghp_examplenotarealtoken1234" \
+    "github_pat_11ABCDEFG0aaaabbbbccccdddd_eeeeffffgggghhhh" \
+    "gho_examplenotarealtoken1234" \
+    "ghs_examplenotarealtoken1234" \
+    "some_future_prefix_9998887776665554443332221110"; do
+    fresh "nosecret_${shape:0:6}"
+    H_GH_EXIT=1 H_GH_STDERR="gh: Bad credentials — Authorization: Bearer $shape (HTTP 401)" \
+      run_guard uonoko1/giinrecord main
+    [[ $RC != 0 ]] || fail "expected non-zero when the API call fails"
+    assert_not_contains "$OUT" "$shape" "token shape [$shape] must never be printed"
+  done
 }
 
 echo "== deploy/monitor/branch-protection.sh =="
@@ -168,8 +232,12 @@ test_case "必須チェックが増えるのは落とさない"              t_e
 test_case "strict（マージ前に main へ追随）が外れたら落ちる" t_strict_off
 test_case "force push が許可されたら落ちる"              t_force_push_on
 test_case "ブランチ削除が許可されたら落ちる"                t_deletion_on
+test_case "restrictions で名指しの push 許可が付いたら落ちる" t_restrictions_present
+test_case "PR 要件の bypass 許可が付いたら落ちる"          t_bypass_allowances_present
+test_case "必須チェックを報告するアプリが変わったら落ちる"    t_app_id_swapped
+test_case "実際の app_id は通す"                         t_app_id_healthy
 test_case "保護そのものが無い（API 404）なら落ちる"        t_no_protection_at_all
-test_case "トークンを出力に出さない"                      t_no_secret_in_output
+test_case "トークンを出力に出さない（5形式）"              t_no_secret_in_output
 
 echo "-- $PASS passed, $FAIL failed"
 [[ $FAIL == 0 ]]
