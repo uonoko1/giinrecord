@@ -55,12 +55,60 @@ const EXPECTED_HEADERS = [
 /** add_header の**かたまり**が現れる回数。#482 以降は 4（server + Cache-Control を持つ 3 location）。 */
 const HEADER_BLOCKS = 4;
 
+/**
+ * add_header の行（Cache-Control を**除いた**もの）。#489: 除外は「ヘッダ名がちょうど Cache-Control」
+ * だけに限る。以前は `!/Cache-Control/`（行全体の部分一致）で、`add_header X-Cache-Control-Debug "on";`
+ * のような**別のヘッダ**まで数えなかった。数え落とすと、その location で継承が消えているのに
+ * 総数が合ってしまい**検査が黙って通る**（#486 のレビューが 39/39 pass を実測）。
+ * 逆に除き足りない（Cache-Control を数えてしまう）場合は総数が増えて落ちるだけなので、
+ * **迷ったら数える側**に倒している。nginx は空白の連続・タブ・ヘッダ名のクォート・小文字を許し、
+ * `;` 区切りで 1 行に複数書けるので、そのすべてを扱う（実機で確認済み・#489）。
+ */
 function headerLines(conf: string): string[] {
   return conf
     .split("\n")
+    .flatMap((l) => l.split(/;\s*(?=add_header\b)/))
     .map((l) => l.trim())
-    .filter((l) => l.startsWith("add_header ") && !/Cache-Control/.test(l));
+    .filter((l) => /^add_header\s/.test(l) && !/^add_header\s+"?Cache-Control"?[\s;]/i.test(l));
 }
+
+// #489: **この検査器自身のテスト。** headerLines() は「Cache-Control **だけ**を除く」係で、
+// 除きすぎると（＝ add_header なのに数えない）**継承の罠が発火しているのに総数が合ってしまう**。
+// 実際 #486 のレビューで `add_header X-Cache-Control-Debug "on";` を持つ location が 39/39 pass した
+// （部分一致 `!/Cache-Control/` がヘッダ**名**に Cache-Control を含む行まで除いていた）。
+// 除き方が足りない場合（＝ Cache-Control を数えてしまう）は総数が増えて**落ちる**ので、
+// 「取りこぼす」より「余分に数える」側に倒す。以下の 11 通りは nginx（docker）で実際に配信して
+// 「その書き方が本当に効く」ことを確かめた上で並べている（#489 の PR に実測を書いた）。
+test("headerLines(): Cache-Control だけを除き、他の add_header は書き方が変わっても数え落とさない（検査器自身のテスト・#489）", () => {
+  // 除くべきもの（Cache-Control 本体。nginx が実際に Cache-Control として配信する書き方）
+  for (const l of [
+    `add_header Cache-Control "public, max-age=3600";`,
+    "add_header Cache-Control public;", // 値にクォート無し（空白が無ければ合法）
+    `add_header  Cache-Control  "x";`, // 空白が複数
+    `add_header\tCache-Control\t"x";`, // タブ区切り
+    `add_header "Cache-Control" "x";`, // ヘッダ名をクォート
+    `add_header cache-control "x";`, // ヘッダ名が小文字
+    `add_header Cache-Control "x" always;`, // always 付き
+  ]) {
+    assert.deepEqual(headerLines(l), [], `Cache-Control として除くべき: ${JSON.stringify(l)}`);
+  }
+  // 数えるべきもの（Cache-Control ではない add_header。1つでもあれば外側の継承が全部消える）
+  for (const l of [
+    `add_header X-Cache-Control-Debug "on";`, // #489 の本体: 名前に Cache-Control を含むだけ
+    `add_header X-Foo "cache-control is fun";`, // 値に含むだけ
+    `add_header Cache-Control-Foo "x";`, // 前方一致するが別のヘッダ
+    `add_header X-Foo "bar";`,
+  ]) {
+    assert.equal(headerLines(l).length, 1, `数えるべき add_header: ${JSON.stringify(l)}`);
+  }
+  // インデントは無視する（site.conf は location 内で 8 スペース）
+  assert.equal(headerLines(`        add_header X-Foo "bar";`).length, 1);
+  // 1 行に 2 つ（nginx は ; 区切りで複数ディレクティブを 1 行に書ける。実機で両方出ることを確認済み）
+  assert.equal(headerLines(`add_header X-One "1"; add_header X-Two "2";`).length, 2, "1 行 2 つを 1 つと数えない");
+  assert.equal(headerLines(`add_header X-One "1"; add_header Cache-Control "x";`).length, 1, "1 行 2 つのうち Cache-Control だけ除く");
+  // add_header ではないディレクティブは数えない（expires だけの location は継承を壊さないので誤検出しない）
+  assert.deepEqual(headerLines("expires 1h;\nmore_set_headers \"X-Foo: bar\";\nproxy_set_header X-Foo bar;"), []);
+});
 
 test("site.conf: セキュリティヘッダと CSP は旧 server block と完全一致（+ staging 用 X-Robots-Tag・#482 の複製 4 か所）", () => {
   const lines = headerLines(siteConf);
