@@ -62,6 +62,10 @@ jobs:
           # secret が無ければ空文字になり `||` で GITHUB_TOKEN に落ちる。
           GH_TOKEN: ${{ secrets.BRANCH_PROTECTION_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
+          # `set +e` が要る: Actions の既定シェルは `bash -e {0}` で、`out=$(…)` が非 0 を返した時点で
+          # **その場で終了する**。実測では exit 2 のまま case に入らず、Issue を1つも開かなかった
+          # （run 33987618134）。ここは非 0 を「値」として扱う場所なので -e を切る。
+          set +e
           set -uo pipefail
           weak_title="[monitor] repo: main の保護設定"
           unreadable_title="[monitor] repo: main の保護設定を読めない"
