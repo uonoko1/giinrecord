@@ -3,7 +3,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { dynamicImports, metaGlobs, reachableFrom, valueImports } from "./value-imports";
+import { dynamicImports, entriesReaching, metaGlobs, reachableFrom, valueImports } from "./value-imports";
 
 /**
  * **tsx で直に走るビルドスクリプトから辿れるモジュールは、`import.meta.glob` に触らない。**
@@ -32,6 +32,20 @@ const entries = readdirSync(scriptsDir)
   .map((name) => path.join(scriptsDir, name))
   .sort();
 
+/**
+ * 辿り着くモジュールの一覧。**これは「基準」ではなく「表示のための一覧」**（#514）。
+ *
+ * #507 まで、件数一致・顔ぶれ一致・無罪判決の引き直しが**すべてこの変数を基準**にしていた。
+ * だから**この 1 行を絞るだけ**で、全部が痩せた基準に対して整合した:
+ *
+ *     const reached = reachableFrom(entries).filter((r) => !r.file.includes("assemblies"));
+ *
+ * → 本物の違反（`tsx sitemap.ts` が `glob is not a function` で落ちる状態）を植えたまま **6/6 緑**。
+ * **一覧を基準にしている限り、一覧を痩せさせる変異は基準ごと痩せる。**
+ *
+ * そこで判定は `entriesReaching`（**一覧を作らない 2 本目の経路**）に持たせ、
+ * この変数は「一覧が痩せていないか」を**逆に見張られる側**にした（`auditedOffenders` を参照）。
+ */
 const reached = reachableFrom(entries);
 const rel = (file: string): string => path.relative(webRoot, file);
 const trail = (via: string[]): string => via.map(rel).join(" → ");
@@ -136,7 +150,37 @@ function auditedOffenders(
     .map((r) => rel(r.file))
     .filter((f) => !accused.has(f))
     .filter((f) => find(readFileSync(path.join(webRoot, f), "utf8"), path.join(webRoot, f)).length > 0);
-  return [...offenders, ...wronglyCleared.map((f) => `${f}（無罪扱いだが、検査器に掛け直すと違反が出る）`)].sort();
+
+  /*
+   * **2 本目の経路（#514）。一覧を経由せず、入口から直に答えを出す。**
+   *
+   * `offenders` / `cleared` / `wronglyCleared` は**どれも `reached` を基準にしている**ので、
+   * `reached` の定義を 1 行絞ると 3 つとも同時に痩せる（実測 6/6 緑）。
+   * `entriesReaching` は**モジュールの一覧を作らない**——入口 1 本ごとに
+   * 「`find` が当たるソースに辿り着いたか」だけを返す。返り値に載るのは**入口の名前**なので、
+   * `assemblies` のようなモジュールパスの述語が引っ掛かる場所が無い。
+   * 探索も `reachableFrom` とは別に書いてある（深さ優先・訪問済み集合も別）ので、
+   * 走査の実装を 1 箇所壊しても両方は黙らない。
+   *
+   * **結果は見張りとして脇に置かず、返す違反者リストに合流させる**（#507 で学んだ形）。
+   * この行を消すと検出そのものが減るので、「見張りだけ消す」ができない。
+   */
+  const viaEntries = entriesReaching(entries, find).map(
+    ({ entry, hit, via }) => `${rel(hit)}（入口 ${path.basename(entry)} から辿った道: ${trail(via)}）`,
+  );
+
+  /*
+   * **一覧（`reached`）が 2 本目の経路より痩せていないか。**
+   * `entriesReaching` が当てたファイルは、定義どおりなら `reached` にも入っているはず。
+   * 入っていなければ `reached` が絞られている。
+   * この見張りを消しても、上の `viaEntries` が違反者として残るので黙らない。
+   */
+  const hidden = entriesReaching(entries, find)
+    .map(({ hit }) => rel(hit))
+    .filter((f) => !reached.some((r) => rel(r.file) === f));
+  expect(hidden, "入口から辿ると届くのに、`reached` の一覧に入っていないモジュール（`reached` が絞られています）").toEqual([]);
+
+  return [...offenders, ...wronglyCleared.map((f) => `${f}（無罪扱いだが、検査器に掛け直すと違反が出る）`), ...viaEntries].sort();
 }
 
 describe("tsx で走るビルドスクリプトから import.meta.glob に繋がらない（#441 / #451 / #490）", () => {
