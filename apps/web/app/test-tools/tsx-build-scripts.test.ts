@@ -55,7 +55,16 @@ describe("tsx で走るビルドスクリプトから import.meta.glob に繋が
     const notCovered = declared.filter((name) => !entries.some((e) => path.basename(e) === name));
     expect(notCovered, "package.json が tsx で走らせているのに、入口に入っていないスクリプト").toEqual([]);
 
-    // 辿り着く先。**増減したら気づく**（減っていたら走査が壊れている可能性がある）
+    /*
+     * 辿り着く先。**増減したら気づく**（減っていたら走査が壊れている可能性がある）。
+     *
+     * **この検査は実際に働いた**: #479（JS 無効の検査）が後からマージされ、
+     * `scripts/browser-check.ts` が `nojs.ts` を引き込んで **13 → 14** になり、CI が落ちた。
+     * メッセージの指示どおり `nojs.ts` を確かめてから足している——
+     * **値 import 0 件・`import.meta.glob` 0 件・動的 import 0 件**で、
+     * そもそも**他のモジュールを 1 つも引き込まない**（型と純粋な関数だけのファイル）。
+     * だから `nojs.ts` から先には伸びず、14 で止まる。
+     */
     expect(
       reached.map((r) => rel(r.file)),
       "tsx から辿れるモジュールが増減しました。増えた分が `import.meta.glob` に触らないことを確かめて、" +
@@ -68,6 +77,7 @@ describe("tsx で走るビルドスクリプトから import.meta.glob に繋が
       "app/lib/districts.ts",
       "app/lib/icons.ts",
       "app/lib/linked-counts.ts",
+      "app/lib/nojs.ts",
       "app/lib/prerender.ts",
       "app/lib/self-hosted-fonts.ts",
       "app/lib/seo.ts",
