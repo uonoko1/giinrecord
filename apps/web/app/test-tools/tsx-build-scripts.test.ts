@@ -36,6 +36,47 @@ const reached = reachableFrom(entries);
 const rel = (file: string): string => path.relative(webRoot, file);
 const trail = (via: string[]): string => via.map(rel).join(" → ");
 
+/**
+ * **辿り着いた全モジュールを検査し、「実際に読んだもの」を呼び出し側に返す（#507）。**
+ *
+ * #500 の Z2 と同じ形が、この検査にも残っていた: `reached` の中身（入口）は固定していたが、
+ * **各 `it` が `reached` を全部見たか（出口）は誰も検査していなかった。**
+ *
+ * 実測（本物の違反 `data-files.ts → assemblies.ts` を植えた状態。**ビルドは実際に落ちる**）:
+ *
+ *     A. 変異なし                                     → 4 / 6 落ちる（正しく捕まえる）
+ *     B. glob 検査の filter だけ狭める                → 3 / 6（**狙った検査だけ黙る**）
+ *     C. 3 つ狭めて、一覧も辻褄を合わせる             → **6 / 6 全部緑（見逃し）**
+ *
+ * C の状態でも `npx tsx apps/web/scripts/sitemap.ts` は
+ * `TypeError: glob is not a function` で落ちる。**緑なのにビルドが壊れている。**
+ *
+ * **C は「意図して辻褄を合わせた」特殊な操作ではない。** この検査自身が失敗時に
+ * 「**増えた分が `import.meta.glob` に触らないことを確かめて、この一覧を更新してください**」
+ * と指示しており、**その手順から「確かめて」を落とすとちょうど C になる**。
+ * 更新を指示する検査が更新の副作用で黙るなら、**指示のほうが罠**。
+ *
+ * そこで、検査は必ずこの関数を通し、**呼び出し側が同じ `it` の中で
+ * 「読んだ集合 == `reached`」を突き合わせる**。**別の `it` に置かない**——
+ * `it` ごと消せば黙るから（#500 の N5 完全版で実測）。
+ */
+function scanReached(find: (source: string, file: string) => unknown[]): { offenders: string[]; scanned: string[] } {
+  const offenders: string[] = [];
+  const scanned: string[] = [];
+  for (const r of reached) {
+    scanned.push(rel(r.file));
+    if (find(readFileSync(r.file, "utf8"), r.file).length > 0) offenders.push(`${rel(r.file)}（辿った道: ${trail(r.via)}）`);
+  }
+  return { offenders, scanned };
+}
+
+/** 「読んだ集合」が `reached` そのものかを、**検査と同じ `it` の中で**突き合わせる（#507） */
+function expectScannedEverything(scanned: string[]): void {
+  expect(scanned, "辿り着いたモジュールの一部を読み飛ばしています（filter や continue で絞っていませんか）").toEqual(reached.map((r) => rel(r.file)));
+  // reached 自体が空なら、上の一致は 0 件同士で成立してしまう
+  expect(scanned.length, "1 つも読んでいない（走査が空）").toBeGreaterThan(0);
+}
+
 describe("tsx で走るビルドスクリプトから import.meta.glob に繋がらない（#441 / #451 / #490）", () => {
   /**
    * **入口が 0 本・対象が 0 件なら、この検査は何も見ていない。**
@@ -88,7 +129,8 @@ describe("tsx で走るビルドスクリプトから import.meta.glob に繋が
   });
 
   it("辿り着くモジュールは import.meta.glob を式として書いていない", () => {
-    const offenders = reached.filter((r) => metaGlobs(readFileSync(r.file, "utf8"), r.file).length > 0).map((r) => `${rel(r.file)}（辿った道: ${trail(r.via)}）`);
+    const { offenders, scanned } = scanReached(metaGlobs);
+    expectScannedEverything(scanned);
     expect(
       offenders,
       "tsx で直に走るビルドスクリプトから `import.meta.glob` に辿り着きます。" +
@@ -98,7 +140,8 @@ describe("tsx で走るビルドスクリプトから import.meta.glob に繋が
   });
 
   it("辿り着くモジュールは動的 import も書かない（呼ばれたときに落ちる）", () => {
-    const offenders = reached.filter((r) => dynamicImports(readFileSync(r.file, "utf8"), r.file).length > 0).map((r) => `${rel(r.file)}（辿った道: ${trail(r.via)}）`);
+    const { offenders, scanned } = scanReached(dynamicImports);
+    expectScannedEverything(scanned);
     expect(offenders, "動的 import（`import(...)`）は、その行が呼ばれたときに glob で落ちます。読み込みは呼び出し側に置いてください").toEqual([]);
   });
 
@@ -113,7 +156,10 @@ describe("tsx で走るビルドスクリプトから import.meta.glob に繋が
       const file = path.join(webRoot, owner);
       expect(metaGlobs(readFileSync(file, "utf8"), file), `${owner} が glob を持たなくなった（この検査の前提が変わった）`).not.toEqual([]);
     }
-    expect(reached.map((r) => rel(r.file)).filter((f) => globOwners.includes(f))).toEqual([]);
+    // **出口の固定（#507）**: reached を全部見たうえで判定しているか
+    const seen = reached.map((r) => rel(r.file));
+    expectScannedEverything(seen);
+    expect(seen.filter((f) => globOwners.includes(f)), "glob を持つモジュールに辿り着いています").toEqual([]);
   });
 
   /**
