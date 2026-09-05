@@ -109,15 +109,58 @@ SECURITY_HEADERS=(
   'Permissions-Policy: '
 )
 
-# **この配列自身の検査**（#451 / #499）。`SECURITY_HEADERS=()` に書き換えると、
+# **この配列自身の検査**（#451 / #499 / #504）。`SECURITY_HEADERS=()` に書き換えると、
 # assert_headers は**何も見ずに全部 pass する**（実測: 空にすると継承の罠 M2 を入れても 15 passed / 0 failed）。
-# 検査の中身が「空でも緑」では、allowlist をやめた意味が無い。要求する種類の数をここで固定する。
+# 検査の中身が「空でも緑」では、allowlist をやめた意味が無い。
+#
+# **個数を固定するだけでは足りない**（#504。#499 の適用が「半分だけ」だった）。
+# 以前ここは `${#SECURITY_HEADERS[@]} -ne 5` で**個数だけ**を見ていた。空（0 種）も 5→4 も落ちるが、
+# **5→5 のすり替えが通る**:
+#     -  'X-Frame-Options: DENY'
+#     +  'Server: '        # 個数は 5 のまま
+# `Server:` はどの応答にも必ず出るので、これと site.conf から `add_header X-Frame-Options` を
+# 4 か所削除する変異を組み合わせると **16 passed / 0 failed**。#504 の担当が docker で実配信して確認し、
+# **全 7 パス（/ /compare /assets/ /data/ /fonts/ プリレンダー 404）から X-Frame-Options が消えていた。**
+# 個数を満たしたまま中身が空洞化する。
+#
+# **ヘッダ名だけを固定しても足りない**（同じく #504 で実測）。名前を残して値を空にすると:
+#     -  'X-Frame-Options: DENY'
+#     +  'X-Frame-Options: '   # 名前も個数もそのまま
+# `Name: ` は**その名前のどんな値にも前方一致する**ので、site.conf を
+# `add_header X-Frame-Options SAMEORIGIN` に変えても **16 passed / 0 failed**（docker で実配信確認）。
+#
+# だから**配列の要素そのもの（`名前: 値` の文字列全体）を、順序ごと**別の定数と突き合わせる。
+# 期待値は**ハードコードする**。SECURITY_HEADERS 側から生成すると自己参照になり、
+# **検査対象が痩せれば期待値も一緒に痩せる**（#499 のレビュアーと PO の一致した判断）。
+# 同じ理由で site.conf から数えることもしない。
+#
 # 5 は「コンテナが全応答に付けるセキュリティヘッダ」の数（HSTS はホスト側なので数えない・#387）。
-if [ "${#SECURITY_HEADERS[@]}" -ne 5 ]; then
-  echo "FAIL 要求するセキュリティヘッダが 5 種でない（${#SECURITY_HEADERS[@]} 種）。減らすなら理由を site.conf のコメントと合わせて書くこと"
+# ヘッダを増減するときは、site.conf のコメントとこの一覧の**両方**を直すこと。
+#
+# 末尾が `: ` で終わる2つ（CSP・Permissions-Policy）は**わざと前方一致**にしてある。値はここでは見ない:
+#   - Content-Security-Policy → packages/etl/test/deploy-docker.test.ts が全文を固定する
+#   - Permissions-Policy      → 下の t_permissions_policy_value が 17 機能を1つずつ実配信で見る
+# 残る3つ（X-Content-Type-Options / X-Frame-Options / Referrer-Policy）は他に値を見る係が
+# いないので、**ここで値まで釘を打つ**。
+REQUIRED_SECURITY_HEADERS=(
+  'X-Content-Type-Options: nosniff'
+  'X-Frame-Options: DENY'
+  'Referrer-Policy: strict-origin-when-cross-origin'
+  'Content-Security-Policy: default-src'
+  'Permissions-Policy: '
+)
+if [ "${#SECURITY_HEADERS[@]}" -ne "${#REQUIRED_SECURITY_HEADERS[@]}" ]; then
+  echo "FAIL 要求するセキュリティヘッダが ${#REQUIRED_SECURITY_HEADERS[@]} 種でない（${#SECURITY_HEADERS[@]} 種）。増減するなら理由を site.conf のコメントと REQUIRED_SECURITY_HEADERS の両方に書くこと"
   exit 1
 fi
-echo "ok   要求するセキュリティヘッダは 5 種（検査の中身が空になっていない）"; PASS=$((PASS+1))
+for i in "${!REQUIRED_SECURITY_HEADERS[@]}"; do
+  if [ "${SECURITY_HEADERS[$i]}" != "${REQUIRED_SECURITY_HEADERS[$i]}" ]; then
+    echo "FAIL SECURITY_HEADERS[$i] が [${SECURITY_HEADERS[$i]}]（[${REQUIRED_SECURITY_HEADERS[$i]}] を期待）"
+    echo "     個数を保ったままヘッダ名や値を差し替えると、実配信からそのヘッダが消えても検査は緑になる（#504）"
+    exit 1
+  fi
+done
+echo "ok   要求するセキュリティヘッダは ${#REQUIRED_SECURITY_HEADERS[@]} 種、名前も値も一致（空・痩せ・同数すり替えを塞ぐ）"; PASS=$((PASS+1))
 
 # assert_headers <path> <なぜ>: そのパスの応答に上の全部が出ているか
 assert_headers() {
