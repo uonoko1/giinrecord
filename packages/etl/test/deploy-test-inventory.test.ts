@@ -126,6 +126,21 @@ function assertionSites(body: string): number {
 const INVENTORY: { file: string; anchors: string[]; minAssertions: number }[] =
   [
     {
+      // #521 / #524: ブランチ保護は **GitHub の設定**にあり、diff にもレビューにも CI にも現れない。
+      // 弱められたことを声にするのはこの検査だけなので、**消えると誰も気づけない**。
+      // #524 はこの検査を足したが、**この検査自身の削除は塞げていなかった**（実測 14本・失敗0件）。
+      file: "branch-protection.test.sh",
+      anchors: [
+        "enforce_admins",
+        "gitleaks",
+        "forbidden-patterns",
+        "audit",
+        "allow_force_pushes",
+        "branch-protection.sh",
+      ],
+      minAssertions: 18,
+    },
+    {
       file: "apply-all.test.sh",
       anchors: ["apply-all.sh", "allowlist", "8083"],
       minAssertions: 64,
@@ -201,7 +216,7 @@ const INVENTORY: { file: string; anchors: string[]; minAssertions: number }[] =
  * **「行をそっと消す」を「数字も書き換える」に変える**——意図が diff に残る。
  * 止めるのは経路2・経路3のほう。
  */
-const EXPECTED_COUNT = 14;
+const EXPECTED_COUNT = 15;
 
 /**
  * 失敗を exit status に変える「出口」。これが無いと assertion がいくつあっても
@@ -229,6 +244,17 @@ const INVENTORY_PINNED: Record<
   string,
   { anchors: string[]; minAssertions: number }
 > = {
+  "branch-protection.test.sh": {
+    anchors: [
+      "enforce_admins",
+      "gitleaks",
+      "forbidden-patterns",
+      "audit",
+      "allow_force_pushes",
+      "branch-protection.sh",
+    ],
+    minAssertions: 18,
+  },
   "apply-all.test.sh": {
     anchors: ["apply-all.sh", "allowlist", "8083"],
     minAssertions: 64,
@@ -467,6 +493,7 @@ const DEPLOY_SUBJECTS_PINNED = [
   "deploy/apply-all.sh",
   "deploy/cloudflare-allowlist.sh",
   "deploy/go-live.sh",
+  "deploy/monitor/branch-protection.sh",
   "deploy/monitor/health.sh",
   "deploy/monitor/logrotate.conf",
   "deploy/monitor/probe.sh",
@@ -538,6 +565,7 @@ const SUBJECT_OWNERS: Record<string, string> = {
   "deploy/apply-all.sh": "apply-all.test.sh",
   "deploy/cloudflare-allowlist.sh": "cloudflare-allowlist.test.sh",
   "deploy/go-live.sh": "go-live.test.sh",
+  "deploy/monitor/branch-protection.sh": "branch-protection.test.sh",
   "deploy/monitor/health.sh": "monitor-health.test.sh",
   "deploy/monitor/logrotate.conf": "logrotate.test.sh",
   "deploy/monitor/probe.sh": "monitor-probe.test.sh",
@@ -563,6 +591,7 @@ const SUBJECT_OWNERS_PINNED: Record<string, string> = {
   "deploy/apply-all.sh": "apply-all.test.sh",
   "deploy/cloudflare-allowlist.sh": "cloudflare-allowlist.test.sh",
   "deploy/go-live.sh": "go-live.test.sh",
+  "deploy/monitor/branch-protection.sh": "branch-protection.test.sh",
   "deploy/monitor/health.sh": "monitor-health.test.sh",
   "deploy/monitor/logrotate.conf": "logrotate.test.sh",
   "deploy/monitor/probe.sh": "monitor-probe.test.sh",
