@@ -43,6 +43,7 @@
 #
 #   bash deploy/test/nginx-headers-probe-safety.test.sh
 # docker は要らない（プローブ生成は docker 起動より前に走り、不正な location はそこで落ちる）。
+# shellcheck disable=SC2016  # 単一引用符は意図的（$ や ` を**展開させずに**見本の location として渡す）
 set -euo pipefail
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 DEPLOY=$(cd "$HERE/.." && pwd)
