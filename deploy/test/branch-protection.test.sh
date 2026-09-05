@@ -110,12 +110,19 @@ t_enforce_admins_off() {
 # removes any element but the first, `{"context":"x"},` removes the first one.
 #
 # This is a plain function, not two chained prefix assignments (`A=${A/x/} A=${A/y/} cmd`). An earlier revision of
-# this file used the chained form and its comment claimed the second expansion could not see the first assignment.
-# THAT CLAIM WAS WRONG — it was measured afterwards and bash does apply them left to right:
+# this file used the chained form, and its comment claimed the second expansion could not see the first assignment,
+# so the fixture had been passing vacuously. THAT CLAIM WAS WRONG (#521 review). Prefix assignments are applied
+# left to right and each one sees the previous:
 #   $ probe(){ echo "[$B]"; };  B=x;  B=first B=${B}-second probe   →   [first-second]
-# so the old fixture really did remove `check`, and it was not passing vacuously. shellcheck's SC2097/SC2098 warn
-# that the construct is hard to read and not portable, not that it misbehaves in bash. The function is kept anyway:
-# it is clearer, and the fixture self-check below is worth having on its own.
+# The old fixture really did remove `check`; it was not vacuous.
+#
+# shellcheck's SC2097/SC2098 are not wrong either — the behaviour they describe is real, it just applies to a
+# DIFFERENT construct: an expansion in the command's ARGUMENTS is performed by the parent, before the assignment
+# takes effect:
+#   $ A=outer; A=new echo "[$A]"   →   [outer]
+# shellcheck reports both shapes with the same message, and reading it as "my two assignments cannot see each
+# other" was the error. A tool firing is not proof that its warning applies to the line in front of you.
+# The function is kept anyway: it is clearer, and the fixture self-check below is worth having on its own.
 without_check() {
   local ctx=$1 json=$DEFAULT_PROTECTION
   # elements carry an app_id, so match up to the closing brace of the element
