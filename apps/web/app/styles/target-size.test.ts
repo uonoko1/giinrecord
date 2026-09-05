@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -39,6 +39,44 @@ import { describe, expect, it } from "vitest";
  */
 const app = join(import.meta.dirname, "..");
 const read = (p: string) => readFileSync(join(app, p), "utf8");
+
+/**
+ * **`app/` 配下の `.css` を全部**（パスと中身）。**手で並べない**——
+ * #506「『全部』と言う前に、対象を機械で列挙する」。
+ *
+ * **手打ちの一覧は denylist で、列挙漏れがそのまま穴になる。** #518 のレビューが実測した:
+ * 禁止検査は `pages.css` と `assemblies.css`（`行` 側は `pages.css` と `rollcall.css`）しか
+ * 読んでおらず、**`member.css` に `.note a { padding: 4px; }` という本物の 2.5.8 違反を書いても
+ * 33 passed（緑）**だった。`.css` は当時 **7 本**あり、**4 本を誰も見ていなかった。**
+ */
+function allCss(): { path: string; label: string; css: string }[] {
+  const out: { path: string; label: string; css: string }[] = [];
+  (function walk(dir: string) {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      if (e.isDirectory()) walk(join(dir, e.name));
+      else if (e.name.endsWith(".css")) out.push({ path: join(dir, e.name), label: "", css: "" });
+    }
+  })(app);
+  out.sort((x, y) => (x.path < y.path ? -1 : x.path > y.path ? 1 : 0));
+  for (const f of out) {
+    f.label = `${f.path.slice(app.length + 1)}: `;
+    f.css = readFileSync(f.path, "utf8");
+  }
+  return out;
+}
+
+/**
+ * `allCss()` が痩せていないこと。**呼ぶ側それぞれで確かめる**（別の `it` に置くと `it` ごと消せる）。
+ *
+ * **この 1 行だけを消しても何も落ちない**（実測 33 passed）——列挙器が正しければ件数は足りるので。
+ * **落ちるのは「列挙を痩せさせたとき」**で、そのときは 3 件落ちる（実測: `.css` を `pages.css` に
+ * 絞る／`routes/` を辿らない、どちらも **3 failed**）。
+ * **この行は「痩せた瞬間に、どの `it` でも同じ言葉で鳴る」ためのもの**であって、
+ * これ自体が唯一の番人ではない（下流の `all.length` の下限も別に効く）。
+ */
+function expectAllCssFound(files: { path: string }[]): void {
+  expect(files.length, "app/ 配下の .css を 1 本も拾えていない（列挙が空振り）").toBeGreaterThan(5);
+}
 
 /**
  * そのセレクタに当たる宣言を集める。**自前で CSS を解析しない**——
@@ -363,18 +401,64 @@ const TARGET_LINK_RULES = {
      * **ブロッククラスの位置を先頭に固定しない**（先頭一致にすると入れ子の前置きが外れる）。
      * `.card .note a` / `main .note a` / `article .card__body a` は**どれも散文の中のリンク**である。
      * 実測: `selector` を `/^\.(note|…)\b.*(?:\ba\b|a$)/` に変えると **31/31 緑**で素通りした。
+     * （この式は**当時の `selectorLink`** を写したもの。`a$` の枝は #518 で落とした。下を読むこと）
      */
     /**
-     * **`a$` の枝は、いまの見本では一度も効いていない**（#518）。実測:
+     * **`a$` の枝は落とした**（#518）。`\ba\b` の 1 本だけで見る。
      *
-     *     `/\ba\b|a$/` → `/\ba\b/`（`a$` を落とす）  **32/32 緑**
-     *     `/\ba\b|a$/` → `/a$/`（`\ba\b` を落とす）   1 件落ちる
+     * ## 見つかった経緯
      *
-     * **等価変異ではない**——`.notea` / `.note xa` で両者は食い違う。
-     * 落ちない理由は**見本の甘さ**で、`散文の違反` の見本が**全部 `a` の前に空白を持つ**ため、
-     * `\ba\b` だけで足りてしまう。**`行` 側で同じ欠陥を潰したのに、隣の `散文` 側に当て直していなかった。**
+     * `/\ba\b|a$/` から `a$` を落としても **32/32 緑**、逆に `\ba\b` を落とすと **1 件落ちる**。
+     * **2 本のうち 1 本だけが死んでいた。** 起票（#518）は「**その枝だけが効く見本を足せ**」
+     * （#506 の教訓）だったが、**足そうとして足せないことが分かった。**
+     *
+     * ## `a$` だけが効く形は、どれも「a 要素ではない」
+     *
+     * **`a` 要素を指す型セレクタは、必ず非単語文字の直後に来る**——
+     * 先頭か、結合子（空白・`>`・`+`・`~`）か、`,`・`)`・`|` のいずれか。
+     * だから **`\ba\b` の直前の `\b` は必ず成立する**。末尾なら後ろの `\b` も成立する。
+     * → **`a$` が当たって `\ba\b` が当たらない「本物の `a` 要素」は存在しない**（12 通りで確認）。
+     *
+     * 逆に `a$` だけが当たるのは、**末尾が `a` の識別子**（`.note xa` / `.note .member-kana` /
+     * `.card__body .furigana`）だけで、**これらは `a` 要素ではないので違反ではない**。
+     * つまり `a$` は**真陽性を 1 つも増やさず、偽陽性だけを増やす枝**だった。
+     *
+     * ## 実害はあった（「まだ起きていない」だけ）
+     *
+     * 2026-09-06 の実測。**数え方**: `apps/web/app` 配下の `.css` を再帰的に集め、
+     * **jsdom に食わせて `cssRules` の `selectorText` を `,` で割って trim** した
+     * （＝この検査と同じ経路。**7 ファイル / 277 件**）:
+     *
+     *     ファイルごと  member 73 / pages 65 / assemblies 35 / rollcall 35 / members 33 / compare 31 / tokens 5
+     *
+     *     `\ba\b` だけが当たる   3 件   `.rollcalls-item a:hover` `.rollcall-vote a:hover`
+     *                                  `.compare-table thead th a:hover`。**全部 `a` 要素**
+     *     `a$` だけが当たる       8 件   `.members-item__kana` `.list__meta` `.member-kana`
+     *                                  `.member-row-meta` `.rollcalls-meta` `.assembly-member__kana`
+     *                                  `.assembly-member__meta` `.members-item__meta`。**`a` 要素は 0 件**
+     *
+     * **いまはどれも `.note` の中に無い**ので偽陽性は出ていないが、
+     * そのどれかが `.note` の中に書かれた日に、**WCAG を満たしている実装を違反と呼ぶ**。
+     * #413 で「110 箇所が違反」と誤って起票したのと同じ誤り方になる。
+     *
+     * **最初ここに 284 件と書いていた**（`/([^{}]+)\{/g` という**素朴な正規表現**で数えた値。
+     * `@media` の `{` などを規則と数えてしまう）。**レビューが同じ方法で数え直して 277 だった。**
+     * **数え方を書かずに数字を出したのが誤り**で、書いていれば食い違いはその場で解けた
+     * （#506 で「277 / 104」の食い違いが解けなくなったのと同じ形を、**同じファイルで繰り返した**）。
+     *
+     * **この 277 / 3 / 8 は測った時点の値で、CSS が変われば動く。**
+     * 動いても検査が効き続けることは、下の `it` が**毎回数え直して**担保する。
+     *
+     * ## だから「見本を足す」ではなく「枝を落とす」
+     *
+     * **落ちない枝は、まず見本を疑う**（#506）。**疑った結果、見本ではなく枝が誤りだった。**
+     * 見本を足して `a$` を生かすと、**偽陽性を仕様として固定してしまう。**
+     * 代わりに `散文の非違反` に**末尾が `a` のクラス名を 3 通り**置いて、
+     * **`a$` を戻すと落ちる**ようにした（KILL A'・#498）。
+     *
+     * `行` 側が `\s+a\b` の 1 本だけで足りているのと同じ形になった。
      */
-    selectorLink: /\ba\b|a$/,
+    selectorLink: /\ba\b/,
     /** `display: inline-block` も見る——inline の箱を block にすると padding が効いて行間が崩れる */
     declaration: /padding|min-height|display:\s*inline-block/,
     reason: "散文の中のリンクは WCAG 2.5.8 の Inline 例外に当たる。docs/research/target-size-inline.md を読むこと",
@@ -672,10 +756,10 @@ describe("一覧の行の中のリンクは Spacing 例外に当たるので直�
    * どちらも `docs/research/target-size-rows.md` で「やらない」と決めた。
    */
   it("行の中のリンクに padding / min-height / 負の margin を足していない", () => {
-    const offenders = [
-      ...forbiddenTargetFixes(pages, "行", "pages.css: "),
-      ...forbiddenTargetFixes(rollcall, "行", "rollcall.css: "),
-    ];
+    // **`app/` 配下の `.css` を全部見る。**手で 2 本並べていたので、残り 5 本が素通りしていた（#518）
+    const files = allCss();
+    expectAllCssFound(files);
+    const offenders = files.flatMap((f) => forbiddenTargetFixes(f.css, "行", f.label));
     expect(offenders, TARGET_LINK_RULES.行.reason).toEqual([]);
   });
 });
@@ -695,7 +779,6 @@ describe("一覧の行の中のリンクは Spacing 例外に当たるので直�
  */
 describe("散文の中のリンクは例外に当たるので直さない（WCAG 2.5.8・Issue 425）", () => {
   const assemblies = read("routes/assemblies.css");
-  const pages = read("styles/pages.css");
 
   /**
    * 一番余裕が無いのが `/coverage` と `/assemblies/pref-31` の「表決結果（公式）」で、
@@ -734,10 +817,10 @@ describe("散文の中のリンクは例外に当たるので直さない（WCAG
    * ここは CSSOM に全ルールを見せて、文章の中のリンクを狙った指定が増えていないかを見る。
    */
   it("文の中のリンク（.note / .card__body / .body）に padding や min-height を足していない", () => {
-    const offenders = [
-      ...forbiddenTargetFixes(pages, "散文", "pages.css: "),
-      ...forbiddenTargetFixes(assemblies, "散文", "assemblies.css: "),
-    ];
+    // **`app/` 配下の `.css` を全部見る。**手で 2 本並べていたので、残り 5 本が素通りしていた（#518）
+    const files = allCss();
+    expectAllCssFound(files);
+    const offenders = files.flatMap((f) => forbiddenTargetFixes(f.css, "散文", f.label));
     expect(offenders, TARGET_LINK_RULES.散文.reason).toEqual([]);
   });
 });
@@ -922,6 +1005,18 @@ describe("forbiddenTargetFixes: 例外に当たるリンクを「直した跡」
     "note の中の a でない子": ".note strong { padding: 2px; }",
     "`.links a`（#423 の担当）": ".links a { padding-block: 6px; }",
     "`display: inline`（block にしていない）": ".note a { display: inline; }",
+    /**
+     * **末尾が `a` の「クラス名」**（#518）。`a` 要素ではないので違反ではない。
+     *
+     * `selectorLink` に `a$` の枝があると、この 3 つを**リンクだと誤って呼ぶ**（実測: `a$` を戻すと落ちる）。
+     * 綴りは本番にある形から採った（`__kana` / `-kana` / `__meta` のような**末尾が `a` のクラス**）。
+     * **本番 CSS に同じ形が現にあること**は、下の
+     * 「selectorLink が当たるのは a 要素を指すセレクタだけ」が**毎回数え直して**確かめる——
+     * ここに件数を書くと、CSS が変わったときに**この行だけが古くなる**。
+     */
+    "末尾が a のクラス名（__kana）": ".note .member-kana { padding: 2px; }",
+    "末尾が a のクラス名（区切りが空白のみ）": ".card__body .furigana { padding: 2px; }",
+    "末尾が a のクラス名（BEM の element）": ".body .list__hiragana { min-height: 24px; }",
   };
 
   it("箱そのものの padding や、リンク以外を違反と呼ばない", () => {
@@ -929,7 +1024,7 @@ describe("forbiddenTargetFixes: 例外に当たるリンクを「直した跡」
       .filter(([, css]) => forbiddenTargetFixes(css, "散文").length > 0)
       .map(([name, css]) => `${name}: ${forbiddenTargetFixes(css, "散文").join(" / ")}`);
     expect(wrong, "散文側で誤検出している").toEqual([]);
-    expect(Object.keys(散文の非違反)).toHaveLength(6);
+    expect(Object.keys(散文の非違反)).toHaveLength(9);
   });
 
   /**
@@ -997,6 +1092,177 @@ describe("forbiddenTargetFixes: 例外に当たるリンクを「直した跡」
       (r as CSSStyleRule).selectorText.split(",").some((t) => TARGET_LINK_RULES.行.selector.test(t.trim())),
     );
     expect(rowLinks.length, ".row a / .list__item a を狙った規則が pages.css に 1 つも無い（綴りが本番とずれている）")
+      .toBeGreaterThan(0);
+  });
+
+  /**
+   * **`selectorLink` が「`a` 要素を指すセレクタ」だけに当たること**（#518）。
+   *
+   * 見本だけで固定すると、**見本に無い形**（本番にしか無い綴り）で偽陽性が出ても気づけない。
+   * だから**本番の CSS 全ファイルのセレクタ**を実際に流して、
+   * **`selectorLink` が当たったセレクタが、本当に `a` 要素を指しているか**を 1 件ずつ検算する。
+   *
+   * 「`a` 要素を指す」の判定は**正規表現ではなく CSSOM に聞く**（#472 / #481 / #483 の教訓。
+   * `matches()` は実際の要素で試すので、綴りの変種に左右されない）。
+   * `<a>` に当たらず `<span>` にだけ当たるなら、それは `a` 要素ではない。
+   *
+   * **`a$` を戻すとここが落ちる**——本番に `__kana` / `__meta` で終わるクラスが現に在るため。
+   */
+  it("selectorLink が当たるのは a 要素を指すセレクタだけ（本番 CSS 全件で検算）", () => {
+    /**
+     * **対象は手で並べない**（#506「『全部』と言う前に、対象を機械で列挙する」）。
+     *
+     * **最初は 3 本を手打ちしていた。**`apps/web/app` の `.css` は **7 本**あるので、
+     * **`routes/member.css` `routes/rollcall.css` `routes/compare.css` `styles/tokens.css`
+     * の 4 本を見ていなかった。** レビューが実測した穴（直す前は **33 passed** で緑）:
+     * `a$` を戻し、見本 3 件を消し、見ていた 3 本から `__kana`/`__meta` を消すと素通りする
+     * （**`member.css` の `.member-kana` / `rollcall.css` の `.rollcalls-meta` が現に残る**ので、
+     * 偽陽性の材料は本番に在る）。
+     *
+     * **一覧を手で書くのは denylist で、列挙漏れがそのまま穴になる。**
+     */
+    const files = allCss();
+    expectAllCssFound(files);
+    const { selectorLink } = TARGET_LINK_RULES.散文;
+
+    /**
+     * **そのセレクタが `a` 要素を狙っているか**を、正規表現で綴りを見るのではなく
+     * **CSSOM の `matches()` に聞く**（#472 / #481 / #483 の教訓）。
+     *
+     * ## 見るのは「一番右の複合セレクタの、要素の型」だけ
+     *
+     * 狙う要素の**種類**を決めるのは一番右である（`.cover__brand a` の `a`）。
+     * 祖先の条件は種類を決めないので落とす。
+     * 切り出しは**括弧の深さを数えて**行う——素朴に `>` で割ると
+     * `.note :is(p > a)` が **`a)` に壊れる**（実測で踏んだ）。
+     *
+     * ## 疑似クラス・疑似要素は落とす（型を変えないため）
+     *
+     * `:hover` `::after` は**要素の型を変えない**。
+     * 落とさないと `matches()` が決して真にならず、
+     * **本物のリンク（`.note a:hover` / `.note a::after`）を「`a` 要素でない」と誤判定する**
+     * （実測で 2 形踏んだ。**検算のほうが壊れていた**）。
+     *
+     * ## ここで見ていない形（塞がない判断。**書いておく**——#451 の流儀）
+     *
+     * **`:is()` / `:where()` の中に結合子が入る形**（`.note :is(p > a)`）は、
+     * 括弧ごと落とすので **`*` になり、`<a>` にも当たるので `targetsAnchor` が `false`** になる。
+     *
+     * **黙るのではない。落ちて、しかも「偽陽性」と嘘を言う。** 実測（`pages.css` に
+     * `.note :is(p > a) { padding: 4px; }` を入れる。**これは本物の 2.5.8 違反**）:
+     *
+     *     × 文の中のリンクに padding や min-height を足していない        ← **正しい検出**
+     *     × selectorLink が当たるのは a 要素を指すセレクタだけ
+     *         → selectorLink が a 要素でないセレクタに当たっている（**偽陽性**）
+     *
+     * **害は「素通り」ではなく「失敗メッセージが嘘をつく」こと。**
+     * このメッセージを信じた人は **`selectorLink` を痩せさせる方向に直しにいく**——
+     * **本物の違反検出を殺す向き**である。
+     * （最初この注記に「**取りこぼし側に倒れるので黙る**」と書いたが、
+     * **測ったら逆だった**。#518 のレビューが実測して指摘した。
+     * **「たぶんこちら側に倒れる」を測らずに書いた**のが誤り。）
+     *
+     * **本番 CSS に現在この形は 0 件。** 書かれたら、**この検算を直すこと**——
+     * 直す先は `selectorLink` ではない。
+     *
+     * ## この検算が「まだ残っている緩さ」を鳴らすこと（#518 では直さない）
+     *
+     * `\ba\b` は **`-` が非単語文字**なので、**`.note .link-a` にも当たる**（`a` 要素ではない）。
+     * これは **`a$` とは別の枝の別の緩さで、`origin/main` から変わっていない**
+     * （実測: `.note .link-a` は main も このブランチも `selectorLink` が真）。
+     * #515 が同じファイルを触る予定なので、**変更を最小限にする指示に従って直していない。**
+     *
+     * ただし**この検算は鳴る**——`.note .link-a { padding: 4px }` を `pages.css` に入れると
+     * **2 failed**（本体の検査＋この検算）。**塞いでいないが、黙ってもいない。**
+     * 直すなら `\ba\b` を `(?:^|[\s>+~,()|])a(?:$|[\s>+~,()|:\[.#])` のような形にする話で、
+     * **別の PBI**。
+     */
+    const rightmostCompound = (sel: string): string => {
+      let depth = 0;
+      let start = 0;
+      for (let i = 0; i < sel.length; i++) {
+        const c = sel[i];
+        if (c === "(" || c === "[") depth++;
+        else if (c === ")" || c === "]") depth--;
+        else if (depth === 0 && /[\s>+~]/.test(c)) start = i + 1;
+      }
+      return sel.slice(start);
+    };
+    const targetsAnchor = (sel: string): boolean => {
+      // 疑似クラス・疑似要素を、括弧の中身ごと落とす（型を変えないため）
+      const bare = rightmostCompound(sel).replace(/::?[\w-]+(\([^)]*\))?/g, "") || "*";
+      const a = document.createElement("a");
+      a.setAttribute("href", "https://example.com/"); // `a[href]` の形も見られるように
+      const span = document.createElement("span");
+      try {
+        return a.matches(bare) && !span.matches(bare);
+      } catch {
+        return false; // 読めないセレクタは「a 要素と言い切れない」側に倒す
+      }
+    };
+
+    // 前提: 走査が空振りしていない
+    const all: string[] = [];
+    for (const f of files) {
+      const style = document.createElement("style");
+      style.textContent = f.css;
+      document.head.appendChild(style);
+      for (const r of [...style.sheet!.cssRules]) {
+        if (r instanceof CSSStyleRule) all.push(...r.selectorText.split(",").map((t) => t.trim()));
+      }
+      style.remove();
+    }
+    expect(all.length, "本番 CSS からセレクタを 1 つも読めていない（検算が空振り）").toBeGreaterThan(100);
+
+    /**
+     * **`filter` で「違反だけ」を集めない**（#500 の Z2 / #507）。
+     * `all.filter((sel) => selectorLink.test(sel) && !targetsAnchor(sel))` の形にすると、
+     * **判定側に述語を 1 つ足すだけ**（`!sel.includes("kana") &&`）で **33/33 緑**になる（実測）。
+     * 通った件数は判決の中身を何も語らないので、**入口の `all.length` も無傷のまま**通る。
+     *
+     * 代わりに**全件について判決を 1 つずつ表に積み**、
+     * **表の鍵が対象集合と完全に一致すること**を同じ `it` の中で突き合わせる。
+     *
+     * ## この照合が効く範囲（**実測。一般化しない**）
+     *
+     * 最初ここに「述語を足せばその件が表から落ちるので、集合の照合で落ちる」と書いたが、
+     * **実態より強い主張だった**（#518 のレビューが 3 形を測って指摘）。**効くのは 1 形だけ**:
+     *
+     *     `verdict.set` を `continue` で飛ばす        **落ちる**（鍵が痩せるので照合で捕まる）
+     *     `falsePositives` / `missed` の `filter` に述語  **落ちない**（表は無傷。判決の読み方だけ変わる）
+     *     `all.push` の時点で述語                     **落ちない**（`all` と比べているので**自己参照**）
+     *
+     * **`all.push` の形が落ちないのは、期待値（`all`）と検査対象が同じ源だから**
+     * （#499「期待値を検査対象から生成しない」）。**ここはその処方を満たしていない。**
+     * `all` の外に独立した期待値が無いので、**入口が痩せたことは
+     * `expectAllCssFound` と `all.length` の下限でしか見ていない。**
+     *
+     * **塞ぎ切ってはいない。** 落ちない 2 形も、**見本側の釘**
+     * （`散文の非違反` の「末尾が `a` のクラス名」3 件）が別に効くので、
+     * **単独の変異では検査全体は死なない**——が、**この `it` は黙る。**
+     */
+    const verdict = new Map<string, "リンク" | "リンクでない">();
+    for (const sel of all) {
+      // `selectorLink` が当たったものだけを「リンク」と呼ぶ。**当たらなかったものも表に載せる**
+      verdict.set(sel, selectorLink.test(sel) ? "リンク" : "リンクでない");
+    }
+    // 出口の固定: 判決を下した集合が、入口の集合と 1 件も違わないこと
+    expect([...verdict.keys()].sort(), "判決を下していないセレクタがある（判定側に述語を足していませんか）")
+      .toEqual([...new Set(all)].sort());
+
+    // 本題: 「リンク」と判決したのに `a` 要素でないもの＝偽陽性の芽
+    const falsePositives = [...verdict].filter(([sel, v]) => v === "リンク" && !targetsAnchor(sel)).map(([sel]) => sel);
+    expect(falsePositives, "selectorLink が a 要素でないセレクタに当たっている（偽陽性）").toEqual([]);
+
+    // 対照: 「リンクでない」と判決したのに `a` 要素なもの＝取りこぼし（枝を痩せさせすぎていない）
+    const missed = [...verdict].filter(([sel, v]) => v === "リンクでない" && targetsAnchor(sel)).map(([sel]) => sel);
+    expect(missed, "a 要素を指すセレクタを selectorLink が取りこぼしている").toEqual([]);
+
+    // 対照が空でないこと（両方の判決が現に出ている＝表が片側に潰れていない）
+    const counts = [...verdict.values()];
+    expect(counts.filter((v) => v === "リンク").length, "本番 CSS に a 要素を指すセレクタが 1 つも無い（対照が空）")
+      .toBeGreaterThan(0);
+    expect(counts.filter((v) => v === "リンクでない").length, "全件を「リンク」と判決している（判定が常に真）")
       .toBeGreaterThan(0);
   });
 });
