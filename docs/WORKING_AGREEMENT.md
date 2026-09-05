@@ -469,6 +469,22 @@
         --jq '.check_runs[]|"\(.name) \(.status)/\(.conclusion)"'
       ```
       **`gh run view <id>` の緑は、その run の commit が PR の HEAD だとは限らない。**
+  - **git の出力は、比べている基準を自分で言えるまで信じない**（2026-09-06、PO が続けて 2 回読み違えた）。
+    - **1 回目**: マージ済みの worktree 15 本を掃除する前に「中身が main にあるか」を確かめようとして、
+      `git diff origin/main <枝>` を見た。**全部が数百ファイルの差分**に見えたので未マージかと思った。
+      **これは枝が古い main から分かれているぶんの差**であって、**枝が加えた変更が残っているかは映らない**。
+      正しくは `base=$(git merge-base origin/main <枝>)` を取り、
+      **`git diff --name-only $base <枝>` で「枝が触ったファイル」に絞ってから** main と比べる。
+      それでも squash マージだと内容一致は保証されないので、**枝が追加した行が main に在るかを直接引く**
+      （`git show origin/main:<file> | grep -F <追加行>`）。**15 本すべて取りこぼし 0 だった。**
+    - **2 回目**: `git push origin main` の出力に
+      `remote: - 4 of 4 required status checks are expected.` が出たのを**拒否だと読み**、
+      枝を切って PR を出そうとした。**push は成功していた**（これは branch protection の案内文）。
+      `gh pr create` が `No commits between main and <枝>` で落ちて初めて気づいた。
+    - **やること**: **`git push` の成否は終了コードと `git rev-parse origin/<branch>` で確かめる。**
+      **`remote:` 行は remote からの案内であって、成否ではない。**
+    - **共通する形**: **どちらも「出力の見た目」で判断し、「何と何を比べているか」を言えていなかった。**
+      作業合意の「**数字を出すときは、測り方も書く**」の、**自分の目で読むとき版**である。
   - **「待てば収束する」と決めつける前に、収束先が存在するか確かめる**
     （2026-09-05、#477 で**同じ症状を 2 度、別の原因で**踏んだ）。
     #477 の担当者は `fbGlyph=5`（システム書体に 5 グリフ）が消えないので
