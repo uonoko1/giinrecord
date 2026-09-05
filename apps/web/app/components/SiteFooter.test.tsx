@@ -1,5 +1,6 @@
 import { act, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { INSTALL_PROMPT_KEY } from "../lib/install-prompt";
 import { SiteFooter } from "./SiteFooter";
 
 /** ルーター文脈なしで描画できること自体が仕様（MemberPage はルーター無しでテストされる）。 */
@@ -34,7 +35,13 @@ describe("SiteFooter（#167）", () => {
 });
 
 describe("SiteFooter のインストール導線（#191）", () => {
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => {
+  // `useInstallPrompt` は捕まえた beforeinstallprompt を window に**保存する**ので、
+  // dispatch したテストは自分でそれを消す。消さないと実行順しだいで
+  // **後ろに並んだ無関係なファイル**がボタンを描いて落ちる（#512）。
+  delete (window as unknown as Record<string, unknown>)[INSTALL_PROMPT_KEY];
+  vi.unstubAllGlobals();
+});
 
   it("既定（イベント未捕捉）ではボタンを出さない", () => {
     renderFooter();

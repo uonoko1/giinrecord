@@ -22,8 +22,17 @@ function stubMatchMedia(standalone: boolean) {
   );
 }
 
+/**
+ * `navigator.userAgent` は `Object.defineProperty` で **navigator 自身に**上書きするので、
+ * `vi.unstubAllGlobals()` では戻らない。戻さないと**次に走るファイル**が Android の UA を見る（#512）。
+ * 素の `userAgent` は `Navigator.prototype` の getter なので、
+ * 自身に生えた own プロパティを `delete` すれば元の値が透ける（実測で確認）。
+ */
 function stubUserAgent(ua: string) {
   Object.defineProperty(navigator, "userAgent", { value: ua, configurable: true });
+}
+function restoreUserAgent() {
+  delete (navigator as { userAgent?: string }).userAgent;
 }
 
 beforeEach(() => {
@@ -32,6 +41,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   delete w()[INSTALL_PROMPT_KEY];
+  restoreUserAgent();
   vi.unstubAllGlobals();
 });
 

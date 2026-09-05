@@ -26,6 +26,9 @@ beforeEach(() => {
 });
 afterEach(() => {
   delete (window as unknown as Record<string, unknown>)[INSTALL_PROMPT_KEY];
+  // `Object.defineProperty` で navigator 自身に生やした own プロパティは `vi.unstubAllGlobals()` で戻らない。
+  // 消さないと**次に走るファイル**が Android / iPhone の UA を見る（#512）。
+  delete (navigator as { userAgent?: string }).userAgent;
   vi.unstubAllGlobals();
 });
 
