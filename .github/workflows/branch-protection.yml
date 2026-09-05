@@ -23,12 +23,16 @@ on:
       - "deploy/monitor/branch-protection.sh"
       - "deploy/test/branch-protection.test.sh"
   workflow_dispatch:
+# GITHUB_TOKEN に branch protection の読み取り権限は与えられない。
+# `administration: read` を書いて実測したところ、GitHub はワークフローを**構文として拒否**した:
+#   HTTP 422: failed to parse workflow: (Line: 31, Col: 3): Unexpected value 'administration'
+# `administration` は GITHUB_TOKEN の permissions に存在しないキーで、書くと**この workflow 自体が
+# 一切動かなくなる**（#540）。読み取りには fine-grained PAT が要る——**人間の作業**で、
+# 手順は docs/ops/deploy.md「main の保護設定」。PAT が置かれるまでは exit 2（読めない）として
+# 報告し続ける。**何も見ていない状態にはしない。**
 permissions:
   contents: read
   issues: write
-  # branch protection の読み取りには管理権限が要る。#521 のマージ後、これが無い状態で
-  # workflow_dispatch した結果、gh api が失敗して Issue #540 が開いた（実測）。
-  administration: read
 concurrency:
   group: branch-protection
   cancel-in-progress: false
