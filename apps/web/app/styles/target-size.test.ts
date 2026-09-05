@@ -1063,16 +1063,65 @@ describe("forbiddenTargetFixes: 例外に当たるリンクを「直した跡」
     const cssFiles = ["styles/pages.css", "routes/assemblies.css", "routes/members.css"];
     const { selectorLink } = TARGET_LINK_RULES.散文;
 
-    // `sel` の末尾の単純セレクタが `a` 要素に当たるかを、CSSOM の `matches()` で確かめる。
-    // 祖先の条件は落として、**一番右の単純セレクタだけ**を <a> と <span> に当てる。
-    const rightmost = (sel: string) => sel.split(/[\s>+~]+/).filter(Boolean).at(-1) ?? "";
+    /**
+     * **そのセレクタが `a` 要素を狙っているか**を、正規表現で綴りを見るのではなく
+     * **CSSOM の `matches()` に聞く**（#472 / #481 / #483 の教訓）。
+     *
+     * ## 見るのは「一番右の複合セレクタの、要素の型」だけ
+     *
+     * 狙う要素の**種類**を決めるのは一番右である（`.cover__brand a` の `a`）。
+     * 祖先の条件は種類を決めないので落とす。
+     * 切り出しは**括弧の深さを数えて**行う——素朴に `>` で割ると
+     * `.note :is(p > a)` が **`a)` に壊れる**（実測で踏んだ）。
+     *
+     * ## 疑似クラス・疑似要素は落とす（型を変えないため）
+     *
+     * `:hover` `::after` は**要素の型を変えない**。
+     * 落とさないと `matches()` が決して真にならず、
+     * **本物のリンク（`.note a:hover` / `.note a::after`）を「`a` 要素でない」と誤判定する**
+     * （実測で 2 形踏んだ。**検算のほうが壊れていた**）。
+     *
+     * ## ここで見ていない形（塞がない判断。**書いておく**——#451 の流儀）
+     *
+     * **`:is()` / `:where()` の中に結合子が入る形**（`.note :is(p > a)`）は、
+     * 括弧ごと落とすので **`*` になり、`<a>` にも `<span>` にも当たる → `false`**。
+     * つまり**「`a` 要素と言い切れない」側に倒れる**ので、
+     * **この検算は黙る**（`a$` の見張りとしては効かなくなる）。
+     * ただし**本体の検査（`forbiddenTargetFixes`）は落ちる**ので、
+     * **違反そのものは素通りしない**（実測: `.note :is(p > a) { padding: 4px }` を
+     * `pages.css` に入れると `1 failed`）。
+     * **本番 CSS に現在この形は 0 件。** 書かれたらこの検算を作り直すこと。
+     *
+     * ## この検算が「まだ残っている緩さ」を鳴らすこと（#518 では直さない）
+     *
+     * `\ba\b` は **`-` が非単語文字**なので、**`.note .link-a` にも当たる**（`a` 要素ではない）。
+     * これは **`a$` とは別の枝の別の緩さで、`origin/main` から変わっていない**
+     * （実測: `.note .link-a` は main も このブランチも `selectorLink` が真）。
+     * #515 が同じファイルを触る予定なので、**変更を最小限にする指示に従って直していない。**
+     *
+     * ただし**この検算は鳴る**——`.note .link-a { padding: 4px }` を `pages.css` に入れると
+     * **2 failed**（本体の検査＋この検算）。**塞いでいないが、黙ってもいない。**
+     * 直すなら `\ba\b` を `(?:^|[\s>+~,()|])a(?:$|[\s>+~,()|:\[.#])` のような形にする話で、
+     * **別の PBI**。
+     */
+    const rightmostCompound = (sel: string): string => {
+      let depth = 0;
+      let start = 0;
+      for (let i = 0; i < sel.length; i++) {
+        const c = sel[i];
+        if (c === "(" || c === "[") depth++;
+        else if (c === ")" || c === "]") depth--;
+        else if (depth === 0 && /[\s>+~]/.test(c)) start = i + 1;
+      }
+      return sel.slice(start);
+    };
     const targetsAnchor = (sel: string): boolean => {
-      const right = rightmost(sel);
+      // 疑似クラス・疑似要素を、括弧の中身ごと落とす（型を変えないため）
+      const bare = rightmostCompound(sel).replace(/::?[\w-]+(\([^)]*\))?/g, "") || "*";
       const a = document.createElement("a");
+      a.setAttribute("href", "https://example.com/"); // `a[href]` の形も見られるように
       const span = document.createElement("span");
       try {
-        // 疑似クラス・疑似要素は落として、要素の型だけを見る
-        const bare = right.replace(/::?[\w-]+(\([^)]*\))?/g, "") || "*";
         return a.matches(bare) && !span.matches(bare);
       } catch {
         return false; // 読めないセレクタは「a 要素と言い切れない」側に倒す
