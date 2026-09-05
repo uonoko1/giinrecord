@@ -100,33 +100,38 @@ selfcheck() {  # selfcheck <落とすべき=bad|通すべき=good> <名前> <本
   else bad "検査器: $name は $want のはずだが検出数 $got"; fi
 }
 
+# 見本の本文は `|` を変数 P から組み立てる。**この検査ファイル自身が走査対象に入る**ので、
+# 見本をそのままリテラルで書くと、検査器が自分の見本を違反として数えてしまう（実際に 1 件出た）。
+P='|'
+
 # --- 落とすべき形（早期終了する読み手がパイプの末尾）---
-selfcheck bad  "printf | grep -q"            'if printf "%s" "$X" | grep -q PAT; then :; fi'
-selfcheck bad  "echo | grep -Eq"             'if echo "$X" | grep -Eq PAT; then :; fi'
-selfcheck bad  "複数行に折り返したパイプ"    'if printf "%s" "$X" \
-  | grep -q PAT; then :; fi'
-selfcheck bad  "cmd | head -1"               'v=$(curl -sI "$U" | head -1)'
-selfcheck bad  "grep -m1"                    'if cat f | grep -m1 PAT; then :; fi'
-selfcheck bad  "grep -l"                     'if cat f | grep -l PAT; then :; fi'
-selfcheck bad  "3段の最後が grep -q"         'if cat f | sed s/a/b/ | grep -q PAT; then :; fi'
-selfcheck bad  "LC_ALL= を前置した grep -q"  'if cat f | LC_ALL=C grep -q PAT; then :; fi'
-selfcheck bad  "フルパスの grep -q"          'if cat f | /usr/bin/grep -q PAT; then :; fi'
+selfcheck bad  "printf ${P} grep -q"          "if printf '%s' \"\$X\" $P grep -q PAT; then :; fi"
+selfcheck bad  "echo ${P} grep -Eq"           "if echo \"\$X\" $P grep -Eq PAT; then :; fi"
+selfcheck bad  "複数行に折り返したパイプ"     "if printf '%s' \"\$X\" \\
+  $P grep -q PAT; then :; fi"
+selfcheck bad  "cmd ${P} head -1"             "v=\$(curl -sI \"\$U\" $P head -1)"
+selfcheck bad  "grep -m1"                     "if cat f $P grep -m1 PAT; then :; fi"
+selfcheck bad  "grep -l"                      "if cat f $P grep -l PAT; then :; fi"
+selfcheck bad  "3段の最後が grep -q"          "if cat f $P sed s/a/b/ $P grep -q PAT; then :; fi"
+selfcheck bad  "LC_ALL= を前置した grep -q"   "if cat f $P LC_ALL=C grep -q PAT; then :; fi"
+selfcheck bad  "フルパスの grep -q"           "if cat f $P /usr/bin/grep -q PAT; then :; fi"
+selfcheck bad  "grep --quiet（長い形）"       "if cat f $P grep --quiet PAT; then :; fi"
 
 # --- 通すべき形（EOF まで読む／パイプでない）---
-selfcheck good "here-string の grep -q"      'if grep -q PAT <<<"$X"; then :; fi'
-selfcheck good "プロセス置換の grep -q"      'if grep -q PAT < <(cat f); then :; fi'
-selfcheck good "ファイル引数の grep -q"      'if grep -q PAT f; then :; fi'
-selfcheck good "パイプ末尾が sed"            'v=$(cat f | sed s/a/b/)'
-selfcheck good "パイプ末尾が awk"            'v=$(cat f | awk "{print}")'
-selfcheck good "パイプ末尾が wc -l"          'v=$(cat f | wc -l)'
-selfcheck good "パイプ末尾が grep -c"        'v=$(cat f | grep -c . || true)'
-selfcheck good "パイプ末尾が sort"           'v=$(cat f | sort)'
-selfcheck good "|| は パイプではない"        'grep -q PAT f || echo no'
-selfcheck good "コメントの中の | grep -q"    '# cat f | grep -q PAT'
-selfcheck good "文字列の中の | grep -q"      'X="cat f | grep -q PAT"'
-selfcheck good "heredoc の中の | grep -q"    'cat <<HD
-cat f | grep -q PAT
-HD'
+selfcheck good "here-string の grep -q"       "if grep -q PAT <<<\"\$X\"; then :; fi"
+selfcheck good "プロセス置換の grep -q"       "if grep -q PAT < <(cat f); then :; fi"
+selfcheck good "ファイル引数の grep -q"       "if grep -q PAT f; then :; fi"
+selfcheck good "パイプ末尾が sed"             "v=\$(cat f $P sed s/a/b/)"
+selfcheck good "パイプ末尾が awk"             "v=\$(cat f $P awk '{print}')"
+selfcheck good "パイプ末尾が wc -l"           "v=\$(cat f $P wc -l)"
+selfcheck good "パイプ末尾が grep -c"         "v=\$(cat f $P grep -c . || true)"
+selfcheck good "パイプ末尾が sort"            "v=\$(cat f $P sort)"
+selfcheck good "${P}${P} はパイプではない"    "grep -q PAT f ${P}${P} echo no"
+selfcheck good "コメントの中の ${P} grep -q"  "# cat f $P grep -q PAT"
+selfcheck good "文字列の中の ${P} grep -q"    "X=\"cat f $P grep -q PAT\""
+selfcheck good "heredoc の中の ${P} grep -q"  "cat <<HD
+cat f $P grep -q PAT
+HD"
 
 echo "== pipefail のもとで、早期終了する読み手をパイプの末尾に置かない（#527） =="
 echo "   検査対象: ${#FILES[@]} ファイル（scripts/ci/shellcheck.sh --list）"
