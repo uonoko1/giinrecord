@@ -67,8 +67,34 @@ t_syntax() { bash -n "$SCRIPT" || fail "bash -n branch-protection.sh"; }
 # job itself has to be deleted from the workflow, which is a visible change in a third file
 # (WORKING_AGREEMENT: 防御は「不可能にすること」ではなく「隠れて通れなくすること」／経路が2つ以上あるものは
 #  それぞれ別々に釘打つ).
-# NOTE: this is a SUBSET assertion in one direction only — every security job must be required. `docker-web` is a
-# job in ci.yml that is deliberately NOT a required check, so "every job must appear" would be wrong.
+# NOT CLOSED, on purpose — read this before trusting the case below.
+#
+# This is a SUBSET assertion in ONE DIRECTION ONLY: every job found in the workflows must appear in
+# REQUIRED_CHECKS. Measured, both directions (2026-09-06):
+#
+#   RENAME  `gitleaks:` → `secrets-scan:` in security.yml, REQUIRED_CHECKS untouched
+#             → 15 passed, 1 failed (exit 1). `want` changes, `got` does not, the subset breaks. Caught.
+#   DELETE  remove the whole `gitleaks:` job from security.yml, REQUIRED_CHECKS untouched
+#             → 16 passed, 0 failed (exit 0). NOT CAUGHT.
+#
+# The delete direction is not caught because removing a job SHRINKS `want`, and a subset assertion is satisfied
+# for free when the left side shrinks. That is exactly the shape #499 warns about ("allowlist は痩せたら落とす
+# だけでなく、中身が入れ替わったら落とすまで固定する") — here only the "入れ替わったら" half is covered.
+#
+# Why it is not made bidirectional here: `docker-web` is a job in ci.yml that is deliberately NOT a required
+# check, so "every job must be required" is false as stated. A bidirectional check needs an allowlist of such
+# exceptions, and that allowlist would itself need pinning — which is more than this layer can carry, since it
+# reads YAML with sed/grep and depends on job ids being two-space-indented keys. This is the
+# "そのレイヤでは塞げない" side of #504, not the "塞げるのに塞いでいない" side.
+#
+# What deleting a job is BELIEVED to cause — THIS IS REASONING, NOT MEASURED: the required contexts live in the
+# branch protection settings, not in the workflow, so deleting the job does not remove `gitleaks` from the
+# required set. Nothing would report it, the check would stay `expected`, and PRs would stop being mergeable
+# (the `4 of 4 required status checks are expected.` state seen in #521). That fails towards "merges stop",
+# not towards "secret scanning silently stops being required". It has NOT been verified end to end on a real PR.
+#
+# Where this should move: #526 does the same kind of work in TypeScript (packages/etl). The bidirectional
+# comparison, plus a pinned allowlist for exceptions like `docker-web`, belongs there.
 t_required_checks_match_workflows() {
   local want got missing=""
   # job ids = the two-space-indented keys AFTER the top-level `jobs:` line (sed range), so `permissions:` and

@@ -93,6 +93,14 @@ Issue が開く。**「気をつけて戻す」には頼らない。**
 **必ず落ちる**（「読めない」を ok に倒さない）。そのとき gh のエラー文は
 **Issue 本文に転記しない** — 認証情報が混ざりうるため、理由は run のログ側に置く。
 
+**塞げていないことが分かっている点**（#521。移設先は #526 の TypeScript 側）:
+必須チェックの一覧は `.github/workflows` の job 定義と突き合わせているが、**片方向だけ**である。
+job を**改名**すると落ちる（実測 `exit 1`）が、job を**丸ごと消す**と落ちない（実測 `exit 0`）——
+消すと突き合わせる側の集合が痩せ、部分集合の判定が自動的に満たされるため。
+双方向にするには `docker-web`（意図的に必須にしていない job）のような例外の allowlist が要り、
+その allowlist もまた固定が要る。**推論（未実測）**だが、job を消しても必須 context は
+branch protection 側に残るので、報告する者がいなくなって**マージが止まる**方向に倒れるはずである。
+
 ### 日次データ（`deploy-data.yml`）
 
 ETL の data PR がマージされると `etl.yml` / `districts.yml` が `gh workflow run deploy-data.yml --ref main` を起動し、staging と production（Environment `production-data`、承認なし）の両方に配る。
