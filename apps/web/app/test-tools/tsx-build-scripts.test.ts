@@ -56,7 +56,11 @@ describe("tsx で走るビルドスクリプトから import.meta.glob に繋が
     expect(notCovered, "package.json が tsx で走らせているのに、入口に入っていないスクリプト").toEqual([]);
 
     // 辿り着く先。**増減したら気づく**（減っていたら走査が壊れている可能性がある）
-    expect(reached.map((r) => rel(r.file))).toEqual([
+    expect(
+      reached.map((r) => rel(r.file)),
+      "tsx から辿れるモジュールが増減しました。増えた分が `import.meta.glob` に触らないことを確かめて、" +
+        "この一覧を更新してください（減っていたら走査が壊れている可能性があります）",
+    ).toEqual([
       "app/lib/archive-path.ts",
       "app/lib/archive.ts",
       "app/lib/data-contract.ts",
