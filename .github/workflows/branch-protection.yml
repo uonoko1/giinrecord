@@ -26,6 +26,9 @@ on:
 permissions:
   contents: read
   issues: write
+  # branch protection の読み取りには管理権限が要る。#521 のマージ後、これが無い状態で
+  # workflow_dispatch した結果、gh api が失敗して Issue #540 が開いた（実測）。
+  administration: read
 concurrency:
   group: branch-protection
   cancel-in-progress: false
@@ -39,30 +42,69 @@ jobs:
         run: bash deploy/test/branch-protection.test.sh
       # PR では実際の設定を読まない: fork からの PR に issues:write は渡らず、Issue の開閉もしたくない。
       # 設定そのものの確認は schedule と workflow_dispatch でやる。
+      # 2つの結果を、2つの別々の Issue として扱う（#540）。
+      #   exit 1 = 設定が弱い        → "[monitor] repo: main の保護設定"
+      #   exit 2 = 設定を読めなかった → "[monitor] repo: main の保護設定を読めない"
+      # 同じタイトルにすると、片方が開いている間もう片方が開けない（report.sh はタイトルを同一性に使う）。
+      # #540 は「読めなかった」のに「弱まっている」という本文で開いた。毎朝それが出ると本物と区別が付かない。
+      #
+      # stderr は $out に混ぜない（`2>&1` にしない）。gh の API エラーには Authorization ヘッダが混ざりうるが、
+      # $out は公開 Issue の本文にそのまま入る。stderr は job のログにだけ出す。
       - name: check main's protection → Issue
         if: github.event_name != 'pull_request'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -uo pipefail
-          title="[monitor] repo: main の保護設定"
-          if out=$(bash deploy/monitor/branch-protection.sh "$GITHUB_REPOSITORY" main 2>&1); then
-            echo "$out"
-            bash deploy/monitor/report.sh "$title" ok
-          else
-            echo "$out"
-            {
-              echo "**main の branch protection が弱まっている。** CI を通さずに main へ入れる状態かもしれない（#521）。"
-              echo
-              echo '```'
-              echo "$out"
-              echo '```'
-              echo
-              echo "- run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-              echo
-              echo "直し方と、緊急時に一時的に外すときの手順は \`docs/ops/deploy.md\`「main の保護設定」。"
-              echo "検査が通るようになれば、この Issue は自動で閉じる。"
-            } > body.md
-            bash deploy/monitor/report.sh "$title" fail body.md
-            exit 1
-          fi
+          weak_title="[monitor] repo: main の保護設定"
+          unreadable_title="[monitor] repo: main の保護設定を読めない"
+          run_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          out=$(bash deploy/monitor/branch-protection.sh "$GITHUB_REPOSITORY" main); rc=$?
+          echo "$out"
+          case $rc in
+            0)
+              # どちらの Issue も閉じる
+              bash deploy/monitor/report.sh "$weak_title" ok
+              bash deploy/monitor/report.sh "$unreadable_title" ok
+              ;;
+            1)
+              {
+                echo "**main の branch protection が弱まっている。** CI を通さずに main へ入れる状態かもしれない（#521）。"
+                echo
+                echo '```'
+                echo "$out"
+                echo '```'
+                echo
+                echo "- run: $run_url"
+                echo
+                echo "直し方と、緊急時に一時的に外すときの手順は \`docs/ops/deploy.md\`「main の保護設定」。"
+                echo "検査が通るようになれば、この Issue は自動で閉じる。"
+              } > body.md
+              bash deploy/monitor/report.sh "$weak_title" fail body.md
+              exit 1
+              ;;
+            2)
+              # 読めなかっただけで、設定が弱いとは限らない。**弱まっている側の Issue は触らない**
+              # （開いていれば開いたまま、閉じていれば閉じたまま。判定できていないので勝手に閉じない）。
+              {
+                echo "**main の保護設定を読めなかった。** 設定が弱いかどうかは**判定できていない**（#540）。"
+                echo
+                echo '```'
+                echo "$out"
+                echo '```'
+                echo
+                echo "- run: $run_url"
+                echo
+                echo "**理由は run のログ（stderr）にある。** 認証情報が混ざりうるのでここには転記しない。"
+                echo "よくある原因は権限で、branch protection の読み取りには \`administration: read\` が要る。"
+                echo "それでも読めない場合は PAT が要る（**人間の作業**）。手順は \`docs/ops/deploy.md\`「main の保護設定」。"
+                echo "読めるようになれば、この Issue は自動で閉じる。"
+              } > body.md
+              bash deploy/monitor/report.sh "$unreadable_title" fail body.md
+              exit 1
+              ;;
+            *)
+              echo "::error::branch-protection.sh が想定外の終了コード $rc を返した"
+              exit 1
+              ;;
+          esac
