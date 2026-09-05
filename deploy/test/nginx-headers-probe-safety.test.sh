@@ -27,6 +27,20 @@
 # 「落ちること」を、良い location を食わせて「通ること」を固定する。
 # 落ちる側だけ試すと、正しい書き方まで落とす検査ができあがる（#451 のレビューの教訓）。
 #
+# **このレイヤで塞げないもの**（作業合意 #504「塞げるのに塞いでいないと、そのレイヤでは
+# 塞げないを区別する」）:
+# **このファイルごと削除する**、または **t_bad_locations_fail の本体を丸ごと `:` にする**変異は、
+# ここでは検出できない（実測: 本体を `:` にすると 5 passed, 0 failed のまま緑）。
+# 同一ファイル内の仕掛けは、そのファイルごと消せるので**原理的に自己防衛できない**。
+# ただしどちらも**レビューで目に見える改変**（関数の中身の全削除・ファイルの削除）で、
+# 「述語を 1 つ足すだけ」のような隠れて通る変異ではない。
+# CI は `deploy/test/*.test.sh` を glob で回す（.github/workflows/ci.yml）ので、
+# ファイルを消せば黙るが、その diff は PR に必ず出る。
+#
+# **ループを飛ばす形は塞いである**: 見本を 1 件ずつ判定した数（JUDGED）を、
+# **同じ関数の最後で**配列の長さと突き合わせる（実測: ループ先頭に `continue` を入れると
+# 「見本 17 形のうち 0 形しか判定していない」で落ちる）。
+#
 #   bash deploy/test/nginx-headers-probe-safety.test.sh
 # docker は要らない（プローブ生成は docker 起動より前に走り、不正な location はそこで落ちる）。
 set -euo pipefail
@@ -119,21 +133,62 @@ BAD_LOCATIONS=(
   'redirect|/a>b/'
   'no_leading_slash|assets/'
   'backslash|/a\b/'
+  # 完全一致（`= uri`）の枝。ファイルは置かないが **curl の URL にそのまま入る**ので、
+  # ここを素通しすると `= /../../x` が curl に渡る。前方一致の見本だけでは
+  # **この枝を 1 度も通らない**（実測: 完全一致の枝の検査を消す変異で
+  # `ok   /../../pbi505-exact` と表示されて **17 passed, 0 failed** になった）。
+  'exact_dotdot|= /../../pbi505-exact'
+  'exact_space|= /a b'
 )
+
+# **判定した件数を、判定そのものと同じ場所で数える**（作業合意 #507「無罪判決を引き直す」）。
+# ループ本体を丸ごと `:` にする変異（Z2）は、**本体を消しただけで 5 passed, 0 failed のまま**
+# 通った（実測）。見本の配列は無傷なので、テスト名の「17 形」も嘘のまま表示される。
+# 数えたものを**同じ関数の最後で突き合わせる**ことで、本体を消すと「0 形しか判定していない」で落ちる。
+# 別の it に置くと「その it だけ消す」で黙るので、ここに置く。
+JUDGED=0
 
 t_bad_locations_fail() {
   local entry name loc conf before after
+  JUDGED=0
   for entry in "${BAD_LOCATIONS[@]}"; do
     name=${entry%%|*}; loc=${entry#*|}
     conf=$(mkconf "$loc")
     before=$(escaped_entries | wc -l)
     run_target "$conf"
     after=$(escaped_entries | wc -l)
+
+    # **「落ちた」ではなく「狙った理由で落ちた」を見る**（作業合意 #451）。
+    # 終了コードだけを見ていると、**docker スタブが後で失敗するせいで exit 1 になった**のを
+    # 「プローブ生成が拒んだ」と読み違える。実測: 完全一致の枝の検査を消す変異（M7）は、
+    # 終了コードと "FAIL" の有無だけでは**素通りした**（5 passed, 0 failed）。
+    # そのとき `= /../../pbi505-exact` は本物の site.conf 相手に
+    # **`ok /../../pbi505-exact` と表示されて 17 passed, 0 failed** になっていた。
+    # だから **プローブ生成が出す固有の文言**を要求する。
+    # `location の数え上げが壊れている` も、**プローブ生成の手前にある見張り**（#499）が
+    # 捕まえた正しい拒否。`;` を含む location は `location[^;]*{` の独立な数え方を狂わせるので、
+    # allowlist に届く前にここで落ちる（実測: /x;y/ は「拾えた 8 個 / site.conf にある 7 個」）。
+    case "$OUT" in
+      *'安全でない location'*|*'docroot の外に出る'*|*'未対応の location'*|*'location の数え上げが壊れている'*) ;;
+      *) fail "$name [$loc]: プローブ生成の拒否メッセージが無い（別の理由で落ちただけ）: $(printf '%s' "$OUT" | tail -2 | tr '\n' ' ')" ;;
+    esac
+
+    # **拒んだ location が、叩くパスの一覧に入っていないこと。**
+    # 上のメッセージは「表示した」だけで、その後も使い続けていれば意味が無い。
+    # `ok <その location>` が出ていたら、拒否したつもりで curl に渡している。
+    case "$OUT" in
+      *"ok   $loc"*|*"ok   ${loc#= }"*)
+        fail "$name [$loc]: 拒否したはずの location を叩いている（ok 行が出た）" ;;
+    esac
+
     [ "$STATUS" -ne 0 ] || fail "$name [$loc]: 終了コードが 0（落ちていない）"
-    case "$OUT" in *FAIL*) ;; *) fail "$name [$loc]: 出力に FAIL が無い";; esac
     [ "$before" = "$after" ] || fail "$name [$loc]: 作業ディレクトリの外に $((after-before)) 件できた: $(escaped_entries | tr '\n' ' ')"
+    JUDGED=$((JUDGED+1))
     rm -f "$conf"
   done
+  # 見本を 1 件ずつ本当に走らせたか。ループ本体を消す・continue で飛ばす変異はここで落ちる。
+  [ "$JUDGED" -eq "${#BAD_LOCATIONS[@]}" ] || \
+    fail "見本 ${#BAD_LOCATIONS[@]} 形のうち $JUDGED 形しか判定していない（ループが飛ばされている）"
 }
 
 # ---- 通すべき location（厳しすぎて正しい書き方を落としていないか・#451） ----
@@ -204,7 +259,7 @@ t_real_site_conf_is_accepted() {
 # BAD_LOCATIONS=() に書き換えるだけで黙る。件数をハードコードして突き合わせる
 # （検査対象から生成すると自己参照になり、対象が痩せれば期待値も一緒に痩せる・#499）。
 t_fixture_counts_are_pinned() {
-  [ "${#BAD_LOCATIONS[@]}" -eq 15 ] || fail "落とすべき location の見本が ${#BAD_LOCATIONS[@]} 件（15 件を期待）。減らすなら理由を書くこと"
+  [ "${#BAD_LOCATIONS[@]}" -eq 17 ] || fail "落とすべき location の見本が ${#BAD_LOCATIONS[@]} 件（17 件を期待）。減らすなら理由を書くこと"
   [ "${#GOOD_LOCATIONS[@]}" -eq 8 ]  || fail "通すべき location の見本が ${#GOOD_LOCATIONS[@]} 件（8 件を期待）。減らすなら理由を書くこと"
 }
 

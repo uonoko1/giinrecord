@@ -100,6 +100,16 @@ echo '<html lang="ja"><title>ページが見つかりません ・ 議員レコ�
 #   (2) 出口 = 実際の書き先が $ROOT の下に収まっているか（下の assert_under_root）
 # (1) だけだと、将来 (1) を緩めたときに黙って外へ書ける。(2) だけだと、$ROOT の中に
 # `/~/` や `/*/` のような意図しない名前を掘るのを止められない。
+#
+# **変異で確かめた結果**（deploy/test/nginx-headers-probe-safety.test.sh で測定）:
+# **片方の釘だけを外しても落ちない。これは穴ではなく、二重化そのもの**である。
+#   - `..` の判定だけ消す        → もう一方（assert_under_root）が
+#     「プローブ置き先が docroot の外に出る」で捕まえ、**何も作られない**（実測）
+#   - assert_under_root を殺す   → allowlist が「.. は traversal になる」で捕まえる（実測）
+#   - assert_safe_uri の `exit 1` だけ消す → assert_under_root の `exit 1` が止める（実測）
+# **両方を同時に外すと、元の穴がそのまま戻る**: `location /../../rev502-escaped/` で
+# **17 passed, 0 failed（exit 0）／/tmp/rev502-escaped が残る**（実測）。
+# つまりどちらも死んだコードではなく、**片方が破れたときの受け皿**として効いている。
 assert_safe_uri() {
   local uri=$1 kind=$2
   case "$uri" in
