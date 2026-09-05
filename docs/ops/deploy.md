@@ -148,6 +148,23 @@ done   # それぞれ 5 が出れば正しい
      && sudo -n docker compose -f /opt/giinrecord/deploy/docker-compose.yml up -d --force-recreate'
    ```
 
+   **`giinops` は `ssh config` の alias ではない**（2026-09-06 に 3 往復した）。
+   `Host giinops` を書いていない端末では `ssh giinops@<host>` が
+   **`Permission denied (publickey)`** で弾かれる——鍵が無いのではなく、
+   **どの鍵を出すかが決まらない**ため。`~/.ssh/config` にこう足しておく:
+
+   ```
+   Host giinops
+       HostName <VPS の IP>
+       User giinops
+       IdentityFile ~/.ssh/sakura-vps/id_ed25519
+       IdentitiesOnly yes
+   ```
+
+   足していない端末では `-i ~/.ssh/sakura-vps/id_ed25519 -o IdentitiesOnly=yes` を明示する。
+   **鍵は `ubuntu` と同じもので、ユーザー名だけが違う。**
+   **旧ユーザー `gikaiops` は鍵が無効化済み**（2026-09-06 に実測。`Permission denied`。#336 の懸念は解消）。
+
    `ubuntu` でやる場合はパスワード sudo なので `ssh -t`（TTY）が必要。
 4. ホスト側 `deploy/nginx-host-proxy.conf` を変える場合は `vps-setup.sh` の heredoc も同じ内容にする（テストが同一性を検査）。反映は `sudo bash deploy/vps-setup.sh giinrecord.jp`（staging は `staging.giinrecord.jp 8083`）の再実行。**certbot 管理の conf（`# managed by Certbot` を含む、#141 以前に構築したホスト）は書き換えず `proxy_pass` のポートだけ合わせる**ので、そのホストでは `sudo nano /etc/nginx/sites-available/giinrecord.conf` → `sudo nginx -t && sudo systemctl reload nginx`。テンプレートへ移行したいときは `sudo certbot certonly`（既存証明書があるので実際には不要）→ conf を退避して削除 → `vps-setup.sh` 再実行。
 
