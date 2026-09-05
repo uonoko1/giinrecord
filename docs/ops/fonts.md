@@ -165,6 +165,23 @@ node apps/web/scripts/font-transfer-bench.mjs <buildDir> <ラベル> > out.json
 > **再実行を忘れたら何も守らない**、が正確である。
 > **`--font-head` + 700 の要素に新しい語を書いたら、B の手順でサブセットを作り直すこと。**
 
+### 検査の所要時間（`testTimeout` の余裕は共有資源、#520 / #522）
+
+`font-subset-coverage.test.ts` は `data/` 全体を舐める（members 1,057 / speakerPositions 17,416 /
+rollCallGroups 96,993 / localVoteMarks 44,527）。**`describe` の外で 1 回だけ読むこと。**
+`it` の中で読むと **2 回**走り、`vitest.config.ts` の **20,000ms** に触れて落ちる。
+
+**同一負荷（load 99 / 16 コア）で測った実測:**
+
+| | `collect` | **`tests`**（`testTimeout` が効く範囲） | 20s までの余裕 |
+|---|---:|---:|---:|
+| `it` の中で 2 回読む | 0.9s | **17.19s** | **残り 2.8s** |
+| `describe` の外で 1 回読む | 16.45s | **0.39s** | 残り 19.6s |
+
+**速くなったのではなく、`testTimeout` の管轄外に移しただけ**である（走査自体は 16.45s のまま）。
+**`testTimeout` を上げてはいけない。** 20,000ms は #400 が折りたたみ系の 7.6s を根拠に置いた
+**共有の余裕**で、1 つのテストが食い潰すと**他人のテストが落ちる**。
+
 ### `pyftsubset` を使う（`text=` は使わない）
 
 Google Fonts の `text=` は **URL 引数が約 7.2 KB を超えると、エラーにならず 122 スライスの CSS を返す**
