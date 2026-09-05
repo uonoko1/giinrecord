@@ -58,7 +58,7 @@ const RAW_COLOR_FORMS: readonly { readonly name: string; readonly pattern: RegEx
    * （現に `app/components/` の非テストソースは `#` 無しの `Issue 167` 表記で統一されている。実測 0 件）。
    * 気づかず落ちる人のために、失敗メッセージで書き方を案内する。
    */
-  { name: "16進（#rgb / #rrggbb など）", pattern: /$^/ },
+  { name: "16進（#rgb / #rrggbb など）", pattern: /#[0-9a-fA-F]{3,8}\b/ },
   /** `rgb()` / `rgba()` / `hsl()` / `hsla()`。空白の有無・カンマ有無（CSS Color 4 記法）に依らず `(` の直前で見る */
   { name: "関数記法（rgb() / hsl()）", pattern: /\b(rgb|hsl)a?\(/ },
   /**
@@ -146,17 +146,32 @@ describe("rawColorsIn: 生の色コードの判定（#506）", () => {
     "色名 gray": 'const s = { color: "gray" };',
     "色名 grey（英国綴り）": 'const s = { color: "grey" };',
     "シングルクォートの色名": "const s = { color: 'white' };",
-    "1ファイルに2件（両方拾う）": 'const a = "#fff"; const b = "rgb(0,0,0)";',
+    "1ファイルに2件（形が違う。両方拾う）": 'const a = "#fff"; const b = "rgb(0,0,0)";',
+    "1ファイルに同じ形が2件（後ろも拾う）": 'const a = "#fff"; const b = "#1a1a1a";',
   };
 
-  it("21 通りの生の色を、どれも見落とさない", () => {
+  it("22 通りの生の色を、どれも見落とさない", () => {
     const missed = Object.entries(違反)
       .filter(([, src]) => rawColorsIn(src).length === 0)
       .map(([name]) => name);
     expect(missed, "生の色を見落としている（判定が死んでいる可能性）").toEqual([]);
-    expect(Object.keys(違反)).toHaveLength(21);
-    // **件数まで見る。** 1 件目で止めると 2 件目が報告に出ない
-    expect(rawColorsIn(違反["1ファイルに2件（両方拾う）"]!), "2 件目を拾っていない").toHaveLength(2);
+    expect(Object.keys(違反)).toHaveLength(22);
+  });
+
+  /**
+   * **件数まで見る。1 件目で止めると 2 件目が報告に出ない**（#485: 「落ちた」だけ見ると格下げに気づけない）。
+   *
+   * **形の違う 2 件だけでは足りない。** 実測: `found.push` の直後に `break;` を入れる変異は、
+   * `'#fff' + 'rgb(0,0,0)'` の見本では **20/20 全部緑で生き残った**——
+   * `break` は同じ形の 2 件目だけを落とし、外側のループが形ごとに回り直すため。
+   * **同じ形が 2 件**の見本を並べて初めて落ちる。
+   */
+  it("同じファイルの 2 件目以降も落とさない（形が同じでも違っても）", () => {
+    expect(rawColorsIn('const a = "#fff"; const b = "rgb(0,0,0)";'), "形の違う 2 件目を拾っていない").toHaveLength(2);
+    expect(rawColorsIn('const a = "#fff"; const b = "#1a1a1a";'), "同じ形の 2 件目を拾っていない（1 件目で止めていませんか）").toEqual([
+      "16進（#rgb / #rrggbb など）: #fff",
+      "16進（#rgb / #rrggbb など）: #1a1a1a",
+    ]);
   });
 
   /** **落ちる理由が狙ったものであること。** 形の名前まで固定する（#485: 「落ちた」だけ見ると格下げに気づけない） */
