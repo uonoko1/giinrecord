@@ -1083,14 +1083,38 @@ describe("forbiddenTargetFixes: 例外に当たるリンクを「直した跡」
     }
     expect(all.length, "本番 CSS からセレクタを 1 つも読めていない（検算が空振り）").toBeGreaterThan(100);
 
-    // 本題: `selectorLink` が当たったのに `a` 要素ではないもの＝偽陽性の芽
-    const falsePositives = all.filter((sel) => selectorLink.test(sel) && !targetsAnchor(sel));
+    /**
+     * **`filter` で「違反だけ」を集めない**（#500 の Z2 / #507）。
+     * `all.filter((sel) => selectorLink.test(sel) && !targetsAnchor(sel))` の形にすると、
+     * **判定側に述語を 1 つ足すだけ**（`!sel.includes("kana") &&`）で **33/33 緑**になる（実測）。
+     * 通った件数は判決の中身を何も語らないので、**入口の `all.length` も無傷のまま**通る。
+     *
+     * 代わりに**全件について判決を 1 つずつ表に積み**、
+     * **表の鍵が対象集合と完全に一致すること**を同じ `it` の中で突き合わせる。
+     * 述語を足せば**その件が表から落ちる**ので、集合の照合で落ちる。
+     */
+    const verdict = new Map<string, "リンク" | "リンクでない">();
+    for (const sel of all) {
+      // `selectorLink` が当たったものだけを「リンク」と呼ぶ。**当たらなかったものも表に載せる**
+      verdict.set(sel, selectorLink.test(sel) ? "リンク" : "リンクでない");
+    }
+    // 出口の固定: 判決を下した集合が、入口の集合と 1 件も違わないこと
+    expect([...verdict.keys()].sort(), "判決を下していないセレクタがある（判定側に述語を足していませんか）")
+      .toEqual([...new Set(all)].sort());
+
+    // 本題: 「リンク」と判決したのに `a` 要素でないもの＝偽陽性の芽
+    const falsePositives = [...verdict].filter(([sel, v]) => v === "リンク" && !targetsAnchor(sel)).map(([sel]) => sel);
     expect(falsePositives, "selectorLink が a 要素でないセレクタに当たっている（偽陽性）").toEqual([]);
 
-    // 対照: `a` 要素を指すセレクタは 1 件も取りこぼさない（枝を痩せさせすぎていない）
-    const missed = all.filter((sel) => targetsAnchor(sel) && !selectorLink.test(sel));
+    // 対照: 「リンクでない」と判決したのに `a` 要素なもの＝取りこぼし（枝を痩せさせすぎていない）
+    const missed = [...verdict].filter(([sel, v]) => v === "リンクでない" && targetsAnchor(sel)).map(([sel]) => sel);
     expect(missed, "a 要素を指すセレクタを selectorLink が取りこぼしている").toEqual([]);
-    expect(all.filter(targetsAnchor).length, "本番 CSS に a 要素を指すセレクタが 1 つも無い（対照が空）")
+
+    // 対照が空でないこと（両方の判決が現に出ている＝表が片側に潰れていない）
+    const counts = [...verdict.values()];
+    expect(counts.filter((v) => v === "リンク").length, "本番 CSS に a 要素を指すセレクタが 1 つも無い（対照が空）")
+      .toBeGreaterThan(0);
+    expect(counts.filter((v) => v === "リンクでない").length, "全件を「リンク」と判決している（判定が常に真）")
       .toBeGreaterThan(0);
   });
 });
