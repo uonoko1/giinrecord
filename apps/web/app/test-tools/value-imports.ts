@@ -178,3 +178,55 @@ export function reachableFrom(entries: string[], readFile: (f: string) => string
   // 並びはコードポイント順（`localeCompare` はロケールで変わる。#244 の事故）
   return [...seen.values()].sort((a, b) => (a.file < b.file ? -1 : a.file > b.file ? 1 : 0));
 }
+
+/**
+ * **入口 1 本ずつについて、「その入口から `find` が当たるソースに辿り着くか」だけを答える（#514）。**
+ *
+ * `reachableFrom` と**答えの形が違う**のが要点。こちらは**モジュールの一覧を作らない**——
+ * 入口ごとに `true` / `false`（＋辿った道）を返すだけ。
+ *
+ * なぜ 2 本目が要るか（#514 で実測した穴）:
+ * 検査が `reachableFrom(entries)` の結果を**一覧として変数に受け**、
+ * 件数・顔ぶれ・無罪判決をすべてその変数と突き合わせていると、
+ * **その変数を 1 行絞るだけ**（`.filter((r) => !r.file.includes("assemblies"))`）で
+ * **全部が痩せた基準に対して整合し、6/6 緑になる**（本物の違反を植えたまま。実測）。
+ * 一覧を基準にしている限り、一覧を痩せさせる変異は基準ごと痩せる。
+ *
+ * そこで**一覧を経由しない経路**を用意する。返すのは入口の名前なので、
+ * **モジュールのパスに対する述語（`assemblies` を除く等）が引っ掛かる場所が無い。**
+ * 入口を絞るなら `entries` を絞ることになるが、それは
+ * 「入口の顔ぶれ」と `package.json` の突き合わせが捕まえる（#490）。
+ *
+ * 探索は `reachableFrom` と**独立に書く**（深さ優先・訪問済み集合も別）。
+ * 同じ実装を呼び直すと、実装を 1 箇所壊しただけで両方黙るため。
+ */
+export function entriesReaching(
+  entries: string[],
+  find: (source: string, file: string) => unknown[],
+  readFile: (f: string) => string = (f) => readFileSync(f, "utf8"),
+): { entry: string; hit: string; via: string[] }[] {
+  const hits: { entry: string; hit: string; via: string[] }[] = [];
+  for (const entry of entries) {
+    const visited = new Set<string>([entry]);
+    const stack: { file: string; via: string[] }[] = [{ file: entry, via: [entry] }];
+    let found: { file: string; via: string[] } | null = null;
+    while (stack.length > 0 && !found) {
+      const current = stack.pop();
+      if (!current) break;
+      // 入口自身は `find` に掛けない（入口は tsx が直に走らせるので、この検査の対象は「その先」）
+      if (current.file !== entry && find(readFile(current.file), current.file).length > 0) {
+        found = current;
+        break;
+      }
+      for (const { specifier } of valueImports(readFile(current.file), current.file)) {
+        if (!specifier) continue;
+        const resolved = resolveRelative(current.file, specifier);
+        if (!resolved || visited.has(resolved)) continue;
+        visited.add(resolved);
+        stack.push({ file: resolved, via: [...current.via, resolved] });
+      }
+    }
+    if (found) hits.push({ entry, hit: found.file, via: found.via });
+  }
+  return hits;
+}
