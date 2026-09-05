@@ -107,8 +107,10 @@ jobs:
                 echo "- run: $run_url"
                 echo
                 echo "**理由は run のログ（stderr）にある。** 認証情報が混ざりうるのでここには転記しない。"
-                echo "よくある原因は権限で、branch protection の読み取りには \`administration: read\` が要る。"
-                echo "それでも読めない場合は PAT が要る（**人間の作業**）。手順は \`docs/ops/deploy.md\`「main の保護設定」。"
+                echo "原因は権限のことが多い。**\`GITHUB_TOKEN\` では branch protection を読めない**"
+                echo "（\`permissions:\` に \`administration: read\` を書くのは**誤り**。GitHub が workflow を"
+                echo "構文として拒否して、この検査ごと動かなくなる）。**fine-grained PAT が要る＝人間の作業。**"
+                echo "手順は \`docs/ops/deploy.md\`「main の保護設定」。"
                 echo "読めるようになれば、この Issue は自動で閉じる。"
               } > body.md
               bash deploy/monitor/report.sh "$unreadable_title" fail body.md
