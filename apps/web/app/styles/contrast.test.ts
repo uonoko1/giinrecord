@@ -159,13 +159,30 @@ const UNDERSTOOD_RULE_TYPES: ReadonlySet<string> = new Set(["CSSStyleRule"]);
  * ただし「`tokens.css` なら何でも許す」にはしない——それだと
  * `@media` の中身を `.member-tab { background: var(--paper) }` にすり替えたときに黙る
  * （**allowlist は「痩せたら落とす」だけでなく「中身が入れ替わったら落とす」まで**。#499 の学び）。
- * 許すのは「**`:root` にカスタムプロパティだけを設定する規則**」に限る。
+ * 通すのは「**`tokens.css` 直下の `@media`** で、**かつ** 下の 2 つを両方満たす規則」に限る。
+ *
+ * 1. **セレクタが、実在する 1 形と完全一致すること**（`ROOT_TOKEN_SELECTORS`）
+ * 2. **宣言がカスタムプロパティだけであること**
+ *
  * これはトークンの**値**の話で、**どの箱が地を敷くかは変えない**ので、
  * `backgroundTokenOf` が解く「実効背景がどのトークンか」には影響しない
  * （ダークの値そのものは `darkToken` / `mediaDarkToken` 側で別に固定してある）。
+ *
+ * **セレクタを前方一致（`/^:root\b/`）で見ていたのは穴だった**（#498 のレビューが実測）。
+ * `\b` は `-` を境界と見るので、`:root .member-tab-label` / `:root, .x` / `:root-x` を**全部通す**。
+ * `@media (min-width: 1px) { :root .member-tab-label { --muted: #fefefe } }` は
+ * **実 UI で文字が地とほぼ同色になる AA 違反**なのに、**81 件緑のまま**だった。
+ * 前方一致をやめ、**実在する 1 形を名指しする**（#499 の「中身が入れ替わったら落とす」と同じ形）。
+ * 実在することは下の `it` が別に固定するので、**消えても増えても落ちる**。
  */
+/**
+ * `tokens.css` の `@media` の中に**実在するセレクタ**。**完全一致でしか通さない。**
+ * ここに無い形（`:root .x` のような子孫セレクタや、`,` で別の箱を巻き込む形）は
+ * **箱の地に効きうる**ので通さない。
+ */
+const ROOT_TOKEN_SELECTORS: ReadonlySet<string> = new Set([':root:not([data-theme="light"])']);
 function onlyRedefinesRootTokens(rule: CSSStyleRule): boolean {
-  if (!/^:root\b/.test(rule.selectorText.trim())) return false;
+  if (!ROOT_TOKEN_SELECTORS.has(rule.selectorText.trim())) return false;
   /*
    * 宣言は**名前を列挙して**見る（`cssText` を正規表現で読まない。#465 → #470 の罠）。
    * jsdom の `CSSStyleDeclaration` は `item()` を持たないが**反復可能**で、実測すると
@@ -719,6 +736,22 @@ describe("文字色として使うトークンは全部 AA（4.5:1）を満た�
     expect(unreadableRules(real!, true)).toEqual([]);
     // その `@media` が**実在する**こと（消えたのに緑、を防ぐ）
     expect(unreadableRules(real!, false).some((r) => r.startsWith("CSSMediaRule:"))).toBe(true);
+    /*
+     * **名指しした `ROOT_TOKEN_SELECTORS` が本当に `tokens.css` に実在すること。**
+     * 名指しの allowlist は、対象が消えても黙って緑になりうる（#499）。
+     * ここで CSSOM に「その `@media` の中に、その完全一致のセレクタがあるか」を数えさせる。
+     */
+    const style = document.createElement("style");
+    style.textContent = real!;
+    document.head.appendChild(style);
+    const inMedia = Array.from(style.sheet!.cssRules)
+      .filter((r): r is CSSMediaRule => r.constructor.name === "CSSMediaRule")
+      .flatMap((r) => Array.from(r.cssRules))
+      .map((r) => (r as CSSStyleRule).selectorText?.trim());
+    style.remove();
+    for (const selector of ROOT_TOKEN_SELECTORS) {
+      expect(inMedia, `${selector} を allowlist に置いているのに tokens.css の @media に無い`).toContain(selector);
+    }
     // 中身のすり替え: 箱に地を敷く規則が 1 つ混ざれば落ちる
     const swapped = '@media (prefers-color-scheme: dark) { :root { --paper: #111; } .member-tab { background: var(--paper); } }';
     expect(unreadableRules(swapped, true).join(" ")).toContain("CSSMediaRule");
@@ -744,6 +777,43 @@ describe("文字色として使うトークンは全部 AA（4.5:1）を満た�
     expect(unreadableRules(css, true).join(" ")).toContain("解析できなかった");
   });
 
+  /*
+   * **緩めロジックそのものに変異を当てる（Issue 498 のレビュー）。**
+   *
+   * 最初の実装は `tokens.css` の `@media` を通す条件を 2 つ持っていたのに、
+   * **どちらを殺しても 81 件が全部緑だった**（レビュアーが実測。担当も再現した）:
+   *
+   *     セレクタ判定を削除            → 0 failed / 81 passed
+   *     宣言判定を `return true` に   → 0 failed / 81 passed
+   *
+   * **緩めるコードは、緩め方に変異を当てないと守られない。**
+   * 「違反を書けば落ちる」だけでは、**通す側が空洞になっても気づけない**（#484）。
+   * 下の 2 つは、その 2 つの変異を**それぞれ**落とすために置いてある。
+   */
+  it("KILL A: セレクタ判定が消えたら落ちる（:root 以外の箱にトークンを効かせる @media を通さない）", () => {
+    /*
+     * **前方一致（`/^:root\b/`）だったときに素通りした形**。`\b` は `-` を境界と見るので、
+     * `:root .x` / `:root, .x` / `:root-x` を全部通していた。
+     * 1 つめは実 UI で `.member-tab-label` の文字が地とほぼ同色になる**AA 違反**そのもの。
+     */
+    for (const selector of [":root .member-tab-label", ":root .member-notice a", ":root-x", ":root, .member-tab", ":root.member-tab"]) {
+      const css = `@media (min-width: 1px) { ${selector} { --muted: #fefefe; } }`;
+      // `tokens.css` 向けの緩めを付けても通さない（＝セレクタ判定が生きている）
+      expect(unreadableRules(css, true).join(" "), selector).toContain("CSSMediaRule");
+    }
+  });
+
+  it("KILL B: 宣言判定が消えたら落ちる（:root でも地を敷く宣言があれば通さない）", () => {
+    const selector = ':root:not([data-theme="light"])'; // ← 実在する、通ってよい形
+    // 通ってよい形でも、**カスタムプロパティ以外の宣言が 1 つでも混ざれば**通さない
+    for (const decl of ["background: var(--paper);", "--paper: #111; background: var(--paper);", "color: red;"]) {
+      const css = `@media (prefers-color-scheme: dark) { ${selector} { ${decl} } }`;
+      expect(unreadableRules(css, true).join(" "), decl).toContain("CSSMediaRule");
+    }
+    // 逆に、カスタムプロパティだけなら通る（通すこともテストする。#484）
+    expect(unreadableRules(`@media (prefers-color-scheme: dark) { ${selector} { --paper: #111; } }`, true)).toEqual([]);
+  });
+
   /**
    * **allowlist そのものを固定する**（#484: 通すこともテストしないと、緩めても気づけない）。
    * 期待値はハードコードする——`UNDERSTOOD_RULE_TYPES` から生成すると自己参照になり、
@@ -751,6 +821,11 @@ describe("文字色として使うトークンは全部 AA（4.5:1）を満た�
    */
   it("読めるとみなす規則は CSSStyleRule だけ（allowlist を広げたら落ちる）", () => {
     expect([...UNDERSTOOD_RULE_TYPES].sort()).toEqual(["CSSStyleRule"]);
+    /*
+     * `tokens.css` の `@media` の中で通すセレクタも**中身をハードコードで**固定する。
+     * 検査対象から生成すると自己参照になり、**対象が痩せれば期待値も一緒に痩せる**（#499）。
+     */
+    expect([...ROOT_TOKEN_SELECTORS].sort()).toEqual([':root:not([data-theme="light"])']);
     // 素の規則は通る（通すこともテストする）
     expect(unreadableRules(".member-tab { background: var(--paper); }", false)).toEqual([]);
   });
