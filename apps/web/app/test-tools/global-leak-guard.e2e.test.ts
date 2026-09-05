@@ -34,6 +34,15 @@ const fixtureDir = "app/test-tools/leak-fixtures";
 const fixtureConfig = `${fixtureDir}/vitest.fixtures.config.ts`;
 
 /**
+ * 出力から ANSI の色付けを外す。`\u001B` は制御文字なので、
+ * 正規表現リテラルに直接書くと lint（`no-control-regex`）が鳴る。
+ * `RegExp` を文字列から組み立てて、制御文字をソースに現さない。
+ */
+function stripAnsi(s: string): string {
+  return s.replace(new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, "g"), "");
+}
+
+/**
  * 本番の `vitest.config.ts` を継いだ設定（`include` だけ差し替え）で、見本 1 ファイルだけを走らせる。
  * 見本は `*.fixture.ts` なので、本体の `include`（`app/**\/*.test.{ts,tsx}`）には入らない。
  */
@@ -43,7 +52,7 @@ function runFixture(name: string): { status: number; output: string } {
     ["vitest", "run", "-c", fixtureConfig, "--reporter=basic", "--pool=forks", "--poolOptions.forks.singleFork", `${fixtureDir}/${name}`],
     { cwd: webRoot, encoding: "utf8", env: { ...process.env, CI: "1" }, timeout: 180_000 },
   );
-  return { status: r.status ?? -1, output: `${r.stdout ?? ""}\n${r.stderr ?? ""}`.replace(/\x1b\[[0-9;]*m/g, "") };
+  return { status: r.status ?? -1, output: stripAnsi(`${r.stdout ?? ""}\n${r.stderr ?? ""}`) };
 }
 
 describe("見張りの配線（#512）", () => {
