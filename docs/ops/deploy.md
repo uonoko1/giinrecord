@@ -52,7 +52,7 @@ remote: - 4 of 4 required status checks are expected.
 
 ### 設定が弱まっていないかの見張り
 
-branch protection は**この リポジトリの中身ではない**ので、弱めても diff にもレビューにも CI にも出ない。
+branch protection は**このリポジトリの中身ではない**ので、弱めても diff にもレビューにも CI にも出ない。
 `.github/workflows/branch-protection.yml` が**毎日**（06:23 JST）
 `deploy/monitor/branch-protection.sh` を走らせ、弱まっていれば
 Issue `[monitor] repo: main の保護設定` を開く（直れば自動で閉じる）。
