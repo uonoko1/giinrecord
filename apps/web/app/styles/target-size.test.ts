@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -39,6 +39,36 @@ import { describe, expect, it } from "vitest";
  */
 const app = join(import.meta.dirname, "..");
 const read = (p: string) => readFileSync(join(app, p), "utf8");
+
+/**
+ * **`app/` 配下の `.css` を全部**（パスと中身）。**手で並べない**——
+ * #506「『全部』と言う前に、対象を機械で列挙する」。
+ *
+ * **手打ちの一覧は denylist で、列挙漏れがそのまま穴になる。** #518 のレビューが実測した:
+ * 禁止検査は `pages.css` と `assemblies.css`（`行` 側は `pages.css` と `rollcall.css`）しか
+ * 読んでおらず、**`member.css` に `.note a { padding: 4px; }` という本物の 2.5.8 違反を書いても
+ * 33 passed（緑）**だった。`.css` は当時 **7 本**あり、**4 本を誰も見ていなかった。**
+ */
+function allCss(): { path: string; label: string; css: string }[] {
+  const out: { path: string; label: string; css: string }[] = [];
+  (function walk(dir: string) {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      if (e.isDirectory()) walk(join(dir, e.name));
+      else if (e.name.endsWith(".css")) out.push({ path: join(dir, e.name), label: "", css: "" });
+    }
+  })(app);
+  out.sort((x, y) => (x.path < y.path ? -1 : x.path > y.path ? 1 : 0));
+  for (const f of out) {
+    f.label = `${f.path.slice(app.length + 1)}: `;
+    f.css = readFileSync(f.path, "utf8");
+  }
+  return out;
+}
+
+/** `allCss()` が痩せていないこと。**呼ぶ側それぞれで確かめる**（別の `it` に置くと `it` ごと消せる） */
+function expectAllCssFound(files: { path: string }[]): void {
+  expect(files.length, "app/ 配下の .css を 1 本も拾えていない（列挙が空振り）").toBeGreaterThan(5);
+}
 
 /**
  * そのセレクタに当たる宣言を集める。**自前で CSS を解析しない**——
@@ -706,10 +736,10 @@ describe("一覧の行の中のリンクは Spacing 例外に当たるので直�
    * どちらも `docs/research/target-size-rows.md` で「やらない」と決めた。
    */
   it("行の中のリンクに padding / min-height / 負の margin を足していない", () => {
-    const offenders = [
-      ...forbiddenTargetFixes(pages, "行", "pages.css: "),
-      ...forbiddenTargetFixes(rollcall, "行", "rollcall.css: "),
-    ];
+    // **`app/` 配下の `.css` を全部見る。**手で 2 本並べていたので、残り 5 本が素通りしていた（#518）
+    const files = allCss();
+    expectAllCssFound(files);
+    const offenders = files.flatMap((f) => forbiddenTargetFixes(f.css, "行", f.label));
     expect(offenders, TARGET_LINK_RULES.行.reason).toEqual([]);
   });
 });
@@ -768,10 +798,10 @@ describe("散文の中のリンクは例外に当たるので直さない（WCAG
    * ここは CSSOM に全ルールを見せて、文章の中のリンクを狙った指定が増えていないかを見る。
    */
   it("文の中のリンク（.note / .card__body / .body）に padding や min-height を足していない", () => {
-    const offenders = [
-      ...forbiddenTargetFixes(pages, "散文", "pages.css: "),
-      ...forbiddenTargetFixes(assemblies, "散文", "assemblies.css: "),
-    ];
+    // **`app/` 配下の `.css` を全部見る。**手で 2 本並べていたので、残り 5 本が素通りしていた（#518）
+    const files = allCss();
+    expectAllCssFound(files);
+    const offenders = files.flatMap((f) => forbiddenTargetFixes(f.css, "散文", f.label));
     expect(offenders, TARGET_LINK_RULES.散文.reason).toEqual([]);
   });
 });
@@ -1060,7 +1090,20 @@ describe("forbiddenTargetFixes: 例外に当たるリンクを「直した跡」
    * **`a$` を戻すとここが落ちる**——本番に `__kana` / `__meta` で終わるクラスが現に在るため。
    */
   it("selectorLink が当たるのは a 要素を指すセレクタだけ（本番 CSS 全件で検算）", () => {
-    const cssFiles = ["styles/pages.css", "routes/assemblies.css", "routes/members.css"];
+    /**
+     * **対象は手で並べない**（#506「『全部』と言う前に、対象を機械で列挙する」）。
+     *
+     * **最初は 3 本を手打ちしていた。**`apps/web/app` の `.css` は **7 本**あるので、
+     * **`routes/member.css` `routes/rollcall.css` `routes/compare.css` `styles/tokens.css`
+     * の 4 本を見ていなかった。** レビューが実測した穴（直す前は **33 passed** で緑）:
+     * `a$` を戻し、見本 3 件を消し、見ていた 3 本から `__kana`/`__meta` を消すと素通りする
+     * （**`member.css` の `.member-kana` / `rollcall.css` の `.rollcalls-meta` が現に残る**ので、
+     * 偽陽性の材料は本番に在る）。
+     *
+     * **一覧を手で書くのは denylist で、列挙漏れがそのまま穴になる。**
+     */
+    const files = allCss();
+    expectAllCssFound(files);
     const { selectorLink } = TARGET_LINK_RULES.散文;
 
     /**
@@ -1130,9 +1173,9 @@ describe("forbiddenTargetFixes: 例外に当たるリンクを「直した跡」
 
     // 前提: 走査が空振りしていない
     const all: string[] = [];
-    for (const f of cssFiles) {
+    for (const f of files) {
       const style = document.createElement("style");
-      style.textContent = read(f);
+      style.textContent = f.css;
       document.head.appendChild(style);
       for (const r of [...style.sheet!.cssRules]) {
         if (r instanceof CSSStyleRule) all.push(...r.selectorText.split(",").map((t) => t.trim()));
