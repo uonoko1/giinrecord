@@ -187,6 +187,19 @@
    "value": "賛成"
   },
   {
+   "committee": "環境委員会",
+   "date": "2026-07-16",
+   "estimated": false,
+   "firstDate": "2026-07-16",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-16",
+   "meetingId": "122114006X01320260716_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122114006X01320260716/0"
+  },
+  {
    "date": "2026-07-15",
    "groupValue": "賛成",
    "kind": "vote",

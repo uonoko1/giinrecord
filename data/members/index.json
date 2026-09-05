@@ -532,7 +532,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 287,
-   "speeches": 262
+   "speeches": 277
   },
   "current": true,
   "district": "千葉",
@@ -702,7 +702,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 287,
-   "speeches": 308
+   "speeches": 313
   },
   "current": true,
   "district": "比例",
@@ -1229,7 +1229,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 287,
-   "speeches": 402
+   "speeches": 407
   },
   "current": true,
   "district": "岩手",
@@ -1314,7 +1314,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 287,
-   "speeches": 284
+   "speeches": 291
   },
   "current": true,
   "district": "比例",
@@ -3371,7 +3371,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 287,
-   "speeches": 236
+   "speeches": 253
   },
   "current": true,
   "district": "広島",
@@ -4174,7 +4174,7 @@
   },
   "current": true,
   "district": "兵庫",
-  "group": "立憲民主・無所属",
+  "group": "各派に属しない議員",
   "house": "sangiin",
   "id": "m_025007",
   "kana": "いずみ ふさほ",
@@ -4204,7 +4204,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 151,
-   "speeches": 83
+   "speeches": 92
   },
   "current": true,
   "district": "比例",
@@ -4323,7 +4323,7 @@
    "bills": 0,
    "questions": 10,
    "rollcalls": 151,
-   "speeches": 113
+   "speeches": 120
   },
   "current": true,
   "district": "比例",
@@ -4357,7 +4357,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 151,
-   "speeches": 80
+   "speeches": 87
   },
   "current": true,
   "district": "鹿児島",
@@ -4697,7 +4697,7 @@
    "bills": 0,
    "questions": 14,
    "rollcalls": 151,
-   "speeches": 92
+   "speeches": 96
   },
   "current": true,
   "district": "沖縄",
@@ -4833,7 +4833,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 151,
-   "speeches": 157
+   "speeches": 164
   },
   "current": true,
   "district": "比例",
@@ -5020,7 +5020,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 151,
-   "speeches": 57
+   "speeches": 62
   },
   "current": true,
   "district": "和歌山",
@@ -5272,7 +5272,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 25
+   "speeches": 26
   },
   "current": true,
   "district": "兵庫8",
@@ -5768,7 +5768,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 397
+   "speeches": 415
   },
   "current": true,
   "district": "東京3",
@@ -8456,7 +8456,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 6
+   "speeches": 7
   },
   "current": true,
   "district": "（比）近畿",
@@ -11928,7 +11928,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 21
+   "speeches": 22
   },
   "current": true,
   "district": "宮城4",
