@@ -53,7 +53,10 @@ jobs:
       - name: check main's protection → Issue
         if: github.event_name != 'pull_request'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # branch protection の読み取りには管理権限が要る。まず GITHUB_TOKEN の administration: read で試し、
+          # それで足りなければ人間が置く fine-grained PAT を使う（手順は docs/ops/deploy.md「main の保護設定」）。
+          # secret が無ければ空文字になり `||` で GITHUB_TOKEN に落ちる。
+          GH_TOKEN: ${{ secrets.BRANCH_PROTECTION_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           set -uo pipefail
           weak_title="[monitor] repo: main の保護設定"
