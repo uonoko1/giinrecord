@@ -722,6 +722,73 @@ nginx の add_header は**継承されない**ので、文字列を読むだけ�
   );
 });
 
+// ---------------------------------------------------------------------------------------------
+// 経路4: 横断する性質（1つの本番ファイルに紐づかない守り）
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * **1 本の本番ファイルに紐づかない守り**は、経路2（主担当）では拾えない。
+ * 実測（レビュー対応で全 14 本を測り直したとき）: 「削除 + 台帳を指示どおり全部更新」で
+ * **`nginx-reload.test.sh` だけが 14 pass / 0 fail** で通った。
+ * このテストが守るのは特定のファイルではなく、**deploy 全体に横断する性質**:
+ *
+ *   `set -e` のもとで `nginx -t && systemctl reload nginx` と書くと、
+ *   **設定が壊れていても reload が黙って飛ばされ、スクリプトは成功したように進む**
+ *   （失敗したコマンドが `&&` リストの最後ではないので errexit が無視する。#133）。
+ *   だから nginx を reload するスクリプトは `reload_nginx()` を通さなければならない。
+ *
+ * 期待値の出どころは **deploy/ の本番スクリプト**（`reload_nginx` を使っているファイル）なので、
+ * 台帳を編集しても縮まない。
+ */
+const CROSSCUTTING: { property: string; owner: string; usedBy: string[]; why: string }[] = [
+  {
+    property: "reload_nginx",
+    owner: "nginx-reload.test.sh",
+    usedBy: ["deploy/vps-setup.sh", "deploy/analytics/vps-analytics-setup.sh"],
+    why: "set -e のもとで `nginx -t && systemctl reload` は壊れた設定でも黙って進む（#133）",
+  },
+];
+
+test("#513 経路4: 横断する性質を使う本番スクリプトには、それを見る生きたテストがある", () => {
+  const src = sources();
+  const floor = new Map(INVENTORY.map((e) => [e.file, e.minAssertions]));
+  const findings: string[] = [];
+  const audited: string[] = [];
+  for (const { property, owner, usedBy, why } of CROSSCUTTING) {
+    audited.push(property);
+    // 母集団: その性質を実際に使っている本番スクリプトを、deploy/ から数え上げる。
+    const actualUsers = deploySubjects()
+      .filter((f) => f.endsWith(".sh"))
+      .filter((f) => stripComments(read(f)).includes(property))
+      .sort();
+    assert.deepEqual(
+      actualUsers,
+      [...usedBy].sort(),
+      `${property} を使う本番スクリプトの集合が変わっている（${why}）。
+  いま: ${actualUsers.join(", ") || "なし"}
+  固定: ${[...usedBy].sort().join(", ")}`,
+    );
+    if (actualUsers.length === 0) continue; // 誰も使っていないなら守る対象も無い
+    const body = src.get(owner);
+    if (body === undefined) {
+      findings.push(`${property}: これを見る ${owner} が存在しない（${why}）`);
+      continue;
+    }
+    if (assertionSites(body) < (floor.get(owner) ?? 1))
+      findings.push(`${property}: ${owner} が骨抜きになっている（走る assertion が足りない）`);
+    if (!body.includes(property))
+      findings.push(`${property}: ${owner} が実行される本文で ${property} を見ていない`);
+  }
+  const skipped = CROSSCUTTING.map((c) => c.property).filter((c) => !audited.includes(c));
+  assert.deepEqual(
+    { findings, skipped },
+    { findings: [], skipped: [] },
+    `横断する性質を守るテストが失われている。
+${findings.map((f) => `  - ${f}`).join("\n") || "  （検出なし）"}
+  数え上げから飛ばした: ${skipped.join(", ") || "なし"}`,
+  );
+});
+
 test("#513: ci.yml は deploy/test/*.test.sh を今も走らせている（走らせるのをやめても落ちる）", () => {
   const ci = read(".github/workflows/ci.yml");
   assert.ok(
