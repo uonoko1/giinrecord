@@ -68,8 +68,8 @@ test_case() {
 
 # mkconf <location 指定> → **本物の site.conf に、その location 1 つだけを差し込んだ**設定を作る。
 # 最小の conf を自作すると、add_header が無いせいでヘッダ検査が落ち、**狙っていない理由で落ちる**
-# （実測: 自作の最小 conf では 15 形中 14 形が「ヘッダが無い」で落ち、プローブ生成が拒んだのか
-#  区別できなかった）。作業合意「『落ちた』ではなく『狙った理由で落ちた』を確かめる」（#451）。
+# （実測: 自作の最小 conf では、当時の見本 15 形のうち 14 形が「ヘッダが無い」で落ち、
+#  プローブ生成が拒んだのか区別できなかった）。作業合意「『落ちた』ではなく『狙った理由で落ちた』を確かめる」（#451）。
 # 本物に差し込めば、**差分はその location 1 つだけ**なので、落ちた理由をその location に帰せる。
 mkconf() {
   local loc=$1 out="$TMP/conf.$$.$RANDOM"
@@ -84,15 +84,45 @@ mkconf() {
   printf '%s' "$out"
 }
 
-# run_target <conf> → STATUS / OUT。プローブ生成は docker より前なので、docker が無くても
-# 不正な location はここで落ちる。docker がある環境では skip されずに最後まで走る。
+# run_target <conf> → STATUS / OUT。
+#
+# **docker は本物を使わない。** nginx-headers.test.sh は冒頭で `docker info` を見て、
+# 無ければ **skip して exit 0** する（= プローブ生成に到達しない）。かといって本物の docker で
+# 走らせると 1 ケースにつきコンテナ 1 つで、変異を何通りも試す時間に収まらない
+# （実測: 本物の docker で全 26 ケース **2 分 07 秒** / スタブで **22 秒**）。
+#
+# ここで見たいのは **docker を起動する前のプローブ生成**だけなので、
+# `docker info` は成功し `docker run` は失敗する**スタブ**を PATH の先頭に置く。
+#   - 不正な location  … プローブ生成で落ちる（docker には到達しない）
+#   - 正しい location  … プローブ生成を通り、docker run で落ちる。
+#                        ここでは「プローブ生成が拒まなかったこと」だけを見る
+# 実配信の検査は nginx-headers.test.sh 自身が本物の docker で持っている。ここはその**手前**の係。
+STUB_BIN="$TMP/stubbin"; mkdir -p "$STUB_BIN"
+cat > "$STUB_BIN/docker" <<'STUB'
+#!/usr/bin/env bash
+# info だけ成功させる。run/exec/port は失敗させ、コンテナを一切作らない。
+case "${1:-}" in
+  info) exit 0 ;;
+  rm)   exit 0 ;;
+  *)    echo "docker stub: $* は実行しない（#505 の検査はプローブ生成までを見る）" >&2; exit 1 ;;
+esac
+STUB
+chmod +x "$STUB_BIN/docker"
+
 run_target() {
   local conf=$1
   set +e
-  ( cd "$CAGE" && TMPDIR="$CAGE" SITE_CONF="$conf" bash "$TARGET" ) > "$TMP/out" 2>&1
+  ( cd "$CAGE" && PATH="$STUB_BIN:$PATH" TMPDIR="$CAGE" SITE_CONF="$conf" bash "$TARGET" ) > "$TMP/out" 2>&1
   STATUS=$?
   set -e
   OUT=$(cat "$TMP/out")
+  # スタブで skip されていないこと（= プローブ生成に到達したこと）を毎回確かめる。
+  # ここを見ないと、docker が使えない環境で**全ケースが skip して exit 0**になり、
+  # 「落ちるはずのものが落ちない」を検出できないまま緑になる（#451: 検査が死んでも緑）。
+  case "$OUT" in
+    *'skip nginx-headers.test.sh'*)
+      fail "プローブ生成に到達していない（docker スタブが効いていない）: $OUT" ;;
+  esac
 }
 
 # 逃走の検知は **2 通り**でやる。片方だけでは足りないことを実測した:
@@ -264,7 +294,7 @@ t_fixture_counts_are_pinned() {
   [ "${#GOOD_LOCATIONS[@]}" -eq 8 ]  || fail "通すべき location の見本が ${#GOOD_LOCATIONS[@]} 件（8 件を期待）。減らすなら理由を書くこと"
 }
 
-test_case "不正な location は素通りせず落ちる（$( : )${#BAD_LOCATIONS[@]} 形）" t_bad_locations_fail
+test_case "不正な location は素通りせず落ちる（${#BAD_LOCATIONS[@]} 形）" t_bad_locations_fail
 test_case "正しい location はプローブ生成に拒まれない（${#GOOD_LOCATIONS[@]} 形）" t_good_locations_pass_probe_generation
 test_case "改行を含む location でも作業ディレクトリの外に出ない" t_newline_location_does_not_escape
 test_case "本物の site.conf はそのまま通る" t_real_site_conf_is_accepted
