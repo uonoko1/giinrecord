@@ -148,6 +148,23 @@ function lastValue(decls: string, prop: string): string | undefined {
  *
  * 見えないままなのは**メディアクエリの中の上書き**（`declarationsFor` が `CSSStyleRule` しか
  * 見ないため）と、`line-height: inherit` のような明示的な継承値。
+ *
+ * ## **鎖の外は、ここでは見えない**（#481。番人は `target-size.browser.test.tsx`）
+ *
+ * **鎖は手で書いた範囲までしか遡らない。** 次の 4 つは**ここでは素通りする**（#481 で実測）:
+ *
+ *     .section { line-height: 0.1 }             ← `.rows` の**実際の DOM 上の親**（home.tsx:132）
+ *     body { line-height: 0.1 }
+ *     :root { line-height: 0.1 }
+ *     @media (…) { .rows { line-height: 0.1 } }
+ *
+ * **鎖を手で伸ばしても `.section` は拾えない**——「どのクラスが DOM 上の親か」は
+ * **CSS ファイルからは分からない**（`home.tsx` にしか書いていない）からである。
+ * よって #481 は **`target-size.browser.test.tsx`（実 DOM ＋ 実ブラウザの computed style）**を
+ * 別に足した。**上の 4 つはあちらで落ちる。**
+ *
+ * **このファイルは残してある**: 軽く（24 件・1 秒未満）、`sizeOnlyHeight` を使う「大きさ」の検査
+ * （フッター・元職・`.links a`・テーマ切替）は**あちらが見ていない**。
  */
 function inheritedLineHeight(css: string, chain: readonly string[]): string | undefined {
   for (const selector of chain) {

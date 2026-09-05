@@ -80,13 +80,38 @@ function rules(): Rule[] {
   return out;
 }
 
-function weightOf(body: string): number | undefined {
+/**
+ * **CSS 全体で有効なキーワード**（CSS Cascade 5 §7）。`font` にも `font-weight` にも書ける。
+ *
+ * これらは**どの家族にも face を要求しない**——親から継ぐ（`inherit`）か、
+ * カスケードを巻き戻す（`initial` / `unset` / `revert` / `revert-layer`）だけである。
+ * だから**検査の対象外**であって、「読めなかった」ではない。**この区別が #484 の本体。**
+ *
+ * `revert-layer` は今このリポジトリでは意味を持たない（`@layer` が **0 件**、grep で確認）が、
+ * **書かれれば他の4つとまったく同じ**に誤検出される。含めない理由が無いので含める。
+ */
+const CSS_WIDE_KEYWORDS = /^(inherit|initial|unset|revert|revert-layer)$/;
+
+/**
+ * `font-weight` の値から**要求されるウェイト**を読む。
+ *
+ * **`undefined` には 2 つの意味がある**（#484 で分けた。混ぜると誤検出になる）:
+ *
+ * - `CSS_WIDE_KEYWORDS`  → **要求しない**。検査の対象外。呼び出し側は**読み飛ばす**
+ * - `lighter` / `bolder` → **親の computed weight からの相対**（CSS Fonts 4 §2.7）。
+ *   親を知らないと決まらないので、**「静的に読めない」で正しい**。`undefined` のまま報告に出す
+ *
+ * **同じ `undefined` を CSS 側は「読み飛ばす」・TSX 側は「読めない」と解釈していた**のが
+ * #484 の誤検出の原因なので、**戻り値で区別する**（`"skip"` は対象外の印）。
+ */
+function weightOf(body: string): number | undefined | "skip" {
   const m = /(?:^|[;\s])font-weight\s*:\s*([^;]+)/.exec(body);
   if (!m) return undefined;
   const v = m[1]!.trim();
   if (v === "normal") return 400;
   if (v === "bold") return 700;
-  if (v === "inherit" || v === "initial" || v === "unset" || v === "lighter" || v === "bolder") return undefined;
+  if (CSS_WIDE_KEYWORDS.test(v)) return "skip"; // 継承・巻き戻し。face を要求しない
+  if (v === "lighter" || v === "bolder") return undefined; // 親に依存する。読めないものとして報告に出す
   const n = Number.parseInt(v, 10);
   return Number.isNaN(n) ? undefined : n;
 }
@@ -103,7 +128,9 @@ describe("見出し家族が持たないウェイトを、家族を書かずに�
     const offenders = all
       .filter((r) => {
         const w = weightOf(r.body);
-        if (w === undefined || headWeights.includes(w)) return false;
+        // `"skip"` は継承・巻き戻し（face を要求しない）、`undefined` は読めなかった値。
+        // **CSS 側はどちらも従来どおり読み飛ばす**——ここの振る舞いは #484 で変えていない。
+        if (w === undefined || w === "skip" || headWeights.includes(w)) return false;
         return !/(?:^|[;\s])font-family\s*:/.test(r.body) && !/(?:^|[;\s])font\s*:/.test(r.body);
       })
       .map((r) => `${r.file}: ${r.selector}`);
@@ -126,7 +153,7 @@ describe("見出し家族が持たないウェイトを、家族を書かずに�
     for (const r of all) {
       for (const [, value] of r.body.matchAll(/(?:^|[;\s])font\s*:\s*([^;]+)/g)) {
         const v = value.trim();
-        if (/^(inherit|initial|unset|revert)$/.test(v)) continue; // 継承・巻き戻しは 400 を要求しない
+        if (CSS_WIDE_KEYWORDS.test(v)) continue; // 継承・巻き戻しは 400 を要求しない（`revert-layer` も #484 で入れた）
         const parsed = parseFontShorthand(v);
         if (parsed === undefined) continue; // caption/menu などのシステム指定。家族も自前ではない
         const family = parsed.family === undefined ? undefined : familyOfValue(parsed.family);
@@ -137,6 +164,33 @@ describe("見出し家族が持たないウェイトを、家族を書かずに�
       }
     }
     expect(offenders).toEqual([]);
+  });
+
+  /**
+   * **キーワードの集合そのものを釘で打つ**（#484 の変異テストで見つけた穴）。
+   *
+   * 上の検査群は「違反をソースに書いたら落ちる」ことは示すが、**`CSS_WIDE_KEYWORDS` が広すぎても
+   * 気づかない**。実際「**何にでも当たる正規表現**」に変えても 9 tests は緑のままで、
+   * そのとき `fontWeight: "500"` を `--font-head` に書いても**ウェイトの検査は落ちなくなる**
+   * （落ちるのは件数の assertion だけ＝**別の理由で偶然落ちている**）。だからここで直接固定する。
+   *
+   * **通すもの**: face を要求しない CSS 全体キーワード（CSS Cascade 5 §7）。
+   * **通さないもの**: 実際のウェイト（`400`）・`normal` / `bold`・
+   * **親に依存する `lighter` / `bolder`**（CSS Fonts 4 §2.7。**静的には読めないので報告に出すのが正しい**）。
+   */
+  it("CSS 全体キーワードだけを対象外にする（広すぎても狭すぎても駄目）", () => {
+    const skipped = ["inherit", "initial", "unset", "revert", "revert-layer"];
+    const notSkipped = ["400", "500", "700", "normal", "bold", "lighter", "bolder", "13px/1.4 var(--font-head)", "caption"];
+    expect(skipped.filter((v) => !CSS_WIDE_KEYWORDS.test(v)), "対象外にすべきキーワードを検査してしまう").toEqual([]);
+    expect(notSkipped.filter((v) => CSS_WIDE_KEYWORDS.test(v)), "検査すべき値を対象外にしている（守りが緩む）").toEqual([]);
+
+    // `lighter` / `bolder` は `inherit` と**同じ `undefined` に見えても意味が違う**。
+    // 「読めない」として報告に出す側であることを固定する（#484 でここを分けた）。
+    expect(weightOf("font-weight: inherit"), "継承は対象外の印を返す").toBe("skip");
+    expect(weightOf("font-weight: lighter"), "相対指定は『読めない』のままにする").toBeUndefined();
+    expect(weightOf("font-weight: bolder"), "相対指定は『読めない』のままにする").toBeUndefined();
+    expect(weightOf("font-weight: bold")).toBe(700);
+    expect(weightOf("font-weight: normal")).toBe(400);
   });
 
   it("件数（.member-session-count）は本文家族を明示する", () => {
@@ -280,7 +334,9 @@ function parseFontShorthand(value: string): { weight: number | undefined; family
   let weight: number | undefined;
   for (const token of before.trim().split(/\s+/).filter(Boolean)) {
     const w = weightOf(`font-weight: ${token}`);
-    if (w !== undefined) weight = w;
+    // ショートハンドの内側に CSS 全体キーワードは書けない（単独でしか使えない）ので `"skip"` は来ない。
+    // 来ても weight としては数えない。
+    if (w !== undefined && w !== "skip") weight = w;
   }
   return { weight, family: family === "" ? undefined : family };
 }
@@ -292,11 +348,19 @@ function parseFontShorthand(value: string): { weight: number | undefined; family
  * `Tabs.tsx` の値は**三項**（A4）。ソース文字列に対する行単位の正規表現ではどちらも取りこぼす——
  * まさに #451 で複数行 import に破られたのと同じ失敗をする。**TypeScript の parser に読ませる。**
  */
-function inlineStyles(): InlineStyle[] {
+/**
+ * **1 ファイル分の TSX ソースから inline style を読む。**
+ *
+ * `inlineStyles()` から**走査（どのファイルを読むか）と解析（1 ファイルをどう読むか）を割った**もの。
+ * こうしておくと、**素通りする書き方の見本をディスクに置かずに**検査できる——
+ * `app/` に fixture を置くと `tsxFiles(app)` の走査に混ざり、**本番の検査対象そのものが変わる**。
+ *
+ * `app` にも `readFileSync` にも依存しない**純関数**なので、実行環境にも依存しない。
+ */
+function readInlineStyles(rel: string, text: string): InlineStyle[] {
   const out: InlineStyle[] = [];
-  for (const file of tsxFiles(app)) {
-    const rel = file.slice(app.length + 1);
-    const source = ts.createSourceFile(file, readFileSync(file, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  {
+    const source = ts.createSourceFile(rel, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
 
     /** 同一ファイル内の `const x = …` を引くための表（A2・A3・A7） */
     const consts = new Map<string, ts.Expression>();
@@ -307,14 +371,60 @@ function inlineStyles(): InlineStyle[] {
     collectConsts(source);
 
     /** 識別子を 1 段だけたどる。循環しないよう深追いしない（実在するのは 1 段だけ） */
-    const deref = (expr: ts.Expression): ts.Expression => (ts.isIdentifier(expr) ? (consts.get(expr.text) ?? expr) : expr);
+    /**
+     * **式を包んでいるだけの構文を、不動点まで剥がす**（N8・N9・M7・M8）。
+     * `({ fontWeight: 400 } as CSSProperties)` のように**重なる**ので、1 回では足りない。
+     * 剥がさないと `style={` の直後に丸括弧が 1 つ入るだけで検査が全部無効になる。
+     */
+    const unwrap = (e: ts.Expression): ts.Expression => {
+      for (;;) {
+        if (ts.isParenthesizedExpression(e) || ts.isAsExpression(e) || ts.isSatisfiesExpression(e) || ts.isNonNullExpression(e) || ts.isTypeAssertionExpression(e)) {
+          e = e.expression;
+          continue;
+        }
+        return e;
+      }
+    };
 
-    /** その式が要求しうる font-weight。三項は**両枝**、識別子は 1 段たどる。読めなければ `undefined` を混ぜる */
+    /**
+     * 識別子を 1 段だけたどる。**多段は追わない**（N10）。
+     *
+     * 追わない理由: 2 段目の識別子は下の `unreadable` で**「読めない」として番人に出る**ので、
+     * **素通りはしない**——「見なかったものを黙って捨てない」という原則は満たす。
+     * 多段は循環参照の危険があり、**本番に該当箇所が 0 件**なので入れない。
+     */
+    const deref = (expr: ts.Expression): ts.Expression => {
+      const e = unwrap(expr);
+      return ts.isIdentifier(e) ? unwrap(consts.get(e.text) ?? e) : e;
+    };
+
+    /** **読めなかったことを 1 件として記録する。** 黙って捨てない（この PBI の本体） */
+    const unreadable = (where: string) => {
+      out.push({ file: rel, where, weights: [undefined], hasFamily: false });
+    };
+
+    /** `style={cond && x}` の偽枝など、**style を渡さないことが確実な**値。落とす必要がない */
+    const isNoStyle = (e: ts.Expression) =>
+      e.kind === ts.SyntaxKind.NullKeyword || e.kind === ts.SyntaxKind.TrueKeyword || e.kind === ts.SyntaxKind.FalseKeyword || (ts.isIdentifier(e) && e.text === "undefined");
+
+    /** 両枝とも style になりうる演算子 */
+    const BRANCHY = [ts.SyntaxKind.AmpersandAmpersandToken, ts.SyntaxKind.BarBarToken, ts.SyntaxKind.QuestionQuestionToken];
+
+    /**
+     * その式が要求しうる font-weight。三項は**両枝**、識別子は 1 段たどる。読めなければ `undefined` を混ぜる。
+     *
+     * **`fontWeight: "inherit"` は face を要求しないので、何も返さない**（#484）。
+     * ここが `undefined` を返していたため、**正しい書き方が「静的に読めない値」として落ちていた**——
+     * CSS 側は同じ `undefined` を読み飛ばしていたので、**CSS に書けば通り TSX に書くと落ちる**非対称だった。
+     */
     const weightsOf = (expr: ts.Expression): (number | undefined)[] => {
       const e = deref(expr);
       if (ts.isConditionalExpression(e)) return [...weightsOf(e.whenTrue), ...weightsOf(e.whenFalse)];
       if (ts.isNumericLiteral(e)) return [Number(e.text)];
-      if (ts.isStringLiteral(e) || ts.isNoSubstitutionTemplateLiteral(e)) return [weightOf(`font-weight: ${e.text}`)];
+      if (ts.isStringLiteral(e) || ts.isNoSubstitutionTemplateLiteral(e)) {
+        const w = weightOf(`font-weight: ${e.text}`);
+        return w === "skip" ? [] : [w]; // 継承・巻き戻しは**要求として数えない**
+      }
       return [undefined]; // B2: props / useState / 関数呼び出しなど、静的には読めない
     };
 
@@ -327,11 +437,32 @@ function inlineStyles(): InlineStyle[] {
           // **展開して 1 つに混ぜない。** 混ぜると「別の場所で family が書いてあるから安全」と
           // 読んでしまい、スプレッド元が別の条件で外れたときに嘘になる。**安全側に倒して別々に数える。**
           if (ts.isObjectLiteralExpression(spread)) readObject(spread, `${where} (spread)`);
+          else unreadable(`${where} (spread) 読めない`); // N13: `{ ...base(), … }`。**黙って捨てない**
           continue;
         }
-        if (!ts.isPropertyAssignment(prop)) continue; // メソッド・getter は style に来ない
+        // M12: **短縮プロパティ** `const fontWeight = 400; style={{ fontWeight }}`。
+        // Prettier もエディタも短縮形を勧めるので、**普通に書かれうる形**。名前を値として解決する。
+        if (ts.isShorthandPropertyAssignment(prop)) {
+          if (dashed(prop.name.text) === "font-weight") entry.weights.push(...weightsOf(prop.name));
+          continue;
+        }
+        // **P29: getter は実際に `style` に渡せて、React も読む**（`el.style` へコピーするときに評価される）。
+        // 以前ここは「メソッド・getter は style に来ない」と書いて `continue` していたが、**その根拠が誤り**だった。
+        // 値は実行時にしか決まらないので、**「読めない」として記録する**（黙って捨てない）。
+        if (!ts.isPropertyAssignment(prop)) {
+          const n = ts.isIdentifier(prop.name) || ts.isStringLiteral(prop.name) ? prop.name.text : undefined;
+          if (n === undefined || dashed(n) === "font-weight" || dashed(n) === "font") unreadable(`${where} 読めない値（getter/メソッド）`);
+          continue;
+        }
         const name = ts.isIdentifier(prop.name) || ts.isStringLiteral(prop.name) ? prop.name.text : undefined;
-        if (name === undefined) continue;
+        // M5・M6: **計算プロパティ** `{ [k]: 400 }`。キーが読めない以上 `font-weight` **かもしれない**ので、
+        // 落とす側に倒す。**解いて 400 と読むこともできるが、やらない**——
+        // 「読めないものは読めないと言う」ほうが原則に忠実で、**本番に 0 件**なので解く必要が無い。
+        // 解く特例を作ると「**どのキーなら解けるか**」が新しい暗黙のルールになる。
+        if (name === undefined) {
+          unreadable(`${where} 読めないキー`);
+          continue;
+        }
         const css = dashed(name);
         if (css === "font-weight") entry.weights.push(...weightsOf(prop.initializer));
         else if (css === "font-family") {
@@ -342,6 +473,10 @@ function inlineStyles(): InlineStyle[] {
           // A6: ショートハンド。**family を供給するかどうかまで見る**（供給しないなら hasFamily を立てない）
           const v = deref(prop.initializer);
           const text = ts.isStringLiteral(v) || ts.isNoSubstitutionTemplateLiteral(v) ? v.text : undefined;
+          // **#484: `font: "inherit"` は完全に正しい書き方**（CSS では 11 箇所使っている）。
+          // `parseFontShorthand` は `<size>` を見つけられず `undefined` を返すので、
+          // ここで読み飛ばさないと**「静的に読めない値」として落ちる**。CSS 側と同じ扱いにそろえる。
+          if (text !== undefined && CSS_WIDE_KEYWORDS.test(text.trim())) continue;
           const parsed = text === undefined ? undefined : parseFontShorthand(text);
           if (parsed === undefined) {
             entry.weights.push(undefined); // 読めないショートハンドは読めないものとして報告に出す
@@ -360,12 +495,99 @@ function inlineStyles(): InlineStyle[] {
       if (entry.weights.length > 0) out.push(entry);
     };
 
+    /**
+     * **`style={…}` に渡された式を読む。オブジェクトリテラルでなければ「読めない」として記録する。**
+     *
+     * PR #480 はここで `if (ts.isObjectLiteralExpression(expr))` と書いており、
+     * **当たらなかった式を何も記録せずに捨てていた**。`weights` に 1 件も積まれないので、
+     * 「静的に読めない値は落とす」番人も鳴らず、**16 通りの書き方が素通りしていた**（#485）。
+     *
+     * 三項・`&&`・`||`・`??` は**両枝とも読む**——潰して「読めない」にせず、
+     * **`fontWeight: 400` の違反として正しく落とす**ため（M1・M2・M3）。
+     */
+    const readStyleExpr = (expr: ts.Expression, where: string): void => {
+      const e = deref(expr);
+      if (ts.isObjectLiteralExpression(e)) return readObject(e, where);
+      if (ts.isConditionalExpression(e)) {
+        readStyleExpr(e.whenTrue, `${where} (?)`);
+        readStyleExpr(e.whenFalse, `${where} (:)`);
+        return;
+      }
+      if (ts.isBinaryExpression(e) && BRANCHY.includes(e.operatorToken.kind)) {
+        readStyleExpr(e.left, `${where} (左)`);
+        readStyleExpr(e.right, `${where} (右)`);
+        return;
+      }
+      if (isNoStyle(e)) return;
+      unreadable(`${where} 読めない`); // N1・N2・N17・M4 など
+    };
+
+    /**
+     * **N3: `<span {...extra} />`。** JSX スプレッドは `style` を運びうる**別の入口**で、
+     * `style=` の属性名を見るだけの検査には掛からない。
+     *
+     * **「スプレッドがあれば読めない」と雑にやってはいけない**——本番に JSX スプレッドは
+     * **実在する**（`routes/member.tsx` の 2 件。どちらも `aria-*` を条件で足すだけ）。
+     * 雑にやると**この 2 件が誤検出になる**ので、**再帰して `style` キーの有無まで見る**。
+     */
+    const readSpreadAttr = (expr: ts.Expression, where: string): void => {
+      const e = deref(expr);
+      if (ts.isObjectLiteralExpression(e)) {
+        for (const prop of e.properties) {
+          if (ts.isSpreadAssignment(prop)) {
+            readSpreadAttr(prop.expression, `${where} (spread)`);
+            continue;
+          }
+          if (ts.isShorthandPropertyAssignment(prop)) {
+            if (prop.name.text === "style") unreadable(`${where} style 読めない`);
+            continue;
+          }
+          if (!ts.isPropertyAssignment(prop)) continue;
+          const n = ts.isIdentifier(prop.name) || ts.isStringLiteral(prop.name) ? prop.name.text : undefined;
+          if (n === "style") readStyleExpr(prop.initializer, `${where} style`);
+          else if (n === undefined) unreadable(`${where} 読めないキー`); // キーが読めない = style かもしれない
+        }
+        return;
+      }
+      if (ts.isConditionalExpression(e)) {
+        readSpreadAttr(e.whenTrue, `${where} (?)`);
+        readSpreadAttr(e.whenFalse, `${where} (:)`);
+        return;
+      }
+      if (ts.isBinaryExpression(e) && BRANCHY.includes(e.operatorToken.kind)) {
+        readSpreadAttr(e.left, `${where} (左)`);
+        readSpreadAttr(e.right, `${where} (右)`);
+        return;
+      }
+      if (isNoStyle(e)) return;
+      unreadable(`${where} 読めない`);
+    };
+
     const walk = (node: ts.Node) => {
+      // N3: JSX スプレッド属性も style の入口
+      if (ts.isJsxSpreadAttribute(node)) {
+        const line = source.getLineAndCharacterOfPosition(node.getStart()).line + 1;
+        readSpreadAttr(node.expression, `${rel}:${line} {...}`);
+      }
+      // **P25・P3: `createElement` / `cloneElement` の props も style の入口。**
+      // JSX は結局これに変換されるので、**同じものを別の綴りで書いているだけ**。
+      // 本番に 0 件（grep 済み）だが、**React の一級 API** で MDX・動的タグ・ライブラリ移植から普通に入る。
+      // 属性名を見るだけの検査には掛からないので、**props の位置を直接読む**。
+      if (ts.isCallExpression(node)) {
+        const callee = node.expression;
+        const fn = ts.isPropertyAccessExpression(callee) ? callee.name.text : ts.isIdentifier(callee) ? callee.text : undefined;
+        if (fn === "createElement" || fn === "cloneElement") {
+          const props = node.arguments[1]; // createElement(type, props, …) / cloneElement(el, props, …)
+          if (props !== undefined) {
+            const line = source.getLineAndCharacterOfPosition(node.getStart()).line + 1;
+            readSpreadAttr(props, `${rel}:${line} ${fn}`);
+          }
+        }
+      }
       // A1・A2: `style={…}` に渡された式
       if (ts.isJsxAttribute(node) && node.name.getText() === "style" && node.initializer && ts.isJsxExpression(node.initializer) && node.initializer.expression) {
-        const expr = deref(node.initializer.expression);
         const line = source.getLineAndCharacterOfPosition(node.getStart()).line + 1;
-        if (ts.isObjectLiteralExpression(expr)) readObject(expr, `${rel}:${line} style=`);
+        readStyleExpr(node.initializer.expression, `${rel}:${line} style=`);
       }
       // A7: `style=` に届いていなくても、**CSSProperties として宣言された時点で**数える。
       // `const s: CSSProperties = {…}` は style に渡る想定の型なので、宣言だけで検査できる。
@@ -378,6 +600,11 @@ function inlineStyles(): InlineStyle[] {
     walk(source);
   }
   return out;
+}
+
+/** `.tsx` を全部読む。**走査はここだけ**（解析は `readInlineStyles`） */
+function inlineStyles(): InlineStyle[] {
+  return tsxFiles(app).flatMap((file) => readInlineStyles(file.slice(app.length + 1), readFileSync(file, "utf8")));
 }
 
 describe("TSX の inline style も同じ規則で守る（#472）", () => {
@@ -444,5 +671,133 @@ describe("TSX の inline style も同じ規則で守る（#472）", () => {
       if (/dangerouslySetInnerHTML/.test(text) && /<style/i.test(text)) found.push(`${rel}: <style> の流し込み（B6）`);
     }
     expect(found, "見ていない経路が入った。docblock の B 表を更新し、検査を足すこと").toEqual([]);
+  });
+});
+
+/**
+ * **素通りしていた書き方を、名前を付けて 1 つずつ釘で打つ**（#485）。
+ *
+ * PR #480 は `style={…}` の中身が**オブジェクトリテラルのときだけ**読み、
+ * **当たらなかった式を何も記録せずに捨てていた**。`weights` に 1 件も積まれないので、
+ * 「静的に読めない値は落とす」番人（B2）も鳴らず、**下の 16 通りが全部素通りしていた**（さらに 5 形をレビューで追加）
+ * （レビュアーが 7 通り・担当者が数え直して 9 通り追加。いずれも `entries: 0` を実測）。
+ *
+ * **#451 の再演**——構文の形で禁止すると裏口から破られる。#480 は parser を使っており
+ * **道具は正しい**が、**「どのノードを見るか」の選び方で同じ穴が空いた**というのが学び。
+ *
+ * **見本をディスクに置かない理由**: `app/` に `.tsx` を置くと `tsxFiles(app)` の走査が拾い、
+ * **本番の検査対象そのものが変わる**。だから `inlineStyles()` を
+ * **走査と解析（`readInlineStyles`）に割って**、ソース文字列で検査する。
+ */
+describe("style= に渡された読めない式を、黙って捨てない（#485）", () => {
+  /** 値が**解けて**違反として落ちる（狙った検査で落ちる） */
+  const 解ける = "落ちる（family 無しで持たないウェイト）";
+  /** 値が**読めない**ので番人に出る */
+  const 読めない = "落ちる（静的に読めない）";
+
+  /**
+   * **落ちなければならない**書き方と、**落ちるべき理由**。
+   * `fontWeight: 400` を family 無しで書く = #454 と同じ事故の形。
+   *
+   * **理由まで固定する。** 「落ちた」だけを見ると、
+   * **値を解けなくなった（＝守りが緩んだ）のに落ち続ける**変化を見逃す——
+   * 実際、`unwrap` を壊すと N8/N9/M7/M8 は
+   * 「400 の違反」から「静的に読めない」に**格下げされるのに、落ちること自体は変わらない**。
+   * **この穴は変異テストで見つけた。**
+   */
+  const MUST_FAIL: Record<string, [string, string]> = {
+    "N1 関数の返り値": ["const makeStyle = () => ({ fontWeight: 400 });\nconst A = () => <span style={makeStyle()}>x</span>;", 読めない],
+    "N2 配列から": ["const styles = [{ fontWeight: 400 }];\nconst A = () => <span style={styles[0]}>x</span>;", 読めない],
+    "N3 JSX スプレッド": ["const extra = { style: { fontWeight: 400 } };\nconst A = () => <span {...extra} />;", 解ける],
+    "N8 型アサーション": ["const A = () => <span style={{ fontWeight: 400 } as CSSProperties}>x</span>;", 解ける],
+    "N9 丸括弧で包んだリテラル": ["const A = () => <span style={({ fontWeight: 400 })}>x</span>;", 解ける],
+    "N13 関数呼び出しの spread": ["const base = () => ({ fontWeight: 400 });\nconst A = () => <span style={{ ...base(), fontSize: 13 }}>x</span>;", 読めない],
+    "N17 メンバアクセス": ["const T = { label: { fontWeight: 400 } };\nconst A = () => <span style={T.label}>x</span>;", 読めない],
+    "M1 style 自体が三項": ["const A = ({ on }) => <span style={on ? { fontWeight: 400 } : { fontWeight: 700 }}>x</span>;", 解ける],
+    "M2 && の右辺": ["const base = { fontWeight: 400 };\nconst A = ({ on }) => <span style={on && base}>x</span>;", 解ける],
+    "M3 ?? の右辺": ["const base = { fontWeight: 400 };\nconst A = ({ p }) => <span style={p ?? base}>x</span>;", 解ける],
+    "M4 Object.assign": ["const A = () => <span style={Object.assign({}, { fontWeight: 400 })}>x</span>;", 読めない],
+    "M5 計算プロパティ（リテラル）": ['const A = () => <span style={{ ["fontWeight"]: 400 }}>x</span>;', 読めない],
+    "M6 計算プロパティ（識別子）": ['const k = "fontWeight";\nconst A = () => <span style={{ [k]: 400 }}>x</span>;', 読めない],
+    "M7 as never": ["const A = () => <span style={{ fontWeight: 400 } as never}>x</span>;", 解ける],
+    "M8 non-null assertion": ["const A = () => <span style={{ fontWeight: 400 }!}>x</span>;", 解ける],
+    "M12 短縮プロパティ": ["const fontWeight = 400;\nconst A = () => <span style={{ fontWeight }}>x</span>;", 解ける],
+    // **M13: 値側の「読めない」を釘打つ。**
+    // 上の 16 形は**どれも `style=` の入口側**で先に捕まるので、
+    // `weightsOf` の `[undefined]`（＝値が静的に読めないという報告）を消しても**誰も落ちない**。
+    // **入口を釘打っても、値側を釘打っていなければ値側は壊せる**——
+    // この PR が塞いだ「黙って捨てる」と**同じ形の穴**が、この PR 自身に空いていた（レビュー指摘）。
+    "M13 値が props（値側の読めない）": ["const A = ({ w }) => <span style={{ fontWeight: w }}>x</span>;", 読めない],
+    // **W1: `unwrap` が「重なるので 1 回では足りない」という docblock の主張を釘打つ。**
+    // 1 段だけ剥がす実装だと、この形だけが「読めない」に格下げされる（他の形は 1 段で足りてしまう）。
+    "W1 ラッパが 2 重（as + !）": ["const A = () => <span style={({ fontWeight: 400 } as CSSProperties)!}>x</span>;", 解ける],
+    // **P29: getter は実際に `style` に渡せて React も読む。** 値は実行時にしか決まらない
+    "P29 getter": ["const A = () => <span style={{ get fontWeight() { return 400; } }}>x</span>;", 読めない],
+    // **P25・P3: JSX はこれに変換される。同じものを別の綴りで書いているだけ**
+    "P25 createElement": ["const A = () => React.createElement('span', { style: { fontWeight: 400 } });", 解ける],
+    "P3 cloneElement": ["const A = (el) => React.cloneElement(el, { style: { fontWeight: 400 } });", 解ける],
+  };
+
+  /** **通らなければならない**書き方。ここが落ちたら**正しいコードを落としている**（誤検出） */
+  const MUST_PASS: Record<string, string> = {
+    "font: inherit（#484）": 'const A = () => <span style={{ font: "inherit" }}>x</span>;',
+    "fontWeight: inherit（#484）": 'const A = () => <span style={{ fontWeight: "inherit" }}>x</span>;',
+    "--font-body + 400": 'const A = () => <span style={{ fontFamily: "var(--font-body)", fontWeight: 400 }}>x</span>;',
+    "sans-serif + 300": 'const A = () => <span style={{ fontFamily: "sans-serif", fontWeight: 300 }}>x</span>;',
+    "Tabs.tsx の形（--font-body + 三項）": 'const A = ({ s }) => <span style={{ fontFamily: "var(--font-body)", fontWeight: s ? 700 : 400 }}>x</span>;',
+  };
+
+  /** その見本が**この検査群のどれに捕まるか**。捕まらなければ「素通り」 */
+  const verdictOf = (name: string, src: string): string => {
+    const got = readInlineStyles(`${name}.tsx`, src);
+    const noFamily = got.filter((s) => !s.hasFamily && s.weights.some((w) => w !== undefined && !headWeights.includes(w)));
+    const namedBad = got.filter((s) => {
+      if (s.namedFamily === undefined) return false;
+      const has = FONT_FAMILIES.find((f) => f.family === s.namedFamily)?.weights ?? [];
+      return s.weights.some((w) => w !== undefined && !has.includes(w));
+    });
+    if (noFamily.length > 0) return 解ける;
+    if (namedBad.length > 0) return "落ちる（明示した family が持たないウェイト）";
+    if (got.some((s) => s.weights.includes(undefined))) return 読めない;
+    return "素通り";
+  };
+
+  it("21 通りの書き方が、どれも素通りしない", () => {
+    // **素通りした形の名前を出す。**「何件」ではなく「どれが」でないと直す場所が分からない
+    const slipped = Object.entries(MUST_FAIL)
+      .filter(([name, [src]]) => verdictOf(name, src) === "素通り")
+      .map(([name]) => name);
+    expect(slipped, "この書き方で fontWeight: 400 を family 無しに書くと、Shippori Mincho の 700 が読まれる（#454 と同じ事故）").toEqual([]);
+  });
+
+  it("落ちる理由が、狙ったものであること", () => {
+    // **値が解けるはずの形が「読めない」に格下げされていたら、守りが緩んでいる。**
+    // 落ちること自体は変わらないので、**理由を見ないと気づけない**（変異テストで見つけた穴）
+    const wrongReason = Object.entries(MUST_FAIL)
+      .map(([name, [src, want]]) => ({ name, want, got: verdictOf(name, src) }))
+      .filter((r) => r.got !== r.want)
+      .map((r) => `${r.name}: ${r.got}（期待: ${r.want}）`);
+    expect(wrongReason, "値を解けなくなっている。落ちてはいるが、狙った検査で落ちていない").toEqual([]);
+  });
+
+  it("正しい書き方を落としていない（誤検出を増やしていない）", () => {
+    const falsePositives = Object.entries(MUST_PASS)
+      .filter(([name, src]) => verdictOf(name, src) !== "素通り")
+      .map(([name, src]) => `${name}: ${verdictOf(name, src)}`);
+    expect(falsePositives, "正しい書き方を落としている。CSS に書けば通るのに TSX で落ちる、という非対称を作らないこと").toEqual([]);
+  });
+
+  it("lighter / bolder は『静的に読めない』のまま（#484 の区別を保つ）", () => {
+    // 親の computed weight からの相対（CSS Fonts 4 §2.7）。**`"skip"` に混ぜてはいけない**
+    expect(verdictOf("lighter", 'const A = () => <span style={{ fontWeight: "lighter" }}>x</span>;')).toBe(読めない);
+    expect(verdictOf("bolder", 'const A = () => <span style={{ fontWeight: "bolder" }}>x</span>;')).toBe(読めない);
+  });
+
+  it("本番に、読めない style 式は無い", () => {
+    // **番人。** 上の 16 通りが本番に入ったら、ここか既存の unresolved 検査が鳴る
+    const unreadable = inlineStyles()
+      .filter((s) => s.where.includes("読めない"))
+      .map((s) => s.where);
+    expect(unreadable, "読める形に直すか、実ブラウザで測る側（rollcalls-bill-weight.browser.test.tsx）に回すこと").toEqual([]);
   });
 });
