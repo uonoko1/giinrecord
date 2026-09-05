@@ -13,8 +13,18 @@ export interface HeadFontDataSource {
   members?: { name?: string; group?: string; district?: string }[];
   /** `.member-position`：会議録の `speakerPosition` の原文（例「国土交通大臣」） */
   speakerPositions?: string[];
-  /** `.rollcall-group-name`：採決ページの会派名 */
+  /**
+   * `.rollcall-group-name`：採決ページの会派名。
+   * **`groups[]` だけでなく `votes[].group` も入れる**（#520 のレビュー指摘）。
+   * `rollcall.tsx` の `unlistedGroups()` は **`votes` にしか無い会派名**を拾って同じクラスで描くので、
+   * `groups[]` だけ読むと「票にだけ現れた新しい会派」が**静かにシステム書体になる**。
+   */
   rollCallGroups?: string[];
+  /**
+   * `.coverage-assembly__name`：`/coverage` が明朝700 で描く議会名（`data/assemblies/index.json` の `name`）。
+   * **ETL が新しい県議会を足す経路**なので、読まないと追加のたびに気づけない穴になる。
+   */
+  assemblyNames?: string[];
   /** `.member-stamp`：地方議会の表決の原文（○×議欠－棄白） */
   localVoteMarks?: string[];
 }
@@ -33,6 +43,7 @@ export function dataHeadChars(source: HeadFontDataSource): Set<string> {
   }
   for (const p of source.speakerPositions ?? []) add(p);
   for (const g of source.rollCallGroups ?? []) add(g);
+  for (const a of source.assemblyNames ?? []) add(a);
   for (const v of source.localVoteMarks ?? []) add(v);
   return out;
 }

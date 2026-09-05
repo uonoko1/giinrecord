@@ -19,9 +19,13 @@
  *
  * （手順は `docs/ops/fonts.md`。`pyftsubset` は手元にだけ入れればよい。CI では走らない）
  *
- * **この検査が見るのは `data/` 側だけ**である。静的な語（`.tag` の「事実」など）が増える経路は
- * HTML が要るので見ていない。そちらは `head-font-chars.test.ts` が関数を、
- * `scripts/font-subset.ts` の再実行が実物を守る。**強い主張をしない**ためにここに書いておく。
+ * **この検査が見るのは `data/` 側だけ**である。
+ * **静的な語（`.tag` の「事実」、`/terms` の見出しなど）は、何も守っていない。**
+ * ソースに新しい語を書いても `pnpm test` は緑のまま
+ * （実測 #520: `terms.tsx` の「準拠法と変更」を「準據法と變更」に変えて **1,164 件すべて緑**）。
+ * `head-font-chars.test.ts` が守るのは**関数の振る舞い**であって、収録字ではない。
+ * **「`scripts/font-subset.ts` の再実行が守る」とは書けない——再実行を忘れたら何も守らない。**
+ * **実態より強い主張をしない**ためにここに書いておく。
  */
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
@@ -51,6 +55,20 @@ const hasData = (() => {
   }
 })();
 
+/**
+ * **`data/` を舐めるのは 1 回だけ。**（#520 のレビュー指摘 → #501 の flaky に直結していた）
+ *
+ * 以前は 2 つの `it` がそれぞれ `readHeadFontDataSource()` を呼んでいた。
+ * `data/` 全体（members 1,057 / speakerPositions 17,416 / rollCallGroups 4,209 /
+ * localVoteMarks 44,527）を**2 回読む**ので、`pnpm test` の並行実行で
+ * **20,000ms の `testTimeout` に触れて落ちた**（レビュアーの手元で実際に flake）。
+ *
+ * **`testTimeout` を上げるのではなく、2 回読むのをやめる。**
+ * `vitest.config.ts` の 20,000ms は「折りたたみ系 7.6 秒の倍以上の余裕」として置かれたもので、
+ * **この PR がその余裕を食い潰していた**（実測: 単独でも 13.2s + 5.5s = 18.7s）。
+ */
+const needed = hasData ? dataHeadChars(readHeadFontDataSource(dataDir)) : new Set<string>();
+
 describe("明朝700 のサブセットが data/ を覆っている（#477）", () => {
   const committed = parseSubsetChars(readFileSync(path.join(fontsDir, SUBSET_CHARS_FILE), "utf8"));
 
@@ -71,7 +89,6 @@ describe("明朝700 のサブセットが data/ を覆っている（#477）", (
   });
 
   it.runIf(hasData)("いまの data/ に出る字が、1 字残らずサブセットに入っている", () => {
-    const needed = dataHeadChars(readHeadFontDataSource(dataDir));
     const missing = [...needed].filter((c) => !committed.has(c)).sort();
     // 落ちたら: pnpm --filter web build && PYFTSUBSET=.venv/bin/pyftsubset pnpm --filter web font-subset
     expect(missing, `明朝700 のサブセットに ${missing.length} 字足りない: ${missing.join("")}（docs/ops/fonts.md の手順で作り直す）`).toEqual([]);
@@ -132,7 +149,7 @@ describe("明朝700 のサブセットが data/ を覆っている（#477）", (
   });
 
   it.runIf(hasData)("目に見えない字（空白の類）が 1 つも落ちていない", () => {
-    const invisible = [...dataHeadChars(readHeadFontDataSource(dataDir))].filter((c) => /\s/u.test(c) || c === "　");
+    const invisible = [...needed].filter((c) => /\s/u.test(c) || c === "　");
     expect(invisible.length, "data/ の明朝700 の欄に空白が 1 つも無い（区切りの取り方が変わった可能性）").toBeGreaterThan(0);
     expect(invisible.filter((c) => !committed.has(c))).toEqual([]);
   });
