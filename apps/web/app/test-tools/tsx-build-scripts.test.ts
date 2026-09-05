@@ -66,48 +66,83 @@ const trail = (via: string[]): string => via.map(rel).join(" → ");
  * **別の `it` に置かない**——`it` ごと消せば黙るから（#500 の N5 完全版で実測）。
  */
 /**
- * **陽性対照のソース。** 検査器が生きていることを、判定表を作る `it` の中で毎回確かめるために使う。
+ * **陽性対照のソース。** 検査器が生きていることを、判定を下す `it` の中で毎回確かめるために使う。
  * 実ファイルではなく文字列にしてあるのは、実ファイルの中身が変わって
  * **対照が黙って陰性になる**（＝対照が対照でなくなる）のを避けるため。
  */
 const GLOB_POSITIVE = 'const m = import.meta.glob("./x/*.json", { eager: true });';
 const DYNAMIC_POSITIVE = 'const m = await import("./x.js");';
 
-type Verdict = { file: string; via: string[]; findings: string[] };
-
-/** `reached` の**全件**に検査器を当て、1 件ごとの結果を表にして返す（間引きも早抜けもしない） */
-function verdicts(find: (source: string, file: string) => unknown[]): Verdict[] {
-  return reached.map((r) => ({
-    file: rel(r.file),
-    via: r.via,
-    findings: find(readFileSync(r.file, "utf8"), r.file).map(String),
-  }));
+/**
+ * **辿り着いた全モジュールに検査器を当て、「無罪だと言い切った件数」まで返す（#507）。**
+ *
+ * #500 の Z2 と同じ形が、この検査にも残っていた: `reached` の中身（入口）は固定していたが、
+ * **各 `it` が `reached` を全部見たか（出口）は誰も検査していなかった。**
+ *
+ * 実測（本物の違反 `data-files.ts` に `export { isDietAssemblyId } from "./assemblies";` を
+ * 植えた状態。`npx tsx apps/web/scripts/sitemap.ts` が実際に
+ * `TypeError: (intermediate value).glob is not a function` で落ちる）:
+ *
+ *     A. 変異なし                                → 4 / 6 落ちる（正しく捕まえる）
+ *     B. glob 検査の絞り込み述語だけ狭める       → 3 / 6（**狙った検査だけ黙る**）
+ *     C. 3 つ狭めて、一覧も辻褄を合わせる        → **6 / 6 全部緑（見逃し）**
+ *
+ * **C は「意図して辻褄を合わせた」特殊な操作ではない。** この検査自身が失敗時に
+ * 「**増えた分が `import.meta.glob` に触らないことを確かめて、この一覧を更新してください**」
+ * と指示しており、**その手順から「確かめて」を落とすとちょうど C になる**。
+ * 更新を指示する検査が更新の副作用で黙るなら、**指示のほうが罠**。
+ *
+ * **数え上げでは足りない**（この PBI で 2 通り試して 2 通りとも破れた。実測）:
+ *
+ * - 「読んだファイルを `scanned` に積んで `reached` と突き合わせる」
+ *   → **判定の側にだけ** `!file.includes("assemblies") &&` を足せば `scanned` は一致したまま黙る（**6 / 6 緑**）
+ * - 「1 件ごとの判定を表にして、表が `reached` を覆っているか見る」
+ *   → **表の中身**（`findings`）を `assemblies` だけ `[]` にすれば、表は覆ったまま黙る（**glob 検査は素通り**）
+ *
+ * どちらも「何件通ったか」を数えていて、**「何件について無罪だと言い切ったか」を数えていない**。
+ * 見逃しとは**無罪判決**であって、素通りではない。
+ *
+ * そこで**無罪判決を数える**。`cleared` は「検査器に掛けた結果、違反 0 件だった」ものだけが増える。
+ * 呼び出し側は同じ `it` の中で **`cleared.length + offenders.length === reached.length`** を見る。
+ * 絞り込みを**どこに足しても**（ループ・判定式・違反者リスト）、
+ * その 1 件は無罪にも有罪にも数えられないので**必ず落ちる**。
+ * **別の `it` に置かない**——`it` ごと消せば黙るから（#500 の N5 完全版で実測）。
+ */
+function judge(find: (source: string, file: string) => unknown[]): { offenders: string[]; cleared: string[] } {
+  const offenders: string[] = [];
+  const cleared: string[] = [];
+  for (const r of reached) {
+    const found = find(readFileSync(r.file, "utf8"), r.file);
+    if (found.length > 0) offenders.push(`${rel(r.file)}（辿った道: ${trail(r.via)}）`);
+    else cleared.push(rel(r.file)); // **無罪だと言い切った**。素通りはここに入らない
+  }
+  return { offenders, cleared };
 }
 
 /**
- * **判定表が `reached` を漏れなく覆っていることを、検査と同じ `it` の中で確かめる。**
- *
- * 「全件に判定が付いているか」だけでなく、**その判定が本当に検査器を通ったか**まで見る。
- * 検査器を通さずに `findings: []` を置く（＝実質の読み飛ばし）と、
- * 下の「既知の陽性が陽性のまま」で落ちる。
+ * **判決が `reached` の全件に行き渡ったことを、検査と同じ `it` の中で確かめる。**
+ * 有罪 + 無罪 = 対象数。絞り込みで落とした 1 件はどちらにも入らないので、この等式が崩れる。
  */
-function expectJudgedEverything(table: Verdict[], find: (source: string, file: string) => unknown[], positiveSource: string): void {
-  expect(table.length, "1 件も判定していない（走査が空）").toBeGreaterThan(0);
+function expectJudgedEverything(
+  { offenders, cleared }: { offenders: string[]; cleared: string[] },
+  find: (source: string, file: string) => unknown[],
+  positiveSource: string,
+): void {
+  expect(reached.length, "辿り着いたモジュールが 0 件（走査が空）").toBeGreaterThan(0);
   expect(
-    table.map((v) => v.file),
-    "辿り着いたモジュールの一部に判定が付いていません（filter / continue / 早期 return で絞っていませんか）",
-  ).toEqual(reached.map((r) => rel(r.file)));
+    cleared.length + offenders.length,
+    "辿り着いたモジュールの一部に判決が出ていません（filter / continue / 早期 return で絞っていませんか）",
+  ).toBe(reached.length);
+  // 無罪と有罪の顔ぶれを合わせると reached そのものか（件数だけだと重複で辻褄が合う）
+  expect([...cleared, ...offenders.map((o) => o.replace(/（辿った道: .*$/, ""))].sort(), "無罪と有罪を合わせても reached にならない").toEqual(
+    reached.map((r) => rel(r.file)).sort(),
+  );
   /*
    * **陽性対照**: **呼び出し側が渡してきた検査器そのもの**を、確実に陽性になるソースに当てる。
-   * これが無いと、検査器が常に `[]` を返す変異でも判定表は「全件に判定あり」のまま緑になる
+   * これが無いと、検査器が常に `[]` を返す変異でも「全件が無罪」で緑になる
    * （#451 の学び: 検査器自身を検査しないと、検査が死んでも緑）。
    */
   expect(find(positiveSource, "positive-control.ts"), "検査器が既知の陽性ソースに何も見つけない（検査器が死んでいる）").not.toEqual([]);
-}
-
-/** 判定表から違反者を作る。**offenders はここ以外から作らない**（絞り込みを別経路で足させない） */
-function offendersOf(table: Verdict[]): string[] {
-  return table.filter((v) => v.findings.length > 0).map((v) => `${v.file}（辿った道: ${trail(v.via)}）`);
 }
 
 describe("tsx で走るビルドスクリプトから import.meta.glob に繋がらない（#441 / #451 / #490）", () => {
@@ -162,9 +197,8 @@ describe("tsx で走るビルドスクリプトから import.meta.glob に繋が
   });
 
   it("辿り着くモジュールは import.meta.glob を式として書いていない", () => {
-    const table = verdicts(metaGlobs);
-    expectJudgedEverything(table, metaGlobs, GLOB_POSITIVE);
-    const offenders = offendersOf(table);
+    const { offenders, cleared } = judge(metaGlobs);
+    expectJudgedEverything({ offenders, cleared }, metaGlobs, GLOB_POSITIVE);
     expect(
       offenders,
       "tsx で直に走るビルドスクリプトから `import.meta.glob` に辿り着きます。" +
@@ -174,9 +208,8 @@ describe("tsx で走るビルドスクリプトから import.meta.glob に繋が
   });
 
   it("辿り着くモジュールは動的 import も書かない（呼ばれたときに落ちる）", () => {
-    const table = verdicts(dynamicImports);
-    expectJudgedEverything(table, dynamicImports, DYNAMIC_POSITIVE);
-    const offenders = offendersOf(table);
+    const { offenders, cleared } = judge(dynamicImports);
+    expectJudgedEverything({ offenders, cleared }, dynamicImports, DYNAMIC_POSITIVE);
     expect(offenders, "動的 import（`import(...)`）は、その行が呼ばれたときに glob で落ちます。読み込みは呼び出し側に置いてください").toEqual([]);
   });
 
@@ -196,10 +229,10 @@ describe("tsx で走るビルドスクリプトから import.meta.glob に繋が
      * 名前の一覧（`globOwners`）だけで見ると、一覧に無い glob 持ちが増えたときに素通りする。
      * 判定表を使うので、判定を狭めれば下の `expectJudgedEverything` が落ちる。
      */
-    const table = verdicts(metaGlobs);
-    expectJudgedEverything(table, metaGlobs, GLOB_POSITIVE);
+    const { offenders, cleared } = judge(metaGlobs);
+    expectJudgedEverything({ offenders, cleared }, metaGlobs, GLOB_POSITIVE);
     expect(
-      table.filter((v) => globOwners.includes(v.file) || v.findings.length > 0).map((v) => `${v.file}（辿った道: ${trail(v.via)}）`),
+      [...offenders, ...cleared.filter((f) => globOwners.includes(f))],
       "glob を持つモジュールに辿り着いています",
     ).toEqual([]);
   });
