@@ -68,15 +68,89 @@ echo '<html lang="ja"><title>トップ ・ 議員レコード</title>' > "$ROOT/
 echo '<html lang="ja"><title>議員 ・ 議員レコード</title>'   > "$ROOT/members/m_1/index.html"
 echo '<html lang="ja"><title>ページが見つかりません ・ 議員レコード</title>' > "$ROOT/__spa-fallback.html"
 
+# ---- 拾った URI を、プローブの置き先に使う前に検査する（#505）----
+# **何が起きていたか**: 下の `mkdir -p "$ROOT$pfx"` は、site.conf の location を**そのまま**
+# パスとして連結していた。`location /../../escaped/` を書くと $ROOT の外に書き、
+# **17 passed / 0 failed（exit 0）のまま** cleanup の `rm -rf "$TMP"` では消えないゴミが残る。
+# `..` は根を超えると根で止まるので、`../` を並べれば**書ける場所ならどこにでも**届く
+# （実測: 10 段並べると /tmp に着地した）。
+#
+# **攻撃経路ではない。** site.conf は自分たちが書くファイルで、外部から `..` を注入される経路は無い。
+# 実害は「テスト実行が $TMP の外にゴミを残す」程度。**それでも塞ぐ**のは、検査が意図しない場所を
+# 読み書きしうる状態だと、**レビューで見えない形の間違い**を許すから
+# （作業合意「防御は不可能にすることではなく、隠れて通れなくすること」）。
+#
+# **`..` を弾く1行では足りない**（作業合意 #333「denylist ではなく allowlist」）。
+# `..` だけを禁じても、絶対パス風・`~`・シェルメタ文字・空白・グロブはそのまま流れる。
+# 綴りの変種と「まだ知らない危険な形」に denylist は原理的に勝てない。
+# だから**通してよい形を書き出して照合する**。増えた瞬間に落ちる = レビューが強制される。
+#
+# 通す形: 先頭が `/`、以降は `[A-Za-z0-9._-]` と `/` のみ。nginx の location URI として
+# このサイトが実際に使うのはこの範囲（`/` `/compare` `/__spa-fallback.html` `/assets/` `/data/`
+# `/fonts/` `/__health`）。**`.` は許すが `..` は下で別に禁じる**（`__probe.txt` や
+# `/__spa-fallback.html` に `.` が要るため、`.` ごと禁じると正しい形まで落ちる）。
+# パーセントエンコード（`%2e%2e`）は許さない — 上の文字集合に `%` が入っていないので弾かれる。
+# **`~` は URL としては予約外の普通の字だが、ここでは許さない**: site.conf は 1 つも使っておらず、
+# 許すと `$ROOT/~/...` という**シェルが展開しうる名前**のディレクトリを掘る。
+# 「今は引用しているから安全」ではなく、**形そのものを拒む**（実測: 許したままだと
+# `/~/pbi505/` が 15 形中ただ 1 つ素通りした）。
+#
+# **経路が2つあるので、それぞれ別々に釘を打つ**（作業合意 #485）:
+#   (1) 入口 = URI の形（この関数）
+#   (2) 出口 = 実際の書き先が $ROOT の下に収まっているか（下の assert_under_root）
+# (1) だけだと、将来 (1) を緩めたときに黙って外へ書ける。(2) だけだと、$ROOT の中に
+# `/~/` や `/*/` のような意図しない名前を掘るのを止められない。
+assert_safe_uri() {
+  local uri=$1 kind=$2
+  case "$uri" in
+    /*) ;;
+    *)  echo "FAIL 安全でない location [$uri]（$kind）: URI が / で始まっていない"; FAIL=$((FAIL+1)); exit 1 ;;
+  esac
+  # allowlist（完全一致）。1 文字でも外の字が混ざれば落ちる。
+  case "$uri" in
+    *[!/A-Za-z0-9._-]*)
+      echo "FAIL 安全でない location [$uri]（$kind）: 許した文字は / A-Z a-z 0-9 . _ - だけ"
+      echo "     プローブの置き先にそのまま使うので、シェルメタ文字・空白・グロブ・改行は拒む（#505）"
+      FAIL=$((FAIL+1)); exit 1 ;;
+  esac
+  # `.` は許すが、パス要素としての `..` は禁じる（traversal そのもの）。
+  case "/$uri/" in
+    *"/../"*)
+      echo "FAIL 安全でない location [$uri]（$kind）: パス要素の .. は traversal になる（#505）"
+      FAIL=$((FAIL+1)); exit 1 ;;
+  esac
+}
+
+# 出口側の釘。実際に触る前に、$ROOT の下に収まるかを**パスの正規化**で確かめる。
+# 入口の allowlist を将来緩めても、ここが独立に止める。
+# `realpath -m` は存在しないパスも正規化する（`..` を畳む）。
+assert_under_root() {
+  local target=$1 uri=$2 resolved root_resolved
+  resolved=$(realpath -m "$target")
+  root_resolved=$(realpath -m "$ROOT")
+  case "$resolved/" in
+    "$root_resolved"/*) ;;
+    *) echo "FAIL location [$uri] のプローブ置き先が docroot の外に出る: $resolved は $root_resolved の下にない（#505）"
+       FAIL=$((FAIL+1)); exit 1 ;;
+  esac
+}
+
 while IFS= read -r loc; do
   case "$loc" in
-    "= "*)   PROBE_PATHS+=("${loc#= }") ;;            # 完全一致: そのパスそのもの
+    "= "*)   uri=${loc#= }
+             # 完全一致はファイルを置かない（curl で叩くだけ）が、**叩く URL にそのまま入る**ので
+             # 同じ allowlist を通す。ここを素通しすると `= /../../x` が curl に渡る。
+             assert_safe_uri "$uri" "完全一致"
+             PROBE_PATHS+=("$uri") ;;
     "^~ "*|"/"*)                                       # 前方一致: 配下に実ファイルを1つ置いて叩く
       pfx=${loc#^~ }
+      assert_safe_uri "$pfx" "前方一致"
       case "$pfx" in
         /) PROBE_PATHS+=("/") ;;
-        */) mkdir -p "$ROOT$pfx"; printf 'x' > "$ROOT${pfx}__probe.txt"; PROBE_PATHS+=("${pfx}__probe.txt") ;;
-        *)  mkdir -p "$(dirname "$ROOT$pfx")"; printf 'x' > "$ROOT$pfx"; PROBE_PATHS+=("$pfx") ;;
+        */) assert_under_root "$ROOT${pfx}__probe.txt" "$pfx"
+            mkdir -p "$ROOT$pfx"; printf 'x' > "$ROOT${pfx}__probe.txt"; PROBE_PATHS+=("${pfx}__probe.txt") ;;
+        *)  assert_under_root "$ROOT$pfx" "$pfx"
+            mkdir -p "$(dirname "$ROOT$pfx")"; printf 'x' > "$ROOT$pfx"; PROBE_PATHS+=("$pfx") ;;
       esac ;;
     *) echo "FAIL 未対応の location 指定 [$loc]。叩くパスを deploy/test/nginx-headers.test.sh に足すこと"; exit 1 ;;
   esac
