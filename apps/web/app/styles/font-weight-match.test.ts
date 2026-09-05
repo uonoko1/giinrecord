@@ -116,6 +116,60 @@ function weightOf(body: string): number | undefined | "skip" {
   return Number.isNaN(n) ? undefined : n;
 }
 
+/**
+ * **この規則は、家族を書かずに「見出し家族が持たない face」を要求しているか。**
+ *
+ * これが #454 の不変条件そのもの: `font-weight` に見出し家族が持たないウェイトを書くなら、
+ * **同じ規則で `font-family`（か `font` ショートハンド）も書く**。そうすれば
+ * 親が `--font-head` でも `--font-body` でも、書いていない face は呼ばれない。
+ *
+ * ## なぜ関数に切り出したか（#506）
+ *
+ * 元は `it` の中の `.filter((r) => { … })` に書かれていた。**現に違反が 0 件なので、
+ * 判定を殺しても全部緑**になる——レビュアーの実測:
+ *
+ *     `return !/font-family:/.test(r.body) && !/font:/.test(r.body);` → `return false;`  **15/15 全部緑**
+ *
+ * 「違反を書けば落ちる」は検査が生きている証明にならない（#484）。
+ * 下の `describe` で**判定自体に yes / no の見本を当てる**（#500 の `isTildeAlias` と同じ処置）。
+ */
+function cssRuleDemandsFaceWithoutFamily(body: string): boolean {
+  const w = weightOf(body);
+  // `"skip"` は継承・巻き戻し（face を要求しない）、`undefined` は読めなかった値。
+  // **CSS 側はどちらも従来どおり読み飛ばす**——ここの振る舞いは #484 で変えていない。
+  if (w === undefined || w === "skip" || headWeights.includes(w)) return false;
+  return !/(?:^|[;\s])font-family\s*:/.test(body) && !/(?:^|[;\s])font\s*:/.test(body);
+}
+
+/** その家族が持つウェイト。無い家族なら空 */
+function weightsOfFamily(family: string | undefined): number[] {
+  return [...(FONT_FAMILIES.find((f) => f.family === family)?.weights ?? [])];
+}
+
+/**
+ * **`font` ショートハンドが、指した家族に無いウェイトを要求している箇所。**
+ *
+ * `font` は **weight を省くと初期値 400 に戻す**（CSS Fonts 4 §5.6）ので、
+ * `font: 13px/1.4 var(--font-head)` は **`400` と 1 文字も書かずに** Mincho に 400 を要求する。
+ * **`font: inherit` は安全**（親のウェイトを継ぐ。初期値には戻さない）——本番の 9 箇所はこの形。
+ *
+ * ここも `it` の中のループだったので、**`if` を `if (false)` にしても 15/15 緑**だった（#506 で実測）。
+ */
+function shorthandMissingWeights(body: string): { value: string; family: string; weight: number }[] {
+  const out: { value: string; family: string; weight: number }[] = [];
+  for (const [, value] of body.matchAll(/(?:^|[;\s])font\s*:\s*([^;]+)/g)) {
+    const v = value.trim();
+    if (CSS_WIDE_KEYWORDS.test(v)) continue; // 継承・巻き戻しは 400 を要求しない（`revert-layer` も #484 で入れた）
+    const parsed = parseFontShorthand(v);
+    if (parsed === undefined) continue; // caption/menu などのシステム指定。家族も自前ではない
+    const family = parsed.family === undefined ? undefined : familyOfValue(parsed.family);
+    if (family === undefined) continue; // 自サイト配信の家族を指していない
+    const w = parsed.weight ?? 400; // **省略は 400 要求**。ここが穴だった
+    if (!weightsOfFamily(family).includes(w)) out.push({ value: v, family, weight: w });
+  }
+  return out;
+}
+
 describe("見出し家族が持たないウェイトを、家族を書かずに要求しない（#454）", () => {
   const all = rules();
 
@@ -125,16 +179,8 @@ describe("見出し家族が持たないウェイトを、家族を書かずに�
   });
 
   it("Shippori Mincho に無いウェイトを書く規則は、font-family も同じ規則で書く", () => {
-    const offenders = all
-      .filter((r) => {
-        const w = weightOf(r.body);
-        // `"skip"` は継承・巻き戻し（face を要求しない）、`undefined` は読めなかった値。
-        // **CSS 側はどちらも従来どおり読み飛ばす**——ここの振る舞いは #484 で変えていない。
-        if (w === undefined || w === "skip" || headWeights.includes(w)) return false;
-        return !/(?:^|[;\s])font-family\s*:/.test(r.body) && !/(?:^|[;\s])font\s*:/.test(r.body);
-      })
-      .map((r) => `${r.file}: ${r.selector}`);
-    expect(offenders).toEqual([]);
+    const offenders = all.filter((r) => cssRuleDemandsFaceWithoutFamily(r.body)).map((r) => `${r.file}: ${r.selector}`);
+    expect(offenders, "この規則は、親が --font-head だと存在しない face を要求します").toEqual([]);
   });
 
   /**
@@ -149,21 +195,10 @@ describe("見出し家族が持たないウェイトを、家族を書かずに�
    * 本番で使われている 9 箇所はすべてこの形なので、**そこを誤検出しないこと**が条件になる。
    */
   it("font ショートハンドで自サイト配信の家族を指すなら、その家族が持つウェイトだけを要求する", () => {
-    const offenders: string[] = [];
-    for (const r of all) {
-      for (const [, value] of r.body.matchAll(/(?:^|[;\s])font\s*:\s*([^;]+)/g)) {
-        const v = value.trim();
-        if (CSS_WIDE_KEYWORDS.test(v)) continue; // 継承・巻き戻しは 400 を要求しない（`revert-layer` も #484 で入れた）
-        const parsed = parseFontShorthand(v);
-        if (parsed === undefined) continue; // caption/menu などのシステム指定。家族も自前ではない
-        const family = parsed.family === undefined ? undefined : familyOfValue(parsed.family);
-        if (family === undefined) continue; // 自サイト配信の家族を指していない
-        const has = FONT_FAMILIES.find((f) => f.family === family)?.weights ?? [];
-        const w = parsed.weight ?? 400; // **省略は 400 要求**。ここが穴だった
-        if (!has.includes(w)) offenders.push(`${r.file}: ${r.selector} { font: ${v} } → ${family} に ${w} は無い`);
-      }
-    }
-    expect(offenders).toEqual([]);
+    const offenders = all.flatMap((r) =>
+      shorthandMissingWeights(r.body).map((m) => `${r.file}: ${r.selector} { font: ${m.value} } → ${m.family} に ${m.weight} は無い`),
+    );
+    expect(offenders, "`font` ショートハンドは weight を省くと 400 に戻ります（CSS Fonts 4 §5.6）").toEqual([]);
   });
 
   /**
@@ -607,6 +642,47 @@ function inlineStyles(): InlineStyle[] {
   return tsxFiles(app).flatMap((file) => readInlineStyles(file.slice(app.length + 1), readFileSync(file, "utf8")));
 }
 
+/**
+ * **inline style 側の、CSS とまったく同じ不変条件**（#472）。
+ * `--font-head` を継承した子に `fontWeight: 400` と書く #454 の形は、ここで落ちる。
+ *
+ * `undefined`（静的に読めなかった値）は**ここでは違反にしない**——読めない値を
+ * 「違反」と決めつけると誤検出になる。読めない箇所は `hasUnresolvedWeight` の番人が別に見る。
+ *
+ * 切り出した理由（#506）: `it` の中の `.filter((s) => …)` を **`() => false` にしても 15/15 緑**だった。
+ */
+function inlineDemandsFaceWithoutFamily(s: InlineStyle): boolean {
+  return !s.hasFamily && s.weights.some((w) => w !== undefined && !headWeights.includes(w));
+}
+
+/**
+ * **family を明示している inline style が、その家族に無いウェイトを要求している分。**
+ *
+ * **`Tabs.tsx` はここを通る**——`--font-body`（BIZ UDPGothic, 400/700）に 400 も 700 もあるため。
+ * **正しい書き方なので落としてはいけない。** 逆に `--font-head` に 400 や 500 を要求すれば落ちる
+ * （#452 が 500 を外したので、Issue #472 が挙げた `--font-head` + 500 は今や本当の違反）。
+ *
+ * 切り出した理由（#506）: ループの中の `if` を **`if (false)` にしても 15/15 緑**だった。
+ */
+function inlineMissingWeights(s: InlineStyle): number[] {
+  if (s.namedFamily === undefined) return [];
+  const has = weightsOfFamily(s.namedFamily);
+  return s.weights.filter((w): w is number => w !== undefined && !has.includes(w));
+}
+
+/**
+ * **静的に読めない値で font-weight を書いている箇所か**（B2 の番人）。
+ *
+ * props・`useState`・関数呼び出しで書かれた値は上の 2 つを**すり抜ける**ので、
+ * 「0 件であること」を別に見る。`lighter` / `bolder` も**親依存で読めない**のでここに出るのが正しい（#484）。
+ *
+ * 切り出した理由（#506）: `it` の中で `styles.filter(...)` を書いていたので、
+ * **常に空を返すようにしても 15/15 緑**だった。
+ */
+function hasUnresolvedWeight(s: InlineStyle): boolean {
+  return s.weights.includes(undefined);
+}
+
 describe("TSX の inline style も同じ規則で守る（#472）", () => {
   const styles = inlineStyles();
 
@@ -626,10 +702,8 @@ describe("TSX の inline style も同じ規則で守る（#472）", () => {
    * `--font-head` を継承した子に `fontWeight: 400` と書く #454 の形は、ここで落ちる。
    */
   it("Shippori Mincho に無いウェイトを書く inline style は、font-family も同じ宣言に書く", () => {
-    const offenders = styles
-      .filter((s) => !s.hasFamily && s.weights.some((w) => w !== undefined && !headWeights.includes(w)))
-      .map((s) => `${s.where}: font-weight ${s.weights.join(" / ")}`);
-    expect(offenders).toEqual([]);
+    const offenders = styles.filter(inlineDemandsFaceWithoutFamily).map((s) => `${s.where}: font-weight ${s.weights.join(" / ")}`);
+    expect(offenders, "family を書かないと、親が --font-head のとき存在しない face を要求します").toEqual([]);
   });
 
   /**
@@ -640,13 +714,10 @@ describe("TSX の inline style も同じ規則で守る（#472）", () => {
    * （#452 が 500 を外したので、**Issue #472 が挙げた `--font-head` + 500 は今や本当の違反**）。
    */
   it("font-family を明示した inline style は、その家族が持つウェイトだけを要求する", () => {
-    const offenders: string[] = [];
-    for (const s of styles) {
-      if (s.namedFamily === undefined) continue;
-      const has = FONT_FAMILIES.find((f) => f.family === s.namedFamily)?.weights ?? [];
-      for (const w of s.weights) if (w !== undefined && !has.includes(w)) offenders.push(`${s.where}: ${s.namedFamily} に ${w} は無い（持つのは ${has.join("/")}）`);
-    }
-    expect(offenders).toEqual([]);
+    const offenders = styles.flatMap((s) =>
+      inlineMissingWeights(s).map((w) => `${s.where}: ${s.namedFamily} に ${w} は無い（持つのは ${weightsOfFamily(s.namedFamily).join("/")}）`),
+    );
+    expect(offenders, "明示した家族が持たないウェイトを要求しています").toEqual([]);
   });
 
   /**
@@ -656,7 +727,7 @@ describe("TSX の inline style も同じ規則で守る（#472）", () => {
    * その箇所を実ブラウザで測る側（`rollcalls-bill-weight.browser.test.tsx` の形）に回すかを、そのとき判断する。
    */
   it("font-weight に、静的に読めない値を書いている箇所は無い", () => {
-    const unresolved = styles.filter((s) => s.weights.includes(undefined)).map((s) => s.where);
+    const unresolved = styles.filter(hasUnresolvedWeight).map((s) => s.where);
     expect(unresolved, "この形は上の検査をすり抜ける。読める形に直すか、実ブラウザで測る側に回すこと").toEqual([]);
   });
 
@@ -799,5 +870,201 @@ describe("style= に渡された読めない式を、黙って捨てない（#48
       .filter((s) => s.where.includes("読めない"))
       .map((s) => s.where);
     expect(unreadable, "読める形に直すか、実ブラウザで測る側（rollcalls-bill-weight.browser.test.tsx）に回すこと").toEqual([]);
+  });
+});
+
+/**
+ * **判定そのものを検査する**（#506。#500 の `isTildeAlias` と同じ処置）。
+ *
+ * 上の検査はどれも「違反 0 件」を主張するので、**判定が何を返しても緑になる**。
+ * この describe を足す前に実測した変異（いずれも **15/15 全部緑**）:
+ *
+ *     cssRuleDemandsFaceWithoutFamily の主判定 → `return false;`
+ *     shorthandMissingWeights の `if (!has.includes(w))` → `if (false)`
+ *     inlineDemandsFaceWithoutFamily の filter → `() => false`
+ *     inlineMissingWeights の `if` → `if (false)`
+ *     hasUnresolvedWeight（B2 の番人）→ 常に空
+ *
+ * **5 つとも殺せた。** #485 が足した describe は `readInlineStyles`（＝**読み取り**）だけを
+ * 見ており、**判定側は 1 つも見ていなかった**。
+ *
+ * **「拾わない」側を同じ重さで書く。** ここを広げると
+ * `font: inherit` / `fontWeight: "inherit"` / `--font-body` + 400/700 / `Tabs.tsx` の三項 /
+ * 本番の JSX spread を違反と呼び、**正しい実装を落とす**（#484 が実際に踏んだ誤り方）。
+ */
+describe("ウェイトの判定そのもの（#506）", () => {
+  describe("cssRuleDemandsFaceWithoutFamily: 家族を書かずに無い face を要求する規則", () => {
+    /** **落ちなければならない**（親が `--font-head` なら存在しない face を呼ぶ） */
+    const 違反: Record<string, string> = {
+      "400 を family 無しで（#454 そのもの）": "font-weight: 400;",
+      "500 を family 無しで": "font-weight: 500;",
+      "300 を family 無しで": "font-weight: 300;",
+      "600 を family 無しで": "font-weight: 600;",
+      "900 を family 無しで": "font-weight: 900;",
+      "normal（= 400）を family 無しで": "font-weight: normal;",
+      "他の宣言に紛れている": "color: var(--ink); font-weight: 500; margin: 0;",
+      "先頭が font-weight": "font-weight: 500; color: var(--ink);",
+      "font-size はあるが family は無い": "font-size: 13px; font-weight: 400;",
+      "似た名前の宣言があるだけ（font-feature-settings は family ではない）":
+        "font-feature-settings: 'palt'; font-weight: 400;",
+    };
+
+    it("10 通りを、どれも見落とさない", () => {
+      const missed = Object.entries(違反)
+        .filter(([, body]) => !cssRuleDemandsFaceWithoutFamily(body))
+        .map(([name]) => name);
+      expect(missed, "家族を書かない face 要求を見落としている（判定が死んでいる可能性）").toEqual([]);
+      expect(Object.keys(違反)).toHaveLength(10);
+    });
+
+    /** **落としてはいけない**（正しい書き方・対象外の書き方） */
+    const 違反でない: Record<string, string> = {
+      "700（Mincho が持つ）": "font-weight: 700;",
+      "800（Mincho が持つ）": "font-weight: 800;",
+      "bold（= 700）": "font-weight: bold;",
+      "400 だが family を同じ規則で書いている": "font-family: var(--font-body); font-weight: 400;",
+      "400 だが font ショートハンドで家族を供給": "font: 400 13px var(--font-body);",
+      "font-weight を書いていない": "color: var(--ink); font-size: 13px;",
+      "inherit（親を継ぐ。face を要求しない）": "font-weight: inherit;",
+      "initial": "font-weight: initial;",
+      "unset": "font-weight: unset;",
+      "revert": "font-weight: revert;",
+      "revert-layer": "font-weight: revert-layer;",
+      "lighter（親依存で読めない。CSS 側は読み飛ばす）": "font-weight: lighter;",
+      "bolder（同上）": "font-weight: bolder;",
+      "空の規則": "",
+    };
+
+    it("正しい書き方・対象外の書き方を落とさない（誤検出を増やさない）", () => {
+      const wrong = Object.entries(違反でない)
+        .filter(([, body]) => cssRuleDemandsFaceWithoutFamily(body))
+        .map(([name]) => name);
+      expect(wrong, "正しい実装を違反として拾っている（誤検出）").toEqual([]);
+      expect(Object.keys(違反でない)).toHaveLength(14);
+    });
+  });
+
+  describe("shorthandMissingWeights: font ショートハンドの weight 省略（400 に戻る）", () => {
+    it("weight を省いた `font:` は 400 要求として拾う（1 文字も 400 と書いていない）", () => {
+      expect(shorthandMissingWeights("font: 13px/1.4 var(--font-head);")).toEqual([
+        { value: "13px/1.4 var(--font-head)", family: "Shippori Mincho", weight: 400 },
+      ]);
+    });
+
+    const 違反: Record<string, string> = {
+      "weight 省略（400 に戻る）": "font: 13px/1.4 var(--font-head);",
+      "weight 省略・line-height なし": "font: 13px var(--font-head);",
+      "500 を明示（#452 で face を外した）": "font: 500 13px var(--font-head);",
+      "normal を明示（= 400）": "font: normal 13px var(--font-head);",
+      "italic 付き": "font: italic 13px var(--font-head);",
+      "他の宣言に紛れている": "color: var(--ink); font: 13px var(--font-head);",
+    };
+
+    it("6 通りを、どれも見落とさない", () => {
+      const missed = Object.entries(違反)
+        .filter(([, body]) => shorthandMissingWeights(body).length === 0)
+        .map(([name]) => name);
+      expect(missed, "font ショートハンドの face 要求を見落としている").toEqual([]);
+      expect(Object.keys(違反)).toHaveLength(6);
+    });
+
+    const 違反でない: Record<string, string> = {
+      "font: inherit（親を継ぐ。初期値には戻さない。本番 9 箇所がこの形）": "font: inherit;",
+      "font: initial": "font: initial;",
+      "font: unset": "font: unset;",
+      "font: revert-layer": "font: revert-layer;",
+      "700 を明示（Mincho が持つ）": "font: 700 13px var(--font-head);",
+      "bold を明示（= 700）": "font: bold 13px var(--font-head);",
+      "本文家族に 400（BIZ UDPGothic が持つ）": "font: 13px var(--font-body);",
+      "本文家族に 700": "font: 700 13px var(--font-body);",
+      "自サイト配信でない家族": "font: 13px sans-serif;",
+      "システムフォント指定": "font: caption;",
+      "font-family だけ（ショートハンドではない）": "font-family: var(--font-head);",
+      "font-size だけ（`font:` ではない）": "font-size: 13px;",
+      "font ショートハンドを書いていない": "color: var(--ink);",
+    };
+
+    it("正しい書き方・対象外を拾わない（font: inherit を落とさない）", () => {
+      const wrong = Object.entries(違反でない)
+        .filter(([, body]) => shorthandMissingWeights(body).length > 0)
+        .map(([name, body]) => `${name}: ${JSON.stringify(shorthandMissingWeights(body))}`);
+      expect(wrong, "正しい実装を違反として拾っている（誤検出）").toEqual([]);
+      expect(Object.keys(違反でない)).toHaveLength(13);
+    });
+  });
+
+  describe("inlineDemandsFaceWithoutFamily / inlineMissingWeights: inline style の判定", () => {
+    const style = (o: Partial<InlineStyle>): InlineStyle =>
+      ({ file: "x.tsx", where: "x.tsx:1", weights: [], hasFamily: false, ...o }) as InlineStyle;
+
+    /** **落ちなければならない** */
+    const 違反: Record<string, InlineStyle> = {
+      "family 無しで 400（DateHeading の子に足す形。#454）": style({ weights: [400] }),
+      "family 無しで 500": style({ weights: [500] }),
+      "family 無しで 300": style({ weights: [300] }),
+      "三項の片方だけが違反（両枝とも要求されうる）": style({ weights: [700, 400] }),
+      "読めない値と違反が混ざる": style({ weights: [undefined, 400] }),
+    };
+
+    it("family を書かない face 要求 5 通りを見落とさない", () => {
+      const missed = Object.entries(違反)
+        .filter(([, s]) => !inlineDemandsFaceWithoutFamily(s))
+        .map(([name]) => name);
+      expect(missed, "inline style の face 要求を見落としている").toEqual([]);
+      expect(Object.keys(違反)).toHaveLength(5);
+    });
+
+    /** **落としてはいけない**（本番に現に在る形を含む） */
+    const 違反でない: Record<string, InlineStyle> = {
+      "family 無しで 700（Mincho が持つ）": style({ weights: [700] }),
+      "family 無しで 800": style({ weights: [800] }),
+      "400 だが family を書いている（Tabs.tsx の形）": style({ weights: [400], hasFamily: true, namedFamily: "BIZ UDPGothic" }),
+      "三項の両枝とも家族を書いている（Tabs.tsx）": style({ weights: [400, 700], hasFamily: true, namedFamily: "BIZ UDPGothic" }),
+      "font-weight を書いていない": style({ weights: [] }),
+      "読めない値だけ（B2 の番人が別に見る。ここでは違反にしない）": style({ weights: [undefined] }),
+      "lighter / bolder（親依存で読めない → undefined のまま）": style({ weights: [undefined] }),
+    };
+
+    it("正しい書き方・読めない値を「family 無し違反」と呼ばない", () => {
+      const wrong = Object.entries(違反でない)
+        .filter(([, s]) => inlineDemandsFaceWithoutFamily(s))
+        .map(([name]) => name);
+      expect(wrong, "正しい実装（Tabs.tsx の三項など）を違反として拾っている").toEqual([]);
+      expect(Object.keys(違反でない)).toHaveLength(7);
+    });
+
+    it("family を明示したら、その家族が持たないウェイトだけを挙げる", () => {
+      // `--font-head`（Shippori Mincho）は 700 / 800 しか持たない
+      expect(inlineMissingWeights(style({ weights: [400], namedFamily: "Shippori Mincho" }))).toEqual([400]);
+      expect(inlineMissingWeights(style({ weights: [500], namedFamily: "Shippori Mincho" }))).toEqual([500]);
+      expect(inlineMissingWeights(style({ weights: [400, 500], namedFamily: "Shippori Mincho" })), "2 件目を落としている").toEqual([400, 500]);
+      expect(inlineMissingWeights(style({ weights: [700], namedFamily: "Shippori Mincho" }))).toEqual([]);
+      // `--font-body`（BIZ UDPGothic）は 400 / 700 を持つ。**Tabs.tsx の三項は正しい**
+      expect(inlineMissingWeights(style({ weights: [400, 700], namedFamily: "BIZ UDPGothic" })), "Tabs.tsx の三項を落としている").toEqual([]);
+      // **本文家族も検査の対象である。** 400 / 700 しか配信していないので 500 は無い face を呼ぶ。
+      // ここが無いと「BIZ UDPGothic を判定から外す」変異が **25/25 緑で生き残る**（#506 で実測）——
+      // 見本が本文家族については「持っているウェイト」しか置いていなかったため。
+      expect(inlineMissingWeights(style({ weights: [500], namedFamily: "BIZ UDPGothic" })), "本文家族を判定から外していませんか").toEqual([500]);
+      expect(inlineMissingWeights(style({ weights: [300], namedFamily: "BIZ UDPGothic" }))).toEqual([300]);
+      // family を明示していないものはここでは扱わない（上の判定の担当）
+      expect(inlineMissingWeights(style({ weights: [400] }))).toEqual([]);
+      // 読めない値は違反にしない（B2 の番人が別に見る）
+      expect(inlineMissingWeights(style({ weights: [undefined], namedFamily: "Shippori Mincho" }))).toEqual([]);
+    });
+
+    it("読めない値の番人（B2）が、読めない値だけに反応する", () => {
+      expect(hasUnresolvedWeight(style({ weights: [undefined] })), "読めない値を見落としている").toBe(true);
+      expect(hasUnresolvedWeight(style({ weights: [700, undefined] })), "混在のとき見落としている").toBe(true);
+      expect(hasUnresolvedWeight(style({ weights: [400] }))).toBe(false);
+      expect(hasUnresolvedWeight(style({ weights: [] }))).toBe(false);
+    });
+
+    /** **家族の表が痩せていないこと**（#499: 中身が入れ替わっても落とす） */
+    it("家族ごとのウェイトが本番の配信と一致する", () => {
+      expect(weightsOfFamily("Shippori Mincho"), "見出し家族のウェイトが変わった（#452 で 500 を外した）").toEqual([700, 800]);
+      expect(weightsOfFamily("BIZ UDPGothic"), "本文家族のウェイトが変わった").toEqual([400, 700]);
+      expect(weightsOfFamily("存在しない家族")).toEqual([]);
+      expect(headWeights, "headWeights が FONT_FAMILIES から外れている").toEqual([700, 800]);
+    });
   });
 });
