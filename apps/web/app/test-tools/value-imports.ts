@@ -106,6 +106,36 @@ export function metaGlobs(code: string, fileName = "x.ts"): string[] {
   return found;
 }
 
+/**
+ * **そのソースが書いているモジュール指定子を、種類を問わず全部**集める（#500）。
+ *
+ * `valueImports` と違い、**型だけの import も、動的 import も、副作用 import も**数える。
+ * 用途が違うため: `valueImports` は「実行時に何を引き込むか」を見るのに対し、こちらは
+ * 「**どんな書き方の指定子が書かれているか**」を見る。`~/` のように
+ * **どの実行環境でも解決できない指定子**は、型だけの import でも `tsc` を通ってしまい、
+ * vitest / Vite ビルド / tsx のいずれかで読み込みが失敗する。
+ *
+ * コメントと文字列リテラルは AST なので最初から対象外（`"~/lib/x"` という**ただの文字列**は拾わない）。
+ */
+export function moduleSpecifiers(code: string, fileName = "x.ts"): string[] {
+  const sf = ts.createSourceFile(fileName, code, ts.ScriptTarget.Latest, true);
+  const found: string[] = [];
+  const walk = (node: ts.Node): void => {
+    // import / export ... from（型だけ・副作用・再エクスポートを含む）
+    if ((ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) && node.moduleSpecifier && ts.isStringLiteralLike(node.moduleSpecifier)) {
+      found.push(node.moduleSpecifier.text);
+    }
+    // 動的 import("...")
+    if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) {
+      const arg = node.arguments[0];
+      if (arg && ts.isStringLiteralLike(arg)) found.push(arg.text);
+    }
+    ts.forEachChild(node, walk);
+  };
+  walk(sf);
+  return found;
+}
+
 /** 相対指定子をファイルに直す。解決できなければ null（パッケージ名などは辿らない） */
 export function resolveRelative(fromFile: string, specifier: string): string | null {
   if (!specifier.startsWith(".")) return null;
