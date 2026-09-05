@@ -470,9 +470,15 @@ function headersInSiteConf(): string[] {
  * （#482 以前の本番が実際にそうだった）。
  */
 function liveNginxTests(): string[] {
+  const floor = new Map(INVENTORY.map((e) => [e.file, e.minAssertions]));
   const out: string[] = [];
   for (const [name, s] of sources()) {
-    if (s.includes("docker run") && s.includes("curl") && s.includes("site.conf")) out.push(name);
+    // 判定は**コメントを落とした本文**に対して行う（sources() が既にそうなっている）。
+    if (!s.includes("docker run") || !s.includes("curl") || !s.includes("site.conf")) continue;
+    // **抜け殻を「実配信のテスト」と数えない**: 台帳の下限を満たす assertion が実際に走ること。
+    // これが無いと、骨抜きにしたファイルが供給側として数えられてしまう。
+    if (assertionSites(s) < (floor.get(name) ?? 1)) continue;
+    out.push(name);
   }
   return out.sort();
 }
@@ -530,8 +536,13 @@ test("#513 経路3: site.conf が送るヘッダは、実物の nginx を叩く 
         findings.push(`${h}: deploy テストの対象外にした根拠 [${elsewhere}] が ci.yml から消えている`);
       continue;
     }
-    const covered = live.some((t) => (src.get(t) ?? "").includes(h));
-    if (!covered) findings.push(`${h}: 実配信で確かめる deploy テストが無い（site.conf は送っている）`);
+    // **ヘッダ名がどこかに出てくる**では足りない（PR #526 のレビュー実測 W1: 別ファイルに
+    // 1 行足すだけで経路3 が黙った）。要求するのは **HTTP の実配信の形**——
+    // `Header:` というレスポンス行の形で、しかも**実際に走る本文**（コメント除去済み）に
+    // あること。ヘッダ名を裸で書き散らしても、この形にはならない。
+    const wire = new RegExp(`${h}:`, "i");
+    const covered = live.some((t) => wire.test(src.get(t) ?? ""));
+    if (!covered) findings.push(`${h}: 実配信で \`${h}:\` を見る deploy テストが無い（site.conf は送っている）`);
   }
   const skipped = headers.filter((h) => !audited.includes(h));
   assert.deepEqual(
