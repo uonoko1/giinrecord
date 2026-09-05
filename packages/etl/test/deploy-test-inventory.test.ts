@@ -234,6 +234,34 @@ const UNCOVERED: Record<string, string> = {
   "deploy/analytics/nginx-noip-log.conf": "log_format の断片。vps-analytics-setup.sh 経由で入る",
 };
 
+/**
+ * **例外集合そのものを固定する**（#484: allowlist を持つ検査は allowlist をテストしないと、
+ * 緩めても気づけない）。実測（Z5）: UNCOVERED に 3 件押し込むだけで、経路2 は
+ * monitor-probe.test.sh の削除に**一言も言わなくなった**。
+ * 期待値はハードコードする——UNCOVERED から生成すると自己参照になる（#499）。
+ */
+const UNCOVERED_KEYS = [
+  "deploy/analytics/aggregate.sh",
+  "deploy/analytics/nginx-noip-log.conf",
+  "deploy/nginx-host-proxy.conf",
+];
+
+test("#513 経路2: 被覆の例外集合そのものを固定する（例外を増やして骨抜きにできない）", () => {
+  assert.deepEqual(
+    Object.keys(UNCOVERED).sort(),
+    [...UNCOVERED_KEYS].sort(),
+    `被覆の例外（UNCOVERED）が変わっている。
+  いま        : ${Object.keys(UNCOVERED).sort().join(", ")}
+  固定した中身: ${[...UNCOVERED_KEYS].sort().join(", ")}
+例外を1つ足すたびに「deploy テストが1本も触らないもの」が1つ増える。
+本当に足すなら UNCOVERED と UNCOVERED_KEYS の両方を書き換え、理由を残すこと。`,
+  );
+  const noReason = Object.entries(UNCOVERED)
+    .filter(([, why]) => why.trim().length === 0)
+    .map(([k]) => k);
+  assert.deepEqual(noReason, [], `理由の無い例外（場所取りだけ）: ${noReason.join(", ")}`);
+});
+
 test("#513 経路2: deploy/ の本番スクリプト・設定は、どれかの deploy テストから名指しされている", () => {
   const src = sources();
   const subjects = deploySubjects();
@@ -302,6 +330,26 @@ const ELSEWHERE: Record<string, string> = {
   // キャッシュ方針。apps/web の smoke（URL モード）が 8081 / 8083 の両方で見ている。
   "Cache-Control": "pnpm --filter web smoke -- --url http://127.0.0.1:8081",
 };
+
+/**
+ * **例外集合そのものを固定する**（#484）。実測: ELSEWHERE に 5 ヘッダ押し込むだけで、
+ * 経路3 は nginx-headers.test.sh の削除に**一言も言わなくなった**。
+ * 期待値はハードコードする（ELSEWHERE から生成すると自己参照になる。#499）。
+ */
+const ELSEWHERE_KEYS = ["Cache-Control", "X-Robots-Tag"];
+
+test("#513 経路3: 実配信検査の例外集合そのものを固定する（例外を増やして骨抜きにできない）", () => {
+  assert.deepEqual(
+    Object.keys(ELSEWHERE).sort(),
+    [...ELSEWHERE_KEYS].sort(),
+    `実配信検査の例外（ELSEWHERE）が変わっている。
+  いま        : ${Object.keys(ELSEWHERE).sort().join(", ")}
+  固定した中身: ${[...ELSEWHERE_KEYS].sort().join(", ")}
+ここに1つ足すたびに「deploy テストが実配信で見ないセキュリティヘッダ」が1つ増える。
+足すなら ELSEWHERE と ELSEWHERE_KEYS の両方を書き換え、**別のどこかが実際に叩いている**根拠を
+ci.yml の逐語行として書くこと（その行が消えれば下のテストが落ちる）。`,
+  );
+});
 
 test("#513 経路3: site.conf が送るヘッダは、実物の nginx を叩く deploy テストに1つ残らず現れる", () => {
   const live = liveNginxTests();
