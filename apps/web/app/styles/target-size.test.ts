@@ -65,7 +65,15 @@ function allCss(): { path: string; label: string; css: string }[] {
   return out;
 }
 
-/** `allCss()` が痩せていないこと。**呼ぶ側それぞれで確かめる**（別の `it` に置くと `it` ごと消せる） */
+/**
+ * `allCss()` が痩せていないこと。**呼ぶ側それぞれで確かめる**（別の `it` に置くと `it` ごと消せる）。
+ *
+ * **この 1 行だけを消しても何も落ちない**（実測 33 passed）——列挙器が正しければ件数は足りるので。
+ * **落ちるのは「列挙を痩せさせたとき」**で、そのときは 3 件落ちる（実測: `.css` を `pages.css` に
+ * 絞る／`routes/` を辿らない、どちらも **3 failed**）。
+ * **この行は「痩せた瞬間に、どの `it` でも同じ言葉で鳴る」ためのもの**であって、
+ * これ自体が唯一の番人ではない（下流の `all.length` の下限も別に効く）。
+ */
 function expectAllCssFound(files: { path: string }[]): void {
   expect(files.length, "app/ 配下の .css を 1 本も拾えていない（列挙が空振り）").toBeGreaterThan(5);
 }
@@ -771,7 +779,6 @@ describe("一覧の行の中のリンクは Spacing 例外に当たるので直�
  */
 describe("散文の中のリンクは例外に当たるので直さない（WCAG 2.5.8・Issue 425）", () => {
   const assemblies = read("routes/assemblies.css");
-  const pages = read("styles/pages.css");
 
   /**
    * 一番余裕が無いのが `/coverage` と `/assemblies/pref-31` の「表決結果（公式）」で、
