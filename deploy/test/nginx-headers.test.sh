@@ -31,15 +31,56 @@ NAME="giinrecord-nginx-headers-test-$$"
 cleanup() { docker rm -f "$NAME" >/dev/null 2>&1 || true; rm -rf "$TMP"; }
 trap cleanup EXIT
 
-# 合成の docroot: 要るのは「location ごとに実在するファイルが1つある」という形だけ。
+# ---- site.conf の location を**全部**数え上げる（#499）----
+# 以前はここが `/`・`/assets/`・`/data/`・`/fonts/` の**4パス決め打ち**（allowlist）だった。
+# **新しく足された location は一度も叩かれない**ので、そこで add_header 継承が消えていても
+# 13 passed / 0 failed になる——レビュアーが実配信で確認した（#499）。
+# allowlist をやめ、site.conf に書いてある location をすべて機械的に拾って、
+# 「そのパスを実際に叩く」まで持っていく。**知らない書き方が出てきたら黙って飛ばさず落とす。**
+#
+# 拾い方: 行頭（インデントを許す）の `location` に続く修飾子とパス。nginx の location は
+#   location [ = | ~ | ~* | ^~ ] uri { ... }
+# の形。ここで扱えるのは `=`（完全一致）・`^~` と修飾子なし（前方一致）まで。
+# 正規表現（`~` `~*`）は「どのパスを叩けば当たるか」を機械的に決められないので、**明示的に落とす**
+# （そのときは、このファイルに叩くパスを足すこと）。
+LOCATIONS=$(grep -Eo '^[[:space:]]*location[[:space:]]+[^{]*' "$CONF" | sed -E 's/^[[:space:]]*location[[:space:]]+//; s/[[:space:]]+$//')
+if [ -z "$LOCATIONS" ]; then echo "FAIL site.conf から location を1つも拾えなかった"; exit 1; fi
+
+# **この数え上げ自身の検査**（#451「検査器のテストが無いと、検査が死んでも緑」）。
+# 上の grep が壊れて 1 つしか拾えなくなっても、下のループは黙って回り、**全部 pass する**。
+# それでは allowlist をやめた意味が無いので、**独立な数え方**で数えた location の数と突き合わせる。
+# 独立にした点: 上は「行頭の location 行」を**行単位**で拾う。下は `{` の**出現**を数える
+# （コメント行の "location" を除いてから）。同じ壊れ方をしないように、拾う対象をずらしてある。
+WANT_LOCS=$(sed -E 's/^[[:space:]]*#.*$//' "$CONF" | grep -c 'location[^;]*{' || true)
+GOT_LOCS=$(printf '%s\n' "$LOCATIONS" | grep -c . || true)
+if [ "$GOT_LOCS" != "$WANT_LOCS" ]; then
+  echo "FAIL location の数え上げが壊れている: 拾えた $GOT_LOCS 個 / site.conf にある $WANT_LOCS 個"
+  echo "     拾えたもの: $(printf '%s\n' "$LOCATIONS" | tr '\n' '|')"
+  exit 1
+fi
+echo "ok   site.conf の location を $GOT_LOCS 個すべて拾った（独立な数え方と一致）"; PASS=$((PASS+1))
+
+# location の指定 -> 実際に叩く URL パス。前方一致の location にはプローブ用のファイルを置く。
+PROBE_PATHS=()
 ROOT="$TMP/html"
-mkdir -p "$ROOT"/{members/m_1,assets,data,fonts}
+mkdir -p "$ROOT/members/m_1"
 echo '<html lang="ja"><title>トップ ・ 議員レコード</title>' > "$ROOT/index.html"
 echo '<html lang="ja"><title>議員 ・ 議員レコード</title>'   > "$ROOT/members/m_1/index.html"
 echo '<html lang="ja"><title>ページが見つかりません ・ 議員レコード</title>' > "$ROOT/__spa-fallback.html"
-echo 'body{}' > "$ROOT/assets/a.css"
-echo '{}'     > "$ROOT/data/meta.json"
-printf 'x'    > "$ROOT/fonts/a.woff2"
+
+while IFS= read -r loc; do
+  case "$loc" in
+    "= "*)   PROBE_PATHS+=("${loc#= }") ;;            # 完全一致: そのパスそのもの
+    "^~ "*|"/"*)                                       # 前方一致: 配下に実ファイルを1つ置いて叩く
+      pfx=${loc#^~ }
+      case "$pfx" in
+        /) PROBE_PATHS+=("/") ;;
+        */) mkdir -p "$ROOT$pfx"; printf 'x' > "$ROOT${pfx}__probe.txt"; PROBE_PATHS+=("${pfx}__probe.txt") ;;
+        *)  mkdir -p "$(dirname "$ROOT$pfx")"; printf 'x' > "$ROOT$pfx"; PROBE_PATHS+=("$pfx") ;;
+      esac ;;
+    *) echo "FAIL 未対応の location 指定 [$loc]。叩くパスを deploy/test/nginx-headers.test.sh に足すこと"; exit 1 ;;
+  esac
+done <<< "$LOCATIONS"
 
 docker run -d --name "$NAME" -p 127.0.0.1:0:80 \
   -v "$CONF:/etc/nginx/conf.d/default.conf:ro" \
@@ -68,6 +109,16 @@ SECURITY_HEADERS=(
   'Permissions-Policy: '
 )
 
+# **この配列自身の検査**（#451 / #499）。`SECURITY_HEADERS=()` に書き換えると、
+# assert_headers は**何も見ずに全部 pass する**（実測: 空にすると継承の罠 M2 を入れても 15 passed / 0 failed）。
+# 検査の中身が「空でも緑」では、allowlist をやめた意味が無い。要求する種類の数をここで固定する。
+# 5 は「コンテナが全応答に付けるセキュリティヘッダ」の数（HSTS はホスト側なので数えない・#387）。
+if [ "${#SECURITY_HEADERS[@]}" -ne 5 ]; then
+  echo "FAIL 要求するセキュリティヘッダが 5 種でない（${#SECURITY_HEADERS[@]} 種）。減らすなら理由を site.conf のコメントと合わせて書くこと"
+  exit 1
+fi
+echo "ok   要求するセキュリティヘッダは 5 種（検査の中身が空になっていない）"; PASS=$((PASS+1))
+
 # assert_headers <path> <なぜ>: そのパスの応答に上の全部が出ているか
 assert_headers() {
   local path=$1 why=$2 h bad=0 want
@@ -79,16 +130,19 @@ assert_headers() {
   else FAIL=$((FAIL+1)); echo "FAIL $path  ($why)"; fi
 }
 
-echo "-- 全 location でセキュリティヘッダ 5 種が出る（add_header 継承の罠 #482）"
-assert_headers /                 "server 階層そのまま"
-assert_headers /members/m_1/     "プリレンダー済みページ"
-assert_headers /compare          "#104: location = /compare"
-# ↓ ここが本命。add_header Cache-Control を持つ location（site.conf の /assets/ /data/ /fonts/）。
-#   server 階層にだけ書くと、この 3 つで**セキュリティヘッダが全部消える**。
-assert_headers /assets/a.css     "#482 本命: add_header Cache-Control を持つ location"
-assert_headers /data/meta.json   "#482 本命: add_header Cache-Control を持つ location"
-assert_headers /fonts/a.woff2    "#482 本命: add_header Cache-Control を持つ location"
-assert_headers /__health         "location = /__health（return 200）"
+echo "-- site.conf の全 location でセキュリティヘッダ 5 種が出る（add_header 継承の罠 #482 / allowlist をやめた #499）"
+echo "   （site.conf から拾った location: ${#PROBE_PATHS[@]} 個）"
+# **叩いた数を数える。** ループが空回りしても「0 件 pass」は緑に見えてしまう（#451）ので、
+# 「location の数だけ assert_headers を通った」ことを後で突き合わせる。
+PROBED=0
+for p in "${PROBE_PATHS[@]}"; do
+  assert_headers "$p" "site.conf の location から自動で拾ったパス"
+  PROBED=$((PROBED+1))
+done
+if [ "$PROBED" != "$GOT_LOCS" ]; then
+  echo "FAIL location を $GOT_LOCS 個拾ったのに $PROBED 個しか叩いていない"; exit 1
+fi
+assert_headers /members/m_1/     "プリレンダー済みページ（location / の配下）"
 
 echo "-- エラー応答にも出る（always）"
 assert_headers /this-does-not-exist/ "404。always が付いているか"
@@ -97,7 +151,7 @@ assert_headers /__spa-fallback.html  "internal → 404"
 echo "-- Cache-Control は消えていない（ヘッダを足して既存を壊していないか）"
 t_cache_control() {
   local bad=0 got
-  for pair in "/assets/a.css:max-age=31536000" "/data/meta.json:max-age=3600" "/fonts/a.woff2:max-age=604800"; do
+  for pair in "/assets/__probe.txt:max-age=31536000" "/data/__probe.txt:max-age=3600" "/fonts/__probe.txt:max-age=604800"; do
     local path=${pair%%:*} want=${pair#*:}
     got=$(curl -sSI "$BASE$path" | tr -d '\r' | grep -i '^cache-control:' || true)
     case "$got" in *"$want"*) ;; *) echo "    x $path の Cache-Control が [$got]（$want を期待）"; bad=1;; esac
