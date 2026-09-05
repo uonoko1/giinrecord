@@ -70,6 +70,10 @@ jobs:
           weak_title="[monitor] repo: main の保護設定"
           unreadable_title="[monitor] repo: main の保護設定を読めない"
           run_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          # Issue の本文はリポジトリの外に書く。以前ここを `body.md` にしていて、
+          # このステップを手元で流したときの残骸を**実際にコミットしてしまった**（PR を出す前の
+          # `git diff origin/main HEAD --stat` で気づいた）。RUNNER_TEMP は Actions でのみ設定される。
+          body_file="${RUNNER_TEMP:-$(mktemp -d)}/branch-protection-body.md"
           out=$(bash deploy/monitor/branch-protection.sh "$GITHUB_REPOSITORY" main); rc=$?
           echo "$out"
           case $rc in
@@ -90,8 +94,8 @@ jobs:
                 echo
                 echo "直し方と、緊急時に一時的に外すときの手順は \`docs/ops/deploy.md\`「main の保護設定」。"
                 echo "検査が通るようになれば、この Issue は自動で閉じる。"
-              } > body.md
-              bash deploy/monitor/report.sh "$weak_title" fail body.md
+              } > "$body_file"
+              bash deploy/monitor/report.sh "$weak_title" fail "$body_file"
               exit 1
               ;;
             2)
@@ -112,8 +116,8 @@ jobs:
                 echo "構文として拒否して、この検査ごと動かなくなる）。**fine-grained PAT が要る＝人間の作業。**"
                 echo "手順は \`docs/ops/deploy.md\`「main の保護設定」。"
                 echo "読めるようになれば、この Issue は自動で閉じる。"
-              } > body.md
-              bash deploy/monitor/report.sh "$unreadable_title" fail body.md
+              } > "$body_file"
+              bash deploy/monitor/report.sh "$unreadable_title" fail "$body_file"
               exit 1
               ;;
             *)
