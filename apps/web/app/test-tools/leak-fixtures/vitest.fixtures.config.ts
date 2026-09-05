@@ -5,6 +5,12 @@
  *
  * `global-leak-guard.e2e.test.ts` が、この設定と本番の設定で
  * `setupFiles` が同一であることを実際に import して照合している。
+ *
+ * **等価変異として記録**（#512 の変異 G9）: ここに `setupFiles: []` を足しても
+ * 見張りは死なない。`mergeConfig` は**配列を連結する**ので、
+ * 本番の `setupFiles` はそのまま残る（実測で見本は落ち続けた）。
+ * 見張りを外すには `mergeConfig` をやめて設定を作り直す必要があり、
+ * それは G10 / G11 として**上の照合が 2 件落とす**。
  */
 import { defineConfig, mergeConfig } from "vitest/config";
 import base from "../../../vitest.config";
