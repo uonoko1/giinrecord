@@ -364,6 +364,16 @@ const TARGET_LINK_RULES = {
      * `.card .note a` / `main .note a` / `article .card__body a` は**どれも散文の中のリンク**である。
      * 実測: `selector` を `/^\.(note|…)\b.*(?:\ba\b|a$)/` に変えると **31/31 緑**で素通りした。
      */
+    /**
+     * **`a$` の枝は、いまの見本では一度も効いていない**（#518）。実測:
+     *
+     *     `/\ba\b|a$/` → `/\ba\b/`（`a$` を落とす）  **32/32 緑**
+     *     `/\ba\b|a$/` → `/a$/`（`\ba\b` を落とす）   1 件落ちる
+     *
+     * **等価変異ではない**——`.notea` / `.note xa` で両者は食い違う。
+     * 落ちない理由は**見本の甘さ**で、`散文の違反` の見本が**全部 `a` の前に空白を持つ**ため、
+     * `\ba\b` だけで足りてしまう。**`行` 側で同じ欠陥を潰したのに、隣の `散文` 側に当て直していなかった。**
+     */
     selectorLink: /\ba\b|a$/,
     /** `display: inline-block` も見る——inline の箱を block にすると padding が効いて行間が崩れる */
     declaration: /padding|min-height|display:\s*inline-block/,

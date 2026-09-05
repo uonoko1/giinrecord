@@ -223,11 +223,14 @@ describe("見出し家族が持たないウェイトを、家族を書かずに�
     // 「読めない」として報告に出す側であることを固定する（#484 でここを分けた）。
     expect(weightOf("font-weight: inherit"), "継承は対象外の印を返す").toBe("skip");
     // **`lighter` / `bolder` は「対象外（`"skip"`）」ではなく「読めない（`undefined`）」**。
-    // `toBeUndefined()` だけでは**どの枝で undefined になったか**は分からない（`parseInt` 落ちでも undefined）が、
-    // ここで見たいのは **`"skip"` に格下げされていないこと**なので、`"skip"` でないことも明示する（#485）。
+    //
+    // **`toBeUndefined()` だけで `"skip"` への格下げは検出できる**（#485）。実測:
+    //   `weightOf` を `lighter`/`bolder` で `"skip"` を返すよう改悪 → **2 件落ちる**
+    // かつて `.not.toBe("skip")` を並べていたが、**恒真で検出力ゼロだった**——
+    // 上の行が通った時点で値は `undefined` 確定なので `undefined !== "skip"` は必ず成り立つ。
+    // 実測でも、その行を消しても消さなくても**同じ 2 件**が落ちた。**消した。**
     for (const v of ["lighter", "bolder"]) {
-      expect(weightOf(`font-weight: ${v}`), `${v} は『読めない』のままにする`).toBeUndefined();
-      expect(weightOf(`font-weight: ${v}`), `${v} を対象外（skip）に格下げしている`).not.toBe("skip");
+      expect(weightOf(`font-weight: ${v}`), `${v} は『読めない』(undefined) のままにする。"skip" に格下げしない`).toBeUndefined();
     }
     expect(weightOf("font-weight: bold")).toBe(700);
     expect(weightOf("font-weight: normal")).toBe(400);
@@ -331,6 +334,17 @@ interface InlineStyle {
   namedFamily?: string;
 }
 
+/**
+ * **`parseFontShorthand` / `familyOfValue` には、まだ直接の見本表が無い**（#517）。
+ *
+ * `weightOf` や `forbiddenTargetFixes` には見本表を付けたのに、**同じファイルの隣の関数に
+ * 付けていない**という取りこぼしである。この 2 つは**本番の CSS / TSX 経由でしか叩かれていない**ので、
+ * 「現に違反 0 件なら判定を殺しても緑」という #506 の穴がそのまま残っている。
+ *
+ * とくに `parseFontShorthand` の `sizeAt` は **1 本の正規表現に `|` が 13 本**あり、
+ * **#506 で「枝を全部数えた」と言ったときに丸ごと数え落とした**（実測: `larger` の枝を落としても
+ * **26/26 緑・web 全体 1119 件も緑**）。**「全部数えた」の保証は、数えた範囲までしか届かない。**
+ */
 /** `var(--font-head)` / `var(--font-body)` が指す自サイト配信の家族。tokens.css の定義と対応する */
 const TOKEN_FAMILY: Record<string, string> = {
   "--font-head": "Shippori Mincho",
@@ -947,18 +961,25 @@ describe("ウェイトの判定そのもの（#506）", () => {
       "revert-layer": "font-weight: revert-layer;",
       "lighter（親依存で読めない。CSS 側は読み飛ばす）": "font-weight: lighter;",
       /**
-       * **`|| v === "bolder"` を落とす変異は 26/26 緑のまま。これは等価変異である**（#506 で確認）。
+       * **`weightOf` の `lighter` / `bolder` の行は、丸ごと消しても全テストが緑**（#506 で実測）。
        *
-       * 枝を落としても、最後の `Number.parseInt("bolder", 10)` が **`NaN`** を返し、
-       * `Number.isNaN(n) ? undefined : n` で**同じ `undefined` に落ちる**（実測）。
+       *     `|| v === "bolder"` を落とす   → **26/26 緑**
+       *     `v === "lighter"` を落とす      → **26/26 緑**
+       *     **行そのものを削除**            → **26/26 緑。web 全体 1119 件も緑**
+       *
+       * **冗長なのは片方の語ではなく、この行そのものである。**
+       * 2 語とも最後の `Number.parseInt(v, 10)` が **`NaN`** を返し、
+       * `Number.isNaN(n) ? undefined : n` で**同じ `undefined` に落ちる**ため。
        * **観測できる振る舞いが 1 ビットも変わらないので、落とせるテストは書けない。**
        *
-       * **無理に落とすテストを書かない**——`weightOf` の内部の分岐を覗くようなテストは
-       * 実装に貼り付くだけで、守っているものが増えない。
-       * **落ちない理由が等価変異だと分かったら、そう書いて残す**（作業合意）。
+       * **それでも残す。可読性のためではなく、仕様の明示のため。**
+       * CSS Fonts 4 §2.7 の `lighter` / `bolder` は**親の computed weight からの相対**で、
+       * 「**親を知らないと決まらないので静的には読めない**」というのが**意図的な設計判断**である。
+       * `parseInt` の `NaN` 落ちに任せると、**その判断が偶然の副作用に化ける**——
+       * しかも**消した版はテストが全部緑なので、消したことに誰も気づけない**。
        *
-       * ただし `"skip"` への**格下げ**は観測できるので、下の `weightOf` の直接検査で
-       * `not.toBe("skip")` まで固定してある（#485: 「落ちた」だけ見ると格下げに気づけない）。
+       * **無理に落とすテストを書かない**（`weightOf` の内部分岐を覗くテストは実装に貼り付くだけ）。
+       * **落ちない理由が等価変異だと分かったら、そう書いて残す**（作業合意）。
        */
       "bolder（同上）": "font-weight: bolder;",
       "空の規則": "",
