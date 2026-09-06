@@ -167,6 +167,18 @@ const INVENTORY: { file: string; anchors: string[]; minAssertions: number }[] =
       minAssertions: 18,
     },
     {
+      // #540 / #546: 「保護設定を読めない」と「弱まっている」を分ける判定。#546 のレビューが
+      // 「.yml のインラインな case をテストが1行も守っていない」（変異5/5が緑）と見つけ、
+      // **テストを書ける場所へ切り出した**もの。消えると、その分岐がまた無防備に戻る。
+      file: "branch-protection-report.test.sh",
+      anchors: [
+        "branch-protection-report.sh",
+        "保護設定を読めない",
+        "report.sh",
+      ],
+      minAssertions: 15,
+    },
+    {
       file: "apply-all.test.sh",
       anchors: ["apply-all.sh", "allowlist", "8083"],
       minAssertions: 64,
@@ -242,7 +254,7 @@ const INVENTORY: { file: string; anchors: string[]; minAssertions: number }[] =
  * **「行をそっと消す」を「数字も書き換える」に変える**——意図が diff に残る。
  * 止めるのは経路2・経路3のほう。
  */
-const EXPECTED_COUNT = 15;
+const EXPECTED_COUNT = 16;
 
 /**
  * 失敗を exit status に変える「出口」。これが無いと assertion がいくつあっても
@@ -280,6 +292,14 @@ const INVENTORY_PINNED: Record<
       "branch-protection.sh",
     ],
     minAssertions: 18,
+  },
+  "branch-protection-report.test.sh": {
+    anchors: [
+      "branch-protection-report.sh",
+      "保護設定を読めない",
+      "report.sh",
+    ],
+    minAssertions: 15,
   },
   "apply-all.test.sh": {
     anchors: ["apply-all.sh", "allowlist", "8083"],
@@ -531,6 +551,7 @@ const DEPLOY_SUBJECTS_PINNED = [
   "deploy/apply-all.sh",
   "deploy/cloudflare-allowlist.sh",
   "deploy/go-live.sh",
+  "deploy/monitor/branch-protection-report.sh",
   "deploy/monitor/branch-protection.sh",
   "deploy/monitor/health.sh",
   "deploy/monitor/logrotate.conf",
@@ -603,6 +624,7 @@ const SUBJECT_OWNERS: Record<string, string> = {
   "deploy/apply-all.sh": "apply-all.test.sh",
   "deploy/cloudflare-allowlist.sh": "cloudflare-allowlist.test.sh",
   "deploy/go-live.sh": "go-live.test.sh",
+  "deploy/monitor/branch-protection-report.sh": "branch-protection-report.test.sh",
   "deploy/monitor/branch-protection.sh": "branch-protection.test.sh",
   "deploy/monitor/health.sh": "monitor-health.test.sh",
   "deploy/monitor/logrotate.conf": "logrotate.test.sh",
@@ -629,6 +651,7 @@ const SUBJECT_OWNERS_PINNED: Record<string, string> = {
   "deploy/apply-all.sh": "apply-all.test.sh",
   "deploy/cloudflare-allowlist.sh": "cloudflare-allowlist.test.sh",
   "deploy/go-live.sh": "go-live.test.sh",
+  "deploy/monitor/branch-protection-report.sh": "branch-protection-report.test.sh",
   "deploy/monitor/branch-protection.sh": "branch-protection.test.sh",
   "deploy/monitor/health.sh": "monitor-health.test.sh",
   "deploy/monitor/logrotate.conf": "logrotate.test.sh",
