@@ -138,13 +138,17 @@ Issue `[monitor] repo: main の保護設定を読めない` が**自動で閉じ
 **PAT を置くまでの間も、ワークフローは消さないこと。**
 「読めない」ことを検出して別の Issue で報告する状態のほうが、**何も見ていない状態より良い**。
 
-**塞げていないことが分かっている点**（#521。移設先は #526 の TypeScript 側）:
-必須チェックの一覧は `.github/workflows` の job 定義と突き合わせているが、**片方向だけ**である。
-job を**改名**すると落ちる（実測 `exit 1`）が、job を**丸ごと消す**と落ちない（実測 `exit 0`）——
-消すと突き合わせる側の集合が痩せ、部分集合の判定が自動的に満たされるため。
-双方向にするには `docker-web`（意図的に必須にしていない job）のような例外の allowlist が要り、
-その allowlist もまた固定が要る。**推論（未実測）**だが、job を消しても必須 context は
-branch protection 側に残るので、報告する者がいなくなって**マージが止まる**方向に倒れるはずである。
+**必須チェックの一覧と `.github/workflows` の job 定義の突き合わせ**（#521 → #541 で双方向化）:
+`packages/etl/test/branch-protection-jobs.test.ts` が、bash の sed/grep ではなく
+YAML のインデント規則で job を数え上げ、**双方向**に突き合わせる:
+(A) pull_request で走る job のうち、許容リスト（`docker-web` / `stale-base` /
+branch-protection.yml 自身の `guard`）に無いものは全部必須チェックに入っている、
+(B) 必須チェックの各要素は実在する job に対応している。
+job を**改名**しても**丸ごと消して**も、どちらも落ちることを実測済み
+（旧 bash 版は「消す」方向だけ通ってしまっていた——消すと突き合わせる側の集合が痩せ、
+部分集合の判定が自動的に満たされるため。#521 の review が見つけた）。
+許容リストと `deploy/monitor/branch-protection.sh` の `REQUIRED_CHECKS` もハードコードして
+固定してあるので、両方を同時に痩せさせる形（#521 review で実際にあった）も落ちる。
 
 ### 日次データ（`deploy-data.yml`）
 
