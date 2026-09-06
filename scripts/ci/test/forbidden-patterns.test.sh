@@ -193,6 +193,57 @@ t_destructive_git_in_scripts_fails() {
     assert_contains "$OUT" "scripts/dev/harness.sh" "[$form] names the file"
   done
 }
+# #557: `git restore` は git が公式に薦める現代的な書き方で、次に変異ハーネスを書く人が最も自然に選ぶ形。
+# docs（.claude/agents/developer.md）と mutate.test.sh は禁じていたのに、CI 規則だけが持っていなかった。
+# `git clean` のフラグ分離（-d -f）と `git checkout -f .` も同じく素通りしていた（PO / 担当者が実測）。
+# ここに並ぶ形はすべて「使い捨てリポジトリで実行して、未コミットの作業が実際に消えること」を
+# 確かめてから足している（tracked の変更 / staged の変更 / 未追跡ファイルのどれが消えるかまで測った）。
+t_destructive_git_restore_and_separated_flags_fail() {
+  local i=0 form
+  for form in "$G restore ." "$G restore --staged --worktree ." "$G restore -- ." \
+              "$G restore --source=HEAD path/to/file" "$G restore path/to/file" \
+              "$G clean -d -f" "$G clean -f -d" "$G clean --force" "$G clean -d --force" \
+              "$G checkout -f ." "$G checkout --force ." "$G checkout -f -- ."; do
+    i=$((i+1)); repo "dgr$i"; add scripts/dev/harness.sh "$form"; run
+    assert_eq 1 "$STATUS" "[$form] → fail: $OUT"
+    assert_contains "$OUT" "destructive-git" "[$form] rule name"
+    assert_contains "$OUT" "scripts/dev/harness.sh" "[$form] names the file"
+  done
+}
+# 変異 KILL E（OPT を「どんな語にも当たる」形に広げる）が最初は生き残った。等価変異ではなく、
+# 見本の甘さだった: フラグが先頭に来ない形（`git checkout mybranch -f` / `git clean untracked.txt -f`）を
+# 1 つも置いていなかった。どちらも実測で未コミットの作業が消える（tracked+staged / untracked）。
+# `git clean -f` と `git clean -q -d -f` も置く: 繰り返しグループを使った書き方だと GNU grep の ERE が
+# これらを取り落とし、規則が書かれた当の形が黙って通る（実測。素通りしたまま 25/25 緑になっていた）。
+t_destructive_git_force_flag_not_first_fails() {
+  local i=0 form
+  for form in "$G checkout mybranch -f" "$G clean untracked.txt -f" "$G clean -f" \
+              "$G clean -q -d -f" "$G checkout -q -f ." "$G clean -x -f"; do
+    i=$((i+1)); repo "dgf$i"; add scripts/dev/harness.sh "$form"; run
+    assert_eq 1 "$STATUS" "[$form] → fail: $OUT"
+    assert_contains "$OUT" "destructive-git" "[$form] rule name"
+  done
+}
+# 行末コメントの中の -f まで拾わないこと（`#` を境界に入れていないと、正当な git checkout main が落ちる。実測）
+t_force_flag_in_trailing_comment_is_not_flagged() {
+  local i=0 form
+  for form in "$G checkout main  # -f は使わない" "$G checkout -b feat/x  # --force しない" \
+              "$G clean --dry-run  # -f を付けないこと" "$G checkout --quiet FETCH_HEAD -- data && cp -f a b"; do
+    i=$((i+1)); repo "fc$i"; add scripts/x.sh "$form"; run
+    assert_eq 0 "$STATUS" "[$form] → pass: $OUT"
+  done
+}
+# 破壊的でないものを足していないこと。`git reset --mixed` は index を戻すだけで作業ツリーを触らない
+# （実測: tracked の変更・staged の変更・未追跡のどれも消えない）。落とすと正当な使い方を禁じてしまう。
+t_non_destructive_git_forms_still_pass() {
+  local i=0 form
+  for form in "$G reset --mixed" "$G reset --soft HEAD~1" "$G restore --help" \
+              "$G checkout -b feature/x" "$G checkout main" "$G checkout \"\$ref\" -- path/to/file" \
+              "$G clean --dry-run" "$G reset HEAD -- file"; do
+    i=$((i+1)); repo "nd$i"; add scripts/x.sh "$form"; run
+    assert_eq 0 "$STATUS" "[$form] → pass: $OUT"
+  done
+}
 # 正当な使い方まで止めない（止めすぎると、この検査ごと外される）
 t_legitimate_git_is_not_flagged() {
   local i=0 form
@@ -244,6 +295,10 @@ test_case "data/ is skipped" t_data_dir_is_skipped
 test_case "destructive git in scripts/deploy/.github → fail (#542)" t_destructive_git_in_scripts_fails
 test_case "destructive git: scripts/ deploy/ .github/ all covered (#542)" t_destructive_git_covers_all_three_dirs
 test_case "legitimate git usage is not flagged (#542)" t_legitimate_git_is_not_flagged
+test_case "destructive git: restore / 分離フラグの clean / checkout -f も落ちる (#557)" t_destructive_git_restore_and_separated_flags_fail
+test_case "破壊的でない git（reset --mixed 等）は通る (#557)" t_non_destructive_git_forms_still_pass
+test_case "destructive git: -f が先頭でない形も落ちる (#557)" t_destructive_git_force_flag_not_first_fails
+test_case "行末コメントの中の -f は落とさない (#557)" t_force_flag_in_trailing_comment_is_not_flagged
 test_case "destructive git outside scripts/ is allowed (#542)" t_destructive_git_outside_scripts_is_allowed
 test_case "destructive git in a comment is allowed (#542)" t_destructive_git_in_comments_is_allowed
 
