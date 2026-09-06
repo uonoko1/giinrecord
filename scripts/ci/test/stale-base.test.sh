@@ -26,10 +26,13 @@ W="$TMP/work"
 g() { git -C "$W" "$@"; }
 commit() { g add -A; g commit -qm "$1"; }
 # new_repo → $W with `main` at a commit holding docs/WORKING_AGREEMENT.md (a bullet list, like the real one)
+# The document is long on purpose: a three-line file makes every edit conflict, so a fixture that short
+# would report "conflict" for edits that git merges cleanly in the real 1,000-line agreement file.
 new_repo() {
   rm -rf "$W"; git init -q -b main "$W"
   mkdir -p "$W/docs" "$W/src"
-  printf -- '- **教訓 A**\n- **教訓 B**\n- **教訓 C**\n' > "$W/docs/WORKING_AGREEMENT.md"
+  { echo "# 作業合意"; for i in $(seq 1 40); do echo "- **教訓 $i** 本文本文本文"; done; } \
+    > "$W/docs/WORKING_AGREEMENT.md"
   printf 'export const a = 1;\nexport const b = 2;\n' > "$W/src/app.ts"
   commit base
   # `origin/main` is what CI compares against; make it a real remote-tracking ref
@@ -50,7 +53,8 @@ BASE_SHA=""
 # exactly what an agent does when it rewrites a section it read before main moved.
 stale_branch() {
   branch_from "$BASE_SHA" "$1"
-  printf -- '- **教訓 A**\n- **教訓 B**\n- **教訓 C**\n- **教訓 私**\n' > "$W/docs/WORKING_AGREEMENT.md"
+  g checkout -q "$BASE_SHA" -- docs/WORKING_AGREEMENT.md      # the stale reading, rewritten wholesale
+  printf -- '- **教訓 私**\n' >> "$W/docs/WORKING_AGREEMENT.md"
   commit "my lesson"
 }
 
@@ -100,7 +104,7 @@ t_fresh_base_deletion_passes() {
   new_repo; BASE_SHA=$(g rev-parse HEAD)
   main_moves '- **教訓 X**'
   branch_from main topic
-  printf -- '- **教訓 X**\n' > "$W/docs/WORKING_AGREEMENT.md"   # drops A/B/C on purpose
+  { echo "# 作業合意"; echo "- **教訓 X**"; } > "$W/docs/WORKING_AGREEMENT.md"  # drops 教訓 1..40 on purpose
   g rm -q src/app.ts
   commit "refactor: drop what we no longer need"
   run
@@ -120,8 +124,10 @@ t_stale_base_deleting_only_its_own_base_lines_passes() {
   new_repo; BASE_SHA=$(g rev-parse HEAD)
   main_moves '- **教訓 X**'
   branch_from "$BASE_SHA" topic
-  printf -- '- **教訓 A**\n' > "$W/docs/WORKING_AGREEMENT.md"    # deletes B and C, which it DID see
-  commit "drop B and C on purpose"
+  # deletes 教訓 3..12, all of which existed at the merge-base, and nowhere near main's append
+  g checkout -q "$BASE_SHA" -- docs/WORKING_AGREEMENT.md
+  sed -i '/^- \*\*教訓 \([3-9]\|1[0-2]\)\*\* /d' "$W/docs/WORKING_AGREEMENT.md"
+  commit "drop 教訓 3..12 on purpose"
   run
   assert_eq 0 "$STATUS" "exit 0 (only lines present at the merge-base were removed): $OUT"
 }
@@ -130,7 +136,8 @@ t_same_line_added_on_both_sides_passes() {
   new_repo; BASE_SHA=$(g rev-parse HEAD)
   main_moves '- **教訓 X**'
   branch_from "$BASE_SHA" topic
-  printf -- '- **教訓 A**\n- **教訓 B**\n- **教訓 C**\n- **教訓 X**\n' > "$W/docs/WORKING_AGREEMENT.md"
+  g checkout -q "$BASE_SHA" -- docs/WORKING_AGREEMENT.md
+  printf -- '- **教訓 X**\n' >> "$W/docs/WORKING_AGREEMENT.md"
   commit "same line, written independently"
   run
   assert_eq 0 "$STATUS" "exit 0: $OUT"
@@ -151,16 +158,19 @@ t_rebase_makes_it_pass() {
   main_moves '- **教訓 X**'
   stale_branch topic
   run; assert_eq 1 "$STATUS" "fails before the rebase"
-  # what the message tells you to do
-  g rebase -q origin/main >/dev/null 2>&1 || g rebase --abort 2>/dev/null || true
-  if g diff --quiet origin/main topic 2>/dev/null; then :; fi
-  # resolve the conflict the way a rebase does when both sides appended: keep both
+  # exactly what the message says to do
+  set +e; g rebase origin/main >/dev/null 2>&1; set -e
   if [[ -e "$W/.git/rebase-merge" || -e "$W/.git/rebase-apply" ]]; then
-    printf -- '- **教訓 A**\n- **教訓 B**\n- **教訓 C**\n- **教訓 X**\n- **教訓 私**\n' > "$W/docs/WORKING_AGREEMENT.md"
-    g add -A; GIT_EDITOR=true g rebase --continue >/dev/null 2>&1 || true
+    # resolve it the right way: keep BOTH sides (main's 教訓 X and the branch's 教訓 私)
+    g checkout -q --theirs docs/WORKING_AGREEMENT.md 2>/dev/null || true
+    g show "origin/main:docs/WORKING_AGREEMENT.md" > "$W/docs/WORKING_AGREEMENT.md"
+    printf -- '- **教訓 私**\n' >> "$W/docs/WORKING_AGREEMENT.md"
+    g add -A; GIT_EDITOR=true g rebase --continue >/dev/null 2>&1
   fi
+  [[ -e "$W/.git/rebase-merge" || -e "$W/.git/rebase-apply" ]] && fail "rebase did not finish"
   run
   assert_eq 0 "$STATUS" "exit 0 after the rebase: $OUT"
+  assert_contains "$(cat "$W/docs/WORKING_AGREEMENT.md")" "教訓 私" "the branch's own line survived the rebase"
 }
 
 # --- 4. the check itself -------------------------------------------------------------------------
