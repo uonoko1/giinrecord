@@ -238,8 +238,10 @@ $(cat "$REPORT")
   git fetch origin
   git rebase origin/main        # 衝突したら、両方の追記を残す形で解決する
 
-そのあと、**上の行が本当に残ったか**をこう確かめてください:
+そのあと、**上の行が本当に残ったか**をこう確かめてください（手元で）:
 
+  bash scripts/ci/stale-base.sh                    # 上の一覧を $LINES_OUT に書き出す（rebase の前に）
+  git rebase origin/main
   bash scripts/ci/stale-base.sh --verify $LINES_OUT
 
 **この2つ目のコマンドを飛ばさないこと。** rebase は共通の祖先を $BASE の先端まで動かすので、
