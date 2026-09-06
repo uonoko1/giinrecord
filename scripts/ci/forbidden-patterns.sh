@@ -74,15 +74,48 @@ grep_files aws-key '\b(AKIA|ASIA)[0-9A-Z]{16}\b'
 ENV_FILES=$(printf '%s\n' "$FILES" | grep -E '(^|/)\.env(\.[^/]+)?$' | grep -v -E '(^|/)\.env\.example$' || true)
 report env-file "$ENV_FILES"
 
-# destructive-git (Issue #542): a script that "undoes" things with git wipes the developer's uncommitted work —
-# git restores to HEAD, so the mutation AND whatever they had not committed both disappear. That happened three
-# times on 2026-09-06 (mutation-testing harnesses using `git checkout` / `git reset --hard`). Mutation harnesses
-# must save with `cp` instead: scripts/dev/mutate.sh. Scoped to scripts/ deploy/ .github/ (docs/ may describe it);
-# comment lines are allowed so this rule's own rationale can be written down. `git checkout <ref> -- <path>` and
-# `git checkout -b` are NOT matched: they do not touch the working tree's uncommitted state.
+# destructive-git (Issue #542, extended by #557): a script that "undoes" things with git wipes the developer's
+# uncommitted work — git restores to HEAD, so the mutation AND whatever they had not committed both disappear.
+# That happened three times on 2026-09-06 (mutation-testing harnesses using `git checkout` / `git reset --hard`).
+# Mutation harnesses must save with `cp` instead: scripts/dev/mutate.sh. Scoped to scripts/ deploy/ .github/
+# (docs/ may describe it); comment lines are allowed so this rule's own rationale can be written down.
+#
+# Every form listed below was measured, not assumed: run in a throw-away repo with a modified tracked file, a
+# modified staged file and an untracked file, each one really loses at least one of the three (#557).
+#   git restore …          loses the tracked change (`--staged --worktree .` loses the staged one too). This is
+#                          the form git's own docs recommend over `git checkout --`, so it is the one the next
+#                          person writing a harness reaches for first — and it was the one this rule missed.
+#   git clean -d -f        loses untracked files. The old regex `-[a-z]*f` only saw the flags fused into one word.
+#   git checkout -f .      loses the tracked change; the old regex only saw `checkout .` and `checkout -- .`.
+# NOT matched, also measured (they keep all three, so blocking them would only make people delete this rule):
+#   git reset --mixed / --soft, git reset HEAD -- <path>, git clean --dry-run, git checkout -b, git checkout main,
+#   git checkout <ref> -- <path>, git restore --help.
+#
+# This is a denylist, so it is not a proof that nothing destructive gets through — see 塞げていない形 in the
+# comment below the regex. It raises the cost of writing one by hand, which is what makes it visible in review.
 GIT_FILES=$(printf '%s\n' "$FILES" | grep -E '^(scripts|deploy|\.github)/' || true)
-DESTRUCTIVE_GIT_RE='(^|[^#[:alnum:]_-])git +(checkout +(-- +)?\.|reset +--hard|clean +-[a-z]*f|stash([[:space:]]|$))'
-GIT_OUT=$(run_grep "$GIT_FILES" -I -H -n -E -e "$DESTRUCTIVE_GIT_RE" | grep -v -E '^[^:]+:[0-9]+: *#' | cut -d: -f1,2 || true)
+# OPT = one option word that may sit between the subcommand and its target (`--quiet`, `-d`, `--source=HEAD`…).
+OPT='(-[A-Za-z-][^[:space:]]*[[:space:]]+)'
+DESTRUCTIVE_GIT_RE="(^|[^#[:alnum:]_-])git +(\
+checkout +$OPT*(-f|--force)([[:space:]]|$)|\
+checkout +(-- +)?\\.([[:space:]]|$)|\
+restore([[:space:]]+(--help|-h)([[:space:]]|$)|[[:space:]]|$)|\
+reset +--hard|\
+clean +$OPT*(-[A-Za-z]*f[A-Za-z]*|--force)([[:space:]]|$)|\
+stash([[:space:]]|$))"
+# `restore` above matches every invocation and then the `--help` / `-h` form is dropped again below: unlike
+# checkout, there is no safe target for restore (`git restore <path>` overwrites that path from the index — 実測).
+DESTRUCTIVE_GIT_ALLOW_RE='git[[:space:]]+restore[[:space:]]+(--help|-h)([[:space:]]|$)'
+GIT_OUT=$(run_grep "$GIT_FILES" -I -H -n -E -e "$DESTRUCTIVE_GIT_RE" \
+  | grep -v -E '^[^:]+:[0-9]+: *#' \
+  | { grep -v -E "$DESTRUCTIVE_GIT_ALLOW_RE" || true; } | cut -d: -f1,2 || true)
+# 塞げていない形（denylist の宿命。「これで全部」ではない。分かっているものは書き残す）:
+#   - 名前を変えた呼び出し: `g=git; $g restore .` / `alias g=git` / `eval "$cmd restore ."` / `"g""it" restore .`
+#   - 引数を組み立てる形: `git "$sub" .` や `git restore "$@"`（$sub / $@ の中身は静的には読めない）
+#   - git 以外の道具: `rm -rf`, `jj`, `hg revert`, IDE の操作
+#   - 行を跨ぐ形: grep は行単位なので `git restore \` + 改行 + `.` は当たらない
+#   - コメント行（意図的。この規則の理由を書けなくなるため）
+#   これらは「隠れて通れる」形ではなく、レビューの diff に不自然な書き方として現れる（作業合意 #507）。
 report destructive-git "$GIT_OUT"
 
 # Strict octets (no leading zeros) and no neighbouring digit, letter or dot: keeps SVG path data and version strings (v1.2.3.4) out.
