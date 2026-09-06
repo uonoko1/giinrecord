@@ -22,5 +22,13 @@ export default defineConfig({
      * **本当に遅い実装が入れば落ちる**幅にしてある。
      */
     testTimeout: 20000,
+    /*
+     * **`testTimeout` が効くのは `tests` だけで、`collect`（import 時に走る処理）は管轄外**（#520 / #556）。
+     * 実測: `collect` に 27 秒かけても 20,000ms を超えたまま緑になる。
+     * つまり **import 時の重い処理は、遅くなっても誰も鳴らさない**。
+     * `font-subset-coverage.test.ts` は `data/` 全体の走査を `describe` の外に置いている——
+     * **`testTimeout` の余裕（他人と共有している）を食い潰さないため**だが、
+     * **代わりに無制限の側へ荷重が移っている**ことは自覚しておくこと。
+     */
   },
 });
