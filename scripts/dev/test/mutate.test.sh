@@ -221,6 +221,17 @@ t_refuses_a_missing_file() {
   assert_contains "$OUT" "src/nope.ts" "names it"
 }
 
+# ---- CI が本当にこのテストを走らせること -------------------------------------------------------
+# 「共通の道具を作る」は、CI が走らせて初めて効く。ci.yml の for ループの glob を固定する。
+# （scripts/dev/test/ を glob から外すと、この道具の防御が黙って死ぬ）
+t_ci_runs_this_test_file() {
+  local ci="$HERE/../../../.github/workflows/ci.yml"
+  [[ -f $ci ]] || { fail "ci.yml が見つからない: $ci"; return 0; }
+  local line; line=$(grep -F 'deploy/test/*.test.sh; do' "$ci" || true)
+  assert_ne "" "$line" "ci.yml に bash テストの for ループがある"
+  assert_contains "$line" 'scripts/dev/test/*.test.sh' "ci.yml が scripts/dev/test/*.test.sh を走らせる"
+}
+
 for t in $(declare -F | awk '{print $3}' | grep '^t_'); do test_case "${t#t_}" "$t"; done
 echo
 echo "passed: $PASS  failed: $FAIL"
