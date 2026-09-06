@@ -13,11 +13,19 @@ tools: Bash, Read, Edit, Write, Grep, Glob
 
 ## 作業の型
 1. **専用の worktree で作業する。** PO の作業ツリー（`/home/uonoko/Development/gikailog`）は**絶対に触らない**。
+   **枝を作る前に、同じ Issue に誰かが着手していないか必ず確かめる**（#512 で 2 人が並行してしまった）:
    ```
    git -C /home/uonoko/Development/gikailog fetch origin
+   git -C /home/uonoko/Development/gikailog worktree list          # ← 先に見る
+   git -C /home/uonoko/Development/gikailog branch -a | grep <issue#>   # ← 先に見る
    git -C /home/uonoko/Development/gikailog worktree add <指示された場所> -b <type>/<issue#>-<slug> origin/main
    ```
    以後のコマンドはすべてその worktree の中で実行する。
+   **既に同じ Issue の枝がある場合は、勝手に別名（`512b` のような）を作って進めない。**
+   **まず PO に「既に <枝名> がある。引き継ぐか、別の観点でやるか」と聞くこと。**
+   - **#512 では、別名で進めた結果 PR が 2 本立ち、PO が帰属を取り違えた。**
+     担当者は最初の進捗報告で衝突を伝えていたが、**PO が読み落とした。**
+     **1 行の報告では埋もれる。「作業を始める前に、答えを待つ」形にすること。**
 2. **TDD**: 失敗するテストを書く → 最小実装で通す → リファクタ。
 3. **変異させて落ちるのを見るまで「テストを書いた」と言わない。**
    - 「この変異で落ちるはず」を先に言ってから変異させる
