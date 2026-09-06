@@ -195,6 +195,17 @@ t_ci_installs_from_the_script() {
   if printf '%s' "$body" | grep -q 'shellcheck.*latest'; then
     fail "ci.yml installs a floating 'latest' shellcheck"
   fi
+  # The whole "we do not need to pin the install step, because the next step exits 3 on a wrong version"
+  # argument rests on that exit 3 reaching CI as a red. Two one-line edits break it and stay green:
+  # `bash scripts/ci/shellcheck.sh || true` and `continue-on-error: true` on the step. Both were measured
+  # to let 0.9.0 lint the repo with the job still green (#552 review).差分1行で通る変異は、
+  # 差分20行の変異よりずっと危険 (#507) — so the swallow is what gets pinned, not the install.
+  if printf '%s' "$body" | grep -E 'shellcheck\.sh([^-]|$)[^|]*\|\|[[:space:]]*(true|:)'; then
+    fail "ci.yml swallows shellcheck's exit status (|| true / || :) — a wrong version would lint silently"
+  fi
+  if printf '%s' "$body" | grep -q 'continue-on-error'; then
+    fail "ci.yml uses continue-on-error — shellcheck's exit 3 would not turn the job red"
+  fi
 }
 
 t_pin_is_documented() {
