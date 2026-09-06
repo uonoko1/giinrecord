@@ -166,6 +166,55 @@ assert_confined() {
   fi
 }
 
+# ---- シンボリックリンク経由の脱出を塞ぐ（#580）----
+# **入口（location_shape_ok）と出口（under_root）はどちらも字句解決だけを見ており、
+# ディスク上の実体は見ていない。** $ROOT の中に外を指すシンボリックリンクが挟まっていれば、
+# location の値そのものは `..` も絶対パスも含まない正常な形（例: `/link/notes.txt`）でも、
+# 実際に書き込む先は $ROOT の外に出る。**実測した**（`git worktree` の外の使い捨てディレクトリで、
+# $ROOT に見立てたディレクトリへ `ln -s <外のディレクトリ> $ROOT/link` を張り、
+# `location /link/notes.txt` を検査しただけで、両方の門が return 0 で通した）:
+#   location_shape_ok "/link/notes.txt"                → 0（許した文字だけ、`..` も無い）
+#   under_root "$ROOT/link/notes.txt"                  → 0（字句解決は /link を展開しない。
+#                                                          文字列としてそのまま $ROOT の下に見える）
+# この経路は**現状の第3の門（作った後に find で突き合わせる）だけが捕まえる**——
+# `find` はシンボリックリンクを辿らないので、リンクの先に書かれたファイルは
+# docroot の下の一覧に現れない。だが**その門が捕まえる時点で、書き込みはもう実行済み**
+# （`printf` の後に `find` している）。変異で第3の門だけを黙らせると **19 passed, 0 failed** になり、
+# 外のファイルが上書きされたまま気づけない（単点防御。#580 の実測）。
+#
+# だから**`mkdir -p` より前**（＝ディスクに何も足す前）に、もう1つ別の根拠で門を置く。
+# 根拠は「**組み立てたパスの祖先を1段ずつ実際に lstat して、既にあるものの中にシンボリックリンクが
+# 無いか**」——字句ではなく、ディスク上の実体を見る点が入口・出口と違う。
+#
+# **祖先の"既にある"範囲だけを見て、存在しない段に着いたら止める。** シンボリックリンクは
+# 攻撃者が**事前に**置いたものでなければ意味を持たない（$ROOT は mktemp -d のたびに新しく作る
+# ので、このテスト自身が作る通常のディレクトリは疑わなくてよい）。まだ存在しない段は
+# `mkdir -p` がこれから普通のディレクトリとして作るだけなので安全。
+# `test -L` は無ければ単に偽を返す（#578 が避けた「存在しないパスで exit 1 になる realpath」の
+# 問題はここには無い）。
+#
+# **この位置（`mkdir -p` より前）に置く理由**: `mkdir -p` の後に検査すると、間に合ったとしても
+# `mkdir -p` 自身がシンボリックリンクの先（docroot の外）に新しいディレクトリを作ってしまう
+# （実測: `location /link/sub/notes.txt` で `mkdir -p` を先に走らせると、リンク先の外部ディレクトリに
+#  空の `sub/` が作られた。既存ファイルの上書きは無いが、外に書く動作自体は起きてしまう）。
+# `mkdir -p` より前に、既存の祖先だけを検査すれば、攻撃が見つかった時点で **何もディスクに触れていない**。
+assert_no_symlink_ancestor() {
+  local built=$1 loc=$2
+  local rel=${built#"$ROOT"}
+  local cur=$ROOT seg
+  IFS=/ read -r -a segs <<< "$rel"
+  for seg in "${segs[@]}"; do
+    [ -z "$seg" ] && continue
+    cur="$cur/$seg"
+    [ -e "$cur" ] || [ -L "$cur" ] || break   # まだ無い段より先は mkdir -p がこれから作るだけ
+    if [ -L "$cur" ]; then
+      echo "FAIL location [$loc] の書き込み先にシンボリックリンクが挟まっている: $cur -> $(readlink "$cur")"
+      echo "     字句上は docroot の中に見えても、実体は外を指しうる（#580）。まだ何も書いていない。"
+      FAIL=$((FAIL+1)); exit 1
+    fi
+  done
+}
+
 CHECKED_LOCS=0
 WANT_PROBES=()
 while IFS= read -r loc; do
@@ -184,9 +233,11 @@ while IFS= read -r loc; do
       case "$pfx" in
         /) PROBE_PATHS+=("/") ;;
         */) assert_confined "$ROOT${pfx}__probe.txt" "$loc"
+            assert_no_symlink_ancestor "$ROOT${pfx}__probe.txt" "$loc"
             mkdir -p "$ROOT$pfx"; printf 'x' > "$ROOT${pfx}__probe.txt"
             WANT_PROBES+=("$ROOT${pfx}__probe.txt"); PROBE_PATHS+=("${pfx}__probe.txt") ;;
         *)  assert_confined "$ROOT$pfx" "$loc"
+            assert_no_symlink_ancestor "$ROOT$pfx" "$loc"
             mkdir -p "$(dirname "$ROOT$pfx")"; printf 'x' > "$ROOT$pfx"
             WANT_PROBES+=("$ROOT$pfx"); PROBE_PATHS+=("$pfx") ;;
       esac ;;
