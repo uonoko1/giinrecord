@@ -41,8 +41,25 @@ type Snapshot = {
   windowKeys: string[];
   navigatorKeys: string[];
   documentElementAttrs: string[];
-  bodyHTML: string;
-  headHTML: string;
+  /**
+   * `document.body` / `head` の**姿**（直下の子の数と、それぞれのタグ・id・class）。
+   *
+   * **`innerHTML` の全文は撮らない。** 全文だと大きい一覧を描くテストで**実費が跳ねる**。
+   * この枝で実測（96KB の DOM、load 95.46）:
+   *
+   *     snapshot+diff  = 121.4 ms / テスト
+   *       うち body.innerHTML の文字列化だけで 57.6 ms
+   *       window/navigator の own キー列挙は合わせて 0.4 ms 未満
+   *
+   * `members.test.tsx` は **59 テスト**あり、もともと `testTimeout` 20000ms の近くで走っている
+   * （#538）。**見張りが上限を押し上げては本末転倒**なので、姿だけを撮る。
+   *
+   * **見逃す形**: 要素の構造を変えずに**テキストだけ**書き換えて残す形は、姿が同じなので鳴らない。
+   * これは**順序依存を作らない**（後続のファイルは自分で描き直すので、残ったテキストを読まない）。
+   * 構造が残る形（`contrast.test.ts` がタブの DOM を敷いたまま終わる形）は**必ず数に出る**。
+   */
+  bodyShape: string;
+  headShape: string;
   localStorage: string;
   sessionStorage: string;
   userAgent: string;
@@ -94,6 +111,18 @@ function navigatorKeys(): string[] {
   return ownKeys(navigator).filter((k) => !IGNORED_NAVIGATOR_KEYS.includes(k));
 }
 
+/**
+ * 要素の姿を1行にする。**残った要素は必ず数に出る**（`innerHTML` の全文は使わない）。
+ * 落ちたときにどれが残ったか言えるよう、先頭 8 個までは名前も出す。
+ */
+function shapeOf(el: HTMLElement): string {
+  const kids = Array.from(el.children).map((c) => {
+    const cls = String(c.getAttribute("class") ?? "").trim();
+    return `${c.tagName.toLowerCase()}${c.id ? `#${c.id}` : ""}${cls ? `.${cls.split(/\s+/).join(".")}` : ""}`;
+  });
+  return kids.length === 0 ? "" : `${kids.length} 要素: ${kids.slice(0, 8).join(", ")}${kids.length > 8 ? " …" : ""}`;
+}
+
 function storageDump(s: Storage): string {
   const out: Record<string, string> = {};
   for (let i = 0; i < s.length; i++) {
@@ -112,8 +141,8 @@ export function snapshotGlobals(): Snapshot {
     documentElementAttrs: Array.from(document.documentElement.attributes)
       .map((a) => `${a.name}=${a.value}`)
       .sort(),
-    bodyHTML: document.body.innerHTML,
-    headHTML: document.head.innerHTML,
+    bodyShape: shapeOf(document.body),
+    headShape: shapeOf(document.head),
     localStorage: storageDump(localStorage),
     sessionStorage: storageDump(sessionStorage),
     userAgent: navigator.userAgent,
@@ -136,8 +165,8 @@ export function describeDrift(before: Snapshot, after: Snapshot): string[] {
   const attrRemoved = before.documentElementAttrs.filter((a) => !after.documentElementAttrs.includes(a));
   for (const a of attrAdded) out.push(`<html> に増えた属性: ${a}`);
   for (const a of attrRemoved) out.push(`<html> から消えた属性: ${a}`);
-  if (before.bodyHTML !== after.bodyHTML) out.push(`document.body が残っている（${after.bodyHTML.length} 文字）: ${after.bodyHTML.slice(0, 120)}`);
-  if (before.headHTML !== after.headHTML) out.push(`document.head が残っている（${after.headHTML.length} 文字）: ${after.headHTML.slice(0, 120)}`);
+  if (before.bodyShape !== after.bodyShape) out.push(`document.body が残っている（${before.bodyShape || "空"} → ${after.bodyShape || "空"}）`);
+  if (before.headShape !== after.headShape) out.push(`document.head が残っている（${before.headShape || "空"} → ${after.headShape || "空"}）`);
   if (before.localStorage !== after.localStorage) out.push(`localStorage: ${before.localStorage} → ${after.localStorage}`);
   if (before.sessionStorage !== after.sessionStorage) out.push(`sessionStorage: ${before.sessionStorage} → ${after.sessionStorage}`);
   if (before.userAgent !== after.userAgent) out.push(`navigator.userAgent: ${before.userAgent} → ${after.userAgent}`);

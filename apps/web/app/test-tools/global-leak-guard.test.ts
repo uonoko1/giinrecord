@@ -82,7 +82,9 @@ const LEAKS: readonly (readonly [name: string, mutate: () => void, restore: () =
     () => {
       document.body.innerHTML = "";
     },
-    [/^document\.body が残っている（\d+ 文字）: <span class="member-tab-label">本会議<\/span>$/],
+    // 姿だけを撮るので文字数は出ないが、**残った要素のタグと class は名指しする**
+    // （全文を撮ると大きい一覧で実費が跳ねる。`global-leak-guard.ts` の `bodyShape` を参照）。
+    [/^document\.body が残っている（空 → 1 要素: span\.member-tab-label）$/],
   ],
   [
     "document.head に style を残す（contrast.test.ts の 22,809 文字）",
@@ -92,7 +94,7 @@ const LEAKS: readonly (readonly [name: string, mutate: () => void, restore: () =
     () => {
       document.head.innerHTML = "";
     },
-    [/^document\.head が残っている（\d+ 文字）: <style>\.x\{color:red\}<\/style>$/],
+    [/^document\.head が残っている（空 → 1 要素: style）$/],
   ],
   [
     "localStorage に残す（CompareAdd / ThemeToggle）",
