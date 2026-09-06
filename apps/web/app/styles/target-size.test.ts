@@ -115,6 +115,95 @@ function gitTrackedCss(): string[] {
 }
 
 /**
+ * **`rules.length > 50` / `all.length > 100` が自己参照だった**（#564、#544/#562 と同じ形）。
+ *
+ * どちらも「CSSOM（jsdom）で読んだ結果」の件数を、その CSSOM の結果自身の下限で見ていた。
+ * `pages.css` を 74 行（51 規則）に切り詰めても、`rules.length` の行は **緑のまま**だった
+ * （実測: `前提: 本番の CSS から規則を実際に読めている` を含め 31 passed。落ちたのは無関係な
+ * 2 件——フッターの高さ検証——で、`rules.length` 自身の検査は何も気づかなかった）。
+ * `member.css` を丸ごと空にしても `all.length`（277 → 約200）は 100 を割らず、**33 passed（緑）**。
+ *
+ * ## なぜ「正規表現による自前の再実装」だけでは足りないか
+ *
+ * `allCss()` の下限（#544）は「読む**対象の一覧**」を git という別経路と突き合わせたが、
+ * ここで見たいのは「1 ファイルの**中身**をどれだけ読めたか」なので、対象の一覧を
+ * 突き合わせる形は使えない（対象は 1 本も減らずに、中の規則だけ削られうる）。
+ *
+ * 中身の読み取りが壊れていないかは、**CSSOM とは別の実装**（`countRuleBlocksByRegex` /
+ * `countSelectorsByRegex`）で数え直し、一致することを見る（#520「fontTools を正解として
+ * 突き合わせる」と同じ形）。jsdom の CSSOM パーサーが実装のバグや骨抜きで空振りしても、
+ * コメントを除いて `{` を数えるだけの自前パーサーは影響を受けない。
+ * 実測: `pages.css` は CSSOM で 64 規則・自前カウントでも 64 個で一致、
+ * 本番 CSS 全ファイルのセレクタ数も CSSOM 277・自前カウント 277 で一致した。
+ *
+ * **ただし、これだけでは「ファイルの中身が本当に削られた」ケースを検出できない**
+ * （実測: `pages.css` を 74 行に切り詰めても、両方の実装が同じ 51 を返すので一致し、
+ * 依然 **緑のまま**）。**2 つの実装を同じ入力にかけている**以上、入力そのものが
+ * 削られれば両方が同じだけ削られる。これは #544 の「両側を同じだけ痩せさせれば、
+ * まだ黙る」と同じ限界。
+ *
+ * ## だから、ファイルサイズの絶対下限をハードコードする（#499）
+ *
+ * `.css` の**文字数**（`readFileSync(p, "utf8").length`。日本語コメントを含むので
+ * バイト数とは一致しない——実測で気づいた: `pages.css` は 8,327 バイトだが 7,230 文字）は、
+ * 規則の中身を読まなくても測れる、もっとも単純な指標である。
+ * 実測（このコミット時点）: `pages.css` **7,230 文字**、`app/` 配下の `.css` 合計
+ * **34,008 文字**。ここから十分な余裕を引いた固定値（`PAGES_CSS_MIN_CHARS` /
+ * `ALL_CSS_MIN_CHARS`）を**ハードコード**し、CSSOM の読み取り件数とは独立に見る。
+ * `74` 行への切り詰め（5,771 文字）・`member.css` の空文字化（合計 24,383 文字）は、
+ * どちらもこの下限を割るので検出できる（後述の実測を見よ）。
+ *
+ * **この下限は「対象から計算した値」ではない。** 対象が正当な理由で縮む変更（コメントの
+ * 整理・重複の削除など）をするときは、**このコミットの担当者が意識してこの定数を書き換える**
+ * ——#499 が容認する形（自動追従ではなく、人が更新する）。
+ */
+const PAGES_CSS_MIN_CHARS = 6000;
+const ALL_CSS_MIN_CHARS = 28000;
+function countRuleBlocksByRegex(css: string): number {
+  const noComments = css.replace(/\/\*[\s\S]*?\*\//g, "");
+  let count = 0;
+  let depth = 0;
+  let prelude = "";
+  for (const ch of noComments) {
+    if (ch === "{") {
+      if (depth === 0 && !prelude.trim().startsWith("@")) count++;
+      depth++;
+      prelude = "";
+    } else if (ch === "}") {
+      depth = Math.max(0, depth - 1);
+      if (depth === 0) prelude = "";
+    } else if (depth === 0) {
+      prelude += ch;
+    }
+  }
+  return count;
+}
+
+/** `countRuleBlocksByRegex` と同じ走査で、トップレベルの規則ごとにセレクタ（カンマ区切り）を数える。 */
+function countSelectorsByRegex(css: string): number {
+  const noComments = css.replace(/\/\*[\s\S]*?\*\//g, "");
+  let count = 0;
+  let depth = 0;
+  let prelude = "";
+  for (const ch of noComments) {
+    if (ch === "{") {
+      if (depth === 0) {
+        const sel = prelude.trim();
+        if (sel && !sel.startsWith("@")) count += sel.split(",").length;
+      }
+      depth++;
+      prelude = "";
+    } else if (ch === "}") {
+      depth = Math.max(0, depth - 1);
+      if (depth === 0) prelude = "";
+    } else if (depth === 0) {
+      prelude += ch;
+    }
+  }
+  return count;
+}
+
+/**
  * `allCss()` が痩せていないこと。**呼ぶ側それぞれで確かめる**（別の `it` に置くと `it` ごと消せる）。
  *
  * **件数ではなく、git から取った一覧そのものと突き合わせる**（#544）。
@@ -1192,7 +1281,19 @@ describe("forbiddenTargetFixes: 例外に当たるリンクを「直した跡」
     expect(Object.keys(TARGET_LINK_RULES)).toEqual(["行", "散文"]);
   });
 
-  /** **走査が空振りしていないこと。** CSS を渡しても 1 つも規則を見ていないなら、判定は永久に緑 */
+  /**
+   * **走査が空振りしていないこと。** CSS を渡しても 1 つも規則を見ていないなら、判定は永久に緑。
+   *
+   * **`rules.length > 50` は自己参照だった**（#564）——`rules` は CSSOM で読んだ結果で、
+   * その下限も `rules` 自身の大きさに対する固定の余裕にすぎない。`pages.css` を 74 行
+   * （51 規則）に切り詰めても実測 **緑のまま**だった（`rules.length` 単体はここでは何も見ていない）。
+   *
+   * **2 段構え**（詳細は `PAGES_CSS_MIN_CHARS` の docblock）:
+   *   1. CSSOM とは別の実装（`countRuleBlocksByRegex`）で同じ CSS を数え直し、一致することを見る
+   *      （実装のバグ・骨抜きを検出。ただし両方を同じだけ痩せさせると黙る）
+   *   2. `pages.css` の文字数がハードコードした下限を割っていないことを見る
+   *      （中身が本当に削られたケースを検出。74 行への切り詰めで実測 5,771 文字）
+   */
   it("前提: 本番の CSS から規則を実際に読めている", () => {
     const pages = read("styles/pages.css");
     const style = document.createElement("style");
@@ -1200,6 +1301,12 @@ describe("forbiddenTargetFixes: 例外に当たるリンクを「直した跡」
     document.head.appendChild(style);
     const rules = [...style.sheet!.cssRules].filter((r) => r instanceof CSSStyleRule);
     style.remove();
+    // 独立実装との突き合わせ（片方だけ骨抜きにされていないこと）
+    expect(rules.length, "CSSOM と自前カウントの規則数が食い違う（どちらかが空振りしていませんか）")
+      .toBe(countRuleBlocksByRegex(pages));
+    // 中身が実際に削られていないこと（ハードコードした絶対下限。#499）
+    expect(pages.length, `pages.css が ${PAGES_CSS_MIN_CHARS} 文字を割っている（中身が削られていませんか）`)
+      .toBeGreaterThanOrEqual(PAGES_CSS_MIN_CHARS);
     expect(rules.length, "pages.css から規則を 1 つも読めていない（判定以前に空振り）").toBeGreaterThan(50);
     // 「行の中のリンク」を狙った規則が現に存在する（セレクタの綴りが本番と合っている）
     const rowLinks = rules.filter((r) =>
@@ -1326,6 +1433,21 @@ describe("forbiddenTargetFixes: 例外に当たるリンクを「直した跡」
       }
       style.remove();
     }
+    /**
+     * **`all.length > 100` も自己参照だった**（#564）。`all` は CSSOM で読んだ結果自身で、
+     * `member.css` を丸ごと空にしても `all.length`（277 → 約200）は 100 を割らず実測 **33 passed（緑）**。
+     *
+     * `rules.length` と同じ 2 段構え（詳細は `PAGES_CSS_MIN_CHARS` の docblock）:
+     *   1. CSSOM とは別の実装（`countSelectorsByRegex`）でファイルごとに数え直し、合計が一致すること
+     *   2. `app/` 配下の `.css` 合計文字数がハードコードした下限を割っていないこと
+     *      （実測: `member.css` を空にすると合計 24,383 文字で `ALL_CSS_MIN_CHARS` を割る）
+     */
+    const bySelectorRegex = files.reduce((sum, f) => sum + countSelectorsByRegex(f.css), 0);
+    expect(all.length, "CSSOM と自前カウントのセレクタ数が食い違う（どちらかが空振りしていませんか）")
+      .toBe(bySelectorRegex);
+    const totalChars = files.reduce((sum, f) => sum + f.css.length, 0);
+    expect(totalChars, `app/ 配下の .css 合計が ${ALL_CSS_MIN_CHARS} 文字を割っている（中身が削られていませんか）`)
+      .toBeGreaterThanOrEqual(ALL_CSS_MIN_CHARS);
     expect(all.length, "本番 CSS からセレクタを 1 つも読めていない（検算が空振り）").toBeGreaterThan(100);
 
     /**
