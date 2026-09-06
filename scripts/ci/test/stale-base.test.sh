@@ -119,8 +119,11 @@ t_stale_base_untouched_files_passes() {
   run
   assert_eq 0 "$STATUS" "exit 0 (behind main is fine when nothing is lost): $OUT"
 }
-# (d) stale base, same file, but the branch appends below what it saw and main's lines survive a merge
-t_stale_base_deleting_only_its_own_base_lines_passes() {
+# (d) A stale branch that ALSO deletes lines on purpose. The two kinds of deletion must be told apart:
+# the 10 lines it deliberately dropped existed at the merge-base and must not be mentioned; main's line,
+# which it never saw, must be. This is the distinction the whole check exists for, so it is asserted on
+# the message, not just on the exit status.
+t_deliberate_deletions_are_not_reported_but_the_unseen_line_is() {
   new_repo; BASE_SHA=$(g rev-parse HEAD)
   main_moves '- **教訓 X**'
   branch_from "$BASE_SHA" topic
@@ -129,7 +132,12 @@ t_stale_base_deleting_only_its_own_base_lines_passes() {
   sed -i '/^- \*\*教訓 \([3-9]\|1[0-2]\)\*\* /d' "$W/docs/WORKING_AGREEMENT.md"
   commit "drop 教訓 3..12 on purpose"
   run
-  assert_eq 0 "$STATUS" "exit 0 (only lines present at the merge-base were removed): $OUT"
+  assert_eq 1 "$STATUS" "exit 1: it does not have main's line"
+  assert_contains "$OUT" "教訓 X" "names the line the branch never saw"
+  for i in 3 7 12; do
+    assert_not_contains "$OUT" "教訓 $i**" "does NOT name 教訓 $i, deleted on purpose from what it saw"
+  done
+  assert_contains "$OUT" "1 行" "counts only that one line, not the 10 deliberate deletions"
 }
 # (e) two branches independently write the same new line: main's line is present, nothing is lost
 t_same_line_added_on_both_sides_passes() {
@@ -203,7 +211,7 @@ test_case "消える行が '+' で始まっても検出する" t_lost_line_start
 test_case "土台が最新で追記だけ → 通る" t_fresh_base_addition_passes
 test_case "土台が最新で意図した削除（リファクタ・ファイル削除） → 通る" t_fresh_base_deletion_passes
 test_case "土台は古いが main が触っていないファイルだけ → 通る" t_stale_base_untouched_files_passes
-test_case "土台は古いが、消したのは自分が見た行だけ → 通る" t_stale_base_deleting_only_its_own_base_lines_passes
+test_case "意図した削除は名指ししない／見ていない行だけを名指しする" t_deliberate_deletions_are_not_reported_but_the_unseen_line_is
 test_case "両方が同じ行を独立に足した → 通る" t_same_line_added_on_both_sides_passes
 test_case "main がファイルを消した（枝はまだ持っている） → 通る" t_main_deleted_a_file_passes
 test_case "rebase すれば通る" t_rebase_makes_it_pass
