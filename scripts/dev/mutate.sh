@@ -29,11 +29,19 @@ SV_EXT=.mutate-sv
 
 usage() {
   cat >&2 <<'USAGE'
-usage:
-  mutate.sh run --file <path> --expr <perl-expr> [--file <path> --expr <expr> ...] -- <cmd> [args...]
-  mutate.sh apply <path> <perl-expr> [<path> <perl-expr> ...]
-  mutate.sh restore
-  mutate.sh status
+変異テストの「当てる／戻す」道具（Issue #542）。git を使わないので、あなたの未コミットの作業は消えない。
+
+  mutate.sh run --file <path> --expr <perl式> [--file <path> --expr <式> ...] -- <cmd> [args...]
+      退避 → 当てる → 当たったか確認 → <cmd> → 必ず戻す。<cmd> の終了コードを返す。ふだんはこれ。
+  mutate.sh apply <path> <perl式> [<path> <perl式> ...]   退避して当てる（戻すのは自分で restore）
+  mutate.sh restore   退避（<path>.mutate-sv）から戻す。異常終了のあとの復旧もこれ
+  mutate.sh status    変異が当たったまま残っていれば 1 を返して名指しする
+
+例:
+  mutate.sh run --file apps/web/app/routes/member.css --expr 's/font-weight/X/g' \
+    -- pnpm --filter web test
+
+終了コード: 0 成功 / 1 拒否（外のパス・退避が残っている・ファイルが無い） / 2 使い方 / 3 変異が当たらなかった
 USAGE
   exit 2
 }
