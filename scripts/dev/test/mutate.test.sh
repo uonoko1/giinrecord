@@ -134,6 +134,63 @@ t_apply_refuses_when_a_save_file_exists() {
   run restore
   assert_eq "$before" "$(md5 "$R/src/app.ts")" "the original is still recoverable"
 }
+# 同じファイルを1回の apply / run で2回渡すと、1回目の変異済みファイルを
+# 2回目の cp が「退避」として上書きする。戻すとその変異済みの中身が書き戻り、
+# しかも find_saves は退避を1つも見つけられない（既に消えている）ので status も気づかない（#577）。
+# 1ファイルに複数の変異をかけたいときは `--expr 's/A/X/; s/B/Y/'` のように式を連結するのが
+# 正しい使い方なので、同じ解決済みパスの重複は最初から拒否する。
+t_apply_refuses_the_same_file_twice_in_one_call() {
+  repo; local before; before=$(md5 "$R/src/app.ts")
+  run apply src/app.ts 's/ORIGINAL/MUTANT/' src/app.ts 's/const n/const N/'
+  assert_ne 0 "$STATUS" "同じファイルを2回渡したら拒否する"
+  assert_contains "$OUT" "src/app.ts" "対象のファイルを名指しする"
+  assert_eq "$before" "$(md5 "$R/src/app.ts")" "何も当てずに触っていない"
+  assert_eq "" "$(find "$R" -name '*'"$SV_EXT" -print)" "退避を作らない（作ってから消すのではなく、最初から作らない）"
+}
+# 別名（相対パスの書き方違い）で同じファイルを指しても、resolve 後は同じパスになるので拒否する
+t_apply_refuses_the_same_file_via_different_spelling() {
+  repo; local before; before=$(md5 "$R/src/app.ts")
+  run apply ./src/app.ts 's/ORIGINAL/MUTANT/' src/../src/app.ts 's/const n/const N/'
+  assert_ne 0 "$STATUS" "解決後に同じパスになるなら拒否する"
+  assert_eq "$before" "$(md5 "$R/src/app.ts")" "触っていない"
+}
+# run 経由でも同じ（コマンドを走らせない）
+t_run_refuses_the_same_file_twice() {
+  repo
+  run run --file src/app.ts --expr 's/ORIGINAL/MUTANT/' --file src/app.ts --expr 's/const n/const N/' -- touch ran
+  assert_ne 0 "$STATUS" "run でも拒否する"
+  [[ ! -e "$R/ran" ]] || fail "コマンドを走らせない"
+  assert_eq "" "$(find "$R" -name '*'"$SV_EXT" -print)" "退避を残さない"
+}
+# status は元々「戻し忘れ」を検出する道具であって、この拒否の代わりにはしない。
+# 拒否した直後は当然、当たったものが無いので status も緑のままでよい。
+t_status_is_clean_after_the_refusal() {
+  repo
+  run apply src/app.ts 's/ORIGINAL/MUTANT/' src/app.ts 's/const n/const N/'
+  run status
+  assert_eq 0 "$STATUS" "拒否した直後は何も残っていないので status も緑: $OUT"
+}
+# 既存の正しい使い方1: 別々のファイルに複数の --file / apply は今まで通り通る
+t_apply_still_allows_multiple_distinct_files() {
+  repo
+  run apply src/app.ts 's/ORIGINAL/MUTANT/' src/dirty.ts 's/EDIT/CHANGED/'
+  assert_eq 0 "$STATUS" "別ファイルなら通る: $OUT"
+  assert_contains "$(cat "$R/src/app.ts")" MUTANT "1つ目が当たる"
+  assert_contains "$(cat "$R/src/dirty.ts")" CHANGED "2つ目も当たる"
+  run restore
+  assert_eq 0 "$STATUS" "戻る: $OUT"
+}
+# 既存の正しい使い方2: 1ファイルに複数式を "; " で連結するのは今まで通り通る
+t_apply_still_allows_semicolon_joined_expr_on_one_file() {
+  repo
+  run apply src/app.ts 's/ORIGINAL/MUTANT/; s/const n/const N/'
+  assert_eq 0 "$STATUS" "連結式は通る: $OUT"
+  assert_contains "$(cat "$R/src/app.ts")" MUTANT "1つ目の置換が効く"
+  assert_contains "$(cat "$R/src/app.ts")" "const N" "2つ目の置換も効く"
+  run restore
+  assert_eq 0 "$STATUS" "戻る: $OUT"
+}
+
 t_status_reports_outstanding_mutation() {
   repo; run apply src/app.ts 's/ORIGINAL/MUTANT/'; run status
   assert_ne 0 "$STATUS" "status exits non-zero while a mutation is outstanding"
