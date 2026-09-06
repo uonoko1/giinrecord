@@ -30,7 +30,7 @@ export function mapLegend(raw: string, legend: Record<string, string>): LocalVot
   return mapped ? { raw, legend: meaning, mapped } : { raw, legend: meaning };
 }
 
-const nameKey = (s: string) => s.replace(/[\s　]/g, "");
+export const nameKey = (s: string) => s.replace(/[\s　]/g, "");
 
 export interface SessionInfo {
   sessionId: string;
