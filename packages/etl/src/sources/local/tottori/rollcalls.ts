@@ -28,7 +28,7 @@ export function mapLegend(raw: string, legend: string): LocalVote {
   return mapped ? { raw, legend, mapped } : { raw, legend };
 }
 
-const nameKey = (s: string) => s.replace(/[\s　]/g, "");
+export const nameKey = (s: string) => s.replace(/[\s　]/g, "");
 
 export interface NameMatch {
   memberId: string;
