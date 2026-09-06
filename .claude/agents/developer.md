@@ -23,6 +23,20 @@ tools: Bash, Read, Edit, Write, Grep, Glob
    - 「この変異で落ちるはず」を先に言ってから変異させる
    - 落ちなければ**まず fixture を疑う**（実装ではなく）。落ちない理由が等価変異なら、そう書いて残す
    - 実装を**複数通りに**壊す（丸ごと削除／条件を差し替え／設計の要点だけ無効化）
+   - **変異は `scripts/dev/mutate.sh` で当てる。自分でハーネスを書かない**（#542）:
+     ```
+     scripts/dev/mutate.sh run --file <対象> --expr '<perl の式>' -- <テストのコマンド>
+     ```
+     `run` は **`cp` で退避 → 当てる → 当たったか md5 で確認 → コマンド → 必ず戻す**。
+     - **`git checkout` / `git reset --hard` / `git stash` で戻さない。**
+       それらは **HEAD に戻す**ので、変異と一緒に**あなたの未コミットの作業も消す**。
+       2026-09-06 の 1 日で**3 人がこれで作業を失った**（#542）。`mutate.sh` は git を一切使わない。
+     - **`perl` / `sed` は空振りしても終了コード 0 でファイルも無変化。**
+       当たっていないのに当たったつもりで測ると、**結果は全部無意味になる**（#514）。
+       `mutate.sh` は md5 が変わらなければ **exit 3** で落とす。素の `perl -pi` を直接使わない。
+     - 異常終了して変異が当たったまま止まったら、`scripts/dev/mutate.sh status` が名指しし、
+       `restore` が `.mutate-sv` から戻す（**退避はプロセスが死んでも残る**）。
+     - 対象が**この作業ツリーの外**なら拒否する（他人の worktree を巻き込まない）。
 4. **同種の修正は先に全部数える**（grep で全部拾う。手で数えない。1ページだけ測らない）。
 5. **push の前に CI と同じ検査を流す**: `pnpm lint && pnpm typecheck && pnpm test`。
    deploy/scripts を触ったら `bash scripts/ci/shellcheck.sh` と `deploy/test/*.test.sh` も。
@@ -36,6 +50,9 @@ tools: Bash, Read, Edit, Write, Grep, Glob
 - PO の作業ツリーでの `git switch` / `git stash` / ファイル編集
 - **`git stash` を使うこと**（worktree を分けても **stash はリポジトリ共有**。`pop` は「一番上」を取るので
   他人のものを奪う。実際に事故が起きた）。退避が要るなら**自分のブランチに WIP コミット**する
+- **変異を `git checkout` / `git restore` / `git reset --hard` / `git clean` で戻すこと**（#542）。
+  自分のハーネスにこれらを書いた時点で、**未コミットの作業を消す道具を自分で作っている**。
+  `scripts/dev/mutate.sh` を使う
 - 依存の追加（必要なら PR 本文で理由を書いて PO の判断を仰ぐ）
 - 計測せずに「減るはず」「速くなるはず」と書く
 - 「テストが緑」を根拠にする（緑は「壊れていない」の証明にならない）
