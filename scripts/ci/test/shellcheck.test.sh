@@ -246,7 +246,7 @@ t_ci_verifies_sha256_before_using_the_binary() {
   assert_contains "$body" "shellcheck.sh --pinned-sha256" "ci.yml reads the sha256 from the script"
   assert_contains "$body" "sha256sum -c" "ci.yml verifies the checksum with sha256sum -c"
   assert_contains "$body" "shellcheck.sh --download-url" "ci.yml reads the download URL from the script"
-  if printf '%s' "$body" | grep -qE '[0-9a-f]{64}'; then
+  if grep -qE '[0-9a-f]{64}' <<<"$body"; then
     fail "ci.yml hardcodes a sha256 instead of reading it from scripts/ci/shellcheck.sh"
   fi
 }
@@ -263,7 +263,7 @@ t_ci_does_not_swallow_the_checksum_check() {
   if printf '%s' "$step" | grep -E 'sha256sum[^|]*\|\|[[:space:]]*(true|:)'; then
     fail "ci.yml swallows the sha256sum exit status (|| true / || :)"
   fi
-  if printf '%s' "$step" | grep -q 'continue-on-error'; then
+  if grep -q 'continue-on-error' <<<"$step"; then
     fail "ci.yml uses continue-on-error on the shellcheck install step"
   fi
 }
