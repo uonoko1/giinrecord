@@ -1,8 +1,19 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { SiteFooter } from "./SiteFooter";
 
 describe("SiteFooter のテーマ切替（#365）", () => {
+  // テーマは `<html data-theme>` と localStorage に**残る**。消さないと実行順しだいで
+  // 後ろのファイルが暗いテーマの html を見る（#512）。
+  beforeEach(() => {
+    document.documentElement.removeAttribute("data-theme");
+    localStorage.clear();
+  });
+  afterEach(() => {
+    document.documentElement.removeAttribute("data-theme");
+    localStorage.clear();
+  });
+
   it("マウント後にテーマの選択肢が出る", async () => {
     render(<SiteFooter />);
     expect(await screen.findByRole("group", { name: "表示テーマ" })).toBeInTheDocument();
