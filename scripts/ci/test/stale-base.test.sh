@@ -16,6 +16,7 @@ fail() { echo "    x $1"; CURRENT_FAILED=1; }
 assert_eq() { [[ "$2" == "$1" ]] || fail "$3: expected [$1] got [$2]"; }
 assert_contains() { [[ "$1" == *"$2"* ]] || fail "$3: expected to contain [$2] in: $1"; }
 assert_not_contains() { [[ "$1" != *"$2"* ]] || fail "$3: expected NOT to contain [$2] in: $1"; }
+count_lines() { [[ -r "$1" ]] && wc -l < "$1" || echo 0; }
 test_case() {
   local name=$1; shift; CURRENT_FAILED=0
   "$@"
@@ -280,7 +281,7 @@ t_default_mode_goes_quiet_after_a_bad_rebase_but_verify_does_not() {
   stale_branch topic
   LINES="$TMP/lines.tsv"; STALE_BASE_LINES_OUT="$LINES" run
   assert_eq 1 "$STATUS" "fails first"
-  assert_eq 2 "$(wc -l < "$LINES")" "wrote both at-risk lines out"
+  assert_eq 2 "$(count_lines "$LINES")" "wrote both at-risk lines out"
   rebase_taking_our_side
   assert_eq 0 "$(g show HEAD:docs/WORKING_AGREEMENT.md | grep -c -- '教訓 X')" "the bad resolution really dropped main's line"
   # the default mode is now blind: the merge-base moved to the base tip
@@ -335,11 +336,11 @@ t_a_later_clean_run_does_not_wipe_the_lines_file() {
   stale_branch topic
   LINES="$TMP/keep.tsv"; STALE_BASE_LINES_OUT="$LINES" run
   assert_eq 1 "$STATUS" "fails first"
-  before=$(wc -l < "$LINES")
+  before=$(count_lines "$LINES")
   rebase_taking_our_side
   STALE_BASE_LINES_OUT="$LINES" run
   assert_eq 0 "$STATUS" "the default mode is quiet now"
-  assert_eq "$before" "$(wc -l < "$LINES")" "the evidence is still there"
+  assert_eq "$before" "$(count_lines "$LINES")" "the evidence is still there"
   assert_contains "$OUT" "--verify" "and the ok message points at --verify"
 }
 
