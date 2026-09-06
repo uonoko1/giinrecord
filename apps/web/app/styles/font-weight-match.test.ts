@@ -1163,6 +1163,11 @@ describe("ウェイトの判定そのもの（#506）", () => {
       "calc()": "calc(1rem + 1px) var(--font-head)",
       "clamp()": "clamp(12px, 2vw, 18px) var(--font-head)",
       "サイズが無い（家族だけ）": "var(--font-head)",
+      // **トークンではなく家族名を直書きする経路**（`familyOfValue` が両方見るのと同じ理由）。
+      // これを置くまで、`mentionsSelfHostedFamily` の直書き側の枝を落としても **34/34 緑だった**（実測）。
+      "直書きの家族名 + calc()": 'calc(1rem + 1px) "Shippori Mincho", serif',
+      "直書きの家族名 + xxx-large": "xxx-large Shippori Mincho",
+      "直書きの本文家族 + vw": '2vw "BIZ UDPGothic"',
     };
 
     it("読めないサイズ 8 通りは undefined（システム指定と区別する）", () => {
@@ -1170,9 +1175,9 @@ describe("ウェイトの判定そのもの（#506）", () => {
         .filter(([, v]) => parseFontShorthand(v) !== undefined)
         .map(([name, v]) => `${name}: ${JSON.stringify(parseFontShorthand(v))}`);
       expect(wrong, "読めない値をシステム指定や解決済みの値と混同している").toEqual([]);
-      expect(Object.keys(読めないサイズ)).toHaveLength(8);
+      expect(Object.keys(読めないサイズ)).toHaveLength(11);
       // **入力が相異なること**（#499。個数だけでは中身のすり替えに気づけない）
-      expect(new Set(Object.values(読めないサイズ)).size).toBe(8);
+      expect(new Set(Object.values(読めないサイズ)).size).toBe(11);
     });
 
     it("読めない `font:` は「読めなかった」として報告に出す（黙って捨てない）", () => {
