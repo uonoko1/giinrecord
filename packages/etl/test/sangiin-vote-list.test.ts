@@ -26,8 +26,9 @@ describe("parseRollCallList: 回次ごとの投票結果一覧 vote_ind.htm（�
     assert.deepEqual(parseRollCallList(fixture("vote_ind-220"), 220), []);
   });
 
-  test("第221回の一覧は現行の採決数と同じ件数を返す", () => {
-    assert.ok(parseRollCallList(fixture("vote_ind-221"), 221).length >= 120);
+  test("第221回: 120件", () => {
+    const list = parseRollCallList(fixture("vote_ind-221"), 221);
+    assert.equal(list.length, 120);
   });
 });
 
