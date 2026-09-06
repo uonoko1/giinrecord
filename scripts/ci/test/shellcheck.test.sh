@@ -144,6 +144,25 @@ t_accepts_pinned_version() {
   assert_contains "$(cat "$TMP/args")" "deploy/posix" "linted the targets"
 }
 
+t_rejects_versions_sharing_a_prefix() {
+  # #504: "fixed the name" is not "fixed the value". Found by mutation: replacing the comparison with a
+  # prefix match ([[ $found != $PINNED* ]]) kept all 11 tests green, yet a shellcheck reporting
+  # "0.11.0-rc1-..." then linted all 64 targets. A version string that merely *starts with* the pin is a
+  # different shellcheck, so the match has to be the whole string.
+  make_tree
+  local bogus
+  for bogus in "$PINNED-rc1" "$PINNED.1" "0$PINNED"; do
+    rm -f "$TMP/args"
+    set +e
+    ( cd "$TMP/tree" && PATH="$TMP/tree/bin:$PATH" STUB_LOG="$TMP/args" STUB_VERSION="$bogus" \
+        bash "$SCRIPT" ) >/dev/null 2>&1
+    local status=$?
+    set -e
+    assert_eq 3 "$status" "exit 3 for [$bogus]"
+    if [[ -e "$TMP/args" ]]; then fail "[$bogus] was allowed to lint"; fi
+  done
+}
+
 t_missing_shellcheck_says_so() {
   # Not "exit 127 from set -e" -- the person who has never installed it must be told what to install.
   make_tree
@@ -189,6 +208,7 @@ test_case "real repo: list covers the former ci.yml globs" t_real_repo_matches_c
 test_case "--pinned-version: prints a single x.y.z" t_pinned_version_is_a_version
 test_case "version pin: a different shellcheck is refused, and nothing is linted (#552)" t_rejects_other_version
 test_case "version pin: the pinned shellcheck is accepted and lints the targets (#552)" t_accepts_pinned_version
+test_case "version pin: a version that merely starts with the pin is refused too (#552/#504)" t_rejects_versions_sharing_a_prefix
 test_case "version pin: a missing shellcheck says what to install (#552)" t_missing_shellcheck_says_so
 test_case "version pin: ci.yml installs the version the script names, with no second copy (#552)" t_ci_installs_from_the_script
 test_case "version pin: docs/ops/shellcheck.md names the pinned version (#552)" t_pin_is_documented
