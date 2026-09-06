@@ -19,11 +19,11 @@
  */
 import { describe, expect, it } from "vitest";
 import { defaultDataDir } from "./data-files";
-import { readHeadFontDataSource } from "./head-font-data-source";
+import { readHeadFontDataSourceByPath } from "./head-font-data-source";
 
 const dataDir = defaultDataDir();
 /** `data/` 全体を舐めるので**1 回だけ読む**（2 回読むと 20s の testTimeout に触れる。#501） */
-const source = readHeadFontDataSource(dataDir);
+const source = readHeadFontDataSourceByPath(dataDir);
 
 describe("readHeadFontDataSource が data/ の 5 欄をすべて拾えている（#477 / #520）", () => {
   /**
@@ -34,19 +34,18 @@ describe("readHeadFontDataSource が data/ の 5 欄をすべて拾えている�
   it.each([
     ["members（議員の氏名・会派・選挙区）", () => source.members?.length ?? 0, 500],
     ["speakerPositions（発言の役職。HTML には焼き込まれない）", () => source.speakerPositions?.length ?? 0, 8000],
-    ["rollCallGroups（採決の会派名。groups[] と votes[].group の両方）", () => source.rollCallGroups?.length ?? 0, 2000],
+    // **2 経路は別々に釘を打つ**（#485）。合算の下限だけだと、
+    // **片方が死んでももう片方で閾値を超えて素通りする**（再レビューで実際に素通りした）
+    ["rollCallGroups: groups[] 経路", () => source.rollCallGroupsFromGroups.length, 1000],
+    ["rollCallGroups: votes[].group 経路（unlistedGroups が描く）", () => source.rollCallGroupsFromVotes.length, 20000],
     ["localVoteMarks（地方議会の判の原文）", () => source.localVoteMarks?.length ?? 0, 20000],
     ["assemblyNames（/coverage が明朝700 で描く議会名）", () => source.assemblyNames?.length ?? 0, 5],
   ])("%s が取れている", (_name, count, min) => {
     expect(count()).toBeGreaterThanOrEqual(min);
   });
 
-  /** `votes[].group` にしか無い会派（`unlistedGroups()` が同じクラスで描く）も入っていること */
-  it("採決の会派名は votes[].group も含む（groups[] だけではない）", () => {
-    const groups = new Set(source.rollCallGroups ?? []);
-    // groups[] だけを読んでいたら、`rollCallGroups` の異なり数は「会派の数」程度で頭打ちになる。
-    // votes[] も読むと同じ会派が票の数だけ積まれるので、**総数が異なり数より大きく上回る**
-    expect(source.rollCallGroups!.length).toBeGreaterThan(groups.size * 2);
+  it("合算は 2 経路の和になっている（片方だけを読んでいない）", () => {
+    expect(source.rollCallGroups!.length).toBe(source.rollCallGroupsFromGroups.length + source.rollCallGroupsFromVotes.length);
   });
 
   it("氏名には区切りの空白が入っている（落とすと 1,013 名で 1 グリフ欠ける）", () => {

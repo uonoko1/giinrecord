@@ -46,18 +46,28 @@ function listDir(dir: string) {
 
 /** `dataDir`（既定は `data/`）を舐めて、明朝 700 で描かれる欄だけを集める。無い欄は空。 */
 export function readHeadFontDataSource(dataDir: string): HeadFontDataSource {
+  return { ...readHeadFontDataSourceByPath(dataDir) };
+}
+
+/**
+ * 経路ごとに分けて返す版（検査用）。**`rollCallGroups` は 2 経路あるので別々に数える**（#485）。
+ * 合算の下限だけを見ると、**片方が死んでももう片方で閾値を超えて素通りする**
+ * （PR #520 の再レビューで実際に素通りした。`groups[]` だけ潰す／`votes[]` だけ潰す、どちらも緑だった）。
+ */
+export function readHeadFontDataSourceByPath(dataDir: string): HeadFontDataSource & { rollCallGroupsFromGroups: string[]; rollCallGroupsFromVotes: string[] } {
   const members = readJson<{ name?: string; group?: string; district?: string }[]>(path.join(dataDir, "members", "index.json")) ?? [];
 
-  const rollCallGroups: string[] = [];
+  const rollCallGroupsFromGroups: string[] = [];
+  const rollCallGroupsFromVotes: string[] = [];
   for (const session of listDir(path.join(dataDir, "rollcalls"))) {
     if (!session.isDirectory()) continue;
     for (const f of listDir(path.join(dataDir, "rollcalls", session.name))) {
       if (!f.isFile() || !f.name.endsWith(".json")) continue;
       const rc = readJson<{ groups?: { group?: string }[]; votes?: { group?: string }[] }>(path.join(dataDir, "rollcalls", session.name, f.name));
-      for (const g of rc?.groups ?? []) if (g.group) rollCallGroups.push(g.group);
+      for (const g of rc?.groups ?? []) if (g.group) rollCallGroupsFromGroups.push(g.group);
       // `votes[].group` にしか無い会派も `.rollcall-group-name` で描かれる（`unlistedGroups()`）。
       // ここを読まないと「票にだけ現れた新しい会派」が静かにシステム書体になる（#520 のレビュー指摘）
-      for (const v of rc?.votes ?? []) if (v.group) rollCallGroups.push(v.group);
+      for (const v of rc?.votes ?? []) if (v.group) rollCallGroupsFromVotes.push(v.group);
     }
   }
 
@@ -78,5 +88,5 @@ export function readHeadFontDataSource(dataDir: string): HeadFontDataSource {
   // ETL が新しい県議会を足す経路なので、読まないと追加のたびに気づけない穴になる（#520 のレビュー指摘）
   const assemblyNames = (readJson<{ name?: string }[]>(path.join(dataDir, "assemblies", "index.json")) ?? []).flatMap((a) => (a.name ? [a.name] : []));
 
-  return { members, speakerPositions, rollCallGroups, localVoteMarks, assemblyNames };
+  return { members, speakerPositions, rollCallGroups: [...rollCallGroupsFromGroups, ...rollCallGroupsFromVotes], localVoteMarks, assemblyNames, rollCallGroupsFromGroups, rollCallGroupsFromVotes };
 }

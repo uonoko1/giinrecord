@@ -34,6 +34,7 @@ import { defaultDataDir } from "./data-files";
 import { dataHeadChars } from "./head-font-data-chars";
 import { readHeadFontDataSource } from "./head-font-data-source";
 import { parseSubsetChars, SUBSET_CHARS_FILE, SUBSET_FILE } from "./font-subset";
+import { woff2Chars } from "./woff2-cmap";
 
 const fontsDir = path.resolve(import.meta.dirname, "../../public/fonts");
 const dataDir = defaultDataDir();
@@ -71,6 +72,8 @@ const needed = hasData ? dataHeadChars(readHeadFontDataSource(dataDir)) : new Se
 
 describe("明朝700 のサブセットが data/ を覆っている（#477）", () => {
   const committed = parseSubsetChars(readFileSync(path.join(fontsDir, SUBSET_CHARS_FILE), "utf8"));
+  /** **実物の woff2 が持つ字**（`.txt` の主張ではなく、cmap を読んだ結果） */
+  const fontChars = woff2Chars(readFileSync(path.join(fontsDir, SUBSET_FILE)));
 
   it("サブセットの woff2 と、収録した字の一覧がコミットされている", () => {
     expect(statSync(path.join(fontsDir, SUBSET_FILE)).size).toBeGreaterThan(1024);
@@ -122,6 +125,36 @@ describe("明朝700 のサブセットが data/ を覆っている（#477）", (
    * 「**新しい議員が入って字が増えたら落ちる**」ことであって、静的な語が増える経路ではない。
    * そちらは `scripts/font-subset.ts` の再実行が見る。**強い主張をしない。**
    */
+  /**
+   * **`.txt` は「入っている」という*主張*であって、証拠ではない**（PR #520 の再レビューで発覚）。
+   *
+   * レビュアーが **woff2 から「準」(U+6E96) だけ抜き、`.txt` はそのまま**にした実測:
+   *
+   *     woff2: 179,912 バイト（`> 100_000` の閾値は超えたまま）
+   *     → 472 件すべて緑
+   *     ブラウザ: 「石井 準一」が
+   *       Shippori Mincho:3 / Liberation Serif(SYSTEM):1 / WenQuanYi Zen Hei(SYSTEM):1
+   *       ＝**氏名 1 つの中で書体が混ざる**
+   *
+   * サイズ検査は**痩せた woff2 は捕まえる**が、**サイズを保ったまま中身が欠ける**のは通す
+   * （#504「名前を固定した は 値を固定した ではない」と同型）。
+   * だから**実物の cmap を読んで突き合わせる**。逆向き（`.txt` にだけ足す）も同時に捕まる。
+   */
+  it("`.txt` が主張する字は、実物の woff2 にも入っている（U+2FA7 だけが既知の例外）", () => {
+    const claimedButMissing = [...committed].filter((c) => !fontChars.has(c));
+    expect(claimedButMissing, "`.txt` にあるのに woff2 に無い字（U+2FA7 以外は退行）").toEqual(["\u2FA7"]);
+    const inFontButUnclaimed = [...fontChars].filter((c) => !committed.has(c));
+    expect(inFontButUnclaimed, "woff2 にあるのに `.txt` に無い字（一覧が古い）").toEqual([]);
+  });
+
+  it.runIf(hasData)("議員 1,057 名全員の氏名が、**実物の woff2 で**描ける", () => {
+    const index = readJson<{ name?: string }[]>(path.join(dataDir, "members", "index.json")) ?? [];
+    expect(index.length).toBeGreaterThan(1000);
+    // `.txt` ではなく **font の cmap** で引く。1 字でも欠ければ、その氏名は書体が混ざる
+    const broken = index.filter((m) => [...(m.name ?? "")].some((c) => !fontChars.has(c))).map((m) => m.name);
+    expect(broken, `${broken.length} 名の氏名に、実物の woff2 に無い字がある`).toEqual([]);
+  });
+
   it.runIf(hasData)("議員 1,057 名全員の氏名が、1 字残らずサブセットに入っている", () => {
     const index = readJson<{ name?: string }[]>(path.join(dataDir, "members", "index.json")) ?? [];
     expect(index.length).toBeGreaterThan(1000);
@@ -144,8 +177,7 @@ describe("明朝700 のサブセットが data/ を覆っている（#477）", (
    */
   it("フォント自身が持たない字は、要求しても収録されない（U+2FA7 は差し替え前から明朝で描けていない）", () => {
     expect(committed.has("\u2FA7")).toBe(true); // 要求はしている（明朝700 の要素に出る字なので）
-    const woff2 = readFileSync(path.join(fontsDir, SUBSET_FILE));
-    expect(woff2.length).toBeGreaterThan(100_000); // 中身の検査は font-subset.ts の実行時に行う
+    expect(fontChars.has("\u2FA7")).toBe(false); // Shippori Mincho がこの字を持っていない
   });
 
   it.runIf(hasData)("目に見えない字（空白の類）が 1 つも落ちていない", () => {

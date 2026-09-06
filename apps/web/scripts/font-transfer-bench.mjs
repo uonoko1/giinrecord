@@ -66,6 +66,10 @@ const MIME = { ".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "
 const server = createServer(async (req, res) => {
   const p = decodeURIComponent(new URL(req.url, "http://x").pathname);
   let file = path.join(buildDir, p);
+  // `new URL()` の正規化の**後**に `decodeURIComponent` しているので、`%2e%2e%2f` は正規化をすり抜ける
+  // （実測: `/%2e%2e%2f%2e%2e%2fetc/passwd` が `/etc/passwd` になる）。127.0.0.1 限定・手動実行のみだが、
+  // #505 が同じ型を直したばかりなので塞ぐ。**解決後のパスが buildDir の中にあること**を見る
+  if (!path.resolve(file).startsWith(path.resolve(buildDir) + path.sep)) { res.writeHead(404).end("nf"); return; }
   try { if ((await stat(file)).isDirectory()) file = path.join(file, "index.html"); }
   catch { try { await stat(`${file}.html`); file = `${file}.html`; } catch { res.writeHead(404).end("nf"); return; } }
   try {

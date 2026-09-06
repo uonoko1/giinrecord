@@ -213,7 +213,14 @@ python3 -m venv .venv && .venv/bin/pip install 'fonttools[woff]'
 
 1. `pnpm --filter web build` — **先にビルドする**（HTML 全ページから静的な語を集めるため）
 2. `PYFTSUBSET=.venv/bin/pyftsubset pnpm --filter web font-subset`
-   （1,466 ページの走査に数十分かかる。`public/fonts/` の woff2・字一覧・`fonts.css` を書き換える）
+   （`public/fonts/` の woff2・字一覧・`fonts.css` を書き換える）
+
+   **走査の所要時間は負荷で大きく変わる**ので、キャッシュ（`.font-subset-html-chars.txt`）を持っている。
+   実測: **1,466 ページで約 2 分**（低負荷、レビュアーの手元）／
+   **45 分以上**（load 80〜120・16 コアで他に 9 プロセスが動いていたとき、実装時）。
+   **「数十分」と書いていたのは高負荷時の値**で、条件を書かずに一般化していた（#520 のレビュー指摘）。
+   キャッシュの根拠は「常に遅いから」ではなく、**途中で落ちるとやり直しになるから**である
+   （実装時に 1,400/1,466 まで進んだところでプロセスが消え、全部やり直しになった）。
 3. `pnpm --filter web test` — 覆えているか、消し忘れが無いかを検査する
 4. `public/fonts/` と `fonts.css` の差分をコミットする
 
