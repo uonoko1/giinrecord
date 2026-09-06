@@ -48,7 +48,8 @@ list_targets() {
 # before the message explaining what to install ever prints, so failure is swallowed deliberately here.
 found_version() {
   command -v shellcheck >/dev/null 2>&1 || return 0
-  shellcheck --version 2>/dev/null | sed -n 's/^version: *//p' | head -n1 || true
+  # パイプを使わない（#527）。`sed` に 1 件で止めさせるので `head` も要らない。
+  sed -n 's/^version: *//p;T;q' < <(shellcheck --version 2>/dev/null) || true
 }
 
 require_pinned_version() {
