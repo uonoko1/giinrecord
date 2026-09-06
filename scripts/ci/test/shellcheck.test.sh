@@ -176,6 +176,11 @@ t_missing_shellcheck_says_so() {
   assert_contains "$out" "docs/ops/shellcheck.md" "points at the install instructions"
 }
 
+# Mutation M6 (measured 2026-09-07): deleting the `curl` that installs shellcheck from ci.yml leaves all
+# 12 tests green, and that survival is deliberate rather than a hole. It is not a silent pass: the runner's
+# own shellcheck is then a different version, so the very next step exits 3 and CI goes red (verified by
+# running shellcheck.sh with 0.9.0 on PATH). The design is fail-closed, so "the install step is missing"
+# and "the wrong version linted the repo" cannot be confused -- only the first can happen, and it is loud.
 t_ci_installs_from_the_script() {
   # CI must install the version *this script* names, not a number retyped into the workflow: a second copy
   # would drift, and #552 is precisely about two places disagreeing about a version. So the assertion is
