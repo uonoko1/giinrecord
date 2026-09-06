@@ -26,6 +26,7 @@ test_case() {
 }
 
 md5() { md5sum "$1" | cut -d' ' -f1; }
+SV_EXT=.mutate-sv   # scripts/dev/mutate.sh の退避ファイルの拡張子（同じ値）
 
 # repo → fresh git repo in $R: one committed file (src/app.ts) plus uncommitted work of both kinds
 #   src/dirty.ts   modified-but-tracked   (what `git checkout -- .` destroys)
@@ -236,10 +237,12 @@ t_ci_runs_this_test_file() {
 t_save_files_are_gitignored() {
   local top; top=$(cd "$HERE/../../.." && pwd)
   [[ -f "$top/.gitignore" ]] || { fail ".gitignore が無い"; return 0; }
-  local ignored; ignored=$(cd "$top" && git check-ignore "some/file.ts$(printf '%s' .mutate-sv)" || true)
-  assert_ne "" "$ignored" "*.mutate-sv が .gitignore で無視される"
+  # check-ignore は「無視される」で 0、「されない」で 1 を返す。1 は失敗ではないので拾い直す。
+  # cd の失敗まで一緒に握り潰さないよう、|| true ではなく関数に分ける。
+  ignores() { local out; out=$(cd "$top" && git check-ignore "$1"); local st=$?; [[ $st -le 1 ]] || return 2; printf '%s' "$out"; }
+  assert_ne "" "$(ignores "some/file.ts$SV_EXT")" "*$SV_EXT が .gitignore で無視される"
   # 検査が空振りしていないこと（何でも無視される設定なら意味が無い）
-  assert_eq "" "$(cd "$top" && git check-ignore some/file.ts || true)" "普通のソースは無視されない"
+  assert_eq "" "$(ignores some/file.ts)" "普通のソースは無視されない"
 }
 
 for t in $(declare -F | awk '{print $3}' | grep '^t_'); do test_case "${t#t_}" "$t"; done
