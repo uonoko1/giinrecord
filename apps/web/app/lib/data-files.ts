@@ -215,14 +215,27 @@ export async function readShugiinBillNameStats(dataDir: string): Promise<Shugiin
   const rosterNames = (index ?? []).filter((m) => m.house === "shugiin").map((m) => normalizeName(m.name));
   const roster = new Set(rosterNames);
 
+  /*
+   * #538: 1,943 ファイル（実測、2026-09-07 時点）を 1 件ずつ `await` で読んでいたので、
+   * I/O 待ちが直列に積み上がっていた（load average 75〜89 の環境で 2 秒、90+ ではさらに伸びる）。
+   * 集計（件数の加算・Set への追加）は**どの順で足しても結果が同じ**（sessions は最後に session でソートし直す）ので、
+   * ディレクトリ単位で `readdir` + 中身の読み込みをすべて `Promise.all` にまとめても出力は変わらない。
+   * ディレクトリの列挙順・ファイルの列挙順に依存する状態を一切持たないことは、このファイルの既存のテスト
+   * （`data-files.test.ts`）が固定している。
+   */
+  const perDirBills = await Promise.all(
+    entries.map(async (dir) => {
+      const files = (await readdir(path.join(billsDir, dir))).filter((f) => f.endsWith(".json"));
+      return Promise.all(files.map((file) => readJson<BillNames>(path.join(billsDir, dir, file))));
+    }),
+  );
+
   let names = 0;
   let linked = 0;
   /** 回次 -> その回次の議案に載る異なり氏名（正規化後） */
   const bySession = new Map<number, Set<string>>();
-  for (const dir of entries) {
-    const files = (await readdir(path.join(billsDir, dir))).filter((f) => f.endsWith(".json"));
-    for (const file of files) {
-      const bill = await readJson<BillNames>(path.join(billsDir, dir, file));
+  for (const bills of perDirBills) {
+    for (const bill of bills) {
       if (!bill || bill.house !== "shugiin" || typeof bill.session !== "number") continue;
       const billNames = [...(bill.submitterNames ?? []), ...(bill.supporterNames ?? [])];
       names += billNames.length;
@@ -264,14 +277,20 @@ export async function readSangiinVoteLinkStats(dataDir: string): Promise<Sangiin
     throw err;
   }
 
+  // #538: readShugiinBillNameStats と同じ理由（381 ファイル、実測 2026-09-07）で並列に読む。
+  const perDirRollCalls = await Promise.all(
+    entries.map(async (sub) => {
+      const files = (await readdir(path.join(dir, sub))).filter((f) => f.endsWith(".json"));
+      return Promise.all(files.map((file) => readJson<RollCallVotes>(path.join(dir, sub, file))));
+    }),
+  );
+
   let votes = 0;
   let linked = 0;
   /** 回次 -> その回次の票の延べ数と紐づいた数 */
   const bySession = new Map<number, { votes: number; linked: number }>();
-  for (const sub of entries) {
-    const files = (await readdir(path.join(dir, sub))).filter((f) => f.endsWith(".json"));
-    for (const file of files) {
-      const rollCall = await readJson<RollCallVotes>(path.join(dir, sub, file));
+  for (const rollCalls of perDirRollCalls) {
+    for (const rollCall of rollCalls) {
       if (!rollCall || typeof rollCall.session !== "number") continue;
       const rows = rollCall.votes ?? [];
       const hit = rows.filter((v) => !!v.memberId).length;
