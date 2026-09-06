@@ -36,7 +36,12 @@ tools: Bash, Read, Edit, Write, Grep, Glob
        `mutate.sh` は md5 が変わらなければ **exit 3** で落とす。素の `perl -pi` を直接使わない。
      - 異常終了して変異が当たったまま止まったら、`scripts/dev/mutate.sh status` が名指しし、
        `restore` が `.mutate-sv` から戻す（**退避はプロセスが死んでも残る**）。
+       **退避を作った後に対象が書き換わっていたら、`restore` は上書きを拒否する**
+       （前日の退避が今日の作業を消さないように。両方残すので中身を見て選ぶ）。
      - 対象が**この作業ツリーの外**なら拒否する（他人の worktree を巻き込まない）。
+       **`.git/` と `node_modules/` の配下も拒否する**（そこに置いた退避は回収できないため）。
+     - **測っている間に変異が外れたら exit 4** で知らせる（その測定結果は使えない）。
+     - 終了コード: 0 成功 / 1 拒否 / 2 使い方 / 3 変異が当たらなかった / 4 測定中に外れた
 4. **同種の修正は先に全部数える**（grep で全部拾う。手で数えない。1ページだけ測らない）。
 5. **push の前に CI と同じ検査を流す**: `pnpm lint && pnpm typecheck && pnpm test`。
    deploy/scripts を触ったら `bash scripts/ci/shellcheck.sh` と `deploy/test/*.test.sh` も。
@@ -52,7 +57,9 @@ tools: Bash, Read, Edit, Write, Grep, Glob
   他人のものを奪う。実際に事故が起きた）。退避が要るなら**自分のブランチに WIP コミット**する
 - **変異を `git checkout` / `git restore` / `git reset --hard` / `git clean` で戻すこと**（#542）。
   自分のハーネスにこれらを書いた時点で、**未コミットの作業を消す道具を自分で作っている**。
-  `scripts/dev/mutate.sh` を使う
+  `scripts/dev/mutate.sh` を使う。
+  **`scripts/` `deploy/` `.github/` の中でこれらを書くと `forbidden-patterns` が CI を落とす**
+  （`destructive-git` 規則。コメントと `git checkout <ref> -- <path>` は通る）
 - 依存の追加（必要なら PR 本文で理由を書いて PO の判断を仰ぐ）
 - 計測せずに「減るはず」「速くなるはず」と書く
 - 「テストが緑」を根拠にする（緑は「壊れていない」の証明にならない）
