@@ -169,6 +169,30 @@ function expectAllCssFound(files: { path: string }[]): void {
 }
 
 /**
+ * **入口を固定しても、出口は痩せる**（#544 のレビューが実測）。
+ * `expectAllCssFound(files)` は `allCss()` の**戻り値**を固定するだけで、
+ * **その次の行が全部を使ったかは誰も見ていなかった**:
+ *
+ *     const offenders = files.filter((f) => !f.path.includes("member")).flatMap(...)   // 1 行
+ *       → 本番に `.note a { padding: 4px }` を載せたまま **33 passed（緑）**
+ *
+ * #500 の Z2（対象を数えたの保証は入口までしか届かない）そのもの。
+ * **読みながら記録し、同じ `it` の中で突き合わせる**——記録を消すことが検出を消すことになる形にする。
+ */
+function readingAll<T>(files: { path: string; css: string; label: string }[],
+                       fn: (f: { path: string; css: string; label: string }) => T[]): T[] {
+  const seen: string[] = [];
+  const out = files.flatMap((f) => {
+    seen.push(relative(app, f.path));
+    return fn(f);
+  });
+  expect(seen.sort(), "検査が読んだ .css が、git の一覧と食い違う（消費側で絞っていませんか）").toEqual(
+    gitTrackedCss(),
+  );
+  return out;
+}
+
+/**
  * そのセレクタに当たる宣言を集める。**自前で CSS を解析しない**——
  * まとめ書き（`.a, .b { … }`）や後勝ちの打ち消しを正しく扱うのは難しく、
  * 実際に正規表現を2回書き直して2回とも取りこぼした。
@@ -849,7 +873,7 @@ describe("一覧の行の中のリンクは Spacing 例外に当たるので直�
     // **`app/` 配下の `.css` を全部見る。**手で 2 本並べていたので、残り 5 本が素通りしていた（#518）
     const files = allCss();
     expectAllCssFound(files);
-    const offenders = files.flatMap((f) => forbiddenTargetFixes(f.css, "行", f.label));
+    const offenders = readingAll(files, (f) => forbiddenTargetFixes(f.css, "行", f.label));
     expect(offenders, TARGET_LINK_RULES.行.reason).toEqual([]);
   });
 });
@@ -910,7 +934,7 @@ describe("散文の中のリンクは例外に当たるので直さない（WCAG
     // **`app/` 配下の `.css` を全部見る。**手で 2 本並べていたので、残り 5 本が素通りしていた（#518）
     const files = allCss();
     expectAllCssFound(files);
-    const offenders = files.flatMap((f) => forbiddenTargetFixes(f.css, "散文", f.label));
+    const offenders = readingAll(files, (f) => forbiddenTargetFixes(f.css, "散文", f.label));
     expect(offenders, TARGET_LINK_RULES.散文.reason).toEqual([]);
   });
 });
