@@ -15,8 +15,9 @@
 # So "shellcheck passed" is only a claim about a particular version. Refusing to run under any other version
 # is the point: a silent pass from the wrong version is worse than no run at all, because it looks like a run.
 #
-# To bump the pin, see docs/ops/shellcheck.md. Both this line and .github/workflows/ci.yml must move together;
-# scripts/ci/test/shellcheck.test.sh fails if only one of them does.
+# To bump the pin, see docs/ops/shellcheck.md: change the one line below and nothing else. ci.yml installs
+# whatever `--pinned-version` prints, so there is no second copy of the number to keep in step (and
+# scripts/ci/test/shellcheck.test.sh fails if a version is ever hardcoded back into the workflow).
 set -euo pipefail
 
 SHELLCHECK_PINNED_VERSION=0.11.0

@@ -36,9 +36,9 @@ make_tree() {
   mkdir -p "$t/bin" "$t/no-shellcheck-bin"
   # A PATH with the tools the script needs but no shellcheck. (Emptying PATH would remove bash itself and
   # test the wrong thing -- the first attempt did exactly that and reported "bash: command not found".)
-  local tool
+  local tool tool_path
   for tool in bash find head grep sed sort cat; do
-    p=$(command -v "$tool") && ln -sf "$p" "$t/no-shellcheck-bin/$tool"
+    tool_path=$(command -v "$tool") && ln -sf "$tool_path" "$t/no-shellcheck-bin/$tool"
   done
   cat > "$t/bin/shellcheck" <<'STUB'
 #!/usr/bin/env bash
