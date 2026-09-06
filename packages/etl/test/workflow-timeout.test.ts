@@ -46,8 +46,14 @@ function stripComment(line: string): string {
  * 依存を足さずに済ませるための割り切りだが、**取りこぼしたら分かる**ように
  * 下の「数え上げそのものの検査」で件数と名前を固定してある（#500: 入口を固定する）。
  */
-function jobsOf(file: string): Job[] {
-  const text = readFileSync(resolve(wfDir, file), "utf8");
+/**
+ * job 名の 1 行にマッチする。GitHub の job ID 規則（英数字・`-`・`_`、先頭は英字か `_`）は
+ * クォートしても変わらない値なので、クォート無し／ダブルクォート／シングルクォートの
+ * 3 通りを同じ ID 規則で受け止める（#574: クォートを付けるだけで数え上げをすり抜けていた）。
+ */
+const HEAD_LINE = /^(?:"([A-Za-z_][A-Za-z0-9_-]*)"|'([A-Za-z_][A-Za-z0-9_-]*)'|([A-Za-z_][A-Za-z0-9_-]*)):\s*$/;
+
+function jobsOfText(text: string, file: string): Job[] {
   const lines = text.split("\n").map(stripComment);
   const start = lines.findIndex((l) => /^jobs:\s*$/.test(l));
   assert.ok(start >= 0, `${file}: トップレベルの jobs: が見つからない`);
@@ -63,7 +69,10 @@ function jobsOf(file: string): Job[] {
   const indentOf = (l: string) => l.length - l.trimStart().length;
   const depth = Math.min(...body.map((b) => indentOf(b.line)));
 
-  const heads = body.filter((b) => indentOf(b.line) === depth && /^[A-Za-z0-9_-]+:\s*$/.test(b.line.trim()));
+  const heads = body
+    .filter((b) => indentOf(b.line) === depth)
+    .map((b) => ({ ...b, m: b.line.trim().match(HEAD_LINE) }))
+    .filter((b): b is typeof b & { m: RegExpMatchArray } => b.m !== null);
   return heads.map((h, n) => {
     const end = n + 1 < heads.length ? heads[n + 1].i : lines.length;
     const own = lines.slice(h.i + 1, end).filter((l) => l.trim() !== "" && indentOf(l) > depth);
@@ -73,19 +82,70 @@ function jobsOf(file: string): Job[] {
     const timeoutLine = direct.find((l) => /^\s*timeout-minutes:/.test(l));
     return {
       file,
-      name: h.line.trim().replace(/:$/, ""),
+      name: h.m[1] ?? h.m[2] ?? h.m[3],
       kind: direct.some((l) => /^\s*uses:/.test(l)) ? "uses" : "runs-on",
       timeout: timeoutLine ? Number(timeoutLine.split(":")[1].trim()) : undefined,
     };
   });
 }
 
+function jobsOf(file: string): Job[] {
+  return jobsOfText(readFileSync(resolve(wfDir, file), "utf8"), file);
+}
+
+/** GitHub は `.yml` と `.yaml` の両方を実行する。`.yml` だけ見ると .yaml のワークフローが丸ごと不可視になる（#574）。 */
 const allJobs = readdirSync(wfDir)
-  .filter((f) => f.endsWith(".yml"))
+  .filter((f) => f.endsWith(".yml") || f.endsWith(".yaml"))
   .sort()
   .flatMap(jobsOf);
 
 const id = (j: Job) => `${j.file}:${j.name}`;
+
+/**
+ * #574: 引用符付きの job 名（`"deploy":` / `'deploy':`）が数え上げをすり抜けていた。
+ * YAML としては `deploy:` と同じ job ID だが、パーサの正規表現 `/^[A-Za-z0-9_-]+:\s*$/` は
+ * クォート文字を弾いて素通りしていた（timeout-minutes が無くても検出されない）。
+ */
+test("#574 引用符付きの job 名（ダブルクォート）でも job として拾える", () => {
+  const yaml = ["jobs:", '  "quoted":', "    runs-on: ubuntu-latest", "    steps:", "      - run: echo hi"].join("\n");
+  const jobs = jobsOfText(yaml, "probe.yml");
+  assert.deepEqual(
+    jobs.map((j) => j.name),
+    ["quoted"],
+  );
+});
+
+test("#574 引用符付きの job 名（シングルクォート）でも job として拾える", () => {
+  const yaml = ["jobs:", "  'quoted':", "    runs-on: ubuntu-latest", "    steps:", "      - run: echo hi"].join("\n");
+  const jobs = jobsOfText(yaml, "probe.yml");
+  assert.deepEqual(
+    jobs.map((j) => j.name),
+    ["quoted"],
+  );
+});
+
+test("#574 引用符付きの job 名で timeout-minutes が無ければ検出できる", () => {
+  const yaml = ["jobs:", '  "quoted":', "    runs-on: ubuntu-latest", "    steps:", "      - run: echo hi"].join("\n");
+  const jobs = jobsOfText(yaml, "probe.yml");
+  const naked = jobs.filter((j) => j.kind === "runs-on" && j.timeout === undefined);
+  assert.deepEqual(naked.map(id), ["probe.yml:quoted"]);
+});
+
+test("#574 .yaml 拡張子のワークフローも数え上げの対象になる", () => {
+  const files = readdirSync(wfDir).filter((f) => f.endsWith(".yml") || f.endsWith(".yaml"));
+  // このリポジトリの実ファイルは全部 .yml だが、フィルタ自体が .yaml も拾える形であることを
+  // readdirSync の結果とは独立に確かめる（フィルタ関数を直接検査する）。
+  const filterFn = (f: string) => f.endsWith(".yml") || f.endsWith(".yaml");
+  assert.equal(filterFn("probe.yaml"), true, ".yaml を拾えていない");
+  assert.equal(filterFn("probe.yml"), true, ".yml を拾えていない（対照）");
+  assert.equal(filterFn("probe.txt"), false, "無関係の拡張子まで拾ってしまっている（対照）");
+  // 実ディレクトリに .yaml が無いことも確認する前提を明示しておく（無ければこのテストの意味が薄れる）
+  assert.equal(
+    files.some((f) => f.endsWith(".yaml")),
+    false,
+    "このリポジトリに .yaml のワークフローがある想定はしていない（無いことの確認）",
+  );
+});
 
 /**
  * 数え上げそのものの検査（#500: 入口を固定しないと、本体が痩せても誰も気づかない）。
