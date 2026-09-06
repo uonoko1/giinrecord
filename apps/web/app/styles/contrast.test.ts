@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import ts from "typescript";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 /**
  * 表紙（`.cover`）の上に置く文字は、表紙の地色に対して WCAG AA（4.5:1）を満たすこと。Issue 394
@@ -263,6 +263,21 @@ function mount(html: string): void {
   document.head.appendChild(style);
   document.body.innerHTML = html;
 }
+
+/**
+ * `mount` は `document.head` / `document.body` を**丸ごと差し替える**ので、
+ * 後始末をしないと本物の CSS と DOM が**後に走るテストファイルに残る**（#512）。
+ *
+ * 実測: これが無いと `Tabs.test.tsx` と `DateHeading.test.tsx` が
+ * 「`本会議` が複数見つかる」「タブが 5 個ある（`本会議3件` が余分）」で落ちた
+ * （`--pool=forks --poolOptions.forks.singleFork` の全件実行）。
+ * `@testing-library/react` の `cleanup()` は**自分が作ったコンテナしか外さない**ので、
+ * `document.body.innerHTML = …` で直に入れたものは残る。
+ */
+afterEach(() => {
+  document.head.innerHTML = "";
+  document.body.innerHTML = "";
+});
 
 /**
  * `mount` が食わせる CSS を**ファイルごとに**検査し、読めない規則があれば落とす。

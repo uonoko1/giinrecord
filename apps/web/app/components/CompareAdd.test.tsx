@@ -13,7 +13,11 @@ function renderAdd(id: string) {
 }
 
 beforeEach(() => localStorage.clear());
-afterEach(() => vi.restoreAllMocks());
+// beforeEach で消すだけだと **最後のテストが残したものが次のファイルに漏れる**（#512）。
+afterEach(() => {
+  localStorage.clear();
+  vi.restoreAllMocks();
+});
 
 describe("CompareAdd", () => {
   it("押すと localStorage に id を足し、ボタンが「比較から外す」になり、/compare?m=… へのリンクが出る", async () => {

@@ -1,6 +1,7 @@
 import { act, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { INSTALL_PROMPT_KEY } from "../../lib/install-prompt";
 import { PoliciesSection } from "./PoliciesSection";
 
 function renderSection() {
@@ -29,7 +30,12 @@ describe("PoliciesSection（#166）", () => {
 });
 
 describe("PoliciesSection のインストール導線（#191）", () => {
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => {
+    // 本物の beforeinstallprompt を dispatch すると useInstallPrompt が window に保存する。
+    // vi.unstubAllGlobals() はこれを消さない（#512。後に走るファイルが落ちていた）。
+    delete (window as unknown as Record<string, unknown>)[INSTALL_PROMPT_KEY];
+    vi.unstubAllGlobals();
+  });
 
   it("既定ではボタンを出さない（プリレンダー HTML は変わらない）", () => {
     renderSection();

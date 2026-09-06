@@ -20,11 +20,16 @@ function stubMatchMedia(standalone: boolean) {
   );
 }
 
+// jsdom の既定 UA。テストが書き換えたあと、これに戻す（#512）。
+const ORIGINAL_UA = navigator.userAgent;
+
 beforeEach(() => {
   stubMatchMedia(false);
   Object.defineProperty(navigator, "userAgent", { value: ANDROID_UA, configurable: true });
 });
 afterEach(() => {
+  // Object.defineProperty は vi.unstubAllGlobals() の管轄外なので、自分で戻す（#512）。
+  Object.defineProperty(navigator, "userAgent", { value: ORIGINAL_UA, configurable: true });
   delete (window as unknown as Record<string, unknown>)[INSTALL_PROMPT_KEY];
   vi.unstubAllGlobals();
 });

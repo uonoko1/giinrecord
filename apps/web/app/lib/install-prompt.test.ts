@@ -26,11 +26,16 @@ function stubUserAgent(ua: string) {
   Object.defineProperty(navigator, "userAgent", { value: ua, configurable: true });
 }
 
+// jsdom の既定 UA。テストが書き換えたあと、これに戻す（#512）。
+const ORIGINAL_UA = navigator.userAgent;
+
 beforeEach(() => {
   stubMatchMedia(false);
   stubUserAgent("Mozilla/5.0 (Linux; Android 14) Chrome/128");
 });
 afterEach(() => {
+  // Object.defineProperty は vi.unstubAllGlobals() の管轄外なので、自分で戻す（#512）。
+  stubUserAgent(ORIGINAL_UA);
   delete w()[INSTALL_PROMPT_KEY];
   vi.unstubAllGlobals();
 });

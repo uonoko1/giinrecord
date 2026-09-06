@@ -7,7 +7,12 @@ describe("ThemeToggle", () => {
     document.documentElement.removeAttribute("data-theme");
     localStorage.clear();
   });
-  afterEach(() => vi.restoreAllMocks());
+  // beforeEach で消すだけだと **最後のテストが残したものが次のファイルに漏れる**（#512）。
+  afterEach(() => {
+    document.documentElement.removeAttribute("data-theme");
+    localStorage.clear();
+    vi.restoreAllMocks();
+  });
 
   it("初期状態は OS 追従（data-theme なし）", () => {
     render(<ThemeToggle />);

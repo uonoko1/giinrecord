@@ -1,8 +1,14 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { SiteFooter } from "./SiteFooter";
 
 describe("SiteFooter のテーマ切替（#365）", () => {
+  // テーマの切替は <html> と localStorage を触るので、ファイルの外へ持ち出さない（#512）。
+  afterEach(() => {
+    document.documentElement.removeAttribute("data-theme");
+    localStorage.clear();
+  });
+
   it("マウント後にテーマの選択肢が出る", async () => {
     render(<SiteFooter />);
     expect(await screen.findByRole("group", { name: "表示テーマ" })).toBeInTheDocument();
