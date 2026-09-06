@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync, writeFileSync, rmSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 
@@ -94,10 +94,14 @@ function jobsOf(file: string): Job[] {
 }
 
 /** GitHub は `.yml` と `.yaml` の両方を実行する。`.yml` だけ見ると .yaml のワークフローが丸ごと不可視になる（#574）。 */
-const allJobs = readdirSync(wfDir)
-  .filter((f) => f.endsWith(".yml") || f.endsWith(".yaml"))
-  .sort()
-  .flatMap(jobsOf);
+function listAllJobs(): Job[] {
+  return readdirSync(wfDir)
+    .filter((f) => f.endsWith(".yml") || f.endsWith(".yaml"))
+    .sort()
+    .flatMap(jobsOf);
+}
+
+const allJobs = listAllJobs();
 
 const id = (j: Job) => `${j.file}:${j.name}`;
 
@@ -131,20 +135,37 @@ test("#574 引用符付きの job 名で timeout-minutes が無ければ検出�
   assert.deepEqual(naked.map(id), ["probe.yml:quoted"]);
 });
 
-test("#574 .yaml 拡張子のワークフローも数え上げの対象になる", () => {
-  const files = readdirSync(wfDir).filter((f) => f.endsWith(".yml") || f.endsWith(".yaml"));
-  // このリポジトリの実ファイルは全部 .yml だが、フィルタ自体が .yaml も拾える形であることを
-  // readdirSync の結果とは独立に確かめる（フィルタ関数を直接検査する）。
-  const filterFn = (f: string) => f.endsWith(".yml") || f.endsWith(".yaml");
-  assert.equal(filterFn("probe.yaml"), true, ".yaml を拾えていない");
-  assert.equal(filterFn("probe.yml"), true, ".yml を拾えていない（対照）");
-  assert.equal(filterFn("probe.txt"), false, "無関係の拡張子まで拾ってしまっている（対照）");
-  // 実ディレクトリに .yaml が無いことも確認する前提を明示しておく（無ければこのテストの意味が薄れる）
-  assert.equal(
-    files.some((f) => f.endsWith(".yaml")),
-    false,
-    "このリポジトリに .yaml のワークフローがある想定はしていない（無いことの確認）",
+/**
+ * #574: readdirSync のフィルタが .yml だけを見ていたため、.yaml のワークフローが
+ * allJobs から丸ごと不可視だった。
+ *
+ * fixture 文字列に対するテスト（jobsOfText）だけでは、readdirSync のフィルタ行を壊しても
+ * このリポジトリに実際の .yaml ファイルが無いため検出できない（実際に変異させて確かめた:
+ * `.filter((f) => f.endsWith(".yml") || f.endsWith(".yaml"))` を
+ * `.filter((f) => f.endsWith(".yml"))` に戻す変異は、fixture テストだけでは 10/10 緑のまま
+ * 通ってしまう＝等価変異になる）。
+ * そこで、実際に .github/workflows に .yaml ファイルを一時的に置き、
+ * allJobs の実行結果（readdirSync を経由した本物のパス）で見えることを確認する。
+ * 確実に後始末するため try/finally で削除する。
+ */
+test("#574 .yaml 拡張子のワークフローも allJobs（readdirSync 経由）から見える", () => {
+  const probeName = "probe-574-yaml-visibility.yaml";
+  const probePath = resolve(wfDir, probeName);
+  const probeYaml = ["jobs:", "  probejob:", "    runs-on: ubuntu-latest", "    timeout-minutes: 5", "    steps:", "      - run: echo hi", ""].join(
+    "\n",
   );
+  writeFileSync(probePath, probeYaml, "utf8");
+  try {
+    // モジュール読み込み時に評価済みの allJobs ではなく、実装本体の listAllJobs() を
+    // ここで再実行する（実装が使う関数そのものを呼ぶことで、フィルタ行の変異を確実に拾う）。
+    const jobs = listAllJobs();
+    assert.ok(
+      jobs.some((j) => j.file === probeName && j.name === "probejob"),
+      ".yaml ワークフローの job が数え上げに現れない",
+    );
+  } finally {
+    rmSync(probePath, { force: true });
+  }
 });
 
 /**
