@@ -393,6 +393,29 @@ t_missing_base_ref_is_an_error_not_a_pass() {
   assert_contains "$OUT" "git fetch origin" "says what to run"
   assert_not_contains "$OUT" "fatal:" "does not leak a raw git error instead of its own message"
 }
+# `|` を含むパス（#554 のレビューが見つけた）。`sed "s|^|$path\t|"` だとここで sed が死に、
+# `set -e` のせいで**メッセージも一覧ファイルも出ないまま** exit 1 になる——落ちたことは分かるが
+# 「何が危ないか」が消える。この検査がいちばん価値を出す場面で黙る形なので、見本を置く。
+t_paths_with_a_pipe_still_report() {
+  new_repo; BASE_SHA=$(g rev-parse HEAD)
+  local odd='docs/a|b.md'
+  g checkout -q main
+  printf -- '- **元の行**\n' > "$W/$odd"
+  commit "add odd path"
+  BASE_SHA=$(g rev-parse HEAD)
+  printf -- '- **main が足した行**\n' >> "$W/$odd"
+  commit "main adds to odd path"
+  g update-ref refs/remotes/origin/main main
+  branch_from "$BASE_SHA" topic
+  printf -- '- **枝が足した行**\n' >> "$W/$odd"
+  commit "branch adds"
+  STALE_BASE_LINES_OUT="$W/lines.tsv" run
+  assert_eq 1 "$STATUS" "a path with a pipe is still caught: $OUT"
+  assert_contains "$OUT" "$odd" "the odd path is named in the message"
+  assert_contains "$(cat "$W/lines.tsv" 2>/dev/null || echo MISSING)" "$odd" \
+    "the lines file is written for a path with a pipe"
+}
+
 t_missing_head_ref_is_an_error_too() {
   new_repo; BASE_SHA=$(g rev-parse HEAD)
   main_moves '- **教訓 X**'
@@ -426,4 +449,5 @@ test_case "見つけた行数を出す" t_reports_the_deletion_count_it_measured
 test_case "base ref を引数で渡せる" t_base_ref_can_be_overridden
 test_case "base ref が解決できないときは通さない" t_missing_base_ref_is_an_error_not_a_pass
 test_case "head ref が解決できないときも通さない" t_missing_head_ref_is_an_error_too
+test_case "パスに | が入っても、名指しと一覧ファイルが出る" t_paths_with_a_pipe_still_report
 echo "passed $PASS, failed $FAIL"; [[ $FAIL == 0 ]]

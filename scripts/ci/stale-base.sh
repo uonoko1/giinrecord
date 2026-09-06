@@ -207,7 +207,9 @@ for path in "${CANDIDATES[@]}"; do
     [[ $n -le 20 ]] || echo "    | …ほか $((n - 20)) 行"
   } >> "$REPORT"
   # Every at-risk line, as `<path><TAB><line>`, for --verify to re-check after the rebase.
-  cut -f2- < "$TMP/lost" | sed "s|^|$path\t|" >> "$LINES_TMP"
+  # `sed "s|^|$path\t|"` にしない: パスに `|` が入ると区切りと衝突して sed が死に、
+  # `set -e` でメッセージも一覧ファイルも出ないまま落ちる（#554 のレビューが実測）。
+  cut -f2- < "$TMP/lost" | awk -v p="$path" 'BEGIN{FS=OFS="\t"} { print p, $0 }' >> "$LINES_TMP"
 done
 
 TOTAL=$((WOULD_LOSE + DIFF_DELETES))
