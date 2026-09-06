@@ -7,6 +7,9 @@
 #   scripts/ci/stale-base.sh [<base-ref>] [<head-ref>]     defaults: origin/main HEAD
 #     exit 0 — nothing of the base's is on the chopping block
 #     exit 1 — lines the base gained after the merge-base are missing from this branch (names every line)
+#            — OR (Issue #565) <base-ref> is a remote-tracking ref and does not match what the remote
+#              actually has right now (nobody ran `git fetch`). Only checked when a matching remote is
+#              registered and reachable; see the block below for why silence elsewhere is deliberate.
 #     exit 2 — usage / a ref that does not resolve  (an unresolvable base is NOT reported as clean)
 #
 # ── What is measured, and why it is not "there are deletions" ───────────────────────────────────
@@ -116,6 +119,41 @@ resolve() { # <ref> → sha, or exit 2 naming the ref (never silently "clean")
 }
 BASE_SHA=$(resolve "$BASE")
 HEAD_SHA=$(resolve "$HEAD_REF")
+
+# ── Issue #565: everything below compares against $BASE_SHA — the LOCAL copy of $BASE. Nothing here
+# runs `git fetch`, on purpose (a check must not have the side effect of changing the working tree just
+# by being run). But if nobody fetched, $BASE_SHA can be a stale `origin/main`, and this script would
+# then say "ok" about a comparison that was never against the real base — worse than saying nothing,
+# because this check exists specifically to stop a stale base (#552 hit exactly this, three times).
+#   Only meaningful for a remote-tracking ref (`origin/main` or `refs/remotes/origin/main`) — a local
+#   branch or a bare SHA has no remote to be stale against.
+#   `git ls-remote` needs the network; CI has already fetched (fetch-depth: 0, plus an explicit fetch
+#   right before this runs — see .github/workflows/ci.yml), so there $BASE_SHA already IS the remote's
+#   tip and this finds no difference and stays quiet. If `git ls-remote` itself fails (no network, or no
+#   remote named that — true of every existing fixture in stale-base.test.sh, which writes
+#   refs/remotes/origin/* directly and never registers a remote called origin), this stays quiet rather
+#   than fail: no answer is not evidence of staleness, and a check that started needing the network to
+#   pass at all would break offline use. That silence is a real gap, not closed by this change.
+if [[ $BASE =~ ^(refs/remotes/)?([^/]+)/(.+)$ ]]; then
+  remote_name=${BASH_REMATCH[2]}
+  remote_branch=${BASH_REMATCH[3]}
+  # `git remote get-url` is only a cheap short-circuit, not a correctness guard: when there is no remote
+  # named "$remote_name" (every existing fixture below), `git ls-remote` on it fails the same way this
+  # skips — measured, removing this `if` alone changes nothing (equivalent mutation). It is kept so a
+  # repo with no such remote does not even attempt a network round-trip.
+  if git remote get-url "$remote_name" >/dev/null 2>&1; then
+    remote_sha=$(git ls-remote --exit-code "$remote_name" "refs/heads/$remote_branch" 2>/dev/null | cut -f1) || remote_sha=""
+    if [[ -n $remote_sha && $remote_sha != "$BASE_SHA" ]]; then
+      # Could be a descendant, or an unrelated/older commit from a force-push — either way "your local
+      # $BASE does not match the remote right now" is the fact; say that and how to fix it.
+      echo "stale-base: 手元の $BASE（${BASE_SHA:0:8}）が、リモートの $remote_name/$remote_branch（${remote_sha:0:8}）と一致しません。" >&2
+      echo "  git fetch していないため、古い（または別の）$BASE と比べている可能性があります。" >&2
+      echo "  git fetch $remote_name  を実行してから、もう一度実行してください。" >&2
+      exit 1
+    fi
+  fi
+fi
+
 MERGE_BASE=$(git merge-base "$BASE_SHA" "$HEAD_SHA") || {
   echo "stale-base: $BASE と $HEAD_REF に共通の祖先がありません" >&2; exit 2
 }

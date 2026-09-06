@@ -444,6 +444,93 @@ test_case "両方残す rebase なら --verify は通る" t_verify_passes_when_t
 test_case "--verify は在る行を「無い」と言わない（pipefail の 141）" t_verify_does_not_report_present_lines_as_missing
 test_case "--verify は読めない一覧ファイルを通さない" t_verify_rejects_an_unreadable_lines_file
 test_case "あとから通った実行が証拠ファイルを消さない" t_a_later_clean_run_does_not_wipe_the_lines_file
+# --- 5. Issue #565: a stale local `origin/main` (no `git fetch` run) must not report `ok` ------------
+# `origin` here is a real remote (a second on-disk repo), so `git ls-remote origin` works exactly as it
+# does against GitHub, only against `file://`-speed instead of the network — no network, no `gh`, per the
+# header comment. `new_repo_with_real_remote` replaces `new_repo`'s bare `update-ref` with an actual clone.
+new_repo_with_real_remote() {
+  local remote="$TMP/remote"; rm -rf "$remote"
+  git init -q -b main "$remote"
+  mkdir -p "$remote/docs" "$remote/src"
+  { echo "# 作業合意"; for i in $(seq 1 40); do echo "- **教訓 $i** 本文本文本文"; done
+    for i in $(seq 1 3000); do echo "  埋め草 $i 本文本文本文本文本文本文本文本文本文本文本文本文本文"; done
+  } > "$remote/docs/WORKING_AGREEMENT.md"
+  printf 'export const a = 1;\nexport const b = 2;\n' > "$remote/src/app.ts"
+  git -C "$remote" add -A; git -C "$remote" commit -qm base
+  rm -rf "$W"
+  git clone -q "$remote" "$W"
+  g checkout -q -b main origin/main 2>/dev/null || g checkout -q main
+}
+# remote_advances <text...> → push new lines to the real `origin`, WITHOUT touching $W's `origin/main`
+# tracking ref — this is exactly "someone else merged to main and I have not fetched".
+remote_advances() {
+  local remote="$TMP/remote"
+  printf -- '%s\n' "$@" >> "$remote/docs/WORKING_AGREEMENT.md"
+  git -C "$remote" add -A; git -C "$remote" commit -qm "main adds"
+}
+
+t_stale_tracking_ref_without_fetch_is_not_reported_as_ok() {
+  new_repo_with_real_remote; BASE_SHA=$(g rev-parse HEAD)
+  branch_from "$BASE_SHA" topic
+  printf -- '- **教訓 私**\n' >> "$W/docs/WORKING_AGREEMENT.md"
+  commit "my lesson"
+  remote_advances '- **教訓 X（fetch していないと見えない）**'
+  # $W's origin/main tracking ref is still at $BASE_SHA: nobody ran `git fetch`.
+  run origin/main
+  # Exit status is asserted, not just message content: a mutant that turns the warning into a silent
+  # `exit 0` (skipping the rest of the script, so `stale-base: ok` never even gets printed) must still
+  # be caught. Content-only assertions passed against that mutant — measured, this is why both are here.
+  assert_eq 1 "$STATUS" "must fail, not merely avoid saying ok: $OUT"
+  assert_not_contains "$OUT" "stale-base: ok" \
+    "must not say ok when the local origin/main is behind the real remote"
+  assert_contains "$OUT" "fetch" "tells the caller to fetch"
+}
+
+t_fetched_tracking_ref_stays_quiet() {
+  new_repo_with_real_remote; BASE_SHA=$(g rev-parse HEAD)
+  branch_from "$BASE_SHA" topic
+  printf -- '- **教訓 私**\n' >> "$W/docs/WORKING_AGREEMENT.md"
+  commit "my lesson"
+  remote_advances '- **教訓 X**'
+  g fetch -q origin
+  run origin/main
+  assert_eq 1 "$STATUS" "still catches the real staleness after fetching: $OUT"
+  assert_not_contains "$OUT" "fetch していない" "a freshly-fetched origin/main is not accused of being stale"
+}
+
+# CI passes the full `refs/remotes/origin/$BASE_REF` form (.github/workflows/ci.yml), not the short
+# `origin/main` this test file otherwise uses. Both spellings must go through the same #565 check.
+t_full_refs_remotes_form_is_also_checked() {
+  new_repo_with_real_remote; BASE_SHA=$(g rev-parse HEAD)
+  branch_from "$BASE_SHA" topic
+  printf -- '- **教訓 私**\n' >> "$W/docs/WORKING_AGREEMENT.md"
+  commit "my lesson"
+  remote_advances '- **教訓 X**'
+  g fetch -q origin
+  run refs/remotes/origin/main
+  assert_eq 1 "$STATUS" "the refs/remotes/ form is checked the same way after fetching: $OUT"
+  assert_not_contains "$OUT" "fetch していない" "freshly fetched: no stale warning"
+}
+
+t_no_registered_remote_is_not_treated_as_stale() {
+  # The existing fixtures (`new_repo`) never register a remote named `origin` — `refs/remotes/origin/main`
+  # is written directly with `update-ref`. That must keep working exactly as before: no remote to compare
+  # against is not evidence of staleness, and must not turn into a spurious warning or a network attempt.
+  new_repo; BASE_SHA=$(g rev-parse HEAD)
+  main_moves '- **教訓 X**'
+  branch_from "$BASE_SHA" topic
+  g checkout -q "$BASE_SHA" -- docs/WORKING_AGREEMENT.md
+  g show origin/main:docs/WORKING_AGREEMENT.md > "$W/docs/WORKING_AGREEMENT.md"
+  commit "up to date"
+  run
+  assert_eq 0 "$STATUS" "no origin remote registered: falls back to the old behaviour: $OUT"
+  assert_not_contains "$OUT" "fetch していない" "does not fabricate a staleness warning with nothing to check against"
+}
+
+test_case "fetch していないローカルの origin/main は ok と言わない（#565）" t_stale_tracking_ref_without_fetch_is_not_reported_as_ok
+test_case "fetch 済みなら黙る（#565、偽陽性なし）" t_fetched_tracking_ref_stays_quiet
+test_case "CI が渡す refs/remotes/origin/main 形式でも同じ検査が働く（#565）" t_full_refs_remotes_form_is_also_checked
+test_case "origin という remote が登録されていない環境では従来どおり動く（既存フィクスチャ）" t_no_registered_remote_is_not_treated_as_stale
 test_case "git worktree の中でも動く（.git はファイル）" t_works_inside_a_git_worktree
 test_case "見つけた行数を出す" t_reports_the_deletion_count_it_measured
 test_case "base ref を引数で渡せる" t_base_ref_can_be_overridden
