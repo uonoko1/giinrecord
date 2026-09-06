@@ -155,19 +155,42 @@ function weightsOfFamily(family: string | undefined): number[] {
  *
  * ここも `it` の中のループだったので、**`if` を `if (false)` にしても 15/15 緑**だった（#506 で実測）。
  */
-function shorthandMissingWeights(body: string): { value: string; family: string; weight: number }[] {
-  const out: { value: string; family: string; weight: number }[] = [];
+type ShorthandFinding = { value: string; family: string; weight: number } | { value: string; unreadable: true };
+
+function shorthandMissingWeights(body: string): ShorthandFinding[] {
+  const out: ShorthandFinding[] = [];
   for (const [, value] of body.matchAll(/(?:^|[;\s])font\s*:\s*([^;]+)/g)) {
     const v = value.trim();
     if (CSS_WIDE_KEYWORDS.test(v)) continue; // 継承・巻き戻しは 400 を要求しない（`revert-layer` も #484 で入れた）
     const parsed = parseFontShorthand(v);
-    if (parsed === undefined) continue; // caption/menu などのシステム指定。家族も自前ではない
+    if (parsed === "system") continue; // caption/menu などのシステム指定。家族も自前ではない
+    if (parsed === undefined) {
+      // **#539: 読めなかった値を黙って捨てない**（#472 / #485 の作業合意）。
+      // `xxx-large` / `pt` / `vw` / `calc()` はどれも合法な CSS で、
+      // **`var(--font-head)` を指していれば Mincho に 400 を要求する本物の違反になりうる**。
+      // ただし**家族が自前でないと読み取れる**なら鳴らさない（`font: 2vw sans-serif` は無害）——
+      // サイズが読めないと family を切り出せないので、**値の中に自前の家族が現れるか**で見る。
+      if (mentionsSelfHostedFamily(v)) out.push({ value: v, unreadable: true });
+      continue;
+    }
     const family = parsed.family === undefined ? undefined : familyOfValue(parsed.family);
     if (family === undefined) continue; // 自サイト配信の家族を指していない
     const w = parsed.weight ?? 400; // **省略は 400 要求**。ここが穴だった
     if (!weightsOfFamily(family).includes(w)) out.push({ value: v, family, weight: w });
   }
   return out;
+}
+
+/**
+ * **値のどこかに自サイト配信の家族が現れるか。**
+ *
+ * `<size>` が読めない値では family の位置が決まらないので、**位置に頼らず値全体を見る**。
+ * ここで拾わないと `font: 2vw sans-serif` まで鳴って**本番で普通の CSS が書けなくなる**（偽陽性）。
+ * 逆にここを広く取りすぎると見逃しになるので、**トークンと直書きの家族名の両方**を見る。
+ */
+function mentionsSelfHostedFamily(value: string): boolean {
+  for (const [, token] of value.matchAll(/var\(\s*(--font-[a-z]+)/g)) if (TOKEN_FAMILY[token!]) return true;
+  return FONT_FAMILIES.some((f) => value.includes(f.family));
 }
 
 describe("見出し家族が持たないウェイトを、家族を書かずに要求しない（#454）", () => {
@@ -196,7 +219,13 @@ describe("見出し家族が持たないウェイトを、家族を書かずに�
    */
   it("font ショートハンドで自サイト配信の家族を指すなら、その家族が持つウェイトだけを要求する", () => {
     const offenders = all.flatMap((r) =>
-      shorthandMissingWeights(r.body).map((m) => `${r.file}: ${r.selector} { font: ${m.value} } → ${m.family} に ${m.weight} は無い`),
+      shorthandMissingWeights(r.body).map((m) =>
+        "unreadable" in m
+          ? // **#539: 読めなかったものは「読めなかった」と出す。**「400 が無い」と断定すると、
+            // **読めていないのに読めたふりをする**ことになる（#485 の格下げ／昇格を作らない）
+            `${r.file}: ${r.selector} { font: ${m.value} } → 静的に読めない（自サイト配信の家族を指している）`
+          : `${r.file}: ${r.selector} { font: ${m.value} } → ${m.family} に ${m.weight} は無い`,
+      ),
     );
     expect(offenders, "`font` ショートハンドは weight を省くと 400 に戻ります（CSS Fonts 4 §5.6）").toEqual([]);
   });
@@ -377,11 +406,26 @@ function familyOfValue(value: string): string | undefined {
  *                                                                         省略された下位項目は初期値に**戻る**ので 400 で正しい
  *     "13px/1.4 var(--font-head)"                           weight 400  ← **どこにも 400 と書いていない**が、
  *                                                                         ショートハンドが weight を初期値に戻すので 400 を要求する（A6b）
- *     "caption" / "menu"（システムフォント指定）               undefined  ← `<size>` が無い。**読めないものとして報告に出す**
+ *     "caption" / "menu"（システムフォント指定）               "system"   ← システムの家族をまるごと持ってくる。**自前の face を要求しない**
+ *     "xxx-large var(--font-head)" / "2vw …" / "calc(…) …"  undefined  ← 合法だが `sizeAt` が読めない。**読めないものとして報告に出す**
+ *
+ * **`undefined` の理由が 2 つあるのに区別していなかったのが #539 の穴。**
+ * 呼び出し側（CSS 経路）が `undefined` を丸ごと読み飛ばしていたので、
+ * **本番 CSS に `font: xxx-large var(--font-head)` と書いても 26/26 緑で通った**（実測）。
+ * `sizeAt` を広げるだけでは**次の新しい単位でまた同じことが起きる**ので、戻り値で区別する
+ * （`weightOf` が `"skip"` と `undefined` を分けたのと同じ処置。#484）。
  */
-function parseFontShorthand(value: string): { weight: number | undefined; family: string | undefined } | undefined {
+/**
+ * **システムフォント指定**（CSS Fonts 4 §6.6 `<system-family-name>`）。
+ * `font: caption` は**システムの家族**をまるごと持ってくるので、自サイト配信の家族に face を要求しない。
+ * **`small-caption` は `small` を含む**ので、`sizeAt` より**先に**判定する必要がある。
+ */
+const SYSTEM_FONT_KEYWORDS = /^(caption|icon|menu|message-box|small-caption|status-bar)$/;
+
+function parseFontShorthand(value: string): { weight: number | undefined; family: string | undefined } | "system" | undefined {
+  if (SYSTEM_FONT_KEYWORDS.test(value.trim())) return "system"; // 家族が自前でない。**捨ててよい唯一の理由**
   const sizeAt = /(^|\s)(-?[\d.]+(?:px|rem|em|%)|larger|smaller|x?x-(?:small|large)|small|medium|large)(\/|\s|$)/.exec(value);
-  if (!sizeAt) return undefined;
+  if (!sizeAt) return undefined; // **読めなかった。黙って捨てない**（呼び出し側が報告に出す）
   const before = value.slice(0, sizeAt.index);
   const after = value.slice(sizeAt.index + sizeAt[0].length - (sizeAt[3] === "/" ? 1 : 0));
   const family = after.replace(/^\/\s*[^\s]+/, "").trim();
@@ -532,6 +576,10 @@ function readInlineStyles(rel: string, text: string): InlineStyle[] {
           // ここで読み飛ばさないと**「静的に読めない値」として落ちる**。CSS 側と同じ扱いにそろえる。
           if (text !== undefined && CSS_WIDE_KEYWORDS.test(text.trim())) continue;
           const parsed = text === undefined ? undefined : parseFontShorthand(text);
+          // **#539: システムフォント指定は CSS 側と同じく素通りさせる。**
+          // ここは以前 `undefined` と一緒くたにしており、**`font: "caption"` を TSX に書くと
+          // 「静的に読めない値」で落ちていた**（実測。CSS 側では通るのに TSX では落ちる非対称）。
+          if (parsed === "system") continue;
           if (parsed === undefined) {
             entry.weights.push(undefined); // 読めないショートハンドは読めないものとして報告に出す
           } else {
