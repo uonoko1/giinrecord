@@ -37,7 +37,7 @@ list_targets() {
   local f
   find scripts deploy -type d -name node_modules -prune -o -type f -print | while IFS= read -r f; do
     if [[ $f == *.sh ]]; then echo "$f"
-    elif [[ $f != */*.* ]] && head -c 64 "$f" 2>/dev/null | head -n1 | grep -qE '^#!.*(/| )(ba)?sh( |$)'; then echo "$f"
+    elif [[ $f != */*.* ]] && grep -qE '^#!.*(/| )(ba)?sh( |$)' < <(head -n1 < <(head -c 64 "$f" 2>/dev/null)); then echo "$f"
     fi
   done | LC_ALL=C sort
 }
@@ -48,7 +48,8 @@ list_targets() {
 # before the message explaining what to install ever prints, so failure is swallowed deliberately here.
 found_version() {
   command -v shellcheck >/dev/null 2>&1 || return 0
-  shellcheck --version 2>/dev/null | sed -n 's/^version: *//p' | head -n1 || true
+  # パイプを使わない（#527）。`sed` に 1 件で止めさせるので `head` も要らない。
+  sed -n 's/^version: *//p;T;q' < <(shellcheck --version 2>/dev/null) || true
 }
 
 require_pinned_version() {

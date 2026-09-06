@@ -38,7 +38,7 @@ esac
 LEGACY_OPS=gikaiops
 if [ "$OPS" != "$LEGACY_OPS" ] && id "$LEGACY_OPS" >/dev/null 2>&1; then
   legacy_sudo=$(sudo -n -l -U "$LEGACY_OPS" 2>/dev/null || true)
-  if printf '%s' "$legacy_sudo" | grep -Eq 'NOPASSWD:[[:space:]]*ALL'; then
+  if grep -Eq 'NOPASSWD:[[:space:]]*ALL' <<<"$legacy_sudo"; then
     cat >&2 <<WARN
 !! 危険: 旧運用ユーザー $LEGACY_OPS が **NOPASSWD: ALL**（無制限の root）を持ったまま生きています。
 !! $OPS をどれだけ絞っても、$LEGACY_OPS にログインできる鍵があれば迂回されます（#336）。

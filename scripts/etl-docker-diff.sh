@@ -33,8 +33,8 @@ ETL_UID=$(id -u) ETL_GID=$(id -g) docker compose -f deploy/docker-compose.etl.ym
 snapshot docker
 
 # 所有者も確認（root で書かれていたら git add / 次の pnpm etl が困る）
-if find data -not -user "$(id -u)" | grep -q .; then
-  echo "NG: data/ にホストの uid 以外が所有するファイルがある"; find data -not -user "$(id -u)" | head; exit 1
+if grep -q . < <(find data -not -user "$(id -u)"); then
+  echo "NG: data/ にホストの uid 以外が所有するファイルがある"; head < <(find data -not -user "$(id -u)"); exit 1
 fi
 
 if diff -r "$WORK/pnpm" "$WORK/docker" >"$WORK/diff.txt"; then
