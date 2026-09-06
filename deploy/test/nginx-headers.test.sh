@@ -154,7 +154,7 @@ under_root() {
   esac
 }
 
-# probe_path_or_die <組み立てるパス> <元の location>: 2つの門を通ったものだけを返す。
+# assert_confined <組み立てるパス> <元の location>: 出口の門。docroot の外に出るなら止める。
 # **落とすときは exit 1**。無視して緑にしない（それでは検査した意味が無い）。
 assert_confined() {
   local built=$1 loc=$2
@@ -167,7 +167,7 @@ assert_confined() {
 }
 
 CHECKED_LOCS=0
-WANT_PROBES=0
+WANT_PROBES=()
 while IFS= read -r loc; do
   # 入口の門。`= ` `^~ ` の修飾子を外した**パスの部分**を検査する。
   raw=${loc#= }; raw=${raw#^~ }
@@ -185,9 +185,10 @@ while IFS= read -r loc; do
         /) PROBE_PATHS+=("/") ;;
         */) assert_confined "$ROOT${pfx}__probe.txt" "$loc"
             mkdir -p "$ROOT$pfx"; printf 'x' > "$ROOT${pfx}__probe.txt"
-            WANT_PROBES=$((WANT_PROBES+1)); PROBE_PATHS+=("${pfx}__probe.txt") ;;
+            WANT_PROBES+=("$ROOT${pfx}__probe.txt"); PROBE_PATHS+=("${pfx}__probe.txt") ;;
         *)  assert_confined "$ROOT$pfx" "$loc"
-            mkdir -p "$(dirname "$ROOT$pfx")"; printf 'x' > "$ROOT$pfx"; PROBE_PATHS+=("$pfx") ;;
+            mkdir -p "$(dirname "$ROOT$pfx")"; printf 'x' > "$ROOT$pfx"
+            WANT_PROBES+=("$ROOT$pfx"); PROBE_PATHS+=("$pfx") ;;
       esac ;;
     *) echo "FAIL 未対応の location 指定 [$loc]。叩くパスを deploy/test/nginx-headers.test.sh に足すこと"; exit 1 ;;
   esac
@@ -202,9 +203,9 @@ if [ "$CHECKED_LOCS" != "$GOT_LOCS" ]; then
 fi
 echo "ok   location $CHECKED_LOCS 個すべてが docroot の中に収まる形（#505 パストラバーサル）"; PASS=$((PASS+1))
 
-# **作った実物を数える**（#505）。上の2つの門は「**作る前に**止める」判定で、
-# ここは「**作った後**に、docroot の中に本当に在るか」を見る係。**根拠が別**である
-# （#485「経路が2つ以上あるものは、それぞれ別々に釘打つ」）。
+# **作った実物を、1つずつ docroot の中で確かめる**（#505）。
+# 上の2つの門は「**作る前に**止める」判定で、ここは「**作った後**に、docroot の中に本当に在るか」を
+# 見る係。**根拠が別**である（#485「経路が2つ以上あるものは、それぞれ別々に釘打つ」）。
 #
 # **担当者が実測した通り、$TMP の中を数えても捕まらない**——`$ROOT/../../x/` は
 # **$TMP ごと飛び越えて外に出る**ので、`find "$TMP"` には 1 件も現れない:
@@ -212,16 +213,36 @@ echo "ok   location $CHECKED_LOCS 個すべてが docroot の中に収まる形�
 #     find "$TMP" -mindepth 1  →  /tmp/tmp.NpMVCSHnJA/html   （プローブは1つも無い）
 #     ls -d /tmp/rev505-x      →  /tmp/rev505-x              （外に出ている）
 # だから見るのは「**外に何かあるか**」ではなく「**中に来るはずのものが来ているか**」。
-# 置きに行った数（WANT_PROBES）と、docroot の中で実際に見つかった数を突き合わせる。
-# 実測（プロトタイプ）: 3 つ置きに行って `/../../` が1つ混ざると **asked=3 landed=2**。
-LANDED_PROBES=$(find "$ROOT" -name '__probe.txt' | wc -l)
-if [ "$LANDED_PROBES" != "$WANT_PROBES" ]; then
-  echo "FAIL プローブを $WANT_PROBES 個置きに行ったのに、docroot の中には $LANDED_PROBES 個しか無い（#505）"
-  echo "     差の分は docroot の外に書かれている。cleanup の rm -rf \"\$TMP\" では消えず、"
-  echo "     同名の既存ファイルがあれば上書きしている。"
+#
+# **`find -name '__probe.txt'` で数える形は不足だった**（担当者が変異で発見して直した）。
+# 末尾スラッシュ無しの location（`printf 'x' > "$ROOT$pfx"`）が作るのは `__probe.txt` ではないので、
+# **名前で数えると、いちばん危ない「既存ファイルを上書きする」形を1つも見ていなかった**:
+#     location /../../rev505-noslash-file  で入口・出口の門を殺すと **19 passed, 0 failed**（素通り）
+#     /tmp/rev505-noslash-file が残る
+# だから**置きに行った実際のパスを1本ずつ覚えて、それが docroot の中に在るか**を見る。
+if [ "${#WANT_PROBES[@]}" -eq 0 ]; then
+  echo "FAIL プローブを1つも置いていない（前方一致の location が site.conf から消えた？ #505）"
   FAIL=$((FAIL+1)); exit 1
 fi
-echo "ok   置きに行ったプローブ $WANT_PROBES 個が全部 docroot の中にある（外に1つも漏れていない）"; PASS=$((PASS+1))
+# **出口の門（under_root）を使わない。** 使うと「その関数を殺す」1つの変異で
+# 出口とここが**同時に**黙る＝経路が2本に見えて1本しかないことになる（#485）。
+# ここは **find が実際に docroot の下から拾い上げたファイルの一覧**とだけ突き合わせる。
+INSIDE_LIST=$(find "$ROOT" -type f -print)
+LANDED_PROBES=0
+for want in "${WANT_PROBES[@]}"; do
+  found=0
+  while IFS= read -r got; do
+    [ "$got" = "$want" ] && { found=1; break; }
+  done <<< "$INSIDE_LIST"
+  if [ "$found" != 1 ]; then
+    echo "FAIL 置きに行ったプローブが docroot の中に無い: $want（#505）"
+    echo "     docroot の外に書かれている。cleanup の rm -rf \"\$TMP\" では消えず、"
+    echo "     同名の既存ファイルがあれば上書きしている。"
+    FAIL=$((FAIL+1)); exit 1
+  fi
+  LANDED_PROBES=$((LANDED_PROBES+1))
+done
+echo "ok   置きに行ったプローブ $LANDED_PROBES 個が全部 docroot の中にある（外に1つも漏れていない）"; PASS=$((PASS+1))
 
 docker run -d --name "$NAME" -p 127.0.0.1:0:80 \
   -v "$CONF:/etc/nginx/conf.d/default.conf:ro" \
