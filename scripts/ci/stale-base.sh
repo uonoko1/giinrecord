@@ -215,7 +215,7 @@ if [[ $TOTAL -eq 0 ]]; then
   echo "stale-base: ok — $BASE が ${MERGE_BASE:0:8} 以降に足した行は、すべてこの枝にあります"
   if [[ -s $LINES_OUT ]]; then
     echo "  前回この検査が挙げた行が $LINES_OUT に残っています。**これで ok とせず**、次を実行してください:"
-    echo "    bash $0 --verify $LINES_OUT"
+    echo "    bash scripts/ci/stale-base.sh --verify $LINES_OUT"
     echo "  （rebase は共通の祖先を動かすので、この検査は行が消えていても ok と言います）"
   fi
   exit 0
