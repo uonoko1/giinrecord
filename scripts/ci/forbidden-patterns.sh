@@ -74,6 +74,17 @@ grep_files aws-key '\b(AKIA|ASIA)[0-9A-Z]{16}\b'
 ENV_FILES=$(printf '%s\n' "$FILES" | grep -E '(^|/)\.env(\.[^/]+)?$' | grep -v -E '(^|/)\.env\.example$' || true)
 report env-file "$ENV_FILES"
 
+# destructive-git (Issue #542): a script that "undoes" things with git wipes the developer's uncommitted work —
+# git restores to HEAD, so the mutation AND whatever they had not committed both disappear. That happened three
+# times on 2026-09-06 (mutation-testing harnesses using `git checkout` / `git reset --hard`). Mutation harnesses
+# must save with `cp` instead: scripts/dev/mutate.sh. Scoped to scripts/ deploy/ .github/ (docs/ may describe it);
+# comment lines are allowed so this rule's own rationale can be written down. `git checkout <ref> -- <path>` and
+# `git checkout -b` are NOT matched: they do not touch the working tree's uncommitted state.
+GIT_FILES=$(printf '%s\n' "$FILES" | grep -E '^(scripts|deploy|\.github)/' || true)
+DESTRUCTIVE_GIT_RE='(^|[^#[:alnum:]_-])git +(checkout +(-- +)?\.|reset +--hard|clean +-[a-z]*f|stash([[:space:]]|$))'
+GIT_OUT=$(run_grep "$GIT_FILES" -I -H -n -E -e "$DESTRUCTIVE_GIT_RE" | grep -v -E '^[^:]+:[0-9]+: *#' | cut -d: -f1,2 || true)
+report destructive-git "$GIT_OUT"
+
 # Strict octets (no leading zeros) and no neighbouring digit, letter or dot: keeps SVG path data and version strings (v1.2.3.4) out.
 OCTET='(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])'
 IP_RE="(?<![0-9A-Za-z.])($OCTET\\.){3}$OCTET(?![0-9A-Za-z.])"

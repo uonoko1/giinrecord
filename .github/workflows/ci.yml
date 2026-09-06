@@ -22,7 +22,7 @@ jobs:
           shellcheck --version | head -2
           bash scripts/ci/shellcheck.sh # target list lives there (Issue #154) — same command locally
           bash scripts/po/test/run.sh
-          for t in scripts/ci/test/*.test.sh deploy/test/*.test.sh; do echo "== $t"; bash "$t"; done
+          for t in scripts/ci/test/*.test.sh scripts/dev/test/*.test.sh deploy/test/*.test.sh; do echo "== $t"; bash "$t"; done
       - run: pnpm lint
       - name: actionlint (all workflows)
         run: |
