@@ -160,6 +160,52 @@ t_main_deleted_a_file_passes() {
   assert_eq 0 "$STATUS" "exit 0: $OUT"
 }
 
+# --- 2b. the two severities ---------------------------------------------------------------------
+# WOULD-LOSE and DIFF-DELETES are different facts and are reported as different facts. Collapsing them
+# into one label would make the message say the merge drops lines it actually keeps (measured on the
+# reconstructed #531 shape: `git merge --squash` kept all 50).
+t_conflicting_file_is_reported_as_would_lose() {
+  new_repo; BASE_SHA=$(g rev-parse HEAD)
+  main_moves '- **教訓 X**'
+  branch_from "$BASE_SHA" topic
+  g checkout -q "$BASE_SHA" -- docs/WORKING_AGREEMENT.md
+  printf -- '- **教訓 私**\n' >> "$W/docs/WORKING_AGREEMENT.md"   # both sides appended at the end → conflict
+  commit "append at the same place"
+  run
+  assert_eq 1 "$STATUS" "exit 1"
+  assert_contains "$OUT" "WOULD-LOSE" "a conflicting file is the severe kind"
+  assert_not_contains "$OUT" "DIFF-DELETES" "and only that kind"
+  assert_contains "$OUT" "三方マージが落とす: 1 行" "counts it under the merge-drops-them tally"
+}
+t_cleanly_merging_file_is_reported_as_diff_deletes() {
+  new_repo; BASE_SHA=$(g rev-parse HEAD)
+  main_moves '- **教訓 X**'                                        # main appends at the end
+  branch_from "$BASE_SHA" topic
+  g checkout -q "$BASE_SHA" -- docs/WORKING_AGREEMENT.md
+  sed -i '1a - **教訓 私**' "$W/docs/WORKING_AGREEMENT.md"          # the branch edits the top → merges clean
+  commit "edit far from main's change"
+  run
+  assert_eq 1 "$STATUS" "exit 1"
+  assert_contains "$OUT" "DIFF-DELETES" "a cleanly merging file is the milder kind"
+  assert_not_contains "$OUT" "WOULD-LOSE" "and only that kind"
+  assert_contains "$OUT" "マージは残すが diff では削除に見える: 1 行" "counts it under the diff tally"
+  # and the claim is true: the three-way merge really does keep the line
+  assert_eq "1" "$(g show "$(g merge-tree --write-tree origin/main topic | head -1)":docs/WORKING_AGREEMENT.md | grep -c -- '- \*\*教訓 X\*\*')" "the merge result really keeps it"
+}
+# Duplicate lines are counted as a multiset: main adding a SECOND copy of a line the branch already has
+# once is still a line the branch is missing. Counting distinct lines instead would report nothing.
+t_a_second_copy_of_an_existing_line_counts() {
+  new_repo; BASE_SHA=$(g rev-parse HEAD)
+  main_moves '- **教訓 1** 本文本文本文'                            # a line identical to one already there
+  branch_from "$BASE_SHA" topic
+  g checkout -q "$BASE_SHA" -- docs/WORKING_AGREEMENT.md
+  sed -i '1a - **教訓 私**' "$W/docs/WORKING_AGREEMENT.md"
+  commit "edit far from main's change"
+  run
+  assert_eq 1 "$STATUS" "exit 1 — main added a second copy and the branch has only the first"
+  assert_contains "$OUT" "1 行" "counts the missing copy"
+}
+
 # --- 3. the fix has to work ---------------------------------------------------------------------
 t_rebase_makes_it_pass() {
   new_repo; BASE_SHA=$(g rev-parse HEAD)
@@ -196,13 +242,27 @@ t_base_ref_can_be_overridden() {
   run main
   assert_eq 1 "$STATUS" "an explicit base ref works too: $OUT"
 }
+# Two guards catch this — `resolve` and, behind it, `git merge-base` failing — and the second one keeps
+# the exit status honest on its own. So the message is asserted too, or removing `resolve`'s check goes
+# unnoticed (#500: pinning one of two paths is pinning neither).
 t_missing_base_ref_is_an_error_not_a_pass() {
   new_repo; BASE_SHA=$(g rev-parse HEAD)
   main_moves '- **教訓 X**'
   stale_branch topic
   run refs/heads/does-not-exist
-  [[ $STATUS != 0 ]] || fail "an unresolvable base must not be reported as clean"
+  assert_eq 2 "$STATUS" "an unresolvable base must not be reported as clean"
   assert_contains "$OUT" "does-not-exist" "names the ref it could not resolve"
+  assert_contains "$OUT" "ref を解決できません" "says the ref is what it could not resolve"
+  assert_contains "$OUT" "git fetch origin" "says what to run"
+  assert_not_contains "$OUT" "fatal:" "does not leak a raw git error instead of its own message"
+}
+t_missing_head_ref_is_an_error_too() {
+  new_repo; BASE_SHA=$(g rev-parse HEAD)
+  main_moves '- **教訓 X**'
+  stale_branch topic
+  run main refs/heads/no-such-head
+  assert_eq 2 "$STATUS" "an unresolvable head must not be reported as clean"
+  assert_contains "$OUT" "no-such-head" "names the ref it could not resolve"
 }
 
 test_case "古い main から切って、その後 main が足した行を消す枝 → 落ちる" t_stale_base_deleting_main_lines_fails
@@ -214,8 +274,12 @@ test_case "土台は古いが main が触っていないファイルだけ → �
 test_case "意図した削除は名指ししない／見ていない行だけを名指しする" t_deliberate_deletions_are_not_reported_but_the_unseen_line_is
 test_case "両方が同じ行を独立に足した → 通る" t_same_line_added_on_both_sides_passes
 test_case "main がファイルを消した（枝はまだ持っている） → 通る" t_main_deleted_a_file_passes
+test_case "衝突する側は WOULD-LOSE として出る" t_conflicting_file_is_reported_as_would_lose
+test_case "きれいにマージできる側は DIFF-DELETES として出る" t_cleanly_merging_file_is_reported_as_diff_deletes
+test_case "同じ行の2本目のコピーも数える（多重集合）" t_a_second_copy_of_an_existing_line_counts
 test_case "rebase すれば通る" t_rebase_makes_it_pass
 test_case "見つけた行数を出す" t_reports_the_deletion_count_it_measured
 test_case "base ref を引数で渡せる" t_base_ref_can_be_overridden
 test_case "base ref が解決できないときは通さない" t_missing_base_ref_is_an_error_not_a_pass
+test_case "head ref が解決できないときも通さない" t_missing_head_ref_is_an_error_too
 echo "passed $PASS, failed $FAIL"; [[ $FAIL == 0 ]]
