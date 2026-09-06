@@ -206,6 +206,32 @@ t_a_second_copy_of_an_existing_line_counts() {
   assert_contains "$OUT" "1 行" "counts the missing copy"
 }
 
+# The conflicted-file list is matched whole-line. A substring match would let a conflicting `a.md`
+# stand in for a cleanly merging `a.md.bak` and report the wrong severity for it.
+t_conflicted_paths_are_matched_whole_line() {
+  new_repo; BASE_SHA=$(g rev-parse HEAD)
+  g checkout -q main
+  cp "$W/docs/WORKING_AGREEMENT.md" "$W/docs/WORKING_AGREEMENT.md.bak"
+  commit "a file whose name contains another file's name"
+  g update-ref refs/remotes/origin/main main
+  BASE_SHA=$(g rev-parse HEAD)
+  # main appends to both; only the shorter name will conflict
+  g checkout -q main
+  printf -- '- **教訓 X**\n' >> "$W/docs/WORKING_AGREEMENT.md"
+  printf -- '- **教訓 X**\n' >> "$W/docs/WORKING_AGREEMENT.md.bak"
+  commit "main appends to both"
+  g update-ref refs/remotes/origin/main main
+  branch_from "$BASE_SHA" topic
+  g checkout -q "$BASE_SHA" -- docs/WORKING_AGREEMENT.md docs/WORKING_AGREEMENT.md.bak
+  printf -- '- **教訓 私**\n' >> "$W/docs/WORKING_AGREEMENT.md"   # end of file → conflicts
+  sed -i '1a - **教訓 私**' "$W/docs/WORKING_AGREEMENT.md.bak"     # top of file → merges clean
+  commit "conflict in the short name, clean merge in the long one"
+  run
+  assert_eq 1 "$STATUS" "exit 1"
+  assert_contains "$OUT" "[WOULD-LOSE] docs/WORKING_AGREEMENT.md:" "the conflicting file is WOULD-LOSE"
+  assert_contains "$OUT" "[DIFF-DELETES] docs/WORKING_AGREEMENT.md.bak:" "the cleanly merging one is not"
+}
+
 # --- 3. the fix has to work ---------------------------------------------------------------------
 t_rebase_makes_it_pass() {
   new_repo; BASE_SHA=$(g rev-parse HEAD)
@@ -277,6 +303,7 @@ test_case "main がファイルを消した（枝はまだ持っている） →
 test_case "衝突する側は WOULD-LOSE として出る" t_conflicting_file_is_reported_as_would_lose
 test_case "きれいにマージできる側は DIFF-DELETES として出る" t_cleanly_merging_file_is_reported_as_diff_deletes
 test_case "同じ行の2本目のコピーも数える（多重集合）" t_a_second_copy_of_an_existing_line_counts
+test_case "衝突ファイルの一覧は行全体で照合する（部分一致にしない）" t_conflicted_paths_are_matched_whole_line
 test_case "rebase すれば通る" t_rebase_makes_it_pass
 test_case "見つけた行数を出す" t_reports_the_deletion_count_it_measured
 test_case "base ref を引数で渡せる" t_base_ref_can_be_overridden

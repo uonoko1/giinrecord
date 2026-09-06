@@ -103,6 +103,10 @@ multiset() {
 mapfile -d '' -t BASE_TOUCHED < <(git diff -z --name-only "$MERGE_BASE" "$BASE_SHA")
 mapfile -d '' -t HEAD_TOUCHED < <(git diff -z --name-only "$MERGE_BASE" "$HEAD_SHA")
 printf '%s\n' "${HEAD_TOUCHED[@]}" | LC_ALL=C sort -u > "$TMP/head-touched"
+# Iterating BASE_TOUCHED rather than HEAD_TOUCHED is an equivalent mutation and is left as such: for a
+# file only the branch touched, `gained` is empty and the loop skips it anyway. Measured on the
+# reconstructed #531 shape — both spellings print the same 50 lines. Iterating the base's list is only
+# the cheaper of the two, so no test tries to tell them apart.
 CANDIDATES=()
 for p in "${BASE_TOUCHED[@]}"; do
   [[ -n "$p" ]] || continue
