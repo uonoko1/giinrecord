@@ -344,6 +344,26 @@ t_a_later_clean_run_does_not_wipe_the_lines_file() {
   assert_contains "$OUT" "--verify" "and the ok message points at --verify"
 }
 
+# Everyone here works in a `git worktree` (the working agreement requires it), where `.git` is a FILE,
+# not a directory. `mkdir -p .git` fails there, so the default path for the at-risk lines has to come
+# from git. Measured before the fix: `mkdir: cannot create directory '.git': File exists`, and the file
+# the failure message points at was never written.
+t_works_inside_a_git_worktree() {
+  new_repo; BASE_SHA=$(g rev-parse HEAD)
+  main_moves '- **教訓 X**'
+  local wt="$TMP/wt"; rm -rf "$wt"
+  g worktree add -q --detach "$wt" "$BASE_SHA" 2>/dev/null
+  [[ -f "$wt/.git" ]] || fail "the fixture is not a worktree (.git must be a file)"
+  ( cd "$wt" && git checkout -q "$BASE_SHA" -- docs/WORKING_AGREEMENT.md       && printf -- '- **教訓 私**\n' >> docs/WORKING_AGREEMENT.md       && git add -A && git -c user.name=t -c user.email=t@example.invalid commit -qm "in a worktree" )
+  set +e; OUT=$(cd "$wt" && bash "$SCRIPT" refs/remotes/origin/main HEAD 2>&1); STATUS=$?; set -e
+  assert_eq 1 "$STATUS" "detects it from inside a worktree: $OUT"
+  assert_not_contains "$OUT" "mkdir:" "does not fail to write the lines file"
+  assert_contains "$OUT" "教訓 X" "names the line"
+  local lines; lines=$(cd "$wt" && git rev-parse --git-dir)/stale-base-lines.tsv
+  assert_eq 1 "$(count_lines "$lines")" "wrote the at-risk lines where the message says they are"
+  g worktree remove --force "$wt" 2>/dev/null || true
+}
+
 # --- 4. the check itself -------------------------------------------------------------------------
 t_reports_the_deletion_count_it_measured() {
   new_repo; BASE_SHA=$(g rev-parse HEAD)
@@ -401,6 +421,7 @@ test_case "両方残す rebase なら --verify は通る" t_verify_passes_when_t
 test_case "--verify は在る行を「無い」と言わない（pipefail の 141）" t_verify_does_not_report_present_lines_as_missing
 test_case "--verify は読めない一覧ファイルを通さない" t_verify_rejects_an_unreadable_lines_file
 test_case "あとから通った実行が証拠ファイルを消さない" t_a_later_clean_run_does_not_wipe_the_lines_file
+test_case "git worktree の中でも動く（.git はファイル）" t_works_inside_a_git_worktree
 test_case "見つけた行数を出す" t_reports_the_deletion_count_it_measured
 test_case "base ref を引数で渡せる" t_base_ref_can_be_overridden
 test_case "base ref が解決できないときは通さない" t_missing_base_ref_is_an_error_not_a_pass

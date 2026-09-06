@@ -182,7 +182,7 @@ REPORT="$TMP/report"
 # up front destroys the evidence: the message tells you to rebase and re-run, and a re-run that now finds
 # nothing (which is exactly the case worth catching — the merge-base moved) would empty the list it is
 # about to be checked against. Measured: it turned `--verify` into "0 行すべてあります".
-LINES_OUT=${STALE_BASE_LINES_OUT:-.git/stale-base-lines.tsv}
+LINES_OUT=${STALE_BASE_LINES_OUT:-$(git rev-parse --git-dir)/stale-base-lines.tsv}
 LINES_TMP="$TMP/lines.tsv"
 : > "$LINES_TMP"
 for path in "${CANDIDATES[@]}"; do
