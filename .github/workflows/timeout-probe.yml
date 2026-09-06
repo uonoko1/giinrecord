@@ -1,0 +1,20 @@
+name: Timeout probe (#556)
+# 使い捨て。#556 の受け入れ条件「無限ループを仕込むと timeout-minutes で止まる」を実機で確かめる。
+on: workflow_dispatch
+permissions:
+  contents: read
+jobs:
+  loops-forever:
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      # #530 の E3 と同じ形: 同期の無限ループ。イベントループごとブロックするので
+      # testTimeout も、非同期のキャンセルも効かない。出力も出ない。
+      - name: synchronous infinite loop (no output, no allocation)
+        run: node -e 'while (true) {}'
+  control-finishes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      # 対照: 同じ timeout の下で、普通に終わる job は緑になる（偽陽性でないことの確認）
+      - run: node -e 'const t=Date.now(); while (Date.now()-t < 5000) {}; console.log("done in 5s")'
