@@ -30,6 +30,8 @@ SV_EXT=.mutate-sv
 # 「刈る側」と「拒否する側」がずれると、当たったのに戻らないファイルができる。
 PRUNED_DIRS='.git
 node_modules'
+# apply_pairs が当てたファイルと、当てた直後の md5（run が測定後に照合する）
+MUTATED_FILES=(); MUTATED_SUMS=()
 
 usage() {
   cat >&2 <<'USAGE'
@@ -45,7 +47,8 @@ usage() {
   mutate.sh run --file apps/web/app/routes/member.css --expr 's/font-weight/X/g' \
     -- pnpm --filter web test
 
-終了コード: 0 成功 / 1 拒否（外のパス・退避が残っている・ファイルが無い） / 2 使い方 / 3 変異が当たらなかった
+終了コード: 0 成功 / 1 拒否（外のパス・回収できない場所・退避が残っている・戻せなかった） / 2 使い方
+            3 変異が当たらなかった（パターン不一致） / 4 測っている間に変異が外れた（測定は無効）
 USAGE
   exit 2
 }
@@ -202,6 +205,7 @@ apply_pairs() {
       exit 3
     fi
     printf '%s\n' "$after" > "$(meta_path "$f")"
+    MUTATED_FILES+=("$f"); MUTATED_SUMS+=("$after")
     done_files+=("$f")
     echo "mutate: 当てた ${f#"$(root)"/}  md5 $before → $after"
   done
@@ -247,7 +251,23 @@ cmd_run() {
   local st=$?
   set -e
   trap - INT TERM HUP
+
+  # 測っている間に変異が外れていないか確かめる。外れていたら、その測定結果は
+  # 「変異なしで測った」ものなので無意味（#514 と同じ形）。exit 0 で済ませない。
+  local i f drifted=0
+  for i in "${!MUTATED_FILES[@]}"; do
+    f=${MUTATED_FILES[$i]}
+    [[ -f $f ]] || { drifted=1; echo "mutate: 測っている間に $f が消えた。この測定結果は使えない" >&2; continue; }
+    if [[ $(sums "$f") != "${MUTATED_SUMS[$i]}" ]]; then
+      drifted=1
+      echo "mutate: 測っている間に ${f#"$(root)"/} の変異が外れた。この測定結果は使えない" >&2
+      echo "  当てた直後の md5: ${MUTATED_SUMS[$i]}" >&2
+      echo "  コマンド終了後:   $(sums "$f")" >&2
+    fi
+  done
+
   cmd_restore || return 1
+  [[ $drifted == 0 ]] || return 4
   return $st
 }
 

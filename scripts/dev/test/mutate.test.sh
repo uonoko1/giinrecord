@@ -371,6 +371,26 @@ t_preserves_mode_and_mtime() {
   assert_eq "$mtime" "$(stat -c '%Y' "$R/src/app.ts")" "mtime も戻る（cp -p。ビルドのキャッシュが狂わないように）"
 }
 
+# ---- run の測定中に変異が外れていたら、その測定結果は無意味（レビュー指摘・低優先） -----------
+# 誰かが並行して restore を打つ／コマンド自身が対象を書き戻す、などで変異が外れうる。
+# それに気づかず exit 0 を返すと、#514 と同じ「当たっていないのに測った」になる。
+t_run_detects_the_mutation_being_undone_midway() {
+  repo; local before; before=$(md5 "$R/src/app.ts")
+  # コマンドの中で対象を元に戻す＝測定中に変異が外れた状態を作る
+  run run --file src/app.ts --expr 's/ORIGINAL/MUTANT/' -- \
+    sh -c 'printf "export const keep = \"ORIGINAL\";\nconst n = 1;\n" > src/app.ts'
+  assert_ne 0 "$STATUS" "測定中に変異が外れたら exit 0 で済ませない"
+  assert_contains "$OUT" "測っている間に" "何が起きたか言う"
+  assert_eq "$before" "$(md5 "$R/src/app.ts")" "後片付けはする"
+}
+# ふつうに走ったときは、この検査で誤って落ちない（厳しすぎる側も固定する）
+t_run_does_not_false_positive_on_a_normal_run() {
+  repo
+  run run --file src/app.ts --expr 's/ORIGINAL/MUTANT/' -- grep -c MUTANT src/app.ts
+  assert_eq 0 "$STATUS" "ふつうの run は通る: $OUT"
+  assert_not_contains "$OUT" "測っている間に" "誤検出しない"
+}
+
 # ---- CI が本当にこのテストを走らせること -------------------------------------------------------
 # 「共通の道具を作る」は、CI が走らせて初めて効く。ci.yml の for ループの glob を固定する。
 # （scripts/dev/test/ を glob から外すと、この道具の防御が黙って死ぬ）
