@@ -1170,7 +1170,7 @@ describe("ウェイトの判定そのもの（#506）", () => {
       "直書きの本文家族 + vw": '2vw "BIZ UDPGothic"',
     };
 
-    it("読めないサイズ 8 通りは undefined（システム指定と区別する）", () => {
+    it("読めないサイズ 11 通りは undefined（システム指定と区別する）", () => {
       const wrong = Object.entries(読めないサイズ)
         .filter(([, v]) => parseFontShorthand(v) !== undefined)
         .map(([name, v]) => `${name}: ${JSON.stringify(parseFontShorthand(v))}`);
