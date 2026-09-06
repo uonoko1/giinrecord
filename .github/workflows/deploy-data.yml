@@ -16,6 +16,8 @@ permissions:
 jobs:
   resolve:
     runs-on: ubuntu-latest
+    # #556: 実測 4–13s（n=40）。
+    timeout-minutes: 10
     outputs:
       ref: ${{ steps.released.outputs.ref }}
     steps:
