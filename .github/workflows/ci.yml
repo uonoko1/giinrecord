@@ -50,10 +50,20 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version-file: .nvmrc, cache: pnpm }
       - run: pnpm install --frozen-lockfile
+      # #552: `ubuntu-latest` ships whatever shellcheck it ships, so the same tree got different answers on
+      # CI (0.9.0) and on a developer's machine (0.11.0) — #542 lost a run to an SC2015 only 0.9.0 raised.
+      # Measured on this repo's probes: `i+=1` is silent in 0.9.0 and SC2324 from 0.10.0 on, so the older
+      # CI was *missing* real findings. The version comes from scripts/ci/shellcheck.sh so that there is one
+      # place to change; the script itself refuses to run under any other version (exit 3).
+      - name: shellcheck (pinned version, #552)
+        run: |
+          v=$(bash scripts/ci/shellcheck.sh --pinned-version)
+          curl -sSfL "https://github.com/koalaman/shellcheck/releases/download/v$v/shellcheck-v$v.linux.x86_64.tar.xz" \
+            | tar -xJ --strip-components=1 -C /usr/local/bin "shellcheck-v$v/shellcheck"
+          shellcheck --version | sed -n '2p'
       - name: shellcheck + bash tests (scripts/po, scripts/ci, deploy)
         run: |
-          shellcheck --version | head -2
-          bash scripts/ci/shellcheck.sh # target list lives there (Issue #154) — same command locally
+          bash scripts/ci/shellcheck.sh # target list and pinned version live there (#154, #552) — same command locally
           bash scripts/po/test/run.sh
           for t in scripts/ci/test/*.test.sh scripts/dev/test/*.test.sh deploy/test/*.test.sh; do echo "== $t"; bash "$t"; done
       - run: pnpm lint
