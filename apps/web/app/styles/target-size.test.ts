@@ -1,5 +1,6 @@
+import { execFileSync } from "node:child_process";
 import { readFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import { join, relative, sep } from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
@@ -66,16 +67,71 @@ function allCss(): { path: string; label: string; css: string }[] {
 }
 
 /**
+ * **`allCss()` が拾うべき `.css` の一覧を、`readdirSync` とは別の経路（git）から取る。**
+ *
+ * ## なぜ件数の下限ではだめだったか（#544）
+ *
+ * ここは以前 `expect(files.length).toBeGreaterThan(5)` だった。
+ * **`files.length` を `files` 自身から測っている**ので、
+ * **列挙が痩せれば、その痩せた結果を数えるだけ**になる。実測（#544 の報告を再現した）:
+ *
+ *     `allCss()` の1行を `&& e.name !== "member.css"` に変える            **33 passed（緑）**
+ *     上に加えて `member.css` に `.note a { padding: 4px }`（本物の違反）  **33 passed（緑）**
+ *
+ * **本番に本物の 2.5.8 違反が載ったまま、全部緑だった。**
+ * 7 本が 6 本になっても下限 5 を割らないので、何も鳴らない。
+ * 作業合意 #499「**期待値を検査対象から生成しない**——自己参照になり、
+ * 対象が痩せれば期待値も一緒に痩せる」がそのまま当てはまる形だった。
+ *
+ * ## 何に変えたか
+ *
+ * **期待値の源を `readdirSync` の外に出す。** git のインデックス（＋未追跡ファイル）から
+ * `.css` の一覧を取り、**件数ではなくパスの集合そのもの**を突き合わせる（#499「個数ではなく中身を固定する」）。
+ * 1 本落ちれば集合が食い違うので、**何本目であっても落ちる。**
+ *
+ * ## なぜ `--others --exclude-standard` を付けるか（偽陽性を出さないため）
+ *
+ * `git ls-files` だけだと**追跡されているものしか見えない**ので、
+ * **新しく `.css` を足した人が `git add` するまで赤くなる**（対象の落ち度ではないのに落ちる＝偽陽性）。
+ * `--others --exclude-standard` を足すと未追跡のファイルも見える。実測:
+ *
+ *     新しい .css を1本置く    `--cached` のみ 7 本 / `--cached --others` 8 本 / readdirSync 8 本
+ *
+ * `--exclude-standard` があるので `.gitignore` されたものは両側とも入らない。
+ *
+ * ## ここが git に依存することの限界（**書いておく**——#451 の流儀）
+ *
+ * **git が無い環境では検査そのものが落ちる**（黙らない）。CI も開発機も git の作業ツリーなので
+ * これで困らないが、**「git が使えないときは素通りさせる」ようには書いていない**——
+ * それを書くと、その逃げ道が穴になる。
+ */
+function gitTrackedCss(): string[] {
+  const out = execFileSync(
+    "git",
+    ["ls-files", "--cached", "--others", "--exclude-standard", "-z", "--", "*.css"],
+    { cwd: app, encoding: "utf8" },
+  );
+  return out.split("\0").filter(Boolean).map((p) => p.split("/").join(sep)).sort();
+}
+
+/**
  * `allCss()` が痩せていないこと。**呼ぶ側それぞれで確かめる**（別の `it` に置くと `it` ごと消せる）。
  *
- * **この 1 行だけを消しても何も落ちない**（実測 33 passed）——列挙器が正しければ件数は足りるので。
- * **落ちるのは「列挙を痩せさせたとき」**で、そのときは 3 件落ちる（実測: `.css` を `pages.css` に
- * 絞る／`routes/` を辿らない、どちらも **3 failed**）。
- * **この行は「痩せた瞬間に、どの `it` でも同じ言葉で鳴る」ためのもの**であって、
- * これ自体が唯一の番人ではない（下流の `all.length` の下限も別に効く）。
+ * **件数ではなく、git から取った一覧と突き合わせる**（#544）。
+ * `allCss()` が 1 本でも落とせば、その名前が `不足` に出て落ちる。
+ * 逆に git に無いものを拾ったら `余分` に出る（`.gitignore` されたビルド生成物を読んでいる等）。
  */
 function expectAllCssFound(files: { path: string }[]): void {
-  expect(files.length, "app/ 配下の .css を 1 本も拾えていない（列挙が空振り）").toBeGreaterThan(5);
+  const found = files.map((f) => relative(app, f.path)).sort();
+  const expected = gitTrackedCss();
+  // 前提: 独立経路そのものが空振りしていないこと（git が 0 件を返したら、集合の一致は無意味になる）
+  expect(expected.length, "git が app/ 配下の .css を 1 本も返していない（独立経路が空振り）").toBeGreaterThan(5);
+  const missing = expected.filter((p) => !found.includes(p));
+  const extra = found.filter((p) => !expected.includes(p));
+  expect(
+    { 不足: missing, 余分: extra },
+    "allCss() が拾った .css が、git の一覧と食い違う（列挙器が痩せていませんか）",
+  ).toEqual({ 不足: [], 余分: [] });
 }
 
 /**
