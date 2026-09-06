@@ -19,6 +19,31 @@ const uncommented = (s: string) =>
     .filter((l) => !/^\s*#/.test(l))
     .join("\n");
 
+/**
+ * Issue #570: YAML のステップ順序を `indexOf` / `lastIndexOf` で見ると、行頭コメント（`# ...`）に
+ * 同じ文字列を書くだけで壊れる——`indexOf` は「最初の一致」を返すので、本物のステップより前に
+ * コメントで同じ語を書けば「先に実行される」ことになり、逆に本物のステップより前に別のダミーの
+ * コメント（無関係な語）を置くだけでも、後ろの本物の位置がずれて誤判定になりうる。
+ *
+ * `uncommented()`（このファイル既存、#513 の stripComments と同型）は行を丸ごと落とすため、
+ * 削った行数・文字数ぶんだけ後続の文字位置がずれる。既存のテストは `job.slice(indexOf(a), indexOf(b))`
+ * のように**位置そのもの**を使って元の生テキストを切り出し、その中身を `assert.match` している
+ * （#570 の受け入れ確認で実測：行を落とす方式のまま `slice` に使うと位置がずれて別の assertion が落ちた）。
+ * そこで、コメント行を**削除**せず**同じ文字数のまま無害な文字（スペース）に潰す**——
+ * 行数はもちろん、文字ごとの位置（インデックス）も元の文字列と 1 対 1 のまま変わらないので、
+ * ここで得た位置を元の生テキストにそのまま使って `slice` できる。
+ */
+const maskComments = (s: string) =>
+  s
+    .split("\n")
+    .map((l) => (/^\s*#/.test(l) ? " ".repeat(l.length) : l))
+    .join("\n");
+
+/** YAML のステップ順序判定専用の `indexOf`。コメント行はマスクした本文で探す（#570）。位置は元の文字列と一致する。 */
+const orderIndexOf = (s: string, needle: string) => maskComments(s).indexOf(needle);
+/** YAML のステップ順序判定専用の `lastIndexOf`。コメント行はマスクした本文で探す（#570）。位置は元の文字列と一致する。 */
+const orderLastIndexOf = (s: string, needle: string) => maskComments(s).lastIndexOf(needle);
+
 const siteConf = read("deploy/nginx/site.conf");
 const hostProxy = read("deploy/nginx-host-proxy.conf");
 const compose = read("deploy/docker-compose.yml");
@@ -277,7 +302,10 @@ test("ci.yml: docker-web は URL smoke の後に Playwright（chromium）の bro
   assert.match(job, /playwright install --with-deps chromium/);
   assert.match(job, /actions\/cache@v4[\s\S]*?ms-playwright/, "chromium download is cached");
   assert.match(job, /browser-check -- --url http:\/\/127\.0\.0\.1:8081/);
-  assert.ok(job.indexOf("smoke -- --url http://127.0.0.1:8081") < job.indexOf("browser-check -- --url"), "browser-check runs after the URL smoke");
+  assert.ok(
+    orderIndexOf(job, "smoke -- --url http://127.0.0.1:8081") < orderIndexOf(job, "browser-check -- --url"),
+    "browser-check runs after the URL smoke",
+  );
 });
 
 test("site.conf: /fonts/ は 1 週間キャッシュ（ハッシュ無しのファイル名なので immutable にはしない）", () => {
@@ -316,7 +344,7 @@ test("site.conf: /compare はプリレンダー無しでも 200（クエリ依�
 // build/client をそのまま配信しているので、そこで叩くのが最後の砦になる。
 test("ci.yml: docker-web は本物のビルドに対して、未知パスが 404・プリレンダー済みと /compare が 200 であることを curl で確かめる（#325）", () => {
   const job = ci.slice(ci.indexOf("  docker-web:"));
-  const step = job.slice(job.indexOf("Not found (#325)"), job.indexOf("Legacy domain 301"));
+  const step = job.slice(orderIndexOf(job, "Not found (#325)"), orderIndexOf(job, "Legacy domain 301"));
   assert.ok(step.length > 0, "Not found (#325) のステップがある");
   // プリレンダー済み: 退行していないこと
   for (const p of ["/", "/members/", "/coverage/", "/assemblies/", "/rollcalls/"]) {
@@ -334,7 +362,107 @@ test("ci.yml: docker-web は本物のビルドに対して、未知パスが 404
   assert.match(step, /lang="ja"/);
   assert.match(step, /noindex/);
   assert.match(step, /Hey developer/, "開発者向けメッセージが出ていないことを確かめる");
-  assert.ok(job.indexOf("Not found (#325)") > job.indexOf("docker compose -f deploy/docker-compose.yml up"), "コンテナを起動した後で叩く");
+  assert.ok(
+    orderIndexOf(job, "Not found (#325)") > orderIndexOf(job, "docker compose -f deploy/docker-compose.yml up"),
+    "コンテナを起動した後で叩く",
+  );
+});
+
+// Issue #570: 上の3つの順序判定（本ファイル内、ci.yml 2箇所・deploy-site.yml 1箇所）は素の `indexOf` で書かれており、
+// コメントに同じ文字列を書くと「最初の一致」がコメント側にずれて偽陽性になる。#556 の担当者が実測で踏んだ
+// （コメントに `pnpm build` と書いたら既存テストが落ちた）。ここでは実際に ci.yml / deploy-site.yml の本文へ
+// コメントを注入して、3箇所すべてで再現すること・orderIndexOf / orderLastIndexOf に変えれば直ること・
+// 順序を本当に入れ替えたときは変わらず落ちること（回帰しないこと）を確かめる。
+test("#570: indexOf によるステップ順序判定は、行頭コメントに同じ文字列を書くと偽陽性になる（現象の再現）", () => {
+  // 1. ci.yml 1箇所目: browser-check を smoke より前に「言及」するコメントを docker-web の直後に置く
+  const ciWithEarlyComment = ci.replace(
+    "  docker-web:\n",
+    "  docker-web:\n    # mentions browser-check -- --url before the real smoke step (#570 repro)\n",
+  );
+  const job1 = ciWithEarlyComment.slice(ciWithEarlyComment.indexOf("  docker-web:"));
+  assert.ok(
+    !(job1.indexOf("smoke -- --url http://127.0.0.1:8081") < job1.indexOf("browser-check -- --url")),
+    "素の indexOf はコメントのせいで「smoke が先」の判定が崩れる（このテストは崩れることを確認するので反転させている）",
+  );
+
+  // 2. ci.yml 2箇所目: 「Not found (#325)」を docker compose up より前に言及するコメント
+  const ciWithEarlyComment2 = ci.replace(
+    "  docker-web:\n",
+    '  docker-web:\n    # placeholder mentioning "Not found (#325)" before docker compose up (#570 repro)\n',
+  );
+  const job2 = ciWithEarlyComment2.slice(ciWithEarlyComment2.indexOf("  docker-web:"));
+  assert.ok(
+    !(job2.indexOf("Not found (#325)") > job2.indexOf("docker compose -f deploy/docker-compose.yml up")),
+    "素の indexOf はコメントのせいで「起動後に叩く」の判定が崩れる",
+  );
+
+  // 3. deploy-site.yml: checkout / pnpm build のあいだに overlay があるかの判定
+  const deploySiteWithComment = deploySite.replace(
+    "  deploy:\n",
+    "  deploy:\n    # note: pnpm build happens here, mentioning actions/checkout too (#570 repro)\n",
+  );
+  const overlayAt = deploySiteWithComment.lastIndexOf("released-ref.sh overlay");
+  assert.ok(
+    !(overlayAt > deploySiteWithComment.indexOf("actions/checkout") && overlayAt < deploySiteWithComment.indexOf("pnpm build")),
+    "素の indexOf はコメントのせいで「checkout の後・build の前」の判定が崩れる",
+  );
+});
+
+test("#570: orderIndexOf / orderLastIndexOf はコメントを除いた本文で見るので、同じコメントを書いても崩れない", () => {
+  const ciWithEarlyComment = ci.replace(
+    "  docker-web:\n",
+    "  docker-web:\n    # mentions browser-check -- --url before the real smoke step (#570 repro)\n",
+  );
+  const job1 = ciWithEarlyComment.slice(orderIndexOf(ciWithEarlyComment, "  docker-web:"));
+  assert.ok(
+    orderIndexOf(job1, "smoke -- --url http://127.0.0.1:8081") < orderIndexOf(job1, "browser-check -- --url"),
+    "コメントを除いた本文で見れば、smoke が先であることは崩れない",
+  );
+
+  const ciWithEarlyComment2 = ci.replace(
+    "  docker-web:\n",
+    '  docker-web:\n    # placeholder mentioning "Not found (#325)" before docker compose up (#570 repro)\n',
+  );
+  const job2 = ciWithEarlyComment2.slice(orderIndexOf(ciWithEarlyComment2, "  docker-web:"));
+  assert.ok(
+    orderIndexOf(job2, "Not found (#325)") > orderIndexOf(job2, "docker compose -f deploy/docker-compose.yml up"),
+    "コメントを除いた本文で見れば、起動後に叩くことは崩れない",
+  );
+
+  const deploySiteWithComment = deploySite.replace(
+    "  deploy:\n",
+    "  deploy:\n    # note: pnpm build happens here, mentioning actions/checkout too (#570 repro)\n",
+  );
+  const overlayAt = orderLastIndexOf(deploySiteWithComment, "released-ref.sh overlay");
+  assert.ok(
+    overlayAt > orderIndexOf(deploySiteWithComment, "actions/checkout") && overlayAt < orderIndexOf(deploySiteWithComment, "pnpm build"),
+    "コメントを除いた本文で見れば、checkout の後・build の前であることは崩れない",
+  );
+});
+
+test("#570: orderIndexOf は偽陰性にならない――本当に順序を逆にすれば、先頭にコメントを書いても検出できる", () => {
+  // 本当に browser-check を smoke より前に実行するよう入れ替え、さらにジョブ先頭へ
+  // 「smoke -- --url ...」に見えるダミーコメントを置いて indexOf を騙そうとする。
+  const smokeStep =
+    "      - name: Smoke (URL mode, production container) — served pages, SPA fallback, security headers and cache policy\n" +
+    "        run: pnpm --filter web smoke -- --url http://127.0.0.1:8081\n";
+  const browserCheckStep =
+    "      - name: Browser check (#194) — no console error / CSP violation on /, /members/, /rollcalls/, a member page; members search filters; and (#479) the records are readable with JavaScript disabled\n" +
+    "        run: pnpm --filter web browser-check -- --url http://127.0.0.1:8081\n";
+  assert.ok(ci.includes(smokeStep) && ci.includes(browserCheckStep), "fixture the test relies on must still exist verbatim in ci.yml");
+
+  let reversed = ci.replace(browserCheckStep, "");
+  reversed = reversed.replace(smokeStep, browserCheckStep + smokeStep);
+  reversed = reversed.replace(
+    "  docker-web:\n",
+    "  docker-web:\n    # smoke -- --url http://127.0.0.1:8081 (fake comment trying to fool indexOf, #570 repro)\n",
+  );
+
+  const job = reversed.slice(orderIndexOf(reversed, "  docker-web:"));
+  assert.ok(
+    !(orderIndexOf(job, "smoke -- --url http://127.0.0.1:8081") < orderIndexOf(job, "browser-check -- --url")),
+    "本当に順序が逆なら、コメントを除いても「smoke が先」という誤った判定を返してはいけない（偽陰性が無いこと）",
+  );
 });
 
 // Issue #189: the container nginx must not log requests at all (the default combined format writes the User-Agent
@@ -542,8 +670,11 @@ test("deploy-site.yml: data_ref 入力（既定空）で released-ref.sh overlay
   assert.match(deploySite, /scripts\/ci\/released-ref\.sh overlay "\$DATA_REF"/);
   assert.match(deploySite, /DATA_REF: \$\{\{ inputs\.data_ref \}\}/);
   assert.match(deploySite, /^\s+sha:\s*\n\s+description:[^\n]*\n\s+value: \$\{\{ jobs\.deploy\.outputs\.sha \}\}$/m);
-  const overlayAt = deploySite.lastIndexOf("released-ref.sh overlay");
-  assert.ok(overlayAt > deploySite.indexOf("actions/checkout") && overlayAt < deploySite.indexOf("pnpm build"), "overlay runs after checkout and before the build");
+  const overlayAt = orderLastIndexOf(deploySite, "released-ref.sh overlay");
+  assert.ok(
+    overlayAt > orderIndexOf(deploySite, "actions/checkout") && overlayAt < orderIndexOf(deploySite, "pnpm build"),
+    "overlay runs after checkout and before the build",
+  );
 });
 
 test("deploy-data.yml: staging は main、production は released-ref.sh resolve の ref + data_ref: main", () => {
