@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import ts from "typescript";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 /**
  * 表紙（`.cover`）の上に置く文字は、表紙の地色に対して WCAG AA（4.5:1）を満たすこと。Issue 394
@@ -16,6 +16,18 @@ import { describe, expect, it } from "vitest";
  * 目視で「読めるようになった」で済ませると、次にパレットを触ったとき静かに戻るので、
  * **比そのものをここで固定する**。
  */
+
+/*
+ * このファイルは `mount()` で `document.head` に本番 CSS を、`document.body` に見本の DOM を敷く。
+ * 敷いたまま終わると、実行順しだいで**後ろに並んだ無関係なファイル**が
+ * 「本会議3件」のようなタブの見本を自分の描画物と一緒に見つけて落ちる
+ * （#512 で `DateHeading` / `Tabs` / `member-shugiin` が実際にそうなった）。
+ * `mount()` の中で消すのでは足りない——落ちたテストは次の `mount()` まで残す。
+ */
+afterEach(() => {
+  document.head.innerHTML = "";
+  document.body.innerHTML = "";
+});
 
 const tokens = readFileSync(join(import.meta.dirname, "tokens.css"), "utf8");
 

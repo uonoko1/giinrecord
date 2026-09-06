@@ -7,7 +7,13 @@ describe("ThemeToggle", () => {
     document.documentElement.removeAttribute("data-theme");
     localStorage.clear();
   });
-  afterEach(() => vi.restoreAllMocks());
+  // テーマは `<html data-theme>` と localStorage に**残る**。消さないと実行順しだいで
+  // 後ろのファイルが暗いテーマの html を見る（#512）。
+  afterEach(() => {
+    document.documentElement.removeAttribute("data-theme");
+    localStorage.clear();
+    vi.restoreAllMocks();
+  });
 
   it("初期状態は OS 追従（data-theme なし）", () => {
     render(<ThemeToggle />);
