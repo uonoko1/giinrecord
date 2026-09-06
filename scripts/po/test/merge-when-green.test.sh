@@ -52,7 +52,7 @@ t_merge_green_merges() {
 handle() {
   case "$*" in
     "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
-    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"},{"name":"lint","bucket":"skipping"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"},{"name":"lint","status":"completed","conclusion":"skipped","started_at":"t1"}]}' ;;
     "pr merge 12 --squash --delete-branch") echo merged ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
@@ -76,7 +76,7 @@ t_merge_retries_when_base_policy_refuses() {
 handle() {
   case "$*" in
     "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
-    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
     "pr merge 12 --squash --delete-branch")
       # 1 回目だけ拒む（GitHub の実際のメッセージ）。2 回目以降はログに update-branch が残っている
       if grep -q update-branch "$FAKE_GH_LOG"; then echo merged; else
@@ -104,7 +104,7 @@ handle() {
       if [ "$(bump)" -eq 1 ]; then echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"BEHIND","url":"u","headRefOid":"oid1"}'
       else echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}'; fi ;;
     "pr update-branch 12") echo updated ;;
-    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
     "pr merge 12 --squash --delete-branch") echo merged ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
@@ -134,9 +134,9 @@ handle() {
       if [ "$(cat "$FAKE_COUNTER")" -eq 2 ] && ! grep -q update-branch "$FAKE_GH_LOG"; then echo '{"mergeStateStatus":"BEHIND"}'
       else echo '{"mergeStateStatus":"BLOCKED"}'; fi ;;
     "pr update-branch 12") echo updated ;;
-    "pr checks 12 --json"*)
-      if [ "$(bump)" -lt 4 ]; then echo '[{"name":"check","bucket":"pending"}]'; exit 8
-      else echo '[{"name":"check","bucket":"pass"}]'; fi ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      if [ "$(bump)" -lt 4 ]; then echo '{"check_runs":[{"name":"check","status":"in_progress","conclusion":null,"started_at":"t1"}]}'
+      else echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}'; fi ;;
     "pr merge 12 --squash --delete-branch") echo merged ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
@@ -159,11 +159,11 @@ handle() {
     "pr view 12 --json mergeStateStatus"*)
       if grep -q update-branch "$FAKE_GH_LOG"; then echo '{"mergeStateStatus":"CLEAN"}'; else echo '{"mergeStateStatus":"BEHIND"}'; fi ;;
     "pr update-branch 12") echo updated ;;
-    "pr checks 12 --json"*)
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
       case "$(bump)" in
-        1) echo '[{"name":"check","bucket":"pass"}]' ;;
-        2) echo '[{"name":"check","bucket":"pending"}]'; exit 8 ;;
-        *) echo '[{"name":"check","bucket":"pass"}]' ;;
+        1) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+        2) echo '{"check_runs":[{"name":"check","status":"in_progress","conclusion":null,"started_at":"t1"}]}' ;;
+        *) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
       esac ;;
     "pr merge 12 --squash --delete-branch") echo merged ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
@@ -175,7 +175,7 @@ EOF
   assert_eq 0 "$STATUS" "exit status: $ERR"
   local order; order=$(grep -E 'update-branch|pr	merge' <<<"$LOG" | tr '\n' '|')
   assert_eq "pr	update-branch	12|pr	merge	12	--squash	--delete-branch|" "$order" "update-branch before merge"
-  assert_eq 3 "$(grep -c 'pr	checks' <<<"$LOG")" "re-polled checks after the update"
+  assert_eq 3 "$(grep -c 'api	repos/uonoko1/giinrecord/commits/.*/check-runs' <<<"$LOG")" "re-polled checks after the update"
 }
 test_case "merge: green but BEHIND → update-branch, re-poll, then merge" t_merge_behind_when_green
 
@@ -186,7 +186,7 @@ handle() {
     "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"BEHIND","url":"u","headRefOid":"oid1"}' ;;
     "pr view 12 --json mergeStateStatus"*) echo '{"mergeStateStatus":"CLEAN"}' ;;
     "pr update-branch 12") echo "merge conflict" >&2; exit 1 ;;
-    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
     "pr merge 12 --squash --delete-branch") echo merged ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
@@ -210,7 +210,7 @@ handle() {
     "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"BEHIND","url":"u","headRefOid":"oid1"}' ;;
     "pr view 12 --json mergeStateStatus"*) echo '{"mergeStateStatus":"CLEAN"}' ;;
     "pr update-branch 12") echo 'GraphQL: refusing to allow an OAuth App to create or update workflow `.github/workflows/etl.yml` without `workflow` scope (updatePullRequestBranch)' >&2; exit 1 ;;
-    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
     "pr merge 12 --squash --delete-branch") echo merged ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
@@ -279,7 +279,7 @@ handle() {
     "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"BEHIND","url":"u","headRefOid":"oid1"}' ;;
     "pr view 12 --json mergeStateStatus"*) echo '{"mergeStateStatus":"CLEAN"}' ;;
     "pr update-branch 12") echo 'refusing to allow an OAuth App to create or update workflow without `workflow` scope' >&2; exit 1 ;;
-    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
     "pr merge 12 --squash --delete-branch") echo merged ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
@@ -310,9 +310,9 @@ t_merge_pending_then_pass() {
 handle() {
   case "$*" in
     "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"BLOCKED","url":"u","headRefOid":"oid1"}' ;;
-    "pr checks 12 --json"*)
-      if [ "$(bump)" -lt 3 ]; then echo '[{"name":"check","bucket":"pending"}]'; exit 8
-      else echo '[{"name":"check","bucket":"pass"}]'; fi ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      if [ "$(bump)" -lt 3 ]; then echo '{"check_runs":[{"name":"check","status":"in_progress","conclusion":null,"started_at":"t1"}]}'
+      else echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}'; fi ;;
     "pr merge 12 --squash --delete-branch") echo merged ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
@@ -321,7 +321,7 @@ EOF
 )
   run_script "$h" merge-when-green.sh 12
   assert_eq 0 "$STATUS" "exit status: $ERR"
-  assert_eq 3 "$(grep -c 'pr	checks' <<<"$LOG")" "polled 3 times"
+  assert_eq 3 "$(grep -c 'api	repos/uonoko1/giinrecord/commits/.*/check-runs' <<<"$LOG")" "polled 3 times"
   assert_contains "$LOG" "pr	merge	12" "merged"
 }
 test_case "merge: pending checks are polled until they pass" t_merge_pending_then_pass
@@ -331,7 +331,7 @@ t_merge_failed_check_aborts() {
 handle() {
   case "$*" in
     "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"BLOCKED","url":"u","headRefOid":"oid1"}' ;;
-    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"fail"},{"name":"smoke","bucket":"pending"}]'; exit 1 ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"failure","started_at":"t1"},{"name":"smoke","status":"in_progress","conclusion":null,"started_at":"t1"}]}'; exit 1 ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
 }
@@ -349,7 +349,7 @@ t_merge_timeout() {
 handle() {
   case "$*" in
     "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"BLOCKED","url":"u","headRefOid":"oid1"}' ;;
-    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pending"}]'; exit 8 ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"in_progress","conclusion":null,"started_at":"t1"}]}'; exit 8 ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
 }
@@ -358,7 +358,7 @@ EOF
   run_script "$h" merge-when-green.sh 12
   assert_eq 1 "$STATUS" "exit status"
   assert_contains "$ERR" "timed out" "reports timeout"
-  assert_eq 5 "$(grep -c 'pr	checks' <<<"$LOG")" "polled POLL_MAX times"
+  assert_eq 5 "$(grep -c 'api	repos/uonoko1/giinrecord/commits/.*/check-runs' <<<"$LOG")" "polled POLL_MAX times"
   assert_not_contains "$LOG" "pr	merge" "never merges"
 }
 test_case "merge: gives up after POLL_MAX polls" t_merge_timeout
@@ -368,8 +368,8 @@ t_merge_data_refresh_approves() {
 handle() {
   case "$*" in
     "pr view 33 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"data/refresh","mergeStateStatus":"BLOCKED","url":"u","headRefOid":"oid1"}' ;;
-    "pr checks 33 --json"*)
-      if [ "$(bump)" -lt 2 ]; then echo '[]'; exit 1; else echo '[{"name":"check","bucket":"pass"}]'; fi ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      if [ "$(bump)" -lt 2 ]; then echo '{"check_runs":[]}'; else echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}'; fi ;;
     "api repos/uonoko1/giinrecord/actions/runs?branch=data/refresh&status=action_required"*) echo '{"workflow_runs":[{"id":101},{"id":102}]}' ;;
     "api -X POST repos/uonoko1/giinrecord/actions/runs/101/approve") echo ok ;;
     "api -X POST repos/uonoko1/giinrecord/actions/runs/102/approve") echo "forbidden" >&2; exit 1 ;;
@@ -392,8 +392,8 @@ t_merge_no_approval_for_feature_branch() {
 handle() {
   case "$*" in
     "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"BLOCKED","url":"u","headRefOid":"oid1"}' ;;
-    "pr checks 12 --json"*)
-      if [ "$(bump)" -lt 2 ]; then echo '[]'; exit 1; else echo '[{"name":"check","bucket":"pass"}]'; fi ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      if [ "$(bump)" -lt 2 ]; then echo '{"check_runs":[]}'; else echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}'; fi ;;
     "pr merge 12 --squash --delete-branch") echo merged ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
@@ -422,12 +422,12 @@ handle() {
         echo "X the base branch policy prohibits the merge." >&2; exit 1
       fi ;;
     "pr update-branch 12") echo updated ;;
-    "pr checks 12 --json"*)
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
       # 1回目=緑（初回のポーリング）。update-branch の後は 2 回 pending を返してから緑に戻る
       case "$(bump)" in
-        1) echo '[{"name":"check","bucket":"pass"},{"name":"docker-web","bucket":"pass"}]' ;;
-        2|3) echo '[{"name":"check","bucket":"pass"},{"name":"docker-web","bucket":"pending"}]'; exit 8 ;;
-        *) echo '[{"name":"check","bucket":"pass"},{"name":"docker-web","bucket":"pass"}]' ;;
+        1) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"},{"name":"docker-web","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+        2|3) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"},{"name":"docker-web","status":"in_progress","conclusion":null,"started_at":"t1"}]}' ;;
+        *) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"},{"name":"docker-web","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
       esac ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
@@ -438,7 +438,7 @@ EOF
   assert_eq 0 "$STATUS" "waited for the re-run and merged: $ERR"
   # 拒否 → update-branch → **再ポーリング** → マージ、の順であること
   # grep の無マッチ + set -e でスイートが途中終了する（#386 で一度踏んだ）ので必ず受ける
-  local order; order=$(grep -oE $'pr\tmerge\t12|pr\tupdate-branch\t12|pr\tchecks' <<<"$LOG" | tr '\n' '|' || true)
+  local order; order=$(grep -oE $'pr\tmerge\t12|pr\tupdate-branch\t12|api\trepos/uonoko1/giinrecord/commits/[^\t]+/check-runs' <<<"$LOG" | sed $'s#^api\trepos/uonoko1/giinrecord/commits/.*/check-runs#pr\tchecks#' | tr '\n' '|' || true)
   assert_eq $'pr\tchecks|pr\tmerge\t12|pr\tupdate-branch\t12|pr\tchecks|pr\tchecks|pr\tchecks|pr\tmerge\t12|' "$order" "re-polled checks between the two merge attempts"
   assert_contains "$ERR" "waiting for the checks to re-run" "says what it is waiting for"
 }
@@ -453,10 +453,10 @@ handle() {
     "pr view 12 --json mergeStateStatus"*) echo '{"mergeStateStatus":"CLEAN"}' ;;
     "pr merge 12 --squash --delete-branch") echo "X the base branch policy prohibits the merge." >&2; exit 1 ;;
     "pr update-branch 12") echo updated ;;
-    "pr checks 12 --json"*)
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
       # 初回だけ緑。以降はずっと pending（＝チェックが戻ってこない）
-      if [ "$(bump)" -eq 1 ]; then echo '[{"name":"check","bucket":"pass"}]'
-      else echo '[{"name":"check","bucket":"pending"}]'; exit 8; fi ;;
+      if [ "$(bump)" -eq 1 ]; then echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}'
+      else echo '{"check_runs":[{"name":"check","status":"in_progress","conclusion":null,"started_at":"t1"}]}'; fi ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
 }
@@ -467,7 +467,7 @@ EOF
   assert_contains "$ERR" "timed out" "timeout, not an infinite retry"
   # POLL_MAX=5（run.sh）を通算で使い切る。リセットしていたら待ち続けて 5 を超える。
   # 再試行前の「必ず1回待つ」も同じ予算から引くので、checks の回数は 5 を**超えない**
-  local polls; polls=$(grep -c $'pr\tchecks' <<<"$LOG" || true)
+  local polls; polls=$(grep -c $'api\trepos/uonoko1/giinrecord/commits/.*/check-runs' <<<"$LOG" || true)
   assert_eq 1 "$([[ "$polls" -le 5 ]] && echo 1 || echo 0)" "checks polls ($polls) stay within POLL_MAX=5"
   assert_eq 1 "$([[ "$polls" -ge 3 ]] && echo 1 || echo 0)" "but it did keep polling ($polls), not give up at once"
 }
@@ -480,7 +480,7 @@ handle() {
   case "$*" in
     "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
     "pr view 12 --json headRefOid"*) echo '{"headRefOid":"oid2"}' ;;   # 待っている間に誰かが push した
-    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
 }
@@ -503,9 +503,9 @@ handle() {
     "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"BEHIND","url":"u","headRefOid":"oid1"}' ;;
     "pr view 12 --json mergeStateStatus"*) echo '{"mergeStateStatus":"CLEAN"}' ;;
     "pr view 12 --json headRefOid"*) echo '{"headRefOid":"oid2"}' ;;   # update-branch でマージコミットが乗った
-    "api repos/uonoko1/giinrecord/commits/oid2"*) echo '{"parents":[{"sha":"oid1"},{"sha":"main1"}]}' ;;   # 旧 HEAD を親に持つ
+    "api repos/uonoko1/giinrecord/commits/oid2 -q .parents[].sha") echo '{"parents":[{"sha":"oid1"},{"sha":"main1"}]}' ;;   # 旧 HEAD を親に持つ
     "pr update-branch 12") echo updated ;;
-    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
     "pr merge 12 --squash --delete-branch") echo merged ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
@@ -553,7 +553,7 @@ handle() {
     "pr view 12 --json mergeStateStatus"*) echo '{"mergeStateStatus":"CLEAN"}' ;;
     "pr update-branch 12") echo "merge conflict" >&2; exit 1 ;;   # 更新は失敗した（何も push していない）
     "pr view 12 --json headRefOid"*) echo '{"headRefOid":"oid2"}' ;;   # なのに HEAD が動いている＝他人の push
-    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
 }
@@ -575,7 +575,7 @@ handle() {
     "pr view 12 --json mergeStateStatus"*) echo '{"mergeStateStatus":"CLEAN"}' ;;
     "pr update-branch 12") echo 'refusing to allow an OAuth App to create or update workflow without `workflow` scope' >&2; exit 1 ;;
     "pr view 12 --json headRefOid"*) echo '{"headRefOid":"oid2"}' ;;
-    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
 }
@@ -612,7 +612,7 @@ handle() {
       # 2回目（再試行の直前）に人の push が見える
       if grep -q update-branch "$FAKE_GH_LOG"; then echo '{"headRefOid":"oid2"}'; else echo '{"headRefOid":"oid1"}'; fi ;;
     "pr update-branch 12") echo "merge conflict" >&2; exit 1 ;;
-    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
     "pr merge 12 --squash --delete-branch") echo "X the base branch policy prohibits the merge." >&2; exit 1 ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
@@ -637,7 +637,7 @@ handle() {
     "pr view 12 --json mergeStateStatus"*) echo '{"mergeStateStatus":"CLEAN"}' ;;
     "pr view 12 --json headRefOid"*) echo '{"headRefOid":"oid1"}' ;;
     "pr update-branch 12") echo updated ;;
-    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;   # ずっと緑（pending に落ちる前）
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;   # ずっと緑（pending に落ちる前）
     "pr merge 12 --squash --delete-branch") echo "X the base branch policy prohibits the merge." >&2; exit 1 ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
@@ -663,7 +663,7 @@ handle() {
     "pr view 12 --json mergeStateStatus"*) echo '{"mergeStateStatus":"CLEAN"}' ;;
     "pr update-branch 12") echo 'refusing to allow an OAuth App to create or update workflow without `workflow` scope' >&2; exit 1 ;;
     "pr view 12 --json headRefOid"*) echo '{"headRefOid":"oid2"}' ;;   # その窓で人が push した
-    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
 }
@@ -693,7 +693,7 @@ handle() {
     "pr view 12 --json mergeStateStatus"*) echo '{"mergeStateStatus":"CLEAN"}' ;;
     "pr update-branch 12") echo 'refusing to allow an OAuth App to create or update workflow without `workflow` scope' >&2; exit 1 ;;
     "pr view 12 --json headRefOid"*) echo '{"headRefOid":"oid2"}' ;;
-    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
 }
@@ -722,7 +722,7 @@ handle() {
     "pr view 12 --json mergeStateStatus"*) echo '{"mergeStateStatus":"CLEAN"}' ;;
     "pr update-branch 12") echo 'refusing to allow an OAuth App to create or update workflow without `workflow` scope' >&2; exit 1 ;;
     "pr view 12 --json headRefOid"*) echo '{"headRefOid":"oid2"}' ;;
-    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
 }
@@ -755,10 +755,10 @@ handle() {
     "pr view 12 --json headRefOid"*) echo '{"headRefOid":"oid1"}' ;;
     "pr list --repo uonoko1/giinrecord --base feat/x --state open --json number"*)
       # 起動時は誰も積んでいない。CI を待っている間に #13 が積まれた
-      if grep -q "pr	checks" "$FAKE_GH_LOG"; then echo '[{"number":13}]'; else echo '[]'; fi ;;
-    "pr checks 12 --json"*)
-      if [ "$(bump)" -lt 2 ]; then echo '[{"name":"check","bucket":"pending"}]'; exit 8
-      else echo '[{"name":"check","bucket":"pass"}]'; fi ;;
+      if grep -q $'api\trepos/uonoko1/giinrecord/commits/.*/check-runs' "$FAKE_GH_LOG"; then echo '[{"number":13}]'; else echo '[]'; fi ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      if [ "$(bump)" -lt 2 ]; then echo '{"check_runs":[{"name":"check","status":"in_progress","conclusion":null,"started_at":"t1"}]}'
+      else echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}'; fi ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
 }
@@ -786,9 +786,9 @@ handle() {
       # update-branch の直後（repin の1回目）はまだ古い oid が見える。2回目から新しい oid になる。
       # **1回しか読まない実装**だと基準が oid1 のまま残り、マージ直前に読む oid2 と食い違って中断する
       if [ "$(bump)" -eq 1 ]; then echo '{"headRefOid":"oid1"}'; else echo '{"headRefOid":"oid2"}'; fi ;;
-    "api repos/uonoko1/giinrecord/commits/oid2"*) echo '{"parents":[{"sha":"oid1"},{"sha":"main1"}]}' ;;
+    "api repos/uonoko1/giinrecord/commits/oid2 -q .parents[].sha") echo '{"parents":[{"sha":"oid1"},{"sha":"main1"}]}' ;;
     "pr update-branch 12") echo updated ;;
-    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
     "pr merge 12 --squash --delete-branch") echo merged ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
@@ -814,9 +814,9 @@ handle() {
     "pr view 12 --json headRefOid"*) echo '{"headRefOid":"human1"}' ;;
     # 人が直接 push したコミット。**旧 HEAD（oid1）を親に持たない**ので、我々の更新ではない。
     # 「変わったら採用」で飲み込むと、検査を通っていない HEAD を基準にしてマージしてしまう
-    "api repos/uonoko1/giinrecord/commits/human1"*) echo '{"parents":[{"sha":"somethingelse"}]}' ;;
+    "api repos/uonoko1/giinrecord/commits/human1 -q .parents[].sha") echo '{"parents":[{"sha":"somethingelse"}]}' ;;
     "pr update-branch 12") echo updated ;;
-    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
 }
@@ -840,8 +840,8 @@ handle() {
     "pr view 12 --json mergeStateStatus"*) echo '{"mergeStateStatus":"BLOCKED"}' ;;
     "pr view 12 --json headRefOid"*) echo '{"headRefOid":"merged1"}' ;;   # 誰かが main を取り込んだ
     # **旧 HEAD を親に持つマージコミット**（親が2つ）＝ 取り込んだだけ
-    "api repos/uonoko1/giinrecord/commits/merged1"*) echo '{"parents":[{"sha":"oid1"},{"sha":"main9"}]}' ;;
-    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/merged1 -q .parents[].sha") echo '{"parents":[{"sha":"oid1"},{"sha":"main9"}]}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
     "pr merge 12 --squash --delete-branch") echo merged ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
@@ -865,8 +865,8 @@ handle() {
     "pr view 12 --json mergeStateStatus"*) echo '{"mergeStateStatus":"BLOCKED"}' ;;
     "pr view 12 --json headRefOid"*) echo '{"headRefOid":"pushed1"}' ;;   # 人が push した
     # **親が1つ**（普通のコミット）。旧 HEAD を親に持つが、取り込みではない
-    "api repos/uonoko1/giinrecord/commits/pushed1"*) echo '{"parents":[{"sha":"oid1"}]}' ;;
-    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/pushed1 -q .parents[].sha") echo '{"parents":[{"sha":"oid1"}]}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
 }
@@ -887,8 +887,8 @@ handle() {
     "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"BLOCKED","url":"u","headRefOid":"oid1"}' ;;
     "pr view 12 --json mergeStateStatus"*) echo '{"mergeStateStatus":"BLOCKED"}' ;;
     "pr view 12 --json headRefOid"*) echo '{"headRefOid":"other1"}' ;;
-    "api repos/uonoko1/giinrecord/commits/other1"*) echo '{"parents":[{"sha":"somethingelse"},{"sha":"main9"}]}' ;;
-    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/other1 -q .parents[].sha") echo '{"parents":[{"sha":"somethingelse"},{"sha":"main9"}]}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
 }
@@ -916,7 +916,7 @@ handle() {
       else
         echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"UNKNOWN","url":"u","headRefOid":"oid1"}'
       fi ;;
-    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
     "pr merge 12 --squash --delete-branch")
       echo "X Pull request uonoko1/giinrecord#12 is not mergeable: the merge commit cannot be cleanly created." >&2
       exit 1 ;;
@@ -939,7 +939,7 @@ t_merge_nonzero_and_still_open_dies() {
 handle() {
   case "$*" in
     "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
-    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
     "pr update-branch 12") echo updated ;;
     "pr merge 12 --squash --delete-branch")
       echo "X Pull request uonoko1/giinrecord#12 is not mergeable: the base branch policy prohibits the merge." >&2
@@ -969,7 +969,7 @@ handle() {
       else
         echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"UNKNOWN","url":"u","headRefOid":"oid1"}'
       fi ;;
-    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
     "pr merge 12 --squash --delete-branch") echo "X refused" >&2; exit 1 ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
@@ -994,7 +994,7 @@ handle() {
       else
         echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"UNKNOWN","url":"u","headRefOid":"oid1"}'
       fi ;;
-    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
     "pr merge 12 --squash --delete-branch") echo "X refused" >&2; exit 1 ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
@@ -1020,7 +1020,7 @@ handle() {
       else
         echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"UNKNOWN","url":"u","headRefOid":"oid1"}'
       fi ;;
-    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
     "pr merge 12 --squash --delete-branch")
       echo "failed to delete local branch feat/x: used by worktree at /somewhere" >&2
       exit 1 ;;
@@ -1052,7 +1052,7 @@ handle() {
       else
         echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"UNKNOWN","url":"u","headRefOid":"oid1"}'
       fi ;;
-    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
     "pr merge 12 --squash --delete-branch") echo "X refused" >&2; exit 1 ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
@@ -1081,7 +1081,7 @@ handle() {
       else
         echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"UNKNOWN","url":"u","headRefOid":"oid1"}'
       fi ;;
-    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
     "pr merge 12 --squash --delete-branch") echo "X refused" >&2; exit 1 ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
@@ -1109,7 +1109,7 @@ handle() {
       # マージ後の確認: MERGED だが oid も空
       echo '{"state":"MERGED","headRefOid":""}' ;;
     "pr view 12 --json headRefOid"*) echo '{"headRefOid":""}' ;;
-    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
     "pr merge 12 --squash --delete-branch") echo "X refused" >&2; exit 1 ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
@@ -1135,7 +1135,7 @@ handle() {
       else
         echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"UNKNOWN","url":"u","headRefOid":"oid1"}'
       fi ;;
-    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
     "pr merge 12 --squash --delete-branch")
       echo "X Pull request uonoko1/giinrecord#12 is not mergeable: the merge commit cannot be cleanly created." >&2
       exit 1 ;;
@@ -1161,7 +1161,7 @@ handle() {
       else
         echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"UNKNOWN","url":"u","headRefOid":"oid1"}'
       fi ;;
-    "pr checks 12 --json"*) echo '[{"name":"check","bucket":"pass"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
     "pr merge 12 --squash --delete-branch")
       echo "failed to delete local branch feat/x: used by worktree at /somewhere" >&2
       exit 1 ;;
@@ -1175,3 +1175,77 @@ EOF
   assert_contains "$ERR" "ローカルブランチ" "削除に失敗したときは残存を伝える"
 }
 test_case "merge: ローカル削除に失敗したときだけ残存ブランチを伝える（#446）" t_merge_branch_hint_when_delete_failed
+
+# #561: PR #534 で observed — GitHub 側の不整合で forbidden-patterns が
+# status:in_progress のまま conclusion:success を持っていた（completed_at も入っていた）。
+# `gh pr checks` の bucket は status から作られるので pending のまま。
+# conclusion が付いていれば status に関わらず完了として扱うこと。
+t_merge_in_progress_with_success_conclusion_is_treated_as_done() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      echo '{"check_runs":[
+        {"name":"gitleaks","status":"completed","conclusion":"success","started_at":"t1"},
+        {"name":"forbidden-patterns","status":"in_progress","conclusion":"success","started_at":"t1"},
+        {"name":"audit","status":"completed","conclusion":"success","started_at":"t1"}
+      ]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "conclusion が付いていれば status:in_progress でも完了扱いしてマージする: $ERR"
+  assert_contains "$LOG" $'pr\tmerge\t12' "merged instead of polling forever"
+}
+test_case "merge: status:in_progress でも conclusion:success なら完了扱いする（#561）" t_merge_in_progress_with_success_conclusion_is_treated_as_done
+
+# conclusion が null（本当にまだ実行中）なら、status に関わらず引き続き pending として待つ。
+# 完了扱いを緩めすぎていないことの裏返しの確認（#561）。
+t_merge_null_conclusion_still_pending() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      if [ "$(bump)" -lt 2 ]; then
+        echo '{"check_runs":[{"name":"docker-web","status":"in_progress","conclusion":null,"started_at":"t1"}]}'
+      else
+        echo '{"check_runs":[{"name":"docker-web","status":"completed","conclusion":"success","started_at":"t1"}]}'
+      fi ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "exit status: $ERR"
+  assert_eq 2 "$(grep -c 'api	repos/uonoko1/giinrecord/commits/.*/check-runs' <<<"$LOG")" "polled twice: conclusion:null keeps it pending"
+  assert_contains "$LOG" $'pr\tmerge\t12' "merged after the real conclusion appears"
+}
+test_case "merge: conclusion:null は status に関わらず pending のまま（#561）" t_merge_null_conclusion_still_pending
+
+# conclusion:failure（本当の失敗）は status に関わらず失敗として扱い、マージしない。
+# 「conclusion があれば通す」に倒れて偽陽性を出していないことの確認（#561）。
+t_merge_failure_conclusion_aborts_even_if_status_says_in_progress() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      echo '{"check_runs":[{"name":"guard","status":"in_progress","conclusion":"failure","started_at":"t1"}]}' ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "conclusion:failure は status を問わず失敗として止める"
+  assert_contains "$ERR" "guard" "names the failed check"
+  assert_not_contains "$LOG" $'pr\tmerge' "never merges a real failure"
+}
+test_case "merge: conclusion:failure は status に関わらず失敗として止める（#561）" t_merge_failure_conclusion_aborts_even_if_status_says_in_progress
