@@ -73,7 +73,12 @@ import { dirname, resolve } from "node:path";
 //      「うっかり片方だけ」は落ちるが、「決めて両方」は通る。**そう設計してある。**
 //
 //   3) **`assertionSites()` は既存 15 本の書き方に合わせたヒューリスティック**
-//      新しい書き方のテストは数え落とされうる（偽陽性）。そのときの直し方は
+//      **当初「新しい書き方は数え落とされうる（偽陽性）」と書いたが、症状の向きが逆だった**
+//      （#513 の再レビューが実測）。**数え落としていたのは既存 15 本の「行頭の `assert_*`」**で、
+//      **正規表現に `m` が無く `^` がファイル先頭にしか当たっていなかった**（＝**偽陰性**）。
+//      16 本中 11 本で下限が実質効いておらず、**`test_case` を全部コメント化しても
+//      11 本が無言で緑**だった。`gm` に直し、下限を実測値に更新済み（例: `go-live` 20 → 103）。
+//      **新しい書き方で数え落とす可能性は残る**。そのときの直し方は
 //      **`minAssertions` を下げることではない**——下の失敗メッセージに書いてある。
 //      実測（#507 の確認）: `monitor-probe.test.sh` の `test_case` を 40 本コメントアウトし、
 //      **旧メッセージの指示どおり**下限を 49 → 9 に下げると **15 pass / 0 fail**。
@@ -136,7 +141,11 @@ function assertionSites(body: string): number {
     )
     .join("\n");
   const re =
-    /(?:^|[;&|(]|\bthen\b|\belse\b|\bdo\b)\s*(?:test_case|assert_[a-z_]+|ok|bad|fail)\s+["$\w]|PASS=\$\(\(PASS\+1\)\)/g;
+    // **`m` が要る**（#513 の再レビューが実測）。`body` は `.join("\n")` で 1 本の文字列なので、
+    // `m` が無いと `^` は**ファイル全体の先頭 1 回**にしか当たらない。**行頭に書かれた
+    // `assert_*` / `test_case` を 1 つも数えない**——16 本中 11 本で下限が実質効いていなかった
+    // （例: `go-live` 20 → 103、`monitor-probe` 49 → 173）。
+    /(?:^|[;&|(]|\bthen\b|\belse\b|\bdo\b)\s*(?:test_case|assert_[a-z_]+|ok|bad|fail)\s+["$\w]|PASS=\$\(\(PASS\+1\)\)/gm;
   return [...withoutDefs.matchAll(re)].length;
 }
 
@@ -164,7 +173,7 @@ const INVENTORY: { file: string; anchors: string[]; minAssertions: number }[] =
         "allow_force_pushes",
         "branch-protection.sh",
       ],
-      minAssertions: 18,
+      minAssertions: 58,
     },
     {
       // #540 / #546: 「保護設定を読めない」と「弱まっている」を分ける判定。#546 のレビューが
@@ -176,7 +185,7 @@ const INVENTORY: { file: string; anchors: string[]; minAssertions: number }[] =
         "保護設定を読めない",
         "report.sh",
       ],
-      minAssertions: 15,
+      minAssertions: 28,
     },
     {
       file: "apply-all.test.sh",
@@ -186,24 +195,24 @@ const INVENTORY: { file: string; anchors: string[]; minAssertions: number }[] =
     {
       file: "cloudflare-allowlist.test.sh",
       anchors: ["cloudflare-allowlist.sh", "nginx -t failed"],
-      minAssertions: 26,
+      minAssertions: 62,
     },
-    { file: "go-live.test.sh", anchors: ["go-live.sh"], minAssertions: 20 },
+    { file: "go-live.test.sh", anchors: ["go-live.sh"], minAssertions: 103 },
     {
       file: "logrotate.test.sh",
       anchors: ["logrotate.conf", "monitor/setup.sh"],
-      minAssertions: 8,
+      minAssertions: 42,
     },
     {
       file: "monitor-health.test.sh",
       anchors: ["monitor/health.sh"],
-      minAssertions: 13,
+      minAssertions: 65,
     },
-    { file: "monitor-probe.test.sh", anchors: ["probe.sh"], minAssertions: 49 },
+    { file: "monitor-probe.test.sh", anchors: ["probe.sh"], minAssertions: 173 },
     {
       file: "monitor-setup.test.sh",
       anchors: ["monitor/setup.sh"],
-      minAssertions: 8,
+      minAssertions: 37,
     },
     {
       file: "nginx-404.test.sh",
@@ -228,7 +237,7 @@ const INVENTORY: { file: string; anchors: string[]; minAssertions: number }[] =
     {
       file: "nginx-reload.test.sh",
       anchors: ["vps-setup.sh", "nginx -t failed"],
-      minAssertions: 2,
+      minAssertions: 17,
     },
     {
       file: "ops-user-setup.test.sh",
@@ -243,9 +252,9 @@ const INVENTORY: { file: string; anchors: string[]; minAssertions: number }[] =
     {
       file: "staging-setup.test.sh",
       anchors: ["staging-setup.sh"],
-      minAssertions: 15,
+      minAssertions: 58,
     },
-    { file: "vps-setup.test.sh", anchors: ["vps-setup.sh"], minAssertions: 30 },
+    { file: "vps-setup.test.sh", anchors: ["vps-setup.sh"], minAssertions: 124 },
   ];
 
 /**
@@ -291,7 +300,7 @@ const INVENTORY_PINNED: Record<
       "allow_force_pushes",
       "branch-protection.sh",
     ],
-    minAssertions: 18,
+    minAssertions: 58,
   },
   "branch-protection-report.test.sh": {
     anchors: [
@@ -299,7 +308,7 @@ const INVENTORY_PINNED: Record<
       "保護設定を読めない",
       "report.sh",
     ],
-    minAssertions: 15,
+    minAssertions: 28,
   },
   "apply-all.test.sh": {
     anchors: ["apply-all.sh", "allowlist", "8083"],
@@ -307,19 +316,19 @@ const INVENTORY_PINNED: Record<
   },
   "cloudflare-allowlist.test.sh": {
     anchors: ["cloudflare-allowlist.sh", "nginx -t failed"],
-    minAssertions: 26,
+    minAssertions: 62,
   },
-  "go-live.test.sh": { anchors: ["go-live.sh"], minAssertions: 20 },
+  "go-live.test.sh": { anchors: ["go-live.sh"], minAssertions: 103 },
   "logrotate.test.sh": {
     anchors: ["logrotate.conf", "monitor/setup.sh"],
-    minAssertions: 8,
+    minAssertions: 42,
   },
   "monitor-health.test.sh": {
     anchors: ["monitor/health.sh"],
-    minAssertions: 13,
+    minAssertions: 65,
   },
-  "monitor-probe.test.sh": { anchors: ["probe.sh"], minAssertions: 49 },
-  "monitor-setup.test.sh": { anchors: ["monitor/setup.sh"], minAssertions: 8 },
+  "monitor-probe.test.sh": { anchors: ["probe.sh"], minAssertions: 173 },
+  "monitor-setup.test.sh": { anchors: ["monitor/setup.sh"], minAssertions: 37 },
   "nginx-404.test.sh": {
     anchors: ["nginx/site.conf", "__spa-fallback.html", "docker"],
     minAssertions: 4,
@@ -339,15 +348,15 @@ const INVENTORY_PINNED: Record<
   },
   "nginx-reload.test.sh": {
     anchors: ["vps-setup.sh", "nginx -t failed"],
-    minAssertions: 2,
+    minAssertions: 17,
   },
   "ops-user-setup.test.sh": {
     anchors: ["ops-user-setup.sh", "NOPASSWD", "visudo"],
     minAssertions: 69,
   },
   "run-remote.test.sh": { anchors: ["run-remote.sh"], minAssertions: 22 },
-  "staging-setup.test.sh": { anchors: ["staging-setup.sh"], minAssertions: 15 },
-  "vps-setup.test.sh": { anchors: ["vps-setup.sh"], minAssertions: 30 },
+  "staging-setup.test.sh": { anchors: ["staging-setup.sh"], minAssertions: 58 },
+  "vps-setup.test.sh": { anchors: ["vps-setup.sh"], minAssertions: 124 },
 };
 
 test("#513 経路1: 検査器の allowlist（GATES・anchors・assertion の下限）そのものを固定する", () => {
