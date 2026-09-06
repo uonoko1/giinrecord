@@ -313,7 +313,7 @@ t_no_secret_in_output() {
   # look like a credential. The prefix and the body are concatenated at run time, so the file contains neither.
   local prefix shape body
   body="0123456789abcdefghij0123456789abcdefghij"
-  for prefix in ghp_ gho_ ghs_ ghr_ github_pat_ some_future_prefix_; do
+  for prefix in ghp_ gho_ ghu_ ghs_ ghr_ github_pat_ some_future_prefix_; do
     shape="${prefix}${body}"
     fresh "nosecret_${prefix}"
     H_GH_EXIT=1 H_GH_STDERR="gh: Bad credentials — Authorization: Bearer $shape (HTTP 401)" \
@@ -342,7 +342,7 @@ test_case "保護そのものが無い（API 404）なら落ちる"        t_no_
 test_case "読めなかったときは exit 2（弱いとは言わない）"    t_unreadable_is_exit_2
 test_case "設定が弱いときは exit 1"                       t_weak_is_exit_1
 test_case "失敗の理由は stderr に出る（stdout には出ない）"  t_reason_on_stderr_not_stdout
-test_case "トークンを出力に出さない（6形式）"              t_no_secret_in_output
+test_case "トークンを出力に出さない（7形式）"              t_no_secret_in_output
 
 echo "-- $PASS passed, $FAIL failed"
 [[ $FAIL == 0 ]]
