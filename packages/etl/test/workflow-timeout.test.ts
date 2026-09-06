@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync, writeFileSync, rmSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 
@@ -46,8 +46,14 @@ function stripComment(line: string): string {
  * 依存を足さずに済ませるための割り切りだが、**取りこぼしたら分かる**ように
  * 下の「数え上げそのものの検査」で件数と名前を固定してある（#500: 入口を固定する）。
  */
-function jobsOf(file: string): Job[] {
-  const text = readFileSync(resolve(wfDir, file), "utf8");
+/**
+ * job 名の 1 行にマッチする。GitHub の job ID 規則（英数字・`-`・`_`、先頭は英字か `_`）は
+ * クォートしても変わらない値なので、クォート無し／ダブルクォート／シングルクォートの
+ * 3 通りを同じ ID 規則で受け止める（#574: クォートを付けるだけで数え上げをすり抜けていた）。
+ */
+const HEAD_LINE = /^(?:"([A-Za-z_][A-Za-z0-9_-]*)"|'([A-Za-z_][A-Za-z0-9_-]*)'|([A-Za-z_][A-Za-z0-9_-]*)):\s*$/;
+
+function jobsOfText(text: string, file: string): Job[] {
   const lines = text.split("\n").map(stripComment);
   const start = lines.findIndex((l) => /^jobs:\s*$/.test(l));
   assert.ok(start >= 0, `${file}: トップレベルの jobs: が見つからない`);
@@ -63,7 +69,10 @@ function jobsOf(file: string): Job[] {
   const indentOf = (l: string) => l.length - l.trimStart().length;
   const depth = Math.min(...body.map((b) => indentOf(b.line)));
 
-  const heads = body.filter((b) => indentOf(b.line) === depth && /^[A-Za-z0-9_-]+:\s*$/.test(b.line.trim()));
+  const heads = body
+    .filter((b) => indentOf(b.line) === depth)
+    .map((b) => ({ ...b, m: b.line.trim().match(HEAD_LINE) }))
+    .filter((b): b is typeof b & { m: RegExpMatchArray } => b.m !== null);
   return heads.map((h, n) => {
     const end = n + 1 < heads.length ? heads[n + 1].i : lines.length;
     const own = lines.slice(h.i + 1, end).filter((l) => l.trim() !== "" && indentOf(l) > depth);
@@ -73,19 +82,91 @@ function jobsOf(file: string): Job[] {
     const timeoutLine = direct.find((l) => /^\s*timeout-minutes:/.test(l));
     return {
       file,
-      name: h.line.trim().replace(/:$/, ""),
+      name: h.m[1] ?? h.m[2] ?? h.m[3],
       kind: direct.some((l) => /^\s*uses:/.test(l)) ? "uses" : "runs-on",
       timeout: timeoutLine ? Number(timeoutLine.split(":")[1].trim()) : undefined,
     };
   });
 }
 
-const allJobs = readdirSync(wfDir)
-  .filter((f) => f.endsWith(".yml"))
-  .sort()
-  .flatMap(jobsOf);
+function jobsOf(file: string): Job[] {
+  return jobsOfText(readFileSync(resolve(wfDir, file), "utf8"), file);
+}
+
+/** GitHub は `.yml` と `.yaml` の両方を実行する。`.yml` だけ見ると .yaml のワークフローが丸ごと不可視になる（#574）。 */
+function listAllJobs(): Job[] {
+  return readdirSync(wfDir)
+    .filter((f) => f.endsWith(".yml") || f.endsWith(".yaml"))
+    .sort()
+    .flatMap(jobsOf);
+}
+
+const allJobs = listAllJobs();
 
 const id = (j: Job) => `${j.file}:${j.name}`;
+
+/**
+ * #574: 引用符付きの job 名（`"deploy":` / `'deploy':`）が数え上げをすり抜けていた。
+ * YAML としては `deploy:` と同じ job ID だが、パーサの正規表現 `/^[A-Za-z0-9_-]+:\s*$/` は
+ * クォート文字を弾いて素通りしていた（timeout-minutes が無くても検出されない）。
+ */
+test("#574 引用符付きの job 名（ダブルクォート）でも job として拾える", () => {
+  const yaml = ["jobs:", '  "quoted":', "    runs-on: ubuntu-latest", "    steps:", "      - run: echo hi"].join("\n");
+  const jobs = jobsOfText(yaml, "probe.yml");
+  assert.deepEqual(
+    jobs.map((j) => j.name),
+    ["quoted"],
+  );
+});
+
+test("#574 引用符付きの job 名（シングルクォート）でも job として拾える", () => {
+  const yaml = ["jobs:", "  'quoted':", "    runs-on: ubuntu-latest", "    steps:", "      - run: echo hi"].join("\n");
+  const jobs = jobsOfText(yaml, "probe.yml");
+  assert.deepEqual(
+    jobs.map((j) => j.name),
+    ["quoted"],
+  );
+});
+
+test("#574 引用符付きの job 名で timeout-minutes が無ければ検出できる", () => {
+  const yaml = ["jobs:", '  "quoted":', "    runs-on: ubuntu-latest", "    steps:", "      - run: echo hi"].join("\n");
+  const jobs = jobsOfText(yaml, "probe.yml");
+  const naked = jobs.filter((j) => j.kind === "runs-on" && j.timeout === undefined);
+  assert.deepEqual(naked.map(id), ["probe.yml:quoted"]);
+});
+
+/**
+ * #574: readdirSync のフィルタが .yml だけを見ていたため、.yaml のワークフローが
+ * allJobs から丸ごと不可視だった。
+ *
+ * fixture 文字列に対するテスト（jobsOfText）だけでは、readdirSync のフィルタ行を壊しても
+ * このリポジトリに実際の .yaml ファイルが無いため検出できない（実際に変異させて確かめた:
+ * `.filter((f) => f.endsWith(".yml") || f.endsWith(".yaml"))` を
+ * `.filter((f) => f.endsWith(".yml"))` に戻す変異は、fixture テストだけでは 10/10 緑のまま
+ * 通ってしまう＝等価変異になる）。
+ * そこで、実際に .github/workflows に .yaml ファイルを一時的に置き、
+ * allJobs の実行結果（readdirSync を経由した本物のパス）で見えることを確認する。
+ * 確実に後始末するため try/finally で削除する。
+ */
+test("#574 .yaml 拡張子のワークフローも allJobs（readdirSync 経由）から見える", () => {
+  const probeName = "probe-574-yaml-visibility.yaml";
+  const probePath = resolve(wfDir, probeName);
+  const probeYaml = ["jobs:", "  probejob:", "    runs-on: ubuntu-latest", "    timeout-minutes: 5", "    steps:", "      - run: echo hi", ""].join(
+    "\n",
+  );
+  writeFileSync(probePath, probeYaml, "utf8");
+  try {
+    // モジュール読み込み時に評価済みの allJobs ではなく、実装本体の listAllJobs() を
+    // ここで再実行する（実装が使う関数そのものを呼ぶことで、フィルタ行の変異を確実に拾う）。
+    const jobs = listAllJobs();
+    assert.ok(
+      jobs.some((j) => j.file === probeName && j.name === "probejob"),
+      ".yaml ワークフローの job が数え上げに現れない",
+    );
+  } finally {
+    rmSync(probePath, { force: true });
+  }
+});
 
 /**
  * 数え上げそのものの検査（#500: 入口を固定しないと、本体が痩せても誰も気づかない）。
