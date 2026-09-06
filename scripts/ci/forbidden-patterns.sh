@@ -94,14 +94,20 @@ report env-file "$ENV_FILES"
 # This is a denylist, so it is not a proof that nothing destructive gets through — see 塞げていない形 in the
 # comment below the regex. It raises the cost of writing one by hand, which is what makes it visible in review.
 GIT_FILES=$(printf '%s\n' "$FILES" | grep -E '^(scripts|deploy|\.github)/' || true)
-# OPT = one option word that may sit between the subcommand and its target (`--quiet`, `-d`, `--source=HEAD`…).
-OPT='(-[A-Za-z-][^[:space:]]*[[:space:]]+)'
+# MID = whatever may sit between the subcommand and the force flag, so the flag does not have to come first.
+# It must cover plain words as well as options: `git checkout mybranch -f` and `git clean untracked.txt -f` are
+# destructive too (実測: both lose uncommitted work). `| ; & ( ) < > #` are excluded so the match cannot run past
+# the end of one command into the next, nor into a trailing comment — without the `#`, a legitimate
+# `git checkout main  # -f は使わない` was reported (実測). Deliberately NOT a repeated group: GNU grep's ERE
+# fails to match `git clean -f` when a `+`-quantified group is itself starred (実測), which silently un-blocks
+# the very form the rule was written for.
+MID='[^|;&()<>#]*'
 DESTRUCTIVE_GIT_RE="(^|[^#[:alnum:]_-])git +(\
-checkout +$OPT*(-f|--force)([[:space:]]|$)|\
+checkout +$MID(-f|--force)([[:space:]]|$)|\
 checkout +(-- +)?\\.([[:space:]]|$)|\
 restore([[:space:]]+(--help|-h)([[:space:]]|$)|[[:space:]]|$)|\
 reset +--hard|\
-clean +$OPT*(-[A-Za-z]*f[A-Za-z]*|--force)([[:space:]]|$)|\
+clean +$MID(-[A-Za-z]*f[A-Za-z]*|--force)([[:space:]]|$)|\
 stash([[:space:]]|$))"
 # `restore` above matches every invocation and then the `--help` / `-h` form is dropped again below: unlike
 # checkout, there is no safe target for restore (`git restore <path>` overwrites that path from the index — 実測).
