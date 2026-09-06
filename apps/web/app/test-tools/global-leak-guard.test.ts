@@ -26,7 +26,7 @@ describe("グローバルの見張りの allowlist", () => {
 
 /** 何も持っていない基準。ここから 1 つずつ足して、見張りが名指しするか見る。 */
 function emptySnapshot(): GlobalSnapshot {
-  return { globals: new Set(), docAttrs: new Set(), bodyHtml: "", headHtml: "", local: new Set(), session: new Set(), userAgent: "jsdom" };
+  return { globals: new Set(), docAttrs: new Set(), bodyShape: "", headShape: "", local: new Set(), session: new Set(), userAgent: "jsdom" };
 }
 
 function withChange(change: (s: GlobalSnapshot) => void): GlobalSnapshot {
@@ -44,8 +44,8 @@ describe("見張りは漏れの形を1つずつ名指しする", () => {
   const cases: readonly [name: string, after: GlobalSnapshot, expectedSubstring: string][] = [
     ["globalThis に残す", withChange((s) => s.globals.add("__giinrecordInstallPrompt")), "globalThis.__giinrecordInstallPrompt が残っている"],
     ["<html> の属性に残す", withChange((s) => s.docAttrs.add("data-theme=dark")), "<html> の属性 data-theme=dark が残っている"],
-    ["document.body に残す", withChange((s) => (s.bodyHtml = "<div class=\"member-tabgroup\"></div>")), "document.body の中身が変わった"],
-    ["document.head に残す", withChange((s) => (s.headHtml = "<style>a{}</style>")), "document.head の中身が変わった"],
+    ["document.body に残す", withChange((s) => (s.bodyShape = "1 要素: div.member-tabgroup")), "document.body の中身が変わった"],
+    ["document.head に残す", withChange((s) => (s.headShape = "1 要素: style")), "document.head の中身が変わった"],
     ["localStorage に残す", withChange((s) => s.local.add("seiji-kiroku:theme")), 'localStorage["seiji-kiroku:theme"] が残っている'],
     ["sessionStorage に残す", withChange((s) => s.session.add("x")), 'sessionStorage["x"] が残っている'],
     ["navigator.userAgent を戻さない", withChange((s) => (s.userAgent = "Mozilla/5.0 (Linux; Android 14) Chrome/128")), "navigator.userAgent が変わったままになっている"],

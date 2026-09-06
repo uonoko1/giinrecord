@@ -34,14 +34,37 @@ export const ALLOWED_DOC_ATTRS: readonly string[] = [];
 export type GlobalSnapshot = {
   globals: Set<string>;
   docAttrs: Set<string>;
-  bodyHtml: string;
-  headHtml: string;
+  /**
+   * `document.body` / `head` の「姿」。**innerHTML の全文は持たない。**
+   *
+   * 全文を撮ると、大きい一覧を描くテストで**1 テストあたり 85ms** かかった（実測。
+   * 96KB の DOM で `body.innerHTML` の文字列化だけが 41.3ms を占め、他は全部足して 1ms 未満）。
+   * `members.test.tsx` は 59 テストあり、既に 20000ms の上限に近いところで走っている。
+   * **見張りが上限を押し上げてしまっては本末転倒**なので、
+   * **子要素の数と、直下の子の形（タグ・class・id）だけ**を撮る。
+   */
+  bodyShape: string;
+  headShape: string;
   local: Set<string>;
   session: Set<string>;
   userAgent: string;
 };
 
 const hasDom = (): boolean => typeof document !== "undefined";
+
+/**
+ * 要素の「姿」——直下の子の**数**と、**それぞれのタグ・class・id**。
+ *
+ * `innerHTML` の全文は使わない（上の `bodyShape` のコメント参照）。
+ * 中身の文字が変わっただけでは鳴らないが、**残った要素は必ず数に出る**ので、
+ * 「後始末をしていない」は捕まえられる。**テキストだけを書き換えて残す**形は
+ * 見逃すが、それはテスト間の順序依存を作らない（次のファイルは自分で描き直す）。
+ */
+function shapeOf(el: HTMLElement | null): string {
+  if (!el) return "";
+  const kids = Array.from(el.children).map((c) => `${c.tagName.toLowerCase()}${c.id ? `#${c.id}` : ""}${c.className ? `.${String(c.className).trim().split(/\s+/).join(".")}` : ""}`);
+  return kids.length === 0 ? "" : `${kids.length} 要素: ${kids.slice(0, 8).join(", ")}`;
+}
 
 function storageKeys(s: Storage | undefined): Set<string> {
   if (!s) return new Set();
@@ -55,13 +78,13 @@ function storageKeys(s: Storage | undefined): Set<string> {
 /** いまのグローバルの姿を撮る。**空を返さない**（撮れなかったら撮れなかったと分かる形にする）。 */
 export function snapshotGlobals(): GlobalSnapshot {
   if (!hasDom()) {
-    return { globals: new Set(Object.getOwnPropertyNames(globalThis)), docAttrs: new Set(), bodyHtml: "", headHtml: "", local: new Set(), session: new Set(), userAgent: "" };
+    return { globals: new Set(Object.getOwnPropertyNames(globalThis)), docAttrs: new Set(), bodyShape: "", headShape: "", local: new Set(), session: new Set(), userAgent: "" };
   }
   return {
     globals: new Set(Object.getOwnPropertyNames(globalThis)),
     docAttrs: new Set(Array.from(document.documentElement.attributes).map((a) => `${a.name}=${a.value}`)),
-    bodyHtml: document.body.innerHTML,
-    headHtml: document.head.innerHTML,
+    bodyShape: shapeOf(document.body),
+    headShape: shapeOf(document.head),
     local: storageKeys(typeof localStorage === "undefined" ? undefined : localStorage),
     session: storageKeys(typeof sessionStorage === "undefined" ? undefined : sessionStorage),
     userAgent: typeof navigator === "undefined" ? "" : navigator.userAgent,
@@ -90,8 +113,8 @@ export function describeLeaks(before: GlobalSnapshot, after: GlobalSnapshot): st
   const removedAttrs = [...before.docAttrs].filter((a) => !after.docAttrs.has(a) && !ALLOWED_DOC_ATTRS.includes(a));
   for (const a of removedAttrs.sort()) leaks.push(`<html> の属性 ${a} が消えた（前のテストが漏らしたものを消した可能性がある）`);
 
-  if (before.bodyHtml !== after.bodyHtml) leaks.push(`document.body の中身が変わった（${before.bodyHtml.length} 文字 → ${after.bodyHtml.length} 文字）: ${after.bodyHtml.slice(0, 120)}`);
-  if (before.headHtml !== after.headHtml) leaks.push(`document.head の中身が変わった（${before.headHtml.length} 文字 → ${after.headHtml.length} 文字）: ${after.headHtml.slice(0, 120)}`);
+  if (before.bodyShape !== after.bodyShape) leaks.push(`document.body の中身が変わった（${before.bodyShape || "空"} → ${after.bodyShape || "空"}）`);
+  if (before.headShape !== after.headShape) leaks.push(`document.head の中身が変わった（${before.headShape || "空"} → ${after.headShape || "空"}）`);
 
   for (const [name, b, a] of [
     ["localStorage", before.local, after.local],
