@@ -182,6 +182,21 @@ apply_pairs() {
     files+=("$f"); exprs+=("$2"); shift 2
   done
 
+  # 同じ解決済みパスが2回来たら、当てる前に拒否する（#577）。
+  # 2回目の `cp -p -- "$f" "$f$SV_EXT"` は「元のファイル」ではなく「1回目の変異で
+  # 書き換えた後のファイル」を退避として上書きしてしまう。戻すとその変異済みの
+  # 中身が書き戻り、しかも find_saves は退避を1つも見つけられない（1回しか
+  # 作られておらず、それも消費済みなので）ため status も気づけない。
+  # 1ファイルに複数の変異をかけたいときは --expr を "s/A/X/; s/B/Y/" と連結するのが
+  # 正しい使い方なので、ここで一度に受け付けるのは1ファイルにつき1回に限る。
+  local dup_i dup_j
+  for ((dup_i = 0; dup_i < ${#files[@]}; dup_i++)); do
+    for ((dup_j = dup_i + 1; dup_j < ${#files[@]}; dup_j++)); do
+      [[ ${files[$dup_i]} != "${files[$dup_j]}" ]] || \
+        die "同じファイルを1回の呼び出しで2回渡すことはできない（${files[$dup_i]#"$(root)"/}）。1ファイルに複数の変異をかけたいときは --expr を 's/A/X/; s/B/Y/' のように連結すること"
+    done
+  done
+
   local -a done_files=()
   local i f e before after
   for i in "${!files[@]}"; do
