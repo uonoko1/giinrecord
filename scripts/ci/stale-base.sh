@@ -41,7 +41,51 @@
 #   `grep -c '^-[^-]'` says 0). File contents are read with `git show`; no diff text is parsed.
 set -euo pipefail
 
-usage() { echo "usage: $0 [<base-ref>] [<head-ref>]" >&2; exit 2; }
+usage() {
+  echo "usage: $0 [<base-ref>] [<head-ref>]" >&2
+  echo "       $0 --verify <lines-file> [<head-ref>]" >&2
+  exit 2
+}
+
+# --verify <file> [<head-ref>] — every `<path>\t<line>` in <file> must still be in <head-ref>.
+# This is the mode the failure message points at, and it is the only one that means anything after a
+# rebase. The default mode asks "what did the base gain since the merge-base"; a rebase moves the
+# merge-base to the base tip, so that question answers "nothing" — measured: `git rebase -X theirs`
+# and a hand resolution that overwrites the file with the branch's version both delete all 12 of the
+# base's lines and both make the default mode print `ok`.
+# --verify does not ask where the merge-base is. It asks whether these exact lines are there.
+if [[ ${1:-} == --verify ]]; then
+  [[ $# -ge 2 && $# -le 3 ]] || usage
+  LINES_FILE=$2
+  [[ -r $LINES_FILE ]] || { echo "stale-base: 読めません: $LINES_FILE" >&2; exit 2; }
+  VERIFY_HEAD=$(git rev-parse --verify --quiet "${3:-HEAD}^{commit}") || {
+    echo "stale-base: ref を解決できません: ${3:-HEAD}" >&2; exit 2; }
+  VTMP=$(mktemp -d); trap 'rm -rf "$VTMP"' EXIT
+  missing=0; total=0; vprev=""
+  while IFS=$'\t' read -r vpath vline; do
+    [[ -n "$vpath" ]] || continue
+    total=$((total + 1))
+    # The blob goes to a file first. `git show … | grep -q` looks right and is wrong: `grep -q` exits at
+    # the first match, `git show` takes SIGPIPE, and under `set -o pipefail` the pipeline reports 141 —
+    # so **every line that IS present reads as missing**. Measured: 12 present lines, 12 reported missing.
+    if [[ $vpath != "$vprev" ]]; then
+      vprev=$vpath
+      git show "$VERIFY_HEAD:$vpath" > "$VTMP/blob" 2>/dev/null || : > "$VTMP/blob"
+    fi
+    if ! LC_ALL=C grep -qxF -- "$vline" "$VTMP/blob"; then
+      missing=$((missing + 1))
+      echo "  無い: $vpath | $vline" >&2
+    fi
+  done < "$LINES_FILE"
+  if [[ $missing -gt 0 ]]; then
+    echo "stale-base --verify: $total 行のうち $missing 行が ${3:-HEAD} にありません。" >&2
+    echo "  rebase の衝突を自分の側で片付けたときに、これが起きます。両方の追記を残してください。" >&2
+    exit 1
+  fi
+  echo "stale-base --verify: $total 行すべて ${3:-HEAD} にあります"
+  exit 0
+fi
+
 [[ $# -le 2 ]] || usage
 BASE=${1:-origin/main}
 HEAD_REF=${2:-HEAD}
@@ -117,6 +161,15 @@ WOULD_LOSE=0      # the merge itself drops them
 DIFF_DELETES=0    # the merge keeps them, but the PR diff shows them as deletions
 REPORT="$TMP/report"
 : > "$REPORT"
+# Where the at-risk lines are written, so the rebase can be checked against them afterwards. Overridable
+# only so the tests can read it; the default is a fixed path, not a temp dir, because the message names it.
+# Written to a scratch file first and only moved into place when there is something to say. Truncating it
+# up front destroys the evidence: the message tells you to rebase and re-run, and a re-run that now finds
+# nothing (which is exactly the case worth catching — the merge-base moved) would empty the list it is
+# about to be checked against. Measured: it turned `--verify` into "0 行すべてあります".
+LINES_OUT=${STALE_BASE_LINES_OUT:-.git/stale-base-lines.tsv}
+LINES_TMP="$TMP/lines.tsv"
+: > "$LINES_TMP"
 for path in "${CANDIDATES[@]}"; do
   [[ -n "$path" ]] || continue
   multiset "$BASE_SHA"   "$path" > "$TMP/b"
@@ -138,13 +191,23 @@ for path in "${CANDIDATES[@]}"; do
     cut -f2- < "$TMP/lost" | head -20 | sed 's/^/    | /'
     [[ $n -le 20 ]] || echo "    | …ほか $((n - 20)) 行"
   } >> "$REPORT"
+  # Every at-risk line, as `<path><TAB><line>`, for --verify to re-check after the rebase.
+  cut -f2- < "$TMP/lost" | sed "s|^|$path\t|" >> "$LINES_TMP"
 done
 
 TOTAL=$((WOULD_LOSE + DIFF_DELETES))
 if [[ $TOTAL -eq 0 ]]; then
   echo "stale-base: ok — $BASE が ${MERGE_BASE:0:8} 以降に足した行は、すべてこの枝にあります"
+  if [[ -s $LINES_OUT ]]; then
+    echo "  前回この検査が挙げた行が $LINES_OUT に残っています。**これで ok とせず**、次を実行してください:"
+    echo "    bash $0 --verify $LINES_OUT"
+    echo "  （rebase は共通の祖先を動かすので、この検査は行が消えていても ok と言います）"
+  fi
   exit 0
 fi
+
+mkdir -p "$(dirname "$LINES_OUT")"
+cp "$LINES_TMP" "$LINES_OUT"
 
 cat >&2 <<MSG
 stale-base: $BASE がこの枝を切ったあとに足した行 $TOTAL 行が、この枝にありません。
@@ -158,12 +221,16 @@ $(cat "$REPORT")
 これらは枝を切った後に $BASE に入った行なので、消す判断は誰もしていません。土台が古いだけです。
 
   git fetch origin
-  git rebase origin/main
+  git rebase origin/main        # 衝突したら、両方の追記を残す形で解決する
 
-**衝突を「自分の側を採る」で片付けると、上の行はそのまま消えます。両方の追記を残してください。**
-rebase のあと、上の行が戻ったことをこの検査で確かめてください:
+そのあと、**上の行が本当に残ったか**をこう確かめてください:
 
-  bash scripts/ci/stale-base.sh
+  bash scripts/ci/stale-base.sh --verify $LINES_OUT
+
+**この2つ目のコマンドを飛ばさないこと。** rebase は共通の祖先を $BASE の先端まで動かすので、
+**上の行を全部消したままでも、1つ目の検査（引数なし）は ok と言います**（実測: rebase -X theirs、
+および衝突を枝の版で上書きする解決で、12 行すべて消えているのに ok）。
+**--verify だけが、行そのものを見ています。**
 
 消してよい行だと本当に判断したのなら、その理由を PR 本文に書いてください。
 **この検査を外す・対象から除く・行を書き戻さずに黙らせる、のいずれもしないこと。**
