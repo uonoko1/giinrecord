@@ -61,6 +61,37 @@ export function parseGoogleFontsCss(css: string): FontFace[] {
   return faces;
 }
 
+/**
+ * `renderFontsCss` が書いた `public/fonts/fonts.css` を読み戻す（#477）。
+ *
+ * `parseGoogleFontsCss` は使えない。あちらは `src` が **Google の絶対 URL** である前提で
+ * `.N.woff2` から slice を取るが、こちらのローカル名は `shippori-mincho-700.0.woff2` のように
+ * **family と weight も入っている**。ここではファイル名そのものから 3 つとも読む。
+ *
+ * 明朝 700 をサブセット 1 面に差し替えるときに、**残す 370 面を数え直さずに済ませる**ためにある。
+ * 外部 URL が混ざっていたら投げる（自サイト配信の前提が崩れたことに気づくため、#168）。
+ */
+export function parseFontsCss(css: string): FontFace[] {
+  const faces: FontFace[] = [];
+  for (const m of css.matchAll(FACE_RE)) {
+    const block = m[2] ?? "";
+    const family = prop(block, "font-family")?.replace(/^['"]|['"]$/g, "");
+    const weight = Number(prop(block, "font-weight"));
+    const src = prop(block, "src") ?? "";
+    const url = /url\(([^)]+)\)\s*format\(['"]woff2['"]\)/.exec(src)?.[1];
+    const unicodeRange = prop(block, "unicode-range");
+    if (!family || !Number.isInteger(weight)) throw new Error(`fonts.css: @font-face without font-family / font-weight:\n${block}`);
+    if (!url) throw new Error(`fonts.css: ${family} ${weight}: src is not a woff2 url`);
+    if (/^[a-z]+:/i.test(url) || url.startsWith("//")) throw new Error(`fonts.css: ${url} is not a local file (self-hosted fonts, #168)`);
+    if (!unicodeRange) throw new Error(`fonts.css: ${family} ${weight}: no unicode-range`);
+    const slug = family.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    const slice = new RegExp(`^${slug}-${weight}\\.(.+)\\.woff2$`).exec(url)?.[1];
+    if (!slice) throw new Error(`fonts.css: ${url} does not name ${family} ${weight} (expected ${slug}-${weight}.<slice>.woff2)`);
+    faces.push({ family, weight, slice, unicodeRange, sourceUrl: url });
+  }
+  return faces;
+}
+
 /** `Shippori Mincho` 700 slice 12 -> `shippori-mincho-700.12.woff2` */
 export function sliceFileName(face: Pick<FontFace, "family" | "weight" | "slice">): string {
   const slug = face.family.toLowerCase().replace(/[^a-z0-9]+/g, "-");
