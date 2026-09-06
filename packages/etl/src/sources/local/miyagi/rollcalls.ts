@@ -32,7 +32,7 @@ export function toIsoDate(dateText: string, sessionYear: number, sessionMonth: n
   return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
-const nameKey = (s: string) => s.replace(/[\s　]/g, "");
+export const nameKey = (s: string) => s.replace(/[\s　]/g, "");
 
 export interface SessionInfo {
   /** 会期 index の見出しの原文（「令和7年11月定例会（第398回）」） */

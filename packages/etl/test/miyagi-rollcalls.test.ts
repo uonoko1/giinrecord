@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { parseRoster } from "../src/sources/local/miyagi/roster.ts";
-import { parseVotePdf } from "../src/sources/local/miyagi/votes-pdf.ts";
+import { parseVotePdf, type VotePdf } from "../src/sources/local/miyagi/votes-pdf.ts";
 import { mapLegend, toIsoDate, toLocalRollCalls } from "../src/sources/local/miyagi/rollcalls.ts";
 
 // 表決 PDF の行 → LocalRollCall（Issue #157）。名簿との名寄せは氏名の空白を除いた完全一致だけ（推定しない）。
@@ -83,4 +83,45 @@ test("toLocalRollCalls: 名簿に同じ氏名が 2 人いれば名寄せしな�
   const { rollCalls, unmatched } = toLocalRollCalls(pdf398, dup, { sessionLabel: "令和7年11月定例会（第398回）", pdfUrl: PDF398 });
   assert.equal(rollCalls[0].votes[0].memberId, "");
   assert.ok(unmatched.some((u) => u.nameText === "柚木 貴光"));
+});
+
+// 「名簿と PDF で字が食い違う」実データの見本（#576 の三重・奈良の実例と同型）を
+// 宮城の突合経路（toLocalRollCalls）に通す。宮城の nameKey は空白しか見ないので、
+// 字体そのものが食い違えば必ず unmatched に落ちる（畳まない設計を固定するテスト）。
+// PDF はバイナリなので、パース結果 VotePdf を直接組み立てて toLocalRollCalls に渡す。
+const fakePdf = (nameText: string): VotePdf => ({
+  sessionLabel: "テスト会期",
+  sessionId: "t",
+  sessionYear: 2025,
+  sessionMonth: 11,
+  legend: { votes: { "○": "賛成" }, methods: { 起立: "起立採決" }, groups: {} },
+  members: [{ nameText, groupText: "", group: "" }],
+  rows: [
+    {
+      page: 1,
+      kind: "議案",
+      number: "1",
+      title: "t",
+      dateText: "12/17",
+      counts: { present: 1, voting: 1, yes: 1, no: 0 },
+      methodText: "起立",
+      result: "可決",
+      cells: ["○"],
+    },
+  ],
+  unknownCells: 0,
+});
+
+test("toLocalRollCalls: 名簿は「髙橋 伸二」(U+9AD9)、PDF に三重の実データと同型の IVS 付き表記（髙\\u{E0100}橋 伸二）が来ると、宮城は字体を畳まないので unmatched に落ちる（別人には絶対に紐づかない）", () => {
+  const pdf = fakePdf("髙\u{E0100}橋 伸二");
+  const { rollCalls, unmatched } = toLocalRollCalls(pdf, roster.members, { sessionLabel: "テスト会期", pdfUrl: "https://example.test/x.pdf" });
+  assert.equal(rollCalls[0].votes[0].memberId, "");
+  assert.deepEqual(unmatched.map((u) => u.nameText), ["髙\u{E0100}橋 伸二"]);
+});
+
+test("toLocalRollCalls: 名簿の表記と空白の有無以外は完全に同じ字（IVS 無し）なら、これまでどおり紐づく（回帰）", () => {
+  const pdf = fakePdf("髙橋　伸二");
+  const { rollCalls, unmatched } = toLocalRollCalls(pdf, roster.members, { sessionLabel: "テスト会期", pdfUrl: "https://example.test/x.pdf" });
+  assert.equal(rollCalls[0].votes[0].memberId, "p_04_sinji");
+  assert.deepEqual(unmatched, []);
 });
