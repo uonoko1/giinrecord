@@ -3,7 +3,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { dynamicImports, metaGlobs, reachableFrom, valueImports } from "./value-imports";
+import { dynamicImports, entriesReaching, metaGlobs, reachableFrom, valueImports } from "./value-imports";
 
 /**
  * **tsx で直に走るビルドスクリプトから辿れるモジュールは、`import.meta.glob` に触らない。**
@@ -32,7 +32,27 @@ const entries = readdirSync(scriptsDir)
   .map((name) => path.join(scriptsDir, name))
   .sort();
 
-const reached = reachableFrom(entries);
+/**
+ * 辿り着くモジュールの一覧。**これは「基準」ではなく「表示のための一覧」**（#514）。
+ *
+ * #507 まで、件数一致・顔ぶれ一致・無罪判決の引き直しが**すべてこの変数を基準**にしていた。
+ * だから**この 1 行を絞るだけ**で、全部が痩せた基準に対して整合した:
+ *
+ *     const reached = reachableFrom(entries).filter((r) => !r.file.includes("assemblies"));
+ *
+ * → 本物の違反（`tsx sitemap.ts` が `glob is not a function` で落ちる状態）を植えたまま **6/6 緑**。
+ * **一覧を基準にしている限り、一覧を痩せさせる変異は基準ごと痩せる。**
+ *
+ * そこで判定は `entriesReaching`（**一覧を作らない 2 本目の経路**）に持たせ、
+ * この変数は「一覧が痩せていないか」を**逆に見張られる側**にした（`auditedOffenders` を参照）。
+ *
+ * さらに**一覧の作り方そのものを関数にして、対照でも同じ関数を通す。**
+ * `const reached = reachableFrom(entries).filter(...)` と書くと、対照は素の
+ * `reachableFrom` を呼ぶので絞りを素通りしてしまう。`reachedWith` を経由させれば、
+ * ここに足した述語は**対照にも同じように効く**（＝対照が陰性になって落ちる）。
+ */
+const reachedWith = (readFile?: (f: string) => string): { file: string; via: string[] }[] => reachableFrom(entries, readFile);
+const reached = reachedWith();
 const rel = (file: string): string => path.relative(webRoot, file);
 const trail = (via: string[]): string => via.map(rel).join(" → ");
 
@@ -136,7 +156,105 @@ function auditedOffenders(
     .map((r) => rel(r.file))
     .filter((f) => !accused.has(f))
     .filter((f) => find(readFileSync(path.join(webRoot, f), "utf8"), path.join(webRoot, f)).length > 0);
-  return [...offenders, ...wronglyCleared.map((f) => `${f}（無罪扱いだが、検査器に掛け直すと違反が出る）`)].sort();
+
+  /*
+   * **2 本目の経路（#514）。一覧を経由せず、入口から直に答えを出す。**
+   *
+   * `offenders` / `cleared` / `wronglyCleared` は**どれも `reached` を基準にしている**ので、
+   * `reached` の定義を 1 行絞ると 3 つとも同時に痩せる（実測 6/6 緑）。
+   * `entriesReaching` は**モジュールの一覧を作らない**——入口 1 本ごとに
+   * 「`find` が当たるソースに辿り着いたか」だけを返す。返り値に載るのは**入口の名前**なので、
+   * `assemblies` のようなモジュールパスの述語が引っ掛かる場所が無い。
+   * 探索も `reachableFrom` とは別に書いてある（深さ優先・訪問済み集合も別）ので、
+   * 走査の実装を 1 箇所壊しても両方は黙らない。
+   *
+   * **結果は見張りとして脇に置かず、返す違反者リストに合流させる**（#507 で学んだ形）。
+   * この行を消すと検出そのものが減るので、「見張りだけ消す」ができない。
+   */
+  // **呼び出しは 1 回だけにする。** 2 回呼ぶと、片方だけ絞る変異が書けてしまう
+  const byEntry = entriesReaching(entries, find);
+  const viaEntries = byEntry.map(({ entry, hit, via }) => `${rel(hit)}（入口 ${path.basename(entry)} から辿った道: ${trail(via)}）`);
+
+  /*
+   * **一覧（`reached`）が 2 本目の経路より痩せていないか。**
+   * `entriesReaching` が当てたファイルは、定義どおりなら `reached` にも入っているはず。
+   * 入っていなければ `reached` が絞られている。
+   * この見張りを消しても、上の `viaEntries` が違反者として残るので黙らない。
+   */
+  const hidden = byEntry.map(({ hit }) => rel(hit)).filter((f) => !reached.some((r) => rel(r.file) === f));
+  expect(hidden, "入口から辿ると届くのに、`reached` の一覧に入っていないモジュール（`reached` が絞られています）").toEqual([]);
+
+  /*
+   * **経路まるごとの陽性対照（#514 の要）。**
+   *
+   * ここまでの見張りは 2 本とも「**モジュールのパス**」を答えに載せている。
+   * だから **2 本とも同じ述語で絞れば**（`reached` に 1 行、`entriesReaching` の返り値に 1 行）
+   * **合わせて 2 行・6/6 緑**で通ってしまう（実測）。
+   * 「片方を基準に他方を見張る」形は、**両方を同じ向きに痩せさせる変異には無力**。
+   *
+   * そこで**答えを「見つかった件数」ではなく「見つけられるか」に変える。**
+   * 実ファイルには手を触れず、`readFile` を差し替えて
+   * **`data-files.ts` が glob 持ちを値で再エクスポートする世界**を合成し、
+   * その世界で**この関数と同じ 2 本の経路が違反を挙げるか**を確かめる。
+   *
+   * 経路のどこか（`entries` / 走査 / 判定 / 返り値 / `reached`）に
+   * **`assemblies` を除く述語を 1 つでも足すと、この対照が陰性になって落ちる。**
+   * 絞る側は「本物の違反は隠したいが、対照は通したい」を同時に満たす必要があり、
+   * それには**述語を対照だけ避けるように書く**しかない——それは 1 行では書けず、
+   * レビューで目に見える改変になる。
+   *
+   * **対照は「隠したい当のファイル」を通す。** 合成する違反は、受け入れ条件そのものの 1 行——
+   * `data-files.ts` に `export { isDietAssemblyId } from "./assemblies";` を足した世界で、
+   * `assemblies.ts` が違反として挙がるか。`assemblies` を除く述語は
+   * **本物の違反と対照を区別できない**ので、隠すと同時に対照も陰性にする。
+   *
+   * `find` は呼び出し側から渡ってきたものを使う（対照専用の検査器を持たない）。
+   * `assemblies.ts` は実際に `import.meta.glob` を持つが、動的 import は持たないので、
+   * **`positiveSource` を `assemblies.ts` の中身に混ぜて**、どちらの検査器でも陽性にする。
+   *
+   * **実測（本物の違反を植えた状態。`npx tsx apps/web/scripts/sitemap.ts` が
+   * `glob is not a function` で本当に落ちる状態で測った）:**
+   *
+   *     絞る場所                                             差分   origin/main   この形
+   *     `reached` の定義（Issue の 1 行）                     1 行   **6/6 緑**    2 / 6 落ちる
+   *     `reachedWith`（一覧の作り方）                         1 行   —             5 / 6 落ちる
+   *     `reachableFrom` の走査                                1 行   —             4 / 6 落ちる
+   *     `judge` のループ                                      1 行   —             5 / 6 落ちる
+   *     `judge` の判定式 / `wronglyCleared`                    1 行   —             4 / 6 落ちる
+   *     `entriesReaching` の走査 / 判定                        1 行   —             5 / 6 落ちる
+   *     `entriesReaching` の返り値 / `byEntry`                 1 行   —             4〜5 / 6 落ちる
+   *     `entries`（入口）                                     1 行   —             4 / 6 落ちる
+   *     一覧 + 2 本目の返り値を**両方**（Issue が予告した形）  2 行   **6/6 緑**    3 / 6 落ちる
+   *
+   * 落ちた `it` は**巻き添えではない**: `reached` の定義を絞ったとき落ちるのは
+   * **「辿り着くモジュールは import.meta.glob を式として書いていない」自身**（`it` 単位で確認）。
+   *
+   * **残っている抜け道（塞げていない。隠れては通れない、が原理的には通る）:**
+   * 述語を**対照だけ避けるように書く**——`filter((r) => readFile !== undefined || !r.file.includes("assemblies"))`
+   * のように「差し替えた `readFile` が来たときは絞らない」と書き、2 本目も同じく絞ると
+   * **1 / 6 しか落ちない**（残る 1 件は一覧の増減が捕まえる。実測）。
+   * これは #504 の線引きで言う「**そのレイヤでは塞げない**」側ではなく、
+   * 「**コストが上がったので、そこで止めてよい**」側——`readFile !== undefined ||` は
+   * **何のためにも見えない条件**で、レビューで目に見える。
+   */
+  const controlHit = path.join(webRoot, "app/lib/assemblies.ts");
+  const dataFiles = path.join(webRoot, "app/lib/data-files.ts");
+  const contaminated = (f: string): string => {
+    if (f === dataFiles) return `export { isDietAssemblyId } from "./assemblies";\n${readFileSync(f, "utf8")}`;
+    if (f === controlHit) return `${positiveSource}\n${readFileSync(f, "utf8")}`;
+    return readFileSync(f, "utf8");
+  };
+  expect(
+    entriesReaching(entries, find, contaminated).map(({ hit }) => rel(hit)),
+    "受け入れ条件の 1 行（`data-files.ts` → `assemblies.ts`）を合成した世界で、入口からの走査が違反を見つけられません。" +
+      "`entries` / 走査 / 判定 / 返り値 のどこかが `assemblies` を避けるように絞られています",
+  ).toContain(rel(controlHit));
+  expect(
+    reachedWith(contaminated).map((r) => rel(r.file)),
+    "同じ世界で一覧の作り方（`reachedWith`）が `assemblies.ts` に辿り着きません（`reached` の作り方が絞られています）",
+  ).toContain(rel(controlHit));
+
+  return [...offenders, ...wronglyCleared.map((f) => `${f}（無罪扱いだが、検査器に掛け直すと違反が出る）`), ...viaEntries].sort();
 }
 
 describe("tsx で走るビルドスクリプトから import.meta.glob に繋がらない（#441 / #451 / #490）", () => {
@@ -238,7 +356,9 @@ describe("tsx で走るビルドスクリプトから import.meta.glob に繋が
     const dataFiles = path.join(webRoot, "app/lib/data-files.ts");
     const patched = `export { isDietAssemblyId } from "./assemblies";\n${readFileSync(dataFiles, "utf8")}`;
     const read = (f: string): string => (f === dataFiles ? patched : readFileSync(f, "utf8"));
-    const withBadLine = reachableFrom(entries, read).map((r) => rel(r.file));
+    // **素の `reachableFrom` ではなく `reachedWith` を通す**（#514）。
+    // 素で呼ぶと `reached` の定義に足した絞りを素通りするので、この `it` は絞りに気づかない。
+    const withBadLine = reachedWith(read).map((r) => rel(r.file));
     expect(withBadLine, "この 1 行で assemblies.ts に辿り着くはず（辿り着かないなら走査が効いていない）").toContain("app/lib/assemblies.ts");
     // そのファイルは実際に glob を持つ＝ビルドが落ちる形
     expect(metaGlobs(readFileSync(path.join(webRoot, "app/lib/assemblies.ts"), "utf8"))).not.toEqual([]);
