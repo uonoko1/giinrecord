@@ -17,3 +17,6 @@ packages/etl/.cache/
 # React Router の生成型（ビルドのたびに書き換わる）
 apps/web/.react-router/
 .playwright-mcp/
+# 変異テストの退避ファイル（scripts/dev/mutate.sh, Issue #542）。
+# 異常終了すると残る。残しておかないと復旧できないので消さないが、コミットもしない。
+*.mutate-sv

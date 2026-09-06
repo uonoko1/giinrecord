@@ -232,6 +232,16 @@ t_ci_runs_this_test_file() {
   assert_contains "$line" 'scripts/dev/test/*.test.sh' "ci.yml が scripts/dev/test/*.test.sh を走らせる"
 }
 
+# 退避ファイルは異常終了すると残る。復旧に要るので消さないが、うっかり commit させない。
+t_save_files_are_gitignored() {
+  local top; top=$(cd "$HERE/../../.." && pwd)
+  [[ -f "$top/.gitignore" ]] || { fail ".gitignore が無い"; return 0; }
+  local ignored; ignored=$(cd "$top" && git check-ignore "some/file.ts$(printf '%s' .mutate-sv)" || true)
+  assert_ne "" "$ignored" "*.mutate-sv が .gitignore で無視される"
+  # 検査が空振りしていないこと（何でも無視される設定なら意味が無い）
+  assert_eq "" "$(cd "$top" && git check-ignore some/file.ts || true)" "普通のソースは無視されない"
+}
+
 for t in $(declare -F | awk '{print $3}' | grep '^t_'); do test_case "${t#t_}" "$t"; done
 echo
 echo "passed: $PASS  failed: $FAIL"
