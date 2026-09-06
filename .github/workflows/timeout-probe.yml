@@ -1,6 +1,8 @@
 name: Timeout probe (#556)
 # 使い捨て。#556 の受け入れ条件「無限ループを仕込むと timeout-minutes で止まる」を実機で確かめる。
-on: workflow_dispatch
+on:
+  pull_request:
+    paths: ['.github/workflows/timeout-probe.yml']
 permissions:
   contents: read
 jobs:
