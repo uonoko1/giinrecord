@@ -34,6 +34,21 @@
 #                from a PR that really removes 50 lines, and one rebase resolved the wrong way makes it
 #                real. Both are worth a rebase, so both fail — but they are reported as what they are.
 #
+# ── What this does NOT catch, and why it is a different layer (#504) ────────────────────────────
+#   Once the branch has been rebased, the merge-base IS the base tip, so "what did the base gain since
+#   the merge-base" answers "nothing" — and it answers that whether or not the base's lines are still
+#   there. Measured: `git rebase -X theirs origin/main`, and a hand resolution that overwrites the file
+#   with the branch's version, both delete all 12 of the base's lines and both make the default mode
+#   print `ok`. What is needed to tell those apart (where the branch was cut from) is destroyed by the
+#   rebase — it is not in the refs any more, so no amount of care in this mode recovers it.
+#   That is what `--verify` is for: it is handed the lines and looks for them, and never asks where the
+#   merge-base is. The failure message points at it, and the `ok` message keeps pointing at it for as
+#   long as the file of at-risk lines is lying around — because `ok` is exactly what the default mode
+#   says after a bad rebase.
+#   CI runs the default mode, and sees the PR before it is rebased, which is when the question can still
+#   be answered. A branch rebased badly *before* it is ever pushed is outside what this can see: the
+#   evidence is gone by then. That is the "this layer cannot" kind of gap, not the "could but did not".
+#
 # ── The trap this deliberately avoids ────────────────────────────────────────────────────────────
 #   `git diff | grep -c '^-[^-]'` counts 0 for a deleted line that itself starts with `-`, because the
 #   diff renders it as `^--`. docs/WORKING_AGREEMENT.md is a bullet list, so that command is blind on
