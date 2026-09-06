@@ -74,8 +74,8 @@ if [[ $MERGE_STATUS -gt 1 ]]; then
   cat "$TMP/merge.err" >&2
   exit 2
 fi
-MERGED_TREE=$(head -1 "$TMP/merge")
-# Conflicted paths, as an exact-match set (a substring test would let `docs/a.md` cover `docs/a.md.bak`).
+# Line 1 is the resulting tree oid, which is not needed; lines 2.. are the conflicted paths.
+# Kept as an exact-match set — a substring test would let `docs/a.md` cover `docs/a.md.bak`.
 tail -n +2 "$TMP/merge" > "$TMP/conflicted"
 is_conflicted() { LC_ALL=C grep -qxF -- "$1" "$TMP/conflicted"; }
 
