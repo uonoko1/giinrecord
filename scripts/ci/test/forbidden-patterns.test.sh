@@ -203,6 +203,15 @@ t_legitimate_git_is_not_flagged() {
     assert_eq 0 "$STATUS" "[$form] → pass: $OUT"
   done
 }
+# scripts/ だけでなく deploy/ と .github/ も対象（3 つとも名指しで固定する）
+t_destructive_git_covers_all_three_dirs() {
+  local i=0 f
+  for f in scripts/a.sh deploy/b.sh .github/workflows/c.yml; do
+    i=$((i+1)); repo "d3$i"; add "$f" "$G reset --hard"; run
+    assert_eq 1 "$STATUS" "[$f] → fail: $OUT"
+    assert_contains "$OUT" "$f" "[$f] names the file"
+  done
+}
 # 対象は scripts/ deploy/ .github/ だけ（docs は説明のために書ける）
 t_destructive_git_outside_scripts_is_allowed() {
   repo dgo; add docs/WORKING_AGREEMENT.md "$G reset --hard は未コミットの作業を消す"; run
@@ -233,6 +242,7 @@ test_case "FORBIDDEN_PATTERNS present + required → pass, no warning" t_secret_
 test_case "untracked files are ignored" t_untracked_files_are_ignored
 test_case "data/ is skipped" t_data_dir_is_skipped
 test_case "destructive git in scripts/deploy/.github → fail (#542)" t_destructive_git_in_scripts_fails
+test_case "destructive git: scripts/ deploy/ .github/ all covered (#542)" t_destructive_git_covers_all_three_dirs
 test_case "legitimate git usage is not flagged (#542)" t_legitimate_git_is_not_flagged
 test_case "destructive git outside scripts/ is allowed (#542)" t_destructive_git_outside_scripts_is_allowed
 test_case "destructive git in a comment is allowed (#542)" t_destructive_git_in_comments_is_allowed
