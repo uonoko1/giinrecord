@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import type { Assembly, MemberAssemblyCount } from "@seiji-kiroku/shared";
 import type { AssemblySession } from "../lib/data-contract";
 import type { Dataset } from "../lib/dataset";
@@ -686,9 +686,21 @@ describe("/coverage の loader（本番経路）で議員ページに出てい�
     `${house} の ${key}: data/members/index.json を直に数えると ${rawSum(house, key)} 件。` +
     `この数と食い違うなら実装の退行。実データ側が変わったのなら data/ の更新を確認したうえで、この期待値ではなく **画面の説明文が実態に合っているか** を先に見ること`;
 
-  it("loader が返す件数が、members/index.json を直に数えた値と一致する", async () => {
+  /*
+   * #538: `loader()` は `data/bills`（1,943 ファイル）や `data/rollcalls`（381 ファイル）を
+   * 走査する重い処理（実測 1 回あたり単独で 4.8〜10 秒、load average 75〜89 の環境）。
+   * 3 つの it それぞれが `await loader()` を呼び直していたので、同じ走査を 3 回繰り返していた。
+   * 結果は 3 つの it で共通なので、`beforeAll` で 1 回だけ呼んで使い回す
+   * （このテストは loader の呼び出し回数ではなく、返った値と画面表示を検査している）。
+   */
+  let loaderResult: Awaited<ReturnType<typeof import("./coverage").loader>>;
+  beforeAll(async () => {
     const { loader } = await import("./coverage");
-    const { linked } = await loader();
+    loaderResult = await loader();
+  });
+
+  it("loader が返す件数が、members/index.json を直に数えた値と一致する", () => {
+    const { linked } = loaderResult;
     // **4 項目 × 2 院をまとめて見る。** 1 項目でも取り違えたら落ちる。
     // 差分は vitest が項目ごとに出すので、どの項目がずれたかは失敗出力からそのまま読める
     expect(linked.sangiin, "参議院: loader の件数が data/members/index.json を直に数えた値と違う").toEqual({ rollcalls: rawSum("sangiin", "rollcalls"), bills: rawSum("sangiin", "bills"), speeches: rawSum("sangiin", "speeches"), questions: rawSum("sangiin", "questions") });
@@ -700,9 +712,8 @@ describe("/coverage の loader（本番経路）で議員ページに出てい�
     expect(linked.sangiin?.speeches, `両院の speeches が同じ数になり、house フィルタを外す変異を検出できなくなった。${why("sangiin", "speeches")} / ${why("shugiin", "speeches")}`).not.toBe(linked.shugiin?.speeches);
   });
 
-  it("loader の結果で描くと、画面の可視テキストにその件数がそのまま出る", async () => {
-    const { loader } = await import("./coverage");
-    const { linked, shugiinBillNames } = await loader();
+  it("loader の結果で描くと、画面の可視テキストにその件数がそのまま出る", () => {
+    const { linked, shugiinBillNames } = loaderResult;
     render(
       <MemoryRouter>
         {/* bundled の data / 集計はそのまま（本番と同じ）。linked と議案の氏名だけ loader から渡す */}
@@ -728,9 +739,8 @@ describe("/coverage の loader（本番経路）で議員ページに出てい�
    * #451 の変異はこれを**実際に 42 件あるのに**表示させていた（利用者から検出できない虚偽）。
    * 数字だけでなく**この文の有無**も本番経路で固定する。
    */
-  it("質問主意書が 1 件以上あるかぎり、「照合できたものはありません」とは書かない", async () => {
-    const { loader } = await import("./coverage");
-    const { linked, shugiinBillNames } = await loader();
+  it("質問主意書が 1 件以上あるかぎり、「照合できたものはありません」とは書かない", () => {
+    const { linked, shugiinBillNames } = loaderResult;
     render(
       <MemoryRouter>
         <CoveragePage shugiinBillNames={shugiinBillNames} linked={linked} />
