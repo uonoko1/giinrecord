@@ -59,7 +59,12 @@ tools: Bash, Read, Edit, Write, Grep, Glob
   自分のハーネスにこれらを書いた時点で、**未コミットの作業を消す道具を自分で作っている**。
   `scripts/dev/mutate.sh` を使う。
   **`scripts/` `deploy/` `.github/` の中でこれらを書くと `forbidden-patterns` が CI を落とす**
-  （`destructive-git` 規則。コメントと `git checkout <ref> -- <path>` は通る）
+  （`destructive-git` 規則。`git restore` は #557 で足した——**docs と自己検査は禁じていたのに
+  CI 規則だけが持っておらず、素通りしていた**。`git clean -d -f` のようにフラグが分かれた形と、
+  `git checkout mybranch -f` のように `-f` が先頭に来ない形も塞いだ。
+  コメント・`git checkout <ref> -- <path>`・`git reset --mixed` は通る）
+  **denylist なので「これで全部」ではない**（`g=git; $g restore .` のような形は通る）。
+  塞げていない形は `scripts/ci/forbidden-patterns.sh` の規則の下に列挙してある。
 - 依存の追加（必要なら PR 本文で理由を書いて PO の判断を仰ぐ）
 - 計測せずに「減るはず」「速くなるはず」と書く
 - 「テストが緑」を根拠にする（緑は「壊れていない」の証明にならない）
