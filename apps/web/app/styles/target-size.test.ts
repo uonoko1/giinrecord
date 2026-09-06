@@ -701,10 +701,43 @@ describe("押せる範囲の**大きさ**が 24px 以上（WCAG 2.5.8・Issue 41
    * 例: `.members-check` を 13px → 11px にすると実物 23px だがテストは緑）。
    */
   const fontSizeOf = (css: string, selector: string): number => {
-    const m = declarationsFor(css, selector).match(/font-size:\s*([\d.]+)px/);
-    expect(m, `${selector} の font-size が読めない`).toBeTruthy();
-    return Number(m![1]);
+    const decls = declarationsFor(css, selector);
+    const value = lastValue(decls, "font-size");
+    expect(value, `${selector} の font-size が読めない`).toBeTruthy();
+    const n = px(value!);
+    expect(n, `${selector} の font-size（${value}）が px で読めない`).not.toBeUndefined();
+    return n!;
   };
+
+  /**
+   * **`fontSizeOf` が最初の一致で読んでいた**（Issue 515）。
+   *
+   * `declarationsFor` は同じセレクタに当たる規則を**出現順**（＝カスケードの後勝ちの順）で
+   * 連結して返す（doc コメントを参照）。にもかかわらず、かつての `fontSizeOf` は
+   * `.match()` で**最初に出てきた `font-size` を採用しており、後から書かれた上書きを無視していた**。
+   *
+   * 実測（このテストを書く前に確認した。#515 の受け入れ条件どおり）:
+   *
+   *     `.members-check { font-size: 9px }` をファイル末尾に追記   → 直す前は 33/33 緑のまま
+   *     （実 UI では後勝ちで 9px になるのに、旧 `fontSizeOf` は 13px を読んでいた）
+   *
+   * ここでは本番 CSS を汚さず、**同じ形の後勝ち上書きを文字列として組み立てて**確かめる。
+   * `lastValue`（`target-size.test.ts` に既にある、`declarationsFor` と組で使うヘルパー）と
+   * 同じ流儀に揃える。
+   *
+   * ## ここで見ている範囲（**同一セレクタの複数規則、出現順**）
+   *
+   * `declarationsFor` は「そのセレクタ**そのもの**に当たる規則」だけを、CSS の中の**出現順**で
+   * 拾う。これは `sizeOnlyHeight` / `paddingBlockPair` と同じ前提で、詳細度の異なるセレクタ
+   * （子孫セレクタや `!important`）や、メディアクエリの中の上書きは見ない
+   * （`declarationsFor` の doc コメント、`inheritedLineHeight` の doc コメントに既出）。
+   * ここまでを解くと CSS カスケードの再実装になるため、**同一セレクタ・同一詳細度・
+   * トップレベルの規則が複数回書かれた場合の後勝ちだけ**を対象にする。
+   */
+  it("fontSizeOf は同じセレクタへの後勝ちの font-size 上書きを読む（Issue 515）", () => {
+    const css = ".members-check { font-size: 13px; } .members-check { font-size: 9px; }";
+    expect(fontSizeOf(css, ".members-check")).toBe(9);
+  });
 
   it("フッターのリンクが 24px を満たす", () => {
     // 文字の大きさは `.site-footer` から継承する
