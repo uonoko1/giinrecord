@@ -9,6 +9,34 @@ concurrency:
 permissions:
   contents: read
 jobs:
+  # Issue #536: a branch cut from an old `main` arrives as a PR that deletes the lines main gained in the
+  # meantime. It happened 7 times over 2026-09-05..06 and every catch was a human reading the diff; the
+  # PO was writing rebase instructions by hand for 8 open PRs. `git diff --stat` does not show it for a
+  # docs-only PR ("1 file changed"), so nothing here knew.
+  # Own job, first, with full history: `fetch-depth: 0` is required (the default depth-1 checkout has no
+  # merge-base to compare against) and the answer is worth having before the 10-minute build starts.
+  stale-base:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: The branch must not be missing lines the base branch gained after it was cut (#536)
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          # The check must not be able to pass by disappearing: a PR that deletes the script would
+          # otherwise turn this step into a no-op (#504 — a check inside one file cannot defend that file,
+          # so the demand that it exist lives in a different file, here).
+          test -f scripts/ci/stale-base.sh || { echo "scripts/ci/stale-base.sh がありません（#536 の検査）"; exit 1; }
+          git fetch --quiet origin "+refs/heads/$BASE_REF:refs/remotes/origin/$BASE_REF" "$HEAD_SHA"
+          # Compare against the PR's own head, NOT the checked-out `refs/pull/N/merge` — that ref already
+          # IS the three-way merge, so it can never be missing anything and this job would say nothing.
+          # Measured on the reconstructed #531 shape (docs/WORKING_AGREEMENT.md, base 85570ec2, main
+          # dd5ac2ef): against the merge ref it reports 0 lines, against the head it reports 50.
+          bash scripts/ci/stale-base.sh "refs/remotes/origin/$BASE_REF" "$HEAD_SHA"
   check:
     runs-on: ubuntu-latest
     steps:
