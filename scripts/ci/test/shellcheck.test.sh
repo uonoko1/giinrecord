@@ -33,7 +33,13 @@ make_tree() {
   echo 'plain text' > "$t/deploy/README.md"
   printf '#!/usr/bin/env bash\n' > "$t/deploy/node_modules/x/skip.sh"       # node_modules → ignored
   printf '#!/usr/bin/env bash\n' > "$t/apps/outside.sh"                     # outside scripts/ and deploy/
-  mkdir -p "$t/bin"
+  mkdir -p "$t/bin" "$t/no-shellcheck-bin"
+  # A PATH with the tools the script needs but no shellcheck. (Emptying PATH would remove bash itself and
+  # test the wrong thing -- the first attempt did exactly that and reported "bash: command not found".)
+  local tool
+  for tool in bash find head grep sed sort cat; do
+    p=$(command -v "$tool") && ln -sf "$p" "$t/no-shellcheck-bin/$tool"
+  done
   cat > "$t/bin/shellcheck" <<'STUB'
 #!/usr/bin/env bash
 if [[ ${1:-} == --version ]]; then
@@ -138,12 +144,33 @@ t_accepts_pinned_version() {
   assert_contains "$(cat "$TMP/args")" "deploy/posix" "linted the targets"
 }
 
-t_ci_installs_the_pinned_version() {
-  # CI must install the version the script demands. If ci.yml pins 0.10.0 while the script wants 0.11.0,
-  # CI fails loudly (t_rejects_other_version) rather than linting with the wrong one -- but the point of
-  # this test is that a version bump touching only one of the two files is caught here, before CI.
-  local wf="$REPO/.github/workflows/ci.yml"
-  grep -qF "shellcheck-v$PINNED" "$wf" || fail "ci.yml does not install shellcheck-v$PINNED"
+t_missing_shellcheck_says_so() {
+  # Not "exit 127 from set -e" -- the person who has never installed it must be told what to install.
+  make_tree
+  set +e
+  local out status
+  out=$( cd "$TMP/tree" && PATH="$TMP/tree/no-shellcheck-bin" bash "$SCRIPT" 2>&1 )
+  status=$?
+  set -e
+  assert_eq 3 "$status" "exit 3 when shellcheck is absent"
+  assert_contains "$out" "$PINNED" "names the version to install"
+  assert_contains "$out" "docs/ops/shellcheck.md" "points at the install instructions"
+}
+
+t_ci_installs_from_the_script() {
+  # CI must install the version *this script* names, not a number retyped into the workflow: a second copy
+  # would drift, and #552 is precisely about two places disagreeing about a version. So the assertion is
+  # that ci.yml asks the script (`--pinned-version`) and does not hardcode any shellcheck-v<x.y.z>.
+  local wf="$REPO/.github/workflows/ci.yml" body
+  body=$(grep -v '^\s*#' "$wf")   # comments may quote versions while explaining why (0.9.0/0.11.0)
+  assert_contains "$body" "shellcheck.sh --pinned-version" "ci.yml reads the version from the script"
+  if printf '%s' "$body" | grep -qE 'shellcheck-v[0-9]+\.[0-9]+\.[0-9]+'; then
+    fail "ci.yml hardcodes a shellcheck version instead of reading it from scripts/ci/shellcheck.sh"
+  fi
+  # ...and the download must actually be pinned to that version, not a floating "latest".
+  if printf '%s' "$body" | grep -q 'shellcheck.*latest'; then
+    fail "ci.yml installs a floating 'latest' shellcheck"
+  fi
 }
 
 t_pin_is_documented() {
@@ -162,7 +189,8 @@ test_case "real repo: list covers the former ci.yml globs" t_real_repo_matches_c
 test_case "--pinned-version: prints a single x.y.z" t_pinned_version_is_a_version
 test_case "version pin: a different shellcheck is refused, and nothing is linted (#552)" t_rejects_other_version
 test_case "version pin: the pinned shellcheck is accepted and lints the targets (#552)" t_accepts_pinned_version
-test_case "version pin: ci.yml installs the version the script demands (#552)" t_ci_installs_the_pinned_version
+test_case "version pin: a missing shellcheck says what to install (#552)" t_missing_shellcheck_says_so
+test_case "version pin: ci.yml installs the version the script names, with no second copy (#552)" t_ci_installs_from_the_script
 test_case "version pin: docs/ops/shellcheck.md names the pinned version (#552)" t_pin_is_documented
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL == 0 ]]

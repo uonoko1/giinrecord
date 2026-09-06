@@ -32,8 +32,11 @@ list_targets() {
 
 # The version shellcheck reports, or empty if it cannot be run at all. `shellcheck --version` prints a
 # header and then `version: x.y.z`; take that line and nothing else.
+# `set -e` + `pipefail` would kill the script at the substitution below when shellcheck is absent (exit 127)
+# before the message explaining what to install ever prints, so failure is swallowed deliberately here.
 found_version() {
-  shellcheck --version 2>/dev/null | sed -n 's/^version: *//p' | head -n1
+  command -v shellcheck >/dev/null 2>&1 || return 0
+  shellcheck --version 2>/dev/null | sed -n 's/^version: *//p' | head -n1 || true
 }
 
 require_pinned_version() {
