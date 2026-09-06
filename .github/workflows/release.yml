@@ -28,6 +28,8 @@ jobs:
     # only contents: write for the tag ref (REST API, no checkout). Rollback = Release an older sha; the tag follows.
     needs: production
     runs-on: ubuntu-latest
+    # #556: 実測 3–8s（n=39）。tag を動かすだけ。
+    timeout-minutes: 10
     permissions:
       contents: write
     steps:
