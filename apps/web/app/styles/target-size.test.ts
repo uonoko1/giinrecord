@@ -117,21 +117,55 @@ function gitTrackedCss(): string[] {
 /**
  * `allCss()` が痩せていないこと。**呼ぶ側それぞれで確かめる**（別の `it` に置くと `it` ごと消せる）。
  *
- * **件数ではなく、git から取った一覧と突き合わせる**（#544）。
- * `allCss()` が 1 本でも落とせば、その名前が `不足` に出て落ちる。
- * 逆に git に無いものを拾ったら `余分` に出る（`.gitignore` されたビルド生成物を読んでいる等）。
+ * **件数ではなく、git から取った一覧そのものと突き合わせる**（#544）。
+ * `allCss()` が 1 本でも落とせば、その名前が食い違って落ちる。
+ * 逆に git に無いものを拾っても落ちる（`.gitignore` されたビルド生成物を読んでいる等）。
+ *
+ * ## `filter` で差分を作ってから `toEqual([])` にしない（#500 の Z2 / #507）
+ *
+ * 最初はこう書いていた:
+ *
+ *     const missing = expected.filter((p) => !found.includes(p));
+ *     expect({ 不足: missing, 余分: extra }).toEqual({ 不足: [], 余分: [] });
+ *
+ * **これは述語を 1 つ足すだけで黙る。** 自分で測った（#507 の基準そのもの）:
+ *
+ *     `missing` の filter に `&& !p.endsWith("member.css")` を足す + 列挙から member.css を落とす
+ *         → **33 passed（緑）**
+ *     `const missing: string[] = []` に潰す + 列挙から member.css を落とす
+ *         → **33 passed（緑）**
+ *
+ * **差分を計算する側に手を入れられると、比べる材料のほうが痩せる。**
+ * なので**差分を作らず、2 つの一覧を直接比べる**——
+ * 減らせる中間の入れ物が無いので、**判定を狭めるには `expected` か `found` 自体を書き換えるしかない**。
+ * `expected` は git から来るので、書き換えれば**目に見える改変**になる（#507「隠れて通れなくする」）。
+ *
+ * ## 塞ぎ切っていないもの（**測った結果を書く**——#451 の流儀。一般化しない）
+ *
+ * **両側を同じだけ痩せさせれば、まだ黙る。** 自分で測った:
+ *
+ *     `gitTrackedCss()` の結果に `.filter((p) => !p.endsWith("member.css"))` を足す
+ *       + 列挙からも member.css を落とす                        → **33 passed（緑）**
+ *     `expect(found).toEqual(expected)` を `toEqual(found)` に書き換える
+ *       + 列挙から member.css を落とす                          → **33 passed（緑）**
+ *
+ * **これは「1 か所を痩せさせる」では済まない**——**独立経路の側と列挙の側の 2 か所**に、
+ * **同じファイル名を名指しして**手を入れる必要がある。
+ * 直す前は**列挙の 1 行だけ**で黙ったので、そこは変わっている。
+ * ただし**「2 か所要る」は「不可能」ではない。**
+ * ここを本当に閉じるには git 以外にもう 1 本経路が要るが、
+ * **経路を増やすほど「全部を同じだけ痩せさせる」以外の道が無くなるだけ**で、原理的な底は同じである。
+ *
+ * **`expected.length` の下限は、独立経路が丸ごと空振りした場合には鳴る**（実測:
+ * `gitTrackedCss()` を `[]` にする／git の `*.css` を `*.nomatch` にする、どちらも **3 failed**）。
  */
 function expectAllCssFound(files: { path: string }[]): void {
   const found = files.map((f) => relative(app, f.path)).sort();
   const expected = gitTrackedCss();
   // 前提: 独立経路そのものが空振りしていないこと（git が 0 件を返したら、集合の一致は無意味になる）
   expect(expected.length, "git が app/ 配下の .css を 1 本も返していない（独立経路が空振り）").toBeGreaterThan(5);
-  const missing = expected.filter((p) => !found.includes(p));
-  const extra = found.filter((p) => !expected.includes(p));
-  expect(
-    { 不足: missing, 余分: extra },
-    "allCss() が拾った .css が、git の一覧と食い違う（列挙器が痩せていませんか）",
-  ).toEqual({ 不足: [], 余分: [] });
+  // 差分を作らず、一覧そのものを比べる（中間の入れ物を痩せさせる道を作らないため）
+  expect(found, "allCss() が拾った .css が、git の一覧と食い違う（列挙器が痩せていませんか）").toEqual(expected);
 }
 
 /**
