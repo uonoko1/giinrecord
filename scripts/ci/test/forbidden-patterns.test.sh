@@ -178,6 +178,42 @@ t_data_dir_is_skipped() {
   assert_eq 0 "$STATUS" "exit (data/ is the ETL output, never scanned for IPs)"
 }
 
+# Issue #542: 変異ハーネスが git の破壊的コマンドで「戻す」と、担当者の未コミットの作業が消える
+# （2026-09-06 に 3 回起きた）。scripts/ deploy/ .github/ の中では書けないようにする。
+# この検査自身が destructive-git 規則に引っかからないよう、テストデータは組み立てて作る
+# （ファイル先頭の方針と同じ。生の "git reset --hard" をこのファイルに書かない）。
+G=git
+t_destructive_git_in_scripts_fails() {
+  local i=0 form
+  for form in "$G checkout -- ." "$G checkout ." "$G reset --hard" "$G reset --hard HEAD" \
+              "$G clean -fd" "$G clean -xfd" "$G stash" "$G stash pop"; do
+    i=$((i+1)); repo "dg$i"; add scripts/dev/harness.sh "$form"; run
+    assert_eq 1 "$STATUS" "[$form] → fail"
+    assert_contains "$OUT" "destructive-git" "[$form] rule name"
+    assert_contains "$OUT" "scripts/dev/harness.sh" "[$form] names the file"
+  done
+}
+# 正当な使い方まで止めない（止めすぎると、この検査ごと外される）
+t_legitimate_git_is_not_flagged() {
+  local i=0 form
+  for form in "$G checkout --quiet FETCH_HEAD -- data" "$G checkout -b feat/x origin/main" \
+              "log \"not inside a $G checkout; update PR manually\"" "$G reset HEAD -- file" \
+              "$G clean --dry-run" "$G stashed_things_are_fine=1"; do
+    i=$((i+1)); repo "lg$i"; add scripts/x.sh "$form"; run
+    assert_eq 0 "$STATUS" "[$form] → pass: $OUT"
+  done
+}
+# 対象は scripts/ deploy/ .github/ だけ（docs は説明のために書ける）
+t_destructive_git_outside_scripts_is_allowed() {
+  repo dgo; add docs/WORKING_AGREEMENT.md "$G reset --hard は未コミットの作業を消す"; run
+  assert_eq 0 "$STATUS" "docs では書ける: $OUT"
+}
+# コメント行は説明なので通す（この規則の理由そのものを書けなくなる）
+t_destructive_git_in_comments_is_allowed() {
+  repo dgc; add scripts/x.sh "# $G reset --hard は使わない（#542）"; run
+  assert_eq 0 "$STATUS" "コメントは通す: $OUT"
+}
+
 test_case "forbidden-patterns.sh: bash -n" bash -n "$SCRIPT"
 test_case "clean repo passes; unset FORBIDDEN_PATTERNS is a warning" t_clean_repo_passes
 test_case "private key header → fail" t_private_key_header_fails
@@ -196,6 +232,10 @@ test_case "FORBIDDEN_PATTERNS absent + not required → ::warning::, still runs"
 test_case "FORBIDDEN_PATTERNS present + required → pass, no warning" t_secret_present_and_required_passes
 test_case "untracked files are ignored" t_untracked_files_are_ignored
 test_case "data/ is skipped" t_data_dir_is_skipped
+test_case "destructive git in scripts/deploy/.github → fail (#542)" t_destructive_git_in_scripts_fails
+test_case "legitimate git usage is not flagged (#542)" t_legitimate_git_is_not_flagged
+test_case "destructive git outside scripts/ is allowed (#542)" t_destructive_git_outside_scripts_is_allowed
+test_case "destructive git in a comment is allowed (#542)" t_destructive_git_in_comments_is_allowed
 
 echo; echo "passed: $PASS  failed: $FAIL"
 [[ $FAIL == 0 ]]
