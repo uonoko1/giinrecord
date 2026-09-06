@@ -68,19 +68,160 @@ echo '<html lang="ja"><title>トップ ・ 議員レコード</title>' > "$ROOT/
 echo '<html lang="ja"><title>議員 ・ 議員レコード</title>'   > "$ROOT/members/m_1/index.html"
 echo '<html lang="ja"><title>ページが見つかりません ・ 議員レコード</title>' > "$ROOT/__spa-fallback.html"
 
+# ---- location の値を、$ROOT の下に置くパスとして使う前に検査する（#505）----
+# **再現した現象**（担当者が origin/main で実測。SITE_CONF= で細工した conf を食わせただけで、
+#  deploy/nginx/site.conf は変更していない）:
+#   site.conf に `location /../../rev505-escaped/` を書くと
+#     -- 17 passed, 0 failed        ← 素通りして緑
+#     $ find /tmp -maxdepth 3 -name 'rev505-escaped'
+#     /tmp/rev505-escaped           ← $TMP の外。cleanup の rm -rf "$TMP" では消えない
+#
+# **Issue #505 は「実害はゴミが残る程度」と書いていたが、実測するとそれより重い。**
+# `*/` でない形（末尾スラッシュ無し）は `printf 'x' > "$ROOT$pfx"` に落ちるので、
+# **$TMP の外の既存ファイルを上書きする**。担当者が実測した:
+#     location /../../../<絶対パス>/notes.txt を置く
+#       → -- 17 passed, 0 failed（緑のまま）
+#       → そのファイルの中身が 27 バイト → 1 バイト（"x"）に置き換わった
+#   ゴミが残るのではなく、**外にある実ファイルが消える**。
+#
+# **攻撃経路ではない**（site.conf は自分たちが書くファイルで、外から `..` を注入する経路は無い）。
+# だが**書き間違い1つで、テストの外にあるファイルが黙って壊れる**。しかも緑のまま気づけない。
+#
+# **denylist にしない**（作業合意 #333。「危ないものを含まない」は綴りの変種に原理的に勝てない）。
+# Issue は「`..` を含んだら FAIL にする1行」を提案していたが、それは denylist である。実際、
+# `..` だけを見る形は**両側に外れる**——担当者が実測した:
+#   - **緩すぎる**: `/a/b/../../../etc/` のように `..` を打ち消しながら深く抜ける形は、
+#     「`..` を含む」では拾えるが「何段抜けたか」は数えていないので、**判定の根拠が現象と合っていない**
+#   - **厳しすぎる**: `/..a/` `/a..b/` は `..` を含むが **$ROOT の外に出ない**（実測で確認）。
+#     正しい書き方を落とす検査になる（作業合意「禁止の検査は『厳しすぎて壊れる』側も固定する」）
+#
+# **経路を2本、別々に釘打つ**（#485 / #500 Z2）。片方だけでは、もう片方は守れない:
+#   入口（allowlist）: location に**使ってよい文字と形**を書き出して、それ以外を落とす
+#   出口（封じ込め）  : 組み立てた**実際のパスを解決して**、$ROOT の下から出ていないことを見る
+# 入口が緩んでも出口が落とし、出口が壊れても入口が落とす。**同じ判定を2回書いているのではない**——
+# 入口は「文字列の形」、出口は「解決したパスの位置」で、根拠が別である。
+
+# 入口: nginx の location に**このテストが扱える形**だけを許す allowlist。
+# 許すのは「/ で始まり、英数字と `-_./` だけからなり、`.` が2つ以上連続しない」パス。
+# `..` の連続を禁じるので `/..a/`（$ROOT を出ない）も落ちるが、**site.conf にそんな location は無く、
+# 出てきたら人が見るべき形**なので、通す側に倒さない。
+location_shape_ok() {
+  case $1 in
+    *[!/A-Za-z0-9._-]*) return 1 ;;   # 許した文字以外（空白・改行・~・シェルメタ文字・マルチバイト）
+    /*) ;;                            # 絶対パスで始まること（location は必ず / 始まり）
+    *) return 1 ;;
+  esac
+  case $1 in
+    *..*) return 1 ;;                 # `.` が2つ連続する形は、$ROOT の外に出うるので一律に落とす
+    *) return 0 ;;
+  esac
+}
+
+# 出口: `$ROOT$pfx` を**字句的に解決**して、$ROOT の下に収まっているかを見る。
+# `realpath` / `readlink -f` は使わない——**存在しないパスでは exit 1 になる**（実測）ため、
+# まだ mkdir する前のここでは使えない。`-m` を付ければ通るが、GNU coreutils 固有の
+# フラグを増やすより、**やっていることが読んで分かる形**を選んだ。
+# 正しさは python の posixpath.normpath と突き合わせて確かめてある（11 形すべて一致。#520 の流儀）。
+resolve_lexical() {
+  local p=$1 seg oldifs=$IFS
+  local -a out=()
+  IFS=/
+  # shellcheck disable=SC2086  # ここは意図的に / で分割している
+  set -- $p
+  IFS=$oldifs
+  for seg in "$@"; do
+    case "$seg" in
+      '' | .) ;;
+      ..) if [ ${#out[@]} -gt 0 ]; then unset 'out[${#out[@]}-1]'; out=(${out[@]+"${out[@]}"}); fi ;;
+      *) out+=("$seg") ;;
+    esac
+  done
+  if [ ${#out[@]} -eq 0 ]; then printf '/\n'; else printf '/%s' "${out[@]}"; printf '\n'; fi
+}
+
+# $ROOT 自身も解決しておく（mktemp -d の値に `.` や `//` が入っても比べ方がずれないように）。
+ROOT_RESOLVED=$(resolve_lexical "$ROOT")
+
+# under_root <組み立てたパス>: 解決した結果が $ROOT の中（$ROOT 自身か、その配下）なら 0。
+# `startsWith($ROOT)` だけでは `$ROOT-evil` のような**兄弟**を通すので、**必ず区切りまで見る**
+# （#520 が `path.resolve(dir) + path.sep` としたのと同じ理由。シェルでも同じ穴が空く）。
+under_root() {
+  local r; r=$(resolve_lexical "$1")
+  case "$r" in
+    "$ROOT_RESOLVED") return 0 ;;
+    "$ROOT_RESOLVED"/*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+# probe_path_or_die <組み立てるパス> <元の location>: 2つの門を通ったものだけを返す。
+# **落とすときは exit 1**。無視して緑にしない（それでは検査した意味が無い）。
+assert_confined() {
+  local built=$1 loc=$2
+  if ! under_root "$built"; then
+    echo "FAIL location [$loc] から作ったパスが docroot の外に出る: $(resolve_lexical "$built") は $ROOT_RESOLVED の下にない"
+    echo "     このテストは location の値をそのままファイルの置き場所に使う。外に出ると \$TMP の外に書き、"
+    echo "     cleanup の rm -rf では消えない（既存ファイルがあれば上書きする）。#505"
+    FAIL=$((FAIL+1)); exit 1
+  fi
+}
+
+CHECKED_LOCS=0
+WANT_PROBES=0
 while IFS= read -r loc; do
+  # 入口の門。`= ` `^~ ` の修飾子を外した**パスの部分**を検査する。
+  raw=${loc#= }; raw=${raw#^~ }
+  if ! location_shape_ok "$raw"; then
+    echo "FAIL location [$loc] に、このテストが扱えない文字か形が入っている（許すのは / A-Z a-z 0-9 . _ - だけ、\`..\` は不可）"
+    echo "     location の値はそのままファイルの置き場所になるので、素通しすると docroot の外に書く（#505）"
+    FAIL=$((FAIL+1)); exit 1
+  fi
+  CHECKED_LOCS=$((CHECKED_LOCS+1))
   case "$loc" in
     "= "*)   PROBE_PATHS+=("${loc#= }") ;;            # 完全一致: そのパスそのもの
     "^~ "*|"/"*)                                       # 前方一致: 配下に実ファイルを1つ置いて叩く
       pfx=${loc#^~ }
       case "$pfx" in
         /) PROBE_PATHS+=("/") ;;
-        */) mkdir -p "$ROOT$pfx"; printf 'x' > "$ROOT${pfx}__probe.txt"; PROBE_PATHS+=("${pfx}__probe.txt") ;;
-        *)  mkdir -p "$(dirname "$ROOT$pfx")"; printf 'x' > "$ROOT$pfx"; PROBE_PATHS+=("$pfx") ;;
+        */) assert_confined "$ROOT${pfx}__probe.txt" "$loc"
+            mkdir -p "$ROOT$pfx"; printf 'x' > "$ROOT${pfx}__probe.txt"
+            WANT_PROBES=$((WANT_PROBES+1)); PROBE_PATHS+=("${pfx}__probe.txt") ;;
+        *)  assert_confined "$ROOT$pfx" "$loc"
+            mkdir -p "$(dirname "$ROOT$pfx")"; printf 'x' > "$ROOT$pfx"; PROBE_PATHS+=("$pfx") ;;
       esac ;;
     *) echo "FAIL 未対応の location 指定 [$loc]。叩くパスを deploy/test/nginx-headers.test.sh に足すこと"; exit 1 ;;
   esac
 done <<< "$LOCATIONS"
+
+# **門を通った数を数える**（#451 / #500 Z2「入口を固定したら出口も固定する」）。
+# 上の 2 つの門は `continue` を1つ足すだけで全部飛ばせる。そのとき「0 件検査した」でも
+# ループは静かに回り切るので、**拾った location の数と突き合わせる**。
+if [ "$CHECKED_LOCS" != "$GOT_LOCS" ]; then
+  echo "FAIL location を $GOT_LOCS 個拾ったのに $CHECKED_LOCS 個しか安全性を検査していない（#505）"
+  FAIL=$((FAIL+1)); exit 1
+fi
+echo "ok   location $CHECKED_LOCS 個すべてが docroot の中に収まる形（#505 パストラバーサル）"; PASS=$((PASS+1))
+
+# **作った実物を数える**（#505）。上の2つの門は「**作る前に**止める」判定で、
+# ここは「**作った後**に、docroot の中に本当に在るか」を見る係。**根拠が別**である
+# （#485「経路が2つ以上あるものは、それぞれ別々に釘打つ」）。
+#
+# **担当者が実測した通り、$TMP の中を数えても捕まらない**——`$ROOT/../../x/` は
+# **$TMP ごと飛び越えて外に出る**ので、`find "$TMP"` には 1 件も現れない:
+#     TMP=/tmp/tmp.NpMVCSHnJA
+#     find "$TMP" -mindepth 1  →  /tmp/tmp.NpMVCSHnJA/html   （プローブは1つも無い）
+#     ls -d /tmp/rev505-x      →  /tmp/rev505-x              （外に出ている）
+# だから見るのは「**外に何かあるか**」ではなく「**中に来るはずのものが来ているか**」。
+# 置きに行った数（WANT_PROBES）と、docroot の中で実際に見つかった数を突き合わせる。
+# 実測（プロトタイプ）: 3 つ置きに行って `/../../` が1つ混ざると **asked=3 landed=2**。
+LANDED_PROBES=$(find "$ROOT" -name '__probe.txt' | wc -l)
+if [ "$LANDED_PROBES" != "$WANT_PROBES" ]; then
+  echo "FAIL プローブを $WANT_PROBES 個置きに行ったのに、docroot の中には $LANDED_PROBES 個しか無い（#505）"
+  echo "     差の分は docroot の外に書かれている。cleanup の rm -rf \"\$TMP\" では消えず、"
+  echo "     同名の既存ファイルがあれば上書きしている。"
+  FAIL=$((FAIL+1)); exit 1
+fi
+echo "ok   置きに行ったプローブ $WANT_PROBES 個が全部 docroot の中にある（外に1つも漏れていない）"; PASS=$((PASS+1))
 
 docker run -d --name "$NAME" -p 127.0.0.1:0:80 \
   -v "$CONF:/etc/nginx/conf.d/default.conf:ro" \
