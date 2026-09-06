@@ -46,7 +46,9 @@ jobs:
     # `gh api .../runs/<id>/jobs` の completed_at − started_at で集計）。値は max の 25 倍。
     #
     # ここは**本番に触る唯一の job** なので、他より厚く取っている。切れたときに何が残るかを見て決めた:
-    #   ・rsync より前（checkout / overlay / pnpm build）で切れる → VPS には何も触れていない。無害。
+    #   ・rsync より前（checkout / overlay / ビルド）で切れる → VPS には何も触れていない。無害。
+    #     （この行にビルドのコマンド名を書かないこと: deploy-docker.test.ts が indexOf で
+    #      「overlay はビルドより前」を見ているので、コメントが最初の一致になると偽陽性で落ちる）
     #   ・rsync の最中に切れる → 転送済みのファイルだけが新しい、混ざった状態が残りうる。
     #     ただし rsync 自身が `--timeout=120` を持つので、無応答なら 2 分で先に落ちる（#308）。
     #     再実行すれば同じ内容で上書きされ、`--delete` も含めて収束する（rsync は冪等）。
