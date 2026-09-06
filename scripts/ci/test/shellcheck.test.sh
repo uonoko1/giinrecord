@@ -216,6 +216,68 @@ t_pin_is_documented() {
   assert_contains "$(cat "$doc")" "$PINNED" "the doc names the pinned version"
 }
 
+# #571: pinning the version number is not pinning the bytes. GitHub Releases assets can in principle be
+# replaced (e.g. a compromised maintainer account), and this binary is placed in /usr/local:bin as root and
+# then fed the whole repository. A sha256 check closes that gap.
+SHA256=$(cd "$REPO" && bash scripts/ci/shellcheck.sh --pinned-sha256)
+
+t_pinned_sha256_is_a_sha256() {
+  # --pinned-sha256 prints exactly one 64-hex-digit checksum and nothing else.
+  assert_eq 1 "$(printf '%s\n' "$SHA256" | wc -l)" "one line"
+  [[ $SHA256 =~ ^[0-9a-f]{64}$ ]] || fail "64 lowercase hex digits: got [$SHA256]"
+}
+
+t_download_url_is_pinned_to_github_and_the_version() {
+  # #571 review's mutation F: swapping the download host (e.g. an attacker-controlled mirror) must be
+  # something a test can catch, not just something curl happens to fail on today. --download-url is the
+  # one place the URL is built, so assert it is anchored to github.com/koalaman/shellcheck and to the
+  # pinned version (not just interpolated blindly).
+  local url; url=$(cd "$REPO" && bash scripts/ci/shellcheck.sh --download-url)
+  assert_contains "$url" "https://github.com/koalaman/shellcheck/releases/download/v$PINNED/" \
+    "download URL is pinned to the official releases host and the pinned version"
+  assert_contains "$url" "shellcheck-v$PINNED.linux.x86_64.tar.xz" "download URL names the pinned asset"
+}
+
+t_ci_verifies_sha256_before_using_the_binary() {
+  # The whole point: ci.yml must check the downloaded tarball's sha256 against the value this script names,
+  # and must do so with something that actually fails the step on mismatch (sha256sum -c, not an echo).
+  local wf="$REPO/.github/workflows/ci.yml" body
+  body=$(grep -v '^\s*#' "$wf")
+  assert_contains "$body" "shellcheck.sh --pinned-sha256" "ci.yml reads the sha256 from the script"
+  assert_contains "$body" "sha256sum -c" "ci.yml verifies the checksum with sha256sum -c"
+  assert_contains "$body" "shellcheck.sh --download-url" "ci.yml reads the download URL from the script"
+  if printf '%s' "$body" | grep -qE '[0-9a-f]{64}'; then
+    fail "ci.yml hardcodes a sha256 instead of reading it from scripts/ci/shellcheck.sh"
+  fi
+}
+
+t_ci_does_not_swallow_the_checksum_check() {
+  # Same shape of hole as #552/#563: `sha256sum -c ... || true` or continue-on-error would make a mismatch
+  # invisible. Look at the whole shellcheck-install step, not just the checksum line, since the swallow
+  # could sit on the step or on a later line in the same run block.
+  local wf="$REPO/.github/workflows/ci.yml"
+  local step
+  step=$(awk '/name: shellcheck \(pinned version/{p=1} p{print} p && /^      - name:/ && !/pinned version/{exit}' "$wf")
+  step=$(printf '%s\n' "$step" | grep -v '^\s*#')
+  assert_contains "$step" "sha256sum -c" "the install step itself runs the checksum check"
+  if printf '%s' "$step" | grep -E 'sha256sum[^|]*\|\|[[:space:]]*(true|:)'; then
+    fail "ci.yml swallows the sha256sum exit status (|| true / || :)"
+  fi
+  if printf '%s' "$step" | grep -q 'continue-on-error'; then
+    fail "ci.yml uses continue-on-error on the shellcheck install step"
+  fi
+}
+
+t_sha256_is_documented() {
+  # Mirrors t_pin_is_documented: bumping the version must also bump the sha256, or CI breaks (fail-closed,
+  # but the procedure should say so up front rather than making the next bumper discover it by a red run).
+  local doc="$REPO/docs/ops/shellcheck.md"
+  [[ -f $doc ]] || { fail "docs/ops/shellcheck.md is missing"; return; }
+  local content; content=$(cat "$doc")
+  assert_contains "$content" "$SHA256" "the doc names the pinned sha256"
+  assert_contains "$content" "sha256" "the doc's bump procedure mentions updating the sha256"
+}
+
 test_case "--list: every *.sh and bash/sh-shebang file under scripts/ and deploy/" t_list_contents
 test_case "--list: node_modules, other interpreters, non-scripts, other dirs excluded" t_list_excludes
 test_case "default: runs shellcheck -x with the list" t_runs_shellcheck_with_list
@@ -228,5 +290,10 @@ test_case "version pin: a version that merely starts with the pin is refused too
 test_case "version pin: a missing shellcheck says what to install (#552)" t_missing_shellcheck_says_so
 test_case "version pin: ci.yml installs the version the script names, with no second copy (#552)" t_ci_installs_from_the_script
 test_case "version pin: docs/ops/shellcheck.md names the pinned version (#552)" t_pin_is_documented
+test_case "sha256 pin: --pinned-sha256 prints a single 64-hex checksum (#571)" t_pinned_sha256_is_a_sha256
+test_case "sha256 pin: --download-url is anchored to github.com and the pinned version (#571)" t_download_url_is_pinned_to_github_and_the_version
+test_case "sha256 pin: ci.yml verifies the checksum with sha256sum -c, no hardcoded copy (#571)" t_ci_verifies_sha256_before_using_the_binary
+test_case "sha256 pin: ci.yml does not swallow a checksum mismatch (#571)" t_ci_does_not_swallow_the_checksum_check
+test_case "sha256 pin: docs/ops/shellcheck.md names the pinned sha256 (#571)" t_sha256_is_documented
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL == 0 ]]
