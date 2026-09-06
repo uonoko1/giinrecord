@@ -21,6 +21,8 @@ permissions:
 jobs:
   gitleaks:
     runs-on: ubuntu-latest
+    # #556: 実測 min 7 / med 11 / max 48s（n=40）。週次は全履歴を走査するので max が跳ねる。必須チェック。
+    timeout-minutes: 20
     permissions:
       contents: read
       pull-requests: write   # gitleaks-action comments on the PR when it finds something
@@ -41,6 +43,8 @@ jobs:
 
   forbidden-patterns:
     runs-on: ubuntu-latest
+    # #556: 実測 7–12s（n=40）。必須チェック。
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - name: forbidden patterns (scripts/ci/forbidden-patterns.sh)
@@ -53,6 +57,8 @@ jobs:
 
   audit:
     runs-on: ubuntu-latest
+    # #556: 実測 min 11 / med 13 / max 25s（n=40）。必須チェック。
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

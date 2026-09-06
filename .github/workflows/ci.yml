@@ -18,6 +18,8 @@ jobs:
   stale-base:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    # #556: 実測 6–10s（n=17）。無限ループは既定 6 時間走るので必ず上限を置く。
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
@@ -39,6 +41,9 @@ jobs:
           bash scripts/ci/stale-base.sh "refs/remotes/origin/$BASE_REF" "$HEAD_SHA"
   check:
     runs-on: ubuntu-latest
+    # #556: 実測 min 153 / med 210 / max 225s（n=36）。同期の無限ループは testTimeout が効かず
+    # （イベントループごとブロックする）、ここだけが止められる。max の 8 倍。負荷で伸びる分の余裕（#538/#501）。
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -106,6 +111,8 @@ jobs:
     # comes from data/ (member name, bill title, tally, the primary-source link), not from a character count.
     needs: check
     runs-on: ubuntu-latest
+    # #556: 実測 min 72 / med 84 / max 96s（n=35）。max の 12 倍。
+    timeout-minutes: 20
     env:
       SITE_DIR: ${{ github.workspace }}/apps/web/build/client
       STAGING_SITE_DIR: ${{ github.workspace }}/apps/web/build/client
