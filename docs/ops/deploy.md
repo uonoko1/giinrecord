@@ -93,6 +93,51 @@ Issue が開く。**「気をつけて戻す」には頼らない。**
 **必ず落ちる**（「読めない」を ok に倒さない）。そのとき gh のエラー文は
 **Issue 本文に転記しない** — 認証情報が混ざりうるため、理由は run のログ側に置く。
 
+### 見張りが「読めない」と言うとき（#540）
+
+**「保護が弱まっている」と「保護を読めなかった」は別の Issue になる。**
+
+| 検査の終了コード | Issue タイトル | 意味 |
+|---|---|---|
+| 1 | `[monitor] repo: main の保護設定` | **設定が実際に弱い。** 本文に該当の設定が出る |
+| 2 | `[monitor] repo: main の保護設定を読めない` | **判定できていない。** 弱いとは限らない |
+
+**失敗の理由は Issue 本文に出さない**（gh の API エラーに認証情報が混ざりうるため）。
+**run のログ（stderr）に出る。**
+
+**原因は権限で、`GITHUB_TOKEN` では読めない**（2026-09-06 実測。#521 のマージ直後に Issue #540 が開いた）。
+
+**`permissions:` に `administration: read` を足しても解決しない。** 実測すると GitHub は
+ワークフローを**構文として拒否**する:
+
+```
+HTTP 422: failed to parse workflow: (Line: 31, Col: 3): Unexpected value 'administration'
+```
+
+`administration` は `GITHUB_TOKEN` の `permissions` に**存在しないキー**で、書くと
+**この workflow 自体が一切動かなくなる**。**書かないこと。**
+
+**したがって fine-grained PAT が要る（人間の作業）。** 作り方:
+
+1. GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token
+2. **Repository access**: `uonoko1/giinrecord` のみ
+3. **Repository permissions**: `Administration: Read-only` と `Issues: Read and write` **だけ**
+   （それ以外は No access。**書き込み権限を与えない**）
+4. 有効期限を設定し、期限を `docs/ops/board.md` に控える
+5. リポジトリの Settings → Secrets and variables → Actions に **`BRANCH_PROTECTION_TOKEN`** として置く
+
+**ワークフロー側の変更は要らない。** `.github/workflows/branch-protection.yml` は既に
+`${{ secrets.BRANCH_PROTECTION_TOKEN || secrets.GITHUB_TOKEN }}` を使っており、
+secret を置いた次の実行から自動的にそちらを使う。置くまでは `GITHUB_TOKEN` に落ちて
+exit 2（読めない）を報告し続ける。
+
+置いたあと `gh workflow run branch-protection.yml` を1回叩き、
+`ok branch-protection: main は保護されている` が出ること、
+Issue `[monitor] repo: main の保護設定を読めない` が**自動で閉じる**ことを確認する。
+
+**PAT を置くまでの間も、ワークフローは消さないこと。**
+「読めない」ことを検出して別の Issue で報告する状態のほうが、**何も見ていない状態より良い**。
+
 **塞げていないことが分かっている点**（#521。移設先は #526 の TypeScript 側）:
 必須チェックの一覧は `.github/workflows` の job 定義と突き合わせているが、**片方向だけ**である。
 job を**改名**すると落ちる（実測 `exit 1`）が、job を**丸ごと消す**と落ちない（実測 `exit 0`）——

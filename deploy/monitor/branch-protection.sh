@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 # Check that main's branch protection still makes CI unskippable (Issue #521; run by branch-protection.yml).
-#   branch-protection.sh <owner/repo> <branch>       exit 0 = intact, 1 = weakened / unreadable
+#   branch-protection.sh <owner/repo> <branch>
+#     exit 0  settings intact
+#     exit 1  settings WEAKENED — the specific setting is named on stdout
+#     exit 2  settings could NOT BE READ (no permission / no protection / API down). The reason goes to stderr.
+#             Distinct from 1 on purpose: "we could not look" must not be reported as "it is weak" (#540).
 #
 # Why this exists: branch protection is GitHub *settings*, not repository content. Weakening it is one API call,
 # it leaves nothing in any diff, and no review or CI run can see it. `enforce_admins` was false for an unknown
@@ -41,21 +45,34 @@ SECURITY_APP_ID=15368
 
 problems=()
 
-# gh's stderr is left on stderr: it reaches the JOB LOG (readable only by people who can read Actions) and never
-# this script's stdout. Everything printed on stdout is copied verbatim into a GitHub Issue body by
-# branch-protection.yml, and this repository is PUBLIC — so an API error message must not be relayed there.
-# gh echoes the request's Authorization header in some failures, and redacting it is a denylist: the first version
-# of this line matched `gh[pousr]_[A-Za-z0-9]+` and passed `github_pat_11ABCDEFG0aaaa..._bbbb` through untouched
-# (the current fine-grained-PAT format contains `_`, so it does not even match `[A-Za-z0-9]+`). Any such list is one
-# token format behind. So the message is not printed at all: the reason is in the job log, and the Issue body
-# already carries the run URL.
-if ! body=$(gh api "repos/$REPO/branches/$BRANCH/protection" 2>/dev/null); then
-  # No protection at all (404), no permission, or the API is down. Never treat "could not read" as "fine": that is
-  # exactly the state where everything below is unenforced (#484).
-  echo "fail branch-protection: $BRANCH の保護設定を読めなかった。保護そのものが外れている可能性がある"
-  echo "  gh api が失敗した。理由はこの run のログを見ること（Issue 本文には出さない: 認証情報が混ざりうる）"
-  exit 1
+# gh's stdout is captured to a file so that its stderr can be captured separately in the same call
+# (`2>&1 >file` sends stderr to the substitution and stdout to the file — the order matters).
+TMP_BODY=$(mktemp); trap 'rm -f "$TMP_BODY"' EXIT
+
+# The API error goes to STDERR, never to stdout. Everything this script prints on stdout is copied verbatim into a
+# GitHub Issue body by branch-protection.yml, and this repository is PUBLIC; gh echoes the request's Authorization
+# header in some failures. Redacting it is a denylist — the first version matched `gh[pousr]_[A-Za-z0-9]+` and let
+# `github_pat_…` through untouched (that format contains `_`, so `[A-Za-z0-9]+` does not even match it), and any
+# such list is one token format behind. Stderr reaches the job log, which only people who can read Actions can see.
+#
+# The first fix sent the error to /dev/null instead, which went too far: the message said "see the run log" while
+# the run log did not contain it either — an instruction that could not be followed
+# (#507: 検査が指示する手順が、検査を黙らせないか見る).
+if ! err=$(gh api "repos/$REPO/branches/$BRANCH/protection" 2>&1 >"$TMP_BODY"); then
+  # Could not read the settings: the token lacks `administration: read` (this actually happened and opened #540),
+  # the branch is unprotected (404), or the API is down.
+  #
+  # EXIT 2, deliberately distinct from "the settings are weak" (exit 1). Both are failures — "could not read" is
+  # never treated as "fine" (#484), since that is exactly the state in which none of the checks below have run.
+  # But they need different words: #540 was opened saying "main の branch protection が弱まっている" while the
+  # protection was intact, and a wrong alarm every morning is indistinguishable from a real one.
+  echo "fail branch-protection: $BRANCH の保護設定を読めなかった（設定が弱いかどうかは判定できていない）"
+  printf 'branch-protection: gh api failed: %s\n' "$err" >&2
+  echo "  理由はこの run のログ（stderr）に出ている。Issue 本文には出さない: 認証情報が混ざりうる"
+  echo "  権限が足りない場合の直し方: docs/ops/deploy.md「main の保護設定」"
+  exit 2
 fi
+body=$(cat "$TMP_BODY")
 
 # jq is present on ubuntu-latest runners and is what gh itself uses; parsing JSON with the shell is how checks
 # start passing on inputs they never understood (WORKING_AGREEMENT: 言語の構造は、その言語の実装に解かせる).
