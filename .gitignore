@@ -20,3 +20,4 @@ apps/web/.react-router/
 # 変異テストの退避ファイル（scripts/dev/mutate.sh, Issue #542）。
 # 異常終了すると残る。残しておかないと復旧できないので消さないが、コミットもしない。
 *.mutate-sv
+*.mutate-sv.md5

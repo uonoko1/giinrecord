@@ -282,10 +282,27 @@ t_status_warns_when_the_target_changed() {
   assert_contains "$OUT" "当てたときと違う" "名指しする"
 }
 
-# ---- 必須3: Ctrl-C / SIGTERM で戻る（レビュー指摘。コメントは戻ると書いていたが戻らなかった） ---
-# プロセスグループに INT を送る＝端末の Ctrl-C と同じ形で試す。
+# ---- 必須3: Ctrl-C / SIGTERM で戻る（レビュー指摘） -------------------------------------------
+# 注意: `setsid ... &` で起動した bash は **SIGINT を無視した状態で生まれる**
+#   （バックグラウンド起動の作法。/proc/<pid>/status の SigIgn に INT のビットが立つ）。
+#   なので「& で起動して INT を送る」形では、trap があってもなくても変異は残らず、
+#   本物の端末の Ctrl-C を試したことにならない。**本物の PTY で確かめるのが t_restores_on_real_ctrl_c。**
+#   ここ（TERM / INT）は「シグナルで殺されても退避が残骸にならない」ことを見ている。
 t_restores_on_sigint_to_the_process_group() { assert_signal_restores INT; }
 t_restores_on_sigterm() { assert_signal_restores TERM; }
+# 本物の端末（PTY）で Ctrl-C を送る。trap が実際に走る唯一の形。
+# trap 文字列の $1 バグ（kill -s "$1" がシグナル名でなく --file を受け取る）はここでしか出ない。
+t_restores_on_real_ctrl_c() {
+  command -v python3 >/dev/null || { echo "    - python3 が無いので PTY の検査を飛ばす"; return 0; }
+  repo; local before; before=$(md5 "$R/src/app.ts")
+  local out; out=$(python3 "$HERE/ctrl-c-probe.py" "$R" "$SCRIPT" 2>&1)
+  assert_contains "$out" "当てた" "PTY: 変異が当たった"
+  assert_contains "$out" "戻した" "PTY: Ctrl-C で戻した"
+  assert_not_contains "$out" "invalid signal specification" "PTY: trap の中の kill が壊れていない"
+  assert_not_contains "$out" "戻すものが無い" "PTY: 二重に restore していない"
+  assert_eq "$before" "$(md5 "$R/src/app.ts")" "PTY: 元に戻っている"
+  assert_eq "" "$(find "$R" -name '*'"$SV_EXT" -print)" "PTY: 退避も片付いている"
+}
 assert_signal_restores() {
   local sig=$1
   repo; local before; before=$(md5 "$R/src/app.ts")
@@ -313,12 +330,20 @@ assert_signal_restores() {
 }
 
 # ---- 必須5-N3: 退避ファイル自身を対象にできない -----------------------------------------------
+# 「退避が残っている」拒否より先にこの guard へ届く場所に置く必要がある。
+# find_saves は node_modules を刈るので、そこに置けば「退避が残っている」判定には引っかからない。
+# （そのまま .mutate-sv を対象にすると、退避が <名前>.mutate-sv.mutate-sv になって復旧が壊れる）
 t_refuses_the_save_file_itself() {
-  repo; printf 'SAVED\n' > "$R/src/app.ts$SV_EXT"
-  run apply "src/app.ts$SV_EXT" 's/SAVED/MUTANT/'
+  # node_modules は find_saves が刈るので「退避が残っている」判定に引っかからない。
+  # （node_modules 配下は別の理由でも拒否されるが、guard のほうが先に効くことを下で確かめる）
+  repo; mkdir -p "$R/node_modules/pkg"; printf 'SAVED\n' > "$R/node_modules/pkg/app.ts$SV_EXT"
+  # まず「退避が残っている」で止まっていないことを確かめる（fixture が guard に届いている証明）
+  run apply "node_modules/pkg/app.ts$SV_EXT" 's/SAVED/MUTANT/'
   assert_ne 0 "$STATUS" "退避ファイル自身は対象にできない"
-  assert_eq SAVED "$(cat "$R/src/app.ts$SV_EXT")" "触っていない"
-  rm -f "$R/src/app.ts$SV_EXT"
+  assert_not_contains "$OUT" "退避が残っている" "別の理由で止まっていない（guard に届いている）"
+  assert_contains "$OUT" "退避ファイル自体" "guard の理由を言う"
+  assert_eq SAVED "$(cat "$R/node_modules/pkg/app.ts$SV_EXT")" "触っていない"
+  assert_eq "" "$(find "$R" -name "*$SV_EXT$SV_EXT" -print)" "二重の退避を作らない"
 }
 
 # ---- 必須5-N4: 戻せなかったら黙って成功しない -------------------------------------------------
@@ -334,11 +359,16 @@ t_restore_fails_loudly_when_the_copy_fails() {
 }
 
 # ---- 必須5-N5: パーミッションを保つ -----------------------------------------------------------
-t_preserves_the_file_mode() {
-  repo; chmod 0755 "$R/src/app.ts"
-  local before; before=$(stat -c '%a' "$R/src/app.ts")
+# mode は cp -p が無くても保たれる（既存ファイルへの cp は宛先の mode を残す）。
+# 実際に -p が要るのは mtime のほうで、これが動くとビルドのキャッシュ判定が狂う。
+t_preserves_mode_and_mtime() {
+  repo; chmod 0755 "$R/src/app.ts"; touch -d '2020-01-01 00:00' "$R/src/app.ts"
+  local mode mtime
+  mode=$(stat -c '%a' "$R/src/app.ts"); mtime=$(stat -c '%Y' "$R/src/app.ts")
   run apply src/app.ts 's/ORIGINAL/MUTANT/'; run restore
-  assert_eq "$before" "$(stat -c '%a' "$R/src/app.ts")" "mode が戻る"
+  assert_eq 0 "$STATUS" "restore exits 0: $OUT"
+  assert_eq "$mode"  "$(stat -c '%a' "$R/src/app.ts")" "mode が戻る"
+  assert_eq "$mtime" "$(stat -c '%Y' "$R/src/app.ts")" "mtime も戻る（cp -p。ビルドのキャッシュが狂わないように）"
 }
 
 # ---- CI が本当にこのテストを走らせること -------------------------------------------------------
@@ -360,6 +390,8 @@ t_save_files_are_gitignored() {
   # cd の失敗まで一緒に握り潰さないよう、|| true ではなく関数に分ける。
   ignores() { local out; out=$(cd "$top" && git check-ignore "$1"); local st=$?; [[ $st -le 1 ]] || return 2; printf '%s' "$out"; }
   assert_ne "" "$(ignores "some/file.ts$SV_EXT")" "*$SV_EXT が .gitignore で無視される"
+  # 変異後の md5 を書いた meta も一緒に無視する（残ると diff に出る）
+  assert_ne "" "$(ignores "some/file.ts$SV_EXT.md5")" "meta も無視される"
   # 検査が空振りしていないこと（何でも無視される設定なら意味が無い）
   assert_eq "" "$(ignores some/file.ts)" "普通のソースは無視されない"
 }
