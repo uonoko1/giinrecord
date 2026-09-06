@@ -99,12 +99,16 @@ t_rc2_opens_unreadable_and_leaves_weak_alone() {
 t_bodies_match_the_outcome() {
   fresh bodies
   G_RC=1 G_OUT="enforce_admins が false" run_report
+  # `cat` on a missing file would abort the whole suite under `set -e`, hiding every case after this one — and a
+  # missing body file is exactly what some mutations produce. Report it as a failure instead.
+  [[ -f "$P/branch-protection-body.md" ]] || { fail "rc=1 で本文ファイルが作られていない"; return; }
   local weak_body; weak_body=$(cat "$P/branch-protection-body.md")
   [[ "$weak_body" == *"弱まっている"* ]] || fail "rc=1 の本文が「弱まっている」と言っていない: $weak_body"
   [[ "$weak_body" != *"判定できていない"* ]] || fail "rc=1 の本文が「判定できていない」と言っている"
 
   fresh bodies2
   G_RC=2 G_OUT="読めなかった" run_report
+  [[ -f "$P/branch-protection-body.md" ]] || { fail "rc=2 で本文ファイルが作られていない"; return; }
   local un_body; un_body=$(cat "$P/branch-protection-body.md")
   [[ "$un_body" == *"判定できていない"* ]] || fail "rc=2 の本文が「判定できていない」と言っていない: $un_body"
   [[ "$un_body" != *"弱まっている"* ]] || fail "rc=2 の本文が「弱まっている」と言っている（#540 の再発）"
