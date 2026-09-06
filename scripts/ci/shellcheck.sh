@@ -5,6 +5,8 @@
 #   scripts/ci/shellcheck.sh                    → shellcheck -x <every target>  (exit status = shellcheck's)
 #   scripts/ci/shellcheck.sh --list             → print the targets, one per line (sorted, repo-relative)
 #   scripts/ci/shellcheck.sh --pinned-version   → print the pinned version (x.y.z), nothing else
+#   scripts/ci/shellcheck.sh --pinned-sha256    → print the pinned sha256 of the linux.x86_64 tarball, nothing else
+#   scripts/ci/shellcheck.sh --download-url     → print the URL ci.yml downloads the tarball from, nothing else
 # Targets = under scripts/ and deploy/ (node_modules skipped): every *.sh, plus every extensionless file whose
 # first line is a bash/sh shebang (e.g. scripts/po/test/fake-bin/gh). Run from the repo root.
 #
@@ -18,9 +20,18 @@
 # To bump the pin, see docs/ops/shellcheck.md: change the one line below and nothing else. ci.yml installs
 # whatever `--pinned-version` prints, so there is no second copy of the number to keep in step (and
 # scripts/ci/test/shellcheck.test.sh fails if a version is ever hardcoded back into the workflow).
+#
+# Why the sha256 is also pinned (#571, from #552's review): pinning the version number pins the *name*, not
+# the bytes. GitHub Releases assets can in principle be replaced (e.g. a compromised maintainer account),
+# and ci.yml places this binary in /usr/local/bin as root and then feeds it the whole repository. The
+# sha256 below was computed by downloading the asset at the URL --download-url prints and running
+# `sha256sum` on it (done twice, on 2026-09-07, both runs agreeing) -- not copied from anyone's report.
 set -euo pipefail
 
 SHELLCHECK_PINNED_VERSION=0.11.0
+# sha256 of shellcheck-v0.11.0.linux.x86_64.tar.xz, computed by hand (see comment above), not retyped
+# from a third party.
+SHELLCHECK_PINNED_SHA256=8c3be12b05d5c177a04c29e3c78ce89ac86f1595681cab149b65b97c4e227198
 
 list_targets() {
   local f
@@ -58,10 +69,13 @@ require_pinned_version() {
 case "${1:-}" in
   --list) list_targets ;;
   --pinned-version) echo "$SHELLCHECK_PINNED_VERSION" ;;
+  --pinned-sha256) echo "$SHELLCHECK_PINNED_SHA256" ;;
+  --download-url)
+    echo "https://github.com/koalaman/shellcheck/releases/download/v$SHELLCHECK_PINNED_VERSION/shellcheck-v$SHELLCHECK_PINNED_VERSION.linux.x86_64.tar.xz" ;;
   "")
     require_pinned_version
     mapfile -t targets < <(list_targets)
     [[ ${#targets[@]} -gt 0 ]] || { echo "shellcheck.sh: no targets found (run from the repo root)" >&2; exit 2; }
     shellcheck -x "${targets[@]}" ;;
-  *) echo "usage: $0 [--list|--pinned-version]" >&2; exit 2 ;;
+  *) echo "usage: $0 [--list|--pinned-version|--pinned-sha256|--download-url]" >&2; exit 2 ;;
 esac

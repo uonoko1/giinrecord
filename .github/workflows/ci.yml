@@ -55,11 +55,19 @@ jobs:
       # Measured on this repo's probes: `i+=1` is silent in 0.9.0 and SC2324 from 0.10.0 on, so the older
       # CI was *missing* real findings. The version comes from scripts/ci/shellcheck.sh so that there is one
       # place to change; the script itself refuses to run under any other version (exit 3).
-      - name: shellcheck (pinned version, #552)
+      # #571: pinning the version pins the name, not the bytes -- GitHub Releases assets can in principle
+      # be replaced (e.g. a compromised maintainer account), and this binary is placed in /usr/local/bin
+      # and then fed the whole repository. The tarball's sha256 (from scripts/ci/shellcheck.sh, not
+      # hardcoded here) is verified with `sha256sum -c` before extraction; a mismatch fails the step.
+      - name: shellcheck (pinned version + sha256, #552, #571)
         run: |
           v=$(bash scripts/ci/shellcheck.sh --pinned-version)
-          curl -sSfL "https://github.com/koalaman/shellcheck/releases/download/v$v/shellcheck-v$v.linux.x86_64.tar.xz" \
-            | tar -xJ --strip-components=1 -C /usr/local/bin "shellcheck-v$v/shellcheck"
+          url=$(bash scripts/ci/shellcheck.sh --download-url)
+          sha256=$(bash scripts/ci/shellcheck.sh --pinned-sha256)
+          curl -sSfL "$url" -o shellcheck.tar.xz
+          echo "$sha256  shellcheck.tar.xz" | sha256sum -c -
+          tar -xJ --strip-components=1 -C /usr/local/bin -f shellcheck.tar.xz "shellcheck-v$v/shellcheck"
+          rm -f shellcheck.tar.xz
           shellcheck --version | sed -n '2p'
       - name: shellcheck + bash tests (scripts/po, scripts/ci, deploy)
         run: |

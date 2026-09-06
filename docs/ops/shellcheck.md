@@ -1,10 +1,29 @@
-# shellcheck の版（#552）
+# shellcheck の版とチェックサム（#552, #571）
 
 **固定している版: 0.11.0**
+**固定している sha256（linux.x86_64.tar.xz）: `8c3be12b05d5c177a04c29e3c78ce89ac86f1595681cab149b65b97c4e227198`**
 
 版の実体は `scripts/ci/shellcheck.sh` の `SHELLCHECK_PINNED_VERSION` **1 か所だけ**にある。
-CI（`.github/workflows/ci.yml`）は `bash scripts/ci/shellcheck.sh --pinned-version` を読んで
-その版を入れるので、**この文書と CI に版番号を書き写していない**（写した番号は必ずずれる）。
+sha256 の実体は同じファイルの `SHELLCHECK_PINNED_SHA256` **1 か所だけ**にある。
+CI（`.github/workflows/ci.yml`）は `bash scripts/ci/shellcheck.sh --pinned-version`・
+`--pinned-sha256`・`--download-url` を読んで版とチェックサムと取得元 URL を決めるので、
+**この文書と CI に値を書き写していない**（写した値は必ずずれる）。
+
+## なぜ sha256 も固定するか（#571）
+
+**版番号を固定しても、固定しているのは名前だけで中身ではない。**
+GitHub Releases のアセットは原理的に差し替えうる（作者のアカウント侵害等）。CI はこのバイナリを
+`/usr/local/bin` に置いて**リポジトリ全体を食わせる**ので、差し替えに気づけないのはサプライチェーンの
+入口になる。`scripts/ci/shellcheck.sh` の `--download-url` が出す URL からダウンロードした tar.xz に
+対して、`--pinned-sha256` が出す値と `sha256sum -c` で照合し、**一致しなければ CI を止める**
+（`|| true` や `continue-on-error` は使っていない）。
+
+**sha256 の出どころ**: 2026-09-07 に
+`https://github.com/koalaman/shellcheck/releases/download/v0.11.0/shellcheck-v0.11.0.linux.x86_64.tar.xz`
+を自分で 2 回ダウンロードし、`sha256sum` で計算した（両方とも同じ値になることを確認済み）。
+GitHub Releases のこのリリースには公式チェックサムファイル（`*.sha256` 等）は配布されていないため、
+**「自分でダウンロードして計算した値」が取れる最善の出どころ**である。レビュアーが先に実測した値
+（#571 本文）と一致することも確認したが、**この値は自分で取り直したものであり、写し取ったのではない**。
 
 ## なぜ固定するか
 
@@ -63,9 +82,12 @@ CI と同じものを入れる（`--pinned-version` から版を読むので、�
 
 ```sh
 v=$(bash scripts/ci/shellcheck.sh --pinned-version)
+sha256=$(bash scripts/ci/shellcheck.sh --pinned-sha256)
+url=$(bash scripts/ci/shellcheck.sh --download-url)
 mkdir -p ~/.local/bin
-curl -sSfL "https://github.com/koalaman/shellcheck/releases/download/v$v/shellcheck-v$v.linux.x86_64.tar.xz" \
-  | tar -xJ --strip-components=1 -C ~/.local/bin "shellcheck-v$v/shellcheck"
+curl -sSfL "$url" -o /tmp/shellcheck.tar.xz
+echo "$sha256  /tmp/shellcheck.tar.xz" | sha256sum -c -
+tar -xJ --strip-components=1 -C ~/.local/bin -f /tmp/shellcheck.tar.xz "shellcheck-v$v/shellcheck"
 shellcheck --version | sed -n '2p'     # → version: <上の $v と同じ>
 ```
 
@@ -76,17 +98,21 @@ shellcheck --version | sed -n '2p'     # → version: <上の $v と同じ>
 
 **版が古くなると、新しい指摘を受け取れない。** 上げるときは:
 
-1. `scripts/ci/shellcheck.sh` の `SHELLCHECK_PINNED_VERSION` を新しい版にする。**ここだけ。**
-2. 上の「手元に入れる」をもう一度実行して、新しい版を入れる。
-3. `bash scripts/ci/shellcheck.sh --list | wc -l` で**対象の本数を数えてから**
+1. `scripts/ci/shellcheck.sh` の `SHELLCHECK_PINNED_VERSION` を新しい版にする。
+2. **`SHELLCHECK_PINNED_SHA256` も同時に更新する。** 新しい版の tar.xz を自分でダウンロードして
+   `sha256sum` で計算する（`bash scripts/ci/shellcheck.sh --download-url` で URL を確認できる。
+   人から聞いた値をそのまま貼らないこと——**忘れると次の CI が sha256 不一致で落ちる**ので、
+   それ自体は fail-closed だが、先にここで更新したほうが早い）。
+3. 上の「手元に入れる」をもう一度実行して、新しい版を入れる。
+4. `bash scripts/ci/shellcheck.sh --list | wc -l` で**対象の本数を数えてから**
    `bash scripts/ci/shellcheck.sh` を走らせ、**exit 0 を確認する**。
-4. **新しい指摘が出たら、それは版を上げたことで見つかった本物の指摘である。**
+5. **新しい指摘が出たら、それは版を上げたことで見つかった本物の指摘である。**
    **`# shellcheck disable=` で黙らせない。** 直すか、直せないなら
    **なぜ黙らせるかを PR 本文とコードのコメントに書く。**
    （#542 は 0.9.0 の SC2015 を抑制せず、`cd` の失敗を握り潰していた構造のほうを直した。）
-5. `bash scripts/ci/test/shellcheck.test.sh` を通す（この文書が新しい版を名指ししているかも見ている）。
-6. **この文書の冒頭「固定している版」と、上の実測表の但し書きを更新する。**
-7. PR に **`shellcheck --version` の出力と、`--list` の本数と、exit コード**を貼る。
+6. `bash scripts/ci/test/shellcheck.test.sh` を通す（この文書が新しい版と sha256 を名指ししているかも見ている）。
+7. **この文書の冒頭「固定している版」「固定している sha256」と、上の実測表の但し書きを更新する。**
+8. PR に **`shellcheck --version` の出力と、`--list` の本数と、exit コードと、sha256 の取得元 URL**を貼る。
 
 ## いつ上げるか
 
