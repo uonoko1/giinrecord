@@ -1372,13 +1372,13 @@ describe("ウェイトの判定そのもの（#506）", () => {
    *     **`-?` を落とす**            → **32/32 緑（唯一の生存枝）**
    *
    * **`-?` の見本は置かない。** `font: -13px …` は **CSS として無効**（`<font-size>` は
-   * `<length-percentage [0,∞]>` で負を許さない。CSS Fonts 4 §3.5）なので、
+   * `<length-percentage [0,∞]>` で負を許さない。CSS Fonts 4 §2.5）なので、
    * **本番に書かれることがなく、書かれても描画に影響しない**。
    * **無理に落とすテストを書かず、等価変異に近いものとして書いて残す**（作業合意）。
    * ——ただし**厳密な等価変異ではない**（`-13px` を渡せば戻り値は変わる）ので、
    * 「**観測できる振る舞いが変わらない**」ではなく「**その入力が本番に存在しない**」が理由である。
    *
-   * ## `<font-size>` の値は仕様から数え上げた（CSS Fonts 4 §3.5）
+   * ## `<font-size>` の値は仕様から数え上げた（CSS Fonts 4 §2.5）
    *
    *     <absolute-size> = xx-small | x-small | small | medium | large | x-large | xx-large
    *     <relative-size> = larger | smaller
@@ -1395,8 +1395,13 @@ describe("ウェイトの判定そのもの（#506）", () => {
    * **規則の中身はどちらも同じ**（省略された下位項目は初期値に戻る）なので実害は無いが、
    * **同一ファイルに 2 つの番号がある**ことを知らずに読むと迷う。
    * 既存 4 箇所の書き換えは**この PBI の範囲外**（見本表を足す PBI で本文を触ると差分が読みにくい）。
-   * この describe で使う番号: `font` ショートハンド **§6.6** / `<font-size>` **§3.5** /
+   * この describe で使う番号: `font` ショートハンド **§6.6** / `<font-size>` **§2.5** /
    * `font-weight`（`lighter` / `bolder` の相対）**§2.2**。
+   * **`§2.2` は既存 4 箇所（101 / 238 / 912 / 1007 行）の `§2.7` と食い違う。**
+   * **PO が仕様を直接引いて確かめた**（`https://www.w3.org/TR/css-fonts-4/` の見出しを機械で列挙）:
+   * `2.2. Font weight: the font-weight property` / `2.5. Font size: the font-size property`。
+   * **`§2.2` が正しく、既存 4 箇所の `§2.7` が誤り。** 書き換えは**この PBI の範囲外**なので、
+   * **どちらが正しいかだけをここに残す**（次に触る人が迷わないため）。
    * `caption` / `icon` / `menu` / `message-box` / `small-caption` / `status-bar` は
    * **`<system-family-name>`** で、`<font-size>` を含まないので `sizeAt` は当たらない。
    *
@@ -1439,7 +1444,7 @@ describe("ウェイトの判定そのもの（#506）", () => {
       "S05 単位 rem": ["1.5rem var(--font-head)", { weight: undefined, family: "var(--font-head)" }],
       "S06 単位 em": ["2em var(--font-head)", { weight: undefined, family: "var(--font-head)" }],
       "S07 単位 %": ["120% var(--font-head)", { weight: undefined, family: "var(--font-head)" }],
-      // --- <relative-size>（CSS Fonts 4 §3.5） ---
+      // --- <relative-size>（CSS Fonts 4 §2.5） ---
       "S08 larger": ["larger var(--font-head)", { weight: undefined, family: "var(--font-head)" }],
       "S09 smaller": ["smaller var(--font-head)", { weight: undefined, family: "var(--font-head)" }],
       // --- <absolute-size> のうち x?x- で書かれている 4 語 ---
@@ -1484,7 +1489,15 @@ describe("ウェイトの判定そのもの（#506）", () => {
       //     ＋ 実装から `larger` の枝を削除 ＋ 本番 CSS に `font: larger var(--font-head)`
       //       → **32/32 緑のまま、本番に本物の違反が載る**（差分 3 箇所のうち 2 箇所はこのファイルの 1 行書き換え）
       //
-      // **入力が相異なることを固定すると、すり替えは「他の見本と同じ値にする」形でしか通らなくなる。**
+      // **これで塞げるのは「他の見本と同じ値にすり替える」形だけ**（#517 の再レビューが実測）:
+      //
+      //     S08 の入力を `larger` → `13px`（既存 S01 と重複）        → **1 failed**（塞げている）
+      //     S09 の入力を `smaller` → `3em`（**表に無い値**）          → **32/32 緑（素通り）**
+      //     ＋ 実装から `smaller` の枝を削除 ＋ 本番に `font: smaller …` → **32/32 緑**
+      //
+      // **表に無い値を使えば、この行は通る。「塞いだ」とは書けない。**
+      // 根本的に塞ぐには「その枝の語が入力に現れること」を要求する形が要るが、
+      // **それは見本表を足すというこの PBI の範囲を超える。**
       const 入力 = Object.values(SIZE_BRANCHES).map(([v]) => v);
       expect(new Set(入力).size, "見本の入力が重複している（枝ごとの見本が別の枝の見本にすり替わっていませんか）").toBe(15);
     });
@@ -1494,8 +1507,12 @@ describe("ウェイトの判定そのもの（#506）", () => {
      *
      * `caption` / `icon` / `menu` / `message-box` / `small-caption` / `status-bar` の 6 語は
      * **`<font-size>` を含まない**ので `sizeAt` が当たらない。**家族も自前ではない**ので、
-     * 「読めない」として `undefined` を返すのが正しい（呼び出し側が `weights` に `undefined` を積み、
-     * B2 の番人が拾う）。
+     * 「読めない」として `undefined` を返すのが正しい。
+     * **ただし CSS 経路では、その `undefined` は呼び出し側の `continue` で黙って捨てられる**
+     * （上の `shorthandMissingWeights` の注記を見よ）。**報告に出すのは TSX 経路だけ**で、
+     * `hasUnresolvedWeight` は `inlineStyles()` しか見ない。**#539 で扱う。**
+     * `caption` の場合は家族が自前でないので実害は無いが、**「B2 の番人が拾う」は偽である**
+     * （実測: 本番 CSS に `font: caption` を植えても 32/32 緑）。
      *
      * **`small-caption` は `small` を含む**——`sizeAt` に単語境界が無ければ
      * **`small` に当たってしまい、システム指定を「サイズ small のショートハンド」と誤読する**。
