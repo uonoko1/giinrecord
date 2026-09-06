@@ -5,7 +5,10 @@
 #      if that is refused because the gh OAuth token lacks the `workflow` scope (the PR touches
 #      .github/workflows/*), fall back to merging origin/main into the PR head in a temporary
 #      worktree and pushing over SSH (#200); a merge conflict aborts with nothing pushed
-#   3. poll `gh pr checks` until every check is pass/skipping (fail/cancel → abort)
+#   3. poll `commits/<head>/check-runs` (not `gh pr checks`: its bucket is derived from `status`,
+#      which can still read in_progress after `conclusion` is already set — #561) until every
+#      check is pass/neutral/skipped (a real conclusion of failure/cancelled/timed_out/
+#      action_required/stale → abort)
 #      main may move while we wait (another PR merged → BEHIND, strict status checks block the
 #      merge): every poll re-checks mergeStateStatus and runs update-branch again (#89, like etl.yml)
 #      while waiting on data/refresh only: approve `action_required` workflow runs
@@ -211,15 +214,50 @@ approve_pending_runs() {
   done
 }
 
+# fetch_checks — `commits/<sha>/check-runs` を読み、各チェック名を pass/pending/fail に分類する
+# （`\(bucket)\t\(name)` 形式。`gh pr checks` の --json name,bucket と同じ形にして、以降の awk を
+# そのまま使い回す）。
+#
+# **`gh pr checks` を使わない理由（#561）**: `gh pr checks` の bucket は `status` から作られる。
+# GitHub 側の不整合で `status: in_progress` のまま `conclusion` が既に付くことがあり
+# （実際に PR #534 の forbidden-patterns で observed: completed_at も入っていた）、
+# その場合 bucket は "pending" のままになる。**`conclusion` が付いていれば、`status` に関わらず
+# 結論が出ている**ので、`conclusion` を最優先で読む。
+#
+# 判定:
+#   conclusion が null                              → pending（まだ実行中で結論なし）
+#   conclusion が success / neutral / skipped        → pass
+#   conclusion がそれ以外（failure/cancelled/timed_out/action_required/stale 等） → fail
+#
+# 同名のチェックが複数回（再実行）現れることがあるので、`started_at` が最新の1件だけを見る
+# （古い run の conclusion で判定しない）。
+#
+# 作業合意「CI の状態は commit を固定して読む」（2026-09-05）:
+# branch protection が読むのも `commits/<PR の HEAD>/check-runs` なので、これに合わせる。
+fetch_checks() {
+  # shellcheck disable=SC2016  # $r/$bucket は jq の変数。シェルに展開させないためのシングルクォート
+  gh api "repos/$REPO/commits/$HEAD_OID/check-runs" -q '
+    [.check_runs[] | {name, status, conclusion, started_at}]
+    | group_by(.name)
+    | map(max_by(.started_at))
+    | .[]
+    | . as $r
+    | (if $r.conclusion == null then "pending"
+       elif ($r.conclusion == "success" or $r.conclusion == "neutral" or $r.conclusion == "skipped") then "pass"
+       else "fail" end) as $bucket
+    | "\($bucket)\t\($r.name)"
+  '
+}
+
 # wait_for_green — チェックが全部 pass/skipping になるまで待つ。POLL_MAX を通算で使い切る
 # （マージ拒否のたびに待ち直すので、上限をリセットすると無限に粘れてしまう）。
 i=0
 wait_for_green() {
   while true; do
     i=$((i + 1))
-    # exit 8 = checks pending, exit 1 = a check failed or no checks yet; output still carries the facts
-    checks=$(gh pr checks "$PR" --json name,bucket -q '.[] | "\(.bucket)\t\(.name)"' || true)
-    failed=$(awk -F'\t' '$1=="fail"||$1=="cancel"{print $2}' <<<"$checks")
+    checks=$(fetch_checks || true)
+    # fetch_checks は pending/pass/fail の3種類しか返さない（cancelled 等の失敗系は fail に含む）
+    failed=$(awk -F'\t' '$1=="fail"{print $2}' <<<"$checks")
     pending=$(awk -F'\t' '$1=="pending"{print $2}' <<<"$checks")
     total=$(grep -c . <<<"$checks" || true)
     if [[ -n "$failed" ]]; then
