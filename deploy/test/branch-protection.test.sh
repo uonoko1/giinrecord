@@ -66,62 +66,25 @@ test_case() {
 
 t_syntax() { bash -n "$SCRIPT" || fail "bash -n branch-protection.sh"; }
 
-# The guard's REQUIRED_CHECKS and the cases below are both in the two files of this PR, so weakening them TOGETHER
-# passes: a review demonstrated that dropping `gitleaks` from the guard's list AND from the loop below gives
-# 15 passed / shellcheck rc=0 while secret scanning is no longer required to merge (#521 review).
-# This case takes the expected set from a THIRD place that neither file controls — the CI workflows that define the
-# jobs. `gitleaks` / `forbidden-patterns` / `audit` are job ids in .github/workflows/security.yml and `check` is one
-# in ci.yml; a required status check is named after the job that reports it. To drop one from the guard now, the
-# job itself has to be deleted from the workflow, which is a visible change in a third file
-# (WORKING_AGREEMENT: 防御は「不可能にすること」ではなく「隠れて通れなくすること」／経路が2つ以上あるものは
-#  それぞれ別々に釘打つ).
-# NOT CLOSED, on purpose — read this before trusting the case below.
+# MOVED to packages/etl/test/branch-protection-jobs.test.ts (Issue #541).
 #
-# This is a SUBSET assertion in ONE DIRECTION ONLY: every job found in the workflows must appear in
-# REQUIRED_CHECKS. Measured, both directions (2026-09-06):
+# This used to be a bash sed/grep check that job ids in .github/workflows/security.yml (plus `check` from
+# ci.yml) all appeared in the guard's REQUIRED_CHECKS array — a SUBSET assertion in ONE DIRECTION ONLY.
+# Measured, both directions (2026-09-06, before the move):
 #
 #   RENAME  `gitleaks:` → `secrets-scan:` in security.yml, REQUIRED_CHECKS untouched
 #             → 15 passed, 1 failed (exit 1). `want` changes, `got` does not, the subset breaks. Caught.
 #   DELETE  remove the whole `gitleaks:` job from security.yml, REQUIRED_CHECKS untouched
-#             → 16 passed, 0 failed (exit 0). NOT CAUGHT.
+#             → 16 passed, 0 failed (exit 0). NOT CAUGHT — deleting a job SHRINKS `want`, and a subset
+#             assertion is satisfied for free when the left side shrinks (#499's "痩せたら落とす" half only).
 #
-# The delete direction is not caught because removing a job SHRINKS `want`, and a subset assertion is satisfied
-# for free when the left side shrinks. That is exactly the shape #499 warns about ("allowlist は痩せたら落とす
-# だけでなく、中身が入れ替わったら落とすまで固定する") — here only the "入れ替わったら" half is covered.
-#
-# Why it is not made bidirectional here: `docker-web` is a job in ci.yml that is deliberately NOT a required
-# check, so "every job must be required" is false as stated. A bidirectional check needs an allowlist of such
-# exceptions, and that allowlist would itself need pinning — which is more than this layer can carry, since it
-# reads YAML with sed/grep and depends on job ids being two-space-indented keys. This is the
-# "そのレイヤでは塞げない" side of #504, not the "塞げるのに塞いでいない" side.
-#
-# What deleting a job is BELIEVED to cause — THIS IS REASONING, NOT MEASURED: the required contexts live in the
-# branch protection settings, not in the workflow, so deleting the job does not remove `gitleaks` from the
-# required set. Nothing would report it, the check would stay `expected`, and PRs would stop being mergeable
-# (the `4 of 4 required status checks are expected.` state seen in #521). That fails towards "merges stop",
-# not towards "secret scanning silently stops being required". It has NOT been verified end to end on a real PR.
-#
-# Where this should move: #526 does the same kind of work in TypeScript (packages/etl). The bidirectional
-# comparison, plus a pinned allowlist for exceptions like `docker-web`, belongs there.
-t_required_checks_match_workflows() {
-  local want got missing=""
-  # job ids = the two-space-indented keys AFTER the top-level `jobs:` line (sed range), so `permissions:` and
-  # `concurrency:` above it are not mistaken for jobs. Plus `check`, the job ci.yml defines.
-  want=$( { sed -n '/^jobs:/,$p' "$HERE/../../.github/workflows/security.yml" \
-              | grep -oE '^  [a-z][a-z0-9-]*:' | tr -d ' :'
-           echo check; } | sort -u)
-  [ -n "$want" ] || { fail "workflow から job 名を1つも取れなかった（この検査自体が空振りしている）"; return; }
-  # the list the guard actually enforces
-  got=$(sed -n 's/^REQUIRED_CHECKS=(\(.*\))$/\1/p' "$SCRIPT" | tr ' ' '\n' | sort -u)
-  [ -n "$got" ] || { fail "REQUIRED_CHECKS を読み取れなかった"; return; }
-  local w
-  while read -r w; do
-    [ -z "$w" ] && continue
-    grep -qxF "$w" <<<"$got" || missing="$missing $w"
-  done <<<"$want"
-  [ -z "$missing" ] || fail "CI の job なのに必須チェックに入っていない:$missing (guard: $(tr '\n' ' ' <<<"$got"))"
-}
-
+# The TypeScript version reads the YAML with an indentation-rule parser (not regex — WORKING_AGREEMENT
+# "言語の構造は、その言語の実装に解かせる", same approach as #556's workflow-timeout.test.ts) and checks
+# BOTH directions: every pull_request job not on a pinned allowlist (`docker-web`, `stale-base`,
+# branch-protection.yml's own `guard`) must be required, AND every required check must still name a real
+# job. Re-measured there: deleting `gitleaks:` now fails ("REQUIRED_CHECKS に名前があるが、対応する job が
+# 無い"). It also cross-checks this file's REQUIRED_CHECKS array against its own hardcoded copy, so
+# shrinking BOTH files together (the exact shape #521's review found) no longer passes either.
 t_healthy() {
   fresh healthy
   run_guard uonoko1/giinrecord main
@@ -325,7 +288,6 @@ t_no_secret_in_output() {
 
 echo "== deploy/monitor/branch-protection.sh =="
 test_case "syntax"                                   t_syntax
-test_case "必須チェックの一覧が CI の job 定義と一致する"    t_required_checks_match_workflows
 test_case "設定が正しいとき ok で終わる"                  t_healthy
 test_case "enforce_admins が false なら落ちる"          t_enforce_admins_off
 test_case "必須チェックが1つでも欠けたら落ちる（4通り）"     t_missing_check

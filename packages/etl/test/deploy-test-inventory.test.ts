@@ -164,6 +164,10 @@ const INVENTORY: { file: string; anchors: string[]; minAssertions: number }[] =
       // #521 / #524: ブランチ保護は **GitHub の設定**にあり、diff にもレビューにも CI にも現れない。
       // 弱められたことを声にするのはこの検査だけなので、**消えると誰も気づけない**。
       // #524 はこの検査を足したが、**この検査自身の削除は塞げていなかった**（実測 14本・失敗0件）。
+      // #541: `t_required_checks_match_workflows`（bash の sed/grep で YAML を読む片方向の検査）を
+      // 削除し、`packages/etl/test/branch-protection-jobs.test.ts` の双方向検査に置き換えた
+      // （job の削除方向を捕まえられなかった穴を、YAML のインデント規則で読む別レイヤで塞いだ）。
+      // 意図して減らしたので、下限を実測値 56 に更新する（下げたのはこのテストケースのみ）。
       file: "branch-protection.test.sh",
       anchors: [
         "enforce_admins",
@@ -173,7 +177,7 @@ const INVENTORY: { file: string; anchors: string[]; minAssertions: number }[] =
         "allow_force_pushes",
         "branch-protection.sh",
       ],
-      minAssertions: 58,
+      minAssertions: 56,
     },
     {
       // #540 / #546: 「保護設定を読めない」と「弱まっている」を分ける判定。#546 のレビューが
@@ -309,7 +313,7 @@ const INVENTORY_PINNED: Record<
       "allow_force_pushes",
       "branch-protection.sh",
     ],
-    minAssertions: 58,
+    minAssertions: 56, // #541: t_required_checks_match_workflows を branch-protection-jobs.test.ts へ移設
   },
   "branch-protection-report.test.sh": {
     anchors: [
