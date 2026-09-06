@@ -26,6 +26,10 @@
 set -euo pipefail
 
 SV_EXT=.mutate-sv
+# find_saves が刈るディレクトリ名。resolve はこの配下を拒否する。
+# 「刈る側」と「拒否する側」がずれると、当たったのに戻らないファイルができる。
+PRUNED_DIRS='.git
+node_modules'
 
 usage() {
   cat >&2 <<'USAGE'
@@ -66,15 +70,30 @@ resolve() {
   top=$(cd -- "$top" && pwd -P)
   [[ $abs == "$top"/* ]] || die "この作業ツリーの外は触らない: $p"
   [[ $abs != *"$SV_EXT" ]] || die "退避ファイル自体は対象にできない: $p"
+  # find_saves が刈る場所に当てると、退避が孤児になって restore が見つけられない
+  # （＝当たったまま「戻すものが無い」と嘘をつく）。受け入れる集合と回収できる集合を一致させる。
+  local rel=${abs#"$top"/} seg
+  while IFS= read -r seg; do
+    [[ $rel == "$seg"/* || $rel == *"/$seg/"* ]] && die "回収できない場所は対象にできない（$seg 配下）: $p"
+  done <<< "$PRUNED_DIRS"
   printf '%s\n' "$abs"
 }
 
 sums() { md5sum "$1" | cut -d' ' -f1; }
 
+# 退避と一緒に「当てた直後の md5」を記録する。restore はそれと一致するときだけ上書きする。
+# .mutate-sv は crash を越えて残り、しかも gitignore されているので git status からは見えない。
+# 記録しないと、翌日その場所に書いた本物の作業を、古い退避が黙って消す
+# （この道具が防ごうとしている事故そのものを、git ではなく cp で起こす）。
+meta_path() { printf '%s\n' "$1$SV_EXT.md5"; }
+
 # find_saves → 作業ツリーに残っている退避ファイルを1行ずつ（.git と node_modules は見ない）
 find_saves() {
   local top; top=$(root)
-  find "$top" \( -name .git -o -name node_modules \) -prune -o -type f -name "*$SV_EXT" -print | LC_ALL=C sort
+  local -a prune=(); local d
+  while IFS= read -r d; do prune+=(-name "$d" -o); done <<< "$PRUNED_DIRS"
+  unset 'prune[-1]'   # 末尾の -o を落とす
+  find "$top" \( "${prune[@]}" \) -prune -o -type f -name "*$SV_EXT" -print | LC_ALL=C sort
 }
 
 cmd_status() {
@@ -83,22 +102,59 @@ cmd_status() {
   [[ -n $saves ]] || { echo "mutate: 変異は残っていない"; return 0; }
   n=$(printf '%s\n' "$saves" | wc -l)
   echo "mutate: 変異が当たったままのファイルが $n 件ある（restore で戻す）:" >&2
-  local s; while IFS= read -r s; do echo "  ${s%"$SV_EXT"}" >&2; done <<< "$saves"
+  local s target; while IFS= read -r s; do
+    target=${s%"$SV_EXT"}
+    if stale "$target"; then
+      echo "  $target  ← 当てたときと違う中身。restore は上書きを拒否する" >&2
+    else
+      echo "  $target" >&2
+    fi
+  done <<< "$saves"
   return 1
 }
 
+# stale <target> → 0 なら「当てたとき」から中身が変わっている（＝誰かが後から書いた）
+stale() {
+  local target=$1 meta expected
+  meta=$(meta_path "$target")
+  [[ -f $meta ]] || return 1          # 記録が無い（古い形式）ときは黙って上書きしない判断ができないので、変わっていない扱い
+  [[ -f $target ]] || return 1        # 対象が消えているなら退避から書き戻してよい
+  expected=$(cat "$meta")
+  [[ $(sums "$target") != "$expected" ]]
+}
+
 cmd_restore() {
-  local saves s target n=0
+  local saves s target n=0 skipped=0
   saves=$(find_saves)
   [[ -n $saves ]] || { echo "mutate: 戻すものが無い（退避ファイルは1つも残っていない）"; return 0; }
   while IFS= read -r s; do
     target=${s%"$SV_EXT"}
-    cp -p -- "$s" "$target"
-    rm -f -- "$s"
+    if stale "$target"; then
+      # 当てたときの変異後の中身ではない＝この場所に後から本物の作業が書かれている。
+      # 上書きすればそれを消す。人が判断できるように、両方残して落ちる。
+      echo "mutate: $target は当てたときと違う中身になっている。上書きしない" >&2
+      echo "  変異を当てた直後の md5: $(cat "$(meta_path "$target")")" >&2
+      echo "  いまの md5:             $(sums "$target")" >&2
+      echo "  当てる前の中身は $s に残してある。中身を見て、要るほうを自分で選ぶこと" >&2
+      skipped=$((skipped + 1))
+      continue
+    fi
+    # cp の失敗を握り潰さない。戻せていないのに「戻した」と言うのが最悪。
+    if ! cp -p -- "$s" "$target"; then
+      echo "mutate: $target を戻せなかった（退避 $s はそのまま残す）" >&2
+      return 1
+    fi
+    # 退避の削除に失敗したら、次の restore が「古い退避」として本物の作業を狙う。
+    # 戻せていない場合と同じ重さで落とす。
+    if ! rm -f -- "$s" "$(meta_path "$target")"; then
+      echo "mutate: $target は戻したが、退避 $s を消せなかった（次回の restore が誤爆する）" >&2
+      return 1
+    fi
     echo "mutate: 戻した $target"
     n=$((n + 1))
   done <<< "$saves"
   echo "mutate: $n 件戻した"
+  [[ $skipped == 0 ]] || return 1
 }
 
 # apply_pairs <path> <expr> [...] → 退避 → 当てる → 当たったか検査。
@@ -130,14 +186,14 @@ apply_pairs() {
     cp -p -- "$f" "$f$SV_EXT"
     before=$(sums "$f")
     if ! perl -pi -e "$e" -- "$f"; then
-      rm -f -- "$f$SV_EXT"
+      rm -f -- "$f$SV_EXT" "$(meta_path "$f")"
       rollback done_files[@]
       die "perl が失敗した: $e"
     fi
     after=$(sums "$f")
     if [[ $before == "$after" ]]; then
       # perl は空振りでも exit 0 を返す。ここが唯一の検出点。
-      cp -p -- "$f$SV_EXT" "$f"; rm -f -- "$f$SV_EXT"
+      cp -p -- "$f$SV_EXT" "$f"; rm -f -- "$f$SV_EXT" "$(meta_path "$f")"
       rollback done_files[@]
       echo "mutate: 変異が当たっていない（パターンが一致しなかった）" >&2
       echo "  ファイル: ${f#"$(root)"/}" >&2
@@ -145,6 +201,7 @@ apply_pairs() {
       echo "  md5 が変わっていない: $before" >&2
       exit 3
     fi
+    printf '%s\n' "$after" > "$(meta_path "$f")"
     done_files+=("$f")
     echo "mutate: 当てた ${f#"$(root)"/}  md5 $before → $after"
   done
@@ -156,7 +213,7 @@ rollback() {
   local f
   for f in "${arr[@]}"; do
     [[ -f "$f$SV_EXT" ]] || continue
-    cp -p -- "$f$SV_EXT" "$f"; rm -f -- "$f$SV_EXT"
+    cp -p -- "$f$SV_EXT" "$f"; rm -f -- "$f$SV_EXT" "$(meta_path "$f")"
     echo "mutate: 巻き戻した ${f#"$(root)"/}" >&2
   done
 }
@@ -176,16 +233,31 @@ cmd_run() {
 
   apply_pairs "${pairs[@]}"
 
-  # ここから先は何があっても戻す。Ctrl-C / TERM でも戻す。
-  # （KILL では戻せないが、退避は残るので後から restore できる）
-  trap 'cmd_restore >&2 || true; trap - INT TERM; kill -s "$1" $$' INT TERM
+  # ここから先は INT / TERM / HUP を受けても戻す（KILL では戻せないが、退避は残るので後から restore できる）。
+  # trap の本体は「シグナルを受けた時点」で展開されるので、そこに $1 と書くと
+  # シグナル名ではなく cmd_run の第1引数（--file）になる。実際そう書いていて壊れていた。
+  # シグナル名は trap を仕掛ける時点で埋め込む。
+  local sig
+  for sig in INT TERM HUP; do
+    # shellcheck disable=SC2064  # $sig を「いま」展開したいので、あえて二重引用符
+    trap "on_signal $sig" "$sig"
+  done
   set +e
   "${cmd[@]}"
   local st=$?
   set -e
-  trap - INT TERM
-  cmd_restore
+  trap - INT TERM HUP
+  cmd_restore || return 1
   return $st
+}
+
+# on_signal <シグナル名> → 戻してから、そのシグナルで自分を殺し直す
+# （呼び出し元に「シグナルで死んだ」と正しく伝えるための作法）
+on_signal() {
+  local sig=$1
+  trap - INT TERM HUP
+  cmd_restore >&2 || true
+  kill -s "$sig" -- "$$"
 }
 
 case "${1-}" in

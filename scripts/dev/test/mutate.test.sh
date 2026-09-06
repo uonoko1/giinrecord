@@ -222,6 +222,125 @@ t_refuses_a_missing_file() {
   assert_contains "$OUT" "src/nope.ts" "names it"
 }
 
+# ---- 必須1: 受け入れる集合と、回収できる集合を一致させる（レビュー指摘） ---------------------
+# find_saves は .git / node_modules を prune するので、そこに当てると退避が孤児になり
+# 「戻すものが無い（exit 0）」と嘘をつく。回収できない場所は最初から拒否する。
+t_refuses_paths_under_unrecoverable_dirs() {
+  repo; mkdir -p "$R/node_modules/pkg"; printf 'ORIGINAL\n' > "$R/node_modules/pkg/index.js"
+  local before; before=$(md5 "$R/node_modules/pkg/index.js")
+  run apply node_modules/pkg/index.js 's/ORIGINAL/MUTANT/'
+  assert_ne 0 "$STATUS" "node_modules 配下は拒否する"
+  assert_contains "$OUT" "回収できない" "explains why"
+  assert_eq "$before" "$(md5 "$R/node_modules/pkg/index.js")" "触っていない"
+  local head; head=$(md5 "$R/.git/config")
+  run apply .git/config 's/core/CORE/'
+  assert_ne 0 "$STATUS" ".git 配下は拒否する"
+  assert_eq "$head" "$(md5 "$R/.git/config")" ".git/config は無傷"
+  assert_eq "" "$(find "$R" -name '*'"$SV_EXT" -print)" "孤児の退避を残さない"
+}
+# run でも同じ（コマンドを走らせない）
+t_run_refuses_unrecoverable_dirs() {
+  repo; mkdir -p "$R/node_modules/pkg"; printf 'ORIGINAL\n' > "$R/node_modules/pkg/index.js"
+  run run --file node_modules/pkg/index.js --expr 's/ORIGINAL/MUTANT/' -- touch ran
+  assert_ne 0 "$STATUS" "拒否する"
+  assert_eq ORIGINAL "$(cat "$R/node_modules/pkg/index.js")" "当たっていない"
+  [[ ! -e "$R/ran" ]] || fail "コマンドを走らせない"
+}
+# 回収できる集合の側も固定する（拒否が広すぎると道具として使えない）
+t_accepts_ordinary_paths() {
+  repo; mkdir -p "$R/apps/web/node_modules_like"; printf 'ORIGINAL\n' > "$R/apps/web/node_modules_like/x.ts"
+  run apply apps/web/node_modules_like/x.ts 's/ORIGINAL/MUTANT/'
+  assert_eq 0 "$STATUS" "紛らわしい名前でも普通のパスは通す: $OUT"
+  run restore; assert_eq ORIGINAL "$(cat "$R/apps/web/node_modules_like/x.ts")" "戻る"
+}
+
+# ---- 必須2: 古い退避が、あとから書いた本物の作業を上書きしない（レビュー指摘） -----------------
+# .mutate-sv は crash を越えて残り、かつ gitignore で git status からも見えない。
+# 「当てたときの変異後の中身」でなくなっていたら、それは誰かが後から書いた本物の作業。
+t_restore_refuses_when_the_target_changed_since_apply() {
+  repo; run apply src/app.ts 's/ORIGINAL/MUTANT/'
+  printf 'MY IMPORTANT NEW FEATURE\n' > "$R/src/app.ts"   # 翌日の本物の作業
+  run restore
+  assert_ne 0 "$STATUS" "上書きせずに拒否する"
+  assert_contains "$OUT" "当てたときと違う" "explains why"
+  assert_eq 'MY IMPORTANT NEW FEATURE' "$(cat "$R/src/app.ts")" "今日の作業を消さない"
+  assert_eq 1 "$(find "$R" -name '*'"$SV_EXT" | wc -l)" "退避も消さない（人が判断できるように残す）"
+  assert_contains "$OUT" "$SV_EXT" "退避の場所を教える"
+}
+# 変異が当たったままなら（＝当てたときの中身のまま）ふつうに戻る
+t_restore_still_works_when_untouched() {
+  repo; local before; before=$(md5 "$R/src/app.ts")
+  run apply src/app.ts 's/ORIGINAL/MUTANT/'; run restore
+  assert_eq 0 "$STATUS" "戻る: $OUT"
+  assert_eq "$before" "$(md5 "$R/src/app.ts")" "元に戻る"
+}
+t_status_warns_when_the_target_changed() {
+  repo; run apply src/app.ts 's/ORIGINAL/MUTANT/'
+  printf 'MY IMPORTANT NEW FEATURE\n' > "$R/src/app.ts"
+  run status
+  assert_ne 0 "$STATUS" "status も気づく"
+  assert_contains "$OUT" "当てたときと違う" "名指しする"
+}
+
+# ---- 必須3: Ctrl-C / SIGTERM で戻る（レビュー指摘。コメントは戻ると書いていたが戻らなかった） ---
+# プロセスグループに INT を送る＝端末の Ctrl-C と同じ形で試す。
+t_restores_on_sigint_to_the_process_group() { assert_signal_restores INT; }
+t_restores_on_sigterm() { assert_signal_restores TERM; }
+assert_signal_restores() {
+  local sig=$1
+  repo; local before; before=$(md5 "$R/src/app.ts")
+  local log="$TMP/sig.$sig.log"
+  ( cd "$R" && setsid bash "$SCRIPT" run --file src/app.ts --expr 's/ORIGINAL/MUTANT/' -- sleep 30 ) > "$log" 2>&1 &
+  local runner=$!
+  local waited=0
+  until grep -q '当てた' "$log" 2>/dev/null; do
+    sleep 0.05; waited=$((waited+1)); [[ $waited -lt 200 ]] || { fail "$sig: 変異が当たらないまま時間切れ"; kill -KILL "$runner" 2>/dev/null; return 0; }
+  done
+  local pgid; pgid=$(ps -o pgid= -p "$runner" 2>/dev/null | tr -d ' ')
+  [[ -n $pgid ]] || { fail "$sig: pgid が取れない"; return 0; }
+  kill -"$sig" -- -"$pgid" 2>/dev/null
+  wait "$runner" 2>/dev/null || true
+  waited=0
+  until [[ ! -e "$R/src/app.ts$SV_EXT" ]]; do
+    sleep 0.05; waited=$((waited+1)); [[ $waited -lt 100 ]] || break
+  done
+  assert_eq "$before" "$(md5 "$R/src/app.ts")" "$sig: 戻っている"
+  assert_eq "" "$(find "$R" -name '*'"$SV_EXT" -print)" "$sig: 退避も片付いている"
+  # trap の中身が壊れていないこと。trap 文字列は「シグナルを受けた時点」で再展開されるので、
+  # その中の $1 は cmd_run の第1引数（--file など）になる。kill -s "$1" は必ず失敗する。
+  assert_not_contains "$(cat "$log")" "invalid signal specification" "$sig: trap の中で kill が失敗していない"
+  assert_not_contains "$(cat "$log")" "戻すものが無い" "$sig: 二重に restore していない"
+}
+
+# ---- 必須5-N3: 退避ファイル自身を対象にできない -----------------------------------------------
+t_refuses_the_save_file_itself() {
+  repo; printf 'SAVED\n' > "$R/src/app.ts$SV_EXT"
+  run apply "src/app.ts$SV_EXT" 's/SAVED/MUTANT/'
+  assert_ne 0 "$STATUS" "退避ファイル自身は対象にできない"
+  assert_eq SAVED "$(cat "$R/src/app.ts$SV_EXT")" "触っていない"
+  rm -f "$R/src/app.ts$SV_EXT"
+}
+
+# ---- 必須5-N4: 戻せなかったら黙って成功しない -------------------------------------------------
+# 読み取り専用ディレクトリにして cp を失敗させる。失敗を握り潰すと「戻した」と嘘をつく。
+t_restore_fails_loudly_when_the_copy_fails() {
+  repo; run apply src/app.ts 's/ORIGINAL/MUTANT/'
+  chmod a-w "$R/src"
+  run restore
+  chmod u+w "$R/src"
+  assert_ne 0 "$STATUS" "書き戻しか片付けに失敗したら非ゼロで落ちる"
+  assert_contains "$OUT" "mutate:" "何が起きたか mutate 自身の言葉で言う"
+  assert_eq 1 "$(find "$R" -name '*'"$SV_EXT" | wc -l)" "退避は残っている（消せていないので）"
+}
+
+# ---- 必須5-N5: パーミッションを保つ -----------------------------------------------------------
+t_preserves_the_file_mode() {
+  repo; chmod 0755 "$R/src/app.ts"
+  local before; before=$(stat -c '%a' "$R/src/app.ts")
+  run apply src/app.ts 's/ORIGINAL/MUTANT/'; run restore
+  assert_eq "$before" "$(stat -c '%a' "$R/src/app.ts")" "mode が戻る"
+}
+
 # ---- CI が本当にこのテストを走らせること -------------------------------------------------------
 # 「共通の道具を作る」は、CI が走らせて初めて効く。ci.yml の for ループの glob を固定する。
 # （scripts/dev/test/ を glob から外すと、この道具の防御が黙って死ぬ）
