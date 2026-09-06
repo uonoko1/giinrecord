@@ -26,13 +26,20 @@ W="$TMP/work"
 g() { git -C "$W" "$@"; }
 commit() { g add -A; g commit -qm "$1"; }
 # new_repo → $W with `main` at a commit holding docs/WORKING_AGREEMENT.md (a bullet list, like the real one)
-# The document is long on purpose: a three-line file makes every edit conflict, so a fixture that short
-# would report "conflict" for edits that git merges cleanly in the real 1,000-line agreement file.
+# The document is long on purpose, for two independent reasons:
+#   · a three-line file makes every edit conflict, so a fixture that short would report "conflict" for
+#     edits that git merge cleanly in the real 1,000-line agreement file
+#   · it has to be bigger than a pipe buffer (64 KiB on Linux). `git show … | grep -q` returns 141 under
+#     `set -o pipefail` only when git is still writing when grep closes the pipe. With a 40-line fixture
+#     git finishes first and exits 0, so the bug is invisible — measured: the mutation that restores the
+#     pipe survived 23/23 against a 40-line file and is caught by this one.
 new_repo() {
   rm -rf "$W"; git init -q -b main "$W"
   mkdir -p "$W/docs" "$W/src"
-  { echo "# 作業合意"; for i in $(seq 1 40); do echo "- **教訓 $i** 本文本文本文"; done; } \
-    > "$W/docs/WORKING_AGREEMENT.md"
+  { echo "# 作業合意"; for i in $(seq 1 40); do echo "- **教訓 $i** 本文本文本文"; done
+    # padding, past the pipe buffer; distinct lines so nothing here is mistaken for a duplicate
+    for i in $(seq 1 3000); do echo "  埋め草 $i 本文本文本文本文本文本文本文本文本文本文本文本文本文"; done
+  } > "$W/docs/WORKING_AGREEMENT.md"
   printf 'export const a = 1;\nexport const b = 2;\n' > "$W/src/app.ts"
   commit base
   # `origin/main` is what CI compares against; make it a real remote-tracking ref
@@ -46,7 +53,7 @@ main_moves() {
   g update-ref refs/remotes/origin/main main
 }
 branch_from() { g checkout -q -b "$2" "$1"; }
-run() { set +e; OUT=$(cd "$W" && bash "$SCRIPT" "$@" 2>&1); STATUS=$?; set -e; }
+run() { set +e; OUT=$(cd "$W" && STALE_BASE_LINES_OUT="${STALE_BASE_LINES_OUT:-}" bash "$SCRIPT" "$@" 2>&1); STATUS=$?; set -e; }
 
 BASE_SHA=""
 # stale_branch <name> → branch off the *first* commit (the stale base) and rewrite the doc wholesale,
@@ -253,6 +260,89 @@ t_rebase_makes_it_pass() {
   assert_contains "$(cat "$W/docs/WORKING_AGREEMENT.md")" "教訓 私" "the branch's own line survived the rebase"
 }
 
+# --- 3b. --verify: the only mode that means anything after a rebase ------------------------------
+# A rebase moves the merge-base to the base tip, so the default mode asks a question whose answer is
+# always "nothing gained since then" — it says ok even when every one of the base's lines is gone.
+# These cases pin that: the default mode goes quiet, and --verify does not.
+LINES=""
+# rebase_taking_our_side → rebase onto origin/main resolving every conflict with the branch's version,
+# which is what "resolve by taking my side" produces. $LINES is the file the check wrote.
+rebase_taking_our_side() {
+  set +e; g rebase -X theirs origin/main >/dev/null 2>&1; set -e
+  if [[ -e "$W/.git/rebase-merge" || -e "$W/.git/rebase-apply" ]]; then
+    g checkout -q --theirs . 2>/dev/null || true
+    g add -A; GIT_EDITOR=true g rebase --continue >/dev/null 2>&1
+  fi
+}
+t_default_mode_goes_quiet_after_a_bad_rebase_but_verify_does_not() {
+  new_repo; BASE_SHA=$(g rev-parse HEAD)
+  main_moves '- **教訓 X**' '- **教訓 Y**'
+  stale_branch topic
+  LINES="$TMP/lines.tsv"; STALE_BASE_LINES_OUT="$LINES" run
+  assert_eq 1 "$STATUS" "fails first"
+  assert_eq 2 "$(wc -l < "$LINES")" "wrote both at-risk lines out"
+  rebase_taking_our_side
+  assert_eq 0 "$(g show HEAD:docs/WORKING_AGREEMENT.md | grep -c -- '教訓 X')" "the bad resolution really dropped main's line"
+  # the default mode is now blind: the merge-base moved to the base tip
+  run
+  assert_eq 0 "$STATUS" "the default mode says ok even though the lines are gone"
+  # --verify is not
+  run --verify "$LINES"
+  assert_eq 1 "$STATUS" "--verify still fails"
+  assert_contains "$OUT" "教訓 X" "names the line that is gone"
+  assert_contains "$OUT" "教訓 Y" "names every line that is gone"
+  assert_contains "$OUT" "2 行が" "counts them"
+}
+t_verify_passes_when_the_rebase_kept_both_sides() {
+  new_repo; BASE_SHA=$(g rev-parse HEAD)
+  main_moves '- **教訓 X**' '- **教訓 Y**'
+  stale_branch topic
+  LINES="$TMP/lines.tsv"; STALE_BASE_LINES_OUT="$LINES" run
+  assert_eq 1 "$STATUS" "fails first"
+  # the good resolution: main's file plus the branch's own line
+  set +e; g rebase origin/main >/dev/null 2>&1; set -e
+  if [[ -e "$W/.git/rebase-merge" || -e "$W/.git/rebase-apply" ]]; then
+    g show origin/main:docs/WORKING_AGREEMENT.md > "$W/docs/WORKING_AGREEMENT.md"
+    printf -- '- **教訓 私**\n' >> "$W/docs/WORKING_AGREEMENT.md"
+    g add -A; GIT_EDITOR=true g rebase --continue >/dev/null 2>&1
+  fi
+  run --verify "$LINES"
+  assert_eq 0 "$STATUS" "--verify passes when both sides were kept: $OUT"
+  assert_contains "$OUT" "2 行すべて" "says how many it checked"
+}
+# `git show <rev>:<path> | grep -q` returns 141 under `set -o pipefail` (grep -q closes the pipe, git
+# takes SIGPIPE), which reads every present line as missing. This is a real bug that shipped for one
+# commit; without a present-line case nothing notices.
+t_verify_does_not_report_present_lines_as_missing() {
+  new_repo; BASE_SHA=$(g rev-parse HEAD)
+  printf 'docs/WORKING_AGREEMENT.md\t- **教訓 1** 本文本文本文\n' >  "$TMP/present.tsv"
+  printf 'docs/WORKING_AGREEMENT.md\t- **教訓 2** 本文本文本文\n' >> "$TMP/present.tsv"
+  run --verify "$TMP/present.tsv"
+  assert_eq 0 "$STATUS" "lines that ARE in the file must not be reported missing: $OUT"
+  assert_contains "$OUT" "2 行すべて" "checked both"
+}
+t_verify_rejects_an_unreadable_lines_file() {
+  new_repo; BASE_SHA=$(g rev-parse HEAD)
+  run --verify "$TMP/no-such-file.tsv"
+  assert_eq 2 "$STATUS" "a missing lines file must not read as clean"
+  assert_contains "$OUT" "読めません" "says it could not read it"
+}
+# The failure message names --verify, so the run that emits it must leave the file behind, and a later
+# run that finds nothing must not wipe it — that run is exactly the post-rebase one it is written for.
+t_a_later_clean_run_does_not_wipe_the_lines_file() {
+  new_repo; BASE_SHA=$(g rev-parse HEAD)
+  main_moves '- **教訓 X**'
+  stale_branch topic
+  LINES="$TMP/keep.tsv"; STALE_BASE_LINES_OUT="$LINES" run
+  assert_eq 1 "$STATUS" "fails first"
+  before=$(wc -l < "$LINES")
+  rebase_taking_our_side
+  STALE_BASE_LINES_OUT="$LINES" run
+  assert_eq 0 "$STATUS" "the default mode is quiet now"
+  assert_eq "$before" "$(wc -l < "$LINES")" "the evidence is still there"
+  assert_contains "$OUT" "--verify" "and the ok message points at --verify"
+}
+
 # --- 4. the check itself -------------------------------------------------------------------------
 t_reports_the_deletion_count_it_measured() {
   new_repo; BASE_SHA=$(g rev-parse HEAD)
@@ -305,6 +395,11 @@ test_case "きれいにマージできる側は DIFF-DELETES として出る" t_
 test_case "同じ行の2本目のコピーも数える（多重集合）" t_a_second_copy_of_an_existing_line_counts
 test_case "衝突ファイルの一覧は行全体で照合する（部分一致にしない）" t_conflicted_paths_are_matched_whole_line
 test_case "rebase すれば通る" t_rebase_makes_it_pass
+test_case "悪い rebase のあと、引数なしは黙るが --verify は黙らない" t_default_mode_goes_quiet_after_a_bad_rebase_but_verify_does_not
+test_case "両方残す rebase なら --verify は通る" t_verify_passes_when_the_rebase_kept_both_sides
+test_case "--verify は在る行を「無い」と言わない（pipefail の 141）" t_verify_does_not_report_present_lines_as_missing
+test_case "--verify は読めない一覧ファイルを通さない" t_verify_rejects_an_unreadable_lines_file
+test_case "あとから通った実行が証拠ファイルを消さない" t_a_later_clean_run_does_not_wipe_the_lines_file
 test_case "見つけた行数を出す" t_reports_the_deletion_count_it_measured
 test_case "base ref を引数で渡せる" t_base_ref_can_be_overridden
 test_case "base ref が解決できないときは通さない" t_missing_base_ref_is_an_error_not_a_pass
