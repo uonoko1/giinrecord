@@ -581,7 +581,10 @@ function readInlineStyles(rel: string, text: string): InlineStyle[] {
           // 「静的に読めない値」で落ちていた**（実測。CSS 側では通るのに TSX では落ちる非対称）。
           if (parsed === "system") continue;
           if (parsed === undefined) {
-            entry.weights.push(undefined); // 読めないショートハンドは読めないものとして報告に出す
+            // **#539: CSS 側と同じ門を通す。** サイズが読めない値でも、
+            // **自サイト配信でない家族が明らかなら鳴らさない**（`font: "2vw sans-serif"` は無害）。
+            // ここを揃える前は **CSS では通るのに TSX だけ落ちる**という非対称が残っていた（実測）。
+            if (text === undefined || mentionsSelfHostedFamily(text)) entry.weights.push(undefined);
           } else {
             // **A6b: weight を省いたショートハンドは 400 を要求する**（省略された下位項目は初期値に戻る。
             // CSS Fonts 4 §5.6）。`font: 13px/1.4 var(--font-head)` はどこにも 400 と書いていないのに
@@ -1240,7 +1243,7 @@ describe("ウェイトの判定そのもの（#506）", () => {
         readInlineStyles("t.tsx", `const A = () => <span style={{ font: ${JSON.stringify(v)} }}>x</span>;`).some(
           (s) => s.weights.includes(undefined) || inlineMissingWeights(s).length > 0 || inlineDemandsFaceWithoutFamily(s),
         );
-      const ずれ = [...Object.values(読めないサイズ), ...システム指定, "inherit", "13px var(--font-head)", "700 13px var(--font-head)", "13px sans-serif"]
+      const ずれ = [...Object.values(読めないサイズ), ...システム指定, "inherit", "13px var(--font-head)", "700 13px var(--font-head)", "13px sans-serif", "2vw sans-serif", "calc(1rem + 1px) Helvetica"]
         .filter((v) => cssReports(v) !== tsxReports(v))
         .map((v) => `${v}: CSS=${cssReports(v)} TSX=${tsxReports(v)}`);
       expect(ずれ, "CSS 経路と TSX 経路で扱いが違う（片方だけ黙って捨てている）").toEqual([]);
