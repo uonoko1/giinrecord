@@ -73,7 +73,14 @@ jobs:
         run: |
           bash scripts/ci/shellcheck.sh # target list and pinned version live there (#154, #552) — same command locally
           bash scripts/po/test/run.sh
-          for t in scripts/ci/test/*.test.sh scripts/dev/test/*.test.sh deploy/test/*.test.sh; do echo "== $t"; bash "$t"; done
+          # #533: this loop is itself a glob (three of them). Narrowing any one — e.g. rewriting the
+          # pattern to `scripts/ci/test/[a-c]*.test.sh` — makes files stop running with no red anywhere,
+          # because a file that never runs cannot fail. `ran` counts iterations of THIS loop, not files on
+          # disk, so a narrowed pattern is caught even if nothing else in the repo re-derives the count.
+          ran=0
+          for t in scripts/ci/test/*.test.sh scripts/dev/test/*.test.sh deploy/test/*.test.sh; do echo "== $t"; bash "$t"; ran=$((ran+1)); done
+          echo "loop ran: $ran (floor 23)"
+          [ "$ran" -ge 23 ] || { echo "FAIL: fewer test files ran than expected — glob narrowed or files deleted"; exit 1; }
       - run: pnpm lint
       - name: actionlint (all workflows)
         run: |
@@ -100,6 +107,25 @@ jobs:
           else
             pnpm --filter web exec playwright install --with-deps chromium
           fi
+      # #533: `pnpm test` runs vitest (apps/web) and `node --test` (packages/etl), both driven by a glob
+      # (vitest.config.ts's `include`, and `test/*.test.ts` in packages/etl/package.json). A glob that
+      # quietly matches fewer files makes tests disappear with no red anywhere — the deleted test simply
+      # never runs. packages/etl/test/test-file-inventory.test.ts checks the same globs from inside etl's
+      # own test run, but that file is itself one of the files the etl glob matches, so deleting it removes
+      # the only thing that would have said so (measured: deleting it drops etl's own test count by 6 and
+      # nothing calls that out). This step is the layer above that: it lives in ci.yml itself, which no
+      # test file can delete, and does not depend on either test runner still working.
+      - name: Test file count floor (#533) — glob shrinkage in vitest/node:test must not go silent
+        run: |
+          set -euo pipefail
+          web=$(find apps/web/app \( -name '*.test.ts' -o -name '*.test.tsx' \) | wc -l)
+          etl=$(find packages/etl/test -maxdepth 1 -name '*.test.ts' | wc -l)
+          echo "apps/web test files: $web (floor 85)"
+          echo "packages/etl test files: $etl (floor 84)"
+          fail=0
+          [ "$web" -ge 85 ] || { echo "FAIL: apps/web test files dropped below floor"; fail=1; }
+          [ "$etl" -ge 84 ] || { echo "FAIL: packages/etl test files dropped below floor"; fail=1; }
+          [ "$fail" = 0 ]
       - run: pnpm test
       - run: pnpm build
         env: { SITE_ORIGIN: "${{ vars.SITE_ORIGIN }}" } # unset → relative URLs (#57); set the repo variable once the domain is decided (#15)
