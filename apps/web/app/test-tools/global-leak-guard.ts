@@ -26,12 +26,12 @@
  * ファイル内で `render` を一度でも呼べば必ず残る。テスト間の汚染にはならない
  * （どのファイルも `render` の前に自分で立て直す）。
  */
-const ALLOWED_GLOBAL_KEYS: readonly string[] = ["IS_REACT_ACT_ENVIRONMENT"];
+export const ALLOWED_GLOBAL_KEYS: readonly string[] = ["IS_REACT_ACT_ENVIRONMENT"];
 
 /** `documentElement` に残ってよい属性。いまは無い。 */
-const ALLOWED_DOC_ATTRS: readonly string[] = [];
+export const ALLOWED_DOC_ATTRS: readonly string[] = [];
 
-type Baseline = {
+export type GlobalSnapshot = {
   globals: Set<string>;
   docAttrs: Set<string>;
   bodyHtml: string;
@@ -53,7 +53,7 @@ function storageKeys(s: Storage | undefined): Set<string> {
 }
 
 /** いまのグローバルの姿を撮る。**空を返さない**（撮れなかったら撮れなかったと分かる形にする）。 */
-export function snapshotGlobals(): Baseline {
+export function snapshotGlobals(): GlobalSnapshot {
   if (!hasDom()) {
     return { globals: new Set(Object.getOwnPropertyNames(globalThis)), docAttrs: new Set(), bodyHtml: "", headHtml: "", local: new Set(), session: new Set(), userAgent: "" };
   }
@@ -75,7 +75,7 @@ export function snapshotGlobals(): Baseline {
  * 次のファイルが消すと、**消したほうのファイルに差分が出る**——
  * その差分は「誰かが漏らした」ことの証拠なので、黙らせない。
  */
-export function describeLeaks(before: Baseline, after: Baseline): string[] {
+export function describeLeaks(before: GlobalSnapshot, after: GlobalSnapshot): string[] {
   const leaks: string[] = [];
 
   const addedGlobals = [...after.globals].filter((k) => !before.globals.has(k) && !ALLOWED_GLOBAL_KEYS.includes(k));
