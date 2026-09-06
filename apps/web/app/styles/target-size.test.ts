@@ -1,5 +1,6 @@
+import { execFileSync } from "node:child_process";
 import { readFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import { join, relative, sep } from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
@@ -66,16 +67,129 @@ function allCss(): { path: string; label: string; css: string }[] {
 }
 
 /**
+ * **`allCss()` が拾うべき `.css` の一覧を、`readdirSync` とは別の経路（git）から取る。**
+ *
+ * ## なぜ件数の下限ではだめだったか（#544）
+ *
+ * ここは以前 `expect(files.length).toBeGreaterThan(5)` だった。
+ * **`files.length` を `files` 自身から測っている**ので、
+ * **列挙が痩せれば、その痩せた結果を数えるだけ**になる。実測（#544 の報告を再現した）:
+ *
+ *     `allCss()` の1行を `&& e.name !== "member.css"` に変える            **33 passed（緑）**
+ *     上に加えて `member.css` に `.note a { padding: 4px }`（本物の違反）  **33 passed（緑）**
+ *
+ * **本番に本物の 2.5.8 違反が載ったまま、全部緑だった。**
+ * 7 本が 6 本になっても下限 5 を割らないので、何も鳴らない。
+ * 作業合意 #499「**期待値を検査対象から生成しない**——自己参照になり、
+ * 対象が痩せれば期待値も一緒に痩せる」がそのまま当てはまる形だった。
+ *
+ * ## 何に変えたか
+ *
+ * **期待値の源を `readdirSync` の外に出す。** git のインデックス（＋未追跡ファイル）から
+ * `.css` の一覧を取り、**件数ではなくパスの集合そのもの**を突き合わせる（#499「個数ではなく中身を固定する」）。
+ * 1 本落ちれば集合が食い違うので、**何本目であっても落ちる。**
+ *
+ * ## なぜ `--others --exclude-standard` を付けるか（偽陽性を出さないため）
+ *
+ * `git ls-files` だけだと**追跡されているものしか見えない**ので、
+ * **新しく `.css` を足した人が `git add` するまで赤くなる**（対象の落ち度ではないのに落ちる＝偽陽性）。
+ * `--others --exclude-standard` を足すと未追跡のファイルも見える。実測:
+ *
+ *     新しい .css を1本置く    `--cached` のみ 7 本 / `--cached --others` 8 本 / readdirSync 8 本
+ *
+ * `--exclude-standard` があるので `.gitignore` されたものは両側とも入らない。
+ *
+ * ## ここが git に依存することの限界（**書いておく**——#451 の流儀）
+ *
+ * **git が無い環境では検査そのものが落ちる**（黙らない）。CI も開発機も git の作業ツリーなので
+ * これで困らないが、**「git が使えないときは素通りさせる」ようには書いていない**——
+ * それを書くと、その逃げ道が穴になる。
+ */
+function gitTrackedCss(): string[] {
+  const out = execFileSync(
+    "git",
+    ["ls-files", "--cached", "--others", "--exclude-standard", "-z", "--", "*.css"],
+    { cwd: app, encoding: "utf8" },
+  );
+  return out.split("\0").filter(Boolean).map((p) => p.split("/").join(sep)).sort();
+}
+
+/**
  * `allCss()` が痩せていないこと。**呼ぶ側それぞれで確かめる**（別の `it` に置くと `it` ごと消せる）。
  *
- * **この 1 行だけを消しても何も落ちない**（実測 33 passed）——列挙器が正しければ件数は足りるので。
- * **落ちるのは「列挙を痩せさせたとき」**で、そのときは 3 件落ちる（実測: `.css` を `pages.css` に
- * 絞る／`routes/` を辿らない、どちらも **3 failed**）。
- * **この行は「痩せた瞬間に、どの `it` でも同じ言葉で鳴る」ためのもの**であって、
- * これ自体が唯一の番人ではない（下流の `all.length` の下限も別に効く）。
+ * **件数ではなく、git から取った一覧そのものと突き合わせる**（#544）。
+ * `allCss()` が 1 本でも落とせば、その名前が食い違って落ちる。
+ * 逆に git に無いものを拾っても落ちる（`.gitignore` されたビルド生成物を読んでいる等）。
+ *
+ * ## `filter` で差分を作ってから `toEqual([])` にしない（#500 の Z2 / #507）
+ *
+ * 最初はこう書いていた:
+ *
+ *     const missing = expected.filter((p) => !found.includes(p));
+ *     expect({ 不足: missing, 余分: extra }).toEqual({ 不足: [], 余分: [] });
+ *
+ * **これは述語を 1 つ足すだけで黙る。** 自分で測った（#507 の基準そのもの）:
+ *
+ *     `missing` の filter に `&& !p.endsWith("member.css")` を足す + 列挙から member.css を落とす
+ *         → **33 passed（緑）**
+ *     `const missing: string[] = []` に潰す + 列挙から member.css を落とす
+ *         → **33 passed（緑）**
+ *
+ * **差分を計算する側に手を入れられると、比べる材料のほうが痩せる。**
+ * なので**差分を作らず、2 つの一覧を直接比べる**——
+ * 減らせる中間の入れ物が無いので、**判定を狭めるには `expected` か `found` 自体を書き換えるしかない**。
+ * `expected` は git から来るので、書き換えれば**目に見える改変**になる（#507「隠れて通れなくする」）。
+ *
+ * ## 塞ぎ切っていないもの（**測った結果を書く**——#451 の流儀。一般化しない）
+ *
+ * **両側を同じだけ痩せさせれば、まだ黙る。** 自分で測った:
+ *
+ *     `gitTrackedCss()` の結果に `.filter((p) => !p.endsWith("member.css"))` を足す
+ *       + 列挙からも member.css を落とす                        → **33 passed（緑）**
+ *     `expect(found).toEqual(expected)` を `toEqual(found)` に書き換える
+ *       + 列挙から member.css を落とす                          → **33 passed（緑）**
+ *
+ * **これは「1 か所を痩せさせる」では済まない**——**独立経路の側と列挙の側の 2 か所**に、
+ * **同じファイル名を名指しして**手を入れる必要がある。
+ * 直す前は**列挙の 1 行だけ**で黙ったので、そこは変わっている。
+ * ただし**「2 か所要る」は「不可能」ではない。**
+ * ここを本当に閉じるには git 以外にもう 1 本経路が要るが、
+ * **経路を増やすほど「全部を同じだけ痩せさせる」以外の道が無くなるだけ**で、原理的な底は同じである。
+ *
+ * **`expected.length` の下限は、独立経路が丸ごと空振りした場合には鳴る**（実測:
+ * `gitTrackedCss()` を `[]` にする／git の `*.css` を `*.nomatch` にする、どちらも **3 failed**）。
  */
 function expectAllCssFound(files: { path: string }[]): void {
-  expect(files.length, "app/ 配下の .css を 1 本も拾えていない（列挙が空振り）").toBeGreaterThan(5);
+  const found = files.map((f) => relative(app, f.path)).sort();
+  const expected = gitTrackedCss();
+  // 前提: 独立経路そのものが空振りしていないこと（git が 0 件を返したら、集合の一致は無意味になる）
+  expect(expected.length, "git が app/ 配下の .css を 1 本も返していない（独立経路が空振り）").toBeGreaterThan(5);
+  // 差分を作らず、一覧そのものを比べる（中間の入れ物を痩せさせる道を作らないため）
+  expect(found, "allCss() が拾った .css が、git の一覧と食い違う（列挙器が痩せていませんか）").toEqual(expected);
+}
+
+/**
+ * **入口を固定しても、出口は痩せる**（#544 のレビューが実測）。
+ * `expectAllCssFound(files)` は `allCss()` の**戻り値**を固定するだけで、
+ * **その次の行が全部を使ったかは誰も見ていなかった**:
+ *
+ *     const offenders = files.filter((f) => !f.path.includes("member")).flatMap(...)   // 1 行
+ *       → 本番に `.note a { padding: 4px }` を載せたまま **33 passed（緑）**
+ *
+ * #500 の Z2（対象を数えたの保証は入口までしか届かない）そのもの。
+ * **読みながら記録し、同じ `it` の中で突き合わせる**——記録を消すことが検出を消すことになる形にする。
+ */
+function readingAll<T>(files: { path: string; css: string; label: string }[],
+                       fn: (f: { path: string; css: string; label: string }) => T[]): T[] {
+  const seen: string[] = [];
+  const out = files.flatMap((f) => {
+    seen.push(relative(app, f.path));
+    return fn(f);
+  });
+  expect(seen.sort(), "検査が読んだ .css が、git の一覧と食い違う（消費側で絞っていませんか）").toEqual(
+    gitTrackedCss(),
+  );
+  return out;
 }
 
 /**
@@ -759,7 +873,7 @@ describe("一覧の行の中のリンクは Spacing 例外に当たるので直�
     // **`app/` 配下の `.css` を全部見る。**手で 2 本並べていたので、残り 5 本が素通りしていた（#518）
     const files = allCss();
     expectAllCssFound(files);
-    const offenders = files.flatMap((f) => forbiddenTargetFixes(f.css, "行", f.label));
+    const offenders = readingAll(files, (f) => forbiddenTargetFixes(f.css, "行", f.label));
     expect(offenders, TARGET_LINK_RULES.行.reason).toEqual([]);
   });
 });
@@ -820,7 +934,7 @@ describe("散文の中のリンクは例外に当たるので直さない（WCAG
     // **`app/` 配下の `.css` を全部見る。**手で 2 本並べていたので、残り 5 本が素通りしていた（#518）
     const files = allCss();
     expectAllCssFound(files);
-    const offenders = files.flatMap((f) => forbiddenTargetFixes(f.css, "散文", f.label));
+    const offenders = readingAll(files, (f) => forbiddenTargetFixes(f.css, "散文", f.label));
     expect(offenders, TARGET_LINK_RULES.散文.reason).toEqual([]);
   });
 });
