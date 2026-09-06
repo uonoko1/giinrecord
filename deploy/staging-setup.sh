@@ -30,7 +30,7 @@ step() { printf '\n\033[1m== %s\033[0m\n' "$*"; }
 # （共用 VPS：他サイトのポートを奪わない。Sprint 7 で 8080/8082 が使用中で 2 回やり直した）。
 ensure_port_free() {
   local port=$1 service=$2
-  if ss -tln | grep -qE "[]:]$port\s"; then
+  if grep -qE "[]:]$port\s" < <(ss -tln); then
     if [ -n "$(docker compose -f "$COMPOSE" ps -q "$service" 2>/dev/null)" ]; then
       echo "127.0.0.1:$port は自分のコンテナ（$service）が使用中。再作成します"
     else
@@ -63,7 +63,7 @@ main() {
 
   step "4/8 コンテナ起動（$SERVICE: 127.0.0.1:$PORT、$SITE を読み取り専用で配信。常に --force-recreate）"
   docker compose -f "$COMPOSE" up -d --wait --force-recreate
-  curl -sI "http://127.0.0.1:$PORT/" | head -1 || true
+  head -1 < <(curl -sI "http://127.0.0.1:$PORT/") || true
 
   step "5/8 Cloudflare の IP allow-list（#163：staging は Cloudflare 経由のみ。snippet 生成＋週次 cron）"
   bash "$REPO_DIR/deploy/cloudflare-allowlist.sh" --install-cron

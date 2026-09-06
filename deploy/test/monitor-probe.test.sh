@@ -279,7 +279,7 @@ t_probe_rotation_covers_every_assembly() {
   for slot in 0 1 2 3; do
     : > "$LOG"
     PROBE_ASSEMBLY_SAMPLE=1 PROBE_NOW=$(( slot * 600 )) run_probe https://giinrecord.jp || fail "exit $? $(cat "$P/out")"
-    id=$(grep -oE 'https://giinrecord\.jp/assemblies/[a-z0-9-]+$' "$LOG" | sed 's|.*/assemblies/||' | head -1)
+    id=$(head -1 < <(grep -oE 'https://giinrecord\.jp/assemblies/[a-z0-9-]+$' "$LOG" | sed 's|.*/assemblies/||'))
     [ -n "$id" ] || { fail "slot $slot probed no assembly"; return; }
     assert_not_contains "$seen" "$id" "slot $slot probes an assembly the earlier slots did not"
     seen="$seen $id"

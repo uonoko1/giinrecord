@@ -198,7 +198,8 @@ t_cleanly_merging_file_is_reported_as_diff_deletes() {
   assert_not_contains "$OUT" "WOULD-LOSE" "and only that kind"
   assert_contains "$OUT" "マージは残すが diff では削除に見える: 1 行" "counts it under the diff tally"
   # and the claim is true: the three-way merge really does keep the line
-  assert_eq "1" "$(g show "$(g merge-tree --write-tree origin/main topic | head -1)":docs/WORKING_AGREEMENT.md | grep -c -- '- \*\*教訓 X\*\*')" "the merge result really keeps it"
+  merged_tree=$(head -1 < <(g merge-tree --write-tree origin/main topic))
+  assert_eq "1" "$(grep -c -- '- \*\*教訓 X\*\*' < <(g show "$merged_tree":docs/WORKING_AGREEMENT.md))" "the merge result really keeps it"
 }
 # Duplicate lines are counted as a multiset: main adding a SECOND copy of a line the branch already has
 # once is still a line the branch is missing. Counting distinct lines instead would report nothing.

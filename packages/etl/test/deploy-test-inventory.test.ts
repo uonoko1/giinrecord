@@ -254,6 +254,15 @@ const INVENTORY: { file: string; anchors: string[]; minAssertions: number }[] =
       anchors: ["staging-setup.sh"],
       minAssertions: 58,
     },
+    {
+      // #527: pipefail のもとで `grep -q` などをパイプの末尾に置くと、
+      // 一致した瞬間に読み手が終了し、書き手が SIGPIPE で死ぬ。pipefail は
+      // それを「パイプの失敗」にするので、**一致したのに検査が落ちる**。
+      // 実測: 大きい入力なら 200 回中 200 回 失敗、`<<<` なら 0 回。
+      file: "pipefail-sigpipe.test.sh",
+      anchors: ["scripts/ci/shellcheck.sh"],
+      minAssertions: 10,
+    },
     { file: "vps-setup.test.sh", anchors: ["vps-setup.sh"], minAssertions: 124 },
   ];
 
@@ -263,7 +272,7 @@ const INVENTORY: { file: string; anchors: string[]; minAssertions: number }[] =
  * **「行をそっと消す」を「数字も書き換える」に変える**——意図が diff に残る。
  * 止めるのは経路2・経路3のほう。
  */
-const EXPECTED_COUNT = 16;
+const EXPECTED_COUNT = 17;
 
 /**
  * 失敗を exit status に変える「出口」。これが無いと assertion がいくつあっても
@@ -356,6 +365,10 @@ const INVENTORY_PINNED: Record<
   },
   "run-remote.test.sh": { anchors: ["run-remote.sh"], minAssertions: 22 },
   "staging-setup.test.sh": { anchors: ["staging-setup.sh"], minAssertions: 58 },
+  "pipefail-sigpipe.test.sh": {
+    anchors: ["scripts/ci/shellcheck.sh"],
+    minAssertions: 10,
+  },
   "vps-setup.test.sh": { anchors: ["vps-setup.sh"], minAssertions: 124 },
 };
 

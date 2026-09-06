@@ -67,7 +67,7 @@ t_retention_is_long_enough_for_incident_review() {
   body=$(grep -v '^[[:space:]]*#' "$MONITOR_FIXTURE")
   rotate=$(printf '%s\n' "$body" | awk '$1=="rotate"{print $2}')
   [[ -n "$rotate" ]] || { fail "monitor: no 'rotate' directive"; return; }
-  period=$(printf '%s\n' "$body" | awk '$1=="daily"||$1=="weekly"||$1=="monthly"{print $1}' | head -1)
+  period=$(head -1 < <(awk '$1=="daily"||$1=="weekly"||$1=="monthly"{print $1}' <<<"$body"))
   case "$period" in
     daily) days=$((rotate)) ;;
     weekly) days=$((rotate*7)) ;;

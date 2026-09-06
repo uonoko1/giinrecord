@@ -84,44 +84,44 @@ echo "== 危険な構文を持ち込まない =="
 ALL_FILES=$(cat "$SUDOERS_DIR"/* 2>/dev/null | sed -e 's/[[:space:]]*#.*$//' -e '/^[[:space:]]*$/d')
 
 # NOPASSWD の後が ALL（空白・タブ・綴りを問わない）
-if echo "$ALL_FILES" | grep -Eq 'NOPASSWD:[[:space:]]*ALL'; then
+if grep -Eq 'NOPASSWD:[[:space:]]*ALL' <<<"$ALL_FILES"; then
   bad "NOPASSWD に ALL を与えている"
 else ok "NOPASSWD に ALL を与えない（空白・タブの変種も含む）"; fi
 
 # 引数を取らない裸のコマンド = 引数自由 = 実質何でもできる
-if echo "$ALL_FILES" | grep -E 'NOPASSWD:' | sed 's/^.*NOPASSWD:[[:space:]]*//' | grep -Eq '^[^ ]+$'; then
+if grep -Eq '^[^ ]+$' < <(grep -E 'NOPASSWD:' <<<"$ALL_FILES" | sed 's/^.*NOPASSWD:[[:space:]]*//'); then
   bad "引数の無い（＝引数自由な）コマンド許可がある"
 else ok "全ての許可コマンドが引数まで固定されている"; fi
 
 # ワイルドカード = 任意コード実行になりうる
-if echo "$ALL_FILES" | grep -E 'NOPASSWD:' | grep -q '[*?]'; then
+if grep -q '[*?]' < <(grep -E 'NOPASSWD:' <<<"$ALL_FILES"); then
   bad "コマンドにワイルドカードがある"
 else ok "コマンドにワイルドカードが無い"; fi
 
 # シェル・インタプリタ・GTFOBins 系は、パスやワイルドカードの有無に関わらず禁止
 DANGEROUS='bash|/sh|dash|zsh|env|find|awk|perl|python|ruby|vi|vim|nano|less|man|dd|chmod|chown|cp|mv|ln|tar|nsenter|unshare|systemd-run'
-if echo "$ALL_FILES" | grep -E 'NOPASSWD:' | sed 's/^.*NOPASSWD:[[:space:]]*//' | grep -Eq "^[^ ]*/($DANGEROUS)( |$)"; then
+if grep -Eq "^[^ ]*/($DANGEROUS)( |$)" < <(grep -E 'NOPASSWD:' <<<"$ALL_FILES" | sed 's/^.*NOPASSWD:[[:space:]]*//'); then
   bad "シェル/インタプリタ系のコマンドを許可している（任意コード実行）"
 else ok "シェル/インタプリタ系を許可していない"; fi
 
 # docker run / exec は任意のコンテナを root で起動できる = root 相当
-if echo "$ALL_FILES" | grep -E 'NOPASSWD:.*docker' | grep -Eq ' (run|exec|cp) '; then
+if grep -Eq ' (run|exec|cp) ' < <(grep -E 'NOPASSWD:.*docker' <<<"$ALL_FILES"); then
   bad "docker run/exec/cp を許可している"
 else ok "docker は compose の固定操作のみ"; fi
 
 # #335: nginx conf を書ける = 実質 root 相当（nginx master は root。`location /x { root /; }` で
 # 任意ファイルを HTTP 公開でき、他サイトの TLS 秘密鍵も読める。`nginx -t` は検査しない）
-if echo "$ALL_FILES" | grep -E 'NOPASSWD:' | grep -q '/tee '; then
+if grep -q '/tee ' < <(grep -E 'NOPASSWD:' <<<"$ALL_FILES"); then
   bad "nginx conf を書く許可（tee）がある（#335: 実質 root 相当）"
 else ok "nginx conf を書く許可（tee）を与えない"; fi
 
 # Issue 375: docker compose logs は足さない（コンテナの nginx ログは IP を含む）
-if echo "$ALL_FILES" | grep -E 'NOPASSWD:.*docker' | grep -q ' logs'; then
+if grep -q ' logs' < <(grep -E 'NOPASSWD:.*docker' <<<"$ALL_FILES"); then
   bad "docker compose logs を許可している（IP を含むログが読める）"
 else ok "docker compose logs は許可しない"; fi
 
 # Alias による間接化（Cmnd_Alias OPS = /usr/bin/env のような迂回）
-if echo "$ALL_FILES" | grep -Eq '^[[:space:]]*(Cmnd_Alias|User_Alias|Runas_Alias|Host_Alias)'; then
+if grep -Eq '^[[:space:]]*(Cmnd_Alias|User_Alias|Runas_Alias|Host_Alias)' <<<"$ALL_FILES"; then
   bad "Alias 定義がある（許可の実体が隠れる）"
 else ok "Alias 定義を使っていない"; fi
 
@@ -159,8 +159,8 @@ if [ "$SUBJECTS" = "giinops " ]; then ok "許可を持つ主体は giinops の�
 # 5. 環境変数が渡らないこと（docker の SITE_DIR=/ 対策）
 # ---------------------------------------------------------------------------
 echo "== 環境をリセットする指定がある =="
-if echo "$ALL_FILES" | grep -q 'env_reset'; then ok "env_reset を明示している"; else bad "env_reset の明示が無い"; fi
-if echo "$ALL_FILES" | grep -q '!setenv'; then ok "!setenv（sudo VAR=x を禁止）を明示している"; else bad "!setenv が無い"; fi
+if grep -q 'env_reset' <<<"$ALL_FILES"; then ok "env_reset を明示している"; else bad "env_reset の明示が無い"; fi
+if grep -q '!setenv' <<<"$ALL_FILES"; then ok "!setenv（sudo VAR=x を禁止）を明示している"; else bad "!setenv が無い"; fi
 
 # ---------------------------------------------------------------------------
 # 6. 構文が本当に妥当か（スタブではなく本物の visudo で）
@@ -201,17 +201,17 @@ warn_output() {  # warn_output <H_LEGACY_EXISTS> <H_LEGACY_SUDO> → stderr
 }
 
 OUT=$(warn_output 1 "(ALL) NOPASSWD: ALL")
-if printf '%s' "$OUT" | grep -q '危険'; then ok "旧ユーザーが NOPASSWD:ALL なら「危険」と言い切る"
+if grep -q '危険' <<<"$OUT"; then ok "旧ユーザーが NOPASSWD:ALL なら「危険」と言い切る"
 else bad "NOPASSWD:ALL を持つ旧ユーザーを危険と伝えていない: $OUT"; fi
-if printf '%s' "$OUT" | grep -q 'deluser'; then ok "消し方（deluser）を示す"
+if grep -q 'deluser' <<<"$OUT"; then ok "消し方（deluser）を示す"
 else bad "消し方を示していない"; fi
 
 OUT=$(warn_output 1 "(ALL) NOPASSWD: /usr/bin/true")
-if printf '%s' "$OUT" | grep -q '残っています'; then ok "無制限でない旧ユーザーは通常の警告"
+if grep -q '残っています' <<<"$OUT"; then ok "無制限でない旧ユーザーは通常の警告"
 else bad "旧ユーザーが居るのに警告が出ない: $OUT"; fi
 
 OUT=$(warn_output "" "")
-if printf '%s' "$OUT" | grep -q '旧運用ユーザー'; then bad "旧ユーザーが居ないのに警告が出る: $OUT"
+if grep -q '旧運用ユーザー' <<<"$OUT"; then bad "旧ユーザーが居ないのに警告が出る: $OUT"
 else ok "旧ユーザーが居なければ何も言わない"; fi
 
 # Issue 375: allowlist を更新するだけの再実行では、鍵を渡し直さなくてよい。
