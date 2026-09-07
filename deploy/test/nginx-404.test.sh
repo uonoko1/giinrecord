@@ -28,14 +28,21 @@ cleanup() { docker rm -f "$NAME" >/dev/null 2>&1 || true; rm -rf "$TMP"; }
 trap cleanup EXIT
 
 # 合成の docroot: 本物のビルドは要らない。要るのは「プリレンダー済みページはディレクトリ + index.html、
-# /compare は何も無い、/__spa-fallback.html はある」という形だけ。
+# /compare は何も無い、/__spa-fallback.html と /__not-found/index.html はある」という形だけ。
 ROOT="$TMP/html"
-mkdir -p "$ROOT"/{members/m_1,coverage,assemblies,rollcalls,assets,data}
+mkdir -p "$ROOT"/{members/m_1,coverage,assemblies,rollcalls,assets,data,__not-found}
 echo '<html lang="ja"><title>トップ ・ 議員レコード</title>' > "$ROOT/index.html"
 for d in members members/m_1 coverage assemblies rollcalls; do
   echo "<html lang=\"ja\"><title>$d ・ 議員レコード</title>" > "$ROOT/$d/index.html"
 done
-echo '<html lang="ja"><title>ページが見つかりません ・ 議員レコード</title><meta name="robots" content="noindex">' > "$ROOT/__spa-fallback.html"
+# /__spa-fallback.html は本物のビルドでもルート `/` の <title>（「議員レコード」のみ）で「見つかりません」
+# を含まない（apps/web/app/root.tsx の HydrateFallback。#104 で /compare の 200 本文として使う）。
+# ここで「見つかりません」を書いてしまうと、error_page 404 が誤って /__spa-fallback.html を指す
+# 退行を、下の t_body / assert_status が検出できなくなる（実測: 誤って書いていたときは 21/21 green のまま通った）。
+echo '<html lang="ja"><title>議員レコード</title><meta name="robots" content="noindex">' > "$ROOT/__spa-fallback.html"
+# Issue #610: 404 の本文は catch-all のプリレンダー済み HTML（JS 無しでも「見つかりません」を含む）。
+# /__spa-fallback.html はルート `/` だけをレンダーした殻なので、404 の本文には使えない。
+echo '<html lang="ja"><title>ページが見つかりません ・ 議員レコード</title><meta name="robots" content="noindex">見つかりません' > "$ROOT/__not-found/index.html"
 echo 'body{}' > "$ROOT/assets/a.css"
 echo '{}' > "$ROOT/data/meta.json"
 
@@ -101,13 +108,17 @@ t_body() {
   case "$body" in *'議員レコード'*) ;; *) echo "    x <title> にサイト名が無い"; bad=1;; esac
   case "$body" in *'noindex'*) ;; *) echo "    x noindex が無い"; bad=1;; esac
   case "$body" in *'<html'*) ;; *) echo "    x nginx の既定 404 ページ（本文が出ていない）"; bad=1;; esac
-  if [ "$bad" = 0 ]; then PASS=$((PASS+1)); echo "ok   404 の本文は SPA fallback（lang=ja・サイト名・noindex）"
+  # Issue #610: JS 無しでも「見つかりません」の文字が本文に出ていること。
+  # /__spa-fallback.html（ルート `/` だけの殻）を誤って 404 の本文に使うと、ここだけが落ちる。
+  case "$body" in *'見つかりません'*) ;; *) echo "    x 「見つかりません」が本文に無い（JS 無しでは読めない = #610）"; bad=1;; esac
+  if [ "$bad" = 0 ]; then PASS=$((PASS+1)); echo "ok   404 の本文は JS 無しでも「見つかりません」まで含む（lang=ja・サイト名・noindex）"
   else FAIL=$((FAIL+1)); echo "FAIL 404 の本文"; fi
 }
 t_body
 
-# ---- fallback 自体は直接取れない（同じ中身が 2 つの URL で索引されるのを防ぐ） ----
-assert_status /__spa-fallback.html 404 "#325: internal。直接は取れない"
+# ---- fallback / not-found 自体は直接取れない（同じ中身が別の 200 URL としても索引されるのを防ぐ） ----
+assert_status /__spa-fallback.html      404 "#325: internal。直接は取れない"
+assert_status /__not-found/index.html   404 "#610: internal。直接は取れない"
 
 # ---- セキュリティヘッダは 404 にも付く ----
 t_headers() {
