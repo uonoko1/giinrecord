@@ -1071,57 +1071,6 @@ Disallow: /
 （作業合意、島根 #232 と同じ教訓）。
 
 
-## DATA_CONTRACT 拡張の素案（実装しない。議論用）
-
-### 1. `house` の拡張
-
-現行 `type House = "sangiin" | "shugiin"` は **国会の院** の意味で全レコードに入っている。地方を足すとき、`House` を増やすのではなく **階層（level）と議会（assembly）を分ける**:
-
-```ts
-type Level = "national" | "prefectural" | "municipal";
-type House = "sangiin" | "shugiin";          // national のときだけ意味を持つ（今のまま）
-type AssemblyId =
-  | "sangiin" | "shugiin"                    // 既存 id と後方互換
-  | `pref-${string}`                         // 都道府県: pref-{団体コード2桁} 例 pref-04（宮城）、pref-36（徳島）
-  | `city-${string}`;                        // 市区町村: city-{団体コード5桁} 例 city-33100（岡山市）、city-14100（横浜市）
-
-interface Assembly { id: AssemblyId; level: Level; name: string; shortName: string; code?: string; sourceUrl: string; voteDisclosure: "individual" | "group" | "totals" | "unknown"; since?: string }
-```
-
-- 団体コード（総務省 全国地方公共団体コード）を id にする。`districts/municipalities.json` の `code` と同じ体系なので、郵便番号 → 市区町村 → 議会 の結合がそのまま効く（#111）。都道府県は上 2 桁。
-- `voteDisclosure` はこの調査表の 4 値をそのまま型にし、Web は「この議会は個人別の表決を公開していません」を **事実として** 出す（評価しない）。
-- 既存の `house: House` はフィールド名を変えない（国会データの後方互換）。地方のレコードは `house` を持たず `assembly: AssemblyId` を持つ、または `house` を `AssemblyId` に広げる（`"sangiin" | "shugiin"` が部分型なので既存 JSON はそのまま妥当）。後者の方が `Member.house` / `RollCall.house` / `Bill.house` の 3 か所を一度に広げられて差分が小さい。
-
-### 2. id と `session`
-
-- 国会は `session`（回次）が整数で全ファイルのキーになっている。地方は「令和8年6月定例会」「第399回」のように **番号付けが議会ごとに違う**（宮城は通算回次、徳島は年＋月、岡山市は議決日）。`session` を整数のまま使わず、`sessionId: string`（議会内で一意。例 `2026-06`、`399`）と `sessionLabel: string`（原文「令和8年6月定例会」）を持つ。
-- `memberId`: `{assemblyId}-{…}`（例 `pref-04-{かな/連番}`）。国会の memberId の作り方（`packages/etl` の name-resolver）を assembly ごとの名簿に対して再利用。
-- `rollCallId`: `{assemblyId}-{sessionId}-{議決日}-{議案番号}`（同じ会期で議決日が複数ある 奈良・沖縄 のため議決日を含める）。
-- `billId`: `{assemblyId}-{sessionId}-{種別原文}-{番号}`。
-- `sourceUrl` の不変条件「衆参・NDL のドメイン」は assembly ごとの許可ドメイン表（`Assembly.sourceUrl` のホスト）に置き換える。ETL の取得先許可リストも同じ表から作る。
-
-### 3. ファイル配置と URL
-
-```
-data/
-  assemblies.json                       Assembly[]（67 件。voteDisclosure を含む。調査表が初版）
-  national/ …（現行の members/ rollcalls/ bills/ をそのまま。移動は別 Issue）
-  local/{assemblyId}/
-    meta.json                           DatasetMeta（取得日時・出典・対象 sessionId）
-    members/index.json, members/{memberId}.json
-    rollcalls/index.json, rollcalls/{sessionId}/{rollCallId}.json
-```
-
-Web の URL: `/assemblies`（一覧。公開／会派別／総数のみ／不明を事実として表示）、`/assemblies/{assemblyId}`、`/assemblies/{assemblyId}/members/{memberId}`、`/assemblies/{assemblyId}/rollcalls/{rollCallId}`。国会の既存 URL は変えない。郵便番号検索（Home）は `districts/municipalities.json` の `code` から `city-{code}` と `pref-{code 上2桁}` を引いて「あなたの自治体の議会」にリンクできる。
-
-### 4. 表決の値
-
-国会の `VoteValue` に、地方の凡例で出てきた値を足す必要がある: 賛成・反対 のほか **議長**（採決に加わらない）、**欠席**、**議場に不在**（－）、**棄権**、**白票／青票**（記名投票）、**除斥**、**退席**。「投票なし」に畳まず原文の区分を保持する（国会では欠席と棄権を区別しないが、地方の PDF は区別して書いているので、区別している事実を消さない）。`simple`（簡易表決＝異議なしで可決、個人票が無い）を RollCall の属性に持ち、個人票が無いことを「全員賛成」と推定しない。
-
-### 5. 会派別しか無い議会
-
-`Bill.shugiinGroupStance` と同じく **推定** として `groupStances` を持ち、`stance` 行（`estimated: true`）だけを作る。個人の `vote` 行は作らない。Web の判は `est-*` のまま。
-
 ## 大分県議会（#617）の再調査（2026-09-07）
 
 #128 由来の大分の行は robots.txt・利用条件・PDF の中身を確認していなかった。
@@ -1357,6 +1306,57 @@ giangiketukextuka{年度1桁}-{回}.html              （令和4年第4回だけ
 - **議席番号 17 番の欠員が誰で、いつからか。** 令和8年第3回時点で欠番と確認しただけ。
 - **会派名の帯が、どの列からどの列までを覆うか**（x の範囲の復元。宮城・青森と同じ課題）。
 - **議員の個別ページの有無**（在職期間・当選回数を確認していない）。
+
+## DATA_CONTRACT 拡張の素案（実装しない。議論用）
+
+### 1. `house` の拡張
+
+現行 `type House = "sangiin" | "shugiin"` は **国会の院** の意味で全レコードに入っている。地方を足すとき、`House` を増やすのではなく **階層（level）と議会（assembly）を分ける**:
+
+```ts
+type Level = "national" | "prefectural" | "municipal";
+type House = "sangiin" | "shugiin";          // national のときだけ意味を持つ（今のまま）
+type AssemblyId =
+  | "sangiin" | "shugiin"                    // 既存 id と後方互換
+  | `pref-${string}`                         // 都道府県: pref-{団体コード2桁} 例 pref-04（宮城）、pref-36（徳島）
+  | `city-${string}`;                        // 市区町村: city-{団体コード5桁} 例 city-33100（岡山市）、city-14100（横浜市）
+
+interface Assembly { id: AssemblyId; level: Level; name: string; shortName: string; code?: string; sourceUrl: string; voteDisclosure: "individual" | "group" | "totals" | "unknown"; since?: string }
+```
+
+- 団体コード（総務省 全国地方公共団体コード）を id にする。`districts/municipalities.json` の `code` と同じ体系なので、郵便番号 → 市区町村 → 議会 の結合がそのまま効く（#111）。都道府県は上 2 桁。
+- `voteDisclosure` はこの調査表の 4 値をそのまま型にし、Web は「この議会は個人別の表決を公開していません」を **事実として** 出す（評価しない）。
+- 既存の `house: House` はフィールド名を変えない（国会データの後方互換）。地方のレコードは `house` を持たず `assembly: AssemblyId` を持つ、または `house` を `AssemblyId` に広げる（`"sangiin" | "shugiin"` が部分型なので既存 JSON はそのまま妥当）。後者の方が `Member.house` / `RollCall.house` / `Bill.house` の 3 か所を一度に広げられて差分が小さい。
+
+### 2. id と `session`
+
+- 国会は `session`（回次）が整数で全ファイルのキーになっている。地方は「令和8年6月定例会」「第399回」のように **番号付けが議会ごとに違う**（宮城は通算回次、徳島は年＋月、岡山市は議決日）。`session` を整数のまま使わず、`sessionId: string`（議会内で一意。例 `2026-06`、`399`）と `sessionLabel: string`（原文「令和8年6月定例会」）を持つ。
+- `memberId`: `{assemblyId}-{…}`（例 `pref-04-{かな/連番}`）。国会の memberId の作り方（`packages/etl` の name-resolver）を assembly ごとの名簿に対して再利用。
+- `rollCallId`: `{assemblyId}-{sessionId}-{議決日}-{議案番号}`（同じ会期で議決日が複数ある 奈良・沖縄 のため議決日を含める）。
+- `billId`: `{assemblyId}-{sessionId}-{種別原文}-{番号}`。
+- `sourceUrl` の不変条件「衆参・NDL のドメイン」は assembly ごとの許可ドメイン表（`Assembly.sourceUrl` のホスト）に置き換える。ETL の取得先許可リストも同じ表から作る。
+
+### 3. ファイル配置と URL
+
+```
+data/
+  assemblies.json                       Assembly[]（67 件。voteDisclosure を含む。調査表が初版）
+  national/ …（現行の members/ rollcalls/ bills/ をそのまま。移動は別 Issue）
+  local/{assemblyId}/
+    meta.json                           DatasetMeta（取得日時・出典・対象 sessionId）
+    members/index.json, members/{memberId}.json
+    rollcalls/index.json, rollcalls/{sessionId}/{rollCallId}.json
+```
+
+Web の URL: `/assemblies`（一覧。公開／会派別／総数のみ／不明を事実として表示）、`/assemblies/{assemblyId}`、`/assemblies/{assemblyId}/members/{memberId}`、`/assemblies/{assemblyId}/rollcalls/{rollCallId}`。国会の既存 URL は変えない。郵便番号検索（Home）は `districts/municipalities.json` の `code` から `city-{code}` と `pref-{code 上2桁}` を引いて「あなたの自治体の議会」にリンクできる。
+
+### 4. 表決の値
+
+国会の `VoteValue` に、地方の凡例で出てきた値を足す必要がある: 賛成・反対 のほか **議長**（採決に加わらない）、**欠席**、**議場に不在**（－）、**棄権**、**白票／青票**（記名投票）、**除斥**、**退席**。「投票なし」に畳まず原文の区分を保持する（国会では欠席と棄権を区別しないが、地方の PDF は区別して書いているので、区別している事実を消さない）。`simple`（簡易表決＝異議なしで可決、個人票が無い）を RollCall の属性に持ち、個人票が無いことを「全員賛成」と推定しない。
+
+### 5. 会派別しか無い議会
+
+`Bill.shugiinGroupStance` と同じく **推定** として `groupStances` を持ち、`stance` 行（`estimated: true`）だけを作る。個人の `vote` 行は作らない。Web の判は `est-*` のまま。
 
 ## 制約と次の一手
 
