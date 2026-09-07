@@ -159,8 +159,13 @@ export function sourceLinks(hrefs: string[], sourceUrl: string): string[] {
  * **#451「検査器自身のテストが無いと、検査が死んでも緑」と同じ形**であり、
  * 自分が塞いだ穴（`texts.length === 0`）の**一段上に同じ穴**が残っていた。
  * 「検査するものが無いから緑」を作らない、という方針をこの層にも当てる。
+ *
+ * #610: 5 ページ目として「存在しない URL（404）」を足した。#325 は「ステータスと画面の両方が
+ * 『無い』を表す」と書いていたが、それが成り立つのは JS が動いたときだけだった
+ * （JS 無効では nginx の SPA shell の「読み込んでいます…」のまま止まる）。ここは
+ * **JS を切ってもその 404 ページ自体に「見つかりません」の本文が出ること**を見る。
  */
-export const NOJS_PAGE_COUNT = 4;
+export const NOJS_PAGE_COUNT = 5;
 
 export interface NoJsReport {
   checked: number;
