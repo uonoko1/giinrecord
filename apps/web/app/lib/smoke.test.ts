@@ -3,7 +3,7 @@
  * 実ファイルシステムは使わず、Map で表した偽のビルドディレクトリに対して検証する。
  */
 import { describe, expect, it } from "vitest";
-import { checkBrandAssets, checkBuild, checkDistrictData, checkMemberData, checkNoExternalResources, checkOpsData, checkSitemap, checkSpaFallback, externalResourceUrls, extractInternalHrefs, OPS_DATA_FILES, resolveHrefTarget, formatReport, SPA_FALLBACK_FILE, type BuildFiles } from "./smoke";
+import { checkBrandAssets, checkBuild, checkDistrictData, checkMemberData, checkNoExternalResources, checkNotFoundPage, checkOpsData, checkSitemap, checkSpaFallback, externalResourceUrls, extractInternalHrefs, NOT_FOUND_FILE, OPS_DATA_FILES, resolveHrefTarget, formatReport, SPA_FALLBACK_FILE, type BuildFiles } from "./smoke";
 
 const html = (links: string[]) => `<html><body>${links.map((l) => `<a href="${l}">x</a>`).join("")}</body></html>`;
 
@@ -310,12 +310,13 @@ describe("externalResourceUrls: self-origin and canonical", () => {
 });
 
 /**
- * Issue #325: nginx が 404 の本文として返す /__spa-fallback.html は、
+ * Issue #325 originally: nginx が 404 の本文として返していた /__spa-fallback.html は、
  * React Router の既定フォールバック（`<html lang="en">`, `<title>Loading...</title>`,
  * `💿 Hey developer` の console.log）のままだった。root.tsx の HydrateFallback を
  * 定義すると自分の shell が使われるので、ビルド成果物側でそれを固定する。
+ * #610 で 404 の本文は checkNotFoundPage（下）に変わったが、/compare（#104）はまだこの shell を使う。
  */
-describe("checkSpaFallback（#325）", () => {
+describe("checkSpaFallback（#104 / #325 originally）", () => {
   const good =
     '<!DOCTYPE html><html lang="ja"><head><title>ページが見つかりません ・ 議員レコード</title>' +
     '<meta name="robots" content="noindex"/></head><body><p>読み込み中</p></body></html>';
@@ -324,7 +325,7 @@ describe("checkSpaFallback（#325）", () => {
     expect(checkSpaFallback(new Map([[SPA_FALLBACK_FILE, good]])).failures).toEqual([]);
   });
 
-  it("ファイルが無ければ失敗（nginx の error_page が指す先）", () => {
+  it("ファイルが無ければ失敗（nginx の /compare が指す先）", () => {
     expect(checkSpaFallback(new Map()).failures).toEqual([`missing page: ${SPA_FALLBACK_FILE}`]);
   });
 
@@ -338,7 +339,7 @@ describe("checkSpaFallback（#325）", () => {
     expect(r.failures).toContain(`${SPA_FALLBACK_FILE}: <title>Loading...</title> lacks the site name`);
   });
 
-  it("noindex が無ければ失敗（404 の本文を索引させない）", () => {
+  it("noindex が無ければ失敗（/compare の本文を索引させない）", () => {
     const r = checkSpaFallback(new Map([[SPA_FALLBACK_FILE, good.replace(/<meta name="robots"[^>]*>/, "")]]));
     expect(r.failures).toContain(`${SPA_FALLBACK_FILE}: no <meta name="robots" content="noindex">`);
   });
@@ -346,5 +347,55 @@ describe("checkSpaFallback（#325）", () => {
   it("開発者向けメッセージ（💿 Hey developer）が本文に残っていれば失敗", () => {
     const r = checkSpaFallback(new Map([[SPA_FALLBACK_FILE, good.replace("</body>", '<script>console.log("💿 Hey developer 👋.")</script></body>')]]));
     expect(r.failures).toContain(`${SPA_FALLBACK_FILE}: React Router の既定フォールバック（Hey developer）が残っている`);
+  });
+});
+
+/**
+ * Issue #610: 404 の本文が /__spa-fallback.html（ルート `/` だけの殻）のままだと、
+ * JS 無効の利用者には「読み込んでいます…」のまま止まって見える
+ * （catch-all の中身はハイドレーション後にしか描かれない）。
+ * NOT_FOUND_FILE は catch-all をプリレンダーした本物の HTML で、中身入りのはず。
+ * checkSpaFallback と同じ観点（lang・title・noindex・Hey developer）に加えて、
+ * 「見つかりません」の本文そのものが焼き込まれていることを見る。
+ */
+describe("checkNotFoundPage（#610）", () => {
+  const good =
+    '<!DOCTYPE html><html lang="ja"><head><title>ページが見つかりません ・ 議員レコード</title>' +
+    '<meta name="robots" content="noindex"/></head><body><h1>ページが見つかりません</h1><a href="/coverage">収録範囲</a></body></html>';
+
+  it("lang=ja・サイト名入りの title・noindex・「見つかりません」の本文がそろっていれば失敗なし", () => {
+    expect(checkNotFoundPage(new Map([[NOT_FOUND_FILE, good]])).failures).toEqual([]);
+  });
+
+  it("ファイルが無ければ失敗（nginx の error_page が指す先）", () => {
+    expect(checkNotFoundPage(new Map()).failures).toEqual([`missing page: ${NOT_FOUND_FILE}`]);
+  });
+
+  it('lang="en" なら失敗（日本語サイトなので ja）', () => {
+    const r = checkNotFoundPage(new Map([[NOT_FOUND_FILE, good.replace('lang="ja"', 'lang="en"')]]));
+    expect(r.failures).toContain(`${NOT_FOUND_FILE}: <html lang="en"> (expected lang="ja")`);
+  });
+
+  it("noindex が無ければ失敗（存在しない URL を検索結果に出さない、が #325 の判断）", () => {
+    const r = checkNotFoundPage(new Map([[NOT_FOUND_FILE, good.replace(/<meta name="robots"[^>]*>/, "")]]));
+    expect(r.failures).toContain(`${NOT_FOUND_FILE}: no <meta name="robots" content="noindex">`);
+  });
+
+  /*
+   * #610 の本題。#325 が直す前と同じ「空の SPA shell」（<body> に本文が無い）がここに焼かれる形を
+   * はっきり落とす——このケースが緑のままだと、直したはずのものが直っていなくても気づけない。
+   * <title>ページが見つかりません…</title> は空 shell にも残るので、`<body>` の中身だけを見て
+   * 判定する（html 全体を見ると <title> の文言だけで偽陰性になる）。
+   */
+  it("<body> に「見つかりません」の本文が無ければ失敗（<title> だけ残る空 shell と同じ形）", () => {
+    const shell = good.replace(/<body>[\s\S]*<\/body>/, "<body><p>読み込んでいます…</p></body>");
+    expect(shell).toContain("ページが見つかりません"); // <title> にはまだ文言が残っている
+    const r = checkNotFoundPage(new Map([[NOT_FOUND_FILE, shell]]));
+    expect(r.failures).toContain(`${NOT_FOUND_FILE}: 「見つかりません」の本文が無い（JS 無効では #610 が直す前の空 shell と同じに見える）`);
+  });
+
+  it("開発者向けメッセージ（💿 Hey developer）が本文に残っていれば失敗", () => {
+    const r = checkNotFoundPage(new Map([[NOT_FOUND_FILE, good.replace("</body>", '<script>console.log("💿 Hey developer 👋.")</script></body>')]]));
+    expect(r.failures).toContain(`${NOT_FOUND_FILE}: React Router の既定フォールバック（Hey developer）が残っている`);
   });
 });

@@ -37,19 +37,19 @@ const expectation: NoJsExpectation = {
 };
 
 /**
- * `checkNoJs` は「4 ページ揃っているか」も見る（#479 のレビュー指摘）ので、
- * 1 ページだけを検査する単体テストでは残り 3 ページ分の**通る**期待値を足して数を合わせる。
+ * `checkNoJs` は「5 ページ揃っているか」も見る（#479 のレビュー指摘、#610 で 4→5 に増えた）ので、
+ * 1 ページだけを検査する単体テストでは残り 4 ページ分の**通る**期待値を足して数を合わせる。
  * ここで見たいのは判定の中身であって、ページ数のガードではない（それは専用の describe で見る）。
  */
 function padded(e: NoJsExpectation): NoJsExpectation[] {
   const filler = (n: number): NoJsExpectation => ({ path: `/filler-${n}/`, label: `詰め物${n}`, texts: ["青木一彦"], sourceUrl: null });
-  return [e, filler(1), filler(2), filler(3)];
+  return [e, filler(1), filler(2), filler(3), filler(4)];
 }
 
 /** `padded` の詰め物ページの中身（すべて通る） */
 function paddedGot(path: string, snap: NoJsSnapshot): Map<string, NoJsSnapshot> {
   const m = new Map([[path, snap]]);
-  for (const n of [1, 2, 3]) m.set(`/filler-${n}/`, filled(`/filler-${n}/`));
+  for (const n of [1, 2, 3, 4]) m.set(`/filler-${n}/`, filled(`/filler-${n}/`));
   return m;
 }
 
@@ -143,6 +143,40 @@ describe("checkNoJs — JS 無効で記録が読めているかの判定（#479�
     expect(r.failures).toHaveLength(1);
     expect(r.failures[0]).toContain("内部リンクが無い");
   });
+
+  /*
+   * #610: 存在しない URL（404）。#325 は「ステータスと画面の両方が『無い』を表す」と書いていたが、
+   * 本番で JS を切って確かめると、404 の本文は「読み込んでいます…」のままだった
+   * （nginx の SPA shell はルート `/` だけをレンダーした殻で、catch-all の中身は
+   * ハイドレーション後に初めて描かれる）。ここは 404 ページ自身にも同じ判定を適用できることを確かめる:
+   * 出典は無い（sourceUrl: null）ページとして、本文の文言と /coverage への導線を見る。
+   */
+  const notFoundExpectation: NoJsExpectation = {
+    path: "/__browser-check-no-such-page__/",
+    label: "404 ページ",
+    texts: ["ページが見つかりません"],
+    links: ["/coverage"],
+    sourceUrl: null,
+  };
+  function notFoundFilled(path: string): NoJsSnapshot {
+    return {
+      url: `${ORIGIN}${path}`,
+      text: "ページが見つかりません\n指定された URL のページはありません。",
+      hrefs: [`${ORIGIN}/members`, `${ORIGIN}/coverage`, `${ORIGIN}/`],
+      times: [],
+    };
+  }
+  it("404 ページ: 「ページが見つかりません」の本文と /coverage への導線が JS 無効でも出ていれば通る", () => {
+    const got = paddedGot(notFoundExpectation.path, notFoundFilled(notFoundExpectation.path));
+    const r = checkNoJs(got, padded(notFoundExpectation), ORIGIN);
+    expect(r.failures).toEqual([]);
+  });
+  it("404 ページ: 本文が nginx の SPA shell（読み込んでいます…）のままだと落ちる（#610 が直す前の形）", () => {
+    const loading: NoJsSnapshot = { url: `${ORIGIN}${notFoundExpectation.path}`, text: "読み込んでいます…", hrefs: [], times: [] };
+    const got = paddedGot(notFoundExpectation.path, loading);
+    const r = checkNoJs(got, padded(notFoundExpectation), ORIGIN);
+    expect(r.failures.join("\n")).toContain("「ページが見つかりません」が出ていない");
+  });
 });
 
 describe("sourceLinks — sourceUrl と同じホストのリンクだけを拾う", () => {
@@ -191,7 +225,7 @@ describe("検査そのものが縮んでいないか（#479 のレビュー指�
    * 残り 2 ページだけで 0 failure = 緑になっていた（レビュアーの実測）。
    * 「検査するものが無いから緑」を作らない。
    */
-  it("**4 ページ揃っていなければ落ちる**（採決データが欠けて 2 ページに縮んだ形）", () => {
+  it("**5 ページ揃っていなければ落ちる**（採決データが欠けて 2 ページに縮んだ形）", () => {
     const two = [expectation, { ...expectation, path: "/members/", label: "議員一覧" }];
     const got = new Map([
       [expectation.path, filled(expectation.path)],
@@ -202,14 +236,14 @@ describe("検査そのものが縮んでいないか（#479 のレビュー指�
   });
 
   it("多すぎても落ちる（数を固定する）", () => {
-    const five = [...padded(expectation), { ...expectation, path: "/extra/", label: "余分" }];
+    const six = [...padded(expectation), { ...expectation, path: "/extra/", label: "余分" }];
     const got = paddedGot(expectation.path, filled(expectation.path));
     got.set("/extra/", filled("/extra/"));
-    const r = checkNoJs(got, five, ORIGIN);
-    expect(r.failures.join("\n")).toContain("5 ページしかない");
+    const r = checkNoJs(got, six, ORIGIN);
+    expect(r.failures.join("\n")).toContain("6 ページしかない");
   });
 
-  it("4 ページ揃っていれば、この検査は何も言わない", () => {
+  it("5 ページ揃っていれば、この検査は何も言わない", () => {
     const r = checkNoJs(paddedGot(expectation.path, filled(expectation.path)), padded(expectation), ORIGIN);
     expect(r.failures).toEqual([]);
   });

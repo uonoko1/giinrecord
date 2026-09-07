@@ -317,12 +317,15 @@ test("site.conf: /fonts/ は 1 週間キャッシュ（ハッシュ無しのフ�
 // タイプミスの議員 URL も外部の古いリンクも「中身のあるページ」として索引されうる）。
 // 直し方は「try_files の最後を =404 にし、error_page 404 で fallback の本文を 404 のまま返す」。
 // ただし /compare（#104）はクエリ依存でプリレンダーされないので、明示的に 200 で fallback を返す location が要る。
-test("site.conf: プリレンダー済みは try_files、未知のパスは =404（本文は SPA fallback、ステータスは 404 のまま #325）", () => {
+// Issue #610: 404 の本文は /__spa-fallback.html（ルート `/` だけの殻。JS 無しでは「読み込んでいます…」のまま）
+// ではなく、catch-all をプリレンダーした /__not-found/index.html にした——JS 無しでも「見つかりません」が読める。
+test("site.conf: プリレンダー済みは try_files、未知のパスは =404（本文は not-found ページ、ステータスは 404 のまま #325 / #610）", () => {
   const code = uncommented(siteConf);
   assert.match(code, /location \/ \{\s*try_files \$uri \$uri\/index\.html =404;/, "try_files の最後は =404");
-  assert.doesNotMatch(code, /try_files [^;]*\/__spa-fallback\.html;/, "try_files で fallback に落とすと 200 になる");
-  assert.match(code, /error_page 404 \/__spa-fallback\.html;/, "404 の本文は SPA fallback（catch-all ルートが 404 画面を描く）");
-  assert.match(code, /location = \/__spa-fallback\.html \{[^}]*internal;/, "fallback 自体は直接取得させない");
+  assert.doesNotMatch(code, /try_files [^;]*\/__spa-fallback\.html;/, "try_files で fallback に落とすと 200 になる（/compare の明示 location 以外）");
+  assert.match(code, /error_page 404 \/__not-found\/index\.html;/, "404 の本文は catch-all のプリレンダー済み HTML（#610: JS 無しでも読める）");
+  assert.match(code, /location = \/__not-found\/index\.html \{[^}]*internal;/, "not-found の HTML 自体は直接取得させない（別の 200 URL を作らない）");
+  assert.match(code, /location = \/__spa-fallback\.html \{[^}]*internal;/, "/compare 専用の SPA shell も直接取得させない");
   assert.match(code, /gzip_types text\/css application\/javascript application\/json image\/svg\+xml;/);
 });
 
@@ -358,10 +361,15 @@ test("ci.yml: docker-web は本物のビルドに対して、未知パスが 404
   // #325: 存在しないパス
   assert.match(step, /expect \/this-does-not-exist\/\s+404/);
   assert.match(step, /expect \/__spa-fallback\.html\s+404/, "fallback を直接は取れない");
+  assert.match(step, /expect \/__not-found\/index\.html\s+404/, "#610: not-found の HTML も直接は取れない");
   // 404 の本文（ステータスだけ 404 で中身は出す）
   assert.match(step, /lang="ja"/);
   assert.match(step, /noindex/);
   assert.match(step, /Hey developer/, "開発者向けメッセージが出ていないことを確かめる");
+  // #610: curl は JS を実行しない。だから curl の応答は JS 無効の利用者が見るものと一致する。
+  assert.match(step, /見つかりません/, "JS を実行しない curl でも「見つかりません」が読めることを確かめる（#610）");
+  // #610: fallback は /compare と共有の仕組みなので、正常なページに 404 の文言が混ざっていないことも見る
+  assert.match(step, /compare_body/, "/compare 側にも「見つかりません」が漏れていないかを確かめるステップがある（#610）");
   assert.ok(
     orderIndexOf(job, "Not found (#325)") > orderIndexOf(job, "docker compose -f deploy/docker-compose.yml up"),
     "コンテナを起動した後で叩く",

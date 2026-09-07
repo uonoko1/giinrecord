@@ -91,17 +91,22 @@ export function checkBuild(files: BuildFiles, data: ExpectedData): SmokeReport {
 }
 
 /**
- * nginx が 404 の本文として返すファイル（deploy/nginx/site.conf の `error_page 404`）。#325
- * React Router がプリレンダー無しのルート用に書き出す SPA shell そのもの。
+ * React Router がルート `/` だけをレンダーして書き出す SPA shell（`isSpaMode: true`）。
+ * Issue #104 の /compare（クエリ依存・プリレンダー無し）が nginx の `location = /compare` から
+ * 200 で配るファイルで、deploy/nginx/site.conf にそう書いてある。
+ * Issue #610 より前は 404 の本文もこのファイルだったが、catch-all の中身（「見つかりません」）は
+ * JS がハイドレーションして初めて描かれるので、JS 無効では「読み込んでいます…」のまま止まっていた。
+ * 404 の本文は今は NOT_FOUND_FILE（プリレンダー済みで中身入り）に変わっている。
  */
 export const SPA_FALLBACK_FILE = "__spa-fallback.html";
 
 /**
- * Issue #325: この shell は 404 の本文であり、/compare（#104）の本文でもある。
- * HydrateFallback を定義するまで、React Router の既定フォールバックがそのまま出ていた：
- * `<html lang="en">`（日本語サイトなのに en）、`<title>Loading...</title>`（サイト名が無いので
- * 外形監視 deploy/monitor/probe.sh の title 検査も通らない）、そして本番のコンソールに出る
- * `💿 Hey developer` の console.log。ビルド成果物側でそれを固定する。
+ * Issue #325 originally: この shell は /compare（#104）の本文で、HydrateFallback を定義するまで
+ * React Router の既定フォールバックがそのまま出ていた：`<html lang="en">`（日本語サイトなのに en）、
+ * `<title>Loading...</title>`（サイト名が無いので外形監視 deploy/monitor/probe.sh の title 検査も
+ * 通らない）、そして本番のコンソールに出る `💿 Hey developer` の console.log。
+ * ビルド成果物側でそれを固定する。#610 で 404 の本文はこのファイルではなくなったが、
+ * /compare はまだこの shell を 200 で返すので、この検査自体は変わらず要る。
  */
 export function checkSpaFallback(files: BuildFiles): { failures: string[] } {
   const html = files.get(SPA_FALLBACK_FILE);
@@ -115,6 +120,41 @@ export function checkSpaFallback(files: BuildFiles): { failures: string[] } {
     failures.push(`${SPA_FALLBACK_FILE}: no <meta name="robots" content="noindex">`);
   }
   if (html.includes("Hey developer")) failures.push(`${SPA_FALLBACK_FILE}: React Router の既定フォールバック（Hey developer）が残っている`);
+  return { failures };
+}
+
+/**
+ * catch-all（apps/web/app/routes/not-found.tsx）をプリレンダーした本物の HTML。
+ * apps/web/app/lib/prerender.ts の `NOT_FOUND_PRERENDER_PATH`（`/__not-found`）が書き出す先で、
+ * deploy/nginx/site.conf の `error_page 404` はここを指す。
+ */
+export const NOT_FOUND_FILE = "__not-found/index.html";
+
+/**
+ * Issue #610: 404 の本文が SPA_FALLBACK_FILE のままだと、JS 無効の利用者には
+ * 「読み込んでいます…」のまま止まって見える（catch-all の中身はハイドレーション後にしか描かれない）。
+ * このファイルは中身入りでビルドされているはずなので、checkSpaFallback と同じ観点に加えて
+ * 「見つかりません」の本文そのものが焼き込まれていることを見る。
+ */
+export function checkNotFoundPage(files: BuildFiles): { failures: string[] } {
+  const html = files.get(NOT_FOUND_FILE);
+  if (html === undefined) return { failures: [`missing page: ${NOT_FOUND_FILE}`] };
+  const failures: string[] = [];
+  const lang = html.match(/<html[^>]*\blang="([^"]*)"/)?.[1];
+  if (lang !== "ja") failures.push(`${NOT_FOUND_FILE}: <html lang="${lang ?? ""}"> (expected lang="ja")`);
+  const title = html.match(/<title[^>]*>([^<]*)<\/title>/)?.[1] ?? "";
+  if (!title.includes(SITE_NAME)) failures.push(`${NOT_FOUND_FILE}: <title>${title}</title> lacks the site name`);
+  if (!/<meta[^>]+name="robots"[^>]+content="[^"]*noindex/.test(html)) {
+    failures.push(`${NOT_FOUND_FILE}: no <meta name="robots" content="noindex">`);
+  }
+  if (html.includes("Hey developer")) failures.push(`${NOT_FOUND_FILE}: React Router の既定フォールバック（Hey developer）が残っている`);
+  // #610 の本題: JS 無しでも「見つかりません」の本文がそのまま焼かれていること。
+  // <title> だけに文言があって <body> が空、という空 shell を見逃さないよう、body の中身だけを見る
+  // （<title>ページが見つかりません…</title> は空 shell にもあるので、html 全体を見ると偽陰性になる）
+  const body = html.match(/<body[^>]*>([\s\S]*)<\/body>/)?.[1] ?? "";
+  if (!body.includes("見つかりません")) {
+    failures.push(`${NOT_FOUND_FILE}: 「見つかりません」の本文が無い（JS 無効では #610 が直す前の空 shell と同じに見える）`);
+  }
   return { failures };
 }
 

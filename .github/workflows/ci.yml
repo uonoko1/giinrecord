@@ -230,13 +230,22 @@ jobs:
           expect /search/                   404
           expect /members/m_no_such_member/ 404
           expect /__spa-fallback.html       404
+          # #610: the not-found page itself must not be reachable as a second, 200 URL either
+          expect /__not-found/index.html    404
           # the 404 must still carry a body: lang=ja, the site name, noindex, and no developer message
           body=$(curl -sS "$BASE/this-does-not-exist/")
           echo "$body" | grep -q '<html lang="ja"' || (echo "404 body: lang is not ja" && exit 1)
           echo "$body" | grep -q '議員レコード' || (echo "404 body: <title> lacks the site name" && exit 1)
           echo "$body" | grep -q 'noindex' || (echo "404 body: no noindex" && exit 1)
           ! echo "$body" | grep -q 'Hey developer' || (echo "404 body: React Router default fallback" && exit 1)
-          echo "ok   404 body: lang=ja, site name, noindex, no developer message"
+          # #610: without JavaScript the 404 body used to stay at "読み込んでいます…" (Loading…, 22 chars).
+          # curl never runs JS, so this is exactly what a JS-disabled visitor (or a crawler) sees.
+          echo "$body" | grep -q '見つかりません' || (echo "404 body: 「見つかりません」 is missing without JavaScript (#610)" && exit 1)
+          echo "ok   404 body: lang=ja, site name, noindex, no developer message, 「見つかりません」 without JS (#610)"
+          # #104 / #610: /compare must still be the empty SPA shell, not the not-found body (fallback file is shared plumbing)
+          compare_body=$(curl -sS "$BASE/compare?m=m_1,m_2")
+          ! echo "$compare_body" | grep -q '見つかりません' || (echo "/compare body: 「見つかりません」 leaked into a normal SPA-fallback page (#610)" && exit 1)
+          echo "ok   /compare body: no 「見つかりません」 leak"
       - name: Legacy domain 301 (#192) — gikailog.jp hosts redirect to giinrecord.jp, path preserved
         run: |
           curl -sSI -H 'Host: gikailog.jp' http://127.0.0.1:8081/members/ | tr -d '\r' | grep -i '^location: https://giinrecord.jp/members/$'

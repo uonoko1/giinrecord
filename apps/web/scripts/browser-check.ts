@@ -243,6 +243,15 @@ async function memberTabsSwitch(page: Page): Promise<void> {
   console.log(`browser-check: member tabs ${count} tabs, switched to ${selectedId}, no page overflow at 375px (strips ${JSON.stringify(overflow.strips)})`);
 }
 
+/** 存在しないことが保証されたパス（#325 / #610 の 404 検査で共通して使う）。実在ルートと衝突しない固定文字列。 */
+const NOT_FOUND_PROBE_SLUG = "__browser-check-no-such-page__";
+/**
+ * apps/web/app/routes/not-found.tsx の `TITLE` と同じ文言。
+ * そのファイルは pages.css を import しており、ここ（tsx で直接実行する Node スクリプト）から
+ * import すると CSS の解決が壊れるので、値だけを重複させている——文言を変えるときは両方直すこと。
+ */
+const NOT_FOUND_TITLE = "ページが見つかりません";
+
 /**
  * #325: 存在しない URL。nginx が 404 で SPA shell を返し、catch-all ルートが「見つかりません」を描く。
  * ステータスが 404 であることは smoke / deploy/test/nginx-404.test.sh が見るが、
@@ -251,7 +260,7 @@ async function memberTabsSwitch(page: Page): Promise<void> {
  * 開発者向けの `💿 Hey developer` が出ないことも、ここが唯一の実測点。
  */
 async function notFoundScreenRenders(page: Page): Promise<void> {
-  await page.waitForFunction(() => document.querySelector("h1")?.textContent?.includes("見つかりません") ?? false, null, { timeout: 10_000 });
+  await page.waitForFunction((title) => document.querySelector("h1")?.textContent?.includes(title) ?? false, NOT_FOUND_TITLE, { timeout: 10_000 });
   const seen = await page.evaluate(() => ({
     lang: document.documentElement.lang,
     title: document.title,
@@ -259,7 +268,7 @@ async function notFoundScreenRenders(page: Page): Promise<void> {
     hrefs: [...document.querySelectorAll("a")].map((a) => a.getAttribute("href") ?? ""),
   }));
   if (seen.lang !== "ja") throw new Error(`404: <html lang="${seen.lang}">（ja であること）`);
-  if (!seen.title.includes("見つかりません")) throw new Error(`404: <title>「${seen.title}」が 404 を指していない`);
+  if (!seen.title.includes(NOT_FOUND_TITLE)) throw new Error(`404: <title>「${seen.title}」が 404 を指していない`);
   if (!seen.robots.includes("noindex")) throw new Error(`404: robots="${seen.robots}"（noindex であること）`);
   if (!seen.hrefs.includes("/coverage")) throw new Error(`404: /coverage への導線が無い: ${seen.hrefs.join(" ")}`);
   console.log(`browser-check: 404 screen rendered (lang=${seen.lang}, title="${seen.title}", robots=${seen.robots})`);
@@ -319,6 +328,18 @@ async function noJsExpectations(dataDir: string, id: string | null): Promise<NoJ
     // data/ から取るので、先頭が地方議員になっても偽陽性にならない
     out.push({ path: `/members/${detail.id}/`, label: "議員ページ", texts: [detail.name, detail.kana], sourceUrl: detail.sourceUrl });
   }
+
+  // #610: 存在しない URL（404）。#325 は「ステータスと画面の両方が『無い』を表す」と書いていたが、
+  // JS を切って本番を実測すると、404 の本文は「読み込んでいます…」のまま止まっていた
+  // （nginx が返す `/__spa-fallback.html` はルート `/` だけをレンダーした殻で、catch-all の中身は
+  // ハイドレーション後に初めて描かれる）。データの有無に関わらず常に存在するページなので `if` は無い。
+  out.push({
+    path: `/${NOT_FOUND_PROBE_SLUG}/`,
+    label: "404 ページ",
+    texts: [NOT_FOUND_TITLE],
+    links: ["/coverage"],
+    sourceUrl: null, // 存在しない URL に出典は無い
+  });
   return out;
 }
 
@@ -354,7 +375,7 @@ const targets: { url: string; run?: (page: Page) => Promise<void>; status?: numb
   { url: `${origin}/coverage/` },
   ...(memberId ? [{ url: `${origin}/members/${memberId}/` }, { url: `${origin}/members/${memberId}/`, run: memberTabsSwitch }] : []),
   // #325: 存在しない URL は 404 を返し、その本文で catch-all ルートが描かれる
-  { url: `${origin}/__browser-check-no-such-page__/`, run: notFoundScreenRenders, status: 404 },
+  { url: `${origin}/${NOT_FOUND_PROBE_SLUG}/`, run: notFoundScreenRenders, status: 404 },
   // #104: プリレンダーしない実在ルート。#325 の =404 で壊しやすいので、200 で JS が動くことを実機で見る
   ...(memberId ? [{ url: `${origin}/compare?m=${memberId}` }] : []),
 ];
