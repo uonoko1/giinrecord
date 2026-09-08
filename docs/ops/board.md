@@ -77,6 +77,18 @@ $ gh api rate_limit
 **通常のレート制限には余裕があるのに止まる。**
 **GitHub Projects の書き込みには別枠の制限があり、`rate_limit` API には出てこない。**
 
+**止まるのは GraphQL を使うものだけ**（2026-09-09 に実測）:
+
+```
+gh api repos/uonoko1/giinrecord     → 動く（REST）
+gh project item-edit                 → 止まる（GraphQL）
+gh pr create                         → 止まる（GraphQL）
+git push                             → 動く（git プロトコル）
+```
+
+**`gh pr create` も止まるので、PR を作れなくなる。**
+**push は通るので、枝は残る**——**待ってから PR を作ればよい。**
+
 **やること**:
 - **一度に大量に登録するときは、途中で止まる前提で進める**（**どこまで登録できたかを
   毎回確かめる**——`gh project item-list` で数える）
