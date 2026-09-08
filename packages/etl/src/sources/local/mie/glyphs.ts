@@ -92,7 +92,13 @@ export function readGlyphPageOps(fnArray: ArrayLike<number>, argsArray: ArrayLik
       tx = e;
       ty = f;
     } else if (fn === OPS.moveText || fn === OPS.setLeadingMoveText || fn === OPS.nextLine) {
-      // 相対移動（Td/TD/T*）を使う PDF はこの読み方の前提（位置は Tm で明示）が崩れる
+      // 相対移動（Td/TD/T*）を使う PDF はこの読み方の前提（位置は Tm で明示）が崩れる。
+      // **三重には高知のような leading の変数が無い**（Issue #703 で確かめた）。
+      // 相対移動が来たら読まずに例外にするので、行送りを保持する必要がそもそも無い。
+      // 実測（2026-09-09、三重のフィクスチャ 5 本）: Td / TD / T* はいずれも 0 回で、
+      // 文字はすべて Tm で置かれている（showText と Tm が同数: 337/502/5389/336/1502）。
+      // **この枝は実データでは一度も通らない**ので、test/local-glyph-variants.test.ts 等の
+      // 実物 PDF ではなく、オペレータ列を直接渡すテストでしか固定できない。
       throw new Error(`page ${pageNo}: unsupported text-positioning op (moveText/nextLine)`);
     } else if (fn === OPS.showText) {
       // 文字の位置は Tm の e/f をそのままページ座標として使う。cm の下ではその前提が崩れる（#700）
