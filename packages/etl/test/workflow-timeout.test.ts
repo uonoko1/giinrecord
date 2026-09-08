@@ -189,6 +189,7 @@ test("#556 数え上げ: jobs: 直下の job を全部拾えている（拾え�
     "deploy-staging.yml:staging",
     "districts.yml:districts",
     "etl.yml:etl",
+    "link-check.yml:link-check",
     "local-assemblies.yml:local-assemblies",
     "monitor.yml:production",
     "monitor.yml:staging",
@@ -257,6 +258,9 @@ test("#556 値が実測から外れていない（短すぎる = 偽陽性 / 長
     "ci.yml:stale-base": 10,
     "deploy-data.yml:resolve": 10,
     "deploy-site.yml:deploy": 30,
+    // #646: 実測 171s（2026-09-08、本番の data/ 83 件を手元から通しで。1 ラウンド 83 秒 +
+    // 再試行の待ち 60 秒 + 落ちた 3 件）。最悪（83 × 30s タイムアウト × 2 ラウンド ≒ 83 分）は切りたいので 20 分。
+    "link-check.yml:link-check": 20,
     "release.yml:released-tag": 10,
     "security.yml:gitleaks": 20,
     "security.yml:forbidden-patterns": 10,
