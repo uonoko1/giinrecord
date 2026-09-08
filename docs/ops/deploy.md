@@ -166,6 +166,68 @@ job を**改名**しても**丸ごと消して**も、どちらも落ちるこ�
 許容リストと `deploy/monitor/branch-protection.sh` の `REQUIRED_CHECKS` もハードコードして
 固定してあるので、両方を同時に痩せさせる形（#521 review で実際にあった）も落ちる。
 
+## Environment の保護設定（#661）
+
+**`production` / `production-data` / `staging` の `protection_rules` は 3 つとも空**——これが
+**記録された意図**（#659 の案A。理由は上の「環境とワークフロー」に書いてある）。
+
+**なぜ見張りが要るか:** Environment の設定は **GitHub の設定**であって、このリポジトリの中身ではない。
+**いまは 3 つとも置いていない**が、設定画面で承認ルールを付けるのは 1 クリックで、
+**diff にもレビューにも CI にも一切現れない。**
+#660 は「承認は置いていない」を文書に書いたが、その担当者自身がこう申告している——
+「**誰かが設定画面で承認ルールを付けても、この PR のテストは緑のまま通ります。**」
+（**置いていない**という実態そのものは #659 の実測どおり変わっていない。変わりうるのに誰も見ていなかった、という話である。）
+branch protection とまったく同じ穴で、同じ形で塞いである。
+
+**両方向を見る**（branch protection と違う点）:
+
+| 起きたこと | 何が困るか |
+|---|---|
+| ルールが**付いた** | そのデプロイが人の操作を待って**止まる**。`production-data` は日次なので**毎日**止まり、数週間前の設定変更と誰も結びつけられない |
+| ルールが**消えた** | 意図が「置く」に変わっていた場合、通すはずの関門が黙って無くなる |
+
+だから「ルールが無ければ良い」ではなく、**`deploy/monitor/environment-protection.sh` の
+`EXPECTED_RULES` に書いた意図と一致するか**を見る。
+
+### 見張り（`environment-protection.yml`）
+
+毎日 06:41 JST に `deploy/monitor/environment-protection.sh` が
+`gh api repos/{owner}/{repo}/environments` を読み、意図と食い違えば Issue を開く（直れば自動で閉じる）。
+
+| 検査の終了コード | Issue タイトル | 意味 |
+|---|---|---|
+| 0 | （両方閉じる） | 意図どおり |
+| 1 | `[monitor] repo: Environment の保護設定` | **実際に食い違っている。** 本文に該当の environment とルールが出る |
+| 2 | `[monitor] repo: Environment の保護設定を読めない` | **判定できていない。** 食い違っているとは限らない |
+
+**失敗の理由は Issue 本文に出さない**（gh の API エラーに認証情報が混ざりうるため）。**run のログ（stderr）に出る。**
+
+**PAT は要らない。** branch protection と違って、この endpoint は**既定の `GITHUB_TOKEN`
+（`permissions: contents: read` のみ）で読める**——2026-09-08 に実測した
+（run 34218226742: `rc=0` / `total_count 3`）。**人間待ちは無い。**
+それでも読めなくなったら（権限が絞られた・API 障害）exit 2 として報告する。**黙って緑にはしない。**
+
+手で走らせるとき:
+
+```sh
+gh workflow run environment-protection.yml
+gh run list --workflow environment-protection.yml --limit 1
+```
+
+### 意図そのものを変えるとき（承認を「置く」に変える）
+
+**#659 は「置かない」と決めたが、変える判断もありうる。** そのときの手順:
+
+1. `deploy/monitor/environment-protection.sh` の `EXPECTED_RULES` を直す
+   （**いまは 3 つとも置いていない**ので値は空。置くと決めたなら `[production]="required_reviewers"` の形にする。
+   値は API の `type` を空白区切りで並べたもの）
+2. GitHub → Settings → Environments で実際の設定を変える
+3. **このドキュメントの上の記述を直す**（「3 つとも空」と書いてある箇所と「環境とワークフロー」の節）
+4. `deploy/test/environment-protection.test.sh` の `t_table_contents_pinned` が表の中身を
+   **別の場所に**固定しているので、そちらも直す（片方だけ痩せさせても通らないようにしてある）
+
+**順番はどれからでもよいが、1 と 2 の間はこの見張りが Issue を開く**（それが正しい振る舞い）。
+
 ### 日次データ（`deploy-data.yml`）
 
 ETL の data PR がマージされると `etl.yml` / `districts.yml` が `gh workflow run deploy-data.yml --ref main` を起動し、staging と production（Environment `production-data`、承認なし）の両方に配る。

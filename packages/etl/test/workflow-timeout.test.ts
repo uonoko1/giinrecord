@@ -188,6 +188,7 @@ test("#556 数え上げ: jobs: 直下の job を全部拾えている（拾え�
     "deploy-site.yml:deploy",
     "deploy-staging.yml:staging",
     "districts.yml:districts",
+    "environment-protection.yml:guard",
     "etl.yml:etl",
     "link-check.yml:link-check",
     "local-assemblies.yml:local-assemblies",
