@@ -87,6 +87,41 @@ const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 /** 国会の行か（`diet-` の assemblyId、または assemblyId の無い古い行）。地方議員は `diet-` 以外の assemblyId を持つ。 */
 export const isDietMemberRow = (m: { assemblyId?: string }): boolean => m.assemblyId === undefined || m.assemblyId.startsWith("diet-");
 
+/**
+ * かな長 / 氏名長（空白を除く）がこれを超えたら、氏名が壊れている疑い（#632）。
+ * 氏名は名簿の PDF から、かなは名簿の HTML から取る（衆院の場合は同じ HTML だが、他は別系統）ので、
+ * 独立した2つの値による検算になる。#617（大分）で見つかった「フォントのサブセットに文字が無く、
+ * 描画命令ごと欠落する」経路は文字数の検算（増減が無い）では気づけないが、これなら比が跳ねて気づける。
+ *
+ * 閾値 3.5 の根拠（2026-09-08 実測。data/ の全議員 1,057 名、由来が同じ index.json 分を除く実体数）:
+ * - 実データの比の最大値は 3.0（「東 徹」「東 豊」の 2 名、ratio = かな5拍 / 氏名2文字）。3.5 ならこれを含め全件が通る。
+ * - PO 案の 4.0 は「実データの氏名が2文字まで短くなったときの1文字欠落」を検出できない
+ *   （2文字氏名5名の1文字欠落シミュレーションで、4.0 超は 5 件中 3 件のみ検出、3.5 超なら 5 件とも検出）。
+ * - 氏名が3文字以上で1文字欠けるケースは、この閾値でもほとんど検出できない
+ *   （4文字氏名の1文字欠落シミュレーションで比は 2.0〜2.67 程度にしかならず、3.5 に届かない。
+ *   #617 の実例 `𠮷村哲彦→村哲彦` も欠落後の比は 2.67 で、この検算では検出できない）。
+ *   **この検算は短い氏名（2文字前後）で1文字が丸ごと消えるケースしか拾えない**という限界がある。
+ *
+ * かなが空の議員がいる（HTML の名簿から取れなかった、または未取得）。空は異常ではなく「比較できない」なので、
+ * 呼び出し側は kana === "" を先に弾いてから使うこと（このタプルからは判定しない）。
+ */
+export const KANA_NAME_RATIO_THRESHOLD = 3.5;
+
+/** 空白を除いた文字数（コードポイント単位。サロゲートペアも1文字と数える）。 */
+const strippedLength = (s: string): number => [...s.replace(/[\s　]/g, "")].length;
+
+/**
+ * name / kana の組が #632 の検算に違反するか（かなが空なら常に false。比較できないため）。
+ * name が空文字列になる壊れ方（全消失）は kanaLen > 0 なので Infinity 相当になり、必ず超過する。
+ */
+export function kanaNameRatioExceeds(name: string, kana: string, threshold = KANA_NAME_RATIO_THRESHOLD): boolean {
+  if (kana === "") return false;
+  const nameLen = strippedLength(name);
+  const kanaLen = strippedLength(kana);
+  if (nameLen === 0) return kanaLen > 0;
+  return kanaLen / nameLen > threshold;
+}
+
 /** timeline の 1 行。公表の原文（会期・方法・結果）をそのまま添える。可否は判定しない。 */
 function toVoteEntry(rc: LocalRollCall, vote: LocalRollCall["votes"][number]): LocalVoteEntry {
   return { kind: "localVote", date: rc.date, rollCallId: rc.id, title: rc.title, vote: vote.value, sessionLabel: rc.sessionLabel, method: rc.method?.raw, result: rc.result, sourceUrl: rc.sourceUrl };
@@ -298,6 +333,7 @@ export async function validateLocalAssemblies(dir: string): Promise<string[]> {
       if ("house" in m) v.push(`${label}: local member row must not carry house (国会の院)`);
       if (typeof m.name !== "string" || m.name === "") v.push(`${label}: name required`);
       if (typeof m.kana !== "string" || typeof m.group !== "string" || typeof m.district !== "string") v.push(`${label}: kana / group / district required`);
+      else if (typeof m.name === "string" && kanaNameRatioExceeds(m.name, m.kana)) v.push(`${label}: kana "${m.kana}" is disproportionate to name "${m.name}" (name may have lost a character. #632)`);
       if (typeof m.current !== "boolean") v.push(`${label}: current must be boolean`);
       if (typeof m.asOf !== "string" || !ISO_DATE.test(m.asOf)) v.push(`${label}: asOf must be ISO date`);
       checkSource(label, m);
