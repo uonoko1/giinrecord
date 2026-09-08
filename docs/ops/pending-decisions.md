@@ -9,11 +9,16 @@
 
 1. **PO に権限が無い**（サーバーの docker、GitHub の設定画面、権限設定で止められた操作）
    - **Release（`release.yml`）はここに入りません。** **PO ができます**（2026-09-08 に実行済み）。
-     `release.yml` のコメントは「`production` environment の required reviewers が承認する」と
-     書いていますが、**実際には protection_rules が設定されていません**
-     （`gh api repos/.../environments` で 3 つとも「なし」。`deploy-site.yml` にも
-     「承認待ちになった run が一度も無い」と記録がある）。
-     **CI が緑の main を本番に出すのは通常運用なので、PO が判断して実行します。**
+     **承認（required reviewers）は 3 つの environment とも置いていません**
+     （`gh api repos/uonoko1/giinrecord/environments` で `protection_rules` が 3 つとも `[]`）。
+     **CI が緑の main を本番に出すのは通常運用なので、PO が判断して実行します:**
+     ```sh
+     git fetch origin && gh workflow run release.yml --ref main -f ref=$(git rev-parse origin/main)
+     ```
+     **#659 で文書側を実態に合わせました**（`deploy.md` / `README.md` / `deploy/README.md` /
+     `etl.md` / 3 つの workflow が「承認待ちになる」と書いていたのを直した）。
+     **reviewers を置く判断をしたなら、それは GitHub の設定画面での操作なので、
+     ここに新しい項目として足すこと。**
 2. **外部に届いてしまう**（事務局への照会、Sponsors の公開）——取り消せないうえに相手がいる
 3. **確認しても答えが出ない**（誰の名前で送るか、広告を入れるかどうか）
 

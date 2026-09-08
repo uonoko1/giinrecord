@@ -11,18 +11,34 @@ Issue #85・#127。構成と初回セットアップは `deploy/README.md`。こ
 
 - 3 つとも再利用ワークフロー `deploy-site.yml`（`pnpm build` → `rsync --delete`）を呼ぶだけ。違いは Environment・`SITE_ORIGIN`・rsync 先・（production-data だけ）`data_ref: main` の overlay。
 - staging ビルド（`SITE_ORIGIN=https://staging.giinrecord.jp`）は `robots.txt` が `Disallow: /`、全ページに `<meta name="robots" content="noindex, nofollow">`（`apps/web/app/lib/seo.ts`）。さらにコンテナの `site.conf` が Host `staging.giinrecord.jp` に `X-Robots-Tag: noindex, nofollow` を付ける。
-- GitHub Environment：`staging`、`production`（**required reviewers = 承認ボタン**。PO が設定）、`production-data`（reviewers 無し）。3 つとも同じ `DEPLOY_*` secrets。
+- GitHub Environment：`staging`、`production`、`production-data`。3 つとも同じ `DEPLOY_*` secrets。
+- **承認（required reviewers）は 3 つとも置いていない**（#659。2026-09-08 実測。`gh api repos/uonoko1/giinrecord/environments` の `protection_rules` が 3 つとも `[]`）。
+  **したがって Release は押した人がそのまま本番に出す**——**承認待ちにはならない。**
+  置いていない理由は 3 つ:
+  - **承認するのは同じ人**（リポジトリの持ち主）なので、二重チェックにならない
+  - **`production-data` は既に承認なしで毎日データを本番に出している。** コードだけ承認を要求する非対称に実質的な意味がない
+  - **止める価値があるのは「CI が緑でない ref を出そうとしたとき」だが、`release.yml` は `workflow_dispatch` で任意の ref を取るので承認では防げない**（下の「main の保護設定」のとおり branch protection とは無関係に動く）
+  **守りは CI の必須 4 件だけである**——「承認があるから安全」と思って他を緩めないこと。
 
 ### リリース手順（production）
 
 1. staging（https://staging.giinrecord.jp/）で確認する。`main` の最新は push 後数分で出ている（Actions → Deploy (staging)）。
-2. Actions → **Release** → Run workflow。`ref` は既定 `main`（タグや **40 桁のフル SHA** も可）→ Run。
+2. Release を起動する。**CLI（PO はこちら）:**
+   ```sh
+   gh workflow run release.yml --ref main -f ref=$(git rev-parse origin/main)
+   gh run list --workflow release.yml --limit 1     # run id を見る
+   gh run watch <run id>                            # 完了まで見る（実測 1〜2 分）
+   ```
+   `--ref main` は**ワークフロー定義をどの枝から読むか**、`-f ref=…` が**リリースする ref** で、別物。
+   GUI なら Actions → **Release** → Run workflow。`ref` は既定 `main`（タグや **40 桁のフル SHA** も可）→ Run。
    - **短縮 SHA は通らない**（2026-09-05 に実際に失敗）。`actions/checkout` は `ref` を
      `+refs/heads/<ref>*:…` の形で fetch するので、**ブランチ名・タグ名・フル SHA しか解決できない。**
      短縮 SHA を渡すと `The process '/usr/bin/git' failed with exit code 1` で 3 回リトライして落ちる
      （**checkout の失敗なので、原因がリリース内容だと誤読しやすい**）。
-     `git rev-parse origin/main` の出力をそのまま渡す。
-3. `production` Environment の承認待ちになる → Review deployments → Approve。
+     上の `$(git rev-parse origin/main)` は 40 桁を出すので、この罠を踏まない
+     （`git rev-parse --short` にしないこと）。**渡す前に `git fetch origin` すること**——
+     `origin/main` は手元のリモート追跡枝なので、fetch していなければ古い SHA を出す。
+3. **承認待ちにはならない**（上のとおり reviewers は置いていない）。起動するとそのまま本番に出る。
 4. 完了後 https://giinrecord.jp/ で確認（title『議員レコード』、`curl -sI https://giinrecord.jp/ | grep -i x-robots-tag` が空、sitemap の `<loc>` が `https://giinrecord.jp/`）。
 
 ロールバックは「前の SHA を `ref` にして Release」（**フル SHA で**。上記のとおり短縮形は通らない）。
@@ -158,9 +174,22 @@ ETL の data PR がマージされると `etl.yml` / `districts.yml` が `gh wor
 - **production** は「最後にリリースしたコード + `main` の `data/`」をビルドする（#134）。`main` にマージ済みで未リリースのコードは日次データと一緒に本番へ出ない。
   1. `resolve` ジョブが `scripts/ci/released-ref.sh resolve` で `refs/tags/released` の SHA を取る（タグが無ければ `main`。初回 Release 前のフォールバック）。
   2. `deploy-site.yml` がその SHA を checkout し、`data_ref: main` で `released-ref.sh overlay main`（`data/` を丸ごと main のものに置き換える。追加も削除も反映、`data/` 以外は触らない）→ `pnpm build` → rsync。
-- タグ `released` は **Release が成功したときだけ** `release.yml` の `released-tag` ジョブが REST API（`GITHUB_TOKEN`、`contents: write`）で動かす（#127 の承認フローの外、deploy secrets は使わない）。ロールバックで古い SHA を Release すればタグもそこへ戻る。手で打ち直すなら `git push -f origin <sha>:refs/tags/released`（次の deploy-data から効く）。
+- タグ `released` は **Release が成功したときだけ** `release.yml` の `released-tag` ジョブが REST API（`GITHUB_TOKEN`、`contents: write`）で動かす（`production` environment の外で走るので deploy secrets を持たない）。ロールバックで古い SHA を Release すればタグもそこへ戻る。手で打ち直すなら `git push -f origin <sha>:refs/tags/released`（次の deploy-data から効く）。
 - 確認：Actions → Deploy data の Summary に `production code ref: <sha>` と `deployed ref <sha> + data/ from main` が出る。`gh api repos/uonoko1/giinrecord/git/ref/tags/released` で現在のタグ。
 - 注意：`released` が指す SHA には `scripts/ci/released-ref.sh` が含まれている必要がある（#134 以前の SHA を Release するとタグは動くが次の deploy-data が overlay ステップで失敗する。その場合は新しい SHA を Release し直す）。
+
+### 一次資料リンクの死活（`link-check.yml`、#646）
+
+週1回（月曜 06:00 JST）自動で走る。**手で走らせるとき:**
+
+```sh
+gh workflow run link-check.yml --ref main
+gh run list --workflow link-check.yml --limit 1
+```
+
+入力は無い（`workflow_dispatch:` だけ）。実測 2〜3 分。404 が出れば Issue
+「一次資料リンクが 404 を返している（link-check.yml）」が立ち、直れば自動で閉じる。
+**配信ではなくデータの出典を見るもの**なので、サイトの死活を見る `monitor.yml` とは別にしてある。
 
 ## 構成の要点
 
