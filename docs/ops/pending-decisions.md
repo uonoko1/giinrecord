@@ -8,6 +8,12 @@
 **ここに書いてよいのは 3 つだけ:**
 
 1. **PO に権限が無い**（サーバーの docker、GitHub の設定画面、権限設定で止められた操作）
+   - **Release（`release.yml`）はここに入りません。** **PO ができます**（2026-09-08 に実行済み）。
+     `release.yml` のコメントは「`production` environment の required reviewers が承認する」と
+     書いていますが、**実際には protection_rules が設定されていません**
+     （`gh api repos/.../environments` で 3 つとも「なし」。`deploy-site.yml` にも
+     「承認待ちになった run が一度も無い」と記録がある）。
+     **CI が緑の main を本番に出すのは通常運用なので、PO が判断して実行します。**
 2. **外部に届いてしまう**（事務局への照会、Sponsors の公開）——取り消せないうえに相手がいる
 3. **確認しても答えが出ない**（誰の名前で送るか、広告を入れるかどうか）
 
@@ -16,7 +22,23 @@
 
 最終更新: 2026-09-08
 
-## 1. #611 の本番反映（`site.conf` の変更）
+## 1. #611 の本番反映（`site.conf` の変更）— **#610 / #654**
+
+**Release（コード側）は 2026-09-08 に PO が済ませました。残っているのは `site.conf` だけです。**
+
+```
+released: 567c09df（2026-09-06） → 044f42af（2026-09-08、69 コミット分）
+```
+
+**PR #611 は 2 つを同時に変えており、片方だけが反映された中間状態です:**
+
+| 変更 | 反映のしかた | 状態 |
+|---|---|---|
+| web のコード（`/__not-found` のプリレンダー） | **Release**（PO ができる） | **済** |
+| **`deploy/nginx/site.conf`** | **ssh でコンテナ再作成** | **未** |
+
+**中間状態のあいだ、`/__not-found/index.html` が 200 で直接開けます**（#654）——
+**`internal` がまだ効いていないためで、`site.conf` の反映で同時に解消します。**
 
 **PO ができない理由**: **PO が動いている端末に接続先が定義されていない**（2026-09-08 実測）。
 
@@ -45,23 +67,27 @@ ssh giinops@<host> 'sudo -n git -C /opt/giinrecord pull \
 **なぜ `up -d` だけでは足りないか**: `site.conf` は bind mount した単一ファイルなので、
 **`git pull` では inode が変わるだけでコンテナは古いものを掴んだまま**（`docs/ops/deploy.md`）。
 
-**反映後の確認**（3 つとも見ること）:
+**反映後の確認**（4 つとも見ること）:
 
 ```sh
-curl -sSL https://giinrecord.jp/no-such-page-12345 | grep -c 見つかりません          # 0 → 2
-curl -sSL -o /dev/null -w "%{http_code}\n" https://giinrecord.jp/no-such-page-12345  # 404 のまま
-curl -sSL -o /dev/null -w "%{http_code}\n" https://giinrecord.jp/compare             # 200 のまま
+curl -sSL https://giinrecord.jp/no-such-page-12345 | grep -c ページが見つかりません        # 0 → 1 以上
+curl -sSL -o /dev/null -w "%{http_code}\n" https://giinrecord.jp/no-such-page-12345        # 404 のまま
+curl -sSL -o /dev/null -w "%{http_code}\n" https://giinrecord.jp/compare                   # 200 のまま
+curl -sSL -o /dev/null -w "%{http_code}\n" https://giinrecord.jp/__not-found/index.html    # 200 → 404
 ```
 
 **3 つ目が大事**——`/compare` は SPA fallback を使う**正常な**ページなので、
 **そこが壊れていないことまで見て、はじめて成功と言える。**
+**4 つ目は #654 の分**——`internal` が効けば直接は開けなくなる。
 
-**いまの本番**（2026-09-08 に PO が実測。まだ未反映）:
+**いまの本番**（2026-09-08、Release 後に PO が実測）:
 
 ```
-1) /no-such-page-12345 の「見つかりません」  0 件   ← 反映後は 2
+1) /no-such-page-12345 の本文              「読み込んでいます」のまま   ← 反映後は「ページが見つかりません」
 2) status                                  404     ← 正しい（変わってはいけない）
 3) /compare                                200     ← 正しい（変わってはいけない）
+4) /__not-found/index.html                 200     ← #654。反映後は 404
+主要 9 ページ（/ /members /rollcalls /assemblies /coverage /about /terms /privacy /compare）すべて 200
 ```
 
 **status 404 は正しい。壊れているのは JS 無しで見たときの画面だけ**（#610）。
