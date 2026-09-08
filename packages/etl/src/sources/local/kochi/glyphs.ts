@@ -66,6 +66,20 @@ export function readGlyphPageOps(fnArray: ArrayLike<number>, argsArray: ArrayLik
   let fontSize = 0;
   let charSpacing = 0;
   let hScale = 1;
+  /**
+   * 行送り（T* が使う）。**初期値 0 は PDF 32000-1 の 9.3.5 が定める既定値**（Issue #703）。
+   *
+   * **実データでは、この初期値も leading 自体も一度も読まれない。**
+   * 実測（2026-09-09、高知 2 本・三重 5 本のフィクスチャ）: **`T*` も `TD` も `TL` も 0 回**。
+   * 高知は行送りに `Td`（1109 回 / 1042 回）を使い、`Td` は行頭を置き直すので leading を読まない。
+   * （Issue #703 は当初「`T*` の前に必ず `TD`/`TL` を出すから初期値が読まれない」としていたが、
+   * 追試の結果それは誤りで、**`T*` 自体が 1 回も出てこない**のが本当の理由だった。）
+   *
+   * **だから、この値を守るテストは実物の PDF では書けない。**
+   * `test/local-glyphs-leading.test.ts` が readGlyphPageOps にオペレータ列を直接渡して固定している
+   * （初期値を 999 に変えると、そこの 2 件が落ちる。実測: 変えても県ごとの PDF テスト 13 件は全部通る）。
+   * **この段落を消すと、あちらのテストが「実データに無い形を守る不要なもの」に見えて消される。**
+   */
   let leading = 0;
   // 現在のテキスト位置（tx, ty）と行頭（lx, ly）。Td/TD/T* は行頭からの相対移動
   let tx = 0;
