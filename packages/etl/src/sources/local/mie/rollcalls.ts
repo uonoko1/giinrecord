@@ -48,7 +48,28 @@ export interface SessionInfo {
   pdfUrl: string;
 }
 
+/**
+ * PDF の表題の会期名（「令和８年定例会（１月）」の「令和８年定例会」）を、会期 index の h2 と突き合わせる（#695）。
+ *
+ * 三重は通年議会で 1 年 1 会期、賛否 PDF は月ごとに 1 本。会期 index の h2 の下に月別のリンクが並ぶだけなので、
+ * 別の年の PDF がその一覧に混ざっても、会期名（令和8年定例会）は index 側の文言がそのまま付く。
+ * 中身は令和7年の票、会期名は令和8年——**利用者からは検出できない**（#569）。
+ *
+ * 何と何を照合するか: **表題の会期名（年 + 定例会/臨時会）**。表題には月も入っている（「（１月）」）が、
+ * 月は index.ts がリンク文言（「令和８年１月」）と突き合わせる（月別 PDF なのでリンクにしか無い情報）。
+ * ここは会期そのものの取り違えを見る。数字の全角・半角は PDF と h2 で揺れるので NFKC で寄せる。
+ *
+ * 注: index.ts にも同じ突合がある（#203 から。年・月・会期名の 3 つ）。ここに置くのは
+ * **toLocalRollCalls を index.ts を通さず呼んでも通り抜けられないようにする**ため（高知・奈良・鳥取と同じ形）。
+ */
+export function checkPdfSession(pdfSessionName: string, sessionLabel: string, pdfUrl: string): void {
+  const a = pdfSessionName.normalize("NFKC").replace(/[\s　]/g, "");
+  const b = sessionLabel.normalize("NFKC").replace(/[\s　]/g, "");
+  if (a !== b) throw new Error(`${pdfUrl}: PDF says ${pdfSessionName}, session index says ${sessionLabel}`);
+}
+
 export function toLocalRollCalls(pdf: VotePdf, roster: readonly LocalMember[], session: SessionInfo): { rollCalls: LocalRollCall[]; unmatched: LocalUnmatchedName[] } {
+  checkPdfSession(pdf.sessionName, session.sessionLabel, session.pdfUrl);
   const resolved = pdf.members.map((m) => matchName(m.nameText, roster).memberId);
   const unmatched = new Map<string, LocalUnmatchedName>();
   const rollCalls: LocalRollCall[] = [];

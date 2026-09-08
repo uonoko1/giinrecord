@@ -41,10 +41,40 @@ export interface SessionInfo {
   sessionId: string;
   /** 会期ページの h1 の原文（「令和8年6月定例会」） */
   sessionLabel: string;
+  /** 会期ページの h1 の西暦（2026）。PDF の表題の採決日の年と突き合わせる */
+  year: number;
+  /** 会期ページの h1 の月（6）。年またぎ（11月定例会 → 1月採決）の判定に使う */
+  month: number;
   pdfUrl: string;
 }
 
+/**
+ * PDF の表題の採決日（「議案審査結果（令和８年２月１３日）」→ 2026-02-13）が、この会期のものかを確かめる（#695）。
+ *
+ * 徳島の PDF の表題には会期名が無く、採決日しか無い。会期ページのリンク文言（「各議員の表決態度（2月13日採決）」）にも
+ * 月日しか無いので、index.ts が突き合わせていたのは 月と日 だけで、**年は捨てていた**
+ * （`const [, m, d] = pdf.date.split("-")` の先頭を読み飛ばしていた）。
+ * その結果、令和7年2月13日の PDF が 令和8年2月定例会 の下に置かれても素通りし、
+ * 会期は令和8年・中身は令和7年の rollCall（id は `pref-36-2026-02-20250213-…`）が出る。
+ * 会期名は合っているので**利用者からは検出できない**（#569 の「別人の記録が出る」と同じ重さ）。
+ *
+ * 何と何を照合するか: **PDF の採決日の年 と 会期ページの h1 の年**。
+ * - PDF の表題に会期名は無いので、会期名どうしの照合はできない（三重・高知のような形は使えない）。
+ * - 採決日は会期の月より後にずれる（令和8年6月定例会 → 7月3日採決、令和8年2月定例会 → 3月11日採決）ので、
+ *   「採決日の月＝会期の月」では正しい PDF まで弾く。月日は index.ts が従来どおりリンク文言と突き合わせる。
+ * - 年またぎ（11月定例会が翌年1月に採決する形）だけは、採決日の月が会期の月より前になる。
+ *   このときに限り翌年を許す。それ以外の年は例外。
+ */
+export function expectedDateYear(session: { year: number; month: number }, pdfMonth: number): number {
+  return pdfMonth < session.month ? session.year + 1 : session.year;
+}
+
 export function toLocalRollCalls(pdf: VotePdf, roster: readonly LocalMember[], session: SessionInfo): { rollCalls: LocalRollCall[]; unmatched: LocalUnmatchedName[] } {
+  const [pdfYear, pdfMonth] = pdf.date.split("-").map(Number);
+  const wantYear = expectedDateYear(session, pdfMonth);
+  if (pdfYear !== wantYear) {
+    throw new Error(`${session.pdfUrl}: PDF says ${pdf.title}（${pdf.date}）, session index says ${session.sessionLabel}（${wantYear}年の採決日のはず）`);
+  }
   const resolved = pdf.members.map((m) => matchName(m.nameText, roster).memberId);
   const unmatched = new Map<string, LocalUnmatchedName>();
   const rollCalls: LocalRollCall[] = [];

@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { mapLegend, matchName, nameKey, toLocalRollCalls } from "../src/sources/local/shimane/rollcalls.ts";
+import { checkPdfSession, mapLegend, matchName, nameKey, toLocalRollCalls } from "../src/sources/local/shimane/rollcalls.ts";
 import { DISTRICT_PAGES, parseRoster } from "../src/sources/local/shimane/roster.ts";
 import { parseResultsPdf, parseVotePdf, UNKNOWN_CELL, UNKNOWN_LEGEND } from "../src/sources/local/shimane/votes-pdf.ts";
 
@@ -132,4 +132,58 @@ test("toLocalRollCalls: 議決結果一覧の議決結果が議員別 PDF と食
   const wrong = new Map(results);
   wrong.set("第77号", { date: "2026-07-02", result: "否決" });
   assert.throws(() => toLocalRollCalls([{ pdf, pdfUrl }], roster.members, session, { results: wrong, lastDate: "2026-07-02" }), /議決結果/);
+});
+
+// ── #695: 議員別採決結果一覧 PDF の表題と会期 index のリンク文言を突き合わせる ────────────────
+// 島根の PDF には表題があり、そこに **通算回次と 年月の会期名の両方** が書かれている
+// （「第４９９回島根県議会（令和８年６月定例会）採決結果」）。にもかかわらず突き合わせていなかった。
+// 会期ページに別の会期の PDF が置かれていても素通りし、会期名は令和8年6月・中身は令和8年2月の
+// rollCall が出る（会期名が合っているので利用者からは検出できない。#569）。
+// PDF の URL（r0806_giinbetu_kekka.pdf）に会期らしき文字列はあるが、URL は県が付けたファイル名であって
+// 中身が何であるかの証拠にはならないので、中身の表題で照合する。
+const feb = await parseVotePdf(fixture("r0802_giinbetu_kekka.pdf"));
+const febResults = await parseResultsPdf(fixture("r0802_giketu_kekka.pdf"));
+
+test("#695 toLocalRollCalls: 別の会期の PDF を渡せば例外（令和8年2月の PDF を令和8年6月定例会として読ませない）", () => {
+  // 実物どうしの取り違え: 第498回（令和8年2月定例会）の PDF を、第499回（令和8年6月定例会）として渡す
+  assert.throws(
+    () => toLocalRollCalls([{ pdf: feb, pdfUrl }], roster.members, session, { results: febResults, lastDate: "2026-03-12" }),
+    /PDF says 令和8年2月定例会, session index says 令和8年6月定例会/,
+  );
+  // 逆向き（第499回の PDF を第498回として）も弾く
+  const febSession = { sessionId: "498", sessionLabel: "令和8年2月定例会（第498回）" };
+  assert.throws(
+    () => toLocalRollCalls([{ pdf, pdfUrl }], roster.members, febSession, { results, lastDate: "2026-07-02" }),
+    /PDF says 令和8年6月定例会, session index says 令和8年2月定例会/,
+  );
+});
+
+test("#695 checkPdfSession: 年月の会期名が合っていても回次が違えば例外（回次と年月の両方を見る）", () => {
+  assert.throws(
+    () => checkPdfSession("第４９８回島根県議会（令和８年６月定例会）採決結果", "令和8年6月定例会（第499回）", pdfUrl),
+    /PDF says 第498回, session index says 第499回/,
+  );
+  // 回次が合っていても年月が違えば例外
+  assert.throws(
+    () => checkPdfSession("第４９９回島根県議会（令和８年２月定例会）採決結果", "令和8年6月定例会（第499回）", pdfUrl),
+    /PDF says 令和8年2月定例会, session index says 令和8年6月定例会/,
+  );
+});
+
+test("#695 checkPdfSession: リンク文言に回次が無い会期（過去の定例会の概要）は年月だけを照合する（無いものは照合しない）", () => {
+  // gikai_kako のリンク文言には回次が無い（sessions.ts の LINK_TEXT 参照）
+  assert.doesNotThrow(() => checkPdfSession("第４９８回島根県議会（令和８年２月定例会）採決結果", "令和8年2月定例会", pdfUrl));
+  // 回次を照合しないだけで、年月が違えば弾く
+  assert.throws(() => checkPdfSession("第４９８回島根県議会（令和８年２月定例会）採決結果", "令和8年6月定例会", pdfUrl), /PDF says 令和8年2月定例会/);
+});
+
+test("#695 checkPdfSession: 否定的対照——実物の表題とリンク文言の組（全角/半角の揺れを含む）は通る", () => {
+  // PDF は全角（「第４９９回」「令和８年」）、リンク文言は半角（「第499回」「令和8年」）。NFKC で寄せて通す
+  assert.doesNotThrow(() => checkPdfSession(pdf.title, session.sessionLabel, pdfUrl));
+  assert.doesNotThrow(() => checkPdfSession(feb.title, "令和8年2月定例会（第498回）", pdfUrl));
+});
+
+test("#695 checkPdfSession: 表題・リンク文言が想定の形でなければ例外（黙って照合を飛ばさない）", () => {
+  assert.throws(() => checkPdfSession("議案等の審査付託先委員会における審査結果に対する賛否状況の一覧です。", session.sessionLabel, pdfUrl), /is not 第N回島根県議会/);
+  assert.throws(() => checkPdfSession(pdf.title, "令和8年6月のなにか", pdfUrl), /is not 令和N年M月定例会/);
 });

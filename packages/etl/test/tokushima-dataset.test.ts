@@ -18,8 +18,8 @@ const bytes = (name: string) => readFileSync(new URL(`./fixtures/tokushima/${nam
 const PDF = (id: string) => `https://www.pref.tokushima.lg.jp/file/attachment/${id}.pdf`;
 const fetchedAt = "2026-08-24T01:20:00.000Z";
 const roster = parseRoster({ kaihabetu: html("giin-kaihabetu.html"), senkyoku: html("giin-senkyoku.html") }, { asOf: jstDate(fetchedAt) });
-const jun = { sessionId: "2026-06", sessionLabel: "令和8年6月定例会", sourceUrl: "https://www.pref.tokushima.lg.jp/gikai/honkaigi/r08/7314697/", pdfs: ["1064407"] };
-const feb = { sessionId: "2026-02", sessionLabel: "令和8年2月定例会", sourceUrl: "https://www.pref.tokushima.lg.jp/gikai/honkaigi/r08/7310454/", pdfs: ["1036105", "1038136", "1042426"] };
+const jun = { sessionId: "2026-06", sessionLabel: "令和8年6月定例会", year: 2026, month: 6, sourceUrl: "https://www.pref.tokushima.lg.jp/gikai/honkaigi/r08/7314697/", pdfs: ["1064407"] };
+const feb = { sessionId: "2026-02", sessionLabel: "令和8年2月定例会", year: 2026, month: 2, sourceUrl: "https://www.pref.tokushima.lg.jp/gikai/honkaigi/r08/7310454/", pdfs: ["1036105", "1038136", "1042426"] };
 const rollCalls: LocalRollCall[] = [];
 const sessions = [];
 for (const s of [jun, feb]) {
@@ -27,7 +27,7 @@ for (const s of [jun, feb]) {
   let unknownCells = 0;
   for (const id of s.pdfs) {
     const pdf = await parseVotePdf(bytes(`${id}.pdf`));
-    const converted = toLocalRollCalls(pdf, roster.members, { sessionId: s.sessionId, sessionLabel: s.sessionLabel, pdfUrl: PDF(id) });
+    const converted = toLocalRollCalls(pdf, roster.members, { sessionId: s.sessionId, sessionLabel: s.sessionLabel, year: s.year, month: s.month, pdfUrl: PDF(id) });
     rollCalls.push(...converted.rollCalls);
     rows += converted.rollCalls.length;
     unknownCells += pdf.unknownCells;

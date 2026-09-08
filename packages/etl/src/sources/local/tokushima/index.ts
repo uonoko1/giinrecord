@@ -59,7 +59,8 @@ export async function runTokushima(opts: { sessions: number; fetchedAt: string; 
       const pdf = await parseVotePdf(await f.bytes(link.url));
       const [, m, d] = pdf.date.split("-").map(Number);
       if (m !== link.month || d !== link.day) throw new Error(`${link.url}: PDF title says ${pdf.date} but the link says ${link.text}`);
-      const converted = toLocalRollCalls(pdf, roster.members, { sessionId: s.sessionId, sessionLabel: page.sessionLabel, pdfUrl: link.url });
+      // 年は toLocalRollCalls が会期ページの h1 の年と突き合わせる（#695。ここの m/d はリンク文言との突合で、年を見ていなかった）
+      const converted = toLocalRollCalls(pdf, roster.members, { sessionId: s.sessionId, sessionLabel: page.sessionLabel, year: page.year, month: page.month, pdfUrl: link.url });
       rollCalls.push(...converted.rollCalls);
       for (const u of converted.unmatched) {
         const key = `${u.nameText}\t${u.group}`;

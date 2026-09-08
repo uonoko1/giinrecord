@@ -56,7 +56,31 @@ export interface SessionInfo {
   pdfUrl: string;
 }
 
+/**
+ * 表決 PDF の見出し（「第398回宮城県議会（令和7年11月定例会）」）を、
+ * 会期 index の見出し（「令和7年11月定例会（第398回）」）と突き合わせる（#695）。
+ *
+ * index.ts は通算回次（pdf.sessionId）だけを見ていた。回次は宮城県議会の通算なので一意で、
+ * これだけでも別の会期の PDF はほぼ弾ける。ただし **議決日は PDF 側の 年月（sessionYear / sessionMonth）から作る**
+ * （toIsoDate。議決月日の欄は「12/17」と月日しか無い）ので、回次が合っていても年月が食い違えば
+ * 日付だけが別の会期のものになる。回次と年月は同じ見出しの中の別々の語なので、両方を照合する。
+ *
+ * 何と何を照合するか: **見出しの「第N回」と「令和N年M月定例会」の両方**。数字の全角・半角は NFKC で寄せる。
+ */
+const PDF_LABEL = /^第(\d+)回宮城県議会[（(](.+?)[）)]$/;
+const INDEX_LABEL = /^(.+?(?:定例会|臨時会))[（(]第(\d+)回[）)]$/;
+
+export function checkPdfSession(pdfLabel: string, sessionLabel: string, pdfUrl: string): void {
+  const t = pdfLabel.normalize("NFKC").replace(/[\s　]/g, "").match(PDF_LABEL);
+  if (!t) throw new Error(`${pdfUrl}: PDF says "${pdfLabel}", which is not 第N回宮城県議会（…）`);
+  const l = sessionLabel.normalize("NFKC").replace(/[\s　]/g, "").match(INDEX_LABEL);
+  if (!l) throw new Error(`${pdfUrl}: session index says "${sessionLabel}", which is not 令和N年M月定例会（第N回）`);
+  if (t[1] !== l[2]) throw new Error(`${pdfUrl}: PDF says 第${t[1]}回, session index says 第${l[2]}回`);
+  if (t[2] !== l[1]) throw new Error(`${pdfUrl}: PDF says ${t[2]}, session index says ${l[1]}`);
+}
+
 export function toLocalRollCalls(pdf: VotePdf, roster: readonly LocalMember[], session: SessionInfo): { rollCalls: LocalRollCall[]; unmatched: LocalUnmatchedName[] } {
+  checkPdfSession(pdf.sessionLabel, session.sessionLabel, session.pdfUrl);
   const resolved = pdf.members.map((m) => matchName(m.nameText, roster).memberId);
   const unmatched = new Map<string, LocalUnmatchedName>();
   const rollCalls: LocalRollCall[] = [];

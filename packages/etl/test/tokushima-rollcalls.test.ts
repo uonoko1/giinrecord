@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { parseRoster } from "../src/sources/local/tokushima/roster.ts";
 import { parseVotePdf } from "../src/sources/local/tokushima/votes-pdf.ts";
-import { mapLegend, toLocalRollCalls } from "../src/sources/local/tokushima/rollcalls.ts";
+import { expectedDateYear, mapLegend, toLocalRollCalls } from "../src/sources/local/tokushima/rollcalls.ts";
 
 // 徳島県議会 表決 PDF の行 → LocalRollCall（Issue #183）。宮城（miyagi/rollcalls.ts）と同じ方針:
 // 名寄せは氏名（空白を除く）の完全一致だけ、LocalVote は原文＋その節の凡例、mapped は凡例の文面が機械的に国会の値に対応するときだけ。
@@ -13,8 +13,9 @@ const roster = parseRoster({ kaihabetu: html("giin-kaihabetu.html"), senkyoku: h
 const jul3 = await parseVotePdf(bytes("1064407.pdf"));
 const mar11 = await parseVotePdf(bytes("1042426.pdf"));
 const feb20 = await parseVotePdf(bytes("1038136.pdf"));
-const JUN = { sessionId: "2026-06", sessionLabel: "令和8年6月定例会", pdfUrl: "https://www.pref.tokushima.lg.jp/file/attachment/1064407.pdf" };
-const FEB = { sessionId: "2026-02", sessionLabel: "令和8年2月定例会" };
+const feb13 = await parseVotePdf(bytes("1036105.pdf"));
+const JUN = { sessionId: "2026-06", sessionLabel: "令和8年6月定例会", year: 2026, month: 6, pdfUrl: "https://www.pref.tokushima.lg.jp/file/attachment/1064407.pdf" };
+const FEB = { sessionId: "2026-02", sessionLabel: "令和8年2月定例会", year: 2026, month: 2 };
 /** 失敗メッセージに出す label（どの議会・会期・議案か。#679 で他の 6 県とそろえた）。 */
 const LABEL = "tokushima-pref-2026-06-20260625-議案-第1号";
 
@@ -95,4 +96,37 @@ test("toLocalRollCalls: 名簿に無い氏名は memberId 空で unmatched に�
   const r2 = toLocalRollCalls(jul3, twin, JUN);
   assert.equal(r2.rollCalls[0].votes[0].memberId, "");
   assert.equal(r2.unmatched.length, 1);
+});
+
+// ── #695: PDF の表題の採決日が、その会期のものかを確かめる ──────────────────────────
+// 徳島の PDF の表題には会期名が無く、採決日（「議案審査結果（令和８年２月１３日）」）しか無い。
+// index.ts はリンク文言（「各議員の表決態度（2月13日採決）」）と月日だけを突き合わせ、**年を捨てていた**
+// （`const [, m, d] = pdf.date.split("-")`）。令和7年2月13日の PDF が令和8年2月定例会に置かれても素通りし、
+// 会期名は令和8年・中身は令和7年の rollCall（id は pref-36-2026-02-20250213-…）が出る。
+// 会期名が合っているので利用者からは検出できない（#569 の「別人の記録が出る」と同じ重さ）。
+
+test("#695 toLocalRollCalls: 採決日の年が会期の年と食い違えば例外（別の年の PDF を黙って読まない）", () => {
+  // 実物の 2026-02-13 の PDF を、1 年前の会期（令和7年2月定例会）に渡す = 県が前年の PDF を置いてしまった形
+  const lastYear = { sessionId: "2025-02", sessionLabel: "令和7年2月定例会", year: 2025, month: 2, pdfUrl: "https://www.pref.tokushima.lg.jp/file/attachment/1036105.pdf" };
+  assert.throws(() => toLocalRollCalls(feb13, roster.members, lastYear), /PDF says/);
+  // 逆向き（会期は令和8年、PDF は 1 年後）も弾く
+  const nextYear = { ...FEB, year: 2027, month: 2, pdfUrl: "https://www.pref.tokushima.lg.jp/file/attachment/1036105.pdf" };
+  assert.throws(() => toLocalRollCalls(feb13, roster.members, nextYear), /PDF says/);
+});
+
+test("#695 toLocalRollCalls: 否定的対照——正しい会期の PDF は通る（上の検査が恒真でないこと）", () => {
+  // 採決日が会期の月より後にずれる形（令和8年6月定例会 → 7月3日採決、令和8年2月定例会 → 3月11日採決）も通す。
+  // 「採決日の月 = 会期の月」で照合していたら、この 2 本が落ちる
+  assert.equal(toLocalRollCalls(jul3, roster.members, JUN).rollCalls.length, 20);
+  assert.equal(toLocalRollCalls(mar11, roster.members, { ...FEB, pdfUrl: "x" }).rollCalls.length, 83);
+  assert.equal(toLocalRollCalls(feb13, roster.members, { ...FEB, pdfUrl: "x" }).rollCalls.length, 1);
+});
+
+test("#695 expectedDateYear: 年またぎ（11月定例会 → 翌年1月採決）だけ翌年を許す", () => {
+  // 会期の月以降の採決日は同じ年
+  assert.equal(expectedDateYear({ year: 2026, month: 6 }, 7), 2026);
+  assert.equal(expectedDateYear({ year: 2026, month: 2 }, 3), 2026);
+  assert.equal(expectedDateYear({ year: 2025, month: 11 }, 12), 2025);
+  // 会期の月より前の採決日は翌年（11月定例会が翌年1月に採決する形）
+  assert.equal(expectedDateYear({ year: 2025, month: 11 }, 1), 2026);
 });

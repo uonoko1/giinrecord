@@ -54,6 +54,34 @@ export interface SessionInfo {
   sessionLabel: string;
 }
 
+/**
+ * 議員別採決結果一覧 PDF の表題（「第４９９回島根県議会（令和８年６月定例会）採決結果」）を、
+ * 会期 index のリンク文言（「令和8年6月定例会（第499回）」）と突き合わせる（#695）。
+ *
+ * この PDF には表題があり、そこに **通算回次と 年月の会期名の両方** が書かれている。
+ * にもかかわらず突き合わせていなかったので、別の会期の PDF が会期ページに置かれていても素通りし、
+ * 会期名は令和8年6月・中身は令和8年2月という rollCall が出る（会期名が合っているので利用者からは検出できない。#569）。
+ * PDF の URL（r0806_giinbetu_kekka.pdf）に会期らしき文字列はあるが、
+ * **URL は県が付けたファイル名であって PDF の中身が何であるかの証拠にはならない**ので、中身の表題で照合する。
+ *
+ * 何と何を照合するか: **表題の「第N回」と「（令和N年M月定例会）」の両方**を、リンク文言の同じ 2 つと。
+ * - 数字の全角・半角は PDF とリンクで揺れる（PDF は「第４９９回」「令和８年」、リンクは「第499回」「令和8年」）ので NFKC で寄せる。
+ * - 回次はリンク文言に無い会期がある（過去の定例会の概要のリンク文言には回次が無い。sessions.ts の LINK_TEXT 参照）。
+ *   その場合は回次を照合しない（無いものは照合できない。推定しない）。年月の会期名は必ず照合する。
+ */
+const PDF_TITLE = /^第(\d+)回島根県議会[（(](.+?)[）)]採決結果$/;
+/** リンク文言（NFKC 後）。「令和8年6月定例会（第499回）」／回次の無い「令和8年2月定例会」 */
+const SESSION_LABEL = /^(.+?(?:定例会|臨時会))(?:[（(]第(\d+)回[）)])?$/;
+
+export function checkPdfSession(pdfTitle: string, sessionLabel: string, pdfUrl: string): void {
+  const t = pdfTitle.normalize("NFKC").replace(/[\s　]/g, "").match(PDF_TITLE);
+  if (!t) throw new Error(`${pdfUrl}: PDF title "${pdfTitle}" is not 第N回島根県議会（…）採決結果`);
+  const l = sessionLabel.normalize("NFKC").replace(/[\s　]/g, "").match(SESSION_LABEL);
+  if (!l) throw new Error(`${pdfUrl}: session label "${sessionLabel}" is not 令和N年M月定例会（第N回）`);
+  if (t[2] !== l[1]) throw new Error(`${pdfUrl}: PDF says ${t[2]}, session index says ${l[1]}`);
+  if (l[2] !== undefined && t[1] !== l[2]) throw new Error(`${pdfUrl}: PDF says 第${t[1]}回, session index says 第${l[2]}回`);
+}
+
 export interface PdfSource {
   pdf: VotePdf;
   pdfUrl: string;
@@ -82,6 +110,7 @@ export function toLocalRollCalls(
   // 議決結果一覧の議案番号を全角・半角を寄せた形（NFKC）で引けるようにする
   const resultsByNumber = new Map([...dates.results].map(([number, row]) => [number.normalize("NFKC"), row] as const));
   for (const { pdf, pdfUrl } of sources) {
+    checkPdfSession(pdf.title, session.sessionLabel, pdfUrl);
     const resolved = pdf.members.map((m) => matchName(m, roster));
     pdf.members.forEach((m, i) => {
       if (resolved[i].memberId === "" && resolved[i].candidates.length > 0) candidateByName.set(m, resolved[i].candidates);
