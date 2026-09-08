@@ -46,12 +46,30 @@ grep してから起票してください（**今日の 5 件はそこにあり�
 | 一次資料の URL がリンク切れになったまま気付かない | `packages/etl/src/fetch.ts` の `if (!res.ok) throw new Error` で ETL が落ち、`.github/workflows/etl.yml` の `Open failure Issue` が Issue を立てる |
 | ETL が回らない月の間にリンクが死ぬ（地方は月1回） | `scripts/ci/link-check.sh`（`LINK_CHECK_UA` で名乗り、`2回とも落ちたものだけ` を報告）を `.github/workflows/link-check.yml` が週1（`Link check (weekly)`）で回す。テストは `scripts/ci/test/link-check.test.sh`（#646） |
 | 別人の記録を出す（表決 PDF の氏名 → 名簿） | `packages/etl/src/sources/local/name-match.ts` は候補が 2 人以上なら `return { memberId: "", candidates: [] }` で**選ばない**（#569）。テストは `packages/etl/test/local-name-match.test.ts` |
+| 別人の記録を出す（国会の表決・発言・議案 → 名簿） | `packages/etl/src/match-votes.ts` の `resolveMember` は `if (candidates.length === 1) return candidates[0];` の 1 人に絞れたときだけ返し、絞れなければ undefined（`在職未確認の候補は「候補ですらない」ものとして扱う`）。発言も同じ関数を通る（`packages/etl/src/match-speeches.ts` の `resolveMember(index, s.speakerText, s.group`）。会派の無い議案ページは `packages/etl/src/match-bills.ts` の `同姓同名は絞れず unmatched に載せる（推測しない）`（#3/#24/#230） |
+| 任期外・在職未確認の議員に記録が付く | `packages/etl/src/match-votes.ts` の `tenureVerified`（(a) `rosterCovers` = 名簿がその回次を覆う／(b) `tenureCarriedOver` = 前の回次の名簿＋任期満了日。どちらでもなければ候補にしない）。テストは `packages/etl/test/match-votes.test.ts` の `在職を確認できない候補は同姓同名の絞り込みからも外れる`（#230） |
+| 院を移った議員の 2 行のうち、会派の違う別人が正しい候補を押しのける | `packages/etl/src/match-votes.ts` の `if (byGroup.length < 2) return undefined;` — **会派（名簿の事実）で絞ってから (a)/(b) の別（推論）を使う**順序。テストは `packages/etl/test/match-votes.test.ts` の `会派が違う同姓同名は、(a) の優先より会派で絞るほうが先` と `会派が分からない経路では (a) を決め手にしない`（#320/#230） |
+| 名寄せできなかった氏名が黙って消える | `packages/etl/src/unmatched.ts` の `writeUnmatched`（`shardUnmatched` は回次で引けない行を `1行も落とさない` で rest に残す）。空の memberId を持つ票が未突合に載っていなければ `packages/etl/src/dataset.ts` が `has empty memberId but is not listed in unmatched.json` で ETL を止める（#219） |
+| 会派の態度が本人の投票として出る（国会側の実装） | `packages/etl/src/aggregate.ts` が衆院の会派態度を `estimated: true` の stance 行にし、`packages/etl/src/dataset.ts` が `stance row must have estimated: true` で型どおりかを検査する。テストは `packages/etl/test/aggregate.test.ts` の `記録するのは会派名であって本人ではない`（#72/#238） |
+| 名簿に無い会派で同姓同名を分けたつもりになる | `packages/etl/src/group-history.ts` の `groupAt`（`会派移動の時期を推定することはしない`）。食い違いは `packages/etl/src/match-votes.ts` の `groupMismatch` に残す（#24） |
 | 氏名が PDF の文字層で 1 文字落ちる | `packages/etl/src/sources/local/name-match.ts` の `matchBySubsequence`（部分列一致）。BMP 外の `𠮷` と康熙部首 `⾧` は `ITAIJI` 表で寄せる（#617/#648） |
 | 氏名が壊れているのに気付かず本番に出る | `packages/etl/src/local-assemblies.ts` の `kanaNameRatioExceeds`（かな長と氏名長の検算。#632）。`packages/etl/src/dataset.ts` が `members/index.json` にも掛ける |
 | 氏名正規化の規則が県ごとに勝手に分岐する | `packages/etl/test/name-normalization-table.test.ts` が `normalizeName` と `localNameKey` の畳み方を表として固定する（#581/#636） |
 | 会派の記録を本人の記録として見せる | `apps/web/app/routes/member-tabs.test.tsx` が `所属会派の記録（推定）本人の投票ではありません` を固定する（#238） |
 | 議員ページの出典が「実際に使っていない source」を含む | `apps/web/app/lib/member-sources.test.ts`（`allowlist（出るべき集合と完全一致）` で固定。#339） |
 | 出力の並び順が実行環境のロケールで変わる | `packages/etl/test/stable-order.test.ts`（`localeCompare` を使わせない。#244 の CI 失敗の回帰） |
+
+## 出典（すべての記録に一次資料リンク）
+
+**`docs/WORKING_AGREEMENT.md` の「原則（プロダクト）」——全行に一次資料リンク——を機械で守っている場所。**
+
+| 事故 | 防いでいるもの |
+|---|---|
+| 許可していないドメインの URL を出典として出す（国会） | `packages/etl/src/dataset.ts` の `const SOURCE_HOST = ` が許可ホストを衆参・NDL に限り、外れると `sourceUrl host not allowed`。テストは `packages/etl/test/dataset.test.ts` の `sourceUrl が衆参・NDL 以外のドメインなら違反`（#4） |
+| 出典がその議会のドメイン外になる（地方は議会ごとに違う） | `packages/etl/src/local-assemblies.ts` は議会ごとの許可ホストを名簿の URL から取り、外れると `sourceUrl host not allowed for` と `(expected ${host})` を出す。https でなければ `sourceUrl missing or not https`（#157） |
+| 記録の種別と出典ページの種類がずれる（発言に議案ページが付く等） | `packages/etl/src/dataset.ts` の `SPEECH_SOURCE` / `ATTENDANCE_SOURCE`（会議録）・`BILL_SOURCE`（参院 議案詳細）・`KEIKA_SOURCE`（衆院 経過ページ）。テストは `packages/etl/test/dataset.test.ts` の `speech 行の sourceUrl が会議録（kokkai.ndl.go.jp/txt/）でなければ違反`（#242） |
+| 質問主意書の答弁 URL だけ許可ホストの検査から漏れる | `packages/etl/src/dataset.ts` の `question answerUrl host not allowed`（キー名が sourceUrl ではないので全レコード共通の検査が掛からず、個別に許可ホストを掛けている。#106） |
+| 画面から出典行そのものが消える | `apps/web/app/components/SourceLine.tsx`（`出典と取得日時。すべての記録はこの行を持つ。`）。リンクと取得日時が出ることは `apps/web/app/components/SourceLine.test.tsx` の `出典リンクと取得日時を出す` |
 
 ## テスト・検査そのものが死ぬ
 
