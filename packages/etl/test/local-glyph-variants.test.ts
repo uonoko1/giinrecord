@@ -53,9 +53,16 @@ test("#674 legendKey: 表に無い記号は原文のまま返す（勝手に増�
 });
 
 test("#674 legendKey: 2 文字以上のセルも 1 文字ずつ寄せる（島根の「棄権」「除斥」「議⾧」）", () => {
+  // 島根の本文セルは実測で ○ / 議⾧ / － / ● / 除斥 の 5 種。うち 2 文字のものは寄せる字を含まないので素通り
   assert.equal(legendKey("棄権"), "棄権");
+  assert.equal(legendKey("除斥"), "除斥");
   assert.equal(legendKey("議⾧"), "議⾧"); // 康熙部首 U+2FA7 のまま（島根は凡例側も同じ字。氏名の表とは別）
+  // 寄せる字が 2 文字セルの中に混じっても、その 1 文字だけが寄る（文字列を丸ごと引く実装だと寄らない）
   assert.equal(legendKey("〇〇"), "○○");
+  assert.equal(legendKey("〇議"), "○議");
+  assert.equal(legendKey("議〇"), "議○");
+  assert.equal(legendKey("棄〇権"), "棄○権");
+  assert.equal(legendKey("✕〇"), "×○");
 });
 
 test("#674 表決の記号と氏名の字形は別の表（混ぜない）", () => {
