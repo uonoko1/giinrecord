@@ -44,7 +44,7 @@ export function mapLegend(raw: string, legend: string): LocalVote {
 export function legendOf(raw: string, legend: ReadonlyMap<string, string>, label: string): string {
   if (raw === UNKNOWN_CELL) return UNKNOWN_LEGEND;
   const meaning = legend.get(legendKey(raw));
-  if (!meaning) throw new Error(`${label}: cell "${raw}" is not in the legend`);
+  if (!meaning) throw new Error(`${label}: cell "${raw}" is not in the legend (${[...legend.keys()].join("")})`);
   return meaning;
 }
 

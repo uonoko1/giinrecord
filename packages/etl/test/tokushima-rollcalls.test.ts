@@ -15,21 +15,23 @@ const mar11 = await parseVotePdf(bytes("1042426.pdf"));
 const feb20 = await parseVotePdf(bytes("1038136.pdf"));
 const JUN = { sessionId: "2026-06", sessionLabel: "令和8年6月定例会", pdfUrl: "https://www.pref.tokushima.lg.jp/file/attachment/1064407.pdf" };
 const FEB = { sessionId: "2026-02", sessionLabel: "令和8年2月定例会" };
+/** 失敗メッセージに出す label（どの議会・会期・議案か。#679 で他の 6 県とそろえた）。 */
+const LABEL = "tokushima-pref-2026-06-20260625-議案-第1号";
 
 test("mapLegend: 議長・退席・欠席・除斥→投票なし。○（委員会審査結果又は議長宣告に起立（賛成）した者）は「議案への賛成」ではなく「委員会審査結果／議長宣告への起立」なので mapped 無し（請願の不採択に ○ なら請願を退けた側）。● も同じく mapped 無し。〇（U+3007）は原文のまま ○ の凡例で読む", () => {
   const yes = "委員会審査結果又は議長宣告に起立（賛成）した者";
   const legend = { "○": yes, "議": "議長", "退": "退席", "除": "除斥", "欠": "欠席", "●": "委員会審査結果又は議長宣告に起立しなかった者" };
-  assert.deepEqual(mapLegend("○", legend), { raw: "○", legend: yes });
-  assert.deepEqual(mapLegend("〇", legend), { raw: "〇", legend: yes });
-  assert.deepEqual(mapLegend("議", legend), { raw: "議", legend: "議長", mapped: "投票なし" });
-  assert.deepEqual(mapLegend("退", legend), { raw: "退", legend: "退席", mapped: "投票なし" });
-  assert.deepEqual(mapLegend("欠", legend), { raw: "欠", legend: "欠席", mapped: "投票なし" });
-  assert.deepEqual(mapLegend("除", legend), { raw: "除", legend: "除斥", mapped: "投票なし" });
-  assert.deepEqual(mapLegend("●", legend), { raw: "●", legend: "委員会審査結果又は議長宣告に起立しなかった者" });
-  assert.deepEqual(mapLegend("不明", legend), { raw: "不明", legend: "抽出不能" });
+  assert.deepEqual(mapLegend("○", legend, LABEL), { raw: "○", legend: yes });
+  assert.deepEqual(mapLegend("〇", legend, LABEL), { raw: "〇", legend: yes });
+  assert.deepEqual(mapLegend("議", legend, LABEL), { raw: "議", legend: "議長", mapped: "投票なし" });
+  assert.deepEqual(mapLegend("退", legend, LABEL), { raw: "退", legend: "退席", mapped: "投票なし" });
+  assert.deepEqual(mapLegend("欠", legend, LABEL), { raw: "欠", legend: "欠席", mapped: "投票なし" });
+  assert.deepEqual(mapLegend("除", legend, LABEL), { raw: "除", legend: "除斥", mapped: "投票なし" });
+  assert.deepEqual(mapLegend("●", legend, LABEL), { raw: "●", legend: "委員会審査結果又は議長宣告に起立しなかった者" });
+  assert.deepEqual(mapLegend("不明", legend, LABEL), { raw: "不明", legend: "抽出不能" });
   // 凡例の文面が違っても ○ に mapped は付けない。凡例に無い値は例外
-  assert.deepEqual(mapLegend("○", { "○": "起立した者" }), { raw: "○", legend: "起立した者" });
-  assert.throws(() => mapLegend("×", legend), /not in the legend/);
+  assert.deepEqual(mapLegend("○", { "○": "起立した者" }, LABEL), { raw: "○", legend: "起立した者" });
+  assert.throws(() => mapLegend("×", legend, LABEL), /not in the legend/);
 });
 
 test("toLocalRollCalls: id は {assemblyId}-{sessionId}-{採決日}-{種別}-{議案番号（NFKC）}。全 36 人が名簿に寄り、各行に委員会審査結果・議決結果・ページ・PDF の URL が付く", () => {
