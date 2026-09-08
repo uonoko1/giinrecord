@@ -239,6 +239,26 @@ const INVENTORY: { file: string; anchors: string[]; minAssertions: number }[] =
       minAssertions: 8,
     },
     {
+      // #642: #505 で採らなかった枝（fix/505-probe-path-traversal）が持っていた見本を取り込んだもの。
+      // **nginx-headers.test.sh のプローブ生成の門そのもの**を、悪い location 17 形・良い location 8 形で
+      // 外から検査する（検査器の検査・#451）。
+      // **否定的対照を実測している**（#642）: 入口の allowlist を
+      // `*[!/A-Za-z0-9._-]*) : ;;` に潰すと、`nginx-headers.test.sh` は **19 passed, 0 failed** のまま
+      // 無言で緑になり、このファイルだけが **4 passed, 1 failed**（17 形中 9 形）で声を上げた。
+      // **allowlist を緩めたことに気づける検査は、これしかない。消えると誰も気づけない。**
+      file: "nginx-headers-probe-safety.test.sh",
+      anchors: [
+        "nginx-headers.test.sh", // 検査対象を名指ししている（対象を差し替えると消える）
+        "BAD_LOCATIONS", // 落とすべき見本（空にすると t_fixture_counts_are_pinned が落ちる）
+        "GOOD_LOCATIONS", // 通すべき見本（落ちる側だけ試すと、正しい書き方まで落とす検査になる）
+        "JUDGED", // 判定した件数の突き合わせ（ループを飛ばす変異がここで落ちる）
+        "扱えない文字か形が入っている", // 入口の allowlist（location_shape_ok・#505）の逐語の文言
+        "docroot の外に出る", // 出口の封じ込め（assert_confined・#505）
+        "シンボリックリンクが挟まっている", // 実体の門（assert_no_symlink_ancestor・#580）
+      ],
+      minAssertions: 16,
+    },
+    {
       file: "nginx-reload.test.sh",
       anchors: ["vps-setup.sh", "nginx -t failed"],
       minAssertions: 17,
@@ -276,7 +296,7 @@ const INVENTORY: { file: string; anchors: string[]; minAssertions: number }[] =
  * **「行をそっと消す」を「数字も書き換える」に変える**——意図が diff に残る。
  * 止めるのは経路2・経路3のほう。
  */
-const EXPECTED_COUNT = 17;
+const EXPECTED_COUNT = 18; // #642: nginx-headers-probe-safety.test.sh を追加（17 → 18）
 
 /**
  * 失敗を exit status に変える「出口」。これが無いと assertion がいくつあっても
@@ -358,6 +378,18 @@ const INVENTORY_PINNED: Record<
       "REQUIRED_SECURITY_HEADERS",
     ],
     minAssertions: 8,
+  },
+  "nginx-headers-probe-safety.test.sh": {
+    anchors: [
+      "nginx-headers.test.sh",
+      "BAD_LOCATIONS",
+      "GOOD_LOCATIONS",
+      "JUDGED",
+      "扱えない文字か形が入っている",
+      "docroot の外に出る",
+      "シンボリックリンクが挟まっている",
+    ],
+    minAssertions: 16,
   },
   "nginx-reload.test.sh": {
     anchors: ["vps-setup.sh", "nginx -t failed"],
