@@ -180,6 +180,22 @@ describe("writeDataset / validateDataset: docs/DATA_CONTRACT.md の不変条件"
     cleanup();
   });
 
+  // #632: 氏名は名簿（PDF/HTML）から、かなは名簿の HTML から取る独立した2つの値。
+  // 一方が静かに1文字消えると比（かな長 / 氏名長）が跳ねる。#617（大分）の実例の機序。
+  test("かなに対して氏名が短すぎれば違反（氏名が1文字消えたのを、かなとの比で検出する。#632）", async () => {
+    // m_007006 は「青木 愛」/「あおき あい」（比 2.5。正常範囲）。氏名から「木」が消えたと想定し「愛」1文字にする
+    // → かな5文字/氏名1文字 = 5.0 になり、閾値 3.5 を超える。
+    patch<MemberSummary[]>(dir, "members/index.json", (idx) => idx.map((m) => (m.id === "m_007006" ? { ...m, name: "愛" } : m)));
+    assert.match((await validateDataset(dir)).join("\n"), /m_007006: kana "あおき あい" is disproportionate to name "愛"/);
+    cleanup();
+  });
+
+  test("かなが空の議員は、氏名が短くても違反にしない（HTML の名簿から取れていないだけで、氏名が壊れたわけではない）", async () => {
+    patch<MemberSummary[]>(dir, "members/index.json", (idx) => idx.map((m) => (m.id === "m_007006" ? { ...m, name: "愛", kana: "" } : m)));
+    assert.doesNotMatch((await validateDataset(dir)).join("\n"), /disproportionate/);
+    cleanup();
+  });
+
   test("meta.json は stableJson（キーソート・インデント1・末尾改行）で書かれる（Issue #24）", () => {
     const text = readFileSync(join(dir, "meta.json"), "utf-8");
     assert.equal(text, stableJson(realDataset().meta));

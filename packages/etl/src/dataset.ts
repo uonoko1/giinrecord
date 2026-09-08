@@ -4,7 +4,7 @@ import { join } from "node:path";
 import type { Assembly, Bill, BillSessionCount, BillSummary, DatasetMeta, MemberAssemblyCount, MemberDetail, MemberSpeeches, MemberSummary, RollCall, RollCallSummary } from "@seiji-kiroku/shared";
 import type { Aggregated } from "./aggregate.ts";
 import { DIET_ASSEMBLY_IDS } from "./assemblies.ts";
-import { isDietMemberRow, membersByAssembly, mergeAssemblies, mergeMemberIndex, readMemberIndex, validateLocalAssemblies } from "./local-assemblies.ts";
+import { isDietMemberRow, kanaNameRatioExceeds, membersByAssembly, mergeAssemblies, mergeMemberIndex, readMemberIndex, validateLocalAssemblies } from "./local-assemblies.ts";
 export { membersByAssembly } from "./local-assemblies.ts";
 import { stableJson } from "./json.ts";
 import type { GroupMismatch } from "./match-votes.ts";
@@ -239,6 +239,9 @@ export async function validateDataset(dir: string): Promise<string[]> {
     // 所属議会（#156）: assemblies/index.json に実在し、国会議員は house と一致する（diet-{house}）。
     if (typeof m.assemblyId !== "string" || !assemblyIds.has(m.assemblyId)) v.push(`members/index.json ${m.id}: assemblyId ${String(m.assemblyId)} not in assemblies/index.json`);
     else if ((m.house === "sangiin" || m.house === "shugiin") && m.assemblyId !== DIET_ASSEMBLY_IDS[m.house]) v.push(`members/index.json ${m.id}: assemblyId ${m.assemblyId} does not match house ${m.house} (expected ${DIET_ASSEMBLY_IDS[m.house]})`);
+    // かなと氏名の検算（#632）: 氏名は名簿（PDF/HTML）、かなは名簿の HTML から。独立した2つの値で、
+    // 片方が静かに欠けたときに比が跳ねる（#617 の「フォントのサブセットに文字が無く欠落」はこれで拾える範囲がある）。
+    if (kanaNameRatioExceeds(m.name, m.kana)) v.push(`members/index.json ${m.id}: kana "${m.kana}" is disproportionate to name "${m.name}" (name may have lost a character. #632)`);
   }
   // members/by-assembly.json（#441）は index.json から機械的に導ける集計。食い違えば
   // /・/assemblies・/coverage が違う人数を出す（利用者から検出できない虚偽）ので止める。
