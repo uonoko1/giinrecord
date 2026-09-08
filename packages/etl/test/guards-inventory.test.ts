@@ -106,13 +106,17 @@ function rows(): Row[] {
 /**
  * 実測（2026-09-08、この索引を作ったとき）: **44 行 / 67 anchor**
  * （最初 43 行 / 66 anchor で書き、rebase 中に main へ入った #661 の守りを 1 行足して 44 / 67）。
+ * **#665 で 55 行 / 103 anchor**——国会側の名寄せ（`resolveMember` / `tenureVerified` / `unmatched` /
+ * 国会側の `estimated`）が 0 行、出典の許可ホスト（`SOURCE_HOST`）も 0 行だった。
+ * **索引ができた翌日に、索引を使って抜けを探して見つかったもの**である（#664 の担当者が
+ * 「44 行が全部だとは主張できない。下限である」と自己申告したのが起点）。
  * 数え方: `guards.md` の表の行（見出しと罫線を除く）と、`防いでいるもの` 欄の
  * バッククォート内のうち**リポジトリ相対のパスに見えないもの**の総数。
  *
  * 下限なので、守りが増えて行が増えるぶんには落ちない。**減ったら落ちる。**
  */
-const MIN_ROWS = 44;
-const MIN_ANCHORS = 67;
+const MIN_ROWS = 55;
+const MIN_ANCHORS = 103;
 
 /**
  * **索引から消えてはならない守り**（#662 で PO が「無い」と誤読した 6 件を必ず含む）。
@@ -138,6 +142,12 @@ const CORE_GUARDS: readonly string[] = [
   "scripts/ci/stale-base.sh", // #536
   "deploy/test/nginx-headers.test.sh", // #505/#580/#642/#652
   "apps/web/app/lib/font-subset-coverage.test.ts", // #477/#520
+  // #665: 国会側の名寄せと出典の許可ホスト。**索引ができた当日は 0 行だった。**
+  // 「別人の記録が出る」は利用者から検出できない虚偽なので、地方（name-match.ts）と
+  // 同じ重さで核に置く。dataset.ts は SOURCE_HOST（出典の許可ホスト）と
+  // 「空 memberId は unmatched に載っていなければ止める」の両方をここだけで持つ。
+  "packages/etl/src/match-votes.ts", // resolveMember / tenureVerified（#3/#24/#230/#320）
+  "packages/etl/src/dataset.ts", // SOURCE_HOST・unmatched の検証・estimated の形（#4/#219）
 ];
 
 test("#662 索引そのものが在る（消えたら落ちる）", () => {
