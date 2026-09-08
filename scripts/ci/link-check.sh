@@ -109,9 +109,16 @@ probe() {
     -A "$UA" -o /dev/null -w '%{http_code}' "$url" 2>/dev/null)
   status=$?
   set -e
+  # curl の終了コードで「HTTP のステータスを受け取ったか」を決める。
+  #   0  ふつうに取れた
+  #   63 --max-filesize 超過。**ステータス行はもう受け取っている**（実測: 島根の表決 PDF は
+  #      65536 バイトを超えるので毎回これになる。ここを落とすと PDF が全部 fail になる）
+  # それ以外（DNS 6・接続 7・タイムアウト 28 …）は**届いていない**ので 000 にする。
+  # curl は接続に失敗しても %{http_code} に 000 を出すとは限らないので、
+  # code の中身ではなく**終了コードで**決める（#514: 当たっていない検査は無意味）。
   case "$status" in
-    0|63) : ;;                      # 63 = Maximum file size exceeded（ステータスは受け取っている）
-    *) [ -n "$code" ] && [ "$code" != 000 ] || code=000 ;;
+    0|63) : ;;
+    *) code=000 ;;
   esac
   printf '%s' "${code:-000}"
 }

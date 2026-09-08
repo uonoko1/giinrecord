@@ -42,6 +42,11 @@ while [ $# -gt 0 ]; do
 done
 n=$(grep -c -x -F -- "$url" "$STUB_DIR/curl.urls" 2>/dev/null || true)
 printf '%s\n' "$url" >> "$STUB_DIR/curl.urls"
+printf 'start\t%s\n' "$url" >> "$STUB_DIR/curl.order"
+# STUB_DELAY: 直列なら「開始→終了」が交互に並ぶ。並列に叩けば start が固まる。
+# ここで本物の sleep を使う（PATH のスタブ sleep ではなく、絶対パス）。
+if [ -n "${STUB_DELAY:-}" ]; then /usr/bin/env -i /bin/sleep "$STUB_DELAY" 2>/dev/null || true; fi
+printf 'end\t%s\n' "$url" >> "$STUB_DIR/curl.order"
 printf '%s\t%s\n' "$url" "$ua" >> "$STUB_DIR/curl.log"
 line=""
 if [ "$n" -ge 1 ]; then line=$(grep -m1 -F -- "$url#2 " "$STUB_DIR/codes" || true); fi
@@ -61,7 +66,7 @@ chmod +x "$BIN/curl" "$BIN/sleep"
 # run <urls-file> [env assignments...] → $OUT / $STATUS、ログは $TMP/curl.log 等
 run() {
   local urls=$1; shift
-  : > "$TMP/curl.log"; : > "$TMP/curl.urls"; : > "$TMP/sleep.log"
+  : > "$TMP/curl.log"; : > "$TMP/curl.urls"; : > "$TMP/sleep.log"; : > "$TMP/curl.order"
   set +e
   OUT=$(STUB_DIR="$TMP" PATH="$BIN:$PATH" env "$@" bash "$SCRIPT" --urls "$urls" 2>&1)
   STATUS=$?
@@ -115,6 +120,17 @@ t_large_pdf_curl_63_is_not_a_failure() {
   run "$TMP/urls"
   assert_eq 0 "$STATUS" "curl 63（サイズ超過）は届いている＝成功"
   assert_contains "$OUT" "ok $GONE_PDF 200" ""
+}
+
+t_transport_failure_is_a_failure_not_a_pass() {
+  # curl が届かなかったとき（DNS 6 / 接続 7 / タイムアウト 28）は 000 として扱う。
+  # curl は %{http_code} に何を出すか保証しないので、**終了コードで**決める。
+  # ここを「code が空でなければ ok」にすると、届いていないのに緑になる。
+  urls "$OK_URL"
+  codes "$OK_URL 200 6"
+  run "$TMP/urls"
+  assert_eq 1 "$STATUS" "curl が届かなかったら失敗"
+  assert_contains "$OUT" "fail $OK_URL 000" "ステータスは 000 として報告する"
 }
 
 # --- 3. 1回の 404 で騒がない ------------------------------------------------------------------
@@ -177,13 +193,25 @@ t_interval_is_configurable_and_actually_used() {
 }
 
 t_requests_are_sequential_not_parallel() {
-  # スタブは呼ばれた順に1行ずつ書く。並列に叩いていれば URL 一覧の順と一致しない。
+  # 相手は自治体のサーバー。同時に何本も掴まない。
+  #
+  # **「呼ばれた順が一覧の順と同じ」では測れない**（この PBI で実測した罠）: スタブが即座に返るので、
+  # `&` でバックグラウンドに送っても順序はたいてい保たれ、並列化の変異が生き残った（19/19 緑のまま）。
+  # そこで**各リクエストに実時間の遅延を入れ**、start / end の並びを見る。
+  # 直列なら start,end,start,end,… と交互に並ぶ。並列なら start が続けて出る。
   urls "$OK_URL" "$GONE_URL" "$GONE_PDF"
   codes "$OK_URL 200" "$GONE_URL 200" "$GONE_PDF 200"
-  run "$TMP/urls"
+  run "$TMP/urls" STUB_DELAY=0.4 LINK_CHECK_INTERVAL=0
+  assert_eq "start
+end
+start
+end
+start
+end" "$(cut -f1 "$TMP/curl.order")" "start と end が交互（＝1本ずつ）。並列なら start が固まる"
+  # 順序そのものも一覧のとおり
   assert_eq "$OK_URL
 $GONE_URL
-$GONE_PDF" "$(cut -f1 "$TMP/curl.log")" "URL 一覧の順に1本ずつ叩く"
+$GONE_PDF" "$(cut -f1 "$TMP/curl.log")" "URL 一覧の順に叩く"
 }
 
 t_retry_waits_before_the_second_round() {
@@ -253,6 +281,7 @@ test_case "404 を fail として報告し、非0で終わる（この仕組み�
 test_case "否定的対照: 全部生きていれば fail は1件も出ず、0 で終わる"                t_all_alive_is_silent_and_green
 test_case "否定的対照: 3xx は失敗にしない"                                          t_redirect_is_not_a_failure
 test_case "否定的対照: 大きい PDF（curl 63 = サイズ超過）は失敗にしない"              t_large_pdf_curl_63_is_not_a_failure
+test_case "curl が届かなかった（終了コード 6 等）は 000 として失敗にする"                 t_transport_failure_is_a_failure_not_a_pass
 test_case "1回だけの失敗（1回目 503 → 2回目 200）は報告しない"                       t_a_blip_does_not_report
 test_case "2回続けて落ちたものだけ報告する"                                          t_two_failures_in_a_row_report
 test_case "叩き直すのは落ちた URL だけ（生きている分は1回）"                          t_retry_probes_only_the_failed_urls
