@@ -16,6 +16,86 @@ export const EDGE = 1.0;
 /** 罫線の座標をまとめる（同じ線が二重に描かれている）距離。 */
 export const EPS = 1.5;
 
+/** PDF の変換行列 [a, b, c, d, e, f]。 */
+export type Matrix = [number, number, number, number, number, number];
+
+const IDENTITY: Matrix = [1, 0, 0, 1, 0, 0];
+
+/**
+ * 行列の合成。`cm` 演算子（`OPS.transform`）は「今の CTM の *前* に掛ける」ので、
+ * 新しい CTM は `m` を `ctm` に右から掛けたものになる（PDF 仕様 8.3.3）。
+ */
+export function multiplyMatrix(ctm: Matrix, m: ArrayLike<number>): Matrix {
+  return [
+    m[0] * ctm[0] + m[1] * ctm[2],
+    m[0] * ctm[1] + m[1] * ctm[3],
+    m[2] * ctm[0] + m[3] * ctm[2],
+    m[2] * ctm[1] + m[3] * ctm[3],
+    m[4] * ctm[0] + m[5] * ctm[2] + ctm[4],
+    m[4] * ctm[1] + m[5] * ctm[3] + ctm[5],
+  ];
+}
+
+/**
+ * 矩形 [x0, y0, x1, y1] に行列を掛け、軸に沿った外接矩形（左下・右上の順）を返す。
+ *
+ * **4 隅すべてを見る**。回転やせん断が入ると、外接矩形の左端・右端を決めるのが
+ * 対角の 2 隅とは限らない（せん断 c=2 を [0,0,4,3] に掛けると 4 隅の x は 0,4,10,6 になり、
+ * 対角の (0,0) と (4,3) だけでは右端 10 を取り落とす）。
+ */
+export function applyMatrix(m: Matrix, rect: ArrayLike<number>): [number, number, number, number] {
+  const [a, b, c, d, e, f] = m;
+  const xs: number[] = [];
+  const ys: number[] = [];
+  for (const [px, py] of [[rect[0], rect[1]], [rect[2], rect[1]], [rect[2], rect[3]], [rect[0], rect[3]]]) {
+    xs.push(a * px + c * py + e);
+    ys.push(b * px + d * py + f);
+  }
+  return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
+}
+
+/**
+ * オペレータ列から罫線（細い矩形）を読む。**CTM を持ち回るのはここだけ**（Issue #693）。
+ *
+ * `OPS.constructPath` の `minMax` は **その時点の CTM を掛ける前** のローカル座標である。
+ * `q`（save）/ `Q`（restore）/ `cm`（transform）を辿って CTM を作り、
+ * 掛けて初めてページ上の位置になる。掛けないと、罫線を `q … cm … 矩形 … Q` で置いている PDF で
+ * 全部の線が同じ位置に潰れ、**その潰れた線で列を割ると別人の票が出る。**
+ *
+ * **`OPS.setTransform` は見ない。pdfjs 6.2.108 の `OPS` にそんなキーは無い**（実測: `undefined`。
+ * `OPS` の 91 キーのうち `transform` を含むものは `transform` 1 つだけ）。
+ * Issue #693 の本文は `OPS.setTransform` も辿るよう書いているが、**存在しないものは辿れない。**
+ * 書くと `fn === undefined` という恒真になりかねない枝ができるだけで、実際は害になる
+ * （最初この枝を書いたとき、テストの `OPS.setTransform` も `undefined` になり、
+ *   `undefined === undefined` で通ってしまった。tsc が `TS2551` で教えてくれた）。
+ * pdfjs が将来 CTM を「置き換える」演算子を足したら、ここに枝を足すこと。
+ *
+ * `getOperatorList()` を渡さず配列 2 本で受けるのは、PDF を用意しなくても
+ * 入れ子の `q`/`Q` を直接テストできるようにするため（実物のフィクスチャは深さ 2 までしか無い）。
+ */
+export function readLines(fnArray: ArrayLike<number>, argsArray: ArrayLike<unknown>): { vlines: VLine[]; hlines: HLine[] } {
+  const vlines: VLine[] = [];
+  const hlines: HLine[] = [];
+  let ctm: Matrix = IDENTITY;
+  const stack: Matrix[] = [];
+  for (let k = 0; k < fnArray.length; k++) {
+    const fn = fnArray[k];
+    if (fn === OPS.save) { stack.push(ctm); continue; }
+    if (fn === OPS.restore) { ctm = stack.pop() ?? IDENTITY; continue; }
+    if (fn === OPS.transform) { ctm = multiplyMatrix(ctm, argsArray[k] as ArrayLike<number>); continue; }
+    if (fn !== OPS.constructPath) continue;
+    const args = argsArray[k] as unknown[];
+    const minMax = args[2] as ArrayLike<number> | undefined;
+    if (!minMax || minMax.length < 4) continue;
+    const [x0, y0, x1, y1] = applyMatrix(ctm, minMax);
+    const w = x1 - x0;
+    const h = y1 - y0;
+    if (w < 2 && h > 5) vlines.push({ x: (x0 + x1) / 2, y0, y1 });
+    else if (h < 2 && w > 5) hlines.push({ y: (y0 + y1) / 2, x0, x1 });
+  }
+  return { vlines, hlines };
+}
+
 export async function readPages(bytes: Buffer): Promise<PageGeometry[]> {
   const loadingTask = getDocument({ data: new Uint8Array(bytes), verbosity: 0 });
   const doc = await loadingTask.promise;
@@ -35,19 +115,7 @@ export async function readPages(bytes: Buffer): Promise<PageGeometry[]> {
         items.push({ str, x, y, w: it.width, h: it.height, cx: x + it.width / 2, cy: y + it.height / 2 });
       }
       const ops = await page.getOperatorList();
-      const vlines: VLine[] = [];
-      const hlines: HLine[] = [];
-      for (let k = 0; k < ops.fnArray.length; k++) {
-        if (ops.fnArray[k] !== OPS.constructPath) continue;
-        const args = ops.argsArray[k] as unknown[];
-        const minMax = args[2] as ArrayLike<number> | undefined;
-        if (!minMax || minMax.length < 4) continue;
-        const [x0, y0, x1, y1] = [minMax[0], minMax[1], minMax[2], minMax[3]];
-        const w = x1 - x0;
-        const h = y1 - y0;
-        if (w < 2 && h > 5) vlines.push({ x: (x0 + x1) / 2, y0, y1 });
-        else if (h < 2 && w > 5) hlines.push({ y: (y0 + y1) / 2, x0, x1 });
-      }
+      const { vlines, hlines } = readLines(ops.fnArray, ops.argsArray);
       out.push({ items, vlines, hlines });
     }
   } finally {
