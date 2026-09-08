@@ -1,6 +1,11 @@
 import type { LocalMember, LocalRollCall, LocalUnmatchedName, LocalVote, VoteValue } from "@seiji-kiroku/shared";
 import { isoDate, KOCHI_ASSEMBLY } from "./site.ts";
 import { UNKNOWN_CELL, UNKNOWN_LEGEND, type VotePdf } from "./votes-pdf.ts";
+// 氏名の突き合わせは 7 県で共通（#636）。規則と、なぜ部分列一致なのかは name-match.ts に書いてある。
+import { localNameKey as nameKey, matchBySubsequence as matchName, type NameMatch } from "../name-match.ts";
+
+export type { NameMatch };
+export { nameKey, matchName };
 
 /**
  * 高知県議会の表決 PDF の行 → LocalRollCall（Issue #220）。
@@ -29,44 +34,6 @@ const MAPPED: Record<string, VoteValue> = {
 export function mapLegend(raw: string, legend: string): LocalVote {
   const mapped = raw === UNKNOWN_CELL ? undefined : MAPPED[legend];
   return mapped ? { raw, legend, mapped } : { raw, legend };
-}
-
-/** 字形違い（異体字）を寄せる。人名用の別字（澤/沢 など）は寄せない。 */
-const ITAIJI: Record<string, string> = { "髙": "高", "﨑": "崎", "𠮷": "吉" };
-
-/** 氏名の突合キー: 空白・異体字セレクタ（U+FE00–FE0F, U+E0100–E01EF）を除き、字形違いを寄せる。 */
-export const nameKey = (s: string): string =>
-  [...s.replace(/[\s　]/g, "").replace(/[\uFE00-\uFE0F\u{E0100}-\u{E01EF}]/gu, "")].map((c) => ITAIJI[c] ?? c).join("");
-
-export interface NameMatch {
-  memberId: string;
-  candidates: { id: string; name: string }[];
-}
-
-/** a の文字が順序どおり b に現れるか（部分列）。 */
-const isSubsequence = (a: string, b: string): boolean => {
-  let i = 0;
-  for (const c of b) if (i < a.length && c === a[i]) i++;
-  return i === a.length;
-};
-
-/**
- * PDF の氏名 → 名簿。完全一致（nameKey）が 1 人ならその人。0 人なら「名簿の氏名に PDF の氏名が順序どおり
- * 部分列として含まれる」議員が 1 人に決まるときだけ寄せる（文字層に落ちる字があるため）。
- * どちらも 2 人以上なら memberId "" で候補を全部返す（選ばない）。
- */
-export function matchName(nameText: string, roster: readonly LocalMember[]): NameMatch {
-  const key = nameKey(nameText);
-  if (key === "") return { memberId: "", candidates: [] };
-  const exact = roster.filter((m) => nameKey(m.name) === key);
-  if (exact.length > 0) {
-    const candidates = exact.map((m) => ({ id: m.id, name: m.name }));
-    return { memberId: exact.length === 1 ? exact[0].id : "", candidates };
-  }
-  if ([...key].length < 2) return { memberId: "", candidates: [] };
-  const partial = roster.filter((m) => isSubsequence(key, nameKey(m.name)));
-  const candidates = partial.map((m) => ({ id: m.id, name: m.name }));
-  return { memberId: partial.length === 1 ? partial[0].id : "", candidates };
 }
 
 export interface SessionInfo {

@@ -1,5 +1,3 @@
-import type { LocalMember } from "@seiji-kiroku/shared";
-
 /**
  * 地方議会の表決 PDF の氏名 → 名簿の突き合わせ（Issue #636）。
  *
@@ -58,14 +56,23 @@ const ITAIJI: Readonly<Record<string, string>> = { "髙": "高", "﨑": "崎", "
 export const localNameKey = (s: string): string =>
   [...s.replace(/[\s　]/g, "").replace(/[︀-️\u{E0100}-\u{E01EF}]/gu, "")].map((c) => ITAIJI[c] ?? c).join("");
 
+/**
+ * 突き合わせに要る名簿の最小限（`LocalMember` はこれを満たす）。
+ * 突き合わせに使わない欄（会派・選挙区など）を型で要求しないので、テストが本物の名簿を組み立てずに済む。
+ */
+export interface RosterEntry {
+  id: string;
+  name: string;
+}
+
 /** 名簿に寄せた結果。`memberId` が "" なら ETL は選んでいない（候補は運用者が見る）。 */
 export interface NameMatch {
   memberId: string;
   candidates: { id: string; name: string }[];
 }
 
-const asCandidates = (ms: readonly LocalMember[]): { id: string; name: string }[] => ms.map((m) => ({ id: m.id, name: m.name }));
-const decide = (hits: readonly LocalMember[]): NameMatch => ({ memberId: hits.length === 1 ? hits[0].id : "", candidates: asCandidates(hits) });
+const asCandidates = (ms: readonly RosterEntry[]): { id: string; name: string }[] => ms.map((m) => ({ id: m.id, name: m.name }));
+const decide = (hits: readonly RosterEntry[]): NameMatch => ({ memberId: hits.length === 1 ? hits[0].id : "", candidates: asCandidates(hits) });
 
 /** a の文字が順序どおり b に現れるか（部分列）。 */
 const isSubsequence = (a: string, b: string): boolean => {
@@ -78,7 +85,7 @@ const isSubsequence = (a: string, b: string): boolean => {
  * 完全一致（`localNameKey`）が 1 人ならその人。0 人・2 人以上は memberId "" で候補を返す（選ばない）。
  * PDF の氏名がフルネームで、文字層に落ちる字が無い議会向け（島根 #221）。
  */
-export function matchByExact(nameText: string, roster: readonly LocalMember[]): NameMatch {
+export function matchByExact(nameText: string, roster: readonly RosterEntry[]): NameMatch {
   const key = localNameKey(nameText);
   if (key === "") return { memberId: "", candidates: [] };
   return decide(roster.filter((m) => localNameKey(m.name) === key));
@@ -93,7 +100,7 @@ export function matchByExact(nameText: string, roster: readonly LocalMember[]): 
  * 1 人に絞ったように見せてはいけない。
  * **1 文字は部分列に落とさない**——当たりすぎて別人に決まりうるため。
  */
-export function matchBySubsequence(nameText: string, roster: readonly LocalMember[]): NameMatch {
+export function matchBySubsequence(nameText: string, roster: readonly RosterEntry[]): NameMatch {
   const key = localNameKey(nameText);
   if (key === "") return { memberId: "", candidates: [] };
   const exact = roster.filter((m) => localNameKey(m.name) === key);
@@ -107,7 +114,7 @@ export function matchBySubsequence(nameText: string, roster: readonly LocalMembe
  * 「議員」を落とした文字列で始まる議員がちょうど 1 人なら memberId、それ以外は "" で候補を全部返す。
  * **この議会だけ書式が違うので前方一致を残している**（理由はファイル冒頭）。
  */
-export function matchBySurnamePrefix(nameText: string, roster: readonly LocalMember[]): NameMatch {
+export function matchBySurnamePrefix(nameText: string, roster: readonly RosterEntry[]): NameMatch {
   const key = localNameKey(nameText).replace(/議員$/, "");
   if (key === "") return { memberId: "", candidates: [] };
   return decide(roster.filter((m) => localNameKey(m.name).startsWith(key)));

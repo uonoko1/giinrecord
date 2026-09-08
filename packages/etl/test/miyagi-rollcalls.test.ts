@@ -112,11 +112,28 @@ const fakePdf = (nameText: string): VotePdf => ({
   unknownCells: 0,
 });
 
-test("toLocalRollCalls: 名簿は「髙橋 伸二」(U+9AD9)、PDF に三重の実データと同型の IVS 付き表記（髙\\u{E0100}橋 伸二）が来ると、宮城は字体を畳まないので unmatched に落ちる（別人には絶対に紐づかない）", () => {
+// #636 で 7 県の突合キーを 1 本にするまで、宮城は空白を除くだけで異体字セレクタも字体も畳まなかったので、
+// この入力は unmatched に落ちていた。共通キー（name-match.ts）が IVS を除くようになったので、今は同じ人に寄る。
+test("toLocalRollCalls: 名簿は「髙橋 伸二」(U+9AD9)、PDF に三重の実データと同型の IVS 付き表記（髙\\u{E0100}橋 伸二）が来ても同じ人に寄る（#636。IVS は幅 0 で目に見えない）", () => {
   const pdf = fakePdf("髙\u{E0100}橋 伸二");
   const { rollCalls, unmatched } = toLocalRollCalls(pdf, roster.members, { sessionLabel: "テスト会期", pdfUrl: "https://example.test/x.pdf" });
+  assert.equal(rollCalls[0].votes[0].memberId, "p_04_sinji");
+  assert.deepEqual(unmatched, []);
+});
+
+test("toLocalRollCalls: 名簿「髙橋 伸二」に PDF の「高橋 伸二」（字体違い）が来ても同じ人に寄る（#636。本番の名簿で実際に効いている 1 名）", () => {
+  const pdf = fakePdf("高橋 伸二");
+  const { rollCalls, unmatched } = toLocalRollCalls(pdf, roster.members, { sessionLabel: "テスト会期", pdfUrl: "https://example.test/x.pdf" });
+  assert.equal(rollCalls[0].votes[0].memberId, "p_04_sinji");
+  assert.deepEqual(unmatched, []);
+});
+
+test("toLocalRollCalls: 字体を畳んでも別人には寄らない（#569。畳んだ結果ぶつかる相手がいれば選ばない）", () => {
+  // 名簿に「髙橋 伸二」と「高橋 伸二」の両方がいたら、キーが同じになるので ETL は選ばない
+  const both = [...roster.members, { ...roster.members[0], id: "p_04_other", name: "高橋 伸二" }];
+  const { rollCalls, unmatched } = toLocalRollCalls(fakePdf("高橋 伸二"), both, { sessionLabel: "テスト会期", pdfUrl: "https://example.test/x.pdf" });
   assert.equal(rollCalls[0].votes[0].memberId, "");
-  assert.deepEqual(unmatched.map((u) => u.nameText), ["髙\u{E0100}橋 伸二"]);
+  assert.deepEqual(unmatched.map((u) => u.nameText), ["高橋 伸二"]);
 });
 
 test("toLocalRollCalls: 名簿の表記と空白の有無以外は完全に同じ字（IVS 無し）なら、これまでどおり紐づく（回帰）", () => {

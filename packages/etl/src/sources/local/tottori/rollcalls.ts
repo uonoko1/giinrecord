@@ -1,6 +1,12 @@
 import type { LocalMember, LocalRollCall, LocalUnmatchedName, LocalVote, VoteValue } from "@seiji-kiroku/shared";
 import { TOTTORI_ASSEMBLY } from "./site.ts";
 import { UNKNOWN_CELL, UNKNOWN_LEGEND, type VotePdf, type VotePdfRow } from "./votes-pdf.ts";
+// 氏名の突き合わせは 7 県で共通（#636）。鳥取だけ PDF が「○○議員」（姓のみ）なので前方一致を使う
+// （部分列にすると「議員」の 2 字まで突き合わせてしまい、決まっていた 35 人が決まらなくなる。実測）。
+import { localNameKey as nameKey, matchBySurnamePrefix as matchName, type NameMatch } from "../name-match.ts";
+
+export type { NameMatch };
+export { nameKey, matchName };
 
 /**
  * 鳥取県議会の表決 PDF の行 → LocalRollCall（Issue #184）。
@@ -26,21 +32,6 @@ const MAPPED: Record<string, VoteValue> = {
 export function mapLegend(raw: string, legend: string): LocalVote {
   const mapped = raw === UNKNOWN_CELL ? undefined : MAPPED[legend];
   return mapped ? { raw, legend, mapped } : { raw, legend };
-}
-
-export const nameKey = (s: string) => s.replace(/[\s　]/g, "");
-
-export interface NameMatch {
-  memberId: string;
-  candidates: { id: string; name: string }[];
-}
-
-/** PDF の「○○議員」→ 名簿。氏名（空白除く）が「議員」を除いた文字列で始まる議員がちょうど 1 人なら memberId、それ以外は ""（候補は全部返す）。 */
-export function matchName(nameText: string, roster: readonly LocalMember[]): NameMatch {
-  const key = nameKey(nameText).replace(/議員$/, "");
-  if (key === "") return { memberId: "", candidates: [] };
-  const candidates = roster.filter((m) => nameKey(m.name).startsWith(key)).map((m) => ({ id: m.id, name: m.name }));
-  return { memberId: candidates.length === 1 ? candidates[0].id : "", candidates };
 }
 
 export interface SessionInfo {

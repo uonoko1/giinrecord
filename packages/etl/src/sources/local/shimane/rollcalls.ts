@@ -1,6 +1,11 @@
 import type { LocalMember, LocalRollCall, LocalUnmatchedName, LocalVote, VoteValue } from "@seiji-kiroku/shared";
 import { SHIMANE_ASSEMBLY } from "./site.ts";
 import { UNKNOWN_CELL, UNKNOWN_LEGEND, type ResultRow, type VotePdf } from "./votes-pdf.ts";
+// 氏名の突き合わせは 7 県で共通（#636）。島根の PDF はフルネームで文字層の欠落が無いので完全一致のみ。
+import { localNameKey as nameKey, matchByExact as matchName, type NameMatch } from "../name-match.ts";
+
+export type { NameMatch };
+export { nameKey, matchName };
 
 /**
  * 島根県議会の表決 PDF の行 → LocalRollCall（Issue #221）。
@@ -28,27 +33,6 @@ const MAPPED: Record<string, VoteValue> = {
 export function mapLegend(raw: string, legend: string): LocalVote {
   const mapped = raw === UNKNOWN_CELL ? undefined : MAPPED[legend];
   return mapped ? { raw, legend, mapped } : { raw, legend };
-}
-
-/** 字形違い（異体字）を寄せる。人名用の別字（澤/沢 など）は寄せない。 */
-const ITAIJI: Record<string, string> = { "髙": "高", "﨑": "崎", "𠮷": "吉", "德": "徳", "⾧": "長" };
-
-/** 氏名の突合キー: 空白・異体字セレクタ（U+FE00–FE0F, U+E0100–E01EF）を除き、字形違いを寄せる。 */
-export const nameKey = (s: string): string =>
-  [...s.replace(/[\s　]/g, "").replace(/[︀-️\u{E0100}-\u{E01EF}]/gu, "")].map((c) => ITAIJI[c] ?? c).join("");
-
-export interface NameMatch {
-  memberId: string;
-  candidates: { id: string; name: string }[];
-}
-
-/** PDF の氏名（フルネーム）→ 名簿。完全一致（nameKey）が 1 人ならその人。決まらなければ候補を返して選ばない。 */
-export function matchName(nameText: string, roster: readonly LocalMember[]): NameMatch {
-  const key = nameKey(nameText);
-  if (key === "") return { memberId: "", candidates: [] };
-  const exact = roster.filter((m) => nameKey(m.name) === key);
-  const candidates = exact.map((m) => ({ id: m.id, name: m.name }));
-  return { memberId: exact.length === 1 ? exact[0].id : "", candidates };
 }
 
 export interface SessionInfo {

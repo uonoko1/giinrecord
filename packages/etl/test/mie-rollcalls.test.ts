@@ -29,10 +29,14 @@ test("mapLegend: ○→賛成・×→反対、議長・除斥・欠席・不在�
   assert.deepEqual(mapLegend("棄", "棄権"), { raw: "棄", legend: "棄権" });
 });
 
-test("nameKey: 空白（全角・半角）と異体字セレクタ（辻󠄀 の IVS）を除いて比べる。字そのものは寄せない", () => {
+test("nameKey: 空白（全角・半角）と異体字セレクタ（辻󠄀 の IVS）を除き、字形違い（髙﨑𠮷德⾧）も寄せる（#636 で 7 県共通の規則になった）", () => {
   assert.equal(nameKey("辻\u{E0100}内 裕也"), nameKey("辻内　裕也"));
   assert.equal(nameKey("東　　 豊"), "東豊");
-  assert.notEqual(nameKey("高橋"), nameKey("髙橋")); // 異体字は寄せない
+  // #636 まで三重は字体を畳まなかった。7 県の規則を 1 本にしたときに畳む側へ揃えた（name-match.ts に理由）
+  assert.equal(nameKey("高橋"), nameKey("髙橋"));
+  // 畳むのは表にある 5 字だけ。人名用の別字は寄せない（#569）
+  assert.notEqual(nameKey("澤田"), nameKey("沢田"));
+  assert.notEqual(nameKey("渡邊"), nameKey("渡辺"));
 });
 
 test("toLocalRollCalls: 令和8年6月分 → 22 件。id は pref-24-r08-{議決日}-{種別}-{番号(NFKC)}、日付は表題の年と議決月日から", () => {
