@@ -61,6 +61,13 @@ import { dirname, resolve } from "node:path";
  *
  * **これで anchor の書き方の制約は減ったが、消えてはいない**: 逐語が短すぎて
  * 「中身を全部消しても残る」ものは依然 anchor にならない（上の節）。
+ *
+ * **照合の規則そのものを固定するテストが要る理由**（#667 の実測）:
+ * `containsAnchor(...)` の呼び出しを `read(a.path).includes(a.text)` に戻す変異を当てると、
+ * **既存 55 行 / 103 anchor は 1 つも落ちなかった**（9 pass / 0 fail）。
+ * つまり**索引の中身だけでは、照合が緩んだことを検出できない。**
+ * だから下の `#667 逐語は単語として照合する` が、索引と無関係に規則を固定する
+ * （この変異で 8 pass / 1 fail になる）。
  */
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -355,8 +362,10 @@ test("#667 逐語は単語として照合する（接頭辞になる改名で落
         "export const resolveMemberX = 1;",
         "resolveMember",
       ),
+      // **前に足す形**。`myResolveMember` だと大文字 R で `includes` すら false になり、
+      // 前方境界を消しても落ちない（実測で M5 が生き残った）。**同じ綴りのまま前に足す。**
       prefixAdded: containsAnchor(
-        "export const myResolveMember = 1;",
+        "export const myresolveMember = 1;",
         "resolveMember",
       ),
       constSuffix: containsAnchor(
