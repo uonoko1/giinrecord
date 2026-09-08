@@ -129,7 +129,7 @@ const MAPS: [string, (raw: string) => { raw: string; legend: string }][] = [
   ["mie", (raw) => mieMap(raw, mieLegendOf(raw, VOTES, "mie"))],
   ["miyagi", (raw) => miyagiMap(raw, miyagiLegendOf(raw, VOTES, "miyagi"))],
   ["nara", (raw) => naraMap(raw, naraLegendOf(raw, VOTES, "nara"))],
-  ["tokushima", (raw) => tokushimaMap(raw, VOTES)],
+  ["tokushima", (raw) => tokushimaMap(raw, VOTES, "tokushima")],
   ["tottori", (raw) => tottoriMap(raw, tottoriLegendOf(raw, VOTES, "tottori"))],
   ["shimane", (raw) => shimaneMap(raw, shimaneLegendOf(raw, new Map(Object.entries(VOTES)), "shimane"))],
 ];
