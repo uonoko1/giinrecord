@@ -224,6 +224,34 @@ const INVENTORY: { file: string; anchors: string[]; minAssertions: number }[] =
       minAssertions: 4,
     },
     {
+      // #652: nginx-headers.test.sh の**出口 assert_confined（#505）と実体
+      // assert_no_symlink_ancestor（#580）が、実際に働くこと**をホワイトボックスで固定する。
+      // 対象から門の定義を逐語で切り出し、使い捨てディレクトリを $ROOT に見立てて
+      // **本物のシンボリックリンクを張って**呼ぶ（リンク先は必ず一時ディレクトリの中）。
+      // **否定的対照を実測している**（#652、origin/main の 26 本すべてを走らせて）:
+      //   `assert_no_symlink_ancestor() { return 0` に潰す
+      //     → nginx-headers.test.sh **19 passed, 0 failed** / probe-safety **5 passed, 0 failed**
+      //     → このファイルだけ **5 passed, 1 failed**（シンボリックリンクの見本 6 形すべて）
+      //   `assert_confined() { return 0` に潰す
+      //     → nginx-headers.test.sh **19 passed, 0 failed** / probe-safety **5 passed, 0 failed**
+      //     → このファイルだけ **5 passed, 1 failed**（docroot の外の見本 4 形すべて）
+      // **この 2 つの門が死んだことに気づける検査は、これしかない。消えると誰も気づけない。**
+      file: "nginx-headers-gate-behavior.test.sh",
+      anchors: [
+        "nginx-headers.test.sh", // 検査対象を名指ししている（対象を差し替えると消える）
+        "assert_no_symlink_ancestor", // 実体の門を名前で切り出している（GATE_FNS）
+        "assert_confined", // 出口の門を名前で切り出している（GATE_FNS）
+        "ln -s", // **本物のシンボリックリンクを張っている**（張らないと門が働かなくても緑になる）
+        "SYMLINK_CASES", // 落とすべき見本（空にすると t_fixture_counts_are_pinned が落ちる）
+        "NO_SYMLINK_CASES", // 通すべき見本（落ちる側だけ試すと「常に exit 1」でも全部 pass する）
+        "CONFINED_BAD_CASES", // 出口の門で落とすべき見本
+        "CONFINED_GOOD_CASES", // 出口の門で通すべき見本
+        "シンボリックリンクが挟まっている", // 実体の門（#580）の逐語の文言
+        "docroot の外に出る", // 出口の門（#505）の逐語の文言
+      ],
+      minAssertions: 24,
+    },
+    {
       file: "nginx-headers.test.sh",
       // #513 が「これが消えると失われる」と名指ししたものを、そのまま釘にする。
       anchors: [
@@ -296,7 +324,7 @@ const INVENTORY: { file: string; anchors: string[]; minAssertions: number }[] =
  * **「行をそっと消す」を「数字も書き換える」に変える**——意図が diff に残る。
  * 止めるのは経路2・経路3のほう。
  */
-const EXPECTED_COUNT = 18; // #642: nginx-headers-probe-safety.test.sh を追加（17 → 18）
+const EXPECTED_COUNT = 19; // #652: nginx-headers-gate-behavior.test.sh を追加（18 → 19。#642 で 17 → 18）
 
 /**
  * 失敗を exit status に変える「出口」。これが無いと assertion がいくつあっても
@@ -378,6 +406,21 @@ const INVENTORY_PINNED: Record<
       "REQUIRED_SECURITY_HEADERS",
     ],
     minAssertions: 8,
+  },
+  "nginx-headers-gate-behavior.test.sh": {
+    anchors: [
+      "nginx-headers.test.sh",
+      "assert_no_symlink_ancestor",
+      "assert_confined",
+      "ln -s",
+      "SYMLINK_CASES",
+      "NO_SYMLINK_CASES",
+      "CONFINED_BAD_CASES",
+      "CONFINED_GOOD_CASES",
+      "シンボリックリンクが挟まっている",
+      "docroot の外に出る",
+    ],
+    minAssertions: 24,
   },
   "nginx-headers-probe-safety.test.sh": {
     anchors: [
