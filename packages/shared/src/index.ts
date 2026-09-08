@@ -650,4 +650,10 @@ export interface LocalUnmatchedName {
   rollCallIds: string[];
   /** 名簿で候補になった議員（姓だけの表記で同姓が 2 人以上いたとき。鳥取 #184）。ETL は選ばない。候補が無ければ省略 */
   candidates?: { id: MemberId; name: string }[];
+  /**
+   * 名寄せできなかった理由が「PDF の中で氏名の字が壊れている」と分かるとき（#680）。省略なら理由は不明
+   * （＝これまでどおり「名簿に無い氏名」。名簿が古い／会期の途中で入れ替わった 等）。
+   * `"brokenGlyph"` は**壊れているという事実だけ**を言う。**元の字を推定しない**（#569／#674）。
+   */
+  reason?: "brokenGlyph";
 }
