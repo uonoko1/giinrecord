@@ -3,7 +3,7 @@
 Sprint 4 レトロ（`docs/sprints/sprint-4.md`）：PO の手元スクリプトの変数ミス（`gh pr list --head` に main を渡す等）を
 繰り返さないため、定型操作をリポジトリに置き、偽の `gh` でテストし、shellcheck を CI で通す（#70）。
 
-## ボードの ID（GitHub Projects v2、project 2「政治記録 スクラムボード」）
+## ボードの ID（GitHub Projects v2、project 2「議員レコード スクラムボード」）
 
 | 対象 | ID |
 |---|---|
@@ -19,6 +19,41 @@ Sprint 4 レトロ（`docs/sprints/sprint-4.md`）：PO の手元スクリプト
 
 ID は `scripts/po/board-set.sh` にも埋め込んである。ボードのフィールドを作り直したらここと同時に更新する。
 再取得：`gh project field-list 2 --owner uonoko1 --format json`。
+
+## ボードを動かすのは PO の仕事（2026-09-08 に一度落とした）
+
+**Issue と PR だけで進めて、ボードを一度も動かさなかったことがある。**
+**ユーザーから「カンバンみても今まで何をやってたかと今何をやってるかが分からん」と指摘された。**
+**そのとき実際に起きていたこと:**
+
+```
+Issue 260 件のうち Project に載っていたのは 103 件（157 件が未登録）
+非 Done の 15 件のうち 13 件は既に CLOSED（Backlog / In Progress / In Review のまま放置）
+ボードの最新は #260、当日の作業（#632〜#668）は 1 件も載っていない
+```
+
+**`scripts/po/board-set.sh` は Sprint 4 から存在していた。使っていなかっただけである。**
+
+**やること**（PBI ごとに、状態が変わった時点で動かす）:
+
+| 出来事 | Status |
+|---|---|
+| PBI を起票した（まだ着手しない） | `Backlog` |
+| リファインメントを終え、着手してよい | `Ready` |
+| 担当者を立てた | `In Progress` |
+| PR が出た | `In Review` |
+| マージした | `Done` |
+
+```sh
+scripts/po/board-set.sh <issue> <Backlog|Ready|In Progress|In Review|Done>
+```
+
+**「人間の判断・操作待ち」は `Backlog` に置き、`blocked` ラベルで区別する**
+（`docs/ops/pending-decisions.md` に理由を書く）。**Ready に置いてはいけない**——
+**Ready は「開発者が今すぐ取れる」という意味であり、誰も取れないものを置くと
+ボードが「作業があるのに誰も動いていない」ように見える。**
+
+**起票と同時にボードへ載せる。** 後でまとめて載せると、**その間ボードは嘘をつく。**
 
 ## スクリプト
 
