@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { parseRoster } from "../src/sources/local/miyagi/roster.ts";
 import { parseVotePdf, type VotePdf } from "../src/sources/local/miyagi/votes-pdf.ts";
-import { mapLegend, toIsoDate, toLocalRollCalls } from "../src/sources/local/miyagi/rollcalls.ts";
+import { checkPdfSession, mapLegend, toIsoDate, toLocalRollCalls } from "../src/sources/local/miyagi/rollcalls.ts";
 
 // 表決 PDF の行 → LocalRollCall（Issue #157）。名簿との名寄せは氏名の空白を除いた完全一致だけ（推定しない）。
 const fixture = (name: string) => new URL(`./fixtures/miyagi/${name}`, import.meta.url);
@@ -90,8 +90,9 @@ test("toLocalRollCalls: 名簿に同じ氏名が 2 人いれば名寄せしな�
 // 字体そのものが食い違えば必ず unmatched に落ちる（畳まない設計を固定するテスト）。
 // PDF はバイナリなので、パース結果 VotePdf を直接組み立てて toLocalRollCalls に渡す。
 const fakePdf = (nameText: string): VotePdf => ({
-  sessionLabel: "テスト会期",
-  sessionId: "t",
+  // #695 で PDF の見出しと会期 index の見出しを突き合わせるようになったので、見出しは実物と同じ形にする
+  sessionLabel: "第398回宮城県議会（令和7年11月定例会）",
+  sessionId: "398",
   sessionYear: 2025,
   sessionMonth: 11,
   legend: { votes: { "○": "賛成" }, methods: { 起立: "起立採決" }, groups: {} },
@@ -116,14 +117,14 @@ const fakePdf = (nameText: string): VotePdf => ({
 // この入力は unmatched に落ちていた。共通キー（name-match.ts）が IVS を除くようになったので、今は同じ人に寄る。
 test("toLocalRollCalls: 名簿は「髙橋 伸二」(U+9AD9)、PDF に三重の実データと同型の IVS 付き表記（髙\\u{E0100}橋 伸二）が来ても同じ人に寄る（#636。IVS は幅 0 で目に見えない）", () => {
   const pdf = fakePdf("髙\u{E0100}橋 伸二");
-  const { rollCalls, unmatched } = toLocalRollCalls(pdf, roster.members, { sessionLabel: "テスト会期", pdfUrl: "https://example.test/x.pdf" });
+  const { rollCalls, unmatched } = toLocalRollCalls(pdf, roster.members, { sessionLabel: "令和7年11月定例会（第398回）", pdfUrl: "https://example.test/x.pdf" });
   assert.equal(rollCalls[0].votes[0].memberId, "p_04_sinji");
   assert.deepEqual(unmatched, []);
 });
 
 test("toLocalRollCalls: 名簿「髙橋 伸二」に PDF の「高橋 伸二」（字体違い）が来ても同じ人に寄る（#636。本番の名簿で実際に効いている 1 名）", () => {
   const pdf = fakePdf("高橋 伸二");
-  const { rollCalls, unmatched } = toLocalRollCalls(pdf, roster.members, { sessionLabel: "テスト会期", pdfUrl: "https://example.test/x.pdf" });
+  const { rollCalls, unmatched } = toLocalRollCalls(pdf, roster.members, { sessionLabel: "令和7年11月定例会（第398回）", pdfUrl: "https://example.test/x.pdf" });
   assert.equal(rollCalls[0].votes[0].memberId, "p_04_sinji");
   assert.deepEqual(unmatched, []);
 });
@@ -131,14 +132,49 @@ test("toLocalRollCalls: 名簿「髙橋 伸二」に PDF の「高橋 伸二」�
 test("toLocalRollCalls: 字体を畳んでも別人には寄らない（#569。畳んだ結果ぶつかる相手がいれば選ばない）", () => {
   // 名簿に「髙橋 伸二」と「高橋 伸二」の両方がいたら、キーが同じになるので ETL は選ばない
   const both = [...roster.members, { ...roster.members[0], id: "p_04_other", name: "高橋 伸二" }];
-  const { rollCalls, unmatched } = toLocalRollCalls(fakePdf("高橋 伸二"), both, { sessionLabel: "テスト会期", pdfUrl: "https://example.test/x.pdf" });
+  const { rollCalls, unmatched } = toLocalRollCalls(fakePdf("高橋 伸二"), both, { sessionLabel: "令和7年11月定例会（第398回）", pdfUrl: "https://example.test/x.pdf" });
   assert.equal(rollCalls[0].votes[0].memberId, "");
   assert.deepEqual(unmatched.map((u) => u.nameText), ["高橋 伸二"]);
 });
 
 test("toLocalRollCalls: 名簿の表記と空白の有無以外は完全に同じ字（IVS 無し）なら、これまでどおり紐づく（回帰）", () => {
   const pdf = fakePdf("髙橋　伸二");
-  const { rollCalls, unmatched } = toLocalRollCalls(pdf, roster.members, { sessionLabel: "テスト会期", pdfUrl: "https://example.test/x.pdf" });
+  const { rollCalls, unmatched } = toLocalRollCalls(pdf, roster.members, { sessionLabel: "令和7年11月定例会（第398回）", pdfUrl: "https://example.test/x.pdf" });
   assert.equal(rollCalls[0].votes[0].memberId, "p_04_sinji");
   assert.deepEqual(unmatched, []);
+});
+
+// ── #695: 表決 PDF の見出しと会期 index の見出しを突き合わせる ────────────────────────
+// index.ts は通算回次（pdf.sessionId）だけを見ていた。回次は宮城県議会の通算なので一意で、これだけでも
+// 別の会期の PDF はほぼ弾ける。ただし **議決日は PDF 側の年月（sessionYear / sessionMonth）から作る**
+// （toIsoDate。議決月日の欄は「12/17」と月日しか無い）ので、回次が合っていても年月が食い違えば
+// 日付だけが別の会期のものになる。回次と年月は同じ見出しの中の別々の語なので、両方を照合する。
+
+test("#695 toLocalRollCalls: 別の会期の PDF を渡せば例外（第399回の PDF を第398回として読ませない）", () => {
+  // 実物どうしの取り違え: 第399回（令和8年2月定例会）の PDF を、第398回（令和7年11月定例会）として渡す
+  assert.throws(
+    () => toLocalRollCalls(pdf399, roster.members, { sessionLabel: "令和7年11月定例会（第398回）", pdfUrl: PDF398 }),
+    /PDF says 第399回, session index says 第398回/,
+  );
+  assert.throws(
+    () => toLocalRollCalls(pdf398, roster.members, { sessionLabel: "令和8年2月定例会（第399回）", pdfUrl: PDF399 }),
+    /PDF says 第398回, session index says 第399回/,
+  );
+});
+
+test("#695 checkPdfSession: 回次が合っていても年月が食い違えば例外（議決日は PDF の年月から作られる）", () => {
+  assert.throws(
+    () => checkPdfSession("第398回宮城県議会（令和8年2月定例会）", "令和7年11月定例会（第398回）", PDF398),
+    /PDF says 令和8年2月定例会, session index says 令和7年11月定例会/,
+  );
+});
+
+test("#695 checkPdfSession: 否定的対照——実物の見出しと会期 index の見出しの組は通る", () => {
+  assert.doesNotThrow(() => checkPdfSession(pdf398.sessionLabel, "令和7年11月定例会（第398回）", PDF398));
+  assert.doesNotThrow(() => checkPdfSession(pdf399.sessionLabel, "令和8年2月定例会（第399回）", PDF399));
+});
+
+test("#695 checkPdfSession: 見出しが想定の形でなければ例外（黙って照合を飛ばさない）", () => {
+  assert.throws(() => checkPdfSession("テスト会期", "令和7年11月定例会（第398回）", PDF398), /is not 第N回宮城県議会/);
+  assert.throws(() => checkPdfSession(pdf398.sessionLabel, "令和7年11月のなにか", PDF398), /is not 令和N年M月定例会/);
 });

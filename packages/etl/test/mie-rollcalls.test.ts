@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { parseVotePdf } from "../src/sources/local/mie/votes-pdf.ts";
-import { mapLegend, nameKey, toLocalRollCalls } from "../src/sources/local/mie/rollcalls.ts";
+import { checkPdfSession, mapLegend, nameKey, toLocalRollCalls } from "../src/sources/local/mie/rollcalls.ts";
 import { DISTRICT_INDEX_URL, parseDistrictIndex, parseDistrictPage, parseGojuon, buildRoster } from "../src/sources/local/mie/roster.ts";
 
 // 表決 PDF の行 → LocalRollCall（Issue #203）。名寄せは空白と異体字セレクタを除いた完全一致だけ（推定しない）。
@@ -84,4 +84,30 @@ test("toLocalRollCalls: 議決月日の月が PDF の月と違えば例外、名
   // 同姓同名が 2 人いれば寄せない
   const dup = [...roster.members, { ...roster.members.find((m) => m.id === "p_24_ichino_shuuhei15")!, id: "p_24_dup" }];
   assert.equal(toLocalRollCalls(jun, dup, session).unmatched.length, 1);
+});
+
+// ── #695: PDF の表題の会期名と会期 index の h2 を突き合わせる ────────────────────────
+// 三重は #203 の時点から index.ts に突合（年・月・会期名の 3 つ）がある。ここに同じ突合を置くのは
+// **toLocalRollCalls を index.ts を通さず呼んでも通り抜けられないようにする**ため（高知・奈良・鳥取と同じ形）。
+// フィクスチャの PDF 5 本はすべて令和8年定例会（月違い）なので、別の会期の実物どうしの取り違えは作れない。
+// 実物の PDF の表題（pdf.sessionName）はそのまま使い、会期 index 側を別の会期にして渡す。
+
+test("#695 toLocalRollCalls: 会期名が PDF と食い違えば例外（別の会期の PDF を黙って読まない）", () => {
+  // 実物の令和8年定例会の PDF を、令和7年定例会として渡す = 県が前年の PDF を一覧に混ぜてしまった形
+  assert.throws(
+    () => toLocalRollCalls(jun, roster.members, { ...session, sessionId: "r07", sessionLabel: "令和７年定例会" }),
+    /PDF says 令和８年定例会, session index says 令和７年定例会/,
+  );
+  // 同じ年でも定例会/臨時会が違えば別の会期
+  assert.throws(
+    () => toLocalRollCalls(jun, roster.members, { ...session, sessionId: "r08-1-rinji", sessionLabel: "令和８年第１回臨時会" }),
+    /PDF says 令和８年定例会/,
+  );
+});
+
+test("#695 checkPdfSession: 否定的対照——実物の表題と h2 の組（全角/半角の揺れを含む）は通る", () => {
+  assert.doesNotThrow(() => checkPdfSession(jun.sessionName, session.sessionLabel, session.pdfUrl));
+  // h2 が半角数字でも NFKC で寄せて通す（index の実データは全角だが、揺れても正しい組は落とさない）
+  assert.doesNotThrow(() => checkPdfSession("令和８年定例会", "令和8年定例会", session.pdfUrl));
+  assert.equal(toLocalRollCalls(jun, roster.members, session).rollCalls.length, 22);
 });
