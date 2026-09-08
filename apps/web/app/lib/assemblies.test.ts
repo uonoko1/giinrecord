@@ -45,10 +45,34 @@ describe("vote-disclosure.json（#128 の調査表から機械的に起こした
     expect(VOTE_DISCLOSURE.source).toBe("docs/research/local-assemblies.md");
     expect(disclosure.rows).toHaveLength(67);
   });
-  it("集計は調査の要約と一致する（都道府県 13/15/12/7、政令市 6/14/0/0）", () => {
+  it("集計は調査の要約と一致する（都道府県 16/16/15/0、政令市 6/14/0/0）", () => {
     const count = (kind: VoteDisclosureRow["kind"], status: VoteDisclosureRow["status"]) => rows.filter((r) => r.kind === kind && r.status === status).length;
-    expect(DISCLOSURE_STATUSES.map((s) => count("prefectural", s))).toEqual([13, 15, 12, 7]);
+    expect(DISCLOSURE_STATUSES.map((s) => count("prefectural", s))).toEqual([16, 16, 15, 0]);
     expect(DISCLOSURE_STATUSES.map((s) => count("municipal", s))).toEqual([6, 14, 0, 0]);
+  });
+  it("#670 で「不明」は 0 件になった（表の行を数えた数と一致する）", () => {
+    // #128 は 7 件、#671 の後も 7 件残っていた。#670 で 7 件すべて確定させた。
+    // 「不明が 0」は「全部わかった」ではない（総数のみ 3 県は会議録本文を見ていない。docs/research/local-assemblies.md）。
+    expect(rows.filter((r) => r.status === "不明")).toHaveLength(0);
+  });
+  it("#670 で調べた 7 県は「到達できず」を名乗らず、4 値のどれかに確定している", () => {
+    for (const id of ["pref-01", "pref-17", "pref-19", "pref-20", "pref-23", "pref-25", "pref-41"]) {
+      const row = disclosureFor(id);
+      expect(row, id).toBeDefined();
+      expect(row!.status, id).not.toBe("不明");
+      expect(row!.format, id).not.toBe("—");
+      expect(row!.note, id).not.toMatch(/到達できず|未確認/);
+      expect(row!.note, id).toMatch(/（2026-09-09、#670）/);
+    }
+  });
+  it("#670: 山梨・滋賀・佐賀は個人票（公開）、石川は会派別、北海道・長野・愛知は総数のみ", () => {
+    expect(disclosureFor("pref-19")).toMatchObject({ label: "山梨", status: "公開" });
+    expect(disclosureFor("pref-25")).toMatchObject({ label: "滋賀", status: "公開" });
+    expect(disclosureFor("pref-41")).toMatchObject({ label: "佐賀", status: "公開" });
+    expect(disclosureFor("pref-17")).toMatchObject({ label: "石川", status: "会派別" });
+    expect(disclosureFor("pref-01")).toMatchObject({ label: "北海道", status: "総数のみ" });
+    expect(disclosureFor("pref-20")).toMatchObject({ label: "長野", status: "総数のみ" });
+    expect(disclosureFor("pref-23")).toMatchObject({ label: "愛知", status: "総数のみ" });
   });
   it("#671 で PDF 本文を開いた 5 件は「表題から分類した」を名乗らない", () => {
     for (const id of ["pref-28", "pref-34", "pref-43", "city-22100", "city-40100"]) {
