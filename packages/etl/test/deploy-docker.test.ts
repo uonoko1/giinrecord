@@ -9,7 +9,7 @@ import { dirname, resolve } from "node:path";
 // 受け入れ基準「セキュリティヘッダ・CSP・キャッシュが現状と同一（diff をテスト）」を、
 // 旧 server block（deploy/nginx-seiji-kiroku.conf, Sprint 1〜5 で本番運用）の値をここに固定して検証する。
 // Issue #127: staging（web-staging, 127.0.0.1:8083, /var/www/giinrecord/staging）を同じ site.conf で足し、
-// main push → staging 自動、production は release.yml の承認付き手動リリース。
+// main push → staging 自動、production は release.yml の手動リリース（#659: 承認は置いていない）。
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, "../../..");
 const read = (p: string) => readFileSync(resolve(root, p), "utf8");
@@ -616,7 +616,8 @@ test("ci.yml: docker compose config → up → URL モード smoke を 8081 と 
   assert.match(ci, /x-robots-tag: noindex, nofollow/i);
 });
 
-// Issue #127: main push → staging（自動）、production は release.yml（workflow_dispatch + environment production の承認）。
+// Issue #127: main push → staging（自動）、production は release.yml（workflow_dispatch + environment production）。
+// Issue #659: 承認（required reviewers）は 3 つの environment とも置いていない（2026-09-08 実測で protection_rules は `[]`）。
 // 日次データは deploy-data.yml が staging と production の両方へ流す（bot のマージは push イベントを起こさない）。
 test("deploy-site.yml: 再利用ワークフロー。environment / site_origin / target_dir / ref を入力で受け、docker を呼ばない", () => {
   assert.match(deploySite, /workflow_call:/);
@@ -639,7 +640,7 @@ test("deploy-staging.yml: main への push で environment staging、SITE_ORIGIN
   assert.doesNotMatch(deployStaging, /production/);
 });
 
-test("release.yml: workflow_dispatch（入力 ref、既定 main）だけで起動し、environment production（required reviewers）へ rsync 先 site", () => {
+test("release.yml: workflow_dispatch（入力 ref、既定 main）だけで起動し、environment production へ rsync 先 site", () => {
   assert.match(release, /workflow_dispatch:/);
   assert.doesNotMatch(release, /^\s*push:/m);
   assert.doesNotMatch(release, /^\s*schedule:/m);
@@ -650,13 +651,83 @@ test("release.yml: workflow_dispatch（入力 ref、既定 main）だけで起�
   assert.match(release, /ref: \$\{\{ inputs\.ref \}\}/);
 });
 
+/**
+ * Issue #659: `deploy.md` は 2 か所で「`production` は required reviewers で承認待ちになる」と書いていたが、
+ * **実際には 3 つの environment とも protection_rules が `[]` で、承認なしで本番に出る**
+ * （2026-09-08 に `gh api repos/uonoko1/giinrecord/environments` で実測。全 3,256 run 中 `?status=waiting` は 0）。
+ *
+ * この食い違いは 2 つの実害を出した:
+ *   1. 「Release は人間の承認が要る」と読んだ結果、**69 コミット分リリースが遅れた**
+ *   2. 「承認があるから安全」という誤った安心（実際の守りは CI の必須 4 件だけ）
+ *
+ * environment の保護ルールは**リポジトリの中身ではない**ので、ここからは直接検証できない。
+ * 検証できるのは「文書とワークフローが、置いていない実態と矛盾する約束をしていないか」だけである。
+ * だから**約束の文言そのもの**を禁じる（実態を変えるときは、この行も一緒に直すことになる）。
+ */
+test("#659: 承認待ちを約束する記述が docs / workflow に残っていない（実態は protection_rules なし）", () => {
+  const files = [
+    "docs/ops/deploy.md",
+    "docs/ops/etl.md",
+    "README.md",
+    "deploy/README.md",
+    ".github/workflows/release.yml",
+    ".github/workflows/deploy-site.yml",
+    ".github/workflows/deploy-data.yml",
+  ];
+  // denylist ではなく allowlist にする。
+  //
+  // 最初は「`required reviewers =` を禁じる」という denylist で書いたが、変異テストで**4 件すり抜けた**
+  // （`required reviewers approve` / `required reviewers が設定されている` / `NO required reviewers` /
+  // `secrets + reviewers`）。禁じたい言い回しを列挙する方式では、言い換えを全部は塞げない。
+  //
+  // そこで **`reviewers` という語が出てくる行を全部拾い、そのうち「置いていない」と明示している行だけを
+  // 許す**形にした。新しい言い回しで「承認が要る」と書けば、それは許可リストに載っていないので落ちる。
+  const ALLOWED = [
+    // 「置いていない」と否定している行だけを許す（日本語・英語の両方）。
+    /置いていない|置かない/,
+    /承認待ちにはならない|承認待ちは無い|承認は無い|承認なし/,
+    /(no|without|neither|never)\s/i,
+    /reviewers は[^。]*(無い|ない|置か)/,
+    // 「もし将来置くなら」という条件形（実態の主張ではない）
+    /将来|later|if .* reviewers/i,
+    // 「protection_rules は空だ」と実測を書いている行（`protection_rules` を含むだけでは許さない——
+    // 変異テストで、対処欄に `protection_rules` を書いた行がそれだけで素通りした）
+    /protection_rules[^\n]*(\[\]|`\[\]`|なし|空)/,
+  ];
+  const offenders: string[] = [];
+  for (const f of files) {
+    for (const [i, line] of read(f).split("\n").entries()) {
+      if (!/reviewers|承認待ち|Review deployments/i.test(line)) continue;
+      if (ALLOWED.some((re) => re.test(line))) continue;
+      offenders.push(`${f}:${i + 1}: ${line.trim()}`);
+    }
+  }
+  assert.deepEqual(
+    offenders,
+    [],
+    `承認（required reviewers）があるかのように読める行が残っている。実態は protection_rules なし:\n${offenders.join("\n")}`,
+  );
+});
+
+test("#659: Release の CLI 起動コマンドが docs にある（フル SHA を渡す形。短縮 SHA は checkout が解決できない）", () => {
+  const deployMd = read("docs/ops/deploy.md");
+  // `--ref main`（ワークフロー定義の出どころ）と `-f ref=`（リリースする ref）は別物。両方要る。
+  assert.match(deployMd, /gh workflow run release\.yml --ref main -f ref=\$\(git rev-parse origin\/main\)/);
+  // `--short` を書くと 20 行上に書いてある罠（#127 の checkout 失敗）をそのまま踏む。
+  assert.doesNotMatch(deployMd, /git rev-parse --short origin\/main\)/);
+  assert.match(read("README.md"), /gh workflow run release\.yml --ref main -f ref=/);
+  // link-check.yml（#646、週1）も手で走らせられる。入力は無いので `--ref main` だけ。
+  assert.match(deployMd, /gh workflow run link-check\.yml --ref main/);
+  assert.match(read(".github/workflows/link-check.yml"), /^\s*workflow_dispatch:\s*$/m);
+});
+
 test("deploy-data.yml: workflow_dispatch（etl.yml / districts.yml から）で staging と production-data の両方へ main を配る", () => {
   assert.match(deployData, /workflow_dispatch:/);
   assert.match(deployData, /environment: staging/);
   assert.match(deployData, /environment: production-data/);
   assert.match(deployData, /target_dir: staging/);
   assert.match(deployData, /target_dir: site/);
-  assert.doesNotMatch(deployData, /environment: production\s*$/m, "the data path must not wait for the production reviewers");
+  assert.doesNotMatch(deployData, /environment: production\s*$/m, "the data path must stay on production-data, separate from the release path");
   for (const f of [".github/workflows/etl.yml", ".github/workflows/districts.yml"]) {
     assert.match(read(f), /gh workflow run deploy-data\.yml --ref main/, `${f} must dispatch deploy-data.yml`);
     assert.doesNotMatch(read(f), /gh workflow run deploy\.yml/, `${f} still dispatches the removed deploy.yml`);

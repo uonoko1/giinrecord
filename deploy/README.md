@@ -87,8 +87,11 @@ directories are bind-mounted, nothing to restart.
 | workflow | trigger | environment | builds | rsync target |
 |---|---|---|---|---|
 | `deploy-staging.yml` | every push to `main` | `staging` | `SITE_ORIGIN=https://staging.giinrecord.jp` (robots `Disallow: /`, `<meta name=robots content=noindex>`) | `staging/` |
-| `release.yml` | Actions → Release → Run workflow, input `ref` (default `main`) | `production` — **required reviewers** = the approve button | `vars.SITE_ORIGIN` | `site/` |
-| `deploy-data.yml` | dispatched by `etl.yml` / `districts.yml` after the data PR merges (+ 06:30 JST safety net) | `staging` and `production-data` (no reviewers) | `main` | both |
+| `release.yml` | `gh workflow run release.yml --ref main -f ref=$(git rev-parse origin/main)`, or Actions → Release → Run workflow (input `ref`, default `main`) | `production` | `vars.SITE_ORIGIN` | `site/` |
+| `deploy-data.yml` | dispatched by `etl.yml` / `districts.yml` after the data PR merges (+ 06:30 JST safety net) | `staging` and `production-data` | `main` | both |
+
+**No environment has required reviewers** (#659; measured 2026-09-08 — `protection_rules` is `[]` for all three). A
+Release publishes as soon as it is dispatched; there is no approve button. See `docs/ops/deploy.md` for why.
 
 GitHub Environment secrets (identical in `staging`, `production`, `production-data`): `DEPLOY_SSH_KEY`, `DEPLOY_HOST`,
 `DEPLOY_USER`, `DEPLOY_KNOWN_HOSTS`. To rotate the key: `ssh-keygen -t ed25519 -C "giinrecord github-actions deploy"`,
