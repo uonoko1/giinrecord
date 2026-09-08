@@ -56,6 +56,19 @@
    "title": "皇室典範等の一部を改正する法律案"
   },
   {
+   "committee": "内閣委員会",
+   "date": "2026-06-26",
+   "estimated": false,
+   "firstDate": "2026-06-26",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-26",
+   "meetingId": "122104889X02420260626_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104889X02420260626/0"
+  },
+  {
    "billId": "221-衆法-28",
    "date": "2026-06-24",
    "kind": "bill",
