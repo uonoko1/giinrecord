@@ -80,6 +80,25 @@ curl -sSL -o /dev/null -w "%{http_code}\n" https://giinrecord.jp/__not-found/ind
 **そこが壊れていないことまで見て、はじめて成功と言える。**
 **4 つ目は #654 の分**——`internal` が効けば直接は開けなくなる。
 
+**`curl` の 4 項目より強い確認があります**（`browser-check.ts` の docblock が PO 宛に書いていたもの）:
+
+```sh
+pnpm --filter web browser-check -- --url https://giinrecord.jp
+# exit 0 になれば #610 と #654 の両方が解消している
+```
+
+**実際に headless Chromium で JS を切って開き、本文とリンクを見ます。**
+**2026-09-08（Release 後・`site.conf` 未反映）に PO が実行したときは、次の 2 件だけが失敗しました:**
+
+```
+- no-js: 404 ページ: JS 無効で本文に「ページが見つかりません」が出ていない（本文 16 文字）
+- no-js: 404 ページ: JS 無効で /coverage への内部リンクが無い（内部リンク 1 本）
+```
+
+**2 回走らせて、両方に出るものだけを見ること**——
+**1 回目は `ERR_NETWORK_CHANGED` が 20 件出ましたが、2 回目は 0 件でした**
+（PO の実行環境の一時的なネットワーク変動で、本番の欠陥ではありません）。
+
 **いまの本番**（2026-09-08、Release 後に PO が実測）:
 
 ```
