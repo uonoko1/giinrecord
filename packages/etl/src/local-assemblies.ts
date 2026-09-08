@@ -4,6 +4,7 @@ import type {
   Assembly, AssemblyId, AssemblySession, LocalAssemblyMeta, LocalMember, LocalMemberDetail, LocalRollCall, LocalRollCallSummary, LocalUnmatchedName, LocalVoteEntry, MemberAssemblyCount, MemberSummary,
 } from "@seiji-kiroku/shared";
 import { stableJson } from "./json.ts";
+import { normalizeTitle } from "./sources/local/title-normalize.ts";
 import { MIYAGI_ASSEMBLY } from "./sources/local/miyagi/site.ts";
 import { runMiyagi } from "./sources/local/miyagi/index.ts";
 import { TOKUSHIMA_ASSEMBLY } from "./sources/local/tokushima/site.ts";
@@ -134,7 +135,10 @@ export function buildLocalAssembly(input: LocalAssemblyInput): LocalAssemblyData
     ids.add(rc.id);
     if (rc.assemblyId !== input.assembly.id) throw new Error(`${rc.id}: assemblyId ${rc.assemblyId} !== ${input.assembly.id}`);
   }
-  const rollCalls = [...input.rollCalls].sort(byDateDesc);
+  // 件名の字だけ正規化する（#648）。ここは 7 議会すべての採決が通る 1 か所で、
+  // rollcalls/{id}.json・rollcalls/index.json・members/{id}.json の timeline はすべてこの rollCalls から作る。
+  // votes（氏名・vote.raw）はスプレッドでそのまま持ち越す＝原文のまま。
+  const rollCalls = input.rollCalls.map((rc) => ({ ...rc, title: normalizeTitle(rc.title) })).sort(byDateDesc);
   const timelines = new Map<string, LocalVoteEntry[]>();
   const unmatched = new Map<string, LocalUnmatchedName>();
   let cells = 0;
