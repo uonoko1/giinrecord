@@ -255,7 +255,8 @@
       "status": "会派別",
       "format": "PDF",
       "sourceUrl": "https://web.pref.hyogo.lg.jp/gikai/teireikai/r07/r7_374/documents/taidor80323.pdf",
-      "note": "令和8年2月 第374回定例会「議案等に対する会派態度」（PDF 本文は抽出せず。表題から分類）"
+      "note": "令和8年2月 第374回定例会「議案等に対する会派態度」。PDF 本文を確認（2026-09-09、#671）: 会派 6 列＋「無所属（5人）」列。無所属だけ「石井○丸尾×」の形で個人名と賛否が入り、5 人が揃うと 1 個の記号にまとまる。会派所属議員の個人票は無い",
+      "statusNote": "無所属は個人名"
     },
     {
       "assemblyId": "pref-29",
@@ -306,10 +307,10 @@
       "assemblyId": "pref-34",
       "kind": "prefectural",
       "label": "広島",
-      "status": "総数のみ",
+      "status": "会派別",
       "format": "PDF",
       "sourceUrl": "https://www.pref.hiroshima.lg.jp/site/gikai/shingikekka.html",
-      "note": "「Ｒ08.6審議結果」など会期ごとの PDF（表題から。本文未抽出）"
+      "note": "「Ｒ08.6審議結果」など会期ごとの PDF。PDF 本文を確認（2026-09-09、#671）: 会派 9 列（自民議連33／民主県政会14／公明党6／広志会3／共産党2／自民会1／無所属ひとわ1／ひろしま刷新1／義友会1）に ○×欠退除。1 人会派 4 つは実質個人票。会派所属議員名簿と欠席者名が同じ PDF にある"
     },
     {
       "assemblyId": "pref-35",
@@ -387,10 +388,10 @@
       "assemblyId": "pref-43",
       "kind": "prefectural",
       "label": "熊本",
-      "status": "総数のみ",
-      "format": "HTML 表 + PDF",
+      "status": "公開",
+      "format": "PDF（index は HTML 表）",
       "sourceUrl": "https://www.pref.kumamoto.jp/site/gikai/list4-16.html",
-      "note": "令和8年6月定例会「知事提出議案の議決結果」＋「議案等の採決結果表（PDF）」（表題から。PDF 本文未抽出）"
+      "note": "令和8年6月定例会「議案等の採決結果表（PDF）」。PDF 本文を確認（2026-09-09、#671）: 議員 47 人の氏名列に ○×●△議除欠 の個人票。HTML 表は議決結果のみで、個人票は PDF 側にある"
     },
     {
       "assemblyId": "pref-44",
@@ -504,10 +505,10 @@
       "assemblyId": "city-22100",
       "kind": "municipal",
       "label": "静岡市",
-      "status": "総数のみ",
+      "status": "会派別",
       "format": "PDF",
       "sourceUrl": "https://www.city.shizuoka.lg.jp/gikai/s006689.html",
-      "note": "令和8年6月定例会 審議結果（表題から。PDF 本文未抽出）"
+      "note": "令和8年6月定例会 審議結果。PDF 本文を確認（2026-09-09、#671）: 会派 10 列（令和8年2月は 8 列）に ○×△。凡例「△は賛否双方あり」。議員個人の票は無い"
     },
     {
       "assemblyId": "city-22130",
@@ -586,10 +587,10 @@
       "assemblyId": "city-40100",
       "kind": "municipal",
       "label": "北九州市",
-      "status": "総数のみ",
+      "status": "会派別",
       "format": "PDF",
       "sourceUrl": "https://www.city.kitakyushu.lg.jp/sigikai/menu11_00089.html",
-      "note": "令和8年6月定例会「会議結果一覧（PDF）」（表題から。本文未抽出）"
+      "note": "令和8年6月定例会「会議結果一覧（PDF）」。PDF 本文を確認（2026-09-09、#671）: 表頭が「各会派の賛否状況」で会派 8 列に ○×△―。凡例「△賛否双方あり／―欠席等により賛否表明なし」。議員個人の票は無い"
     },
     {
       "assemblyId": "city-40130",
