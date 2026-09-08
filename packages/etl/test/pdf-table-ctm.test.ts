@@ -150,15 +150,20 @@ test("#693 readLines: 深さ 3 の入れ子でも 1 段ずつ戻る（stack を�
   assert.deepEqual(vlines.map((l) => l.x), [321.5, 21.5, 1.5, 0.5]);
 });
 
-test("#693 readLines: setTransform は積み上げでなく置き換え（cm と取り違えていれば落ちる）", () => {
+test("#693 readLines: pdfjs 6.2.108 の OPS に setTransform は無い（存在しない演算子を辿らない）", () => {
+  // Issue #693 の本文は OPS.setTransform も辿るよう書いているが、このバージョンには無い。
+  // 枝を書くと `fn === undefined` の恒真になりかねないので、無いことをここで固定する。
+  // pdfjs が足したら、このテストが落ちて気づける（そのとき readLines に枝を足す）。
+  assert.equal((OPS as Record<string, number | undefined>).setTransform, undefined);
+  assert.deepEqual(Object.keys(OPS).filter((k) => /ransform/.test(k)), ["transform"]);
+  // 知らない演算子は CTM を変えない（無視して読み飛ばす）
   const [fn, args] = opList([
-    [OPS.transform, [1, 0, 0, 1, 500, 0]],
-    [OPS.setTransform, [1, 0, 0, 1, 7, 0]],
+    [OPS.transform, [1, 0, 0, 1, 40, 0]],
+    [OPS.setLineWidth, [3]],
     [OPS.constructPath, path(0, 0, 1, 50)],
   ]);
   const { vlines } = readLines(fn, args);
-  assert.equal(vlines.length, 1);
-  assert.equal(vlines[0].x, 7.5, "setTransform は今の CTM を捨てて置き換える（足してはいけない）");
+  assert.equal(vlines[0].x, 40.5);
 });
 
 test("#693 readLines: 釣り合わない Q（q より多い）で落ちず、単位行列に戻る", () => {

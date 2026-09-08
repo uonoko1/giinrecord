@@ -39,11 +39,9 @@ export function multiplyMatrix(ctm: Matrix, m: ArrayLike<number>): Matrix {
 /**
  * 矩形 [x0, y0, x1, y1] に行列を掛け、軸に沿った外接矩形（左下・右上の順）を返す。
  *
- * なぜ要るか（Issue #693）: `getOperatorList()` の `OPS.constructPath` が持つ `minMax` は
- * **その時点の CTM を掛ける前**の座標である。`OPS.save` / `OPS.restore` / `OPS.transform` /
- * `OPS.setTransform` を辿って CTM を持ち回り、これを掛けて初めてページ上の位置になる。
- * 掛けないと、字を輪郭（ベクタ）で描いた PDF で、全部の輪郭が原点に潰れて 1 本の縦罫線に化ける
- * （佐賀の令和7年2月版で実測 5,936 本が x=0 に集まった）。
+ * **4 隅すべてを見る**。回転やせん断が入ると、外接矩形の左端・右端を決めるのが
+ * 対角の 2 隅とは限らない（せん断 c=2 を [0,0,4,3] に掛けると 4 隅の x は 0,4,10,6 になり、
+ * 対角の (0,0) と (4,3) だけでは右端 10 を取り落とす）。
  */
 export function applyMatrix(m: Matrix, rect: ArrayLike<number>): [number, number, number, number] {
   const [a, b, c, d, e, f] = m;
@@ -60,9 +58,17 @@ export function applyMatrix(m: Matrix, rect: ArrayLike<number>): [number, number
  * オペレータ列から罫線（細い矩形）を読む。**CTM を持ち回るのはここだけ**（Issue #693）。
  *
  * `OPS.constructPath` の `minMax` は **その時点の CTM を掛ける前** のローカル座標である。
- * `q`（save）/ `Q`（restore）/ `cm`（transform）/ `setTransform` を辿って CTM を作り、
+ * `q`（save）/ `Q`（restore）/ `cm`（transform）を辿って CTM を作り、
  * 掛けて初めてページ上の位置になる。掛けないと、罫線を `q … cm … 矩形 … Q` で置いている PDF で
  * 全部の線が同じ位置に潰れ、**その潰れた線で列を割ると別人の票が出る。**
+ *
+ * **`OPS.setTransform` は見ない。pdfjs 6.2.108 の `OPS` にそんなキーは無い**（実測: `undefined`。
+ * `OPS` の 91 キーのうち `transform` を含むものは `transform` 1 つだけ）。
+ * Issue #693 の本文は `OPS.setTransform` も辿るよう書いているが、**存在しないものは辿れない。**
+ * 書くと `fn === undefined` という恒真になりかねない枝ができるだけで、実際は害になる
+ * （最初この枝を書いたとき、テストの `OPS.setTransform` も `undefined` になり、
+ *   `undefined === undefined` で通ってしまった。tsc が `TS2551` で教えてくれた）。
+ * pdfjs が将来 CTM を「置き換える」演算子を足したら、ここに枝を足すこと。
  *
  * `getOperatorList()` を渡さず配列 2 本で受けるのは、PDF を用意しなくても
  * 入れ子の `q`/`Q` を直接テストできるようにするため（実物のフィクスチャは深さ 2 までしか無い）。
@@ -77,7 +83,6 @@ export function readLines(fnArray: ArrayLike<number>, argsArray: ArrayLike<unkno
     if (fn === OPS.save) { stack.push(ctm); continue; }
     if (fn === OPS.restore) { ctm = stack.pop() ?? IDENTITY; continue; }
     if (fn === OPS.transform) { ctm = multiplyMatrix(ctm, argsArray[k] as ArrayLike<number>); continue; }
-    if (fn === OPS.setTransform) { ctm = (argsArray[k] as number[]).slice(0, 6) as Matrix; continue; }
     if (fn !== OPS.constructPath) continue;
     const args = argsArray[k] as unknown[];
     const minMax = args[2] as ArrayLike<number> | undefined;
