@@ -7,10 +7,10 @@
       "assemblyId": "pref-01",
       "kind": "prefectural",
       "label": "北海道",
-      "status": "不明",
-      "format": "—",
+      "status": "総数のみ",
+      "format": "PDF（index は HTML）",
       "sourceUrl": "https://www.gikai.pref.hokkaido.lg.jp/honkaigi/index.html",
-      "note": "議案・決議案の一覧ページはあるが賛否の資料に到達できず"
+      "note": "令和8年第2回定例会（7月3日議決）「議案処理簿」。PDF 本文を確認（2026-09-09、#670）: 1 ページ・文字層あり。列は 議案番号／件名／提出年月日／付託委員会／議決年月日／議決状況 で、賛否の内訳（会派・個人・賛成数）が 1 つも無い。本会議日ページには「起立により採決」とあるが起立者は載らない。サイトマップ全体にも賛否の分類が無い"
     },
     {
       "assemblyId": "pref-02",
@@ -152,10 +152,11 @@
       "assemblyId": "pref-17",
       "kind": "prefectural",
       "label": "石川",
-      "status": "不明",
-      "format": "—",
-      "sourceUrl": "https://www.pref.ishikawa.lg.jp/gikai/index.html",
-      "note": "賛否ページに到達できず（`voices/g07_gian_sanpi.asp` は 404）"
+      "status": "会派別",
+      "format": "PDF（index は HTML）",
+      "sourceUrl": "https://www.pref.ishikawa.lg.jp/gikai/gaiyou.html",
+      "note": "令和8年5月定例会「各会派の議案に対する賛否の状況」。PDF 本文を確認（2026-09-09、#670）: 4 ページ・文字層あり。列は 自民・未来・公明・共産・まっすぐ・参政 の 6 会派（令和3年2月は 5 会派）。個人名は備考の「除斥：石田」と討論者の姓だけ。無所属の個人列そのものが無い",
+      "statusNote": "除斥・討論者のみ姓"
     },
     {
       "assemblyId": "pref-18",
@@ -170,19 +171,19 @@
       "assemblyId": "pref-19",
       "kind": "prefectural",
       "label": "山梨",
-      "status": "不明",
-      "format": "—",
-      "sourceUrl": "https://www.pref.yamanashi.jp/gikaisom/",
-      "note": "トップに議決結果・賛否の導線なし"
+      "status": "公開",
+      "format": "PDF（index は HTML）",
+      "sourceUrl": "https://www.pref.yamanashi.jp/gikaisom/teireikainaiyo_index.html",
+      "note": "令和8年6月定例会「議案に対する賛否一覧」。PDF 本文を確認（2026-09-09、#670）: 1 ページ・文字層あり・氏名は縦書き 1 文字 1 アイテム。議員 36 名の個票、凡例「○賛成 ×反対 議 欠 除 －議場に不在」。記号のセルは 1 文字 1 アイテムで宮城のコードが効く形。令和5年9月まで遡って確認"
     },
     {
       "assemblyId": "pref-20",
       "kind": "prefectural",
       "label": "長野",
-      "status": "不明",
-      "format": "—",
+      "status": "総数のみ",
+      "format": "HTML",
       "sourceUrl": "https://www.pref.nagano.lg.jp/gikai/chosa/teireikai/index.html",
-      "note": "令和8年6月定例会ページは 会期日程・知事提出議案・発言通告・議員提出議案・請願陳情・委員長報告のみ。賛否資料に到達できず"
+      "note": "令和8年6月定例会。会期ページの先（知事提出議案・議員提出議案）まで確認（2026-09-09、#670）: 列は 番号／件名／議決年月日／議決結果 だけ。令和5年2月も同じ構成。広報紙「こんにちは県議会です」第172号 PDF は文字層がほぼ無い（2 ページで抽出できた文字は Q/A の 18 個）"
     },
     {
       "assemblyId": "pref-21",
@@ -207,10 +208,10 @@
       "assemblyId": "pref-23",
       "kind": "prefectural",
       "label": "愛知",
-      "status": "不明",
-      "format": "—",
+      "status": "総数のみ",
+      "format": "PDF + テキスト",
       "sourceUrl": "https://www.pref.aichi.jp/site/gikai/kekka-gaiyo.html",
-      "note": "結果概要は 議会ニュース・県議会だより（PDF/テキスト）への導線のみ。賛否の有無は未確認"
+      "note": "令和8年6月定例議会。議会ニュース PDF（8 ページ・文字層あり）と県議会だより テキスト版を確認（2026-09-09、#670）: どちらも「すべて原案のとおり可決又は同意されました」の形で賛否の内訳が無い。個人名が出るのは 質問者・議案質疑者・討論者だけ。県議会サイトの分類一覧にも賛否の項目が無い"
     },
     {
       "assemblyId": "pref-24",
@@ -225,10 +226,10 @@
       "assemblyId": "pref-25",
       "kind": "prefectural",
       "label": "滋賀",
-      "status": "不明",
-      "format": "—",
-      "sourceUrl": "https://www.shigaken-gikai.jp/g07_giketsu.asp",
-      "note": "検索結果の要約には「賛否状況を掲載」とあるが一次資料で確認できず"
+      "status": "公開",
+      "format": "PDF（index は HTML）",
+      "sourceUrl": "https://www.shigaken-gikai.jp/voices/g07_Congress.asp?Y1=2026",
+      "note": "令和8年7月定例会議「議案等賛否一覧」。PDF 本文を確認（2026-09-09、#670）: 2 ページ・文字層あり。議員 44 名の個票、凡例「○賛成 ×反対 議＝議長（表決権なし） －表決に参加していない」。#128 の g07_gian_sanpi.asp は引数なしだと「文書が指定されていません。」で、?KaigiID= が要るだけだった。平成24年2月まで遡って確認。1 行ぶんの記号が丸ごと 1 テキストアイテム（最大 44 記号）で既存 7 県のコードでは読めない"
     },
     {
       "assemblyId": "pref-26",
@@ -370,10 +371,10 @@
       "assemblyId": "pref-41",
       "kind": "prefectural",
       "label": "佐賀",
-      "status": "不明",
-      "format": "—",
+      "status": "公開",
+      "format": "PDF（index は HTML）",
       "sourceUrl": "https://www.pref.saga.lg.jp/gikai/list01707.html",
-      "note": "令和8年の会期ページは 議案件名一覧・委員会審議・委員長報告の導線のみ。検索要約の「意見書案と採決状況」は一次資料で未確認"
+      "note": "令和8年6月定例会「議案採決結果一覧表」。PDF 本文を確認（2026-09-09、#670）: 3 ページ・文字層あり。議員 37 名の個票、凡例「○賛成 ×反対 △退席 欠欠席 議議長」。リンク名「議員ごとの採決結果」は議案件名一覧表ページの中にあり、会期ページの目次からは見えない。令和3年2月・平成30年2月の PDF は showText が 570 回あるのに getTextContent() が 0 件（画像 PDF ではなくフォントに ToUnicode が無い）"
     },
     {
       "assemblyId": "pref-42",
