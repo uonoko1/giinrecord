@@ -42,16 +42,32 @@ import { dirname, resolve } from "node:path";
  * 「404」「24」のような短い数字は、**中身を全部消しても残る**ので anchor にならない
  * （最初の版で実際にそう書きかけ、この判定で弾いた）。
  *
- * ## 裸の識別子だけの anchor は「接尾辞を足す改名」で生き残る（#665 の実測）
+ * ## 照合は「単語境界」で行う（#667 で `includes` から変えた）
  *
- * 照合は `includes` なので、**anchor が改名後の名前の接頭辞になる改名は検出できない。**
- * 実測: `resolveMember` → `resolveMemberX` に全置換しても **7 pass / 0 fail**
- * （`resolveMemberX` が `resolveMember` を含むため）。`resolveMember` → `pickMember` なら 6 pass / 1 fail。
- * 2026-09-08 時点で **103 anchor 中 47 個**が裸の識別子（`/^[A-Za-z_][A-Za-z0-9_]*$/`）で、
- * この形の改名に弱い。**塞いでいない。** 弱くしないための書き方は、
- * 裸の識別子だけで 1 行を持たせず、**文（`if (byGroup.length < 2) return undefined;`）や
- * エラーメッセージ（`sourceUrl host not allowed`）を同じ行に併記する**こと
- * （#665 で足した行はすべてそうしてある）。
+ * **#665 までの照合は `includes` だった。だから anchor が改名後の名前の接頭辞になる改名を
+ * 検出できなかった**（`resolveMember` → `resolveMemberX` は `"resolveMemberX".includes("resolveMember")`
+ * が true なので通る）。**#665 時点で 103 anchor 中 47 個、55 行中 20 行がこの形だけに頼っていた。**
+ *
+ * `containsAnchor` は anchor の**両端が識別子文字なら、その側に `[A-Za-z0-9_]` が続かないこと**を
+ * 求める（`\b` 相当を手で書いているのは、anchor に正規表現メタ文字が入るため）。
+ *
+ * **識別子だけでなく、すべての anchor に同じ規則を当てている。** 分ける理由が無かったからである:
+ * `if (candidates.length === 1) return candidates[0];` のようなコード片も、
+ * `timeout-minutes` のような語も、末尾が識別子文字なら「そこで語が終わる」ことを求めてよい。
+ * **実測（#667）: 103 anchor 全部に当てて、落ちる anchor は 0 個だった**
+ * （裸の識別子だけに当てた場合も 0 個。つまり全部に当てるほうが厳しく、かつ既存を壊さない）。
+ * 端が識別子文字でない anchor（`.txt` の先頭、`const SOURCE_HOST = ` の末尾）は、
+ * その側の境界を要求しない——要求すると意味の無い偽陽性になる。
+ *
+ * **これで anchor の書き方の制約は減ったが、消えてはいない**: 逐語が短すぎて
+ * 「中身を全部消しても残る」ものは依然 anchor にならない（上の節）。
+ *
+ * **照合の規則そのものを固定するテストが要る理由**（#667 の実測）:
+ * `containsAnchor(...)` の呼び出しを `read(a.path).includes(a.text)` に戻す変異を当てると、
+ * **既存 55 行 / 103 anchor は 1 つも落ちなかった**（9 pass / 0 fail）。
+ * つまり**索引の中身だけでは、照合が緩んだことを検出できない。**
+ * だから下の `#667 逐語は単語として照合する` が、索引と無関係に規則を固定する
+ * （この変異で 8 pass / 1 fail になる）。
  */
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -76,11 +92,33 @@ interface Row {
   /** `path` は「その逐語の直前に書かれたパス」。逐語はそのファイルの中だけを探す。 */
   anchors: { path: string; text: string }[];
   line: number;
+  /** `line.split("|")` の要素数。正しい 2 列の行は必ず 4（先頭と末尾の空文字を含む）。 */
+  cellCount: number;
 }
 
 /** `パス`（バッククォート内、リポジトリ相対、拡張子つき）に見えるか。 */
 const looksLikePath = (t: string): boolean =>
   t.includes("/") && /^[\w.@/-]+\.(ts|tsx|sh|yml|md|txt|css)$/.test(t);
+
+/** 識別子を構成する文字（`\w` から Unicode の揺れを除いた ASCII のみ）。 */
+const WORD = /[A-Za-z0-9_]/;
+
+const escapeRe = (s: string): string =>
+  s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/**
+ * `text` が `src` に**単語として**現れるか。
+ *
+ * `src.includes(text)` ではない理由は docblock の「照合は単語境界で行う」を読むこと。
+ * **`text` の端が識別子文字のときだけ、その側に識別子文字が続かないことを求める。**
+ * 端が `.`（`.txt`）や空白（`const SOURCE_HOST = `）なら境界は要求しない。
+ */
+export const containsAnchor = (src: string, text: string): boolean => {
+  if (text === "") return false;
+  const pre = WORD.test(text[0]) ? "(?<![A-Za-z0-9_])" : "";
+  const post = WORD.test(text[text.length - 1]) ? "(?![A-Za-z0-9_])" : "";
+  return new RegExp(pre + escapeRe(text) + post).test(src);
+};
 
 /**
  * `docs/ops/guards.md` の表を読む。
@@ -109,6 +147,7 @@ function rows(): Row[] {
       paths: toks.filter(looksLikePath),
       anchors,
       line: i + 1,
+      cellCount: cells.length,
     });
   }
   return out;
@@ -220,7 +259,7 @@ test("#662 索引の逐語の文字列は、名指ししたファイルに今も
         continue;
       }
       if (!existsSync(resolve(root, a.path))) continue; // ファイルの不在は上の test の担当
-      if (!read(a.path).includes(a.text))
+      if (!containsAnchor(read(a.path), a.text))
         gone.push(
           `${INDEX}:${r.line} 「${r.accident}」→ [${a.text}] が ${a.path} に無い`,
         );
@@ -250,7 +289,10 @@ test("#662 索引の行数と逐語の数が下限を割らない（行を消す
   const rs = rows();
   const anchors = rs.reduce((n, r) => n + r.anchors.length, 0);
   assert.deepEqual(
-    { rowsAtLeast: rs.length >= MIN_ROWS, anchorsAtLeast: anchors >= MIN_ANCHORS },
+    {
+      rowsAtLeast: rs.length >= MIN_ROWS,
+      anchorsAtLeast: anchors >= MIN_ANCHORS,
+    },
     { rowsAtLeast: true, anchorsAtLeast: true },
     `${INDEX} が縮んでいる。行 ${rs.length}（下限 ${MIN_ROWS}）/ 逐語 ${anchors}（下限 ${MIN_ANCHORS}）。
 守りを本当にやめたのなら、**なぜやめたかを PR 本文に書いた上で**下限も下げること。
@@ -305,5 +347,103 @@ ${missing.map((m) => `  - [${m}]`).join("\n")}
 この索引は**全数ではなく下限**である。それを書かずに一覧だけ置くと、
 **「索引に無い＝守りが無い」と読まれて、索引が無かったときより悪くなる**（#662 の起点）。
 grep する先の 4 か所も、**今日の 6 件のうち 5 件がそこにあった**ので必ず残す。`,
+  );
+});
+
+test("#667 逐語は単語として照合する（接頭辞になる改名で落ちる）", () => {
+  // **この test が守っているのは「照合の規則そのもの」である。**
+  // 索引の中身とは無関係に、`containsAnchor` が満たすべき性質をここに固定する。
+  // これが無いと、`containsAnchor` を `includes` に戻しても既存 55 行は全部通ってしまい、
+  // **緩めたことに誰も気付けない**（#667 の起点はまさにその状態だった）。
+  assert.deepEqual(
+    {
+      // 改名: anchor が改名後の名前の接頭辞になる形。**これを検出できないのが #667 の欠陥だった。**
+      suffixAdded: containsAnchor(
+        "export const resolveMemberX = 1;",
+        "resolveMember",
+      ),
+      // **前に足す形**。`myResolveMember` だと大文字 R で `includes` すら false になり、
+      // 前方境界を消しても落ちない（実測で M5 が生き残った）。**同じ綴りのまま前に足す。**
+      prefixAdded: containsAnchor(
+        "export const myresolveMember = 1;",
+        "resolveMember",
+      ),
+      constSuffix: containsAnchor(
+        "const EXPECTED_COUNT_V2 = 3;",
+        "EXPECTED_COUNT",
+      ),
+      // 同一なら当然通る。
+      exact: containsAnchor("export const resolveMember = 1;", "resolveMember"),
+      // 記号で区切られていれば「別の語」なので通る。
+      calledAsFunction: containsAnchor(
+        "resolveMember(index, x)",
+        "resolveMember",
+      ),
+      dotted: containsAnchor("a.resolveMember;", "resolveMember"),
+      // 端が識別子文字でない anchor は、その側の境界を要求しない。
+      dotPrefixed: containsAnchor("読む: foo.txt を", ".txt"),
+      trailingSpace: containsAnchor(
+        'const SOURCE_HOST = "x";',
+        "const SOURCE_HOST = ",
+      ),
+      // が、識別子文字で終わる側は効く。
+      dotPrefixedExtended: containsAnchor("foo.txtx", ".txt"),
+      // 正規表現のメタ文字を含む逐語が、正規表現として解釈されない。
+      metaChars: containsAnchor(
+        "if (candidates.length === 1) return candidates[0];",
+        "if (candidates.length === 1) return candidates[0];",
+      ),
+      metaCharsNotRegex: containsAnchor(
+        "if (xxxxxxxxxxlengthxxx1) return candidatesX0Y;",
+        "if (candidates.length === 1) return candidates[0];",
+      ),
+      // 非 ASCII は識別子文字ではないので境界を要求しない（日本語の逐語が使えなくならない）。
+      japanese: containsAnchor(
+        "これは記録するのは会派名であって本人ではないという話",
+        "記録するのは会派名であって本人ではない",
+      ),
+    },
+    {
+      suffixAdded: false,
+      prefixAdded: false,
+      constSuffix: false,
+      exact: true,
+      calledAsFunction: true,
+      dotted: true,
+      dotPrefixed: true,
+      trailingSpace: true,
+      dotPrefixedExtended: false,
+      metaChars: true,
+      metaCharsNotRegex: false,
+      japanese: true,
+    },
+    `逐語の照合が単語境界で行われていない。**includes に戻すとここが落ちる。**
+includes だと resolveMember → resolveMemberX の改名を索引が見逃す（#667）。
+**照合を緩めて黙らせないこと**——落ちているなら、索引の逐語のほうを実在する形に直す。`,
+  );
+});
+
+test("#667 索引の表の行は 2 列ちょうど（セル内の `||` で行の構造が壊れない）", () => {
+  // **`guards.md` の表のセルの中に `|` を書くと、`line.split("|")` で列が増える。**
+  // 増えた列は `const [, accident, guard] = cells` で捨てられるので、
+  // **その行の逐語のうち 2 本目の `|` より後ろにあるものが、まるごと検査から外れる。**
+  // 落ちずに黙って弱くなるので、**索引に行を足す人が踏む罠**である
+  // （#666 の担当者が実装中に踏み、逐語を書き換えて回避した）。
+  // Markdown の表でセル内に縦棒を出したいときは `\|` ではなく `｜`（全角）か
+  // バッククォート外の別の書き方にすること。
+  const over = rows()
+    .filter((r) => r.cellCount !== 4)
+    .map(
+      (r) =>
+        `${INDEX}:${r.line} 「${r.accident}」→ ${r.cellCount} 列に割れている`,
+    );
+  assert.deepEqual(
+    over,
+    [],
+    `${INDEX} の表の行が 2 列に収まっていない（セルの中に縦棒がある）:
+${over.map((m) => `  - ${m}`).join("\n")}
+
+**この行の逐語は、2 本目の縦棒より後ろのぶんが検査されていない。**
+セルの中で縦棒を書かないこと。`,
   );
 });
