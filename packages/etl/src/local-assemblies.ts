@@ -4,6 +4,7 @@ import type {
   Assembly, AssemblyId, AssemblySession, LocalAssemblyMeta, LocalMember, LocalMemberDetail, LocalRollCall, LocalRollCallSummary, LocalUnmatchedName, LocalVoteEntry, MemberAssemblyCount, MemberSummary,
 } from "@seiji-kiroku/shared";
 import { stableJson } from "./json.ts";
+import { unmatchedReason } from "./sources/local/name-match.ts";
 import { normalizeTitle } from "./sources/local/title-normalize.ts";
 import { MIYAGI_ASSEMBLY } from "./sources/local/miyagi/site.ts";
 import { runMiyagi } from "./sources/local/miyagi/index.ts";
@@ -170,7 +171,9 @@ export function buildLocalAssembly(input: LocalAssemblyInput): LocalAssemblyData
   const unmatchedList = [...unmatched.values()]
     .map((u) => {
       const c = candidates.get(`${u.nameText}\t${u.group}`);
-      return { ...u, rollCallIds: [...u.rollCallIds].sort(cmp), ...(c ? { candidates: c } : {}) };
+      // 「なぜ寄せられなかったか」は全県が通るここで付ける（県ごとに書くと足し忘れが黙って落ちる。#680）
+      const reason = unmatchedReason(u.nameText);
+      return { ...u, rollCallIds: [...u.rollCallIds].sort(cmp), ...(c ? { candidates: c } : {}), ...(reason ? { reason } : {}) };
     })
     .sort((a, b) => cmp(a.nameText, b.nameText) || cmp(a.group, b.group));
   // 会期一覧（sessions.json）: date はその会期の最終議決日（rollcalls から）。表決の無い会期は書けない（date を推定しない）
@@ -370,6 +373,9 @@ export async function validateLocalAssemblies(dir: string): Promise<string[]> {
     for (const u of unmatched) {
       for (const id of u.rollCallIds) unmatchedKeys.add(`${id}\t${u.nameText}`);
       // 候補（同姓が 2 人以上）は名簿の id を指す。空の配列は書かない（無ければ省略）
+      // reason は氏名から決まる（#680）。人手で書き換えても、県の実装が誤って付けても、ここで食い違いが出る
+      const expected = unmatchedReason(u.nameText);
+      if (u.reason !== expected) v.push(`assemblies/${a.id}/unmatched.json ${u.nameText}: reason ${JSON.stringify(u.reason)} !== ${JSON.stringify(expected)} (氏名から決まる。#680)`);
       if ("candidates" in u) {
         if (!Array.isArray(u.candidates) || u.candidates.length === 0) v.push(`assemblies/${a.id}/unmatched.json ${u.nameText}: candidates must be a non-empty array when present`);
         else for (const c of u.candidates) if (!memberIds.has(c.id) || typeof c.name !== "string" || c.name === "") v.push(`assemblies/${a.id}/unmatched.json ${u.nameText}: candidate ${String(c.id)} not in members/index.json`);

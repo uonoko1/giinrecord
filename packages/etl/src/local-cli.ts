@@ -1,5 +1,6 @@
 import { fileURLToPath } from "node:url";
 import { buildLocalAssembly, LOCAL_SOURCES, validateLocalAssemblies, writeLocalAssembly } from "./local-assemblies.ts";
+import { nonNameCharacters } from "./sources/local/name-match.ts";
 import { DEFAULT_SESSIONS, dietAssemblies, readSessionsOnDisk } from "./dataset.ts";
 
 /**
@@ -40,7 +41,7 @@ const built = buildLocalAssembly({
 console.log(`rollcalls: ${built.meta.counts.rollcalls}, cells: ${built.meta.counts.cells}, unknown cells (kept as 不明, not guessed): ${built.meta.counts.unknownCells}`);
 if (built.unmatched.length) {
   console.warn(`names in the PDF not matched to the roster (memberId left empty; see data/assemblies/${source.assembly.id}/unmatched.json): ${built.unmatched.length}`);
-  for (const u of built.unmatched) console.warn(`  ${u.nameText}（${u.group}）: ${u.rollCallIds.length} roll calls${u.candidates?.length ? `; candidates (not chosen): ${u.candidates.map((c) => c.name).join(" / ")}` : ""}`);
+  for (const u of built.unmatched) console.warn(`  ${u.nameText}（${u.group}）: ${u.rollCallIds.length} roll calls${u.candidates?.length ? `; candidates (not chosen): ${u.candidates.map((c) => c.name).join(" / ")}` : ""}${u.reason === "brokenGlyph" ? `; the PDF's own text layer is broken here: ${nonNameCharacters(u.nameText).map((c) => `${JSON.stringify(c)} U+${c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, "0")}`).join(" ")} cannot be part of a name (not guessed back. #680)` : ""}`);
 }
 // assemblies/index.json に国会の 2 行が無ければ（日次 ETL がまだ #156 以降の形で走っていない）国会の行も補う
 const national = dietAssemblies(Math.max(...DEFAULT_SESSIONS, ...(await readSessionsOnDisk(DATA))));

@@ -119,3 +119,58 @@ export function matchBySurnamePrefix(nameText: string, roster: readonly RosterEn
   if (key === "") return { memberId: "", candidates: [] };
   return decide(roster.filter((m) => localNameKey(m.name).startsWith(key)));
 }
+
+/**
+ * 氏名として現れうる文字か（Issue #680）。**allowlist であって denylist ではない。**
+ * 「化ける先の記号を並べる」形にすると、次に別の記号で化けたときに素通りする
+ * （`□` だけを名指しする守りは、`◇` で化けた PDF に対して無力）。
+ *
+ * 何を許すかは**本番データの実測で決めた**（2026-09-09）:
+ *   - `data/members/index.json` の 1,057 名の氏名 → 異なり 672 文字。CJK 統合漢字 602／ひらがな 50／
+ *     カタカナ 18／CJK 互換漢字 1（滋賀と同じ `隆` U+F9DC 系）／`々` 1。**記号は 0 文字。**
+ *   - `data/assemblies/*​/rollcalls/` の 45,054 票の `nameText` → 異なり 374 文字。
+ *     漢字・かな以外は 空白 25,662・`々` 777・異体字セレクタ U+E0100 453 の 3 種だけ。**記号は 0 文字。**
+ * よって「漢字・かな・々・長音・中黒・空白・異体字セレクタ以外が氏名に混じっていたら壊れている」は、
+ * **本番の 45,054 票と 1,057 名に対して偽陽性 0 件**。
+ *
+ * CJK 拡張 A・B（`𠮷` U+20BB7 は拡張 B）と CJK 互換漢字（`隆` U+F9DC）を含めるのは、
+ * **どちらも本番の氏名に実在するから**（`ITAIJI` と同じ根拠の取り方）。
+ *
+ * **康熙部首（`⾧` U+2FA7、島根 #221）はここに書かない。**`localNameKey` が `ITAIJI` で `長` に寄せた後に
+ * 見るので、この表と `ITAIJI` の両方に同じ字を書くと、片方だけ増やしたときに食い違う。
+ * 判定の入口を `localNameKey` に一本化する（**根拠の置き場を 2 つにしない**）。
+ */
+const NAME_CHAR = /[々぀-ゟ゠-ヿ㐀-䶿一-鿿豈-﫿\u{20000}-\u{2A6DF}ーー・\s　]/u;
+
+/**
+ * 氏名に混じった「名前になれない字」を出た順に返す（重複は 1 回だけ）。壊れていなければ空配列。
+ *
+ * **ここは「元の字が何だったか」を推定しない。**`□` を `辻` と読むのは字形を寄せることではなく推定で、
+ * 別人の記録を作る側（#569／#674）。**返すのは「壊れている」という事実だけ**で、直す手掛かりは返さない。
+ *
+ * 異体字セレクタは `localNameKey` と同じく先に落とす（幅 0 で目に見えないので、
+ * 「名前になれない字」として報告すると壊れていない氏名まで壊れて見える。#617）。
+ */
+export function nonNameCharacters(nameText: string): string[] {
+  const out: string[] = [];
+  // localNameKey と同じ畳み方を通してから見る（異体字セレクタを落とし、ITAIJI を寄せる）
+  for (const c of localNameKey(nameText)) {
+    if (NAME_CHAR.test(c) || out.includes(c)) continue;
+    out.push(c);
+  }
+  return out;
+}
+
+/**
+ * 名簿に寄せられなかった氏名が「なぜ寄せられなかったか」（`LocalUnmatchedName.reason`。#680）。
+ *
+ * **区別したいのは 2 つの別の出来事**——
+ *   - **名簿に無い議員**（会期の途中で入れ替わった、名簿の取得が古い）→ `undefined`（これまでどおり）
+ *   - **PDF の中で氏名の字が壊れている** → `"brokenGlyph"`
+ * どちらも `unmatched.json` に落ちる（**落とす側は変えない。#569 のまま**）が、
+ * **`unmatched.json` を見る運用者にとっては全く違う話**で、前者は名簿を直す、後者は議会に問い合わせる。
+ * 理由を書かないと、後者が前者に見える（#680 の案A の欠点）。
+ */
+export function unmatchedReason(nameText: string): "brokenGlyph" | undefined {
+  return nonNameCharacters(nameText).length > 0 ? "brokenGlyph" : undefined;
+}
