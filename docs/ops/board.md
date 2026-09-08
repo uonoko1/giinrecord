@@ -63,6 +63,40 @@ scripts/po/board-set.sh <issue> <Backlog|Ready|In Progress|In Review|Done>
 
 **迷ったら「これは誰かに渡せる仕事か」で決める。** **渡せるなら PBI、渡せないなら PR だけ。**
 
+## 一度に大量に登録するとレート制限に当たる（2026-09-09 に実際に当たった）
+
+**Issue 261 件をボードに登録し直したあと、`board-set.sh` が
+`GraphQL: API rate limit already exceeded` で止まった。**
+
+```
+$ gh api rate_limit
+  core:    4999/5000    ← 余裕がある
+  graphql: 5000/5000    ← 余裕がある
+```
+
+**通常のレート制限には余裕があるのに止まる。**
+**GitHub Projects の書き込みには別枠の制限があり、`rate_limit` API には出てこない。**
+
+**止まるのは GraphQL を使うものだけ**（2026-09-09 に実測）:
+
+```
+gh api repos/uonoko1/giinrecord     → 動く（REST）
+gh project item-edit                 → 止まる（GraphQL）
+gh pr create                         → 止まる（GraphQL）
+git push                             → 動く（git プロトコル）
+```
+
+**`gh pr create` も止まるので、PR を作れなくなる。**
+**push は通るので、枝は残る**——**待ってから PR を作ればよい。**
+
+**やること**:
+- **一度に大量に登録するときは、途中で止まる前提で進める**（**どこまで登録できたかを
+  毎回確かめる**——`gh project item-list` で数える）
+- **止まったら待つ。** **通常のレート制限のリセット時刻（`gh api rate_limit` の `reset`）は
+  当てにならない**——別枠なので
+- **急ぎでないなら、その日のうちに全部やらない。** **PBI ごとに起票と同時に載せていれば、
+  一度に大量に登録する必要は起きない**（これが本来の運用）
+
 ## スクリプト
 
 すべて `bash`、`set -euo pipefail`、`gh`（認証済み）だけに依存する。JSON は `gh --jq` で読む（jq 本体は不要）。
