@@ -1,5 +1,6 @@
 import { bandIndex, cluster, EDGE, EPS, joinVertical, readPages, within, type HLine, type Item, type PageGeometry, type VLine } from "../pdf-table.ts";
 import { isoDate, warekiYear } from "./site.ts";
+import { legendKey } from "../glyph-variants.ts";
 
 /**
  * 徳島県議会「各議員の表決態度」PDF の表復元（Issue #183）。
@@ -17,9 +18,8 @@ import { isoDate, warekiYear } from "./site.ts";
 export const UNKNOWN_CELL = "不明";
 export const UNKNOWN_LEGEND = "抽出不能";
 
-/** 凡例の記号と同じ意味の字形（見た目が同じ別コードポイント）。セルの原文は保ち、凡例を引くときだけ寄せる。 */
-const GLYPH_VARIANTS: Record<string, string> = { "〇": "○" }; // U+3007 → U+25CB
-export const legendKey = (raw: string): string => GLYPH_VARIANTS[raw] ?? raw;
+// 字形の揺れを寄せる表は 7 県で共通（#674）。徳島にだけあった GLYPH_VARIANTS を glyph-variants.ts に移した。
+export { legendKey } from "../glyph-variants.ts";
 
 export interface VotePdfMember {
   /** 縦書きの氏名を上から並べたもの。空きマスは半角空白 1 つ（例「嘉見 博之」。5 文字で埋まる「川真田琢巳」には入らない） */
