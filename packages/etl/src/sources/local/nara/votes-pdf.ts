@@ -1,5 +1,6 @@
 import { bandIndex, cluster, EDGE, EPS, joinVertical, readPages, within, type Item, type PageGeometry } from "../pdf-table.ts";
 import { isoDate, warekiYear } from "./site.ts";
+import { legendKey } from "../glyph-variants.ts";
 
 /**
  * 奈良県議会「議員別の議案等に対する表決結果」PDF の表復元（Issue #202）。
@@ -95,11 +96,11 @@ export async function parseVotePdf(bytes: Buffer): Promise<VotePdf> {
   return { ...head, legend, members, rows, unknownCells };
 }
 
-/** 凡例に無い値が出たら例外（丸めない・推定しない）。UNKNOWN_CELL だけは通す。 */
+/** 凡例に無い値が出たら例外（丸めない・推定しない）。UNKNOWN_CELL だけは通す。字形の揺れ（〇 U+3007・✕ U+2715）は凡例の記号に寄せて引く（#674）。 */
 export function checkCellsAgainstLegend(cells: readonly string[], votes: Record<string, string>, label: string): void {
   for (const c of cells) {
     if (c === UNKNOWN_CELL) continue;
-    if (!(c in votes)) throw new Error(`${label}: cell value "${c}" is not in the legend (${Object.keys(votes).join("")})`);
+    if (!(legendKey(c) in votes)) throw new Error(`${label}: cell value "${c}" is not in the legend (${Object.keys(votes).join("")})`);
   }
 }
 

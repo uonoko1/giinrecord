@@ -3,6 +3,8 @@ import { isoDate, KOCHI_ASSEMBLY } from "./site.ts";
 import { UNKNOWN_CELL, UNKNOWN_LEGEND, type VotePdf } from "./votes-pdf.ts";
 // 氏名の突き合わせは 7 県で共通（#636）。規則と、なぜ部分列一致なのかは name-match.ts に書いてある。
 import { localNameKey as nameKey, matchBySubsequence as matchName, type NameMatch } from "../name-match.ts";
+// 字形の揺れ（〇 U+3007・✕ U+2715）は凡例を引くときだけ寄せる。raw は原文のまま（#674）。
+import { legendKey } from "../glyph-variants.ts";
 
 export type { NameMatch };
 export { nameKey, matchName };
@@ -34,6 +36,17 @@ const MAPPED: Record<string, VoteValue> = {
 export function mapLegend(raw: string, legend: string): LocalVote {
   const mapped = raw === UNKNOWN_CELL ? undefined : MAPPED[legend];
   return mapped ? { raw, legend, mapped } : { raw, legend };
+}
+
+/**
+ * セルの原文 → 凡例の意味。字形の揺れ（〇 U+3007 → ○ U+25CB、✕ U+2715 → × U+00D7）は寄せてから引く（#674）。
+ * 寄せても凡例に無ければ例外（丸めない・推定しない。#569）。raw は原文のまま呼び出し側に残る。
+ */
+export function legendOf(raw: string, votes: Record<string, string>, label: string): string {
+  if (raw === UNKNOWN_CELL) return UNKNOWN_LEGEND;
+  const meaning = votes[legendKey(raw)];
+  if (!meaning) throw new Error(`${label}: cell "${raw}" is not in the legend (${Object.keys(votes).join("")})`);
+  return meaning;
 }
 
 export interface SessionInfo {
@@ -78,7 +91,7 @@ export function toLocalRollCalls(sources: readonly PdfSource[], roster: readonly
       const base = `${KOCHI_ASSEMBLY.id}-${session.sessionId}-${date.replace(/-/g, "")}-${row.kind}-${row.number}`;
       baseIds.set(base, (baseIds.get(base) ?? 0) + 1);
       const votes: LocalRollCall["votes"] = row.cells.map((raw, i) => {
-        const legend = raw === UNKNOWN_CELL ? UNKNOWN_LEGEND : pdf.legend.votes[raw];
+        const legend = legendOf(raw, pdf.legend.votes, base);
         if (!legend) throw new Error(`${base}: cell "${raw}" is not in the legend`);
         const member = pdf.members[i];
         return { memberId: resolved[i].memberId, nameText: member.nameText, group: member.group, value: mapLegend(raw, legend) };
