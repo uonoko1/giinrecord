@@ -165,8 +165,8 @@ function rows(): Row[] {
  *
  * 下限なので、守りが増えて行が増えるぶんには落ちない。**減ったら落ちる。**
  */
-const MIN_ROWS = 57;
-const MIN_ANCHORS = 104;
+const MIN_ROWS = 58;
+const MIN_ANCHORS = 107;
 
 /**
  * **索引から消えてはならない守り**（#662 で PO が「無い」と誤読した 6 件を必ず含む）。
