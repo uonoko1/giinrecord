@@ -56,6 +56,41 @@ export function applyMatrix(m: Matrix, rect: ArrayLike<number>): [number, number
   return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
 }
 
+/**
+ * オペレータ列から罫線（細い矩形）を読む。**CTM を持ち回るのはここだけ**（Issue #693）。
+ *
+ * `OPS.constructPath` の `minMax` は **その時点の CTM を掛ける前** のローカル座標である。
+ * `q`（save）/ `Q`（restore）/ `cm`（transform）/ `setTransform` を辿って CTM を作り、
+ * 掛けて初めてページ上の位置になる。掛けないと、罫線を `q … cm … 矩形 … Q` で置いている PDF で
+ * 全部の線が同じ位置に潰れ、**その潰れた線で列を割ると別人の票が出る。**
+ *
+ * `getOperatorList()` を渡さず配列 2 本で受けるのは、PDF を用意しなくても
+ * 入れ子の `q`/`Q` を直接テストできるようにするため（実物のフィクスチャは深さ 2 までしか無い）。
+ */
+export function readLines(fnArray: ArrayLike<number>, argsArray: ArrayLike<unknown>): { vlines: VLine[]; hlines: HLine[] } {
+  const vlines: VLine[] = [];
+  const hlines: HLine[] = [];
+  let ctm: Matrix = IDENTITY;
+  const stack: Matrix[] = [];
+  for (let k = 0; k < fnArray.length; k++) {
+    const fn = fnArray[k];
+    if (fn === OPS.save) { stack.push(ctm); continue; }
+    if (fn === OPS.restore) { ctm = stack.pop() ?? IDENTITY; continue; }
+    if (fn === OPS.transform) { ctm = multiplyMatrix(ctm, argsArray[k] as ArrayLike<number>); continue; }
+    if (fn === OPS.setTransform) { ctm = (argsArray[k] as number[]).slice(0, 6) as Matrix; continue; }
+    if (fn !== OPS.constructPath) continue;
+    const args = argsArray[k] as unknown[];
+    const minMax = args[2] as ArrayLike<number> | undefined;
+    if (!minMax || minMax.length < 4) continue;
+    const [x0, y0, x1, y1] = applyMatrix(ctm, minMax);
+    const w = x1 - x0;
+    const h = y1 - y0;
+    if (w < 2 && h > 5) vlines.push({ x: (x0 + x1) / 2, y0, y1 });
+    else if (h < 2 && w > 5) hlines.push({ y: (y0 + y1) / 2, x0, x1 });
+  }
+  return { vlines, hlines };
+}
+
 export async function readPages(bytes: Buffer): Promise<PageGeometry[]> {
   const loadingTask = getDocument({ data: new Uint8Array(bytes), verbosity: 0 });
   const doc = await loadingTask.promise;
@@ -75,28 +110,7 @@ export async function readPages(bytes: Buffer): Promise<PageGeometry[]> {
         items.push({ str, x, y, w: it.width, h: it.height, cx: x + it.width / 2, cy: y + it.height / 2 });
       }
       const ops = await page.getOperatorList();
-      const vlines: VLine[] = [];
-      const hlines: HLine[] = [];
-      // CTM（現在の変換行列）を走査しながら持ち回る。constructPath の minMax は
-      // その時点の CTM を掛ける前のローカル座標なので、掛けないとページ上の位置にならない（Issue #693）。
-      let ctm: Matrix = IDENTITY;
-      const stack: Matrix[] = [];
-      for (let k = 0; k < ops.fnArray.length; k++) {
-        const fn = ops.fnArray[k];
-        if (fn === OPS.save) { stack.push(ctm); continue; }
-        if (fn === OPS.restore) { ctm = stack.pop() ?? IDENTITY; continue; }
-        if (fn === OPS.transform) { ctm = multiplyMatrix(ctm, ops.argsArray[k] as ArrayLike<number>); continue; }
-        if (fn === OPS.setTransform) { ctm = (ops.argsArray[k] as number[]).slice(0, 6) as Matrix; continue; }
-        if (fn !== OPS.constructPath) continue;
-        const args = ops.argsArray[k] as unknown[];
-        const minMax = args[2] as ArrayLike<number> | undefined;
-        if (!minMax || minMax.length < 4) continue;
-        const [x0, y0, x1, y1] = applyMatrix(ctm, minMax);
-        const w = x1 - x0;
-        const h = y1 - y0;
-        if (w < 2 && h > 5) vlines.push({ x: (x0 + x1) / 2, y0, y1 });
-        else if (h < 2 && w > 5) hlines.push({ y: (y0 + y1) / 2, x0, x1 });
-      }
+      const { vlines, hlines } = readLines(ops.fnArray, ops.argsArray);
       out.push({ items, vlines, hlines });
     }
   } finally {

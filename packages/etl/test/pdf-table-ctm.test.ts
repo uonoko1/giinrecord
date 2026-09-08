@@ -1,7 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { applyMatrix, cluster, multiplyMatrix, readPages, type Matrix } from "../src/sources/local/pdf-table.ts";
+import { OPS } from "pdfjs-dist/legacy/build/pdf.mjs";
+import { applyMatrix, cluster, multiplyMatrix, readLines, readPages, type Matrix } from "../src/sources/local/pdf-table.ts";
 
 // Issue #693: readPages が OPS.constructPath の minMax を「そのまま」座標として使っており、
 // CTM（現在の変換行列）を掛けていなかった。
@@ -82,7 +83,107 @@ test("#693 applyMatrix: 左下・右上の順で返す（負の倍率で上下�
 });
 
 // ---------------------------------------------------------------------------
-// 2. 実物の PDF（佐賀県議会 令和7年2月定例会 議案採決結果一覧表）
+// 2. オペレータ列を組み立てて、q / Q の入れ子を直接読ませる
+// ---------------------------------------------------------------------------
+//
+// **なぜ実物の PDF では足りないか**（実測、2026-09-09）:
+//   リポジトリのフィクスチャ 26 本すべてで、`constructPath` が現れる q/Q の入れ子の深さは **1 か 2**、
+//   深さ 2 のもの（kochi/0806.pdf、tottori/R8.2giketsukekka0325.pdf）は外側の CTM が単位行列だった。
+//   つまり **どのフィクスチャも、`save` が CTM を積むかどうかを見分けられない**——
+//   積まなくても `restore` が単位行列に落ちて同じ値になる。
+//   `save` の行を消す変異は、この節を書く前は 11 件中 0 件しか落ちなかった（実測）。
+//   だから深い入れ子は、PDF ではなくオペレータ列を組んで固定する。
+
+/** 縦線 1 本ぶんの constructPath（矩形 [x0,y0,x1,y1] をローカル座標で）。 */
+const path = (x0: number, y0: number, x1: number, y1: number) =>
+  [OPS.stroke, [new Float32Array()], Float32Array.from([x0, y0, x1, y1])];
+
+/** [fnArray, argsArray] を [op, args] の並びから組み立てる。 */
+function opList(pairs: [number, unknown][]): [number[], unknown[]] {
+  return [pairs.map((p) => p[0]), pairs.map((p) => p[1])];
+}
+
+test("#693 readLines: q が CTM を積み、Q が積んだものに戻す（入れ子の外側が残る）", () => {
+  // q (10,0) 動かす → q (100,0) さらに動かす → 線 → Q（100 のぶんだけ戻る）→ 線
+  const [fn, args] = opList([
+    [OPS.save, null],
+    [OPS.transform, [1, 0, 0, 1, 10, 0]],
+    [OPS.save, null],
+    [OPS.transform, [1, 0, 0, 1, 100, 0]],
+    [OPS.constructPath, path(0, 0, 1, 50)],
+    [OPS.restore, null],
+    [OPS.constructPath, path(0, 0, 1, 50)],
+    [OPS.restore, null],
+  ]);
+  const { vlines } = readLines(fn, args);
+  assert.equal(vlines.length, 2);
+  // 内側は 10 + 100 = 110、外側に戻った 2 本目は 10。
+  // save が積んでいなければ Q で単位行列に落ち、2 本目が 0.5 になって落ちる
+  assert.equal(vlines[0].x, 110.5);
+  assert.equal(vlines[1].x, 10.5);
+});
+
+test("#693 readLines: 深さ 3 の入れ子でも 1 段ずつ戻る（stack を配列でなく 1 個の変数で持っていれば落ちる）", () => {
+  const [fn, args] = opList([
+    [OPS.save, null], [OPS.transform, [1, 0, 0, 1, 1, 0]],
+    [OPS.save, null], [OPS.transform, [1, 0, 0, 1, 20, 0]],
+    [OPS.save, null], [OPS.transform, [1, 0, 0, 1, 300, 0]],
+    [OPS.constructPath, path(0, 0, 1, 50)],
+    [OPS.restore, null], [OPS.constructPath, path(0, 0, 1, 50)],
+    [OPS.restore, null], [OPS.constructPath, path(0, 0, 1, 50)],
+    [OPS.restore, null], [OPS.constructPath, path(0, 0, 1, 50)],
+  ]);
+  const { vlines } = readLines(fn, args);
+  assert.deepEqual(vlines.map((l) => l.x), [321.5, 21.5, 1.5, 0.5]);
+});
+
+test("#693 readLines: setTransform は積み上げでなく置き換え（cm と取り違えていれば落ちる）", () => {
+  const [fn, args] = opList([
+    [OPS.transform, [1, 0, 0, 1, 500, 0]],
+    [OPS.setTransform, [1, 0, 0, 1, 7, 0]],
+    [OPS.constructPath, path(0, 0, 1, 50)],
+  ]);
+  const { vlines } = readLines(fn, args);
+  assert.equal(vlines.length, 1);
+  assert.equal(vlines[0].x, 7.5, "setTransform は今の CTM を捨てて置き換える（足してはいけない）");
+});
+
+test("#693 readLines: 釣り合わない Q（q より多い）で落ちず、単位行列に戻る", () => {
+  const [fn, args] = opList([
+    [OPS.transform, [1, 0, 0, 1, 40, 0]],
+    [OPS.restore, null],
+    [OPS.constructPath, path(0, 0, 1, 50)],
+  ]);
+  const { vlines } = readLines(fn, args);
+  assert.equal(vlines[0].x, 0.5);
+});
+
+test("#693 readLines: 縦横の判定は CTM を掛けた後の寸法で行う（掛ける前で判定していれば落ちる）", () => {
+  // ローカルでは幅 1・高さ 1（どちらの条件にも当たらない）。10 倍すると幅 10・高さ 10 で、
+  // 「w<2 && h>5」にも「h<2 && w>5」にも当たらない。20 倍で縦横比を変えて縦線にする
+  const [fn, args] = opList([
+    [OPS.transform, [1, 0, 0, 20, 0, 0]], // y だけ 20 倍 → 幅 1・高さ 20 の縦線になる
+    [OPS.constructPath, path(0, 0, 1, 1)],
+  ]);
+  const { vlines, hlines } = readLines(fn, args);
+  assert.equal(vlines.length, 1, "掛けた後の高さ 20 で縦罫線と判定されるはず");
+  assert.equal(hlines.length, 0);
+  assert.equal(vlines[0].y1, 20);
+});
+
+test("#693 readLines: 掛けた後に細くなる線は罫線として拾わない（縮小で消える）", () => {
+  // ローカルでは幅 1・高さ 50 の縦線。y を 1/10 にすると高さ 5 で「h > 5」を満たさなくなる
+  const [fn, args] = opList([
+    [OPS.transform, [1, 0, 0, 0.1, 0, 0]],
+    [OPS.constructPath, path(0, 0, 1, 50)],
+  ]);
+  const { vlines, hlines } = readLines(fn, args);
+  assert.equal(vlines.length, 0);
+  assert.equal(hlines.length, 0);
+});
+
+// ---------------------------------------------------------------------------
+// 3. 実物の PDF（佐賀県議会 令和7年2月定例会 議案採決結果一覧表）
 // ---------------------------------------------------------------------------
 //
 // 出どころ: https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf
