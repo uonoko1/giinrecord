@@ -16,6 +16,46 @@ export const EDGE = 1.0;
 /** 罫線の座標をまとめる（同じ線が二重に描かれている）距離。 */
 export const EPS = 1.5;
 
+/** PDF の変換行列 [a, b, c, d, e, f]。 */
+export type Matrix = [number, number, number, number, number, number];
+
+const IDENTITY: Matrix = [1, 0, 0, 1, 0, 0];
+
+/**
+ * 行列の合成。`cm` 演算子（`OPS.transform`）は「今の CTM の *前* に掛ける」ので、
+ * 新しい CTM は `m` を `ctm` に右から掛けたものになる（PDF 仕様 8.3.3）。
+ */
+export function multiplyMatrix(ctm: Matrix, m: ArrayLike<number>): Matrix {
+  return [
+    m[0] * ctm[0] + m[1] * ctm[2],
+    m[0] * ctm[1] + m[1] * ctm[3],
+    m[2] * ctm[0] + m[3] * ctm[2],
+    m[2] * ctm[1] + m[3] * ctm[3],
+    m[4] * ctm[0] + m[5] * ctm[2] + ctm[4],
+    m[4] * ctm[1] + m[5] * ctm[3] + ctm[5],
+  ];
+}
+
+/**
+ * 矩形 [x0, y0, x1, y1] に行列を掛け、軸に沿った外接矩形（左下・右上の順）を返す。
+ *
+ * なぜ要るか（Issue #693）: `getOperatorList()` の `OPS.constructPath` が持つ `minMax` は
+ * **その時点の CTM を掛ける前**の座標である。`OPS.save` / `OPS.restore` / `OPS.transform` /
+ * `OPS.setTransform` を辿って CTM を持ち回り、これを掛けて初めてページ上の位置になる。
+ * 掛けないと、字を輪郭（ベクタ）で描いた PDF で、全部の輪郭が原点に潰れて 1 本の縦罫線に化ける
+ * （佐賀の令和7年2月版で実測 5,936 本が x=0 に集まった）。
+ */
+export function applyMatrix(m: Matrix, rect: ArrayLike<number>): [number, number, number, number] {
+  const [a, b, c, d, e, f] = m;
+  const xs: number[] = [];
+  const ys: number[] = [];
+  for (const [px, py] of [[rect[0], rect[1]], [rect[2], rect[1]], [rect[2], rect[3]], [rect[0], rect[3]]]) {
+    xs.push(a * px + c * py + e);
+    ys.push(b * px + d * py + f);
+  }
+  return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
+}
+
 export async function readPages(bytes: Buffer): Promise<PageGeometry[]> {
   const loadingTask = getDocument({ data: new Uint8Array(bytes), verbosity: 0 });
   const doc = await loadingTask.promise;
@@ -37,12 +77,21 @@ export async function readPages(bytes: Buffer): Promise<PageGeometry[]> {
       const ops = await page.getOperatorList();
       const vlines: VLine[] = [];
       const hlines: HLine[] = [];
+      // CTM（現在の変換行列）を走査しながら持ち回る。constructPath の minMax は
+      // その時点の CTM を掛ける前のローカル座標なので、掛けないとページ上の位置にならない（Issue #693）。
+      let ctm: Matrix = IDENTITY;
+      const stack: Matrix[] = [];
       for (let k = 0; k < ops.fnArray.length; k++) {
-        if (ops.fnArray[k] !== OPS.constructPath) continue;
+        const fn = ops.fnArray[k];
+        if (fn === OPS.save) { stack.push(ctm); continue; }
+        if (fn === OPS.restore) { ctm = stack.pop() ?? IDENTITY; continue; }
+        if (fn === OPS.transform) { ctm = multiplyMatrix(ctm, ops.argsArray[k] as ArrayLike<number>); continue; }
+        if (fn === OPS.setTransform) { ctm = (ops.argsArray[k] as number[]).slice(0, 6) as Matrix; continue; }
+        if (fn !== OPS.constructPath) continue;
         const args = ops.argsArray[k] as unknown[];
         const minMax = args[2] as ArrayLike<number> | undefined;
         if (!minMax || minMax.length < 4) continue;
-        const [x0, y0, x1, y1] = [minMax[0], minMax[1], minMax[2], minMax[3]];
+        const [x0, y0, x1, y1] = applyMatrix(ctm, minMax);
         const w = x1 - x0;
         const h = y1 - y0;
         if (w < 2 && h > 5) vlines.push({ x: (x0 + x1) / 2, y0, y1 });
