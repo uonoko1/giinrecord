@@ -29,6 +29,8 @@ import { dirname, resolve } from "node:path";
  *   ci.yml:stale-base          #536 の検査。#524 のレビューで既に必須外と確認済み
  *   ci.yml:docker-web          Issue #541 本文が名指しした例外そのもの
  *   branch-protection.yml:guard  自分自身の検査。paths 限定の pull_request でしか走らない
+ *   environment-protection.yml:guard  同上（#661）。paths 限定なので、必須にすると
+ *                              その paths を触らない PR が永久に pending でマージできなくなる
  */
 const here = dirname(fileURLToPath(import.meta.url));
 const wfDir = resolve(here, "../../../.github/workflows");
@@ -107,7 +109,14 @@ const id = (j: { file: string; name: string }) => `${j.file}:${j.name}`;
  * ハードコードする（#499: 期待値はハードコードする。対象から生成すると自己参照になる）。
  * 中身が痩せても入れ替わっても、下のテストで固定する。
  */
-const EXEMPT_FROM_REQUIRED: readonly string[] = ["ci.yml:stale-base", "ci.yml:docker-web", "branch-protection.yml:guard"];
+const EXEMPT_FROM_REQUIRED: readonly string[] = [
+  "ci.yml:stale-base",
+  "ci.yml:docker-web",
+  "branch-protection.yml:guard",
+  // #661: branch-protection.yml:guard と同じ理由。paths 限定の pull_request でしか走らないので、
+  // 必須チェックにすると**その paths を触らない PR では永久に pending のまま**マージできなくなる。
+  "environment-protection.yml:guard",
+];
 
 /**
  * 必須ステータスチェックとして GitHub に登録されている名前（deploy/monitor/branch-protection.sh の
@@ -132,6 +141,7 @@ test("数え上げそのものの検査: allJobs が全 workflow の job を拾�
     "deploy-site.yml:deploy",
     "deploy-staging.yml:staging",
     "districts.yml:districts",
+    "environment-protection.yml:guard",
     "etl.yml:etl",
     "link-check.yml:link-check",
     "local-assemblies.yml:local-assemblies",
@@ -147,7 +157,7 @@ test("数え上げそのものの検査: allJobs が全 workflow の job を拾�
 
 test("数え上げそのものの検査: pull_request トリガーを持つ workflow を正しく識別できている", () => {
   const onPR = [...new Set(allJobs.filter((j) => j.onPullRequest).map((j) => j.file))].sort();
-  assert.deepEqual(onPR, ["branch-protection.yml", "ci.yml", "security.yml"]);
+  assert.deepEqual(onPR, ["branch-protection.yml", "ci.yml", "environment-protection.yml", "security.yml"]);
 });
 
 /**
@@ -186,7 +196,10 @@ test("#541 REQUIRED_CHECKS の各要素は、実在する pull_request 上の jo
 
 /** 許容リストが痩せても入れ替わっても落ちる（#484/#499）。中身をそのまま固定する。 */
 test("#541 許容リスト（意図的に必須外にしている job）は中身が固定されている", () => {
-  assert.deepEqual([...EXEMPT_FROM_REQUIRED].sort(), ["branch-protection.yml:guard", "ci.yml:docker-web", "ci.yml:stale-base"].sort());
+  assert.deepEqual(
+    [...EXEMPT_FROM_REQUIRED].sort(),
+    ["branch-protection.yml:guard", "ci.yml:docker-web", "ci.yml:stale-base", "environment-protection.yml:guard"].sort(),
+  );
 });
 
 /**

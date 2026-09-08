@@ -192,6 +192,33 @@ const INVENTORY: { file: string; anchors: string[]; minAssertions: number }[] =
       minAssertions: 28,
     },
     {
+      // #661: Environment の protection_rules も branch protection とまったく同じ性質で、
+      // **GitHub の設定**にあって diff にもレビューにも CI にも現れない。#660 の担当者自身が
+      // 「誰かが設定画面で reviewers を付けても、この PR のテストは緑のまま通ります」と申告した穴。
+      // `production-data` は日次デプロイなので、reviewers が付くと毎日止まる——
+      // しかも数週間前の設定変更と止まった事実は誰も結びつけられない。
+      file: "environment-protection.test.sh",
+      anchors: [
+        "environment-protection.sh",
+        "required_reviewers",
+        "wait_timer",
+        "production-data",
+        "EXPECTED_RULES",
+      ],
+      minAssertions: 49,
+    },
+    {
+      // #661: 「読めない」と「意図と食い違う」を分ける判定。branch-protection 側と同じく、
+      // **テストを書ける場所へ切り出してある**（インラインの `run:` は変異 5/5 が素通りした——#546）。
+      file: "environment-protection-report.test.sh",
+      anchors: [
+        "environment-protection-report.sh",
+        "Environment の保護設定を読めない",
+        "report.sh",
+      ],
+      minAssertions: 32,
+    },
+    {
       file: "apply-all.test.sh",
       anchors: ["apply-all.sh", "allowlist", "8083"],
       minAssertions: 64,
@@ -324,7 +351,7 @@ const INVENTORY: { file: string; anchors: string[]; minAssertions: number }[] =
  * **「行をそっと消す」を「数字も書き換える」に変える**——意図が diff に残る。
  * 止めるのは経路2・経路3のほう。
  */
-const EXPECTED_COUNT = 19; // #652: nginx-headers-gate-behavior.test.sh を追加（18 → 19。#642 で 17 → 18）
+const EXPECTED_COUNT = 21; // #661: environment-protection{,-report}.test.sh を追加（19 → 21。#652 で 18 → 19）
 
 /**
  * 失敗を exit status に変える「出口」。これが無いと assertion がいくつあっても
@@ -370,6 +397,24 @@ const INVENTORY_PINNED: Record<
       "report.sh",
     ],
     minAssertions: 28,
+  },
+  "environment-protection.test.sh": {
+    anchors: [
+      "environment-protection.sh",
+      "required_reviewers",
+      "wait_timer",
+      "production-data",
+      "EXPECTED_RULES",
+    ],
+    minAssertions: 49, // #661
+  },
+  "environment-protection-report.test.sh": {
+    anchors: [
+      "environment-protection-report.sh",
+      "Environment の保護設定を読めない",
+      "report.sh",
+    ],
+    minAssertions: 32, // #661
   },
   "apply-all.test.sh": {
     anchors: ["apply-all.sh", "allowlist", "8083"],
@@ -654,6 +699,8 @@ const DEPLOY_SUBJECTS_PINNED = [
   "deploy/go-live.sh",
   "deploy/monitor/branch-protection-report.sh",
   "deploy/monitor/branch-protection.sh",
+  "deploy/monitor/environment-protection-report.sh",
+  "deploy/monitor/environment-protection.sh",
   "deploy/monitor/health.sh",
   "deploy/monitor/logrotate.conf",
   "deploy/monitor/probe.sh",
@@ -727,6 +774,8 @@ const SUBJECT_OWNERS: Record<string, string> = {
   "deploy/go-live.sh": "go-live.test.sh",
   "deploy/monitor/branch-protection-report.sh": "branch-protection-report.test.sh",
   "deploy/monitor/branch-protection.sh": "branch-protection.test.sh",
+  "deploy/monitor/environment-protection-report.sh": "environment-protection-report.test.sh",
+  "deploy/monitor/environment-protection.sh": "environment-protection.test.sh",
   "deploy/monitor/health.sh": "monitor-health.test.sh",
   "deploy/monitor/logrotate.conf": "logrotate.test.sh",
   "deploy/monitor/probe.sh": "monitor-probe.test.sh",
@@ -754,6 +803,8 @@ const SUBJECT_OWNERS_PINNED: Record<string, string> = {
   "deploy/go-live.sh": "go-live.test.sh",
   "deploy/monitor/branch-protection-report.sh": "branch-protection-report.test.sh",
   "deploy/monitor/branch-protection.sh": "branch-protection.test.sh",
+  "deploy/monitor/environment-protection-report.sh": "environment-protection-report.test.sh",
+  "deploy/monitor/environment-protection.sh": "environment-protection.test.sh",
   "deploy/monitor/health.sh": "monitor-health.test.sh",
   "deploy/monitor/logrotate.conf": "logrotate.test.sh",
   "deploy/monitor/probe.sh": "monitor-probe.test.sh",

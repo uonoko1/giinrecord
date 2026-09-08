@@ -1,0 +1,66 @@
+name: Environment protection
+# Issue #661: デプロイ用 Environment の protection_rules が、記録した意図（#659）から動いていないかを見張る。
+#
+# なぜ要るか: Environment の protection_rules は GitHub の**設定**であって、このリポジトリの中身ではない。
+# 設定画面で reviewers を付けるのは 1 クリックで、diff にもレビューにも CI にも一切現れない。
+# #660 の担当者自身がそう申告している——「誰かが設定画面で reviewers を付けても、この PR のテストは
+# 緑のまま通ります」。branch-protection.yml とまったく同じ性質の穴で、同じ形で塞ぐ。
+# 作業合意「防御は不可能にすることではなく、隠れて通れなくすること」。
+#
+# **branch-protection.yml とは別ファイルにした理由**（同じものに足さなかった）:
+#   1. **トークンの前提が違う。** branch protection は `GITHUB_TOKEN` では読めず、人間が fine-grained PAT を
+#      置くまで exit 2 を出し続ける状態にある（#540/#550）。こちらは既定の `GITHUB_TOKEN`（`contents: read`
+#      のみ）で読めることを**実測した**（2026-09-08, run 34218226742: rc=0 / total_count 3）。
+#      同居させると、こちらの検査まで向こうの人間待ちに引きずられているように見える。
+#   2. **Issue のタイトルが別**（片方が読めて片方が読めない状態を、それぞれ独立に開閉したい）。
+#   3. 片方の失敗でもう片方が走らなくなるのを避ける。
+#
+# 検査そのものは deploy/monitor/environment-protection.sh（テスト: deploy/test/environment-protection.test.sh）。
+# Issue の開閉は monitor.yml と同じ deploy/monitor/report.sh に任せる（タイトルが同一性なので溜まらない）。
+# **意図を変える手順**（承認を「置く」に変える判断もありうる）は environment-protection.sh の冒頭にある。
+on:
+  schedule:
+    - cron: "41 21 * * *"   # 毎日 06:41 JST。branch-protection.yml（06:23）とも monitor.yml の 10 分刻みともずらす
+  pull_request:
+    # 検査そのものを触る PR では、その場で走らせて壊れていないことを見る
+    paths:
+      - ".github/workflows/environment-protection.yml"
+      - "deploy/monitor/environment-protection.sh"
+      - "deploy/monitor/environment-protection-report.sh"
+      - "deploy/test/environment-protection.test.sh"
+      - "deploy/test/environment-protection-report.test.sh"
+  workflow_dispatch:
+# `repos/{owner}/{repo}/environments` は既定の `GITHUB_TOKEN` で読める——**実測済み**（上記 run）。
+# branch protection と違って PAT は要らず、人間待ちは無い。
+# それでも読めなくなる可能性（権限が絞られる／API 障害）は残るので、そのときは exit 2 として
+# 「読めなかった」Issue を開く。**黙って緑にはしない。**
+permissions:
+  contents: read
+  issues: write
+concurrency:
+  group: environment-protection
+  cancel-in-progress: false
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: unit tests (gh / report.sh are stubs, no network)
+        run: |
+          bash deploy/test/environment-protection.test.sh
+          bash deploy/test/environment-protection-report.test.sh
+      # PR では実際の設定を読まない: fork からの PR に issues:write は渡らず、Issue の開閉もしたくない。
+      # 設定そのものの確認は schedule と workflow_dispatch でやる。
+      # 判定と報告の対応（どの終了コードでどの Issue を開閉するか）は
+      # deploy/monitor/environment-protection-report.sh にある。**ここに直接書かない**:
+      # インラインの `run:` に書いていた間、それを検査するものが1つも無く、レビューが
+      # タイトルの入れ替え・rc=2 分岐の削除・`set +e` の削除の3つを入れてもテストは素通りした（#546 レビュー）。
+      - name: check the environments → Issue
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          bash deploy/monitor/environment-protection-report.sh \
+            "$GITHUB_REPOSITORY" \
+            "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
