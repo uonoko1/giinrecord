@@ -133,6 +133,7 @@ test("数え上げそのものの検査: allJobs が全 workflow の job を拾�
     "deploy-staging.yml:staging",
     "districts.yml:districts",
     "etl.yml:etl",
+    "link-check.yml:link-check",
     "local-assemblies.yml:local-assemblies",
     "monitor.yml:production",
     "monitor.yml:staging",

@@ -189,6 +189,7 @@ test("#556 数え上げ: jobs: 直下の job を全部拾えている（拾え�
     "deploy-staging.yml:staging",
     "districts.yml:districts",
     "etl.yml:etl",
+    "link-check.yml:link-check",
     "local-assemblies.yml:local-assemblies",
     "monitor.yml:production",
     "monitor.yml:staging",
@@ -257,6 +258,9 @@ test("#556 値が実測から外れていない（短すぎる = 偽陽性 / 長
     "ci.yml:stale-base": 10,
     "deploy-data.yml:resolve": 10,
     "deploy-site.yml:deploy": 30,
+    // #646: 83 件 × 1 秒 + 落ちた分の再試行。実測 1 ラウンド 3 分弱（手元、島根 9 件で 30s /
+    // 全 83 件で 2 分 51 秒）。相手が全部詰まった最悪（83 × 30s タイムアウト × 2 ラウンド）でも切れる値。
+    "link-check.yml:link-check": 20,
     "release.yml:released-tag": 10,
     "security.yml:gitleaks": 20,
     "security.yml:forbidden-patterns": 10,

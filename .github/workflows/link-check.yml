@@ -1,0 +1,119 @@
+name: Link check (weekly)
+# Issue #646: 一次資料 URL の死活を、ETL とは別に定期で確かめる。
+#
+# なぜ要るか: 地方議会の ETL は月1回（local-assemblies.yml、毎月5日）。島根が
+# ugoki/saikin/ → ugoki/gikai_kako/ に URL を移したとき、本番には 404 の一次資料リンクが
+# 3件出たまま、次の ETL（翌月5日）まで誰も気づかなかった。ETL 自体は落ちる
+# （fetch.ts の res.ok → etl.yml の if: failure()）が、**走らないと落ちない**。
+# 「全行に一次資料リンク」が根幹なので、リンクを踏んで 404 が返るのは記録が確かめられないということ。
+#
+# ── なぜ monitor.yml に足さず、別のワークフローにしたか ──────────────────────────
+# monitor.yml は 10 分おき（本番）／1時間おき（staging）に**自分のサイト**を叩く。
+# ここで叩くのは**他人（自治体）のサーバー 83 件**で、
+#   * 頻度が2桁違う（10分おきに 83 件叩けば 1 日 11,952 リクエスト。相手に対して論外）
+#   * 1 ラウンドが 83 秒以上かかる（1秒間隔）ので、10 分の枠に収まらない回が出る
+#   * 落ちたときに立てたい Issue の中身も宛先も別（サイトの死活ではなくデータの出典）
+#   * monitor.yml の concurrency group を共有すると、遅いこちらが 10 分の監視を詰まらせる
+# 混ぜると「サイトが落ちた」と「島根が URL を移した」が同じ Issue の系列になる。分けた。
+#
+# ── なぜ週1回か ──────────────────────────────────────────────────────────
+# ETL は月1回なので、週1回でも**気づくまでの時間が 1/4 になる**（最悪 30 日 → 最悪 7 日）。
+# 一方でリクエストは 83 件/週（1秒間隔・直列・UA 明記）で、自治体のサーバーに対して控えめ。
+# 毎日にすると 7 倍の負荷になるが、**議会は会期単位でしか動かない**（だから ETL が月1で足りる）ので
+# 得られるものは「最悪 7 日 → 最悪 1 日」だけ。相手のサーバーに払わせる分に見合わないと判断した。
+# 上げるとしたら「404 が出てから直すまで」が実測で長すぎたとき。
+#
+# ── やらないこと ────────────────────────────────────────────────────────
+#   * **data/ を書き換えない。** 404 の移動先が正しいかを判断するのは ETL か人間の仕事。
+#     このワークフローは data/ を読むだけで、permissions も contents: read のまま。
+#   * **1回の 404 で騒がない。** 落ちた URL だけを 60 秒後に叩き直し、2回とも落ちたものだけ報告する。
+#     一時的な障害と恒久的な移動は HTTP のステータスだけでは区別できない。
+#
+# 落ちたら Issue（タイトルで重複排除、etl.yml / local-assemblies.yml と同じ形）。
+#   スクリプト: scripts/ci/link-check.sh   テスト: scripts/ci/test/link-check.test.sh
+on:
+  schedule:
+    - cron: "0 21 * * 1"   # 06:00 JST 月曜（etl.yml / districts.yml / local-assemblies.yml のどれとも重ならない時刻）
+  workflow_dispatch:
+permissions:
+  contents: read
+  issues: write        # 落ちたら Issue を立てる／直ったら閉じる
+concurrency:
+  group: link-check    # 1 ラウンドが数分かかるので、手動実行と定期実行を並走させない
+  cancel-in-progress: false
+env:
+  FAILURE_ISSUE_TITLE: "一次資料リンクが 404 を返している（link-check.yml）"
+jobs:
+  link-check:
+    runs-on: ubuntu-latest
+    # 83 件 × 1 秒 + 落ちた分の再試行（60 秒待ち + その件数分）。実測 1 ラウンド 3 分弱。
+    # 相手が全部詰まった最悪（83 × 30 秒のタイムアウト × 2 ラウンド）でも切れるように 20 分。
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check every primary-source URL in data/assemblies (1 req/s, named UA, twice on failure)
+        id: check
+        run: |
+          set -euo pipefail
+          set +e
+          bash scripts/ci/link-check.sh | tee link-check.log
+          echo "status=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+          set -e
+      - name: Job summary
+        if: always()
+        run: |
+          {
+            echo "## 一次資料リンクの死活（週次）"
+            echo
+            echo '```'
+            grep '^summary:' link-check.log 2>/dev/null || echo "(スクリプトが summary を出す前に落ちた)"
+            echo '```'
+            echo
+            if grep -q '^fail ' link-check.log 2>/dev/null; then
+              echo "### 2回続けて落ちた URL"
+              echo
+              echo '```'
+              grep '^fail ' link-check.log
+              echo '```'
+              echo
+              echo "移動先を確かめてから ETL を回して直してください（data/ を手で書き換えないこと）。"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Fail the job when a URL was dead twice in a row
+        if: steps.check.outputs.status != '0'
+        run: exit 1
+      - name: Open failure Issue (deduped by title)
+        if: failure()
+        uses: actions/github-script@v7
+        env:
+          FAILURE_ISSUE_TITLE: ${{ env.FAILURE_ISSUE_TITLE }}
+        with:
+          script: |
+            const fs = require("node:fs");
+            const title = process.env.FAILURE_ISSUE_TITLE;
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            let dead = [];
+            try {
+              dead = fs.readFileSync("link-check.log", "utf8").split("\n").filter((l) => l.startsWith("fail "));
+            } catch { /* ログが無い＝スクリプト自体が落ちた。run へのリンクだけ出す */ }
+            const open = await github.paginate(github.rest.issues.listForRepo, { ...context.repo, state: "open", labels: "etl", per_page: 100 });
+            const dup = open.find((i) => i.title === title && !i.pull_request);
+            const list = dead.length ? ["```", ...dead.slice(0, 50), "```"] : ["(fail 行なし: スクリプト自体が落ちた可能性)"];
+            const body = [
+              "`data/assemblies/` の一次資料 URL のうち、**2回続けて**（60 秒あけて）2xx/3xx を返さなかったものがあります。",
+              "",
+              ...list,
+              "",
+              `- 実行: ${runUrl}`,
+              "- 直し方: 移動先を確かめてから ETL を回す（`pnpm etl:local <name>`）。**`data/` を手で書き換えないこと**",
+              "- このワークフローは `data/` を読むだけで、書き換えません（移動先が正しいかの判断は ETL か人間の仕事）",
+              "",
+              "直ったら次の週次実行で緑になります。Issue はこちらで閉じてください。",
+            ].join("\n");
+            if (dup) {
+              await github.rest.issues.createComment({ ...context.repo, issue_number: dup.number, body: `再度失敗: ${runUrl}\n\n${list.join("\n")}` });
+              core.info(`commented on existing #${dup.number}`);
+              return;
+            }
+            const { data } = await github.rest.issues.create({ ...context.repo, title, labels: ["etl", "infra"], body });
+            core.info(`created #${data.number}`);
