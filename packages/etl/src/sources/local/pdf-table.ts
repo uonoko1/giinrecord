@@ -79,7 +79,26 @@ export function bandIndex(bounds: number[], v: number): number | undefined {
 
 export const within = (v: number, lo: number, hi: number): boolean => v > Math.min(lo, hi) && v < Math.max(lo, hi);
 
-/** 縦書きの文字列を上から順に結合。1 文字ぶん以上空いていれば半角空白 1 つ（連続する空きは 1 つに）。 */
+/**
+ * 縦書きの文字列を上から順に結合。1 文字ぶん以上空いていれば半角空白 1 つ（連続する空きは 1 つに）。
+ *
+ * 並べ替え（y の大きい順、同じ y なら x の小さい順）は、**現在の 7 県では no-op である**（Issue #640）。
+ * 呼び出し側（高知の joinVerticalColumns、島根の colX ごとの filter など）が
+ * 既に列を分けて順序どおりに渡すので、この関数に届く時点で並んでいる。
+ *
+ * 実測（2026-09-08、フィクスチャ 7 県 24 本のうち parseVotePdf が通る 22 本。
+ * 残り 2 本は島根の文字コード崩れ #232 で既知の例外）:
+ *   joinVertical の呼び出しに probe を入れ、渡ってきた chars が既に
+ *   (b.y - a.y || a.x - b.x) の順に並んでいるかを毎回検査した。
+ *   → 呼び出し 1,650 回すべてで既に並んでいた（並べ替えが順序を変えた回数 0）。
+ *   内訳: 宮城 468 / 徳島 396 / 三重 329 / 奈良 209 / 高知 178 / 島根 70 / 鳥取 0（未使用）。
+ *   そのため、この行を消しても県ごとの PDF テストは 988 pass / 0 fail のまま落ちない。
+ *   （対比: すぐ下の空白挿入の行を消すと 978 pass / 10 fail になる。あちらは守られている）
+ *
+ * **いつ効き始めるか**: 新しい県を足したとき、呼び出し側が列に分けず、
+ * 順序も整えずに chars を渡すなら、この行が実際に効き始める。
+ * 実データでは守れないので、代わりに test/pdf-table.test.ts が直接この順序を固定している。
+ */
 export function joinVertical(chars: Item[]): string {
   const sorted = [...chars].sort((a, b) => b.y - a.y || a.x - b.x);
   let out = "";
