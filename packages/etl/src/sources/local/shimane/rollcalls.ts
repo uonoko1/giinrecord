@@ -3,6 +3,8 @@ import { SHIMANE_ASSEMBLY } from "./site.ts";
 import { UNKNOWN_CELL, UNKNOWN_LEGEND, type ResultRow, type VotePdf } from "./votes-pdf.ts";
 // 氏名の突き合わせは 7 県で共通（#636）。島根の PDF はフルネームで文字層の欠落が無いので完全一致のみ。
 import { localNameKey as nameKey, matchByExact as matchName, type NameMatch } from "../name-match.ts";
+// 字形の揺れ（〇 U+3007・✕ U+2715）は凡例を引くときだけ寄せる。raw は原文のまま（#674）。
+import { legendKey } from "../glyph-variants.ts";
 
 export type { NameMatch };
 export { nameKey, matchName };
@@ -33,6 +35,17 @@ const MAPPED: Record<string, VoteValue> = {
 export function mapLegend(raw: string, legend: string): LocalVote {
   const mapped = raw === UNKNOWN_CELL ? undefined : MAPPED[legend];
   return mapped ? { raw, legend, mapped } : { raw, legend };
+}
+
+/**
+ * セルの原文 → 凡例の意味。字形の揺れ（〇 U+3007 → ○ U+25CB など）は寄せてから引く（#674）。
+ * 寄せても凡例に無ければ例外（丸めない・推定しない。#569）。raw は原文のまま呼び出し側に返る。
+ */
+export function legendOf(raw: string, legend: ReadonlyMap<string, string>, label: string): string {
+  if (raw === UNKNOWN_CELL) return UNKNOWN_LEGEND;
+  const meaning = legend.get(legendKey(raw));
+  if (!meaning) throw new Error(`${label}: cell "${raw}" is not in the legend`);
+  return meaning;
 }
 
 export interface SessionInfo {
@@ -87,8 +100,7 @@ export function toLocalRollCalls(
       const base = `${SHIMANE_ASSEMBLY.id}-${session.sessionId}-${ymd}-${row.kind}-${row.number}`;
       baseIds.set(base, (baseIds.get(base) ?? 0) + 1);
       const votes: LocalRollCall["votes"] = row.cells.map((raw, i) => {
-        const legend = raw === UNKNOWN_CELL ? UNKNOWN_LEGEND : pdf.legend.get(raw);
-        if (!legend) throw new Error(`${base}: cell "${raw}" is not in the legend`);
+        const legend = legendOf(raw, pdf.legend, base);
         const name = pdf.members[i];
         const member = roster.find((m) => m.id === resolved[i].memberId);
         return { memberId: resolved[i].memberId, nameText: name, group: member?.group ?? "", value: mapLegend(raw, legend) };
