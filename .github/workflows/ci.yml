@@ -79,12 +79,13 @@ jobs:
           # disk, so a narrowed pattern is caught even if nothing else in the repo re-derives the count.
           ran=0
           for t in scripts/ci/test/*.test.sh scripts/dev/test/*.test.sh deploy/test/*.test.sh; do echo "== $t"; bash "$t"; ran=$((ran+1)); done
-          # #642: deploy/test に nginx-headers-probe-safety.test.sh が増えて実測 25 本になったので、
-          # 下限を 23 → 24 に上げる（実測より 1 本の余裕を残すのは従来どおり。
+          # #652: deploy/test に nginx-headers-gate-behavior.test.sh が増え、#646 で
+          # scripts/ci/test/link-check.test.sh も増えて**実測 27 本**になったので、
+          # 下限を 24 → 25 に上げる（#642 で 23 → 24。実測より下に余裕を残すのは従来どおり。
           # deploy/test の**正確な**本数は packages/etl/test/deploy-test-inventory.test.ts が
-          # EXPECTED_COUNT=18 で固定しており、ここは glob が痩せていないことを見る粗い最終防波堤）。
-          echo "loop ran: $ran (floor 24)"
-          [ "$ran" -ge 24 ] || { echo "FAIL: fewer test files ran than expected — glob narrowed or files deleted"; exit 1; }
+          # EXPECTED_COUNT=19 で固定しており、ここは glob が痩せていないことを見る粗い最終防波堤）。
+          echo "loop ran: $ran (floor 25)"
+          [ "$ran" -ge 25 ] || { echo "FAIL: fewer test files ran than expected — glob narrowed or files deleted"; exit 1; }
       - run: pnpm lint
       - name: actionlint (all workflows)
         run: |
