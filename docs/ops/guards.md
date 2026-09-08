@@ -107,6 +107,7 @@ grep してから起票してください（**今日の 5 件はそこにあり�
 | shellcheck の対象・版が CI と手元でずれる | `scripts/ci/shellcheck.sh`（`--list` の対象と `--pinned-version` の固定版が 1 か所。#154/#552） |
 | ビルド成果物がリポジトリに入る | `apps/web/app/lib/repo-hygiene.test.ts`（`check-ignore` で判定。文字列一致ではなく git の判定） |
 | 本番のコードが「最後のリリース」から外れる | `scripts/ci/released-ref.sh`（`resolve` / `overlay`。#134） |
+| スプリント文書が「次に持ち越すもの」を落とし、次の計画がゼロから始まる | `packages/etl/test/sprint-doc-shape.test.ts` の `REQUIRED_SECTIONS` と `FIRST_ENFORCED_SPRINT`。雛形は `docs/sprints/TEMPLATE.md` の `次に持ち越すもの`（#682。3 回中 2 回落とした） |
 
 ## 配信（nginx / VPS）
 
