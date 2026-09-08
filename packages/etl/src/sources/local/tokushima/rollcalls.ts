@@ -1,6 +1,10 @@
 import type { LocalMember, LocalRollCall, LocalUnmatchedName, LocalVote, VoteValue } from "@seiji-kiroku/shared";
 import { TOKUSHIMA_ASSEMBLY } from "./site.ts";
 import { legendKey, UNKNOWN_CELL, UNKNOWN_LEGEND, type VotePdf } from "./votes-pdf.ts";
+// 氏名の突き合わせは 7 県で共通（#636）。徳島の PDF はフルネーム。
+import { localNameKey as nameKey, matchBySubsequence as matchName } from "../name-match.ts";
+
+export { nameKey, matchName };
 
 /**
  * 徳島の表決 PDF の行 → LocalRollCall（Issue #183）。宮城（miyagi/rollcalls.ts）と同じ方針:
@@ -30,7 +34,6 @@ export function mapLegend(raw: string, legend: Record<string, string>): LocalVot
   return mapped ? { raw, legend: meaning, mapped } : { raw, legend: meaning };
 }
 
-export const nameKey = (s: string) => s.replace(/[\s　]/g, "");
 
 export interface SessionInfo {
   sessionId: string;
@@ -40,15 +43,7 @@ export interface SessionInfo {
 }
 
 export function toLocalRollCalls(pdf: VotePdf, roster: readonly LocalMember[], session: SessionInfo): { rollCalls: LocalRollCall[]; unmatched: LocalUnmatchedName[] } {
-  const byName = new Map<string, LocalMember[]>();
-  for (const m of roster) {
-    const key = nameKey(m.name);
-    byName.set(key, [...(byName.get(key) ?? []), m]);
-  }
-  const resolved = pdf.members.map((m) => {
-    const hits = byName.get(nameKey(m.nameText)) ?? [];
-    return hits.length === 1 ? hits[0].id : "";
-  });
+  const resolved = pdf.members.map((m) => matchName(m.nameText, roster).memberId);
   const unmatched = new Map<string, LocalUnmatchedName>();
   const rollCalls: LocalRollCall[] = [];
   const ymd = pdf.date.replace(/-/g, "");
