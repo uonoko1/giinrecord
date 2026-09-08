@@ -39,11 +39,11 @@ pnpm etl 221        # 第221回国会の参院投票結果を data/ に取得
 | 環境 | URL | いつ | ワークフロー |
 |---|---|---|---|
 | staging | https://staging.giinrecord.jp（noindex） | `main` への push で自動 | `deploy-staging.yml` |
-| production | https://giinrecord.jp | 手動リリース：Actions → **Release** → Run workflow（ref、既定 `main`）→ Environment `production` の承認 | `release.yml` |
+| production | https://giinrecord.jp | 手動リリース：`gh workflow run release.yml --ref main -f ref=$(git rev-parse origin/main)`（GUI なら Actions → **Release** → Run workflow）。**承認待ちは無い**（#659） | `release.yml` |
 | 両方（データのみ） | — | 日次 ETL の data PR がマージされたら自動 | `deploy-data.yml`（`etl.yml` / `districts.yml` が起動） |
 
 staging の初回構築で人間がやることは 2 つだけ：**DNS の A レコード `staging.giinrecord.jp → VPS のアドレス`（`giinrecord.jp` と同じ。IP はリポジトリに書かない、#133）** と、手元で 1 回 `bash deploy/run-remote.sh deploy/staging-setup.sh`（`VPS_SSH_HOST` は ssh エイリアス、既定 `sakura-vps`）。
-GitHub 側は Environment `staging` / `production-data` に `DEPLOY_*` secrets（`production` と同じ）、`production` に required reviewers。詳細は `deploy/README.md` と `docs/ops/deploy.md`。
+GitHub 側は Environment `staging` / `production` / `production-data` に同じ `DEPLOY_*` secrets。**required reviewers は 3 つとも置いていない**（#659。理由は `docs/ops/deploy.md`）。詳細は `deploy/README.md` と `docs/ops/deploy.md`。
 
 ## ライセンス
 

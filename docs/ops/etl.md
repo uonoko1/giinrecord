@@ -65,7 +65,7 @@
 | `test -n "$NUMBER"` で失敗 | `gh pr create` 失敗（label `etl` が無い、権限不足） | 手元で `gh pr list --head data/refresh`。label が無ければ作る |
 | 15 分待っても MERGED にならない | ブランチ保護の required check が走らない。`GITHUB_TOKEN` の push は `pull_request` イベントを起こさないため、CI を required にすると auto-merge が永遠に待つ | required check を外すか、push に PAT / GitHub App token を使う（`secrets.GITHUB_TOKEN` から差し替える）。手動で PR をマージすれば staging は `push: main` で走るが production は走らない点に注意 → `gh workflow run deploy-data.yml` |
 | `action_required` の run が出る | fork 由来ではないので通常は出ない。出た場合はワークフローが `actions/runs/{id}/approve` を試みる | 承認できない（権限）なら Actions UI で承認 |
-| Deploy が `waiting` のまま | `environment: production` に required reviewers が設定されている | 環境の保護ルールを確認。ETL 側からは承認しない（人が判断する） |
+| Deploy が `waiting` のまま | environment に required reviewers が設定された（**いまは 3 つとも置いていない**ので通常は起きない。#659） | `gh api repos/uonoko1/giinrecord/environments` で `protection_rules` を見る。ETL 側からは承認しない（人が判断する） |
 | 失敗 Issue が作られない | `issues: write` 権限・`etl`/`infra` label の欠落 | run ログの `Open failure Issue` ステップを見る。label は存在しないと API が 422 を返すので事前に作っておく |
 | 同じ失敗で Issue が増える | タイトルが変わった／前の Issue を close していた | タイトルは `FAILURE_ISSUE_TITLE` で固定。直したら close、直るまで open のままにする |
 

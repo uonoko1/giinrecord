@@ -2,8 +2,8 @@ name: Deploy site (reusable)
 # Issue #127. Build the static site from `ref` with SITE_ORIGIN=`site_origin` and rsync it to
 # /var/www/giinrecord/<target_dir>/ on the VPS as the deploy user. Called by:
 #   deploy-staging.yml  push main            → environment staging          target_dir staging  (https://staging.giinrecord.jp)
-#   release.yml         workflow_dispatch    → environment production       target_dir site     (required reviewers = the release button)
-#   deploy-data.yml     dispatched by etl.yml → staging + production-data   (daily data, no approval; docs/ops/deploy.md)
+#   release.yml         workflow_dispatch    → environment production       target_dir site     (the release button)
+#   deploy-data.yml     dispatched by etl.yml → staging + production-data   (daily data; docs/ops/deploy.md)
 # Issue #134: optional `data_ref` overlays data/ from that ref onto the checkout (production-data: code = tag `released`,
 # data = main). Output `sha` = the built commit (release.yml moves the `released` tag to it).
 # Every environment needs the same four secrets: DEPLOY_SSH_KEY, DEPLOY_HOST, DEPLOY_USER, DEPLOY_KNOWN_HOSTS.
@@ -12,7 +12,7 @@ on:
   workflow_call:
     inputs:
       environment:
-        description: "GitHub Environment (staging | production | production-data): secrets + reviewers"
+        description: "GitHub Environment (staging | production | production-data): supplies the DEPLOY_* secrets"
         required: true
         type: string
       site_origin:
@@ -57,10 +57,13 @@ jobs:
     # concurrency group `deploy-vps` を最大 6 時間占有し、**その間のデプロイが全部詰まる**。
     # 詰まる側の害のほうが大きいと判断した。
     #
-    # 注意（未検証）: `environment` に required reviewers を設定すると承認待ちが入る。
-    # 承認待ちが timeout-minutes に算入されるかは、このリポジトリの履歴では確かめられなかった
-    # （`?status=waiting` の total_count は 0 で、承認待ちになった run が一度も無い）。
-    # reviewers を有効にするときは、この値で足りるかを実際に待たせて確かめること。
+    # 承認待ちは起きない（#659）。3 つの environment とも protection_rules が `[]` で、
+    # required reviewers は置いていない（置かない理由は docs/ops/deploy.md）。2026-09-08 実測:
+    # `?status=waiting` の total_count は全 3,256 run 中 0、production の直近 10 deployment の
+    # status も `queued`/`in_progress`/`success` だけで `waiting` は無い。
+    # したがって timeout-minutes 30 は「ビルド + rsync」だけを覆えばよい。
+    # もし将来 reviewers を置くなら、承認待ちがこの 30 分に算入されるかを実際に待たせて確かめること
+    # （このリポジトリの履歴では一度も待っていないので、まだ確かめられていない）。
     timeout-minutes: 30
     environment: ${{ inputs.environment }}
     concurrency:

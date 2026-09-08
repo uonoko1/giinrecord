@@ -1,7 +1,11 @@
 name: Release
-# Issue #127: the production release button. Actions → Release → Run workflow (ref, default main) → the
-# `production` environment's required reviewers approve → build with vars.SITE_ORIGIN → rsync to /var/www/giinrecord/site/.
-# Nothing else writes production code; daily data goes through deploy-data.yml (environment production-data, no approval).
+# Issue #127: the production release button. `gh workflow run release.yml --ref main -f ref=$(git rev-parse origin/main)`
+# (or Actions → Release → Run workflow) → build with vars.SITE_ORIGIN → rsync to /var/www/giinrecord/site/.
+# Issue #659: NO approval step. The `production` environment has no protection_rules (measured 2026-09-08: all three
+# environments return `[]`), so the run goes straight through — whoever dispatches this publishes to production.
+# The only gate is main's branch protection (4 required checks), and `ref` here is free-form, so even that is bypassable
+# by dispatching a ref that never passed CI. Do not treat "it deployed" as "someone reviewed it" — docs/ops/deploy.md.
+# Nothing else writes production code; daily data goes through deploy-data.yml (environment production-data).
 # Issue #134: after a successful release the lightweight tag `released` is moved to the released sha, so deploy-data.yml
 # builds that code (not main) and lays main's data/ on top. Ref updates made with GITHUB_TOKEN trigger no other workflow.
 on:
