@@ -74,6 +74,33 @@ describe("vote-disclosure.json（#128 の調査表から機械的に起こした
     expect(disclosureFor("pref-20")).toMatchObject({ label: "長野", status: "総数のみ" });
     expect(disclosureFor("pref-23")).toMatchObject({ label: "愛知", status: "総数のみ" });
   });
+  // #688: #670 は「総数のみ 3 県は会議録を 1 本も開いていない」と留保を残した。
+  // 起立採決の会議録に起立者名が載っていればそれは個人別の記録なので、3 県とも本会議の会議録本文まで見た。
+  it("#688: 北海道・長野は会議録本文まで開いた（起立採決の記述と、名前が無いことを note が示す）", () => {
+    for (const id of ["pref-01", "pref-20"]) {
+      const row = disclosureFor(id);
+      expect(row, id).toBeDefined();
+      expect(row!.status, id).toBe("総数のみ");
+      // 「会議録を開いていない」ではなく「開いて何が無かったか」が書かれていること。
+      expect(row!.note, id).toMatch(/会議録本文を確認（2026-09-09、#688）/);
+      // 会議録の原文をそのまま引くこと。北海道は「賛 成 者 起 立」と字間が空き、長野は空かない——
+      // 原文の字面が違うので、空白を潰した形で一致を見る。
+      expect(row!.note!.replace(/\s+/g, ""), id).toMatch(/〔賛成者起立〕/);
+      expect(row!.note, id).toMatch(/起立多数/);
+      // 名前も人数も無い、と明記していること（「起立多数」だけでは個人は分からない）。
+      expect(row!.note, id).toMatch(/氏名も人数も無い/);
+    }
+  });
+  it("#688: 愛知は robots.txt に阻まれて会議録に到達していない（到達できなかったことを隠さない）", () => {
+    const row = disclosureFor("pref-23");
+    expect(row).toBeDefined();
+    expect(row!.status).toBe("総数のみ");
+    // 北海道・長野と違い「確認した」と書いてはならない。
+    expect(row!.note).not.toMatch(/会議録本文を確認/);
+    expect(row!.note).toMatch(/robots\.txt/);
+    expect(row!.note).toMatch(/Disallow: \//);
+    expect(row!.note).toMatch(/#688/);
+  });
   it("#671 で PDF 本文を開いた 5 件は「表題から分類した」を名乗らない", () => {
     for (const id of ["pref-28", "pref-34", "pref-43", "city-22100", "city-40100"]) {
       const row = disclosureFor(id);
