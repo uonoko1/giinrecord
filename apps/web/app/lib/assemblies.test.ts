@@ -45,10 +45,25 @@ describe("vote-disclosure.json（#128 の調査表から機械的に起こした
     expect(VOTE_DISCLOSURE.source).toBe("docs/research/local-assemblies.md");
     expect(disclosure.rows).toHaveLength(67);
   });
-  it("集計は調査の要約と一致する（都道府県 12/14/14/7、政令市 6/12/2/0）", () => {
+  it("集計は調査の要約と一致する（都道府県 13/15/12/7、政令市 6/14/0/0）", () => {
     const count = (kind: VoteDisclosureRow["kind"], status: VoteDisclosureRow["status"]) => rows.filter((r) => r.kind === kind && r.status === status).length;
-    expect(DISCLOSURE_STATUSES.map((s) => count("prefectural", s))).toEqual([12, 14, 14, 7]);
-    expect(DISCLOSURE_STATUSES.map((s) => count("municipal", s))).toEqual([6, 12, 2, 0]);
+    expect(DISCLOSURE_STATUSES.map((s) => count("prefectural", s))).toEqual([13, 15, 12, 7]);
+    expect(DISCLOSURE_STATUSES.map((s) => count("municipal", s))).toEqual([6, 14, 0, 0]);
+  });
+  it("#671 で PDF 本文を開いた 5 件は「表題から分類した」を名乗らない", () => {
+    for (const id of ["pref-28", "pref-34", "pref-43", "city-22100", "city-40100"]) {
+      const row = disclosureFor(id);
+      expect(row, id).toBeDefined();
+      expect(row!.note, id).not.toMatch(/表題から/);
+      expect(row!.note, id).toMatch(/PDF 本文を確認（2026-09-09、#671）/);
+    }
+  });
+  it("#671: 熊本県は議員別の個人票（公開）、広島県・静岡市・北九州市は会派別（いずれも総数のみではない）", () => {
+    expect(disclosureFor("pref-43")).toMatchObject({ label: "熊本", status: "公開" });
+    expect(disclosureFor("pref-34")).toMatchObject({ label: "広島", status: "会派別" });
+    expect(disclosureFor("city-22100")).toMatchObject({ label: "静岡市", status: "会派別" });
+    expect(disclosureFor("city-40100")).toMatchObject({ label: "北九州市", status: "会派別" });
+    expect(disclosureFor("pref-28")).toMatchObject({ label: "兵庫", status: "会派別" });
   });
   it("全行が https の出典 URL と一意の assemblyId を持ち、status は4値", () => {
     expect(new Set(rows.map((r) => r.assemblyId)).size).toBe(67);
