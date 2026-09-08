@@ -4,7 +4,7 @@ import { mkdtemp, readFile, writeFile, mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Assembly, LocalMember, LocalRollCall } from "@seiji-kiroku/shared";
-import { buildLocalAssembly, validateLocalAssemblies, writeLocalAssembly, MIYAGI_ASSEMBLY } from "../src/local-assemblies.ts";
+import { buildLocalAssembly, validateLocalAssemblies, writeLocalAssembly, kanaNameRatioExceeds, MIYAGI_ASSEMBLY } from "../src/local-assemblies.ts";
 import { stableJson } from "../src/json.ts";
 import { validateDataset, writeDataset, dietAssemblies } from "../src/dataset.ts";
 
@@ -107,6 +107,59 @@ test("validateLocalAssemblies: sourceUrl のホストが議会の公式ホスト
   assert.ok(v.some((l) => /p_04_zzz/.test(l)), v.join("\n"));
   assert.ok(v.some((l) => /cells/.test(l)), v.join("\n"));
   assert.ok(v.some((l) => /mapped/.test(l)), v.join("\n"));
+});
+
+// #632: kanaNameRatioExceeds 単体のテスト（境界値・かな空・空白の扱い）。
+test("kanaNameRatioExceeds: 実データの最大値相当（比 3.0）は違反にしない。空白は数えない", () => {
+  assert.equal(kanaNameRatioExceeds("東 徹", "あずま とおる"), false, "「東 徹」(2文字)/「あずまとおる」(5文字) = 2.5相当のはず");
+  assert.equal(kanaNameRatioExceeds("東徹", "あずまとおる"), false, "空白を除いても比は変わらない");
+});
+
+test("kanaNameRatioExceeds: #617（大分）の実例「𠮷村哲彦→村哲彦」は欠落後の比 2.67 で、この検算では検出できない（限界の記録）", () => {
+  assert.equal(kanaNameRatioExceeds("村哲彦", "よしむらてつひこ"), false, "3文字以上の氏名からの1文字欠落は、この閾値では拾えない");
+});
+
+test("kanaNameRatioExceeds: 短い氏名（1〜2文字）の1文字欠落は検出できる", () => {
+  assert.equal(kanaNameRatioExceeds("愛", "あおきあい"), true, "「青木 愛」→「愛」");
+  assert.equal(kanaNameRatioExceeds("木", "ゆずきたかみつ"), true, "「柚木 貴光」→「木」");
+});
+
+test("kanaNameRatioExceeds: かなが空なら常に false（比較できないので異常としない）", () => {
+  assert.equal(kanaNameRatioExceeds("愛", ""), false);
+  assert.equal(kanaNameRatioExceeds("", ""), false);
+});
+
+test("kanaNameRatioExceeds: 氏名が空でかなが非空なら true（全消失も検出する）", () => {
+  assert.equal(kanaNameRatioExceeds("", "あおきあい"), true);
+});
+
+// 地方議会（validateLocalAssemblies）側の統合テスト。
+// 氏名は名簿（PDF/HTML）から、かなは名簿の HTML から取る独立した2つの値。
+// 一方が静かに1文字消えると比（かな長 / 氏名長）が跳ねる。#617（大分）の実例の機序。
+test("validateLocalAssemblies: かなに対して氏名が短すぎれば違反（氏名が1文字消えたのを、かなとの比で検出する。#632）", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "giinrecord-local-"));
+  const a = { ...member("p_04_a", "柚木 貴光"), kana: "ゆずき たかみつ" }; // 比 2.0（正常）
+  const built = buildLocalAssembly({ assembly: MIYAGI_ASSEMBLY, members: [a], rollCalls: [], fetchedAt: "2026-08-24T00:00:00.000Z", rosterAsOf: "2026-04-23", sources: [], sessions: [] });
+  await writeLocalAssembly(dir, built);
+  const rel = join(dir, "members", "index.json");
+  const idx = JSON.parse(await readFile(rel, "utf8")) as LocalMember[];
+  // 「柚木 貴光」から「柚」が消えたと想定し「木 貴光」にする → 空白を除くと3文字、かな7文字/3文字 = 2.33（検出できない範囲）。
+  // さらに「貴光」も消え「木」1文字になったのを想定 → かな7文字/1文字 = 7.0 で閾値 3.5 を超える。
+  await writeFile(rel, stableJson(idx.map((m) => (m.id === "p_04_a" ? { ...m, name: "木" } : m))));
+  const v = await validateLocalAssemblies(dir);
+  assert.ok(v.some((l) => /p_04_a.*kana "ゆずき たかみつ" is disproportionate to name "木"/.test(l)), v.join("\n"));
+});
+
+test("validateLocalAssemblies: かなが空の議員は、氏名が短くても違反にしない", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "giinrecord-local-"));
+  const a = { ...member("p_04_a", "柚木 貴光"), kana: "" };
+  const built = buildLocalAssembly({ assembly: MIYAGI_ASSEMBLY, members: [a], rollCalls: [], fetchedAt: "2026-08-24T00:00:00.000Z", rosterAsOf: "2026-04-23", sources: [], sessions: [] });
+  await writeLocalAssembly(dir, built);
+  const rel = join(dir, "members", "index.json");
+  const idx = JSON.parse(await readFile(rel, "utf8")) as LocalMember[];
+  await writeFile(rel, stableJson(idx.map((m) => (m.id === "p_04_a" ? { ...m, name: "木" } : m))));
+  const v = await validateLocalAssemblies(dir);
+  assert.ok(!v.some((l) => /disproportionate/.test(l)), v.join("\n"));
 });
 
 test("writeLocalAssembly: members/index.json は国会の行を残し、自分の議会の行だけ入れ替える（名簿から消えた人の detail も消す）", async () => {
