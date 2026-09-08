@@ -41,6 +41,17 @@ import { dirname, resolve } from "node:path";
  * **散文ではなく、その守りが現に検査している識別子**を選ぶ。
  * 「404」「24」のような短い数字は、**中身を全部消しても残る**ので anchor にならない
  * （最初の版で実際にそう書きかけ、この判定で弾いた）。
+ *
+ * ## 裸の識別子だけの anchor は「接尾辞を足す改名」で生き残る（#665 の実測）
+ *
+ * 照合は `includes` なので、**anchor が改名後の名前の接頭辞になる改名は検出できない。**
+ * 実測: `resolveMember` → `resolveMemberX` に全置換しても **7 pass / 0 fail**
+ * （`resolveMemberX` が `resolveMember` を含むため）。`resolveMember` → `pickMember` なら 6 pass / 1 fail。
+ * 2026-09-08 時点で **103 anchor 中 47 個**が裸の識別子（`/^[A-Za-z_][A-Za-z0-9_]*$/`）で、
+ * この形の改名に弱い。**塞いでいない。** 弱くしないための書き方は、
+ * 裸の識別子だけで 1 行を持たせず、**文（`if (byGroup.length < 2) return undefined;`）や
+ * エラーメッセージ（`sourceUrl host not allowed`）を同じ行に併記する**こと
+ * （#665 で足した行はすべてそうしてある）。
  */
 
 const here = dirname(fileURLToPath(import.meta.url));
