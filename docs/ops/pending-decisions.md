@@ -18,14 +18,32 @@
 
 ## 1. #611 の本番反映（`site.conf` の変更）
 
-**PO ができない理由**: **deploy 用ユーザーに docker 権限が無い**（設計上そうしてある）。
-`site.conf` は bind mount した単一ファイルで、**`git pull` では inode が変わるだけで
-コンテナは古いものを掴んだまま**（`docs/ops/deploy.md`）。
+**PO ができない理由**: **PO が動いている端末に接続先が定義されていない**（2026-09-08 実測）。
+
+```
+$ ssh giinops '...'
+ssh: Could not resolve hostname giinops: Name or service not known
+$ grep -ci '^Host .*giinops' ~/.ssh/config
+0
+```
+
+**`docs/ops/deploy.md` が既にこれを警告しています**——
+「**`giinops` は `ssh config` の alias ではない**（2026-09-06 に 3 往復した）」。
+**定義するには VPS の IP が要り、それはリポジトリに書けません。**
+
+**旧記述「deploy 用ユーザーに docker 権限が無い」は誤りでした**——
+**`giinops` は下の 2 コマンドだけ NOPASSWD 許可されています**（#333）。
+**問題は権限ではなく、接続手段です。**
+
+**手順は `docs/ops/deploy.md` の「設定を変えるとき」3 番にあります**（`Host giinops` の書き方も含む）:
 
 ```sh
-ssh giinops 'sudo -n git -C /opt/giinrecord pull \
+ssh giinops@<host> 'sudo -n git -C /opt/giinrecord pull \
   && sudo -n docker compose -f /opt/giinrecord/deploy/docker-compose.yml up -d --force-recreate'
 ```
+
+**なぜ `up -d` だけでは足りないか**: `site.conf` は bind mount した単一ファイルなので、
+**`git pull` では inode が変わるだけでコンテナは古いものを掴んだまま**（`docs/ops/deploy.md`）。
 
 **反映後の確認**（3 つとも見ること）:
 
@@ -38,7 +56,15 @@ curl -sSL -o /dev/null -w "%{http_code}\n" https://giinrecord.jp/compare        
 **3 つ目が大事**——`/compare` は SPA fallback を使う**正常な**ページなので、
 **そこが壊れていないことまで見て、はじめて成功と言える。**
 
-**いまの本番**: status 404 は正しい。**壊れているのは JS 無しで見たときの画面だけ**（#610）。
+**いまの本番**（2026-09-08 に PO が実測。まだ未反映）:
+
+```
+1) /no-such-page-12345 の「見つかりません」  0 件   ← 反映後は 2
+2) status                                  404     ← 正しい（変わってはいけない）
+3) /compare                                200     ← 正しい（変わってはいけない）
+```
+
+**status 404 は正しい。壊れているのは JS 無しで見たときの画面だけ**（#610）。
 
 ## 2. #537 地方議会 7 県の事前照会
 
