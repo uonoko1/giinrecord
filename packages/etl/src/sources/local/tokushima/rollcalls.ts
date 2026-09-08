@@ -26,10 +26,12 @@ const MAPPED_BY_LEGEND: Record<string, VoteValue> = {
   "除斥": "投票なし",
 };
 
-export function mapLegend(raw: string, legend: Record<string, string>): LocalVote {
+export function mapLegend(raw: string, legend: Record<string, string>, label: string): LocalVote {
   if (raw === UNKNOWN_CELL) return { raw, legend: UNKNOWN_LEGEND };
   const meaning = legend[legendKey(raw)];
-  if (!meaning) throw new Error(`cell "${raw}" is not in the legend (${Object.keys(legend).join("")})`);
+  // 失敗メッセージは ETL が落ちたとき人間が最初に読むもの。label（どの議会・会期・議案か）が無いと
+  // 「どこかで凡例に無い値が出た」としか分からない（#679）。他の 6 県の legendOf と同じ形にそろえる。
+  if (!meaning) throw new Error(`${label}: cell "${raw}" is not in the legend (${Object.keys(legend).join("")})`);
   const mapped = MAPPED_BY_LEGEND[meaning];
   return mapped ? { raw, legend: meaning, mapped } : { raw, legend: meaning };
 }
@@ -68,7 +70,7 @@ export function toLocalRollCalls(pdf: VotePdf, roster: readonly LocalMember[], s
           u.rollCallIds.push(id);
           unmatched.set(key, u);
         }
-        return { memberId: resolved[i], nameText: member.nameText, group: member.group, value: mapLegend(raw, section.legend) };
+        return { memberId: resolved[i], nameText: member.nameText, group: member.group, value: mapLegend(raw, section.legend, id) };
       });
       rollCalls.push({
         id,
