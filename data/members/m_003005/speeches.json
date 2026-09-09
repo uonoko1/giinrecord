@@ -13,6 +13,127 @@
    "speechId": "122114541X00420260702_007"
   },
   {
+   "chars": 24,
+   "date": "2026-06-26",
+   "excerpt": "本日はこれにて散会いたします。 午前十時四分散会",
+   "kind": "speech",
+   "meeting": "本会議 第25号",
+   "position": "議長",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X02520260626/6",
+   "speechId": "122115254X02520260626_006"
+  },
+  {
+   "chars": 104,
+   "date": "2026-06-26",
+   "excerpt": "投票の結果を報告いたします。 投票総数 二百四十二 賛成 二百二十七 反対 十五 よって、本案は可決されました。（拍手） ───────────── 〔投票者氏名は本号末尾に掲載〕 ─────────────",
+   "kind": "speech",
+   "meeting": "本会議 第25号",
+   "position": "議長",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X02520260626/5",
+   "speechId": "122115254X02520260626_005"
+  },
+  {
+   "chars": 39,
+   "date": "2026-06-26",
+   "excerpt": "間もなく投票を終了いたします。──これにて投票を終了いたします。 〔投票終了〕",
+   "kind": "speech",
+   "meeting": "本会議 第25号",
+   "position": "議長",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X02520260626/4",
+   "speechId": "122115254X02520260626_004"
+  },
+  {
+   "chars": 45,
+   "date": "2026-06-26",
+   "excerpt": "これより採決をいたします。 本案の賛否について、投票ボタンをお押し願います。 〔投票開始〕",
+   "kind": "speech",
+   "meeting": "本会議 第25号",
+   "position": "議長",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X02520260626/3",
+   "speechId": "122115254X02520260626_003"
+  },
+  {
+   "chars": 148,
+   "date": "2026-06-26",
+   "excerpt": "これより会議を開きます。 日程第一 防衛省設置法等の一部を改正する法律案（内閣提出、衆議院送付）を議題といたします。 まず、委員長の報告を求めます。外交防衛委員長里見隆治君。 ───────────── 〔審査報告書及び議案は本号末尾に掲載〕 ───────────── 〔里見隆治君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第25号",
+   "position": "議長",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X02520260626/1",
+   "speechId": "122115254X02520260626_001"
+  },
+  {
+   "chars": 43,
+   "date": "2026-06-24",
+   "excerpt": "これにて質疑は終了いたしました。 本日はこれにて散会いたします。 午前十一時二十分散会",
+   "kind": "speech",
+   "meeting": "本会議 第24号",
+   "position": "議長",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X02420260624/17",
+   "speechId": "122115254X02420260624_017"
+  },
+  {
+   "chars": 17,
+   "date": "2026-06-24",
+   "excerpt": "山中泉君。 〔山中泉君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第24号",
+   "position": "議長",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X02420260624/13",
+   "speechId": "122115254X02420260624_013"
+  },
+  {
+   "chars": 19,
+   "date": "2026-06-24",
+   "excerpt": "三浦信祐君。 〔三浦信祐君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第24号",
+   "position": "議長",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X02420260624/9",
+   "speechId": "122115254X02420260624_009"
+  },
+  {
+   "chars": 19,
+   "date": "2026-06-24",
+   "excerpt": "山田吉彦君。 〔山田吉彦君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第24号",
+   "position": "議長",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X02420260624/6",
+   "speechId": "122115254X02420260624_006"
+  },
+  {
+   "chars": 52,
+   "date": "2026-06-24",
+   "excerpt": "ただいまの趣旨説明に対し、質疑の通告がございます。順次発言を許します。青木愛君。 〔青木愛君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第24号",
+   "position": "議長",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X02420260624/3",
+   "speechId": "122115254X02420260624_003"
+  },
+  {
+   "chars": 91,
+   "date": "2026-06-24",
+   "excerpt": "これより会議を開きます。 日程第一 防衛省設置法等の一部を改正する法律案（趣旨説明） 本案について提出者の趣旨説明を求めます。小泉進次郎防衛大臣。 〔国務大臣小泉進次郎君登壇、拍手〕",
+   "kind": "speech",
+   "meeting": "本会議 第24号",
+   "position": "議長",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122115254X02420260624/1",
+   "speechId": "122115254X02420260624_001"
+  },
+  {
    "chars": 26,
    "date": "2026-06-19",
    "excerpt": "本日はこれにて散会いたします。 午後零時二十七分散会",
