@@ -75,6 +75,11 @@ test("#711 conflictingRosterNames: 長さが違う・2 文字以上違う・完�
   assert.deepEqual(conflictingRosterNames(SAGA_ROSTER, roster), []);
   // 1 文字落ちた（部分列一致が拾う世界。#617/#648 の「字が落ちる」であって食い違いではない）
   assert.deepEqual(conflictingRosterNames("猪村恵子", roster), []);
+  // **長さの検査を外すと生き残る形**（変異 M3 で実測。これを書くまで 10 pass / 0 fail だった）:
+  // 末尾が落ちたうえに 1 字違う（`猪村理恵` は名簿の先頭 4 字と 1 字違い）。
+  // これは「字が落ちた」と「食い違い」が混ざった形で、**食い違いだと言い切る根拠が無い。**
+  // 長さが違うものを食い違いと呼ぶと、部分列一致（#617/#648）が扱う世界まで食い違い扱いになる。
+  assert.deepEqual(conflictingRosterNames("猪村理恵", roster), []);
   // 2 文字違う（別人の可能性が高く、1 字違いという根拠が無い）
   assert.deepEqual(conflictingRosterNames("猪村理恵美", roster), []);
   // 空文字は何とも比べない
