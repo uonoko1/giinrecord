@@ -11,8 +11,8 @@ import { multiplyMatrix, readLines, type Matrix, type PageGeometry, type Item } 
  * この PDF はすべての文字を setTextMatrix（位置の明示）＋ showText で置いているので、オペレータ列を歩けば
  * 1 文字ごとの正確な位置が取れる（推定ではない）。ここでは showText 1 回を 1 アイテムにする
  * （見出しの「令和８年定例会（２月）」のような 1 行のテキストは 1 回の showText、氏名・セルの 1 文字は 1 文字ずつ）。
- * 位置の前提が崩れる命令（moveText 系・回転や拡縮の入った text matrix・単位行列でない CTM）が出たら
- * 例外（黙って読み間違えない）。罫線は pdf-table.ts の readLines に任せる（CTM を掛ける。Issue #693 / #700）。
+ * 位置の前提が崩れる命令（moveText 系・生の `'` / `"`・0 でない word spacing・回転や拡縮の入った
+ * text matrix・単位行列でない CTM）が出たら例外（黙って読み間違えない。Issue #707）。罫線は pdf-table.ts の readLines に任せる（CTM を掛ける。Issue #693 / #700）。
  */
 export async function readGlyphPages(bytes: Buffer): Promise<PageGeometry[]> {
   const loadingTask = getDocument({ data: new Uint8Array(bytes), verbosity: 0 });
@@ -100,6 +100,19 @@ export function readGlyphPageOps(fnArray: ArrayLike<number>, argsArray: ArrayLik
       // **この枝は実データでは一度も通らない**ので、test/local-glyph-variants.test.ts 等の
       // 実物 PDF ではなく、オペレータ列を直接渡すテストでしか固定できない。
       throw new Error(`page ${pageNo}: unsupported text-positioning op (moveText/nextLine)`);
+    } else if (fn === OPS.nextLineShowText || fn === OPS.nextLineSetSpacingShowText) {
+      // `'` / `"`（次行送り＋表示）。**pdfjs の getOperatorList はここまで届けない**——
+      // `'` を nextLine + showText に、`"` を nextLine + setWordSpacing + setCharSpacing + showText に
+      // 分解して出す（実測 2026-09-09、手で組んだ PDF で確認。Issue #707）。
+      // 分解された形なら上の nextLine の枝が例外にするが、**pdfjs が分解をやめたら
+      // 何の枝にも当たらず黙って無視される**ので、生で来ても同じく止める。
+      throw new Error(`page ${pageNo}: unsupported next-line show-text op (' / ")`);
+    } else if (fn === OPS.setWordSpacing) {
+      // Tw: 空白グリフ 1 つごとに送り幅へ加算される（PDF 32000-1 9.3.3）。
+      // **この実装は Tw を送りに足していない**ので、0 でない Tw の下では x が左へ詰まる。
+      // 実測（2026-09-09、三重 5 本）: Tw は 0 回。空白グリフは 2 / 2 / 6 / 2 / 2 個あるので、
+      // Tw が付けば効く。**正しい足し方を実データで検証できないため、出さない側に倒す**（#700 と同じ判断）。
+      if ((args[0] as number) !== 0) throw new Error(`page ${pageNo}: non-zero word spacing (Tw ${args[0]}) not supported`);
     } else if (fn === OPS.showText) {
       // 文字の位置は Tm の e/f をそのままページ座標として使う。cm の下ではその前提が崩れる（#700）
       if (!isIdentity(ctm)) throw new Error(`page ${pageNo}: text under non-identity CTM [${ctm.join(",")}] not supported`);
