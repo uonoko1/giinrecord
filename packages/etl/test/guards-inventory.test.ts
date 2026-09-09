@@ -163,10 +163,16 @@ function rows(): Row[] {
  * 数え方: `guards.md` の表の行（見出しと罫線を除く）と、`防いでいるもの` 欄の
  * バッククォート内のうち**リポジトリ相対のパスに見えないもの**の総数。
  *
+ * **#711 で 60 行 / 118 anchor**——「一次資料どうしが氏名で食い違ったら、どちらかに寄せずに出さない」
+ * が 0 行だった（`grep` で 0 件。判断は `docs/research/local-assemblies.md` の 2,300 行の 1 行にしかなく、
+ * **索引に無い守りは、次にその県を実装する人に届かない**）。
+ * **下限は「今の実数」に合わせて上げること。** 上げずに緩いまま置くと、その差のぶんだけ
+ * 「行を消して黙らせる」余地が残る（実測: #711 の直前は実数 59 行 / 112 anchor に対して下限が 58 / 107 だった）。
+ *
  * 下限なので、守りが増えて行が増えるぶんには落ちない。**減ったら落ちる。**
  */
-const MIN_ROWS = 58;
-const MIN_ANCHORS = 107;
+const MIN_ROWS = 60;
+const MIN_ANCHORS = 118;
 
 /**
  * **索引から消えてはならない守り**（#662 で PO が「無い」と誤読した 6 件を必ず含む）。
@@ -198,6 +204,10 @@ const CORE_GUARDS: readonly string[] = [
   // 「空 memberId は unmatched に載っていなければ止める」の両方をここだけで持つ。
   "packages/etl/src/match-votes.ts", // resolveMember / tenureVerified（#3/#24/#230/#320）
   "packages/etl/src/dataset.ts", // SOURCE_HOST・unmatched の検証・estimated の形（#4/#219）
+  // #711: 一次資料どうしが氏名で食い違ったときに、どちらかへ寄せずに「食い違いだ」と分かる形で落とす。
+  // **1 文字違いを同一人物の根拠にした瞬間、利用者から検出できない虚偽になる**（本番名簿に
+  // 現職どうしの 1 文字違いが 3 組ある）。この test が消えたら、その歯止めが誰にも見えなくなる。
+  "packages/etl/test/local-name-source-conflict.test.ts",
 ];
 
 test("#662 索引そのものが在る（消えたら落ちる）", () => {

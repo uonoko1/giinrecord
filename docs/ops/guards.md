@@ -63,6 +63,7 @@ grep してから起票してください（**今日の 5 件はそこにあり�
 | 会派の態度が本人の投票として出る（国会側の実装） | `packages/etl/src/aggregate.ts` が衆院の会派態度を `estimated: true` の stance 行にし、`packages/etl/src/dataset.ts` が `stance row must have estimated: true` で型どおりかを検査する。テストは `packages/etl/test/aggregate.test.ts` の `記録するのは会派名であって本人ではない`（#72/#238） |
 | 名簿に無い会派で同姓同名を分けたつもりになる | `packages/etl/src/group-history.ts` の `groupAt`（`会派移動の時期を推定することはしない`）。食い違いは `packages/etl/src/match-votes.ts` の `groupMismatch` に残す（#24） |
 | 氏名が PDF の文字層で 1 文字落ちる | `packages/etl/src/sources/local/name-match.ts` の `matchBySubsequence`（部分列一致）。BMP 外の `𠮷` と康熙部首 `⾧` は `ITAIJI` 表で寄せる（#617/#648） |
+| **一次資料どうしが氏名で食い違う**（同じ議員が別の漢字で載る。佐賀 `猪村理恵子` U+7406 / `猪村利恵子` U+5229） | `packages/etl/src/sources/local/name-match.ts` の `localNameKey` は別字を畳まないので、どちらかに寄らず未突合に落ちる。**食い違いだと分かる形で落とす**のは同じファイルの `conflictingRosterNames`（名簿と1文字違いを名指しするだけで寄せない）と `sourceConflict`。運用者に見せるのは `packages/etl/src/local-assemblies.ts` の `describeUnmatched`（`do NOT pick one`）。テストは `packages/etl/test/local-name-source-conflict.test.ts` の `1 文字違いは同一人物の根拠にならない（本番名簿に現職どうしの組が 3 組ある）`（#711/#670/#569） |
 | 氏名が壊れているのに気付かず本番に出る | `packages/etl/src/local-assemblies.ts` の `kanaNameRatioExceeds`（かな長と氏名長の検算。#632）。`packages/etl/src/dataset.ts` が `members/index.json` にも掛ける |
 | 氏名正規化の規則が県ごとに勝手に分岐する | `packages/etl/test/name-normalization-table.test.ts` が `normalizeName` と `localNameKey` の畳み方を表として固定する（#581/#636） |
 | 会派の記録を本人の記録として見せる | `apps/web/app/routes/member-tabs.test.tsx` が `所属会派の記録（推定）本人の投票ではありません` を固定する（#238） |
