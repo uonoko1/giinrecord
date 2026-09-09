@@ -162,15 +162,61 @@ export function nonNameCharacters(nameText: string): string[] {
 }
 
 /**
- * 名簿に寄せられなかった氏名が「なぜ寄せられなかったか」（`LocalUnmatchedName.reason`。#680）。
+ * 名簿の中に、この氏名と**ちょうど 1 文字だけ違う**議員が居れば、その議員を出た順に返す（Issue #711）。
  *
- * **区別したいのは 2 つの別の出来事**——
- *   - **名簿に無い議員**（会期の途中で入れ替わった、名簿の取得が古い）→ `undefined`（これまでどおり）
- *   - **PDF の中で氏名の字が壊れている** → `"brokenGlyph"`
- * どちらも `unmatched.json` に落ちる（**落とす側は変えない。#569 のまま**）が、
- * **`unmatched.json` を見る運用者にとっては全く違う話**で、前者は名簿を直す、後者は議会に問い合わせる。
- * 理由を書かないと、後者が前者に見える（#680 の案A の欠点）。
+ * ## 何のためか——**一次資料どうしが氏名で食い違った**ことを名指しするため
+ *
+ * 実例（佐賀、#670 の実測）: 令和8年6月版 PDF が `猪村理恵子`（理 U+7406）、
+ * 令和6年2月版 PDF と議員一覧ページが `猪村利恵子`（利 U+5229）。
+ * **NFC でも異体字セレクタでもない、別の漢字である。** だから `localNameKey` は畳まないし、
+ * **畳んではいけない**（別字を畳むと別人の記録を作る。`ITAIJI` の docblock と #569）。
+ *
+ * ## **返り値を突き合わせに使ってはいけない**
+ *
+ * **「1 文字違い＝同一人物」ではない。** 実測（2026-09-09、本番の地方名簿 285 名）——
+ * **現職どうしで 1 文字違いの組が 3 組ある**:
+ *   宮城 `高橋 克也` / `高橋 宗也`、三重 `喜田 健児` / `津田 健児`、高知 `西森 美和` / `西森 雅和`。
+ * この 3 組のどれかに寄せた瞬間、**利用者から検出できない虚偽**になる（#569）。
+ * ここが返すのは**事実（1 文字違いの氏名が名簿に在る）だけ**で、**どちらが正しいかは決めない。**
+ *
+ * ## なぜ「1 文字」だけか（緩めない理由）
+ *
+ * 2 文字以上違えば「食い違い」と言う根拠が無い（別人でありうる）。**長さが違う場合も見ない**——
+ * それは字が落ちた側の話で、`matchBySubsequence`（部分列一致。#617/#648）が既に扱っている。
+ * 完全一致は当然この関数の対象外（食い違っていない）。
+ *
+ * 比較は `localNameKey` を通した後で行う（空白・異体字セレクタ・`ITAIJI` の差は食い違いではない）。
  */
-export function unmatchedReason(nameText: string): "brokenGlyph" | undefined {
-  return nonNameCharacters(nameText).length > 0 ? "brokenGlyph" : undefined;
+export function conflictingRosterNames(nameText: string, roster: readonly RosterEntry[]): { id: string; name: string }[] {
+  const key = [...localNameKey(nameText)];
+  if (key.length === 0) return [];
+  return asCandidates(roster.filter((m) => {
+    const other = [...localNameKey(m.name)];
+    if (other.length !== key.length) return false;
+    let diff = 0;
+    for (let i = 0; i < key.length; i++) if (key[i] !== other[i] && ++diff > 1) return false;
+    return diff === 1;
+  }));
+}
+
+/**
+ * 名簿に寄せられなかった氏名が「なぜ寄せられなかったか」（`LocalUnmatchedName.reason`。#680／#711）。
+ *
+ * **区別したいのは 3 つの別の出来事**——
+ *   - **名簿に無い議員**（会期の途中で入れ替わった、名簿の取得が古い）→ `undefined`（これまでどおり）
+ *   - **PDF の中で氏名の字が壊れている** → `"brokenGlyph"`（#680）
+ *   - **一次資料どうしが氏名で食い違っている** → `"sourceConflict"`（#711。佐賀 猪村理恵子/利恵子）
+ * どれも `unmatched.json` に落ちる（**落とす側は変えない。#569 のまま**）が、
+ * **`unmatched.json` を見る運用者にとっては全く違う話**で、
+ * 1 つ目は名簿を直す、2 つ目は文字層を疑う、3 つ目は**どちらが正しいかを議会に確かめる**。
+ * 理由を書かないと、後ろの 2 つが 1 つ目に見える（#680 の案A の欠点）。
+ *
+ * **`brokenGlyph` が先。** 字が壊れた氏名はたまたま名簿と 1 文字違いになりうる（`□村利恵子`）が、
+ * それは食い違いではなく文字化けで、**問い合わせる先が違う。**
+ *
+ * `roster` を渡さなければ（空配列）氏名だけで決まる `brokenGlyph` しか見ない。
+ */
+export function unmatchedReason(nameText: string, roster: readonly RosterEntry[] = []): "brokenGlyph" | "sourceConflict" | undefined {
+  if (nonNameCharacters(nameText).length > 0) return "brokenGlyph";
+  return conflictingRosterNames(nameText, roster).length > 0 ? "sourceConflict" : undefined;
 }

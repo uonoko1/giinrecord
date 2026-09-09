@@ -4,7 +4,7 @@ import type {
   Assembly, AssemblyId, AssemblySession, LocalAssemblyMeta, LocalMember, LocalMemberDetail, LocalRollCall, LocalRollCallSummary, LocalUnmatchedName, LocalVoteEntry, MemberAssemblyCount, MemberSummary,
 } from "@seiji-kiroku/shared";
 import { stableJson } from "./json.ts";
-import { unmatchedReason } from "./sources/local/name-match.ts";
+import { conflictingRosterNames, nonNameCharacters, unmatchedReason } from "./sources/local/name-match.ts";
 import { normalizeTitle } from "./sources/local/title-normalize.ts";
 import { MIYAGI_ASSEMBLY } from "./sources/local/miyagi/site.ts";
 import { runMiyagi } from "./sources/local/miyagi/index.ts";
@@ -129,6 +129,33 @@ function toVoteEntry(rc: LocalRollCall, vote: LocalRollCall["votes"][number]): L
   return { kind: "localVote", date: rc.date, rollCallId: rc.id, title: rc.title, vote: vote.value, sessionLabel: rc.sessionLabel, method: rc.method?.raw, result: rc.result, sourceUrl: rc.sourceUrl };
 }
 
+/**
+ * `unmatched.json` の 1 行を、運用者が**次に何をすればよいか**が分かる 1 行にする（#680／#711）。
+ *
+ * **`unmatched.json` に落とすだけでは「名簿に無い議員だ」と読まれる**（#680 の案A の欠点）。
+ * 理由ごとに、確かめる先が違う:
+ *   - 理由なし → 名簿を直す（任期途中で入れ替わった／名簿の取得が古い）
+ *   - `brokenGlyph` → PDF の文字層を疑う。**元の字は推定しない**（#569／#674）
+ *   - `sourceConflict` → **どちらの表記が正しいかを議会に確かめる。**
+ *     ここでも**どちらかに寄せない**——1 文字違いは同一人物の根拠にならない（`conflictingRosterNames`）。
+ *
+ * `local-cli.ts` は起動しただけで走るスクリプトなのでテストから import できない。
+ * **だからメッセージの組み立てはここに置く**（テストが読める側に置く。#680 の validate と同じ考え）。
+ */
+export function describeUnmatched(u: LocalUnmatchedName, roster: readonly { id: string; name: string }[]): string {
+  const parts = [`${u.nameText}（${u.group}）: ${u.rollCallIds.length} roll calls`];
+  if (u.candidates?.length) parts.push(`candidates (not chosen): ${u.candidates.map((c) => c.name).join(" / ")}`);
+  if (u.reason === "brokenGlyph") {
+    const chars = nonNameCharacters(u.nameText).map((c) => `${JSON.stringify(c)} U+${c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, "0")}`).join(" ");
+    parts.push(`the PDF's own text layer is broken here: ${chars} cannot be part of a name (not guessed back. #680)`);
+  }
+  if (u.reason === "sourceConflict") {
+    const near = conflictingRosterNames(u.nameText, roster).map((c) => `${c.name} (${c.id})`).join(" / ");
+    parts.push(`primary sources disagree on this name: the roster has ${near}, one character apart. ask the assembly which spelling is right; do NOT pick one (#711/#569)`);
+  }
+  return parts.join("; ");
+}
+
 export function buildLocalAssembly(input: LocalAssemblyInput): LocalAssemblyDataset {
   const ids = new Set<string>();
   for (const rc of input.rollCalls) {
@@ -172,7 +199,9 @@ export function buildLocalAssembly(input: LocalAssemblyInput): LocalAssemblyData
     .map((u) => {
       const c = candidates.get(`${u.nameText}\t${u.group}`);
       // 「なぜ寄せられなかったか」は全県が通るここで付ける（県ごとに書くと足し忘れが黙って落ちる。#680）
-      const reason = unmatchedReason(u.nameText);
+      // 名簿を渡すのは #711（一次資料どうしの食い違い）を見るため。**寄せるためではない**——
+      // 1 文字違いは同一人物の根拠にならない（本番名簿に現職どうしの組が 3 組ある）。
+      const reason = unmatchedReason(u.nameText, input.members);
       return { ...u, rollCallIds: [...u.rollCallIds].sort(cmp), ...(c ? { candidates: c } : {}), ...(reason ? { reason } : {}) };
     })
     .sort((a, b) => cmp(a.nameText, b.nameText) || cmp(a.group, b.group));
@@ -373,8 +402,8 @@ export async function validateLocalAssemblies(dir: string): Promise<string[]> {
     for (const u of unmatched) {
       for (const id of u.rollCallIds) unmatchedKeys.add(`${id}\t${u.nameText}`);
       // 候補（同姓が 2 人以上）は名簿の id を指す。空の配列は書かない（無ければ省略）
-      // reason は氏名から決まる（#680）。人手で書き換えても、県の実装が誤って付けても、ここで食い違いが出る
-      const expected = unmatchedReason(u.nameText);
+      // reason は氏名と名簿から決まる（#680／#711）。人手で書き換えても、県の実装が誤って付けても、ここで食い違いが出る
+      const expected = unmatchedReason(u.nameText, index);
       if (u.reason !== expected) v.push(`assemblies/${a.id}/unmatched.json ${u.nameText}: reason ${JSON.stringify(u.reason)} !== ${JSON.stringify(expected)} (氏名から決まる。#680)`);
       if ("candidates" in u) {
         if (!Array.isArray(u.candidates) || u.candidates.length === 0) v.push(`assemblies/${a.id}/unmatched.json ${u.nameText}: candidates must be a non-empty array when present`);
