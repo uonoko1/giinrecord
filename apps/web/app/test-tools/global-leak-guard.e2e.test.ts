@@ -45,11 +45,24 @@ function stripAnsi(s: string): string {
 /**
  * 本番の `vitest.config.ts` を継いだ設定（`include` だけ差し替え）で、見本 1 ファイルだけを走らせる。
  * 見本は `*.fixture.ts` なので、本体の `include`（`app/**\/*.test.{ts,tsx}`）には入らない。
+ *
+ * **渡している引数はどれも下の `expect` が読むもので、飾りではない**（#709 で vitest 4 に上げたときに書き換えた）:
+ *
+ * - `--reporter=default`: vitest 4 で **`basic` が消えた**（`--reporter` の選択肢から無くなり、
+ *   渡すと「Failed to load custom Reporter from basic」で**起動ごと落ちる**——テストの結果ではなく
+ *   vitest の使い方の間違いとして落ちるので、見張りの検査になっていない状態だった）。
+ *   v4 の `default` が v3 の `basic` と同じものを出す（`✓ app/test-tools/leak-fixtures/clean.fixture.ts (1 test)`）。
+ *   **ファイル名を出す reporter でないと、下の「見本が vitest に拾われていない」が検査にならない**
+ *   （`dot` は `·` しか出さないので不可。実測で確認済み）。
+ * - `--pool=forks --maxWorkers=1`: vitest 4 で **`--poolOptions.*` が CLI から消えた**
+ *   （`CACError: Unknown option --poolOptions`）。v3 の `--poolOptions.forks.singleFork` に当たるのは
+ *   v4 では `--maxWorkers=1`。**見本を 1 プロセスで直列に走らせる**ためのもので、
+ *   見張りはグローバルの前後差分を見る以上、並行させると別の見本の影響が混ざる。
  */
 function runFixture(name: string): { status: number; output: string } {
   const r = spawnSync(
     "npx",
-    ["vitest", "run", "-c", fixtureConfig, "--reporter=basic", "--pool=forks", "--poolOptions.forks.singleFork", `${fixtureDir}/${name}`],
+    ["vitest", "run", "-c", fixtureConfig, "--reporter=default", "--pool=forks", "--maxWorkers=1", `${fixtureDir}/${name}`],
     { cwd: webRoot, encoding: "utf8", env: { ...process.env, CI: "1" }, timeout: 180_000 },
   );
   return { status: r.status ?? -1, output: stripAnsi(`${r.stdout ?? ""}\n${r.stderr ?? ""}`) };
