@@ -61,6 +61,96 @@ scripts/po/board-set.sh <issue> <Backlog|Ready|In Progress|In Review|Done>
 （例: 2026-09-09 の #669 ボードの運用、#675 #537 の対象が増えたことの反映）。
 **載せるために Issue を作ると、ボードが PR と 1 対 1 になり、PBI の単位が失われる。**
 
+### マージしたら Issue も閉じる（2026-09-09 に落とした）
+
+**ボードを動かすようになった翌日、今度は「マージと Issue のクローズ」が繋がっていなかった。**
+
+```
+#688  PR #690 が 2026-09-08 20:03 にマージ済み → Issue は OPEN のまま
+#694  PR #704 が 2026-09-08 22:58 にマージ済み → Issue は OPEN のまま
+```
+
+**PO はこの状態で #688 に新しい担当者を立ててしまった。**
+担当者が着手前に「同じ Issue のブランチが既にある」と気づいて止めた（`WORKING_AGREEMENT.md` の #512）。
+**気づかなければ、自治体のサーバーに 2 度目のリクエストを送っていた。**
+
+**Sprint 26 で落としたものと形が同じである**——道具（`board-set.sh`）は使い始めたが、
+**「マージ → Done → Issue クローズ」の 3 つ目が繋がっていなかった。**
+
+**やること**: **`merge-when-green.sh` でマージしたら、その場で 3 つ全部やる。**
+
+```sh
+scripts/po/merge-when-green.sh <pr>
+scripts/po/board-set.sh <issue> Done
+gh issue close <issue> --comment "..."   # 何が入ったか・残る留保を書く
+```
+
+**残る留保があるなら、クローズのコメントに書いて別 Issue を起票する。**
+**「Issue を開けたままにしておく」で留保を表現しない**——
+**開いたままの Issue は「まだ誰もやっていない」に見え、担当者を二重に立てる原因になる。**
+
+### `In Review` を飛ばしている（2026-09-09 に落とした。3 つ目）
+
+**「マージしたら Issue も閉じる」を書いた同じ日に、今度は `In Review` を一度も使っていなかった。**
+
+**実測**（Sprint 27 の PBI 5 件。PR が出た時刻は `gh pr list --json createdAt`）:
+
+```
+#707  PR #712 が 2026-09-08 23:59 に出た → In Progress のまま
+#705  PR #713 が 2026-09-09 00:01 に出た → In Progress のまま
+#711  PR #716 が 2026-09-09 00:14 に出た → PO が気づいたのは 00:40 頃
+#710  PR #719 が 2026-09-09 00:18 に出た → 同上
+```
+
+**5 件中 2 件しか `In Review` を通らず、その 2 件も PR から 20 分以上あとだった。**
+
+**なぜ落ちるか**: **PR が出たことを PO が知るのは、担当者の完了報告か Monitor の通知である。**
+**担当者は「PR を出して CI が緑になるまで見届けてから報告」するので、報告が来た時点で既にマージできる。**
+**つまり `In Review` に置ける時間が短く、置く動機が働かない。**
+
+**それでも置く理由**: **ボードが「今どこまで」を答えるためである。**
+**`In Progress` が 8 件並んでいると、着手したばかりのものと PR が出て緑のものが区別できない。**
+**ユーザーの指摘（「カンバンみても今まで何をやってたかと今何をやってるかが分からん」）は、まさにこれである。**
+
+**やること**: **担当者の完了報告を受けたら、マージの前に `In Review` に動かす。**
+
+```sh
+scripts/po/board-set.sh <issue> "In Review"   # 報告を受けたら（＝マージの前に）
+scripts/po/merge-when-green.sh <pr>            # マージは非同期に走る
+scripts/po/board-set.sh <issue> Done           # マージ後
+gh issue close <issue> --comment "..."         # Closes #N で自動なら不要
+```
+
+**`merge-when-green.sh` は `update-branch` から CI 再実行まで待つので数分かかる。**
+**その間ボードが `In Review` であることに意味がある**——**「緑で、マージ待ち」という状態が実在する。**
+
+**同じ形が 3 回続いていることに注意**（Sprint 26: ボードを動かさない → Sprint 27: 閉じ忘れ → これ）。
+**道具（`board-set.sh`）はあり、書いてもある。実行の側が抜ける。**
+
+**`board-set.sh` に渡すのは Issue 番号である。PR 番号を渡すと失敗する**（実測）:
+
+```
+$ scripts/po/board-set.sh 719 "In Review"
+gh: Could not resolve to an Issue with the number of 719.
+```
+
+**ボードに載るのは PBI（Issue）なので、これは正しい挙動である**（上の「Issue の無い PR は載せない」）。
+**Issue と PR は番号を共有するので、取り違えやすい。**
+
+**確かめ方**（PO が定期的に走らせる）:
+
+```sh
+# open な Issue のうち、タイトルに #N を含むマージ済み PR があるもの
+for n in $(gh issue list --state open --limit 60 --json number --jq '.[].number'); do
+  gh pr list --state merged --search "$n in:title" --limit 5 \
+    --json number,title --jq ".[] | select(.title | test(\"#$n\\\\b\")) | \"issue #$n ← PR#\(.number)\""
+done
+```
+
+**引っかかっても、それだけでは閉じてよいとは限らない**——
+#537 / #610 / #654 / #543 は「文書だけ進んで人間の作業が残っている」ので **open が正しい**。
+**PR が何をマージしたのかを読んでから判断すること。**
+
 **迷ったら「これは誰かに渡せる仕事か」で決める。** **渡せるなら PBI、渡せないなら PR だけ。**
 
 ## 一度に大量に登録するとレート制限に当たる（2026-09-09 に実際に当たった）
