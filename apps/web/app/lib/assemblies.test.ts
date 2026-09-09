@@ -45,14 +45,15 @@ describe("vote-disclosure.json（#128 の調査表から機械的に起こした
     expect(VOTE_DISCLOSURE.source).toBe("docs/research/local-assemblies.md");
     expect(disclosure.rows).toHaveLength(67);
   });
-  it("集計は調査の要約と一致する（都道府県 16/16/15/0、政令市 6/14/0/0）", () => {
+  it("集計は調査の要約と一致する（都道府県 16/17/14/0、政令市 6/14/0/0）", () => {
     const count = (kind: VoteDisclosureRow["kind"], status: VoteDisclosureRow["status"]) => rows.filter((r) => r.kind === kind && r.status === status).length;
-    expect(DISCLOSURE_STATUSES.map((s) => count("prefectural", s))).toEqual([16, 16, 15, 0]);
+    // #710 で愛知が 総数のみ → 会派別 に動いた（会派別 16→17、総数のみ 15→14）。
+    expect(DISCLOSURE_STATUSES.map((s) => count("prefectural", s))).toEqual([16, 17, 14, 0]);
     expect(DISCLOSURE_STATUSES.map((s) => count("municipal", s))).toEqual([6, 14, 0, 0]);
   });
   it("#670 で「不明」は 0 件になった（表の行を数えた数と一致する）", () => {
     // #128 は 7 件、#671 の後も 7 件残っていた。#670 で 7 件すべて確定させた。
-    // 「不明が 0」は「全部わかった」ではない（総数のみ 3 県は会議録本文を見ていない。docs/research/local-assemblies.md）。
+    // 「不明が 0」は「全部わかった」ではない（総数のみ 2 県も会議録の全会期は見ていない。docs/research/local-assemblies.md）。
     expect(rows.filter((r) => r.status === "不明")).toHaveLength(0);
   });
   it("#670 で調べた 7 県は「到達できず」を名乗らず、4 値のどれかに確定している", () => {
@@ -72,7 +73,7 @@ describe("vote-disclosure.json（#128 の調査表から機械的に起こした
     expect(disclosureFor("pref-17")).toMatchObject({ label: "石川", status: "会派別" });
     expect(disclosureFor("pref-01")).toMatchObject({ label: "北海道", status: "総数のみ" });
     expect(disclosureFor("pref-20")).toMatchObject({ label: "長野", status: "総数のみ" });
-    expect(disclosureFor("pref-23")).toMatchObject({ label: "愛知", status: "総数のみ" });
+    // 愛知は #710 で 会派別 に動いた（下の #710 の it を見よ）。
   });
   // #688: #670 は「総数のみ 3 県は会議録を 1 本も開いていない」と留保を残した。
   // 起立採決の会議録に起立者名が載っていればそれは個人別の記録なので、3 県とも本会議の会議録本文まで見た。
@@ -91,15 +92,30 @@ describe("vote-disclosure.json（#128 の調査表から機械的に起こした
       expect(row!.note, id).toMatch(/氏名も人数も無い/);
     }
   });
-  it("#688: 愛知は robots.txt に阻まれて会議録に到達していない（到達できなかったことを隠さない）", () => {
+  // #710: #688 は「県サイト側に会議録 PDF は無い」で止まったが、探した範囲を書いていなかった。
+  // 今回 /site/gikai/ 配下を全ページ辿ったところ、会議録は依然として無い一方で、
+  // 日程ページ（#670・#688 のどちらも開いていなかった）に「議案ごとの各会派の態度」PDF があった。
+  it("#710: 愛知は 会派別（会派ごとの ○× を PDF 本文で確認した）", () => {
     const row = disclosureFor("pref-23");
     expect(row).toBeDefined();
-    expect(row!.status).toBe("総数のみ");
-    // 北海道・長野と違い「確認した」と書いてはならない。
+    expect(row!.status).toBe("会派別");
+    // 表題ではなく PDF の本文を開いたこと。
+    expect(row!.note).toMatch(/PDF 本文を確認（2026-09-09、#710）/);
+    // 会派名と凡例を原文で引くこと（「態度」という語だけでは賛否かどうか分からない）。
+    expect(row!.note).toMatch(/各会派の態度/);
+    expect(row!.note).toMatch(/○…賛成、×…反対/);
+    // 無所属は人数の集計で、個人名は無い——だから 公開 ではない。ここを落とすと別人の記録になる。
+    expect(row!.note).toMatch(/無所属/);
+    expect(row!.note).toMatch(/人数/);
+    expect(row!.note).not.toMatch(/議員ごと|個人票/);
+    // 出典 URL も日程ページに移す（結果概要ページにこの PDF は無い）。
+    expect(row!.sourceUrl).toBe("https://www.pref.aichi.jp/site/gikai/teirei-rinji-nittei.html");
+  });
+  it("#710: 愛知の会議録には今も到達していない（robots.txt。到達できなかったことを隠さない）", () => {
+    const row = disclosureFor("pref-23");
     expect(row!.note).not.toMatch(/会議録本文を確認/);
     expect(row!.note).toMatch(/robots\.txt/);
     expect(row!.note).toMatch(/Disallow: \//);
-    expect(row!.note).toMatch(/#688/);
   });
   it("#671 で PDF 本文を開いた 5 件は「表題から分類した」を名乗らない", () => {
     for (const id of ["pref-28", "pref-34", "pref-43", "city-22100", "city-40100"]) {
