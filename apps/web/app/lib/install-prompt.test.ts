@@ -5,9 +5,17 @@ import { INSTALL_PROMPT_EVENT, INSTALL_PROMPT_KEY, installPromptInit, useInstall
 type InstallWindow = Window & { [INSTALL_PROMPT_KEY]?: BeforeInstallPromptEvent };
 const w = () => window as InstallWindow;
 
+/**
+ * `prompt` の型を `ReturnType<typeof vi.fn>` ではなく**呼び出しの形まで**書く（#709）。
+ * vitest 4 で素の `vi.fn` は `Mock<Procedure | Constructable>` に解決するようになり、
+ * `BeforeInstallPromptEvent` の `prompt(): Promise<void>` に代入できない（TS2322 が 6 件）。
+ * ここで型引数を渡すと `Mock<() => Promise<void>>` になり、**本物の契約と同じ形**になる。
+ * 型を緩める（`as never` など）のではなく、**本番の interface と一致させて**通していることに注意——
+ * `prompt` の戻り値が `Promise<void>` でなくなれば、ここが落ちる。
+ */
 function makeEvent(outcome: "accepted" | "dismissed" = "accepted") {
   const e = new Event("beforeinstallprompt", { cancelable: true }) as Event & {
-    prompt: ReturnType<typeof vi.fn>;
+    prompt: ReturnType<typeof vi.fn<() => Promise<void>>>;
     userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
   };
   e.prompt = vi.fn(() => Promise.resolve());
