@@ -14,6 +14,7 @@ import { multiplyMatrix, readLines, type Matrix, type PageGeometry, type Item } 
  * 三重の glyphs.ts と同じ考え方だが、こちらの PDF は行送りに moveText（Td）も使うので、
  * Td/TD/T* は「直前の行頭からの相対移動」として仕様どおり畳み込む（三重は Tm だけを前提に例外にしている）。
  * 回転・拡縮の入った text matrix、単位行列でない CTM の下の文字が出たら例外（黙って読み間違えない）。
+ * 生の `'` / `"`（次行送り＋表示）と 0 でない word spacing（Tw）も例外（Issue #707）。
  * 罫線は pdf-table.ts の readLines に任せる（CTM を掛ける。Issue #693 / #700）。
  */
 export async function readGlyphPages(bytes: Buffer): Promise<PageGeometry[]> {
@@ -66,6 +67,20 @@ export function readGlyphPageOps(fnArray: ArrayLike<number>, argsArray: ArrayLik
   let fontSize = 0;
   let charSpacing = 0;
   let hScale = 1;
+  /**
+   * 行送り（T* が使う）。**初期値 0 は PDF 32000-1 の 9.3.5 が定める既定値**（Issue #703）。
+   *
+   * **実データでは、この初期値も leading 自体も一度も読まれない。**
+   * 実測（2026-09-09、高知 2 本・三重 5 本のフィクスチャ）: **`T*` も `TD` も `TL` も 0 回**。
+   * 高知は行送りに `Td`（1109 回 / 1042 回）を使い、`Td` は行頭を置き直すので leading を読まない。
+   * （Issue #703 は当初「`T*` の前に必ず `TD`/`TL` を出すから初期値が読まれない」としていたが、
+   * 追試の結果それは誤りで、**`T*` 自体が 1 回も出てこない**のが本当の理由だった。）
+   *
+   * **だから、この値を守るテストは実物の PDF では書けない。**
+   * `test/local-glyphs-leading.test.ts` が readGlyphPageOps にオペレータ列を直接渡して固定している
+   * （初期値を 999 に変えると、そこの 2 件が落ちる。実測: 変えても県ごとの PDF テスト 13 件は全部通る）。
+   * **この段落を消すと、あちらのテストが「実データに無い形を守る不要なもの」に見えて消される。**
+   */
   let leading = 0;
   // 現在のテキスト位置（tx, ty）と行頭（lx, ly）。Td/TD/T* は行頭からの相対移動
   let tx = 0;
@@ -118,6 +133,20 @@ export function readGlyphPageOps(fnArray: ArrayLike<number>, argsArray: ArrayLik
       ly -= leading;
       tx = lx;
       ty = ly;
+    } else if (fn === OPS.nextLineShowText || fn === OPS.nextLineSetSpacingShowText) {
+      // `'` / `"`（次行送り＋表示）。**pdfjs の getOperatorList はここまで届けない**——
+      // `'` を nextLine + showText に、`"` を nextLine + setWordSpacing + setCharSpacing + showText に
+      // 分解して出す（実測 2026-09-09、手で組んだ PDF で確認。Issue #707）。
+      // だからこの枝は実データでも自作 PDF でも通らないが、**pdfjs が分解をやめたら
+      // 何の枝にも当たらず黙って無視され、行送りを無視した位置で文字を読む**（別の議員の欄に記号が入る）。
+      // 分解された形なら上の nextLine の枝が正しく処理するので、**生で来たら読まずに止める**（#569）。
+      throw new Error(`page ${pageNo}: unsupported next-line show-text op (' / ")`);
+    } else if (fn === OPS.setWordSpacing) {
+      // Tw: 空白グリフ 1 つごとに送り幅へ加算される（PDF 32000-1 9.3.3）。
+      // **この実装は Tw を送りに足していない**ので、0 でない Tw の下では x が左へ詰まる。
+      // 実測（2026-09-09、高知 2 本・三重 5 本）: Tw は 0 回。空白グリフは高知に 62 / 61 個あるので、
+      // Tw が付けば効く。**正しい足し方を実データで検証できないため、出さない側に倒す**（#700 と同じ判断）。
+      if ((args[0] as number) !== 0) throw new Error(`page ${pageNo}: non-zero word spacing (Tw ${args[0]}) not supported`);
     } else if (fn === OPS.showText) {
       // 文字の位置は Tm / Td の値をそのままページ座標として使う。cm の下ではその前提が崩れる（#700）
       if (!isIdentity(ctm)) throw new Error(`page ${pageNo}: text under non-identity CTM [${ctm.join(",")}] not supported`);
