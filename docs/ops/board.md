@@ -61,6 +61,48 @@ scripts/po/board-set.sh <issue> <Backlog|Ready|In Progress|In Review|Done>
 （例: 2026-09-09 の #669 ボードの運用、#675 #537 の対象が増えたことの反映）。
 **載せるために Issue を作ると、ボードが PR と 1 対 1 になり、PBI の単位が失われる。**
 
+### マージしたら Issue も閉じる（2026-09-09 に落とした）
+
+**ボードを動かすようになった翌日、今度は「マージと Issue のクローズ」が繋がっていなかった。**
+
+```
+#688  PR #690 が 2026-09-08 20:03 にマージ済み → Issue は OPEN のまま
+#694  PR #704 が 2026-09-08 22:58 にマージ済み → Issue は OPEN のまま
+```
+
+**PO はこの状態で #688 に新しい担当者を立ててしまった。**
+担当者が着手前に「同じ Issue のブランチが既にある」と気づいて止めた（`WORKING_AGREEMENT.md` の #512）。
+**気づかなければ、自治体のサーバーに 2 度目のリクエストを送っていた。**
+
+**Sprint 26 で落としたものと形が同じである**——道具（`board-set.sh`）は使い始めたが、
+**「マージ → Done → Issue クローズ」の 3 つ目が繋がっていなかった。**
+
+**やること**: **`merge-when-green.sh` でマージしたら、その場で 3 つ全部やる。**
+
+```sh
+scripts/po/merge-when-green.sh <pr>
+scripts/po/board-set.sh <issue> Done
+gh issue close <issue> --comment "..."   # 何が入ったか・残る留保を書く
+```
+
+**残る留保があるなら、クローズのコメントに書いて別 Issue を起票する。**
+**「Issue を開けたままにしておく」で留保を表現しない**——
+**開いたままの Issue は「まだ誰もやっていない」に見え、担当者を二重に立てる原因になる。**
+
+**確かめ方**（PO が定期的に走らせる）:
+
+```sh
+# open な Issue のうち、タイトルに #N を含むマージ済み PR があるもの
+for n in $(gh issue list --state open --limit 60 --json number --jq '.[].number'); do
+  gh pr list --state merged --search "$n in:title" --limit 5 \
+    --json number,title --jq ".[] | select(.title | test(\"#$n\\\\b\")) | \"issue #$n ← PR#\(.number)\""
+done
+```
+
+**引っかかっても、それだけでは閉じてよいとは限らない**——
+#537 / #610 / #654 / #543 は「文書だけ進んで人間の作業が残っている」ので **open が正しい**。
+**PR が何をマージしたのかを読んでから判断すること。**
+
 **迷ったら「これは誰かに渡せる仕事か」で決める。** **渡せるなら PBI、渡せないなら PR だけ。**
 
 ## 一度に大量に登録するとレート制限に当たる（2026-09-09 に実際に当たった）
