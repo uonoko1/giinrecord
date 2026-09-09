@@ -14,6 +14,7 @@ import { multiplyMatrix, readLines, type Matrix, type PageGeometry, type Item } 
  * 三重の glyphs.ts と同じ考え方だが、こちらの PDF は行送りに moveText（Td）も使うので、
  * Td/TD/T* は「直前の行頭からの相対移動」として仕様どおり畳み込む（三重は Tm だけを前提に例外にしている）。
  * 回転・拡縮の入った text matrix、単位行列でない CTM の下の文字が出たら例外（黙って読み間違えない）。
+ * 生の `'` / `"`（次行送り＋表示）と 0 でない word spacing（Tw）も例外（Issue #707）。
  * 罫線は pdf-table.ts の readLines に任せる（CTM を掛ける。Issue #693 / #700）。
  */
 export async function readGlyphPages(bytes: Buffer): Promise<PageGeometry[]> {
@@ -132,6 +133,20 @@ export function readGlyphPageOps(fnArray: ArrayLike<number>, argsArray: ArrayLik
       ly -= leading;
       tx = lx;
       ty = ly;
+    } else if (fn === OPS.nextLineShowText || fn === OPS.nextLineSetSpacingShowText) {
+      // `'` / `"`（次行送り＋表示）。**pdfjs の getOperatorList はここまで届けない**——
+      // `'` を nextLine + showText に、`"` を nextLine + setWordSpacing + setCharSpacing + showText に
+      // 分解して出す（実測 2026-09-09、手で組んだ PDF で確認。Issue #707）。
+      // だからこの枝は実データでも自作 PDF でも通らないが、**pdfjs が分解をやめたら
+      // 何の枝にも当たらず黙って無視され、行送りを無視した位置で文字を読む**（別の議員の欄に記号が入る）。
+      // 分解された形なら上の nextLine の枝が正しく処理するので、**生で来たら読まずに止める**（#569）。
+      throw new Error(`page ${pageNo}: unsupported next-line show-text op (' / ")`);
+    } else if (fn === OPS.setWordSpacing) {
+      // Tw: 空白グリフ 1 つごとに送り幅へ加算される（PDF 32000-1 9.3.3）。
+      // **この実装は Tw を送りに足していない**ので、0 でない Tw の下では x が左へ詰まる。
+      // 実測（2026-09-09、高知 2 本・三重 5 本）: Tw は 0 回。空白グリフは高知に 62 / 61 個あるので、
+      // Tw が付けば効く。**正しい足し方を実データで検証できないため、出さない側に倒す**（#700 と同じ判断）。
+      if ((args[0] as number) !== 0) throw new Error(`page ${pageNo}: non-zero word spacing (Tw ${args[0]}) not supported`);
     } else if (fn === OPS.showText) {
       // 文字の位置は Tm / Td の値をそのままページ座標として使う。cm の下ではその前提が崩れる（#700）
       if (!isIdentity(ctm)) throw new Error(`page ${pageNo}: text under non-identity CTM [${ctm.join(",")}] not supported`);
