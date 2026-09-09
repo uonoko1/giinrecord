@@ -208,10 +208,10 @@
       "assemblyId": "pref-23",
       "kind": "prefectural",
       "label": "愛知",
-      "status": "総数のみ",
-      "format": "PDF + テキスト",
-      "sourceUrl": "https://www.pref.aichi.jp/site/gikai/kekka-gaiyo.html",
-      "note": "令和8年6月定例議会。議会ニュース PDF（8 ページ・文字層あり）と県議会だより テキスト版を確認（2026-09-09、#670）: どちらも「すべて原案のとおり可決又は同意されました」の形で賛否の内訳が無い。個人名が出るのは 質問者・議案質疑者・討論者だけ。県議会サイトの分類一覧にも賛否の項目が無い。会議録本文には到達していない（2026-09-09、#688）: 会議録システム www.pref.aichi.dbsr.jp の robots.txt が「User-agent: * / Disallow: /」で、許可は / と /index.php のみ。県サイト側に会議録の PDF は無い。したがって起立者名が載るかどうかは確かめられていない"
+      "status": "会派別",
+      "format": "PDF（index は HTML）",
+      "sourceUrl": "https://www.pref.aichi.jp/site/gikai/teirei-rinji-nittei.html",
+      "note": "「議案ごとの各会派の態度」PDF 本文を確認（2026-09-09、#710）: 表頭が「議 案 番 号／件 名／自 民／民 主／公 明／減 税／無 所 属」、凡例は「各会派の態度：○…賛成、×…反対」。無所属の欄は「○（8人）×（1人）」のように人数の集計で、議員の氏名は無い。注記に「議案等の採決を行う本会議に先立って開かれる議会運営委員会で、各会派及び無所属議員の態度について、確認した内容」とある。日程ページ（teirei-rinji-nittei.html）と過去 6 会期の nittei-*.html すべてにこの PDF がある。結果概要ページ側は 議会ニュース PDF と県議会だより テキスト版のみで賛否の内訳が無い（2026-09-09、#670）。会議録本文には今も到達していない（2026-09-09、#688／#710）: 会議録システム www.pref.aichi.dbsr.jp の robots.txt が「User-agent: * / Disallow: /」で、許可は / と /index.php のみ。県サイト側の /site/gikai/ 配下 57 ページを辿ったが会議録は無く、印刷物の会議録は議会図書室等で閲覧する形（koho.html）"
     },
     {
       "assemblyId": "pref-24",
