@@ -413,7 +413,7 @@
    "bills": 0,
    "questions": 83,
    "rollcalls": 287,
-   "speeches": 496
+   "speeches": 506
   },
   "current": true,
   "district": "宮城",
@@ -702,7 +702,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 287,
-   "speeches": 313
+   "speeches": 316
   },
   "current": true,
   "district": "比例",
@@ -770,7 +770,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 287,
-   "speeches": 310
+   "speeches": 321
   },
   "current": true,
   "district": "比例",
@@ -1025,7 +1025,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 287,
-   "speeches": 375
+   "speeches": 384
   },
   "current": true,
   "district": "比例",
@@ -1654,7 +1654,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 287,
-   "speeches": 260
+   "speeches": 264
   },
   "current": true,
   "district": "宮城",
@@ -1807,7 +1807,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 287,
-   "speeches": 345
+   "speeches": 374
   },
   "current": true,
   "district": "福岡",
@@ -2351,7 +2351,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 287,
-   "speeches": 523
+   "speeches": 534
   },
   "current": true,
   "district": "比例",
@@ -2589,7 +2589,7 @@
    "bills": 0,
    "questions": 3,
    "rollcalls": 287,
-   "speeches": 506
+   "speeches": 516
   },
   "current": true,
   "district": "比例",
@@ -2742,7 +2742,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 287,
-   "speeches": 528
+   "speeches": 533
   },
   "current": true,
   "district": "山形",
@@ -3201,7 +3201,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 287,
-   "speeches": 656
+   "speeches": 680
   },
   "current": true,
   "district": "静岡",
@@ -3575,7 +3575,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 287,
-   "speeches": 289
+   "speeches": 298
   },
   "current": true,
   "district": "広島",
@@ -4204,7 +4204,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 151,
-   "speeches": 92
+   "speeches": 104
   },
   "current": true,
   "district": "比例",
@@ -4238,7 +4238,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 151,
-   "speeches": 39
+   "speeches": 44
   },
   "current": true,
   "district": "比例",
@@ -4578,7 +4578,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 151,
-   "speeches": 161
+   "speeches": 178
   },
   "current": true,
   "district": "比例",
@@ -4646,7 +4646,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 151,
-   "speeches": 175
+   "speeches": 184
   },
   "current": true,
   "district": "愛知",
@@ -8888,7 +8888,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 1210
+   "speeches": 1238
   },
   "current": true,
   "district": "奈良2",
@@ -9160,7 +9160,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 4
+   "speeches": 6
   },
   "current": true,
   "district": "茨城1",
@@ -10008,7 +10008,7 @@
    "bills": 0,
    "questions": 0,
    "rollcalls": 0,
-   "speeches": 31
+   "speeches": 32
   },
   "current": true,
   "district": "北海道4",
