@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { parseVotePdf, trailingVoteSymbols, legendOf, UNKNOWN_CELL, UNKNOWN_LEGEND, type VotePdf } from "../src/sources/local/shiga/votes-pdf.ts";
+import { parseVotePdf, readVoteCells, trailingVoteSymbols, legendOf, UNKNOWN_CELL, UNKNOWN_LEGEND, type Grid, type VotePdf } from "../src/sources/local/shiga/votes-pdf.ts";
 import { bandIndex, cluster, readPages, within, type Item } from "../src/sources/local/pdf-table.ts";
 import { nonNameCharacters } from "../src/sources/local/name-match.ts";
 
@@ -77,6 +77,22 @@ test("#741 parseVotePdf: **記号帯が 2 アイテムに割れても議長が�
   }
 });
 
+test("#741 parseVotePdf: **凡例は PDF ごとに読む。`-` の意味が会期で違う**（Kg220、#694）", async () => {
+  const pdf = await parseVotePdf(fixture("Kg220_240424-sanpi.pdf"));
+  // **もう 1 つの凡例**（147 本中 4 本）。`-` が「表決に参加していない」ではなく**「欠席」**を意味し、
+  // **`退`（退席）という記号がある。** **決め打ちにすると、この 4 本で `-` に違う意味を当てる。**
+  assert.deepEqual(pdf.legend.votes, { "-": "欠席", "議": "議長（表決権なし）", "退": "退席" });
+  // Kg907 の凡例（`○`「賛成」・`×`「反対」・`－`「表決に参加していない」）とは**別物**
+  assert.equal("○" in pdf.legend.votes, false, "この本の凡例に ○ は無い（決め打ちの凡例が混ざっている）");
+  assert.equal(pdf.members.length, 47);
+  assert.equal(pdf.unknownCells, 0);
+  // **凡例に無い記号（`○`）が本文に出ても、票は落とさない**——読めた事実は残し、意味だけ不明にする
+  const raws = new Set(pdf.rows.flatMap((r) => r.cells));
+  assert.ok(raws.has("○"), "本文に ○ が無ければこの確認は空回りしている");
+  assert.equal(legendOf("○", pdf.legend.votes), UNKNOWN_LEGEND);
+  assert.equal(legendOf("議", pdf.legend.votes), "議長（表決権なし）");
+});
+
 test("#741 parseVotePdf: **議決結果が記号と同じアイテムに入る型**（Kg280、#694）", async () => {
   const pdf = await parseVotePdf(fixture("Kg280_sanpi-250924.pdf"));
   assert.equal(pdf.members.length, 46);
@@ -98,7 +114,10 @@ test("#741 parseVotePdf: **2 ページ目で氏名が消える列を 1 ページ
   const pdf = await parseVotePdf(fixture("Kg693_sanpi-040318.pdf"));
   assert.equal(pdf.members.length, 42);
   // **氏名の無い列が 1 つも無いこと。** この本の 2 ページ目には 41 人ぶんの氏名があり
-  // （「氏名帯が空」ではない）、欠けるのは 1 列だけ。**「空のときだけ 1 ページ目」では直らない**（#718）
+  // （「氏名帯が空」ではない）、欠けるのは 1 列だけ（#718）。
+  // **いまの実装では議員の並びを 1 ページ目からしか取らない**ので、2 ページ目の欠けた氏名帯は
+  // 出力に届かない（`readMembers` の「空の列だけ借りる」枝は実測 147 本で 1 度も走らない）。
+  // **ここが見ているのは「欠落が出力に出ないこと」**で、どちらの守りで防いでいるかではない。
   assert.equal(pdf.members.filter((m) => m.nameText === "").length, 0);
   assert.equal(pdf.members[23].nameText, "角 田 航 也");
   // 2 ページ目の行でも、その列に票が入っている
@@ -238,4 +257,51 @@ test("#741 **この検算は順序不変ではない**——記号を 1 列回�
       assert.equal(m.near, 0, `${name} shift=${shift}: ${m.near} 対が半セル未満のまま（この検算は順序不変）`);
     }
   }
+});
+
+/* ---------- 「数が合わなければ置かない」——実データには出ないが、最後の砦 ---------- */
+
+/**
+ * **記号の個数が議員の列の数と合わない行を、押し込んで置かないこと**（#689）。
+ *
+ * **実データ 147 本ではこの枝は 1 度も走らない**（この行を消しても 144 本の出力が
+ * 1 バイトも変わらない。実測）。**それでも直接測る**——ここが緩むと
+ * **ずれた 1 列ぶん全員が別人の票になる**（#569 の「利用者から検出できない虚偽」）。
+ * **実データに出ないことは、守らなくてよい理由にならない**——次の会期で記号が 1 つ増減した瞬間に効く。
+ */
+const item = (str: string, x: number, w: number, cy = 100): Item => ({ str, x, y: cy - 3, w, h: 6, cx: x + w / 2, cy });
+const grid4 = (n: number, left = 100, cell = 10): Grid => ({
+  top: 200, bodyTop: 150, bottom: 50,
+  rowLines: [150, 50], left: 0,
+  voteCols: Array.from({ length: n + 1 }, (_, i) => left + i * cell),
+  leftCols: [0, left], headerLines: [], nameBottom: 150,
+});
+
+const symbolRun = (n: number, ch = "○") => Array.from({ length: n }, () => ch).join(" ");
+
+test("#741 readVoteCells: **記号の個数が議員の列の数と合わなければ全セル不明**（推定しない。#689）", () => {
+  const g = grid4(12); // 議員 12 名、列は 100..220（幅 10）
+  // ちょうど 12 個 → 置く
+  const twelve = readVoteCells([item(symbolRun(12), 100, 120)], g, [], 12);
+  assert.deepEqual(twelve, Array.from({ length: 12 }, () => "○"));
+  // **11 個しか無い → 全セル不明。** 11 個を 12 列に「詰めて」置くと、
+  // どこかで 1 列ずれ、**その列から先の全員が別人の票になる**
+  const eleven = readVoteCells([item(symbolRun(11), 100, 110)], g, [], 12);
+  assert.deepEqual(eleven, Array.from({ length: 12 }, () => UNKNOWN_CELL));
+  // **13 個ある → 全セル不明**（多い側も同じ。どれが余りかは決められない）
+  const thirteen = readVoteCells([item(symbolRun(13), 100, 130)], g, [], 12);
+  assert.deepEqual(thirteen, Array.from({ length: 12 }, () => UNKNOWN_CELL));
+  // 記号が 10 個未満の帯は表の行ではない（注記など）→ undefined（行として数えない）
+  assert.equal(readVoteCells([item(symbolRun(9), 100, 90)], g, [], 12), undefined);
+});
+
+test("#741 readVoteCells: **1 つの列に 2 個入ったらその列だけ不明**（黙って上書きしない）", () => {
+  const g = grid4(12);
+  // 12 個だが、先頭の 2 個が同じ列に落ちる形（1 文字アイテムを並べる）
+  const items = [item("○", 100, 10), item("×", 101, 10), ...Array.from({ length: 10 }, (_, i) => item("○", 120 + i * 10, 10))];
+  const cells = readVoteCells(items, g, [], 12);
+  assert.ok(cells);
+  // 重なった列は不明、重なっていない列は読める（**全部捨てない。読めた事実は残す**）
+  assert.equal(cells[0], UNKNOWN_CELL);
+  assert.equal(cells[3], "○");
 });

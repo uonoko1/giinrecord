@@ -207,7 +207,7 @@ export function parseLegend(pages: readonly PageGeometry[]): VotePdfLegend {
 
 /* ---------- grid ---------- */
 
-interface Grid {
+export interface Grid {
   /** 表の上端（いちばん高い全幅の横罫線） */
   top: number;
   /** 本文の上端（＝氏名帯の下端。表の上端の次に高い全幅の横罫線） */
@@ -471,7 +471,17 @@ function readMembers(page: PageGeometry, grid: Grid, page1: Map<number, VotePdfM
     const seat = seatTop === undefined ? "" : columnText(page.items.filter((i) => inCol(i) && i.cy > nameTop! + EDGE && i.cy <= seatTop + EDGE)).replace(/[\s　]+/g, "");
     const group = groups.find((g) => within((x0 + x1) / 2, g.x0, g.x1))?.name ?? "";
     const borrowed = page1?.get(c);
-    // **空の列だけ**借りる（#718）。氏名が読めた列は借りない
+    // **空の列だけ**借りる（#718。「氏名帯が空のときだけ」では直らない——
+    // `Kg693_sanpi-040318` の 2 ページ目には 41 人ぶんあるので「空」ではなく、欠けるのは 1 列だけ）。
+    //
+    // **ただし、いまの設計ではこの枝は 1 度も走らない**（実測 147 本。この行を消しても
+    // 144 本の出力が 1 バイトも変わらない）。**議員の並びは 1 ページ目から取ってそれ以降は使わない**
+    // （`parseVotePdf` の `if (!members) members = pageMembers`）ので、
+    // 2 ページ目の欠けた氏名帯はそもそも出力に届かない。**#718 の欠落はそちらで防げている。**
+    //
+    // **それでも残す**——`parseVotePdf` の側が「ページごとに氏名を取り直す」形に変わった瞬間に
+    // #718 の欠落が復活するし、そのときこの枝が無ければ**議員 1 人の記録が静かに消える**
+    // （合計の辻褄は合うので気づけない）。**守りは、効いていないときも外さない。**
     if (nameText === "" && borrowed) out.push({ ...borrowed });
     else out.push({ nameText, group, seat });
   }
@@ -568,7 +578,7 @@ function resultFromSymbolItems(inRow: readonly Item[], grid: Grid): string {
  * **記号の総数が議員の列の数と一致しなければ、全セルを UNKNOWN_CELL にする**——
  * **数が合わない行を押し込むと、ずれた 1 列ぶん全員が別人の票になる**（#689）。
  */
-function readVoteCells(inRow: readonly Item[], grid: Grid, vxs: readonly number[], memberCount: number): string[] | undefined {
+export function readVoteCells(inRow: readonly Item[], grid: Grid, vxs: readonly number[], memberCount: number): string[] | undefined {
   const voteLeft = grid.voteCols[0];
   const voteRight = grid.voteCols[grid.voteCols.length - 1];
   const symItems = inRow.filter((i) => trailingVoteSymbols(i.str).length > 0 && i.x + i.w > voteLeft && i.cx < voteRight + EDGE);
