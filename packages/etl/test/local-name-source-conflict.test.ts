@@ -179,8 +179,9 @@ test("#711 validateLocalAssemblies: unmatched.json の sourceConflict が名簿�
 });
 
 /**
- * 否定的対照（#554）: **本番 `data/` の unmatched 4 行に 1 件も当たらない。**
- * ここが落ちれば、既存 7 県の出力に差分が出る（＝この PBI の「data/ を変えない」条件を破っている）。
+ * 否定的対照（#554）: **本番 `data/` の unmatched 5 行に 1 件も `sourceConflict` が当たらない。**
+ * ここが落ちれば、既存の出力に差分が出る（＝「data/ を変えない」条件を破っている）。
+ * **滋賀（#741）の 1 行は `brokenGlyph`** で、`sourceConflict` とは別の理由である。
  * 「食い違いを拾う」だけの test は、全部を食い違いと言う実装でも通るので、この対照が要る。
  */
 test("#711 否定的対照: 本番 data/ の unmatched 行は 1 つも sourceConflict にならない", async () => {
@@ -189,7 +190,8 @@ test("#711 否定的対照: 本番 data/ の unmatched 行は 1 つも sourceCon
   const locals = members.filter((m) => typeof m.assemblyId === "string" && m.assemblyId.startsWith("pref-"));
   assert.ok(locals.length > 200, `地方名簿が読めていなければこの対照は無意味（${locals.length} 名）`);
   const assemblies = [...new Set(locals.map((m) => m.assemblyId!))].sort();
-  assert.equal(assemblies.length, 7, `既存 7 県を全部見ていること: ${assemblies.join(",")}`);
+  // 2026-09-13 に滋賀（pref-25、#741）が 8 議会目として入った
+  assert.equal(assemblies.length, 8, `全 8 議会を見ていること: ${assemblies.join(",")}`);
 
   let rows = 0;
   const hits: string[] = [];
@@ -202,7 +204,8 @@ test("#711 否定的対照: 本番 data/ の unmatched 行は 1 つも sourceCon
       if (reason !== u.reason) hits.push(`${a} ${u.nameText}: ${String(reason)} !== ${String(u.reason)}`);
     }
   }
-  assert.equal(rows, 4, `本番の unmatched は 4 行のはず（宮城 1・三重 3）。増減したらこの対照を測り直すこと（実測 2026-09-09）`);
+  // 滋賀の 1 行は `brokenGlyph`（`辻` が `□` に化けた氏名。#680／#741）。**`sourceConflict` ではない**
+  assert.equal(rows, 5, `本番の unmatched は 5 行のはず（宮城 1・三重 3・滋賀 1）。増減したらこの対照を測り直すこと（実測 2026-09-13）`);
   assert.deepEqual(hits, [], "本番 data/ の unmatched.json と理由が食い違った＝再生成すると data/ に差分が出る");
 });
 

@@ -255,10 +255,14 @@ t_list_collects_real_primary_source_urls() {
   [ "$n" -ge 80 ] || fail "一次資料 URL が $n 件しか集まらない（80 未満）: 抽出が壊れている"
   assert_contains "$list" "https://www.pref.shimane.lg.jp/" "島根の URL が入っている"
   assert_contains "$list" "https://www.pref.mie.lg.jp/" "三重の URL が入っている"
+  assert_contains "$list" "https://www.shigaken-gikai.jp/" "滋賀の URL が入っている（#741）"
   # 重複していない（同じ PDF が数百の rollcall から参照される。全部叩いたら相手に失礼）
   assert_eq "$n" "$(printf '%s\n' "$list" | sed '/^$/d' | sort -u | wc -l | tr -d ' ')" "重複を除いてある"
   # 集めるのは公式ドメインだけ（data/ に外部ドメインが紛れ込んだら気づく）
-  assert_eq "" "$(printf '%s\n' "$list" | sed '/^$/d' | grep -v -E '^https://(www\.pref\.[a-z]+\.(lg\.)?jp|gikai\.pref\.[a-z]+\.lg\.jp|www\.(shugiin|sangiin)\.go\.jp)/' || true)" "公式ドメイン以外が混ざっていない"
+  # **議会のドメインは `pref.*.lg.jp` の形とは限らない**——滋賀県議会は `www.shigaken-gikai.jp`
+  # という独自ドメインで、`.lg.jp` ですらない（#741）。**県ごとに明示で足す**
+  # （`*-gikai.jp` のような広いパターンにすると、誰でも取れるドメインが通ってしまう）。
+  assert_eq "" "$(printf '%s\n' "$list" | sed '/^$/d' | grep -v -E '^https://(www\.pref\.[a-z]+\.(lg\.)?jp|gikai\.pref\.[a-z]+\.lg\.jp|www\.shigaken-gikai\.jp|www\.(shugiin|sangiin)\.go\.jp)/' || true)" "公式ドメイン以外が混ざっていない"
 }
 
 t_list_does_not_hit_the_network() {

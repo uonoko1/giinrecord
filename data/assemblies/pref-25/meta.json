@@ -1,0 +1,74 @@
+{
+ "assemblyId": "pref-25",
+ "counts": {
+  "cells": 604,
+  "members": 44,
+  "rollcalls": 14,
+  "unknownCells": 0,
+  "unmatchedNames": 1
+ },
+ "fetchedAt": "2026-09-12T20:20:52.955Z",
+ "rosterAsOf": "2026-09-13",
+ "sessions": [
+  {
+   "pdfUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg900_sanpi-0722-2.pdf",
+   "pdfUrls": [
+    "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg900_sanpi-0722-2.pdf",
+    "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg907_sanpi-080810-1.pdf"
+   ],
+   "rollcalls": 10,
+   "sessionId": "2026-07",
+   "sessionLabel": "令和8年 7月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=256",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg898_sanpi2-080630%20.pdf",
+   "pdfUrls": [
+    "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg898_sanpi2-080630%20.pdf"
+   ],
+   "rollcalls": 4,
+   "sessionId": "2026-06-rinji",
+   "sessionLabel": "令和8年 6月臨時会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=258",
+   "unknownCells": 0
+  }
+ ],
+ "sources": [
+  {
+   "fetchedAt": "2026-09-12T20:20:52.955Z",
+   "name": "滋賀県議会 議員名簿（五十音順）",
+   "url": "https://www.shigaken-gikai.jp/g07_giinlistP.asp"
+  },
+  {
+   "fetchedAt": "2026-09-12T20:20:52.955Z",
+   "name": "滋賀県議会 本会議の開催状況（年の一覧）",
+   "url": "https://www.shigaken-gikai.jp/voices/g07_Congress.asp?YMSel=9999"
+  },
+  {
+   "fetchedAt": "2026-09-12T20:20:52.955Z",
+   "name": "滋賀県議会 令和8年 7月定例会議賛否状況",
+   "url": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=256"
+  },
+  {
+   "fetchedAt": "2026-09-12T20:20:52.955Z",
+   "name": "滋賀県議会 令和8年 7月定例会議議案等賛否一覧（７月22日議決分）",
+   "url": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg900_sanpi-0722-2.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-12T20:20:52.955Z",
+   "name": "滋賀県議会 令和8年 7月定例会議議案等賛否一覧（８月10日議決分）",
+   "url": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg907_sanpi-080810-1.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-12T20:20:52.955Z",
+   "name": "滋賀県議会 令和8年 6月臨時会議賛否状況",
+   "url": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=258"
+  },
+  {
+   "fetchedAt": "2026-09-12T20:20:52.955Z",
+   "name": "滋賀県議会 令和8年 6月臨時会議議案等賛否一覧（６月30日議決分）",
+   "url": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg898_sanpi2-080630%20.pdf"
+  }
+ ]
+}
