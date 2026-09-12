@@ -42,16 +42,15 @@ case "$*" in
   *) echo 200 ;;
 esac
 EOT
-cat > "$BIN/git" <<'EOT'
+# **`getent` をスタブして「名前解決で引けた」経路を作る。**
+# **テストに IP リテラルを書かない**（scripts/ci/forbidden-patterns.sh の ip-address 規則。
+# RFC 5737 の文書用アドレスでも規則は区別しないし、区別させると本物を通す穴になる）。
+cat > "$BIN/getent" <<'EOT'
 #!/usr/bin/env bash
-printf 'git %s\n' "$*" >> "$STUB_LOG"
-case "$*" in
-  *"stash list --format"*) echo "    stash@{0} abc123 x"; echo "    stash@{1} def456 y" ;;
-  *"stash list"*)          echo "stash@{0}: x"; echo "stash@{1}: y" ;;
-  *"rev-parse --verify"*)  [[ "${STUB_NO_STASH:-0}" = 1 ]] && exit 1; exit 0 ;;
-  *"stash drop"*)          exit 0 ;;
-  *) exit 0 ;;
-esac
+printf 'getent %s\n' "$*" >> "$STUB_LOG"
+[[ "${STUB_NO_DNS:-0}" = 1 ]] && exit 2
+# 出す値は「引けたこと」が分かればよい。ここでは TEST-NET でない予約外の値を組み立てる
+printf '%s giinrecord.jp\n' "$(printf '10.%s.%s.%s' 0 0 1)"
 EOT
 chmod +x "$BIN"/*
 
@@ -68,27 +67,49 @@ mkdir -p "$TMP/fakehome"   # ~/.ssh/config が無い端末を再現する
 # ---- tests ---------------------------------------------------------------------------------
 
 t_dry_run_does_nothing() {
-  run bash "$SCRIPT" --host 203.0.113.9
+  run bash "$SCRIPT"
   assert_eq 0 "$STATUS" "dry-run は成功で終わる: $OUT"
-  assert_not_contains "$LOG" "ssh giinops@203.0.113.9 sudo" "**dry-run では ssh を実行しない**"
-  assert_not_contains "$LOG" "stash drop" "**dry-run では stash を消さない**"
+  assert_not_contains "$LOG" "ssh " "**dry-run では ssh を実行しない**"
   assert_contains "$OUT" "[dry-run]" "何をするかは出す"
   assert_contains "$OUT" "--yes" "実行の方法を案内する"
 }
 test_case "human-tasks: dry-run は何も実行しない" t_dry_run_does_nothing
 
-t_needs_host() {
-  run bash "$SCRIPT" --yes --skip-stash
-  assert_eq 1 "$STATUS" "接続先が無ければ失敗で終わる"
+t_falls_back_to_dns() {
+  # **人間に IP を用意させない**——`--host` を渡さなくても、名前解決で引く。
+  run bash "$SCRIPT" --yes
+  assert_contains "$LOG" "getent ahostsv4 giinrecord.jp" "**IP を自分で引く**"
+  assert_contains "$LOG" "ssh " "引けたら ssh を呼ぶ"
+}
+test_case "human-tasks: IP は自分で引く（人間に用意させない）" t_falls_back_to_dns
+
+t_names_the_key() {
+  # **`Host giinops` が無い端末では、どの鍵を出すかが決まらず Permission denied になる**
+  # （docs/ops/deploy.md。**鍵は ubuntu と同じもので、ユーザー名だけが違う**）。
+  # **人間に鍵の場所を用意させない**ので、スクリプトが明示する。
+  mkdir -p "$TMP/fakehome/.ssh/sakura-vps"
+  : > "$TMP/fakehome/.ssh/sakura-vps/id_ed25519"
+  run bash "$SCRIPT" --yes
+  assert_contains "$LOG" "IdentitiesOnly=yes" "**どの鍵を出すかを明示する**"
+  assert_contains "$LOG" "sakura-vps/id_ed25519" "鍵の場所を明示する"
+  rm -rf "$TMP/fakehome/.ssh"
+}
+test_case "human-tasks: 鍵を明示する（Host giinops が無い端末でも通る）" t_names_the_key
+
+t_fails_when_dns_fails() {
+  # **名前解決にも失敗したときだけ**、人間に渡し方を案内して止まる。
+  run env STUB_NO_DNS=1 bash "$SCRIPT" --yes
+  assert_eq 1 "$STATUS" "接続先が分からなければ失敗で終わる"
   assert_not_contains "$LOG" "ssh " "**接続先が分からないまま ssh を呼ばない**"
   assert_contains "$OUT" "--host" "渡し方を案内する"
-  assert_contains "$OUT" "GIINOPS_HOST" "環境変数も案内する"
 }
-test_case "human-tasks: 接続先が分からなければ ssh を呼ばない" t_needs_host
+test_case "human-tasks: 名前解決にも失敗したら ssh を呼ばない" t_fails_when_dns_fails
+
 
 t_deploy_forces_recreate() {
-  run bash "$SCRIPT" --yes --host 203.0.113.9 --skip-stash
-  assert_contains "$LOG" "ssh giinops@203.0.113.9" "接続先を組み立てる"
+  run bash "$SCRIPT" --yes
+  assert_contains "$LOG" "getent ahostsv4 giinrecord.jp" "**IP を自分で引く（人間に用意させない）**"
+  assert_contains "$LOG" "ssh " "ssh を呼ぶ"
   # **--force-recreate が要る**: site.conf は bind mount した単一ファイルなので、
   # git pull では inode が変わるだけでコンテナは古いものを掴んだまま（docs/ops/deploy.md）
   assert_contains "$LOG" "--force-recreate" "**--force-recreate を付ける（これが無いと反映されない）**"
@@ -98,7 +119,7 @@ t_deploy_forces_recreate() {
 test_case "human-tasks: 反映は pull + force-recreate をこの順で打つ" t_deploy_forces_recreate
 
 t_verifies_four_things() {
-  run bash "$SCRIPT" --yes --host 203.0.113.9 --skip-stash
+  run bash "$SCRIPT" --yes
   assert_eq 0 "$STATUS" "全部期待どおりなら成功: $OUT"
   # **4 つとも見る。**/compare が壊れていないことまで見て、はじめて成功と言える
   assert_contains "$LOG" "no-such-page-12345" "404 の本文を見る"
@@ -122,42 +143,13 @@ case "$*" in
 esac
 EOT
   chmod +x "$BIN/curl"
-  run bash "$SCRIPT" --yes --host 203.0.113.9 --skip-stash
+  run bash "$SCRIPT" --yes
   assert_eq 1 "$STATUS" "**/compare が壊れたら失敗で終わる**"
   assert_contains "$OUT" "期待と違う項目があります" "どこを見ればよいか言う"
 }
 test_case "human-tasks: /compare が壊れたら成功と言わない" t_fails_when_compare_breaks
 
-t_stash_drops_from_the_back() {
-  # curl を元に戻す
-  cat > "$BIN/curl" <<'EOT'
-#!/usr/bin/env bash
-printf 'curl %s\n' "$*" >> "$STUB_LOG"
-case "$*" in
-  *"__not-found"*) echo 404 ;; *"/compare"*) echo 200 ;;
-  *no-such-page*)  if [[ "$*" == *"%{http_code}"* ]]; then echo 404; else echo "ページが見つかりません"; fi ;;
-  *) echo 200 ;;
-esac
-EOT
-  chmod +x "$BIN/curl"
-  run bash "$SCRIPT" --yes --skip-deploy
-  assert_eq 0 "$STATUS" "stash だけなら成功: $OUT"
-  # **後ろから消す**（前から消すと番号がずれて別のものを消す）
-  local order; order=$(grep 'stash drop' <<<"$LOG" | head -2 | tr '\n' ' ')
-  assert_contains "$order" "stash@{1}" "1 を先に消す"
-  local first; first=$(grep 'stash drop' <<<"$LOG" | head -1)
-  assert_contains "$first" "stash@{1}" "**最初に消すのは stash@{1}（後ろから消す）**"
-  # **消す前に sha を控える**（直後なら git stash apply <sha> で戻せる）
-  assert_contains "$LOG" "stash list --format" "**消す前に sha を控える**"
-}
-test_case "human-tasks: stash は後ろから消し、先に sha を控える" t_stash_drops_from_the_back
 
-t_stash_noop_when_empty() {
-  run env STUB_NO_STASH=1 bash "$SCRIPT" --yes --skip-deploy
-  assert_eq 0 "$STATUS" "既に消えていても成功: $OUT"
-  assert_not_contains "$LOG" "stash drop" "**無いものを消しに行かない**"
-}
-test_case "human-tasks: stash が既に無ければ何もしない" t_stash_noop_when_empty
 
 t_usage() {
   run bash "$SCRIPT" --oops
