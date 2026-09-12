@@ -84,8 +84,10 @@ jobs:
           # 下限を 24 → 25 に上げる（#642 で 23 → 24。実測より下に余裕を残すのは従来どおり。
           # deploy/test の**正確な**本数は packages/etl/test/deploy-test-inventory.test.ts が
           # EXPECTED_COUNT=19 で固定しており、ここは glob が痩せていないことを見る粗い最終防波堤）。
-          echo "loop ran: $ran (floor 25)"
-          [ "$ran" -ge 25 ] || { echo "FAIL: fewer test files ran than expected — glob narrowed or files deleted"; exit 1; }
+          # #537 が片付いて human-tasks.test.sh が増え**実測 30 本**になったので 25 → 27 に上げる
+          # （#720 の「実数 − 3」。テストを増やした PR がそのついでに上げる）。
+          echo "loop ran: $ran (floor 27)"
+          [ "$ran" -ge 27 ] || { echo "FAIL: fewer test files ran than expected — glob narrowed or files deleted"; exit 1; }
       - run: pnpm lint
       - name: actionlint (all workflows)
         run: |

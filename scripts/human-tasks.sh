@@ -1,0 +1,132 @@
+#!/usr/bin/env bash
+# **人間にしか打てないコマンドを 1 本にまとめたもの**（PO が作った。2026-09-13）。
+#
+# なぜ要るか:
+#   PO（Claude）が接続手段で止められている作業を、人間に 1 回のコマンドで済ませてもらう。
+#   **ユーザーからの指示: 「sudo パスワード以外の情報を私に用意させないで」。**
+#   だから **VPS の IP はこのスクリプトが自分で引く**（`giinrecord.jp` の A レコード）。
+#   **鍵も `~/.ssh/sakura-vps/id_ed25519` にある前提で明示する**（`Host giinops` が無い端末でも通る）。
+#
+# 何をするか（**これ 1 つだけ**）:
+#   **`site.conf` を本番に反映する**（#610 / #654）——ssh が要る。PO の端末には接続先が無い。
+#
+# **やらないこと**:
+#   - **`git stash` 2 件の drop（#543）**——**`scripts/ci/forbidden-patterns.sh` が
+#     `git stash` を全面的に禁止している**（#542 / #557。2026-09-06 に 3 回、担当者の未コミットの
+#     作業が git の「元に戻す」で消えた）。**規則を作った側がスクリプトで破るのは筋が通らない。**
+#     **#543 は人間が手で 2 回打つ**（`docs/ops/pending-decisions.md` の「3.」に手順がある）。
+#   - **fine-grained PAT の設置**（#550 / #155 / #547）——GitHub の設定画面での操作
+#   - **Sponsors / 広告 / NDL 照会**（#53 / #48 / #250）——外部に届く。方針の判断も要る
+#
+# 使い方:
+#   bash scripts/human-tasks.sh          # 何をするかだけ出す（dry-run）
+#   bash scripts/human-tasks.sh --yes    # 実行する（**引数はこれだけ。IP も鍵も渡さなくてよい**）
+#
+#   接続先を上書きしたいときだけ `--host <IP>` か `GIINOPS_HOST=<IP>`。
+#   **ふだんは要らない。**
+#
+#   Tests: scripts/ci/test/human-tasks.test.sh（ssh / curl / getent はスタブ。実際には何もしない）
+set -euo pipefail
+
+APPLY=0; HOST="${GIINOPS_HOST:-}"
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --yes) APPLY=1; shift ;;
+    --host) HOST="${2:-}"; shift 2 ;;
+    *) echo "usage: human-tasks.sh [--yes] [--host <IP>]" >&2; exit 2 ;;
+  esac
+done
+
+log() { echo "[$(date -u +%H:%M:%SZ)] $*"; }
+
+# ssh の宛先を決める。**人間に IP を用意させない**（ユーザーの指示）:
+#   1. `~/.ssh/config` に `Host giinops` があればそれを使う
+#   2. `--host` / `GIINOPS_HOST` が渡されていればそれ
+#   3. **どちらも無ければ `giinrecord.jp` の A レコードを自分で引く**
+#      （本番のサイトが載っているホストなので、これが VPS の IP である）
+ssh_target() {
+  if grep -qi '^[[:space:]]*Host[[:space:]].*\bgiinops\b' "${HOME}/.ssh/config" 2>/dev/null; then
+    echo "giinops"; return
+  fi
+  if [[ -z "$HOST" ]]; then
+    HOST=$(getent ahostsv4 giinrecord.jp 2>/dev/null | awk '{print $1; exit}')
+  fi
+  [[ -n "$HOST" ]] || return 1
+  echo "giinops@${HOST}"
+}
+
+# `Host giinops` が無い端末では、**どの鍵を出すかが決まらず Permission denied になる**
+# （`docs/ops/deploy.md`）。**鍵は ubuntu と同じもので、ユーザー名だけが違う。**
+# **配列で持つ**——文字列にして `$(...)` で展開すると単語分割の扱いが曖昧になる（SC2046）。
+ssh_opts=()
+set_ssh_opts() {
+  local key="${HOME}/.ssh/sakura-vps/id_ed25519"
+  ssh_opts=()
+  if [[ "$1" == giinops@* && -r "$key" ]]; then ssh_opts=(-i "$key" -o IdentitiesOnly=yes); fi
+}
+
+fail=0
+
+# ---- 1. site.conf を本番に反映する（#610 / #654）---------------------------------------------
+echo
+log "== site.conf を本番に反映する（#610 / #654）=="
+if true; then
+  if ! target=$(ssh_target); then
+    log "  ssh の接続先が分かりません（giinrecord.jp の名前解決にも失敗しました）。"
+    log "    ネットワークを確かめるか、--host <IP> か GIINOPS_HOST=<IP> で渡してください"
+    fail=1
+  else
+    # **`up -d` だけでは足りない**: site.conf は bind mount した単一ファイルなので、
+    # git pull では inode が変わるだけでコンテナは古いものを掴んだまま（docs/ops/deploy.md）。
+    cmd='sudo -n git -C /opt/giinrecord pull && sudo -n docker compose -f /opt/giinrecord/deploy/docker-compose.yml up -d --force-recreate'
+    if [[ "$APPLY" = 0 ]]; then
+      # **IP は出さない**（このスクリプトのログが貼られても漏れないように。
+      # `scripts/ci/forbidden-patterns.sh` の ip-address 規則と同じ趣旨）。
+      log "  [dry-run] ssh <giinops@VPS> '$cmd'"
+    else
+      log "  ssh で反映します（接続先は伏せます）"
+      set_ssh_opts "$target"
+      # shellcheck disable=SC2029  # $cmd はローカルで組み立てた固定文字列。クライアント側展開が意図どおり
+      if ssh "${ssh_opts[@]}" "$target" "$cmd"; then log "  反映しました"; else log "  ssh が失敗しました"; fail=1; fi
+    fi
+  fi
+fi
+
+# ---- 反映の確認（#610 / #654 を実際に見る）----------------------------------------------------
+if [[ "$APPLY" = 1 && "$fail" = 0 ]]; then
+  echo
+  log "== 反映の確認 =="
+  # **4 つとも見る。** 3 つ目が大事——/compare は SPA fallback を使う**正常な**ページなので、
+  # そこが壊れていないことまで見て、はじめて成功と言える（docs/ops/pending-decisions.md）。
+  body=$(curl -sSL -A giinrecord-human-tasks https://giinrecord.jp/no-such-page-12345 | grep -c ページが見つかりません || true)
+  code404=$(curl -sSL -o /dev/null -w '%{http_code}' -A giinrecord-human-tasks https://giinrecord.jp/no-such-page-12345)
+  compare=$(curl -sSL -o /dev/null -w '%{http_code}' -A giinrecord-human-tasks https://giinrecord.jp/compare)
+  leaked=$(curl -sSL -o /dev/null -w '%{http_code}' -A giinrecord-human-tasks https://giinrecord.jp/__not-found/index.html)
+  log "  1) 404 の本文に「ページが見つかりません」: $body 件   （0 → 1 以上になれば #610 が解消）"
+  log "  2) 存在しない URL の status:               $code404   （404 のまま。変わってはいけない）"
+  log "  3) /compare の status:                     $compare   （200 のまま。**ここが壊れたら失敗**）"
+  log "  4) /__not-found/index.html の status:      $leaked   （200 → 404 になれば #654 が解消）"
+  # **`A && B || C` は if-then-else ではない**（SC2015。B が失敗すると C も走る）。
+  # ここは「4 つとも期待どおりか」で分岐したいので、素直に if で書く。
+  if [[ "$body" != "0" && "$code404" = "404" && "$compare" = "200" && "$leaked" = "404" ]]; then
+    log "  4 つとも期待どおりです（#610 / #654 が解消しました）"
+  else
+    log "  期待と違う項目があります。docs/ops/pending-decisions.md の「1.」を見てください"
+    fail=1
+  fi
+  echo
+  log "  さらに強い確認（headless Chromium で JS を切って開く）:"
+  log "    pnpm --filter web browser-check -- --url https://giinrecord.jp"
+  log "    **2 回走らせて、両方に出るものだけを見ること**（1 回目は一時的なネットワーク変動が出ることがある）"
+fi
+
+echo
+if [[ "$APPLY" = 0 ]]; then
+  log "dry-run でした。実行するには --yes を付けてください"
+elif [[ "$fail" = 0 ]]; then
+  log "できました。**Claude に「human-tasks を実行した」と伝えてください**（#610 / #654 を閉じます）"
+  log "  **#543（退避された作業 2 件の破棄）は別です**——docs/ops/pending-decisions.md の「3.」を見てください"
+else
+  log "できなかったものがあります。上のログを Claude に伝えてください"
+  exit 1
+fi
