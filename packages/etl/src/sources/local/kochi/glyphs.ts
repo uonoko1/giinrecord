@@ -15,6 +15,9 @@ import { multiplyMatrix, readLines, type Matrix, type PageGeometry, type Item } 
  * Td/TD/T* は「直前の行頭からの相対移動」として仕様どおり畳み込む（三重は Tm だけを前提に例外にしている）。
  * 回転・拡縮の入った text matrix、単位行列でない CTM の下の文字が出たら例外（黙って読み間違えない）。
  * 生の `'` / `"`（次行送り＋表示）と 0 でない word spacing（Tw）も例外（Issue #707）。
+ * **知らない演算子も例外**（Issue #717）——この関数には既定の枝が無く、**見たことのない演算子は
+ * 何の枝にも当たらず黙って次へ進んでいた**。色や線の体裁など、文字に効かないものだけ明示的に無視する
+ * （HARMLESS_OPS）。不可視の文字（`Tr 3`）と ExtGState の `Font` / 透明指定も止める。
  * 罫線は pdf-table.ts の readLines に任せる（CTM を掛ける。Issue #693 / #700）。
  */
 export async function readGlyphPages(bytes: Buffer): Promise<PageGeometry[]> {
@@ -38,6 +41,59 @@ const IDENTITY: Matrix = [1, 0, 0, 1, 0, 0];
 
 /** CTM が単位行列か（文字の位置を Tm / Td だけで決められるか）。 */
 const isIdentity = (m: Matrix): boolean => m.every((v, i) => v === IDENTITY[i]);
+
+/**
+ * **文字の位置にも可読性にも影響しない演算子**（Issue #717）。ここに載っているものだけ黙って読み飛ばす。
+ *
+ * **なぜ allowlist（既定は例外）にするか**: この関数には既定の枝が無く、
+ * **知らない演算子は何の枝にも当たらず黙って次へ進んでいた**。#707 が `'` / `"` / `Tw` を
+ * 名指しで塞いだが、**同じ形の穴が演算子の数だけ残っていた**（実測: フィクスチャ 7 本に
+ * どちらの実装も見ていない演算子が 13 種類）。1 つずつ足しても次の未知の演算子で同じことが起きる。
+ *
+ * **なぜ全部を例外にしないか**: 13 種類のうち 11 種類は色・線の体裁・クリップ・マーク付きコンテンツで、
+ * **実データに 32,036 回出る**（内訳は test/local-glyphs-unknown-ops.test.ts の実測表）。
+ * 全部止めると**色を変えただけの PDF で ETL が丸ごと止まる**。
+ *
+ * **なぜこれらが無害と言えるか**:
+ *   - `setFillRGBColor` / `setStrokeRGBColor` / `setLineWidth` / `setLineCap` / `setLineJoin`:
+ *     **色と線の体裁だけ**。文字の座標にも、文字が見えるかどうかにも効かない
+ *     （見えなくする方法は「透明にする」で、それは `setGState` の `ca`/`CA` 側にあり、下で止めている）。
+ *   - `clip` / `eoClip`: クリップ領域を狭める。**この読み方は描画結果ではなく命令の座標を読む**ので
+ *     関係しない（クリップで文字が隠れることは原理上ありうるが、それは
+ *     この 2 つではなく `constructPath` の形の問題で、罫線の読み方（readLines）と同じ土俵になる）。
+ *   - `beginMarkedContent` / `beginMarkedContentProps` / `endMarkedContent`:
+ *     タグ付き PDF の構造マーク。描画には一切効かない。
+ *   - `dependency`: pdfjs 内部の「このフォント資源を待て」という印。PDF の演算子ですらない。
+ *   - `endText`: `BT` と対の `ET`。`beginText` が状態を初期化するので、閉じ側で見るものが無い。
+ */
+const HARMLESS_OPS: ReadonlySet<number> = new Set([
+  OPS.setFillRGBColor, OPS.setStrokeRGBColor, OPS.setLineWidth, OPS.setLineCap, OPS.setLineJoin,
+  OPS.clip, OPS.eoClip,
+  OPS.beginMarkedContent, OPS.beginMarkedContentProps, OPS.endMarkedContent,
+  OPS.dependency, OPS.endText,
+  // **`constructPath` はここで無視してよいのではなく、readLines が別に読んでいる**（罫線）。
+  // このループでは何もしないのが正しいが、理由が「無害だから」ではないので明記しておく。
+  // 実測（2026-09-09、フィクスチャ 7 本）: 24,299 回。ここを外すと 7 本すべてが例外で止まる。
+  OPS.constructPath,
+]);
+
+/** 演算子の番号から `OPS` の名前を引く（未知なら "unknown"）。例外の本文に出して追えるようにする。 */
+const opName = (fn: number): string => Object.keys(OPS).find((k) => (OPS as Record<string, number>)[k] === fn) ?? "unknown";
+
+/**
+ * **文字を読んでよい text rendering mode か**（PDF 32000-1 9.3.6。Issue #717）。
+ *
+ * `0`=fill（既定） `1`=stroke `2`=fill+stroke **`3`=invisible（不可視）** `4`-`7`=clip 付き。
+ *
+ * **`3` の文字は PDF ビューアに表示されない。**それを読んで記録にすると、
+ * **利用者が一次資料を開いても、その文字は見えない**——「出典を確かめられない記録」になる（#569 と同じ重さ）。
+ * OCR 済みスキャン PDF の透明テキスト層はまさに `Tr 3` で置かれる。
+ *
+ * 実測（2026-09-09、フィクスチャ 7 本）: 出た値は **`2` だけ**（三重 5 本に 1〜3 回ずつ。高知は 0 回）。
+ * **`1` と `4`-`7` は実データに無いので「正しく読める」ことを検証できない**ので、
+ * `0`（既定）と `2` だけ通し、残りは出さない側に倒す（#707 の `Tw` と同じ判断）。
+ */
+const READABLE_TEXT_RENDERING_MODES: ReadonlySet<number> = new Set([0, 2]);
 
 /**
  * 1 ページぶんのオペレータ列を読む（Issue #700 でここに切り出した）。
@@ -173,6 +229,38 @@ export function readGlyphPageOps(fnArray: ArrayLike<number>, argsArray: ArrayLik
         items.push({ str, x: x0, y: ty, w, h: fontSize, cx: x0 + w / 2, cy: ty + fontSize / 2 });
       }
       tx = x;
+    } else if (fn === OPS.setTextRenderingMode) {
+      // Tr: 塗り／線／不可視／クリップの別（PDF 32000-1 9.3.6）。**`3` は不可視**。
+      // **見た瞬間に止める**（#707 の Tw と同じ理由——状態にして showText のときに判定すると、
+      // たまたまその区間に文字が無かった回だけ通り、同じ PDF の別の回で不可視の文字を読む）。
+      if (!READABLE_TEXT_RENDERING_MODES.has(args[0] as number)) throw new Error(`page ${pageNo}: unsupported text rendering mode (Tr ${args[0]})`);
+    } else if (fn === OPS.setTextRise) {
+      // Ts: ベースラインを上下にずらす（PDF 32000-1 9.4.3）。**この実装は y に足していない**ので、
+      // 0 でない Ts の下では文字の y がずれる（#707 の担当者が別 Issue 候補として残した宿題）。
+      // 実測（2026-09-09、フィクスチャ 7 本）: Ts は 0 回。正しい足し方を実データで検証できないので止める。
+      if ((args[0] as number) !== 0) throw new Error(`page ${pageNo}: non-zero text rise (Ts ${args[0]}) not supported`);
+    } else if (fn === OPS.setGState) {
+      // gs: ExtGState をまとめて適用する。**pdfjs は [鍵, 値] の並びを 1 つ包んで渡す**
+      // （pdf.worker.mjs の setGState が組み立てる gStateObj）。**中身を見ないと危ない鍵が 2 つある**:
+      //   - `Font`: フォントと**サイズ**を設定するが、**このとき pdfjs は setFont を出さない**
+      //     （実測。test/local-glyphs-unknown-ops.test.ts の 1. が実物の PDF で固定している）。
+      //     この実装は fontSize を setFont からしか取らないので **0 のまま**になり、
+      //     グリフ幅が全部 0 → **文字の x が 1 点に潰れる**。潰れた座標で列を割ると
+      //     記号が別の議員の列に入る（#693 と同じ実害。高知も三重も 1 人 1 列）。
+      //   - `ca` / `CA` が 1 でない: 塗り／線が透ける。**0 なら完全に見えない**（Tr 3 と同じ帰結）。
+      // 実測（2026-09-09、フィクスチャ 7 本の setGState 14 回すべて）: 出たのは
+      // `[["BM","source-over"],["ca",1]]` と `[["BM","source-over"],["CA",1]]` の 2 種類だけ。
+      // **allowlist にする**ので、知らない鍵（SMask など）は止まる側に落ちる。
+      for (const [key, value] of (args[0] as [string, unknown][]) ?? []) {
+        if (key === "BM") continue; // 合成モード。文字の位置にも可読性にも効かない
+        if ((key === "ca" || key === "CA") && value === 1) continue; // 完全に不透明（実データはこれ）
+        throw new Error(`page ${pageNo}: unsupported graphics state (${key === "ca" || key === "CA" ? `${key} ${value}` : key})`);
+      }
+    } else if (!HARMLESS_OPS.has(fn)) {
+      // **既定の枝**（Issue #717）。ここに来る演算子は、この実装が一度も考えたことのないものである。
+      // **黙って無視すると、それが位置や可読性を変える演算子だったときに気づけない。**
+      // 番号と名前を出して止める（`OPS` に名前が無い番号なら "unknown"）。
+      throw new Error(`page ${pageNo}: unsupported operator ${fn} (${opName(fn)})`);
     }
   }
   return { items, vlines, hlines };
