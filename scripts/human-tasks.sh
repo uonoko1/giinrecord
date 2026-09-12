@@ -8,7 +8,7 @@
 #   **鍵も `~/.ssh/sakura-vps/id_ed25519` にある前提で明示する**（`Host giinops` が無い端末でも通る）。
 #
 # 何をするか（**これ 1 つだけ**）:
-#   **`site.conf` を本番に反映する**（#610 / #654）——ssh が要る。PO の端末には接続先が無い。
+#   **`site.conf` を本番に反映する**（#610 / #654 / #746）——ssh が要る。PO の端末には接続先が無い。
 #
 # **やらないこと**:
 #   - **`git stash` 2 件の drop（#543）**——**`scripts/ci/forbidden-patterns.sh` が
@@ -67,9 +67,9 @@ set_ssh_opts() {
 
 fail=0
 
-# ---- 1. site.conf を本番に反映する（#610 / #654）---------------------------------------------
+# ---- 1. site.conf を本番に反映する（#610 / #654 / #746）---------------------------------------------
 echo
-log "== site.conf を本番に反映する（#610 / #654）=="
+log "== site.conf を本番に反映する（#610 / #654 / #746）=="
 if true; then
   if ! target=$(ssh_target); then
     log "  ssh の接続先が分かりません（giinrecord.jp の名前解決にも失敗しました）。"
@@ -92,24 +92,35 @@ if true; then
   fi
 fi
 
-# ---- 反映の確認（#610 / #654 を実際に見る）----------------------------------------------------
+# ---- 反映の確認（#610 / #654 / #746 を実際に見る）----------------------------------------------------
 if [[ "$APPLY" = 1 && "$fail" = 0 ]]; then
   echo
   log "== 反映の確認 =="
-  # **4 つとも見る。** 3 つ目が大事——/compare は SPA fallback を使う**正常な**ページなので、
+  # **#746: 2026-09-13 に、このスクリプトは「4 つとも期待どおり」と報告したのに 200 が残っていた。**
+  # **見ていたのが `/__not-found/index.html` だけで、`/__not-found` と `/__not-found/` を見ていなかった。**
+  # `try_files $uri $uri/index.html` が末尾なしを index.html に内部解決し、`internal` は
+  # **外部からの要求しか拒まない**ので、綴りによって 404 と 200 が分かれていた。
+  # **だから「not-found の綴りを 1 つだけ見る」のをやめ、3 つとも見る。**
+  # **/compare を見るのも同じくらい大事**——SPA fallback を使う**正常な**ページなので、
   # そこが壊れていないことまで見て、はじめて成功と言える（docs/ops/pending-decisions.md）。
+  code() { curl -sSL -o /dev/null -w '%{http_code}' -A giinrecord-human-tasks "https://giinrecord.jp$1"; }
   body=$(curl -sSL -A giinrecord-human-tasks https://giinrecord.jp/no-such-page-12345 | grep -c ページが見つかりません || true)
-  code404=$(curl -sSL -o /dev/null -w '%{http_code}' -A giinrecord-human-tasks https://giinrecord.jp/no-such-page-12345)
-  compare=$(curl -sSL -o /dev/null -w '%{http_code}' -A giinrecord-human-tasks https://giinrecord.jp/compare)
-  leaked=$(curl -sSL -o /dev/null -w '%{http_code}' -A giinrecord-human-tasks https://giinrecord.jp/__not-found/index.html)
+  code404=$(code /no-such-page-12345)
+  compare=$(code /compare)
   log "  1) 404 の本文に「ページが見つかりません」: $body 件   （0 → 1 以上になれば #610 が解消）"
   log "  2) 存在しない URL の status:               $code404   （404 のまま。変わってはいけない）"
   log "  3) /compare の status:                     $compare   （200 のまま。**ここが壊れたら失敗**）"
-  log "  4) /__not-found/index.html の status:      $leaked   （200 → 404 になれば #654 が解消）"
+  # **綴り違いを 1 つずつ。** どれか 1 つでも 404 でなければ失敗にする（#746）。
+  not_found_bad=0
+  for path in /__not-found /__not-found/ /__not-found/index.html; do
+    got=$(code "$path")
+    log "  4) $path の status: $got   （404 でなければ #654 / #746 が未解消）"
+    [[ "$got" = "404" ]] || not_found_bad=1
+  done
   # **`A && B || C` は if-then-else ではない**（SC2015。B が失敗すると C も走る）。
-  # ここは「4 つとも期待どおりか」で分岐したいので、素直に if で書く。
-  if [[ "$body" != "0" && "$code404" = "404" && "$compare" = "200" && "$leaked" = "404" ]]; then
-    log "  4 つとも期待どおりです（#610 / #654 が解消しました）"
+  # ここは「全部期待どおりか」で分岐したいので、素直に if で書く。
+  if [[ "$body" != "0" && "$code404" = "404" && "$compare" = "200" && "$not_found_bad" = 0 ]]; then
+    log "  6 つとも期待どおりです（#610 / #654 / #746 が解消しました）"
   else
     log "  期待と違う項目があります。docs/ops/pending-decisions.md の「1.」を見てください"
     fail=1
@@ -124,7 +135,7 @@ echo
 if [[ "$APPLY" = 0 ]]; then
   log "dry-run でした。実行するには --yes を付けてください"
 elif [[ "$fail" = 0 ]]; then
-  log "できました。**Claude に「human-tasks を実行した」と伝えてください**（#610 / #654 を閉じます）"
+  log "できました。**Claude に「human-tasks を実行した」と伝えてください**（#610 / #654 / #746 を閉じます）"
   log "  **#543（退避された作業 2 件の破棄）は別です**——docs/ops/pending-decisions.md の「3.」を見てください"
 else
   log "できなかったものがあります。上のログを Claude に伝えてください"

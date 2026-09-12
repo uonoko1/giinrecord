@@ -139,7 +139,8 @@ if (baseUrl) {
     all.filter((f) => f.endsWith("index.html")),
     all.filter((f) => !f.endsWith(".html")),
   );
-  const urls = [...targets.pages, ...targets.spa, targets.unknown, targets.asset, targets.data].filter((u): u is string => u !== null);
+  // #746: targets.internal（/__not-found の 3 つの綴り）も取りに行く。**取らなければ "no response" で落ちる**
+  const urls = [...targets.pages, ...targets.spa, ...targets.internal, targets.unknown, targets.asset, targets.data].filter((u): u is string => u !== null);
   const served = checkServed(await fetchAll(baseUrl, urls), targets);
   servedFailures = served.failures;
   console.log(`smoke: url=${baseUrl} ${served.checked} urls fetched`);

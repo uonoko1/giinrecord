@@ -239,6 +239,13 @@ jobs:
           expect /__spa-fallback.html       404
           # #610: the not-found page itself must not be reachable as a second, 200 URL either
           expect /__not-found/index.html    404
+          # #746: /__not-found/index.html alone was NOT enough. `location /`'s `try_files $uri $uri/index.html`
+          # resolved /__not-found to /__not-found/index.html internally, and `internal` only rejects requests
+          # from outside — so production answered 404 for /__not-found/index.html but **200** for /__not-found
+          # and /__not-found/ (measured 2026-09-13, right after the deploy). Check every spelling.
+          expect /__not-found              404
+          expect /__not-found/             404
+          expect /__not-found/anything     404
           # the 404 must still carry a body: lang=ja, the site name, noindex, and no developer message
           body=$(curl -sS "$BASE/this-does-not-exist/")
           echo "$body" | grep -q '<html lang="ja"' || (echo "404 body: lang is not ja" && exit 1)

@@ -31,10 +31,13 @@ printf 'ssh %s\n' "$*" >> "$STUB_LOG"
 [[ "${STUB_SSH_FAIL:-0}" = 1 ]] && exit 255
 exit 0
 EOT
-cat > "$BIN/curl" <<'EOT'
+# **curl のスタブは書き換えるテストがあるので、既定に戻せる形にしておく**
+# （書き換えたまま次のテストに漏らすと、そのテストは何を測ったのか分からなくなる）。
+restore_curl_stub() {
+  cat > "$BIN/curl" <<'EOT'
 #!/usr/bin/env bash
 printf 'curl %s\n' "$*" >> "$STUB_LOG"
-# 反映後の期待値を返す（成功の経路を通す）
+# 反映後の期待値を返す（成功の経路を通す）。**#746 以後は 3 つの綴りとも 404 にする。**
 case "$*" in
   *"__not-found"*) echo 404 ;;
   *"/compare"*)    echo 200 ;;
@@ -42,6 +45,9 @@ case "$*" in
   *) echo 200 ;;
 esac
 EOT
+  chmod +x "$BIN/curl"
+}
+restore_curl_stub
 # **`getent` をスタブして「名前解決で引けた」経路を作る。**
 # **テストに IP リテラルを書かない**（scripts/ci/forbidden-patterns.sh の ip-address 規則。
 # RFC 5737 の文書用アドレスでも規則は区別しないし、区別させると本物を通す穴になる）。
@@ -118,17 +124,48 @@ t_deploy_forces_recreate() {
 }
 test_case "human-tasks: 反映は pull + force-recreate をこの順で打つ" t_deploy_forces_recreate
 
-t_verifies_four_things() {
+t_verifies_everything() {
   run bash "$SCRIPT" --yes
   assert_eq 0 "$STATUS" "全部期待どおりなら成功: $OUT"
-  # **4 つとも見る。**/compare が壊れていないことまで見て、はじめて成功と言える
+  # /compare が壊れていないことまで見て、はじめて成功と言える
   assert_contains "$LOG" "no-such-page-12345" "404 の本文を見る"
   assert_contains "$LOG" "/compare" "**/compare が壊れていないことを見る**"
-  assert_contains "$LOG" "__not-found/index.html" "#654 の分を見る"
-  assert_contains "$OUT" "4 つとも期待どおり" "全部通ったと言う"
+  # **#746: 綴りを 3 つとも見る。** index.html だけを見ていたせいで、
+  # 2026-09-13 にこのスクリプトは「4 つとも期待どおり」と報告したのに /__not-found は 200 だった。
+  # **URL は行末に来るので、部分一致だと `/__not-found` が `/__not-found/index.html` にも当たってしまう。**
+  # **行ごと完全一致で数える**（そうしないと「3 つとも見た」の検算が空回りする）。
+  for want in /__not-found /__not-found/ /__not-found/index.html; do
+    n=$(printf '%s\n' "$LOG" | grep -c "https://giinrecord.jp${want}\$" || true)
+    assert_eq 1 "$n" "**#746: $want をちょうど 1 回叩く**"
+  done
+  assert_contains "$OUT" "期待どおりです" "全部通ったと言う"
   assert_contains "$OUT" "browser-check" "より強い確認も案内する"
 }
-test_case "human-tasks: 反映後に 4 つとも確認する" t_verifies_four_things
+test_case "human-tasks: 反映後に /compare と not-found の 3 つの綴りを確認する（#746）" t_verifies_everything
+
+# **#746 の否定的対照。** 2026-09-13 に本番で実際に起きた状態をそのまま作る:
+# **`/__not-found/index.html` は 404 なのに、`/__not-found` と `/__not-found/` は 200。**
+# 当時のスクリプトはこの状態で「4 つとも期待どおり」と報告した。**そう言わないことを固定する。**
+t_fails_when_only_index_is_fixed() {
+  cat > "$BIN/curl" <<'EOT'
+#!/usr/bin/env bash
+printf 'curl %s\n' "$*" >> "$STUB_LOG"
+case "$*" in
+  *"__not-found/index.html"*) echo 404 ;;   # ← スクリプトが唯一見ていた URL。ここだけ直っていた
+  *"__not-found"*)            echo 200 ;;   # ← 末尾なし・スラッシュ付きは 200 のままだった
+  *"/compare"*)               echo 200 ;;
+  *no-such-page*)  if [[ "$*" == *"%{http_code}"* ]]; then echo 404; else echo "ページが見つかりません"; fi ;;
+  *) echo 200 ;;
+esac
+EOT
+  chmod +x "$BIN/curl"
+  run bash "$SCRIPT" --yes
+  assert_eq 1 "$STATUS" "**index.html だけ 404 でも成功と言わない（#746 で誤報告した状態）**"
+  assert_not_contains "$OUT" "期待どおりです" "「期待どおり」と言ってはいけない"
+  assert_contains "$OUT" "期待と違う項目があります" "どこを見ればよいか言う"
+  restore_curl_stub
+}
+test_case "human-tasks: /__not-found/index.html だけ 404 では成功と言わない（#746 の誤報告）" t_fails_when_only_index_is_fixed
 
 t_fails_when_compare_breaks() {
   # **/compare が 404 を返す状況**（反映で壊れた）を作る
@@ -137,7 +174,7 @@ t_fails_when_compare_breaks() {
 printf 'curl %s\n' "$*" >> "$STUB_LOG"
 case "$*" in
   *"/compare"*)    echo 404 ;;
-  *"__not-found"*) echo 404 ;;
+  *"__not-found"*) echo 404 ;;   # #746: 綴り 3 つとも直っている = 落ちる理由は /compare だけ
   *no-such-page*)  if [[ "$*" == *"%{http_code}"* ]]; then echo 404; else echo "ページが見つかりません"; fi ;;
   *) echo 200 ;;
 esac
@@ -146,6 +183,7 @@ EOT
   run bash "$SCRIPT" --yes
   assert_eq 1 "$STATUS" "**/compare が壊れたら失敗で終わる**"
   assert_contains "$OUT" "期待と違う項目があります" "どこを見ればよいか言う"
+  restore_curl_stub
 }
 test_case "human-tasks: /compare が壊れたら成功と言わない" t_fails_when_compare_breaks
 

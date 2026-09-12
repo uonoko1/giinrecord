@@ -324,7 +324,20 @@ test("site.conf: プリレンダー済みは try_files、未知のパスは =404
   assert.match(code, /location \/ \{\s*try_files \$uri \$uri\/index\.html =404;/, "try_files の最後は =404");
   assert.doesNotMatch(code, /try_files [^;]*\/__spa-fallback\.html;/, "try_files で fallback に落とすと 200 になる（/compare の明示 location 以外）");
   assert.match(code, /error_page 404 \/__not-found\/index\.html;/, "404 の本文は catch-all のプリレンダー済み HTML（#610: JS 無しでも読める）");
-  assert.match(code, /location = \/__not-found\/index\.html \{[^}]*internal;/, "not-found の HTML 自体は直接取得させない（別の 200 URL を作らない）");
+  // Issue #746: **`location =`（完全一致）では足りない。** `try_files $uri $uri/index.html` が
+  // `/__not-found` を `/__not-found/index.html` に内部解決し、`internal` は外部からの要求しか拒まないので
+  // **`/__not-found` と `/__not-found/` が 200 のまま残った**（2026-09-13 の本番実測）。
+  // `^~` は `location /` より優先されるので `try_files` 自体が走らない = 綴り違いごと塞げる。
+  assert.match(
+    code,
+    /location \^~ \/__not-found \{[^}]*internal;/,
+    "not-found は prefix ごと internal（#746: `=` だと /__not-found が try_files に拾われて 200 になる）",
+  );
+  assert.doesNotMatch(
+    code,
+    /location = \/__not-found\/index\.html \{/,
+    "#746: 完全一致の location に戻すと /__not-found と /__not-found/ が 200 に戻る",
+  );
   assert.match(code, /location = \/__spa-fallback\.html \{[^}]*internal;/, "/compare 専用の SPA shell も直接取得させない");
   assert.match(code, /gzip_types text\/css application\/javascript application\/json image\/svg\+xml;/);
 });
@@ -362,6 +375,10 @@ test("ci.yml: docker-web は本物のビルドに対して、未知パスが 404
   assert.match(step, /expect \/this-does-not-exist\/\s+404/);
   assert.match(step, /expect \/__spa-fallback\.html\s+404/, "fallback を直接は取れない");
   assert.match(step, /expect \/__not-found\/index\.html\s+404/, "#610: not-found の HTML も直接は取れない");
+  // Issue #746: 綴り違い（末尾なし・スラッシュ付き）も本物のビルドに対して見る。
+  // 本番では index.html だけが 404 で、この 2 つが 200 のまま残っていた。
+  assert.match(step, /expect \/__not-found\s+404/, "#746: 末尾なしも直接は取れない");
+  assert.match(step, /expect \/__not-found\/\s+404/, "#746: スラッシュ付きも直接は取れない");
   // 404 の本文（ステータスだけ 404 で中身は出す）
   assert.match(step, /lang="ja"/);
   assert.match(step, /noindex/);

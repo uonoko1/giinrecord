@@ -119,6 +119,37 @@ t_body
 # ---- fallback / not-found 自体は直接取れない（同じ中身が別の 200 URL としても索引されるのを防ぐ） ----
 assert_status /__spa-fallback.html      404 "#325: internal。直接は取れない"
 assert_status /__not-found/index.html   404 "#610: internal。直接は取れない"
+# Issue #746: **末尾なし・スラッシュ付きも塞ぐ。** #654 は `location = /__not-found/index.html` に
+# `internal` を付けただけだったので、`location /` の `try_files $uri $uri/index.html` が
+# **`/__not-found` を `/__not-found/index.html` に内部解決して 200 を返していた**
+# （`internal` が拒むのは「外部からの要求」だけで、try_files の内部解決は通る）。
+# 本番実測（2026-09-13、反映直後）: /__not-found/index.html は 404、**/__not-found と /__not-found/ は 200**
+# で本文に「ページが見つかりません」が出ていた = 同じ本文が別の 200 URL としても索引されうる（#325 の再現）。
+assert_status /__not-found              404 "#746: 末尾なし。try_files の内部解決に拾わせない"
+assert_status '/__not-found/'           404 "#746: スラッシュ付き"
+assert_status /__not-found/anything     404 "#746: 配下も 200 にしない"
+# **ステータスだけを見ると足りない。** #746 の症状は「**200 で**『ページが見つかりません』を返す」
+# ——つまり *同じ本文が、自分自身の URL として索引可能な 200 で二重に存在する* こと。
+# 404 の本文に「見つかりません」が出るのは **正しい**（error_page がこの HTML を 404 の本文に使う。#610）ので、
+# ここで禁じるのは「200 かつ not-found の本文」の組み合わせだけ。
+# **status だけの assert と分けてある理由**: 将来 `return 404 ""` のように本文ごと消す直し方をすると
+# status の assert は通るが #610 が壊れる。逆に本文だけ見ると 200 を見逃す。両方見る。
+t_not_found_variants_body() {
+  local bad=0 path got body
+  for path in /__not-found /__not-found/ /__not-found/index.html; do
+    got=$(status "$path")
+    body=$(cat "$TMP/body")
+    if [ "$got" != 200 ]; then continue; fi
+    bad=1
+    case "$body" in
+      *'見つかりません'*) echo "    x $path が 200 で not-found の本文を返している（#746 の症状そのもの）";;
+      *) echo "    x $path が 200（内容は別だが、内部用のパスが外から開けている）";;
+    esac
+  done
+  if [ "$bad" = 0 ]; then PASS=$((PASS+1)); echo "ok   #746: /__not-found の 3 つの綴りはどれも 200 で本文を出さない"
+  else FAIL=$((FAIL+1)); echo "FAIL #746: /__not-found の綴り違いが 200 を返す"; fi
+}
+t_not_found_variants_body
 
 # ---- セキュリティヘッダは 404 にも付く ----
 t_headers() {
