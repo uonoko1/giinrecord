@@ -51,8 +51,10 @@ bash scripts/human-tasks.sh --yes    # 実行する（**引数はこれだけ**�
 | **PAT の設置**（#550 / #155 / #547） | GitHub の設定画面での操作 |
 | **Sponsors / 広告 / NDL 照会**（#53 / #48 / #250） | **外部に届く。方針の判断も要る** |
 
-**スクリプトは反映後に 4 つとも確認する**（`/compare` が壊れていないことまで見る）。
+**スクリプトは反映後に 6 つとも確認する**（`/compare` が壊れていないことと、
+**`/__not-found` の 3 つの綴りが全部 404 であること**まで見る）。
 **`/compare` が壊れたら成功と言わない**（テストで固定した）。
+**`/__not-found/index.html` だけが 404 でも成功と言わない**（#746。これが 2026-09-13 の誤報告そのもの）。
 
 **新しく「人間にしか打てないもの」が増えたら、ここに足すか、足さない理由を書くこと**——
 **対話が要る／判断が要る／既存の規則に反するものは足さない。**
@@ -102,18 +104,48 @@ ssh giinops@<host> 'sudo -n git -C /opt/giinrecord pull \
 **なぜ `up -d` だけでは足りないか**: `site.conf` は bind mount した単一ファイルなので、
 **`git pull` では inode が変わるだけでコンテナは古いものを掴んだまま**（`docs/ops/deploy.md`）。
 
-**反映後の確認**（4 つとも見ること）:
+**反映後の確認**（**6 つとも見ること**。**なぜ 6 つになったかは下の #746 を読むこと**）:
 
 ```sh
 curl -sSL https://giinrecord.jp/no-such-page-12345 | grep -c ページが見つかりません        # 0 → 1 以上
 curl -sSL -o /dev/null -w "%{http_code}\n" https://giinrecord.jp/no-such-page-12345        # 404 のまま
 curl -sSL -o /dev/null -w "%{http_code}\n" https://giinrecord.jp/compare                   # 200 のまま
-curl -sSL -o /dev/null -w "%{http_code}\n" https://giinrecord.jp/__not-found/index.html    # 200 → 404
+curl -sSL -o /dev/null -w "%{http_code}\n" https://giinrecord.jp/__not-found               # 404（#746）
+curl -sSL -o /dev/null -w "%{http_code}\n" https://giinrecord.jp/__not-found/              # 404（#746）
+curl -sSL -o /dev/null -w "%{http_code}\n" https://giinrecord.jp/__not-found/index.html    # 404（#654）
 ```
 
 **3 つ目が大事**——`/compare` は SPA fallback を使う**正常な**ページなので、
 **そこが壊れていないことまで見て、はじめて成功と言える。**
-**4 つ目は #654 の分**——`internal` が効けば直接は開けなくなる。
+
+### **#746: この確認は 1 度、通ったのに直っていなかった**（2026-09-13）
+
+**`scripts/human-tasks.sh --yes` が「4 つとも期待どおり」と報告した直後に、PO が別の綴りで叩いたら:**
+
+| URL | status |
+|---|---|
+| `/__not-found/index.html` | **404**（スクリプトが見ていた唯一の URL） |
+| **`/__not-found`** | **200**（本文は「ページが見つかりません」） |
+| **`/__not-found/`** | **200** |
+
+**原因**: `location / { try_files $uri $uri/index.html =404; }` の 2 つ目が
+**`/__not-found` を `/__not-found/index.html` に内部解決する。**
+**`internal` が拒むのは「外部からの要求」だけで、`try_files` の内部解決は通る。**
+**だから綴りによって 404 と 200 が分かれていた**（`location =` を `location ^~` にして直した）。
+
+**なぜ気づけなかったか**: **#654 を起票したのも、この確認 4 項目を書いたのも PO。**
+**`scripts/human-tasks.sh` はその 4 項目をそのまま実装したので、同じ所だけを見た。**
+**確認項目を書いた人と実装した人が同じだと、見落としがそのまま複製される。**
+
+**だから「確認項目を足す」だけでは足りない。次からは:**
+
+- **URL を 1 つ選んだら、その URL の *綴り違い* も必ず並べる**（末尾なし／スラッシュ付き／配下）
+- **確認は人が打つ手順ではなく、実機を起動するテストに書く**——
+  `deploy/test/nginx-404.test.sh` と `.github/workflows/ci.yml` の docker-web が
+  **3 つの綴りとも 404 であることを毎回叩く。** 手順書は「人が確かめるための写し」にすぎない
+- **「N 件とも期待どおり」と言うスクリプトには、N 件が通っても失敗する否定的対照を必ず添える**——
+  `scripts/ci/test/human-tasks.test.sh` に **「index.html だけ 404、他は 200」= 当時の本番そのもの**
+  を再現して、**スクリプトが成功と言わないこと**を固定した
 
 **`curl` の 4 項目より強い確認があります**（`browser-check.ts` の docblock が PO 宛に書いていたもの）:
 
@@ -141,6 +173,7 @@ pnpm --filter web browser-check -- --url https://giinrecord.jp
 2) status                                  404     ← 正しい（変わってはいけない）
 3) /compare                                200     ← 正しい（変わってはいけない）
 4) /__not-found/index.html                 200     ← #654。反映後は 404
+（**このとき /__not-found と /__not-found/ を測っていなかった。それが #746 になった**）
 主要 9 ページ（/ /members /rollcalls /assemblies /coverage /about /terms /privacy /compare）すべて 200
 ```
 
