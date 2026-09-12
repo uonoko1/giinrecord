@@ -80,18 +80,20 @@ const measure = (mutate: (key: string[], i: number) => string | null) => {
 
 test("#722 機序 1/3（1 文字欠落）: 別人に決まる例は無い", () => {
   const r = measure((key, i) => [...key.slice(0, i), ...key.slice(i + 1)].join(""));
-  assert.equal(r.total, 1123, "母数が変わった＝名簿が変わっている。docblock ごと測り直すこと");
+  // 2026-09-13 に滋賀（pref-25、#741）の 44 名が入って 1,123 → 1,297（8 議会・329 名）になった。
+  // **測り直した結果、別人に決まる経路は 1 つも開いていない**（other 0 / wrong []）。
+  assert.equal(r.total, 1297, "母数が変わった＝名簿が変わっている。docblock ごと測り直すこと");
   assert.deepEqual(r.wrong, [], "**実データで起こりうる欠落で別人に決まる経路が開いた**（#569）");
-  assert.equal(r.self, 1010, "本人に決まる数が変わった。名簿が変わっている");
+  assert.equal(r.self, 1183, "本人に決まる数が変わった。名簿が変わっている");
 });
 
 test("#722 機序 4（別の字に化ける）: 別人に決まらず、全件 brokenGlyph として落ちる", () => {
   // 滋賀の実例は `□`(U+25A1)。同じ形になりうる代替文字も測る（#680 は □ しか見ていない）
   for (const replacement of ["□", "◇", "■", "?", "�"]) {
     const r = measure((key, i) => [...key.slice(0, i), replacement, ...key.slice(i + 1)].join(""));
-    assert.equal(r.total, 1123, `母数が変わった（${replacement}）`);
+    assert.equal(r.total, 1297, `母数が変わった（${replacement}）`);
     assert.deepEqual(r.wrong, [], `**${replacement} に化けて別人に決まる経路が開いた**`);
-    assert.equal(r.none, 1123, `${replacement} は全件 unmatched に落ちるはず`);
+    assert.equal(r.none, 1297, `${replacement} は全件 unmatched に落ちるはず`);
     // #680 の守り: 「名簿に無い」ではなく「字が化けた」と区別できること
     for (const [assemblyId, members] of roster()) {
       const sample = [...localNameKey(members[0].name)];

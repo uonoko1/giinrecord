@@ -47,11 +47,14 @@ test("#680 unmatchedReason: 名前になれない字があれば brokenGlyph、�
 });
 
 /**
- * 否定的対照（#554）: **本番データに 1 件も当たらないことを、本番データそのもので確かめる。**
+ * 否定的対照（#554）: **本番データで偽陽性が 0 件であることを、本番データそのもので確かめる。**
+ * **2026-09-13 に滋賀（#741）が入るまでは「1 件も当たらない」だった。**
+ * 滋賀の PDF には `辻` が `□` に化ける本があり、**本番データに初めて真陽性が出た**ので、
+ * 「当たったものが全部 unmatched.json に落ちていること」に変えた（見ている性質は同じ）。
  * 「壊れた氏名を拾う」だけのテストは、`nonNameCharacters` が全部の氏名を返す実装でも通る。
  * ここが落ちれば allowlist が狭すぎる（＝正しい氏名を壊れていると言う）。
  */
-test("#680 否定的対照: 本番 data/ の全議員名・全票の nameText に 1 件も当たらない", async () => {
+test("#680 否定的対照: 本番 data/ で当たるのは unmatched.json に落ちた氏名だけ（偽陽性 0 件）", async () => {
   const DATA = fileURLToPath(new URL("../../../data/", import.meta.url));
 
   const members = JSON.parse(await readFile(join(DATA, "members/index.json"), "utf-8")) as { name: string }[];
@@ -74,7 +77,25 @@ test("#680 否定的対照: 本番 data/ の全議員名・全票の nameText �
   };
   await walk(join(DATA, "assemblies"));
   assert.ok(votes > 40000, `票が読めていなければこの対照は無意味（${votes} 票）`);
-  assert.deepEqual([...voteHits], [], "rollcalls の nameText に当たった");
+  // **当たってよいのは「本当に壊れている氏名」だけ。** 2026-09-13 に滋賀（pref-25、#741）が入って
+  // **本番データに初めて真陽性が出た**——`辻正隆` の `辻` が PDF の文字層で `□`（U+25A1）に化ける本がある。
+  // **この対照が見ているのは偽陽性（正しい氏名を壊れていると言うこと）**なので、
+  // **「0 件」ではなく「当たったものが全部 unmatched.json に落ちていること」で確かめる。**
+  // 寄せられた氏名（memberId が付く票）に 1 件でも当たれば、それは偽陽性である。
+  const unmatchedNames = new Set<string>();
+  for (const e of await readdir(join(DATA, "assemblies"), { withFileTypes: true })) {
+    if (!e.isDirectory()) continue;
+    try {
+      const list = JSON.parse(await readFile(join(DATA, "assemblies", e.name, "unmatched.json"), "utf-8")) as { nameText: string }[];
+      for (const u of list) unmatchedNames.add(u.nameText);
+    } catch { /* unmatched.json の無い議会 */ }
+  }
+  const falsePositives = [...voteHits].filter((n) => !unmatchedNames.has(n));
+  assert.deepEqual(falsePositives, [], "名簿に寄せられた氏名に当たった（偽陽性）");
+  // **母数が減って空回りしていないこと**——当たった氏名が全部 unmatched なのは、
+  // 当たりが 0 件でも真になる。**真陽性が実際にあることも見る**（滋賀が入る前は 0 件だった）。
+  assert.ok(voteHits.size >= 1, "壊れた氏名が 1 件も無い（滋賀 pref-25 の `□` が消えた？ 対照が空回りしている）");
+  for (const n of voteHits) assert.ok(unmatchedNames.has(n), `${n}: 壊れているのに unmatched.json に無い`);
 });
 
 /**

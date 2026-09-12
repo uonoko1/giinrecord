@@ -26,6 +26,13 @@
   "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/08089011294.htm"
  },
  {
+  "id": "pref-25",
+  "kind": "prefectural",
+  "name": "滋賀県議会",
+  "prefCode": "25",
+  "sourceUrl": "https://www.shigaken-gikai.jp/g07_giinlistP.asp"
+ },
+ {
   "id": "pref-29",
   "kind": "prefectural",
   "name": "奈良県議会",

@@ -1,0 +1,216 @@
+{
+ "asOf": "2026-09-13",
+ "assemblyId": "pref-25",
+ "counts": {
+  "rollcalls": 14
+ },
+ "current": true,
+ "district": "大津市",
+ "group": "日本共産党滋賀県議会議員団",
+ "id": "p_25_77",
+ "kana": "ふしき みちよ",
+ "name": "節木 三千代",
+ "profileUrl": "https://www.shigaken-gikai.jp/g07_giinlistS.asp?SrchID=77",
+ "sourceUrl": "https://www.shigaken-gikai.jp/g07_giinlistP.asp",
+ "terms": [
+  {
+   "asOf": "2026-09-13",
+   "district": "大津市",
+   "group": "日本共産党滋賀県議会議員団"
+  }
+ ],
+ "timeline": [
+  {
+   "date": "2026-08-10",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2026-07-20260810-意見書第10号から意見書第12号まで",
+   "sessionLabel": "令和8年 7月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg907_sanpi-080810-1.pdf",
+   "title": "意見書第10号から意見書第12号まで",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-08-10",
+   "kind": "localVote",
+   "result": "否決",
+   "rollCallId": "pref-25-2026-07-20260810-意見書第８号および意見書第９号",
+   "sessionLabel": "令和8年 7月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg907_sanpi-080810-1.pdf",
+   "title": "意見書第８号および意見書第９号",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-08-10",
+   "kind": "localVote",
+   "result": "不採択",
+   "rollCallId": "pref-25-2026-07-20260810-請願第10号を不採択とすべきものとする総務・企画・公室常任委員長報告",
+   "sessionLabel": "令和8年 7月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg907_sanpi-080810-1.pdf",
+   "title": "請願第10号を不採択とすべきものとする総務・企画・公室常任委員長報告",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-08-10",
+   "kind": "localVote",
+   "result": "不採択",
+   "rollCallId": "pref-25-2026-07-20260810-請願第11号を不採択とすべきものとする厚生・産業常任委員長報告",
+   "sessionLabel": "令和8年 7月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg907_sanpi-080810-1.pdf",
+   "title": "請願第11号を不採択とすべきものとする厚生・産業常任委員長報告",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-08-10",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-25-2026-07-20260810-議第105号から議第109号まで（人事案件）",
+   "sessionLabel": "令和8年 7月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg907_sanpi-080810-1.pdf",
+   "title": "議第105号から議第109号まで（人事案件）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-08-10",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-25-2026-07-20260810-議第110号から議第114号まで（人事案件）",
+   "sessionLabel": "令和8年 7月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg907_sanpi-080810-1.pdf",
+   "title": "議第110号から議第114号まで（人事案件）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-08-10",
+   "kind": "localVote",
+   "result": "可決不採択",
+   "rollCallId": "pref-25-2026-07-20260810-議第87号、議第90号、議第91号、議第93号から議第96号までおよび議第98号を可決すべきもの、請願第９号を不採択とすべきものとする各常任委員長報告",
+   "sessionLabel": "令和8年 7月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg907_sanpi-080810-1.pdf",
+   "title": "議第87号、議第90号、議第91号、議第93号から議第96号までおよび議第98号を可決すべきもの、請願第９号を不採択とすべきものとする各常任委員長報告",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-08-10",
+   "kind": "localVote",
+   "result": "可決採択",
+   "rollCallId": "pref-25-2026-07-20260810-議第88号、議第89号、議第92号、議第97号、議第99号および議第102号から議第104号までを可決すべきもの、請願第８号を採択すべきものとする各常任委員長報告",
+   "sessionLabel": "令和8年 7月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg907_sanpi-080810-1.pdf",
+   "title": "議第88号、議第89号、議第92号、議第97号、議第99号および議第102号から議第104号までを可決すべきもの、請願第８号を採択すべきものとする各常任委員長報告",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-22",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2026-07-20260722-議第100号を可決すべきものとする厚生・産業常任委員長報告",
+   "sessionLabel": "令和8年 7月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg900_sanpi-0722-2.pdf",
+   "title": "議第100号を可決すべきものとする厚生・産業常任委員長報告",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-07-22",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-25-2026-07-20260722-議第101号（人事案件）",
+   "sessionLabel": "令和8年 7月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg900_sanpi-0722-2.pdf",
+   "title": "議第101号（人事案件）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-06-30",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2026-06-rinji-20260630-意見書第６号",
+   "sessionLabel": "令和8年 6月臨時会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg898_sanpi2-080630%20.pdf",
+   "title": "意見書第６号",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-06-30",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2026-06-rinji-20260630-意見書第７号",
+   "sessionLabel": "令和8年 6月臨時会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg898_sanpi2-080630%20.pdf",
+   "title": "意見書第７号",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-06-30",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2026-06-rinji-20260630-議第85号を可決すべきものとする各常任委員長報告",
+   "sessionLabel": "令和8年 6月臨時会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg898_sanpi2-080630%20.pdf",
+   "title": "議第85号を可決すべきものとする各常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-06-30",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2026-06-rinji-20260630-議第86号を可決すべきものとする厚生・産業常任委員長報告",
+   "sessionLabel": "令和8年 6月臨時会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg898_sanpi2-080630%20.pdf",
+   "title": "議第86号を可決すべきものとする厚生・産業常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  }
+ ]
+}

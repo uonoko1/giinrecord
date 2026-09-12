@@ -1,4 +1,5 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
+import iconv from "iconv-lite";
 import { createHash } from "node:crypto";
 import { POLITENESS_FLOOR_MS, sleep } from "../../fetch.ts";
 
@@ -98,6 +99,15 @@ export class PoliteFetcher {
   /** HTML（UTF-8）。毎回取得。 */
   async text(url: string): Promise<string> {
     return (await this.get(url)).toString("utf-8");
+  }
+
+  /**
+   * HTML（Shift_JIS）。毎回取得。**滋賀県議会（#741）のサイトは `charset=shift_jis`** で、
+   * UTF-8 として読むと氏名も会派名も文字化けする。
+   * 衆議院の名簿（`shugiin-members.ts`）と同じ `iconv-lite` で復号する（依存は増えない）。
+   */
+  async textShiftJis(url: string): Promise<string> {
+    return iconv.decode(await this.get(url), "Shift_JIS");
   }
 
   /** PDF などのバイナリ。URL が固定なので .cache/ にキャッシュする。 */

@@ -12,7 +12,9 @@ import { DEFAULT_SESSIONS, dietAssemblies, readSessionsOnDisk } from "./dataset.
  *   鳥取県議会（#184）: 議員名簿（1 ページ）× 直近 N 会期の「議案等の議決結果」ページの賛否 PDF（会期に複数）→ 同じ形で pref-31。
  *     PDF の氏名は姓だけ（「○○議員」）なので、名簿で 1 人に決まるときだけ寄せ、同姓が複数なら候補を unmatched.json に列挙する。
  *   高知県議会（#220）: 議員名簿（会派別、1 ページ）×「議員別賛否の状況」index の直近 N 会期の議決結果一覧 PDF → pref-39。
- * Usage: pnpm etl:local <miyagi|tokushima|tottori|mie|nara|shimane|kochi> [--sessions N]   (default N = 2)
+ *   滋賀県議会（#741）: 議員名簿（五十音順、1 ページ、**Shift_JIS**）× 年ページ（年度版と暦年版の 2 通り）→ 会期の賛否ページ → 直近 N 会期の議案等賛否一覧 PDF（1 会期に複数本）→ pref-25。
+ *     **文字層の無い画像 PDF が 3 本ある**（#680）。読めない本は落とさず `meta.notes.unreadablePdfs` に記録して先へ進む。
+ * Usage: pnpm etl:local <miyagi|tokushima|tottori|mie|nara|shimane|kochi|shiga> [--sessions N]   (default N = 2)
  */
 const DATA = fileURLToPath(new URL("../../../data/", import.meta.url));
 const args = process.argv.slice(2);
@@ -36,6 +38,7 @@ const built = buildLocalAssembly({
   sources: run.sources,
   sessions: run.sessions,
   unmatched: run.unmatched,
+  ...(run.unreadableSources?.length ? { unreadableSources: run.unreadableSources } : {}),
 });
 console.log(`rollcalls: ${built.meta.counts.rollcalls}, cells: ${built.meta.counts.cells}, unknown cells (kept as 不明, not guessed): ${built.meta.counts.unknownCells}`);
 if (built.unmatched.length) {

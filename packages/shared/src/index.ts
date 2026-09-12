@@ -641,6 +641,14 @@ export interface LocalAssemblyMeta {
   /** 対象会期。pdfUrl はその会期の表決 PDF（採決日ごとに PDF が分かれる議会（徳島）は最初の 1 本。全部は pdfUrls） */
   sessions: { sessionId: string; sessionLabel: string; sourceUrl: string; pdfUrl: string; pdfUrls?: string[]; rollcalls: number; unknownCells: number }[];
   counts: { members: number; rollcalls: number; cells: number; unknownCells: number; unmatchedNames: number };
+  /**
+   * **読めなかった一次資料**（滋賀 #741 が最初）。**「公表されていない」と区別するために書く。**
+   * 滋賀には**文字層の無い画像 PDF が 3 本ある**（#680 が 147 本を走査して名指しした）。
+   * そこに賛否は公表されているのに、**機械では読めない**。
+   * 何も書かないと「その日の採決は無かった」と読めてしまうので、URL と理由を残す。
+   * **理由は推定しない**（例外のメッセージをそのまま写す）。読める議会では省略。
+   */
+  unreadableSources?: { url: string; reason: string }[];
 }
 
 /** 表決 PDF の氏名のうち名簿に名寄せできなかったもの（`unmatched.json`）。運用者が確認する。 */

@@ -1,0 +1,18 @@
+[
+ {
+  "date": "2026-08-10",
+  "fetchedAt": "2026-09-12T20:20:52.955Z",
+  "id": "2026-07",
+  "label": "令和8年 7月定例会議",
+  "rollcalls": 10,
+  "sourceUrl": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=256"
+ },
+ {
+  "date": "2026-06-30",
+  "fetchedAt": "2026-09-12T20:20:52.955Z",
+  "id": "2026-06-rinji",
+  "label": "令和8年 6月臨時会議",
+  "rollcalls": 4,
+  "sourceUrl": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=258"
+ }
+]
