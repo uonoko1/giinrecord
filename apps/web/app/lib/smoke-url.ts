@@ -26,6 +26,17 @@ export interface UrlSmokeTargets {
   spa: string[];
   /** a path that is not a route at all; must return 404 (#325; it used to be 200 via the SPA fallback) */
   unknown: string | null;
+  /**
+   * Issue #746: paths that exist as files in the build but must NOT be reachable as their own 200 URL
+   * (`internal` in deploy/nginx/site.conf) — the pre-rendered not-found page and every spelling that
+   * `try_files $uri $uri/index.html` can resolve to it. **They must return 404.**
+   *
+   * **This list used to be missing, and `pages` silently contained `/__not-found/`**: because the build
+   * really does write `__not-found/index.html`, the generic "every index.html must be 200" rule
+   * *asserted the bug*. Production served `/__not-found/` with 200 and the body
+   * 「ページが見つかりません」, and this smoke test called that a pass (measured 2026-09-13).
+   */
+  internal: string[];
   /** one hashed asset (null = none built) */
   asset: string | null;
   /** one file under data/ (the archive zip today; null = none built) */
@@ -56,6 +67,16 @@ export const UNKNOWN_PATH = "/__smoke-no-such-page__/";
  */
 export const SPA_ONLY_PATHS = ["/compare?m=m_1,m_2"];
 
+/**
+ * Issue #610 / #746: the pre-rendered not-found page. The build writes it, so it turns up in the
+ * `index.html` sweep — but nginx marks it `internal`, so **every spelling must answer 404.**
+ * All three are listed because `try_files $uri $uri/index.html` resolves the first two to the third.
+ */
+export const INTERNAL_ONLY_PATHS = ["/__not-found", "/__not-found/", "/__not-found/index.html"];
+
+/** build-relative files that must be dropped from the "every page is 200" sweep (they are `internal`) */
+const INTERNAL_PAGE_FILES = new Set(["__not-found/index.html"]);
+
 /** `members/m_1/index.html` -> `/members/m_1/`; `index.html` -> `/` */
 function pageUrl(file: string): string {
   const dir = file.replace(/index\.html$/, "");
@@ -66,9 +87,12 @@ export function urlSmokeTargets(pageFiles: string[], otherFiles: string[]): UrlS
   const asset = otherFiles.find((f) => f.startsWith("assets/")) ?? null;
   const data = otherFiles.find((f) => f.startsWith("data/")) ?? null;
   return {
-    pages: pageFiles.map(pageUrl),
+    // #746: `internal` なファイルを「200 であるべきページ」から外す。**外し忘れると穴を固定してしまう**
+    // ——`__not-found/index.html` はビルドが実際に書き出すので、この掃き出しに混ざっていた。
+    pages: pageFiles.filter((f) => !INTERNAL_PAGE_FILES.has(f)).map(pageUrl),
     spa: [...SPA_ONLY_PATHS],
     unknown: UNKNOWN_PATH,
+    internal: [...INTERNAL_ONLY_PATHS],
     asset: asset ? `/${asset}` : null,
     data: data ? `/${data}` : null,
   };
@@ -113,6 +137,16 @@ export function checkServed(got: Map<string, ServedResponse>, t: UrlSmokeTargets
     const r = take(url);
     if (!r) continue;
     if (r.status !== 200) failures.push(`${url}: status ${r.status} (expected 200)`);
+    expectSecurityHeaders(url, r, failures);
+  }
+  // #746: the not-found page must not be reachable as its own 200 URL, in ANY spelling.
+  // `internal` in nginx only rejects *external* requests; `try_files $uri $uri/index.html` resolves
+  // /__not-found internally and used to answer 200 with the 「ページが見つかりません」 body — the same
+  // text served at a second, indexable URL, which is exactly what #325 set out to prevent.
+  for (const url of t.internal ?? []) {
+    const r = take(url);
+    if (!r) continue;
+    if (r.status !== 404) failures.push(`${url}: status ${r.status} (expected 404 — internal, #746)`);
     expectSecurityHeaders(url, r, failures);
   }
   // #325: an unknown path must be 404, not 200 — a 200 makes search engines index a page that does not exist.
