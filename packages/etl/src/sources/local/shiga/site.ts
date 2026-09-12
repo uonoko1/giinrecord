@@ -27,10 +27,15 @@ export const SHIGA_ROSTER_URL = `${SHIGA_ORIGIN}/g07_giinlistP.asp`;
 export const SHIGA_YEAR_INDEX_URL = `${SHIGA_ORIGIN}/voices/g07_Congress.asp?YMSel=9999`;
 
 /**
- * 年ページ。**`Tmode=0` が要る**——付けないと、その年の会期の一部しか出ない（実測 #741:
- * 2012 年は `Tmode` 無しで 1 会期、`Tmode=0` で 6 会期。#670 が「平成24年は 6 件」と数えたのは `Tmode=0` 側）。
+ * 年ページ。**2 通りある**（実測 #741）:
+ *   - `Tmode` 無し ＝ **年度**（4月〜翌3月）
+ *   - `Tmode=0` ＝ **暦年**（1月〜12月）
+ * **片方だけでは会期が落ちる**（2012 年は年度版で 1 会期・暦年版で 6 会期、
+ * 2014 年は年度版で 6 会期・暦年版で 1 会期。2026 年は年度版に 7月定例会議があり暦年版に無い）。
+ * **両方読んで KaigiID の和を取る**と 81 会期・147 本になり、#680 が数えた本数と一致する。
  */
-export const shigaYearUrl = (year: number): string => `${SHIGA_ORIGIN}/voices/g07_Congress.asp?Y1=${year}&Tmode=0`;
+export const shigaYearUrl = (year: number, mode: "fiscal" | "calendar"): string =>
+  mode === "calendar" ? `${SHIGA_ORIGIN}/voices/g07_Congress.asp?Y1=${year}&Tmode=0` : `${SHIGA_ORIGIN}/voices/g07_Congress.asp?Y1=${year}`;
 /** 会期の賛否ページ。**`KaigiID` は年ページから拾うしかない**（連番に見えて飛ぶので組み立てない。#670） */
 export const shigaSanpiUrl = (kaigiId: number): string => `${SHIGA_ORIGIN}/g07_gian_sanpi.asp?KaigiID=${kaigiId}`;
 

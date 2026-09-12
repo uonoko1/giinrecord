@@ -34,8 +34,10 @@ export function parseRoster(html: string, opts: { asOf: string }): Roster {
   const members: LocalMember[] = [];
   const ids = new Set<string>();
   for (const td of root.querySelectorAll("td")) {
+    // **写真の td にも同じプロフィールへのリンクがある**（`<td class="photos"><a …><img …></a></td>`）。
+    // 中身が画像だけなので氏名が 1 文字も取れない。氏名の td だけを見る。
     const a = td.querySelector("a");
-    if (!a) continue;
+    if (!a || a.querySelector("img")) continue;
     const m = (a.getAttribute("href") ?? "").trim().match(PROFILE_HREF);
     if (!m) continue;
     const srchId = m[1];

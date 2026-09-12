@@ -392,15 +392,26 @@ function nameBand(page: PageGeometry, grid: Grid): { top: number; bottom: number
   // 下の帯ほど埋まっている列が減る（実測 `Kg229_240711` は 47 → 39 → 11 → 36 → 4 → 47 と上下する）。
   // **「同じくらい埋まっている帯まで」で切ると、氏名の途中で切れて別の氏名になる。**
   const width = (b: { items: Item[] }) => new Set(b.items.map((i) => bandIndex(grid.voteCols, i.cx))).size;
-  let best = 0;
-  for (let i = 1; i < bands.length; i++) if (width(bands[i]) > width(bands[best])) best = i;
-  const full = width(bands[best]);
-  if (full < 2) return undefined;
-  const end = bands.length - 1;
-  const top = Math.max(...bands[best].items.map((i) => i.cy));
-  const bottom = Math.min(...bands[end].items.map((i) => i.cy));
-  // 議席番号帯: 氏名帯のすぐ上の帯（無ければ氏名帯の上端をそのまま返す）
-  const seatTop = best > 0 ? Math.max(...bands[best - 1].items.map((i) => i.cy)) : top;
+  // **議席番号の帯を先に外す**——議席番号も全列が埋まるので、密度だけで選ぶと
+  // 議席番号を氏名として読む（実測 `Kg898_sanpi2-080630` は議席番号も氏名 1 文字目も 41 列で、
+  // 密度が同点になる）。**議席番号は全部が数字**で、氏名にはならない
+  // （本番の 1,057 名の氏名に数字は 1 文字も無い。`name-match.ts` の実測）。
+  const nameBands = bands.filter((b) => b.items.some((i) => !/^[0-9０-９]$/.test(i.str)));
+  if (nameBands.length === 0) return undefined;
+  const widest = Math.max(...nameBands.map(width));
+  if (widest < 2) return undefined;
+  // **いちばん広い帯を採ってはいけない**——氏名は縦書きで長さがまちまちなので、
+  // 最後の文字の帯（全員ぶんそろう）が 1 文字目の帯より広くなることがある
+  // （実測 `Kg898_sanpi2-080630`: 1 文字目 40 列・最後の文字 41 列。`辻󠄀` の幅が 0 で列に入らないため）。
+  // **氏名の 1 文字目は「いちばん広い帯とほぼ同じだけ埋まっている帯のうち、いちばん上」**。
+  const best = nameBands.findIndex((b) => width(b) >= widest * 0.9);
+  const full = width(nameBands[best]);
+  const end = nameBands.length - 1;
+  const top = Math.max(...nameBands[best].items.map((i) => i.cy));
+  const bottom = Math.min(...nameBands[end].items.map((i) => i.cy));
+  // 議席番号帯: 氏名帯のすぐ上の帯（数字の帯を外す前の並びで見る。無ければ氏名帯の上端）
+  const bestIdx = bands.indexOf(nameBands[best]);
+  const seatTop = bestIdx > 0 ? Math.max(...bands[bestIdx - 1].items.map((i) => i.cy)) : top;
   return { top, bottom, seatTop };
 }
 
