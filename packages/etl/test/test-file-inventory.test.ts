@@ -108,7 +108,7 @@ const ciTestFiles = (): string[] =>
 // **その場合は今の値を据え置く**（この規則は「離れすぎを詰める」ためのもので、
 // **緩める口実にしてはいけない**）。
 const WEB_TEST_FILES_MIN = 85; // 実測 2026-09-13: walk() で 87。**下げないので 85 のまま**（実数 − 3 = 84 は今より低い）
-const ETL_TEST_FILES_MIN = 98; // 実測 2026-09-13: readdirSync で 101（− 3。このファイル自身を含む）
+const ETL_TEST_FILES_MIN = 99; // 実測 2026-09-13: readdirSync で 102（− 3。このファイル自身を含む）
 const CI_TEST_FILES_MIN = 6; // 実測 2026-09-13: readdirSync で 7（− 1。母数が小さいので幅も小さく）
 
 test("#533: apps/web のテストファイル集合が下限を割らない（vitest の include glob を消しても足しても検出する）", () => {
@@ -208,7 +208,7 @@ webTestFiles() はディスク上のファイルを直接数えるので、inclu
  */
 test("#720 ci.yml の下限が、このファイルの定数とずれていない（片方だけ直すのを防ぐ）", () => {
   const ci = readFileSync(resolve(root, ".github/workflows/ci.yml"), "utf8");
-  // `[ "$web" -ge 85 ]` / `[ "$etl" -ge 98 ]` の数字を取る
+  // `[ "$web" -ge 85 ]` / `[ "$etl" -ge 99 ]` の数字を取る
   const pick = (name: string): number | null => {
     const m = new RegExp(`\\[ "\\$${name}" -ge (\\d+) \\]`).exec(ci);
     return m ? Number(m[1]) : null;
