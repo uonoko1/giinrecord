@@ -42,6 +42,21 @@ describe("urlSmokeTargets", () => {
     expect(t.pages).not.toContain("/compare");
     expect(t.spa).not.toContain(t.unknown);
   });
+
+  // Issue #746: **このスモークは穴を「合格」として固定していた。**
+  // ビルドは `__not-found/index.html` を実際に書き出すので、「index.html は全部 200」の掃き出しに
+  // 混ざり、`/__not-found/` に 200 を期待していた。本番は 200 を返していたので、ここは通っていた。
+  // **プリレンダーされたファイルであることと、その URL が 200 であるべきことは別。**
+  it("#746 /__not-found はプリレンダー済みでも「200 であるべきページ」に入れない", () => {
+    const t = urlSmokeTargets(["index.html", "about/index.html", "__not-found/index.html"], []);
+    expect(t.pages).toEqual(["/", "/about/"]);
+    expect(t.pages).not.toContain("/__not-found/");
+  });
+
+  it("#746 /__not-found は 3 つの綴りとも internal（404 を期待する的）に入る", () => {
+    const t = urlSmokeTargets(["index.html", "__not-found/index.html"], []);
+    expect(t.internal).toEqual(["/__not-found", "/__not-found/", "/__not-found/index.html"]);
+  });
 });
 
 describe("checkServed", () => {
@@ -49,6 +64,7 @@ describe("checkServed", () => {
     pages: ["/", "/about/"],
     spa: [] as string[],
     unknown: "/__x__/",
+    internal: [] as string[],
     asset: "/assets/a.js",
     data: "/data/members/index.json",
   };
@@ -94,6 +110,38 @@ describe("checkServed", () => {
   it("プリレンダーしない SPA ページが 200 なら失敗なし", () => {
     const got = new Map([["/", res()], ["/about/", res()], ["/__x__/", res({ status: 404 })], ["/compare?m=m_1", res()]]);
     expect(checkServed(got, { ...base, spa: ["/compare?m=m_1"], asset: null, data: null }).failures).toEqual([]);
+  });
+
+  // Issue #746: `internal` なパスが 200 を返したら失敗。**2026-09-13 の本番がこれだった**
+  // （/__not-found/index.html だけ 404、/__not-found と /__not-found/ は 200）。
+  it("#746 internal なパスが 200 なら失敗（同じ本文が別の 200 URL として索引される）", () => {
+    const got = new Map([
+      ["/", res()],
+      ["/about/", res()],
+      ["/__x__/", res({ status: 404 })],
+      ["/__not-found", res({ status: 200, body: "<html>ページが見つかりません</html>" })],
+      ["/__not-found/", res({ status: 200, body: "<html>ページが見つかりません</html>" })],
+      ["/__not-found/index.html", res({ status: 404 })],
+    ]);
+    const r = checkServed(got, { ...base, internal: ["/__not-found", "/__not-found/", "/__not-found/index.html"], asset: null, data: null });
+    expect(r.failures).toContain("/__not-found: status 200 (expected 404 — internal, #746)");
+    expect(r.failures).toContain("/__not-found/: status 200 (expected 404 — internal, #746)");
+    // **index.html だけが 404 でも合格にしてはいけない**——それが #654 で「直った」と思った状態
+    expect(r.failures).not.toContain("/__not-found/index.html: status 404 (expected 404 — internal, #746)");
+  });
+
+  it("#746 internal なパスが 3 つとも 404 なら失敗なし（セキュリティヘッダは付いたまま）", () => {
+    const got = new Map([
+      ["/", res()],
+      ["/about/", res()],
+      ["/__x__/", res({ status: 404 })],
+      ["/__not-found", res({ status: 404 })],
+      ["/__not-found/", res({ status: 404 })],
+      ["/__not-found/index.html", res({ status: 404 })],
+    ]);
+    const r = checkServed(got, { ...base, internal: ["/__not-found", "/__not-found/", "/__not-found/index.html"], asset: null, data: null });
+    expect(r.failures).toEqual([]);
+    expect(r.checked).toBe(6);
   });
 
   it("セキュリティヘッダが欠けている／違う値なら失敗（CSP を含む）", () => {
