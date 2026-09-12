@@ -125,6 +125,17 @@ const HEADING = /([０-９0-9]+)月([０-９0-9]+)日議決分/;
 const LEGEND_LINE = /^「.+」.*表す。?$/;
 /** 凡例の項目「「○」は賛成を、」「「-」欠席を、」（「は」が無い形もある） */
 const LEGEND_ITEM = /「(.)」(?:は)?([^、。]+?)(?:を)?(?=[、。]|$)/g;
+/**
+ * 列見出しの原文（1 アイテムで出るもの）。**本文の行に混じることがある**ので、行を読むときに落とす。
+ * 縦書き 1 文字ずつの見出し（`議決日` `議決結果` など）は氏名帯より上にあるので行には入らない。
+ */
+const COLUMN_HEADERS = new Set(["議案等番号", "件名", "議席番号", "会派名"]);
+
+/** アイテムの末尾に連なる記号（と空白）。`trailingVoteSymbols` と同じ範囲を文字列として切る。 */
+const TRAILING_SYMBOL_RUN = /[○×議〇✕－―ー欠退\-\s　]+$/u;
+
+/** 凡例の最後の項目に付く述語（「…を表す。」）。意味には含めない */
+const LEGEND_TAIL = /(こと)?を表す$/;
 
 export async function parseVotePdf(bytes: Buffer): Promise<VotePdf> {
   const pages = await readPages(bytes);
@@ -184,7 +195,7 @@ export function parseLegend(pages: readonly PageGeometry[]): VotePdfLegend {
       notes.push(text);
       for (const m of text.matchAll(LEGEND_ITEM)) {
         const key = m[1];
-        const meaning = m[2].trim();
+        const meaning = m[2].replace(LEGEND_TAIL, "").trim();
         if (meaning === "") continue;
         if (key in votes && votes[key] !== meaning) throw new Error(`legend key ${key} appears twice with different meanings (${votes[key]} / ${meaning})`);
         votes[key] = meaning;
@@ -213,6 +224,8 @@ interface Grid {
   leftCols: number[];
   /** 会派帯・議席番号帯・氏名帯を区切る横罫線（降順。無いページもある） */
   headerLines: number[];
+  /** 氏名帯の下端（氏名の文字の中心のいちばん低い y）。氏名帯が無いページは bodyTop */
+  nameBottom: number;
 }
 
 /**
@@ -295,7 +308,8 @@ function buildGrid(page: PageGeometry, pageNo: number, inherit?: number): Grid |
   const bodyTop = wide.filter((y) => y > topVoteRowY(page, voteCols[0], right) + EPS).sort((a, b) => a - b)[0] ?? top;
   const rowLines = wide.filter((y) => y <= bodyTop + EPS);
   if (rowLines.length < 2) return undefined;
-  return { top, bodyTop, bottom, rowLines, left, voteCols, leftCols, headerLines };
+  const nameLow = Math.min(...page.items.filter((i) => [...i.str].length === 1 && within(i.cx, voteCols[0], right) && i.cy > topVoteRowY(page, voteCols[0], right) + EDGE && i.cy < top).map((i) => i.cy), Infinity);
+  return { top, bodyTop, bottom, rowLines, left, voteCols, leftCols, headerLines, nameBottom: Number.isFinite(nameLow) ? nameLow : bodyTop };
 }
 
 /**
@@ -390,6 +404,34 @@ function nameBand(page: PageGeometry, grid: Grid): { top: number; bottom: number
   return { top, bottom, seatTop };
 }
 
+/**
+ * 会派帯（議席番号帯の上〜表の上端）。**結合セル**なので、その段まで届く縦線で区切る。
+ * 会派名は**複数アイテムに割れる**（`日本共` / `産党滋` / `賀県議` / `会議員` / `団`。#670）ので、
+ * セルの中の文字を上の行から順に繋ぐ。
+ */
+function readGroups(page: PageGeometry, grid: Grid, seatTop: number): { x0: number; x1: number; name: string }[] {
+  const left = grid.voteCols[0];
+  const right = grid.voteCols[grid.voteCols.length - 1];
+  // **会派帯の下端は罫線で取る**——`seatTop`（議席番号の文字の中心）は罫線より下なので、
+  // それを境にすると議員の列の境（議席番号帯の上まで届く）まで会派の境に数えてしまう（実測）。
+  const ruleAbove = cluster(page.hlines.map((l) => l.y)).filter((y) => y > seatTop + EDGE && y < grid.top - EPS).sort((a, b) => a - b)[0] ?? seatTop;
+  // 会派帯まで届く縦線（議員の列の境は議席番号帯までしか届かない）
+  const xs = cluster(page.vlines.filter((l) => l.y1 > ruleAbove + EDGE && l.y0 < grid.top - EDGE).map((l) => l.x))
+    .filter((x) => x >= left - EPS && x <= right + EPS);
+  const bounds = xs.length >= 2 ? xs : [left, right];
+  const out: { x0: number; x1: number; name: string }[] = [];
+  for (let g = 0; g + 1 < bounds.length; g++) {
+    const name = page.items
+      .filter((i) => within(i.cx, bounds[g], bounds[g + 1]) && i.cy > ruleAbove + EDGE && i.cy < grid.top)
+      .sort((a, b) => b.y - a.y || a.x - b.x)
+      .map((i) => i.str)
+      .join("")
+      .replace(/[\s　]+/g, "");
+    out.push({ x0: bounds[g], x1: bounds[g + 1], name });
+  }
+  return out;
+}
+
 /** 縦書きの列を上から結合（空白は 1 つに寄せる）。 */
 const columnText = (chars: readonly Item[]): string => joinVertical([...chars]).replace(/[\s　]+/g, " ").trim();
 
@@ -408,6 +450,7 @@ function readMembers(page: PageGeometry, grid: Grid, page1: Map<number, VotePdfM
   const nameTop = band?.top;
   const seatTop = band?.seatTop;
   const nameBottom = band?.bottom ?? grid.bodyTop;
+  const groups = seatTop === undefined ? [] : readGroups(page, grid, seatTop);
   const out: VotePdfMember[] = [];
   for (let c = 0; c < n; c++) {
     const x0 = grid.voteCols[c];
@@ -415,13 +458,7 @@ function readMembers(page: PageGeometry, grid: Grid, page1: Map<number, VotePdfM
     const inCol = (i: Item) => within(i.cx, x0, x1);
     const nameText = nameTop === undefined ? "" : columnText(page.items.filter((i) => inCol(i) && i.cy >= nameBottom - EDGE && i.cy <= nameTop + EDGE));
     const seat = seatTop === undefined ? "" : columnText(page.items.filter((i) => inCol(i) && i.cy > nameTop! + EDGE && i.cy <= seatTop + EDGE)).replace(/[\s　]+/g, "");
-    // 会派帯は結合セル（複数列にまたがる）ので、列の中心が入る帯の文字を横に繋ぐ
-    const group = seatTop === undefined ? "" : page.items
-      .filter((i) => i.cy > seatTop + EDGE && i.cy < grid.top + EDGE && within(i.cx, x0 - 40, x1 + 40))
-      .sort((a, b) => b.y - a.y || a.x - b.x)
-      .map((i) => i.str)
-      .join("")
-      .replace(/[\s　]+/g, "");
+    const group = groups.find((g) => within((x0 + x1) / 2, g.x0, g.x1))?.name ?? "";
     const borrowed = page1?.get(c);
     // **空の列だけ**借りる（#718）。氏名が読めた列は借りない
     if (nameText === "" && borrowed) out.push({ ...borrowed });
@@ -444,28 +481,73 @@ function readRows(page: PageGeometry, grid: Grid, pageNo: number, memberCount: n
   for (let r = 0; r + 1 < grid.rowLines.length; r++) {
     const y1 = grid.rowLines[r];
     const y0 = grid.rowLines[r + 1];
-    const inRow = page.items.filter((i) => within(i.cy, y0, y1));
+    // **いちばん上の行には列見出しが混ざる会期がある**（実測 15 本。氏名帯の下に罫線が無いので
+    // 見出しが最初の行と同じ帯に入る。`議案等番号` は氏名帯より**下**に置かれている本もあるので、
+    // 位置では切れない）。**見出しの文言そのもので落とす**——`議案等番号` は議案の件名ではなく、
+    // この PDF が必ず使う列見出しの原文である。落とさないと件名が `議案等番号議第109号…` になる。
+    // 列見出しは 2 通りの形で最初の行に混ざる（実測 15 本。氏名帯の下に罫線が無い会期）:
+    //   - 1 アイテムの横書き（`議案等番号`）→ 文言で落とす
+    //   - 1 文字ずつの縦書き（`議決結果` の `議` `決` `結` `果`）→ **氏名帯と同じ高さにある**ので、
+    //     氏名帯の下端より上にある 1 文字アイテムを落とす（議案の値は氏名帯より下にある）
+    const inRow = page.items.filter((i) => within(i.cy, y0, y1)
+      && !COLUMN_HEADERS.has(i.str.replace(/[\s　]+/g, ""))
+      && !([...i.str].length === 1 && i.cy >= grid.nameBottom - EDGE));
     if (inRow.length === 0) continue;
     const cells = readVoteCells(inRow, grid, vxs, memberCount);
     if (!cells) continue; // 記号帯の無い行（表題・注記の行）
     // 左の欄。列の数は会期で違うので、右から数える:
     //   [..., 議決日, 出席者数, 表決者数, 賛成数, 反対数, 議決結果] の 6 欄が賛否欄の左に並ぶ
     const lc = grid.leftCols;
-    const leftText = (a: number, b: number) => joinText(inRow.filter((i) => within(i.cx, a, b)));
+    // **賛否欄まで伸びているアイテムは左の欄から除く**——記号帯が議決結果の欄から始まる本では
+    // アイテムの中心 `cx` が議決結果の欄に入り、`可決○○○…` のような値になる。
+    // **「記号で終わるアイテム」で除いてはいけない**——件名の `特別委員会設置動議` が
+    // `議` で終わるので件名が丸ごと消える（実測 12 行）。**位置で除く。**
+    const leftItems = inRow.filter((i) => trailingVoteSymbols(i.str).length === 0 || i.x + i.w <= voteLeft + EDGE);
+    const leftText = (a: number, b: number) => joinText(leftItems.filter((i) => within(i.cx, a, b)));
     const nLeft = lc.length - 1;
     // 議案等番号・件名は左端から「議決日」の左まで
     const dateIdx = nLeft - 6;
     const title = dateIdx >= 1 ? leftText(lc[0], lc[dateIdx]) : leftText(lc[0], lc[Math.max(0, nLeft - 1)]);
     const dateText = dateIdx >= 0 ? leftText(lc[dateIdx], lc[dateIdx + 1]) : "";
-    const result = leftText(lc[nLeft - 1], lc[nLeft]);
-    // 出席者数・表決者数・賛成数・反対数は 1 アイテムにまとまることがある（`"44 43 43"` + `"0"`）ので、
-    // 欄ごとに読むのではなく、4 欄ぶんの範囲の文字を並べて数字を取り出す
-    const numsText = dateIdx >= 0 ? joinText(inRow.filter((i) => within(i.cx, lc[dateIdx + 1], lc[nLeft - 1]))).replace(/[^\d]/g, " ").trim() : "";
+    // **議決結果が記号のアイテムに入っている会期がある**（実測 `"可決 ○ ○ … ○"`。#694 の
+    // 「結果列が記号と同じアイテムに入る型」）。**その場合、議決結果の欄には何も無い**ので、
+    // 記号アイテムの先頭（記号でない部分）から取る。**推定ではない**——原文がそこにある。
+    const resultCell = leftText(lc[nLeft - 1], lc[nLeft]);
+    const result = resultCell !== "" ? resultCell : resultFromSymbolItems(inRow, grid);
+    // 出席者数・表決者数・賛成数・反対数は **1 アイテムにまとまることがある**（`"44 43 43"` ＋ `"0"`）。
+    // **空白を潰してから数字を取り出してはいけない**——`"44 43 43"` ＋ `"0"` が `"4443430"` になる。
+    // 区切りを残したまま並べて、数字の列として読む。
+    const numsText = dateIdx >= 0
+      ? [...inRow.filter((i) => within(i.cx, lc[dateIdx + 1], lc[nLeft - 1]))].sort((a, b) => b.y - a.y || a.x - b.x).map((i) => i.str).join(" ").replace(/[^\d]/g, " ").trim()
+      : "";
     const nums = numsText === "" ? [] : numsText.split(/\s+/).map(Number);
     const counts = nums.length === 4 && nums.every((v) => Number.isInteger(v)) ? { present: nums[0], voting: nums[1], yes: nums[2], no: nums[3] } : undefined;
     rows.push({ page: pageNo, title, dateText, ...(counts ? { counts } : {}), result, cells });
   }
   return rows;
+}
+
+/**
+ * 記号のアイテムに混ざった議決結果の原文（`"可決 ○ ○ … ○"` の `可決`）。無ければ空。
+ * **記号のアイテムの、末尾の記号の連なりより前**を取るだけ（推定はしない）。
+ * `"44 43 19 24 不採択 × × …"` のように集計数も混ざる形があるので、**数字は落とす**
+ * （数字は別に `counts` として読んでいる）。
+ */
+function resultFromSymbolItems(inRow: readonly Item[], grid: Grid): string {
+  const voteLeft = grid.voteCols[0];
+  for (const it of [...inRow].sort((a, b) => a.cx - b.cx)) {
+    const cs = trailingVoteSymbols(it.str);
+    if (cs.length === 0) continue;
+    if (it.x > voteLeft + EDGE) continue; // 記号帯が賛否欄から始まる＝結果は混ざっていない
+    if (it.x + it.w <= voteLeft + EDGE) continue; // 賛否欄に届かない＝件名の `…動議` などで記号ではない
+    // **末尾の記号の連なりには空白が挟まる**（`"可決 ○ ○ … ○"`）ので、
+    // **記号の個数だけ後ろから切り落としてはいけない**（空白のぶん足りず、記号が結果に残る）。
+    // 末尾から「記号と空白だけ」の部分を正規表現で落とす。
+    const head = it.str.replace(TRAILING_SYMBOL_RUN, "");
+    const text = head.replace(/[0-9０-９]/g, " ").replace(/[\s　]+/g, "");
+    if (text !== "") return text;
+  }
+  return "";
 }
 
 /**
