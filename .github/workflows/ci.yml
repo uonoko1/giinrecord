@@ -126,10 +126,10 @@ jobs:
           web=$(find apps/web/app \( -name '*.test.ts' -o -name '*.test.tsx' \) | wc -l)
           etl=$(find packages/etl/test -maxdepth 1 -name '*.test.ts' | wc -l)
           echo "apps/web test files: $web (floor 85)"
-          echo "packages/etl test files: $etl (floor 84)"
+          echo "packages/etl test files: $etl (floor 97)"
           fail=0
           [ "$web" -ge 85 ] || { echo "FAIL: apps/web test files dropped below floor"; fail=1; }
-          [ "$etl" -ge 84 ] || { echo "FAIL: packages/etl test files dropped below floor"; fail=1; }
+          [ "$etl" -ge 97 ] || { echo "FAIL: packages/etl test files dropped below floor"; fail=1; }
           [ "$fail" = 0 ]
       - run: pnpm test
       - run: pnpm build
