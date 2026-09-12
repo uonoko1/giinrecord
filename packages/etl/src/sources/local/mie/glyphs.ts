@@ -12,7 +12,11 @@ import { multiplyMatrix, readLines, type Matrix, type PageGeometry, type Item } 
  * 1 文字ごとの正確な位置が取れる（推定ではない）。ここでは showText 1 回を 1 アイテムにする
  * （見出しの「令和８年定例会（２月）」のような 1 行のテキストは 1 回の showText、氏名・セルの 1 文字は 1 文字ずつ）。
  * 位置の前提が崩れる命令（moveText 系・生の `'` / `"`・0 でない word spacing・回転や拡縮の入った
- * text matrix・単位行列でない CTM）が出たら例外（黙って読み間違えない。Issue #707）。罫線は pdf-table.ts の readLines に任せる（CTM を掛ける。Issue #693 / #700）。
+ * text matrix・単位行列でない CTM）が出たら例外（黙って読み間違えない。Issue #707）。
+ * **知らない演算子も例外**（Issue #717）——この関数には既定の枝が無く、**見たことのない演算子は
+ * 何の枝にも当たらず黙って次へ進んでいた**。色や線の体裁など、文字に効かないものだけ明示的に無視する
+ * （HARMLESS_OPS）。不可視の文字（`Tr 3`）と ExtGState の `Font` / 透明指定も止める。
+ * 罫線は pdf-table.ts の readLines に任せる（CTM を掛ける。Issue #693 / #700）。
  */
 export async function readGlyphPages(bytes: Buffer): Promise<PageGeometry[]> {
   const loadingTask = getDocument({ data: new Uint8Array(bytes), verbosity: 0 });

@@ -15,6 +15,9 @@ import { multiplyMatrix, readLines, type Matrix, type PageGeometry, type Item } 
  * Td/TD/T* は「直前の行頭からの相対移動」として仕様どおり畳み込む（三重は Tm だけを前提に例外にしている）。
  * 回転・拡縮の入った text matrix、単位行列でない CTM の下の文字が出たら例外（黙って読み間違えない）。
  * 生の `'` / `"`（次行送り＋表示）と 0 でない word spacing（Tw）も例外（Issue #707）。
+ * **知らない演算子も例外**（Issue #717）——この関数には既定の枝が無く、**見たことのない演算子は
+ * 何の枝にも当たらず黙って次へ進んでいた**。色や線の体裁など、文字に効かないものだけ明示的に無視する
+ * （HARMLESS_OPS）。不可視の文字（`Tr 3`）と ExtGState の `Font` / 透明指定も止める。
  * 罫線は pdf-table.ts の readLines に任せる（CTM を掛ける。Issue #693 / #700）。
  */
 export async function readGlyphPages(bytes: Buffer): Promise<PageGeometry[]> {
