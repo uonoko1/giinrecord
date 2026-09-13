@@ -176,4 +176,14 @@ test("parseVotePdf: 凡例として読むのはテキスト全体が「{記号}�
   assert.deepEqual(splitLegendTextForTest("議案等の審議結果"), []);
   assert.deepEqual(splitLegendTextForTest("○："), []);
   assert.deepEqual(splitLegendTextForTest("令和８年定例会（６月）議案等の審議結果"), []);
+  // **前置きのある文は読まない**（先頭が「{1文字}：」で始まらない。青森の「賛否欄：「○」は賛成…」の形）
+  assert.deepEqual(splitLegendTextForTest("賛否欄：「○」は賛成、「×」は反対"), []);
+  // **末尾に中途半端な「{記号}：」が残る形は、途中まで読まずに 0 件にする**（#841）。
+  // **凡例が途中で切れているのに前半だけ読むと、後半の記号が「凡例に無い」として落ちる形になり、
+  //   「凡例が切れている」のか「知らない記号が出た」のか区別できなくなる。読めないものは読めないで止める（#569）。**
+  assert.deepEqual(splitLegendTextForTest("○：賛成×："), []);
+  assert.deepEqual(splitLegendTextForTest("○：賛成×：反対議："), []);
+  // **前後の空白は落として読む**（151 本のどれにも空白付きの凡例は無かったが、
+  //   これが無いと「余りがある」と見なして凡例ごと読まなくなる。守りとして置く）
+  assert.deepEqual(splitLegendTextForTest(" ○：賛成 ").map((x) => [x.key, x.desc]), [["○", "賛成"]]);
 });
