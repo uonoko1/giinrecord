@@ -112,9 +112,18 @@ fi
 # answers "nothing" and the mode prints `ok` — the gap its own header documents. `--verify` closes it,
 # but only when the at-risk lines were written down BEFORE the rebase.
 # Measured on the two real incidents, and that precondition did not hold in either:
-#   PR #832 — 17 lines of docs/WORKING_AGREEMENT.md added by #820/#824 were gone already in the
-#             FIRST commit that was ever pushed (the branch was rebased before its first push).
-#   PR #761 — 12 lines of docs/DATA_CONTRACT.md added by #762, same shape, and still absent from main.
+#   PR #832 — 286 lines across 3 files, gone already in the FIRST commit that was ever pushed (the
+#             branch was rebased before its first push). By `git diff --numstat`, over ALL files:
+#             docs/WORKING_AGREEMENT.md +1 -17, docs/research/local-assemblies.md +0 -210,
+#             docs/sprints/sprint-28.md +12 -59. All of it was added by #820/#824/#827/#831.
+#             The PO has since restored it (#834/#838).
+#   PR #761 — 33 lines across 2 files, added by #762 and **still absent from main today** (measured
+#             2026-09-14: 25 of the 26 non-blank lines are not in origin/main).
+#             docs/DATA_CONTRACT.md +0 -19, packages/etl/test/data-use-policy.test.ts +1 -14.
+#             Not a replacement: the removed `mustHave` block asserted the checklist verbatim and is
+#             nowhere in main, and the same commit LOWERED `boxes >= 7` back to `boxes >= 6`.
+#             #761's own in-place replacements (e.g. ci.yml's `floor 104` → `floor 110`) are NOT
+#             reported, because there `added >= lost` — which is the point of the rule.
 # So there was no earlier run to write a lines file, and nothing else in refs or the API recovers the
 # fork point: measured, the fork point (566399a7) already contained the line, the branch commit's
 # AUTHOR date (23:54) is later than the line's landing on main (23:14) because the rebase rewrote it,
@@ -159,6 +168,15 @@ if [[ ${1:-} == --net-deletions ]]; then
   }
   ND_BASE_SHA=$(nd_resolve "$ND_BASE")
   ND_HEAD_SHA=$(nd_resolve "$ND_HEAD")
+  # Lines main gained AFTER this branch was cut are the DEFAULT mode's business, not this one. Counting
+  # them here makes the check fire on every open PR the moment main moves — measured on this very branch
+  # while writing it: 620 lines across 4 files, every one of them simply main having moved on. They also
+  # corrupt the answer in the other direction: main's additions inflate `added` and hide the branch's own
+  # deletions (measured in the fixture: 2 real lost lines reported as `ok`).
+  # So both sides are restricted to what the branch actually HAD: the merge-base.
+  ND_MERGE_BASE=$(git merge-base "$ND_BASE_SHA" "$ND_HEAD_SHA") || {
+    echo "stale-base: $ND_BASE と $ND_HEAD に共通の祖先がありません" >&2; exit 2
+  }
   NTMP=$(mktemp -d); trap 'rm -rf "$NTMP"' EXIT
 
   # Same multiset spelling as the default mode: sorted, occurrence-numbered lines, so `comm` subtracts
@@ -193,10 +211,16 @@ if [[ ${1:-} == --net-deletions ]]; then
     if [[ $(git diff --numstat "$ND_BASE_SHA" "$ND_HEAD_SHA" -- "$ndpath" | cut -f1) == "-" ]]; then
       continue
     fi
-    nd_multiset "$ND_BASE_SHA" "$ndpath" > "$NTMP/b"
-    nd_multiset "$ND_HEAD_SHA" "$ndpath" > "$NTMP/h"
-    LC_ALL=C comm -23 "$NTMP/b" "$NTMP/h" > "$NTMP/lost"
-    LC_ALL=C comm -13 "$NTMP/b" "$NTMP/h" > "$NTMP/added"
+    nd_multiset "$ND_BASE_SHA"   "$ndpath" > "$NTMP/b"
+    nd_multiset "$ND_HEAD_SHA"   "$ndpath" > "$NTMP/h"
+    nd_multiset "$ND_MERGE_BASE" "$ndpath" > "$NTMP/m"
+    # Only lines that are BOTH on the base now AND were there when the branch was cut: those are the
+    # ones this branch definitely saw and then removed. `comm -12` is the intersection.
+    LC_ALL=C comm -12 "$NTMP/b" "$NTMP/m" > "$NTMP/had"
+    LC_ALL=C comm -23 "$NTMP/had" "$NTMP/h" > "$NTMP/lost"
+    # Symmetrically, `added` must only count what the BRANCH added, not what main added since the fork —
+    # otherwise main moving on inflates it and hides a real net deletion.
+    LC_ALL=C comm -13 "$NTMP/m" "$NTMP/h" > "$NTMP/added"
     nlost=$(wc -l < "$NTMP/lost")
     nadded=$(wc -l < "$NTMP/added")
     [[ $nlost -gt 0 ]] || continue
@@ -233,7 +257,7 @@ $(cat "$ND_REPORT")
 **これは「消してはいけない」という意味ではありません。** 意図した削除は正当です。
 **言っているのは「$ND_BASE にあった行が、戻ってくる量より多く消えている」という事実だけです。**
 
-**実地で 2 回、これは rebase の事故でした**（#832 が 17 行、#761 が 12 行。どちらも
+**実地で 2 回、これは rebase の事故でした**（#832 が 3 ファイル 286 行、#761 が 2 ファイル 33 行。どちらも
 **他人がマージ済みの追記**で、**引数なしの検査は ok と言いました**——rebase が共通の祖先を
 動かしたあとで、**何が元々あったかを refs から復元する方法はありません**）。
 

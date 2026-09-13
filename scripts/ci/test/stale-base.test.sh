@@ -428,7 +428,8 @@ t_missing_head_ref_is_an_error_too() {
 
 # --- #836: the branch is UP TO DATE with the base and still drops the base's lines -------------
 # Measured on the real incidents: PR #832 removed 17 lines of docs/WORKING_AGREEMENT.md that #820/#824
-# had added, and PR #761 removed 12 lines of docs/DATA_CONTRACT.md that #762 had added. In BOTH, the
+# had added (286 lines across 3 files in total, by `--numstat` over all files), and PR #761 removed 33
+# lines across 2 files that #762 had added — still absent from main today. In BOTH, the
 # branch had been rebased **before it was ever pushed**, so the merge-base was already the base tip and
 # `gained` was empty: the default mode printed `ok`. Nothing in refs or the API distinguishes that from
 # a deliberate deletion (measured: the fork point, the author dates and the pre-force-push head are all
@@ -587,6 +588,33 @@ t_net_deletions_is_wired_into_ci() {
     "スクリプトの存在自体をワークフローが要求する（#504）"
 }
 
+t_net_deletions_is_not_confused_by_a_diverged_branch() {
+  # The real shape of an open PR: the branch is BEHIND main (main moved on) **and** AHEAD of it (it has
+  # its own commits). Comparing the head against the base TIP then counts everything main gained since
+  # the fork as "lost", which is normal and is the DEFAULT mode's business, not this one.
+  # Found by running this check against this very branch: it reported 620 lines across 4 files purely
+  # because origin/main had moved. A check that fires on every open PR the moment main moves is a check
+  # nobody reads — the exact trap stale-base.sh's own header warns about.
+  # The branch must also REMOVE some of its own lines, or "added >= lost" hides the bug: with a pure
+  # append the branch's own additions outnumber what main gained and the rule stays quiet by accident.
+  # Measured on this branch when the bug was live: 620 lines across 4 files, all of them main's.
+  new_repo; BASE_SHA=$(g rev-parse HEAD)
+  branch_from main topic
+  # a normal edit: drop two of the base's own lines and add one (a net deletion of lines the branch HAD)
+  g show "$BASE_SHA:docs/WORKING_AGREEMENT.md" | sed '2,3d' > "$W/docs/WORKING_AGREEMENT.md"
+  printf -- '- **教訓 私**\n' >> "$W/docs/WORKING_AGREEMENT.md"
+  commit "my lesson"
+  main_moves '- **教訓 X**' '- **教訓 Y**' '- **教訓 Z**'   # main moves AFTER the branch was cut
+  # `main_moves` leaves the repo checked out on main, so HEAD would be main and the comparison would be
+  # main against itself — a fixture that silently proves nothing. Go back to the branch, and name it
+  # explicitly rather than relying on the checkout.
+  g checkout -q topic
+  run --net-deletions origin/main topic
+  assert_eq 1 "$STATUS" "precondition: it does fire, and must report only the branch's own 2 lines: $OUT"
+  assert_contains "$OUT" "2 行が減り" "main's 3 new lines must NOT be counted as this branch's doing: $OUT"
+  assert_not_contains "$OUT" "教訓 X" "a line main gained after the fork is the default mode's business"
+}
+
 test_case "古い main から切って、その後 main が足した行を消す枝 → 落ちる" t_stale_base_deleting_main_lines_fails
 test_case "消える行が '- ' で始まっても検出する（^-- で除外されない）" t_bullet_lines_are_not_missed
 test_case "消える行が '+' で始まっても検出する" t_lost_line_starting_with_plus_is_not_missed
@@ -709,4 +737,5 @@ test_case "20 行を超える報告で SIGPIPE で死なない（引数なし、
 test_case "20 行を超える報告で SIGPIPE で死なない（--net-deletions、#836）" t_a_long_report_does_not_die_of_sigpipe_net_deletions
 test_case "--net-deletions はバイナリを対象にしない（#836）" t_net_deletions_skips_binary_files
 test_case "wiring: ci.yml が --net-deletions を呼び、引数なしの検査も残っている（#836／#504）" t_net_deletions_is_wired_into_ci
+test_case "枝が main と分岐している（遅れ かつ 進んでいる）だけでは黙る（#836）" t_net_deletions_is_not_confused_by_a_diverged_branch
 echo "passed $PASS, failed $FAIL"; [[ $FAIL == 0 ]]
