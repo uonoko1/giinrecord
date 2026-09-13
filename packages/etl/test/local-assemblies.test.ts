@@ -191,7 +191,7 @@ test("writeDataset（国会の日次 ETL）は assemblies/index.json の地方�
   await writeFile(join(dir, "members", "index.json"), stableJson([local]));
   await writeFile(join(dir, "members", "p_04_a.json"), stableJson({ ...local, terms: [{ group: local.group, district: local.district, asOf: local.asOf }], timeline: [] }));
   await mkdir(join(dir, "assemblies", "pref-04"), { recursive: true });
-  for (const [rel, value] of [["meta.json", { assemblyId: "pref-04", fetchedAt: "x", sources: [], rosterAsOf: "2026-04-23", sessions: [], counts: { members: 1, rollcalls: 0, cells: 0, unknownCells: 0, unmatchedNames: 0 } }], ["sessions.json", []], ["unmatched.json", []], ["rollcalls/index.json", []]] as const) {
+  for (const [rel, value] of [["meta.json", { assemblyId: "pref-04", fetchedAt: "x", sources: [], rosterAsOf: "2026-04-23", sessions: [], counts: { members: 1, rollcalls: 0, cells: 0, unknownCells: 0, unmatchedNames: 0 }, countChecked: { rows: 0, checked: 0, noCounts: 0, unreadableCells: 0 } }], ["sessions.json", []], ["unmatched.json", []], ["rollcalls/index.json", []]] as const) {
     await mkdir(join(dir, "assemblies", "pref-04", rel, ".."), { recursive: true });
     await writeFile(join(dir, "assemblies", "pref-04", rel), stableJson(value));
   }
