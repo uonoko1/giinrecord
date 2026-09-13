@@ -33,6 +33,7 @@ import { stableJson } from "../src/json.ts";
  */
 
 const DATA = fileURLToPath(new URL("../../../data/", import.meta.url));
+const PDF = "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf";
 const cmp = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 const walk = async (dir: string): Promise<string[]> => (await Promise.all((await readdir(dir, { withFileTypes: true })).map(async (e) =>
   e.isDirectory() ? walk(join(dir, e.name)) : e.name.endsWith(".json") && e.name !== "index.json" ? [join(dir, e.name)] : []))).flat();
@@ -97,8 +98,7 @@ const rollCall = (id: string, date: string, counts?: LocalRollCall["counts"]): L
   id, assemblyId: "pref-04" as LocalRollCall["assemblyId"], sessionId: "398",
   sessionLabel: "令和7年11月定例会（第398回）", date, kind: "発議案", number: id.slice(-1),
   title: "条例", result: "可決", page: 1,
-  sourceUrl: "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",
-  fetchedAt: "2026-04-23T00:00:00.000Z",
+  sourceUrl: PDF,
   ...(counts ? { counts } : {}),
   votes: [{ memberId: "p_04_a", nameText: "山田太郎", group: "会派", value: { raw: "○", legend: "賛成", mapped: "賛成" } }],
 });
@@ -107,8 +107,8 @@ const setup = async (): Promise<string> => {
   const dir = await mkdtemp(join(tmpdir(), "gikailog-851-"));
   const built = buildLocalAssembly({
     assembly: MIYAGI_ASSEMBLY, fetchedAt: "2026-04-23T00:00:00.000Z", rosterAsOf: "2026-04-23",
-    sources: [{ kind: "roster", url: "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html", fetchedAt: "2026-04-23T00:00:00.000Z" }],
-    sessions: [{ sessionId: "398", sessionLabel: "令和7年11月定例会（第398回）", rollcalls: 2, sourceUrl: "https://www.pref.miyagi.jp/site/kengikai/hyouketsu.html" }],
+    sources: [],
+    sessions: [{ sessionId: "398", sessionLabel: "令和7年11月定例会（第398回）", sourceUrl: "https://www.pref.miyagi.jp/site/kengikai/hyoketu071217.html", pdfUrl: PDF, rollcalls: 2, unknownCells: 0 }],
     members: [member("p_04_a", "山田太郎")],
     rollCalls: [rollCall("pref-04-a", "2025-12-17", { yes: 1, no: 0 }), rollCall("pref-04-b", "2025-12-16", { yes: 1, no: 0 })],
   });
@@ -173,8 +173,8 @@ test("#851 rollCallIndexOf は votes を落とし、日付の降順に並べる"
 test("#851 buildLocalAssembly の rollCallIndex は rollCallIndexOf(rollCalls) と一致する", () => {
   const built = buildLocalAssembly({
     assembly: MIYAGI_ASSEMBLY, fetchedAt: "2026-04-23T00:00:00.000Z", rosterAsOf: "2026-04-23",
-    sources: [{ kind: "roster", url: "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html", fetchedAt: "2026-04-23T00:00:00.000Z" }],
-    sessions: [{ sessionId: "398", sessionLabel: "令和7年11月定例会（第398回）", rollcalls: 2, sourceUrl: "https://www.pref.miyagi.jp/site/kengikai/hyouketsu.html" }],
+    sources: [],
+    sessions: [{ sessionId: "398", sessionLabel: "令和7年11月定例会（第398回）", sourceUrl: "https://www.pref.miyagi.jp/site/kengikai/hyoketu071217.html", pdfUrl: PDF, rollcalls: 2, unknownCells: 0 }],
     members: [member("p_04_a", "山田太郎")],
     rollCalls: [rollCall("pref-04-b", "2025-12-16"), rollCall("pref-04-a", "2025-12-17", { yes: 1, no: 0 })],
   });
