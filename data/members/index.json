@@ -14189,6 +14189,621 @@
   "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
  },
  {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "大館市",
+  "group": "立憲民主党",
+  "id": "p_05_2018052300021",
+  "kana": "",
+  "name": "石田 寛",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2018052300021/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "秋田市",
+  "group": "自由民主党",
+  "id": "p_05_2018052300038",
+  "kana": "",
+  "name": "今川雄策",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2018052300038/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "能代市山本郡",
+  "group": "立憲民主党",
+  "id": "p_05_2018052300045",
+  "kana": "",
+  "name": "薄井 司",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2018052300045/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "横手市",
+  "group": "立憲民主党",
+  "id": "p_05_2018052300076",
+  "kana": "",
+  "name": "小原正晃",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2018052300076/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "秋田市",
+  "group": "日本共産党",
+  "id": "p_05_2018052300083",
+  "kana": "",
+  "name": "加賀屋千鶴子",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2018052300083/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "由利本荘市",
+  "group": "自由民主党",
+  "id": "p_05_2018052300090",
+  "kana": "",
+  "name": "加藤鉱一",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2018052300090/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "大仙市仙北郡",
+  "group": "社会民主党",
+  "id": "p_05_2018052300106",
+  "kana": "",
+  "name": "加藤麻里",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2018052300106/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "鹿角市鹿角郡",
+  "group": "自由民主党",
+  "id": "p_05_2018052300113",
+  "kana": "",
+  "name": "川口 一",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2018052300113/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "北秋田市北秋田郡",
+  "group": "自由民主党",
+  "id": "p_05_2018052300137",
+  "kana": "",
+  "name": "北林丈正",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2018052300137/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "秋田市",
+  "group": "自由民主党",
+  "id": "p_05_2018052300144",
+  "kana": "",
+  "name": "工藤嘉範",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2018052300144/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "にかほ市",
+  "group": "自由民主党",
+  "id": "p_05_2018052300175",
+  "kana": "",
+  "name": "佐々木雄太",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2018052300175/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "湯沢市雄勝郡",
+  "group": "みらい",
+  "id": "p_05_2018052300199",
+  "kana": "",
+  "name": "佐藤正一郎",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2018052300199/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "能代市山本郡",
+  "group": "自由民主党",
+  "id": "p_05_2018052300205",
+  "kana": "",
+  "name": "佐藤信喜",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2018052300205/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "横手市",
+  "group": "自由民主党",
+  "id": "p_05_2018052300229",
+  "kana": "",
+  "name": "柴田正敏",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2018052300229/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "男鹿市",
+  "group": "自由民主党",
+  "id": "p_05_2018052300250",
+  "kana": "",
+  "name": "杉本俊比古",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2018052300250/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "大館市",
+  "group": "自由民主党",
+  "id": "p_05_2018052300281",
+  "kana": "",
+  "name": "鈴木洋一",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2018052300281/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "能代市山本郡",
+  "group": "自由民主党",
+  "id": "p_05_2018052300298",
+  "kana": "",
+  "name": "髙橋武浩",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2018052300298/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "秋田市",
+  "group": "自由民主党",
+  "id": "p_05_2018052300311",
+  "kana": "",
+  "name": "竹下博英",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2018052300311/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "横手市",
+  "group": "自由民主党",
+  "id": "p_05_2018052300335",
+  "kana": "",
+  "name": "鶴田有司",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2018052300335/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "大仙市仙北郡",
+  "group": "自由民主党",
+  "id": "p_05_2018052300359",
+  "kana": "",
+  "name": "原 幸子",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2018052300359/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "由利本荘市",
+  "group": "みらい",
+  "id": "p_05_2018052300373",
+  "kana": "",
+  "name": "三浦英一",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2018052300373/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "秋田市",
+  "group": "みらい",
+  "id": "p_05_2018052300380",
+  "kana": "",
+  "name": "三浦茂人",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2018052300380/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "大仙市仙北郡",
+  "group": "みらい",
+  "id": "p_05_2018052300403",
+  "kana": "",
+  "name": "渡部英治",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2018052300403/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "秋田市",
+  "group": "公明党",
+  "id": "p_05_2019051800017",
+  "kana": "",
+  "name": "松田豊臣",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2019051800017/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "秋田市",
+  "group": "自由民主党",
+  "id": "p_05_2019051800031",
+  "kana": "",
+  "name": "宇佐見康人",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2019051800031/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "湯沢市雄勝郡",
+  "group": "自由民主党",
+  "id": "p_05_2019051800048",
+  "kana": "",
+  "name": "住谷 達",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2019051800048/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "鹿角市鹿角郡",
+  "group": "自由民主党",
+  "id": "p_05_2019051800055",
+  "kana": "",
+  "name": "児玉政明",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2019051800055/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "由利本荘市",
+  "group": "自由民主党",
+  "id": "p_05_2019051800062",
+  "kana": "",
+  "name": "小野一彦",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2019051800062/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "大仙市仙北郡",
+  "group": "自由民主党",
+  "id": "p_05_2019051800079",
+  "kana": "",
+  "name": "小山緑郎",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2019051800079/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "南秋田郡",
+  "group": "自由民主党",
+  "id": "p_05_2019051800086",
+  "kana": "",
+  "name": "鈴木真実",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2019051800086/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "秋田市",
+  "group": "自由民主党",
+  "id": "p_05_2021041500012",
+  "kana": "",
+  "name": "島田 薫",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2021041500012/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "潟上市",
+  "group": "自由民主党",
+  "id": "p_05_2021041500029",
+  "kana": "",
+  "name": "瓜生 望",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2021041500029/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "大館市",
+  "group": "自由民主党",
+  "id": "p_05_2023053100013",
+  "kana": "",
+  "name": "小棚木政之",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2023053100013/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "北秋田市北秋田郡",
+  "group": "きらり",
+  "id": "p_05_2023053100037",
+  "kana": "",
+  "name": "佐藤光子",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2023053100037/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "湯沢市雄勝郡",
+  "group": "自由民主党",
+  "id": "p_05_2023053100044",
+  "kana": "",
+  "name": "高橋 健",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2023053100044/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "横手市",
+  "group": "みらい",
+  "id": "p_05_2023053100068",
+  "kana": "",
+  "name": "山形健二",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2023053100068/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "仙北市",
+  "group": "自由民主党",
+  "id": "p_05_2023060100013",
+  "kana": "",
+  "name": "髙橋 豪",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2023060100013/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "秋田市",
+  "group": "自由民主党",
+  "id": "p_05_2023060100020",
+  "kana": "",
+  "name": "武内伸文",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2023060100020/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "秋田市",
+  "group": "立憲民主党",
+  "id": "p_05_2023060100037",
+  "kana": "",
+  "name": "櫻田憂子",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2023060100037/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "秋田市",
+  "group": "自由民主党",
+  "id": "p_05_2025040700015",
+  "kana": "",
+  "name": "川邉隼之介",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2025040700015/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
+  "asOf": "2026-07-24",
+  "assemblyId": "pref-05",
+  "counts": {
+   "rollcalls": 157
+  },
+  "current": true,
+  "district": "秋田市",
+  "group": "ひらく会",
+  "id": "p_05_2025040700022",
+  "kana": "",
+  "name": "福田博之",
+  "profileUrl": "https://pref.akita.gsl-service.net/profile/2025040700022/",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
   "asOf": "2025-11-18",
   "assemblyId": "pref-24",
   "counts": {

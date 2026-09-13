@@ -250,8 +250,9 @@ t_list_collects_real_primary_source_urls() {
   local list n
   list=$(cd "$REPO" && bash "$SCRIPT" --list)
   n=$(printf '%s\n' "$list" | sed '/^$/d' | wc -l | tr -d ' ')
-  # 実測 95 件（data/assemblies/**/*.json の http(s) 文字列、重複除去。2026-09-13。
-  # 83 件 → 滋賀 7 件（#741）→ 青森 5 件（#750））。
+  # 実測 98 件（data/assemblies/**/*.json の http(s) 文字列、重複除去。2026-09-13。
+  # 83 件 → 滋賀 7 件（#741）→ 青森 5 件（#750）→ 秋田 3 件（#759。名簿・概要ハブ・年度一覧 ＋ PDF 2 本のうち
+  # 一覧に出るもの））。
   # 下限だけを置く: 議会が増えれば増えるので上限は固定しないが、抽出が痩せたら落ちる。
   [ "$n" -ge 80 ] || fail "一次資料 URL が $n 件しか集まらない（80 未満）: 抽出が壊れている"
   assert_contains "$list" "https://www.pref.shimane.lg.jp/" "島根の URL が入っている"
@@ -261,13 +262,22 @@ t_list_collects_real_primary_source_urls() {
   # （滋賀の `www.shigaken-gikai.jp` のように許可リストを足す必要は無かった。実測 2026-09-13）。
   # **それでも明示で確かめる**——当たっていることが偶然でないと分かるように。
   assert_contains "$list" "https://www.pref.aomori.lg.jp/" "青森の URL が入っている（#750）"
+  # **秋田（#759）は `pref.akita.gsl-service.net`**——**`pref.*.lg.jp` の形ではない**
+  # （県のサイト `www.pref.akita.lg.jp` とは別ホストに議会サイトが載っている）。
+  # **滋賀の `www.shigaken-gikai.jp` と同じ形**なので、**下の許可リストに名指しで足した。**
+  # **「入っていること」もここで固定する**——許可リストに足しただけでは、
+  # **抽出が秋田を拾っていなくても緑になる**（#500: 入口を固定する）。
+  assert_contains "$list" "https://pref.akita.gsl-service.net/" "秋田の URL が入っている（#759）"
   # 重複していない（同じ PDF が数百の rollcall から参照される。全部叩いたら相手に失礼）
   assert_eq "$n" "$(printf '%s\n' "$list" | sed '/^$/d' | sort -u | wc -l | tr -d ' ')" "重複を除いてある"
   # 集めるのは公式ドメインだけ（data/ に外部ドメインが紛れ込んだら気づく）
   # **議会のドメインは `pref.*.lg.jp` の形とは限らない**——滋賀県議会は `www.shigaken-gikai.jp`
-  # という独自ドメインで、`.lg.jp` ですらない（#741）。**県ごとに明示で足す**
+  # という独自ドメインで、`.lg.jp` ですらない（#741）。
+  # **秋田県議会は `pref.akita.gsl-service.net`**——**`.lg.jp` でもなく、`gsl-service.net` という
+  # ベンダのドメインの下にある**（#759。県のサイト `www.pref.akita.lg.jp` とは別ホスト）。
+  # **県ごとに明示で足す**
   # （`*-gikai.jp` のような広いパターンにすると、誰でも取れるドメインが通ってしまう）。
-  assert_eq "" "$(printf '%s\n' "$list" | sed '/^$/d' | grep -v -E '^https://(www\.pref\.[a-z]+\.(lg\.)?jp|gikai\.pref\.[a-z]+\.lg\.jp|www\.shigaken-gikai\.jp|www\.(shugiin|sangiin)\.go\.jp)/' || true)" "公式ドメイン以外が混ざっていない"
+  assert_eq "" "$(printf '%s\n' "$list" | sed '/^$/d' | grep -v -E '^https://(www\.pref\.[a-z]+\.(lg\.)?jp|gikai\.pref\.[a-z]+\.lg\.jp|www\.shigaken-gikai\.jp|pref\.akita\.gsl-service\.net|www\.(shugiin|sangiin)\.go\.jp)/' || true)" "公式ドメイン以外が混ざっていない"
 }
 
 t_list_does_not_hit_the_network() {

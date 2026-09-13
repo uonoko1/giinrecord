@@ -201,8 +201,8 @@ test("#711 否定的対照: 本番 data/ の unmatched 行の reason が計算�
   const locals = members.filter((m) => typeof m.assemblyId === "string" && m.assemblyId.startsWith("pref-"));
   assert.ok(locals.length > 200, `地方名簿が読めていなければこの対照は無意味（${locals.length} 名）`);
   const assemblies = [...new Set(locals.map((m) => m.assemblyId!))].sort();
-  // 2026-09-13 に滋賀（pref-25、#741）が 8 議会目、青森（pref-02、#750）が 9 議会目として入った
-  assert.equal(assemblies.length, 9, `全 9 議会を見ていること: ${assemblies.join(",")}`);
+  // 2026-09-13 に滋賀（pref-25、#741）が 8 議会目、青森（pref-02、#750）が 9 議会目、秋田（pref-05、#759）が 10 議会目として入った
+  assert.equal(assemblies.length, 10, `全 10 議会を見ていること: ${assemblies.join(",")}`);
 
   let rows = 0;
   let conflicts = 0;

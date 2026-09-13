@@ -26,6 +26,13 @@
   "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/meibo/index.html"
  },
  {
+  "id": "pref-05",
+  "kind": "prefectural",
+  "name": "秋田県議会",
+  "prefCode": "05",
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+ },
+ {
   "id": "pref-24",
   "kind": "prefectural",
   "name": "三重県議会",

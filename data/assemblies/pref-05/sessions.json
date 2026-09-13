@@ -1,0 +1,42 @@
+[
+ {
+  "date": "2026-07-03",
+  "fetchedAt": "2026-09-13T00:00:00.000Z",
+  "id": "2026-07-03",
+  "label": "令和８年第１回定例会（６月議会）",
+  "rollcalls": 26,
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/"
+ },
+ {
+  "date": "2026-06-15",
+  "fetchedAt": "2026-09-13T00:00:00.000Z",
+  "id": "2026-06-15",
+  "label": "令和８年第１回定例会（６月議会）",
+  "rollcalls": 1,
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/"
+ },
+ {
+  "date": "2026-06-09",
+  "fetchedAt": "2026-09-13T00:00:00.000Z",
+  "id": "2026-06-09",
+  "label": "令和８年第１回定例会（６月議会）",
+  "rollcalls": 2,
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/"
+ },
+ {
+  "date": "2026-03-19",
+  "fetchedAt": "2026-09-13T00:00:00.000Z",
+  "id": "2026-03-19",
+  "label": "令和８年第１回定例会（２月議会）",
+  "rollcalls": 91,
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/"
+ },
+ {
+  "date": "2026-02-27",
+  "fetchedAt": "2026-09-13T00:00:00.000Z",
+  "id": "2026-02-27",
+  "label": "令和８年第１回定例会（２月議会）",
+  "rollcalls": 37,
+  "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/"
+ }
+]
