@@ -181,6 +181,7 @@ test("#556 数え上げ: jobs: 直下の job を全部拾えている（拾え�
     "branch-protection.yml:guard",
     "ci.yml:check",
     "ci.yml:docker-web",
+    "ci.yml:pr-closes",
     "ci.yml:stale-base",
     "deploy-data.yml:production",
     "deploy-data.yml:resolve",
@@ -196,6 +197,7 @@ test("#556 数え上げ: jobs: 直下の job を全部拾えている（拾え�
     "monitor.yml:staging",
     "release.yml:production",
     "release.yml:released-tag",
+    "security-alerts.yml:guard",
     "security.yml:gitleaks",
     "security.yml:forbidden-patterns",
     "security.yml:audit",
@@ -242,6 +244,8 @@ test("#556 uses: の job に timeout-minutes を書かない（GitHub が受け�
  *   ci.yml:check                    36   153   210   223   225s  → 30 分（max の 8 倍）
  *   ci.yml:docker-web               35    72    84    93    96s  → 20 分
  *   ci.yml:stale-base               17     6     8    10    10s  → 10 分
+ *   ci.yml:pr-closes                 1    11    11    11    11s  → 10 分（#793。PR #808 の
+ *                                                                    実測 1 本。stale-base と同値）
  *   deploy-data.yml:resolve         40     4     8    10    13s  → 10 分
  *   deploy-site.yml:deploy          40    28    56    62    71s  → 30 分（本番に触るので厚め）
  *   release.yml:released-tag        39     3     4     5     8s  → 10 分
@@ -256,6 +260,9 @@ test("#556 値が実測から外れていない（短すぎる = 偽陽性 / 長
   const expected: Record<string, number> = {
     "ci.yml:check": 30,
     "ci.yml:docker-web": 20,
+    // #793: 実測 11s（n=1。PR #808 の初回 CI、job 103725977042）。stale-base（実測 max 10s）と
+    // ほぼ同じで、同じ 10 分。n=1 なので、本数が溜まったら上の表ごと測り直すこと。
+    "ci.yml:pr-closes": 10,
     "ci.yml:stale-base": 10,
     "deploy-data.yml:resolve": 10,
     "deploy-site.yml:deploy": 30,
@@ -266,6 +273,10 @@ test("#556 値が実測から外れていない（短すぎる = 偽陽性 / 長
     "security.yml:gitleaks": 20,
     "security.yml:forbidden-patterns": 10,
     "security.yml:audit": 10,
+    // #786: この job は「2 本のシェルテスト（ネットワーク無し）＋ gh api 2 回」だけ。
+    // 手元の実測でテストは 2 本合わせて 2 秒未満、gh api は CI 上で 1 秒未満（run 34753557512）。
+    // branch-protection.yml:guard / environment-protection.yml:guard と同じ 5 分に揃える。
+    "security-alerts.yml:guard": 5,
   };
   for (const [key, want] of Object.entries(expected)) {
     const job = allJobs.find((j) => id(j) === key);
