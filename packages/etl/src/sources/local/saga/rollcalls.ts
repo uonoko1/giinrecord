@@ -105,15 +105,12 @@ const idPart = (s: string): string => s.replace(/[\s　/\\]/g, "");
 export interface Converted {
   rollCalls: LocalRollCall[];
   unmatched: LocalUnmatchedName[];
-  /** **字が落ちたまま名簿に寄った氏名**（`meta.lossyNameMatches`。青森 #749 の機序 ②） */
-  lossy: { nameText: string; memberId: string; rosterName: string; rollCalls: number }[];
 }
 
 export function toLocalRollCalls(sources: readonly PdfSource[], roster: readonly LocalMember[], session: SessionInfo): Converted {
   const rollCalls: LocalRollCall[] = [];
   const baseIds = new Map<string, number>();
   const matchOf = new Map<string, ReturnType<typeof matchName>>();
-  const lossy = new Map<string, { nameText: string; memberId: string; rosterName: string; rollCalls: number }>();
   /** 氏名 → 名寄せの結果（同じ氏名を 2 回引かない） */
   const resolve = (m: VotePdfMember) => {
     const key = `${m.nameText}\t${m.group}`;
@@ -158,23 +155,6 @@ export function toLocalRollCalls(sources: readonly PdfSource[], roster: readonly
         sourceUrl: pdfUrl,
       });
     }
-    // **字が落ちたまま寄った氏名**を数える（青森 #749 の機序 ②。`meta.lossyNameMatches`）
-    const seen = new Set<string>();
-    for (const [i, row] of pdf.rows.entries()) {
-      for (const m of pdf.rowMembers[i]) {
-        if (seen.has(m.nameText)) continue;
-        seen.add(m.nameText);
-        const hit = resolve(m);
-        if (hit.memberId === "") continue;
-        const r = roster.find((x) => x.id === hit.memberId);
-        if (!r || nameKey(m.nameText) === nameKey(r.name)) continue;
-        const k = `${m.nameText}\t${hit.memberId}`;
-        const cur = lossy.get(k) ?? { nameText: m.nameText, memberId: hit.memberId, rosterName: r.name, rollCalls: 0 };
-        cur.rollCalls += pdf.rows.length;
-        lossy.set(k, cur);
-      }
-      void row;
-    }
   }
   // 同じ議決日で同じ id の行が複数なら、出た順に全部へ -1, -2 … を足す（10 県と同じ規則）
   const seenId = new Map<string, number>();
@@ -201,7 +181,7 @@ export function toLocalRollCalls(sources: readonly PdfSource[], roster: readonly
     const match = matchOf.get(`${u.nameText}\t${u.group}`);
     return { ...u, ...(match && match.candidates.length > 0 ? { candidates: match.candidates } : {}) };
   });
-  return { rollCalls, unmatched: unmatchedList, lossy: [...lossy.values()] };
+  return { rollCalls, unmatched: unmatchedList };
 }
 
 /** 集計欄の原文（`37` `0`。**全角もありうる**）→ 数。読めなければ undefined（推定しない）。 */

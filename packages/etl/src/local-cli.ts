@@ -69,7 +69,6 @@ const built = buildLocalAssembly({
   sessions: run.sessions,
   unmatched: run.unmatched,
   ...(run.unreadableSources?.length ? { unreadableSources: run.unreadableSources } : {}),
-  ...(run.lossyNameMatches?.length ? { lossyNameMatches: run.lossyNameMatches } : {}),
 });
 console.log(`rollcalls: ${built.meta.counts.rollcalls}, cells: ${built.meta.counts.cells}, unknown cells (kept as 不明, not guessed): ${built.meta.counts.unknownCells}`);
 if (built.unmatched.length) {
