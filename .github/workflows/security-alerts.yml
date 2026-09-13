@@ -1,0 +1,81 @@
+name: Security alerts
+# Issue #786: GitHub 自身が出している security アラートを**誰かが読む**ようにする。
+#
+# なぜ要るか: secret scanning のアラート #1 は 2026-08-23T16:51:24Z に立ち、
+# **21 日間、誰も見ていなかった**。中身は本物の漏洩だった（#785）。
+# **その間 CI は全部緑で、gitleaks はこの形を検出しない**（実測: `no leaks found`）。
+# **唯一これを見つけていた検出器の出力を、我々は読んでいなかった。**
+# **見ていない検出器は、無い検出器と同じである。**
+#
+# #785 は「その 1 件を消す」。**この workflow は「次の 1 件に 21 日かけない」。**
+#
+# 検査そのものは deploy/monitor/security-alerts.sh（テスト: deploy/test/security-alerts.test.sh）。
+# Issue の開閉は monitor.yml と同じ deploy/monitor/report.sh に任せる（タイトルが同一性なので溜まらない）。
+# 判定と報告の対応は deploy/monitor/security-alerts-report.sh に**ファイルとして**置く。
+# **ここに直接書かない**——インラインの `run:` を守るものは無く、branch-protection.yml で
+# タイトルの入れ替え・rc=2 分岐の削除・`set +e` の削除の 3 つが素通りした（#546 レビュー）。
+#
+# **`Security` ワークフローに相乗りしなかった理由**（security.yml に足さなかった）:
+#   1. **`Security` は必須チェック**である（gitleaks / forbidden-patterns / audit が
+#      branch protection の required checks に名指しで入っている。deploy/monitor/branch-protection.sh）。
+#      そこに job を足すと **PR ごとに走り**、しかも**必須チェックの集合を動かす**判断が要る。
+#      この検査が見るのは「リポジトリ全体の現在の状態」で、**PR の内容とは無関係**——
+#      PR を落とすべきものではない（他人が入れたアラートで自分の PR が赤くなる）。
+#   2. **トークンの前提が違う。** security.yml の 3 job は `GITHUB_TOKEN` だけで動くが、
+#      こちらは PAT が要る（下記）。同居させると、人間待ちがどこに掛かっているのか読めなくなる。
+#   3. **Issue を開く**ので `issues: write` が要る。security.yml は `contents: read` で足りている。
+#   branch-protection.yml / environment-protection.yml が**まさに同じ理由で別ファイルになっている**ので、
+#   「GitHub の設定・状態を毎日見て Issue を開閉する」列に並べるのが既存の形だと判断した。
+on:
+  schedule:
+    - cron: "53 21 * * *"   # 毎日 06:53 JST。branch-protection(06:23) / environment-protection(06:41) とずらす
+  pull_request:
+    # 検査そのものを触る PR では、その場で走らせて壊れていないことを見る
+    paths:
+      - ".github/workflows/security-alerts.yml"
+      - "deploy/monitor/security-alerts.sh"
+      - "deploy/monitor/security-alerts-report.sh"
+      - "deploy/test/security-alerts.test.sh"
+      - "deploy/test/security-alerts-report.test.sh"
+  workflow_dispatch:
+# **`secret-scanning` も `dependabot-alerts` も、`permissions:` に書けるキーではない。**
+# 実測（actionlint、2026-09-13。GitHub が受け付けるスコープの一覧そのもの）:
+#   unknown permission scope "secret-scanning". all available permission scopes are
+#   "actions", "artifact-metadata", "attestations", "checks", "contents", "deployments",
+#   "discussions", "id-token", "issues", "models", "packages", "pages", "pull-requests",
+#   "repository-projects", "security-events", "statuses"
+# **書くと #540 と同じことが起きる**——GitHub が workflow を構文として拒否し、
+# **この検査ごと一切動かなくなる**（`administration` で実測済み: HTTP 422 failed to parse workflow）。
+# 唯一それらしい `security-events` は **code scanning** のスコープで、secret scanning の
+# アラート API も dependabot のアラート API も対象外。
+# → **読むには fine-grained PAT が要る＝人間の作業。** 手順は docs/ops/monitoring.md
+#   「GitHub の security アラート」、打つコマンドは `bash scripts/human-tasks.sh`。
+# **PAT が置かれるまでは exit 2（読めない）として報告し続ける。何も見ていない状態にはしない。**
+permissions:
+  contents: read
+  issues: write
+concurrency:
+  group: security-alerts
+  cancel-in-progress: false
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: unit tests (gh / report.sh are stubs, no network)
+        run: |
+          bash deploy/test/security-alerts.test.sh
+          bash deploy/test/security-alerts-report.test.sh
+      # PR では実際のアラートを読まない: fork からの PR に issues:write は渡らず、Issue の開閉もしたくない。
+      # アラートそのものの確認は schedule と workflow_dispatch でやる。
+      - name: read the security alerts → Issue
+        if: github.event_name != 'pull_request'
+        env:
+          # secret scanning / dependabot のアラートは **`GITHUB_TOKEN` では読めない**（上の注記）。
+          # 人間が fine-grained PAT を置けば自動的にそちらを使う。置かれるまでは「読めない」Issue が開く。
+          GH_TOKEN: ${{ secrets.SECURITY_ALERTS_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          bash deploy/monitor/security-alerts-report.sh \
+            "$GITHUB_REPOSITORY" \
+            "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
