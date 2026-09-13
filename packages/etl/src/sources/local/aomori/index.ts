@@ -33,7 +33,6 @@ export interface AomoriRun {
   sessions: LocalAssemblyMeta["sessions"];
   sources: LocalAssemblyMeta["sources"];
   unreadableSources: { url: string; reason: string }[];
-  lossyNameMatches: NonNullable<LocalAssemblyMeta["lossyNameMatches"]>;
   summary: { sessionId: string; sessionLabel: string; members: number; rows: number; unknownCells: number; skippedRows: number; pdfUrls: string[] }[];
 }
 
@@ -60,7 +59,6 @@ export async function runAomori(opts: { sessions: number; fetchedAt: string; fet
     { name: "青森県議会 本会議・委員会の審査結果", url: AOMORI_INDEX_URL, fetchedAt: opts.fetchedAt },
   ];
   const unreadableSources: AomoriRun["unreadableSources"] = [];
-  const lossy = new Map<string, NonNullable<LocalAssemblyMeta["lossyNameMatches"]>[number]>();
   const summary: AomoriRun["summary"] = [];
   for (const t of picked) {
     const pdfs: PdfSource[] = [];
@@ -82,12 +80,6 @@ export async function runAomori(opts: { sessions: number; fetchedAt: string; fet
       cur.rollCallIds.push(...u.rollCallIds);
       unmatched.set(key, cur);
     }
-    for (const l of converted.lossy) {
-      const key = `${l.nameText}\t${l.memberId}`;
-      const cur = lossy.get(key) ?? { nameText: l.nameText, memberId: l.memberId, rosterName: l.rosterName, rollCalls: 0 };
-      cur.rollCalls += l.rollCalls;
-      lossy.set(key, cur);
-    }
     const unknownCells = pdfs.reduce((s, p) => s + p.pdf.unknownCells, 0);
     const pdfUrls = pdfs.map((p) => p.pdfUrl);
     sessions.push({
@@ -105,5 +97,5 @@ export async function runAomori(opts: { sessions: number; fetchedAt: string; fet
     log(`  ${t.sessionLabel}: ${converted.rollCalls.length} roll calls × ${pdfs[0].pdf.members.length} members, unknown cells ${unknownCells}, unmatched names ${converted.unmatched.length}, 表決していない行 ${converted.skippedRows} (${pdfUrls.length} PDFs)`);
   }
   if (rollCalls.length === 0) throw new Error("no roll calls read from any session");
-  return { roster, rollCalls, unmatched: [...unmatched.values()], sessions, sources, unreadableSources, lossyNameMatches: [...lossy.values()], summary };
+  return { roster, rollCalls, unmatched: [...unmatched.values()], sessions, sources, unreadableSources, summary };
 }
