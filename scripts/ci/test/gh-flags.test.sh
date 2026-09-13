@@ -87,8 +87,12 @@ INHERITED FLAGS
 H
     ;;
   *)
-    # **実在しないサブコマンド**——本物と同じく親の help を出して 0 で返る
-    printf 'USAGE\n  gh %s <command> [flags]\n\nAVAILABLE COMMANDS\n  list\n' "$1"
+    # **実在しないサブコマンド**——本物と同じく親の help を出して 0 で返る。
+    # **INHERITED FLAGS まで書き写すこと。** 最初はここを省いて `USAGE` と `AVAILABLE COMMANDS` だけに
+    # していたが、それだと親 help から**フラグが 1 つも取れず**、USAGE の検査を外しても
+    # `--repo` が「無いフラグ」として落ちてしまい、**テストが正しい理由で通っていなかった**
+    # （変異 M3 が生き残って気づいた。実測: 本物の `gh secret zzset --help` は `--help` と `--repo` を出す）。
+    printf 'USAGE\n  gh %s <command> [flags]\n\nAVAILABLE COMMANDS\n  list\n\nINHERITED FLAGS\n      --help                     Show help for command\n  -R, --repo [HOST/]OWNER/REPO   Select another repository\n' "$1"
     ;;
 esac
 exit 0
@@ -175,7 +179,12 @@ test_case "コメントに書いた「誤りの記録」では落ちない" t_co
 t_test_files_skipped() {
   mkrepo 'printf %s "$T" | gh secret set S --repo o/r'
   mkdir -p "$TMP/repo/scripts/test"
-  { echo '#!/usr/bin/env bash'; echo 'assert_contains "$LOG" "gh secret set BAD_FLAG --body-file"'; } \
+  # **綴りが「抽出される形」で書いてあること。** 最初は
+  # `assert_contains "$LOG" "gh secret set … --body-file"` と書いていたが、**末尾の `"` が付くので
+  # `--body-file"` となり、そもそも抽出の対象外だった**——除外規則を無効にしてもこのテストは通り、
+  # **何も測っていなかった**（変異 M8 が生き残って気づいた）。閉じ引用符を後ろの語に回して、
+  # 除外規則だけが効いている状態にする。
+  { echo '#!/usr/bin/env bash'; echo 'assert_contains "$LOG" "gh secret set BAD --body-file -" "スタブが弾く"'; } \
     > "$TMP/repo/scripts/test/x.test.sh"
   run "PATH=$FAKE:$PATH"
   assert_eq 0 "$STATUS" "テストの中の assert 文字列で落ちている: $OUT"
@@ -265,6 +274,16 @@ t_dupes_repo_clean() {
   assert_contains "$OUT" "件のトップレベルのスタブ定義" "**何件見たかを出す**"
 }
 test_case "この作業ツリーにスタブの二重定義は無い" t_dupes_repo_clean
+
+# ---- 14. CI が実際にこの 2 本を走らせているか --------------------------------------------------
+# **走らないテストは落ちない**（#533 と同じ根）。ci.yml からこの step を消しても、
+# ここが無ければどこも赤くならない。**ci.yml 自身は、どのテストファイルからも消せない。**
+t_ci_runs_the_checks() {
+  local ci="$ROOT/.github/workflows/ci.yml"
+  assert_contains "$(cat "$ci")" "bash scripts/ci/gh-flags.sh" "ci.yml が gh-flags.sh を走らせていない"
+  assert_contains "$(cat "$ci")" "bash scripts/ci/stub-dupes.sh" "ci.yml が stub-dupes.sh を走らせていない"
+}
+test_case "ci.yml がこの 2 本を走らせている（step を消したら落ちる）" t_ci_runs_the_checks
 
 echo
 echo "$PASS passed, $FAIL failed"
