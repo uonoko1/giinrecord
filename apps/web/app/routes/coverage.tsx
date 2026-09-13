@@ -718,9 +718,8 @@ function CountMismatchSection({ local, metas }: { local: LocalCoverage[]; metas:
       </p>
       <p className="card__body">
         食い違いがあっても<strong>表決の記録はそのまま出します</strong>。公表された賛成者数に議長の記号を
-        含めるかどうかは議会ごとに違い（山梨県議会には含めていない行が、佐賀県議会には含めている行が実在します）、
-        食い違いが<strong>読み取りの誤りだとは限らない</strong>ためです。
-        どちらが正しいかはこのサイトでは判断しません。数えた数と公表された数の両方を出します。
+        含めるかどうかは議会ごとに違うためです（山梨県議会には含めていない行が、佐賀県議会には含めている行が実在します）。
+        <strong>どちらが正しいかはこのサイトでは判断しません。</strong>数えた数と公表された数の両方を出します。
       </p>
       {hit.length === 0 ? (
         <p className="card__body" data-testid="coverage-count-mismatch-none">

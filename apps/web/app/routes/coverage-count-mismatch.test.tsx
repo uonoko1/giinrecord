@@ -98,9 +98,18 @@ describe("/coverage: 記号の数と公表値の食い違い（#826）", () => {
     expect(screen.queryByRole("region", { name: SECTION })).toBeNull();
   });
 
-  it("評価を書かない: 「誤り」「正しい」と断じる語を出さない", () => {
+  /**
+   * **評価・推測を書かない**（絶対原則）。**`/coverage` 全体の同じ検査に実際に落とされた**——
+   * 最初の文面は「食い違いが**読み取りの誤り**だとは限らない」と書いており、
+   * **`coverage-lossy-name.test.tsx` の「評価・推測を書かない」が `誤り` を拾って落とした。**
+   * **文面を直した**（検査は緩めていない）。**同じ検査をこの節にも当てる。**
+   */
+  it("評価・推測を書かない（どちらが正しいかを断じない）", () => {
     renderPage([metaOf({ countMismatches: YAMANASHI_SHAPED } as Partial<LocalAssemblyMeta>)]);
     const section = screen.getByRole("region", { name: SECTION });
+    for (const w of ["おそらく", "たぶん", "可能性", "誤り", "間違", "疑わ", "ランキング", "不正確"]) {
+      expect(section.textContent, `${w} を出している`).not.toContain(w);
+    }
     expect(section.textContent).toContain("どちらが正しいかはこのサイトでは判断しません");
   });
 });
