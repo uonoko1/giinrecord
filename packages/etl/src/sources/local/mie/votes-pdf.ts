@@ -78,6 +78,8 @@ function splitLegendText(raw: string): { key: string; desc: string }[] {
   }
   return end === text.length ? out : [];
 }
+/** テスト用（凡例の区切り方だけを単体で見る。#841） */
+export const splitLegendTextForTest = splitLegendText;
 // 賛成・反対の列見出しは 2 文字（「者数」は付かない）
 const LEFT_HEADERS = ["議案等番号", "件名", "議決月日", "出席者数", "表決者数", "賛成", "反対", "議決結果"] as const;
 const NUMBER_CELL = /^(.+?)(第[0-9０-９]+号)$/;
