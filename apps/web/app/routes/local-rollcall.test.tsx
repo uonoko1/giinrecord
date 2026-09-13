@@ -103,6 +103,17 @@ describe("LocalRollCallPage 議員ごとの表決", () => {
     expect(screen.queryByRole("link", { name: "佐藤 次郎" })).not.toBeInTheDocument();
   });
 
+  /**
+   * 凡例から国会の値に読める票だけ色を使う（`localVoteTone`）。
+   * 変異テストで気づいた穴: mapped のある票の色を確かめていなかったので、
+   * 「全部 raw」にする変異がこのファイルでは落ちなかった（assemblies.test.ts では落ちた）。
+   */
+  it("mapped のある票は凡例どおりの色（賛成／反対／投票なし）で、raw に潰れない", () => {
+    renderPage();
+    const rows = screen.getAllByRole("listitem");
+    expect(rows.map((r) => within(r).getByRole("img").getAttribute("data-tone"))).toEqual(["yes", "no", "none", "raw"]);
+  });
+
   /** 絶対原則: 凡例から読めない票を「賛成」「反対」に丸めない。 */
   it("mapped の無い票は原文と凡例だけを出し、賛成／反対に丸めない", () => {
     renderPage(withoutCounts);
