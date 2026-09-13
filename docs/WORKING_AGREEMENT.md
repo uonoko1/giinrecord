@@ -2002,3 +2002,41 @@
 CI が機械的に見る分（`.github/workflows/security.yml`、Issue #133）: gitleaks（PR 差分／週次の全履歴）、`scripts/ci/forbidden-patterns.sh`（鍵ヘッダ・トークン形式・追跡された `.env`・公開 IP（除外ディレクトリなし）・secret `FORBIDDEN_PATTERNS` の正規表現。secret が無いと fork PR 以外では失敗）、`fixture-secret`（`test/fixtures/` の中の第三者の鍵・トークン。**gitleaks の既定ルールは Google の `AIza…` 形を検出しない**——#785 で実測。母数 0 は clean ではなく error）、`scripts/ci/audit.sh`（high 以上。例外は `scripts/ci/audit-ignore.txt` に期限と理由つき）。
 シェルは `bash scripts/ci/shellcheck.sh` で lint（Issue #154）。対象（`scripts/**`・`deploy/**` の `*.sh` と bash/sh shebang の拡張子なしファイル）はこのスクリプトだけが列挙し、CI も同じコマンドを呼ぶ。PR 前に手元で実行する（`--list` で対象確認）。
 他サイト名の禁止パターンは**リポジトリに書かず** repo secret `FORBIDDEN_PATTERNS`（改行区切りの正規表現）に置く。VPS の IP も書かない（ssh は `$VPS_SSH_HOST`、既定 `sakura-vps`）。nginx の reload は `if nginx -t; then systemctl reload nginx; else exit 1; fi` の形（`deploy/test/nginx-reload.test.sh`）。報告窓口は `SECURITY.md`。
+
+### `pr-closes` が赤いとき、本文を直しても `gh run rerun` では緑にならない
+
+**2026-09-14、PR #860 で実測**（担当者がジョブのログを読んで特定した）。
+
+`ci.yml` の `pr-closes` は **イベントのペイロード**から本文を読む:
+
+```
+PR_BODY: ${{ github.event.pull_request.body }}
+```
+
+**`gh run rerun` は「その run が作られた時点の本文」を再生する。**
+**本文を編集しても rerun では反映されない。**
+
+**直し方**: **空コミットを push して新しい `synchronize` イベントを起こす。**
+
+```
+git commit --allow-empty -m "chore: 本文を直したので pr-closes を測り直す"
+git push
+```
+
+**押す前に手元で確かめるなら**——GitHub から本文を読み直して、**自作の正規表現ではなく実物の
+`scripts/ci/pr-closes.sh`** に食わせる:
+
+```
+gh pr view <番号> --json body --jq .body > /tmp/body.txt
+bash scripts/ci/pr-closes.sh - < /tmp/body.txt; echo "exit=$?"
+```
+
+**否定的対照も取る**（逃げ道や `Closes #N` を消した本文で `exit=1` になること）。
+**`| echo $?` では測れない**——パイプの最後のコマンドの終了コードを見ることになる。
+PO は最初これで両方 0 に見えた。**ファイルに落としてリダイレクトで測る。**
+
+**この手順を `ci.yml` のコメントに書いてはいけない。**
+`scripts/ci/test/pr-closes.test.sh` の wiring 検査が
+`assert_not_contains "$body" 'gh pr view'`（#793「CI は API を叩かない」）を見ていて、
+**コメントか実行の行かを区別しない**ので落ちる（PO が PR #863 で実際に落とした）。
+**検査の側を緩めない**——緩めると実行の行も見逃す形に弱まる。**手順はここに書く。**

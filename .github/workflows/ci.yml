@@ -93,8 +93,8 @@ jobs:
           # **本文を直したあと `gh run rerun` では緑にならない**（2026-09-14、PR #860 で実測）。
           # ここはイベントのペイロードを読むので、rerun は **その run が作られた時点の本文**を再生する。
           # **本文を直したら、空コミットを push して新しい `synchronize` イベントを起こすこと。**
-          # 押す前に手元で確かめるなら:
-          #   gh pr view <番号> --json body --jq .body | bash scripts/ci/pr-closes.sh -
+          # 押す前に手元で確かめる手順は docs/WORKING_AGREEMENT.md に書いた
+          # （**ここに書くと「CI は API を叩かない」の検査に当たる** ── pr-closes.test.sh の wiring）。
           PR_BODY: ${{ github.event.pull_request.body }}
         run: |
           set -euo pipefail
