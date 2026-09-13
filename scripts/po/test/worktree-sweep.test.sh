@@ -259,3 +259,68 @@ EOF
   assert_contains "$ERR" "未コミットの変更が 3 件" "3 件とも数える"
 }
 test_case "sweep: .cache の除外も広げない（#787 で狭めた）" t_sweep_cache_exception_not_widened
+
+# --- 取得キャッシュを黙って消さない（#787 のマージ時に PO が見つけた穴） ---------------------
+#
+# **`.measure/` は守り 1 から外した＝「消えてよい」と宣言した場所**である。
+# ところが PO が #769 の 32MB を確かめたところ、`.work/769/cache/` の `.bin` 335 本は
+# **群馬県のサイトから取得した賛否 PDF 110 本のキャッシュ**だった。
+# 取得は 1 秒以上空けて直列なので、消すと**相手のサーバーに 110 本ぶんの再取得**が要る。
+#
+# **これは docs では止まらない**（#783: board.md に 4 回書いた教訓が 5 回目に再発した）。
+# **消す直前に「何を捨てるか」を出す**——数字は `du` と `find` で実際に取れる。
+
+t_sweep_reports_measure_before_removing() {
+  local wt; wt=$(mktemp -d)
+  mkdir -p "$wt/.measure/769/cache" "$wt/packages/etl/.measure"
+  # 1MB を 2 本。**中身ではなく大きさで気づかせる**（取得キャッシュは必ず大きい）
+  dd if=/dev/zero of="$wt/.measure/769/cache/a.bin" bs=1024 count=1024 2>/dev/null
+  dd if=/dev/zero of="$wt/packages/etl/.measure/b.bin" bs=1024 count=1024 2>/dev/null
+  # **.measure/ の外にもファイルを置く**（追跡済みのソース）。これが無いと
+  # 「全ファイルを数える」変異（M9）が生き残る——絞り込んでいるかを測れない。
+  mkdir -p "$wt/packages/etl/src"
+  : > "$wt/packages/etl/src/index.ts"; : > "$wt/README.md"; : > "$wt/package.json"
+  local h; h=$(handler <<EOF
+git_handle() {
+  case "\$*" in
+    "worktree list --porcelain") printf '%s\n' \\
+      "worktree /repo" "branch refs/heads/main" "" \\
+      "worktree $wt" "branch refs/heads/docs/measure" "" ;;
+    *"status --porcelain") ;;
+    *"log --oneline @{u}..HEAD") ;;
+    *) ;;
+  esac
+}
+handle() { echo '[{"state":"MERGED"}]'; }
+EOF
+)
+  run_script "$h" worktree-sweep.sh --yes
+  assert_eq 0 "$STATUS" "exit status: $ERR"
+  assert_contains "$ERR" ".measure" "**捨てる .measure/ があることを、消す前に出す**"
+  assert_contains "$ERR" "2 ファイル" "**何本捨てるかを数字で出す**"
+  assert_contains "$ERR" "取得" "**再取得が要ることを言う（相手のサーバーの負荷）**"
+  rm -rf "$wt"
+}
+test_case "sweep: .measure/ を捨てるときは何を捨てるか出す (#787)" t_sweep_reports_measure_before_removing
+
+t_sweep_silent_when_no_measure() {
+  local wt; wt=$(mktemp -d)
+  local h; h=$(handler <<EOF
+git_handle() {
+  case "\$*" in
+    "worktree list --porcelain") printf '%s\n' \\
+      "worktree /repo" "branch refs/heads/main" "" \\
+      "worktree $wt" "branch refs/heads/docs/plain" "" ;;
+    *"status --porcelain") ;;
+    *"log --oneline @{u}..HEAD") ;;
+    *) ;;
+  esac
+}
+handle() { echo '[{"state":"MERGED"}]'; }
+EOF
+)
+  run_script "$h" worktree-sweep.sh --yes
+  assert_not_contains "$ERR" "取得" "**.measure/ が無いツリーでは言わない（毎回鳴ると見なくなる）**"
+  rm -rf "$wt"
+}
+test_case "sweep: .measure/ が無ければ黙っている (#787)" t_sweep_silent_when_no_measure
