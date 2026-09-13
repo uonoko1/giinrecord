@@ -75,6 +75,21 @@ describe("checkBuild", () => {
     );
   });
 
+  // #791: 地方議会の採決。国会の rollcalls/{回次}/{id} とは別の URL 空間。
+  it("地方議会の採決一覧と採決1件のページが必要", () => {
+    const r = checkBuild(staticOnly, { memberIds: null, rollCalls: null, localRollCalls: [{ assemblyId: "pref-41", id: "pref-41-x-乙第40号議案" }] });
+    expect(r.failures).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("assemblies/pref-41/rollcalls/index.html"),
+        expect.stringContaining("assemblies/pref-41/rollcalls/pref-41-x-乙第40号議案/index.html"),
+      ]),
+    );
+  });
+  it("地方議会の採決が無ければ、地方の採決ページは要求しない", () => {
+    const r = checkBuild(staticOnly, { memberIds: null, rollCalls: null, localRollCalls: [] });
+    expect(r.failures.filter((f) => f.includes("/rollcalls"))).toEqual([]);
+  });
+
   it("内部リンク先が file でも dir/index.html でも存在すれば OK、無ければ失敗", () => {
     const b = fakeBuild({
       "index.html": html(["/about", "/members", "/robots.txt", "/members/missing", "/assets/gone-1234.js"]),
