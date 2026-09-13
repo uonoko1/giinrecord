@@ -1,5 +1,5 @@
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { join, relative, sep } from "node:path";
 import type {
   Assembly, AssemblyId, AssemblySession, LocalAssemblyMeta, LocalMember, LocalMemberDetail, LocalRollCall, LocalRollCallSummary, LocalUnmatchedName, LocalVoteEntry, MemberAssemblyCount, MemberSummary,
 } from "@seiji-kiroku/shared";
@@ -100,6 +100,19 @@ export interface LocalAssemblyDataset {
 const byDateDesc = <T extends { date: string; id?: string; rollCallId?: string }>(a: T, b: T) =>
   (a.date < b.date ? 1 : a.date > b.date ? -1 : 0) || cmp(a.id ?? a.rollCallId ?? "", b.id ?? b.rollCallId ?? "");
 const cmp = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
+
+/** ディレクトリ以下の *.json を全部集める（無ければ []）。 */
+async function walkJson(dir: string): Promise<string[]> {
+  let entries;
+  try { entries = await readdir(dir, { withFileTypes: true }); } catch { return []; }
+  const out: string[] = [];
+  for (const e of entries) {
+    const p = join(dir, e.name);
+    if (e.isDirectory()) out.push(...(await walkJson(p)));
+    else if (e.name.endsWith(".json")) out.push(p);
+  }
+  return out.sort(cmp);
+}
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 /** 国会の行か（`diet-` の assemblyId、または assemblyId の無い古い行）。地方議員は `diet-` 以外の assemblyId を持つ。 */
@@ -276,7 +289,8 @@ export function lossyNameMatchesOf(
  *
  * ## 母数から外すもの（**外した数も返す**。#757）
  *
- * - **`counts` の欄が無い行**（本番 341 件。奈良 125・徳島 105・高知 104・秋田 7）——**突き合わせる相手が無い。**
+ * - **`counts` の欄が無い行**（本番 334 件。奈良 125・徳島 105・高知 104。**2026-09-14 実測**——
+ * **秋田の 7 件は #840 が埋めたので 0 になった**）——**突き合わせる相手が無い。**
  * - **凡例の引けないセルがある行**（本番 5 件。滋賀 4・鳥取 1）——**`mapped` が無いセルは賛成とも反対とも数えられない。**
  *   **滋賀の 4 行は生の字では公表値と合っている**（`legend` が `抽出不能` なだけ）ので、
  *   **母数に入れると「票が食い違った」という偽の件数になる**（食い違っているのは凡例の読みであって、票ではない）。
@@ -301,6 +315,26 @@ export function countMismatchesOf(rollCalls: readonly LocalRollCall[]): {
     mismatches.push({ rollCallId: rc.id, counted: { yes, no }, published: { yes: rc.counts.yes, no: rc.counts.no } });
   }
   return { mismatches: mismatches.sort((a, b) => cmp(a.rollCallId, b.rollCallId)), checked };
+}
+
+/**
+ * **`rollcalls/index.json` の行を、採決の原本（`rollcalls/{sessionId}/{id}.json`）から作る**（Issue #851）。
+ *
+ * ## 何が問題だったか
+ *
+ * **#840 が秋田の `counts` 7 件を個別ファイルと `meta.json` に入れたが、`index.json` は古いままだった。**
+ * **本番の採決ページは `index.json` を読むので、公表されている人数が
+ * 「人数は公表記録にありません」と表示され続けた**（利用者から検出できない虚偽。#569 より悪い側）。
+ *
+ * **`index.json` は「採決の原本から `votes` を落としただけ」**——**独立した記録ではない。**
+ * **だから作る側（`buildLocalAssembly`）と検算する側（`validateLocalAssemblies`）が
+ * この 1 つの関数を共有する**（`countMismatchesOf` / `lossyNameMatchesOf` と同じ形）。
+ * **手で写さない**——写せば同じずれがまた起きる。
+ *
+ * **並びは `buildLocalAssembly` の `rollCalls` と同じ（日付の降順 → id 順）。**
+ */
+export function rollCallIndexOf(rollCalls: readonly LocalRollCall[]): LocalRollCallSummary[] {
+  return [...rollCalls].sort(byDateDesc).map(({ votes: _v, ...s }) => s);
 }
 
 export function buildLocalAssembly(input: LocalAssemblyInput): LocalAssemblyDataset {
@@ -379,7 +413,7 @@ export function buildLocalAssembly(input: LocalAssemblyInput): LocalAssemblyData
     countChecked: counted.checked,
     ...(counted.mismatches.length ? { countMismatches: counted.mismatches } : {}),
   };
-  return { assembly: input.assembly, index, details, sessions, rollCallIndex: rollCalls.map(({ votes: _v, ...s }) => s), rollCalls, unmatched: unmatchedList, meta };
+  return { assembly: input.assembly, index, details, sessions, rollCallIndex: rollCallIndexOf(rollCalls), rollCalls, unmatched: unmatchedList, meta };
 }
 
 /** `assemblies/index.json` を読む（無ければ []）。 */
@@ -587,7 +621,8 @@ export async function validateLocalAssemblies(dir: string): Promise<string[]> {
       perSession.set(s.sessionId, ps);
       const rel = `assemblies/${a.id}/rollcalls/${s.sessionId}/${s.id}.json`;
       const rc = await read<LocalRollCall>(rel);
-      if (!rc) continue;
+      // **原本が無ければ黙って飛ばさない**（#851。飛ばすと下の突き合わせの母数から消える）
+      if (!rc) { v.push(`${label}: ${rel} が無い（index にある採決の原本が読めない）`); continue; }
       rollCallsOnDisk.push(rc);
       if (rc.id !== s.id || rc.assemblyId !== a.id) v.push(`${rel}: id/assemblyId mismatch`);
       if (!ISO_DATE.test(rc.date)) v.push(`${rel}: date must be ISO`);
@@ -612,6 +647,38 @@ export async function validateLocalAssemblies(dir: string): Promise<string[]> {
           if (!unmatchedKeys.has(`${rc.id}\t${vote.nameText}`)) v.push(`${rel}: "${vote.nameText}" has empty memberId but is not listed in unmatched.json`);
         } else if (!memberIds.has(vote.memberId)) v.push(`${rel}: memberId ${vote.memberId} not in members/index.json`);
         else seenVotes.set(vote.memberId, (seenVotes.get(vote.memberId) ?? 0) + 1);
+      }
+    }
+    // **公表した `rollcalls/index.json` が、公表した採決の原本と一致すること**（#851）。
+    // **#842（`meta.json` ↔ `rollcalls/`）は 2 つを突き合わせているが、3 つ目の `index.json` は誰も見ていなかった**
+    // （#774「独立でも互いの代わりにならない」と同じ形）。**実際に #840 が原本と `meta.json` だけを直し、
+    // `index.json` が古いまま本番に出て、公表されている人数が「公表記録にありません」と表示されていた。**
+    // **原本のほうを正とする**——票が一次資料に最も近い形だから。**行ごとに比べる**（1 行ずれても名指しできるように）。
+    {
+      // **原本は `rollcalls/` を歩いて集める**——**index を辿って集めると、
+      // index に載っていない原本（載せ忘れ）が母数から消え、永久に見つからない。**
+      const onDisk = [...rollCallsOnDisk];
+      const seen = new Set(onDisk.map((rc) => rc.id));
+      for (const f of await walkJson(join(base, "rollcalls"))) {
+        if (f.endsWith(`${sep}index.json`)) continue;
+        const rc = await read<LocalRollCall>(relative(dir, f).split(sep).join("/"));
+        if (rc && !seen.has(rc.id)) { seen.add(rc.id); onDisk.push(rc); }
+      }
+      const expected = rollCallIndexOf(onDisk);
+      const byId = new Map(expected.map((e) => [e.id, e]));
+      for (let i = 0; i < summaries.length; i++) {
+        const e = byId.get(summaries[i].id);
+        if (!e) continue; // 原本が読めなかった行は上で違反にしている
+        if (stableJson(summaries[i]) !== stableJson(e)) {
+          v.push(`assemblies/${a.id}/rollcalls/index.json[${i}] (${summaries[i].id}): rollcalls/ の原本と食い違っている（原本が正）`);
+        }
+      }
+      // **原本にあるのに index.json に無い採決**（載せ忘れは「記録が出ない」側）
+      const inIndex = new Set(summaries.map((s2) => s2.id));
+      for (const e of expected) if (!inIndex.has(e.id)) v.push(`assemblies/${a.id}/rollcalls/index.json: ${e.id} が原本にあるのに index に無い`);
+      // **並びも原本から決まる**（日付の降順 → id 順）
+      if (expected.length === summaries.length && stableJson(summaries.map((s2) => s2.id)) !== stableJson(expected.map((e) => e.id))) {
+        v.push(`assemblies/${a.id}/rollcalls/index.json: 並びが rollcalls/ の原本から作った並びと違う`);
       }
     }
     for (const [id, n] of voteCounts) if ((seenVotes.get(id) ?? 0) !== n) v.push(`assemblies/${a.id}: member ${id} has ${n} timeline votes but ${seenVotes.get(id) ?? 0} in rollcalls/`);
