@@ -142,6 +142,20 @@ HTTP 422: failed to parse workflow: (Line: 31, Col: 3): Unexpected value 'admini
 4. 有効期限を設定し、期限を `docs/ops/board.md` に控える
 5. リポジトリの Settings → Secrets and variables → Actions に **`BRANCH_PROTECTION_TOKEN`** として置く
 
+**5. は `gh` でできる**（#790。**画面での操作は 1〜4 だけ**）。手順を読み上げ、置いて、
+ワークフローを起動して結果まで見るところまでを 1 コマンドにしてある:
+
+```sh
+bash scripts/human-tasks.sh --yes --set-token     # 打ってから、トークンを貼って Enter
+```
+
+**トークンは引数では渡せない**（`sudo` と同じ理由で、シェルの履歴と `ps` に残る）。
+**標準入力か環境変数 `BRANCH_PROTECTION_TOKEN` だけ。** `gh secret set` にも
+**`--body` 系のフラグを一切付けずに**標準入力から渡すので、コマンド行にも出ない
+（**`--body-file -` は誤り**。そんなフラグは無く `unknown flag` で失敗する。
+**`--body -` も誤り**で、リテラルの `-` が secret として保存される。いずれも #786 で実測）。**`#155` の VPS 監視用 PAT は別物**
+（`/etc/gikailog/monitor.token`。`docs/ops/monitoring.md`）。
+
 **ワークフロー側の変更は要らない。** `.github/workflows/branch-protection.yml` は既に
 `${{ secrets.BRANCH_PROTECTION_TOKEN || secrets.GITHUB_TOKEN }}` を使っており、
 secret を置いた次の実行から自動的にそちらを使う。置くまでは `GITHUB_TOKEN` に落ちて

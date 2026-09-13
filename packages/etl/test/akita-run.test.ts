@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { runAkita, type Fetcher } from "../src/sources/local/akita/index.ts";
-import { buildLocalAssembly, validateLocalAssemblies, writeLocalAssembly, LOCAL_SOURCES } from "../src/local-assemblies.ts";
+import { buildLocalAssembly, lossyNameMatchesOf, validateLocalAssemblies, writeLocalAssembly, LOCAL_SOURCES } from "../src/local-assemblies.ts";
 import { AKITA_ASSEMBLY, AKITA_HOST, AKITA_HUB_URL, AKITA_ROSTER_URL, AKITA_YEARS_URL } from "../src/sources/local/akita/site.ts";
 
 const fixture = (name: string): Buffer => readFileSync(fileURLToPath(new URL(`fixtures/akita/${name}`, import.meta.url)));
@@ -92,7 +92,8 @@ test("#759 runAkita: 41 人全員が名簿に寄る（unmatched 0）", async () 
   const run = await runAkita({ sessions: 6, fetchedAt: FETCHED_AT, fetcher: f });
   assert.equal(run.roster.members.length, 41, "名簿");
   assert.deepEqual(run.unmatched, [], "寄らなかった氏名");
-  assert.deepEqual(run.lossyNameMatches, [], "字が落ちたまま寄った氏名");
+  // **#778 で共通層が数えるようになった**（`run` は渡さない）。秋田は 0 のまま（否定的対照）
+  assert.deepEqual(lossyNameMatchesOf(run.rollCalls, run.roster.members), [], "字が落ちたまま寄った氏名");
   assert.equal(run.rollCalls.length, 91, "採決");
   // **全部の票に memberId が入っている**（`unmatched` 0 と同じことを、票の側からも見る）
   const empty = run.rollCalls.flatMap((r) => r.votes).filter((v) => v.memberId === "");

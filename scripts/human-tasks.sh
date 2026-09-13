@@ -7,25 +7,42 @@
 #   だから **VPS の IP はこのスクリプトが自分で引く**（`giinrecord.jp` の A レコード）。
 #   **鍵も `~/.ssh/sakura-vps/id_ed25519` にある前提で明示する**（`Host giinops` が無い端末でも通る）。
 #
-# 何をするか:
+# 何をするか（**3 つ**）:
 #   1. **`site.conf` を本番に反映する**（#610 / #654 / #746）——ssh が要る。PO の端末には接続先が無い。
-#   2. **security アラート用の PAT を置く**（#786）——トークンが渡されたときだけ。
-#      **トークンを「作る」のはブラウザでしかできない**（GitHub の設定画面）。だがそれ以外
-#      ——**置くこと・置けたか確かめること・検査を走らせること**——は全部ここでやる。
-#      ユーザーの指示「対話的でないなら 1 つのスクリプトにまとめて、1 回のコマンドで済むように」。
+#   2. **branch protection 監視用の PAT を secret に置く**（#790 / #550 / #547）——
+#      **`Branch protection` ワークフローが 6 日連続で failure だった。** 設計は正しく、
+#      `GITHUB_TOKEN` では保護設定を読めないので「読めなかった」と報告し続けていた（#540）。
+#      **PAT の生成だけは GUI でしかできないが、secret の設置は `gh` でできる。**
+#      **人間に残る操作は「画面で PAT を作って、出てきた文字列を 1 回貼る」だけ。**
+#   3. **security アラート監視用の PAT を secret に置く**（#786）——**2 と同じ形**。
+#      secret scanning / Dependabot のアラートも `GITHUB_TOKEN` では読めない
+#      （**CI 上で実測: 両方 HTTP 403**。run 34753557512）。**2 とは別の secret**
+#      （`SECURITY_ALERTS_TOKEN`）で、**要る権限も違う**（Secret scanning / Dependabot alerts の Read-only）。
 #
 # **やらないこと**:
 #   - **`git stash` 2 件の drop（#543）**——**`scripts/ci/forbidden-patterns.sh` が
 #     `git stash` を全面的に禁止している**（#542 / #557。2026-09-06 に 3 回、担当者の未コミットの
 #     作業が git の「元に戻す」で消えた）。**規則を作った側がスクリプトで破るのは筋が通らない。**
 #     **#543 は人間が手で 2 回打つ**（`docs/ops/pending-decisions.md` の「3.」に手順がある）。
-#   - **fine-grained PAT を「作る」こと**（#550 / #155 / #547 / #786）——GitHub の設定画面での操作。
-#     **作ったあと「置く」のはここでできる**（`--set-security-alerts-token`。#786 のぶんだけ実装済み）。
+#   - **PAT の生成そのもの**（GitHub の設定画面での操作。API では作れない）
+#   - **VPS 監視用 PAT の設置**（#155）——**別の secret**（`/etc/gikailog/monitor.token`、root 600）。
+#     **ここで置くのは `BRANCH_PROTECTION_TOKEN` と `SECURITY_ALERTS_TOKEN` の 2 つだけ。
+#     取り違えないこと**（用途も要る権限も違う）。
 #   - **Sponsors / 広告 / NDL 照会**（#53 / #48 / #250）——外部に届く。方針の判断も要る
+#
+# **トークンの扱い**:
+#   - **コマンドライン引数では受け取らない**（`sudo` と同じ理由。**シェルの履歴と `ps` に残る**）。
+#     **環境変数か標準入力だけ。**
+#   - **`set -x` を使わない**（展開されてトークンがログに出る）。
+#   - **値は `echo` / `printf` / `log` に渡さない。** `gh` にも**標準入力で**渡す（引数に載せない）。
 #
 # 使い方:
 #   bash scripts/human-tasks.sh          # 何をするかだけ出す（dry-run）
-#   bash scripts/human-tasks.sh --yes    # 実行する（**引数はこれだけ。IP も鍵も渡さなくてよい**）
+#   bash scripts/human-tasks.sh --yes    # 実行する（**IP も鍵も渡さなくてよい**）
+#
+#   PAT を置くとき（**引数では渡せない**）:
+#     bash scripts/human-tasks.sh --yes --set-token   # 打ってから、トークンを貼って Enter
+#     （環境変数 BRANCH_PROTECTION_TOKEN でも読む。**コマンド行に書くと履歴に残る**）
 #
 #   接続先を上書きしたいときだけ `--host <IP>` か `GIINOPS_HOST=<IP>`。
 #   **ふだんは要らない。**
@@ -36,19 +53,26 @@
 #     （環境変数 SECURITY_ALERTS_TOKEN でも読む。**ただしコマンド行に書くと履歴に残る**）
 #   トークンの作り方は docs/ops/monitoring.md「GitHub の security アラート」。
 #
-#   Tests: scripts/ci/test/human-tasks.test.sh（ssh / curl / getent はスタブ。実際には何もしない）
+#   **2 つの PAT は別物**（#790 と #786）。**両方置くなら 2 回に分けて打つ**——
+#   1 回の実行で読める標準入力は 1 本なので、どちらの値か取り違えないため。
+#
+#   Tests: scripts/ci/test/human-tasks.test.sh（ssh / curl / getent / gh はスタブ。実際には何もしない）
 set -euo pipefail
 
-APPLY=0; HOST="${GIINOPS_HOST:-}"; READ_SEC_TOKEN_STDIN=0
+APPLY=0; HOST="${GIINOPS_HOST:-}"; READ_TOKEN_STDIN=0; READ_SEC_TOKEN_STDIN=0
 usage() {
   cat >&2 <<'USAGE'
-usage: human-tasks.sh [--yes] [--host <IP>] [--set-security-alerts-token]
+usage: human-tasks.sh [--yes] [--host <IP>] [--set-token | --set-security-alerts-token]
   --yes                         実際に実行する（既定は dry-run。何をするか出すだけ）
   --host <IP>                   ssh の接続先を上書きする（ふだんは要らない。自分で名前解決する）
+  --set-token                   BRANCH_PROTECTION_TOKEN を**標準入力から**読む（#790）
   --set-security-alerts-token   SECURITY_ALERTS_TOKEN を**標準入力から**読む（#786）
 
   **トークンは引数では渡せません**（シェルの履歴と ps に残るため）。
-  環境変数 SECURITY_ALERTS_TOKEN か、--set-security-alerts-token + 標準入力で渡してください。
+  環境変数（BRANCH_PROTECTION_TOKEN / SECURITY_ALERTS_TOKEN）か、
+  上のフラグ + 標準入力で渡してください。
+
+  **2 つの PAT は別物です**（用途も要る権限も違う）。**同時には指定できません。**
 USAGE
   exit 2
 }
@@ -56,10 +80,19 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --yes) APPLY=1; shift ;;
     --host) HOST="${2:-}"; shift 2 ;;
+    --set-token) READ_TOKEN_STDIN=1; shift ;;
     --set-security-alerts-token) READ_SEC_TOKEN_STDIN=1; shift ;;
     *) usage ;;
   esac
 done
+
+# **標準入力は 1 本しかない。** 両方のフラグを同時に受けると、どちらの secret に入るのかが
+# 呼ぶ人にも読む人にも決められない（**取り違えると、権限の違う PAT が逆の用途に置かれる**）。
+# **黙ってどちらかを選ばず、usage で弾く。**
+if [[ "$READ_TOKEN_STDIN" = 1 && "$READ_SEC_TOKEN_STDIN" = 1 ]]; then
+  echo "--set-token と --set-security-alerts-token は同時に指定できません（標準入力は 1 本です）" >&2
+  usage
+fi
 
 # **トークンの受け取り口は 2 つだけ: 環境変数と標準入力。**
 # **引数は受け取らない**（`--security-alerts-token <値>` は上の usage で弾かれる）。
@@ -165,7 +198,89 @@ if [[ "$APPLY" = 1 && "$fail" = 0 ]]; then
   log "    **2 回走らせて、両方に出るものだけを見ること**（1 回目は一時的なネットワーク変動が出ることがある）"
 fi
 
-# ---- 2. security アラート用の PAT を置く（#786）------------------------------------------------------
+# ---- 2. branch protection 監視用の PAT を secret に置く（#790 / #550 / #547）------------------
+# **`Branch protection` ワークフローは 2026-09-08 以降、毎日 failure で終わっていた。**
+# **設計は正しい**——`GITHUB_TOKEN` では保護設定を読めないので exit 2（読めない）を報告し続けていた
+# （#540）。**問題は、正しい設計が赤いまま何日も置かれること**（毎日赤いものは、赤いこと自体が
+# 見えなくなる。同じ形で secret scanning の検出を 21 日見落とした——#785 / #786）。
+#
+# **ワークフロー側の変更は要らない。** `.github/workflows/branch-protection.yml` は既に
+# `${{ secrets.BRANCH_PROTECTION_TOKEN || secrets.GITHUB_TOKEN }}` を使っており、
+# **secret を置いた次の実行から自動でそちらを使う。**
+BP_SECRET=BRANCH_PROTECTION_TOKEN
+BP_WORKFLOW=branch-protection.yml
+BP_REPO=uonoko1/giinrecord
+
+echo
+log "== $BP_SECRET を置く（#790 / #550 / #547）=="
+# **`deploy.md` を開かせない。** 必要な設定をここで読み上げる（原典は docs/ops/deploy.md
+# 「main の保護設定」。**消さずに参照する**）。
+log "  PAT は GitHub の画面でしか作れません。次の設定で作ってください:"
+log "    1) Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token"
+log "    2) Repository access : $BP_REPO **のみ**（All repositories にしない）"
+log "    3) Repository permissions : Administration = Read-only / Issues = Read and write **だけ**"
+log "       （それ以外は No access。**書き込み権限を与えない**）"
+log "    4) 有効期限を決める（**期限は docs/ops/board.md に控えてください**。切れるとまた赤くなります）"
+log "  作った文字列の渡し方（**引数では渡せません**。シェルの履歴と ps に残るため）:"
+log "    bash scripts/human-tasks.sh --yes --set-token   ← これを打ってから、**トークンを貼って Enter**"
+log "    （環境変数 BRANCH_PROTECTION_TOKEN でも読みます。**ただしコマンド行に書くと履歴に残ります**）"
+log "  **#155（VPS 監視用の PAT）は別物です**（置き場も用途も違う。docs/ops/monitoring.md）"
+
+# **トークンの受け取り口は 2 つだけ: 環境変数と標準入力。**
+# **引数は受け取らない**（`--token` は上の usage で弾かれる）。
+BP_TOKEN="${BRANCH_PROTECTION_TOKEN:-}"
+if [[ "$READ_TOKEN_STDIN" = 1 && -z "$BP_TOKEN" ]]; then
+  # `read -r` は改行を落とす。**貼り付けの末尾改行がそのまま secret に入らないように。**
+  IFS= read -r BP_TOKEN || true
+fi
+
+if [[ -z "$BP_TOKEN" ]]; then
+  log "  トークンが渡されていないので、置きません（**site.conf の反映は上で済んでいます**）"
+elif [[ "$APPLY" = 0 ]]; then
+  # **既定は読むだけ。** `--yes` が無ければ `gh` を一度も呼ばない。
+  log "  [dry-run] gh secret set $BP_SECRET --repo $BP_REPO  （値は標準入力で渡します）"
+  log "  [dry-run] gh workflow run $BP_WORKFLOW --repo $BP_REPO"
+else
+  # **値は引数ではなく標準入力で渡す**（`ps` に出さない）。
+  # **`--body-file -` と書いてはいけない——そんなフラグは無い**（#786 で実測:
+  # `unknown flag: --body-file`。これを打つと **#790 が直そうとした作業そのものが失敗する**）。
+  # **`--body -` も誤り**——`-b/--body` は「値そのもの」を取る文字列フラグで `-` を特別扱いせず、
+  # **リテラルの `-` を secret として保存する**（`--no-store` で暗号文の長さを比べて確認）。
+  # 正しいのは **`--body` 系を一切書かないこと**。`gh secret set --help` にそう書いてある:
+  #   "-b, --body string   The value for the secret (reads from standard input if not specified)"
+  # **`log` にも `echo` にも $BP_TOKEN を渡さない。**
+  if printf '%s' "$BP_TOKEN" | gh secret set "$BP_SECRET" --repo "$BP_REPO" ; then
+    log "  置きました（${#BP_TOKEN} 文字。**値は出しません**）"
+    log "  期限を docs/ops/board.md に控えてください"
+    log "  $BP_WORKFLOW を起動して、赤い期間が終わったかを見ます"
+    if ! gh workflow run "$BP_WORKFLOW" --repo "$BP_REPO"; then
+      log "  ワークフローを起動できませんでした"
+      fail=1
+    else
+      # **起動しただけで終わらない。結果まで見る**（#790: 「置いた」と「緑になった」は別）。
+      run_id=$(gh run list --repo "$BP_REPO" --workflow "$BP_WORKFLOW" --limit 1 --json databaseId -q '.[0].databaseId' || true)
+      if [[ -z "$run_id" ]]; then
+        log "  起動した run を見つけられませんでした。Actions → Branch protection を見てください"
+        fail=1
+      elif gh run watch "$run_id" --repo "$BP_REPO" --exit-status >/dev/null 2>&1; then
+        log "  緑になりました: ok branch-protection: main は保護されている"
+        log "  Issue 「[monitor] repo: main の保護設定を読めない」は自動で閉じます（#547 / #550）"
+      else
+        log "  まだ赤いです。Actions → Branch protection の run を見てください"
+        log "    権限が足りない可能性: Administration = Read-only が入っているか確かめてください"
+        fail=1
+      fi
+    fi
+  else
+    # **gh のエラー文は転記しない**（認証情報が混ざりうる。deploy.md と同じ扱い）。
+    log "  secret を置けませんでした（**ワークフローは起動しません**）"
+    log "    gh auth status で、このリポジトリに権限のあるアカウントか確かめてください"
+    fail=1
+  fi
+fi
+
+# ---- 3. security アラート監視用の PAT を secret に置く（#786）--------------------------------------
+# **2. と同じ形・同じ流儀**（#790 が先に入った）。**別の secret・別の権限**なので取り違えないこと。
 # **なぜ人間の作業か（実測）**: secret scanning / dependabot のアラートは、CI の既定 `GITHUB_TOKEN`
 # では**読めない**。2026-09-13 に Actions 上で実際に叩いて確かめた（run 34753557512）:
 #     RESULT secret-scanning/alerts: NOT READABLE  HTTP 403 Resource not accessible
