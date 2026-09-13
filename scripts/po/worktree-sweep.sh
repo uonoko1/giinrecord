@@ -68,7 +68,16 @@ for i in "${!PATHS[@]}"; do
   fi
 
   # 1. 未コミットの作業があるツリーは消さない
-  dirty=$(git -C "$path" status --porcelain 2>/dev/null | grep -v '^?? .cache' || true)
+  #
+  # **除外するのは「未追跡（?? ）の作業ディレクトリ」だけ**（#787）。
+  #   - `.cache/`   … ETL の生の HTML キャッシュ（.gitignore 済み）
+  #   - `.measure/` … 測定・調査の作業ディレクトリ（.gitignore 済み。どの階層に掘っても同じ名前）
+  # `.gitignore` に入れたので通常は `status --porcelain` に出ないが、**--ignored を付けて呼ばれた場合や、
+  # 手元の .gitignore が古い worktree でも同じ判定になるように**ここでも落とす。
+  # **狭く書く**: 接頭辞一致（`.measure-notes.md` や `.measurements/`）では落とさず、
+  # 追跡済みの変更（` M` / `A `）も落とさない。**取りこぼしはゴミより高くつく。**
+  dirty=$(git -C "$path" status --porcelain 2>/dev/null \
+    | grep -Ev '^\?\? (.*/)?\.(cache|measure)/$' || true)
   if [[ -n "$dirty" ]]; then
     log "残す $path ($branch): 未コミットの変更が $(printf '%s\n' "$dirty" | wc -l | tr -d ' ') 件"
     kept=$((kept+1)); continue
@@ -91,6 +100,19 @@ for i in "${!PATHS[@]}"; do
   if [[ "$APPLY" = 0 ]]; then
     log "消せる $path ($branch): PR は MERGED、未コミット 0、未 push 0"
     swept=$((swept+1)); continue
+  fi
+
+  # **消す直前に、捨てる作業ディレクトリの中身を数字で出す**（#787。PO が #769 の 32MB を確かめて分かった）。
+  # `.measure/` は守り 1 から外した＝**「消えてよい」と宣言した場所**である。ところが #769 の
+  # `.work/769/cache/` の `.bin` 335 本は**群馬県から取得した賛否 PDF 110 本のキャッシュ**だった。
+  # 取得は 1 秒以上空けて直列なので、消すと**相手のサーバーに再取得がかかる**。
+  # **止めはしない**（守りを増やすと毎回鳴って見なくなる）。**捨てる前に何を捨てるか言うだけ。**
+  # `.measure/` が無いツリーでは何も出さない。
+  # `|| true` が要る: 存在しないパス（テストの fake や、既に消えたツリー）で find は 1 を返し、
+  # set -e が掃除そのものを止めてしまう。**数えられなければ 0 として黙る**。
+  measured=$(find "$path" -path '*/.measure/*' -type f 2>/dev/null | wc -l | tr -d ' ' || true)
+  if [[ "${measured:-0}" != "0" ]]; then
+    log "  $path: .measure/ の $measured ファイルを捨てます。**取得したものが入っていれば、次に再取得が要ります**"
   fi
 
   # 4. --force は使わない。失敗したら残す（消せない理由があるということ）

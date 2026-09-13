@@ -10,6 +10,14 @@ dist/
 .DS_Store
 # ETL working files (raw HTML cache). Normalized data under data/ IS committed.
 packages/etl/.cache/
+# 測定・調査の作業ディレクトリ（Issue #787）。**どこに掘っても .measure/ の 1 つだけ。**
+# 測定スクリプトはワークスペースの依存を import するのでパッケージの中に居る必要があり、
+# scratchpad では代えられない。名前が担当者ごとに違うと worktree-sweep.sh が毎回鳴り、
+# 「本物の取りこぼし」と「ただの作業ゴミ」が出力から区別できなくなる（#769 で実際に起きた）。
+# **末尾の / が要る**: これが無いと .measure という名前のファイルまで無視する。
+# **接頭辞一致にしない**: .measure-notes.md や .measurements/ は無視されない（取りこぼしはゴミより高くつく）。
+# Tests: apps/web/app/lib/repo-hygiene.test.ts
+.measure/
 # .claude/settings.local.json には共用 VPS の同居サイト名（deny ルール）が入るので追跡しない。
 # agents/（スクラムの役割定義）は共有する。README を除く .claude/ 直下と worktrees/ は無視。
 .claude/*

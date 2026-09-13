@@ -48,7 +48,6 @@ export interface AkitaRun {
   sessions: LocalAssemblyMeta["sessions"];
   sources: LocalAssemblyMeta["sources"];
   unreadableSources: { url: string; reason: string }[];
-  lossyNameMatches: NonNullable<LocalAssemblyMeta["lossyNameMatches"]>;
   summary: { sessionId: string; sessionLabel: string; members: number; rows: number; unknownCells: number; skippedRows: number; pdfUrls: string[] }[];
 }
 
@@ -84,7 +83,6 @@ export async function runAkita(opts: { sessions: number; fetchedAt: string; fetc
     { name: "秋田県議会 定例会・臨時会の概要（過去分の一覧）", url: AKITA_YEARS_URL, fetchedAt: opts.fetchedAt },
   ];
   const unreadableSources: AkitaRun["unreadableSources"] = [];
-  const lossy = new Map<string, NonNullable<LocalAssemblyMeta["lossyNameMatches"]>[number]>();
   const summary: AkitaRun["summary"] = [];
   const seenSessionIds = new Set<string>();
   for (const link of picked) {
@@ -119,12 +117,6 @@ export async function runAkita(opts: { sessions: number; fetchedAt: string; fetc
       cur.rollCallIds.push(...u.rollCallIds);
       unmatched.set(key, cur);
     }
-    for (const l of converted.lossy) {
-      const key = `${l.nameText}\t${l.memberId}`;
-      const cur = lossy.get(key) ?? { nameText: l.nameText, memberId: l.memberId, rosterName: l.rosterName, rollCalls: 0 };
-      cur.rollCalls += l.rollCalls;
-      lossy.set(key, cur);
-    }
     sessions.push({
       sessionId,
       sessionLabel,
@@ -140,5 +132,5 @@ export async function runAkita(opts: { sessions: number; fetchedAt: string; fetc
     log(`  ${sessionId}（${sessionLabel}）: ${converted.rollCalls.length} roll calls × ${pdf.pdf.members.length} members, unknown cells ${pdf.pdf.unknownCells}, unmatched names ${converted.unmatched.length}, 表決していない行 ${converted.skippedRows}`);
   }
   if (rollCalls.length === 0) throw new Error("no roll calls read from any PDF");
-  return { roster, rollCalls, unmatched: [...unmatched.values()], sessions, sources, unreadableSources, lossyNameMatches: [...lossy.values()], summary };
+  return { roster, rollCalls, unmatched: [...unmatched.values()], sessions, sources, unreadableSources, summary };
 }

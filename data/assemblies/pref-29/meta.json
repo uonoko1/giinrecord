@@ -8,6 +8,20 @@
   "unmatchedNames": 0
  },
  "fetchedAt": "2026-09-04T22:17:32.500Z",
+ "lossyNameMatches": [
+  {
+   "memberId": "p_29_52575",
+   "nameText": "西川",
+   "rollCalls": 125,
+   "rosterName": "西川 均"
+  },
+  {
+   "memberId": "p_29_52536",
+   "nameText": "髙清友",
+   "rollCalls": 37,
+   "rosterName": "芦高 清友"
+  }
+ ],
  "rosterAsOf": "2026-04-24",
  "sessions": [
   {
