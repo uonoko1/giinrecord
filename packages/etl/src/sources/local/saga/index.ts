@@ -43,8 +43,6 @@ export interface SagaRun {
   sources: LocalAssemblyMeta["sources"];
   /** 読めなかった PDF（文字層なし・回転・404 など）。URL と理由。meta.json の unreadableSources */
   unreadableSources: { url: string; reason: string }[];
-  /** 字が落ちたまま名簿に寄った氏名（meta.lossyNameMatches） */
-  lossyNameMatches: { nameText: string; memberId: string; rosterName: string; rollCalls: number }[];
   summary: { sessionId: string; sessionLabel: string; members: number; rows: number; unknownCells: number; pdfUrls: string[] }[];
 }
 
@@ -84,7 +82,6 @@ export async function runSaga(opts: { sessions: number; fetchedAt: string; fetch
     { name: "佐賀県議会 議案等の審議結果", url: SAGA_INDEX_URL, fetchedAt: opts.fetchedAt },
   ];
   const unreadableSources: SagaRun["unreadableSources"] = [];
-  const lossy = new Map<string, SagaRun["lossyNameMatches"][number]>();
   const summary: SagaRun["summary"] = [];
   /** 同じ PDF を 2 回読まない（#670 が「同じ PDF が 2 つの URL で配られる」を実測） */
   const seenPdf = new Set<string>();
@@ -134,12 +131,6 @@ export async function runSaga(opts: { sessions: number; fetchedAt: string; fetch
       cur.rollCallIds.push(...u.rollCallIds);
       unmatched.set(key, cur);
     }
-    for (const l of converted.lossy) {
-      const k = `${l.nameText}\t${l.memberId}`;
-      const cur = lossy.get(k) ?? { ...l, rollCalls: 0 };
-      cur.rollCalls += l.rollCalls;
-      lossy.set(k, cur);
-    }
     const unknownCells = pdfs.reduce((s, p) => s + p.pdf.unknownCells, 0);
     const urls = pdfs.map((p) => p.pdfUrl);
     sessions.push({
@@ -156,5 +147,5 @@ export async function runSaga(opts: { sessions: number; fetchedAt: string; fetch
     log(`  ${t.sessionLabel}: ${converted.rollCalls.length} roll calls × ${pdfs[0].pdf.members.length} members, unknown cells ${unknownCells}, unmatched names ${converted.unmatched.length}`);
   }
   if (rollCalls.length === 0) throw new Error("no roll calls read from any session");
-  return { roster, rollCalls, unmatched: [...unmatched.values()], sessions, sources, unreadableSources, lossyNameMatches: [...lossy.values()], summary };
+  return { roster, rollCalls, unmatched: [...unmatched.values()], sessions, sources, unreadableSources, summary };
 }

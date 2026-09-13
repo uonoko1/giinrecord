@@ -6,6 +6,7 @@ import { parseVotePdf, UNKNOWN_CELL, UNKNOWN_LEGEND } from "../src/sources/local
 import { parseRoster } from "../src/sources/local/aomori/roster.ts";
 import { mapLegend, parseDateText, resolveDate, toLocalRollCalls, type SessionInfo } from "../src/sources/local/aomori/rollcalls.ts";
 import { unmatchedReason } from "../src/sources/local/name-match.ts";
+import { lossyNameMatchesOf } from "../src/local-assemblies.ts";
 
 const fx = (name: string) => readFileSync(fileURLToPath(new URL(`fixtures/aomori/${name}`, import.meta.url)), "utf-8");
 const bin = (name: string) => readFileSync(fileURLToPath(new URL(`fixtures/aomori/${name}`, import.meta.url)));
@@ -133,8 +134,9 @@ test("#750 引ユキ子 は 3 つの守りを素通りする——lossyNameMatch
   const c = await convert("300teirei_sanpi", S300);
   // **`unmatched.json` に載らない**（本人に寄っている）
   assert.equal(c.unmatched.some((u) => u.nameText.includes("ユキ子")), false);
-  // **`lossyNameMatches` に残る**
-  assert.deepEqual(c.lossy, [{
+  // **`lossyNameMatches` に残る**（**#778 で共通層（`lossyNameMatchesOf`）が数えるようになった**——
+  // **青森の `rollcalls.ts` は何も渡していない。渡さなくても出ることがこの検査の要点である**）
+  assert.deepEqual(lossyNameMatchesOf(c.rollCalls, r), [{
     nameText: "引 ユキ子", memberId: "p_02_giin_kushibiki-yukiko", rosterName: "櫛󠄁引 ユキ子", rollCalls: 46,
   }]);
   // **票は本人に付いている**（記録が消えてはいない）
@@ -146,7 +148,7 @@ test("#750 引ユキ子 は 3 つの守りを素通りする——lossyNameMatch
 /** **字が落ちていない本では `lossy` が空**（この記録が「全部に付く」実装になっていないこと） */
 test("#750 lossyNameMatches: 字が落ちていない本では空（否定的対照）", async () => {
   for (const [f, s] of [["314teirei_sanpi", S314], ["322teirei_sanpi", S322], ["276_25.11_giketsukekka", S276]] as const) {
-    assert.deepEqual((await convert(f, s)).lossy, [], `${f} に lossy が出た`);
+    assert.deepEqual(lossyNameMatchesOf((await convert(f, s)).rollCalls, roster()), [], `${f} に lossy が出た`);
   }
 });
 
