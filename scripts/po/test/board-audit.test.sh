@@ -319,3 +319,189 @@ EOF
   assert_contains "$OUT" "2 件は規則 1 の対象外" "**見えていない PR の本数も出す**"
 }
 test_case "audit: 規則1が見ていない PR の本数を出す（閉じる語が無い PR）" t_audit_reports_keyword_coverage
+
+# ---- 5. inprogress-no-trace（#809）-------------------------------------------------------------
+# **In Progress なのに作業の痕跡が無い。** #781 は起票して In Progress にしたまま
+# **担当者を立て忘れ、PO が目で見つけるまで誰も作業していなかった。**
+#
+# **「痕跡が無い = 誰も居ない」ではない**（#809 で PO が実測。worktree=0 の 4 件は 4 件とも偽陽性）。
+# だから **(a) 時間の閾値** と **(b) monitor ラベルの除外** で絞る。**列挙するだけで直さない。**
+#
+# **時刻はテストから固定できないといけない**ので、`PO_NOW` で now を差し込む
+# （fake gh では `date` を差し替えられない）。
+
+# In Progress の項目 1 件を返すボード応答を組み立てる補助は使えない（ハンドラは別プロセス）。
+# 各ハンドラに直接書く。
+
+t_audit_stale_inprogress() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "issue list "*) echo '[{"number":781,"state":"OPEN"}]' ;;
+    "api graphql "*) echo '{"data":{"node":{"items":{"pageInfo":{"hasNextPage":false,"endCursor":""},
+      "nodes":[{"id":"I781","content":{"number":781,"labels":{"nodes":[]}},
+        "fieldValueByName":{"name":"In Progress","updatedAt":"2026-09-13T00:00:00Z"}}]}}}}' ;;
+    "pr list --repo "*"--state merged"*) echo '[{"number":790,"body":"no refs","headRefName":"docs/790-x"}]' ;;
+    "pr list --repo "*"--state all"*) echo '[{"number":790,"body":"no refs","headRefName":"docs/790-x"}]' ;;
+    "api repos/"*"/branches"*) echo '[{"name":"main"},{"name":"docs/790-x"}]' ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  PO_NOW=2026-09-14T12:00:00Z run_script "$h" board-audit.sh
+  assert_eq 1 "$STATUS" "食い違いがあるので 1: $ERR"
+  assert_contains "$OUT" "inprogress-no-trace" "**痕跡の無い In Progress を検出する（本丸）**"
+  assert_contains "$OUT" "#781" "対象の Issue 番号を出す"
+}
+test_case "audit: In Progress なのに痕跡が無い Issue を検出する (#809)" t_audit_stale_inprogress
+
+t_audit_inprogress_with_branch_is_not_stale() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "issue list "*) echo '[{"number":781,"state":"OPEN"}]' ;;
+    "api graphql "*) echo '{"data":{"node":{"items":{"pageInfo":{"hasNextPage":false,"endCursor":""},
+      "nodes":[{"id":"I781","content":{"number":781,"labels":{"nodes":[]}},
+        "fieldValueByName":{"name":"In Progress","updatedAt":"2026-09-13T00:00:00Z"}}]}}}}' ;;
+    "pr list --repo "*"--state merged"*) echo '[]' ;;
+    "pr list --repo "*"--state all"*) echo '[]' ;;
+    # **リモートに枝がある = 誰かが作業している**
+    "api repos/"*"/branches"*) echo '[{"name":"main"},{"name":"docs/781-kumamoto-measure"}]' ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  PO_NOW=2026-09-14T12:00:00Z run_script "$h" board-audit.sh
+  assert_not_contains "$OUT" "inprogress-no-trace" "**枝があれば鳴らさない（誤検出の検査）**"
+}
+test_case "audit: 番号の付いた枝があれば In Progress を誤検出しない (#809)" t_audit_inprogress_with_branch_is_not_stale
+
+t_audit_inprogress_with_pr_is_not_stale() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "issue list "*) echo '[{"number":781,"state":"OPEN"}]' ;;
+    "api graphql "*) echo '{"data":{"node":{"items":{"pageInfo":{"hasNextPage":false,"endCursor":""},
+      "nodes":[{"id":"I781","content":{"number":781,"labels":{"nodes":[]}},
+        "fieldValueByName":{"name":"In Progress","updatedAt":"2026-09-13T00:00:00Z"}}]}}}}' ;;
+    "pr list --repo "*"--state merged"*) echo '[]' ;;
+    # **枝は消えていても、Closes #781 の PR があれば作業はあった**
+    "pr list --repo "*"--state all"*) echo '[{"number":799,"body":"Closes #781","headRefName":"gone"}]' ;;
+    "api repos/"*"/branches"*) echo '[{"name":"main"}]' ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  PO_NOW=2026-09-14T12:00:00Z run_script "$h" board-audit.sh
+  assert_not_contains "$OUT" "inprogress-no-trace" "**Closes #N の PR があれば鳴らさない（誤検出の検査）**"
+}
+test_case "audit: Closes #N の PR があれば In Progress を誤検出しない (#809)" t_audit_inprogress_with_pr_is_not_stale
+
+t_audit_inprogress_recent_is_not_stale() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "issue list "*) echo '[{"number":855,"state":"OPEN"}]' ;;
+    # **1 分前に In Progress にしたばかり**（#855 の実物。worktree を作る前）
+    "api graphql "*) echo '{"data":{"node":{"items":{"pageInfo":{"hasNextPage":false,"endCursor":""},
+      "nodes":[{"id":"I855","content":{"number":855,"labels":{"nodes":[]}},
+        "fieldValueByName":{"name":"In Progress","updatedAt":"2026-09-14T11:59:00Z"}}]}}}}' ;;
+    # **母数 0 で exit 4 になる既存の検査を踏まないよう、無関係な PR を 1 本置く**
+    "pr list --repo "*"--state merged"*) echo '[{"number":600,"body":"no refs","headRefName":"chore/600-x"}]' ;;
+    "pr list --repo "*"--state all"*) echo '[{"number":600,"body":"no refs","headRefName":"chore/600-x"}]' ;;
+    "api repos/"*"/branches"*) echo '[{"name":"main"}]' ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  PO_NOW=2026-09-14T12:00:00Z run_script "$h" board-audit.sh
+  assert_not_contains "$OUT" "inprogress-no-trace" "**始めた直後は鳴らさない（誤検出の検査）**"
+  assert_contains "$OUT" "24 時間" "**閾値を出力に書く**（何を見なかったかが分かるように）"
+}
+test_case "audit: In Progress にした直後は鳴らさない (#809)" t_audit_inprogress_recent_is_not_stale
+
+t_audit_inprogress_monitor_label_excluded() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "issue list "*) echo '[{"number":821,"state":"OPEN"}]' ;;
+    # **#821 の実物**: monitor が自動で開いた Issue。**担当者は要らない**
+    "api graphql "*) echo '{"data":{"node":{"items":{"pageInfo":{"hasNextPage":false,"endCursor":""},
+      "nodes":[{"id":"I821","content":{"number":821,"labels":{"nodes":[{"name":"monitor"}]}},
+        "fieldValueByName":{"name":"In Progress","updatedAt":"2026-09-01T00:00:00Z"}}]}}}}' ;;
+    # **母数 0 で exit 4 になる既存の検査を踏まないよう、無関係な PR を 1 本置く**
+    "pr list --repo "*"--state merged"*) echo '[{"number":600,"body":"no refs","headRefName":"chore/600-x"}]' ;;
+    "pr list --repo "*"--state all"*) echo '[{"number":600,"body":"no refs","headRefName":"chore/600-x"}]' ;;
+    "api repos/"*"/branches"*) echo '[{"name":"main"}]' ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  PO_NOW=2026-09-14T12:00:00Z run_script "$h" board-audit.sh
+  assert_not_contains "$OUT" "inprogress-no-trace" "**monitor ラベルは対象外（担当者を立てない型）**"
+  assert_contains "$OUT" "monitor" "**除外した理由と件数を出す**（沈黙で 100% に見せない。#757）"
+}
+test_case "audit: monitor ラベルの Issue は In Progress でも対象外 (#809)" t_audit_inprogress_monitor_label_excluded
+
+t_audit_inprogress_denominator() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "issue list "*) echo '[{"number":781,"state":"OPEN"},{"number":812,"state":"OPEN"},{"number":821,"state":"OPEN"},{"number":700,"state":"CLOSED"}]' ;;
+    "api graphql "*) echo '{"data":{"node":{"items":{"pageInfo":{"hasNextPage":false,"endCursor":""},
+      "nodes":[{"id":"I781","content":{"number":781,"labels":{"nodes":[]}},
+                "fieldValueByName":{"name":"In Progress","updatedAt":"2026-09-13T00:00:00Z"}},
+               {"id":"I812","content":{"number":812,"labels":{"nodes":[]}},
+                "fieldValueByName":{"name":"In Progress","updatedAt":"2026-09-13T00:00:00Z"}},
+               {"id":"I821","content":{"number":821,"labels":{"nodes":[{"name":"monitor"}]}},
+                "fieldValueByName":{"name":"In Progress","updatedAt":"2026-09-01T00:00:00Z"}},
+               {"id":"I700","content":{"number":700,"labels":{"nodes":[]}},
+                "fieldValueByName":{"name":"Done","updatedAt":"2026-09-01T00:00:00Z"}}]}}}}' ;;
+    "pr list --repo "*"--state merged"*) echo '[{"number":790,"body":"no refs","headRefName":"x"}]' ;;
+    "pr list --repo "*"--state all"*) echo '[{"number":790,"body":"no refs","headRefName":"x"}]' ;;
+    "api repos/"*"/branches"*) echo '[{"name":"main"},{"name":"docs/812-ci-throughput"}]' ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  PO_NOW=2026-09-14T12:00:00Z run_script "$h" board-audit.sh
+  # **母数を出す**（#757。「0 件」と「1 件も見ていない」を区別する）
+  assert_contains "$OUT" "In Progress 3 件" "**In Progress の母数を出す**"
+  assert_contains "$OUT" "痕跡あり 1 件" "**痕跡があった件数を出す**"
+  assert_contains "$OUT" "monitor 1 件" "**除外した件数を出す**"
+  assert_contains "$OUT" "#781" "痕跡が無いのは #781 だけ"
+  assert_not_contains "$OUT" "inprogress-no-trace	#812" "枝がある #812 は鳴らさない"
+  assert_not_contains "$OUT" "inprogress-no-trace	#821" "monitor の #821 は鳴らさない"
+}
+test_case "audit: In Progress の母数と内訳を出す (#809/#757)" t_audit_inprogress_denominator
+
+t_audit_inprogress_not_fixed() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "issue list "*) echo '[{"number":781,"state":"OPEN"}]' ;;
+    "api graphql "*"items(first:100"*) echo '{"data":{"node":{"items":{"pageInfo":{"hasNextPage":false,"endCursor":""},
+      "nodes":[{"id":"I781","content":{"number":781,"labels":{"nodes":[]}},
+        "fieldValueByName":{"name":"In Progress","updatedAt":"2026-09-13T00:00:00Z"}}]}}}}' ;;
+    "pr list --repo "*"--state merged"*) echo '[{"number":790,"body":"no refs","headRefName":"x"}]' ;;
+    "pr list --repo "*"--state all"*) echo '[{"number":790,"body":"no refs","headRefName":"x"}]' ;;
+    "api repos/"*"/branches"*) echo '[{"name":"main"}]' ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  PO_NOW=2026-09-14T12:00:00Z run_script "$h" board-audit.sh --fix
+  assert_eq 1 "$STATUS" "直せないものが残るので 1: $ERR"
+  # **担当者を立てるのは PO の判断。--fix で動かさない**（OPEN/Done を戻さないのと同じ理由）
+  assert_not_contains "$LOG" "updateProjectV2ItemFieldValue" "**--fix でもボードを動かさない**"
+  assert_not_contains "$LOG" "$(printf 'issue\tclose')" "**--fix でも Issue を閉じない**"
+  assert_contains "$ERR" "人が決めて" "残した理由を出す"
+}
+test_case "audit: --fix でも In Progress の痕跡無しは直さない (#809)" t_audit_inprogress_not_fixed
