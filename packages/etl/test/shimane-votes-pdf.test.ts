@@ -2,6 +2,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { parseResultsPdf, parseVotePdf, UNKNOWN_CELL, UNKNOWN_LEGEND } from "../src/sources/local/shimane/votes-pdf.ts";
+// **食い違った行を全部並べる**（#826 で佐賀に作り、#844 で 5 県が使う 1 か所に移した）。
+// **島根の反対は `●`**（`×` ではない）——#826 の担当者は `×` で数えて 17 件の偽の不一致を出している。
+import { countMismatchRows } from "./count-mismatch-rows.ts";
 
 // 島根県議会「議員別採決結果一覧」（令和8年6月定例会＝第499回。4 ページ・文字層あり。2026-08-24 取得）と
 // 同じ会期ページの「議決結果一覧」（議決日を読むためだけに使う）。
@@ -115,11 +118,22 @@ test("parseVotePdf: その他表決は議長が交代している（列 18 と�
   assert.equal(others[2].cells[18], "除斥");
 });
 
-test("parseVotePdf: 全 30 行で ○ ● の数が PDF の賛成者数・反対者数と一致する（表の復元が正しいことの検算）", () => {
-  for (const r of pdf.rows) {
-    assert.equal(r.cells.filter((c) => c === "○").length, r.counts.yes, `${r.number} ${r.title}: 賛成`);
-    assert.equal(r.cells.filter((c) => c === "●").length, r.counts.no, `${r.number} ${r.title}: 反対`);
-  }
+/**
+ * **○ の数 ＝ 賛成者数 / ● の数 ＝ 反対者数**（表の復元が正しいことの検算）。
+ *
+ * **島根の反対は `●` であって `×` ではない**——**#826 の担当者は本番の全票を `○`/`×` で数えて
+ * 島根に 17 件の「不一致」を出し、`●` だと気づいて数え直している。**
+ *
+ * **食い違った行を全部並べて比べる**（#826／#844）——**`assert.equal` を行ごとに撃つと最初の 1 行で止まり、**
+ * **「1 行だけ数え方が違う」のか「表の復元が壊れて 26 行ずれた」のかが読めない**
+ * （**前者は記録が正しく、後者は記録が偽なのに、どちらも「テストが赤い」では同じに見える**）。
+ * **検算は緩めていない——食い違いが 1 行でもあれば落ちる。**
+ */
+test("令和8年6月: 全 30 行で ○ ● の数が PDF の賛成者数・反対者数と一致する（食い違いは全部並べる）", () => {
+  const { mismatches, checked } = countMismatchRows(pdf.rows, { yes: "○", no: "●", cells: (r) => r.cells, label: (r) => `${r.number} ${r.title}` });
+  // **母数を先に固定する**（#757）——**突き合わせた行が減ったら、「食い違い 0 件」は「見た上での 0」ではない**
+  assert.equal(checked, 30, "30 行とも突き合わせた（母数が減ったらこの検算は空回りする）");
+  assert.deepEqual(mismatches, []);
 });
 
 test("parseVotePdf: 凡例に無い値は 1 つも無い（あれば不明セルとして数える）", () => {
@@ -264,11 +278,11 @@ test("令和8年2月: 反対した議員を名指しで固定する（第3号は
   );
 });
 
-test("令和8年2月: 全 82 行で ○ ● の数が PDF の賛成者数・反対者数と一致する（表の復元の検算）", () => {
-  for (const r of feb.rows) {
-    assert.equal(r.cells.filter((c) => c === "○").length, r.counts.yes, `${r.number} ${r.title}: 賛成`);
-    assert.equal(r.cells.filter((c) => c === "●").length, r.counts.no, `${r.number} ${r.title}: 反対`);
-  }
+/** **上の 6月定と同じ検算を 2月定にも**（食い違った行を全部並べる。#844）。 */
+test("令和8年2月: 全 82 行で ○ ● の数が PDF の賛成者数・反対者数と一致する（食い違いは全部並べる）", () => {
+  const { mismatches, checked } = countMismatchRows(feb.rows, { yes: "○", no: "●", cells: (r) => r.cells, label: (r) => `${r.number} ${r.title}` });
+  assert.equal(checked, 82, "82 行とも突き合わせた（母数が減ったらこの検算は空回りする）");
+  assert.deepEqual(mismatches, []);
 });
 
 test("令和8年2月: 凡例に無い値は 1 つも無い。不明セルも無い", () => {
