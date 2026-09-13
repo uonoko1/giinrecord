@@ -150,8 +150,10 @@ bash scripts/human-tasks.sh --yes --set-token     # 打ってから、トーク�
 ```
 
 **トークンは引数では渡せない**（`sudo` と同じ理由で、シェルの履歴と `ps` に残る）。
-**標準入力か環境変数 `BRANCH_PROTECTION_TOKEN` だけ。** `gh` にも `--body-file -` で
-標準入力から渡すので、コマンド行にも出ない。**`#155` の VPS 監視用 PAT は別物**
+**標準入力か環境変数 `BRANCH_PROTECTION_TOKEN` だけ。** `gh secret set` にも
+**`--body` 系のフラグを一切付けずに**標準入力から渡すので、コマンド行にも出ない
+（**`--body-file -` は誤り**。そんなフラグは無く `unknown flag` で失敗する。
+**`--body -` も誤り**で、リテラルの `-` が secret として保存される。いずれも #786 で実測）。**`#155` の VPS 監視用 PAT は別物**
 （`/etc/gikailog/monitor.token`。`docs/ops/monitoring.md`）。
 
 **ワークフロー側の変更は要らない。** `.github/workflows/branch-protection.yml` は既に
