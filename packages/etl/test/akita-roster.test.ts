@@ -44,9 +44,34 @@ test("#759 parseRoster: 議員紹介の 3 つの一覧を突き合わせて 41 �
  * **`<a>` ごとに議員を作ると、この 1 人が `川邉` `隼` `之介` の 3 人になる。**
  * **しかも 3 つのうち 2 つが `http://`、1 つが `https://`。**
  * **`<td>` 1 つ ＝ 議員 1 人として読み、`<a>` のテキストを繋ぐことで解ける。**
+ *
+ * ## **割れているのは会派別一覧だけである**（**変異を当てて気づいた。2026-09-13**）
+ * **五十音別一覧（名簿の実体）では `<a>` が 1 つ**（`<a href="…/profile/2025040700015/">川邉隼之介</a>`）。
+ * **だから「`<a>` のテキストを繋ぐ」をやめる変異を当てても、`members` の氏名は変わらない**——
+ * **落ちるのは `parseSection` の単体テストだけだった**（実測: 9 件中 1 件）。
+ * **`members` が変わらないのは、会派別一覧が「会派を引くための表」でしかなく、
+ * 氏名は五十音別から取っているためである。**
+ *
+ * **それでも会派別一覧の氏名が壊れると害がある**——
+ * **会派は `profileUrl` で引いているので会派は正しく付くが、
+ * `parseRoster` の「3 つの一覧に同じ 41 人が居る」という検算は `profileUrl` で見るので、
+ * 氏名が壊れても通ってしまう。**
+ * **だから、このテストは会派別一覧そのものを読んで氏名を確かめる。**
  */
 test("#759 `川邉隼之介` が 3 つの `<a>` に割れていても 1 人になる", () => {
   const r = parseRoster(html("giin"));
+  // **会派別一覧を直接読む**（ここが割れている側。五十音別は 1 つの `<a>` なので壊れても気づけない）
+  const body = html("giin");
+  const kaiha = body.slice(body.indexOf('id="kaiha"'), body.indexOf('id="giin"'));
+  const inKaiha = parseSection(kaiha, "h4").filter((x) => x.profileUrl.includes("2025040700015"));
+  assert.equal(inKaiha.length, 1, "会派別一覧でも 1 人（3 つの `<a>` を 3 人にしない）");
+  assert.equal(inKaiha[0].name, "川邉隼之介", "会派別一覧でも氏名が繋がっている");
+  // **会派別一覧の `<a>` が本当に 3 つに割れている**（フィクスチャがこの罠を持っていることの確認）
+  const anchors = [...kaiha.matchAll(/<a[^>]*href="[^"]*2025040700015[^"]*"[^>]*>([^<]*)<\/a>/g)].map((m) => m[1]);
+  assert.deepEqual(anchors, ["川邉", "隼", "之介"], "会派別一覧の `<a>` は 3 つ");
+  // **2 つが `http://`、1 つが `https://`**（URL を鍵にするなら寄せないと 2 つに見える）
+  const schemes = [...kaiha.matchAll(/<a[^>]*href="(https?):\/\/[^"]*2025040700015[^"]*"/g)].map((m) => m[1]);
+  assert.deepEqual(schemes, ["http", "https", "http"], "スキームが混在している");
   const kawabe = r.members.filter((m) => m.name.includes("川邉"));
   assert.equal(kawabe.length, 1, `川邉 で始まる議員は 1 人（実際: ${JSON.stringify(kawabe.map((m) => m.name))}）`);
   assert.equal(kawabe[0].name, "川邉隼之介", "氏名が繋がっている");
