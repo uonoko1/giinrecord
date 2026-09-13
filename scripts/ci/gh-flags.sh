@@ -49,7 +49,10 @@ list_targets() {
     case "$f" in
       *.sh) ;;
       */*.*) continue ;;
-      *) head -c 64 "$f" 2>/dev/null | head -n1 | grep -qE '^#!.*(/| )(ba)?sh( |$)' || continue ;;
+      # **パイプにしない**（#527 / deploy/test/pipefail-sigpipe.test.sh）。`grep -q` は一致した瞬間に
+      # 終わるので、`pipefail` のもとでは書き手が SIGPIPE で死んで**確率的に偽になる**。
+      # scripts/ci/shellcheck.sh の同じ判定と同じ綴りにそろえている。
+      *) grep -qE '^#!.*(/| )(ba)?sh( |$)' < <(head -n1 < <(head -c 64 "$f" 2>/dev/null)) || continue ;;
     esac
     case "$f" in */test/*|*.test.sh|*fake-bin*) continue ;; esac
     echo "$f"
