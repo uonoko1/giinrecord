@@ -26,8 +26,10 @@ import { AOMORI_ASSEMBLY } from "./sources/local/aomori/site.ts";
 import { runAomori } from "./sources/local/aomori/index.ts";
 import { AKITA_ASSEMBLY } from "./sources/local/akita/site.ts";
 import { runAkita } from "./sources/local/akita/index.ts";
+import { SAGA_ASSEMBLY } from "./sources/local/saga/site.ts";
+import { runSaga } from "./sources/local/saga/index.ts";
 
-export { MIYAGI_ASSEMBLY, TOKUSHIMA_ASSEMBLY, TOTTORI_ASSEMBLY, MIE_ASSEMBLY, NARA_ASSEMBLY, SHIMANE_ASSEMBLY, KOCHI_ASSEMBLY, SHIGA_ASSEMBLY, AOMORI_ASSEMBLY, AKITA_ASSEMBLY };
+export { MIYAGI_ASSEMBLY, TOKUSHIMA_ASSEMBLY, TOTTORI_ASSEMBLY, MIE_ASSEMBLY, NARA_ASSEMBLY, SHIMANE_ASSEMBLY, KOCHI_ASSEMBLY, SHIGA_ASSEMBLY, AOMORI_ASSEMBLY, AKITA_ASSEMBLY, SAGA_ASSEMBLY };
 
 /** 議会ごとの取得部が返す形（buildLocalAssembly の入力になる部分）。 */
 export interface LocalSourceRun {
@@ -58,6 +60,7 @@ export const LOCAL_SOURCES: Record<string, LocalSource> = {
   shiga: { assembly: SHIGA_ASSEMBLY, run: runShiga },
   aomori: { assembly: AOMORI_ASSEMBLY, run: runAomori },
   akita: { assembly: AKITA_ASSEMBLY, run: runAkita },
+  saga: { assembly: SAGA_ASSEMBLY, run: runSaga },
 };
 
 /**

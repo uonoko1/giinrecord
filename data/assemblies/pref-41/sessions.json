@@ -1,0 +1,18 @@
+[
+ {
+  "date": "2026-07-01",
+  "fetchedAt": "2026-09-13T06:34:55.122Z",
+  "id": "2026-06-teirei-list06680",
+  "label": "令和8年6月定例会",
+  "rollcalls": 21,
+  "sourceUrl": "https://www.pref.saga.lg.jp/gikai/list06680.html"
+ },
+ {
+  "date": "2026-04-23",
+  "fetchedAt": "2026-09-13T06:34:55.122Z",
+  "id": "2026-04-rinji-list06671",
+  "label": "令和8年4月臨時会",
+  "rollcalls": 2,
+  "sourceUrl": "https://www.pref.saga.lg.jp/gikai/list06671.html"
+ }
+]
