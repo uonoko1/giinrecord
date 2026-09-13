@@ -108,6 +108,7 @@ grep してから起票してください（**今日の 5 件はそこにあり�
 | 高深刻度の脆弱性を無期限に放置する | `scripts/ci/audit.sh`（`audit-ignore.txt` の例外は必ず期限付き）と `scripts/ci/audit-ignore.txt`（#133） |
 | shellcheck の対象・版が CI と手元でずれる | `scripts/ci/shellcheck.sh`（`--list` の対象と `--pinned-version` の固定版が 1 か所。#154/#552） |
 | ビルド成果物がリポジトリに入る | `apps/web/app/lib/repo-hygiene.test.ts`（`check-ignore` で判定。文字列一致ではなく git の判定） |
+| 測定の作業ゴミが git status に残り、マージ済み worktree が消えず、守りが毎回鳴って本物の取りこぼしと見分けられなくなる | 置き場所は 1 つに決めてある。`apps/web/app/lib/repo-hygiene.test.ts` が check-ignore で両側を測る——`.measure/` が無視されること、および `成果物を黙って捨てない`（名前が似ているだけのものと data/ 配下）が無視されないこと。`scripts/po/worktree-sweep.sh` は `未追跡（?? ）の作業ディレクトリ` だけを守り 1 から外す（#787/#769/#726） |
 | 本番のコードが「最後のリリース」から外れる | `scripts/ci/released-ref.sh`（`resolve` / `overlay`。#134） |
 | スプリント文書が「次に持ち越すもの」を落とし、次の計画がゼロから始まる | `packages/etl/test/sprint-doc-shape.test.ts` の `REQUIRED_SECTIONS` と `FIRST_ENFORCED_SPRINT`。雛形は `docs/sprints/TEMPLATE.md` の `次に持ち越すもの`（#682。3 回中 2 回落とした） |
 

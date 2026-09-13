@@ -169,3 +169,93 @@ EOF
   assert_eq "" "$LOG" "**git も gh も一度も呼ばない**"
 }
 test_case "sweep: 知らない引数では何もしない" t_sweep_usage
+
+# --- Issue #787: 作業ディレクトリ .measure/ で守りが鳴らないようにする ---------------------
+#
+# **目的は「鳴らなくする」ことではなく、「鳴ったときに本物だと分かる」こと。**
+# 守り 1（未コミットがあるなら消さない）は #726 のまま。**除外するのは .measure/ という 1 つの名前だけ。**
+# #769（群馬）では `?? .work/` と `?? packages/etl/.work769/` のせいで
+# マージ済みのツリーが消えず、**守りが毎回鳴ることで、鳴っていること自体を見なくなっていた。**
+
+t_sweep_ignores_measure_workdir() {
+  local h; h=$(handler <<'EOF'
+git_handle() {
+  case "$*" in
+    "worktree list --porcelain") printf '%s\n' \
+      "worktree /repo" "branch refs/heads/main" "" \
+      "worktree /wt/measure" "branch refs/heads/docs/measure" "" \
+      "worktree /wt/real" "branch refs/heads/docs/real" "" ;;
+    # **作業ゴミだけ**: 未追跡の .measure/（ルートとパッケージ配下の両方）と .cache/
+    "-C /wt/measure status --porcelain") printf '%s\n' "?? .measure/" "?? packages/etl/.measure/" "?? .cache/" ;;
+    # **本物の取りこぼし**: .measure/ と同じツリーに混ざっていても見落とさない
+    "-C /wt/real status --porcelain") printf '%s\n' "?? .measure/" " M packages/etl/src/a.ts" ;;
+    *"log --oneline @{u}..HEAD") ;;
+    *) ;;
+  esac
+}
+handle() { echo '[{"state":"MERGED"}]'; }
+EOF
+)
+  run_script "$h" worktree-sweep.sh --yes
+  assert_eq 0 "$STATUS" "exit status: $ERR"
+  assert_contains "$LOG" "$(printf 'worktree\tremove\t/wt/measure')" "**.measure/ だけのツリーは消せる（守りが鳴らない）**"
+  assert_not_contains "$ERR" "残す /wt/measure" "作業ゴミだけを理由に残さない"
+  assert_not_contains "$LOG" "$(printf 'worktree\tremove\t/wt/real')" "**本物の未コミットは .measure/ に紛れても消さない**"
+  assert_contains "$ERR" "残す /wt/real" "本物は残す"
+  assert_contains "$ERR" "未コミットの変更が 1 件" "**数えるのは本物の 1 件だけ（.measure/ は数に入れない）**"
+}
+test_case "sweep: .measure/ の作業ディレクトリでは守りが鳴らない (#787)" t_sweep_ignores_measure_workdir
+
+t_sweep_measure_exception_is_narrow() {
+  local h; h=$(handler <<'EOF'
+git_handle() {
+  case "$*" in
+    "worktree list --porcelain") printf '%s\n' \
+      "worktree /repo" "branch refs/heads/main" "" \
+      "worktree /wt/near" "branch refs/heads/docs/near" "" ;;
+    # **名前が似ているだけ / 追跡されている変更**: どれも除外してはいけない
+    "-C /wt/near status --porcelain") printf '%s\n' \
+      "?? .measurements/x.json" \
+      "?? packages/etl/.measure-notes.md" \
+      "?? data/assemblies/pref-10/new.json" \
+      " M .measure/kept.ts" \
+      "A  packages/etl/.measure/added.ts" \
+      " M .measure/" \
+      "D  packages/etl/.cache/" ;;
+    *"log --oneline @{u}..HEAD") ;;
+    *) ;;
+  esac
+}
+handle() { echo '[{"state":"MERGED"}]'; }
+EOF
+)
+  run_script "$h" worktree-sweep.sh --yes
+  assert_not_contains "$LOG" "$(printf 'worktree\tremove\t/wt/near')" "**接頭辞が似ているだけのものを除外しない**"
+  assert_contains "$ERR" "未コミットの変更が 7 件" "**7 件すべて数える。除外は未追跡（?? ）に限る**"
+}
+test_case "sweep: .measure/ の除外は未追跡の .measure/ だけ (#787)" t_sweep_measure_exception_is_narrow
+
+t_sweep_cache_exception_not_widened() {
+  local h; h=$(handler <<'EOF'
+git_handle() {
+  case "$*" in
+    "worktree list --porcelain") printf '%s\n' \
+      "worktree /repo" "branch refs/heads/main" "" \
+      "worktree /wt/cache" "branch refs/heads/feat/cache" "" ;;
+    # **#787 より前は `grep -v '^?? .cache'` だったので、下の 2 行は黙って消えていた。**
+    # `?? .measure/file.txt` は、.measure/ の中に追跡済みファイルがあるときだけ git が出す形
+    # （全部未追跡なら git はディレクトリを `?? .measure/` に畳む）。**つまり本物である。**
+    "-C /wt/cache status --porcelain") printf '%s\n' \
+      "?? .cacheXYZ" "?? .cache-notes.md" "?? .measure/file.txt" ;;
+    *"log --oneline @{u}..HEAD") ;;
+    *) ;;
+  esac
+}
+handle() { echo '[{"state":"MERGED"}]'; }
+EOF
+)
+  run_script "$h" worktree-sweep.sh --yes
+  assert_not_contains "$LOG" "$(printf 'worktree\tremove\t/wt/cache')" "**.cache で始まるだけのものを除外しない**"
+  assert_contains "$ERR" "未コミットの変更が 3 件" "3 件とも数える"
+}
+test_case "sweep: .cache の除外も広げない（#787 で狭めた）" t_sweep_cache_exception_not_widened
