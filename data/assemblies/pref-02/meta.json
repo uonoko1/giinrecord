@@ -1,0 +1,63 @@
+{
+ "assemblyId": "pref-02",
+ "counts": {
+  "cells": 5111,
+  "members": 46,
+  "rollcalls": 113,
+  "unknownCells": 0,
+  "unmatchedNames": 3
+ },
+ "fetchedAt": "2026-09-13T12:00:00.000Z",
+ "rosterAsOf": "2026-05-25",
+ "sessions": [
+  {
+   "pdfUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "pdfUrls": [
+    "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf"
+   ],
+   "rollcalls": 26,
+   "sessionId": "2026-06",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/katsudo-shinsakekka.html",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "pdfUrls": [
+    "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf"
+   ],
+   "rollcalls": 87,
+   "sessionId": "2026-02",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/katsudo-shinsakekka.html",
+   "unknownCells": 0
+  }
+ ],
+ "sources": [
+  {
+   "fetchedAt": "2026-09-13T12:00:00.000Z",
+   "name": "青森県議会 議員の紹介（会派別）",
+   "url": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+  },
+  {
+   "fetchedAt": "2026-09-13T12:00:00.000Z",
+   "name": "青森県議会 議員の紹介（選挙区別）",
+   "url": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-senkyoku.html"
+  },
+  {
+   "fetchedAt": "2026-09-13T12:00:00.000Z",
+   "name": "青森県議会 本会議・委員会の審査結果",
+   "url": "https://www.pref.aomori.lg.jp/soshiki/gikai/katsudo-shinsakekka.html"
+  },
+  {
+   "fetchedAt": "2026-09-13T12:00:00.000Z",
+   "name": "青森県議会 令和8年6月第326回定例会 議決結果",
+   "url": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-13T12:00:00.000Z",
+   "name": "青森県議会 令和8年2月第325回定例会 議決結果",
+   "url": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf"
+  }
+ ]
+}

@@ -14,7 +14,12 @@ import { DEFAULT_SESSIONS, dietAssemblies, readSessionsOnDisk } from "./dataset.
  *   高知県議会（#220）: 議員名簿（会派別、1 ページ）×「議員別賛否の状況」index の直近 N 会期の議決結果一覧 PDF → pref-39。
  *   滋賀県議会（#741）: 議員名簿（五十音順、1 ページ、**Shift_JIS**）× 年ページ（年度版と暦年版の 2 通り）→ 会期の賛否ページ → 直近 N 会期の議案等賛否一覧 PDF（1 会期に複数本）→ pref-25。
  *     **文字層の無い画像 PDF が 3 本ある**（#680）。読めない本は落とさず `meta.notes.unreadablePdfs` に記録して先へ進む。
- * Usage: pnpm etl:local <miyagi|tokushima|tottori|mie|nara|shimane|kochi|shiga> [--sessions N]   (default N = 2)
+ *   青森県議会（#750）: 議員名簿（**会派別と選挙区別の 2 ページ**。突き合わせは氏名ではなく
+ *     プロフィールの URL——**2 ページで氏名の字が違う議員がいる**（`和田寬司`/`和田寛司`。#529））
+ *     × 審査結果 index（**1 ページに全 56 会期**）の直近 N 会期の議決結果 PDF → pref-02。
+ *     **11 本が `/Rotate 90`、4 本に罫線が 1 本も無い、記号のアイテムの粒度が 2 通り**（#743 が 56 本で実測）。
+ *     **`kana` は空**（一覧ページにふりがなが無く、議員ごとの個別ページにしか無い）。
+ * Usage: pnpm etl:local <miyagi|tokushima|tottori|mie|nara|shimane|kochi|shiga|aomori> [--sessions N]   (default N = 2)
  */
 const DATA = fileURLToPath(new URL("../../../data/", import.meta.url));
 const args = process.argv.slice(2);
@@ -39,6 +44,7 @@ const built = buildLocalAssembly({
   sessions: run.sessions,
   unmatched: run.unmatched,
   ...(run.unreadableSources?.length ? { unreadableSources: run.unreadableSources } : {}),
+  ...(run.lossyNameMatches?.length ? { lossyNameMatches: run.lossyNameMatches } : {}),
 });
 console.log(`rollcalls: ${built.meta.counts.rollcalls}, cells: ${built.meta.counts.cells}, unknown cells (kept as 不明, not guessed): ${built.meta.counts.unknownCells}`);
 if (built.unmatched.length) {

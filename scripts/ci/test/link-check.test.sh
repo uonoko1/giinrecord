@@ -250,12 +250,17 @@ t_list_collects_real_primary_source_urls() {
   local list n
   list=$(cd "$REPO" && bash "$SCRIPT" --list)
   n=$(printf '%s\n' "$list" | sed '/^$/d' | wc -l | tr -d ' ')
-  # 実測 83 件（data/assemblies/**/*.json の http(s) 文字列、重複除去。2026-09-08）。
+  # 実測 95 件（data/assemblies/**/*.json の http(s) 文字列、重複除去。2026-09-13。
+  # 83 件 → 滋賀 7 件（#741）→ 青森 5 件（#750））。
   # 下限だけを置く: 議会が増えれば増えるので上限は固定しないが、抽出が痩せたら落ちる。
   [ "$n" -ge 80 ] || fail "一次資料 URL が $n 件しか集まらない（80 未満）: 抽出が壊れている"
   assert_contains "$list" "https://www.pref.shimane.lg.jp/" "島根の URL が入っている"
   assert_contains "$list" "https://www.pref.mie.lg.jp/" "三重の URL が入っている"
   assert_contains "$list" "https://www.shigaken-gikai.jp/" "滋賀の URL が入っている（#741）"
+  # **青森（#750）は `www.pref.aomori.lg.jp`** で、**既存の `www.pref.<県>.lg.jp` のパターンに当たる**
+  # （滋賀の `www.shigaken-gikai.jp` のように許可リストを足す必要は無かった。実測 2026-09-13）。
+  # **それでも明示で確かめる**——当たっていることが偶然でないと分かるように。
+  assert_contains "$list" "https://www.pref.aomori.lg.jp/" "青森の URL が入っている（#750）"
   # 重複していない（同じ PDF が数百の rollcall から参照される。全部叩いたら相手に失礼）
   assert_eq "$n" "$(printf '%s\n' "$list" | sed '/^$/d' | sort -u | wc -l | tr -d ' ')" "重複を除いてある"
   # 集めるのは公式ドメインだけ（data/ に外部ドメインが紛れ込んだら気づく）

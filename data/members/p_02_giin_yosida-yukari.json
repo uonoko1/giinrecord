@@ -1,0 +1,1719 @@
+{
+ "asOf": "2026-05-25",
+ "assemblyId": "pref-02",
+ "counts": {
+  "rollcalls": 113
+ },
+ "current": true,
+ "district": "むつ市",
+ "group": "無所属",
+ "id": "p_02_giin_yosida-yukari",
+ "kana": "",
+ "name": "吉田 ゆかり",
+ "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_yosida-yukari.html",
+ "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html",
+ "terms": [
+  {
+   "asOf": "2026-05-25",
+   "district": "むつ市",
+   "group": "無所属"
+  }
+ ],
+ "timeline": [
+  {
+   "date": "2026-06-29",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "決定",
+   "rollCallId": "pref-02-2026-06-20260629-№１",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "国内派遣",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-06-29",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "決定",
+   "rollCallId": "pref-02-2026-06-20260629-№２",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "国内派遣",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-06-29",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "決定",
+   "rollCallId": "pref-02-2026-06-20260629-№３",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "国内派遣",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-06-29",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "決定",
+   "rollCallId": "pref-02-2026-06-20260629-№４",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "国内派遣",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-06-29",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "決定",
+   "rollCallId": "pref-02-2026-06-20260629-№５",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "国内派遣",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-06-29",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-06-20260629-第10号",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "原油価格高騰対策と生活必需品の安定供給を求める意見書(案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-06-29",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-06-20260629-第1号-1",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "令和８年度青森県一般会計補正予算（第１号）案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-06-29",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "承認",
+   "rollCallId": "pref-02-2026-06-20260629-第1号-2",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "専決処分した事項の報告及び承認を求めるの件（青森県県税条例の一部を改正する条例）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-06-29",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-06-20260629-第2号-1",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "職員の特殊勤務手当に関する条例の一部を改正する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-06-29",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "承認",
+   "rollCallId": "pref-02-2026-06-20260629-第2号-2",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "専決処分した事項の報告及び承認を求めるの件（青森県県税の特別措置に関する条例の一部を改正する条例）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-06-29",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-06-20260629-第3号",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "青森県県税条例の一部を改正する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-06-29",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-06-20260629-第4号",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "青森県公営企業の設置等に関する条例の一部を改正する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-06-29",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-06-20260629-第5号",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "青森県立高等学校授業料等徴収条例の一部を改正する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-06-29",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-06-20260629-第6号",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "青森県立学校設置条例の一部を改正する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-06-29",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-06-20260629-第7号",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "財産の取得の件",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-06-29",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-06-20260629-第8号",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "公共施設等の整備等に関する事業契約の一部変更の件",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-06-29",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "同意",
+   "rollCallId": "pref-02-2026-06-20260629-第9号-1",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "青森県副知事の選任の件",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-06-29",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-06-20260629-第9号-2",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "軽油引取税における免税措置の継続を求める意見書(案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-06-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案否決",
+   "rollCallId": "pref-02-2026-06-20260624-第1号",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "いわゆる隠れ教育費の実態把握と保護者負担軽減を求める意見書（案）",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-06-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案否決",
+   "rollCallId": "pref-02-2026-06-20260624-第2号",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "性的指向・性自認（ジェンダーアイデンティティ）に関する差別の解消と安心して暮らせる環境整備を求める意見書（案）",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-06-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案否決",
+   "rollCallId": "pref-02-2026-06-20260624-第3号",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "多様な民意の反映を損なう衆議院比例代表定数の大幅削減に反対する意見書（案）",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-06-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案否決",
+   "rollCallId": "pref-02-2026-06-20260624-第4号",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "改憲発議に反対し、日本国憲法をいかした政治を求める意見書（案）",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-06-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案否決",
+   "rollCallId": "pref-02-2026-06-20260624-第5号",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "「一部保険外療養」を盛り込んだ改定健康保険法を廃案し、国民皆保険制度を守ることを求める意見書（案）",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-06-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案否決",
+   "rollCallId": "pref-02-2026-06-20260624-第6号",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "実効ある消費税率引き下げを速やかに行うことを求める意見書（案）",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-06-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-06-20260624-第7号",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "自衛隊員の処遇改善及び退職自衛官の再就職促進に関する意見書(案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-06-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-06-20260624-第8号",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "皇室の伝統に基づく安定的皇位継承を確保するための法整備の早期実現を求める意見書(案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "決定",
+   "rollCallId": "pref-02-2026-02-20260324-№1",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "海外派遣",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "決定",
+   "rollCallId": "pref-02-2026-02-20260324-№2",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "国内派遣",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "不採択",
+   "rollCallId": "pref-02-2026-02-20260324-受理番号第1号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "ゆきとどいた教育を求める請願書不採択",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第10号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "令和８年度青森県国民健康保険特別会計予算案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第10号請願・陳情",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "青森県議会会議規則の一部を改正する規則案委員長報告",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第11号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "令和８年度青森県母子父子寡婦福祉資金特別会計予算案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第12号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "令和８年度青森県小規模企業者等設備導入資金特別会計予算案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第13号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "令和８年度青森県林業・木材産業改善資金特別会計予算案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第14号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "令和８年度青森県沿岸漁業改善資金特別会計予算案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第15号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "令和８年度青森県病院事業会計予算案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第16号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "令和８年度青森県工業用水道事業会計予算案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第17号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "令和８年度青森県下水道事業会計予算案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第18号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "青森県宅地造成等工事許可申請手数料等徴収条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第19号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "青森県自助・共助による防災の取組の推進に関する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第1号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "令和８年度青森県一般会計予算案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第20号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "青森県附属機関に関する条例の一部を改正する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第21号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "青森県行政手続条例の一部を改正する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第22号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "青森県青少年健全育成条例の一部を改正する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第23号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "青森県環境影響評価条例の一部を改正する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第24号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "青森県自然環境保全条例の一部を改正する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第25号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "青森県医薬品、医療機器等の品質、有効性及び安全性の確保等に関する法律関係手数料徴収条例の一部を改正する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第26号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "青森県後期高齢者医療財政安定化基金条例の一部を改正する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第27号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "青森県国民健康保険事業費納付金に関する条例の一部を改正する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第28号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "青森県道路法施行条例の一部を改正する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第29号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "青森県港湾管理条例の一部を改正する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第2号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "令和８年度青森県公債費特別会計予算案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第30号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "青森県都市公園条例の一部を改正する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第31号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "青森県県営住宅条例の一部を改正する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第32号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "青森県立高等学校授業料等徴収条例の一部を改正する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第33号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "青森県立中学校入学者選抜手数料徴収条例の一部を改正する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第34号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "青森県学校職員定数条例の一部を改正する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第35号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "警察官に対する被服の支給及び装備品の貸与に関する条例の一部を改正する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第36号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "青森県知事の所管に属する公益信託の引受けの許可及び監督に関する条例を廃止する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第37号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "青森県教育委員会の所管に属する公益信託の引受けの許可及び監督に関する条例を廃止する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第38号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "工事の請負契約の件",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第39号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "工事の請負契約の件",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第3号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "令和８年度青森県療育福祉・医療療育センター特別会計予算案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第40号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "工事の請負契約の一部変更の件",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第41号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "工事の請負契約の一部変更の件",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第42号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "工事の請負契約の一部変更の件",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第43号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "権利の放棄の件",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第44号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "権利の放棄の件",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第45号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "権利の放棄の件",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第46号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "権利の放棄の件",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第47号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "権利の放棄の件",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第48号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "権利の放棄の件",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第49号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "包括外部監査契約の件",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第4号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "令和８年度青森県港湾整備事業特別会計予算案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第50号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "公立大学法人青森県立保健大学の定款の一部変更の件",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第51号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "青森県道路公社が行う有料の県道の新設に係る変更について同意するの件",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "同意",
+   "rollCallId": "pref-02-2026-02-20260324-第52号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "青森県人事委員会委員の選任の件",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第5号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "令和８年度青森県証紙特別会計予算案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第6号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "令和８年度青森県管理特別会計予算案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第7号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "令和８年度青森県公共用地先行取得事業特別会計予算案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第8号-1",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "令和８年度青森県駐車場事業特別会計予算案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第8号-2",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "豪雪の状況下において建設事業者の工期延長や一時中止指針の適切な運用を求める意見書(案)",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第9号-1",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "令和８年度青森県鉄道施設事業特別会計予算案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260324-第9号-2",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "青森県議会議員の議員報酬及び費用弁償の額並びにその支給条例の一部を改正する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "method": "記名投票",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260312-第1号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "青森県議会議員の定数並びに選挙区及び各選挙区において選挙すべき議員数に関する条例の一部を改正する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案否決",
+   "rollCallId": "pref-02-2026-02-20260312-第2号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "日米一体の大軍拡”ミサイル列島“づくりの中止を求める意見書（案）",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案否決",
+   "rollCallId": "pref-02-2026-02-20260312-第3号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "原発回帰ではなく原発ゼロと再生可能エネルギーへの転換を求める意見書（案）",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案否決",
+   "rollCallId": "pref-02-2026-02-20260312-第4号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "米国とイスラエルによるイランへの武力攻撃に抗議し、即時停戦を求める意見書(案)",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案否決",
+   "rollCallId": "pref-02-2026-02-20260312-第5号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "災害対策の充実強化についての意見書（案）",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案否決",
+   "rollCallId": "pref-02-2026-02-20260312-第6号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "いじめ対策の強化を求める意見書（案）",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-03-12",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案否決",
+   "rollCallId": "pref-02-2026-02-20260312-第7号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "地域公共交通の維持・確保に向けた環境整備を求める意見書（案）",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-03-11",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "承認",
+   "rollCallId": "pref-02-2026-02-20260311-第1号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "専決処分した事項の報告及び承認を求めるの件（令和７年度青森県一般会計補正予算（専決第１号））",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-11",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "承認",
+   "rollCallId": "pref-02-2026-02-20260311-第2号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "専決処分した事項の報告及び承認を求めるの件（令和７年度青森県一般会計補正予算（専決第２号））",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-11",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260311-第53号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "令和７年度青森県一般会計補正予算（第５号）案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-11",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260311-第54号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "令和７年度青森県下水道事業会計補正予算（第３号）案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-11",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260311-第55号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "青森県高等学校等教育改革促進基金条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-11",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260311-第56号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "令和７年度青森県一般会計補正予算（第６号）案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-11",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260311-第57号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "令和７年度青森県公債費特別会計補正予算（第１号）案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-11",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260311-第58号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "令和７年度青森県療育福祉・医療療育センター特別会計補正予算（第２号）案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-11",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260311-第59号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "令和７年度青森県港湾整備事業特別会計補正予算（第３号）案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-11",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260311-第60号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "令和７年度青森県証紙特別会計補正予算（第１号）案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-11",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260311-第61号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "令和７年度青森県駐車場事業特別会計補正予算（第２号）案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-11",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260311-第62号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "令和７年度青森県鉄道施設事業特別会計補正予算（第２号）案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-11",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260311-第63号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "令和７年度青森県国民健康保険特別会計補正予算（第１号）案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-11",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260311-第64号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "令和７年度青森県小規模企業者等設備導入資金特別会計補正予算（第２号）案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-11",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260311-第65号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "令和７年度青森県林業・木材産業改善資金特別会計補正予算（第１号）案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-11",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260311-第66号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "令和７年度青森県沿岸漁業改善資金特別会計補正予算（第１号）案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-11",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260311-第67号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "令和７年度青森県病院事業会計補正予算（第３号）案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-11",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260311-第68号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "令和７年度青森県工業用水道事業会計補正予算（第１号）案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-11",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260311-第69号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "令和７年度青森県下水道事業会計補正予算（第４号）案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-11",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260311-第70号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "市町村に負担させる金額の決定の件",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-11",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260311-第71号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "市町村に負担させる金額の決定の件",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-11",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-02-20260311-第72号",
+   "sessionLabel": "令和8年2月第325回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf",
+   "title": "市町村に負担させる金額の決定の件",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  }
+ ]
+}
