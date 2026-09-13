@@ -17,17 +17,27 @@ PASS=0; FAIL=0
 TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
 BIN="$TMP/bin"; mkdir -p "$BIN"
 
-# A fake credential in the SHAPE the real alert carries (prefix + 33 chars), used as a canary: if it ever shows
-# up in the script's stdout, the monitoring would publish the secret it is warning about.
+# The canary: a value that stands in for the leaked credential. If it ever shows up in the script's stdout,
+# the monitoring would publish the secret it is warning about.
 #
-# **It is assembled at runtime, never written as a literal.** Two reasons, both measured:
-#   1. `.gitleaks.toml` uses the default ruleset, whose `gcp-api-key` rule matches this exact shape. A literal
-#      here would make the REQUIRED `gitleaks` job red on every run — and `.gitleaks.toml` says in so many words
-#      that the fix is to remove the source, not to add an allowlist (#216).
-#   2. GitHub's own push protection blocks pushes containing this shape. A test for "do not leak secrets" that
-#      cannot be pushed is not a test.
-# The prefix is split so that the literal `AIzaSy` does not appear in this file either.
-CANARY="AIza""Sy$(printf 'T%.0s' {1..33})"
+# **It deliberately does NOT look like a real credential.** The first version was shaped like a real Google API
+# key (`AIza` + `Sy` + 33 chars), assembled at runtime so no literal appeared in the file. That was not enough:
+# **GitHub's secret scanning opened a real alert on it anyway** (alert #2, 2026-09-13, on this very file) —
+# **the scanner sees the string after it is committed, so splitting the literal in the source does not help.**
+#
+# Why that matters more than it looks: #786 exists to make an open alert VISIBLE. A canary that keeps one alert
+# permanently open would make this monitor report "1 件 open" forever — i.e. **red every single day**, which is
+# exactly the state #790 is about (6 days red and nobody looking any more). **A detector that always fires is
+# the same as no detector**, which is the sentence this whole PBI is built on.
+#
+# **Why the real shape is not needed — measured, not assumed.** The leak tests below are `assert_not_contains`,
+# i.e. **string equality against whatever $CANARY holds**. Nothing in the assertions, in security-alerts.sh, or
+# in jq inspects the FORMAT of the value. Measured with the leak mutation (`.secret_type_display_name` → `tojson`,
+# which dumps the whole alert object into stdout):
+#     canary = AIza + Sy + T×33 (real key shape)   → 8 failed assertions
+#     canary = CANARY-SECRET-VALUE-MUST-NOT-…      → 8 failed assertions   (identical)
+# Same assertions, same count. The shape bought nothing for detection and cost a permanently-open alert.
+CANARY="CANARY-SECRET-VALUE-MUST-NOT-APPEAR-IN-OUTPUT"
 CANARY_PATH="packages/etl/test/fixtures/example/leaky.html"
 CANARY_SHA="0123456789abcdef0123456789abcdef01234567"
 
@@ -157,7 +167,8 @@ t_never_prints_the_secret_value() {
   fresh canary
   G_SECRET_JSON=$(alert_json) run_guard
   assert_not_contains "$OUT" "$CANARY" "秘密の値が stdout に出ている（これが出たら警告そのものが漏洩になる）"
-  assert_not_contains "$OUT" "${CANARY:0:6}" "鍵の接頭辞すら出さない"
+  # 値の**一部**でも出ていないこと（丸ごと一致だけを見ると、切り詰めて出す実装を見逃す）
+  assert_not_contains "$OUT" "${CANARY:0:20}" "秘密の値の先頭 20 文字が出ている"
 }
 t_never_prints_the_file_location() {
   fresh canary_loc

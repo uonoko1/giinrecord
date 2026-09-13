@@ -9,7 +9,7 @@
 #
 # 何をするか:
 #   1. **`site.conf` を本番に反映する**（#610 / #654 / #746）——ssh が要る。PO の端末には接続先が無い。
-#   2. **security アラート用の PAT を置く**（#786）——`--security-alerts-token <PAT>` を渡したときだけ。
+#   2. **security アラート用の PAT を置く**（#786）——トークンが渡されたときだけ。
 #      **トークンを「作る」のはブラウザでしかできない**（GitHub の設定画面）。だがそれ以外
 #      ——**置くこと・置けたか確かめること・検査を走らせること**——は全部ここでやる。
 #      ユーザーの指示「対話的でないなら 1 つのスクリプトにまとめて、1 回のコマンドで済むように」。
@@ -20,7 +20,7 @@
 #     作業が git の「元に戻す」で消えた）。**規則を作った側がスクリプトで破るのは筋が通らない。**
 #     **#543 は人間が手で 2 回打つ**（`docs/ops/pending-decisions.md` の「3.」に手順がある）。
 #   - **fine-grained PAT を「作る」こと**（#550 / #155 / #547 / #786）——GitHub の設定画面での操作。
-#     **作ったあと「置く」のはここでできる**（`--security-alerts-token`。#786 のぶんだけ実装済み）。
+#     **作ったあと「置く」のはここでできる**（`--set-security-alerts-token`。#786 のぶんだけ実装済み）。
 #   - **Sponsors / 広告 / NDL 照会**（#53 / #48 / #250）——外部に届く。方針の判断も要る
 #
 # 使い方:
@@ -30,26 +30,46 @@
 #   接続先を上書きしたいときだけ `--host <IP>` か `GIINOPS_HOST=<IP>`。
 #   **ふだんは要らない。**
 #
-#   security アラートの監視を動かすとき（#786。**1 回きり**）:
-#     bash scripts/human-tasks.sh --yes --security-alerts-token github_pat_xxxxx
+#   security アラートの監視を動かすとき（#786。**1 回きり**。**引数では渡せません**）:
+#     bash scripts/human-tasks.sh --yes --set-security-alerts-token
+#       ← これを打ってから、**トークンを貼って Enter**
+#     （環境変数 SECURITY_ALERTS_TOKEN でも読む。**ただしコマンド行に書くと履歴に残る**）
 #   トークンの作り方は docs/ops/monitoring.md「GitHub の security アラート」。
-#   **PAT は argv に出る**（ps で見える）。**GIINOPS_SECURITY_ALERTS_TOKEN 環境変数でも渡せる**ので、
-#   共用の端末ではそちらを使うこと。
 #
 #   Tests: scripts/ci/test/human-tasks.test.sh（ssh / curl / getent はスタブ。実際には何もしない）
 set -euo pipefail
 
-APPLY=0; HOST="${GIINOPS_HOST:-}"
-# **PAT は argv からすぐ変数に移し、以後 argv を参照しない**（ログにも出さない）。
-SEC_TOKEN="${GIINOPS_SECURITY_ALERTS_TOKEN:-}"
+APPLY=0; HOST="${GIINOPS_HOST:-}"; READ_SEC_TOKEN_STDIN=0
+usage() {
+  cat >&2 <<'USAGE'
+usage: human-tasks.sh [--yes] [--host <IP>] [--set-security-alerts-token]
+  --yes                         実際に実行する（既定は dry-run。何をするか出すだけ）
+  --host <IP>                   ssh の接続先を上書きする（ふだんは要らない。自分で名前解決する）
+  --set-security-alerts-token   SECURITY_ALERTS_TOKEN を**標準入力から**読む（#786）
+
+  **トークンは引数では渡せません**（シェルの履歴と ps に残るため）。
+  環境変数 SECURITY_ALERTS_TOKEN か、--set-security-alerts-token + 標準入力で渡してください。
+USAGE
+  exit 2
+}
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --yes) APPLY=1; shift ;;
     --host) HOST="${2:-}"; shift 2 ;;
-    --security-alerts-token) SEC_TOKEN="${2:-}"; shift 2 ;;
-    *) echo "usage: human-tasks.sh [--yes] [--host <IP>] [--security-alerts-token <PAT>]" >&2; exit 2 ;;
+    --set-security-alerts-token) READ_SEC_TOKEN_STDIN=1; shift ;;
+    *) usage ;;
   esac
 done
+
+# **トークンの受け取り口は 2 つだけ: 環境変数と標準入力。**
+# **引数は受け取らない**（`--security-alerts-token <値>` は上の usage で弾かれる）。
+# **最初の版は引数で受け取っていた**——同じ docblock に「argv は ps で見える」と書きながら、
+# その下で argv から受け取っていた（#786 レビュー）。**同じスクリプトの中で方針が割れていた。**
+SEC_TOKEN="${SECURITY_ALERTS_TOKEN:-}"
+if [[ "$READ_SEC_TOKEN_STDIN" = 1 && -z "$SEC_TOKEN" ]]; then
+  # `read -r` は改行を落とす。**貼り付けの末尾改行がそのまま secret に入らないように。**
+  IFS= read -r SEC_TOKEN || true
+fi
 
 log() { echo "[$(date -u +%H:%M:%SZ)] $*"; }
 
@@ -157,7 +177,8 @@ log "== security アラート用の PAT を置く（#786）=="
 if [[ -z "$SEC_TOKEN" ]]; then
   log "  トークンが渡されていないので飛ばします（この作業が済んでいれば、それで構いません）"
   log "  まだなら: docs/ops/monitoring.md「GitHub の security アラート」の手順で PAT を作り、"
-  log "    bash scripts/human-tasks.sh --yes --security-alerts-token <PAT>"
+  log "    bash scripts/human-tasks.sh --yes --set-security-alerts-token   ← 打ってからトークンを貼って Enter"
+  log "    （環境変数 SECURITY_ALERTS_TOKEN でも読みます。**コマンド行に書くと履歴に残ります**）"
 elif [[ "$APPLY" = 0 ]]; then
   # **トークンそのものは絶対に出さない。** 長さだけ出して「渡っている」ことを示す。
   log "  [dry-run] gh secret set SECURITY_ALERTS_TOKEN （${#SEC_TOKEN} 文字のトークンを受け取っています）"

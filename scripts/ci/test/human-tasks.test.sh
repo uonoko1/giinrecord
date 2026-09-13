@@ -85,8 +85,11 @@ chmod +x "$BIN"/*
 run() {  # run [args...] → OUT / STATUS
   : > "$TMP/log"
   set +e
+  # **トークンは標準入力か環境変数でしか渡らない**ので、run もその 2 つを通す。
+  # `RUN_STDIN` が空なら `</dev/null`（`read` が待ち続けてテストが固まらないように）。
   OUT=$(PATH="$BIN:$PATH" STUB_LOG="$TMP/log" HOME="$TMP/fakehome" \
-        STUB_GH_SET_FAIL="${STUB_GH_SET_FAIL:-0}" STUB_GH_API_FAIL="${STUB_GH_API_FAIL:-0}" "$@" 2>&1)
+        STUB_GH_SET_FAIL="${STUB_GH_SET_FAIL:-0}" STUB_GH_API_FAIL="${STUB_GH_API_FAIL:-0}" \
+        SECURITY_ALERTS_TOKEN="${SECURITY_ALERTS_TOKEN:-}" "$@" <<<"${RUN_STDIN:-}" 2>&1)
   STATUS=$?
   set -e
   LOG=$(cat "$TMP/log")
@@ -216,30 +219,59 @@ test_case "human-tasks: /compare が壊れたら成功と言わない" t_fails_w
 # ---- #786: security アラート用の PAT を置く --------------------------------------------------
 # **この一群で一番大事なのは「トークンを出力に出さない」こと。** 出力はユーザーが Claude に
 # 貼って渡すことが前提なので、ここに載ったトークンは会話にもログにも残る。
-# **実行時に組み立てる。リテラルで書かない。**
-# `scripts/ci/forbidden-patterns.sh` の github-token 規則（`github_pat_[A-Za-z0-9_]{22,}`）が
-# **この行を実際に検出して CI を落とした**ので、接頭辞を分割して当たらないようにしてある。
-# 規則を allowlist で黙らせるのではなく、**発生源のほうを消す**（.gitleaks.toml と同じ方針、#216）。
-TOKEN_CANARY="github""_pat_11ABCDEFG0THISisNOTaREALtokenJUSTaCANARY"
+# **本物のトークンの形をあえて真似ていない**（#786 レビュー）。
+# 最初の版は `github_pat_…` の形を実行時に組み立てていた。`scripts/ci/forbidden-patterns.sh` の
+# github-token 規則が**リテラルを実際に検出して CI を落とした**のが発端だが、分割しても
+# **GitHub の secret scanning は commit 後の連結された文字列を見る**ので、同じ形である限り
+# アラートを立てうる（同じ日に `deploy/test/security-alerts.test.sh` の Google API Key 形の
+# canary で**実際にアラート #2 が立った**）。**恒常的に open なアラートは「毎日赤い」であり、
+# #786 が無くそうとしている状態そのもの。**
+#
+# **形は要らない——測って確かめた。** 下の判定はすべて `assert_not_contains`＝
+# **$TOKEN_CANARY の文字列一致**で、値の形式を見ているものは 1 つも無い。
+# 漏洩の変異（dry-run でトークンそのものを出す）は、形を変えても**同じ 1 本**が落ちる。
+TOKEN_CANARY="TOKEN-CANARY-MUST-NOT-APPEAR-IN-OUTPUT-OR-LOG"
+
+# **引数でトークンを渡せてはいけない**（#786 レビュー）。
+# **これが一番大事な 1 本**: 最初の版は `--security-alerts-token <PAT>` を受け取っており、
+# **同じ docblock に「argv は ps で見える」と書きながら argv から受け取っていた。**
+# #798（#790）が同じスクリプトで `--token` を弾く形にしたので、**綴りを揃えてある。**
+t_token_rejects_argv() {
+  run bash "$SCRIPT" --yes --security-alerts-token "$TOKEN_CANARY"
+  assert_eq 2 "$STATUS" "**引数でトークンを渡せてはいけない**（履歴と ps に残る）: $OUT"
+  assert_not_contains "$LOG" "gh secret set" "**引数から secret を置かない**"
+  assert_contains "$OUT" "usage" "usage を出す"
+  assert_contains "$OUT" "引数では渡せません" "なぜ弾くのかを言う"
+}
+test_case "human-tasks: トークンを引数で渡せない（履歴とプロセス一覧に残る）" t_token_rejects_argv
 
 t_token_is_never_printed() {
-  STUB_GH_SET_FAIL=0 STUB_GH_API_FAIL=0 run bash "$SCRIPT" --yes --security-alerts-token "$TOKEN_CANARY"
+  RUN_STDIN="$TOKEN_CANARY" run bash "$SCRIPT" --yes --set-security-alerts-token
   assert_not_contains "$OUT" "$TOKEN_CANARY" "**トークンが出力に出ている**（貼られたら漏洩する）"
   assert_not_contains "$LOG" "$TOKEN_CANARY" "トークンがスタブのログに出ている"
 }
 test_case "human-tasks: PAT を出力にもログにも出さない（#786）" t_token_is_never_printed
 
 t_token_is_not_passed_in_argv() {
-  STUB_GH_SET_FAIL=0 STUB_GH_API_FAIL=0 run bash "$SCRIPT" --yes --security-alerts-token "$TOKEN_CANARY"
+  RUN_STDIN="$TOKEN_CANARY" run bash "$SCRIPT" --yes --set-security-alerts-token
   # スタブは受け取った長さを記録する。**標準入力から渡っていれば長さが一致する。**
   assert_contains "$LOG" "gh secret set SECURITY_ALERTS_TOKEN len=${#TOKEN_CANARY}" \
     "標準入力でトークンを渡していない（--body \"\$TOKEN\" は ps で見える）"
 }
 test_case "human-tasks: PAT は標準入力で渡す（argv に載せない）" t_token_is_not_passed_in_argv
 
+t_token_from_env() {
+  # **受け取り口は 2 つ**: 標準入力と環境変数。環境変数のほうも生きていることを見る。
+  SECURITY_ALERTS_TOKEN="$TOKEN_CANARY" run bash "$SCRIPT" --yes
+  assert_contains "$LOG" "gh secret set SECURITY_ALERTS_TOKEN len=${#TOKEN_CANARY}" "環境変数から読めていない"
+  assert_not_contains "$OUT" "$TOKEN_CANARY" "環境変数経由でもトークンを出さない"
+}
+test_case "human-tasks: PAT を環境変数でも受け取る（#786）" t_token_from_env
+
 t_token_is_verified_not_just_placed() {
   # **権限の足りない PAT**: secret としては置けるが、アラートは読めない。
-  STUB_GH_SET_FAIL=0 STUB_GH_API_FAIL=1 run bash "$SCRIPT" --yes --security-alerts-token "$TOKEN_CANARY"
+  RUN_STDIN="$TOKEN_CANARY" STUB_GH_SET_FAIL=0 STUB_GH_API_FAIL=1 \
+    run bash "$SCRIPT" --yes --set-security-alerts-token
   assert_eq 1 "$STATUS" "**読めない PAT を置いて成功と言ってはいけない**（#786 の 21 日の再来）"
   assert_contains "$OUT" "アラートを読めません" "読めないことを言う"
   assert_contains "$OUT" "Secret scanning alerts" "何の権限が足りないか言う"
@@ -247,7 +279,7 @@ t_token_is_verified_not_just_placed() {
 test_case "human-tasks: 置けても読めなければ失敗にする（#786）" t_token_is_verified_not_just_placed
 
 t_token_success_path() {
-  STUB_GH_SET_FAIL=0 STUB_GH_API_FAIL=0 run bash "$SCRIPT" --yes --security-alerts-token "$TOKEN_CANARY"
+  RUN_STDIN="$TOKEN_CANARY" run bash "$SCRIPT" --yes --set-security-alerts-token
   assert_contains "$OUT" "2 つのフィードとも読めました" "両方読めたことを言う"
   # **2 つのフィードを両方確かめている**こと（片方だけ見て成功にしない）
   assert_contains "$LOG" "secret-scanning/alerts" "secret scanning を確かめている"
@@ -262,8 +294,16 @@ t_no_token_skips_without_failing() {
 }
 test_case "human-tasks: トークン未指定なら飛ばす（既存の作業は止めない）" t_no_token_skips_without_failing
 
+# **フラグだけ立てて何も貼らなかった場合**も、止まらず・置かずに終わること。
+t_flag_without_input_does_not_hang() {
+  run bash "$SCRIPT" --yes --set-security-alerts-token
+  assert_not_contains "$LOG" "gh secret set" "空入力なのに secret を置いている"
+  assert_contains "$OUT" "飛ばします" "飛ばしたことを言う"
+}
+test_case "human-tasks: フラグだけで何も貼らなければ置かない" t_flag_without_input_does_not_hang
+
 t_dry_run_does_not_place_the_token() {
-  run bash "$SCRIPT" --security-alerts-token "$TOKEN_CANARY"
+  RUN_STDIN="$TOKEN_CANARY" run bash "$SCRIPT" --set-security-alerts-token
   assert_not_contains "$LOG" "gh secret set" "**dry-run なのに secret を置いている**"
   assert_not_contains "$OUT" "$TOKEN_CANARY" "dry-run でもトークンを出さない"
   assert_contains "$OUT" "文字のトークンを受け取っています" "渡っていることは（長さで）示す"

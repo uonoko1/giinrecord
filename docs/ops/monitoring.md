@@ -145,10 +145,13 @@ RESULT dependabot/alerts:      NOT READABLE   HTTP 403 Resource not accessible
 5. **置くのはスクリプトでできる**（ブラウザが要るのは上の 1〜3 だけ）:
 
 ```
-bash scripts/human-tasks.sh --yes --security-alerts-token <PAT>
+bash scripts/human-tasks.sh --yes --set-security-alerts-token
+# ↑ を打ってから、**トークンを貼って Enter**
 ```
 
-  これは secret `SECURITY_ALERTS_TOKEN` を置いたうえで、**そのトークンで実際に 2 つのフィードを読めるか**まで確かめる（**置けただけでは成功と言わない**。権限の足りない PAT も secret としては置けてしまうため）。トークンは**標準入力で渡し、出力にもログにも出さない**。共用の端末では `GIINOPS_SECURITY_ALERTS_TOKEN` 環境変数で渡すこと（argv は `ps` で見える）。
+  **トークンは引数では渡せない**（`--security-alerts-token <PAT>` は usage で弾かれる）。シェルの履歴と `ps` に残るため——`gh secret set` に `--body -` で渡していても、**その前段で argv に載っていれば同じこと**。受け取り口は**標準入力か環境変数 `SECURITY_ALERTS_TOKEN` の 2 つだけ**（`docs/ops/deploy.md` の `BRANCH_PROTECTION_TOKEN` と同じ流儀。#790 / #798）。
+
+  これは secret `SECURITY_ALERTS_TOKEN` を置いたうえで、**そのトークンで実際に 2 つのフィードを読めるか**まで確かめる（**置けただけでは成功と言わない**。権限の足りない PAT も secret としては置けてしまうため）。トークンは**出力にもログにも出さない**（長さだけ出す）。
 
 **ワークフロー側の変更は要らない。** `security-alerts.yml` は `${{ secrets.SECURITY_ALERTS_TOKEN || secrets.GITHUB_TOKEN }}` を使っており、secret を置いた次の実行から自動的にそちらを使う。**置くまでは `GITHUB_TOKEN` に落ちて exit 2（読めない）を報告し続ける。**
 
