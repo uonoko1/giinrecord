@@ -342,9 +342,14 @@ t_no_set_x() {
   # **`set -x` を使わない**（トークンが展開されて出る。#790 の「やらないこと」）。
   n=$(grep -c -E '^[[:space:]]*set[[:space:]]+-[a-z]*x' "$SCRIPT" || true)
   assert_eq 0 "$n" "**set -x を書かない（トークンが展開されて出る）**"
-  # **トークンを持つ変数を echo/printf の引数に載せない**
-  n=$(grep -c -E '(echo|printf|log)[^#]*\$\{?(BRANCH_PROTECTION_)?TOKEN' "$SCRIPT" || true)
-  assert_eq 0 "$n" "**トークンを echo / printf / log に渡さない**"
+  # **トークンを持つ変数を `echo` / `log` の引数に載せない。**
+  # `${#BP_TOKEN}`（長さ）は値ではないので許す。**`printf '%s' "$BP_TOKEN" | gh secret set …`
+  # だけが例外**（引数ではなく標準入力に流すための形）で、`gh secret set` が続くことで見分ける。
+  # shellcheck disable=SC2016  # '${#' は**展開させたくない文字列そのもの**（長さ取得の綴り）。-F で固定文字列として渡す
+  n=$(grep -vE '^[[:space:]]*#' "$SCRIPT" | grep -n -E '(echo|log)[^#]*\$\{?[A-Za-z_]*TOKEN' | grep -cvF '${#' || true)
+  assert_eq 0 "$n" "**トークンを echo / log に渡さない**"
+  n=$(grep -vE '^[[:space:]]*#' "$SCRIPT" | grep -n -E 'printf[^#]*\$\{?[A-Za-z_]*TOKEN' | grep -cv 'gh secret set' || true)
+  assert_eq 0 "$n" "**printf に渡してよいのは gh の標準入力に流すときだけ**"
 }
 test_case "human-tasks: トークンがログに出る書き方をしていない" t_no_set_x
 

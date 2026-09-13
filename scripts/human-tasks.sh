@@ -35,9 +35,9 @@
 #   bash scripts/human-tasks.sh          # 何をするかだけ出す（dry-run）
 #   bash scripts/human-tasks.sh --yes    # 実行する（**IP も鍵も渡さなくてよい**）
 #
-#   PAT を置くとき（どちらでもよい。**引数では渡せない**）:
-#     BRANCH_PROTECTION_TOKEN=<貼る> bash scripts/human-tasks.sh --yes
-#     pbpaste | bash scripts/human-tasks.sh --yes --set-token      # 標準入力から読む
+#   PAT を置くとき（**引数では渡せない**）:
+#     bash scripts/human-tasks.sh --yes --set-token   # 打ってから、トークンを貼って Enter
+#     （環境変数 BRANCH_PROTECTION_TOKEN でも読む。**コマンド行に書くと履歴に残る**）
 #
 #   接続先を上書きしたいときだけ `--host <IP>` か `GIINOPS_HOST=<IP>`。
 #   **ふだんは要らない。**
@@ -184,9 +184,9 @@ log "    2) Repository access : $BP_REPO **のみ**（All repositories にしな
 log "    3) Repository permissions : Administration = Read-only / Issues = Read and write **だけ**"
 log "       （それ以外は No access。**書き込み権限を与えない**）"
 log "    4) 有効期限を決める（**期限は docs/ops/board.md に控えてください**。切れるとまた赤くなります）"
-log "  作った文字列の渡し方（**引数では渡せません**。履歴と ps に残るため）:"
-log "    BRANCH_PROTECTION_TOKEN=<貼る> bash scripts/human-tasks.sh --yes"
-log "    または: bash scripts/human-tasks.sh --yes --set-token   ← 標準入力に貼る"
+log "  作った文字列の渡し方（**引数では渡せません**。シェルの履歴と ps に残るため）:"
+log "    bash scripts/human-tasks.sh --yes --set-token   ← これを打ってから、**トークンを貼って Enter**"
+log "    （環境変数 BRANCH_PROTECTION_TOKEN でも読みます。**ただしコマンド行に書くと履歴に残ります**）"
 log "  **#155（VPS 監視用の PAT）は別物です**（置き場も用途も違う。docs/ops/monitoring.md）"
 
 # **トークンの受け取り口は 2 つだけ: 環境変数と標準入力。**
