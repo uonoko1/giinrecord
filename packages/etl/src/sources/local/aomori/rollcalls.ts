@@ -94,8 +94,6 @@ const idPart = (s: string): string => s.replace(/[\s　/\\]/g, "");
 export interface Converted {
   rollCalls: LocalRollCall[];
   unmatched: LocalUnmatchedName[];
-  /** **字が落ちたまま名簿に寄った氏名**（`meta.lossyNameMatches`。#749 の機序 ②） */
-  lossy: { nameText: string; memberId: string; rosterName: string; rollCalls: number }[];
   /**
    * **議決日が読めなくて採決にしなかった行**の数。
    * **実測では 56 本 2,445 行すべてが `M/D` で、0 である**（2026-09-13）。
@@ -111,7 +109,6 @@ export function toLocalRollCalls(sources: readonly PdfSource[], roster: readonly
   const rollCalls: LocalRollCall[] = [];
   const baseIds = new Map<string, number>();
   const matchOf = new Map<string, ReturnType<typeof matchName>>();
-  const lossy = new Map<string, { nameText: string; memberId: string; rosterName: string; rollCalls: number }>();
   let skippedRows = 0;
   for (const { pdf, pdfUrl } of sources) {
     const resolved = pdf.members.map((m) => {
@@ -162,17 +159,6 @@ export function toLocalRollCalls(sources: readonly PdfSource[], roster: readonly
         sourceUrl: pdfUrl,
       });
     }
-    // **字が落ちたまま寄った氏名**を数える（#749 の機序 ②。`meta.lossyNameMatches`）
-    for (let i = 0; i < pdf.members.length; i++) {
-      const hit = resolved[i];
-      if (hit.memberId === "") continue;
-      const m = roster.find((r) => r.id === hit.memberId);
-      if (!m || nameKey(pdf.members[i].nameText) === nameKey(m.name)) continue;
-      const k = `${pdf.members[i].nameText}\t${hit.memberId}`;
-      const cur = lossy.get(k) ?? { nameText: pdf.members[i].nameText, memberId: hit.memberId, rosterName: m.name, rollCalls: 0 };
-      cur.rollCalls += pdf.rows.length;
-      lossy.set(k, cur);
-    }
   }
   // 同じ議決日で同じ id の行が複数なら、出た順に全部へ -1, -2 … を足す（8 県と同じ規則）
   const seen = new Map<string, number>();
@@ -199,5 +185,5 @@ export function toLocalRollCalls(sources: readonly PdfSource[], roster: readonly
     const match = matchOf.get(`${u.nameText}\t${u.group}`);
     return { ...u, ...(match && match.candidates.length > 0 ? { candidates: match.candidates } : {}) };
   });
-  return { rollCalls, unmatched: unmatchedList, lossy: [...lossy.values()], skippedRows };
+  return { rollCalls, unmatched: unmatchedList, skippedRows };
 }

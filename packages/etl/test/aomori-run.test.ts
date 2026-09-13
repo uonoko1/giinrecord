@@ -92,7 +92,6 @@ test("#750 buildLocalAssembly → validateLocalAssemblies が違反 0 で通る"
     assembly: AOMORI_ASSEMBLY, members: run.roster.members, rollCalls: run.rollCalls, fetchedAt: FETCHED_AT,
     rosterAsOf: run.roster.asOf, sources: run.sources, sessions: run.sessions, unmatched: run.unmatched,
     unreadableSources: run.unreadableSources,
-    ...(run.lossyNameMatches.length ? { lossyNameMatches: run.lossyNameMatches } : {}),
   });
   assert.equal(built.meta.counts.members, 46);
   assert.equal(built.meta.counts.rollcalls, 44);
@@ -127,15 +126,16 @@ test("#750 meta.lossyNameMatches: 字が落ちたまま寄った氏名が残る�
   // 第300回（2019-11）は index の新しい順で 29 番目
   const run = await runAomori({ sessions: 29, fetchedAt: FETCHED_AT, fetcher: fetcher() });
   assert.deepEqual(run.sessions.map((s) => s.sessionId), ["2025-06", "2023-07", "2019-11"], "フィクスチャにある 3 本ぶん読めた");
-  assert.deepEqual(run.lossyNameMatches, [{
-    nameText: "引 ユキ子", memberId: "p_02_giin_kushibiki-yukiko", rosterName: "櫛󠄁引 ユキ子", rollCalls: 46,
-  }]);
   const built = buildLocalAssembly({
     assembly: AOMORI_ASSEMBLY, members: run.roster.members, rollCalls: run.rollCalls, fetchedAt: FETCHED_AT,
     rosterAsOf: run.roster.asOf, sources: run.sources, sessions: run.sessions, unmatched: run.unmatched,
-    unreadableSources: run.unreadableSources, lossyNameMatches: run.lossyNameMatches,
+    unreadableSources: run.unreadableSources,
   });
-  assert.equal(built.meta.lossyNameMatches?.length, 1);
+  // **#778 でここは共通層（`lossyNameMatchesOf`）が数えるようになった。**
+  // **青森の `run` は渡していない**——**渡さなくても出ることがこの検査の要点である。**
+  assert.deepEqual(built.meta.lossyNameMatches, [{
+    nameText: "引 ユキ子", memberId: "p_02_giin_kushibiki-yukiko", rosterName: "櫛󠄁引 ユキ子", rollCalls: 46,
+  }]);
   assert.equal(built.meta.counts.rollcalls, 23 + 21 + 46);
   const dir = await mkdtemp(join(tmpdir(), "gl750b-"));
   await writeLocalAssembly(dir, built, { national: [] });
