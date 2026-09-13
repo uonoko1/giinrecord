@@ -7,15 +7,20 @@
 #   だから **VPS の IP はこのスクリプトが自分で引く**（`giinrecord.jp` の A レコード）。
 #   **鍵も `~/.ssh/sakura-vps/id_ed25519` にある前提で明示する**（`Host giinops` が無い端末でも通る）。
 #
-# 何をするか（**これ 1 つだけ**）:
-#   **`site.conf` を本番に反映する**（#610 / #654 / #746）——ssh が要る。PO の端末には接続先が無い。
+# 何をするか:
+#   1. **`site.conf` を本番に反映する**（#610 / #654 / #746）——ssh が要る。PO の端末には接続先が無い。
+#   2. **security アラート用の PAT を置く**（#786）——`--security-alerts-token <PAT>` を渡したときだけ。
+#      **トークンを「作る」のはブラウザでしかできない**（GitHub の設定画面）。だがそれ以外
+#      ——**置くこと・置けたか確かめること・検査を走らせること**——は全部ここでやる。
+#      ユーザーの指示「対話的でないなら 1 つのスクリプトにまとめて、1 回のコマンドで済むように」。
 #
 # **やらないこと**:
 #   - **`git stash` 2 件の drop（#543）**——**`scripts/ci/forbidden-patterns.sh` が
 #     `git stash` を全面的に禁止している**（#542 / #557。2026-09-06 に 3 回、担当者の未コミットの
 #     作業が git の「元に戻す」で消えた）。**規則を作った側がスクリプトで破るのは筋が通らない。**
 #     **#543 は人間が手で 2 回打つ**（`docs/ops/pending-decisions.md` の「3.」に手順がある）。
-#   - **fine-grained PAT の設置**（#550 / #155 / #547）——GitHub の設定画面での操作
+#   - **fine-grained PAT を「作る」こと**（#550 / #155 / #547 / #786）——GitHub の設定画面での操作。
+#     **作ったあと「置く」のはここでできる**（`--security-alerts-token`。#786 のぶんだけ実装済み）。
 #   - **Sponsors / 広告 / NDL 照会**（#53 / #48 / #250）——外部に届く。方針の判断も要る
 #
 # 使い方:
@@ -25,15 +30,24 @@
 #   接続先を上書きしたいときだけ `--host <IP>` か `GIINOPS_HOST=<IP>`。
 #   **ふだんは要らない。**
 #
+#   security アラートの監視を動かすとき（#786。**1 回きり**）:
+#     bash scripts/human-tasks.sh --yes --security-alerts-token github_pat_xxxxx
+#   トークンの作り方は docs/ops/monitoring.md「GitHub の security アラート」。
+#   **PAT は argv に出る**（ps で見える）。**GIINOPS_SECURITY_ALERTS_TOKEN 環境変数でも渡せる**ので、
+#   共用の端末ではそちらを使うこと。
+#
 #   Tests: scripts/ci/test/human-tasks.test.sh（ssh / curl / getent はスタブ。実際には何もしない）
 set -euo pipefail
 
 APPLY=0; HOST="${GIINOPS_HOST:-}"
+# **PAT は argv からすぐ変数に移し、以後 argv を参照しない**（ログにも出さない）。
+SEC_TOKEN="${GIINOPS_SECURITY_ALERTS_TOKEN:-}"
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --yes) APPLY=1; shift ;;
     --host) HOST="${2:-}"; shift 2 ;;
-    *) echo "usage: human-tasks.sh [--yes] [--host <IP>]" >&2; exit 2 ;;
+    --security-alerts-token) SEC_TOKEN="${2:-}"; shift 2 ;;
+    *) echo "usage: human-tasks.sh [--yes] [--host <IP>] [--security-alerts-token <PAT>]" >&2; exit 2 ;;
   esac
 done
 
@@ -129,6 +143,45 @@ if [[ "$APPLY" = 1 && "$fail" = 0 ]]; then
   log "  さらに強い確認（headless Chromium で JS を切って開く）:"
   log "    pnpm --filter web browser-check -- --url https://giinrecord.jp"
   log "    **2 回走らせて、両方に出るものだけを見ること**（1 回目は一時的なネットワーク変動が出ることがある）"
+fi
+
+# ---- 2. security アラート用の PAT を置く（#786）------------------------------------------------------
+# **なぜ人間の作業か（実測）**: secret scanning / dependabot のアラートは、CI の既定 `GITHUB_TOKEN`
+# では**読めない**。2026-09-13 に Actions 上で実際に叩いて確かめた（run 34753557512）:
+#     RESULT secret-scanning/alerts: NOT READABLE  HTTP 403 Resource not accessible
+#     RESULT dependabot/alerts:      NOT READABLE  HTTP 403 Resource not accessible
+# しかも `permissions:` に `secret-scanning` / `dependabot-alerts` と書くことは**できない**
+# （そんなキーは無く、書くと #540 と同じく workflow ごと動かなくなる）。**PAT しか手が無い。**
+echo
+log "== security アラート用の PAT を置く（#786）=="
+if [[ -z "$SEC_TOKEN" ]]; then
+  log "  トークンが渡されていないので飛ばします（この作業が済んでいれば、それで構いません）"
+  log "  まだなら: docs/ops/monitoring.md「GitHub の security アラート」の手順で PAT を作り、"
+  log "    bash scripts/human-tasks.sh --yes --security-alerts-token <PAT>"
+elif [[ "$APPLY" = 0 ]]; then
+  # **トークンそのものは絶対に出さない。** 長さだけ出して「渡っている」ことを示す。
+  log "  [dry-run] gh secret set SECURITY_ALERTS_TOKEN （${#SEC_TOKEN} 文字のトークンを受け取っています）"
+else
+  # `--body -` で **標準入力から**渡す。`--body "$SEC_TOKEN"` だと argv に載り ps で見える。
+  if printf '%s' "$SEC_TOKEN" | gh secret set SECURITY_ALERTS_TOKEN --body - >/dev/null 2>&1; then
+    log "  SECURITY_ALERTS_TOKEN を置きました"
+    # **置けただけでは足りない。** 権限が足りない PAT でも secret としては置ける。
+    # **実際にアラートを読めるか**を、置いたトークンそのもので確かめる。
+    if GH_TOKEN="$SEC_TOKEN" gh api "repos/uonoko1/giinrecord/secret-scanning/alerts?per_page=1" >/dev/null 2>&1 \
+       && GH_TOKEN="$SEC_TOKEN" gh api "repos/uonoko1/giinrecord/dependabot/alerts?per_page=1" >/dev/null 2>&1; then
+      log "  このトークンで 2 つのフィードとも読めました（監視が動きます）"
+      log "  次の実行で Issue「[monitor] repo: security アラートを読めない」が自動で閉じます"
+    else
+      # **ここで黙って成功にしない。** 読めない PAT を置いて緑にするのは #786 の 21 日の再来。
+      log "  **置きましたが、このトークンではアラートを読めません。**"
+      log "    Repository permissions に「Secret scanning alerts: Read-only」と"
+      log "    「Dependabot alerts: Read-only」が付いているか確かめてください"
+      fail=1
+    fi
+  else
+    log "  gh secret set に失敗しました（gh の認証を確かめてください: gh auth status）"
+    fail=1
+  fi
 fi
 
 echo

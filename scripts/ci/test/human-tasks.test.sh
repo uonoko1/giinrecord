@@ -31,6 +31,28 @@ printf 'ssh %s\n' "$*" >> "$STUB_LOG"
 [[ "${STUB_SSH_FAIL:-0}" = 1 ]] && exit 255
 exit 0
 EOT
+# **gh のスタブ（#786）。** 本物を呼ぶと実際に secret を置いてしまうので、必ずスタブ経由にする。
+#   STUB_GH_SET_FAIL=1  `gh secret set` を失敗させる
+#   STUB_GH_API_FAIL=1  `gh api`（アラートの読み取り）を失敗させる = 権限の足りない PAT
+# **標準入力から受け取ったトークンは、長さだけをログに残す。** 中身をログに書いたら、
+# このテスト自身が「トークンを漏らさない」という主張を裏切ることになる。
+cat > "$BIN/gh" <<'EOT'
+#!/usr/bin/env bash
+case "$1 $2" in
+  "secret set")
+    body=$(cat)   # --body - で渡ってくる
+    printf 'gh secret set %s len=%s\n' "$3" "${#body}" >> "$STUB_LOG"
+    [[ "${STUB_GH_SET_FAIL:-0}" = 1 ]] && exit 1
+    exit 0 ;;
+  "api "*|"api")
+    printf 'gh api %s token_len=%s\n' "$2" "${#GH_TOKEN}" >> "$STUB_LOG"
+    [[ "${STUB_GH_API_FAIL:-0}" = 1 ]] && exit 1
+    echo '[]'; exit 0 ;;
+  *) printf 'gh %s\n' "$*" >> "$STUB_LOG"; exit 0 ;;
+esac
+EOT
+chmod +x "$BIN/gh"
+
 # **curl のスタブは書き換えるテストがあるので、既定に戻せる形にしておく**
 # （書き換えたまま次のテストに漏らすと、そのテストは何を測ったのか分からなくなる）。
 restore_curl_stub() {
@@ -63,7 +85,8 @@ chmod +x "$BIN"/*
 run() {  # run [args...] → OUT / STATUS
   : > "$TMP/log"
   set +e
-  OUT=$(PATH="$BIN:$PATH" STUB_LOG="$TMP/log" HOME="$TMP/fakehome" "$@" 2>&1)
+  OUT=$(PATH="$BIN:$PATH" STUB_LOG="$TMP/log" HOME="$TMP/fakehome" \
+        STUB_GH_SET_FAIL="${STUB_GH_SET_FAIL:-0}" STUB_GH_API_FAIL="${STUB_GH_API_FAIL:-0}" "$@" 2>&1)
   STATUS=$?
   set -e
   LOG=$(cat "$TMP/log")
@@ -188,6 +211,60 @@ EOT
 test_case "human-tasks: /compare が壊れたら成功と言わない" t_fails_when_compare_breaks
 
 
+
+
+# ---- #786: security アラート用の PAT を置く --------------------------------------------------
+# **この一群で一番大事なのは「トークンを出力に出さない」こと。** 出力はユーザーが Claude に
+# 貼って渡すことが前提なので、ここに載ったトークンは会話にもログにも残る。
+TOKEN_CANARY="github_pat_11ABCDEFG0THISisNOTaREALtokenJUSTaCANARY"
+
+t_token_is_never_printed() {
+  STUB_GH_SET_FAIL=0 STUB_GH_API_FAIL=0 run bash "$SCRIPT" --yes --security-alerts-token "$TOKEN_CANARY"
+  assert_not_contains "$OUT" "$TOKEN_CANARY" "**トークンが出力に出ている**（貼られたら漏洩する）"
+  assert_not_contains "$LOG" "$TOKEN_CANARY" "トークンがスタブのログに出ている"
+}
+test_case "human-tasks: PAT を出力にもログにも出さない（#786）" t_token_is_never_printed
+
+t_token_is_not_passed_in_argv() {
+  STUB_GH_SET_FAIL=0 STUB_GH_API_FAIL=0 run bash "$SCRIPT" --yes --security-alerts-token "$TOKEN_CANARY"
+  # スタブは受け取った長さを記録する。**標準入力から渡っていれば長さが一致する。**
+  assert_contains "$LOG" "gh secret set SECURITY_ALERTS_TOKEN len=${#TOKEN_CANARY}" \
+    "標準入力でトークンを渡していない（--body \"\$TOKEN\" は ps で見える）"
+}
+test_case "human-tasks: PAT は標準入力で渡す（argv に載せない）" t_token_is_not_passed_in_argv
+
+t_token_is_verified_not_just_placed() {
+  # **権限の足りない PAT**: secret としては置けるが、アラートは読めない。
+  STUB_GH_SET_FAIL=0 STUB_GH_API_FAIL=1 run bash "$SCRIPT" --yes --security-alerts-token "$TOKEN_CANARY"
+  assert_eq 1 "$STATUS" "**読めない PAT を置いて成功と言ってはいけない**（#786 の 21 日の再来）"
+  assert_contains "$OUT" "アラートを読めません" "読めないことを言う"
+  assert_contains "$OUT" "Secret scanning alerts" "何の権限が足りないか言う"
+}
+test_case "human-tasks: 置けても読めなければ失敗にする（#786）" t_token_is_verified_not_just_placed
+
+t_token_success_path() {
+  STUB_GH_SET_FAIL=0 STUB_GH_API_FAIL=0 run bash "$SCRIPT" --yes --security-alerts-token "$TOKEN_CANARY"
+  assert_contains "$OUT" "2 つのフィードとも読めました" "両方読めたことを言う"
+  # **2 つのフィードを両方確かめている**こと（片方だけ見て成功にしない）
+  assert_contains "$LOG" "secret-scanning/alerts" "secret scanning を確かめている"
+  assert_contains "$LOG" "dependabot/alerts" "dependabot を確かめている"
+}
+test_case "human-tasks: 2 つのフィードとも読めることを確かめる（#786）" t_token_success_path
+
+t_no_token_skips_without_failing() {
+  run bash "$SCRIPT" --yes
+  assert_not_contains "$LOG" "gh secret set" "トークンを渡していないのに secret を置いている"
+  assert_contains "$OUT" "飛ばします" "飛ばしたことを言う"
+}
+test_case "human-tasks: トークン未指定なら飛ばす（既存の作業は止めない）" t_no_token_skips_without_failing
+
+t_dry_run_does_not_place_the_token() {
+  run bash "$SCRIPT" --security-alerts-token "$TOKEN_CANARY"
+  assert_not_contains "$LOG" "gh secret set" "**dry-run なのに secret を置いている**"
+  assert_not_contains "$OUT" "$TOKEN_CANARY" "dry-run でもトークンを出さない"
+  assert_contains "$OUT" "文字のトークンを受け取っています" "渡っていることは（長さで）示す"
+}
+test_case "human-tasks: dry-run では PAT を置かない" t_dry_run_does_not_place_the_token
 
 t_usage() {
   run bash "$SCRIPT" --oops
