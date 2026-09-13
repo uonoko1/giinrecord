@@ -167,11 +167,11 @@ test("parseVotePdf: 令和8年2月定例会。先議（14 件）と 3月25日議
  */
 test("parseVotePdf: ○の数＝賛成者数、×の数＝反対者数（PDF 5 本 133 行。食い違いは全部並べる）", () => {
   const rows = [june, juneSeigan, juneGiin, febSengi, feb].flatMap((pdf) => pdf.rows.map((r) => ({ ...r, date: pdf.date })));
-  assert.equal(rows.length, 133, "30 + 11 + 4 + 14 + 74（母数が減ったらこの検算は空回りする）");
-  assert.deepEqual(
-    countMismatchRows(rows, { yes: "○", no: "×", cells: (r) => r.cells, label: (r) => `${r.date} ${r.kind} ${r.number}` }),
-    [],
-  );
+  assert.equal(rows.length, 133, "30 + 11 + 4 + 14 + 74");
+  const { mismatches, checked } = countMismatchRows(rows, { yes: "○", no: "×", cells: (r) => r.cells, label: (r) => `${r.date} ${r.kind} ${r.number}` });
+  // **母数を先に固定する**（#757）——**突き合わせた行が減ったら、「食い違い 0 件」は「見た上での 0」ではない**
+  assert.equal(checked, 133, "133 行とも突き合わせた（母数が減ったらこの検算は空回りする）");
+  assert.deepEqual(mismatches, []);
 });
 
 test("parseVotePdf: 見出し（会期・議決日）が無い・凡例が無い PDF は失敗する", async () => {

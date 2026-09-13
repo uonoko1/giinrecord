@@ -116,11 +116,11 @@ test("parseVotePdf: 不変条件 — 全行でセル数＝議員数、不明セ�
  */
 test("parseVotePdf: ○の数＝賛成者数、×の数＝反対者数（2 会期 160 行。食い違いは全部並べる）", () => {
   const rows = [...pdf398.rows, ...pdf399.rows];
-  assert.equal(rows.length, 160, "第398回 50 行 ＋ 第399回 110 行（母数が減ったらこの検算は空回りする）");
-  assert.deepEqual(
-    countMismatchRows(rows, { yes: "○", no: "×", cells: (r) => r.cells, label: (r) => `${r.kind} ${r.number}` }),
-    [],
-  );
+  assert.equal(rows.length, 160, "第398回 50 行 ＋ 第399回 110 行");
+  const { mismatches, checked } = countMismatchRows(rows, { yes: "○", no: "×", cells: (r) => r.cells, label: (r) => `${r.kind} ${r.number}` });
+  // **母数を先に固定する**（#757）——**突き合わせた行が減ったら、「食い違い 0 件」は「見た上での 0」ではない**
+  assert.equal(checked, 160, "160 行とも突き合わせた（母数が減ったらこの検算は空回りする）");
+  assert.deepEqual(mismatches, []);
 });
 
 test("parseVotePdf: 凡例に無い値のセルは例外（丸めない・推定しない）", async () => {

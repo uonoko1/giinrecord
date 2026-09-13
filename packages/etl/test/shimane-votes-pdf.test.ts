@@ -130,11 +130,10 @@ test("parseVotePdf: その他表決は議長が交代している（列 18 と�
  * **検算は緩めていない——食い違いが 1 行でもあれば落ちる。**
  */
 test("令和8年6月: 全 30 行で ○ ● の数が PDF の賛成者数・反対者数と一致する（食い違いは全部並べる）", () => {
-  assert.equal(pdf.rows.length, 30, "母数が減ったらこの検算は空回りする");
-  assert.deepEqual(
-    countMismatchRows(pdf.rows, { yes: "○", no: "●", cells: (r) => r.cells, label: (r) => `${r.number} ${r.title}` }),
-    [],
-  );
+  const { mismatches, checked } = countMismatchRows(pdf.rows, { yes: "○", no: "●", cells: (r) => r.cells, label: (r) => `${r.number} ${r.title}` });
+  // **母数を先に固定する**（#757）——**突き合わせた行が減ったら、「食い違い 0 件」は「見た上での 0」ではない**
+  assert.equal(checked, 30, "30 行とも突き合わせた（母数が減ったらこの検算は空回りする）");
+  assert.deepEqual(mismatches, []);
 });
 
 test("parseVotePdf: 凡例に無い値は 1 つも無い（あれば不明セルとして数える）", () => {
@@ -281,11 +280,9 @@ test("令和8年2月: 反対した議員を名指しで固定する（第3号は
 
 /** **上の 6月定と同じ検算を 2月定にも**（食い違った行を全部並べる。#844）。 */
 test("令和8年2月: 全 82 行で ○ ● の数が PDF の賛成者数・反対者数と一致する（食い違いは全部並べる）", () => {
-  assert.equal(feb.rows.length, 82, "母数が減ったらこの検算は空回りする");
-  assert.deepEqual(
-    countMismatchRows(feb.rows, { yes: "○", no: "●", cells: (r) => r.cells, label: (r) => `${r.number} ${r.title}` }),
-    [],
-  );
+  const { mismatches, checked } = countMismatchRows(feb.rows, { yes: "○", no: "●", cells: (r) => r.cells, label: (r) => `${r.number} ${r.title}` });
+  assert.equal(checked, 82, "82 行とも突き合わせた（母数が減ったらこの検算は空回りする）");
+  assert.deepEqual(mismatches, []);
 });
 
 test("令和8年2月: 凡例に無い値は 1 つも無い。不明セルも無い", () => {

@@ -112,12 +112,11 @@ test("parseVotePdf: 凡例に無い値が出たら例外（丸めない）", () 
  */
 test("parseVotePdf: 復元したセルの員数が PDF 自身の賛成者数・反対者数と一致する（2 会期 47 行。食い違いは全部並べる）", () => {
   const rows = [june8, june7].flatMap((pdf) => pdf.rows.map((r) => ({ ...r, sessionLabel: pdf.sessionLabel })));
-  assert.equal(rows.length, 47, "令和8年6月 23 行 ＋ 令和7年6月 24 行（母数が減ったらこの検算は空回りする）");
-  assert.equal(rows.filter((r) => r.counts).length, 47, "47 行とも counts の欄がある（外れる行が無いこと）");
-  assert.deepEqual(
-    countMismatchRows(rows, { yes: "○", no: "×", cells: (r) => r.cells, label: (r) => `${r.sessionLabel} ${r.number}` }),
-    [],
-  );
+  assert.equal(rows.length, 47, "令和8年6月 23 行 ＋ 令和7年6月 24 行");
+  const { mismatches, checked } = countMismatchRows(rows, { yes: "○", no: "×", cells: (r) => r.cells, label: (r) => `${r.sessionLabel} ${r.number}` });
+  // **母数を先に固定する**（#757）——**突き合わせた行が減ったら、「食い違い 0 件」は「見た上での 0」ではない**
+  assert.equal(checked, 47, "47 行とも counts の欄があり、47 行とも突き合わせた（母数が減ったらこの検算は空回りする）");
+  assert.deepEqual(mismatches, []);
 });
 
 /** 議員の氏名 → セルの値。「何人が×か」ではなく「どの議員が×か」を見るための形。 */

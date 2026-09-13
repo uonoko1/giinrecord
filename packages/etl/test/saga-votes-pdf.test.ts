@@ -229,10 +229,10 @@ test("#768 令和4年9月定例会: 議決者数と賛成が 1 アイテムの�
   // **記号の数と突き合わせる**（原文の数と抽出した記号が合う）。
   // **食い違った行を全部並べて比べる**（#826）——**`assert.equal` を行ごとに撃つと最初の 1 行で止まり、
   // 「1 行なのか 26 行なのか」が読めない**（実測: 3 行を食い違わせても、落ちたメッセージには 1 行しか出なかった）。
-  assert.deepEqual(
-    countMismatchRows(pdf.rows, { yes: "○", no: "×", cells: (r) => r.cells, label: (r) => r.number }),
-    [], "○ の数 ＝ 賛成 / × の数 ＝ 反対",
-  );
+  const { mismatches, checked } = countMismatchRows(pdf.rows, { yes: "○", no: "×", cells: (r) => r.cells, label: (r) => r.number });
+  // **母数を先に固定する**（#757）——**突き合わせた行が減ったら、「食い違い 0 件」は「見た上での 0」ではない**
+  assert.equal(checked, 26, "26 行とも突き合わせた（母数が減ったらこの検算は空回りする）");
+  assert.deepEqual(mismatches, [], "○ の数 ＝ 賛成 / × の数 ＝ 反対");
 });
 
 /* ---------- 表題・凡例 ---------- */

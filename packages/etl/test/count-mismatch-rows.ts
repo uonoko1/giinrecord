@@ -40,6 +40,12 @@
  * | 鳥取 | 133 | 117（1 行は凡例が引けず母数の外） |
  * | 島根 | 112 | 112 |
  * | **高知** | **47** | **0**（**104 行すべて `counts` を出力に入れていないので母数の外**。#757） |
+ *
+ * ## **`checked`（実際に突き合わせた行の数）も返す**（#757／#844 の変異 3）
+ *
+ * **食い違いの配列だけを返していたとき、「全行を黙って外す」変異を当てても 4 県とも緑のままだった**
+ * （**当たったことは md5 で確認済み。等価変異ではない**）。**「食い違い 0 件」は「見た上での 0」でなければ意味が無い。**
+ * **だから呼ぶ側は `checked` も固定する**——**突き合わせる相手が 1 行も無くなったら落ちる。**
  */
 export function countMismatchRows<Row extends { counts?: { yes: number | string; no: number | string } }>(
   rows: readonly Row[],
@@ -53,16 +59,19 @@ export function countMismatchRows<Row extends { counts?: { yes: number | string;
     /** 落ちたときに人が読む行の名前（議案番号など）。 */
     readonly label: (row: Row) => string;
   },
-): string[] {
-  return rows.flatMap((r) => {
+): { mismatches: string[]; checked: number } {
+  const mismatches: string[] = [];
+  let checked = 0;
+  for (const r of rows) {
     // **`counts` の欄が無い行は突き合わせる相手が公表されていない**ので、外す（#757）。
     // **「合っている」とも「食い違っている」とも言えない。**
-    if (!r.counts) return [];
+    if (!r.counts) continue;
+    checked++;
     const cells = opts.cells(r);
     const yes = cells.filter((c) => c === opts.yes).length;
     const no = cells.filter((c) => c === opts.no).length;
-    return yes === Number(r.counts.yes) && no === Number(r.counts.no)
-      ? []
-      : [`${opts.label(r)}: 数えた ${opts.yes}${yes} ${opts.no}${no} / 公表 賛成${r.counts.yes} 反対${r.counts.no}`];
-  });
+    if (yes === Number(r.counts.yes) && no === Number(r.counts.no)) continue;
+    mismatches.push(`${opts.label(r)}: 数えた ${opts.yes}${yes} ${opts.no}${no} / 公表 賛成${r.counts.yes} 反対${r.counts.no}`);
+  }
+  return { mismatches, checked };
 }
