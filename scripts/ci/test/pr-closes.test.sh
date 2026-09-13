@@ -130,7 +130,7 @@ test_case "escape: 括弧が空／空白だけなら落ちる" t_no_issue_empty_
 t_regex_comes_from_board_audit() {
   # 取り出した値が、board-audit.sh に書いてある値と文字列として一致することを直接見る。
   local from_audit
-  from_audit=$(sed -n "s/^CLOSING_RE='\(.*\)'[[:space:]]*$/\1/p" "$ROOT/scripts/po/board-audit.sh" | head -1)
+  from_audit=$(sed -n "s/^CLOSING_RE='\(.*\)'[[:space:]]*\$/\1/p;T;q" "$ROOT/scripts/po/board-audit.sh")
   assert_contains "$from_audit" 'close' "board-audit.sh から規則を取り出せる（前提）"
   # pr-closes.sh 自身が正規表現の写しを持っていないこと。持っていたら、この設計は無意味。
   local copies

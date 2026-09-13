@@ -67,7 +67,10 @@ if [[ ! -r "$BOARD_AUDIT" ]]; then
   echo "  この検査は board-audit.sh の CLOSING_RE をそのまま使います。写しは持ちません。" >&2
   exit 3
 fi
-CLOSING_RE=$(sed -n "s/^CLOSING_RE='\(.*\)'[[:space:]]*$/\1/p" "$BOARD_AUDIT" | head -1)
+# **パイプにしない**（#527）: `sed ... | head -1` は pipefail のもとで、head が先に閉じて sed が
+# SIGPIPE で死ぬと 141 を返す——board-audit.sh は 200 行超あるので、実際に起こりうる。
+# `sed` に最初の 1 件で止めさせれば head は要らない（`T;q` = 置換できなければ次の行へ、できたら終了）。
+CLOSING_RE=$(sed -n "s/^CLOSING_RE='\(.*\)'[[:space:]]*\$/\1/p;T;q" "$BOARD_AUDIT")
 if [[ -z "$CLOSING_RE" ]]; then
   echo "pr-closes: board-audit.sh から CLOSING_RE を取り出せませんでした。" >&2
   echo "  board-audit.sh の書き方が変わったなら、この検査の取り出し方も直してください。" >&2
