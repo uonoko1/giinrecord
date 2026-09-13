@@ -19,7 +19,19 @@ import { DEFAULT_SESSIONS, dietAssemblies, readSessionsOnDisk } from "./dataset.
  *     × 審査結果 index（**1 ページに全 56 会期**）の直近 N 会期の議決結果 PDF → pref-02。
  *     **11 本が `/Rotate 90`、4 本に罫線が 1 本も無い、記号のアイテムの粒度が 2 通り**（#743 が 56 本で実測）。
  *     **`kana` は空**（一覧ページにふりがなが無く、議員ごとの個別ページにしか無い）。
- * Usage: pnpm etl:local <miyagi|tokushima|tottori|mie|nara|shimane|kochi|shiga|aomori> [--sessions N]   (default N = 2)
+ *   秋田県議会（#759）: 議員紹介（**1 ページに五十音別・選挙区別・会派別の 3 つの一覧**。
+ *     突き合わせはプロフィールの URL——**`川邉隼之介` が 3 つの `<a>` に割れている**）
+ *     × 概要ハブ → 年度の一覧 → **年度ページ 21 本**の賛否 PDF（**154 本。1 本会議日に 1 本**）→ pref-05。
+ *     **`sessionId` は議決日**（`2017-12-22`）——**年度ページの会期の名前は 154 本のうち 8 本で形が違う**
+ *     （`第１定例会` のように `回` が無い）ので、**PDF 自身の中の事実だけから決める。**
+ *     **`/Rotate 90` が 96 ページ / 70 本、左端の stray な `議` が 5,298 個 / 154 本すべて、
+ *     1 行の中で分割単位が揃わないのが 110 本 / 2,780 アイテム、凡例が 4 通り**（#753 が 154 本で実測）。
+ *     **議員の列は氏名からではなく票の行から作る**（氏名から作ると 154 本のうち 43 本しか
+ *     記号の個数と一致しない。`votes-pdf.ts` の `findMemberColumns`）。
+ *     **`ー`(U+30FC) を表決の記号にしない**——**凡例 B の 10 本がそれを「議場に不在」に使うが、
+ *     記号として拾うと議案名の長音が票に化ける**（`エネルギー` `センター`。268 個 / 73 本）。
+ *     **`kana` は空**（一覧ページにふりがなが無い）。**ホストは `pref.akita.gsl-service.net`**（`pref.*.lg.jp` ではない）。
+ * Usage: pnpm etl:local <miyagi|tokushima|tottori|mie|nara|shimane|kochi|shiga|aomori|akita> [--sessions N]   (default N = 2)
  */
 const DATA = fileURLToPath(new URL("../../../data/", import.meta.url));
 const args = process.argv.slice(2);

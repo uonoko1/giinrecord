@@ -1,0 +1,111 @@
+{
+ "assemblyId": "pref-05",
+ "counts": {
+  "cells": 6437,
+  "members": 41,
+  "rollcalls": 157,
+  "unknownCells": 0,
+  "unmatchedNames": 0
+ },
+ "fetchedAt": "2026-09-13T00:00:00.000Z",
+ "rosterAsOf": "2026-07-24",
+ "sessions": [
+  {
+   "pdfUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/080703.pdf",
+   "pdfUrls": [
+    "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/080703.pdf"
+   ],
+   "rollcalls": 26,
+   "sessionId": "2026-07-03",
+   "sessionLabel": "令和８年第１回定例会（６月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/080615.pdf",
+   "pdfUrls": [
+    "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/080615.pdf"
+   ],
+   "rollcalls": 1,
+   "sessionId": "2026-06-15",
+   "sessionLabel": "令和８年第１回定例会（６月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/080609.pdf",
+   "pdfUrls": [
+    "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/080609.pdf"
+   ],
+   "rollcalls": 2,
+   "sessionId": "2026-06-09",
+   "sessionLabel": "令和８年第１回定例会（６月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/080319.pdf",
+   "pdfUrls": [
+    "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/080319.pdf"
+   ],
+   "rollcalls": 91,
+   "sessionId": "2026-03-19",
+   "sessionLabel": "令和８年第１回定例会（２月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/080227.pdf",
+   "pdfUrls": [
+    "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/080227.pdf"
+   ],
+   "rollcalls": 37,
+   "sessionId": "2026-02-27",
+   "sessionLabel": "令和８年第１回定例会（２月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/",
+   "unknownCells": 0
+  }
+ ],
+ "sources": [
+  {
+   "fetchedAt": "2026-09-13T00:00:00.000Z",
+   "name": "秋田県議会 議員紹介",
+   "url": "https://pref.akita.gsl-service.net/doc/2018042300017/"
+  },
+  {
+   "fetchedAt": "2026-09-13T00:00:00.000Z",
+   "name": "秋田県議会 定例会・臨時会の概要",
+   "url": "https://pref.akita.gsl-service.net/doc/2018051000199/"
+  },
+  {
+   "fetchedAt": "2026-09-13T00:00:00.000Z",
+   "name": "秋田県議会 定例会・臨時会の概要（過去分の一覧）",
+   "url": "https://pref.akita.gsl-service.net/doc/2018051000205/"
+  },
+  {
+   "fetchedAt": "2026-09-13T00:00:00.000Z",
+   "name": "秋田県議会 令和８年第１回定例会（６月議会） 各議員の表決状況",
+   "url": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/080703.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-13T00:00:00.000Z",
+   "name": "秋田県議会 令和８年第１回定例会（６月議会） 各議員の表決状況",
+   "url": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/080615.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-13T00:00:00.000Z",
+   "name": "秋田県議会 令和８年第１回定例会（６月議会） 各議員の表決状況",
+   "url": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/080609.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-13T00:00:00.000Z",
+   "name": "秋田県議会 令和８年第１回定例会（２月議会） 各議員の表決状況",
+   "url": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/080319.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-13T00:00:00.000Z",
+   "name": "秋田県議会 令和８年第１回定例会（２月議会） 各議員の表決状況",
+   "url": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/080227.pdf"
+  }
+ ]
+}

@@ -16,7 +16,7 @@ concurrency:
 env:
   DATA_BRANCH: data/local-assemblies
   # `pnpm etl:local <name>` の name と assemblyId（name=id の組。順に直列で走らせる）
-  ASSEMBLIES: "miyagi=pref-04 tokushima=pref-36 tottori=pref-31 mie=pref-24 nara=pref-29 shimane=pref-32 kochi=pref-39 shiga=pref-25 aomori=pref-02"
+  ASSEMBLIES: "miyagi=pref-04 tokushima=pref-36 tottori=pref-31 mie=pref-24 nara=pref-29 shimane=pref-32 kochi=pref-39 shiga=pref-25 aomori=pref-02 akita=pref-05"
   FAILURE_ISSUE_TITLE: "地方議会 ETL 月次実行が失敗した（local-assemblies.yml）"
 jobs:
   local-assemblies:
