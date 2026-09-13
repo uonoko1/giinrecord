@@ -169,3 +169,158 @@ EOF
   assert_eq "" "$LOG" "**git も gh も一度も呼ばない**"
 }
 test_case "sweep: 知らない引数では何もしない" t_sweep_usage
+
+# --- Issue #787: 作業ディレクトリ .measure/ で守りが鳴らないようにする ---------------------
+#
+# **目的は「鳴らなくする」ことではなく、「鳴ったときに本物だと分かる」こと。**
+# 守り 1（未コミットがあるなら消さない）は #726 のまま。**除外するのは .measure/ という 1 つの名前だけ。**
+# #769（群馬）では `?? .work/` と `?? packages/etl/.work769/` のせいで
+# マージ済みのツリーが消えず、**守りが毎回鳴ることで、鳴っていること自体を見なくなっていた。**
+
+t_sweep_ignores_measure_workdir() {
+  local h; h=$(handler <<'EOF'
+git_handle() {
+  case "$*" in
+    "worktree list --porcelain") printf '%s\n' \
+      "worktree /repo" "branch refs/heads/main" "" \
+      "worktree /wt/measure" "branch refs/heads/docs/measure" "" \
+      "worktree /wt/real" "branch refs/heads/docs/real" "" ;;
+    # **作業ゴミだけ**: 未追跡の .measure/（ルートとパッケージ配下の両方）と .cache/
+    "-C /wt/measure status --porcelain") printf '%s\n' "?? .measure/" "?? packages/etl/.measure/" "?? .cache/" ;;
+    # **本物の取りこぼし**: .measure/ と同じツリーに混ざっていても見落とさない
+    "-C /wt/real status --porcelain") printf '%s\n' "?? .measure/" " M packages/etl/src/a.ts" ;;
+    *"log --oneline @{u}..HEAD") ;;
+    *) ;;
+  esac
+}
+handle() { echo '[{"state":"MERGED"}]'; }
+EOF
+)
+  run_script "$h" worktree-sweep.sh --yes
+  assert_eq 0 "$STATUS" "exit status: $ERR"
+  assert_contains "$LOG" "$(printf 'worktree\tremove\t/wt/measure')" "**.measure/ だけのツリーは消せる（守りが鳴らない）**"
+  assert_not_contains "$ERR" "残す /wt/measure" "作業ゴミだけを理由に残さない"
+  assert_not_contains "$LOG" "$(printf 'worktree\tremove\t/wt/real')" "**本物の未コミットは .measure/ に紛れても消さない**"
+  assert_contains "$ERR" "残す /wt/real" "本物は残す"
+  assert_contains "$ERR" "未コミットの変更が 1 件" "**数えるのは本物の 1 件だけ（.measure/ は数に入れない）**"
+}
+test_case "sweep: .measure/ の作業ディレクトリでは守りが鳴らない (#787)" t_sweep_ignores_measure_workdir
+
+t_sweep_measure_exception_is_narrow() {
+  local h; h=$(handler <<'EOF'
+git_handle() {
+  case "$*" in
+    "worktree list --porcelain") printf '%s\n' \
+      "worktree /repo" "branch refs/heads/main" "" \
+      "worktree /wt/near" "branch refs/heads/docs/near" "" ;;
+    # **名前が似ているだけ / 追跡されている変更**: どれも除外してはいけない
+    "-C /wt/near status --porcelain") printf '%s\n' \
+      "?? .measurements/x.json" \
+      "?? packages/etl/.measure-notes.md" \
+      "?? data/assemblies/pref-10/new.json" \
+      " M .measure/kept.ts" \
+      "A  packages/etl/.measure/added.ts" \
+      " M .measure/" \
+      "D  packages/etl/.cache/" ;;
+    *"log --oneline @{u}..HEAD") ;;
+    *) ;;
+  esac
+}
+handle() { echo '[{"state":"MERGED"}]'; }
+EOF
+)
+  run_script "$h" worktree-sweep.sh --yes
+  assert_not_contains "$LOG" "$(printf 'worktree\tremove\t/wt/near')" "**接頭辞が似ているだけのものを除外しない**"
+  assert_contains "$ERR" "未コミットの変更が 7 件" "**7 件すべて数える。除外は未追跡（?? ）に限る**"
+}
+test_case "sweep: .measure/ の除外は未追跡の .measure/ だけ (#787)" t_sweep_measure_exception_is_narrow
+
+t_sweep_cache_exception_not_widened() {
+  local h; h=$(handler <<'EOF'
+git_handle() {
+  case "$*" in
+    "worktree list --porcelain") printf '%s\n' \
+      "worktree /repo" "branch refs/heads/main" "" \
+      "worktree /wt/cache" "branch refs/heads/feat/cache" "" ;;
+    # **#787 より前は `grep -v '^?? .cache'` だったので、下の 2 行は黙って消えていた。**
+    # `?? .measure/file.txt` は、.measure/ の中に追跡済みファイルがあるときだけ git が出す形
+    # （全部未追跡なら git はディレクトリを `?? .measure/` に畳む）。**つまり本物である。**
+    "-C /wt/cache status --porcelain") printf '%s\n' \
+      "?? .cacheXYZ" "?? .cache-notes.md" "?? .measure/file.txt" ;;
+    *"log --oneline @{u}..HEAD") ;;
+    *) ;;
+  esac
+}
+handle() { echo '[{"state":"MERGED"}]'; }
+EOF
+)
+  run_script "$h" worktree-sweep.sh --yes
+  assert_not_contains "$LOG" "$(printf 'worktree\tremove\t/wt/cache')" "**.cache で始まるだけのものを除外しない**"
+  assert_contains "$ERR" "未コミットの変更が 3 件" "3 件とも数える"
+}
+test_case "sweep: .cache の除外も広げない（#787 で狭めた）" t_sweep_cache_exception_not_widened
+
+# --- 取得キャッシュを黙って消さない（#787 のマージ時に PO が見つけた穴） ---------------------
+#
+# **`.measure/` は守り 1 から外した＝「消えてよい」と宣言した場所**である。
+# ところが PO が #769 の 32MB を確かめたところ、`.work/769/cache/` の `.bin` 335 本は
+# **群馬県のサイトから取得した賛否 PDF 110 本のキャッシュ**だった。
+# 取得は 1 秒以上空けて直列なので、消すと**相手のサーバーに 110 本ぶんの再取得**が要る。
+#
+# **これは docs では止まらない**（#783: board.md に 4 回書いた教訓が 5 回目に再発した）。
+# **消す直前に「何を捨てるか」を出す**——数字は `du` と `find` で実際に取れる。
+
+t_sweep_reports_measure_before_removing() {
+  local wt; wt=$(mktemp -d)
+  mkdir -p "$wt/.measure/769/cache" "$wt/packages/etl/.measure"
+  # 1MB を 2 本。**中身ではなく大きさで気づかせる**（取得キャッシュは必ず大きい）
+  dd if=/dev/zero of="$wt/.measure/769/cache/a.bin" bs=1024 count=1024 2>/dev/null
+  dd if=/dev/zero of="$wt/packages/etl/.measure/b.bin" bs=1024 count=1024 2>/dev/null
+  # **.measure/ の外にもファイルを置く**（追跡済みのソース）。これが無いと
+  # 「全ファイルを数える」変異（M9）が生き残る——絞り込んでいるかを測れない。
+  mkdir -p "$wt/packages/etl/src"
+  : > "$wt/packages/etl/src/index.ts"; : > "$wt/README.md"; : > "$wt/package.json"
+  local h; h=$(handler <<EOF
+git_handle() {
+  case "\$*" in
+    "worktree list --porcelain") printf '%s\n' \\
+      "worktree /repo" "branch refs/heads/main" "" \\
+      "worktree $wt" "branch refs/heads/docs/measure" "" ;;
+    *"status --porcelain") ;;
+    *"log --oneline @{u}..HEAD") ;;
+    *) ;;
+  esac
+}
+handle() { echo '[{"state":"MERGED"}]'; }
+EOF
+)
+  run_script "$h" worktree-sweep.sh --yes
+  assert_eq 0 "$STATUS" "exit status: $ERR"
+  assert_contains "$ERR" ".measure" "**捨てる .measure/ があることを、消す前に出す**"
+  assert_contains "$ERR" "2 ファイル" "**何本捨てるかを数字で出す**"
+  assert_contains "$ERR" "取得" "**再取得が要ることを言う（相手のサーバーの負荷）**"
+  rm -rf "$wt"
+}
+test_case "sweep: .measure/ を捨てるときは何を捨てるか出す (#787)" t_sweep_reports_measure_before_removing
+
+t_sweep_silent_when_no_measure() {
+  local wt; wt=$(mktemp -d)
+  local h; h=$(handler <<EOF
+git_handle() {
+  case "\$*" in
+    "worktree list --porcelain") printf '%s\n' \\
+      "worktree /repo" "branch refs/heads/main" "" \\
+      "worktree $wt" "branch refs/heads/docs/plain" "" ;;
+    *"status --porcelain") ;;
+    *"log --oneline @{u}..HEAD") ;;
+    *) ;;
+  esac
+}
+handle() { echo '[{"state":"MERGED"}]'; }
+EOF
+)
+  run_script "$h" worktree-sweep.sh --yes
+  assert_not_contains "$ERR" "取得" "**.measure/ が無いツリーでは言わない（毎回鳴ると見なくなる）**"
+  rm -rf "$wt"
+}
+test_case "sweep: .measure/ が無ければ黙っている (#787)" t_sweep_silent_when_no_measure
