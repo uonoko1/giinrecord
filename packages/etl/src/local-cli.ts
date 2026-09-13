@@ -31,7 +31,20 @@ import { DEFAULT_SESSIONS, dietAssemblies, readSessionsOnDisk } from "./dataset.
  *     **`ー`(U+30FC) を表決の記号にしない**——**凡例 B の 10 本がそれを「議場に不在」に使うが、
  *     記号として拾うと議案名の長音が票に化ける**（`エネルギー` `センター`。268 個 / 73 本）。
  *     **`kana` は空**（一覧ページにふりがなが無い）。**ホストは `pref.akita.gsl-service.net`**（`pref.*.lg.jp` ではない）。
- * Usage: pnpm etl:local <miyagi|tokushima|tottori|mie|nara|shimane|kochi|shiga|aomori|akita> [--sessions N]   (default N = 2)
+ *   佐賀県議会（#768）: 議員一覧（**1 ページに 37 名。ふりがな・会派・選挙区・期数が揃う**。
+ *     **議員ごとのページが無い**ので `profileUrl` は名簿ページ自身、`id` は**写真の添付ファイル番号**から作る）
+ *     × 議案等の審議結果 → 年 → 定例会/臨時会 → 会期 → **議案件名一覧表**（**ここに初めて
+ *     「議員ごとの採決結果」のリンクが出る**。会期ページからは見えない。#670）→ 賛否 PDF → pref-41。
+ *     **リンク 67 本 / 取れる 64 本のうち読めるのは 16 本**——**文字層が無い 32 本**（`ToUnicode` 無し。#689）、
+ *     **`/Rotate 90` の 16 本**（平成27〜29年。表の作りも違うので読まない）、**404 が 3 本**。
+ *     **1 本の PDF に表が何枚も入り、表ごとに議決日も議員の並びも違う**（実測 16 本 76 表 505 行）。
+ *     **続きのページには見出しが無い**ので、直前の表の議決日と議員の並びを引き継ぐ。
+ *     **議員の列は罫線から採る**（右端から幅がそろっている run。集計欄は 13〜17% 広い）。
+ *     **列見出し `議員名` の `議` が議員の帯の x の中にある**ので、
+ *     **「記号が 1 個の y」を行にしない**（列の数の半分以上を要求する）。
+ *     **氏名の食い違いが 2 人ぶんある**（`猪村利恵子`/`猪村理恵子`、`桃崎祐介`/`桃崎裕介`）——
+ *     **どちらにも寄せず `unmatched.json` に `sourceConflict` で落ちる**（#711）。
+ * Usage: pnpm etl:local <miyagi|tokushima|tottori|mie|nara|shimane|kochi|shiga|aomori|akita|saga> [--sessions N]   (default N = 2)
  */
 const DATA = fileURLToPath(new URL("../../../data/", import.meta.url));
 const args = process.argv.slice(2);

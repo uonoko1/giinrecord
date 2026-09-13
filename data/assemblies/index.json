@@ -80,5 +80,12 @@
   "name": "高知県議会",
   "prefCode": "39",
   "sourceUrl": "https://gikai.pref.kochi.lg.jp/member/categories/"
+ },
+ {
+  "id": "pref-41",
+  "kind": "prefectural",
+  "name": "佐賀県議会",
+  "prefCode": "41",
+  "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00366725/index.html"
  }
 ]

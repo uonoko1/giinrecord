@@ -1,0 +1,346 @@
+{
+ "asOf": "2025-04-01",
+ "assemblyId": "pref-41",
+ "counts": {
+  "rollcalls": 23
+ },
+ "current": true,
+ "district": "三養基郡",
+ "group": "自由民主党ネクストさが",
+ "id": "p_41_280959",
+ "kana": "こが かずひろ",
+ "name": "古賀 和浩",
+ "profileUrl": "https://www.pref.saga.lg.jp/gikai/kiji00366725/index.html",
+ "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00366725/index.html",
+ "terms": [
+  {
+   "asOf": "2025-04-01",
+   "district": "三養基郡",
+   "group": "自由民主党ネクストさが"
+  }
+ ],
+ "timeline": [
+  {
+   "date": "2026-07-01",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-06-teirei-list06680-20260701-乙第40号議案",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003119791/3_119791_394982_up_cda325jj.pdf",
+   "title": "職員の勤務時間、休暇等に関する条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-01",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-06-teirei-list06680-20260701-乙第41号議案",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003119791/3_119791_394982_up_cda325jj.pdf",
+   "title": "佐賀県公立学校職員特殊勤務手当及びへき地手当支給条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-01",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-06-teirei-list06680-20260701-乙第42号議案",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003119791/3_119791_394982_up_cda325jj.pdf",
+   "title": "佐賀県児童福祉法の施行等に関する条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-01",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-06-teirei-list06680-20260701-乙第43号議案",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003119791/3_119791_394982_up_cda325jj.pdf",
+   "title": "佐賀県立博物館及び佐賀県立美術館の使用料に関する条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-01",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-06-teirei-list06680-20260701-乙第44号議案",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003119791/3_119791_394982_up_cda325jj.pdf",
+   "title": "国営土地改良事業に対する市町の負担について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-01",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-06-teirei-list06680-20260701-乙第45号議案",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003119791/3_119791_394982_up_cda325jj.pdf",
+   "title": "唐津港県営水産５号上屋のモルタル剥離落下事故に対する損害賠償について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-01",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-06-teirei-list06680-20260701-乙第46号議案",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003119791/3_119791_394982_up_cda325jj.pdf",
+   "title": "警察官による捜索・差押えを起因とする車両損傷に対する損害賠償について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-01",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-06-teirei-list06680-20260701-乙第47号議案",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003119791/3_119791_394982_up_cda325jj.pdf",
+   "title": "県有財産の取得について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-01",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-41-2026-06-teirei-list06680-20260701-乙第48号議案",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003119791/3_119791_394982_up_cda325jj.pdf",
+   "title": "監査委員の選任について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-01",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-41-2026-06-teirei-list06680-20260701-乙第49号議案",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003119791/3_119791_394982_up_cda325jj.pdf",
+   "title": "収用委員会委員及び予備委員の任命について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-01",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-06-teirei-list06680-20260701-意第５号意見書案",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003119791/3_119791_394982_up_cda325jj.pdf",
+   "title": "交通事故等による被害を受けた胎児に係る法整備についての意見書（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-01",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-06-teirei-list06680-20260701-意第６号意見書案",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003119791/3_119791_394982_up_cda325jj.pdf",
+   "title": "教育・保育施設等に係る公共価格の地域区分の見直しに関する意見書（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-01",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-06-teirei-list06680-20260701-意第７号意見書案",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003119791/3_119791_394982_up_cda325jj.pdf",
+   "title": "地方財政の充実・強化に関する意見書（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-01",
+   "kind": "localVote",
+   "result": "否決",
+   "rollCallId": "pref-41-2026-06-teirei-list06680-20260701-意第８号意見書案",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003119791/3_119791_394982_up_cda325jj.pdf",
+   "title": "核兵器禁止条約に関する意見書（案）",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-07-01",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-06-teirei-list06680-20260701-甲第36号議案",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003119791/3_119791_394982_up_cda325jj.pdf",
+   "title": "令和８年度佐賀県一般会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-01",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-06-teirei-list06680-20260701-甲第37号議案",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003119791/3_119791_394982_up_cda325jj.pdf",
+   "title": "令和８年度佐賀県財政調整積立金特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-01",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-06-teirei-list06680-20260701-甲第38号議案",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003119791/3_119791_394982_up_cda325jj.pdf",
+   "title": "令和８年度佐賀県産業用地造成事業特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-01",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-06-teirei-list06680-20260701-甲第39号議案",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003119791/3_119791_394982_up_cda325jj.pdf",
+   "title": "令和８年度佐賀県港湾整備事業特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-01",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-06-teirei-list06680-20260701-甲第40号議案",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003119791/3_119791_394982_up_cda325jj.pdf",
+   "title": "令和８年度佐賀県一般会計補正予算（第２号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-01",
+   "kind": "localVote",
+   "result": "採択",
+   "rollCallId": "pref-41-2026-06-teirei-list06680-20260701-請第１号請願",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003119791/3_119791_394982_up_cda325jj.pdf",
+   "title": "佐賀県における公共図書館及び学校図書館の図書調達の見直しを求める請願書",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-07-01",
+   "kind": "localVote",
+   "result": "否決",
+   "rollCallId": "pref-41-2026-06-teirei-list06680-20260701-議第３号議案",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003119791/3_119791_394982_up_cda325jj.pdf",
+   "title": "佐賀県議会議員の定数並びに選挙区及び各選挙区において選挙すべき議員の数に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-04-23",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-41-2026-04-rinji-list06671-20260423-乙第39号議案",
+   "sessionLabel": "令和8年4月臨時会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003119136/3_119136_389175_up_bkhi5h10.pdf",
+   "title": "監査委員の選任について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-04-21",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-04-rinji-list06671-20260421-議第２号議案",
+   "sessionLabel": "令和8年4月臨時会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003119136/3_119136_389175_up_bkhi5h10.pdf",
+   "title": "佐賀県議会委員会条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  }
+ ]
+}

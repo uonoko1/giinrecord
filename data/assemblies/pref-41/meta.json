@@ -1,0 +1,68 @@
+{
+ "assemblyId": "pref-41",
+ "counts": {
+  "cells": 851,
+  "members": 37,
+  "rollcalls": 23,
+  "unknownCells": 0,
+  "unmatchedNames": 2
+ },
+ "fetchedAt": "2026-09-13T06:34:55.122Z",
+ "rosterAsOf": "2025-04-01",
+ "sessions": [
+  {
+   "pdfUrl": "https://www.pref.saga.lg.jp/gikai/kiji003119791/3_119791_394982_up_cda325jj.pdf",
+   "pdfUrls": [
+    "https://www.pref.saga.lg.jp/gikai/kiji003119791/3_119791_394982_up_cda325jj.pdf"
+   ],
+   "rollcalls": 21,
+   "sessionId": "2026-06-teirei-list06680",
+   "sessionLabel": "令和8年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/list06680.html",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.pref.saga.lg.jp/gikai/kiji003119136/3_119136_389175_up_bkhi5h10.pdf",
+   "pdfUrls": [
+    "https://www.pref.saga.lg.jp/gikai/kiji003119136/3_119136_389175_up_bkhi5h10.pdf"
+   ],
+   "rollcalls": 2,
+   "sessionId": "2026-04-rinji-list06671",
+   "sessionLabel": "令和8年4月臨時会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/list06671.html",
+   "unknownCells": 0
+  }
+ ],
+ "sources": [
+  {
+   "fetchedAt": "2026-09-13T06:34:55.122Z",
+   "name": "佐賀県議会 議員一覧",
+   "url": "https://www.pref.saga.lg.jp/gikai/kiji00366725/index.html"
+  },
+  {
+   "fetchedAt": "2026-09-13T06:34:55.122Z",
+   "name": "佐賀県議会 議案等の審議結果",
+   "url": "https://www.pref.saga.lg.jp/gikai/list01707.html"
+  },
+  {
+   "fetchedAt": "2026-09-13T06:34:55.122Z",
+   "name": "佐賀県議会 令和8年6月定例会 議案件名一覧表",
+   "url": "https://www.pref.saga.lg.jp/gikai/kiji003119791/index.html"
+  },
+  {
+   "fetchedAt": "2026-09-13T06:34:55.122Z",
+   "name": "佐賀県議会 令和8年6月定例会議案採決結果一覧表",
+   "url": "https://www.pref.saga.lg.jp/gikai/kiji003119791/3_119791_394982_up_cda325jj.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-13T06:34:55.122Z",
+   "name": "佐賀県議会 令和8年4月臨時会 議案件名一覧表",
+   "url": "https://www.pref.saga.lg.jp/gikai/kiji003119136/index.html"
+  },
+  {
+   "fetchedAt": "2026-09-13T06:34:55.122Z",
+   "name": "佐賀県議会 令和8年4月臨時会議案採決結果一覧表",
+   "url": "https://www.pref.saga.lg.jp/gikai/kiji003119136/3_119136_389175_up_bkhi5h10.pdf"
+  }
+ ]
+}
