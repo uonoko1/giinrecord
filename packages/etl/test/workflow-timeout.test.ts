@@ -181,6 +181,7 @@ test("#556 数え上げ: jobs: 直下の job を全部拾えている（拾え�
     "branch-protection.yml:guard",
     "ci.yml:check",
     "ci.yml:docker-web",
+    "ci.yml:pr-closes",
     "ci.yml:stale-base",
     "deploy-data.yml:production",
     "deploy-data.yml:resolve",
@@ -242,6 +243,8 @@ test("#556 uses: の job に timeout-minutes を書かない（GitHub が受け�
  *   ci.yml:check                    36   153   210   223   225s  → 30 分（max の 8 倍）
  *   ci.yml:docker-web               35    72    84    93    96s  → 20 分
  *   ci.yml:stale-base               17     6     8    10    10s  → 10 分
+ *   ci.yml:pr-closes                 0     -     -     -     -    → 10 分（#793。実測前。
+ *                                                                    stale-base より軽いのでそれに合わせた）
  *   deploy-data.yml:resolve         40     4     8    10    13s  → 10 分
  *   deploy-site.yml:deploy          40    28    56    62    71s  → 30 分（本番に触るので厚め）
  *   release.yml:released-tag        39     3     4     5     8s  → 10 分
@@ -256,6 +259,9 @@ test("#556 値が実測から外れていない（短すぎる = 偽陽性 / 長
   const expected: Record<string, number> = {
     "ci.yml:check": 30,
     "ci.yml:docker-web": 20,
+    // #793: 実測はまだ無い。checkout + grep 2 回で stale-base（実測 max 10s）より軽いので、
+    // その 10 分に合わせてある。実測が取れたら上の表ごと更新する。
+    "ci.yml:pr-closes": 10,
     "ci.yml:stale-base": 10,
     "deploy-data.yml:resolve": 10,
     "deploy-site.yml:deploy": 30,

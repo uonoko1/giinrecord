@@ -58,7 +58,11 @@ jobs:
   pr-closes:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    # #556 の表に実測が無い新しい job なので、**一番近い実測を持つ job に合わせる**:
+    # stale-base（checkout + スクリプト 1 本、実測 max 10s）が 10 分。この job は checkout +
+    # grep 2 回で、stale-base より確実に軽い（fetch も install もしない）。実測が取れたら
+    # packages/etl/test/workflow-timeout.test.ts の表ごと更新すること。
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - name: PR 本文に Closes #N （または「Issue 無し」の明示）があること (#793)
