@@ -5,8 +5,9 @@ import { assemblyPath, bundledSessions } from "../lib/assemblies";
 import { billsBySession as bundledBillsBySession } from "../lib/bills";
 import { buildCoverage, type Coverage, type DietCoverage, formatLocalSessionRange, formatSessionRange, hasSessionGaps, type LinkedRecordCounts, type LocalCoverage, rosterlessSessions, rosterScope, sangiinUnlinkedVotes, type SangiinVoteLinkStats, type SessionRange, shugiinBillNameCoverage, type ShugiinBillNameStats, shugiinQuestionCoverage, speechCoverage, type UnmatchedSpeechStats, unmatchedSpeechCoverage } from "../lib/coverage";
 import type { BillSessionCount, MemberAssemblyCount } from "@seiji-kiroku/shared";
-import type { AssemblySession } from "../lib/data-contract";
-import { defaultDataDir, readLinkedRecordCounts, readSangiinVoteLinkStats, readShugiinBillNameStats, readUnmatchedSpeechStats } from "../lib/data-files";
+import type { AssemblySession, LocalAssemblyMeta } from "../lib/data-contract";
+import { lossyNameSummary } from "../lib/lossy-name";
+import { defaultDataDir, readLinkedRecordCounts, readLocalAssemblyMetas, readSangiinVoteLinkStats, readShugiinBillNameStats, readUnmatchedSpeechStats } from "../lib/data-files";
 import { type Dataset, dataset as bundled } from "../lib/dataset";
 import { membersByAssembly as bundledMembersByAssembly } from "../lib/members-by-assembly";
 import { formatDate, formatDateTime } from "../lib/format";
@@ -27,6 +28,11 @@ export type CoverageLoaderData = {
   unmatchedSpeeches: UnmatchedSpeechStats | null;
   /** 院ごとの「議員ページに実際に出ている件数」（#251）。#441 でここ（Node 側）に移した */
   linked: { sangiin: LinkedRecordCounts | null; shugiin: LinkedRecordCounts | null };
+  /**
+   * 地方議会の `meta.json`（#800）。**バンドルもされず `/data/` でも配信されない**ので、
+   * ビルド時に Node で読んでここへ渡すのが唯一の経路。読めていなければ null（「0 件」ではない）。
+   */
+  localMetas: LocalAssemblyMeta[] | null;
 };
 
 export async function loader(): Promise<CoverageLoaderData> {
@@ -37,6 +43,8 @@ export async function loader(): Promise<CoverageLoaderData> {
     unmatchedSpeeches: await readUnmatchedSpeechStats(dataDir),
     // #441: 名簿全件（gzip 40KB）をブラウザに送らずに数えるため、合計だけをビルド時に作る
     linked: await readLinkedRecordCounts(dataDir),
+    // #800: 地方の meta.json は配信もバンドルもされない。ここで読まなければ誰にも見えない
+    localMetas: await readLocalAssemblyMetas(dataDir),
   };
 }
 
@@ -49,8 +57,8 @@ const n = (v: number) => v.toLocaleString("ja-JP");
 const KIND_LABEL = { national: "国会", prefectural: "都道府県議会", municipal: "政令指定都市議会" } as const;
 
 export default function CoverageRoute() {
-  const { shugiinBillNames, sangiinVotes, unmatchedSpeeches, linked } = useLoaderData<typeof loader>();
-  return <CoveragePage shugiinBillNames={shugiinBillNames} sangiinVotes={sangiinVotes} unmatchedSpeeches={unmatchedSpeeches} linked={linked} />;
+  const { shugiinBillNames, sangiinVotes, unmatchedSpeeches, linked, localMetas } = useLoaderData<typeof loader>();
+  return <CoveragePage shugiinBillNames={shugiinBillNames} sangiinVotes={sangiinVotes} unmatchedSpeeches={unmatchedSpeeches} linked={linked} localMetas={localMetas} />;
 }
 
 /**
@@ -71,6 +79,8 @@ export function CoveragePage({
   sangiinVotes = null,
   unmatchedSpeeches = null,
   linked = { sangiin: null, shugiin: null },
+  // #800: null は「1 件も読めていない」。空配列（「読んだが 0 議会」）と区別する
+  localMetas = null,
 }: {
   data?: Dataset;
   sessions?: ReadonlyMap<string, AssemblySession[]>;
@@ -80,6 +90,7 @@ export function CoveragePage({
   sangiinVotes?: SangiinVoteLinkStats | null;
   unmatchedSpeeches?: UnmatchedSpeechStats | null;
   linked?: { sangiin: LinkedRecordCounts | null; shugiin: LinkedRecordCounts | null };
+  localMetas?: LocalAssemblyMeta[] | null;
 }) {
   const coverage = buildCoverage(data, sessions, billsBySession, membersByAssembly);
   return (
@@ -95,6 +106,7 @@ export function CoveragePage({
         <TotalsSection coverage={coverage} />
         <DietSection diet={coverage.diet} metaSessions={coverage.metaSessions} />
         <LocalSection local={coverage.local} />
+        <LossyNameSection local={coverage.local} metas={localMetas} />
 
         <SpeechSection data={data} unmatchedSpeeches={unmatchedSpeeches} linked={linked} />
         <RosterlessSection meta={data.meta} votes={sangiinVotes} />
@@ -551,6 +563,102 @@ function DietRows({ coverage: d }: { coverage: DietCoverage }) {
         </tr>
       ))}
     </>
+  );
+}
+
+/**
+ * **字が落ちたまま名簿に突き合わせた氏名**（#800。`assemblies/{id}/meta.json` の `lossyNameMatches`）。
+ *
+ * **`unmatched.json` とは別物である**（docs/DATA_CONTRACT.md）:
+ * - `unmatched` ＝ **突き合わなかった**（票が誰にも付いていない）。上の「発言」の節と同じ扱い。
+ * - `lossyNameMatches` ＝ **字が落ちたまま突き合わせた**（**票は本人に付いている**）。
+ *
+ * **後者の方が利用者から見えにくい。** 画面上は普通の表決として出るので、
+ * 何かが起きていること自体が分からない。だから件数を数えてここに出す（#800 で決めたこと）。
+ *
+ * **書くのは事実だけ**: 表決結果に印字されていた氏名の原文・名簿の氏名の原文・件数・母数・一次資料。
+ * **寄せ方が正しいかどうかは書かない**（我々にも分からない。推測は評価である）。
+ *
+ * **`metas` が null なら節ごと出さない**（#757）——「0 件」と「1 件も読めていない」は違う。
+ */
+function LossyNameSection({ local, metas }: { local: LocalCoverage[]; metas: LocalAssemblyMeta[] | null }) {
+  if (!metas) return null;
+  const nameOf = new Map(local.map((a) => [a.assemblyId, a.name]));
+  const rows = metas
+    .map((m) => ({ meta: m, name: nameOf.get(m.assemblyId) ?? m.assemblyId, summary: lossyNameSummary(m) }))
+    .filter((r): r is { meta: LocalAssemblyMeta; name: string; summary: NonNullable<ReturnType<typeof lossyNameSummary>> } => r.summary !== null);
+  if (rows.length === 0) return null;
+  const hit = rows.filter((r) => r.summary.members > 0);
+  const totalRollCalls = rows.reduce((n, r) => n + r.summary.totalRollCalls, 0);
+  const lossyRollCalls = hit.reduce((n, r) => n + r.summary.rollCalls, 0);
+  const lossyMembers = hit.reduce((n, r) => n + r.summary.members, 0);
+  return (
+    <section className="section" aria-labelledby="coverage-lossy-heading">
+      <h2 id="coverage-lossy-heading" className="section__title">
+        字が落ちたまま名簿に突き合わせた氏名
+      </h2>
+      <p className="card__body">
+        地方議会の表決結果は PDF で公表されており、氏名の字が PDF の文字層に入っていないことがあります。
+        名簿の氏名にその並びが順序どおり含まれていれば議員に突き合わせるので、
+        <strong>字が落ちたままでも表決は議員ページに出ます</strong>。
+        いま収録している <span className="num">{n(rows.length)}</span> 議会・表決{" "}
+        <span className="num">{n(totalRollCalls)}</span> 件のうち、そうして突き合わせたのは{" "}
+        <span className="num">{n(lossyMembers)}</span> 名・<span className="num">{n(lossyRollCalls)}</span> 件です。
+      </p>
+      {hit.length === 0 ? (
+        <p className="card__body" data-testid="coverage-lossy-none">
+          該当する議会はありません。
+        </p>
+      ) : (
+        hit.map((r) => (
+          <section key={r.meta.assemblyId} className="coverage-assembly" aria-label={r.name} data-testid={`coverage-lossy-${r.meta.assemblyId}`}>
+            <h3 className="coverage-assembly__name">
+              <Link to={assemblyPath(r.meta.assemblyId)}>{r.name}</Link>
+            </h3>
+            <p className="card__body num">
+              {n(r.summary.members)} 名 ・ {n(r.summary.rollCalls)} 件（この議会の表決 {n(r.summary.totalRollCalls)} 件のうち）
+            </p>
+            <div className="assemblies-table-wrap">
+              <table className="assembly-sessions" aria-label={`${r.name}の字が落ちた氏名`}>
+                <thead>
+                  <tr>
+                    <th scope="col">表決結果に印字されていた氏名</th>
+                    <th scope="col">議員名簿の氏名</th>
+                    <th scope="col">表決</th>
+                    <th scope="col">議員ページ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(r.meta.lossyNameMatches ?? []).map((m) => (
+                    <tr key={m.memberId}>
+                      <td>{m.nameText}</td>
+                      <td>{m.rosterName}</td>
+                      <td className="num">{n(m.rollCalls)} 件</td>
+                      <td>
+                        <Link to={`/members/${m.memberId}`}>{m.rosterName}</Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {r.meta.sources.length > 0 && (
+              <p className="card__body">
+                原文：
+                {r.meta.sources.map((s, i) => (
+                  <span key={s.url}>
+                    {i > 0 && " ・ "}
+                    <a href={s.url} target="_blank" rel="noopener noreferrer">
+                      {s.name}
+                    </a>
+                  </span>
+                ))}
+              </p>
+            )}
+          </section>
+        ))
+      )}
+    </section>
   );
 }
 
