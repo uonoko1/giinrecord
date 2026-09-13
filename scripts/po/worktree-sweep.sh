@@ -68,7 +68,16 @@ for i in "${!PATHS[@]}"; do
   fi
 
   # 1. 未コミットの作業があるツリーは消さない
-  dirty=$(git -C "$path" status --porcelain 2>/dev/null | grep -v '^?? .cache' || true)
+  #
+  # **除外するのは「未追跡（?? ）の作業ディレクトリ」だけ**（#787）。
+  #   - `.cache/`   … ETL の生の HTML キャッシュ（.gitignore 済み）
+  #   - `.measure/` … 測定・調査の作業ディレクトリ（.gitignore 済み。どの階層に掘っても同じ名前）
+  # `.gitignore` に入れたので通常は `status --porcelain` に出ないが、**--ignored を付けて呼ばれた場合や、
+  # 手元の .gitignore が古い worktree でも同じ判定になるように**ここでも落とす。
+  # **狭く書く**: 接頭辞一致（`.measure-notes.md` や `.measurements/`）では落とさず、
+  # 追跡済みの変更（` M` / `A `）も落とさない。**取りこぼしはゴミより高くつく。**
+  dirty=$(git -C "$path" status --porcelain 2>/dev/null \
+    | grep -Ev '^\?\? (.*/)?\.(cache|measure)/$' || true)
   if [[ -n "$dirty" ]]; then
     log "残す $path ($branch): 未コミットの変更が $(printf '%s\n' "$dirty" | wc -l | tr -d ' ') 件"
     kept=$((kept+1)); continue
