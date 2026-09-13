@@ -567,6 +567,26 @@ t_net_deletions_skips_binary_files() {
   assert_not_contains "$OUT" "blob.bin" "does not name a binary file"
 }
 
+# --- #836: the CI wiring itself -----------------------------------------------------------------
+# #504's rule: a check inside one file cannot defend that file, so the demand that CI actually RUN it
+# lives here. Measured while writing this: removing the `--net-deletions` line from ci.yml left all
+# 1,542 etl tests and all of this file's cases green — nothing anywhere noticed. The pr-closes tests
+# record the same trap and its shape: asserting that the file NAME appears is not enough, because the
+# `test -f` line keeps the name alive. Assert the line that RUNS it.
+t_net_deletions_is_wired_into_ci() {
+  local wf="$HERE/../../../.github/workflows/ci.yml"
+  local body; body=$(cat "$wf")
+  assert_contains "$body" 'bash scripts/ci/stale-base.sh --net-deletions' \
+    "ci.yml が --net-deletions を実行している（#836）"
+  # The default mode must stay too: --net-deletions is a SECOND step, not a replacement. The default
+  # mode names the exact lines and is the only one that is exact for the un-rebased shape.
+  # shellcheck disable=SC2016  # ci.yml の中の**文字どおりの**文字列を探している
+  assert_contains "$body" 'bash scripts/ci/stale-base.sh "refs/remotes/origin/$BASE_REF" "$HEAD_SHA"' \
+    "引数なしの検査は置き換えずに残っている（#536）"
+  assert_contains "$body" 'test -f scripts/ci/stale-base.sh' \
+    "スクリプトの存在自体をワークフローが要求する（#504）"
+}
+
 test_case "古い main から切って、その後 main が足した行を消す枝 → 落ちる" t_stale_base_deleting_main_lines_fails
 test_case "消える行が '- ' で始まっても検出する（^-- で除外されない）" t_bullet_lines_are_not_missed
 test_case "消える行が '+' で始まっても検出する" t_lost_line_starting_with_plus_is_not_missed
@@ -688,4 +708,5 @@ test_case "--net-deletions も解決できない ref を通さない（#836）" 
 test_case "20 行を超える報告で SIGPIPE で死なない（引数なし、#836）" t_a_long_report_does_not_die_of_sigpipe_default_mode
 test_case "20 行を超える報告で SIGPIPE で死なない（--net-deletions、#836）" t_a_long_report_does_not_die_of_sigpipe_net_deletions
 test_case "--net-deletions はバイナリを対象にしない（#836）" t_net_deletions_skips_binary_files
+test_case "wiring: ci.yml が --net-deletions を呼び、引数なしの検査も残っている（#836／#504）" t_net_deletions_is_wired_into_ci
 echo "passed $PASS, failed $FAIL"; [[ $FAIL == 0 ]]
