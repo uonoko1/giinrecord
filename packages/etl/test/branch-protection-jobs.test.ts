@@ -116,6 +116,11 @@ const EXEMPT_FROM_REQUIRED: readonly string[] = [
   // #661: branch-protection.yml:guard と同じ理由。paths 限定の pull_request でしか走らないので、
   // 必須チェックにすると**その paths を触らない PR では永久に pending のまま**マージできなくなる。
   "environment-protection.yml:guard",
+  // #786: 上の 2 つとまったく同じ理由。paths 限定の pull_request でしか走らないので、
+  // 必須チェックにすると**その paths を触らない PR では永久に pending のまま**になる。
+  // そもそもこの job が見るのは「リポジトリ全体の現在のアラート」で、**PR の内容とは無関係**
+  // ——他人が入れたアラートで自分の PR が赤くなるべきではない。
+  "security-alerts.yml:guard",
 ];
 
 /**
@@ -149,6 +154,7 @@ test("数え上げそのものの検査: allJobs が全 workflow の job を拾�
     "monitor.yml:staging",
     "release.yml:production",
     "release.yml:released-tag",
+    "security-alerts.yml:guard",
     "security.yml:gitleaks",
     "security.yml:forbidden-patterns",
     "security.yml:audit",
@@ -157,7 +163,7 @@ test("数え上げそのものの検査: allJobs が全 workflow の job を拾�
 
 test("数え上げそのものの検査: pull_request トリガーを持つ workflow を正しく識別できている", () => {
   const onPR = [...new Set(allJobs.filter((j) => j.onPullRequest).map((j) => j.file))].sort();
-  assert.deepEqual(onPR, ["branch-protection.yml", "ci.yml", "environment-protection.yml", "security.yml"]);
+  assert.deepEqual(onPR, ["branch-protection.yml", "ci.yml", "environment-protection.yml", "security-alerts.yml", "security.yml"]);
 });
 
 /**
@@ -198,7 +204,13 @@ test("#541 REQUIRED_CHECKS の各要素は、実在する pull_request 上の jo
 test("#541 許容リスト（意図的に必須外にしている job）は中身が固定されている", () => {
   assert.deepEqual(
     [...EXEMPT_FROM_REQUIRED].sort(),
-    ["branch-protection.yml:guard", "ci.yml:docker-web", "ci.yml:stale-base", "environment-protection.yml:guard"].sort(),
+    [
+      "branch-protection.yml:guard",
+      "ci.yml:docker-web",
+      "ci.yml:stale-base",
+      "environment-protection.yml:guard",
+      "security-alerts.yml:guard", // #786
+    ].sort(),
   );
 });
 

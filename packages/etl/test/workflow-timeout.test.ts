@@ -196,6 +196,7 @@ test("#556 数え上げ: jobs: 直下の job を全部拾えている（拾え�
     "monitor.yml:staging",
     "release.yml:production",
     "release.yml:released-tag",
+    "security-alerts.yml:guard",
     "security.yml:gitleaks",
     "security.yml:forbidden-patterns",
     "security.yml:audit",
@@ -266,6 +267,10 @@ test("#556 値が実測から外れていない（短すぎる = 偽陽性 / 長
     "security.yml:gitleaks": 20,
     "security.yml:forbidden-patterns": 10,
     "security.yml:audit": 10,
+    // #786: この job は「2 本のシェルテスト（ネットワーク無し）＋ gh api 2 回」だけ。
+    // 手元の実測でテストは 2 本合わせて 2 秒未満、gh api は CI 上で 1 秒未満（run 34753557512）。
+    // branch-protection.yml:guard / environment-protection.yml:guard と同じ 5 分に揃える。
+    "security-alerts.yml:guard": 5,
   };
   for (const [key, want] of Object.entries(expected)) {
     const job = allJobs.find((j) => id(j) === key);

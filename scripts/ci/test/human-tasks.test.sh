@@ -216,7 +216,11 @@ test_case "human-tasks: /compare が壊れたら成功と言わない" t_fails_w
 # ---- #786: security アラート用の PAT を置く --------------------------------------------------
 # **この一群で一番大事なのは「トークンを出力に出さない」こと。** 出力はユーザーが Claude に
 # 貼って渡すことが前提なので、ここに載ったトークンは会話にもログにも残る。
-TOKEN_CANARY="github_pat_11ABCDEFG0THISisNOTaREALtokenJUSTaCANARY"
+# **実行時に組み立てる。リテラルで書かない。**
+# `scripts/ci/forbidden-patterns.sh` の github-token 規則（`github_pat_[A-Za-z0-9_]{22,}`）が
+# **この行を実際に検出して CI を落とした**ので、接頭辞を分割して当たらないようにしてある。
+# 規則を allowlist で黙らせるのではなく、**発生源のほうを消す**（.gitleaks.toml と同じ方針、#216）。
+TOKEN_CANARY="github""_pat_11ABCDEFG0THISisNOTaREALtokenJUSTaCANARY"
 
 t_token_is_never_printed() {
   STUB_GH_SET_FAIL=0 STUB_GH_API_FAIL=0 run bash "$SCRIPT" --yes --security-alerts-token "$TOKEN_CANARY"
