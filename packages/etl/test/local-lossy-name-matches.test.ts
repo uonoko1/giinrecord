@@ -191,3 +191,32 @@ test("#778 本番 data/: 字が落ちたまま寄った氏名は奈良の 2 件�
   assert.equal(votes, 58057, "母数が変わったら数え直すこと");
   assert.deepEqual(found, { "pref-29": ["西川→西川 均 (125)", "髙清友→芦高 清友 (37)"] });
 });
+
+/**
+ * **公表した `meta.json` が、公表した `rollcalls/` から計算し直したものと一致すること**（#778）。
+ *
+ * **上のテストは `lossyNameMatchesOf` を直に呼ぶので、`meta.json` の中身がずれても気づかない**
+ * （変異テストで実際に素通りした——`pref-29/meta.json` の `rollCalls: 125` を `999` に書き換えても緑だった）。
+ * **`meta.json` は運用者が見る唯一の窓なので、そこが票と食い違ったまま出ていることに
+ * 誰も気づかない状態にしない。**
+ *
+ * **`rollcalls/` のほうを正とする**——**票が一次資料に最も近い形だから。**
+ */
+test("#778 公表した meta.json は、公表した票から計算し直したものと一致する", async () => {
+  const DATA = fileURLToPath(new URL("../../../data/", import.meta.url));
+  const members = JSON.parse(await readFile(join(DATA, "members", "index.json"), "utf8")) as { id: string; name: string }[];
+  const walk = async (dir: string): Promise<string[]> => (await Promise.all((await readdir(dir, { withFileTypes: true })).map(async (e) =>
+    e.isDirectory() ? walk(join(dir, e.name)) : e.name.endsWith(".json") && e.name !== "index.json" ? [join(dir, e.name)] : []))).flat();
+  const cmp = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
+  const prefs = (await readdir(join(DATA, "assemblies"), { withFileTypes: true })).filter((e) => e.isDirectory() && e.name.startsWith("pref-")).map((e) => e.name).sort();
+  assert.equal(prefs.length, 11, "11 県ぶんを見ていること");
+  for (const p of prefs) {
+    const rollCalls: LocalRollCall[] = [];
+    for (const f of await walk(join(DATA, "assemblies", p, "rollcalls"))) rollCalls.push(JSON.parse(await readFile(f, "utf8")));
+    const recomputed = lossyNameMatchesOf(rollCalls, members).sort((a, b) => cmp(a.nameText, b.nameText) || cmp(a.memberId, b.memberId));
+    const meta = JSON.parse(await readFile(join(DATA, "assemblies", p, "meta.json"), "utf8")) as { lossyNameMatches?: unknown[] };
+    // **0 件なら欄ごと無い**こと（空配列を書かない。`buildLocalAssembly` の形と同じ）
+    assert.deepEqual(meta.lossyNameMatches ?? [], recomputed, `${p}/meta.json が票と食い違っている`);
+    if (recomputed.length === 0) assert.equal("lossyNameMatches" in meta, false, `${p}/meta.json に空の欄がある`);
+  }
+});
