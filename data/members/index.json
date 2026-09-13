@@ -12659,6 +12659,696 @@
   "name": "渡辺 博道"
  },
  {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 26
+  },
+  "current": true,
+  "district": "南津軽郡",
+  "group": "自由民主党",
+  "id": "p_02_abe-yuuki_01",
+  "kana": "",
+  "name": "阿部 祐己",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/abe-yuuki_01.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "上北郡",
+  "group": "自由民主党",
+  "id": "p_02_ebisawa-masakatu",
+  "kana": "",
+  "name": "蛯沢 正勝",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/ebisawa-masakatu.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "弘前市",
+  "group": "日本共産党",
+  "id": "p_02_giin_ando-harumi",
+  "kana": "",
+  "name": "安藤 晴美",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_ando-harumi.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "東津軽郡",
+  "group": "自由民主党",
+  "id": "p_02_giin_fukushi-naoharu",
+  "kana": "",
+  "name": "福士 直治",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_fukushi-naoharu.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "青森市",
+  "group": "参政党",
+  "id": "p_02_giin_gotou-seian",
+  "kana": "",
+  "name": "後藤 清安",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_gotou-seian.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "青森市",
+  "group": "公明党",
+  "id": "p_02_giin_ibuki-shinichi",
+  "kana": "",
+  "name": "伊吹 信一",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_ibuki-shinichi.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "むつ市",
+  "group": "自由民主党",
+  "id": "p_02_giin_imoto-takayuki",
+  "kana": "",
+  "name": "井本 貴之",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_imoto-takayuki.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "弘前市",
+  "group": "オール青森",
+  "id": "p_02_giin_kawamura-satoru",
+  "kana": "",
+  "name": "川村 悟",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_kawamura-satoru.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "弘前市",
+  "group": "自由民主党",
+  "id": "p_02_giin_kikuchi-isao",
+  "kana": "",
+  "name": "菊池 勲",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_kikuchi-isao.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "上北郡",
+  "group": "自由民主党",
+  "id": "p_02_giin_kimyou-kazuhito",
+  "kana": "",
+  "name": "木明 和人",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_kimyou-kazuhito.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "上北郡",
+  "group": "オール青森",
+  "id": "p_02_giin_kitamuki-youki",
+  "kana": "",
+  "name": "北向 由樹",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_kitamuki-youki.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "三沢市",
+  "group": "自由民主党",
+  "id": "p_02_giin_kohiruimaki-masanori",
+  "kana": "",
+  "name": "小比類巻 正規",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_kohiruimaki-masanori.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "五所川原市",
+  "group": "立憲民主・憲法をいかす県民の会",
+  "id": "p_02_giin_kon-hiroshi",
+  "kana": "",
+  "name": "今 博",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_kon-hiroshi.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "西津軽郡",
+  "group": "自由民主党",
+  "id": "p_02_giin_kudo-kanemitsu",
+  "kana": "",
+  "name": "工藤 兼光",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_kudo-kanemitsu.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "上北郡",
+  "group": "自由民主党",
+  "id": "p_02_giin_kudo-noriyasu",
+  "kana": "",
+  "name": "工藤 慎康",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_kudo-noriyasu.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "八戸市",
+  "group": "自由民主党",
+  "id": "p_02_giin_kudou-youhei",
+  "kana": "",
+  "name": "工藤 悠平",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_kudou-youhei.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 26
+  },
+  "current": true,
+  "district": "五所川原市",
+  "group": "自由民主党",
+  "id": "p_02_giin_kushibiki-yukiko",
+  "kana": "",
+  "name": "櫛󠄁引 ユキ子",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_kushibiki-yukiko.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "十和田市",
+  "group": "自由民主党",
+  "id": "p_02_giin_marui-yutaka",
+  "kana": "",
+  "name": "丸井 裕",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_marui-yutaka.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "つがる市",
+  "group": "自由民主党",
+  "id": "p_02_giin_mitsuhashi-kazumi",
+  "kana": "",
+  "name": "三橋 一三",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_mitsuhashi-kazumi.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "青森市",
+  "group": "自由民主党",
+  "id": "p_02_giin_moriuchi-noboru",
+  "kana": "",
+  "name": "森内 之保留",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_moriuchi-noboru.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "北津軽郡",
+  "group": "自由民主党",
+  "id": "p_02_giin_narita-youkou",
+  "kana": "",
+  "name": "成田 陽光",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_narita-youkou.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "三戸郡",
+  "group": "自由民主党",
+  "id": "p_02_giin_natsubori-koichi",
+  "kana": "",
+  "name": "夏堀 浩一",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_natsubori-koichi.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "三戸郡",
+  "group": "立憲民主・無所属の会",
+  "id": "p_02_giin_natsubori_kaichirou",
+  "kana": "",
+  "name": "夏堀 嘉一郎",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_natsubori_kaichirou.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "八戸市",
+  "group": "公明党",
+  "id": "p_02_giin_natsusaka-osamu",
+  "kana": "",
+  "name": "夏坂 修",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_natsusaka-osamu.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "青森市",
+  "group": "立憲民主・無所属の会",
+  "id": "p_02_giin_ogasawara-daisuke",
+  "kana": "",
+  "name": "小笠原 大佑",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_ogasawara-daisuke.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "黒石市",
+  "group": "オール青森",
+  "id": "p_02_giin_oodaira-youko",
+  "kana": "",
+  "name": "大平 陽子",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_oodaira-youko.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "八戸市",
+  "group": "自由民主党",
+  "id": "p_02_giin_oosaki-mitsuaki",
+  "kana": "",
+  "name": "大崎 光明",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_oosaki-mitsuaki.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "平川市",
+  "group": "自由民主党",
+  "id": "p_02_giin_oosawa-tosihiko",
+  "kana": "",
+  "name": "大澤 敏彦",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_oosawa-tosihiko.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "むつ市",
+  "group": "オール青森",
+  "id": "p_02_giin_saitou-takaaki",
+  "kana": "",
+  "name": "斉藤 孝昭",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_saitou-takaaki.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "青森市",
+  "group": "立憲民主・憲法をいかす県民の会",
+  "id": "p_02_giin_shikanai-hiroshi",
+  "kana": "",
+  "name": "鹿内 博",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_shikanai-hiroshi.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "八戸市",
+  "group": "自由民主党",
+  "id": "p_02_giin_shimizu-etsuro",
+  "kana": "",
+  "name": "清水 悦郎",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_shimizu-etsuro.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "八戸市",
+  "group": "日本共産党",
+  "id": "p_02_giin_tabata-miyuki",
+  "kana": "",
+  "name": "田端 深雪",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_tabata-miyuki.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "青森市",
+  "group": "自由民主党",
+  "id": "p_02_giin_takahashi-shuichi",
+  "kana": "",
+  "name": "高橋 修一",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_takahashi-shuichi.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "八戸市",
+  "group": "立憲民主・無所属の会",
+  "id": "p_02_giin_takahata-noriko",
+  "kana": "",
+  "name": "高畑 紀子",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_takahata-noriko.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "八戸市",
+  "group": "立憲民主・無所属の会",
+  "id": "p_02_giin_tanabu-sadao",
+  "kana": "",
+  "name": "田名部 定男",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_tanabu-sadao.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "十和田市",
+  "group": "自由民主党",
+  "id": "p_02_giin_tanaka-junzo",
+  "kana": "",
+  "name": "田中 順造",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_tanaka-junzo.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "弘前市",
+  "group": "無所属",
+  "id": "p_02_giin_tsurugaya-takashi",
+  "kana": "",
+  "name": "鶴賀谷 貴",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_tsurugaya-takashi.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 0
+  },
+  "current": true,
+  "district": "三戸郡",
+  "group": "自由民主党",
+  "id": "p_02_giin_wada-kanji",
+  "kana": "",
+  "name": "和田 寬司",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_wada-kanji.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "八戸市",
+  "group": "自由民主党",
+  "id": "p_02_giin_yamada-satoru",
+  "kana": "",
+  "name": "山田 知",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_yamada-satoru.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "青森市",
+  "group": "日本共産党",
+  "id": "p_02_giin_yoshimata-you",
+  "kana": "",
+  "name": "吉俣 洋",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_yoshimata-you.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "むつ市",
+  "group": "無所属",
+  "id": "p_02_giin_yosida-yukari",
+  "kana": "",
+  "name": "吉田 ゆかり",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_yosida-yukari.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "青森市",
+  "group": "自由民主党",
+  "id": "p_02_hanada-eisuke",
+  "kana": "",
+  "name": "花田 栄介",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/hanada-eisuke.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "青森市",
+  "group": "オール青森",
+  "id": "p_02_oosawap-tadahiro",
+  "kana": "",
+  "name": "大澤 祥宏",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/oosawap-tadahiro.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "弘前市",
+  "group": "自由民主党",
+  "id": "p_02_saitou-tikasi",
+  "kana": "",
+  "name": "齊藤 爾",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/saitou-tikasi.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "五所川原市",
+  "group": "自由民主党",
+  "id": "p_02_terada-tatuya",
+  "kana": "",
+  "name": "寺田 達也",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/terada-tatuya.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
+  "asOf": "2026-05-25",
+  "assemblyId": "pref-02",
+  "counts": {
+   "rollcalls": 113
+  },
+  "current": true,
+  "district": "青森市",
+  "group": "自由民主党",
+  "id": "p_02_yamaya-kiyofumi",
+  "kana": "",
+  "name": "山谷 清文",
+  "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/yamaya-kiyofumi.html",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
   "asOf": "2026-04-23",
   "assemblyId": "pref-04",
   "counts": {

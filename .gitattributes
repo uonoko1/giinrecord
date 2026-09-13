@@ -1,2 +1,9 @@
 * text=auto eol=lf
 data/**/*.json linguist-generated=true
+
+# 地方議会の一次資料のフィクスチャは**取得したバイトのまま**置く（改行も含め原文）。
+# `* text=auto eol=lf` が掛かると CRLF が LF に潰れ、**「これは取得したものと同じか」を
+# md5 で確かめられなくなる**（青森 #750 の HTML は CRLF。実測 14,162 B → 14,027 B）。
+packages/etl/test/fixtures/**/*.html -text
+packages/etl/test/fixtures/**/*.htm -text
+packages/etl/test/fixtures/**/*.pdf -text

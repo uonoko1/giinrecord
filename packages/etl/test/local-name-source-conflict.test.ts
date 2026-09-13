@@ -179,33 +179,51 @@ test("#711 validateLocalAssemblies: unmatched.json の sourceConflict が名簿�
 });
 
 /**
- * 否定的対照（#554）: **本番 `data/` の unmatched 5 行に 1 件も `sourceConflict` が当たらない。**
- * ここが落ちれば、既存の出力に差分が出る（＝「data/ を変えない」条件を破っている）。
- * **滋賀（#741）の 1 行は `brokenGlyph`** で、`sourceConflict` とは別の理由である。
- * 「食い違いを拾う」だけの test は、全部を食い違いと言う実装でも通るので、この対照が要る。
+ * 否定的対照（#554）: **本番 `data/` の unmatched 行の `reason` が、氏名と名簿から計算し直した値と
+ * 1 件も食い違わない。** ここが落ちれば、再生成したときに既存の出力に差分が出る。
+ * 「食い違いを拾う」だけの test は、**全部を食い違いと言う実装でも通る**ので、この対照が要る。
+ *
+ * **2026-09-13、青森（pref-02、#750）が入って本番に初めて真陽性が出た。**
+ * それまでは「1 件も `sourceConflict` にならない」（偽陽性 0）を見ていたが、
+ * **真陽性が出た以上、その形では性質を測れない。** 見る性質は同じ
+ * （**計算し直した `reason` と保存された `reason` が一致するか**）に保ち、
+ * **真陽性が 1 件以上あること**と**`sourceConflict` でない行も残っていること**の両方を見る
+ * （**母数が `sourceConflict` だけになって空回りしないように**。#705／#718 の罠）。
+ *
+ * 青森の 3 行（実測 2026-09-13）:
+ *   `和 田 寛 司`（寛 U+5BDB）… 名簿は `和田 寬司`（寬 U+5BEC）。**別の漢字**（#529 が見つけた罠）
+ *   `噰 引 ユキ子`（噰 U+5670）… 名簿は `櫛󠄁引 ユキ子`。**埋め込みフォントの ToUnicode が別の字を指す**（#749 の機序 ③）
+ * 滋賀の 1 行は `brokenGlyph`（`辻` が `□` に化けた氏名。#680／#741）で、`sourceConflict` ではない。
  */
-test("#711 否定的対照: 本番 data/ の unmatched 行は 1 つも sourceConflict にならない", async () => {
+test("#711 否定的対照: 本番 data/ の unmatched 行の reason が計算し直した値と一致する", async () => {
   const DATA = fileURLToPath(new URL("../../../data/", import.meta.url));
   const members = JSON.parse(await readFile(join(DATA, "members/index.json"), "utf-8")) as (LocalMember & { assemblyId?: string })[];
   const locals = members.filter((m) => typeof m.assemblyId === "string" && m.assemblyId.startsWith("pref-"));
   assert.ok(locals.length > 200, `地方名簿が読めていなければこの対照は無意味（${locals.length} 名）`);
   const assemblies = [...new Set(locals.map((m) => m.assemblyId!))].sort();
-  // 2026-09-13 に滋賀（pref-25、#741）が 8 議会目として入った
-  assert.equal(assemblies.length, 8, `全 8 議会を見ていること: ${assemblies.join(",")}`);
+  // 2026-09-13 に滋賀（pref-25、#741）が 8 議会目、青森（pref-02、#750）が 9 議会目として入った
+  assert.equal(assemblies.length, 9, `全 9 議会を見ていること: ${assemblies.join(",")}`);
 
   let rows = 0;
+  let conflicts = 0;
+  let others = 0;
   const hits: string[] = [];
   for (const a of assemblies) {
     const roster = locals.filter((m) => m.assemblyId === a).map((m) => ({ id: m.id, name: m.name }));
     const um = JSON.parse(await readFile(join(DATA, `assemblies/${a}/unmatched.json`), "utf-8")) as { nameText: string; reason?: string }[];
     for (const u of um) {
       rows++;
+      if (u.reason === "sourceConflict") conflicts++; else others++;
       const reason = unmatchedReason(u.nameText, roster);
       if (reason !== u.reason) hits.push(`${a} ${u.nameText}: ${String(reason)} !== ${String(u.reason)}`);
     }
   }
-  // 滋賀の 1 行は `brokenGlyph`（`辻` が `□` に化けた氏名。#680／#741）。**`sourceConflict` ではない**
-  assert.equal(rows, 5, `本番の unmatched は 5 行のはず（宮城 1・三重 3・滋賀 1）。増減したらこの対照を測り直すこと（実測 2026-09-13）`);
+  // 実測 2026-09-13: 宮城 1・三重 3・滋賀 1（brokenGlyph）・青森 3（sourceConflict）
+  assert.equal(rows, 8, `本番の unmatched は 8 行のはず（宮城 1・三重 3・滋賀 1・青森 3）。増減したらこの対照を測り直すこと（実測 2026-09-13）`);
+  // **真陽性が 1 件以上**（無ければ「全部 sourceConflict にしない実装」でも通ってしまう）
+  assert.ok(conflicts >= 1, `本番に sourceConflict の真陽性が 1 件も無い（${conflicts} 件）。この対照は空回りしている`);
+  // **sourceConflict でない行も残っている**（無ければ「全部 sourceConflict にする実装」でも通ってしまう）
+  assert.ok(others >= 1, `本番に sourceConflict 以外の行が 1 件も無い（${others} 件）。この対照は空回りしている`);
   assert.deepEqual(hits, [], "本番 data/ の unmatched.json と理由が食い違った＝再生成すると data/ に差分が出る");
 });
 

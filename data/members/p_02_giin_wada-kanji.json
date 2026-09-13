@@ -1,0 +1,23 @@
+{
+ "asOf": "2026-05-25",
+ "assemblyId": "pref-02",
+ "counts": {
+  "rollcalls": 0
+ },
+ "current": true,
+ "district": "三戸郡",
+ "group": "自由民主党",
+ "id": "p_02_giin_wada-kanji",
+ "kana": "",
+ "name": "和田 寬司",
+ "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin_wada-kanji.html",
+ "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html",
+ "terms": [
+  {
+   "asOf": "2026-05-25",
+   "district": "三戸郡",
+   "group": "自由民主党"
+  }
+ ],
+ "timeline": []
+}

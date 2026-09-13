@@ -22,8 +22,10 @@ import { KOCHI_ASSEMBLY } from "./sources/local/kochi/site.ts";
 import { runKochi } from "./sources/local/kochi/index.ts";
 import { SHIGA_ASSEMBLY } from "./sources/local/shiga/site.ts";
 import { runShiga } from "./sources/local/shiga/index.ts";
+import { AOMORI_ASSEMBLY } from "./sources/local/aomori/site.ts";
+import { runAomori } from "./sources/local/aomori/index.ts";
 
-export { MIYAGI_ASSEMBLY, TOKUSHIMA_ASSEMBLY, TOTTORI_ASSEMBLY, MIE_ASSEMBLY, NARA_ASSEMBLY, SHIMANE_ASSEMBLY, KOCHI_ASSEMBLY, SHIGA_ASSEMBLY };
+export { MIYAGI_ASSEMBLY, TOKUSHIMA_ASSEMBLY, TOTTORI_ASSEMBLY, MIE_ASSEMBLY, NARA_ASSEMBLY, SHIMANE_ASSEMBLY, KOCHI_ASSEMBLY, SHIGA_ASSEMBLY, AOMORI_ASSEMBLY };
 
 /** 議会ごとの取得部が返す形（buildLocalAssembly の入力になる部分）。 */
 export interface LocalSourceRun {
@@ -35,6 +37,8 @@ export interface LocalSourceRun {
   unmatched?: LocalUnmatchedName[];
   /** 読めなかった一次資料（滋賀の画像 PDF 3 本。#741）。無い議会は省略 */
   unreadableSources?: { url: string; reason: string }[];
+  /** 字が落ちたまま名簿に寄った氏名（青森 #750／#749 の機序 ②）。無い議会は省略 */
+  lossyNameMatches?: LocalAssemblyMeta["lossyNameMatches"];
 }
 export interface LocalSource {
   assembly: Assembly;
@@ -50,6 +54,7 @@ export const LOCAL_SOURCES: Record<string, LocalSource> = {
   shimane: { assembly: SHIMANE_ASSEMBLY, run: runShimane },
   kochi: { assembly: KOCHI_ASSEMBLY, run: runKochi },
   shiga: { assembly: SHIGA_ASSEMBLY, run: runShiga },
+  aomori: { assembly: AOMORI_ASSEMBLY, run: runAomori },
 };
 
 /**
@@ -75,6 +80,8 @@ export interface LocalAssemblyInput {
   unmatched?: LocalUnmatchedName[];
   /** 読めなかった一次資料（滋賀の画像 PDF 3 本。#741）。無い議会は省略 */
   unreadableSources?: { url: string; reason: string }[];
+  /** 字が落ちたまま名簿に寄った氏名（青森 #750／#749 の機序 ②）。無い議会は省略 */
+  lossyNameMatches?: LocalAssemblyMeta["lossyNameMatches"];
 }
 
 export interface LocalAssemblyDataset {
@@ -228,6 +235,7 @@ export function buildLocalAssembly(input: LocalAssemblyInput): LocalAssemblyData
     sessions: input.sessions,
     counts: { members: index.length, rollcalls: rollCalls.length, cells, unknownCells, unmatchedNames: unmatchedList.length },
     ...(input.unreadableSources?.length ? { unreadableSources: [...input.unreadableSources].sort((a, b) => cmp(a.url, b.url)) } : {}),
+    ...(input.lossyNameMatches?.length ? { lossyNameMatches: [...input.lossyNameMatches].sort((a, b) => cmp(a.nameText, b.nameText) || cmp(a.memberId, b.memberId)) } : {}),
   };
   return { assembly: input.assembly, index, details, sessions, rollCallIndex: rollCalls.map(({ votes: _v, ...s }) => s), rollCalls, unmatched: unmatchedList, meta };
 }

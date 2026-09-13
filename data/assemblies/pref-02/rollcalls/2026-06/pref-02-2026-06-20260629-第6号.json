@@ -1,0 +1,484 @@
+{
+ "assemblyId": "pref-02",
+ "counts": {
+  "no": 4,
+  "voting": 45,
+  "yes": 41
+ },
+ "date": "2026-06-29",
+ "id": "pref-02-2026-06-20260629-第6号",
+ "kind": "議案等",
+ "method": {
+  "legend": "起立",
+  "raw": "起立"
+ },
+ "number": "第6号",
+ "page": 1,
+ "result": "原案可決",
+ "sessionId": "2026-06",
+ "sessionLabel": "令和8年6月第326回定例会",
+ "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+ "title": "青森県立学校設置条例の一部を改正する条例案",
+ "votes": [
+  {
+   "group": "自由民主党",
+   "memberId": "p_02_giin_tanaka-junzo",
+   "nameText": "田 中 順 造",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_02_giin_shimizu-etsuro",
+   "nameText": "清 水 悦 郎",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_02_giin_moriuchi-noboru",
+   "nameText": "森 内 之保留",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_02_giin_kudo-kanemitsu",
+   "nameText": "工 藤 兼 光",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_02_giin_mitsuhashi-kazumi",
+   "nameText": "三 橋 一 三",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_02_giin_yamada-satoru",
+   "nameText": "山 田 知",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_02_giin_marui-yutaka",
+   "nameText": "丸 井 裕",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_02_yamaya-kiyofumi",
+   "nameText": "山 谷 清 文",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_02_giin_kushibiki-yukiko",
+   "nameText": "櫛󠄁 引 ユキ子",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_02_giin_natsubori-koichi",
+   "nameText": "夏 堀 浩 一",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_02_giin_kudo-noriyasu",
+   "nameText": "工 藤 慎 康",
+   "value": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_02_giin_takahashi-shuichi",
+   "nameText": "高 橋 修 一",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_02_ebisawa-masakatu",
+   "nameText": "蛯 沢 正 勝",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_02_terada-tatuya",
+   "nameText": "寺 田 達 也",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_02_saitou-tikasi",
+   "nameText": "齊 藤 爾",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_02_hanada-eisuke",
+   "nameText": "花 田 栄 介",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_02_giin_kikuchi-isao",
+   "nameText": "菊 池 勲",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_02_giin_kohiruimaki-masanori",
+   "nameText": "小比類巻 正規",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "",
+   "nameText": "和 田 寛 司",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_02_giin_kimyou-kazuhito",
+   "nameText": "木 明 和 人",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_02_giin_oosaki-mitsuaki",
+   "nameText": "大 崎 光 明",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_02_giin_fukushi-naoharu",
+   "nameText": "福 士 直 治",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_02_giin_narita-youkou",
+   "nameText": "成 田 陽 光",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_02_giin_oosawa-tosihiko",
+   "nameText": "大 澤 敏 彦",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_02_giin_kudou-youhei",
+   "nameText": "工 藤 悠 平",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_02_giin_imoto-takayuki",
+   "nameText": "井 本 貴 之",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党",
+   "memberId": "p_02_abe-yuuki_01",
+   "nameText": "阿 部 祐 己",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "オール青森",
+   "memberId": "p_02_giin_kawamura-satoru",
+   "nameText": "川 村 悟",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "オール青森",
+   "memberId": "p_02_giin_saitou-takaaki",
+   "nameText": "斉 藤 孝 昭",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "オール青森",
+   "memberId": "p_02_giin_oodaira-youko",
+   "nameText": "大 平 陽 子",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "オール青森",
+   "memberId": "p_02_giin_kitamuki-youki",
+   "nameText": "北 向 由 樹",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "オール青森",
+   "memberId": "p_02_oosawap-tadahiro",
+   "nameText": "大 澤 祥 宏",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "立憲民主・無所属の会",
+   "memberId": "p_02_giin_tanabu-sadao",
+   "nameText": "田名部 定 男",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "立憲民主・無所属の会",
+   "memberId": "p_02_giin_takahata-noriko",
+   "nameText": "高 畑 紀 子",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "立憲民主・無所属の会",
+   "memberId": "p_02_giin_natsubori_kaichirou",
+   "nameText": "夏 堀 嘉一郎",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "立憲民主・無所属の会",
+   "memberId": "p_02_giin_ogasawara-daisuke",
+   "nameText": "小笠原 大 佑",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "日本共産党",
+   "memberId": "p_02_giin_ando-harumi",
+   "nameText": "安 藤 晴 美",
+   "value": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "group": "日本共産党",
+   "memberId": "p_02_giin_yoshimata-you",
+   "nameText": "吉 俣 洋",
+   "value": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "group": "日本共産党",
+   "memberId": "p_02_giin_tabata-miyuki",
+   "nameText": "田 端 深 雪",
+   "value": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "group": "公明党",
+   "memberId": "p_02_giin_ibuki-shinichi",
+   "nameText": "伊 吹 信 一",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "公明党",
+   "memberId": "p_02_giin_natsusaka-osamu",
+   "nameText": "夏 坂 修",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "立憲民主・憲法をいかす県民の会",
+   "memberId": "p_02_giin_shikanai-hiroshi",
+   "nameText": "鹿 内 博",
+   "value": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "group": "立憲民主・憲法をいかす県民の会",
+   "memberId": "p_02_giin_kon-hiroshi",
+   "nameText": "今 博",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "参政党",
+   "memberId": "p_02_giin_gotou-seian",
+   "nameText": "後 藤 清 安",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "無所属",
+   "memberId": "p_02_giin_tsurugaya-takashi",
+   "nameText": "鶴賀谷 貴",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "無所属",
+   "memberId": "p_02_giin_yosida-yukari",
+   "nameText": "吉 田 ゆかり",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  }
+ ]
+}

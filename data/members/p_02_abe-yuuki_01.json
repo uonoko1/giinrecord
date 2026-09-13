@@ -1,0 +1,414 @@
+{
+ "asOf": "2026-05-25",
+ "assemblyId": "pref-02",
+ "counts": {
+  "rollcalls": 26
+ },
+ "current": true,
+ "district": "南津軽郡",
+ "group": "自由民主党",
+ "id": "p_02_abe-yuuki_01",
+ "kana": "",
+ "name": "阿部 祐己",
+ "profileUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/abe-yuuki_01.html",
+ "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html",
+ "terms": [
+  {
+   "asOf": "2026-05-25",
+   "district": "南津軽郡",
+   "group": "自由民主党"
+  }
+ ],
+ "timeline": [
+  {
+   "date": "2026-06-29",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "決定",
+   "rollCallId": "pref-02-2026-06-20260629-№１",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "国内派遣",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-06-29",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "決定",
+   "rollCallId": "pref-02-2026-06-20260629-№２",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "国内派遣",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-06-29",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "決定",
+   "rollCallId": "pref-02-2026-06-20260629-№３",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "国内派遣",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-06-29",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "決定",
+   "rollCallId": "pref-02-2026-06-20260629-№４",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "国内派遣",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-06-29",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "決定",
+   "rollCallId": "pref-02-2026-06-20260629-№５",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "国内派遣",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-06-29",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-06-20260629-第10号",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "原油価格高騰対策と生活必需品の安定供給を求める意見書(案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-06-29",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-06-20260629-第1号-1",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "令和８年度青森県一般会計補正予算（第１号）案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-06-29",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "承認",
+   "rollCallId": "pref-02-2026-06-20260629-第1号-2",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "専決処分した事項の報告及び承認を求めるの件（青森県県税条例の一部を改正する条例）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-06-29",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-06-20260629-第2号-1",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "職員の特殊勤務手当に関する条例の一部を改正する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-06-29",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "承認",
+   "rollCallId": "pref-02-2026-06-20260629-第2号-2",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "専決処分した事項の報告及び承認を求めるの件（青森県県税の特別措置に関する条例の一部を改正する条例）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-06-29",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-06-20260629-第3号",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "青森県県税条例の一部を改正する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-06-29",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-06-20260629-第4号",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "青森県公営企業の設置等に関する条例の一部を改正する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-06-29",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-06-20260629-第5号",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "青森県立高等学校授業料等徴収条例の一部を改正する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-06-29",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-06-20260629-第6号",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "青森県立学校設置条例の一部を改正する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-06-29",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-06-20260629-第7号",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "財産の取得の件",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-06-29",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-06-20260629-第8号",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "公共施設等の整備等に関する事業契約の一部変更の件",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-06-29",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "同意",
+   "rollCallId": "pref-02-2026-06-20260629-第9号-1",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "青森県副知事の選任の件",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-06-29",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-06-20260629-第9号-2",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "軽油引取税における免税措置の継続を求める意見書(案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-06-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案否決",
+   "rollCallId": "pref-02-2026-06-20260624-第1号",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "いわゆる隠れ教育費の実態把握と保護者負担軽減を求める意見書（案）",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-06-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案否決",
+   "rollCallId": "pref-02-2026-06-20260624-第2号",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "性的指向・性自認（ジェンダーアイデンティティ）に関する差別の解消と安心して暮らせる環境整備を求める意見書（案）",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-06-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案否決",
+   "rollCallId": "pref-02-2026-06-20260624-第3号",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "多様な民意の反映を損なう衆議院比例代表定数の大幅削減に反対する意見書（案）",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-06-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案否決",
+   "rollCallId": "pref-02-2026-06-20260624-第4号",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "改憲発議に反対し、日本国憲法をいかした政治を求める意見書（案）",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-06-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案否決",
+   "rollCallId": "pref-02-2026-06-20260624-第5号",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "「一部保険外療養」を盛り込んだ改定健康保険法を廃案し、国民皆保険制度を守ることを求める意見書（案）",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-06-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案否決",
+   "rollCallId": "pref-02-2026-06-20260624-第6号",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "実効ある消費税率引き下げを速やかに行うことを求める意見書（案）",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-06-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-06-20260624-第7号",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "自衛隊員の処遇改善及び退職自衛官の再就職促進に関する意見書(案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-06-24",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-06-20260624-第8号",
+   "sessionLabel": "令和8年6月第326回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
+   "title": "皇室の伝統に基づく安定的皇位継承を確保するための法整備の早期実現を求める意見書(案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  }
+ ]
+}

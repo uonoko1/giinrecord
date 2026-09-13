@@ -99,7 +99,21 @@ if (cached !== null) {
   await writeFile(cachePath, formatSubsetChars(fromHtml));
 }
 const fromData = dataHeadChars(readHeadFontDataSource(dataDir));
-const chars = new Set([...fromHtml, ...fromData]);
+/**
+ * **異体字セレクタ（SVS U+FE00–FE0F / IVS U+E0100–E01EF）は字ではない。**
+ * **幅 0 で、それ自体は 1 つも描かれない**——直前の字の字形を選ぶだけの符号である。
+ * **サブセットに入れろと言っても、フォントにその符号のグリフは無い**ので、
+ * `font-subset-coverage.test.ts` の「`.txt` が主張する字が woff2 に入っているか」が**偽陽性で落ちる**。
+ *
+ * **2026-09-13、青森県議会（#750）を足して実際に落ちた**——
+ * 名簿の `櫛󠄁引 ユキ子` の `櫛` が `U+6ADB U+E0101` で、**U+E0101 が字として集まった。**
+ * **`櫛` U+6ADB のほうは入っている**ので、この議員の氏名は明朝で描ける（欠けていない）。
+ *
+ * **`dataHeadChars` 側でも落としているが、ここでも落とす**——
+ * **ビルド済み HTML 側（`headFontChars`）からも同じ符号が入る**ため（実測: data 側だけ落としても 972 字のまま）。
+ */
+const isVariationSelector = (c: string): boolean => /[\uFE00-\uFE0F\u{E0100}-\u{E01EF}]/u.test(c);
+const chars = new Set([...fromHtml, ...fromData].filter((c) => !isVariationSelector(c)));
 const onlyInData = [...fromData].filter((c) => !fromHtml.has(c));
 console.log(`font-subset: HTML ${fromHtml.size} + data ${fromData.size} -> ${chars.size} chars (${onlyInData.length} only in data/, e.g. ${onlyInData.slice(0, 12).join("")})`);
 if (chars.size === 0) throw new Error("font-subset: collected 0 characters — refusing to write an empty subset");

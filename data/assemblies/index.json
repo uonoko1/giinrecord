@@ -12,6 +12,13 @@
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_annai.nsf/html/statics/syu/1giin.htm"
  },
  {
+  "id": "pref-02",
+  "kind": "prefectural",
+  "name": "青森県議会",
+  "prefCode": "02",
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
+ },
+ {
   "id": "pref-04",
   "kind": "prefectural",
   "name": "宮城県議会",
