@@ -58,7 +58,28 @@ export interface VotePdf {
 
 // 表題の showText は「議案等の審議結果」まで 1 つのテキストになることがあるので末尾は縛らない
 const TITLE = /^((令和|平成)([０-９0-9]+|元)年(?:第[０-９0-9]+回)?(?:定例会|臨時会))（([０-９0-9]+)月）/;
-const LEGEND_ITEM = /^(.)：(.+)$/;
+/**
+ * 凡例の 1 項目「{記号}：{意味}」。**繋がった形（1 つの showText に 6 項目）があるので `g` で全部拾う**（#841）。
+ * index 151 本のうち **20 本**が `"○：賛成×：反対議：議長除：除斥－：不在欠：欠席"` の 1 テキストで出る
+ * （残る 16 本は 6 テキストに分かれる。この 2 形しか無いことを読めた 36 本すべてで数えた）。
+ * 意味は **次の「{1 文字}：」の直前まで**（非貪欲＋先読み）。
+ * **貪欲な `(.+)` だと 1 件にまとまり、`議`/`欠`/`除` が「凡例に無い」として落ちていた**（#835 で 20 本を実測）。
+ */
+const LEGEND_ITEM = /(.)：(.+?)(?=.：|$)/gu;
+/** テキスト全体が「{記号}：{意味}」の並びだけで出来ているか（余りがあれば凡例として読まない） */
+function splitLegendText(raw: string): { key: string; desc: string }[] {
+  const text = raw.trim();
+  const out: { key: string; desc: string }[] = [];
+  let end = 0;
+  for (const m of text.matchAll(LEGEND_ITEM)) {
+    if (m.index !== end) return []; // 途中に凡例でない文字がある = このテキストは凡例ではない
+    out.push({ key: m[1], desc: m[2] });
+    end = m.index + m[0].length;
+  }
+  return end === text.length ? out : [];
+}
+/** テスト用（凡例の区切り方だけを単体で見る。#841） */
+export const splitLegendTextForTest = splitLegendText;
 // 賛成・反対の列見出しは 2 文字（「者数」は付かない）
 const LEFT_HEADERS = ["議案等番号", "件名", "議決月日", "出席者数", "表決者数", "賛成", "反対", "議決結果"] as const;
 const NUMBER_CELL = /^(.+?)(第[0-9０-９]+号)$/;
@@ -105,7 +126,7 @@ function parseHeader(items: Item[], pageNo: number): { title: string; sessionNam
   const label = items.find((i) => TITLE.test(i.str.trim()));
   if (!label) throw new Error(`page ${pageNo}: title (令和N年定例会（M月）) not found`);
   const m = label.str.trim().match(TITLE)!;
-  const legendYs = items.filter((i) => LEGEND_ITEM.test(i.str)).map((i) => i.y);
+  const legendYs = items.filter((i) => splitLegendText(i.str).length > 0).map((i) => i.y);
   if (legendYs.length === 0) throw new Error(`page ${pageNo}: legend (○：賛成 …) not found`);
   // 表の上端 = 凡例行の下（buildGrid が罫線から取る。ここでは凡例の最下行を返す）
   return { title: m[0], sessionName: m[1], year: warekiYear(m[2], m[3]), month: Number(m[4].normalize("NFKC")), tableTop: Math.min(...legendYs) };
@@ -115,10 +136,10 @@ function parseLegend(items: Item[], tableTop: number, pageNo: number): Record<st
   const legend: Record<string, string> = {};
   for (const it of items) {
     if (it.y < tableTop - EPS) continue; // 表より下は凡例ではない
-    const m = it.str.match(LEGEND_ITEM);
-    if (!m) continue;
-    if (m[1] in legend) throw new Error(`page ${pageNo}: legend key ${m[1]} appears twice`);
-    legend[m[1]] = m[2].replace(/[\s　]+/g, "");
+    for (const { key, desc } of splitLegendText(it.str)) {
+      if (key in legend) throw new Error(`page ${pageNo}: legend key ${key} appears twice`);
+      legend[key] = desc.replace(/[\s　]+/g, "");
+    }
   }
   if (Object.keys(legend).length === 0) throw new Error(`page ${pageNo}: legend empty`);
   return legend;

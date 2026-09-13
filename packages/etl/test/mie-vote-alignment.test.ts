@@ -132,14 +132,14 @@ const sum = (ts: Tally[]): Tally => ({
   bad: ts.flatMap((t) => t.bad),
 });
 
-test("#835 母数: フィクスチャ 8 本が読め、行と議員の数が実測どおり", () => {
-  assert.equal(books.length, 8, `読めた本 ${books.length}`);
+test("#835 母数: フィクスチャ 11 本が読め、行と議員の数が実測どおり", () => {
+  assert.equal(books.length, 11, `読めた本 ${books.length}`);
   const rows = books.reduce((n, b) => n + b.pdf.rows.length, 0);
   const cells = books.reduce((n, b) => n + b.pdf.rows.length * b.pdf.members.length, 0);
   const unknown = books.reduce((n, b) => n + b.pdf.unknownCells, 0);
   // **母数を必ず出す**（#757）。「ずれ 0 件」と「1 行も比べていない」を同じ出力にしない
-  assert.equal(rows, 258, `行 ${rows}`);
-  assert.equal(cells, 12065, `セル ${cells}`);
+  assert.equal(rows, 261, `行 ${rows}`);
+  assert.equal(cells, 12215, `セル ${cells}`);
   // **43 セルはすべて 令和6年10月 の 下野幸助（※１、令和6年10月10日に議員辞職）の列**——
   // **PDF がその列を空欄にしており、「棄権」でも「欠席」でもない。実装は推定せず UNKNOWN_CELL で残す。**
   assert.equal(unknown, 43, `不明セル ${unknown}`);
@@ -147,13 +147,13 @@ test("#835 母数: フィクスチャ 8 本が読め、行と議員の数が実�
 
 test("#835 検算A: 公表された賛成者数・反対者数が、その行の記号帯の ○ / × の数と合う", () => {
   const t = sum(books.map((b) => checkCounts(b, (i) => b.pdf.rows[i].cells)));
-  assert.equal(t.judgeable, 215, `判定できた行 ${t.judgeable}（不明を含む ${t.skipped} 行は判定外）`);
+  assert.equal(t.judgeable, 218, `判定できた行 ${t.judgeable}（不明を含む ${t.skipped} 行は判定外）`);
   assert.deepEqual(t.bad, [], `合わない行 ${t.bad.length} / ${t.judgeable}`);
 });
 
 test("#835 検算B: `議` の列の議員が、県が公表している歴代議長と一致する", () => {
   const t = sum(books.map((b) => checkSpeaker(b, (i) => b.pdf.rows[i].cells)));
-  assert.equal(t.judgeable, 258, `判定できた行 ${t.judgeable}（歴代議長の表に無い年月 ${t.skipped} 行は判定外）`);
+  assert.equal(t.judgeable, 259, `判定できた行 ${t.judgeable}（歴代議長の表に無い年月 ${t.skipped} 行は判定外）`);
   assert.deepEqual(t.bad, [], `合わない行 ${t.bad.length} / ${t.judgeable}`);
 });
 
@@ -225,7 +225,7 @@ test("#835 x 方向: 記号のアイテムの中心と、置いた列の中心�
     }
   }
   // **母数を書く**（#757）。「全部一致」だけでは 0 対を測ったのと区別が付かない
-  assert.equal(pairs, 12022, `測った (記号, 列) の対 ${pairs}`);
+  assert.equal(pairs, 12172, `測った (記号, 列) の対 ${pairs}`);
   assert.equal(half, pairs, `半セル未満 ${half} / ${pairs}`);
   // 実測 max 0.0297（セル幅 14.64pt の 3%）
   assert.ok(worst < 0.05, `いちばん外れた対 ${worst.toFixed(4)} セル幅`);
