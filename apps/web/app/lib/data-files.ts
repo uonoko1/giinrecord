@@ -7,7 +7,7 @@
  */
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
-import type { Assembly } from "@seiji-kiroku/shared";
+import type { Assembly, LocalRollCall, LocalRollCallSummary } from "@seiji-kiroku/shared";
 import type { SangiinVoteLinkStats, ShugiinBillNameStats, UnmatchedSpeechStats } from "./coverage";
 // #451: 計算は `linked-counts.ts`（型以外を import しない）に 1 つだけ置く。`coverage.ts` は
 // `import.meta.glob` に触るので値として import できない——型だけの import に留めること。
@@ -118,6 +118,70 @@ export async function readAssemblySessions(dataDir: string, assemblyId: string):
 export async function readLocalRollCallIndex(dataDir: string, assemblyId: string): Promise<LocalRollCallSubject[] | null> {
   if (!SAFE_ID.test(assemblyId)) return null;
   return readJson<LocalRollCallSubject[]>(path.join(dataDir, "assemblies", assemblyId, "rollcalls", "index.json"));
+}
+
+/**
+ * `assemblies/{id}/rollcalls/index.json` の全項目（`LocalRollCallSummary[]`、#791）。無ければ null。
+ * `readLocalRollCallIndex` は議員ページが結合に使う 3 項目だけの型で読むが、
+ * 地方の採決一覧ページは日付・議案名・結果・出典まで要るのでこちらを使う。
+ */
+export async function readLocalRollCallSummaries(dataDir: string, assemblyId: string): Promise<LocalRollCallSummary[] | null> {
+  if (!SAFE_ID.test(assemblyId)) return null;
+  return readJson<LocalRollCallSummary[]>(path.join(dataDir, "assemblies", assemblyId, "rollcalls", "index.json"));
+}
+
+/**
+ * `assemblies/{assemblyId}/rollcalls/{sessionId}/{id}.json`（議案 1 件の全議員の表決、#791）。無ければ null。
+ *
+ * **id から会期のディレクトリを組み立てない。** 地方の id は `{assemblyId}-{sessionId}-{議決日}-{種別}-{番号}`
+ * だが、sessionId 自体に `-` を含む議会（佐賀 `2026-06-teirei-list06680`）があるので id を分割しても
+ * 会期は復元できない。**`rollcalls/index.json` を引いて `sessionId` を得る**（これが唯一の正しい経路）。
+ * index に無い id は null＝存在しない（ファイルを探しに行かない）。
+ *
+ * 地方の id には日本語（「乙第40号議案」）が入るので `SAFE_ID` は使えない。パス区切り・親参照・
+ * NUL を拒否して、残りは原文のままファイル名として使う（ETL がそう書いている）。
+ */
+export async function readLocalRollCall(dataDir: string, assemblyId: string, id: string): Promise<LocalRollCall | null> {
+  if (!SAFE_ID.test(assemblyId) || !isSafeLocalRollCallId(id)) return null;
+  const index = await readLocalRollCallSummaries(dataDir, assemblyId);
+  const summary = index?.find((r) => r.id === id);
+  if (!summary) return null;
+  if (!isSafeLocalRollCallId(summary.sessionId)) return null;
+  return readJson<LocalRollCall>(path.join(dataDir, "assemblies", assemblyId, "rollcalls", summary.sessionId, `${id}.json`));
+}
+
+/**
+ * ファイル名として使ってよい地方の id か。日本語を許すので allowlist にはできない——
+ * **パス区切り（`/` `\`）・親参照（`..`）・NUL・空**だけを拒否する denylist である。
+ * これで防げるのはディレクトリ脱出だけで、「これで全部」ではない。実際に読む名前は
+ * ETL が書いた `rollcalls/index.json` に載っているものに限る（`readLocalRollCall` が引き当てる）ので、
+ * URL から任意のファイル名が渡ることはない。
+ */
+function isSafeLocalRollCallId(id: string): boolean {
+  if (id === "") return false;
+  return !/[/\\\0]/.test(id) && !id.split(/[/\\]/).includes("..") && id !== ".." && !id.includes("..");
+}
+
+/**
+ * プリレンダー対象（#791）: `assemblies/{id}/rollcalls/index.json` を持つ議会ごとに、
+ * 一覧 `/assemblies/{id}/rollcalls` と、その全件の `/assemblies/{id}/rollcalls/{id}`。
+ *
+ * **国会の `/rollcalls/...` には一切足さない**（あちらは回次の数で切る作りで、地方の会期 id は数ではない。
+ * docs/DATA_CONTRACT.md「地方議会の採決の URL」）。
+ * `rollcalls/index.json` の無い議会（宮城 pref-04）は一覧も出さない——**0 件の一覧を出すと
+ * 「この議会は採決が 0 件」と読めてしまうが、事実は「まだ取得していない」なので**（#757）。
+ */
+export async function localRollCallPaths(dataDir: string): Promise<string[]> {
+  const assemblies = await readAssemblies(dataDir);
+  if (!assemblies) return [];
+  const paths: string[] = [];
+  for (const a of assemblies) {
+    const index = await readLocalRollCallSummaries(dataDir, a.id);
+    if (!index || index.length === 0) continue;
+    paths.push(`/assemblies/${a.id}/rollcalls`);
+    for (const r of index) paths.push(`/assemblies/${a.id}/rollcalls/${r.id}`);
+  }
+  return paths;
 }
 
 /**

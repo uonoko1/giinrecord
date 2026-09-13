@@ -27,6 +27,8 @@ import { dirname, resolve } from "node:path";
  * 許容リスト（pull_request で走るが意図的に必須にしていない job）は #484/#499 の言う
  * 「allowlist は名指しし、その中身も固定する」形でハードコードする。
  *   ci.yml:stale-base          #536 の検査。#524 のレビューで既に必須外と確認済み
+ *   ci.yml:pr-closes           #793 の検査。stale-base と同じく「PR の書き方」を見るもの。
+ *                              必須に昇格させるには GitHub 側の branch protection への登録が要る
  *   ci.yml:docker-web          Issue #541 本文が名指しした例外そのもの
  *   branch-protection.yml:guard  自分自身の検査。paths 限定の pull_request でしか走らない
  *   environment-protection.yml:guard  同上（#661）。paths 限定なので、必須にすると
@@ -111,6 +113,12 @@ const id = (j: { file: string; name: string }) => `${j.file}:${j.name}`;
  */
 const EXEMPT_FROM_REQUIRED: readonly string[] = [
   "ci.yml:stale-base",
+  // #793: stale-base と同じ扱い。どちらも「PR の書き方」を見る検査で、本体の正しさは見ていない。
+  // **必須チェックにするかどうかは PO の判断**——REQUIRED_CHECKS に足すだけでは足りず、
+  // GitHub 側の branch protection に同じ名前を登録する必要があり、登録されていない必須チェックは
+  // **全 PR を永久に pending にしてマージ不能にする**（環境を触れるのは PO だけ）。
+  // 必須に昇格させるなら、GitHub 側の登録と同じ PR でここに移すこと。
+  "ci.yml:pr-closes",
   "ci.yml:docker-web",
   "branch-protection.yml:guard",
   // #661: branch-protection.yml:guard と同じ理由。paths 限定の pull_request でしか走らないので、
@@ -134,6 +142,7 @@ test("数え上げそのものの検査: allJobs が全 workflow の job を拾�
     "branch-protection.yml:guard",
     "ci.yml:check",
     "ci.yml:docker-web",
+    "ci.yml:pr-closes",
     "ci.yml:stale-base",
     "deploy-data.yml:production",
     "deploy-data.yml:resolve",
@@ -198,7 +207,7 @@ test("#541 REQUIRED_CHECKS の各要素は、実在する pull_request 上の jo
 test("#541 許容リスト（意図的に必須外にしている job）は中身が固定されている", () => {
   assert.deepEqual(
     [...EXEMPT_FROM_REQUIRED].sort(),
-    ["branch-protection.yml:guard", "ci.yml:docker-web", "ci.yml:stale-base", "environment-protection.yml:guard"].sort(),
+    ["branch-protection.yml:guard", "ci.yml:docker-web", "ci.yml:pr-closes", "ci.yml:stale-base", "environment-protection.yml:guard"].sort(),
   );
 });
 
