@@ -36,6 +36,8 @@ const metaOf = (lossy?: LocalAssemblyMeta["lossyNameMatches"], rollcalls = 5): L
     sessions: [],
     sources: [{ name: "宮城県議会 表決結果", url: "https://www.pref.miyagi.jp/soshiki/gikai/hyouketsu.html", fetchedAt: "2026-09-04T22:17:32.500Z" }],
     counts: { members: 59, rollcalls, cells: 100, unknownCells: 0, unmatchedNames: 0 },
+    // #826 で必須になった母数（この節の検査には関わらないが、型が要求する）
+    countChecked: { rows: rollcalls, checked: rollcalls, noCounts: 0, unreadableCells: 0 },
     ...(lossy ? { lossyNameMatches: lossy } : {}),
   }) as LocalAssemblyMeta;
 

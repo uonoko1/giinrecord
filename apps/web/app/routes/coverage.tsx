@@ -6,6 +6,7 @@ import { billsBySession as bundledBillsBySession } from "../lib/bills";
 import { buildCoverage, type Coverage, type DietCoverage, formatLocalSessionRange, formatSessionRange, hasSessionGaps, type LinkedRecordCounts, type LocalCoverage, rosterlessSessions, rosterScope, sangiinUnlinkedVotes, type SangiinVoteLinkStats, type SessionRange, shugiinBillNameCoverage, type ShugiinBillNameStats, shugiinQuestionCoverage, speechCoverage, type UnmatchedSpeechStats, unmatchedSpeechCoverage } from "../lib/coverage";
 import type { BillSessionCount, MemberAssemblyCount } from "@seiji-kiroku/shared";
 import type { AssemblySession, LocalAssemblyMeta } from "../lib/data-contract";
+import { countMismatchSummary } from "../lib/count-mismatch";
 import { lossyNameSummary } from "../lib/lossy-name";
 import { defaultDataDir, readLinkedRecordCounts, readLocalAssemblyMetas, readSangiinVoteLinkStats, readShugiinBillNameStats, readUnmatchedSpeechStats } from "../lib/data-files";
 import { type Dataset, dataset as bundled } from "../lib/dataset";
@@ -107,6 +108,7 @@ export function CoveragePage({
         <DietSection diet={coverage.diet} metaSessions={coverage.metaSessions} />
         <LocalSection local={coverage.local} />
         <LossyNameSection local={coverage.local} metas={localMetas} />
+        <CountMismatchSection local={coverage.local} metas={localMetas} />
 
         <SpeechSection data={data} unmatchedSpeeches={unmatchedSpeeches} linked={linked} />
         <RosterlessSection meta={data.meta} votes={sangiinVotes} />
@@ -655,6 +657,109 @@ function LossyNameSection({ local, metas }: { local: LocalCoverage[]; metas: Loc
                 ))}
               </p>
             )}
+          </section>
+        ))
+      )}
+    </section>
+  );
+}
+
+/**
+ * **記号の数と公表された賛成者数・反対者数の突き合わせ**（#826。`meta.countChecked` / `meta.countMismatches`）。
+ *
+ * **賛否 PDF には、議員ごとの記号の列とは別に、行ごとの賛成者数・反対者数の欄がある**（別の原文）。
+ * **数が食い違えば、記号の取りこぼし・二重取りがあるということ**なので、取得の検算に使ってきた。
+ *
+ * **だが食い違いには別の原因もある。** **山梨県議会には、公表された賛成者数に議長の `〇` が
+ * 入っていない行が 2 つある**（再議→否決の行）。**佐賀県議会には同じ事象の行が実在するが、
+ * 佐賀では議長を数えているので合っている。** **同じ事象でも議会ごとに数え方が違う。**
+ *
+ * **だから食い違いで止めない**——**止めると、正しい記録まで出なくなる。**
+ * **記録は出したうえで、食い違ったという事実を件数として出す。**
+ * **どちらが正しいかは書かない**（我々には分からない）。
+ *
+ * **`metas` が null なら節ごと出さない**（#757）——「0 件」と「1 件も読めていない」は違う。
+ */
+function CountMismatchSection({ local, metas }: { local: LocalCoverage[]; metas: LocalAssemblyMeta[] | null }) {
+  if (!metas) return null;
+  const nameOf = new Map(local.map((a) => [a.assemblyId, a.name]));
+  const rows = metas
+    .map((m) => ({ meta: m, name: nameOf.get(m.assemblyId) ?? m.assemblyId, summary: countMismatchSummary(m) }))
+    .filter((r): r is { meta: LocalAssemblyMeta; name: string; summary: NonNullable<ReturnType<typeof countMismatchSummary>> } => r.summary !== null);
+  if (rows.length === 0) return null;
+  const checked = rows.reduce((n, r) => n + r.summary.checked, 0);
+  const mismatches = rows.reduce((n, r) => n + r.summary.mismatches, 0);
+  const noCounts = rows.reduce((n, r) => n + r.summary.noCounts, 0);
+  const unreadable = rows.reduce((n, r) => n + r.summary.unreadableCells, 0);
+  const hit = rows.filter((r) => r.summary.mismatches > 0);
+  return (
+    <section className="section" aria-labelledby="coverage-count-mismatch-heading">
+      <h2 id="coverage-count-mismatch-heading" className="section__title">
+        記号の数と公表された賛成者数・反対者数の突き合わせ
+      </h2>
+      <p className="card__body">
+        地方議会の表決結果 PDF には、議員ごとの記号（○ × など）とは別に、
+        <strong>その議案の賛成者数・反対者数の欄</strong>があります。どちらも同じ一次資料の別の場所なので、
+        数が合うかを突き合わせています。いま突き合わせたのは <span className="num">{n(checked)}</span> 件で、
+        食い違ったのは <span className="num">{n(mismatches)}</span> 件です。
+        {noCounts > 0 && (
+          <>
+            {" "}
+            <span className="num">{n(noCounts)}</span> 件は<strong>賛成者数の欄が PDF に無い</strong>ため、
+          </>
+        )}
+        {unreadable > 0 && (
+          <>
+            {" "}
+            <span className="num">{n(unreadable)}</span> 件は<strong>凡例が読み取れないセルがある</strong>ため、
+          </>
+        )}
+        {(noCounts > 0 || unreadable > 0) && "突き合わせていません（合っているとも食い違っているとも言えません）。"}
+      </p>
+      <p className="card__body">
+        食い違いがあっても<strong>表決の記録はそのまま出します</strong>。公表された賛成者数に議長の記号を
+        含めるかどうかは議会ごとに違うためです（山梨県議会には含めていない行が、佐賀県議会には含めている行が実在します）。
+        <strong>どちらが正しいかはこのサイトでは判断しません。</strong>数えた数と公表された数の両方を出します。
+      </p>
+      {hit.length === 0 ? (
+        <p className="card__body" data-testid="coverage-count-mismatch-none">
+          食い違った表決はありません。
+        </p>
+      ) : (
+        hit.map((r) => (
+          <section key={r.meta.assemblyId} className="coverage-assembly" aria-label={r.name} data-testid={`coverage-count-mismatch-${r.meta.assemblyId}`}>
+            <h3 className="coverage-assembly__name">
+              <Link to={assemblyPath(r.meta.assemblyId)}>{r.name}</Link>
+            </h3>
+            <p className="card__body num">
+              {n(r.summary.mismatches)} 件（この議会で突き合わせた {n(r.summary.checked)} 件のうち）
+            </p>
+            <div className="assemblies-table-wrap">
+              <table className="assembly-sessions" aria-label={`${r.name}の記号の数と公表値の食い違い`}>
+                <thead>
+                  <tr>
+                    <th scope="col">表決</th>
+                    <th scope="col">数えた賛成／反対</th>
+                    <th scope="col">公表された賛成／反対</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(r.meta.countMismatches ?? []).map((m) => (
+                    <tr key={m.rollCallId}>
+                      <td>
+                        <Link to={`${assemblyPath(r.meta.assemblyId)}/rollcalls/${m.rollCallId}`}>{m.rollCallId}</Link>
+                      </td>
+                      <td className="num">
+                        {n(m.counted.yes)} ／ {n(m.counted.no)}
+                      </td>
+                      <td className="num">
+                        {n(m.published.yes)} ／ {n(m.published.no)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </section>
         ))
       )}

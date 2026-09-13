@@ -1,5 +1,6 @@
 {
  "assemblyId": "pref-04",
+ "countChecked": { "checked": 10, "noCounts": 0, "rows": 10, "unreadableCells": 0 },
  "counts": { "cells": 100, "members": 59, "rollcalls": 10, "unknownCells": 0, "unmatchedNames": 0 },
  "fetchedAt": "2026-08-24T12:12:38.778Z",
  "rosterAsOf": "2026-05-01",
