@@ -10,7 +10,16 @@ VPS  root cron 5分  /usr/local/lib/giinrecord-monitor/health.sh                
        コンテナ healthy・ディスク・nginx・rsync 先の鮮度                        │
        → /var/log/giinrecord-monitor.log, ~ubuntu/monitor/latest.json           │
        → curl で Issues API（/etc/giinrecord/monitor.token、無ければ通知なし） ──┘ Issue "[monitor] vps: <check>"
+
+GitHub Actions  security-alerts.yml ──毎日 06:53 JST──▶ GitHub 自身の security アラート（#786）
+       secret scanning / Dependabot の open アラートを読む                       ┐ deploy/monitor/security-alerts.sh
+       **PAT が要る**（GITHUB_TOKEN では 403。下記）                              │  → security-alerts-report.sh → report.sh
+                                                                                 │ open あり → "[monitor] repo: security アラート"
+                                                                                 ┘ 読めない  → "…security アラートを読めない"
 ```
+
+> **監視は「見ている」だけでは足りず、「読んでいる」必要がある。**
+> secret scanning は 21 日間ずっと正しく警告していた。**読んでいなかったのは我々のほうだった**（#786）。
 
 ## 何を見ているか
 
@@ -99,6 +108,61 @@ VPS の cron は自前のマシンなので間引かれない。実測（`/var/l
 - 2 回連続（10 分）で失敗した check は Issue `[monitor] vps: <check>`。Issue 番号は `/var/lib/giinrecord-monitor/issue.<check>`（root）に覚え、消えていても同名の open Issue を採用して重複させない。復旧でコメント＋close。
 - **トークンが無い・API が失敗しても監視は止まらない**（ログに `note:` を 1 行書くだけ。終了コードは check の結果のみ）。
 - Issue 本文は check 名と時刻のみ。ホスト名・IP・ユーザー名・パスは書かない。
+
+### GitHub の security アラート（`.github/workflows/security-alerts.yml`、毎日 06:53 JST）
+
+**GitHub 自身が出しているアラートを、毎日誰かが読むようにしたもの**（#786）。
+
+**なぜ要るか（実測）**: secret scanning のアラート #1 は **2026-08-23T16:51:24Z に立ち、21 日間、誰も見ていなかった**。中身は本物の漏洩だった（#785）。**その間 CI は全部緑で、gitleaks はこの形を検出しない**（実測: `no leaks found`）。**唯一これを見つけていた検出器の出力を、我々は読んでいなかった。見ていない検出器は、無い検出器と同じである。**
+
+| 見るもの | API | Issue |
+|---|---|---|
+| secret scanning の open アラート | `repos/{owner}/{repo}/secret-scanning/alerts` | `[monitor] repo: security アラート` |
+| Dependabot の open アラート | `repos/{owner}/{repo}/dependabot/alerts` | 同上（1 本にまとめる） |
+| **どちらかが読めなかった** | — | `[monitor] repo: security アラートを読めない` |
+
+- 検査は `deploy/monitor/security-alerts.sh`（exit 0 = 全部読めて 0 件 / 1 = open あり / 2 = **読めなかった**）。Issue の開閉は `deploy/monitor/security-alerts-report.sh` が `report.sh` 経由で行う（`monitor.yml` と同じ作法。タイトルが同一性なので溜まらない）。
+- **「読めなかった」と「0 件」は別の Issue** にしてある。読めていないのを緑にすると **21 日がそのまま戻る**（#757 の母数）。rc=2 のときは「アラート」Issue に**触らない**——そのとき判定していないものを閉じるのは嘘になる。
+- **Issue 本文に書くのは「種類・件数・GitHub 上の URL」だけ。** 秘密の値・該当ファイル・行・commit は**書かない**。実測（2026-09-13）した本物の応答は **`.secret` に平文の鍵そのもの**を持っており、そのまま本文に入れれば**警告そのものが漏洩になる**。実装は**許可リスト**（`.secret_type_display_name` と severity だけを取り出す）。denylist（「`.secret` を消す」）にしないこと——API はフィールドが増え続けており、denylist は常に 1 つ後ろを走る。
+
+#### **PAT が要る（人間の作業）**
+
+**既定の `GITHUB_TOKEN` では両方とも読めない。** CI 上で実測した（2026-09-13, run 34753557512）:
+
+```
+RESULT secret-scanning/alerts: NOT READABLE   HTTP 403 Resource not accessible
+RESULT dependabot/alerts:      NOT READABLE   HTTP 403 Resource not accessible
+```
+
+**`permissions:` に `secret-scanning` や `dependabot-alerts` と書くのは誤り。** そんなキーは存在せず、書くと **#540 と同じく workflow が構文として拒否されて検査ごと動かなくなる**。GitHub が受け付けるスコープの全部（actionlint で実測）は `actions` / `artifact-metadata` / `attestations` / `checks` / `contents` / `deployments` / `discussions` / `id-token` / `issues` / `models` / `packages` / `pages` / `pull-requests` / `repository-projects` / `security-events` / `statuses` で、**唯一それらしい `security-events` は code scanning のスコープ**であって、この 2 つの API は対象外。
+
+作り方（`docs/ops/deploy.md`「main の保護設定」の PAT と同じ流儀）:
+
+1. GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token
+2. **Repository access**: このリポジトリのみ
+3. **Repository permissions**: `Secret scanning alerts: Read-only` と `Dependabot alerts: Read-only` **だけ**（それ以外は No access。**書き込みを与えない**）
+4. 有効期限を設定し、期限を `docs/ops/board.md` に控える
+5. **置くのはスクリプトでできる**（ブラウザが要るのは上の 1〜3 だけ）:
+
+```
+bash scripts/human-tasks.sh --yes --set-security-alerts-token
+# ↑ を打ってから、**トークンを貼って Enter**
+```
+
+  **トークンは引数では渡せない**（`--security-alerts-token <PAT>` は usage で弾かれる）。シェルの履歴と `ps` に残るため——`gh secret set` に `--body -` で渡していても、**その前段で argv に載っていれば同じこと**。受け取り口は**標準入力か環境変数 `SECURITY_ALERTS_TOKEN` の 2 つだけ**（`docs/ops/deploy.md` の `BRANCH_PROTECTION_TOKEN` と同じ流儀。#790 / #798）。
+
+  これは secret `SECURITY_ALERTS_TOKEN` を置いたうえで、**そのトークンで実際に 2 つのフィードを読めるか**まで確かめる（**置けただけでは成功と言わない**。権限の足りない PAT も secret としては置けてしまうため）。トークンは**出力にもログにも出さない**（長さだけ出す）。
+
+**ワークフロー側の変更は要らない。** `security-alerts.yml` は `${{ secrets.SECURITY_ALERTS_TOKEN || secrets.GITHUB_TOKEN }}` を使っており、secret を置いた次の実行から自動的にそちらを使う。**置くまでは `GITHUB_TOKEN` に落ちて exit 2（読めない）を報告し続ける。**
+
+**PAT を置くまでの間も、ワークフローを消さないこと。** 「読めない」ことを検出して別の Issue で報告する状態のほうが、**何も見ていない状態より良い**。
+
+#### アラートの Issue が開いたときにやること
+
+1. Issue 本文の `https://github.com/<owner>/<repo>/security` を開く（**push 権限が要る**）。**中身は Issue には書かれていない。**
+2. secret scanning なら: **まず鍵を失効させる**（リポジトリから消すだけでは、履歴に残るし既に漏れている）。そのうえでリポジトリ側の発生源を消す（#785 の徳島のフィクスチャがこの形）。
+3. Dependabot なら: Dependabot が出している PR を取り込む。取り込めない事情があるなら `scripts/ci/audit-ignore.txt` に**期限と理由を付けて**書く（`scripts/ci/audit.sh`）。
+4. アラートが 0 件になれば、**次の実行で Issue は自動で閉じる**。手で閉じなくてよい。
 
 ## 初回セットアップ
 
