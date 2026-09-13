@@ -477,3 +477,145 @@ test("#750 parseVotePdf: 文字層の無い PDF は例外（読めないのが�
     + "trailer<</Root 1 0 R>>\n", "latin1");
   await assert.rejects(() => parseVotePdf(empty), /PDF has no (pages|text layer)/);
 });
+
+/* ==================== #829 `title` ↔ `cells` を結ぶ ==================== */
+
+/** 中央値（最大値だと件名の折り返しや縦書きのラベルで揺れる。下の docblock） */
+const med = (a: readonly number[]): number => [...a].sort((x, y) => x - y)[Math.floor(a.length / 2)];
+
+/**
+ * ## **なぜこの検算が要るか**（#819 / PR #827 が測った穴）
+ *
+ * **青森の `counts` は `readCounts(page, b, band.right)` が読む——`b` は記号帯そのもの**なので、
+ * **`counts` と `cells` は同じ y から来ている。**
+ * **だから「`counts` の数と `○`/`×` の数が合う」という検算は、`counts` ↔ `cells` しか見ていない。**
+ * **議案を名指しするのは `title` の側なのに、`title` はこの検算に 1 度も入らない。**
+ *
+ * **実測（PR #827）**: 錨の割り当てを 1 つずらすと
+ * **160 行中 152 行で `title` が 1 議案ぶんずれたのに、`cells` も `counts` も 1 行も変わらず、
+ * テストは 4 本とも通った。**
+ * **実物は「第18号 …決算の認定 に 46 人が賛成した」という、どの議案についても偽の記録になる**
+ * ——**#569 の「別人の記録が出る」と同じ重さで、利用者からは検出できない。**
+ *
+ * ## **どう結ぶか**
+ *
+ * **公開出力に材料が無い**（議決日・番号・件名・結果・`counts`・番号の昇順は全部だめだった。#827）。
+ * **だから `VotePdfRow.provenance` にパーサの内部の y を出した**——
+ * **`cellItems`（`cells` を作った記号アイテムそのもの）と
+ * `leftYs`（この行に配られた左の欄のアイテムの cy）。**
+ * **`cellItems` は「帯の中心」でも「錨」でもない**——**錨から読んだものを錨と比べたら恒真になる。**
+ * **`y` だけを出していたときは、`[rowAnchor[r]]` にすり替える変異が 27 本とも通った**（実測）ので、
+ * **`Item` そのものを出して、下のテストが `str` から独立に確かめられるようにした。**
+ * **`rollcalls.ts` は読まないので `data/` には出ない**（#811 の高知と同じ判断）。
+ *
+ * **見るのは「行全体がどれだけずれているか」＝ `leftYs` の中央値 − `cellItems` の y の中央値。**
+ * **最大値ではなく中央値なのは、件名が 2 行に折り返す行や縦書きのラベルがあるため**
+ * （実測: 最大値は無改造でも 19.42pt まで出る。**中央値なら 0.24pt に収まる**）。
+ *
+ * ## **実測（フィクスチャ 5 本 160 行。2026-09-13）**
+ *
+ * | | `|中央値Δy|` の分布 | max |
+ * |---|---|---:|
+ * | **無改造** | **< 2pt が 160 行**（p50 0.00 / p90 0.24） | **0.24** |
+ * | 変異 A（錨の割り当てを 12pt ずらす。`title` 145 行が変化） | ≥ 12pt が **106 行** | 23.76 |
+ * | 変異 B（`rowAnchor` を 1 つ回す。**`title` 152 行が変化＝#827 の変異 #3 そのもの**） | ≥ 12pt が **143 行** | **594.98** |
+ *
+ * **上限は 5pt を採る**——**無改造の最大 0.24 のはるか上、行の送り（約 10.8pt）の半分より下。**
+ * **`cells` も `counts` も動かない変異が、ここで落ちる。**
+ */
+test("#829 title を読んだ y と cells を読んだ y が同じ行にある（5 本 160 行）", async () => {
+  /** 行の送りは約 10.8pt。**その半分より小さく、無改造の最大 0.24 よりはるかに大きい値** */
+  const MAX_ROW_DRIFT_PT = 5;
+  let rows = 0;
+  let judged = 0;
+  let maxDrift = 0;
+  const bad: string[] = [];
+  for (const f of FIXTURES) {
+    const v = await parseVotePdf(pdf(f));
+    for (const r of v.rows) {
+      rows++;
+      // **`leftYs` が空の行は判定できない**（左の欄に 1 アイテムも配られていない）。**推定しない**
+      if (r.provenance.leftYs.length === 0) continue;
+      judged++;
+      const drift = Math.abs(med(r.provenance.leftYs) - med(r.provenance.cellItems.map((i) => i.cy)));
+      if (drift > maxDrift) maxDrift = drift;
+      if (drift > MAX_ROW_DRIFT_PT) bad.push(`${f} p${r.page} ${r.number || r.title.slice(0, 20)} 中央値Δy=${drift.toFixed(2)}pt`);
+    }
+  }
+  assert.equal(rows, 160, "**母数**——行が減ったら落ちる（#757）");
+  assert.equal(judged, 160, "**母数**——判定できた行（`provenance` が空になったら落ちる）");
+  assert.deepEqual(bad, [], "左の欄と記号帯が別の行から来ている行");
+  // **無改造の実測値を固定する**——**0.24 が大きくなったら、錨の付け方が変わったということ**
+  assert.ok(maxDrift < 1, `無改造の最大は 1pt 未満（実測 0.24。今 ${maxDrift.toFixed(2)}）`);
+});
+
+/**
+ * ## **否定的対照: `title` だけがずれる壊れ方を、実際に作って落としてみせる**
+ *
+ * **PR #827 の変異 #3 と同じこと**（錨の割り当てを 1 つ回す）を、**このテストの中で起こす。**
+ * **`readRows` は export されていない**ので、**`provenance` を作り替えて確かめる**——
+ * **確かめたいのは「上の検算が、`cells` が動かない `title` のずれを見つけられるか」**であって、
+ * **パーサの中身ではない。**
+ *
+ * **`cellsY` を隣の行のものに差し替える**（＝ `title` が 1 議案ぶんずれたのと同じ関係になる）。
+ * **これで落ちなければ、上の検算は恒真である。**
+ */
+test("#829 否定的対照: 行を 1 つ回すと、上の検算が落ちる（恒真でない）", async () => {
+  const MAX_ROW_DRIFT_PT = 5;
+  let judged = 0;
+  let caught = 0;
+  for (const f of FIXTURES) {
+    const v = await parseVotePdf(pdf(f));
+    const byPage = new Map<number, typeof v.rows>();
+    for (const r of v.rows) byPage.set(r.page, [...(byPage.get(r.page) ?? []), r]);
+    for (const page of byPage.values()) {
+      if (page.length < 2) continue;
+      for (let i = 0; i < page.length; i++) {
+        const r = page[i];
+        if (r.provenance.leftYs.length === 0) continue;
+        judged++;
+        // **1 つ下の行の記号帯と結び直す**（`title` が 1 議案ぶんずれたのと同じ関係）
+        const shifted = med(page[(i + 1) % page.length].provenance.cellItems.map((i) => i.cy));
+        if (Math.abs(med(r.provenance.leftYs) - shifted) > MAX_ROW_DRIFT_PT) caught++;
+      }
+    }
+  }
+  assert.ok(judged >= 150, `**母数**——回せた行（実測 158。今 ${judged}）`);
+  // **回すと大半が落ちる**——**「合う議案が隣にもある」ことがあるので 100% は求めない**
+  assert.ok(caught / judged > 0.9, `**1 行回すと 9 割超が落ちる**（今 ${caught}/${judged} = ${(caught / judged * 100).toFixed(1)}%）`);
+});
+
+/**
+ * ## **`provenance.cellItems` が本当に「`cells` を作ったアイテム」であることを、独立に確かめる**
+ *
+ * **上の検算は `provenance` を信じている。** **`provenance` が自己申告なら、
+ * そこに錨の y を入れるだけで検算は恒真になる**——**実際にそうなった。**
+ * **`cellYs: number[]` だったとき、`[rowAnchor[r]]` にすり替える変異を当てても 27 本とも通り、
+ * しかも「行を 1 つ回す変異（#827 の変異 #3）」と同時に当てても通った**（実測）。
+ * **恒真化が、本丸の壊れ方を隠せてしまっていた。**
+ *
+ * **だから `provenance` は `Item` を持ち、ここでは `str` を見る**——
+ * **`provenance` の中の文字を数え直すと、その行に置いたセルの数と一致する。**
+ * **錨（議決月日の欄）は `11/22` のような文字なので、表決記号は 0 個。すり替えれば落ちる。**
+ *
+ * **実測（5 本 160 行）: 160 行すべてで、`cellItems` の中の表決記号の数 = 置けたセルの数。**
+ */
+test("#829 provenance.cellItems の中に、置いたセルの数だけ表決記号が実在する（自己申告でない）", async () => {
+  let rows = 0;
+  let symbols = 0;
+  const bad: string[] = [];
+  for (const f of FIXTURES) {
+    const v = await parseVotePdf(pdf(f));
+    for (const r of v.rows) {
+      rows++;
+      // **`provenance` の中の文字を数え直す**——`readVoteCells` と同じ拾い方（`trailingVoteSymbols`）
+      const syms = r.provenance.cellItems.reduce((sum, i) => sum + trailingVoteSymbols(i.str).length, 0);
+      symbols += syms;
+      const placed = r.cells.filter((c) => c !== UNKNOWN_CELL).length;
+      if (syms !== placed) bad.push(`${f} p${r.page} ${r.number || r.title.slice(0, 16)} 記号=${syms} 置けたセル=${placed}`);
+    }
+  }
+  assert.equal(rows, 160, "**母数**——行が減ったら落ちる（#757）");
+  assert.equal(symbols, 7_540, "**母数**——数えた表決記号（実測 7,540。記号が減ったら落ちる）");
+  assert.deepEqual(bad, [], "cellItems の中の記号の数と、置けたセルの数が合わない行");
+});
