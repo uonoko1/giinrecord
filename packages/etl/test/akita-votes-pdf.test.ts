@@ -514,3 +514,150 @@ test("#759 parseVotePdf: 文字層の無い PDF は例外", async () => {
   );
   await assert.rejects(() => parseVotePdf(empty), /no pages|no text layer|Invalid PDF|XRef|structure/i, "文字層が無ければ例外");
 });
+
+/* ==================== #829 ページ番号が票の行に混ざる ==================== */
+
+/**
+ * **`readRows` が左の欄のアイテムを「いちばん近い錨」に配るときの距離の上限**（#829）。
+ *
+ * **上限が無かったころ、ページ下端に 1 つだけ立つページ番号（`1` `2` `3`）が
+ * いちばん近い行に入り、`readLeftCells` の「右の数字を左から 3 つ」に混ざった**（#819 が見つけた）。
+ *
+ * **下の表は、上限を入れる前の実測**（フィクスチャ 6 本 213 行を全件突き合わせた。2026-09-13）。
+ * **10 行が影響を受け、内訳は捏造 5・喪失 5 である。**
+ * **上限を外すと、この表の `before` がそのまま戻る**（下の否定的対照）。
+ */
+const PAGE_NUMBER_ROWS = [
+  // **捏造 5**（数が 2 つしか無い行にページ番号が足されて 3 つになり、counts ができてしまった）
+  { book: "h291222giketu", page: 1, number: "議案第214号", before: { voting: 1, yes: 40, no: 40 }, after: undefined, yes: 40, no: 0 },
+  { book: "h291222giketu", page: 2, number: "請願第40号", before: { voting: 2, yes: 40, no: 40 }, after: undefined, yes: 40, no: 0 },
+  { book: "h231202giketu", page: 1, number: "事提出認定第２号", before: { voting: 44, yes: 42, no: 1 }, after: undefined, yes: 42, no: 2 },
+  { book: "060220hyoketsu", page: 1, number: "議案第10号", before: { voting: 40, yes: 40, no: 1 }, after: undefined, yes: 40, no: 0 },
+  { book: "041222hyoketsu", page: 1, number: "議案第209号", before: { voting: 42, yes: 42, no: 1 }, after: undefined, yes: 42, no: 0 },
+  // **喪失 5**（数が 3 つある行にページ番号が足されて 4 つになり、counts が丸ごと落ちた）
+  { book: "R41102hyoketsu", page: 1, number: "知事提出認定第3号", before: undefined, after: { voting: 42, yes: 41, no: 1 }, yes: 41, no: 1 },
+  { book: "041222hyoketsu", page: 2, number: "請願第57号", before: undefined, after: { voting: 42, yes: 6, no: 36 }, yes: 6, no: 36 },
+  { book: "080319", page: 1, number: "議案第86号", before: undefined, after: { voting: 40, yes: 39, no: 1 }, yes: 39, no: 1 },
+  { book: "080319", page: 2, number: "議員提出決議案第1号", before: undefined, after: { voting: 40, yes: 40, no: 0 }, yes: 40, no: 0 },
+  { book: "080319", page: 3, number: "請願第27号", before: undefined, after: { voting: 40, yes: 40, no: 0 }, yes: 40, no: 0 },
+] as const;
+
+const parsed = new Map<string, Awaited<ReturnType<typeof parseVotePdf>>>();
+const parseOnce = async (book: string): Promise<Awaited<ReturnType<typeof parseVotePdf>>> => {
+  const hit = parsed.get(book);
+  if (hit) return hit;
+  const v = await parseVotePdf(pdf(book));
+  parsed.set(book, v);
+  return v;
+};
+
+test("#829 ページ番号が混ざっていた 10 行が、実物の値で直っている", async () => {
+  assert.equal(PAGE_NUMBER_ROWS.length, 10, "**母数**——この表が縮んだら落ちる（#757）");
+  assert.equal(PAGE_NUMBER_ROWS.filter((r) => r.before !== undefined).length, 5, "捏造されていた行");
+  assert.equal(PAGE_NUMBER_ROWS.filter((r) => r.before === undefined).length, 5, "counts が落ちていた行");
+  for (const want of PAGE_NUMBER_ROWS) {
+    const v = await parseOnce(want.book);
+    const row = v.rows.find((r) => r.page === want.page && r.number === want.number);
+    assert.ok(row, `${want.book} p${want.page} ${want.number} が見つからない`);
+    assert.deepEqual(row.counts, want.after, `${want.book} p${want.page} ${want.number} の counts`);
+    // **counts があるなら、その行の記号の数と一致する**（捏造された値はここで落ちる）
+    const yes = row.cells.filter((c) => c === "○").length;
+    const no = row.cells.filter((c) => c === "×").length;
+    assert.equal(yes, want.yes, `${want.number} の ○`);
+    assert.equal(no, want.no, `${want.number} の ×`);
+    if (row.counts) {
+      assert.equal(row.counts.yes, yes, `${want.number}: counts.yes と ○ が合う`);
+      assert.equal(row.counts.no, no, `${want.number}: counts.no と × が合う`);
+    }
+  }
+});
+
+/**
+ * **フィクスチャ 6 本 213 行で、`counts` のある行は 1 行残らず記号の数と一致する。**
+ *
+ * **上限を入れる前は 5 行が合わなかった**（#819 が「無改造で合わない行 5 行」と書いたのがこれ）。
+ * **「0 件」と書いているが、母数（`counts` のある行の数）も一緒に固定してある**ので、
+ * **`counts` を全部捨てる変異でも落ちる。**
+ */
+test("#829 counts と記号の数が合う（6 本 213 行・合わない行 0）", async () => {
+  let rows = 0;
+  let withCounts = 0;
+  const bad: string[] = [];
+  for (const f of FIXTURES) {
+    const v = await parseOnce(f);
+    for (const r of v.rows) {
+      rows++;
+      if (!r.counts) continue;
+      withCounts++;
+      const yes = r.cells.filter((c) => c === "○").length;
+      const no = r.cells.filter((c) => c === "×").length;
+      if (r.counts.yes !== yes || r.counts.no !== no) bad.push(`${f} p${r.page} ${r.number} counts=${JSON.stringify(r.counts)} ○=${yes} ×=${no}`);
+    }
+  }
+  assert.equal(rows, 213, "**母数**——行が減ったら落ちる");
+  assert.equal(withCounts, 103, "**母数**——`counts` を読めた行（全部捨てる変異で落ちる）");
+  assert.deepEqual(bad, [], "counts と記号の数が合わない行");
+});
+
+/**
+ * ## **否定的対照: 上限を外すと、捏造が戻ることを「実物で」示す**
+ *
+ * **`readRows` は export されていない**ので、**ここでは `parseVotePdf` の外から上限を外せない。**
+ * **代わりに「上限が無い配り方」をこのテストの中で組み直して、
+ * ページ番号が実在し、それが `counts` の欄に届くことを確かめる。**
+ *
+ * **これは実装の写しではない**——**確かめているのは「ページ番号のアイテムが、
+ * 上限が無ければどの行に入り、その行の数字が何個になるか」という PDF 側の事実である。**
+ * **フィクスチャからページ番号が消えれば、この対照は落ちる**（守りが空回りでないことの母数）。
+ */
+test("#829 否定的対照: 上限が無ければページ番号が行に届く（実物が 10 個ある）", async () => {
+  const DATE_IN = /([０-９0-9]{1,2})月([０-９0-9]{1,2})日/;
+  const found: { book: string; page: number; str: string; ratio: number }[] = [];
+  const legit: number[] = [];
+  for (const f of FIXTURES) {
+    const raw = await readPages(pdf(f));
+    const pages = raw.map(unrotate);
+    for (let p = 0; p < pages.length; p++) {
+      const page = pages[p];
+      const mc = findMemberColumns(page);
+      if (!mc) continue;
+      const rows = [...mc.rows, ...mc.oddRows].sort((a, b) => b.cy - a.cy);
+      if (rows.length === 0) continue;
+      const bandBottom = rows[0].cy + Math.max(rows[0].h, 1);
+      const anchors = [...new Set(page.items.filter((i) => i.x + i.w <= mc.left + 1 && i.cy < bandBottom && DATE_IN.test(i.str)).map((i) => i.cy))].sort((a, b) => b - a);
+      const used = new Set<number>();
+      const rowAnchor = rows.map((b) => {
+        let best: number | undefined;
+        for (const y of anchors) {
+          if (used.has(y)) continue;
+          if (best === undefined || Math.abs(y - b.cy) < Math.abs(best - b.cy)) best = y;
+        }
+        if (best === undefined || Math.abs(best - b.cy) > Math.max(b.h, 1) * 3) return b.cy;
+        used.add(best);
+        return best;
+      });
+      const allAnchors = [...new Set([...rowAnchor, ...anchors])];
+      for (const it of page.items) {
+        if (it.x + it.w > mc.left + 1) continue;
+        if (it.cy >= bandBottom) continue;
+        const nearest = allAnchors.reduce((bestY, y) => (Math.abs(y - it.cy) < Math.abs(bestY - it.cy) ? y : bestY), allAnchors[0] ?? Infinity);
+        const r = rowAnchor.indexOf(nearest);
+        if (r < 0) continue;
+        const ratio = Math.abs(it.cy - nearest) / Math.max(rows[r].h, 1);
+        if (ratio > 2.5) found.push({ book: f, page: p + 1, str: it.str.trim(), ratio });
+        else legit.push(ratio);
+      }
+    }
+  }
+  assert.equal(found.length, 10, "**上限より遠いアイテムが 10 個ある**（消えたらこの守りは空回り）");
+  assert.deepEqual([...new Set(found.map((x) => x.str))].sort(), ["1", "2", "3"], "**遠いのは全部ページ番号の 1 桁**");
+  // **上限の置き場所が「実測の隙間の中」にあることを、数字で残す**
+  const maxLegit = Math.max(...legit);
+  const minStray = Math.min(...found.map((x) => x.ratio));
+  assert.ok(maxLegit < 2.0, `本物の最大は行の高さの 2 倍未満（実測 1.884。今 ${maxLegit.toFixed(3)}）`);
+  // **`3.000` は丸めた表示で、実数は 2.9999… である**（実測。行の高さ 8.28 に対して Δy = -24.8）。
+  // **`>= 3.0` と書くと落ちる**ので、**上限 2.5 との隙間を見る形にする**（ここが見たいことでもある）。
+  assert.ok(minStray > 2.9, `ページ番号の最小は行の高さの 2.9 倍より遠い（実測 2.9999。今 ${minStray.toFixed(4)}）`);
+  assert.ok(minStray - maxLegit > 1.0, `**本物とページ番号のあいだが 1 行ぶん以上空いている**（実測 2.9999 − 1.884 = 1.116。今 ${(minStray - maxLegit).toFixed(3)}）`);
+  assert.equal(legit.length, 1657, "**母数**——上限の内側に残るアイテム（1,667 − 10）");
+});

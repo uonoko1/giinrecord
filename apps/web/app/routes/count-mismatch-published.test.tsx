@@ -58,16 +58,24 @@ describe("#826 本番データ: 記号の数と公表値の突き合わせが画
       noCounts: sum((s) => s.noCounts),
       unreadableCells: sum((s) => s.unreadableCells),
       mismatches: sum((s) => s.mismatches),
-    }).toEqual({ rows: 1369, checked: 1023, noCounts: 341, unreadableCells: 5, mismatches: 0 });
+      // ## **#829 で 1,023 → 1,030 / 341 → 334 に動いた**（2026-09-14）
+      // **#826 の担当者が「#829 がマージされて行の読み方が変わると変わりうる。
+      // その場合は本 PR のテストが落ちて知らせる」と書いたとおりに落ちたので、実測に直した。**
+      // **動いたのは秋田の 7 件だけ**——**ページ下端のページ番号が `counts` の数字に混ざって
+      // 「数字が 4 つある」状態になり、`counts` が丸ごと捨てられていた**（#829 が直した）。
+      // **「公表記録に無い」のではなく「我々が読み落としていた」**ので、
+      // **7 件は母数の外ではなく中に入るのが正しい。**
+      // **採決の数 1,369 と「凡例が引けない 5」は 1 件も動いていない。**
+    }).toEqual({ rows: 1369, checked: 1030, noCounts: 334, unreadableCells: 5, mismatches: 0 });
   });
 
-  it("/coverage に、本番の母数（1,023 件）と食い違い（0 件）と未突合の内訳が出る", async () => {
+  it("/coverage に、本番の母数（1,030 件）と食い違い（0 件）と未突合の内訳が出る", async () => {
     await renderCoverage(await realLocalMetas());
     const section = screen.getByRole("region", { name: SECTION });
     // **母数が出ていること**（#757。「0 件」は「見た上での 0」でなければ意味が無い）
-    expect(section).toHaveTextContent("1,023");
-    // **突き合わせなかった 341 件と 5 件の内訳も出す**（黙って母数から外さない）
-    expect(section).toHaveTextContent("341");
+    expect(section).toHaveTextContent("1,030");
+    // **突き合わせなかった 334 件と 5 件の内訳も出す**（黙って母数から外さない）
+    expect(section).toHaveTextContent("334");
     expect(section).toHaveTextContent("5");
     // **今は食い違いが無い**、を母数つきで言う
     expect(within(section).getByTestId("coverage-count-mismatch-none")).toBeInTheDocument();
