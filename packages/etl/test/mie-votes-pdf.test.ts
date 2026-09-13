@@ -104,3 +104,21 @@ test("parseVotePdf: 凡例に無い値が出るセルは例外にできる（che
   // parse が通っている時点で全セルが凡例内（不明以外）であることは保証される。UNKNOWN_CELL の値そのものを確認
   assert.equal(UNKNOWN_CELL, "不明");
 });
+
+// ---------------------------------------------------------------------------
+// 凡例が 1 つのテキストに繋がる本（Issue #841。index 151 本のうち 20 本がこの形）
+//   "○：賛成×：反対議：議長除：除斥－：不在欠：欠席" が showText 1 つで出る。
+//   平成28年1月分: https://www.pref.mie.lg.jp/common/content/000599391.pdf（`議` が出る。2026-09-14 取得）
+//   平成28年2月分: …/000599392.pdf（`欠` が出る）、令和6年5月分: …/001197758.pdf（`除` が出る）
+const h28jan = await parseVotePdf(bytes("000599391.pdf"));
+const h28feb = await parseVotePdf(bytes("000599392.pdf"));
+const r6may = await parseVotePdf(bytes("001197758.pdf"));
+
+test("parseVotePdf: 凡例が 1 つのテキストに繋がっていても 6 件に分ける（#841。繋がった形は index 151 本中 20 本）", () => {
+  const expected = { "○": "賛成", "×": "反対", "議": "議長", "除": "除斥", "－": "不在", "欠": "欠席" };
+  assert.deepEqual(h28jan.legend, expected);
+  assert.deepEqual(h28feb.legend, expected);
+  assert.deepEqual(r6may.legend, expected);
+  // 区切って読めた凡例は、区切らずに読めた本（令和8年6月）と同じであること
+  assert.deepEqual(h28jan.legend, jun.legend);
+});
