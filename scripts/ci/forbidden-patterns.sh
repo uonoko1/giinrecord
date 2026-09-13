@@ -146,7 +146,8 @@ FIXTURE_N=$(printf '%s\n' "$FIXTURE_FILES" | sed '/^$/d' | wc -l | tr -d ' ')
 # ETL が無い repo（このスクリプトのテストが作る使い捨ての repo、将来の切り出し）では 0 本が正しいので通す
 # ——ここを無条件の error にすると、検査のテスト 26 件が道連れで落ちる（実測）。
 echo "fixture-secret: $FIXTURE_N file(s) scanned"
-if [ "$FIXTURE_N" -eq 0 ] && printf '%s\n' "$FILES" | grep -q -E '^packages/etl/'; then
+# grep -q はパイプの末尾に置かない（#527: pipefail のもとで書き手が SIGPIPE で死に、確率的に偽になる）
+if [ "$FIXTURE_N" -eq 0 ] && grep -q -E '^packages/etl/' <<<"$FILES"; then
   echo "::error::fixture-secret: packages/etl/ exists but no file matched test/fixtures/ —" \
     "the check scanned nothing. That is not 'clean'. Fix the path glob in" \
     "scripts/ci/forbidden-patterns.sh (Issue #757)." >&2
