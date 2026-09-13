@@ -1,5 +1,11 @@
 {
  "assemblyId": "pref-41",
+ "countChecked": {
+  "checked": 23,
+  "noCounts": 0,
+  "rows": 23,
+  "unreadableCells": 0
+ },
  "counts": {
   "cells": 851,
   "members": 37,
