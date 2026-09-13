@@ -4,7 +4,7 @@ import type {
   Assembly, AssemblyId, AssemblySession, LocalAssemblyMeta, LocalMember, LocalMemberDetail, LocalRollCall, LocalRollCallSummary, LocalUnmatchedName, LocalVoteEntry, MemberAssemblyCount, MemberSummary,
 } from "@seiji-kiroku/shared";
 import { stableJson } from "./json.ts";
-import { conflictingRosterNames, nonNameCharacters, unmatchedReason } from "./sources/local/name-match.ts";
+import { conflictingRosterNames, isLossyName, nonNameCharacters, unmatchedReason } from "./sources/local/name-match.ts";
 import { normalizeTitle } from "./sources/local/title-normalize.ts";
 import { MIYAGI_ASSEMBLY } from "./sources/local/miyagi/site.ts";
 import { runMiyagi } from "./sources/local/miyagi/index.ts";
@@ -41,8 +41,6 @@ export interface LocalSourceRun {
   unmatched?: LocalUnmatchedName[];
   /** 読めなかった一次資料（滋賀の画像 PDF 3 本。#741）。無い議会は省略 */
   unreadableSources?: { url: string; reason: string }[];
-  /** 字が落ちたまま名簿に寄った氏名（青森 #750／#749 の機序 ②）。無い議会は省略 */
-  lossyNameMatches?: LocalAssemblyMeta["lossyNameMatches"];
 }
 export interface LocalSource {
   assembly: Assembly;
@@ -86,8 +84,6 @@ export interface LocalAssemblyInput {
   unmatched?: LocalUnmatchedName[];
   /** 読めなかった一次資料（滋賀の画像 PDF 3 本。#741）。無い議会は省略 */
   unreadableSources?: { url: string; reason: string }[];
-  /** 字が落ちたまま名簿に寄った氏名（青森 #750／#749 の機序 ②）。無い議会は省略 */
-  lossyNameMatches?: LocalAssemblyMeta["lossyNameMatches"];
 }
 
 export interface LocalAssemblyDataset {
@@ -136,7 +132,8 @@ export const isDietMemberRow = (m: { assemblyId?: string }): boolean => m.assemb
  * **#617（大分）/ #529（青森）の「フォントのサブセットに文字が無く、描画命令ごと欠落する」は
  * PDF 側で起きるので、名簿は無傷であり、この比は動かない。**
  * **それを守っているのは `meta.lossyNameMatches`**（名簿に寄った後で
- * `nameKey(PDF の氏名) !== nameKey(名簿の氏名)` を積む。#750。青森・秋田・佐賀に実装）
+ * **PDF の氏名が名簿の氏名の部分列で、かつ短い**ことを積む。#750 が青森に置き、
+ * **#778 で `lossyNameMatchesOf` として 11 県すべてが通る 1 か所に移した**）
  * **と `unmatched.json` の `sourceConflict`**（#711）である。
  *
  * **この検算が実際に守るのは「名簿の HTML 自体が壊れた／読み違えた」場合だけ**で、
@@ -213,6 +210,51 @@ export function describeUnmatched(u: LocalUnmatchedName, roster: readonly { id: 
   return parts.join("; ");
 }
 
+/**
+ * **字が落ちたまま名簿に寄った氏名**を、採決の票から数える（Issue #778。#749 の機序 ②）。
+ *
+ * ## **どこに置くか——11 県すべてが通る 1 か所**
+ *
+ * **これは #750（青森）が置き、#759（秋田）・#768（佐賀）が写した判定だが、
+ * 3 県それぞれの `rollcalls.ts` に同じコードが 3 回書かれており、残り 8 県には無かった。**
+ * **`buildLocalAssembly` が `unmatched.json` の `reason` を 1 か所で付けているのと同じ理由でここに置く**
+ * ——**県ごとに書くと足し忘れが黙って落ちる**（#680 の判断）。
+ * **実際に落ちていた**: **本番 `data/` の 58,057 票を数えると奈良に 2 件あり、
+ * `nara/rollcalls.ts` の docblock はそれを知っていたのに、公表データのどこにも出ていなかった。**
+ *
+ * ## **要る材料はこの関数の引数で足りている**
+ *
+ * 判定に要るのは **(PDF の氏名, 寄った先の memberId)** と **名簿** だけで、
+ * どちらも `buildLocalAssembly` の引数にある（`rollCalls[].votes[].nameText` / `.memberId` と `members`）。
+ * **PDF の読み方が県ごとに違っても、ここに来る形は同じ**なので、名簿の取り方の違いに依存しない。
+ *
+ * **`rollCalls` は「その氏名が出た採決の数」**（3 県の実装と同じ数え方）。
+ * **同じ採決に同じ氏名が 2 度出ることは無い**（列が 1 人 1 つ）ので、票の数ではなく採決の数を数える。
+ */
+export function lossyNameMatchesOf(
+  rollCalls: readonly LocalRollCall[],
+  members: readonly { id: string; name: string }[],
+): NonNullable<LocalAssemblyMeta["lossyNameMatches"]> {
+  const nameOf = new Map(members.map((m) => [m.id, m.name]));
+  const out = new Map<string, NonNullable<LocalAssemblyMeta["lossyNameMatches"]>[number]>();
+  for (const rc of rollCalls) {
+    const seen = new Set<string>();
+    for (const v of rc.votes) {
+      if (v.memberId === "") continue;
+      const rosterName = nameOf.get(v.memberId);
+      // **名簿に無い memberId はここでは黙る**——それは別の壊れ方で、`buildLocalAssembly` が例外にする
+      if (rosterName === undefined || !isLossyName(v.nameText, rosterName)) continue;
+      const k = `${v.nameText}\t${v.memberId}`;
+      if (seen.has(k)) continue;
+      seen.add(k);
+      const cur = out.get(k) ?? { nameText: v.nameText, memberId: v.memberId, rosterName, rollCalls: 0 };
+      cur.rollCalls++;
+      out.set(k, cur);
+    }
+  }
+  return [...out.values()];
+}
+
 export function buildLocalAssembly(input: LocalAssemblyInput): LocalAssemblyDataset {
   const ids = new Set<string>();
   for (const rc of input.rollCalls) {
@@ -270,6 +312,9 @@ export function buildLocalAssembly(input: LocalAssemblyInput): LocalAssemblyData
       return { id: s.sessionId, label: s.sessionLabel, date: dates.reduce((a, b) => (a > b ? a : b)), rollcalls: s.rollcalls, sourceUrl: s.sourceUrl, fetchedAt: input.fetchedAt };
     })
     .sort((a, b) => cmp(b.date, a.date) || cmp(b.id, a.id));
+  // **字が落ちたまま寄った氏名は、11 県すべてが通るここで数える**（#778。県ごとに書かない）。
+  // **`input.lossyNameMatches` は受け取らない**——受け取ると「県が渡さなければ出ない」に戻る。
+  const lossyNameMatches = lossyNameMatchesOf(rollCalls, input.members);
   const meta: LocalAssemblyMeta = {
     assemblyId: input.assembly.id,
     fetchedAt: input.fetchedAt,
@@ -278,7 +323,7 @@ export function buildLocalAssembly(input: LocalAssemblyInput): LocalAssemblyData
     sessions: input.sessions,
     counts: { members: index.length, rollcalls: rollCalls.length, cells, unknownCells, unmatchedNames: unmatchedList.length },
     ...(input.unreadableSources?.length ? { unreadableSources: [...input.unreadableSources].sort((a, b) => cmp(a.url, b.url)) } : {}),
-    ...(input.lossyNameMatches?.length ? { lossyNameMatches: [...input.lossyNameMatches].sort((a, b) => cmp(a.nameText, b.nameText) || cmp(a.memberId, b.memberId)) } : {}),
+    ...(lossyNameMatches.length ? { lossyNameMatches: lossyNameMatches.sort((a, b) => cmp(a.nameText, b.nameText) || cmp(a.memberId, b.memberId)) } : {}),
   };
   return { assembly: input.assembly, index, details, sessions, rollCallIndex: rollCalls.map(({ votes: _v, ...s }) => s), rollCalls, unmatched: unmatchedList, meta };
 }

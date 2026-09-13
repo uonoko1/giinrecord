@@ -64,6 +64,7 @@ grep してから起票してください（**今日の 5 件はそこにあり�
 | 名簿に無い会派で同姓同名を分けたつもりになる | `packages/etl/src/group-history.ts` の `groupAt`（`会派移動の時期を推定することはしない`）。食い違いは `packages/etl/src/match-votes.ts` の `groupMismatch` に残す（#24） |
 | 氏名が PDF の文字層で 1 文字落ちる | `packages/etl/src/sources/local/name-match.ts` の `matchBySubsequence`（部分列一致）。BMP 外の `𠮷` と康熙部首 `⾧` は `ITAIJI` 表で寄せる（#617/#648） |
 | **一次資料どうしが氏名で食い違う**（同じ議員が別の漢字で載る。佐賀 `猪村理恵子` U+7406 / `猪村利恵子` U+5229） | `packages/etl/src/sources/local/name-match.ts` の `localNameKey` は別字を畳まないので、どちらかに寄らず未突合に落ちる。**食い違いだと分かる形で落とす**のは同じファイルの `conflictingRosterNames`（名簿と1文字違いを名指しするだけで寄せない）と `sourceConflict`。運用者に見せるのは `packages/etl/src/local-assemblies.ts` の `describeUnmatched`（`do NOT pick one`）。テストは `packages/etl/test/local-name-source-conflict.test.ts` の `1 文字違いは同一人物の根拠にならない（本番名簿に現職どうしの組が 3 組ある）`（#711/#670/#569） |
+| **PDF の文字層から字が落ちたまま、それでも本人に寄って、誰も気づかない** | `packages/etl/src/local-assemblies.ts` の `lossyNameMatchesOf` が **11 県すべてが通る 1 か所**で数え、`meta.json` の `lossyNameMatches` に出す（#778。#750 が青森に置いたものを共通層へ移した）。判定は `packages/etl/src/sources/local/name-match.ts` の `isLossyName`（**キーが違うのではなく、部分列で短い**＝字が落ちた。「キーが違う」だと鳥取の 35 人全員が鳴る）。**票は本人に付けたまま残す**（寄せ方は変えない）。**鳥取だけは鳴らせない**——PDF が姓だけなので、名の側の欠落は見えない。テストは `packages/etl/test/local-lossy-name-matches.test.ts`（本番 58,057 票を数えると奈良に 2 件。**公表した `meta.json` が票と食い違っていないことも見る**） |
 | **名簿の HTML 自体を読み違えて、氏名が短くなったまま本番に出る** | `packages/etl/src/local-assemblies.ts` の `kanaNameRatioExceeds`（かな長と氏名長の検算。#632）。`packages/etl/src/dataset.ts` が `members/index.json` にも掛ける。**見るのは名簿の行だけで、PDF 側の欠落は拾えない**（氏名もかなも同じ HTML の同じ行から来るので「独立した2つの値」ではない。#771）。**鳴るのは氏名が 2 文字前後のときだけ**（1 文字欠落 4,554 通り中 19 通り = 0.42%、2026-09-13 実測）。テストは `packages/etl/test/kana-ratio-provenance.test.ts` |
 | 氏名正規化の規則が県ごとに勝手に分岐する | `packages/etl/test/name-normalization-table.test.ts` が `normalizeName` と `localNameKey` の畳み方を表として固定する（#581/#636） |
 | 会派の記録を本人の記録として見せる | `apps/web/app/routes/member-tabs.test.tsx` が `所属会派の記録（推定）本人の投票ではありません` を固定する（#238） |
@@ -107,6 +108,7 @@ grep してから起票してください（**今日の 5 件はそこにあり�
 | 高深刻度の脆弱性を無期限に放置する | `scripts/ci/audit.sh`（`audit-ignore.txt` の例外は必ず期限付き）と `scripts/ci/audit-ignore.txt`（#133） |
 | shellcheck の対象・版が CI と手元でずれる | `scripts/ci/shellcheck.sh`（`--list` の対象と `--pinned-version` の固定版が 1 か所。#154/#552） |
 | ビルド成果物がリポジトリに入る | `apps/web/app/lib/repo-hygiene.test.ts`（`check-ignore` で判定。文字列一致ではなく git の判定） |
+| 測定の作業ゴミが git status に残り、マージ済み worktree が消えず、守りが毎回鳴って本物の取りこぼしと見分けられなくなる | 置き場所は 1 つに決めてある。`apps/web/app/lib/repo-hygiene.test.ts` が check-ignore で両側を測る——`.measure/` が無視されること、および `成果物を黙って捨てない`（名前が似ているだけのものと data/ 配下）が無視されないこと。`scripts/po/worktree-sweep.sh` は `未追跡（?? ）の作業ディレクトリ` だけを守り 1 から外す（#787/#769/#726） |
 | 本番のコードが「最後のリリース」から外れる | `scripts/ci/released-ref.sh`（`resolve` / `overlay`。#134） |
 | スプリント文書が「次に持ち越すもの」を落とし、次の計画がゼロから始まる | `packages/etl/test/sprint-doc-shape.test.ts` の `REQUIRED_SECTIONS` と `FIRST_ENFORCED_SPRINT`。雛形は `docs/sprints/TEMPLATE.md` の `次に持ち越すもの`（#682。3 回中 2 回落とした） |
 
