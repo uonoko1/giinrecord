@@ -201,6 +201,19 @@ t_stdin() {
 }
 test_case "input: - で標準入力から読める" t_stdin
 
+# ── 6b. GitHub が実際に送ってくる形（CRLF）────────────────────────────────────────────
+# **GitHub の PR 本文は CRLF 改行で来る。** LF の fixture だけで測ると、本番でだけ
+# 行末の `\r` が正規表現に噛んで落ちる、という形を見落とす。
+t_crlf_body() {
+  printf 'text\r\nCloses #793\r\n' > "$TMP/body.md"
+  set +e; OUT=$(bash "$SCRIPT" "$TMP/body.md" 2>&1); STATUS=$?; set -e
+  assert_eq 0 "$STATUS" "CRLF の本文でも Closes #N を拾う"
+  printf 'text\r\nCloses \xe3\x81\xaa\xe3\x81\x97\xef\xbc\x88\xe4\xbd\x9c\xe6\xa5\xad\xe5\x90\x88\xe6\x84\x8f\xe3\x81\xae\xe6\x9b\xb4\xe6\x96\xb0\xef\xbc\x89\r\n' > "$TMP/body.md"
+  set +e; OUT=$(bash "$SCRIPT" "$TMP/body.md" 2>&1); STATUS=$?; set -e
+  assert_eq 0 "$STATUS" "CRLF の本文でも「Issue 無し」の宣言を拾う"
+}
+test_case "input: CRLF の本文（GitHub が送ってくる形）でも両方拾う" t_crlf_body
+
 # ── 7. この PBI 自身の PR 本文（実物）が通ること ────────────────────────────────────────
 # **自分が作った検査を自分が通らない、を防ぐ**（#793 の指示）。
 t_this_pr_body_shape_passes() {
