@@ -1,0 +1,391 @@
+{
+ "assemblyId": "pref-41",
+ "counts": {
+  "no": 0,
+  "present": 37,
+  "voting": 36,
+  "yes": 36
+ },
+ "date": "2026-04-21",
+ "id": "pref-41-2026-04-rinji-list06671-20260421-議第２号議案",
+ "kind": "議案",
+ "number": "議第２号議案",
+ "page": 1,
+ "result": "可決",
+ "sessionId": "2026-04-rinji-list06671",
+ "sessionLabel": "令和8年4月臨時会",
+ "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003119136/3_119136_389175_up_bkhi5h10.pdf",
+ "title": "佐賀県議会委員会条例の一部を改正する条例（案）",
+ "votes": [
+  {
+   "group": "",
+   "memberId": "p_41_280954",
+   "nameText": "石井秀夫",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_41_280907",
+   "nameText": "留守茂幸",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_41_280920",
+   "nameText": "大場芳博",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_41_280906",
+   "nameText": "木原奉文",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_41_280928",
+   "nameText": "冨田幸樹",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_41_280970",
+   "nameText": "猪村利恵子",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_41_280914",
+   "nameText": "西久保弘克",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_41_280931",
+   "nameText": "指山清範",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_41_322577",
+   "nameText": "藤木卓一郎",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_41_280942",
+   "nameText": "中村圭一",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_41_280958",
+   "nameText": "宮原真一",
+   "value": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_41_280951",
+   "nameText": "坂口祐樹",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_41_280956",
+   "nameText": "古川裕紀",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_41_280919",
+   "nameText": "青木一功",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "",
+   "nameText": "桃崎裕介",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_41_280913",
+   "nameText": "古賀陽三",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_41_280949",
+   "nameText": "石丸太郎",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_41_280955",
+   "nameText": "八谷克幸",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_41_280962",
+   "nameText": "石倉秀郷",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_41_280950",
+   "nameText": "土井敏行",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_41_280947",
+   "nameText": "岡口重文",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_41_280953",
+   "nameText": "池田正恭",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_41_280960",
+   "nameText": "原田寿雄",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_41_280963",
+   "nameText": "定松一生",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_41_280948",
+   "nameText": "弘川貴紀",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_41_280959",
+   "nameText": "古賀和浩",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_41_280929",
+   "nameText": "田中秀和",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_41_280918",
+   "nameText": "一ノ瀬裕子",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_41_280969",
+   "nameText": "酒井幸盛",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_41_280946",
+   "nameText": "野田勝人",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_41_280909",
+   "nameText": "徳光清孝",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_41_280911",
+   "nameText": "江口善紀",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_41_280910",
+   "nameText": "藤崎輝樹",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_41_280943",
+   "nameText": "下田寛",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_41_280912",
+   "nameText": "中本正一",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_41_280922",
+   "nameText": "木村雄一",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_41_280908",
+   "nameText": "武藤明美",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  }
+ ]
+}

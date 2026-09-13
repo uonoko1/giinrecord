@@ -268,6 +268,10 @@ t_list_collects_real_primary_source_urls() {
   # **「入っていること」もここで固定する**——許可リストに足しただけでは、
   # **抽出が秋田を拾っていなくても緑になる**（#500: 入口を固定する）。
   assert_contains "$list" "https://pref.akita.gsl-service.net/" "秋田の URL が入っている（#759）"
+  # **佐賀（#768）は `www.pref.saga.lg.jp`**——**既存の `www.pref.<県>.lg.jp` のパターンに当たる**
+  # （青森と同じで、許可リストを足す必要は無かった。実測 2026-09-13）。
+  # **それでも「入っていること」は固定する**（#500: 抽出が佐賀を拾っていなくても緑にならないように）。
+  assert_contains "$list" "https://www.pref.saga.lg.jp/" "佐賀の URL が入っている（#768）"
   # 重複していない（同じ PDF が数百の rollcall から参照される。全部叩いたら相手に失礼）
   assert_eq "$n" "$(printf '%s\n' "$list" | sed '/^$/d' | sort -u | wc -l | tr -d ' ')" "重複を除いてある"
   # 集めるのは公式ドメインだけ（data/ に外部ドメインが紛れ込んだら気づく）

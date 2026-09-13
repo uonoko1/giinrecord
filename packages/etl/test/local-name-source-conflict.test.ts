@@ -194,6 +194,12 @@ test("#711 validateLocalAssemblies: unmatched.json の sourceConflict が名簿�
  *   `和 田 寛 司`（寛 U+5BDB）… 名簿は `和田 寬司`（寬 U+5BEC）。**別の漢字**（#529 が見つけた罠）
  *   `噰 引 ユキ子`（噰 U+5670）… 名簿は `櫛󠄁引 ユキ子`。**埋め込みフォントの ToUnicode が別の字を指す**（#749 の機序 ③）
  * 滋賀の 1 行は `brokenGlyph`（`辻` が `□` に化けた氏名。#680／#741）で、`sourceConflict` ではない。
+ *
+ * **2026-09-13、佐賀（pref-41、#768）が 11 議会目として入り、真陽性が 2 行増えた**（実測）:
+ *   `猪村理恵子`（理 U+7406）… 名簿は `猪村 利恵子`（利 U+5229）。**別の漢字**（#670 が見つけた）
+ *   `桃崎裕介`（裕 U+88D5）… 名簿は `桃崎 祐介`（祐 U+7950）。**別の漢字**（#765 が見つけた）
+ * **どちらも「日付では切れない」**——**少数側が最新でもない**ので、
+ * **「事務局が改めた」とも言えない**（#670 の仮説は #765 に否定された）。
  */
 test("#711 否定的対照: 本番 data/ の unmatched 行の reason が計算し直した値と一致する", async () => {
   const DATA = fileURLToPath(new URL("../../../data/", import.meta.url));
@@ -201,8 +207,9 @@ test("#711 否定的対照: 本番 data/ の unmatched 行の reason が計算�
   const locals = members.filter((m) => typeof m.assemblyId === "string" && m.assemblyId.startsWith("pref-"));
   assert.ok(locals.length > 200, `地方名簿が読めていなければこの対照は無意味（${locals.length} 名）`);
   const assemblies = [...new Set(locals.map((m) => m.assemblyId!))].sort();
-  // 2026-09-13 に滋賀（pref-25、#741）が 8 議会目、青森（pref-02、#750）が 9 議会目、秋田（pref-05、#759）が 10 議会目として入った
-  assert.equal(assemblies.length, 10, `全 10 議会を見ていること: ${assemblies.join(",")}`);
+  // 2026-09-13 に滋賀（pref-25、#741）が 8 議会目、青森（pref-02、#750）が 9 議会目、
+  // 秋田（pref-05、#759）が 10 議会目、佐賀（pref-41、#768）が 11 議会目として入った
+  assert.equal(assemblies.length, 11, `全 11 議会を見ていること: ${assemblies.join(",")}`);
 
   let rows = 0;
   let conflicts = 0;
@@ -218,8 +225,9 @@ test("#711 否定的対照: 本番 data/ の unmatched 行の reason が計算�
       if (reason !== u.reason) hits.push(`${a} ${u.nameText}: ${String(reason)} !== ${String(u.reason)}`);
     }
   }
-  // 実測 2026-09-13: 宮城 1・三重 3・滋賀 1（brokenGlyph）・青森 3（sourceConflict）
-  assert.equal(rows, 8, `本番の unmatched は 8 行のはず（宮城 1・三重 3・滋賀 1・青森 3）。増減したらこの対照を測り直すこと（実測 2026-09-13）`);
+  // 実測 2026-09-13: 宮城 1・三重 3・滋賀 1（brokenGlyph）・青森 3・佐賀 2（sourceConflict）
+  assert.equal(rows, 10, `本番の unmatched は 10 行のはず（宮城 1・三重 3・滋賀 1・青森 3・佐賀 2）。増減したらこの対照を測り直すこと（実測 2026-09-13）`);
+  assert.equal(conflicts, 5, "sourceConflict は 5 行（青森 3・佐賀 2）");
   // **真陽性が 1 件以上**（無ければ「全部 sourceConflict にしない実装」でも通ってしまう）
   assert.ok(conflicts >= 1, `本番に sourceConflict の真陽性が 1 件も無い（${conflicts} 件）。この対照は空回りしている`);
   // **sourceConflict でない行も残っている**（無ければ「全部 sourceConflict にする実装」でも通ってしまう）
