@@ -364,8 +364,9 @@ handle() {
     "api graphql "*) echo '{"data":{"node":{"items":{"pageInfo":{"hasNextPage":false,"endCursor":""},
       "nodes":[{"id":"I781","content":{"number":781,"labels":{"nodes":[]}},
         "fieldValueByName":{"name":"In Progress","updatedAt":"2026-09-13T00:00:00Z"}}]}}}}' ;;
-    "pr list --repo "*"--state merged"*) echo '[]' ;;
-    "pr list --repo "*"--state all"*) echo '[]' ;;
+    # **母数 0 で exit 4 になる既存の検査を踏まないよう、無関係な PR を 1 本置く**
+    "pr list --repo "*"--state merged"*) echo '[{"number":600,"body":"no refs","headRefName":"chore/600-x"}]' ;;
+    "pr list --repo "*"--state all"*) echo '[{"number":600,"body":"no refs","headRefName":"chore/600-x"}]' ;;
     # **リモートに枝がある = 誰かが作業している**
     "api repos/"*"/branches"*) echo '[{"name":"main"},{"name":"docs/781-kumamoto-measure"}]' ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
@@ -375,6 +376,10 @@ EOF
 )
   PO_NOW=2026-09-14T12:00:00Z run_script "$h" board-audit.sh
   assert_not_contains "$OUT" "inprogress-no-trace" "**枝があれば鳴らさない（誤検出の検査）**"
+  # **空回り防止**（この 2 行が無いと、規則 5 に到達しないだけで上の検査が通ってしまう。
+  # 実際に最初の版はそうなっていて、`HAS_TRACE` を無視する変異で落ちなかった）
+  assert_eq 0 "$STATUS" "規則 5 まで到達して食い違い 0 件で終わる: $ERR"
+  assert_contains "$OUT" "痕跡あり 1 件" "**枝を痕跡として数えたことを出力で確かめる**"
 }
 test_case "audit: 番号の付いた枝があれば In Progress を誤検出しない (#809)" t_audit_inprogress_with_branch_is_not_stale
 
@@ -386,7 +391,7 @@ handle() {
     "api graphql "*) echo '{"data":{"node":{"items":{"pageInfo":{"hasNextPage":false,"endCursor":""},
       "nodes":[{"id":"I781","content":{"number":781,"labels":{"nodes":[]}},
         "fieldValueByName":{"name":"In Progress","updatedAt":"2026-09-13T00:00:00Z"}}]}}}}' ;;
-    "pr list --repo "*"--state merged"*) echo '[]' ;;
+    "pr list --repo "*"--state merged"*) echo '[{"number":600,"body":"no refs","headRefName":"chore/600-x"}]' ;;
     # **枝は消えていても、Closes #781 の PR があれば作業はあった**
     "pr list --repo "*"--state all"*) echo '[{"number":799,"body":"Closes #781","headRefName":"gone"}]' ;;
     "api repos/"*"/branches"*) echo '[{"name":"main"}]' ;;
@@ -397,6 +402,8 @@ EOF
 )
   PO_NOW=2026-09-14T12:00:00Z run_script "$h" board-audit.sh
   assert_not_contains "$OUT" "inprogress-no-trace" "**Closes #N の PR があれば鳴らさない（誤検出の検査）**"
+  assert_eq 0 "$STATUS" "規則 5 まで到達して食い違い 0 件で終わる: $ERR"
+  assert_contains "$OUT" "痕跡あり 1 件" "**PR を痕跡として数えたことを出力で確かめる**"
 }
 test_case "audit: Closes #N の PR があれば In Progress を誤検出しない (#809)" t_audit_inprogress_with_pr_is_not_stale
 
@@ -421,6 +428,8 @@ EOF
   PO_NOW=2026-09-14T12:00:00Z run_script "$h" board-audit.sh
   assert_not_contains "$OUT" "inprogress-no-trace" "**始めた直後は鳴らさない（誤検出の検査）**"
   assert_contains "$OUT" "24 時間" "**閾値を出力に書く**（何を見なかったかが分かるように）"
+  assert_eq 0 "$STATUS" "規則 5 まで到達して食い違い 0 件で終わる: $ERR"
+  assert_contains "$OUT" "24 時間未満 1 件" "**閾値で見送ったことを出力で確かめる**（空回り防止）"
 }
 test_case "audit: In Progress にした直後は鳴らさない (#809)" t_audit_inprogress_recent_is_not_stale
 
@@ -445,6 +454,8 @@ EOF
   PO_NOW=2026-09-14T12:00:00Z run_script "$h" board-audit.sh
   assert_not_contains "$OUT" "inprogress-no-trace" "**monitor ラベルは対象外（担当者を立てない型）**"
   assert_contains "$OUT" "monitor" "**除外した理由と件数を出す**（沈黙で 100% に見せない。#757）"
+  assert_eq 0 "$STATUS" "規則 5 まで到達して食い違い 0 件で終わる: $ERR"
+  assert_contains "$OUT" "monitor 1 件" "**除外した件数を出力で確かめる**（空回り防止）"
 }
 test_case "audit: monitor ラベルの Issue は In Progress でも対象外 (#809)" t_audit_inprogress_monitor_label_excluded
 
