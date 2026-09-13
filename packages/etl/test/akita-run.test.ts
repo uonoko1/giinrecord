@@ -139,9 +139,9 @@ test("#759 LOCAL_SOURCES に `akita` が入っている", () => {
   assert.ok(Object.hasOwn(LOCAL_SOURCES, "akita"), "`pnpm etl:local akita` が引ける");
   assert.equal(LOCAL_SOURCES.akita.assembly.id, "pref-05");
   assert.equal(LOCAL_SOURCES.akita.assembly.name, "秋田県議会");
-  // **10 議会目**（既存 9 県を消していない）
-  assert.equal(Object.keys(LOCAL_SOURCES).length, 10, `議会の数（${Object.keys(LOCAL_SOURCES).join(" ")}）`);
-  assert.equal(new Set(Object.values(LOCAL_SOURCES).map((s) => s.assembly.id)).size, 10, "assemblyId が重複していない");
+  // **既存の議会を消していない**（#768 で佐賀が 11 議会目に入った）
+  assert.equal(Object.keys(LOCAL_SOURCES).length, 11, `議会の数（${Object.keys(LOCAL_SOURCES).join(" ")}）`);
+  assert.equal(new Set(Object.values(LOCAL_SOURCES).map((s) => s.assembly.id)).size, 11, "assemblyId が重複していない");
 });
 
 /** **ワークフローと CLI にも足してある**（コードだけあっても月次で走らない。#720 の運用） */
@@ -150,7 +150,9 @@ test("#759 ワークフローと CLI の Usage に `akita=pref-05` が入って�
   const wf = await readFile(join(repo, ".github/workflows/local-assemblies.yml"), "utf-8");
   assert.match(wf, /akita=pref-05/, "ASSEMBLIES に入っている");
   const cli = await readFile(join(repo, "packages/etl/src/local-cli.ts"), "utf-8");
-  assert.match(cli, /\|akita>/, "Usage に入っている");
+  // **末尾に固定しない**——**次の議会が足されるたびに落ちる**（#768 の佐賀で実際に落ちた）。
+  // **`|akita|` か `|akita>` のどちらか**（列挙の途中でも末尾でもよい）
+  assert.match(cli, /Usage:[^\n]*\|akita[|>]/, "Usage に入っている");
   // **link-check の公式ドメインの許可にも入っている**（秋田は `pref.*.lg.jp` ではない）
   const lc = await readFile(join(repo, "scripts/ci/test/link-check.test.sh"), "utf-8");
   assert.match(lc, /pref\\\.akita\\\.gsl-service\\\.net/, "許可リストに入っている");
