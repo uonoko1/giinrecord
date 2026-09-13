@@ -255,6 +255,54 @@ export function lossyNameMatchesOf(
   return [...out.values()];
 }
 
+/**
+ * **記号の数と公表値（`counts`）を突き合わせる**（Issue #826）。**11 県すべてが通る 1 か所。**
+ *
+ * ## なぜ例外にしないか
+ *
+ * **5 県（宮城・鳥取・島根・佐賀・高知）はこれを `assert.equal` で突き合わせてきた**が、
+ * **食い違いの原因は「記号の取りこぼし」だけではない。**
+ * **山梨には、公表された賛成者数に議長の `〇` が入っていない行が 2 つある**（#782／#811）。
+ * **佐賀にも同じ事象（知事の再議・三分の二未満で否決）の行が実在するが、佐賀では議長を数えているので合っている**（#825）。
+ * **同じ事象でも県ごとに数え方が違うので、食い違いは「壊れている」の証明にならない。**
+ * **止めれば正しい記録まで出なくなる**ので、**件数として残す**（#811 の PO の判断）。
+ *
+ * ## なぜ `mapped`（凡例から引いた意味）で数えるか——**生の字では数えられない**
+ *
+ * **本番 `data/` の 58,000 票を数えた実測**: 賛成は `○`（10 県）と `〇`（徳島）、
+ * 反対は `×`（8 県）と `●`（島根・徳島）に分かれている。
+ * **島根の `●` を `×` で数えれば、島根の全 112 件が「反対 0」になり、偽の食い違いが 112 件出る。**
+ * **`mapped` は各県が凡例（PDF の原文）から引いた意味なので、県ごとの字に依存しない。**
+ *
+ * ## 母数から外すもの（**外した数も返す**。#757）
+ *
+ * - **`counts` の欄が無い行**（本番 341 件。奈良 125・徳島 105・高知 104・秋田 7）——**突き合わせる相手が無い。**
+ * - **凡例の引けないセルがある行**（本番 5 件。滋賀 4・鳥取 1）——**`mapped` が無いセルは賛成とも反対とも数えられない。**
+ *   **滋賀の 4 行は生の字では公表値と合っている**（`legend` が `抽出不能` なだけ）ので、
+ *   **母数に入れると「票が食い違った」という偽の件数になる**（食い違っているのは凡例の読みであって、票ではない）。
+ *
+ * **議長の行は外さない**——`議` は `mapped: "投票なし"` なので賛成にも反対にも数えず、自然に合う。
+ * **議長が投票した行は一番壊れやすいので、検算の外に出さない**（#811 で PO が退けた案 ②）。
+ */
+export function countMismatchesOf(rollCalls: readonly LocalRollCall[]): {
+  mismatches: NonNullable<LocalAssemblyMeta["countMismatches"]>;
+  checked: LocalAssemblyMeta["countChecked"];
+} {
+  const mismatches: NonNullable<LocalAssemblyMeta["countMismatches"]> = [];
+  const checked = { rows: 0, checked: 0, noCounts: 0, unreadableCells: 0 };
+  for (const rc of rollCalls) {
+    checked.rows++;
+    if (!rc.counts) { checked.noCounts++; continue; }
+    if (rc.votes.some((v) => v.value.mapped === undefined)) { checked.unreadableCells++; continue; }
+    checked.checked++;
+    const yes = rc.votes.filter((v) => v.value.mapped === "賛成").length;
+    const no = rc.votes.filter((v) => v.value.mapped === "反対").length;
+    if (yes === rc.counts.yes && no === rc.counts.no) continue;
+    mismatches.push({ rollCallId: rc.id, counted: { yes, no }, published: { yes: rc.counts.yes, no: rc.counts.no } });
+  }
+  return { mismatches: mismatches.sort((a, b) => cmp(a.rollCallId, b.rollCallId)), checked };
+}
+
 export function buildLocalAssembly(input: LocalAssemblyInput): LocalAssemblyDataset {
   const ids = new Set<string>();
   for (const rc of input.rollCalls) {
@@ -315,6 +363,9 @@ export function buildLocalAssembly(input: LocalAssemblyInput): LocalAssemblyData
   // **字が落ちたまま寄った氏名は、11 県すべてが通るここで数える**（#778。県ごとに書かない）。
   // **`input.lossyNameMatches` は受け取らない**——受け取ると「県が渡さなければ出ない」に戻る。
   const lossyNameMatches = lossyNameMatchesOf(rollCalls, input.members);
+  // **記号の数と公表値の突き合わせも同じ理由でここに置く**（#826）。
+  // **`input.countMismatches` は受け取らない**——受け取ると「県が渡さなければ出ない」に戻る。
+  const counted = countMismatchesOf(rollCalls);
   const meta: LocalAssemblyMeta = {
     assemblyId: input.assembly.id,
     fetchedAt: input.fetchedAt,
@@ -324,6 +375,9 @@ export function buildLocalAssembly(input: LocalAssemblyInput): LocalAssemblyData
     counts: { members: index.length, rollcalls: rollCalls.length, cells, unknownCells, unmatchedNames: unmatchedList.length },
     ...(input.unreadableSources?.length ? { unreadableSources: [...input.unreadableSources].sort((a, b) => cmp(a.url, b.url)) } : {}),
     ...(lossyNameMatches.length ? { lossyNameMatches: lossyNameMatches.sort((a, b) => cmp(a.nameText, b.nameText) || cmp(a.memberId, b.memberId)) } : {}),
+    // **母数はいつも出す**（食い違いが 0 でも。「0 件」は「見た上での 0」でなければ意味が無い。#757）
+    countChecked: counted.checked,
+    ...(counted.mismatches.length ? { countMismatches: counted.mismatches } : {}),
   };
   return { assembly: input.assembly, index, details, sessions, rollCallIndex: rollCalls.map(({ votes: _v, ...s }) => s), rollCalls, unmatched: unmatchedList, meta };
 }
@@ -519,6 +573,8 @@ export async function validateLocalAssemblies(dir: string): Promise<string[]> {
     const perSession = new Map<string, { rollcalls: number; last: string }>();
     let cells = 0;
     let unknownCells = 0;
+    // **記号の数と公表値の突き合わせを meta と照合するために、読んだ採決を集める**（#826）
+    const rollCallsOnDisk: LocalRollCall[] = [];
     for (let i = 0; i < summaries.length; i++) {
       const s = summaries[i];
       const label = `assemblies/${a.id}/rollcalls/index.json[${i}]`;
@@ -532,6 +588,7 @@ export async function validateLocalAssemblies(dir: string): Promise<string[]> {
       const rel = `assemblies/${a.id}/rollcalls/${s.sessionId}/${s.id}.json`;
       const rc = await read<LocalRollCall>(rel);
       if (!rc) continue;
+      rollCallsOnDisk.push(rc);
       if (rc.id !== s.id || rc.assemblyId !== a.id) v.push(`${rel}: id/assemblyId mismatch`);
       if (!ISO_DATE.test(rc.date)) v.push(`${rel}: date must be ISO`);
       if (typeof rc.kind !== "string" || rc.kind === "" || typeof rc.title !== "string" || rc.title === "") v.push(`${rel}: kind / title required`);
@@ -585,6 +642,12 @@ export async function validateLocalAssemblies(dir: string): Promise<string[]> {
       if (meta.counts.rollcalls !== summaries.length) v.push(`assemblies/${a.id}/meta.json: counts.rollcalls ${meta.counts.rollcalls} !== ${summaries.length}`);
       if (meta.counts.members !== index.length) v.push(`assemblies/${a.id}/meta.json: counts.members ${meta.counts.members} !== ${index.length}`);
       if (meta.counts.unmatchedNames !== unmatched.length) v.push(`assemblies/${a.id}/meta.json: counts.unmatchedNames ${meta.counts.unmatchedNames} !== ${unmatched.length}`);
+      // **公表した meta が、公表した票と食い違っていないこと**（#826。**#778 と同じ理由**——
+      // **`meta.json` は運用者が見る唯一の窓**なので、そこが票とずれたまま出ている状態にしない）。
+      // **`rollcalls/` のほうを正とする**（票が一次資料に最も近い形だから）
+      const counted = countMismatchesOf(rollCallsOnDisk);
+      if (stableJson(meta.countChecked) !== stableJson(counted.checked)) v.push(`assemblies/${a.id}/meta.json: countChecked ${stableJson(meta.countChecked).trim()} !== ${stableJson(counted.checked).trim()} from rollcalls/`);
+      if (stableJson(meta.countMismatches ?? []) !== stableJson(counted.mismatches)) v.push(`assemblies/${a.id}/meta.json: countMismatches (${(meta.countMismatches ?? []).length} rows) !== ${counted.mismatches.length} rows from rollcalls/`);
     }
   }
   return v;

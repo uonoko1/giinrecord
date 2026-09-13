@@ -14,6 +14,7 @@ const assemblyMeta: LocalAssemblyMeta = {
   rosterAsOf: "2026-08-01",
   sessions: [{ sessionId: "2026-06", sessionLabel: "令和8年6月定例会", sourceUrl: "https://www.pref.tottori.lg.jp/gikai/", pdfUrl: "https://www.pref.tottori.lg.jp/secure/1422217/R8.6giketsukekka0629.pdf", rollcalls: 3, unknownCells: 0 }],
   counts: { members: 34, rollcalls: 3, cells: 102, unknownCells: 0, unmatchedNames: 0 },
+  countChecked: { rows: 10, checked: 10, noCounts: 0, unreadableCells: 0 },
 };
 const withCounts = mapped as unknown as LocalRollCall;
 const withoutCounts = unmapped as unknown as LocalRollCall;
