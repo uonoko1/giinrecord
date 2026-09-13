@@ -9,7 +9,28 @@ import { getDocument, OPS } from "pdfjs-dist/legacy/build/pdf.mjs";
 export interface Item { str: string; x: number; y: number; w: number; h: number; cx: number; cy: number }
 export interface VLine { x: number; y0: number; y1: number }
 export interface HLine { y: number; x0: number; x1: number }
+/** ページの文字と罫線。オペレータ列だけから作れる部分（`kochi/glyphs.ts` / `mie/glyphs.ts` が作る）。 */
 export interface PageGeometry { items: Item[]; vlines: VLine[]; hlines: HLine[] }
+
+/**
+ * `readPages` が返すページ。**`rotate` と `view` は青森（#750）で足した**。
+ * **既存 8 県は 1 つも読んでいない**（`items` / `vlines` / `hlines` の値は 1 バイトも変わらない）。
+ *
+ * **なぜ要るか**——**青森の 56 本のうち 11 本 / 27 ページが `/Rotate 90`**（#743 が実測）。
+ * `it.transform[4]/[5]` は回転を打ち消す前の座標なので、**そのまま読むと縦書きの氏名が横に並び、
+ * 行が縦に並ぶ**（#743: 行 2,445 → 2,000、対 113,911 → 92,901、氏名なし 20,864）。
+ * **打ち消す計算は共通層には置かない**（既存 8 県の出力が変わるため。#743 と同じ判断）。
+ * **ここは「ページがそう宣言している」という事実だけを渡し、直すかどうかは議会ごとに決める。**
+ *
+ * **`PageGeometry` と分けてあるのは、`kochi/glyphs.ts` / `mie/glyphs.ts` が
+ * ページを持たずにオペレータ列だけから幾何を組み立てるため**（そちらは `/Rotate` を知りようがない）。
+ */
+export interface RotatedPageGeometry extends PageGeometry {
+  /** ページの `/Rotate`（度。0 / 90 / 180 / 270）。**座標には反映していない** */
+  rotate: number;
+  /** ページの MediaBox（`page.view`。`[x0, y0, x1, y1]`）。回転を打ち消すときに幅・高さが要る */
+  view: readonly [number, number, number, number];
+}
 
 /** 境界からこの距離以内にある文字は「どちらのセルか分からない」として置かない。 */
 export const EDGE = 1.0;
@@ -96,10 +117,10 @@ export function readLines(fnArray: ArrayLike<number>, argsArray: ArrayLike<unkno
   return { vlines, hlines };
 }
 
-export async function readPages(bytes: Buffer): Promise<PageGeometry[]> {
+export async function readPages(bytes: Buffer): Promise<RotatedPageGeometry[]> {
   const loadingTask = getDocument({ data: new Uint8Array(bytes), verbosity: 0 });
   const doc = await loadingTask.promise;
-  const out: PageGeometry[] = [];
+  const out: RotatedPageGeometry[] = [];
   try {
     for (let i = 1; i <= doc.numPages; i++) {
       const page = await doc.getPage(i);
@@ -116,7 +137,8 @@ export async function readPages(bytes: Buffer): Promise<PageGeometry[]> {
       }
       const ops = await page.getOperatorList();
       const { vlines, hlines } = readLines(ops.fnArray, ops.argsArray);
-      out.push({ items, vlines, hlines });
+      const view = page.view as number[];
+      out.push({ items, vlines, hlines, rotate: page.rotate, view: [view[0], view[1], view[2], view[3]] });
     }
   } finally {
     await loadingTask.destroy();

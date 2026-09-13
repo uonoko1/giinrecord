@@ -29,12 +29,25 @@ export interface HeadFontDataSource {
   localVoteMarks?: string[];
 }
 
+/**
+ * **異体字セレクタは字ではない**（SVS U+FE00–FE0F / IVS U+E0100–E01EF）。
+ * **幅 0 で、それ自体は 1 つも描かれない**——直前の字の字形を選ぶだけの符号である。
+ * **サブセットに入れろと言っても、フォントにその符号のグリフは無い**ので、
+ * 「`.txt` が主張する字が woff2 に入っていない」という退行の検査に**偽陽性**で引っ掛かる。
+ *
+ * **2026-09-13、青森県議会（#750）を足して実際に引っ掛かった**——
+ * 名簿の `櫛󠄁引 ユキ子` の `櫛` が `U+6ADB U+E0101` で、**U+E0101 が字として集まった。**
+ * **`櫛` U+6ADB のほうは入っている**ので、**この議員の氏名は明朝で描ける**（欠けていない）。
+ * **落とすのが正しい。**
+ */
+const VARIATION_SELECTOR = /[\uFE00-\uFE0F\u{E0100}-\u{E01EF}]/u;
+
 /** 与えた欄に出てくる**異なり字**。`undefined` の欄は無視する（ETL 前・古いデータでも落ちない）。 */
 export function dataHeadChars(source: HeadFontDataSource): Set<string> {
   const out = new Set<string>();
   const add = (text: string | undefined) => {
     if (typeof text !== "string") return;
-    for (const ch of text) out.add(ch);
+    for (const ch of text) if (!VARIATION_SELECTOR.test(ch)) out.add(ch);
   };
   for (const m of source.members ?? []) {
     add(m.name);

@@ -140,6 +140,21 @@ describe("明朝700 のサブセットが data/ を覆っている（#477）", (
    * （#504「名前を固定した は 値を固定した ではない」と同型）。
    * だから**実物の cmap を読んで突き合わせる**。逆向き（`.txt` にだけ足す）も同時に捕まる。
    */
+  /**
+   * **異体字セレクタ（SVS U+FE00–FE0F / IVS U+E0100–E01EF）は「描ける／描けない」の対象ではない。**
+   * **幅 0 で、それ自体は 1 つも描かれない**——直前の字の字形を選ぶだけの符号である。
+   * **フォントにその符号のグリフは無く、あってはならない。**
+   *
+   * **2026-09-13、青森県議会（#750）を足して実際に引っ掛かった**——
+   * 名簿の `櫛󠄁引 ユキ子` の `櫛` は `U+6ADB U+E0101` で、**`櫛` U+6ADB は woff2 に入っている。**
+   * **この氏名は明朝で描ける。** それを「描けない」と報告するのは偽陽性である。
+   *
+   * **「セレクタを無視すれば全部通る」ようにはなっていない**——`櫛` 本体が抜ければ落ちる。
+   * **除外が空回りしていないこと**は、上の test が「セレクタを持つ氏名が実在する」ことで固定する。
+   */
+  const isVariationSelector = (c: string): boolean => /[\uFE00-\uFE0F\u{E0100}-\u{E01EF}]/u.test(c);
+  const nameGlyphs = (name: string | undefined): string[] => [...(name ?? "")].filter((c) => !isVariationSelector(c));
+
   it("`.txt` が主張する字は、実物の woff2 にも入っている（U+2FA7 だけが既知の例外）", () => {
     const claimedButMissing = [...committed].filter((c) => !fontChars.has(c));
     expect(claimedButMissing, "`.txt` にあるのに woff2 に無い字（U+2FA7 以外は退行）").toEqual(["\u2FA7"]);
@@ -151,14 +166,17 @@ describe("明朝700 のサブセットが data/ を覆っている（#477）", (
     const index = readJson<{ name?: string }[]>(path.join(dataDir, "members", "index.json")) ?? [];
     expect(index.length).toBeGreaterThan(1000);
     // `.txt` ではなく **font の cmap** で引く。1 字でも欠ければ、その氏名は書体が混ざる
-    const broken = index.filter((m) => [...(m.name ?? "")].some((c) => !fontChars.has(c))).map((m) => m.name);
+    const broken = index.filter((m) => nameGlyphs(m.name).some((c) => !fontChars.has(c))).map((m) => m.name);
     expect(broken, `${broken.length} 名の氏名に、実物の woff2 に無い字がある`).toEqual([]);
+    // **異体字セレクタを持つ氏名が実在すること**を固定する（下の `nameGlyphs` の除外が空回りしないように）
+    const withVs = index.filter((m) => [...(m.name ?? "")].some(isVariationSelector)).map((m) => m.name);
+    expect(withVs, "異体字セレクタを持つ氏名（青森 #750 の `櫛󠄁引 ユキ子`）").toEqual(["櫛\u{E0101}引 ユキ子"]);
   });
 
   it.runIf(hasData)("議員 1,057 名全員の氏名が、1 字残らずサブセットに入っている", () => {
     const index = readJson<{ name?: string }[]>(path.join(dataDir, "members", "index.json")) ?? [];
     expect(index.length).toBeGreaterThan(1000);
-    const incomplete = index.filter((m) => [...(m.name ?? "")].some((c) => !committed.has(c))).map((m) => m.name);
+    const incomplete = index.filter((m) => nameGlyphs(m.name).some((c) => !committed.has(c))).map((m) => m.name);
     expect(incomplete, `${incomplete.length} 名の氏名に、サブセットに無い字がある`).toEqual([]);
   });
 

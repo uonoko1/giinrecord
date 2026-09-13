@@ -1,0 +1,18 @@
+[
+ {
+  "date": "2026-06-29",
+  "fetchedAt": "2026-09-13T12:00:00.000Z",
+  "id": "2026-06",
+  "label": "令和8年6月第326回定例会",
+  "rollcalls": 26,
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/katsudo-shinsakekka.html"
+ },
+ {
+  "date": "2026-03-24",
+  "fetchedAt": "2026-09-13T12:00:00.000Z",
+  "id": "2026-02",
+  "label": "令和8年2月第325回定例会",
+  "rollcalls": 87,
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/katsudo-shinsakekka.html"
+ }
+]
