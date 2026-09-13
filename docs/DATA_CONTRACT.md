@@ -66,7 +66,7 @@ interface LocalVote { raw: string; legend: string; mapped?: VoteValue }   // 地
 - `house` は**国会の院**の意味のまま残す（`"sangiin" | "shugiin"`。既存 JSON の後方互換）。階層は `Assembly.kind`、所属は `Member.assemblyId` / `MemberSummary.assemblyId` で表す。国会議員の `assemblyId` は `diet-{house}`（`diet-sangiin` / `diet-shugiin`）。
 - `Assembly.id`: 国会は `diet-sangiin` / `diet-shugiin`。都道府県は `pref-{団体コード上2桁}`（例 `pref-04` 宮城、`pref-36` 徳島）、市区町村は `city-{団体コード5桁}`（例 `city-33100` 岡山市）。団体コードは `districts/municipalities.json` の `code` と同じ体系なので、郵便番号 → 市区町村 → 議会 の結合がそのまま効く（#111）。`prefCode` は都道府県の団体コード上2桁で、`prefectural` / `municipal` に必須、`national` には無い。
 - `Assembly.name` は公式表記（「参議院」「宮城県議会」）、`sourceUrl` は名簿（議員一覧）の入口。国会の2行は衆参のドメイン。地方議会の行は https。地方議会のレコード（名簿・会議結果）の `sourceUrl` はその議会の `Assembly.sourceUrl` のホストに限る（「衆参・NDL のドメイン」の不変条件を議会ごとの許可ホストに一般化する。地方 ETL 以降）。
-- **URL**: 議会は `/assemblies/{assemblyId}/`、議員は既存の `/members/{id}` のまま。`MemberId` の空間は接頭辞で分ける: 参院 `m_…`、衆院 `h_…`、地方議会は `p_{prefCode}_…`（例 `p_04_…`）。国会の既存 URL は変えない。
+- **URL**: 議会は `/assemblies/{assemblyId}/`、議員は既存の `/members/{id}` のまま。**地方議会の表決は `/assemblies/{assemblyId}/rollcalls`（一覧）と `/assemblies/{assemblyId}/rollcalls/{rollCallId}`（1 件）**（#791。理由は下の「地方議会の採決の URL」）。`MemberId` の空間は接頭辞で分ける: 参院 `m_…`、衆院 `h_…`、地方議会は `p_{prefCode}_…`（例 `p_04_…`）。**国会の既存 URL は変えない**（`/rollcalls/{回次}/{id}`）。
 - **表決値（地方）**: 国会の `VoteValue`（賛成／反対／投票なし）には触れない。地方議会の凡例（○×議欠－棄白、簡易／起立 …）は `LocalVote` で**原文のまま**保持する: `raw` はセルの原文（「○」「×」「欠」「－」「議」）、`legend` はその議会の凡例での意味の原文（「賛成」「反対」「欠席」「議場に不在」「議長」「棄権」「白票」）、`mapped` は凡例から機械的に国会の値へ対応づけられるときだけ（○→賛成、×→反対、欠席・退席・除斥・議長など「票を投じていない」と凡例が言うとき→投票なし）。凡例から読めなければ `mapped` は省略し、推定しない。Web は必ず `raw` と `legend` を添えて表示し、`mapped` だけを出さない（欠席と棄権を区別している事実を消さない。国会の「欠席と棄権を区別しない」は国会の公表形式に従った結果で、地方の公表形式まで丸めない）。
 - 国会の既存データへの差分は `assemblies/index.json` の新設と `members/index.json` / `members/{id}.json` の `assemblyId` の追加だけ（それ以外は byte-identical）。
 - 不変条件（`validateDataset`）: `assemblies/index.json` が存在し、`id` は空でなく一意、`kind` は3値、`name` は空でない、`national` は `prefCode` を持たず `sourceUrl` は衆参・NDL のドメイン、`prefectural` / `municipal` は `prefCode` が 01〜47 で `sourceUrl` は https。`members/index.json` の各行の `assemblyId` は `assemblies/index.json` に存在し、`house` が `sangiin` / `shugiin` なら `diet-{house}` と一致する。`members/{id}.json` の `assemblyId` は index と同じ。
@@ -89,6 +89,35 @@ interface AssemblySession { id: string; label: string; date: string; rollcalls: 
 - `AssemblySession.id` は議会内で一意（例 `399`、`2026-06`）、`label` は原文（例「令和8年2月定例会（第399回）」）、`date` はその会期の最終議決日（ISO）、`rollcalls` はその会期の表決件数、`sourceUrl` は会期の表決結果ページ、`fetchedAt` は取得日時（ISO）。
 - 議員ページはビルド時に `assemblies/{assemblyId}/rollcalls/index.json` も読み、`voteSubject` / `committeeReport`（あれば）を rollCallId で timeline に結合して採決行に注記する（#204。下の「賛否の対象」）。ファイルが無い議会（結合できない場合）は従来どおり表示する。
 - 個人別表決の公開状況（公開／会派別／総数のみ／不明）は `data/` ではなく `apps/web/app/data/vote-disclosure.json`（#128 の調査表 `docs/research/local-assemblies.md` から機械的に起こしたもの。調査日付き）。`/assemblies/` が事実として表示する。
+
+### 地方議会の採決の URL（Issue #791。**国会の `/rollcalls` とは分ける**）
+
+**決めたこと**:
+
+| 何 | URL | ルート |
+|---|---|---|
+| 地方議会の表決一覧（議会ごと） | `/assemblies/{assemblyId}/rollcalls` | `routes/local-rollcalls.tsx` |
+| 地方議会の表決 1 件 | `/assemblies/{assemblyId}/rollcalls/{rollCallId}` | `routes/local-rollcall.tsx` |
+| 国会の採決一覧・採決 1 件（**変えない**） | `/rollcalls/{回次}` ・ `/rollcalls/{回次}/{id}` | `routes/rollcalls.tsx` ・ `routes/rollcall.tsx` |
+
+**なぜ国会の `/rollcalls` に混ぜないか**（#791 で最初に決めたこと）:
+
+- **`/rollcalls/{session}` は回次の「数」で切る作りである**（`rollCallPaths` は `index.map((r) => r.session)` を数として昇順に並べ、ページは「第221回国会の採決」と出す）。**地方の会期 id は数ではない**——宮城 `398`・鳥取 `2026-06`・佐賀 `2026-06-teirei-list06680`。そのまま混ぜると「第 2026-06-teirei-list06680 回国会」のような**意味の壊れた見出し**になる。
+- **地方の会期 id は議会内でしか一意でない。** `2026-06` は鳥取にも他県にもありうる。`/rollcalls/2026-06` は**どの県か決まらない**。`assemblyId` を前に置いて初めて一意になる。
+- **1 画面に 1,777 件（国会 408 ＋ 地方 1,369）を混ぜると、どの議会の記録を見ているのか分からなくなる。** 議会ごとに分ければ最大 365 件（三重）。
+
+**採決 1 件の id をそのまま URL に使う**（`{assemblyId}-{sessionId}-{議決日}-{種別}-{番号}`）。**日本語が入る**（「乙第40号議案」）ので percent-encode されるが、`data/` のファイル名と同じ文字列なので**変換表を持たなくてよい**（変換表は、それ自体がずれる）。地方 11 県 1,369 件で id はすべて一意（重複 0）、パス区切り・親参照を含む id は 0 件、encode 後の最長は 626 文字。
+
+**id から会期のディレクトリを組み立てない。** `{assemblyId}-{sessionId}-…` に見えるが、**`sessionId` 自体が `-` を含む議会がある**（佐賀 `2026-06-teirei-list06680`）ので id を分割しても会期は復元できない。`readLocalRollCall` は **`rollcalls/index.json` を引いて `sessionId` を得る**（これが唯一の正しい経路で、URL から任意のファイル名が渡ることもない）。
+
+**画面に出すもの**（**事実のみ。評価・採点・推薦をしない。順位をつけない。賛成率のような集計も出さない**）:
+
+- **一覧**: 議決日・議案名（採決 1 件のページへのリンク）・議案種別と番号・会期・議決結果・**表決結果（公式）への外部リンク**。**`sourceUrl` が https で無い行は表に出さない**（一次資料の無い行は出せない＝絶対原則）。**出さなかった件数はページに書く**（黙って落とすと「その表決は無かった」と読める）。
+- **1 件**: 議案名・議決日・会期・議案種別と番号・表決方法・議決結果・賛否の対象／委員長報告（#204）・付託委員会（#221）・**公表された人数**・会派ごとの各議員の表決（判の文字は**セルの原文**、読み上げは「原文（凡例）」）・**表決結果（公式）への外部リンクと PDF の何ページ目か**。
+- **人数は PDF の公表値（`counts`）だけを出し、`votes` から数え直さない。** 公表しない議会（奈良 `pref-29` 125 件・徳島 `pref-36` 105 件・高知 `pref-39` 104 件・秋田 `pref-05` の 7 件、計 341 件）では**「人数は公表記録にありません」と書く**——自分で数えた値を出すと、公表値と数え直した値の区別がつかなくなる（#757）。
+- **`mapped` の無い票（地方 11 県の 58,057 票のうち 3,762 票）を賛成／反対に丸めない。** 判の色は `mapped` のある票だけで、それ以外は中立（`localVoteTone`）。
+
+**プリレンダーは `rollcalls/index.json` を持つ議会だけ**（`localRollCallPaths`）。**採決を取得していない議会に空の一覧を作らない**——「0 件」と「まだ取得していない」が同じ画面になってしまう（#757）。議会ページ（`/assemblies/{id}`）の入口も `sessions.json` の `rollcalls` の合計が 0 より大きい議会だけに出す。
 
 ### 地方議会の ETL が書く原本（`assemblies/{assemblyId}/`、Issue #157。最初の議会は宮城県議会 `pref-04`、2 つ目は徳島県議会 `pref-36` #183、3 つ目は鳥取県議会 `pref-31` #184、4 つ目は三重県議会 `pref-24` #203）
 ### 地方議会の ETL が書く原本（`assemblies/{assemblyId}/`、Issue #157。最初の議会は宮城県議会 `pref-04`、2 つ目は徳島県議会 `pref-36` #183、3 つ目は鳥取県議会 `pref-31` #184、4 つ目は三重県議会 `pref-24` #203、5 つ目は奈良県議会 `pref-29` #202、6 つ目は島根県議会 `pref-32` #221）

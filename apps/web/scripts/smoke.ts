@@ -20,7 +20,7 @@ import { access, readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import type { ZipDistricts } from "@seiji-kiroku/shared";
 import { ARCHIVE_NAME, checkArchive, collectDataFiles } from "../app/lib/archive";
-import { defaultDataDir, readAssemblies, readRollCallIndex } from "../app/lib/data-files";
+import { defaultDataDir, readAssemblies, readLocalRollCallSummaries, readRollCallIndex } from "../app/lib/data-files";
 import { DISTRICTS_DATA_PATH, zipPrefix } from "../app/lib/districts";
 import { checkBrandAssets, checkBuild, checkDistrictData, checkMemberData, checkNoExternalResources, checkNotFoundPage, checkOpsData, checkSitemap, checkSpaFallback, FONTS_CSS, formatReport, NOT_FOUND_FILE, OPS_DATA_FILES, SPA_FALLBACK_FILE, type BuildFiles, type ExpectedData } from "../app/lib/smoke";
 import { checkServed, urlSmokeTargets, type ServedResponse } from "../app/lib/smoke-url";
@@ -69,7 +69,15 @@ async function readExpected(dataDir: string): Promise<ExpectedData> {
   } catch (err) {
     if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
   }
-  const assemblyIds = (await readAssemblies(dataDir))?.map((a) => a.id) ?? null;
+  const assemblies = await readAssemblies(dataDir);
+  const assemblyIds = assemblies?.map((a) => a.id) ?? null;
+  // #791: 地方議会の採決。議会ごとの rollcalls/index.json（無い議会は飛ばす）
+  let localRollCalls: ExpectedData["localRollCalls"] = null;
+  for (const a of assemblies ?? []) {
+    const index = await readLocalRollCallSummaries(dataDir, a.id);
+    if (!index || index.length === 0) continue;
+    localRollCalls = [...(localRollCalls ?? []), ...index.map((r) => ({ assemblyId: a.id, id: r.id }))];
+  }
   const opsFiles: string[] = [];
   for (const name of OPS_DATA_FILES) {
     try {
@@ -79,7 +87,7 @@ async function readExpected(dataDir: string): Promise<ExpectedData> {
       if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
     }
   }
-  return { memberIds, speechMemberIds, rollCalls, assemblyIds, districts, opsFiles };
+  return { memberIds, speechMemberIds, rollCalls, assemblyIds, localRollCalls, districts, opsFiles };
 }
 
 const buildDir = process.env.BUILD_DIR ?? path.resolve(process.cwd(), "build/client");
@@ -147,7 +155,7 @@ if (baseUrl) {
 }
 
 const report = { ...pages, failures: [...pages.failures, ...sitemap.failures, ...memberData.failures, ...districtData.failures, ...brandAssets.failures, ...opsData.failures, ...external.failures, ...spaFallback.failures, ...notFoundPage.failures, ...archiveFailures, ...servedFailures] };
-console.log(`smoke: build=${buildDir} data=${dataDir} members=${data.memberIds?.length ?? "none"} rollcalls=${data.rollCalls?.length ?? "none"} assemblies=${data.assemblyIds?.length ?? "none"}`);
+console.log(`smoke: build=${buildDir} data=${dataDir} members=${data.memberIds?.length ?? "none"} rollcalls=${data.rollCalls?.length ?? "none"} local-rollcalls=${data.localRollCalls?.length ?? "none"} assemblies=${data.assemblyIds?.length ?? "none"}`);
 console.log(`smoke: sitemap.xml ${sitemap.checkedUrls} urls checked`);
 console.log(`smoke: data/members ${memberData.checkedFiles} member files checked`);
 console.log(`smoke: data/districts ${districtData.checkedFiles} shard files checked (sample zip ${data.districts?.sample.zip ?? "none"})`);

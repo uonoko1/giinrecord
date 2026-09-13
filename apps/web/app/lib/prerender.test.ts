@@ -5,6 +5,7 @@ import { buildPrerenderPaths, NOT_FOUND_PRERENDER_PATH, prerenderPaths } from ".
 
 const fixtures = fileURLToPath(new URL("../test-fixtures/data", import.meta.url));
 const missing = fileURLToPath(new URL("../test-fixtures/does-not-exist", import.meta.url));
+const assemblyFixtures = fileURLToPath(new URL("../test-fixtures/assemblies/data", import.meta.url));
 
 describe("prerenderPaths", () => {
   it("静的ページ・全議員・全採決を列挙する", async () => {
@@ -22,6 +23,20 @@ describe("prerenderPaths", () => {
     // /members は #7 以降、データが無くても常に生成する（空の一覧を表示）
     // /assemblies と国会の2議会は #158 以降、assemblies/index.json が無くても生成する（ページ側の fallback と同じ）
     expect(await prerenderPaths(missing)).toEqual(["/", "/about", "/coverage", "/terms", "/privacy", "/members", "/assemblies", "/assemblies/diet-sangiin", "/assemblies/diet-shugiin"]);
+  });
+
+  // #791: 地方議会の採決。国会の /rollcalls/{回次}/{id} とは別の URL 空間に置く。
+  it("地方議会の採決一覧と採決1件も列挙する（国会側の列挙は変えない）", async () => {
+    const paths = await prerenderPaths(assemblyFixtures);
+    expect(paths).toContain("/assemblies/pref-31/rollcalls");
+    expect(paths).toContain("/assemblies/pref-31/rollcalls/pref-31-2026-06-20260629-知事提案-第10号");
+    expect(paths.filter((p) => p.startsWith("/assemblies/pref-31/rollcalls/"))).toHaveLength(3);
+    // rollcalls/index.json の無い議会（宮城）には一覧を作らない（0 件の一覧を出さない。#757）
+    expect(paths.some((p) => p.startsWith("/assemblies/pref-04/rollcalls"))).toBe(false);
+    expect(new Set(paths).size).toBe(paths.length);
+  });
+  it("地方の採決が 1 件も無いデータでは、地方の採決パスを 1 つも足さない", async () => {
+    expect((await prerenderPaths(fixtures)).some((p) => /^\/assemblies\/[^/]+\/rollcalls/.test(p))).toBe(false);
   });
 
   // #610: sitemap.ts / robots.ts はこの関数（prerenderPaths）をそのまま使う。not-found（noindex）が

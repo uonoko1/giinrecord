@@ -27,6 +27,11 @@ export interface ExpectedData {
   districts?: { prefixes: string[]; sample: { zip: string; districts: ZipDistricts } } | null;
   /** data/ 直下にある運用ファイル名（OPS_DATA_FILES のうち存在するもの）。data/ が無ければ省略／null（#152） */
   opsFiles?: string[] | null;
+  /**
+   * 地方議会の採決（#791）。`data/assemblies/{assemblyId}/rollcalls/index.json` の全件。
+   * ファイルが 1 つも無ければ省略／null（国会の rollCalls とは別に数える。URL 空間が違う）。
+   */
+  localRollCalls?: { assemblyId: string; id: string }[] | null;
 }
 
 export interface SmokeReport {
@@ -68,6 +73,12 @@ export function expectedPages(data: ExpectedData): string[] {
     pages.push("rollcalls/index.html");
     for (const r of data.rollCalls) pages.push(`rollcalls/${r.session}/${r.id}/index.html`);
   }
+  // #791: 地方議会は議会ごとに一覧を持つ（国会の rollcalls/ には混ぜない）。
+  // 採決のある議会だけ一覧を要求する——採決を取得していない議会に空の一覧を作らせないため（#757）。
+  for (const assemblyId of new Set((data.localRollCalls ?? []).map((r) => r.assemblyId))) {
+    pages.push(`assemblies/${assemblyId}/rollcalls/index.html`);
+  }
+  for (const r of data.localRollCalls ?? []) pages.push(`assemblies/${r.assemblyId}/rollcalls/${r.id}/index.html`);
   return pages;
 }
 

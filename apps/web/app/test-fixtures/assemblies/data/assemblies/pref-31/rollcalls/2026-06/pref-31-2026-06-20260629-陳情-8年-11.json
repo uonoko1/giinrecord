@@ -1,0 +1,35 @@
+{
+  "assemblyId": "pref-31",
+  "committeeReport": "不採択",
+  "date": "2026-06-29",
+  "id": "pref-31-2026-06-20260629-陳情-8年-11",
+  "kind": "陳情",
+  "number": "8年-11",
+  "page": 4,
+  "result": "不採択",
+  "sessionId": "2026-06",
+  "sessionLabel": "令和8年6月定例会",
+  "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1422217/R8.6giketsukekka0629.pdf",
+  "title": "ゆたかな学びの実現・教職員定数改善を図るための、2027年度政府予算に係る意見書採択について",
+  "voteSubject": "委員長報告に対する賛否",
+  "votes": [
+    {
+      "group": "自由民主党",
+      "memberId": "p_31_001",
+      "nameText": "山田 太郎",
+      "value": {
+        "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+        "raw": "○"
+      }
+    },
+    {
+      "group": "自由民主党",
+      "memberId": "p_31_002",
+      "nameText": "鈴木 花子",
+      "value": {
+        "legend": "委員会審査結果又は議長宣告に起立しなかった者",
+        "raw": "●"
+      }
+    }
+  ]
+}

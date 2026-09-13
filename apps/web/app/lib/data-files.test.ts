@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import { dynamicImports, metaGlobs, valueImports } from "../test-tools/value-imports";
-import { assemblyPaths, memberPaths, readAssemblies, readLocalAssemblyMeta, readAssemblySessions, readLocalRollCallIndex, readLinkedRecordCounts, readMemberDetail, readMeta, readRollCall, readSangiinVoteLinkStats, readShugiinBillNameStats, readUnmatchedSpeechStats, rollCallPaths } from "./data-files";
+import { assemblyPaths, memberPaths, readAssemblies, readLocalAssemblyMeta, readAssemblySessions, readLocalRollCall, readLocalRollCallIndex, readLocalRollCallSummaries, localRollCallPaths, readLinkedRecordCounts, readMemberDetail, readMeta, readRollCall, readSangiinVoteLinkStats, readShugiinBillNameStats, readUnmatchedSpeechStats, rollCallPaths } from "./data-files";
 
 const fixtures = fileURLToPath(new URL("../test-fixtures/data", import.meta.url));
 const missing = fileURLToPath(new URL("../test-fixtures/does-not-exist", import.meta.url));
@@ -118,13 +118,13 @@ describe("readLocalAssemblyMeta（#346）: 地方議員の出典はその議会�
 describe("readAssemblies / assemblyPaths（#158）", () => {
   it("assemblies/index.json を読む", async () => {
     const list = await readAssemblies(assemblyFixtures);
-    expect(list?.map((a) => a.id)).toEqual(["diet-sangiin", "diet-shugiin", "pref-04"]);
+    expect(list?.map((a) => a.id)).toEqual(["diet-sangiin", "diet-shugiin", "pref-04", "pref-31"]);
   });
   it("assemblies/index.json が無ければ null", async () => {
     expect(await readAssemblies(missing)).toBeNull();
   });
   it("一覧 /assemblies と index.json の全議会 /assemblies/{id} を返す", async () => {
-    expect(await assemblyPaths(assemblyFixtures)).toEqual(["/assemblies", "/assemblies/diet-sangiin", "/assemblies/diet-shugiin", "/assemblies/pref-04"]);
+    expect(await assemblyPaths(assemblyFixtures)).toEqual(["/assemblies", "/assemblies/diet-sangiin", "/assemblies/diet-shugiin", "/assemblies/pref-04", "/assemblies/pref-31"]);
   });
   it("index.json が無い（#156 より前の）データでは国会の2議会を返す（ページ側の fallback と同じ）", async () => {
     expect(await assemblyPaths(missing)).toEqual(["/assemblies", "/assemblies/diet-sangiin", "/assemblies/diet-shugiin"]);
@@ -163,6 +163,47 @@ describe("readLocalRollCallIndex（#204）", () => {
     expect(await readLocalRollCallIndex(assemblyFixtures, "pref-04")).toBeNull();
     expect(await readLocalRollCallIndex(assemblyFixtures, "pref-99")).toBeNull();
     expect(await readLocalRollCallIndex(assemblyFixtures, "../pref-31")).toBeNull();
+  });
+});
+
+describe("readLocalRollCall / localRollCallPaths（#791）", () => {
+  it("assemblies/{id}/rollcalls/{sessionId}/{id}.json を読み、votes の raw / legend / mapped を原文のまま返す", async () => {
+    const rc = await readLocalRollCall(assemblyFixtures, "pref-31", "pref-31-2026-06-20260629-知事提案-第10号");
+    expect(rc?.title).toBe("損害賠償に係る和解及び損害賠償の額の決定について");
+    expect(rc?.sourceUrl).toBe("https://www.pref.tottori.lg.jp/secure/1422217/R8.6giketsukekka0629.pdf");
+    expect(rc?.votes).toHaveLength(4);
+    expect(rc?.votes[0].value).toEqual({ raw: "○", legend: "賛成", mapped: "賛成" });
+    // 凡例から国会の値に読めない票は mapped を持たない（推定しない）
+    expect(rc?.votes[3].value).toEqual({ raw: "棄", legend: "棄権" });
+  });
+  it("counts の無い議会（島根・奈良・徳島）の行も読める。counts は undefined のまま（0 にしない）", async () => {
+    const rc = await readLocalRollCall(assemblyFixtures, "pref-31", "pref-31-2026-06-20260629-陳情-8年-11");
+    expect(rc?.counts).toBeUndefined();
+    expect(rc?.votes).toHaveLength(2);
+  });
+  it("無い議会・無い id・パス区切りを含む値は null（ファイルを読みに行かない）", async () => {
+    expect(await readLocalRollCall(assemblyFixtures, "pref-99", "x")).toBeNull();
+    expect(await readLocalRollCall(assemblyFixtures, "pref-31", "nope")).toBeNull();
+    expect(await readLocalRollCall(assemblyFixtures, "../pref-31", "x")).toBeNull();
+    expect(await readLocalRollCall(assemblyFixtures, "pref-31", "../../meta")).toBeNull();
+    expect(await readLocalRollCall(assemblyFixtures, "pref-31", "a/b")).toBeNull();
+  });
+  it("localRollCallPaths は議会ごとの一覧と、index.json の全件の個別ページを返す", async () => {
+    const paths = await localRollCallPaths(assemblyFixtures);
+    expect(paths).toContain("/assemblies/pref-31/rollcalls");
+    expect(paths).toContain("/assemblies/pref-31/rollcalls/pref-31-2026-06-20260629-知事提案-第10号");
+    // index.json の 3 件すべて（宮城 pref-04 は rollcalls/ が無いので一覧も出さない）
+    expect(paths.filter((p) => p.startsWith("/assemblies/pref-31/rollcalls/"))).toHaveLength(3);
+    expect(paths.some((p) => p.startsWith("/assemblies/pref-04/rollcalls"))).toBe(false);
+  });
+  it("data/ が無ければ空（地方のルートは足さない）", async () => {
+    expect(await localRollCallPaths(missing)).toEqual([]);
+  });
+  it("readLocalRollCallSummaries は votes を持たない一覧をそのまま返す", async () => {
+    const list = await readLocalRollCallSummaries(assemblyFixtures, "pref-31");
+    expect(list).toHaveLength(3);
+    expect(list?.[0].sourceUrl).toBe("https://www.pref.tottori.lg.jp/secure/1422217/R8.6giketsukekka0629.pdf");
+    expect(list?.every((r) => !("votes" in r))).toBe(true);
   });
 });
 
