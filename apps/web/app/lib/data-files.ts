@@ -97,6 +97,26 @@ export async function readLocalAssemblyMeta(dataDir: string, assemblyId: string)
 }
 
 /**
+ * 地方議会すべての `meta.json`（#800）。**`assemblies/index.json` が無ければ null**——
+ * 「0 件」ではなく「**1 件も読んでいない**」なので、空配列と同じ形にしてはいけない（#757）。
+ * 読めた議会だけを返す（`meta.json` の無い議会は行そのものを作らない。無い事実を作らないため）。
+ *
+ * `/coverage` が `lossyNameMatches`（字が落ちたまま名簿に寄った氏名）を出すために読む。
+ * **`data/assemblies/{id}/meta.json` は `/data/` で配信されず、バンドルもされない**ので、
+ * ビルド時にここで読まなければ利用者には一生見えない（それが #800 で起きていたこと）。
+ */
+export async function readLocalAssemblyMetas(dataDir: string): Promise<LocalAssemblyMeta[] | null> {
+  const assemblies = await readAssemblies(dataDir);
+  if (!assemblies) return null;
+  const out: LocalAssemblyMeta[] = [];
+  for (const a of assemblies) {
+    const meta = await readLocalAssemblyMeta(dataDir, a.id);
+    if (meta) out.push(meta);
+  }
+  return out;
+}
+
+/**
  * プリレンダー対象（#158）: 一覧 `/assemblies` と、index.json の全議会 `/assemblies/{id}`。
  * index.json が無い（#156 より前の）データでは国会の2議会（ページ側の fallback と同じ）。
  */

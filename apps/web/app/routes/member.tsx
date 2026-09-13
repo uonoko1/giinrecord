@@ -7,6 +7,7 @@ import type { Assembly } from "@seiji-kiroku/shared";
 import { assemblyPath, findAssembly, isLocalMember, joinVoteSubjects, localVoteTone, voteSubjectNote } from "../lib/assemblies";
 import type { BillEntry, BillRole, CommitteeRoleEntry, DatasetMeta, LocalVoteEntry, MemberDetail, MemberSpeeches, QuestionEntry, SpeechEntry, StanceEntry, TimelineEntry, VoteEntry } from "../lib/data-contract";
 import { defaultDataDir, readAssemblies, readLocalAssemblyMeta, readLocalRollCallIndex, readMemberDetail, readMemberSpeechCount, readMeta } from "../lib/data-files";
+import { type LossyNameMatch, lossyNameMatchFor } from "../lib/lossy-name";
 import { formatDate, formatDateTime, formatYearMonth } from "../lib/format";
 import { seoMeta } from "../lib/seo";
 import "./member.css";
@@ -23,14 +24,19 @@ import { memberSources, type PlainSource } from "../lib/member-sources";
  * 載せるとプリレンダーが HTML に全件焼き込み、分割した意味が無くなる（#263 の実測: HTML は元 JSON の 2.15 倍）。
  * 件数だけあればタブの件数と表紙の件数帯は出せるので、本文は発言タブを開いたときに実行時 fetch する。
  */
-export type MemberLoaderData = { detail: MemberDetail; meta: DatasetMeta | null; assembly: Assembly | null; speechCount: number; localSources: PlainSource[] | null };
+/**
+ * #800: `lossyNameMatch` は **その議員の票が「字が落ちたままの氏名」で名簿に突き合わされた**という事実
+ * （`assemblies/{id}/meta.json` の `lossyNameMatches` のうち、この議員の行）。該当しなければ null。
+ * **11 県中 10 県は全員 null、奈良は 40 人中 2 人だけ**が非 null（2026-09-13 の本番データ）。
+ */
+export type MemberLoaderData = { detail: MemberDetail; meta: DatasetMeta | null; assembly: Assembly | null; speechCount: number; localSources: PlainSource[] | null; lossyNameMatch: LossyNameMatch | null };
 
 export async function loader({ params }: LoaderFunctionArgs): Promise<MemberLoaderData> {
   const dir = defaultDataDir();
   const id = params.id ?? "";
   const [detail, meta, speechCount] = await Promise.all([readMemberDetail(dir, id), readMeta(dir), readMemberSpeechCount(dir, id)]);
   if (!detail) throw new Response("Not Found", { status: 404 });
-  if (!isLocalMember(detail)) return { detail, meta, assembly: null, speechCount, localSources: null };
+  if (!isLocalMember(detail)) return { detail, meta, assembly: null, speechCount, localSources: null, lossyNameMatch: null };
   // 地方議員（#158）: 議会の行に加え、採決行の注記（#204）のために rollcalls/index.json の voteSubject / committeeReport を timeline に結合する
   // 出典はその議会自身のもの（#346）。国会の `data/meta.json` の出典はこの議員のものではない。
   const [assemblies, rollCallIndex, localMeta] = await Promise.all([
@@ -40,7 +46,7 @@ export async function loader({ params }: LoaderFunctionArgs): Promise<MemberLoad
   ]);
   const assembly = findAssembly(assemblies ?? [], detail.assemblyId ?? "") ?? null;
   const localSources = localMeta?.sources ?? null;
-  return { detail: { ...detail, timeline: joinVoteSubjects(detail.timeline, rollCallIndex) }, meta, assembly, speechCount, localSources };
+  return { detail: { ...detail, timeline: joinVoteSubjects(detail.timeline, rollCallIndex) }, meta, assembly, speechCount, localSources, lossyNameMatch: lossyNameMatchFor(localMeta, id) };
 }
 
 /** 発言の実行時 fetch 先（#242）。nginx が gzip を掛ける application/json（deploy/nginx/site.conf）。 */
@@ -85,7 +91,7 @@ export function meta({ data, location }: MetaArgs<typeof loader>) {
 
 export default function MemberRoute() {
   const loaderData = useLoaderData<typeof loader>();
-  return <MemberPage detail={loaderData.detail} meta={loaderData.meta} assembly={loaderData.assembly ?? null} speechCount={loaderData.speechCount ?? 0} localSources={loaderData.localSources ?? null} loadSpeeches={fetchSpeeches} />;
+  return <MemberPage detail={loaderData.detail} meta={loaderData.meta} assembly={loaderData.assembly ?? null} speechCount={loaderData.speechCount ?? 0} localSources={loaderData.localSources ?? null} lossyNameMatch={loaderData.lossyNameMatch ?? null} loadSpeeches={fetchSpeeches} />;
 }
 
 /* ---------- page ---------- */
@@ -277,7 +283,7 @@ type SpeechState = { status: "idle" | "loading" } | { status: "ready"; speeches:
  *
  * `loadSpeeches` を引数にしているのは compare.tsx（`load`）と同じ理由で、テストが fetch を差し替えられるようにするため。
  */
-export function MemberPage({ detail, meta, assembly = null, speechCount = 0, localSources = null, loadSpeeches }: { detail: MemberDetail; meta: DatasetMeta | null; assembly?: Assembly | null; speechCount?: number; localSources?: PlainSource[] | null; loadSpeeches?: (id: string) => Promise<SpeechEntry[]> }) {
+export function MemberPage({ detail, meta, assembly = null, speechCount = 0, localSources = null, lossyNameMatch = null, loadSpeeches }: { detail: MemberDetail; meta: DatasetMeta | null; assembly?: Assembly | null; speechCount?: number; localSources?: PlainSource[] | null; lossyNameMatch?: LossyNameMatch | null; loadSpeeches?: (id: string) => Promise<SpeechEntry[]> }) {
   const local = isLocalMember(detail);
   const [tab, setTabState] = useState<Tab>("all");
   const [foldExpanded, setFoldExpanded] = useState(false);
@@ -320,6 +326,7 @@ export function MemberPage({ detail, meta, assembly = null, speechCount = 0, loc
       <main className="member">
         <Cover detail={detail} counts={counts} assembly={assembly} />
         {local ? <LocalNotice detail={detail} assembly={assembly} /> : detail.house === "shugiin" && <ShugiinNotice />}
+        {lossyNameMatch && <LossyNameNotice match={lossyNameMatch} total={counts.localVote} sources={localSources} />}
         <TabBar tabs={local ? LOCAL_TABS : TABS[detail.house]} current={tab} counts={counts} onSelect={setTab} />
         <section id="member-records" role="tabpanel" aria-labelledby={`tab-${tab}`}>
           {tab === "stance" && <p className="member-tab-note">所属会派が議案情報の賛成会派・反対会派に載っていた記録です。会派の態度であり、本人の投票ではありません。</p>}
@@ -498,6 +505,44 @@ function LocalNotice({ detail, assembly }: { detail: MemberDetail; assembly: Ass
         <>
           {" ・ "}
           <a href={assemblyPath(detail.assemblyId)}>議会ページ</a>
+        </>
+      )}
+    </p>
+  );
+}
+
+/**
+ * **この議員の票が「字が落ちたままの氏名」で名簿に突き合わされた**という事実（#800）。
+ *
+ * **なぜ出すか**: `matchBySubsequence` は「名簿の氏名に PDF の氏名が順序どおり含まれる」なら寄せるので、
+ * **PDF 側で字が 1 つ落ちていても本人に寄る。** 本番の奈良では `西川`（`均` が文字層に無い）に
+ * **125 票**が付いている。**寄せ方が正しいかを利用者も我々も確かめる手立てが無い。**
+ * #569 の原則（「別人の記録が出る」は利用者から検出できない虚偽）より重い側の話なので、
+ * **少なくとも見えるようにする**——それが #800 で決めたこと。
+ *
+ * **書くのは事実だけ。** 「正しく寄っている」「誤りかもしれない」のどちらも書かない（**推測は評価である**）。
+ * 出すのは: 表決結果に印字されていた氏名の**原文**・名簿の氏名の**原文**・件数と**母数**（#757）・
+ * **一次資料へのリンク**（絶対原則。これが無ければ利用者は自分で確かめられない）。
+ *
+ * **票は動かさない**（#800 の「やらないこと」）。この注記は表示だけで、記録は 1 件も減らさない。
+ */
+function LossyNameNotice({ match, total, sources }: { match: LossyNameMatch; total: number; sources: PlainSource[] | null }) {
+  return (
+    <p className="member-notice" data-testid="member-lossy-name">
+      表決結果に印字されていた氏名は「{match.nameText}」で、議員名簿の「{match.rosterName}」より字が少ない状態でした。
+      この氏名のまま名簿と突き合わせた表決が <span className="num">{match.rollCalls.toLocaleString("ja-JP")}</span> 件あります（このページの表決{" "}
+      <span className="num">{total.toLocaleString("ja-JP")}</span> 件のうち）。
+      {(sources ?? []).length > 0 && (
+        <>
+          {" "}
+          原文は
+          {(sources ?? []).map((s, i) => (
+            <span key={s.url}>
+              {i > 0 && " ・ "}
+              <ExternalLink href={s.url}>{s.name}</ExternalLink>
+            </span>
+          ))}
+          で確かめられます。
         </>
       )}
     </p>

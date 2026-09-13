@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import { dynamicImports, metaGlobs, valueImports } from "../test-tools/value-imports";
-import { assemblyPaths, memberPaths, readAssemblies, readLocalAssemblyMeta, readAssemblySessions, readLocalRollCall, readLocalRollCallIndex, readLocalRollCallSummaries, localRollCallPaths, readLinkedRecordCounts, readMemberDetail, readMeta, readRollCall, readSangiinVoteLinkStats, readShugiinBillNameStats, readUnmatchedSpeechStats, rollCallPaths } from "./data-files";
+import { assemblyPaths, memberPaths, readAssemblies, readLocalAssemblyMeta, readLocalAssemblyMetas, readAssemblySessions, readLocalRollCall, readLocalRollCallIndex, readLocalRollCallSummaries, localRollCallPaths, readLinkedRecordCounts, readMemberDetail, readMeta, readRollCall, readSangiinVoteLinkStats, readShugiinBillNameStats, readUnmatchedSpeechStats, rollCallPaths } from "./data-files";
 
 const fixtures = fileURLToPath(new URL("../test-fixtures/data", import.meta.url));
 const missing = fileURLToPath(new URL("../test-fixtures/does-not-exist", import.meta.url));
@@ -112,6 +112,17 @@ describe("readLocalAssemblyMeta（#346）: 地方議員の出典はその議会�
   });
   it("assemblyId が空なら null", async () => {
     expect(await readLocalAssemblyMeta(assemblyFixtures, "")).toBeNull();
+  });
+});
+
+describe("readLocalAssemblyMetas（#800）: 地方の meta.json は配信もバンドルもされない", () => {
+  it("assemblies/index.json にある議会の meta.json を全部読む（無い議会は行そのものを作らない）", async () => {
+    const metas = await readLocalAssemblyMetas(assemblyFixtures);
+    // fixture は pref-04 だけが meta.json を持つ（diet-2 議会と pref-31 は持たない）
+    expect(metas?.map((m) => m.assemblyId)).toEqual(["pref-04"]);
+  });
+  it("assemblies/index.json が無ければ null（「0 件」ではなく「1 件も読んでいない」。#757）", async () => {
+    expect(await readLocalAssemblyMetas(missing)).toBeNull();
   });
 });
 
