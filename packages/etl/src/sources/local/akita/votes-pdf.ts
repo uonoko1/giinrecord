@@ -231,7 +231,7 @@ const DATE_IN = /([０-９0-9]{1,2})月([０-９0-9]{1,2})日/;
  * **`議案第 184 号` のように空白が入る本と入らない本がある**（`joinText` が空白を除いてから当てる）。
  * **当たらなければ番号は空**（推定しない）。
  */
-const NUMBER_CELL = /^.{0,8}?第[０-９0-9]{1,4}号/;
+const NUMBER_CELL = /(?:議案|認定|承認|報告|請願|陳情|発議|意見書案|決議案|同意|諮問|人事案件|[一-鿿]{0,6})第[０-９0-9]{1,4}号/;
 
 /* ---------- 回転の打ち消し ---------- */
 
@@ -822,14 +822,42 @@ function readLeftCells(items: readonly Item[]): { number: string; title: string;
   const dateItem = sorted[dateIdx].str;
   const dm = dateItem.match(DATE_IN)!;
   const dateText = dm[0];
-  // **錨より左 = 番号 ＋ 件名**。上の行から順、行の中は左から。
-  // **日付のアイテムの中で日付より前の部分も左に足す**（`議案第 1 号 … 12月22日` が 1 アイテムの本がある）
-  const left = joinText(sorted.slice(0, dateIdx)) + dateItem.slice(0, dm.index!).replace(/[\s　]+/g, "");
-  // **番号は `(議案|認定|報告|請願|陳情|発議|…)第N号` の形**（実測の全形は 154 本で 20 通り以上あるが、
-  // **`第` と `号` に挟まれた数**という形は変わらない）。**当たらなければ番号は空**（推定しない）
-  const numMatch = left.match(NUMBER_CELL);
+  // ## **番号と件名は「x で分ける」。繋いでから切ってはいけない**（実装中に踏んだ）
+  //
+  // **件名が 2 行に折り返す議案がある**（実測 `080319.pdf` の 議案第78号）:
+  // ```
+  // cy=219.8 x=160.3 "秋田県行政手続における…個人番号の利"     ← 件名 1 行目
+  // cy=213.7 x=30.8  "34"  x=83.8 "議案第"  x=125.5 "78"  x=146.1 "号"   ← 通し番号と議案等番号
+  // cy=207.5 x=160.3 "用及び特定個人情報の提供に関する条例の一部を改正する条例案"  ← 件名 2 行目
+  // ```
+  // **番号の行が件名の 2 行の「あいだ」にある**（番号は縦の中央に置かれる）。
+  // **y の降順で繋ぐと `…個人番号の利` ＋ `34議案第78号` ＋ `用及び…` になり、
+  // 件名の途中に番号が挟まる**（実測でこの形の title が出た。**どの議案の件名でもない文字列**）。
+  //
+  // **番号の欄と件名の欄は x が違う**（実測: 番号 30.8〜151.6、件名 160.3〜）ので、**x で分ける。**
+  // **境は「`第N号` に当たるアイテム列の右端」**——**`議案第` `78` `号` が別アイテムに割れる本があるので、
+  // 「番号に当たるひとかたまり」を左から探す。**
+  const leftItems = sorted.slice(0, dateIdx);
+  // **日付のアイテムの中で日付より前の部分**（`議案第 1 号 … 12月22日` が 1 アイテムの本）は
+  // **その 1 アイテムの中の話なので、そのまま前に足す**
+  const inDateBefore = dateItem.slice(0, dm.index!).replace(/[\s　]+/g, "");
+  // **左から順にアイテムを繋いでいって、`第N号` の形になった所で切る。**
+  // **通し番号（`34`）が先に来る本がある**ので、**`第` を含むアイテムより前は番号に入れる。**
+  let numberEnd = -1;
+  let acc = "";
+  for (let k = 0; k < leftItems.length; k++) {
+    acc += leftItems[k].str.replace(/[\s　]+/g, "");
+    if (NUMBER_CELL.test(acc)) { numberEnd = k; break; }
+  }
+  const numberText = numberEnd >= 0 ? acc : "";
+  const numMatch = numberText.match(NUMBER_CELL);
+  // **通し番号は番号ではない**（`34議案第78号` の `34`）ので、`第N号` の部分だけを採る
   const number = numMatch ? numMatch[0] : "";
-  const title = numMatch ? left.slice(numMatch.index! + numMatch[0].length) : left;
+  // **件名は残りのアイテム**（**y の降順・行の中は左から**。折り返しがここで正しく繋がる）
+  const titleItems = numberEnd >= 0 ? leftItems.slice(numberEnd + 1) : leftItems;
+  const title = joinText(titleItems) + (numberEnd >= 0 ? inDateBefore : "");
+  // **番号が取れなかったときは、日付より前の全部を件名にする**（推定しない）
+  const fallbackTitle = numberEnd >= 0 ? title : joinText(leftItems) + inDateBefore;
   // **錨より右 = 表決方法 → 議決結果 → 数**。
   // **日付のアイテムの中で日付より後ろの部分も右に足す**（`12月22日 簡易` が 1 アイテムの本がある。
   // 実測 `041222hyoketsu.pdf` の 44 行すべて）
@@ -841,7 +869,7 @@ function readLeftCells(items: readonly Item[]): { number: string; title: string;
   const result = restText.replace(/[\s　]*[0-9０-９]+.*$/, "").replace(/[\s　]+/g, "");
   const nums = restText.normalize("NFKC").match(/\d+/g) ?? [];
   const counts = nums.length === 3 ? { voting: Number(nums[0]), yes: Number(nums[1]), no: Number(nums[2]) } : undefined;
-  return { number, title, dateText, method, result, ...(counts ? { counts } : {}) };
+  return { number, title: fallbackTitle, dateText, method, result, ...(counts ? { counts } : {}) };
 }
 
 /**
