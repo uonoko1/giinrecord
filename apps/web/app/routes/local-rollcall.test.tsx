@@ -7,7 +7,14 @@ import unmapped from "../test-fixtures/assemblies/data/assemblies/pref-31/rollca
 import { LocalRollCallPage, meta as routeMeta } from "./local-rollcall";
 
 const assembly: Assembly = { id: "pref-31", kind: "prefectural", name: "鳥取県議会", prefCode: "31", sourceUrl: "https://www.pref.tottori.lg.jp/gikai/" };
-const assemblyMeta = { assemblyId: "pref-31", fetchedAt: "2026-09-01T00:00:00Z" } as LocalAssemblyMeta;
+const assemblyMeta: LocalAssemblyMeta = {
+  assemblyId: "pref-31",
+  fetchedAt: "2026-09-01T00:00:00Z",
+  sources: [{ name: "鳥取県議会", url: "https://www.pref.tottori.lg.jp/gikai/", fetchedAt: "2026-09-01T00:00:00Z" }],
+  rosterAsOf: "2026-08-01",
+  sessions: [{ sessionId: "2026-06", sessionLabel: "令和8年6月定例会", sourceUrl: "https://www.pref.tottori.lg.jp/gikai/", pdfUrl: "https://www.pref.tottori.lg.jp/secure/1422217/R8.6giketsukekka0629.pdf", rollcalls: 3, unknownCells: 0 }],
+  counts: { members: 34, rollcalls: 3, cells: 102, unknownCells: 0, unmatchedNames: 0 },
+};
 const withCounts = mapped as unknown as LocalRollCall;
 const withoutCounts = unmapped as unknown as LocalRollCall;
 
