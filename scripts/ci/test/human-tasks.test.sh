@@ -58,6 +58,34 @@ printf 'getent %s\n' "$*" >> "$STUB_LOG"
 # 出す値は「引けたこと」が分かればよい。ここでは TEST-NET でない予約外の値を組み立てる
 printf '%s giinrecord.jp\n' "$(printf '10.%s.%s.%s' 0 0 1)"
 EOT
+# **`gh` をスタブする。** 本物を呼ぶと**本当に secret が置かれ、ワークフローが起動する。**
+# **トークンの値はログに書かない**——長さだけを記録して「標準入力から受け取ったか」を見る
+# （フィクスチャにトークンらしき文字列を残さないため。#790 の「やらないこと」）。
+cat > "$BIN/gh" <<'EOT'
+#!/usr/bin/env bash
+printf 'gh %s\n' "$*" >> "$STUB_LOG"
+case "$1 $2" in
+  "secret set")
+    # **標準入力で来たか**を測る。パイプでなければ（端末/クローズ）0 バイトになる
+    body=$(cat 2>/dev/null || true)
+    printf 'gh-stdin-bytes %s\n' "${#body}" >> "$STUB_LOG"
+    [[ "${STUB_GH_SECRET_FAIL:-0}" = 1 ]] && { echo "gh: secret set failed" >&2; exit 1; }
+    ;;
+  "workflow run")
+    [[ "${STUB_GH_RUN_FAIL:-0}" = 1 ]] && { echo "gh: workflow run failed" >&2; exit 1; }
+    ;;
+  "run list")
+    echo "${STUB_GH_RUN_ID:-4242}"
+    ;;
+  "run watch"|"run view")
+    if [[ "${STUB_GH_CONCLUSION:-success}" != success ]]; then
+      echo "${STUB_GH_CONCLUSION:-success}"; exit 1
+    fi
+    echo success
+    ;;
+esac
+exit 0
+EOT
 chmod +x "$BIN"/*
 
 run() {  # run [args...] → OUT / STATUS
@@ -195,6 +223,130 @@ t_usage() {
   assert_eq "" "$LOG" "**ssh も git も curl も一度も呼ばない**"
 }
 test_case "human-tasks: 知らない引数では何もしない" t_usage
+
+# ---- #790: BRANCH_PROTECTION_TOKEN の設置 -----------------------------------------------------
+# **`Branch protection` ワークフローが 6 日連続で failure だった。** 設計は正しく、
+# `GITHUB_TOKEN` では保護設定を読めないので exit 2（読めない）を報告し続けていた（#540 / #547）。
+# **人間に残るのは PAT を作って貼ることだけ**にする。**#550 は `BRANCH_PROTECTION_TOKEN`、
+# #155 は VPS 監視用の別物**（`/etc/gikailog/monitor.token`）。取り違えないことを固定する。
+TOKEN_FIXTURE_PREFIX="github_"   # **本物らしい文字列をフィクスチャに置かない**（#790）
+FAKE_TOKEN="${TOKEN_FIXTURE_PREFIX}not-a-real-token-0000"
+
+t_pat_dry_run_reads_aloud() {
+  # **deploy.md を開かせない**: 必要な設定をスクリプトが読み上げる。
+  run bash "$SCRIPT"
+  assert_eq 0 "$STATUS" "dry-run は成功で終わる: $OUT"
+  assert_contains "$OUT" "BRANCH_PROTECTION_TOKEN" "**置く secret の名前を言う**"
+  assert_contains "$OUT" "uonoko1/giinrecord" "Repository access を言う"
+  assert_contains "$OUT" "Administration" "Administration: Read-only を言う"
+  assert_contains "$OUT" "Read-only" "Read-only であることを言う"
+  assert_contains "$OUT" "Issues" "Issues: Read and write を言う"
+  assert_contains "$OUT" "有効期限" "期限を決めさせる"
+  assert_contains "$OUT" "docs/ops/board.md" "**期限を控える場所を案内する**"
+}
+test_case "human-tasks: PAT に必要な設定を読み上げる（deploy.md を開かせない）" t_pat_dry_run_reads_aloud
+
+t_pat_dry_run_does_not_set() {
+  # **既定は読むだけ。** `--yes` が無ければ gh を一度も呼ばない。
+  run env BRANCH_PROTECTION_TOKEN="$FAKE_TOKEN" bash "$SCRIPT"
+  assert_eq 0 "$STATUS" "dry-run は成功で終わる: $OUT"
+  assert_not_contains "$LOG" "gh secret set" "**--yes が無ければ secret を置かない**"
+  assert_not_contains "$LOG" "gh workflow run" "**--yes が無ければワークフローも起動しない**"
+}
+test_case "human-tasks: --yes が無ければ secret を置かない" t_pat_dry_run_does_not_set
+
+t_pat_rejects_argv() {
+  # **トークンを引数で受け取らない**（`sudo` と同じ理由。シェル履歴とプロセス一覧に残る）。
+  # **`--token` という綴りが usage で弾かれることを固定する。**
+  run bash "$SCRIPT" --token "$FAKE_TOKEN"
+  assert_eq 2 "$STATUS" "**引数でトークンを渡せてはいけない**: $OUT"
+  assert_not_contains "$LOG" "gh secret set" "**引数から secret を置かない**"
+  assert_not_contains "$OUT" "$FAKE_TOKEN" "**弾くときもトークンを出さない**"
+  # 受け取り口は標準入力か環境変数だけ、と usage で言う
+  assert_contains "$OUT" "usage" "usage を出す"
+}
+test_case "human-tasks: トークンを引数で渡せない（履歴とプロセス一覧に残る）" t_pat_rejects_argv
+
+t_pat_sets_from_env() {
+  run env BRANCH_PROTECTION_TOKEN="$FAKE_TOKEN" bash "$SCRIPT" --yes
+  assert_eq 0 "$STATUS" "置けたら成功: $OUT"
+  assert_contains "$LOG" "gh secret set BRANCH_PROTECTION_TOKEN" "**その名前で置く**"
+  # **値は標準入力で渡す**（引数に載せない）。スタブは受け取ったバイト数だけ記録する
+  assert_contains "$LOG" "gh-stdin-bytes ${#FAKE_TOKEN}" "**標準入力でトークンを渡す**"
+  assert_not_contains "$LOG" "$FAKE_TOKEN" "**トークンを引数に載せない**"
+  assert_not_contains "$OUT" "$FAKE_TOKEN" "**トークンをログに出さない**"
+}
+test_case "human-tasks: 環境変数のトークンを標準入力で渡して置く" t_pat_sets_from_env
+
+t_pat_sets_from_stdin() {
+  # **貼るだけで済む**: 標準入力から受け取る。
+  set +e
+  OUT=$(printf '%s\n' "$FAKE_TOKEN" | PATH="$BIN:$PATH" STUB_LOG="$TMP/log" HOME="$TMP/fakehome" \
+    bash "$SCRIPT" --yes --set-token 2>&1)
+  STATUS=$?
+  set -e
+  LOG=$(cat "$TMP/log")
+  assert_eq 0 "$STATUS" "標準入力からでも置ける: $OUT"
+  assert_contains "$LOG" "gh secret set BRANCH_PROTECTION_TOKEN" "その名前で置く"
+  assert_contains "$LOG" "gh-stdin-bytes ${#FAKE_TOKEN}" "**標準入力の中身がそのまま渡る（改行は落とす）**"
+  assert_not_contains "$OUT" "$FAKE_TOKEN" "**トークンをログに出さない**"
+  : > "$TMP/log"
+}
+test_case "human-tasks: 標準入力に貼ったトークンを置く" t_pat_sets_from_stdin
+
+t_pat_not_the_vps_token() {
+  # **#155 は VPS 監視用の別の secret。** 取り違えていないことを固定する。
+  run env BRANCH_PROTECTION_TOKEN="$FAKE_TOKEN" bash "$SCRIPT" --yes
+  assert_not_contains "$LOG" "monitor.token" "**#155（VPS 監視用）の置き場ではない**"
+  n=$(printf '%s\n' "$LOG" | grep -c 'gh secret set BRANCH_PROTECTION_TOKEN' || true)
+  assert_eq 1 "$n" "**置く secret はちょうど 1 つ**"
+  n=$(printf '%s\n' "$LOG" | grep -c 'gh secret set ' || true)
+  assert_eq 1 "$n" "**他の secret を置かない**"
+}
+test_case "human-tasks: 置くのは BRANCH_PROTECTION_TOKEN だけ（#155 と取り違えない）" t_pat_not_the_vps_token
+
+t_pat_runs_workflow_and_shows_result() {
+  # **置いたら結果まで見せる**（#790: 赤い期間が終わったことを人間が確かめられるように）。
+  run env BRANCH_PROTECTION_TOKEN="$FAKE_TOKEN" bash "$SCRIPT" --yes
+  assert_contains "$LOG" "gh workflow run branch-protection.yml" "**ワークフローを起動する**"
+  assert_contains "$LOG" "gh run watch" "**終わるまで見る**"
+  assert_contains "$OUT" "保護されている" "**結果を読み上げる**"
+}
+test_case "human-tasks: 置いたあとワークフローを起動して結果まで見せる" t_pat_runs_workflow_and_shows_result
+
+t_pat_fails_when_workflow_red() {
+  # **赤いまま「できました」と言わない**（#746 と同じ誤報告をしない）。
+  run env BRANCH_PROTECTION_TOKEN="$FAKE_TOKEN" STUB_GH_CONCLUSION=failure bash "$SCRIPT" --yes
+  assert_eq 1 "$STATUS" "**ワークフローが赤ければ失敗で終わる**: $OUT"
+  assert_not_contains "$OUT" "保護されている" "赤いのに「保護されている」と言わない"
+}
+test_case "human-tasks: ワークフローが赤ければ成功と言わない" t_pat_fails_when_workflow_red
+
+t_pat_fails_when_secret_set_fails() {
+  run env BRANCH_PROTECTION_TOKEN="$FAKE_TOKEN" STUB_GH_SECRET_FAIL=1 bash "$SCRIPT" --yes
+  assert_eq 1 "$STATUS" "**置けなければ失敗で終わる**: $OUT"
+  assert_not_contains "$LOG" "gh workflow run" "**置けていないのに起動しない**"
+}
+test_case "human-tasks: secret を置けなければワークフローを起動しない" t_pat_fails_when_secret_set_fails
+
+t_pat_skipped_without_token() {
+  # **トークンが無いときは、site.conf の反映を止めない**（#654 の本番反映が先にある）。
+  run bash "$SCRIPT" --yes
+  assert_eq 0 "$STATUS" "トークンが無くても site.conf の反映は通る: $OUT"
+  assert_not_contains "$LOG" "gh secret set" "**トークンが無ければ置かない**"
+  assert_contains "$OUT" "BRANCH_PROTECTION_TOKEN" "作り方は読み上げる"
+}
+test_case "human-tasks: トークンが無くても site.conf の反映は止まらない" t_pat_skipped_without_token
+
+t_no_set_x() {
+  # **`set -x` を使わない**（トークンが展開されて出る。#790 の「やらないこと」）。
+  n=$(grep -c -E '^[[:space:]]*set[[:space:]]+-[a-z]*x' "$SCRIPT" || true)
+  assert_eq 0 "$n" "**set -x を書かない（トークンが展開されて出る）**"
+  # **トークンを持つ変数を echo/printf の引数に載せない**
+  n=$(grep -c -E '(echo|printf|log)[^#]*\$\{?(BRANCH_PROTECTION_)?TOKEN' "$SCRIPT" || true)
+  assert_eq 0 "$n" "**トークンを echo / printf / log に渡さない**"
+}
+test_case "human-tasks: トークンがログに出る書き方をしていない" t_no_set_x
 
 echo
 echo "$PASS passed, $FAIL failed"
