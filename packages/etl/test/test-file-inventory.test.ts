@@ -249,12 +249,18 @@ test("#855 ci.yml が「本番 data/ に不変条件を当てるテスト」の�
     ci.includes("test -f packages/etl/test/published-data-validate.test.ts"),
     "ci.yml が published-data-validate.test.ts の存在を要求していない（#855／#504）",
   );
-  const body = read("packages/etl/test/published-data-validate.test.ts");
+  // **消されたら ENOENT ではなく理由を出す**（読めない理由が「無い」なのか「壊れた」なのかを分ける）
+  let body: string;
+  try { body = read("packages/etl/test/published-data-validate.test.ts"); } catch {
+    assert.fail(`packages/etl/test/published-data-validate.test.ts が無い（#855）。
+**本数の下限では止まらない**（実測 2026-09-14: 消しても 134 → 133 本で、下限 131 を上回るので通る）。
+コミット済み data/ に不変条件を当てる唯一のものなので、消すなら理由をここに書くこと。`);
+  }
   // **本番の data/ を指していること。** 一時ディレクトリに当てても、コミット済みの data/ は見ていない。
   assert.ok(
     body.includes('fileURLToPath(new URL("../../../data/", import.meta.url))'),
     "published-data-validate.test.ts がコミット済み data/ を読んでいない（#855）",
   );
-  assert.ok(body.includes("validateLocalAssemblies(DATA)"), "validateLocalAssemblies を本番 data/ に当てていない（#855）");
+  // validateDataset は validateLocalAssemblies を内側で呼ぶ厳密な上位集合（理由はテスト本体の docblock）
   assert.ok(body.includes("validateDataset(DATA)"), "validateDataset を本番 data/ に当てていない（#855）");
 });

@@ -4,7 +4,6 @@ import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Assembly, LocalRollCall, MemberSummary } from "@seiji-kiroku/shared";
-import { validateLocalAssemblies } from "../src/local-assemblies.ts";
 import { validateDataset } from "../src/dataset.ts";
 
 /**
@@ -47,16 +46,40 @@ import { validateDataset } from "../src/dataset.ts";
  *
  * ## 実行時間（#812 が CI の所要時間を見ているので測った）
  *
- * **実測 2026-09-14（ローカル、ページキャッシュが温まった状態、n=3）:**
- * `validateLocalAssemblies` 2,976 / 3,224 / 3,697 ms、`validateDataset` 8,433 ms。
- * **`pnpm --filter @seiji-kiroku/etl test` は 1,578 テストで 81.7 秒**だったので、
- * **合わせて 1 割強の増**。数字は下の docblock に測り直した値を書いてある。
+ * **単体で測った時間（ローカル、ページキャッシュが温まった状態、n=3）:**
+ * `validateLocalAssemblies` 2,708 / 2,696 / 2,610 ms、`validateDataset` 7,206 / 7,015 / 7,328 ms。
+ * **合わせて約 10 秒の直列時間**である。
+ *
+ * **だが `pnpm --filter @seiji-kiroku/etl test` の所要時間は動かない。**
+ * `node --test` は 134 本のファイルを並列に走らせるので、**10 秒の 1 本は他の仕事に隠れる。**
+ * **交互に測った実測（WITH / WITHOUT を続けて 3 組）:**
+ * 79.1 / 80.4（−1.3 秒）、80.5 / 80.4（＋0.1 秒）、159.0 / 154.3（＋4.7 秒。両方遅く、機械が混んでいた）。
+ * **中央値の差は ＋0.1 秒——測定の揺れの中である。**
+ *
+ * **#812 が CI の所要時間を見ているので書いておく: これは CI を目に見えて遅くしない。**
+ * **最初に 1 回だけ測ったときは ＋34 秒に見えたが、それは自分が並列に走らせていた別の測定との
+ * 取り合いだった**（交互に測り直して消えた）。**1 回の測定を数字として出さないこと。**
  */
 const DATA = fileURLToPath(new URL("../../../data/", import.meta.url));
 
 /**
  * **母数**（#757）。**「何件見たか」を出さない検査は、0 件を見て緑になっても同じ顔をする。**
- * **`data/` を丸ごと空にしても `validateLocalAssemblies` は `[]` を返す**（違反が無いのは本当だから）。
+ *
+ * ## **これは理屈ではない。実際に `validateDataset` が素通りする形がある。**
+ *
+ * **実測 2026-09-14**: **青森（pref-02）を「整合したまま」丸ごと消した**——
+ * `assemblies/index.json` の行、`members/index.json` の 46 行、その detail、
+ * `members/by-assembly.json` の行、`assemblies/pref-02/` を**まとめて**落とした。
+ * **残ったデータは内部的に完全に整合しているので、`validateDataset` の違反は 0 件のまま緑だった。**
+ * **落ちたのはこのテストだけである**（議会が 13 → 12）。
+ *
+ * **「1 県ぶんの記録が丸ごと消えても誰も言わない」は、まさに「記録が出ない」側の事故である。**
+ * **`data/` を丸ごと空にしたときも `validateLocalAssemblies` は `[]` を返す**（違反が無いのは本当だから）。
+ *
+ * **上限ではなく「ちょうど」で固定する**——**県が増えたらここが落ちて、数え直しを強制する。**
+ * **増えたときに数字を書き換えるのは、増やした PR の仕事である**
+ * （`local-count-mismatches.test.ts` の「母数が変わったら数え直すこと」と同じ約束）。
+ *
  * **実測 2026-09-14**（`data/` を直に数えた値）。
  */
 const CORPUS = {
@@ -81,10 +104,8 @@ const walkRollCalls = async (dir: string): Promise<string[]> => {
 };
 
 /**
- * **母数を先に測る。** **これが落ちたら、下の 2 つの「違反 0 件」は意味を失っている**
- * （空のディレクトリを見て緑になっているのかもしれない）。
- * **上限ではなく「これ以上」で書く**——県が増えれば増えるのが正常だから。
- * **数え直したら実測に書き換えること**（`local-count-mismatches.test.ts` と同じ約束）。
+ * **母数を先に測る。** **これが落ちたら、下の「違反 0 件」は意味を失っている**
+ * （痩せたディレクトリを見て緑になっているのかもしれない。上の docblock の青森の実測）。
  */
 test("#855 母数: コミット済み data/ に 11 議会・1,369 採決・58,057 セル・1,225 名簿行がある", async () => {
   const assemblies = JSON.parse(await readFile(join(DATA, "assemblies/index.json"), "utf-8")) as Assembly[];
@@ -107,28 +128,52 @@ test("#855 母数: コミット済み data/ に 11 議会・1,369 採決・58,05
 });
 
 /**
- * **本丸。** `validateLocalAssemblies` を**コミット済みの `data/` そのもの**に当てる。
+ * **本丸。** **コミット済みの `data/` そのもの**に不変条件を当てる。
+ *
+ * ## **なぜ `validateDataset` 1 つで、`validateLocalAssemblies` を別に呼ばないか**
+ *
+ * **`validateDataset` は `validateLocalAssemblies` を内側で呼んでいる**
+ * （`packages/etl/src/dataset.ts` の末尾: `v.push(...(await validateLocalAssemblies(dir)))`）。
+ * **書いている途中は 2 つ別々に呼んでいたが、変異を当てて初めて気づいた**——
+ * `rollcalls/index.json` の `counts` を 1 つ壊したら、**2 つのテストが同じ 1 件の違反で落ちた。**
+ * **同じ仕事を 2 回している**（地方のぶんだけ実測 2.6–2.7 秒の二重払い）。
+ *
+ * **だから 1 回だけ呼ぶ。** **`validateDataset` は厳密な上位集合**である——
+ * 地方議会の不変条件（`validateLocalAssemblies`）に加えて、
+ * `assemblies/index.json` の全行・`members/index.json` の全行・
+ * `members/by-assembly.json` ↔ `members/index.json` の集計・国会議員の detail まで見る。
+ * **#853 の担当者が「`assemblies/index.json` と `members/index.json` は未調査」と書いた部分は、
+ * これで当たっている。**
  *
  * **違反の一覧をそのまま出す**（件数だけだと、何が起きたのか読めない）。
+ *
  * **実測 2026-09-14: 0 件。** **「今は綺麗」であって「今後も綺麗」ではない**——
- * **#851 / #829 のずれは、この検査を当てていれば当日中に赤くなっていた。**
+ * **#851 / #829 のずれは、この検査を当てていれば当日中に赤くなっていた**
+ * （変異で確かめた: #851 と同じ形——`rollcalls/index.json` の `counts.yes` を 38 → 37 にする——を
+ * 当てると、`assemblies/pref-05/rollcalls/index.json[0] (…提出意見書案第6号):
+ * rollcalls/ の原本と食い違っている（原本が正）` と名指しして落ちる）。
  */
-test("#855 本番 data/: validateLocalAssemblies の違反が 0 件（地方議会の不変条件）", async () => {
-  const v = await validateLocalAssemblies(DATA);
-  assert.deepEqual(v, [], `コミット済み data/ が地方議会の不変条件に違反している（${v.length} 件）`);
+test("#855 本番 data/: 不変条件の違反が 0 件（validateDataset ＝ 国会側 ＋ validateLocalAssemblies）", async () => {
+  const v = await validateDataset(DATA);
+  assert.deepEqual(v, [], `コミット済み data/ が不変条件に違反している（${v.length} 件）`);
 });
 
 /**
- * **`assemblies/index.json` と `members/index.json` の側**（#853 の担当者が「未調査」と明示した）。
+ * **上のテストが本当に地方議会ぶんも見ていることを、別の根拠で固定する**（#774「独立でも互いの代わりにならない」）。
  *
- * **`validateLocalAssemblies` は地方議会の行しか見ない**（国会の行は素通りする）。
- * **`validateDataset` のほうが `assemblies/index.json` の全行・`members/index.json` の全行・
- * `members/by-assembly.json` ↔ `members/index.json` の集計を見る。**
- * **こちらも誰も本番に当てていなかった**ので、同じ理由でここに置く。
- *
- * **実測 2026-09-14: 0 件。**
+ * **`validateDataset` の中の 1 行（`v.push(...(await validateLocalAssemblies(dir)))`）が消えると、
+ * 上のテストは地方議会を 1 件も見なくなるのに緑のままになる**
+ * **実測 2026-09-14**（その行を `/* removed *\/` に置き換えて測った）:
+ * **上のテストは 0 件のまま緑で通り、落ちたのはこのテストだけだった。**
+ * **地方議会の検査が丸ごと走らなくなったのに、「違反 0 件」は何も言わない**——
+ * **違反が 0 なのは本当だから**（見ていないものからは違反が出ない）。
+ * **ここはソースを読んで、その 1 行が在ることを固定する**——**呼ばれていることの根拠を、
+ * 「違反が 0 だった」以外の場所から取る。**
  */
-test("#855 本番 data/: validateDataset の違反が 0 件（assemblies/index.json・members/index.json・by-assembly.json)", async () => {
-  const v = await validateDataset(DATA);
-  assert.deepEqual(v, [], `コミット済み data/ が国会側の不変条件に違反している（${v.length} 件）`);
+test("#855 validateDataset は validateLocalAssemblies を今も呼んでいる（呼ばなくなっても上のテストは緑のままなので）", async () => {
+  const src = await readFile(fileURLToPath(new URL("../src/dataset.ts", import.meta.url)), "utf-8");
+  assert.ok(
+    src.includes("v.push(...(await validateLocalAssemblies(dir)))"),
+    "dataset.ts が validateLocalAssemblies を呼んでいない。呼ばなくなると、上のテストは地方議会を 1 件も見ずに緑になる（#855）",
+  );
 });

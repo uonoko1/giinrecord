@@ -210,18 +210,18 @@ jobs:
       #
       # 当てる本体は packages/etl/test/published-data-validate.test.ts（本番 `data/` を読み直す既存の形
       # ——akita/saga-published-data.test.ts と同じ）。**だが #504 のとおり、テストの中の検査は
-      # 「そのテストが走らなくなったこと」を言えない**——ファイルごと消せば無言で緑になる
-      # （実測: 消すと etl は 1,581 → 1,578 テストで 0 fail）。上の本数の下限は「何か 1 本」で
-      # 埋まるので、このファイルを名指しできない。**だから存在の要求をワークフロー側に置く**
+      # 「そのテストが走らなくなったこと」を言えない**——ファイルごと消せば、そのファイルの中の
+      # どの検査も一度も走らない。**上の本数の下限はこれを止められない**（実測 2026-09-14:
+      # 消しても 134 → 133 本で、下限 131 を上回るので通る。下限は「何か 1 本」で埋まるので、
+      # このファイルを名指しできない）。**だから存在の要求をワークフロー側に置く**
       # （`test -f scripts/ci/stale-base.sh` と同じ形）。
       - name: 本番 data/ に不変条件を当てるテストが在ること (#855, #504)
         run: |
           set -euo pipefail
           test -f packages/etl/test/published-data-validate.test.ts || {
             echo "packages/etl/test/published-data-validate.test.ts がありません（#855 の検査）"; exit 1; }
-          # 名前だけ残った空ファイルで通らないように、実際に両方の検査を呼んでいることを見る
-          grep -q 'validateLocalAssemblies(DATA)' packages/etl/test/published-data-validate.test.ts || {
-            echo "published-data-validate.test.ts が validateLocalAssemblies を本番 data/ に当てていません"; exit 1; }
+          # 名前だけ残った空ファイルで通らないように、実際に検査を呼んでいることを見る
+          # （validateDataset は validateLocalAssemblies を内側で呼ぶ厳密な上位集合。理由はテスト本体の docblock）
           grep -q 'validateDataset(DATA)' packages/etl/test/published-data-validate.test.ts || {
             echo "published-data-validate.test.ts が validateDataset を本番 data/ に当てていません"; exit 1; }
       - run: pnpm test
