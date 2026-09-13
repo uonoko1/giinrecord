@@ -6,6 +6,8 @@ import {
   bottomRun, isVoteSymbol, legendOf, memberColumns, parseHeading, parseLegend, parseVotePdf,
   readRowBands, readVoteCells, splitLeftItem, splitRowItem, UNKNOWN_CELL, UNKNOWN_LEGEND,
 } from "../src/sources/local/saga/votes-pdf.ts";
+// **食い違った行を全部並べる**（#826 でここに作り、#844 で 5 県が使う 1 か所に移した）。
+import { countMismatchRows } from "./count-mismatch-rows.ts";
 
 /**
  * 佐賀県議会「議案採決結果一覧表」PDF（Issue #768）。フィクスチャは本物の PDF 7 本:
@@ -30,37 +32,6 @@ const FIX = {
   rotated: "3_48014_3948_up_zea78qos.pdf",
 } as const;
 const bytes = (name: string): Buffer => readFileSync(new URL(`./fixtures/saga/${name}`, import.meta.url));
-
-/**
- * **記号の数と公表値（賛成者数・反対者数）が食い違った行を全部返す**（#826）。
- *
- * ## なぜ「行ごとに `assert.equal`」をやめたか
- *
- * **この検算は 5 県（宮城・鳥取・島根・佐賀・高知）にあり、5 つとも全行に無条件だった。**
- * **山梨には、公表された賛成者数に議長の `〇` が入っていない行が 2 つある**（再議→否決。#782／#811）。
- * **佐賀にも同じ事象（知事の再議・三分の二未満で否決）の行が実在するが、佐賀では議長を数えているので合っている**（#825）。
- * **つまり「規則」ではなく「県ごとの慣行」で、同じ事象でも数え方が違う。**
- *
- * **だから、いつか落ちる。** **落ちたときに読めるものが「36 !== 35」だけでは、**
- * **`1 行だけ数え方が違う` のか `表の復元が壊れて 26 行ずれた` のかが区別できない**
- * （**実測: 72 行のうち 3 行を食い違わせても、落ちたメッセージに出たのは最初の 1 行だけだった**）。
- * **前者は記録が正しく、後者は記録が偽である。** **どちらも「テストが赤い」では同じに見える。**
- *
- * **検算は緩めない**——**食い違いが 1 行でもあればこのテストは落ちる。**
- * **変わったのは「落ちたときに全部見える」ことだけである。**
- *
- * **本番側の扱いは別にある**: **`meta.countMismatches`**（#826）が
- * **11 県すべてで食い違いを件数として残す**ので、**月次 ETL は止まらず、記録は出たうえで人が見に行ける。**
- */
-function countMismatchRows(rows: readonly { number: string; cells: string[]; counts: { yes: string; no: string } }[]): string[] {
-  return rows.flatMap((r) => {
-    const yes = r.cells.filter((c) => c === "○").length;
-    const no = r.cells.filter((c) => c === "×").length;
-    return yes === Number(r.counts.yes) && no === Number(r.counts.no)
-      ? []
-      : [`${r.number}: 数えた ○${yes} ×${no} / 公表 賛成${r.counts.yes} 反対${r.counts.no}`];
-  });
-}
 
 /* ---------- 読めた本の実測値（1 本ずつ固定する） ---------- */
 
@@ -258,7 +229,10 @@ test("#768 令和4年9月定例会: 議決者数と賛成が 1 アイテムの�
   // **記号の数と突き合わせる**（原文の数と抽出した記号が合う）。
   // **食い違った行を全部並べて比べる**（#826）——**`assert.equal` を行ごとに撃つと最初の 1 行で止まり、
   // 「1 行なのか 26 行なのか」が読めない**（実測: 3 行を食い違わせても、落ちたメッセージには 1 行しか出なかった）。
-  assert.deepEqual(countMismatchRows(pdf.rows), [], "○ の数 ＝ 賛成 / × の数 ＝ 反対");
+  assert.deepEqual(
+    countMismatchRows(pdf.rows, { yes: "○", no: "×", cells: (r) => r.cells, label: (r) => r.number }),
+    [], "○ の数 ＝ 賛成 / × の数 ＝ 反対",
+  );
 });
 
 /* ---------- 表題・凡例 ---------- */

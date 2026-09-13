@@ -2,6 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { parseVotePdf, UNKNOWN_CELL, checkCellsAgainstLegend } from "../src/sources/local/kochi/votes-pdf.ts";
+// **食い違った行を全部並べる**（#826 で佐賀に作り、#844 で 5 県が使う 1 か所に移した）。
+import { countMismatchRows } from "./count-mismatch-rows.ts";
 
 // 高知県議会「議員別賛否の状況」の会期 PDF（Issue #220。2026-08-24 取得）。文字層から表を復元する（pdfjs、共通部は pdf-table.ts）。
 //   令和8年6月定例会: /_files/00156424/0806.pdf（2 ページ、36 名）
@@ -92,19 +94,30 @@ test("parseVotePdf: 凡例に無い値が出たら例外（丸めない）", () 
   assert.doesNotThrow(() => checkCellsAgainstLegend(["○", UNKNOWN_CELL], june8.legend.votes, "test"));
 });
 
-test("parseVotePdf: 復元したセルの員数が PDF 自身の賛成者数・反対者数と一致する（セルの脱落・余剰の検算）", () => {
-  // PDF には行ごとに賛成者数・反対者数の欄がある（cells とは別の列＝countCols から読むので独立した原文）。
-  // 数が食い違えば、セルの取りこぼし・二重取りがあるということ（原文どうしの突き合わせなので推定は入らない）。
-  // ただしこれは「員数」の一致であって順序は見ていない: セルを並べ替えても合計は変わらないので、
-  // 列のずれ（off-by-one）はこの検算では捕まらない。それは下の「どの議員が」のゴールデンテストが受け持つ。
-  for (const pdf of [june8, june7]) {
-    for (const row of pdf.rows) {
-      if (!row.counts) continue;
-      const yes = row.cells.filter((c) => c === "○").length;
-      const no = row.cells.filter((c) => c === "×").length;
-      assert.deepEqual({ yes, no }, row.counts, `${pdf.sessionLabel} ${row.number}`);
-    }
-  }
+/**
+ * PDF には行ごとに賛成者数・反対者数の欄がある（cells とは別の列＝countCols から読むので独立した原文）。
+ * 数が食い違えば、セルの取りこぼし・二重取りがあるということ（原文どうしの突き合わせなので推定は入らない）。
+ * ただしこれは「員数」の一致であって順序は見ていない: セルを並べ替えても合計は変わらないので、
+ * 列のずれ（off-by-one）はこの検算では捕まらない。それは下の「どの議員が」のゴールデンテストが受け持つ。
+ *
+ * **食い違った行を全部並べて比べる**（#826／#844）——**`assert.deepEqual` を行ごとに撃つと最初の 1 行で止まり、**
+ * **「1 行だけ数え方が違う」のか「表の復元が壊れて 26 行ずれた」のかが読めない**
+ * （**前者は記録が正しく、後者は記録が偽なのに、どちらも「テストが赤い」では同じに見える**）。
+ * **検算は緩めていない——食い違いが 1 行でもあれば落ちる。**
+ *
+ * **本番側（`data/`）では代えられない**——**高知がいちばんはっきりしている。**
+ * **`data/assemblies/pref-39/` の 104 行は 104 行とも `counts` を出力に入れていない**ので、
+ * **本番側（`meta.countMismatches`）が見ている高知の行は 0 である**（#757／#844 の実測）。
+ * **つまりこのフィクスチャの 47 行を検算しているのは、この 1 本だけである。**
+ */
+test("parseVotePdf: 復元したセルの員数が PDF 自身の賛成者数・反対者数と一致する（2 会期 47 行。食い違いは全部並べる）", () => {
+  const rows = [june8, june7].flatMap((pdf) => pdf.rows.map((r) => ({ ...r, sessionLabel: pdf.sessionLabel })));
+  assert.equal(rows.length, 47, "令和8年6月 23 行 ＋ 令和7年6月 24 行（母数が減ったらこの検算は空回りする）");
+  assert.equal(rows.filter((r) => r.counts).length, 47, "47 行とも counts の欄がある（外れる行が無いこと）");
+  assert.deepEqual(
+    countMismatchRows(rows, { yes: "○", no: "×", cells: (r) => r.cells, label: (r) => `${r.sessionLabel} ${r.number}` }),
+    [],
+  );
 });
 
 /** 議員の氏名 → セルの値。「何人が×か」ではなく「どの議員が×か」を見るための形。 */

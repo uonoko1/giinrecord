@@ -2,6 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { parseVotePdf, UNKNOWN_CELL } from "../src/sources/local/miyagi/votes-pdf.ts";
+// **食い違った行を全部並べる**（#826 で佐賀に作り、#844 で 5 県が使う 1 か所に移した）。
+import { countMismatchRows } from "./count-mismatch-rows.ts";
 
 // 宮城県議会「各議員の表決状況」PDF（Issue #157）。文字層から表を復元する（pdfjs）。
 //   第398回（令和7年11月定例会）: https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf（3 ページ、2026-08-23 取得）
@@ -90,17 +92,35 @@ test("parseVotePdf: セルは議員数ぶん（議員数×議案数）。第398�
   assert.equal(pdf398.members[row.cells.indexOf("欠")].nameText, "坂下 賢");
 });
 
-test("parseVotePdf: 不変条件 — 全行でセル数＝議員数、○の数＝賛成者数、×の数＝反対者数、不明セル 0（2 会期）", () => {
+test("parseVotePdf: 不変条件 — 全行でセル数＝議員数、不明セル 0、凡例に無い値は無い（2 会期）", () => {
   for (const pdf of [pdf398, pdf399]) {
     assert.equal(pdf.unknownCells, 0);
     for (const row of pdf.rows) {
       assert.equal(row.cells.length, pdf.members.length, `${row.kind} ${row.number}`);
-      assert.equal(row.cells.filter((c) => c === "○").length, row.counts.yes, `${row.kind} ${row.number} yes`);
-      assert.equal(row.cells.filter((c) => c === "×").length, row.counts.no, `${row.kind} ${row.number} no`);
       for (const c of row.cells) assert.ok(c === UNKNOWN_CELL || c in pdf.legend.votes, `${row.kind} ${row.number}: ${c}`);
     }
   }
   assert.equal(pdf398.rows.length * pdf398.members.length, pdf398.rows.reduce((n, r) => n + r.cells.length, 0));
+});
+
+/**
+ * **○ の数 ＝ 賛成者数 / × の数 ＝ 反対者数**（表の復元の検算。原文どうしの突き合わせなので推定は入らない）。
+ *
+ * **食い違った行を全部並べて比べる**（#826／#844）——**`assert.equal` を行ごとに撃つと最初の 1 行で止まり、**
+ * **「1 行だけ数え方が違う」のか「表の復元が壊れて 26 行ずれた」のかが読めない**
+ * （**前者は記録が正しく、後者は記録が偽なのに、どちらも「テストが赤い」では同じに見える**）。
+ * **検算は緩めていない——食い違いが 1 行でもあれば落ちる。**
+ *
+ * **本番側（`data/`）では代えられない**: **フィクスチャは第398回・第399回の 160 行だが、
+ * `data/assemblies/pref-04/` にあるのは第399回・第400回の 133 行で、第398回の 50 行はどこにも無い**（#844 の実測）。
+ */
+test("parseVotePdf: ○の数＝賛成者数、×の数＝反対者数（2 会期 160 行。食い違いは全部並べる）", () => {
+  const rows = [...pdf398.rows, ...pdf399.rows];
+  assert.equal(rows.length, 160, "第398回 50 行 ＋ 第399回 110 行（母数が減ったらこの検算は空回りする）");
+  assert.deepEqual(
+    countMismatchRows(rows, { yes: "○", no: "×", cells: (r) => r.cells, label: (r) => `${r.kind} ${r.number}` }),
+    [],
+  );
 });
 
 test("parseVotePdf: 凡例に無い値のセルは例外（丸めない・推定しない）", async () => {

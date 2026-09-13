@@ -2,6 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { parseVotePdf, UNKNOWN_CELL } from "../src/sources/local/tottori/votes-pdf.ts";
+// **食い違った行を全部並べる**（#826 で佐賀に作り、#844 で 5 県が使う 1 か所に移した）。
+import { countMismatchRows } from "./count-mismatch-rows.ts";
 
 // 鳥取県議会「議決結果（令和N年M月D日議決分）」PDF（Issue #184）。文字層から表を復元する（pdfjs）。
 //   令和8年6月定例会（6月29日議決分）: /secure/1422217/R8.6giketsukekka0629.pdf（5 ページ。知事提出議案 15・議員提出議案 4・陳情 11。2026-08-24 取得）
@@ -137,12 +139,10 @@ test("parseVotePdf: 令和8年2月定例会。先議（14 件）と 3月25日議
   // 3月25日分は 6 ページ目が「別紙」（陳情の本文）。表ではないので読まない
   assert.equal(feb.trailingPages, 1);
   assert.equal(june.trailingPages, 0);
-  // 全 PDF のセルは凡例の値だけ（不明は 0）。取得したフィクスチャでは ○ の数＝賛成者数、× の数＝反対者数（抽出の検算。ETL は数え直さない）
+  // 全 PDF のセルは凡例の値だけ（不明は 0）。員数の検算は下の別のテストが受け持つ（#844）
   for (const pdf of [june, juneSeigan, juneGiin, febSengi, feb]) {
     for (const r of pdf.rows) {
       for (const c of r.cells) assert.ok(c === UNKNOWN_CELL || c in pdf.legend.votes, `${r.number}: ${c}`);
-      assert.equal(r.cells.filter((c) => c === "○").length, r.counts.yes, `${pdf.date} ${r.kind} ${r.number}: ○ vs 賛成者数`);
-      assert.equal(r.cells.filter((c) => c === "×").length, r.counts.no, `${pdf.date} ${r.kind} ${r.number}: × vs 反対者数`);
     }
   }
   // 番号の列に番号でない原文が入る行（附帯意見）も、議決結果の原文（「決定」）もそのまま
@@ -151,6 +151,27 @@ test("parseVotePdf: 令和8年2月定例会。先議（14 件）と 3月25日議
   assert.equal(futai.title, "（議案第1号関係）");
   assert.equal(futai.result, "決定");
   assert.equal(june.rows[1].result, "決定");
+});
+
+/**
+ * **○ の数 ＝ 賛成者数 / × の数 ＝ 反対者数**（抽出の検算。ETL は数え直さない）。
+ *
+ * **食い違った行を全部並べて比べる**（#826／#844）——**`assert.equal` を行ごとに撃つと最初の 1 行で止まり、**
+ * **「1 行だけ数え方が違う」のか「表の復元が壊れて 26 行ずれた」のかが読めない**
+ * （**前者は記録が正しく、後者は記録が偽なのに、どちらも「テストが赤い」では同じに見える**）。
+ * **検算は緩めていない——食い違いが 1 行でもあれば落ちる。**
+ *
+ * **本番側（`data/`）では代えられない**: **フィクスチャは 5 本 133 行だが、
+ * `data/assemblies/pref-31/` で本番側（`meta.countMismatches`）が見ているのは 117 行**
+ * （**118 行のうち 1 行は凡例の引けないセルがあるので母数の外**。#844 の実測）。
+ */
+test("parseVotePdf: ○の数＝賛成者数、×の数＝反対者数（PDF 5 本 133 行。食い違いは全部並べる）", () => {
+  const rows = [june, juneSeigan, juneGiin, febSengi, feb].flatMap((pdf) => pdf.rows.map((r) => ({ ...r, date: pdf.date })));
+  assert.equal(rows.length, 133, "30 + 11 + 4 + 14 + 74（母数が減ったらこの検算は空回りする）");
+  assert.deepEqual(
+    countMismatchRows(rows, { yes: "○", no: "×", cells: (r) => r.cells, label: (r) => `${r.date} ${r.kind} ${r.number}` }),
+    [],
+  );
 });
 
 test("parseVotePdf: 見出し（会期・議決日）が無い・凡例が無い PDF は失敗する", async () => {
