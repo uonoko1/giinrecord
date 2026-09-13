@@ -122,8 +122,18 @@ jobs:
           # （#720 の「実数 − 3」。テストを増やした PR がそのついでに上げる）。
           # #793 で scripts/ci/test/pr-closes.test.sh が増え**実測 31 本**になったので 27 → 28 に上げる
           # （#720 の「実数 − 3」。テストを増やした PR がそのついでに上げる）。
-          echo "loop ran: $ran (floor 28)"
-          [ "$ran" -ge 28 ] || { echo "FAIL: fewer test files ran than expected — glob narrowed or files deleted"; exit 1; }
+          # #814 で scripts/ci/test/gh-flags.test.sh が増え**実測 34 本**になったので 28 → 31 に上げる
+          # （#720 の「実数 − 3」。テストを増やした PR がそのついでに上げる）。
+          echo "loop ran: $ran (floor 31)"
+          [ "$ran" -ge 31 ] || { echo "FAIL: fewer test files ran than expected — glob narrowed or files deleted"; exit 1; }
+      # #814: **スタブと実装が同じ誤りを共有して緑になった**（`gh secret set --body-file` は存在しない）。
+      # リポジトリの中どうしを突き合わせても一致してしまうので、**本物の `gh --help` を一次資料にする。**
+      # `--help` だけなので**認証も網も副作用も要らない**（`--no-store` は公開鍵を取りに行くので 401 になる。
+      # 実測済み。gh-flags.sh の冒頭に理由を書いた）。`ubuntu-latest` には `gh` が入っている。
+      - name: gh のフラグが本物の --help と合っているか（#814）／スタブの二重定義（#799）
+        run: |
+          bash scripts/ci/gh-flags.sh
+          bash scripts/ci/stub-dupes.sh
       - run: pnpm lint
       - name: actionlint (all workflows)
         run: |
