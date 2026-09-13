@@ -40,7 +40,14 @@ cat > "$BIN/gh" <<'EOT'
 #!/usr/bin/env bash
 case "$1 $2" in
   "secret set")
-    body=$(cat)   # --body - で渡ってくる
+    # **`--body` を付けずに標準入力から読ませるのが正しい呼び方**（#786。`--body -` は
+    # リテラルの `-` を保存してしまう。実測で確認済み）。**引数に値が載っていたら落とす。**
+    for a in "$@"; do
+      case "$a" in
+        --body|--body-file|-b) printf 'gh secret set BAD_FLAG %s\n' "$a" >> "$STUB_LOG"; exit 9 ;;
+      esac
+    done
+    body=$(cat)   # 標準入力から受け取る
     printf 'gh secret set %s len=%s\n' "$3" "${#body}" >> "$STUB_LOG"
     [[ "${STUB_GH_SET_FAIL:-0}" = 1 ]] && exit 1
     exit 0 ;;

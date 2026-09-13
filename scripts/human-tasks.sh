@@ -183,8 +183,15 @@ elif [[ "$APPLY" = 0 ]]; then
   # **トークンそのものは絶対に出さない。** 長さだけ出して「渡っている」ことを示す。
   log "  [dry-run] gh secret set SECURITY_ALERTS_TOKEN （${#SEC_TOKEN} 文字のトークンを受け取っています）"
 else
-  # `--body -` で **標準入力から**渡す。`--body "$SEC_TOKEN"` だと argv に載り ps で見える。
-  if printf '%s' "$SEC_TOKEN" | gh secret set SECURITY_ALERTS_TOKEN --body - >/dev/null 2>&1; then
+  # **値は標準入力で渡す**（`--body "$SEC_TOKEN"` だと argv に載って `ps` で見える）。
+  #
+  # **`--body -` と書いてはいけない。** `gh secret set` の `-b/--body` は「値そのもの」を取る文字列
+  # フラグで、**`-` を特別扱いしない**。`--body -` は**リテラルの `-` を secret として保存する**
+  # （実測 2026-09-13、`--no-store` で暗号化後の長さを比べて確認。1 文字ぶんの短い暗号文が出た）。
+  # **`--body-file -` も存在しない**（実測: `unknown flag: --body-file`）。
+  # 正しいのは **`--body` を書かないこと**——help にそう書いてある:
+  #   "-b, --body string   The value for the secret (reads from standard input if not specified)"
+  if printf '%s' "$SEC_TOKEN" | gh secret set SECURITY_ALERTS_TOKEN >/dev/null 2>&1; then
     log "  SECURITY_ALERTS_TOKEN を置きました"
     # **置けただけでは足りない。** 権限が足りない PAT でも secret としては置ける。
     # **実際にアラートを読めるか**を、置いたトークンそのもので確かめる。
