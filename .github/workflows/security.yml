@@ -2,7 +2,9 @@ name: Security
 # Issue #133: structural leak prevention for a public repo that deploys to a SHARED VPS.
 #   gitleaks            secrets in the PR's commits (pull_request) and, weekly, in the FULL history
 #   forbidden patterns  scripts/ci/forbidden-patterns.sh — key headers, token formats, tracked .env, public IPs,
-#                       plus site-specific regexes from the FORBIDDEN_PATTERNS secret (never written to the repo)
+#                       plus site-specific regexes from the FORBIDDEN_PATTERNS secret (never written to the repo),
+#                       plus third-party keys/tokens inside test/fixtures/ (#750 / #785 — gitleaks' default rules
+#                       do NOT catch the Google `AIza…` form; 実測: no leaks found on the leaked fixtures)
 #   pnpm audit          scripts/ci/audit.sh — high/critical advisories fail unless listed (with expiry + reason)
 #                       in scripts/ci/audit-ignore.txt. Dependabot opens the upgrade PRs.
 # Reporting a vulnerability: SECURITY.md
