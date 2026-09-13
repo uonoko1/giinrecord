@@ -10,6 +10,8 @@
 #   ip-address    a public IPv4 literal anywhere (the VPS is written as a domain, not an IP; no directory is exempt —
 #                 deploy/ and docs/ops/ are exactly where the IP used to live. Loopback, 0.0.0.0 and RFC1918
 #                 ranges are fine — they identify nothing)
+#   fixture-secret 第三者サービスの鍵・トークンらしき値が test/fixtures/ の中にある（取得した HTML に
+#                 混ざって入ってくる。#750 / #785。フィクスチャが 1 本も無ければ exit 2 ——#757）
 #   forbidden     regexes from $FORBIDDEN_PATTERNS (newline separated; a repo secret set by the PO — names of the
 #                 other sites on the shared VPS etc.). The patterns are never printed.
 #                 Unset/empty → with FORBIDDEN_PATTERNS_REQUIRED=true (push, schedule, same-repo PR) that is an
@@ -123,6 +125,41 @@ GIT_OUT=$(run_grep "$GIT_FILES" -I -H -n -E -e "$DESTRUCTIVE_GIT_RE" \
 #   - コメント行（意図的。この規則の理由を書けなくなるため）
 #   これらは「隠れて通れる」形ではなく、レビューの diff に不自然な書き方として現れる（作業合意 #507）。
 report destructive-git "$GIT_OUT"
+
+# fixture-secret (Issue #785, 同じ機序で #750): 取得した第三者の HTML をそのままフィクスチャに置くと、
+# そのページが埋め込んでいる鍵・トークンが一緒にリポジトリへ入る。実際に 2 回起きた:
+#   #750 青森  <a href="https://…/web_inquiry/?token=<32 文字>">
+#   #785 徳島  <script src="https://maps.googleapis.com/maps/api/js?key=AIza…&amp;language=ja">
+# gitleaks v8.30.1 の既定ルールは後者を検出しない（実測: packages/etl/test/fixtures/tokushima を
+# 素の default config で走らせて "no leaks found"）。穴を埋めていたのは GitHub secret scanning だけで、
+# そのアラートは 21 日間読まれなかった。見ていない検出器は無い検出器と同じなので、CI で落とす側に置く。
+#
+# 対象は test/fixtures/ 配下だけ（取得した第三者の HTML が入る唯一の場所）。docs はこの規則の理由を
+# 書けるよう対象外にする。サニタイズ済みの値（REDACTED / 空 / 短い ID）は落とさない——落とすと、
+# 直した人が検査ごと外す。逐語で押さえる 2 つの形を、それぞれ別の正規表現にしてある（#762: 「N 個以上」
+# のような数え方だと、足した項目を消しても落ちない）。
+FIXTURE_FILES=$(printf '%s\n' "$FILES" | grep -E '(^|/)test/fixtures/' || true)
+FIXTURE_N=$(printf '%s\n' "$FIXTURE_FILES" | sed '/^$/d' | wc -l | tr -d ' ')
+# 母数（Issue #757）: 「1 本も無い」は clean ではない。パスの付け替えや ls-files の失敗で対象が消えると、
+# 「0 件検出」と「1 本も読めていない」が同じ緑になってしまう。件数は常に出す。
+# ETL があるのにフィクスチャが 0 本なのは、この repo では起こり得ない（徳島・青森・奈良…が読む）ので error。
+# ETL が無い repo（このスクリプトのテストが作る使い捨ての repo、将来の切り出し）では 0 本が正しいので通す
+# ——ここを無条件の error にすると、検査のテスト 26 件が道連れで落ちる（実測）。
+echo "fixture-secret: $FIXTURE_N file(s) scanned"
+if [ "$FIXTURE_N" -eq 0 ] && printf '%s\n' "$FILES" | grep -q -E '^packages/etl/'; then
+  echo "::error::fixture-secret: packages/etl/ exists but no file matched test/fixtures/ —" \
+    "the check scanned nothing. That is not 'clean'. Fix the path glob in" \
+    "scripts/ci/forbidden-patterns.sh (Issue #757)." >&2
+  exit 2
+fi
+# 形 1（#785）: Google 系の API キー。AIza で始まり 30 文字以上続く。徳島で踏んだのはこの形そのもの。
+FIXTURE_GOOGLE_KEY_RE='AIza[0-9A-Za-z_-]{30,}'
+# 形 2（#750）: クエリ文字列の鍵・トークン。値が 16 文字以上の英数字系のときだけ落とす。
+# REDACTED（8 文字）や議案 ID（7310454）や年（2024）はこの閾値に届かない——実測でそう選んだ。
+FIXTURE_QUERY_SECRET_RE='[?&](token|key|api_?key|apikey|access_token|auth|secret|signature|sig)=[0-9A-Za-z_.~-]{16,}'
+FIXTURE_OUT=$(run_grep "$FIXTURE_FILES" -I -H -n -E \
+  -e "$FIXTURE_GOOGLE_KEY_RE" -e "$FIXTURE_QUERY_SECRET_RE" | cut -d: -f1,2) || exit 2
+report fixture-secret "$FIXTURE_OUT"
 
 # Strict octets (no leading zeros) and no neighbouring digit, letter or dot: keeps SVG path data and version strings (v1.2.3.4) out.
 OCTET='(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])'
