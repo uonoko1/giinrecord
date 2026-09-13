@@ -219,7 +219,9 @@ git_handle() {
       "?? packages/etl/.measure-notes.md" \
       "?? data/assemblies/pref-10/new.json" \
       " M .measure/kept.ts" \
-      "A  packages/etl/.measure/added.ts" ;;
+      "A  packages/etl/.measure/added.ts" \
+      " M .measure/" \
+      "D  packages/etl/.cache/" ;;
     *"log --oneline @{u}..HEAD") ;;
     *) ;;
   esac
@@ -229,7 +231,7 @@ EOF
 )
   run_script "$h" worktree-sweep.sh --yes
   assert_not_contains "$LOG" "$(printf 'worktree\tremove\t/wt/near')" "**接頭辞が似ているだけのものを除外しない**"
-  assert_contains "$ERR" "未コミットの変更が 5 件" "**5 件すべて数える（追跡済みの .measure/ も含む）**"
+  assert_contains "$ERR" "未コミットの変更が 7 件" "**7 件すべて数える。除外は未追跡（?? ）に限る**"
 }
 test_case "sweep: .measure/ の除外は未追跡の .measure/ だけ (#787)" t_sweep_measure_exception_is_narrow
 

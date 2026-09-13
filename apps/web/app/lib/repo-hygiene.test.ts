@@ -99,6 +99,10 @@ describe("測定・調査の作業ディレクトリ .measure/ (#787)", () => {
     "packages/etl/measure/run.ts",
     "apps/web/app/lib/measure.ts",
     "data/.measurement",
+    // **ディレクトリではなく `.measure` という名前のファイル**。
+    // `.gitignore` の末尾の `/` が落ちると、これも黙って無視される（変異 M2b で実測した）。
+    ".measure",
+    "packages/etl/.measure",
     // 通常のソース
     "packages/etl/src/index.ts",
     "apps/web/app/root.tsx",
@@ -108,7 +112,7 @@ describe("測定・調査の作業ディレクトリ .measure/ (#787)", () => {
     expect(ignored(p)).toBe(false);
   });
   it("無視されないパスを数えている（母数が消えたら落ちる）", () => {
-    expect(trackablePaths.length).toBe(10);
+    expect(trackablePaths.length).toBe(12);
   });
 
   it(".measure 配下に追跡中のファイルが無い", () => {
@@ -119,7 +123,11 @@ describe("測定・調査の作業ディレクトリ .measure/ (#787)", () => {
     expect(tracked).toBe("");
   });
 
-  it("data/ 配下に追跡中のファイルが残っている（上の検査の母数。data/ ごと無視したら落ちる）", () => {
+  // **この検査は「data/ を無視する変異」では落ちない**（実測。`git ls-files` は追跡済みのファイルを
+  // .gitignore に関係なく出すため）。**落とすのは上の check-ignore の側である。**
+  // ここが担っているのは**母数**——「無視されない」と言っている data/ に、本当に成果物が在ること。
+  // これが空になったら、上の data/ の検査は「存在しないものが無視されない」を確かめているだけになる。
+  it("data/ 配下に追跡中のファイルが実際に在る（上の data/ の検査の母数）", () => {
     const tracked = execFileSync("git", ["ls-files", "data"], { cwd: repoRoot, encoding: "utf8" })
       .trim()
       .split("\n")
