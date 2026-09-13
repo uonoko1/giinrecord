@@ -134,8 +134,8 @@ test("kanaNameRatioExceeds: 氏名が空でかなが非空なら true（全消�
 });
 
 // 地方議会（validateLocalAssemblies）側の統合テスト。
-// 氏名は名簿（PDF/HTML）から、かなは名簿の HTML から取る独立した2つの値。
-// 一方が静かに1文字消えると比（かな長 / 氏名長）が跳ねる。#617（大分）の実例の機序。
+// **氏名もかなも名簿の同じ HTML から来る**ので「独立した2つの値」ではない（#771）。
+// **この検算が守るのは「名簿の HTML 自体が壊れた／読み違えた」場合だけ**で、PDF 側の欠落（#617）は拾えない。
 test("validateLocalAssemblies: かなに対して氏名が短すぎれば違反（氏名が1文字消えたのを、かなとの比で検出する。#632）", async () => {
   const dir = await mkdtemp(join(tmpdir(), "giinrecord-local-"));
   const a = { ...member("p_04_a", "柚木 貴光"), kana: "ゆずき たかみつ" }; // 比 2.0（正常）

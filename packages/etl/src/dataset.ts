@@ -239,8 +239,9 @@ export async function validateDataset(dir: string): Promise<string[]> {
     // 所属議会（#156）: assemblies/index.json に実在し、国会議員は house と一致する（diet-{house}）。
     if (typeof m.assemblyId !== "string" || !assemblyIds.has(m.assemblyId)) v.push(`members/index.json ${m.id}: assemblyId ${String(m.assemblyId)} not in assemblies/index.json`);
     else if ((m.house === "sangiin" || m.house === "shugiin") && m.assemblyId !== DIET_ASSEMBLY_IDS[m.house]) v.push(`members/index.json ${m.id}: assemblyId ${m.assemblyId} does not match house ${m.house} (expected ${DIET_ASSEMBLY_IDS[m.house]})`);
-    // かなと氏名の検算（#632）: 氏名は名簿（PDF/HTML）、かなは名簿の HTML から。独立した2つの値で、
-    // 片方が静かに欠けたときに比が跳ねる（#617 の「フォントのサブセットに文字が無く欠落」はこれで拾える範囲がある）。
+    // かなと氏名の検算（#632）: **見るのは名簿の行だけ**（`members/index.json` の氏名とかな）。
+    // **衆院も参院も、氏名とかなは同じ `<tr>` の隣り合う `<td>` から来る**ので「独立した2つの値」ではない（#771）。
+    // **PDF 側の欠落（#617）はここでは拾えない**——名簿が無傷なら比は動かない。詳細は kanaNameRatioExceeds の docblock。
     if (kanaNameRatioExceeds(m.name, m.kana)) v.push(`members/index.json ${m.id}: kana "${m.kana}" is disproportionate to name "${m.name}" (name may have lost a character. #632)`);
   }
   // members/by-assembly.json（#441）は index.json から機械的に導ける集計。食い違えば
