@@ -426,6 +426,147 @@ t_missing_head_ref_is_an_error_too() {
   assert_contains "$OUT" "no-such-head" "names the ref it could not resolve"
 }
 
+# --- #836: the branch is UP TO DATE with the base and still drops the base's lines -------------
+# Measured on the real incidents: PR #832 removed 17 lines of docs/WORKING_AGREEMENT.md that #820/#824
+# had added, and PR #761 removed 12 lines of docs/DATA_CONTRACT.md that #762 had added. In BOTH, the
+# branch had been rebased **before it was ever pushed**, so the merge-base was already the base tip and
+# `gained` was empty: the default mode printed `ok`. Nothing in refs or the API distinguishes that from
+# a deliberate deletion (measured: the fork point, the author dates and the pre-force-push head are all
+# destroyed or unavailable). What IS still true of both is that the PR takes more of the base's lines
+# out of a file than it puts back — a NET deletion — while the file survives. That is what this mode
+# measures. Over the last 60 merged PRs it fires on 4 and both real incidents are among them.
+t_net_deletions_catches_a_rebased_branch_that_dropped_the_bases_lines() {
+  new_repo; BASE_SHA=$(g rev-parse HEAD)
+  main_moves '- **教訓 X**' '- **教訓 Y**'
+  # the branch is a DESCENDANT of the base tip (what `git rebase` / "Update branch" leaves behind) …
+  branch_from main topic
+  # … and yet its copy of the file is the pre-move one plus its own line: the rebase was resolved
+  # "take my side". The merge-base IS the base tip, so the default mode has nothing to compare.
+  g checkout -q "$BASE_SHA" -- docs/WORKING_AGREEMENT.md
+  printf -- '- **教訓 私**\n' >> "$W/docs/WORKING_AGREEMENT.md"
+  commit "my lesson, main's two lines gone"
+  run
+  assert_eq 0 "$STATUS" "precondition: the default mode is blind here (that is the bug) — $OUT"
+  run --net-deletions
+  assert_eq 1 "$STATUS" "a net deletion of the base's lines must not pass: $OUT"
+  assert_contains "$OUT" "docs/WORKING_AGREEMENT.md" "names the file"
+  assert_contains "$OUT" "教訓 X" "names a line it is about to lose"
+}
+
+t_net_deletions_stays_quiet_for_a_rewrite_that_puts_back_at_least_as_much() {
+  # A section rewritten in place (the #740 shape: a resolved decision replacing the old text) removes
+  # lines but adds at least as many. That is a deliberate edit and must stay quiet, or the check fires
+  # on everything and nobody reads it (measured: the naive "any deletion" rule fires on 39 of 60 PRs).
+  new_repo; BASE_SHA=$(g rev-parse HEAD)
+  main_moves '- **教訓 X**'
+  branch_from main topic
+  g checkout -q "$BASE_SHA" -- docs/WORKING_AGREEMENT.md
+  printf -- '- **書き換え 1**\n- **書き換え 2**\n- **書き換え 3**\n' >> "$W/docs/WORKING_AGREEMENT.md"
+  commit "rewrote the section"
+  run --net-deletions
+  assert_eq 0 "$STATUS" "a rewrite that adds more than it removes must stay quiet: $OUT"
+}
+
+t_net_deletions_allows_deleting_a_whole_file() {
+  # Deleting a file outright is a deliberate act and is visible in `git diff --stat`; this mode is about
+  # a file that SURVIVES while quietly losing the base's lines. Requiring the file to exist in head is
+  # what keeps a legitimate removal from being reported here.
+  new_repo; BASE_SHA=$(g rev-parse HEAD)
+  main_moves '- **教訓 X**'
+  branch_from main topic
+  g rm -q docs/WORKING_AGREEMENT.md
+  commit "drop the doc on purpose"
+  run --net-deletions
+  assert_eq 0 "$STATUS" "deleting the file outright is not this mode's business: $OUT"
+}
+
+t_net_deletions_is_not_confused_by_a_behind_branch() {
+  # Being BEHIND main is normal and must stay quiet here too: the branch simply does not have the base's
+  # newest lines yet, and a three-way merge puts them back. Firing on it would fail every open PR the
+  # moment main moves — the same trap the default mode documents.
+  new_repo; BASE_SHA=$(g rev-parse HEAD)
+  branch_from main topic
+  printf -- '- **教訓 私**\n' >> "$W/docs/WORKING_AGREEMENT.md"
+  commit "my lesson"
+  main_moves '- **教訓 X**' '- **教訓 Y**' '- **教訓 Z**'
+  run --net-deletions
+  assert_eq 0 "$STATUS" "a branch that is merely behind main must stay quiet: $OUT"
+}
+
+t_net_deletions_counts_every_line_it_reports() {
+  new_repo; BASE_SHA=$(g rev-parse HEAD)
+  main_moves '- **教訓 X**' '- **教訓 Y**' '- **教訓 Z**'
+  branch_from main topic
+  g checkout -q "$BASE_SHA" -- docs/WORKING_AGREEMENT.md
+  commit "all three gone"
+  run --net-deletions
+  assert_eq 1 "$STATUS" "three lost lines must fail: $OUT"
+  assert_contains "$OUT" "3 行" "reports the number it measured, not a vague warning: $OUT"
+}
+
+t_net_deletions_rejects_an_unresolvable_ref() {
+  new_repo; BASE_SHA=$(g rev-parse HEAD)
+  run --net-deletions refs/heads/no-such-base
+  assert_eq 2 "$STATUS" "an unresolvable base must not be reported as clean"
+  assert_contains "$OUT" "no-such-base" "names the ref it could not resolve"
+}
+
+# --- #836: `cut … | head -20 | sed` dies of SIGPIPE under `set -o pipefail` ---------------------
+# `head -20` closes the pipe after 20 lines, `cut` takes SIGPIPE, and `set -o pipefail` makes the whole
+# pipeline report 141 — `set -e` then kills the script with **no message and no lines file at all**.
+# Found by running the new mode against the real PR #761, whose diff contains a 769-line woff2 blob:
+# exit 141, zero bytes of output. A check that dies silently on a big file is worse than no check.
+# The trigger is the SIZE of the reported list, so the fixture has to produce more than 20 lost lines
+# AND enough data that `cut` is still writing when `head` exits — a 25-line file is not enough
+# (measured: `cut` finishes first and exits 0, so the bug is invisible). Both modes share the spelling,
+# so both are asserted here; the default mode had the same latent bug and had simply never met a file
+# large enough.
+# 200 lost lines is NOT enough: at 23,892 bytes `cut` finishes before `head` exits and the pipeline
+# reports 0 (measured). The report has to exceed the 64 KiB pipe buffer. Measured thresholds for
+# this exact line shape: 200 lines / 23,892 B → exit 0; 2,000 lines / 240,893 B → exit 141.
+LOSTY=2000
+t_a_long_report_does_not_die_of_sigpipe_default_mode() {
+  new_repo; BASE_SHA=$(g rev-parse HEAD)
+  local many=(); local i
+  for i in $(seq 1 $LOSTY); do many+=("- **教訓 多 $i** 本文本文本文本文本文本文本文本文本文本文本文本文本文本文本文本文"); done
+  main_moves "${many[@]}"
+  stale_branch topic
+  run
+  assert_eq 1 "$STATUS" "a long report must still fail, not die of SIGPIPE (got $STATUS)"
+  assert_contains "$OUT" "$LOSTY 行" "the count survives a report longer than 20 lines: $OUT"
+  assert_contains "$OUT" "ほか $((LOSTY - 20)) 行" "says how many it truncated"
+}
+
+t_a_long_report_does_not_die_of_sigpipe_net_deletions() {
+  new_repo; BASE_SHA=$(g rev-parse HEAD)
+  local many=(); local i
+  for i in $(seq 1 $LOSTY); do many+=("- **教訓 多 $i** 本文本文本文本文本文本文本文本文本文本文本文本文本文本文本文本文"); done
+  main_moves "${many[@]}"
+  branch_from main topic
+  g checkout -q "$BASE_SHA" -- docs/WORKING_AGREEMENT.md
+  commit "all of main's lines gone"
+  run --net-deletions
+  assert_eq 1 "$STATUS" "a long report must still fail, not die of SIGPIPE (got $STATUS)"
+  assert_contains "$OUT" "$LOSTY 行が減り" "the count survives a report longer than 20 lines: $OUT"
+}
+
+t_net_deletions_skips_binary_files() {
+  # A binary blob has no "lines"; `sort` over it produces an artifact count and the message itself comes
+  # out binary (measured on the real PR #761: the woff2 subset reported "769 行が減り、762 行しか
+  # 戻っていません", and `grep` on the output needed `-a` to read it). Nothing about a re-generated font
+  # subset is a lost lesson, so it must not be reported at all.
+  new_repo; BASE_SHA=$(g rev-parse HEAD)
+  printf 'AAAA\n\000\001\002BBBB\nCCCC\n\000DDDD\nEEEE\n' > "$W/docs/blob.bin"
+  commit "add a binary file"
+  g update-ref refs/remotes/origin/main main
+  branch_from main topic
+  printf 'AAAA\n\000\001\002BBBB\n' > "$W/docs/blob.bin"   # strictly fewer "lines": a net deletion
+  commit "shrink the binary"
+  run --net-deletions
+  assert_eq 0 "$STATUS" "a binary file must not be reported as losing lines: $OUT"
+  assert_not_contains "$OUT" "blob.bin" "does not name a binary file"
+}
+
 test_case "古い main から切って、その後 main が足した行を消す枝 → 落ちる" t_stale_base_deleting_main_lines_fails
 test_case "消える行が '- ' で始まっても検出する（^-- で除外されない）" t_bullet_lines_are_not_missed
 test_case "消える行が '+' で始まっても検出する" t_lost_line_starting_with_plus_is_not_missed
@@ -538,4 +679,13 @@ test_case "base ref を引数で渡せる" t_base_ref_can_be_overridden
 test_case "base ref が解決できないときは通さない" t_missing_base_ref_is_an_error_not_a_pass
 test_case "head ref が解決できないときも通さない" t_missing_head_ref_is_an_error_too
 test_case "パスに | が入っても、名指しと一覧ファイルが出る" t_paths_with_a_pipe_still_report
+test_case "土台が最新なのに base の行を差し引きで消す枝 → 落ちる（#836）" t_net_deletions_catches_a_rebased_branch_that_dropped_the_bases_lines
+test_case "同じ量以上を書き戻す書き換えは黙る（#836。何にでも火が点く検査にしない）" t_net_deletions_stays_quiet_for_a_rewrite_that_puts_back_at_least_as_much
+test_case "ファイルごと消すのはこのモードの対象外（#836）" t_net_deletions_allows_deleting_a_whole_file
+test_case "main に遅れているだけの枝は黙る（#836）" t_net_deletions_is_not_confused_by_a_behind_branch
+test_case "--net-deletions は数えた行数を出す（#836）" t_net_deletions_counts_every_line_it_reports
+test_case "--net-deletions も解決できない ref を通さない（#836）" t_net_deletions_rejects_an_unresolvable_ref
+test_case "20 行を超える報告で SIGPIPE で死なない（引数なし、#836）" t_a_long_report_does_not_die_of_sigpipe_default_mode
+test_case "20 行を超える報告で SIGPIPE で死なない（--net-deletions、#836）" t_a_long_report_does_not_die_of_sigpipe_net_deletions
+test_case "--net-deletions はバイナリを対象にしない（#836）" t_net_deletions_skips_binary_files
 echo "passed $PASS, failed $FAIL"; [[ $FAIL == 0 ]]

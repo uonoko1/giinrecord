@@ -62,6 +62,7 @@ set -euo pipefail
 usage() {
   echo "usage: $0 [<base-ref>] [<head-ref>]" >&2
   echo "       $0 --verify <lines-file> [<head-ref>]" >&2
+  echo "       $0 --net-deletions [<base-ref>] [<head-ref>]" >&2
   exit 2
 }
 
@@ -102,6 +103,153 @@ if [[ ${1:-} == --verify ]]; then
   fi
   echo "stale-base --verify: $total 行すべて ${3:-HEAD} にあります"
   exit 0
+fi
+
+# --net-deletions [<base-ref>] [<head-ref>] — Issue #836.
+#
+# Why a second mode is needed at all. The default mode asks "what did the base gain since the
+# merge-base, and is it still here". A rebase moves the merge-base to the base tip, so that question
+# answers "nothing" and the mode prints `ok` — the gap its own header documents. `--verify` closes it,
+# but only when the at-risk lines were written down BEFORE the rebase.
+# Measured on the two real incidents, and that precondition did not hold in either:
+#   PR #832 — 17 lines of docs/WORKING_AGREEMENT.md added by #820/#824 were gone already in the
+#             FIRST commit that was ever pushed (the branch was rebased before its first push).
+#   PR #761 — 12 lines of docs/DATA_CONTRACT.md added by #762, same shape, and still absent from main.
+# So there was no earlier run to write a lines file, and nothing else in refs or the API recovers the
+# fork point: measured, the fork point (566399a7) already contained the line, the branch commit's
+# AUTHOR date (23:54) is later than the line's landing on main (23:14) because the rebase rewrote it,
+# `base.sha` from the API is the CURRENT base tip, and the pre-force-push head is not in the events API.
+# Every "reconstruct what the author started from" approach is therefore ruled out by measurement, not
+# by taste.
+#
+# What is still true of both incidents, and needs no history at all:
+#   the PR takes more of the base's lines OUT of a file than it puts back, and the file survives.
+# That is what this measures. Per file the head still has:
+#   lost  = multiset(base) \ multiset(head)      lines of the base that are not in the branch
+#   added = multiset(head) \ multiset(base)      lines the branch has that the base does not
+#   report when  lost > 0 AND added < lost.
+#
+# Why `added < lost` and not "lost > 0". Deliberate deletions are legitimate and common; a rule that
+# fires on any deletion fires on everything and stops being read. Measured over the last 60 merged PRs:
+#   "any deletion of a base line"      → fires on 39 of 60   (unusable)
+#   "net deletion, file survives"      → fires on  4 of 60   (#832, #761, #740, #794)
+# Of those 4, two are the real incidents. The other two were read by hand and are deliberate:
+#   #740 replaced a resolved decision's text in docs/ops/pending-decisions.md (22 out, 14 in)
+#   #794 moved the per-prefecture `lossy` code into one shared `lossyNameMatchesOf` (still in main)
+# So this is a 2-in-4 signal, not a proof. It fails, and the author says in the PR body which it is —
+# the same contract as the default mode. It is NOT a replacement for it: the default mode still catches
+# the un-rebased shape, where it names the lines and is exact.
+#
+# Deleting a whole file is excluded on purpose: that is visible in `git diff --stat` and is a deliberate
+# act. This mode is about a file that SURVIVES while quietly losing the base's lines — the shape
+# `git diff --stat` renders as "1 file changed" and nobody looks twice at.
+if [[ ${1:-} == --net-deletions ]]; then
+  shift
+  [[ $# -le 2 ]] || usage
+  ND_BASE=${1:-origin/main}
+  ND_HEAD=${2:-HEAD}
+  nd_resolve() {
+    local sha
+    sha=$(git rev-parse --verify --quiet "$1^{commit}") || {
+      echo "stale-base: ref を解決できません: $1" >&2
+      echo "  origin/main が無いなら  git fetch origin  を先に実行してください。" >&2
+      exit 2
+    }
+    echo "$sha"
+  }
+  ND_BASE_SHA=$(nd_resolve "$ND_BASE")
+  ND_HEAD_SHA=$(nd_resolve "$ND_HEAD")
+  NTMP=$(mktemp -d); trap 'rm -rf "$NTMP"' EXIT
+
+  # Same multiset spelling as the default mode: sorted, occurrence-numbered lines, so `comm` subtracts
+  # multisets and a line that legitimately appears N times keeps its N copies. Nothing parses diff text
+  # (`git diff | grep -c '^-[^-]'` counts 0 for a deleted line that itself starts with `-`, which is
+  # every bullet in the document this is meant to protect).
+  nd_multiset() {
+    local type
+    type=$(git cat-file -t "$1:$2" 2>/dev/null) || return 0
+    [[ $type == blob ]] || return 0
+    git show "$1:$2" | LC_ALL=C sort | LC_ALL=C awk '{ print ++n[$0] "\t" $0 }' | LC_ALL=C sort
+  }
+
+  ND_TOTAL=0
+  ND_REPORT="$NTMP/report"
+  : > "$ND_REPORT"
+  ND_LINES_OUT=${STALE_BASE_LINES_OUT:-$(git rev-parse --git-dir)/stale-base-lines.tsv}
+  ND_LINES_TMP="$NTMP/lines.tsv"
+  : > "$ND_LINES_TMP"
+
+  while IFS= read -r -d '' ndpath; do
+    [[ -n "$ndpath" ]] || continue
+    # The file must still exist in the head: deleting it outright is a different, visible act.
+    ndtype=$(git cat-file -t "$ND_HEAD_SHA:$ndpath" 2>/dev/null) || continue
+    [[ $ndtype == blob ]] || continue
+    # Binary blobs have no "lines": sorting one yields an artifact count and makes this script's own
+    # message binary (measured on the real PR #761 — the re-generated woff2 subset reported
+    # "769 行が減り、762 行しか戻っていません", and grep on the output needed `-a`). A re-generated
+    # font subset is never a lost lesson, so it is not this check's business.
+    # `git diff --numstat` prints `-\t-\t<path>` for a binary path; that is git's own answer to
+    # "is this binary", so it is used rather than a guess about extensions.
+    if [[ $(git diff --numstat "$ND_BASE_SHA" "$ND_HEAD_SHA" -- "$ndpath" | cut -f1) == "-" ]]; then
+      continue
+    fi
+    nd_multiset "$ND_BASE_SHA" "$ndpath" > "$NTMP/b"
+    nd_multiset "$ND_HEAD_SHA" "$ndpath" > "$NTMP/h"
+    LC_ALL=C comm -23 "$NTMP/b" "$NTMP/h" > "$NTMP/lost"
+    LC_ALL=C comm -13 "$NTMP/b" "$NTMP/h" > "$NTMP/added"
+    nlost=$(wc -l < "$NTMP/lost")
+    nadded=$(wc -l < "$NTMP/added")
+    [[ $nlost -gt 0 ]] || continue
+    [[ $nadded -lt $nlost ]] || continue
+    ND_TOTAL=$((ND_TOTAL + nlost))
+    { echo "  $ndpath: $nlost 行が減り、$nadded 行しか戻っていません"
+      # `cut … | head -20 | sed` dies here: `head` closes the pipe, `cut` takes SIGPIPE, and under
+    # `set -o pipefail` the pipeline reports 141, which `set -e` turns into a silent death with no
+    # message and no lines file (#836 — measured against the real PR #761, whose diff holds a 769-line
+    # woff2 blob: exit 141, zero bytes of output). `head` reads from a file instead, so nothing is
+    # writing into a pipe that gets closed early.
+    LC_ALL=C head -20 "$NTMP/lost" | cut -f2- | sed 's/^/    | /'
+      [[ $nlost -le 20 ]] || echo "    | …ほか $((nlost - 20)) 行"
+    } >> "$ND_REPORT"
+    cut -f2- < "$NTMP/lost" | awk -v p="$ndpath" 'BEGIN{FS=OFS="\t"} { print p, $0 }' >> "$ND_LINES_TMP"
+  done < <(git diff -z --name-only "$ND_BASE_SHA" "$ND_HEAD_SHA")
+
+  if [[ $ND_TOTAL -eq 0 ]]; then
+    echo "stale-base --net-deletions: ok — $ND_BASE の行を差し引きで減らしているファイルはありません"
+    exit 0
+  fi
+
+  mkdir -p "$(dirname "$ND_LINES_OUT")"
+  cp "$ND_LINES_TMP" "$ND_LINES_OUT"
+
+  cat >&2 <<NDMSG
+stale-base --net-deletions: $ND_BASE の行 $ND_TOTAL 行が、この枝で差し引き減っています。
+
+  $ND_BASE = ${ND_BASE_SHA:0:8}
+  この枝   = ${ND_HEAD_SHA:0:8}
+
+$(cat "$ND_REPORT")
+
+**これは「消してはいけない」という意味ではありません。** 意図した削除は正当です。
+**言っているのは「$ND_BASE にあった行が、戻ってくる量より多く消えている」という事実だけです。**
+
+**実地で 2 回、これは rebase の事故でした**（#832 が 17 行、#761 が 12 行。どちらも
+**他人がマージ済みの追記**で、**引数なしの検査は ok と言いました**——rebase が共通の祖先を
+動かしたあとで、**何が元々あったかを refs から復元する方法はありません**）。
+
+確かめ方は 2 つです。
+
+  git fetch origin
+  git diff $ND_BASE -- <上のファイル>      # 消えている行を実際に読む
+
+**自分が消すと決めた行なら、その理由を PR 本文に書いてください。**
+**身に覚えが無いなら、rebase の解決で落ちています。** その行を書き戻してください:
+
+  bash scripts/ci/stale-base.sh --verify $ND_LINES_OUT
+
+**この検査を外す・対象から除く・行を書き戻さずに黙らせる、のいずれもしないこと。**
+NDMSG
+  exit 1
 fi
 
 [[ $# -le 2 ]] || usage
@@ -241,7 +389,11 @@ for path in "${CANDIDATES[@]}"; do
     DIFF_DELETES=$((DIFF_DELETES + n))
   fi
   { echo "  [$kind] $path: $n 行 — $note"
-    cut -f2- < "$TMP/lost" | head -20 | sed 's/^/    | /'
+    # Same SIGPIPE trap as the mode above, and the same fix: read with `head` from the file, so no
+    # process is writing into a pipe that `head` closes. This mode had the bug too and had simply never
+    # been handed a file with more than 20 lost lines big enough to fill the 64 KiB pipe buffer
+    # (measured: 200 lost lines / 23,892 B exits 0; 2,000 / 240,893 B exits 141).
+    LC_ALL=C head -20 "$TMP/lost" | cut -f2- | sed 's/^/    | /'
     [[ $n -le 20 ]] || echo "    | …ほか $((n - 20)) 行"
   } >> "$REPORT"
   # Every at-risk line, as `<path><TAB><line>`, for --verify to re-check after the rebase.
