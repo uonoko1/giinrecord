@@ -274,6 +274,100 @@ t_destructive_git_in_comments_is_allowed() {
   assert_eq 0 "$STATUS" "コメントは通す: $OUT"
 }
 
+# Issue #785: 取得した第三者の HTML をフィクスチャに保存すると、そのページが埋め込んでいる
+# 鍵・トークンが一緒に入ってくる。#750（青森 ?token=）と #785（徳島 maps.googleapis.com ?key=AIza…）で
+# 2 回起きた。gitleaks v8.30.1 の既定ルールは徳島の形を検出しない（実測: no leaks found）ので、
+# ここで塞ぐ。テストデータは組み立てて作る（このファイル自身が本物らしき鍵を含まないため）。
+GKEY="AIza$(printf 'D%.0s' $(seq 1 35))"
+LONGTOK=$(printf 'e%.0s' $(seq 1 32))
+
+# 1. 徳島の形を逐語で固定する（#762: 「N 個以上」ではなく実際に踏んだ形そのものを押さえる）
+t_fixture_google_maps_key_fails() {
+  repo fgk
+  add "packages/etl/test/fixtures/tokushima/gaiyou.html" \
+    "<script src=\"https://maps.googleapis.com/maps/api/js?key=$GKEY&amp;language=ja\"></script>"
+  run
+  assert_eq 1 "$STATUS" "exit"
+  assert_contains "$OUT" "packages/etl/test/fixtures/tokushima/gaiyou.html" "offending fixture named"
+  assert_contains "$OUT" "fixture-secret" "rule named"
+  assert_not_contains "$OUT" "$GKEY" "鍵の値そのものは出力しない"
+}
+# 1b. 2 つの形を独立に固定する（#762）。上の 1 本だけだと、徳島の形は ?key= の規則にも当たるので、
+#     AIza の規則を丸ごと消しても落ちない（実測: 変異 1 が生き残った）。クエリ文字列の外に置いた
+#     AIza の値は、AIza の規則にしか当たらない。
+t_fixture_google_key_outside_query_string_fails() {
+  repo fgk2
+  add "packages/etl/test/fixtures/tokushima/inline.html" "<script>var gmapKey = \"$GKEY\";</script>"
+  run
+  assert_eq 1 "$STATUS" "exit"
+  assert_contains "$OUT" "packages/etl/test/fixtures/tokushima/inline.html" "AIza 単独でも落ちる"
+  assert_contains "$OUT" "fixture-secret" "rule named"
+}
+
+# 2. 青森の形を逐語で固定する（#750）
+# 値は AIza で始まらない（= AIza の規則には当たらない）ので、この 1 本はクエリ文字列の規則だけを固定する。
+t_fixture_query_token_fails() {
+  repo fqt
+  add "packages/etl/test/fixtures/aomori/giin-kaiha.html" \
+    "<a href=\"https://example.invalid/web_inquiry/?token=$LONGTOK\">手話で電話</a>"
+  run
+  assert_eq 1 "$STATUS" "exit"
+  assert_contains "$OUT" "packages/etl/test/fixtures/aomori/giin-kaiha.html" "offending fixture named"
+  assert_contains "$OUT" "fixture-secret" "rule named"
+}
+
+# 3. サニタイズ済みのものが落ちてはいけない（落ちると、直した人が検査ごと外す）
+t_sanitized_fixture_passes() {
+  repo fsan
+  add "packages/etl/test/fixtures/tokushima/gaiyou.html" \
+    "<script src=\"https://maps.googleapis.com/maps/api/js?key=REDACTED&amp;language=ja\"></script>"
+  add "packages/etl/test/fixtures/nara/18579.html" \
+    "<a href=\"https://example.invalid/web_inquiry/?token=REDACTED\">手話で電話</a>"
+  run
+  assert_eq 0 "$STATUS" "REDACTED はサニタイズ済み: $OUT"
+}
+
+# 3b. 短い・普通のクエリ文字列まで落とさない（フィクスチャは普通の HTML で埋まっている）
+t_ordinary_fixture_query_strings_pass() {
+  repo ford
+  add "packages/etl/test/fixtures/tokushima/index.html" \
+    "<a href=\"/list.html?key=2024\">一覧</a><a href=\"/x?token=\">空</a><a href=\"/y?id=7310454\">議案</a>"
+  run
+  assert_eq 0 "$STATUS" "普通のクエリは通す: $OUT"
+}
+
+# 4. 母数（#757）: フィクスチャが 1 本も見つからなければ「0 件」ではなく異常。
+#    「全部きれい」と「1 本も読めていない」が同じ出力になってはいけない。
+t_fixture_secret_denominator_is_reported() {
+  repo fden; add "packages/etl/test/fixtures/tokushima/gaiyou.html" "<p>ok</p>"
+  run
+  assert_eq 0 "$STATUS" "exit"
+  assert_contains "$OUT" "fixture-secret: 1 file(s) scanned" "母数を出す"
+}
+# ETL があるのにフィクスチャが 0 本 → error。パスの付け替えで対象が消えたときに緑にならないため。
+t_fixture_secret_zero_files_with_etl_is_an_error() {
+  repo fzero; add "packages/etl/src/a.ts" "export const x = 1;"   # ETL はあるがフィクスチャが 1 本も無い
+  run
+  assert_eq 2 "$STATUS" "ETL ありでフィクスチャ 0 本は clean ではなく error: $OUT"
+  assert_contains "$OUT" "fixture-secret" "rule named"
+  assert_contains "$OUT" "fixture-secret: 0 file(s) scanned" "母数 0 を明示する"
+}
+# ETL が無い repo では 0 本が正しい（このファイルのテストが作る使い捨ての repo がまさにそれ）
+t_fixture_secret_zero_files_without_etl_passes() {
+  repo fzeroo; add "src/a.ts" "export const x = 1;"
+  run
+  assert_eq 0 "$STATUS" "ETL が無ければ 0 本は正常: $OUT"
+  assert_contains "$OUT" "fixture-secret: 0 file(s) scanned" "母数は常に出す"
+}
+
+# 対象はフィクスチャ（取得した第三者の HTML）。docs は説明のために書ける。
+t_fixture_secret_scope_is_fixtures_only() {
+  repo fsc; add "packages/etl/test/fixtures/x/a.html" "<p>ok</p>"
+  add "docs/WORKING_AGREEMENT.md" "maps.googleapis.com/maps/api/js?key=$GKEY のような値をフィクスチャに残さない"
+  run
+  assert_eq 0 "$STATUS" "docs は対象外: $OUT"
+}
+
 test_case "forbidden-patterns.sh: bash -n" bash -n "$SCRIPT"
 test_case "clean repo passes; unset FORBIDDEN_PATTERNS is a warning" t_clean_repo_passes
 test_case "private key header → fail" t_private_key_header_fails
@@ -301,6 +395,16 @@ test_case "destructive git: -f が先頭でない形も落ちる (#557)" t_destr
 test_case "行末コメントの中の -f は落とさない (#557)" t_force_flag_in_trailing_comment_is_not_flagged
 test_case "destructive git outside scripts/ is allowed (#542)" t_destructive_git_outside_scripts_is_allowed
 test_case "destructive git in a comment is allowed (#542)" t_destructive_git_in_comments_is_allowed
+
+test_case "fixture に Google API キー（AIza…）→ fail (#785)" t_fixture_google_maps_key_fails
+test_case "fixture に AIza…（クエリ文字列の外）→ fail (#785/#762)" t_fixture_google_key_outside_query_string_fails
+test_case "fixture に ?token=<長い値> → fail (#750)" t_fixture_query_token_fails
+test_case "サニタイズ済み（REDACTED）の fixture は通る (#785)" t_sanitized_fixture_passes
+test_case "普通のクエリ文字列の fixture は通る (#785)" t_ordinary_fixture_query_strings_pass
+test_case "fixture-secret: 母数を出す (#757)" t_fixture_secret_denominator_is_reported
+test_case "fixture-secret: ETL ありでフィクスチャ 0 本は error (#757)" t_fixture_secret_zero_files_with_etl_is_an_error
+test_case "fixture-secret: ETL 無しなら 0 本は正常、母数は出す (#757)" t_fixture_secret_zero_files_without_etl_passes
+test_case "fixture-secret: 対象は fixtures のみ (#785)" t_fixture_secret_scope_is_fixtures_only
 
 echo; echo "passed: $PASS  failed: $FAIL"
 [[ $FAIL == 0 ]]

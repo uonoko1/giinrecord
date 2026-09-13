@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { runSaga, sameSession, type Fetcher } from "../src/sources/local/saga/index.ts";
 import { SAGA_INDEX_URL, SAGA_ORIGIN, SAGA_ROSTER_URL } from "../src/sources/local/saga/site.ts";
+import { lossyNameMatchesOf } from "../src/local-assemblies.ts";
 
 /**
  * 佐賀県議会 ETL の取得部（Issue #768）。本物の HTML / PDF をフィクスチャから返す stub で回す。
@@ -69,7 +70,8 @@ test("#768 runSaga: 名簿 37 人 × 令和8年6月定例会 21 採決、不明 
     rollcalls: 21,
     unknownCells: 0,
   });
-  assert.deepEqual(run.lossyNameMatches, [], "字が落ちたまま寄った氏名は 0");
+  // **#778 で共通層が数えるようになった**（`run` は渡さない）。佐賀は 0 のまま（否定的対照）
+  assert.deepEqual(lossyNameMatchesOf(run.rollCalls, run.roster.members), [], "字が落ちたまま寄った氏名は 0");
   // **`sources` は名簿・索引・議案件名一覧表・PDF の 4 本**（出典を全部残す）
   assert.deepEqual(run.sources.map((s) => s.url), [
     SAGA_ROSTER_URL, SAGA_INDEX_URL, u("kiji003119791/index.html"), u("kiji003119791/3_119791_394982_up_cda325jj.pdf"),

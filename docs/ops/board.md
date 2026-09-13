@@ -168,19 +168,50 @@ scripts/po/worktree-sweep.sh --yes    # 実際に消す
 **この節が 4 つ目である**（ボードを動かさない → 閉じ忘れ → `In Review` を飛ばす → worktree）。
 **道具はどれも「PO が呼ばないと動かない」**——**だから手順に書く。**
 
-**確かめ方**（PO が定期的に走らせる）:
+### 4 つとも、機械が見るようになった（2026-09-13。#783）
+
+**2026-09-13 に、マージ済みの PR に対応する Issue が 3 件 open のまま残っていた**
+（#763←#770 / #769←#775 / #771←#776）。**上の 4 つの節を書いた後に起きた。**
+**つまり「書く」は 4 回とも対策になっていない。**
+
+**だから `scripts/po/board-audit.sh` を作った**（#783）。上の 4 つの食い違いを列挙する:
 
 ```sh
-# open な Issue のうち、タイトルに #N を含むマージ済み PR があるもの
-for n in $(gh issue list --state open --limit 60 --json number --jq '.[].number'); do
-  gh pr list --state merged --search "$n in:title" --limit 5 \
-    --json number,title --jq ".[] | select(.title | test(\"#$n\\\\b\")) | \"issue #$n ← PR#\(.number)\""
-done
+scripts/po/board-audit.sh          # 食い違いを列挙する（読むだけ。既定）
+scripts/po/board-audit.sh --fix    # 直す（Issue を閉じる／Status を直す）
 ```
+
+| 種別 | 見るもの |
+|---|---|
+| `closed-pr-open-issue` | `Closes/Fixes/Resolves #N` を含む PR が MERGED なのに Issue #N が OPEN |
+| `closed-issue-not-done` | Issue が CLOSED なのに Status が Done でない |
+| `open-issue-done` | Issue が OPEN なのに Status が Done |
+| `not-on-board` | Issue がボードに載っていない |
+
+**守っていること**（`scripts/po/test/board-audit.test.sh` が 14 本で固定している）:
+
+- **`Closes` / `Fixes` / `Resolves` + `#N` の形に限る。** **本文に `#N` が出るだけの PR は拾わない**——
+  #763 の検索には無関係な #450 / #698 / #461 が引っかかった
+  （検査名: `audit: 本文に #N が出るだけの PR は拾わない`）。
+- **PR が MERGED であることを `gh pr view` で個別に確かめてから閉じる**
+  （**squash なので `git merge-base --is-ancestor` は使えない**——#535）
+  （検査名: `audit: PR が MERGED でなければ Issue を閉じない`）。
+- **既定は読むだけ。`--fix` を付けたときだけ書く**
+  （検査名: `audit: 既定は 4 種類とも列挙するだけで何も書かない`）。
+- **`OPEN` なのに `Done` は `--fix` でも自動で戻さない**——どの Status に戻すかは機械には分からない
+  （検査名: `audit: --fix でも OPEN/Done は自動で戻さない`）。
+- **母数を必ず出し、`gh` が空を返したら「全部きれい」と報告せず異常終了する**（#757）
+  （検査名: `audit: gh が空を返したら『全部きれい』と報告しない`）。
+
+**規則 1 が見られる範囲は半分である**（実測 2026-09-13: マージ済み 300 本のうち
+閉じる語があるのは **150 本**）。**実際 #770（→#763）と #776（→#771）は閉じる語を書いていなかった。**
+**それでも語を緩めない**——**間違って閉じる方が、閉じ漏れより気づきにくい**（#569）。
+**代わりに、見えていない本数を毎回出す**（検査名: `audit: 規則1が見ていない PR の本数を出す（閉じる語が無い PR）`）。
+**PR に `Closes #N` を書けば、この規則が見てくれる。**
 
 **引っかかっても、それだけでは閉じてよいとは限らない**——
 #537 / #610 / #654 / #543 は「文書だけ進んで人間の作業が残っている」ので **open が正しい**。
-**PR が何をマージしたのかを読んでから判断すること。**
+**PR が何をマージしたのかを読んでから判断すること**（だから `--fix` は既定ではない）。
 
 **迷ったら「これは誰かに渡せる仕事か」で決める。** **渡せるなら PBI、渡せないなら PR だけ。**
 
@@ -228,6 +259,7 @@ git push                             → 動く（git プロトコル）
 | `scripts/po/merge-when-green.sh <pr>` | OPEN かつ非 draft を確認 → BEHIND なら `gh pr update-branch` → `gh pr checks` を 20 秒ごと最大 60 回（20 分）見て、全部 pass/skipping になったら `gh pr merge --squash --delete-branch`。fail/cancel が 1 つでもあれば何もせず終了。head が `data/refresh` のときだけ、待っている間に `action_required` の run を承認する（他のブランチでは承認しない）。`gh pr merge` が非ゼロで返っても PR の state を読み直し、検査した HEAD がそのまま MERGED なら成功として終わる（#434。UNKNOWN のときマージ成功でも非ゼロが返る／`--delete-branch` のローカル削除が worktree に阻まれる） | 0 マージ済 / 1 失敗・タイムアウト / 2 引数エラー |
 | `scripts/po/board-set.sh <issue> <Backlog\|Ready\|In Progress\|In Review\|Done>` | Issue のボード上の item を探し（無ければ追加し）、Status を設定 | 0 / 1 / 2 |
 | `scripts/po/verify-site.sh [production\|staging\|all]` | `ssh $VPS_SSH_HOST`（既定 `giinops`）で VPS 内から主要 URL（`/`, `/about/`, `/terms`, `/privacy`, `/members/`, `/rollcalls/`, `/assemblies/`, `/data/meta.json`, `/sitemap.xml`）の HTTP コードと `<title>` を一覧する（読み取りのみ。PO 手元の curl が 000 を返す問題の回避、#182）。production は `curl --resolve giinrecord.jp:443:127.0.0.1`（証明書検証あり）。staging は host nginx が Cloudflare 以外を 403 にする（#163）ので、コンテナのポート `127.0.0.1:8083` に `Host: staging.giinrecord.jp` で当てる（デプロイ済みビルドの確認であり、Access の確認ではない） | 0 = 全部 200 / 1 = 200 以外あり（行末に `NG`）/ 2 引数エラー |
+| `scripts/po/board-audit.sh [--fix]` | ボードと Issue と PR の食い違いを 4 種類列挙する（既定は読むだけ）。`Closes/Fixes/Resolves #N` の形に限り、`gh pr view` で MERGED を個別に確認してから閉じる。母数（Issue / ボード項目 / マージ済み PR の件数と、閉じる語がある PR の本数）を必ず出す | 0 = 食い違い 0 / 1 = 食い違いあり（`--fix` なら残ったものあり）/ 2 引数エラー / 4 母数が 0（読めていない） |
 | `scripts/po/etl-verify.sh` | 最新の ETL (daily) run の結論、`data/refresh` の最新 PR の番号と state、最新 Deploy run を 3 行で出す（読み取りのみ）。`docs/ops/etl.md` の PO チェックリストに対応 | 0 = ETL success かつ data PR が MERGED（または無し）かつ Deploy success / 1 = どれかが違う |
 
 環境変数：`POLL_INTERVAL`（秒）、`POLL_MAX`（回数）、`PO_REPO`（`owner/name`。未指定ならカレントの checkout から `gh repo view`）、`VPS_SSH_HOST`（verify-site の ssh 先、既定 `giinops`）、`STAGING_PORT`（既定 8083）。
