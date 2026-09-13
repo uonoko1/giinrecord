@@ -69,6 +69,23 @@ describe("/assemblies/{id} 地方議会", () => {
     expect(src).toHaveAttribute("target", "_blank");
   });
 
+  // #791: 地方の採決は議員ページからしか見えていなかった。議会ページから採決一覧へ入れるようにする。
+  it("表決のある議会は、会期の rollcalls の合計を件数にして採決一覧へリンクする", () => {
+    renderPage("pref-04");
+    const link = screen.getByRole("link", { name: /本会議表決/ });
+    expect(link).toHaveAttribute("href", "/assemblies/pref-04/rollcalls");
+    expect(link).toHaveTextContent("5 件"); // sessions.json の 3 + 2（自分で数え直さない）
+  });
+  it("会期を取得していない議会には採決一覧へのリンクを出さない（0 件の一覧を作らない。#757）", () => {
+    renderPage("pref-04", withLocal, new Map());
+    expect(screen.queryByRole("link", { name: /本会議表決/ })).toBeNull();
+  });
+  it("表決 0 件の会期しか無い議会にもリンクを出さない", () => {
+    const zero = new Map<string, AssemblySession[]>([["pref-04", (sessionsFixture as AssemblySession[]).map((x) => ({ ...x, rollcalls: 0 }))]]);
+    renderPage("pref-04", withLocal, zero);
+    expect(screen.queryByRole("link", { name: /本会議表決/ })).toBeNull();
+  });
+
   it("sessions.json が無い議会は「会期の一覧は未取得です」", () => {
     renderPage("pref-04", withLocal, new Map());
     expect(screen.queryByRole("table", { name: "会期" })).toBeNull();

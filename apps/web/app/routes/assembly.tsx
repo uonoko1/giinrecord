@@ -30,7 +30,16 @@ export function meta({ location, params }: MetaArgs) {
 
 /**
  * /assemblies/{id}（#158）。データは index.json をビルド時にバンドルし、URL の id で引く（loader 無し）。
- * 国会は既存の一覧（/members?assembly=）と採決（/rollcalls）へ送り、地方議会はここで議員と会期を並べる。
+ *
+ * **国会**は既存の一覧（`/members?assembly=`）と採決（`/rollcalls`）へ送る（**この経路は変えない**）。
+ * **地方議会**はここで議員と会期を並べ、表決のある議会は `/assemblies/{id}/rollcalls` へ送る（#791）。
+ *
+ * **地方の採決を国会の `/rollcalls` に混ぜない**理由は docs/DATA_CONTRACT.md「地方議会の採決の URL」に書いた:
+ * `/rollcalls/{session}` は回次の**数**で切る作りで、地方の会期 id は数ではない
+ * （宮城 `398`・佐賀 `2026-06-teirei-list06680`）。
+ *
+ * 採決の件数は `sessions.json` の `rollcalls` の合計（ETL の公表集計）を使い、**ここで数え直さない**。
+ * `rollcalls/index.json`（地方 11 県で 1,369 行）をブラウザへバンドルしないため（#441 と同じ理由）。
  */
 export default function AssemblyRoute({ data = bundled, sessions, allMembers }: { data?: Dataset; sessions?: ReadonlyMap<string, AssemblySession[]>; allMembers?: readonly MemberSummary[] }) {
   const { id = "" } = useParams();
@@ -122,8 +131,18 @@ function DietSections({ assembly, data }: { assembly: Assembly; data: Dataset })
 function LocalSections({ assembly, members, sessions }: { assembly: Assembly; members: MemberSummary[]; sessions: AssemblySession[] | undefined }) {
   const disclosure = disclosureFor(assembly.id);
   const sorted = [...members].sort((a, b) => collator.compare(a.kana, b.kana));
+  const rollcallCount = (sessions ?? []).reduce((n, x) => n + x.rollcalls, 0);
   return (
     <>
+      {/* #791: 表決のある議会だけ。0 件のときにリンクを出すと、空の一覧が「表決が無かった」と読める（#757） */}
+      {rollcallCount > 0 && (
+        <section className="section entry" aria-label="さがす">
+          <Link className="entry__link" to={`/assemblies/${assembly.id}/rollcalls`}>
+            本会議表決
+            <span className="entry__sub">　{rollcallCount.toLocaleString("ja-JP")} 件　議案名・議決日・各議員の表決</span>
+          </Link>
+        </section>
+      )}
       {disclosure && (
         <section className="section" aria-labelledby="assembly-disclosure-heading">
           <h2 id="assembly-disclosure-heading" className="section__title">
