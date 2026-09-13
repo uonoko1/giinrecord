@@ -132,6 +132,37 @@ export interface VotePdfRow {
   counts?: { yes: number; no: number; voting: number };
   /** members と同じ順。置けなかったセルは UNKNOWN_CELL */
   cells: string[];
+  /**
+   * ## **この行の `title` を読んだ y と、`cells` を読んだ y**（#829。**`data/` には書かない**）
+   *
+   * **#819 が測って分かったこと**——**`counts` は記号帯（`cells` と同じ y）から読んでいるので、
+   * `counts` ↔ `cells` の検算は `title` ↔ `cells` を 1 件も確かめていない。**
+   * **`title` だけが 1 議案ぶんずれる壊れ方は、出力からは原理的に検出できない**
+   * （実測: 錨の選び方を 12pt ずらすと 160 行中 152 行で `title` がずれたが、
+   * `cells` も `counts` も 1 行も変わらず、テストは 4 本とも通った）。
+   *
+   * **公開出力に材料が無いので、パーサの内部の y をここに出す。**
+   * **`rollcalls.ts` は読まないので `data/` には出ない**（#811 の高知と同じ判断——
+   * **検算の材料は出力の契約ではなく、テストが見れば足りる**）。
+   */
+  provenance: {
+    /**
+     * **`cells` を作った記号アイテムそのもの**（帯の中心でも錨でもなく、原文のアイテム）。
+     *
+     * **`number[]`（y だけ）ではなく `Item[]` を出す**——**y だけを出すと、
+     * そこに錨の y を入れてもテストからは区別が付かず、検算が恒真になる。**
+     * **実測: `cellYs: number[]` だったとき、`[rowAnchor[r]]` にすり替える変異を当てても 27 本とも通り、
+     * しかも「行を 1 つ回す変異」と同時に当てても通った**——
+     * **恒真化が本物の壊れ方を隠せてしまっていた。**
+     *
+     * **`Item` なら `str` が入っているので、テストが
+     * 「このアイテムの文字が本当に表決の記号か」を独立に確かめられる。**
+     * **錨（議決月日の欄）の文字は `11/22` であって記号ではないので、すり替えるとそこで落ちる。**
+     */
+    cellItems: readonly Item[];
+    /** この行に配られた左の欄のアイテムの cy（`number` `title` `dateText` … はここから読んだ）。空の行もある */
+    leftYs: number[];
+  };
 }
 
 export interface VotePdf {
@@ -667,7 +698,13 @@ function readRows(page: PageGeometry, band: NameBand, pageNo: number): VotePdfRo
   const rows: VotePdfRow[] = [];
   for (let r = 0; r < voteRows.length; r++) {
     const b = voteRows[r];
-    rows.push({ page: pageNo, ...readLeftCells(rowItems[r], bounds), ...readCounts(page, b, band.right), cells: readVoteCells(b.items, band) });
+    rows.push({
+      page: pageNo,
+      ...readLeftCells(rowItems[r], bounds),
+      ...readCounts(page, b, band.right),
+      cells: readVoteCells(b.items, band),
+      provenance: { cellItems: b.items, leftYs: rowItems[r].map((i) => i.cy) },
+    });
   }
   return rows;
 }
