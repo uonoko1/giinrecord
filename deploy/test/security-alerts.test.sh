@@ -17,10 +17,17 @@ PASS=0; FAIL=0
 TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
 BIN="$TMP/bin"; mkdir -p "$BIN"
 
-# A fake credential in the shape the real alert carries. NOT a real key: 39 chars of filler after the prefix,
-# and it matches .gitleaks.toml's allowlist for this test file. If this string ever shows up in the script's
-# stdout, the monitoring would publish the secret it is warning about.
-CANARY="AIzaSyTESTTESTTESTTESTTESTTESTTESTTESTX"
+# A fake credential in the SHAPE the real alert carries (prefix + 33 chars), used as a canary: if it ever shows
+# up in the script's stdout, the monitoring would publish the secret it is warning about.
+#
+# **It is assembled at runtime, never written as a literal.** Two reasons, both measured:
+#   1. `.gitleaks.toml` uses the default ruleset, whose `gcp-api-key` rule matches this exact shape. A literal
+#      here would make the REQUIRED `gitleaks` job red on every run — and `.gitleaks.toml` says in so many words
+#      that the fix is to remove the source, not to add an allowlist (#216).
+#   2. GitHub's own push protection blocks pushes containing this shape. A test for "do not leak secrets" that
+#      cannot be pushed is not a test.
+# The prefix is split so that the literal `AIzaSy` does not appear in this file either.
+CANARY="AIza""Sy$(printf 'T%.0s' {1..33})"
 CANARY_PATH="packages/etl/test/fixtures/example/leaky.html"
 CANARY_SHA="0123456789abcdef0123456789abcdef01234567"
 
@@ -150,7 +157,7 @@ t_never_prints_the_secret_value() {
   fresh canary
   G_SECRET_JSON=$(alert_json) run_guard
   assert_not_contains "$OUT" "$CANARY" "秘密の値が stdout に出ている（これが出たら警告そのものが漏洩になる）"
-  assert_not_contains "$OUT" "AIzaSy" "鍵の接頭辞すら出さない"
+  assert_not_contains "$OUT" "${CANARY:0:6}" "鍵の接頭辞すら出さない"
 }
 t_never_prints_the_file_location() {
   fresh canary_loc

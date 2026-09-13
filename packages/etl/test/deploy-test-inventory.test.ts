@@ -329,6 +329,34 @@ const INVENTORY: { file: string; anchors: string[]; minAssertions: number }[] =
       minAssertions: 22,
     },
     {
+      // #786: secret scanning のアラート #1 が 2026-08-23 に立ってから **21 日間、誰も見ていなかった**。
+      // 中身は本物の漏洩で、その間 CI は全部緑、gitleaks はこの形を検出しない（実測: no leaks found）。
+      // このテストが消えると、**秘密の値を Issue 本文に出さない**という一番大事な釘が抜ける
+      // ——実測した本物の応答は `.secret` に**平文の鍵そのもの**を持っており、
+      // 逐語で本文に入れば警告そのものが漏洩になる。
+      // 「読めなかった」を「0 件」にしない（#757 の母数）ことを固定しているのもここ。
+      file: "security-alerts.test.sh",
+      anchors: [
+        "security-alerts.sh",
+        "secret-scanning",
+        "dependabot",
+        "CANARY",
+        "読めなかった",
+      ],
+      minAssertions: 73,
+    },
+    {
+      // #786: 「アラートがある」と「アラートを読めない」を分ける判定。#540 / #546 と同じ形で、
+      // インラインの `run:` に置くと誰も守れない（変異 5/5 が緑だった）。
+      file: "security-alerts-report.test.sh",
+      anchors: [
+        "security-alerts-report.sh",
+        "security アラートを読めない",
+        "report.sh",
+      ],
+      minAssertions: 42,
+    },
+    {
       file: "staging-setup.test.sh",
       anchors: ["staging-setup.sh"],
       minAssertions: 58,
@@ -351,7 +379,7 @@ const INVENTORY: { file: string; anchors: string[]; minAssertions: number }[] =
  * **「行をそっと消す」を「数字も書き換える」に変える**——意図が diff に残る。
  * 止めるのは経路2・経路3のほう。
  */
-const EXPECTED_COUNT = 21; // #661: environment-protection{,-report}.test.sh を追加（19 → 21。#652 で 18 → 19）
+const EXPECTED_COUNT = 23; // #786: security-alerts{,-report}.test.sh を追加（21 → 23。#661 で 19 → 21、#652 で 18 → 19）
 
 /**
  * 失敗を exit status に変える「出口」。これが無いと assertion がいくつあっても
@@ -488,6 +516,24 @@ const INVENTORY_PINNED: Record<
     minAssertions: 69,
   },
   "run-remote.test.sh": { anchors: ["run-remote.sh"], minAssertions: 22 },
+  "security-alerts.test.sh": {
+    anchors: [
+      "security-alerts.sh",
+      "secret-scanning",
+      "dependabot",
+      "CANARY",
+      "読めなかった",
+    ],
+    minAssertions: 73,
+  },
+  "security-alerts-report.test.sh": {
+    anchors: [
+      "security-alerts-report.sh",
+      "security アラートを読めない",
+      "report.sh",
+    ],
+    minAssertions: 42,
+  },
   "staging-setup.test.sh": { anchors: ["staging-setup.sh"], minAssertions: 58 },
   "pipefail-sigpipe.test.sh": {
     anchors: ["scripts/ci/shellcheck.sh"],
@@ -706,6 +752,8 @@ const DEPLOY_SUBJECTS_PINNED = [
   "deploy/monitor/probe.sh",
   "deploy/monitor/report.sh",
   "deploy/monitor/run.sh",
+  "deploy/monitor/security-alerts-report.sh",
+  "deploy/monitor/security-alerts.sh",
   "deploy/monitor/setup.sh",
   "deploy/nginx-host-proxy.conf",
   "deploy/nginx/site.conf",
@@ -781,6 +829,8 @@ const SUBJECT_OWNERS: Record<string, string> = {
   "deploy/monitor/probe.sh": "monitor-probe.test.sh",
   "deploy/monitor/report.sh": "monitor-probe.test.sh",
   "deploy/monitor/run.sh": "monitor-probe.test.sh",
+  "deploy/monitor/security-alerts-report.sh": "security-alerts-report.test.sh",
+  "deploy/monitor/security-alerts.sh": "security-alerts.test.sh",
   "deploy/monitor/setup.sh": "monitor-setup.test.sh",
   "deploy/nginx/site.conf": "nginx-headers.test.sh",
   "deploy/ops-user-setup.sh": "ops-user-setup.test.sh",
@@ -810,6 +860,8 @@ const SUBJECT_OWNERS_PINNED: Record<string, string> = {
   "deploy/monitor/probe.sh": "monitor-probe.test.sh",
   "deploy/monitor/report.sh": "monitor-probe.test.sh",
   "deploy/monitor/run.sh": "monitor-probe.test.sh",
+  "deploy/monitor/security-alerts-report.sh": "security-alerts-report.test.sh",
+  "deploy/monitor/security-alerts.sh": "security-alerts.test.sh",
   "deploy/monitor/setup.sh": "monitor-setup.test.sh",
   "deploy/nginx/site.conf": "nginx-headers.test.sh",
   "deploy/ops-user-setup.sh": "ops-user-setup.test.sh",
