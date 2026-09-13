@@ -39,6 +39,29 @@ jobs:
           # Measured on the reconstructed #531 shape (docs/WORKING_AGREEMENT.md, base 85570ec2, main
           # dd5ac2ef): against the merge ref it reports 0 lines, against the head it reports 50.
           bash scripts/ci/stale-base.sh "refs/remotes/origin/$BASE_REF" "$HEAD_SHA"
+      # Issue #836: the step above passed while PR #832 removed 286 lines across 3 files that #820,
+      # #824, #827 and #831 had already merged (by `git diff --numstat`, over ALL files, not just docs:
+      # WORKING_AGREEMENT.md -17, research/local-assemblies.md -210, sprints/sprint-28.md -59), and
+      # PR #761 removed 33 lines across 2 files that #762 had merged — still absent from main today.
+      # Both branches had been rebased BEFORE they were ever pushed, so the
+      # merge-base was already the base tip and "what did main gain since the merge-base" answered
+      # "nothing" — the gap stale-base.sh documents in its own header. `--verify` is the documented
+      # answer but needs a list captured before the rebase, and there was none: the very first commit
+      # ever pushed was already missing the lines (measured on both PRs).
+      # This second step asks a question that needs no history: does this branch take more of the base's
+      # lines out of a file than it puts back, while the file survives. Measured over the last 60 merged
+      # PRs it fires on 4 — #832 and #761 (the real incidents) plus #740 and #794, which were read by
+      # hand and are deliberate (a resolved decision rewritten in place; per-prefecture code moved into
+      # one shared function that is still in main). So it is a 2-in-4 signal that a human resolves in
+      # the PR body, not a proof — and it is a SECOND step, not a replacement: the step above is exact
+      # and still catches the un-rebased shape.
+      - name: The branch must not quietly take more of the base's lines out of a file than it puts back (#836)
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          bash scripts/ci/stale-base.sh --net-deletions "refs/remotes/origin/$BASE_REF" "$HEAD_SHA"
   # Issue #793: マージ済み PR 300 件のうち `Closes #N` があるのは 151 件だけだった（実測 2026-09-13。
   # 直近 50 件では 有 28 / 無 22 ＝ 44% が書いていない）。書いていない PR はマージしても Issue が
   # open のまま残り、実際に #763 / #771 が取り残された。#783 で作った scripts/po/board-audit.sh は
