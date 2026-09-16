@@ -49,12 +49,15 @@ export async function runShimane(opts: { sessions: number; fetchedAt: string; fe
   for (const s of archived) if (!index.some((x) => x.url === s.url)) index.push(s);
   index.sort((a, b) => b.year * 100 + b.month - (a.year * 100 + a.month));
 
-  const targets: { sessionId: string; sessionLabel: string; url: string; pdfUrls: string[]; resultsPdfUrl?: string }[] = [];
+  const targets: { sessionId: string; sessionLabel: string; url: string; pdfUrls: string[]; resultsPdfUrl: string }[] = [];
   for (const s of index) {
     if (targets.length >= opts.sessions) break;
     const page = parseSessionPage(await f.text(s.url), s.url, { sessionLabel: s.sessionLabel });
     if (page.pdfUrls.length === 0) { log(`  ${s.sessionLabel}: no 議員別採決結果一覧 PDF yet (skip)`); continue; }
-    targets.push({ sessionId: s.sessionId, sessionLabel: s.sessionLabel, url: s.url, pdfUrls: page.pdfUrls, ...(page.resultsPdfUrl ? { resultsPdfUrl: page.resultsPdfUrl } : {}) });
+    // 議決日は「議決結果一覧」PDF からしか取れないので、無ければここで落とす（#896）。
+    // **PDF を取りに行く前に落とす**——取ってから落ちると、1MB 超の PDF を無駄に取ることになる。
+    if (!page.resultsPdfUrl) throw new Error(`${s.url}: 議決結果一覧 PDF link not found (議決日 comes from it)`);
+    targets.push({ sessionId: s.sessionId, sessionLabel: s.sessionLabel, url: s.url, pdfUrls: page.pdfUrls, resultsPdfUrl: page.resultsPdfUrl });
   }
   if (targets.length === 0) throw new Error("no session with a 議員別採決結果一覧 PDF found");
   log(`sessions: ${targets.map((t) => `${t.sessionId}（${t.sessionLabel}）`).join(" / ")}`);
@@ -77,7 +80,6 @@ export async function runShimane(opts: { sessions: number; fetchedAt: string; fe
     // **組み立てていたときは 14 本中 4 本で外れ、うち 1 本は HTTP 200 で「表決 PDF そのもの」が返っていた**
     // （＝議決日を誤った資料から読む経路が開いていた。詳しくは `sessions.ts` の `resultsPdfUrl`）。
     const resultsUrl = t.resultsPdfUrl;
-    if (!resultsUrl) throw new Error(`${t.url}: 議決結果一覧 PDF link not found (議決日 comes from it)`);
     let results: Map<string, ResultRow>;
     try {
       results = await parseResultsPdf(await f.bytes(resultsUrl));

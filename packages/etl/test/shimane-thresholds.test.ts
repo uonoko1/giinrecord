@@ -296,3 +296,45 @@ test("#896 フィクスチャにある本の読める／読めないが、直し
   // **「読めるようにした」つもりで例外を握り潰していないことの確認**
   await assert.rejects(() => parseVotePdf(fixture("r0711_giinbetu_kekka.pdf")), /付託委員会 is 4\.2pt off the row centre/);
 });
+
+/**
+ * **会期ページに「議決結果一覧」のリンクが無かったら、黙って進まずに落ちる**（Issue #896）。
+ *
+ * **議決日はこの PDF からしか取れない。**
+ * **リンクが無いのに進むと、議決日の無いまま採決を作ることになる**——
+ * **`data/` に「日付の無い採決」が出るより、止まるほうがよい**（#569）。
+ *
+ * **直す前は URL を組み立てていたので「リンクが無い」という状態が存在しなかった。**
+ * **リンクから拾うようにした以上、無いときの振る舞いを決めておく必要がある。**
+ */
+test("#896 会期ページに議決結果一覧のリンクが無ければ、議決日を取れないので落ちる", async () => {
+  const { runShimane } = await import("../src/sources/local/shimane/index.ts");
+  const { DISTRICT_PAGES } = await import("../src/sources/local/shimane/roster.ts");
+  const origin = "https://www.pref.shimane.lg.jp";
+  const session = `${origin}/gikai/ugoki/saikin/r0806/`;
+  // **議決結果一覧のリンクだけを消した会期ページ**（表決 PDF のリンクはそのまま）
+  const stripped = html("r0806.html").replace(/<a[^>]*r0806_giketu_kekka\.pdf[^>]*>[\s\S]*?<\/a>/g, "");
+  assert.ok(!stripped.includes("r0806_giketu_kekka.pdf"), "議決結果一覧のリンクが消えている");
+  assert.ok(stripped.includes("r0806_giinbetu_kekka.pdf"), "表決 PDF のリンクは残っている");
+
+  const files: Record<string, string> = {
+    [`${origin}/gikai/gaido/meibo/tiku.html`]: "meibo-tiku.html",
+    [`${origin}/gikai/ugoki/saikin/`]: "saikin.html",
+    [`${origin}/gikai/ugoki/gikai_kako/`]: "gikai_kako.html",
+  };
+  for (const d of DISTRICT_PAGES) files[`${origin}${d.path}`] = `meibo-${d.slug}.html`;
+  const fetcher = {
+    text: async (url: string): Promise<string> => {
+      if (url === session) return stripped;
+      const f = files[url];
+      if (!f) throw new Error(`unexpected fetch ${url}`);
+      return readFileSync(new URL(`./fixtures/shimane/${f}`, import.meta.url), "utf8");
+    },
+    bytes: async (url: string): Promise<Buffer> => { throw new Error(`should not fetch bytes: ${url}`); },
+  };
+  await assert.rejects(
+    () => runShimane({ sessions: 1, fetchedAt: "2026-08-24T00:00:00.000Z", fetcher }),
+    /議決結果一覧 PDF link not found \(議決日 comes from it\)/,
+    "**議決日が取れないまま進まない**",
+  );
+});
