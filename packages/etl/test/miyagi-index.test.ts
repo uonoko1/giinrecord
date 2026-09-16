@@ -35,7 +35,8 @@ test("parseSessionIndex: 会期 index の規則性 — ラベルは「令和N年
   const ids = new Set<string>();
   for (let i = 0; i < sessions.length; i++) {
     const s = sessions[i];
-    assert.match(s.sessionLabel, /^(令和|平成)\d+年\d+月(定例会|臨時会)（第\d+回）$/, s.sessionLabel);
+    // **#895 で 2 か所ひろげた**: `令和元年`（和暦の最初の年）と、開き括弧だけが ASCII の `(`（原文のまま）
+    assert.match(s.sessionLabel, /^(令和|平成)(\d+|元)年\d+月(定例会|臨時会)[（(]第\d+回[）)]$/, s.sessionLabel);
     if (s.kind === "page") assert.match(s.url, /^https:\/\/www\.pref\.miyagi\.jp\/(site|soshiki)\/kengikai\/[A-Za-z0-9_-]+\.html$/, s.url);
     else assert.match(s.url, /^https:\/\/www\.pref\.miyagi\.jp\/documents\/\d+\/[A-Za-z0-9_-]+\.pdf$/, s.url);
     assert.equal(s.sessionId, s.sessionLabel.match(/第(\d+)回/)![1]);

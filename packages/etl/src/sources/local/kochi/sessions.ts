@@ -1,5 +1,6 @@
 import { parse } from "node-html-parser";
 import { cleanText, KOCHI_DECISION_URL, resolveKochiUrl, warekiYear } from "./site.ts";
+import { SessionTally } from "../session-tally.ts";
 
 /**
  * 高知県議会「議員別賛否の状況」（Issue #220）。
@@ -28,14 +29,15 @@ const LINK_TEXT = /^((令和|平成)([０-９0-9]+|元)年([０-９0-9]+)月(定
 /**
  * 会期 index → 会期ごとの PDF（ページの並び順＝新しい順）。
  * 並びが新しい順でなければ例外、同じ会期が 2 回出ても例外（別のページを黙って読まない）。
+ * **`tally` を渡すと母数が入る**（#895）。
  */
-export function parseSessionIndex(html: string, baseUrl: string): SessionLink[] {
+export function parseSessionIndex(html: string, baseUrl: string, tally?: SessionTally): SessionLink[] {
   const root = parse(html);
   const sessions: SessionLink[] = [];
   for (const a of root.querySelectorAll("a")) {
     const text = cleanText(a.text);
     const m = text.match(LINK_TEXT);
-    if (!m) continue;
+    if (!m) { tally?.drop(text, "not-a-session"); continue; }
     const href = (a.getAttribute("href") ?? "").trim();
     if (!/\.pdf$/i.test(href)) throw new Error(`${baseUrl}: 議決結果一覧表 link is not a PDF: ${href}`);
     const year = warekiYear(m[2], m[3]);
@@ -44,6 +46,7 @@ export function parseSessionIndex(html: string, baseUrl: string): SessionLink[] 
     const sessionId = `${year}-${String(month).padStart(2, "0")}${m[5] === "臨時会" ? "-rinji" : ""}`;
     if (sessions.some((s) => s.sessionId === sessionId)) throw new Error(`${baseUrl}: duplicate session ${sessionId}`);
     sessions.push({ sessionId, sessionLabel: m[1], year, month, pdfUrl: resolveKochiUrl(href, baseUrl) });
+    tally?.take();
   }
   if (sessions.length === 0) throw new Error(`${baseUrl}: no sessions found`);
   for (let i = 1; i < sessions.length; i++) {

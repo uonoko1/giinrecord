@@ -1,5 +1,6 @@
 import { parse } from "node-html-parser";
 import { cleanText, resolveShigaUrl, warekiYear } from "./site.ts";
+import { SessionTally } from "../session-tally.ts";
 
 /**
  * 滋賀県議会の会期 index（Issue #741）。3 段:
@@ -54,8 +55,9 @@ const SESSION_HEADING = /^(令和|平成|昭和)\s*([０-９0-9]+|元)年\s*([�
  * 年ページ → 賛否状況のリンクがある会期。**賛否状況のリンクが無い会期は返さない**
  * （会期中、または賛否を公表していない古い会期。**公表されていない事実を作らない**）。
  * h2 と `<ul>` の対応は文書順（h2 の次に現れる `<ul>` がその会期のメニュー）。
+ * **`tally` を渡すと母数が入る**（#895）。
  */
-export function parseYearPage(html: string, baseUrl: string): SessionLink[] {
+export function parseYearPage(html: string, baseUrl: string, tally?: SessionTally): SessionLink[] {
   const root = parse(html);
   const out: SessionLink[] = [];
   // 文書順に h2 と ul を並べ、h2 の直後の ul をその会期のメニューとする
@@ -64,11 +66,12 @@ export function parseYearPage(html: string, baseUrl: string): SessionLink[] {
     if (nodes[i].tagName !== "H2") continue;
     const heading = cleanText(nodes[i].text);
     const m = heading.match(SESSION_HEADING);
-    if (!m) continue;
+    if (!m) { tally?.drop(heading, "not-a-session"); continue; }
     const ul = nodes[i + 1]?.tagName === "UL" ? nodes[i + 1] : undefined;
-    if (!ul) continue;
+    if (!ul) { tally?.drop(heading, "no-vote-link"); continue; }
     const link = ul.querySelectorAll("a").find((a) => /g07_gian_sanpi\.asp\?KaigiID=\d+/.test(a.getAttribute("href") ?? ""));
-    if (!link) continue; // 賛否状況の無い会期（会期中・古い会期）
+    // 賛否状況の無い会期（会期中・古い会期）。**落としたことは母数に残す**（#895）
+    if (!link) { tally?.drop(heading, "no-vote-link"); continue; }
     const href = link.getAttribute("href")!;
     const kaigiId = Number(href.match(/KaigiID=(\d+)/)![1]);
     const year = warekiYear(m[1], m[2]);
@@ -78,6 +81,7 @@ export function parseYearPage(html: string, baseUrl: string): SessionLink[] {
     const kind = m[4];
     const sessionId = `${year}-${String(month).padStart(2, "0")}${kind.startsWith("定例") ? "" : "-rinji"}`;
     out.push({ sessionId, sessionLabel: heading, year, month, kaigiId, kaigiUrl: resolveShigaUrl(href, baseUrl) });
+    tally?.take();
   }
   return out;
 }
