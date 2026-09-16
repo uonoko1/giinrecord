@@ -1,5 +1,6 @@
 import { parse } from "node-html-parser";
 import { cleanText, NARA_ORIGIN, resolveNaraUrl, warekiYear } from "./site.ts";
+import { SessionTally } from "../session-tally.ts";
 
 /**
  * 奈良県議会「定例（臨時）県議会の概要」（Issue #202）。
@@ -22,8 +23,11 @@ export interface SessionLink {
 
 const LINK_TEXT = /^(令和|平成)(\d+|元)年(\d{1,2})月(定例会|臨時会)の概要$/;
 
-/** 会期 index → 会期のリンク（ページの並び順＝新しい順）。並びが新しい順でなければ例外（別のページを黙って読まない）。 */
-export function parseSessionIndex(html: string, baseUrl: string): SessionLink[] {
+/**
+ * 会期 index → 会期のリンク（ページの並び順＝新しい順）。並びが新しい順でなければ例外（別のページを黙って読まない）。
+ * **`tally` を渡すと母数が入る**（#895）。
+ */
+export function parseSessionIndex(html: string, baseUrl: string, tally?: SessionTally): SessionLink[] {
   const root = parse(html);
   const contents = root.querySelector("#tmp_contents");
   if (!contents) throw new Error(`${baseUrl}: #tmp_contents not found`);
@@ -31,13 +35,14 @@ export function parseSessionIndex(html: string, baseUrl: string): SessionLink[] 
   for (const a of contents.querySelectorAll("a")) {
     const text = cleanText(a.text).normalize("NFKC");
     const m = text.match(LINK_TEXT);
-    if (!m) continue;
+    if (!m) { tally?.drop(text, "not-a-session"); continue; }
     const year = warekiYear(m[1], m[2]);
     const month = Number(m[3]);
     if (month < 1 || month > 12) throw new Error(`${baseUrl} ${text}: bad month`);
     const sessionId = `${year}-${String(month).padStart(2, "0")}${m[4] === "臨時会" ? "-rinji" : ""}`;
     if (sessions.some((s) => s.sessionId === sessionId)) throw new Error(`${baseUrl}: duplicate session ${sessionId}`);
     sessions.push({ sessionId, sessionLabel: text.replace(/の概要$/, ""), year, month, url: resolveNaraUrl(a.getAttribute("href") ?? "", baseUrl) });
+    tally?.take();
   }
   if (sessions.length === 0) throw new Error(`${baseUrl}: no sessions found`);
   for (let i = 1; i < sessions.length; i++) {

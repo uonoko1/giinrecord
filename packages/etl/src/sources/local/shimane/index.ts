@@ -1,5 +1,6 @@
 import type { LocalAssemblyMeta, LocalRollCall, LocalUnmatchedName } from "@seiji-kiroku/shared";
 import { PoliteFetcher } from "../polite-fetch.ts";
+import { SessionTally } from "../session-tally.ts";
 import { SHIMANE_HOST, SHIMANE_ROSTER_URL } from "./site.ts";
 import { DISTRICT_PAGES, parseDistrictIndex, parseRoster, type Roster } from "./roster.ts";
 import { parseSessionIndex, parseSessionPage, SESSION_ARCHIVE_URL, SESSION_INDEX_URL } from "./sessions.ts";
@@ -43,8 +44,10 @@ export async function runShimane(opts: { sessions: number; fetchedAt: string; fe
   log(`roster: ${roster.members.length} members in ${districts.length} districts (as of ${roster.asOf})`);
 
   // 会期: 「最近の定例会の概要」＋「過去の定例会の概要」を合わせて新しい順（同じ会期ページは 1 つに）
-  const recent = parseSessionIndex(await f.text(SESSION_INDEX_URL), SESSION_INDEX_URL);
-  const archived = parseSessionIndex(await f.text(SESSION_ARCHIVE_URL), SESSION_ARCHIVE_URL);
+  const indexTally = new SessionTally();
+  const recent = parseSessionIndex(await f.text(SESSION_INDEX_URL), SESSION_INDEX_URL, indexTally);
+  const archived = parseSessionIndex(await f.text(SESSION_ARCHIVE_URL), SESSION_ARCHIVE_URL, indexTally);
+  log(`session index: ${indexTally.line()}`);
   const index = [...recent];
   for (const s of archived) if (!index.some((x) => x.url === s.url)) index.push(s);
   index.sort((a, b) => b.year * 100 + b.month - (a.year * 100 + a.month));
