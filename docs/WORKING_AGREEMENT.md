@@ -2309,3 +2309,45 @@ comm -23 <(sort -u /tmp/h.md) <(sort -u <file>) | grep -vc '^$'   # 自分の側
 
 **この件では、担当者が `worktree` だけ作ってファイルを 1 行も触らずに止めた。**
 **そのおかげで後始末が要らなかった。**
+
+### CI が 1 度も起動しないことがある——空コミットでも close/reopen でも直らなかった
+
+**2026-09-17、PR #908 で実測。**
+
+**担当者が「CI がこのブランチで 1 つも起動しませんでした（`gh run list` が空）」と報告した。**
+**PO が確かめたところ、本当に 0 件だった:**
+
+```
+gh api "…/actions/runs?head_sha=<SHA>"           → total_count: 0
+gh api "…/actions/runs?branch=<枝>"              → total_count: 0
+gh api "…/commits/<SHA>/check-runs"              → total_count: 0
+```
+
+**同じ時刻に他の枝（`docs/half-cell-kochi` など）は正常に走っていた。**
+**Actions は `enabled=true`、キューの詰まりも無し**（`queued` 0 / `in_progress` 2）。
+**枝は `.github/` を 1 バイトも触っておらず、PR は draft でもなく、base も head も正常。**
+
+**効かなかった手当て:**
+
+1. **空コミットを push**（`--allow-empty`）→ **新しい SHA でも `total_count: 0`**
+   **`pr-closes` の rerun 問題とは別物である**——あれは本文の再生の話で、こちらは run が 1 つも作られない。
+2. **`gh pr close` → `gh pr reopen`** → **やはり 0 件**
+
+**効いた手当て:**
+
+3. **`origin/main` を枝にマージして push**（**実体のある変更を含むコミット**）→ **起動した**
+
+**なぜ効いたかは分かっていない。**
+**空コミットとの違いは「ファイルが実際に変わったか」だが、
+GitHub 側の仕様として確かめたわけではない。** **たまたまの可能性もある。**
+
+**やること**:
+
+- **CI が 0 件のままマージしない。** **検査が走っていないものは、緑ではなく未測定である。**
+- **0 件だと分かったら、まず `head_sha` で API を叩いて確かめる**
+  （`gh pr view` の `statusCheckRollup` が空なだけかもしれない）。
+- **空コミット → close/reopen → main のマージ、の順に試す。**
+- **どれも効かなければ、手元で CI と同じ検査を全部流し、その結果を PR に貼ってから判断する**
+  （`pnpm -w lint` / `typecheck` / `test`、`scripts/ci/forbidden-patterns.sh`、
+  `scripts/ci/shellcheck.sh`、`scripts/ci/stale-base.sh --net-deletions`、
+  `pr-closes` が見る語が本文に在ること）。**「手元で通った」と明記すること。**
