@@ -1,0 +1,10 @@
+User-agent: *
+Disallow: /voices/cgi/
+Disallow: /voices2/cgi/
+Disallow: /gikai/cgi/
+Disallow: /g07_Video*_View*.asp
+Disallow: /g08_Video*_View*.asp
+Disallow: /voices/gikaidoc/index.html
+Disallow: /voices/gikaidoc/index2.html
+Disallow: /gikai/gikaidoc/index.html
+Disallow: /gikai/gikaidoc/index2.html

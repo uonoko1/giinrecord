@@ -1,0 +1,2 @@
+User-agent: *
+Disallow: /TOPICS/200809027610.pdf
