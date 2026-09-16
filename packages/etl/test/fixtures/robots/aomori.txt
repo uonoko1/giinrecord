@@ -1,0 +1,5 @@
+User-Agent: *
+Disallow: /kensei/kojisotatsu/
+
+User-agent: ndl-japan
+Allow: /kensei/kojisotatsu/

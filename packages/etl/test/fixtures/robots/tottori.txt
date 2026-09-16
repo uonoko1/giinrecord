@@ -1,0 +1,16 @@
+User-Agent: *
+Disallow: /dde.aspx
+Disallow: /m/dde.aspx
+Disallow: /secure/221685/
+Disallow: /secure/1352427/hand_icon.png
+Allow: /
+
+User-agent: Baiduspider
+Disallow: /
+
+User-agent: Googlebot-Image
+Disallow: /
+
+User-agent: *
+Disallow: /koujisoutatu*.pdf
+Disallow: */koujisoutatu*.pdf

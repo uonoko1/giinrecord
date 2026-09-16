@@ -1,0 +1,9 @@
+User-agent: *
+Disallow: */Calendar.aspx
+Disallow: */Daily.aspx
+Disallow: */Weekly.aspx
+Disallow: */Yearly.aspx
+Disallow: */calendar.aspx
+Disallow: */daily.aspx
+Disallow: */weekly.aspx
+Disallow: */yearly.aspx
