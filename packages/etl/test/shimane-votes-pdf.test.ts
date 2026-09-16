@@ -550,13 +550,13 @@ test("#866 見張りの閾値: 昔のやり方（1 行ずつ近い議案へ）�
   const oldOffsets = anchors.map((a) => offsetOf(near.get(a)!, a));
   // **請願第29号が −31.6pt ずれる**（本文の上の数行を巻き込むので、塊の中心が上へ動く）。
   // **この値は変異テストでも出た**（`splitTitleCells` を使わなくすると
-  // `page 3 請願第29号: 件名 is -31.6pt off the row centre (max 8)` で落ちる）
-  assert.ok(Math.abs(oldOffsets[1]) > 8, `昔のやり方のずれ ${oldOffsets[1].toFixed(1)}pt が閾値 8 を超えていない`);
+  // `page 3 請願第29号: 件名 is -31.6pt off the row centre (max 15)` で落ちる）
+  assert.ok(Math.abs(oldOffsets[1]) > 15, `昔のやり方のずれ ${oldOffsets[1].toFixed(1)}pt が閾値 15 を超えていない`);
   assert.equal(oldOffsets[1].toFixed(1), "-31.6", "請願第29号のずれ");
   // **今のやり方なら閾値の内側**（請願第30号だけ 5.16pt で、それは一次資料がそう置いている）
   const now = splitTitleCells(titleYs.map((y) => [{ str: "x", x: 91.68, y, w: 170, h: 11.4, cx: 176, cy: y }]), anchors)!;
   const newOffsets = anchors.map((a) => offsetOf(now.get(a)!.map((i) => i.y), a));
-  assert.deepEqual(newOffsets.map((o) => Math.abs(o) <= 8), [true, true, true], newOffsets.map((o) => o.toFixed(2)).join(" / "));
+  assert.deepEqual(newOffsets.map((o) => Math.abs(o) <= 15), [true, true, true], newOffsets.map((o) => o.toFixed(2)).join(" / "));
   assert.equal(newOffsets[2].toFixed(2), "5.16", "請願第30号のずれ（一次資料がそう置いている）");
 });
 
@@ -571,16 +571,24 @@ test("#866 checkTitleOffset: 閾値を超えたら落ち、内側なら通る（
   // **鳴らない側**: 請願第30号の 5.16pt は一次資料がそう置いているので通る
   assert.doesNotThrow(() => { checkTitleOffset(3, "請願第30号", "平成25年6月議会で…", 5.16); });
   assert.doesNotThrow(() => { checkTitleOffset(5, "承認第２号", "専決処分事件の…", -0.24); });
-  // **境界そのもの**: 閾値 8 ちょうどは通り、超えたら落ちる（`>` であって `>=` ではない）
-  assert.doesNotThrow(() => { checkTitleOffset(1, "第1号", "x", 8); });
-  assert.doesNotThrow(() => { checkTitleOffset(1, "第1号", "x", -8); });
-  assert.throws(() => { checkTitleOffset(1, "第1号", "x", 8.1); }, /off the row centre/);
-  assert.throws(() => { checkTitleOffset(1, "第1号", "x", -8.1); }, /off the row centre/);
+  // **2024-09 請願第14号の −12.33pt も通る**（#896。**8 のときはここで ETL が止まっていた**——
+  // **`splitTitleCells` の割り当ては正しく、一次資料が塊の中心を行の中心ぴったりには置いていないだけである**）
+  assert.doesNotThrow(() => { checkTitleOffset(3, "請願第14号", "本年7月10日、永田町の星陵会館で…", -12.36); });
+  // **境界そのもの**: 閾値 15 ちょうどは通り、超えたら落ちる（`>` であって `>=` ではない）
+  assert.doesNotThrow(() => { checkTitleOffset(1, "第1号", "x", 15); });
+  assert.doesNotThrow(() => { checkTitleOffset(1, "第1号", "x", -15); });
+  assert.throws(() => { checkTitleOffset(1, "第1号", "x", 15.1); }, /off the row centre/);
+  assert.throws(() => { checkTitleOffset(1, "第1号", "x", -15.1); }, /off the row centre/);
+  // **緩めた側で誤りが通らないこと**（#896 の「必ず守ること」）:
+  // **壊れている側の最小は 17.88pt**（2024-09 請願第14号を昔のやり方で割り当てたときの値。14 本の実測）。
+  // **15 はその内側にあるので、壊れている 10 行はいまも全部落ちる。**
+  assert.throws(() => { checkTitleOffset(3, "請願第14号", "x", 17.88); }, /off the row centre/);
+  assert.throws(() => { checkTitleOffset(3, "請願第14号", "x", -17.88); }, /off the row centre/);
   // **鳴る側**: 昔のやり方が出していた値（上のテストが計算した −31.6pt / 起票時の ±27pt）
   assert.throws(
     () => { checkTitleOffset(3, "請願第29号", "「地方財政の充実・強化を求める」請願平成25年6月議会で島根", -31.6); },
     // **どの議案がどれだけずれたかを、落ちたときのメッセージが名指しする**（#569: 黙って通さない）
-    /page 3 請願第29号: 件名 is -31\.6pt off the row centre \(max 8\) — 隣の行の件名が混ざっている疑い: 「地方財政の充実・強化を求める」請願平成25年6月議会で島根/,
+    /page 3 請願第29号: 件名 is -31\.6pt off the row centre \(max 15\) — 隣の行の件名が混ざっている疑い: 「地方財政の充実・強化を求める」請願平成25年6月議会で島根/,
   );
   assert.throws(() => { checkTitleOffset(5, "承認第２号", "専決処分事件の…", -27.4); }, /off the row centre/);
   assert.throws(() => { checkTitleOffset(5, "議員提出第1号", "もの請願書に…", 27.35); }, /off the row centre/);
