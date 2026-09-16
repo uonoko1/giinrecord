@@ -1,5 +1,6 @@
 import { parse } from "node-html-parser";
 import { cleanText, resolveTokushimaUrl, TOKUSHIMA_ORIGIN, warekiYear } from "./site.ts";
+import { SessionTally } from "../session-tally.ts";
 
 /**
  * 徳島県議会「定例会の概要」（Issue #183）。
@@ -34,8 +35,11 @@ export interface SessionIndex {
 const YEAR_HEADING = /^(令和|平成)(\d+|元)年 定例会の概要$/;
 const SESSION_HEADING = /^(\d+)月 (定例会|臨時会)$/;
 
-/** 会期 index（今年のページ・年ページ）→ 年と会期（新しい順）。見出しの形が崩れていれば例外（別のページを黙って読まない）。 */
-export function parseSessionIndex(html: string, baseUrl: string): SessionIndex {
+/**
+ * 会期 index（今年のページ・年ページ）→ 年と会期（新しい順）。見出しの形が崩れていれば例外（別のページを黙って読まない）。
+ * **`tally` を渡すと母数が入る**（#895）。**候補は `<figure>`**（会期はどれも figure に入っている）。
+ */
+export function parseSessionIndex(html: string, baseUrl: string, tally?: SessionTally): SessionIndex {
   const root = parse(html);
   const yearHeads = root.querySelectorAll("h1, h2").map((h) => cleanText(h.text)).filter((t) => YEAR_HEADING.test(t));
   if (yearHeads.length !== 1) throw new Error(`${baseUrl}: expected one year heading (令和N年 定例会の概要), got ${yearHeads.length}`);
@@ -45,10 +49,11 @@ export function parseSessionIndex(html: string, baseUrl: string): SessionIndex {
   const sessions: SessionLink[] = [];
   for (const fig of root.querySelectorAll("figure")) {
     const caption = fig.querySelector("figcaption");
-    if (!caption) continue;
+    // **figcaption の無い figure は会期の候補ですらない**（写真だけの figure）
+    if (!caption) { tally?.drop("", "not-a-candidate"); continue; }
     const heading = cleanText(caption.text);
     const m = heading.match(SESSION_HEADING);
-    if (!m) continue;
+    if (!m) { tally?.drop(heading, "not-a-session"); continue; }
     const links = fig.querySelectorAll("a").filter((a) => cleanText(a.text).startsWith("各議員の表決態度"));
     if (links.length !== 1) throw new Error(`${baseUrl} ${heading}: expected exactly one 各議員の表決態度 link, got ${links.length}`);
     const month = Number(m[1]);
@@ -56,6 +61,7 @@ export function parseSessionIndex(html: string, baseUrl: string): SessionIndex {
     const sessionId = `${year}-${String(month).padStart(2, "0")}`;
     if (sessions.some((s) => s.sessionId === sessionId)) throw new Error(`${baseUrl}: duplicate session ${sessionId}`);
     sessions.push({ sessionId, month, heading, url: resolveTokushimaUrl(links[0].getAttribute("href") ?? "", baseUrl) });
+    tally?.take();
   }
   if (sessions.length === 0) throw new Error(`${baseUrl}: no sessions found`);
   for (let i = 1; i < sessions.length; i++) {

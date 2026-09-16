@@ -1,5 +1,6 @@
 import type { LocalAssemblyMeta, LocalRollCall, LocalUnmatchedName } from "@seiji-kiroku/shared";
 import { PoliteFetcher } from "../polite-fetch.ts";
+import { SessionTally } from "../session-tally.ts";
 import { AKITA_HOST, AKITA_HUB_URL, AKITA_ROSTER_URL, AKITA_YEARS_URL } from "./site.ts";
 import { parseRoster, type Roster } from "./roster.ts";
 import { parseYearPage, parseYearPages, type PdfLink } from "./sessions.ts";
@@ -66,10 +67,12 @@ export async function runAkita(opts: { sessions: number; fetchedAt: string; fetc
   // **年度ページは新しいほうから順に見て、必要な本数が集まったらやめる**
   // （既定の N = 2 なら 1〜2 ページで足りる。取りに行くリクエストを増やさない）
   const links: PdfLink[] = [];
+  const indexTally = new SessionTally();
   for (const page of yearPages) {
     if (links.length >= opts.sessions) break;
-    links.push(...parseYearPage(await f.text(page), page));
+    links.push(...parseYearPage(await f.text(page), page, indexTally));
   }
+  log(`session index: ${indexTally.line()}`);
   if (links.length === 0) throw new Error("年度ページに賛否 PDF が 1 本も無い");
   const picked = links.slice(0, opts.sessions);
   log(`pdfs: ${picked.length} of ${links.length} found (--sessions ${opts.sessions})`);
