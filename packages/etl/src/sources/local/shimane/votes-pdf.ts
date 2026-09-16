@@ -47,6 +47,14 @@ export interface VoteRow {
   /** 各議員の表決の原文（members と同じ並び。置けなければ UNKNOWN_CELL） */
   cells: string[];
   page: number;
+  /**
+   * **件名のセルの中心と、議案番号の欄の y（行の中心）のずれ（pt）**（Issue #866）。
+   * この PDF には罫線が無く、行の上下の端はどこにも描かれていない。件名のセルが行の中心に
+   * 揃っているという事実だけが、セルを行に結びつけている。**そこがずれていれば、
+   * 件名が隣の行のものと混ざっている**（島根で 5 件、うち 1 件は正しい議案名の後ろに
+   * 別議案の請願本文が連結していた）。**この値を公表して、呼ぶ側が見張れるようにする。**
+   */
+  titleOffset: number;
 }
 
 export interface VotePdf {
@@ -238,6 +246,31 @@ function kindOf(section: string | undefined, numberHeader: string, number: strin
   if (!kind) throw new Error(`page ${pageNo} ${number}: no 節見出し and 議案番号 header "${numberHeader}" does not say what the table is`);
   return kind;
 }
+/**
+ * 同じ行に置かれた文字列とみなす y の差（#866）。1 行が 2 つのアイテムに分かれて書かれている行がある
+ * （令和8年6月 1 ページ目の「《浜田養護学校整備（高等部棟」「建築）工事》」は y の差が 0.00）。
+ * 実測の行送りは 10.6pt（令和8年2月）・11.4pt（令和8年6月）なので、それより十分小さい値。
+ */
+const SAME_LINE = 2;
+/**
+ * **件名のセルの中心が、議案番号の欄の y（行の中心）からずれてよい上限（pt）**（Issue #866）。
+ *
+ * **実測（2026-09-14、フィクスチャ 2 本・112 行すべて。`titleOffset` の絶対値）**:
+ *   令和8年2月（82 行）は全行 0.30pt 以下。令和8年6月（30 行）は 29 行が 0.24pt 以下で、
+ *   **請願第30号だけ 5.16pt**——件名が 21 行の請願本文そのもので、
+ *   **その塊の中心を PDF が行の中心ぴったりには置いていない**（一次資料がそうなっている）。
+ * **壊れているときの値**（直す前の令和8年2月 5 ページ目、同じ y から計算）:
+ *   承認第２号 **−27.40pt** / 議員提出第1号 **+27.35pt**（どちらも請願の本文を巻き込んでいた）。
+ * **正しい 5.16 と壊れている 27.35 の間**に置く。8 は 5.16 に余裕を持たせつつ 27 の 3 分の 1 以下。
+ *
+ * **この上限だけでは足りない行がある、と先に書いておく。**
+ * 直す前の**請願第28号のずれは −0.20pt で、この上限の内側だった**
+ * （上下の行に 5 行ずつ対称に取られたので、塊の中心が動かなかった）。
+ * **それでも見張りとして働くのは**、その 5 行を取った先が上下の行であり、
+ * **上下の行のほうが ±27pt に飛ぶから**である（同じページの合計のずれは 55.20 → 0.80）。
+ * **1 行だけを見て安心しないこと。** ページの全行を通してはじめて壊れを名指しできる。
+ */
+const MAX_TITLE_OFFSET = 8;
 /** 縦書きのセル（議⾧・除斥）をまとめる距離。1 文字ぶん（約 11.4pt）より少し大きく。 */
 const CELL_GAP = 13;
 /** 付託委員会のブロックをまとめる距離（1 行ぶんの行送り）。 */
@@ -279,6 +312,76 @@ function splitAtBoundary(it: Item, boundary: number): { left: Item; right: Item 
     left: { ...it, str: leftStr, w: boundary - it.x, cx: (it.x + boundary) / 2 },
     right: { ...it, str: rightStr, x: boundary, w: it.x + it.w - boundary, cx: (boundary + it.x + it.w) / 2 },
   };
+}
+
+/**
+ * 件名の欄を「行ごとのセル」に切り分ける（Issue #866）。
+ *
+ * **なぜ 1 行ずつ y の近い議案番号に入れてはいけないか。**
+ * この PDF には**罫線が 1 本も無い**（`readPages` の `hlines`/`vlines` はどのページも 0 本）。
+ * 行の手がかりは議案番号の欄の y（＝行の**中心**）だけで、**行の上下の端はどこにも描かれていない。**
+ * 件名のセルは 1 行のものもあれば、請願の本文が丸ごと入って 20 行を超えるものもある。
+ * 高いセルは上下の議案番号より外まで伸びるので、**1 行ずつ「y が一番近い議案番号」に入れると
+ * 上端の数行が上の議案へ、下端の数行が下の議案へこぼれる**（島根で 5 件、うち承認第２号は
+ * 正しい議案名の後ろに別議案の請願本文が連結した）。
+ *
+ * **行の高さが違っても使える事実は 1 つだけ**——件名のセルは**行の中心に揃えて**書かれている
+ * （付託委員会の欄がすでにそれを使っている）。そこで件名の行を**上から順に、切れ目を入れずに**
+ * 議案の数ぶんの塊に分け、**塊の中心と議案番号の y のずれの合計が最小になる分け方**を選ぶ。
+ * 上から順に並んだ行を並べ替えずに分けるので、**行が入れ替わることはない**（推定で並べ替えない）。
+ *
+ * **行の高さやセルの字数は使わない。** 68 字 1 セル（第39号）も 480 字 1 セル（請願第30号）も
+ * 同じ規則で通る。**字数の上限は機序ではないので、ここでは見ない。**
+ *
+ * **件名の行が議案の数より少ないときは分けられない**（件名が空の議案があることになる）。
+ * そのときは**分けずに undefined を返し**、呼ぶ側が今までどおり 1 行ずつ近い行へ入れる
+ * （その場合は「件名が空」で落ちる。黙って推定で埋めない）。
+ */
+export function splitTitleCells(lines: Item[][], anchors: number[]): Map<number, Item[]> | undefined {
+  const n = lines.length;
+  const m = anchors.length;
+  if (m === 0 || n < m) return undefined;
+  // dp[j][i] = 上から i 行を j 個の塊に分けたときの「塊の中心と議案番号の y のずれ」の合計の最小
+  const INF = Number.POSITIVE_INFINITY;
+  const dp: number[][] = Array.from({ length: m + 1 }, () => new Array<number>(n + 1).fill(INF));
+  const back: number[][] = Array.from({ length: m + 1 }, () => new Array<number>(n + 1).fill(-1));
+  dp[0][0] = 0;
+  for (let j = 1; j <= m; j++) {
+    for (let i = j; i <= n; i++) {
+      for (let k = j - 1; k < i; k++) {
+        if (dp[j - 1][k] === INF) continue;
+        // 塊 lines[k..i-1] の中心（上端と下端の y の平均）
+        const cost = dp[j - 1][k] + Math.abs((lines[k][0].y + lines[i - 1][0].y) / 2 - anchors[j - 1]);
+        if (cost < dp[j][i]) { dp[j][i] = cost; back[j][i] = k; }
+      }
+    }
+  }
+  if (dp[m][n] === INF) return undefined;
+  const out = new Map<number, Item[]>();
+  let i = n;
+  for (let j = m; j >= 1; j--) {
+    const k = back[j][i];
+    out.set(anchors[j - 1], lines.slice(k, i).flat());
+    i = k;
+  }
+  return out;
+}
+
+/**
+ * **件名のセルは行の中心に揃っている**という、この PDF で行とセルを結びつけている唯一の事実を見張る（#866）。
+ * ずれていれば隣の行の件名が混ざっている。**字数の上限では見ない**（68 字 1 セルも 480 字 1 セルも正しい）。
+ *
+ * **`parseVotePdf` の中の `if` ではなく、名前の付いた関数にしてある。**
+ * **理由は、この見張りは今の 2 本のフィクスチャでは 1 度も鳴らないからである**——
+ * **`if (false)` に変えても 32 本すべてが緑のままだった**（変異テストで実測）。
+ * **鳴る条件を直接呼んで確かめられるように、呼べる形にしてある。**
+ *
+ * @throws ずれが `MAX_TITLE_OFFSET` を超えたとき
+ */
+export function checkTitleOffset(page: number, number: string, title: string, titleOffset: number): void {
+  if (Math.abs(titleOffset) > MAX_TITLE_OFFSET) {
+    throw new Error(`page ${page} ${number}: 件名 is ${titleOffset.toFixed(1)}pt off the row centre (max ${MAX_TITLE_OFFSET}) — 隣の行の件名が混ざっている疑い: ${title.slice(0, 30)}`);
+  }
 }
 
 export async function parseVotePdf(bytes: Buffer): Promise<VotePdf> {
@@ -396,7 +499,17 @@ export async function parseVotePdf(bytes: Buffer): Promise<VotePdf> {
       return map;
     };
     const numByRow = own(numItems);
-    const titleByRow = own(titleItems);
+    // 件名は 1 行ずつ近い行へ入れると高いセルが上下へこぼれる（#866）。
+    // 上から順の行を、議案の数ぶんの塊に切れ目なく分ける（塊の中心が議案番号の y に最も近くなる分け方）。
+    // 同じ y に置かれた文字列（1 行が 2 つのアイテムに分かれているもの）は 1 行として扱う。
+    const titleLines: Item[][] = [];
+    for (const it of [...titleItems].sort((a, b) => b.y - a.y || a.x - b.x)) {
+      const last = titleLines.at(-1);
+      if (last && Math.abs(last[0].y - it.y) < SAME_LINE) last.push(it);
+      else titleLines.push([it]);
+    }
+    const titleCells = splitTitleCells(titleLines, anchors);
+    const titleByRow = titleCells ?? own(titleItems);
     const resultByRow = own(body.filter((i) => inX(i, band.result)));
     const yesByRow = own(body.filter((i) => inX(i, band.yes)));
     const noByRow = own(body.filter((i) => inX(i, band.no)));
@@ -451,6 +564,9 @@ export async function parseVotePdf(bytes: Buffer): Promise<VotePdf> {
 
     for (const a of anchors) {
       const number = joinText(numByRow.get(a)!);
+      // 件名のセルの中心と行の中心のずれ（#866）。件名が空の行は測れないので 0（すぐ下で「件名が空」で落ちる）
+      const titleYs = titleByRow.get(a)!.map((i) => i.y);
+      const titleOffset = titleYs.length === 0 ? 0 : (Math.max(...titleYs) + Math.min(...titleYs)) / 2 - a;
       const title = joinText(titleByRow.get(a)!);
       const result = joinText(resultByRow.get(a)!);
       const yesText = joinText(yesByRow.get(a)!).normalize("NFKC");
@@ -458,6 +574,7 @@ export async function parseVotePdf(bytes: Buffer): Promise<VotePdf> {
       const referredCommittees = refByRow.get(a)!;
       if (number === "") throw new Error(`page ${pi + 1} y=${a.toFixed(0)}: 議案番号 is empty`);
       if (title === "") throw new Error(`page ${pi + 1} ${number}: 件名 is empty`);
+      checkTitleOffset(pi + 1, number, title, titleOffset);
       if (result === "") throw new Error(`page ${pi + 1} ${number}: 採決結果 is empty`);
       if (referredCommittees.length === 0) throw new Error(`page ${pi + 1} ${number}: 付託委員会 is empty`);
       if (!/^\d+$/.test(yesText) || !/^\d+$/.test(noText)) throw new Error(`page ${pi + 1} ${number}: 賛成/反対 "${yesText}"/"${noText}" is not a number`);
@@ -474,7 +591,7 @@ export async function parseVotePdf(bytes: Buffer): Promise<VotePdf> {
         unknownCells++;
         return UNKNOWN_CELL;
       });
-      rows.push({ kind: kindOf(section, band.numberHeader, number, pi + 1), number, title, referredCommittees, result, counts: { yes: Number(yesText), no: Number(noText) }, cells, page: pi + 1 });
+      rows.push({ kind: kindOf(section, band.numberHeader, number, pi + 1), number, title, referredCommittees, result, counts: { yes: Number(yesText), no: Number(noText) }, cells, page: pi + 1, titleOffset });
     }
   }
   if (rows.length === 0) throw new Error("no rows found in the PDF");
