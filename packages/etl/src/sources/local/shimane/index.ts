@@ -28,9 +28,6 @@ export interface ShimaneRun {
   summary: { sessionId: string; sessionLabel: string; members: number; rows: number; unknownCells: number; pdfUrls: string[] }[];
 }
 
-/** 「議決結果一覧」PDF（議決日を読むためだけに使う）。同じ会期ページの「議員別採決結果一覧」の隣にある。 */
-const RESULTS_PDF = (votePdfUrl: string): string => votePdfUrl.replace(/_giinbetu_kekka\.pdf$/, "_giketu_kekka.pdf");
-
 export async function runShimane(opts: { sessions: number; fetchedAt: string; fetcher?: Fetcher; log?: (line: string) => void }): Promise<ShimaneRun> {
   const log = opts.log ?? (() => {});
   const f: Fetcher = opts.fetcher ?? new PoliteFetcher(SHIMANE_HOST);
@@ -52,12 +49,12 @@ export async function runShimane(opts: { sessions: number; fetchedAt: string; fe
   for (const s of archived) if (!index.some((x) => x.url === s.url)) index.push(s);
   index.sort((a, b) => b.year * 100 + b.month - (a.year * 100 + a.month));
 
-  const targets: { sessionId: string; sessionLabel: string; url: string; pdfUrls: string[] }[] = [];
+  const targets: { sessionId: string; sessionLabel: string; url: string; pdfUrls: string[]; resultsPdfUrl?: string }[] = [];
   for (const s of index) {
     if (targets.length >= opts.sessions) break;
     const page = parseSessionPage(await f.text(s.url), s.url, { sessionLabel: s.sessionLabel });
     if (page.pdfUrls.length === 0) { log(`  ${s.sessionLabel}: no 議員別採決結果一覧 PDF yet (skip)`); continue; }
-    targets.push({ sessionId: s.sessionId, sessionLabel: s.sessionLabel, url: s.url, pdfUrls: page.pdfUrls });
+    targets.push({ sessionId: s.sessionId, sessionLabel: s.sessionLabel, url: s.url, pdfUrls: page.pdfUrls, ...(page.resultsPdfUrl ? { resultsPdfUrl: page.resultsPdfUrl } : {}) });
   }
   if (targets.length === 0) throw new Error("no session with a 議員別採決結果一覧 PDF found");
   log(`sessions: ${targets.map((t) => `${t.sessionId}（${t.sessionLabel}）`).join(" / ")}`);
@@ -75,8 +72,12 @@ export async function runShimane(opts: { sessions: number; fetchedAt: string; fe
     const pdfUrl = t.pdfUrls[0];
     if (t.pdfUrls.length > 1) throw new Error(`${t.url}: expected 1 議員別採決結果一覧 PDF, got ${t.pdfUrls.length}`);
     const pdf = await parseVotePdf(await f.bytes(pdfUrl));
-    // 議決日は議員別採決結果一覧に書かれていないので、同じ会期ページの「議決結果一覧」から読む
-    const resultsUrl = RESULTS_PDF(pdfUrl);
+    // 議決日は議員別採決結果一覧に書かれていないので、同じ会期ページの「議決結果一覧」から読む。
+    // **URL は組み立てず、会期ページに貼られているリンクをそのまま使う**（#896）。
+    // **組み立てていたときは 14 本中 4 本で外れ、うち 1 本は HTTP 200 で「表決 PDF そのもの」が返っていた**
+    // （＝議決日を誤った資料から読む経路が開いていた。詳しくは `sessions.ts` の `resultsPdfUrl`）。
+    const resultsUrl = t.resultsPdfUrl;
+    if (!resultsUrl) throw new Error(`${t.url}: 議決結果一覧 PDF link not found (議決日 comes from it)`);
     let results: Map<string, ResultRow>;
     try {
       results = await parseResultsPdf(await f.bytes(resultsUrl));

@@ -67,9 +67,41 @@ export interface SessionPage {
   sessionLabel: string;
   /** 「議員別採決結果一覧」PDF（ページの並び順）。無ければ []（会期中＝まだ議決していない） */
   pdfUrls: string[];
+  /**
+   * **「議決結果一覧」PDF（議決日を読むためだけに使う）**（Issue #896）。無ければ `undefined`。
+   *
+   * **直す前は、表決 PDF の URL を文字列置換して組み立てていた**
+   * （`_giinbetu_kekka.pdf` → `_giketu_kekka.pdf`）。
+   * **14 本すべてについて、組み立てた名前と会期ページに実際に貼られている名前を突き合わせた実測**:
+   *
+   * | | 本数 | |
+   * |---|---|---|
+   * | 一致 | **10** | |
+   * | **`r0611_giketu_kekka_.pdf`**（末尾に `_`） | 1 | **HTTP 404**（実測） |
+   * | **`r0602_giketsu_kekka.pdf`**（`giketsu`） | 1 | **HTTP 404**（実測） |
+   * | **`r0511_giketsukekka.pdf`**（`_` 無し） | 1 | **HTTP 404**（実測） |
+   * | **`r0509_giketsu_kekka.pdf`** | 1 | **置換が空振りして表決 PDF の URL のまま。HTTP 200 で表決 PDF そのものが返る** |
+   *
+   * **最後の 1 本がいちばん危ない**——**404 なら止まるが、200 で「別のファイル」が返る。**
+   * **表決 PDF を「議決結果一覧」として読むと、議決日を誤った資料から取ることになり、
+   * 利用者からは検出できない。**（`r0509` の表決 PDF の名前は `…giketsu_kekka_giinnbetsu.pdf` で、
+   * 置換の正規表現 `_giinbetu_kekka\.pdf$` に当たらない。**綴りが `giinnbetsu` だから**）
+   *
+   * **会期ページには「議決結果一覧」のリンクが必ず 1 本だけある**（14 本すべてで実測）ので、
+   * **組み立てずにそれを読む**（青森・秋田・三重と同じ結論）。
+   */
+  resultsPdfUrl?: string;
 }
 
 const VOTE_PDF_TEXT = /^議員別採決結果一覧/;
+/**
+ * 「議決結果一覧」PDF のリンク文言（#896）。原文は
+ * 「第４９８回島根県議会（令和８年２月定例会）議決結果一覧（PDF：164KB）」のように
+ * **回次と会期名が前に付く**ので、先頭ではなく**含む**で探す。
+ * **「議員別採決結果一覧」も「結果一覧」を含むので、`議員別` を含むものは除く**
+ * （そちらは表決 PDF であって、議決日はそこに書かれていない）。
+ */
+const RESULTS_PDF_TEXT = /議決結果一覧/;
 /** index のリンク文言の通算回次「（第499回）」。会期ページの h1 には無いので、突き合わせる前に落とす（NFKC 後は半角括弧）。 */
 const KAIJI = /[（(]第\d+回[）)]$/;
 
@@ -86,13 +118,23 @@ export function parseSessionPage(html: string, baseUrl: string, expected: { sess
   const want = `${expected.sessionLabel.normalize("NFKC").replace(KAIJI, "")}の概要`;
   if (h1 !== want) throw new Error(`${baseUrl}: h1 "${h1}" does not match the index link "${want}"`);
   const pdfUrls: string[] = [];
+  const resultsUrls: string[] = [];
   for (const a of contents.querySelectorAll("a")) {
     const text = cleanText(a.text).normalize("NFKC");
-    if (!VOTE_PDF_TEXT.test(text)) continue;
     const href = (a.getAttribute("href") ?? "").trim();
-    if (!/\.pdf$/i.test(href)) throw new Error(`${baseUrl}: 議員別採決結果一覧 link is not a PDF: ${href}`);
+    if (VOTE_PDF_TEXT.test(text)) {
+      if (!/\.pdf$/i.test(href)) throw new Error(`${baseUrl}: 議員別採決結果一覧 link is not a PDF: ${href}`);
+      const url = resolveShimaneUrl(href, baseUrl);
+      if (!pdfUrls.includes(url)) pdfUrls.push(url);
+      continue;
+    }
+    // 「議決結果一覧」PDF（議決日を読むためだけに使う。#896。組み立てずにここから拾う）
+    if (!RESULTS_PDF_TEXT.test(text) || !/\.pdf$/i.test(href)) continue;
     const url = resolveShimaneUrl(href, baseUrl);
-    if (!pdfUrls.includes(url)) pdfUrls.push(url);
+    if (!resultsUrls.includes(url)) resultsUrls.push(url);
   }
-  return { sessionLabel: h1.replace(/の概要$/, ""), pdfUrls };
+  // **同じ会期ページに「議決結果一覧」が 2 本あれば、どちらが議決日かを決められないので落とす**（推定しない。#569）。
+  // **14 本すべてでこれは 1 本だった**（実測）。
+  if (resultsUrls.length > 1) throw new Error(`${baseUrl}: expected 1 議決結果一覧 PDF, got ${resultsUrls.length}: ${resultsUrls.join(", ")}`);
+  return { sessionLabel: h1.replace(/の概要$/, ""), pdfUrls, ...(resultsUrls.length === 1 ? { resultsPdfUrl: resultsUrls[0] } : {}) };
 }
