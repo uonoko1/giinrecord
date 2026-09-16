@@ -8,10 +8,12 @@ import { multiplyMatrix, readLines, type Matrix, type PageGeometry, type Item } 
  * まとめられた 2 文字目以降の位置が失われる（三重の令和8年5月分 PDF では、縦書きの氏名の列で
  * 「中川正美」の末尾の「美」と隣の列の先頭の「辻󠄀」（異体字セレクタ付き）が「美辻󠄀」の 1 テキストになり、
  * 「辻󠄀」が隣の列の位置で読めなくなる）。
- * この PDF はすべての文字を setTextMatrix（位置の明示）＋ showText で置いているので、オペレータ列を歩けば
- * 1 文字ごとの正確な位置が取れる（推定ではない）。ここでは showText 1 回を 1 アイテムにする
+ * この PDF は文字を setTextMatrix（位置の明示）または相対移動（Td/TD/T*）＋ showText で置いているので、
+ * オペレータ列を歩けば 1 文字ごとの正確な位置が取れる（推定ではない）。ここでは showText 1 回を 1 アイテムにする
  * （見出しの「令和８年定例会（２月）」のような 1 行のテキストは 1 回の showText、氏名・セルの 1 文字は 1 文字ずつ）。
- * 位置の前提が崩れる命令（moveText 系・生の `'` / `"`・0 でない word spacing・回転や拡縮の入った
+ * **相対移動（Td/TD/T*）も読む**（Issue #867）。**index 151 本のうち 80 本がこれを使っている。**
+ * 実装は高知（kochi/glyphs.ts）と同じ。
+ * 位置の前提が崩れる命令（生の `'` / `"`・0 でない word spacing・回転や拡縮の入った
  * text matrix・単位行列でない CTM）が出たら例外（黙って読み間違えない。Issue #707）。
  * **知らない演算子も例外**（Issue #717）——この関数には既定の枝が無く、**見たことのない演算子は
  * 何の枝にも当たらず黙って次へ進んでいた**。色や線の体裁など、文字に効かないものだけ明示的に無視する
@@ -103,7 +105,7 @@ const READABLE_TEXT_RENDERING_MODES: ReadonlySet<number> = new Set([0, 2]);
  * **潰れた線で列を割ると、採決記号が別の議員の列に入る**（利用者からは検出できない）。
  * 掛け方（4 隅を見る外接矩形、cm の合成の向き）は 1 か所に置きたいので readLines を呼ぶ。
  *
- * **文字のほうは CTM を掛けていない**（この読み方は Tm の e/f をそのままページ座標として使う）。
+ * **文字のほうは CTM を掛けていない**（この読み方は Tm / Td の値をそのままページ座標として使う）。
  * 掛けないまま `cm` の下で文字が置かれたら黙って別の位置に読むので、
  * **showText が単位行列でない CTM の下に来たら例外にする**（黙って読み間違えない、と同じ方針）。
  * 実測（2026-09-09、フィクスチャ 5 本）: 三重の PDF の showText は 8,066 回すべて CTM が単位行列。
@@ -120,8 +122,23 @@ export function readGlyphPageOps(fnArray: ArrayLike<number>, argsArray: ArrayLik
   let fontSize = 0;
   let charSpacing = 0;
   let hScale = 1;
+  /**
+   * 行送り（T* が使う）。**初期値 0 は PDF 32000-1 の 9.3.5 が定める既定値**（Issue #703 / #867）。
+   *
+   * **実データでは、この初期値は一度も読まれない。**
+   * 実測（2026-09-14、三重の index **151 本**すべて）: **A 群 80 本の `T*` 1,651 回すべてに、
+   * 同じ `BT` ブロックの中で先に `TD` が出ている**（`TL` は 80 本で **0 回**）。
+   * **`T*` が 1 回でも出る 63 本すべてで `TD` > 0** なので、初期値が効く経路が実データに無い。
+   * **だからこの値を守るテストは実物の PDF では書けない**——
+   * `test/local-glyphs-leading.test.ts` の「#867 mie: TL も TD も無しの T*」が
+   * オペレータ列を直接渡して固定している。**母数を書かずに「実データに無い」と書かないこと**（#757）。
+   */
+  let leading = 0;
+  // 現在のテキスト位置（tx, ty）と行頭（lx, ly）。Td/TD/T* は行頭からの相対移動
   let tx = 0;
   let ty = 0;
+  let lx = 0;
+  let ly = 0;
   for (let k = 0; k < fnArray.length; k++) {
     const fn = fnArray[k];
     const args = argsArray[k] as unknown[];
@@ -135,11 +152,15 @@ export function readGlyphPageOps(fnArray: ArrayLike<number>, argsArray: ArrayLik
       fontSize = args[1] as number;
     } else if (fn === OPS.setCharSpacing) {
       charSpacing = args[0] as number;
+    } else if (fn === OPS.setLeading) {
+      leading = args[0] as number;
     } else if (fn === OPS.setHScale) {
       hScale = (args[0] as number) / 100;
     } else if (fn === OPS.beginText) {
       tx = 0;
       ty = 0;
+      lx = 0;
+      ly = 0;
     } else if (fn === OPS.setTextMatrix) {
       // argsArray の形は [a,b,c,d,e,f] のことも、行列 1 つ（Array / Float32Array）を包んだ形のこともある
       const first = args[0] as unknown;
@@ -148,21 +169,45 @@ export function readGlyphPageOps(fnArray: ArrayLike<number>, argsArray: ArrayLik
       if (a !== 1 || b !== 0 || c !== 0 || d !== 1) throw new Error(`page ${pageNo}: rotated/scaled text matrix [${a},${b},${c},${d}] not supported`);
       tx = e;
       ty = f;
-    } else if (fn === OPS.moveText || fn === OPS.setLeadingMoveText || fn === OPS.nextLine) {
-      // 相対移動（Td/TD/T*）を使う PDF はこの読み方の前提（位置は Tm で明示）が崩れる。
-      // **三重には高知のような leading の変数が無い**（Issue #703 で確かめた）。
-      // 相対移動が来たら読まずに例外にするので、行送りを保持する必要がそもそも無い。
-      // 実測（2026-09-09、三重のフィクスチャ 5 本）: Td / TD / T* はいずれも 0 回で、
-      // 文字はすべて Tm で置かれている（showText と Tm が同数: 337/502/5389/336/1502）。
-      // **この枝は実データでは一度も通らない**ので、test/local-glyph-variants.test.ts 等の
-      // 実物 PDF ではなく、オペレータ列を直接渡すテストでしか固定できない。
-      throw new Error(`page ${pageNo}: unsupported text-positioning op (moveText/nextLine)`);
+      lx = e;
+      ly = f;
+    } else if (fn === OPS.moveText || fn === OPS.setLeadingMoveText) {
+      // Td / TD: 行頭から (dx, dy) 動かして新しい行頭にする。TD は同時に leading を設定する。
+      // **高知（kochi/glyphs.ts）と同じ実装である**（#703 で書かれ、実データで動いているもの）。
+      //
+      // **ここには 2026-09-09 まで「この枝は実データでは一度も通らない」と書いてあった**（#703 / #707）。
+      // **その記述は「フィクスチャ 5 本」という母数の上では正しく、今も正しい**——
+      // **その 5 本の Td / TD / T* は当時 0 回で、2026-09-14 に数え直しても 0 回である。**
+      // **間違っていたのは「実データ」という言葉のほうで、母数が 5 本だと書いていなかった**（#757）。
+      //
+      // **index 151 本に母数を広げた実測（2026-09-14、#867）: 80 本がこの枝で落ちていた。**
+      //   A 群 80 本の内訳: `Td` 122,059 回 / `TD` 59,351 回 / `T*` 1,651 回 / `TL` **0 回**。
+      //   **年で見ると A 群は 2011〜2023 年に収まり、2024 年以降の本は 1 本も無い**
+      //   （フィクスチャ 5 本はすべて令和8年 = 2026 年の本なので、A 群を 1 本も含んでいなかった）。
+      //   **ただし「古い本＝A 群」ではない**——**元から読めていた 33 本にも 2015・2016・2019 年の本がある。**
+      //   **年で切り分かるのではなく、本ごとに作り方が違う。**
+      //
+      // **`T*` の行送りがどこから来るか**（`leading` の初期値が実データで効かない根拠）:
+      //   **A 群 80 本の `T*` 1,651 回すべてに、同じ `BT` ブロックの中で先に `TD` が出ている**（0 例外）。
+      //   **`T*` が 1 回以上出る 63 本すべてで `TD` > 0**、かつ **`TL` は 80 本で 0 回。**
+      const dx = args[0] as number;
+      const dy = args[1] as number;
+      if (fn === OPS.setLeadingMoveText) leading = -dy;
+      lx += dx;
+      ly += dy;
+      tx = lx;
+      ty = ly;
+    } else if (fn === OPS.nextLine) {
+      // T*: 行送りぶん下げて行頭へ
+      ly -= leading;
+      tx = lx;
+      ty = ly;
     } else if (fn === OPS.nextLineShowText || fn === OPS.nextLineSetSpacingShowText) {
       // `'` / `"`（次行送り＋表示）。**pdfjs の getOperatorList はここまで届けない**——
       // `'` を nextLine + showText に、`"` を nextLine + setWordSpacing + setCharSpacing + showText に
       // 分解して出す（実測 2026-09-09、手で組んだ PDF で確認。Issue #707）。
-      // 分解された形なら上の nextLine の枝が例外にするが、**pdfjs が分解をやめたら
-      // 何の枝にも当たらず黙って無視される**ので、生で来ても同じく止める。
+      // 分解された形なら上の nextLine の枝が正しく処理するが、**pdfjs が分解をやめたら
+      // 何の枝にも当たらず黙って無視され、行送りを無視した位置で文字を読む**ので、生で来たら止める。
       throw new Error(`page ${pageNo}: unsupported next-line show-text op (' / ")`);
     } else if (fn === OPS.setWordSpacing) {
       // Tw: 空白グリフ 1 つごとに送り幅へ加算される（PDF 32000-1 9.3.3）。
@@ -171,7 +216,7 @@ export function readGlyphPageOps(fnArray: ArrayLike<number>, argsArray: ArrayLik
       // Tw が付けば効く。**正しい足し方を実データで検証できないため、出さない側に倒す**（#700 と同じ判断）。
       if ((args[0] as number) !== 0) throw new Error(`page ${pageNo}: non-zero word spacing (Tw ${args[0]}) not supported`);
     } else if (fn === OPS.showText) {
-      // 文字の位置は Tm の e/f をそのままページ座標として使う。cm の下ではその前提が崩れる（#700）
+      // 文字の位置は Tm / Td の値をそのままページ座標として使う。cm の下ではその前提が崩れる（#700）
       if (!isIdentity(ctm)) throw new Error(`page ${pageNo}: text under non-identity CTM [${ctm.join(",")}] not supported`);
       // showText 1 回 = 1 アイテム。配列の数値は字送りの調整（thousandths）
       let x = tx;

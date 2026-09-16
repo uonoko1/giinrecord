@@ -15,6 +15,14 @@ import { parseVotePdf, UNKNOWN_CELL, type VotePdf } from "../src/sources/local/m
  * **残り 136 本は例外で落ちる**（`moveText/nextLine` 80 本・`text matrix` 35 本・
  * 凡例の取りこぼし 20 本・議案等番号の形 1 本）。**詳しい内訳は PR #835。**
  *
+ * ## **#867（2026-09-14 / 09-16）で A 群（相対移動）を読めるようにした後の実測**
+ * **同じ 151 本で 33 本 → 84 本になった**（#835 の 15 本は #841 の凡例修正で 33 本に増えていた）。
+ * **A 群 80 本のうち 51 本が読めるようになり、29 本は別の理由で止まる**
+ * （表題が見つからない 15 / 未知の演算子 7 / 罫線の形 2 / その他 5。**途中まで読まずに止めている**。#569）。
+ * **残る 35 本は B 群（回転・拡大・上下反転）で、#867 では触っていない。**
+ * **フィクスチャに足したのは A 群 51 本のうち 3 本だけである**（`000073643` `000674338` `000711542`）——
+ * **1 本も足さないと、A 群の枝を丸ごと殺す変異を実物の PDF のテストが 1 件も捕まえない**（#867 で実測）。
+ *
  * **本番（`data/assemblies/pref-24`）に出ている 365 件は、この 15 本のうち 13 本から出ている**
  * （`--sessions 2` の既定で 令和8年・令和7年 の 2 会期だけを取っているため）。
  * **残る 138 本は取りに行っていない。** **ETL は読めない本を黙って飛ばさず例外で落ちる**ので、
@@ -143,9 +151,40 @@ const VICE_SPEAKERS: { from: [number, number]; name: string }[] = [
  * **同じ本の 1 つ前の `決議案第４号`（小林貴虎議員に対する辞職勧告決議案）では、
  * `除` が列 21 = 小林 貴虎 に立ち、`議` は列 35 = 前野 和美 のままである。**
  * **`除` が「決議案の名前に出てくる本人の列」にちょうど立つことが、x 方向の独立した裏取りになっている。**
+ *
+ * **#867 で A 群（相対移動）を読めるようにしたとき、同じ形がもう 1 件見つかった。**
+ * `000674338.pdf`（平成28年定例会 12月）`決議案第５号`
+ * **「三重県議会中村進一議長に対する不信任決議案」**:
+ * **`議` は列 16 = 日沖 正信**（**平成28.05 就任の副議長 110代**。上の `VICE_SPEAKERS` と同じ表の同じ行）、
+ * **`除` は列 20 = 中村 進一**（**その月の議長 106代**。同じ本の他の 48 行では `議` が立っている列）。
+ * **PDF 側の数（賛成20・反対25・否決）とも矛盾しない。**
+ * **同じ本の他の 48 行はすべて `議` = 中村 進一 なので、この 1 行だけが入れ替わっている。**
  */
 const SPEAKER_EXCEPTIONS: { file: string; kind: string; number: string; speaker: string; excluded: string }[] = [
   { file: "001041967.pdf", kind: "決議案", number: "第５号", speaker: "藤田宜三", excluded: "前野和美" },
+  { file: "000674338.pdf", kind: "決議案", number: "第５号", speaker: "日沖正信", excluded: "中村進一" },
+];
+
+/**
+ * **議長が交代した月の本は、1 冊の中に前後 2 人の `議` が立つ**（#867 で A 群を読めるようにして初めて出てきた）。
+ * **`SPEAKERS` は「就任年月から」でしか引けないので、交代月の本は月だけでは 1 人に決まらない。**
+ * **これは実装の誤りではなく、実在する形である**（推定でずらすのではなく、一次資料で 1 行ずつ確かめて書く。#569）。
+ *
+ * `000073643.pdf`（平成26年定例会 5月、**平成26年5月16日議決分**）:
+ * **`議提議案第3号` は `議` = 列 39 山本 勝**（**104代、平成25.05 就任**）、
+ * **`議案第126号` は `議` = 列 40 永田 正巳**（**105代、平成26.05 就任**）。
+ * **同じ日の同じ本の中で議長が代わっている**——
+ * **`議案第126号`「監査委員の選任につき同意を得るについて」は新議長の下で諮られている。**
+ * 一次資料（歴代正副議長 https://www.pref.mie.lg.jp/KENGIKAI/07681011814.htm 、2026-09-14 取得）:
+ * **104代 山本勝 平成25.05 / 105代 永田正巳 平成26.05。**
+ * **議決分の審議結果ページ（「平成26年定例会 平成26年5月16日議決分」）にも
+ * `議提議案第３号` と `議案第126号` の 2 件が並んでおり、この本の 2 行と一致する。**
+ * **そのページの URL はここに書かない**——**2026-09-16 に確かめようとして 404 だったものを
+ * 「確かめた一次資料」として残さない**（#569。**リンクは実際に引けたものだけを書く**）。
+ * **この行の根拠は上の「歴代正副議長」（実際に引けた）と、PDF 自身の 2 行である。**
+ */
+const TRANSITION_EXCEPTIONS: { file: string; kind: string; number: string; speaker: string }[] = [
+  { file: "000073643.pdf", kind: "議提議案", number: "第3号", speaker: "山本勝" },
 ];
 
 const speakerAt = (year: number, month: number, table: { from: [number, number]; name: string }[] = SPEAKERS): string | undefined => {
@@ -199,7 +238,8 @@ function checkSpeaker(
     if (at.length !== 1) { t.bad.push(`${b.name} ${r.kind}${r.number} 議 が ${at.length} 個`); return; }
     // **議長本人の不信任決議案だけは副議長が議事を執る**（一次資料で 1 行ずつ確かめたものだけ。#852）
     const ex = SPEAKER_EXCEPTIONS.find((e) => e.file === b.name && e.kind === r.kind && e.number === r.number);
-    const want = ex ? ex.speaker : month;
+    const tr = TRANSITION_EXCEPTIONS.find((e) => e.file === b.name && e.kind === r.kind && e.number === r.number);
+    const want = ex ? ex.speaker : tr ? tr.speaker : month;
     const got = bare(b.pdf.members[at[0]].nameText);
     if (got !== want) t.bad.push(`${b.name} ${r.kind}${r.number} 議=${got} ≠ ${want}`);
   });
@@ -212,14 +252,15 @@ const sum = (ts: Tally[]): Tally => ({
   bad: ts.flatMap((t) => t.bad),
 });
 
-test("#835 母数: フィクスチャ 15 本が読め、行と議員の数が実測どおり", () => {
-  assert.equal(books.length, 15, `読めた本 ${books.length}`);
+test("#835 母数: フィクスチャ 18 本が読め、行と議員の数が実測どおり", () => {
+  // **#867 で A 群（相対移動）の 3 本を足した**（`000073643` `000674338` `000711542`）
+  assert.equal(books.length, 18, `読めた本 ${books.length}`);
   const rows = books.reduce((n, b) => n + b.pdf.rows.length, 0);
   const cells = books.reduce((n, b) => n + b.pdf.rows.length * b.pdf.members.length, 0);
   const unknown = books.reduce((n, b) => n + b.pdf.unknownCells, 0);
   // **母数を必ず出す**（#757）。「ずれ 0 件」と「1 行も比べていない」を同じ出力にしない
-  assert.equal(rows, 379, `行 ${rows}`);
-  assert.equal(cells, 18057, `セル ${cells}`);
+  assert.equal(rows, 431, `行 ${rows}`);
+  assert.equal(cells, 20607, `セル ${cells}`);
   // **43 セルはすべて 令和6年10月 の 下野幸助（※１、令和6年10月10日に議員辞職）の列**——
   // **PDF がその列を空欄にしており、「棄権」でも「欠席」でもない。実装は推定せず UNKNOWN_CELL で残す。**
   assert.equal(unknown, 43, `不明セル ${unknown}`);
@@ -227,7 +268,7 @@ test("#835 母数: フィクスチャ 15 本が読め、行と議員の数が実
 
 test("#835 検算A: 公表された賛成者数・反対者数が、その行の記号帯の ○ / × の数と合う", () => {
   const t = sum(books.map((b) => checkCounts(b, (i) => b.pdf.rows[i].cells)));
-  assert.equal(t.judgeable, 336, `判定できた行 ${t.judgeable}（不明を含む ${t.skipped} 行は判定外）`);
+  assert.equal(t.judgeable, 388, `判定できた行 ${t.judgeable}（不明を含む ${t.skipped} 行は判定外）`);
   assert.deepEqual(t.bad, [], `合わない行 ${t.bad.length} / ${t.judgeable}`);
 });
 
@@ -236,7 +277,7 @@ test("#835 検算B: `議` の列の議員が、県が公表している歴代議
   // **#835 では 259 / 421 しか判定できていなかった**（歴代議長の表を 3 行しか写していなかったため）。
   // **表を 100代（平成19.05）から写し直したので、フィクスチャ 15 本の 379 行すべてが判定できる**（#852）。
   assert.equal(t.skipped, 0, `歴代議長の表に無い年月で判定外になった行 ${t.skipped}（0 が実測。増えたら表が足りていない）`);
-  assert.equal(t.judgeable, 379, `判定できた行 ${t.judgeable}（歴代議長の表に無い年月 ${t.skipped} 行は判定外）`);
+  assert.equal(t.judgeable, 431, `判定できた行 ${t.judgeable}（歴代議長の表に無い年月 ${t.skipped} 行は判定外）`);
   assert.deepEqual(t.bad, [], `合わない行 ${t.bad.length} / ${t.judgeable}`);
 });
 
@@ -279,11 +320,15 @@ test("#835 2 本の検算は互いの代わりにならない（片方ずつ壊�
   // **検算B は x を捕まえる**
   assert.ok(bX.bad.length > 0, `x 回転で検算B が落ちた ${bX.bad.length} / ${bX.judgeable}`);
   // **検算B は y をほとんど捕まえない**（#835 では 0 / 417 だった）。
-  // **`001041967.pdf` を足したことで 2 / 373 になった**——**議長本人の不信任決議案の行だけ `議` が副議長に立つので、
-  // その行が 1 つずれると「その行」と「隣の行」の 2 行で氏名が合わなくなる。**
-  // **373 行のうち 2 行（0.5%）でしかないので、「検算B が y を見ている」とは言えない。**
+  // **`001041967.pdf` を足して 2 / 373 になり、#867 で A 群の 2 本を足して 6 / 424 になった。**
+  // **増えたぶんは「1 冊の中で `議` の列が動く行」がある本の数にちょうど比例している**（実測で 1 行ずつ数えた）:
+  //   `001041967.pdf` 決議案第４号 / 第５号（議長本人の不信任決議案。#852）
+  //   `000674338.pdf` 意見書案第20号 / 決議案第５号（同じく議長本人の不信任決議案。#867）
+  //   `000073643.pdf` 議提議案第3号 / 議案第126号（**議長が交代した月の本**。#867）
+  // **どの本も「その行」と「隣の行」の 2 行で氏名が合わなくなるので、3 本 × 2 行 = 6 行。**
+  // **424 行のうち 6 行（1.4%）でしかないので、「検算B が y を見ている」とは依然として言えない。**
   // **上限で固定する**（**これが増えたら、その増えた理由を調べること**）。
-  assert.equal(bY.bad.length, 2, `y 回転で検算B が落ちた ${bY.bad.length} / ${bY.judgeable}（実測 2。不信任決議案の 1 行とその隣だけ）`);
+  assert.equal(bY.bad.length, 6, `y 回転で検算B が落ちた ${bY.bad.length} / ${bY.judgeable}（実測 6 = 議長の列が動く本 3 冊 × 2 行）`);
 });
 
 test("#835 x 方向: 記号のアイテムの中心と、置いた列の中心が半セル未満（列番号を通さずに測る）", async () => {
@@ -313,7 +358,7 @@ test("#835 x 方向: 記号のアイテムの中心と、置いた列の中心�
     }
   }
   // **母数を書く**（#757）。「全部一致」だけでは 0 対を測ったのと区別が付かない
-  assert.equal(pairs, 18014, `測った (記号, 列) の対 ${pairs}`);
+  assert.equal(pairs, 20564, `測った (記号, 列) の対 ${pairs}`);
   assert.equal(half, pairs, `半セル未満 ${half} / ${pairs}`);
   // 実測 max 0.0297（セル幅 14.64pt の 3%）
   assert.ok(worst < 0.05, `いちばん外れた対 ${worst.toFixed(4)} セル幅`);
@@ -382,7 +427,7 @@ test("#852 新たに読めた本を含めて、`議` の列が歴代議長と一
 
 test("#852 議長本人の不信任決議案では、議長が `除`・副議長が `議` になる（一次資料で確かめた 1 行）", () => {
   // **母数を出す**（#757）。例外の表が空になったら落ちる
-  assert.equal(SPEAKER_EXCEPTIONS.length, 1, `例外として書いた行 ${SPEAKER_EXCEPTIONS.length}`);
+  assert.equal(SPEAKER_EXCEPTIONS.length, 2, `例外として書いた行 ${SPEAKER_EXCEPTIONS.length}`);
   for (const ex of SPEAKER_EXCEPTIONS) {
     const b = books.find((x) => x.name === ex.file);
     assert.ok(b, `${ex.file} がフィクスチャに無い`);
@@ -424,10 +469,15 @@ test("#852 副議長の表で照合すると落ちる（#835 の担当者が実�
   // **この検算が「どの表を使っても通る」形なら、外の事実に結んだことにならない。**
   const t = sum(books.map((b) => checkSpeaker(b, (i) => b.pdf.rows[i].cells, VICE_SPEAKERS)));
   assert.equal(t.skipped, 0, `副議長の表で判定外になった行 ${t.skipped}`);
-  assert.equal(t.judgeable, 379, `副議長の表で判定できた行 ${t.judgeable}`);
-  // **実測 378 / 379 行が落ちる。** **落ちない 1 行は `001041967.pdf` の 決議案第５号**——
-  // **そこだけは本当に副議長（藤田宜三）が `議` なので、副議長の表と一致してしまう。**
-  assert.equal(t.bad.length, 378, `副議長の表で落ちた行 ${t.bad.length} / ${t.judgeable}（実測 378。1 行だけ本当に副議長）`);
+  assert.equal(t.judgeable, 431, `副議長の表で判定できた行 ${t.judgeable}`);
+  // **実測 428 / 431 行が落ちる。落ちない 3 行を 1 行ずつ数えた**（#867。**まとめて「3 行」と書かない**）:
+  //   `001041967.pdf` 決議案第５号 = 藤田宜三（**本当に副議長が `議`**。平成…令和04.05 就任の副議長。#852）
+  //   `000674338.pdf` 決議案第５号 = 日沖正信（**本当に副議長が `議`**。平成28.05 就任の副議長。#867）
+  //   `000073643.pdf` 議提議案第3号 = 山本勝（**これは理由が違う**——
+  //     **議長交代月なので `TRANSITION_EXCEPTIONS` が「山本勝」を期待値に入れており、
+  //     どちらの表を使っても期待値が同じになるので、この 1 行だけ副議長の表でも通ってしまう。**
+  //     **例外の表は「その行を検算から外す」のと同じ効きしか持たない**、ということがここに出ている。）
+  assert.equal(t.bad.length, 428, `副議長の表で落ちた行 ${t.bad.length} / ${t.judgeable}（実測 428）`);
   // **代の番号のずれは年によって違う**（「2 年ずれる」ではない）。令和06.05 で 議長 114代 稲垣昭義 / 副議長 118代 小林正人
   assert.equal(speakerAt(2024, 6), "稲垣昭義", "令和6年6月の議長");
   assert.equal(speakerAt(2024, 6, VICE_SPEAKERS), "小林正人", "令和6年6月の副議長");

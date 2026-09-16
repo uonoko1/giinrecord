@@ -33,8 +33,12 @@ import { readGlyphPageOps as mieOps } from "../src/sources/local/mie/glyphs.ts";
 //   高知は行送りに `Td` を使う（だから #700 の docblock が「Td も使う」と書いているのは正しい）。
 //   使わないのは `T*` のほう。**`Td` は行頭を絶対に近い形で置き直すので `leading` を読まない。**
 //
-// **三重はそもそも `leading` を持たない**（`moveText`/`setLeadingMoveText`/`nextLine` が来たら
-// 例外にする実装なので、変数自体が無い）。同じ状態かを確かめた結果、三重には当てるものが無かった。
+// **三重はこの当時 `leading` を持たなかった**（`moveText`/`setLeadingMoveText`/`nextLine` が来たら
+// 例外にする実装だったので、変数自体が無かった）。
+// **2026-09-14（#867）に、三重も高知と同じ相対移動を読むようにしたので、今は持っている。**
+// **上の表の「mie/… は Td/T*/TD がすべて 0 回」は今も正しい**——
+// **ただしそれはフィクスチャ 5 本の話で、index 151 本では 80 本が Td/TD/T* を使う。**
+// **母数が違うだけで、どちらの実測も正しかった**（詳しくは mie/glyphs.ts の docblock）。
 //
 // **落ちなかった変異（2026-09-09、`scripts/dev/mutate.sh run`、対象 kochi-votes-pdf.test.ts 13 件）**:
 //   無改造                                   13 pass / 0 fail
@@ -211,29 +215,113 @@ test("#703 BT（beginText）は行頭を原点に戻すが、leading は持ち�
 });
 
 // ---------------------------------------------------------------------------
-// 3. 三重: leading を持たないこと自体を固定する（#703 で「同じ状態か」を確かめた結果）
+// 3. 三重: 相対移動（Td/TD/T*）を高知と同じ意味で読む（Issue #867）
 // ---------------------------------------------------------------------------
 //
-// 三重の実装は Td/TD/T* が来たら例外にするので leading の変数が無い。
-// **黙って読み飛ばすようになると、行送りぶんずれた y で文字を読む**——
-// 三重も 1 人 1 列なので、ずれた行は別の議員の欄に入りうる（利用者からは検出できない）。
-// この例外は local-glyphs-ctm.test.ts の 32 行目にコメントとして書かれているだけで、
-// **assert で固定されていなかった**（#703 で確認）。
+// **#703 当時、ここには「三重は Td/TD/T* が来たら例外にする」ことを固定する 3 件が置いてあった。**
+// **その前提は母数が変わって崩れた**（下の docblock と glyphs.ts の実測を見よ）。
+// **三重の index 151 本のうち 80 本が Td/TD/T* を使っており、例外にしていた間は 1 本も読めなかった。**
+//
+// **例外をやめた以上、「黙って読み飛ばさない」を守る役目は「正しい位置に読む」に変わる。**
+// **ずれた y で読めば、賛成した議案と反対した議案が入れ替わる**（三重も 1 人 1 列）。
+// **だから 1 〜 2 節と同じ主張を、三重の実装でももう一度固定する**
+// （実装は高知と同じだが、**別のファイルの別の関数**なので、片方だけ壊れうる）。
 
-for (const [op, name] of [[OPS.nextLine, "T*"], [OPS.moveText, "Td"], [OPS.setLeadingMoveText, "TD"]] as const) {
-  test(`#703 mie: ${name}（相対移動）が来たら例外にする（黙って読み飛ばさない）`, () => {
-    const [fn, args] = opList([
-      [OPS.setFont, ["F1", 10]],
-      [OPS.beginText, null],
-      [OPS.setTextMatrix, [1, 0, 0, 1, 50, 700]],
-      [op, op === OPS.nextLine ? null : [0, -12]],
-      [OPS.showText, glyph("あ")],
-    ]);
-    assert.throws(() => mieOps(fn, args, 3), /page 3: unsupported text-positioning op/);
-  });
-}
+test("#867 mie: Td（moveText）は行頭からの相対移動で、leading を変えない", () => {
+  const [fn, args] = opList([
+    [OPS.setFont, ["F1", 10]],
+    [OPS.beginText, null],
+    [OPS.setTextMatrix, [1, 0, 0, 1, 100, 400]],
+    [OPS.setLeading, [7]],
+    [OPS.moveText, [5, -30]], // Td: 行頭は動くが leading は 7 のまま
+    [OPS.showText, glyph("さ")],
+    [OPS.nextLine, null],
+    [OPS.showText, glyph("し")],
+  ]);
+  const { items } = mieOps(fn, args, 3);
+  assert.deepEqual([items[0].x, items[0].y], [105, 370]);
+  assert.deepEqual([items[1].x, items[1].y], [105, 363], "Td が leading を書き換えている");
+});
 
-test("#703 mie: 相対移動が無ければ例外にしない（上の 3 件が広すぎないかの否定的対照）", () => {
+test("#867 mie: TD（setLeadingMoveText）は leading を -dy に設定し、同時に行頭を動かす", () => {
+  const [fn, args] = opList([
+    [OPS.setFont, ["F1", 10]],
+    [OPS.beginText, null],
+    [OPS.setTextMatrix, [1, 0, 0, 1, 100, 400]],
+    [OPS.setLeadingMoveText, [5, -12]],
+    [OPS.showText, glyph("か")],
+    [OPS.nextLine, null],
+    [OPS.showText, glyph("き")],
+  ]);
+  const { items } = mieOps(fn, args, 3);
+  assert.deepEqual([items[0].x, items[0].y], [105, 388]);
+  assert.deepEqual([items[1].x, items[1].y], [105, 376]);
+});
+
+test("#867 mie: T*（nextLine）は TL で設定した行送りぶん下げ、x は行頭に戻す", () => {
+  const [fn, args] = opList([
+    [OPS.setFont, ["F1", 10]],
+    [OPS.beginText, null],
+    [OPS.setTextMatrix, [1, 0, 0, 1, 50, 700]],
+    [OPS.setLeading, [14]],
+    [OPS.showText, glyph("あ")],
+    [OPS.nextLine, null],
+    [OPS.showText, glyph("い")],
+    [OPS.nextLine, null],
+    [OPS.showText, glyph("う")],
+  ]);
+  const { items } = mieOps(fn, args, 3);
+  assert.deepEqual(items.map((i) => i.str), ["あ", "い", "う"]);
+  assert.deepEqual(items.map((i) => i.y), [700, 686, 672]);
+  assert.deepEqual(items.map((i) => i.x), [50, 50, 50], "T* は行頭に戻すはず（前の文字の右端ではない）");
+});
+
+test("#867 mie: Td の移動は「直前の行頭から」の相対（前の文字の右端からではない）", () => {
+  const [fn, args] = opList([
+    [OPS.setFont, ["F1", 10]],
+    [OPS.beginText, null],
+    [OPS.setTextMatrix, [1, 0, 0, 1, 100, 400]],
+    [OPS.showText, glyph("あ")], // tx は 110 まで進む
+    [OPS.moveText, [0, -20]], // 行頭 100 から。110 からではない
+    [OPS.showText, glyph("い")],
+  ]);
+  const { items } = mieOps(fn, args, 3);
+  assert.deepEqual([items[0].x, items[0].y], [100, 400]);
+  assert.deepEqual([items[1].x, items[1].y], [100, 380], "行頭ではなく前の文字の右端から動かしている");
+});
+
+test("#867 mie: TL も TD も無しの T* は初期値 leading = 0 で 1 行も下がらない", () => {
+  // **三重の実データにこの形は無い**（A 群 80 本の T* 1,651 回すべてに同じ BT の中で先に TD がある）。
+  // 仕様（PDF 32000-1 9.3.5）が初期値 0 と定めているので、そちらに合わせて固定する。
+  const [fn, args] = opList([
+    [OPS.setFont, ["F1", 10]],
+    [OPS.beginText, null],
+    [OPS.setTextMatrix, [1, 0, 0, 1, 50, 700]],
+    [OPS.showText, glyph("あ")],
+    [OPS.nextLine, null],
+    [OPS.showText, glyph("い")],
+  ]);
+  const { items } = mieOps(fn, args, 3);
+  assert.equal(items[1].y, 700, "leading の初期値が 0 でなければ y がずれる");
+  assert.equal(items[1].x, 50);
+});
+
+test("#867 mie: BT は行頭を戻すが leading は持ち越す（PDF 32000-1 9.4.1）", () => {
+  const [fn, args] = opList([
+    [OPS.setFont, ["F1", 10]],
+    [OPS.beginText, null],
+    [OPS.setLeading, [9]],
+    [OPS.beginText, null],
+    [OPS.setTextMatrix, [1, 0, 0, 1, 60, 300]],
+    [OPS.nextLine, null],
+    [OPS.showText, glyph("ぬ")],
+  ]);
+  const { items } = mieOps(fn, args, 3);
+  assert.equal(items.length, 1);
+  assert.equal(items[0].y, 291, "BT で leading が 0 に戻されている（291 でなく 300 になる）");
+});
+
+test("#867 mie: 相対移動が無い本は今までどおり Tm の値をそのまま使う（#703 の否定的対照を残す）", () => {
   const [fn, args] = opList([
     [OPS.setFont, ["F1", 10]],
     [OPS.beginText, null],
