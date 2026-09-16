@@ -1,5 +1,6 @@
 import { parse } from "node-html-parser";
 import { cleanText, resolveTottoriUrl, TOTTORI_ORIGIN } from "./site.ts";
+import { SessionTally } from "../session-tally.ts";
 
 /**
  * 鳥取県議会の会期の入口（Issue #184）。
@@ -30,8 +31,12 @@ function westernYear(era: string, n: string): number {
   return era === "令和" ? 2018 + v : 1988 + v;
 }
 
-/** 会期 index → 新しい順の会期。年の見出しが読めない・会期が無い・id が重複すれば例外。 */
-export function parseSessionIndex(html: string, baseUrl: string): SessionLink[] {
+/**
+ * 会期 index → 新しい順の会期。年の見出しが読めない・会期が無い・id が重複すれば例外。
+ * **`tally` を渡すと母数が入る**（#895）。**このページの `<a>` は 88 本あるが、会期は 73 本**——
+ * **残り 15 本は `<a id="itemid…"></a>`（`href` 無しのアンカーだけ）14 本と「次のページ」1 本**（実測）。
+ */
+export function parseSessionIndex(html: string, baseUrl: string, tally?: SessionTally): SessionLink[] {
   const root = parse(html);
   const out: SessionLink[] = [];
   const seen = new Set<string>();
@@ -48,13 +53,15 @@ export function parseSessionIndex(html: string, baseUrl: string): SessionLink[] 
       for (const a of el.tagName === "A" ? [el] : el.querySelectorAll("a")) {
         const text = cleanText(a.text).normalize("NFKC").replace(/\s+/g, "");
         const m = text.match(SESSION_TEXT);
-        if (!m) continue;
+        // **`href` の無い `<a>`（アンカーだけ）とページ送りは会期の候補ですらない**（#895）
+        if (!m) { tally?.drop(text, a.getAttribute("href") ? "not-a-session" : "not-a-candidate"); continue; }
         const month = Number(m[1]);
         if (month < 1 || month > 12) throw new Error(`${heading} ${text}: month out of range`);
         const sessionId = `${year}-${String(month).padStart(2, "0")}${m[2] === "臨時会" ? "-rinji" : ""}`;
         if (seen.has(sessionId)) throw new Error(`duplicate session ${sessionId} (${heading} ${text})`);
         seen.add(sessionId);
         out.push({ sessionId, sessionLabel: `${eraLabel}${month}月${m[2]}`, url: resolveTottoriUrl(a.getAttribute("href") ?? "", baseUrl) });
+        tally?.take();
       }
     }
   }
@@ -62,12 +69,22 @@ export function parseSessionIndex(html: string, baseUrl: string): SessionLink[] 
   return out;
 }
 
-/** 会期ページ → 「議案等の議決結果」のリンク。無ければ undefined。2 本以上なら例外。 */
+/**
+ * 会期ページ → 議決結果のリンク。無ければ undefined。2 本以上なら例外。
+ *
+ * **#895 で文言をひろげた。** **#873 が実測したとおり、`議案等の議決結果` の完全一致では
+ * 73 会期のうち 47 会期しか当たらず、残り 26 会期は文言が `議決結果` で、黙って落ちていた**
+ * （**`undefined` を返すので「まだ議決していない会期」と区別が付かない**）。
+ * **末尾一致 `議決結果` にする**——**`議案等の議決結果` も `議決結果` も当たる。**
+ * **`議員別の賛否の状況` のような別物には当たらない。**
+ */
+const RESULTS_LINK = /議決結果$/;
+
 export function parseSessionPage(html: string, baseUrl: string): string | undefined {
   const root = parse(html);
-  const links = root.querySelectorAll("a").filter((a) => cleanText(a.text) === "議案等の議決結果");
+  const links = root.querySelectorAll("a").filter((a) => RESULTS_LINK.test(cleanText(a.text)));
   const urls = [...new Set(links.map((a) => resolveTottoriUrl(a.getAttribute("href") ?? "", baseUrl)))];
-  if (urls.length > 1) throw new Error(`${baseUrl}: expected one 議案等の議決結果 link, got ${urls.length}`);
+  if (urls.length > 1) throw new Error(`${baseUrl}: expected one 議決結果 link, got ${urls.length}`);
   return urls[0];
 }
 

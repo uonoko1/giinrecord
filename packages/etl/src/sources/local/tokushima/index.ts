@@ -1,5 +1,6 @@
 import type { LocalAssemblyMeta, LocalRollCall, LocalUnmatchedName } from "@seiji-kiroku/shared";
 import { PoliteFetcher } from "../polite-fetch.ts";
+import { SessionTally } from "../session-tally.ts";
 import { TOKUSHIMA_HOST, TOKUSHIMA_ROSTER_INDEX_URL } from "./site.ts";
 import { parseRoster, ROSTER_URLS, type Roster } from "./roster.ts";
 import { parseSessionIndex, parseSessionPage, sessionIndexUrl, type SessionLink } from "./sessions.ts";
@@ -33,12 +34,14 @@ export async function runTokushima(opts: { sessions: number; fetchedAt: string; 
   const indexUrls: string[] = [];
   const targets: SessionLink[] = [];
   let url: string | undefined = sessionIndexUrl;
+  const indexTally = new SessionTally();
   while (url && targets.length < opts.sessions) {
     indexUrls.push(url);
-    const index = parseSessionIndex(await f.text(url), url);
+    const index = parseSessionIndex(await f.text(url), url, indexTally);
     targets.push(...index.sessions);
     url = index.previousYearUrl;
   }
+  log(`session index: ${indexTally.line()}`);
   if (targets.length < opts.sessions) throw new Error(`only ${targets.length} sessions found (wanted ${opts.sessions})`);
   targets.length = opts.sessions;
   log(`sessions: ${targets.map((s) => s.sessionId).join(" / ")}`);

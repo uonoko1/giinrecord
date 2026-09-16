@@ -1,5 +1,6 @@
 import type { LocalAssemblyMeta, LocalRollCall, LocalUnmatchedName } from "@seiji-kiroku/shared";
 import { PoliteFetcher } from "../polite-fetch.ts";
+import { SessionTally } from "../session-tally.ts";
 import { SHIGA_HOST, SHIGA_ROSTER_URL, SHIGA_YEAR_INDEX_URL, shigaYearUrl } from "./site.ts";
 import { parseRoster, type Roster } from "./roster.ts";
 import { parseSanpiPage, parseYearIndex, parseYearPage, type SessionLink } from "./sessions.ts";
@@ -53,19 +54,21 @@ export async function runShiga(opts: { sessions: number; fetchedAt: string; fetc
   // 年の一覧 → 新しい年から順に、賛否状況のある会期が opts.sessions 本そろうまで年ページを開く
   const years = parseYearIndex(await f.textShiftJis(SHIGA_YEAR_INDEX_URL)).sort((a, b) => b - a);
   const targets: SessionLink[] = [];
+  const indexTally = new SessionTally();
   const seen = new Set<string>();
   for (const year of years) {
     if (targets.length >= opts.sessions) break;
     // **年度版と暦年版の両方を読む**（片方だけでは会期が落ちる。site.ts の shigaYearUrl の注）
     for (const mode of ["fiscal", "calendar"] as const) {
       const url = shigaYearUrl(year, mode);
-      for (const link of parseYearPage(await f.textShiftJis(url), url)) {
+      for (const link of parseYearPage(await f.textShiftJis(url), url, indexTally)) {
         if (seen.has(link.sessionId)) continue;
         seen.add(link.sessionId);
         targets.push(link);
       }
     }
   }
+  log(`session index: ${indexTally.line()}`);
   // 新しい順（年・月）に並べ、上から opts.sessions 会期
   targets.sort((a, b) => b.year * 100 + b.month - (a.year * 100 + a.month) || b.kaigiId - a.kaigiId);
   const picked = targets.slice(0, opts.sessions);
