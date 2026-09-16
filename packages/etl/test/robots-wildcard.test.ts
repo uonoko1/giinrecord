@@ -47,9 +47,19 @@ test("フィクスチャは 11 県ぶんある（母数。0 件では下の検�
   assert.deepEqual([...fx.keys()].sort(), Object.keys(HOSTS).sort());
 });
 
-test("11 県の Disallow は 30 件、うち途中・先頭に * を持つのは 13 件、末尾のみ * が 1 件、$ 付きは 0 件", () => {
+/**
+ * **30 → 33 に直した（#875、2026-09-16）。**
+ * **徳島のフィクスチャだけが実物ではなく `docs/ops/etl.md` の「`/system` **など**を Disallow」という
+ * 一文から起こされており、`Disallow` が 1 行しか入っていなかった**（README の表にそう書いてある）。
+ * **#875 の担当者が実物を取り直した**（`https://www.pref.tokushima.lg.jp/robots.txt`
+ * **HTTP 200・167 バイト・md5 `e47a08edefc95a4f8a32fdb0ca98af2a`**）。
+ * **実物の `Disallow` は 4 行で、`/system` のほかに `/kenseijoho/kenpou/koujisoutatsu` と
+ * その `/tb/`・`/sp/` 版がある。** **`*` を含む規則は 0 件**なので、
+ * **途中・先頭 `*` の 13 件・末尾のみ `*` の 1 件は動かない**（徳島の寄与は 0）。
+ */
+test("11 県の Disallow は 33 件、うち途中・先頭に * を持つのは 13 件、末尾のみ * が 1 件、$ 付きは 0 件", () => {
   const all = [...readFixtures().values()].flatMap((t) => rulesOf(t).disallow);
-  assert.equal(all.length, 30, "母数が動いたらこのテストの数字を測り直すこと");
+  assert.equal(all.length, 33, "母数が動いたらこのテストの数字を測り直すこと");
   const star = all.filter((d) => d.includes("*"));
   assert.equal(star.length, 14);
   // 末尾 1 文字を除いた部分に * があるもの＝**直す前の実装が剥がせなかったもの**
@@ -111,10 +121,20 @@ test("回帰: * を含まない Disallow（16 件）の判定は直す前と変�
   assert.equal(isAllowedByRobots(tottori, `https://${HOSTS.tottori}/dd.aspx`), true);
   assert.equal(isAllowedByRobots(tottori, `https://${HOSTS.tottori}/secure/221685/x.pdf`), false);
   assert.equal(isAllowedByRobots(tottori, `https://${HOSTS.tottori}/secure/1422216/x.pdf`), true);
-  // 徳島 /system
+  // **徳島 4 件（#875 が実物を取り直した）。`*` は 1 つも無い**
   const tokushima = rulesOf(fx.get("tokushima")!);
+  assert.deepEqual(tokushima.disallow, ["/system", "/kenseijoho/kenpou/koujisoutatsu", "/tb/kenseijoho/kenpou/koujisoutatsu", "/sp/kenseijoho/kenpou/koujisoutatsu"]);
+  assert.deepEqual(tokushima.disallow.filter((d) => d.includes("*")), [], "徳島の実物に * は 0 件");
   assert.equal(isAllowedByRobots(tokushima, `https://${HOSTS.tokushima}/system/x`), false);
+  assert.equal(isAllowedByRobots(tokushima, `https://${HOSTS.tokushima}/kenseijoho/kenpou/koujisoutatsu/x.pdf`), false);
+  assert.equal(isAllowedByRobots(tokushima, `https://${HOSTS.tokushima}/sp/kenseijoho/kenpou/koujisoutatsu/x.pdf`), false);
+  // **`/kenseijoho/` の下でも `koujisoutatsu` でなければ掛からない**（接頭辞の切れ目を見る）
+  assert.equal(isAllowedByRobots(tokushima, `https://${HOSTS.tokushima}/kenseijoho/kenpou/x.pdf`), true);
+  // **賛否の経路は 4 件のどれにも当たらない**（#875 が実物 160 URL を 1 件ずつ判定して 0 件）
   assert.equal(isAllowedByRobots(tokushima, `https://${HOSTS.tokushima}/gikai/honkaigi/gaiyou/`), true);
+  assert.equal(isAllowedByRobots(tokushima, `https://${HOSTS.tokushima}/gikai/honkaigi/r08/7314697/`), true);
+  assert.equal(isAllowedByRobots(tokushima, `https://${HOSTS.tokushima}/file/attachment/1064407.pdf`), true);
+  assert.equal(isAllowedByRobots(tokushima, `https://${HOSTS.tokushima}/gikai/giin/kaihabetu/`), true);
   // 秋田（GPTBot だけ）・宮城／島根（404）は Disallow が 0 件
   for (const name of ["akita", "miyagi", "shimane"]) {
     const r = rulesOf(fx.get(name)!);
