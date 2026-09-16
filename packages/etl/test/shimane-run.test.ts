@@ -222,3 +222,39 @@ test("writeLocalAssembly + validateLocalAssemblies（島根・2 会期）: 契�
   assert.equal(detail.counts.rollcalls, 112);
   assert.ok(detail.timeline.some((e: { sessionLabel: string }) => e.sessionLabel === "令和8年2月定例会"));
 });
+
+/**
+ * **members/{id}.json の timeline の件名が、採決の原本と食い違っていたら契約違反**（Issue #866）。
+ *
+ * **#851 は `rollcalls/index.json` と原本の食い違いを見るようにしたが、
+ * `members/{id}.json` の timeline は件名が「文字列であること」しか見ていなかった。**
+ * **島根の 5 件の壊れた件名は、原本・index・35 人の timeline（175 か所）に同じ値で写っていた**ので
+ * 今回は食い違わなかったが、**片方だけ直せば黙って残る**（#840 が index.json でやったのと同じ形）。
+ * **件名は原本から来る 1 つの事実で、timeline は写しである。** 写しがずれたら落とす。
+ */
+test("#866 validateLocalAssemblies: members の timeline の件名が原本と違えば契約違反", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "shimane-866-"));
+  const built = buildLocalAssembly({
+    assembly: SHIMANE_ASSEMBLY,
+    members: run.roster.members,
+    rollCalls: run.rollCalls,
+    fetchedAt: "2026-08-24T00:00:00.000Z",
+    rosterAsOf: run.roster.asOf,
+    sources: run.sources,
+    sessions: run.sessions,
+    unmatched: run.unmatched,
+  });
+  await writeLocalAssembly(dir, built);
+  // **まず違反 0 であること**（下の 1 か所を書き換えたから落ちた、と言えるように）
+  assert.deepEqual(await validateLocalAssemblies(dir), []);
+  const path = join(dir, "members", `${built.details[0].id}.json`);
+  const d = JSON.parse(await readFile(path, "utf8")) as { timeline: { title: string }[] };
+  // **母数**: この議員の timeline は空ではない（空なら書き換えても落ちないので検査が空回りする。#757）
+  assert.ok(d.timeline.length > 0, "timeline が空では検査にならない");
+  d.timeline[0].title = `${d.timeline[0].title}（原本に無い字）`;
+  const { writeFile } = await import("node:fs/promises");
+  const { stableJson } = await import("../src/json.ts");
+  await writeFile(path, stableJson(d));
+  const violations = await validateLocalAssemblies(dir);
+  assert.ok(violations.some((x) => /title/.test(x) && /timeline/.test(x)), violations.join("\n") || "違反が 1 件も出ていない");
+});

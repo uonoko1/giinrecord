@@ -1,7 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { parseResultsPdf, parseVotePdf, UNKNOWN_CELL, UNKNOWN_LEGEND } from "../src/sources/local/shimane/votes-pdf.ts";
+import { checkTitleOffset, parseResultsPdf, parseVotePdf, splitTitleCells, UNKNOWN_CELL, UNKNOWN_LEGEND } from "../src/sources/local/shimane/votes-pdf.ts";
+import type { Item } from "../src/sources/local/pdf-table.ts";
+import { normalizeTitle } from "../src/sources/local/title-normalize.ts";
 // **食い違った行を全部並べる**（#826 で佐賀に作り、#844 で 5 県が使う 1 か所に移した）。
 // **島根の反対は `●`**（`×` ではない）——#826 の担当者は `×` で数えて 17 件の偽の不一致を出している。
 import { countMismatchRows } from "./count-mismatch-rows.ts";
@@ -306,4 +308,280 @@ test("令和8年2月 parseResultsPdf: 議決日は 3月12日。議案の行は�
     assert.ok(hit, `${r.number} not in 議決結果一覧`);
     assert.equal(hit!.result, r.result, r.number);
   }
+});
+
+/**
+ * **件名の欄が縦に高い行（請願の本文が丸ごと件名として書かれている行）を、上下の行に漏らさない**（Issue #866）。
+ *
+ * **一次資料に何が書いてあるか**（`r0802_giinbetu_kekka.pdf` 5 ページ目 / `r0806_giinbetu_kekka.pdf` 3 ページ目。
+ * 実測は下の `#866` のテストが数字で押さえる）:
+ *   - この PDF には**罫線が 1 本も無い**（`readPages` の `hlines`/`vlines` がどのページも 0 本）。
+ *     行の区切りは「議案番号の欄の y」だけで、**行の上下の端はどこにも描かれていない。**
+ *   - 件名のセルは**行の中心に揃えて**書かれている（付託委員会の欄と同じ）。
+ *     請願の本文が件名になっている行は 20 行を超える高さになり、**上下の行の議案番号より外まで伸びる。**
+ * 直す前は件名を**1 行ずつ**「y が一番近い議案番号」に入れていたので、
+ * 高いセルの上端の数行が上の議案へ、下端の数行が下の議案へこぼれていた。
+ */
+test("#866 一次資料: 件名の高いセルが上下の議案に漏れない（承認第２号・請願第28号・議員提出第1号）", () => {
+  // 令和8年2月 5 ページ目。承認第２号の件名は《…》で閉じて終わる（後ろに請願の本文が続かない）
+  assert.equal(
+    feb.rows.find((r) => r.number === "承認第２号")!.title,
+    "専決処分事件の報告及び承認について《令和７年度島根県中小企業制度融資等特別会計補正予算（第１号）》",
+  );
+  // 請願第28号の件名は請願の本文そのもの。PDF の 21 行ぶんが 1 つのセル。
+  // **先頭は「島根県議会が平成25年…」で、途中（「して最も多かったのが、…」）から始まらない**
+  const p28 = feb.rows.find((r) => r.number === "請願第28号")!;
+  assert.ok(p28.title.startsWith("島根県議会が平成25年6月26日付で可決採択された"), p28.title.slice(0, 40));
+  assert.ok(p28.title.endsWith("とする決議を求めます。"), p28.title.slice(-20));
+  // 議員提出第1号の件名は条例名 1 つだけ（請願の本文が前に付かない）
+  assert.equal(
+    feb.rows.find((r) => r.number === "議員提出第1号")!.title,
+    "議会の議員の議員報酬、費用弁償及び期末手当支給条例の一部を改正する条例",
+  );
+});
+
+test("#866 一次資料: 令和8年6月 3 ページ目も同じ（請願第29号・請願第30号）", () => {
+  // 請願第29号の件名は「「地方財政の充実・強化を求める」請願」の 1 行だけ
+  assert.equal(pdf.rows.find((r) => r.number === "請願第29号")!.title, "「地方財政の充実・強化を求める」請願");
+  // 請願第30号の件名が本文 20 行ぶん。**先頭は「平成25年6月議会で…」**（途中から始まらない）
+  const p30 = pdf.rows.find((r) => r.number === "請願第30号")!;
+  assert.ok(p30.title.startsWith("平成25年6月議会で島根県議会が採択された請願は"), p30.title.slice(0, 40));
+  assert.ok(p30.title.endsWith("とする決議を求めます。"), p30.title.slice(-20));
+});
+
+/**
+ * **件名のセルが行の中心に揃っていることを、全行ぶん数字で押さえる**（Issue #866）。
+ * **母数（何行見たか）をこのテストの中で確かめる**ので、「違反 0 件」と「1 行も見ていない」が区別できる（#757）。
+ * **字数の上限では見ない**——68 字 1 セル（第39号）も 480 字 1 セル（請願第30号）も一次資料のとおりで、
+ * **字数は壊れの機序ではない。**
+ */
+test("#866 件名のセルの中心は行の中心にある（112 行ぜんぶ測る。母数も固定する）", () => {
+  const rows = [...feb.rows, ...pdf.rows];
+  // **母数**: 令和8年2月 82 行 ＋ 令和8年6月 30 行 = 112 行。行が減ったらここで落ちる
+  assert.equal(feb.rows.length, 82);
+  assert.equal(pdf.rows.length, 30);
+  assert.equal(rows.length, 112);
+  // 全行に titleOffset がある（undefined を「ずれ 0」と読まない）
+  assert.equal(rows.filter((r) => typeof r.titleOffset === "number").length, 112);
+  const offsets = rows.map((r) => Math.abs(r.titleOffset)).sort((a, b) => b - a);
+  // **実測（2026-09-14）**: 一番大きいのが請願第30号の 5.16pt（件名が 21 行の請願本文そのもの）。
+  // 残り 111 行は 0.30pt 以下。壊れていたときの値は ±27pt だった（MAX_TITLE_OFFSET の注記を見よ）
+  assert.ok(offsets[0] < 5.2 && offsets[0] > 5.1, `max offset ${offsets[0]}`);
+  assert.equal(rows.filter((r) => Math.abs(r.titleOffset) > 1).length, 1);
+  assert.ok(offsets[1] <= 0.3, `second largest ${offsets[1]}`);
+  // 件名が 1 文字も落ちていない: 件名の字数の合計を固定する（行の取り合いで増減すれば落ちる）
+  assert.equal(feb.rows.reduce((n, r) => n + [...r.title].length, 0), 2612);
+  assert.equal(pdf.rows.reduce((n, r) => n + [...r.title].length, 0), 1205);
+});
+
+/**
+ * ## **本番 `data/assemblies/pref-32/` の件名が、一次資料の PDF と 1 字も違わない**（Issue #866）
+ *
+ * **上の 3 本は PDF を読む側を見ている。ここは「書いたもの」を PDF と突き合わせる。**
+ * **#866 で直したのは `data/` に出ている件名なので、`data/` を読み直さなければ直ったことにならない。**
+ *
+ * **突き合わせの鍵は `sessionId` + `number` ではなく、会期ごとの「PDF の行の並び」である**——
+ * **島根の「その他表決」4 件は番号が原文の `ー` で、番号では 1 つに潰れる**（実測: 番号で引くと
+ * 112 行が 109 通りにしかならない）。**PDF の行順と `data/` の並びを、そのまま 1 対 1 で突き合わせる。**
+ *
+ * **`title` の中身は一次資料が決める。** 請願第28号・請願第30号の件名は**請願の本文そのもの**で、
+ * **それは一次資料の件名の欄にそう書いてある**（下の `#866 一次資料:` の 2 本が PDF 側で押さえている）。
+ * **短い議案名は一次資料のどこにも書かれていないので、推測で作らない**（#569）。
+ */
+test("#866 本番 data/pref-32: 112 件の件名が一次資料の PDF と完全一致（多重集合で突き合わせる）", () => {
+  const dir = new URL("../../../data/assemblies/pref-32/rollcalls/", import.meta.url);
+  const index = JSON.parse(readFileSync(new URL("index.json", dir), "utf-8")) as { id: string; sessionId: string }[];
+  const read = (session: string): { title: string; number: string; page: number }[] =>
+    index
+      .filter((e) => e.sessionId === session)
+      .map((e) => JSON.parse(readFileSync(new URL(`${session}/${e.id}.json`, dir), "utf-8")) as { title: string; number: string; page: number });
+  // **`index.json` の並びは表示のための並びで、PDF の行順ではない**（#851）。
+  // **番号でも引けない**——**「その他表決」4 件は番号が原文の `ー` で、番号では 1 つに潰れる**
+  // （実測: 112 行を番号で引くと 109 通りにしかならない）。
+  // **そこで「番号・件名・ページ」の組の多重集合として突き合わせる。**
+  // **並べ替えには強く、1 字の違いには落ちる**（件名が 1 か所でも変われば組が合わなくなる）。
+  const key = (r: { title: string; number: string; page: number }): string => `p${r.page}\u0001${r.number}\u0001${r.title}`;
+  let compared = 0;
+  let normalized = 0;
+  for (const [session, rows, label] of [["2026-02", feb.rows, "令和8年2月"], ["499", pdf.rows, "令和8年6月"]] as const) {
+    const got = read(session);
+    // **母数**: 会期ごとに PDF の行数と `data/` の件数が合っていること。
+    // **合っていなければ、以下の突き合わせは意味を持たない**（#757）
+    assert.equal(got.length, rows.length, `${label}: data/ の件数と PDF の行数`);
+    // **`data/` に出る件名は、PDF の件名に `normalizeTitle` を掛けたものである**（#648 / #674）。
+    // **島根の PDF の文字層は「長」を康熙部首 `⾧` U+2FA7 で持っており、件名だけ `長` U+9577 に寄せている**
+    // （氏名と `vote.raw` には掛けない）。**ここでその 1 段だけを明示して掛ける**——
+    // **掛けずに比べると「教育⾧」と「教育長」で落ちるが、それは #866 の壊れではない。**
+    const want = rows.map((r) => ({ ...r, title: normalizeTitle(r.title) }));
+    normalized += rows.filter((r) => normalizeTitle(r.title) !== r.title).length;
+    assert.deepEqual(got.map(key).sort(), want.map(key).sort(), `${label}: 件名（PDF と data/）`);
+    compared += got.length;
+  }
+  // **`normalizeTitle` が実際に効いた行の数**（実測 2026-09-16: 令和8年2月の「教育⾧任命の同意について」1 行 ＋
+  // 令和8年6月の「議⾧辞職…」「副議⾧辞職…」4 行 = 5 行）。
+  // **0 になったら、上の突き合わせは正規化を通していないのと同じで、この 1 段の主張が空回りする。**
+  assert.equal(normalized, 5, "normalizeTitle が件名を書き換えた行の数");
+  // **何件突き合わせたか**——**0 件を見て緑にならないように**（#757）
+  assert.equal(compared, 112, "突き合わせた件名の数");
+});
+
+/**
+ * ## **#866 で直した 5 件の、直った後の値をそのまま固定する**
+ *
+ * **一次資料に何と書いてあるかは上のテストが PDF 側で押さえている。ここは `data/` の実物を名指しで固定する。**
+ * **PDF のフィクスチャを取り替えても、`data/` を作り直し忘れればここが落ちる。**
+ *
+ * | 議案 | 直す前 | 直した後 | 一次資料に書いてあること |
+ * |---|---|---|---|
+ * | 承認第２号 | 175 字 | **49 字** | 議案名だけ。後ろに付いていた別議案（請願第28号）の本文が消えた |
+ * | 議員提出第1号 | 171 字 | **35 字** | 条例名だけ。前に付いていた請願第28号の本文の末尾が消えた |
+ * | 請願第29号 | 144 字 | **18 字** | 件名 1 行だけ。後ろに付いていた請願第30号の本文の先頭が消えた |
+ * | 請願第28号 | 304 字 | **566 字** | **件名の欄が請願の本文そのもの。** 断片ではなく全体になった |
+ * | 請願第30号 | 354 字 | **480 字** | **同上。** 文の途中から始まらなくなった |
+ *
+ * **請願第28号・第30号が長いままなのは、一次資料の件名の欄がそうなっているからである。**
+ * **短い議案名は `議員別採決結果一覧` にも `議決結果一覧`（請願を載せない）にも会期ページにも無い。**
+ * **委員会の委員長報告には請願の趣旨が地の文で述べられているが、それは件名の欄ではなく報告の文章であり、
+ * そこから件名を組み立てれば本サイトが議案名を創作したことになる**（#569: 推測で書かない）。
+ */
+test("#866 本番 data/pref-32: 直した 5 件の件名（字数と先頭・末尾を名指しで固定）", () => {
+  const dir = new URL("../../../data/assemblies/pref-32/rollcalls/", import.meta.url);
+  const title = (session: string, id: string): string =>
+    (JSON.parse(readFileSync(new URL(`${session}/${id}.json`, dir), "utf-8")) as { title: string }).title;
+  const len = (s: string): number => [...s].length;
+
+  // **文の途中から始まらない**（「議案名が文の途中から始まることは無い」——#866 の起票時は 2 件がそうだった）
+  const shouryou2 = title("2026-02", "pref-32-2026-02-20260312-議案-承認第２号");
+  assert.equal(shouryou2, "専決処分事件の報告及び承認について《令和７年度島根県中小企業制度融資等特別会計補正予算（第１号）》");
+  assert.equal(len(shouryou2), 49);
+
+  const teishutsu1 = title("2026-02", "pref-32-2026-02-20260312-議案-議員提出第1号");
+  assert.equal(teishutsu1, "議会の議員の議員報酬、費用弁償及び期末手当支給条例の一部を改正する条例");
+  assert.equal(len(teishutsu1), 35);
+
+  const seigan29 = title("499", "pref-32-499-20260702-請願-請願第29号");
+  assert.equal(seigan29, "「地方財政の充実・強化を求める」請願");
+  assert.equal(len(seigan29), 18);
+
+  // **この 2 件は一次資料の件名の欄が請願の本文そのもの**（短い議案名は一次資料のどこにも無い）。
+  // **断片ではなく全体が入っていること**——**先頭が文の頭で、末尾が文の終わり**であることで見る。
+  const seigan28 = title("2026-02", "pref-32-2026-02-20260312-請願-請願第28号");
+  assert.equal(len(seigan28), 566);
+  assert.ok(seigan28.startsWith("島根県議会が平成25年6月26日付で可決採択された"), seigan28.slice(0, 30));
+  assert.ok(seigan28.endsWith("とする決議を求めます。"), seigan28.slice(-15));
+
+  const seigan30 = title("499", "pref-32-499-20260702-請願-請願第30号");
+  assert.equal(len(seigan30), 480);
+  assert.ok(seigan30.startsWith("平成25年6月議会で島根県議会が採択された請願は"), seigan30.slice(0, 30));
+  assert.ok(seigan30.endsWith("とする決議を求めます。"), seigan30.slice(-15));
+
+  // **起票時に混ざっていた「別の議案の中身」が、もう入っていない**——
+  // **承認第２号（議案）の欄に請願第28号の本文が続いていたのが #866 の核心だった。**
+  assert.ok(!shouryou2.includes("島根県議会が平成25年"), "承認第２号に請願第28号の本文が連結している");
+  assert.ok(!teishutsu1.includes("請願書"), "議員提出第1号に請願第28号の本文の末尾が付いている");
+  assert.ok(!seigan29.includes("平成25年6月議会で島根県議会が採択された請願は"), "請願第29号に請願第30号の本文の先頭が付いている");
+});
+
+/**
+ * ## **`splitTitleCells` の契約を、PDF を通さずに直接見る**（Issue #866）
+ *
+ * **上の 3 本は 2 本のフィクスチャを通してしか `splitTitleCells` を呼んでいない。**
+ * **その 2 本ではたまたま「一番素直な分け方」が正解なので、分け方の規則そのものは見えていない。**
+ * **ここでは一次資料と同じ形（高いセルが上下の議案番号を跨ぐ）を最小の入力で作って、規則を名指しで見る。**
+ *
+ * **数字は令和8年6月 3 ページ目の実測**（`請願第17号` y=445.80 / `請願第29号` y=422.88 / `請願第30号` y=286.32、
+ * 本文 21 行は y=405.48 から 11.4pt 刻みで y=177.48 まで）。
+ */
+test("#866 splitTitleCells: 高いセルは行を跨いでも 1 つの議案に入る（一次資料と同じ y で確かめる）", () => {
+  const line = (y: number, str: string): Item[] => [{ str, x: 91.68, y, w: 170, h: 11.4, cx: 91.68 + 85, cy: y }];
+  // 令和8年6月 3 ページ目の件名の行（実測の y）
+  const body: number[] = [];
+  for (let y = 405.48; y > 177; y -= 11.4) body.push(Number(y.toFixed(2)));
+  assert.equal(body.length, 21, "請願の本文の行数（母数）");
+  const lines = [line(445.56, "「再審法改正を求める意見書」採択について"), line(422.64, "「地方財政の充実・強化を求める」請願"), ...body.map((y, i) => line(y, `本文${i}`))];
+  const anchors = [445.80, 422.88, 286.32]; // 請願第17号 / 第29号 / 第30号
+  const out = splitTitleCells(lines, anchors)!;
+  assert.ok(out, "分けられた");
+  assert.equal(out.size, 3, "議案の数ぶんの塊");
+  // **第17号・第29号は 1 行ずつ、第30号が本文 21 行ぜんぶ**——
+  // **本文の上端 y=405.48 は第29号の y=422.88 より第30号の y=286.32 から遠いが、
+  // 塊として見れば第30号に入る。1 行ずつ近い議案に入れると、ここで上の 2 行が第29号へ漏れる。**
+  assert.deepEqual(out.get(445.80)!.map((i) => i.str), ["「再審法改正を求める意見書」採択について"]);
+  assert.deepEqual(out.get(422.88)!.map((i) => i.str), ["「地方財政の充実・強化を求める」請願"]);
+  assert.equal(out.get(286.32)!.length, 21, "第30号に入った行数");
+  assert.equal(out.get(286.32)![0].str, "本文0", "第30号の先頭は本文の 1 行目（途中から始まらない）");
+  assert.equal(out.get(286.32)!.at(-1)!.str, "本文20", "第30号の末尾は本文の最終行");
+  // **行を並べ替えない**（上から順の塊に切るだけ。推定で入れ替えない）。
+  // **`Map` に入れる順は下の議案からなので、y の大きい議案から並べ直して比べる**
+  // （`Map` の入れ方は実装の都合で、契約は「行が入れ替わらないこと」）
+  assert.deepEqual(
+    [...anchors].sort((a, b) => b - a).flatMap((a) => out.get(a)!).map((i) => i.str),
+    lines.flat().map((i) => i.str),
+    "行の順序",
+  );
+  // **件名の行が議案の数より少なければ分けない**（黙って推定で埋めず undefined を返す）
+  assert.equal(splitTitleCells(lines.slice(0, 2), anchors), undefined, "3 議案に 2 行");
+  assert.equal(splitTitleCells(lines, []), undefined, "議案が 0");
+});
+
+/**
+ * ## **`MAX_TITLE_OFFSET` の見張りが、実際に落ちることを見る**（Issue #866）
+ *
+ * **これが無いと、見張りを `if (false)` にしても 30 本すべて緑のままだった**
+ * （変異テストで実測。**見張りは「今のフィクスチャでは鳴らない」ので、鳴る条件を別に作らないと誰も見ていない**）。
+ *
+ * **`parseVotePdf` は PDF を丸ごと受け取るので、件名だけをずらした PDF は作れない。**
+ * **そこで `splitTitleCells` を通さなかったとき（= 1 行ずつ近い議案に入れる昔のやり方）に
+ * 何 pt ずれるかを、同じ入力で計算して確かめる。** 直す前の実装が出していた値そのものである。
+ */
+test("#866 見張りの閾値: 昔のやり方（1 行ずつ近い議案へ）のずれは閾値を超える", () => {
+  const body: number[] = [];
+  for (let y = 405.48; y > 177; y -= 11.4) body.push(Number(y.toFixed(2)));
+  const titleYs = [445.56, 422.64, ...body];
+  const anchors = [445.80, 422.88, 286.32];
+  // 昔のやり方: 1 行ずつ「y が一番近い議案番号」に入れる
+  const near = new Map<number, number[]>(anchors.map((a) => [a, [] as number[]]));
+  for (const y of titleYs) {
+    let best = anchors[0];
+    for (const a of anchors) if (Math.abs(a - y) < Math.abs(best - y)) best = a;
+    near.get(best)!.push(y);
+  }
+  const offsetOf = (ys: number[], a: number): number => (Math.max(...ys) + Math.min(...ys)) / 2 - a;
+  const oldOffsets = anchors.map((a) => offsetOf(near.get(a)!, a));
+  // **請願第29号が −31.6pt ずれる**（本文の上の数行を巻き込むので、塊の中心が上へ動く）。
+  // **この値は変異テストでも出た**（`splitTitleCells` を使わなくすると
+  // `page 3 請願第29号: 件名 is -31.6pt off the row centre (max 8)` で落ちる）
+  assert.ok(Math.abs(oldOffsets[1]) > 8, `昔のやり方のずれ ${oldOffsets[1].toFixed(1)}pt が閾値 8 を超えていない`);
+  assert.equal(oldOffsets[1].toFixed(1), "-31.6", "請願第29号のずれ");
+  // **今のやり方なら閾値の内側**（請願第30号だけ 5.16pt で、それは一次資料がそう置いている）
+  const now = splitTitleCells(titleYs.map((y) => [{ str: "x", x: 91.68, y, w: 170, h: 11.4, cx: 176, cy: y }]), anchors)!;
+  const newOffsets = anchors.map((a) => offsetOf(now.get(a)!.map((i) => i.y), a));
+  assert.deepEqual(newOffsets.map((o) => Math.abs(o) <= 8), [true, true, true], newOffsets.map((o) => o.toFixed(2)).join(" / "));
+  assert.equal(newOffsets[2].toFixed(2), "5.16", "請願第30号のずれ（一次資料がそう置いている）");
+});
+
+/**
+ * ## **見張りそのものを呼んで、鳴ることと鳴らないことを両方見る**（Issue #866）
+ *
+ * **この見張りは今の 2 本のフィクスチャでは 1 度も鳴らない**（112 行すべて閾値の内側）。
+ * **だから `if (false)` に変えても 32 本すべてが緑のままだった**（変異テストで実測）——
+ * **見張りを足しただけでは、誰もそれを見ていない。** ここで直接呼ぶ。
+ */
+test("#866 checkTitleOffset: 閾値を超えたら落ち、内側なら通る（境界の両側を見る）", () => {
+  // **鳴らない側**: 請願第30号の 5.16pt は一次資料がそう置いているので通る
+  assert.doesNotThrow(() => { checkTitleOffset(3, "請願第30号", "平成25年6月議会で…", 5.16); });
+  assert.doesNotThrow(() => { checkTitleOffset(5, "承認第２号", "専決処分事件の…", -0.24); });
+  // **境界そのもの**: 閾値 8 ちょうどは通り、超えたら落ちる（`>` であって `>=` ではない）
+  assert.doesNotThrow(() => { checkTitleOffset(1, "第1号", "x", 8); });
+  assert.doesNotThrow(() => { checkTitleOffset(1, "第1号", "x", -8); });
+  assert.throws(() => { checkTitleOffset(1, "第1号", "x", 8.1); }, /off the row centre/);
+  assert.throws(() => { checkTitleOffset(1, "第1号", "x", -8.1); }, /off the row centre/);
+  // **鳴る側**: 昔のやり方が出していた値（上のテストが計算した −31.6pt / 起票時の ±27pt）
+  assert.throws(
+    () => { checkTitleOffset(3, "請願第29号", "「地方財政の充実・強化を求める」請願平成25年6月議会で島根", -31.6); },
+    // **どの議案がどれだけずれたかを、落ちたときのメッセージが名指しする**（#569: 黙って通さない）
+    /page 3 請願第29号: 件名 is -31\.6pt off the row centre \(max 8\) — 隣の行の件名が混ざっている疑い: 「地方財政の充実・強化を求める」請願平成25年6月議会で島根/,
+  );
+  assert.throws(() => { checkTitleOffset(5, "承認第２号", "専決処分事件の…", -27.4); }, /off the row centre/);
+  assert.throws(() => { checkTitleOffset(5, "議員提出第1号", "もの請願書に…", 27.35); }, /off the row centre/);
 });

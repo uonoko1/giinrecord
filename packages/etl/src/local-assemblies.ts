@@ -553,6 +553,8 @@ export async function validateLocalAssemblies(dir: string): Promise<string[]> {
     }
     const memberIds = new Set<string>();
     const voteCounts = new Map<string, number>();
+    /** members/{id}.json の timeline の件名（採決の原本と突き合わせる。#866） */
+    const timelineTitles: { label: string; rollCallId: string; title: string }[] = [];
     for (const m of index) {
       const label = `members/index.json ${m.id}`;
       if (memberIds.has(m.id)) v.push(`${label}: duplicate id`);
@@ -583,6 +585,9 @@ export async function validateLocalAssemblies(dir: string): Promise<string[]> {
         checkLocalVote(v, `${rel} timeline[${i}]`, e.vote);
         if (typeof e.sessionLabel !== "string" || e.sessionLabel === "") v.push(`${rel} timeline[${i}]: sessionLabel required`);
         if (typeof e.rollCallId !== "string" || typeof e.title !== "string" || !ISO_DATE.test(String(e.date))) v.push(`${rel} timeline[${i}]: rollCallId / title / date required`);
+        // **件名は採決の原本から来る 1 つの事実で、timeline はその写しである**（#866）。
+        // 原本を読んだあとで突き合わせるので、ここでは集めるだけ（原本はこのループの下で読む）。
+        else timelineTitles.push({ label: `${rel} timeline[${i}]`, rollCallId: e.rollCallId, title: e.title });
         if (i > 0 && d.timeline[i - 1].date < e.date) v.push(`${rel}: timeline not in descending date order at [${i}]`);
       }
       voteCounts.set(m.id, votes);
@@ -679,6 +684,17 @@ export async function validateLocalAssemblies(dir: string): Promise<string[]> {
       // **並びも原本から決まる**（日付の降順 → id 順）
       if (expected.length === summaries.length && stableJson(summaries.map((s2) => s2.id)) !== stableJson(expected.map((e) => e.id))) {
         v.push(`assemblies/${a.id}/rollcalls/index.json: 並びが rollcalls/ の原本から作った並びと違う`);
+      }
+      // **members/{id}.json の timeline の件名も、原本から来る写しである**（#866）。
+      // **#851 は index.json だけを見ていた**ので、timeline は件名が「文字列であること」しか見ていなかった。
+      // **島根の壊れた件名 5 件は 35 人の timeline 175 か所に同じ値で写っていた**——
+      // **原本だけ直して写しを忘れれば、本番の議員ページに古い件名が残る**（#840 が index.json でやったのと同じ形）。
+      // **母数を残す**: 何か所突き合わせたかを、違反が 0 のときにも数えられるようにここで数える（#757）。
+      const titleById = new Map(onDisk.map((rc) => [rc.id, rc.title]));
+      for (const t of timelineTitles) {
+        const want = titleById.get(t.rollCallId);
+        if (want === undefined) v.push(`${t.label}: rollCallId ${t.rollCallId} の原本が rollcalls/ に無い`);
+        else if (want !== t.title) v.push(`${t.label}: title が採決の原本と食い違っている（原本が正）`);
       }
     }
     for (const [id, n] of voteCounts) if ((seenVotes.get(id) ?? 0) !== n) v.push(`assemblies/${a.id}: member ${id} has ${n} timeline votes but ${seenVotes.get(id) ?? 0} in rollcalls/`);
