@@ -1,5 +1,6 @@
 import { parse } from "node-html-parser";
 import { cleanText, resolveAomoriUrl, warekiYear } from "./site.ts";
+import { SessionTally } from "../session-tally.ts";
 
 /**
  * 青森県議会の審査結果 index（Issue #750）。**1 ページに全会期が並ぶ**（中間ページは無い）:
@@ -63,8 +64,9 @@ export const FIRST_PERSONAL_MONTH = 9;
 /**
  * index → 個人別の議決結果 PDF を持つ会期（**ページの並び順＝新しい順のまま**）。
  * **見出しの下の `<div>` に並ぶリンクのうち、文言に「議決結果」を含むものだけ**を採る。
+ * **`tally` を渡すと母数が入る**（#895）。
  */
-export function parseIndex(html: string, baseUrl: string): SessionLink[] {
+export function parseIndex(html: string, baseUrl: string, tally?: SessionTally): SessionLink[] {
   const root = parse(html);
   const out: SessionLink[] = [];
   const seen = new Set<string>();
@@ -75,9 +77,9 @@ export function parseIndex(html: string, baseUrl: string): SessionLink[] {
     if (nodes[i].tagName !== "H3") continue;
     const heading = cleanText(nodes[i].text);
     const m = heading.match(SESSION_HEADING);
-    if (!m) continue;
+    if (!m) { tally?.drop(heading, "not-a-session"); continue; }
     const box = nodes[i + 1]?.tagName === "DIV" ? nodes[i + 1] : undefined;
-    if (!box) continue;
+    if (!box) { tally?.drop(heading, "no-vote-link"); continue; }
     const year = warekiYear(m[1], m[2]);
     const month = Number(m[3].normalize("NFKC"));
     const round = Number(m[4].normalize("NFKC"));
@@ -85,7 +87,7 @@ export function parseIndex(html: string, baseUrl: string): SessionLink[] {
     if (month < 1 || month > 12) throw new Error(`${heading}: bad month`);
     // **第275回より前は会派別**（docblock）。定例会は回次で、臨時会は年月で切る
     const isTeirei = kind.startsWith("定例");
-    if (isTeirei ? round < FIRST_PERSONAL_ROUND : year * 100 + month < FIRST_PERSONAL_YEAR * 100 + FIRST_PERSONAL_MONTH) continue;
+    if (isTeirei ? round < FIRST_PERSONAL_ROUND : year * 100 + month < FIRST_PERSONAL_YEAR * 100 + FIRST_PERSONAL_MONTH) { tally?.drop(heading, "before-personal-votes"); continue; }
     const pdfUrls: string[] = [];
     for (const a of box.querySelectorAll("a")) {
       const href = a.getAttribute("href");
@@ -96,11 +98,13 @@ export function parseIndex(html: string, baseUrl: string): SessionLink[] {
       if (pdfUrls.includes(url)) continue;
       pdfUrls.push(url);
     }
-    if (pdfUrls.length === 0) continue; // 議決結果 PDF がまだ載っていない会期（会期中）
+    // 議決結果 PDF がまだ載っていない会期（会期中）。**落としたことは母数に残す**（#895）
+    if (pdfUrls.length === 0) { tally?.drop(heading, "no-vote-link"); continue; }
     const sessionId = `${year}-${String(month).padStart(2, "0")}${isTeirei ? "" : "-rinji"}`;
     if (seen.has(sessionId)) throw new Error(`sessionId ${sessionId} が 2 回出た（${heading}）`);
     seen.add(sessionId);
     out.push({ sessionId, sessionLabel: heading, year, month, round, kind, pdfUrls });
+    tally?.take();
   }
   if (out.length === 0) throw new Error("index に個人別の議決結果 PDF が 1 本も無い");
   return out;

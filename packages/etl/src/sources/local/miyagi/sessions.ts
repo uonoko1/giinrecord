@@ -1,5 +1,6 @@
 import { parse } from "node-html-parser";
 import { cleanText, MIYAGI_ORIGIN, resolveMiyagiUrl } from "./site.ts";
+import { SessionTally } from "../session-tally.ts";
 
 /**
  * 宮城県議会「過去の本会議情報」（Issue #157）。会期ごとに h2「令和N年M月定例会（第NNN回）」があり、その下の ul に
@@ -19,29 +20,42 @@ export interface SessionLink {
   kind: "page" | "pdf";
 }
 
-const SESSION_LABEL = /^(令和|平成)\d+年\d+月(定例会|臨時会)（第(\d+)回）$/;
+/**
+ * 会期の見出し。**#895 で 2 か所ひろげた**（**どちらも #871 が実測し、7 本が黙って落ちていた**）:
+ *   1. **`\d+年` は `令和元年` に当たらない**（`令和元年11月`・`令和元年9月`・`令和元年6月` の 3 本）。
+ *      **和暦の最初の年は `1年` ではなく `元年` と書かれる。**
+ *   2. **開き括弧だけが ASCII の `(` の見出しがある**（`平成28年9月定例会(第357回）` など 4 本）——
+ *      **閉じ括弧は全角のまま。原文がそう書かれている。**
+ * **`sessionLabel` は原文のまま返す**（括弧を揃えたりしない。**推定しない**）。
+ */
+const SESSION_LABEL = /^(令和|平成)(\d+|元)年\d+月(定例会|臨時会)[（(]第(\d+)回[）)]$/;
 
-/** 会期 index → 新しい順の会期リンク。見出しの形・リンクの規則性が崩れていれば例外（別のページを黙って読まない）。 */
-export function parseSessionIndex(html: string, baseUrl: string): SessionLink[] {
+/**
+ * 会期 index → 新しい順の会期リンク。見出しの形・リンクの規則性が崩れていれば例外（別のページを黙って読まない）。
+ * **`tally` を渡すと「何本の候補を見て、何本を採り、何本を落としたか」が入る**（#895）。
+ */
+export function parseSessionIndex(html: string, baseUrl: string, tally?: SessionTally): SessionLink[] {
   const root = parse(html);
   const out: SessionLink[] = [];
   const seen = new Set<string>();
   for (const h2 of root.querySelectorAll("h2")) {
     const label = cleanText(h2.text);
     const m = label.match(SESSION_LABEL);
-    if (!m) continue;
+    if (!m) { tally?.drop(label, "not-a-session"); continue; }
     const list = h2.nextElementSibling;
     if (!list || list.tagName !== "UL") throw new Error(`${label}: no link list after heading`);
     const links = list.querySelectorAll("a").filter((a) => cleanText(a.text).startsWith("各議員の表決状況"));
     if (links.length > 1) throw new Error(`${label}: expected at most one 各議員の表決状況 link, got ${links.length}`);
-    const sessionId = m[3];
+    const sessionId = m[4];
     if (seen.has(sessionId)) throw new Error(`duplicate session ${sessionId}`);
     seen.add(sessionId);
-    if (links.length === 0) continue; // 2008 年以前は表決状況の公開が無い（事実として載せない）
+    // 2008 年以前は表決状況の公開が無い（事実として載せない）。**落としたことは母数に残す**（#895）
+    if (links.length === 0) { tally?.drop(label, "no-vote-link"); continue; }
     const url = resolveMiyagiUrl(links[0].getAttribute("href") ?? "", baseUrl);
     const kind = /\.pdf$/i.test(url) ? "pdf" : /\/(site|soshiki)\/kengikai\/[A-Za-z0-9_-]+\.html$/.test(url) ? "page" : undefined;
     if (!kind) throw new Error(`${label}: unexpected 表決状況 URL ${url}`);
     out.push({ sessionId, sessionLabel: label, url, kind });
+    tally?.take();
   }
   if (out.length === 0) throw new Error("no 各議員の表決状況 links found in session index");
   for (let i = 1; i < out.length; i++) {

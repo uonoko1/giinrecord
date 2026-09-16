@@ -1,5 +1,6 @@
 import type { LocalAssemblyMeta, LocalRollCall, LocalUnmatchedName } from "@seiji-kiroku/shared";
 import { PoliteFetcher } from "../polite-fetch.ts";
+import { SessionTally } from "../session-tally.ts";
 import { MIE_HOST, MIE_ROSTER_INDEX_URL } from "./site.ts";
 import { buildRoster, DISTRICT_INDEX_URL, GOJUON_URL, parseDistrictIndex, parseDistrictPage, parseGojuon, type Roster } from "./roster.ts";
 import { parseSessionIndex, SESSION_INDEX_URL } from "./sessions.ts";
@@ -36,7 +37,9 @@ export async function runMie(opts: { sessions: number; fetchedAt: string; fetche
   const roster = buildRoster(gojuon, links, pages);
   log(`roster: ${roster.members.length} members (定数 ${roster.seats}, as of ${roster.asOf}, ${links.length} district pages)`);
 
-  const index = parseSessionIndex(await f.text(SESSION_INDEX_URL), SESSION_INDEX_URL);
+  const indexTally = new SessionTally();
+  const index = parseSessionIndex(await f.text(SESSION_INDEX_URL), SESSION_INDEX_URL, indexTally);
+  log(`session index: ${indexTally.line()}`);
   const targets = index.slice(0, opts.sessions);
   if (targets.length < opts.sessions) throw new Error(`only ${targets.length} sessions found (wanted ${opts.sessions})`);
   log(`sessions: ${targets.map((s) => `${s.sessionId}（${s.sessionLabel}）`).join(" / ")}`);

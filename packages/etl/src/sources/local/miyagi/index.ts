@@ -1,5 +1,6 @@
 import type { LocalAssemblyMeta, LocalMember, LocalRollCall, LocalUnmatchedName } from "@seiji-kiroku/shared";
 import { PoliteFetcher } from "../polite-fetch.ts";
+import { SessionTally } from "../session-tally.ts";
 import { MIYAGI_HOST, MIYAGI_ROSTER_INDEX_URL } from "./site.ts";
 import { parseRoster, ROSTER_URLS, type Roster } from "./roster.ts";
 import { parseSessionIndex, parseSessionPage, sessionIndexUrl, type SessionLink } from "./sessions.ts";
@@ -30,7 +31,9 @@ export async function runMiyagi(opts: { sessions: number; fetchedAt: string; log
   });
   log(`roster: ${roster.members.length} members (as of ${roster.asOf}, vacancies ${roster.vacancies})`);
 
-  const index = parseSessionIndex(await f.text(sessionIndexUrl), sessionIndexUrl);
+  const indexTally = new SessionTally();
+  const index = parseSessionIndex(await f.text(sessionIndexUrl), sessionIndexUrl, indexTally);
+  log(`session index: ${indexTally.line()}`);
   const targets: SessionLink[] = index.slice(0, opts.sessions);
   log(`sessions: ${targets.map((s) => `${s.sessionId}（${s.sessionLabel}）`).join(" / ")}`);
 
