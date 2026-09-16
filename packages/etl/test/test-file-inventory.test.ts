@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 
@@ -108,7 +108,7 @@ const ciTestFiles = (): string[] =>
 // **その場合は今の値を据え置く**（この規則は「離れすぎを詰める」ためのもので、
 // **緩める口実にしてはいけない**）。
 const WEB_TEST_FILES_MIN = 85; // 実測 2026-09-13: walk() で 87。**下げないので 85 のまま**（実数 − 3 = 84 は今より低い）
-const ETL_TEST_FILES_MIN = 124; // 実測 2026-09-13: readdirSync で 128（− 4）。#741 が滋賀の 5 本、#750 が青森の 6 本、#759 が秋田の 6 本、#763 が青森のかな 1 本、#768 が佐賀の 6 本、#778 が `local-lossy-name-matches.test.ts` 1 本を足した
+const ETL_TEST_FILES_MIN = 139; // 実測 2026-09-16: readdirSync で 142（− 3。#720 の規則）。#865 の前半 4 本（宮城・三重・滋賀・奈良）がマージされて 138 → 142 になった
 const CI_TEST_FILES_MIN = 6; // 実測 2026-09-13: readdirSync で 7（− 1。母数が小さいので幅も小さく）
 
 test("#533: apps/web のテストファイル集合が下限を割らない（vitest の include glob を消しても足しても検出する）", () => {
@@ -225,4 +225,192 @@ test("#720 ci.yml の下限が、このファイルの定数とずれていな�
     "ci.yml の echo が古い下限を表示している");
   assert.match(ci, new RegExp(`packages/etl test files: \\$etl \\(floor ${ETL_TEST_FILES_MIN}\\)`),
     "ci.yml の echo が古い下限を表示している");
+});
+
+/**
+ * Issue #855: **本数の下限は、特定のファイルを名指しできない。**
+ *
+ * `published-data-validate.test.ts`（**コミット済み `data/` に不変条件を当てる唯一のもの**）を消しても、
+ * **別のテストファイルが 1 本でも増えていれば ETL_TEST_FILES_MIN は満たされる。**
+ * **実測: このファイルを消すと etl は 1,581 → 1,578 テストで 0 fail（無言で緑）。**
+ *
+ * **だから ci.yml 側に `test -f` を置いた**（`test -f scripts/ci/stale-base.sh` と同じ #504 の形）。
+ * **そして「ci.yml がそれを今も要求していること」を、ci.yml ではないファイルから固定する**
+ * ——`scripts/ci/test/stale-base.test.sh` の `t_net_deletions_is_wired_into_ci` と同じ形である
+ * （**そこの実測: ci.yml から `--net-deletions` の行を消しても 1,542 の etl テストが全部緑だった**）。
+ *
+ * **名前が在ることだけを見ない**（`pr-closes` のテストが記録している罠——
+ * `test -f` の行がファイル名を生かし続けるので、名前の存在は検査にならない）。
+ * **本番 `data/` に実際に当てている行**を見る。
+ */
+test("#855 ci.yml が「本番 data/ に不変条件を当てるテスト」の存在を要求している（消しても無言で緑にならない）", () => {
+  const ci = read(".github/workflows/ci.yml");
+  assert.ok(
+    ci.includes("test -f packages/etl/test/published-data-validate.test.ts"),
+    "ci.yml が published-data-validate.test.ts の存在を要求していない（#855／#504）",
+  );
+  // **消されたら ENOENT ではなく理由を出す**（読めない理由が「無い」なのか「壊れた」なのかを分ける）
+  let body: string;
+  try { body = read("packages/etl/test/published-data-validate.test.ts"); } catch {
+    assert.fail(`packages/etl/test/published-data-validate.test.ts が無い（#855）。
+**本数の下限では止まらない**（実測 2026-09-14: 消しても 134 → 133 本で、下限 131 を上回るので通る）。
+コミット済み data/ に不変条件を当てる唯一のものなので、消すなら理由をここに書くこと。`);
+  }
+  // **本番の data/ を指していること。** 一時ディレクトリに当てても、コミット済みの data/ は見ていない。
+  assert.ok(
+    body.includes('fileURLToPath(new URL("../../../data/", import.meta.url))'),
+    "published-data-validate.test.ts がコミット済み data/ を読んでいない（#855）",
+  );
+  // validateDataset は validateLocalAssemblies を内側で呼ぶ厳密な上位集合（理由はテスト本体の docblock）
+  assert.ok(body.includes("validateDataset(DATA)"), "validateDataset を本番 data/ に当てていない（#855）");
+});
+
+/**
+ * Issue #865: **`skip: !hasData` は、`data/` が消えたら黙って全部を緑にする経路である。**
+ *
+ * ## 何が問題か
+ *
+ * **7 本の `*-published-data.test.ts` は、先頭に同じ形の門番を置いている:**
+ *
+ * ```ts
+ * const hasData = (() => { try { return statSync(join(DIR, "meta.json")).isFile(); } catch { return false; } })();
+ * test("...", { skip: !hasData }, () => { ... });
+ * ```
+ *
+ * **`meta.json` が 1 つ消えると、その県の検査（6〜9 本）が全部 `skipped` になり、`fail 0` で通る。**
+ * **`node --test` は skip を赤にしない。** **本数の下限（このファイルの上の 3 本）も止められない**——
+ * **ファイルは在るし、テストも「走っている」ことになっているから。**
+ *
+ * **PO は「今は効いていない」ことを実測している**（佐賀 `tests 6 / pass 6 / skipped 0`）。
+ * **だが「今は skip されていない」は「今後も skip されない」ではない。**
+ *
+ * ## **なぜ「skip された本数を数える」形にしないか**（先に検討して捨てた案）
+ *
+ * **テストの中から、そのテスト自身の実行結果（skipped の本数）は見えない。**
+ * 見るには `node --test` の reporter か、`pnpm test` の出力を親プロセスから読む層が要る。
+ * **それは「テストを走らせるためにテストを走らせる」形**で、
+ * **#542 が禁じている「自前のハーネス」に近づく。**
+ *
+ * **代わりに、門番の前提そのものを別の層から要求する**——
+ * **「`*-published-data.test.ts` が在る県には、`data/assemblies/<id>/meta.json` が必ず在る」。**
+ * **これが成り立つ限り `hasData` は常に真で、`skip` は一度も発火しない。**
+ * **つまり「skip された本数が 0」と同値である**（`skip: !hasData` **以外**の skip が
+ * 混ざらないことも下で見る）。
+ *
+ * ## **このファイルに置く理由**
+ *
+ * **このファイルは `skip` を 1 つも使っていない**（使ったら同じ穴が開く。下でそれも見る）。
+ * **既存の形がこれだから**でもある——`deploy-test-inventory.test.ts` / 上の 3 本と同じ層。
+ *
+ * **限界**（上の docblock と同型）: **このファイルごと消せば、この検査も消える。**
+ * **止めるのは ci.yml 側の「Test file count floor」と、#855 が足した存在の要求である。**
+ */
+
+/** `packages/etl/test/*-published-data.test.ts` の一覧（県ごとの検査。glob と同じ数え方）。 */
+const publishedDataTestFiles = (): string[] =>
+  readdirSync(resolve(root, "packages/etl/test"))
+    .filter((n) => n.endsWith("-published-data.test.ts"))
+    .sort();
+
+/**
+ * **その検査が見ている議会 id** を、ファイルの中の `join(DATA, "assemblies", "pref-NN")` から取る。
+ * **id をこのファイルに書き写さない**（#499/#564 と逆に見えるが、ここで固定したいのは
+ * **「テストと `data/` の対応」であって id の一覧ではない**。id を写すと、
+ * 県を足すたびに 2 か所を直すことになり、**片方が古いまま残る**——#720 で実際に起きた形）。
+ */
+const assemblyIdOf = (file: string): string | null => {
+  const src = read(`packages/etl/test/${file}`);
+  return /"assemblies",\s*"(pref-\d+)"/.exec(src)?.[1] ?? null;
+};
+
+test("#865 `skip: !hasData` が発火しない（県ごとの検査が在る県には meta.json が在る）", () => {
+  const files = publishedDataTestFiles();
+  // **母数**（#757）。**0 本を見て緑になったら、この検査は何も言っていない**
+  assert.ok(files.length >= 7, `県ごとの検査が ${files.length} 本しか無い（実測 2026-09-14: 7 本）`);
+  const checked: string[] = [];
+  const missing: string[] = [];
+  for (const f of files) {
+    const id = assemblyIdOf(f);
+    assert.ok(id !== null, `${f}: 議会 id（join(DATA, "assemblies", "pref-NN")）が読めない。
+**書き方を変えたなら、この検査の取り出し方も合わせて直すこと。**
+**読めないまま放っておくと、その県は一度も突き合わされない。**`);
+    const meta = resolve(root, `data/assemblies/${id}/meta.json`);
+    // **`catch` で握りつぶさない。** **この検査を書いている途中で実際に踏んだ**——
+    // `statSync` を import し忘れていて `ReferenceError` が出ていたのに、
+    // **`catch {}` がそれを「meta.json が無い」に化けさせ、7 県すべてが「無い」と出た。**
+    // **原因が違えば直すところも違う**（#680）。**ENOENT 以外はそのまま投げる。**
+    try {
+      if (!statSync(meta).isFile()) missing.push(`${f} → data/assemblies/${id}/meta.json がファイルでない`);
+    } catch (e) {
+      if ((e as NodeJS.ErrnoException).code !== "ENOENT") throw e;
+      missing.push(`${f} → data/assemblies/${id}/meta.json が無い`);
+    }
+    checked.push(`${f}:${id}`);
+  }
+  assert.equal(checked.length, files.length, "**すべての県ごとの検査を突き合わせた**（母数）");
+  assert.deepEqual(missing, [], `**\`skip: !hasData\` が発火する県がある。**
+その県の検査（6〜9 本）は **\`skipped\` になって、\`fail 0\` で黙って通る。**
+**\`data/\` が消えたのか、検査が要らなくなったのかを確かめること。**
+**要らなくなったなら、テストファイルごと消す**（\`skip\` で残すと「在るのに見ていない」状態になる）。
+突き合わせた: ${checked.join(" / ")}`);
+});
+
+/**
+ * **門番が `skip: !hasData` の形のままであること。**
+ *
+ * **上の検査は「`meta.json` が在る」しか見ていない。**
+ * **別の条件で skip するようになったら（例: `{ skip: process.env.CI !== undefined }`）、
+ * 上の検査は緑のまま、テストは一度も走らなくなる**——**#504 と同型の抜け道。**
+ *
+ * **だから「その 7 本に出てくる `skip:` は、`!hasData` 以外に無い」ことを逐語で見る。**
+ * **`skip: true` / `todo` / `t.skip()` も同じ経路なので拾う。**
+ */
+test("#865 県ごとの検査の skip は `!hasData` だけ（別の条件で黙って止まらない）", () => {
+  const files = publishedDataTestFiles();
+  assert.ok(files.length >= 7, `県ごとの検査が ${files.length} 本しか無い`);
+  const offenders: string[] = [];
+  let skipCount = 0;
+  for (const f of files) {
+    const src = read(`packages/etl/test/${f}`);
+    for (const m of src.matchAll(/skip:\s*([^,}]+)/g)) {
+      skipCount++;
+      if (m[1].trim() !== "!hasData") offenders.push(`${f}: skip: ${m[1].trim()}`);
+    }
+    // `t.skip()` / `test.skip(` / `{ todo` も同じ「黙って通る」経路
+    for (const pat of [/\.skip\(/g, /todo:\s*true/g, /test\.todo\(/g]) {
+      for (const _ of src.matchAll(pat)) offenders.push(`${f}: ${pat.source}`);
+    }
+  }
+  // **母数**: **7 本あわせて 51 個の `skip:` を読んだ**（実測 2026-09-14）。
+  // **0 個を読んで緑になったら、この検査は何も言っていない**（正規表現が空振りしても気づけるように）
+  assert.ok(skipCount >= 40, `\`skip:\` を ${skipCount} 個しか読んでいない（実測 2026-09-14: 51 個）。
+**正規表現が空振りしていないか、テストの書き方が変わっていないかを先に疑うこと**（#514）。`);
+  assert.deepEqual(offenders, [], "**`!hasData` 以外の skip / todo が県ごとの検査に入っている**");
+});
+
+/**
+ * **このファイル自身が `skip` を使っていないこと。**
+ *
+ * **上の 2 本は「県ごとの検査が skip で黙らないこと」を言っているが、
+ * この検査自身が skip されたら、それも黙る。**
+ * **入れ子の一番外側は、自分で自分を見るしかない**（それより外は ci.yml。上の docblock と同じ限界）。
+ */
+test("#865 このファイル自身は skip / todo を使っていない（門番が門番を黙らせない）", () => {
+  const self = read("packages/etl/test/test-file-inventory.test.ts");
+  // **自分のソースを読めていること**（読めなければ下の検査は空振りする）
+  assert.ok(self.includes("#865 このファイル自身は skip"), "自分のソースを読めていない");
+  // **docblock の中の例（`test("...", { skip: !hasData }, ...)`）を数えないように、
+  // 行頭から始まる `test(` だけを見る**（docblock の行は必ず ` * ` で始まる）。
+  // **これは「行頭の `test(`」という弱い近似である**——
+  // **`  test(` のように字下げして書けばすり抜ける。** このファイルは今そう書いていない。
+  const lines = self.split("\n");
+  const testCalls = lines.filter((l) => /^test\(/.test(l));
+  // **母数**: **このファイルの `test(` は 11 本**（実測 2026-09-16。#855 の配線検査が main で 1 本増えた）。**0 本を読んだら空振り**
+  assert.ok(testCalls.length >= 11, `行頭の \`test(\` が ${testCalls.length} 本しか無い（実測 2026-09-16: 11 本）。
+**字下げして書くようになったなら、この数え方も直すこと**（#514: 空振りに気づけるように）。`);
+  // **options オブジェクト（`{ skip: ... }` を置ける位置）を取っている `test(` が 0 本**
+  const withOptions = testCalls.filter((l) => /^test\(\s*"[^"]*",\s*\{/.test(l));
+  assert.deepEqual(withOptions, [],
+    `**このファイルの \`test(...)\` が options（\`{ skip: ... }\` を置ける位置）を取っている。**
+**県ごとの検査を見張る側が skip できるようになったら、この階層はもう何も言っていない。**`);
 });
