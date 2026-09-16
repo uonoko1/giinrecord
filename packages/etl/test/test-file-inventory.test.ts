@@ -108,7 +108,7 @@ const ciTestFiles = (): string[] =>
 // **その場合は今の値を据え置く**（この規則は「離れすぎを詰める」ためのもので、
 // **緩める口実にしてはいけない**）。
 const WEB_TEST_FILES_MIN = 85; // 実測 2026-09-13: walk() で 87。**下げないので 85 のまま**（実数 − 3 = 84 は今より低い）
-const ETL_TEST_FILES_MIN = 135; // 実測 2026-09-16: readdirSync で 138（− 3。#720 の規則）。#855 が published-data-validate 1 本、#865 後半が鳥取・島根・徳島・高知の 4 本を足した
+const ETL_TEST_FILES_MIN = 139; // 実測 2026-09-16: readdirSync で 142（− 3。#720 の規則）。#865 の前半 4 本（宮城・三重・滋賀・奈良）がマージされて 138 → 142 になった
 const CI_TEST_FILES_MIN = 6; // 実測 2026-09-13: readdirSync で 7（− 1。母数が小さいので幅も小さく）
 
 test("#533: apps/web のテストファイル集合が下限を割らない（vitest の include glob を消しても足しても検出する）", () => {
