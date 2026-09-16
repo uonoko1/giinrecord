@@ -1,5 +1,6 @@
 import type { LocalAssemblyMeta, LocalRollCall, LocalUnmatchedName } from "@seiji-kiroku/shared";
 import { PoliteFetcher } from "../polite-fetch.ts";
+import { SessionTally } from "../session-tally.ts";
 import { SAGA_HOST, SAGA_INDEX_URL, SAGA_ROSTER_URL } from "./site.ts";
 import { parseRoster, type Roster } from "./roster.ts";
 import { articleTitle, parseCategoryPage, parseGianPage, parseIndex, parseSessionPage, parseYearPage, type SessionLink } from "./sessions.ts";
@@ -60,15 +61,17 @@ export async function runSaga(opts: { sessions: number; fetchedAt: string; fetch
   // 年の一覧 → 年ページ → 種別ページ → 会期。**新しい年から順に、必要な本数がそろうまで**
   const yearPages = parseIndex(await f.text(SAGA_INDEX_URL));
   const targets: SessionLink[] = [];
+  const indexTally = new SessionTally();
   for (const yearUrl of yearPages) {
     if (targets.length >= opts.sessions) break;
     for (const catUrl of parseYearPage(await f.text(yearUrl), yearUrl)) {
-      for (const s of parseCategoryPage(await f.text(catUrl), catUrl)) {
+      for (const s of parseCategoryPage(await f.text(catUrl), catUrl, indexTally)) {
         if (targets.some((t) => t.sessionUrl === s.sessionUrl)) continue;
         targets.push(s);
       }
     }
   }
+  log(`session index: ${indexTally.line()}`);
   // 新しい順（年・月）に並べる。**同じ年月に 2 本ある会期は sessionId で決める**（安定した順）
   targets.sort((a, b) => b.year * 100 + b.month - (a.year * 100 + a.month) || (a.sessionId < b.sessionId ? 1 : -1));
   if (targets.length === 0) throw new Error("会期が 1 つも見つからない");

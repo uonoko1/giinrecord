@@ -1,5 +1,6 @@
 import type { LocalAssemblyMeta, LocalRollCall, LocalUnmatchedName } from "@seiji-kiroku/shared";
 import { PoliteFetcher } from "../polite-fetch.ts";
+import { SessionTally } from "../session-tally.ts";
 import { AOMORI_DISTRICT_URL, AOMORI_HOST, AOMORI_INDEX_URL, AOMORI_ROSTER_URL } from "./site.ts";
 import { parseRoster, type Roster } from "./roster.ts";
 import { parseIndex, type SessionLink } from "./sessions.ts";
@@ -45,7 +46,9 @@ export async function runAomori(opts: { sessions: number; fetchedAt: string; fet
   log(`roster: ${roster.members.length} members (as of ${roster.asOf}, 名簿ページの更新日付)`);
 
   // index は 1 ページに全会期（新しい順）。**個人別の範囲（第275回以降）だけが返る**
-  const all = parseIndex(await f.text(AOMORI_INDEX_URL), AOMORI_INDEX_URL);
+  const indexTally = new SessionTally();
+  const all = parseIndex(await f.text(AOMORI_INDEX_URL), AOMORI_INDEX_URL, indexTally);
+  log(`session index: ${indexTally.line()}`);
   const picked: SessionLink[] = all.slice(0, opts.sessions);
   if (picked.length === 0) throw new Error("no session with a 議決結果 PDF found");
   log(`sessions: ${picked.map((t) => `${t.sessionId}（${t.sessionLabel}）`).join(" / ")}`);

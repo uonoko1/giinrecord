@@ -1,5 +1,6 @@
 import { parse } from "node-html-parser";
 import { AKITA_HUB_URL, AKITA_YEARS_URL, cleanText, resolveAkitaUrl } from "./site.ts";
+import { SessionTally } from "../session-tally.ts";
 
 /**
  * 秋田県議会の会期の索引（Issue #759）。**索引は 2 段ある**（#753 が #615 の行き詰まりを解いた）:
@@ -102,8 +103,9 @@ export function parseYearPages(htmls: readonly { html: string; baseUrl: string }
  * **`<a>` の中だけを見ると 22 本にしかならない**（#753）。
  * **直前の地の文は 400 字ぶん見る**——**実測でいちばん遠いものが 120 字**（議案の一覧が挟まる）。
  * **記事本文の中だけを見る**（サイドバーの SNS 運用方針 PDF を拾わない。21 本ある）。
+ * **`tally` を渡すと母数が入る**（#895）。**候補は記事本文の中の `.pdf` リンク全部。**
  */
-export function parseYearPage(html: string, baseUrl: string): PdfLink[] {
+export function parseYearPage(html: string, baseUrl: string, tally?: SessionTally): PdfLink[] {
   const root = parse(html);
   const art = root.querySelector("article.contentGpArticleDoc");
   if (!art) return [];
@@ -114,17 +116,20 @@ export function parseYearPage(html: string, baseUrl: string): PdfLink[] {
   const seen = new Set<string>();
   for (const m of body.matchAll(/<a[^>]*href="([^"]*\.pdf)"[^>]*>([\s\S]*?)<\/a>/gi)) {
     const href = m[1];
-    if (NOT_A_VOTE_PDF.test(href)) continue;
+    // サイドバーの SNS 運用方針 PDF（賛否 PDF ではない）
+    if (NOT_A_VOTE_PDF.test(href)) { tally?.drop(href, "not-a-candidate"); continue; }
     const linkText = cleanText(parse(`<div>${m[2]}</div>`).text);
     const before = cleanText(parse(`<div>${body.slice(Math.max(0, m.index - 400), m.index)}</div>`).text);
-    if (!linkText.includes(VOTE_PDF_MARK) && !before.includes(VOTE_PDF_MARK)) continue;
+    // 文言にも直前の地の文にも `表決状況` が無い PDF（議案の本文など）
+    if (!linkText.includes(VOTE_PDF_MARK) && !before.includes(VOTE_PDF_MARK)) { tally?.drop(linkText, "not-a-session"); continue; }
     let url: string;
-    try { url = resolveAkitaUrl(href, baseUrl); } catch { continue; }
+    try { url = resolveAkitaUrl(href, baseUrl); } catch { tally?.drop(href, "not-a-candidate"); continue; }
     // **同じ PDF への 2 本目のリンクは飛ばす**（`080213.pdf` は `<a>` が閉じ括弧の前で切れている。docblock）
-    if (seen.has(url)) continue;
+    if (seen.has(url)) { tally?.drop(linkText, "not-a-candidate"); continue; }
     seen.add(url);
     // **文言は「地の文の末尾 ＋ リンクの文言」**（会期の名前は地の文の側にある本がある。docblock）
     out.push({ url, sourceUrl: baseUrl, yearLabel, linkText: cleanText(`${before.slice(-120)} ${linkText}`) });
+    tally?.take();
   }
   return out;
 }

@@ -1,5 +1,6 @@
 import type { LocalAssemblyMeta, LocalRollCall, LocalUnmatchedName } from "@seiji-kiroku/shared";
 import { PoliteFetcher } from "../polite-fetch.ts";
+import { SessionTally } from "../session-tally.ts";
 import { TOTTORI_HOST, TOTTORI_ROSTER_URL } from "./site.ts";
 import { parseRoster, type Roster } from "./roster.ts";
 import { parseResultsPage, parseSessionIndex, parseSessionPage, SESSION_INDEX_URL, type SessionLink } from "./sessions.ts";
@@ -32,7 +33,9 @@ export async function runTottori(opts: { sessions: number; fetchedAt: string; fe
   const roster = parseRoster(await f.text(TOTTORI_ROSTER_URL));
   log(`roster: ${roster.members.length} members (as of ${roster.asOf})`);
 
-  const index = parseSessionIndex(await f.text(SESSION_INDEX_URL), SESSION_INDEX_URL);
+  const indexTally = new SessionTally();
+  const index = parseSessionIndex(await f.text(SESSION_INDEX_URL), SESSION_INDEX_URL, indexTally);
+  log(`session index: ${indexTally.line()}`);
   const targets: { session: SessionLink; resultsUrl: string }[] = [];
   for (const s of index) {
     if (targets.length >= opts.sessions) break;

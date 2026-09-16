@@ -1,5 +1,6 @@
 import type { LocalAssemblyMeta, LocalRollCall, LocalUnmatchedName } from "@seiji-kiroku/shared";
 import { PoliteFetcher } from "../polite-fetch.ts";
+import { SessionTally } from "../session-tally.ts";
 import { KOCHI_HOST, KOCHI_ROSTER_URL } from "./site.ts";
 import { parseRoster, type Roster } from "./roster.ts";
 import { parseSessionIndex, DECISION_URL } from "./sessions.ts";
@@ -33,7 +34,9 @@ export async function runKochi(opts: { sessions: number; fetchedAt: string; fetc
   const roster = parseRoster(await f.text(KOCHI_ROSTER_URL));
   log(`roster: ${roster.members.length} members (as of ${roster.asOf})`);
 
-  const index = parseSessionIndex(await f.text(DECISION_URL), DECISION_URL);
+  const indexTally = new SessionTally();
+  const index = parseSessionIndex(await f.text(DECISION_URL), DECISION_URL, indexTally);
+  log(`session index: ${indexTally.line()}`);
   const targets = index.slice(0, opts.sessions);
   if (targets.length === 0) throw new Error("no session with a 議決結果一覧 PDF found");
   log(`sessions: ${targets.map((t) => `${t.sessionId}（${t.sessionLabel}）`).join(" / ")}`);

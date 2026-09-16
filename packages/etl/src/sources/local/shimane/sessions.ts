@@ -1,5 +1,6 @@
 import { parse } from "node-html-parser";
 import { cleanText, resolveShimaneUrl, SHIMANE_ORIGIN, warekiYear } from "./site.ts";
+import { SessionTally } from "../session-tally.ts";
 
 /**
  * 島根県議会の会期の発見（Issue #221）。会期の index は 2 つに分かれている:
@@ -32,8 +33,9 @@ const LINK_TEXT = /^(令和|平成)(\d+|元)年(\d{1,2})月(定例会|臨時会)
 /**
  * 会期 index（saikin / gikai_kako のどちらでも）→ 会期のリンク。新しい順に並べ替えて返す
  * （gikai_kako の年内の並びは年によって昇順・降順が混ざっているので、ここで揃える）。
+ * **`tally` を渡すと母数が入る**（#895）。
  */
-export function parseSessionIndex(html: string, baseUrl: string): SessionLink[] {
+export function parseSessionIndex(html: string, baseUrl: string, tally?: SessionTally): SessionLink[] {
   const root = parse(html);
   const contents = root.querySelector("#page-content");
   if (!contents) throw new Error(`${baseUrl}: #page-content not found`);
@@ -41,7 +43,7 @@ export function parseSessionIndex(html: string, baseUrl: string): SessionLink[] 
   for (const a of contents.querySelectorAll("a")) {
     const text = cleanText(a.text).normalize("NFKC");
     const m = text.match(LINK_TEXT);
-    if (!m) continue;
+    if (!m) { tally?.drop(text, "not-a-session"); continue; }
     const year = warekiYear(m[1], m[2]);
     const month = Number(m[3]);
     if (month < 1 || month > 12) throw new Error(`${baseUrl} ${text}: bad month`);
@@ -56,6 +58,7 @@ export function parseSessionIndex(html: string, baseUrl: string): SessionLink[] 
       month,
       url: resolveShimaneUrl(a.getAttribute("href") ?? "", baseUrl),
     });
+    tally?.take();
   }
   if (sessions.length === 0) throw new Error(`${baseUrl}: no sessions found`);
   sessions.sort((a, b) => b.year * 100 + b.month - (a.year * 100 + a.month));

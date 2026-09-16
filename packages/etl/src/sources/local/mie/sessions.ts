@@ -1,5 +1,6 @@
 import { parse, type HTMLElement } from "node-html-parser";
 import { cleanText, MIE_ORIGIN, resolveMieUrl, warekiYear } from "./site.ts";
+import { SessionTally } from "../session-tally.ts";
 
 /**
  * 三重県議会「議案審議結果一覧」（Issue #203）。1 ページに全会期が並ぶ。
@@ -32,15 +33,18 @@ export interface MieSession {
   pdfs: SessionPdfLink[];
 }
 
-/** 会期 index → 賛否 PDF のある会期（新しい順）。見出し・リンクの形が崩れていれば例外（黙って読まない）。 */
-export function parseSessionIndex(html: string, baseUrl: string): MieSession[] {
+/**
+ * 会期 index → 賛否 PDF のある会期（新しい順）。見出し・リンクの形が崩れていれば例外（黙って読まない）。
+ * **`tally` を渡すと母数が入る**（#895）。
+ */
+export function parseSessionIndex(html: string, baseUrl: string, tally?: SessionTally): MieSession[] {
   const root = parse(html);
   const out: MieSession[] = [];
   const seen = new Set<string>();
   for (const h2 of root.querySelectorAll("h2")) {
     const label = cleanText(h2.text);
     const m = label.match(SESSION_HEADING);
-    if (!m) continue;
+    if (!m) { tally?.drop(label, "not-a-session"); continue; }
     const year = warekiYear(m[1], m[2]);
     const era = m[1] === "令和" ? "r" : "h";
     const n = m[2] === "元" ? 1 : Number(m[2].normalize("NFKC"));
@@ -59,7 +63,8 @@ export function parseSessionIndex(html: string, baseUrl: string): MieSession[] {
         break;
       }
     }
-    if (!pdfList) continue;
+    // 平成19年以前は「議員別の賛否等の状況」の節が無い（公表が無い）。**落としたことは母数に残す**（#895）
+    if (!pdfList) { tally?.drop(label, "no-vote-link"); continue; }
     const pdfs: SessionPdfLink[] = [];
     for (const a of pdfList.querySelectorAll("a")) {
       const text = cleanText(a.text);
@@ -75,6 +80,7 @@ export function parseSessionIndex(html: string, baseUrl: string): MieSession[] {
     }
     if (pdfs.length === 0) throw new Error(`${label}: ${PDF_HEADING} has no links`);
     out.push({ sessionId, sessionLabel: label, year, pdfs });
+    tally?.take();
   }
   if (out.length === 0) throw new Error(`${baseUrl}: no sessions with 賛否 PDF found`);
   for (let i = 1; i < out.length; i++) {

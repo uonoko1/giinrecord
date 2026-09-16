@@ -1,5 +1,6 @@
 import { parse, type HTMLElement } from "node-html-parser";
 import { cleanText, resolveSagaUrl, SAGA_INDEX_URL, warekiYear } from "./site.ts";
+import { SessionTally } from "../session-tally.ts";
 
 /**
  * 佐賀県議会の会期の索引（Issue #768）。**5 階層下りる:**
@@ -111,13 +112,17 @@ export function parseYearPage(html: string, baseUrl: string): string[] {
   return out;
 }
 
-/** 種別ページ → 会期。**`令和8年6月定例会` のような名前のリンクだけ**。 */
-export function parseCategoryPage(html: string, baseUrl: string): SessionLink[] {
+/**
+ * 種別ページ → 会期。**`令和8年6月定例会` のような名前のリンクだけ**。
+ * **`tally` を渡すと母数が入る**（#895）。
+ */
+export function parseCategoryPage(html: string, baseUrl: string, tally?: SessionTally): SessionLink[] {
   const out: SessionLink[] = [];
   for (const { url, text } of mainLinks(html, baseUrl)) {
     const m = SESSION_LABEL.exec(text.replace(/[\s　]+/g, ""));
-    if (!m) continue;
-    if (out.some((s) => s.sessionUrl === url)) continue;
+    if (!m) { tally?.drop(text, "not-a-session"); continue; }
+    // **同じ会期ページへの 2 本目のリンク**（本文に同じ記事が 2 回出る種別ページがある）
+    if (out.some((s) => s.sessionUrl === url)) { tally?.drop(text, "not-a-candidate"); continue; }
     const year = warekiYear(m[1], m[2]);
     const month = Number(m[3].normalize("NFKC"));
     const kind = m[4];
@@ -126,6 +131,7 @@ export function parseCategoryPage(html: string, baseUrl: string): SessionLink[] 
     const page = /\/(list\d+|kiji\d+)(?:\/index)?\.html$/.exec(url)?.[1] ?? "";
     const suffix = kind === "定例会" ? "teirei" : kind === "臨時会" ? "rinji" : "sonota";
     out.push({ sessionLabel: text, sessionId: `${year}-${String(month).padStart(2, "0")}-${suffix}-${page}`, sessionUrl: url, year, month, kind });
+    tally?.take();
   }
   return out;
 }
