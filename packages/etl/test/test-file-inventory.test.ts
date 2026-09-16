@@ -108,7 +108,7 @@ const ciTestFiles = (): string[] =>
 // **その場合は今の値を据え置く**（この規則は「離れすぎを詰める」ためのもので、
 // **緩める口実にしてはいけない**）。
 const WEB_TEST_FILES_MIN = 85; // 実測 2026-09-13: walk() で 87。**下げないので 85 のまま**（実数 − 3 = 84 は今より低い）
-const ETL_TEST_FILES_MIN = 124; // 実測 2026-09-13: readdirSync で 128（− 4）。#741 が滋賀の 5 本、#750 が青森の 6 本、#759 が秋田の 6 本、#763 が青森のかな 1 本、#768 が佐賀の 6 本、#778 が `local-lossy-name-matches.test.ts` 1 本を足した
+const ETL_TEST_FILES_MIN = 131; // 実測 2026-09-14: readdirSync で 134（− 3。#720 の規則どおり「テストを増やした PR がそのついでに上げる」）。#855 が `published-data-validate.test.ts` 1 本を足し、残り 5 本は #829 以降に入ったもの
 const CI_TEST_FILES_MIN = 6; // 実測 2026-09-13: readdirSync で 7（− 1。母数が小さいので幅も小さく）
 
 test("#533: apps/web のテストファイル集合が下限を割らない（vitest の include glob を消しても足しても検出する）", () => {
@@ -225,4 +225,42 @@ test("#720 ci.yml の下限が、このファイルの定数とずれていな�
     "ci.yml の echo が古い下限を表示している");
   assert.match(ci, new RegExp(`packages/etl test files: \\$etl \\(floor ${ETL_TEST_FILES_MIN}\\)`),
     "ci.yml の echo が古い下限を表示している");
+});
+
+/**
+ * Issue #855: **本数の下限は、特定のファイルを名指しできない。**
+ *
+ * `published-data-validate.test.ts`（**コミット済み `data/` に不変条件を当てる唯一のもの**）を消しても、
+ * **別のテストファイルが 1 本でも増えていれば ETL_TEST_FILES_MIN は満たされる。**
+ * **実測: このファイルを消すと etl は 1,581 → 1,578 テストで 0 fail（無言で緑）。**
+ *
+ * **だから ci.yml 側に `test -f` を置いた**（`test -f scripts/ci/stale-base.sh` と同じ #504 の形）。
+ * **そして「ci.yml がそれを今も要求していること」を、ci.yml ではないファイルから固定する**
+ * ——`scripts/ci/test/stale-base.test.sh` の `t_net_deletions_is_wired_into_ci` と同じ形である
+ * （**そこの実測: ci.yml から `--net-deletions` の行を消しても 1,542 の etl テストが全部緑だった**）。
+ *
+ * **名前が在ることだけを見ない**（`pr-closes` のテストが記録している罠——
+ * `test -f` の行がファイル名を生かし続けるので、名前の存在は検査にならない）。
+ * **本番 `data/` に実際に当てている行**を見る。
+ */
+test("#855 ci.yml が「本番 data/ に不変条件を当てるテスト」の存在を要求している（消しても無言で緑にならない）", () => {
+  const ci = read(".github/workflows/ci.yml");
+  assert.ok(
+    ci.includes("test -f packages/etl/test/published-data-validate.test.ts"),
+    "ci.yml が published-data-validate.test.ts の存在を要求していない（#855／#504）",
+  );
+  // **消されたら ENOENT ではなく理由を出す**（読めない理由が「無い」なのか「壊れた」なのかを分ける）
+  let body: string;
+  try { body = read("packages/etl/test/published-data-validate.test.ts"); } catch {
+    assert.fail(`packages/etl/test/published-data-validate.test.ts が無い（#855）。
+**本数の下限では止まらない**（実測 2026-09-14: 消しても 134 → 133 本で、下限 131 を上回るので通る）。
+コミット済み data/ に不変条件を当てる唯一のものなので、消すなら理由をここに書くこと。`);
+  }
+  // **本番の data/ を指していること。** 一時ディレクトリに当てても、コミット済みの data/ は見ていない。
+  assert.ok(
+    body.includes('fileURLToPath(new URL("../../../data/", import.meta.url))'),
+    "published-data-validate.test.ts がコミット済み data/ を読んでいない（#855）",
+  );
+  // validateDataset は validateLocalAssemblies を内側で呼ぶ厳密な上位集合（理由はテスト本体の docblock）
+  assert.ok(body.includes("validateDataset(DATA)"), "validateDataset を本番 data/ に当てていない（#855）");
 });
