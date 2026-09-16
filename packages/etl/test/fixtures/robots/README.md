@@ -17,7 +17,7 @@
 | `nara.txt` | 奈良 | `www.pref.nara.lg.jp` | 「全文は `User-agent: *` / `Disallow: /documents/22137/*` の 2 行だけ」（43 B） |
 | `tottori.txt` | 鳥取 | `www.pref.tottori.lg.jp` | 「`User-Agent: *` のブロックが 2 つ…末尾にもう 1 つ `User-agent: *` があり `/koujisoutatu*.pdf` と `*/koujisoutatu*.pdf`」（406 B） |
 | `shimane.txt` | 島根 | `www.pref.shimane.lg.jp` | **HTTP 404**。`Disallow` は無い |
-| `tokushima.txt` | 徳島 | `www.pref.tokushima.lg.jp` | `docs/ops/etl.md`「robots.txt は `/system` などを Disallow。`/gikai/` と `/file/attachment/` は対象外」 |
+| `tokushima.txt` | 徳島 | `www.pref.tokushima.lg.jp` | **実物を取り直した**（#875、2026-09-16。**HTTP 200・167 B・md5 `e47a08ed…`・全文 5 行で、このファイルは原本と 1 バイトも違わない**）。**`Disallow` は 4 行**（`/system`・`/kenseijoho/kenpou/koujisoutatsu`・その `/tb/` と `/sp/` 版）。**`*` は 0 件。** **`docs/ops/etl.md` の「`/system` などを Disallow」から起こした版は `Disallow` が 1 行しか無く、3 行足りなかった** |
 | `kochi.txt` | 高知 | `gikai.pref.kochi.lg.jp` | 「`Disallow: /search.html` `/reiki/` `/*.html.r` のみ」 |
 | `saga.txt` | 佐賀 | `www.pref.saga.lg.jp` | 「`*/Calendar.aspx` `*/Daily.aspx` `*/Weekly.aspx` `*/Yearly.aspx`（大小両方）のみ」＝8 行（219 B、md5 `844393c4…`） |
 
