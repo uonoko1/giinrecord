@@ -46,9 +46,54 @@ export function parseRobots(text: string, agent = "giinrecord-etl"): RobotsRules
   return { disallow };
 }
 
+/**
+ * `Disallow` の値を照合用の正規表現にする（RFC 9309 §2.2.2 の `*` と `$`。#894）。
+ *
+ * **直す前は `prefix.replace(/\*$/, "")` で末尾の `*` しか剥がしておらず、途中の `*` を
+ * ただの文字として扱っていた。** そのため `/koujisoutatu*.pdf`（鳥取に実在する）のとき
+ * `/koujisoutatu2024.pdf` を **許可** と判定していた——
+ * **「取ってはいけない」と書かれた URL を「取ってよい」と言う、危険側の誤りだった。**
+ *
+ * - `*` は 0 文字以上の任意の並び。
+ * - **末尾の `$` だけ**が行末への固定（途中の `$` はただの文字。RFC 9309 の書き方に合わせた）。
+ * - **それ以外の文字はすべてリテラル**。`.` や `(` を正規表現のメタ文字として扱うと、
+ *   当たらないはずの URL まで拒否になる（**厳しすぎる側にも外さない**）。
+ */
+function disallowPattern(rule: string): RegExp {
+  const anchored = rule.endsWith("$");
+  const body = anchored ? rule.slice(0, -1) : rule;
+  // `*` で切って、間をリテラルとしてエスケープし、`*` を `[\s\S]*` に戻す
+  const source = body.split("*").map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("[\\s\\S]*");
+  return new RegExp(`^${source}${anchored ? "$" : ""}`);
+}
+
+/** 規則ごとの正規表現は同じ文字列で何度も引くので覚えておく（robots.txt は 1 ホストで 1 回読むが、URL ごとに全規則を当てる）。 */
+const patternCache = new Map<string, RegExp>();
+
+function patternFor(rule: string): RegExp {
+  let re = patternCache.get(rule);
+  if (re === undefined) {
+    re = disallowPattern(rule);
+    patternCache.set(rule, re);
+  }
+  return re;
+}
+
+/**
+ * この URL を取りに行ってよいか。**`Disallow` に 1 つでも当たれば取りに行かない**（`Allow` は見ない＝保守的）。
+ *
+ * **照合する対象はパスとクエリ**（RFC 9309 は path を「path + query」と定める）。
+ * **URL として読めないものは「拒否」に倒す**——判断が付かないときに取りに行かないのが安全側である。
+ */
 export function isAllowedByRobots(rules: RobotsRules, url: string): boolean {
-  const path = new URL(url).pathname;
-  return !rules.disallow.some((prefix) => path.startsWith(prefix.replace(/\*$/, "")));
+  let target: string;
+  try {
+    const u = new URL(url);
+    target = `${u.pathname}${u.search}`;
+  } catch {
+    return false;
+  }
+  return !rules.disallow.some((rule) => patternFor(rule).test(target));
 }
 
 export class PoliteFetcher {
