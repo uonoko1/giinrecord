@@ -318,7 +318,11 @@ test("#874 2024-06 は既存の 2 本と作りが違う（Producer が DocuWorks
 
 test("#874 2025-11 は読めない——付託委員会の名前が**中央揃え**で、`leftAlignedBoundary` の前提が崩れる", async () => {
   // **`parseVotePdf` は例外を投げる**（黙って落とさない）。**それ自体は正しい振る舞いである。**
-  await assert.rejects(() => parseVotePdf(fixture("r0711_giinbetu_kekka.pdf")), /付託委員会 is empty/);
+  // **#896 で例外の中身が変わった**（`付託委員会 is empty` → `付託委員会 is …pt off the row centre`）。
+  // **#896 は付託委員会の切り分けを閾値から「塊の中心が行の中心に揃う」に変えたので、
+  // この本では「欄からこぼれた委員会名のぶん、塊の中心がずれる」という形で先に捕まる。**
+  // **どちらにせよ読めない**——**中央揃えという機序は #896 では直していない**（下でその機序を固定する）。
+  await assert.rejects(() => parseVotePdf(fixture("r0711_giinbetu_kekka.pdf")), /付託委員会 is 4\.2pt off the row centre/);
   // **機序**: 12 本では委員会名が**左端を揃えて**書かれるが、2025-11 だけ**中心が揃っている**（中心 x=350.0）。
   // そのため「一番多く並んでいる左端の x」を欄の左端とみなす規則が、長い名前を取りこぼす。
   const pages = await readPages(fixture("r0711_giinbetu_kekka.pdf"));
