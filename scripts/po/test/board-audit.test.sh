@@ -516,3 +516,295 @@ EOF
   assert_contains "$ERR" "人が決めて" "残した理由を出す"
 }
 test_case "audit: --fix でも In Progress の痕跡無しは直さない (#809)" t_audit_inprogress_not_fixed
+
+# ---- 台帳（#919）-------------------------------------------------------------------------------
+# **`--fix` が直したことを、後から数えられる形で残す。**
+# **Sprint 28 の締めで「この回で何回食い違いを捕まえたか」が書けなかった**——
+# **`--fix` が直すたびに食い違いが消えるので、後から数えられなかった。**
+#
+# **ここで固定するのは 3 つ**:
+#   (a) **`--fix` が直したら台帳が増える**
+#   (b) **`--fix` を付けずに読んだだけなら 1 バイトも書かない**（ファイルを作りもしない）
+#   (c) **母数（何件見て・何件直して・何件残したか）が台帳に入る**（#757）
+
+# 台帳の行を数える。**空を 1 行と数えない**（`printf '%s\n' ""` は空行 1 本を作るので、
+# `grep -c ''` では「書いていない」と「1 行書いた」が両方 1 になる——そこが今回の主張の核心）。
+# `grep -c` は 0 件で exit 1 を返し、run.sh の `set -e` が走行ごと落とすので `|| true` で受ける。
+ledger_rows() { # ledger_rows [kind]  → 行数（kind を渡すとその種別の行だけ数える）
+  [[ -n "$LEDGER" ]] || { echo 0; return 0; }
+  local kind=${1:-}
+  if [[ -z "$kind" ]]; then
+    printf '%s\n' "$LEDGER" | grep -c '' || true
+  else
+    printf '%s\n' "$LEDGER" | cut -f2 | grep -cx "$kind" || true
+  fi
+}
+
+# 直した 1 件・残した 1 件が同時に出るハンドラ（台帳の検査で使い回す）。
+# #763: Closes #763 の MERGED な PR がある OPEN な Issue → 直す
+# #710: OPEN なのに Done                                 → 残す（人が決める）
+t_ledger_handler() {
+  handler <<'EOF'
+handle() {
+  case "$*" in
+    "issue list "*) echo '[{"number":763,"state":"OPEN"},{"number":710,"state":"OPEN"}]' ;;
+    "api graphql "*"items(first:100"*) echo '{"data":{"node":{"items":{"pageInfo":{"hasNextPage":false,"endCursor":""},
+      "nodes":[{"id":"I763","content":{"number":763},"fieldValueByName":{"name":"In Review"}},
+               {"id":"I710","content":{"number":710},"fieldValueByName":{"name":"Done"}}]}}}}' ;;
+    "api graphql "*"projectItems(first:50"*) echo '{"data":{"repository":{"issue":{"id":"N763","projectItems":{"nodes":[{"id":"I763","project":{"id":"PVT_kwHOBy0CLs4BhHqj"}}]}}}}}' ;;
+    "api graphql "*updateProjectV2ItemFieldValue*) echo '{"data":{"updateProjectV2ItemFieldValue":{"projectV2Item":{"id":"I763"}}}}' ;;
+    "pr list "*) echo '[{"number":770,"body":"Closes #763"}]' ;;
+    "pr view 770 "*) echo '{"state":"MERGED"}' ;;
+    "issue close "*) ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+}
+
+t_ledger_records_fixes() {
+  local h; h=$(t_ledger_handler)
+  run_script "$h" board-audit.sh --fix
+  # (a) 直した 1 件が、**いつ・どの Issue を・どの状態からどの状態に**の形で残る
+  # 規則 1 は **Issue を閉じる** と **ボードを Done にする** の 2 つを動かすので、両方を書く
+  assert_contains "$LEDGER" "$(printf '\tfixed\t763\tOPEN/In Review\tCLOSED/Done\tclosed-pr-open-issue')" \
+    "**直した 1 件が <どこから><どこへ><種別> 付きで台帳に残る**"
+  # 残した 1 件も残る（**直していないものを「直した」と数えないため**）
+  assert_contains "$LEDGER" "$(printf '\tleft\t710\tDone\t')" "**人に残した 1 件も台帳に残る**"
+  assert_contains "$LEDGER" "open-issue-done" "残した理由（種別）も残る"
+  # 時刻が UTC の ISO8601 で入っている（**いつ直したか**）
+  local ts; ts=$(printf '%s\n' "$LEDGER" | head -1 | cut -f1)
+  [[ "$ts" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$ ]] \
+    || fail "台帳の 1 列目は UTC の ISO8601: got [$ts]"
+  # **行数の検算**: fixed 1 + left 1 + run 1 = 3 行
+  assert_eq 3 "$(ledger_rows)" "**台帳は fixed 1 + left 1 + run 1 の 3 行**"
+}
+test_case "ledger: --fix が直した/残した 1 件ずつを台帳に残す (#919)" t_ledger_records_fixes
+
+t_ledger_records_denominator() {
+  local h; h=$(t_ledger_handler)
+  run_script "$h" board-audit.sh --fix
+  # (c) **#757: 何件見て、何件直して、何件残したか。** 「直した 1 件」だけでは母数が分からない
+  assert_contains "$LEDGER" "$(printf '\trun\t-\t-\t-\t')" "**1 回の --fix につき run 行が 1 本**"
+  assert_contains "$LEDGER" "issues=2 board=2 prs=1 findings=2 fixed=1 left=1" \
+    "**母数（見た件数）と内訳（直した/残した）が run 行に入る**"
+  # **run 行の数字と、実際に書いた行数が一致すること**（台帳の中だけで検算できる）
+  local fixed_rows left_rows
+  fixed_rows=$(ledger_rows fixed)
+  left_rows=$(ledger_rows left)
+  assert_eq 1 "$fixed_rows" "fixed 行は 1 本"
+  assert_eq 1 "$left_rows" "left 行は 1 本"
+  assert_contains "$LEDGER" "fixed=$fixed_rows left=$left_rows" "**run 行の数字が実際の行数と一致する**"
+}
+test_case "ledger: 台帳に母数（見た/直した/残した）が入る (#919/#757)" t_ledger_records_denominator
+
+t_ledger_readonly_writes_nothing() {
+  # (b) **読んだだけで「直した」が増えてはいけない。** **ファイルを作りもしない。**
+  #
+  # **2 つの形を両方見る。** 片方だけでは `$FIX` の番人を外す変異を捕まえられない:
+  #   - **食い違いがある形**: 読むだけの走行は `exit 1` で `ledger_flush` に着く前に終わる。
+  #     **だからこの形は、番人が無くても台帳が増えない**——**この形だけでは何も主張できない**
+  #     （実測: `[[ "$FIX" == 1 ]] || return 0` を 2 か所とも消しても、この形は緑のままだった）。
+  #   - **食い違いが 0 件の形**: `ledger_flush` に着くので、**番人だけが書き込みを止めている。**
+  local h; h=$(t_ledger_handler)
+  run_script "$h" board-audit.sh   # **--fix を付けない**（食い違いあり）
+  assert_eq 1 "$STATUS" "食い違いがあるので 1: $ERR"
+  assert_contains "$OUT" "closed-pr-open-issue" "読むだけでも食い違いは出す（前提）"
+  assert_eq "" "$LEDGER" "**読むだけの走行は台帳に 1 バイトも書かない（食い違いあり）**"
+  [[ ! -e "$LEDGER_PATH" ]] || fail "**読むだけの走行は台帳のファイルを作りもしない（食い違いあり）**"
+
+  local h0; h0=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "issue list "*) echo '[{"number":700,"state":"CLOSED"}]' ;;
+    "api graphql "*) echo '{"data":{"node":{"items":{"pageInfo":{"hasNextPage":false,"endCursor":""},
+      "nodes":[{"id":"I700","content":{"number":700},"fieldValueByName":{"name":"Done"}}]}}}}' ;;
+    "pr list "*) echo '[{"number":702,"body":"no closing keyword"}]' ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h0" board-audit.sh   # **--fix を付けない**（食い違い 0 件）
+  assert_eq 0 "$STATUS" "食い違いが無いので 0: $ERR"
+  assert_contains "$OUT" "食い違い 0 件" "読むだけでも 0 件だと言う（前提）"
+  assert_eq "" "$LEDGER" "**読むだけの走行は台帳に 1 バイトも書かない（0 件）**"
+  [[ ! -e "$LEDGER_PATH" ]] || fail "**読むだけの走行は台帳のファイルを作りもしない（0 件）**"
+}
+test_case "ledger: --fix を付けずに読んだだけなら台帳に何も書かない (#919)" t_ledger_readonly_writes_nothing
+
+t_ledger_clean_run_still_counted() {
+  # **食い違い 0 件でも --fix なら run 行を書く。**
+  # **走らせた回数が母数だから**——「直した 9 件」だけ残ると、
+  # それが 1 回で出たのか 30 回走らせて出たのかが分からない。
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "issue list "*) echo '[{"number":700,"state":"CLOSED"}]' ;;
+    "api graphql "*) echo '{"data":{"node":{"items":{"pageInfo":{"hasNextPage":false,"endCursor":""},
+      "nodes":[{"id":"I700","content":{"number":700},"fieldValueByName":{"name":"Done"}}]}}}}' ;;
+    "pr list "*) echo '[{"number":702,"body":"no closing keyword"}]' ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" board-audit.sh --fix
+  assert_eq 0 "$STATUS" "食い違いが無いので 0: $ERR"
+  assert_contains "$LEDGER" "findings=0 fixed=0 left=0" "**0 件の走行も run 行として数える**"
+  assert_eq 1 "$(ledger_rows)" "**0 件なら run 行 1 本だけ**"
+  # そして同じハンドラを --fix 無しで走らせたら、やはり何も書かない
+  run_script "$h" board-audit.sh
+  assert_eq "" "$LEDGER" "**0 件でも読むだけなら書かない**"
+}
+test_case "ledger: 食い違い 0 件の --fix も run 行として数える (#919/#757)" t_ledger_clean_run_still_counted
+
+t_ledger_appends() {
+  # **追記であること。** **前回までの行を消したら、過去の回数がまた失われる**
+  # ——**それがこの PBI の出発点である**（Sprint 28 の回数はもう復元できない）。
+  #
+  # 台帳に「前の回の 3 行」を先に置いてから走らせ、**その 3 行が残ったまま増える**ことを見る。
+  local h; h=$(t_ledger_handler)
+  run_script "$h" board-audit.sh --fix          # 1 回目（run_script が台帳を消してから走る）
+  local first_rows; first_rows=$(ledger_rows)
+  assert_eq 3 "$first_rows" "1 回目で 3 行（前提）"
+  # 2 回目: **1 回目の中身を置いたまま**走らせる（run_script は消すので、直接呼ばずに自前で走らせる）
+  local seeded="$LEDGER"
+  printf '%s\n' "$seeded" > "$LEDGER_PATH"
+  PATH="$HERE/fake-bin:$PATH" FAKE_GH_LOG="$TMP/gh.log" FAKE_GH_HANDLER="$h" \
+    FAKE_COUNTER="$TMP/counter" FAKE_UNHANDLED="$TMP/unhandled" \
+    POLL_INTERVAL=0 POLL_MAX=5 PO_REPO=uonoko1/giinrecord BOARD_AUDIT_LOG="$LEDGER_PATH" \
+    bash "$PO_DIR/board-audit.sh" --fix > /dev/null 2>&1 || true
+  local LEDGER; LEDGER=$(cat "$LEDGER_PATH" 2>/dev/null || true)
+  assert_eq 6 "$(ledger_rows)" "**2 回走らせたら 6 行**（追記であって上書きではない）"
+  assert_eq 2 "$(ledger_rows run)" "**run 行が 2 本 = --fix を 2 回走らせた**"
+  assert_eq 2 "$(ledger_rows fixed)" "**直した延べ件数（2 件）が数えられる**"
+  # **1 回目に置いた行がそのまま残っている**（消して書き直していない）
+  assert_contains "$LEDGER" "$seeded" "**前の回の行を 1 行も消さない**"
+}
+test_case "ledger: 台帳は追記で、過去の回数が消えない (#919)" t_ledger_appends
+
+t_ledger_writes_no_free_text() {
+  # **OSS 公開前提。台帳に書くのは番号と Status と種別だけで、自由文は書かない。**
+  # **Issue/PR のタイトルや本文は台帳の入力にしていない**——**何が入るか分からない**から
+  # （調査中のホスト名や URL が入りうる）。
+  #
+  # **この検査が見るのは「実際に台帳まで流れうる文字列」である。**
+  # 食い違いの行には `根拠` の列があり、そこには PR 番号や `since` の時刻が入る。
+  # **台帳には種別しか書かない**ので、根拠の文字列は台帳に出ない。
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "issue list "*) echo '[{"number":781,"state":"OPEN"}]' ;;
+    "api graphql "*"items(first:100"*) echo '{"data":{"node":{"items":{"pageInfo":{"hasNextPage":false,"endCursor":""},
+      "nodes":[{"id":"I781","content":{"number":781,"labels":{"nodes":[]}},
+        "fieldValueByName":{"name":"In Progress","updatedAt":"2026-09-13T00:00:00Z"}}]}}}}' ;;
+    "pr list --repo "*"--state merged"*) echo '[{"number":790,"body":"no refs","headRefName":"x"}]' ;;
+    "pr list --repo "*"--state all"*) echo '[{"number":790,"body":"no refs","headRefName":"x"}]' ;;
+    "api repos/"*"/branches"*) echo '[{"name":"main"}]' ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  PO_NOW=2026-09-14T12:00:00Z run_script "$h" board-audit.sh --fix
+  assert_contains "$LEDGER" "$(printf '\tleft\t781\t')" "残したことは台帳に残る（前提）"
+  # **前提の確認**: 根拠の文字列は画面には出る。**ここが落ちたら下 2 行は何も主張していない**
+  assert_contains "$OUT" "枝も PR も無い（since 2026-09-13T00:00:00Z）" "根拠は画面には出る（前提）"
+  assert_not_contains "$LEDGER" "since" "**台帳に根拠の自由文を書かない**"
+  assert_not_contains "$LEDGER" "2026-09-13T00:00:00Z" "**台帳に食い違いの根拠の時刻を書かない**"
+  # 台帳の 6 列目（detail）は 5 種類の種別か run 行の母数のどちらかしかない
+  local kinds; kinds=$(printf '%s\n' "$LEDGER" | awk -F'\t' '$2!="run"{print $6}' | sort -u)
+  assert_eq "inprogress-no-trace" "$kinds" "**台帳の種別は board-audit.sh 自身の語彙だけ**"
+}
+test_case "ledger: 台帳に自由文を書かない（番号と Status と種別だけ）(#919)" t_ledger_writes_no_free_text
+
+t_ledger_unwritable_is_not_success() {
+  # **残らないなら「直した」と報告しない。** 台帳に書けない場所を指したら exit 5 で落ちる
+  # （**直した件数が残らない走行を、静かに成功にしない**）。
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "issue list "*) echo '[{"number":700,"state":"CLOSED"}]' ;;
+    "api graphql "*) echo '{"data":{"node":{"items":{"pageInfo":{"hasNextPage":false,"endCursor":""},
+      "nodes":[{"id":"I700","content":{"number":700},"fieldValueByName":{"name":"Done"}}]}}}}' ;;
+    "pr list "*) echo '[{"number":702,"body":"none"}]' ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  # 書き込めないディレクトリの下を指す（root で走らせると通ってしまうので、そのときは飛ばす）
+  local bad="$TMP/ro-dir"
+  rm -rf "$bad"; mkdir -p "$bad"; chmod 500 "$bad"
+  if ( : > "$bad/probe" ) 2>/dev/null; then
+    rm -rf "$bad"; echo "    - skipped: この環境では読み取り専用ディレクトリに書けてしまう（root?）"; return 0
+  fi
+  local saved="$LEDGER_PATH"
+  LEDGER_PATH="$bad/board-audit-log.tsv"
+  run_script "$h" board-audit.sh --fix
+  LEDGER_PATH="$saved"
+  assert_eq 5 "$STATUS" "**台帳に書けなければ exit 5**: $ERR"
+  assert_contains "$ERR" "台帳" "どこで失敗したかを言う"
+  chmod 700 "$bad"; rm -rf "$bad"
+}
+test_case "ledger: 台帳に書けなければ成功と報告しない (#919)" t_ledger_unwritable_is_not_success
+
+# ---- 台帳の検算（#919/#757）----------------------------------------------------------------
+# **`ledger_flush` は「行数」と「直した/残した/食い違いの件数」が合わないと書かずに落ちる。**
+#
+# **この番人は、実際の走行では一度も鳴らない**（`ledger_add` と `fixed`/`left` の加算が
+# 同じ `case` の同じ節に並んでいるので、ふだんは必ず一致する）。
+# **一度も鳴らない番人を、テストの無いまま置いておかない**（#922「通るだけのテストは消す」の裏）:
+# **鳴らす条件を直接作って、鳴ることを固定する。**
+#
+# **規則は board-audit.sh から取り出す。写しを持たない**（`scripts/ci/pr-closes.sh` が
+# `CLOSING_RE` をそこから取り出しているのと同じ理由）。**取り出せなければ落ちる。**
+t_ledger_checksum_refuses_mismatch() {
+  local block="$TMP/ledger-block.sh"
+  # LEDGER-BEGIN 〜 LEDGER-END の間だけを取り出す
+  sed -n '/# ---- 台帳（#919）.*LEDGER-BEGIN/,/^# LEDGER-END$/p' "$PO_DIR/board-audit.sh" > "$block"
+  # **印が片方でも壊れていたら、取り出しは黙って全部（または空）を返す。**
+  # **両端が在ることと、中身が台帳の関数だけであることを確かめてから使う**
+  # （**取り出せないまま緑にしない**。#757）。
+  if ! grep -q '^# LEDGER-END$' "$block" || ! grep -q '^ledger_flush() {' "$block" \
+     || grep -q '^REPO=' "$block"; then
+    fail "board-audit.sh から台帳のブロックを取り出せません（LEDGER-BEGIN/LEDGER-END の印を確かめてください）"
+    return 0
+  fi
+  # 取り出したブロックだけを走らせる小さな台本。lib.sh の log() と HERE が要る
+  local drv="$TMP/ledger-drv.sh"
+  cat > "$drv" <<DRV
+set -euo pipefail
+HERE="$PO_DIR"
+source "$PO_DIR/lib.sh"
+FIX=1
+BOARD_AUDIT_LOG="\$1"; shift
+source "$block"
+# 行を \$1 本積んでから、fixed/left/findings を引数のとおりに渡す
+n=\$1; shift
+i=0; while [[ \$i -lt \$n ]]; do ledger_add fixed \$((900+i)) A B kind; i=\$((i+1)); done
+ledger_flush 10 10 10 "\$1" "\$2" "\$3"
+DRV
+  local out rc log_path="$TMP/checksum.tsv"
+
+  # (1) 合っている: 行 2 本 / 直した 2 / 残した 0 / 食い違い 2 → 書ける
+  rm -f "$log_path"
+  set +e; out=$(bash "$drv" "$log_path" 2 2 2 0 2>&1); rc=$?; set -e
+  assert_eq 0 "$rc" "**数が合えば書ける（前提。ここが落ちたら下は何も主張していない）**: $out"
+  assert_eq 3 "$(grep -c '' "$log_path")" "fixed 2 + run 1 = 3 行"
+
+  # (2) 行より fixed が多い（`ledger_add` を呼び忘れた形）→ **書かずに 5 で落ちる**
+  rm -f "$log_path"
+  set +e; out=$(bash "$drv" "$log_path" 1 2 2 0 2>&1); rc=$?; set -e
+  assert_eq 5 "$rc" "**行 1 本なのに直した 2 件なら落ちる**: $out"
+  assert_contains "$out" "検算が合いません" "何が合わないかを言う"
+  [[ ! -e "$log_path" ]] || fail "**合わないときは台帳を作りもしない**"
+
+  # (3) findings が fixed+left と合わない（数え落とした形）→ **書かずに 5 で落ちる**
+  rm -f "$log_path"
+  set +e; out=$(bash "$drv" "$log_path" 2 3 2 0 2>&1); rc=$?; set -e
+  assert_eq 5 "$rc" "**食い違い 3 件なのに直した 2 + 残した 0 なら落ちる**: $out"
+  [[ ! -e "$log_path" ]] || fail "**合わないときは台帳を作りもしない（findings 側）**"
+}
+test_case "ledger: 行数と件数が合わない台帳は書かない (#919/#757)" t_ledger_checksum_refuses_mismatch

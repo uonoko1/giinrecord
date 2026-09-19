@@ -12,16 +12,21 @@ PASS=0; FAIL=0; FAILED=()
 # ---- harness -------------------------------------------------------------------------------
 TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
 # shellcheck disable=SC2034  # read by the sourced *.test.sh files
-STATUS=0; OUT=""; ERR=""; LOG=""
+STATUS=0; OUT=""; ERR=""; LOG=""; LEDGER=""; LEDGER_PATH=""
 
-# run_script <handler-file> <script> [args...]  → sets STATUS, OUT, ERR, LOG
+# board-audit.sh --fix の台帳（#919）。**テストが本物の docs/ops/board-audit-log.tsv を汚さないよう、
+# $TMP に向ける。** **毎回消してから走らせる**ので、「書かなかった」を「ファイルが無い」で見られる。
+LEDGER_PATH="$TMP/board-audit-log.tsv"
+
+# run_script <handler-file> <script> [args...]  → sets STATUS, OUT, ERR, LOG, LEDGER
 run_script() {
   local handler=$1 script=$2; shift 2
   : > "$TMP/gh.log"
   echo 0 > "$TMP/counter"
+  rm -f "$LEDGER_PATH"
   set +e
   PATH="$HERE/fake-bin:$PATH" FAKE_GH_LOG="$TMP/gh.log" FAKE_GH_HANDLER="$handler" FAKE_COUNTER="$TMP/counter" FAKE_UNHANDLED="$TMP/unhandled" \
-    POLL_INTERVAL=0 POLL_MAX=5 PO_REPO=uonoko1/giinrecord \
+    POLL_INTERVAL=0 POLL_MAX=5 PO_REPO=uonoko1/giinrecord BOARD_AUDIT_LOG="$LEDGER_PATH" \
     bash "$PO_DIR/$script" "$@" > "$TMP/out" 2> "$TMP/err"
   # shellcheck disable=SC2034
   STATUS=$?
@@ -32,6 +37,8 @@ run_script() {
   ERR=$(cat "$TMP/err")
   # shellcheck disable=SC2034
   LOG=$(cat "$TMP/gh.log")
+  # shellcheck disable=SC2034
+  LEDGER=$(cat "$LEDGER_PATH" 2>/dev/null || true)
 }
 
 # handler <<'EOF' ... EOF → writes a handler file defining `handle`, echoes its path
