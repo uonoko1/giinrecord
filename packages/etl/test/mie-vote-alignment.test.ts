@@ -283,15 +283,19 @@ const sum = (ts: Tally[]): Tally => ({
   bad: ts.flatMap((t) => t.bad),
 });
 
-test("#835 母数: フィクスチャ 18 本が読め、行と議員の数が実測どおり", () => {
-  // **#867 で A 群（相対移動）の 3 本を足した**（`000073643` `000674338` `000711542`）
-  assert.equal(books.length, 18, `読めた本 ${books.length}`);
+test("#835 母数: フィクスチャ 20 本が読め、行と議員の数が実測どおり", () => {
+  // **#867 で A 群（相対移動）の 3 本を足した**（`000073643` `000674338` `000711542`）。
+  // **#901 でさらに 2 本**（`001086178`（令和5年6月）/ `001172850`（令和6年12月））——
+  // **この 2 本は `--sessions 3` と `--sessions 4` を塞いでいた本**で、
+  // **議案等番号の別の形（`意見書案N号` / `意見書第N案`）と、
+  // 2 列に折り返した会派見出し（`草の根運動いが`）の両方を含む。**
+  assert.equal(books.length, 20, `読めた本 ${books.length}`);
   const rows = books.reduce((n, b) => n + b.pdf.rows.length, 0);
   const cells = books.reduce((n, b) => n + b.pdf.rows.length * b.pdf.members.length, 0);
   const unknown = books.reduce((n, b) => n + b.pdf.unknownCells, 0);
   // **母数を必ず出す**（#757）。「ずれ 0 件」と「1 行も比べていない」を同じ出力にしない
-  assert.equal(rows, 431, `行 ${rows}`);
-  assert.equal(cells, 20607, `セル ${cells}`);
+  assert.equal(rows, 488, `行 ${rows}`);
+  assert.equal(cells, 23261, `セル ${cells}`);
   // **43 セルはすべて 令和6年10月 の 下野幸助（※１、令和6年10月10日に議員辞職）の列**——
   // **PDF がその列を空欄にしており、「棄権」でも「欠席」でもない。実装は推定せず UNKNOWN_CELL で残す。**
   assert.equal(unknown, 43, `不明セル ${unknown}`);
@@ -299,7 +303,7 @@ test("#835 母数: フィクスチャ 18 本が読め、行と議員の数が実
 
 test("#835 検算A: 公表された賛成者数・反対者数が、その行の記号帯の ○ / × の数と合う", () => {
   const t = sum(books.map((b) => checkCounts(b, (i) => b.pdf.rows[i].cells)));
-  assert.equal(t.judgeable, 388, `判定できた行 ${t.judgeable}（不明を含む ${t.skipped} 行は判定外）`);
+  assert.equal(t.judgeable, 445, `判定できた行 ${t.judgeable}（不明を含む ${t.skipped} 行は判定外）`);
   assert.deepEqual(t.bad, [], `合わない行 ${t.bad.length} / ${t.judgeable}`);
 });
 
@@ -308,7 +312,7 @@ test("#835 検算B: `議` の列の議員が、県が公表している歴代議
   // **#835 では 259 / 421 しか判定できていなかった**（歴代議長の表を 3 行しか写していなかったため）。
   // **表を 100代（平成19.05）から写し直したので、フィクスチャ 15 本の 379 行すべてが判定できる**（#852）。
   assert.equal(t.skipped, 0, `歴代議長の表に無い年月で判定外になった行 ${t.skipped}（0 が実測。増えたら表が足りていない）`);
-  assert.equal(t.judgeable, 431, `判定できた行 ${t.judgeable}（歴代議長の表に無い年月 ${t.skipped} 行は判定外）`);
+  assert.equal(t.judgeable, 488, `判定できた行 ${t.judgeable}（歴代議長の表に無い年月 ${t.skipped} 行は判定外）`);
   assert.deepEqual(t.bad, [], `合わない行 ${t.bad.length} / ${t.judgeable}`);
 });
 
@@ -394,7 +398,7 @@ test("#835 x 方向: 記号のアイテムの中心と、置いた列の中心�
     }
   }
   // **母数を書く**（#757）。「全部一致」だけでは 0 対を測ったのと区別が付かない
-  assert.equal(pairs, 20564, `測った (記号, 列) の対 ${pairs}`);
+  assert.equal(pairs, 23218, `測った (記号, 列) の対 ${pairs}`);
   assert.equal(half, pairs, `半セル未満 ${half} / ${pairs}`);
   // 実測 max 0.0297（セル幅 14.64pt の 3%）
   assert.ok(worst < 0.05, `いちばん外れた対 ${worst.toFixed(4)} セル幅`);
@@ -505,7 +509,7 @@ test("#852 副議長の表で照合すると落ちる（#835 の担当者が実�
   // **この検算が「どの表を使っても通る」形なら、外の事実に結んだことにならない。**
   const t = sum(books.map((b) => checkSpeaker(b, (i) => b.pdf.rows[i].cells, VICE_SPEAKERS)));
   assert.equal(t.skipped, 0, `副議長の表で判定外になった行 ${t.skipped}`);
-  assert.equal(t.judgeable, 431, `副議長の表で判定できた行 ${t.judgeable}`);
+  assert.equal(t.judgeable, 488, `副議長の表で判定できた行 ${t.judgeable}`);
   // **実測 428 / 431 行が落ちる。落ちない 3 行を 1 行ずつ数えた**（#867。**まとめて「3 行」と書かない**）:
   //   `001041967.pdf` 決議案第５号 = 藤田宜三（**本当に副議長が `議`**。平成…令和04.05 就任の副議長。#852）
   //   `000674338.pdf` 決議案第５号 = 日沖正信（**本当に副議長が `議`**。平成28.05 就任の副議長。#867）
@@ -513,7 +517,11 @@ test("#852 副議長の表で照合すると落ちる（#835 の担当者が実�
   //     **議長交代月なので `TRANSITION_EXCEPTIONS` が「山本勝」を期待値に入れており、
   //     どちらの表を使っても期待値が同じになるので、この 1 行だけ副議長の表でも通ってしまう。**
   //     **例外の表は「その行を検算から外す」のと同じ効きしか持たない**、ということがここに出ている。）
-  assert.equal(t.bad.length, 428, `副議長の表で落ちた行 ${t.bad.length} / ${t.judgeable}（実測 428）`);
+  // **#901 で 2 本足して 428 → 485 になった**（足した 57 行はすべて落ちる＝どちらの表でも通る行は増えていない）
+  assert.equal(t.bad.length, 485, `副議長の表で落ちた行 ${t.bad.length} / ${t.judgeable}（実測 485）`);
+  // **通ってしまう 3 行は #867 のときと同じ 3 行のまま**（増えていないことを名指しで固定する）
+  const passed = t.judgeable - t.bad.length;
+  assert.equal(passed, 3, `副議長の表でも通った行 ${passed}`);
   // **代の番号のずれは年によって違う**（「2 年ずれる」ではない）。令和06.05 で 議長 114代 稲垣昭義 / 副議長 118代 小林正人
   assert.equal(speakerAt(2024, 6), "稲垣昭義", "令和6年6月の議長");
   assert.equal(speakerAt(2024, 6, VICE_SPEAKERS), "小林正人", "令和6年6月の副議長");
