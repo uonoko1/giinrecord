@@ -68,9 +68,40 @@ import { parseVotePdf, UNKNOWN_CELL, type VotePdf } from "../src/sources/local/m
  */
 
 const dir = fileURLToPath(new URL("fixtures/mie/", import.meta.url));
+
+/**
+ * **`parseVotePdf` が最後まで読めない本**（Issue #867 B 群「拡大のみ 15 本」から取った 2 本）。
+ *
+ * **この 2 本は「読めるようになった本」ではない。**
+ * **glyphs.ts では読めるようになった**（CMap を渡したのでグリフが取れ、表題も
+ * 「平成２３年第１回定例会（２月）」「平成２１年第１回定例会（４月）」と正しく出る）が、
+ * **`votes-pdf.ts` が別の理由で止まる**——
+ * この世代の本は **1 行ぶんの記号が 1 つの showText にまとまっている**
+ * （最長アイテムが `"○○○○○○○○○欠○○○○○○○○○議○…"` の 49 文字）ので、
+ * セルに割れず `incomplete row (title/date/result)` で止まる。
+ *
+ * **握り潰していない。** `parseVotePdf` は今も例外を投げる（#569 の「途中まで読まない」は守られている）。
+ * **このファイルの検査（`議` の列 ↔ 歴代議長）は「最後まで読めた本」にしか当てられない**ので、
+ * **名指しで外し、理由をここに書く。** **フィクスチャとして置いてあるのは、
+ * `local-glyphs-cmap.test.ts` が「CMap 無しならグリフ 0 / CMap ありなら取れる」を実物で固定するため。**
+ */
+const NOT_FULLY_PARSEABLE = new Set(["000073609.pdf", "000073620.pdf"]);
+
 const files = readdirSync(dir).filter((f) => f.endsWith(".pdf")).sort();
 const books: { name: string; pdf: VotePdf }[] = [];
-for (const f of files) books.push({ name: f, pdf: await parseVotePdf(readFileSync(dir + f)) });
+for (const f of files.filter((f) => !NOT_FULLY_PARSEABLE.has(f))) books.push({ name: f, pdf: await parseVotePdf(readFileSync(dir + f)) });
+
+// **外した本が本当に「読めない」ままであることを検査にする**（#569）。
+// **黙って除外リストに足せば検査をすり抜けられる**ので、除外の理由のほうを固定する。
+test("#867 除外した本は parseVotePdf が例外で止まる（握り潰して部分的に読んでいない）", async () => {
+  for (const f of NOT_FULLY_PARSEABLE) {
+    await assert.rejects(
+      () => parseVotePdf(readFileSync(dir + f)),
+      /incomplete row|title .* not found/,
+      `${f}: 読めるようになったなら除外リストから外すこと`,
+    );
+  }
+});
 
 /**
  * **三重県議会 歴代議長**（一次資料 https://www.pref.mie.lg.jp/KENGIKAI/07681011814.htm 、
@@ -335,7 +366,12 @@ test("#835 x 方向: 記号のアイテムの中心と、置いた列の中心�
   const { readGlyphPages } = await import("../src/sources/local/mie/glyphs.ts");
   const { cluster, within, bandIndex } = await import("../src/sources/local/pdf-table.ts");
   let pairs = 0, half = 0, worst = 0;
-  for (const f of files) {
+  // **`NOT_FULLY_PARSEABLE` の 2 本は母数に入れない**（#867）。
+  // この本は 1 行ぶんの記号が 1 アイテムにまとまっており、**「記号 1 つ」の対になっていない**
+  // （入れると 20564 → 20573 対に増えるが、増えた 9 対は 1 文字の記号ではなく 49 文字の塊である）。
+  // **そもそも #891 が「半セル未満は x の根拠にならない」と測っている**（1 列ずらしても 98〜99% が通る）ので、
+  // **ここは「壊れていないこと」の弱い確認でしかない。母数を汚さないほうを採る。**
+  for (const f of files.filter((f) => !NOT_FULLY_PARSEABLE.has(f))) {
     const pages = await readGlyphPages(readFileSync(dir + f));
     for (const page of pages) {
       const legendBottom = Math.min(...page.items.filter((i) => /^(.)：(.+)$/.test(i.str)).map((i) => i.y));
