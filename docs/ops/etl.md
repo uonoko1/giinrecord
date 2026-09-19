@@ -11,7 +11,7 @@
   3. actions/cache/save     失敗しても保存（if: always）
   4. data PR                git diff に変更があれば data/refresh に force push → open PR が無ければ作成 → `gh pr merge --auto`
   5. Job summary            結果 / データ PR 番号 / 変更ファイル数 / unmatched・unmatched-bills 件数 / ログの警告行
-  6. マージ待ち → Deploy    最大 15 分 PR の state を 20 秒ごとに見る。MERGED で `gh workflow run deploy-data.yml --ref main`（staging + production の両方、#127）
+  6. マージ待ち → Deploy    最大 15 分 PR の state を 20 秒ごとに見る。MERGED で `gh workflow run deploy-data.yml --ref main`（staging + production の両方、#939）
   7. failure()              「ETL 日次実行が失敗した（etl.yml）」という Issue を作る（同タイトルの open Issue があればコメントだけ）
 ```
 
