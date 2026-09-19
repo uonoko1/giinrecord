@@ -17,7 +17,7 @@ import { buildLocalAssembly, lossyNameMatchesOf, MIYAGI_ASSEMBLY } from "../src/
  * **残り 8 県は「文字層から字が落ちて、それでも本人に寄る」機序**——
  * **#749 の機序 ②（青森で `櫛` が文字層に無く `引ユキ子` になる）**——**に対して無防備だった。**
  *
- * **そして実際に起きていた。** **本番 `data/` の 58,057 票を数えると、奈良に 2 件ある**（下の実測）。
+ * **そして実際に起きていた。** **本番 `data/` の 75,615 票を数えると、奈良に 2 件ある**（下の実測。**#901 の後**）。
  *
  * ## なぜ共通層（`buildLocalAssembly`）に置けるか——**名寄せの規則が決めている**
  *
@@ -158,7 +158,7 @@ test("#778 同じ氏名は 1 行にまとめ、rollCalls に採決の数を数�
  * **本番 `data/` の実測を固定する**（#778 で数えた値。測り方も書く）。
  *
  * **測り方**: `data/assemblies/pref-*​/rollcalls/**​/*.json`（index.json を除く）の全票について、
- * `memberId` が空でないものを `data/members/index.json` の氏名と突き合わせた。**母数 58,057 票。**
+ * `memberId` が空でないものを `data/members/index.json` の氏名と突き合わせた。**母数 75,615 票。**
  *
  * | 議会 | 票 | **字が落ちたまま寄った異なり** |
  * |---|---:|---:|
@@ -188,7 +188,8 @@ test("#778 本番 data/: 字が落ちたまま寄った氏名は奈良の 2 件�
     const lossy = lossyNameMatchesOf(rollCalls, members);
     if (lossy.length) found[p] = lossy.map((l) => `${l.nameText}→${l.rosterName} (${l.rollCalls})`).sort();
   }
-  assert.equal(votes, 58057, "母数が変わったら数え直すこと");
+  // **#901 で三重の会期を 2 → 4 にしたので 58,057 → 75,615**（動いたのは pref-24 だけ）
+  assert.equal(votes, 75615, "母数が変わったら数え直すこと");
   assert.deepEqual(found, { "pref-29": ["西川→西川 均 (125)", "髙清友→芦高 清友 (37)"] });
 });
 
