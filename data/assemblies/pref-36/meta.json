@@ -2,20 +2,31 @@
  "assemblyId": "pref-36",
  "countChecked": {
   "checked": 0,
-  "noCounts": 105,
-  "rows": 105,
+  "noCounts": 153,
+  "rows": 153,
   "unreadableCells": 0
  },
  "counts": {
-  "cells": 3780,
+  "cells": 5562,
   "members": 36,
-  "rollcalls": 105,
+  "rollcalls": 153,
   "unknownCells": 0,
-  "unmatchedNames": 0
+  "unmatchedNames": 2
  },
- "fetchedAt": "2026-09-04T22:16:23.167Z",
- "rosterAsOf": "2026-09-05",
+ "fetchedAt": "2026-09-19T19:30:21.855Z",
+ "rosterAsOf": "2026-09-20",
  "sessions": [
+  {
+   "pdfUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1075652.pdf",
+   "pdfUrls": [
+    "https://www.pref.tokushima.lg.jp/file/attachment/1075652.pdf"
+   ],
+   "rollcalls": 1,
+   "sessionId": "2026-09",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/honkaigi/r08/7316301/",
+   "unknownCells": 0
+  },
   {
    "pdfUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1064407.pdf",
    "pdfUrls": [
@@ -39,43 +50,75 @@
    "sessionLabel": "令和8年2月定例会",
    "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/honkaigi/r08/7310454/",
    "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1024978.pdf",
+   "pdfUrls": [
+    "https://www.pref.tokushima.lg.jp/file/attachment/1024978.pdf",
+    "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf"
+   ],
+   "rollcalls": 47,
+   "sessionId": "2025-11",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/honkaigi/r07/7308466/",
+   "unknownCells": 0
   }
  ],
  "sources": [
   {
-   "fetchedAt": "2026-09-04T22:16:23.167Z",
+   "fetchedAt": "2026-09-19T19:30:21.855Z",
    "name": "徳島県議会 会派別 議員紹介",
    "url": "https://www.pref.tokushima.lg.jp/gikai/giin/kaihabetu/"
   },
   {
-   "fetchedAt": "2026-09-04T22:16:23.167Z",
+   "fetchedAt": "2026-09-19T19:30:21.855Z",
    "name": "徳島県議会 選挙区別 議員紹介",
    "url": "https://www.pref.tokushima.lg.jp/gikai/giin/senkyoku/"
   },
   {
-   "fetchedAt": "2026-09-04T22:16:23.167Z",
+   "fetchedAt": "2026-09-19T19:30:21.855Z",
    "name": "徳島県議会 定例会の概要",
    "url": "https://www.pref.tokushima.lg.jp/gikai/honkaigi/gaiyou/"
   },
   {
-   "fetchedAt": "2026-09-04T22:16:23.167Z",
+   "fetchedAt": "2026-09-19T19:30:21.855Z",
+   "name": "徳島県議会 定例会の概要",
+   "url": "https://www.pref.tokushima.lg.jp/gikai/honkaigi/gaiyou/r07/"
+  },
+  {
+   "fetchedAt": "2026-09-19T19:30:21.855Z",
+   "name": "徳島県議会 各議員の表決態度（9月11日採決）（令和8年9月定例会）",
+   "url": "https://www.pref.tokushima.lg.jp/file/attachment/1075652.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-19T19:30:21.855Z",
    "name": "徳島県議会 各議員の表決態度（7月3日採決）（令和8年6月定例会）",
    "url": "https://www.pref.tokushima.lg.jp/file/attachment/1064407.pdf"
   },
   {
-   "fetchedAt": "2026-09-04T22:16:23.167Z",
+   "fetchedAt": "2026-09-19T19:30:21.855Z",
    "name": "徳島県議会 各議員の表決態度（2月13日採決）（令和8年2月定例会）",
    "url": "https://www.pref.tokushima.lg.jp/file/attachment/1036105.pdf"
   },
   {
-   "fetchedAt": "2026-09-04T22:16:23.167Z",
+   "fetchedAt": "2026-09-19T19:30:21.855Z",
    "name": "徳島県議会 各議員の表決態度（2月20日採決）（令和8年2月定例会）",
    "url": "https://www.pref.tokushima.lg.jp/file/attachment/1038136.pdf"
   },
   {
-   "fetchedAt": "2026-09-04T22:16:23.167Z",
+   "fetchedAt": "2026-09-19T19:30:21.855Z",
    "name": "徳島県議会 各議員の表決態度（3月11日採決）（令和8年2月定例会）",
    "url": "https://www.pref.tokushima.lg.jp/file/attachment/1042426.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-19T19:30:21.855Z",
+   "name": "徳島県議会 各議員の表決態度（11月28日採決）（令和7年11月定例会）",
+   "url": "https://www.pref.tokushima.lg.jp/file/attachment/1024978.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-19T19:30:21.855Z",
+   "name": "徳島県議会 各議員の表決態度（12月19日採決）（令和7年11月定例会）",
+   "url": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf"
   }
  ]
 }

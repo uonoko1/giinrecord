@@ -1,8 +1,8 @@
 {
- "asOf": "2026-09-05",
+ "asOf": "2026-09-20",
  "assemblyId": "pref-36",
  "counts": {
-  "rollcalls": 105
+  "rollcalls": 153
  },
  "current": true,
  "district": "小松島・勝浦選挙区",
@@ -14,12 +14,25 @@
  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kaihabetu/",
  "terms": [
   {
-   "asOf": "2026-09-05",
+   "asOf": "2026-09-20",
    "district": "小松島・勝浦選挙区",
    "group": "新しい県政を創る会"
   }
  ],
  "timeline": [
+  {
+   "date": "2026-09-11",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2026-09-20260911-議員提出議案-第1号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1075652.pdf",
+   "title": "知事の専決処分事項の指定の一部改正について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
   {
    "date": "2026-07-03",
    "kind": "localVote",
@@ -1381,6 +1394,617 @@
    "sessionLabel": "令和8年2月定例会",
    "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1036105.pdf",
    "title": "令和７年度徳島県一般会計補正予算（第９号）",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2025-11-20251219-知事提出議案-第10号",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf",
+   "title": "徳島県立産業観光交流センター等の指定管理者の指定について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2025-11-20251219-知事提出議案-第11号",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf",
+   "title": "徳島県立あすたむらんどの指定管理者の指定について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2025-11-20251219-知事提出議案-第12号",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf",
+   "title": "徳島県蔵本公園等の指定管理者の指定について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2025-11-20251219-知事提出議案-第13号",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf",
+   "title": "徳島県郷土文化会館の指定管理者の指定について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2025-11-20251219-知事提出議案-第14号",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf",
+   "title": "徳島県立文学書道館の指定管理者の指定について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2025-11-20251219-知事提出議案-第15号",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf",
+   "title": "徳島県立木のおもちゃ美術館の指定管理者の指定について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2025-11-20251219-知事提出議案-第16号",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf",
+   "title": "徳島県立椿泊漁港荷さばき所の指定管理者の指定について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2025-11-20251219-知事提出議案-第17号",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf",
+   "title": "徳島県日峯大神子広域公園等の指定管理者の指定について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2025-11-20251219-知事提出議案-第18号",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf",
+   "title": "徳島県鳴門ウチノ海総合公園の指定管理者の指定について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2025-11-20251219-知事提出議案-第19号",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf",
+   "title": "大麻団地県営住宅の指定管理者の指定について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2025-11-20251219-知事提出議案-第1号",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf",
+   "title": "令和７年度徳島県一般会計補正予算（第５号）",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2025-11-20251219-知事提出議案-第20号",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf",
+   "title": "令和７年度徳島県一般会計補正予算（第６号）",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2025-11-20251219-知事提出議案-第21号",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf",
+   "title": "職員の給与に関する条例等の一部改正について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2025-11-20251219-知事提出議案-第22号",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf",
+   "title": "会計年度任用職員の給与及び費用弁償に関する条例の一部改正について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2025-11-20251219-知事提出議案-第23号",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf",
+   "title": "徳島県学校職員給与条例等の一部改正について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2025-11-20251219-知事提出議案-第24号",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf",
+   "title": "徳島県会計年度任用学校職員の給与及び費用弁償に関する条例の一部改正について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2025-11-20251219-知事提出議案-第25号",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf",
+   "title": "徳島県地方警察職員の給与に関する条例及び一般職の任期付研究員の採用等に関する条例の一部改正について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2025-11-20251219-知事提出議案-第26号",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf",
+   "title": "徳島県会計年度任用警察職員の給与及び費用弁償に関する条例の一部改正について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2025-11-20251219-知事提出議案-第27号",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf",
+   "title": "企業職員の給与の種類及び基準に関する条例の一部改正について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2025-11-20251219-知事提出議案-第28号",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf",
+   "title": "病院事業職員の給与の種類及び基準に関する条例の一部改正について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2025-11-20251219-知事提出議案-第29号",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf",
+   "title": "令和７年度徳島県一般会計補正予算（第７号）",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2025-11-20251219-知事提出議案-第2号",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf",
+   "title": "徳島県企画総務関係手数料条例の一部改正について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-36-2025-11-20251219-知事提出議案-第30号",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf",
+   "title": "教育委員会委員の任命について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-36-2025-11-20251219-知事提出議案-第31号",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf",
+   "title": "収用委員会委員の任命について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-36-2025-11-20251219-知事提出議案-第32号",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf",
+   "title": "土地利用審査会委員の任命について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2025-11-20251219-知事提出議案-第3号",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf",
+   "title": "徳島県条例の形式を左横書きに改正する等の条例の制定について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2025-11-20251219-知事提出議案-第4号",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf",
+   "title": "適用対象の消滅等に伴う関係条例の整理に関する条例の制定について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2025-11-20251219-知事提出議案-第5号",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf",
+   "title": "徳島県行政機関設置条例の制定について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2025-11-20251219-知事提出議案-第6号",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf",
+   "title": "住民基本台帳法施行条例の一部改正について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2025-11-20251219-知事提出議案-第7号",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf",
+   "title": "徳島県県土整備関係手数料条例の一部改正について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2025-11-20251219-知事提出議案-第8号",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf",
+   "title": "当せん金付証票の発売について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2025-11-20251219-知事提出議案-第9号",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf",
+   "title": "徳島県立西部防災館の指定管理者の指定について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "採択",
+   "rollCallId": "pref-36-2025-11-20251219-請願-17号",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf",
+   "title": "国の教育政策における財政的支援に関する請願",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2025-11-20251219-議員提出議案-第1号",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf",
+   "title": "「令和７年度徳島県一般会計補正予算（第５号）」に対する附帯決議",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2025-11-20251219-議員提出議案-第2号",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf",
+   "title": "国の教育政策における財政的支援を求める意見書",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2025-11-20251219-議員提出議案-第3号",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf",
+   "title": "森林・林業・木材産業関係事業の推進に関する意見書",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2025-11-20251219-議員提出議案-第4号",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf",
+   "title": "保育所等における調理員の配置基準改善等を求める意見書",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2025-11-20251219-議員提出議案-第5号",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf",
+   "title": "刑事訴訟法の再審規定の改正を求める意見書",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2025-11-20251219-議員提出議案-第6号",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf",
+   "title": "医療崩壊を防ぐための医療機関への緊急かつ抜本的な経営支援を求める意見書",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2025-11-20251219-議員提出議案-第7号",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf",
+   "title": "医療的ケア児者とその家族への支援充実を求める意見書",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-11-28",
+   "kind": "localVote",
+   "result": "認定",
+   "rollCallId": "pref-36-2025-11-20251128-知事提出議案-7年9月定例会提出分",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1024978.pdf",
+   "title": "令和６年度徳島県一般会計歳入歳出決算並びに各特別会計歳入歳出決算の認定について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-11-28",
+   "kind": "localVote",
+   "result": "認定",
+   "rollCallId": "pref-36-2025-11-20251128-知事提出議案-無番号1",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1024978.pdf",
+   "title": "令和６年度徳島県病院事業会計決算の認定について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-11-28",
+   "kind": "localVote",
+   "result": "可決及び認定",
+   "rollCallId": "pref-36-2025-11-20251128-知事提出議案-無番号2",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1024978.pdf",
+   "title": "令和６年度徳島県電気事業会計剰余金の処分及び決算の認定について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-11-28",
+   "kind": "localVote",
+   "result": "可決及び認定",
+   "rollCallId": "pref-36-2025-11-20251128-知事提出議案-無番号3",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1024978.pdf",
+   "title": "令和６年度徳島県工業用水道事業会計剰余金の処分及び決算の認定について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-11-28",
+   "kind": "localVote",
+   "result": "可決及び認定",
+   "rollCallId": "pref-36-2025-11-20251128-知事提出議案-無番号4",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1024978.pdf",
+   "title": "令和６年度徳島県土地造成事業会計剰余金の処分及び決算の認定について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-11-28",
+   "kind": "localVote",
+   "result": "可決及び認定",
+   "rollCallId": "pref-36-2025-11-20251128-知事提出議案-無番号5",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1024978.pdf",
+   "title": "令和６年度徳島県駐車場事業会計剰余金の処分及び決算の認定について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-11-28",
+   "kind": "localVote",
+   "result": "認定",
+   "rollCallId": "pref-36-2025-11-20251128-知事提出議案-無番号6",
+   "sessionLabel": "令和7年11月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1024978.pdf",
+   "title": "令和６年度徳島県流域下水道事業会計決算の認定について",
    "vote": {
     "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
     "raw": "○"

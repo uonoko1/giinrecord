@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { expandDitto, parseLegendLines, parseVotePdf, UNKNOWN_CELL } from "../src/sources/local/tokushima/votes-pdf.ts";
+import { checkSameMemberSet, expandDitto, parseLegendLines, parseVotePdf, UNKNOWN_CELL } from "../src/sources/local/tokushima/votes-pdf.ts";
 
 // 徳島県議会「各議員の表決態度」PDF（Issue #183）。行＝議案、列＝議員（縦書き氏名、上段に会派の結合セル）。
 //   令和8年6月定例会 7月3日採決: https://www.pref.tokushima.lg.jp/file/attachment/1064407.pdf（2 ページ、2026-08-24 取得）
@@ -74,7 +74,10 @@ test("parseVotePdf: 節（○ 知事提出議案／議員提出議案／請願�
 
 test("parseVotePdf: 行は 議案番号・案名（2 行に折り返しても 1 つ）・委員会審査結果・議決結果 を原文で持つ", () => {
   const rows = jul3.sections[0].rows;
-  assert.deepEqual({ ...rows[0], cells: undefined }, { page: 1, number: "第１号", title: "令和8年度徳島県一般会計補正予算（第1号）", committeeResult: "可決", result: "可決", cells: undefined });
+  assert.deepEqual({ ...rows[0], cells: undefined, members: undefined }, { page: 1, number: "第１号", title: "令和8年度徳島県一般会計補正予算（第1号）", committeeResult: "可決", result: "可決", cells: undefined, members: undefined });
+  // **並びが 1 通りしか無い PDF では、行の `members` は `VotePdf.members` と同一**（#901。回帰の番人）
+  assert.deepEqual(rows[0].members, jul3.members);
+  assert.deepEqual([...new Set(jul3.sections.flatMap((s) => s.rows).map((r) => JSON.stringify(r.members)))], [JSON.stringify(jul3.members)]);
   assert.equal(rows[3].number, "第４号");
   assert.equal(rows[3].title, "地方活力向上地域内における県税の課税免除等に関する条例の一部改正について");
   assert.equal(rows[12].number, "第13号");
@@ -149,4 +152,134 @@ test("expandDitto / parseLegendLines: 「●」 〃 に起立しなかった者 
     "●": "委員会審査結果又は議長宣告に起立しなかった者",
   });
   assert.throws(() => parseLegendLines(["「○」賛成、「○」反対"]), /twice/);
+});
+
+/**
+ * ## **1 本の PDF の中で、議員の列の並びが表ごとに違う**（Issue #901 の徳島。**実測で見つけた**）
+ *
+ * **`1028727.pdf`（令和7年11月定例会 12月19日採決）は 4 枚の表を持ち、
+ * 4 枚目（3 ページ目の 2 枚目、議員提出議案の表）だけ 11 列目と 12 列目が入れ替わっている。**
+ *
+ * | | 10 列目 | **11 列目** | **12 列目** | 13 列目 |
+ * |---|---|---|---|---|
+ * | 1〜3 枚目 | 井村 保裕 | **沢本 勝彦** | **川真田琢巳** | 大塚 明廣 |
+ * | **4 枚目** | 井村 保裕 | **川真田琢巳** | **沢本 勝彦** | 大塚 明廣 |
+ *
+ * **これは読み取りの誤りではない**——**PDF のグリフの x 座標そのものが違う**（実測）:
+ * **1 枚目は `沢`/`本`/`勝`/`彦` が cx=415.75、`川真田琢巳` が cx=428.95。
+ * 4 枚目は `川真田琢巳` が cx=415.75、`沢本勝彦` が cx=428.95。**
+ *
+ * **`--sessions 2` の範囲には 1 本も無い。** **4 会期に広げた瞬間に出る形である。**
+ * **28 本の到達可能な PDF のうち、表ごとに並びが違うのはこの 1 本だけ**（実測 2026-09-20）。
+ *
+ * ## **なぜこれが「別の記録が出る」形なのか**
+ *
+ * **直す前のコードは「1 枚目と違えば例外」だった**——**安全側だが、この会期がまるごと出ない。**
+ * **「1 枚目の並びを使い回す」という直し方をすると、4 枚目の 7 行で
+ * 沢本 勝彦 の票が 川真田琢巳 に、川真田琢巳 の票が 沢本 勝彦 に付く**——
+ * **利用者から検出できない虚偽である**（#569 の重いほう）。
+ *
+ * **だから「表ごとの並びをその表の行に持たせる」以外に正しい直し方は無い。**
+ */
+const dec19 = await parseVotePdf(bytes("1028727.pdf"));
+
+test("#901 parseVotePdf: 表ごとに議員の並びが違う PDF で、行が自分の表の並びを持つ（1028727.pdf の 4 枚目だけ 11/12 列目が入れ替わる）", () => {
+  assert.equal(dec19.date, "2025-12-19");
+  assert.equal(dec19.members.length, 37, "この会期は 37 人（今の名簿 36 人＋北島 一人）");
+  // **`members` は 1 枚目の並び**（従来どおり。互換）
+  assert.equal(dec19.members[10].nameText, "沢本 勝彦");
+  assert.equal(dec19.members[11].nameText, "川真田琢巳");
+  // **行は自分の表の並びを持つ**
+  const all = dec19.sections.flatMap((s) => s.rows);
+  assert.equal(all.length, 40, "母数（この PDF の全行）");
+  assert.deepEqual(dec19.sections.map((sec) => [sec.kind, sec.rows.length]), [["知事提出議案", 32], ["請願", 1], ["議員提出議案", 7]]);
+  const swapped = all.filter((r) => r.members[10].nameText === "川真田琢巳");
+  const normal = all.filter((r) => r.members[10].nameText === "沢本 勝彦");
+  assert.equal(normal.length, 33, "1〜3 枚目の行");
+  assert.equal(swapped.length, 7, "**4 枚目（議員提出議案）の 7 行だけ入れ替わっている**");
+  // **入れ替わっているのは 11/12 列目だけで、ほかの 35 列は同じ**
+  for (const r of swapped) {
+    assert.equal(r.members[10].nameText, "川真田琢巳");
+    assert.equal(r.members[11].nameText, "沢本 勝彦");
+    assert.deepEqual(
+      r.members.filter((_, i) => i !== 10 && i !== 11).map((m) => m.nameText),
+      dec19.members.filter((_, i) => i !== 10 && i !== 11).map((m) => m.nameText),
+      "11/12 列目以外は 1 枚目と同じ",
+    );
+  }
+  // **`members` と `cells` の長さが行ごとに揃う**（37 列 × 37 行）
+  assert.deepEqual([...new Set(all.map((r) => r.cells.length))], [37]);
+  assert.deepEqual([...new Set(all.map((r) => r.members.length))], [37]);
+  assert.equal(dec19.unknownCells, 0);
+});
+
+test("#901 parseVotePdf: 入れ替わった 4 枚目の `●` 2 票が、1 枚目の並びで読むと別人に付く（直さずに使い回したときの被害）", () => {
+  const swapped = dec19.sections.flatMap((s) => s.rows).filter((r) => r.members[10].nameText === "川真田琢巳");
+  // 附帯決議 第１号 は 2 人が `●`
+  const teiketsu = swapped.find((r) => r.title.includes("附帯決議"));
+  assert.ok(teiketsu, "附帯決議の行");
+  const nays = teiketsu.cells.map((c, i) => [c, i] as const).filter(([c]) => c === "●").map(([, i]) => i);
+  assert.deepEqual(nays, [30, 31], "`●` の列");
+  // **その 2 人は、その行の並びで読む**
+  assert.deepEqual(nays.map((i) => teiketsu.members[i].nameText), ["岡 佑樹", "坂口 誠治"]);
+  // **`議` も同じ**（この PDF の議長は 須見 一仁）
+  const gi = teiketsu.cells.indexOf("議");
+  assert.equal(teiketsu.members[gi].nameText, "須見 一仁");
+
+  // **ここが「別の記録が出る」ことの実物である**——**入れ替わった 7 行で、
+  // 11 列目と 12 列目を `VotePdf.members`（1 枚目の並び）で読むと、2 人の票が入れ替わる。**
+  const swapped7 = dec19.sections.flatMap((s) => s.rows).filter((r) => r.members[10].nameText === "川真田琢巳");
+  assert.equal(swapped7.length, 7, "母数");
+  let wouldSwap = 0;
+  for (const r of swapped7) {
+    // 正しい読み（行の並び） ↔ 誤った読み（1 枚目の並び）
+    if (r.members[10].nameText !== dec19.members[10].nameText) wouldSwap++;
+    if (r.members[11].nameText !== dec19.members[11].nameText) wouldSwap++;
+  }
+  assert.equal(wouldSwap, 14, "**7 行 × 2 人 = 14 票が別人に付いていたはず**");
+});
+
+/**
+ * **顔ぶれが違う表は、並びが違うだけの表とは別に扱う**（#901）。
+ *
+ * **並びの違いは許す**（実在する）が、**1 人でも増減したら止める**——
+ * **「同じ会期の同じ議員の表」ではないので、推定して読まない**（#569）。
+ */
+/**
+ * **`parseVotePdf` が、2 枚目以降の表について実際に `checkSameMemberSet` を呼んでいること**（#901）。
+ *
+ * **これが無いと、`checkSameMemberSet` のテストは「関数が正しいこと」しか言わない**——
+ * **`parseVotePdf` の中の呼び出しを丸ごと消しても 1 件も落ちない**（**変異 M2 で実測した。分類 4**）。
+ * **#932 の M9 とまったく同じ形である。**
+ *
+ * **フィクスチャに「顔ぶれが違う表を持つ PDF」が 1 本も無い**（7 本すべて、表ごとの顔ぶれは同じ）
+ * **ので、振る舞いでは書けない。** **だから #932 が `CMAP_OPTIONS` でやったのと同じく、
+ * 呼び出し側の原文を読んで固定する。** **弱い検査であることを、弱いまま書く。**
+ */
+test("#901 parseVotePdf は 2 枚目以降の表に checkSameMemberSet を当てている（呼び出し側の原文を読む）", () => {
+  const src = readFileSync(new URL("../src/sources/local/tokushima/votes-pdf.ts", import.meta.url), "utf-8");
+  // **1 枚目は `members` に入れ、2 枚目以降は `checkSameMemberSet` に掛ける**
+  assert.match(src, /if \(!members\) members = tableMembers;\s+else checkSameMemberSet\(members, tableMembers, /,
+    "**`parseVotePdf` の中で `checkSameMemberSet` を呼んでいない**（変異 M2 が素通りする）");
+  // **行に渡すのは `tableMembers`（その表の並び）であって `members`（1 枚目の並び）ではない**
+  assert.match(src, /readRows\(page, grid, pageNo, tableMembers\)/,
+    "**行に 1 枚目の並びを渡している**（14 票が別人に付く。変異 M1）");
+  assert.doesNotMatch(src, /readRows\(page, grid, pageNo, members\)/);
+  // **同じ関数の中に両方がある**（別の場所の文字列を拾って緑にならないように）
+  const body = src.slice(src.indexOf("export async function parseVotePdf"), src.indexOf("export function checkCellsAgainstLegend"));
+  assert.ok(body.includes("checkSameMemberSet(members, tableMembers,"), "parseVotePdf の中に無い");
+  assert.ok(body.includes("readRows(page, grid, pageNo, tableMembers)"), "parseVotePdf の中に無い");
+});
+
+test("#901 checkSameMemberSet: 並びの違いは通し、顔ぶれの違いは例外（どちらが増減したかをメッセージに出す）", () => {
+  const a = [{ nameText: "沢本 勝彦", group: "自民" }, { nameText: "川真田琢巳", group: "自民" }, { nameText: "扶川 敦", group: "護民官" }];
+  const swapped = [a[1], a[0], a[2]];
+  assert.doesNotThrow(() => checkSameMemberSet(a, swapped, "t"), "並びが違うだけなら通す");
+  assert.doesNotThrow(() => checkSameMemberSet(a, a, "t"));
+  // 1 人減る
+  assert.throws(() => checkSameMemberSet(a, a.slice(0, 2), "t"), /only in the first: 扶川 敦/);
+  // 1 人入れ替わる（人数は同じ）
+  assert.throws(() => checkSameMemberSet(a, [a[0], a[1], { nameText: "北島 一人", group: "自民" }], "t"), /only in the first: 扶川 敦.*only here: 北島 一人/s);
+  // **会派だけ違っても別の顔ぶれ**（同じ氏名でも会派が違えば、名簿の会派と食い違う）
+  assert.throws(() => checkSameMemberSet(a, [a[0], a[1], { nameText: "扶川 敦", group: "別会派" }], "t"), /member columns differ/);
 });
