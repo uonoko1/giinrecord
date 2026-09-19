@@ -1,5 +1,5 @@
 import { fileURLToPath } from "node:url";
-import { buildLocalAssembly, describeUnmatched, LOCAL_SOURCES, validateLocalAssemblies, writeLocalAssembly } from "./local-assemblies.ts";
+import { buildLocalAssembly, defaultSessionsFor, describeUnmatched, LOCAL_SOURCES, validateLocalAssemblies, writeLocalAssembly } from "./local-assemblies.ts";
 import { DEFAULT_SESSIONS, dietAssemblies, readSessionsOnDisk } from "./dataset.ts";
 
 /**
@@ -44,13 +44,17 @@ import { DEFAULT_SESSIONS, dietAssemblies, readSessionsOnDisk } from "./dataset.
  *     **「記号が 1 個の y」を行にしない**（列の数の半分以上を要求する）。
  *     **氏名の食い違いが 2 人ぶんある**（`猪村利恵子`/`猪村理恵子`、`桃崎祐介`/`桃崎裕介`）——
  *     **どちらにも寄せず `unmatched.json` に `sourceConflict` で落ちる**（#711）。
- * Usage: pnpm etl:local <miyagi|tokushima|tottori|mie|nara|shimane|kochi|shiga|aomori|akita|saga> [--sessions N]   (default N = 2)
+ * Usage: pnpm etl:local <miyagi|tokushima|tottori|mie|nara|shimane|kochi|shiga|aomori|akita|saga> [--sessions N]
+ *   **N の既定は議会ごと**（`defaultSessionsFor`。#901）——**三重 4 / 他の 10 議会 2。**
+ *   **一律の数にしないのは、名簿が「今の 1 枚」しか無く、一般選挙をまたぐと
+ *   引退した議員の票が今の別人に付きうるため**（#569。任期の境は議会ごとに違う）。
  */
 const DATA = fileURLToPath(new URL("../../../data/", import.meta.url));
 const args = process.argv.slice(2);
 const target = args[0] ?? "";
 const sessionsArg = args.indexOf("--sessions");
-const sessions = sessionsArg >= 0 ? Number(args[sessionsArg + 1]) : 2;
+// **`--sessions` が無ければ議会ごとの既定**（#901。三重は 4、他の 10 議会は 2）
+const sessions = sessionsArg >= 0 ? Number(args[sessionsArg + 1]) : defaultSessionsFor(target);
 const source = Object.hasOwn(LOCAL_SOURCES, target) ? LOCAL_SOURCES[target] : undefined;
 if (!source || !Number.isInteger(sessions) || sessions < 1) {
   console.error(`Usage: pnpm etl:local <${Object.keys(LOCAL_SOURCES).join("|")}> [--sessions N]`);

@@ -82,7 +82,39 @@ function splitLegendText(raw: string): { key: string; desc: string }[] {
 export const splitLegendTextForTest = splitLegendText;
 // 賛成・反対の列見出しは 2 文字（「者数」は付かない）
 const LEFT_HEADERS = ["議案等番号", "件名", "議決月日", "出席者数", "表決者数", "賛成", "反対", "議決結果"] as const;
-const NUMBER_CELL = /^(.+?)(第[0-9０-９]+号)$/;
+/**
+ * **議案等番号のセル → (種別, 番号)**。**どちらも原文のまま返す**（#569。表記を揃え直さない）。
+ *
+ * **2026-09-20 に index の賛否 PDF 151 本すべてを取得して、このセルの原文を数えた**
+ * （#901。`.measure/901/numbers.ts`。**母数 3,700 個 / 9 種**）:
+ *
+ * | 形 | 件数 | 枝 |
+ * |---|---:|---|
+ * | `議案第N号` 2,838 / `意見書案第N号` 279 / `請願第N号` 240 / `認定第N号` 233 / `議提議案第N号` 72 / `決議案第N号` 23 / `諮問第N号` 5 | **3,690** | 1 番目 |
+ * | **`意見書第N案`**（`第` と `号`/`案` が入れ替わる。令和6年12月の 2 個） | **2** | 2 番目 |
+ * | **`意見書案N号`**（`第` が無い。令和5年6月の 3 個と平成28年10月の 5 個） | **8** | 3 番目 |
+ *
+ * **外れるのは 10 個（0.27%）で、2 本の PDF に固まっている**——
+ * **`001172850.pdf`（令和6年12月）と `001086178.pdf`（令和5年6月）。**
+ * **`index.ts` は `parseVotePdf` の例外を握り潰さない**ので、**この 10 個が
+ * 令和6年定例会と令和5年第2回定例会をまるごと塞いでいた**（#901 で実測）。
+ *
+ * **3 つの枝はどれも「セルに書いてある種別と番号をそのまま割る」だけで、補っていない**——
+ * **`意見書案３号` を `意見書案第３号` に直さないし、`意見書第26案` を `第26号` にしない。**
+ * **原文に無い文字を出力に入れると、採決 id が一次資料と食い違う**（#569）。
+ *
+ * **貪欲にしない**: 先頭の `(.+?)` は最短一致なので、**`議案第79号` は `(議案, 第79号)` に割れる**
+ * ——**`(議案第7, 9号)` にはならない。**
+ *
+ * **枝の順序は結果を変えない**（**2026-09-20 に変異を当てて確かめた**。#901）。
+ * **当初この docblock は「`第N号` を先に見るので 3 番目の枝に落ちない」と書いていたが、それは誤りだった。**
+ * **3 つの枝を逆順（`N号` を先）にしても、`議案第79号` `意見書案３号` `意見書第26案` など
+ * 実データの 9 種すべてで結果が 1 文字も変わらない**——
+ * **`(.+?)` が最短から伸ばし、末尾が `$` で固定されているので、
+ * 最初に全体が一致する位置は枝の順序に依らないからである。**
+ * **順序を入れ替える変異はテストを落とさない。これは等価変異であって、守りの穴ではない。**
+ */
+const NUMBER_CELL = /^(.+?)(?:(第[0-9０-９]+号)|(第[0-9０-９]+案)|([0-9０-９]+号))$/;
 
 export async function parseVotePdf(bytes: Buffer): Promise<VotePdf> {
   const pages = await readGlyphPages(bytes);
@@ -197,6 +229,57 @@ function buildGrid(page: PageGeometry, legendBottom: number, pageNo: number): Gr
 
 /* ---------- members ---------- */
 
+/**
+ * **縦書きの見出しを読む。列を右から左へ、各列を上から下へ**（Issue #901）。
+ *
+ * ## 何が問題だったか
+ *
+ * **会派見出しは結合セルで、名前が長いと縦書きが 2 列に折り返す。**
+ * **日本語の縦書きは右の列から読む**が、直す前は
+ * **`(b.y - a.y || a.x - b.x)`（上から下 → 同じ高さなら左から右）** で並べていた。
+ * **1 列に収まる見出しでは同じ結果になる**ので、**`--sessions 2` の 13 本では 1 件も出ない。**
+ * **2 列に折り返すと、左右の列が 1 文字ずつ交互に混ざる。**
+ *
+ * **実測（2026-09-20、index の賛否 PDF 151 本すべて。母数＝読めた 87 本 / 見出しの原文 21 種）:**
+ *
+ * | 出ていた原文 | 本数 | 正しい原文 |
+ * |---|---:|---|
+ * | `運草動のい根が` | 36 | **`草の根運動いが`** |
+ * | `運草動のみ根え` | 12 | **`草の根運動みえ`** |
+ * | `運※動草いのが根` | 1 | 同じ会派（`※` 付き） |
+ * | `※み1ん新なしのい党翼` | 1 | `新しい翼`（`※` 付き） |
+ *
+ * **同じ会派が、本によって 2 通りの文字列で出ていた**——
+ * **`草の根運動いが` は 2 本では正しく（1 列に収まった本）、36 本では崩れて出ていた。**
+ *
+ * **これは「記録が出ない」ではなく「別の文字列が出る」側である**（#569）。
+ * **利用者から会派名の誤りは検出できない。**
+ *
+ * ## どう読むか
+ *
+ * **x でクラスタに分け、クラスタを降順（右 → 左）に、各クラスタを y の降順（上 → 下）に読む。**
+ * **クラスタ幅は文字の高さ `h` の半分**——**同じ列の文字は x がほぼ揃い、隣の列とは 1 文字ぶん離れる**
+ * （実測: `001086178.pdf` の `草の根運動いが` は x = 1116.7 と 1123.7 で、差 7.0pt ＝ 文字 1 つぶん）。
+ *
+ * **1 列の見出しではクラスタが 1 つなので、今までと 1 バイトも変わらない**
+ * （**読めた 87 本の見出しのうち、クラスタが 2 つ以上なのは上の 4 種だけ**）。
+ *
+ * **推定はしない**——**文字を足しも引きもせず、並べ替えるだけである。**
+ * **`joinVertical` は使えない**（あれも y を先に見るので、2 列だと同じように混ざる）。
+ */
+export function readVerticalHeading(chars: readonly Item[]): string {
+  if (chars.length === 0) return "";
+  // **列の幅は文字の高さの半分**（同じ列の x の揺れより広く、隣の列との間隔より狭い）
+  const w = Math.max(...chars.map((c) => c.h), 1) / 2;
+  const xs = cluster(chars.map((c) => c.x), w).sort((a, b) => b - a); // **右から左へ**
+  let out = "";
+  for (const cx of xs) {
+    const col = chars.filter((c) => Math.abs(c.x - cx) <= w).sort((a, b) => b.y - a.y); // **上から下へ**
+    out += col.map((c) => c.str).join("");
+  }
+  return out.replace(/[\s　]+/g, "");
+}
+
 function readMembers(page: PageGeometry, grid: Grid, pageNo: number): VotePdfMember[] {
   const label = `page ${pageNo}`;
   // 左 8 列の見出し（bodyTop〜top の結合セル）が期待どおりか（レイアウト変化の検出）
@@ -211,7 +294,7 @@ function readMembers(page: PageGeometry, grid: Grid, pageNo: number): VotePdfMem
     const x0 = grid.groupCols[g];
     const x1 = grid.groupCols[g + 1];
     const chars = page.items.filter((i) => within(i.cx, x0, x1) && within(i.cy, grid.groupBottom, grid.top));
-    const name = chars.sort((a, b) => b.y - a.y || a.x - b.x).map((c) => c.str).join("").replace(/[\s　]+/g, "");
+    const name = readVerticalHeading(chars);
     if (name === "") throw new Error(`${label}: group heading between ${x0.toFixed(1)} and ${x1.toFixed(1)} is empty`);
     groups.push({ x0, x1, name });
   }
@@ -279,7 +362,8 @@ function readRows(page: PageGeometry, grid: Grid, pageNo: number, memberCount: n
     rows.push({
       page: pageNo,
       kind: nm[1],
-      number: nm[2],
+      // **3 つの枝のうち当たった 1 つ**（`第N号` / `第N案` / `N号`）。**原文のまま**（#901）
+      number: nm[2] ?? nm[3] ?? nm[4],
       title,
       dateText,
       counts: { present: Number(nums[0]), voting: Number(nums[1]), yes: Number(nums[2]), no: Number(nums[3]) },
