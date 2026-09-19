@@ -139,7 +139,26 @@ test("#750 meta.lossyNameMatches: 字が落ちたまま寄った氏名が残る�
   assert.equal(built.meta.counts.rollcalls, 23 + 21 + 46);
   const dir = await mkdtemp(join(tmpdir(), "gl750b-"));
   await writeLocalAssembly(dir, built, { national: [] });
-  assert.deepEqual(await validateLocalAssemblies(dir), []);
+  // **ここは `--sessions` を 29 まで広げた形である**（#901 が本番でやろうとしていること）。
+  // **そうすると 2019-11 の採決に 2026-05-25 の名簿を当てることになり、
+  // 間に 2019 年と 2023 年の 2 回の一般選挙が挟まる**——**#928 の検査がそれを名指しする。**
+  //
+  // **これは偽陽性ではない。** **`引 ユキ子` の 46 本は、その人が 2019 年に在職していたことを
+  // 我々のデータからは確かめられないまま、2026 年の名簿の議員に寄っている**
+  // （地方の名簿は掲載日しか持たず任期が無い。`rosterWindowOf` の docblock）。
+  // **国会側は同じことを `tenureVerified` で禁じている**（`docs/DATA_CONTRACT.md` #230:
+  // 「**在職を確認できない氏名一致では紐づけない**」）。
+  //
+  // **本番の `data/` はこの形になっていない**——**実測 2026-09-20: `data/assemblies/pref-02/` の
+  // 採決は 2026-03-11 〜 2026-06-29 の 5 日ぶんで、2019 年の採決は 1 本も無い**
+  // （このフィクスチャは `--sessions 29` を渡したときだけ 2019-11 を読む）。
+  // **だから本番は緑のままで、広げたときだけここが鳴る。**
+  //
+  // **黙らせない**——**違反をそのまま書き留める。** **#901 が会期を広げるなら、
+  // 「2019 年の票を誰に付けるか」を決めるのはその PBI の仕事である**（#928 の範囲外）。
+  assert.deepEqual(await validateLocalAssemblies(dir), [
+    "assemblies/pref-02/meta.json: 最古の採決 2019-11-22 が rosterAsOf 2026-05-25 の 2376 日前で、1 任期（1461 日）を超えている（間に必ず選挙がある。#928）",
+  ]);
 });
 
 test("#750 runAomori: 会期が 1 つも読めなければ例外（空の data/ を書かない）", async () => {

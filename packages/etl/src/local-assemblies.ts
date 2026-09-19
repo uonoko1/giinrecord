@@ -317,6 +317,100 @@ export function countMismatchesOf(rollCalls: readonly LocalRollCall[]): {
   return { mismatches: mismatches.sort((a, b) => cmp(a.rollCallId, b.rollCallId)), checked };
 }
 
+/** 2 つの ISO 日付の差（日数）。`to - from`。 */
+const daysBetween = (from: string, to: string): number =>
+  Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000);
+
+/**
+ * **地方議会議員の任期 4 年（地方自治法 93 条 1 項）を日数にしたもの。うるう年を 1 回含めて 1,461 日。**
+ *
+ * **これは「どこまで許すか」の好みの値ではなく、一次資料から決まる上限である**（#928）:
+ * **`rosterAsOf` から 1,461 日より離れた採決は、間に必ず一般選挙を挟んでいる**
+ * ——**その名簿がその採決の議会を写している可能性は無い。**
+ *
+ * **1,461 日以内なら安全、という意味ではない**（**任期の途中でも辞職・死去・補選で名簿は動く**）。
+ * **「ここから先は確実に別の議会である」という一方向の線だけを引いている。**
+ * **`rosterWindowOf` の docblock のとおり、名簿に任期が無いので、これ以上細かくは言えない。**
+ *
+ * **実測 2026-09-20（本番 `data/` の 11 議会）: いちばん開いている鳥取で 1,156 日。**
+ * **11 議会とも 1,461 日以内なので、この検査は今 1 件も鳴らない**
+ * （**足した時点で赤くならない**——#928 の完了条件）。**鳥取の残りは 305 日である。**
+ */
+export const LOCAL_TERM_DAYS = 1_461;
+
+/**
+ * **名簿の掲載日（`rosterAsOf`）と、その名簿を当てた採決の日付の関係**（Issue #928）。
+ *
+ * ## **何を測るか**
+ *
+ * **地方の名簿は「掲載日時点の一枚の写真」である**——`LocalMemberTerm` は `asOf` しか持たず、
+ * **任期の開始日も終了日も持たない**（`packages/shared/src/index.ts` の `LocalMemberTerm`:
+ * 「国会の MemberTerm（院・回次・任期）に当たる情報は名簿に無いので持たない」）。
+ * **だから「この議員はこの採決の日に在職していたか」は、我々のデータからは答えられない。**
+ *
+ * **答えられないものを答えたふりをしない**（#569）。**ここが返すのは「どれだけ離れているか」だけである。**
+ *
+ * - `daysAfter` — **最新の採決が `rosterAsOf` より何日後か**（負なら名簿のほうが新しい）
+ * - `daysBefore` — **最古の採決が `rosterAsOf` より何日前か**（負なら採決のほうが新しい）
+ * - `votesAfter` / `votesBefore` — **窓の外に出ている採決の本数**（母数は `rollcalls`。#757）
+ *
+ * ## **なぜ「後ろに出ていること」自体を違反にしないか**
+ *
+ * **実測 2026-09-20（本番 `data/` の 11 議会・1,369 本）: 7 議会で `daysAfter > 0` である。**
+ * **いちばん開いているのは鳥取の 1,156 日**（`rosterAsOf` 2023-04-30 / 最新の採決 2026-06-29）。
+ * **だが 11 議会すべてで「名簿に無い memberId」は 0 件**（母数 58,057 セル）——
+ * **鳥取の任期が 2023〜2027 なので、2023 年の名簿が 2026 年の採決にそのまま当たっている。**
+ *
+ * **つまり「窓の外に出ている」は、それ自体では壊れていることを意味しない。**
+ * **違反にすれば今すぐ 7 議会が赤くなるが、赤くなった先に直すものが無い**
+ * （名簿の一次資料は「今の名簿」1 枚しか公表されていない。過去の名簿は取得できない）。
+ * **直せない赤は、やがて誰も見なくなる**（#785「見ていない検出器は、無い検出器と同じ」）。
+ *
+ * ## **では何が危ないのか**——**任期をまたいだときに起きること**
+ *
+ * **#901 が `--sessions` を広げると、任期をまたぐ採決が入る。そのとき 2 つのことが起こりうる:**
+ *
+ * 1. **引退した議員の氏名が今の名簿に無い** → 突合が `memberId: ""` を返し、`unmatched.json` に落ちる。
+ *    **これは「記録が出ない」側で、利用者から見える**（#569）。
+ * 2. **引退した議員の氏名が、今の名簿の別人に当たる** → **その別人の記録として出る。**
+ *    **これは利用者から検出できない虚偽であり、1 より重い**（#569）。
+ *
+ * **2 を既存の守りは 1 つも捕まえない**——**当たった `memberId` は名簿に実在するからである**
+ * （`validateLocalAssemblies` の `memberId ... not in members/index.json` も、
+ * `buildLocalAssembly` の `vote memberId ... is not in the roster` も、どちらも素通りする）。
+ *
+ * **実測しておく（2026-09-20）**: **今の名簿から 1 人ずつ抜いて、その人が実際に投じた `nameText` を
+ * 各県の突合規則で引き直した 453 通りでは、別人に決まった例は 0 件で、453 通りとも `unmatched` に落ちた。**
+ * **「2 は今のデータでは再現しない」までが実測である**——**起こりえないという意味ではない。**
+ * **だから 2 を直接見張ることはできない。見張れるのは「窓がどれだけ開いているか」だけである。**
+ *
+ * **返すのは事実だけで、判断はしない。** 判断（どこまで開いてよいか）は呼ぶ側に置く。
+ */
+export function rosterWindowOf(rosterAsOf: string, rollCalls: readonly { date: string }[]): {
+  rosterAsOf: string;
+  rollcalls: number;
+  first?: string;
+  last?: string;
+  daysAfter: number;
+  daysBefore: number;
+  votesAfter: number;
+  votesBefore: number;
+} {
+  const dates = rollCalls.map((rc) => rc.date).filter((d) => ISO_DATE.test(d)).sort(cmp);
+  // **母数は採決の本数であって、日付が読めた本数ではない**（#757。読めない日付があれば下の件数と合わなくなる）
+  const base = { rosterAsOf, rollcalls: rollCalls.length };
+  if (dates.length === 0) return { ...base, daysAfter: 0, daysBefore: 0, votesAfter: 0, votesBefore: 0 };
+  const first = dates[0];
+  const last = dates[dates.length - 1];
+  return {
+    ...base, first, last,
+    daysAfter: daysBetween(rosterAsOf, last),
+    daysBefore: daysBetween(first, rosterAsOf),
+    votesAfter: dates.filter((d) => d > rosterAsOf).length,
+    votesBefore: dates.filter((d) => d < rosterAsOf).length,
+  };
+}
+
 /**
  * **`rollcalls/index.json` の行を、採決の原本（`rollcalls/{sessionId}/{id}.json`）から作る**（Issue #851）。
  *
@@ -731,6 +825,11 @@ export async function validateLocalAssemblies(dir: string): Promise<string[]> {
       const counted = countMismatchesOf(rollCallsOnDisk);
       if (stableJson(meta.countChecked) !== stableJson(counted.checked)) v.push(`assemblies/${a.id}/meta.json: countChecked ${stableJson(meta.countChecked).trim()} !== ${stableJson(counted.checked).trim()} from rollcalls/`);
       if (stableJson(meta.countMismatches ?? []) !== stableJson(counted.mismatches)) v.push(`assemblies/${a.id}/meta.json: countMismatches (${(meta.countMismatches ?? []).length} rows) !== ${counted.mismatches.length} rows from rollcalls/`);
+      // **名簿の掲載日から 1 任期より遠い採決に、その名簿を当てていないこと**（#928。理由は `rosterWindowOf`）。
+      // **`rollcalls/` のほうを正とする**（採決の日付が一次資料に最も近い形だから）。
+      const w = rosterWindowOf(meta.rosterAsOf, rollCallsOnDisk);
+      if (w.daysAfter > LOCAL_TERM_DAYS) v.push(`assemblies/${a.id}/meta.json: 最新の採決 ${String(w.last)} が rosterAsOf ${meta.rosterAsOf} の ${w.daysAfter} 日後で、1 任期（${LOCAL_TERM_DAYS} 日）を超えている（間に必ず選挙がある。#928）`);
+      if (w.daysBefore > LOCAL_TERM_DAYS) v.push(`assemblies/${a.id}/meta.json: 最古の採決 ${String(w.first)} が rosterAsOf ${meta.rosterAsOf} の ${w.daysBefore} 日前で、1 任期（${LOCAL_TERM_DAYS} 日）を超えている（間に必ず選挙がある。#928）`);
     }
   }
   return v;
