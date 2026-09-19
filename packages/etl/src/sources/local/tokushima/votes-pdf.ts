@@ -37,7 +37,17 @@ export interface VotePdfRow {
   committeeResult: string;
   /** 議決結果の原文（「可決」「同意」「採択」「否決」…） */
   result: string;
-  /** members と同じ順。置けなかったセルは UNKNOWN_CELL */
+  /**
+   * **この行が属する表の議員の並び**（`cells` と同じ順・同じ長さ）。
+   *
+   * **`VotePdf.members`（1 枚目の並び）とは違うことがある**——**`1028727.pdf`
+   * （令和7年11月定例会 12月19日採決）の 4 枚目は 11 列目と 12 列目が入れ替わっている**
+   * （`沢本 勝彦` と `川真田琢巳`。**グリフの x 座標そのものが違う**。#901 で実測）。
+   * **だから票を議員に結ぶときは、必ずこの `members` を使う**——
+   * **`VotePdf.members` を使い回すと、その 7 行で 2 人の票が入れ替わる**（#569 の重いほう）。
+   */
+  members: VotePdfMember[];
+  /** この行の members と同じ順。置けなかったセルは UNKNOWN_CELL */
   cells: string[];
 }
 
@@ -54,6 +64,10 @@ export interface VotePdf {
   title: string;
   /** 採決日（ISO） */
   date: string;
+  /**
+   * **1 枚目の表の議員の並び**（会期を通した「誰が居たか」に使う）。
+   * **票を議員に結ぶのには使わない**——**表ごとに並びが違う PDF があるので `VotePdfRow.members` を使う**（#901）。
+   */
   members: VotePdfMember[];
   sections: VotePdfSection[];
   unknownCells: number;
@@ -92,8 +106,8 @@ export async function parseVotePdf(bytes: Buffer): Promise<VotePdf> {
       const grid = buildGrid(tb, `page ${pageNo} table ${t + 1}`);
       const tableMembers = readMembers(page, grid, `page ${pageNo} table ${t + 1}`);
       if (!members) members = tableMembers;
-      else if (JSON.stringify(members) !== JSON.stringify(tableMembers)) throw new Error(`page ${pageNo} table ${t + 1}: member columns differ from the first table`);
-      section.rows.push(...readRows(page, grid, pageNo, members.length));
+      else checkSameMemberSet(members, tableMembers, `page ${pageNo} table ${t + 1}`);
+      section.rows.push(...readRows(page, grid, pageNo, tableMembers));
       const lines = legendLines.filter((l) => l.y < tb.bottom && l.y > below).map((l) => l.text);
       if (lines.length) legends[legends.length - 1] = lines;
     }
@@ -111,6 +125,27 @@ export async function parseVotePdf(bytes: Buffer): Promise<VotePdf> {
     }
   });
   return { ...head, members, sections, unknownCells };
+}
+
+/**
+ * **2 枚目以降の表の議員が、1 枚目と「同じ顔ぶれ・同じ会派」であることを確かめる**（#901）。
+ *
+ * **並びが違うのは許す**——**実在するからである**（`1028727.pdf` の 4 枚目で
+ * `沢本 勝彦` と `川真田琢巳` が入れ替わっている。**PDF のグリフの x 座標そのものが違う**）。
+ * **並びは行ごとに `VotePdfRow.members` が持つので、入れ替わっても票は正しい議員に付く。**
+ *
+ * **顔ぶれが違えば例外**——**1 人でも増減したら、それは「同じ会期の同じ議員の表」ではない。**
+ * **そのときは黙って読まずに止める**（推定しない。#569）。
+ */
+export function checkSameMemberSet(first: readonly VotePdfMember[], other: readonly VotePdfMember[], label: string): void {
+  const key = (m: VotePdfMember) => `${m.nameText}\t${m.group}`;
+  const a = [...first].map(key).sort();
+  const b = [...other].map(key).sort();
+  if (a.length !== b.length || a.some((x, i) => x !== b[i])) {
+    const onlyFirst = a.filter((x) => !b.includes(x));
+    const onlyOther = b.filter((x) => !a.includes(x));
+    throw new Error(`${label}: member columns differ from the first table (only in the first: ${onlyFirst.join(", ") || "-"}; only here: ${onlyOther.join(", ") || "-"})`);
+  }
 }
 
 /** 凡例に無い値が出たら例外（丸めない・推定しない）。UNKNOWN_CELL だけは通す。字形の揺れ（〇）は凡例の記号に寄せて引く。 */
@@ -294,7 +329,8 @@ function readMembers(page: PageGeometry, grid: Grid, label: string): VotePdfMemb
 
 /* ---------- rows ---------- */
 
-function readRows(page: PageGeometry, grid: Grid, pageNo: number, memberCount: number): VotePdfRow[] {
+function readRows(page: PageGeometry, grid: Grid, pageNo: number, members: readonly VotePdfMember[]): VotePdfRow[] {
+  const memberCount = members.length;
   const label = `page ${pageNo}`;
   const body = page.items.filter((i) => within(i.cy, grid.bottom, grid.bodyTop));
   const numbers: { y0: number; y1: number; text: string }[] = [];
@@ -339,7 +375,7 @@ function readRows(page: PageGeometry, grid: Grid, pageNo: number, memberCount: n
         if (it.cx >= grid.voteCols[c] - EDGE && it.cx <= grid.voteCols[c + 1] + EDGE) cells[c] = UNKNOWN_CELL;
       }
     }
-    rows.push({ page: pageNo, number: number.text, title, committeeResult, result, cells });
+    rows.push({ page: pageNo, number: number.text, title, committeeResult, result, members: [...members], cells });
   }
   return rows;
 }

@@ -188,8 +188,10 @@ test("#778 本番 data/: 字が落ちたまま寄った氏名は奈良の 2 件�
     const lossy = lossyNameMatchesOf(rollCalls, members);
     if (lossy.length) found[p] = lossy.map((l) => `${l.nameText}→${l.rosterName} (${l.rollCalls})`).sort();
   }
-  // **#901 で三重の会期を 2 → 4 にしたので 58,057 → 75,615**（動いたのは pref-24 だけ）
-  assert.equal(votes, 75615, "母数が変わったら数え直すこと");
+  // **#901 で三重の会期を 2 → 4 にして 58,057 → 75,615、徳島を 2 → 4 にして 75,615 → 77,397**
+  assert.equal(votes, 77397, "母数が変わったら数え直すこと");
+  // **徳島を広げても 1 件も増えない**——**徳島の名寄せは空白を除いた完全一致だけで、
+  // 寄らなかった 2 人（北島 一人・古川 広志）は `memberId` 空のまま残る**（**字を落として寄せていない**。#569）。
   assert.deepEqual(found, { "pref-29": ["西川→西川 均 (125)", "髙清友→芦高 清友 (37)"] });
 });
 
