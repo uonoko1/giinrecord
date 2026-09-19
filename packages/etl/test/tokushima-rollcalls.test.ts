@@ -147,12 +147,26 @@ test("#901 toLocalRollCalls: 入れ替わった 4 枚目の 7 行で、沢本 �
   const { rollCalls, unmatched } = toLocalRollCalls(dec19, roster.members, NOV);
   assert.equal(rollCalls.length, 40, "母数（この PDF の全行）");
   assert.deepEqual([...new Set(rollCalls.map((r) => r.votes.length))], [37], "37 人ぶんの票");
-  // **氏名 → その人に付いた記号の並び**（行ごとに集める）
-  const marksOf = (name: string) => rollCalls.map((r) => r.votes.find((v) => v.nameText === name)!.value.raw);
-  const sawamoto = marksOf("沢本 勝彦");
-  const kawamada = marksOf("川真田琢巳");
+  // **氏名 → その人が座っている列の番号**（行ごとに集める）。
+  // **`votes[i].nameText` が PDF のその表の i 列目の議員であること**を、ここで直に見る。
+  const colOf = (name: string) => rollCalls.map((r) => r.votes.findIndex((v) => v.nameText === name));
+  const sawamoto = colOf("沢本 勝彦");
+  const kawamada = colOf("川真田琢巳");
   assert.equal(sawamoto.length, 40);
   assert.equal(kawamada.length, 40);
+  // **2 人とも 40 行すべてに 1 回ずつ出る**（どの行でも消えない）
+  assert.deepEqual(sawamoto.filter((i) => i < 0), [], "沢本 勝彦 が出ない行");
+  assert.deepEqual(kawamada.filter((i) => i < 0), [], "川真田琢巳 が出ない行");
+  // **座る列は 2 通りずつ**——**33 行は 10/11、7 行は 11/10**（4 枚目だけ入れ替わる）
+  const tally = (a: number[]) => Object.fromEntries([...new Map(a.map((x) => [x, a.filter((y) => y === x).length]))].sort((x, y) => x[0] - y[0]));
+  assert.deepEqual(tally(sawamoto), { 10: 33, 11: 7 }, "**沢本 勝彦 の列**（7 行だけ 11 列目）");
+  assert.deepEqual(tally(kawamada), { 10: 7, 11: 33 }, "**川真田琢巳 の列**（同じ 7 行で 10 列目）");
+  // **2 人は必ず隣り合い、同じ行で入れ替わる**（片方だけ動く行は無い）
+  for (let i = 0; i < 40; i++) {
+    assert.equal(Math.abs(sawamoto[i] - kawamada[i]), 1, `行 ${i}: 2 人が隣り合っていない`);
+  }
+  assert.equal(sawamoto.filter((x, i) => x === 11 && kawamada[i] === 10).length, 7, "**入れ替わっている行は 7**");
+  // **`pdf.members` を使い回すと、この 2 つの内訳が { 10: 40 } / { 11: 40 } に潰れる**（変異 M4 が落ちる）
   // **1 人に 1 行 1 票ちょうど**（並びが入れ替わっても重複も欠落も起きない）
   for (const r of rollCalls) {
     assert.equal(new Set(r.votes.map((v) => v.nameText)).size, 37, `${r.id}: 同じ氏名が 2 回出ていない`);
@@ -176,6 +190,28 @@ test("#901 toLocalRollCalls: 入れ替わった 4 枚目の 7 行で、沢本 �
   const matched = rollCalls.flatMap((r) => r.votes).filter((v) => v.memberId !== "");
   assert.equal(matched.length, 40 * 36);
   assert.equal(new Set(matched.map((v) => v.memberId)).size, 36);
+});
+
+/**
+ * **`row.members` と `row.cells` の長さが食い違ったら例外**（#901）。
+ *
+ * **今の `votes-pdf.ts` では起こりえない**——**`readRows` が `cells` を `members.length` で作り、
+ * 同じ `push` で `members` を入れているからである**（**変異 M11 で「検査を消しても落ちない」ことを実測した**）。
+ * **だからこれは等価変異ではなく、モジュールの境で張った検査である**——
+ * **`votes-pdf.ts` の側が将来ずれたときに、票が黙って別人に付くのを止める。**
+ * **その検査が働くことを、ここで組み立てた行で確かめる**（**フィクスチャでは作れない**）。
+ */
+test("#901 toLocalRollCalls: 行の members と cells の長さが食い違えば例外（黙って短いほうに合わせない）", () => {
+  const base = structuredClone(dec19);
+  // **1 行だけ members を 1 人減らす**（cells は 37 のまま）
+  base.sections[0].rows[0].members = base.sections[0].rows[0].members.slice(0, 36);
+  assert.throws(() => toLocalRollCalls(base, roster.members, NOV), /36 members but 37 cells/);
+  // **逆向き（cells を減らす）も止まる**
+  const base2 = structuredClone(dec19);
+  base2.sections[0].rows[0].cells = base2.sections[0].rows[0].cells.slice(0, 36);
+  assert.throws(() => toLocalRollCalls(base2, roster.members, NOV), /37 members but 36 cells/);
+  // **否定的対照: 無改造は通る**（この検査が恒真でないこと）
+  assert.equal(toLocalRollCalls(structuredClone(dec19), roster.members, NOV).rollCalls.length, 40);
 });
 
 /**

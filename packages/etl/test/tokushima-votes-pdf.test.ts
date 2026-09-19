@@ -245,6 +245,32 @@ test("#901 parseVotePdf: 入れ替わった 4 枚目の `●` 2 票が、1 枚�
  * **並びの違いは許す**（実在する）が、**1 人でも増減したら止める**——
  * **「同じ会期の同じ議員の表」ではないので、推定して読まない**（#569）。
  */
+/**
+ * **`parseVotePdf` が、2 枚目以降の表について実際に `checkSameMemberSet` を呼んでいること**（#901）。
+ *
+ * **これが無いと、`checkSameMemberSet` のテストは「関数が正しいこと」しか言わない**——
+ * **`parseVotePdf` の中の呼び出しを丸ごと消しても 1 件も落ちない**（**変異 M2 で実測した。分類 4**）。
+ * **#932 の M9 とまったく同じ形である。**
+ *
+ * **フィクスチャに「顔ぶれが違う表を持つ PDF」が 1 本も無い**（7 本すべて、表ごとの顔ぶれは同じ）
+ * **ので、振る舞いでは書けない。** **だから #932 が `CMAP_OPTIONS` でやったのと同じく、
+ * 呼び出し側の原文を読んで固定する。** **弱い検査であることを、弱いまま書く。**
+ */
+test("#901 parseVotePdf は 2 枚目以降の表に checkSameMemberSet を当てている（呼び出し側の原文を読む）", () => {
+  const src = readFileSync(new URL("../src/sources/local/tokushima/votes-pdf.ts", import.meta.url), "utf-8");
+  // **1 枚目は `members` に入れ、2 枚目以降は `checkSameMemberSet` に掛ける**
+  assert.match(src, /if \(!members\) members = tableMembers;\s+else checkSameMemberSet\(members, tableMembers, /,
+    "**`parseVotePdf` の中で `checkSameMemberSet` を呼んでいない**（変異 M2 が素通りする）");
+  // **行に渡すのは `tableMembers`（その表の並び）であって `members`（1 枚目の並び）ではない**
+  assert.match(src, /readRows\(page, grid, pageNo, tableMembers\)/,
+    "**行に 1 枚目の並びを渡している**（14 票が別人に付く。変異 M1）");
+  assert.doesNotMatch(src, /readRows\(page, grid, pageNo, members\)/);
+  // **同じ関数の中に両方がある**（別の場所の文字列を拾って緑にならないように）
+  const body = src.slice(src.indexOf("export async function parseVotePdf"), src.indexOf("export function checkCellsAgainstLegend"));
+  assert.ok(body.includes("checkSameMemberSet(members, tableMembers,"), "parseVotePdf の中に無い");
+  assert.ok(body.includes("readRows(page, grid, pageNo, tableMembers)"), "parseVotePdf の中に無い");
+});
+
 test("#901 checkSameMemberSet: 並びの違いは通し、顔ぶれの違いは例外（どちらが増減したかをメッセージに出す）", () => {
   const a = [{ nameText: "沢本 勝彦", group: "自民" }, { nameText: "川真田琢巳", group: "自民" }, { nameText: "扶川 敦", group: "護民官" }];
   const swapped = [a[1], a[0], a[2]];
