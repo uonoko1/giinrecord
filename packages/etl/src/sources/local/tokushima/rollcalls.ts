@@ -75,7 +75,17 @@ export function toLocalRollCalls(pdf: VotePdf, roster: readonly LocalMember[], s
   if (pdfYear !== wantYear) {
     throw new Error(`${session.pdfUrl}: PDF says ${pdf.title}（${pdf.date}）, session index says ${session.sessionLabel}（${wantYear}年の採決日のはず）`);
   }
-  const resolved = pdf.members.map((m) => matchName(m.nameText, roster).memberId);
+  /**
+   * **名寄せは「氏名＋会派」ごとに 1 回だけ**（列の位置では引かない）。
+   * **表ごとに列の並びが違う PDF がある**ので、**位置で引くと票が別人に付く**（#901。`VotePdfRow.members`）。
+   */
+  const resolvedByName = new Map<string, string>();
+  const resolveMember = (m: { nameText: string; group: string }): string => {
+    const key = `${m.nameText}\t${m.group}`;
+    let id = resolvedByName.get(key);
+    if (id === undefined) { id = matchName(m.nameText, roster).memberId; resolvedByName.set(key, id); }
+    return id;
+  };
   const unmatched = new Map<string, LocalUnmatchedName>();
   const rollCalls: LocalRollCall[] = [];
   const ymd = pdf.date.replace(/-/g, "");
@@ -92,15 +102,18 @@ export function toLocalRollCalls(pdf: VotePdf, roster: readonly LocalMember[], s
       const numberForId = base === "" ? `無番号${n}` : (dup.get(base) ?? 1) > 1 ? `${base}-${n}` : base;
       const id = `${TOKUSHIMA_ASSEMBLY.id}-${session.sessionId}-${ymd}-${section.kind}-${numberForId}`;
       if (rollCalls.some((rc) => rc.id === id)) throw new Error(`duplicate rollCall id ${id}`);
+      if (row.members.length !== row.cells.length) throw new Error(`${id}: ${row.members.length} members but ${row.cells.length} cells`);
       const votes = row.cells.map((raw, i) => {
-        const member = pdf.members[i];
-        if (resolved[i] === "") {
+        // **その行が属する表の並び**（`pdf.members` ではない。#901）
+        const member = row.members[i];
+        const memberId = resolveMember(member);
+        if (memberId === "") {
           const key = `${member.nameText}\t${member.group}`;
           const u = unmatched.get(key) ?? { nameText: member.nameText, group: member.group, rollCallIds: [] };
           u.rollCallIds.push(id);
           unmatched.set(key, u);
         }
-        return { memberId: resolved[i], nameText: member.nameText, group: member.group, value: mapLegend(raw, section.legend, id) };
+        return { memberId, nameText: member.nameText, group: member.group, value: mapLegend(raw, section.legend, id) };
       });
       rollCalls.push({
         id,

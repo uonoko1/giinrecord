@@ -511,3 +511,279 @@ test("#875 2025 年の 2 本は 38 人。`北島 一人` と `古川 広志` は
   assert.deepEqual(only2025.sort(), ["北島 一人", "古川 広志"], "**2025 年の 2 本にしか出ない議員**");
   for (const b of bs) assert.equal(b.members.length, b.date < "2026-01-01" ? 38 : 36, `${b.date}`);
 });
+
+/* ================= #901: `--sessions 4` で本番に出る 7 本に、同じ錨を当て直す ================= */
+
+/**
+ * # **広げた範囲（`--sessions 4`）の 7 本に x と y の錨を当てる**（Issue #901、#819）
+ *
+ * **上の #875 の測定は「読めた 7 本」を見ている**が、**その 7 本と、`--sessions 4` で本番に出る 7 本は
+ * 同じ集合ではない**——**`1017725.pdf`（2025-10-07、令和7年9月定例会）は 5 会期目にあたり、
+ * 会期ページが `no 各議員の表決態度 PDF` で例外になるので到達できない**（#875 が実装の欠陥として記録）。
+ * **代わりに `1028727.pdf`（2025-12-19）が入る**——**#875 の時点では
+ * `member columns differ from the first table` で読めなかった本である**（この PR で直した）。
+ *
+ * | | #875 の「読めた 7 本」 | **#901 の「本番に出る 7 本」** |
+ * |---|---|---|
+ * | 共通 | 6 本 | 6 本 |
+ * | 違い | `1017725.pdf`（到達できない） | **`1028727.pdf`（この PR で読めるようになった）** |
+ *
+ * ## **`members` は行ごとに取る**
+ *
+ * **`1028727.pdf` は 4 枚目の表だけ 11/12 列目が入れ替わっている。**
+ * **`VotePdf.members`（1 枚目の並び）で読むと、その 7 行で 2 人の票が入れ替わる**（#569 の重いほう）。
+ * **だからここでは `VotePdfRow.members` を使う**——**#875 のブロックは `pdf.members` のままで、
+ * そちらの 7 本には並びが 2 通りの本が 1 本も無いので、数字は 1 つも変わらない。**
+ */
+const PUBLISHED = [
+  { file: "1028727.pdf", date: "2025-12-19", rows: 40 },
+  { file: "1024978.pdf", date: "2025-11-28", rows: 7 },
+  { file: "1036105.pdf", date: "2026-02-13", rows: 1 },
+  { file: "1038136.pdf", date: "2026-02-20", rows: 1 },
+  { file: "1042426.pdf", date: "2026-03-11", rows: 83 },
+  { file: "1064407.pdf", date: "2026-07-03", rows: 20 },
+  { file: "1075652.pdf", date: "2026-09-11", rows: 1 },
+] as const;
+
+/** **行ごとの `members` を持つ Book**（`Book` は本ごとに 1 つしか持てないので、行に持たせる）。 */
+interface RowM extends Row { members: string[] }
+interface BookM { date: string; rows: RowM[] }
+
+let cachedP: BookM[] | undefined;
+async function published(): Promise<BookM[]> {
+  if (cachedP) return cachedP;
+  const out: BookM[] = [];
+  for (const p of PUBLISHED) {
+    const pdf = await parseVotePdf(FX(p.file));
+    out.push({
+      date: pdf.date,
+      rows: pdf.sections.flatMap((s) => s.rows.map((r) => ({
+        kind: s.kind, number: r.number, title: r.title, committeeResult: r.committeeResult,
+        result: r.result, cells: r.cells, members: r.members.map((m) => m.nameText),
+      }))),
+    });
+  }
+  cachedP = out.sort((a, b) => a.date.localeCompare(b.date));
+  return cachedP;
+}
+
+/** **検算B'（x）**: `議` の列の議員の姓 ⇔ 県公表の議長。**行ごとの `members` で引く。** */
+function checkBp(bs: readonly BookM[]): { n: number; bad: number } {
+  let n = 0, bad = 0;
+  for (const b of bs) {
+    const want = GICHO.find((g) => b.date >= g.from && b.date <= g.to);
+    if (!want) continue;
+    for (const r of b.rows) {
+      const gi = r.cells.map((c, i) => (c === "議" ? r.members[i] : undefined)).filter((x): x is string => x !== undefined);
+      n++;
+      if (gi.length !== 1 || surnameOf(gi[0]) !== want.surname) bad++;
+    }
+  }
+  return { n, bad };
+}
+
+/** **検算G'（x と y を同時に）**: `除` の列の議員 ⇔ 件名に書かれた氏名。**行ごとの `members` で引く。** */
+function checkGp(bs: readonly BookM[]): { n: number; bad: number } {
+  let n = 0, bad = 0;
+  for (const b of bs) for (const r of b.rows) {
+    const m = r.title.match(/（(.+?)氏）$/);
+    if (!m) continue;
+    n++;
+    const jo = r.cells.map((c, i) => (c === "除" ? r.members[i] : undefined)).filter((x): x is string => x !== undefined);
+    if (jo.length !== 1 || jo[0].replace(/[\s　]/g, "") !== m[1].replace(/[\s　]/g, "")) bad++;
+  }
+  return { n, bad };
+}
+
+/** **検算D'（y）**: 結果の追従 ⇔ `○` が `●` より多いか。**横棒 3 通りを「付託なし」として母数から外す**（#901）。 */
+function checkDp(bs: readonly BookM[]): { n: number; bad: number } {
+  let n = 0, bad = 0;
+  for (const b of bs) for (const r of b.rows) {
+    const cr = r.committeeResult.replace(/[\s　]/g, "");
+    if (NOT_REFERRED.has(cr)) continue;
+    const yes = r.cells.filter((c) => c === "○" || c === "〇").length;
+    const no = r.cells.filter((c) => c === "●").length;
+    if (yes + no === 0) continue;
+    n++;
+    if ((cr === r.result.replace(/[\s　]/g, "")) !== (yes > no)) bad++;
+  }
+  return { n, bad };
+}
+
+/** **検算E'（y、PDF の中だけ）**: 委員会審査結果 ⇔ 議決結果。**横棒 3 通りを外す**（#901）。 */
+function checkEp(bs: readonly BookM[]): { n: number; bad: number } {
+  let n = 0, bad = 0;
+  for (const b of bs) for (const r of b.rows) {
+    const cr = r.committeeResult.replace(/[\s　]/g, "");
+    if (NOT_REFERRED.has(cr)) continue;
+    n++;
+    if (cr !== r.result.replace(/[\s　]/g, "")) bad++;
+  }
+  return { n, bad };
+}
+
+const rotCellsM = (rows: readonly RowM[], k: number): RowM[] => rows.map((r, i) => ({ ...r, cells: rows[((i - k) % rows.length + rows.length) % rows.length].cells }));
+const rotFieldM = (rows: readonly RowM[], k: number, f: "result" | "committeeResult" | "title"): RowM[] =>
+  rows.map((r, i) => ({ ...r, [f]: rows[((i - k) % rows.length + rows.length) % rows.length][f] }));
+
+test("#901 母数: `--sessions 4` で本番に出る 7 本・153 行・5,562 セル（本番 `data/` の数と同じ）", async () => {
+  const bs = await published();
+  assert.equal(bs.length, 7, "本");
+  assert.equal(bs.reduce((s, b) => s + b.rows.length, 0), 153, "**行**（`--sessions 2` の 21 行から +132）");
+  assert.equal(bs.reduce((s, b) => s + b.rows.reduce((t, r) => t + r.cells.length, 0), 0), 5_562, "**セル**");
+  assert.deepEqual(bs.map((b) => [b.date, b.rows.length]), [
+    ["2025-11-28", 7], ["2025-12-19", 40], ["2026-02-13", 1],
+    ["2026-02-20", 1], ["2026-03-11", 83], ["2026-07-03", 20], ["2026-09-11", 1],
+  ]);
+  // **記号の内訳が 5,562 セルを 7 種に分類しきる**（`不明` は 0）
+  const m = new Map<string, number>();
+  for (const b of bs) for (const r of b.rows) for (const c of r.cells) m.set(c, (m.get(c) ?? 0) + 1);
+  assert.deepEqual(Object.fromEntries([...m].sort()), { "●": 102, "〇": 77, "○": 5126, "欠": 92, "議": 153, "退": 10, "除": 2 });
+  assert.equal([...m.values()].reduce((a, b) => a + b, 0), 5_562, "母数");
+  assert.equal(m.get("不明") ?? 0, 0, "抽出不能のセル");
+  // **1 行あたりの列数は 36 / 37 / 38 の 3 通り**（会期ごとに議員の人数が違う）
+  const per = new Map<number, number>();
+  for (const b of bs) for (const r of b.rows) per.set(r.cells.length, (per.get(r.cells.length) ?? 0) + 1);
+  assert.deepEqual(Object.fromEntries([...per].sort((a, c) => a[0] - c[0])), { 36: 106, 37: 40, 38: 7 });
+});
+
+test("#901 検算B'（x）: 広げた 7 本でも `議` の列 ⇔ 県公表の議長。無改造 0 / 153、1 列回すと 153 / 153 落ちる", async () => {
+  const bs = await published();
+  const base = checkBp(bs);
+  assert.equal(base.n, 153, "**判定できた行**（除外なし。#757）");
+  assert.equal(base.bad, 0, "不一致");
+  for (const k of [1, 2, 3, -1, 18]) {
+    const r = checkBp(bs.map((b) => ({ ...b, rows: b.rows.map((x) => ({ ...x, cells: rot(x.cells, k) })) })));
+    assert.equal(r.n, 153, `${k} 列回転: 母数`);
+    assert.equal(r.bad, 153, `**記号帯を ${k} 列回すと 153 / 153 行が落ちる**`);
+  }
+  // **名簿の側（行ごとの members）を回しても同じ**
+  for (const k of [1, -1]) {
+    const r = checkBp(bs.map((b) => ({ ...b, rows: b.rows.map((x) => ({ ...x, members: rot(x.members, k) })) })));
+    assert.equal(r.bad, 153, `名簿を ${k} つ回す`);
+  }
+  // **y を回しても 0 件**（x しか見ていないことの確認。#911 の「落ちる行数が多いほど強い」とは読まない）
+  for (const k of [1, -1]) {
+    assert.equal(checkBp(bs.map((b) => ({ ...b, rows: rotCellsM(b.rows, k) }))).bad, 0, `記号帯を y に ${k} 行回しても 0 件`);
+  }
+});
+
+test("#901 検算B' を 増えた 2 本だけに絞っても当たる（新しく出した 47 行が、既にあった 106 行に薄められていない）", async () => {
+  const bs = (await published()).filter((b) => b.date.startsWith("2025-1"));
+  assert.deepEqual(bs.map((b) => b.date), ["2025-11-28", "2025-12-19"], "**増えた 2 本**");
+  const base = checkBp(bs);
+  assert.equal(base.n, 47, "**増えたぶんの行**（7 + 40）");
+  assert.equal(base.bad, 0, "不一致");
+  for (const k of [1, -1, 18]) {
+    assert.equal(checkBp(bs.map((b) => ({ ...b, rows: b.rows.map((x) => ({ ...x, cells: rot(x.cells, k) })) }))).bad, 47,
+      `**増えた 47 行も ${k} 列回すと全部落ちる**`);
+  }
+  // **この 2 本の議長は 須見 一仁**（2025-12 は 2026-03-11 の交代より前）
+  const names = new Set(bs.flatMap((b) => b.rows.flatMap((r) => r.cells.map((c, i) => (c === "議" ? r.members[i] : undefined)).filter(Boolean))));
+  assert.deepEqual([...names], ["須見 一仁"]);
+});
+
+/**
+ * ## **委員会に付託しなかった印が 3 通りある**（**広げて初めて出た**。#901）
+ *
+ * **`-` U+002D（14 行）・`－` U+FF0D（7 行）に加えて、`―` U+2015（7 行）がある**——
+ * **U+2015 は `1028727.pdf`（2025-12-19）の議員提出議案 7 行だけに出る。**
+ * **`--sessions 2` の範囲には 1 件も無い。**
+ *
+ * **原文はそのまま残っている**（寄せていない）——**これは実装の不具合ではない。**
+ * **だが #875 が書いた検算D / 検算E は `-` と `－` しか除いていなかったので、
+ * この 7 行を「委員会に付託された行」として数え、7 件の不一致を出していた**——
+ * **テストの側の欠陥である**（**落ちない変異を等価変異で片付ける前に自分のテストを疑え、の実例**）。
+ *
+ * **奈良が `―` U+2015 と `-` U+002D の食い違いで `--sessions 5` で落ちたのと同じ文字である**（#901 の本文）。
+ */
+const NOT_REFERRED = new Set(["-", "－", "―", ""]);
+
+test("#901 委員会審査結果の「付託なし」は 3 通りの横棒（U+002D 14 / U+FF0D 7 / U+2015 7）。原文のまま残っている", async () => {
+  const bs = await published();
+  const m = new Map<string, number>();
+  for (const b of bs) for (const r of b.rows) m.set(r.committeeResult, (m.get(r.committeeResult) ?? 0) + 1);
+  assert.equal([...m.values()].reduce((a, c) => a + c, 0), 153, "母数");
+  assert.deepEqual(Object.fromEntries([...m].sort()), {
+    "-": 14, "―": 7, "－": 7, "不採択": 4, "可決": 111, "可決及び認定": 4, "承認": 1, "採択": 2, "認定": 3,
+  });
+  // **3 つは別の符号位置**（寄せていない）
+  assert.equal("-".codePointAt(0), 0x002d, "HYPHEN-MINUS");
+  assert.equal("―".codePointAt(0), 0x2015, "HORIZONTAL BAR");
+  assert.equal("－".codePointAt(0), 0xff0d, "FULLWIDTH HYPHEN-MINUS");
+  // **U+2015 の 7 行は 1 本の PDF の議員提出議案だけ**
+  const u2015 = bs.flatMap((b) => b.rows.map((r) => ({ d: b.date, r }))).filter((x) => x.r.committeeResult === "―");
+  assert.equal(u2015.length, 7);
+  assert.deepEqual([...new Set(u2015.map((x) => x.d))], ["2025-12-19"], "**U+2015 が出る本**");
+  assert.deepEqual([...new Set(u2015.map((x) => x.r.kind))], ["議員提出議案"]);
+});
+
+test("#901 検算D'/E'（y）: 広げた 7 本でも 結果の追従と 委員会結果 ⇔ 議決結果 が合う。欄を 1 行回すと落ちる", async () => {
+  const bs = await published();
+  // **`checkD` / `checkE` は `members` を見ないが、横棒 3 通りを除く形に直したものをここで使う**
+  const d = checkDp(bs);
+  assert.equal(d.n, 125, "**検算D で判定できた行**（委員会に付託されなかった 28 行を母数から外した）");
+  assert.equal(d.bad, 0, "不一致");
+  const e = checkEp(bs);
+  assert.equal(e.n, 125, "**検算E で判定できた行**");
+  assert.equal(e.bad, 0, "不一致");
+  // **議決結果の欄を 1 行回すと落ちる**（恒真でないことの確認）
+  assert.equal(checkEp(bs.map((b) => ({ ...b, rows: rotFieldM(b.rows, 1, "result") }))).bad, 11, "議決結果の欄を +1 行");
+  assert.equal(checkEp(bs.map((b) => ({ ...b, rows: rotFieldM(b.rows, -1, "result") }))).bad, 10, "議決結果の欄を −1 行");
+  assert.equal(checkEp(bs.map((b) => ({ ...b, rows: rotFieldM(b.rows, 1, "committeeResult") }))).bad, 10, "委員会結果の欄を +1 行");
+  // **検算D は x を 1 件も捕まえない**（#891 が徳島でも成り立つ）
+  for (const k of [1, -1]) {
+    assert.equal(checkDp(bs.map((b) => ({ ...b, rows: b.rows.map((x) => ({ ...x, cells: rot(x.cells, k) })) }))).bad, 0,
+      `**x に ${k} 列回しても検算D は 0 件**（公表数の形の検算は x を捕まえない。#891）`);
+  }
+  // **記号帯を y に 1 行回しても、検算D は 1 件しか捕まえない**（#875 と同じ弱さ。強くなっていない）
+  assert.equal(checkDp(bs.map((b) => ({ ...b, rows: rotCellsM(b.rows, 1) }))).bad, 1, "**y に 1 行回しても 125 行中 1 行**");
+  // **#875 の検算D（横棒 2 通りしか除かない）だと、この 7 行が不一致として出る**——**テストの側の欠陥だった**
+  const old = checkD((await published()).map((b) => ({ ...b, members: [] as string[] })) as unknown as Book[]);
+  assert.equal(old.n, 132, "横棒 2 通りだと母数が 7 行多い");
+  assert.equal(old.bad, 7, "**その 7 行がそのまま不一致になる**（U+2015 の行）");
+});
+
+test("#901 検算G'（x と y を同時に）: 広げた 7 本でも `除` は件名に名前がある本人の列", async () => {
+  const bs = await published();
+  const base = checkGp(bs);
+  assert.equal(base.n, 2, "**判定できた行**（`（○○氏）` で終わる件名は 2 行）");
+  assert.equal(base.bad, 0, "不一致");
+  for (const k of [1, -1, 4]) {
+    assert.equal(checkGp(bs.map((b) => ({ ...b, rows: b.rows.map((x) => ({ ...x, cells: rot(x.cells, k) })) }))).bad, 2, `x に ${k} 列`);
+  }
+  for (const k of [1, -1]) {
+    assert.equal(checkGp(bs.map((b) => ({ ...b, rows: rotCellsM(b.rows, k) }))).bad, 2, `記号帯を y に ${k} 行`);
+    assert.equal(checkGp(bs.map((b) => ({ ...b, rows: rotFieldM(b.rows, k, "title") }))).bad, 2, `件名を y に ${k} 行`);
+  }
+});
+
+/**
+ * **増えた 2 本の x を、行ごとの `members` で測る**（#901 でいちばん重い検算）。
+ *
+ * **`1028727.pdf` の 4 枚目だけ 11/12 列目が入れ替わっている。**
+ * **「1 枚目の並びを使い回す」読み方をすると、検算B' は 1 件も落ちない**
+ * ——**`議`（須見 一仁）は 7 列目で、入れ替わった 11/12 列目とは別の列だからである。**
+ * **つまり検算B' は、この入れ替わりを捕まえない。** **そのことを数字で残す。**
+ *
+ * **捕まえるのは「その行の `members` を、その表の罫線から読んだか」だけである。**
+ * **だから `tokushima-votes-pdf.test.ts` / `tokushima-rollcalls.test.ts` の 14 票の検算が要る。**
+ */
+test("#901 検算B' は 11/12 列目の入れ替わりを 1 件も捕まえない（錨の限界を、限界のまま書く）", async () => {
+  const bs = await published();
+  const dec = bs.find((b) => b.date === "2025-12-19")!;
+  // **入れ替わっている 7 行**
+  const swapped = dec.rows.filter((r) => r.members[10] === "川真田琢巳");
+  assert.equal(swapped.length, 7, "母数");
+  assert.equal(dec.rows.filter((r) => r.members[10] === "沢本 勝彦").length, 33, "入れ替わっていない行");
+  // **1 枚目の並びを使い回した「誤った読み」を組み立てる**
+  const first = dec.rows[0].members;
+  const wrong = [{ ...dec, rows: dec.rows.map((r) => ({ ...r, members: first })) }];
+  assert.equal(checkBp(wrong).n, 40, "母数");
+  assert.equal(checkBp(wrong).bad, 0, "**検算B' は 0 件。`議` の列（7 列目）は入れ替わりの外にある**");
+  // **だが 14 票は別人に付いている**
+  let moved = 0;
+  for (const r of dec.rows) for (let i = 0; i < r.members.length; i++) if (r.members[i] !== first[i]) moved++;
+  assert.equal(moved, 14, "**7 行 × 2 人 = 14 票が別人に付く**（1,480 票中）");
+  assert.equal(dec.rows.reduce((s, r) => s + r.cells.length, 0), 1_480, "この本の母数");
+});

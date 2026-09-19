@@ -130,3 +130,70 @@ test("#695 expectedDateYear: 年またぎ（11月定例会 → 翌年1月採決�
   // 会期の月より前の採決日は翌年（11月定例会が翌年1月に採決する形）
   assert.equal(expectedDateYear({ year: 2025, month: 11 }, 1), 2026);
 });
+
+/**
+ * ## **表ごとに列の並びが違う PDF で、票が正しい議員に付く**（Issue #901）
+ *
+ * **`1028727.pdf`（令和7年11月定例会 12月19日採決）の 4 枚目だけ 11/12 列目が入れ替わっている。**
+ * **`toLocalRollCalls` は `VotePdf.members`（1 枚目の並び）ではなく `VotePdfRow.members` を使う。**
+ *
+ * **この会期の名簿は 37 人で、今の名簿は 36 人**——**北島 一人 は 2026-02 会期より前に退いている。**
+ * **だからこの PDF の 37 列のうち 1 列は名簿に寄らない**（`memberId` は空。**推定しない**。#569 / #529）。
+ */
+const dec19 = await parseVotePdf(bytes("1028727.pdf"));
+const NOV = { sessionId: "2025-11", sessionLabel: "令和7年11月定例会", year: 2025, month: 11, pdfUrl: "https://www.pref.tokushima.lg.jp/file/attachment/1028727.pdf" };
+
+test("#901 toLocalRollCalls: 入れ替わった 4 枚目の 7 行で、沢本 勝彦 と 川真田琢巳 の票が入れ替わらない", () => {
+  const { rollCalls, unmatched } = toLocalRollCalls(dec19, roster.members, NOV);
+  assert.equal(rollCalls.length, 40, "母数（この PDF の全行）");
+  assert.deepEqual([...new Set(rollCalls.map((r) => r.votes.length))], [37], "37 人ぶんの票");
+  // **氏名 → その人に付いた記号の並び**（行ごとに集める）
+  const marksOf = (name: string) => rollCalls.map((r) => r.votes.find((v) => v.nameText === name)!.value.raw);
+  const sawamoto = marksOf("沢本 勝彦");
+  const kawamada = marksOf("川真田琢巳");
+  assert.equal(sawamoto.length, 40);
+  assert.equal(kawamada.length, 40);
+  // **1 人に 1 行 1 票ちょうど**（並びが入れ替わっても重複も欠落も起きない）
+  for (const r of rollCalls) {
+    assert.equal(new Set(r.votes.map((v) => v.nameText)).size, 37, `${r.id}: 同じ氏名が 2 回出ていない`);
+  }
+  // **`議` は全 40 行で 須見 一仁 1 人**
+  for (const r of rollCalls) {
+    const gi = r.votes.filter((v) => v.value.raw === "議");
+    assert.equal(gi.length, 1, `${r.id}: 議長の列`);
+    assert.equal(gi[0].nameText, "須見 一仁", `${r.id}: 議長`);
+  }
+  // **入れ替わった 7 行（議員提出議案）でも、附帯決議の `●` 2 票は 岡 佑樹・坂口 誠治 に付く**
+  const teiketsu = rollCalls.find((r) => r.title.includes("附帯決議"))!;
+  assert.deepEqual(teiketsu.votes.filter((v) => v.value.raw === "●").map((v) => v.nameText), ["岡 佑樹", "坂口 誠治"]);
+  // **名簿に寄らないのは 北島 一人 1 人だけ**（今の名簿 36 人には居ない。推定しない）
+  assert.deepEqual(unmatched.map((u) => u.nameText), ["北島 一人"], "寄らなかった氏名");
+  assert.equal(unmatched[0].rollCallIds.length, 40, "その 40 行すべてで memberId は空");
+  const empty = rollCalls.flatMap((r) => r.votes).filter((v) => v.memberId === "");
+  assert.equal(empty.length, 40, "**memberId が空の票は 40（= 1 人 × 40 行）**");
+  assert.deepEqual([...new Set(empty.map((v) => v.nameText))], ["北島 一人"]);
+  // **残る 36 人はすべて名簿に寄る**
+  const matched = rollCalls.flatMap((r) => r.votes).filter((v) => v.memberId !== "");
+  assert.equal(matched.length, 40 * 36);
+  assert.equal(new Set(matched.map((v) => v.memberId)).size, 36);
+});
+
+/**
+ * **「1 枚目の並びを使い回す」直し方をしたときの被害を、そのまま数える**（#901）。
+ *
+ * **これは「変異を書いたテスト」ではない**——**誤った読み方を実際に組み立てて、
+ * 何票が別人に付くかを数えている。** **落ちるのは実装ではなく、誤った読み方のほうである。**
+ */
+test("#901 toLocalRollCalls: 1 枚目の並びを使い回すと 14 票が別人に付く（数えた）", () => {
+  const { rollCalls } = toLocalRollCalls(dec19, roster.members, NOV);
+  let wrong = 0;
+  for (const r of rollCalls) {
+    const row = dec19.sections.flatMap((s) => s.rows).find((x) => x.title === r.title && x.number === r.number)!;
+    for (let i = 0; i < row.cells.length; i++) {
+      // 誤った読み: 1 枚目の並び（`dec19.members`）で i 番目の議員に当てる
+      if (dec19.members[i].nameText !== r.votes[i].nameText) wrong++;
+    }
+  }
+  assert.equal(wrong, 14, "**7 行 × 2 人 = 14 票**（40 行 × 37 列 = 1,480 票中）");
+  assert.equal(rollCalls.reduce((s, r) => s + r.votes.length, 0), 1_480, "母数");
+});
