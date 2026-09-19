@@ -67,7 +67,7 @@ describe("#826 本番データ: 記号の数と公表値の突き合わせが画
       // **7 件は母数の外ではなく中に入るのが正しい。**
       // **採決の数 1,369 と「凡例が引けない 5」は 1 件も動いていない。**
       //
-      // ## **#901 で 1,369 → 1,785 / 1,030 → 1,355 / 5 → 48 に動いた**（2026-09-20。三重と徳島）
+      // ## **#901 で 1,369 → 2,413 / 1,030 → 1,752 / 5 → 48 に動いた**（2026-09-20。三重・徳島・秋田）
       // **三重の `--sessions` の既定を 2 → 4 にした**（一般選挙の手前まで）。
       // **増えた 368 本のうち 43 本に「凡例の引けないセル」がある**——
       // **令和6年10月の 下野幸助（10月10日に議員辞職）の列を PDF が空欄にしており、
@@ -75,17 +75,21 @@ describe("#826 本番データ: 記号の数と公表値の突き合わせが画
       // **三重のぶんでは `noCounts` 334 は動かなかった**（三重は 733 / 733 本すべてに `counts` がある）。
       // **徳島も 2 → 4 にした**（105 → 153）——**徳島の PDF には `counts` の欄が無いので、
       // 増えた 48 本はそのまま `noCounts` に入る**（**334 → 382**。`checked` は **1,355 のまま**）。
+      // **秋田も 5 → 29 本会議日にした**（採決 157 → 785）——**`checked` は 157 → 554 に増え、
+      // 食い違いは 0 のまま。** **残る 231 件は反対者数の欄が PDF で空**なので `noCounts` に入る
+      // （**382 → 613**）。**「空欄 = 0」と読むと 154 本で 180 行が嘘になる**ので読まない
+      // （`packages/etl/src/sources/local/akita/votes-pdf.ts` の docblock）。
       // **食い違いは 0 のまま。**
-    }).toEqual({ rows: 1785, checked: 1355, noCounts: 382, unreadableCells: 48, mismatches: 0 });
+    }).toEqual({ rows: 2413, checked: 1752, noCounts: 613, unreadableCells: 48, mismatches: 0 });
   });
 
-  it("/coverage に、本番の母数（1,355 件）と食い違い（0 件）と未突合の内訳が出る", async () => {
+  it("/coverage に、本番の母数（1,752 件）と食い違い（0 件）と未突合の内訳が出る", async () => {
     await renderCoverage(await realLocalMetas());
     const section = screen.getByRole("region", { name: SECTION });
     // **母数が出ていること**（#757。「0 件」は「見た上での 0」でなければ意味が無い）
-    expect(section).toHaveTextContent("1,355");
-    // **突き合わせなかった 382 件と 48 件の内訳も出す**（黙って母数から外さない）
-    expect(section).toHaveTextContent("382");
+    expect(section).toHaveTextContent("1,752");
+    // **突き合わせなかった 613 件と 48 件の内訳も出す**（黙って母数から外さない）
+    expect(section).toHaveTextContent("613");
     expect(section).toHaveTextContent("48");
     // **今は食い違いが無い**、を母数つきで言う
     expect(within(section).getByTestId("coverage-count-mismatch-none")).toBeInTheDocument();

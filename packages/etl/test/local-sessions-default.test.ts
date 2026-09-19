@@ -87,12 +87,14 @@ test("#901 既定は議会ごとに持つ（全議会一律の 1 つの数にし
   }
 });
 
-test("#901 三重と徳島だけ 4、他の 9 議会は 2 のまま（測った議会だけ広げる）", () => {
+test("#901 測った 3 議会だけ既定を動かし、他の 8 議会は 2 のまま", () => {
   assert.equal(defaultSessionsFor("mie"), 4, "三重は令和5年第2回定例会まで（2023年4月の一般選挙の後）");
   assert.equal(defaultSessionsFor("tokushima"), 4, "徳島は令和7年11月定例会まで（5 会期目は会期ページが例外、6 会期目以降は 1 本も読めない）");
-  const measured = ["mie", "tokushima"];
+  // **秋田の単位は「本会議日」**（他の 10 議会は「定例会」）。**29 は 29 本の PDF ＝ 2023-05-16 以降**
+  assert.equal(defaultSessionsFor("akita"), 29, "秋田は 2023-05-16 の本会議日まで（2023年4月の一般選挙の後。30 本目が選挙の前）");
+  const measured = ["mie", "tokushima", "akita"];
   const others = Object.keys(LOCAL_SOURCES).filter((n) => !measured.includes(n));
-  assert.equal(others.length, 9, `測っていない議会 ${others.length}`);
+  assert.equal(others.length, 8, `測っていない議会 ${others.length}`);
   assert.deepEqual(
     others.filter((n) => defaultSessionsFor(n) !== DEFAULT_LOCAL_SESSIONS),
     [],

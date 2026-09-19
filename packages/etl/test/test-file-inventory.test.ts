@@ -108,7 +108,7 @@ const ciTestFiles = (): string[] =>
 // **その場合は今の値を据え置く**（この規則は「離れすぎを詰める」ためのもので、
 // **緩める口実にしてはいけない**）。
 const WEB_TEST_FILES_MIN = 85; // 実測 2026-09-13: walk() で 87。**下げないので 85 のまま**（実数 − 3 = 84 は今より低い）
-const ETL_TEST_FILES_MIN = 156; // 実測 2026-09-20: readdirSync で 159（− 3。#720 の規則）。#928 が 156 → 157、**#901 が local-sessions-default.test.ts と local-cli-sessions.test.ts を足して 157 → 159**。**139 のままだと 18 本消しても落ちなかった**（#720 が詰めた「実数から離れたぶんだけ守っていない」がまた開いていた）
+const ETL_TEST_FILES_MIN = 157; // 実測 2026-09-20: readdirSync で 160（− 3。#720 の規則）。#928 が 156 → 157、**#901 が local-sessions-default.test.ts と local-cli-sessions.test.ts を足して 157 → 159、さらに akita-vote-alignment.test.ts を足して 159 → 160**。**139 のままだと 18 本消しても落ちなかった**（#720 が詰めた「実数から離れたぶんだけ守っていない」がまた開いていた）
 const CI_TEST_FILES_MIN = 6; // 実測 2026-09-13: readdirSync で 7（− 1。母数が小さいので幅も小さく）
 
 test("#533: apps/web のテストファイル集合が下限を割らない（vitest の include glob を消しても足しても検出する）", () => {

@@ -60,8 +60,9 @@ test("#851 公表した rollcalls/index.json は、公表した採決の原本�
     }
   }
   // **母数はいつも出す**（「0 件」は「見た上での 0」でなければ意味が無い。#757）
-  // **#901 で三重を 365 → 733 本、徳島を 105 → 153 本にしたので 1,369 → 1,785**（動いたのは pref-24 と pref-36 だけ）
-  assert.equal(rows, 1_785, "**11 県で 1,785 行を突き合わせた**（2026-09-20 実測）");
+  // **#901 で三重 365 → 733、徳島 105 → 153、秋田 157 → 785 にしたので 1,369 → 2,413**
+  // （動いたのは pref-24 / pref-36 / pref-05 だけ）
+  assert.equal(rows, 2_413, "**11 県で 2,413 行を突き合わせた**（2026-09-20 実測）");
 });
 
 /**
@@ -70,7 +71,7 @@ test("#851 公表した rollcalls/index.json は、公表した採決の原本�
  * **秋田は 157 / 157 本に `counts` がある**（#840 が 7 件を埋めた後の値）。
  * **`index.json` だけが 150 / 157 だった。**
  */
-test("#851 counts を持つ採決の数は index と原本で一致する（11 県。秋田は 157/157）", async () => {
+test("#851 counts を持つ採決の数は index と原本で一致する（11 県。秋田は 554/785）", async () => {
   const prefs = (await readdir(join(DATA, "assemblies"), { withFileTypes: true }))
     .filter((e) => e.isDirectory() && e.name.startsWith("pref-")).map((e) => e.name).sort();
   const got: Record<string, number> = {};
@@ -84,9 +85,11 @@ test("#851 counts を持つ採決の数は index と原本で一致する（11 �
     got[p] = inIndex;
   }
   // **2026-09-20 実測**（`counts` の欄が無い県は 0。奈良・高知・徳島は PDF に人数欄が無い）。
-  // **#901 で三重が 365 → 733**（三重は全行に `counts` があるので採決の本数と同じ）
+  // **#901 で三重が 365 → 733**（三重は全行に `counts` があるので採決の本数と同じ）、
+  // **秋田が 157 → 554**（**785 行中 231 行は反対者数の欄が PDF で空**なので `counts` が付かない。
+  // `akita/votes-pdf.ts` の docblock。**「空欄 = 0」と読むと 180 行が嘘になる**）
   assert.deepEqual(got, {
-    "pref-02": 113, "pref-04": 133, "pref-05": 157, "pref-24": 733, "pref-25": 14,
+    "pref-02": 113, "pref-04": 133, "pref-05": 554, "pref-24": 733, "pref-25": 14,
     "pref-29": 0, "pref-31": 118, "pref-32": 112, "pref-36": 0, "pref-39": 0, "pref-41": 23,
   });
 });
