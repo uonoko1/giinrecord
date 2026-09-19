@@ -50,6 +50,36 @@
 # 既定は読むだけ（worktree-sweep.sh と同じ設計）。`--fix` を付けたときだけ
 #   `gh issue close` と `board-set.sh` を呼ぶ。
 #
+# ---- `--fix` は自分がやったことを台帳に追記する（#919）----------------------------------------
+# **Sprint 28 の締めで、「この回で何回食い違いを捕まえたか」を書けなかった。**
+# **`--fix` が直すたびに食い違いが消えるので、後から正確な回数を出せない。**
+# **PO は「9 回」と書きかけて、測っていない数字だったのでやめ、スプリント文書に「数えていない」と書いた。**
+# **道具が効いた証拠が、道具自身によって失われていた**（#757 の裏返し——
+#   #757 は「母数を書かない検算は 0 件でも緑になる」、こちらは
+#   「直した件数を残さない道具は、効いていても効いていなくても同じ顔をする」）。
+#
+# **既に消えた回数は復元しない**（できない）。**ここから先が数えられればよい。**
+#
+# **台帳**: `$BOARD_AUDIT_LOG`（既定 `<repo>/docs/ops/board-audit-log.tsv`）に**追記だけ**する。
+#   **1 回の `--fix` が必ず 1 本の `run` 行を書く**（直せた件数が 0 でも書く。**母数が要る**ので）。
+#   **直した 1 件につき 1 本の `fixed` 行、直さず残した 1 件につき 1 本の `left` 行**を `run` の前に書く:
+#     <ts>\trun\t-\t-\t-\tissues=N board=N prs=N findings=N fixed=N left=N
+#     <ts>\tfixed\t<issue>\t<現在>\t<あるべき>\t<種別>
+#     <ts>\tleft\t<issue>\t<現在>\t<あるべき>\t<種別>
+#   **`findings == fixed + left` を書いた行の側でも数え直し、合わなければ異常終了する**（#757）。
+#   **列は 6 つに固定**。TSV なので `awk -F'\t'` で数えられる。
+#
+# **読むだけのときは 1 バイトも書かない**（**読んだだけで「直した」が増えてはいけない**）。
+#   **`--fix` が無いときは台帳のファイルを作りもしない。**
+#
+# **台帳に書くのは番号と Status と種別だけ**で、**Issue や PR のタイトル・本文は一切書かない**。
+#   OSS 公開前提で、**タイトルには何が入るか分からない**（調査中のホスト名や URL が入りうる）。
+#   **番号・Status・種別は、このスクリプト自身が出す語彙と GitHub 上で既に公開されている番号だけ。**
+#
+# **数え方**（PO はスプリントの締めでこれを叩く）:
+#   awk -F'\t' '$2=="fixed"' docs/ops/board-audit-log.tsv | wc -l   # 直した延べ件数
+#   awk -F'\t' '$2=="run"'   docs/ops/board-audit-log.tsv | wc -l   # --fix を走らせた回数
+#
 #   Tests: scripts/po/test/board-audit.test.sh（fake `gh` で実際には何も書き換えない）
 #
 # Usage:
@@ -57,10 +87,12 @@
 #   scripts/po/board-audit.sh --fix      # 直す（Issue を閉じる／ボードの Status を直す）
 #
 # 環境変数:
-#   STALE_HOURS  規則 5 の閾値（時間。既定 24）
-#   PO_NOW       規則 5 の「今」を固定する（ISO8601。テスト用）
+#   STALE_HOURS      規則 5 の閾値（時間。既定 24）
+#   PO_NOW           規則 5 の「今」を固定する（ISO8601。テスト用）
+#   BOARD_AUDIT_LOG  台帳の場所（既定 <repo>/docs/ops/board-audit-log.tsv。テスト用）
 #
 # 終了コード: 0 食い違い無し / 1 食い違いあり（--fix なら直せなかったものが残る） / 2 使い方 / 4 母数が 0
+#             / 5 台帳に書けなかった（**残らないなら「直した」と報告しない**）
 set -euo pipefail
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 # shellcheck source=scripts/po/lib.sh
@@ -76,6 +108,64 @@ case "${1:-}" in
 esac
 
 REPO=$(po_repo)
+
+# ---- 台帳（#919）-----------------------------------------------------------------------------  LEDGER-BEGIN
+# **`--fix` が直したことを、後から数えられる形で残す。**
+# **`ledger_add` / `ledger_flush` は `$FIX` が 1 のときしか書かない**——
+# **読むだけの走行で 1 バイトでも書いたら、この道具は「読んだだけで直したことになる」台帳を作る。**
+#
+# **`LEDGER-BEGIN` / `LEDGER-END` の印は、テストがこのブロックだけを取り出して source するため。**
+# **写しを 2 つ作らないため**である（`scripts/ci/pr-closes.sh` が `CLOSING_RE` を
+# このファイルから取り出しているのと同じ理由）。**印を消すならテストの取り出し方も直すこと**
+# ——取り出せなければテストは落ちる（**取れないまま緑にしない**。#757）。
+BOARD_AUDIT_LOG=${BOARD_AUDIT_LOG:-"$HERE/../../docs/ops/board-audit-log.tsv"}
+declare -a LEDGER_ROWS=()
+
+ledger_add() { # ledger_add <fixed|left> <issue> <現在> <あるべき> <種別>
+  # **この番人は届かない所に在る**（実測 #919）: `ledger_add` を呼ぶのは `--fix` の節だけで、
+  # **`FIX=0` の走行はそこに着く前に `exit 0` / `exit 1` している。**
+  # **だからこの行だけを外しても、振る舞いは変わらない**（等価変異になる）。
+  # **それでも残す**——`ledger_flush` 側の番人と対で読めるほうが、後から節を足す人が間違えにくい。
+  # **守りとして数えているのは `ledger_flush` 側だけである。**
+  [[ "$FIX" == 1 ]] || return 0
+  LEDGER_ROWS+=("$(printf '%s\t%s\t%s\t%s\t%s' "$1" "$2" "$3" "$4" "$5")")
+}
+
+ledger_flush() { # ledger_flush <issues> <board> <prs> <findings> <fixed> <left>
+  [[ "$FIX" == 1 ]] || return 0
+  local issues=$1 board=$2 prs=$3 findings=$4 fixed=$5 left=$6
+  # **#757: 書いた行の側でも数え直す。** 行数と数えた件数が食い違う台帳は、
+  # **在ることで「数えられている」と誤解させる**ので、書かずに落とす。
+  local rows=${#LEDGER_ROWS[@]}
+  if [[ "$rows" -ne $((fixed + left)) || "$findings" -ne $((fixed + left)) ]]; then
+    echo "board-audit: 台帳の検算が合いません（行 $rows / 直した $fixed / 残した $left / 食い違い $findings）。" >&2
+    echo "  **合わない台帳は書きません**（数えられない記録は、数えられると誤解させるだけです）。" >&2
+    return 5
+  fi
+  local ts dir tmp
+  ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+  dir=$(dirname "$BOARD_AUDIT_LOG")
+  mkdir -p "$dir" || { echo "board-audit: 台帳の置き場 $dir を作れません。" >&2; return 5; }
+  # **追記は 1 回の書き込みにまとめる**（途中で落ちて半端な run 行が残らないように）。
+  tmp=$(mktemp) || { echo "board-audit: 一時ファイルを作れません。" >&2; return 5; }
+  # **`${a[@]+"${a[@]}"}` の形で受ける**（`set -u` の下では空配列の `${a[@]}` が未定義エラーになる）。
+  # **クオートを外すと行の中のタブで単語分割される**ので、必ずこの形のまま。
+  local row
+  if [[ "$rows" -gt 0 ]]; then
+    for row in "${LEDGER_ROWS[@]}"; do printf '%s\t%s\n' "$ts" "$row" >> "$tmp"; done
+  fi
+  printf '%s\trun\t-\t-\t-\tissues=%s board=%s prs=%s findings=%s fixed=%s left=%s\n' \
+    "$ts" "$issues" "$board" "$prs" "$findings" "$fixed" "$left" >> "$tmp"
+  if ! cat "$tmp" >> "$BOARD_AUDIT_LOG"; then
+    rm -f "$tmp"
+    echo "board-audit: 台帳 $BOARD_AUDIT_LOG に追記できません。" >&2
+    echo "  **残らないなら「直した」と報告しません。**" >&2
+    return 5
+  fi
+  rm -f "$tmp"
+  log "台帳に $((rows + 1)) 行追記しました（$BOARD_AUDIT_LOG）"
+}
+# LEDGER-END
 
 # ---- 1. Issue を全部読む（母数その1）---------------------------------------------------------
 # state=all。`gh issue list` は PR を返さない。
@@ -280,6 +370,9 @@ if [[ ${#FINDINGS[@]} -eq 0 ]]; then
   echo "食い違い 0 件（Issue $ISSUE_COUNT 件 / ボード項目 $BOARD_COUNT 件 / マージ済み PR $PR_COUNT 件 を見た）"
   echo "  ただし $COVERAGE"
   echo "  $INPROGRESS_SUMMARY"
+  # **食い違い 0 件でも `--fix` なら run 行を書く**（#919）。**走らせた回数が母数だから**——
+  # **「直した 9 件」だけ残ると、それが 1 回で出たのか 30 回走らせて出たのかが分からない。**
+  ledger_flush "$ISSUE_COUNT" "$BOARD_COUNT" "$PR_COUNT" 0 0 0 || exit 5
   exit 0
 fi
 
@@ -298,33 +391,44 @@ if [[ "$FIX" == 0 ]]; then
 fi
 
 # ---- --fix ------------------------------------------------------------------------------------
+# **直した／残した 1 件ごとに台帳の行を積む**（#919）。**積むのは `ledger_add` だけで、
+# 書き出すのはループの後の `ledger_flush` 1 回**——途中で落ちたら run 行ごと残さない。
 fixed=0; left=0
 for row in "${SORTED[@]}"; do
-  IFS=$'\t' read -r kind issue _now _want why <<< "$row"
+  IFS=$'\t' read -r kind issue now _want why <<< "$row"
   case "$kind" in
     closed-pr-open-issue)
       # **ここに来るのは pr_is_merged を通ったものだけ**（上のループで確認済み）
       gh issue close "$issue" --repo "$REPO" --comment "$why でマージ済みのため閉じます（scripts/po/board-audit.sh --fix）"
       "$HERE/board-set.sh" "$issue" Done
+      # **この規則だけは 2 つ動かす**（Issue を閉じる + ボードを Done）ので、両方を書く。
+      # `$now` は Issue の state（OPEN）で、ボードの Status ではない——**混ぜて 1 語にしない**。
+      ledger_add fixed "$issue" "OPEN/${BOARD_STATUS[$issue]:-(なし)}" "CLOSED/Done" "$kind"
       fixed=$((fixed+1)) ;;
     closed-issue-not-done|not-on-board)
       if [[ "${ISSUE_STATE[$issue]}" == "CLOSED" ]]; then
-        "$HERE/board-set.sh" "$issue" Done
+        to=Done
       else
-        "$HERE/board-set.sh" "$issue" Backlog
+        to=Backlog
       fi
+      "$HERE/board-set.sh" "$issue" "$to"
+      ledger_add fixed "$issue" "$now" "$to" "$kind"
       fixed=$((fixed+1)) ;;
     inprogress-no-trace)
       # **担当者を立てるのは PO の判断。** **誰を立てるか／そもそも立てるべきかは機械に決められない**
       # （**OPEN なのに Done を自動で戻さない**のと同じ理由）。**ボードも Issue も触らない。**
       log "残す #$issue: In Progress なのに枝も PR も無い。担当者を立てるか Status を戻すかは人が決めてください"
+      ledger_add left "$issue" "$now" "(人が決める)" "$kind"
       left=$((left+1)) ;;
     open-issue-done)
       # **Done から自動で動かさない。** どこへ戻すべきか（Ready / In Progress / In Review）は
       # 機械には分からず、**取り違えるとボードがまた嘘をつく**。人が決める。
       log "残す #$issue: OPEN なのに Done。どの Status に戻すかは人が決めてください（board-set.sh）"
+      ledger_add left "$issue" "$now" "(人が決める)" "$kind"
       left=$((left+1)) ;;
   esac
 done
 echo "直した $fixed 件 / 残した $left 件"
+# **台帳に書けなかったら、直した件数が残らない**——**その走行は「数えられる」とは言えないので落とす**（#919）。
+ledger_flush "$ISSUE_COUNT" "$BOARD_COUNT" "$PR_COUNT" "${#SORTED[@]}" "$fixed" "$left" || exit 5
 [[ "$left" -eq 0 ]] || exit 1
