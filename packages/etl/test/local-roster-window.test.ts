@@ -64,6 +64,17 @@ import {
  * **実測しておく（2026-09-20）**: **今の名簿から 1 人ずつ抜き、その人が実際に投じた `nameText` を
  * 各県の突合規則で引き直した 453 通りでは、別人に決まった例は 0 件、453 通りとも `unmatched` に落ちた。**
  * **「2 は今のデータでは再現しない」までが実測である**——**起こりえないという意味ではない。**
+ *
+ * ## **この検査は、既にあるテストの中で 1 件鳴った**（**作り話ではない**）
+ *
+ * **`aomori-run.test.ts` の `#750 meta.lossyNameMatches`（第300回）は `--sessions 29` を渡しており、
+ * 2019-11 の採決 46 本に 2026-05-25 の名簿を当てている**——**間に 2019 年と 2023 年の
+ * 一般選挙が 2 回挟まる 2,376 日。** **ETL のテスト 1,861 件のうち、鳴ったのはこの 1 件だけだった。**
+ *
+ * **偽陽性ではない**——**`引 ユキ子` の 46 本は、その人の 2019 年の在職を確かめないまま
+ * 2026 年の名簿の議員に寄っている。** **本番 `data/` の青森は 2026-03-11 〜 2026-06-29 しか持たず、
+ * 2019 年の採決は 1 本も無い**ので、**本番は緑のままである。**
+ * **つまり「#901 が広げたら鳴る」が、広げた形のテストで実際に起きた。**
  */
 const DATA = fileURLToPath(new URL("../../../data/", import.meta.url));
 
@@ -83,7 +94,7 @@ const localPrefs = async (): Promise<string[]> =>
   (await readdir(join(DATA, "assemblies"), { withFileTypes: true }))
     .filter((e) => e.isDirectory() && e.name.startsWith("pref-")).map((e) => e.name).sort();
 
-const windowOfPref = async (p: string): ReturnType<typeof rosterWindowOf> extends infer R ? Promise<R> : never => {
+const windowOfPref = async (p: string): Promise<ReturnType<typeof rosterWindowOf>> => {
   const meta = JSON.parse(await readFile(join(DATA, "assemblies", p, "meta.json"), "utf-8")) as LocalAssemblyMeta;
   const rcs: LocalRollCall[] = [];
   for (const f of await walk(join(DATA, "assemblies", p, "rollcalls"))) rcs.push(JSON.parse(await readFile(f, "utf-8")) as LocalRollCall);
