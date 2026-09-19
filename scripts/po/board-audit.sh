@@ -148,8 +148,8 @@ ledger_flush() { # ledger_flush <issues> <board> <prs> <findings> <fixed> <left>
   mkdir -p "$dir" || { echo "board-audit: 台帳の置き場 $dir を作れません。" >&2; return 5; }
   # **追記は 1 回の書き込みにまとめる**（途中で落ちて半端な run 行が残らないように）。
   tmp=$(mktemp) || { echo "board-audit: 一時ファイルを作れません。" >&2; return 5; }
-  # **`${a[@]+"${a[@]}"}` の形で受ける**（`set -u` の下では空配列の `${a[@]}` が未定義エラーになる）。
-  # **クオートを外すと行の中のタブで単語分割される**ので、必ずこの形のまま。
+  # **空配列を `for` に渡さない**（`set -u` の下では `"${a[@]}"` が未定義エラーになる）ので、
+  # 先に `rows` で分ける。**クオートを外すと行の中のタブで単語分割される**ので、必ずこの形のまま。
   local row
   if [[ "$rows" -gt 0 ]]; then
     for row in "${LEDGER_ROWS[@]}"; do printf '%s\t%s\n' "$ts" "$row" >> "$tmp"; done
