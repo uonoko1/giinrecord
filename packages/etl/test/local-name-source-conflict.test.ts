@@ -225,11 +225,14 @@ test("#711 否定的対照: 本番 data/ の unmatched 行の reason が計算�
       if (reason !== u.reason) hits.push(`${a} ${u.nameText}: ${String(reason)} !== ${String(u.reason)}`);
     }
   }
-  // 実測 2026-09-20: 宮城 1・**三重 6**・滋賀 1（brokenGlyph）・青森 3・佐賀 2（sourceConflict）。
+  // 実測 2026-09-20: 宮城 1・**三重 6**・滋賀 1（brokenGlyph）・青森 3・佐賀 2（sourceConflict）・**徳島 2**。
   // **#901 で三重の会期を 2 → 4 にして 3 → 6 行になった**——
   // **増えた 3 行のうち 1 行（`下野 幸助 ※１`）は `brokenGlyph`** で、`※`（U+203B）と `１`（U+FF11）が
   // 氏名の列に入っている（#680）。**残り 2 行は理由の記載なし＝名簿に無い氏名。**
-  assert.equal(rows, 13, `本番の unmatched は 13 行のはず（宮城 1・三重 6・滋賀 1・青森 3・佐賀 2）。増減したらこの対照を測り直すこと（実測 2026-09-20）`);
+  // **徳島も 2 → 4 にして 0 → 2 行になった**（別の PR）——**北島 一人・古川 広志。**
+  // **どちらも 2025-11 会期にだけ出る、今の名簿に無い議員で、理由の記載なし＝名簿に無い氏名。**
+  // **`sourceConflict` は 1 行も増えていない**（徳島の名簿は 2 ページの突き合わせで食い違わない）。
+  assert.equal(rows, 15, `本番の unmatched は 15 行のはず（宮城 1・三重 6・滋賀 1・青森 3・佐賀 2・徳島 2）。増減したらこの対照を測り直すこと（実測 2026-09-20）`);
   assert.equal(conflicts, 5, "sourceConflict は 5 行（青森 3・佐賀 2）");
   // **真陽性が 1 件以上**（無ければ「全部 sourceConflict にしない実装」でも通ってしまう）
   assert.ok(conflicts >= 1, `本番に sourceConflict の真陽性が 1 件も無い（${conflicts} 件）。この対照は空回りしている`);

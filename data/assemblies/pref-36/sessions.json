@@ -1,7 +1,15 @@
 [
  {
+  "date": "2026-09-11",
+  "fetchedAt": "2026-09-19T19:30:21.855Z",
+  "id": "2026-09",
+  "label": "令和8年9月定例会",
+  "rollcalls": 1,
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/honkaigi/r08/7316301/"
+ },
+ {
   "date": "2026-07-03",
-  "fetchedAt": "2026-09-04T22:16:23.167Z",
+  "fetchedAt": "2026-09-19T19:30:21.855Z",
   "id": "2026-06",
   "label": "令和8年6月定例会",
   "rollcalls": 20,
@@ -9,10 +17,18 @@
  },
  {
   "date": "2026-03-11",
-  "fetchedAt": "2026-09-04T22:16:23.167Z",
+  "fetchedAt": "2026-09-19T19:30:21.855Z",
   "id": "2026-02",
   "label": "令和8年2月定例会",
   "rollcalls": 85,
   "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/honkaigi/r08/7310454/"
+ },
+ {
+  "date": "2025-12-19",
+  "fetchedAt": "2026-09-19T19:30:21.855Z",
+  "id": "2025-11",
+  "label": "令和7年11月定例会",
+  "rollcalls": 47,
+  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/honkaigi/r07/7308466/"
  }
 ]
