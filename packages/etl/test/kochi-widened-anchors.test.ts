@@ -315,6 +315,14 @@ test("#901 錨D を 2025-09 には当てない —— **HTML 43 行 / PDF 18 行
   assert.equal(carried.length, 25, "**2025-12 の本の継続審査の行**（**25 行でちょうど一致する**）");
   const tail = (s: string) => strip(s).replace(/^376/, "");
   assert.deepEqual(carried.map((r) => tail(r.number)).sort(), onlyHtml.map((h) => strip(h.number)).sort(), "**番号が 25 行とも一致する**");
+  // **件名も 25 行とも一致する**（**番号だけなら偶然が残るが、件名まで合えば同じ議案である**）
+  const titleMismatch = carried.flatMap((c) => {
+    const h = onlyHtml.find((x) => strip(x.number) === tail(c.number));
+    return h && strip(c.title) === stripTitle(h.title) ? [] : [`${c.number}: PDF「${c.title}」 HTML「${h?.title ?? "(無い)"}」`];
+  });
+  assert.deepEqual(titleMismatch, [], "**件名が 25 行とも一致する**");
+  // **それでも県が「第376回からの継続」と書いた文は見つけていない**——
+  // **`376` という接頭辞がそう読めることと、番号・件名が 25 行とも一致することまでが実測である。**
 });
 
 /* ============================ 使っていない物差しを、使っていないまま固定する ============================ */
