@@ -1,4 +1,5 @@
 import { getDocument, OPS } from "pdfjs-dist/legacy/build/pdf.mjs";
+import { CMAP_OPTIONS } from "../pdf-cmap.ts";
 import { multiplyMatrix, readLines, type Matrix, type PageGeometry, type Item } from "../pdf-table.ts";
 
 /**
@@ -21,7 +22,7 @@ import { multiplyMatrix, readLines, type Matrix, type PageGeometry, type Item } 
  * 罫線は pdf-table.ts の readLines に任せる（CTM を掛ける。Issue #693 / #700）。
  */
 export async function readGlyphPages(bytes: Buffer): Promise<PageGeometry[]> {
-  const loadingTask = getDocument({ data: new Uint8Array(bytes), verbosity: 0 });
+  const loadingTask = getDocument({ data: new Uint8Array(bytes), verbosity: 0, ...CMAP_OPTIONS });
   const doc = await loadingTask.promise;
   const out: PageGeometry[] = [];
   try {

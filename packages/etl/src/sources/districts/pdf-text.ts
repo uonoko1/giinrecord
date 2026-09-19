@@ -1,4 +1,5 @@
 import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
+import { CMAP_OPTIONS } from "../local/pdf-cmap.ts";
 
 /**
  * PDF のテキスト抽出（Issue #111）。総務省の区域 PDF は本文がテキストなので pdfjs（Mozilla、純 JS）で読む。
@@ -11,9 +12,12 @@ export const GAIJI = "〓";
 
 export async function extractPdfText(bytes: Buffer): Promise<string> {
   // pdfjs 6.x: PDFDocumentProxy.destroy() は廃止。後始末は loadingTask.destroy() で行う。
+  // **あらかじめ定義された CMap を渡す**（Issue #922。`../local/pdf-cmap.ts` に理由を書いた）。
+  // 渡さないと、predefined CMap を使うフォントの文字が **例外なしで消える**。
   const loadingTask = getDocument({
     data: new Uint8Array(bytes),
     verbosity: 0,
+    ...CMAP_OPTIONS,
   });
   const doc = await loadingTask.promise;
   let out = "";

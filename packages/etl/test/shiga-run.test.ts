@@ -69,7 +69,10 @@ test("#741 runShiga: 名簿 44 名 × 最新 1 会期。**年ページを年度�
 });
 
 test("#741 runShiga: **読めない PDF で会期ごと落とさない**（#680 の案C を採らない）", async () => {
-  // 2 本のうち 1 本を画像 PDF（文字層なし）に差し替える
+  // 2 本のうち 1 本を**読めない本**に差し替える。
+  // **#922 まで「画像 PDF（文字層なし）」と書いていたが、Kg265 に文字層はある**
+  // （CMap 未指定で消えていただけ）。**読めない理由は「表が組めない」**（`rotate=90` の縦置きページ）。
+  // **このテストが見ているのは「読めない本があっても会期ごと落とさない」ことで、理由の中身ではない。**
   const f = fetcher({ ...PDFS, "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg900_sanpi-0722-2.pdf": "Kg265_250424-sanpi.pdf" });
   const run = await runShiga({ sessions: 1, fetchedAt: "2026-09-12T20:20:52.955Z", fetcher: f });
   // **読めた 1 本ぶんの記録は残る。** 会期ごと捨てると、壊れていない 44 名の記録まで消える
@@ -78,7 +81,7 @@ test("#741 runShiga: **読めない PDF で会期ごと落とさない**（#680 
   // **読めなかったことを記録する**——書かないと「その日の採決は無かった」ように見える
   assert.equal(run.unreadableSources.length, 1);
   assert.equal(run.unreadableSources[0].url, "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg900_sanpi-0722-2.pdf");
-  assert.match(run.unreadableSources[0].reason, /no text layer/);
+  assert.match(run.unreadableSources[0].reason, /no member columns found/);
 });
 
 test("#741 buildLocalAssembly: meta に unreadableSources が載る（読めた議会では省略）", async () => {
@@ -91,7 +94,7 @@ test("#741 buildLocalAssembly: meta に unreadableSources が載る（読めた�
     unreadableSources: run.unreadableSources,
   });
   assert.equal(built.meta.unreadableSources?.length, 1);
-  assert.match(built.meta.unreadableSources![0].reason, /no text layer/);
+  assert.match(built.meta.unreadableSources![0].reason, /no member columns found/);
   assert.equal(built.meta.counts.unknownCells, 0);
   // 読めた本だけで counts が合う
   assert.equal(built.meta.counts.cells, built.meta.counts.rollcalls * 44);
