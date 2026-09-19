@@ -127,9 +127,30 @@ test("#741 parseVotePdf: **2 ページ目で氏名が消える列を 1 ページ
   assert.equal(pdf.unknownCells, 0);
 });
 
-test("#741 parseVotePdf: **文字層の無い画像 PDF は読めないのが正しい**（Kg265、#680）", async () => {
-  // **推定で埋めない。** 画像 PDF を「賛否が無かった」と書くのも、OCR で埋めるのも、どちらもしない
-  await assert.rejects(() => parseVotePdf(fixture("Kg265_250424-sanpi.pdf")), /no text layer/);
+test("#922 parseVotePdf: **Kg265 は画像 PDF ではなかった**（CMap を渡すと文字は読める。表はまだ組めない）", async () => {
+  // **#741 はこの本を「文字層の無い画像 PDF」とし、`/no text layer/` で落ちるのが正しいとしていた。**
+  // **実測ではそうではない**（#922）——**CMap 未指定で文字が全部消えていただけ**で、
+  // 文字層はある（showText 774 回・空 711 回 → CMap を渡すと空 0・グリフ 774）。
+  //
+  // **ただし表はまだ組めない。** この本は **`rotate=90` の縦置きページ**で（読める本は `rotate=0` の横置き）、
+  // 罫線の縦横が入れ替わって見える（vlines 92 / hlines 54。読める Kg220 は 59 / 88）。
+  // **回転したページの表の組み立ては CMap とは別の問題**なので、この PBI では直さない。
+  //
+  // **推定で埋めない方針は変わらない**（#569）。読めないなら読めないままにする。
+  // **変わったのは「なぜ読めないか」だけ**——「文字が無い」ではなく「表が組めない」。
+  await assert.rejects(() => parseVotePdf(fixture("Kg265_250424-sanpi.pdf")), /no member columns found/);
+});
+
+test("#922 parseVotePdf: **本当に文字層が無い本**は今も `no text layer` で落ちる（Kg337 は showText 0 回）", async () => {
+  // **「画像 PDF 3 本」のうち、本当に文字層が無いのは Kg337 だけだった**（実測）。
+  // **Kg337 はフィクスチャに足していない**（showText が 0 回なので CMap では 1 文字も変わらず、
+  // 132 KB を置いても固定できることが無い）。**ここでは文字層の無い PDF 一般で経路を固定する。**
+  // 1 ページだけの最小の PDF（文字層なし）。**依存は足さない**（akita-votes-pdf.test.ts と同じ作り方）
+  const blank = Buffer.from(
+    "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n" +
+      "3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 200 200]>>endobj\ntrailer<</Root 1 0 R>>\n",
+  );
+  await assert.rejects(() => parseVotePdf(blank), /no pages|no text layer|Invalid PDF|XRef|structure/i);
 });
 
 test("#741 parseVotePdf: **化けた氏名を戻さない**（Kg907 の `辻` → `□`。#680／#674）", async () => {

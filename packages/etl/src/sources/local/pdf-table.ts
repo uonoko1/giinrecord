@@ -1,4 +1,5 @@
 import { getDocument, OPS } from "pdfjs-dist/legacy/build/pdf.mjs";
+import { CMAP_OPTIONS } from "./pdf-cmap.ts";
 
 /**
  * 地方議会の表決 PDF に共通の幾何（Issue #157 宮城、#183 徳島）。
@@ -117,8 +118,14 @@ export function readLines(fnArray: ArrayLike<number>, argsArray: ArrayLike<unkno
   return { vlines, hlines };
 }
 
+/**
+ * **あらかじめ定義された CMap を pdfjs に渡す**（Issue #922。`./pdf-cmap.ts` に理由を書いた）。
+ * **11 県のうち 9 県がここを通る**（`glyphs.ts` を持つのは高知と三重だけ）。
+ * 渡さないと、古い本のフォントで **getTextContent が 1 アイテムも返さず、文字が黙って消える**
+ * （例外は投げられない。滋賀の `Kg265_250424` は 711 回の showText が全部「グリフ 0」だった）。
+ */
 export async function readPages(bytes: Buffer): Promise<RotatedPageGeometry[]> {
-  const loadingTask = getDocument({ data: new Uint8Array(bytes), verbosity: 0 });
+  const loadingTask = getDocument({ data: new Uint8Array(bytes), verbosity: 0, ...CMAP_OPTIONS });
   const doc = await loadingTask.promise;
   const out: RotatedPageGeometry[] = [];
   try {
