@@ -61,6 +61,8 @@ const fixture = (name: string) => readFileSync(new URL(`./fixtures/kochi/${name}
 const text = (name: string) => fixture(name).toString("utf-8");
 
 const june8 = await parseVotePdf(fixture("080710.pdf"));
+/** **令和7年12月定例会**（`0712.pdf`、2026-09-20 取得）。**#901 で読めるようになった本**（請願の枝番） */
+const kochiDec7 = await parseVotePdf(fixture("0712.pdf"));
 const chairmanHtml = text("chairman.html");
 const gicho = parseChairs(chairmanHtml, "歴代議長");
 const fukugicho = parseChairs(chairmanHtml, "歴代副議長");
@@ -446,17 +448,21 @@ test("#876 欠陥①: `parseDateText` が `H30.3.20`（平成）と `R元.10.10`
   assert.equal(measureDate("R元.10.10"), "2019-10-10");
 });
 
-test("#876 欠陥②: 番号の正規表現が `請第1-1号`（請願の枝番）を弾く —— **15 の 12月定例会が全部これで落ちる**", () => {
-  const NUMBER = /^(.*?第[0-9]+号)(.*)$/;
-  assert.ok(NUMBER.test("第1号"));
-  assert.ok(NUMBER.test("議発第12号"));
-  assert.ok(NUMBER.test("請第1号"), "枝番の無い請願は通る");
-  assert.equal(NUMBER.test("請第1-1号"), false, "**枝番があると通らない**");
-  assert.equal(NUMBER.test("請第1－1号"), false, "**全角のハイフンでも通らない**");
-  // **全数測定: 65 本のうち 9 本がこれで落ちる**（2015-12 / 2016-12 / 2017-12 / 2019-12 /
-  //   2021-12 / 2022-12 / 2023-12 / 2024-12 / 2025-12）。**区切りは `-` U+002D と `－` U+FF0D の 2 通り。**
-  // **12月定例会は請願を議決するので、15 ある 12月定例会は 15 本とも読めない**
+test("#876 欠陥②（**#901 で直した**）: 番号の正規表現が `請第1-1号`（請願の枝番）を弾いていた", () => {
+  // **#876 が測ったときの形**（**この行は歴史の記録であって、いまの実装ではない**）
+  const BEFORE = /^(.*?第[0-9]+号)(.*)$/;
+  assert.equal(BEFORE.test("請第1-1号"), false, "**直す前は枝番があると通らなかった**");
+  // **全数測定: 65 本のうち 9 本がこれで落ちていた**（2015-12 / 2016-12 / 2017-12 / 2019-12 /
+  //   2021-12 / 2022-12 / 2023-12 / 2024-12 / 2025-12）。
+  // **12月定例会は請願を議決するので、15 ある 12月定例会は 15 本とも読めなかった**
   //   （9 本がこの欠陥、3 本が `setDash`、3 本が text matrix）。
+  //
+  // **#901 で `第[0-9]+(?:-[0-9]+)?号` に枝を足した**——**実装そのものを呼んで確かめる**
+  // （**上の `BEFORE` のような写しを assert すると「写しが写しと一致する」しか言えない**）。
+  const dec7 = kochiDec7;
+  assert.deepEqual(dec7.rows.filter((r) => r.kind === "請願").map((r) => r.number), ["請第1-1号", "請第1-2号", "請第2-1号", "請第2-2号"]);
+  assert.equal(dec7.rows.length, 75, "**この本が丸ごと読めるようになった**");
+  // **残る 6 本の 12月定例会は別の理由で落ちる**（`setDash` 2 / text matrix 4。**#901 でも直っていない**）
 });
 
 test("#876 欠陥③: `setDash [[],0]`（＝実線に戻すだけ）で本が丸ごと落ちる", () => {

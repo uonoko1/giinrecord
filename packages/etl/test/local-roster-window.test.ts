@@ -133,12 +133,12 @@ test("#928 本番 data/: 11 議会の rosterAsOf と採決日の窓（7 議会�
     "pref-32": { daysAfter: 1_142, daysBefore: -1_030, votesAfter: 112, rollcalls: 112 },
     // **#901 で会期を 2 → 4 にした**。**`daysBefore` 204 → 296（上限 1,461 の 20%）で、#928 の検査は鳴らない**
     "pref-36": { daysAfter: -9, daysBefore: 296, votesAfter: 0, rollcalls: 153 },
-    "pref-39": { daysAfter: -20, daysBefore: 128, votesAfter: 0, rollcalls: 104 },
+    "pref-39": { daysAfter: -20, daysBefore: 398, votesAfter: 0, rollcalls: 221 },
     "pref-41": { daysAfter: 456, daysBefore: -385, votesAfter: 23, rollcalls: 23 },
   });
   // **母数の検算**（#757）: **採決の本数の合計が、#855 が数えている 1,369 本と一致する。**
   // **これが無いと、痩せたディレクトリを見て「はみ出し 0」を言える。**
-  assert.equal(Object.values(got).reduce((s, x) => s + x.rollcalls, 0), 1_785, "11 議会の採決の合計（#855 の母数と同じ）");
+  assert.equal(Object.values(got).reduce((s, x) => s + x.rollcalls, 0), 1_902, "11 議会の採決の合計（#855 の母数と同じ）");
   // **後ろにはみ出している議会はちょうど 7**（#928 の起票の数字）
   assert.equal(Object.values(got).filter((x) => x.daysAfter > 0).length, 7, "rosterAsOf より後の採決を持つ議会");
   // **`rosterAsOf` が採決の範囲を「またいでいる」議会**（#928 が三重の形として挙げたもの）。
@@ -169,6 +169,10 @@ test("#928 本番 data/: 11 議会とも rosterAsOf から 1 任期（1,461 日�
   assert.equal(Math.min(...Object.values(slack)), 305, "最小の余裕（鳥取）");
   assert.equal(slack["pref-31"], 305);
   assert.equal(slack["pref-32"], 319, "島根（1,461 − 1,142）");
+  // **#901 で広げた 3 県の余裕**（**広げても 1 任期の内側にある**）:
+  assert.equal(slack["pref-24"], 540, "三重（1,461 − 921。`--sessions 4`）");
+  assert.equal(slack["pref-36"], 1_165, "徳島（1,461 − 296。`--sessions 4`）");
+  assert.equal(slack["pref-39"], 1_063, "高知（1,461 − 398。`--sessions 5`）");
 });
 
 /**
