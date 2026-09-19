@@ -80,15 +80,17 @@ const DATA = fileURLToPath(new URL("../../../data/", import.meta.url));
  * **増えたときに数字を書き換えるのは、増やした PR の仕事である**
  * （`local-count-mismatches.test.ts` の「母数が変わったら数え直すこと」と同じ約束）。
  *
- * **実測 2026-09-14**（`data/` を直に数えた値）。
+ * **実測 2026-09-20**（`data/` を直に数えた値。**#901 で三重だけ会期を 2 → 4 にした**:
+ * **採決 1,369 → 1,737（+368）/ セル 58,057 → 75,615（+17,558）。**
+ * **動いたのは `pref-24` だけで、他の 10 議会は 1 バイトも変わっていない**）。
  */
 const CORPUS = {
   assemblies: 13, // assemblies/index.json の全行（国会 2 ＋ 地方 11）
   localAssemblies: 11,
   memberRows: 1225, // members/index.json の全行
   localMemberRows: 453, // うち地方議員（assemblyId が diet- で始まらない行）
-  rollCallFiles: 1369, // assemblies/*/rollcalls/**/*.json（index.json を除く）
-  voteCells: 58057, // その採決ファイルの votes[] の合計
+  rollCallFiles: 1737, // assemblies/*/rollcalls/**/*.json（index.json を除く）。**#901 で三重が 365 → 733**
+  voteCells: 75615, // その採決ファイルの votes[] の合計。**#901 で三重が 17,032 → 34,590**
 };
 
 const walkRollCalls = async (dir: string): Promise<string[]> => {
@@ -107,7 +109,7 @@ const walkRollCalls = async (dir: string): Promise<string[]> => {
  * **母数を先に測る。** **これが落ちたら、下の「違反 0 件」は意味を失っている**
  * （痩せたディレクトリを見て緑になっているのかもしれない。上の docblock の青森の実測）。
  */
-test("#855 母数: コミット済み data/ に 11 議会・1,369 採決・58,057 セル・1,225 名簿行がある", async () => {
+test("#855 母数: コミット済み data/ に 11 議会・1,737 採決・75,615 セル・1,225 名簿行がある", async () => {
   const assemblies = JSON.parse(await readFile(join(DATA, "assemblies/index.json"), "utf-8")) as Assembly[];
   const members = JSON.parse(await readFile(join(DATA, "members/index.json"), "utf-8")) as MemberSummary[];
   const local = assemblies.filter((a) => a.kind !== "national");
