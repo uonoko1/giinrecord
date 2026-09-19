@@ -189,7 +189,7 @@ scripts/po/board-audit.sh --fix    # 直す（Issue を閉じる／Status を直
 | `not-on-board` | Issue がボードに載っていない |
 | `inprogress-no-trace` | **ボードが `In Progress` なのに作業の痕跡が無い**（#809。**列挙するだけ。`--fix` では直さない**） |
 
-**守っていること**（`scripts/po/test/board-audit.test.sh` が 21 本で固定している）:
+**守っていること**（`scripts/po/test/board-audit.test.sh` が 29 本で固定している。うち 5 規則が 21 本、台帳（#919）が 8 本）:
 
 - **`Closes` / `Fixes` / `Resolves` + `#N` の形に限る。** **本文に `#N` が出るだけの PR は拾わない**——
   #763 の検索には無関係な #450 / #698 / #461 が引っかかった
@@ -246,6 +246,55 @@ scripts/po/board-audit.sh --fix    # 直す（Issue を閉じる／Status を直
 **毎回の出力に `In Progress N 件（痕跡あり / monitor / 閾値未満 の内訳）` が付く**ので、
 **鳴らすかどうかは何日か数えてから決めればよい。**
 
+### `--fix` は自分がやったことを台帳に残す（2026-09-20。#919）
+
+**Sprint 28 の締めで、「この回で `board-audit.sh` が何回食い違いを捕まえたか」を書こうとして、書けなかった。**
+**`--fix` が直すたびに食い違いが消えるので、後から正確な回数を出せない。**
+**PO は「9 回」と書きかけて、測っていない数字だったのでやめ、
+`docs/sprints/sprint-28.md` には「数えていない」と理由つきで書いた。**
+
+**道具が効いた証拠が、道具自身によって失われていた。**
+**これは #757 の裏返しである**——**#757 は「母数を書かない検算は、0 件を見て緑になっても同じ顔をする」。
+こちらは「直した件数を残さない道具は、効いていても効いていなくても同じ顔をする」。**
+
+**`--fix` は `docs/ops/board-audit-log.tsv` に追記する**（`BOARD_AUDIT_LOG` で移せる。テストは `$TMP` に向ける）。
+**追記だけで、行は消さない。**
+
+| 列 | 中身 |
+|---|---|
+| 1 | 時刻（UTC の ISO8601） |
+| 2 | `run` / `fixed` / `left` |
+| 3 | Issue 番号（`run` は `-`） |
+| 4 | 直す前（`run` は `-`） |
+| 5 | 直した後（`left` は `(人が決める)`、`run` は `-`） |
+| 6 | `run` は母数 `issues=N board=N prs=N findings=N fixed=N left=N`、他は食い違いの種別 |
+
+**1 回の `--fix` が必ず 1 本の `run` 行を書く**（**直した件数が 0 でも書く**）。
+**走らせた回数が母数だから**——**「直した 9 件」だけ残ると、
+それが 1 回で出たのか 30 回走らせて出たのかが分からない。**
+
+**誰がどこで読むか**: **PO がスプリントの締めに、この 2 行を叩いて振り返りに書く。**
+
+```sh
+awk -F'\t' '$2=="fixed"' docs/ops/board-audit-log.tsv | wc -l   # 直した延べ件数
+awk -F'\t' '$2=="run"'   docs/ops/board-audit-log.tsv | wc -l   # --fix を走らせた回数
+```
+
+**守っていること**（`scripts/po/test/board-audit.test.sh` が 8 本で固定している）:
+
+- **`--fix` を付けずに読んだだけなら 1 バイトも書かない**——**ファイルを作りもしない**
+  （検査名: `ledger: --fix を付けずに読んだだけなら台帳に何も書かない (#919)`）。
+  **読んだだけで「直した」が増えたら、この台帳は数えるためではなく騙すために在ることになる。**
+- **行数と件数が合わない台帳は書かずに落ちる**（exit 5。#757）
+  （検査名: `ledger: 行数と件数が合わない台帳は書かない (#919/#757)`）。
+- **台帳に書くのは番号と Status と種別だけ。** **Issue や PR のタイトル・本文は書かない**
+  ——**OSS 公開前提で、タイトルに何が入るか分からない**（調査中のホスト名や URL が入りうる）
+  （検査名: `ledger: 台帳に自由文を書かない（番号と Status と種別だけ）(#919)`）。
+- **台帳に書けなければ「直した」と報告しない**（exit 5）
+  （検査名: `ledger: 台帳に書けなければ成功と報告しない (#919)`）。
+
+**Sprint 28 以前の回数は復元しない**——**できない。** **「ここから先は数えられる」にしただけである。**
+
 **引っかかっても、それだけでは閉じてよいとは限らない**——
 #537 / #610 / #654 / #543 は「文書だけ進んで人間の作業が残っている」ので **open が正しい**。
 **PR が何をマージしたのかを読んでから判断すること**（だから `--fix` は既定ではない）。
@@ -296,7 +345,7 @@ git push                             → 動く（git プロトコル）
 | `scripts/po/merge-when-green.sh <pr>` | OPEN かつ非 draft を確認 → BEHIND なら `gh pr update-branch` → `gh pr checks` を 20 秒ごと最大 60 回（20 分）見て、全部 pass/skipping になったら `gh pr merge --squash --delete-branch`。fail/cancel が 1 つでもあれば何もせず終了。head が `data/refresh` のときだけ、待っている間に `action_required` の run を承認する（他のブランチでは承認しない）。`gh pr merge` が非ゼロで返っても PR の state を読み直し、検査した HEAD がそのまま MERGED なら成功として終わる（#434。UNKNOWN のときマージ成功でも非ゼロが返る／`--delete-branch` のローカル削除が worktree に阻まれる） | 0 マージ済 / 1 失敗・タイムアウト / 2 引数エラー |
 | `scripts/po/board-set.sh <issue> <Backlog\|Ready\|In Progress\|In Review\|Done>` | Issue のボード上の item を探し（無ければ追加し）、Status を設定 | 0 / 1 / 2 |
 | `scripts/po/verify-site.sh [production\|staging\|all]` | `ssh $VPS_SSH_HOST`（既定 `giinops`）で VPS 内から主要 URL（`/`, `/about/`, `/terms`, `/privacy`, `/members/`, `/rollcalls/`, `/assemblies/`, `/data/meta.json`, `/sitemap.xml`）の HTTP コードと `<title>` を一覧する（読み取りのみ。PO 手元の curl が 000 を返す問題の回避、#182）。production は `curl --resolve giinrecord.jp:443:127.0.0.1`（証明書検証あり）。staging は host nginx が Cloudflare 以外を 403 にする（#163）ので、コンテナのポート `127.0.0.1:8083` に `Host: staging.giinrecord.jp` で当てる（デプロイ済みビルドの確認であり、Access の確認ではない） | 0 = 全部 200 / 1 = 200 以外あり（行末に `NG`）/ 2 引数エラー |
-| `scripts/po/board-audit.sh [--fix]` | ボードと Issue と PR の食い違いを 5 種類列挙する（既定は読むだけ）。`Closes/Fixes/Resolves #N` の形に限り、`gh pr view` で MERGED を個別に確認してから閉じる。母数（Issue / ボード項目 / マージ済み PR の件数と、閉じる語がある PR の本数、`In Progress` の内訳）を必ず出す。`inprogress-no-trace`（#809）は**列挙するだけで `--fix` でも直さない**（`STALE_HOURS` 既定 24） | 0 = 食い違い 0 / 1 = 食い違いあり（`--fix` なら残ったものあり）/ 2 引数エラー / 4 母数が 0（読めていない） |
+| `scripts/po/board-audit.sh [--fix]` | ボードと Issue と PR の食い違いを 5 種類列挙する（既定は読むだけ）。`Closes/Fixes/Resolves #N` の形に限り、`gh pr view` で MERGED を個別に確認してから閉じる。母数（Issue / ボード項目 / マージ済み PR の件数と、閉じる語がある PR の本数、`In Progress` の内訳）を必ず出す。`inprogress-no-trace`（#809）は**列挙するだけで `--fix` でも直さない**（`STALE_HOURS` 既定 24）。**`--fix` は直したことを `docs/ops/board-audit-log.tsv` に追記する**（#919。`BOARD_AUDIT_LOG` で移せる） | 0 = 食い違い 0 / 1 = 食い違いあり（`--fix` なら残ったものあり）/ 2 引数エラー / 4 母数が 0（読めていない）/ 5 台帳に書けなかった |
 | `scripts/po/etl-verify.sh` | 最新の ETL (daily) run の結論、`data/refresh` の最新 PR の番号と state、最新 Deploy run を 3 行で出す（読み取りのみ）。`docs/ops/etl.md` の PO チェックリストに対応 | 0 = ETL success かつ data PR が MERGED（または無し）かつ Deploy success / 1 = どれかが違う |
 
 環境変数：`POLL_INTERVAL`（秒）、`POLL_MAX`（回数）、`PO_REPO`（`owner/name`。未指定ならカレントの checkout から `gh repo view`）、`VPS_SSH_HOST`（verify-site の ssh 先、既定 `giinops`）、`STAGING_PORT`（既定 8083）。

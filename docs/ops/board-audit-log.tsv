@@ -1,0 +1,12 @@
+# scripts/po/board-audit.sh --fix の台帳（Issue #919）。**追記だけ。行を消さない。**
+# 列: ts<TAB>kind<TAB>issue<TAB>from<TAB>to<TAB>detail
+#   kind=run    1 回の --fix につき必ず 1 行。detail=issues=N board=N prs=N findings=N fixed=N left=N
+#   kind=fixed  機械が直した 1 件。from=直す前の Status / to=直した後の Status / detail=食い違いの種別
+#   kind=left   機械が直さず人に残した 1 件（open-issue-done / inprogress-no-trace）。detail=同上
+# **--fix を付けない走行はこのファイルに 1 バイトも書かない**（読んだだけで「直した」が増えないため）。
+# **番号と Status と種別だけを書く。** Issue や PR のタイトル・本文は書かない（OSS 公開前提）。
+# 数え方:
+#   awk -F'\t' '$2=="fixed"' docs/ops/board-audit-log.tsv | wc -l   # 直した延べ件数
+#   awk -F'\t' '$2=="run"'   docs/ops/board-audit-log.tsv | wc -l   # --fix を走らせた回数
+# **Sprint 28 以前の回数は復元できない**（--fix が直すたびに食い違いが消えていた）。
+# **この台帳は 2026-09-20（Sprint 29）からの分だけを数える。**
