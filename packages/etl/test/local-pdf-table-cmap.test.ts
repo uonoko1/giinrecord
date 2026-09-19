@@ -133,18 +133,38 @@ test("#922 kochi の readGlyphPages も CMap を渡す（高知のフィクス�
 //    `pdf-table.ts` / `kochi/glyphs.ts` / `districts/pdf-text.ts` の 3 か所ぶん。
 // ---------------------------------------------------------------------------
 
-test("#922 readGlyphPages（kochi）に CMap を要求する本を通すと、グリフが取れる（渡し忘れなら 0 になる）", async () => {
-  // **滋賀の本を高知の入口に通す**（入口ごとに「CMap を要求する本」で渡し忘れを検出する）。
-  // **高知の実装は回転した text matrix で例外を投げる**（#707 の「黙って読み間違えない」）ので、
-  // **滋賀の本は例外まで到達する。だが CMap を渡していなければ、そこに着く前に
-  // 「グリフ 0」で静かに終わる**——つまり **例外が出ること自体が「文字が読めた」印**である。
-  // （CMap 無し: showText が全部空 → 例外にならず items 0 で返る。
-  //   CMap 有り: グリフが取れるので回転の検査に届き、例外になる。）
-  await assert.rejects(
-    () => readGlyphPages(fixture("shiga", "Kg265_250424-sanpi.pdf")),
-    /rotated\/scaled text matrix/,
-    "kochi/glyphs.ts が CMap を渡していない（グリフが取れず、回転の検査に届いていない）",
-  );
+// **高知の入口だけは「CMap を渡していること」をテストで固定できない**（#922 の変異テストで判明）。
+//
+// **理由**: 高知の `readGlyphPageOps` は **text matrix が単位行列でなければ即座に例外**を投げる
+// （`a !== 1 || b !== 0 || c !== 0 || d !== 1`。#707 の「黙って読み間違えない」）。
+// **この検査はグリフを 1 つも見ずに済む。**
+// 一方、**CMap を要求する本は手元に 4 本あるが、4 本とも text matrix が単位行列ではない**（実測）:
+//   mie/000073609 `[5.16,0,0,5.15]`・mie/000073620 `[8.04,0,0,8.04]`（拡大のみ）
+//   shiga/Kg265・shiga/Kg274 `[0,6.96,-6.96,0]`（回転）
+// **つまり、どの本を高知の入口に通しても、CMap の有無にかかわらず同じ例外で終わる。**
+// **「CMap を外しても落ちないテスト」しか書けない**ので、書かない
+// （**通るだけのテストを置くと、渡し忘れを見つけたつもりになる**）。
+//
+// **代わりに、静的に固定する**——4 か所すべてが同じ `CMAP_OPTIONS` を使っていることを、原文で確かめる。
+// これは実行時の振る舞いではないが、**渡し忘れ（1 か所だけ直す）は確実に捕まえる**。
+test("#922 getDocument を呼ぶ 4 か所すべてが CMAP_OPTIONS を渡している（原文で確かめる）", () => {
+  const sites = [
+    "../src/sources/districts/pdf-text.ts",
+    "../src/sources/local/pdf-table.ts",
+    "../src/sources/local/kochi/glyphs.ts",
+    "../src/sources/local/mie/glyphs.ts",
+  ];
+  let seen = 0;
+  for (const rel of sites) {
+    const src = readFileSync(new URL(rel, import.meta.url), "utf8");
+    // `getDocument({ ... })` の中身を取り出す（1 ファイルに 1 か所しか無いことも確かめる）
+    const calls = [...src.matchAll(/getDocument\(\{([\s\S]*?)\}\)/g)];
+    assert.equal(calls.length, 1, `${rel}: getDocument の呼び出しが ${calls.length} か所（1 か所のはず）`);
+    assert.match(calls[0][1], /\.\.\.CMAP_OPTIONS/, `${rel}: getDocument に CMAP_OPTIONS を渡していない`);
+    seen++;
+  }
+  // **母数を検算に入れる**（#757）。4 か所を数えたことを固定する
+  assert.equal(seen, 4, "getDocument の呼び出し箇所が 4 か所ではない（増えたなら CMap を渡したか確かめる）");
 });
 
 test("#922 extractPdfText（districts）に CMap を要求する本を通すと、文字が取れる（渡し忘れなら空になる）", async () => {
