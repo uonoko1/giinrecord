@@ -222,6 +222,57 @@ function buildGrid(page: PageGeometry, legendBottom: number, pageNo: number): Gr
 
 /* ---------- members ---------- */
 
+/**
+ * **縦書きの見出しを読む。列を右から左へ、各列を上から下へ**（Issue #901）。
+ *
+ * ## 何が問題だったか
+ *
+ * **会派見出しは結合セルで、名前が長いと縦書きが 2 列に折り返す。**
+ * **日本語の縦書きは右の列から読む**が、直す前は
+ * **`(b.y - a.y || a.x - b.x)`（上から下 → 同じ高さなら左から右）** で並べていた。
+ * **1 列に収まる見出しでは同じ結果になる**ので、**`--sessions 2` の 13 本では 1 件も出ない。**
+ * **2 列に折り返すと、左右の列が 1 文字ずつ交互に混ざる。**
+ *
+ * **実測（2026-09-20、index の賛否 PDF 151 本すべて。母数＝読めた 87 本 / 見出しの原文 21 種）:**
+ *
+ * | 出ていた原文 | 本数 | 正しい原文 |
+ * |---|---:|---|
+ * | `運草動のい根が` | 36 | **`草の根運動いが`** |
+ * | `運草動のみ根え` | 12 | **`草の根運動みえ`** |
+ * | `運※動草いのが根` | 1 | 同じ会派（`※` 付き） |
+ * | `※み1ん新なしのい党翼` | 1 | `新しい翼`（`※` 付き） |
+ *
+ * **同じ会派が、本によって 2 通りの文字列で出ていた**——
+ * **`草の根運動いが` は 2 本では正しく（1 列に収まった本）、36 本では崩れて出ていた。**
+ *
+ * **これは「記録が出ない」ではなく「別の文字列が出る」側である**（#569）。
+ * **利用者から会派名の誤りは検出できない。**
+ *
+ * ## どう読むか
+ *
+ * **x でクラスタに分け、クラスタを降順（右 → 左）に、各クラスタを y の降順（上 → 下）に読む。**
+ * **クラスタ幅は文字の高さ `h` の半分**——**同じ列の文字は x がほぼ揃い、隣の列とは 1 文字ぶん離れる**
+ * （実測: `001086178.pdf` の `草の根運動いが` は x = 1116.7 と 1123.7 で、差 7.0pt ＝ 文字 1 つぶん）。
+ *
+ * **1 列の見出しではクラスタが 1 つなので、今までと 1 バイトも変わらない**
+ * （**読めた 87 本の見出しのうち、クラスタが 2 つ以上なのは上の 4 種だけ**）。
+ *
+ * **推定はしない**——**文字を足しも引きもせず、並べ替えるだけである。**
+ * **`joinVertical` は使えない**（あれも y を先に見るので、2 列だと同じように混ざる）。
+ */
+export function readVerticalHeading(chars: readonly Item[]): string {
+  if (chars.length === 0) return "";
+  // **列の幅は文字の高さの半分**（同じ列の x の揺れより広く、隣の列との間隔より狭い）
+  const w = Math.max(...chars.map((c) => c.h), 1) / 2;
+  const xs = cluster(chars.map((c) => c.x), w).sort((a, b) => b - a); // **右から左へ**
+  let out = "";
+  for (const cx of xs) {
+    const col = chars.filter((c) => Math.abs(c.x - cx) <= w).sort((a, b) => b.y - a.y); // **上から下へ**
+    out += col.map((c) => c.str).join("");
+  }
+  return out.replace(/[\s　]+/g, "");
+}
+
 function readMembers(page: PageGeometry, grid: Grid, pageNo: number): VotePdfMember[] {
   const label = `page ${pageNo}`;
   // 左 8 列の見出し（bodyTop〜top の結合セル）が期待どおりか（レイアウト変化の検出）
@@ -236,7 +287,7 @@ function readMembers(page: PageGeometry, grid: Grid, pageNo: number): VotePdfMem
     const x0 = grid.groupCols[g];
     const x1 = grid.groupCols[g + 1];
     const chars = page.items.filter((i) => within(i.cx, x0, x1) && within(i.cy, grid.groupBottom, grid.top));
-    const name = chars.sort((a, b) => b.y - a.y || a.x - b.x).map((c) => c.str).join("").replace(/[\s　]+/g, "");
+    const name = readVerticalHeading(chars);
     if (name === "") throw new Error(`${label}: group heading between ${x0.toFixed(1)} and ${x1.toFixed(1)} is empty`);
     groups.push({ x0, x1, name });
   }
