@@ -1,7 +1,7 @@
 [
  {
   "date": "2026-07-10",
-  "fetchedAt": "2026-09-04T22:18:08.741Z",
+  "fetchedAt": "2026-09-19T21:03:35.323Z",
   "id": "2026-06",
   "label": "令和８年６月定例会",
   "rollcalls": 23,
@@ -9,10 +9,34 @@
  },
  {
   "date": "2026-03-24",
-  "fetchedAt": "2026-09-04T22:18:08.741Z",
+  "fetchedAt": "2026-09-19T21:03:35.323Z",
   "id": "2026-02",
   "label": "令和８年２月定例会",
   "rollcalls": 81,
   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00150866/0802.pdf"
+ },
+ {
+  "date": "2025-12-19",
+  "fetchedAt": "2026-09-19T21:03:35.323Z",
+  "id": "2025-12",
+  "label": "令和７年12月定例会",
+  "rollcalls": 75,
+  "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00147774/0712.pdf"
+ },
+ {
+  "date": "2025-10-14",
+  "fetchedAt": "2026-09-19T21:03:35.323Z",
+  "id": "2025-09",
+  "label": "令和７年９月定例会",
+  "rollcalls": 18,
+  "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00145978/0709.pdf"
+ },
+ {
+  "date": "2025-06-27",
+  "fetchedAt": "2026-09-19T21:03:35.323Z",
+  "id": "2025-06",
+  "label": "令和７年６月定例会",
+  "rollcalls": 24,
+  "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00141109/0706.pdf"
  }
 ]

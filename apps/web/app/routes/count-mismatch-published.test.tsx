@@ -76,7 +76,14 @@ describe("#826 本番データ: 記号の数と公表値の突き合わせが画
       // **徳島も 2 → 4 にした**（105 → 153）——**徳島の PDF には `counts` の欄が無いので、
       // 増えた 48 本はそのまま `noCounts` に入る**（**334 → 382**。`checked` は **1,355 のまま**）。
       // **食い違いは 0 のまま。**
-    }).toEqual({ rows: 1785, checked: 1355, noCounts: 382, unreadableCells: 48, mismatches: 0 });
+      //
+      // ## **#901 で 1,785 → 1,902 に動いた**（2026-09-20。高知）
+      // **高知の `--sessions` の既定を 2 → 5 にした**（104 → 221）。
+      // **高知の PDF には `counts` の欄があるが、`kochi/rollcalls.ts` が `LocalRollCall` に
+      // 載せていない**ので、**221 本がまるごと `noCounts` に入る**（**382 → 499**。
+      // **104 本ぶんは既に入っていたので +117**）。**`checked` は 1,355 のまま、`unreadableCells` も 48 のまま。**
+      // **食い違いは 0 のまま。**
+    }).toEqual({ rows: 1902, checked: 1355, noCounts: 499, unreadableCells: 48, mismatches: 0 });
   });
 
   it("/coverage に、本番の母数（1,355 件）と食い違い（0 件）と未突合の内訳が出る", async () => {
@@ -84,8 +91,8 @@ describe("#826 本番データ: 記号の数と公表値の突き合わせが画
     const section = screen.getByRole("region", { name: SECTION });
     // **母数が出ていること**（#757。「0 件」は「見た上での 0」でなければ意味が無い）
     expect(section).toHaveTextContent("1,355");
-    // **突き合わせなかった 382 件と 48 件の内訳も出す**（黙って母数から外さない）
-    expect(section).toHaveTextContent("382");
+    // **突き合わせなかった 499 件と 48 件の内訳も出す**（黙って母数から外さない）
+    expect(section).toHaveTextContent("499");
     expect(section).toHaveTextContent("48");
     // **今は食い違いが無い**、を母数つきで言う
     expect(within(section).getByTestId("coverage-count-mismatch-none")).toBeInTheDocument();
