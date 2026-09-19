@@ -1,5 +1,8 @@
 import { getDocument, OPS } from "pdfjs-dist/legacy/build/pdf.mjs";
 import { multiplyMatrix, readLines, type Matrix, type PageGeometry, type Item } from "../pdf-table.ts";
+import { CMAP_DIR, CMAP_OPTIONS, CMAP_PACKED } from "../pdf-cmap.ts";
+
+export { CMAP_DIR, CMAP_PACKED };
 
 /**
  * オペレータ列からの文字と罫線の読み出し（Issue #203 三重）。
@@ -13,15 +16,20 @@ import { multiplyMatrix, readLines, type Matrix, type PageGeometry, type Item } 
  * （見出しの「令和８年定例会（２月）」のような 1 行のテキストは 1 回の showText、氏名・セルの 1 文字は 1 文字ずつ）。
  * **相対移動（Td/TD/T*）も読む**（Issue #867）。**index 151 本のうち 80 本がこれを使っている。**
  * 実装は高知（kochi/glyphs.ts）と同じ。
- * 位置の前提が崩れる命令（生の `'` / `"`・0 でない word spacing・回転や拡縮の入った
+ * **拡大だけの text matrix も読む**（Issue #867 B 群。**index 151 本のうち 15 本がこの形**——
+ * `Tf` のサイズが **1** で、**`Tm` が文字の大きさを持っている**）。**回転と上下反転はまだ読まない。**
+ * 位置の前提が崩れる命令（生の `'` / `"`・0 でない word spacing・**回転や上下反転や異方の入った**
  * text matrix・単位行列でない CTM）が出たら例外（黙って読み間違えない。Issue #707）。
  * **知らない演算子も例外**（Issue #717）——この関数には既定の枝が無く、**見たことのない演算子は
  * 何の枝にも当たらず黙って次へ進んでいた**。色や線の体裁など、文字に効かないものだけ明示的に無視する
  * （HARMLESS_OPS）。不可視の文字（`Tr 3`）と ExtGState の `Font` / 透明指定も止める。
  * 罫線は pdf-table.ts の readLines に任せる（CTM を掛ける。Issue #693 / #700）。
+ *
+ * **あらかじめ定義された CMap を pdfjs に渡す**（Issue #867 B 群。`../pdf-cmap.ts` に理由を書いた）。
+ * 渡さないと、古い本のフォントで **showText が「グリフ 0 個」になり、文字が黙って消える**。
  */
 export async function readGlyphPages(bytes: Buffer): Promise<PageGeometry[]> {
-  const loadingTask = getDocument({ data: new Uint8Array(bytes), verbosity: 0 });
+  const loadingTask = getDocument({ data: new Uint8Array(bytes), verbosity: 0, ...CMAP_OPTIONS });
   const doc = await loadingTask.promise;
   const out: PageGeometry[] = [];
   try {
@@ -116,6 +124,8 @@ const READABLE_TEXT_RENDERING_MODES: ReadonlySet<number> = new Set([0, 2]);
  */
 export function readGlyphPageOps(fnArray: ArrayLike<number>, argsArray: ArrayLike<unknown>, pageNo: number): PageGeometry {
   const items: Item[] = [];
+  /** このページで「文字を描け」と言われた回数（0 グリフのまま終わったら例外にする。Issue #867）。 */
+  let showTextCalls = 0;
   const { vlines, hlines } = readLines(fnArray, argsArray);
   let ctm: Matrix = IDENTITY;
   const ctmStack: Matrix[] = [];
@@ -134,7 +144,27 @@ export function readGlyphPageOps(fnArray: ArrayLike<number>, argsArray: ArrayLik
    * オペレータ列を直接渡して固定している。**母数を書かずに「実データに無い」と書かないこと**（#757）。
    */
   let leading = 0;
-  // 現在のテキスト位置（tx, ty）と行頭（lx, ly）。Td/TD/T* は行頭からの相対移動
+  /**
+   * **text matrix の拡大**（Issue #867 B 群「拡大のみ 15 本」）。
+   *
+   * **`tx`/`ty`/`lx`/`ly` はページ座標で持ち、`Td`/`T*` の移動量と文字の送りにこの倍率を掛ける。**
+   * 拡大のみの 15 本は `Tf` のサイズが **1** で、**Tm が大きさを持っている**ので、
+   * 掛けないと **文字が 1/8 に縮んだ位置**に並び、罫線で割った列と全く合わない。
+   *
+   * **初期値 1 は PDF 32000-1 の 9.4.2 が定める `Tm` の既定値（単位行列）である。**
+   *
+   * **この宣言の初期値は、構造上けっして読まれない**（`BT` が下で 1 に戻すため。
+   * `BT` より前に `showText` が来る PDF は規格違反で、実データにも無い）。
+   * **実測（2026-09-19、`mutate.sh`）: ここを `8` にしてもテストは 1 件も落ちず、
+   * 151 本の読める本数も 84 のまま変わらない**——**分類②「等価変異」である。**
+   * **`BT` 側の `sx = 1` を `8` にすると落ちる**ので、生きているのはそちらだと確かめてある。
+   *
+   * **なお「`BT` の後、最初の showText より前に `Tm` が来ない」本は 151 本中 80 本ある**
+   * （A 群の相対移動の本。`Td` で置く）。**だから `BT` での戻しは実データに効いている。**
+   */
+  let sx = 1;
+  let sy = 1;
+  // 現在のテキスト位置（tx, ty）と行頭（lx, ly）。Td/TD/T* は行頭からの相対移動（text space なので倍率を掛ける）
   let tx = 0;
   let ty = 0;
   let lx = 0;
@@ -157,16 +187,45 @@ export function readGlyphPageOps(fnArray: ArrayLike<number>, argsArray: ArrayLik
     } else if (fn === OPS.setHScale) {
       hScale = (args[0] as number) / 100;
     } else if (fn === OPS.beginText) {
+      // BT: text matrix と text line matrix を単位行列に戻す（PDF 32000-1 9.4.1）。**倍率も 1 に戻す。**
       tx = 0;
       ty = 0;
       lx = 0;
       ly = 0;
+      sx = 1;
+      sy = 1;
     } else if (fn === OPS.setTextMatrix) {
       // argsArray の形は [a,b,c,d,e,f] のことも、行列 1 つ（Array / Float32Array）を包んだ形のこともある
       const first = args[0] as unknown;
       const matrix = (args.length === 1 && typeof first === "object" && first !== null && "length" in (first as object) ? first : args) as ArrayLike<number>;
       const [a, b, c, d, e, f] = Array.from(matrix);
-      if (a !== 1 || b !== 0 || c !== 0 || d !== 1) throw new Error(`page ${pageNo}: rotated/scaled text matrix [${a},${b},${c},${d}] not supported`);
+      // **回転・斜行は読まない**（Issue #867 B 群のうち「回転 90/270 の 11 本」）。
+      // 回転が入ると文字の送りが x でなく y に進み、行の向きも変わる。
+      // この実装は「文字は x に進み、行は y に並ぶ」を前提に表を組み立てているので、
+      // b / c が 0 でないまま読むと **列と行を取り違える**（#819: 行がずれれば賛成と反対が入れ替わる）。
+      if (b !== 0 || c !== 0) throw new Error(`page ${pageNo}: rotated text matrix [${a},${b},${c},${d}] not supported`);
+      // **拡大のみ（b=0, c=0）は読む**（Issue #867 B 群の「拡大のみ 15 本」）。
+      // この 15 本は `Tf` のサイズが **1** で、**Tm が文字の大きさを持っている**（実測: Tf 1 / Tm 8.04 など）。
+      // だから Td / T* の移動量も送りも「text space の単位」で来ており、a / d を掛けて初めてページ座標になる。
+      //
+      // **a と d が違ってよいのは「同じ向きの拡大」の範囲だけにする。**
+      // 実測（2026-09-19、拡大のみ 15 本の Tm 全部）: a と d の差は最大でも a の **0.1%**
+      // （例: 8.039859771728516 と 8.032349586486816）。実質は等方の拡大で、丸め誤差しか違わない。
+      // **上下反転（d < 0）はここでは読まない**（B 群の「上下反転 9 本」。別 PR。
+      // 反転は `cm` 側の反転と打ち消し合う形で来ており、CTM を掛けないこの実装の前提の外にある）。
+      if (a <= 0 || d <= 0) throw new Error(`page ${pageNo}: flipped text matrix [${a},${b},${c},${d}] not supported`);
+      if (Math.abs(a - d) > Math.abs(a) * 0.01) throw new Error(`page ${pageNo}: anisotropic text matrix [${a},${b},${c},${d}] not supported`);
+      // **x と y は別々に持つ**（a と d は丸めのぶんだけ違う。片方で代用しない）。
+      // **実測（2026-09-19）**: `sy = d` を `sy = a` にしても、テストは 1 件も落ちず、
+      // 151 本の読める本数も変わらない。**差が小さすぎるためである**——
+      // 実データでいちばん離れた本（`000073609.pdf`: a=5.159900… / d=5.152400…）でも
+      // **差は a の 0.145%、`h` で 0.0075pt、`cy` で 0.00375pt** にしかならず、
+      // **行を割る罫線の間隔（十数 pt）に対して 3 桁小さい。**
+      // **分類②「等価変異」に近い**（出力が変わる本はあるが、行の割り当てには届かない）。
+      // **それでも `d` を使う**——**「小さいから代用してよい」は根拠になっておらず、
+      // PDF が書いてある値をそのまま使うほうが、次に大きい差が来たときに壊れない。**
+      sx = a;
+      sy = d;
       tx = e;
       ty = f;
       lx = e;
@@ -190,16 +249,20 @@ export function readGlyphPageOps(fnArray: ArrayLike<number>, argsArray: ArrayLik
       // **`T*` の行送りがどこから来るか**（`leading` の初期値が実データで効かない根拠）:
       //   **A 群 80 本の `T*` 1,651 回すべてに、同じ `BT` ブロックの中で先に `TD` が出ている**（0 例外）。
       //   **`T*` が 1 回以上出る 63 本すべてで `TD` > 0**、かつ **`TL` は 80 本で 0 回。**
+      //
+      // **移動量は text space なので `sx`/`sy` を掛ける**（Issue #867。拡大のみの 15 本で効く）。
+      // `Tm` が単位行列の本では `sx = sy = 1` なので、既存の 84 本の値は 1 ビットも変わらない。
       const dx = args[0] as number;
       const dy = args[1] as number;
       if (fn === OPS.setLeadingMoveText) leading = -dy;
-      lx += dx;
-      ly += dy;
+      lx += dx * sx;
+      ly += dy * sy;
       tx = lx;
       ty = ly;
     } else if (fn === OPS.nextLine) {
-      // T*: 行送りぶん下げて行頭へ
-      ly -= leading;
+      // T*: 行送りぶん下げて行頭へ。**`leading` も text space なので `sy` を掛ける**（Issue #867）。
+      // `leading` は `TD` の `-dy` か `TL` の値で、どちらも text space の量である。
+      ly -= leading * sy;
       tx = lx;
       ty = ly;
     } else if (fn === OPS.nextLineShowText || fn === OPS.nextLineSetSpacingShowText) {
@@ -218,27 +281,34 @@ export function readGlyphPageOps(fnArray: ArrayLike<number>, argsArray: ArrayLik
     } else if (fn === OPS.showText) {
       // 文字の位置は Tm / Td の値をそのままページ座標として使う。cm の下ではその前提が崩れる（#700）
       if (!isIdentity(ctm)) throw new Error(`page ${pageNo}: text under non-identity CTM [${ctm.join(",")}] not supported`);
+      showTextCalls++;
       // showText 1 回 = 1 アイテム。配列の数値は字送りの調整（thousandths）
+      //
+      // **送りは text space の量なので `sx` を掛ける**（Issue #867。拡大のみの 15 本で効く）。
+      // この 15 本は `Tf` のサイズが 1 で `Tm` が大きさを持つので、掛けないと
+      // **1 文字の幅が 1/8 になり、氏名の列の中で全部の文字が 1 点に潰れる**（#693 と同じ実害）。
       let x = tx;
       let str = "";
       let x0: number | undefined;
       for (const g of args[0] as (number | { unicode?: string; width?: number } | null)[]) {
         if (typeof g === "number") {
-          x -= (g / 1000) * fontSize * hScale;
+          x -= (g / 1000) * fontSize * hScale * sx;
           continue;
         }
         if (!g || typeof g !== "object") continue;
-        const w = ((g.width ?? 0) / 1000) * fontSize * hScale;
+        const w = ((g.width ?? 0) / 1000) * fontSize * hScale * sx;
         const u = (g.unicode ?? "").replace(/[\uE000-\uF8FF]/g, "〓"); // 私用領域（外字）は読めない（原文に無い文字を作らない）
         if (u.trim() !== "") {
           x0 ??= x;
           str += u;
         }
-        x += w + charSpacing * hScale;
+        x += w + charSpacing * hScale * sx;
       }
       if (str !== "" && x0 !== undefined) {
         const w = x - x0;
-        items.push({ str, x: x0, y: ty, w, h: fontSize, cx: x0 + w / 2, cy: ty + fontSize / 2 });
+        // 高さも text space の量なので `sy` を掛ける（Tf 1 / Tm 8.04 の本で h が 1 になるのを防ぐ）
+        const h = fontSize * sy;
+        items.push({ str, x: x0, y: ty, w, h, cx: x0 + w / 2, cy: ty + h / 2 });
       }
       tx = x;
     } else if (fn === OPS.setTextRenderingMode) {
@@ -274,6 +344,21 @@ export function readGlyphPageOps(fnArray: ArrayLike<number>, argsArray: ArrayLik
       // 番号と名前を出して止める（`OPS` に名前が無い番号なら "unknown"）。
       throw new Error(`page ${pageNo}: unsupported operator ${fn} (${opName(fn)})`);
     }
+  }
+  // **文字を描けと言われたのに 1 文字も取れなかったページは、読めたことにしない**（Issue #867）。
+  //
+  // **pdfjs は、フォントを組み立てられなかったとき例外を投げず、showText に空の配列を渡す。**
+  // いちばん多い原因は「あらかじめ定義された CMap」を渡していないこと（`../pdf-cmap.ts`）だが、
+  // **壊れた埋め込みフォントでも同じ形になる**。どちらも **文字が黙って消える**。
+  // ここで止めないと「罫線だけの空の表」を正しく読めたものとして返し、
+  // **途中まで読んだ表（#569）** になる——後段が表題で落ちるかどうかは本の作り次第で、
+  // **偶然に頼ってはいけない。**
+  //
+  // 実測（2026-09-19、三重 151 本）: この検査で新たに落ちる本は **0 本**
+  // （CMap を渡した後は、showText がある 151 本すべてで 1 つ以上のアイテムが取れる）。
+  // **つまりこれは「今の本を落とすための検査」ではなく「黙って空を返さないための受け皿」である。**
+  if (items.length === 0 && showTextCalls > 0) {
+    throw new Error(`page ${pageNo}: no glyphs from ${showTextCalls} show-text ops (font/CMap not loaded?)`);
   }
   return { items, vlines, hlines };
 }
