@@ -1,10 +1,18 @@
 #!/usr/bin/env bash
 # Cloudflare Origin CA 証明書を VPS に置き、Authenticated Origin Pulls（mTLS）を有効にする（Issue #943）。
 #
-#   bash deploy/origin-ca.sh < /path/to/keys.txt        ← **標準入力から受け取る**
+#   bash deploy/origin-ca.sh --keys /path/to/keys.txt   ← **ファイルのパスを渡す**
+#   bash deploy/origin-ca.sh < /path/to/keys.txt        ← 標準入力でもよい（tty が要らない場面）
 #
-# **秘密鍵を引数にも環境変数にも渡さない**——`ps` に出るため（#163 と同じ方針）。
-# **標準入力の形式**（ゾーンごとに 1 ブロック。順不同、余分な空行は無視）:
+# **秘密鍵そのものを引数にも環境変数にも渡さない**——`ps` に出るため（#163 と同じ方針）。
+# **パスは `ps` に出るが、パスは秘密ではない**（中身が 600 なら読めない）。
+#
+# **なぜ `--keys` が要るか**: `ssh host 'sudo bash …' < keys.txt` は**動かない**。
+# 標準入力を鍵が占有するので `sudo` がパスワードを読めず
+# `sudo: a terminal is required to read the password` で落ちる（ユーザーの実機で実測）。
+# **`run-remote.sh` の docblock にある #419 と同じ罠である。**
+#
+# **鍵ファイルの形式**（ゾーンごとに 1 ブロック。順不同、余分な空行は無視）:
 #
 #   ### zone giinrecord.jp
 #   -----BEGIN CERTIFICATE-----
@@ -37,7 +45,14 @@
 set -euo pipefail
 
 APPLY=0
-[ "${1:-}" = "--apply" ] && { APPLY=1; shift; }
+KEYS=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --apply) APPLY=1; shift ;;
+    --keys)  KEYS="${2:?--keys にパスが要る}"; shift 2 ;;
+    *) echo "origin-ca: 知らない引数 '$1'" >&2; exit 2 ;;
+  esac
+done
 
 PREFIX="${ORIGIN_CA_PREFIX:-}"          # テスト用。全パスをこの下に寄せる
 SSL_DIR="$PREFIX/etc/ssl/cloudflare"
@@ -48,11 +63,15 @@ zone_ok() { case "$1" in giinrecord.jp|gikailog.jp) return 0 ;; *) return 1 ;; e
 
 die() { echo "origin-ca: $*" >&2; exit 1; }
 
-[ -t 0 ] && die "標準入力から鍵を読む。 使い方: bash deploy/origin-ca.sh [--apply] < keys.txt"
-
 IN=$(mktemp); trap 'rm -f "$IN"; rm -rf "${WORK:-}"' EXIT
-cat > "$IN"
-[ -s "$IN" ] || die "標準入力が空"
+if [ -n "$KEYS" ]; then
+  [ -r "$KEYS" ] || die "鍵ファイルが読めない: $KEYS"
+  cat "$KEYS" > "$IN"
+else
+  [ -t 0 ] && die "鍵の渡し方: --keys <パス>、または標準入力"
+  cat > "$IN"
+fi
+[ -s "$IN" ] || die "鍵ファイルが空"
 
 WORK=$(mktemp -d)
 
@@ -160,7 +179,7 @@ if [ "$APPLY" = 0 ]; then
 origin-ca: **置いただけ。nginx はまだ切り替えていない。**
 
   次にやること（この順で）:
-    1. bash deploy/origin-ca.sh --apply < keys.txt   ← nginx を Origin CA + mTLS に切り替える
+    1. sudo bash /tmp/origin-ca.sh --apply --keys /tmp/oca-keys.txt   ← 切り替える
     2. **その後で** Cloudflare の DNS プロキシ（橙色の雲）を ON にする
 
   **1 の後、DNS プロキシが OFF のままだとサイトは外から見えなくなる**
