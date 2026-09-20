@@ -65,15 +65,17 @@ async function sessionsPassedTo(target: string, extra: string[] = []): Promise<n
   return Number(m[1]);
 }
 
-test("#901 `--sessions` を渡さないとき、CLI は議会ごとの既定を使う（三重 4 / 徳島 4 / 宮城 2）", async () => {
+test("#901 `--sessions` を渡さないとき、CLI は議会ごとの既定を使う（三重 4 / 徳島 4 / 宮城 11 / 奈良 2）", async () => {
   // **これが M9 を殺す検査**——**CLI の中の `defaultSessionsFor(target)` を `2` に書き換えると落ちる**
   assert.equal(await sessionsPassedTo("mie"), 4, "三重は 4（令和5年第2回定例会まで）");
   assert.equal(await sessionsPassedTo("tokushima"), 4, "徳島は 4（令和7年11月定例会まで）");
-  assert.equal(await sessionsPassedTo("miyagi"), 2, "測っていない議会は 2 のまま");
+  assert.equal(await sessionsPassedTo("miyagi"), 11, "宮城は 11（第390回まで。12 本目は 2023-10 の一般選挙の前）");
+  assert.equal(await sessionsPassedTo("nara"), 2, "測っていない議会は 2 のまま");
   // **関数の返り値と、CLI が実際に渡した値が同じ**（片方だけ直して食い違う形を塞ぐ）
   assert.equal(await sessionsPassedTo("mie"), defaultSessionsFor("mie"));
   assert.equal(await sessionsPassedTo("tokushima"), defaultSessionsFor("tokushima"));
   assert.equal(await sessionsPassedTo("miyagi"), defaultSessionsFor("miyagi"));
+  assert.equal(await sessionsPassedTo("nara"), defaultSessionsFor("nara"));
 });
 
 test("#901 `--sessions N` を渡したときは、既定ではなく N が使われる（既定が N を上書きしない）", async () => {

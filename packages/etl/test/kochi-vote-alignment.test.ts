@@ -474,19 +474,23 @@ test("#876 欠陥③: `setDash [[],0]`（＝実線に戻すだけ）で本が丸
   assert.ok(true, "数字を記録するためのテスト（実装は変えない）");
 });
 
-test("#876 欠陥④: `-` U+002D が凡例の `－` U+FF0D に寄らない —— 2 本が落ちる", async () => {
+test("#876 欠陥④（**#901 の宮城で直した**）: `-` U+002D が凡例の `－` U+FF0D に寄る", async () => {
   const { legendKey } = await import("../src/sources/local/glyph-variants.ts");
   assert.equal(legendKey("〇"), "○", "既にある寄せ");
   assert.equal(legendKey("✕"), "×");
-  assert.equal(legendKey("-"), "-", "**`-` U+002D は寄らない**");
   assert.equal("－".codePointAt(0), 0xff0d, "凡例の `－`");
   assert.equal("-".codePointAt(0), 0x2d);
-  assert.ok(!("-" in june8.legend.votes), "凡例に `-` U+002D は無い");
+  // **#876 が測ったときは寄らず、高知の 2016-02 と 2015-06 の 2 本が
+  // `cell value "-" is not in the legend` で落ちていた。**
+  // **#901 が宮城 第391回で同じ形を 1 セル見つけ、`glyph-variants.ts` に足した**
+  // （**U+002D と U+FF0D は半角形と全角形で、NFKC は FF0D → 002D に畳む**）。
+  assert.equal(legendKey("-"), "－", "**#901 で寄るようになった**");
+  assert.ok(!("-" in june8.legend.votes), "凡例に `-` U+002D は無い（寄せる側であって凡例側ではない）");
   assert.ok("－" in june8.legend.votes, "凡例にあるのは `－` U+FF0D");
-  // **実測: 2016-02 と 2015-06 の 2 本が `cell value "-" is not in the legend` で落ちる。**
-  // **これは「記録が出ない」側の失敗であって「別人の記録が出る」ではない**——
-  // **`glyph-variants.ts` の設計どおり、寄せた先が凡例に無ければ例外になる**（#674 / #569）。
-  // **寄せてよいかは「同じ字形の別コードポイントか」で決まる。ここでは決めない**（実装は別 PBI）。
+  // **高知の本番データは 1 バイトも変わらない**——**`--sessions 5`（最古 2025-06-27）の範囲に
+  // ASCII の `-` は 1 セルも無く、2016-02 / 2015-06 はそもそも取りに行っていない。**
+  // **寄せた先が凡例に無ければ、これまでどおり例外になる**（#674 / #569 の原則は緩めていない）。
+  assert.equal(legendKey("△"), "△", "表に無い字は原文のまま（勝手に増やさない）");
 });
 
 test("#876 欠陥⑤: 会派名が 2 列に折り返すと順序が入れ替わる（**県の HTML と食い違う**）", () => {
