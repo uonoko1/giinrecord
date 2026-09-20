@@ -2,23 +2,23 @@
  "assemblyId": "pref-29",
  "countChecked": {
   "checked": 0,
-  "noCounts": 125,
-  "rows": 125,
+  "noCounts": 180,
+  "rows": 180,
   "unreadableCells": 0
  },
  "counts": {
-  "cells": 5000,
+  "cells": 7200,
   "members": 40,
-  "rollcalls": 125,
+  "rollcalls": 180,
   "unknownCells": 0,
   "unmatchedNames": 0
  },
- "fetchedAt": "2026-09-04T22:17:32.500Z",
+ "fetchedAt": "2026-09-20T23:13:04.172Z",
  "lossyNameMatches": [
   {
    "memberId": "p_29_52575",
    "nameText": "西川",
-   "rollCalls": 125,
+   "rollCalls": 180,
    "rosterName": "西川 均"
   },
   {
@@ -51,38 +51,86 @@
    "sessionLabel": "令和8年2月定例会",
    "sourceUrl": "https://www.pref.nara.lg.jp/n161/p114001.html",
    "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.pref.nara.lg.jp/documents/18768/20251215_giinbetsu_hyoketsu.pdf",
+   "pdfUrls": [
+    "https://www.pref.nara.lg.jp/documents/18768/20251215_giinbetsu_hyoketsu.pdf"
+   ],
+   "rollcalls": 34,
+   "sessionId": "2025-12",
+   "sessionLabel": "令和7年12月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/n161/70511.html",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.pref.nara.lg.jp/documents/18767/20251009_giinbetsu_hyoketsu.pdf",
+   "pdfUrls": [
+    "https://www.pref.nara.lg.jp/documents/18767/20251009_giinbetsu_hyoketsu.pdf",
+    "https://www.pref.nara.lg.jp/documents/18767/20251024_giinbetsu_hyoketsu.pdf"
+   ],
+   "rollcalls": 21,
+   "sessionId": "2025-09",
+   "sessionLabel": "令和7年9月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/n161/70052.html",
+   "unknownCells": 0
   }
  ],
  "sources": [
   {
-   "fetchedAt": "2026-09-04T22:17:32.500Z",
+   "fetchedAt": "2026-09-20T23:13:04.172Z",
    "name": "奈良県議会 議員名簿（五十音順）",
    "url": "https://www.pref.nara.lg.jp/n161/52534.html"
   },
   {
-   "fetchedAt": "2026-09-04T22:17:32.500Z",
+   "fetchedAt": "2026-09-20T23:13:04.172Z",
    "name": "奈良県議会 定例（臨時）県議会の概要",
    "url": "https://www.pref.nara.lg.jp/n161/18579.html"
   },
   {
-   "fetchedAt": "2026-09-04T22:17:32.500Z",
+   "fetchedAt": "2026-09-20T23:13:04.172Z",
    "name": "奈良県議会 令和8年6月定例会の概要",
    "url": "https://www.pref.nara.lg.jp/n161/p114029.html"
   },
   {
-   "fetchedAt": "2026-09-04T22:17:32.500Z",
+   "fetchedAt": "2026-09-20T23:13:04.172Z",
    "name": "奈良県議会 議員別の議案等に対する表決結果（令和8年6月定例会 2026-07-02議決分）",
    "url": "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf"
   },
   {
-   "fetchedAt": "2026-09-04T22:17:32.500Z",
+   "fetchedAt": "2026-09-20T23:13:04.172Z",
    "name": "奈良県議会 令和8年2月定例会の概要",
    "url": "https://www.pref.nara.lg.jp/n161/p114001.html"
   },
   {
-   "fetchedAt": "2026-09-04T22:17:32.500Z",
+   "fetchedAt": "2026-09-20T23:13:04.172Z",
    "name": "奈良県議会 議員別の議案等に対する表決結果（令和8年2月定例会 2026-03-25議決分）",
    "url": "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-20T23:13:04.172Z",
+   "name": "奈良県議会 令和7年12月定例会の概要",
+   "url": "https://www.pref.nara.lg.jp/n161/70511.html"
+  },
+  {
+   "fetchedAt": "2026-09-20T23:13:04.172Z",
+   "name": "奈良県議会 議員別の議案等に対する表決結果（令和7年12月定例会 2025-12-15議決分）",
+   "url": "https://www.pref.nara.lg.jp/documents/18768/20251215_giinbetsu_hyoketsu.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-20T23:13:04.172Z",
+   "name": "奈良県議会 令和7年9月定例会の概要",
+   "url": "https://www.pref.nara.lg.jp/n161/70052.html"
+  },
+  {
+   "fetchedAt": "2026-09-20T23:13:04.172Z",
+   "name": "奈良県議会 議員別の議案等に対する表決結果（令和7年9月定例会 2025-10-09議決分）",
+   "url": "https://www.pref.nara.lg.jp/documents/18767/20251009_giinbetsu_hyoketsu.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-20T23:13:04.172Z",
+   "name": "奈良県議会 議員別の議案等に対する表決結果（令和7年9月定例会 2025-10-24議決分）",
+   "url": "https://www.pref.nara.lg.jp/documents/18767/20251024_giinbetsu_hyoketsu.pdf"
   }
  ]
 }

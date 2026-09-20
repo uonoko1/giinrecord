@@ -23,7 +23,7 @@ import {
  *
  * | | 母数 | 結果 |
  * |---|---|---|
- * | **名簿に無い `memberId`** | **107,119 セル / 2,530 採決 / 11 議会** | **0 件** |
+ * | **名簿に無い `memberId`** | **109,319 セル / 2,585 採決 / 11 議会** | **0 件** |
  * | **`rosterAsOf` より後の採決を持つ議会** | 11 議会 | **7 議会**（最大 鳥取 1,156 日） |
  *
  * **鳥取の任期が 2023〜2027 なので、2023 年の名簿が 2026 年の採決にそのまま当たっている。**
@@ -109,7 +109,7 @@ const windowOfPref = async (p: string): Promise<ReturnType<typeof rosterWindowOf
  * **これは「今どうなっているか」の記録である。**
  * **`rosterAsOf` を書き換えても、採決を足しても、会期を広げてもここが落ちて数え直しを強制する。**
  *
- * **母数を一緒に持つ**（#757）——**`rollcalls` の合計が 1,785 であることを下で検算する。**
+ * **母数を一緒に持つ**（#757）——**`rollcalls` の合計が 2,585 であることを下で検算する。**
  * **「7 議会がはみ出している」は、11 議会を全部見た上での 7 でなければ意味が無い。**
  */
 test("#928 本番 data/: 11 議会の rosterAsOf と採決日の窓（7 議会が後ろにはみ出し、最大は鳥取 1,156 日）", async () => {
@@ -132,7 +132,8 @@ test("#928 本番 data/: 11 議会の rosterAsOf と採決日の窓（7 議会�
     // **#901 で会期を 2 → 4 にした**。**`daysBefore` 302 → 921（上限 1,461 の 63%）で、#928 の検査は鳴らない**
     "pref-24": { daysAfter: 224, daysBefore: 921, votesAfter: 190, rollcalls: 733 },
     "pref-25": { daysAfter: -34, daysBefore: 75, votesAfter: 0, rollcalls: 14 },
-    "pref-29": { daysAfter: 69, daysBefore: 30, votesAfter: 37, rollcalls: 125 },
+    // **#901 で会期を 2 → 4 にした**。**`daysBefore` 30 → 197（上限 1,461 の 13%）で、#928 の検査は鳴らない**
+    "pref-29": { daysAfter: 69, daysBefore: 197, votesAfter: 37, rollcalls: 180 },
     "pref-31": { daysAfter: 1_156, daysBefore: -1_044, votesAfter: 118, rollcalls: 118 },
     "pref-32": { daysAfter: 1_142, daysBefore: -1_030, votesAfter: 112, rollcalls: 112 },
     // **#901 で会期を 2 → 4 にした**。**`daysBefore` 204 → 296（上限 1,461 の 20%）で、#928 の検査は鳴らない**
@@ -142,7 +143,7 @@ test("#928 本番 data/: 11 議会の rosterAsOf と採決日の窓（7 議会�
   });
   // **母数の検算**（#757）: **採決の本数の合計が、#855 が数えている 1,369 本と一致する。**
   // **これが無いと、痩せたディレクトリを見て「はみ出し 0」を言える。**
-  assert.equal(Object.values(got).reduce((s, x) => s + x.rollcalls, 0), 2_530, "11 議会の採決の合計（#855 の母数と同じ）");
+  assert.equal(Object.values(got).reduce((s, x) => s + x.rollcalls, 0), 2_585, "11 議会の採決の合計（#855 の母数と同じ）");
   // **後ろにはみ出している議会はちょうど 7**（#928 の起票の数字）
   assert.equal(Object.values(got).filter((x) => x.daysAfter > 0).length, 7, "rosterAsOf より後の採決を持つ議会");
   // **`rosterAsOf` が採決の範囲を「またいでいる」議会**（#928 が三重の形として挙げたもの）。

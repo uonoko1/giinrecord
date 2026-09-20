@@ -158,23 +158,34 @@ function rotateRows<T>(values: readonly T[], k: number): T[] {
  * 母数（#757）。**先に固定する。** 検算が「全部一致」でも、母数が 0 なら何も測っていない。
  * ------------------------------------------------------------------ */
 
-/** フィクスチャ 2 本の行数（実測。本番 `data/assemblies/pref-29` の 125 採決と一致する）。 */
-const ROWS_TOTAL = 125;
+/**
+ * **フィクスチャ 5 本の行数**（実測。**`--sessions 4` の本番 `data/assemblies/pref-29` の 180 採決と一致する**）。
+ * **#901 で 2 本 125 行 → 5 本 180 行に増えた**（令和7年12月 34 行・令和7年9月 16+5 行）。
+ */
+const ROWS_TOTAL = 180;
 /** そのうち `議` がちょうど 1 つ立つ行（実測: 全部）。 */
-const SPEAKER_ROWS = 125;
-/** そのうち歴代議長の表で判定できる行（**議長交代の当日の 37 行を除いた 88 行**）。 */
-const SPEAKER_DENOMINATOR = 88;
+const SPEAKER_ROWS = 180;
+/**
+ * そのうち歴代議長の表で判定できる行（**議長交代の当日の 37 行を除いた 143 行**）。
+ * **#901 で 88 → 143 に増えた**——**増えた 3 本（55 行）はすべて 田中惟允 の在任中で、
+ * 歴代議長の表がそのまま当たる**（PR に実測を書いた）。
+ */
+const SPEAKER_DENOMINATOR = 143;
 
-test("#872 母数: フィクスチャ 2 本は 125 行・5,000 セル（本番 pref-29 と同じ）", () => {
-  assert.equal(books.length, 2, "フィクスチャは 2 本");
+test("#872/#901 母数: フィクスチャ 5 本は 180 行・7,200 セル（本番 pref-29 と同じ）", () => {
+  assert.equal(books.length, 5, "フィクスチャは 5 本");
   const rows = books.reduce((n, b) => n + b.pdf.rows.length, 0);
   assert.equal(rows, ROWS_TOTAL);
   const cells = books.reduce((n, b) => n + b.pdf.rows.length * b.pdf.members.length, 0);
-  assert.equal(cells, 5000);
+  assert.equal(cells, 7200);
+  assert.equal(180 * 40, 7200, "母数を式で残す（40 人 × 180 採決の長方形）");
+  assert.deepEqual(books.map((b) => [b.pdf.date, b.pdf.rows.length, b.pdf.members.length]), [
+    ["2025-10-09", 16, 40], ["2025-10-24", 5, 40], ["2025-12-15", 34, 40], ["2026-03-25", 88, 40], ["2026-07-02", 37, 40],
+  ], "**本ごとの内訳**（合計だけ合って中身が入れ替わる形を塞ぐ）");
   assert.equal(books.reduce((n, b) => n + b.pdf.unknownCells, 0), 0, "不明セルは 0");
 });
 
-test("#872 母数: `議` は全 125 行でちょうど 1 つ立つ（0 個・2 個の行は無い）", () => {
+test("#872/#901 母数: `議` は全 180 行でちょうど 1 つ立つ（0 個・2 個の行は無い）", () => {
   let one = 0;
   for (const b of books) {
     for (const r of b.pdf.rows) {
@@ -211,13 +222,13 @@ function checkSpeaker(k: number): { judged: number; mismatch: number } {
   return { judged, mismatch };
 }
 
-test("#872 検算B(x): `議` の列は歴代議長と一致する（88 / 88 行）", () => {
+test("#872/#901 検算B(x): `議` の列は歴代議長と一致する（143 / 143 行）", () => {
   const r = checkSpeaker(0);
   assert.equal(r.judged, SPEAKER_DENOMINATOR, "母数が減っていたら、この検算は空回りしている（#757）");
   assert.equal(r.mismatch, 0);
 });
 
-test("#872 検算B(x): 記号帯を 1 列・2 列・−1 列回すと、88 行すべてが落ちる", () => {
+test("#872/#901 検算B(x): 記号帯を 1 列・2 列・−1 列回すと、143 行すべてが落ちる", () => {
   for (const k of [1, 2, -1]) {
     const r = checkSpeaker(k);
     assert.equal(r.judged, SPEAKER_DENOMINATOR, `${k} 列回転で母数が変わった`);
@@ -324,7 +335,7 @@ test("#872 逆向き（監査委員の選任 ⇒ `除`）は成り立たない�
  * 記号帯と左の欄が同じ行から読まれていること（x でも y でもない壊れ方）
  * ------------------------------------------------------------------ */
 
-test("#872 検算B は y を 1 件も捕まえない（記号帯だけを 1 行回しても 0 / 88）", () => {
+test("#872/#901 検算B は y を 1 件も捕まえない（記号帯だけを 1 行回しても 0 / 143）", () => {
   // 記号帯だけを回したものを、そのまま検算B にかける
   let judged = 0;
   let mismatch = 0;
@@ -354,7 +365,7 @@ test("#872 氏名の欠落: 県自身が「JIS に無い漢字を同音類似の
   //   ホームページ上での表記: 西川 均 / 芦高 清友（正確な表記は画像でのみ示されている）
   const names = books.flatMap((b) => b.pdf.members.map((m) => m.nameText));
   // 西川 均 は 2 本とも「西川」（名が文字層に無い）
-  assert.equal(names.filter((n) => n === "西川").length, 2, "`西川`（2 文字）が 2 本に 1 列ずつ");
+  assert.equal(names.filter((n) => n === "西川").length, 5, "`西川`（2 文字）が 5 本すべてに 1 列ずつ");
   assert.equal(names.filter((n) => n.startsWith("西川") && n.length > 2).length, 0, "`西川均` は 1 本も無い");
   // 芦高 清友 は本によって違う: 令和8年2月は IVS 付きで 4 文字、令和8年6月は先頭の `芦󠄀` が落ちて 3 文字
   const feb = books.find((b) => b.name === "20260325_giinbetsu_hyoketsu.pdf")!;
@@ -362,6 +373,12 @@ test("#872 氏名の欠落: 県自身が「JIS に無い漢字を同音類似の
   assert.ok(feb.pdf.members.some((m) => m.nameText === "芦\u{E0100}髙清友"), "令和8年2月: `芦󠄀髙清友`（芦 + U+E0100）");
   assert.ok(jun.pdf.members.some((m) => m.nameText === "髙清友"), "令和8年6月: `髙清友`（`芦󠄀` が文字層に無い）");
   assert.equal(jun.pdf.members.filter((m) => m.nameText.startsWith("芦")).length, 0);
+  // **#901 で 3 本増やして数え直した**——**`芦󠄀` が落ちるのは 5 本のうち 令和8年6月 の 1 本だけ。**
+  // **増やした 3 本（令和7年9月 2 本・令和7年12月 1 本）は 令和8年2月 と同じ `芦󠄀髙清友`。**
+  // **「新しい本ほど欠ける」のような規則ではない**（確かめていないので、そう書く）。
+  assert.equal(names.filter((n) => n === "髙清友").length, 1, "`芦󠄀` が落ちた本");
+  assert.equal(names.filter((n) => n === "芦\u{E0100}髙清友").length, 4, "`芦󠄀` が残っている本");
+  assert.equal(1 + 4, books.length, "母数（5 本すべてにこの議員の列がある）");
 });
 
 test("#872 氏名の欠落: 落ちた字を推定で補っていない（`nameText` は PDF の原文のまま）", () => {
@@ -392,16 +409,24 @@ test("#872 長い件名は連結が正しい——専決処分の報告は 1 行
   assert.equal(r19.cells.length, jun.pdf.members.length);
   assert.equal(r19.cells.filter((c) => c === "○").length, 39);
   assert.equal(r19.cells.filter((c) => c === "議").length, 1);
-  // 125 行のうち 100 字を超えるのは 2 行だけ（実測。中央値は 25 字）
+  // **180 行のうち 100 字を超えるのは 4 行**（実測。**#901 で 2 本 → 5 本にして 2 行増えた**）。
+  // **長いのはすべて「専決処分の報告」で、字数は機序ではない**（#866 の島根と同じ問い）。
+  // **`--sessions 2` の窓には 2 行しか無かった**ので、**「長い件名は 報第19号・報第20号 だけ」は偽だった。**
   const long = books.flatMap((b) => b.pdf.rows).filter((r) => r.title.length > 100);
-  assert.deepEqual(long.map((r) => r.number).sort(), ["報第19号", "報第20号"]);
+  assert.deepEqual(
+    long.map((r) => [r.number, r.title.length]).sort((a, b) => String(a[0]).localeCompare(String(b[0]))),
+    [["報第19号", 190], ["報第20号", 155], ["報第29号", 140], ["報第34号", 148]],
+  );
+  assert.equal(books.flatMap((b) => b.pdf.rows).length, ROWS_TOTAL, "母数（#757）");
+  // **4 行とも「地方自治法第…条第１項の規定による専決処分の報告について」で始まる**
+  for (const r of long) assert.match(r.title, /^地方自治法第\d+条第１項の規定による専決処分の報告について/, r.number);
 });
 
 /* ------------------------------------------------------------------ *
  * 凡例（**凡例にあるが実物を見ていない記号を数として残す**）
  * ------------------------------------------------------------------ */
 
-test("#872 凡例は 8 種類。うち `副` は 125 行・5,000 セルに 1 度も現れない", () => {
+test("#872/#901 凡例は 8 種類。うち `副` は 180 行・7,200 セルに 1 度も現れない", () => {
   for (const b of books) {
     assert.deepEqual(Object.keys(b.pdf.legend.votes), ["○", "×", "議", "副", "除", "欠", "退", "―"]);
   }
