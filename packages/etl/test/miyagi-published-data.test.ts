@@ -244,7 +244,7 @@ test("#901 本番 pref-04: 未突合 5 件（4 人。うち 1 人は会派が変
   }
   const ids = [...bySession.keys()].sort((a, b) => Number(b) - Number(a));
   assert.deepEqual(ids, ["400", "399", "398", "397", "396", "395", "394", "393", "392", "391", "390"], "会期（新しい順）");
-  const moves: Record<string, [number, string[], string[]]> = {};
+  const moves: Record<string, [size: number, joined: string[], left: string[]]> = {};
   for (let i = 0; i + 1 < ids.length; i++) {
     const cur = bySession.get(ids[i])!;
     const prev = bySession.get(ids[i + 1])!;
@@ -262,7 +262,9 @@ test("#901 本番 pref-04: 未突合 5 件（4 人。うち 1 人は会派が変
     "392": [59, [], []],
     "391": [59, [], []],
   }, "**会期ごとの [人数, 入った, 去った]**（5 人以上の入れ替わりが出たら一般選挙をまたいでいる）");
-  const biggest = Math.max(...Object.values(moves).map(([, i2, o]) => Math.max(i2.length, o.length)));
+  const sizes: number[] = [];
+  for (const key of Object.keys(moves)) { const [, joined, left] = moves[key]; sizes.push(joined.length, left.length); }
+  const biggest = Math.max(...sizes);
   assert.equal(biggest, 2, "**いちばん大きい入れ替わり**（本番の範囲では 2 人。5 以上なら選挙の向こう側）");
 
   // **名簿側でも同じ形**——**11 会期すべてに出る 54 人が 584、`鈴木 敦` が 23（第400回だけ）、
