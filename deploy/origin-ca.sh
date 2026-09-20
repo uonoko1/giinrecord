@@ -197,9 +197,28 @@ cp -a "$NGINX_DIR/sites-available" "$BACKUP/" 2>/dev/null || die "sites-availabl
 # **他サイトの conf を 1 バイトも変えないことを確かめるため、先に md5 を取る**
 before=$(find "$NGINX_DIR/sites-available" -type f -print0 | sort -z | xargs -0 md5sum 2>/dev/null)
 
+# **conf の名前はゾーン名ではない**——`vps-setup.sh` の `site_vars` が決めている:
+#   giinrecord.jp ゾーン → giinrecord.conf（本番）/ giinrecord-staging.conf
+#   gikailog.jp  ゾーン → gikailog.conf（旧ドメインの 301）/ gikailog-staging.conf
+# **最初これを `<zone>.conf` と決め打ちして、1 本も見つからず黙って何もしなかった**（ユーザーの実機で実測）。
+confs_for_zone() {
+  case "$1" in
+    giinrecord.jp) echo "$NGINX_DIR/sites-available/giinrecord.conf $NGINX_DIR/sites-available/giinrecord-staging.conf" ;;
+    gikailog.jp)   echo "$NGINX_DIR/sites-available/gikailog.conf $NGINX_DIR/sites-available/gikailog-staging.conf" ;;
+  esac
+}
+
+# **1 本も無ければ落とす**（黙って「変更なし」で終わると、切り替わったと誤解する）
+found=0
+for z in $ZONES; do
+  for c in $(confs_for_zone "$z"); do [ -f "$c" ] && found=$((found+1)); done
+done
+[ "$found" -gt 0 ] || die "切り替える conf が 1 本も無い（sites-available を確かめること）"
+echo "origin-ca: 切り替える conf $found 本"
+
 changed=0
 for z in $ZONES; do
-  for conf in "$NGINX_DIR/sites-available/$z.conf" "$NGINX_DIR/sites-available/staging.$z.conf"; do
+  for conf in $(confs_for_zone "$z"); do
     [ -f "$conf" ] || continue
     tmp=$(mktemp)
     # Let's Encrypt の証明書を Origin CA に差し替え、mTLS を足す（**冪等**：既に入っていれば足さない）
