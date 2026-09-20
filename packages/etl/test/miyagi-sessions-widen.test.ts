@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { parseVotePdf } from "../src/sources/local/miyagi/votes-pdf.ts";
 import { toIsoDate } from "../src/sources/local/miyagi/rollcalls.ts";
+import { defaultSessionsFor } from "../src/local-assemblies.ts";
+import type { LocalMember } from "@seiji-kiroku/shared";
 
 /**
  * # 宮城の `--sessions` を広げる前に直した 2 つの欠陥（Issue #901）
@@ -208,6 +210,41 @@ test("#901 第393回: 議案等番号が `※` の 2 行に別々の ID が付�
 });
 
 /**
+ * **請願の枝番（`391の1`）は番号である**——**`無番号N` に落とさない**（#901）。
+ *
+ * **`※` を「番号でない」側に落とすとき、枝番まで巻き込むと 10 行の ID が
+ * `無番号1` `無番号2` … に変わる**——**採決 ID は Web の URL でもあるので、
+ * 「同じ議案の記録が別の住所に移る」形になる。**
+ *
+ * **13 本に枝番は 10 行ある**（第390回 2 / 第391回 1 / 第394回 2 / 第397回 1 ほか。
+ * **`NUMBER_FOR_ID` の `(の\d+)?` を消すとここが落ちる**）。
+ */
+test("#901 請願の枝番（`391の1`）は番号としてそのまま ID に入る（`無番号N` に落とさない）", async () => {
+  const { toLocalRollCalls } = await import("../src/sources/local/miyagi/rollcalls.ts");
+  const cases: [file: string, label: string, url: string][] = [
+    ["hyouketsu060313.pdf", "令和6年2月定例会（第391回）", "https://www.pref.miyagi.jp/documents/50597/hyouketsu060313.pdf"],
+    ["hyouketsu061211.pdf", "令和6年11月定例会（第394回）", "https://www.pref.miyagi.jp/documents/55094/hyouketsu061211.pdf"],
+    ["hyouketsu1002syuusei.pdf", "令和7年9月定例会（第397回）", "https://www.pref.miyagi.jp/documents/61559/hyouketsu1002syuusei.pdf"],
+    ["hyouketsu051219.pdf", "令和5年11月定例会（第390回）", "https://www.pref.miyagi.jp/documents/50057/hyouketsu051219.pdf"],
+  ];
+  const got: string[] = [];
+  for (const [file, sessionLabel, pdfUrl] of cases) {
+    const pdf = await parseVotePdf(bytes(file));
+    const { rollCalls } = toLocalRollCalls(pdf, [], { sessionLabel, pdfUrl });
+    for (const r of rollCalls) if (/^\d+の\d+$/.test(r.number)) got.push(r.id);
+  }
+  assert.deepEqual(got.sort(), [
+    "pref-04-390-20231219-請願-390の1",
+    "pref-04-390-20231219-請願-390の2",
+    "pref-04-391-20240313-請願-391の1",
+    "pref-04-394-20241211-請願-394の1",
+    "pref-04-394-20241211-請願-394の2",
+    "pref-04-397-20251002-請願-397の1",
+  ], "**枝番の行の ID**（`無番号N` になっていたら `NUMBER_FOR_ID` が枝番を落としている）");
+  assert.deepEqual(got.filter((id) => id.includes("無番号")), [], "枝番が `無番号N` に落ちた行");
+});
+
+/**
  * **番号の形を 13 本すべてで数えた**（#757。**「その他」が増えたら気づけるように母数ごと固定する**）。
  * **`※` を番号でないほうに落としたのは、この 4 通りを全部見た上での判断である。**
  */
@@ -231,4 +268,146 @@ test("#901 議案等番号の欄の形は 4 通りしかない（13 本 649 行�
   assert.deepEqual(Object.fromEntries([...forms].sort((a, b) => b[1] - a[1])), {
     "数字だけ": 633, "Nの M": 10, "空": 4, "その他:※": 2,
   });
+});
+
+/**
+ * ## **緩めたのは「辞書に無い見出し」だけで、「読めていない見出し」は今までどおり例外**
+ *
+ * **`readMembers` は元々「凡例に無い見出し」を例外にしていた。**
+ * **これは会派名の辞書引きであると同時に、レイアウトが変わったことの検出でもあった**——
+ * **帯の x 境界がずれて見出しの文字を拾えなくなれば、空の見出しとして例外になっていた。**
+ *
+ * **#901 で辞書引きを緩めたので、その検出が一緒に消えないように、空の見出しは明示的に例外にした。**
+ * **これが無いと、罫線の読みが壊れて見出しが 1 文字も拾えなくなっても、
+ * 会派名が空文字のまま静かに通る**——**「別の記録が出る」側ではないが、
+ * 「壊れているのに気づけない」側である**（#477 の font と同じ理由で、気づけないことが問題）。
+ *
+ * **本物の PDF には空の見出しが 1 つも無い**（13 本すべて実測）ので、
+ * **実装を呼んで確かめるには、帯の境界を人為的に潰すしかない。**
+ * **ここでは `readMembers` が見ている 2 つの条件を、最小の作り物で再現する。**
+ */
+test("#901 会派の帯の見出しが 1 文字も拾えないときは例外（辞書引きを緩めても、壊れた読みは通さない）", async () => {
+  const { parseVotePdf: parse } = await import("../src/sources/local/miyagi/votes-pdf.ts");
+  // **本物の本では空の見出しが 1 つも出ない**（**この検査が「起きていないこと」を見ていることの母数**）
+  const FILES = [
+    "hyoketu080707.pdf", "syuusei_hyouketsu080318.pdf", "hyouketsu071217.pdf", "hyouketsu1002syuusei.pdf",
+    "hyouketsu070630.pdf", "hyouketsu070314.pdf", "hyouketsu061211.pdf", "hyouketsu061017.pdf",
+    "hyouketsu060701.pdf", "hyouketsu060313.pdf", "hyouketsu051219.pdf", "hyouketsu051004.pdf", "hyouketsu050704.pdf",
+  ];
+  let bands = 0;
+  for (const f of FILES) {
+    const pdf = await parse(bytes(f));
+    const seen = new Set(pdf.members.map((m) => m.groupText));
+    bands += seen.size;
+    assert.deepEqual([...seen].filter((t) => t === ""), [], `${f}: 空の会派見出し`);
+  }
+  assert.equal(bands, 97, "**13 本で見た会派の帯の数**（0 を「違反なし」と読み違えないため）");
+
+  // **例外のメッセージが `group heading at [x0,x1] has no text` であること**を、実装の原文で固定する。
+  // **`?? text` に緩めた行のすぐ上にある検査で、片方だけ消せばここが落ちる。**
+  const src = readFileSync(new URL("../src/sources/local/miyagi/votes-pdf.ts", import.meta.url), "utf8");
+  assert.match(src, /if \(text === ""\) throw new Error\(`\$\{label\}: group heading at /,
+    "**空の見出しを例外にする行**（消すと、罫線が壊れても会派名が空文字で静かに通る）");
+  assert.match(src, /const name = legend\.groups\[text\] \?\? text;/,
+    "**辞書に無ければ見出しの原文を使う行**（#901）");
+});
+
+/**
+ * ## **`--sessions 11` で止めた根拠を、一次資料（PDF に出る氏名）だけから固定する**（#901）
+ *
+ * **#928 の検査はこの境を 1 件も捕まえない**——**13 本目まで広げても
+ * `rosterAsOf` から 1,178 日で、上限 1,461 日の内側である**（**実測。変異 M9 で確かめた**）。
+ * **だから「11 を 12 にしても `#928` は鳴らない」。鳴らすものがここに要る。**
+ *
+ * **会期ごとに PDF に出る氏名の集合を 13 本ぶん数えた。**
+ * **不連続は 12 回の移り変わりのうち 1 か所にしかない**（第390回 ← 第389回、IN 18 / OUT 19）——
+ * **2023-10 の一般選挙である**（**選挙の日付を外から持ち込まず、氏名の集合だけで見える**）。
+ *
+ * **名簿は「今の 1 枚」しか公表されていない**（`LocalMember` は `asOf` しか持たない）。
+ * **選挙をまたいだ採決にその名簿を当てると、引退した議員の票が今の別人に付きうる**——
+ * **利用者から検出できない虚偽である**（#569 の重いほう）。
+ *
+ * **いま宮城では「別人に付く」は 1 件も起きない**（下で測ってある）——
+ * **選挙前にだけ出る 18 人の氏名は、今の名簿 56 人の誰とも一致しない。**
+ * **だが「今のデータでは再現しない」までが実測であって、起こりえないという意味ではない**（#928 の担当者の言葉）。
+ * **だから境の手前で止める。**
+ */
+test("#901 会期ごとの氏名の集合は、第390回 ← 第389回 でだけ不連続になる（2023-10 の一般選挙）", async () => {
+  // **並びは index の新しい順**。**`defaultSessionsFor("miyagi") === 11` は 11 本目（第390回）まで**
+  const ORDER: [n: number, id: string, file: string][] = [
+    [1, "400", "hyoketu080707.pdf"], [2, "399", "syuusei_hyouketsu080318.pdf"], [3, "398", "hyouketsu071217.pdf"],
+    [4, "397", "hyouketsu1002syuusei.pdf"], [5, "396", "hyouketsu070630.pdf"], [6, "395", "hyouketsu070314.pdf"],
+    [7, "394", "hyouketsu061211.pdf"], [8, "393", "hyouketsu061017.pdf"], [9, "392", "hyouketsu060701.pdf"],
+    [10, "391", "hyouketsu060313.pdf"], [11, "390", "hyouketsu051219.pdf"],
+    [12, "389", "hyouketsu051004.pdf"], [13, "388", "hyouketsu050704.pdf"],
+  ];
+  const names = new Map<string, Set<string>>();
+  for (const [, id, file] of ORDER) {
+    const pdf = await parseVotePdf(bytes(file));
+    names.set(id, new Set(pdf.members.map((m) => m.nameText.replace(/[\s　]+/g, ""))));
+  }
+  const moves: { n: number; id: string; size: number; inN: number; outN: number }[] = [];
+  for (let i = 0; i + 1 < ORDER.length; i++) {
+    const cur = names.get(ORDER[i][1])!;
+    const prev = names.get(ORDER[i + 1][1])!;
+    moves.push({
+      n: ORDER[i][0], id: ORDER[i][1], size: cur.size,
+      inN: [...cur].filter((x) => !prev.has(x)).length,
+      outN: [...prev].filter((x) => !cur.has(x)).length,
+    });
+  }
+  assert.equal(moves.length, 12, "母数（数えた移り変わり）");
+  // **5 人以上の入れ替わりが出るのは 1 か所だけ**（**そこが一般選挙の境**）
+  // **`moves` は新しい側の本で名前を付けている**（`n` 本目 ← `n+1` 本目 の移り変わり）
+  const big = moves.filter((m) => m.inN >= 5 || m.outN >= 5);
+  assert.deepEqual(big, [{ n: 11, id: "390", size: 59, inN: 19, outN: 18 }],
+    "**5 人以上の入れ替わり**（11 本目 第390回 ← 12 本目 第389回。IN 19 / OUT 18）");
+  // **それ以外の 11 回は 0〜2 人**（任期中の辞職・補選の規模）
+  assert.equal(Math.max(...moves.filter((m) => m.n !== 11).flatMap((m) => [m.inN, m.outN])), 2);
+  // **境は「11 本目と 12 本目のあいだ」にある**——**`--sessions 11` はその手前で止まる最大である。**
+  // **12 にすると、選挙の前の第389回が入ってくる。**
+  assert.equal(big[0].n, 11);
+  assert.ok(defaultSessionsFor("miyagi") <= big[0].n,
+    `既定 ${defaultSessionsFor("miyagi")} が一般選挙の境（${big[0].n} 本目と ${big[0].n + 1} 本目のあいだ）を越えている。**#928 は鳴らない**ので、ここが唯一の歯止めである`);
+  assert.equal(defaultSessionsFor("miyagi"), 11, "**境の手前で最大**（10 に縮めても 12 に伸ばしてもここが落ちる）");
+});
+
+/**
+ * **「いま別人に付いていない」ことを、母数つきで測る**（#569 / #796）。
+ *
+ * **これは「起こりえない」の証明ではない**——**今の名簿と今の 13 本で 0 件だった、という実測である。**
+ * **`matchBySubsequence` は部分列一致も見るので、完全一致だけを数えるのでは足りない。**
+ */
+test("#901 一般選挙の前にだけ出る 18 人は、今の名簿 56 人の誰にも寄らない（母数つき。0 件は「見た上での 0」）", async () => {
+  const { matchBySubsequence } = await import("../src/sources/local/name-match.ts");
+  const AFTER = [
+    "hyoketu080707.pdf", "syuusei_hyouketsu080318.pdf", "hyouketsu071217.pdf", "hyouketsu1002syuusei.pdf",
+    "hyouketsu070630.pdf", "hyouketsu070314.pdf", "hyouketsu061211.pdf", "hyouketsu061017.pdf",
+    "hyouketsu060701.pdf", "hyouketsu060313.pdf", "hyouketsu051219.pdf",
+  ];
+  const BEFORE = ["hyouketsu051004.pdf", "hyouketsu050704.pdf"];
+  const namesOf = async (files: string[]) => {
+    const s = new Set<string>();
+    for (const f of files) for (const m of (await parseVotePdf(bytes(f))).members) s.add(m.nameText);
+    return s;
+  };
+  const after = await namesOf(AFTER);
+  const before = await namesOf(BEFORE);
+  assert.equal(after.size, 60, "選挙の後の 11 本に出る氏名（母数）");
+  assert.equal(before.size, 58, "選挙の前の 2 本に出る氏名（母数）");
+  const onlyBefore = [...before].filter((n) => !after.has(n));
+  assert.equal(onlyBefore.length, 18, "選挙の前にだけ出る氏名");
+
+  // **今の名簿**（本番の `data/members/index.json` の pref-04 の行）
+  const roster = (JSON.parse(readFileSync(new URL("../../../data/members/index.json", import.meta.url), "utf8")) as LocalMember[])
+    .filter((m) => m.assemblyId === "pref-04");
+  assert.equal(roster.length, 56, "名簿（母数）");
+  const hits = onlyBefore
+    .map((n) => ({ pdf: n, id: matchBySubsequence(n, roster).memberId }))
+    .filter((x) => x.id !== "");
+  // **1 件でも寄ったら、それは「引退した議員の票が今の別人に付いた」形である**（#569 の重いほう）
+  assert.deepEqual(hits, [], "**選挙前にだけ出る氏名が、今の名簿の誰かに寄った**");
+  // **逆向きの母数**——**選挙をまたいで両方に出る 40 人は、同じ人が再選したぶんである**
+  assert.equal([...before].filter((n) => after.has(n)).length, 40, "両方に出る氏名");
+  assert.equal(18 + 40, 58, "母数の検算（#757）");
 });
