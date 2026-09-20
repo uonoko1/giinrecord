@@ -203,10 +203,10 @@ jobs:
           web=$(find apps/web/app \( -name '*.test.ts' -o -name '*.test.tsx' \) | wc -l)
           etl=$(find packages/etl/test -maxdepth 1 -name '*.test.ts' | wc -l)
           echo "apps/web test files: $web (floor 85)"
-          echo "packages/etl test files: $etl (floor 156)"
+          echo "packages/etl test files: $etl (floor 158)"
           fail=0
           [ "$web" -ge 85 ] || { echo "FAIL: apps/web test files dropped below floor"; fail=1; }
-          [ "$etl" -ge 156 ] || { echo "FAIL: packages/etl test files dropped below floor"; fail=1; }
+          [ "$etl" -ge 158 ] || { echo "FAIL: packages/etl test files dropped below floor"; fail=1; }
           [ "$fail" = 0 ]
       # #855: `validateLocalAssemblies` / `validateDataset` は在ったのに、**コミット済みの `data/` には
       # 誰も走らせていなかった**（呼び出し元は ETL の CLI と県ごとの run テストだけで、どちらも
