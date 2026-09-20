@@ -166,3 +166,69 @@ test("#901 `--sessions 11` の範囲の 11 本がすべて読める（直す前�
   assert.equal(dates[0], "2023-12-12", "最古の議決日");
   assert.equal(dates.at(-1), "2026-07-07", "最新の議決日");
 });
+
+/**
+ * ## 欠陥 3: **議案等番号の欄が `※` の行が 2 つあり、採決 ID が衝突する**（第393回。**広げて初めて見えた**）
+ *
+ * **第393回の 種別（結合セル）は `知事提出議案（※は議員提出）` という原文で、
+ * 議員提出の 2 行は議案番号を持たず `※` とだけ書いてある**（**修正動議・継続審査動議**。実測）。
+ *
+ * **`toLocalRollCalls` の ID は `{議会}-{回次}-{議決日}-{種別}-{番号}` で、
+ * 番号が空のときだけ `無番号N` を振っていた。** **`※` は空ではないので素通りし、
+ * **同じ日・同じ種別の 2 行がまったく同じ ID になって例外で止まっていた。**
+ *
+ * **これは `--sessions 2` の範囲には 1 件も無い**（**本番の 133 件は第399・400回だけ**）。
+ * **数え直すと、13 本 649 行のうち `※` はこの 2 行だけである**
+ * （**数字だけ 633 / `Nの M`（請願の枝番）10 / 空 4 / `※` 2**）。
+ *
+ * **直し方**: **`※` を番号として扱わない**（`無番号N` と同じ扱いにする）。
+ * **`number` の原文は `※` のまま残す**——**「議員提出である」という県の記しを捨てない**（#569）。
+ */
+test("#901 第393回: 議案等番号が `※` の 2 行に別々の ID が付き、`number` の原文は `※` のまま残る", async () => {
+  const { toLocalRollCalls } = await import("../src/sources/local/miyagi/rollcalls.ts");
+  const pdf = await parseVotePdf(bytes("hyouketsu061017.pdf"));
+  const { rollCalls } = toLocalRollCalls(pdf, [], {
+    sessionLabel: "令和6年9月定例会（第393回）",
+    pdfUrl: "https://www.pref.miyagi.jp/documents/54531/hyouketsu061017.pdf",
+  });
+  assert.equal(rollCalls.length, 31, "母数（この本の行数）");
+  assert.equal(new Set(rollCalls.map((r) => r.id)).size, 31, "ID は 31 通り（衝突していない）");
+  const marked = rollCalls.filter((r) => r.number === "※");
+  assert.equal(marked.length, 2, "`※` の行");
+  assert.deepEqual(marked.map((r) => r.title), [
+    "議第１１８号議案（令和６年度宮城県一般会計補正予算）に対する修正動議",
+    "議第１１９号議案（宿泊税条例）に対する継続審査動議",
+  ]);
+  // **種別の原文もそのまま**（県の記しごと残す）
+  assert.deepEqual([...new Set(marked.map((r) => r.kind))], ["知事提出議案（※は議員提出）"]);
+  assert.deepEqual(marked.map((r) => r.id), [
+    "pref-04-393-20241017-知事提出議案（※は議員提出）-無番号1",
+    "pref-04-393-20241017-知事提出議案（※は議員提出）-無番号2",
+  ]);
+});
+
+/**
+ * **番号の形を 13 本すべてで数えた**（#757。**「その他」が増えたら気づけるように母数ごと固定する**）。
+ * **`※` を番号でないほうに落としたのは、この 4 通りを全部見た上での判断である。**
+ */
+test("#901 議案等番号の欄の形は 4 通りしかない（13 本 649 行）", async () => {
+  const FILES = [
+    "hyoketu080707.pdf", "syuusei_hyouketsu080318.pdf", "hyouketsu071217.pdf", "hyouketsu1002syuusei.pdf",
+    "hyouketsu070630.pdf", "hyouketsu070314.pdf", "hyouketsu061211.pdf", "hyouketsu061017.pdf",
+    "hyouketsu060701.pdf", "hyouketsu060313.pdf", "hyouketsu051219.pdf", "hyouketsu051004.pdf", "hyouketsu050704.pdf",
+  ];
+  const forms = new Map<string, number>();
+  let total = 0;
+  for (const f of FILES) {
+    const pdf = await parseVotePdf(bytes(f));
+    for (const r of pdf.rows) {
+      total++;
+      const form = r.number === "" ? "空" : /^\d+$/.test(r.number) ? "数字だけ" : /^\d+の\d+$/.test(r.number) ? "Nの M" : `その他:${r.number}`;
+      forms.set(form, (forms.get(form) ?? 0) + 1);
+    }
+  }
+  assert.equal(total, 649, "母数（13 本の行）");
+  assert.deepEqual(Object.fromEntries([...forms].sort((a, b) => b[1] - a[1])), {
+    "数字だけ": 633, "Nの M": 10, "空": 4, "その他:※": 2,
+  });
+});

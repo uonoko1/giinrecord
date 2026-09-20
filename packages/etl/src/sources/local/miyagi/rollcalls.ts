@@ -49,6 +49,14 @@ export function toIsoDate(dateText: string, sessionYear: number, sessionMonth: n
   return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
+/**
+ * **採決 ID にそのまま使ってよい「議案等番号」の形**（#901）。
+ * **13 本 649 行の実測で出た形は 4 通りだけ**——**数字だけ 633（`118`）/ `Nの M` 10（請願の枝番 `391の1`）/
+ * 空 4（決議案・発議案）/ `※` 2（第393回の議員提出の記し）。**
+ * **ここに当たらない行は「番号を持たない行」として通し番号を振る**（`無番号N`）。
+ * **`row.number` の原文は出力にそのまま残す**（**記しを捨てない**。#569）。
+ */
+const NUMBER_FOR_ID = /^\d+(の\d+)?$/;
 
 export interface SessionInfo {
   /** 会期 index の見出しの原文（「令和7年11月定例会（第398回）」） */
@@ -90,7 +98,13 @@ export function toLocalRollCalls(pdf: VotePdf, roster: readonly LocalMember[], s
     const date = toIsoDate(row.dateText, pdf.sessionYear, pdf.sessionMonth);
     const ymd = date.replace(/-/g, "");
     let numberForId = row.number;
-    if (numberForId === "") {
+    // **議案等番号の欄に「番号でないもの」が入る行がある**（#901。**広げて初めて見えた**）。
+    // **13 本 649 行を数えた内訳: 数字だけ 633 / `Nの M`（請願の枝番）10 / 空 4 / `※` 2。**
+    // **`※` は第393回の 種別 `知事提出議案（※は議員提出）` に対応する記しで、番号ではない**
+    // （**修正動議・継続審査動議の 2 行。どちらも議案番号を持たない**）。
+    // **空と同じ扱いにして通し番号を振る**——**そうしないと同じ日・同じ種別の 2 行が同じ ID になって止まる。**
+    // **`row.number` の原文（`※`）は出力にそのまま残す**——**「議員提出である」という県の記しを捨てない**（#569）。
+    if (!NUMBER_FOR_ID.test(numberForId)) {
       const key = `${ymd}\t${row.kind}`;
       const n = (unnumbered.get(key) ?? 0) + 1;
       unnumbered.set(key, n);
