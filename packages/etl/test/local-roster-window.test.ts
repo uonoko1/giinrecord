@@ -23,7 +23,7 @@ import {
  *
  * | | 母数 | 結果 |
  * |---|---|---|
- * | **名簿に無い `memberId`** | **77,397 セル / 1,785 採決 / 11 議会** | **0 件** |
+ * | **名簿に無い `memberId`** | **107,119 セル / 2,530 採決 / 11 議会** | **0 件** |
  * | **`rosterAsOf` より後の採決を持つ議会** | 11 議会 | **7 議会**（最大 鳥取 1,156 日） |
  *
  * **鳥取の任期が 2023〜2027 なので、2023 年の名簿が 2026 年の採決にそのまま当たっている。**
@@ -124,7 +124,11 @@ test("#928 本番 data/: 11 議会の rosterAsOf と採決日の窓（7 議会�
   assert.deepEqual(got, {
     "pref-02": { daysAfter: 35, daysBefore: 75, votesAfter: 26, rollcalls: 113 },
     "pref-04": { daysAfter: 75, daysBefore: 65, votesAfter: 23, rollcalls: 133 },
-    "pref-05": { daysAfter: -21, daysBefore: 147, votesAfter: 0, rollcalls: 157 },
+    // **#901 で本会議日を 5 → 29 にした**。**`daysBefore` 147 → 1,165（上限 1,461 の 80%）**——
+    // **11 議会でいちばん余裕が小さい**（下のテスト）。**それでも #928 の検査は鳴らない。**
+    // **止める位置を決めたのは #928 ではなく、氏名の集合に出た不連続のほうである**
+    // （**30 本目の 2023-03-10 は 1,232 日で、これも 1,461 の内側**。`local-assemblies.ts` の docblock）
+    "pref-05": { daysAfter: -21, daysBefore: 1_165, votesAfter: 0, rollcalls: 785 },
     // **#901 で会期を 2 → 4 にした**。**`daysBefore` 302 → 921（上限 1,461 の 63%）で、#928 の検査は鳴らない**
     "pref-24": { daysAfter: 224, daysBefore: 921, votesAfter: 190, rollcalls: 733 },
     "pref-25": { daysAfter: -34, daysBefore: 75, votesAfter: 0, rollcalls: 14 },
@@ -138,7 +142,7 @@ test("#928 本番 data/: 11 議会の rosterAsOf と採決日の窓（7 議会�
   });
   // **母数の検算**（#757）: **採決の本数の合計が、#855 が数えている 1,369 本と一致する。**
   // **これが無いと、痩せたディレクトリを見て「はみ出し 0」を言える。**
-  assert.equal(Object.values(got).reduce((s, x) => s + x.rollcalls, 0), 1_902, "11 議会の採決の合計（#855 の母数と同じ）");
+  assert.equal(Object.values(got).reduce((s, x) => s + x.rollcalls, 0), 2_530, "11 議会の採決の合計（#855 の母数と同じ）");
   // **後ろにはみ出している議会はちょうど 7**（#928 の起票の数字）
   assert.equal(Object.values(got).filter((x) => x.daysAfter > 0).length, 7, "rosterAsOf より後の採決を持つ議会");
   // **`rosterAsOf` が採決の範囲を「またいでいる」議会**（#928 が三重の形として挙げたもの）。
@@ -165,14 +169,23 @@ test("#928 本番 data/: 11 議会とも rosterAsOf から 1 任期（1,461 日�
   }
   assert.equal(Object.keys(slack).length, 11, "11 議会ぶん（母数）");
   for (const [p, s] of Object.entries(slack)) assert.ok(s > 0, `${p}: 1 任期を ${-s} 日超えている`);
-  // **いちばん余裕が無いのは鳥取**（1,461 − 1,156 = 305 日）。**実測 2026-09-20**
-  assert.equal(Math.min(...Object.values(slack)), 305, "最小の余裕（鳥取）");
-  assert.equal(slack["pref-31"], 305);
+  // **#901 で秋田を 5 → 29 本会議日にしたので、いちばん余裕が無いのは鳥取（305）から秋田（296）に変わった。**
+  // **実測 2026-09-20**
+  assert.equal(Math.min(...Object.values(slack)), 296, "最小の余裕（秋田）");
+  assert.equal(slack["pref-05"], 296, "秋田（1,461 − 1,165。`--sessions 29`）");
+  assert.equal(slack["pref-31"], 305, "鳥取（1,461 − 1,156）");
   assert.equal(slack["pref-32"], 319, "島根（1,461 − 1,142）");
-  // **#901 で広げた 3 県の余裕**（**広げても 1 任期の内側にある**）:
+  // **#901 で広げた 4 県の余裕**（**広げても 1 任期の内側にある**）:
   assert.equal(slack["pref-24"], 540, "三重（1,461 − 921。`--sessions 4`）");
   assert.equal(slack["pref-36"], 1_165, "徳島（1,461 − 296。`--sessions 4`）");
   assert.equal(slack["pref-39"], 1_063, "高知（1,461 − 398。`--sessions 5`）");
+  // ## **余裕が残っていることは「安全」ではない**（#901 の秋田が実測した）
+  //
+  // **秋田の一般選挙は 2023年4月で、その前の本会議日（2023-03-10）は `rosterAsOf` から 1,232 日。**
+  // **1,461 の内側なので、`--sessions 30` にしても #928 は鳴らない。**
+  // **つまりこの検査は、秋田の任期の境を 1 度も捕まえない。**
+  // **捕まえたのは「本会議日ごとに PDF に出る氏名の集合」の不連続（IN 7 / OUT 9）のほうである。**
+  assert.ok(1_232 < LOCAL_TERM_DAYS, "**選挙の前の本会議日ですら、この検査の内側にある**");
 });
 
 /**

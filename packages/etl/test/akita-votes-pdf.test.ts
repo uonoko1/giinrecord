@@ -661,3 +661,77 @@ test("#829 否定的対照: 上限が無ければページ番号が行に届く�
   assert.ok(minStray - maxLegit > 1.0, `**本物とページ番号のあいだが 1 行ぶん以上空いている**（実測 2.9999 − 1.884 = 1.116。今 ${(minStray - maxLegit).toFixed(3)}）`);
   assert.equal(legit.length, 1657, "**母数**——上限の内側に残るアイテム（1,667 − 10）");
 });
+
+/**
+ * # **反対者数の欄が空の行**（Issue #901。**`--sessions 29` に広げて初めて出た形**）
+ *
+ * ## 何を見つけたか
+ *
+ * **秋田の古い形の本は、反対者数の欄に何も書かないことがある**（実測）:
+ * ```
+ * x=488 "5月16日"  x=525 "簡易"  x=548 "原案可決 40 40"       ← 数が 2 つ
+ * x=488 "5月16日"  x=525 "起立"  x=557 "同意"  x=588 "38 38"   ← 数が 2 つ
+ * ```
+ * **`--sessions 5`（旧・本番）の範囲には 1 行も無く、`--sessions 29` で 231 / 785 行（29.4%）出た。**
+ *
+ * ## **「空欄 = 反対 0」と読む実装を書いて、被害を数えた**
+ * （`docs/WORKING_AGREEMENT.md`「変異を書く代わりに、誤った読み方を組み立てて被害を数える」）
+ *
+ * **これは実在した選択肢である**——**`--sessions 29` の範囲だけを見ると、
+ * 数が 2 つの 550 / 550 行で `表決者数 == 賛成者数` が成り立ち、
+ * `mc.left − 行の右端` を字の高さで割った比もきれいに分かれる**（**3 つの行は 0.2〜0.8、
+ * 2 つの行は 2.3〜3.6 で、あいだが完全に空いている**）。
+ * **実際にその実装を書き、154 本すべてで測った。**
+ *
+ * **結果: `--sessions 29` の範囲（index 0..28）では 1 行も嘘にならないが、
+ * 154 本すべてでは 180 行が嘘になる**（実測 2026-09-20）。
+ * **反対者が居るのに欄が空の行が実在する**（下の `BLANK_NO_BUT_NOT_ZERO`）。
+ *
+ * **だから採らなかった。** **`counts` を作らないほうが正しい**（#569: 原文に無い数を作らない）。
+ * **231 行に `counts` が無いのは実装の不具合ではなく、一次資料がそう書いていないからである。**
+ */
+
+/** **「空欄 = 0」と読んでいたら嘘になっていた行**（実測。**この 3 本はフィクスチャにある**）。 */
+const BLANK_NO_BUT_NOT_ZERO = [
+  { book: "h231202giketu", number: "事提出認定第２号", published: ["44", "42"], yes: 42, no: 2 },
+] as const;
+
+test("#901 反対者数の欄が空でも `counts` を作らない（空欄を 0 と読まない）", async () => {
+  // **`05516hyoketsu.pdf` は 6 行すべてが「数 2 つ」の形**（実測）
+  const book = await parseVotePdf(pdf("05516hyoketsu"));
+  assert.equal(book.rows.length, 6, "行");
+  assert.equal(book.rows.filter((r) => r.counts).length, 0, "**counts を作っていない**（空欄を 0 と読まない）");
+  // **この 6 行は、記号の側では反対 0 である**——**それでも `counts` は作らない。**
+  // **「辻褄が合う」ことは根拠にならない**（合わない行が他所に 180 行ある。下のテスト）
+  for (const r of book.rows) assert.equal(r.cells.filter((c) => c === "×").length, 0, `${r.number}: ×`);
+});
+
+test("#901 「空欄 = 反対 0」と読んでいたら嘘になっていた行が実在する（採らなかった理由）", async () => {
+  assert.equal(BLANK_NO_BUT_NOT_ZERO.length, 1, "**母数**——この表が空になったら、この検査は何も言っていない");
+  for (const want of BLANK_NO_BUT_NOT_ZERO) {
+    const v = await parseOnce(want.book);
+    const row = v.rows.find((r) => r.number === want.number);
+    assert.ok(row, `${want.book} ${want.number} が見つからない`);
+    // **PDF に書いてあるのは 2 つの数だけ**（反対者数の欄は空）
+    assert.equal(row.counts, undefined, `${want.number}: counts を作っていない`);
+    // **記号の側では反対が 0 ではない**——**「空欄 = 0」と読めば、反対 2 人を 0 人と公表していた**
+    assert.equal(row.cells.filter((c) => c === "○").length, want.yes, `${want.number}: ○`);
+    assert.equal(row.cells.filter((c) => c === "×").length, want.no, `${want.number}: ×`);
+    assert.ok(want.no > 0, `${want.number}: 反対が 0 でない（これが「嘘になる」の中身）`);
+  }
+});
+
+test("#901 数が 3 つある本は counts を読む（否定的対照。読まないのではなく、書いていないから読めない）", async () => {
+  // **`080319.pdf` は 91 行すべてが「数 3 つ」**
+  const book = await parseVotePdf(pdf("080319"));
+  assert.equal(book.rows.filter((r) => r.counts).length, 91, "counts を読めた行");
+  // **反対者数が 0 でない行が実在する**（**全部 0 なら、この対照は何も言っていない**）
+  const withNo = book.rows.filter((r) => (r.counts?.no ?? 0) > 0);
+  assert.ok(withNo.length > 0, `反対者数が 0 でない行（${withNo.length}）`);
+  for (const r of book.rows) {
+    const yes = r.cells.filter((c) => c === "○").length;
+    const no = r.cells.filter((c) => c === "×").length;
+    assert.equal(r.counts!.yes, yes, `${r.number}: counts.yes と ○`);
+    assert.equal(r.counts!.no, no, `${r.number}: counts.no と ×`);
+  }
+});

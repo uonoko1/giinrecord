@@ -1,0 +1,429 @@
+{
+ "assemblyId": "pref-05",
+ "date": "2023-12-22",
+ "id": "pref-05-2023-12-22-20231222-議案第176号",
+ "kind": "議案等",
+ "method": {
+  "legend": "簡易表決（異議の有無を諮る）",
+  "raw": "簡易"
+ },
+ "number": "議案第176号",
+ "page": 1,
+ "result": "原案可決",
+ "sessionId": "2023-12-22",
+ "sessionLabel": "令和５年第３回定例会（１２月議会）",
+ "sourceUrl": "https://pref.akita.gsl-service.net/_files/00082877/051222hyouketsu.pdf",
+ "title": "秋田県港湾施設管理条例の一部を改正する条例案",
+ "votes": [
+  {
+   "group": "",
+   "memberId": "p_05_2023053100044",
+   "nameText": "高 橋 健",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_05_2023060100020",
+   "nameText": "武 内 伸 文",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_05_2023053100013",
+   "nameText": "小 棚 木政 之",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "■賛否",
+   "memberId": "p_05_2023060100013",
+   "nameText": "髙 橋 豪",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_05_2021041500029",
+   "nameText": "瓜 生 望",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_05_2021041500012",
+   "nameText": "島 田 薫",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_05_2019051800031",
+   "nameText": "宇 佐 見康 人",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_05_2019051800048",
+   "nameText": "住 谷 達",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_05_2019051800055",
+   "nameText": "児 玉 政 明",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_05_2019051800079",
+   "nameText": "小 山 緑 郎",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_05_2019051800062",
+   "nameText": "小 野 一 彦",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_05_2019051800086",
+   "nameText": "鈴 木 真 実",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_05_2018052300175",
+   "nameText": "佐 々 木雄 太",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自民",
+   "memberId": "p_05_2018052300250",
+   "nameText": "杉 本俊 比 古",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "",
+   "nameText": "鈴 木 健 太",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_05_2018052300205",
+   "nameText": "佐 藤 信 喜",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_05_2018052300038",
+   "nameText": "今 川 雄 策",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_05_2018052300298",
+   "nameText": "髙 橋 武 浩",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_05_2018052300137",
+   "nameText": "北 林 丈 正",
+   "value": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_05_2018052300311",
+   "nameText": "竹 下 博 英",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_05_2018052300359",
+   "nameText": "原 幸 子",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_05_2018052300144",
+   "nameText": "工 藤 嘉 範",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_05_2018052300090",
+   "nameText": "加 藤 鉱 一",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_05_2018052300229",
+   "nameText": "柴 田 正 敏",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_05_2018052300113",
+   "nameText": "川 口 一",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_05_2018052300335",
+   "nameText": "鶴 田 有 司",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_05_2018052300281",
+   "nameText": "鈴 木 洋 一",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_05_2023053100068",
+   "nameText": "山 形 健 二",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_05_2018052300199",
+   "nameText": "佐 藤正 一 郎",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "みらい",
+   "memberId": "p_05_2018052300380",
+   "nameText": "三 浦 茂 人",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_05_2018052300403",
+   "nameText": "渡 部 英 治",
+   "value": {
+    "legend": "欠席",
+    "mapped": "投票なし",
+    "raw": "欠"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_05_2018052300373",
+   "nameText": "三 浦 英 一",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_05_2023060100037",
+   "nameText": "櫻 田 憂 子",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "立民",
+   "memberId": "p_05_2018052300045",
+   "nameText": "薄 井 司",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_05_2018052300076",
+   "nameText": "小 原 正 晃",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "",
+   "memberId": "p_05_2018052300021",
+   "nameText": "石 田 寛",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "社民",
+   "memberId": "p_05_2018052300106",
+   "nameText": "加 藤 麻 里",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "つなぐ会",
+   "memberId": "",
+   "nameText": "沼 谷 純",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "共産",
+   "memberId": "p_05_2018052300083",
+   "nameText": "加 賀 屋 千 鶴 子",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "公明",
+   "memberId": "p_05_2019051800017",
+   "nameText": "松 田 豊 臣",
+   "value": {
+    "legend": "欠席",
+    "mapped": "投票なし",
+    "raw": "欠"
+   }
+  },
+  {
+   "group": "きらり",
+   "memberId": "p_05_2023053100037",
+   "nameText": "佐 藤 光 子",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  }
+ ]
+}

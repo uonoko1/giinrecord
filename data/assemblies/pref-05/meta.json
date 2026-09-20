@@ -1,19 +1,19 @@
 {
  "assemblyId": "pref-05",
  "countChecked": {
-  "checked": 157,
-  "noCounts": 0,
-  "rows": 157,
+  "checked": 554,
+  "noCounts": 231,
+  "rows": 785,
   "unreadableCells": 0
  },
  "counts": {
-  "cells": 6437,
+  "cells": 32022,
   "members": 41,
-  "rollcalls": 157,
+  "rollcalls": 785,
   "unknownCells": 0,
-  "unmatchedNames": 0
+  "unmatchedNames": 2
  },
- "fetchedAt": "2026-09-13T00:00:00.000Z",
+ "fetchedAt": "2026-09-20T21:55:17.621Z",
  "rosterAsOf": "2026-07-24",
  "sessions": [
   {
@@ -70,48 +70,432 @@
    "sessionLabel": "令和８年第１回定例会（２月議会）",
    "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/",
    "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/080213.pdf",
+   "pdfUrls": [
+    "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/080213.pdf"
+   ],
+   "rollcalls": 8,
+   "sessionId": "2026-02-13",
+   "sessionLabel": "令和８年第１回定例会（２月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://pref.akita.gsl-service.net/doc/2025021700027/file_contents/071219.pdf",
+   "pdfUrls": [
+    "https://pref.akita.gsl-service.net/doc/2025021700027/file_contents/071219.pdf"
+   ],
+   "rollcalls": 74,
+   "sessionId": "2025-12-19",
+   "sessionLabel": "令和７年第２回定例会（１２月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2025021700027/",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://pref.akita.gsl-service.net/doc/2025021700027/file_contents/071208.pdf",
+   "pdfUrls": [
+    "https://pref.akita.gsl-service.net/doc/2025021700027/file_contents/071208.pdf"
+   ],
+   "rollcalls": 1,
+   "sessionId": "2025-12-08",
+   "sessionLabel": "令和７年第２回定例会（１２月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2025021700027/",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://pref.akita.gsl-service.net/doc/2025021700027/file_contents/071031.pdf",
+   "pdfUrls": [
+    "https://pref.akita.gsl-service.net/doc/2025021700027/file_contents/071031.pdf"
+   ],
+   "rollcalls": 1,
+   "sessionId": "2025-10-31",
+   "sessionLabel": "令和７年第２回定例会（１０月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2025021700027/",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://pref.akita.gsl-service.net/doc/2025021700027/file_contents/071003.pdf",
+   "pdfUrls": [
+    "https://pref.akita.gsl-service.net/doc/2025021700027/file_contents/071003.pdf"
+   ],
+   "rollcalls": 42,
+   "sessionId": "2025-10-03",
+   "sessionLabel": "令和７年第２回定例会（９月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2025021700027/",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://pref.akita.gsl-service.net/doc/2025021700027/file_contents/070619.pdf",
+   "pdfUrls": [
+    "https://pref.akita.gsl-service.net/doc/2025021700027/file_contents/070619.pdf"
+   ],
+   "rollcalls": 39,
+   "sessionId": "2025-06-19",
+   "sessionLabel": "令和７年第１回定例会（６月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2025021700027/",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://pref.akita.gsl-service.net/doc/2025021700027/file_contents/514.pdf",
+   "pdfUrls": [
+    "https://pref.akita.gsl-service.net/doc/2025021700027/file_contents/514.pdf"
+   ],
+   "rollcalls": 3,
+   "sessionId": "2025-05-14",
+   "sessionLabel": "令和７年第１回定例会（５月１４日）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2025021700027/",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://pref.akita.gsl-service.net/doc/2025021700027/file_contents/430.pdf",
+   "pdfUrls": [
+    "https://pref.akita.gsl-service.net/doc/2025021700027/file_contents/430.pdf"
+   ],
+   "rollcalls": 1,
+   "sessionId": "2025-04-30",
+   "sessionLabel": "令和７年第１回定例会（４月３０日議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2025021700027/",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://pref.akita.gsl-service.net/doc/2025021700027/file_contents/PDFR736.pdf",
+   "pdfUrls": [
+    "https://pref.akita.gsl-service.net/doc/2025021700027/file_contents/PDFR736.pdf"
+   ],
+   "rollcalls": 85,
+   "sessionId": "2025-03-06",
+   "sessionLabel": "令和７年第１回定例会（２月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2025021700027/",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://pref.akita.gsl-service.net/doc/2025021700027/file_contents/PDFR7217.pdf",
+   "pdfUrls": [
+    "https://pref.akita.gsl-service.net/doc/2025021700027/file_contents/PDFR7217.pdf"
+   ],
+   "rollcalls": 41,
+   "sessionId": "2025-02-17",
+   "sessionLabel": "令和７年第１回定例会（２月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2025021700027/",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://pref.akita.gsl-service.net/_files/00089340/PDFR61220.pdf",
+   "pdfUrls": [
+    "https://pref.akita.gsl-service.net/_files/00089340/PDFR61220.pdf"
+   ],
+   "rollcalls": 37,
+   "sessionId": "2024-12-20",
+   "sessionLabel": "令和６年第２回定例会（１２月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2024022000037/",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://pref.akita.gsl-service.net/_files/00088350/hyoketsu_R061101.pdf",
+   "pdfUrls": [
+    "https://pref.akita.gsl-service.net/_files/00088350/hyoketsu_R061101.pdf"
+   ],
+   "rollcalls": 1,
+   "sessionId": "2024-11-01",
+   "sessionLabel": "令和６年第２回定例会（１０月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2024022000037/",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://pref.akita.gsl-service.net/_files/00087933/hyoketsu_R061004.pdf",
+   "pdfUrls": [
+    "https://pref.akita.gsl-service.net/_files/00087933/hyoketsu_R061004.pdf"
+   ],
+   "rollcalls": 25,
+   "sessionId": "2024-10-04",
+   "sessionLabel": "令和６年第２回定例会（９月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2024022000037/",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://pref.akita.gsl-service.net/_files/00086745/hyoketsu_R060705.pdf",
+   "pdfUrls": [
+    "https://pref.akita.gsl-service.net/_files/00086745/hyoketsu_R060705.pdf"
+   ],
+   "rollcalls": 35,
+   "sessionId": "2024-07-05",
+   "sessionLabel": "令和６年第１回定例会（６月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2024022000037/",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://pref.akita.gsl-service.net/_files/00084079/060319hyoketsu.pdf",
+   "pdfUrls": [
+    "https://pref.akita.gsl-service.net/_files/00084079/060319hyoketsu.pdf"
+   ],
+   "rollcalls": 93,
+   "sessionId": "2024-03-19",
+   "sessionLabel": "令和６年第１回定例会（２月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2024022000037/",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://pref.akita.gsl-service.net/_files/00083799/R060228hyoketsu.pdf",
+   "pdfUrls": [
+    "https://pref.akita.gsl-service.net/_files/00083799/R060228hyoketsu.pdf"
+   ],
+   "rollcalls": 36,
+   "sessionId": "2024-02-28",
+   "sessionLabel": "令和６年第１回定例会（２月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2024022000037/",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://pref.akita.gsl-service.net/_files/00083737/060220hyoketsu.pdf",
+   "pdfUrls": [
+    "https://pref.akita.gsl-service.net/_files/00083737/060220hyoketsu.pdf"
+   ],
+   "rollcalls": 10,
+   "sessionId": "2024-02-20",
+   "sessionLabel": "令和６年第１回定例会（２月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2024022000037/",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://pref.akita.gsl-service.net/_files/00082877/051222hyouketsu.pdf",
+   "pdfUrls": [
+    "https://pref.akita.gsl-service.net/_files/00082877/051222hyouketsu.pdf"
+   ],
+   "rollcalls": 39,
+   "sessionId": "2023-12-22",
+   "sessionLabel": "令和５年第３回定例会（１２月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2023020800021/",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://pref.akita.gsl-service.net/_files/00081696/051102hyoketsu.pdf",
+   "pdfUrls": [
+    "https://pref.akita.gsl-service.net/_files/00081696/051102hyoketsu.pdf"
+   ],
+   "rollcalls": 1,
+   "sessionId": "2023-11-02",
+   "sessionLabel": "令和５年第３回定例会（１０月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2023020800021/",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://pref.akita.gsl-service.net/_files/00081283/051005hyoketsu.pdf",
+   "pdfUrls": [
+    "https://pref.akita.gsl-service.net/_files/00081283/051005hyoketsu.pdf"
+   ],
+   "rollcalls": 21,
+   "sessionId": "2023-10-05",
+   "sessionLabel": "令和５年第３回定例会（９月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2023020800021/",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://pref.akita.gsl-service.net/_files/00080606/050911hyouketsu.pdf",
+   "pdfUrls": [
+    "https://pref.akita.gsl-service.net/_files/00080606/050911hyouketsu.pdf"
+   ],
+   "rollcalls": 1,
+   "sessionId": "2023-09-11",
+   "sessionLabel": "令和５年第３回定例会（９月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2023020800021/",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://pref.akita.gsl-service.net/_files/00079914/050728hyouketsu.pdf",
+   "pdfUrls": [
+    "https://pref.akita.gsl-service.net/_files/00079914/050728hyouketsu.pdf"
+   ],
+   "rollcalls": 1,
+   "sessionId": "2023-07-28",
+   "sessionLabel": "令和５年第１回臨時会",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2023020800021/",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://pref.akita.gsl-service.net/_files/00079501/050706hyoketsu.pdf",
+   "pdfUrls": [
+    "https://pref.akita.gsl-service.net/_files/00079501/050706hyoketsu.pdf"
+   ],
+   "rollcalls": 27,
+   "sessionId": "2023-07-06",
+   "sessionLabel": "令和５年第２回定例会（６月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2023020800021/",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://pref.akita.gsl-service.net/_files/00076586/05516hyoketsu.pdf",
+   "pdfUrls": [
+    "https://pref.akita.gsl-service.net/_files/00076586/05516hyoketsu.pdf"
+   ],
+   "rollcalls": 6,
+   "sessionId": "2023-05-16",
+   "sessionLabel": "令和５年第２回定例会（５月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2023020800021/",
+   "unknownCells": 0
   }
  ],
  "sources": [
   {
-   "fetchedAt": "2026-09-13T00:00:00.000Z",
+   "fetchedAt": "2026-09-20T21:55:17.621Z",
    "name": "秋田県議会 議員紹介",
    "url": "https://pref.akita.gsl-service.net/doc/2018042300017/"
   },
   {
-   "fetchedAt": "2026-09-13T00:00:00.000Z",
+   "fetchedAt": "2026-09-20T21:55:17.621Z",
    "name": "秋田県議会 定例会・臨時会の概要",
    "url": "https://pref.akita.gsl-service.net/doc/2018051000199/"
   },
   {
-   "fetchedAt": "2026-09-13T00:00:00.000Z",
+   "fetchedAt": "2026-09-20T21:55:17.621Z",
    "name": "秋田県議会 定例会・臨時会の概要（過去分の一覧）",
    "url": "https://pref.akita.gsl-service.net/doc/2018051000205/"
   },
   {
-   "fetchedAt": "2026-09-13T00:00:00.000Z",
+   "fetchedAt": "2026-09-20T21:55:17.621Z",
    "name": "秋田県議会 令和８年第１回定例会（６月議会） 各議員の表決状況",
    "url": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/080703.pdf"
   },
   {
-   "fetchedAt": "2026-09-13T00:00:00.000Z",
+   "fetchedAt": "2026-09-20T21:55:17.621Z",
    "name": "秋田県議会 令和８年第１回定例会（６月議会） 各議員の表決状況",
    "url": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/080615.pdf"
   },
   {
-   "fetchedAt": "2026-09-13T00:00:00.000Z",
+   "fetchedAt": "2026-09-20T21:55:17.621Z",
    "name": "秋田県議会 令和８年第１回定例会（６月議会） 各議員の表決状況",
    "url": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/080609.pdf"
   },
   {
-   "fetchedAt": "2026-09-13T00:00:00.000Z",
+   "fetchedAt": "2026-09-20T21:55:17.621Z",
    "name": "秋田県議会 令和８年第１回定例会（２月議会） 各議員の表決状況",
    "url": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/080319.pdf"
   },
   {
-   "fetchedAt": "2026-09-13T00:00:00.000Z",
+   "fetchedAt": "2026-09-20T21:55:17.621Z",
    "name": "秋田県議会 令和８年第１回定例会（２月議会） 各議員の表決状況",
    "url": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/080227.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "name": "秋田県議会 令和８年第１回定例会（２月議会） 各議員の表決状況",
+   "url": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/080213.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "name": "秋田県議会 令和７年第２回定例会（１２月議会） 各議員の表決状況",
+   "url": "https://pref.akita.gsl-service.net/doc/2025021700027/file_contents/071219.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "name": "秋田県議会 令和７年第２回定例会（１２月議会） 各議員の表決状況",
+   "url": "https://pref.akita.gsl-service.net/doc/2025021700027/file_contents/071208.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "name": "秋田県議会 令和７年第２回定例会（１０月議会） 各議員の表決状況",
+   "url": "https://pref.akita.gsl-service.net/doc/2025021700027/file_contents/071031.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "name": "秋田県議会 令和７年第２回定例会（９月議会） 各議員の表決状況",
+   "url": "https://pref.akita.gsl-service.net/doc/2025021700027/file_contents/071003.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "name": "秋田県議会 令和７年第１回定例会（６月議会） 各議員の表決状況",
+   "url": "https://pref.akita.gsl-service.net/doc/2025021700027/file_contents/070619.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "name": "秋田県議会 令和７年第１回定例会（５月１４日） 各議員の表決状況",
+   "url": "https://pref.akita.gsl-service.net/doc/2025021700027/file_contents/514.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "name": "秋田県議会 令和７年第１回定例会（４月３０日議会） 各議員の表決状況",
+   "url": "https://pref.akita.gsl-service.net/doc/2025021700027/file_contents/430.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "name": "秋田県議会 令和７年第１回定例会（２月議会） 各議員の表決状況",
+   "url": "https://pref.akita.gsl-service.net/doc/2025021700027/file_contents/PDFR736.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "name": "秋田県議会 令和７年第１回定例会（２月議会） 各議員の表決状況",
+   "url": "https://pref.akita.gsl-service.net/doc/2025021700027/file_contents/PDFR7217.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "name": "秋田県議会 令和６年第２回定例会（１２月議会） 各議員の表決状況",
+   "url": "https://pref.akita.gsl-service.net/_files/00089340/PDFR61220.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "name": "秋田県議会 令和６年第２回定例会（１０月議会） 各議員の表決状況",
+   "url": "https://pref.akita.gsl-service.net/_files/00088350/hyoketsu_R061101.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "name": "秋田県議会 令和６年第２回定例会（９月議会） 各議員の表決状況",
+   "url": "https://pref.akita.gsl-service.net/_files/00087933/hyoketsu_R061004.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "name": "秋田県議会 令和６年第１回定例会（６月議会） 各議員の表決状況",
+   "url": "https://pref.akita.gsl-service.net/_files/00086745/hyoketsu_R060705.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "name": "秋田県議会 令和６年第１回定例会（２月議会） 各議員の表決状況",
+   "url": "https://pref.akita.gsl-service.net/_files/00084079/060319hyoketsu.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "name": "秋田県議会 令和６年第１回定例会（２月議会） 各議員の表決状況",
+   "url": "https://pref.akita.gsl-service.net/_files/00083799/R060228hyoketsu.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "name": "秋田県議会 令和６年第１回定例会（２月議会） 各議員の表決状況",
+   "url": "https://pref.akita.gsl-service.net/_files/00083737/060220hyoketsu.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "name": "秋田県議会 令和５年第３回定例会（１２月議会） 各議員の表決状況",
+   "url": "https://pref.akita.gsl-service.net/_files/00082877/051222hyouketsu.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "name": "秋田県議会 令和５年第３回定例会（１０月議会） 各議員の表決状況",
+   "url": "https://pref.akita.gsl-service.net/_files/00081696/051102hyoketsu.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "name": "秋田県議会 令和５年第３回定例会（９月議会） 各議員の表決状況",
+   "url": "https://pref.akita.gsl-service.net/_files/00081283/051005hyoketsu.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "name": "秋田県議会 令和５年第３回定例会（９月議会） 各議員の表決状況",
+   "url": "https://pref.akita.gsl-service.net/_files/00080606/050911hyouketsu.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "name": "秋田県議会 令和５年第１回臨時会 各議員の表決状況",
+   "url": "https://pref.akita.gsl-service.net/_files/00079914/050728hyouketsu.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "name": "秋田県議会 令和５年第２回定例会（６月議会） 各議員の表決状況",
+   "url": "https://pref.akita.gsl-service.net/_files/00079501/050706hyoketsu.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "name": "秋田県議会 令和５年第２回定例会（５月議会） 各議員の表決状況",
+   "url": "https://pref.akita.gsl-service.net/_files/00076586/05516hyoketsu.pdf"
   }
  ]
 }
