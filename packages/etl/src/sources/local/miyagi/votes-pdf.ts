@@ -207,8 +207,16 @@ function readMembers(page: PageGeometry, grid: Grid, legend: VotePdfLegend, page
     const x1 = grid.groupCols[g + 1];
     const chars = page.items.filter((i) => within(i.cx, x0, x1) && within(i.cy, grid.groupBottom, grid.top));
     const text = chars.sort((a, b) => b.y - a.y || a.x - b.x).map((c) => c.str).join("").replace(/[\s　]+/g, "").normalize("NFKC");
-    const name = legend.groups[text];
-    if (!name) throw new Error(`${label}: group heading "${text}" is not in the legend (${Object.keys(legend.groups).join(" / ")})`);
+    // **見出しが空の帯は「読めていない」ということ**——**これは今までどおり例外**（レイアウト変化の検出）。
+    if (text === "") throw new Error(`${label}: group heading at [${x0.toFixed(1)},${x1.toFixed(1)}] has no text`);
+    // **凡例の `＜会派名＞` は「略称：正式名称」の辞書で、略称と正式名称が同じ会派の行を書かない本がある**（#901）。
+    // **実測（index の 77 本すべての 1 ページ目を開いた）**: **辞書に無い見出しは第394〜397回の `無所属` 4 本だけ**で、
+    // **どれも議員 1 人ぶんの帯**。**同じ県の第388・389回では、同じ凡例に `無所属：無所属` と
+    // `無所属の会：無所属の会` という恒真な行が実際に書いてある**——
+    // **県は「略称＝正式名称」の会派を、書く本と書かない本の両方を出している。**
+    // **だから辞書に無ければ見出しの原文をそのまま会派名にする**（**原文に無い文字を足さない**。#569）。
+    // **推定ではない**: 対応づけるべき正式名称を当てているのではなく、**県が書くときに書く文字**を置いている。
+    const name = legend.groups[text] ?? text;
     groups.push({ x0, x1, text, name });
   }
   const members: VotePdfMember[] = [];
