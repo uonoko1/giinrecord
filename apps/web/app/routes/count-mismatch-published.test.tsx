@@ -89,7 +89,13 @@ describe("#826 本番データ: 記号の数と公表値の突き合わせが画
       // **「空欄 = 反対 0」と読む実装を書いて 154 本で測ったが、180 行が嘘になるので採らなかった**
       // （`packages/etl/src/sources/local/akita/votes-pdf.ts` の docblock）。
       // **食い違いは 0 のまま。**
-    }).toEqual({ rows: 2530, checked: 1752, noCounts: 730, unreadableCells: 48, mismatches: 0 });
+      //
+      // ## **#901 で 2,530 → 2,585 に動いた**（2026-09-21。奈良）
+      // **奈良の `--sessions` の既定を 2 → 4 にした**（125 → 180）。
+      // **奈良の PDF には集計の欄が無い**ので、**180 本がまるごと `noCounts` に入る**
+      // （**730 → 785**。**125 本ぶんは既に入っていたので +55**）。
+      // **`checked` は 1,752 のまま、`unreadableCells` も 48 のまま。食い違いは 0 のまま。**
+    }).toEqual({ rows: 2585, checked: 1752, noCounts: 785, unreadableCells: 48, mismatches: 0 });
   });
 
   it("/coverage に、本番の母数（1,752 件）と食い違い（0 件）と未突合の内訳が出る", async () => {
@@ -97,8 +103,8 @@ describe("#826 本番データ: 記号の数と公表値の突き合わせが画
     const section = screen.getByRole("region", { name: SECTION });
     // **母数が出ていること**（#757。「0 件」は「見た上での 0」でなければ意味が無い）
     expect(section).toHaveTextContent("1,752");
-    // **突き合わせなかった 730 件と 48 件の内訳も出す**（黙って母数から外さない）
-    expect(section).toHaveTextContent("730");
+    // **突き合わせなかった 785 件と 48 件の内訳も出す**（黙って母数から外さない）
+    expect(section).toHaveTextContent("785");
     expect(section).toHaveTextContent("48");
     // **今は食い違いが無い**、を母数つきで言う
     expect(within(section).getByTestId("coverage-count-mismatch-none")).toBeInTheDocument();
