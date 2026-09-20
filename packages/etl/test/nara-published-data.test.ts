@@ -16,7 +16,7 @@ import { NARA_HOST } from "../src/sources/local/nara/site.ts";
  *
  * ## **奈良は「PDF が集計を印刷していない」県**
  *
- * **125 / 125 本すべてに `counts` が無い**（三重・宮城・滋賀は全本にある）。
+ * **180 / 180 本すべてに `counts` が無い**（三重・宮城・滋賀は全本にある）。
  * **つまり #529 の「○ の数 = 公表値」という検算が、奈良では 1 件も走らない。**
  * **共通の検算（`countMismatchesOf`）は「違反 0 件」を返すが、それは「1 件も見ていない」からである**
  * （#757 が `countChecked` を足した理由そのもの）。
@@ -43,22 +43,27 @@ const meta = (): LocalAssemblyMeta => JSON.parse(readFileSync(join(DIR, "meta.js
 const members = (): LocalMember[] =>
   (JSON.parse(readFileSync(join(DATA, "members", "index.json"), "utf-8")) as LocalMember[]).filter((m) => m.assemblyId === "pref-29");
 
-test("#865 本番 pref-29: 採決 125 × 議員 40 = 5,000 セル、未突合 0", { skip: !hasData }, () => {
+test("#865/#901 本番 pref-29: 採決 180 × 議員 40 = 7,200 セル、未突合 0", { skip: !hasData }, () => {
   const m = meta();
   const rcs = rollCalls();
-  // **実測 2026-09-14**（令和8年2月定例会 88 本 + 令和8年6月定例会 37 本）
-  assert.equal(m.counts.rollcalls, 125);
+  // **実測 2026-09-21**（**#901 で `--sessions` の既定を 2 → 4 にした**。
+  // 令和8年6月 37 + 令和8年2月 88 + 令和7年12月 34 + 令和7年9月 21 = 180）
+  assert.equal(m.counts.rollcalls, 180);
   assert.equal(m.counts.members, 40);
-  assert.equal(m.counts.cells, 5_000);
+  assert.equal(m.counts.cells, 7_200);
   assert.equal(m.counts.unknownCells, 0, "**推定せず `不明` で残したセルは 0**");
   assert.equal(m.counts.unmatchedNames, 0, "**名簿に寄らなかった氏名は 0**");
   assert.equal(rcs.length, m.counts.rollcalls, "rollcalls/ の実ファイル数");
   assert.equal(rcs.reduce((s, r) => s + r.votes.length, 0), m.counts.cells, "票の実数");
   // **125 × 40 の長方形**（**1 人静かに落ちても合計は合ってしまう**ので行ごとに見る。#705 が滋賀で踏んだ形）
   assert.deepEqual([...new Set(rcs.map((r) => r.votes.length))], [40], "採決ごとの票数");
-  assert.equal(125 * 40, 5_000, "母数を式で残す");
-  assert.deepEqual(m.sessions.map((s) => [s.sessionId, s.rollcalls]).sort(), [["2026-02", 88], ["2026-06", 37]]);
-  // **未突合 0 ＝ 5,000 票すべてに `memberId` がある**
+  assert.equal(180 * 40, 7_200, "母数を式で残す");
+  assert.deepEqual(m.sessions.map((s) => [s.sessionId, s.rollcalls]).sort(),
+    [["2025-09", 21], ["2025-12", 34], ["2026-02", 88], ["2026-06", 37]]);
+  // **令和7年9月だけ PDF が 2 本**（議決日が 2 つ）。**`--sessions 2` の窓には無かった形**
+  assert.deepEqual(m.sessions.map((s) => [s.sessionId, (s.pdfUrls ?? []).length]),
+    [["2026-06", 1], ["2026-02", 1], ["2025-12", 1], ["2025-09", 2]]);
+  // **未突合 0 ＝ 7,200 票すべてに `memberId` がある**
   assert.deepEqual(JSON.parse(readFileSync(join(DIR, "unmatched.json"), "utf-8")), []);
   assert.deepEqual(rcs.flatMap((r) => r.votes).filter((v) => v.memberId === "").map((v) => v.nameText), []);
 });
@@ -69,12 +74,12 @@ test("#865 本番 pref-29: 採決 125 × 議員 40 = 5,000 セル、未突合 0"
  * **共通の検算はここでは何も見ていない。** そのことを**数字で固定する**——
  * **もし将来 PDF が集計を載せ始めたら、この行が落ちて気づける**（今は黙って 0 件のまま通る）。
  */
-test("#865 本番 pref-29: counts を持つ採決は 0 / 125 本（共通の検算はここでは 1 件も走らない）", { skip: !hasData }, () => {
+test("#865/#901 本番 pref-29: counts を持つ採決は 0 / 180 本（共通の検算はここでは 1 件も走らない）", { skip: !hasData }, () => {
   const rcs = rollCalls();
-  assert.equal(rcs.length, 125, "母数");
+  assert.equal(rcs.length, 180, "母数");
   assert.deepEqual(rcs.filter((r) => r.counts !== undefined).map((r) => r.id), [], "`counts` を持つ採決");
   // **`countChecked` がそう言っている**（`noCounts` で 125 本ぶん外している）
-  assert.deepEqual(meta().countChecked, { rows: 125, checked: 0, noCounts: 125, unreadableCells: 0 });
+  assert.deepEqual(meta().countChecked, { rows: 180, checked: 0, noCounts: 180, unreadableCells: 0 });
   assert.equal(meta().countMismatches, undefined, "突き合わせていないので食い違いも無い（省略される）");
   // **`unreadableCells` が 0 なのは「読めないセルが無い」からではない**——
   // **`mapped` の無い票は 17 ある**（`退` ＝ 表決を棄権）が、
@@ -83,9 +88,9 @@ test("#865 本番 pref-29: counts を持つ採決は 0 / 125 本（共通の検�
   assert.equal(rcs.flatMap((r) => r.votes).filter((v) => v.value.mapped === undefined).length, 17);
 });
 
-test("#865 本番 pref-29: 票 5,000 の内訳（○ 4652 / 欠 176 / 議 125 / × 28 / 退 17 / 除 2）", { skip: !hasData }, () => {
+test("#865/#901 本番 pref-29: 票 7,200 の内訳（○ 6705 / 欠 265 / 議 180 / × 31 / 退 17 / 除 2）", { skip: !hasData }, () => {
   const votes = rollCalls().flatMap((r) => r.votes);
-  assert.equal(votes.length, 5_000, "母数（減っていたら以下の内訳は意味が無い）");
+  assert.equal(votes.length, 7_200, "母数（減っていたら以下の内訳は意味が無い）");
   const raw = new Map<string, number>();
   const legend = new Map<string, number>();
   for (const v of votes) {
@@ -93,14 +98,14 @@ test("#865 本番 pref-29: 票 5,000 の内訳（○ 4652 / 欠 176 / 議 125 / 
     legend.set(v.value.legend, (legend.get(v.value.legend) ?? 0) + 1);
   }
   assert.deepEqual(Object.fromEntries([...raw].sort((a, b) => b[1] - a[1])),
-    { "○": 4652, "欠": 176, "議": 125, "×": 28, "退": 17, "除": 2 });
+    { "○": 6705, "欠": 265, "議": 180, "×": 31, "退": 17, "除": 2 });
   // **凡例は PDF の原文をそのまま持つ**——**`×` は「反対」ではなく
   // 「反対（起立採決において、起立しなかった議員）」**。**短く言い換えない**（#569）。
   assert.deepEqual(Object.fromEntries([...legend].sort((a, b) => b[1] - a[1])), {
-    "賛成": 4652,
-    "欠席": 176,
-    "議長": 125,
-    "反対（起立採決において、起立しなかった議員）": 28,
+    "賛成": 6705,
+    "欠席": 265,
+    "議長": 180,
+    "反対（起立採決において、起立しなかった議員）": 31,
     "表決を棄権": 17,
     "除斥": 2,
   });
@@ -112,7 +117,7 @@ test("#865 本番 pref-29: 票 5,000 の内訳（○ 4652 / 欠 176 / 議 125 / 
   assert.equal(noMapped.length, 17);
   assert.deepEqual([...new Set(noMapped.map((v) => v.value.raw))], ["退"]);
   assert.deepEqual(Object.fromEntries([...votes.reduce((m2, v) => m2.set(v.value.mapped ?? "(なし)", (m2.get(v.value.mapped ?? "(なし)") ?? 0) + 1), new Map<string, number>())]
-    .sort((a, b) => b[1] - a[1])), { "賛成": 4652, "投票なし": 176 + 125 + 2, "反対": 28, "(なし)": 17 });
+    .sort((a, b) => b[1] - a[1])), { "賛成": 6705, "投票なし": 265 + 180 + 2, "反対": 31, "(なし)": 17 });
 });
 
 /**
@@ -127,7 +132,7 @@ test("#865 本番 pref-29: 票 5,000 の内訳（○ 4652 / 欠 176 / 議 125 / 
  * **`議` は行ごとに読む。推定しない**（`nara-votes-pdf.test.ts` が PDF 側で同じ 2 行を見ている。
  * **ここは書き出した `data/` 側で 125 本すべてを数えている**——**層が違う**）。
  */
-test("#865 本番 pref-29: `議` は 125 本すべてで 1 人、うち 2 本だけ議長席が別人（議第68号・69号）", { skip: !hasData }, () => {
+test("#865/#901 本番 pref-29: `議` は 180 本すべてで 1 人、うち 2 本だけ議長席が別人（議第68号・69号）", { skip: !hasData }, () => {
   const rcs = rollCalls();
   const perRollCall = new Map<number, number>();
   const byDate = new Map<string, Map<string, number>>();
@@ -144,10 +149,18 @@ test("#865 本番 pref-29: `議` は 125 本すべてで 1 人、うち 2 本だ
       byDate.set(k, s);
     }
   }
-  assert.deepEqual(Object.fromEntries(perRollCall), { 1: 125 }, "採決ごとの `議` の数（母数 125）");
+  assert.deepEqual(Object.fromEntries(perRollCall), { 1: 180 }, "採決ごとの `議` の数（母数 180）");
+  // **#901 で 3 本（55 採決）増えたが、`議` はすべて `田中惟允`**
+  // （**歴代正副議長一覧で「106代 田中惟允 令和7年7月2日 就任」。増えた 3 本は 2025-10-09〜2025-12-15**）
   assert.deepEqual(
     Object.fromEntries([...byDate].map(([k, v]) => [k, Object.fromEntries([...v].sort())]).sort()),
-    { "2026-02/2026-03-25": { "田中惟允": 88 }, "2026-06/2026-07-02": { "乾浩之": 2, "田中惟允": 35 } },
+    {
+      "2025-09/2025-10-09": { "田中惟允": 16 },
+      "2025-09/2025-10-24": { "田中惟允": 5 },
+      "2025-12/2025-12-15": { "田中惟允": 34 },
+      "2026-02/2026-03-25": { "田中惟允": 88 },
+      "2026-06/2026-07-02": { "乾浩之": 2, "田中惟允": 35 },
+    },
     "**議決日ごとに `議` が誰で何本か**",
   );
   // **`乾浩之` が `議` の 2 本は 人事案件**。**その 2 本で `田中惟允` は `○`**
@@ -172,12 +185,17 @@ test("#865 本番 pref-29: `議` は 125 本すべてで 1 人、うち 2 本だ
  *   - **`西川` ← `西川 均`**（`均` が落ちる。**125 本すべて**）
  *   - **`髙清友` ← `芦高 清友`**（`芦` が落ちる。**6月定例会の 37 本だけ**。`髙`/`高` は `ITAIJI` で寄る）
  *
+ * **#901 で `--sessions` を 2 → 4 にして 55 採決増えたが、増えたのは `西川` の件数だけ**
+ * （**125 → 180**）。**増えた 3 本では `芦高 清友` は `芦󠄀髙清友` と IVS 付きで書かれており、
+ * `芦󠄀` は落ちていない**（`髙`/`高` の字形違いは `ITAIJI` で寄るので `lossy` に数えない）。
+ * **「新しい本ほど欠ける」のような規則ではない**（確かめていない）。
+ *
  * **寄せ方は変えない**（#569）が、**「寄せた」という事実と「何が落ちたか」を残す**。
  * **このテストは「同一人物である」と主張していない**——
  * **ETL が部分列一致で寄せた、という事実と、その件数を固定しているだけ**（#796）。
  * **件数が増えたら、それは新しい欠落が起きたということ。**
  */
-test("#865 本番 pref-29: 字が落ちたまま寄った氏名は 2 件（西川 125 本 / 髙清友 37 本）", { skip: !hasData }, () => {
+test("#865/#901 本番 pref-29: 字が落ちたまま寄った氏名は 2 件（西川 180 本 / 髙清友 37 本）", { skip: !hasData }, () => {
   const lossy = meta().lossyNameMatches;
   assert.ok(lossy, "`lossyNameMatches` がある（奈良は省略されない）");
   assert.deepEqual(
@@ -185,7 +203,7 @@ test("#865 本番 pref-29: 字が落ちたまま寄った氏名は 2 件（西�
       .sort((a, b) => a.memberId.localeCompare(b.memberId)),
     [
       { nameText: "髙清友", memberId: "p_29_52536", rosterName: "芦高 清友", rollCalls: 37 },
-      { nameText: "西川", memberId: "p_29_52575", rosterName: "西川 均", rollCalls: 125 },
+      { nameText: "西川", memberId: "p_29_52575", rosterName: "西川 均", rollCalls: 180 },
     ],
   );
   // **符号位置で機序が分かる**（推定ではなく、文字そのものが違う）
@@ -202,41 +220,46 @@ test("#865 本番 pref-29: 字が落ちたまま寄った氏名は 2 件（西�
       byMember.set(v.memberId, s);
     }
   }
-  assert.deepEqual(Object.fromEntries(byMember.get("p_29_52575")!), { "西川": 125 });
-  // **`芦高 清友` は PDF 側で 2 通りの書かれ方をする**（2月定例は `芦󠄀髙清友`、6月定例は `髙清友`）
+  assert.deepEqual(Object.fromEntries(byMember.get("p_29_52575")!), { "西川": 180 });
+  // **`芦高 清友` は PDF 側で 2 通りの書かれ方をする**（`芦󠄀髙清友` が 143 本、`髙清友` が 37 本）
   assert.deepEqual(Object.fromEntries([...byMember.get("p_29_52536")!].sort()),
-    { "髙清友": 37, "芦\u{E0100}髙清友": 88 });
+    { "髙清友": 37, "芦\u{E0100}髙清友": 143 });
+  assert.equal(37 + 143, 180, "母数（2 通りの書かれ方で 180 本すべてが埋まる）");
   // **2 通りに書かれる議員はこの 1 人だけ**（母数 40 人）
   assert.equal(byMember.size, 40, "票に出る議員");
   assert.deepEqual([...byMember].filter(([, v]) => v.size > 1).map(([k]) => k), ["p_29_52536"]);
 });
 
 /** **出典はすべて県の公式ホスト**（**採決 125 本 + meta の 6 出典 + 会期 2 本**）。 */
-test("#865 本番 pref-29: sourceUrl はすべて www.pref.nara.lg.jp（PDF は 2 本）", { skip: !hasData }, () => {
+test("#865/#901 本番 pref-29: sourceUrl はすべて www.pref.nara.lg.jp（PDF は 5 本）", { skip: !hasData }, () => {
   const m = meta();
   const rcs = rollCalls();
   const urls: string[] = [];
   for (const rc of rcs) urls.push(rc.sourceUrl);
   for (const s of m.sources) urls.push(s.url);
   for (const s of m.sessions) { urls.push(s.sourceUrl); urls.push(s.pdfUrl); for (const p of s.pdfUrls ?? []) urls.push(p); }
-  assert.equal(urls.length, 125 + 6 + (1 + 1 + 1) * 2, "**見た URL の本数**（0 本を「違反なし」と読み違えないため）");
+  // **`sessions` は会期ごとに sourceUrl 1 + pdfUrl 1 + pdfUrls の本数**（令和7年9月だけ 2 本）
+  assert.equal(urls.length, 180 + (2 + 4 + 5) + ((1 + 1 + 1) * 3 + (1 + 1 + 2)), "**見た URL の本数**（0 本を「違反なし」と読み違えないため）");
   const bad = urls.filter((u) => new URL(u).host !== NARA_HOST || new URL(u).protocol !== "https:");
   assert.deepEqual([...new Set(bad)], []);
   assert.deepEqual([...new Set(rcs.map((r) => r.sourceUrl))].sort(), [
+    "https://www.pref.nara.lg.jp/documents/18767/20251009_giinbetsu_hyoketsu.pdf",
+    "https://www.pref.nara.lg.jp/documents/18767/20251024_giinbetsu_hyoketsu.pdf",
+    "https://www.pref.nara.lg.jp/documents/18768/20251215_giinbetsu_hyoketsu.pdf",
     "https://www.pref.nara.lg.jp/documents/21459/20260325_giinbetsu_hyoketsu.pdf",
     "https://www.pref.nara.lg.jp/documents/24098/20260702_giinbetsu_hyoketsu.pdf",
   ]);
-  assert.equal(m.sources.filter((s) => s.url.endsWith(".pdf")).length, 2, "meta の出典の PDF");
+  assert.equal(m.sources.filter((s) => s.url.endsWith(".pdf")).length, 5, "meta の出典の PDF");
   assert.equal(m.unreadableSources, undefined, "読めなかった一次資料は無い（省略される）");
   assert.equal(m.rosterAsOf, "2026-04-24");
   // **全部の採決に日付と件名がある**（名の無い採決・日付の無い採決を出さない）
   assert.deepEqual(rcs.filter((r) => !/^\d{4}-\d{2}-\d{2}$/.test(r.date)).map((r) => r.id), [], "日付の形");
   assert.deepEqual(rcs.filter((r) => r.title === "").map((r) => r.id), [], "件名が空の採決");
-  assert.equal(new Set(rcs.map((r) => r.id)).size, 125, "id の重複");
+  assert.equal(new Set(rcs.map((r) => r.id)).size, 180, "id の重複");
 });
 
-/** **名簿 40 人**——**かな・選挙区・会派が全員にあり、全員が 125 本すべてに出る**（#632／#718）。 */
-test("#865 本番 pref-29: 名簿 40 人・全員が 125 本すべてに出る", { skip: !hasData }, () => {
+/** **名簿 40 人**——**かな・選挙区・会派が全員にあり、全員が 180 本すべてに出る**（#632／#718）。 */
+test("#865/#901 本番 pref-29: 名簿 40 人・全員が 180 本すべてに出る", { skip: !hasData }, () => {
   const ms = members();
   assert.equal(ms.length, 40, "母数");
   assert.deepEqual(ms.filter((m) => m.kana === "").map((m) => m.name), [], "かなが空の議員");
@@ -245,5 +268,5 @@ test("#865 本番 pref-29: 名簿 40 人・全員が 125 本すべてに出る",
   assert.deepEqual(ms.filter((m) => !m.profileUrl.startsWith(`https://${NARA_HOST}/`)).map((m) => m.name), [], "別ホストの profileUrl");
   assert.equal(new Set(ms.map((m) => m.id)).size, 40, "id の重複");
   // **40 人全員がちょうど 125 本**（宮城・三重・滋賀はここが割れる。奈良は割れない）
-  assert.deepEqual([...new Set(ms.map((m) => m.counts?.rollcalls))], [125], "議員ごとの採決数");
+  assert.deepEqual([...new Set(ms.map((m) => m.counts?.rollcalls))], [180], "議員ごとの採決数");
 });

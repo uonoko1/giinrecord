@@ -90,8 +90,8 @@ const CORPUS = {
   localAssemblies: 11,
   memberRows: 1225, // members/index.json の全行
   localMemberRows: 453, // うち地方議員（assemblyId が diet- で始まらない行）
-  rollCallFiles: 2530, // assemblies/*/rollcalls/**/*.json（index.json を除く）。**#901 で三重 365 → 733、徳島 105 → 153、高知 104 → 221、秋田 157 → 785**
-  voteCells: 107119, // その採決ファイルの votes[] の合計。**#901 で三重 17,032 → 34,590、徳島 3,780 → 5,562、高知 3,744 → 7,881、秋田 6,437 → 32,022**
+  rollCallFiles: 2585, // assemblies/*/rollcalls/**/*.json（index.json を除く）。**#901 で三重 365 → 733、徳島 105 → 153、高知 104 → 221、秋田 157 → 785、奈良 125 → 180**
+  voteCells: 109319, // その採決ファイルの votes[] の合計。**#901 で三重 17,032 → 34,590、徳島 3,780 → 5,562、高知 3,744 → 7,881、秋田 6,437 → 32,022、奈良 5,000 → 7,200**
 };
 
 const walkRollCalls = async (dir: string): Promise<string[]> => {
@@ -110,7 +110,7 @@ const walkRollCalls = async (dir: string): Promise<string[]> => {
  * **母数を先に測る。** **これが落ちたら、下の「違反 0 件」は意味を失っている**
  * （痩せたディレクトリを見て緑になっているのかもしれない。上の docblock の青森の実測）。
  */
-test("#855 母数: コミット済み data/ に 11 議会・2,530 採決・107,119 セル・1,225 名簿行がある", async () => {
+test("#855 母数: コミット済み data/ に 11 議会・2,585 採決・109,319 セル・1,225 名簿行がある", async () => {
   const assemblies = JSON.parse(await readFile(join(DATA, "assemblies/index.json"), "utf-8")) as Assembly[];
   const members = JSON.parse(await readFile(join(DATA, "members/index.json"), "utf-8")) as MemberSummary[];
   const local = assemblies.filter((a) => a.kind !== "national");
