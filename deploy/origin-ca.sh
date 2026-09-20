@@ -1,0 +1,233 @@
+#!/usr/bin/env bash
+# Cloudflare Origin CA 証明書を VPS に置き、Authenticated Origin Pulls（mTLS）を有効にする（Issue #943）。
+#
+#   bash deploy/origin-ca.sh < /path/to/keys.txt        ← **標準入力から受け取る**
+#
+# **秘密鍵を引数にも環境変数にも渡さない**——`ps` に出るため（#163 と同じ方針）。
+# **標準入力の形式**（ゾーンごとに 1 ブロック。順不同、余分な空行は無視）:
+#
+#   ### zone giinrecord.jp
+#   -----BEGIN CERTIFICATE-----
+#   ...
+#   -----END CERTIFICATE-----
+#   -----BEGIN PRIVATE KEY-----
+#   ...
+#   -----END PRIVATE KEY-----
+#   ### zone gikailog.jp
+#   （同じ形）
+#
+# **RSA の場合は `-----BEGIN RSA PRIVATE KEY-----` でもよい**（Cloudflare は既定で ECC を出す）。
+#
+# やること（**冪等。何度でも再実行できる**）:
+#   1. 入力を検証する（ゾーン名・証明書と鍵の対応・鍵と証明書の公開鍵が一致するか）
+#   2. /etc/ssl/cloudflare/<zone>/{origin.pem,origin.key} に置く（key は 600、root:root）
+#   3. Cloudflare の Origin Pull CA を /etc/ssl/cloudflare/origin-pull-ca.pem に置く（**同梱。取りに行かない**）
+#   4. **まだ nginx は切り替えない**——`--apply` を付けたときだけ切り替える
+#
+#   bash deploy/origin-ca.sh --apply < keys.txt   ← 置く＋nginx を Origin CA と mTLS に切り替える
+#
+# **なぜ 2 段階か**: 切り替えると **Cloudflare 経由以外の接続が TLS の時点で落ちる**。
+# **DNS プロキシが OFF のまま切り替えるとサイトが落ちる**ので、置くだけと切り替えるを分ける。
+#
+# 安全装置:
+#   - **同居している他サイトの server block を 1 バイトも変えない**ことを、書き換えの前後で検査する
+#   - `nginx -t` が通らなければ**元に戻す**（切り替え前の conf を退避してある）
+#   - reload は graceful なので**古いワーカーが証明書を返す**。検証はリトライする（隣接プロジェクトの実測）
+#   - ゾーン名は**完全一致の allowlist**（`../../etc/nginx` のような値で任意パスに書けないように）
+set -euo pipefail
+
+APPLY=0
+[ "${1:-}" = "--apply" ] && { APPLY=1; shift; }
+
+PREFIX="${ORIGIN_CA_PREFIX:-}"          # テスト用。全パスをこの下に寄せる
+SSL_DIR="$PREFIX/etc/ssl/cloudflare"
+NGINX_DIR="$PREFIX/etc/nginx"
+
+# **完全一致の allowlist**（パス検証。変数でパスを組み立てる前に弾く）
+zone_ok() { case "$1" in giinrecord.jp|gikailog.jp) return 0 ;; *) return 1 ;; esac; }
+
+die() { echo "origin-ca: $*" >&2; exit 1; }
+
+[ -t 0 ] && die "標準入力から鍵を読む。 使い方: bash deploy/origin-ca.sh [--apply] < keys.txt"
+
+IN=$(mktemp); trap 'rm -f "$IN"; rm -rf "${WORK:-}"' EXIT
+cat > "$IN"
+[ -s "$IN" ] || die "標準入力が空"
+
+WORK=$(mktemp -d)
+
+# --- 入力を割る（ゾーンごと） -------------------------------------------------
+ZONES=""
+# **ゾーン名を先に検証してからファイルを開く**（`../../etc/nginx` のような値で
+# awk が任意パスに書きに行くのを防ぐ。検証より先に開くと awk のエラーで落ちて筋が読めない）
+grep -n '^### zone ' "$IN" | sed 's/^[0-9]*:### zone //' | while IFS= read -r z; do
+  z=${z%%[[:space:]]*}
+  zone_ok "$z" || { echo "origin-ca: 知らないゾーン '$z'（許すのは giinrecord.jp と gikailog.jp だけ）" >&2; exit 1; }
+done || exit 1
+
+awk -v out="$WORK" '
+  /^### zone / { z=$3; sub(/[[:space:]]+$/,"",z); f=out "/" z ".block"; print z > (out "/zones.txt"); next }
+  z != "" { print > f }
+' "$IN"
+[ -f "$WORK/zones.txt" ] || die "'### zone <ドメイン>' の行が 1 つも無い"
+
+N=0
+while IFS= read -r z; do
+  [ -n "$z" ] || continue
+  zone_ok "$z" || die "知らないゾーン '$z'（許すのは giinrecord.jp と gikailog.jp だけ）"
+  B="$WORK/$z.block"
+  [ -s "$B" ] || die "$z: 中身が空"
+
+  # 証明書と鍵を取り出す（**最初の 1 組だけ**。余分が在れば落とす）
+  awk '/-----BEGIN CERTIFICATE-----/,/-----END CERTIFICATE-----/' "$B" > "$WORK/$z.crt"
+  awk '/-----BEGIN (RSA |EC )?PRIVATE KEY-----/,/-----END (RSA |EC )?PRIVATE KEY-----/' "$B" > "$WORK/$z.key"
+  [ -s "$WORK/$z.crt" ] || die "$z: CERTIFICATE が見つからない"
+  [ -s "$WORK/$z.key" ] || die "$z: PRIVATE KEY が見つからない"
+  [ "$(grep -c -- '-----BEGIN CERTIFICATE-----' "$WORK/$z.crt")" = 1 ] || die "$z: CERTIFICATE が 2 つ以上ある"
+  [ "$(grep -c -- '-----BEGIN' "$WORK/$z.key")" = 1 ] || die "$z: PRIVATE KEY が 2 つ以上ある"
+
+  # **鍵と証明書が対か**を確かめる（取り違えを置く前に落とす）
+  c=$(openssl x509 -in "$WORK/$z.crt" -noout -pubkey 2>/dev/null | openssl dgst -sha256 | awk '{print $NF}')
+  k=$(openssl pkey -in "$WORK/$z.key" -pubout 2>/dev/null | openssl dgst -sha256 | awk '{print $NF}')
+  [ -n "$c" ] && [ "$c" = "$k" ] || die "$z: 証明書と秘密鍵が対になっていない（取り違え？）"
+
+  # **証明書がそのゾーンのものか**（SAN にゾーン名が入っているか）
+  san=$(openssl x509 -in "$WORK/$z.crt" -noout -ext subjectAltName 2>/dev/null || true)
+  echo "$san" | grep -q "DNS:$z" || echo "$san" | grep -q "DNS:\*\.$z" \
+    || die "$z: 証明書の SAN に $z が無い（別ゾーンの証明書？）"
+
+  ZONES="$ZONES $z"; N=$((N+1))
+done < "$WORK/zones.txt"
+
+[ "$N" -gt 0 ] || die "ゾーンが 0 件"
+echo "origin-ca: 入力を検証した（$N ゾーン:$ZONES）"
+
+# --- 置く -------------------------------------------------------------------
+install -d -m 755 "$SSL_DIR"
+for z in $ZONES; do
+  install -d -m 755 "$SSL_DIR/$z"
+  install -m 644 "$WORK/$z.crt" "$SSL_DIR/$z/origin.pem"
+  install -m 600 "$WORK/$z.key" "$SSL_DIR/$z/origin.key"
+  echo "  $z → $SSL_DIR/$z/{origin.pem,origin.key}"
+done
+
+# Cloudflare の Origin Pull CA（**同梱**。取りに行くと落ちたときに壊れる）
+cat > "$SSL_DIR/origin-pull-ca.pem" <<'CA'
+-----BEGIN CERTIFICATE-----
+MIIGCjCCA/KgAwIBAgIIV5G6lVbCLmEwDQYJKoZIhvcNAQENBQAwgZAxCzAJBgNV
+BAYTAlVTMRkwFwYDVQQKExBDbG91ZEZsYXJlLCBJbmMuMRQwEgYDVQQLEwtPcmln
+aW4gUHVsbDEWMBQGA1UEBxMNU2FuIEZyYW5jaXNjbzETMBEGA1UECBMKQ2FsaWZv
+cm5pYTEjMCEGA1UEAxMab3JpZ2luLXB1bGwuY2xvdWRmbGFyZS5uZXQwHhcNMTkx
+MDEwMTg0NTAwWhcNMjkxMTAxMTcwMDAwWjCBkDELMAkGA1UEBhMCVVMxGTAXBgNV
+BAoTEENsb3VkRmxhcmUsIEluYy4xFDASBgNVBAsTC09yaWdpbiBQdWxsMRYwFAYD
+VQQHEw1TYW4gRnJhbmNpc2NvMRMwEQYDVQQIEwpDYWxpZm9ybmlhMSMwIQYDVQQD
+ExpvcmlnaW4tcHVsbC5jbG91ZGZsYXJlLm5ldDCCAiIwDQYJKoZIhvcNAQEBBQAD
+ggIPADCCAgoCggIBAN2y2zojYfl0bKfhp0AJBFeV+jQqbCw3sHmvEPwLmqDLqynI
+42tZXR5y914ZB9ZrwbL/K5O46exd/LujJnV2b3dzcx5rtiQzso0xzljqbnbQT20e
+ihx/WrF4OkZKydZzsdaJsWAPuplDH5P7J82q3re88jQdgE5hqjqFZ3clCG7lxoBw
+hLaazm3NJJlUfzdk97ouRvnFGAuXd5cQVx8jYOOeU60sWqmMe4QHdOvpqB91bJoY
+QSKVFjUgHeTpN8tNpKJfb9LIn3pun3bC9NKNHtRKMNX3Kl/sAPq7q/AlndvA2Kw3
+Dkum2mHQUGdzVHqcOgea9BGjLK2h7SuX93zTWL02u799dr6Xkrad/WShHchfjjRn
+aL35niJUDr02YJtPgxWObsrfOU63B8juLUphW/4BOjjJyAG5l9j1//aUGEi/sEe5
+lqVv0P78QrxoxR+MMXiJwQab5FB8TG/ac6mRHgF9CmkX90uaRh+OC07XjTdfSKGR
+PpM9hB2ZhLol/nf8qmoLdoD5HvODZuKu2+muKeVHXgw2/A6wM7OwrinxZiyBk5Hh
+CvaADH7PZpU6z/zv5NU5HSvXiKtCzFuDu4/Zfi34RfHXeCUfHAb4KfNRXJwMsxUa
++4ZpSAX2G6RnGU5meuXpU5/V+DQJp/e69XyyY6RXDoMywaEFlIlXBqjRRA2pAgMB
+AAGjZjBkMA4GA1UdDwEB/wQEAwIBBjASBgNVHRMBAf8ECDAGAQH/AgECMB0GA1Ud
+DgQWBBRDWUsraYuA4REzalfNVzjann3F6zAfBgNVHSMEGDAWgBRDWUsraYuA4REz
+alfNVzjann3F6zANBgkqhkiG9w0BAQ0FAAOCAgEAkQ+T9nqcSlAuW/90DeYmQOW1
+QhqOor5psBEGvxbNGV2hdLJY8h6QUq48BCevcMChg/L1CkznBNI40i3/6heDn3IS
+zVEwXKf34pPFCACWVMZxbQjkNRTiH8iRur9EsaNQ5oXCPJkhwg2+IFyoPAAYURoX
+VcI9SCDUa45clmYHJ/XYwV1icGVI8/9b2JUqklnOTa5tugwIUi5sTfipNcJXHhgz
+6BKYDl0/UP0lLKbsUETXeTGDiDpxZYIgbcFrRDDkHC6BSvdWVEiH5b9mH2BON60z
+0O0j8EEKTwi9jnafVtZQXP/D8yoVowdFDjXcKkOPF/1gIh9qrFR6GdoPVgB3SkLc
+5ulBqZaCHm563jsvWb/kXJnlFxW+1bsO9BDD6DweBcGdNurgmH625wBXksSdD7y/
+fakk8DagjbjKShYlPEFOAqEcliwjF45eabL0t27MJV61O/jHzHL3dknXeE4BDa2j
+bA+JbyJeUMtU7KMsxvx82RmhqBEJJDBCJ3scVptvhDMRrtqDBW5JShxoAOcpFQGm
+iYWicn46nPDjgTU0bX1ZPpTpryXbvciVL5RkVBuyX2ntcOLDPlZWgxZCBp96x07F
+AnOzKgZk4RzZPNAxCXERVxajn/FLcOhglVAKo5H0ac+AitlQ0ip55D2/mf8o72tM
+fVQ6VpyjEXdiIXWUq/o=
+-----END CERTIFICATE-----
+CA
+chmod 644 "$SSL_DIR/origin-pull-ca.pem"
+openssl x509 -in "$SSL_DIR/origin-pull-ca.pem" -noout -subject >/dev/null 2>&1 \
+  || die "同梱の Origin Pull CA が壊れている"
+echo "  Origin Pull CA → $SSL_DIR/origin-pull-ca.pem"
+
+if [ "$APPLY" = 0 ]; then
+  cat <<'NEXT'
+
+origin-ca: **置いただけ。nginx はまだ切り替えていない。**
+
+  次にやること（この順で）:
+    1. bash deploy/origin-ca.sh --apply < keys.txt   ← nginx を Origin CA + mTLS に切り替える
+    2. **その後で** Cloudflare の DNS プロキシ（橙色の雲）を ON にする
+
+  **1 の後、DNS プロキシが OFF のままだとサイトは外から見えなくなる**
+  （Cloudflare 以外の接続が TLS の時点で落ちるため）。**1 と 2 は続けて行うこと。**
+NEXT
+  exit 0
+fi
+
+# --- 切り替える（--apply） ---------------------------------------------------
+command -v nginx >/dev/null || die "nginx が無い"
+
+BACKUP=$(mktemp -d)
+cp -a "$NGINX_DIR/sites-available" "$BACKUP/" 2>/dev/null || die "sites-available を退避できない"
+
+# **他サイトの conf を 1 バイトも変えないことを確かめるため、先に md5 を取る**
+before=$(find "$NGINX_DIR/sites-available" -type f -print0 | sort -z | xargs -0 md5sum 2>/dev/null)
+
+changed=0
+for z in $ZONES; do
+  for conf in "$NGINX_DIR/sites-available/$z.conf" "$NGINX_DIR/sites-available/staging.$z.conf"; do
+    [ -f "$conf" ] || continue
+    tmp=$(mktemp)
+    # Let's Encrypt の証明書を Origin CA に差し替え、mTLS を足す（**冪等**：既に入っていれば足さない）
+    awk -v pem="$SSL_DIR/$z/origin.pem" -v key="$SSL_DIR/$z/origin.key" -v ca="$SSL_DIR/origin-pull-ca.pem" '
+      /ssl_certificate_key[[:space:]]/ { print "    ssl_certificate_key " key ";"; next }
+      /ssl_certificate[[:space:]]/     { print "    ssl_certificate " pem ";"; next }
+      /ssl_client_certificate|ssl_verify_client/ { next }      # 既存を落として書き直す（冪等）
+      /ssl_session_cache|ssl_protocols|listen .*443/ && !done {
+        print
+        print "    ssl_client_certificate " ca ";"
+        print "    ssl_verify_client on;"
+        done=1; next
+      }
+      { print }
+    ' "$conf" > "$tmp"
+    if ! cmp -s "$conf" "$tmp"; then cp "$tmp" "$conf"; changed=$((changed+1)); echo "  切り替えた: $conf"; fi
+    rm -f "$tmp"
+  done
+done
+
+after=$(find "$NGINX_DIR/sites-available" -type f -print0 | sort -z | xargs -0 md5sum 2>/dev/null)
+# **対象以外が変わっていないこと**を数える（同居している他サイトを壊していない証拠）
+others=$(diff <(echo "$before") <(echo "$after") | grep '^[<>]' | grep -cvE "(giinrecord|gikailog)" || true)
+[ "$others" -eq 0 ] || { cp -a "$BACKUP/sites-available/." "$NGINX_DIR/sites-available/"; die "対象以外の conf が $others 行変わった。戻した。"; }
+
+if [ "$changed" -eq 0 ]; then echo "origin-ca: 変更なし（既に切り替わっている）"; exit 0; fi
+
+if ! nginx -t 2>&1; then
+  cp -a "$BACKUP/sites-available/." "$NGINX_DIR/sites-available/"
+  die "nginx -t が通らないので戻した"
+fi
+systemctl reload nginx || { cp -a "$BACKUP/sites-available/." "$NGINX_DIR/sites-available/"; nginx -t && systemctl reload nginx; die "reload に失敗したので戻した"; }
+
+# **reload は graceful。古いワーカーが古い証明書を返すのでリトライする**（隣接プロジェクトの実測）
+ok=0
+for _ in 1 2 3 4 5; do
+  sleep 2
+  issuer=$(echo | openssl s_client -connect 127.0.0.1:443 -servername giinrecord.jp 2>/dev/null \
+           | openssl x509 -noout -issuer 2>/dev/null || true)
+  case "$issuer" in *CloudFlare*|*Cloudflare*) ok=1; break ;; esac
+done
+[ "$ok" = 1 ] && echo "origin-ca: 切り替わった（origin が Cloudflare Origin CA を返している）" \
+              || echo "::warning::origin-ca: 5 回見たが Origin CA を確認できなかった。nginx -t は通っている。手で確かめること"
+
+cat <<'NEXT'
+
+origin-ca: **次に Cloudflare の DNS プロキシ（橙色の雲）を ON にすること。**
+  **今この瞬間、Cloudflare 以外からの接続は TLS の時点で落ちる。**
+  giinrecord.jp / www / staging と gikailog.jp / www / staging の 6 レコードすべて。
+NEXT
