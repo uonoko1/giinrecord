@@ -94,8 +94,14 @@ test("#901 第388・389回の凡例には `無所属：無所属` が実際に�
  *
  * **第391回のダッシュ様の字を全部数えた**（実測）:
  * **`－` U+FF0D が 5 個・`ー` U+30FC が 11 個（件名の長音）・`-` U+002D が 1 個。**
- * **U+002D と U+FF0D は同じ字の半角形と全角形**（NFKC は FF0D → 002D に畳む）で、
- * **`glyph-variants.ts` が既に持っている `〇`→`○`・`✕`→`×` と同じ種類の揺れである。**
+ * **U+002D と U+FF0D は同じ字の半角形と全角形**（NFKC は FF0D → 002D に畳む）である。
+ *
+ * **だが共有の字形表（`glyph-variants.ts`）には足せない**——
+ * **滋賀の凡例は `-` U+002D そのものを「欠席」の鍵として使っている**
+ * （`Kg220_240424-sanpi.pdf` の凡例は `{"-":"欠席","議":…,"退":…}`。実測。#950 の奈良が同じ判断をした）。
+ * **だから宮城の中だけで寄せる**（`miyagiLegendKey`）——
+ * **宮城の 13 本の凡例に `-` U+002D は 1 度も出てこない**（鍵は `○ × 議 欠 除 － 棄 白` の 8 種）ので、
+ * **宮城の中では意味が衝突しない。**
  *
  * **意味の推定ではない**——**寄せた先が凡例に無ければ、これまでどおり例外になる。**
  */
@@ -410,4 +416,54 @@ test("#901 一般選挙の前にだけ出る 18 人は、今の名簿 56 人の�
   // **逆向きの母数**——**選挙をまたいで両方に出る 40 人は、同じ人が再選したぶんである**
   assert.equal([...before].filter((n) => after.has(n)).length, 40, "両方に出る氏名");
   assert.equal(18 + 40, 58, "母数の検算（#757）");
+});
+
+/**
+ * ## **`-` → `－` を共有の字形表に移してはいけない**（#901 → #950）
+ *
+ * **この PR は一度 `glyph-variants.ts` に `"-": "－"` を足した。**
+ * **`pnpm -w test` は全部緑だった**——**それでも間違いだった。**
+ *
+ * **滋賀の凡例は `-` U+002D そのものを「欠席」の鍵として使っている**
+ * （`Kg220_240424-sanpi.pdf`）。**共有の表で `-` → `－` に寄せると、
+ * その本の凡例から `-` が引けなくなる**——**滋賀の「欠席」のセルが例外で落ちる。**
+ * **緑だったのは、いま本番に出ている滋賀のセルにたまたま `-` が 1 つも無いからで、
+ * 「壊れていない」ことの証明ではない**（#950 の奈良が独立に同じ結論に達している）。
+ *
+ * **だから「見た目が同じ別コードポイント」かどうかだけでは足りない。**
+ * **その符号位置が、別の議会で別の意味の鍵になっていないかを見る必要がある。**
+ */
+test("#901 `-` → `－` は宮城の中だけ（共有の字形表は `-` を寄せない。滋賀の凡例の鍵だから）", async () => {
+  const { legendKey } = await import("../src/sources/local/glyph-variants.ts");
+  const { miyagiLegendKey } = await import("../src/sources/local/miyagi/votes-pdf.ts");
+  // **共有の表は寄せない**（移したらここが落ちる）
+  assert.equal(legendKey("-"), "-", "**共有の `legendKey` は `-` を寄せない**（滋賀の凡例の鍵だから）");
+  // **宮城の中だけ寄る**
+  assert.equal(miyagiLegendKey("-"), "－", "宮城の `miyagiLegendKey` は寄せる");
+  // **共有の 2 件は宮城でもそのまま効く**（上に重ねただけで、下を壊していない）
+  assert.equal(miyagiLegendKey("〇"), "○");
+  assert.equal(miyagiLegendKey("✕"), "×");
+  // **表に無い字は原文のまま**（勝手に増やさない）
+  assert.equal(miyagiLegendKey("△"), "△");
+
+  // ## **滋賀の凡例が `-` を鍵にしていることを、一次資料から確かめる**（この判断の根拠そのもの）
+  const { parseVotePdf: parseShiga } = await import("../src/sources/local/shiga/votes-pdf.ts");
+  const shiga = await parseShiga(readFileSync(new URL("./fixtures/shiga/Kg220_240424-sanpi.pdf", import.meta.url)));
+  assert.deepEqual(shiga.legend.votes, { "-": "欠席", "議": "議長（表決権なし）", "退": "退席" },
+    "**滋賀の凡例の鍵**（`-` U+002D が「欠席」。ここが変わったら判断を測り直すこと）");
+  assert.ok(!("－" in shiga.legend.votes), "滋賀の凡例に `－` U+FF0D は無い");
+  // **共有の表で寄せると、この鍵が引けなくなる**（＝「欠席」のセルが例外で落ちる）
+  assert.ok(legendKey("-") in shiga.legend.votes, "**共有の表で寄せたら、この行が落ちる**");
+
+  // ## **宮城の 13 本の凡例に `-` U+002D は 1 度も出てこない**（だから宮城の中では衝突しない）
+  const FILES = [
+    "hyoketu080707.pdf", "syuusei_hyouketsu080318.pdf", "hyouketsu071217.pdf", "hyouketsu1002syuusei.pdf",
+    "hyouketsu070630.pdf", "hyouketsu070314.pdf", "hyouketsu061211.pdf", "hyouketsu061017.pdf",
+    "hyouketsu060701.pdf", "hyouketsu060313.pdf", "hyouketsu051219.pdf", "hyouketsu051004.pdf", "hyouketsu050704.pdf",
+  ];
+  const keys = new Set<string>();
+  for (const f of FILES) for (const k of Object.keys((await parseVotePdf(bytes(f))).legend.votes)) keys.add(k);
+  assert.deepEqual([...keys].sort(), ["×", "○", "棄", "欠", "白", "議", "除", "－"],
+    "**13 本の賛否凡例の鍵（異なり）**（母数。`-` が鍵になった本が出たら、寄せてよいかを測り直すこと）");
+  assert.ok(!keys.has("-"), "**宮城の凡例に `-` U+002D は無い**（寄せても意味が衝突しない根拠）");
 });

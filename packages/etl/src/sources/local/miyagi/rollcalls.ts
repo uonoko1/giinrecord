@@ -1,10 +1,10 @@
 import type { LocalMember, LocalRollCall, LocalUnmatchedName, LocalVote, VoteValue } from "@seiji-kiroku/shared";
 import { MIYAGI_ASSEMBLY } from "./site.ts";
-import { UNKNOWN_CELL, UNKNOWN_LEGEND, type VotePdf } from "./votes-pdf.ts";
+import { miyagiLegendKey, UNKNOWN_CELL, UNKNOWN_LEGEND, type VotePdf } from "./votes-pdf.ts";
 // 氏名の突き合わせは 7 県で共通（#636）。宮城の PDF はフルネーム。名簿の「髙橋 伸二」は字形違いを寄せて初めて PDF の「高橋 伸二」と一致する。
 import { localNameKey as nameKey, matchBySubsequence as matchName } from "../name-match.ts";
-// 字形の揺れ（〇 U+3007・✕ U+2715）は凡例を引くときだけ寄せる。raw は原文のまま（#674）。
-import { legendKey } from "../glyph-variants.ts";
+// 字形の揺れ（〇 U+3007・✕ U+2715 と、宮城だけの `-` U+002D → `－` U+FF0D）は凡例を引くときだけ寄せる。
+// raw は原文のまま（#674 / #901）。`miyagiLegendKey` の docblock に「共有の表に足さない理由」がある。
 
 export { nameKey, matchName };
 
@@ -34,7 +34,7 @@ export function mapLegend(raw: string, legend: string): LocalVote {
  */
 export function legendOf(raw: string, votes: Record<string, string>, label: string): string {
   if (raw === UNKNOWN_CELL) return UNKNOWN_LEGEND;
-  const meaning = votes[legendKey(raw)];
+  const meaning = votes[miyagiLegendKey(raw)];
   if (!meaning) throw new Error(`${label}: cell "${raw}" is not in the legend (${Object.keys(votes).join("")})`);
   return meaning;
 }

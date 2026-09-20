@@ -92,11 +92,36 @@ export async function parseVotePdf(bytes: Buffer): Promise<VotePdf> {
   return { ...head, legend, members, rows, unknownCells };
 }
 
-/** 凡例に無い値が出たら例外（丸めない・推定しない）。UNKNOWN_CELL だけは通す。字形の揺れ（〇 U+3007・✕ U+2715）は凡例の記号に寄せて引く（#674）。 */
+/**
+ * **宮城だけの字形の揺れ: `-` U+002D → `－` U+FF0D**（#901。第391回 `hyouketsu060313.pdf` の 1 セル）。
+ *
+ * **共有の `glyph-variants.ts` に足してはいけない**——
+ * **滋賀の凡例は `-` U+002D そのものを「欠席」の鍵として使っている**
+ * （`Kg220_240424-sanpi.pdf` の凡例は `{"-":"欠席","議":"議長（表決権なし）","退":"退席"}`。実測）。
+ * **共有の表で `-` → `－` に寄せると、その本の凡例から `-` が引けなくなる**（#950 の奈良が同じ判断をした）。
+ * **同じ符号位置が議会ごとに違う意味を持つので、「見た目が同じ別コードポイント」ではなく意味の衝突である。**
+ *
+ * **宮城でこの向きに寄せてよい根拠**（実測。**議会の中で閉じている**）:
+ * **宮城の 13 本の凡例に `-` U+002D は 1 度も出てこない**（**`－` U+FF0D が「議場に不在」の鍵**）。
+ * **つまり宮城では `-` が別の意味を持つことが無いので、寄せても意味が衝突しない。**
+ * **第391回のダッシュ様の字を全部数えた**: **`－` U+FF0D が 5 個（5 ページに繰り返される凡例の行だけ。
+ * 本文のセルには 1 つも無い）・`ー` U+30FC が 11 個（件名の長音）・`-` U+002D が 1 個。**
+ * **その 1 個は 知事提出議案1 の最後の議員のセルで、公表数と矛盾しない**
+ * （**出席59 / 表決57 / 賛成41 / 反対16。`議` 1 と `-` 1 の 2 人が表決に加わらない**）。
+ *
+ * **寄せた先が凡例に無ければ、これまでどおり例外になる**（#674 / #569 の原則は緩めていない）。
+ */
+const MIYAGI_GLYPH_VARIANTS: Readonly<Record<string, string>> = { "-": "－" };
+
+/** セルの原文 → 凡例を引く鍵。共有の揺れ（〇 U+3007・✕ U+2715）に、宮城だけの `-` → `－` を足す。 */
+export const miyagiLegendKey = (raw: string): string =>
+  [...legendKey(raw)].map((c) => MIYAGI_GLYPH_VARIANTS[c] ?? c).join("");
+
+/** 凡例に無い値が出たら例外（丸めない・推定しない）。UNKNOWN_CELL だけは通す。字形の揺れは凡例の記号に寄せて引く（#674 / #901）。 */
 export function checkCellsAgainstLegend(cells: readonly string[], votes: Record<string, string>, label: string): void {
   for (const c of cells) {
     if (c === UNKNOWN_CELL) continue;
-    if (!(legendKey(c) in votes)) throw new Error(`${label}: cell value "${c}" is not in the legend (${Object.keys(votes).join("")})`);
+    if (!(miyagiLegendKey(c) in votes)) throw new Error(`${label}: cell value "${c}" is not in the legend (${Object.keys(votes).join("")})`);
   }
 }
 
