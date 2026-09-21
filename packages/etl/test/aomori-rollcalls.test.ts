@@ -215,3 +215,36 @@ test("#750 過去の会期の議員は unmatched に落ちる（黙って捨て�
   assert.equal(votes.every((v) => v.value.mapped !== undefined), true, "票そのものは読めている");
 });
 function S279(): SessionInfo { return { sessionId: "2014-09", sessionLabel: "平成26年9月第279回定例会", year: 2014, month: 9 }; }
+
+/**
+ * ## **`skippedRows === 0` は、カウンタが動いている証拠にならない**（#901 で変異を当てて分かった）
+ *
+ * **`rollcalls.ts` の `if (!md) { skippedRows++; continue; }` から `skippedRows++` を
+ * 取り除く変異を当てても、青森のテストは 1 本も落ちなかった**（実測 2026-09-21）。
+ * **56 本 2,445 行すべてが `M/D` なので、数えても数えなくても 0 だからである**
+ * （**落ちない変異の分類 4: テストが何も主張していない**）。
+ *
+ * **`skippedRows` は「議決日の欄が別の形になった会期が出た」ことに気づくための数である**
+ * （`Converted` の docblock）。**数えていないなら、その会期が来ても黙って行が消える。**
+ * **だから「数えられること」を陽性対照で固定する**——
+ * **議決日の欄を読めない形にした行を 1 つ作って、それが `skippedRows` に入ることを見る。**
+ *
+ * **`parseVotePdf` の出力を組み替えている**（PDF を作り直さない）——
+ * **確かめたいのは `toLocalRollCalls` の数え方であって、PDF の読み方ではない。**
+ */
+test("#901 陽性対照: 議決日の読めない行は skippedRows に入る（0 が「数えていない」ではないこと）", async () => {
+  const pdf = await parseVotePdf(bin("314teirei_sanpi.pdf"));
+  const base = toLocalRollCalls([{ pdf, pdfUrl: url("314teirei_sanpi") }], roster(), S314);
+  assert.equal(base.rollCalls.length, 21, "母数（#757）");
+  assert.equal(base.skippedRows, 0, "無改造では 0");
+  // **1 行目の議決月日を `継続審査` にする**（**実在する形**——`275` `279` `283` にある。
+  // **ただしその 3 本では記号が 1 つも無いので `rows` にならない**ので、ここで作る）
+  const broken = { ...pdf, rows: pdf.rows.map((r, i) => (i === 0 ? { ...r, dateText: "継続審査" } : r)) };
+  const got = toLocalRollCalls([{ pdf: broken, pdfUrl: url("314teirei_sanpi") }], roster(), S314);
+  assert.equal(got.skippedRows, 1, "**数えていること**（`skippedRows++` を消すとここが 0 になる）");
+  assert.equal(got.rollCalls.length, 20, "**その行は採決にしない**（日付の無い記録を出さない）");
+  // **落とした行の票が、別の行に混ざっていないこと**（20 行 × 48 人のまま）
+  assert.equal(got.rollCalls.reduce((s, r) => s + r.votes.length, 0), 20 * 48);
+  // **2 行目以降の id は 1 バイトも変わらない**（**行がずれていない**）
+  assert.deepEqual(got.rollCalls.map((r) => r.id), base.rollCalls.slice(1).map((r) => r.id));
+});

@@ -109,7 +109,8 @@ test("#901 奈良の `--sessions` の既定は 4（他の議会の値は動か�
   assert.deepEqual(
     ["mie", "tokushima", "kochi", "miyagi", "tottori", "shimane", "shiga", "aomori", "akita", "saga"].map((t) => [t, defaultSessionsFor(t)]),
     // **宮城は #901 の別 PR で 2 → 11 になった**（第400 〜 第390回。2023-10 の一般選挙の手前）
-    [["mie", 4], ["tokushima", 4], ["kochi", 5], ["miyagi", 11], ["tottori", 2], ["shimane", 2], ["shiga", 2], ["aomori", 2], ["akita", 29], ["saga", 2]],
+    [["mie", 4], ["tokushima", 4], ["kochi", 5], ["miyagi", 11], ["tottori", 2], ["shimane", 2], ["shiga", 2], // **#901 の青森で `aomori` が 2 → 14 になった**（他の 9 議会は据え置き）
+    ["aomori", 14], ["akita", 29], ["saga", 2]],
   );
 });
 
