@@ -698,6 +698,56 @@ export interface LocalAssemblyMeta {
    *     その行は `mapped` が無く、意味で数えると 0 になるため、母数に入れると偽の食い違いが出る
    */
   countChecked: { rows: number; checked: number; noCounts: number; unreadableCells: number };
+  /**
+   * **会期ごとに「その名簿がその会期をどれだけ写しているか」**（Issue #951。**会期が 1 つでも必ず出す**。#757）。
+   *
+   * ## **なぜ要るか**——**一般選挙の境をまたぐと、票が今の名簿に黙って寄る**
+   *
+   * **地方の名簿は「今の名簿」1 枚しか公表されていない**（`LocalMemberTerm` は `asOf` しか持たない）。
+   * **`--sessions` を広げて一般選挙の境をまたぐと、その頃の議員の氏名が今の名簿に当たりうる**
+   * ——**再選した本人でも、同姓同名の別人でも、出力は 1 バイトも違わない**（#569 の重いほう）。
+   *
+   * **既存の守りは 4 つとも捕まえない**（#951 の表。実測で確かめた）:
+   * **#928（`rosterAsOf` の窓）は境の直前なら 1 任期の内側／`unmatched` は寄ってしまうので出ない／
+   * `lossyNameMatches` は字が落ちていない／`sourceConflict` は一次資料どうしが食い違っていない。**
+   *
+   * **奈良で境をまたいだ場合、1,656 / 2,952 票（56.1%）が痕跡ゼロで今の名簿に寄る**（#950 の実測）。
+   *
+   * ## **何を書くか**——**事実だけ。誰と誰が入れ替わったかは書かない**
+   *
+   *   - `sessionId` / `date`: その会期と、その会期の最終議決日
+   *   - `rollcalls` / `votes`: **母数**（#757。下の件数はこれを見ないと読めない）
+   *   - `rosterSeen`: **名簿の議員のうち、その会期の票に現れた人数**
+   *   - `rosterAbsent`: **名簿の議員のうち、その会期の票に 1 度も現れなかった人数**
+   *     （`rosterSeen + rosterAbsent` = `meta.counts.members`）
+   *   - `unmatchedNames` / `unmatchedVotes`: **その会期で名簿に寄らなかった氏名の数と票数**
+   *   - `seatsChanged`: **`min(rosterAbsent, unmatchedNames)`**——
+   *     **その会期と名簿の間で、確実に持ち主が変わっている席の数。**
+   *     **「名簿に居るのにこの会期に居ない人」と「この会期に居るのに名簿に無い氏名」が
+   *     同時にあるとき、その分だけ席が入れ替わっている**という事実だけを言う。
+   *     **誰が誰に替わったかは書かない**（それは推定であり、#569 の禁じる側）。
+   *
+   * ## **これは「境だ」とは言わない**——**言えるのは「名簿とどれだけ違うか」まで**
+   *
+   * **一般選挙の日付を外から持ち込まない**（一次資料は表決 PDF と名簿だけ）。
+   * **`seatsChanged` が大きい理由は、選挙かもしれないし、まとまった辞職かもしれない。**
+   * **我々のデータからは区別できないので、区別したふりをしない。**
+   *
+   * **実測（2026-09-21、本番 `data/` の 11 議会 / 67 会期 / 3,036 採決 / 135,686 票）:
+   * `seatsChanged` の最大は 4（三重 r05-2 / r06。母数 47 人）で、**
+   * **`seatsChanged >= 10` の会期は 0 件である**（#951 の測定。**「数えていない」ではなく「数えて 0」**）。
+   */
+  sessionRosterCoverage: {
+    sessionId: string;
+    date: string;
+    rollcalls: number;
+    votes: number;
+    rosterSeen: number;
+    rosterAbsent: number;
+    unmatchedNames: number;
+    unmatchedVotes: number;
+    seatsChanged: number;
+  }[];
 }
 
 /** 表決 PDF の氏名のうち名簿に名寄せできなかったもの（`unmatched.json`）。運用者が確認する。 */

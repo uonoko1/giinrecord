@@ -15,6 +15,30 @@
  },
  "fetchedAt": "2026-09-21T00:45:23.409Z",
  "rosterAsOf": "2026-05-25",
+ "sessionRosterCoverage": [
+  {
+   "date": "2026-06-29",
+   "rollcalls": 26,
+   "rosterAbsent": 1,
+   "rosterSeen": 45,
+   "seatsChanged": 1,
+   "sessionId": "2026-06",
+   "unmatchedNames": 1,
+   "unmatchedVotes": 26,
+   "votes": 1196
+  },
+  {
+   "date": "2026-03-24",
+   "rollcalls": 87,
+   "rosterAbsent": 3,
+   "rosterSeen": 43,
+   "seatsChanged": 2,
+   "sessionId": "2026-02",
+   "unmatchedNames": 2,
+   "unmatchedVotes": 174,
+   "votes": 3915
+  }
+ ],
  "sessions": [
   {
    "pdfUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
