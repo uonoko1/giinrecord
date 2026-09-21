@@ -57,7 +57,9 @@ for line in io.open(sys.argv[1],encoding='utf-8'):
            or ip.is_multicast or ip.is_unspecified: continue
         if m.startswith(('192.0.2.','198.51.100.','203.0.113.')): continue  # RFC 5737 文書用
         # **バージョン番号を IPv4 と読まない**（`forbidden-patterns` の `ip-address` 規則が
-        # DocuWorks の `7.0.19.1` を拾った実例が PR #813 に在る。**規則ではなく文脈で外す**）:
+        # DocuWorks の版番号（4 つ組）を拾った実例が PR #813 に在る。**規則ではなく文脈で外す**）:
+        # ——その版番号そのものをここに書くと `forbidden-patterns` の `ip-address` が
+        # **この行を**拾う（実測: PR #940 の CI が落ちた）。規則を緩めるのではなく書かない。
         # 直前に「Build」「ver」「v」などが在るか、周りに「バージョン」と書いてあれば版番号。
         ctx=body[max(0,body.find(m)-40):body.find(m)+len(m)+10]
         if re.search(r'(?i)(build|version|ver\.?|バージョン|ビルド|Adobe|DocuWorks|Acrobat)', ctx): continue
