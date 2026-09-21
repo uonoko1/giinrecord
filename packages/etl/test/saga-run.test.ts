@@ -28,6 +28,36 @@ const HTML: Record<string, string> = {
 const PDF: Record<string, string> = {
   [u("kiji003119791/3_119791_394982_up_cda325jj.pdf")]: "3_119791_394982_up_cda325jj.pdf",
   [u("kiji003119136/3_119136_389175_up_bkhi5h10.pdf")]: "3_119136_389175_up_bkhi5h10.pdf",
+  [u("kiji003111805/3_111805_349057_up_7elgmado.pdf")]: "3_111805_349057_up_7elgmado.pdf",
+};
+
+/**
+ * **令和7年の索引**（#901。「令和8年に読める会期が尽きたら令和7年へ下りる」ことを見るため）。
+ * **本物の HTML を削ったフィクスチャ**（`year-r7.html` / `category-r7-teirei.html` /
+ * `session-r7-02.html` / `gian-r7-02.html`。2026-09-21 取得）。
+ *
+ * **読める会期は 令和7年2月定例会 の 1 本だけにしてある。**
+ * **令和7年の 6月定・9月定・11月定・4月臨・決算特別委員会は、本文が空のページを返す**
+ * （`EMPTY`）——**本物では 9月定と 4月臨も読めるが、この試験が見たいのは
+ * 「索引をもう 1 年ぶん下りたか」であって「令和7年が全部読めるか」ではない。**
+ * **フィクスチャの PDF を増やすほど試験は遅くなるので、1 本だけ置いて境を作る。**
+ */
+const EMPTY = `<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8" /><title>フィクスチャ（本文が空）| 佐賀県議会</title></head><body>
+<!-- #901 の試験用。**本物のページではない**——索引の歩きを止めるための空の本文。 -->
+<div class="RightArea"></div></body></html>`;
+const R7: Record<string, string> = {
+  // **令和8年2月定例会**（`category-r8-teirei.html` に出るが、議案件名一覧表のフィクスチャが無い）。
+  // **本物では 78 採決が読める**が、ここでは空にして「令和8年に読めるのは 2 本」の境を作る。
+  [u("list06637.html")]: EMPTY,
+  [u("list06438.html")]: fx("year-r7.html").toString("utf-8"),
+  [u("list06439.html")]: fx("category-r7-teirei.html").toString("utf-8"),
+  [u("list06440.html")]: fx("session-r7-02.html").toString("utf-8"),
+  [u("kiji003111805/index.html")]: fx("gian-r7-02.html").toString("utf-8"),
+  [u("list06470.html")]: EMPTY, // 令和7年 臨時会（種別ページ）
+  [u("list06545.html")]: EMPTY, // 令和7年 決算特別委員会（種別ページ）
+  [u("list06485.html")]: EMPTY, // 令和7年6月定例会
+  [u("list06515.html")]: EMPTY, // 令和7年9月定例会
+  [u("list06546.html")]: EMPTY, // 令和7年11月定例会
 };
 
 function stub(extra: { html?: Record<string, string>; pdf?: Record<string, Buffer> } = {}): Fetcher & { fetched: string[] } {
@@ -148,4 +178,46 @@ test("#768 runSaga --sessions 2: 令和8年6月定例会と令和8年4月臨時�
   assert.deepEqual(run.unmatched.map((x) => x.nameText).sort(), ["桃崎裕介", "猪村理恵子"].sort());
   assert.equal(run.rollCalls.reduce((s, rc) => s + rc.votes.filter((v) => v.value.raw === "不明").length, 0), 0);
   assert.equal(run.unreadableSources.length, 0);
+});
+
+/**
+ * ## **`--sessions N` が「読める会期 N 本」を返さない**（#901 佐賀。**この PR が直す欠陥**）
+ *
+ * **`index.ts` の docblock と内側のループは「読める会期が `opts.sessions` 本そろったら止める」と
+ * 書いてあるが、外側の索引の歩きは `targets.length >= opts.sessions` で止まる。**
+ * **`targets` は「索引の候補」であって「読める会期」ではない。**
+ * **佐賀は読めない会期が多い**（文字層なし 5 本・賛否 PDF が無い 2 本が現任期の 20 会期に混ざる）
+ * **ので、候補の本数で止めると読める会期が足りないまま返る。**
+ *
+ * **本番で実測した（2026-09-21、`--sessions N` で `runSaga` を走らせた）:**
+ * | 頼んだ N | 返った会期 | 採決 | 最古 |
+ * |---:|---:|---:|---|
+ * | 2 | 2 | 23 | 2026-04-21 |
+ * | 4 | **3** | 101 | 2026-03-06 |
+ * | 8 | **6** | 201 | 2025-03-07 |
+ * | 13 | **8** | 277 | 2024-03-14 |
+ * | 20 | **14** | 445 | 2023-03-10（**一般選挙の前に届いてしまう**） |
+ *
+ * **「N 本頼んだら N 本返る」ではないので、既定を決める根拠に使えない。**
+ * **`N` を大きくすれば読める会期は増えるが、増え方が読めないまま
+ * 一般選挙の境（令和5年2月定例会）を踏み越える**——**#569 の「別人の記録が出る」側。**
+ *
+ * **このテストは索引の歩きが「読める会期の本数」で止まることを見る。**
+ * **フィクスチャの令和8年には読める会期が 2 本しか無い**（6月定・4月臨。
+ * 9月定は賛否 PDF が無く、2月定は議案件名一覧表のフィクスチャを置いていない）。
+ * **3 本目を頼んだら、令和7年まで索引を下りて 令和7年2月定例会 に届くこと。**
+ */
+test("#901 runSaga --sessions 3: 令和8年に読める会期が 2 本しか無くても、令和7年まで下りて 3 本そろえる", async () => {
+  const f = stub({ html: R7 });
+  const run = await runSaga({ sessions: 3, fetchedAt: "2026-09-13T00:00:00.000Z", fetcher: f });
+  assert.deepEqual(run.sessions.map((s) => `${s.sessionLabel}/${s.rollcalls}`), [
+    "令和8年6月定例会/21",
+    "令和8年4月臨時会/2",
+    "令和7年2月定例会/72",
+  ], "読める会期が 3 本（索引の候補の本数ではなく）");
+  assert.equal(run.rollCalls.length, 95);
+  assert.equal(run.rollCalls.reduce((s, rc) => s + rc.votes.filter((v) => v.value.raw === "不明").length, 0), 0, "不明セルは 0");
+  // **令和7年の索引を実際に下りている**（黙って空で返していない）
+  assert.ok(f.fetched.includes(u("list06438.html")), "令和7年の年ページを開いた");
+  assert.ok(f.fetched.includes(u("list06439.html")), "令和7年の定例会ページを開いた");
 });

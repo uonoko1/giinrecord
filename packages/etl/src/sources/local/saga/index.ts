@@ -58,24 +58,33 @@ export async function runSaga(opts: { sessions: number; fetchedAt: string; fetch
   const roster = parseRoster(await f.text(SAGA_ROSTER_URL));
   log(`roster: ${roster.members.length} members (as of ${roster.asOf}, ${roster.termText})`);
 
-  // 年の一覧 → 年ページ → 種別ページ → 会期。**新しい年から順に、必要な本数がそろうまで**
+  // 年の一覧 → 年ページ → 種別ページ → 会期。**新しい年から順に、1 年ずつ下りる**（`nextYear`）
   const yearPages = parseIndex(await f.text(SAGA_INDEX_URL));
   const targets: SessionLink[] = [];
   const indexTally = new SessionTally();
-  for (const yearUrl of yearPages) {
-    if (targets.length >= opts.sessions) break;
+  let yearCursor = 0;
+  /**
+   * **索引をもう 1 年ぶん下りる**（読めた会期が足りないときに呼ぶ。#901）。
+   * **戻り値は「新しく足せた会期の本数」**（0 なら索引が尽きた）。
+   * **`targets` は毎回まるごと並べ直す**——**年をまたいで会期が混ざるため**
+   * （令和8年4月臨時会 は 令和8年6月定例会 より古い）。
+   */
+  const nextYear = async (): Promise<number> => {
+    if (yearCursor >= yearPages.length) return 0;
+    const yearUrl = yearPages[yearCursor++];
+    const before = targets.length;
     for (const catUrl of parseYearPage(await f.text(yearUrl), yearUrl)) {
       for (const s of parseCategoryPage(await f.text(catUrl), catUrl, indexTally)) {
         if (targets.some((t) => t.sessionUrl === s.sessionUrl)) continue;
         targets.push(s);
       }
     }
-  }
-  log(`session index: ${indexTally.line()}`);
-  // 新しい順（年・月）に並べる。**同じ年月に 2 本ある会期は sessionId で決める**（安定した順）
-  targets.sort((a, b) => b.year * 100 + b.month - (a.year * 100 + a.month) || (a.sessionId < b.sessionId ? 1 : -1));
+    // 新しい順（年・月）に並べる。**同じ年月に 2 本ある会期は sessionId で決める**（安定した順）
+    targets.sort((a, b) => b.year * 100 + b.month - (a.year * 100 + a.month) || (a.sessionId < b.sessionId ? 1 : -1));
+    return targets.length - before;
+  };
+  await nextYear();
   if (targets.length === 0) throw new Error("会期が 1 つも見つからない");
-  log(`sessions found: ${targets.length}`);
 
   const rollCalls: LocalRollCall[] = [];
   const unmatched = new Map<string, LocalUnmatchedName>();
@@ -88,9 +97,26 @@ export async function runSaga(opts: { sessions: number; fetchedAt: string; fetch
   const summary: SagaRun["summary"] = [];
   /** 同じ PDF を 2 回読まない（#670 が「同じ PDF が 2 つの URL で配られる」を実測） */
   const seenPdf = new Set<string>();
-  for (const t of targets) {
-    // **読める会期が opts.sessions 本そろったら止める**（読めない会期で枠を使わない）
-    if (sessions.length >= opts.sessions) break;
+  /** 見た会期の本数（`targets` の添字）。**読めたかどうかに関わらず 1 本進む。** */
+  let seen = 0;
+  /** 索引が尽きた（`nextYear` が 0 を返した）。**これが立つまでは「足りない」を「無い」と言わない。** */
+  let indexExhausted = false;
+  // **読める会期が opts.sessions 本そろうまで**（読めない会期で枠を使わない）。
+  // **`targets` を使い切ったら索引をもう 1 年ぶん下りる**（#901。これが無いと
+  // 「索引の候補が opts.sessions 本」で止まり、読めない会期のぶんだけ足りないまま返る）
+  while (sessions.length < opts.sessions) {
+    if (seen >= targets.length) {
+      if (indexExhausted) break;
+      // **1 年ぶん足しても 1 本も増えなければ、さらに次の年へ**（会期の無い年がある）
+      let added = 0;
+      while (added === 0) {
+        added = await nextYear();
+        if (added === 0 && yearCursor >= yearPages.length) { indexExhausted = true; break; }
+      }
+      if (indexExhausted) break;
+      continue;
+    }
+    const t = targets[seen++];
     const gianUrls = parseSessionPage(await f.text(t.sessionUrl), t.sessionUrl);
     const pdfUrls: string[] = [];
     const visited = new Set<string>();
@@ -149,6 +175,11 @@ export async function runSaga(opts: { sessions: number; fetchedAt: string; fetch
     summary.push({ sessionId: t.sessionId, sessionLabel: t.sessionLabel, members: pdfs[0].pdf.members.length, rows: converted.rollCalls.length, unknownCells, pdfUrls: urls });
     log(`  ${t.sessionLabel}: ${converted.rollCalls.length} roll calls × ${pdfs[0].pdf.members.length} members, unknown cells ${unknownCells}, unmatched names ${converted.unmatched.length}`);
   }
+  // **母数を出す**（#757。「足りなかった」を黙って返さない）。
+  // **索引は歩いたぶんだけ数える**ので、この行は歩き終わってから出す。
+  log(`session index: ${indexTally.line()}`);
+  log(`sessions: 頼んだ ${opts.sessions} / 見た ${seen} / 読めた ${sessions.length} / 読めなかった ${seen - sessions.length}`
+    + `（索引 ${indexExhausted ? "尽きた" : "残っている"}、年ページ ${yearCursor}/${yearPages.length}）`);
   if (rollCalls.length === 0) throw new Error("no roll calls read from any session");
   return { roster, rollCalls, unmatched: [...unmatched.values()], sessions, sources, unreadableSources, summary };
 }
