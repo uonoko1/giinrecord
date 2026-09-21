@@ -31,7 +31,7 @@ describe("root links / meta（#129 ファビコン・manifest）", () => {
   });
 });
 
-// Issue #127: SITE_ORIGIN が staging のビルドは全ページ noindex。origin は import.meta.env にインライン化されるので
+// Issue #939: SITE_ORIGIN が staging のビルドは全ページ noindex。origin は import.meta.env にインライン化されるので
 // モジュールを読み直して検証する。
 describe("root robots meta", () => {
   async function renderWith(origin: string): Promise<string> {

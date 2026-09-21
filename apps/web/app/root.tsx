@@ -5,7 +5,7 @@ import { BRAND } from "./lib/brand-colors";
 import { installPromptInit } from "./lib/install-prompt";
 import { robotsMeta, SITE_NAME, siteOrigin } from "./lib/seo";
 
-/** staging build (#127): every page carries noindex; null on production / origin-less builds. */
+/** staging build (#939): every page carries noindex; null on production / origin-less builds. */
 const robots = robotsMeta(siteOrigin());
 
 /**
