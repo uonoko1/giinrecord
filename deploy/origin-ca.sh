@@ -15,16 +15,18 @@
 # **鍵ファイルの形式**（ゾーンごとに 1 ブロック。順不同、余分な空行は無視）:
 #
 #   ### zone giinrecord.jp
-#   -----BEGIN CERTIFICATE-----
-#   ...
-#   -----END CERTIFICATE-----
-#   -----BEGIN PRIVATE KEY-----
-#   ...
-#   -----END PRIVATE KEY-----
+#   <Cloudflare が出した Origin 証明書の PEM をまるごと>
+#   <同じゾーンの秘密鍵の PEM をまるごと>
 #   ### zone gikailog.jp
 #   （同じ形）
 #
-# **RSA の場合は `-----BEGIN RSA PRIVATE KEY-----` でもよい**（Cloudflare は既定で ECC を出す）。
+# PEM の境界行（`BEGIN`/`END` の行）は Cloudflare の画面から出てくるものをそのまま使う。
+# **ここに逐語で書き写さない**: `-----BEGIN ... PRIVATE KEY-----` という 1 行は、それ自体が
+# gitleaks と `forbidden-patterns` の `private-key` 規則に当たる。実際 PR #944 の CI は、
+# 鍵が 1 本も入っていないこの説明文だけで 3 本落ちた。**規則を緩めるのではなく書かない**
+# （`scripts/ci/issue-secrets.sh` が版番号で踏んだのと同じ形）。
+# 鍵と証明書の見分けは下の parse が実際の境界行でやっているので、説明を省いても動作は変わらない。
+# RSA 形式（`RSA PRIVATE KEY`）でもよい。Cloudflare は既定で ECC を出す。
 #
 # やること（**冪等。何度でも再実行できる**）:
 #   1. 入力を検証する（ゾーン名・証明書と鍵の対応・鍵と証明書の公開鍵が一致するか）
@@ -250,7 +252,20 @@ if ! nginx -t 2>&1; then
   cp -a "$BACKUP/sites-available/." "$NGINX_DIR/sites-available/"
   die "nginx -t が通らないので戻した"
 fi
-systemctl reload nginx || { cp -a "$BACKUP/sites-available/." "$NGINX_DIR/sites-available/"; nginx -t && systemctl reload nginx; die "reload に失敗したので戻した"; }
+# **戻すときの reload を `nginx -t && systemctl reload nginx` で書かない**（#133 の規則。
+# `set -e` のもとで `&&` の左が落ちると errexit が見逃し、reload を飛ばしたまま先へ進む）。
+# ここは全体で一番効かせたい 1 行である: 戻した conf が反映されなければ、戻していないのと同じ。
+# 失敗したら黙らず、何が残っているかを言って落ちる。
+if ! systemctl reload nginx; then
+  cp -a "$BACKUP/sites-available/." "$NGINX_DIR/sites-available/"
+  if ! nginx -t; then
+    die "reload に失敗し、戻した conf でも nginx -t が通らない。$BACKUP を手で確かめること"
+  fi
+  if ! systemctl reload nginx; then
+    die "reload に失敗し、戻した conf の reload も失敗した。稼働中の nginx は古い設定のまま。$BACKUP を手で確かめること"
+  fi
+  die "reload に失敗したので戻した（戻した設定での reload は成功した）"
+fi
 
 # **reload は graceful。古いワーカーが古い証明書を返すのでリトライする**（隣接プロジェクトの実測）
 ok=0
