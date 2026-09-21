@@ -1,19 +1,19 @@
 {
  "assemblyId": "pref-31",
  "countChecked": {
-  "checked": 117,
+  "checked": 569,
   "noCounts": 0,
-  "rows": 118,
-  "unreadableCells": 1
+  "rows": 572,
+  "unreadableCells": 3
  },
  "counts": {
-  "cells": 4130,
+  "cells": 19623,
   "members": 35,
-  "rollcalls": 118,
+  "rollcalls": 572,
   "unknownCells": 0,
-  "unmatchedNames": 0
+  "unmatchedNames": 2
  },
- "fetchedAt": "2026-09-04T22:16:37.344Z",
+ "fetchedAt": "2026-09-21T01:29:54.355Z",
  "rosterAsOf": "2023-04-30",
  "sessionRosterCoverage": [
   {
@@ -55,68 +55,345 @@
    "sessionLabel": "令和8年2月定例会",
    "sourceUrl": "https://www.pref.tottori.lg.jp/326506.htm",
    "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.pref.tottori.lg.jp/secure/1409605/R7.12.3giketsukekka.pdf",
+   "rollcalls": 36,
+   "sessionId": "2025-12",
+   "sessionLabel": "令和7年12月定例会",
+   "sourceUrl": "https://www.pref.tottori.lg.jp/325250.htm",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.pref.tottori.lg.jp/secure/1396549/R7.9giketsukekka.pdf",
+   "rollcalls": 35,
+   "sessionId": "2025-09",
+   "sessionLabel": "令和7年9月定例会",
+   "sourceUrl": "https://www.pref.tottori.lg.jp/323980.htm",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.pref.tottori.lg.jp/secure/1394859/R7_6_sengigiketsu.pdf",
+   "rollcalls": 36,
+   "sessionId": "2025-06",
+   "sessionLabel": "令和7年6月定例会",
+   "sourceUrl": "https://www.pref.tottori.lg.jp/322232.htm",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.pref.tottori.lg.jp/secure/1376361/R7_2_sengiketsu.pdf",
+   "rollcalls": 98,
+   "sessionId": "2025-02",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.tottori.lg.jp/320610.htm",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.pref.tottori.lg.jp/secure/1369845/R6.11giketsukekka.pdf",
+   "rollcalls": 37,
+   "sessionId": "2024-11",
+   "sessionLabel": "令和6年11月定例会",
+   "sourceUrl": "https://www.pref.tottori.lg.jp/319525.htm",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.pref.tottori.lg.jp/secure/1362545/R0609gikeysukekka.pdf",
+   "rollcalls": 36,
+   "sessionId": "2024-09",
+   "sessionLabel": "令和6年9月定例会",
+   "sourceUrl": "https://www.pref.tottori.lg.jp/318408.htm",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.pref.tottori.lg.jp/secure/1353173/R6.6giketsukekka.pdf",
+   "rollcalls": 38,
+   "sessionId": "2024-06",
+   "sessionLabel": "令和6年6月定例会",
+   "sourceUrl": "https://www.pref.tottori.lg.jp/316912.htm",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.pref.tottori.lg.jp/secure/1344176/R6-2_giketsukekka_0306sengi.pdf",
+   "rollcalls": 88,
+   "sessionId": "2024-02",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.tottori.lg.jp/315291.htm",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.pref.tottori.lg.jp/secure/1338979/R5_11_sengigiketsukekka.pdf",
+   "rollcalls": 50,
+   "sessionId": "2023-11",
+   "sessionLabel": "令和5年11月定例会",
+   "sourceUrl": "https://www.pref.tottori.lg.jp/314478.htm",
+   "unknownCells": 0
   }
  ],
  "sources": [
   {
-   "fetchedAt": "2026-09-04T22:16:37.344Z",
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
    "name": "鳥取県議会 議員名簿（五十音順）",
    "url": "https://www.pref.tottori.lg.jp/75928.htm"
   },
   {
-   "fetchedAt": "2026-09-04T22:16:37.344Z",
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
    "name": "鳥取県議会 定例会・臨時会の概要",
    "url": "https://www.pref.tottori.lg.jp/87621.htm"
   },
   {
-   "fetchedAt": "2026-09-04T22:16:37.344Z",
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
    "name": "鳥取県議会 議案等の議決結果（令和8年6月定例会）",
    "url": "https://www.pref.tottori.lg.jp/328150.htm"
   },
   {
-   "fetchedAt": "2026-09-04T22:16:37.344Z",
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
    "name": "鳥取県議会 議決結果・議員別の賛否の状況（令和8年6月定例会、2026-06-29議決分）",
    "url": "https://www.pref.tottori.lg.jp/secure/1422217/R8.6giketsukekka0629.pdf"
   },
   {
-   "fetchedAt": "2026-09-04T22:16:37.344Z",
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
    "name": "鳥取県議会 議決結果・議員別の賛否の状況（令和8年6月定例会、2026-06-29議決分）",
    "url": "https://www.pref.tottori.lg.jp/secure/1422215/r8.6.29giketsukekka.pdf"
   },
   {
-   "fetchedAt": "2026-09-04T22:16:37.344Z",
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
    "name": "鳥取県議会 議決結果・議員別の賛否の状況（令和8年6月定例会、2026-06-29議決分）",
    "url": "https://www.pref.tottori.lg.jp/secure/1422215/R8.6.29%20giinteishutsugian_giketsukekka.pdf"
   },
   {
-   "fetchedAt": "2026-09-04T22:16:37.344Z",
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
    "name": "鳥取県議会 議決結果・議員別の賛否の状況（令和8年6月定例会、2026-06-29議決分）",
    "url": "https://www.pref.tottori.lg.jp/secure/1422216/R8.6.29_seiganchinjogiketsukekka.pdf"
   },
   {
-   "fetchedAt": "2026-09-04T22:16:37.344Z",
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
    "name": "鳥取県議会 議案等の議決結果（令和8年2月定例会）",
    "url": "https://www.pref.tottori.lg.jp/326506.htm"
   },
   {
-   "fetchedAt": "2026-09-04T22:16:37.344Z",
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
    "name": "鳥取県議会 議決結果・議員別の賛否の状況（令和8年2月定例会、2026-03-09議決分）",
    "url": "https://www.pref.tottori.lg.jp/secure/1412313/R0802sengikekka.pdf"
   },
   {
-   "fetchedAt": "2026-09-04T22:16:37.344Z",
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
    "name": "鳥取県議会 議決結果・議員別の賛否の状況（令和8年2月定例会、2026-03-25議決分）",
    "url": "https://www.pref.tottori.lg.jp/secure/1412311/R8.2giketsukekka0325.pdf"
   },
   {
-   "fetchedAt": "2026-09-04T22:16:37.344Z",
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
    "name": "鳥取県議会 議決結果・議員別の賛否の状況（令和8年2月定例会、2026-03-25議決分）",
    "url": "https://www.pref.tottori.lg.jp/secure/1412309/R8.2giketsukekka0325.pdf"
   },
   {
-   "fetchedAt": "2026-09-04T22:16:37.344Z",
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
    "name": "鳥取県議会 議決結果・議員別の賛否の状況（令和8年2月定例会、2026-03-25議決分）",
    "url": "https://www.pref.tottori.lg.jp/secure/1412310/R8.2giketsukekka0325.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議案等の議決結果（令和7年12月定例会）",
+   "url": "https://www.pref.tottori.lg.jp/325250.htm"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議決結果・議員別の賛否の状況（令和7年12月定例会、2025-12-03議決分）",
+   "url": "https://www.pref.tottori.lg.jp/secure/1409605/R7.12.3giketsukekka.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議決結果・議員別の賛否の状況（令和7年12月定例会、2025-12-22議決分）",
+   "url": "https://www.pref.tottori.lg.jp/secure/1404907/R7.12.22giketsukekka.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議決結果・議員別の賛否の状況（令和7年12月定例会、2025-12-22議決分）",
+   "url": "https://www.pref.tottori.lg.jp/secure/1404906/R7.12.22giketsukekka.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議決結果・議員別の賛否の状況（令和7年12月定例会、2025-12-22議決分）",
+   "url": "https://www.pref.tottori.lg.jp/secure/1404909/R7.12.22giketsukekka.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議案等の議決結果（令和7年9月定例会）",
+   "url": "https://www.pref.tottori.lg.jp/323980.htm"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議決結果・議員別の賛否の状況（令和7年9月定例会、2025-10-08議決分）",
+   "url": "https://www.pref.tottori.lg.jp/secure/1396549/R7.9giketsukekka.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議決結果・議員別の賛否の状況（令和7年9月定例会、2025-10-08議決分）",
+   "url": "https://www.pref.tottori.lg.jp/secure/1396548/R7.9giketsukekka.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議案等の議決結果（令和7年6月定例会）",
+   "url": "https://www.pref.tottori.lg.jp/322232.htm"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議決結果・議員別の賛否の状況（令和7年6月定例会、2025-06-12議決分）",
+   "url": "https://www.pref.tottori.lg.jp/secure/1394859/R7_6_sengigiketsu.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議決結果・議員別の賛否の状況（令和7年6月定例会、2025-06-30議決分）",
+   "url": "https://www.pref.tottori.lg.jp/secure/1385959/R7.6giketsukekka.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議決結果・議員別の賛否の状況（令和7年6月定例会、2025-06-30議決分）",
+   "url": "https://www.pref.tottori.lg.jp/secure/1385957/R7.6giketsukekka.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議決結果・議員別の賛否の状況（令和7年6月定例会、2025-06-30議決分）",
+   "url": "https://www.pref.tottori.lg.jp/secure/1385958/R7.6giketsukekka.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議案等の議決結果（令和7年2月定例会）",
+   "url": "https://www.pref.tottori.lg.jp/320610.htm"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議決結果・議員別の賛否の状況（令和7年2月定例会、2025-03-06議決分）",
+   "url": "https://www.pref.tottori.lg.jp/secure/1376361/R7_2_sengiketsu.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議決結果・議員別の賛否の状況（令和7年2月定例会、2025-03-24議決分）",
+   "url": "https://www.pref.tottori.lg.jp/secure/1376359/R7.2giketsukekka.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議決結果・議員別の賛否の状況（令和7年2月定例会、2025-03-24議決分）",
+   "url": "https://www.pref.tottori.lg.jp/secure/1376357/R7.2giketsukekka.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議決結果・議員別の賛否の状況（令和7年2月定例会、2025-03-24議決分）",
+   "url": "https://www.pref.tottori.lg.jp/secure/1376358/R7.2giketsukekka.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議案等の議決結果（令和6年11月定例会）",
+   "url": "https://www.pref.tottori.lg.jp/319525.htm"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議決結果・議員別の賛否の状況（令和6年11月定例会、2024-12-19議決分）",
+   "url": "https://www.pref.tottori.lg.jp/secure/1369845/R6.11giketsukekka.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議決結果・議員別の賛否の状況（令和6年11月定例会、2024-12-19議決分）",
+   "url": "https://www.pref.tottori.lg.jp/secure/1369844/R6.11giketsukekka.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議決結果・議員別の賛否の状況（令和6年11月定例会、2024-12-19議決分）",
+   "url": "https://www.pref.tottori.lg.jp/secure/1369849/R6.11giketsukekka.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議案等の議決結果（令和6年9月定例会）",
+   "url": "https://www.pref.tottori.lg.jp/318408.htm"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議決結果・議員別の賛否の状況（令和6年9月定例会、2024-10-10議決分）",
+   "url": "https://www.pref.tottori.lg.jp/secure/1362545/R0609gikeysukekka.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議決結果・議員別の賛否の状況（令和6年9月定例会、2024-10-10議決分）",
+   "url": "https://www.pref.tottori.lg.jp/secure/1362543/R0609gikeysukekka.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議決結果・議員別の賛否の状況（令和6年9月定例会、2024-10-10議決分）",
+   "url": "https://www.pref.tottori.lg.jp/secure/1362544/R0609gikeysukekka.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議案等の議決結果（令和6年6月定例会）",
+   "url": "https://www.pref.tottori.lg.jp/316912.htm"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議決結果・議員別の賛否の状況（令和6年6月定例会、2024-07-03議決分）",
+   "url": "https://www.pref.tottori.lg.jp/secure/1353173/R6.6giketsukekka.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議決結果・議員別の賛否の状況（令和6年6月定例会、2024-07-03議決分）",
+   "url": "https://www.pref.tottori.lg.jp/secure/1353171/R6.6giketsukekka.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議決結果・議員別の賛否の状況（令和6年6月定例会、2024-07-03議決分）",
+   "url": "https://www.pref.tottori.lg.jp/secure/1353169/R6.6giketsukekka.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議決結果・議員別の賛否の状況（令和6年6月定例会、2024-07-03議決分）",
+   "url": "https://www.pref.tottori.lg.jp/secure/1353170/R6.6giketsukekka.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議案等の議決結果（令和6年2月定例会）",
+   "url": "https://www.pref.tottori.lg.jp/315291.htm"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議決結果・議員別の賛否の状況（令和6年2月定例会、2024-03-06議決分）",
+   "url": "https://www.pref.tottori.lg.jp/secure/1344176/R6-2_giketsukekka_0306sengi.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議決結果・議員別の賛否の状況（令和6年2月定例会、2024-03-22議決分）",
+   "url": "https://www.pref.tottori.lg.jp/secure/1344174/giketsukekka_R6.2.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議決結果・議員別の賛否の状況（令和6年2月定例会、2024-03-22議決分）",
+   "url": "https://www.pref.tottori.lg.jp/secure/1344172/giketsukekka_R6.2.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議決結果・議員別の賛否の状況（令和6年2月定例会、2024-03-22議決分）",
+   "url": "https://www.pref.tottori.lg.jp/secure/1344173/giketsukekka_R6.2.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議案等の議決結果（令和5年11月定例会）",
+   "url": "https://www.pref.tottori.lg.jp/314478.htm"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議決結果・議員別の賛否の状況（令和5年11月定例会、2023-12-04議決分）",
+   "url": "https://www.pref.tottori.lg.jp/secure/1338979/R5_11_sengigiketsukekka.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議決結果・議員別の賛否の状況（令和5年11月定例会、2023-12-20議決分）",
+   "url": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議決結果・議員別の賛否の状況（令和5年11月定例会、2023-12-20議決分）",
+   "url": "https://www.pref.tottori.lg.jp/secure/1338976/R5-11_giketsukekka.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T01:29:54.355Z",
+   "name": "鳥取県議会 議決結果・議員別の賛否の状況（令和5年11月定例会、2023-12-20議決分）",
+   "url": "https://www.pref.tottori.lg.jp/secure/1338981/R5-11_giketsukekka.pdf"
   }
  ]
 }
