@@ -104,14 +104,26 @@ describe("#826 本番データ: 記号の数と公表値の突き合わせが画
       // PDF が 29 行ぶん空欄にしており、推定せず `不明` で残した**（#569）。
       // **その 29 本は突き合わせの外に出る**（584 − 29 = 555 が `checked`）。
       // **食い違いは 0 のまま。**
-    }).toEqual({ rows: 3036, checked: 2174, noCounts: 785, unreadableCells: 77, mismatches: 0 });
+      //
+      // ## **#901 で 3,036 → 3,534 / 2,174 → 2,672 に動いた**（2026-09-21。青森）
+      // **青森の `--sessions` の既定を 2 → 14 にした**（113 → 611。2023年4月の一般選挙の直後まで）。
+      // **増えた 498 本は 498 本とも `checked` に入る**——
+      // **青森は 611 / 611 行に `counts` があり、611 / 611 行で ○/× の数と一致する**（実測）。
+      // **`noCounts` は 785 のまま、`unreadableCells` も 77 のまま**
+      // （**青森は index の 56 本すべてが読め、不明セルが 1 つも無い**）。**食い違いは 0 のまま。**
+      //
+      // **⚠ この一致は x の錨にならない**（#891／#911）——**記号を 1 列ずらしても
+      // ○ と × の個数は変わらないので、`counts` との突き合わせは通る**（実測: 青森の
+      // `readVoteCells` を 1 列回す変異を当てても、この数字は 1 つも動かなかった）。
+      // **x の錨は `packages/etl/test/aomori-votes-pdf.test.ts` の #901 のほうである。**
+    }).toEqual({ rows: 3534, checked: 2672, noCounts: 785, unreadableCells: 77, mismatches: 0 });
   });
 
-  it("/coverage に、本番の母数（2,174 件）と食い違い（0 件）と未突合の内訳が出る", async () => {
+  it("/coverage に、本番の母数（2,672 件）と食い違い（0 件）と未突合の内訳が出る", async () => {
     await renderCoverage(await realLocalMetas());
     const section = screen.getByRole("region", { name: SECTION });
     // **母数が出ていること**（#757。「0 件」は「見た上での 0」でなければ意味が無い）
-    expect(section).toHaveTextContent("2,174");
+    expect(section).toHaveTextContent("2,672");
     // **突き合わせなかった 785 件と 77 件の内訳も出す**（黙って母数から外さない）
     expect(section).toHaveTextContent("785");
     expect(section).toHaveTextContent("77");
