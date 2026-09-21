@@ -316,15 +316,19 @@ test("#874 2024-06 は既存の 2 本と作りが違う（Producer が DocuWorks
   assert.ok(books.get("2026-06")!.pdf.legend.has("－"), "2026-06 の凡例の横棒は U+FF0D");
 });
 
-test("#874 2025-11 は読めない——付託委員会の名前が**中央揃え**で、`leftAlignedBoundary` の前提が崩れる", async () => {
-  // **`parseVotePdf` は例外を投げる**（黙って落とさない）。**それ自体は正しい振る舞いである。**
-  // **#896 で例外の中身が変わった**（`付託委員会 is empty` → `付託委員会 is …pt off the row centre`）。
-  // **#896 は付託委員会の切り分けを閾値から「塊の中心が行の中心に揃う」に変えたので、
-  // この本では「欄からこぼれた委員会名のぶん、塊の中心がずれる」という形で先に捕まる。**
-  // **どちらにせよ読めない**——**中央揃えという機序は #896 では直していない**（下でその機序を固定する）。
-  await assert.rejects(() => parseVotePdf(fixture("r0711_giinbetu_kekka.pdf")), /付託委員会 is 4\.2pt off the row centre/);
+test("#901 2025-11 は読める（#874 / #896 の「読めない」を直した）——付託委員会の名前が**中央揃え**である", async () => {
+  // **#874 と #896 はここで「読めない」を固定していた**（`付託委員会 is 4.2pt off the row centre`）。
+  // **#901 が機序そのものを直したので、いまは読める。**
+  // **機序は消えていない**——**この本の委員会名が中央揃えであることは下でそのまま固定する。**
+  // **変わったのは `leftAlignedBoundary` が欄の中心も見るようになったこと**（`votes-pdf.ts` の docblock）。
+  const pdf = await parseVotePdf(fixture("r0711_giinbetu_kekka.pdf"));
+  assert.equal(pdf.rows.length, 62, "2025-11 の行数");
+  // **付託委員会が 1 行も空でない**（母数を書く。#757）
+  assert.equal(pdf.rows.filter((r) => r.referredCommittees.length > 0).length, 62, "付託委員会のある行");
+  // **件名に委員会名がこぼれていない**
+  assert.deepEqual(pdf.rows.filter((r) => /^[^※]{2,12}(委員会|審査会)$/.test(r.title)).map((r) => r.number), []);
   // **機序**: 12 本では委員会名が**左端を揃えて**書かれるが、2025-11 だけ**中心が揃っている**（中心 x=350.0）。
-  // そのため「一番多く並んでいる左端の x」を欄の左端とみなす規則が、長い名前を取りこぼす。
+  // **「一番多く並んでいる左端の x」だけを欄の左端とみなすと、長い名前を取りこぼす。**
   const pages = await readPages(fixture("r0711_giinbetu_kekka.pdf"));
   const lefts = new Map<string, Set<number>>();
   for (const page of pages) {

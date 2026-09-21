@@ -182,25 +182,59 @@ function boundaryBetween(pages: PageGeometry[], bodyTops: number[], lo: number, 
 
 /**
  * 件名の欄と付託委員会の欄の境目。件名は欄の左端（titleLeft）から書かれて行ごとに長さが違い
- * （2 行にわたる件名の続きの行は途中の x から始まることもある）、付託委員会は 1 議案に 1〜4 個、
- * どれも自分の欄の左端に揃えて書かれる。そこで
+ * （2 行にわたる件名の続きの行は途中の x から始まることもある）、付託委員会は 1 議案に 1〜4 個。
+ * そこで
  *   付託委員会の書き出し = 件名の書き出しより右にある本文の文字の左端のうち、
  *                          同じ x に一番多く並んでいるもの（＝全議案ぶん揃っている欄の左端）
  * を取り、その手前までを件名の欄にする。境目は「件名の右端の最大」と「付託委員会の書き出し」の中点。
  * 件名が付託委員会の書き出しまで届いている行（＝2 つの欄が 1 つの文字列になっている行）は、
  * 右端の最大を取るときには数えない（その行は後で境目で切り分ける）。
+ *
+ * ## **欄が中央揃えのことがある**（Issue #901。**2025-11 がこれで読めなかった**）
+ *
+ * **「どれも自分の欄の左端に揃えて書かれる」は 14 本のうち 1 本で成り立たない。**
+ * **2025-11（`r0711`）だけ付託委員会が中央揃えで、名前の長さで左端が散る**（実測）:
+ *
+ * | | 相異なる左端（最大/頁） | 相異なる中心（最大/頁） | 左端 sd | 中心 sd |
+ * |---|---|---|---|---|
+ * | **2025-11** | **6** | **2** | **4.62** | **0.12** |
+ * | 他の 11 本（読めた本を含む） | 1〜5 | 3〜5 | **0.00 〜 0.28** | 4.43 〜 9.50 |
+ *
+ * **中央揃えだと「一番多い左端」より左に書き出される委員会名が出る**——
+ * **2025-11 は 62 個中 37 個**（実測）。**それが件名の欄に落ちて `付託委員会 is 4.2pt off` になっていた。**
+ *
+ * **直し方は「閾値を緩める」ではない。** **欄の中心という、同じ PDF に書かれている事実を足す:**
+ * **一番多く並んでいる左端を持つ文字の「中心」を欄の中心とみなし、
+ * その中心を共有する文字だけを欄の仲間に入れて、その中の最小の左端を欄の左端にする。**
+ *
+ * **中心が違う文字は入らない**ので、**件名の続きの行が欄に食い込んでも拾わない**——
+ * **緩めているのではなく、揃え方が 2 通りあることを PDF から読んでいる。**
+ * **左揃えの本では、欄の仲間の左端は全部同じなので最小＝最頻であり、値は 1pt も動かない**（実測。下のテスト）。
  */
+/** 欄の中心とみなす許容差（pt）。同じ欄の文字は中心が一致する（2025-11 の実測は 2 通りで幅 0.2pt）。 */
+const COLUMN_CENTER_TOL = 1;
+
 function leftAlignedBoundary(pages: PageGeometry[], bodyTops: number[], titleCenter: number, hi: number, titleLeft: number, what: string): { boundary: number; right: number } {
   const inBody = (i: Item, pi: number): boolean => i.y < bodyTops[pi];
   const lefts: number[] = [];
+  const band: Item[] = [];
   for (const [pi, page] of pages.entries()) {
-    for (const i of page.items) if (inBody(i, pi) && i.x > titleCenter && i.x < hi) lefts.push(i.x);
+    for (const i of page.items) if (inBody(i, pi) && i.x > titleCenter && i.x < hi) { lefts.push(i.x); band.push(i); }
   }
   const groups = cluster(lefts, 1);
   if (groups.length === 0) throw new Error(`${what} columns cannot be told apart (no 付託委員会 text found)`);
   const count = (x: number): number => lefts.filter((v) => Math.abs(v - x) <= 1).length;
   // 一番多く並んでいる x。同数なら左のものを取る（付託委員会の欄は必ず全議案ぶん並ぶ）
-  const right = groups.reduce((best, x) => (count(x) > count(best) ? x : best), groups[0]);
+  const mode = groups.reduce((best, x) => (count(x) > count(best) ? x : best), groups[0]);
+  // **欄の中心**: 一番多く並んでいる左端を持つ文字の中心。**同じ左端でも幅が違えば中心も違う**ので、
+  // **一番多く並んでいる中心**を取る（左揃えの本では長さの違う委員会名が同じ左端に並ぶ）。
+  const modeCenters = band.filter((i) => Math.abs(i.x - mode) <= 1).map(center);
+  const centerCount = (c: number): number => modeCenters.filter((v) => Math.abs(v - c) <= COLUMN_CENTER_TOL).length;
+  const columnCenter = modeCenters.reduce((best, c) => (centerCount(c) > centerCount(best) ? c : best), modeCenters[0]);
+  // **欄の仲間**: その中心を共有する文字。**中央揃えの本ではここで左端の散らばりが吸収される。**
+  // **左揃えの本では中心がばらけるので仲間は最頻の左端の文字だけになり、`right` は動かない**（実測）。
+  const members = band.filter((i) => Math.abs(center(i) - columnCenter) <= COLUMN_CENTER_TOL);
+  const right = Math.min(mode, ...members.map((i) => i.x));
   let titleRight = titleLeft;
   for (const [pi, page] of pages.entries()) {
     for (const i of page.items) {
@@ -489,6 +523,37 @@ export function checkReferredOffset(page: number, number: string, committees: st
   }
 }
 
+/**
+ * **1 つの文字アイテムに票の記号が 2 つ以上入っていることがある**ので、記号 1 つずつに割る（Issue #901）。
+ *
+ * **2025-11（`r0711`）の page 3 に `"○ ○"` が 1 個ある**（実測。`x=740.17 w=13.77`）。
+ * **PDF の中で 2 つの `○` が 1 回の `showText` で描かれている**ために、1 アイテムになる。
+ *
+ * **割らないとどうなるか**（直す前の実測）:
+ * - **その列は「凡例に無いセル `○○`」になり、`rollcalls.ts` が例外を投げて ETL が止まる。**
+ * - **隣の列は記号が無いので `不明` になる**——**投じられた票が 1 つ消える。**
+ *
+ * **どこに置くかは推定しない。** **アイテムの x と幅がまたいでいる列だけに置く**——
+ * **またいだ列の数と記号の数が合わなければ、割らずにそのまま返す**（合わないものを無理に配らない。#569）。
+ * **2025-11 の実測**: `740.17 〜 753.94` が列 `740.2` と `749.4` の 2 列をまたぎ、記号も 2 つで一致する。
+ *
+ * **記号が 1 つのアイテム（＝ほとんど全部）はそのまま返る**ので、13 本の出力は 1 セルも変わらない（実測）。
+ */
+export function splitJoinedMarks(items: readonly Item[], colX: readonly number[]): Item[] {
+  const out: Item[] = [];
+  for (const it of items) {
+    const marks = [...it.str.replace(/\s+/g, "")];
+    // 記号だけで 2 つ以上入っているアイテムだけが対象（「議⾧」「除斥」などのラベルは触らない）
+    if (marks.length < 2 || !marks.every((m) => m === "○" || m === "●")) { out.push(it); continue; }
+    // このアイテムがまたいでいる列（アイテムの x 〜 右端の中にある列の中心）
+    const spanned = colX.map((x, k) => [x, k] as const).filter(([x]) => x >= it.x - 4 && x <= it.x + it.w + 4);
+    // **数が合わなければ割らない**——どの列がどの記号かを決められない
+    if (spanned.length !== marks.length) { out.push(it); continue; }
+    marks.forEach((m, k) => { out.push({ ...it, str: m, x: spanned[k][0], w: it.w / marks.length }); });
+  }
+  return out;
+}
+
 export async function parseVotePdf(bytes: Buffer): Promise<VotePdf> {
   const pages = await readPages(bytes);
   if (pages.length === 0) throw new Error("empty PDF");
@@ -663,7 +728,7 @@ export async function parseVotePdf(bytes: Buffer): Promise<VotePdf> {
     // 「議⾧」「除斥」は縦書き 2 文字の結合セルで、○ ● の無い行をまとめて覆う（議長は複数の議案にわたって議長のまま）。
     // 列ごとに文字を集めておき、その列で ○ ● の無い行すべてにこのラベルを入れる。
     const labelByCol = new Map<number, Item[]>();
-    for (const it of voteItems) {
+    for (const it of splitJoinedMarks(voteItems, colX)) {
       const col = colX.findIndex((x) => Math.abs(it.x - x) < 4);
       if (col < 0) { unknownCells++; continue; }
       if (it.str === "○" || it.str === "●") {
