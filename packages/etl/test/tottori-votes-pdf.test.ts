@@ -252,3 +252,27 @@ test("#901 広げた 3 本でも ○の数＝賛成者数、×の数＝反対者
   assert.equal(checked, 160);
   assert.deepEqual(mismatches, []);
 });
+
+const feb2024 = await parseVotePdf(bytes("giketsukekka_R6.2.pdf"));
+
+test("#901 件名が 5.5pt 字下げされた行（令和6年2月定例会 5 ページ目）でも件名を読む。引用の本文は今までどおり件名に入れない", () => {
+  // **直す前は `i.x < titleLeft + 4` で全部ふるっていたので、この 7 行の件名が空になり、
+  // `toLocalRollCalls` の `title is empty in every PDF` で会期がまるごと出なかった。**
+  assert.equal(feb2024.date, "2024-03-22");
+  const named = feb2024.rows.filter((r) => r.title === "鳥取県廃棄物審議会委員の任命について");
+  assert.equal(named.length, 7, "**同じ件名の行が 7 行**（第75号〜第81号。母数。#757。実測 2026-09-21）");
+  assert.deepEqual(named.map((r) => r.number), ["第75号", "第76号", "第77号", "第78号", "第79号", "第80号", "第81号"]);
+  // **この PDF に件名が空の行はもう 1 行も無い**（直す前は 7 行あった）
+  assert.deepEqual(feb2024.rows.filter((r) => r.title === "").map((r) => `${r.kind}${r.number}`), []);
+});
+
+test("#901 引用の本文は件名に混ざらない（陳情の PDF で、折り返しが件名と同じくらいまで字下げが戻る行）", () => {
+  // **x だけで切ると、引用の折り返し（6.4pt）が件名（5.6pt まで）と区別できない。**
+  // **上から読んで 10pt 以上字下げされた行に当たったら打ち切る**ので、折り返しも入らない。
+  const wind = juneSeigan.rows.find((r) => r.number === "8年-8");
+  assert.ok(wind, "陳情 8年-8 が要る");
+  assert.equal(wind.title, "大規模風力発電事業等の許認可に自治体の同意を要件とする電気事業法等の改正を求める陳情");
+  const kosit = juneSeigan.rows.find((r) => r.number === "8年-10");
+  assert.ok(kosit);
+  assert.equal(kosit.title, "皇室の伝統に基づく安定的皇位継承の国会論議促進を求める陳情");
+});

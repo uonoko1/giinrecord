@@ -72,9 +72,37 @@ export interface VotePdf {
 /** 件名の見出しセルには、前ページから続く陳情の本文がはみ出して入ることがある（陳情だけの PDF の 2 ページ目）ので前方一致 */
 const LEFT_HEADERS = [/^議案等番号$/, /^件名/];
 const RIGHT_HEADERS = [/^賛成者数$/, /^反対者数$/, /^表決者数$/, /^議決結果$/, /^表決方法$/];
-/** 種別（縦書き）は列の左端に寄っている。件名はセルの左端（罫線から 4pt 以内）に揃う。 */
+/** 種別（縦書き）は列の左端に寄っている。 */
 const KIND_INDENT = 8;
-const TITLE_INDENT = 4;
+/**
+ * **件名のセルの中身は 2 種類ある**（#901）——**件名そのものと、その下に引用された陳情・条文の本文。**
+ * **この 2 つを分けるのに、x（字下げ）だけでは足りない**ことが、`--sessions` を広げて分かった。
+ *
+ * **読めるすべての PDF（43 本・1,678 行）で字下げを数えた**（実測 2026-09-21）:
+ *
+ * | | 字下げ |
+ * |---|---|
+ * | 件名の 1 行目・2 行目 | **1.3 / 2.0 / 2.1 / 2.2 / 5.6pt** |
+ * | 引用の本文の 1 行目 | **10.8 〜 12.5pt** |
+ * | **引用の本文の 2 行目以降**（折り返し） | **6.4 / 6.5 / 7.1 / 7.3 / 7.4pt** |
+ * | 前のページから続く本文だけの行 | **7.4pt**（1 行だけ。43 本で 1 行） |
+ *
+ * **件名（最大 5.6）と引用の折り返し（最小 6.4）のあいだは 0.8pt しかない。**
+ * **1 本の閾値でこの 2 つを分けるのは危うい**ので、**y も使う。**
+ *
+ * - **`QUOTE_INDENT`（10pt）**: **引用の本文の 1 行目は必ずここまで字下げされている。**
+ *   **件名は必ずセルの上から始まる**ので、**上から読んでいって 10pt 以上字下げされた行に当たったら、
+ *   そこから下は全部引用である**——**折り返しが 6.4pt に戻っても、もう件名には戻らない。**
+ *   **これで「件名が 5.5pt」と「引用の折り返しが 6.4pt」を、x で区別しなくてよくなる。**
+ *   **直す前（`i.x < titleLeft + 4` で全部ふるう）は、令和6年2月定例会（2024-03-22 議決分）の
+ *   5.5pt 字下げされた 7 行の件名が空になり、`title is empty in every PDF` で会期ごと落ちていた。**
+ *
+ * - **`CONTINUATION_INDENT`（4pt）**: **「件名の列にしか文字が無い行」＝前のページから続く本文だけの行。**
+ *   **この行は採決ではないので、行として数えない。**
+ *   **ここを 6.5 に上げると、その行（7.4pt）を採決と読み違えて例外になる**（実測）。
+ */
+const CONTINUATION_INDENT = 4;
+const QUOTE_INDENT = 10;
 
 export async function parseVotePdf(bytes: Buffer): Promise<VotePdf> {
   const pages = await readPages(bytes);
@@ -313,7 +341,7 @@ function readRows(page: PageGeometry, grid: Grid, pageNo: number, memberCount: n
     if (inRow.length === 0) continue; // 空の行（余白）
     const firstCol = inRow.filter((i) => within(i.cx, kindLeft, kindRight));
     // 件名の列にしか文字が無い行: 前ページから続く陳情の本文だけ（番号・賛否・結果が無い）。行として数えない
-    if (inRow.every((i) => within(i.cx, titleLeft, voteStart) && i.x >= titleLeft + TITLE_INDENT)) continue;
+    if (inRow.every((i) => within(i.cx, titleLeft, voteStart) && i.x >= titleLeft + CONTINUATION_INDENT)) continue;
     // 節見出しの行（「【議案】」）: 賛否の対象を読み、以後の行に付ける
     if (firstCol.some((i) => i.str.trim().startsWith("【"))) {
       const heading = joinText(firstCol);
@@ -330,7 +358,11 @@ function readRows(page: PageGeometry, grid: Grid, pageNo: number, memberCount: n
     if (splits.length > 1) throw new Error(`${rowLabel}: unexpected columns between 件名 and the vote area (${splits.map((x) => x.toFixed(1)).join(" ")})`);
     const titleRight = splits[0] ?? voteStart;
     const titleItems = inRow.filter((i) => within(i.cx, titleLeft, titleRight));
-    const title = [...titleItems.filter((i) => i.x < titleLeft + TITLE_INDENT)].sort((a, b) => b.y - a.y || a.x - b.x).map((i) => i.str.trim()).join("");
+    // **上から読んでいき、引用の本文（`QUOTE_INDENT` 以上の字下げ）に当たったらそこで打ち切る。**
+    // **引用の折り返しは字下げが件名と同じくらいまで戻るので、x だけでは切れない**（上の docblock）。
+    const titleLines = [...titleItems].sort((a, b) => b.y - a.y || a.x - b.x);
+    const quoteAt = titleLines.findIndex((i) => i.x >= titleLeft + QUOTE_INDENT);
+    const title = (quoteAt < 0 ? titleLines : titleLines.slice(0, quoteAt)).map((i) => i.str.trim()).join("");
     const committeeReport = splits.length === 1 ? joinText(inRow.filter((i) => within(i.cx, titleRight, voteStart))) : undefined;
     const rightText = (c: number) => joinText(inRow.filter((i) => within(i.cx, grid.rightCols[c], grid.rightCols[c + 1])));
     const nums = [0, 1, 2].map(rightText);
