@@ -1,0 +1,116 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { OPS } from "pdfjs-dist/legacy/build/pdf.mjs";
+import { readGlyphPageOps } from "../src/sources/local/mie/glyphs.ts";
+
+// Issue #867 B 群「上下反転 9 本」。
+//
+// **Issue は「上下反転した text matrix（`[1,0,0,-1]`）が読めない」と書いていた。
+// 行列の形はそのとおりだったが、「上下反転している」という読みは誤りだった。**
+//
+// **実測（2026-09-21、9 本すべて）**:
+//   `Tm` は 9 本 **すべての showText で `[1,0,0,-1,e,f]`**（distinct 1 種類）。
+//   **その showText の CTM も 9 本すべてで 1 種類** ——`[0.75,0,0,-0.75,0,H]`
+//   （H はページの高さ。`595.32` が 4 本、`841.92` が 5 本）。**`cm` は 1 ページに 1 回だけ。**
+//
+// **掛け合わせると反転が打ち消される**:
+//   `Tm × CTM = [1·0.75, 0, 0, (-1)·(-0.75), 0.75e, H − 0.75f] = [0.75, 0, 0, 0.75, …]`
+//   **正の等方 0.75 倍＋平行移動。回転もせん断も残らない。**
+//
+// **つまりこの 9 本は「上下反転した本」ではなく「0.75 倍で置かれた本」である。**
+// 反転は `Tm` と `cm` に 2 回書かれていて、合成すると消える。
+//
+// **だから直し方は「反転を読めるようにする」ではなく
+// 「`Tm` と CTM を合成してから判定する」である。**
+// 合成すれば、この 9 本は既に対応済みの「拡大のみ」と同じ形になる。
+//
+// **合成前の `Tm` だけを見て `d < 0` で止めるのも、
+// 合成前の CTM だけを見て「単位行列でない」で止めるのも、どちらも見るべき量を見ていない。**
+// **見るべきは合成であって、その片方ではない。**
+//
+// ---------------------------------------------------------------------------
+// **それでも「合成が回転・反転・異方なら止める」は残す**（#569 / #707）
+// ---------------------------------------------------------------------------
+// 合成した結果に `b`/`c` が残る、`a`/`d` が負、`a` と `d` が大きく違う——
+// どれも「文字は x に進み、行は y に並ぶ」という表の組み立ての前提を壊す。
+// **前提が壊れたまま読むと、行がずれて賛成と反対が入れ替わる**（#819）。**止める。**
+
+/** `BT … Tm … Tj … ET` を組む（必要なら手前に `q cm` を置く）。 */
+function ops(tm: number[], cm?: number[]): [number[], unknown[]] {
+  const fn: number[] = [];
+  const args: unknown[] = [];
+  if (cm) { fn.push(OPS.save, OPS.transform); args.push(null, cm); }
+  fn.push(OPS.beginText, OPS.setFont, OPS.setTextMatrix, OPS.showText, OPS.endText);
+  args.push(null, ["f1", 1], tm, [[{ unicode: "○", width: 1000 }]], null);
+  if (cm) { fn.push(OPS.restore); args.push(null); }
+  return [fn, args];
+}
+
+test("#867 上下反転の Tm と上下反転の CTM は打ち消し合う（9 本の実測値をそのまま通す）", () => {
+  // **値は `001088734.pdf` の 1 ページ目の凡例の実測値である**（2026-09-21）
+  const [fn, args] = ops([1, 0, 0, -1, 670.88, 98.56], [0.75, 0, 0, -0.75, 0, 595.32]);
+  const { items } = readGlyphPageOps(fn, args, 1);
+  assert.equal(items.length, 1);
+  // 合成 = [0.75,0,0,0.75, 0.75·670.88, 595.32 − 0.75·98.56] = [0.75,0,0,0.75, 503.16, 521.4]
+  assert.equal(Math.round(items[0].x * 100) / 100, 503.16);
+  assert.equal(Math.round(items[0].y * 100) / 100, 521.4);
+  // 高さは fontSize(1) × 合成の d(0.75)。**掛けないと 1 になり、行の割り当てに使えない**
+  assert.equal(Math.round(items[0].h * 100) / 100, 0.75);
+  // 幅は グリフ幅(1000/1000) × fontSize(1) × 合成の a(0.75)
+  assert.equal(Math.round(items[0].w * 100) / 100, 0.75);
+});
+
+test("#867 CTM だけが反転していて Tm が正なら、合成は反転のままなので止める", () => {
+  // **打ち消されない反転は読まない。** 読めば行が上下逆に並び、賛成と反対が入れ替わる（#819）
+  const [fn, args] = ops([1, 0, 0, 1, 100, 700], [0.75, 0, 0, -0.75, 0, 595.32]);
+  assert.throws(() => readGlyphPageOps(fn, args, 1), /flipped text matrix/);
+});
+
+test("#867 Tm だけが反転していて CTM が単位行列なら、合成は反転のままなので止める", () => {
+  const [fn, args] = ops([1, 0, 0, -1, 670.88, 98.56]);
+  assert.throws(() => readGlyphPageOps(fn, args, 1), /flipped text matrix/);
+});
+
+test("#867 CTM に回転が入っていたら、Tm が正でも止める（合成を見る）", () => {
+  const [fn, args] = ops([1, 0, 0, 1, 100, 700], [0, 0.75, -0.75, 0, 0, 595.32]);
+  assert.throws(() => readGlyphPageOps(fn, args, 1), /rotated text matrix/);
+});
+
+test("#867 CTM に平行移動だけが入っていたら読む（回転も反転も異方も無い）", () => {
+  const [fn, args] = ops([1, 0, 0, 1, 100, 700], [1, 0, 0, 1, 20, 30]);
+  const { items } = readGlyphPageOps(fn, args, 1);
+  assert.equal(items.length, 1);
+  assert.equal(Math.round(items[0].x), 120);
+  assert.equal(Math.round(items[0].y), 730);
+});
+
+test("#867 CTM が縦横で違う倍率なら、合成が異方になるので止める", () => {
+  const [fn, args] = ops([1, 0, 0, 1, 100, 700], [0.75, 0, 0, 0.5, 0, 0]);
+  assert.throws(() => readGlyphPageOps(fn, args, 1), /anisotropic text matrix/);
+});
+
+test("#867 CTM が単位行列のままなら、今までと 1 ビットも変わらない（既存 84 本はこの形）", () => {
+  const [fn, args] = ops([8.039999961853027, 0, 0, 8.039999961853027, 100, 700]);
+  const { items } = readGlyphPageOps(fn, args, 1);
+  assert.equal(items.length, 1);
+  assert.equal(Math.round(items[0].x), 100);
+  assert.equal(Math.round(items[0].y), 700);
+  assert.equal(Math.round(items[0].h * 100) / 100, 8.04);
+});
+
+test("#867 Td の移動量にも合成の倍率が掛かる（1/0.75 に縮んだ位置に並べない）", () => {
+  // **この 9 本に `Td`/`TD`/`T*` は 1 回も出ない**（2026-09-21 実測: 9 本とも 0 回。
+  // 文字は全部 `Tm` で 1 つずつ置かれている）。**だからこれは実物では通らない道である。**
+  // それでも固定するのは、**合成の倍率を `Td` に掛け忘れると、
+  // 移動量だけが 1/0.75 に縮んで文字が別の列に落ちる**ためで、
+  // **実データに無いからといって掛け忘れてよい根拠にはならない**（#757 と同じ）。
+  const fn = [OPS.save, OPS.transform, OPS.beginText, OPS.setFont, OPS.setTextMatrix, OPS.moveText, OPS.showText, OPS.endText, OPS.restore];
+  const args: unknown[] = [null, [0.75, 0, 0, -0.75, 0, 595.32], null, ["f1", 1], [1, 0, 0, -1, 0, 0], [100, 200], [[{ unicode: "○", width: 1000 }]], null, null];
+  const { items } = readGlyphPageOps(fn, args, 1);
+  assert.equal(items.length, 1);
+  // 合成行列は [0.75,0,0,0.75,0,595.32]。**合成したあとの d は正**なので、
+  // text space の (100, 200) は (0.75·100, 595.32 + 0.75·200) = (75, 745.32) に行く。
+  // **掛け忘れると (100, 795.32) になり、x が 25pt（列 1.5 個ぶん）ずれる。**
+  assert.equal(Math.round(items[0].x), 75);
+  assert.equal(Math.round(items[0].y), 745);
+});
