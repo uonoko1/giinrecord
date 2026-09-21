@@ -90,6 +90,43 @@ function hasPullRequestTrigger(text: string): boolean {
   return false;
 }
 
+/**
+ * job 直下の `if:` を取り出す（#940）。`jobNamesOfText` と同じ考え方で、`jobs:` の下の
+ * job ブロックを見つけ、そのブロック内で**さらに 1 段深い** `if:` を拾う。
+ * steps の中の `if:` は 2 段以上深いので拾わない。
+ */
+function jobIfOf(text: string, jobName: string): string | null {
+  const lines = text.split("\n").map(stripComment);
+  const jobsAt = lines.findIndex((l) => /^jobs:\s*$/.test(l));
+  if (jobsAt < 0) return null;
+  let at = -1;
+  let indent = -1;
+  for (let i = jobsAt + 1; i < lines.length; i++) {
+    const l = lines[i];
+    if (l.trim() === "") continue;
+    if (!/^\s/.test(l)) break;
+    const ind = l.length - l.trimStart().length;
+    const m = HEAD_LINE.exec(l.trim());
+    if (indent < 0) indent = ind;
+    if (ind === indent && m && (m[1] ?? m[2] ?? m[3]) === jobName) {
+      at = i;
+      break;
+    }
+  }
+  if (at < 0) return null;
+  for (let i = at + 1; i < lines.length; i++) {
+    const l = lines[i];
+    if (l.trim() === "") continue;
+    const ind = l.length - l.trimStart().length;
+    if (ind <= indent) break; // 次の job に入った
+    if (ind === indent + 2) {
+      const m = /^if:\s*(.+)$/.exec(l.trim());
+      if (m) return m[1].trim();
+    }
+  }
+  return null;
+}
+
 function jobsOf(file: string): Job[] {
   const text = readFileSync(resolve(wfDir, file), "utf8");
   const onPR = hasPullRequestTrigger(text);
@@ -129,6 +166,20 @@ const EXEMPT_FROM_REQUIRED: readonly string[] = [
   // そもそもこの job が見るのは「リポジトリ全体の現在のアラート」で、**PR の内容とは無関係**
   // ——他人が入れたアラートで自分の PR が赤くなるべきではない。
   "security-alerts.yml:guard",
+  // #940: security.yml は `pull_request` トリガーを持つので、このファイルの job は全部
+  // `onPullRequest` と判定される（判定は**ファイル単位**で、job の `if:` を見ていない）。
+  // だが issue-secrets は `if: github.event_name == 'schedule' || 'workflow_dispatch'` で
+  // 閉じてあるので、PR では**必ず skipped** になる。
+  //
+  // **実測**（PR #940、commit の check-runs API）: `issue-secrets completed skipped`
+  // ——`docker-web completed skipped` とまったく同じ形である。
+  //
+  // 必須チェックにすると、**全 PR で skipped のまま**になる。GitHub の branch protection は
+  // skipped を success として扱わないので、全 PR が永久にマージ不能になる
+  // （branch-protection.yml:guard / environment-protection.yml:guard と同じ壊れ方）。
+  //
+  // Issue は push と無関係に書かれるので、PR ごとに見ても意味が無い。週次で十分である。
+  "security.yml:issue-secrets",
 ];
 
 /**
@@ -165,6 +216,7 @@ test("数え上げそのものの検査: allJobs が全 workflow の job を拾�
     "release.yml:released-tag",
     "security-alerts.yml:guard",
     "security.yml:gitleaks",
+    "security.yml:issue-secrets",
     "security.yml:forbidden-patterns",
     "security.yml:audit",
   ].sort());
@@ -220,8 +272,40 @@ test("#541 許容リスト（意図的に必須外にしている job）は中�
       "ci.yml:stale-base",
       "environment-protection.yml:guard",
       "security-alerts.yml:guard", // #786
+      "security.yml:issue-secrets", // #940: PR では必ず skipped（実測）。必須にすると全 PR が詰まる
     ].sort(),
   );
+});
+
+/**
+ * #940: **許容リストに載せた理由が、workflow 側で本当に成り立っているか**を確かめる。
+ *
+ * `onPullRequest` の判定は**ファイル単位**で、job の `if:` を見ていない。security.yml は
+ * `pull_request` トリガーを持つので、その中の issue-secrets も「PR で走る」と判定される。
+ * それを必須外にしてよい理由は「`if:` で閉じてあるので PR では必ず skipped になる」であり、
+ * **その `if:` が消えたら理由ごと崩れる**。
+ *
+ * 変異で測った（実測）: 許容リストから issue-secrets を消すと 2 件落ちる。しかし
+ * **workflow 側の `if:` を消しても、この検査を足す前は 1 件も落ちなかった**——つまり
+ * 「1,364 件の Issue を全 PR で読みに行く」形に変えても誰も気づかなかった。
+ * 理由を書いた側（許容リスト）と、理由が成り立つ側（workflow）を突き合わせる。
+ */
+test("#940 イベントで閉じてあることを理由に必須外にした job は、その `if:` が実在する", () => {
+  // 「PR では skipped になるから必須外」と判断した job → その理由が成り立つ条件
+  const GATED_BY_EVENT: Record<string, RegExp> = {
+    "security.yml:issue-secrets": /github\.event_name/,
+  };
+  const checked: string[] = [];
+  for (const [jobId, want] of Object.entries(GATED_BY_EVENT)) {
+    assert.ok(EXEMPT_FROM_REQUIRED.includes(jobId), `${jobId} が許容リストから消えている`);
+    const [file, name] = jobId.split(":");
+    const cond = jobIfOf(readFileSync(resolve(wfDir, file), "utf8"), name);
+    assert.ok(cond, `${jobId} に job 直下の \`if:\` が無い。PR ごとに走るようになっている`);
+    assert.match(cond, want, `${jobId} の \`if:\` がイベントで閉じていない: ${cond}`);
+    checked.push(jobId);
+  }
+  // 母数（#757）: 0 件を緑にしない。上の表が空になったらこの検査は何も主張していない。
+  assert.ok(checked.length > 0, "GATED_BY_EVENT が空。この検査は何も見ていない");
 });
 
 /**

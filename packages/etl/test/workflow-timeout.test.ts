@@ -198,9 +198,10 @@ test("#556 数え上げ: jobs: 直下の job を全部拾えている（拾え�
     "release.yml:production",
     "release.yml:released-tag",
     "security-alerts.yml:guard",
-    "security.yml:gitleaks",
-    "security.yml:forbidden-patterns",
     "security.yml:audit",
+    "security.yml:forbidden-patterns",
+    "security.yml:gitleaks",
+    "security.yml:issue-secrets",
   ].sort());
 });
 
@@ -251,6 +252,11 @@ test("#556 uses: の job に timeout-minutes を書かない（GitHub が受け�
  *   release.yml:released-tag        39     3     4     5     8s  → 10 分
  *   security.yml:gitleaks           40     7    11    13    48s  → 20 分（全履歴走査の週次がある）
  *   security.yml:forbidden-patterns 40     7    10    11    12s  → 10 分
+ *   security.yml:issue-secrets       0     -     -     -     -    → 10 分（**CI 実測はまだ 0 本**。
+ *                                                                    手元で 1,359 件を 1 回の gh api
+ *                                                                    ＋ python で読んで 6 秒。週次で
+ *                                                                    しか走らないので n が溜まるのは
+ *                                                                    遅い。溜まったら測り直すこと）
  *   security.yml:audit              40    11    13    16    25s  → 10 分
  *
  * 上限も固定する理由: 6 時間の既定に近い値を書くと、付いていても止まらない。
@@ -272,6 +278,10 @@ test("#556 値が実測から外れていない（短すぎる = 偽陽性 / 長
     "release.yml:released-tag": 10,
     "security.yml:gitleaks": 20,
     "security.yml:forbidden-patterns": 10,
+    // #940: CI 実測は 0 本。手元で 1,359 件を 6 秒（gh api 1 回 + python）。件数は Issue が
+    // 増えれば伸びるが、gh api のページングが支配的なので 10 分で足りる見込み。n が溜まったら
+    // 上の表ごと測り直すこと——「まだ測っていない」ことを値ではなくコメントで残しておく。
+    "security.yml:issue-secrets": 10,
     "security.yml:audit": 10,
     // #786: この job は「2 本のシェルテスト（ネットワーク無し）＋ gh api 2 回」だけ。
     // 手元の実測でテストは 2 本合わせて 2 秒未満、gh api は CI 上で 1 秒未満（run 34753557512）。
