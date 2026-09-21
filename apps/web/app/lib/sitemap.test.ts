@@ -32,7 +32,7 @@ describe("buildRobots", () => {
   it("origin が無ければ Sitemap 行は出さない（相対 URL は仕様違反）", () => {
     expect(buildRobots("")).toBe("User-agent: *\nAllow: /\nDisallow: /compare\n");
   });
-  it("staging origin では全面 Disallow で、Sitemap 行も出さない（#127）", () => {
+  it("staging origin では全面 Disallow で、Sitemap 行も出さない（#939）", () => {
     expect(buildRobots("https://staging.giinrecord.jp")).toBe("User-agent: *\nDisallow: /\n");
   });
 });

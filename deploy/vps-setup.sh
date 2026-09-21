@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Host-nginx setup for one site on the SHARED host (Issue #85; staging #127; idempotent + safety checks #141). Run as:
+# Host-nginx setup for one site on the SHARED host (Issue #85; staging #939; idempotent + safety checks #141). Run as:
 #   bash deploy/run-remote.sh deploy/vps-setup.sh <domain> [port]
 #   （`ssh ... 'sudo bash -s' < script` は sudo がパスワードを読めず落ちる。run-remote.sh が正しい形、#419）
 #     port 8081 (default) = production: giinrecord.jp         → /var/www/giinrecord/site,    sites-available/giinrecord.conf

@@ -1,5 +1,5 @@
 name: Deploy (staging)
-# Issue #127: every push to main goes to https://staging.giinrecord.jp automatically (noindex build).
+# Issue #939: every push to main goes to https://staging.giinrecord.jp automatically (noindex build).
 # Production is released by hand from release.yml. Daily data reaches both through deploy-data.yml.
 on:
   push:
