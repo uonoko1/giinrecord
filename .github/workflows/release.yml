@@ -1,5 +1,5 @@
 name: Release
-# Issue #127: the production release button. `gh workflow run release.yml --ref main -f ref=$(git rev-parse origin/main)`
+# Issue #939: the production release button. `gh workflow run release.yml --ref main -f ref=$(git rev-parse origin/main)`
 # (or Actions → Release → Run workflow) → build with vars.SITE_ORIGIN → rsync to /var/www/giinrecord/site/.
 # Issue #659: NO approval step. The `production` environment has no protection_rules (measured 2026-09-08: all three
 # environments return `[]`), so the run goes straight through — whoever dispatches this publishes to production.

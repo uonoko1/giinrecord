@@ -232,7 +232,7 @@ jobs:
             echo "published-data-validate.test.ts が validateDataset を本番 data/ に当てていません"; exit 1; }
       - run: pnpm test
       - run: pnpm build
-        env: { SITE_ORIGIN: "${{ vars.SITE_ORIGIN }}" } # unset → relative URLs (#57); set the repo variable once the domain is decided (#15)
+        env: { SITE_ORIGIN: "${{ vars.SITE_ORIGIN }}" } # unset → relative URLs (#57); set the repo variable once the domain is decided (#938)
       - name: Smoke — built pages exist, internal links resolve, sitemap.xml lists every page
         run: pnpm --filter web smoke
       - name: Guard — no server runtime code reaches the browser
@@ -248,7 +248,7 @@ jobs:
   docker-web:
     # Issue #85: the same compose file that serves production must bring up the built site locally and pass
     # the smoke test over HTTP (status, SPA fallback, security headers, Cache-Control).
-    # Issue #127: both services (web :8081, web-staging :8083) come up from the same build; the staging
+    # Issue #939: both services (web :8081, web-staging :8083) come up from the same build; the staging
     # X-Robots-Tag is keyed on the Host header, so it is checked with curl against either container.
     # Issue #194: headers alone missed a CSP that blocked every inline <script> (no hydration in production), so
     # apps/web/scripts/browser-check.ts opens the served pages in headless Chromium (Playwright) and fails on any

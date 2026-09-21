@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 議員レコード staging（staging.giinrecord.jp）の初回セットアップ（Issue #127、冪等化と安全装置 #141）。root で 1 回、再実行可。
+# 議員レコード staging（staging.giinrecord.jp）の初回セットアップ（Issue #939、冪等化と安全装置 #141）。root で 1 回、再実行可。
 #   bash deploy/run-remote.sh deploy/staging-setup.sh                        ← TTY が要る（certbot が対話）
 #   bash deploy/run-remote.sh deploy/staging-setup.sh staging.example.test   （ドメインを変える場合）
 #   （`ssh -t ... < script` は標準入力が tty でなくなり sudo が落ちる。run-remote.sh が正しい形、#419）

@@ -1,5 +1,5 @@
 # web: the static site served by an nginx container (Issue #85).
-# web-staging: the same image + config serving the staging build (Issue #127).
+# web-staging: the same image + config serving the staging build (Issue #939).
 #
 #   production + staging (VPS, run by a human with docker privileges — NOT the CI deploy user `ubuntu`):
 #     docker compose -f deploy/docker-compose.yml up -d

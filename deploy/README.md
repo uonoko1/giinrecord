@@ -1,7 +1,7 @@
 # VPS deploy (shared host: host nginx → web containers)
 
 The site is static files. On the VPS they are served by **nginx containers** (`docker compose`, this directory) —
-one for production, one for staging (Issue #127) — and the **host nginx**, which also serves other sites on this
+one for production, one for staging (Issue #939) — and the **host nginx**, which also serves other sites on this
 shared machine, only terminates TLS and proxies to the containers on loopback. No Node, no database on the VPS.
 The only cron job is the cookie-less access-log aggregation (`deploy/analytics/`, see `docs/ops/analytics.md`).
 
@@ -65,7 +65,7 @@ full template (`:80` → 301 https, `:443` proxy); a conf that certbot manages (
 `proxy_pass` port. `go-live.sh` / `staging-setup.sh` validate the domain, check the port with `ss -tln`, always `--force-recreate`
 the containers and skip certbot when the certificate exists — see `docs/ops/deploy.md`.
 
-### staging (Issue #127)
+### staging (Issue #939)
 
 Two human actions, nothing else:
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Tests for deploy/staging-setup.sh (Issue #127). No root, no docker, no nginx, no certbot: every path is rooted at a
+# Tests for deploy/staging-setup.sh (Issue #939). No root, no docker, no nginx, no certbot: every path is rooted at a
 # temp dir through STAGING_SETUP_PREFIX, and the external commands are stubs on PATH that only record their arguments.
 #   bash deploy/test/staging-setup.test.sh
 set -euo pipefail

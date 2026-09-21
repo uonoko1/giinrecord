@@ -1,5 +1,5 @@
 name: Deploy site (reusable)
-# Issue #127. Build the static site from `ref` with SITE_ORIGIN=`site_origin` and rsync it to
+# Issue #939. Build the static site from `ref` with SITE_ORIGIN=`site_origin` and rsync it to
 # /var/www/giinrecord/<target_dir>/ on the VPS as the deploy user. Called by:
 #   deploy-staging.yml  push main            → environment staging          target_dir staging  (https://staging.giinrecord.jp)
 #   release.yml         workflow_dispatch    → environment production       target_dir site     (the release button)

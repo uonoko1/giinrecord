@@ -19,7 +19,7 @@ export function siteOrigin(): string {
 }
 
 /**
- * Staging (Issue #127): a build whose SITE_ORIGIN host starts with `staging.` must never be indexed.
+ * Staging (Issue #939): a build whose SITE_ORIGIN host starts with `staging.` must never be indexed.
  * scripts/sitemap.ts writes a Disallow-all robots.txt and root.tsx adds the noindex meta from this.
  */
 export function isStagingOrigin(raw: string | undefined): boolean {

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # etl-verify.sh
 #   Prints the three facts of docs/ops/etl.md's PO checklist: the latest ETL (daily) run,
-#   the latest data/refresh PR, and the latest "Deploy data" run (deploy-data.yml, #127). Read-only.
+#   the latest data/refresh PR, and the latest "Deploy data" run (deploy-data.yml, #939). Read-only.
 #   Exit 0 only when ETL = success, data PR is MERGED (or there is none), Deploy = success.
 # Env: PO_REPO (owner/name override).
 set -euo pipefail

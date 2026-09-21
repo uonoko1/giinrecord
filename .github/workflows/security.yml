@@ -5,6 +5,9 @@ name: Security
 #                       plus site-specific regexes from the FORBIDDEN_PATTERNS secret (never written to the repo),
 #                       plus third-party keys/tokens inside test/fixtures/ (#750 / #785 — gitleaks' default rules
 #                       do NOT catch the Google `AIza…` form; 実測: no leaks found on the leaked fixtures)
+#   issue-secrets       scripts/ci/issue-secrets.sh — **Issue / PR の本文とコメント**に公開 IPv4 が無いか（週次）。
+#                       **リポジトリの外なので gitleaks も forbidden-patterns も見ていない**（#940。
+#                       実測 2026-09-20: VPS の IP が Issue 2 件とコメント 1 件に 1 か月以上公開されていた）
 #   pnpm audit          scripts/ci/audit.sh — high/critical advisories fail unless listed (with expiry + reason)
 #                       in scripts/ci/audit-ignore.txt. Dependabot opens the upgrade PRs.
 # Reporting a vulnerability: SECURITY.md
@@ -56,6 +59,25 @@ jobs:
           # secret (missing / renamed) fails the step instead of silently skipping the site-name check (#137 review).
           FORBIDDEN_PATTERNS_REQUIRED: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
         run: bash scripts/ci/forbidden-patterns.sh
+
+  # Issue #940: **Issue / PR の本文とコメントはリポジトリの外にあるので、
+  # gitleaks も forbidden-patterns も見ていない。** 実際 2026-09-20 に VPS の IP が
+  # Issue 2 件とコメント 1 件に 1 か月以上公開されていた（ユーザーが見つけた。CI は気づいていない）。
+  # **週次だけで十分**——Issue は push と無関係に書かれるので PR ごとに見ても意味が無く、
+  # 全件（実測 1,364 件）を読むので API を毎回叩きたくない。
+  issue-secrets:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      issues: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Issue / PR の本文に公開 IPv4 が無いか (scripts/ci/issue-secrets.sh)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash scripts/ci/issue-secrets.sh
 
   audit:
     runs-on: ubuntu-latest

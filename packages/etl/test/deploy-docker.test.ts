@@ -8,7 +8,7 @@ import { dirname, resolve } from "node:path";
 // Issue #85: web は nginx コンテナ（docker compose）で配信し、共用 VPS のホスト nginx は proxy_pass + TLS だけにする。
 // 受け入れ基準「セキュリティヘッダ・CSP・キャッシュが現状と同一（diff をテスト）」を、
 // 旧 server block（deploy/nginx-seiji-kiroku.conf, Sprint 1〜5 で本番運用）の値をここに固定して検証する。
-// Issue #127: staging（web-staging, 127.0.0.1:8083, /var/www/giinrecord/staging）を同じ site.conf で足し、
+// Issue #939: staging（web-staging, 127.0.0.1:8083, /var/www/giinrecord/staging）を同じ site.conf で足し、
 // main push → staging 自動、production は release.yml の手動リリース（#659: 承認は置いていない）。
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, "../../..");
@@ -57,7 +57,7 @@ const release = read(".github/workflows/release.yml");
 const deployData = read(".github/workflows/deploy-data.yml");
 
 /**
- * 旧 deploy/nginx-seiji-kiroku.conf の add_header 行（順序・値とも同一であること）＋ #127 の X-Robots-Tag。
+ * 旧 deploy/nginx-seiji-kiroku.conf の add_header 行（順序・値とも同一であること）＋ #939 の X-Robots-Tag。
  * #168: フォントを自サイト配信にしたので CSP から fonts.googleapis.com / fonts.gstatic.com を外し、font-src 'self'。
  * #194: script-src に 'unsafe-inline'。React Router のプリレンダリング HTML は inline <script>（hydration context・themeInit）を
  * 持ち、内容がページ・ビルドごとに変わるためハッシュ方式は不可。'self' だけだと本番でクライアント JS が一切動かなかった。
@@ -73,7 +73,7 @@ const EXPECTED_HEADERS = [
   `add_header Content-Security-Policy "default-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; connect-src 'self'" always;`,
   // #482: 使っていないと数えた 17 個のブラウザ機能を空 allowlist で閉じる（数え方は PR に）。
   `add_header Permissions-Policy "accelerometer=(), autoplay=(), camera=(), display-capture=(), encrypted-media=(), fullscreen=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), usb=(), xr-spatial-tracking=()" always;`,
-  // #127: "" on production hosts (nginx omits add_header with an empty value), "noindex, nofollow" for staging.giinrecord.jp
+  // #939: "" on production hosts (nginx omits add_header with an empty value), "noindex, nofollow" for staging.giinrecord.jp
   "add_header X-Robots-Tag $robots_tag always;",
 ];
 
@@ -584,7 +584,7 @@ test("vps-setup.sh と nginx-host-proxy.conf の server block は同一（ファ
   );
 });
 
-// Issue #127: vps-setup.sh <domain> [port] — 8081 = production (giinrecord.conf, site/), 8083 = staging (giinrecord-staging.conf, staging/).
+// Issue #939: vps-setup.sh <domain> [port] — 8081 = production (giinrecord.conf, site/), 8083 = staging (giinrecord-staging.conf, staging/).
 // deploy/test/render-host-proxy.sh は同じ関数で server block を stdout に描くだけ（root 不要）。
 test("vps-setup.sh: port 8083 なら staging の conf 名・web root・ログ名（8081 が既定）。置換後に placeholder が残らない", () => {
   assert.match(setupCode, /PORT="\$\{2:-8081\}"/);
@@ -633,7 +633,7 @@ test("ci.yml: docker compose config → up → URL モード smoke を 8081 と 
   assert.match(ci, /x-robots-tag: noindex, nofollow/i);
 });
 
-// Issue #127: main push → staging（自動）、production は release.yml（workflow_dispatch + environment production）。
+// Issue #939: main push → staging（自動）、production は release.yml（workflow_dispatch + environment production）。
 // Issue #659: 承認（required reviewers）は 3 つの environment とも置いていない（2026-09-08 実測で protection_rules は `[]`）。
 // 日次データは deploy-data.yml が staging と production の両方へ流す（bot のマージは push イベントを起こさない）。
 test("deploy-site.yml: 再利用ワークフロー。environment / site_origin / target_dir / ref を入力で受け、docker を呼ばない", () => {
@@ -730,7 +730,7 @@ test("#659: Release の CLI 起動コマンドが docs にある（フル SHA �
   const deployMd = read("docs/ops/deploy.md");
   // `--ref main`（ワークフロー定義の出どころ）と `-f ref=`（リリースする ref）は別物。両方要る。
   assert.match(deployMd, /gh workflow run release\.yml --ref main -f ref=\$\(git rev-parse origin\/main\)/);
-  // `--short` を書くと 20 行上に書いてある罠（#127 の checkout 失敗）をそのまま踏む。
+  // `--short` を書くと 20 行上に書いてある罠（#939 の checkout 失敗）をそのまま踏む。
   assert.doesNotMatch(deployMd, /git rev-parse --short origin\/main\)/);
   assert.match(read("README.md"), /gh workflow run release\.yml --ref main -f ref=/);
   // link-check.yml（#646、週1）も手で走らせられる。入力は無いので `--ref main` だけ。
