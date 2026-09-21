@@ -1249,3 +1249,542 @@ EOF
   assert_not_contains "$LOG" $'pr\tmerge' "never merges a real failure"
 }
 test_case "merge: conclusion:failure は status に関わらず失敗として止める（#561）" t_merge_failure_conclusion_aborts_even_if_status_says_in_progress
+
+# --- #858: 必須でない検査が赤いとき ------------------------------------------------------------
+# **何が問題だったか**: `wait_for_green` は fail が 1 件でもあれば無条件に die していた。
+# `docker-web` は GitHub の必須ステータスチェックではない（branch protection の contexts は
+# check / gitleaks / forbidden-patterns / audit の 4 件。**実測 2026-09-21**）ので
+# **GitHub はマージを許すのに、この道具だけが止めていた**。PO はこの回だけで 3 回、
+# 手で `gh pr merge` を打って回避しており、そのたびに #389/#392/#414/#434/#446 で
+# 積み上げた守り（HEAD が動いていないか・上に PR が積まれていないか）が全部飛んでいた。
+#
+# **母数**（実測、直近 12 件のマージ済み PR は全部同じ）: 1 PR につき check-run は **7 件**
+#   audit, check, docker-web, forbidden-patterns, gitleaks, pr-closes, stale-base
+# このうち **必須 5 件** / **必須でない 2 件（stale-base, docker-web）**。
+#
+# **`stale-base` が必須でない側なのが #858 の本題**: 2 つ目の step（`--net-deletions`、#836）は
+# #846 の担当者自身が「**合図であって証拠ではありません**（4 件中 2 件が本物）」と書いており、
+# **「赤いが通してよい」状態が正常に起こりうる**（実地 5 件中 3 件）。PR #856 はそれで詰まった。
+# **`pr-closes` は必須のまま**: 赤いなら本文を直せば緑にできるので、「赤いが通してよい」は起こらない。
+#
+# 設計:
+#   - 必須が 1 件でも赤 → **常に die**（`--allow-nonrequired-red` があっても）
+#   - 必須でないものだけが赤 → **何が赤いかを必ず出力し**、既定では die。
+#     `--allow-nonrequired-red` があるときだけ、赤の名前を読み上げてからマージする
+#   - **知らない名前は必須として扱う**（fail-closed）。新しい job が増えたときに
+#     黙って「必須でない」側に落ちると、この道具の守りが痩せる
+#   - **母数を毎回出す**（#757）: 見た件数 / 必須 / 赤
+
+# 既定では従来どおり止まる。ただし「なぜ止まったか」が従来より詳しい。
+t_858_nonrequired_red_still_stops_by_default() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[
+      {"name":"check","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"gitleaks","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"forbidden-patterns","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"audit","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"stale-base","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"pr-closes","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"docker-web","status":"completed","conclusion":"failure","started_at":"t1"}]}' ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "既定では止まる（挙動を変えない）"
+  assert_contains "$ERR" "docker-web" "何が赤いかを名指しする"
+  assert_contains "$ERR" "--allow-nonrequired-red" "逃げ道の名前を教える"
+  assert_not_contains "$LOG" $'pr\tmerge' "マージしない"
+}
+test_case "858: 必須でない検査が赤いとき、既定では止まる（合図が無ければ押さない）" t_858_nonrequired_red_still_stops_by_default
+
+# 本丸: 合図があれば、必須が全部緑なのでマージしてよい。
+t_858_nonrequired_red_merges_with_flag() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[
+      {"name":"check","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"gitleaks","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"forbidden-patterns","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"audit","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"stale-base","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"pr-closes","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"docker-web","status":"completed","conclusion":"failure","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh --allow-nonrequired-red 12
+  assert_eq 0 "$STATUS" "必須が全部緑なのでマージできる: $ERR"
+  assert_contains "$LOG" $'pr\tmerge\t12' "マージした"
+  assert_contains "$ERR" "docker-web" "黙って押さない: 何が赤いかを読み上げる"
+  assert_contains "$ERR" "failure" "赤の中身（conclusion）まで出す"
+  # **母数の行だけでは足りない**: 母数は「赤があった」を言うだけで、「それでも進む」とは
+  # 言っていない。**押す直前に、押すと言うこと**を別の行として固定する。
+  # （最初に書いたときは母数の行が docker-web と failure を両方含んでいたため、
+  #  この読み上げを丸ごと消しても落ちなかった。変異 M3 で気づいて足した。）
+  assert_contains "$ERR" "必須でない検査が赤いまま進みます（--allow-nonrequired-red）: docker-web (failure)" \
+    "押す直前に「押す」と言う（母数の行とは別に）"
+}
+test_case "858: --allow-nonrequired-red があれば、必須が全部緑ならマージする" t_858_nonrequired_red_merges_with_flag
+
+# **本丸の裏**: 合図があっても、必須が赤ければ絶対にマージしない。
+t_858_required_red_never_merges_even_with_flag() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[
+      {"name":"check","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"gitleaks","status":"completed","conclusion":"failure","started_at":"t1"},
+      {"name":"forbidden-patterns","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"audit","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"stale-base","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"pr-closes","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"docker-web","status":"completed","conclusion":"failure","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh --allow-nonrequired-red 12
+  assert_eq 1 "$STATUS" "必須が赤なら合図があっても止まる"
+  assert_contains "$ERR" "gitleaks" "必須の赤を名指しする"
+  assert_not_contains "$LOG" $'pr\tmerge' "絶対にマージしない"
+}
+test_case "858: 必須の検査が赤ければ、--allow-nonrequired-red があってもマージしない" t_858_required_red_never_merges_even_with_flag
+
+# 必須の赤が 5 種類それぞれで止まること。1 つだけ測って「必須は守られている」と言わない（#757）。
+t_858_each_required_check_red_stops() {
+  local name h
+  for name in check gitleaks forbidden-patterns audit pr-closes; do
+    h=$(NAME="$name" bash -c 'cat' <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"$name","status":"completed","conclusion":"failure","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+    local f="$TMP/handler.each.$name.sh"; printf '%s\n' "$h" > "$f"
+    run_script "$f" merge-when-green.sh --allow-nonrequired-red 12
+    assert_eq 1 "$STATUS" "$name が赤なら止まる"
+    assert_not_contains "$LOG" $'pr\tmerge' "$name: マージしない"
+  done
+}
+test_case "858: 必須 5 件はそれぞれ単独で赤でも止まる（母数を 1 件で測らない）" t_858_each_required_check_red_stops
+
+# **知らない名前は必須として扱う**（fail-closed）。新しい job が増えたとき、
+# 黙って「必須でない」側に落ちてはいけない。
+t_858_unknown_check_is_treated_as_required() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[
+      {"name":"check","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"brand-new-job","status":"completed","conclusion":"failure","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh --allow-nonrequired-red 12
+  assert_eq 1 "$STATUS" "知らない名前は必須扱いなので止まる"
+  assert_contains "$ERR" "brand-new-job" "名指しする"
+  assert_not_contains "$LOG" $'pr\tmerge' "マージしない"
+}
+test_case "858: 知らない名前の検査は必須として扱う（fail-closed）" t_858_unknown_check_is_treated_as_required
+
+# **母数を出す**（#757）: 見た件数 / 必須 / 赤 が出力に載ること。
+t_858_reports_denominator() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[
+      {"name":"check","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"gitleaks","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"forbidden-patterns","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"audit","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"stale-base","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"pr-closes","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"docker-web","status":"completed","conclusion":"failure","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh --allow-nonrequired-red 12
+  assert_eq 0 "$STATUS" "マージした: $ERR"
+  assert_contains "$ERR" "検査 7 件" "母数: 見た件数"
+  assert_contains "$ERR" "必須 5 件" "母数: 必須の件数（stale-base を外したので 6 → 5）"
+  assert_contains "$ERR" "赤 1 件" "母数: 赤の件数"
+}
+test_case "858: 母数を出力に書く（検査 N 件 / 必須 M 件 / 赤 K 件）" t_858_reports_denominator
+
+# **母数が 0 なら緑にしない**（#757）。既存の「no checks reported yet」の挙動を、
+# 必須/必須でないの分岐を足した後も保っていることの確認。
+t_858_empty_denominator_never_green() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh --allow-nonrequired-red 12
+  assert_eq 1 "$STATUS" "検査が 1 件も無ければマージしない"
+  assert_contains "$ERR" "timed out" "待ち続けて時間切れになる"
+  assert_not_contains "$LOG" $'pr\tmerge' "マージしない"
+}
+test_case "858: 母数が 0 のときは緑にしない（--allow-nonrequired-red があっても）" t_858_empty_denominator_never_green
+
+# 必須でないものが **pending** のときは、赤ではないので従来どおり待つ。
+# 「必須でないなら見ない」に倒れていないこと（案 A の懸念）。
+t_858_nonrequired_pending_is_still_waited_for() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      if [ "$(bump)" -lt 3 ]; then
+        echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"},{"name":"docker-web","status":"in_progress","conclusion":null,"started_at":"t1"}]}'
+      else
+        echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"},{"name":"docker-web","status":"completed","conclusion":"success","started_at":"t1"}]}'
+      fi ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh --allow-nonrequired-red 12
+  assert_eq 0 "$STATUS" "exit status: $ERR"
+  assert_eq 3 "$(grep -c 'api	repos/uonoko1/giinrecord/commits/.*/check-runs' <<<"$LOG")" "pending の間は待つ（必須でなくても飛ばさない）"
+  assert_contains "$LOG" $'pr\tmerge\t12' "緑になってからマージ"
+}
+test_case "858: 必須でない検査が pending のときは従来どおり待つ（見ないことにはしない）" t_858_nonrequired_pending_is_still_waited_for
+
+# 引数の順序を問わない / 不正な引数は usage で落ちる。
+t_858_flag_after_pr_number() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"},{"name":"docker-web","status":"completed","conclusion":"failure","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12 --allow-nonrequired-red
+  assert_eq 0 "$STATUS" "PR 番号の後ろに置いても効く: $ERR"
+  assert_contains "$LOG" $'pr\tmerge\t12' "マージした"
+}
+test_case "858: --allow-nonrequired-red は PR 番号の前後どちらでも効く" t_858_flag_after_pr_number
+
+t_858_unknown_flag_is_usage_error() {
+  local h; h=$(handler <<'EOF'
+handle() { echo "unexpected: $*" >&2; exit 99; }
+EOF
+)
+  run_script "$h" merge-when-green.sh --allow-everything 12
+  assert_eq 2 "$STATUS" "知らないフラグは usage（exit 2）"
+  assert_contains "$ERR" "usage" "usage を出す"
+  assert_eq "" "$LOG" "gh を1回も叩かない"
+}
+test_case "858: 知らないフラグは usage で落とす（似た名前で素通りさせない）" t_858_unknown_flag_is_usage_error
+
+# **REQUIRED_CHECKS / NONREQUIRED_CHECKS を固定する**（#499: 期待値はハードコードする）。
+# 配列を実行時に対象から読み出すと自己参照になるので、**ここに独立して書き写す**。
+# 中身が痩せる・入れ替わる・GitHub 側の登録と食い違う、のどれが起きてもここが落ちる。
+t_858_check_lists_are_pinned() {
+  local req nonreq
+  req=$(grep -E '^REQUIRED_CHECKS=' "$PO_DIR/merge-when-green.sh")
+  nonreq=$(grep -E '^NONREQUIRED_CHECKS=' "$PO_DIR/merge-when-green.sh")
+  assert_eq 'REQUIRED_CHECKS=(check gitleaks forbidden-patterns audit pr-closes)' "$req" \
+    "必須 5 件（GitHub の登録 4 件 + この道具が上乗せする pr-closes）"
+  assert_eq 'NONREQUIRED_CHECKS=(stale-base docker-web)' "$nonreq" \
+    "必須でないのは stale-base / docker-web の 2 件（抜け道を増やすなら意識的にここを直す）"
+}
+test_case "858: 必須 / 必須でないの一覧をハードコードで固定する（#499）" t_858_check_lists_are_pinned
+
+# 知らない名前を「必須として扱った」と**言う**こと。黙って必須に倒すと、
+# REQUIRED_CHECKS が空になっても挙動が同じになり、配列が飾りになる。
+t_858_unknown_check_is_announced() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[
+      {"name":"check","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"brand-new-job","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "緑ならマージする（知らない名前でも止めはしない）: $ERR"
+  assert_contains "$ERR" "知らない検査があります" "知らない名前があることを言う"
+  assert_contains "$ERR" "brand-new-job" "名指しする"
+}
+test_case "858: 一覧に無い検査名は「必須として扱った」と言う" t_858_unknown_check_is_announced
+
+# 一覧にある名前では、その note を出さない（毎回鳴る警告は読まれなくなる）。
+t_858_known_checks_are_quiet() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[
+      {"name":"check","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"gitleaks","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"forbidden-patterns","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"audit","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"stale-base","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"pr-closes","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"docker-web","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "全部緑ならマージする: $ERR"
+  assert_not_contains "$ERR" "知らない検査があります" "本番の 7 件では黙っている"
+}
+test_case "858: 本番の 7 件（実測）では「知らない検査」を言わない" t_858_known_checks_are_quiet
+
+# フラグだけで PR 番号が無ければ usage（フラグを足したせいで「引数が 1 個」の検査が
+# 効かなくなっていないこと。以前は `$# -ne 1` の 1 行がこれを守っていた）。
+t_858_flag_without_pr_is_usage_error() {
+  local h; h=$(handler <<'EOF'
+handle() { echo "unexpected: $*" >&2; exit 99; }
+EOF
+)
+  run_script "$h" merge-when-green.sh --allow-nonrequired-red
+  assert_eq 2 "$STATUS" "PR 番号が無ければ usage（exit 2）"
+  assert_contains "$ERR" "usage" "usage を出す"
+  assert_eq "" "$LOG" "gh を1回も叩かない"
+}
+test_case "858: --allow-nonrequired-red だけで PR 番号が無ければ usage" t_858_flag_without_pr_is_usage_error
+
+# PR 番号を 2 つ渡したら usage（2 つ目を黙って捨てて 1 つ目をマージしない）。
+t_858_two_pr_numbers_is_usage_error() {
+  local h; h=$(handler <<'EOF'
+handle() { echo "unexpected: $*" >&2; exit 99; }
+EOF
+)
+  run_script "$h" merge-when-green.sh 12 13
+  assert_eq 2 "$STATUS" "PR 番号が 2 つなら usage（どちらをマージするか決めない）"
+  assert_eq "" "$LOG" "gh を1回も叩かない"
+}
+test_case "858: PR 番号を 2 つ渡したら usage（黙って片方をマージしない）" t_858_two_pr_numbers_is_usage_error
+
+# 「知らない検査」の note は、顔ぶれが同じなら 1 回だけ。wait_for_green は最大 60 回
+# まわるので、毎回出すと読まれなくなる（毎回鳴る警告は警告ではない）。
+t_858_unknown_note_is_said_once() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      if [ "$(bump)" -lt 3 ]; then
+        echo '{"check_runs":[{"name":"brand-new-job","status":"in_progress","conclusion":null,"started_at":"t1"}]}'
+      else
+        echo '{"check_runs":[{"name":"brand-new-job","status":"completed","conclusion":"success","started_at":"t1"}]}'
+      fi ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "exit status: $ERR"
+  assert_eq 3 "$(grep -c 'api	repos/uonoko1/giinrecord/commits/.*/check-runs' <<<"$LOG")" "3 回ポーリングした"
+  assert_eq 1 "$(grep -c '知らない検査があります' <<<"$ERR")" "3 回まわっても note は 1 回だけ"
+}
+test_case "858: 「知らない検査」の note は顔ぶれが同じなら 1 回だけ" t_858_unknown_note_is_said_once
+
+# --- #856 の形（#858 の本題）------------------------------------------------------------------
+# `--net-deletions` が「正しく鳴った」PR。**必須は全部緑で、`stale-base` だけが赤い。**
+# 実地では PO がこれで 3 回、手で `gh pr merge` を打った。
+#
+# **押す人が「何行が減っているか」を読める形になっているか**を確かめる（PO の指摘）。
+# その数字は **`stale-base` の job のログの中にしかない**（PR の画面にも `gh pr checks` の
+# 一覧にも出てこない）ので、**ログの URL を指せているか**を見る。
+# **数字そのものをこの道具が作り直すことはしない**——検査が既に数えたものを二重に実装すると、
+# 片方が古くなったときに嘘をつく。
+
+STALE_BASE_RED_CHECKS='{"check_runs":[
+      {"name":"check","status":"completed","conclusion":"success","started_at":"t1","details_url":"https://example.invalid/check"},
+      {"name":"gitleaks","status":"completed","conclusion":"success","started_at":"t1","details_url":"https://example.invalid/gitleaks"},
+      {"name":"forbidden-patterns","status":"completed","conclusion":"success","started_at":"t1","details_url":"https://example.invalid/fp"},
+      {"name":"audit","status":"completed","conclusion":"success","started_at":"t1","details_url":"https://example.invalid/audit"},
+      {"name":"pr-closes","status":"completed","conclusion":"success","started_at":"t1","details_url":"https://example.invalid/prcloses"},
+      {"name":"docker-web","status":"completed","conclusion":"success","started_at":"t1","details_url":"https://example.invalid/docker"},
+      {"name":"stale-base","status":"completed","conclusion":"failure","started_at":"t1","details_url":"https://example.invalid/runs/1/job/2"}]}'
+
+t_858_856_shape_stops_and_points_at_the_log() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '$STALE_BASE_RED_CHECKS' ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "既定では止まる"
+  assert_contains "$ERR" "stale-base (failure)" "何がどう赤いかを名指しする"
+  assert_contains "$ERR" "必須 5 件は全部緑" "必須が緑であることを言う（GitHub はマージを許す状態）"
+  # **本題**: 押す人が「何行が減っているか」を読みに行ける場所を指しているか。
+  assert_contains "$ERR" "https://example.invalid/runs/1/job/2" "赤い検査の job ログの URL を出す"
+  assert_contains "$ERR" "gh run view --log-failed" "手元で読む手順も出す"
+  assert_contains "$ERR" "--allow-nonrequired-red 12" "読んだうえで通す道を示す"
+  assert_not_contains "$LOG" $'pr\tmerge' "マージしない"
+  # **緑の検査のログは出さない**（7 件全部の URL を並べたら、赤がどれか分からなくなる）
+  assert_not_contains "$ERR" "https://example.invalid/check" "緑の検査の URL は出さない"
+}
+test_case "858: #856 の形（stale-base だけ赤）は止まり、ログの URL を指す" t_858_856_shape_stops_and_points_at_the_log
+
+t_858_856_shape_merges_with_flag_and_records_the_log() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '$STALE_BASE_RED_CHECKS' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh --allow-nonrequired-red 12
+  assert_eq 0 "$STATUS" "必須が全部緑なのでマージできる: $ERR"
+  assert_contains "$LOG" $'pr\tmerge\t12' "マージした"
+  assert_contains "$ERR" "必須でない検査が赤いまま進みます（--allow-nonrequired-red）: stale-base (failure)" \
+    "押す直前に「押す」と言う"
+  # **押したときにも URL を残す**——あとから「何を見て押したのか」を追えるように。
+  assert_contains "$ERR" "https://example.invalid/runs/1/job/2" "押したときもログの URL を記録する"
+}
+test_case "858: #856 の形は --allow-nonrequired-red でマージでき、そのときログの URL も残る" t_858_856_shape_merges_with_flag_and_records_the_log
+
+# `stale-base` が赤くても、**必須が赤ければ通らない**（抜け道が `stale-base` 経由で広がらない）。
+t_858_stale_base_red_plus_required_red_never_merges() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[
+      {"name":"check","status":"completed","conclusion":"failure","started_at":"t1","details_url":"https://example.invalid/check"},
+      {"name":"stale-base","status":"completed","conclusion":"failure","started_at":"t1","details_url":"https://example.invalid/sb"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh --allow-nonrequired-red 12
+  assert_eq 1 "$STATUS" "必須の check が赤いので止まる"
+  assert_contains "$ERR" "check" "必須の赤を名指しする"
+  assert_contains "$ERR" "必須でない赤: stale-base" "必須でない赤も併せて言う"
+  assert_not_contains "$LOG" $'pr\tmerge' "絶対にマージしない"
+}
+test_case "858: stale-base が赤くても、必須が赤ければマージしない" t_858_stale_base_red_plus_required_red_never_merges
+
+# **ログの URL が取れなかったとき、黙って行を落とさない。**
+# `details_url` が null の check-run は実在しうる（外部 App のチェック）。
+# 「URL が無い」と「赤い検査が 1 件少ない」を取り違えさせない。
+t_858_missing_details_url_is_said() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[
+      {"name":"check","status":"completed","conclusion":"success","started_at":"t1","details_url":null},
+      {"name":"stale-base","status":"completed","conclusion":"failure","started_at":"t1","details_url":null}]}' ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "既定では止まる"
+  assert_contains "$ERR" "stale-base (failure)" "赤い検査は名指しする"
+  assert_contains "$ERR" "ログの URL が取れませんでした" "URL が無いことを言う（行を黙って落とさない）"
+}
+test_case "858: ログの URL が取れなくても、赤い検査の行は落とさずそう言う" t_858_missing_details_url_is_said
+
+# 赤いまま通したときは **「all N checks green」と言わない**。
+# ログは後から「何が起きたか」を読む唯一の記録なので、そこに嘘が混ざってはいけない。
+t_858_does_not_claim_all_green_when_proceeding_over_red() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '$STALE_BASE_RED_CHECKS' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh --allow-nonrequired-red 12
+  assert_eq 0 "$STATUS" "マージした: $ERR"
+  assert_not_contains "$ERR" "all 7 checks green" "赤いまま通したのに「全部緑」と言わない"
+  assert_contains "$ERR" "stale-base (failure) を赤いまま通してマージします" "何を通したかを言う"
+}
+test_case "858: 赤いまま通したときは「all N checks green」と言わない" t_858_does_not_claim_all_green_when_proceeding_over_red
+
+# 逆: 前の poll で赤かったものが緑になったら、**持ち越さず**「全部緑」と言う。
+# （PROCEEDED_OVER_RED を毎 poll で捨てていること。持ち越すと逆向きの嘘になる。）
+t_858_red_then_green_says_all_green() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      if [ "$(bump)" -lt 2 ]; then
+        echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1","details_url":"u1"},{"name":"stale-base","status":"completed","conclusion":"failure","started_at":"t1","details_url":"u2"},{"name":"docker-web","status":"in_progress","conclusion":null,"started_at":"t1","details_url":"u3"}]}'
+      else
+        echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1","details_url":"u1"},{"name":"stale-base","status":"completed","conclusion":"success","started_at":"t1","details_url":"u2"},{"name":"docker-web","status":"completed","conclusion":"success","started_at":"t1","details_url":"u3"}]}'
+      fi ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh --allow-nonrequired-red 12
+  assert_eq 0 "$STATUS" "マージした: $ERR"
+  assert_contains "$ERR" "all 3 checks green" "緑になったら素直に「全部緑」と言う（持ち越さない）"
+  assert_not_contains "$ERR" "を赤いまま通してマージします" "緑なのに「赤いまま通した」と言わない"
+}
+test_case "858: 赤が緑に変わったら「赤いまま通した」を持ち越さない" t_858_red_then_green_says_all_green
