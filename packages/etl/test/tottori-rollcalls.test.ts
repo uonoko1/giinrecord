@@ -206,3 +206,18 @@ test("#901 広げた範囲に出る姓は、寄るか・誰にも寄らないか
   // **本番の値は `tottori-published-data.test.ts` が数える。**
   assert.deepEqual(wrong, [], "**姓で始まらない氏名に寄った組は 0 組**（1 組でも出たら別人の記録が出ている）");
 });
+
+test("#901 番号が空の行が同じ会期・同じ議決日・同じ種別に 2 行あれば、id が衝突するので例外", () => {
+  // **番号を空のまま出すようにしたので、id の末尾が `-` で終わる**
+  // （`pref-31-2023-11-20231220-知事提案-`）。**本番の 572 採決では衝突していない**が、
+  // **もし 2 行が同じ id になったら、`toLocalRollCalls` は「同じ議案が複数の PDF に出た」と読んで
+  // 内容の一致を確かめる**——**内容が違えば例外で止まる**（黙ってどちらかを捨てない）。
+  const pdf = JSON.parse(JSON.stringify(febSengi)) as VotePdf;
+  // 2 行の番号を両方とも空にして、賛否だけ変える
+  pdf.rows = pdf.rows.slice(0, 2).map((r, i) => ({ ...r, number: "", cells: r.cells.map((c, j) => (i === 1 && j === 0 ? (c === "○" ? "×" : "○") : c)) }));
+  assert.throws(
+    () => toLocalRollCalls([{ pdf, pdfUrl: `${origin}/secure/1/x.pdf` }], roster, { sessionId: "2026-02", sessionLabel: "令和8年2月定例会" }),
+    /content differs between PDFs/,
+    "**内容の違う 2 行が同じ id になったら止まる**（どちらが正しいか推定しない）",
+  );
+});

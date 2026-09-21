@@ -48,22 +48,30 @@ const rollCalls = (): LocalRollCall[] => {
 const hasData = (() => { try { return statSync(join(DIR, "meta.json")).isFile(); } catch { return false; } })();
 const meta = (): LocalAssemblyMeta => JSON.parse(readFileSync(join(DIR, "meta.json"), "utf-8")) as LocalAssemblyMeta;
 
-test("#865 本番 pref-31: 採決 118 × 議員 35 = 4,130 セル、抽出不能 0.00%", { skip: !hasData }, () => {
+test("#865/#901 本番 pref-31: 採決 572 / セル 19,623 / 抽出不能 0.00%（`--sessions` 2 → 11）", { skip: !hasData }, () => {
   const m = meta();
   const rcs = rollCalls();
-  // **実測 2026-09-14**（直近 2 会期。月次のワークフローは既定の `--sessions 2` で回る）
-  assert.equal(m.counts.rollcalls, 118);
+  // **実測 2026-09-21**（直近 11 会期。月次のワークフローは既定の `--sessions 11` で回る。#901）
+  assert.equal(m.counts.rollcalls, 572, "**118 → 572**（`--sessions` を 2 → 11 に広げた）");
   assert.equal(m.counts.members, 35);
-  assert.equal(m.counts.cells, 4_130);
+  assert.equal(m.counts.cells, 19_623, "**4,130 → 19,623**");
   assert.equal(m.counts.unknownCells, 0, "**推定せず残した不明セルは 0**");
-  assert.equal(m.counts.unmatchedNames, 0, "**名簿に寄らなかった氏名は 0**");
+  // **0 → 2**（**内田隆議員・藤縄議員。どちらも任期の途中で退いた議員で、今の名簿 35 人に居ない**）。
+  // **これは「記録が出ない」側であって、「別人の記録が出る」側ではない**（#569 / #529）。
+  // **寄らなかったことの検査は `tottori-rollcalls.test.ts`**——**特に `内田隆議員` が
+  // 同姓の 内田 博長 に寄っていないこと。**
+  assert.equal(m.counts.unmatchedNames, 2, "**名簿に寄らなかった氏名は 2**（引退した議員）");
   // **meta の数が、書いた実物と一致する**（meta だけを書き換えても落ちる）
   assert.equal(rcs.length, m.counts.rollcalls, "rollcalls/ の実ファイル数");
   assert.equal(rcs.reduce((s, r) => s + r.votes.length, 0), m.counts.cells, "票の実数");
-  // **118 行とも 35 セルちょうど**（会期の途中で議員が 1 人静かに消えていない。#705 が滋賀で踏んだ形）
+  // **セル数は行ごとに 33 / 34 / 35 の 3 通り**（#901 で広げて出た）。
+  // **これは「会期の途中で議員が 1 人静かに消えた」（#705 が滋賀で踏んだ形）ではない**——
+  // **一次資料の PDF が、その会期に在職していた議員ぶんの列しか持っていない**からである
+  // （辞職・補選で 33 → 35 人に戻る）。**3 通り以外が出たら数え直す。**
   const perRow = new Map<number, number>();
   for (const r of rcs) perRow.set(r.votes.length, (perRow.get(r.votes.length) ?? 0) + 1);
-  assert.deepEqual(Object.fromEntries(perRow), { 35: 118 }, "採決ごとのセル数");
+  assert.deepEqual(Object.fromEntries([...perRow].sort((a, b) => a[0] - b[0])), { 33: 88, 34: 221, 35: 263 }, "採決ごとのセル数");
+  assert.equal([...perRow.values()].reduce((a, b) => a + b, 0), 572, "母数（3 通りで 572 行を数えきる）");
   // **`抽出不能` / `不明` の票は 0**（読めなかったセルを推定で埋めていない）
   assert.equal(rcs.reduce((s, r) => s + r.votes.filter((v) => v.value.legend === "抽出不能").length, 0), 0, "`抽出不能` の票");
   assert.equal(rcs.reduce((s, r) => s + r.votes.filter((v) => v.value.raw === "不明").length, 0), 0, "`不明` の票");
@@ -78,21 +86,24 @@ test("#865 本番 pref-31: 採決 118 × 議員 35 = 4,130 セル、抽出不能
  * どれでもない「棄権した」という事実が消える**（#569 の「推定しない」）。
  * **逆に、誰かが「投票なし」を足したらここが落ちる。**
  */
-test("#865 本番 pref-31: 票の内訳 ○3814 / ×195 / 議118 / 棄3（棄権だけ mapped が付かない）", { skip: !hasData }, () => {
+test("#865/#901 本番 pref-31: 票の内訳 ○18156 / ×847 / 議572 / 欠37 / 棄5 / 除3 / －3（棄権だけ mapped が付かない）", { skip: !hasData }, () => {
   const votes = rollCalls().flatMap((r) => r.votes);
-  assert.equal(votes.length, 4_130, "母数（減っていたらこの内訳は意味が無い）");
+  assert.equal(votes.length, 19_623, "母数（減っていたらこの内訳は意味が無い）");
   const raw = new Map<string, number>();
   const legend = new Map<string, number>();
   for (const v of votes) {
     raw.set(v.value.raw, (raw.get(v.value.raw) ?? 0) + 1);
     legend.set(v.value.legend, (legend.get(v.value.legend) ?? 0) + 1);
   }
-  assert.deepEqual(Object.fromEntries([...raw].sort()), { "×": 195, "○": 3814, "棄": 3, "議": 118 });
-  assert.deepEqual(Object.fromEntries([...legend].sort()), { "反対": 195, "棄権": 3, "議長": 118, "賛成": 3814 });
-  // **`mapped` が付かないのは `棄` の 3 票だけ**（ほかの 4,127 票は全部付く）
+  // **`--sessions 2` では `○ × 棄 議` の 4 記号しか出なかった。広げて `欠`・`除`・`－` が出た**（#901）。
+  assert.deepEqual(Object.fromEntries([...raw].sort()), { "×": 847, "○": 18_156, "－": 3, "欠": 37, "棄": 5, "議": 572, "除": 3 });
+  assert.deepEqual(Object.fromEntries([...legend].sort()), {
+    "反対": 847, "棄権": 5, "欠席": 37, "議場に不在であり、表決しなかった議員": 3, "議長": 572, "賛成": 18_156, "除斥": 3,
+  });
+  // **`mapped` が付かないのは `棄` の 5 票だけ**（ほかの 19,618 票は全部付く）
   const unmapped = votes.filter((v) => v.value.mapped === undefined);
   assert.deepEqual([...new Set(unmapped.map((v) => v.value.raw))], ["棄"], "mapped が無い票の記号");
-  assert.equal(unmapped.length, 3, "mapped が無い票の数");
+  assert.equal(unmapped.length, 5, "mapped が無い票の数");
   // **凡例に無い値に落ちていない**（`賛成` / `反対` / `投票なし` の 3 つだけ）
   assert.deepEqual(
     [...new Set(votes.map((v) => v.value.mapped).filter((x) => x !== undefined))].sort(),
@@ -115,9 +126,9 @@ test("#865 本番 pref-31: 票の内訳 ○3814 / ×195 / 議118 / 棄3（棄権
  * （`meta.countChecked` が `checked: 117 / rows: 118 / unreadableCells: 1` と自分で言っている）。
  * **ここでは `raw` の記号を数えるので、118 / 118 行を突き合わせる。**
  */
-test("#865 本番 pref-31: ○=yes / ×=no / 35−非表決=voting を 118 行すべてで（共通層が飛ばす 1 行を含む）", { skip: !hasData }, () => {
+test("#865/#901 本番 pref-31: ○=yes / ×=no / 列数−非表決=voting を 572 行すべてで（共通層が飛ばす 3 行を含む）", { skip: !hasData }, () => {
   const rcs = rollCalls();
-  assert.equal(rcs.length, 118, "母数");
+  assert.equal(rcs.length, 572, "母数");
   let checked = 0;
   const votingSeen = new Map<number, number>();
   for (const rc of rcs) {
@@ -130,16 +141,18 @@ test("#865 本番 pref-31: ○=yes / ×=no / 35−非表決=voting を 118 行�
     const voting = (rc.counts as { voting?: number }).voting;
     assert.equal(typeof voting, "number", `${rc.id}: counts.voting がある`);
     const nonVoting = rc.votes.filter((v) => v.value.mapped !== "賛成" && v.value.mapped !== "反対").length;
-    assert.equal(rc.votes.length - nonVoting, voting, `${rc.id}: 35 − 非表決 = counts.voting`);
+    // **`35 −` と書かない**（#901 で広げたら、会期によって列が 33 / 34 / 35 人になった）
+    assert.equal(rc.votes.length - nonVoting, voting, `${rc.id}: 列数 − 非表決 = counts.voting`);
     assert.equal(yes + no, voting, `${rc.id}: ○ + × = counts.voting`);
     votingSeen.set(voting!, (votingSeen.get(voting!) ?? 0) + 1);
     checked++;
   }
-  assert.equal(checked, 118, "**118 行すべてを突き合わせた**（母数が減ったらこの検算は空回りする）");
-  // **共通層は 117 行しか見ていない**（`棄` のある 1 行を飛ばしている）。**ここはその 1 行も見た**
-  assert.deepEqual(meta().countChecked, { checked: 117, noCounts: 0, rows: 118, unreadableCells: 1 });
-  // **表決者数は 34（議長を除く 34 人）が 117 行、棄権 3 人が抜けた 1 行だけ 31**
-  assert.deepEqual(Object.fromEntries([...votingSeen].sort()), { 31: 1, 34: 117 });
+  assert.equal(checked, 572, "**572 行すべてを突き合わせた**（母数が減ったらこの検算は空回りする）");
+  // **共通層は 569 行しか見ていない**（`棄` のある 3 行を飛ばしている）。**ここはその 3 行も見た**
+  assert.deepEqual(meta().countChecked, { checked: 569, noCounts: 0, rows: 572, unreadableCells: 3 });
+  // **表決者数は 31 / 32 / 33 / 34 の 4 通り**（列が 33〜35 人、議長 1 人と欠席・除斥・棄権が抜ける）
+  assert.deepEqual(Object.fromEntries([...votingSeen].sort((a, b) => a[0] - b[0])), { 31: 3, 32: 91, 33: 254, 34: 224 });
+  assert.equal([...votingSeen.values()].reduce((a, b) => a + b, 0), 572, "母数（4 通りで 572 行を数えきる）");
 });
 
 /**
@@ -154,7 +167,7 @@ test("#865 本番 pref-31: ○=yes / ×=no / 35−非表決=voting を 118 行�
  * 恒真であることを実測している）。**順序の検算は `tottori-votes-pdf.test.ts` にある。**
  * **ここで言えるのは「議長の列が会期の途中で動いていない」ことだけである。**
  */
-test("#865 本番 pref-31: `議` は 118 採決すべてで 1 人、2 会期とも同じ議員（福田議員）", { skip: !hasData }, () => {
+test("#865/#901 本番 pref-31: `議` は 572 採決すべてで 1 人。議長は 2 人で、交代の日が県の公表と 1 日も食い違わない", { skip: !hasData }, () => {
   const rcs = rollCalls();
   const perRollCall = new Map<number, number>();
   const ids = new Set<string>();
@@ -164,10 +177,28 @@ test("#865 本番 pref-31: `議` は 118 採決すべてで 1 人、2 会期と�
     perRollCall.set(gi.length, (perRollCall.get(gi.length) ?? 0) + 1);
     for (const v of gi) { ids.add(v.memberId); names.add(v.nameText); assert.equal(v.value.legend, "議長"); assert.equal(v.value.mapped, "投票なし"); }
   }
-  assert.deepEqual(Object.fromEntries(perRollCall), { 1: 118 }, "採決ごとの `議` の数");
-  assert.equal(ids.size, 1, `\`議\` が付く議員（${[...ids].join(",")}）`);
-  assert.deepEqual([...names], ["福田議員"], "PDF に出る議長の氏名（姓だけ）");
+  assert.deepEqual(Object.fromEntries(perRollCall), { 1: 572 }, "採決ごとの `議` の数");
+  assert.equal(ids.size, 2, `\`議\` が付く議員（${[...ids].join(",")}）`);
+  assert.deepEqual([...names].sort(), ["浜崎議員", "福田議員"], "PDF に出る議長の氏名（姓だけ）");
   assert.ok(![...ids].includes(""), "議長が名簿に寄っている");
+  // **外の一次資料との結び目**（#819 の y の錨）——**県議会「歴代正副議長一覧」**
+  // https://www.pref.tottori.lg.jp/76208.htm : **88代 浜崎晋一 令和5年5月10日 / 89代 福田俊史 令和7年6月9日。**
+  // **`議` が立っている日を数えると、交代の日と 1 日も食い違わない。**
+  // **これは「列がずれていない」ことの、我々のデータの外からの検算である**
+  // （列が 1 つでもずれれば、別の議員に `議` が立ち、日付の並びが壊れる）。
+  const span = new Map<string, string[]>();
+  for (const rc of rcs) {
+    const gi = rc.votes.find((v) => v.value.raw === "議")!;
+    (span.get(gi.nameText) ?? span.set(gi.nameText, []).get(gi.nameText)!).push(rc.date);
+  }
+  const hamasaki = span.get("浜崎議員")!.sort();
+  const fukuda = span.get("福田議員")!.sort();
+  assert.equal(hamasaki.length, 347, "浜崎議員 の採決数");
+  assert.equal(fukuda.length, 225, "福田議員 の採決数");
+  assert.equal(hamasaki.length + fukuda.length, 572, "母数（2 人で 572 採決を数えきる）");
+  assert.ok(hamasaki.at(-1)! < "2025-06-09", `浜崎議員 の最後の採決 ${hamasaki.at(-1)} は 89代の就任（2025-06-09）より前`);
+  assert.ok(fukuda[0] >= "2025-06-09", `福田議員 の最初の採決 ${fukuda[0]} は 89代の就任（2025-06-09）以後`);
+  assert.ok(hamasaki[0] >= "2023-05-10", `浜崎議員 の最初の採決 ${hamasaki[0]} は 88代の就任（2023-05-10）以後`);
 });
 
 /**
@@ -181,16 +212,27 @@ test("#865 本番 pref-31: `議` は 118 採決すべてで 1 人、2 会期と�
  * **1 つの `memberId` に 2 通りの氏名が付いたら、どこかで別人に寄せている。**
  * **逆に 1 つの氏名が 2 つの `memberId` に付いたら、同じ人が 2 人に割れている。**
  */
-test("#865 本番 pref-31: 35 人が姓だけの氏名と 1 対 1（未突合 0、票に空の memberId が無い）", { skip: !hasData }, () => {
+test("#865/#901 本番 pref-31: 35 人が姓だけの氏名と 1 対 1。引退した 2 人の票は空の memberId のまま（別人に寄らない）", { skip: !hasData }, () => {
   const rcs = rollCalls();
   const votes = rcs.flatMap((r) => r.votes);
-  assert.equal(votes.length, 4_130, "母数");
-  assert.deepEqual(JSON.parse(readFileSync(join(DIR, "unmatched.json"), "utf-8")), [], "unmatched.json");
-  assert.deepEqual(votes.filter((v) => v.memberId === "").map((v) => v.nameText), [], "memberId が空の票");
-  // **`memberId` ↔ `nameText` が 1 対 1**
+  assert.equal(votes.length, 19_623, "母数");
+  // **`--sessions` を広げて、寄らない氏名が 0 → 2 通りになった**（#901）。
+  // **どちらも任期の途中で退いた議員で、今の名簿 35 人に居ない**——
+  // **票は `memberId` 空のまま残す**（#529。**「記録が出ない」側で、利用者から見える**）。
+  const unmatchedJson = JSON.parse(readFileSync(join(DIR, "unmatched.json"), "utf-8")) as { nameText: string; rollCallIds: string[]; candidates?: unknown[] }[];
+  assert.deepEqual(unmatchedJson.map((u) => u.nameText).sort(), ["内田隆議員", "藤縄議員"], "unmatched.json の氏名");
+  // **候補を 1 人も挙げていない**——**挙げたうえで選ばなかったのではなく、姓で始まる議員が名簿に居ない。**
+  // **`内田隆議員` は特に重要**: **名簿に 内田 博長 が居るが、`内田博長`.startsWith(`内田隆`) が偽なので挙がらない。**
+  assert.deepEqual(unmatchedJson.map((u) => u.candidates ?? []), [[], []], "候補（1 人でも挙がっていたら寄る危険がある）");
+  assert.equal(unmatchedJson.reduce((n, u) => n + u.rollCallIds.length, 0), 226, "寄らなかった票の数（176 + 50）");
+  // **空の memberId が付いた票は、その 2 通りの氏名のものだけ**
+  assert.deepEqual([...new Set(votes.filter((v) => v.memberId === "").map((v) => v.nameText))].sort(), ["内田隆議員", "藤縄議員"]);
+  assert.equal(votes.filter((v) => v.memberId === "").length, 226, "空の memberId の票");
+  // **`memberId` ↔ `nameText` が 1 対 1**（**空の memberId は「誰でもない」ので外して数える**）
   const idToNames = new Map<string, Set<string>>();
   const nameToIds = new Map<string, Set<string>>();
   for (const v of votes) {
+    if (v.memberId === "") continue;
     (idToNames.get(v.memberId) ?? idToNames.set(v.memberId, new Set()).get(v.memberId)!).add(v.nameText);
     (nameToIds.get(v.nameText) ?? nameToIds.set(v.nameText, new Set()).get(v.nameText)!).add(v.memberId);
   }
@@ -198,8 +240,18 @@ test("#865 本番 pref-31: 35 人が姓だけの氏名と 1 対 1（未突合 0�
   assert.equal(nameToIds.size, 35, "票に出る氏名");
   assert.deepEqual([...idToNames].filter(([, s]) => s.size > 1).map(([k]) => k), [], "1 人に 2 通りの氏名");
   assert.deepEqual([...nameToIds].filter(([, s]) => s.size > 1).map(([k]) => k), [], "1 つの氏名が 2 人に");
-  // **同じ採決の中に同じ議員が 2 回出ない**（列がずれて同じ人を 2 度数えていない）
-  assert.deepEqual(rcs.filter((r) => new Set(r.votes.map((v) => v.memberId)).size !== r.votes.length).map((r) => r.id), []);
+  // **同じ採決の中に同じ議員が 2 回出ない**（列がずれて同じ人を 2 度数えていない）。
+  // **空の `memberId` は数から外す**——**寄らなかった議員が 2 人いる採決では空が 2 つ並ぶが、
+  // それは「同じ人が 2 回出た」ではない**（#901。**氏名のほうで別々であることを下で見る**）。
+  assert.deepEqual(
+    rcs.filter((r) => { const ids = r.votes.map((v) => v.memberId).filter((x) => x !== ""); return new Set(ids).size !== ids.length; }).map((r) => r.id),
+    [], "同じ採決に同じ memberId が 2 回",
+  );
+  // **氏名のほうは空にならないので、こちらは全票を数えられる**（**空の memberId が隠す穴を塞ぐ**）
+  assert.deepEqual(
+    rcs.filter((r) => new Set(r.votes.map((v) => v.nameText)).size !== r.votes.length).map((r) => r.id),
+    [], "同じ採決に同じ氏名が 2 回",
+  );
   // **PDF の「○○議員」が、名簿の氏名（空白を除く）の前方に本当に載っている**
   const index = JSON.parse(readFileSync(join(DATA, "members", "index.json"), "utf-8")) as LocalMember[];
   const roster = new Map(index.filter((m) => m.assemblyId === "pref-31").map((m) => [m.id, m.name.replace(/[\s　]/g, "")]));
@@ -214,24 +266,33 @@ test("#865 本番 pref-31: 35 人が姓だけの氏名と 1 対 1（未突合 0�
     matched++;
   }
   assert.equal(matched, 35, "**35 人すべてを名簿と突き合わせた**");
-  // **全員が 118 件すべてに出る**（誰かが一部の採決から静かに落ちていない）
+  // **議員ごとの採決数は 3 通り**（#901 で広げて出た）。**572 は 11 会期すべてに出た 32 人、
+  // 434 は 2024年の補選で入った 2 人（山本議員・玉木議員）、225 は 2025年に入った 1 人（森議員）。**
+  // **一律でないのは、一次資料の PDF がその人の在職前の会期に列を持っていないからである。**
   const tottori = index.filter((m) => m.assemblyId === "pref-31");
-  assert.deepEqual([...new Set(tottori.map((m) => m.counts?.rollcalls))], [118], "議員ごとの採決数");
+  const perMember = new Map<number, number>();
+  for (const m2 of tottori) perMember.set(m2.counts!.rollcalls, (perMember.get(m2.counts!.rollcalls) ?? 0) + 1);
+  assert.deepEqual(Object.fromEntries([...perMember].sort((a, b) => a[0] - b[0])), { 225: 1, 434: 2, 572: 32 }, "議員ごとの採決数");
+  assert.equal([...perMember.values()].reduce((a, b) => a + b, 0), 35, "母数（3 通りで 35 人を数えきる）");
 });
 
 /** **出典はすべて県議会の公式ホスト**（`validateLocalAssemblies` も見るが、値をここでも固定する）。 */
-test("#865 本番 pref-31: sourceUrl は 12 本すべて https://www.pref.tottori.lg.jp", { skip: !hasData }, () => {
+test("#865/#901 本番 pref-31: sourceUrl は 53 本すべて https://www.pref.tottori.lg.jp", { skip: !hasData }, () => {
   const m = meta();
   const urls = new Set<string>();
   for (const rc of rollCalls()) urls.add(rc.sourceUrl);
   for (const s of m.sources) urls.add(s.url);
   for (const s of m.sessions) { urls.add(s.sourceUrl); if (s.pdfUrl) urls.add(s.pdfUrl); for (const p of s.pdfUrls ?? []) urls.add(p); }
-  assert.equal(urls.size, 12, "**突き合わせた URL の本数**（0 本を見て緑にならないように）");
+  assert.equal(urls.size, 53, "**突き合わせた URL の本数**（0 本を見て緑にならないように。12 → 53）");
   const bad = [...urls].filter((u) => new URL(u).host !== TOTTORI_HOST || new URL(u).protocol !== "https:");
   assert.deepEqual(bad, [], "公式ホストでない URL");
-  // **会期は 2 本、内訳は 30 + 88 = 118**
-  assert.deepEqual(m.sessions.map((s) => [s.sessionId, s.rollcalls]).sort(), [["2026-02", 88], ["2026-06", 30]]);
-  assert.equal(m.sessions.reduce((s, x) => s + (x.rollcalls ?? 0), 0), 118, "会期ごとの採決数の合計");
+  // **会期は 11 本**（#901。**`--sessions` の既定が 11 なので、ここが 11 本より少なければ既定が効いていない**）
+  assert.deepEqual(m.sessions.map((s) => [s.sessionId, s.rollcalls]).sort(), [
+    ["2023-11", 50], ["2024-02", 88], ["2024-06", 38], ["2024-09", 36], ["2024-11", 37], ["2025-02", 98],
+    ["2025-06", 36], ["2025-09", 35], ["2025-12", 36], ["2026-02", 88], ["2026-06", 30],
+  ]);
+  assert.equal(m.sessions.length, 11, "会期の本数");
+  assert.equal(m.sessions.reduce((s, x) => s + (x.rollcalls ?? 0), 0), 572, "会期ごとの採決数の合計");
   // **全部の採決に日付・件名がある**（名や日付の無い記録を出さない）
   const rcs = rollCalls();
   assert.deepEqual(rcs.filter((r) => !/^\d{4}-\d{2}-\d{2}$/.test(r.date)).map((r) => r.id), [], "日付の形");
