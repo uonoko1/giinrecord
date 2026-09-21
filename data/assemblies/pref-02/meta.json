@@ -1,19 +1,19 @@
 {
  "assemblyId": "pref-02",
  "countChecked": {
-  "checked": 113,
+  "checked": 611,
   "noCounts": 0,
-  "rows": 113,
+  "rows": 611,
   "unreadableCells": 0
  },
  "counts": {
-  "cells": 5111,
+  "cells": 29015,
   "members": 46,
-  "rollcalls": 113,
+  "rollcalls": 611,
   "unknownCells": 0,
-  "unmatchedNames": 3
+  "unmatchedNames": 10
  },
- "fetchedAt": "2026-09-13T12:00:00.000Z",
+ "fetchedAt": "2026-09-21T00:29:38.828Z",
  "rosterAsOf": "2026-05-25",
  "sessions": [
   {
@@ -37,33 +37,225 @@
    "sessionLabel": "令和8年2月第325回定例会",
    "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/katsudo-shinsakekka.html",
    "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/324teirei_sanpi.pdf",
+   "pdfUrls": [
+    "https://www.pref.aomori.lg.jp/soshiki/gikai/files/324teirei_sanpi.pdf"
+   ],
+   "rollcalls": 51,
+   "sessionId": "2025-11",
+   "sessionLabel": "令和7年11月第324回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/katsudo-shinsakekka.html",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/323teirei_sanpi.pdf",
+   "pdfUrls": [
+    "https://www.pref.aomori.lg.jp/soshiki/gikai/files/323teirei_sanpi.pdf"
+   ],
+   "rollcalls": 32,
+   "sessionId": "2025-09",
+   "sessionLabel": "令和7年9月第323回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/katsudo-shinsakekka.html",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/322teirei_sanpi.pdf",
+   "pdfUrls": [
+    "https://www.pref.aomori.lg.jp/soshiki/gikai/files/322teirei_sanpi.pdf"
+   ],
+   "rollcalls": 23,
+   "sessionId": "2025-06",
+   "sessionLabel": "令和7年6月第322回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/katsudo-shinsakekka.html",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/321teirei_sanpi.pdf",
+   "pdfUrls": [
+    "https://www.pref.aomori.lg.jp/soshiki/gikai/files/321teirei_sanpi.pdf"
+   ],
+   "rollcalls": 98,
+   "sessionId": "2025-02",
+   "sessionLabel": "令和7年2月第321回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/katsudo-shinsakekka.html",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/320teirei_sanpi.pdf",
+   "pdfUrls": [
+    "https://www.pref.aomori.lg.jp/soshiki/gikai/files/320teirei_sanpi.pdf"
+   ],
+   "rollcalls": 53,
+   "sessionId": "2024-11",
+   "sessionLabel": "令和6年11月第320回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/katsudo-shinsakekka.html",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/319teirei_sanpi.pdf",
+   "pdfUrls": [
+    "https://www.pref.aomori.lg.jp/soshiki/gikai/files/319teirei_sanpi.pdf"
+   ],
+   "rollcalls": 23,
+   "sessionId": "2024-09",
+   "sessionLabel": "令和6年9月第319回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/katsudo-shinsakekka.html",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/318teirei_sanpi.pdf",
+   "pdfUrls": [
+    "https://www.pref.aomori.lg.jp/soshiki/gikai/files/318teirei_sanpi.pdf"
+   ],
+   "rollcalls": 27,
+   "sessionId": "2024-06",
+   "sessionLabel": "令和6年6月第318回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/katsudo-shinsakekka.html",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/317teirei_sanpi.pdf",
+   "pdfUrls": [
+    "https://www.pref.aomori.lg.jp/soshiki/gikai/files/317teirei_sanpi.pdf"
+   ],
+   "rollcalls": 91,
+   "sessionId": "2024-02",
+   "sessionLabel": "令和6年2月第317回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/katsudo-shinsakekka.html",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/316teirei_sanpi.pdf",
+   "pdfUrls": [
+    "https://www.pref.aomori.lg.jp/soshiki/gikai/files/316teirei_sanpi.pdf"
+   ],
+   "rollcalls": 44,
+   "sessionId": "2023-11",
+   "sessionLabel": "令和5年11月第316回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/katsudo-shinsakekka.html",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/315teirei_sanpi.pdf",
+   "pdfUrls": [
+    "https://www.pref.aomori.lg.jp/soshiki/gikai/files/315teirei_sanpi.pdf"
+   ],
+   "rollcalls": 27,
+   "sessionId": "2023-09",
+   "sessionLabel": "令和5年9月第315回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/katsudo-shinsakekka.html",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/314teirei_sanpi.pdf",
+   "pdfUrls": [
+    "https://www.pref.aomori.lg.jp/soshiki/gikai/files/314teirei_sanpi.pdf"
+   ],
+   "rollcalls": 21,
+   "sessionId": "2023-07",
+   "sessionLabel": "令和5年7月第314回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/katsudo-shinsakekka.html",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/96rinji_sanpi.pdf",
+   "pdfUrls": [
+    "https://www.pref.aomori.lg.jp/soshiki/gikai/files/96rinji_sanpi.pdf"
+   ],
+   "rollcalls": 8,
+   "sessionId": "2023-05-rinji",
+   "sessionLabel": "令和5年5月第96回臨時会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/katsudo-shinsakekka.html",
+   "unknownCells": 0
   }
  ],
  "sources": [
   {
-   "fetchedAt": "2026-09-13T12:00:00.000Z",
+   "fetchedAt": "2026-09-21T00:29:38.828Z",
    "name": "青森県議会 議員の紹介（会派別）",
    "url": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-kaiha.html"
   },
   {
-   "fetchedAt": "2026-09-13T12:00:00.000Z",
+   "fetchedAt": "2026-09-21T00:29:38.828Z",
    "name": "青森県議会 議員の紹介（選挙区別）",
    "url": "https://www.pref.aomori.lg.jp/soshiki/gikai/giin-senkyoku.html"
   },
   {
-   "fetchedAt": "2026-09-13T12:00:00.000Z",
+   "fetchedAt": "2026-09-21T00:29:38.828Z",
    "name": "青森県議会 本会議・委員会の審査結果",
    "url": "https://www.pref.aomori.lg.jp/soshiki/gikai/katsudo-shinsakekka.html"
   },
   {
-   "fetchedAt": "2026-09-13T12:00:00.000Z",
+   "fetchedAt": "2026-09-21T00:29:38.828Z",
    "name": "青森県議会 令和8年6月第326回定例会 議決結果",
    "url": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf"
   },
   {
-   "fetchedAt": "2026-09-13T12:00:00.000Z",
+   "fetchedAt": "2026-09-21T00:29:38.828Z",
    "name": "青森県議会 令和8年2月第325回定例会 議決結果",
    "url": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/325teirei_sanpi.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T00:29:38.828Z",
+   "name": "青森県議会 令和7年11月第324回定例会 議決結果",
+   "url": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/324teirei_sanpi.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T00:29:38.828Z",
+   "name": "青森県議会 令和7年9月第323回定例会 議決結果",
+   "url": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/323teirei_sanpi.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T00:29:38.828Z",
+   "name": "青森県議会 令和7年6月第322回定例会 議決結果",
+   "url": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/322teirei_sanpi.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T00:29:38.828Z",
+   "name": "青森県議会 令和7年2月第321回定例会 議決結果",
+   "url": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/321teirei_sanpi.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T00:29:38.828Z",
+   "name": "青森県議会 令和6年11月第320回定例会 議決結果",
+   "url": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/320teirei_sanpi.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T00:29:38.828Z",
+   "name": "青森県議会 令和6年9月第319回定例会 議決結果",
+   "url": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/319teirei_sanpi.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T00:29:38.828Z",
+   "name": "青森県議会 令和6年6月第318回定例会 議決結果",
+   "url": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/318teirei_sanpi.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T00:29:38.828Z",
+   "name": "青森県議会 令和6年2月第317回定例会 議決結果",
+   "url": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/317teirei_sanpi.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T00:29:38.828Z",
+   "name": "青森県議会 令和5年11月第316回定例会 議決結果",
+   "url": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/316teirei_sanpi.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T00:29:38.828Z",
+   "name": "青森県議会 令和5年9月第315回定例会 議決結果",
+   "url": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/315teirei_sanpi.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T00:29:38.828Z",
+   "name": "青森県議会 令和5年7月第314回定例会 議決結果",
+   "url": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/314teirei_sanpi.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-21T00:29:38.828Z",
+   "name": "青森県議会 令和5年5月第96回臨時会 議決結果",
+   "url": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/96rinji_sanpi.pdf"
   }
  ]
 }

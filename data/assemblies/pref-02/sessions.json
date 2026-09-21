@@ -1,7 +1,7 @@
 [
  {
   "date": "2026-06-29",
-  "fetchedAt": "2026-09-13T12:00:00.000Z",
+  "fetchedAt": "2026-09-21T00:29:38.828Z",
   "id": "2026-06",
   "label": "令和8年6月第326回定例会",
   "rollcalls": 26,
@@ -9,10 +9,106 @@
  },
  {
   "date": "2026-03-24",
-  "fetchedAt": "2026-09-13T12:00:00.000Z",
+  "fetchedAt": "2026-09-21T00:29:38.828Z",
   "id": "2026-02",
   "label": "令和8年2月第325回定例会",
   "rollcalls": 87,
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/katsudo-shinsakekka.html"
+ },
+ {
+  "date": "2025-12-08",
+  "fetchedAt": "2026-09-21T00:29:38.828Z",
+  "id": "2025-11",
+  "label": "令和7年11月第324回定例会",
+  "rollcalls": 51,
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/katsudo-shinsakekka.html"
+ },
+ {
+  "date": "2025-10-06",
+  "fetchedAt": "2026-09-21T00:29:38.828Z",
+  "id": "2025-09",
+  "label": "令和7年9月第323回定例会",
+  "rollcalls": 32,
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/katsudo-shinsakekka.html"
+ },
+ {
+  "date": "2025-06-27",
+  "fetchedAt": "2026-09-21T00:29:38.828Z",
+  "id": "2025-06",
+  "label": "令和7年6月第322回定例会",
+  "rollcalls": 23,
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/katsudo-shinsakekka.html"
+ },
+ {
+  "date": "2025-03-24",
+  "fetchedAt": "2026-09-21T00:29:38.828Z",
+  "id": "2025-02",
+  "label": "令和7年2月第321回定例会",
+  "rollcalls": 98,
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/katsudo-shinsakekka.html"
+ },
+ {
+  "date": "2024-12-09",
+  "fetchedAt": "2026-09-21T00:29:38.828Z",
+  "id": "2024-11",
+  "label": "令和6年11月第320回定例会",
+  "rollcalls": 53,
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/katsudo-shinsakekka.html"
+ },
+ {
+  "date": "2024-10-08",
+  "fetchedAt": "2026-09-21T00:29:38.828Z",
+  "id": "2024-09",
+  "label": "令和6年9月第319回定例会",
+  "rollcalls": 23,
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/katsudo-shinsakekka.html"
+ },
+ {
+  "date": "2024-06-28",
+  "fetchedAt": "2026-09-21T00:29:38.828Z",
+  "id": "2024-06",
+  "label": "令和6年6月第318回定例会",
+  "rollcalls": 27,
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/katsudo-shinsakekka.html"
+ },
+ {
+  "date": "2024-03-22",
+  "fetchedAt": "2026-09-21T00:29:38.828Z",
+  "id": "2024-02",
+  "label": "令和6年2月第317回定例会",
+  "rollcalls": 91,
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/katsudo-shinsakekka.html"
+ },
+ {
+  "date": "2023-12-08",
+  "fetchedAt": "2026-09-21T00:29:38.828Z",
+  "id": "2023-11",
+  "label": "令和5年11月第316回定例会",
+  "rollcalls": 44,
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/katsudo-shinsakekka.html"
+ },
+ {
+  "date": "2023-10-06",
+  "fetchedAt": "2026-09-21T00:29:38.828Z",
+  "id": "2023-09",
+  "label": "令和5年9月第315回定例会",
+  "rollcalls": 27,
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/katsudo-shinsakekka.html"
+ },
+ {
+  "date": "2023-07-24",
+  "fetchedAt": "2026-09-21T00:29:38.828Z",
+  "id": "2023-07",
+  "label": "令和5年7月第314回定例会",
+  "rollcalls": 21,
+  "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/katsudo-shinsakekka.html"
+ },
+ {
+  "date": "2023-05-12",
+  "fetchedAt": "2026-09-21T00:29:38.828Z",
+  "id": "2023-05-rinji",
+  "label": "令和5年5月第96回臨時会",
+  "rollcalls": 8,
   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/katsudo-shinsakekka.html"
  }
 ]
