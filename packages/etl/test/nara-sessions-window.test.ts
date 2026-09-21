@@ -108,7 +108,8 @@ test("#901 奈良の `--sessions` の既定は 4（他の議会の値は動か�
   // **触っていない議会**（この PR は奈良だけ。#901 は「1 県ずつ」と言っている）
   assert.deepEqual(
     ["mie", "tokushima", "kochi", "miyagi", "tottori", "shimane", "shiga", "aomori", "akita", "saga"].map((t) => [t, defaultSessionsFor(t)]),
-    [["mie", 4], ["tokushima", 4], ["kochi", 5], ["miyagi", 2], ["tottori", 2], ["shimane", 2], ["shiga", 2], ["aomori", 2], ["akita", 29], ["saga", 2]],
+    // **宮城は #901 の別 PR で 2 → 11 になった**（第400 〜 第390回。2023-10 の一般選挙の手前）
+    [["mie", 4], ["tokushima", 4], ["kochi", 5], ["miyagi", 11], ["tottori", 2], ["shimane", 2], ["shiga", 2], ["aomori", 2], ["akita", 29], ["saga", 2]],
   );
 });
 
@@ -329,8 +330,10 @@ test("#901 否定的対照: `－` U+FF0D → `―` を共有表に足すと、�
     if (broken) brokenPerAssembly.set(a.name, broken);
   }
   assert.ok(total > 50_000, `母数が小さすぎる（${total} 票）。data/ が無いなら、この検算は空回りしている（#757）`);
-  assert.deepEqual(Object.fromEntries([...brokenPerAssembly].sort()), { "pref-04": 5, "pref-24": 6, "pref-32": 81 });
-  assert.equal([...brokenPerAssembly.values()].reduce((a, b) => a + b, 0), 92, "合計（母数 " + total + " 票）");
+  // **宮城（pref-04）が 5 → 11 に増えたのは、#901 の宮城で `--sessions` を 2 → 11 に広げたから**
+  // （**`－` U+FF0D の票が 5 → 11 になった**。**本数が増えただけで、性質は変わっていない**）。
+  assert.deepEqual(Object.fromEntries([...brokenPerAssembly].sort()), { "pref-04": 11, "pref-24": 6, "pref-32": 81 });
+  assert.equal([...brokenPerAssembly.values()].reduce((a, b) => a + b, 0), 98, "合計（母数 " + total + " 票）");
   // **奈良（pref-29）は 0**——**壊すのは奈良ではなく、他の 3 議会である**
   assert.equal(brokenPerAssembly.get("pref-29"), undefined);
 });

@@ -13,7 +13,7 @@
   "unknownCells": 29,
   "unmatchedNames": 5
  },
- "fetchedAt": "2026-09-20T22:47:07.159Z",
+ "fetchedAt": "2026-09-20T23:59:53.330Z",
  "rosterAsOf": "2026-09-17",
  "sessions": [
   {
@@ -107,77 +107,77 @@
  ],
  "sources": [
   {
-   "fetchedAt": "2026-09-20T22:47:07.159Z",
+   "fetchedAt": "2026-09-20T23:59:53.330Z",
    "name": "宮城県議会 議員名簿（会派別）",
    "url": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kaiha.html"
   },
   {
-   "fetchedAt": "2026-09-20T22:47:07.159Z",
+   "fetchedAt": "2026-09-20T23:59:53.330Z",
    "name": "宮城県議会 議員名簿（選挙区別）",
    "url": "https://www.pref.miyagi.jp/site/kengikai/18meibo-kubetu.html"
   },
   {
-   "fetchedAt": "2026-09-20T22:47:07.159Z",
+   "fetchedAt": "2026-09-20T23:59:53.330Z",
    "name": "宮城県議会 議員名簿（五十音順）",
    "url": "https://www.pref.miyagi.jp/site/kengikai/18meibo-gojuuon.html"
   },
   {
-   "fetchedAt": "2026-09-20T22:47:07.159Z",
+   "fetchedAt": "2026-09-20T23:59:53.330Z",
    "name": "宮城県議会 過去の本会議情報",
    "url": "https://www.pref.miyagi.jp/site/kengikai/kakohonkaigi.html"
   },
   {
-   "fetchedAt": "2026-09-20T22:47:07.159Z",
+   "fetchedAt": "2026-09-20T23:59:53.330Z",
    "name": "宮城県議会 各議員の表決状況（令和8年6月定例会（第400回））",
    "url": "https://www.pref.miyagi.jp/documents/65634/hyoketu080707.pdf"
   },
   {
-   "fetchedAt": "2026-09-20T22:47:07.159Z",
+   "fetchedAt": "2026-09-20T23:59:53.330Z",
    "name": "宮城県議会 各議員の表決状況（令和8年2月定例会（第399回））",
    "url": "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf"
   },
   {
-   "fetchedAt": "2026-09-20T22:47:07.159Z",
+   "fetchedAt": "2026-09-20T23:59:53.330Z",
    "name": "宮城県議会 各議員の表決状況（令和7年11月定例会（第398回））",
    "url": "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf"
   },
   {
-   "fetchedAt": "2026-09-20T22:47:07.159Z",
+   "fetchedAt": "2026-09-20T23:59:53.330Z",
    "name": "宮城県議会 各議員の表決状況（令和7年9月定例会（第397回））",
    "url": "https://www.pref.miyagi.jp/documents/61559/hyouketsu1002syuusei.pdf"
   },
   {
-   "fetchedAt": "2026-09-20T22:47:07.159Z",
+   "fetchedAt": "2026-09-20T23:59:53.330Z",
    "name": "宮城県議会 各議員の表決状況（令和7年6月定例会（第396回））",
    "url": "https://www.pref.miyagi.jp/documents/60482/hyouketsu070630.pdf"
   },
   {
-   "fetchedAt": "2026-09-20T22:47:07.159Z",
+   "fetchedAt": "2026-09-20T23:59:53.330Z",
    "name": "宮城県議会 各議員の表決状況（令和7年2月定例会（第395回））",
    "url": "https://www.pref.miyagi.jp/documents/56771/hyouketsu070314.pdf"
   },
   {
-   "fetchedAt": "2026-09-20T22:47:07.159Z",
+   "fetchedAt": "2026-09-20T23:59:53.330Z",
    "name": "宮城県議会 各議員の表決状況（令和6年11月定例会（第394回））",
    "url": "https://www.pref.miyagi.jp/documents/55094/hyouketsu061211.pdf"
   },
   {
-   "fetchedAt": "2026-09-20T22:47:07.159Z",
+   "fetchedAt": "2026-09-20T23:59:53.330Z",
    "name": "宮城県議会 各議員の表決状況（令和6年9月定例会（第393回））",
    "url": "https://www.pref.miyagi.jp/documents/54531/hyouketsu061017.pdf"
   },
   {
-   "fetchedAt": "2026-09-20T22:47:07.159Z",
+   "fetchedAt": "2026-09-20T23:59:53.330Z",
    "name": "宮城県議会 各議員の表決状況（令和6年6月定例会（第392回））",
    "url": "https://www.pref.miyagi.jp/documents/53087/hyouketsu060701.pdf"
   },
   {
-   "fetchedAt": "2026-09-20T22:47:07.159Z",
+   "fetchedAt": "2026-09-20T23:59:53.330Z",
    "name": "宮城県議会 各議員の表決状況（令和6年2月定例会（第391回））",
    "url": "https://www.pref.miyagi.jp/documents/50597/hyouketsu060313.pdf"
   },
   {
-   "fetchedAt": "2026-09-20T22:47:07.159Z",
+   "fetchedAt": "2026-09-20T23:59:53.330Z",
    "name": "宮城県議会 各議員の表決状況（令和5年11月定例会（第390回））",
    "url": "https://www.pref.miyagi.jp/documents/50057/hyouketsu051219.pdf"
   }
