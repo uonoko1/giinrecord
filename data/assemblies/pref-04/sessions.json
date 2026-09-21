@@ -1,7 +1,7 @@
 [
  {
   "date": "2026-07-07",
-  "fetchedAt": "2026-09-04T22:16:11.781Z",
+  "fetchedAt": "2026-09-20T23:59:53.330Z",
   "id": "400",
   "label": "令和8年6月定例会（第400回）",
   "rollcalls": 23,
@@ -9,10 +9,82 @@
  },
  {
   "date": "2026-03-18",
-  "fetchedAt": "2026-09-04T22:16:11.781Z",
+  "fetchedAt": "2026-09-20T23:59:53.330Z",
   "id": "399",
   "label": "令和8年2月定例会（第399回）",
   "rollcalls": 110,
   "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/hyoketu080318.html"
+ },
+ {
+  "date": "2025-12-17",
+  "fetchedAt": "2026-09-20T23:59:53.330Z",
+  "id": "398",
+  "label": "令和7年11月定例会（第398回）",
+  "rollcalls": 50,
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/hyoketu071217.html"
+ },
+ {
+  "date": "2025-10-02",
+  "fetchedAt": "2026-09-20T23:59:53.330Z",
+  "id": "397",
+  "label": "令和7年9月定例会（第397回）",
+  "rollcalls": 29,
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/hyoketu071002.html"
+ },
+ {
+  "date": "2025-06-30",
+  "fetchedAt": "2026-09-20T23:59:53.330Z",
+  "id": "396",
+  "label": "令和7年6月定例会（第396回）",
+  "rollcalls": 31,
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/hyoketu070630.html"
+ },
+ {
+  "date": "2025-03-14",
+  "fetchedAt": "2026-09-20T23:59:53.330Z",
+  "id": "395",
+  "label": "令和7年2月定例会（第395回）",
+  "rollcalls": 89,
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/hyouketsu070314.html"
+ },
+ {
+  "date": "2024-12-11",
+  "fetchedAt": "2026-09-20T23:59:53.330Z",
+  "id": "394",
+  "label": "令和6年11月定例会（第394回）",
+  "rollcalls": 43,
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/hyouketsu061211.html"
+ },
+ {
+  "date": "2024-10-17",
+  "fetchedAt": "2026-09-20T23:59:53.330Z",
+  "id": "393",
+  "label": "令和6年9月定例会（第393回）",
+  "rollcalls": 31,
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/hyouketsu061017.html"
+ },
+ {
+  "date": "2024-07-01",
+  "fetchedAt": "2026-09-20T23:59:53.330Z",
+  "id": "392",
+  "label": "令和6年6月定例会（第392回）",
+  "rollcalls": 31,
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/hyouketsu060701.html"
+ },
+ {
+  "date": "2024-03-13",
+  "fetchedAt": "2026-09-20T23:59:53.330Z",
+  "id": "391",
+  "label": "令和6年2月定例会（第391回）",
+  "rollcalls": 101,
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/hyouketsu060313.html"
+ },
+ {
+  "date": "2023-12-19",
+  "fetchedAt": "2026-09-20T23:59:53.330Z",
+  "id": "390",
+  "label": "令和5年11月定例会（第390回）",
+  "rollcalls": 46,
+  "sourceUrl": "https://www.pref.miyagi.jp/site/kengikai/hyouketsu051219.html"
  }
 ]

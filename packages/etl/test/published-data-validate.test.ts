@@ -90,8 +90,8 @@ const CORPUS = {
   localAssemblies: 11,
   memberRows: 1225, // members/index.json の全行
   localMemberRows: 453, // うち地方議員（assemblyId が diet- で始まらない行）
-  rollCallFiles: 2585, // assemblies/*/rollcalls/**/*.json（index.json を除く）。**#901 で三重 365 → 733、徳島 105 → 153、高知 104 → 221、秋田 157 → 785、奈良 125 → 180**
-  voteCells: 109319, // その採決ファイルの votes[] の合計。**#901 で三重 17,032 → 34,590、徳島 3,780 → 5,562、高知 3,744 → 7,881、秋田 6,437 → 32,022、奈良 5,000 → 7,200**
+  rollCallFiles: 3036, // assemblies/*/rollcalls/**/*.json（index.json を除く）。**#901 で三重 365 → 733、徳島 105 → 153、高知 104 → 221、秋田 157 → 785、奈良 125 → 180、宮城 133 → 584**
+  voteCells: 135686, // その採決ファイルの votes[] の合計。**#901 で三重 17,032 → 34,590、徳島 3,780 → 5,562、高知 3,744 → 7,881、秋田 6,437 → 32,022、奈良 5,000 → 7,200、宮城 7,448 → 33,815**
 };
 
 const walkRollCalls = async (dir: string): Promise<string[]> => {
