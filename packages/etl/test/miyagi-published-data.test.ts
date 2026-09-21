@@ -40,21 +40,42 @@ const meta = (): LocalAssemblyMeta => JSON.parse(readFileSync(join(DIR, "meta.js
 const members = (): LocalMember[] =>
   (JSON.parse(readFileSync(join(DATA, "members", "index.json"), "utf-8")) as LocalMember[]).filter((m) => m.assemblyId === "pref-04");
 
-test("#865 本番 pref-04: 採決 133 × 議員 56 = 7,448 セル、不明セル 0", { skip: !hasData }, () => {
+test("#901 本番 pref-04: 採決 584・セル 33,815・不明セル 29（11 会期。#865 の 133 / 7,448 から広げた）", { skip: !hasData }, () => {
   const m = meta();
   const rcs = rollCalls();
-  // **実測 2026-09-14**（直近 2 会期。第399回（令和8年2月定）110 本 + 第400回（令和8年6月定）23 本）
-  assert.equal(m.counts.rollcalls, 133);
+  // **実測 2026-09-21**（`--sessions 11`。**第400 〜 第390回**）。
+  // **#865 の時点は `--sessions 2` で 133 採決 / 7,448 セル / 不明 0 だった。**
+  assert.equal(m.counts.rollcalls, 584);
   assert.equal(m.counts.members, 56);
-  assert.equal(m.counts.cells, 7_448);
-  assert.equal(m.counts.unknownCells, 0, "**推定せず `不明` で残したセルは 0**");
-  assert.equal(m.counts.unmatchedNames, 1);
+  assert.equal(m.counts.cells, 33_815);
+  // **29 セルは第393回（令和6年9月）の 石川光次郎 の列**——**PDF がその列を 29 行ぶん空欄にしている**
+  // （`欠` でも `－` でもなく記号が 1 つも無い。#871 が実測）。**推定せず `不明` で残す。**
+  assert.equal(m.counts.unknownCells, 29, "**推定せず `不明` で残したセル**");
+  assert.equal(m.counts.unmatchedNames, 5);
   // **meta の数が、書いた実物と一致する**（meta だけを書き換えても落ちる）
   assert.equal(rcs.length, m.counts.rollcalls, "rollcalls/ の実ファイル数");
   assert.equal(rcs.reduce((s, r) => s + r.votes.length, 0), m.counts.cells, "票の実数");
-  // **133 × 56 の長方形**（どの採決も 56 人ぶん。**1 人静かに落ちても合計は合ってしまう**ので行ごとに見る）
-  assert.deepEqual([...new Set(rcs.map((r) => r.votes.length))], [56], "採決ごとの票数");
-  assert.equal(133 * 56, 7_448, "長方形であることの検算（母数を式で残す）");
+  // **長方形ではない**——**議員数が会期で 56 / 58 / 59 と動く**（**広げて初めて出る形**）。
+  // **だから「採決 × 議員」の掛け算では検算できない。会期ごとに人数と本数を突き合わせる。**
+  assert.deepEqual([...new Set(rcs.map((r) => r.votes.length))].sort((a, b) => a - b), [56, 58, 59], "採決ごとの票数");
+  const perSession = new Map<string, { rows: number; members: Set<number> }>();
+  for (const r of rcs) {
+    const e = perSession.get(r.sessionId) ?? { rows: 0, members: new Set<number>() };
+    e.rows++;
+    e.members.add(r.votes.length);
+    perSession.set(r.sessionId, e);
+  }
+  assert.deepEqual(
+    Object.fromEntries([...perSession].map(([k, v]) => [k, [v.rows, [...v.members]]]).sort()),
+    {
+      "390": [46, [59]], "391": [101, [59]], "392": [31, [59]], "393": [31, [59]], "394": [43, [58]],
+      "395": [89, [58]], "396": [31, [58]], "397": [29, [58]], "398": [50, [58]], "399": [110, [56]], "400": [23, [56]],
+    },
+    "**会期ごとの [採決数, 議員数の通り]**（1 人静かに落ちれば会期の人数が変わる）",
+  );
+  // **足し合わせが meta と合う**（母数を式で残す。#757）
+  assert.equal([...perSession.values()].reduce((n, v) => n + v.rows * [...v.members][0], 0), 33_815);
+  assert.equal(46 * 59 + 101 * 59 + 31 * 59 + 31 * 59 + 43 * 58 + 89 * 58 + 31 * 58 + 29 * 58 + 50 * 58 + 110 * 56 + 23 * 56, 33_815);
 });
 
 /**
@@ -62,25 +83,32 @@ test("#865 本番 pref-04: 採決 133 × 議員 56 = 7,448 セル、不明セル
  * **`抽出不能` が 0 であることを、母数つきで言う**——**0 でも数える**のは、
  * **「凡例に無い記号が混ざり始めた」ことに増えてから気づけるようにするため**（#750 と同じ理由）。
  */
-test("#865 本番 pref-04: 票 7,448 の内訳（○ 7155 / × 154 / 議 133 / － 5 / 欠 1）", { skip: !hasData }, () => {
+test("#901 本番 pref-04: 票 33,815 の内訳（○ 32500 / × 626 / 議 584 / 欠 61 / 不明 29 / － 11 / 除 3 / - 1）", { skip: !hasData }, () => {
   const votes = rollCalls().flatMap((r) => r.votes);
-  assert.equal(votes.length, 7_448, "母数（減っていたら以下の内訳は意味が無い）");
+  assert.equal(votes.length, 33_815, "母数（減っていたら以下の内訳は意味が無い）");
   const raw = new Map<string, number>();
   const legend = new Map<string, number>();
   for (const v of votes) {
     raw.set(v.value.raw, (raw.get(v.value.raw) ?? 0) + 1);
     legend.set(v.value.legend, (legend.get(v.value.legend) ?? 0) + 1);
   }
-  assert.deepEqual(Object.fromEntries([...raw].sort((a, b) => b[1] - a[1])), { "○": 7155, "×": 154, "議": 133, "－": 5, "欠": 1 });
-  // **`－`(U+FF0D) は「議場に不在」**——**「欠席」と別の事実**なので畳まない（#569）
+  // **広げて初めて出た記号が 3 つある**: **`除`（除斥）3 / `-` U+002D 1 / `不明` 29。**
+  // **`-` は第391回の 1 セルで、`glyph-variants.ts` が `－` U+FF0D に寄せて凡例を引いている**（#901）——
+  // **`raw` は原文のまま `-` で残る**（#674 と同じ方針。**寄せるのは凡例を引くときだけ**）。
+  assert.deepEqual(Object.fromEntries([...raw].sort((a, b) => b[1] - a[1])),
+    { "○": 32500, "×": 626, "議": 584, "欠": 61, "不明": 29, "－": 11, "除": 3, "-": 1 });
+  // **`－`(U+FF0D) は「議場に不在」**——**「欠席」と別の事実**なので畳まない（#569）。
+  // **`-` U+002D も同じ意味に落ちる**（11 + 1 = 12）が、**raw は分かれたままである。**
   assert.deepEqual(Object.fromEntries([...legend].sort((a, b) => b[1] - a[1])),
-    { "賛成": 7155, "反対": 154, "議長": 133, "議場に不在": 5, "欠席": 1 });
-  assert.equal(raw.get("不明"), undefined, "`不明` の票");
-  assert.equal(legend.get("抽出不能"), undefined, "`抽出不能` の票");
-  // **`mapped` が付かない票が 0**（凡例の意味が全部 `MAPPED` に載っている）
-  assert.deepEqual(votes.filter((v) => v.value.mapped === undefined), []);
-  assert.deepEqual(Object.fromEntries([...votes.reduce((m2, v) => m2.set(v.value.mapped!, (m2.get(v.value.mapped!) ?? 0) + 1), new Map<string, number>())]
-    .sort((a, b) => b[1] - a[1])), { "賛成": 7155, "反対": 154, "投票なし": 139 });
+    { "賛成": 32500, "反対": 626, "議長": 584, "欠席": 61, "抽出不能": 29, "議場に不在": 12, "除斥": 3 });
+  assert.equal(raw.get("不明"), 29, "`不明` の票（PDF が空欄にしている列。推定していない）");
+  assert.equal(legend.get("抽出不能"), 29, "`抽出不能` の票");
+  // **`mapped` が付かない票は `不明` の 29 票だけ**（凡例の意味は全部 `MAPPED` に載っている）
+  assert.deepEqual([...new Set(votes.filter((v) => v.value.mapped === undefined).map((v) => v.value.raw))], ["不明"]);
+  assert.equal(votes.filter((v) => v.value.mapped === undefined).length, 29);
+  assert.deepEqual(Object.fromEntries([...votes.reduce((m2, v) => m2.set(String(v.value.mapped), (m2.get(String(v.value.mapped)) ?? 0) + 1), new Map<string, number>())]
+    .sort((a, b) => b[1] - a[1])), { "賛成": 32500, "投票なし": 660, "反対": 626, "undefined": 29 });
+  assert.equal(584 + 61 + 12 + 3, 660, "「投票なし」の内訳（議長 + 欠席 + 議場に不在 + 除斥）");
 });
 
 /**
@@ -94,7 +122,7 @@ test("#865 本番 pref-04: 票 7,448 の内訳（○ 7155 / × 154 / 議 133 / �
  * **ただし「議長は採決に加わらない」と決め打ちしない**——**実装は PDF の記号をそのまま読む。**
  * **`議` が 0 人の行が出たら、それはそう印刷されていたということ**（#615 が秋田で実測）。
  */
-test("#865 本番 pref-04: `議` は全 133 採決で 1 人、2 会期とも 佐々木幸士", { skip: !hasData }, () => {
+test("#901 本番 pref-04: `議` は全 584 採決で 1 人、11 会期で 2 人（髙橋 伸二 → 佐々木幸士）", { skip: !hasData }, () => {
   const rcs = rollCalls();
   const perRollCall = new Map<number, number>();
   const bySession = new Map<string, Map<string, number>>();
@@ -109,15 +137,23 @@ test("#865 本番 pref-04: `議` は全 133 採決で 1 人、2 会期とも 佐
       bySession.set(rc.sessionId, s);
     }
   }
-  assert.deepEqual(Object.fromEntries(perRollCall), { 1: 133 }, "採決ごとの `議` の数（母数 133）");
+  assert.deepEqual(Object.fromEntries(perRollCall), { 1: 584 }, "採決ごとの `議` の数（母数 584）");
+  // **広げたので議長が 2 人に跨る**——**「1 人ぶんしか見ていない」状態を抜けた。**
+  // **交代は 2025-11-27（46代 髙橋伸二 → 47代 佐々木幸士）で、第398回から新議長になる。**
+  // **どの会期も `議` は 1 人だけ**（**議長交代の当日に議決した行は 1 つも無い**——
+  // 宮城の交代は 11 月下旬だが、11 月に議決日が 1 日も無い。`miyagi-vote-alignment.test.ts`）。
   assert.deepEqual(
     Object.fromEntries([...bySession].map(([k, v]) => [k, Object.fromEntries(v)]).sort()),
-    { "399": { "佐々木幸士": 110 }, "400": { "佐々木幸士": 23 } },
+    {
+      "390": { "髙橋 伸二": 46 }, "391": { "髙橋 伸二": 101 }, "392": { "髙橋 伸二": 31 }, "393": { "髙橋 伸二": 31 },
+      "394": { "髙橋 伸二": 43 }, "395": { "髙橋 伸二": 89 }, "396": { "髙橋 伸二": 31 }, "397": { "髙橋 伸二": 29 },
+      "398": { "佐々木幸士": 50 }, "399": { "佐々木幸士": 110 }, "400": { "佐々木幸士": 23 },
+    },
     "**会期ごとに `議` が誰で何本か**（列がずれれば別人になる）",
   );
-  // **`議` が付く議員は 1 人だけ**（名簿にも寄っている＝空の memberId ではない）
+  // **`議` が付く議員は 2 人**（どちらも名簿に寄っている＝空の memberId ではない）
   const ids = new Set(rcs.flatMap((r) => r.votes.filter((v) => v.value.raw === "議").map((v) => v.memberId)));
-  assert.deepEqual([...ids], ["p_04_kosi"], "`議` の memberId");
+  assert.deepEqual([...ids].sort(), ["p_04_kosi", "p_04_sinji"], "`議` の memberId");
 });
 
 /**
@@ -128,19 +164,27 @@ test("#865 本番 pref-04: `議` は全 133 採決で 1 人、2 会期とも 佐
  * **順序の検算は `miyagi-votes-pdf.test.ts` が受け持つ。**
  * **ここで言えるのは「記号を落としても増やしてもいない」こと。**
  */
-test("#865 本番 pref-04: 賛成の数 = counts.yes / 反対の数 = counts.no（133 / 133 本すべてに counts がある）", { skip: !hasData }, () => {
+test("#901 本番 pref-04: 賛成の数 = counts.yes / 反対の数 = counts.no（584 本すべてに counts があり、555 本を突き合わせた）", { skip: !hasData }, () => {
   const rcs = rollCalls();
-  assert.equal(rcs.length, 133, "母数");
-  let checked = 0;
+  assert.equal(rcs.length, 584, "母数");
+  let checked = 0, skipped = 0;
   for (const rc of rcs) {
     assert.ok(rc.counts, `${rc.id}: counts が無い`);
+    // **`不明` を含む行は判定外**（**`不明` を `○` とも `×` とも数えない**）。
+    // **29 行は第393回の 石川光次郎 の空欄で、その 29 行の `出席者数` は 58（○ がある 2 行は 59）**
+    // ——**公表数とも矛盾しない**（#871）。
+    if (rc.votes.some((v) => v.value.raw === "不明")) { skipped++; continue; }
     assert.equal(rc.votes.filter((v) => v.value.mapped === "賛成").length, rc.counts!.yes, `${rc.id}: 賛成`);
     assert.equal(rc.votes.filter((v) => v.value.mapped === "反対").length, rc.counts!.no, `${rc.id}: 反対`);
     checked++;
   }
-  assert.equal(checked, 133, "**突き合わせた採決の数**（0 件を「違反なし」と読み違えないため）");
+  assert.equal(checked, 555, "**突き合わせた採決の数**（0 件を「違反なし」と読み違えないため）");
+  assert.equal(skipped, 29, "不明セルを含む行");
+  assert.equal(checked + skipped, 584, "母数の検算（#757）");
   // **meta の母数も同じことを言っている**（#757。`countChecked` は `countMismatchesOf` が数える）
-  assert.deepEqual(meta().countChecked, { rows: 133, checked: 133, noCounts: 0, unreadableCells: 0 });
+  assert.deepEqual(meta().countChecked, { rows: 584, checked: 555, noCounts: 0, unreadableCells: 29 });
+  // **#871 が見つけた「一次資料そのものが合わない 1 行」（第388回 知事提出議案104）は
+  // `--sessions 11` の範囲の外**（第388回は 13 本目）——**だから食い違いは 0 件のままである。**
   assert.equal(meta().countMismatches, undefined, "食い違いが無ければ省略される");
 });
 
@@ -157,64 +201,117 @@ test("#865 本番 pref-04: 賛成の数 = counts.yes / 反対の数 = counts.no�
  *
  * **票そのものは残っている**（`memberId` が空なだけ。「記録が出ない」にしていない）。
  */
-test("#865 本番 pref-04: 未突合 1 件（中島 源陽・理由の記載なし）と、会期ごとに出る氏名の差", { skip: !hasData }, () => {
+test("#901 本番 pref-04: 未突合 5 件（4 人。うち 1 人は会派が変わって 2 行）と、会期ごとに出る氏名の差", { skip: !hasData }, () => {
   const um = JSON.parse(readFileSync(join(DIR, "unmatched.json"), "utf-8")) as LocalUnmatchedName[];
+  // **`unmatched` は「名簿に寄らなかった氏名」で、増えるのは安全側である**（#901 の PO の言葉）。
+  // **`--sessions 2` のときは 1 件（中島 源陽）だった。11 会期に広げて 5 件。**
+  // **`reason` はどれも省略＝「名簿にこの氏名が無い」**（`sourceConflict` でも `brokenGlyph` でもない）。
+  // **`中島 源陽` が 2 行あるのは、鍵が「氏名 + 会派」だからである**——
+  // **第397回までは `無所属`、第398・399回は `自由民主党・県民会議` と PDF に書いてある**（原文のまま）。
+  // **同一人物だと断定はしない**（#796。**一次資料が言っているのは各会期の会派の表記まで**）。
   assert.deepEqual(um.map((u) => ({ name: u.nameText, reason: u.reason, group: u.group, rollCalls: u.rollCallIds.length })), [
-    { name: "中島 源陽", reason: undefined, group: "自由民主党・県民会議", rollCalls: 110 },
+    { name: "ゆさみゆき", reason: undefined, group: "みやぎ県民の声", rollCalls: 401 },
+    { name: "中島 源陽", reason: undefined, group: "無所属", rollCalls: 192 },
+    { name: "中島 源陽", reason: undefined, group: "自由民主党・県民会議", rollCalls: 369 },
+    { name: "渡辺 勝幸", reason: undefined, group: "自由民主党・県民会議", rollCalls: 451 },
+    { name: "渡辺 重益", reason: undefined, group: "自由民主党・県民会議", rollCalls: 451 },
   ]);
-  assert.equal(meta().counts.unmatchedNames, 1);
+  assert.equal(meta().counts.unmatchedNames, 5);
 
   const rcs = rollCalls();
-  // **memberId が空の票は 110**（1 人 × 110 本。**それ以外の 7,338 票は名簿に寄っている**）
+  // **memberId が空の票は 1,864**（母数 33,815 の 5.5%）。**票そのものは読めている**——
+  // **「記録が出ない」にはしていない**（`memberId` が空なだけ）。
   const orphan = rcs.flatMap((r) => r.votes).filter((v) => v.memberId === "");
-  assert.equal(orphan.length, 110, "母数 7,448 のうち名簿に寄らなかった票");
-  assert.deepEqual([...new Set(orphan.map((v) => v.nameText))], ["中島 源陽"]);
-  assert.deepEqual(orphan.filter((v) => v.value.mapped === undefined), [], "寄らなくても票は読めている");
+  assert.equal(orphan.length, 1_864, "母数 33,815 のうち名簿に寄らなかった票");
+  assert.equal(401 + 192 + 369 + 451 + 451, 1_864, "内訳の検算（#757）");
+  assert.deepEqual([...new Set(orphan.map((v) => v.nameText))].sort(), ["ゆさみゆき", "中島 源陽", "渡辺 勝幸", "渡辺 重益"]);
+  assert.deepEqual(orphan.filter((v) => v.value.mapped === undefined && v.value.raw !== "不明"), [], "寄らなくても票は読めている");
 
-  // **会期ごとに出る氏名の集合**（56 人ずつで、差は 1 人だけ）
+  // ## **会期ごとに出る氏名の集合**——**止める位置を決めた検算**（#901）
+  //
+  // **地方の名簿は「今の 1 枚」しか無いので、一般選挙をまたぐと引退した議員の票が
+  // 今の別人に付きうる**（#569 の重いほう）。**#928 の検査はこれを捕まえない**——
+  // **13 本目まで広げても `rosterAsOf` から 1,178 日で、上限 1,461 日の内側である。**
+  //
+  // **だから一次資料（PDF に出る氏名そのもの）で境を見た。**
+  // **本番の 11 会期では、隣り合う会期の入れ替わりはどれも 0〜2 人である**（任期中の辞職・補選の規模）。
+  // **12 本目（第389回）に広げると IN 18 / OUT 19 になる**——**2023-10 の一般選挙。そこで止めた。**
   const bySession = new Map<string, Set<string>>();
   for (const r of rcs) {
     const s = bySession.get(r.sessionId) ?? new Set<string>();
     for (const v of r.votes) s.add(v.nameText);
     bySession.set(r.sessionId, s);
   }
-  const s399 = bySession.get("399")!;
-  const s400 = bySession.get("400")!;
-  assert.equal(s399.size, 56);
-  assert.equal(s400.size, 56);
-  assert.deepEqual([...s399].filter((n) => !s400.has(n)), ["中島 源陽"], "399 にだけ出る氏名");
-  assert.deepEqual([...s400].filter((n) => !s399.has(n)), ["鈴木 敦"], "400 にだけ出る氏名");
-  // **名簿側でも同じ形**——**`鈴木 敦` の採決数は 23**（400 の本数）で、ほかの 55 人は 133
+  const ids = [...bySession.keys()].sort((a, b) => Number(b) - Number(a));
+  assert.deepEqual(ids, ["400", "399", "398", "397", "396", "395", "394", "393", "392", "391", "390"], "会期（新しい順）");
+  const moves: Record<string, [size: number, joined: string[], left: string[]]> = {};
+  for (let i = 0; i + 1 < ids.length; i++) {
+    const cur = bySession.get(ids[i])!;
+    const prev = bySession.get(ids[i + 1])!;
+    moves[ids[i]] = [cur.size, [...cur].filter((n) => !prev.has(n)), [...prev].filter((n) => !cur.has(n))];
+  }
+  assert.deepEqual(moves, {
+    "400": [56, ["鈴木 敦"], ["中島 源陽"]],
+    "399": [56, [], ["渡辺 重益", "渡辺 勝幸"]],
+    "398": [58, ["石川光次郎"], ["ゆさみゆき"]],
+    "397": [58, [], []],
+    "396": [58, [], []],
+    "395": [58, [], []],
+    "394": [58, [], ["石川光次郎"]],
+    "393": [59, [], []],
+    "392": [59, [], []],
+    "391": [59, [], []],
+  }, "**会期ごとの [人数, 入った, 去った]**（5 人以上の入れ替わりが出たら一般選挙をまたいでいる）");
+  const sizes: number[] = [];
+  for (const key of Object.keys(moves)) { const [, joined, left] = moves[key]; sizes.push(joined.length, left.length); }
+  const biggest = Math.max(...sizes);
+  assert.equal(biggest, 2, "**いちばん大きい入れ替わり**（本番の範囲では 2 人。5 以上なら選挙の向こう側）");
+
+  // **名簿側でも同じ形**——**11 会期すべてに出る 54 人が 584、`鈴木 敦` が 23（第400回だけ）、
+  // `石川 光次郎` が 392**（**第390〜393回の 209 本 ＋ 第398〜400回の 183 本。第394〜397回に出ない**）。
   const ms = members();
   assert.equal(ms.length, 56);
   assert.deepEqual(
-    Object.fromEntries([...ms.reduce((m2, m) => m2.set(m.counts?.rollcalls ?? -1, (m2.get(m.counts?.rollcalls ?? -1) ?? 0) + 1), new Map<number, number>())].sort()),
-    { 23: 1, 133: 55 },
+    Object.fromEntries([...ms.reduce((m2, m) => m2.set(m.counts?.rollcalls ?? -1, (m2.get(m.counts?.rollcalls ?? -1) ?? 0) + 1), new Map<number, number>())].sort((a, b) => a[0] - b[0])),
+    { 23: 1, 392: 1, 584: 54 },
     "名簿の議員ごとの採決数",
   );
   assert.deepEqual(ms.filter((m) => m.counts?.rollcalls === 23).map((m) => m.name), ["鈴木 敦"]);
+  assert.deepEqual(ms.filter((m) => m.counts?.rollcalls === 392).map((m) => m.name), ["石川 光次郎"]);
+  assert.equal(46 + 101 + 31 + 31 + 50 + 110 + 23, 392, "石川 光次郎 の内訳の検算（第390〜393回 ＋ 第398〜400回）");
 });
 
 /** **出典はすべて県の公式ホスト**（`validateLocalAssemblies` も見るが、**本数と PDF の数もここで固定する**）。 */
-test("#865 本番 pref-04: sourceUrl はすべて www.pref.miyagi.jp（採決 133 本 + meta の 6 出典 + 会期 2 本）", { skip: !hasData }, () => {
+test("#901 本番 pref-04: sourceUrl はすべて www.pref.miyagi.jp（採決 584 本 + meta の 15 出典 + 会期 11 本）", { skip: !hasData }, () => {
   const m = meta();
   const rcs = rollCalls();
   const urls: string[] = [];
   for (const rc of rcs) urls.push(rc.sourceUrl);
   for (const s of m.sources) urls.push(s.url);
   for (const s of m.sessions) { urls.push(s.sourceUrl); urls.push(s.pdfUrl); for (const p of s.pdfUrls ?? []) urls.push(p); }
-  assert.equal(urls.length, 133 + 6 + 2 * 2, "**見た URL の本数**（0 本を「違反なし」と読み違えないため）");
+  assert.equal(urls.length, 584 + 15 + 11 * 2, "**見た URL の本数**（0 本を「違反なし」と読み違えないため）");
   const bad = urls.filter((u) => new URL(u).host !== MIYAGI_HOST || new URL(u).protocol !== "https:");
   assert.deepEqual([...new Set(bad)], []);
-  // **採決の出典は 2 本の PDF だけ**（会期ごとに 1 本）
+  // **採決の出典は 11 本の PDF だけ**（会期ごとに 1 本。**新しい順の index の先頭 11 会期**）
   assert.deepEqual([...new Set(rcs.map((r) => r.sourceUrl))].sort(), [
-    "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf",
-    "https://www.pref.miyagi.jp/documents/65634/hyoketu080707.pdf",
+    "https://www.pref.miyagi.jp/documents/50057/hyouketsu051219.pdf",   // 第390回
+    "https://www.pref.miyagi.jp/documents/50597/hyouketsu060313.pdf",   // 第391回
+    "https://www.pref.miyagi.jp/documents/53087/hyouketsu060701.pdf",   // 第392回
+    "https://www.pref.miyagi.jp/documents/54531/hyouketsu061017.pdf",   // 第393回
+    "https://www.pref.miyagi.jp/documents/55094/hyouketsu061211.pdf",   // 第394回
+    "https://www.pref.miyagi.jp/documents/56771/hyouketsu070314.pdf",   // 第395回
+    "https://www.pref.miyagi.jp/documents/60482/hyouketsu070630.pdf",   // 第396回
+    "https://www.pref.miyagi.jp/documents/61559/hyouketsu1002syuusei.pdf", // 第397回
+    "https://www.pref.miyagi.jp/documents/62682/hyouketsu071217.pdf",   // 第398回
+    "https://www.pref.miyagi.jp/documents/63622/syuusei_hyouketsu080318.pdf", // 第399回
+    "https://www.pref.miyagi.jp/documents/65634/hyoketu080707.pdf",     // 第400回
   ]);
-  assert.equal(m.sources.filter((s) => s.url.endsWith(".pdf")).length, 2, "出典の PDF");
+  assert.equal(m.sources.filter((s) => s.url.endsWith(".pdf")).length, 11, "出典の PDF");
   assert.equal(m.unreadableSources, undefined, "読めなかった一次資料は無い（省略される）");
   assert.equal(m.lossyNameMatches, undefined, "字が落ちた氏名の寄せは無い（省略される）");
-  assert.equal(m.rosterAsOf, "2026-04-23");
+  // **`rosterAsOf` は名簿ページの「掲載日」で、取得日ではない**（`parsePostedDate`）。
+  // **最古の採決 2023-12-12 まで 1,010 日で、#928 の上限 1,461 日の内側**（**鳴らない**）。
+  assert.equal(m.rosterAsOf, "2026-09-17");
 });
 
 /**
