@@ -619,3 +619,333 @@ test("#829 provenance.cellItems の中に、置いたセルの数だけ表決記
   assert.equal(symbols, 7_540, "**母数**——数えた表決記号（実測 7,540。記号が減ったら落ちる）");
   assert.deepEqual(bad, [], "cellItems の中の記号の数と、置けたセルの数が合わない行");
 });
+
+/* ==================== #901 `--sessions` を 2 → 14 に広げた範囲 ==================== */
+
+/**
+ * ## **広げた範囲に固有の形を 1 本足す**——**`324teirei_sanpi.pdf`（令和7年11月第324回定例会）**
+ *
+ * **#901 で `--sessions` の既定を 2 → 14 にした。** **増えた 12 会期に、今の既定では
+ * 出なかった壊れ方が無いかを 56 本すべてで数えた**（2026-09-21）。
+ *
+ * ### **構造そのものは増えていない**（**実測**）
+ * **14 会期の PDF は 2 種類しかない**——
+ * **罫線の無い本 4 本（第322〜325回）と、1 文字 1 アイテム・罫線ありの本 10 本。**
+ * **どちらも既存のフィクスチャ（`322teirei_sanpi` / `314teirei_sanpi`）が覆っている。**
+ * **記号帯が割れる形（`276`）も `/Rotate 90`（`279`）も凡例に無い `-` も、
+ * この 14 会期には 1 件も無い**（**それぞれ 0 行 / 0 ページ / 0 個**。実測）。
+ *
+ * ### **だが 1 つだけ、広げて初めて出る形がある**——**縦書きの見出しが行の欄に入る**
+ *
+ * **`324` の 3 ページ目には、左端に縦書きの `議員派遣` という「表の中の見出し」が立つ。**
+ * **`readRows` は「議員の帯より左のアイテムを、いちばん近い錨に配る」ので、
+ * この 4 文字が 2 つの行に 2 文字ずつ分かれて `議案等番号` の欄に入る**（実測: `議員` と `派遣`）。
+ * **同じ形が `323`（2025-09）では 3 行に `議` `員派` `遣` と分かれる。**
+ *
+ * **`--sessions 2` の範囲（`326` / `325`）にはこの形が 1 件も無い。**
+ * **56 本のうち 14 会期で `第N号` / `№N` にならない番号の欄は 28 行（611 行中 4.58%）で、
+ * `--sessions 2` の 113 行では 2 行（1.77%）だった。**
+ *
+ * ### **これを直していない。理由を書く**（#901 は「広げられない理由も結論」と言っている）
+ *
+ * **1. 票は 1 つも動かない。** **番号と件名は左の欄の話で、`cells` は記号帯から別に読んでいる。**
+ * **下のテストで、この 2 行も x と y の錨に当たっていることを確かめる**
+ * （**`議員派遣` の行の票は、他の行と同じく k 番目の記号が k 番目の議員に付いている**）。
+ *
+ * **2. `id` が別の議案と衝突しない。** **`toLocalRollCalls` は同じ `{日付}-{番号}` が複数あれば
+ * 全部に `-1` `-2` … を足す**（`rollcalls.ts`）。**黙って上書きされる行は無い。**
+ *
+ * **3. 直すには「どれが見出しでどれが番号か」を決める必要があり、それは推定である**（#569）。
+ * **`議員` を番号から外して `№1` を番号に昇格させると、`title` の `№1国内派遣` から
+ * `№1` を取り出すことになる**——**原文のどの欄にも「この行の番号は №1 だ」とは書いていない。**
+ * **原文をそのまま出して、決めない側に倒す。**
+ *
+ * **4. 出力には原文がそのまま残る。** **`number` は PDF のその欄にあった文字であり、
+ * 我々が作った文字ではない。** **利用者は `title` と `sourceUrl` から原本に辿れる。**
+ */
+const N324 = "324teirei_sanpi";
+
+test("#901 324teirei_sanpi（広げて入った罫線の無い本）: 議員の列・行・記号がそろう", async () => {
+  const p = await parseVotePdf(pdf(N324));
+  assert.equal(p.members.length, 48, "議員の列");
+  assert.equal(p.rows.length, 51, "議案の行");
+  assert.equal(p.pages, 3);
+  assert.equal(p.rotatedPages, 0);
+  assert.equal(p.ruleless, 3, "**3 ページとも縦罫線が 1 本も無い**（第322〜325回の形）");
+  assert.equal(p.year, 2025);
+  assert.equal(p.month, 11);
+  assert.equal(p.round, 324);
+  assert.equal(p.unknownCells, 0, "**推定せず残した不明セルは 0**");
+  assert.deepEqual(p.legend.votes, LEGEND, "**凡例は 56 本で 1 字も変わらない**");
+  assert.deepEqual(p.members.filter((m) => m.nameText === ""), [], "氏名の空の列");
+  // **罫線が無いので会派帯が読めない**（#743 が第322〜325回で測った形。**推定で埋めない**）
+  assert.deepEqual([...new Set(p.members.map((m) => m.group))], [""], "会派は空（罫線が無い）");
+  // **`議` は 51 行すべてでちょうど 1 人**（左端の stray を拾っていない）
+  for (const r of p.rows) assert.equal(r.cells.filter((c) => c === "議").length, 1, `${r.number}: 議 が 1 人でない`);
+});
+
+/**
+ * **縦書きの見出し `議員派遣` が、2 行の `議案等番号` の欄に 2 文字ずつ入っている。**
+ * **これを「直していない」という事実そのものを固定する**——
+ * **黙って直ると、次に同じ形が出たときに「前からこうだった」と言えなくなる。**
+ */
+test("#901 324: 縦書きの見出し `議員派遣` が番号の欄に入る（直していない。原文のまま出す）", async () => {
+  const p = await parseVotePdf(pdf(N324));
+  const odd = p.rows.filter((r) => r.number !== "" && !/^(第[0-9０-９]+号|№[0-9０-９]+)$/.test(r.number.replace(/[\s　]/g, "")));
+  assert.equal(odd.length, 5, "**51 行中 5 行**（実測 2026-09-21）");
+  // **そのうち 2 行が `議員派遣` の断片**（**3 ページ目。縦書き 4 文字が 2 行に分かれる**）
+  const haken = p.rows.filter((r) => r.number === "議員" || r.number === "派遣");
+  assert.deepEqual(haken.map((r) => [r.number, r.title, r.page]), [
+    ["議員", "№1国内派遣", 3],
+    ["派遣", "№2国内派遣", 3],
+  ], "**原文のまま。`№1` を番号に昇格させていない**（どの欄にもそう書いていない。#569）");
+  // **残り 3 行は請願・陳情の見出しが混ざった形**（同じ機序。**これも原文のまま**）
+  assert.deepEqual(odd.filter((r) => !haken.includes(r)).map((r) => r.number).sort(), [
+    "受理番号第4号", "受理番号第5号", "第8号請願・陳情",
+  ].sort());
+  // ## **票は 1 つも動いていない**——**これがいちばん大事な確認**
+  // **`cells` は記号帯から別に読んでいるので、左の欄が混ざっても 1 セルも変わらない**
+  for (const r of haken) {
+    assert.equal(r.cells.length, p.members.length, "記号の数が議員の列の数と一致する");
+    assert.equal(r.cells.filter((c) => c === UNKNOWN_CELL).length, 0, "不明セルが無い");
+    assert.equal(r.cells.filter((c) => c === "議").length, 1, "`議` が 1 人");
+  }
+  // **`counts` も読めている**（**記号帯と同じ y から読むので、左の欄の混ざりに影響されない**）
+  for (const r of haken) {
+    assert.ok(r.counts, `${r.number}: counts が無い`);
+    assert.equal(r.cells.filter((c) => c === "○").length, r.counts!.yes, "○ の数と賛成者数");
+    assert.equal(r.cells.filter((c) => c === "×").length, r.counts!.no, "× の数と反対者数");
+  }
+});
+
+/**
+ * **増えた会期にも x の錨が当たる**（#819。**「件数が増えた」は「正しく増えた」ではない**）。
+ * **上の `measure()` と同じ検算を、広げて入った `324` 1 本に当てる。**
+ * **回転で落ちることまで見る**——**落ちなければ「順序不変の恒真」である**（#743 の検算 B）。
+ */
+const measure324 = async (rot: number) => {
+  let rows = 0, pairs = 0, over = 0, noName = 0, maxRatio = 0;
+  const raw = (await readPages(pdf(N324))).map(unrotate);
+  let band: NameBand | undefined;
+  for (const page of raw) {
+    const b = findNameBand(page);
+    if (b && !band) band = b;
+    if (!band) continue;
+    const n = band.cols.length - 1;
+    const cellW = (band.cols[n] - band.cols[0]) / n;
+    const nameCx: (number | undefined)[] = [];
+    for (let c = 0; c < n; c++) {
+      const xs = page.items
+        .filter((i) => isSingleGlyph(i.str) && !"○×議副除欠退-".includes(i.str.replace(/[\u{E0100}-\u{E01EF}]/gu, ""))
+          && i.cx >= band!.cols[c] && i.cx < band!.cols[c + 1] && i.cy >= band!.bottom - 0.5 && i.cy <= band!.top + 0.5)
+        .map((i) => i.cx);
+      nameCx.push(xs.length ? xs.reduce((a, b2) => a + b2, 0) / xs.length : undefined);
+    }
+    const symItems = page.items.filter((i) => trailingVoteSymbols(i.str).length > 0 && i.x + i.w > band!.left && i.cx < band!.right);
+    const bands: { cy: number; h: number; items: Item[] }[] = [];
+    for (const it of [...symItems].sort((a, b2) => b2.cy - a.cy)) {
+      const last = bands[bands.length - 1];
+      if (last && Math.abs(last.cy - it.cy) <= Math.max(it.h, last.h, 1) * 0.5) last.items.push(it);
+      else bands.push({ cy: it.cy, h: it.h, items: [it] });
+    }
+    for (const r of bands.filter((b2) => b2.items.reduce((s, i) => s + trailingVoteSymbols(i.str).length, 0) >= 10)) {
+      const marks: { cx: number; ch: string }[] = [];
+      for (const it of r.items) {
+        const cs = trailingVoteSymbols(it.str);
+        if (cs.length === 1 && isSingleGlyph(it.str)) marks.push({ cx: it.cx, ch: cs[0] });
+        else marks.push(...splitRowItem(it));
+      }
+      marks.sort((a, b2) => a.cx - b2.cx);
+      if (marks.length !== n) continue;
+      rows++;
+      const xs = marks.map((m) => m.cx);
+      for (let k = 0; k < n; k++) {
+        const cx = xs[((k - rot) % n + n) % n];
+        const nx = nameCx[k];
+        if (nx === undefined) { noName++; continue; }
+        pairs++;
+        const d = Math.abs(cx - nx) / cellW;
+        if (d > maxRatio) maxRatio = d;
+        if (d >= 0.5) over++;
+      }
+    }
+  }
+  return { rows, pairs, over, noName, maxRatio };
+};
+
+test("#901 324（広げて入った本）でも k 番目の記号は k 番目の議員のもの", async () => {
+  const r = await measure324(0);
+  // **母数も判定に入れる**（#757。`over` が 0 のままでも対が減れば落ちる）
+  assert.equal(r.rows, 51, "行");
+  assert.equal(r.pairs, 51 * 48, "(記号, 議員) の対");
+  assert.equal(r.noName, 0, "氏名の無い列に落ちた記号");
+  assert.equal(r.over, 0, "差が半セル以上の対");
+  assert.ok(r.maxRatio < 0.29, `差の最大が 0.29 セルを超えた（${r.maxRatio.toFixed(4)}）`);
+});
+
+test("#901 324 でもこの検算は順序不変ではない（記号だけを回すと全部落ちる）", async () => {
+  for (const rot of [1, -1, 2]) {
+    const r = await measure324(rot);
+    assert.equal(r.pairs, 51 * 48, `${rot} 列回しても対の数は同じ`);
+    assert.equal(r.over, 51 * 48, `${rot} 列回して落ちない対がある＝この検算は順序不変`);
+  }
+});
+
+/**
+ * ## **⚠ 上の 2 本だけでは足りない**——**変異を当てて初めて分かった**（2026-09-21）
+ *
+ * **`measure324`（と、上にある 5 本ぶんの `measure`）は `page.items` から
+ * 列の割り当てをテストの中で組み直している。** **`parseVotePdf` が実際に返した
+ * `VotePdfRow.cells` を 1 つも見ていない。**
+ *
+ * **だから `readVoteCells` の `columnOf(...)` を `(c + 1) % n` に差し替える変異を当てても、
+ * この 2 本は落ちない**（実測。**`aomori-votes-pdf.test.ts` の 33 本のうち落ちたのは 3 本だけで、
+ * どれも「置けない形」を見る別の検算だった**）。
+ * **その変異で実際に起きること**（`324` の 1 行目を目で見た）:
+ *
+ * ```
+ * 無改造: ○○○○○○○○○○○議○○○○○○○○欠○○○…   （`議` は 12 人目 = 丸井 裕）
+ * 変異  : ○○○○○○○○○○○○議○○○○○○○○欠○○…   （`議` は 13 人目 = 別人）
+ * ```
+ *
+ * **`unknownCells` は 0 のまま、`議` は全行ちょうど 1 人のまま、
+ * `counts` と ○/× の数も 1 件残らず一致したまま**——**全員の票が 1 人ずれる。**
+ * **これが #569 の「利用者から検出できない虚偽」そのものである**（#743 の問題 1 と同じ形）。
+ *
+ * ## **だから、`parseVotePdf` の出力の側から同じことを見る**
+ *
+ * **`provenance.cellItems` は `cells` を作った記号アイテムそのもの**（#829）なので、
+ * **「出力の k 番目のセルの記号は、k 列目の x に立っていたアイテムのものか」**を
+ * **出力だけから引き直せる。** **セルの記号と、その x にあった記号の文字が一致することまで見る**
+ * ——**x が合っていても違う記号が入っていたら、それは別の壊れ方である。**
+ */
+test("#901 324: parseVotePdf が返した cells の k 番目が、k 列目の x の記号である（出力の側から見る）", async () => {
+  const p = await parseVotePdf(pdf(N324));
+  const raw = (await readPages(pdf(N324))).map(unrotate);
+  const band = findNameBand(raw[0])!;
+  const n = band.cols.length - 1;
+  assert.equal(n, p.members.length, "列の数（母数）");
+  let pairs = 0;
+  const bad: string[] = [];
+  for (const r of p.rows) {
+    // **その行の記号アイテムを x でばらす**（`readVoteCells` と同じ材料だが、比べる相手が違う）
+    const marks: { cx: number; ch: string }[] = [];
+    for (const it of r.provenance.cellItems) {
+      const cs = trailingVoteSymbols(it.str);
+      if (cs.length === 1 && isSingleGlyph(it.str)) marks.push({ cx: it.cx, ch: cs[0] });
+      else marks.push(...splitRowItem(it));
+    }
+    marks.sort((a, b) => a.cx - b.cx);
+    assert.equal(marks.length, n, `p${r.page} ${r.number}: 記号の数が列の数と違う`);
+    for (let k = 0; k < n; k++) {
+      pairs++;
+      // **k 番目の記号の x が k 列目の中に入っていること**（`columnOf` を通さず境界で見る）
+      if (!(marks[k].cx >= band.cols[k] && marks[k].cx < band.cols[k + 1]))
+        bad.push(`p${r.page} ${r.number} k=${k}: x=${marks[k].cx.toFixed(1)} が [${band.cols[k].toFixed(1)}, ${band.cols[k + 1].toFixed(1)}) の外`);
+      // **出力のセルの文字が、その x の記号の文字と同じであること**
+      if (r.cells[k] !== marks[k].ch)
+        bad.push(`p${r.page} ${r.number} k=${k}: cells=${JSON.stringify(r.cells[k])} vs x の記号=${JSON.stringify(marks[k].ch)}`);
+    }
+  }
+  assert.equal(pairs, 51 * 48, "**母数**（#757）");
+  assert.deepEqual(bad.slice(0, 5), [], `出力と x が食い違う対（${bad.length} 件）`);
+  assert.equal(bad.length, 0);
+});
+
+/**
+ * **否定的対照**: **上のテストが本当に「順序」を見ているか。**
+ * **出力の `cells` を 1 列回したものを渡して、落ちることを確かめる**
+ * （**落ちなければ、上のテストは変異 3 を素通りさせる恒真である**）。
+ */
+test("#901 324: 出力の cells を 1 列回すと、上の検算は全行で落ちる（恒真ではない）", async () => {
+  const p = await parseVotePdf(pdf(N324));
+  const raw = (await readPages(pdf(N324))).map(unrotate);
+  const band = findNameBand(raw[0])!;
+  const n = band.cols.length - 1;
+  let rowsCaught = 0;
+  for (const r of p.rows) {
+    const marks: { cx: number; ch: string }[] = [];
+    for (const it of r.provenance.cellItems) {
+      const cs = trailingVoteSymbols(it.str);
+      if (cs.length === 1 && isSingleGlyph(it.str)) marks.push({ cx: it.cx, ch: cs[0] });
+      else marks.push(...splitRowItem(it));
+    }
+    marks.sort((a, b) => a.cx - b.cx);
+    // **1 列回した `cells`**（変異 3 が作るのと同じ関係）
+    const rotated = [...r.cells.slice(n - 1), ...r.cells.slice(0, n - 1)];
+    if (rotated.some((c, k) => c !== marks[k].ch)) rowsCaught++;
+  }
+  assert.equal(rowsCaught, 51, "**51 行すべてで食い違いが出る**（1 行でも通れば検算が弱い）");
+});
+
+/**
+ * **増えた会期にも y の錨が当たる**（#829）。
+ * **`議員派遣` の見出しが左の欄に混ざっても、`leftYs` の中央値は記号帯の y から 0.5pt も離れない**
+ * ——**混ざった 2 文字は、その行の他のアイテムに埋もれる**（中央値を採る理由がここでも効く）。
+ */
+test("#829/#901 324: title を読んだ y と cells を読んだ y が同じ行にある（51 行）", async () => {
+  const MAX_ROW_DRIFT_PT = 5;
+  const v = await parseVotePdf(pdf(N324));
+  let judged = 0, maxDrift = 0;
+  const bad: string[] = [];
+  for (const r of v.rows) {
+    assert.ok(r.provenance.leftYs.length > 0, `${r.number}: 左の欄に 1 アイテムも配られていない`);
+    judged++;
+    const drift = Math.abs(med(r.provenance.leftYs) - med(r.provenance.cellItems.map((i) => i.cy)));
+    if (drift > maxDrift) maxDrift = drift;
+    if (drift > MAX_ROW_DRIFT_PT) bad.push(`p${r.page} ${r.number || r.title.slice(0, 20)} 中央値Δy=${drift.toFixed(2)}pt`);
+  }
+  assert.equal(v.rows.length, 51, "**母数**（#757）");
+  assert.equal(judged, 51, "**母数**——判定できた行");
+  assert.deepEqual(bad, [], "左の欄と記号帯が別の行から来ている行");
+  assert.ok(maxDrift < 1, `無改造の最大は 1pt 未満（今 ${maxDrift.toFixed(2)}）`);
+});
+
+/**
+ * ## **`leftColumnBounds` の「3 分の 2 以上の行」は、`324` でも `322` でも空回りしている**
+ *
+ * **#901 で変異を当てて分かった**（2026-09-21）。
+ * **`rowItems.length * 2 / 3` を `rowItems.length / 2` に緩める変異を当てても、
+ * `322`（既存）でも `324`（#901 で追加）でも出力は 1 バイトも変わらなかった。**
+ * **どちらの本でも、縦書きのラベルは行の半分に届かないからである。**
+ *
+ * **この閾値の docblock が挙げている実例は `323 p2` で、それはフィクスチャに無かった。**
+ * **`--sessions 2` の範囲（`326` / `325`）にも無い**——**#901 で広げて初めて本番に入った本である。**
+ *
+ * **実測（56 本すべてを取得して当てた）: 閾値を 1/2 に緩めると、
+ * `323` の 32 行のうち 8 行で `表決方法` の欄が空になる。** **他の 55 本は 1 バイトも変わらない。**
+ * **`議決結果` の欄が 1 つ右にずれて `表決方法` の位置に入り、`起立` が読めなくなる**
+ * （**欄を右から数えているので、左に 1 本増えると全部ずれる**）。
+ *
+ * **「値が消える」は安全側だが、黙って消えるのは駄目である**——
+ * **`method` が空の行は `LocalRollCall` から `method` ごと落ちるので、
+ * 利用者には「表決方法が公表されていない」ように見える**（公表されているのに）。
+ * **だから `323` をフィクスチャに足して、この閾値に効き目があることを固定する。**
+ */
+const N323 = "323teirei_sanpi";
+
+test("#901 323teirei_sanpi: 縦書きのラベルを欄に数えない（32 行すべてで表決方法が読める）", async () => {
+  const p = await parseVotePdf(pdf(N323));
+  assert.equal(p.members.length, 48, "議員の列");
+  assert.equal(p.rows.length, 32, "議案の行（母数。#757）");
+  assert.equal(p.pages, 2);
+  assert.equal(p.ruleless, 2, "**2 ページとも縦罫線が 1 本も無い**");
+  assert.equal(p.unknownCells, 0);
+  assert.deepEqual(p.legend.votes, LEGEND);
+  // **本丸**: **32 行すべてで左の 5 欄が読める**（**閾値を 1/2 に緩めると 8 行で `method` が空になる**）
+  assert.deepEqual(p.rows.filter((r) => r.method === "").map((r) => `p${r.page} ${r.number}`), [], "表決方法が空の行");
+  assert.deepEqual(p.rows.filter((r) => r.result === "").map((r) => `p${r.page} ${r.number}`), [], "議決結果が空の行");
+  assert.deepEqual(p.rows.filter((r) => r.dateText === "").map((r) => `p${r.page} ${r.number}`), [], "議決月日が空の行");
+  // **表決方法の原文は 2 通り**（**`簡易` が `起立` に化けていたら、欄が 1 つずれている**）
+  assert.deepEqual(
+    Object.fromEntries([...new Set(p.rows.map((r) => r.method))].sort().map((m) => [m, p.rows.filter((r) => r.method === m).length])),
+    { "簡易": 3, "起立": 29 },
+  );
+  // **この本にも縦書きのラベルが実在する**（**閾値が守っている相手**）——
+  // **`議` `員派` `遣` が 3 行の番号の欄に分かれる**（`324` は 2 行に分かれた）
+  assert.deepEqual(p.rows.filter((r) => ["議", "員派", "遣"].includes(r.number)).map((r) => [r.number, r.title]), [
+    ["議", "№1国内派遣"], ["員派", "№2国内派遣"], ["遣", "№3国内派遣"],
+  ], "**原文のまま**（`№1` を番号に昇格させていない。#569）");
+  // **票は動いていない**
+  for (const r of p.rows) assert.equal(r.cells.filter((c) => c === "議").length, 1, `${r.number}: 議 が 1 人でない`);
+});
