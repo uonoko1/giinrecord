@@ -235,7 +235,7 @@ test("#826 countMismatchesOf を直接叩ける", () => {
  * **採決の数 1,369 は 1 件も変わっていない**——**#829 は行を増やしても減らしてもいない。**
  * **変えたのは「その行の `counts` を読めるかどうか」だけである。**
  */
-test("#826 本番 data/: 母数 2,174 件のうち、記号の数と公表値が食い違う行は 0（測定の固定。#901 で 1,030 → 2,174。秋田で +397、宮城で +422）", async () => {
+test("#826 本番 data/: 母数 2,672 件のうち、記号の数と公表値が食い違う行は 0（測定の固定。#901 で 1,030 → 2,672。秋田で +397、宮城で +422、青森で +498）", async () => {
   const DATA = fileURLToPath(new URL("../../../data/", import.meta.url));
   const prefs = (await readdir(join(DATA, "assemblies"), { withFileTypes: true }))
     .filter((e) => e.isDirectory() && e.name.startsWith("pref-")).map((e) => e.name).sort();
@@ -260,7 +260,7 @@ test("#826 本番 data/: 母数 2,174 件のうち、記号の数と公表値が
   // （**増えた 397 件も、公表値と ○/× の数が 1 件残らず合っている**）。
   // **奈良を 2 → 4 会期にしても `checked` は 1 件も動かない**——**奈良の PDF に集計の欄が無く、
   // 125 → 180 がまるごと `noCounts` に行くため**（#865。**730 → 785**）。
-  assert.deepEqual(total, { rows: 3036, checked: 2174, noCounts: 785, unreadableCells: 77 }, "母数が変わったら数え直すこと");
+  assert.deepEqual(total, { rows: 3534, checked: 2672, noCounts: 785, unreadableCells: 77 }, "母数が変わったら数え直すこと");
   // **785 件の内訳**——**`counts` が出力に入っていない 4 県。**
   // ## **秋田の 231 件は #829 の逆戻りではない**
   // **#829 は「我々がページ番号を混ぜて counts を捨てていた」を直した**（読み落としの側）。
