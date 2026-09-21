@@ -81,10 +81,21 @@ WORK=$(mktemp -d)
 ZONES=""
 # **ゾーン名を先に検証してからファイルを開く**（`../../etc/nginx` のような値で
 # awk が任意パスに書きに行くのを防ぐ。検証より先に開くと awk のエラーで落ちて筋が読めない）
-grep -n '^### zone ' "$IN" | sed 's/^[0-9]*:### zone //' | while IFS= read -r z; do
+#
+# **一度ファイルに落としてから読む**（#958 で実測）。以前はここが
+#   grep … | sed … | while read -r z; do … done || exit 1
+# で、`### zone` の行が **0 本**のとき `grep` が no-match の 1 を返し、`pipefail` でパイプライン全体が
+# 1 になり、`|| exit 1` が下の `die` に届く前に殺していた。実測: **出力 0 バイト・rc=1**。
+# 運用者の画面には何も出ない。これは「落ちる」ではなく「**何も言わない**」壊れ方で、
+# このスクリプトが実機で 2 度やったのと同じ形である（conf 0 本で exit 0 / sudo で黙って停止）。
+# ついでに、`while` がパイプの中（サブシェル）でなくなるので `die` がそのまま使える。
+ZONE_LINES="$WORK/zone-lines.txt"
+grep '^### zone ' "$IN" | sed 's/^### zone //' > "$ZONE_LINES" || true
+while IFS= read -r z; do
   z=${z%%[[:space:]]*}
-  zone_ok "$z" || { echo "origin-ca: 知らないゾーン '$z'（許すのは giinrecord.jp と gikailog.jp だけ）" >&2; exit 1; }
-done || exit 1
+  [ -n "$z" ] || continue
+  zone_ok "$z" || die "知らないゾーン '$z'（許すのは giinrecord.jp と gikailog.jp だけ）"
+done < "$ZONE_LINES"
 
 awk -v out="$WORK" '
   /^### zone / { z=$3; sub(/[[:space:]]+$/,"",z); f=out "/" z ".block"; print z > (out "/zones.txt"); next }
