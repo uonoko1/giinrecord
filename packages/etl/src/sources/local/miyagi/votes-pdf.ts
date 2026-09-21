@@ -92,11 +92,36 @@ export async function parseVotePdf(bytes: Buffer): Promise<VotePdf> {
   return { ...head, legend, members, rows, unknownCells };
 }
 
-/** 凡例に無い値が出たら例外（丸めない・推定しない）。UNKNOWN_CELL だけは通す。字形の揺れ（〇 U+3007・✕ U+2715）は凡例の記号に寄せて引く（#674）。 */
+/**
+ * **宮城だけの字形の揺れ: `-` U+002D → `－` U+FF0D**（#901。第391回 `hyouketsu060313.pdf` の 1 セル）。
+ *
+ * **共有の `glyph-variants.ts` に足してはいけない**——
+ * **滋賀の凡例は `-` U+002D そのものを「欠席」の鍵として使っている**
+ * （`Kg220_240424-sanpi.pdf` の凡例は `{"-":"欠席","議":"議長（表決権なし）","退":"退席"}`。実測）。
+ * **共有の表で `-` → `－` に寄せると、その本の凡例から `-` が引けなくなる**（#950 の奈良が同じ判断をした）。
+ * **同じ符号位置が議会ごとに違う意味を持つので、「見た目が同じ別コードポイント」ではなく意味の衝突である。**
+ *
+ * **宮城でこの向きに寄せてよい根拠**（実測。**議会の中で閉じている**）:
+ * **宮城の 13 本の凡例に `-` U+002D は 1 度も出てこない**（**`－` U+FF0D が「議場に不在」の鍵**）。
+ * **つまり宮城では `-` が別の意味を持つことが無いので、寄せても意味が衝突しない。**
+ * **第391回のダッシュ様の字を全部数えた**: **`－` U+FF0D が 5 個（5 ページに繰り返される凡例の行だけ。
+ * 本文のセルには 1 つも無い）・`ー` U+30FC が 11 個（件名の長音）・`-` U+002D が 1 個。**
+ * **その 1 個は 知事提出議案1 の最後の議員のセルで、公表数と矛盾しない**
+ * （**出席59 / 表決57 / 賛成41 / 反対16。`議` 1 と `-` 1 の 2 人が表決に加わらない**）。
+ *
+ * **寄せた先が凡例に無ければ、これまでどおり例外になる**（#674 / #569 の原則は緩めていない）。
+ */
+const MIYAGI_GLYPH_VARIANTS: Readonly<Record<string, string>> = { "-": "－" };
+
+/** セルの原文 → 凡例を引く鍵。共有の揺れ（〇 U+3007・✕ U+2715）に、宮城だけの `-` → `－` を足す。 */
+export const miyagiLegendKey = (raw: string): string =>
+  [...legendKey(raw)].map((c) => MIYAGI_GLYPH_VARIANTS[c] ?? c).join("");
+
+/** 凡例に無い値が出たら例外（丸めない・推定しない）。UNKNOWN_CELL だけは通す。字形の揺れは凡例の記号に寄せて引く（#674 / #901）。 */
 export function checkCellsAgainstLegend(cells: readonly string[], votes: Record<string, string>, label: string): void {
   for (const c of cells) {
     if (c === UNKNOWN_CELL) continue;
-    if (!(legendKey(c) in votes)) throw new Error(`${label}: cell value "${c}" is not in the legend (${Object.keys(votes).join("")})`);
+    if (!(miyagiLegendKey(c) in votes)) throw new Error(`${label}: cell value "${c}" is not in the legend (${Object.keys(votes).join("")})`);
   }
 }
 
@@ -207,8 +232,16 @@ function readMembers(page: PageGeometry, grid: Grid, legend: VotePdfLegend, page
     const x1 = grid.groupCols[g + 1];
     const chars = page.items.filter((i) => within(i.cx, x0, x1) && within(i.cy, grid.groupBottom, grid.top));
     const text = chars.sort((a, b) => b.y - a.y || a.x - b.x).map((c) => c.str).join("").replace(/[\s　]+/g, "").normalize("NFKC");
-    const name = legend.groups[text];
-    if (!name) throw new Error(`${label}: group heading "${text}" is not in the legend (${Object.keys(legend.groups).join(" / ")})`);
+    // **見出しが空の帯は「読めていない」ということ**——**これは今までどおり例外**（レイアウト変化の検出）。
+    if (text === "") throw new Error(`${label}: group heading at [${x0.toFixed(1)},${x1.toFixed(1)}] has no text`);
+    // **凡例の `＜会派名＞` は「略称：正式名称」の辞書で、略称と正式名称が同じ会派の行を書かない本がある**（#901）。
+    // **実測（index の 77 本すべての 1 ページ目を開いた）**: **辞書に無い見出しは第394〜397回の `無所属` 4 本だけ**で、
+    // **どれも議員 1 人ぶんの帯**。**同じ県の第388・389回では、同じ凡例に `無所属：無所属` と
+    // `無所属の会：無所属の会` という恒真な行が実際に書いてある**——
+    // **県は「略称＝正式名称」の会派を、書く本と書かない本の両方を出している。**
+    // **だから辞書に無ければ見出しの原文をそのまま会派名にする**（**原文に無い文字を足さない**。#569）。
+    // **推定ではない**: 対応づけるべき正式名称を当てているのではなく、**県が書くときに書く文字**を置いている。
+    const name = legend.groups[text] ?? text;
     groups.push({ x0, x1, text, name });
   }
   const members: VotePdfMember[] = [];
