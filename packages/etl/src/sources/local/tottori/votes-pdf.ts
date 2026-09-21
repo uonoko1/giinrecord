@@ -69,8 +69,6 @@ export interface VotePdf {
   trailingPages: number;
 }
 
-const SESSION_LABEL = /^(令和|平成)(\d+|元)年\d{1,2}月(定例会|臨時会)$/;
-const DATE_HEADING = /^議決結果（(.+)議決分）$/;
 /** 件名の見出しセルには、前ページから続く陳情の本文がはみ出して入ることがある（陳情だけの PDF の 2 ページ目）ので前方一致 */
 const LEFT_HEADERS = [/^議案等番号$/, /^件名/];
 const RIGHT_HEADERS = [/^賛成者数$/, /^反対者数$/, /^表決者数$/, /^議決結果$/, /^表決方法$/];
@@ -124,14 +122,43 @@ export function checkCellsAgainstLegend(cells: readonly string[], votes: Record<
 
 /* ---------- header & legend ---------- */
 
+/**
+ * **見出しの 1 行を、同じ y に並ぶ文字アイテムを x 順につないで作る**（#901）。
+ *
+ * **同じ行に「令和7年2月定例会」と「議決結果（令和7年3月24日議決分）」が並んでいる**ので、
+ * **行を 1 本の文字列にしたうえで、2 つの見出しを別々に「その中から」探す。**
+ *
+ * **なぜ必要か**: **本によって、同じ見出しが 1 アイテムのことも複数アイテムのこともある。**
+ * **令和7年2月定例会（2025-03-24 議決分）は `令和` / `7` / `年` / `2` / `月定例会` の 5 つに割れており、
+ * `items.find` では 1 つも当たらなかった**（実測。`--sessions` を広げるとここで落ちていた）。
+ * **アイテムをまたいで読むのは「割れた文字を元に戻す」だけで、値を足していない。**
+ */
+function headerLines(page: PageGeometry): string[] {
+  const rows = new Map<number, Item[]>();
+  for (const it of page.items) {
+    const key = [...rows.keys()].find((y) => Math.abs(y - it.y) <= EPS) ?? it.y;
+    if (!rows.has(key)) rows.set(key, []);
+    rows.get(key)!.push(it);
+  }
+  return [...rows.entries()]
+    .sort((a, b) => b[0] - a[0])
+    .map(([, items]) => [...items].sort((a, b) => a.x - b.x).map((i) => i.str).join(""));
+}
+
+/** **行の中から見出しを探す**（`^…$` の正規表現を、行のどこかに当たる形に読み替える）。 */
+const SESSION_LABEL_IN_LINE = /(令和|平成)(\d+|元)年\d{1,2}月(定例会|臨時会)/;
+// **NFKC を通した後なので全角の括弧は半角になっている**（`（` → `(`）。
+const DATE_HEADING_IN_LINE = /議決結果\((.+?)議決分\)/;
+
 function parseHeader(page: PageGeometry): { sessionLabel: string; date: string } {
-  const label = page.items.find((i) => SESSION_LABEL.test(i.str.normalize("NFKC").replace(/\s+/g, "")));
+  const lines = headerLines(page).map((l) => l.normalize("NFKC").replace(/\s+/g, ""));
+  const label = lines.map((l) => l.match(SESSION_LABEL_IN_LINE)?.[0]).find((v) => v !== undefined);
   if (!label) throw new Error("session label (令和N年M月定例会) not found in page 1 header");
-  const dated = page.items.find((i) => DATE_HEADING.test(i.str.replace(/\s+/g, "")));
+  const dated = lines.map((l) => l.match(DATE_HEADING_IN_LINE)?.[1]).find((v) => v !== undefined);
   if (!dated) throw new Error("議決結果（…議決分） not found in page 1 header");
-  const date = toIsoDate(dated.str.replace(/\s+/g, "").match(DATE_HEADING)![1]);
-  if (!date) throw new Error(`cannot read 議決日 from ${dated.str}`);
-  return { sessionLabel: label.str.normalize("NFKC").replace(/\s+/g, ""), date };
+  const date = toIsoDate(dated);
+  if (!date) throw new Error(`cannot read 議決日 from ${dated}`);
+  return { sessionLabel: label, date };
 }
 
 /** 表の下の「【凡例】」ブロック。「「○」賛成」の形の項目を集める。このページに無ければ undefined。 */
@@ -142,8 +169,13 @@ function parseLegend(page: PageGeometry, bottom: number): VotePdfLegend | undefi
   for (const it of below) {
     const m = it.str.trim().match(/^「(.)」(.+)$/);
     if (!m) continue;
-    if (m[1] in votes) throw new Error(`legend key ${m[1]} appears twice`);
-    votes[m[1]] = m[2].trim();
+    // **同じ凡例が同じページに何度も印刷されている本がある**（#901）——
+    // **令和6年9月・6月定例会の PDF は、最終ページに 7 項目の凡例ブロックを 3 回・2 回刷っている**
+    // （実測。**123 本すべてを見て、鍵が重なるページは 7 ページ、値が食い違うページは 0 ページ**）。
+    // **同じ値の重なりは通す。値が違えばどちらが正かを決められないので、今までどおり例外にする。**
+    const value = m[2].trim();
+    if (m[1] in votes && votes[m[1]] !== value) throw new Error(`legend key ${m[1]} has two different meanings: "${votes[m[1]]}" / "${value}"`);
+    votes[m[1]] = value;
   }
   if (Object.keys(votes).length === 0) throw new Error("legend block has no 「X」… entries");
   return { votes };
@@ -304,7 +336,13 @@ function readRows(page: PageGeometry, grid: Grid, pageNo: number, memberCount: n
     const nums = [0, 1, 2].map(rightText);
     const result = rightText(3);
     const methodText = rightText(4);
-    if (kind === "" || number === "" || methodText === "" || result === "") throw new Error(`${rowLabel}: incomplete row (kind/number/method/result)`);
+    // **番号だけは空を許す**（#901）。**一次資料に番号の無い行が実在する**——
+    // **令和7年12月定例会（2025-12-22 議決分）の「決算認定に係る指摘事項…」の行は、
+    // 議案等番号のセルが空で、番号のほうは件名に書いてある**（実測。`tottori-votes-pdf.test.ts`）。
+    // **件名から番号を拾って埋めない**（推定しない。#569）——**空のまま出す。**
+    // **種別・表決方法・議決結果は今までどおり空を許さない**:
+    // **種別が空ならその行がどの表のものか決まらず、表決方法・議決結果が空なら採決として出せない。**
+    if (kind === "" || methodText === "" || result === "") throw new Error(`${rowLabel}: incomplete row (kind/method/result)`);
     if (nums.some((n) => !/^\d+$/.test(n))) throw new Error(`${rowLabel}: counts "${nums.join(",")}" are not numbers`);
     if (splits.length === 1 && committeeReport === "") throw new Error(`${rowLabel}: 委員長報告 column is empty`);
     // 表決のセル: 各議員の列に、この行の文字がちょうど 1 つ入るときだけ採用
