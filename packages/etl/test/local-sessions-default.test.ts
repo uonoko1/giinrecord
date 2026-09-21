@@ -139,7 +139,7 @@ test("#901 既定は議会ごとに持つ（全議会一律の 1 つの数にし
   }
 });
 
-test("#901 三重・徳島は 4、高知は 5、秋田は 29、他の 7 議会は 2 のまま（測った議会だけ広げる）", () => {
+test("#901 三重・徳島・奈良は 4、高知は 5、宮城は 11、秋田は 29、他の 5 議会は 2 のまま（測った議会だけ広げる）", () => {
   assert.equal(defaultSessionsFor("mie"), 4, "三重は令和5年第2回定例会まで（2023年4月の一般選挙の後）");
   assert.equal(defaultSessionsFor("tokushima"), 4, "徳島は令和7年11月定例会まで（5 会期目は会期ページが例外、6 会期目以降は 1 本も読めない）");
   assert.equal(defaultSessionsFor("kochi"), 5, "高知は令和7年6月定例会まで（6 会期目の 2025-02 は text matrix が 1.00002 倍で止まる）");
@@ -147,9 +147,19 @@ test("#901 三重・徳島は 4、高知は 5、秋田は 29、他の 7 議会�
   assert.equal(defaultSessionsFor("akita"), 29, "秋田は 2023-05-16 の本会議日まで（2023年4月の一般選挙の後。30 本目が選挙の前）");
   // **秋田だけ桁が違うのは単位が違うから**——**他県の 4・5 と比べて「大きすぎる」のではない**
   assert.ok(defaultSessionsFor("akita") > defaultSessionsFor("kochi") * 5, "**単位が違うので桁も違う**（本会議日 vs 定例会）");
-  const measured = ["mie", "tokushima", "kochi", "akita"];
+  // **奈良は令和7年9月定例会まで**（5 会期目の 令和7年6月 はセルの `-` U+002D が凡例の `―` U+2015 に無い。
+  // **共有の字形表で寄せると滋賀の凡例から `-`（欠席）が引けなくなる**ので寄せない。
+  // 測定は `nara-sessions-window.test.ts`）
+  assert.equal(defaultSessionsFor("nara"), 4, "奈良は令和7年9月定例会まで（5 会期目は `-` U+002D が凡例に無い）");
+  // **宮城は第390回（令和5年11月定例会）まで**——**12 本目の第389回は 2023-10 の一般選挙の向こう側**
+  // （**PDF に出る氏名の集合が IN 19 / OUT 18 で不連続になる。他の 11 回の移り変わりは 0〜2 人**）。
+  // **14 本目以降は 1 本も読めない**ので、宮城で効いている上限は「読めるか」ではなく「名簿が当たるか」である。
+  // **#928 はこの境を捕まえない**（13 本目まで広げても `rosterAsOf` から 1,178 日で上限 1,461 日の内側）——
+  // **歯止めは `miyagi-sessions-widen.test.ts` の「氏名の集合の不連続」のテストである。**
+  assert.equal(defaultSessionsFor("miyagi"), 11, "宮城は令和5年11月定例会（第390回）まで（12 本目は 2023-10 の一般選挙の前）");
+  const measured = ["mie", "tokushima", "kochi", "akita", "nara", "miyagi"];
   const others = Object.keys(LOCAL_SOURCES).filter((n) => !measured.includes(n));
-  assert.equal(others.length, 7, `測っていない議会 ${others.length}`);
+  assert.equal(others.length, 5, `測っていない議会 ${others.length}`);
   assert.deepEqual(
     others.filter((n) => defaultSessionsFor(n) !== DEFAULT_LOCAL_SESSIONS),
     [],
