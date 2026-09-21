@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# merge-when-green.sh <pr>
+# merge-when-green.sh [--allow-nonrequired-red] <pr>
 #   1. refuse unless the PR is OPEN and not a draft
 #   2. `gh pr update-branch` when it is BEHIND main
 #      if that is refused because the gh OAuth token lacks the `workflow` scope (the PR touches
@@ -8,7 +8,8 @@
 #   3. poll `commits/<head>/check-runs` (not `gh pr checks`: its bucket is derived from `status`,
 #      which can still read in_progress after `conclusion` is already set — #561) until every
 #      check is pass/neutral/skipped (a real conclusion of failure/cancelled/timed_out/
-#      action_required/stale → abort)
+#      action_required/stale → abort). A red check that is NOT a required one only stops us
+#      unless --allow-nonrequired-red is given, and it is always read out by name (#858)
 #      main may move while we wait (another PR merged → BEHIND, strict status checks block the
 #      merge): every poll re-checks mergeStateStatus and runs update-branch again (#89, like etl.yml)
 #      while waiting on data/refresh only: approve `action_required` workflow runs
@@ -21,6 +22,8 @@
 # Before touching anything: refuse if another open PR is based on this branch (#392) — merging
 # deletes the head branch, which closes those PRs.
 # Env: POLL_INTERVAL (s, default 20), POLL_MAX (default 60), PO_REPO (owner/name override).
+# Flags: --allow-nonrequired-red — merge even though a non-required check is red (#858). Required
+# checks being red still aborts, always. See REQUIRED_CHECKS below for what that means here.
 # Destructive operations: the squash merge (+ head branch deletion) of the given PR, and — only
 # in the workflow-scope fallback — a merge commit of origin/main pushed to the PR head branch.
 set -euo pipefail
@@ -30,8 +33,83 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 DATA_BRANCH="data/refresh"
 
-if [[ $# -ne 1 ]] || ! is_int "$1"; then usage "merge-when-green.sh <pr-number>"; fi
-PR=$1
+# --- 必須 / 必須でない検査（#858）-----------------------------------------------------------
+# **何が問題だったか**: `wait_for_green` は fail が 1 件でもあれば無条件に die していた。
+# `docker-web` は GitHub の必須ステータスチェックではない（branch protection の contexts は
+# check / gitleaks / forbidden-patterns / audit の 4 件。**実測 2026-09-21**）ので
+# **GitHub はマージを許すのにこの道具だけが止めていた**。PO はその度に手で `gh pr merge` を
+# 打って回避しており（この回だけで 3 回）、#389/#392/#414/#434/#446 で積み上げた守り
+# （HEAD が動いていないか・上に PR が積まれていないか）が**そのたびに全部飛んでいた**。
+#
+# **母数**（実測 2026-09-21、直近 12 件のマージ済み PR は全部同じ）: 1 PR につき check-run は **7 件**
+#   audit, check, docker-web, forbidden-patterns, gitleaks, pr-closes, stale-base
+# このうち **必須 5 件** / **必須でない 2 件（stale-base, docker-web）**。
+#
+# **なぜ `stale-base` が必須でない側なのか**——**これが #858 の本題である**。
+# `stale-base` の 2 つ目の step（`--net-deletions`、#836）は、#846 の担当者自身が
+# **「合図であって証拠ではありません（4 件中 2 件が本物）。意図した削除でも落ちるので
+# 『PR 本文に理由を書く』運用に依存します」**と書いている。
+# **つまり「赤いが通してよい」状態が正常に起こりうる検査**である（実地 5 件中 3 件がそれ）。
+# それを「どれか赤なら止める」道具と組み合わせていたのが、PR #856 が詰まった原因だった。
+# **「赤いが通してよい」が正常に起こる検査だけが、この抜け道に入る資格を持つ。**
+#
+# **なぜ `pr-closes` は必須のままなのか**: あれは「本文に `Closes #N`（または
+# 『Closes なし（理由）』）を書いたか」を見るだけで、**赤いなら本文を直せば緑にできる**。
+# **「赤いが通してよい」状態は起こらない**ので、抜け道に入れる理由が無い。
+# （GitHub 側には登録できない——paths 限定・本文依存で「全 PR が永久に pending」になる。
+# packages/etl/test/branch-protection-jobs.test.ts の EXEMPT_FROM_REQUIRED に理由がある。
+# **だがこの道具は GitHub より厳しくてよい**ので、ここでは必須として扱う。
+# 逆は許されない——GitHub が必須にしているものをここで外すと、この道具が保護を跨ぐことになる。）
+#
+# **知らない名前は必須として扱う**（fail-closed）。新しい job が増えたときに黙って
+# 「必須でない」側に落ちると、この道具の守りが痩せる——そこで NONREQUIRED_CHECKS に
+# **明示的に列挙された名前だけ**が「必須でない」になる。
+#
+# 期待値は**ハードコードする**（#499）。実行時に GitHub の protection API を読みに行かない:
+# それは管理権限が要り（#540 で実測）、読めないときにこの分岐が黙って緩んでしまう。
+REQUIRED_CHECKS=(check gitleaks forbidden-patterns audit pr-closes)
+NONREQUIRED_CHECKS=(stale-base docker-web)
+
+# is_required_check <name> → 0 なら「赤ければ絶対にマージしない」
+#   REQUIRED_CHECKS にある        → 0（必須）
+#   NONREQUIRED_CHECKS にある     → 1（必須でない。--allow-nonrequired-red で通せる）
+#   どちらにも無い（知らない名前） → 0（**必須**。fail-closed）
+# **REQUIRED_CHECKS を先に引く**のは意図である（変異 M8 で確かめた）: 両方に同じ名前が
+# 載ってしまった場合、**必須として扱う側に倒れる**。抜け道が黙って広がるより良い。
+#
+# **注記（変異 M6、等価変異）**: REQUIRED_CHECKS の走査を丸ごと消しても、この関数の答えは
+# 変わらない——2 つの配列が名前空間を分割しており、REQUIRED にある名前は
+# NONREQUIRED に無いので、どのみち最後の `return 0`（必須）に落ちるからである。
+# それでも配列を引いているのは、上の「両方に載った場合」の優先順位をここで決めているのと、
+# **is_known_check が REQUIRED_CHECKS を必要とする**（空にすると本番の 7 件が
+# 「知らない検査」になる。変異 M7 で 2 件落ちる）ため。
+is_required_check() {
+  local name=$1 n
+  for n in "${REQUIRED_CHECKS[@]}"; do [[ "$n" == "$name" ]] && return 0; done
+  for n in "${NONREQUIRED_CHECKS[@]}"; do [[ "$n" == "$name" ]] && return 1; done
+  return 0   # 知らない名前は必須（新しい job が黙って抜け道に落ちない）
+}
+
+# is_known_check <name> → 0 なら**どちらかの配列に載っている**。
+# 載っていない名前は必須として扱う（上）が、**扱いが正しいかは誰も確かめていない**ので、
+# そのことを言う（#858）。ここが無いと REQUIRED_CHECKS は「知らない名前も必須」に
+# 吸収されて**挙動に効かない飾り**になり、中身が痩せても誰も気づかない。
+is_known_check() {
+  local name=$1 n
+  for n in "${REQUIRED_CHECKS[@]}" "${NONREQUIRED_CHECKS[@]}"; do [[ "$n" == "$name" ]] && return 0; done
+  return 1
+}
+
+ALLOW_NONREQUIRED_RED=0
+PR=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --allow-nonrequired-red) ALLOW_NONREQUIRED_RED=1 ;;
+    *) if [[ -z "$PR" ]] && is_int "$1"; then PR=$1; else usage "merge-when-green.sh [--allow-nonrequired-red] <pr-number>"; fi ;;
+  esac
+  shift
+done
+[[ -n "$PR" ]] || usage "merge-when-green.sh [--allow-nonrequired-red] <pr-number>"
 REPO=$(po_repo)
 
 # --- 1. state ---------------------------------------------------------------------------------
@@ -229,6 +307,18 @@ approve_pending_runs() {
 #   conclusion が success / neutral / skipped        → pass
 #   conclusion がそれ以外（failure/cancelled/timed_out/action_required/stale 等） → fail
 #
+# 出力は `<bucket>\t<name>\t<conclusion>\t<details_url>` の4列（#858 で 3・4 列目を足した）。
+# **赤いときに「何で赤いのか」を、押す人がその場で読めるようにするため**:
+#   - `conclusion`  `failure` と `cancelled` と `timed_out` は読む人にとって別の話で、
+#                   「押してよいか」の判断がそこで変わる
+#   - `details_url` **その job のログの URL**。`--net-deletions` が鳴ったときに
+#                   「どのファイルの何行が減っているか」が書いてあるのは**そのログの中だけ**で、
+#                   PR の画面にも `gh pr checks` の一覧にも出てこない（#858 で PO が指摘）。
+#                   **数字をここで作り直さない**——検査が既に数えたものを指すだけにする。
+#                   作り直すと二重の実装になり、片方が古くなったときに嘘をつく。
+# pending は conclusion が null なので3列目は空になる。既存の awk は $1/$2 しか見ないので
+# 列を足しても読み方は変わらない。
+#
 # 同名のチェックが複数回（再実行）現れることがあるので、`started_at` が最新の1件だけを見る
 # （古い run の conclusion で判定しない）。
 #
@@ -237,7 +327,7 @@ approve_pending_runs() {
 fetch_checks() {
   # shellcheck disable=SC2016  # $r/$bucket は jq の変数。シェルに展開させないためのシングルクォート
   gh api "repos/$REPO/commits/$HEAD_OID/check-runs" -q '
-    [.check_runs[] | {name, status, conclusion, started_at}]
+    [.check_runs[] | {name, status, conclusion, started_at, details_url}]
     | group_by(.name)
     | map(max_by(.started_at))
     | .[]
@@ -245,8 +335,30 @@ fetch_checks() {
     | (if $r.conclusion == null then "pending"
        elif ($r.conclusion == "success" or $r.conclusion == "neutral" or $r.conclusion == "skipped") then "pass"
        else "fail" end) as $bucket
-    | "\($bucket)\t\($r.name)"
+    | "\($bucket)\t\($r.name)\t\($r.conclusion // "")\t\($r.details_url // "")"
   '
+}
+
+# classify_failures — fail の行を「必須」と「必須でない」に振り分け、シェル変数に置く。
+# REQUIRED_RED / NONREQUIRED_RED は名前だけ（空白区切り）、NONREQUIRED_RED_DETAIL は
+# `name (conclusion)` 形式——**黙って押さない**ための読み上げ用（#858）。
+classify_failures() {
+  local name concl url
+  REQUIRED_RED=""; NONREQUIRED_RED=""; NONREQUIRED_RED_DETAIL=""; NONREQUIRED_RED_LOGS=""
+  while IFS=$'\t' read -r _ name concl url; do
+    [[ -n "$name" ]] || continue
+    if is_required_check "$name"; then
+      REQUIRED_RED+="$name "
+    else
+      NONREQUIRED_RED+="$name "
+      NONREQUIRED_RED_DETAIL+="$name (${concl:-unknown}) "
+      # **押す人が読むための行**。URL が無ければそう言う（黙って行を落とさない）
+      NONREQUIRED_RED_LOGS+="         $name (${concl:-unknown}): ${url:-（ログの URL が取れませんでした）}"$'\n'
+    fi
+  done < <(awk -F'\t' '$1=="fail"' <<<"$1")
+  REQUIRED_RED=${REQUIRED_RED% }; NONREQUIRED_RED=${NONREQUIRED_RED% }
+  NONREQUIRED_RED_DETAIL=${NONREQUIRED_RED_DETAIL% }
+  NONREQUIRED_RED_LOGS=${NONREQUIRED_RED_LOGS%$'\n'}
 }
 
 # wait_for_green — チェックが全部 pass/skipping になるまで待つ。POLL_MAX を通算で使い切る
@@ -260,14 +372,70 @@ wait_for_green() {
     failed=$(awk -F'\t' '$1=="fail"{print $2}' <<<"$checks")
     pending=$(awk -F'\t' '$1=="pending"{print $2}' <<<"$checks")
     total=$(grep -c . <<<"$checks" || true)
+    required_total=0; unknown_checks=""
+    # **毎 poll で捨てる**。前の poll で赤かったものが今は緑かもしれない
+    # （`gh run rerun` や、update-branch で走り直した場合）。持ち越すと
+    # 「緑なのに赤いまま通した」と嘘のログを残す。
+    PROCEEDED_OVER_RED=""
+    while IFS=$'\t' read -r _ n _; do
+      [[ -n "$n" ]] || continue
+      if is_required_check "$n"; then required_total=$((required_total + 1)); fi
+      if ! is_known_check "$n"; then unknown_checks+="$n "; fi
+    done <<<"$checks"
+    unknown_checks=${unknown_checks% }
+    # **知らない名前が出たら必ず言う**（必須として扱ってはいるが、そう決めた人はいない）。
+    # **同じ顔ぶれでは 1 回だけ**言う: wait_for_green は最大 60 回まわるので、毎回出すと
+    # 「毎回鳴る警告」になって読まれなくなる。顔ぶれが変わったら（新しい job が増えたら）また言う。
+    if [[ -n "$unknown_checks" && "$unknown_checks" != "${unknown_announced:-}" ]]; then
+      log "note: 知らない検査があります（必須として扱います。REQUIRED_CHECKS / NONREQUIRED_CHECKS に足してください）: $unknown_checks"
+      unknown_announced=$unknown_checks
+    fi
     if [[ -n "$failed" ]]; then
-      die "checks failed on PR #$PR: $(tr '\n' ' ' <<<"$failed")"
+      # #858: 赤を「必須」と「必須でない」に分ける。**母数を必ず出す**（#757）——
+      # 何件の検査を見て、そのうち何件が必須で、何件が赤いのか。
+      classify_failures "$checks"
+      local red_total; red_total=$(grep -c . <<<"$failed" || true)
+      log "検査 $total 件 / 必須 $required_total 件 / 赤 $red_total 件（必須の赤: ${REQUIRED_RED:-なし} / 必須でない赤: ${NONREQUIRED_RED_DETAIL:-なし}）"
+      # **必須が 1 件でも赤ければ絶対にマージしない**（--allow-nonrequired-red があっても）。
+      if [[ -n "$REQUIRED_RED" ]]; then
+        die "checks failed on PR #$PR: $REQUIRED_RED${NONREQUIRED_RED:+ (必須でない赤: $NONREQUIRED_RED)}
+       必須の検査が赤いので、マージしません。--allow-nonrequired-red では通せません。"
+      fi
+      # ここから先は「必須でないものだけが赤」。**黙って押さない**: 何がどう赤いかを必ず言い、
+      # **その理由が書いてある場所（job のログ）を指す**。
+      # `--net-deletions` が鳴ったとき、「どのファイルの何行が減っているか」は
+      # **その job のログの中にしかない**——PR の画面にも `gh pr checks` にも出てこない。
+      # 指さなければ「押す人は何も読めないまま押す」ことになる（#858 で PO が指摘）。
+      if [[ "$ALLOW_NONREQUIRED_RED" != 1 ]]; then
+        die "checks failed on PR #$PR: $NONREQUIRED_RED_DETAIL
+       これは必須の検査ではありません（必須 $required_total 件は全部緑）。GitHub はマージを許します。
+       **なぜ赤いのかを読んでから**判断してください。赤い検査のログ:
+$NONREQUIRED_RED_LOGS
+       手元で読むなら:
+         gh pr checks $PR
+         gh run view --log-failed --job <上の URL 末尾の数字>
+       読んだうえで通すなら:
+         scripts/po/merge-when-green.sh --allow-nonrequired-red $PR"
+      fi
+      # 押す直前に、押すと言う。**ログの URL も一緒に出す**——あとから
+      # 「何を見て押したのか」を追えるようにするため（ここが記録として残る唯一の場所）。
+      log "必須でない検査が赤いまま進みます（--allow-nonrequired-red）: $NONREQUIRED_RED_DETAIL"
+      log "赤い検査のログ:
+$NONREQUIRED_RED_LOGS"
+      # **「全部緑」と言わせない**（下の break の直前の行）。赤いまま進んだのだから、
+      # `all N checks green` は嘘である。**ログは後から「何が起きたか」を読む唯一の記録**なので、
+      # そこに嘘が混ざると、次に事故を調べる人が誤った前提から出発する。
+      PROCEEDED_OVER_RED=$NONREQUIRED_RED_DETAIL
     fi
     if [[ -z "$pending" && "$total" -gt 0 ]]; then
       if update_if_behind; then
         log "[$i/$POLL_MAX] checks were green on an old base; waiting for them to re-run"
       else
-        log "all $total checks green"
+        if [[ -n "${PROCEEDED_OVER_RED:-}" ]]; then
+          log "必須 $required_total 件は緑。$PROCEEDED_OVER_RED を赤いまま通してマージします"
+        else
+          log "all $total checks green"
+        fi
         break
       fi
     else
