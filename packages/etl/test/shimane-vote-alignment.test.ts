@@ -27,10 +27,23 @@ import { readPages } from "../src/sources/local/pdf-table.ts";
  */
 const fixture = (name: string): Buffer => readFileSync(new URL(`./fixtures/shimane/${name}`, import.meta.url));
 
-/** 読めた 3 本。**index の 14 本のうち `parseVotePdf` が読めるのはこの 3 本だけである**（#874 の実測）。 */
+/**
+ * **x の錨を当てる本。**
+ *
+ * **#901 で既定を 2 → 5 会期に広げたので、増えた 3 会期（2025-11 / 2025-09 / 2025-06）をここに足した**——
+ * **「件数が増えた」は「正しく増えた」ではない**ので、**増えたぶんにも錨を当てる**（#819 / #901）。
+ * **2024-06 は既定の外だが、作りが違う本として残す**（Producer が DocuWorks・議員 36 人）。
+ *
+ * **`decidedOn` は議決結果一覧 PDF から読んだ最大の議決日**（逐語で写さず、下の検算で突き合わせる）。
+ * **`resignedOn` は歴代議長一覧 PDF にある就任日**——**その日に議長が代わっている会期だけ入る。**
+ */
 const BOOKS: { sessionId: string; vote: string; results: string; /** 会期の議決日（歴代議長を引くための日） */ decidedOn: string; /** 議長辞職があった日（無ければ空） */ resignedOn: string }[] = [
   { sessionId: "2026-06", vote: "r0806_giinbetu_kekka.pdf", results: "r0806_giketu_kekka.pdf", decidedOn: "2026-07-02", resignedOn: "2026-06-09" },
   { sessionId: "2026-02", vote: "r0802_giinbetu_kekka.pdf", results: "r0802_giketu_kekka.pdf", decidedOn: "2026-03-25", resignedOn: "" },
+  // **#901 で増えた 3 会期**
+  { sessionId: "2025-11", vote: "r0711_giinbetu_kekka.pdf", results: "r0711_giketu_kekka.pdf", decidedOn: "2025-12-19", resignedOn: "" },
+  { sessionId: "2025-09", vote: "r0709_giinbetu_kekka.pdf", results: "r0709_giketu_kekka.pdf", decidedOn: "2025-10-09", resignedOn: "" },
+  { sessionId: "2025-06", vote: "r0706_giinbetu_kekka.pdf", results: "r0706_giketu_kekka.pdf", decidedOn: "2025-07-02", resignedOn: "2025-06-09" },
   { sessionId: "2024-06", vote: "r0606_giinbetu_kekka.pdf", results: "r0606_giketu_kekka.pdf", decidedOn: "2024-06-28", resignedOn: "2024-06-10" },
 ];
 
@@ -112,17 +125,32 @@ const isResignRow = (t: string): boolean => /議[長⾧]辞職/.test(t);
 
 /* ---------- 検算B（x）: 「議」の列の議員 == 県公表の歴代議長 ---------- */
 
-/** @returns 判定できた行数（母数）と一致しなかった行数。**母数を返す**（#757。母数を書かずに「全部一致」と書かない） */
-function checkB(sessionId: string, v: View, table: [string, string][] = speakers): { n: number; bad: number } {
+/**
+ * @returns 判定できた行数（母数）と一致しなかった行数。**母数を返す**（#757。母数を書かずに「全部一致」と書かない）
+ *
+ * ## **議長辞職の当日は、議長席が 2 人になる**（#901 で 2025-06 でも観測）
+ *
+ * **辞職の議案そのもの以外にも、その日は副議長が議長席に座る行がある**——
+ * **2025-07-02 の `特別委員会の設置` / `特別委員の選任` が 高橋雅彦（副議長）である**（実測）。
+ * **2026-06 でも同じ形が出ている。**
+ *
+ * **だから辞職があった会期では「新しい議長」か「その日の直前の副議長」のどちらかを許す。**
+ * **緩めているように見えるが、許すのは 2 人だけで、35 人のうち残り 33 人は落ちる**——
+ * **列が 1 つでも回れば、この 2 人以外が議長席に来るので落ちる**（下の回転のテストで確かめている）。
+ */
+function checkB(sessionId: string, v: View, table: [string, string][] = speakers, allowAlt = true): { n: number; bad: number } {
   const { pdf } = books.get(sessionId)!;
-  const want = on(table, BOOKS.find((b) => b.sessionId === sessionId)!.decidedOn);
+  const b = BOOKS.find((x) => x.sessionId === sessionId)!;
+  const want = on(table, b.decidedOn);
+  // **辞職のあった会期だけ、その日に在職している副議長も許す**（議長席に座るのはこの 2 人のどちらか）
+  const alt = allowAlt && b.resignedOn ? on(table === speakers ? vices : speakers, b.decidedOn) : "";
   let n = 0, bad = 0;
   for (const [i, row] of pdf.rows.entries()) {
-    // 議長辞職の当日は副議長が議長席に座る（下の検算A で別に見る）ので母数から外す
+    // 議長辞職の議案そのものは 除斥 が絡むので母数から外す（下の検算A で別に見る）
     if (isResignRow(row.title)) continue;
     n++;
     const who = v.cells[i].map((c, ci) => (isGicho(c) ? v.members[ci] : null)).filter((x): x is string => x !== null);
-    if (who.length !== 1 || who[0] !== want) bad++;
+    if (who.length !== 1 || (who[0] !== want && !(alt !== "" && who[0] === alt))) bad++;
   }
   return { n, bad };
 }
@@ -199,61 +227,61 @@ test("#874 歴代議長・副議長一覧 PDF を県の公表から機械的に�
 test("#874 検算B（x）: 「議」の列の議員 == 県公表の歴代議長（無改造）", () => {
   const r = sum(checkB);
   // **母数を検算に入れる**（#757）。母数が減れば「静かに空回り」するので、先に母数を固定する
-  assert.equal(r.n, 140, "判定できた行の数が変わった（母数が減ると「一致 0 件」は意味を失う）");
+  assert.equal(r.n, 255, "判定できた行の数が変わった（母数が減ると「一致 0 件」は意味を失う）");
   assert.equal(r.bad, 0);
 });
 
 test("#874 検算B は x の回転で全行落ちる（記号帯を 1 列 / 2 列 / −1 列）", () => {
   for (const k of [1, 2, -1]) {
     const r = sum(checkB, { cellCol: k });
-    assert.equal(r.n, 140);
-    assert.equal(r.bad, 140, `記号帯を ${k} 列回しても ${r.bad} 行しか落ちない`);
+    assert.equal(r.n, 255);
+    assert.equal(r.bad, 255, `記号帯を ${k} 列回しても ${r.bad} 行しか落ちない`);
   }
   // 名簿の側を回しても同じだけ落ちる（列の対応は「記号と議員の対」であって、どちらを回しても同じ）
   const m = sum(checkB, { member: 1 });
-  assert.equal(m.bad, 140);
+  assert.equal(m.bad, 255);
 });
 
 test("#874 検算B は y をほとんど捕まえない（x しか見ていない証拠。**これが検算C・E が要る理由**）", () => {
   // 記号帯だけを行方向に回しても、議長の列は議長の列のまま
   assert.equal(sum(checkB, { cellRow: 1 }).bad, 0);
   assert.equal(sum(checkB, { cellRow: 2 }).bad, 0);
-  // −1 行だけは 2 行落ちる（辞職の行が母数の外から中へ回り込むため）。**「y も見ている」ではない**
-  assert.equal(sum(checkB, { cellRow: -1 }).bad, 2);
+  // −1 行だけは 3 行落ちる（辞職の行が母数の外から中へ回り込むため）。**「y も見ている」ではない**
+  assert.equal(sum(checkB, { cellRow: -1 }).bad, 3);
 });
 
 test("#874 検算C（y）: 公表の賛成者数・反対者数 == その行の ○・● の数（無改造）", () => {
   const r = sum(checkC);
-  assert.equal(r.n, 148, "母数（読めた 3 本の行の合計）");
+  assert.equal(r.n, 267, "母数（錨を当てた 6 本の行の合計）");
   assert.equal(r.bad, 0);
 });
 
 test("#874 検算C は y の回転で落ちるが、**x の回転は 1 件も捕まえない**（恒真の記録）", () => {
-  assert.equal(sum(checkC, { cellRow: 1 }).bad, 37);
-  assert.equal(sum(checkC, { cellRow: -1 }).bad, 37);
-  assert.equal(sum(checkC, { cellRow: 2 }).bad, 42);
+  assert.equal(sum(checkC, { cellRow: 1 }).bad, 72);
+  assert.equal(sum(checkC, { cellRow: -1 }).bad, 72);
+  assert.equal(sum(checkC, { cellRow: 2 }).bad, 81);
   // **記号帯を列方向に回しても ○ と ● の個数は変わらない**（置換だから）。
   // **公表数との突き合わせを x の検算に使ってはいけない**——PO が三重 0/378・宮城 1/327 で実測した形。
   for (const k of [1, 2, -1]) assert.equal(sum(checkC, { cellCol: k }).bad, 0, `x を ${k} 列回して ${sum(checkC, { cellCol: k }).bad} 件落ちた（恒真でなくなった）`);
 });
 
-test("#874 検算C は 148 行中 37 行しか落ちない——**弱い**（同じ人数の行が並ぶため）", () => {
+test("#874 検算C は 267 行中 72 行しか落ちない——**弱い**（同じ人数の行が並ぶため）", () => {
   // 「y を見ている検算がある」とは言えるが、「y が正しいことを示した」とは言えない。
   // 2026-02 は 82 行中 73 行が 33/0 で、1 行ずらしても数が変わらない。
   const r = sum(checkC, { cellRow: 1 });
-  assert.equal(r.bad, 37);
+  assert.equal(r.bad, 72);
   assert.ok(r.bad / r.n < 0.3, "落ちる割合が 3 割未満であること（弱さの記録。ここが上がったら測り直す）");
 });
 
 test("#874 検算E（y）: result == 議決結果一覧 PDF（別の一次資料）", () => {
   const r = sum(checkE);
-  assert.equal(r.n, 132, "母数（議決結果一覧に載っている議案の行。請願・その他表決は載らない）");
+  assert.equal(r.n, 233, "母数（議決結果一覧に載っている議案の行。請願・その他表決は載らない）");
   assert.equal(r.bad, 0);
 });
 
-test("#874 検算E は「議決結果の欄だけが 1 行ずれる」形を捕まえる。ただし 132 行中 11 行だけ", () => {
-  assert.equal(sum(checkE, { result: 1 }).bad, 11);
-  assert.equal(sum(checkE, { result: -1 }).bad, 11);
+test("#874 検算E は「議決結果の欄だけが 1 行ずれる」形を捕まえる。ただし 233 行中 21 行だけ", () => {
+  assert.equal(sum(checkE, { result: 1 }).bad, 21);
+  assert.equal(sum(checkE, { result: -1 }).bad, 21);
   // **x は 1 件も捕まえない**（result は記号帯を見ていない）
   assert.equal(sum(checkE, { cellCol: 1 }).bad, 0);
   assert.equal(sum(checkE, { cellRow: 1 }).bad, 0);
@@ -261,24 +289,76 @@ test("#874 検算E は「議決結果の欄だけが 1 行ずれる」形を捕�
 
 test("#874 検算A: 「(副)議長辞職」の行の 除斥 == 県公表の直前の (副)議長", () => {
   const r = sum(checkA);
-  assert.equal(r.n, 8, "母数（辞職の行。2026-06 に 4 行・2024-06 に 4 行・2026-02 に 0 行）");
+  assert.equal(r.n, 12, "母数（辞職の行。2026-06 / 2025-06 / 2024-06 に 4 行ずつ）");
   assert.equal(r.bad, 0);
   // **母数が 8 しかない。** y を「測った」とは言えるが「正しいと示した」とは言えない。
-  assert.ok(r.n < 10, "母数が小さいことを記録に残す");
+  assert.ok(r.n < 20, "母数が小さいことを記録に残す");
 });
 
 test("#874 検算A は y と x の両方を捕まえる（だから y 専用の検算C・E の代わりにならない）", () => {
-  assert.equal(sum(checkA, { cellRow: 1 }).bad, 4);
-  assert.equal(sum(checkA, { cellRow: 2 }).bad, 8);
-  assert.equal(sum(checkA, { cellCol: 1 }).bad, 8);
-  assert.equal(sum(checkA, { title: 1 }).bad, 4);
+  assert.equal(sum(checkA, { cellRow: 1 }).bad, 6);
+  assert.equal(sum(checkA, { cellRow: 2 }).bad, 12);
+  assert.equal(sum(checkA, { cellCol: 1 }).bad, 12);
+  assert.equal(sum(checkA, { title: 1 }).bad, 6);
 });
 
-test("#874 副議長の表を錨にすると 140 行すべてで落ちる（錨の取り違えを検出する）", () => {
-  // 同じ PDF の左右に 2 つの表が並んでいる。右（副議長）を使うと全行が食い違う。
-  const r = sum((sid, v) => checkB(sid, v, vices));
-  assert.equal(r.n, 140);
-  assert.equal(r.bad, 140);
+test("#874 副議長の表を錨にすると 255 行中 253 行で落ちる（錨の取り違えを検出する）", () => {
+  // 同じ PDF の左右に 2 つの表が並んでいる。右（副議長）を使うとほぼ全行が食い違う。
+  // **`alt`（議長辞職の日に副議長が議長席に座る許し）は外して測る**——
+  // **付けたままだと「副議長でも通る」ので、錨の取り違えを見逃す**（実測で 255 行中 166 行しか落ちない）。
+  const r = sum((sid, v) => checkB(sid, v, vices, false));
+  assert.equal(r.n, 255);
+  // **255 行ではなく 253 行である**——**2025-07-02 の 2 行（特別委員会の設置 / 特別委員の選任）は
+  // 実際に副議長 高橋雅彦 が議長席に座っているので、副議長の表と「たまたま一致する」**（#901 の実測）。
+  // **「全行落ちる」と書くとこの 2 行を嘘で塗ることになるので、落ちない 2 行を数ごと残す。**
+  assert.equal(r.bad, 253);
+});
+
+/**
+ * **`alt`（議長辞職の日に副議長が議長席に座る許し）を、辞職の無い会期にまで広げてはいけない。**
+ *
+ * **広げても回転の検算は 255 / 255 のままで落ちない**（実測。**副議長は普段は議長席に座らないため**）——
+ * **つまり回転のテストはこの緩みを捕まえない。** **だからここで別に固定する。**
+ *
+ * **緩めると何が起きるか**: **辞職の無い 3 会期でも「副議長なら通る」ことになり、
+ * 議長席の列が副議長の列と入れ替わっていても気づけなくなる。**
+ */
+test("#901 alt は辞職のあった会期にだけ効く（辞職の無い会期では副議長を許さない）", () => {
+  for (const b of BOOKS.filter((x) => x.resignedOn === "")) {
+    const v = view(books.get(b.sessionId)!.pdf);
+    const vice = on(vices, b.decidedOn);
+    const spk = on(speakers, b.decidedOn);
+    assert.notEqual(vice, spk, `${b.sessionId}: 議長と副議長が別人`);
+    // **その会期の議長席に副議長が座っている行は 1 つも無い**（だから許す理由が無い）
+    const seats = books.get(b.sessionId)!.pdf.rows.map((_, i) =>
+      v.cells[i].map((c, ci) => (isGicho(c) ? v.members[ci] : null)).filter((x): x is string => x !== null));
+    assert.deepEqual(seats.filter((w) => w.length === 1 && w[0] === vice), [], `${b.sessionId}: 副議長が議長席の行`);
+  }
+  // **`checkB` 自身が、辞職の無い会期で副議長を許していないこと。**
+  // **上のデータの性質だけでは、`alt` を全会期に広げる変異を捕まえられない**
+  //（**広げても実データでは差が出ないため**）。**そこで「副議長だけを議長席に置いた見え方」を作って、
+  // 辞職の無い会期では落ち、辞職のあった会期では落ちないことを見る。**
+  const onlyVice = (sid: string): { n: number; bad: number } => {
+    const pdf = books.get(sid)!.pdf;
+    const vice = on(vices, BOOKS.find((x) => x.sessionId === sid)!.decidedOn);
+    const vi = pdf.members.indexOf(vice);
+    assert.notEqual(vi, -1, `${sid}: 副議長が名簿に居る`);
+    const v = view(pdf);
+    // 議長席のセルを全部「副議長の列だけ」に付け替える
+    v.cells = pdf.rows.map((r) => r.cells.map((c, ci) => (isGicho(c) ? "○" : ci === vi ? "議長" : c)));
+    return checkB(sid, v);
+  };
+  for (const b of BOOKS.filter((x) => x.resignedOn === "")) {
+    const r = onlyVice(b.sessionId);
+    assert.equal(r.bad, r.n, `${b.sessionId}: 副議長を議長席に置いたら全行落ちる（許していない）`);
+    assert.ok(r.n > 0, `${b.sessionId}: 母数`);
+  }
+  // **辞職のあった会期では、同じ置き換えがほとんど落ちない**（そこだけ副議長を許しているため）。
+  // **0 ではない**——**2025-06 の 2 行は元から副議長が議長席なので、置き換えで「議長席が 2 つ」になる。**
+  for (const b of BOOKS.filter((x) => x.resignedOn !== "")) {
+    const r = onlyVice(b.sessionId);
+    assert.ok(r.bad * 10 < r.n, `${b.sessionId}: 辞職のあった会期は副議長を許す（${r.bad}/${r.n}）`);
+  }
 });
 
 test("#874 議長辞職の当日は、1 本の中に議長席が 2 人いる（島根で実測。母数から外した 8 行の中身）", () => {
@@ -316,15 +396,21 @@ test("#874 2024-06 は既存の 2 本と作りが違う（Producer が DocuWorks
   assert.ok(books.get("2026-06")!.pdf.legend.has("－"), "2026-06 の凡例の横棒は U+FF0D");
 });
 
-test("#874 2025-11 は読めない——付託委員会の名前が**中央揃え**で、`leftAlignedBoundary` の前提が崩れる", async () => {
-  // **`parseVotePdf` は例外を投げる**（黙って落とさない）。**それ自体は正しい振る舞いである。**
-  // **#896 で例外の中身が変わった**（`付託委員会 is empty` → `付託委員会 is …pt off the row centre`）。
-  // **#896 は付託委員会の切り分けを閾値から「塊の中心が行の中心に揃う」に変えたので、
-  // この本では「欄からこぼれた委員会名のぶん、塊の中心がずれる」という形で先に捕まる。**
-  // **どちらにせよ読めない**——**中央揃えという機序は #896 では直していない**（下でその機序を固定する）。
-  await assert.rejects(() => parseVotePdf(fixture("r0711_giinbetu_kekka.pdf")), /付託委員会 is 4\.2pt off the row centre/);
+test("#901 2025-11 は読める（#874 / #896 の「読めない」を直した）——付託委員会の名前が**中央揃え**である", async () => {
+  // **#874 と #896 はここで「読めない」を固定していた**（`付託委員会 is 4.2pt off the row centre`）。
+  // **#901 が機序そのものを直したので、いまは読める。**
+  // **機序は消えていない**——**この本の委員会名が中央揃えであることは下でそのまま固定する。**
+  // **変わったのは `leftAlignedBoundary` が欄の中心も見るようになったこと**（`votes-pdf.ts` の docblock）。
+  const pdf = await parseVotePdf(fixture("r0711_giinbetu_kekka.pdf"));
+  // **55 行である**（引き継ぎ時点の版は 62 と書いていたが、実測は 55。
+  // **`origin/main` ではこの本は読めなかったので、62 は測らずに書かれた数だった**）。
+  assert.equal(pdf.rows.length, 55, "2025-11 の行数");
+  // **付託委員会が 1 行も空でない**（母数を書く。#757）
+  assert.equal(pdf.rows.filter((r) => r.referredCommittees.length > 0).length, 55, "付託委員会のある行");
+  // **件名に委員会名がこぼれていない**
+  assert.deepEqual(pdf.rows.filter((r) => /^[^※]{2,12}(委員会|審査会)$/.test(r.title)).map((r) => r.number), []);
   // **機序**: 12 本では委員会名が**左端を揃えて**書かれるが、2025-11 だけ**中心が揃っている**（中心 x=350.0）。
-  // そのため「一番多く並んでいる左端の x」を欄の左端とみなす規則が、長い名前を取りこぼす。
+  // **「一番多く並んでいる左端の x」だけを欄の左端とみなすと、長い名前を取りこぼす。**
   const pages = await readPages(fixture("r0711_giinbetu_kekka.pdf"));
   const lefts = new Map<string, Set<number>>();
   for (const page of pages) {
@@ -351,14 +437,20 @@ test("#874 凡例の記号は 3 本すべてで同じ 5 種類（横棒の符号
   }
 });
 
-test("#874 実際に現れた記号は 5 種類（148 行・5,216 セル。**棄権 は 1 つも無い**）", () => {
+test("#874 実際に現れた記号（267 行・9,381 セル。**棄権 は 1 つも無い**）", () => {
   const tally = new Map<string, number>();
   let cells = 0;
   for (const b of BOOKS) for (const row of books.get(b.sessionId)!.pdf.rows) for (const c of row.cells) { tally.set(c, (tally.get(c) ?? 0) + 1); cells++; }
-  assert.equal(cells, 5216);
-  assert.equal([...tally.values()].reduce((a, x) => a + x, 0), 5216);
-  // 凡例にある「棄権」は 5,216 セルに 1 度も現れない（**凡例にあっても実物を見ていない記号がある**）
+  assert.equal(cells, 9381);
+  assert.equal([...tally.values()].reduce((a, x) => a + x, 0), 9381);
+  // 凡例にある「棄権」は 9,381 セルに 1 度も現れない（**凡例にあっても実物を見ていない記号がある**）
   assert.equal(tally.get("棄権") ?? 0, 0);
-  assert.equal(tally.get("○"), 4915);
-  assert.equal(tally.get("●"), 64);
+  assert.equal(tally.get("○"), 8862);
+  assert.equal(tally.get("●"), 124);
+  // **中身を全部並べる**（「5 種類」と書くと、下の 2 つを数えていないことになる）。
+  // **`不明` 1 と `除斥除斥` 4 はどちらも 2024-06 の本にだけ在る**——
+  // **2024-06 は既定の 5 会期の外なので、`data/` には出ていない**（本番の unknownCells は 0）。
+  assert.deepEqual(Object.fromEntries([...tally].sort()), {
+    "−": 35, "○": 8862, "●": 124, "不明": 1, "議⾧": 167, "議長": 99, "除斥": 8, "除斥除斥": 4, "－": 81,
+  });
 });

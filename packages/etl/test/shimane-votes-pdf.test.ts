@@ -389,6 +389,9 @@ test("#866 件名のセルの中心は行の中心にある（112 行ぜんぶ�
  * **短い議案名は一次資料のどこにも書かれていないので、推測で作らない**（#569）。
  */
 test("#866 本番 data/pref-32: 112 件の件名が一次資料の PDF と完全一致（多重集合で突き合わせる）", () => {
+  // **#901 で `data/` は 231 件になったが、ここで突き合わせるのはフィクスチャのある 2 会期 112 件のまま**——
+  // **増えた 3 会期の表決 PDF はこのファイルに読み込んでいないので、比べる相手がいない。**
+  // **増えたぶんの件名は `shimane-published-data.test.ts` が「空でないこと」まで見ている。**
   const dir = new URL("../../../data/assemblies/pref-32/rollcalls/", import.meta.url);
   const index = JSON.parse(readFileSync(new URL("index.json", dir), "utf-8")) as { id: string; sessionId: string }[];
   const read = (session: string): { title: string; number: string; page: number }[] =>
@@ -403,7 +406,10 @@ test("#866 本番 data/pref-32: 112 件の件名が一次資料の PDF と完全
   const key = (r: { title: string; number: string; page: number }): string => `p${r.page}\u0001${r.number}\u0001${r.title}`;
   let compared = 0;
   let normalized = 0;
-  for (const [session, rows, label] of [["2026-02", feb.rows, "令和8年2月"], ["499", pdf.rows, "令和8年6月"]] as const) {
+  // **`499`（回数）は `2026-06`（年月）に変わった**（#901）——
+  // **回数は「最近の定例会の概要」のリンク文言にしか無く、その会期が「過去の…」に移ったため。**
+  // **県の側の変更であり、`--sessions` を広げなくても次回の実行で同じことが起きる。**
+  for (const [session, rows, label] of [["2026-02", feb.rows, "令和8年2月"], ["2026-06", pdf.rows, "令和8年6月"]] as const) {
     const got = read(session);
     // **母数**: 会期ごとに PDF の行数と `data/` の件数が合っていること。
     // **合っていなければ、以下の突き合わせは意味を持たない**（#757）
@@ -459,7 +465,7 @@ test("#866 本番 data/pref-32: 直した 5 件の件名（字数と先頭・末
   assert.equal(teishutsu1, "議会の議員の議員報酬、費用弁償及び期末手当支給条例の一部を改正する条例");
   assert.equal(len(teishutsu1), 35);
 
-  const seigan29 = title("499", "pref-32-499-20260702-請願-請願第29号");
+  const seigan29 = title("2026-06", "pref-32-2026-06-20260702-請願-請願第29号");
   assert.equal(seigan29, "「地方財政の充実・強化を求める」請願");
   assert.equal(len(seigan29), 18);
 
@@ -470,7 +476,7 @@ test("#866 本番 data/pref-32: 直した 5 件の件名（字数と先頭・末
   assert.ok(seigan28.startsWith("島根県議会が平成25年6月26日付で可決採択された"), seigan28.slice(0, 30));
   assert.ok(seigan28.endsWith("とする決議を求めます。"), seigan28.slice(-15));
 
-  const seigan30 = title("499", "pref-32-499-20260702-請願-請願第30号");
+  const seigan30 = title("2026-06", "pref-32-2026-06-20260702-請願-請願第30号");
   assert.equal(len(seigan30), 480);
   assert.ok(seigan30.startsWith("平成25年6月議会で島根県議会が採択された請願は"), seigan30.slice(0, 30));
   assert.ok(seigan30.endsWith("とする決議を求めます。"), seigan30.slice(-15));
