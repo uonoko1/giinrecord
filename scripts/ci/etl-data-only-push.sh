@@ -54,6 +54,15 @@ say() {
 # 1) 土台を最新にする。ETL の実行中に進んだ main を取り込んでから push する。
 git fetch "$REMOTE" "$DEFAULT_BRANCH"
 BASE="$REMOTE/$DEFAULT_BRANCH"
+# 土台が解決できないなら、そこで止める。**解決できないまま進むと `git diff` が 1 行も出さず、
+# その 0 件が「data/ の外は 0 件。push する」に化ける**（#757 の「0 件を緑にしない」。
+# 実測: REMOTE=. のとき BASE が `./main` になり、git diff は fatal で終わるのに
+# 検査は「差分は 1 件も無い」と言って push まで進んだ）。
+git rev-parse --verify --quiet "$BASE^{commit}" > /dev/null || {
+  echo "FAIL: 土台 $BASE を解決できない。比較できないものを「差分 0 件」と読むと、" >&2
+  echo "  検査が素通りする（#757）。REMOTE / DEFAULT_BRANCH と fetch の結果を確かめること。" >&2
+  exit 1
+}
 if [[ ${REBASE:-yes} != "no" ]]; then
   if ! git rebase "$BASE"; then
     git rebase --abort || true
@@ -64,7 +73,14 @@ if [[ ${REBASE:-yes} != "no" ]]; then
 fi
 
 # 2) **tip 同士**で突き合わせる。三点（...）は merge base と比べるので、土台の古さを見逃す。
-mapfile -t PATHS < <(git diff --name-only "$BASE" HEAD)
+# `mapfile < <(...)` はプロセス置換の終了コードを捨てるので、git diff が落ちても空配列になり
+# 「差分 0 件」として通ってしまう。**一度ファイルに落として終了コードを見る。**
+DIFF_OUT=$(mktemp); trap 'rm -f "$DIFF_OUT"' EXIT
+if ! git diff --name-only "$BASE" HEAD > "$DIFF_OUT"; then
+  echo "FAIL: git diff --name-only $BASE HEAD が失敗した。比較できていないので push しない。" >&2
+  exit 1
+fi
+mapfile -t PATHS < "$DIFF_OUT"
 
 inside=0
 outside=0

@@ -233,6 +233,75 @@ case_all_data_workflows_use_the_guard() {
   assert_eq 0 "$raw" "素の git push が残っていない"
 }
 
+# --- 10: **既存の stale-base.sh ではこの形を覆えない**（だからこの検査が別に要る）。
+#         stale-base.sh の候補は「両側が触ったファイル」に限られる（それは意図的で正しい——
+#         main に対して単に遅れているだけの枝で鳴らすと、main が動くたび全 PR が赤になる）。
+#         #943 の形では枝は data/ しか触らず .github/ は main しか触らないので、**候補が 0 件**になり
+#         stale-base は ok と言う。実測済み。ここが緑のままこの検査を消すと、守るものが無くなる。
+case_stale_base_sh_does_not_cover_this_shape() {
+  local root; root=$(cd "$HERE/../../.." && pwd)
+  local sb="$root/scripts/ci/stale-base.sh"
+  [[ -f $sb ]] || { fail "stale-base.sh が無い（この比較の前提が消えた）"; return; }
+  rm -rf "$TMP/sb" "$TMP/sb-remote"; git init -q -b main "$TMP/sb"
+  (
+    cd "$TMP/sb"
+    mkdir -p data .github/workflows
+    # shellcheck disable=SC2016  # ci.yml の中身を模した文字列。$etl は展開させない
+    printf '[ "$etl" -ge 156 ] || exit 1\n' > .github/workflows/ci.yml
+    printf '{"v":1}\n' > data/meta.json
+    git add -A; git_q commit -qm base
+    git switch -q -c data/refresh
+    printf '{"v":2}\n' > data/meta.json          # 枝は data/ しか触らない
+    git add -A; git_q commit -qm "data: refresh"
+    git switch -q main
+    # shellcheck disable=SC2016  # 同上
+    printf '[ "$etl" -ge 139 ] || exit 1\n' > .github/workflows/ci.yml   # main だけが .github/ を触る
+    git add -A; git_q commit -qm "ci: lower the floor"
+  )
+  local head sb_out sb_status guard_out guard_status mb common
+  head=$(git -C "$TMP/sb" rev-parse data/refresh)
+  # 候補集合（両側が触ったファイル）が空であることを直接測る——これが ok の理由である
+  mb=$(git -C "$TMP/sb" merge-base main data/refresh)
+  common=$(comm -12 \
+    <(git -C "$TMP/sb" diff --name-only "$mb" main | LC_ALL=C sort) \
+    <(git -C "$TMP/sb" diff --name-only "$mb" data/refresh | LC_ALL=C sort) | wc -l)
+  assert_eq 0 "$common" "stale-base の候補（両側が触ったファイル）は 0 件"
+  set +e
+  sb_out=$( cd "$TMP/sb" && bash "$sb" main "$head" 2>&1 ); sb_status=$?
+  set -e
+  assert_eq 0 "$sb_status" "stale-base.sh はこの形を ok と言う（候補が 0 件なので）"
+  assert_contains "$sb_out" "ok" "stale-base.sh の出力は ok"
+  # 同じ形を、こちらの検査は止める（tip 同士で比べるので .github/ が見える）
+  # 本物の remote を 1 つ足して（REMOTE=. は `./main` という解決できない ref になる）、
+  # 同じ形をこちらの検査に掛ける。
+  git init -q --bare -b main "$TMP/sb-remote"
+  ( cd "$TMP/sb" && git_q remote add origin "$TMP/sb-remote" && git_q push -q origin main )
+  set +e
+  guard_out=$( cd "$TMP/sb" && git switch -q data/refresh && \
+    REBASE=no PUSH=no bash "$SCRIPT" data/refresh 2>&1 ); guard_status=$?
+  set -e
+  assert_eq 1 "$guard_status" "同じ形を etl-data-only-push.sh は止める"
+  assert_contains "$guard_out" ".github/workflows/ci.yml" "止めた理由を名指しする"
+}
+
+# --- 11: **土台を解決できないときに「差分 0 件」で通さない**（#757: 0 件を緑にしない）。
+#         実測（このテストを書いている最中に踏んだ）: REMOTE=. だと BASE が `./main` になり、
+#         git diff は fatal で終わるのに mapfile はプロセス置換の終了コードを捨てるので空配列になり、
+#         検査は「差分は 1 件も無い」「push する」と言って先へ進んだ。
+#         **比較できていないことと、比較した結果 0 件だったことは別である。**
+case_unresolvable_base_is_not_green() {
+  setup; etl_writes_data; main_moves
+  set +e
+  ( cd "$WORK" && REMOTE=. DEFAULT_BRANCH=main REBASE=no PUSH=no bash "$SCRIPT" data/refresh ) \
+    > "$TMP/out" 2>&1
+  STATUS=$?
+  set -e
+  OUT=$(cat "$TMP/out")
+  assert_eq 1 "$STATUS" "土台を解決できなければ失敗する"
+  assert_not_contains "$OUT" "push する" "「push する」とは言わない"
+  assert_contains "$OUT" "解決できない" "解決できないと言う"
+}
+
 test_case "#943 土台が古くても rebase して push できる（.github/ を巻き戻さない）" case_stale_base_is_rebased_and_pushed
 test_case "data/ の外に差分があれば push せず失敗する" case_outside_data_fails
 test_case "母数を出す（0 件と「見ていない」を区別する）" case_denominator_is_reported
@@ -242,6 +311,8 @@ test_case "引数無しは使い方を出して exit 2" case_usage
 test_case "rebase 衝突は push せず失敗する" case_rebase_conflict_fails
 test_case "rebase を外しても、古い土台は検査だけで止まる（tip 同士の比較）" case_check_alone_catches_stale_base
 test_case "3 本のデータ ETL ワークフローが全部この検査を通る" case_all_data_workflows_use_the_guard
+test_case "stale-base.sh はこの形を覆えない（候補 0 件）——だからこの検査が別に要る" case_stale_base_sh_does_not_cover_this_shape
+test_case "土台を解決できないときに「差分 0 件」で通さない（#757）" case_unresolvable_base_is_not_green
 
 echo
 echo "passed: $PASS  failed: $FAIL"
