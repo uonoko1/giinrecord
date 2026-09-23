@@ -339,3 +339,29 @@ test("#913 錨E の射程を数え切る: 列の 1 対入れ替え 630 通りの
   }
   // **だから錨E は 錨A・錨B の代わりにはならない。3 本を並べて置くこと**（#906 / #913）。
 });
+
+test("#913 錨E は 会派の **名前** を見ていない —— 名前を総入れ替えしても 0 件（変異で確かめた）", () => {
+  // **変異テストで見つけたこと**（**予測は「落ちる」だった。落ちなかったので、ここに書き残す**）:
+  // **`votes-pdf.ts` の `group.name` を「1 つ後ろの会派の名前」に差し替えても、
+  //   錨E の 4 つのテストは 1 つも落ちなかった**（7 / 9 が緑のまま）。
+  //
+  // **当たり前ではある**——**錨E が見ているのは「どの列とどの列が同じ束か」という区切りだけで、
+  //   その束に何という名前が付いているかは見ていない。**
+  // **だが「錨E を足したから会派まで守られた」と読まれると嘘になるので、恒真であることを固定する**（#912 の形）。
+  //
+  // **会派の名前を守っているのは 錨C（名簿 ⇔ 列の氏名・会派、`kochi-x-anchor-roster.test.ts`）である。**
+  const rename = (pdf: VotePdf, f: (g: string) => string): VotePdf =>
+    ({ ...pdf, members: pdf.members.map((m) => ({ ...m, group: f(m.group) })) });
+  const order = feb8.members.reduce<string[]>((a, m) => (a[a.length - 1] === m.group ? a : [...a, m.group]), []);
+  // **(a) 名前を 1 つ後ろにずらす**（区切りはそのまま）
+  const shifted = rename(feb8, (g) => order[(order.indexOf(g) + 1) % order.length]);
+  assert.equal(blocCheck(shifted).split, 0, "**名前を 1 つずらしても 0 件**（恒真）");
+  assert.equal(blocCheck(shifted, -1).split, 9, "ずらした名前でも `−1` は同じ 9 行で落ちる");
+  // **(b) 名前をぜんぶ無意味な記号にする**（区切りだけ残す）
+  const anon = rename(feb8, (g) => `#${order.indexOf(g)}`);
+  assert.equal(blocCheck(anon).split, 0, "**名前を捨てても 0 件**（恒真）");
+  assert.equal(blocCheck(anon, -1).split, 9, "名前を捨てても `−1` は同じ 9 行で落ちる");
+  // **(c) だが「区切り」を変えれば効く**——**2 つの会派を 1 つに束ねると、無改造でも割れる。**
+  const merged = rename(feb8, (g) => (g === "日本共産党" || g === "自由民主党" ? "M" : g));
+  assert.ok(blocCheck(merged).split > 0, "区切りを壊すと無改造でも落ちる（見ているのは区切りである）");
+});
