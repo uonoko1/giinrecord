@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { parseVotePdf } from "../src/sources/local/shimane/votes-pdf.ts";
+import { parseVotePdf, splitJoinedMarks } from "../src/sources/local/shimane/votes-pdf.ts";
 import { defaultSessionsFor } from "../src/local-assemblies.ts";
 
 /**
@@ -56,4 +56,79 @@ test("#901 2025-11 は読める（直す前は 付託委員会 が中央揃え�
 
 test("#901 島根の --sessions の既定", () => {
   assert.equal(defaultSessionsFor("shimane"), 5);
+});
+
+/* ==================== 3. 繋がった票の記号 ==================== */
+
+/**
+ * **1 つの文字アイテムに票の記号が 2 つ入っていることがある**（Issue #901）。
+ *
+ * **2025-11 の page 3 に `"○ ○"` が 1 個ある**（実測 `x=740.17 w=13.77`）。
+ * **割らないと `凡例に無いセル "○○"` で ETL が止まり、隣の列は記号が無いので `不明` になる**
+ * （＝**投じられた票が 1 つ消える**）。
+ *
+ * **どこに置くかは推定していない**——**アイテムの x と幅がまたいでいる列だけに置き、
+ * またいだ列の数と記号の数が合わなければ割らない。**
+ */
+test("#901 splitJoinedMarks: またいだ列の数と記号の数が合うときだけ割る", () => {
+  const item = (str: string, x: number, w: number) => ({ str, x, y: 100, w, h: 9, cx: x + w / 2, cy: 100 });
+  const colX = [740.2, 749.4, 758.6];
+  // **2025-11 の実測そのもの**: 740.17 〜 753.94 が 740.2 と 749.4 の 2 列をまたぎ、記号も 2 つ
+  const split = splitJoinedMarks([item("○ ○", 740.17, 13.77)], colX);
+  assert.deepEqual(split.map((i) => [i.str, Number(i.x.toFixed(1))]), [["○", 740.2], ["○", 749.4]]);
+  // **記号が 1 つのアイテムはそのまま**（ほとんど全部がこれ。13 本の出力が変わらない根拠）
+  assert.deepEqual(splitJoinedMarks([item("○", 740.2, 6.9)], colX).map((i) => i.str), ["○"]);
+  // **列の数と記号の数が合わなければ割らない**——3 列をまたぐのに記号が 2 つ
+  assert.deepEqual(splitJoinedMarks([item("○ ○", 740.17, 22.0)], colX).map((i) => i.str), ["○ ○"]);
+  // **記号でない文字（結合されたラベル）は触らない**——2024-06 の `除斥除斥` はここでは割らない
+  assert.deepEqual(splitJoinedMarks([item("除斥除斥", 740.17, 13.77)], colX).map((i) => i.str), ["除斥除斥"]);
+  // **賛成と反対が混ざっていても、またいだ列と合えば割る**（記号の種類では区別しない）
+  assert.deepEqual(splitJoinedMarks([item("○ ●", 740.17, 13.77)], colX).map((i) => i.str), ["○", "●"]);
+});
+
+/**
+ * **公表された賛成者数・反対者数と、`○`/`●` の個数が、既定 5 会期の 231 行すべてで一致する**（母数つき。#757）。
+ *
+ * **直す前の 2025-11 は、`"○ ○"` の行だけ 公表 32 に対し 数え直し 30 だった**（実測）——
+ * **割った後は 55 / 55 で一致する。**
+ *
+ * **この検算は「PDF が自分自身と整合しているか」しか見ていない**（#874 が変異で確かめた等価変異の話と同じ）。
+ * **x の錨にはならない**——**記号帯を列ごと回しても `○` と `●` の個数は変わらないため。**
+ * **ここで主張しているのは「割ったせいで票の数が狂っていないこと」だけである。**
+ */
+test("#901 既定 5 会期の 231 行で、公表の賛成/反対と ○● の個数が一致する（母数 231）", async () => {
+  const books = ["r0806_giinbetu_kekka.pdf", "r0802_giinbetu_kekka.pdf", "r0711_giinbetu_kekka.pdf", "r0709_giinbetu_kekka.pdf", "r0706_giinbetu_kekka.pdf"];
+  let rows = 0, agree = 0;
+  const disagree: string[] = [];
+  for (const b of books) {
+    const pdf = await parseVotePdf(fixture(b));
+    for (const r of pdf.rows) {
+      rows++;
+      const yes = r.cells.filter((c) => c === "○").length;
+      const no = r.cells.filter((c) => c === "●").length;
+      if (yes === r.counts.yes && no === r.counts.no) agree++;
+      else disagree.push(`${b} ${r.number}: 公表 ${r.counts.yes}/${r.counts.no} 数え直し ${yes}/${no}`);
+    }
+  }
+  assert.equal(rows, 231, "母数（既定 5 会期の行数）");
+  assert.deepEqual(disagree, [], "食い違った行を全部並べる");
+  assert.equal(agree, 231);
+});
+
+/* ==================== 4. 止める位置の根拠 ==================== */
+
+/**
+ * **6 会期目（2025-05 臨時会）は読めない。** **これが既定を 5 で止めている理由である。**
+ *
+ * **機序は #874 の分類 E**——**記号の行が 4 つあるのに議案番号が `第80号` の 1 つしか無い**
+ * （`常任委員の選任について` など、番号を持たない議案があるため）。
+ * **`anchors` が 1 本しか立たず、4 行ぶんの記号が 1 行に集まる。**
+ *
+ * **`splitJoinedMarks`（#901）はこれを直さない**——**この本に繋がった記号は 1 つも無い**（実測）。
+ * **直すには「番号の無い行」を行として立てる必要があり、それは別の機序である。**
+ */
+test("#901 6 会期目（2025-05 臨時会）が読めないことは、既定を 5 で止めている理由そのものである", () => {
+  // **フィクスチャを置いていないので、ここで固定するのは「なぜ 5 なのか」の記述と既定の値の対応だけである。**
+  // **実測は PR 本文と `local-assemblies.ts` の docblock にある**（本番の一次資料に対して測った）。
+  assert.equal(defaultSessionsFor("shimane"), 5, "6 ではない");
 });
