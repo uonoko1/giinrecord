@@ -131,6 +131,23 @@ const TOTTORI_FILES = [
   "R8.6.29_giinteishutsugian_giketsukekka.pdf",
   "R0802sengikekka.pdf",
   "R8.2giketsukekka0325.pdf",
+  // **#901 で `--sessions` を 2 → 11 に広げて読めるようになった会期の本**（4 本）。
+  // **増えた採決にも同じ錨を当てる**——**「件数が増えた」は「正しく増えた」ではない。**
+  // **この 4 本は 88代 浜崎晋一（令5.5.10〜）と 89代 福田俊史（令7.6.9〜）の両方をまたぐ。**
+  "R7.12.22giketsukekka.pdf",
+  "R7.2giketsukekka0324.pdf",
+  "giketsukekka_R6.2.pdf",
+  // **`R0609gikeysukekka.pdf` はこの配列の末尾に置く**（**並べ替えないこと**）。
+  // **鳥取県が `giketsukekka` を `gikeysukekka` と綴り間違えた実在のファイル名**で、
+  // **`data/members/p_31_*.json` の出典 URL に在る**（一次資料なので書き換えられない）。
+  // **`...key...` を含むため、gitleaks の `generic-api-key` が
+  // 「鍵の名前」と読み、その直後に在る文字列リテラルを「鍵の値」として拾う**——
+  // **落ちるのは次の行の値のほうで、この名前そのものではない**（実測 2026-09-23、
+  // gitleaks 8.28.0: 単独なら `no leaks found` ／ 直後に文字列を足すと `leaks found: 1`）。
+  // **末尾なら直後に文字列リテラルが無いので、誤検知が出ない。**
+  // **`.gitleaksignore` にも `.gitleaks.toml` の allowlist にも 1 行も足さずに済む**
+  // （**規則を緩めれば、本物の鍵も同じだけ見逃す**。#940 と同じ判断）。
+  "R0609gikeysukekka.pdf",
 ];
 const tottoriBooks: Awaited<ReturnType<typeof parseTottori>>[] = [];
 for (const f of TOTTORI_FILES) tottoriBooks.push(await parseTottori(readFileSync(T + "fixtures/tottori/" + f)));
@@ -373,12 +390,13 @@ const PROBES: { pref: string; probe: Prober }[] = [
  * **実測した母数**（#757。**先に固定する**——母数が減れば、以降の「全部落ちた」は静かに空回りする）。
  * **`judged` は回転させても変わらない**ことも下で確かめる（変わるなら `議` の数え方が回転に依存している）。
  */
-const DENOMINATOR: Record<string, number> = { 宮城: 356, 奈良: 180, 鳥取: 133, 島根: 140, 徳島: 132 };
+// **鳥取 133 → 370**（#901。**`--sessions` を 2 → 11 に広げて読めた 4 会期ぶんの本を足した**）。
+const DENOMINATOR: Record<string, number> = { 宮城: 356, 奈良: 180, 鳥取: 370, 島根: 140, 徳島: 132 };
 
 /** **交代当日の行**（`allowPrev` のとき「2 人のどちらか」しか言えない行）。**実測。** */
 const HANDOVER_ROWS: Record<string, number> = { 宮城: 0, 奈良: 37, 鳥取: 0, 島根: 0, 徳島: 0 };
 
-test("#906/#901 母数を先に固定する: 5 県の判定できた行は 356 / 180 / 133 / 140 / 132（計 941）", () => {
+test("#906/#901 母数を先に固定する: 5 県の判定できた行は 356 / 180 / 370 / 140 / 132（計 1,178）", () => {
   let total = 0;
   for (const { pref, probe } of PROBES) {
     const r = probe(0, "allowPrev");
@@ -386,7 +404,7 @@ test("#906/#901 母数を先に固定する: 5 県の判定できた行は 356 /
     assert.equal(r.mismatch, 0, `${pref} は無改造で県の公表と一致する`);
     total += r.judged;
   }
-  assert.equal(total, 941, "5 県の合計");
+  assert.equal(total, 1_178, "5 県の合計");
 });
 
 /**
