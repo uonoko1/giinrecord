@@ -15,6 +15,52 @@
  },
  "fetchedAt": "2026-09-19T16:35:54.208Z",
  "rosterAsOf": "2025-11-18",
+ "sessionRosterCoverage": [
+  {
+   "date": "2026-06-30",
+   "rollcalls": 110,
+   "rosterAbsent": 0,
+   "rosterSeen": 47,
+   "seatsChanged": 0,
+   "sessionId": "r08",
+   "unmatchedNames": 0,
+   "unmatchedVotes": 0,
+   "votes": 5170
+  },
+  {
+   "date": "2025-12-22",
+   "rollcalls": 255,
+   "rosterAbsent": 0,
+   "rosterSeen": 47,
+   "seatsChanged": 0,
+   "sessionId": "r07",
+   "unmatchedNames": 3,
+   "unmatchedVotes": 417,
+   "votes": 11862
+  },
+  {
+   "date": "2024-12-19",
+   "rollcalls": 222,
+   "rosterAbsent": 4,
+   "rosterSeen": 43,
+   "seatsChanged": 4,
+   "sessionId": "r06",
+   "unmatchedNames": 6,
+   "unmatchedVotes": 1004,
+   "votes": 10550
+  },
+  {
+   "date": "2023-12-21",
+   "rollcalls": 146,
+   "rosterAbsent": 4,
+   "rosterSeen": 43,
+   "seatsChanged": 4,
+   "sessionId": "r05-2",
+   "unmatchedNames": 5,
+   "unmatchedVotes": 730,
+   "votes": 7008
+  }
+ ],
  "sessions": [
   {
    "pdfUrl": "https://www.pref.mie.lg.jp/common/content/001235880.pdf",

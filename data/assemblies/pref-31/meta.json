@@ -15,6 +15,30 @@
  },
  "fetchedAt": "2026-09-04T22:16:37.344Z",
  "rosterAsOf": "2023-04-30",
+ "sessionRosterCoverage": [
+  {
+   "date": "2026-06-29",
+   "rollcalls": 30,
+   "rosterAbsent": 0,
+   "rosterSeen": 35,
+   "seatsChanged": 0,
+   "sessionId": "2026-06",
+   "unmatchedNames": 0,
+   "unmatchedVotes": 0,
+   "votes": 1050
+  },
+  {
+   "date": "2026-03-25",
+   "rollcalls": 88,
+   "rosterAbsent": 0,
+   "rosterSeen": 35,
+   "seatsChanged": 0,
+   "sessionId": "2026-02",
+   "unmatchedNames": 0,
+   "unmatchedVotes": 0,
+   "votes": 3080
+  }
+ ],
  "sessions": [
   {
    "pdfUrl": "https://www.pref.tottori.lg.jp/secure/1422217/R8.6giketsukekka0629.pdf",

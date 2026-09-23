@@ -18,6 +18,8 @@ const meta = (lossy?: LocalAssemblyMeta["lossyNameMatches"], rollcalls = 125): L
     counts: { members: 40, rollcalls, cells: 5000, unknownCells: 0, unmatchedNames: 0 },
     // #826 で必須になった母数（この節の検査には関わらないが、型が要求する）
     countChecked: { rows: rollcalls, checked: rollcalls, noCounts: 0, unreadableCells: 0 },
+    // #951: `sessionRosterCoverage` は必須（会期が 1 つでも、入れ替わりが 0 でも必ず出る欄）
+    sessionRosterCoverage: [],
     ...(lossy ? { lossyNameMatches: lossy } : {}),
   }) as LocalAssemblyMeta;
 

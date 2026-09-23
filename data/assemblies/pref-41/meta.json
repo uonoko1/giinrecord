@@ -15,6 +15,30 @@
  },
  "fetchedAt": "2026-09-13T06:34:55.122Z",
  "rosterAsOf": "2025-04-01",
+ "sessionRosterCoverage": [
+  {
+   "date": "2026-07-01",
+   "rollcalls": 21,
+   "rosterAbsent": 1,
+   "rosterSeen": 36,
+   "seatsChanged": 1,
+   "sessionId": "2026-06-teirei-list06680",
+   "unmatchedNames": 1,
+   "unmatchedVotes": 21,
+   "votes": 777
+  },
+  {
+   "date": "2026-04-23",
+   "rollcalls": 2,
+   "rosterAbsent": 1,
+   "rosterSeen": 36,
+   "seatsChanged": 1,
+   "sessionId": "2026-04-rinji-list06671",
+   "unmatchedNames": 1,
+   "unmatchedVotes": 2,
+   "votes": 74
+  }
+ ],
  "sessions": [
   {
    "pdfUrl": "https://www.pref.saga.lg.jp/gikai/kiji003119791/3_119791_394982_up_cda325jj.pdf",

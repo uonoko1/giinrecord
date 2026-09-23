@@ -15,6 +15,63 @@
  },
  "fetchedAt": "2026-09-19T21:03:35.323Z",
  "rosterAsOf": "2026-07-30",
+ "sessionRosterCoverage": [
+  {
+   "date": "2026-07-10",
+   "rollcalls": 23,
+   "rosterAbsent": 0,
+   "rosterSeen": 36,
+   "seatsChanged": 0,
+   "sessionId": "2026-06",
+   "unmatchedNames": 0,
+   "unmatchedVotes": 0,
+   "votes": 828
+  },
+  {
+   "date": "2026-03-24",
+   "rollcalls": 81,
+   "rosterAbsent": 0,
+   "rosterSeen": 36,
+   "seatsChanged": 0,
+   "sessionId": "2026-02",
+   "unmatchedNames": 0,
+   "unmatchedVotes": 0,
+   "votes": 2916
+  },
+  {
+   "date": "2025-12-19",
+   "rollcalls": 75,
+   "rosterAbsent": 3,
+   "rosterSeen": 33,
+   "seatsChanged": 2,
+   "sessionId": "2025-12",
+   "unmatchedNames": 2,
+   "unmatchedVotes": 150,
+   "votes": 2625
+  },
+  {
+   "date": "2025-10-14",
+   "rollcalls": 18,
+   "rosterAbsent": 3,
+   "rosterSeen": 33,
+   "seatsChanged": 3,
+   "sessionId": "2025-09",
+   "unmatchedNames": 3,
+   "unmatchedVotes": 54,
+   "votes": 648
+  },
+  {
+   "date": "2025-06-27",
+   "rollcalls": 24,
+   "rosterAbsent": 3,
+   "rosterSeen": 33,
+   "seatsChanged": 3,
+   "sessionId": "2025-06",
+   "unmatchedNames": 3,
+   "unmatchedVotes": 72,
+   "votes": 864
+  }
+ ],
  "sessions": [
   {
    "pdfUrl": "https://gikai.pref.kochi.lg.jp/_files/00157346/080710.pdf",

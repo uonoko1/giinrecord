@@ -15,6 +15,162 @@
  },
  "fetchedAt": "2026-09-21T00:45:23.409Z",
  "rosterAsOf": "2026-05-25",
+ "sessionRosterCoverage": [
+  {
+   "date": "2026-06-29",
+   "rollcalls": 26,
+   "rosterAbsent": 1,
+   "rosterSeen": 45,
+   "seatsChanged": 1,
+   "sessionId": "2026-06",
+   "unmatchedNames": 1,
+   "unmatchedVotes": 26,
+   "votes": 1196
+  },
+  {
+   "date": "2026-03-24",
+   "rollcalls": 87,
+   "rosterAbsent": 3,
+   "rosterSeen": 43,
+   "seatsChanged": 2,
+   "sessionId": "2026-02",
+   "unmatchedNames": 2,
+   "unmatchedVotes": 174,
+   "votes": 3915
+  },
+  {
+   "date": "2025-12-08",
+   "rollcalls": 51,
+   "rosterAbsent": 3,
+   "rosterSeen": 43,
+   "seatsChanged": 3,
+   "sessionId": "2025-11",
+   "unmatchedNames": 5,
+   "unmatchedVotes": 255,
+   "votes": 2448
+  },
+  {
+   "date": "2025-10-06",
+   "rollcalls": 32,
+   "rosterAbsent": 3,
+   "rosterSeen": 43,
+   "seatsChanged": 3,
+   "sessionId": "2025-09",
+   "unmatchedNames": 5,
+   "unmatchedVotes": 160,
+   "votes": 1536
+  },
+  {
+   "date": "2025-06-27",
+   "rollcalls": 23,
+   "rosterAbsent": 3,
+   "rosterSeen": 43,
+   "seatsChanged": 3,
+   "sessionId": "2025-06",
+   "unmatchedNames": 5,
+   "unmatchedVotes": 115,
+   "votes": 1104
+  },
+  {
+   "date": "2025-03-24",
+   "rollcalls": 98,
+   "rosterAbsent": 2,
+   "rosterSeen": 44,
+   "seatsChanged": 2,
+   "sessionId": "2025-02",
+   "unmatchedNames": 4,
+   "unmatchedVotes": 392,
+   "votes": 4704
+  },
+  {
+   "date": "2024-12-09",
+   "rollcalls": 53,
+   "rosterAbsent": 2,
+   "rosterSeen": 44,
+   "seatsChanged": 2,
+   "sessionId": "2024-11",
+   "unmatchedNames": 4,
+   "unmatchedVotes": 212,
+   "votes": 2544
+  },
+  {
+   "date": "2024-10-08",
+   "rollcalls": 23,
+   "rosterAbsent": 2,
+   "rosterSeen": 44,
+   "seatsChanged": 2,
+   "sessionId": "2024-09",
+   "unmatchedNames": 4,
+   "unmatchedVotes": 92,
+   "votes": 1104
+  },
+  {
+   "date": "2024-06-28",
+   "rollcalls": 27,
+   "rosterAbsent": 2,
+   "rosterSeen": 44,
+   "seatsChanged": 2,
+   "sessionId": "2024-06",
+   "unmatchedNames": 4,
+   "unmatchedVotes": 108,
+   "votes": 1296
+  },
+  {
+   "date": "2024-03-22",
+   "rollcalls": 91,
+   "rosterAbsent": 2,
+   "rosterSeen": 44,
+   "seatsChanged": 2,
+   "sessionId": "2024-02",
+   "unmatchedNames": 4,
+   "unmatchedVotes": 364,
+   "votes": 4368
+  },
+  {
+   "date": "2023-12-08",
+   "rollcalls": 44,
+   "rosterAbsent": 2,
+   "rosterSeen": 44,
+   "seatsChanged": 2,
+   "sessionId": "2023-11",
+   "unmatchedNames": 4,
+   "unmatchedVotes": 176,
+   "votes": 2112
+  },
+  {
+   "date": "2023-10-06",
+   "rollcalls": 27,
+   "rosterAbsent": 2,
+   "rosterSeen": 44,
+   "seatsChanged": 2,
+   "sessionId": "2023-09",
+   "unmatchedNames": 4,
+   "unmatchedVotes": 108,
+   "votes": 1296
+  },
+  {
+   "date": "2023-07-24",
+   "rollcalls": 21,
+   "rosterAbsent": 2,
+   "rosterSeen": 44,
+   "seatsChanged": 2,
+   "sessionId": "2023-07",
+   "unmatchedNames": 4,
+   "unmatchedVotes": 84,
+   "votes": 1008
+  },
+  {
+   "date": "2023-05-12",
+   "rollcalls": 8,
+   "rosterAbsent": 3,
+   "rosterSeen": 43,
+   "seatsChanged": 3,
+   "sessionId": "2023-05-rinji",
+   "unmatchedNames": 5,
+   "unmatchedVotes": 40,
+   "votes": 384
+  }
+ ],
  "sessions": [
   {
    "pdfUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/326teirei_sanpi.pdf",
