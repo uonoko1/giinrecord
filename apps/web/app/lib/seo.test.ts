@@ -72,7 +72,7 @@ describe("og:image（#129）", () => {
   });
 });
 
-// Issue #127: staging.giinrecord.jp はクローラに拾わせない（robots Disallow + <meta name=robots content=noindex>）。
+// Issue #939: staging.giinrecord.jp はクローラに拾わせない（robots Disallow + <meta name=robots content=noindex>）。
 describe("isStagingOrigin / robotsMeta", () => {
   it("SITE_ORIGIN=https://staging.giinrecord.jp は staging", () => {
     expect(isStagingOrigin("https://staging.giinrecord.jp")).toBe(true);
