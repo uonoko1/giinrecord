@@ -184,19 +184,71 @@ test("#700 kochi: 単位行列の CTM の下なら文字は Tm の位置に読�
   assert.deepEqual([items[0].x, items[0].y], [50, 700]);
 });
 
+/**
+ * **`cm` の下の文字を、三重と高知で別々に検査する**（Issue #867 で分かれた）。
+ *
+ * **2026-09-21 までは両方とも「`cm` の下の文字は例外」で揃っていた**（#700）——
+ * どちらの実装も `Tm` の値をそのままページ座標として使っており、
+ * **`cm` の下ではその前提が崩れて黙って別の位置に読む**ためである。
+ *
+ * **三重だけが `Tm × CTM` を合成するようになった**（#867 B 群「上下反転 9 本」）。
+ * **合成すれば「前提が崩れる」こと自体が無くなる**ので、三重は例外ではなく**読む**。
+ * **高知は合成していないので、今までどおり例外のままである。**
+ *
+ * **高知にも同じ合成を入れるかは、この PR では決めない**——
+ * **高知の実データでこの枝が通るかを測っていない**（測らずに触ると、
+ * 読めている本の文字の位置が黙って変わりうる）。
+ */
+test("#867 mie: cm の下の文字は Tm と合成して読む（平行移動だけなら位置が決まる）", () => {
+  const [fn, args] = opList([
+    [OPS.setFont, ["F1", 10]],
+    [OPS.save, null],
+    [OPS.transform, [1, 0, 0, 1, 300, 0]],
+    [OPS.beginText, null],
+    [OPS.setTextMatrix, [1, 0, 0, 1, 50, 700]],
+    [OPS.showText, glyph("あ")],
+    [OPS.restore, null],
+  ]);
+  const { items } = mieOps(fn, args, 2);
+  assert.equal(items.length, 1);
+  // 合成 = [1,0,0,1, 50+300, 700]。**合成しないと x=50 になり、300pt ぶん左にずれる**
+  assert.equal(items[0].x, 350);
+  assert.equal(items[0].y, 700);
+});
+
+test("#700 kochi: cm の下の文字は例外（掛けずに読むと黙って別の位置になる）", () => {
+  const [fn, args] = opList([
+    [OPS.setFont, ["F1", 10]],
+    [OPS.save, null],
+    [OPS.transform, [1, 0, 0, 1, 300, 0]],
+    [OPS.beginText, null],
+    [OPS.setTextMatrix, [1, 0, 0, 1, 50, 700]],
+    [OPS.showText, glyph("あ")],
+    [OPS.restore, null],
+  ]);
+  assert.throws(() => kochiOps(fn, args, 2), /page 2: text under non-identity CTM/);
+});
+
+/**
+ * **`Tm` が来ないまま `cm` の下で文字が置かれる形は、三重でも例外のままである。**
+ * `BT` は `sx`/`sy` を 1 に、`tx`/`ty` を 0 に戻すだけで CTM を見ないので、
+ * **合成する相手が無い。**
+ * **実測（2026-09-21、三重 151 本）: `BT` の後、最初の showText より前に `Tm` が
+ * 来ない本は 80 本あるが、そのすべてで CTM は単位行列である**（A 群の相対移動の本）。
+ */
+test("#867 mie: Tm が無いまま cm の下で文字が置かれたら例外（推測で置かない）", () => {
+  const [fn, args] = opList([
+    [OPS.setFont, ["F1", 10]],
+    [OPS.save, null],
+    [OPS.transform, [1, 0, 0, 1, 300, 0]],
+    [OPS.beginText, null],
+    [OPS.showText, glyph("あ")],
+    [OPS.restore, null],
+  ]);
+  assert.throws(() => mieOps(fn, args, 2), /page 2: text under non-identity CTM .* without a text matrix/);
+});
+
 for (const [name, read] of readers) {
-  test(`#700 ${name}: cm の下の文字は例外（掛けずに読むと黙って別の位置になる）`, () => {
-    const [fn, args] = opList([
-      [OPS.setFont, ["F1", 10]],
-      [OPS.save, null],
-      [OPS.transform, [1, 0, 0, 1, 300, 0]],
-      [OPS.beginText, null],
-      [OPS.setTextMatrix, [1, 0, 0, 1, 50, 700]],
-      [OPS.showText, glyph("あ")],
-      [OPS.restore, null],
-    ]);
-    assert.throws(() => read(fn, args, 2), /page 2: text under non-identity CTM/);
-  });
 
   test(`#700 ${name}: Q で単位行列に戻った後の文字は例外にしない（例外が広すぎないか）`, () => {
     const [fn, args] = opList([
