@@ -118,14 +118,50 @@ test("#901 採決 id: 255 バイトに収まる id は 1 バイトも変えな�
   assert.ok(!/-h[0-9a-f]{8}$/.test(rollCalls[1].id), "切っていないのに指紋が付いた");
 });
 
-test("#901 採決 id: 切るのは文字の境（UTF-8 の途中で切らない）", () => {
-  const { rollCalls } = toLocalRollCalls([{ pdf: pdfWith([REAL_LONG]), pdfUrl: URL_ }], roster(), SESSION);
-  const id = rollCalls[0].id;
-  // **壊れた文字（U+FFFD）が入っていない**——バイトで切ると必ずここに出る
-  assert.equal(id.includes("�"), false, `id に壊れた文字がある: ${id}`);
-  // **往復して同じ**（`Buffer` で切って戻すと壊れた文字が混じる形を排除する）
+/**
+ * ## **1 本の件名で測ってはいけない**（#901。**変異を当てて分かった**）
+ *
+ * **`REAL_LONG` 1 本だけで「文字の境で切る」を測ったら、
+ * 「バイトで切る」に変異させても 4 件中 0 件しか落ちなかった**（`mutate.sh` の実測）。
+ *
+ * **理由は件名の中身である**——`REAL_LONG` は `議第10号` のように
+ * **3 バイトの漢字と 1 バイトの ASCII 数字が混ざっている**ので、
+ * **予算 240 バイトの切れ目がたまたま文字の境に当たっていた**（切っても U+FFFD が出ない）。
+ *
+ * **落ちなかったのは実装が正しいからではなく、fixture が弱かったからである。**
+ * **だから「1 文字 3 バイトだけで埋めた件名」を足す**——
+ * **予算が 3 で割り切れなければ、バイトで切ると必ず U+FFFD が出る。**
+ *
+ * **さらに 4 バイト文字（サロゲートペア）の件名も測る**（`𠮷` U+20BB7）。
+ */
+test("#901 採決 id: 切るのは文字の境（UTF-8 の途中で切らない。3 バイト文字・4 バイト文字も）", () => {
+  // **予算が 3 の倍数にならないよう、3 バイト文字だけで埋めた件名**（ASCII を混ぜない）
+  const kanjiOnly = "議".repeat(300);
+  // **4 バイト文字（サロゲートペア）だけの件名**——**切り方を間違えやすい形**
+  const surrogateOnly = "\u{20BB7}".repeat(200);
+  const titles = [REAL_LONG, kanjiOnly, surrogateOnly];
+  const { rollCalls } = toLocalRollCalls([{ pdf: pdfWith(titles), pdfUrl: URL_ }], roster(), SESSION);
+  // **母数**（#757）——3 本とも見ている。**3 本とも実際に切られている**
+  assert.equal(rollCalls.length, 3);
+  for (const t of titles) assert.ok(bytes(t) > 255, `件名が短い: ${bytes(t)}B`);
+  assert.equal(rollCalls.filter((rc) => /-h[0-9a-f]{8}$/.test(rc.id)).length, 3, "切られていない件名がある");
+
   const enc = new TextEncoder();
-  assert.equal(new TextDecoder().decode(enc.encode(id)), id);
+  for (const rc of rollCalls) {
+    const id = rc.id;
+    // **ファイル名が収まっている**
+    assert.ok(bytes(`${id}.json`) <= 255, `${bytes(`${id}.json`)}B: ${id}`);
+    // **壊れた文字（U+FFFD）が入っていない**——バイトで切ると 3 バイト文字の件名では必ずここに出る
+    assert.equal(id.includes("\u{FFFD}"), false, `id に壊れた文字がある: ${id}`);
+    // **往復して同じ**（バイトで切って戻すと壊れた文字が混じる形を排除する）
+    assert.equal(new TextDecoder().decode(enc.encode(id)), id);
+    // **孤立サロゲートが残っていない**（4 バイト文字を半分で切ると出る）
+    assert.deepEqual([...id].filter((c) => c.codePointAt(0)! >= 0xd800 && c.codePointAt(0)! <= 0xdfff), [], id);
+  }
   // **切った id は元の件名の頭で始まる**（別の件名に化けていない）
-  assert.ok(id.startsWith(`pref-25-2026-02-20260319-${REAL_LONG.slice(0, 20)}`), id);
+  const real = rollCalls.find((rc) => rc.title === REAL_LONG)!;
+  assert.ok(real.id.startsWith(`pref-25-2026-02-20260319-${REAL_LONG.slice(0, 20)}`), real.id);
+  // **3 バイト文字だけの件名は、予算いっぱいまで使っても余りが出る**（3 で割り切れない証拠）
+  const kanji = rollCalls.find((rc) => rc.title === kanjiOnly)!;
+  assert.ok(bytes(`${kanji.id}.json`) < 255, `余りが出ていない: ${bytes(`${kanji.id}.json`)}B`);
 });
