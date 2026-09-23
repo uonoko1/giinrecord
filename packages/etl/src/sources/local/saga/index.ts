@@ -127,6 +127,12 @@ export async function runSaga(opts: { sessions: number; fetchedAt: string; fetch
       if (indexExhausted) break;
       continue;
     }
+    // **「1 周回ったら必ず 1 本増える」ことをここで保証する**（#901）。
+    // **これが破れたループは、赤くならずに回り続ける**——
+    // **変異で実測した: 添字で歩く形に戻すと、索引が新しい順でないときに永久に止まらない
+    // （テストは落ちずに固まる。落ちないテストは「通った」と見分けがつかない）。**
+    // **止まらない不具合を、止まる不具合にしておく。**
+    if (seenSessions.has(t.sessionUrl)) throw new Error(`会期の歩きが進んでいない: ${t.sessionUrl}`);
     seenSessions.add(t.sessionUrl);
     const gianUrls = parseSessionPage(await f.text(t.sessionUrl), t.sessionUrl);
     const pdfUrls: string[] = [];
