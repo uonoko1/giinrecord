@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import type { LocalMember, LocalRollCall, LocalUnmatchedName, LocalVote, VoteValue } from "@seiji-kiroku/shared";
 import { isoDate, SHIGA_ASSEMBLY } from "./site.ts";
 import { legendOf, UNKNOWN_CELL, UNKNOWN_LEGEND, type VotePdf } from "./votes-pdf.ts";
@@ -87,6 +88,70 @@ export function parseDateText(text: string): { month: number; day: number } | un
 /** id に使えない文字（区切りと空白）を落とす。件名は原文のまま `title` に残る。 */
 const idPart = (s: string): string => s.replace(/[\s　/\\]/g, "");
 
+/**
+ * ## 採決 id の長さの上限（#901）
+ *
+ * **id はそのままファイル名（`data/assemblies/pref-25/rollcalls/{sessionId}/{id}.json`）になる。**
+ * **ほとんどのファイルシステムは 1 つの名前を 255 バイトまでしか持てない**（ext4 / APFS / NTFS）。
+ *
+ * **滋賀の PDF には議案番号の欄が無く、件名の欄が議案等番号を兼ねる**（上の docblock）ので、
+ * **件名が「議案の列挙」そのものになる**——
+ * `議第２号、議第９号、…および議第77号を可決すべきものとする各委員長報告ならびに請願第２号から…`。
+ * **この 1 件で 576 バイト**（UTF-8。漢字 1 文字 3 バイト）。
+ *
+ * **実測（#901。`--sessions` を広げて数えた。母数を出す。#757）**:
+ *
+ * | | `--sessions 2`（本番に今出ている値） | **`--sessions 19`** |
+ * |---|---:|---:|
+ * | 採決（母数） | 14 | **163** |
+ * | **255 バイト超え** | **0** | **15（9.2%）** |
+ * | 最長 | **241B**（余裕 14B） | **576B** |
+ *
+ * **`--sessions 2` の窓には 1 件も無かったので、今まで見えていなかった。**
+ * **余裕は漢字 4 文字ぶんしか無く、広げなくても次の会期で落ちうる形だった。**
+ *
+ * **落ち方が悪い**——`writeLocalAssembly` は `data/assemblies/{id}/` を**消してから書き直す**ので、
+ * **途中で `ENAMETOOLONG` になると `meta.json` と `unmatched.json` が消えた半端な状態で残る**（実測）。
+ */
+const MAX_FILENAME_BYTES = 255;
+/** `.json` のぶん */
+const EXT_BYTES = 5;
+
+const utf8 = new TextEncoder();
+const byteLength = (s: string): number => utf8.encode(s).length;
+
+/**
+ * **件名から作った id を、ファイル名が 255 バイトに収まるところで切る。**
+ *
+ * - **切るのは文字の境**（バイトで切ると UTF-8 の途中で切れて壊れた文字（U+FFFD）が出る）。
+ * - **切った id には元の id の指紋（SHA-256 の先頭 8 桁）を `-h{8桁}` で足す。**
+ *   **切り詰めだけだと、頭が同じで末尾だけ違う 2 件が同じ id になる**——
+ *   **`buildLocalAssembly` の重複 id の検査で例外になり、県ぶんまるごと出せなくなる**
+ *   （検査が無ければ後から書いたほうで上書きして**採決が 1 件黙って消える**）。
+ * - **指紋は件名だけから決まる**ので、**取り直しても並び順が変わっても id が動かない**
+ *   （連番にすると、県が件名を 1 つ足しただけで後ろの id が全部ずれる）。
+ * - **収まる id は 1 バイトも変えない**——**本番に今出ている 14 件の id は動かない。**
+ *
+ * **件名の原文は `title` にそのまま残る。** **id は「場所の名前」であって記録ではない。**
+ */
+function capIdLength(id: string): string {
+  if (byteLength(id) + EXT_BYTES <= MAX_FILENAME_BYTES) return id;
+  // 指紋は**切る前の id 全体**から取る（同じ件名が別の会期・別の日付に出ても別の id になる）
+  const fp = createHash("sha256").update(id, "utf8").digest("hex").slice(0, 8);
+  const suffix = `-h${fp}`;
+  const budget = MAX_FILENAME_BYTES - EXT_BYTES - byteLength(suffix);
+  // **文字の境で切る**——1 文字ずつ足して予算を超えたら止める（サロゲートペアも壊さない）
+  let out = "";
+  let used = 0;
+  for (const ch of id) {
+    const n = byteLength(ch);
+    if (used + n > budget) break;
+    out += ch;
+    used += n;
+  }
+  return out + suffix;
+}
+
 export function toLocalRollCalls(sources: readonly PdfSource[], roster: readonly LocalMember[], session: SessionInfo): { rollCalls: LocalRollCall[]; unmatched: LocalUnmatchedName[] } {
   const rollCalls: LocalRollCall[] = [];
   const baseIds = new Map<string, number>();
@@ -103,7 +168,8 @@ export function toLocalRollCalls(sources: readonly PdfSource[], roster: readonly
       const md = parseDateText(row.dateText) ?? { month: pdf.month, day: pdf.day };
       const date = resolveDate(session, md.month, md.day);
       if (row.title === "") throw new Error(`${pdfUrl}: page ${row.page}: 件名が空の行がある`);
-      const base = `${SHIGA_ASSEMBLY.id}-${session.sessionId}-${date.replace(/-/g, "")}-${idPart(row.title)}`;
+      // **ファイル名が 255 バイトに収まるところで切る**（`capIdLength`。#901）。件名は `title` に原文のまま残る
+      const base = capIdLength(`${SHIGA_ASSEMBLY.id}-${session.sessionId}-${date.replace(/-/g, "")}-${idPart(row.title)}`);
       baseIds.set(base, (baseIds.get(base) ?? 0) + 1);
       const votes: LocalRollCall["votes"] = row.cells.map((raw, i) => {
         const legend = legendOf(raw, pdf.legend.votes);
