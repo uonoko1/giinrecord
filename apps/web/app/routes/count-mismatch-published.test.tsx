@@ -122,14 +122,25 @@ describe("#826 本番データ: 記号の数と公表値の突き合わせが画
       // **増えた 119 本は 119 本とも `checked` に入る**——
       // **島根は 231 / 231 行に `counts` があり、231 / 231 行で ○/● の数と一致する**（実測）。
       // **`noCounts` 785 も `unreadableCells` 77 も動かない**（**島根は不明セルが 1 つも無い**）。
-    }).toEqual({ rows: 3653, checked: 2791, noCounts: 785, unreadableCells: 77, mismatches: 0 });
+          //
+      // ## **#901 で 3,653 → 3,996 / 2,791 → 3,134 に動いた**（2026-09-23。佐賀）
+      // **佐賀の `--sessions` の既定を 2 → 13 にした**（23 → 366。2023年4月の一般選挙の直後まで）。
+      // **増えた 343 本は 343 本とも `checked` に入る**——
+      // **佐賀は 366 / 366 行に `counts` があり、366 / 366 行で ○/× の数と一致する**（実測）。
+      // **`noCounts` は 785 のまま、`unreadableCells` も 77 のまま**
+      // （**増えた 343 本に `不明` のセルが 1 つも無い**）。**食い違いは 0 のまま。**
+      //
+      // **⚠ 上と同じ理由で、この一致も x の錨にならない。**
+      // **佐賀の x の錨は `packages/etl/test/saga-votes-pdf.test.ts` の
+      // 「記号を 1 列回すと全対がずれる」である**（#901 で列を 1 本ずらす変異を当てて確かめた）。
+    }).toEqual({ rows: 3996, checked: 3134, noCounts: 785, unreadableCells: 77, mismatches: 0 });
   });
 
-  it("/coverage に、本番の母数（2,791 件）と食い違い（0 件）と未突合の内訳が出る", async () => {
+  it("/coverage に、本番の母数（3,134 件）と食い違い（0 件）と未突合の内訳が出る", async () => {
     await renderCoverage(await realLocalMetas());
     const section = screen.getByRole("region", { name: SECTION });
     // **母数が出ていること**（#757。「0 件」は「見た上での 0」でなければ意味が無い）
-    expect(section).toHaveTextContent("2,791");
+    expect(section).toHaveTextContent("3,134");
     // **突き合わせなかった 785 件と 77 件の内訳も出す**（黙って母数から外さない）
     expect(section).toHaveTextContent("785");
     expect(section).toHaveTextContent("77");
