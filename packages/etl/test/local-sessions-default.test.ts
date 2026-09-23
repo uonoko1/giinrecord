@@ -201,7 +201,7 @@ test("#901 既定は議会ごとに持つ（全議会一律の 1 つの数にし
   }
 });
 
-test("#901 三重・徳島・奈良は 4、高知・島根は 5、宮城は 11、佐賀は 13、青森は 14、秋田は 29、他の 2 議会は 2 のまま（測った議会だけ広げる）", () => {
+test("#901 三重・徳島・奈良は 4、高知・島根は 5、宮城・鳥取は 11、佐賀は 13、青森は 14、秋田は 29、滋賀だけ 2 のまま（測った議会だけ広げる）", () => {
   assert.equal(defaultSessionsFor("mie"), 4, "三重は令和5年第2回定例会まで（2023年4月の一般選挙の後）");
   assert.equal(defaultSessionsFor("tokushima"), 4, "徳島は令和7年11月定例会まで（5 会期目は会期ページが例外、6 会期目以降は 1 本も読めない）");
   assert.equal(defaultSessionsFor("kochi"), 5, "高知は令和7年6月定例会まで（6 会期目の 2025-02 は text matrix が 1.00002 倍で止まる）");
@@ -235,9 +235,13 @@ test("#901 三重・徳島・奈良は 4、高知・島根は 5、宮城は 11�
   // **半分そこそこ**。**先行 9 県でいちばん外れている**）——
   // **歯止めは `saga-sessions-widen.test.ts` の「氏名の集合の不連続」のテストである。**
   assert.equal(defaultSessionsFor("saga"), 13, "佐賀は令和5年5月臨時会まで（14 本目は 2023-04 の一般選挙の前）");
-  const measured = ["mie", "tokushima", "kochi", "akita", "nara", "miyagi", "aomori", "shimane", "saga"];
+  // **#901 の鳥取**: **11 会期（令和5年11月定例会まで）。12 会期目は会派の見出しの罫線が無く 3 本とも読めない。**
+  // **名簿の境ではない**——**読める 11 会期の `seatsChanged` は 0〜2 で、一般選挙の規模の跳ねが 1 回も出ない**
+  // （**いちばん古い読める会期が 2023年4月の一般選挙の後**）。**#928 も鳴らない**（`daysBefore` が負）。
+  assert.equal(defaultSessionsFor("tottori"), 11, "鳥取は令和5年11月定例会まで（12 会期目は罫線が無くて読めない）");
+  const measured = ["mie", "tokushima", "kochi", "akita", "nara", "miyagi", "aomori", "shimane", "saga", "tottori"];
   const others = Object.keys(LOCAL_SOURCES).filter((n) => !measured.includes(n));
-  assert.equal(others.length, 2, `測っていない議会 ${others.length}`);
+  assert.equal(others.length, 1, `測っていない議会 ${others.length}`);
   assert.deepEqual(
     others.filter((n) => defaultSessionsFor(n) !== DEFAULT_LOCAL_SESSIONS),
     [],

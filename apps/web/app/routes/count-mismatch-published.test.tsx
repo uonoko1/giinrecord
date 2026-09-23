@@ -135,9 +135,9 @@ describe("#826 本番データ: 記号の数と公表値の突き合わせが画
       // 「記号を 1 列回すと全対がずれる」である**（#901 で列を 1 本ずらす変異を当てて確かめた）。
 
 
-      // ## **#901 で 3,653 → 4,107 / 2,791 → 3,243 に動いた**（2026-09-23。鳥取）
-      // **島根（上）と同じ日に別の PR で広げたので、土台は島根が入った後の値である**——
-      // **`3,534 + 454` ではなく、`data/` を読み直して measured した値を書いている。**
+      // ## **#901 で 3,996 → 4,450 / 3,134 → 3,586 に動いた**（2026-09-23。鳥取）
+      // **島根・佐賀（上）と同じ日に別々の PR で広げたので、土台は両方が入った後の値である**——
+      // **足し算ではなく、`data/` を読み直して測った値を書いている。**
       // **鳥取の `--sessions` の既定を 2 → 11 にした**（118 → 572。**+454**）。
       // **`noCounts` は 785 のまま**（**鳥取は 572 / 572 行に `counts` の欄がある**）。
       // **`checked` は +452**——**増えた 454 本のうち 2 本だけが突き合わせの外に出る。**
@@ -153,14 +153,14 @@ describe("#826 本番データ: 記号の数と公表値の突き合わせが画
       // **食い違いは 0 のまま**——**572 / 572 行で ○の数＝`yes`・×の数＝`no` が一致する**（実測）。
 
 
-    }).toEqual({ rows: 4107, checked: 3243, noCounts: 785, unreadableCells: 79, mismatches: 0 });
+    }).toEqual({ rows: 4450, checked: 3586, noCounts: 785, unreadableCells: 79, mismatches: 0 });
   });
 
-  it("/coverage に、本番の母数（3,243 件）と食い違い（0 件）と未突合の内訳が出る", async () => {
+  it("/coverage に、本番の母数（3,586 件）と食い違い（0 件）と未突合の内訳が出る", async () => {
     await renderCoverage(await realLocalMetas());
     const section = screen.getByRole("region", { name: SECTION });
     // **母数が出ていること**（#757。「0 件」は「見た上での 0」でなければ意味が無い）
-    expect(section).toHaveTextContent("3,243");
+    expect(section).toHaveTextContent("3,586");
     // **突き合わせなかった 785 件と 79 件の内訳も出す**（黙って母数から外さない）
     expect(section).toHaveTextContent("785");
     expect(section).toHaveTextContent("79");
