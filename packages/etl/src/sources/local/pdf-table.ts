@@ -77,6 +77,37 @@ export function applyMatrix(m: Matrix, rect: ArrayLike<number>): [number, number
 }
 
 /**
+ * `readLines` の振る舞いの切り替え（Issue #867）。
+ */
+export interface ReadLinesOptions {
+  /**
+   * **1 回の `constructPath` に入った複数のサブパスを、1 本ずつの線として読むか**（既定 `false`）。
+   *
+   * **既定を `false` にしてある。** これは「安全側だから」ではなく、
+   * **`true` にすると既存 11 県のうち 2 県の出力が実際に変わる**ためである
+   * （2026-09-21 に 107 本のフィクスチャを前後で突き合わせて実測）:
+   *
+   * | フィクスチャ | `true` にすると |
+   * |---|---|
+   * | `saga/3_111805_349057_up_7elgmado.pdf` | **議員の列が 37 → 11、`unknownCells` が 0 → 792**。**セルのハッシュが変わる**（＝票が別の列に落ちる） |
+   * | `aomori/32{2,3,4}teirei_sanpi.pdf` | 罫線が 0 → 230 本に増える。**セルのハッシュは変わらない**（青森はこの罫線を使っていない）が、出力は変わる |
+   *
+   * **佐賀で壊れる理由**: 佐賀の PDF は**字の輪郭を `fill` のパスで描いており**、
+   * 1 回の `constructPath` に 2〜13 個のサブパスが入っている（実測: 6,417 回 / 29,725 サブパス）。
+   * 割ると **字の縦棒・横棒が「長さ 5〜12pt の罫線」として拾われ**、列の境界が汚れる。
+   * **`minMax` 1 つで読んでいたときは、字の輪郭は「太い塊」に見えて罫線検査に当たらなかった。**
+   * **つまり `minMax` は、意図せず「字を罫線と読み違えない」働きをしていた。**
+   *
+   * **`fill` / `stroke` の別では分けられない**（実測）——
+   * 佐賀の輪郭も三重の上下反転 9 本の罫線も、どちらも塗りのパスで来る
+   * （三重 9 本は `eoFill`、佐賀の輪郭は `fill` と `eoFill` の両方）。
+   *
+   * **だから議会ごとに選ばせる。** 今これを `true` にしているのは三重だけである。
+   */
+  splitBatchedPaths?: boolean;
+}
+
+/**
  * オペレータ列から罫線（細い矩形）を読む。**CTM を持ち回るのはここだけ**（Issue #693）。
  *
  * `OPS.constructPath` の `minMax` は **その時点の CTM を掛ける前** のローカル座標である。
@@ -95,7 +126,8 @@ export function applyMatrix(m: Matrix, rect: ArrayLike<number>): [number, number
  * `getOperatorList()` を渡さず配列 2 本で受けるのは、PDF を用意しなくても
  * 入れ子の `q`/`Q` を直接テストできるようにするため（実物のフィクスチャは深さ 2 までしか無い）。
  */
-export function readLines(fnArray: ArrayLike<number>, argsArray: ArrayLike<unknown>): { vlines: VLine[]; hlines: HLine[] } {
+export function readLines(fnArray: ArrayLike<number>, argsArray: ArrayLike<unknown>, options: ReadLinesOptions = {}): { vlines: VLine[]; hlines: HLine[] } {
+  const { splitBatchedPaths = false } = options;
   const vlines: VLine[] = [];
   const hlines: HLine[] = [];
   let ctm: Matrix = IDENTITY;
@@ -109,13 +141,84 @@ export function readLines(fnArray: ArrayLike<number>, argsArray: ArrayLike<unkno
     const args = argsArray[k] as unknown[];
     const minMax = args[2] as ArrayLike<number> | undefined;
     if (!minMax || minMax.length < 4) continue;
-    const [x0, y0, x1, y1] = applyMatrix(ctm, minMax);
-    const w = x1 - x0;
-    const h = y1 - y0;
-    if (w < 2 && h > 5) vlines.push({ x: (x0 + x1) / 2, y0, y1 });
-    else if (h < 2 && w > 5) hlines.push({ y: (y0 + y1) / 2, x0, x1 });
+    // **1 回の `constructPath` に複数のサブパスが入っていることがある**（Issue #867）。
+    // その場合 `minMax` は「全部を囲む 1 つの外接矩形」なので、これだけ見ると
+    // **数千本の罫線が 1 つの大きな矩形に潰れ、「細い」検査に当たらず 1 本も拾われない。**
+    // サブパスに割れたときはそちらを使い、割れなければ今までどおり `minMax` を使う。
+    for (const rect of (splitBatchedPaths ? splitSubpaths(args[1]) : undefined) ?? [minMax]) {
+      const [x0, y0, x1, y1] = applyMatrix(ctm, rect);
+      const w = x1 - x0;
+      const h = y1 - y0;
+      if (w < 2 && h > 5) vlines.push({ x: (x0 + x1) / 2, y0, y1 });
+      else if (h < 2 && w > 5) hlines.push({ y: (y0 + y1) / 2, x0, x1 });
+    }
   }
   return { vlines, hlines };
+}
+
+/**
+ * pdfjs の path バッファ（`constructPath` の `args[1]`）の描画命令（`pdf.worker.mjs` の `DrawOPS`）。
+ *
+ * **公開 API に無いので実測値を写す**（2026-09-21、`pdfjs-dist` 6.2.108 の `pdf.worker.mjs:5832`）。
+ * 後続の数値の個数（この値を間違えるとバイト境界がずれ、**座標でない数値を座標として読む**）:
+ */
+const DRAW_MOVE_TO = 0;
+const DRAW_LINE_TO = 1;
+const DRAW_CURVE_TO = 2;
+const DRAW_QUADRATIC_CURVE_TO = 3;
+const DRAW_CLOSE_PATH = 4;
+/** 描画命令 → 後続の数値の個数。**ここに無い命令が来たらサブパスに割らない**（下記）。 */
+const DRAW_OP_OPERANDS: ReadonlyMap<number, number> = new Map([
+  [DRAW_MOVE_TO, 2], [DRAW_LINE_TO, 2], [DRAW_CURVE_TO, 6], [DRAW_QUADRATIC_CURVE_TO, 4], [DRAW_CLOSE_PATH, 0],
+]);
+
+/**
+ * `constructPath` の path バッファを**サブパスごとの外接矩形**に割る（Issue #867 B 群「上下反転 9 本」）。
+ *
+ * **なぜ要るか**: pdfjs は `q / cm / constructPath / Q` の並びを 1 つの `constructPath` に畳み
+ * （`pdf.worker.mjs` の path 最適化）、PDF 側が 1 つの path オペレータに複数のサブパスを
+ * 書いていればそれも 1 回で届く。このとき `minMax` は畳まれた全部を囲む 1 つの矩形になる。
+ * **三重の上下反転 9 本は、13,207 本の罫線が 92 回の `constructPath` に入っており、
+ * `minMax` だけを見ると縦罫線 0 本・横罫線 0 本になる**（2026-09-21 実測）。
+ * **例外は投げられない。黙って「罫線の無いページ」になる**（#569 の「途中まで読んだ表」と同じ形）。
+ *
+ * **既存 11 県には効かない**——**今読めている本の `constructPath` は 1 回 = 1 サブパスである**
+ * （2026-09-21 実測: 読めている 10 本で 35,866 回 / 35,866 サブパス、三重の回転 11 本で
+ * 11,557 回 / 11,557 サブパス。**サブパスが 2 つ以上の回は 0**）。
+ * サブパスが 1 つなら、その外接矩形は `minMax` と同じものを指す。
+ *
+ * **知らない描画命令が来たら `undefined` を返して、呼び手を `minMax` に戻す。**
+ * **後続の数値の個数が分からないまま進めると、バイト境界がずれて
+ * 「座標でない数値を座標として読む」**——それは**潰れた線より重い**（別人の列に落ちる。#693）。
+ * **読み違えるくらいなら拾わない側に倒す**（#569）。
+ */
+function splitSubpaths(raw: unknown): number[][] | undefined {
+  // pdfjs は `[buffer]` の形（配列 1 つに包む）で渡す
+  const wrapped = raw as ArrayLike<unknown> | undefined;
+  if (!wrapped || wrapped.length !== 1) return undefined;
+  const buf = wrapped[0] as ArrayLike<number> | undefined;
+  if (!buf || typeof buf.length !== "number" || buf.length === 0) return undefined;
+  const out: number[][] = [];
+  let box: number[] | undefined;
+  const add = (x: number, y: number): void => {
+    if (!box) box = [x, y, x, y];
+    else { box[0] = Math.min(box[0], x); box[1] = Math.min(box[1], y); box[2] = Math.max(box[2], x); box[3] = Math.max(box[3], y); }
+  };
+  for (let i = 0; i < buf.length;) {
+    const op = buf[i++];
+    const operands = DRAW_OP_OPERANDS.get(op);
+    if (operands === undefined) return undefined; // 知らない命令: 進め方が分からないので諦める
+    if (i + operands > buf.length) return undefined; // 途中で切れている
+    // **`m`（moveTo）は新しいサブパスの始まり**なので、点を足す前にここで切る。
+    // `h`（closePath）で閉じずに次の `m` で次の線を引く PDF があり、切らないと全部 1 つの箱になる。
+    if (op === DRAW_MOVE_TO && box) { out.push(box); box = undefined; }
+    // **制御点も外接矩形に入れる**（曲線の膨らみは制御点の凸包に収まるので、制御点を見れば足りる）
+    for (let j = 0; j < operands; j += 2) add(buf[i + j], buf[i + j + 1]);
+    i += operands;
+    if (op === DRAW_CLOSE_PATH && box) { out.push(box); box = undefined; }
+  }
+  if (box) out.push(box);
+  return out.length === 0 ? undefined : out;
 }
 
 /**

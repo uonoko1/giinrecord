@@ -126,7 +126,12 @@ export function readGlyphPageOps(fnArray: ArrayLike<number>, argsArray: ArrayLik
   const items: Item[] = [];
   /** このページで「文字を描け」と言われた回数（0 グリフのまま終わったら例外にする。Issue #867）。 */
   let showTextCalls = 0;
-  const { vlines, hlines } = readLines(fnArray, argsArray);
+  // **`splitBatchedPaths` は三重だけで `true` にする**（Issue #867 B 群「上下反転 9 本」）。
+  // この 9 本は 13,207 本の罫線が 92 回の `constructPath` に畳まれており、
+  // 割らないと **縦罫線 0 本・横罫線 0 本**になる（例外は出ない。黙って空の表になる）。
+  // **佐賀では `true` にすると字の輪郭を罫線と読み違えて票が別の列に落ちる**ので、
+  // 共通層の既定は `false` のままにしてある（`pdf-table.ts` の `ReadLinesOptions` に実測表がある）。
+  const { vlines, hlines } = readLines(fnArray, argsArray, { splitBatchedPaths: true });
   let ctm: Matrix = IDENTITY;
   const ctmStack: Matrix[] = [];
   let fontSize = 0;
@@ -164,6 +169,12 @@ export function readGlyphPageOps(fnArray: ArrayLike<number>, argsArray: ArrayLik
    */
   let sx = 1;
   let sy = 1;
+  /**
+   * この `BT` ブロックで `Tm` を見たか（Issue #867）。
+   * **`Tm` が来れば CTM は合成済み**なので showText で CTM を見る必要が無い。
+   * **来ていなければ CTM が反映されていない**ので、単位行列でない CTM の下では止める。
+   */
+  let tmSeenInBlock = false;
   // 現在のテキスト位置（tx, ty）と行頭（lx, ly）。Td/TD/T* は行頭からの相対移動（text space なので倍率を掛ける）
   let tx = 0;
   let ty = 0;
@@ -194,27 +205,38 @@ export function readGlyphPageOps(fnArray: ArrayLike<number>, argsArray: ArrayLik
       ly = 0;
       sx = 1;
       sy = 1;
+      tmSeenInBlock = false;
     } else if (fn === OPS.setTextMatrix) {
       // argsArray の形は [a,b,c,d,e,f] のことも、行列 1 つ（Array / Float32Array）を包んだ形のこともある
       const first = args[0] as unknown;
       const matrix = (args.length === 1 && typeof first === "object" && first !== null && "length" in (first as object) ? first : args) as ArrayLike<number>;
-      const [a, b, c, d, e, f] = Array.from(matrix);
-      // **回転・斜行は読まない**（Issue #867 B 群のうち「回転 90/270 の 11 本」）。
+      // **`Tm` だけを見ない。CTM と合成してから判定する**（Issue #867 B 群「上下反転 9 本」）。
+      //
+      // **実測（2026-09-21、9 本すべて）**: `Tm` は全 showText で `[1,0,0,-1,e,f]` の 1 種類、
+      // そのときの CTM も `[0.75,0,0,-0.75,0,H]` の 1 種類（H はページの高さ）。
+      // **合成すると `[0.75,0,0,0.75,0.75e,H−0.75f]`——正の等方 0.75 倍＋平行移動で、
+      // 反転は打ち消し合って消える。**
+      // **つまりこの 9 本は「上下反転した本」ではなく「0.75 倍で置かれた本」である。**
+      //
+      // **合成前の `Tm` の `d < 0` で止めるのは、見るべき量を見ていない。**
+      // 同じ理由で、**合成前の CTM が単位行列かどうかで止めるのも見るべき量ではない**
+      // （この関数は 2026-09-21 まで showText のところで CTM を弾いていた。#700）。
+      // **文字がページのどこに置かれるかを決めるのは `Tm × CTM` であって、その片方ではない。**
+      const [ta, tb, tc, td] = Array.from(matrix);
+      const m = multiplyMatrix(ctm, matrix);
+      const [a, b, c, d, e, f] = m;
+      const shown = `[${ta},${tb},${tc},${td}] under CTM [${ctm.join(",")}]`;
+      // **回転・斜行は読まない**（Issue #867 B 群のうち「回転 90/270 の 11 本」。別 PR）。
       // 回転が入ると文字の送りが x でなく y に進み、行の向きも変わる。
       // この実装は「文字は x に進み、行は y に並ぶ」を前提に表を組み立てているので、
       // b / c が 0 でないまま読むと **列と行を取り違える**（#819: 行がずれれば賛成と反対が入れ替わる）。
-      if (b !== 0 || c !== 0) throw new Error(`page ${pageNo}: rotated text matrix [${a},${b},${c},${d}] not supported`);
-      // **拡大のみ（b=0, c=0）は読む**（Issue #867 B 群の「拡大のみ 15 本」）。
-      // この 15 本は `Tf` のサイズが **1** で、**Tm が文字の大きさを持っている**（実測: Tf 1 / Tm 8.04 など）。
-      // だから Td / T* の移動量も送りも「text space の単位」で来ており、a / d を掛けて初めてページ座標になる。
-      //
+      if (b !== 0 || c !== 0) throw new Error(`page ${pageNo}: rotated text matrix ${shown} not supported`);
+      // **打ち消されずに残った反転は読まない。** 読めば行が上下逆に並び、賛成と反対が入れ替わる。
+      if (a <= 0 || d <= 0) throw new Error(`page ${pageNo}: flipped text matrix ${shown} not supported`);
       // **a と d が違ってよいのは「同じ向きの拡大」の範囲だけにする。**
       // 実測（2026-09-19、拡大のみ 15 本の Tm 全部）: a と d の差は最大でも a の **0.1%**
       // （例: 8.039859771728516 と 8.032349586486816）。実質は等方の拡大で、丸め誤差しか違わない。
-      // **上下反転（d < 0）はここでは読まない**（B 群の「上下反転 9 本」。別 PR。
-      // 反転は `cm` 側の反転と打ち消し合う形で来ており、CTM を掛けないこの実装の前提の外にある）。
-      if (a <= 0 || d <= 0) throw new Error(`page ${pageNo}: flipped text matrix [${a},${b},${c},${d}] not supported`);
-      if (Math.abs(a - d) > Math.abs(a) * 0.01) throw new Error(`page ${pageNo}: anisotropic text matrix [${a},${b},${c},${d}] not supported`);
+      if (Math.abs(a - d) > Math.abs(a) * 0.01) throw new Error(`page ${pageNo}: anisotropic text matrix ${shown} not supported`);
       // **x と y は別々に持つ**（a と d は丸めのぶんだけ違う。片方で代用しない）。
       // **実測（2026-09-19）**: `sy = d` を `sy = a` にしても、テストは 1 件も落ちず、
       // 151 本の読める本数も変わらない。**差が小さすぎるためである**——
@@ -230,6 +252,7 @@ export function readGlyphPageOps(fnArray: ArrayLike<number>, argsArray: ArrayLik
       ty = f;
       lx = e;
       ly = f;
+      tmSeenInBlock = true;
     } else if (fn === OPS.moveText || fn === OPS.setLeadingMoveText) {
       // Td / TD: 行頭から (dx, dy) 動かして新しい行頭にする。TD は同時に leading を設定する。
       // **高知（kochi/glyphs.ts）と同じ実装である**（#703 で書かれ、実データで動いているもの）。
@@ -279,8 +302,15 @@ export function readGlyphPageOps(fnArray: ArrayLike<number>, argsArray: ArrayLik
       // Tw が付けば効く。**正しい足し方を実データで検証できないため、出さない側に倒す**（#700 と同じ判断）。
       if ((args[0] as number) !== 0) throw new Error(`page ${pageNo}: non-zero word spacing (Tw ${args[0]}) not supported`);
     } else if (fn === OPS.showText) {
-      // 文字の位置は Tm / Td の値をそのままページ座標として使う。cm の下ではその前提が崩れる（#700）
-      if (!isIdentity(ctm)) throw new Error(`page ${pageNo}: text under non-identity CTM [${ctm.join(",")}] not supported`);
+      // **CTM は `Tm` と合成して `sx`/`sy`/`tx`/`ty` に入っている**ので、ここで弾くものは無い
+      // （Issue #867。2026-09-21 まではここで `!isIdentity(ctm)` を例外にしていた——
+      // **上下反転 9 本はその検査に当たって落ちていたが、合成すれば反転は消える**）。
+      // **ただし `Tm` が一度も来ないまま `cm` の下で文字が置かれる形は、まだ前提の外である**
+      // （`BT` が `sx`/`sy` を 1 に、`tx`/`ty` を 0 に戻すだけで CTM を見ないため）。
+      // **実測（2026-09-21、三重 151 本）: `BT` の後、最初の showText より前に `Tm` が来ない本は
+      // 80 本あるが、そのすべてで CTM は単位行列である**（A 群の相対移動の本）。
+      // **単位行列でない CTM の下で `Tm` 無しの showText が来たら止める**（推測で置かない）。
+      if (!tmSeenInBlock && !isIdentity(ctm)) throw new Error(`page ${pageNo}: text under non-identity CTM [${ctm.join(",")}] without a text matrix not supported`);
       showTextCalls++;
       // showText 1 回 = 1 アイテム。配列の数値は字送りの調整（thousandths）
       //
