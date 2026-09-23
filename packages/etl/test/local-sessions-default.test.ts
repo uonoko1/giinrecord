@@ -201,7 +201,7 @@ test("#901 既定は議会ごとに持つ（全議会一律の 1 つの数にし
   }
 });
 
-test("#901 三重・徳島・奈良は 4、高知は 5、宮城は 11、青森は 14、秋田は 29、他の 4 議会は 2 のまま（測った議会だけ広げる）", () => {
+test("#901 三重・徳島・奈良は 4、高知・島根は 5、宮城は 11、青森は 14、秋田は 29、他の 3 議会は 2 のまま（測った議会だけ広げる）", () => {
   assert.equal(defaultSessionsFor("mie"), 4, "三重は令和5年第2回定例会まで（2023年4月の一般選挙の後）");
   assert.equal(defaultSessionsFor("tokushima"), 4, "徳島は令和7年11月定例会まで（5 会期目は会期ページが例外、6 会期目以降は 1 本も読めない）");
   assert.equal(defaultSessionsFor("kochi"), 5, "高知は令和7年6月定例会まで（6 会期目の 2025-02 は text matrix が 1.00002 倍で止まる）");
@@ -223,9 +223,15 @@ test("#901 三重・徳島・奈良は 4、高知は 5、宮城は 11、青森�
   assert.equal(defaultSessionsFor("aomori"), 14, "青森は令和5年5月第96回臨時会まで（2023年4月の一般選挙の後。15 会期目が選挙の前）");
   // **青森の 14 は「会期」の数のまま**——**秋田と違って 1 会期 1 本なので、14 会期 ＝ 14 本の PDF**
   assert.ok(defaultSessionsFor("aomori") < defaultSessionsFor("akita"), "**青森 14 会期 < 秋田 29 本会議日**（単位が違う）");
-  const measured = ["mie", "tokushima", "kochi", "akita", "nara", "miyagi", "aomori"];
+  // **島根は「名簿が当たるか」ではなく「読めるか」で止まっている**（#901。先行 8 県と理由が違う）——
+  // **6 会期目（2025-05 臨時会）は議案番号の無い行が 4 行中 3 行あり `parseVotePdf` が落ちる**
+  //（`two vote marks in one cell`。測定は `shimane-sessions-window.test.ts` が本ごと置いて固定している）。
+  // **一般選挙（2023-04）は読める 14 本すべてより手前**で、**#928 の窓は 1 度も鳴らない**（#961 のとおり）。
+  // **氏名の集合も跳ねない**（35〜36 人、差は 1 人の辞職だけ）。
+  assert.equal(defaultSessionsFor("shimane"), 5, "島根は令和7年6月定例会まで（6 会期目は議案番号の無い行で読めない）");
+  const measured = ["mie", "tokushima", "kochi", "akita", "nara", "miyagi", "aomori", "shimane"];
   const others = Object.keys(LOCAL_SOURCES).filter((n) => !measured.includes(n));
-  assert.equal(others.length, 4, `測っていない議会 ${others.length}`);
+  assert.equal(others.length, 3, `測っていない議会 ${others.length}`);
   assert.deepEqual(
     others.filter((n) => defaultSessionsFor(n) !== DEFAULT_LOCAL_SESSIONS),
     [],
