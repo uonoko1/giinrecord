@@ -108,7 +108,7 @@ const ciTestFiles = (): string[] =>
 // **その場合は今の値を据え置く**（この規則は「離れすぎを詰める」ためのもので、
 // **緩める口実にしてはいけない**）。
 const WEB_TEST_FILES_MIN = 95; // 実測 2026-09-21: walk() で 98（− 3。#720 の規則）。**85 のままだと 13 本消しても落ちなかった**——#951 が session-roster-coverage の 2 本を足すついでに詰め直した（2026-09-13 は 87 本で「下げないので 85 のまま」と書いたが、その後 11 本増えたのに下限が動いていなかった）
-const ETL_TEST_FILES_MIN = 163; // 実測 2026-09-21: readdirSync で 166（− 3。#720 の規則）。**#951 が local-session-roster-coverage.test.ts を足して 165 → 166**（下限は 159 → 161。**実数から離れたぶんだけ守っていない**）。#928 が 156 → 157、**#901 が local-sessions-default.test.ts と local-cli-sessions.test.ts を足して 157 → 159、高知の kochi-petition-branch.test.ts と kochi-widened-anchors.test.ts で 159 → 161、秋田の akita-vote-alignment.test.ts で 161 → 162**。**139 のままだと 18 本消しても落ちなかった**（#720 が詰めた「実数から離れたぶんだけ守っていない」がまた開いていた）
+const ETL_TEST_FILES_MIN = 164; // 実測 2026-09-23（#943）: readdirSync で 167（− 3。#720 の規則）。#943 が workflow-data-pr-push.test.ts を足して 166 → 167。**159 のままでは 7 本消しても落ちなかった**——main が進むあいだに実数だけが増え、下限が置き去りになっていた。以前の経緯: **#951 が local-session-roster-coverage.test.ts を足して 165 → 166**（下限は 159 → 161）。#928 が 156 → 157、**#901 が local-sessions-default.test.ts と local-cli-sessions.test.ts を足して 157 → 159、高知の kochi-petition-branch.test.ts と kochi-widened-anchors.test.ts で 159 → 161、秋田の akita-vote-alignment.test.ts で 161 → 162**。**139 のままだと 18 本消しても落ちなかった**（#720 が詰めた「実数から離れたぶんだけ守っていない」がまた開いていた）
 const CI_TEST_FILES_MIN = 6; // 実測 2026-09-13: readdirSync で 7（− 1。母数が小さいので幅も小さく）
 
 test("#533: apps/web のテストファイル集合が下限を割らない（vitest の include glob を消しても足しても検出する）", () => {

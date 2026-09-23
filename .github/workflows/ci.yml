@@ -153,8 +153,10 @@ jobs:
           # （#720 の「実数 − 3」。テストを増やした PR がそのついでに上げる）。
           # #814 で scripts/ci/test/gh-flags.test.sh が増え**実測 34 本**になったので 28 → 31 に上げる
           # （#720 の「実数 − 3」。テストを増やした PR がそのついでに上げる）。
-          echo "loop ran: $ran (floor 31)"
-          [ "$ran" -ge 31 ] || { echo "FAIL: fewer test files ran than expected — glob narrowed or files deleted"; exit 1; }
+          # #943 で scripts/ci/test/etl-data-only-push.test.sh が増え**実測 36 本**になったので 31 → 33 に上げる
+          # （#720 の「実数 − 3」。テストを増やした PR がそのついでに上げる）。
+          echo "loop ran: $ran (floor 33)"
+          [ "$ran" -ge 33 ] || { echo "FAIL: fewer test files ran than expected — glob narrowed or files deleted"; exit 1; }
       # #814: **スタブと実装が同じ誤りを共有して緑になった**（`gh secret set --body-file` は存在しない）。
       # リポジトリの中どうしを突き合わせても一致してしまうので、**本物の `gh --help` を一次資料にする。**
       # `--help` だけなので**認証も網も副作用も要らない**（`--no-store` は公開鍵を取りに行くので 401 になる。
@@ -203,10 +205,10 @@ jobs:
           web=$(find apps/web/app \( -name '*.test.ts' -o -name '*.test.tsx' \) | wc -l)
           etl=$(find packages/etl/test -maxdepth 1 -name '*.test.ts' | wc -l)
           echo "apps/web test files: $web (floor 95)"
-          echo "packages/etl test files: $etl (floor 163)"
+          echo "packages/etl test files: $etl (floor 164)"
           fail=0
           [ "$web" -ge 95 ] || { echo "FAIL: apps/web test files dropped below floor"; fail=1; }
-          [ "$etl" -ge 163 ] || { echo "FAIL: packages/etl test files dropped below floor"; fail=1; }
+          [ "$etl" -ge 164 ] || { echo "FAIL: packages/etl test files dropped below floor"; fail=1; }
           [ "$fail" = 0 ]
       # #855: `validateLocalAssemblies` / `validateDataset` は在ったのに、**コミット済みの `data/` には
       # 誰も走らせていなかった**（呼び出し元は ETL の CLI と県ごとの run テストだけで、どちらも

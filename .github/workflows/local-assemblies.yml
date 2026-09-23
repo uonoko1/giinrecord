@@ -66,9 +66,14 @@ jobs:
           STAMP=$(date -u +%Y-%m-%dT%H:%MZ)
           git switch -c "$DATA_BRANCH"
           git commit -m "data: local assemblies $STAMP"
-          # 既存ブランチへの force-push は GITHUB_TOKEN（workflows 権限なし）が拒否することがあるので、削除して新規 push する（etl.yml と同じ）。
-          git push origin --delete "$DATA_BRANCH" 2>/dev/null || true
-          git push origin "$DATA_BRANCH"
+          # #943: ETL の実行中に main が進むと、枝の土台が古いままになる。枝のコミットは data/ しか
+          # 触っていなくても、**GitHub は既定ブランチの現在の tip と比べる**ので、main 側で進んだ
+          # .github/ が「枝で巻き戻されている」ように見え、GITHUB_TOKEN（workflows 権限なし）が拒否する。
+          # 実際に起きた（run 35473644787）。そのとき紛れ込みかけたのは ci.yml のテストファイル数の
+          # **下限を下げる**差分で、止めたのは権限だった。権限は「たまたま止まった」でしかないので、
+          # rebase（土台を最新にする）と検査（data/ 以外の差分を 0 件だと母数付きで数える）を両方置く。
+          # 中身と検証は scripts/ci/etl-data-only-push.sh / scripts/ci/test/etl-data-only-push.test.sh。
+          bash scripts/ci/etl-data-only-push.sh "$DATA_BRANCH"
           NUMBER=$(gh pr list --head "$DATA_BRANCH" --state open --json number -q ".[0].number")
           if [ -z "$NUMBER" ]; then
             gh pr create --base main --head "$DATA_BRANCH" --title "data: local assemblies $STAMP" \
