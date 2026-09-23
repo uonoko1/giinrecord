@@ -167,7 +167,7 @@ export function memberColumns(vlines: readonly { x: number }[]): number[] {
     const run = gaps.slice(i - 1);
     const sorted = [...run].sort((a, b) => a - b);
     const med = sorted[Math.floor(sorted.length / 2)];
-    if (run.some((g) => Math.abs(g - med) > med * 0.08)) break;
+    if (run.some((g) => Math.abs(g - med) > med * 0.30)) break;
     i--;
   }
   const cols = vx.slice(i);

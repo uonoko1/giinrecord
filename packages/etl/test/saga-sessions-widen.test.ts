@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { parseVotePdf } from "../src/sources/local/saga/votes-pdf.ts";
 import { parseRoster } from "../src/sources/local/saga/roster.ts";
 import { matchName } from "../src/sources/local/saga/rollcalls.ts";
-import { defaultSessionsFor } from "../src/local-assemblies.ts";
+import { defaultSessionsFor, LOCAL_TERM_DAYS } from "../src/local-assemblies.ts";
 
 /**
  * # 佐賀の `--sessions` の既定を 2 → 13 にした根拠（Issue #901 / #961）
@@ -158,7 +158,10 @@ test("#901 14 本目に入ってくる 4 人は今の名簿に 1 人もいない
 test("#901 #928 の 1,461 日の窓は佐賀の境を捕まえない（境の向こう側でも 753 日、余り 708 日）", () => {
   const days = (from: string, to: string) =>
     Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000);
-  const LIMIT = 1_461; // `LOCAL_TERM_DAYS`（地方自治法 93 条 1 項の 4 年）
+  // **実装の定数をそのまま使う**（ここに 1,461 と書き写すと、
+  // **`LOCAL_TERM_DAYS` を変えてもこのテストが気づかない**）
+  const LIMIT = LOCAL_TERM_DAYS;
+  assert.equal(LIMIT, 1_461, "地方自治法 93 条 1 項の 4 年（うるう年 1 回を含む）");
   const rosterAsOf = "2025-04-01";
   // **13 本目まで**（この PR の既定）
   assert.equal(days("2023-05-11", rosterAsOf), 691, "`--sessions 13` の最古の採決までの日数");
