@@ -1,8 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import iconv from "iconv-lite";
 import type { LocalMember } from "@seiji-kiroku/shared";
 import { toLocalRollCalls } from "../src/sources/local/shiga/rollcalls.ts";
 import type { VotePdf } from "../src/sources/local/shiga/votes-pdf.ts";
+import { parseRoster } from "../src/sources/local/shiga/roster.ts";
 
 /**
  * # 採決 id がファイル名の上限（255 バイト）を超える（Issue #901）
@@ -52,9 +55,8 @@ import type { VotePdf } from "../src/sources/local/shiga/votes-pdf.ts";
 const SESSION = { sessionId: "2026-02", sessionLabel: "令和8年 2月定例会議", year: 2026, month: 2 };
 const URL_ = "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg000_test.pdf";
 
-const roster = (): LocalMember[] => [
-  { id: "p_25_001", assemblyId: "pref-25", name: "甲 野 太 郎", assembly: "滋賀県議会", sourceUrl: "https://www.shigaken-gikai.jp/", current: true },
-];
+/** **本物の名簿**（ここで測るのは id の長さだけなので誰が居ても結果は変わらないが、型に合わせる） */
+const roster = (): LocalMember[] => parseRoster(iconv.decode(readFileSync(new URL("./fixtures/shiga/giinlist.html", import.meta.url)), "Shift_JIS"), { asOf: "2026-09-23" }).members;
 
 /** 件名だけを変えた最小の `VotePdf`（表の読み方はここでは測らない） */
 const pdfWith = (titles: string[]): VotePdf => ({

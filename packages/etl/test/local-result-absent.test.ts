@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
 import iconv from "iconv-lite";
+import type { LocalMember } from "@seiji-kiroku/shared";
 import { buildLocalAssembly, validateLocalAssemblies, writeLocalAssembly } from "../src/local-assemblies.ts";
 import { toLocalRollCalls } from "../src/sources/local/shiga/rollcalls.ts";
 import { parseVotePdf } from "../src/sources/local/shiga/votes-pdf.ts";
