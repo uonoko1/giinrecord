@@ -314,6 +314,20 @@ const INVENTORY: { file: string; anchors: string[]; minAssertions: number }[] =
       minAssertions: 16,
     },
     {
+      file: "origin-ca.test.sh",
+      anchors: [
+        "origin-ca.sh",
+        "1 本も無い",
+        "知らないゾーン",
+        "対になっていない",
+        "SAN に giinrecord.jp が無い",
+        "ssl_verify_client on;",
+        "稼働中の nginx は古い設定のまま",
+      ],
+      minAssertions: 120, // 実測 134（#958）
+
+    },
+    {
       file: "nginx-reload.test.sh",
       anchors: ["vps-setup.sh", "nginx -t failed"],
       minAssertions: 17,
@@ -379,7 +393,7 @@ const INVENTORY: { file: string; anchors: string[]; minAssertions: number }[] =
  * **「行をそっと消す」を「数字も書き換える」に変える**——意図が diff に残る。
  * 止めるのは経路2・経路3のほう。
  */
-const EXPECTED_COUNT = 23; // #786: security-alerts{,-report}.test.sh を追加（21 → 23。#661 で 19 → 21、#652 で 18 → 19）
+const EXPECTED_COUNT = 24; // #958: origin-ca.test.sh を追加（23 → 24）。#786: security-alerts{,-report}.test.sh を追加（21 → 23。#661 で 19 → 21、#652 で 18 → 19）
 
 /**
  * 失敗を exit status に変える「出口」。これが無いと assertion がいくつあっても
@@ -506,6 +520,19 @@ const INVENTORY_PINNED: Record<
       "シンボリックリンクが挟まっている",
     ],
     minAssertions: 16,
+  },
+  "origin-ca.test.sh": {
+    anchors: [
+      "origin-ca.sh",
+      "1 本も無い",
+      "知らないゾーン",
+      "対になっていない",
+      "SAN に giinrecord.jp が無い",
+      "ssl_verify_client on;",
+      "稼働中の nginx は古い設定のまま",
+    ],
+    minAssertions: 120, // 実測 134（#958）
+
   },
   "nginx-reload.test.sh": {
     anchors: ["vps-setup.sh", "nginx -t failed"],
@@ -758,6 +785,7 @@ const DEPLOY_SUBJECTS_PINNED = [
   "deploy/nginx-host-proxy.conf",
   "deploy/nginx/site.conf",
   "deploy/ops-user-setup.sh",
+  "deploy/origin-ca.sh",
   "deploy/run-remote.sh",
   "deploy/staging-setup.sh",
   "deploy/vps-setup.sh",
@@ -833,6 +861,7 @@ const SUBJECT_OWNERS: Record<string, string> = {
   "deploy/monitor/security-alerts.sh": "security-alerts.test.sh",
   "deploy/monitor/setup.sh": "monitor-setup.test.sh",
   "deploy/nginx/site.conf": "nginx-headers.test.sh",
+  "deploy/origin-ca.sh": "origin-ca.test.sh",
   "deploy/ops-user-setup.sh": "ops-user-setup.test.sh",
   "deploy/run-remote.sh": "run-remote.test.sh",
   "deploy/staging-setup.sh": "staging-setup.test.sh",
@@ -864,6 +893,7 @@ const SUBJECT_OWNERS_PINNED: Record<string, string> = {
   "deploy/monitor/security-alerts.sh": "security-alerts.test.sh",
   "deploy/monitor/setup.sh": "monitor-setup.test.sh",
   "deploy/nginx/site.conf": "nginx-headers.test.sh",
+  "deploy/origin-ca.sh": "origin-ca.test.sh",
   "deploy/ops-user-setup.sh": "ops-user-setup.test.sh",
   "deploy/run-remote.sh": "run-remote.test.sh",
   "deploy/staging-setup.sh": "staging-setup.test.sh",
