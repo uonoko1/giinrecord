@@ -8,6 +8,7 @@ import type { BillSessionCount, MemberAssemblyCount } from "@seiji-kiroku/shared
 import type { AssemblySession, LocalAssemblyMeta } from "../lib/data-contract";
 import { countMismatchSummary } from "../lib/count-mismatch";
 import { lossyNameSummary } from "../lib/lossy-name";
+import { SEATS_CHANGED_FLAG, sessionRosterCoverageSummary } from "../lib/session-roster-coverage";
 import { defaultDataDir, readLinkedRecordCounts, readLocalAssemblyMetas, readSangiinVoteLinkStats, readShugiinBillNameStats, readUnmatchedSpeechStats } from "../lib/data-files";
 import { type Dataset, dataset as bundled } from "../lib/dataset";
 import { membersByAssembly as bundledMembersByAssembly } from "../lib/members-by-assembly";
@@ -109,6 +110,7 @@ export function CoveragePage({
         <LocalSection local={coverage.local} />
         <LossyNameSection local={coverage.local} metas={localMetas} />
         <CountMismatchSection local={coverage.local} metas={localMetas} />
+        <SessionRosterCoverageSection local={coverage.local} metas={localMetas} />
 
         <SpeechSection data={data} unmatchedSpeeches={unmatchedSpeeches} linked={linked} />
         <RosterlessSection meta={data.meta} votes={sangiinVotes} />
@@ -755,6 +757,93 @@ function CountMismatchSection({ local, metas }: { local: LocalCoverage[]; metas:
                       <td className="num">
                         {n(m.published.yes)} ／ {n(m.published.no)}
                       </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        ))
+      )}
+    </section>
+  );
+}
+
+/**
+ * **会期ごとに、その名簿がその会期をどれだけ写しているか**（#951。`meta.sessionRosterCoverage`）。
+ *
+ * **地方議会の議員名簿は、どの県も「今の名簿」1 枚しか公表していない。**
+ * **古い会期の表決 PDF に今の名簿を当てると、その頃の議員の氏名が今の議員に当たることがある**
+ * ——**同じ人が再選していたのか、たまたま同姓同名の別人なのかは、公表されているものからは分からない**
+ * （#569 の「別の記録が出る」側。**利用者から検出できない**）。
+ *
+ * **だから「どれだけ違うか」だけを出す。** **誰と誰が入れ替わったかは書かない**（推定になるため）。
+ * **「選挙があった」とも書かない**——**選挙かまとまった辞職かは区別できない。**
+ *
+ * **`metas` が null なら節ごと出さない**（#757）——「0 件」と「1 件も読めていない」は違う。
+ */
+function SessionRosterCoverageSection({ local, metas }: { local: LocalCoverage[]; metas: LocalAssemblyMeta[] | null }) {
+  if (!metas) return null;
+  const nameOf = new Map(local.map((a) => [a.assemblyId, a.name]));
+  const rows = metas
+    .map((m) => ({ meta: m, name: nameOf.get(m.assemblyId) ?? m.assemblyId, summary: sessionRosterCoverageSummary(m) }))
+    .filter((r): r is { meta: LocalAssemblyMeta; name: string; summary: NonNullable<ReturnType<typeof sessionRosterCoverageSummary>> } => r.summary !== null);
+  if (rows.length === 0) return null;
+  const sessions = rows.reduce((acc, r) => acc + r.summary.sessions, 0);
+  const hit = rows.filter((r) => r.summary.flagged.length > 0);
+  const maxSeats = rows.reduce((acc, r) => Math.max(acc, r.summary.maxSeatsChanged), 0);
+  return (
+    <section className="section" aria-labelledby="coverage-session-roster-heading">
+      <h2 id="coverage-session-roster-heading" className="section__title">
+        古い会期に今の議員名簿を当てていないか
+      </h2>
+      <p className="card__body">
+        地方議会の議員名簿は、どの県も<strong>いま在職している議員の一覧</strong>しか公表していません。
+        表決の記録を古い会期まで広げると、その頃の議員の氏名に今の名簿を当てることになります。
+        一般選挙をはさむと議員が入れ替わりますが、<strong>同じ氏名が同じ人かどうかは、公表されている資料からは確かめられません</strong>。
+        そこで会期ごとに、<strong>名簿に載っているのにその会期の表決に出てこない議員の数</strong>と、
+        <strong>その会期の表決に出てくるのに名簿に無い氏名の数</strong>を数えています。
+        いま数えたのは <span className="num">{n(sessions)}</span> 会期で、
+        入れ替わりがいちばん多い会期でも <span className="num">{n(maxSeats)}</span> 人です。
+      </p>
+      <p className="card__body">
+        <strong>誰と誰が入れ替わったかは書きません。</strong>
+        公表されている資料からは、同じ氏名が同じ人なのか別の人なのかを確かめられないためです。
+        <strong>選挙があったとも書きません</strong>——まとまった辞職と区別できないからです。出すのは数だけです。
+      </p>
+      {hit.length === 0 ? (
+        <p className="card__body" data-testid="coverage-session-roster-none">
+          入れ替わりが <span className="num">{n(SEATS_CHANGED_FLAG)}</span> 人以上の会期はありません（
+          <span className="num">{n(sessions)}</span> 会期すべてを数えた結果です）。
+        </p>
+      ) : (
+        hit.map((r) => (
+          <section key={r.meta.assemblyId} className="coverage-assembly" aria-label={r.name} data-testid={`coverage-session-roster-${r.meta.assemblyId}`}>
+            <h3 className="coverage-assembly__name">
+              <Link to={assemblyPath(r.meta.assemblyId)}>{r.name}</Link>
+            </h3>
+            <p className="card__body num">
+              {n(r.summary.flagged.length)} 会期（この議会の {n(r.summary.sessions)} 会期のうち。名簿は {n(r.summary.rosterSize)} 人）
+            </p>
+            <div className="assemblies-table-wrap">
+              <table className="assembly-sessions" aria-label={`${r.name}の会期ごとの名簿の写り方`}>
+                <thead>
+                  <tr>
+                    <th scope="col">会期</th>
+                    <th scope="col">最終議決日</th>
+                    <th scope="col">名簿にいるが出てこない</th>
+                    <th scope="col">出てくるが名簿に無い</th>
+                    <th scope="col">入れ替わり</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {r.summary.flagged.map((s) => (
+                    <tr key={s.sessionId}>
+                      <td>{s.sessionId}</td>
+                      <td>{formatDate(s.date)}</td>
+                      <td className="num">{n(s.rosterAbsent)}</td>
+                      <td className="num">{n(s.unmatchedNames)}</td>
+                      <td className="num">{n(s.seatsChanged)}</td>
                     </tr>
                   ))}
                 </tbody>
