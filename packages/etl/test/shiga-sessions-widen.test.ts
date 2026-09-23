@@ -73,14 +73,23 @@ test("#901 滋賀の `--sessions` の既定は 19（2023年4月の一般選挙�
  * **「#928 が守ってくれる」と思って既定を広げると、選挙をまたいだ採決に今の名簿が当たる**（#569 の重いほう）。
  */
 test("#901 **#928 は滋賀の境を捕まえない**——19 でも 20 でも上限 1,461 日の内側（止めているのは氏名の集合）", () => {
-  const asOf = Date.parse("2026-09-21");
+  // **`rosterAsOf` は本番に出したものを読む**——**固定の日付を書くと、
+  //   名簿を取り直すたびに「測ったときの話」と「出したものの話」がずれる**（#963 の形）。
+  //   **主張は「出した名簿から見て 20 会期目も窓の内側」であって、ある日の日数ではない。**
+  const asOf = Date.parse(publishedRosterAsOf());
   const days = (d: string) => Math.round((asOf - Date.parse(d)) / 86_400_000);
-  // 19 会期目の最古の採決（令和5年5月招集会議）
-  assert.equal(days("2023-05-09"), 1231);
-  // **20 会期目の最古の採決（令和5年2月定例会議）——選挙の向こう側なのに、まだ内側**
-  assert.equal(days("2023-02-14"), 1315);
-  assert.ok(days("2023-05-09") < LOCAL_TERM_DAYS, "19 会期目は #928 の内側");
-  assert.ok(days("2023-02-14") < LOCAL_TERM_DAYS, "**20 会期目も #928 の内側＝#928 は鳴らない**");
+  // **母数**（#757）——名簿の日付が読めていること（読めないまま 0 日で緑にしない）
+  assert.match(publishedRosterAsOf(), /^\d{4}-\d{2}-\d{2}$/);
+  // 19 会期目の最古の採決（令和5年5月招集会議）／20 会期目（令和5年2月定例会議）
+  const inside = days("2023-05-09");
+  const outside = days("2023-02-14");
+  // **20 会期目のほうが 84 日ぶん古い**（会期の並びが崩れれば落ちる）
+  assert.equal(outside - inside, 84);
+  assert.ok(inside < LOCAL_TERM_DAYS, `19 会期目は #928 の内側（${inside} 日）`);
+  // **選挙の向こう側なのに、まだ内側＝#928 は鳴らない**（これがこのテストの主張）
+  assert.ok(outside < LOCAL_TERM_DAYS, `**20 会期目も #928 の内側＝#928 は鳴らない**（${outside} 日）`);
+  // **余裕がどれだけあるか**も残す（#961。「鳴らない」だけでなく「かなり手前」だという事実）
+  assert.ok(outside < LOCAL_TERM_DAYS * 0.95, `20 会期目の余裕（${LOCAL_TERM_DAYS - outside} 日）`);
 });
 
 /* ------------------------------------------------------------------ *
@@ -88,6 +97,9 @@ test("#901 **#928 は滋賀の境を捕まえない**——19 でも 20 でも�
  * ------------------------------------------------------------------ */
 
 const bytes = (name: string): Buffer => readFileSync(new URL(`./fixtures/shiga/${name}`, import.meta.url));
+/** **本番に出した `meta.json` の `rosterAsOf`**（固定の日付を書かない。上の docblock） */
+const publishedRosterAsOf = (): string =>
+  (JSON.parse(readFileSync(new URL("../../../data/assemblies/pref-25/meta.json", import.meta.url), "utf-8")) as { rosterAsOf: string }).rosterAsOf;
 /** 氏名の突き合わせ用に空白と異体字セレクタを落とす（`matchName` と同じ考え方） */
 const flat = (s: string): string => s.normalize("NFC").replace(/[\s　\u{E0100}-\u{E01EF}\u{FE00}-\u{FE0F}]/gu, "");
 
