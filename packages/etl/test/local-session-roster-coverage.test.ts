@@ -71,21 +71,21 @@ const metaOf = async (p: string): Promise<LocalAssemblyMeta> =>
  * **答えは 0 件である。** **「数えていない」と区別するため、母数と分布をそのまま固定する**（#757）。
  *
  * **実測 2026-09-21**（`data/` を直に読んだ）:
- * **11 議会 / 67 会期 / 3,036 採決 / 135,686 票。**
+ * **11 議会 / 79 会期 / 3,534 採決 / 159,590 票。**
  *
  * | `seatsChanged` | 会期 |
  * |---:|---:|
  * | 0 | 32 |
  * | 1 | 12 |
- * | 2 | 19 |
- * | 3 | 2 |
+ * | 2 | 27 |
+ * | 3 | 6 |
  * | 4 | 2 |
  * | **10 以上（印が付く）** | **0** |
  *
  * **最大は 4**（三重 r05-2 と r06。母数 47 人）。
  * **奈良が境をまたいだ場合は 17 になる**（#950 が測った 41 名中 17 名の入れ替わり）。
  */
-test("#951 本番 data/: 11 議会 67 会期の seatsChanged 分布（最大 4、印が付く会期は 0 件）", async () => {
+test("#951 本番 data/: 11 議会 79 会期の seatsChanged 分布（最大 4、印が付く会期は 0 件）", async () => {
   const prefs = await localPrefs();
   assert.equal(prefs.length, 11, "11 議会ぶんを見ていること（母数。#757）");
   const rows: LocalAssemblyMeta["sessionRosterCoverage"] = [];
@@ -95,13 +95,13 @@ test("#951 本番 data/: 11 議会 67 会期の seatsChanged 分布（最大 4�
     rows.push(...cov);
   }
   // **母数を 3 通りで持つ**（会期・採決・票）。**どれか 1 つが痩せても気づける**
-  assert.equal(rows.length, 67, "会期の合計");
-  assert.equal(rows.reduce((s, r) => s + r.rollcalls, 0), 3_036, "採決の合計（#855 / #928 の母数と同じ）");
-  assert.equal(rows.reduce((s, r) => s + r.votes, 0), 135_686, "票の合計（#928 の母数と同じ）");
+  assert.equal(rows.length, 79, "会期の合計");
+  assert.equal(rows.reduce((s, r) => s + r.rollcalls, 0), 3_534, "採決の合計（#855 / #928 の母数と同じ）");
+  assert.equal(rows.reduce((s, r) => s + r.votes, 0), 159_590, "票の合計（#928 の母数と同じ）");
   // **分布**（**「0 件でした」では、見ていなくても同じ顔をする**）
   const hist = new Map<number, number>();
   for (const r of rows) hist.set(r.seatsChanged, (hist.get(r.seatsChanged) ?? 0) + 1);
-  assert.deepEqual(Object.fromEntries([...hist].sort((a, b) => a[0] - b[0])), { 0: 32, 1: 12, 2: 19, 3: 2, 4: 2 });
+  assert.deepEqual(Object.fromEntries([...hist].sort((a, b) => a[0] - b[0])), { 0: 32, 1: 12, 2: 27, 3: 6, 4: 2 });
   assert.equal(Math.max(...rows.map((r) => r.seatsChanged)), 4, "今までに実際に起きた最大の入れ替わり");
   // **本丸**: **印が付く会期は 0 件**（**11 議会を全部見たうえでの 0**）
   assert.deepEqual(rows.filter((r) => r.seatsChanged >= SEATS_CHANGED_FLAG).map((r) => `${r.sessionId} (${r.date})`), [],
@@ -114,7 +114,7 @@ test("#951 本番 data/: 11 議会 67 会期の seatsChanged 分布（最大 4�
  * **`rosterSeen + rosterAbsent` が名簿の人数に一致する**——**この式が成り立たないと
  * `seatsChanged` は読めない**（#757。母数を検算に入れる）。
  */
-test("#951 本番 data/: rosterSeen + rosterAbsent == counts.members（67 会期すべて）", async () => {
+test("#951 本番 data/: rosterSeen + rosterAbsent == counts.members（79 会期すべて）", async () => {
   const prefs = await localPrefs();
   let checked = 0;
   for (const p of prefs) {
@@ -126,7 +126,7 @@ test("#951 本番 data/: rosterSeen + rosterAbsent == counts.members（67 会期
       checked++;
     }
   }
-  assert.equal(checked, 67, "見た会期の数（母数）");
+  assert.equal(checked, 79, "見た会期の数（母数）");
 });
 
 /**
@@ -147,7 +147,7 @@ test("#951 本番 data/: meta.sessionRosterCoverage が rollcalls/ + members/ind
     assert.deepEqual((await metaOf(p)).sessionRosterCoverage, want, p);
     sessions += want.length;
   }
-  assert.equal(sessions, 67, "作り直した会期の数（母数）");
+  assert.equal(sessions, 79, "作り直した会期の数（母数）");
 });
 
 /** **検査の側からも言う**（#774）——**`validateLocalAssemblies` に繋がっていること。** */
@@ -301,6 +301,92 @@ test("#951 宮城で境をまたぐと印が付く（#953 が --sessions 12 に�
   // **#928 は鳴らない**: **2023-07-12 は `rosterAsOf` 2026-09-17 の 1,163 日前で、1,461 の内側**
   assert.ok(daysApart("2023-07-12", "2026-09-17") < LOCAL_TERM_DAYS, "**#928 の窓の内側**");
   assert.equal(daysApart("2023-07-12", "2026-09-17"), 1_163);
+});
+
+/**
+ * ## **3 県目の実例——青森**（**#959 の境。3 県が独立に測った境が、3 つとも線の外にある**）
+ *
+ * **#959 は青森を `--sessions 14`（2023-05臨時まで）で止めた**——
+ * **`--sessions 15`（2023-02定例）は 2023年4月の一般選挙をまたぐ**（#959 が一次資料で
+ * **44 名中 IN 11 / OUT 15**、`unmatchedNames` 0〜3 → **11** と測った）。
+ *
+ * **#959 の要点は「#928 は鳴るが、境より 4 会期も遅い」である**——
+ * **境は 14 ↔ 15 だが、`LOCAL_TERM_DAYS` が初めて超えるのは 19 会期目。**
+ * **`--sessions 15`（境の向こう）ですら 1,174 / 1,461 日で #928 は鳴らない。**
+ * **この 4 会期ぶんの隙間が、`seatsChanged` の要る理由そのものである**（#961）。
+ *
+ * **2023-02 の PDF は取得していない**——**#959 の数を本番の名簿と採決の形に当てて再現する。**
+ *
+ * **数え方が #959 と違うので、値も違う**（**正直に書く**）:
+ * **#959 は「氏名の集合の入れ替わり」（OUT 15）を数え、ここは `min(rosterAbsent, unmatchedNames)`
+ * = `min(13, 11)` = **11** を数える。** **どちらも線（10）の外にある、というのが言えることである。**
+ */
+test("#951 青森で境をまたぐと印が付く（#959 が --sessions 15 にしなかった境。seatsChanged 11）", () => {
+  // **今の名簿 46 人のうち 33 人が前の任期にも居て、11 名は名簿に無い**（#959 の `unmatchedNames` 11）
+  const members = Array.from({ length: 46 }, (_, i) => member(i));
+  const across: [string, string][] = [
+    ...members.slice(0, 33).map((m) => [m.id, m.name] as [string, string]),
+    ...Array.from({ length: 11 }, (_, k) => ["", formerName(k)] as [string, string]),
+  ];
+  const cov = sessionRosterCoverageOf([rollCall("2023-02", "2023-03-08", 1, across)], members);
+  assert.deepEqual(cov, [{
+    sessionId: "2023-02", date: "2023-03-08", rollcalls: 1, votes: 44,
+    // **名簿 46 − 出てきた 33 = 13 が absent、名簿に無い氏名が 11** → **小さいほう 11**
+    rosterSeen: 33, rosterAbsent: 13, unmatchedNames: 11, unmatchedVotes: 11, seatsChanged: 11,
+  }]);
+  assert.ok(cov[0].seatsChanged >= SEATS_CHANGED_FLAG, "**境をまたいだ青森にも印が付く**");
+  // **票の 75.0% が今の名簿に黙って寄る**（**3 県でいちばん悪い**）
+  assert.equal(Math.round((1_000 * 33) / 44) / 10, 75.0, "名簿に寄る票の割合");
+  // **#928 は鳴らない**: **#959 の実測 1,174 日。1,461 の内側**
+  assert.equal(daysApart("2023-03-08", "2026-05-25"), 1_174, "#959 が測った daysBefore");
+  assert.ok(daysApart("2023-03-08", "2026-05-25") < LOCAL_TERM_DAYS, "**#928 の窓の内側**");
+});
+
+/**
+ * ## **3 県の境をまとめて 1 つの表にする**（**#961 の出どころ**）
+ *
+ * **3 県とも、担当者が氏名の集合の不連続を見て手前で止めた**——**機械が止めたのではない。**
+ * **#928（`LOCAL_TERM_DAYS`）は 3 県とも境の向こうで鳴らない。**
+ *
+ * **これが「`seatsChanged` が要る」ことの根拠のすべてである。**
+ * **この表が壊れたら、線の置き方の根拠も壊れている。**
+ */
+test("#951 境をまたいだ 3 県は、3 つとも線の外・3 つとも #928 の内側（#961 の根拠）", () => {
+  const border = (roster: number, stays: number, gone: number, date: string, asOf: string) => {
+    const members = Array.from({ length: roster }, (_, i) => member(i));
+    const votes: [string, string][] = [
+      ...members.slice(0, stays).map((m) => [m.id, m.name] as [string, string]),
+      ...Array.from({ length: gone }, (_, k) => ["", formerName(k)] as [string, string]),
+    ];
+    const c = sessionRosterCoverageOf([rollCall("x", date, 1, votes)], members)[0];
+    return {
+      seatsChanged: c.seatsChanged,
+      flagged: c.seatsChanged >= SEATS_CHANGED_FLAG,
+      snappedPct: Math.round((1_000 * stays) / (stays + gone)) / 10,
+      daysBefore: daysApart(date, asOf),
+      rings928: daysApart(date, asOf) > LOCAL_TERM_DAYS,
+    };
+  };
+  assert.deepEqual(
+    {
+      // **奈良**（#950 の境 2022-10-12。41 名中 17 名入れ替わり。rosterAsOf 2026-04-24）
+      nara: border(40, 23, 18, "2022-10-12", "2026-04-24"),
+      // **宮城**（#953 の境 2023-07-12。58 名中 18 名。rosterAsOf 2026-09-17）
+      miyagi: border(56, 40, 18, "2023-07-12", "2026-09-17"),
+      // **青森**（#959 の境 2023-03-08。44 名中 11 名が名簿に無い。rosterAsOf 2026-05-25）
+      aomori: border(46, 33, 11, "2023-03-08", "2026-05-25"),
+    },
+    {
+      nara: { seatsChanged: 17, flagged: true, snappedPct: 56.1, daysBefore: 1_290, rings928: false },
+      miyagi: { seatsChanged: 16, flagged: true, snappedPct: 69.0, daysBefore: 1_163, rings928: false },
+      aomori: { seatsChanged: 11, flagged: true, snappedPct: 75.0, daysBefore: 1_174, rings928: false },
+    },
+    "**3 県とも印が付き、3 県とも #928 は鳴らない**",
+  );
+  // **いちばん小さい境（青森 11）が、線（10）のすぐ外にある**——**余裕は 1 しかない。**
+  // **線を 12 以上にすると青森を取りこぼす。** 母数つきでそう書いておく（#961 が動かすときの材料）
+  assert.equal(SEATS_CHANGED_FLAG, 10);
+  assert.equal(11 - SEATS_CHANGED_FLAG, 1, "**いちばん小さい境と線の差**（3 県の実測のうち最小）");
 });
 
 /** 2 つの ISO 日付の差（日数）。`rosterWindowOf` が中で使っているのと同じ計算。 */

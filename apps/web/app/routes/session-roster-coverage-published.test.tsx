@@ -50,10 +50,10 @@ describe("#951 本番データ: 会期ごとの名簿の写り方が画面に出
   /**
    * **本番の母数と印の件数を固定する**（#757。**「数えていない」と区別する**）。
    *
-   * **実測 2026-09-21**: **11 議会 / 67 会期。`seatsChanged` の最大は 4（三重）で、
+   * **実測 2026-09-21**: **11 議会 / 79 会期。`seatsChanged` の最大は 4（三重）で、
    * 印（10 以上）は 0 件。** **#901 が会期を広げると、ここが動いて数え直しを強制する。**
    */
-  it("本番の母数と印の件数を固定する（67 会期・最大 4・印 0 件）", async () => {
+  it("本番の母数と印の件数を固定する（79 会期・最大 4・印 0 件）", async () => {
     const metas = await realLocalMetas();
     const local = metas.filter((m) => m.assemblyId.startsWith("pref-"));
     const sums = local.map((m) => sessionRosterCoverageSummary(m)!);
@@ -62,16 +62,16 @@ describe("#951 本番データ: 会期ごとの名簿の写り方が画面に出
       sessions: sums.reduce((n, s) => n + s.sessions, 0),
       maxSeatsChanged: sums.reduce((n, s) => Math.max(n, s.maxSeatsChanged), 0),
       flagged: sums.reduce((n, s) => n + s.flagged.length, 0),
-    }).toEqual({ assemblies: 11, sessions: 67, maxSeatsChanged: 4, flagged: 0 });
+    }).toEqual({ assemblies: 11, sessions: 79, maxSeatsChanged: 4, flagged: 0 });
     // **線は今までに起きた最大（4）の外に在る**（内側に引けば今すぐ赤くなり、誰も見なくなる。#785）
     expect(SEATS_CHANGED_FLAG).toBeGreaterThan(4);
   });
 
-  it("/coverage に、本番の母数（67 会期）と「印の付いた会期は無い」が出る", async () => {
+  it("/coverage に、本番の母数（79 会期）と「印の付いた会期は無い」が出る", async () => {
     await renderCoverage(await realLocalMetas());
     const section = screen.getByRole("region", { name: SECTION });
     // **母数が出ていること**（#757。「0 件」は「見た上での 0」でなければ意味が無い）
-    expect(section).toHaveTextContent("67");
+    expect(section).toHaveTextContent("79");
     // **今までに起きた最大も出す**（「入れ替わりは無い」と読ませない）
     expect(section).toHaveTextContent("4");
     expect(within(section).getByTestId("coverage-session-roster-none")).toBeInTheDocument();
