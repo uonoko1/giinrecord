@@ -15,6 +15,129 @@
  },
  "fetchedAt": "2026-09-20T23:59:53.330Z",
  "rosterAsOf": "2026-09-17",
+ "sessionRosterCoverage": [
+  {
+   "date": "2026-07-07",
+   "rollcalls": 23,
+   "rosterAbsent": 0,
+   "rosterSeen": 56,
+   "seatsChanged": 0,
+   "sessionId": "400",
+   "unmatchedNames": 0,
+   "unmatchedVotes": 0,
+   "votes": 1288
+  },
+  {
+   "date": "2026-03-18",
+   "rollcalls": 110,
+   "rosterAbsent": 1,
+   "rosterSeen": 55,
+   "seatsChanged": 1,
+   "sessionId": "399",
+   "unmatchedNames": 1,
+   "unmatchedVotes": 110,
+   "votes": 6160
+  },
+  {
+   "date": "2025-12-17",
+   "rollcalls": 50,
+   "rosterAbsent": 1,
+   "rosterSeen": 55,
+   "seatsChanged": 1,
+   "sessionId": "398",
+   "unmatchedNames": 3,
+   "unmatchedVotes": 150,
+   "votes": 2900
+  },
+  {
+   "date": "2025-10-02",
+   "rollcalls": 29,
+   "rosterAbsent": 2,
+   "rosterSeen": 54,
+   "seatsChanged": 2,
+   "sessionId": "397",
+   "unmatchedNames": 4,
+   "unmatchedVotes": 116,
+   "votes": 1682
+  },
+  {
+   "date": "2025-06-30",
+   "rollcalls": 31,
+   "rosterAbsent": 2,
+   "rosterSeen": 54,
+   "seatsChanged": 2,
+   "sessionId": "396",
+   "unmatchedNames": 4,
+   "unmatchedVotes": 124,
+   "votes": 1798
+  },
+  {
+   "date": "2025-03-14",
+   "rollcalls": 89,
+   "rosterAbsent": 2,
+   "rosterSeen": 54,
+   "seatsChanged": 2,
+   "sessionId": "395",
+   "unmatchedNames": 4,
+   "unmatchedVotes": 356,
+   "votes": 5162
+  },
+  {
+   "date": "2024-12-11",
+   "rollcalls": 43,
+   "rosterAbsent": 2,
+   "rosterSeen": 54,
+   "seatsChanged": 2,
+   "sessionId": "394",
+   "unmatchedNames": 4,
+   "unmatchedVotes": 172,
+   "votes": 2494
+  },
+  {
+   "date": "2024-10-17",
+   "rollcalls": 31,
+   "rosterAbsent": 1,
+   "rosterSeen": 55,
+   "seatsChanged": 1,
+   "sessionId": "393",
+   "unmatchedNames": 4,
+   "unmatchedVotes": 124,
+   "votes": 1829
+  },
+  {
+   "date": "2024-07-01",
+   "rollcalls": 31,
+   "rosterAbsent": 1,
+   "rosterSeen": 55,
+   "seatsChanged": 1,
+   "sessionId": "392",
+   "unmatchedNames": 4,
+   "unmatchedVotes": 124,
+   "votes": 1829
+  },
+  {
+   "date": "2024-03-13",
+   "rollcalls": 101,
+   "rosterAbsent": 1,
+   "rosterSeen": 55,
+   "seatsChanged": 1,
+   "sessionId": "391",
+   "unmatchedNames": 4,
+   "unmatchedVotes": 404,
+   "votes": 5959
+  },
+  {
+   "date": "2023-12-19",
+   "rollcalls": 46,
+   "rosterAbsent": 1,
+   "rosterSeen": 55,
+   "seatsChanged": 1,
+   "sessionId": "390",
+   "unmatchedNames": 4,
+   "unmatchedVotes": 184,
+   "votes": 2714
+  }
+ ],
  "sessions": [
   {
    "pdfUrl": "https://www.pref.miyagi.jp/documents/65634/hyoketu080707.pdf",
