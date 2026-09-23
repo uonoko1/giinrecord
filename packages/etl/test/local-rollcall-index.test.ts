@@ -93,7 +93,7 @@ test("#851 counts を持つ採決の数は index と原本で一致する（11 �
   // **`counts` が読めることと、記号の意味が引けることは別である**）
   assert.deepEqual(got, {
     "pref-02": 611, "pref-04": 584, "pref-05": 554, "pref-24": 733, "pref-25": 163,
-    "pref-29": 0, "pref-31": 118, "pref-32": 231, "pref-36": 0, "pref-39": 0, "pref-41": 23,
+    "pref-29": 0, "pref-31": 118, "pref-32": 231, "pref-36": 0, "pref-39": 0, "pref-41": 366,
   });
 });
 

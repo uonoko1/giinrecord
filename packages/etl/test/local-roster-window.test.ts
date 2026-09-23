@@ -150,7 +150,7 @@ test("#928 本番 data/: 11 議会の rosterAsOf と採決日の窓（6 議会�
     // **#901 で会期を 2 → 4 にした**。**`daysBefore` 204 → 296（上限 1,461 の 20%）で、#928 の検査は鳴らない**
     "pref-36": { daysAfter: -9, daysBefore: 296, votesAfter: 0, rollcalls: 153 },
     "pref-39": { daysAfter: -20, daysBefore: 398, votesAfter: 0, rollcalls: 221 },
-    "pref-41": { daysAfter: 456, daysBefore: -385, votesAfter: 23, rollcalls: 23 },
+    "pref-41": { daysAfter: 456, daysBefore: 691, votesAfter: 129, rollcalls: 366 },
   });
   // **母数の検算**（#757）: **採決の本数の合計が、#855 が数えている 1,369 本と一致する。**
   // **これが無いと、痩せたディレクトリを見て「はみ出し 0」を言える。**
@@ -163,7 +163,11 @@ test("#928 本番 data/: 11 議会の rosterAsOf と採決日の窓（6 議会�
   // **またいでいる議会では、名簿より前の採決に「後の名簿」を当てている**（三重は 302 日前から）。
   // **#901 の宮城で 4 → 3 に減った**（`daysAfter` が負になったので、もう跨いでいない）
   const straddling = Object.entries(got).filter(([, x]) => x.daysAfter > 0 && x.daysBefore > 0).map(([p]) => p);
-  assert.deepEqual(straddling, ["pref-02", "pref-24", "pref-29"], "rosterAsOf が採決の範囲の内側にある議会");
+  // **#901 の佐賀（2 → 13 会期）で 3 → 4 に増えた**——**広げる前は最古の採決が `rosterAsOf` より
+  // 後ろだった（`daysBefore` が負）が、広げて 691 日前まで遡ったので跨ぐようになった。**
+  // **これは「名簿より前の採決に後の名簿を当てている」状態**で、**#928 が数として見えるようにした形である。**
+  // **佐賀の余裕は 1,461 − 691 = 770 日**（`seatsChanged` の印も付いていない）。
+  assert.deepEqual(straddling, ["pref-02", "pref-24", "pref-29", "pref-41"], "rosterAsOf が採決の範囲の内側にある議会");
 });
 
 /**
