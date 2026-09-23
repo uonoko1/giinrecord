@@ -97,15 +97,26 @@ export async function runSaga(opts: { sessions: number; fetchedAt: string; fetch
   const summary: SagaRun["summary"] = [];
   /** 同じ PDF を 2 回読まない（#670 が「同じ PDF が 2 つの URL で配られる」を実測） */
   const seenPdf = new Set<string>();
-  /** 見た会期の本数（`targets` の添字）。**読めたかどうかに関わらず 1 本進む。** */
-  let seen = 0;
+  /**
+   * **もう見た会期**（`sessionUrl`。**読めたかどうかに関わらず入る**）。
+   *
+   * **添字（`targets[i]`）では数えない**——**`nextYear` のたびに `targets` を並べ直す**ので、
+   * **新しく足した年に「もう見た会期より新しい会期」が 1 本でもあると、
+   * それが添字の手前に割り込み、見たはずの会期をもう 1 度見るか、
+   * まだ見ていない会期を飛ばすかのどちらかになる。**
+   * **索引の年ページが新しい順に並んでいる限りは起きないが、それはページの作り側の都合であって、
+   * この実装が頼ってよい保証ではない**（#901。`parseIndex` は本文の出現順をそのまま返す）。
+   */
+  const seenSessions = new Set<string>();
   /** 索引が尽きた（`nextYear` が 0 を返した）。**これが立つまでは「足りない」を「無い」と言わない。** */
   let indexExhausted = false;
   // **読める会期が opts.sessions 本そろうまで**（読めない会期で枠を使わない）。
   // **`targets` を使い切ったら索引をもう 1 年ぶん下りる**（#901。これが無いと
   // 「索引の候補が opts.sessions 本」で止まり、読めない会期のぶんだけ足りないまま返る）
   while (sessions.length < opts.sessions) {
-    if (seen >= targets.length) {
+    // **並べ直した後の `targets` から、まだ見ていない中でいちばん新しい 1 本**を取る
+    const t = targets.find((x) => !seenSessions.has(x.sessionUrl));
+    if (!t) {
       if (indexExhausted) break;
       // **1 年ぶん足しても 1 本も増えなければ、さらに次の年へ**（会期の無い年がある）
       let added = 0;
@@ -116,7 +127,7 @@ export async function runSaga(opts: { sessions: number; fetchedAt: string; fetch
       if (indexExhausted) break;
       continue;
     }
-    const t = targets[seen++];
+    seenSessions.add(t.sessionUrl);
     const gianUrls = parseSessionPage(await f.text(t.sessionUrl), t.sessionUrl);
     const pdfUrls: string[] = [];
     const visited = new Set<string>();
@@ -178,8 +189,16 @@ export async function runSaga(opts: { sessions: number; fetchedAt: string; fetch
   // **母数を出す**（#757。「足りなかった」を黙って返さない）。
   // **索引は歩いたぶんだけ数える**ので、この行は歩き終わってから出す。
   log(`session index: ${indexTally.line()}`);
-  log(`sessions: 頼んだ ${opts.sessions} / 見た ${seen} / 読めた ${sessions.length} / 読めなかった ${seen - sessions.length}`
+  log(`sessions: 頼んだ ${opts.sessions} / 見た ${seenSessions.size} / 読めた ${sessions.length} / 読めなかった ${seenSessions.size - sessions.length}`
     + `（索引 ${indexExhausted ? "尽きた" : "残っている"}、年ページ ${yearCursor}/${yearPages.length}）`);
   if (rollCalls.length === 0) throw new Error("no roll calls read from any session");
+  // **出す順は「歩いた順」ではなく「新しい順」**（#901）。
+  // **歩く順は索引ページの年の並びに引きずられる**——**索引が新しい順でなければ、
+  // 古い会期が先頭に来る。** **`targets` の並べ替えと同じ鍵をここでも当てる**
+  // （`sessionId` は `2026-06-teirei-list06680` の形なので、**降順が新しい順**）。
+  const order = new Map(targets.map((t) => [t.sessionId, t.year * 100 + t.month]));
+  const key = (id: string): number => order.get(id) ?? 0;
+  sessions.sort((a, b) => key(b.sessionId) - key(a.sessionId) || (a.sessionId < b.sessionId ? 1 : -1));
+  summary.sort((a, b) => key(b.sessionId) - key(a.sessionId) || (a.sessionId < b.sessionId ? 1 : -1));
   return { roster, rollCalls, unmatched: [...unmatched.values()], sessions, sources, unreadableSources, summary };
 }

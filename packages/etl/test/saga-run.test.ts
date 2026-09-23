@@ -221,3 +221,46 @@ test("#901 runSaga --sessions 3: 令和8年に読める会期が 2 本しか無�
   assert.ok(f.fetched.includes(u("list06438.html")), "令和7年の年ページを開いた");
   assert.ok(f.fetched.includes(u("list06439.html")), "令和7年の定例会ページを開いた");
 });
+
+/**
+ * ## **索引の年が新しい順に並んでいなくても、会期を飛ばさない**（#901）
+ *
+ * **`nextYear` は 1 年ぶん足すたびに `targets` をまるごと並べ直す。**
+ * **その `targets` を「添字」で歩くと、後から足した年に
+ * 「もう見た会期より新しい会期」が 1 本でもあった瞬間に列がずれる**——
+ * **見たはずの会期をもう 1 度見るか、まだ見ていない会期を飛ばすかのどちらかになる。**
+ *
+ * **`parseIndex` は索引ページの本文の出現順をそのまま返す**（`sessions.ts`）。
+ * **本物のページは新しい順に並んでいるが、それはページの作り側の都合であって、
+ * この実装が頼ってよい保証ではない。**
+ *
+ * **このテストは索引の年の並びだけを入れ替える**（**令和7年 → 令和8年 の順**）。
+ * **一次資料そのものは 1 バイトも変えていない**——**会期ページも PDF も上のテストと同じ。**
+ * **`--sessions 3` で返る 3 本は、並びを入れ替える前と同じ 3 本・同じ順**であること。
+ */
+test("#901 runSaga: 索引の年が新しい順でなくても、読める会期 3 本を新しい順に返す（添字で歩かない）", async () => {
+  // **令和7年を先に、令和8年を後に**書いた索引（**リンク先は本物のまま**）
+  const SWAPPED = `<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8" /><title>議案等の審議結果 | 佐賀県議会</title></head><body>
+<!-- #901 の試験用。**本物のページではない**——索引の年の並びだけを入れ替えてある。 -->
+<div class="RightArea"><div class="newArea"><ul class="classArea2">
+<li class="class2"><div class="midashi"><a href="list06438.html">令和7年</a></div>
+<ul class="child"><li><a href="list06439.html">定例会</a></li><li><a href="list06470.html">臨時会</a></li><li><a href="list06545.html">決算特別委員会</a></li></ul></li>
+<li class="class2"><div class="midashi"><a href="list06635.html">令和8年</a></div>
+<ul class="child"><li><a href="list06636.html">定例会</a></li><li><a href="list06670.html">臨時会</a></li></ul></li>
+</ul></div></div></body></html>`;
+  const f = stub({ html: { ...R7, [SAGA_INDEX_URL]: SWAPPED } });
+  const run = await runSaga({ sessions: 3, fetchedAt: "2026-09-13T00:00:00.000Z", fetcher: f });
+  // **並びを入れ替えない上のテストと 1 文字も違わない**（同じ 3 本・同じ順・同じ採決数）
+  assert.deepEqual(run.sessions.map((s) => `${s.sessionLabel}/${s.rollcalls}`), [
+    "令和8年6月定例会/21",
+    "令和8年4月臨時会/2",
+    "令和7年2月定例会/72",
+  ], "索引の年の並びは結果を変えない");
+  assert.equal(run.rollCalls.length, 95);
+  // **同じ会期を 2 回出していない**（添字で歩くと重複が出うる）
+  const ids = run.sessions.map((s) => s.sessionId);
+  assert.equal(new Set(ids).size, ids.length, "会期の重複 0");
+  // **同じ会期ページを 2 回開いていない**（母数。#757）
+  const pages = f.fetched.filter((x) => x === u("list06680.html"));
+  assert.equal(pages.length, 1, "令和8年6月定例会の会期ページを開いた回数");
+});
