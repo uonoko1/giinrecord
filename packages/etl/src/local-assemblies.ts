@@ -583,6 +583,117 @@ export function countMismatchesOf(rollCalls: readonly LocalRollCall[]): {
   return { mismatches: mismatches.sort((a, b) => cmp(a.rollCallId, b.rollCallId)), checked };
 }
 
+/**
+ * **`seatsChanged` がこの数以上なら、`data/` の中で名指しする**（Issue #951）。
+ *
+ * **これは「ここから先は選挙だ」という線ではない**——**選挙かまとまった辞職かは、
+ * 我々の一次資料（表決 PDF と名簿）からは区別できない**（`sessionRosterCoverage` の docblock）。
+ *
+ * **引いているのは「今まで実際に起きた幅の外」という線だけである。**
+ * **実測 2026-09-21（本番 `data/` の 11 議会 / 79 会期 / 3,534 採決 / 159,590 票）:**
+ *
+ * | `seatsChanged` | 会期 |
+ * |---:|---:|
+ * | 0 | 32 |
+ * | 1 | 12 |
+ * | 2 | 27 |
+ * | 3 | 6 |
+ * | **4** | **2**（三重 r05-2 / r06。母数 47 人） |
+ * | **5 以上** | **0** |
+ *
+ * **今の 11 県の最大が 4 なので、10 は「任期の途中の辞職・補選では 1 度も出ていない幅の 2 倍以上」である。**
+ *
+ * **境をまたいだ形を 3 県で測った**（**1 県だけで線を引いていない**。#961）:
+ *
+ * | 県 | 境 | 入れ替わり | **`seatsChanged`** | **#928**（1,461 日） | 名簿に黙って寄る票 |
+ * |---|---|---|---:|---|---:|
+ * | **奈良**（#950） | 2022-10-12 | 41 名中 17 名 | **17** | **鳴らない**（1,290 日） | **56.1%** |
+ * | **宮城**（#953） | 2023-07-12 | 58 名中 18 名 | **16** | **鳴らない**（1,163 日） | **69.0%** |
+ * | **青森**（#959） | 2023-03-08 | 44 名中 11 名が名簿に無い | **11** | **鳴らない**（1,174 日） | **75.0%** |
+ *
+ * **この線は 3 つとも捕まえ、今の 11 県では 1 件も鳴らない。**
+ * **3 県とも本番は境のこちら側で止まっている**（#950 / #953 / #959 の担当者が手で止めた）ので、
+ * **「鳴らなかった」ではなく「境をまたいでいないので鳴りようがない」である。**
+ *
+ * **いちばん小さい境（青森 11）と線（10）の差は 1 しかない**——**線を 12 以上にすると青森を取りこぼす。**
+ * **上側の余裕（今の 11 県の最大 4 との差 6）より、下側の余裕（1）のほうが薄い。**
+ *
+ * **青森は #928 との関係でも重要である**（#959 の要点）: **境は 14 ↔ 15 会期だが、
+ * `LOCAL_TERM_DAYS` が初めて超えるのは 19 会期目で、境より 4 会期も後ろである。**
+ * **`--sessions 15`（境の向こう）ですら #928 は鳴らない。** **その隙間がこの欄の要る理由そのものである。**
+ *
+ * **鳴っても止めない**（#951 の PO の判断。止めると #901 が進まなくなる）。
+ * **`meta.json` に `flagged: true` が残り、後から数えられる**——**それがこの PBI の成果物である。**
+ */
+export const SEATS_CHANGED_FLAG = 10;
+
+/**
+ * **会期ごとに「その名簿がその会期をどれだけ写しているか」を数える**（Issue #951）。
+ * **11 県すべてが通る 1 か所に置く**（`lossyNameMatchesOf` / `countMismatchesOf` と同じ理由）。
+ *
+ * ## **何が問題だったか**——**一般選挙の境をまたいだ寄せに、痕跡が 1 つも残らない**
+ *
+ * **#950 が奈良で測った**: **境をまたぐと 1,656 / 2,952 票（56.1%）が今の名簿に寄る。**
+ * **`unmatched` にも `lossyNameMatches` にも `candidates` にも #928 にも出ない。**
+ * **「再選した本人」と「同姓同名の別人」で出力が 1 バイトも違わない**（#569 の重いほう）。
+ *
+ * ## **なぜ「会期ごと」なのか**
+ *
+ * **議会全体で数えると混ざって消える。** **奈良が境をまたいだとき、
+ * 新しい 2 会期は名簿と完全に一致し、古い 4 会期だけが半分ずれる。**
+ * **議会をひとまとめに数えると「40 人中 40 人が居る」になって、ずれが見えない。**
+ * **会期は一次資料（県の会期ページ）が決めた単位なので、我々が切ったものではない。**
+ *
+ * ## **なぜ `min(rosterAbsent, unmatchedNames)` なのか**——**両方向を要求する**
+ *
+ * **片方だけでは席の入れ替わりの証拠にならない:**
+ *   - **`rosterAbsent` だけ**: PDF が読めた会期が少ないだけかもしれない（滋賀は 1 日 1 本の会期がある）。
+ *   - **`unmatchedNames` だけ**: 字が壊れているだけかもしれない（#680 の `□`）。
+ *
+ * **両方が同時にある分だけが「席の持ち主が変わった」と言える。**
+ * **それでも誰が誰に替わったかは書かない**——**それは推定であり、#569 が禁じる側である。**
+ *
+ * ## **`rosterAbsent` は「欠席」ではない**
+ *
+ * **表決 PDF は議員全員の列を持ち、欠席者にも `欠` の記号が入る**（奈良の 176 票）。
+ * **だから「票に現れない」は「その会期の PDF に列が無い」であって、欠席とは別である。**
+ *
+ * **母数（`rollcalls` / `votes`）を必ず持つ**（#757。**件数だけでは読めない**）。
+ */
+export function sessionRosterCoverageOf(
+  rollCalls: readonly LocalRollCall[],
+  members: readonly { id: string }[],
+): LocalAssemblyMeta["sessionRosterCoverage"] {
+  const rosterSize = new Set(members.map((m) => m.id)).size;
+  const bySession = new Map<string, { date: string; rollcalls: number; votes: number; seen: Set<string>; unmatched: Set<string>; unmatchedVotes: number }>();
+  for (const rc of rollCalls) {
+    const s = bySession.get(rc.sessionId) ?? { date: "", rollcalls: 0, votes: 0, seen: new Set<string>(), unmatched: new Set<string>(), unmatchedVotes: 0 };
+    // 会期の日付は「その会期の最終議決日」（`buildLocalAssembly` の sessions.json と同じ決め方）
+    if (rc.date > s.date) s.date = rc.date;
+    s.rollcalls++;
+    for (const v of rc.votes) {
+      s.votes++;
+      if (v.memberId === "") { s.unmatched.add(v.nameText); s.unmatchedVotes++; }
+      else s.seen.add(v.memberId);
+    }
+    bySession.set(rc.sessionId, s);
+  }
+  return [...bySession]
+    .map(([sessionId, s]) => ({
+      sessionId,
+      date: s.date,
+      rollcalls: s.rollcalls,
+      votes: s.votes,
+      rosterSeen: s.seen.size,
+      // **名簿に無い memberId はここでは数えない**——それは別の壊れ方で、`buildLocalAssembly` が例外にする
+      rosterAbsent: Math.max(0, rosterSize - s.seen.size),
+      unmatchedNames: s.unmatched.size,
+      unmatchedVotes: s.unmatchedVotes,
+      seatsChanged: Math.min(Math.max(0, rosterSize - s.seen.size), s.unmatched.size),
+    }))
+    .sort((a, b) => cmp(b.date, a.date) || cmp(b.sessionId, a.sessionId));
+}
+
 /** 2 つの ISO 日付の差（日数）。`to - from`。 */
 const daysBetween = (from: string, to: string): number =>
   Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000);
@@ -601,6 +712,28 @@ const daysBetween = (from: string, to: string): number =>
  * **実測 2026-09-20（本番 `data/` の 11 議会）: いちばん開いている鳥取で 1,156 日。**
  * **11 議会とも 1,461 日以内なので、この検査は今 1 件も鳴らない**
  * （**足した時点で赤くならない**——#928 の完了条件）。**鳥取の残りは 305 日である。**
+ *
+ * ## ⚠ **この窓は「一般選挙の境」を止められない**（#961。**PO 自身が読み違えて訂正された**）
+ *
+ * **止めるのは「名簿が古すぎる」ことだけであって、「選挙をまたいだ」ことではない。**
+ * **一般選挙は任期満了の前に行われる**（統一地方選なら 4 月）ので、**境は 1,461 日より手前に来る。**
+ *
+ * **青森で実測した**（PR #959）:
+ *
+ * | `--sessions` | 最古の採決 | `rosterAsOf` からの日数 | **この窓** | 氏名の不連続 |
+ * |---:|---|---:|---|---|
+ * | 14（採った） | 2023-05-12 | 1,109 | 内側 | — |
+ * | **15** | **2023-03-08** | **1,174** | **内側** | **一般選挙の境**（IN 11 / OUT 15） |
+ * | 18 | 2022-06-14 | 1,441 | 内側（余裕 20 日） | — |
+ * | **19** | 2022-03-03 | 1,544 | **外**（ここで初めて鳴る） | — |
+ *
+ * **境は 14 ↔ 15 だが、この窓が初めて鳴るのは 19 会期目**——**境より 4 会期も後ろである。**
+ * **秋田（#901）では 1 度も鳴らなかった。** **どちらも同じことを指している:
+ * 4 年という日数は、選挙がいつあったかを知らない。**
+ *
+ * **境を捕まえるのは `sessionRosterCoverage` の `seatsChanged`（#951 / PR #954）である。**
+ * **青森の 15 会期目は `seatsChanged` 11 なので、そちらは鳴る**（奈良 17・宮城 16 も同じ）。
+ * **この窓は上限でしかない。止める位置を決める根拠にしない。**
  */
 export const LOCAL_TERM_DAYS = 1_461;
 
@@ -772,6 +905,9 @@ export function buildLocalAssembly(input: LocalAssemblyInput): LocalAssemblyData
     // **母数はいつも出す**（食い違いが 0 でも。「0 件」は「見た上での 0」でなければ意味が無い。#757）
     countChecked: counted.checked,
     ...(counted.mismatches.length ? { countMismatches: counted.mismatches } : {}),
+    // **一般選挙の境をまたいだ寄せの痕跡**（#951）。**会期が 1 つでも必ず出す**（母数。#757）。
+    // **`input.sessionRosterCoverage` は受け取らない**——受け取ると「県が渡さなければ出ない」に戻る。
+    sessionRosterCoverage: sessionRosterCoverageOf(rollCalls, input.members),
   };
   return { assembly: input.assembly, index, details, sessions, rollCallIndex: rollCallIndexOf(rollCalls), rollCalls, unmatched: unmatchedList, meta };
 }
@@ -1096,6 +1232,12 @@ export async function validateLocalAssemblies(dir: string): Promise<string[]> {
       const w = rosterWindowOf(meta.rosterAsOf, rollCallsOnDisk);
       if (w.daysAfter > LOCAL_TERM_DAYS) v.push(`assemblies/${a.id}/meta.json: 最新の採決 ${String(w.last)} が rosterAsOf ${meta.rosterAsOf} の ${w.daysAfter} 日後で、1 任期（${LOCAL_TERM_DAYS} 日）を超えている（間に必ず選挙がある。#928）`);
       if (w.daysBefore > LOCAL_TERM_DAYS) v.push(`assemblies/${a.id}/meta.json: 最古の採決 ${String(w.first)} が rosterAsOf ${meta.rosterAsOf} の ${w.daysBefore} 日前で、1 任期（${LOCAL_TERM_DAYS} 日）を超えている（間に必ず選挙がある。#928）`);
+      // **会期ごとの名簿の写り方が、公表した票と食い違っていないこと**（#951。`countChecked` と同じ理由）。
+      // **`rollcalls/` と `members/index.json` のほうを正とする**（どちらも一次資料に近い側）。
+      const cov = sessionRosterCoverageOf(rollCallsOnDisk, index);
+      if (stableJson(meta.sessionRosterCoverage ?? []) !== stableJson(cov)) {
+        v.push(`assemblies/${a.id}/meta.json: sessionRosterCoverage (${(meta.sessionRosterCoverage ?? []).length} rows) !== ${cov.length} rows from rollcalls/ + members/index.json（#951）`);
+      }
     }
   }
   return v;
