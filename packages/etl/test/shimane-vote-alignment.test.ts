@@ -314,6 +314,53 @@ test("#874 副議長の表を錨にすると 255 行中 253 行で落ちる（�
   assert.equal(r.bad, 253);
 });
 
+/**
+ * **`alt`（議長辞職の日に副議長が議長席に座る許し）を、辞職の無い会期にまで広げてはいけない。**
+ *
+ * **広げても回転の検算は 255 / 255 のままで落ちない**（実測。**副議長は普段は議長席に座らないため**）——
+ * **つまり回転のテストはこの緩みを捕まえない。** **だからここで別に固定する。**
+ *
+ * **緩めると何が起きるか**: **辞職の無い 3 会期でも「副議長なら通る」ことになり、
+ * 議長席の列が副議長の列と入れ替わっていても気づけなくなる。**
+ */
+test("#901 alt は辞職のあった会期にだけ効く（辞職の無い会期では副議長を許さない）", () => {
+  for (const b of BOOKS.filter((x) => x.resignedOn === "")) {
+    const v = view(books.get(b.sessionId)!.pdf);
+    const vice = on(vices, b.decidedOn);
+    const spk = on(speakers, b.decidedOn);
+    assert.notEqual(vice, spk, `${b.sessionId}: 議長と副議長が別人`);
+    // **その会期の議長席に副議長が座っている行は 1 つも無い**（だから許す理由が無い）
+    const seats = books.get(b.sessionId)!.pdf.rows.map((_, i) =>
+      v.cells[i].map((c, ci) => (isGicho(c) ? v.members[ci] : null)).filter((x): x is string => x !== null));
+    assert.deepEqual(seats.filter((w) => w.length === 1 && w[0] === vice), [], `${b.sessionId}: 副議長が議長席の行`);
+  }
+  // **`checkB` 自身が、辞職の無い会期で副議長を許していないこと。**
+  // **上のデータの性質だけでは、`alt` を全会期に広げる変異を捕まえられない**
+  //（**広げても実データでは差が出ないため**）。**そこで「副議長だけを議長席に置いた見え方」を作って、
+  // 辞職の無い会期では落ち、辞職のあった会期では落ちないことを見る。**
+  const onlyVice = (sid: string): { n: number; bad: number } => {
+    const pdf = books.get(sid)!.pdf;
+    const vice = on(vices, BOOKS.find((x) => x.sessionId === sid)!.decidedOn);
+    const vi = pdf.members.indexOf(vice);
+    assert.notEqual(vi, -1, `${sid}: 副議長が名簿に居る`);
+    const v = view(pdf);
+    // 議長席のセルを全部「副議長の列だけ」に付け替える
+    v.cells = pdf.rows.map((r) => r.cells.map((c, ci) => (isGicho(c) ? "○" : ci === vi ? "議長" : c)));
+    return checkB(sid, v);
+  };
+  for (const b of BOOKS.filter((x) => x.resignedOn === "")) {
+    const r = onlyVice(b.sessionId);
+    assert.equal(r.bad, r.n, `${b.sessionId}: 副議長を議長席に置いたら全行落ちる（許していない）`);
+    assert.ok(r.n > 0, `${b.sessionId}: 母数`);
+  }
+  // **辞職のあった会期では、同じ置き換えがほとんど落ちない**（そこだけ副議長を許しているため）。
+  // **0 ではない**——**2025-06 の 2 行は元から副議長が議長席なので、置き換えで「議長席が 2 つ」になる。**
+  for (const b of BOOKS.filter((x) => x.resignedOn !== "")) {
+    const r = onlyVice(b.sessionId);
+    assert.ok(r.bad * 10 < r.n, `${b.sessionId}: 辞職のあった会期は副議長を許す（${r.bad}/${r.n}）`);
+  }
+});
+
 test("#874 議長辞職の当日は、1 本の中に議長席が 2 人いる（島根で実測。母数から外した 8 行の中身）", () => {
   // 2026-06: 主たる議長は 山根成二（83代・令和8年6月9日 就任）だが、
   //          「議⾧辞職」の 2 行だけ 高橋雅彦（92代 副議長・令和7年6月9日 就任）が議長席に座る。
