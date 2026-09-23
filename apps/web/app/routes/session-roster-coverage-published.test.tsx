@@ -50,17 +50,10 @@ describe("#951 本番データ: 会期ごとの名簿の写り方が画面に出
   /**
    * **本番の母数と印の件数を固定する**（#757。**「数えていない」と区別する**）。
    *
-   * **実測 2026-09-23**: **11 議会 / 102 会期（#901 の島根で 79 → 82、佐賀で 82 → 93、鳥取で 93 → 102）。**
-   * **`seatsChanged` の最大は 4（三重）で、
+   * **実測 2026-09-23**: **11 議会 / 96 会期。`seatsChanged` の最大は 5（滋賀。#901 で 2 → 19 会期）で、
    * 印（10 以上）は 0 件。** **#901 が会期を広げると、ここが動いて数え直しを強制する。**
-   *
-   * ## ⚠ **佐賀の 14 会期目（一般選挙の境）は `seatsChanged` 4 で、線 10 に掛からない**
-   * **本番は 13 で止めているのでここには出ないが、「印が 0 件」を
-   * 「境をまたいでいないことの証明」と読まないこと。**
-   * **線の下にも本物の境がある**（`packages/etl/test/saga-sessions-widen.test.ts` が
-   * 一次資料から固定している。#961 への申し送り）。
    */
-  it("本番の母数と印の件数を固定する（102 会期・最大 4・印 0 件）", async () => {
+  it("本番の母数と印の件数を固定する（96 会期・最大 5・印 0 件）", async () => {
     const metas = await realLocalMetas();
     const local = metas.filter((m) => m.assemblyId.startsWith("pref-"));
     const sums = local.map((m) => sessionRosterCoverageSummary(m)!);
@@ -69,18 +62,18 @@ describe("#951 本番データ: 会期ごとの名簿の写り方が画面に出
       sessions: sums.reduce((n, s) => n + s.sessions, 0),
       maxSeatsChanged: sums.reduce((n, s) => Math.max(n, s.maxSeatsChanged), 0),
       flagged: sums.reduce((n, s) => n + s.flagged.length, 0),
-    }).toEqual({ assemblies: 11, sessions: 102, maxSeatsChanged: 4, flagged: 0 });
+    }).toEqual({ assemblies: 11, sessions: 96, maxSeatsChanged: 5, flagged: 0 });
     // **線は今までに起きた最大（4）の外に在る**（内側に引けば今すぐ赤くなり、誰も見なくなる。#785）
     expect(SEATS_CHANGED_FLAG).toBeGreaterThan(4);
   });
 
-  it("/coverage に、本番の母数（102 会期）と「印の付いた会期は無い」が出る", async () => {
+  it("/coverage に、本番の母数（96 会期）と「印の付いた会期は無い」が出る", async () => {
     await renderCoverage(await realLocalMetas());
     const section = screen.getByRole("region", { name: SECTION });
     // **母数が出ていること**（#757。「0 件」は「見た上での 0」でなければ意味が無い）
-    expect(section).toHaveTextContent("102");
+    expect(section).toHaveTextContent("96");
     // **今までに起きた最大も出す**（「入れ替わりは無い」と読ませない）
-    expect(section).toHaveTextContent("4");
+    expect(section).toHaveTextContent("5");
     expect(within(section).getByTestId("coverage-session-roster-none")).toBeInTheDocument();
     // **推定を書いていない**（#569）——**「選挙」や「同一人物」と断定しない**
     expect(section).toHaveTextContent("誰と誰が入れ替わったかは書きません");
