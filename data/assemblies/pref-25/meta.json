@@ -15,6 +15,30 @@
  },
  "fetchedAt": "2026-09-12T20:20:52.955Z",
  "rosterAsOf": "2026-09-13",
+ "sessionRosterCoverage": [
+  {
+   "date": "2026-08-10",
+   "rollcalls": 10,
+   "rosterAbsent": 0,
+   "rosterSeen": 44,
+   "seatsChanged": 0,
+   "sessionId": "2026-07",
+   "unmatchedNames": 1,
+   "unmatchedVotes": 8,
+   "votes": 440
+  },
+  {
+   "date": "2026-06-30",
+   "rollcalls": 4,
+   "rosterAbsent": 3,
+   "rosterSeen": 41,
+   "seatsChanged": 0,
+   "sessionId": "2026-06-rinji",
+   "unmatchedNames": 0,
+   "unmatchedVotes": 0,
+   "votes": 164
+  }
+ ],
  "sessions": [
   {
    "pdfUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg900_sanpi-0722-2.pdf",

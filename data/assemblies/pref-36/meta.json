@@ -15,6 +15,52 @@
  },
  "fetchedAt": "2026-09-19T19:30:21.855Z",
  "rosterAsOf": "2026-09-20",
+ "sessionRosterCoverage": [
+  {
+   "date": "2026-09-11",
+   "rollcalls": 1,
+   "rosterAbsent": 0,
+   "rosterSeen": 36,
+   "seatsChanged": 0,
+   "sessionId": "2026-09",
+   "unmatchedNames": 0,
+   "unmatchedVotes": 0,
+   "votes": 36
+  },
+  {
+   "date": "2026-07-03",
+   "rollcalls": 20,
+   "rosterAbsent": 0,
+   "rosterSeen": 36,
+   "seatsChanged": 0,
+   "sessionId": "2026-06",
+   "unmatchedNames": 0,
+   "unmatchedVotes": 0,
+   "votes": 720
+  },
+  {
+   "date": "2026-03-11",
+   "rollcalls": 85,
+   "rosterAbsent": 0,
+   "rosterSeen": 36,
+   "seatsChanged": 0,
+   "sessionId": "2026-02",
+   "unmatchedNames": 0,
+   "unmatchedVotes": 0,
+   "votes": 3060
+  },
+  {
+   "date": "2025-12-19",
+   "rollcalls": 47,
+   "rosterAbsent": 0,
+   "rosterSeen": 36,
+   "seatsChanged": 0,
+   "sessionId": "2025-11",
+   "unmatchedNames": 2,
+   "unmatchedVotes": 54,
+   "votes": 1746
+  }
+ ],
  "sessions": [
   {
    "pdfUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1075652.pdf",
