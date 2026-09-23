@@ -2,7 +2,7 @@
  "asOf": "2025-04-01",
  "assemblyId": "pref-41",
  "counts": {
-  "rollcalls": 23
+  "rollcalls": 366
  },
  "current": true,
  "district": "佐賀市",
@@ -336,6 +336,4808 @@
    "sessionLabel": "令和8年4月臨時会",
    "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003119136/3_119136_389175_up_bkhi5h10.pdf",
    "title": "佐賀県議会委員会条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-乙第10号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "佐賀県個人番号の利用及び特定個人情報の提供に関する条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-乙第11号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "佐賀県立学校職員及び佐賀県市町立学校県費負担教職員定数条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-乙第12号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "佐賀県義務教育諸学校等の教育職員の給与等に関する特別措置条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-乙第13号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "佐賀県産業廃棄物等の適正な処理に関する条例(案)",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-乙第14号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "佐賀県国民健康保険法施行条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-乙第15号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "佐賀県障害者介護給付費等不服審査会条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-乙第16号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "佐賀県青少年健全育成条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-乙第17号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "佐賀県工鉱業試験手数料及び使用料条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-乙第18号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "佐賀県企業立地の促進に関する条例を廃止する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-乙第19号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "国営土地改良事業負担金条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-乙第20号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "佐賀県豊かな山を未来へつなぐ条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-乙第21号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "佐賀県国土利用計画審議会の組織及び運営に関する条例及び佐賀県土地利用審査会の組織及び運営に関する条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-乙第22号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "地方独立行政法人佐賀県医療センター好生館第５期中期計画の認可について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-乙第23号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "佐賀県道路公社定款の一部変更について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-乙第24号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "県道の路線変更について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-乙第25号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "権利の放棄について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-乙第26号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "県有財産の処分について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-乙第27号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "包括外部監査契約の締結について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-乙第37号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "人事委員会委員の選任について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-乙第38号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "佐賀県県税条例等の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-乙第１号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "佐賀県公益認定等審議会条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-乙第２号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "佐賀県職員定数条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-乙第３号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "佐賀県職員等の旅費に関する条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-乙第４号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "職員の勤務時間、休暇等に関する条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-乙第５号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "佐賀県手数料条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-乙第６号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "地域経済牽引事業の促進区域における県税の課税免除に関する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-乙第７号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "佐賀県ふるさと寄附金基金条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-乙第８号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "住民基本台帳法施行条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-乙第９号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "佐賀県行政手続等における情報通信の技術の利用に関する条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-意第１号意見書案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "北朝鮮による日本人拉致問題の早期解決を求める意見書（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-意第２号意見書案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "地域公共交通の維持・確保に向けた環境整備を求める意見書（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-意第３号意見書案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "皇統の伝統に基づく安定的皇位継承の国会議論促進を求める意見書（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-意第４号意見書案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "学校施設環境改善交付金の十分な財源確保を求める意見書（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-甲第10号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "令和８年度佐賀県林業改善資金特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-甲第11号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "令和８年度佐賀県沿岸漁業改善資金特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-甲第12号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "令和８年度佐賀県公債管理特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-甲第13号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "令和８年度佐賀県育英資金特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-甲第14号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "令和８年度佐賀県港湾整備事業特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-甲第15号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "令和８年度地方独立行政法人佐賀県医療センター好生館貸付金特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-甲第16号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "令和８年度佐賀県国民健康保険事業特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-甲第17号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "令和８年度佐賀県工業用水道事業会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-甲第１号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "令和８年度佐賀県一般会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-甲第２号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "令和８年度佐賀県災害救助基金特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-甲第３号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "令和８年度佐賀県母子父子寡婦福祉資金特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-甲第４号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "令和８年度佐賀県就農支援資金特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-甲第５号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "令和８年度佐賀県小規模企業者等設備導入等事業支援特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-甲第６号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "令和８年度佐賀県財政調整積立金特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-甲第７号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "令和８年度佐賀県証紙特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-甲第８号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "令和８年度佐賀県土地取得特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-甲第９号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "令和８年度佐賀県産業用地造成事業特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260316-議第１号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "佐賀県議会会議規則の一部を改正する規則（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-06",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260306-乙第28号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "佐賀県高等学校等教育改革促進基金条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-06",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260306-乙第29号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "県事業に対する市町の負担について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-06",
+   "kind": "localVote",
+   "result": "承認",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260306-乙第30号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "県営土地改良事業に対する市町の負担について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-06",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260306-乙第31号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "独立行政法人鉄道建設・運輸施設整備支援機構事業に対する市町の負担について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-06",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260306-乙第32号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "権利の放棄について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-06",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260306-乙第33号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "権利の放棄について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-06",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260306-乙第34号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "請負契約について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-06",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260306-乙第35号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "請負契約の変更について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-06",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260306-乙第36号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "県有財産の取得の変更について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-06",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260306-甲第18号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "令和７年度佐賀県一般会計補正予算（第８号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-06",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260306-甲第19号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "令和７年度佐賀県災害救助基金特別会計補正予算（第２号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-06",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260306-甲第20号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "令和７年度佐賀県母子父子寡婦福祉資金特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-06",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260306-甲第21号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "令和７年度佐賀県就農支援資金特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-06",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260306-甲第22号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "令和７年度佐賀県小規模企業者等設備導入等事業支援特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-06",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260306-甲第23号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "令和７年度佐賀県財政調整積立金特別会計補正予算（第２号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-06",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260306-甲第24号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "令和７年度佐賀県証紙特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-06",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260306-甲第25号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "令和７年度佐賀県土地取得特別会計補正予算（第３号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-06",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260306-甲第26号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "令和７年度佐賀県産業用地造成事業特別会計補正予算（第３号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-06",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260306-甲第27号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "令和７年度佐賀県林業改善資金特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-06",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260306-甲第28号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "令和７年度佐賀県沿岸漁業改善資金特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-06",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260306-甲第29号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "令和７年度佐賀県公債管理特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-06",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260306-甲第30号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "令和７年度佐賀県育英資金特別会計補正予算（第２号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-06",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260306-甲第31号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "令和７年度佐賀県港湾整備事業特別会計補正予算（第３号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-06",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260306-甲第32号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "令和７年度地方独立行政法人佐賀県医療センター好生館貸付金特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-06",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260306-甲第33号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "令和７年度佐賀県国民健康保険事業特別会計補正予算（第２号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-06",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260306-甲第34号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "令和７年度佐賀県工業用水道事業会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-06",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-02-teirei-list06637-20260306-甲第35号議案",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "title": "令和７年度佐賀県一般会計補正予算（第７号）の専決処分について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-10-02",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-09-teirei-list06515-20251002-乙第46号議案",
+   "sessionLabel": "令和7年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003114754/3_114754_368974_up_845tlsur.pdf",
+   "title": "佐賀県波戸岬少年自然の家設置条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-10-02",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-09-teirei-list06515-20251002-乙第47号議案",
+   "sessionLabel": "令和7年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003114754/3_114754_368974_up_845tlsur.pdf",
+   "title": "佐賀県議会議員又は佐賀県知事の選挙における選挙運動用自動車の使用及びポスター等の作成の公営に関する条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-10-02",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-09-teirei-list06515-20251002-乙第48号議案",
+   "sessionLabel": "令和7年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003114754/3_114754_368974_up_845tlsur.pdf",
+   "title": "佐賀県警察官支給品及び貸与品に関する条例及び佐賀県交通巡視員支給品及び貸与品に関する条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-10-02",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-09-teirei-list06515-20251002-乙第49号議案",
+   "sessionLabel": "令和7年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003114754/3_114754_368974_up_845tlsur.pdf",
+   "title": "佐賀県唐津地区高等学校等寄宿舎設置条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-10-02",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-09-teirei-list06515-20251002-乙第50号議案",
+   "sessionLabel": "令和7年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003114754/3_114754_368974_up_845tlsur.pdf",
+   "title": "県事業に対する市町の負担について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-10-02",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-09-teirei-list06515-20251002-乙第51号議案",
+   "sessionLabel": "令和7年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003114754/3_114754_368974_up_845tlsur.pdf",
+   "title": "国営土地改良事業に対する市町の負担について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-10-02",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-09-teirei-list06515-20251002-乙第52号議案",
+   "sessionLabel": "令和7年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003114754/3_114754_368974_up_845tlsur.pdf",
+   "title": "県営土地改良事業に対する市町の負担について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-10-02",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-09-teirei-list06515-20251002-乙第53号議案",
+   "sessionLabel": "令和7年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003114754/3_114754_368974_up_845tlsur.pdf",
+   "title": "地方独立行政法人佐賀県医療センター好生館第５期中期目標の制定について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-10-02",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-09-teirei-list06515-20251002-乙第54号議案",
+   "sessionLabel": "令和7年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003114754/3_114754_368974_up_845tlsur.pdf",
+   "title": "地方独立行政法人佐賀県医療センター好生館が行う出資等に係る不要財産の納付の認可について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-10-02",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-09-teirei-list06515-20251002-乙第55号議案",
+   "sessionLabel": "令和7年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003114754/3_114754_368974_up_845tlsur.pdf",
+   "title": "地方独立行政法人佐賀県医療センター好生館定款の一部変更について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-10-02",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-09-teirei-list06515-20251002-乙第56号議案",
+   "sessionLabel": "令和7年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003114754/3_114754_368974_up_845tlsur.pdf",
+   "title": "警察官の交通事故処理を起因とする車両損傷に対する損害賠償について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-10-02",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-09-teirei-list06515-20251002-乙第57号議案",
+   "sessionLabel": "令和7年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003114754/3_114754_368974_up_845tlsur.pdf",
+   "title": "請負契約について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-10-02",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-09-teirei-list06515-20251002-乙第58号議案",
+   "sessionLabel": "令和7年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003114754/3_114754_368974_up_845tlsur.pdf",
+   "title": "請負契約の変更について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-10-02",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-09-teirei-list06515-20251002-乙第59号議案",
+   "sessionLabel": "令和7年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003114754/3_114754_368974_up_845tlsur.pdf",
+   "title": "県有財産の無償譲渡について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-10-02",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-41-2025-09-teirei-list06515-20251002-乙第60号議案",
+   "sessionLabel": "令和7年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003114754/3_114754_368974_up_845tlsur.pdf",
+   "title": "公安委員会委員の任命について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-10-02",
+   "kind": "localVote",
+   "result": "否決",
+   "rollCallId": "pref-41-2025-09-teirei-list06515-20251002-意第10号意見書案",
+   "sessionLabel": "令和7年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003114754/3_114754_368974_up_845tlsur.pdf",
+   "title": "最高裁判決に基づきすべての生活保護利用者に対する速やかな被害回復措置を求める意見書（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-10-02",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-09-teirei-list06515-20251002-意第11号意見書案",
+   "sessionLabel": "令和7年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003114754/3_114754_368974_up_845tlsur.pdf",
+   "title": "外国人や外国資本による土地取得及び利用を制限するための法整備を求める意見書（案）",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2025-10-02",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-09-teirei-list06515-20251002-意第12号意見書案",
+   "sessionLabel": "令和7年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003114754/3_114754_368974_up_845tlsur.pdf",
+   "title": "台湾のＣＰＴＰＰ（環太平洋パートナーシップに関する包括的及び先進的な協定）参加を積極的に支援するよう求める意見書（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-10-02",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-09-teirei-list06515-20251002-意第８号意見書案",
+   "sessionLabel": "令和7年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003114754/3_114754_368974_up_845tlsur.pdf",
+   "title": "私学助成の充実強化等に関する意見書（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-10-02",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-09-teirei-list06515-20251002-意第９号意見書案",
+   "sessionLabel": "令和7年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003114754/3_114754_368974_up_845tlsur.pdf",
+   "title": "地方消費者行政の充実・強化のため国の財政措置を求める意見書（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-10-02",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-09-teirei-list06515-20251002-決第１号決議案",
+   "sessionLabel": "令和7年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003114754/3_114754_368974_up_845tlsur.pdf",
+   "title": "佐賀県警察本部ＤＮＡ型鑑定不祥事の再発防止と県民への信頼回復を求める決議（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-10-02",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-09-teirei-list06515-20251002-甲第40号議案",
+   "sessionLabel": "令和7年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003114754/3_114754_368974_up_845tlsur.pdf",
+   "title": "令和７年度佐賀県一般会計補正予算（第３号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-10-02",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-09-teirei-list06515-20251002-甲第41号議案",
+   "sessionLabel": "令和7年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003114754/3_114754_368974_up_845tlsur.pdf",
+   "title": "令和７年度佐賀県災害救助基金特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-10-02",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-09-teirei-list06515-20251002-甲第42号議案",
+   "sessionLabel": "令和7年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003114754/3_114754_368974_up_845tlsur.pdf",
+   "title": "令和７年度佐賀県財政調整積立金特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-10-02",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-09-teirei-list06515-20251002-甲第43号議案",
+   "sessionLabel": "令和7年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003114754/3_114754_368974_up_845tlsur.pdf",
+   "title": "令和７年度佐賀県土地取得特別会計補正予算（第２号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-10-02",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-09-teirei-list06515-20251002-甲第44号議案",
+   "sessionLabel": "令和7年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003114754/3_114754_368974_up_845tlsur.pdf",
+   "title": "令和７年度佐賀県国民健康保険事業特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-10-02",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-09-teirei-list06515-20251002-甲第45号議案",
+   "sessionLabel": "令和7年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003114754/3_114754_368974_up_845tlsur.pdf",
+   "title": "令和７年度佐賀県一般会計補正予算（第４号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-04-24",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-41-2025-04-rinji-list06476-20250424-乙第33号議案",
+   "sessionLabel": "令和7年4月臨時会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003112934/3_112934_353517_up_h8tpjpnt.pdf",
+   "title": "監査委員の選任について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-乙第10号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "佐賀県立学校職員及び佐賀県市町立学校県費負担教職員定数条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-乙第11号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "佐賀県公立学校職員給与条例等の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-乙第12号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "佐賀県産業廃棄物税基金条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-乙第13号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "佐賀県危険な薬物から県民の命とくらしを守る条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-乙第14号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "佐賀県安心こども基金条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-乙第15号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "佐賀県児童福祉法の施行等に関する条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-乙第16号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "佐賀県奨学金返還支援基金条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-乙第17号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "佐賀県獣医師修学資金貸与条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-乙第18号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "佐賀県空港条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-乙第19号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "ＳＡＧＡスポーツピラミッド構想推進条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-乙第20号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "ＳＳＰ育成・ＳＡＧＡ２０２４運営基金条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-乙第21号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "県道の路線変更について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-乙第22号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "訴えの提起について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-乙第23号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "包括外部監査契約の締結について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-乙第29号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "佐賀県有明海区漁業調整委員会委員の任命について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-乙第30号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "松浦海区漁業調整委員会委員の任命",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-乙第31号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "佐賀県県税条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-乙第32号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "副知事の選任について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-乙第１号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "佐賀県有明海漁業振興・補償基金条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-乙第２号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "九年庵設置条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-乙第３号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "佐賀県職員給与条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-乙第４号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "佐賀県職員等の旅費に関する条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-乙第５号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "職員の勤務時間、休暇等に関する条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-乙第６号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "佐賀県手数料条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-乙第７号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "佐賀県ふるさと寄附金基金条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-乙第８号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "佐賀県個人番号の利用及び特定個人情報の提供に関する条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-乙第９号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "佐賀県立学校設置条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-意第１号意見書案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "性犯罪の再犯防止の取組への支援の強化を求める意見書（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-意第２号意見書案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "日米地位協定の見直しを求める意見書（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-意第３号意見書案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "適格請求書等保存方式（インボイス制度）の見直しを求める意見書（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "否決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-意第４号意見書案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "健康保険証の発行停止の見直しを求める意見書（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-甲第10号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "令和７年度佐賀県林業改善資金特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-甲第11号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "令和７年度佐賀県沿岸漁業改善資金特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-甲第12号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "令和７年度佐賀県公債管理特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-甲第13号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "令和７年度佐賀県育英資金特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-甲第14号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "令和７年度佐賀県港湾整備事業特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-甲第15号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "令和７年度地方独立行政法人佐賀県医療センター好生館貸付金特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-甲第16号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "令和７年度佐賀県国民健康保険事業特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-甲第17号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "令和７年度佐賀県工業用水道事業会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-甲第１号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "令和７年度佐賀県一般会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-甲第２号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "令和７年度佐賀県災害救助基金特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-甲第３号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "令和７年度佐賀県母子父子寡婦福祉資金特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-甲第４号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "令和７年度佐賀県就農支援資金特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-甲第５号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "令和７年度佐賀県小規模企業者等設備導入等事業支援特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-甲第６号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "令和７年度佐賀県財政調整積立金特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-甲第７号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "令和７年度佐賀県証紙特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-甲第８号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "令和７年度佐賀県土地取得特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-甲第９号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "令和７年度佐賀県産業用地造成事業特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-議第１号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "佐賀県議会の保有する個人情報の保護に関する条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250317-議第２号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "佐賀県議会会議規則の一部を改正する規則（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250307-乙第24号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "県事業に対する市町の負担について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250307-乙第25号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "県営土地改良事業に対する市町の負担について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250307-乙第26号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "独立行政法人鉄道建設・運輸施設整備支援機構事業に対する市町の負担について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250307-乙第27号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "県誘致の売買契約に係る損害賠償について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250307-乙第28号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "権利の放棄について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250307-甲第18号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "令和６年度佐賀県一般会計補正予算（第６号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250307-甲第19号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "令和６年度佐賀県災害救助基金特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250307-甲第20号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "令和６年度佐賀県母子父子寡婦福祉資金特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250307-甲第21号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "令和６年度佐賀県就農支援資金特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250307-甲第22号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "令和６年度佐賀県小規模企業者等設備導入等事業支援特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250307-甲第23号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "令和６年度佐賀県財政調整積立金特別会計補正予算（第２号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250307-甲第24号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "令和６年度佐賀県証紙特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250307-甲第25号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "令和６年度佐賀県土地取得特別会計補正予算（第３号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250307-甲第26号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "令和６年度佐賀県産業用地造成事業特別会計補正予算（第２号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250307-甲第27号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "令和６年度佐賀県林業改善資金特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250307-甲第28号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "令和６年度佐賀県沿岸漁業改善資金特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250307-甲第29号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "令和６年度佐賀県公債管理特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250307-甲第30号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "令和６年度佐賀県育英資金特別会計補正予算（第２号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250307-甲第31号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "令和６年度佐賀県港湾整備事業特別会計補正予算（第３号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250307-甲第32号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "令和６年度地方独立行政法人佐賀県医療センター好生館貸付金特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250307-甲第33号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "令和６年度佐賀県国民健康保険事業特別会計補正予算（第２号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2025-02-teirei-list06440-20250307-甲第34号議案",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "title": "令和６年度佐賀県工業用水道事業会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-04-18",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-41-2024-04-rinji-list06316-20240418-乙第34号議案",
+   "sessionLabel": "令和6年4月臨時会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003106186/3_106186_317362_up_cc5irhtz.pdf",
+   "title": "教育長の任命について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-04-18",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-41-2024-04-rinji-list06316-20240418-乙第35号議案",
+   "sessionLabel": "令和6年4月臨時会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003106186/3_106186_317362_up_cc5irhtz.pdf",
+   "title": "監査委員の選任について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-乙第10号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "佐賀県国民健康保険広域化等支援基金条例を廃止する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-乙第11号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "大麻取締法及び麻薬及び向精神薬取締法の一部を改正する法律の施行に伴う関係条例の整理に関する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-乙第12号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "佐賀県介護保険財政安定化基金条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-乙第13号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "佐賀県介護保険法施行条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-乙第14号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "精神保健及び精神障害者福祉に関する法律に基づく任意入院者の症状等の報告に関する条例及び佐賀県職員特殊勤務手当支給条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-乙第15号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "佐賀県児童福祉法の施行等に関する条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-乙第16号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "佐賀県立九千部学園条例を廃止する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-乙第17号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "佐賀県女性相談支援センター設置条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-乙第18号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "佐賀県職業能力開発促進法施行条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-乙第19号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "佐賀県蜜蜂転飼条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-乙第20号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "漁港漁場整備法及び水産業協同組合法の一部を改正する法律の施行に伴う関係条例の整備に関する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-乙第21号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "佐賀県道路占用料条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-乙第22号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "佐賀県立都市公園条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-乙第23号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "建築基準法施行条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-乙第24号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "「佐賀県人権施策基本方針」の策定について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-乙第25号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "包括外部監査契約の締結について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-乙第26号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "訴えの提起について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-乙第33号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "佐賀県県税条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-乙第１号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "佐賀県職員の退職手当に関する条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-乙第２号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "地方自治法の一部改正に伴う関係条例の整理に関する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-乙第３号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "佐賀県手数料条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-乙第４号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "住民基本台帳法施行条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-乙第５号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "佐賀県個人番号の利用及び特定個人情報の提供に関する条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-乙第６号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "佐賀県公立学校職員特殊勤務手当及びへき地手当支給条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-乙第７号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "佐賀県立学校職員及び佐賀県市町立学校県費負担教職員定数条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-乙第８号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "佐賀県医師修学資金等貸与条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-乙第９号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "佐賀県医療法の施行等に関する条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-意第１号意見書案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "政治資金パーティー裏金問題の再発防止等を求める意見書（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "否決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-意第２号意見書案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "「国の補充的指示権の創設」については慎重な審議を求める意見書（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "否決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-意第３号意見書案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "健康保険証の存続を求める意見書（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "否決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-意第４号意見書案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "被災者生活再建支援制度の拡充を求める意見書（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-決第１号決議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "洋上風力発電事業誘致の早期実現に向けた取組を求める決議（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-甲第10号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "令和６年度佐賀県林業改善資金特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-甲第11号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "令和６年度佐賀県沿岸漁業改善資金特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-甲第12号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "令和６年度佐賀県公債管理特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-甲第13号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "令和６年度佐賀県育英資金特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-甲第14号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "令和６年度佐賀県港湾整備事業特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-甲第15号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "令和６年度地方独立行政法人佐賀県医療センター好生館貸付金特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-甲第16号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "令和６年度佐賀県国民健康保険事業特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-甲第17号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "令和６年度佐賀県工業用水道事業会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-甲第１号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "令和６年度佐賀県一般会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-甲第２号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "令和６年度佐賀県災害救助基金特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-甲第３号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "令和６年度佐賀県母子父子寡婦福祉資金特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-甲第４号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "令和６年度佐賀県就農支援資金特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-甲第５号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "令和６年度佐賀県小規模企業者等設備導入等事業支援特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-甲第６号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "令和６年度佐賀県財政調整積立金特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-甲第７号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "令和６年度佐賀県証紙特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-甲第８号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "令和６年度佐賀県土地取得特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-甲第９号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "令和６年度佐賀県産業用地造成事業特別会計予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "不採択",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-請第１号請願",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "小中高のすべてで３５人以下学級の実現、正規・専任の教職員の増員、特別支援学級の編制基準の見直し、教育費の保護者負担軽減を求める請願",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-25",
+   "kind": "localVote",
+   "result": "不採択",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240325-請第２号請願",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "健康保険証の存続を求める請願書",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-14",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240314-乙第27号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "佐賀県公立学校情報機器整備基金条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-14",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240314-乙第28号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "県事業に対する市町の負担について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-14",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240314-乙第29号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "県営土地改良事業に対する市町の負担について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-14",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240314-乙第30号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "独立行政法人鉄道建設・運輸施設整備支援機構事業に対する市町の負担について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-14",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240314-乙第31号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "警察官の交通誘導を起因とする交通事故に対する損害賠償について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-14",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240314-乙第32号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "権利の放棄について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-14",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240314-甲第18号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "令和５年度佐賀県一般会計補正予算（第８号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-14",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240314-甲第19号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "令和５年度佐賀県災害救助基金特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-14",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240314-甲第20号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "令和５年度佐賀県母子父子寡婦福祉資金特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-14",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240314-甲第21号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "令和５年度佐賀県就農支援資金特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-14",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240314-甲第22号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "令和５年度佐賀県小規模企業者等設備導入等事業支援特別会計補正予算（第４号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-14",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240314-甲第23号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "令和５年度佐賀県財政調整積立金特別会計補正予算（第３号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-14",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240314-甲第24号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "令和５年度佐賀県証紙特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-14",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240314-甲第25号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "令和５年度佐賀県土地取得特別会計補正予算（第３号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-14",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240314-甲第26号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "令和５年度佐賀県産業用地造成事業特別会計補正予算（第２号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-14",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240314-甲第27号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "令和５年度佐賀県林業改善資金特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-14",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240314-甲第28号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "令和５年度佐賀県沿岸漁業改善資金特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-14",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240314-甲第29号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "令和５年度佐賀県公債管理特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-14",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240314-甲第30号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "令和５年度佐賀県育英資金特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-14",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240314-甲第31号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "令和５年度佐賀県港湾整備事業特別会計補正予算（第３号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-14",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240314-甲第32号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "令和５年度地方独立行政法人佐賀県医療センター好生館貸付金特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-14",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240314-甲第33号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "令和５年度佐賀県国民健康保険事業特別会計補正予算（第２号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-14",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2024-02-teirei-list06074-20240314-甲第34号議案",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "title": "令和５年度佐賀県工業用水道事業会計補正予算（第２号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-12-21",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-11-teirei-list05990-20231221-甲第50号議案",
+   "sessionLabel": "令和5年11月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00399990/3_99990_303196_up_xhnpim76.pdf",
+   "title": "令和５年度佐賀県一般会計補正予算（第６号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-12-21",
+   "kind": "localVote",
+   "result": "否決",
+   "rollCallId": "pref-41-2023-11-teirei-list05990-20231221-－-1",
+   "sessionLabel": "令和5年11月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00399990/3_99990_303196_up_xhnpim76.pdf",
+   "title": "12月20日に修正議決された甲第50号議案について、知事が再議に付し、12月21日の採決において出席議員の三分の二以上の賛成を得られなかったため、先（12月20日）の議決のとおり決定することが否決された。",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2023-12-21",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-11-teirei-list05990-20231221-－-2",
+   "sessionLabel": "令和5年11月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00399990/3_99990_303196_up_xhnpim76.pdf",
+   "title": "甲第５０号議案令和５年度佐賀県一般会計補正予算（第６号）に対する附帯決議（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-12-20",
+   "kind": "localVote",
+   "result": "認定",
+   "rollCallId": "pref-41-2023-11-teirei-list05990-20231220-乙第69号議案",
+   "sessionLabel": "令和5年11月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00399990/3_99990_303196_up_xhnpim76.pdf",
+   "title": "令和４年度佐賀県歳入歳出決算の認定について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-12-20",
+   "kind": "localVote",
+   "result": "認定",
+   "rollCallId": "pref-41-2023-11-teirei-list05990-20231220-乙第70号議案",
+   "sessionLabel": "令和5年11月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00399990/3_99990_303196_up_xhnpim76.pdf",
+   "title": "令和４年度佐賀県工業用水道事業決算の認定について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-12-20",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-11-teirei-list05990-20231220-乙第71号議案",
+   "sessionLabel": "令和5年11月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00399990/3_99990_303196_up_xhnpim76.pdf",
+   "title": "佐賀県職員給与条例等の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-12-20",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-11-teirei-list05990-20231220-乙第72号議案",
+   "sessionLabel": "令和5年11月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00399990/3_99990_303196_up_xhnpim76.pdf",
+   "title": "佐賀県会計年度任用職員の報酬等に関する条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-12-20",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-11-teirei-list05990-20231220-乙第73号議案",
+   "sessionLabel": "令和5年11月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00399990/3_99990_303196_up_xhnpim76.pdf",
+   "title": "佐賀県手数料条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-12-20",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-11-teirei-list05990-20231220-乙第74号議案",
+   "sessionLabel": "令和5年11月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00399990/3_99990_303196_up_xhnpim76.pdf",
+   "title": "佐賀県公立学校職員給与条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-12-20",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-11-teirei-list05990-20231220-乙第75号議案",
+   "sessionLabel": "令和5年11月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00399990/3_99990_303196_up_xhnpim76.pdf",
+   "title": "県事業に対する市町の負担について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-12-20",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-11-teirei-list05990-20231220-乙第76号議案",
+   "sessionLabel": "令和5年11月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00399990/3_99990_303196_up_xhnpim76.pdf",
+   "title": "当せん金付証票の発売について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-12-20",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-11-teirei-list05990-20231220-乙第77号議案",
+   "sessionLabel": "令和5年11月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00399990/3_99990_303196_up_xhnpim76.pdf",
+   "title": "訴えの提起について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-12-20",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-11-teirei-list05990-20231220-乙第78号議案",
+   "sessionLabel": "令和5年11月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00399990/3_99990_303196_up_xhnpim76.pdf",
+   "title": "小型船舶損傷事故に対する損害賠償について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-12-20",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-11-teirei-list05990-20231220-乙第79号議案",
+   "sessionLabel": "令和5年11月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00399990/3_99990_303196_up_xhnpim76.pdf",
+   "title": "横断歩道標識の設置不備箇所における交通取締りに対する損害賠償について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-12-20",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-11-teirei-list05990-20231220-乙第80号議案",
+   "sessionLabel": "令和5年11月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00399990/3_99990_303196_up_xhnpim76.pdf",
+   "title": "ＳＡＧＡパラスポーツセンターの管理について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-12-20",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-11-teirei-list05990-20231220-乙第81号議案",
+   "sessionLabel": "令和5年11月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00399990/3_99990_303196_up_xhnpim76.pdf",
+   "title": "佐賀県波戸岬海浜公園の管理について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-12-20",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-11-teirei-list05990-20231220-乙第82号議案",
+   "sessionLabel": "令和5年11月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00399990/3_99990_303196_up_xhnpim76.pdf",
+   "title": "佐賀県立男女共同参画センター及び佐賀県立生涯学習センターの管理について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-12-20",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-11-teirei-list05990-20231220-乙第83号議案",
+   "sessionLabel": "令和5年11月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00399990/3_99990_303196_up_xhnpim76.pdf",
+   "title": "佐賀県営住宅等（佐賀県東部地区）の管理について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-12-20",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-11-teirei-list05990-20231220-乙第84号議案",
+   "sessionLabel": "令和5年11月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00399990/3_99990_303196_up_xhnpim76.pdf",
+   "title": "佐賀県営住宅等（佐賀県西部地区）の管理について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-12-20",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-41-2023-11-teirei-list05990-20231220-乙第85号議案",
+   "sessionLabel": "令和5年11月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00399990/3_99990_303196_up_xhnpim76.pdf",
+   "title": "教育委員会委員の任命について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-12-20",
+   "kind": "localVote",
+   "result": "可決）",
+   "rollCallId": "pref-41-2023-11-teirei-list05990-20231220-修第１号修正案",
+   "sessionLabel": "令和5年11月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00399990/3_99990_303196_up_xhnpim76.pdf",
+   "title": "修正案 甲第50号議案 令和５年度佐賀県一般会計補正予算（第６号）",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2023-12-20",
+   "kind": "localVote",
+   "result": "否決",
+   "rollCallId": "pref-41-2023-11-teirei-list05990-20231220-意第14号意見書案",
+   "sessionLabel": "令和5年11月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00399990/3_99990_303196_up_xhnpim76.pdf",
+   "title": "オスプレイの運用に関する意見書（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-12-20",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-11-teirei-list05990-20231220-意第15号意見書案",
+   "sessionLabel": "令和5年11月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00399990/3_99990_303196_up_xhnpim76.pdf",
+   "title": "医療・介護を提供するための適切な財源確保を求める意見書（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-12-20",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-11-teirei-list05990-20231220-意第16号意見書案",
+   "sessionLabel": "令和5年11月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00399990/3_99990_303196_up_xhnpim76.pdf",
+   "title": "独立行政法人国立病院機構肥前精神医療センターの外来管理棟の早期建替と経営安定化に向けた適切な財源措置を求める意見書（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-12-20",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-11-teirei-list05990-20231220-意第17号意見書案",
+   "sessionLabel": "令和5年11月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00399990/3_99990_303196_up_xhnpim76.pdf",
+   "title": "太平洋クロマグロ資源管理に係る対策の充実を求める意見書（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-12-20",
+   "kind": "localVote",
+   "result": "修正可決）",
+   "rollCallId": "pref-41-2023-11-teirei-list05990-20231220-甲第50号議案",
+   "sessionLabel": "令和5年11月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00399990/3_99990_303196_up_xhnpim76.pdf",
+   "title": "令和５年度佐賀県一般会計補正予算（第６号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-12-20",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-11-teirei-list05990-20231220-甲第51号議案",
+   "sessionLabel": "令和5年11月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00399990/3_99990_303196_up_xhnpim76.pdf",
+   "title": "令和５年度佐賀県小規模企業者等設備導入等事業支援特別会計補正予算（第３号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-12-20",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-11-teirei-list05990-20231220-甲第52号議案",
+   "sessionLabel": "令和5年11月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00399990/3_99990_303196_up_xhnpim76.pdf",
+   "title": "令和５年度佐賀県港湾整備事業特別会計補正予算（第２号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-12-20",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-11-teirei-list05990-20231220-甲第53号議案",
+   "sessionLabel": "令和5年11月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00399990/3_99990_303196_up_xhnpim76.pdf",
+   "title": "令和５年度佐賀県一般会計補正予算（第７号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-12-20",
+   "kind": "localVote",
+   "result": "採択",
+   "rollCallId": "pref-41-2023-11-teirei-list05990-20231220-請第４号請願",
+   "sessionLabel": "令和5年11月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00399990/3_99990_303196_up_xhnpim76.pdf",
+   "title": "私学助成の大幅増額・教育費の保護者負担の軽減・教育条件の改善をもとめる請願書",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-12-20",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-11-teirei-list05990-20231220-議第４号議案",
+   "sessionLabel": "令和5年11月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00399990/3_99990_303196_up_xhnpim76.pdf",
+   "title": "佐賀県議会議員の議員報酬等の支給に関する条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-10-04",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-09-teirei-list05968-20231004-乙第58号議案",
+   "sessionLabel": "令和5年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00398777/3_98777_294607_up_hkpnr3a4.pdf",
+   "title": "佐賀県核燃料税条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-10-04",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-09-teirei-list05968-20231004-乙第59号議案",
+   "sessionLabel": "令和5年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00398777/3_98777_294607_up_hkpnr3a4.pdf",
+   "title": "佐賀県波戸岬海浜公園条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-10-04",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-09-teirei-list05968-20231004-乙第60号議案",
+   "sessionLabel": "令和5年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00398777/3_98777_294607_up_hkpnr3a4.pdf",
+   "title": "旅館業に関する条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-10-04",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-09-teirei-list05968-20231004-乙第61号議案",
+   "sessionLabel": "令和5年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00398777/3_98777_294607_up_hkpnr3a4.pdf",
+   "title": "障害のあるなしにかかわらず、ともに暮らしやすい佐賀県をつくる条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-10-04",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-09-teirei-list05968-20231004-乙第62号議案",
+   "sessionLabel": "令和5年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00398777/3_98777_294607_up_hkpnr3a4.pdf",
+   "title": "県事業に対する市町の負担について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-10-04",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-09-teirei-list05968-20231004-乙第63号議案",
+   "sessionLabel": "令和5年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00398777/3_98777_294607_up_hkpnr3a4.pdf",
+   "title": "国営土地改良事業に対する市町の負担について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-10-04",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-09-teirei-list05968-20231004-乙第64号議案",
+   "sessionLabel": "令和5年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00398777/3_98777_294607_up_hkpnr3a4.pdf",
+   "title": "県営土地改良事業に対する市町の負担について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-10-04",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-09-teirei-list05968-20231004-乙第65号議案",
+   "sessionLabel": "令和5年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00398777/3_98777_294607_up_hkpnr3a4.pdf",
+   "title": "小型船舶損傷事故に対する損害賠償について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-10-04",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-09-teirei-list05968-20231004-乙第66号議案",
+   "sessionLabel": "令和5年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00398777/3_98777_294607_up_hkpnr3a4.pdf",
+   "title": "県有財産の処分について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-10-04",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-41-2023-09-teirei-list05968-20231004-乙第67号議案",
+   "sessionLabel": "令和5年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00398777/3_98777_294607_up_hkpnr3a4.pdf",
+   "title": "公安委員会委員の任命について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-10-04",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-41-2023-09-teirei-list05968-20231004-乙第68号議案",
+   "sessionLabel": "令和5年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00398777/3_98777_294607_up_hkpnr3a4.pdf",
+   "title": "監査委員の選任について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-10-04",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-09-teirei-list05968-20231004-意第11号意見書案",
+   "sessionLabel": "令和5年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00398777/3_98777_294607_up_hkpnr3a4.pdf",
+   "title": "私学助成の充実強化等に関する意見書（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-10-04",
+   "kind": "localVote",
+   "result": "否決",
+   "rollCallId": "pref-41-2023-09-teirei-list05968-20231004-意第12号意見書案",
+   "sessionLabel": "令和5年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00398777/3_98777_294607_up_hkpnr3a4.pdf",
+   "title": "「健康保険証」の継続を求める意見書（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-10-04",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-09-teirei-list05968-20231004-意第13号意見書案",
+   "sessionLabel": "令和5年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00398777/3_98777_294607_up_hkpnr3a4.pdf",
+   "title": "ブラッドパッチ療法(硬膜外自家血注入療法)に対する適正な診療上の評価等を求める意見書（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-10-04",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-09-teirei-list05968-20231004-甲第42号議案",
+   "sessionLabel": "令和5年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00398777/3_98777_294607_up_hkpnr3a4.pdf",
+   "title": "令和５年度佐賀県一般会計補正予算（第４号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-10-04",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-09-teirei-list05968-20231004-甲第43号議案",
+   "sessionLabel": "令和5年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00398777/3_98777_294607_up_hkpnr3a4.pdf",
+   "title": "令和５年度佐賀県小規模企業者等設備導入等事業支援特別会計補正予算（第２号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-10-04",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-09-teirei-list05968-20231004-甲第44号議案",
+   "sessionLabel": "令和5年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00398777/3_98777_294607_up_hkpnr3a4.pdf",
+   "title": "令和５年度佐賀県財政調整積立金特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-10-04",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-09-teirei-list05968-20231004-甲第45号議案",
+   "sessionLabel": "令和5年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00398777/3_98777_294607_up_hkpnr3a4.pdf",
+   "title": "令和５年度佐賀県土地取得特別会計補正予算（第２号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-10-04",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-09-teirei-list05968-20231004-甲第46号議案",
+   "sessionLabel": "令和5年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00398777/3_98777_294607_up_hkpnr3a4.pdf",
+   "title": "令和５年度佐賀県国民健康保険事業特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-10-04",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-09-teirei-list05968-20231004-甲第47号議案",
+   "sessionLabel": "令和5年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00398777/3_98777_294607_up_hkpnr3a4.pdf",
+   "title": "令和５年度佐賀県工業用水道事業会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-10-04",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-09-teirei-list05968-20231004-甲第48号議案",
+   "sessionLabel": "令和5年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00398777/3_98777_294607_up_hkpnr3a4.pdf",
+   "title": "令和５年度佐賀県一般会計補正予算（第５号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-10-04",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-09-teirei-list05968-20231004-甲第49号議案",
+   "sessionLabel": "令和5年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00398777/3_98777_294607_up_hkpnr3a4.pdf",
+   "title": "令和５年度佐賀県財政調整積立金特別会計補正予算（第２号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-10-04",
+   "kind": "localVote",
+   "result": "不採択",
+   "rollCallId": "pref-41-2023-09-teirei-list05968-20231004-請第３号請願",
+   "sessionLabel": "令和5年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00398777/3_98777_294607_up_hkpnr3a4.pdf",
+   "title": "佐賀県環境影響評価条例にもとづく環境アセスメント実施に関する請願",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-09-22",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-09-teirei-list05968-20230922-甲第41号議案",
+   "sessionLabel": "令和5年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00398777/3_98777_294607_up_hkpnr3a4.pdf",
+   "title": "令和５年度佐賀県一般会計補正予算（第３号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-07-05",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-06-teirei-list05949-20230705-乙第40号議案",
+   "sessionLabel": "令和5年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00397057/3_97057_286304_up_kniy6mtb.pdf",
+   "title": "佐賀県職員給与条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-07-05",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-06-teirei-list05949-20230705-乙第41号議案",
+   "sessionLabel": "令和5年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00397057/3_97057_286304_up_kniy6mtb.pdf",
+   "title": "佐賀県職員特殊勤務手当支給条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-07-05",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-06-teirei-list05949-20230705-乙第42号議案",
+   "sessionLabel": "令和5年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00397057/3_97057_286304_up_kniy6mtb.pdf",
+   "title": "佐賀県迷惑行為防止条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-07-05",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-06-teirei-list05949-20230705-乙第43号議案",
+   "sessionLabel": "令和5年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00397057/3_97057_286304_up_kniy6mtb.pdf",
+   "title": "佐賀県児童福祉法の施行等に関する条例及び佐賀県障害者の日常生活及び社会生活を総合的に支援するための法律施行条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-07-05",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-06-teirei-list05949-20230705-乙第44号議案",
+   "sessionLabel": "令和5年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00397057/3_97057_286304_up_kniy6mtb.pdf",
+   "title": "佐賀県港湾管理条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-07-05",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-06-teirei-list05949-20230705-乙第45号議案",
+   "sessionLabel": "令和5年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00397057/3_97057_286304_up_kniy6mtb.pdf",
+   "title": "「佐賀県施策方針2023」の策定について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-07-05",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-06-teirei-list05949-20230705-乙第46号議案",
+   "sessionLabel": "令和5年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00397057/3_97057_286304_up_kniy6mtb.pdf",
+   "title": "「佐賀県『食』と『農』の振興計画2023」の策定について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-07-05",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-06-teirei-list05949-20230705-乙第47号議案",
+   "sessionLabel": "令和5年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00397057/3_97057_286304_up_kniy6mtb.pdf",
+   "title": "「さがの森林・林業ビジョン2023」の策定について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-07-05",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-06-teirei-list05949-20230705-乙第48号議案",
+   "sessionLabel": "令和5年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00397057/3_97057_286304_up_kniy6mtb.pdf",
+   "title": "「佐賀県再生可能エネルギー利用等基本計画」の変更について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-07-05",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-06-teirei-list05949-20230705-乙第49号議案",
+   "sessionLabel": "令和5年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00397057/3_97057_286304_up_kniy6mtb.pdf",
+   "title": "樹木の枝の落下による車両等損傷事故に対する損害賠償について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-07-05",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-06-teirei-list05949-20230705-乙第50号議案",
+   "sessionLabel": "令和5年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00397057/3_97057_286304_up_kniy6mtb.pdf",
+   "title": "警察官の交通整理を誘因とする交通事故に対する損害賠償について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-07-05",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-06-teirei-list05949-20230705-乙第51号議案",
+   "sessionLabel": "令和5年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00397057/3_97057_286304_up_kniy6mtb.pdf",
+   "title": "請負契約の変更について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-07-05",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-06-teirei-list05949-20230705-乙第52号議案",
+   "sessionLabel": "令和5年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00397057/3_97057_286304_up_kniy6mtb.pdf",
+   "title": "県有財産の取得について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-07-05",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-06-teirei-list05949-20230705-乙第53号議案",
+   "sessionLabel": "令和5年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00397057/3_97057_286304_up_kniy6mtb.pdf",
+   "title": "県有財産の取得について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-07-05",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-06-teirei-list05949-20230705-乙第54号議案",
+   "sessionLabel": "令和5年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00397057/3_97057_286304_up_kniy6mtb.pdf",
+   "title": "県有財産の処分について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-07-05",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-06-teirei-list05949-20230705-乙第55号議案",
+   "sessionLabel": "令和5年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00397057/3_97057_286304_up_kniy6mtb.pdf",
+   "title": "県有財産の処分について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-07-05",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-41-2023-06-teirei-list05949-20230705-乙第56号議案",
+   "sessionLabel": "令和5年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00397057/3_97057_286304_up_kniy6mtb.pdf",
+   "title": "人事委員会委員の選任について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-07-05",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-41-2023-06-teirei-list05949-20230705-乙第57号議案",
+   "sessionLabel": "令和5年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00397057/3_97057_286304_up_kniy6mtb.pdf",
+   "title": "収用委員会の委員及び予備委員の任命について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-07-05",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-06-teirei-list05949-20230705-意第10号意見書案",
+   "sessionLabel": "令和5年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00397057/3_97057_286304_up_kniy6mtb.pdf",
+   "title": "生涯を通じた国民皆歯科健診の実現を求める意見書（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-07-05",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-06-teirei-list05949-20230705-意第５号意見書案",
+   "sessionLabel": "令和5年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00397057/3_97057_286304_up_kniy6mtb.pdf",
+   "title": "地方財政の充実・強化に関する意見書（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-07-05",
+   "kind": "localVote",
+   "result": "否決",
+   "rollCallId": "pref-41-2023-06-teirei-list05949-20230705-意第６号意見書案",
+   "sessionLabel": "令和5年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00397057/3_97057_286304_up_kniy6mtb.pdf",
+   "title": "健康保険証廃止の見直しを求める意見書（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-07-05",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-06-teirei-list05949-20230705-意第７号意見書案",
+   "sessionLabel": "令和5年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00397057/3_97057_286304_up_kniy6mtb.pdf",
+   "title": "緊急事態に関する国会審議を求める意見書（案）",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2023-07-05",
+   "kind": "localVote",
+   "result": "否決",
+   "rollCallId": "pref-41-2023-06-teirei-list05949-20230705-意第８号意見書案",
+   "sessionLabel": "令和5年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00397057/3_97057_286304_up_kniy6mtb.pdf",
+   "title": "インボイス制度の実施延期を求める意見書（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-07-05",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-06-teirei-list05949-20230705-意第９号意見書案",
+   "sessionLabel": "令和5年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00397057/3_97057_286304_up_kniy6mtb.pdf",
+   "title": "軽油引取税の課税免除措置の継続等を求める意見書（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-07-05",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-06-teirei-list05949-20230705-決第１号決議案",
+   "sessionLabel": "令和5年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00397057/3_97057_286304_up_kniy6mtb.pdf",
+   "title": "北朝鮮による日本人拉致問題の早期解決に向けた取組を推進する決議（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-07-05",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-06-teirei-list05949-20230705-甲第36号議案",
+   "sessionLabel": "令和5年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00397057/3_97057_286304_up_kniy6mtb.pdf",
+   "title": "令和５年度佐賀県一般会計補正予算（第２号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-07-05",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-06-teirei-list05949-20230705-甲第37号議案",
+   "sessionLabel": "令和5年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00397057/3_97057_286304_up_kniy6mtb.pdf",
+   "title": "令和５年度佐賀県小規模企業者等設備導入等事業支援特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-07-05",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-06-teirei-list05949-20230705-甲第38号議案",
+   "sessionLabel": "令和5年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00397057/3_97057_286304_up_kniy6mtb.pdf",
+   "title": "令和５年度佐賀県土地取得特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-07-05",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-06-teirei-list05949-20230705-甲第39号議案",
+   "sessionLabel": "令和5年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00397057/3_97057_286304_up_kniy6mtb.pdf",
+   "title": "令和５年度佐賀県産業用地造成事業特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-07-05",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2023-06-teirei-list05949-20230705-甲第40号議案",
+   "sessionLabel": "令和5年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00397057/3_97057_286304_up_kniy6mtb.pdf",
+   "title": "令和５年度佐賀県港湾整備事業特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-05-29",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-41-2023-05-rinji-list05941-20230529-乙第38号議案",
+   "sessionLabel": "令和5年5月臨時会（5月29日）",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00396953/3_96953_281837_up_b40ejbja.pdf",
+   "title": "副知事の選任について",
+   "vote": {
+    "legend": "欠席",
+    "mapped": "投票なし",
+    "raw": "欠"
+   }
+  },
+  {
+   "date": "2023-05-29",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-41-2023-05-rinji-list05941-20230529-乙第39号議案",
+   "sessionLabel": "令和5年5月臨時会（5月29日）",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00396953/3_96953_281837_up_b40ejbja.pdf",
+   "title": "教育長の任命について",
+   "vote": {
+    "legend": "欠席",
+    "mapped": "投票なし",
+    "raw": "欠"
+   }
+  },
+  {
+   "date": "2023-05-11",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-41-2023-05-rinji-list05938-20230511-乙第37号議案",
+   "sessionLabel": "令和5年5月臨時会（5月9日から11日まで）",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00396145/3_96145_279859_up_jsqwevkw.pdf",
+   "title": "監査委員の選任について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-05-11",
+   "kind": "localVote",
+   "result": "承認",
+   "rollCallId": "pref-41-2023-05-rinji-list05938-20230511-甲第35号議案",
+   "sessionLabel": "令和5年5月臨時会（5月9日から11日まで）",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00396145/3_96145_279859_up_jsqwevkw.pdf",
+   "title": "令和５年度佐賀県一般会計補正予算（第１号）の専決処分について",
    "vote": {
     "legend": "賛成",
     "mapped": "賛成",

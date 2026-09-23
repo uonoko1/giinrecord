@@ -149,11 +149,16 @@ test("#928 本番 data/: 11 議会の rosterAsOf と採決日の窓（6 議会�
     // **#901 で会期を 2 → 4 にした**。**`daysBefore` 204 → 296（上限 1,461 の 20%）で、#928 の検査は鳴らない**
     "pref-36": { daysAfter: -9, daysBefore: 296, votesAfter: 0, rollcalls: 153 },
     "pref-39": { daysAfter: -20, daysBefore: 398, votesAfter: 0, rollcalls: 221 },
-    "pref-41": { daysAfter: 456, daysBefore: -385, votesAfter: 23, rollcalls: 23 },
+    // **#901 で会期を 2 → 13 にした**。**`daysBefore` -385 → 691**——
+    // **名簿より前の採決を持つようになったので、佐賀も「またいでいる」議会に入る**。
+    // **691 は上限 1,461 の 47%** なので **#928 は鳴らない**が、
+    // **一般選挙の境（14 本目・2023-03-10 で 753 日）も鳴らない**——
+    // **止めているのは窓ではなく `saga-sessions-widen.test.ts` の氏名の不連続である**（#961）。
+    "pref-41": { daysAfter: 456, daysBefore: 691, votesAfter: 129, rollcalls: 366 },
   });
   // **母数の検算**（#757）: **採決の本数の合計が、#855 が数えている 1,369 本と一致する。**
   // **これが無いと、痩せたディレクトリを見て「はみ出し 0」を言える。**
-  assert.equal(Object.values(got).reduce((s, x) => s + x.rollcalls, 0), 3_653, "11 議会の採決の合計（#855 の母数と同じ）");
+  assert.equal(Object.values(got).reduce((s, x) => s + x.rollcalls, 0), 3_996, "11 議会の採決の合計（#855 の母数と同じ）");
   // **後ろにはみ出している議会は 7 → 6**（**#901 の宮城で名簿の掲載日が採決より後になったため。広げたからではない**）
   assert.equal(Object.values(got).filter((x) => x.daysAfter > 0).length, 6, "rosterAsOf より後の採決を持つ議会");
   // **`rosterAsOf` が採決の範囲を「またいでいる」議会**（#928 が三重の形として挙げたもの）。
@@ -162,7 +167,8 @@ test("#928 本番 data/: 11 議会の rosterAsOf と採決日の窓（6 議会�
   // **またいでいる議会では、名簿より前の採決に「後の名簿」を当てている**（三重は 302 日前から）。
   // **#901 の宮城で 4 → 3 に減った**（`daysAfter` が負になったので、もう跨いでいない）
   const straddling = Object.entries(got).filter(([, x]) => x.daysAfter > 0 && x.daysBefore > 0).map(([p]) => p);
-  assert.deepEqual(straddling, ["pref-02", "pref-24", "pref-29"], "rosterAsOf が採決の範囲の内側にある議会");
+  // **#901 の佐賀で 3 → 4 に増えた**（`daysBefore` が -385 → 691 になったため）
+  assert.deepEqual(straddling, ["pref-02", "pref-24", "pref-29", "pref-41"], "rosterAsOf が採決の範囲の内側にある議会");
 });
 
 /**
