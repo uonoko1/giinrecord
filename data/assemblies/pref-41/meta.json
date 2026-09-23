@@ -1,19 +1,19 @@
 {
  "assemblyId": "pref-41",
  "countChecked": {
-  "checked": 23,
+  "checked": 366,
   "noCounts": 0,
-  "rows": 23,
+  "rows": 366,
   "unreadableCells": 0
  },
  "counts": {
-  "cells": 851,
+  "cells": 13542,
   "members": 37,
-  "rollcalls": 23,
+  "rollcalls": 366,
   "unknownCells": 0,
   "unmatchedNames": 2
  },
- "fetchedAt": "2026-09-13T06:34:55.122Z",
+ "fetchedAt": "2026-09-23T11:17:56.386Z",
  "rosterAsOf": "2025-04-01",
  "sessionRosterCoverage": [
   {
@@ -61,38 +61,316 @@
    "sessionLabel": "令和8年4月臨時会",
    "sourceUrl": "https://www.pref.saga.lg.jp/gikai/list06671.html",
    "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf",
+   "pdfUrls": [
+    "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf"
+   ],
+   "rollcalls": 78,
+   "sessionId": "2026-02-teirei-list06637",
+   "sessionLabel": "令和8年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/list06637.html",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.pref.saga.lg.jp/gikai/kiji003114754/3_114754_368974_up_845tlsur.pdf",
+   "pdfUrls": [
+    "https://www.pref.saga.lg.jp/gikai/kiji003114754/3_114754_368974_up_845tlsur.pdf"
+   ],
+   "rollcalls": 27,
+   "sessionId": "2025-09-teirei-list06515",
+   "sessionLabel": "令和7年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/list06515.html",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.pref.saga.lg.jp/gikai/kiji003112934/3_112934_353517_up_h8tpjpnt.pdf",
+   "pdfUrls": [
+    "https://www.pref.saga.lg.jp/gikai/kiji003112934/3_112934_353517_up_h8tpjpnt.pdf"
+   ],
+   "rollcalls": 1,
+   "sessionId": "2025-04-rinji-list06476",
+   "sessionLabel": "令和7年4月臨時会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/list06476.html",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf",
+   "pdfUrls": [
+    "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf"
+   ],
+   "rollcalls": 72,
+   "sessionId": "2025-02-teirei-list06440",
+   "sessionLabel": "令和7年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/list06440.html",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.pref.saga.lg.jp/gikai/kiji003106186/3_106186_317362_up_cc5irhtz.pdf",
+   "pdfUrls": [
+    "https://www.pref.saga.lg.jp/gikai/kiji003106186/3_106186_317362_up_cc5irhtz.pdf"
+   ],
+   "rollcalls": 2,
+   "sessionId": "2024-04-rinji-list06316",
+   "sessionLabel": "令和6年4月臨時会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/list06316.html",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf",
+   "pdfUrls": [
+    "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf"
+   ],
+   "rollcalls": 74,
+   "sessionId": "2024-02-teirei-list06074",
+   "sessionLabel": "令和6年2月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/list06074.html",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.pref.saga.lg.jp/gikai/kiji00399990/3_99990_303196_up_xhnpim76.pdf",
+   "pdfUrls": [
+    "https://www.pref.saga.lg.jp/gikai/kiji00399990/3_99990_303196_up_xhnpim76.pdf"
+   ],
+   "rollcalls": 31,
+   "sessionId": "2023-11-teirei-list05990",
+   "sessionLabel": "令和5年11月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/list05990.html",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.pref.saga.lg.jp/gikai/kiji00398777/3_98777_294607_up_hkpnr3a4.pdf",
+   "pdfUrls": [
+    "https://www.pref.saga.lg.jp/gikai/kiji00398777/3_98777_294607_up_hkpnr3a4.pdf"
+   ],
+   "rollcalls": 24,
+   "sessionId": "2023-09-teirei-list05968",
+   "sessionLabel": "令和5年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/list05968.html",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.pref.saga.lg.jp/gikai/kiji00397057/3_97057_286304_up_kniy6mtb.pdf",
+   "pdfUrls": [
+    "https://www.pref.saga.lg.jp/gikai/kiji00397057/3_97057_286304_up_kniy6mtb.pdf"
+   ],
+   "rollcalls": 30,
+   "sessionId": "2023-06-teirei-list05949",
+   "sessionLabel": "令和5年6月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/list05949.html",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.pref.saga.lg.jp/gikai/kiji00396953/3_96953_281837_up_b40ejbja.pdf",
+   "pdfUrls": [
+    "https://www.pref.saga.lg.jp/gikai/kiji00396953/3_96953_281837_up_b40ejbja.pdf"
+   ],
+   "rollcalls": 2,
+   "sessionId": "2023-05-rinji-list05941",
+   "sessionLabel": "令和5年5月臨時会（5月29日）",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/list05941.html",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.pref.saga.lg.jp/gikai/kiji00396145/3_96145_279859_up_jsqwevkw.pdf",
+   "pdfUrls": [
+    "https://www.pref.saga.lg.jp/gikai/kiji00396145/3_96145_279859_up_jsqwevkw.pdf"
+   ],
+   "rollcalls": 2,
+   "sessionId": "2023-05-rinji-list05938",
+   "sessionLabel": "令和5年5月臨時会（5月9日から11日まで）",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/list05938.html",
+   "unknownCells": 0
   }
  ],
  "sources": [
   {
-   "fetchedAt": "2026-09-13T06:34:55.122Z",
+   "fetchedAt": "2026-09-23T11:17:56.386Z",
    "name": "佐賀県議会 議員一覧",
    "url": "https://www.pref.saga.lg.jp/gikai/kiji00366725/index.html"
   },
   {
-   "fetchedAt": "2026-09-13T06:34:55.122Z",
+   "fetchedAt": "2026-09-23T11:17:56.386Z",
    "name": "佐賀県議会 議案等の審議結果",
    "url": "https://www.pref.saga.lg.jp/gikai/list01707.html"
   },
   {
-   "fetchedAt": "2026-09-13T06:34:55.122Z",
+   "fetchedAt": "2026-09-23T11:17:56.386Z",
    "name": "佐賀県議会 令和8年6月定例会 議案件名一覧表",
    "url": "https://www.pref.saga.lg.jp/gikai/kiji003119791/index.html"
   },
   {
-   "fetchedAt": "2026-09-13T06:34:55.122Z",
+   "fetchedAt": "2026-09-23T11:17:56.386Z",
    "name": "佐賀県議会 令和8年6月定例会議案採決結果一覧表",
    "url": "https://www.pref.saga.lg.jp/gikai/kiji003119791/3_119791_394982_up_cda325jj.pdf"
   },
   {
-   "fetchedAt": "2026-09-13T06:34:55.122Z",
+   "fetchedAt": "2026-09-23T11:17:56.386Z",
    "name": "佐賀県議会 令和8年4月臨時会 議案件名一覧表",
    "url": "https://www.pref.saga.lg.jp/gikai/kiji003119136/index.html"
   },
   {
-   "fetchedAt": "2026-09-13T06:34:55.122Z",
+   "fetchedAt": "2026-09-23T11:17:56.386Z",
    "name": "佐賀県議会 令和8年4月臨時会議案採決結果一覧表",
    "url": "https://www.pref.saga.lg.jp/gikai/kiji003119136/3_119136_389175_up_bkhi5h10.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-23T11:17:56.386Z",
+   "name": "佐賀県議会 令和8年2月定例会 議案件名一覧表",
+   "url": "https://www.pref.saga.lg.jp/gikai/kiji003117512/index.html"
+  },
+  {
+   "fetchedAt": "2026-09-23T11:17:56.386Z",
+   "name": "佐賀県議会 令和8年2月定例会議案採決結果一覧表",
+   "url": "https://www.pref.saga.lg.jp/gikai/kiji003117512/3_117512_384646_up_w21vhyt5.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-23T11:17:56.386Z",
+   "name": "佐賀県議会 令和7年11月定例会 議案件名一覧表",
+   "url": "https://www.pref.saga.lg.jp/gikai/kiji003116193/index.html"
+  },
+  {
+   "fetchedAt": "2026-09-23T11:17:56.386Z",
+   "name": "佐賀県議会 令和7年9月定例会 議案件名一覧表",
+   "url": "https://www.pref.saga.lg.jp/gikai/kiji003114754/index.html"
+  },
+  {
+   "fetchedAt": "2026-09-23T11:17:56.386Z",
+   "name": "佐賀県議会 令和7年9月定例会議案採決結果一覧表",
+   "url": "https://www.pref.saga.lg.jp/gikai/kiji003114754/3_114754_368974_up_845tlsur.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-23T11:17:56.386Z",
+   "name": "佐賀県議会 令和7年6月定例会 議案件名一覧表",
+   "url": "https://www.pref.saga.lg.jp/gikai/kiji003114143/index.html"
+  },
+  {
+   "fetchedAt": "2026-09-23T11:17:56.386Z",
+   "name": "佐賀県議会 令和7年4月臨時会 議案件名一覧表",
+   "url": "https://www.pref.saga.lg.jp/gikai/kiji003112934/index.html"
+  },
+  {
+   "fetchedAt": "2026-09-23T11:17:56.386Z",
+   "name": "佐賀県議会 令和7年4月臨時会議案採決結果一覧表",
+   "url": "https://www.pref.saga.lg.jp/gikai/kiji003112934/3_112934_353517_up_h8tpjpnt.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-23T11:17:56.386Z",
+   "name": "佐賀県議会 令和7年2月定例会 議案件名一覧表",
+   "url": "https://www.pref.saga.lg.jp/gikai/kiji003111805/index.html"
+  },
+  {
+   "fetchedAt": "2026-09-23T11:17:56.386Z",
+   "name": "佐賀県議会 令和7年2月定例会議案採決結果一覧表",
+   "url": "https://www.pref.saga.lg.jp/gikai/kiji003111805/3_111805_349057_up_7elgmado.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-23T11:17:56.386Z",
+   "name": "佐賀県議会 令和6年11月定例会 議案件名一覧表",
+   "url": "https://www.pref.saga.lg.jp/gikai/kiji003110680/index.html"
+  },
+  {
+   "fetchedAt": "2026-09-23T11:17:56.386Z",
+   "name": "佐賀県議会 令和6年9月定例会 議案件名一覧表",
+   "url": "https://www.pref.saga.lg.jp/gikai/kiji003109660/index.html"
+  },
+  {
+   "fetchedAt": "2026-09-23T11:17:56.386Z",
+   "name": "佐賀県議会 令和6年6月定例会 議案件名一覧表",
+   "url": "https://www.pref.saga.lg.jp/gikai/kiji003107704/index.html"
+  },
+  {
+   "fetchedAt": "2026-09-23T11:17:56.386Z",
+   "name": "佐賀県議会 令和6年4月臨時会 議案件名一覧表",
+   "url": "https://www.pref.saga.lg.jp/gikai/kiji003106186/index.html"
+  },
+  {
+   "fetchedAt": "2026-09-23T11:17:56.386Z",
+   "name": "佐賀県議会 令和6年4月臨時会議案採決結果一覧表",
+   "url": "https://www.pref.saga.lg.jp/gikai/kiji003106186/3_106186_317362_up_cc5irhtz.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-23T11:17:56.386Z",
+   "name": "佐賀県議会 令和6年2月定例会 議案件名一覧表",
+   "url": "https://www.pref.saga.lg.jp/gikai/kiji003101121/index.html"
+  },
+  {
+   "fetchedAt": "2026-09-23T11:17:56.386Z",
+   "name": "佐賀県議会 令和6年2月定例会議案採決結果一覧表",
+   "url": "https://www.pref.saga.lg.jp/gikai/kiji003101121/3_101121_314179_up_bls0q48x.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-23T11:17:56.386Z",
+   "name": "佐賀県議会 令和5年11月定例会 議案件名一覧表",
+   "url": "https://www.pref.saga.lg.jp/gikai/kiji00399990/index.html"
+  },
+  {
+   "fetchedAt": "2026-09-23T11:17:56.386Z",
+   "name": "佐賀県議会 令和5年11月定例会議案採決結果一覧表",
+   "url": "https://www.pref.saga.lg.jp/gikai/kiji00399990/3_99990_303196_up_xhnpim76.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-23T11:17:56.386Z",
+   "name": "佐賀県議会 令和5年9月定例会 議案件名一覧表",
+   "url": "https://www.pref.saga.lg.jp/gikai/kiji00398777/index.html"
+  },
+  {
+   "fetchedAt": "2026-09-23T11:17:56.386Z",
+   "name": "佐賀県議会 令和5年9月定例会議案採決結果一覧表",
+   "url": "https://www.pref.saga.lg.jp/gikai/kiji00398777/3_98777_294607_up_hkpnr3a4.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-23T11:17:56.386Z",
+   "name": "佐賀県議会 令和5年6月定例会 議案件名一覧表",
+   "url": "https://www.pref.saga.lg.jp/gikai/kiji00397057/index.html"
+  },
+  {
+   "fetchedAt": "2026-09-23T11:17:56.386Z",
+   "name": "佐賀県議会 令和5年6月定例会議案採決結果一覧表",
+   "url": "https://www.pref.saga.lg.jp/gikai/kiji00397057/3_97057_286304_up_kniy6mtb.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-23T11:17:56.386Z",
+   "name": "佐賀県議会 令和5年5月臨時会 議案件名一覧表",
+   "url": "https://www.pref.saga.lg.jp/gikai/kiji00396953/index.html"
+  },
+  {
+   "fetchedAt": "2026-09-23T11:17:56.386Z",
+   "name": "佐賀県議会 令和5年5月臨時会（5月29日）議案採決結果一覧表",
+   "url": "https://www.pref.saga.lg.jp/gikai/kiji00396953/3_96953_281837_up_b40ejbja.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-23T11:17:56.386Z",
+   "name": "佐賀県議会 令和5年5月臨時会 議案件名一覧表",
+   "url": "https://www.pref.saga.lg.jp/gikai/kiji00396145/index.html"
+  },
+  {
+   "fetchedAt": "2026-09-23T11:17:56.386Z",
+   "name": "佐賀県議会 令和5年5月臨時会（5月9日から11日まで）議案採決結果一覧表",
+   "url": "https://www.pref.saga.lg.jp/gikai/kiji00396145/3_96145_279859_up_jsqwevkw.pdf"
+  }
+ ],
+ "unreadableSources": [
+  {
+   "reason": "PDF に文字層が無い（ToUnicode 無し。#689）",
+   "url": "https://www.pref.saga.lg.jp/gikai/kiji003107704/3_107704_324364_up_hcx5c0zl.pdf"
+  },
+  {
+   "reason": "PDF に文字層が無い（ToUnicode 無し。#689）",
+   "url": "https://www.pref.saga.lg.jp/gikai/kiji003109660/3_109660_331924_up_qphcathw.pdf"
+  },
+  {
+   "reason": "PDF に文字層が無い（ToUnicode 無し。#689）",
+   "url": "https://www.pref.saga.lg.jp/gikai/kiji003110680/3_110680_339492_up_4hrpc4lp.pdf"
+  },
+  {
+   "reason": "PDF に文字層が無い（ToUnicode 無し。#689）",
+   "url": "https://www.pref.saga.lg.jp/gikai/kiji003114143/3_114143_360206_up_8onm36yv.pdf"
+  },
+  {
+   "reason": "PDF に文字層が無い（ToUnicode 無し。#689）",
+   "url": "https://www.pref.saga.lg.jp/gikai/kiji003116193/3_116193_376118_up_7bc8glqj.pdf"
   }
  ]
 }

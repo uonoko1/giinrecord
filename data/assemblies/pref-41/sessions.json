@@ -1,7 +1,7 @@
 [
  {
   "date": "2026-07-01",
-  "fetchedAt": "2026-09-13T06:34:55.122Z",
+  "fetchedAt": "2026-09-23T11:17:56.386Z",
   "id": "2026-06-teirei-list06680",
   "label": "令和8年6月定例会",
   "rollcalls": 21,
@@ -9,10 +9,98 @@
  },
  {
   "date": "2026-04-23",
-  "fetchedAt": "2026-09-13T06:34:55.122Z",
+  "fetchedAt": "2026-09-23T11:17:56.386Z",
   "id": "2026-04-rinji-list06671",
   "label": "令和8年4月臨時会",
   "rollcalls": 2,
   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/list06671.html"
+ },
+ {
+  "date": "2026-03-16",
+  "fetchedAt": "2026-09-23T11:17:56.386Z",
+  "id": "2026-02-teirei-list06637",
+  "label": "令和8年2月定例会",
+  "rollcalls": 78,
+  "sourceUrl": "https://www.pref.saga.lg.jp/gikai/list06637.html"
+ },
+ {
+  "date": "2025-10-02",
+  "fetchedAt": "2026-09-23T11:17:56.386Z",
+  "id": "2025-09-teirei-list06515",
+  "label": "令和7年9月定例会",
+  "rollcalls": 27,
+  "sourceUrl": "https://www.pref.saga.lg.jp/gikai/list06515.html"
+ },
+ {
+  "date": "2025-04-24",
+  "fetchedAt": "2026-09-23T11:17:56.386Z",
+  "id": "2025-04-rinji-list06476",
+  "label": "令和7年4月臨時会",
+  "rollcalls": 1,
+  "sourceUrl": "https://www.pref.saga.lg.jp/gikai/list06476.html"
+ },
+ {
+  "date": "2025-03-17",
+  "fetchedAt": "2026-09-23T11:17:56.386Z",
+  "id": "2025-02-teirei-list06440",
+  "label": "令和7年2月定例会",
+  "rollcalls": 72,
+  "sourceUrl": "https://www.pref.saga.lg.jp/gikai/list06440.html"
+ },
+ {
+  "date": "2024-04-18",
+  "fetchedAt": "2026-09-23T11:17:56.386Z",
+  "id": "2024-04-rinji-list06316",
+  "label": "令和6年4月臨時会",
+  "rollcalls": 2,
+  "sourceUrl": "https://www.pref.saga.lg.jp/gikai/list06316.html"
+ },
+ {
+  "date": "2024-03-25",
+  "fetchedAt": "2026-09-23T11:17:56.386Z",
+  "id": "2024-02-teirei-list06074",
+  "label": "令和6年2月定例会",
+  "rollcalls": 74,
+  "sourceUrl": "https://www.pref.saga.lg.jp/gikai/list06074.html"
+ },
+ {
+  "date": "2023-12-21",
+  "fetchedAt": "2026-09-23T11:17:56.386Z",
+  "id": "2023-11-teirei-list05990",
+  "label": "令和5年11月定例会",
+  "rollcalls": 31,
+  "sourceUrl": "https://www.pref.saga.lg.jp/gikai/list05990.html"
+ },
+ {
+  "date": "2023-10-04",
+  "fetchedAt": "2026-09-23T11:17:56.386Z",
+  "id": "2023-09-teirei-list05968",
+  "label": "令和5年9月定例会",
+  "rollcalls": 24,
+  "sourceUrl": "https://www.pref.saga.lg.jp/gikai/list05968.html"
+ },
+ {
+  "date": "2023-07-05",
+  "fetchedAt": "2026-09-23T11:17:56.386Z",
+  "id": "2023-06-teirei-list05949",
+  "label": "令和5年6月定例会",
+  "rollcalls": 30,
+  "sourceUrl": "https://www.pref.saga.lg.jp/gikai/list05949.html"
+ },
+ {
+  "date": "2023-05-29",
+  "fetchedAt": "2026-09-23T11:17:56.386Z",
+  "id": "2023-05-rinji-list05941",
+  "label": "令和5年5月臨時会（5月29日）",
+  "rollcalls": 2,
+  "sourceUrl": "https://www.pref.saga.lg.jp/gikai/list05941.html"
+ },
+ {
+  "date": "2023-05-11",
+  "fetchedAt": "2026-09-23T11:17:56.386Z",
+  "id": "2023-05-rinji-list05938",
+  "label": "令和5年5月臨時会（5月9日から11日まで）",
+  "rollcalls": 2,
+  "sourceUrl": "https://www.pref.saga.lg.jp/gikai/list05938.html"
  }
 ]
