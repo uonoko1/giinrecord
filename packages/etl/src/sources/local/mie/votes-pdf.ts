@@ -154,11 +154,66 @@ export function checkCellsAgainstLegend(cells: readonly string[], legend: Record
 
 /* ---------- header & legend ---------- */
 
+/**
+ * **同じ行に並ぶ文字を x の順に繋ぐ**（Issue #867 A-2）。行ごとに `{ y, text }` を上から順に返す。
+ *
+ * ## 何が問題か
+ *
+ * **表題と凡例を 1 文字ずつ別の `showText` で置いている本がある**（index 151 本のうち **19 本**。実測 2026-09-21）。
+ * `readGlyphPages` は **showText 1 回を 1 アイテム**にするので、そういう本では
+ * **どのアイテムも 1 文字しか持たず、`TITLE` にも `LEGEND_ITEM` にも当たらない。**
+ *
+ * 実測（`000995095.pdf` 令和4年1月分、1 ページ目）: **`令` `和` `4` `年` `定` `例` `会` `（` `１` `月` `）` … が
+ * すべて同じ y=766.8 に x=104.6 から 11.9pt 刻みで 19 個**並ぶ。
+ * **凡例も同じ形**——**19 本すべてで「単体で凡例として読めるアイテム」は 0 個、
+ * 繋ぐと 1 個**（実測。母数 19 / 19）。**表題だけ直しても読めるようにならない。**
+ *
+ * **#841 が凡例で直したのと同じ形**（あちらは「繋がりすぎ」で 1 つのテキストに 6 項目、
+ * こちらは「割れすぎ」。**どちらも showText の切れ目が意味の切れ目と一致しない**）。
+ *
+ * ## 推定ではない（#569）
+ *
+ * **やっているのは並べ替えだけである**——**文字を足しも引きもせず、同じ行の文字を x の順に繋ぐ。**
+ * **繋いだ結果が `TITLE` / 凡例の形に当たらなければ、今までどおり例外になる。**
+ * **`000073600.pdf`（`平成２０年第１回臨時会`。`（M月）` が無い）は、繋いでも当たらないので読めないまま**
+ * （A-3。**この変更で読めるようになる本と、ならない本の境目がここにある**）。
+ *
+ * ## 行の切り方
+ *
+ * **「y の差が、その行の先頭の文字の高さの半分以上」で行を切る。**
+ * 表題の文字は同じ y に置かれるので実測では差 0 だが、丸めの揺れを見込んで半分だけ許す。
+ * **隣の行はそれより離れている**——実測: 表題 y=766.8 の次の行（凡例）は y=758.3 で、
+ * **差 8.5pt に対し表題の文字の高さは 11.8pt**。**半分（5.9pt）なら切れる。**
+ */
+function joinedLines(items: Item[]): { y: number; text: string }[] {
+  if (items.length === 0) return [];
+  const sorted = [...items].sort((a, b) => b.y - a.y || a.x - b.x);
+  const out: { y: number; text: string }[] = [];
+  let line: Item[] = [];
+  const flush = () => { if (line.length > 0) out.push({ y: line[0].y, text: line.map((i) => i.str).join("") }); };
+  for (const it of sorted) {
+    if (line.length > 0 && Math.abs(it.y - line[0].y) >= Math.max(line[0].h, 1) / 2) {
+      flush();
+      line = [];
+    }
+    line.push(it);
+  }
+  flush();
+  return out;
+}
+
 function parseHeader(items: Item[], pageNo: number): { title: string; sessionName: string; year: number; month: number; tableTop: number } {
-  const label = items.find((i) => TITLE.test(i.str.trim()));
-  if (!label) throw new Error(`page ${pageNo}: title (令和N年定例会（M月）) not found`);
-  const m = label.str.trim().match(TITLE)!;
-  const legendYs = items.filter((i) => splitLegendText(i.str).length > 0).map((i) => i.y);
+  // **まず 1 アイテムで当たるものを探す**（今までどおり。読めていた本はこの経路のまま値が変わらない）。
+  // **無ければ、同じ行の文字を繋いで探す**（Issue #867 A-2。**繋いでも当たらなければ例外**）。
+  const lines = joinedLines(items);
+  const single = items.find((i) => TITLE.test(i.str.trim()));
+  const raw = single ? single.str.trim() : lines.map((l) => l.text.trim()).find((l) => TITLE.test(l));
+  if (raw === undefined) throw new Error(`page ${pageNo}: title (令和N年定例会（M月）) not found`);
+  const m = raw.match(TITLE)!;
+  // **凡例も 1 文字ずつ割れていることがある**（A-2。19 本すべてがその形）。
+  // **単体で読めるものがあればそれだけを使う**（既存の本の `tableTop` を 1 ビットも変えないため）。
+  const singleYs = items.filter((i) => splitLegendText(i.str).length > 0).map((i) => i.y);
+  const legendYs = singleYs.length > 0 ? singleYs : lines.filter((l) => splitLegendText(l.text).length > 0).map((l) => l.y);
   if (legendYs.length === 0) throw new Error(`page ${pageNo}: legend (○：賛成 …) not found`);
   // 表の上端 = 凡例行の下（buildGrid が罫線から取る。ここでは凡例の最下行を返す）
   return { title: m[0], sessionName: m[1], year: warekiYear(m[2], m[3]), month: Number(m[4].normalize("NFKC")), tableTop: Math.min(...legendYs) };
@@ -166,9 +221,14 @@ function parseHeader(items: Item[], pageNo: number): { title: string; sessionNam
 
 function parseLegend(items: Item[], tableTop: number, pageNo: number): Record<string, string> {
   const legend: Record<string, string> = {};
-  for (const it of items) {
-    if (it.y < tableTop - EPS) continue; // 表より下は凡例ではない
-    for (const { key, desc } of splitLegendText(it.str)) {
+  // **単体で凡例として読めるアイテムがあればそれだけを使う**（今までどおり）。
+  // **1 つも無ければ、同じ行の文字を繋いだものを読む**（Issue #867 A-2。**19 本がこの形**）。
+  // **「単体が 1 つでもあれば繋いだ側は見ない」**ので、**読めていた本の凡例は 1 ビットも変わらない。**
+  const singles = items.filter((i) => splitLegendText(i.str).length > 0).map((i) => ({ y: i.y, text: i.str }));
+  const sources = singles.length > 0 ? singles : joinedLines(items);
+  for (const src of sources) {
+    if (src.y < tableTop - EPS) continue; // 表より下は凡例ではない
+    for (const { key, desc } of splitLegendText(src.text)) {
       if (key in legend) throw new Error(`page ${pageNo}: legend key ${key} appears twice`);
       legend[key] = desc.replace(/[\s　]+/g, "");
     }
