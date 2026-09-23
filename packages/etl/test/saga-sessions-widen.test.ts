@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { parseVotePdf } from "../src/sources/local/saga/votes-pdf.ts";
 import { parseRoster } from "../src/sources/local/saga/roster.ts";
 import { matchName } from "../src/sources/local/saga/rollcalls.ts";
-import { defaultSessionsFor, LOCAL_TERM_DAYS } from "../src/local-assemblies.ts";
+import { defaultSessionsFor, LOCAL_TERM_DAYS, SEATS_CHANGED_FLAG, sessionRosterCoverageOf } from "../src/local-assemblies.ts";
 
 /**
  * # 佐賀の `--sessions` の既定を 2 → 13 にした根拠（Issue #901 / #961）
@@ -222,4 +222,93 @@ test("#901 unmatched の跳ね: 13 本目は 0 人、14 本目は 4 人（母数
     "**13 本目（令和5年5月臨・37 人）は全員が今の名簿に当たる**");
   assert.deepEqual(await unmatchedOf(ACROSS), ["中倉政義", "井上祐輔", "川﨑常博", "稲富正敏"].sort(),
     "**14 本目（令和5年2月定・36 人）は 4 人が当たらない**（一般選挙で退いた）");
+});
+
+/**
+ * ## **`seatsChanged`（#951）は佐賀の境を捕まえない**——**線 10 に対して 4 にしかならない**
+ *
+ * **#961 は「実際に効いたのは `seatsChanged` の跳ねだった」と書き、
+ * `SEATS_CHANGED_FLAG = 10` の根拠は「3 県で測った境が 17 / 16 / 11 だった」ことである。**
+ * **佐賀の境は 4 である。** **線に掛からない。**
+ *
+ * ## **理由は 2 つあり、どちらも佐賀に固有ではない**
+ *
+ * **1. `min(rosterAbsent, unmatchedNames)` が縮める。**
+ * **14 会期目は 名簿 37 / PDF 36 人 / 名簿に無い新顔 4 / 名簿に居るが出ていない 5 である。**
+ * **`rosterAbsent` 5・`unmatchedNames` 4 なので `min` は 4**——
+ * **入れ替わりの総量 9（4 + 5）の半分以下になる。**
+ * **`min` は「両方向を要求する」ための意図的な設計であり**（`sessionRosterCoverageOf` の docblock）、
+ * **その代償として、入れ替わりが非対称なときに実数より小さく出る。**
+ * **佐賀は定数が 37 → 36 に 1 減っているので、必ず非対称になる。**
+ *
+ * **2. 入れ替わりの割合そのものが小さい。**
+ *
+ * | 県 | 名簿 | 入れ替わり | **`seatsChanged`** | 入替/名簿 | 線 10 |
+ * |---|---:|---:|---:|---:|---|
+ * | 奈良（#950） | 41 | 17 | **17** | 41.5% | 掛かる |
+ * | 宮城（#953） | 58 | 18 | **16** | 31.0% | 掛かる |
+ * | 青森（#959） | 44 | 11 | **11** | 25.0% | 掛かる（差 1） |
+ * | **佐賀（この PR）** | **37** | **9** | **4** | **24.3%** | **掛からない（線の下 6）** |
+ *
+ * **青森は 25.0% で 11、佐賀は 24.3% で 4。** **割合はほとんど同じなのに値が 3 倍近く違う**——
+ * **`min` の縮み方の差である**（青森は `rosterAbsent` と `unmatchedNames` が揃って 11）。
+ *
+ * ## **これは「佐賀では広げてよい」という意味ではない**
+ *
+ * **一次資料は境があると言っている**——**入ってくる 4 人は今の名簿に 1 人もいない**（上のテスト）。
+ * **`seatsChanged` が小さいのは、境が無いからではなく、この指標が境の大きさを測りきれないからである。**
+ * **線だけを自動の歯止めにすると、佐賀の 14 会期目は黙って通る。**
+ *
+ * **だからこの PR は `seatsChanged` でも `rosterAsOf` の窓でも止めていない。**
+ * **止めているのは「入ってくる氏名が今の名簿に 1 人も当たらない」という、
+ * 一次資料そのものから読める事実である**（上の 2 つのテスト）。
+ *
+ * **#961 への申し送り**: **`seatsChanged >= 10` を「広げてよいかの判定」に使わないこと。**
+ * **後から数えるための記録としては有用だが、線の下にも本物の境がある**（この 1 件が実例）。
+ */
+test("#901/#951 佐賀の境は seatsChanged 4——線 10 に掛からない（min が 9 を 4 に縮める）", () => {
+  // **一次資料から組み立てる**（`sessionRosterCoverageOf` は本番の実装そのもの）。
+  // **14 本目の顔ぶれ**: 名簿 37 人のうち 32 人が出て、4 人は名簿に無い新顔。
+  const roster = Array.from({ length: 37 }, (_, i) => ({ id: `m${i}` }));
+  const names = [
+    ...Array.from({ length: 32 }, (_, i) => ({ memberId: `m${i}`, nameText: `現職${i}` })),
+    // **名簿に当たらない 4 人**（`中倉政義` `川﨑常博` `井上祐輔` `稲富正敏` に対応）
+    ...["中倉政義", "川﨑常博", "井上祐輔", "稲富正敏"].map((n) => ({ memberId: "", nameText: n })),
+  ];
+  const rc = [{ id: "x", sessionId: "2023-02", date: "2023-03-10", votes: names }] as never;
+  const cov = sessionRosterCoverageOf(rc, roster)!;
+  assert.equal(cov.length, 1, "母数（会期 1 本）");
+  const c = cov[0];
+  // **母数を先に置く**（#757。0 を緑にしない）
+  assert.equal(c.votes, 36, "**14 本目の議員は 36 人**（名簿より 1 人少ない）");
+  assert.equal(c.rosterSeen, 32, "名簿に当たった人数");
+  assert.equal(c.rosterAbsent, 5, "**名簿に居るが 14 本目に出ていない 5 人**");
+  assert.equal(c.unmatchedNames, 4, "**14 本目に出るが名簿に無い 4 人**");
+  // **ここが結論**
+  assert.equal(c.seatsChanged, 4, "**`min(5, 4)` = 4**");
+  assert.equal(Math.min(5, 4), 4, "式を残す");
+  assert.equal(4 + 5, 9, "**入れ替わりの総量は 9**（`min` が 4 に縮めている）");
+  assert.ok(c.seatsChanged < SEATS_CHANGED_FLAG,
+    `**一般選挙の境なのに線に掛からない**（${c.seatsChanged} < ${SEATS_CHANGED_FLAG}）`);
+  assert.equal(SEATS_CHANGED_FLAG - c.seatsChanged, 6, "**線の下 6**（青森は差 1 で掛かった）");
+});
+
+/**
+ * ## **本番に出した 13 会期は 1 会期も `flagged` にならない**（**線の内側で止めた証拠**）
+ *
+ * **`seatsChanged` が最大 1 で、その 1 は `猪村理恵子` / `桃崎裕介` の字の食い違いである**
+ * （**`sourceConflict`。席は動いていない**）。
+ * **「鳴らなかった」ことを主張するには、鳴る値を作れることを一緒に示す**（恒真でないこと）。
+ */
+test("#901/#951 本番に出した 13 会期は seatsChanged が最大 1（線 10 に 1 会期も掛からない）", () => {
+  const meta = JSON.parse(
+    readFileSync(new URL("../../../data/assemblies/pref-41/meta.json", import.meta.url), "utf-8"),
+  ) as { sessionRosterCoverage?: { seatsChanged: number; flagged?: boolean }[] };
+  const cov = meta.sessionRosterCoverage ?? [];
+  assert.equal(cov.length, 13, "**母数**——13 会期ぶんある（#951 の検査が数える単位）");
+  assert.equal(Math.max(...cov.map((c) => c.seatsChanged)), 1, "**最大 1**（字の食い違い 1 人ぶん）");
+  assert.deepEqual(cov.filter((c) => c.flagged).map((c) => c.seatsChanged), [], "`flagged` の会期は 0");
+  // **否定的対照**: 線そのものは動く値であること（`SEATS_CHANGED_FLAG` を読んでいる）
+  assert.ok(cov.every((c) => c.seatsChanged < SEATS_CHANGED_FLAG));
+  assert.equal(SEATS_CHANGED_FLAG, 10, "線（変わったらこのテストの意味も変わる）");
 });
