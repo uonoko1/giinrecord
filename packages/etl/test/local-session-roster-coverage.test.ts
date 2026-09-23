@@ -71,7 +71,7 @@ const metaOf = async (p: string): Promise<LocalAssemblyMeta> =>
  * **答えは 0 件である。** **「数えていない」と区別するため、母数と分布をそのまま固定する**（#757）。
  *
  * **実測 2026-09-21**（`data/` を直に読んだ）:
- * **11 議会 / 99 会期 / 3,802 採決 / 170,037 票**（#901 の島根 2 → 5 と滋賀 2 → 19 で動いた）。
+ * **11 議会 / 110 会期 / 4,145 採決 / 182,728 票**（#901 の島根 2 → 5・佐賀 2 → 13・滋賀 2 → 19 で動いた）。
  *
  * | `seatsChanged` | 会期 |
  * |---:|---:|
@@ -88,7 +88,7 @@ const metaOf = async (p: string): Promise<LocalAssemblyMeta> =>
  * **だから 19 で止めた**（#901。**印はこの境で鳴る**）。
  * **奈良が境をまたいだ場合は 17 になる**（#950 が測った 41 名中 17 名の入れ替わり）。
  */
-test("#951 本番 data/: 11 議会 99 会期の seatsChanged 分布（最大 5、印が付く会期は 0 件）", async () => {
+test("#951 本番 data/: 11 議会 110 会期の seatsChanged 分布（最大 5、印が付く会期は 0 件）", async () => {
   const prefs = await localPrefs();
   assert.equal(prefs.length, 11, "11 議会ぶんを見ていること（母数。#757）");
   const rows: LocalAssemblyMeta["sessionRosterCoverage"] = [];
@@ -98,13 +98,13 @@ test("#951 本番 data/: 11 議会 99 会期の seatsChanged 分布（最大 5�
     rows.push(...cov);
   }
   // **母数を 3 通りで持つ**（会期・採決・票）。**どれか 1 つが痩せても気づける**
-  assert.equal(rows.length, 99, "会期の合計");
-  assert.equal(rows.reduce((s, r) => s + r.rollcalls, 0), 3_802, "採決の合計（#855 / #928 の母数と同じ）");
-  assert.equal(rows.reduce((s, r) => s + r.votes, 0), 170_037, "票の合計（#928 の母数と同じ）");
+  assert.equal(rows.length, 110, "会期の合計");
+  assert.equal(rows.reduce((s, r) => s + r.rollcalls, 0), 4_145, "採決の合計（#855 / #928 の母数と同じ）");
+  assert.equal(rows.reduce((s, r) => s + r.votes, 0), 182_728, "票の合計（#928 の母数と同じ）");
   // **分布**（**「0 件でした」では、見ていなくても同じ顔をする**）
   const hist = new Map<number, number>();
   for (const r of rows) hist.set(r.seatsChanged, (hist.get(r.seatsChanged) ?? 0) + 1);
-  assert.deepEqual(Object.fromEntries([...hist].sort((a, b) => a[0] - b[0])), { 0: 34, 1: 12, 2: 28, 3: 9, 4: 8, 5: 8 });
+  assert.deepEqual(Object.fromEntries([...hist].sort((a, b) => a[0] - b[0])), { 0: 42, 1: 15, 2: 28, 3: 9, 4: 8, 5: 8 });
   assert.equal(Math.max(...rows.map((r) => r.seatsChanged)), 5, "今までに実際に起きた最大の入れ替わり");
   // **本丸**: **印が付く会期は 0 件**（**11 議会を全部見たうえでの 0**）
   assert.deepEqual(rows.filter((r) => r.seatsChanged >= SEATS_CHANGED_FLAG).map((r) => `${r.sessionId} (${r.date})`), [],
@@ -117,7 +117,7 @@ test("#951 本番 data/: 11 議会 99 会期の seatsChanged 分布（最大 5�
  * **`rosterSeen + rosterAbsent` が名簿の人数に一致する**——**この式が成り立たないと
  * `seatsChanged` は読めない**（#757。母数を検算に入れる）。
  */
-test("#951 本番 data/: rosterSeen + rosterAbsent == counts.members（99 会期すべて）", async () => {
+test("#951 本番 data/: rosterSeen + rosterAbsent == counts.members（110 会期すべて）", async () => {
   const prefs = await localPrefs();
   let checked = 0;
   for (const p of prefs) {
@@ -129,7 +129,7 @@ test("#951 本番 data/: rosterSeen + rosterAbsent == counts.members（99 会期
       checked++;
     }
   }
-  assert.equal(checked, 99, "見た会期の数（母数）");
+  assert.equal(checked, 110, "見た会期の数（母数）");
 });
 
 /**
@@ -150,7 +150,7 @@ test("#951 本番 data/: meta.sessionRosterCoverage が rollcalls/ + members/ind
     assert.deepEqual((await metaOf(p)).sessionRosterCoverage, want, p);
     sessions += want.length;
   }
-  assert.equal(sessions, 99, "作り直した会期の数（母数）");
+  assert.equal(sessions, 110, "作り直した会期の数（母数）");
 });
 
 /** **検査の側からも言う**（#774）——**`validateLocalAssemblies` に繋がっていること。** */

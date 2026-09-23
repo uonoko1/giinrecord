@@ -134,7 +134,7 @@ describe("#826 本番データ: 記号の数と公表値の突き合わせが画
       // **`noCounts` は 785 のまま動かない**（島根・滋賀とも全行に `counts` がある）。**食い違いは 0 のまま。**
       //
       // **検算**: **`checked + noCounts + unreadableCells === rows`**。
-    }).toEqual({ rows: 3802, checked: 2833, noCounts: 785, unreadableCells: 184, mismatches: 0 });
+    }).toEqual({ rows: 4145, checked: 3176, noCounts: 785, unreadableCells: 184, mismatches: 0 });
   });
 
   it("**母数の 3 つの内訳の和が母数になる**（黙って母数から外していない。県ごとにも）", async () => {

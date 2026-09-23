@@ -154,7 +154,7 @@ test("#928 本番 data/: 11 議会の rosterAsOf と採決日の窓（6 議会�
   });
   // **母数の検算**（#757）: **採決の本数の合計が、#855 が数えている 1,369 本と一致する。**
   // **これが無いと、痩せたディレクトリを見て「はみ出し 0」を言える。**
-  assert.equal(Object.values(got).reduce((s, x) => s + x.rollcalls, 0), 3_802, "11 議会の採決の合計（#855 の母数と同じ）");
+  assert.equal(Object.values(got).reduce((s, x) => s + x.rollcalls, 0), 4_145, "11 議会の採決の合計（#855 の母数と同じ）");
   // **後ろにはみ出している議会は 7 → 6**（**#901 の宮城で名簿の掲載日が採決より後になったため。広げたからではない**）
   assert.equal(Object.values(got).filter((x) => x.daysAfter > 0).length, 6, "rosterAsOf より後の採決を持つ議会");
   // **`rosterAsOf` が採決の範囲を「またいでいる」議会**（#928 が三重の形として挙げたもの）。
