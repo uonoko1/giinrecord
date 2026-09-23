@@ -116,14 +116,20 @@ describe("#826 本番データ: 記号の数と公表値の突き合わせが画
       // ○ と × の個数は変わらないので、`counts` との突き合わせは通る**（実測: 青森の
       // `readVoteCells` を 1 列回す変異を当てても、この数字は 1 つも動かなかった）。
       // **x の錨は `packages/etl/test/aomori-votes-pdf.test.ts` の #901 のほうである。**
-    }).toEqual({ rows: 3534, checked: 2672, noCounts: 785, unreadableCells: 77, mismatches: 0 });
+      //
+      // ## **#901 で 3,534 → 3,653 / 2,672 → 2,791 に動いた**（2026-09-23。島根）
+      // **島根の `--sessions` の既定を 2 → 5 にした**（112 → 231）。
+      // **増えた 119 本は 119 本とも `checked` に入る**——
+      // **島根は 231 / 231 行に `counts` があり、231 / 231 行で ○/● の数と一致する**（実測）。
+      // **`noCounts` 785 も `unreadableCells` 77 も動かない**（**島根は不明セルが 1 つも無い**）。
+    }).toEqual({ rows: 3653, checked: 2791, noCounts: 785, unreadableCells: 77, mismatches: 0 });
   });
 
-  it("/coverage に、本番の母数（2,672 件）と食い違い（0 件）と未突合の内訳が出る", async () => {
+  it("/coverage に、本番の母数（2,791 件）と食い違い（0 件）と未突合の内訳が出る", async () => {
     await renderCoverage(await realLocalMetas());
     const section = screen.getByRole("region", { name: SECTION });
     // **母数が出ていること**（#757。「0 件」は「見た上での 0」でなければ意味が無い）
-    expect(section).toHaveTextContent("2,672");
+    expect(section).toHaveTextContent("2,791");
     // **突き合わせなかった 785 件と 77 件の内訳も出す**（黙って母数から外さない）
     expect(section).toHaveTextContent("785");
     expect(section).toHaveTextContent("77");

@@ -272,29 +272,42 @@ test("#896 議決結果一覧が 2 本ある会期ページは、黙ってどち
  * ## **母数を検算に入れる**（#757）
  *
  * **14 本すべてに対して、変更の前後で何本読めるかを数えた**（#896 の「必ず守ること」）。
- * **このテストはフィクスチャにある 6 本ぶんを固定する**（14 本すべてをリポジトリに入れると 8.5MB になるため）。
+ * **このテストはフィクスチャにある 7 本ぶんを固定する**（14 本すべてをリポジトリに入れると 8.5MB になるため）。
  *
- * | | 直す前 | 直した後 |
- * |---|---|---|
- * | **表決 PDF が読めた** | **3 / 14** | **7 / 14** |
- * | **表決と議決結果一覧の両方が読めた** | 測っていない | **6 / 14** |
+ * | | #896 の前 | #896 の後 | **#901 の後** |
+ * |---|---|---|---|
+ * | **表決 PDF が読めた** | **3 / 14** | **7 / 14** | **8 / 14** |
  *
- * **新しく読めるようになった 4 本**: **2024-09**（`MAX_TITLE_OFFSET`）・**2023-06**（`HEADER_GAP`）・
+ * **#896 で新しく読めるようになった 4 本**: **2024-09**（`MAX_TITLE_OFFSET`）・**2023-06**（`HEADER_GAP`）・
  * **2025-06 / 2025-09**（`BLOCK_GAP`）。
+ * **#901 で新しく読めるようになった 1 本**: **2025-11**（**付託委員会が中央揃え**。`leftAlignedBoundary`）。
  *
- * **読めないままの 7 本と、その理由**（**どれもこの PBI の範囲外**）:
- * 2025-02 / 2024-11（件名の欄の境目）・2025-05-rinji（議案番号が無い行）・
- * **2025-11（委員会名が中央揃え）**・2024-02（注記の文言）・2023-11（委員長報告の節）・
+ * **読めないままの 6 本と、その理由**（**どれもこの PBI の範囲外**）:
+ * 2025-02 / 2024-11（件名の欄の境目）・**2025-05-rinji（議案番号の無い行が 4 行中 3 行）**・
+ * 2024-02（注記の文言）・2023-11（委員長報告の節）・
  * **2023-09（文字層が無い。すべてベクタの輪郭）**。
  */
-test("#896 フィクスチャにある本の読める／読めないが、直した後の実測どおりである", async () => {
-  const readable = ["r0806_giinbetu_kekka.pdf", "r0802_giinbetu_kekka.pdf", "r0606_giinbetu_kekka.pdf", "r0609_giinbetu_kekka.pdf", "r0706_giinbetu_kekka.pdf", "r0506_giinbetu_kekka.pdf"];
+test("#901 フィクスチャにある本の読める／読めないが、直した後の実測どおりである", async () => {
+  const readable = ["r0806_giinbetu_kekka.pdf", "r0802_giinbetu_kekka.pdf", "r0711_giinbetu_kekka.pdf", "r0709_giinbetu_kekka.pdf", "r0706_giinbetu_kekka.pdf", "r0609_giinbetu_kekka.pdf", "r0606_giinbetu_kekka.pdf", "r0506_giinbetu_kekka.pdf"];
   let ok = 0;
   for (const b of readable) { await parseVotePdf(fixture(b)); ok++; }
-  assert.equal(ok, 6, "フィクスチャにある読める本");
-  // **2025-11 は読めないままである**（委員会名が中央揃え。#896 では直していない）——
-  // **「読めるようにした」つもりで例外を握り潰していないことの確認**
-  await assert.rejects(() => parseVotePdf(fixture("r0711_giinbetu_kekka.pdf")), /付託委員会 is 4\.2pt off the row centre/);
+  assert.equal(ok, 8, "フィクスチャにある読める本");
+  // **既定の 5 会期ぶんは `不明` も凡例に無いセルも 0 である**（母数つき。#757）——
+  // **「読めた」と「中身が置けた」は違うので、セルの側でも数える**
+  const inDefault = ["r0806_giinbetu_kekka.pdf", "r0802_giinbetu_kekka.pdf", "r0711_giinbetu_kekka.pdf", "r0709_giinbetu_kekka.pdf", "r0706_giinbetu_kekka.pdf"];
+  let cells = 0, unknown = 0, offLegend = 0;
+  for (const b of inDefault) {
+    const pdf = await parseVotePdf(fixture(b));
+    const legend = new Set(pdf.legend.keys());
+    for (const c of pdf.rows.flatMap((r) => r.cells)) {
+      cells++;
+      if (c === "不明") unknown++;
+      else if (!legend.has(c)) offLegend++;
+    }
+  }
+  assert.equal(cells, 8085, "既定 5 会期のセル数（母数）");
+  assert.equal(unknown, 0, "不明セル");
+  assert.equal(offLegend, 0, "凡例に無いセル");
 });
 
 /**
