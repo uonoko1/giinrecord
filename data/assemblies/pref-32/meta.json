@@ -13,7 +13,7 @@
   "unknownCells": 0,
   "unmatchedNames": 0
  },
- "fetchedAt": "2026-09-23T10:56:11.425Z",
+ "fetchedAt": "2026-09-23T12:38:16.408Z",
  "rosterAsOf": "2023-05-17",
  "sessionRosterCoverage": [
   {
@@ -22,7 +22,7 @@
    "rosterAbsent": 0,
    "rosterSeen": 35,
    "seatsChanged": 0,
-   "sessionId": "499",
+   "sessionId": "2026-06",
    "unmatchedNames": 0,
    "unmatchedVotes": 0,
    "votes": 1050
@@ -37,6 +37,39 @@
    "unmatchedNames": 0,
    "unmatchedVotes": 0,
    "votes": 2870
+  },
+  {
+   "date": "2025-12-19",
+   "rollcalls": 55,
+   "rosterAbsent": 0,
+   "rosterSeen": 35,
+   "seatsChanged": 0,
+   "sessionId": "2025-11",
+   "unmatchedNames": 0,
+   "unmatchedVotes": 0,
+   "votes": 1925
+  },
+  {
+   "date": "2025-10-09",
+   "rollcalls": 29,
+   "rosterAbsent": 0,
+   "rosterSeen": 35,
+   "seatsChanged": 0,
+   "sessionId": "2025-09",
+   "unmatchedNames": 0,
+   "unmatchedVotes": 0,
+   "votes": 1015
+  },
+  {
+   "date": "2025-07-02",
+   "rollcalls": 35,
+   "rosterAbsent": 0,
+   "rosterSeen": 35,
+   "seatsChanged": 0,
+   "sessionId": "2025-06",
+   "unmatchedNames": 0,
+   "unmatchedVotes": 0,
+   "votes": 1225
   }
  ],
  "sessions": [
@@ -83,92 +116,92 @@
  ],
  "sources": [
   {
-   "fetchedAt": "2026-09-23T10:56:11.425Z",
+   "fetchedAt": "2026-09-23T12:38:16.408Z",
    "name": "島根県議会 議員名簿（選挙区別）",
    "url": "https://www.pref.shimane.lg.jp/gikai/gaido/meibo/tiku.html"
   },
   {
-   "fetchedAt": "2026-09-23T10:56:11.425Z",
+   "fetchedAt": "2026-09-23T12:38:16.408Z",
    "name": "島根県議会 最近の定例会の概要",
    "url": "https://www.pref.shimane.lg.jp/gikai/ugoki/saikin/"
   },
   {
-   "fetchedAt": "2026-09-23T10:56:11.425Z",
+   "fetchedAt": "2026-09-23T12:38:16.408Z",
    "name": "島根県議会 過去の定例会の概要",
    "url": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/"
   },
   {
-   "fetchedAt": "2026-09-23T10:56:11.425Z",
+   "fetchedAt": "2026-09-23T12:38:16.408Z",
    "name": "島根県議会 令和8年6月定例会の概要",
    "url": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0806/"
   },
   {
-   "fetchedAt": "2026-09-23T10:56:11.425Z",
+   "fetchedAt": "2026-09-23T12:38:16.408Z",
    "name": "島根県議会 議員別採決結果一覧（令和8年6月定例会）",
    "url": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0806/index.data/r0806_giinbetu_kekka.pdf"
   },
   {
-   "fetchedAt": "2026-09-23T10:56:11.425Z",
+   "fetchedAt": "2026-09-23T12:38:16.408Z",
    "name": "島根県議会 議決結果一覧（令和8年6月定例会）",
    "url": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0806/index.data/r0806_giketu_kekka.pdf"
   },
   {
-   "fetchedAt": "2026-09-23T10:56:11.425Z",
+   "fetchedAt": "2026-09-23T12:38:16.408Z",
    "name": "島根県議会 令和8年2月定例会の概要",
    "url": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/"
   },
   {
-   "fetchedAt": "2026-09-23T10:56:11.425Z",
+   "fetchedAt": "2026-09-23T12:38:16.408Z",
    "name": "島根県議会 議員別採決結果一覧（令和8年2月定例会）",
    "url": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giinbetu_kekka.pdf"
   },
   {
-   "fetchedAt": "2026-09-23T10:56:11.425Z",
+   "fetchedAt": "2026-09-23T12:38:16.408Z",
    "name": "島根県議会 議決結果一覧（令和8年2月定例会）",
    "url": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0802/index.data/r0802_giketu_kekka.pdf"
   },
   {
-   "fetchedAt": "2026-09-23T10:56:11.425Z",
+   "fetchedAt": "2026-09-23T12:38:16.408Z",
    "name": "島根県議会 令和7年11月定例会の概要",
    "url": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0711/"
   },
   {
-   "fetchedAt": "2026-09-23T10:56:11.425Z",
+   "fetchedAt": "2026-09-23T12:38:16.408Z",
    "name": "島根県議会 議員別採決結果一覧（令和7年11月定例会）",
    "url": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0711/index.data/r0711_giinbetu_kekka.pdf"
   },
   {
-   "fetchedAt": "2026-09-23T10:56:11.425Z",
+   "fetchedAt": "2026-09-23T12:38:16.408Z",
    "name": "島根県議会 議決結果一覧（令和7年11月定例会）",
    "url": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0711/index.data/r0711_giketu_kekka.pdf"
   },
   {
-   "fetchedAt": "2026-09-23T10:56:11.425Z",
+   "fetchedAt": "2026-09-23T12:38:16.408Z",
    "name": "島根県議会 令和7年9月定例会の概要",
    "url": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0709/"
   },
   {
-   "fetchedAt": "2026-09-23T10:56:11.425Z",
+   "fetchedAt": "2026-09-23T12:38:16.408Z",
    "name": "島根県議会 議員別採決結果一覧（令和7年9月定例会）",
    "url": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0709/index.data/r0709_giinbetu_kekka.pdf"
   },
   {
-   "fetchedAt": "2026-09-23T10:56:11.425Z",
+   "fetchedAt": "2026-09-23T12:38:16.408Z",
    "name": "島根県議会 議決結果一覧（令和7年9月定例会）",
    "url": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0709/index.data/r0709_giketu_kekka.pdf"
   },
   {
-   "fetchedAt": "2026-09-23T10:56:11.425Z",
+   "fetchedAt": "2026-09-23T12:38:16.408Z",
    "name": "島根県議会 令和7年6月定例会の概要",
    "url": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0706/"
   },
   {
-   "fetchedAt": "2026-09-23T10:56:11.425Z",
+   "fetchedAt": "2026-09-23T12:38:16.408Z",
    "name": "島根県議会 議員別採決結果一覧（令和7年6月定例会）",
    "url": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0706/index.data/r0706_giinbetu_kekka.pdf"
   },
   {
-   "fetchedAt": "2026-09-23T10:56:11.425Z",
+   "fetchedAt": "2026-09-23T12:38:16.408Z",
    "name": "島根県議会 議決結果一覧（令和7年6月定例会）",
    "url": "https://www.pref.shimane.lg.jp/gikai/ugoki/gikai_kako/r0706/index.data/r0706_giketu_kekka.pdf"
   }
