@@ -190,6 +190,10 @@ export function toLocalRollCalls(sources: readonly PdfSource[], roster: readonly
         number: "",
         title: row.title,
         result: row.result,
+        // **議決結果の欄が一次資料で空**（#901）。**`counts` は読めているが多数決から埋めない。**
+        // **`Kg835_0425sanpi2.pdf` の 1 ページ目は `議決結果` の列見出しがあるのに 3 行とも値が無く、
+        //   同じ本の 2 ページ目の行には `承認` がある**——**読めないのではなく書かれていない**（実測）。
+        ...(row.result === "" ? { resultAbsent: true as const } : {}),
         ...(row.counts ? { counts: { yes: row.counts.yes, no: row.counts.no, present: row.counts.present, voting: row.counts.voting } } : {}),
         votes,
         page: row.page,

@@ -1287,7 +1287,14 @@ export async function validateLocalAssemblies(dir: string): Promise<string[]> {
       // method は PDF に表決方法の欄がある議会（宮城）だけ。あれば raw と legend（空でない）を持つ
       if (rc.method !== undefined && (typeof rc.method.raw !== "string" || typeof rc.method.legend !== "string" || rc.method.legend === "")) v.push(`${rel}: method.raw / method.legend required when method is present`);
       if (rc.committeeResult !== undefined && typeof rc.committeeResult !== "string") v.push(`${rel}: committeeResult must be a string`);
-      if (typeof rc.result !== "string" || rc.result === "") v.push(`${rel}: result required`);
+      // **`result` は原文。空は `resultAbsent: true` を付けたときだけ通す**（#901）。
+      // **一次資料のその欄が空だったことを「主張」として書いた採決だけが空でよく、
+      //   黙って空になった採決（読み取りの壊れ）は今までどおり違反**
+      // （11 議会 3,683 採決のうち空は滋賀の 3 件だけ。実測。この検査は実際に効いている）。
+      if (typeof rc.result !== "string") v.push(`${rel}: result required`);
+      else if (rc.result === "" && rc.resultAbsent !== true) v.push(`${rel}: result required`);
+      else if (rc.result !== "" && "resultAbsent" in rc) v.push(`${rel}: resultAbsent is only for an empty result (result is ${JSON.stringify(rc.result)})`);
+      if ("resultAbsent" in rc && rc.resultAbsent !== true) v.push(`${rel}: resultAbsent must be true when present`);
       // counts はその欄がある PDF（宮城・鳥取・島根）だけ。あれば yes / no は数値、present（宮城）・voting（宮城・鳥取）は公表する議会だけ
       if (rc.counts !== undefined && ([rc.counts.yes, rc.counts.no].some((n) => typeof n !== "number") || ("present" in rc.counts && typeof rc.counts.present !== "number") || ("voting" in rc.counts && typeof rc.counts.voting !== "number"))) v.push(`${rel}: counts.yes / no must be numbers (counts, present and voting optional)`);
       // referredCommittees は付託委員会の欄がある議会（島根）だけ。あれば空でない文字列の空でない配列
