@@ -56,6 +56,21 @@ const meta = (): LocalAssemblyMeta => JSON.parse(readFileSync(join(DIR, "meta.js
 const members = (): LocalMember[] =>
   (JSON.parse(readFileSync(join(DATA, "members", "index.json"), "utf-8")) as LocalMember[]).filter((m) => m.assemblyId === "pref-25");
 
+/**
+ * ## **このテストが赤くなったら、まず「県が名簿を動かした」を疑うこと**（#901。**不具合とは限らない**）
+ *
+ * **滋賀の名簿は「いま在職している議員の一覧」しか公表されていない**ので、
+ * **県が誰かを載せ替えれば、ここで固定している数は全部動く。**
+ *
+ * **実際に起きた**: **2026-09-13 → 09-23 のあいだに県が `白井 幸則` と `九里 学` を名簿から外し、
+ * 名簿 44 → 42 人・`unmatchedNames` 1 → 3 になった**（`--sessions` は 2 のまま。**広げたからではない**）。
+ *
+ * **そのとき直すのは実装ではなく、この数である**——**`pnpm etl:local shiga` で `data/` を作り直し、
+ * 新しい数に置き換えて、何が動いたかをコミットメッセージに書く。**
+ * **「赤いから」と検査のほうを緩めないこと**（#943）。
+ *
+ * **赤くなること自体は正しい振る舞いである**——**県が名簿を動かしたことを、黙って通さずに知らせている。**
+ */
 test("#901 本番 pref-25: 採決 163 / セル 6,886 / 名簿 42 人（meta.json と実物が一致する）", { skip: !hasData }, () => {
   const m = meta();
   const rcs = rollCalls();

@@ -201,6 +201,15 @@ test("#711 validateLocalAssemblies: unmatched.json の sourceConflict が名簿�
  * **どちらも「日付では切れない」**——**少数側が最新でもない**ので、
  * **「事務局が改めた」とも言えない**（#670 の仮説は #765 に否定された）。
  */
+/**
+ * ## **この数が赤くなったら、まず「県が名簿を動かした」を疑うこと**（#901。**不具合とは限らない**）
+ *
+ * **`unmatched` は「一次資料に在るが今の名簿に無い氏名」なので、県が名簿から誰かを外せば増える。**
+ * **実際に起きた**: **2026-09-23 に滋賀が 44 → 42 人になり、`--sessions` を動かさなくても 1 → 3 行**。
+ *
+ * **本丸は行数ではなく `hits` が空であること**——**理由（`brokenGlyph` / `sourceConflict`）が
+ * 計算し直した値と一致すること。** **行数を直すときは `hits` を必ず見ること**（#943）。
+ */
 test("#711 否定的対照: 本番 data/ の unmatched 行の reason が計算し直した値と一致する", async () => {
   const DATA = fileURLToPath(new URL("../../../data/", import.meta.url));
   const members = JSON.parse(await readFile(join(DATA, "members/index.json"), "utf-8")) as (LocalMember & { assemblyId?: string })[];
