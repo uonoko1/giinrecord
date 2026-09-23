@@ -126,7 +126,12 @@ export function readGlyphPageOps(fnArray: ArrayLike<number>, argsArray: ArrayLik
   const items: Item[] = [];
   /** このページで「文字を描け」と言われた回数（0 グリフのまま終わったら例外にする。Issue #867）。 */
   let showTextCalls = 0;
-  const { vlines, hlines } = readLines(fnArray, argsArray);
+  // **`splitBatchedPaths` は三重だけで `true` にする**（Issue #867 B 群「上下反転 9 本」）。
+  // この 9 本は 13,207 本の罫線が 92 回の `constructPath` に畳まれており、
+  // 割らないと **縦罫線 0 本・横罫線 0 本**になる（例外は出ない。黙って空の表になる）。
+  // **佐賀では `true` にすると字の輪郭を罫線と読み違えて票が別の列に落ちる**ので、
+  // 共通層の既定は `false` のままにしてある（`pdf-table.ts` の `ReadLinesOptions` に実測表がある）。
+  const { vlines, hlines } = readLines(fnArray, argsArray, { splitBatchedPaths: true });
   let ctm: Matrix = IDENTITY;
   const ctmStack: Matrix[] = [];
   let fontSize = 0;

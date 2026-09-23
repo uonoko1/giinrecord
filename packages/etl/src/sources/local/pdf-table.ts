@@ -77,6 +77,37 @@ export function applyMatrix(m: Matrix, rect: ArrayLike<number>): [number, number
 }
 
 /**
+ * `readLines` の振る舞いの切り替え（Issue #867）。
+ */
+export interface ReadLinesOptions {
+  /**
+   * **1 回の `constructPath` に入った複数のサブパスを、1 本ずつの線として読むか**（既定 `false`）。
+   *
+   * **既定を `false` にしてある。** これは「安全側だから」ではなく、
+   * **`true` にすると既存 11 県のうち 2 県の出力が実際に変わる**ためである
+   * （2026-09-21 に 107 本のフィクスチャを前後で突き合わせて実測）:
+   *
+   * | フィクスチャ | `true` にすると |
+   * |---|---|
+   * | `saga/3_111805_349057_up_7elgmado.pdf` | **議員の列が 37 → 11、`unknownCells` が 0 → 792**。**セルのハッシュが変わる**（＝票が別の列に落ちる） |
+   * | `aomori/32{2,3,4}teirei_sanpi.pdf` | 罫線が 0 → 230 本に増える。**セルのハッシュは変わらない**（青森はこの罫線を使っていない）が、出力は変わる |
+   *
+   * **佐賀で壊れる理由**: 佐賀の PDF は**字の輪郭を `fill` のパスで描いており**、
+   * 1 回の `constructPath` に 2〜13 個のサブパスが入っている（実測: 6,417 回 / 29,725 サブパス）。
+   * 割ると **字の縦棒・横棒が「長さ 5〜12pt の罫線」として拾われ**、列の境界が汚れる。
+   * **`minMax` 1 つで読んでいたときは、字の輪郭は「太い塊」に見えて罫線検査に当たらなかった。**
+   * **つまり `minMax` は、意図せず「字を罫線と読み違えない」働きをしていた。**
+   *
+   * **`fill` / `stroke` の別では分けられない**（実測）——
+   * 佐賀の輪郭も三重の上下反転 9 本の罫線も、どちらも塗りのパスで来る
+   * （三重 9 本は `eoFill`、佐賀の輪郭は `fill` と `eoFill` の両方）。
+   *
+   * **だから議会ごとに選ばせる。** 今これを `true` にしているのは三重だけである。
+   */
+  splitBatchedPaths?: boolean;
+}
+
+/**
  * オペレータ列から罫線（細い矩形）を読む。**CTM を持ち回るのはここだけ**（Issue #693）。
  *
  * `OPS.constructPath` の `minMax` は **その時点の CTM を掛ける前** のローカル座標である。
@@ -95,7 +126,8 @@ export function applyMatrix(m: Matrix, rect: ArrayLike<number>): [number, number
  * `getOperatorList()` を渡さず配列 2 本で受けるのは、PDF を用意しなくても
  * 入れ子の `q`/`Q` を直接テストできるようにするため（実物のフィクスチャは深さ 2 までしか無い）。
  */
-export function readLines(fnArray: ArrayLike<number>, argsArray: ArrayLike<unknown>): { vlines: VLine[]; hlines: HLine[] } {
+export function readLines(fnArray: ArrayLike<number>, argsArray: ArrayLike<unknown>, options: ReadLinesOptions = {}): { vlines: VLine[]; hlines: HLine[] } {
+  const { splitBatchedPaths = false } = options;
   const vlines: VLine[] = [];
   const hlines: HLine[] = [];
   let ctm: Matrix = IDENTITY;
@@ -113,7 +145,7 @@ export function readLines(fnArray: ArrayLike<number>, argsArray: ArrayLike<unkno
     // その場合 `minMax` は「全部を囲む 1 つの外接矩形」なので、これだけ見ると
     // **数千本の罫線が 1 つの大きな矩形に潰れ、「細い」検査に当たらず 1 本も拾われない。**
     // サブパスに割れたときはそちらを使い、割れなければ今までどおり `minMax` を使う。
-    for (const rect of splitSubpaths(args[1]) ?? [minMax]) {
+    for (const rect of (splitBatchedPaths ? splitSubpaths(args[1]) : undefined) ?? [minMax]) {
       const [x0, y0, x1, y1] = applyMatrix(ctm, rect);
       const w = x1 - x0;
       const h = y1 - y0;
