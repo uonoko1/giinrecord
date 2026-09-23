@@ -144,7 +144,10 @@ test("#928 本番 data/: 11 議会の rosterAsOf と採決日の窓（6 議会�
     "pref-25": { daysAfter: -34, daysBefore: 75, votesAfter: 0, rollcalls: 14 },
     // **#901 で会期を 2 → 4 にした**。**`daysBefore` 30 → 197（上限 1,461 の 13%）で、#928 の検査は鳴らない**
     "pref-29": { daysAfter: 69, daysBefore: 197, votesAfter: 37, rollcalls: 180 },
-    "pref-31": { daysAfter: 1_156, daysBefore: -1_044, votesAfter: 118, rollcalls: 118 },
+    // **#901 で会期を 2 → 11 にした**（118 → 572）。**`daysAfter` は 1,156 のまま動かない**——
+    // **増えるのは古い側なので最新の採決が変わらない**。**`daysBefore` は -1,044 → -218 で依然として負**
+    // （**572 本すべてが `rosterAsOf` 2023-04-30 より後**。最古の採決 2023-12-04）。**#928 は鳴らない。**
+    "pref-31": { daysAfter: 1_156, daysBefore: -218, votesAfter: 572, rollcalls: 572 },
     "pref-32": { daysAfter: 1_142, daysBefore: -777, votesAfter: 231, rollcalls: 231 },
     // **#901 で会期を 2 → 4 にした**。**`daysBefore` 204 → 296（上限 1,461 の 20%）で、#928 の検査は鳴らない**
     "pref-36": { daysAfter: -9, daysBefore: 296, votesAfter: 0, rollcalls: 153 },
@@ -158,7 +161,7 @@ test("#928 本番 data/: 11 議会の rosterAsOf と採決日の窓（6 議会�
   });
   // **母数の検算**（#757）: **採決の本数の合計が、#855 が数えている 1,369 本と一致する。**
   // **これが無いと、痩せたディレクトリを見て「はみ出し 0」を言える。**
-  assert.equal(Object.values(got).reduce((s, x) => s + x.rollcalls, 0), 3_996, "11 議会の採決の合計（#855 の母数と同じ）");
+  assert.equal(Object.values(got).reduce((s, x) => s + x.rollcalls, 0), 4_450, "11 議会の採決の合計（#855 の母数と同じ）");
   // **後ろにはみ出している議会は 7 → 6**（**#901 の宮城で名簿の掲載日が採決より後になったため。広げたからではない**）
   assert.equal(Object.values(got).filter((x) => x.daysAfter > 0).length, 6, "rosterAsOf より後の採決を持つ議会");
   // **`rosterAsOf` が採決の範囲を「またいでいる」議会**（#928 が三重の形として挙げたもの）。

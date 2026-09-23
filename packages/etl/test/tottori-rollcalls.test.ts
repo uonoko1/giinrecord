@@ -141,3 +141,83 @@ test("toLocalRollCalls: 令和8年2月定例会は議決日が 2 つ（3/9 先�
   assert.equal(new Set(rollCalls.map((r) => r.id)).size, 88);
   assert.equal(rollCalls.every((r) => r.votes.every((v) => v.memberId !== "")), true);
 });
+
+/* ============================================================ *
+ * **#901 `--sessions` を 2 → 11 に広げたとき、引退した議員の票が今の別人に付かないこと**
+ *
+ * **これがこの PBI でいちばん危ない誤りである**（#569 の重いほう）——
+ * **「記録が出ない」は利用者から見えるが、「別人の記録が出る」は見えない。**
+ * ============================================================ */
+
+test("#901 引退した議員の姓は、同姓の現職に寄らない（内田隆議員 → 内田博長 に付けない）", () => {
+  // **鳥取の PDF は同姓を「名の 1 文字」で書き分ける**（`内田隆議員` / `内田博議員`）。
+  // **令和5年11月〜令和6年6月定例会に出る `内田隆議員` は 内田 隆嗣（2024年に退いた）で、
+  // 今の名簿（35 人）には居ない。** **名簿に居る同姓は 内田 博長 ただ 1 人。**
+  // **前方一致は `内田博長`.startsWith(`内田隆`) が偽なので寄らない**——**これを固定する。**
+  const uchidaTakashi = matchName("内田隆議員", roster);
+  assert.equal(uchidaTakashi.memberId, "", "**寄せない**（引退した議員の 176 採決が 内田博長 に付いたら、それは別人の記録である）");
+  assert.deepEqual(uchidaTakashi.candidates, [], "**候補も 0 人**（同姓が居ても前方一致しないので挙げない）");
+  // **現職の 内田博議員 のほうは、ちゃんと 内田 博長 に寄る**（寄らなくなっていたら逆に取りこぼす）
+  const uchidaHiro = matchName("内田博議員", roster);
+  const hiro = roster.find((m) => m.name.replace(/[\s　]/g, "") === "内田博長");
+  assert.ok(hiro, "名簿に 内田 博長 が要る");
+  assert.equal(uchidaHiro.memberId, hiro.id);
+});
+
+test("#901 名簿に姓すら無い引退議員は、誰にも寄らない（藤縄議員）", () => {
+  // **藤縄 喜和（86代議長。令和6年に退いた）は今の名簿 35 人に居ない。**
+  // **名簿に `藤縄` で始まる氏名は 1 つも無いので、候補 0 人で unmatched に落ちる**（#529）。
+  const fujinawa = matchName("藤縄議員", roster);
+  assert.equal(fujinawa.memberId, "");
+  assert.deepEqual(fujinawa.candidates, []);
+  assert.equal(roster.filter((m) => m.name.replace(/[\s　]/g, "").startsWith("藤縄")).length, 0, "**母数**: 名簿に 藤縄 は 0 人");
+});
+
+test("#901 広げた範囲に出る姓は、寄るか・誰にも寄らないかのどちらかで、別人には寄らない（母数を数える）", () => {
+  // **読める 13 会期（令和5年6月〜令和8年6月）の PDF に出る氏名を全部並べ、
+  // 「寄った先の名簿の氏名が、PDF の姓で始まっている」ことを 1 件ずつ確かめる。**
+  // **寄った先が姓で始まっていなければ、それは別人である。**
+  const seen = new Set<string>([
+    // **実測 2026-09-21**（読める 13 会期の PDF に出る氏名の異なり 38 通り。
+    // **`--sessions 11` の範囲だけなら 37 通り**——`平井議員` は 12・13 会期目にしか出ない）
+    "入江議員", "鹿島議員", "尾崎議員", "伊藤議員", "市谷議員", "森議員", "内田博議員", "興治議員",
+    "銀杏議員", "語堂議員", "斉木議員", "坂野議員", "島谷議員", "中島議員", "西村議員", "野坂議員",
+    "浜崎議員", "浜田一議員", "浜田妙議員", "福浜議員", "福田議員", "松田議員", "安田議員", "山川議員",
+    "山本議員", "広谷議員", "川部議員", "東田議員", "前田議員", "前住議員", "鳥羽議員", "河上議員",
+    "村上議員", "前原議員", "玉木議員",
+    // **引退した 3 人**（今の名簿に居ない）
+    "内田隆議員", "藤縄議員", "平井議員",  // 平井は 12・13 会期目のみ
+  ]);
+  assert.equal(seen.size, 38, "**母数**（ここが減ったら下の 0 件は「見た上での 0」ではない）");
+  let matched = 0, unmatchedCount = 0;
+  const wrong: string[] = [];
+  for (const nameText of seen) {
+    const m = matchName(nameText, roster);
+    if (m.memberId === "") { unmatchedCount++; continue; }
+    matched++;
+    const member = roster.find((x) => x.id === m.memberId);
+    assert.ok(member, `${nameText}: 寄った先 ${m.memberId} が名簿に無い`);
+    const surname = nameText.replace(/議員$/, "");
+    if (!member.name.replace(/[\s　]/g, "").startsWith(surname)) wrong.push(`${nameText} → ${member.name}`);
+  }
+  assert.equal(matched, 35, "**35 通りが名簿に寄る**（名簿はちょうど 35 人）");
+  assert.equal(unmatchedCount, 3, "**3 通りは誰にも寄らない**（内田隆・藤縄・平井。引退した議員）");
+  // **`--sessions 11` で実際に `unmatched.json` に載るのは 2 通り**（平井は 12 会期目以降にしか出ない）。
+  // **本番の値は `tottori-published-data.test.ts` が数える。**
+  assert.deepEqual(wrong, [], "**姓で始まらない氏名に寄った組は 0 組**（1 組でも出たら別人の記録が出ている）");
+});
+
+test("#901 番号が空の行が同じ会期・同じ議決日・同じ種別に 2 行あれば、id が衝突するので例外", () => {
+  // **番号を空のまま出すようにしたので、id の末尾が `-` で終わる**
+  // （`pref-31-2023-11-20231220-知事提案-`）。**本番の 572 採決では衝突していない**が、
+  // **もし 2 行が同じ id になったら、`toLocalRollCalls` は「同じ議案が複数の PDF に出た」と読んで
+  // 内容の一致を確かめる**——**内容が違えば例外で止まる**（黙ってどちらかを捨てない）。
+  const pdf = JSON.parse(JSON.stringify(febSengi)) as VotePdf;
+  // 2 行の番号を両方とも空にして、賛否だけ変える
+  pdf.rows = pdf.rows.slice(0, 2).map((r, i) => ({ ...r, number: "", cells: r.cells.map((c, j) => (i === 1 && j === 0 ? (c === "○" ? "×" : "○") : c)) }));
+  assert.throws(
+    () => toLocalRollCalls([{ pdf, pdfUrl: `${origin}/secure/1/x.pdf` }], roster, { sessionId: "2026-02", sessionLabel: "令和8年2月定例会" }),
+    /content differs between PDFs/,
+    "**内容の違う 2 行が同じ id になったら止まる**（どちらが正しいか推定しない）",
+  );
+});

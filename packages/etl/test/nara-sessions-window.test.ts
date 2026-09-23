@@ -50,7 +50,7 @@ import { defaultSessionsFor, LOCAL_TERM_DAYS, rosterWindowOf } from "../src/loca
  * | `―` U+2015 | **`不在（除斥、欠席及び表決を棄権した場合を除く）`** | （無い） | （無い） |
  *
  * **`-` → `―` に寄せると、滋賀の凡例から `-` が引けなくなる**（下のテストで実測）。
- * **`－` → `―` に寄せると、本番 `data/` に既に出ている 92 票が「凡例に無い」になる**
+ * **`－` → `―` に寄せると、本番 `data/` に既に出ている 95 票が「凡例に無い」になる**（#901 の鳥取で 92 → 95）
  * （**pref-32 が 81 票・pref-24 が 6 票・pref-04 が 5 票。母数 81,534 票**。下のテストで数えた）。
  * **`index.ts` は例外を握り潰さないので、その議会の ETL がまるごと止まる。**
  *
@@ -111,7 +111,7 @@ test("#901 奈良の `--sessions` の既定は 4（他の議会の値は動か�
     // **宮城は #901 の別 PR で 2 → 11 になった**（第400 〜 第390回。2023-10 の一般選挙の手前）
     // **#901 の島根で `shimane` が 2 → 5 になった**（6 会期目が読めないので 5 で止まる）
     // **#901 の佐賀で `saga` が 2 → 13 になった**（令和5年5月臨まで。2023-04 の一般選挙の手前）
-    [["mie", 4], ["tokushima", 4], ["kochi", 5], ["miyagi", 11], ["tottori", 2], ["shimane", 5], ["shiga", 2], // **#901 の青森で `aomori` が 2 → 14 になった**
+    [["mie", 4], ["tokushima", 4], ["kochi", 5], ["miyagi", 11], ["tottori", 11], ["shimane", 5], ["shiga", 2], // **#901 の青森で `aomori` が 2 → 14 になった**
     ["aomori", 14], ["akita", 29], ["saga", 13]],
   );
 });
@@ -303,7 +303,7 @@ test("#901 否定的対照: `-` → `―` を共有表に足すと、滋賀の�
   assert.notEqual(shiga.legend.votes["-"], nara[wouldFold("-")], "**同じ字が議会ごとに違う意味**（字形の揺れではない）");
 });
 
-test("#901 否定的対照: `－` U+FF0D → `―` を共有表に足すと、本番に出ている 92 票が凡例から外れる", async () => {
+test("#901 否定的対照: `－` U+FF0D → `―` を共有表に足すと、本番に出ている 95 票が凡例から外れる", async () => {
   // **本番 `data/` を読み直して数える**（#865 と同じ層。**推測ではない**）
   const { readdirSync, statSync } = await import("node:fs");
   const { join } = await import("node:path");
@@ -335,8 +335,12 @@ test("#901 否定的対照: `－` U+FF0D → `―` を共有表に足すと、�
   assert.ok(total > 50_000, `母数が小さすぎる（${total} 票）。data/ が無いなら、この検算は空回りしている（#757）`);
   // **宮城（pref-04）が 5 → 11 に増えたのは、#901 の宮城で `--sessions` を 2 → 11 に広げたから**
   // （**`－` U+FF0D の票が 5 → 11 になった**。**本数が増えただけで、性質は変わっていない**）。
-  assert.deepEqual(Object.fromEntries([...brokenPerAssembly].sort()), { "pref-04": 11, "pref-24": 6, "pref-32": 81 });
-  assert.equal([...brokenPerAssembly.values()].reduce((a, b) => a + b, 0), 98, "合計（母数 " + total + " 票）");
+  // **鳥取（pref-31）が 0 → 3 で現れたのは、#901 の鳥取で `--sessions` を 2 → 11 に広げたから**
+  // （**`－` U+FF0D の票が 3 票ある。`--sessions 2` の範囲には 1 票も無かった**）。
+  // **この対照が強くなっただけで、性質は変わっていない**——**共有表に `－` → `―` を足せば、
+  // 今度は 95 票が凡例から引けなくなる**（92 + 鳥取の 3）。
+  assert.deepEqual(Object.fromEntries([...brokenPerAssembly].sort()), { "pref-04": 11, "pref-24": 6, "pref-31": 3, "pref-32": 81 });
+  assert.equal([...brokenPerAssembly.values()].reduce((a, b) => a + b, 0), 101, "合計（母数 " + total + " 票）");
   // **奈良（pref-29）は 0**——**壊すのは奈良ではなく、他の 3 議会である**
   assert.equal(brokenPerAssembly.get("pref-29"), undefined);
 });

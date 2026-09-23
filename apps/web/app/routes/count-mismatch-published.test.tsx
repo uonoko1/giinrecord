@@ -133,17 +133,37 @@ describe("#826 本番データ: 記号の数と公表値の突き合わせが画
       // **⚠ 上と同じ理由で、この一致も x の錨にならない。**
       // **佐賀の x の錨は `packages/etl/test/saga-votes-pdf.test.ts` の
       // 「記号を 1 列回すと全対がずれる」である**（#901 で列を 1 本ずらす変異を当てて確かめた）。
-    }).toEqual({ rows: 3996, checked: 3134, noCounts: 785, unreadableCells: 77, mismatches: 0 });
+
+
+      // ## **#901 で 3,996 → 4,450 / 3,134 → 3,586 に動いた**（2026-09-23。鳥取）
+      // **島根・佐賀（上）と同じ日に別々の PR で広げたので、土台は両方が入った後の値である**——
+      // **足し算ではなく、`data/` を読み直して測った値を書いている。**
+      // **鳥取の `--sessions` の既定を 2 → 11 にした**（118 → 572。**+454**）。
+      // **`noCounts` は 785 のまま**（**鳥取は 572 / 572 行に `counts` の欄がある**）。
+      // **`checked` は +452**——**増えた 454 本のうち 2 本だけが突き合わせの外に出る。**
+      //
+      // **`unreadableCells` が 77 → 79 になるのは、読めなかったからではない**（**鳥取の
+      // `抽出不能` / `不明` の票は 0 のまま。実測**）。**`棄権` の票が入った行だからである。**
+      // **`棄` は `賛成` / `反対` / `投票なし` のどれにも寄せない**——**寄せると
+      // 「棄権した」という事実が消える**（#569）。**`mapped` が無い票のある行は、
+      // この突き合わせ（○の数＝`yes`）の対象外に出る**（`local-assemblies.ts`）。
+      // **実測: `棄` の票は 5 票・3 行**（令和8年6月 議員提案第2号 3 票／令和7年2月 議員提案第7号 1 票／
+      // 令和7年6月 知事提案第20号 1 票）。**そのうち 2 行が #901 で増えた**ので **77 → 79。**
+      //
+      // **食い違いは 0 のまま**——**572 / 572 行で ○の数＝`yes`・×の数＝`no` が一致する**（実測）。
+
+
+    }).toEqual({ rows: 4450, checked: 3586, noCounts: 785, unreadableCells: 79, mismatches: 0 });
   });
 
-  it("/coverage に、本番の母数（3,134 件）と食い違い（0 件）と未突合の内訳が出る", async () => {
+  it("/coverage に、本番の母数（3,586 件）と食い違い（0 件）と未突合の内訳が出る", async () => {
     await renderCoverage(await realLocalMetas());
     const section = screen.getByRole("region", { name: SECTION });
     // **母数が出ていること**（#757。「0 件」は「見た上での 0」でなければ意味が無い）
-    expect(section).toHaveTextContent("3,134");
-    // **突き合わせなかった 785 件と 77 件の内訳も出す**（黙って母数から外さない）
+    expect(section).toHaveTextContent("3,586");
+    // **突き合わせなかった 785 件と 79 件の内訳も出す**（黙って母数から外さない）
     expect(section).toHaveTextContent("785");
-    expect(section).toHaveTextContent("77");
+    expect(section).toHaveTextContent("79");
     // **今は食い違いが無い**、を母数つきで言う
     expect(within(section).getByTestId("coverage-count-mismatch-none")).toBeInTheDocument();
   });

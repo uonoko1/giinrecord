@@ -177,3 +177,102 @@ test("parseVotePdf: ○の数＝賛成者数、×の数＝反対者数（PDF 5 �
 test("parseVotePdf: 見出し（会期・議決日）が無い・凡例が無い PDF は失敗する", async () => {
   await assert.rejects(parseVotePdf(Buffer.from("%PDF-1.4\n%%EOF")), /PDF|Invalid/);
 });
+
+/* ============================================================ *
+ * **#901 で `--sessions` を広げたとき、次の 3 会期が例外で止めていた 3 つの欠陥**
+ *
+ * **`--sessions 2` の 5 本には 1 本も無い形である。**
+ * **どれも「読めない」であって「別人が出る」ではない**（#569 の軽いほう）が、
+ * **直さないと 3 会期めから先が 1 行も出ない。**
+ * ============================================================ */
+
+const dec2025 = await parseVotePdf(bytes("R7.12.22giketsukekka.pdf"));
+const feb2025 = await parseVotePdf(bytes("R7.2giketsukekka0324.pdf"));
+const sep2024 = await parseVotePdf(bytes("R0609gikeysukekka.pdf"));
+
+test("#901 議案等番号が空の行（決算認定に係る指摘事項）を読む。番号を推定せず空のまま出す", () => {
+  // **令和7年12月定例会（2025-12-22 議決分）の 2 ページ目 9 行目**——
+  // **議案等番号のセルが一次資料で空**（件名のほうに「9月定例会第13号、第14号及び第15号」と書いてある）。
+  // **直す前は `incomplete row (kind/number/method/result)` で PDF まるごと落ちていた。**
+  assert.equal(dec2025.sessionLabel, "令和7年12月定例会");
+  assert.equal(dec2025.date, "2025-12-22");
+  const blank = dec2025.rows.filter((r) => r.number === "");
+  assert.equal(blank.length, 1, "**番号が空の行は 1 行だけ**（母数。#757。増えたら数え直す）");
+  assert.equal(blank[0].kind, "知事提案");
+  assert.equal(blank[0].title, "決算認定に係る指摘事項「9月定例会第13号、第14号及び第15号」並びに12月定例会第13号」");
+  assert.deepEqual(blank[0].counts, { yes: 33, no: 1, voting: 34 });
+  assert.equal(blank[0].result, "決定");
+  assert.equal(blank[0].methodText, "起立");
+  // **セルは 35 人ぶんそろう**（番号が空でも賛否は読める）
+  assert.equal(blank[0].cells.length, 35);
+  assert.equal(blank[0].cells.filter((c) => c === "○").length, 33);
+  assert.equal(blank[0].cells.filter((c) => c === "×").length, 1);
+  assert.equal(blank[0].cells.filter((c) => c === "議").length, 1);
+  assert.equal(blank[0].cells.filter((c) => c === UNKNOWN_CELL).length, 0);
+});
+
+test("#901 種別・表決方法・議決結果はどれか 1 つでも空なら今までどおり例外（空を許したのは番号だけ）", () => {
+  // **「番号が空でも通す」を「どれが空でも通す」に広げてはいけない**——
+  // **種別が読めない行は、その行がどの表のものか分からない。**
+  for (const r of dec2025.rows) {
+    assert.notEqual(r.kind, "", `${r.number}: 種別は空にならない`);
+    assert.notEqual(r.result, "", `${r.number}: 議決結果は空にならない`);
+    assert.notEqual(r.methodText, "", `${r.number}: 表決方法は空にならない`);
+  }
+});
+
+test("#901 見出しが複数の文字アイテムに割れている PDF（令和7年2月定例会）でも会期と議決日を読む", () => {
+  // **同じ会期の先議 PDF は `令和7年2月定例会` が 1 アイテムなのに、
+  // この本は `令和` / `7` / `年` / `2` / `月定例会` の 5 アイテムに割れている**（実測）。
+  // **直す前は `session label (令和N年M月定例会) not found in page 1 header` で落ちていた。**
+  assert.equal(feb2025.sessionLabel, "令和7年2月定例会");
+  assert.equal(feb2025.date, "2025-03-24");
+});
+
+test("#901 同じ凡例が同じページに何度も印刷される PDF は通す。値が食い違う凡例は今までどおり例外", () => {
+  // **令和6年9月定例会の PDF は、最終ページに同じ凡例ブロックを 3 回印刷している**
+  // （**7 項目 × 3 回。値は 1 文字も違わない**——実測）。
+  // **直す前は `legend key ○ appears twice` で落ちていた。**
+  assert.equal(sep2024.sessionLabel, "令和6年9月定例会");
+  assert.deepEqual(sep2024.legend.votes, {
+    "○": "賛成",
+    "×": "反対",
+    "議": "議長",
+    "副": "副議長が議長の職務を代理",
+    "除": "除斥",
+    "欠": "欠席",
+    "－": "議場に不在であり、表決しなかった議員",
+  });
+});
+
+test("#901 広げた 3 本でも ○の数＝賛成者数、×の数＝反対者数（母数を数える）", () => {
+  const rows = [dec2025, feb2025, sep2024].flatMap((pdf) => pdf.rows.map((r) => ({ ...r, date: pdf.date })));
+  assert.equal(rows.length, 160, "**母数**（実測 2026-09-21。ここが減ったら下の 0 件は「見た上での 0」ではない）");
+  const { mismatches, checked } = countMismatchRows(rows, { yes: "○", no: "×", cells: (r) => r.cells, label: (r) => `${r.date} ${r.kind} ${r.number}` });
+  assert.equal(checked, 160);
+  assert.deepEqual(mismatches, []);
+});
+
+const feb2024 = await parseVotePdf(bytes("giketsukekka_R6.2.pdf"));
+
+test("#901 件名が 5.5pt 字下げされた行（令和6年2月定例会 5 ページ目）でも件名を読む。引用の本文は今までどおり件名に入れない", () => {
+  // **直す前は `i.x < titleLeft + 4` で全部ふるっていたので、この 7 行の件名が空になり、
+  // `toLocalRollCalls` の `title is empty in every PDF` で会期がまるごと出なかった。**
+  assert.equal(feb2024.date, "2024-03-22");
+  const named = feb2024.rows.filter((r) => r.title === "鳥取県廃棄物審議会委員の任命について");
+  assert.equal(named.length, 7, "**同じ件名の行が 7 行**（第75号〜第81号。母数。#757。実測 2026-09-21）");
+  assert.deepEqual(named.map((r) => r.number), ["第75号", "第76号", "第77号", "第78号", "第79号", "第80号", "第81号"]);
+  // **この PDF に件名が空の行はもう 1 行も無い**（直す前は 7 行あった）
+  assert.deepEqual(feb2024.rows.filter((r) => r.title === "").map((r) => `${r.kind}${r.number}`), []);
+});
+
+test("#901 引用の本文は件名に混ざらない（陳情の PDF で、折り返しが件名と同じくらいまで字下げが戻る行）", () => {
+  // **x だけで切ると、引用の折り返し（6.4pt）が件名（5.6pt まで）と区別できない。**
+  // **上から読んで 10pt 以上字下げされた行に当たったら打ち切る**ので、折り返しも入らない。
+  const wind = juneSeigan.rows.find((r) => r.number === "8年-8");
+  assert.ok(wind, "陳情 8年-8 が要る");
+  assert.equal(wind.title, "大規模風力発電事業等の許認可に自治体の同意を要件とする電気事業法等の改正を求める陳情");
+  const kosit = juneSeigan.rows.find((r) => r.number === "8年-10");
+  assert.ok(kosit);
+  assert.equal(kosit.title, "皇室の伝統に基づく安定的皇位継承の国会論議促進を求める陳情");
+});
