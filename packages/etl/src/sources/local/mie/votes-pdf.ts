@@ -1,4 +1,4 @@
-import { bandIndex, byRowThenColumn, cluster, EDGE, EPS, joinVertical, within, type Item, type PageGeometry } from "../pdf-table.ts";
+import { bandIndex, cluster, EDGE, EPS, joinVertical, within, type Item, type PageGeometry } from "../pdf-table.ts";
 import { readGlyphPages } from "./glyphs.ts";
 import { warekiYear } from "./site.ts";
 import { legendKey } from "../glyph-variants.ts";
@@ -203,6 +203,127 @@ export function checkCellsAgainstLegend(cells: readonly string[], legend: Record
   }
 }
 
+/**
+ * **「上から下、同じ行なら左から右」に並べる**（Issue #999）。**三重の中だけで使う。**
+ *
+ * ## 何が問題だったか
+ *
+ * **直す前は `(b.y - a.y || a.x - b.x)` で並べていた。**
+ * **`b.y - a.y` が 0 でなければ x を見ない**ので、**同じ行なのに y が浮動小数の丸めで
+ * 最下位ビットだけ違うと、左右の順序が誤差で決まる。**
+ *
+ * **揺れの出どころは推測ではない**——**`glyphs.ts` の `Td`/`TD`/`T*` は `ly += dy * sy` で
+ * 行頭を積算する**ので、**同じ高さに戻ってきても、どの経路を通ったかで最下位ビットが違う。**
+ * **さらに、座標を単精度で持つ本では誤差が `1e-5 pt` の桁まで伸びる。**
+ *
+ * **実害が出ていた**: **`000073636.pdf`（平成25年定例会（6月））は
+ * `column 0 header "案等番号議" !== 議案等番号` で読めなくなっていた**（正しくは `議案等番号`）。
+ * **同じ本では件名と議決結果も崩れる**——**実測（この本だけで 45 対）:
+ * `議案第105号` → `105号議案第`、`可決` → `決可`、
+ * `平成25年度三重県一般会計補正予算（第２号）` → `25年度三重県一般会計補正予算（第２平成号）`。**
+ *
+ * ## **なぜ「比較関数に許容差を入れる」ではないのか**（**ここが要点**）
+ *
+ * **比較関数の中で `Math.abs(a.y - b.y) <= tol ? 0 : …` とやると、比較が非推移的になる。**
+ * **`A~B` かつ `B~C` でも `A≁C` になりうる**（`tol` のすぐ内側を 2 回またぐと届かない）。
+ * **`Array.prototype.sort` は比較関数が全順序であることを前提にしているので、
+ * 非推移的な比較を渡すと、結果が入力の順序で変わる。**
+ *
+ * **実測（2026-09-24）**: `h = 8.4`（`tol = 8.4e-5`）で、y が `tol * 0.9` ずつ離れた 3 要素を作ると
+ * **`A~B: 0` / `B~C: 0` / `A~C: -1`（同値関係になっていない）**になり、
+ * **6 通りの入力順すべてで並べ替えると結果は 3 通りに割れた**（`CBA` / `ACB` / `BAC`）。
+ * **元の `(b.y - a.y || a.x - b.x)` は 6 通りとも同じ結果を出す**（厳密に推移的なので）。
+ * **つまり「許容差つきの比較関数」は、順序依存が無かったところに順序依存を持ち込む。**
+ *
+ * **他県の実データにも非推移的な三つ組が在る**——
+ * **秋田の `readPages` の出力を全探索すると 40 件**あり、
+ * **巻き込まれるのは票そのものの文字列である**
+ * （`akita/h291222giketu.pdf` p2。賛成一色の行と反対一色の行が同じ「同じ高さ」の鎖に入る）。
+ * **秋田は今この関数を使っていないので今日は壊れないが、V8 の `sort` は
+ * 要素数 23 を境にアルゴリズムを変えるので、配列の長さで結果が変わりうる。**
+ * **これは「黙って別のものが出る」側の壊れ方である**（#569）。
+ *
+ * ## どう直すか: **先に行へ丸めてから、行番号と x で比べる**
+ *
+ * **`cluster()` で y を行の代表値にまとめ、各アイテムをその行番号に写してから
+ * `(行番号, x)` で並べる。** **行番号は整数なので、比較は厳密に推移的である。**
+ * **`cluster()` は入力を先にソートするので、結果は入力の順序に依らない。**
+ *
+ * **「同じ行」の幅 `tol` は、その一群の文字の高さから決める**——**`h` の最大値の `1e-5`。**
+ * **丸め誤差は座標の大きさに比例するので、絶対値では決められない**
+ * （実測: 三重の `Tm` の倍率は 1 倍から 5 倍まである）。
+ *
+ * ## `tol` の値の根拠（**三重の index 151 本で測った。他県では測っていない**）
+ *
+ * **`d = 隣り合う y の差` を、文字の高さ `h` に対する比で数えた**（母数＝差が 0 でない隣接対 **90,899**）:
+ *
+ * | `d/h` | 対 | 性質 |
+ * |---|---:|---|
+ * | `1e-16` 〜 `1e-13` | **4,739** | **double の積算の丸め誤差**（同じ行） |
+ * | **`1e-12` 〜 `1e-9`** | **0** | ← 4 桁ぶん空いている |
+ * | `1e-8` 〜 `1e-6` | **457** | **座標を単精度で持つ本の誤差**（`000073636.pdf` 1 本だけ。同じ行） |
+ * | **`1e-5`** | **0** | ← **ここが空いているので境目に置いた** |
+ * | `1e-4` 以上 | **85,703** | **本物の差**（わざとずらした要素・別の行） |
+ *
+ * **三重の 151 本では、`1e-5 h` の帯がまるごと空いている。**
+ * **`1e-5 h` より上でいちばん小さい差は `d/h = 1.800e-4`（`000073620.pdf`）で、`tol` の 18.0 倍ある**
+ * （フィクスチャ 29 本で測った値。**上界の実物は `000073608.pdf` の
+ * `公明党`(x=1096.56, y=755.9585124287606) と `県政みらい`(x=1017.48, y=755.9573199973106) で、
+ * `d = 1.192431e-3 pt` / `d/h = 2.114e-4` / `tol` の 21.14 倍。x では逆順**なので、
+ * **`tol` がここまで届くと `県政みらい公明党` になる。**）
+ *
+ * ### **この余裕は三重だけの性質である**（**他県に持ち出さない理由**）
+ *
+ * **フィクスチャで同じ量を測ると、他県には空白帯が無い**（2026-09-24 実測）:
+ *
+ * | 県 | `1e-5` 台の対 | `1e-5 h` より上の最小 `d/h` | **`tol` に対する余裕** |
+ * |---|---:|---:|---:|
+ * | **佐賀** | **43** | **1.042e-5** | **×1.04** |
+ * | 青森 | 62 | 1.264e-5 | ×1.26 |
+ * | 秋田 | 26 | 1.588e-5 | ×1.59 |
+ * | 滋賀 | 3 | 2.276e-5 | ×2.28 |
+ * | 島根 | 0 | 1.587e-4 | ×15.87 |
+ * | **三重** | **0** | **1.800e-4** | **×18.00** |
+ * | 宮城・徳島・奈良・高知・鳥取 | 0 | 4.5e-3 〜 1.6e-2 | ×452 〜 ×1587 |
+ *
+ * **佐賀では余裕が 1.04 倍しかない。** **しかも佐賀のその対を開くと「本物」ではなく、
+ * 同じ行の丸め誤差が `1e-4` まで伸びているものだった**——**`1e-5 h` では届かない。**
+ * **つまり他県には別の値（あるいは別のやり方）が要る。**
+ * **だからこの関数は三重の中に置き、共有層（`pdf-table.ts`）には 1 バイトも足さない**
+ * （#953。**「追記だけだから安全」は射程の議論になっていない**）。
+ * **他県が要るようになったときに、その県の実データで測ってから持ち出すこと。**
+ */
+function rowOrdered(chars: readonly Item[]): Item[] {
+  if (chars.length <= 1) return [...chars];
+  // **許容差はこの一群の文字の高さから決める**（丸め誤差は座標の大きさに比例する）。
+  // **`a.h` と `b.h` の対ごとではなく、一群でひとつ**——
+  // **対ごとに変えると「A から見た同じ行」と「B から見た同じ行」が食い違い、
+  // 比較が非対称になる**（`cmp(A,B)` と `cmp(B,A)` が同符号になりうる）。
+  const tol = Math.max(...chars.map((c) => c.h), 1) * 1e-5;
+  // **y を行の代表値にまとめる**（`cluster` は昇順に返し、入力の順序に依らない）
+  const rows = cluster(chars.map((c) => c.y), tol);
+  // **各文字をいちばん近い代表値の行番号に写す**（鎖で伸びた行でも写像が一意になる）
+  const rowOf = new Map<Item, number>();
+  for (const c of chars) {
+    let best = 0;
+    let bestD = Infinity;
+    for (let i = 0; i < rows.length; i++) {
+      const d = Math.abs(rows[i] - c.y);
+      if (d < bestD) { bestD = d; best = i; }
+    }
+    rowOf.set(c, best);
+  }
+  // **`rows` は昇順（下から上）なので、行番号の降順が「上から下」になる。**
+  // **比べる量は整数と x だけなので、厳密に推移的で、入力の順序にも依らない。**
+  return [...chars].sort((a, b) => rowOf.get(b)! - rowOf.get(a)! || a.x - b.x);
+}
+/**
+ * **テスト用**（`splitLegendTextForTest` と同じ形）。
+ * **`rowOrdered` は三重の中だけの関数なので、外から直接読めるのはここだけにする**——
+ * **共有層に置くと 11 県が通る道になり、他県で測っていない `tol` が効き始める**（#999 / #953）。
+ */
+export const rowOrderedForTest = rowOrdered;
+
 /* ---------- header & legend ---------- */
 
 /**
@@ -240,7 +361,7 @@ function joinedLines(items: Item[]): { y: number; text: string }[] {
   if (items.length === 0) return [];
   // **ここの許容差は、今の 151 本では等価変異である**（Issue #999。**測ったので、そう書き残す**）。
   //
-  // **`byRowThenColumn` を元の `(b.y - a.y || a.x - b.x)` に戻す変異を当てても、
+  // **`rowOrdered` を元の `(b.y - a.y || a.x - b.x)` の並べ替えに戻す変異を当てても、
   // 151 本の出力は 1 ビットも変わらない**（読めた 112 本のうち値が変わった本 0、読めなくなった本 0）。
   //
   // **理由は「差が小さいから」ではない。誤差でひっくり返る対は、ここがいちばん多い**——
@@ -254,7 +375,7 @@ function joinedLines(items: Item[]): { y: number; text: string }[] {
   //
   // **それでも許容差つきを使う**——**「今のデータでは同じ」は「正しい」ではない。**
   // **本文の行が崩れたまま表題や凡例の形に当たってしまえば、別の文字列が黙って通る**（#569）。
-  const sorted = [...items].sort(byRowThenColumn);
+  const sorted = rowOrdered(items);
   const out: { y: number; text: string }[] = [];
   let line: Item[] = [];
   const flush = () => { if (line.length > 0) out.push({ y: line[0].y, text: line.map((i) => i.str).join("") }); };
@@ -412,7 +533,7 @@ function readMembers(page: PageGeometry, grid: Grid, pageNo: number): VotePdfMem
   // 左 8 列の見出し（bodyTop〜top の結合セル）が期待どおりか（レイアウト変化の検出）
   for (let c = 0; c < LEFT_HEADERS.length; c++) {
     const chars = page.items.filter((i) => within(i.cx, grid.leftCols[c], grid.leftCols[c + 1]) && within(i.cy, grid.bodyTop, grid.top));
-    const text = chars.sort(byRowThenColumn).map((i) => i.str).join("").replace(/[\s　]+/g, "");
+    const text = rowOrdered(chars).map((i) => i.str).join("").replace(/[\s　]+/g, "");
     if (text !== LEFT_HEADERS[c]) throw new Error(`${label}: column ${c} header "${text}" !== ${LEFT_HEADERS[c]}`);
   }
   // 会派見出し（結合セル。正式名称がそのまま載る。凡例は無い）
@@ -453,7 +574,7 @@ function readRows(page: PageGeometry, grid: Grid, pageNo: number, memberCount: n
     if (inRow.length === 0) continue; // 空の行（余白）
     const cellText = (c: number) => {
       const chars = inRow.filter((i) => within(i.cx, grid.leftCols[c], grid.leftCols[c + 1]));
-      return chars.sort(byRowThenColumn).map((i) => i.str).join("").replace(/[\s　]+/g, "");
+      return rowOrdered(chars).map((i) => i.str).join("").replace(/[\s　]+/g, "");
     };
     const numberCell = cellText(0);
     const title = cellText(1);
