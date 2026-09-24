@@ -260,7 +260,7 @@ test("#826 本番 data/: 母数 2,714 件のうち、記号の数と公表値が
   // （**増えた 397 件も、公表値と ○/× の数が 1 件残らず合っている**）。
   // **奈良を 2 → 4 会期にしても `checked` は 1 件も動かない**——**奈良の PDF に集計の欄が無く、
   // 125 → 180 がまるごと `noCounts` に行くため**（#865。**730 → 785**）。
-  assert.deepEqual(total, { rows: 4145, checked: 3176, noCounts: 785, unreadableCells: 184 }, "母数が変わったら数え直すこと");
+  assert.deepEqual(total, { rows: 4599, checked: 3628, noCounts: 785, unreadableCells: 186 }, "母数が変わったら数え直すこと");
   // **内訳の和が母数**（#757。黙って母数から外していない）
   assert.equal(total.checked + total.noCounts + total.unreadableCells, total.rows, "内訳の和 = 母数");
   // **785 件の内訳**——**`counts` が出力に入っていない 4 県。**

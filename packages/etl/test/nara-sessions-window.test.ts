@@ -113,7 +113,6 @@ test("#901 奈良の `--sessions` の既定は 4（他の議会の値は動か�
     // **据え置きは 1 議会も無い**——**11 議会すべてを測り終えた。**
     [["mie", 4], ["tokushima", 4], ["kochi", 5], ["miyagi", 11], ["tottori", 11], ["shimane", 5], ["shiga", 19],
     ["aomori", 14], ["akita", 29], ["saga", 13]],
-    ["aomori", 14], ["akita", 29], ["saga", 13]],
   );
 });
 

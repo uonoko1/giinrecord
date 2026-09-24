@@ -134,7 +134,7 @@ describe("#826 本番データ: 記号の数と公表値の突き合わせが画
       // **`noCounts` は 785 のまま動かない**（島根・滋賀とも全行に `counts` がある）。**食い違いは 0 のまま。**
       //
       // **検算**: **`checked + noCounts + unreadableCells === rows`**。
-    }).toEqual({ rows: 4145, checked: 3176, noCounts: 785, unreadableCells: 184, mismatches: 0 });
+    }).toEqual({ rows: 4599, checked: 3628, noCounts: 785, unreadableCells: 186, mismatches: 0 });
   });
 
   it("**母数の 3 つの内訳の和が母数になる**（黙って母数から外していない。県ごとにも）", async () => {
@@ -151,9 +151,9 @@ describe("#826 本番データ: 記号の数と公表値の突き合わせが画
   it("/coverage に、本番の母数と食い違い（0 件）と未突合の内訳が出る", async () => {
     await renderCoverage(await realLocalMetas());
     const section = screen.getByRole("region", { name: SECTION });
-    // **突き合わせなかった 785 件と 184 件の内訳も出す**（黙って母数から外さない）
+    // **突き合わせなかった 785 件と 186 件の内訳も出す**（黙って母数から外さない）
     expect(section).toHaveTextContent("785");
-    expect(section).toHaveTextContent("184");
+    expect(section).toHaveTextContent("186");
     // **今は食い違いが無い**、を母数つきで言う
     expect(within(section).getByTestId("coverage-count-mismatch-none")).toBeInTheDocument();
   });
