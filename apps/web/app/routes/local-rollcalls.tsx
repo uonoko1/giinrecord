@@ -101,7 +101,9 @@ export function LocalRollCallsPage({ assembly, rollCalls }: { assembly: Assembly
                         <span className="assemblies-status-note">{[r.kind, r.number].filter(Boolean).join(" ・ ")}</span>
                       </td>
                       <td>{r.sessionLabel}</td>
-                      <td>{r.result}</td>
+                      <td>
+                        <ResultCell rollCall={r} />
+                      </td>
                       <td>
                         <a href={r.sourceUrl} target="_blank" rel="noopener noreferrer">
                           表決結果（公式）
@@ -117,6 +119,27 @@ export function LocalRollCallsPage({ assembly, rollCalls }: { assembly: Assembly
       </main>
       <SiteFooter />
     </>
+  );
+}
+
+/**
+ * 「結果」列（#1003）。**原文があればそのまま出す。**
+ *
+ * **一次資料のその欄が空だった行（`resultAbsent: true`。ETL は #901）は、空セルにしない**——
+ * 空セルは「県も書いていない」と「こちらの読み取りが壊れた」を同じ見た目にしてしまい、
+ * 利用者には**サイトのバグ**にしか見えない。**「記載がありません」は事実なので書ける。**
+ * **`counts` から可否を埋めない**（可否を多数決から推論しない。docs/DATA_CONTRACT.md）。
+ *
+ * **`resultAbsent` の無い空は、今までどおり空のまま**（ETL が違反として弾く形なので、
+ * ここで「記載がありません」と書くと読み取り事故を県のせいにしてしまう）。
+ */
+function ResultCell({ rollCall }: { rollCall: Pick<LocalRollCallSummary, "result" | "resultAbsent"> }) {
+  if (rollCall.result !== "") return <>{rollCall.result}</>;
+  if (rollCall.resultAbsent !== true) return null;
+  return (
+    <span className="assemblies-status-note" data-testid="local-rollcalls-result-absent">
+      一次資料に記載がありません
+    </span>
   );
 }
 
