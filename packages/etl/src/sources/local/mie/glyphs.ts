@@ -1,5 +1,5 @@
 import { getDocument, OPS } from "pdfjs-dist/legacy/build/pdf.mjs";
-import { multiplyMatrix, readLines, type Matrix, type PageGeometry, type Item } from "../pdf-table.ts";
+import { multiplyMatrix, readLines, type Matrix, type PageGeometry, type Item, type VLine, type HLine } from "../pdf-table.ts";
 import { CMAP_DIR, CMAP_OPTIONS, CMAP_PACKED } from "../pdf-cmap.ts";
 
 export { CMAP_DIR, CMAP_PACKED };
@@ -36,7 +36,16 @@ export async function readGlyphPages(bytes: Buffer, options: ReadGlyphOptions = 
     for (let i = 1; i <= doc.numPages; i++) {
       const page = await doc.getPage(i);
       const ops = await page.getOperatorList();
-      out.push(readGlyphPageOps(ops.fnArray, ops.argsArray, i, options));
+      // **ページの `/Rotate` と `view` を渡す**（Issue #867 B 群「回転 90 の 11 本」）。
+      // **`/Rotate 0` のページ（151 本中 140 本）では打ち消しが単位行列になり、値は 1 ビットも変わらない。**
+      const view = page.view as number[];
+      // **原点が 0 でない `view` は実データに無い**（実測 2026-09-24、151 本の全ページ）。
+      // **打ち消しは幅だけを使うので、原点がずれていると向きではなく位置がずれる**——
+      // **黙って別の位置で読まない**（#569）。
+      if (page.rotate !== 0 && (view[0] !== 0 || view[1] !== 0)) {
+        throw new Error(`page ${i}: rotated page with non-zero view origin [${view.join(",")}] not supported`);
+      }
+      out.push(readGlyphPageOps(ops.fnArray, ops.argsArray, i, { ...options, pageRotate: page.rotate, pageWidth: view[2] - view[0] }));
     }
   } finally {
     await loadingTask.destroy();
@@ -88,13 +97,121 @@ export interface ReadGlyphOptions {
    * （`parseVotePdf` の 2 段構え）。**読めている本はこの枝に入らない。**
    */
   splitGlyphs?: boolean;
+
+  /**
+   * **このページの `/Rotate`（度）**（Issue #867 B 群「回転 90 の 11 本」。既定 `0` ＝ 打ち消さない）。
+   *
+   * ## なぜ要るか（**#969 と同じ形の「合成」だった**）
+   *
+   * **実測（2026-09-24、index 151 本のうち回転で止まっていた 11 本の `Tm` 774 回すべて）**:
+   *
+   * | | 値 | 種類 |
+   * |---|---|---:|
+   * | `Tm` | **`[0, +s, -s, 0, e, f]`** | **1 種類**（774 / 774） |
+   * | そのときの CTM | **`[1,0,0,1,0,0]`（単位行列）** | **1 種類** |
+   * | ページの `/Rotate` | **90** | **1 種類**（11 本の全 19 ページ） |
+   * | ページの `view` | **`[0,0,842,1191]`**（A3 縦） | **1 種類** |
+   *
+   * **`/Rotate 90` は「時計回りに 90 度回して表示する」意味**なので、
+   * **PDF 座標 `(px, py)` は表示座標 `(py, W − px)`（W はページの幅）に写る。**
+   * これは行列 **`D = [0, −1, 1, 0, 0, W]`** である。
+   *
+   * **`Tm × CTM` に `D` を掛けると回転はちょうど打ち消し合って消える**:
+   *
+   * ```
+   * [0, s, −s, 0, e, f] × [0, −1, 1, 0, 0, W] = [s, 0, 0, s, f, W − e]
+   * ```
+   *
+   * **正の等方 s 倍＋平行移動。** **つまりこの 11 本は「回転した本」ではなく、
+   * 「`/Rotate 90` のページに、そのページの向きに合わせて置かれた本」である。**
+   *
+   * **#969 が上下反転 9 本で見つけたのと同じ形**——
+   * **見るべき量は `Tm` でも CTM でもなく、`Tm × CTM × D` のほうだった。**
+   * **`Tm` の `b`/`c` が 0 でないことだけで止めるのは、見るべき量を見ていない。**
+   *
+   * ## **既定は `0`（打ち消さない）**
+   *
+   * **`readGlyphPages` はページの `/Rotate` をそのまま渡す**ので、
+   * **`/Rotate 0` の本（151 本中 140 本）では `D` が単位行列になり、値は 1 ビットも変わらない。**
+   * **オペレータ列を直接渡すテストでは、渡さなければ今までどおりの判定になる。**
+   *
+   * ## **180 / 270 は例外にする**
+   *
+   * **実データに 1 ページも無い**（11 本の全 19 ページが 90。残り 140 本は 0）。
+   * **正しい向きを実データで検証できないものは、黙って読まずに止める**（#707 / #700 と同じ判断）。
+   */
+  pageRotate?: number;
+
+  /**
+   * **このページの `view` の幅**（`view[2] − view[0]`。`pageRotate` が 0 でないときだけ読む）。
+   * **`/Rotate 90` の打ち消しは `y_disp = W − x_pdf` なので、幅が要る。**
+   * **`pageRotate` が 0 なら使われない**（`D` が単位行列になる）。
+   */
+  pageWidth?: number;
 }
 
 /** 単位行列（q/Q/cm を辿るときの初期値）。 */
 const IDENTITY: Matrix = [1, 0, 0, 1, 0, 0];
 
-/** CTM が単位行列か（文字の位置を Tm だけで決められるか）。 */
-const isIdentity = (m: Matrix): boolean => m.every((v, i) => v === IDENTITY[i]);
+/**
+ * **ページの `/Rotate` を打ち消す行列**（Issue #867 B 群「回転 90 の 11 本」）。
+ *
+ * **`/Rotate 90` は「時計回りに 90 度回して表示する」**ので、
+ * **PDF 座標 `(px, py)` は表示座標 `(py, W − px)` に写る**（W はページの幅）。
+ * 行列にすると `[0, −1, 1, 0, 0, W]`——`(px, py)` に掛けると `(py, −px + W)` になる。
+ *
+ * **`0` なら単位行列を返す**ので、**回転の無いページでは何も変わらない**
+ * （151 本中 140 本がここを通る。**値は 1 ビットも変わらない**）。
+ *
+ * **180 / 270 は例外**——**実データに 1 ページも無く**（実測 2026-09-24、151 本の全ページ）、
+ * **正しい向きを検証できないので黙って読まない**（#707 の `Tw` と同じ判断）。
+ *
+ * **`view[0]` / `view[1]` が 0 でないページは実データに無い**（回転の 11 本はすべて `[0,0,842,1191]`）。
+ * **出たら向きではなく位置がずれる**ので、`readGlyphPages` が別に例外にして受け止める。
+ */
+export function pageRotationMatrix(rotate: number, width: number): Matrix {
+  if (rotate === 0) return IDENTITY;
+  if (rotate !== 90) throw new Error(`unsupported page rotation ${rotate}`);
+  return [0, -1, 1, 0, 0, width];
+}
+
+/** 2 つの行列が同じか（6 つの成分すべて）。 */
+const sameMatrix = (a: Matrix, b: Matrix): boolean => a.every((v, i) => v === b[i]);
+
+/**
+ * **罫線に `/Rotate` の打ち消しを掛ける**（Issue #867 B 群「回転 90 の 11 本」）。
+ *
+ * **`readLines` は共有層（`pdf-table.ts`）にあり、単位行列から CTM を組み立てる**ので、
+ * **`D` をそこに渡すと 11 県の既定が変わる**（秋田 #759 の docblock が禁じている）。
+ * **だから読んだあとでここで掛ける。**
+ *
+ * **`/Rotate 90` の打ち消しは 90 度回転なので、PDF の縦線は表示の横線になり、逆も同じ**
+ * （**青森の `unrotate`（`aomori/votes-pdf.ts:224`）が同じ入れ替えをしている**。
+ * **考え方を借りて、掛ける相手を「`readPages` の Item」から「`readLines` の線」に替えただけ**）。
+ *
+ * **`display` が単位行列なら、配列をそのまま返す**——
+ * **回転の無い 140 本では `vlines` / `hlines` が 1 ビットも変わらない**（新しいオブジェクトすら作らない）。
+ */
+function rotateLines(lines: { vlines: VLine[]; hlines: HLine[] }, display: Matrix): { vlines: VLine[]; hlines: HLine[] } {
+  if (sameMatrix(display, IDENTITY)) return lines;
+  const [a, b, c, d, e, f] = display;
+  const map = (x: number, y: number): [number, number] => [a * x + c * y + e, b * x + d * y + f];
+  const vlines: VLine[] = [];
+  const hlines: HLine[] = [];
+  // **PDF の縦線（x 一定）は、90 度回すと表示の横線（y 一定）になる。**
+  for (const l of lines.vlines) {
+    const [x0, y0] = map(l.x, l.y0);
+    const [x1, y1] = map(l.x, l.y1);
+    hlines.push({ y: (y0 + y1) / 2, x0: Math.min(x0, x1), x1: Math.max(x0, x1) });
+  }
+  // **PDF の横線（y 一定）は、90 度回すと表示の縦線（x 一定）になる。**
+  for (const l of lines.hlines) {
+    const [x0, y0] = map(l.x0, l.y);
+    const [x1, y1] = map(l.x1, l.y);
+    vlines.push({ x: (x0 + x1) / 2, y0: Math.min(y0, y1), y1: Math.max(y0, y1) });
+  }
+  return { vlines, hlines };
+}
 
 /**
  * **文字の位置にも可読性にも影響しない演算子**（Issue #717）。ここに載っているものだけ黙って読み飛ばす。
@@ -109,9 +226,20 @@ const isIdentity = (m: Matrix): boolean => m.every((v, i) => v === IDENTITY[i]);
  * 全部止めると**色を変えただけの PDF で ETL が丸ごと止まる**。
  *
  * **なぜこれらが無害と言えるか**:
- *   - `setFillRGBColor` / `setStrokeRGBColor` / `setLineWidth` / `setLineCap` / `setLineJoin`:
+ *   - `setFillRGBColor` / `setStrokeRGBColor` / `setLineWidth` / `setLineCap` / `setLineJoin`
+ *     **／ `setMiterLimit`**:
  *     **色と線の体裁だけ**。文字の座標にも、文字が見えるかどうかにも効かない
  *     （見えなくする方法は「透明にする」で、それは `setGState` の `ca`/`CA` 側にあり、下で止めている）。
+ *
+ *     **`setMiterLimit`（`M`。PDF 32000-1 8.4.3.5）は #867 の回転 11 本で足した。**
+ *     **「線の角がどこまで尖ってよいか」の上限**で、**`setLineJoin` が既に allowlist に入っているのと
+ *     同じ種類の値である**（`setLineJoin` が「角の形」、`setMiterLimit` が「その角の長さの上限」）。
+ *     **実測（2026-09-24、index 151 本すべて）: `setMiterLimit` が出るのは 9 本で、
+ *     9 本とも回転の本、1 本あたり 1 回、値はすべて `1`**（＝尖らせない。既定の 10 より弱い指定）。
+ *     **残り 142 本には 1 回も出ない**ので、**足しても既存の本の経路は 1 つも変わらない**
+ *     （実測: 151 本の出力は前後で 1 ビットも変わらなかった）。
+ *     **`setLineWidth` と違って、罫線の「細さ」の判定（`readLines`）にも効かない**——
+ *     **`readLines` が見るのは `constructPath` の座標であって、線の太さでも角の形でもない。**
  *   - `clip` / `eoClip`: クリップ領域を狭める。**この読み方は描画結果ではなく命令の座標を読む**ので
  *     関係しない（クリップで文字が隠れることは原理上ありうるが、それは
  *     この 2 つではなく `constructPath` の形の問題で、罫線の読み方（readLines）と同じ土俵になる）。
@@ -122,6 +250,7 @@ const isIdentity = (m: Matrix): boolean => m.every((v, i) => v === IDENTITY[i]);
  */
 const HARMLESS_OPS: ReadonlySet<number> = new Set([
   OPS.setFillRGBColor, OPS.setStrokeRGBColor, OPS.setLineWidth, OPS.setLineCap, OPS.setLineJoin,
+  OPS.setMiterLimit, // **#867 の回転 11 本で出た**（9 本 / 各 1 回 / 値はすべて 1。残り 142 本には 0 回）
   OPS.clip, OPS.eoClip,
   OPS.beginMarkedContent, OPS.beginMarkedContentProps, OPS.endMarkedContent,
   OPS.dependency, OPS.endText,
@@ -169,17 +298,32 @@ const READABLE_TEXT_RENDERING_MODES: ReadonlySet<number> = new Set([0, 2]);
  * 変換ありの constructPath が 0 本で、掛けても掛けなくても同じ値になり違いを見せられない）。
  */
 export function readGlyphPageOps(fnArray: ArrayLike<number>, argsArray: ArrayLike<unknown>, pageNo: number, options: ReadGlyphOptions = {}): PageGeometry {
-  const { splitGlyphs = false } = options;
+  const { splitGlyphs = false, pageRotate = 0, pageWidth = 0 } = options;
   const items: Item[] = [];
   /** このページで「文字を描け」と言われた回数（0 グリフのまま終わったら例外にする。Issue #867）。 */
   let showTextCalls = 0;
+  /**
+   * **ページの `/Rotate` を打ち消す行列**（Issue #867 B 群「回転 90 の 11 本」）。
+   * **`pageRotate` が 0 なら単位行列**なので、既存の 140 本は 1 ビットも変わらない。
+   *
+   * **これを CTM の初期値にする。** `multiplyMatrix(ctm, m)` は「`m` を先に、`ctm` を後に」掛けるので、
+   * **`cm` も `Tm` も、最後に必ず `D` が掛かる**——**文字も罫線も同じ 1 か所で向きが直る。**
+   * **判定（回転・反転・異方）は `D` を掛けたあとの値に対して行う**ので、
+   * **「`/Rotate 90` のページで `Tm` が 90 度回っている」＝「表示上は回っていない」を正しく読む。**
+   */
+  const display = pageRotationMatrix(pageRotate, pageWidth);
   // **`splitBatchedPaths` は三重だけで `true` にする**（Issue #867 B 群「上下反転 9 本」）。
   // この 9 本は 13,207 本の罫線が 92 回の `constructPath` に畳まれており、
   // 割らないと **縦罫線 0 本・横罫線 0 本**になる（例外は出ない。黙って空の表になる）。
   // **佐賀では `true` にすると字の輪郭を罫線と読み違えて票が別の列に落ちる**ので、
   // 共通層の既定は `false` のままにしてある（`pdf-table.ts` の `ReadLinesOptions` に実測表がある）。
-  const { vlines, hlines } = readLines(fnArray, argsArray, { splitBatchedPaths: true });
-  let ctm: Matrix = IDENTITY;
+  //
+  // **罫線は `readLines` が単位行列から CTM を組み立てる**（共有層なので `D` を渡せない）。
+  // **だから読んだあとでここで `D` を掛ける**（`rotateLines`）。
+  // **共有層（`pdf-table.ts`）には 1 文字も触らない**（秋田 #759 / 青森 #750 と同じ判断。
+  // 既存 11 県の出力を変えないため）。
+  const { vlines, hlines } = rotateLines(readLines(fnArray, argsArray, { splitBatchedPaths: true }), display);
+  let ctm: Matrix = display;
   const ctmStack: Matrix[] = [];
   let fontSize = 0;
   let charSpacing = 0;
@@ -233,7 +377,8 @@ export function readGlyphPageOps(fnArray: ArrayLike<number>, argsArray: ArrayLik
     if (fn === OPS.save) {
       ctmStack.push(ctm);
     } else if (fn === OPS.restore) {
-      ctm = ctmStack.pop() ?? IDENTITY;
+      // **戻す先は `display`**（Issue #867。回転の無いページでは単位行列なので今までどおり）
+      ctm = ctmStack.pop() ?? display;
     } else if (fn === OPS.transform) {
       ctm = multiplyMatrix(ctm, args as ArrayLike<number>);
     } else if (fn === OPS.setFont) {
@@ -357,7 +502,12 @@ export function readGlyphPageOps(fnArray: ArrayLike<number>, argsArray: ArrayLik
       // **実測（2026-09-21、三重 151 本）: `BT` の後、最初の showText より前に `Tm` が来ない本は
       // 80 本あるが、そのすべてで CTM は単位行列である**（A 群の相対移動の本）。
       // **単位行列でない CTM の下で `Tm` 無しの showText が来たら止める**（推測で置かない）。
-      if (!tmSeenInBlock && !isIdentity(ctm)) throw new Error(`page ${pageNo}: text under non-identity CTM [${ctm.join(",")}] without a text matrix not supported`);
+      //
+      // **比べる相手は `display`（ページの `/Rotate` を打ち消す行列）である**（Issue #867 回転 11 本）。
+      // **回転の無いページでは `display` は単位行列なので、今までと全く同じ判定になる。**
+      // **回転のあるページで「CTM に何も足されていない」は「CTM が `display` のまま」を意味する**
+      // ——**`IDENTITY` と比べると、打ち消しそのものを「余計な CTM」と読んで 11 本を全部止めてしまう。**
+      if (!tmSeenInBlock && !sameMatrix(ctm, display)) throw new Error(`page ${pageNo}: text under non-identity CTM [${ctm.join(",")}] without a text matrix not supported`);
       showTextCalls++;
       // showText 1 回 = 1 アイテム。配列の数値は字送りの調整（thousandths）
       //
