@@ -1,8 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { cluster, readPages } from "../src/sources/local/pdf-table.ts";
-import { MEMBER_COLUMN_TOLERANCE, memberColumns, parseVotePdf, UNKNOWN_CELL } from "../src/sources/local/saga/votes-pdf.ts";
+import { cluster, type Item, readPages } from "../src/sources/local/pdf-table.ts";
+import {
+  MEMBER_COLUMN_TOLERANCE, memberColumns, parseVotePdf, readRowBands, readVoteCells, splitRowItem, UNKNOWN_CELL,
+} from "../src/sources/local/saga/votes-pdf.ts";
 
 /**
  * **佐賀 `MEMBER_COLUMN_TOLERANCE`（±8%）を動かさせないための回帰**（Issue #1004）。
@@ -149,8 +151,12 @@ test("#1004 上限のすぐ外（0.087）で 2 本の列が +1 本になる—�
  * **例外は飛ばない。`members[0]` が `石井秀夫` から `可`（議決結果の欄）に変わり、
  * 議員が全員 1 つ右へずれる。** **これが #569 の「別人の記録が出る」形。**
  *
- * **この 2 本では、ずれた並びのセルがすべて `不明` に落ちた**（測った事実）。
- * **`不明` に落ちるかどうかは罫線と記号の x の偶然で、設計上止まっているわけではない。**
+ * **ずれた並びのセルがすべて `不明` に落ちるのは偶然ではない**——
+ * **`readVoteCells` の `placed.length !== n` が個数で受け止めている**
+ * （#1015 のレビューの指摘。下の `#1004 番人` のテストが実測で固定している）。
+ *
+ * **ただしこの番人が守るのは「票が誤帰属しないこと」だけ**で、
+ * **`members[0]` が `可` になること自体は止まらない**（氏名帯は列と一緒に伸びる）。
  */
 test("#1004 選んだ値では members[0] が氏名で、票が全部読める（0.087 の被害の裏返し）", async () => {
   for (const [file, rows, cells, first] of [
@@ -162,12 +168,80 @@ test("#1004 選んだ値では members[0] が氏名で、票が全部読める�
     const known = pdf.rows.reduce((s, r) => s + r.cells.filter((c) => c !== UNKNOWN_CELL).length, 0);
     assert.deepEqual(
       { rows: pdf.rows.length, cells: total, known, first: pdf.members[0].nameText },
-      { rows, cells: total, known: cells, first },
+      { rows, cells, known: cells, first },
       `${file}: 0.087 だと members[0] が 可 になり、読めるセルが 0 になる`,
     );
-    assert.equal(total, cells, `${file}: セルの総数（母数）`);
     assert.equal(pdf.unknownCells, 0, `${file}: 不明 0`);
   }
+});
+
+/* ---------- 番人はどこに在るか（#1015 のレビューが名指しした） ---------- */
+
+/**
+ * **列が増えたとき `不明` に倒しているのは `readVoteCells` の `placed.length !== n`。**
+ *
+ * **最初この docblock は「`不明` に落ちるのは x の偶然で、設計として止めているものは無い」
+ * と書いていたが、#1015 のレビューが測って否定した。撤回した主張である。**
+ *
+ * **機序は構造的**: **記号の個数は PDF が持っている定数**（36 か 37）で、
+ * **列を増やしても記号は増えない。** よって **`n` が増えた瞬間に
+ * `placed.length !== n` が必ず成立する**——**x の偶然ではなく、個数の検算。**
+ *
+ * **だから `readVoteCells` の `placed.length !== n` を「余計な検査」として弱めてはいけない。**
+ * **閾値が外れたときに `不明` へ倒している唯一の仕掛けである。**
+ *
+ * **2 つ目の番人 `b !== k` は、このテストでは固定できていない**——
+ * **実データで 1 度も発火しないので、消しても 9 件すべて緑のまま**（変異 G3 で確認）。
+ * **「効いていないから消してよい」ではない**（個数が合ったまま並びだけ崩れる本が来たら、
+ * これが最後の砦になる）。**固定できていないことを書き残しておく。**
+ */
+test("#1004 番人: 列が増えた全ケースを placed.length !== n が受け止める（b !== k は 1 度も発火しない）", async () => {
+  const pages = await allPageVx();
+  const rawPages = new Map<string, Awaited<ReturnType<typeof readPages>>>();
+  for (const file of FIXTURES) {
+    try { rawPages.set(file, await readPages(bytes(file))); } catch { /* 読めない本は列も取れない */ }
+  }
+  let grew = 0, byCount = 0, byBand = 0, readable = 0;
+  for (const tol of [0.087, 0.09, 0.10, 0.12, 0.16, 0.30]) {
+    for (const p of pages) {
+      const base = memberColumns(p.vx);
+      const cols = memberColumnsAt(p.vx, tol);
+      if (base.length === 0 || cols.length <= base.length) continue;
+      grew++;
+      const pg = rawPages.get(p.file)![p.page - 1];
+      const n = cols.length - 1;
+      for (const band of readRowBands(pg, cols)) {
+        // **本物の `readVoteCells` を呼ぶ**——ここで番人を書き写すと、
+        // **本体から番人を消しても気づけない**（実際に G1 の変異が生き残った）
+        const cells = readVoteCells(band.items, cols, n);
+        const allUnknown = cells.every((c) => c === UNKNOWN_CELL);
+        if (!allUnknown) { readable++; continue; }
+        // **どちらの番人が落としたか**を切り分ける（個数が合わなければ 1 つ目）
+        const placed = [...band.items].sort((a, b) => a.cx - b.cx).flatMap(splitRowItem).sort((a, b) => a.x - b.x);
+        if (placed.length !== n) byCount++; else byBand++;
+      }
+    }
+  }
+  assert.equal(grew, 88, "列が増えた (ページ, 許容) の組（母数。実測 2026-09-25）");
+  assert.equal(byCount, 823, "記号の個数が列の数と合わない行");
+  assert.equal(byBand, 0, "個数は合うのに帯がずれる行は 0（個数の検算だけで足りている）");
+  assert.equal(readable, 0, "記号が読めてしまった行は 0（票の誤帰属は 1 件も起きない）");
+
+  // **上の 823 行を落としているのが「個数の番人」であること**を直に押さえる。
+  // **`readVoteCells` の外からは 2 つの番人が区別できない**（どちらも全部 `不明` を返す）ので、
+  // **記号が n より 1 個少なく、かつ順番は正しい行**を作って当てる——
+  // **個数の番人だけがこれを `不明` にできる**（帯の番人は k < n で `placed[k]` を
+  // 範囲外まで読むので、個数の番人が無ければ例外か別の結果になる）。
+  const cols = [0, 10, 20, 30, 40];
+  const item = (ch: string, cx: number): Item => ({ str: ch, x: cx - 1, y: 0, w: 2, h: 10, cx, cy: 5 });
+  const four = [item("○", 5), item("○", 15), item("○", 25), item("○", 35)];
+  assert.deepEqual(readVoteCells(four, cols, 4), ["○", "○", "○", "○"], "4 個 / 4 列 はそのまま読める（この対照が空回りしていないこと）");
+  // **3 個しか無いのに 4 列**（順番は正しい）。個数の番人が無ければ全部 `不明` にはならない
+  assert.deepEqual(
+    readVoteCells(four.slice(0, 3), cols, 4),
+    [UNKNOWN_CELL, UNKNOWN_CELL, UNKNOWN_CELL, UNKNOWN_CELL],
+    "記号 3 個 / 列 4 本 は、個数の番人が全部 不明 にする（推測で 1 列埋めない）",
+  );
 });
 
 /* ---------- 下に外すと「記録が出ない」（上とは別の壊れ方） ---------- */
