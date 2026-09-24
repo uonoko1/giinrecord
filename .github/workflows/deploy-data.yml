@@ -8,8 +8,20 @@ name: Deploy data
 # Issue #134: production builds the code of the last release (tag `released`, moved by release.yml) with data/ taken
 # from main, so unreleased code merged to main stays off https://giinrecord.jp. Before the first Release the tag does
 # not exist and production falls back to main. Staging always builds main — docs/ops/deploy.md.
+# Issue #995: a HUMAN-merged PR that touches data/ used to start nothing. Measured over all of origin/main
+# (2026-09-25): 85 commits touch data/ — 54 from the bots (which dispatch this workflow themselves) and
+# 29 from human merges, which started nothing. Those 29 waited min 0.26h / median 9.70h / p90 21.62h /
+# max 27.99h for the next successful deploy-data run (17 of 29 over 6h). The `on.push` below closes that gap.
+# It does NOT double-fire with the bots: a GITHUB_TOKEN merge raises no push event. Measured on
+# deploy-staging.yml (which already has `on: push: branches: [main]`) over the window its last 400 runs cover
+# (2026-09-02T20:05Z — 2026-09-24T17:56Z): of the 47 data/ commits in that window, the 22 bot merges produced
+# a push run 0 times and the 25 human merges produced one 25 times.
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "data/**"
   schedule:
     - cron: "30 21 * * *"   # 06:30 JST — safety net only; etl.yml dispatches this workflow right after the data PR merges
 permissions:
@@ -31,6 +43,12 @@ jobs:
           echo "ref=$REF" >> "$GITHUB_OUTPUT"
           echo "production code ref: \`$REF\` (tag \`released\`, or main before the first Release); data/ from main" >> "$GITHUB_STEP_SUMMARY"
   staging:
+    # On a push, deploy-staging.yml already builds and rsyncs the very same staging artifact from the very
+    # same sha (measured: 25 / 25 human data/ merges produced a deploy-staging push run). Running it here too
+    # would build and rsync it twice; the two are serialised by deploy-site.yml's `deploy-vps` concurrency
+    # group, so the only cost is one more turn in the queue (deploy job: 73–106s over the last 6 runs) — but
+    # it is pure waste. cron and workflow_dispatch raise no push, so those paths still deliver staging here.
+    if: github.event_name != 'push'
     uses: ./.github/workflows/deploy-site.yml
     with:
       environment: staging
