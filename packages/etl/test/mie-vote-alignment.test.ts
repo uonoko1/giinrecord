@@ -82,12 +82,28 @@ const dir = fileURLToPath(new URL("fixtures/mie/", import.meta.url));
  * 全部の行が 1 行に潰れている**（割ると 7 議案ぶんの議決月日が 1 つのセルに連なり、
  * `date "2/222/222/22…" is not M/D` で止まる）。**推測で切り分けない。**
  *
+ * **`000073610.pdf` / `000073614.pdf` は #867 の回転 11 本から取った 2 本**（2026-09-24 に足した）。
+ * **回転そのものは打ち消せる**（`Tm × CTM × /Rotate の打ち消し` を合成すると回転が消える。
+ * 詳しくは `test/mie-rotated.test.ts`）。**表題も凡例も罫線も正しく立ち、記号も列に正しく落ちる。**
+ * **それでも `readGlyphPages` が既定で止める**——
+ * **この 11 本は会派見出しが「横書きの複数行」で置かれており、
+ * `readVerticalHeading`（縦書き前提。#901）で読むと `新政みえ` が `えみ政新` になる。**
+ * **「記録が出ない」ではなく「別の文字列が出る」側なので、出さない側に倒した**（#569）。
+ * **縦書きか横書きかを見分ける規則は、151 本で測っても分かれなかったので作っていない。**
+ *
  * **握り潰していない。** `parseVotePdf` は今も例外を投げる（#569 の「途中まで読まない」は守られている）。
  * **このファイルの検査（`議` の列 ↔ 歴代議長）は「最後まで読めた本」にしか当てられない**ので、
  * **名指しで外し、理由をここに書く。** **フィクスチャとして置いてあるのは、
- * `local-glyphs-cmap.test.ts` が「CMap 無しならグリフ 0 / CMap ありなら取れる」を実物で固定するため。**
+ * `local-glyphs-cmap.test.ts` が「CMap 無しならグリフ 0 / CMap ありなら取れる」を実物で固定するため、
+ * および `mie-rotated.test.ts` が回転の打ち消しを実物で固定するため。**
  */
-const NOT_FULLY_PARSEABLE = new Set(["000073620.pdf"]);
+const NOT_FULLY_PARSEABLE = new Map<string, RegExp>([
+  // 全幅の罫線が足りず、全部の行が 1 行に潰れる（#994 が測って残した）
+  ["000073620.pdf", /incomplete row .* after splitting glyphs: .* is not M\/D/],
+  // 回転は打ち消せるが、会派見出しが横書きなので票を出さない（#867 / #569）
+  ["000073610.pdf", /rotated page \(\/Rotate 90\)/],
+  ["000073614.pdf", /rotated page \(\/Rotate 90\)/],
+]);
 
 const files = readdirSync(dir).filter((f) => f.endsWith(".pdf")).sort();
 const books: { name: string; pdf: VotePdf }[] = [];
@@ -96,10 +112,12 @@ for (const f of files.filter((f) => !NOT_FULLY_PARSEABLE.has(f))) books.push({ n
 // **外した本が本当に「読めない」ままであることを検査にする**（#569）。
 // **黙って除外リストに足せば検査をすり抜けられる**ので、除外の理由のほうを固定する。
 test("#867 除外した本は parseVotePdf が例外で止まる（握り潰して部分的に読んでいない）", async () => {
-  for (const f of NOT_FULLY_PARSEABLE) {
+  // **本ごとに「どの理由で止まるか」まで固定する**——
+  // **理由が変わったら気づけるようにする**（別の壁に移ったのに同じ除外で隠れないように）。
+  for (const [f, reason] of NOT_FULLY_PARSEABLE) {
     await assert.rejects(
       () => parseVotePdf(readFileSync(dir + f)),
-      /incomplete row .* after splitting glyphs: .* is not M\/D/,
+      reason,
       `${f}: 読めるようになったなら除外リストから外すこと`,
     );
   }
