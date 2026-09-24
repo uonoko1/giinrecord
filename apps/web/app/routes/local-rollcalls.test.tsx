@@ -3,6 +3,7 @@ import { MemoryRouter } from "react-router";
 import { describe, expect, it } from "vitest";
 import type { Assembly, LocalRollCallSummary } from "../lib/data-contract";
 import index from "../test-fixtures/assemblies/data/assemblies/pref-31/rollcalls/index.json";
+import shigaIndex from "../test-fixtures/assemblies/data/assemblies/pref-25/rollcalls/index.json";
 import { LocalRollCallsPage, meta as routeMeta } from "./local-rollcalls";
 
 const assembly: Assembly = { id: "pref-31", kind: "prefectural", name: "鳥取県議会", prefCode: "31", sourceUrl: "https://www.pref.tottori.lg.jp/gikai/" };
@@ -86,5 +87,55 @@ describe("LocalRollCallsPage meta", () => {
     expect(title.title).toContain("鳥取県議会");
     const desc = tags.find((t) => (t as { name?: string }).name === "description") as { content: string };
     expect(desc.content).not.toMatch(/評価|おすすめ|ランキング|率/);
+  });
+});
+
+/**
+ * #1003: **一覧の「結果」列が空セルだった。**
+ * `resultAbsent: true`（一次資料に書かれていない）と、読み取りが壊れて空になった場合を、
+ * **画面で見分けられるようにする。** fixture は本番の実データ（滋賀 `2025-04-rinji` の 4 行。3 行が `resultAbsent`）。
+ */
+describe("LocalRollCallsPage 議決結果が一次資料に無い行（#1003）", () => {
+  const shiga: Assembly = { id: "pref-25", kind: "prefectural", name: "滋賀県議会", prefCode: "25", sourceUrl: "https://www.shigaken-gikai.jp/" };
+  const shigaRows = shigaIndex as unknown as LocalRollCallSummary[];
+
+  function renderShiga(list: LocalRollCallSummary[] = shigaRows) {
+    return render(
+      <MemoryRouter>
+        <LocalRollCallsPage assembly={shiga} rollCalls={list} />
+      </MemoryRouter>,
+    );
+  }
+
+  /** **母数つきで数える**（#757）。4 行のうち 3 行が空、1 行は原文どおり「承認」。 */
+  it("resultAbsent の行にだけ「一次資料に記載なし」を出し、結果のある行は原文のまま出す", () => {
+    renderShiga();
+    const rows = screen.getAllByRole("row").slice(1);
+    expect(rows).toHaveLength(4);
+    const notes = screen.getAllByTestId("local-rollcalls-result-absent");
+    expect(notes).toHaveLength(3);
+    for (const n of notes) {
+      expect(n).toHaveTextContent(/記載.*ありません|記載なし/);
+      // **可否を多数決から推論しない**（#901 / DATA_CONTRACT）
+      expect(n.textContent).not.toMatch(/可決|否決|承認|不承認|採択/);
+    }
+    const approved = rows.find((r) => r.textContent?.includes("議第97号を承認すべきものとする"));
+    expect(approved).toBeDefined();
+    expect(approved).toHaveTextContent("承認");
+    expect(within(approved as HTMLElement).queryByTestId("local-rollcalls-result-absent")).not.toBeInTheDocument();
+  });
+
+  /** `number` が空でも議案名の下の補足が「議案等 ・」で終わらない（滋賀は 163 件すべて number が空）。 */
+  it("number が空でも `・` が余らない", () => {
+    renderShiga();
+    for (const note of document.querySelectorAll(".assemblies-status-note")) {
+      expect(note.textContent).not.toMatch(/・\s*$|^\s*・|・\s*・/);
+    }
+  });
+
+  /** 鳥取（結果が全行読めている）には注記が 1 つも出ない。 */
+  it("結果が全行読めている議会には注記を出さない", () => {
+    renderPage();
+    expect(screen.queryAllByTestId("local-rollcalls-result-absent")).toHaveLength(0);
   });
 });

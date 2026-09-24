@@ -27,13 +27,28 @@ export function meta({ data, location }: MetaArgs<typeof loader>) {
   if (!data) return [{ title: "議員レコード" }];
   const { rollCall, assembly } = data;
   const name = assembly?.name ?? rollCall.assemblyId;
+  // 事実だけ（#791）。賛成率のような集計・評価は書かない。
+  // **空の欄は落とす**（#1003）。滋賀は 163 件すべて `number` が空で、素朴につなぐと
+  // `（令和8年 4月招集会議・・可決）` のように中黒が 2 つ続く文字列が検索結果に出ていた（PO が本番で確認）。
+  const fields = [rollCall.sessionLabel, rollCall.number, resultTextForMeta(rollCall)].filter((s) => s !== "");
   return seoMeta({
     title: rollCall.title,
-    // 事実だけ（#791）。賛成率のような集計・評価は書かない。
-    description: `${formatDate(rollCall.date)} ${name}本会議の表決（${rollCall.sessionLabel}・${rollCall.number}・${rollCall.result}）。各議員の表決を、表決結果の原文と凡例のまま、出典付きで並べます。`,
+    description: `${formatDate(rollCall.date)} ${name}本会議の表決（${fields.join("・")}）。各議員の表決を、表決結果の原文と凡例のまま、出典付きで並べます。`,
     pathname: location.pathname,
     type: "article",
   });
+}
+
+/**
+ * description に書く議決結果（#1003）。**原文があればそのまま**、
+ * **一次資料のその欄が空（`resultAbsent: true`）なら「議決結果の記載なし」**、
+ * **`resultAbsent` の無い空**（本来 ETL が違反として弾く形）は**何も書かない**——
+ * 「読めなかった」を「県が書いていない」と言い換えない（#569）。
+ * **`counts` から「可決」を埋めない**（可否を多数決から推論しない。docs/DATA_CONTRACT.md）。
+ */
+export function resultTextForMeta(rollCall: Pick<LocalRollCall, "result" | "resultAbsent">): string {
+  if (rollCall.result !== "") return rollCall.result;
+  return rollCall.resultAbsent === true ? "議決結果の記載なし" : "";
 }
 
 export default function LocalRollCallRoute() {
@@ -74,6 +89,7 @@ export function LocalRollCallPage({ rollCall, assembly, meta }: { rollCall: Loca
           <p className="rollcall-note">
             {[rollCall.kind, rollCall.number, rollCall.method?.raw, rollCall.result].filter(Boolean).join(" ・ ")}
           </p>
+          <ResultAbsentNote rollCall={rollCall} />
           {/* #204: 請願・陳情の ○ は委員長報告への賛成であって採択への賛成ではない。原文をそのまま添える */}
           {(rollCall.voteSubject || rollCall.committeeReport) && (
             <p className="rollcall-note">{[rollCall.voteSubject, rollCall.committeeReport && `委員長報告 ${rollCall.committeeReport}`].filter(Boolean).join(" ・ ")}</p>
@@ -97,6 +113,28 @@ export function LocalRollCallPage({ rollCall, assembly, meta }: { rollCall: Loca
       </main>
       <SiteFooter />
     </>
+  );
+}
+
+/**
+ * **一次資料の議決結果の欄が空だったこと**（#1003 / ETL 側は #901）。
+ *
+ * **「書かれていない」と「読めなかった」を画面で分ける。** 直すまでは議決結果が**空セル**で出ていて、
+ * 利用者には**サイトのバグ**にしか見えず、一次資料に当たっても「県も書いていない」ことが分からなかった。
+ *
+ * **書くのは事実だけ**: 「欄に記載がない」。**`counts` はあるが「賛成多数だから可決」とは書かない**
+ * （可否を多数決から推論しない。docs/DATA_CONTRACT.md）。推論した文字列を出せば、
+ * 利用者からは「県がそう書いた」と見分けがつかない（#569）。
+ *
+ * **`resultAbsent` の無い空の `result`（読み取り事故）には出さない。** ETL が今までどおり違反として弾く形なので、
+ * ここで「記載なし」と書くと事故を県のせいにしてしまう。
+ */
+function ResultAbsentNote({ rollCall }: { rollCall: Pick<LocalRollCall, "result" | "resultAbsent"> }) {
+  if (rollCall.result !== "" || rollCall.resultAbsent !== true) return null;
+  return (
+    <p className="rollcall-note" data-testid="local-rollcall-result-absent">
+      議決結果は、一次資料（表決結果）の欄が空のため記載がありません。人数から可否を補っていません。
+    </p>
   );
 }
 
