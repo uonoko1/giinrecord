@@ -94,6 +94,7 @@ grep してから起票してください（**今日の 5 件はそこにあり�
 | テストが `exit 0` に差し替えられて素通りする | `packages/etl/test/deploy-test-inventory.test.ts` の `GATES` と `minAssertions`（コメント化して黙らせる道を塞ぐ。#526） |
 | 検査器そのものが壊れて緑のまま（検査器自身のテストが無い） | `apps/web/app/test-tools/value-imports.test.ts`（`検査そのものを検査する。`。#451）／`deploy/test/nginx-headers-probe-safety.test.sh`（門に悪い location を食わせる。#642） |
 | テスト間でグローバルが漏れて隣のテストを壊す | `apps/web/app/test-tools/global-leak-guard.ts` の `installGlobalLeakGuard`。配線されているかは `apps/web/app/test-tools/global-leak-guard.e2e.test.ts` が別プロセスから見る（#512） |
+| **「残りを列挙する」検査が、残りが 0 になった日に黙る**（空配列は何を filter しても空。#901 は 11 県を広げ終えた瞬間にこうなった） | `packages/etl/test/local-sessions-default.test.ts` の `measured と LOCAL_SOURCES の数`（残りではなく母数を見る。一覧の過不足・重複・綴り間違いも見る）と `packages/etl/test/local-cli-sessions.test.ts` の `見ていない議会がある`（11 議会すべてを CLI 経由で通す。**それまで 7 議会しか通っておらず、奈良・高知・佐賀・秋田は一度も通っていなかった**）。**母数の主張を外すと、検査を恒真にしても 2060 pass / 0 fail で緑になる**（#985 で実測） |
 | `set -o pipefail` + 早期終了する読み手で検査が確率的に偽になる | `deploy/test/pipefail-sigpipe.test.sh`（`set -o pipefail` と早期終了する読み手の組。#527） |
 
 ## CI とリポジトリの運用

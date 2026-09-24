@@ -347,6 +347,156 @@
       allowlist を 1 語広げると見張りが丸ごと黙る M9）**が互いに見つかった。**
       **重複を避けるべき理由は「無駄だから」ではなく、「帰属と責任が曖昧になるから」である。**
 
+### 同じ範囲を並列で広げると、同じ数字が 6 か所でぶつかる（#901 の 11 県、2026-09-24 実測）
+
+**#901 は 11 県の `--sessions` を 1 県 1 PR で広げた。** **4 人の担当者が全員同じ形で止まった。**
+**「どの県を担当するか」は分かれていたのに、触るファイルは分かれていなかった。**
+
+#### **どのファイルが共有なのか**——**11 本すべてを数えた**
+
+**`git show --name-only` で 11 本の県を広げたコミットを数えた**（`data/` を除く）:
+
+| 触った PR の本数 | ファイル |
+|---:|---|
+| **11 / 11** | `packages/etl/src/local-assemblies.ts` |
+| **11 / 11** | `packages/etl/test/local-sessions-default.test.ts` |
+| **11 / 11** | `packages/etl/test/local-count-mismatches.test.ts` |
+| **11 / 11** | `packages/etl/test/local-rollcall-index.test.ts` |
+| **11 / 11** | `packages/etl/test/local-roster-window.test.ts` |
+| **11 / 11** | `packages/etl/test/local-lossy-name-matches.test.ts` |
+| **11 / 11** | `packages/etl/test/published-data-validate.test.ts` |
+| **11 / 11** | `apps/web/app/routes/count-mismatch-published.test.tsx` |
+| 8 / 11 | `packages/etl/src/local-cli.ts` · `packages/etl/test/local-name-source-conflict.test.ts` |
+| 5 / 11 | `packages/etl/test/local-cli-sessions.test.ts` |
+| 4 / 11 | `apps/web/app/routes/session-roster-coverage-published.test.tsx` |
+| 4 / 11 | `apps/web/public/fonts/{fonts.css,shippori-mincho-700.subset.txt,shippori-mincho-700.subset.woff2}` |
+
+**起票のとき「衝突するのは 5 ファイル」と書いたが、実測は 8 ファイルが全 11 本に出ている。**
+**フォントは 4 / 11 で、いちばん目立ったが、いちばん頻度が高いわけではなかった。**
+
+#### **同じ数字が 6 か所・2 パッケージにある**（**起票では 3 か所と数えていた**）
+
+**採決の総数 `4,599` を grep すると 6 か所出る**（`4599` と `4_599` の両方を引くこと。**片方だけだと半分しか出ない**）:
+
+```
+apps/web/app/routes/count-mismatch-published.test.tsx      rows: 4599
+packages/etl/test/local-count-mismatches.test.ts           rows: 4599
+packages/etl/test/published-data-validate.test.ts          rollCallFiles: 4599
+packages/etl/test/local-rollcall-index.test.ts             4_599
+packages/etl/test/local-roster-window.test.ts              4_599
+packages/etl/test/local-session-roster-coverage.test.ts    4_599
+```
+
+**票の総数 `198,221` も 3 か所**（`local-lossy-name-matches` / `published-data-validate` /
+`local-session-roster-coverage`）。**`198221` と `198_221` で書き方が割れている。**
+
+**衝突するぶんには気づける。危ないのは衝突しないほうである。**
+
+**`git merge-tree` で両方の形を実測した**（2026-09-24。共通の親から枝を 2 本合成して掛けた）:
+
+| 2 人が触った場所 | 結果 |
+|---|---|
+| **同じファイルの同じ行**（島根 ↔ 佐賀、`count-mismatch-published` と `local-count-mismatches`） | **両方 `CONFLICT (content)`**——**人が気づく** |
+| **同じ数字だが、別パッケージの別ファイル**（一方は web だけ、他方は etl だけ直した） | **★ 衝突 0。黙ってマージされる** |
+
+**後者が事故である。** **git は「別のファイルを触ったのだから独立だ」と判断する**が、
+**中身は同じ 1 つの数字**なので、**マージした結果は web が古く etl が新しい**
+（#950 奈良の前後で言えば **web `rows: 2530` / etl `rows: 2585`**）。
+**テストが 1 本だけ赤くなり、どちらが正しいかその場では分からない。**
+**4 人中 4 人がこれを踏んだ**（鳥取の担当者は 1 本の PR の中で 3 回踏んでいる:
+web だけ／etl だけ／`toHaveTextContent` の取り残し）。
+
+#### **直し方は「どちらかを選ぶ」ではない。`data/` から数え直す**
+
+**両方の値が古い**（自分の県と相手の県、どちらも入る前の値である）。
+**だから片方を採っても、足し算で出しても、正しい値にはならない。**
+
+- **`--ours` / `--theirs` を使わない。** **どちらも「片方の県が入っていない値」である。**
+- **足し算で出した値を書かない。** **`checked` と `unreadableCells` は足し算で動かない**——
+  **滋賀は増えた 149 本のうち 42 本しか `checked` に入らず、107 本が `unreadableCells` に行った。**
+  **「自分の県で +N だったから合計も +N」は成り立たない。**
+- **`data/` を作り直してから、`data/` を数え直す。** **下のコマンドが出す値を、そのまま書く。**
+
+```sh
+# 採決の本数と票のセル数（published-data-validate.test.ts の rollCallFiles / voteCells）
+node -e '
+const fs=require("fs"),p=require("path");const D="data/assemblies";let files=0,cells=0;
+const walk=d=>{for(const e of fs.readdirSync(d,{withFileTypes:true})){const q=p.join(d,e.name);
+ if(e.isDirectory())walk(q);else if(e.name!=="index.json"&&e.name.endsWith(".json")){
+  files++;cells+=(JSON.parse(fs.readFileSync(q,"utf8")).votes||[]).length;}}};
+for(const a of fs.readdirSync(D)){const rc=p.join(D,a,"rollcalls");if(fs.existsSync(rc))walk(rc);}
+console.log({rollCallFiles:files,voteCells:cells});'
+
+# 突き合わせの内訳（count-mismatch-published / local-count-mismatches）と会期の母数
+node -e '
+const fs=require("fs"),p=require("path");const D="data/assemblies";
+const t={rows:0,checked:0,noCounts:0,unreadableCells:0};let assemblies=0,sessions=0,maxSeatsChanged=0;
+for(const d of fs.readdirSync(D).filter(x=>x.startsWith("pref-"))){
+ const m=JSON.parse(fs.readFileSync(p.join(D,d,"meta.json"),"utf8"));
+ for(const k of Object.keys(t))t[k]+=m.countChecked[k];
+ assemblies++;const sc=m.sessionRosterCoverage||[];sessions+=sc.length;
+ for(const s of sc)if(s.seatsChanged>maxSeatsChanged)maxSeatsChanged=s.seatsChanged;}
+console.log(t,{assemblies,sessions,maxSeatsChanged});'
+```
+
+**2026-09-24 に流した実測**（**本文中の 6 か所・3 か所すべてと一致した**）:
+
+```
+{ rollCallFiles: 4599, voteCells: 198221 }
+{ rows: 4599, checked: 3628, noCounts: 785, unreadableCells: 186 }
+{ assemblies: 11, sessions: 119, maxSeatsChanged: 5 }
+```
+
+**`checked + noCounts + unreadableCells === rows` が成り立つことを確かめてから書く**（#757）。
+**数え直した値と、赤くなっているテストの期待値が食い違ったら、テストのほうを直す。**
+**逆はしない**——**`data/` が原本である。**
+
+#### **なぜ「1 か所にまとめる」を選ばなかったか**（検討した上での結論）
+
+**同じ数字が 6 か所にあるのを 1 か所にまとめたくなる。** **やらない。**
+
+**これらは重複ではなく、人に数え直させるための仕掛けである。**
+`local-count-mismatches.test.ts` の `"母数が変わったら数え直すこと"`、
+`published-data-validate.test.ts` の
+**「`memberRows` が赤くなったら、まず『県が名簿を動かした』を疑うこと」**
+「**直すのは実装ではなくこの数**」が、**それを明示して書いてある。**
+
+**実際にそれが働いた**: **2026-09-23 に滋賀が 44 → 42 人になった**
+（`白井 幸則` と `九里 学` を**県が名簿から外した**。広げたからではない）。
+**自動で追随する形にしていたら、この 2 人が消えたことは誰にも見えないまま緑になっていた**（#757）。
+
+**6 か所あること自体は費用だが、その費用は「数え直す」ことで払う。**
+**まとめて払わずに済ませる形にはしない。**
+
+#### **conflict を解いたら `pnpm typecheck` を必ず回す**（**同じ日に 2 人が独立に踏んだ**）
+
+**rebase の自動解決は、同じ形の行を両方残すことがある**——
+**テスト名が二重になる／オブジェクトのキーが二重になる／表の行が二重になる。**
+
+**`pnpm test` では捕まらない形がある。実測（2026-09-24、変異を当てて測った）:**
+
+| 壊れ方 | `pnpm test` | `pnpm typecheck` |
+|---|---|---|
+| **オブジェクトのキーが二重**（`saga: 13, ... , saga: 13, ...`） | **2060 pass / 0 fail（緑）** | **`TS1117` ×4（赤）** |
+| 文が途中で二重になる（括弧が閉じない） | 1 fail（赤） | `TS1005`（赤） |
+| **数字だけが古い**（`sessions: 119` → `102`） | **赤** | **緑** |
+
+**キーの二重は、後ろの値が黙って勝つ。** **テストは通る。誰も気づかない。**
+**逆に「数字だけが古い」は typecheck では絶対に出ない**——
+**typecheck が見るのは形であって、値ではない。**
+
+**やること**: **conflict を解いたあとは `pnpm lint && pnpm typecheck && pnpm test` を全部流す。**
+**どれか 1 つでは足りない**——**上の表の 3 行は、どの 1 つでも取りこぼす。**
+**`pnpm test` は etl を流すが、`pnpm --filter @seiji-kiroku/etl test` は web を流さない。**
+**この 2 パッケージにまたがって同じ数字があるので、片方だけでは必ず取りこぼす。**
+
+#### **フォントは別の重さを持つ**
+
+**手順は `docs/ops/fonts.md` にある**（「**2 県が同時に広げると、このファイルが衝突する**」）。
+**ここでは繰り返さない。** **要点だけ**: **`.woff2` はバイナリなので 3-way マージの結果を信用しない。**
+**`--ours` / `--theirs` で片付けると、採らなかった側の字が消えて本番で豆腐（□）になる。**
+**先にマージされた版を土台に rebase し、作り直す。**
+
 ## テストそのもの（変異・否定的対照・fixture・恒真・自己参照の下限）
 この節は何の話か: テストや検査そのものが本当に守っているか、書いただけで満足していないかの話。
 - テストは仕様である。テスト名は「何が・どうなる」を日本語で書いてよい。
@@ -1216,6 +1366,41 @@
   - **会派・院・回次のような「絞り込みの手がかり」には強さの順序がある。**
     名簿に書いてある事実（会派）は、記載からの推論（(a)/(b) の別）より強い。
     **弱い手がかりを先に効かせると、強い手がかりで直せなくなる。**
+
+- **「残りを列挙する」検査は、残りが 0 になった日に黙る**（#901 / #985、2026-09-24 実測）。
+  - **形はこれである**——**「まだ手を付けていないものを挙げて、それが空であること」を見る:**
+    ```ts
+    const others = Object.keys(LOCAL_SOURCES).filter((n) => !measured.includes(n));
+    assert.deepEqual(others, [], "測っていない議会");
+    ```
+  - **広げる作業が進むほど、この検査は弱くなる。** **最後の 1 件が入った瞬間に、何も主張しなくなる**——
+    **空の配列は何を filter しても空だからである。** **変異の分類 4（テストが何も主張していない）。**
+  - **いちばん祝いたい瞬間に起きる。** #901 は 11 県を 11 本の PR で広げ、
+    **滋賀（最後の 1 県）がマージされた時点でこれになった。**
+  - **測った**（`scripts/dev/mutate.sh` で `measured` を `Object.keys(LOCAL_SOURCES)` に置き換える——
+    **検査を完全な恒真にする変異**）:
+
+    | `local-sessions-default.test.ts` の形 | 結果 |
+    |---|---|
+    | **`others` が空であることだけを見る**（母数の主張を外した形） | **2060 pass / 0 fail（緑）** |
+    | 母数を見る形（いま入っているもの） | **1 fail** |
+
+    **恒真にしても緑だった。** **「残りは 0 です」と言うだけの検査は、0 になった後は何も守らない。**
+  - **`local-cli-sessions.test.ts` にも同じ形があった。** そちらは
+    **「測っていない議会は既定の 2 のまま」**という書き方で、**2 のままの議会が 1 つも無くなった。**
+    **その結果、奈良・高知・佐賀・秋田は CLI 経由で一度も検査されていなかった**
+    （**7 議会しか通していなかった**）。**残りが減るほど弱くなる形は、通っている母数も一緒に痩せる。**
+  - **直し方は「0 を期待値にする」ではない。** **数字だけ `1` → `0` に直して残すと、
+    緑の理由が消える**（母数が消える。#757）。**母数を見る形に置き換える:**
+    - **一覧が全体を過不足なく指していること**（`measured.length === Object.keys(LOCAL_SOURCES).length`）
+    - **重複が無いこと**（`new Set(measured).size`——**数だけ合っていて中身が違う形を塞ぐ**）
+    - **一覧の側に、全体に無い名前が無いこと**（**片側だけの照合では、綴り間違いが通る**）
+    - **一覧の各要素が、期待する状態に実際に在ること**（**「測った」と書いてあるのに既定のままの議会が無い**）
+  - **やること**: **「残りを列挙する」検査を書くときは、残りが 0 になった日に何を主張するかを先に決める。**
+    **決められないなら、それは残りではなく母数を見る検査として書く。**
+    **`assert.deepEqual(<何か>.filter(...), [], ...)` を書いたら、
+    その `<何か>` が空になりうるかを必ず自問する**（リポジトリに 130 件ある形である。
+    **`data/` から数える大半は空にならないので問題ない**——**危ないのは「やり終えたら空になる」ものだけ**）。
 
 ## 数字と測り方（測り方を書く・母数と結果・外挿と実測・負荷を書く）
 この節は何の話か: 数字や事実をどう測り、どう確かめ、どう書けば読む側が照合できるかの話。
