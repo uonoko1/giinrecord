@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
-# merge-when-green.sh [--allow-nonrequired-red] <pr>
+# merge-when-green.sh [--allow-nonrequired-red] [--no-review <理由>] <pr>
 #   1. refuse unless the PR is OPEN and not a draft
+#   1.5 refuse unless a reviewer's report is already on the PR (#1006) — a comment containing one
+#      of reviewer.md's verdicts (マージしてよい / 直してから / 反対). Checked BEFORE polling, so a
+#      PR that was never reviewed is refused in seconds rather than after 20 minutes of waiting.
+#      --no-review <理由> skips it and logs the reason; the reason is not optional.
 #   2. `gh pr update-branch` when it is BEHIND main
 #      if that is refused because the gh OAuth token lacks the `workflow` scope (the PR touches
 #      .github/workflows/*), fall back to merging origin/main into the PR head in a temporary
@@ -24,6 +28,8 @@
 # Env: POLL_INTERVAL (s, default 20), POLL_MAX (default 60), PO_REPO (owner/name override).
 # Flags: --allow-nonrequired-red — merge even though a non-required check is red (#858). Required
 # checks being red still aborts, always. See REQUIRED_CHECKS below for what that means here.
+#        --no-review <理由> — merge a PR that has no reviewer report (#1006). The reason is
+# mandatory and is written to the log: that log line is the only record of why review was skipped.
 # Destructive operations: the squash merge (+ head branch deletion) of the given PR, and — only
 # in the workflow-scope fallback — a merge commit of origin/main pushed to the PR head branch.
 set -euo pipefail
@@ -100,16 +106,26 @@ is_known_check() {
   return 1
 }
 
+USAGE='merge-when-green.sh [--allow-nonrequired-red] [--no-review <理由>] <pr-number>'
 ALLOW_NONREQUIRED_RED=0
+NO_REVIEW_REASON=""
 PR=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --allow-nonrequired-red) ALLOW_NONREQUIRED_RED=1 ;;
-    *) if [[ -z "$PR" ]] && is_int "$1"; then PR=$1; else usage "merge-when-green.sh [--allow-nonrequired-red] <pr-number>"; fi ;;
+    # **理由は省略できない**（#1006）。`--no-review` だけで通せるなら、それは歯止めではない
+    # （`pr-closes.sh` の「`Closes なし` だけでは通さない」と同じ）。
+    # 次の引数が無い／別のフラグ／PR 番号だった場合は**理由が書かれていない**ので usage で落とす。
+    --no-review)
+      [[ $# -ge 2 && -n "${2:-}" && "$2" != --* ]] && ! is_int "${2:-}" \
+        || usage "$USAGE
+       --no-review には理由が要ります（例: --no-review 'レビュアーを立てられない障害中'）"
+      NO_REVIEW_REASON=$2; shift ;;
+    *) if [[ -z "$PR" ]] && is_int "$1"; then PR=$1; else usage "$USAGE"; fi ;;
   esac
   shift
 done
-[[ -n "$PR" ]] || usage "merge-when-green.sh [--allow-nonrequired-red] <pr-number>"
+[[ -n "$PR" ]] || usage "$USAGE"
 REPO=$(po_repo)
 
 # --- 1. state ---------------------------------------------------------------------------------
@@ -140,6 +156,121 @@ assert_no_stacked_prs() {
        先に  gh pr edit <番号> --base main  で base を切り替えてください。"
 }
 assert_no_stacked_prs
+
+# --- 1.5 レビュー済みか（#1006）-----------------------------------------------------------------
+# **何が起きたか**: PO が 2026-09-23〜24 に **32 本の PR を 1 件もレビューさせずにマージした**。
+# `.claude/agents/README.md` の「PO がやってはいけないこと」には
+# **「レビュー無しでマージする」が明記されていた**。手順に書いてあっても止まらなかった。
+# そのあと PO は PR #1001 に「**道具に歯止めを置きました**」と書いたが、**事実に反していた**
+# （レビュアーが発見し、PO も検算した）: `reviewed` ラベルは存在せず、この道具の検査は 0 件で、
+# 歯止めは**セッションのスクラッチパッドにしか無かった**——そして 2026-09-25 に
+# セッションが再起動して **exit 127 で消えた**。だからリポジトリの中に置く。
+#
+# ── なぜラベルではないのか（レビュアーの指摘）───────────────────────────────────────────
+# **`reviewed` ラベルは PO が 1 コマンドで付けられる。** 32 本のときの PO は
+# 「自分で検算したから十分だ」と判断していた。**同じ PO が「自分で検算したから
+# `reviewed` を付ける」と判断できる。歯止めが自己申告なら歯止めではない。**
+# **レビュアーの報告は、レビュアーを走らせないと生えない。** だから報告そのものを要求する。
+#
+# ── なぜ `--json reviews` ではなく issue comments なのか（実測 2026-09-25、直近 60 PR）──
+#   `gh pr view --json reviews` が空でない PR   **2 件 / 60**
+#       どちらも著者は `github-actions`（bot）で **body は空文字**。
+#       **人間のレビューは GitHub の Review として 1 件も登録されていない**（母数 60 中 0）。
+#       → **`reviews` を見る検査は、この運用では何も見ていないのと同じ**になる。
+#   `gh pr view --json comments` が空でない PR  **14 件 / 60**
+#       **14 件とも著者は `uonoko1`**。PO も開発者もレビュアーも**同じアカウント**で書くので、
+#       **著者では見分けられない**（authorAssociation も 14 件とも OWNER）。
+#       → **本文の形で見分けるしかない。**
+#   14 件の 1 行目を読むと、**レビュアーの報告は 1 件だけ**（PR #1000
+#   「## レビュー: **マージしてよい**（3 度目の敵対的レビュー）」）。
+#   残る 13 件は「PO が測り直した」「PO が確かめた」等、**PO 自身の検算**か担当者の返答だった。
+#   **つまり直近 60 本のうち、レビュアーの報告が付いているのは 1 本**である。
+#
+#   **`gh pr view --json comments` ではなく `gh api .../issues/<n>/comments` を叩く理由**は
+#   中身ではなく、この道具のテストの都合である: 既存のハンドラ 30 個が
+#   `"pr view 12 --json"*` を catch-all にしているので、`pr view --json comments` を足すと
+#   **30 個のテストが state の JSON を返してしまい、検査が黙って素通りする**。
+#   別の呼び出し方にして衝突させない（`gh api .../check-runs` と同じ形）。
+#
+# ── 何を「レビュアーの報告」とみなすか ─────────────────────────────────────────────────
+# `.claude/agents/reviewer.md` の報告様式:
+#     「**結論を先に**: マージしてよいか／直してから／反対か」
+# **その 3 語のどれかを含むコメントが 1 件以上あること**を要求する。
+# **良し悪しは判定しない**（`pr-closes.sh` と同じ考え方——機械が判断できないことを
+# 機械に判断させない。機械が見るのは「レビュアーが走って報告を書いた」ことだけで、
+# **報告の中身が正しいかはレビュアー自身とPOが見る**）。
+#
+# **「マージしてよい」だけを探さないのは意図である。** それだけだと
+# **「直してから」「反対」と書かれた PR は「レビューが無い」と同じ扱い**になり、
+# **担当者が直して再レビューを受けた PR と、一度もレビューされていない PR を区別できなくなる。**
+# ここで見ているのは「レビュアーが走ったか」であって「レビュアーが許したか」ではない。
+# **「直してから」のまま押すかどうかは、PO が報告を読んで決めること**であり、
+# この道具はその判断を肩代わりしない（下の VERDICT を必ず読み上げるのはそのため）。
+#
+# **denylist ではなく allowlist**（#858 と同じ向き）: 3 語のどれも無ければ止める。
+# 綴りが増えたらここに足す——**黙って通る側に落ちる形にはしない。**
+REVIEW_VERDICTS=(マージしてよい 直してから 反対)
+
+# review_comment_bodies — この PR のコメント本文を 1 行 1 件で出す（改行は空白に潰す）。
+# 本文に改行が入ると「1 コメント = 1 行」が崩れて母数が数えられなくなるので、jq 側で潰す。
+review_comment_bodies() {
+  # shellcheck disable=SC2016  # jq の式。シェルに展開させない
+  gh api "repos/$REPO/issues/$PR/comments" --paginate \
+    -q '.[] | (.body // "") | gsub("[\r\n]+"; " ")' 2>/dev/null || true
+}
+
+# assert_reviewed — レビュアーの報告が 1 件も無ければ die する。
+# **検査を待つ前に呼ぶ**: レビューが無いと分かっているのに 20 分ポーリングさせない。
+assert_reviewed() {
+  local bodies total=0 hits="" verdict found=""
+  bodies=$(review_comment_bodies)
+  [[ -n "$bodies" ]] && total=$(grep -c . <<<"$bodies")
+  for verdict in "${REVIEW_VERDICTS[@]}"; do
+    if [[ -n "$bodies" ]] && grep -qF -- "$verdict" <<<"$bodies"; then
+      found+="$verdict "
+    fi
+  done
+  found=${found% }
+  if [[ -n "$found" ]]; then
+    # **母数を必ず出す**（#757）: 何件のコメントを見て、どの語で当たったのか。
+    # **どの語で当たったかを読み上げる**のは、「直してから」「反対」のまま押している場合に
+    # **PO がそれを見落とさないため**である。ここが記録として残る唯一の場所になる。
+    log "レビューの報告を確認しました（コメント $total 件中、結論の語: $found）"
+    return 0
+  fi
+  die "PR #$PR にレビュアーの報告がありません（コメント $total 件を見ました）。マージしません。
+
+       **PO の検算はレビューではありません**（#1001）。2026-09-23〜24 に 32 本の PR が
+       1 件もレビューされずにマージされ、そのとき PO は「自分で検算したから十分だ」と
+       判断していました。**.claude/agents/README.md は「レビュー無しでマージする」を
+       禁じていましたが、手順に書いてあっても止まりませんでした。**
+
+       この道具が探しているのは、PR のコメントに書かれた**レビュアーの結論の語**です
+       （.claude/agents/reviewer.md の「結論を先に: マージしてよいか／直してから／反対か」）:
+         ${REVIEW_VERDICTS[*]}
+
+       やること:
+         1. reviewer サブエージェント（.claude/agents/reviewer.md）を立てる
+         2. その報告を  gh pr comment $PR --body-file <報告>  で PR に貼る
+         3. もう一度 この道具を流す
+
+       **レビューできない事情がある場合**（例: レビュアーが立てられない障害時）は、
+       **理由を PR のコメントに書いてから**通してください:
+         gh pr comment $PR --body 'レビューなし（理由）'
+         scripts/po/merge-when-green.sh --no-review '理由' $PR
+       $URL"
+}
+if [[ -n "$NO_REVIEW_REASON" ]]; then
+  # **逃げ道は「黙って開く」形にしない。** `pr-closes.sh` の `Closes なし（理由）` と同じ考え方:
+  # **理由は省略できない**（引数が空なら下の引数解析が usage で落とす）。
+  # **中身の良し悪しは判定しない**——機械には分からない。機械が見るのは
+  # 「人が一度立ち止まって書いた」ことだけである。
+  # **理由はログに必ず残す**: ここが「なぜレビュー無しで押したのか」が残る唯一の場所になる。
+  log "**レビュー無しでマージします**（--no-review）。理由: $NO_REVIEW_REASON"
+  log "  この行が、レビューを飛ばした記録です。PR のコメントにも同じ理由を残してください。"
+else
+  assert_reviewed
+fi
 
 # --- 2. bring up to date ----------------------------------------------------------------------
 # merge_main_locally — fallback for `gh pr update-branch` being refused because the gh OAuth
