@@ -4,6 +4,8 @@ import { describe, expect, it } from "vitest";
 import type { Assembly, LocalAssemblyMeta, LocalRollCall } from "../lib/data-contract";
 import mapped from "../test-fixtures/assemblies/data/assemblies/pref-31/rollcalls/2026-06/pref-31-2026-06-20260629-知事提案-第10号.json";
 import unmapped from "../test-fixtures/assemblies/data/assemblies/pref-31/rollcalls/2026-06/pref-31-2026-06-20260629-陳情-8年-11.json";
+import resultPresentFixture from "../test-fixtures/assemblies/data/assemblies/pref-25/rollcalls/2025-04-rinji/pref-25-2025-04-rinji-20250425-議第97号を承認すべきものとする総務・企画・公室常任委員長報告.json";
+import resultAbsentFixture from "../test-fixtures/assemblies/data/assemblies/pref-25/rollcalls/2025-04-rinji/pref-25-2025-04-rinji-20250425-議長辞職の件.json";
 import { LocalRollCallPage, meta as routeMeta } from "./local-rollcall";
 
 const assembly: Assembly = { id: "pref-31", kind: "prefectural", name: "鳥取県議会", prefCode: "31", sourceUrl: "https://www.pref.tottori.lg.jp/gikai/" };
@@ -149,5 +151,104 @@ describe("LocalRollCallPage meta", () => {
     const desc = tags.find((t) => (t as { name?: string }).name === "description") as { content: string };
     expect(desc.content).toContain("鳥取県議会");
     expect(desc.content).not.toMatch(/評価|おすすめ|ランキング|率/);
+  });
+});
+
+/**
+ * #1003: **`resultAbsent: true`（一次資料の議決結果の欄が空）が画面で消えていた。**
+ *
+ * ETL（#901）は **`counts` から「可決」を埋めない**という判断をして、
+ * 「**書かれていない**」（`resultAbsent: true`）と「**読めなかった**」（今までどおり契約違反で弾く）を
+ * 分けた。**その区別が web に 1 件も届いていなかった**（`git grep -c resultAbsent apps/web` が 0）。
+ *
+ * fixture は**本番の実データ**（滋賀 `Kg835_0425sanpi2.pdf`、`2025-04-rinji` の 4 行中 3 行。votes だけ 4 人に詰めた）。
+ */
+describe("LocalRollCallPage 議決結果が一次資料に無いとき（#1003）", () => {
+  const absent = resultAbsentFixture as unknown as LocalRollCall;
+  const present = resultPresentFixture as unknown as LocalRollCall;
+  const shiga: Assembly = { id: "pref-25", kind: "prefectural", name: "滋賀県議会", prefCode: "25", sourceUrl: "https://www.shigaken-gikai.jp/" };
+  const shigaMeta: LocalAssemblyMeta = { ...assemblyMeta, assemblyId: "pref-25" };
+
+  function renderShiga(rollCall: LocalRollCall) {
+    return render(
+      <MemoryRouter>
+        <LocalRollCallPage rollCall={rollCall} assembly={shiga} meta={shigaMeta} />
+      </MemoryRouter>,
+    );
+  }
+
+  /** **「書かれていない」を事実として書く。** 「可決と思われる」のような推測は書かない。 */
+  it("resultAbsent: true のときは、議決結果の欄が一次資料で空だったという事実を出す", () => {
+    renderShiga(absent);
+    const note = screen.getByTestId("local-rollcall-result-absent");
+    expect(note).toHaveTextContent(/議決結果.*一次資料.*空/);
+    // **推論した可否を県の公表値として出さない**（counts は賛成 40・反対 0 だが「可決」と書かない）
+    expect(note.textContent).not.toMatch(/可決|否決|承認|不承認|採択|推定|思われ|みられ/);
+  });
+
+  /** **「読めなかった」と混ざらないこと。** 空セルのままだと利用者にはサイトのバグにしか見えない。 */
+  it("resultAbsent が無い（＝結果が読めている）採決には、その注記を出さない", () => {
+    renderShiga(present);
+    expect(screen.queryByTestId("local-rollcall-result-absent")).not.toBeInTheDocument();
+    // 議決結果の原文は見出しの補足行にそのまま出る（`resultAbsent` の注記に置き換わらない）
+    expect(document.querySelector(".rollcall-note")).toHaveTextContent("議案等 ・ 承認");
+  });
+
+  /** `number` も空（滋賀は 163 件すべて空）。`.filter(Boolean)` で落ちた結果、見出しが「議案等」だけになっていた。 */
+  it("number も result も空でも、見出しの区切りが崩れない（・が 2 つ続かない）", () => {
+    renderShiga(absent);
+    const notes = screen.getAllByText(/議案等/);
+    expect(notes.length).toBeGreaterThan(0);
+    for (const n of notes) expect(n.textContent).not.toMatch(/・\s*・|・\s*$|^\s*・/);
+  });
+
+  /**
+   * **ここがこの PBI の要**（#569）。**`resultAbsent` の無い空の `result`** は
+   * **ETL が今までどおり違反として弾く形**（読み取りが壊れた場合）。
+   * **そこに「県が書いていない」と書けば、こちらの事故を県のせいにする虚偽になる。**
+   * 画面には**何も足さない**（空のまま）——利用者が「出ていない」と気づける側に倒す。
+   *
+   * この行は本番の `data/` には **1 件も無い**（11 議会 4,599 採決のうち空 `result` は
+   * `resultAbsent` 付きの 3 件だけ。実測）。**起こりうる形なので手で作る。**
+   */
+  it("resultAbsent が無い空の result（読み取り事故）には「記載なし」と書かない", () => {
+    const broken = { ...absent } as Record<string, unknown>;
+    delete broken.resultAbsent;
+    renderShiga(broken as unknown as LocalRollCall);
+    expect(screen.queryByTestId("local-rollcall-result-absent")).not.toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/記載がありません|記載なし/);
+  });
+
+  it("resultAbsent が無い空の result は meta description にも「記載なし」と書かない", () => {
+    const broken = { ...absent } as Record<string, unknown>;
+    delete broken.resultAbsent;
+    const tags = routeMeta({ data: { rollCall: broken, assembly: shiga, meta: shigaMeta }, location: { pathname: "/assemblies/pref-25/rollcalls/x" } } as never);
+    const desc = tags.find((t) => (t as { name?: string }).name === "description") as { content: string };
+    expect(desc.content).not.toMatch(/記載なし|記載がありません/);
+    expect(desc.content).not.toMatch(/・・|（・|・）/);
+    expect(desc.content).toContain("令和7年 4月招集会議");
+  });
+
+  /** 本番の `<meta name="description">` に `・・` が入っていた（PO が curl で確認）。 */
+  it("meta description に空欄由来の `・・` が出ない", () => {
+    const tags = routeMeta({ data: { rollCall: absent, assembly: shiga, meta: shigaMeta }, location: { pathname: "/assemblies/pref-25/rollcalls/x" } } as never);
+    const desc = tags.find((t) => (t as { name?: string }).name === "description") as { content: string };
+    expect(desc.content).not.toMatch(/・・/);
+    expect(desc.content).not.toMatch(/（・|・）/);
+    expect(desc.content).toContain("令和7年 4月招集会議");
+    // **「書かれていない」ことを description にも書く**（空欄を黙って落とすだけにしない）
+    expect(desc.content).toMatch(/議決結果の記載なし/);
+    // <title> には議案名が入る（description とは別の欄）
+    expect((tags.find((t) => "title" in t) as { title: string }).title).toContain("議長辞職の件");
+    // 結果を推論して埋めない
+    expect(desc.content).not.toMatch(/可決|否決|承認/);
+  });
+
+  /** 結果が読めている採決の description は今までどおり原文を含む（注記で置き換えない）。 */
+  it("結果が読めている採決の meta description は原文の議決結果を含む", () => {
+    const tags = routeMeta({ data: { rollCall: present, assembly: shiga, meta: shigaMeta }, location: { pathname: "/assemblies/pref-25/rollcalls/y" } } as never);
+    const desc = tags.find((t) => (t as { name?: string }).name === "description") as { content: string };
+    expect(desc.content).toContain("承認");
+    expect(desc.content).not.toMatch(/・・/);
   });
 });

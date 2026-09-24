@@ -1,0 +1,81 @@
+[
+  {
+    "assemblyId": "pref-25",
+    "counts": {
+      "no": 0,
+      "present": 42,
+      "voting": 41,
+      "yes": 41
+    },
+    "date": "2025-04-25",
+    "id": "pref-25-2025-04-rinji-20250425-特別委員会改編動議",
+    "kind": "議案等",
+    "number": "",
+    "page": 1,
+    "result": "",
+    "resultAbsent": true,
+    "sessionId": "2025-04-rinji",
+    "sessionLabel": "令和7年 4月招集会議",
+    "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg835_0425sanpi2.pdf",
+    "title": "特別委員会改編動議"
+  },
+  {
+    "assemblyId": "pref-25",
+    "counts": {
+      "no": 2,
+      "present": 42,
+      "voting": 41,
+      "yes": 39
+    },
+    "date": "2025-04-25",
+    "id": "pref-25-2025-04-rinji-20250425-議第97号を承認すべきものとする総務・企画・公室常任委員長報告",
+    "kind": "議案等",
+    "number": "",
+    "page": 2,
+    "result": "承認",
+    "sessionId": "2025-04-rinji",
+    "sessionLabel": "令和7年 4月招集会議",
+    "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg835_0425sanpi2.pdf",
+    "title": "議第97号を承認すべきものとする総務・企画・公室常任委員長報告"
+  },
+  {
+    "assemblyId": "pref-25",
+    "counts": {
+      "no": 2,
+      "present": 42,
+      "voting": 40,
+      "yes": 38
+    },
+    "date": "2025-04-25",
+    "id": "pref-25-2025-04-rinji-20250425-議第98号（人事案件）",
+    "kind": "議案等",
+    "number": "",
+    "page": 1,
+    "result": "",
+    "resultAbsent": true,
+    "sessionId": "2025-04-rinji",
+    "sessionLabel": "令和7年 4月招集会議",
+    "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg835_0425sanpi2.pdf",
+    "title": "議第98号（人事案件）"
+  },
+  {
+    "assemblyId": "pref-25",
+    "counts": {
+      "no": 0,
+      "present": 42,
+      "voting": 40,
+      "yes": 40
+    },
+    "date": "2025-04-25",
+    "id": "pref-25-2025-04-rinji-20250425-議長辞職の件",
+    "kind": "議案等",
+    "number": "",
+    "page": 1,
+    "result": "",
+    "resultAbsent": true,
+    "sessionId": "2025-04-rinji",
+    "sessionLabel": "令和7年 4月招集会議",
+    "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg835_0425sanpi2.pdf",
+    "title": "議長辞職の件"
+  }
+]
