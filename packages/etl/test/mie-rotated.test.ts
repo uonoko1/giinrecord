@@ -233,6 +233,31 @@ test("#867 mie: /Rotate 90 のページで回転していない Tm が来たら�
   assert.throws(() => readGlyphPageOps(fn, args, 1, { pageRotate: 90, pageWidth: 842 }), /rotated text matrix/);
 });
 
+test("#867 mie: /Rotate 90 のページで Tm 無しの showText は、打ち消しそのものを「余計な CTM」と読まない", () => {
+  // **`showText` の `!tmSeenInBlock` の枝が比べる相手は `display` である**（`IDENTITY` ではない）。
+  // **`IDENTITY` と比べると、打ち消しの行列そのものが「単位行列でない CTM」に見えて、
+  // 回転したページの `Tm` 無しの文字が全部止まる。**
+  //
+  // **この枝は実データでは一度も通らない**（実測 2026-09-24: 回転 11 本の `showText` 6,369 回すべてで、
+  // 同じ `BT` ブロックの中に先に `Tm` が来ている。`Tm` 無しは **0 回**）。
+  // **だから実物の PDF では `display` と `IDENTITY` のどちらで比べても結果が変わらない**——
+  // **`sameMatrix(ctm, display)` を `sameMatrix(ctm, IDENTITY)` にする変異は、
+  // 151 本の読める本数も 111 のまま変わらない（分類②「等価変異」）。**
+  // **オペレータ列を直接渡して、この枝そのものを固定しておく。**
+  const fnArray = [OPS.beginText, OPS.setFont, OPS.showText];
+  const argsArray: unknown[] = [[], ["F1", 8], [[{ unicode: "あ", width: 1000 }]]];
+  // **回転したページで、CTM に何も足されていない（= `display` のまま）なら読む**
+  const { items } = readGlyphPageOps(fnArray, argsArray, 1, { pageRotate: 90, pageWidth: 842 });
+  assert.equal(items.length, 1, "Tm 無しでも、CTM が打ち消しのままなら読む");
+  // **`cm` が 1 つでも足されていれば、今までどおり止める**（推測で置かない）
+  const withCm = [OPS.transform, ...fnArray];
+  const withCmArgs: unknown[] = [[1, 0, 0, 1, 20, 30], ...argsArray];
+  assert.throws(() => readGlyphPageOps(withCm, withCmArgs, 1, { pageRotate: 90, pageWidth: 842 }), /without a text matrix not supported/);
+  // **回転していないページでは今までどおり**（既定の経路が変わっていないことの確認）
+  assert.equal(readGlyphPageOps(fnArray, argsArray, 1).items.length, 1);
+  assert.throws(() => readGlyphPageOps(withCm, withCmArgs, 1), /without a text matrix not supported/);
+});
+
 test("#867 mie: 罫線も同じ打ち消しで向きが直る（PDF の縦線は表示の横線になる）", () => {
   // `readLines` は共有層（`pdf-table.ts`）なので `D` を渡せない。読んだあとで `rotateLines` が掛ける。
   // **縦線 x=100（y 10..200）は、/Rotate 90（W=842）で 横線 y=842−100=742（x 10..200）になる。**
