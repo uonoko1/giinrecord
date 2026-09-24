@@ -189,6 +189,67 @@ test("#1004 下限のすぐ外（0.020）では列が取れなくなる——壊
   assert.deepEqual(grew.map((p) => `${p.file} p${p.page}`), [], "下に外しても列は増えない");
 });
 
+/* ---------- 等価変異（固定できていないものを、固定できていないと書き残す） ---------- */
+
+/**
+ * **`memberColumns` の docblock が長らく主張していた「絶対値（±0.35pt）では落ちる」は、
+ * 今のフィクスチャでは成り立たない**（#1004 で測り直した）。
+ *
+ * **基準点の取り違えだった。** `3_111805_349057_up_7elgmado.pdf` p2 の議員の列は
+ * **min 14.580 / max 15.000 / 中央値 14.760** で、
+ * **min と max の差は 0.420pt あるが、中央値からの最大距離は 0.240pt。**
+ * 検査は `|g - med| > 0.35` なので **0.240 < 0.35 で通る。**
+ *
+ * **だからこの 2 つは等価変異で、テストでは落とせない。**
+ * **落とせないことを書き残す**（「変異で落ちなかった＝テストが足りない」を黙って流さない）。
+ * **相対を選んだ判断自体は変えない**——列の幅は本ごとに 10.92〜15.88pt と 1.45 倍ちがう。
+ */
+test("#1004 等価変異: 絶対 0.35pt も 平均 も、29 ページの出力を 1 本も変えない（固定できていない）", async () => {
+  const pages = await allPageVx();
+  const byRule = (vlines: readonly { x: number }[], brk: (g: number, med: number) => boolean): number => {
+    const vx = cluster(vlines.map((v) => v.x));
+    if (vx.length < 10) return 0;
+    const gaps = vx.slice(1).map((v, k) => v - vx[k]);
+    let i = gaps.length - 1;
+    while (i > 0) {
+      const run = gaps.slice(i - 1);
+      const sorted = [...run].sort((a, b) => a - b);
+      if (run.some((g) => brk(g, sorted[Math.floor(sorted.length / 2)]))) break;
+      i--;
+    }
+    const cols = vx.slice(i);
+    return cols.length >= 10 ? cols.length : 0;
+  };
+  const abs035 = pages.filter((p) => byRule(p.vx, (g, med) => Math.abs(g - med) > 0.35) !== memberColumns(p.vx).length);
+  assert.deepEqual(abs035.map((p) => `${p.file} p${p.page}`), [], "絶対 0.35pt でも出力は変わらない（等価変異）");
+
+  const byMean = (vlines: readonly { x: number }[]): number => {
+    const vx = cluster(vlines.map((v) => v.x));
+    if (vx.length < 10) return 0;
+    const gaps = vx.slice(1).map((v, k) => v - vx[k]);
+    let i = gaps.length - 1;
+    while (i > 0) {
+      const run = gaps.slice(i - 1);
+      const mean = run.reduce((a, b) => a + b, 0) / run.length;
+      if (run.some((g) => Math.abs(g - mean) > mean * MEMBER_COLUMN_TOLERANCE)) break;
+      i--;
+    }
+    const cols = vx.slice(i);
+    return cols.length >= 10 ? cols.length : 0;
+  };
+  const meanDiff = pages.filter((p) => byMean(p.vx) !== memberColumns(p.vx).length);
+  assert.deepEqual(meanDiff.map((p) => `${p.file} p${p.page}`), [], "平均でも出力は変わらない（等価変異）");
+
+  // **基準点の取り違えの実体**（「幅 0.42pt」は「±0.35pt で切れる」を意味しない）
+  const r7 = pages.find((p) => p.file === "3_111805_349057_up_7elgmado.pdf" && p.page === 2)!;
+  const cols = memberColumns(r7.vx);
+  const gaps = cols.slice(1).map((v, k) => v - cols[k]);
+  const sorted = [...gaps].sort((a, b) => a - b);
+  const med = sorted[Math.floor(sorted.length / 2)];
+  assert.equal((Math.max(...gaps) - Math.min(...gaps)).toFixed(3), "0.420", "min と max の差は 0.420pt");
+  assert.equal(Math.max(...gaps.map((g) => Math.abs(g - med))).toFixed(3), "0.240", "中央値からの最大距離は 0.240pt（0.35 より小さい）");
+});
+
 /* ---------- 実データのばらつき（なぜ下が潤沢なのか） ---------- */
 
 test("#1004 実データの列間隔のばらつきは最大 1.63%（許容 8% の 5 分の 1）", async () => {
