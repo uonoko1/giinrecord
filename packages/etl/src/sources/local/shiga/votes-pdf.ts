@@ -331,6 +331,13 @@ function buildGrid(page: PageGeometry, pageNo: number, inherit?: number): Grid |
  *   - **狭すぎる**: `Kg815_1128sanpi-go` は 736.5 の次が 740.9（幅 4.4pt）
  * **どちらも議員の列に数えると、記号の個数が列の数と合わなくなり、その本の全セルが不明に落ちる。**
  */
+/**
+ * **検査のためだけの別名**（Issue #1002。**本番の道は 1 バイトも変えていない**）。
+ * **`readVoteCells` に渡る `Grid` を、フィクスチャの実ページから作るために要る**——
+ * **合成した `Grid` で測っても「実データでどうか」は何も言えない。**
+ */
+export const buildGridForTest = buildGrid;
+
 function trimOuterColumns(cols: readonly number[]): number[] {
   let out = [...cols];
   for (let guard = 0; guard < out.length && out.length > 3; guard++) {
