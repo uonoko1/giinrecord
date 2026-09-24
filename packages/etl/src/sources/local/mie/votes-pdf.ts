@@ -116,8 +116,59 @@ const LEFT_HEADERS = ["議案等番号", "件名", "議決月日", "出席者数
  */
 const NUMBER_CELL = /^(.+?)(?:(第[0-9０-９]+号)|(第[0-9０-９]+案)|([0-9０-９]+号))$/;
 
+/**
+ * **「既定で読む → 落ちたらグリフに割って読み直す」の 2 段構え**（Issue #982）。
+ *
+ * ## なぜ 2 段にするか（**#969 が割らなかった理由への答え**）
+ *
+ * **三重の 17 本は 1 回の showText に複数のセルぶんの文字を入れている**ので、
+ * **1 アイテムが丸ごと 1 つの列に落ち、残りの列が空になる**（`glyphs.ts` の `splitGlyphs` に実測表）。
+ * **割れば読めるが、全部を割ると `TITLE` / `LEGEND_ITEM` が 1 文字ずつのアイテムに当たらなくなり、
+ * 今読めている 99 本が表題も凡例も失う**（#969 が測ったとおり）。
+ *
+ * **#969 は「どのアイテムが記号帯かを決める規則」を考えて、
+ * 規則を誤れば別人の列に票が落ちる（#569）として見送った。**
+ *
+ * **この実装は規則を作らない。** **「どれを割るか」を一切選ばず、
+ * **本ごとに「割らないで読む」を先に試し、それが例外で止まった本だけ「全部割って」読み直す。**
+ *
+ * **だから読めている本はこの枝に入らない**——**入口の `readGlyphPages(bytes)` が成功した時点で返る。**
+ * **実測（2026-09-24、index の賛否 PDF 151 本すべて）: 読めていた 99 本の
+ * セル・議員・凡例・表題のハッシュは 1 本も変わらない**（1 段目で返るため、構造上そうなる）。
+ *
+ * ## **2 段目が「黙って間違える」ことはあるか**（#569 の重さ）
+ *
+ * **ある。だから 2 段目にも 1 段目と同じ検査がすべて掛かる**——
+ * 左 8 列の見出しが `LEFT_HEADERS` と一致すること、凡例に無い記号が出たら例外、
+ * ページごとの議員の並びが同じこと、行の日付・人数が形どおりであること。
+ * **2 段目だけが緩い、ということが無いようにしてある**（同じ `parseFrom` を呼ぶ）。
+ *
+ * **そのうえで、割った位置が正しいことを別に実測した**（2026-09-24、**17 本すべて・全 30 ページ**）:
+ * **記号帯のグリフ 21,197 個の中心が、罫線で決まる議員の列に対して
+ * `内側 21,197 / 境界上 0 / 列の外 0`、かつ「同じ列に 2 つ落ちた」が 0。**
+ * **1 グリフがちょうど 1 列に、1 列にちょうど 1 グリフ入る。**
+ */
 export async function parseVotePdf(bytes: Buffer): Promise<VotePdf> {
-  const pages = await readGlyphPages(bytes);
+  try {
+    return await parseFrom(await readGlyphPages(bytes));
+  } catch (first) {
+    // **2 段目に進むのは 1 段目が止まった本だけ**（読めた本はここに来ない）。
+    let pages;
+    try {
+      pages = await readGlyphPages(bytes, { splitGlyphs: true });
+    } catch {
+      throw first; // 割っても読み出せない（例: 回転）。**1 段目の理由をそのまま返す**（理由を差し替えない）
+    }
+    try {
+      return await parseFrom(pages);
+    } catch (second) {
+      // **どちらの理由も残す**（#569。「割れば読める」と誤解させない）
+      throw new Error(`${(first as Error).message} / after splitting glyphs: ${(second as Error).message}`);
+    }
+  }
+}
+
+async function parseFrom(pages: PageGeometry[]): Promise<VotePdf> {
   if (pages.length === 0) throw new Error("PDF has no pages");
   const head = parseHeader(pages[0].items, 1);
   const legend = parseLegend(pages[0].items, head.tableTop, 1);
