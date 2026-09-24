@@ -82,15 +82,19 @@ const measure = async () => {
   const dirs = (await readdir(join(DATA, "assemblies"), { withFileTypes: true }))
     .filter((e) => e.isDirectory() && e.name.startsWith("pref-")).map((e) => e.name).sort();
   let sessions = 0, rollcalls = 0, votes = 0, flagged = 0, max = 0;
+  // **分布も返す**（**`max` と `flagged` が「数え直しの結果」であることを、後で分布から検算するため**）。
+  // **これが無いと `max = 5;` と定数に潰しても緑だった**（#1007 のレビュー。**自己参照**）。
+  const hist = new Map<number, number>();
   for (const d of dirs) {
     const meta = JSON.parse(await readFile(join(DATA, "assemblies", d, "meta.json"), "utf-8")) as LocalAssemblyMeta;
     for (const c of meta.sessionRosterCoverage) {
       sessions++; rollcalls += c.rollcalls; votes += c.votes;
+      hist.set(c.seatsChanged, (hist.get(c.seatsChanged) ?? 0) + 1);
       if (c.seatsChanged > max) max = c.seatsChanged;
-      if (c.seatsChanged >= 10) flagged++;
+      if (c.seatsChanged >= SEATS_CHANGED_FLAG) flagged++;
     }
   }
-  return { assemblies: dirs.length, sessions, rollcalls, votes, max, flagged };
+  return { assemblies: dirs.length, sessions, rollcalls, votes, max, flagged, hist };
 };
 
 /** **「4,599」「4_599」「4599」のどれで書いてあっても引ける形にする**（#993）。 */
@@ -121,7 +125,7 @@ const mentions = (text: string, n: number): boolean =>
  *   **本番 `data/` を読んで自分で数え直しているので、ずれたらそれ自身が落ちる。**
  * - `apps/web/app/routes/coverage.tsx` — **数字を書かず `meta.json` から描いている。**
  */
-type Quantity = "sessions" | "rollcalls" | "votes" | "max";
+type Quantity = "sessions" | "rollcalls" | "votes" | "max" | "flagged";
 
 /**
  * **どの数を書いているかは所によって違う**（**書いていない数まで要求しない**）。
@@ -132,18 +136,22 @@ type Quantity = "sessions" | "rollcalls" | "votes" | "max";
  */
 const PLACES: readonly { path: string; why: string; needs: readonly Quantity[] }[] = [
   { path: "docs/DATA_CONTRACT.md", why: "`SEATS_CHANGED_FLAG` の節（#1007 が直した所）",
-    needs: ["sessions", "rollcalls", "votes", "max"] },
+    needs: ["sessions", "rollcalls", "votes", "max", "flagged"] },
   { path: "docs/ops/guards.md", why: "守りの一覧の `sessionRosterCoverage` の行",
-    needs: ["sessions", "max"] },
+    needs: ["sessions", "max", "flagged"] },
   { path: "packages/shared/src/index.ts", why: "`sessionRosterCoverage` の型の docblock",
-    needs: ["sessions", "rollcalls", "votes", "max"] },
+    needs: ["sessions", "rollcalls", "votes", "max", "flagged"] },
   { path: "packages/etl/src/local-assemblies.ts", why: "`SEATS_CHANGED_FLAG` の docblock（#990 が直した所）",
-    needs: ["sessions", "rollcalls", "votes", "max"] },
+    needs: ["sessions", "rollcalls", "votes", "max", "flagged"] },
   { path: "apps/web/app/lib/session-roster-coverage.ts", why: "web 側の `SEATS_CHANGED_FLAG` の docblock",
-    needs: ["sessions", "max"] },
+    needs: ["sessions", "max", "flagged"] },
+  // **この docblock の表は main で 97 会期ぶんのまま取り残されていた**（#1007 のレビューが見つけた）——
+  // **同じ表の正しい版が `local-assemblies.ts` に在る「2 か所にあって片方だけ直った」の実例。**
+  { path: "packages/etl/test/local-session-roster-coverage.test.ts", why: "本番 data/ を数える test の docblock",
+    needs: ["sessions", "rollcalls", "votes", "max", "flagged"] },
 ];
 
-const LABEL: Record<Quantity, string> = { sessions: "会期", rollcalls: "採決", votes: "票", max: "最大" };
+const LABEL: Record<Quantity, string> = { sessions: "会期", rollcalls: "採決", votes: "票", max: "最大", flagged: "印" };
 
 /* ==================== 「いちばん小さい境」を本番 data/ から出し直す ==================== */
 
@@ -213,15 +221,44 @@ const PREF_NAME: Readonly<Record<string, string>> = {
 const maxPhrase = (text: string, n: number): boolean =>
   spellings(n).some((s) => text.includes(`\`seatsChanged\` の最大は ${s}`));
 
-test("#1007 線と実測の距離を書いた 5 か所が、本番 data/ の実測と一致する", async () => {
+/**
+ * ## **「10 以上は N 件」**——**この節でいちばん load-bearing な主張**（#1007 のレビューが見つけた）
+ *
+ * **`seatsChanged >= 10` が 0 件であることは「境をまたいで票が黙って寄っている会期は 1 つも無い」という、
+ * この欄で最も重い安全性の主張である。** **それが無検査だった**——
+ * **`measure()` は `flagged` を数えていたが、どこからも assert されておらず、
+ * `DATA_CONTRACT.md` の「10 以上は 0 件」を「3 件」に改竄しても 2120 / 2120 緑だった。**
+ *
+ * **`0` は 1 桁なので `mentions` では空回りする**（`max` と同じ理由）。**だから語ごと見る。**
+ * **`SEATS_CHANGED_FLAG` の値も語に含める**——**線を動かしたら 5 か所とも書き換わるべきだからである。**
+ */
+const flaggedPhrase = (text: string, n: number): boolean =>
+  spellings(n).some((s) => text.includes(`${SEATS_CHANGED_FLAG} 以上は ${s} 件`));
+
+test("#1007 線と実測の距離を書いた 6 か所が、本番 data/ の実測と一致する", async () => {
   const m = await measure();
   // **母数を先に置く**（#757。**数え直しが空回りしていたら以降は無意味**）
   assert.equal(m.assemblies, 11, "11 議会ぶんを数えたこと（母数）");
   assert.ok(m.sessions > 0 && m.rollcalls > 0 && m.votes > 0, "data/ から数が出ていること");
-  assert.equal(PLACES.length, 5, "見る所の数（母数。grep で数えた）");
+  // ## **`max` と `flagged` も「数え直しの結果である」ことを守る**（#1007 のレビューが見つけた）
+  //
+  // **`sessions` / `rollcalls` / `votes` にはこの守りが在ったが、`max` と `flagged` だけ外れていた**——
+  // **`measure()` の `max` 集計を `max = 5;` と定数にしても 2120 / 2120 緑だった**
+  // （**期待値が `measure()` から来るので、`measure()` が痩せれば期待値も痩せる＝自己参照**。#1001）。
+  // **分布から独立に出し直して、`max` / `flagged` が数え直しの結果であることを検算する**
+  // （**`max = 5;` と定数に潰す変異は、此処で落ちる**——**分布は潰れていないため**）
+  const keys = [...m.hist.keys()];
+  assert.ok(keys.length > 0, "分布が空でない（母数）");
+  assert.equal(m.max, Math.max(...keys), "**最大は分布の最大と一致する**（**定数に潰すと落ちる**）");
+  assert.equal(m.flagged, [...m.hist].filter(([k]) => k >= SEATS_CHANGED_FLAG).reduce((n, [, v]) => n + v, 0),
+    "**印の件数は分布から数え直したものと一致する**");
+  assert.equal([...m.hist.values()].reduce((a, b) => a + b, 0), m.sessions, "**分布の合計は会期数**（母数の検算）");
+  assert.equal(m.flagged, 0, "**`seatsChanged >= 10` の会期は 0 件**（**この欄で最も重い主張**）");
+  assert.equal(PLACES.length, 6, "見る所の数（母数。rg の 14 本のうち数字を書いている所）");
 
   // **数え直しの母数**（**検査した (所 × 数) の組の数。0 を緑にしない**。#757）
-  assert.equal(PLACES.reduce((n, p) => n + p.needs.length, 0), 16, "検査する (所 × 数) の組の数（母数。4+2+4+4+2）");
+  assert.equal(PLACES.reduce((n, p) => n + p.needs.length, 0), 26,
+    "検査する (所 × 数) の組の数（母数。5+3+5+5+3+5）");
 
   const missing: string[] = [];
   for (const { path, why, needs } of PLACES) {
@@ -229,7 +266,10 @@ test("#1007 線と実測の距離を書いた 5 か所が、本番 data/ の実�
     // **その場所が本当に `seatsChanged` の話をしていること**（**関係の無いファイルを緑で通さない**）
     assert.ok(/seatsChanged|SEATS_CHANGED_FLAG/.test(text), `${path}: seatsChanged の話が無い（${why}）`);
     for (const q of needs) {
-      const ok = q === "max" ? maxPhrase(text, m.max) : mentions(text, m[q]);
+      // **1 桁（最大 5 / 印 0）は「本文のどこかに在るか」では空回りする**ので語ごと見る
+      const ok = q === "max" ? maxPhrase(text, m.max)
+        : q === "flagged" ? flaggedPhrase(text, m.flagged)
+        : mentions(text, m[q]);
       if (!ok) missing.push(`${path}: ${LABEL[q]} ${m[q]} がどの綴りでも出てこない（${why}）`);
     }
   }
@@ -266,14 +306,131 @@ test("#1007 「いちばん小さい境」の主張が、本番 data/ から組�
   assert.equal(aomori.seatsChanged, 16, "**青森の境は 16**（#951 の組み立てでの 11 ではない）");
   assert.ok(aomori.seatsChanged >= SEATS_CHANGED_FLAG, "**青森は線の外**（取りこぼしてはいない）");
 
-  // **その主張が 5 か所すべてに、語ごと書いてあること**（**1 か所だけ書き戻すと落ちる**）
+  // ## **語が在るだけでは足りない**——**主張の向きまで見る**（#1007 のレビューが見つけた）
+  //
+  // **初版は `text.includes("秋田 9・佐賀 4")` だけだったので、
+  // 「線の下にあるのは」を「線の上にあるのは」に反転しても緑だった**（素通り④）。
+  // **#1007 が直したのは「上か下か」なので、向きが素通りするなら本丸の半分が無検査である。**
+  //
+  // **さらに「1 文だけ裏返す」「誤った文を隣に足す」も素通りしていた**（素通り⑤⑥）——
+  // **doc は「最後に書いてあることが正しい」とは限らないので、
+  // 「正しい語が在るか」だけでなく「誤った語が無いか」も見る。**
   const phrase = under.map((b) => `${PREF_NAME[b.pref]} ${b.seatsChanged}`).reverse().join("・");
   assert.equal(phrase, "秋田 9・佐賀 4", "**文章に要求する語**（**実測から組み立てた**）");
+  // **向きごと要求する**（**「線の下にあるのは 秋田 9・佐賀 4」**）
+  const claim = `線の下にあるのは ${phrase}`;
+  const smallest = `いちばん小さい境は${PREF_NAME[boundaries[0].pref]} ${boundaries[0].seatsChanged}`;
+  assert.equal(claim, "線の下にあるのは 秋田 9・佐賀 4");
+  assert.equal(smallest, "いちばん小さい境は佐賀 4");
+
   const missing: string[] = [];
   for (const { path, why } of PLACES) {
     if (!(await read(path)).includes(phrase)) missing.push(`${path}: 「${phrase}」が無い（${why}）`);
   }
   assert.deepEqual(missing, [], "**本丸の主張が書かれていない所**（**#1007 の再発**）");
+  // **向きは、それを書いている所（`DATA_CONTRACT.md`）で要求する**
+  assert.ok((await read("docs/DATA_CONTRACT.md")).includes(claim),
+    `**主張の向きが書かれていない**（「${claim}」。**「線の上に」に反転すると此処が落ちる**）`);
+
+  // ## **誤った主張が「隣に足されて」いないこと**（**素通り⑤⑥**）
+  //
+  // **`いちばん小さい境は青森 11` は、`… ではなく` が続くとき（訂正文）だけ許す。**
+  // **「いちばん小さい境は青森 11 との差が 1」のような、主張として書かれた形は落とす。**
+  const aomoriName = PREF_NAME[aomori.pref];
+  // **「…は誤りである」「…ではなく」と注記された形は許す**（**過去の誤りを記録に残すのは正しい**）。
+  // **許さないのは「事実として言い切っている」形だけ。**
+  const wrong = new RegExp(
+    `いちばん小さい境[はが（(]?[^。]*?${aomoriName}\\s*11(?![^。]*(?:ではなく|は誤り|誤りである|訂正))`,
+  );
+  //
+  // **これは `PLACES` の 6 本ではなく、`git grep` に当たる 15 本すべてを見る**——
+  // **誤りの復活は「検査すると決めた所」だけに起きるとは限らない**
+  // （**レビュアーは `docs/WORKING_AGREEMENT.md`（`PLACES` の外）に足して素通りさせた。素通り③**）。
+  //
+  // ## ⚠ **「誤りを引用している行」と「誤りを主張している行」は、機械では見分けきれない**
+  //
+  // **`「…」` で括った引用・`> ` の引用・このファイル自身の否定的対照は、**
+  // **どれも誤り文を本文に含むが、誤りではない。** **そこは除く**——
+  // **除いたぶん、この検査は「引用の形に偽装した誤り」を見逃す**（**正直に書く**）。
+  const quoted = (line: string): boolean =>
+    /^\s*(?:\*\s*)?>/.test(line)          // 引用ブロック（`> …` / ` * > …`）
+    || /「[^」]*いちばん小さい境/.test(line)  // 「…」で括った引用
+    || /assert\.|wrong\.test|expect\(/.test(line); // このファイル自身の否定的対照
+  const revived: string[] = [];
+  for (const path of await grepHits()) {
+    // **このファイル自身は、誤り文を説明のために何度も書くので除く**（**上の否定的対照が代わりに見ている**）
+    if (path === "packages/etl/test/seats-changed-line-numbers.test.ts") continue;
+    const text = await read(path);
+    for (const line of text.split("\n")) {
+      if (wrong.test(line) && !quoted(line)) revived.push(`${path}: ${line.trim().slice(0, 60)}`);
+    }
+  }
+  assert.deepEqual(revived, [], "**「いちばん小さい境は青森 11」が主張として書かれている所**（**#1007 の誤りの復活**）");
+  // **否定的対照**: **訂正文の形は許し、誤りの形は捕まえる**（**正規表現が空回りしていない**）
+  assert.equal(wrong.test("いちばん小さい境は青森 11 ではなく佐賀 4（線の下 6）"), false, "訂正文は許す");
+  assert.equal(wrong.test("**⚠ 「いちばん小さい境は青森 11」は 2026-09-23 から在った誤りである**"), false,
+    "**過去の誤りを記録に残す形は許す**（**歴史を消させない**）");
+  assert.equal(wrong.test("下側はいちばん小さい境（青森 11）との差が 1。"), true, "**元の誤り文は捕まえる**");
+  assert.equal(wrong.test("いちばん小さい境は青森 11 との差が 1"), true, "**言い切る形は捕まえる**");
+  assert.equal(wrong.test("いちばん小さい境は佐賀 4"), false, "正しい主張は許す");
+});
+
+/**
+ * ## **`PLACES` が denylist であることを、母数で見えるようにする**（#1007 のレビュー。素通り③）
+ *
+ * **`rg -l 'seatsChanged|SEATS_CHANGED_FLAG'` に当たるが `PLACES` に無いファイルに、
+ * 元の誤り文をそっくり足しても 2120 / 2120 緑だった**
+ * （**レビュアーは `docs/WORKING_AGREEMENT.md` で実証した**）。
+ *
+ * **`PLACES` は denylist なので、その外は素通りする。これは消せない**——
+ * **が、「何本を対象外にしたか」を数えれば、新しいファイルが増えたときに気づける。**
+ * **`local-seats-changed-boundaries.test.ts` が `BOUNDARIES` + `UNMEASURED_BOUNDARIES` = 11 で
+ * やっているのと同じ形である。**
+ *
+ * **PR 本文は当初「rg で当たるのは 9 本」と書いていたが誤りだった**（**レビュアーが見つけた**）。
+ * **手で数えたのが原因なので、機械に数えさせる。**
+ *
+ * ## ⚠ **`rg` と `git grep` で本数が違う**（**どちらが正しいかを決めておく**）
+ *
+ * **`rg` の既定は隠しディレクトリを見ないので 14 本、`git grep`（＝ `rg --hidden`）は 15 本になる。**
+ * **差は `.claude/agents/README.md` の 1 本**（**`SEATS_CHANGED_FLAG` の恒真式に言及している**）。
+ * **レビュアーの「14 本」は `rg` の既定での実測で、正しい。**
+ *
+ * **此処では `git grep` を採る**——**追跡されているファイルを漏れなく見るため。**
+ * **「隠しディレクトリだから見なくてよい」は、この検査の目的（denylist の外を数える）に反する。**
+ */
+const OUT_OF_SCOPE: Readonly<Record<string, string>> = {
+  "apps/web/app/lib/session-roster-coverage.test.ts": "線の値そのものを ETL の原文と突き合わせている（数字を書かない）",
+  "apps/web/app/routes/coverage.tsx": "数字を書かず `meta.json` から描いている",
+  "apps/web/app/routes/session-roster-coverage-published.test.tsx": "本番 `data/` から数え直して `toEqual` で固定している",
+  "docs/WORKING_AGREEMENT.md": "#1007 の経緯に言及するだけで、母数・最大・印の数字を書いていない",
+  "packages/etl/test/local-roster-window.test.ts": "#928 の窓の話で、`seatsChanged` は母数として触れるだけ",
+  "packages/etl/test/local-seats-changed-boundaries.test.ts": "本番 `data/` から境を組み直しているので、ずれたらそれ自身が落ちる",
+  "packages/etl/test/saga-sessions-widen.test.ts": "佐賀の境を一次資料から組み立てている（#959 の値は注記つきで保存）",
+  "packages/etl/test/seats-changed-line-numbers.test.ts": "このファイル自身",
+  ".claude/agents/README.md": "レビューの手順書。`SEATS_CHANGED_FLAG` の恒真式に言及するだけで、母数の数字を書かない",
+};
+
+/** **`seatsChanged` に触れている追跡ファイル**（**`data/` は出力なので除く**）。 */
+const grepHits = async (): Promise<string[]> => {
+  const { execFile } = await import("node:child_process");
+  const { promisify } = await import("node:util");
+  const { stdout } = await promisify(execFile)("git", ["grep", "-l", "-E", "seatsChanged|SEATS_CHANGED_FLAG"], { cwd: REPO });
+  return stdout.split("\n").filter(Boolean)
+    // **`data/` は出力であって記述ではない。`pnpm-lock.yaml` も同じ**
+    .filter((f) => !f.startsWith("data/") && f !== "pnpm-lock.yaml").sort();
+};
+
+test("#1007 git grep に当たる 15 本が、検査する 6 本と対象外 9 本に過不足なく分かれる（denylist の母数）", async () => {
+  const hits = await grepHits();
+  assert.equal(hits.length, 15, `**git grep に当たる本数**（母数。実測。今は ${hits.length} 本）`);
+  const covered = PLACES.map((p) => p.path).sort();
+  const excluded = Object.keys(OUT_OF_SCOPE).sort();
+  assert.equal(covered.length, 6, "**検査する本数**");
+  assert.equal(excluded.length, 9, "**対象外にした本数**（**理由つきで名指ししている**）");
+  // **足して 15**（**どちらにも入っていないファイルを作らない**）
+  assert.deepEqual([...covered, ...excluded].sort(), hits,
+    "**検査する所と対象外を足すと、rg に当たる全部になる**（**新しいファイルが増えたら此処が落ちる**）");
 });
 
 /**
@@ -325,5 +482,21 @@ test("#1007 最大は「`seatsChanged` の最大は N」の語ごと見る（素
   assert.equal(maxPhrase("**`seatsChanged` の最大は 4（三重）**", 5), false, "**古い最大（4）のままなら落ちる**");
   assert.equal(maxPhrase("**`seatsChanged` の最大は 5（滋賀）**", 5), true);
   // **母数**: **5 か所すべてがこの綴りに揃っていること**（**揃っていなければ上のテストが落ちる**）
-  assert.equal(PLACES.filter((p) => p.needs.includes("max")).length, 5, "最大を見る所の数（母数）");
+  assert.equal(PLACES.filter((p) => p.needs.includes("max")).length, 6, "最大を見る所の数（母数）");
+});
+
+/**
+ * ## **`flaggedPhrase` が語ごと見ていること**（**`0` を素で探すと常に緑になる**）
+ *
+ * **「10 以上は 0 件」は、この欄でいちばん load-bearing な安全性の主張である**——
+ * **それが `3 件` に書き換えられても緑だった**（#1007 のレビュー）。
+ */
+test("#1007 印は「10 以上は N 件」の語ごと見る（素の 0 では当たらない）", () => {
+  assert.equal(flaggedPhrase("…0 件…10 以上…", 0), false, "語が離れていれば当たらない");
+  assert.equal(flaggedPhrase("**10 以上は 3 件**", 0), false, "**0 件でない主張は落ちる**（**素通り① の再現**）");
+  assert.equal(flaggedPhrase("**10 以上は 0 件**", 0), true);
+  // **線の値も語に含む**——**線を動かしたら 6 か所とも書き換わるべき**
+  assert.equal(SEATS_CHANGED_FLAG, 10, "線（この語の一部になっている）");
+  assert.equal(flaggedPhrase("**20 以上は 0 件**", 0), false, "**別の線の話は当たらない**");
+  assert.equal(PLACES.filter((p) => p.needs.includes("flagged")).length, 6, "印を見る所の数（母数）");
 });
