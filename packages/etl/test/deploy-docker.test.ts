@@ -778,6 +778,12 @@ test("deploy-data.yml: staging は main、production は released-ref.sh resolve
   assert.match(staging, /ref: main/);
   assert.doesNotMatch(staging, /data_ref/);
   const production = deployData.slice(deployData.indexOf("  production:"));
+  // Issue #1017: **この 1 行は「`ref:` に何と書いてあるか」しか見ていない。**
+  // `needs: resolve` の行だけを消すと文字列はそのまま残るので通ってしまい、
+  // `needs.resolve.outputs.ref` は**空文字**に解決されて main が本番に出る（#134 違反）。
+  // 実測（2026-09-25）: `needs: resolve` を消した状態で
+  // deploy-docker.test.ts + workflow-deploy-data-push.test.ts の 51 件が 51/51 緑だった。
+  // **鎖（needs → outputs → with.ref）そのものを見る検査は workflow-needs-resolve.test.ts にある。**
   assert.match(production, /ref: \$\{\{ needs\.resolve\.outputs\.ref \}\}/);
   assert.match(production, /data_ref: main/);
   assert.match(deployData, /scripts\/ci\/released-ref\.sh resolve/);
