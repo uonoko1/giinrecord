@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
 # merge-when-green.sh [--allow-nonrequired-red] [--no-review <理由>] <pr>
 #   1. refuse unless the PR is OPEN and not a draft
-#   1.5 refuse unless a reviewer's report is already on the PR (#1006) — a comment containing one
-#      of reviewer.md's verdicts (マージしてよい / 直してから / 反対). Checked BEFORE polling, so a
-#      PR that was never reviewed is refused in seconds rather than after 20 minutes of waiting.
+#   1.5 refuse unless a reviewer's report is already on the PR (#1006, #1010) — a comment whose
+#      FIRST LINE is `## レビュー: <verdict>` (verdict: マージしてよい / 直してから / 反対).
+#      **That spelling is defined by .claude/agents/reviewer.md, not guessed here** (#1010: the
+#      #1006 check required the word 「レビュー」 which reviewer.md never specified, so a
+#      spec-compliant report was refused while the 6 characters `レビュー反対` merged).
+#      Checked BEFORE polling, so a PR that was never reviewed is refused in seconds rather
+#      than after 20 minutes of waiting.
 #      --no-review <理由> skips it and logs the reason; the reason is not optional.
 #   2. `gh pr update-branch` when it is BEHIND main
 #      if that is refused because the gh OAuth token lacks the `workflow` scope (the PR touches
@@ -309,11 +313,30 @@ assert_no_stacked_prs
 # **「レビュー」の直後に結論の語が来ること**が、その区別になる——
 # **返答は「レビュー対応」「レビュー指摘」と続き、結論の語では続かない。**
 #
-# **過去の報告に道具を合わせない。** この形は、**綴りが規定される前に書かれた報告**
-# （#223 #226 #259 #429 #496 など）を落とす。**それでよい**: それらは既にマージ済みで、
-# **これから書かれる報告は `reviewer.md` の規定に従う。**
-# **過去 8 件に当てはまるよう緩めると、上で見たとおり「採決データの語に支えられた検査」に
-# 戻る。** **母数 8 件から綴りを推定するより、綴りを規定するほうが確実である。**
+# ── **この形の代償を、測った数字でそのまま書く（隠さない）** ─────────────────────────
+# **新しい規則を全履歴（PR 634 本・コメント 218 件）に当てると、通るのは 2 件だけ**
+# （**#1000 と #1009**。**誤検出 0 件**）。
+# **本物 8 件のうち 6 件（#223 #224 #226 #259 #429 #496）は通らない。** 1 行目の実測:
+#     #223 `## 敵対的レビュー: PR #223（docs/research/backfill-142-199.md）`  ← 結論でなく件名
+#     #224 `## レビュー: PR #224 収録範囲ページ /coverage/`                   ← 結論でなく件名
+#     #226 `## レビュー（敵対的検証）`                                        ← コロンが無い
+#     #259 `## レビュー結果: REQUEST_CHANGES`                                 ← 結論の語でない
+#     #429 `## レビュー結果: **1点直してからマージ**`                          ← 「レビュー結果」
+#     #496 `**承認します。マージします。**…`                                  ← 1 行目が見出しでない
+#
+# **これは「過去の 6 件が悪い」という意味ではない。** **綴りを決める仕様が無かった**ので、
+# **6 人が 6 通りに書いた。それが #1010 そのものである。**
+#
+# **過去の報告に道具を合わせない。** **合わせると、上で見たとおり
+# 「採決データの語『反対』に支えられた検査」に戻る**——本物 8 件のうち 4 件は
+# その語でしか通っていなかった。**母数 8 件から綴りを推定するより、綴りを規定するほうが確実。**
+# **6 件は既にマージ済みで、これから書かれる報告は `reviewer.md` の規定に従う。**
+#
+# **ただし言い換えれば、この検査は「2026-09-25 より前の書き方」を受け付けない。**
+# **古い形で報告が貼られたら、この道具は止まる。**
+# そのとき PO がやることは 2 つ: **レビュアーに規定の形で貼り直してもらう**か、
+# **`--no-review <理由>` で理由を残して通す**（どちらも記録が残る）。
+# **黙って通る道は無い。**
 #
 # **良し悪しは判定しない**（`pr-closes.sh` と同じ考え方——機械が判断できないことを
 # 機械に判断させない）。機械が見るのは「レビュアーが走って報告を書いた」ことだけで、
@@ -337,6 +360,15 @@ REVIEW_HEADING_FORM='## レビュー: <結論>'
 # `##` の後の空白は任意、`レビュー`/`敵対的レビュー`、コロンは半角・全角どちらも、
 # その後の装飾（`**` など）と空白は読み飛ばす。
 review_heading_re() {
+  # **一覧が空なら、黙って通す側に落ちない**（#1010 の変異 M7 が実測で示した）。
+  # **空のまま `(%s)` を組み立てると `()` という空の group になり、何にでも当たる**
+  # ——つまり **`## レビュー: ` とだけ書けば通る**。allowlist が痩せたときに
+  # **厳しくなるのではなく、黙って開く**。それは歯止めではない。
+  # **die する**: 一覧が空なのは編集の事故であって、この PR の性質ではない。
+  [[ ${#REVIEW_VERDICTS[@]} -gt 0 ]] || die "REVIEW_VERDICTS が空です（この道具の不具合）。マージしません。
+
+       結論の語が 1 つも無いと、検査は「## レビュー: 」だけで通ってしまいます。
+       .claude/agents/reviewer.md が規定している結論の語を REVIEW_VERDICTS に入れてください。"
   local verdicts; verdicts=$(IFS='|'; echo "${REVIEW_VERDICTS[*]}")
   printf '^##[[:space:]]*(敵対的)?レビュー[[:space:]]*[:：][[:space:]*_]*(%s)' "$verdicts"
 }
