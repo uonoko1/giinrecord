@@ -1,0 +1,399 @@
+{
+ "assemblyId": "pref-25",
+ "counts": {
+  "no": 0,
+  "present": 42,
+  "voting": 41,
+  "yes": 41
+ },
+ "date": "2025-09-05",
+ "id": "pref-25-2025-09-20250905-議第145号（人事案件）",
+ "kind": "議案等",
+ "number": "",
+ "page": 1,
+ "result": "同意",
+ "sessionId": "2025-09",
+ "sessionLabel": "令和7年 9月定例会議",
+ "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg853_0905sanpi_ato.pdf",
+ "title": "議第145号（人事案件）",
+ "votes": [
+  {
+   "group": "自由民主党滋賀県議会議員団",
+   "memberId": "p_25_187",
+   "nameText": "谷 口 典 隆",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党滋賀県議会議員団",
+   "memberId": "p_25_185",
+   "nameText": "田 中 英 樹",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党滋賀県議会議員団",
+   "memberId": "p_25_186",
+   "nameText": "谷 成 隆",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党滋賀県議会議員団",
+   "memberId": "p_25_184",
+   "nameText": "小 河 文 人",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党滋賀県議会議員団",
+   "memberId": "p_25_183",
+   "nameText": "菅 沼 利 紀",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党滋賀県議会議員団",
+   "memberId": "p_25_182",
+   "nameText": "桐 田 真 人",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党滋賀県議会議員団",
+   "memberId": "p_25_170",
+   "nameText": "井 狩 辰 也",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党滋賀県議会議員団",
+   "memberId": "p_25_179",
+   "nameText": "本 田 秀 樹",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党滋賀県議会議員団",
+   "memberId": "p_25_176",
+   "nameText": "柴 田 清 行",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党滋賀県議会議員団",
+   "memberId": "",
+   "nameText": "重 田 剛",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党滋賀県議会議員団",
+   "memberId": "",
+   "nameText": "白 井 幸 則",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党滋賀県議会議員団",
+   "memberId": "p_25_181",
+   "nameText": "村 上 元 庸",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党滋賀県議会議員団",
+   "memberId": "p_25_169",
+   "nameText": "桑 野 仁",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党滋賀県議会議員団",
+   "memberId": "p_25_168",
+   "nameText": "周 防 清 二",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党滋賀県議会議員団",
+   "memberId": "p_25_158",
+   "nameText": "海 東 英 和",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党滋賀県議会議員団",
+   "memberId": "p_25_159",
+   "nameText": "加 藤 誠 一",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党滋賀県議会議員団",
+   "memberId": "p_25_152",
+   "nameText": "目 片 信 悟",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "議"
+   }
+  },
+  {
+   "group": "自由民主党滋賀県議会議員団",
+   "memberId": "p_25_141",
+   "nameText": "有 村 國 俊",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党滋賀県議会議員団",
+   "memberId": "p_25_44",
+   "nameText": "川 島 隆 二",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自由民主党滋賀県議会議員団",
+   "memberId": "p_25_37",
+   "nameText": "奥 村 芳 正",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "チームしが県議団",
+   "memberId": "p_25_196",
+   "nameText": "中 川 雅 史",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "チームしが県議団",
+   "memberId": "p_25_190",
+   "nameText": "野 田 武 宏",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "チームしが県議団",
+   "memberId": "p_25_188",
+   "nameText": "赤 井 康 彦",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "チームしが県議団",
+   "memberId": "",
+   "nameText": "河 井 昭 成",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "チームしが県議団",
+   "memberId": "p_25_174",
+   "nameText": "佐 口 佳 恵",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "チームしが県議団",
+   "memberId": "p_25_171",
+   "nameText": "小 川 泰 江",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "チームしが県議団",
+   "memberId": "p_25_163",
+   "nameText": "田中松太郎",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "チームしが県議団",
+   "memberId": "p_25_145",
+   "nameText": "冨 波 義 明",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "チームしが県議団",
+   "memberId": "p_25_20",
+   "nameText": "今 江 政 彦",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "チームしが県議団",
+   "memberId": "p_25_94",
+   "nameText": "中 沢 啓 子",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "さざなみ倶楽部",
+   "memberId": "p_25_150",
+   "nameText": "駒 井 千 代",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "さざなみ倶楽部",
+   "memberId": "p_25_47",
+   "nameText": "木 沢 成 人",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "さざなみ倶楽部",
+   "memberId": "p_25_71",
+   "nameText": "清 水 鉄 次",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "滋賀維新の会",
+   "memberId": "p_25_194",
+   "nameText": "田 中 誠",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "滋賀維新の会",
+   "memberId": "p_25_192",
+   "nameText": "河 村 浩 史",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "滋賀維新の会",
+   "memberId": "p_25_191",
+   "nameText": "柴 田 栄 一",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "公明党滋賀県議団",
+   "memberId": "p_25_193",
+   "nameText": "岩 崎 和 也",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "公明党滋賀県議団",
+   "memberId": "p_25_177",
+   "nameText": "清水ひとみ",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "日本共産党滋賀県議会議員団",
+   "memberId": "p_25_195",
+   "nameText": "中 山 和 行",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "日本共産党滋賀県議会議員団",
+   "memberId": "p_25_77",
+   "nameText": "節木三千代",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "無所属",
+   "memberId": "p_25_189",
+   "nameText": "森 重 重 則",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "無所属",
+   "memberId": "",
+   "nameText": "九 里 学",
+   "value": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  }
+ ]
+}

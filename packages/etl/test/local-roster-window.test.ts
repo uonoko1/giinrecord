@@ -141,27 +141,20 @@ test("#928 本番 data/: 11 議会の rosterAsOf と採決日の窓（6 議会�
     "pref-05": { daysAfter: -21, daysBefore: 1_165, votesAfter: 0, rollcalls: 785 },
     // **#901 で会期を 2 → 4 にした**。**`daysBefore` 302 → 921（上限 1,461 の 63%）で、#928 の検査は鳴らない**
     "pref-24": { daysAfter: 224, daysBefore: 921, votesAfter: 190, rollcalls: 733 },
-    "pref-25": { daysAfter: -34, daysBefore: 75, votesAfter: 0, rollcalls: 14 },
+    // **#901 で滋賀を 2 → 19 会期にした**（14 → 163）。**`daysBefore` が 75 → 1,233 で 11 議会の最大**
+    "pref-25": { daysAfter: -44, daysBefore: 1233, votesAfter: 0, rollcalls: 163 },
     // **#901 で会期を 2 → 4 にした**。**`daysBefore` 30 → 197（上限 1,461 の 13%）で、#928 の検査は鳴らない**
     "pref-29": { daysAfter: 69, daysBefore: 197, votesAfter: 37, rollcalls: 180 },
-    // **#901 で会期を 2 → 11 にした**（118 → 572）。**`daysAfter` は 1,156 のまま動かない**——
-    // **増えるのは古い側なので最新の採決が変わらない**。**`daysBefore` は -1,044 → -218 で依然として負**
-    // （**572 本すべてが `rosterAsOf` 2023-04-30 より後**。最古の採決 2023-12-04）。**#928 は鳴らない。**
-    "pref-31": { daysAfter: 1_156, daysBefore: -218, votesAfter: 572, rollcalls: 572 },
-    "pref-32": { daysAfter: 1_142, daysBefore: -777, votesAfter: 231, rollcalls: 231 },
+    "pref-31": { daysAfter: 1156, daysBefore: -218, votesAfter: 572, rollcalls: 572 },
+    "pref-32": { daysAfter: 1142, daysBefore: -777, votesAfter: 231, rollcalls: 231 },
     // **#901 で会期を 2 → 4 にした**。**`daysBefore` 204 → 296（上限 1,461 の 20%）で、#928 の検査は鳴らない**
     "pref-36": { daysAfter: -9, daysBefore: 296, votesAfter: 0, rollcalls: 153 },
     "pref-39": { daysAfter: -20, daysBefore: 398, votesAfter: 0, rollcalls: 221 },
-    // **#901 で会期を 2 → 13 にした**。**`daysBefore` -385 → 691**——
-    // **名簿より前の採決を持つようになったので、佐賀も「またいでいる」議会に入る**。
-    // **691 は上限 1,461 の 47%** なので **#928 は鳴らない**が、
-    // **一般選挙の境（14 本目・2023-03-10 で 753 日）も鳴らない**——
-    // **止めているのは窓ではなく `saga-sessions-widen.test.ts` の氏名の不連続である**（#961）。
     "pref-41": { daysAfter: 456, daysBefore: 691, votesAfter: 129, rollcalls: 366 },
   });
   // **母数の検算**（#757）: **採決の本数の合計が、#855 が数えている 1,369 本と一致する。**
   // **これが無いと、痩せたディレクトリを見て「はみ出し 0」を言える。**
-  assert.equal(Object.values(got).reduce((s, x) => s + x.rollcalls, 0), 4_450, "11 議会の採決の合計（#855 の母数と同じ）");
+  assert.equal(Object.values(got).reduce((s, x) => s + x.rollcalls, 0), 4_599, "11 議会の採決の合計（#855 の母数と同じ）");
   // **後ろにはみ出している議会は 7 → 6**（**#901 の宮城で名簿の掲載日が採決より後になったため。広げたからではない**）
   assert.equal(Object.values(got).filter((x) => x.daysAfter > 0).length, 6, "rosterAsOf より後の採決を持つ議会");
   // **`rosterAsOf` が採決の範囲を「またいでいる」議会**（#928 が三重の形として挙げたもの）。
@@ -170,7 +163,10 @@ test("#928 本番 data/: 11 議会の rosterAsOf と採決日の窓（6 議会�
   // **またいでいる議会では、名簿より前の採決に「後の名簿」を当てている**（三重は 302 日前から）。
   // **#901 の宮城で 4 → 3 に減った**（`daysAfter` が負になったので、もう跨いでいない）
   const straddling = Object.entries(got).filter(([, x]) => x.daysAfter > 0 && x.daysBefore > 0).map(([p]) => p);
-  // **#901 の佐賀で 3 → 4 に増えた**（`daysBefore` が -385 → 691 になったため）
+  // **#901 の佐賀（2 → 13 会期）で 3 → 4 に増えた**——**広げる前は最古の採決が `rosterAsOf` より
+  // 後ろだった（`daysBefore` が負）が、広げて 691 日前まで遡ったので跨ぐようになった。**
+  // **これは「名簿より前の採決に後の名簿を当てている」状態**で、**#928 が数として見えるようにした形である。**
+  // **佐賀の余裕は 1,461 − 691 = 770 日**（`seatsChanged` の印も付いていない）。
   assert.deepEqual(straddling, ["pref-02", "pref-24", "pref-29", "pref-41"], "rosterAsOf が採決の範囲の内側にある議会");
 });
 
@@ -180,7 +176,7 @@ test("#928 本番 data/: 11 議会の rosterAsOf と採決日の窓（6 議会�
  * **#928 の完了条件「今の 11 議会が緑であること」を、違反の一覧ではなく
  * 余裕の日数で言う**（**「0 件でした」では、見ていなくても同じ顔をする**）。
  */
-test("#928 本番 data/: 11 議会とも rosterAsOf から 1 任期（1,461 日）の内側（鳥取の残りが最小で 305 日）", async () => {
+test("#928 本番 data/: 11 議会とも rosterAsOf から 1 任期（1,461 日）の内側（滋賀の残りが最小で 228 日）", async () => {
   const prefs = await localPrefs();
   const slack: Record<string, number> = {};
   for (const p of prefs) {
@@ -190,9 +186,10 @@ test("#928 本番 data/: 11 議会とも rosterAsOf から 1 任期（1,461 日�
   }
   assert.equal(Object.keys(slack).length, 11, "11 議会ぶん（母数）");
   for (const [p, s] of Object.entries(slack)) assert.ok(s > 0, `${p}: 1 任期を ${-s} 日超えている`);
-  // **#901 で秋田を 5 → 29 本会議日にしたので、いちばん余裕が無いのは鳥取（305）から秋田（296）に変わった。**
-  // **実測 2026-09-20**
-  assert.equal(Math.min(...Object.values(slack)), 296, "最小の余裕（秋田）");
+  // **#901 で滋賀を 2 → 19 会期にしたので、いちばん余裕が無いのは秋田（296）から滋賀（228）に変わった。**
+  // **滋賀の 19 会期は 11 議会でいちばん広い窓**（3 年 4 か月ぶん）。**実測 2026-09-23**
+  assert.equal(Math.min(...Object.values(slack)), 228, "最小の余裕（滋賀）");
+  assert.equal(slack["pref-25"], 228, "滋賀（1,461 − 1,233。`--sessions 19`）");
   assert.equal(slack["pref-05"], 296, "秋田（1,461 − 1,165。`--sessions 29`）");
   // **#901 で青森を 2 → 14 会期にした**。**352 で余裕は 3 番目に小さい**（秋田 296・鳥取 305 の次）
   assert.equal(slack["pref-02"], 352, "青森（1,461 − 1,109。`--sessions 14`）");

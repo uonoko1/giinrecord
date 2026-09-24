@@ -1,8 +1,8 @@
 {
- "asOf": "2026-09-13",
+ "asOf": "2026-09-23",
  "assemblyId": "pref-25",
  "counts": {
-  "rollcalls": 14
+  "rollcalls": 163
  },
  "current": true,
  "district": "草津市",
@@ -14,7 +14,7 @@
  "sourceUrl": "https://www.shigaken-gikai.jp/g07_giinlistP.asp",
  "terms": [
   {
-   "asOf": "2026-09-13",
+   "asOf": "2026-09-23",
    "district": "草津市",
    "group": "さざなみ倶楽部"
   }
@@ -209,6 +209,1986 @@
    "title": "議第86号を可決すべきものとする厚生・産業常任委員長報告",
    "vote": {
     "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-04-28",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2026-04-rinji-20260428-決議第２号",
+   "sessionLabel": "令和8年 4月招集会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg889_0428sanpi2.pdf",
+   "title": "決議第２号",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-04-28",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2026-04-rinji-20260428-特別委員会改編動議",
+   "sessionLabel": "令和8年 4月招集会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg889_0428sanpi2.pdf",
+   "title": "特別委員会改編動議",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-04-28",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2026-04-rinji-20260428-議第81号を可決すべきものとする厚生・産業常任委員長報告",
+   "sessionLabel": "令和8年 4月招集会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg889_0428sanpi2.pdf",
+   "title": "議第81号を可決すべきものとする厚生・産業常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-04-28",
+   "kind": "localVote",
+   "result": "承認",
+   "rollCallId": "pref-25-2026-04-rinji-20260428-議第82号を承認すべきものとする総務・企画・公室常任委員長報告",
+   "sessionLabel": "令和8年 4月招集会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg889_0428sanpi2.pdf",
+   "title": "議第82号を承認すべきものとする総務・企画・公室常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-04-28",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-25-2026-04-rinji-20260428-議第83号（人事案件）",
+   "sessionLabel": "令和8年 4月招集会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg889_0428sanpi2.pdf",
+   "title": "議第83号（人事案件）",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-04-28",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-25-2026-04-rinji-20260428-議第84号（人事案件）",
+   "sessionLabel": "令和8年 4月招集会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg889_0428sanpi2.pdf",
+   "title": "議第84号（人事案件）",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-04-28",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2026-04-rinji-20260428-議長辞職の件",
+   "sessionLabel": "令和8年 4月招集会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg889_0428sanpi2.pdf",
+   "title": "議長辞職の件",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2026-02-20260319-会第１号",
+   "sessionLabel": "令和8年 2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg880_0319sanpi.pdf",
+   "title": "会第１号",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2026-02-20260319-会第２号",
+   "sessionLabel": "令和8年 2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg880_0319sanpi.pdf",
+   "title": "会第２号",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-19",
+   "kind": "localVote",
+   "result": "否決",
+   "rollCallId": "pref-25-2026-02-20260319-意見書第２号",
+   "sessionLabel": "令和8年 2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg880_0319sanpi.pdf",
+   "title": "意見書第２号",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2026-02-20260319-意見書第３号",
+   "sessionLabel": "令和8年 2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg880_0319sanpi.pdf",
+   "title": "意見書第３号",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2026-02-20260319-意見書第４号",
+   "sessionLabel": "令和8年 2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg880_0319sanpi.pdf",
+   "title": "意見書第４号",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2026-02-20260319-意見書第５号",
+   "sessionLabel": "令和8年 2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg880_0319sanpi.pdf",
+   "title": "意見書第５号",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2026-02-20260319-決議第１号",
+   "sessionLabel": "令和8年 2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg880_0319sanpi.pdf",
+   "title": "決議第１号",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-19",
+   "kind": "localVote",
+   "result": "不採択",
+   "rollCallId": "pref-25-2026-02-20260319-請願第１号を不採択とすべきものとする総務・企画・公室常任委員長報告",
+   "sessionLabel": "令和8年 2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg880_0319sanpi.pdf",
+   "title": "請願第１号を不採択とすべきものとする総務・企画・公室常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-19",
+   "kind": "localVote",
+   "result": "不採択",
+   "rollCallId": "pref-25-2026-02-20260319-請願第５号を不採択とすべきものとする総務・企画・公室常任委員長報告",
+   "sessionLabel": "令和8年 2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg880_0319sanpi.pdf",
+   "title": "請願第５号を不採択とすべきものとする総務・企画・公室常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-19",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-25-2026-02-20260319-議第78号（人事案件）",
+   "sessionLabel": "令和8年 2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg880_0319sanpi.pdf",
+   "title": "議第78号（人事案件）",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-19",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-25-2026-02-20260319-議第79号（人事案件）",
+   "sessionLabel": "令和8年 2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg880_0319sanpi.pdf",
+   "title": "議第79号（人事案件）",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-19",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-25-2026-02-20260319-議第80号（人事案件）",
+   "sessionLabel": "令和8年 2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg880_0319sanpi.pdf",
+   "title": "議第80号（人事案件）",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-19",
+   "kind": "localVote",
+   "result": "可決不採択",
+   "rollCallId": "pref-25-2026-02-20260319-議第２号、議第９号、議第10号、議第13号、議第15号、議第17号から議第20号まで、議第26号、議第28号、議第30号、議第33号、議第35号、議第38号、議第40号、議第42-ha6e31f67",
+   "sessionLabel": "令和8年 2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg880_0319sanpi.pdf",
+   "title": "議第２号、議第９号、議第10号、議第13号、議第15号、議第17号から議第20号まで、議第26号、議第28号、議第30号、議第33号、議第35号、議第38号、議第40号、議第42号、議第44号、議第46号、議第48号、議第51号、議第52号、議第54号、議第76号および議第77号を可決すべきものとする各委員長報告ならびに請願第２号から請願第４号まで、請願第６号および請願第７号を不採択とすべきものとする各常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2026-02-20260319-議第３号から議第８号まで、議第11号、議第12号、議第14号、議第16号、議第21号から議第25号まで、議第27号、議第29号、議第31号、議第32号、議第34号、議第36号-he7439041",
+   "sessionLabel": "令和8年 2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg880_0319sanpi.pdf",
+   "title": "議第３号から議第８号まで、議第11号、議第12号、議第14号、議第16号、議第21号から議第25号まで、議第27号、議第29号、議第31号、議第32号、議第34号、議第36号、議第37号、議第39号、議第41号、議第43号、議第45号、議第47号、議第49号、議第50号および議第53号を可決すべきものとする各委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-13",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2026-02-20260313-意見書第１号",
+   "sessionLabel": "令和8年 2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg879_0313sanpi_mae.pdf",
+   "title": "意見書第１号",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-13",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2026-02-20260313-議第55号および議第72号を可決すべきものとする各常任委員長報告",
+   "sessionLabel": "令和8年 2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg879_0313sanpi_mae.pdf",
+   "title": "議第55号および議第72号を可決すべきものとする各常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-03-13",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2026-02-20260313-議第56号から議第71号までおよび議第73号から議第75号までを可決すべきものとする各常任委員長報告",
+   "sessionLabel": "令和8年 2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg879_0313sanpi_mae.pdf",
+   "title": "議第56号から議第71号までおよび議第73号から議第75号までを可決すべきものとする各常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-01-26",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2026-01-rinji-20260126-議第１号を可決すべきものとする総務・企画・公室常任委員長報告",
+   "sessionLabel": "令和8年 1月臨時会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg871_R80126sanpi.pdf",
+   "title": "議第１号を可決すべきものとする総務・企画・公室常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2025-11-20251219-意見書第15号",
+   "sessionLabel": "令和7年 11月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg864_1219sanpi_mae.pdf",
+   "title": "意見書第15号",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2025-11-20251219-意見書第16号および意見書第17号",
+   "sessionLabel": "令和7年 11月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg864_1219sanpi_mae.pdf",
+   "title": "意見書第16号および意見書第17号",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "不採択",
+   "rollCallId": "pref-25-2025-11-20251219-請願第15号および請願第19号を不採択とすべきものとする各常任委員長報告",
+   "sessionLabel": "令和7年 11月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg864_1219sanpi_mae.pdf",
+   "title": "請願第15号および請願第19号を不採択とすべきものとする各常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "不採択",
+   "rollCallId": "pref-25-2025-11-20251219-請願第17号を不採択とすべきものとする総務・企画・公室常任委員長報告",
+   "sessionLabel": "令和7年 11月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg864_1219sanpi_mae.pdf",
+   "title": "請願第17号を不採択とすべきものとする総務・企画・公室常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決不採択",
+   "rollCallId": "pref-25-2025-11-20251219-議第153号、議第156号、議第157号、議第159号、議第163号、議第164号、議第167号、議第188号、議第193号、議第195号、議第198号および議第203号を可決すべきもの、請-h064e5c04",
+   "sessionLabel": "令和7年 11月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg864_1219sanpi_mae.pdf",
+   "title": "議第153号、議第156号、議第157号、議第159号、議第163号、議第164号、議第167号、議第188号、議第193号、議第195号、議第198号および議第203号を可決すべきもの、請願第14号、請願第16号および請願第18号を不採択とすべきものとする各常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2025-11-20251219-議第154号、議第155号、議第158号、議第160号から議第162号まで、議第165号、議第166号、議第168号から議第187号まで、議第189号から議第192号まで、議第194号、議第19-h13fe38b2",
+   "sessionLabel": "令和7年 11月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg864_1219sanpi_mae.pdf",
+   "title": "議第154号、議第155号、議第158号、議第160号から議第162号まで、議第165号、議第166号、議第168号から議第187号まで、議第189号から議第192号まで、議第194号、議第197号および議第204号から議第207号までを可決すべきものとする各常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2025-11-20251219-議第196号を可決すべきものとする総務・企画・公室常任委員長報告",
+   "sessionLabel": "令和7年 11月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg864_1219sanpi_mae.pdf",
+   "title": "議第196号を可決すべきものとする総務・企画・公室常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-25-2025-11-20251219-議第199号および議第200号",
+   "sessionLabel": "令和7年 11月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg864_1219sanpi_mae.pdf",
+   "title": "議第199号および議第200号",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-25-2025-11-20251219-議第201号",
+   "sessionLabel": "令和7年 11月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg864_1219sanpi_mae.pdf",
+   "title": "議第201号",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-12-19",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-25-2025-11-20251219-議第202号",
+   "sessionLabel": "令和7年 11月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg864_1219sanpi_mae.pdf",
+   "title": "議第202号",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-11-27",
+   "kind": "localVote",
+   "result": "認定",
+   "rollCallId": "pref-25-2025-11-20251127-議第124号、議第127号および議第128号を認定すべきものとする決算特別委員長報告",
+   "sessionLabel": "令和7年 11月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg862_1127sanpi.pdf",
+   "title": "議第124号、議第127号および議第128号を認定すべきものとする決算特別委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-11-27",
+   "kind": "localVote",
+   "result": "認定可決",
+   "rollCallId": "pref-25-2025-11-20251127-議第125号、議第126号および議第129号を認定すべきもの、議第144号を可決すべきものとする決算特別委員長報告",
+   "sessionLabel": "令和7年 11月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg862_1127sanpi.pdf",
+   "title": "議第125号、議第126号および議第129号を認定すべきもの、議第144号を可決すべきものとする決算特別委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-10-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2025-09-20251017-意見書第11号",
+   "sessionLabel": "令和7年 9月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg857_1017sanpi.pdf",
+   "title": "意見書第11号",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2025-10-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2025-09-20251017-意見書第12号",
+   "sessionLabel": "令和7年 9月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg857_1017sanpi.pdf",
+   "title": "意見書第12号",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-10-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2025-09-20251017-意見書第13号および意見書第14号",
+   "sessionLabel": "令和7年 9月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg857_1017sanpi.pdf",
+   "title": "意見書第13号および意見書第14号",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-10-17",
+   "kind": "localVote",
+   "result": "不採択",
+   "rollCallId": "pref-25-2025-09-20251017-請願第11号を不採択とすべきものとする総務・企画・公室常任委員長報告",
+   "sessionLabel": "令和7年 9月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg857_1017sanpi.pdf",
+   "title": "請願第11号を不採択とすべきものとする総務・企画・公室常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2025-10-17",
+   "kind": "localVote",
+   "result": "不採択",
+   "rollCallId": "pref-25-2025-09-20251017-請願第12号を不採択とすべきものとする総務・企画・公室常任委員長報告",
+   "sessionLabel": "令和7年 9月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg857_1017sanpi.pdf",
+   "title": "請願第12号を不採択とすべきものとする総務・企画・公室常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-10-17",
+   "kind": "localVote",
+   "result": "可決不採択",
+   "rollCallId": "pref-25-2025-09-20251017-議第117号、議第120号、議第123号、議第133号および議第135号を可決すべきもの、請願第13号を不採択とすべきものとする各常任委員長報告",
+   "sessionLabel": "令和7年 9月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg857_1017sanpi.pdf",
+   "title": "議第117号、議第120号、議第123号、議第133号および議第135号を可決すべきもの、請願第13号を不採択とすべきものとする各常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-10-17",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2025-09-20251017-議第118号、議第119号、議第121号、議第122号、議第130号から議第132号まで、議第134号および議第136号から議第143号までを可決すべきものとする各常任委員長報告",
+   "sessionLabel": "令和7年 9月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg857_1017sanpi.pdf",
+   "title": "議第118号、議第119号、議第121号、議第122号、議第130号から議第132号まで、議第134号および議第136号から議第143号までを可決すべきものとする各常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-09-05",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-25-2025-09-20250905-議第145号（人事案件）",
+   "sessionLabel": "令和7年 9月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg853_0905sanpi_ato.pdf",
+   "title": "議第145号（人事案件）",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-09-05",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-25-2025-09-20250905-議第146号から議第152号まで（人事案件）",
+   "sessionLabel": "令和7年 9月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg853_0905sanpi_ato.pdf",
+   "title": "議第146号から議第152号まで（人事案件）",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-07-02",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2025-06-20250702-意見書第７号",
+   "sessionLabel": "令和7年 6月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg847_0702sanpi.pdf",
+   "title": "意見書第７号",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-07-02",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2025-06-20250702-意見書第８号",
+   "sessionLabel": "令和7年 6月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg847_0702sanpi.pdf",
+   "title": "意見書第８号",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-07-02",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2025-06-20250702-意見書第９号および第10号",
+   "sessionLabel": "令和7年 6月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg847_0702sanpi.pdf",
+   "title": "意見書第９号および第10号",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-07-02",
+   "kind": "localVote",
+   "result": "不採択",
+   "rollCallId": "pref-25-2025-06-20250702-請願第８号および請願第10号を不採択とすべきものとする各常任委員長報告",
+   "sessionLabel": "令和7年 6月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg847_0702sanpi.pdf",
+   "title": "請願第８号および請願第10号を不採択とすべきものとする各常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-07-02",
+   "kind": "localVote",
+   "result": "不採択",
+   "rollCallId": "pref-25-2025-06-20250702-請願第９号を不採択とすべきものとする教育・子ども若者常任委員長報告",
+   "sessionLabel": "令和7年 6月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg847_0702sanpi.pdf",
+   "title": "請願第９号を不採択とすべきものとする教育・子ども若者常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2025-07-02",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2025-06-20250702-議員派遣の件（女性議員研究交流大会）",
+   "sessionLabel": "令和7年 6月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg847_0702sanpi.pdf",
+   "title": "議員派遣の件（女性議員研究交流大会）",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-07-02",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2025-06-20250702-議員派遣の件（滋賀県・リオ・グランデ・ド・スール州姉妹提携45周年記念行事）",
+   "sessionLabel": "令和7年 6月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg847_0702sanpi.pdf",
+   "title": "議員派遣の件（滋賀県・リオ・グランデ・ド・スール州姉妹提携45周年記念行事）",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-07-02",
+   "kind": "localVote",
+   "result": "可決知事の裁決案は適当と認める",
+   "rollCallId": "pref-25-2025-06-20250702-議第100号、議第101号および議題104号から議第113号までを可決すべきもの、諮第１号を知事の裁決案を適当と認めるべきものとする各常任委員長報告",
+   "sessionLabel": "令和7年 6月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg847_0702sanpi.pdf",
+   "title": "議第100号、議第101号および議題104号から議第113号までを可決すべきもの、諮第１号を知事の裁決案を適当と認めるべきものとする各常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-07-02",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-25-2025-06-20250702-議第115号（人事案件）",
+   "sessionLabel": "令和7年 6月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg847_0702sanpi.pdf",
+   "title": "議第115号（人事案件）",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-07-02",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-25-2025-06-20250702-議第116号（人事案件）",
+   "sessionLabel": "令和7年 6月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg847_0702sanpi.pdf",
+   "title": "議第116号（人事案件）",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-07-02",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2025-06-20250702-議第99号、議第102号、議題103号および議第114号を可決すべきものとする各常任委員長報告",
+   "sessionLabel": "令和7年 6月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg847_0702sanpi.pdf",
+   "title": "議第99号、議第102号、議題103号および議第114号を可決すべきものとする各常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-04-25",
+   "kind": "localVote",
+   "result": "",
+   "rollCallId": "pref-25-2025-04-rinji-20250425-特別委員会改編動議",
+   "sessionLabel": "令和7年 4月招集会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg835_0425sanpi2.pdf",
+   "title": "特別委員会改編動議",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-04-25",
+   "kind": "localVote",
+   "result": "承認",
+   "rollCallId": "pref-25-2025-04-rinji-20250425-議第97号を承認すべきものとする総務・企画・公室常任委員長報告",
+   "sessionLabel": "令和7年 4月招集会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg835_0425sanpi2.pdf",
+   "title": "議第97号を承認すべきものとする総務・企画・公室常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-04-25",
+   "kind": "localVote",
+   "result": "",
+   "rollCallId": "pref-25-2025-04-rinji-20250425-議第98号（人事案件）",
+   "sessionLabel": "令和7年 4月招集会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg835_0425sanpi2.pdf",
+   "title": "議第98号（人事案件）",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-04-25",
+   "kind": "localVote",
+   "result": "",
+   "rollCallId": "pref-25-2025-04-rinji-20250425-議長辞職の件",
+   "sessionLabel": "令和7年 4月招集会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg835_0425sanpi2.pdf",
+   "title": "議長辞職の件",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2025-02-20250319-会第１号",
+   "sessionLabel": "令和7年 2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg831_0319sanpi-go2.pdf",
+   "title": "会第１号",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2025-02-20250319-会第２号",
+   "sessionLabel": "令和7年 2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg831_0319sanpi-go2.pdf",
+   "title": "会第２号",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2025-02-20250319-意見書第１号",
+   "sessionLabel": "令和7年 2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg831_0319sanpi-go2.pdf",
+   "title": "意見書第１号",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2025-02-20250319-意見書第２号",
+   "sessionLabel": "令和7年 2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg831_0319sanpi-go2.pdf",
+   "title": "意見書第２号",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2025-02-20250319-意見書第３号から意見書第６号まで",
+   "sessionLabel": "令和7年 2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg831_0319sanpi-go2.pdf",
+   "title": "意見書第３号から意見書第６号まで",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-19",
+   "kind": "localVote",
+   "result": "不採択",
+   "rollCallId": "pref-25-2025-02-20250319-請願第３号から請願第５号までを不採択とすべきものとする各常任委員長報告",
+   "sessionLabel": "令和7年 2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg831_0319sanpi-go2.pdf",
+   "title": "請願第３号から請願第５号までを不採択とすべきものとする各常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-19",
+   "kind": "localVote",
+   "result": "不採択",
+   "rollCallId": "pref-25-2025-02-20250319-請願第７号を不採択とすべきものとする厚生・産業・企業常任委員長報告",
+   "sessionLabel": "令和7年 2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg831_0319sanpi-go2.pdf",
+   "title": "請願第７号を不採択とすべきものとする厚生・産業・企業常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2025-03-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2025-02-20250319-議第22号議案を可決すべきものとする総務・企画・公室常任委員長報告",
+   "sessionLabel": "令和7年 2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg831_0319sanpi-go2.pdf",
+   "title": "議第22号議案を可決すべきものとする総務・企画・公室常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-19",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-25-2025-02-20250319-議第83号（人事案件）",
+   "sessionLabel": "令和7年 2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg831_0319sanpi-go2.pdf",
+   "title": "議第83号（人事案件）",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-19",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-25-2025-02-20250319-議第84号（人事案件）",
+   "sessionLabel": "令和7年 2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg831_0319sanpi-go2.pdf",
+   "title": "議第84号（人事案件）",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-19",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-25-2025-02-20250319-議第85号（人事案件）",
+   "sessionLabel": "令和7年 2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg831_0319sanpi-go2.pdf",
+   "title": "議第85号（人事案件）",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-19",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-25-2025-02-20250319-議第86号から議第95号まで（人事案件）",
+   "sessionLabel": "令和7年 2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg831_0319sanpi-go2.pdf",
+   "title": "議第86号から議第95号まで（人事案件）",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-19",
+   "kind": "localVote",
+   "result": "可決不採択",
+   "rollCallId": "pref-25-2025-02-20250319-議第１号、議第８号、議第９号、議第15号、議第16号、議第18号、議第21号、議第33号、議第34号、議第37号、議第50号、議第53号、議第54号、議第58号、議第81号お-hce19e6a5",
+   "sessionLabel": "令和7年 2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg831_0319sanpi-go2.pdf",
+   "title": "議第１号、議第８号、議第９号、議第15号、議第16号、議第18号、議第21号、議第33号、議第34号、議第37号、議第50号、議第53号、議第54号、議第58号、議第81号および議第82号を可決すべきものとする各委員長報告ならびに請願第１号、請願第２号および請願第６号を不採択とすべきものとする各常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2025-02-20250319-議第２号から議第７号まで、議第10号から議第14号まで、議第17号、議第19号、議第20号、議第23号から議第32号まで、議第35号、議第36号、議第38号から議第49号ま-hd5e21295",
+   "sessionLabel": "令和7年 2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg831_0319sanpi-go2.pdf",
+   "title": "議第２号から議第７号まで、議第10号から議第14号まで、議第17号、議第19号、議第20号、議第23号から議第32号まで、議第35号、議第36号、議第38号から議第49号まで、議第51号、議第52号、議第55号から議第57号まで、および議第96号を可決すべきものとする各委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-13",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2025-02-20250313-議第59号および議第80号を可決すべきものとする各常任委員長報告",
+   "sessionLabel": "令和7年 2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg829_0313sanpi-ato.pdf",
+   "title": "議第59号および議第80号を可決すべきものとする各常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2025-03-13",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2025-02-20250313-議第60号から議第79号までを可決すべきものとする各常任委員長報告",
+   "sessionLabel": "令和7年 2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg829_0313sanpi-ato.pdf",
+   "title": "議第60号から議第79号までを可決すべきものとする各常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-12-20",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2024-11-20241220-意見書第15号から意見書第17号まで",
+   "sessionLabel": "令和6年 11月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg821_sanpi-go.pdf",
+   "title": "意見書第15号から意見書第17号まで",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-12-20",
+   "kind": "localVote",
+   "result": "不採択",
+   "rollCallId": "pref-25-2024-11-20241220-請願第９号を不採択とすべきものとする総務・企画・公室常任委員長報告",
+   "sessionLabel": "令和6年 11月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg821_sanpi-go.pdf",
+   "title": "請願第９号を不採択とすべきものとする総務・企画・公室常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-12-20",
+   "kind": "localVote",
+   "result": "可決不採択",
+   "rollCallId": "pref-25-2024-11-20241220-議第181号、議第185号から議第187号まで、議第189号、議第193号、議第194号、議第203号、議第210号、議第212号および議第219号を可決すべきものとする各常任委員長-h90cc0306",
+   "sessionLabel": "令和6年 11月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg821_sanpi-go.pdf",
+   "title": "議第181号、議第185号から議第187号まで、議第189号、議第193号、議第194号、議第203号、議第210号、議第212号および議第219号を可決すべきものとする各常任委員長報告ならびに請願第８号および請願第10号を不採択とすべきものとする各常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-12-20",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2024-11-20241220-議第182号から議第184号まで、議第188号、議第190号から議第192号まで、議第195号から議第202号まで、議第204号、議第206号から議第209号まで、議第211号、議第214号-h108a65ab",
+   "sessionLabel": "令和6年 11月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg821_sanpi-go.pdf",
+   "title": "議第182号から議第184号まで、議第188号、議第190号から議第192号まで、議第195号から議第202号まで、議第204号、議第206号から議第209号まで、議第211号、議第214号および議第215号を可決すべきものとする各常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-12-20",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2024-11-20241220-議第205号議案および議第213号議案を可決すべきものとする各常任委員長報告",
+   "sessionLabel": "令和6年 11月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg821_sanpi-go.pdf",
+   "title": "議第205号議案および議第213号議案を可決すべきものとする各常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-12-20",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-25-2024-11-20241220-議第216号から議第218号まで",
+   "sessionLabel": "令和6年 11月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg821_sanpi-go.pdf",
+   "title": "議第216号から議第218号まで",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-11-28",
+   "kind": "localVote",
+   "result": "認定",
+   "rollCallId": "pref-25-2024-11-20241128-議第152号および議第155号を認定すべきものとする決算特別委員長報告",
+   "sessionLabel": "令和6年 11月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg815_1128sanpi-go.pdf",
+   "title": "議第152号および議第155号を認定すべきものとする決算特別委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-11-28",
+   "kind": "localVote",
+   "result": "認定可決",
+   "rollCallId": "pref-25-2024-11-20241128-議第153号、議第154号、議第156号および議第157号を認定すべきもの、議第167号を可決すべきものとする決算特別委員長報告",
+   "sessionLabel": "令和6年 11月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg815_1128sanpi-go.pdf",
+   "title": "議第153号、議第154号、議第156号および議第157号を認定すべきもの、議第167号を可決すべきものとする決算特別委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-10-11",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2024-09-20241011-会第３号",
+   "sessionLabel": "令和6年 9月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg809_sanpigo.pdf",
+   "title": "会第３号",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-10-11",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2024-09-20241011-意見書第12号から14号まで",
+   "sessionLabel": "令和6年 9月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg809_sanpigo.pdf",
+   "title": "意見書第12号から14号まで",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-10-11",
+   "kind": "localVote",
+   "result": "不採択",
+   "rollCallId": "pref-25-2024-09-20241011-請願第６号を不採択とすべきものとする総務・企画・公室常任委員長報告",
+   "sessionLabel": "令和6年 9月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg809_sanpigo.pdf",
+   "title": "請願第６号を不採択とすべきものとする総務・企画・公室常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-10-11",
+   "kind": "localVote",
+   "result": "不採択",
+   "rollCallId": "pref-25-2024-09-20241011-請願第７号を不採択とすべきものとする厚生・産業・企業常任委員長報告",
+   "sessionLabel": "令和6年 9月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg809_sanpigo.pdf",
+   "title": "請願第７号を不採択とすべきものとする厚生・産業・企業常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-10-11",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2024-09-20241011-議第105号、議第107号、議第108号、議第110号、議第113号から議第120号まで、議第122号、議第123号、議第125号から議第133号まで、議第135号から議第151号までおよび-hc7337e3b",
+   "sessionLabel": "令和6年 9月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg809_sanpigo.pdf",
+   "title": "議第105号、議第107号、議第108号、議第110号、議第113号から議第120号まで、議第122号、議第123号、議第125号から議第133号まで、議第135号から議第151号までおよび議第168号を可決すべきものとする各常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-10-11",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2024-09-20241011-議第106号、議第109号、議第111号、議第112号、議第121号、議第124号、議第134号、議第158号から議第166号まで、議第169号および議第180号を可決すべきものとする各-hd05894c9",
+   "sessionLabel": "令和6年 9月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg809_sanpigo.pdf",
+   "title": "議第106号、議第109号、議第111号、議第112号、議第121号、議第124号、議第134号、議第158号から議第166号まで、議第169号および議第180号を可決すべきものとする各常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-10-11",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-25-2024-09-20241011-議第170号から議第179号まで（人事案件）",
+   "sessionLabel": "令和6年 9月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg809_sanpigo.pdf",
+   "title": "議第170号から議第179号まで（人事案件）",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-07-12",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2024-06-20240712-意見書第８号",
+   "sessionLabel": "令和6年 6月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg799_0712go.pdf",
+   "title": "意見書第８号",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-07-12",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2024-06-20240712-意見書第９号から11号まで",
+   "sessionLabel": "令和6年 6月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg799_0712go.pdf",
+   "title": "意見書第９号から11号まで",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-07-12",
+   "kind": "localVote",
+   "result": "不採択",
+   "rollCallId": "pref-25-2024-06-20240712-請願第２号を不採択とすべきものとする厚生・産業・企業常任委員長報告",
+   "sessionLabel": "令和6年 6月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg799_0712go.pdf",
+   "title": "請願第２号を不採択とすべきものとする厚生・産業・企業常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2024-07-12",
+   "kind": "localVote",
+   "result": "不採択",
+   "rollCallId": "pref-25-2024-06-20240712-請願第５号を不採択とすべきものとする総務・企画・公室常任委員長報告",
+   "sessionLabel": "令和6年 6月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg799_0712go.pdf",
+   "title": "請願第５号を不採択とすべきものとする総務・企画・公室常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-07-12",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-25-2024-06-20240712-議第100号から議第104号まで（人事案件）",
+   "sessionLabel": "令和6年 6月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg799_0712go.pdf",
+   "title": "議第100号から議第104号まで（人事案件）",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-07-12",
+   "kind": "localVote",
+   "result": "可決不採択",
+   "rollCallId": "pref-25-2024-06-20240712-議第88号、議第90号、議第93号から議第95号までおよび議第97号を可決すべきもの、請願第３号および請願第４号を不採択とすべきものとする各常任委員長報告",
+   "sessionLabel": "令和6年 6月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg799_0712go.pdf",
+   "title": "議第88号、議第90号、議第93号から議第95号までおよび議第97号を可決すべきもの、請願第３号および請願第４号を不採択とすべきものとする各常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-07-12",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2024-06-20240712-議第89号、議第91号、議第92号および議第96号を可決すべきものとする各常任委員長報告",
+   "sessionLabel": "令和6年 6月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg799_0712go.pdf",
+   "title": "議第89号、議第91号、議第92号および議第96号を可決すべきものとする各常任委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-07-12",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-25-2024-06-20240712-議第98号（人事案件）",
+   "sessionLabel": "令和6年 6月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg799_0712go.pdf",
+   "title": "議第98号（人事案件）",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-07-12",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-25-2024-06-20240712-議第99号（人事案件）",
+   "sessionLabel": "令和6年 6月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg799_0712go.pdf",
+   "title": "議第99号（人事案件）",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-06-28",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2024-06-20240628-決議第１号",
+   "sessionLabel": "令和6年 6月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg798_0628go.pdf",
+   "title": "決議第１号",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-04-26",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2024-04-rinji-20240426-特別委員会改編動議",
+   "sessionLabel": "令和6年 4月招集会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg792_0426sanpi-go.pdf",
+   "title": "特別委員会改編動議",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-04-26",
+   "kind": "localVote",
+   "result": "承認",
+   "rollCallId": "pref-25-2024-04-rinji-20240426-議第86号を承認すべきものとする委員長報告",
+   "sessionLabel": "令和6年 4月招集会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg792_0426sanpi-go.pdf",
+   "title": "議第86号を承認すべきものとする委員長報告",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-04-26",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-25-2024-04-rinji-20240426-議第87号（人事案件）",
+   "sessionLabel": "令和6年 4月招集会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg792_0426sanpi-go.pdf",
+   "title": "議第87号（人事案件）",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "―"
+   }
+  },
+  {
+   "date": "2024-04-26",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2024-04-rinji-20240426-議長辞職の件",
+   "sessionLabel": "令和6年 4月招集会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg792_0426sanpi-go.pdf",
+   "title": "議長辞職の件",
+   "vote": {
+    "legend": "抽出不能",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2024-02-20240319-会第１号",
+   "sessionLabel": "令和6年2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg784_0319sanpi-go.pdf",
+   "title": "会第１号",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2024-02-20240319-会第２号",
+   "sessionLabel": "令和6年2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg784_0319sanpi-go.pdf",
+   "title": "会第２号",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-19",
+   "kind": "localVote",
+   "result": "否決",
+   "rollCallId": "pref-25-2024-02-20240319-意見書第１号",
+   "sessionLabel": "令和6年2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg784_0319sanpi-go.pdf",
+   "title": "意見書第１号",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2024-03-19",
+   "kind": "localVote",
+   "result": "否決",
+   "rollCallId": "pref-25-2024-02-20240319-意見書第２号",
+   "sessionLabel": "令和6年2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg784_0319sanpi-go.pdf",
+   "title": "意見書第２号",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2024-02-20240319-意見書第３号",
+   "sessionLabel": "令和6年2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg784_0319sanpi-go.pdf",
+   "title": "意見書第３号",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2024-02-20240319-意見書第４号および意見書第５号",
+   "sessionLabel": "令和6年2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg784_0319sanpi-go.pdf",
+   "title": "意見書第４号および意見書第５号",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2024-02-20240319-意見書第６号および意見書第７号",
+   "sessionLabel": "令和6年2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg784_0319sanpi-go.pdf",
+   "title": "意見書第６号および意見書第７号",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-19",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-25-2024-02-20240319-議第81号（人事案件）",
+   "sessionLabel": "令和6年2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg784_0319sanpi-go.pdf",
+   "title": "議第81号（人事案件）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-19",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-25-2024-02-20240319-議第82号（人事案件）",
+   "sessionLabel": "令和6年2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg784_0319sanpi-go.pdf",
+   "title": "議第82号（人事案件）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-19",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-25-2024-02-20240319-議第83号および議第84号（人事案件）",
+   "sessionLabel": "令和6年2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg784_0319sanpi-go.pdf",
+   "title": "議第83号および議第84号（人事案件）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2024-02-20240319-議第１号、議第８号、議第14号、議第15号、議第19号、議第21号、議第28号から議第32号まで、議第38号、議第40号、議第42号、議第77号、議第79号および議第80号を-hb91f3a5e",
+   "sessionLabel": "令和6年2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg784_0319sanpi-go.pdf",
+   "title": "議第１号、議第８号、議第14号、議第15号、議第19号、議第21号、議第28号から議第32号まで、議第38号、議第40号、議第42号、議第77号、議第79号および議第80号を可決すべきものとする各委員長報告ならびに請願第１号を不採択とすべきものとする厚生・産業常任委員長報告",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-19",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2024-02-20240319-議第２号から議第７号まで、議第９号から議第13号まで、議第16号から議第18号まで、議第20号、議第22号から議第27号まで、議第33号から議第37号まで、議第39号-hf3ac0aac",
+   "sessionLabel": "令和6年2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg784_0319sanpi-go.pdf",
+   "title": "議第２号から議第７号まで、議第９号から議第13号まで、議第16号から議第18号まで、議第20号、議第22号から議第27号まで、議第33号から議第37号まで、議第39号、議第41号、議第43号から議第51号まで、議第78号および議第85号を可決すべきものとする各委員長報告",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-12",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2024-02-20240312-議第52号、議第69号および議第70号を可決すべきものとする各常任委員長報告",
+   "sessionLabel": "令和6年2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg782_0312sanpi-koukaigo.pdf",
+   "title": "議第52号、議第69号および議第70号を可決すべきものとする各常任委員長報告",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2024-03-12",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2024-02-20240312-議第53号から議第68号までおよび議第71号から議第76号までを可決すべきものとする各常任委員長報告",
+   "sessionLabel": "令和6年2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg782_0312sanpi-koukaigo.pdf",
+   "title": "議第53号から議第68号までおよび議第71号から議第76号までを可決すべきものとする各常任委員長報告",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-12-21",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2023-11-20231221-意見書第16号",
+   "sessionLabel": "令和5年11月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg773_1221sanpi-koukaigo.pdf",
+   "title": "意見書第16号",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2023-12-21",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2023-11-20231221-意見書第17号から意見書第19号まで",
+   "sessionLabel": "令和5年11月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg773_1221sanpi-koukaigo.pdf",
+   "title": "意見書第17号から意見書第19号まで",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-12-21",
+   "kind": "localVote",
+   "result": "不採択",
+   "rollCallId": "pref-25-2023-11-20231221-請願第17号、請願第19号および請願第20号を不採択とすべきものとする各常任委員長報告",
+   "sessionLabel": "令和5年11月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg773_1221sanpi-koukaigo.pdf",
+   "title": "請願第17号、請願第19号および請願第20号を不採択とすべきものとする各常任委員長報告",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-12-21",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2023-11-20231221-議第132号および議第141号を可決すべきものとする各常任委員長報告",
+   "sessionLabel": "令和5年11月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg773_1221sanpi-koukaigo.pdf",
+   "title": "議第132号および議第141号を可決すべきものとする各常任委員長報告",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-12-21",
+   "kind": "localVote",
+   "result": "可決採択",
+   "rollCallId": "pref-25-2023-11-20231221-議第133号から議第136号まで、議第138号、議第142号から議第150号まで、議第153号から議第155号まで、議第158号および議第162号から議第165号までを可決すべきもの-h7c696c80",
+   "sessionLabel": "令和5年11月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg773_1221sanpi-koukaigo.pdf",
+   "title": "議第133号から議第136号まで、議第138号、議第142号から議第150号まで、議第153号から議第155号まで、議第158号および議第162号から議第165号までを可決すべきものとする各常任委員長報告ならびに請願第16号を採択すべきものとする厚生・産業常任委員長報告",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-12-21",
+   "kind": "localVote",
+   "result": "可決不採択",
+   "rollCallId": "pref-25-2023-11-20231221-議第137号、議第139号、議第140号、議第151号、議第152号、議第157号および議第159号から議第161号までを可決すべきものとする各常任委員長報告ならびに請願第18号-h662db149",
+   "sessionLabel": "令和5年11月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg773_1221sanpi-koukaigo.pdf",
+   "title": "議第137号、議第139号、議第140号、議第151号、議第152号、議第157号および議第159号から議第161号までを可決すべきものとする各常任委員長報告ならびに請願第18号を不採択とすべきものとする総務・企画・公室常任委員長報告",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-12-21",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2023-11-20231221-議第156号を可決すべきものとする教育・文化スポーツ常任委員長報告",
+   "sessionLabel": "令和5年11月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg773_1221sanpi-koukaigo.pdf",
+   "title": "議第156号を可決すべきものとする教育・文化スポーツ常任委員長報告",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-12-21",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-25-2023-11-20231221-議第166号（人事案件）",
+   "sessionLabel": "令和5年11月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg773_1221sanpi-koukaigo.pdf",
+   "title": "議第166号（人事案件）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-11-29",
+   "kind": "localVote",
+   "result": "認定",
+   "rollCallId": "pref-25-2023-11-20231129-議第110号から議第115号までを認定すべきものとする決算特別委員長報告",
+   "sessionLabel": "令和5年11月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg770_1129sanpi-go.pdf",
+   "title": "議第110号から議第115号までを認定すべきものとする決算特別委員長報告",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-11-29",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2023-11-20231129-議第130号を可決すべきものとする決算特別委員長報告",
+   "sessionLabel": "令和5年11月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg770_1129sanpi-go.pdf",
+   "title": "議第130号を可決すべきものとする決算特別委員長報告",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-10-13",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2023-09-20231013-意見書第13号から意見書第15号まで",
+   "sessionLabel": "令和5年 9月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg763_sanpikoukaigo.pdf",
+   "title": "意見書第13号から意見書第15号まで",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-10-13",
+   "kind": "localVote",
+   "result": "不採択",
+   "rollCallId": "pref-25-2023-09-20231013-請願第10号を不採択とすべきものとする厚生・産業常任委員長報告",
+   "sessionLabel": "令和5年 9月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg763_sanpikoukaigo.pdf",
+   "title": "請願第10号を不採択とすべきものとする厚生・産業常任委員長報告",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-10-13",
+   "kind": "localVote",
+   "result": "不採択",
+   "rollCallId": "pref-25-2023-09-20231013-請願第13号を不採択とすべきものとする厚生・産業常任委員長報告",
+   "sessionLabel": "令和5年 9月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg763_sanpikoukaigo.pdf",
+   "title": "請願第13号を不採択とすべきものとする厚生・産業常任委員長報告",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2023-10-13",
+   "kind": "localVote",
+   "result": "可決不採択",
+   "rollCallId": "pref-25-2023-09-20231013-議第104号、議第106号、議第109号、議第116号、議第118号、議第129号および議第131号を可決すべきものとする各常任委員長報告ならびに請願第11号、請願第12号、請-h51a10f36",
+   "sessionLabel": "令和5年 9月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg763_sanpikoukaigo.pdf",
+   "title": "議第104号、議第106号、議第109号、議第116号、議第118号、議第129号および議第131号を可決すべきものとする各常任委員長報告ならびに請願第11号、請願第12号、請願第14号および請願第15号を不採択とすべきものとする各常任委員長報告",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-10-13",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2023-09-20231013-議第105号、議第107号、議第108号、議第117号および議第119号から議第128号までを可決すべきものとする各常任委員長報告",
+   "sessionLabel": "令和5年 9月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg763_sanpikoukaigo.pdf",
+   "title": "議第105号、議第107号、議第108号、議第117号および議第119号から議第128号までを可決すべきものとする各常任委員長報告",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-07-14",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2023-06-20230714-会第４号",
+   "sessionLabel": "令和5年 6月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg757_050714sanpi.pdf",
+   "title": "会第４号",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-07-14",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2023-06-20230714-意見書第12号",
+   "sessionLabel": "令和5年 6月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg757_050714sanpi.pdf",
+   "title": "意見書第12号",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-07-14",
+   "kind": "localVote",
+   "result": "不採択",
+   "rollCallId": "pref-25-2023-06-20230714-請願第７号を不採択とすべきものとする厚生・産業常任委員長報告",
+   "sessionLabel": "令和5年 6月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg757_050714sanpi.pdf",
+   "title": "請願第７号を不採択とすべきものとする厚生・産業常任委員長報告",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-07-14",
+   "kind": "localVote",
+   "result": "不採択",
+   "rollCallId": "pref-25-2023-06-20230714-請願第９号を不採択とすべきものとする総務・企画・公室常任委員長報告",
+   "sessionLabel": "令和5年 6月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg757_050714sanpi.pdf",
+   "title": "請願第９号を不採択とすべきものとする総務・企画・公室常任委員長報告",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-07-14",
+   "kind": "localVote",
+   "result": "可決不採択",
+   "rollCallId": "pref-25-2023-06-20230714-議第84号、議第92号、議第94号および議第97号を可決すべきもの、請願第８号を不採択すべきものとする各常任委員長報告",
+   "sessionLabel": "令和5年 6月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg757_050714sanpi.pdf",
+   "title": "議第84号、議第92号、議第94号および議第97号を可決すべきもの、請願第８号を不採択すべきものとする各常任委員長報告",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-07-14",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2023-06-20230714-議第85号から議第91号まで、議第93号、議第95号および議第96号をけ欠すべきものとする各常任委員長報告",
+   "sessionLabel": "令和5年 6月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg757_050714sanpi.pdf",
+   "title": "議第85号から議第91号まで、議第93号、議第95号および議第96号をけ欠すべきものとする各常任委員長報告",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-07-14",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-25-2023-06-20230714-議第98号（人事案件）",
+   "sessionLabel": "令和5年 6月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg757_050714sanpi.pdf",
+   "title": "議第98号（人事案件）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-07-14",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-25-2023-06-20230714-議第99号から議第103号まで（人事案件）",
+   "sessionLabel": "令和5年 6月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg757_050714sanpi.pdf",
+   "title": "議第99号から議第103号まで（人事案件）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-05-09",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2023-05-rinji-20230509-会第３号",
+   "sessionLabel": "令和5年 5月招集会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg749_050509sannpi.pdf",
+   "title": "会第３号",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-05-09",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2023-05-rinji-20230509-決議第４号",
+   "sessionLabel": "令和5年 5月招集会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg749_050509sannpi.pdf",
+   "title": "決議第４号",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-05-09",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2023-05-rinji-20230509-特別委員会設置動議",
+   "sessionLabel": "令和5年 5月招集会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg749_050509sannpi.pdf",
+   "title": "特別委員会設置動議",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-05-09",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-25-2023-05-rinji-20230509-議第77号から議第81号までを可決すべきものとする各常任委員長報告",
+   "sessionLabel": "令和5年 5月招集会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg749_050509sannpi.pdf",
+   "title": "議第77号から議第81号までを可決すべきものとする各常任委員長報告",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-05-09",
+   "kind": "localVote",
+   "result": "承認",
+   "rollCallId": "pref-25-2023-05-rinji-20230509-議第82号を承認すべきものとする総務・企画・公室常任委員長報告",
+   "sessionLabel": "令和5年 5月招集会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg749_050509sannpi.pdf",
+   "title": "議第82号を承認すべきものとする総務・企画・公室常任委員長報告",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2023-05-09",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-25-2023-05-rinji-20230509-議第83号（人事案件）",
+   "sessionLabel": "令和5年 5月招集会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg749_050509sannpi.pdf",
+   "title": "議第83号（人事案件）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
     "raw": "○"
    }
   }

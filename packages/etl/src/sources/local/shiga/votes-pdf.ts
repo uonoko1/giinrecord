@@ -426,24 +426,48 @@ function nameBand(page: PageGeometry, grid: Grid): { top: number; bottom: number
 }
 
 /**
- * 会派帯（議席番号帯の上〜表の上端）。**結合セル**なので、その段まで届く縦線で区切る。
+ * 会派帯（議席番号帯の上〜**会派帯の上の罫線**）。**結合セル**なので、その段まで届く縦線で区切る。
  * 会派名は**複数アイテムに割れる**（`日本共` / `産党滋` / `賀県議` / `会議員` / `団`。#670）ので、
  * セルの中の文字を上の行から順に繋ぐ。
+ *
+ * ## **帯の上端に `grid.top`（表の外枠）を使ってはいけない**（#901）
+ *
+ * **`grid.top` は「議員の列の右端まで届く横罫線のいちばん上」＝表の外枠**であって、
+ * 会派帯の上端ではない。**外枠と会派帯のあいだに見出し・注記の段がある本では、
+ * その段の文字が会派名の頭に流れ込む。**
+ *
+ * **実測（146 本すべてを `parseVotePdf` に通した。#901）**: **25 本・825 列**が壊れていた。2 通り:
+ *   - `（議案についてはこのホームページの議案詳細情報をご覧ください。）自由民主党滋賀県議会議員団`
+ *     （注記が見出しの段にあり、外枠との間に罫線が無い本）
+ *   - `「○」は賛成を、…表す。チームしが県議団`（凡例が同じ段にある本）
+ *
+ * **`group` は票の 1 件ずつに書かれ、`unmatched.json` の鍵にもなる**ので、
+ * **同じ議員の同じ会派が「別の会派」として 2 行に割れる**（実測。`--sessions 19` の
+ * `unmatched` で `重田 剛` と `白井 幸則` が会派違いで 2 行ずつ出ていた）。
+ *
+ * **正しい上端は「会派帯の下の罫線（`ruleAbove`）より上にある罫線のうち、いちばん低いもの」。**
+ * **健全な本ではこれが `grid.top` と一致する**ので、**壊れていない 119 本の出力は 1 文字も変わらない**
+ * （実測。下の「出力が変わらないこと」の検算）。**罫線が 1 本も無ければ `grid.top` に戻す**
+ * （帯を閉じられないときに広げるのではなく、今までどおりにする）。
  */
 function readGroups(page: PageGeometry, grid: Grid, seatTop: number): { x0: number; x1: number; name: string }[] {
   const left = grid.voteCols[0];
   const right = grid.voteCols[grid.voteCols.length - 1];
+  const hys = cluster(page.hlines.map((l) => l.y));
   // **会派帯の下端は罫線で取る**——`seatTop`（議席番号の文字の中心）は罫線より下なので、
   // それを境にすると議員の列の境（議席番号帯の上まで届く）まで会派の境に数えてしまう（実測）。
-  const ruleAbove = cluster(page.hlines.map((l) => l.y)).filter((y) => y > seatTop + EDGE && y < grid.top - EPS).sort((a, b) => a - b)[0] ?? seatTop;
+  const ruleAbove = hys.filter((y) => y > seatTop + EDGE && y < grid.top - EPS).sort((a, b) => a - b)[0] ?? seatTop;
+  // **会派帯の上端**: `ruleAbove` より上の罫線のうち、いちばん低いもの（上の docblock）。
+  // **外枠まで飛ばさない。** 無ければ `grid.top`（今までどおり）。
+  const bandTop = hys.filter((y) => y > ruleAbove + EPS).sort((a, b) => a - b)[0] ?? grid.top;
   // 会派帯まで届く縦線（議員の列の境は議席番号帯までしか届かない）
-  const xs = cluster(page.vlines.filter((l) => l.y1 > ruleAbove + EDGE && l.y0 < grid.top - EDGE).map((l) => l.x))
+  const xs = cluster(page.vlines.filter((l) => l.y1 > ruleAbove + EDGE && l.y0 < bandTop - EDGE).map((l) => l.x))
     .filter((x) => x >= left - EPS && x <= right + EPS);
   const bounds = xs.length >= 2 ? xs : [left, right];
   const out: { x0: number; x1: number; name: string }[] = [];
   for (let g = 0; g + 1 < bounds.length; g++) {
     const name = page.items
-      .filter((i) => within(i.cx, bounds[g], bounds[g + 1]) && i.cy > ruleAbove + EDGE && i.cy < grid.top)
+      .filter((i) => within(i.cx, bounds[g], bounds[g + 1]) && i.cy > ruleAbove + EDGE && i.cy < bandTop)
       .sort((a, b) => b.y - a.y || a.x - b.x)
       .map((i) => i.str)
       .join("")

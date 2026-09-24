@@ -88,10 +88,18 @@ const DATA = fileURLToPath(new URL("../../../data/", import.meta.url));
 const CORPUS = {
   assemblies: 13, // assemblies/index.json の全行（国会 2 ＋ 地方 11）
   localAssemblies: 11,
-  memberRows: 1225, // members/index.json の全行
-  localMemberRows: 453, // うち地方議員（assemblyId が diet- で始まらない行）
-  rollCallFiles: 4450, // assemblies/*/rollcalls/**/*.json（index.json を除く）。**#901 で三重 365 → 733、徳島 105 → 153、高知 104 → 221、秋田 157 → 785、奈良 125 → 180、宮城 133 → 584**、青森 113 → 611、**島根 112 → 231、佐賀 23 → 366、鳥取 118 → 572**
-  voteCells: 191939, // その採決ファイルの votes[] の合計。**#901 で三重 17,032 → 34,590、徳島 3,780 → 5,562、高知 3,744 → 7,881、秋田 6,437 → 32,022、奈良 5,000 → 7,200、宮城 7,448 → 33,815**、青森 5,111 → 29,015、**島根 3,920 → 8,085、佐賀 851 → 13,542**
+  // ## **`memberRows` / `localMemberRows` が赤くなったら、まず「県が名簿を動かした」を疑うこと**（#901）
+  //
+  // **地方議会の名簿は「いま在職している議員の一覧」しか公表されていない。**
+  // **県が誰かを載せ替えれば、ここも `counts.members` も動く**——**不具合とは限らない。**
+  // **実際に起きた**: **2026-09-23 に滋賀が 44 → 42 人になり 1,225 → 1,223 行**
+  // （**`--sessions` を広げたからではない**。`白井 幸則` と `九里 学` を県が名簿から外した）。
+  // **直すのは実装ではなくこの数**——**`data/` を作り直し、何が動いたかをコミットメッセージに書く。**
+  // **「赤いから」と検査を緩めないこと**（#943）。
+  memberRows: 1223, // members/index.json の全行。**#901 の滋賀で 1,225 → 1,223**——**県が名簿から 2 人（白井 幸則・九里 学）を外した**（広げたからではない）
+  localMemberRows: 451, // うち地方議員（assemblyId が diet- で始まらない行）。**滋賀の名簿が 44 → 42 人**
+  rollCallFiles: 4599, // assemblies/*/rollcalls/**/*.json（index.json を除く）。**#901 で三重 365 → 733、徳島 105 → 153、高知 104 → 221、秋田 157 → 785、奈良 125 → 180、宮城 133 → 584、青森 113 → 611**、滋賀 14 → 163
+  voteCells: 198221, // その採決ファイルの votes[] の合計。**#901 で三重 17,032 → 34,590、徳島 3,780 → 5,562、高知 3,744 → 7,881、秋田 6,437 → 32,022、奈良 5,000 → 7,200、宮城 7,448 → 33,815、青森 5,111 → 29,015**、滋賀 604 → 6,886
 };
 
 const walkRollCalls = async (dir: string): Promise<string[]> => {
@@ -110,7 +118,7 @@ const walkRollCalls = async (dir: string): Promise<string[]> => {
  * **母数を先に測る。** **これが落ちたら、下の「違反 0 件」は意味を失っている**
  * （痩せたディレクトリを見て緑になっているのかもしれない。上の docblock の青森の実測）。
  */
-test("#855 母数: コミット済み data/ に 11 議会・3,996 採決・176,446 セル・1,225 名簿行がある", async () => {
+test("#855 母数: コミット済み data/ に 11 議会・4,599 採決・198,221 セル・1,223 名簿行がある", async () => {
   const assemblies = JSON.parse(await readFile(join(DATA, "assemblies/index.json"), "utf-8")) as Assembly[];
   const members = JSON.parse(await readFile(join(DATA, "members/index.json"), "utf-8")) as MemberSummary[];
   const local = assemblies.filter((a) => a.kind !== "national");
