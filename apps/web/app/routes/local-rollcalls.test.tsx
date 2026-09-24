@@ -125,6 +125,19 @@ describe("LocalRollCallsPage 議決結果が一次資料に無い行（#1003）"
     expect(within(approved as HTMLElement).queryByTestId("local-rollcalls-result-absent")).not.toBeInTheDocument();
   });
 
+  /**
+   * **ここがこの PBI の要**（#569）。**`resultAbsent` の無い空の `result`** は読み取り事故の形で、
+   * ETL が今までどおり違反として弾く。**画面で「一次資料に記載がありません」と書けば、
+   * こちらの事故を県のせいにする虚偽になる。** 空のまま出す（利用者が「出ていない」と気づける）。
+   */
+  it("resultAbsent が無い空の result（読み取り事故）には「一次資料に記載がありません」と書かない", () => {
+    const broken = { ...shigaRows[0] } as Record<string, unknown>;
+    delete broken.resultAbsent;
+    renderShiga([broken as unknown as LocalRollCallSummary]);
+    expect(screen.queryAllByTestId("local-rollcalls-result-absent")).toHaveLength(0);
+    expect(document.body.textContent).not.toMatch(/一次資料に記載がありません/);
+  });
+
   /** `number` が空でも議案名の下の補足が「議案等 ・」で終わらない（滋賀は 163 件すべて number が空）。 */
   it("number が空でも `・` が余らない", () => {
     renderShiga();

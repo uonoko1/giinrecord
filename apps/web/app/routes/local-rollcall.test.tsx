@@ -202,6 +202,33 @@ describe("LocalRollCallPage 議決結果が一次資料に無いとき（#1003�
     for (const n of notes) expect(n.textContent).not.toMatch(/・\s*・|・\s*$|^\s*・/);
   });
 
+  /**
+   * **ここがこの PBI の要**（#569）。**`resultAbsent` の無い空の `result`** は
+   * **ETL が今までどおり違反として弾く形**（読み取りが壊れた場合）。
+   * **そこに「県が書いていない」と書けば、こちらの事故を県のせいにする虚偽になる。**
+   * 画面には**何も足さない**（空のまま）——利用者が「出ていない」と気づける側に倒す。
+   *
+   * この行は本番の `data/` には **1 件も無い**（11 議会 4,599 採決のうち空 `result` は
+   * `resultAbsent` 付きの 3 件だけ。実測）。**起こりうる形なので手で作る。**
+   */
+  it("resultAbsent が無い空の result（読み取り事故）には「記載なし」と書かない", () => {
+    const broken = { ...absent } as Record<string, unknown>;
+    delete broken.resultAbsent;
+    renderShiga(broken as unknown as LocalRollCall);
+    expect(screen.queryByTestId("local-rollcall-result-absent")).not.toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/記載がありません|記載なし/);
+  });
+
+  it("resultAbsent が無い空の result は meta description にも「記載なし」と書かない", () => {
+    const broken = { ...absent } as Record<string, unknown>;
+    delete broken.resultAbsent;
+    const tags = routeMeta({ data: { rollCall: broken, assembly: shiga, meta: shigaMeta }, location: { pathname: "/assemblies/pref-25/rollcalls/x" } } as never);
+    const desc = tags.find((t) => (t as { name?: string }).name === "description") as { content: string };
+    expect(desc.content).not.toMatch(/記載なし|記載がありません/);
+    expect(desc.content).not.toMatch(/・・|（・|・）/);
+    expect(desc.content).toContain("令和7年 4月招集会議");
+  });
+
   /** 本番の `<meta name="description">` に `・・` が入っていた（PO が curl で確認）。 */
   it("meta description に空欄由来の `・・` が出ない", () => {
     const tags = routeMeta({ data: { rollCall: absent, assembly: shiga, meta: shigaMeta }, location: { pathname: "/assemblies/pref-25/rollcalls/x" } } as never);
