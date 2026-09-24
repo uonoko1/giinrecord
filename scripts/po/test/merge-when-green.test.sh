@@ -2007,3 +2007,76 @@ EOF
   assert_contains "$ERR" "reviewer.md" "何をすればよいかを指す"
 }
 test_case "1006: コメント 0 件のときも母数を言う" t_1006_reports_zero_denominator
+
+# **`反対` はこの専案の「データの語」である**（採決の記録が賛成／反対でできている）。
+# 結論の語だけを本文のどこかから探す形だと、**PO 自身の検算コメントがすり抜ける**。
+# **実測（直近 60 PR）でそうなった 3 件を、そのままフィクスチャにする**:
+#   #947 / #945 / #942 — どれも票数の話で「反対」と書いているだけで、レビューではない。
+t_1006_vote_word_hantai_is_not_a_review() {
+  local body h
+  for body in \
+    '## PO が独立に数えた\n\n**PDF が刷っている賛成数・反対数と、読み取ったセルが 8 行すべて一致**（賛成 28 / 反対 18）。' \
+    '## PO が確かめた\n\n（請願第38号は反対 32 人を 0 人と公表することになる）/ #899 を踏んだ自己申告' \
+    '## PO が直した 1 件\n\n> **「反対者数の欄が空 = 0」と読む実装を実際に書いて測りました。**'
+  do
+    h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/issues/12/comments"*) echo '[{"user":{"login":"uonoko1"},"body":"$body"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '$REVIEW_GREEN_CHECKS' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+    run_script "$h" merge-when-green.sh 12
+    assert_eq 1 "$STATUS" "票数の話の「反対」はレビューではない: $body"
+    assert_not_contains "$LOG" "pr	merge	12" "マージを試みない: $body"
+  done
+}
+test_case "1006: 票数の話の「反対」をレビューとして通さない（実測の誤検出 3 件）" t_1006_vote_word_hantai_is_not_a_review
+
+# 逆向き: **「レビュー」の語があるだけでは通さない。** 両方が同じコメントに要る。
+t_1006_context_word_alone_is_not_enough() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/issues/12/comments"*) echo '[{"user":{"login":"uonoko1"},"body":"レビューをこれからお願いします。"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '$REVIEW_GREEN_CHECKS' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "「レビュー」だけでは通さない"
+  assert_not_contains "$LOG" "pr	merge	12" "マージを試みない"
+}
+test_case "1006: 「レビュー」の語だけでは通さない（結論の語も要る）" t_1006_context_word_alone_is_not_enough
+
+# **別々のコメントに分かれているものを合算しない。**
+# 「レビューします」というコメントと、票数の話で「反対」と書いたコメントが並んでいるだけで
+# 通ってしまうと、**上で塞いだ誤検出が別の形で戻ってくる。**
+t_1006_does_not_combine_across_comments() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/issues/12/comments"*) echo '[{"user":{"login":"uonoko1"},"body":"これからレビューを回します。"},{"user":{"login":"uonoko1"},"body":"## PO が測り直した\n\n賛成 28 / 反対 18 で一致した。"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '$REVIEW_GREEN_CHECKS' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "別々のコメントを合算しない"
+  assert_contains "$ERR" "コメント 2 件を見ました" "母数を出す（#757）"
+  assert_not_contains "$LOG" "pr	merge	12" "マージを試みない"
+}
+test_case "1006: 別々のコメントの「レビュー」と「反対」を合算しない" t_1006_does_not_combine_across_comments

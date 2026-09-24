@@ -116,10 +116,68 @@ gh issue close <issue> --comment "..."   # 何が入ったか・残る留保を�
 
 ```sh
 scripts/po/board-set.sh <issue> "In Review"   # 報告を受けたら（＝マージの前に）
+# ここで reviewer サブエージェントを立て、その報告を PR のコメントに貼る（#1006）
+gh pr comment <pr> --body-file <レビューの報告>
 scripts/po/merge-when-green.sh <pr>            # マージは非同期に走る
 scripts/po/board-set.sh <issue> Done           # マージ後
 gh issue close <issue> --comment "..."         # Closes #N で自動なら不要
 ```
+
+### レビュー無しではマージできない（#1006）
+
+**`merge-when-green.sh` は、PR のコメントにレビュアーの報告が無ければ何もせずに終わる。**
+
+**なぜ道具に入れたか**: **2026-09-23〜24 に、PO が 32 本の PR を 1 件もレビューさせずにマージした。**
+**`.claude/agents/README.md` は「レビュー無しでマージする」を禁止事項として明記していた。**
+**手順に書いてあっても止まらなかった。**
+そのあと PO は PR #1001 に「道具に歯止めを置きました」と書いたが、**それは事実に反していた**
+（レビュアーが発見し、PO も検算した）——`reviewed` ラベルは存在せず、道具の検査は 0 件で、
+**歯止めはセッションのスクラッチパッドにしか無かった。2026-09-25 に再起動で消えた（exit 127）。**
+
+**なぜラベルではないのか**: **`reviewed` ラベルは PO が 1 コマンドで付けられる。**
+32 本のときの PO は「自分で検算したから十分だ」と判断していた。
+**同じ PO が「自分で検算したから `reviewed` を付ける」と判断できる。自己申告は歯止めではない。**
+**レビュアーの報告は、レビュアーを走らせないと生えない。**
+
+**何を見ているか**: **同じ 1 件のコメントに「レビュー」の語と、結論の語
+（`マージしてよい` / `直してから` / `反対`）が両方あること**
+（`.claude/agents/reviewer.md` の報告様式「**結論を先に**: マージしてよいか／直してから／反対か」）。
+
+**なぜ結論の語だけでは足りないか（実測）**: **`反対` はこの専案の「データの語」である**——
+採決の記録そのものが賛成／反対でできている。結論の語だけを本文のどこかから探す形で
+直近 60 PR に当てると **4 件が通り、うち 3 件は誤検出**だった（#947 / #945 / #942。
+どれも PO 自身の検算コメントが票数の話で「反対」と書いているだけ）。
+**「レビュー」の語も同じコメントに要る**としたところ、**60 件中 1 件**（#1000、本物の
+レビュー報告）だけが通った——**誤検出 0 件。**
+**良し悪しは判定しない**（`pr-closes.sh` と同じ——機械が判断できないことを機械に判断させない）。
+**「マージしてよい」だけを探していない**のは意図である: それだと
+**「直してから」と言われて直し、再レビューを受けた PR が「レビューが無い」と同じ扱い**になる。
+見ているのは「レビュアーが走ったか」であって「レビュアーが許したか」ではない
+（だから当たった語を必ず読み上げる——**「直してから」のまま押していないか、PO が読む**）。
+
+**実測（2026-09-25、直近 60 PR）**:
+
+| | 実測 |
+|---|---|
+| `gh pr view --json reviews` が空でない PR | **2 / 60**（どちらも `github-actions` で body は空。**人間のレビューは 0 件**） |
+| `gh pr view --json comments` が空でない PR | **14 / 60**（**14 件とも著者は `uonoko1`**。PO も開発者もレビュアーも同じアカウント） |
+| そのうちレビュアーの報告の形 | **1 / 60**（PR #1000。残る 13 件は「PO が測り直した」等の PO 自身の検算か担当者の返答） |
+| **この検査を直近 60 PR に当てた結果** | **通る 1 / 止まる 59**（通るのは #1000 のみ。誤検出 0） |
+
+**だから著者では見分けられず、GitHub の Review 機能も使われていない。本文の形で見るしかない。**
+
+**逃げ道**: `--no-review <理由>`。**理由は省略できない**（`--no-review` 単独も
+`--no-review 12` も `--no-review --allow-nonrequired-red` も usage で落ちる）。
+**理由はログに残る**——そこが「なぜレビューを飛ばしたのか」が残る唯一の場所になる。
+
+```sh
+scripts/po/merge-when-green.sh --no-review 'レビュアーを立てられない障害中' <pr>
+```
+
+**`data/refresh` の PR はこの検査を通らない**——あれらは `etl.yml` / `districts.yml` /
+`local-assemblies.yml` が `gh pr merge --squash --auto` で直接マージしており、
+**この道具を経由しない**（実測: 直近 200 件のマージ済み PR のうち `data/refresh` は 15 件、
+すべて `github-actions` が著者）。**つまりこの検査は、その 15 件を止めも通しもしない。**
 
 **`merge-when-green.sh` は `update-branch` から CI 再実行まで待つので数分かかる。**
 **その間ボードが `In Review` であることに意味がある**——**「緑で、マージ待ち」という状態が実在する。**
@@ -419,7 +477,7 @@ git push                             → 動く（git プロトコル）
 
 | コマンド | すること | 終了コード |
 |---|---|---|
-| `scripts/po/merge-when-green.sh [--allow-nonrequired-red] <pr>` | OPEN かつ非 draft を確認 → BEHIND なら `gh pr update-branch` → `gh pr checks` を 20 秒ごと最大 60 回（20 分）見て、全部 pass/skipping になったら `gh pr merge --squash --delete-branch`。**必須の検査**（`check` / `gitleaks` / `forbidden-patterns` / `audit` / `pr-closes`）が 1 つでも赤なら何もせず終了（`--allow-nonrequired-red` があっても）。**必須でない検査**（`stale-base` / `docker-web`）だけが赤いときは、何がどう赤いかと**その job のログの URL**を出したうえで既定では終了し、`--allow-nonrequired-red` があるときだけ読み上げてからマージする（#858）。一覧に無い名前は必須として扱い、そのことを言う。赤いまま通した場合は「all N checks green」とは言わない。head が `data/refresh` のときだけ、待っている間に `action_required` の run を承認する（他のブランチでは承認しない）。`gh pr merge` が非ゼロで返っても PR の state を読み直し、検査した HEAD がそのまま MERGED なら成功として終わる（#434。UNKNOWN のときマージ成功でも非ゼロが返る／`--delete-branch` のローカル削除が worktree に阻まれる） | 0 マージ済 / 1 失敗・タイムアウト / 2 引数エラー |
+| `scripts/po/merge-when-green.sh [--allow-nonrequired-red] [--no-review <理由>] <pr>` | OPEN かつ非 draft を確認 → **レビュアーの報告が PR のコメントに在ることを確認**（#1006。`.claude/agents/reviewer.md` の結論の語 `マージしてよい` / `直してから` / `反対` のどれかを含むコメントが 1 件以上。**無ければ検査を待たずにその場で終了**し、母数（見たコメントの件数）を出す。`--no-review <理由>` で飛ばせるが**理由は省略できず、ログに残る**） → BEHIND なら `gh pr update-branch` → `gh pr checks` を 20 秒ごと最大 60 回（20 分）見て、全部 pass/skipping になったら `gh pr merge --squash --delete-branch`。**必須の検査**（`check` / `gitleaks` / `forbidden-patterns` / `audit` / `pr-closes`）が 1 つでも赤なら何もせず終了（`--allow-nonrequired-red` があっても）。**必須でない検査**（`stale-base` / `docker-web`）だけが赤いときは、何がどう赤いかと**その job のログの URL**を出したうえで既定では終了し、`--allow-nonrequired-red` があるときだけ読み上げてからマージする（#858）。一覧に無い名前は必須として扱い、そのことを言う。赤いまま通した場合は「all N checks green」とは言わない。head が `data/refresh` のときだけ、待っている間に `action_required` の run を承認する（他のブランチでは承認しない）。`gh pr merge` が非ゼロで返っても PR の state を読み直し、検査した HEAD がそのまま MERGED なら成功として終わる（#434。UNKNOWN のときマージ成功でも非ゼロが返る／`--delete-branch` のローカル削除が worktree に阻まれる） | 0 マージ済 / 1 失敗・タイムアウト / 2 引数エラー |
 | `scripts/po/board-set.sh <issue> <Backlog\|Ready\|In Progress\|In Review\|Done>` | Issue のボード上の item を探し（無ければ追加し）、Status を設定 | 0 / 1 / 2 |
 | `scripts/po/verify-site.sh [production\|staging\|all]` | `ssh $VPS_SSH_HOST`（既定 `giinops`）で VPS 内から主要 URL（`/`, `/about/`, `/terms`, `/privacy`, `/members/`, `/rollcalls/`, `/assemblies/`, `/data/meta.json`, `/sitemap.xml`）の HTTP コードと `<title>` を一覧する（読み取りのみ。PO 手元の curl が 000 を返す問題の回避、#182）。production は `curl --resolve giinrecord.jp:443:127.0.0.1`（証明書検証あり）。staging は host nginx が Cloudflare 以外を 403 にする（#163）ので、コンテナのポート `127.0.0.1:8083` に `Host: staging.giinrecord.jp` で当てる（デプロイ済みビルドの確認であり、Access の確認ではない） | 0 = 全部 200 / 1 = 200 以外あり（行末に `NG`）/ 2 引数エラー |
 | `scripts/po/board-audit.sh [--fix]` | ボードと Issue と PR の食い違いを 5 種類列挙する（既定は読むだけ）。`Closes/Fixes/Resolves #N` の形に限り、`gh pr view` で MERGED を個別に確認してから閉じる。母数（Issue / ボード項目 / マージ済み PR の件数と、閉じる語がある PR の本数、`In Progress` の内訳）を必ず出す。`inprogress-no-trace`（#809）は**列挙するだけで `--fix` でも直さない**（`STALE_HOURS` 既定 24）。**`--fix` は直したことを `docs/ops/board-audit-log.tsv` に追記する**（#919。`BOARD_AUDIT_LOG` で移せる） | 0 = 食い違い 0 / 1 = 食い違いあり（`--fix` なら残ったものあり）/ 2 引数エラー / 4 母数が 0（読めていない）/ 5 台帳に書けなかった |
