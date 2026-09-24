@@ -18,3 +18,16 @@
 2026-09-21T01:29:52Z	fixed	943	(載っていない)	Backlog	not-on-board
 2026-09-21T01:29:52Z	fixed	956	(載っていない)	Backlog	not-on-board
 2026-09-21T01:29:52Z	run	-	-	-	issues=360 board=355 prs=300 findings=5 fixed=5 left=0
+2026-09-24T02:17:47Z	fixed	804	(Backlog/Ready/In Progress)	Done	closed-issue-not-done
+2026-09-24T02:17:47Z	fixed	901	(Backlog/Ready/In Progress)	Done	closed-issue-not-done
+2026-09-24T02:17:47Z	fixed	913	(Backlog/Ready/In Progress)	Done	closed-issue-not-done
+2026-09-24T02:17:47Z	fixed	943	(Backlog/Ready/In Progress)	Done	closed-issue-not-done
+2026-09-24T02:17:47Z	fixed	951	(Backlog/Ready/In Progress)	Done	closed-issue-not-done
+2026-09-24T02:17:47Z	fixed	956	(Backlog/Ready/In Progress)	Done	closed-issue-not-done
+2026-09-24T02:17:47Z	fixed	958	(Backlog/Ready/In Progress)	Done	closed-issue-not-done
+2026-09-24T02:17:47Z	fixed	961	(Backlog/Ready/In Progress)	Done	closed-issue-not-done
+2026-09-24T02:17:47Z	fixed	977	(載っていない)	Backlog/In Progress	not-on-board
+2026-09-24T02:17:47Z	fixed	982	(載っていない)	Backlog/In Progress	not-on-board
+2026-09-24T02:17:47Z	fixed	985	(載っていない)	Backlog/In Progress	not-on-board
+2026-09-24T02:17:47Z	fixed	986	(載っていない)	Backlog/In Progress	not-on-board
+2026-09-24T02:17:47Z	run	-	-	-	issues=364 board=360 prs=300 findings=12 fixed=12 left=0
