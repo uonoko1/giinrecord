@@ -519,6 +519,12 @@ export function voteRowCore(marks: readonly { cx: number; ch: string }[]): { cx:
   const gaps = xs.slice(1).map((v, k) => v - xs[k]);
   const sorted = [...gaps].sort((a, b) => a - b);
   const step = sorted[Math.floor(sorted.length / 2)];
+  // **抜け道**（Issue #1002 で測った。**#1019 の「1 つずれを設計として止めているものは無い」と同じ土俵**）:
+  // **並んでいない `marks` を渡されると中央値の間隔が 0 以下になり、ここで「芯」を作らずに全部返す。**
+  // **そのとき長さが議員の数と一致すれば、`readVoteCells` が `core[k].ch` を k 列目に入れる＝別人の票になる。**
+  // **44,600 試行のうち 20,444 回ここに入り、1,192 回は長さの検査も抜けた**（docblock の表）。
+  // **止めているのは `readVoteCells` の `columnOf(...) !== k` だけである**（外すと 1,181 行が別人の票）。
+  // **この PBI では塞いでいない**——塞ぐと出力が変わりうるので、測定の PBI で出力は変えない。
   if (!(step > 0)) return [...marks];
   let bestStart = 0, bestLen = 1, start = 0, len = 1;
   for (let k = 0; k < gaps.length; k++) {
@@ -1063,7 +1069,10 @@ export function readVoteCells(row: VoteRow, mc: MemberColumns): string[] {
   const core = voteRowCore(row.marks);
   if (core.length !== mc.n) return cells; // 数が合わない＝置かない（推定しない）
   for (let k = 0; k < mc.n; k++) {
-    // **k 番目の記号が k 番目の列の中にあることを確かめる**（外れたらその行を丸ごと落とす）
+    // **k 番目の記号が k 番目の列の中にあることを確かめる**（外れたらその行を丸ごと落とす）。
+    // **消してはいけない**（Issue #1002。docblock の表）——**`voteRowCore` の `step <= 0` の抜け道を
+    // 通った入力を止めているのはこの 1 行だけで、外すと 1,181 行 / 6,742 セルが別人の票になる。**
+    // **`test/vote-order-independence.test.ts` が変異 M10 で固定している。**
     if (columnOf(mc.cols, core[k].cx) !== k) return new Array(mc.n).fill(UNKNOWN_CELL);
     cells[k] = core[k].ch;
   }
