@@ -253,6 +253,12 @@ test("#901 unmatched の跳ね: 13 本目は 0 人、14 本目は 4 人（母数
  * **青森は 25.0% で 11、佐賀は 24.3% で 4。** **割合はほとんど同じなのに値が 3 倍近く違う**——
  * **`min` の縮み方の差である**（青森は `rosterAbsent` と `unmatchedNames` が揃って 11）。
  *
+ * **⚠ 上の表の青森 11 は #959 の組み立て（`rosterAbsent` 13 / `unmatchedNames` 11）による値である**
+ * （#1007）。**#990 が本番 `data/` の最古の会期から組み立て直すと青森の境は 16 になる**
+ * （`rosterAbsent` 18 / `unmatchedNames` 16）。**どちらでも線 10 の外なので、この表の結論は変わらない。**
+ * **変わるのは「いちばん小さい境はどれか」である**——**11 県では佐賀 4 が最小で、この PR の実測が
+ * そのまま最小である**（#990 の表）。
+ *
  * ## **これは「佐賀では広げてよい」という意味ではない**
  *
  * **一次資料は境があると言っている**——**入ってくる 4 人は今の名簿に 1 人もいない**（上のテスト）。
@@ -290,7 +296,7 @@ test("#901/#951 佐賀の境は seatsChanged 4——線 10 に掛からない（
   assert.equal(4 + 5, 9, "**入れ替わりの総量は 9**（`min` が 4 に縮めている）");
   assert.ok(c.seatsChanged < SEATS_CHANGED_FLAG,
     `**一般選挙の境なのに線に掛からない**（${c.seatsChanged} < ${SEATS_CHANGED_FLAG}）`);
-  assert.equal(SEATS_CHANGED_FLAG - c.seatsChanged, 6, "**線の下 6**（青森は差 1 で掛かった）");
+  assert.equal(SEATS_CHANGED_FLAG - c.seatsChanged, 6, "**線の下 6**（#990 の 11 県の測り直しでも、これが最小の境）");
 });
 
 /**
