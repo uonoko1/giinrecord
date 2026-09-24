@@ -62,7 +62,8 @@ test("#768 令和7年2月定例会（1 行 1 アイテム型・8 ページ）: 7
   );
   // **1 本の PDF に議決日が 2 つある**（「PDF に 1 つの議決日」と決め打ちしない）
   assert.deepEqual([...new Set(pdf.rows.map((r) => `${r.month}/${r.day}`))], ["3/7", "3/17"]);
-  // **すべての行が 37 人**（**列幅が 15.00 / 14.76 で揺れる本。±0.35pt で切ると 36 列になる**）
+  // **すべての行が 37 人**（**列幅が 14.58 / 14.76 / 15.00 で揺れる本**。
+  // **±0.35pt でも切れないことは #1004 が実測した**。`saga-threshold.test.ts` 参照）
   assert.deepEqual([...new Set(pdf.rowMembers.map((m) => m.length))], [37]);
   assert.equal(pdf.rowMembers[0][0].nameText, "石井秀夫", "1 列目は 石井秀夫（この列を落とすと表が 1 列ずれる）");
   assert.deepEqual([...new Set(pdf.rows.map((r) => r.section))], ["知事提出議案", "議員提出議案"]);
@@ -122,9 +123,9 @@ test("#768 /Rotate 90 の PDF は読まない（平成27〜29年は表の作り�
 /**
  * **議員の列は「右端から、幅が中央値の ±8% 以内で続くところまで」。**
  *
- * **`±0.35pt` のような絶対値では令和7年2月版が落ちる**——
- * **議員の列の 1 本目だけ 15.00pt、残りが 14.76〜14.88pt で、末尾との差が 0.42pt ある。**
- * **切れると列が 36 本になり、記号 37 個と合わず 72 行すべてが `不明` に落ちる。**
+ * **下のアサーションは「議員の列の幅は 0.35pt より広く散らばる」ことしか言っていない**——
+ * **「±0.35pt の絶対値なら切れる」ではない**（**実装が見るのは中央値からの距離で、
+ * 令和7年2月版は最大 0.240pt しかなく、絶対 0.35pt でも切れない。#1004 が実測**）。
  */
 test("#768 列: 集計欄は議員の列より広い。±8% で切ると議員の列だけが残る", async () => {
   for (const [name, expect] of [[FIX.r8_06, 37], [FIX.r7_02, 37], [FIX.r7_04, 37], [FIX.r4_09, 37]] as const) {
@@ -145,7 +146,7 @@ test("#768 列: 集計欄は議員の列より広い。±8% で切ると議員�
   const countGaps = gaps.slice(2, gaps.length - (cols.length - 1));
   assert.ok(countGaps.length >= 7, `集計欄が ${countGaps.length} 欄`);
   assert.ok(Math.min(...countGaps) > Math.max(...memberGaps), `集計欄 ${Math.min(...countGaps).toFixed(2)}pt > 議員 ${Math.max(...memberGaps).toFixed(2)}pt`);
-  assert.ok(Math.max(...memberGaps) - Math.min(...memberGaps) > 0.35, "議員の列の幅は ±0.35pt に収まらない（絶対値では切れない）");
+  assert.ok(Math.max(...memberGaps) - Math.min(...memberGaps) > 0.35, "議員の列の幅は 0.35pt より広く散らばる（中央値からの距離ではない。#1004）");
 });
 
 /**

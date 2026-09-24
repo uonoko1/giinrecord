@@ -63,8 +63,10 @@ describe("#951 本番データ: 会期ごとの名簿の写り方が画面に出
       maxSeatsChanged: sums.reduce((n, s) => Math.max(n, s.maxSeatsChanged), 0),
       flagged: sums.reduce((n, s) => n + s.flagged.length, 0),
     }).toEqual({ assemblies: 11, sessions: 119, maxSeatsChanged: 5, flagged: 0 });
-    // **線は今までに起きた最大（4）の外に在る**（内側に引けば今すぐ赤くなり、誰も見なくなる。#785）
-    expect(SEATS_CHANGED_FLAG).toBeGreaterThan(4);
+    // **線は今までに起きた最大（5）の外に在る**（内側に引けば今すぐ赤くなり、誰も見なくなる。#785）
+    // **実測から引く**（`4` を直書きすると、最大が 5 に動いた #973 のあとも緑のままだった。#1007）
+    const maxSeatsChanged = sums.reduce((n, s) => Math.max(n, s.maxSeatsChanged), 0);
+    expect(SEATS_CHANGED_FLAG).toBeGreaterThan(maxSeatsChanged);
   });
 
   it("/coverage に、本番の母数（119 会期）と「印の付いた会期は無い」が出る", async () => {
