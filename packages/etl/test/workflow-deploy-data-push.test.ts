@@ -68,22 +68,40 @@ function onBlock(): string[] {
   return out;
 }
 
-test("deploy-data.yml は main への push で起動する（#995: 人のマージが 29 本、何も起動していなかった）", () => {
+/**
+ * `on:` の中の 1 つのトリガ（`push:` など）の本体だけを返す。
+ *
+ * **`on:` ブロック全体から `paths:` を探してはいけない。** 変異 #1（`push:` を `pull_request:` に
+ * 差し替える）を当てたとき、paths の検査が**素通りした**——`paths:` は依然として `on:` の中に
+ * 在ったからである。**在る場所が意味を決める**ので、ここは親を指定して取り出す。
+ */
+function triggerBody(name: string): string[] | undefined {
   const block = onBlock();
-  const pushIdx = block.findIndex((l) => /^\s{2}push:\s*$/.test(l));
+  const head = new RegExp(`^\\s{2}${name}:\\s*$`);
+  const start = block.findIndex((l) => head.test(l));
+  if (start < 0) return undefined;
+  const out: string[] = [];
+  for (let i = start + 1; i < block.length; i++) {
+    if (/^\s{2}\S/.test(block[i])) break; // 次のトリガ
+    out.push(block[i]);
+  }
+  return out;
+}
+
+test("deploy-data.yml は main への push で起動する（#995: 人のマージが 29 本、何も起動していなかった）", () => {
+  const push = triggerBody("push");
   assert.ok(
-    pushIdx >= 0,
+    push,
     "on: に push: が無い。人が data/ を含む PR をマージしても deploy-data が起動せず、" +
       "安全網の cron まで最大 27.99h（実測）本番が main から遅れる",
   );
-  const push = block.slice(pushIdx + 1).filter((l) => /^\s{4}\S/.test(l) || /^\s{6}/.test(l));
-  const body = push.join("\n");
-  assert.match(body, /branches:\s*\[\s*main\s*\]/, "push の branches が [main] でない");
+  assert.match(push.join("\n"), /branches:\s*\[\s*main\s*\]/, "push の branches が [main] でない");
 });
 
 test("push の paths は data/ だけを拾う（コードの push で本番データ配信を起こさない）", () => {
-  const block = onBlock().join("\n");
-  const m = block.match(/paths:\s*\n((?:\s{6}-\s*\S+\n?)+)/);
+  const push = triggerBody("push");
+  assert.ok(push, "on: に push: が無い（paths 以前の問題）");
+  const m = push.join("\n").match(/paths:\s*\n((?:\s{6}-\s*\S+\n?)+)/);
   assert.ok(m, "on.push に paths が無い。全 push で起動すると deploy-vps の待ち行列が不要に伸びる");
   const paths = m[1]
     .split("\n")
