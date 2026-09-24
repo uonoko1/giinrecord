@@ -1,7 +1,8 @@
 name: Deploy data
 # Issue #939: daily data (validateDataset-checked facts) flows to BOTH staging and production automatically.
-# etl.yml / districts.yml dispatch this right after the data PR merges (`gh workflow run deploy-data.yml --ref main`;
-# a GITHUB_TOKEN merge fires no push event, so deploy-staging.yml would not run by itself).
+# etl.yml / districts.yml / local-assemblies.yml dispatch this right after their data PR merges
+# (`gh workflow run deploy-data.yml --ref main`; a GITHUB_TOKEN merge fires no push event, so neither
+# deploy-staging.yml nor the `on.push` below would run by itself — that is exactly why the dispatch exists).
 # The production job uses environment `production-data`, kept separate from `production` so the two paths can be gated
 # independently. Today neither has required reviewers (#659), so neither waits; keeping them apart means adding a gate to
 # releases later would not stop the daily data.
