@@ -238,6 +238,22 @@ export function checkCellsAgainstLegend(cells: readonly string[], legend: Record
  */
 function joinedLines(items: Item[]): { y: number; text: string }[] {
   if (items.length === 0) return [];
+  // **ここの許容差は、今の 151 本では等価変異である**（Issue #999。**測ったので、そう書き残す**）。
+  //
+  // **`byRowThenColumn` を元の `(b.y - a.y || a.x - b.x)` に戻す変異を当てても、
+  // 151 本の出力は 1 ビットも変わらない**（読めた 112 本のうち値が変わった本 0、読めなくなった本 0）。
+  //
+  // **理由は「差が小さいから」ではない。誤差でひっくり返る対は、ここがいちばん多い**——
+  // **151 本で 2,627 対（`cellText` と `joinVertical` は 0 対）。**
+  // **それでも出力が変わらないのは、この関数の結果が
+  // 「`TITLE` に当たる行」と「凡例として読める行」を探すためだけに使われるから**である。
+  // **崩れるのは本文の行で、そこは `TITLE` にも `LEGEND_ITEM` にも当たらない。**
+  // **実測（151 本）: 表題として当たった行 479 / 凡例として当たった行 444 のうち、
+  // 許容差の有無で文字列が変わったものは 0 行。**
+  // **当たり外れが変わった行も 0 行**（新しく当たるようになった行 0 / 当たらなくなった行 0）。
+  //
+  // **それでも許容差つきを使う**——**「今のデータでは同じ」は「正しい」ではない。**
+  // **本文の行が崩れたまま表題や凡例の形に当たってしまえば、別の文字列が黙って通る**（#569）。
   const sorted = [...items].sort(byRowThenColumn);
   const out: { y: number; text: string }[] = [];
   let line: Item[] = [];
