@@ -112,6 +112,17 @@ const UNMEASURED_BOUNDARIES: Readonly<Record<string, string>> = {
  * `seatsChanged` を IN + OUT と比べたのではなく OUT（15）と比べていたからである。**
  *
  * **本番の 119 会期で、`seatsChanged` が総量と一致した会期は 1 つも無い**（下のテスト）。
+ *
+ * ## ⚠ **このテストは `data/` の中身を主張していて、実装を主張していない**（**変異で確かめた**）
+ *
+ * **`meta.json` を読むだけなので、`sessionRosterCoverageOf` を `min` → `max` に変異させても落ちない**
+ * （**書き出し済みの `data/` は変わらないため**）。**`data/assemblies/pref-41/meta.json` の
+ * `seatsChanged` を 1 つ書き換えると落ちる**——**つまり見ているのは出荷しているデータである。**
+ *
+ * **実装が `min` であること自体は `local-session-roster-coverage.test.ts` が
+ * `assert.equal(r.seatsChanged, Math.min(...))` で固定しており、
+ * `meta.sessionRosterCoverage` が採決の原本と一致することも同じファイルが見ている。**
+ * **ここで測りたいのは「出荷しているデータでこの性質が成り立っているか」なので、これでよい。**
  */
 test("#986 seatsChanged <= floor((rosterAbsent + unmatchedNames) / 2)（本番 119 会期すべて）", async () => {
   const prefs = await localPrefs();
@@ -281,14 +292,28 @@ test("#986 感度: 秋田と佐賀は IN/OUT の分け方をどう振っても 1
  * 境ではそれより大きくなりうる。** **この節が言えるのは「入れ替わりが 9 人なら、
  * それだけでは線に届かない」ということだけで、三重の境が鳴らないことの証明ではない。**
  */
-test("#986 線 10 に掛かるには入れ替わりの総量が 20 以上要る（三重の 9 では届かない）", () => {
+test("#986 線 10 に掛かるには入れ替わりの総量が 20 以上要る（三重の 9 では届かない）", async () => {
   const ceiling = (churn: number) => Math.max(...Array.from({ length: churn + 1 }, (_, a) => Math.min(a, churn - a)));
   assert.equal(ceiling(9), 4, "**三重の境の総量 9**（内訳が無くても上限は 4）");
   assert.equal(ceiling(19), 9, "総量 19 でも届かない");
   assert.equal(ceiling(20), 10, "**総量 20 が線 10 に届く最小**");
-  // **本番 11 県の最大の総量は 12**（滋賀）——**半分の 6 すら線の半分である**
-  assert.ok(ceiling(12) < SEATS_CHANGED_FLAG, "本番の最大の総量 12 でも線には届かない");
-  assert.equal(ceiling(12), 6);
+  // **本番の最大の総量は、書き写さずに `data/` から数える**（#986 の PO の誤りと同じ轍を踏まない）
+  let maxChurn = 0;
+  let where = "";
+  let sessions = 0;
+  for (const p of await localPrefs()) {
+    for (const r of (await metaOf(p)).sessionRosterCoverage) {
+      sessions++;
+      const churn = r.rosterAbsent + r.unmatchedNames;
+      if (churn > maxChurn) { maxChurn = churn; where = `${p} ${r.sessionId}`; }
+    }
+  }
+  assert.equal(sessions, 119, "母数（#757）");
+  assert.equal(maxChurn, 12, "**本番 11 県の最大の総量**");
+  assert.equal(where, "pref-25 2023-11", "**どの会期か**（滋賀。母数 42 人）");
+  // **その最大の総量ですら、線には届かない**——**本番が鳴らないのは境をまたいでいないからである**
+  assert.ok(ceiling(maxChurn) < SEATS_CHANGED_FLAG, "本番の最大の総量でも線には届かない");
+  assert.equal(ceiling(maxChurn), 6);
 });
 
 /* ==================== 3. `flagged: 0` が何を意味するか ==================== */
