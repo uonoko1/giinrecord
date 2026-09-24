@@ -130,6 +130,21 @@ const PLACES: readonly { path: string; why: string; needs: readonly Quantity[] }
 
 const LABEL: Record<Quantity, string> = { sessions: "会期", rollcalls: "採決", votes: "票", max: "最大" };
 
+/**
+ * ## **1 桁の数は「本文のどこかに在る」では検査にならない**（**変異で見つけた**）
+ *
+ * **最初はこのテストも最大（5）を `mentions` で見ていたが、
+ * `needs` から `max` を外す変異を当てても 1 件も落ちなかった**——
+ * **`5` も `4` も、5 か所すべての本文のどこかには必ず出てくるからである**（実測: 5 / 5 か所）。
+ * **`99` のような在り得ない 2 桁は 5 か所中 1 か所にしか出てこないので、
+ * 桁が増えれば効くが、1 桁では常に緑になる。**
+ *
+ * **だから最大だけは「数が在るか」ではなく「`seatsChanged` の最大は N」という語ごと見る。**
+ * **5 か所すべてがこの綴りに揃えてある**（#1007 が揃えた。**揃っていなければ落ちる**）。
+ */
+const maxPhrase = (text: string, n: number): boolean =>
+  spellings(n).some((s) => text.includes(`\`seatsChanged\` の最大は ${s}`));
+
 test("#1007 線と実測の距離を書いた 5 か所が、本番 data/ の実測と一致する", async () => {
   const m = await measure();
   // **母数を先に置く**（#757。**数え直しが空回りしていたら以降は無意味**）
@@ -146,7 +161,8 @@ test("#1007 線と実測の距離を書いた 5 か所が、本番 data/ の実�
     // **その場所が本当に `seatsChanged` の話をしていること**（**関係の無いファイルを緑で通さない**）
     assert.ok(/seatsChanged|SEATS_CHANGED_FLAG/.test(text), `${path}: seatsChanged の話が無い（${why}）`);
     for (const q of needs) {
-      if (!mentions(text, m[q])) missing.push(`${path}: ${LABEL[q]} ${m[q]} がどの綴りでも出てこない（${why}）`);
+      const ok = q === "max" ? maxPhrase(text, m.max) : mentions(text, m[q]);
+      if (!ok) missing.push(`${path}: ${LABEL[q]} ${m[q]} がどの綴りでも出てこない（${why}）`);
     }
   }
   assert.deepEqual(missing, [], "**実測とずれている所**（**片方だけ直すと此処が落ちる**——#1007 の再発防止）");
@@ -189,4 +205,17 @@ test("#1007 数の綴りの揺れ（4599 / 4,599 / 4_599 / ４５９９）をど
   assert.equal(mentions("119 会期", 119), true);
   // **カンマ区切りの中に当たらない**（**`4,599` の `599` を `599` として引かない**）
   assert.equal(mentions("4,599 採決", 599), false, "カンマ区切りの下 3 桁に当たってはいけない");
+});
+
+/**
+ * ## **`maxPhrase` が語ごと見ていること**（**1 桁を素で探すと常に緑になる**）
+ *
+ * **これが無いと `max` の検査は空回りする**——**実際に変異で空回りを見つけた**（上の docblock）。
+ */
+test("#1007 最大は「`seatsChanged` の最大は N」の語ごと見る（素の 1 桁では当たらない）", () => {
+  assert.equal(maxPhrase("…5 か所…4 件…", 5), false, "1 桁が本文に在るだけでは当たらない");
+  assert.equal(maxPhrase("**`seatsChanged` の最大は 4（三重）**", 5), false, "**古い最大（4）のままなら落ちる**");
+  assert.equal(maxPhrase("**`seatsChanged` の最大は 5（滋賀）**", 5), true);
+  // **母数**: **5 か所すべてがこの綴りに揃っていること**（**揃っていなければ上のテストが落ちる**）
+  assert.equal(PLACES.filter((p) => p.needs.includes("max")).length, 5, "最大を見る所の数（母数）");
 });
