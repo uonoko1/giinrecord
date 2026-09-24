@@ -16,8 +16,16 @@ import { dirname, resolve } from "node:path";
  *
  * `needs:` が無いと `needs.resolve.outputs.ref` は**空文字**に解決される。`deploy-site.yml` の
  * `inputs.ref` は空文字を受け取り（`default: main` は「入力が与えられないとき」にしか効かない——
- * 空文字は与えられた値である）、`actions/checkout` の `ref: ''` は既定ブランチにフォールバックする。
- * **つまり main のコードが本番に出る。** #134 違反そのものである。
+ * 空文字は与えられた値である）、その空文字が `actions/checkout` の `ref:` に渡る。
+ *
+ * **フォールバック先は「main」ではなく「この run を起こした ref」である**（実測で訂正した点）。
+ * `actions/checkout` の `src/input-helper.ts` を読むと、`ref` 入力が空のとき
+ * `result.ref = github.context.ref` / `result.commit = github.context.sha` を使う。
+ * `deploy-data.yml` の 3 つの起動経路（`push: branches: [main]` / `gh workflow run --ref main` /
+ * 既定ブランチで走る `schedule`）はいずれも `github.context.ref` が main なので、
+ * **このワークフローでは結果として main のコードが本番に出る**——#134 違反そのものである。
+ * **ワークフローを走らせて確かめてはいない**（走らせれば本番に出てしまう）。根拠は
+ * `actions/checkout` のソースと、このワークフローの `on:` に書いてある起動経路だけである。
  *
  * ── 既存の検査がなぜ捕まえなかったか ────────────────────────────────────
  * `deploy-docker.test.ts` の #134 ガードは (3) を文字列で見ていた:
@@ -47,6 +55,15 @@ import { dirname, resolve } from "node:path";
  * `needs.*.outputs.*` を参照している箇所は 2 つ（deploy-data の production、release の released-tag）。
  * 下の検査は 3 ワークフロー（deploy-data 3 job / release 2 job / deploy-staging 1 job、計 6 job）を
  * 走査し、参照 2 件すべてを検証する。**0 件だったら落とす**（「参照が無い」と「数えていない」を分ける）。
+ *
+ * ── 塞げていない穴（変異で見つけた。この PBI の対象外にした）────────────
+ * **`deploy-staging.yml` の `ref: ${{ github.sha }}` を `main` に書き換えても、何も落ちない**
+ * （実測 2026-09-25: この 3 件 + deploy-docker.test.ts の計 50 件が 50/50 緑）。
+ * **#1017 の対象外にした理由**: 行き先が staging だけで、本番（`target_dir: site`）には触れない。
+ * また `on: push: branches: [main]` で走るので `github.sha` は main の先端であり、
+ * 差が出るのは「push の直後に main がさらに進んだ」ときの**どの sha を配るか**だけで、
+ * **#134 の「released と main が混ざる」とは別の話**である。
+ * **直すなら別 PBI。** ここで一緒に固定すると、この検査が見ている主題（needs の鎖）がぼやける。
  */
 const here = dirname(fileURLToPath(import.meta.url));
 const wfDir = resolve(here, "../../../.github/workflows");
