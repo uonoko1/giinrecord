@@ -189,25 +189,122 @@ test("#999 高さが取れない（h=0）ときも床 1 が効いて、微小な
 /* ---------- 5. 三重の中で閉じていること ---------- */
 
 /**
- * **共有層（`pdf-table.ts`）に染み出していないこと**（#953。**「追記だけだから安全」は射程の議論ではない**）。
+ * **`pdf-table.ts` の `joinVertical` が、許容差つきの並べ替えになっていないこと**（#999）。
  *
- * **`tol = 1e-5 h` は三重の 151 本で測った値で、他県では余裕が 1.04 倍しかない**（佐賀）。
- * **共有層に置くと 11 県が通る道になり、測っていない県で効き始める。**
+ * ## なぜ文字列の grep をやめたか（**レビューで実証された**）
  *
- * **この検査はソースを読んで固定する**——**実装を移しただけでは落ちないので、
- * 「他県が通る関数に入れる」変異をここで捕まえる。**
+ * **直す前のこの検査は `pdf-table.ts` のソースを `/1e-5/` と `/rowOrdered/` で見ていた。**
+ * **レビュアーが 2 通りの回避を実証し、どちらも全件緑で通った**:
+ *   - **`0.00001` と書き、`rowOrdered` という名前を使わずに `joinVertical` へ注入する**
+ *   - **元の `sort` 行を残したまま、その直後で `sorted.sort(...)` し直す**
+ * **私も両方を当て直して、17 件中 0 件 fail（＝素通り）を確認した。**
+ * **denylist の文字列一致は、綴りを変えられた時点で何も守らない。**
+ *
+ * ## なぜ重いか（#569）
+ *
+ * **`joinVertical` は議員の氏名（`nameText`）を組み立てる**。
+ * **徳島・島根・宮城・奈良・秋田・高知・滋賀・青森の 8 県が通る。**
+ * **ここが非推移的な比較で並ぶと、V8 の `sort` は要素数でアルゴリズムを変えるので、
+ * 氏名が黙って別の順に組まれる**——**「別人の記録が出る」そのものである。**
+ *
+ * ## どう固定するか: **振る舞いで見る**
+ *
+ * **`joinVertical` を、許容差つきなら必ず結果が変わる形で呼ぶ。**
+ * **`y` が `tol` の半分だけ違い、`x` では逆順**の 2 文字を渡す:
+ *   - **元の比較**（`b.y - a.y || a.x - b.x`）なら **y が優先**されて `上下` の順
+ *   - **許容差つき**（同じ行とみなす）なら **x が優先**されて `下上` の順
+ * **実装を何と名付けようと、どこに書こうと、振る舞いが変われば落ちる。**
  */
-test("#999 射程: 許容差つきの並べ替えは共有層 pdf-table.ts に無い", () => {
-  const src = readFileSync(new URL("../src/sources/local/pdf-table.ts", import.meta.url), "utf8");
-  assert.ok(!/1e-5/.test(src), "pdf-table.ts に 1e-5（#999 の許容差）が入っている");
-  assert.ok(!/rowOrdered|byRowThenColumn/.test(src), "pdf-table.ts に #999 の並べ替えが入っている");
-  // **`joinVertical`（7 県が通る）は元の比較のままであること**——ここが染み出しの入口になる
-  const jv = src.slice(src.indexOf("export function joinVertical"));
-  assert.match(jv.slice(0, 200), /sort\(\(a, b\) => b\.y - a\.y \|\| a\.x - b\.x\)/,
-    "joinVertical の比較が #999 の許容差つきに差し替えられている（7 県に染み出す）");
+test("#999 射程: 共有層の joinVertical は許容差を持たない（8 県の議員氏名が通る道）", async () => {
+  const { joinVertical } = await import("../src/sources/local/pdf-table.ts");
+  // **#999 の tol（h の 1e-5）の半分**。許容差があれば「同じ行」に入る大きさ
+  const h = 8.4;
+  const d = h * 1e-5 / 2;
+  // **上の文字のほうが x が大きい**——**y で並べば `上下`、x で並べば `下上`**
+  const up = { str: "上", x: 900, y: 600, w: h, h, cx: 900 + h / 2, cy: 600 + h / 2 };
+  const down = { str: "下", x: 100, y: 600 - d, w: h, h, cx: 100 + h / 2, cy: 600 - d + h / 2 };
+  assert.ok(up.y > down.y, "前提: 上のほうが y が大きい");
+  assert.ok(up.x > down.x, "前提: x では逆順（許容差があれば下が先に来る並び）");
+  assert.equal(joinVertical([up, down]), "上下",
+    "joinVertical が許容差つきになっている（#999 の tol の半分で順序が変わった）。8 県の議員氏名がこの関数を通る");
+  // **入れ替えて渡しても同じ**（比較が壊れていれば、ここで入力順に引きずられる）
+  assert.equal(joinVertical([down, up]), "上下", "joinVertical の結果が入力の順序で変わった");
 });
 
-test("#999 射程: 許容差つきの並べ替えを使っているのは三重だけ", () => {
+/**
+ * **共有層の `sort` を全部数え上げて、比較式を allowlist で固定する**（#757。**母数つき**）。
+ *
+ * **denylist（「これが入っていなければよい」）ではなく allowlist（「これしか無い」）にする。**
+ * **数え上げた総数も固定する**ので、**新しい `sort` を足せば、それだけで落ちる。**
+ * **上の振る舞いの検査と二重にしてある**——
+ * **振る舞いは `joinVertical` 1 か所しか見ないが、こちらは共有層の全部を見る。**
+ */
+test("#999 射程: 共有層 pdf-table.ts の sort は 2 か所で、どちらも許容差を持たない", () => {
+  const src = readFileSync(new URL("../src/sources/local/pdf-table.ts", import.meta.url), "utf8");
+  // **コメントを除いてから数える**（docblock の中の `.sort(` を拾わない）
+  const code = src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+  const comparators = [...code.matchAll(/\.sort\(([^;]*?)\)(?:;|\.)/g)].map((m) => m[1].replace(/\s+/g, " ").trim());
+  // **母数**（#757）。「許容差 0 件」と「sort を 1 つも見ていない」を同じ出力にしない
+  assert.equal(comparators.length, 2, `共有層の sort ${comparators.length} か所: ${comparators.join(" / ")}`);
+  // **allowlist: この 2 つだけ**。どちらも「厳密な比較」で、許容差を持たない
+  assert.deepEqual(comparators.sort(), [
+    "(a, b) => a - b",                        // cluster: 値の昇順
+    "(a, b) => b.y - a.y || a.x - b.x",       // joinVertical: 上から下、同じ y なら左から右
+  ], "共有層の sort の比較式が allowlist から外れた（#999 の許容差が染み出していないか確かめること）");
+});
+
+/**
+ * **どの県のファイルにも「許容差つきの比較関数」が無いこと**（**構造で見る。文字列ではなく**）。
+ *
+ * **レビュアーは徳島に非推移的な `tol` 付き `sort` を直接書いて緑を通した。**
+ * **共有層は上の 2 つ（振る舞い・allowlist）が押さえるが、県ごとの写しはそれでは拾えない。**
+ *
+ * ## 何を見るか: **「比較関数が、条件つきで `0` を返す」形**
+ *
+ * **許容差の本質はこれである**——**「近ければ同値とみなす」＝「条件つきで `0` を返す」。**
+ * **`Math.abs` を使うかどうかは書き方の問題なので、そこを見ない。**
+ *
+ * **実測（2026-09-24、この形で 4 通りの書き方を試した）**:
+ *
+ * | 書き方 | 捕まえるか |
+ * |---|---|
+ * | `Math.abs(a.y - b.y) <= tol ? 0 : …`（レビュアーの X5） | **捕まえる** |
+ * | `(a.y - b.y) * (a.y - b.y) <= 1e-8 ? 0 : …`（`Math.abs` を使わない） | **捕まえる** |
+ * | `Math.hypot(a.y - b.y) < w ? 0 : …`（定数を別名で持つ） | **捕まえる** |
+ * | `near(a.y, b.y) ? 0 : …`（判定を関数に出す） | **捕まえる** |
+ * | `b.y - a.y || a.x - b.x`（正しい比較） | 素通り（＝正） |
+ * | `(a.big ? 1 : -1) || a.x - b.x`（三項だが `0` を返さない） | 素通り（＝正） |
+ * | `rowOf.get(b)! - rowOf.get(a)! || a.x - b.x`（三重の直した形） | 素通り（＝正） |
+ *
+ * **三重の `rowOrdered` がこの検査に当たらないのは、たまたまではない**——
+ * **許容差を比較関数の外（`cluster` による行への丸め）に出したからである。**
+ * **「比較関数の中に許容差を置かない」ことが、そのまま検査になっている。**
+ *
+ * **これも完全ではない**（`sort` を経由せず自前で並べる、比較を別ファイルに置く、など）。
+ * **共有層は振る舞いで押さえてあるので、ここは県ごとの写しを拾う二重目である。**
+ */
+test("#999 射程: 比較関数の中で条件つきに 0 を返す（＝許容差つきの）sort は 1 つも無い", () => {
+  const dir = new URL("../src/sources/local/", import.meta.url);
+  // **`.sort((…) => … ? 0 : …`**——**「近ければ同値」を比較関数の中でやっている形**
+  const TOL_COMPARE = /\.sort\(\s*\([^)]*\)\s*=>[^;]*?\?\s*0\s*:/;
+  const hits: string[] = [];
+  let scanned = 0;
+  for (const pref of readdirSync(dir)) {
+    const sub = new URL(`${pref}/`, dir);
+    try { if (!statSync(sub).isDirectory()) continue; } catch { continue; }
+    for (const f of readdirSync(sub)) {
+      if (!f.endsWith(".ts")) continue;
+      scanned++;
+      const code = readFileSync(new URL(f, sub), "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+      if (TOL_COMPARE.test(code)) hits.push(`${pref}/${f}`);
+    }
+  }
+  // **母数**（#757）。「0 件」と「1 ファイルも読んでいない」を区別する
+  assert.equal(scanned, 68, `読んだファイル ${scanned}（実測 68。県のディレクトリの .ts 全部）`);
+  assert.deepEqual(hits, [], `比較関数の中に許容差を持つファイル: ${hits.join(" ")}`);
+});
+
+test("#999 射程: rowOrdered を使っているのは三重だけ", () => {
   const dir = new URL("../src/sources/local/", import.meta.url);
   const users: string[] = [];
   for (const pref of readdirSync(dir)) {
