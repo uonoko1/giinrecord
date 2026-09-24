@@ -6,6 +6,7 @@ import { cluster, readPages, within, type PageGeometry, type RotatedPageGeometry
 import * as aomori from "../src/sources/local/aomori/votes-pdf.ts";
 import * as saga from "../src/sources/local/saga/votes-pdf.ts";
 import * as akita from "../src/sources/local/akita/votes-pdf.ts";
+import { UNKNOWN_CELL } from "../src/sources/local/akita/votes-pdf.ts";
 import * as shiga from "../src/sources/local/shiga/votes-pdf.ts";
 
 /**
@@ -269,6 +270,45 @@ function probeSaga(page: PageGeometry): Probe {
  *
  * **正しい測り方は `page.items` を混ぜること**——**そこは誰も順序を約束していない**
  * （pdfjs が返した順がそのまま来るだけ）。**`voteRows()` の中の並べ替えごと通す。**
+ *
+ * ## **前提が破れたとき「別人の票」になる経路を探した**（PO の指摘を受けて測った）
+ *
+ * **「全部 `不明` に落ちる」は結果であって、保証ではない。**
+ * **`voteRowCore` には `if (!(step > 0)) return [...marks];` という抜け道がある**——
+ * **並んでいない入力では中央値の間隔が 0 以下になりうるので、そこを通ると
+ * 「並べ替えられていない marks がそのまま芯として返る」。**
+ * **そのとき長さが `mc.n` と一致すれば、`core[k].ch` が k 列目に入る＝別人の票になる。**
+ *
+ * **223 行 × 200 通りの混ぜ方 = 44,600 試行で、この経路をどこまで進むかを数えた**（実測）:
+ *
+ * | 段階 | 試行 |
+ * |---|---:|
+ * | 混ぜた試行（母数） | **44,600** |
+ * | **`step <= 0` になった**（抜け道に入った） | **20,444** |
+ * | **芯の長さが `mc.n` と一致した**（長さの検査を抜けた） | **1,192** |
+ * | **`columnOf(...) === k` の検算まで通った** | **0** |
+ * | **別人の票になった** | **0** |
+ *
+ * **つまり「長さが合う」ところまでは 1,192 回到達する。止めているのは `columnOf` の検算だけである。**
+ * **秋田の docblock は「154 本でこの枝は 1 度も効かない」と書いているが、
+ * それは正しい入力での話で、前提が破れた入力では 1,192 回効いている。**
+ *
+ * **余裕も測った**——**落ちた 1,192 回のうち 1,188 回（99.7%）は `k = 0`、
+ * 残り 4 回が `k = 1` で、それより後ろまで通ったものは 0。**
+ * **検算は「いちばん最初の記号」で捕まえており、薄氷ではない。**
+ *
+ * **`columnOf` の検算が本当に効いているかは、外して測った**（同じ 44,600 試行）:
+ *
+ * | | 素のコード | **検算を外す** |
+ * |---|---:|---:|
+ * | 全部 `不明` | 44,600 | 43,408 |
+ * | **別人の票になった行** | **0** | **1,181** |
+ * | **誤ったセル** | **0** | **6,742** |
+ *
+ * **だからここは「明文化すれば足りる」と判断した**（PBI を分けない）——
+ * **守りは既にあり、外すと 1,181 行が別人の票になることまで測れている。**
+ * **欠けていたのは前提の記述だけである。**
+ * **`voteRowCore` と `readVoteCells` の docblock に、この表を添えて前提を書いた。**
  */
 function probeAkita(raw: RotatedPageGeometry): Probe {
   const out: Probe = { calls: 0, cells: 0, mismatches: [] };
@@ -437,6 +477,57 @@ test("#1002 4 県の readVoteCells の本体が y / cy を 1 度も読まない"
   }
   assert.equal(checked, 4, "4 県ぶん見ているはず（母数）");
   assert.deepEqual(offenders, [], "票を決める関数の中で y を読んでいる（#999 の揺れが票に届く道ができる）");
+});
+
+/**
+ * **秋田の `columnOf` の検算が、前提の破れを本当に止めていることを固定する**（#1002）。
+ *
+ * **`voteRowCore` は「`marks` が cx の昇順」を前提にしている。**
+ * **前提が破れた入力を作り、`readVoteCells` が「別人の票」を 1 つも出さないことを見る。**
+ *
+ * **これは上の「混ぜても変わらない」検査では守れない**——
+ * **あちらは `page.items` を混ぜるので、`voteRows()` が並べ直してしまい、前提は破れない。**
+ * **ここでは `row.marks` を直に混ぜて、前提そのものを破る。**
+ *
+ * **実測（2026-09-25。6 本 223 行 × 200 通り = 44,600 試行）**:
+ * **素のコードでは 44,600 試行すべてが全セル `不明`。別人の票は 0。**
+ * **`columnOf` の検算を外すと 1,181 行が別人の票になる（誤ったセル 6,742）。**
+ * **＝この検査は空振りではない。**
+ *
+ * **検査では 200 通りではなく 20 通りにしてある**（CI の時間のため）。
+ * **20 通りでも、検算を外す変異では落ちることを確かめてある。**
+ */
+test("#1002 秋田: marks の並び順の前提が破れても、別人の票は 1 つも出ない", async () => {
+  let trials = 0, notAllUnknown = 0;
+  const wrong: string[] = [];
+  for (const file of pdfsIn("akita")) {
+    let ps: RotatedPageGeometry[];
+    try { ps = await pages("akita", file); } catch { continue; }
+    for (const rp of ps) {
+      const page = unrotate(rp);
+      const mc = akita.findMemberColumns(page);
+      if (!mc) continue;
+      for (const r of akita.voteRows(page)) {
+        const base = akita.readVoteCells(r, mc);
+        for (let seed = 1; seed <= 20; seed++) {
+          trials++;
+          const got = akita.readVoteCells({ ...r, marks: shuffled(r.marks, seed) }, mc);
+          if (got.every((c) => c === UNKNOWN_CELL)) continue; // 丸ごと落ちた＝安全な向き
+          notAllUnknown++;
+          // 落ちていないなら、元と 1 セルも違ってはいけない
+          for (let k = 0; k < got.length; k++) {
+            if (got[k] !== base[k] && got[k] !== UNKNOWN_CELL) {
+              wrong.push(`${file} seed ${seed} 列 ${k}: ${base[k]} → ${got[k]}`);
+            }
+          }
+        }
+      }
+    }
+  }
+  // **母数**（#757。0 試行なら何も主張しない）
+  assert.equal(trials, 223 * 20, `前提: 秋田の票の行は 223 のはず（試行 ${trials} / 20 通り）`);
+  assert.deepEqual(wrong.slice(0, 5), [], `別人の票が出た（${wrong.length} 件 / 試行 ${trials}）`);
+  assert.equal(notAllUnknown, 0, `全セル 不明 にならなかった試行が ${notAllUnknown} 件（実測は 0 件）`);
 });
 
 /**
