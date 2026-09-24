@@ -370,15 +370,14 @@ test("#951 境をまたいだ 3 県は、3 つとも線の外・3 つとも #928
       rings928: daysApart(date, asOf) > LOCAL_TERM_DAYS,
     };
   };
+  // **奈良**（#950 の境 2022-10-12。41 名中 17 名入れ替わり。rosterAsOf 2026-04-24）
+  const nara = border(40, 23, 18, "2022-10-12", "2026-04-24");
+  // **宮城**（#953 の境 2023-07-12。58 名中 18 名。rosterAsOf 2026-09-17）
+  const miyagi = border(56, 40, 18, "2023-07-12", "2026-09-17");
+  // **青森**（#959 の境 2023-03-08。44 名中 11 名が名簿に無い。rosterAsOf 2026-05-25）
+  const aomori = border(46, 33, 11, "2023-03-08", "2026-05-25");
   assert.deepEqual(
-    {
-      // **奈良**（#950 の境 2022-10-12。41 名中 17 名入れ替わり。rosterAsOf 2026-04-24）
-      nara: border(40, 23, 18, "2022-10-12", "2026-04-24"),
-      // **宮城**（#953 の境 2023-07-12。58 名中 18 名。rosterAsOf 2026-09-17）
-      miyagi: border(56, 40, 18, "2023-07-12", "2026-09-17"),
-      // **青森**（#959 の境 2023-03-08。44 名中 11 名が名簿に無い。rosterAsOf 2026-05-25）
-      aomori: border(46, 33, 11, "2023-03-08", "2026-05-25"),
-    },
+    { nara, miyagi, aomori },
     {
       nara: { seatsChanged: 17, flagged: true, snappedPct: 56.1, daysBefore: 1_290, rings928: false },
       miyagi: { seatsChanged: 16, flagged: true, snappedPct: 69.0, daysBefore: 1_163, rings928: false },
@@ -388,13 +387,22 @@ test("#951 境をまたいだ 3 県は、3 つとも線の外・3 つとも #928
   );
   // **この 3 県は「いちばん小さい境」ではない**（#990 が 11 県すべてを測り直した。#1007 で訂正）——
   // **測れた 8 県のうち 秋田 9・佐賀 4 がこの線の下にある。**
-  // **ここで「いちばん小さい境は青森 11、線との差は 1」と書いていたのが誤りだった**——
-  // **`assert.equal(11 - SEATS_CHANGED_FLAG, 1)` は定数どうしの恒真式で、
-  //   11 が実測と食い違っていても永久に緑だった**（#1001 が引いた「測定は数字が誤っても緑になる」の実例）。
-  // **だから 11 県の境そのものを見る**（`local-seats-changed-boundaries.test.ts` が組み立てたのと同じ値）。
+  //
+  // ## ⚠ **此処には 2 代つづけて恒真式が置かれていた**（#1007 のレビューが実証した）
+  //
+  // **1 代目**: `assert.equal(11 - SEATS_CHANGED_FLAG, 1)`
+  //   ——**`11` も `SEATS_CHANGED_FLAG` も定数なので、実測が何であっても永久に緑だった。**
+  // **2 代目**（#1007 が置いた）: `assert.equal(Math.min(17, 16, 11) - SEATS_CHANGED_FLAG, 1)`
+  //   ——**`17` / `16` / `11` もすべてリテラルで、直上の `border(...)` が計算した実測は流れていない。**
+  //   **レビュアーが青森の入力を `border(46, 36, 8, …)` に変え（境が線の下に落ちた状況）、
+  //     `deepEqual` の期待値も揃えたところ、この assert は緑のまま通った**（pass 15 / fail 0）。
+  //
+  // **だから `border(...)` の戻り値そのものから引く**（**リテラルを 1 つも挟まない**）。
   assert.equal(SEATS_CHANGED_FLAG, 10);
-  assert.equal(Math.min(17, 16, 11) - SEATS_CHANGED_FLAG, 1,
-    "**この 3 県の中での最小（青森 11）と線の差**——**11 県の最小ではない**");
+  const smallest = Math.min(nara.seatsChanged, miyagi.seatsChanged, aomori.seatsChanged);
+  assert.equal(smallest, aomori.seatsChanged, "**この 3 県での最小は青森**（**入力が変われば此処が落ちる**）");
+  assert.equal(smallest - SEATS_CHANGED_FLAG, 1,
+    "**この 3 県の中での最小（青森 11）と線の差**——**11 県の最小ではない**（**最小は佐賀 4**）");
 });
 
 /** 2 つの ISO 日付の差（日数）。`rosterWindowOf` が中で使っているのと同じ計算。 */

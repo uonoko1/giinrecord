@@ -4,6 +4,7 @@ import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { LocalAssemblyMeta } from "@seiji-kiroku/shared";
+import { SEATS_CHANGED_FLAG, sessionRosterCoverageOf } from "../src/local-assemblies.ts";
 
 /**
  * # **`seatsChanged` の線（10）と実測の距離を書いた所を、全部まとめて数え直す**（Issue #1007）
@@ -49,12 +50,26 @@ import type { LocalAssemblyMeta } from "@seiji-kiroku/shared";
  * `SEATS_CHANGED_FLAG` について ETL の原文を読んで突き合わせている**（`packages/shared` が定数を持てないため）。
  * **此処はそれを「定数」から「実測の数字」へ広げただけである。**
  *
- * ## ⚠ **このテストが見ていないもの**（**正直に書く**）
+ * ## ⚠ **最初これは「母数と最大」しか見ておらず、#1007 の本題を素通りした**（**レビューが実証した**）
  *
- * **見るのは「本番 `data/` の実測と、文章に書かれた数字が一致するか」だけである。**
- * **「その文章の主張が正しいか」は見ていない**——
- * **例えば「いちばん小さい境は佐賀 4」は `local-seats-changed-boundaries.test.ts` が測っており、
- * 此処はその値が doc に正しく写っているかだけを見る。**
+ * **`DATA_CONTRACT.md:237` の本丸——「いちばん小さい境（青森 11）との差が 1」——を
+ * 元の誤り文そのままに書き戻しても、母数と最大さえ新しければ 4 テストとも緑で通った**
+ * （**`pnpm --filter @seiji-kiroku/etl test` も 2115 / 2115 緑**）。
+ * **`青森` も `佐賀 4` も `秋田 9` も、当時は docblock のコメントに在るだけで
+ * assert には 1 つも無かった。**
+ *
+ * **「数字が合っているか」と「その数字が主張していることが正しいか」は別である。**
+ * **#1007 が直したのは後者なので、後者を検査しなければ再発は止まらない。**
+ *
+ * **だから下の `SMALLEST_BOUNDARY` を足した**——
+ * **11 県の境を本番 `data/` から組み直し、「いちばん小さい境は佐賀 4」という文ごと突き合わせる。**
+ *
+ * ## ⚠ **それでもこのテストが見ていないもの**（**正直に書く**）
+ *
+ * **見るのは「本番 `data/` の実測と、文章に書かれた数字・語が一致するか」までである。**
+ * **11 県の境の組み立てそのもの（IN / OUT の当て方と、その仮定）は
+ * `local-seats-changed-boundaries.test.ts` が持っており、此処はその値を独立にもう一度出して突き合わせるだけ。**
+ * **2 つが同じ仮定を共有しているので、仮定が間違っていれば 2 つとも同じように間違う。**
  */
 
 const REPO = fileURLToPath(new URL("../../../", import.meta.url));
@@ -130,6 +145,59 @@ const PLACES: readonly { path: string; why: string; needs: readonly Quantity[] }
 
 const LABEL: Record<Quantity, string> = { sessions: "会期", rollcalls: "採決", votes: "票", max: "最大" };
 
+/* ==================== 「いちばん小さい境」を本番 data/ から出し直す ==================== */
+
+/**
+ * **11 県の境の IN / OUT**（**#901 / #950 / #953 / #959 / #968 / #973 が一次資料から測った値**）。
+ *
+ * **`local-seats-changed-boundaries.test.ts` の `BOUNDARIES` と同じ値を、独立に置いてある。**
+ * **わざと import していない**——**あちらが壊れたときに此方も一緒に壊れると、
+ * 「2 か所が一致する」という此のテストの主張そのものが無意味になるからである。**
+ * **ずれたら下の `assert` が落ちる**（**同じ値を 2 か所に持つ、という此の PR の形そのもの**）。
+ *
+ * - **`inAtBoundary`**: **境の会期にだけ居る氏名の数**
+ * - **`outAtBoundary`**: **窓の中の最古の会期にだけ居る氏名の数**
+ */
+const BOUNDARY_IN_OUT: Readonly<Record<string, { inAtBoundary: number; outAtBoundary: number }>> = {
+  "pref-02": { inAtBoundary: 11, outAtBoundary: 15 }, // 青森 #959
+  "pref-04": { inAtBoundary: 19, outAtBoundary: 18 }, // 宮城 #953
+  "pref-05": { inAtBoundary: 9, outAtBoundary: 7 },   // 秋田 #901
+  "pref-25": { inAtBoundary: 11, outAtBoundary: 12 }, // 滋賀 #973
+  "pref-29": { inAtBoundary: 17, outAtBoundary: 17 }, // 奈良 #950
+  "pref-36": { inAtBoundary: 11, outAtBoundary: 13 }, // 徳島 #901
+  "pref-39": { inAtBoundary: 9, outAtBoundary: 10 },  // 高知 #901
+  "pref-41": { inAtBoundary: 4, outAtBoundary: 5 },   // 佐賀 #968
+};
+
+/** **境の会期を組み立てて、本番の `sessionRosterCoverageOf` に通す**（**式を書き写さない**）。 */
+const boundarySeatsChanged = async (pref: string): Promise<number> => {
+  const meta = JSON.parse(
+    await readFile(join(DATA, "assemblies", pref, "meta.json"), "utf-8"),
+  ) as LocalAssemblyMeta;
+  const oldest = meta.sessionRosterCoverage.at(-1)!;
+  const b = BOUNDARY_IN_OUT[pref];
+  const stays = oldest.rosterSeen - b.outAtBoundary;
+  const gone = oldest.unmatchedNames + b.inAtBoundary;
+  const members = Array.from({ length: meta.counts.members }, (_, i) => ({ id: `m${i}` }));
+  const votes = [
+    ...members.slice(0, stays).map((m) => ({ memberId: m.id, nameText: `在 ${m.id}` })),
+    ...Array.from({ length: gone }, (_, k) => ({ memberId: "", nameText: `退 ${k}` })),
+  ];
+  const rc = {
+    id: "x", assemblyId: pref, sessionId: "boundary", sessionLabel: "boundary", date: "2023-01-01",
+    kind: "議案", number: "1", title: "x", result: "可決", page: 1, sourceUrl: "https://example.invalid/x.pdf",
+    votes: votes.map((v) => ({ ...v, group: "会派", value: { raw: "○", legend: "賛成", mapped: "賛成" as const } })),
+  } as unknown as Parameters<typeof sessionRosterCoverageOf>[0][number];
+  return sessionRosterCoverageOf([rc], members)[0].seatsChanged;
+};
+
+/** **県コード → 文章で使う県名**（**「佐賀 4」のように語ごと突き合わせるため**）。 */
+const PREF_NAME: Readonly<Record<string, string>> = {
+  "pref-02": "青森", "pref-04": "宮城", "pref-05": "秋田", "pref-25": "滋賀",
+  "pref-29": "奈良", "pref-36": "徳島", "pref-39": "高知", "pref-41": "佐賀",
+};
+
+
 /**
  * ## **1 桁の数は「本文のどこかに在る」では検査にならない**（**変異で見つけた**）
  *
@@ -166,6 +234,46 @@ test("#1007 線と実測の距離を書いた 5 か所が、本番 data/ の実�
     }
   }
   assert.deepEqual(missing, [], "**実測とずれている所**（**片方だけ直すと此処が落ちる**——#1007 の再発防止）");
+});
+
+/**
+ * ## **#1007 の本題**——**「いちばん小さい境はどれか」を文ごと突き合わせる**
+ *
+ * **これが無いと、母数と最大さえ新しければ本丸の誤り文が素通りする**（上の docblock。**レビューが実証**）。
+ *
+ * **本番 `data/` から 8 県の境を組み直し、`min` を採って
+ * 「線の下にあるのは 秋田 9・佐賀 4」という語を 5 か所すべてに要求する。**
+ * **県名も数も実測から組み立てる**——**リテラルを 1 つも挟まない**（**恒真式にしない**）。
+ */
+test("#1007 「いちばん小さい境」の主張が、本番 data/ から組み直した境と一致する", async () => {
+  const prefs = Object.keys(BOUNDARY_IN_OUT);
+  assert.equal(prefs.length, 8, "**測れた境の数**（母数。測れない 3 県を足して 11）");
+
+  const boundaries: { pref: string; seatsChanged: number }[] = [];
+  for (const p of prefs) boundaries.push({ pref: p, seatsChanged: await boundarySeatsChanged(p) });
+  boundaries.sort((a, b) => a.seatsChanged - b.seatsChanged);
+
+  // **線の下に落ちた境**（**実測から出す。「2 県」と書き写さない**）
+  const under = boundaries.filter((b) => b.seatsChanged < SEATS_CHANGED_FLAG);
+  // **その顔ぶれと値**（**ここが #1007 の訂正そのもの**）
+  assert.deepEqual(under.map((b) => `${PREF_NAME[b.pref]} ${b.seatsChanged}`), ["佐賀 4", "秋田 9"],
+    "**線 10 の下にある境**（**「いちばん小さい境は青森 11」は誤り**）");
+  // **いちばん小さい境は佐賀**（**青森ではない**——**#1007 が直した主張**）
+  assert.equal(PREF_NAME[boundaries[0].pref], "佐賀", "**いちばん小さい境の県**");
+  assert.notEqual(PREF_NAME[boundaries[0].pref], "青森", "**否定的対照**: **青森ではない**");
+  // **青森は線の外**（**11 ではなく 16**。**測り方が違うと値が変わる**）
+  const aomori = boundaries.find((b) => PREF_NAME[b.pref] === "青森")!;
+  assert.equal(aomori.seatsChanged, 16, "**青森の境は 16**（#951 の組み立てでの 11 ではない）");
+  assert.ok(aomori.seatsChanged >= SEATS_CHANGED_FLAG, "**青森は線の外**（取りこぼしてはいない）");
+
+  // **その主張が 5 か所すべてに、語ごと書いてあること**（**1 か所だけ書き戻すと落ちる**）
+  const phrase = under.map((b) => `${PREF_NAME[b.pref]} ${b.seatsChanged}`).reverse().join("・");
+  assert.equal(phrase, "秋田 9・佐賀 4", "**文章に要求する語**（**実測から組み立てた**）");
+  const missing: string[] = [];
+  for (const { path, why } of PLACES) {
+    if (!(await read(path)).includes(phrase)) missing.push(`${path}: 「${phrase}」が無い（${why}）`);
+  }
+  assert.deepEqual(missing, [], "**本丸の主張が書かれていない所**（**#1007 の再発**）");
 });
 
 /**
