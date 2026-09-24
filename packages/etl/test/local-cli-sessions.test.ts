@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { promisify } from "node:util";
-import { defaultSessionsFor } from "../src/local-assemblies.ts";
+import { defaultSessionsFor, LOCAL_SOURCES } from "../src/local-assemblies.ts";
 
 const run = promisify(execFile);
 const repo = fileURLToPath(new URL("../../../", import.meta.url));
@@ -65,23 +65,31 @@ async function sessionsPassedTo(target: string, extra: string[] = []): Promise<n
   return Number(m[1]);
 }
 
-test("#901 `--sessions` を渡さないとき、CLI は議会ごとの既定を使う（三重 4 / 徳島 4 / 宮城 11 / 鳥取 11 / 青森 14 / 島根 5 / 滋賀 2）", async () => {
+/**
+ * **#901 で 11 議会すべての既定が 2 から動いた**（滋賀が最後の 1 県）。
+ *
+ * **「測っていない議会は 2 のまま」という行はもう置けない**——**2 のままの議会が 1 つも無い。**
+ * **数字だけ 2 → 19 に直して残すと、「2 のまま」という主張だけが嘘になって残る。**
+ *
+ * **だから 11 議会を全部通す形にした**——**母数つきで、1 議会も飛ばさずに。**
+ */
+test("#901 `--sessions` を渡さないとき、CLI は議会ごとの既定を使う（11 議会すべて。2 のままの議会は 1 つも無い）", async () => {
   // **これが M9 を殺す検査**——**CLI の中の `defaultSessionsFor(target)` を `2` に書き換えると落ちる**
-  assert.equal(await sessionsPassedTo("mie"), 4, "三重は 4（令和5年第2回定例会まで）");
-  assert.equal(await sessionsPassedTo("tokushima"), 4, "徳島は 4（令和7年11月定例会まで）");
-  assert.equal(await sessionsPassedTo("miyagi"), 11, "宮城は 11（第390回まで。12 本目は 2023-10 の一般選挙の前）");
-  assert.equal(await sessionsPassedTo("tottori"), 11, "鳥取は 11（令和5年11月定例会まで。12 会期目は会派の見出しの罫線が無くて読めない）");
-  assert.equal(await sessionsPassedTo("aomori"), 14, "青森は 14（#959 で main に入った。鳥取の変更がこれを動かさない）");
-  assert.equal(await sessionsPassedTo("shimane"), 5, "島根は 5（#967 で main に入った。鳥取の変更がこれを動かさない）");
-  assert.equal(await sessionsPassedTo("shiga"), 2, "**測っていない議会は 2 のまま**（滋賀・佐賀）");
-  // **関数の返り値と、CLI が実際に渡した値が同じ**（片方だけ直して食い違う形を塞ぐ）
-  assert.equal(await sessionsPassedTo("mie"), defaultSessionsFor("mie"));
-  assert.equal(await sessionsPassedTo("tokushima"), defaultSessionsFor("tokushima"));
-  assert.equal(await sessionsPassedTo("miyagi"), defaultSessionsFor("miyagi"));
-  assert.equal(await sessionsPassedTo("tottori"), defaultSessionsFor("tottori"));
-  assert.equal(await sessionsPassedTo("aomori"), defaultSessionsFor("aomori"));
-  assert.equal(await sessionsPassedTo("shimane"), defaultSessionsFor("shimane"));
-  assert.equal(await sessionsPassedTo("shiga"), defaultSessionsFor("shiga"));
+  const expected: Readonly<Record<string, number>> = {
+    mie: 4, tokushima: 4, nara: 4, kochi: 5, shimane: 5, miyagi: 11, tottori: 11,
+    saga: 13, aomori: 14, shiga: 19, akita: 29,
+  };
+  // **母数**（#757）——**`LOCAL_SOURCES` の 11 議会を 1 つ残らず見ている**
+  assert.deepEqual(Object.keys(expected).sort(), Object.keys(LOCAL_SOURCES).sort(), "見ていない議会がある");
+  assert.equal(Object.keys(expected).length, 11);
+  for (const [target, n] of Object.entries(expected)) {
+    // **CLI が実際に渡した値**（`defaultSessionsFor` を直に呼ぶのではなく、子プロセスを走らせる）
+    assert.equal(await sessionsPassedTo(target), n, `${target} の既定`);
+    // **関数の返り値と、CLI が実際に渡した値が同じ**（片方だけ直して食い違う形を塞ぐ）
+    assert.equal(await sessionsPassedTo(target), defaultSessionsFor(target), `${target}: CLI と関数が食い違う`);
+  }
+  // **2 のままの議会は 1 つも無い**（#901 で 11 議会すべてを測り終えた）
+  assert.deepEqual(Object.entries(expected).filter(([, n]) => n === 2), [], "既定の 2 のままの議会");
 });
 
 test("#901 `--sessions N` を渡したときは、既定ではなく N が使われる（既定が N を上書きしない）", async () => {

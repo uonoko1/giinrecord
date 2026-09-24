@@ -265,7 +265,9 @@ test("#711 否定的対照: 本番 data/ の unmatched 行の reason が計算�
   // **残り 5 人は今の任期の途中で退いた議員で、理由の記載なし＝名簿に無い氏名。**
   // **`candidates` は 7 人とも 0 件**（**名簿 42 人に同姓同名すら居ない**）。
   // **`sourceConflict` は 1 行も増えていない**（広げて新しく「名簿と 1 文字違い」になった氏名は無い）。
-  assert.equal(rows, 40, `本番の unmatched は 40 行のはず。増減したらこの対照を測り直すこと（実測 2026-09-23）`);
+  // **#901 の鳥取（2 → 11 会期）と日次 refresh で 40 → 42 行になった**（滋賀ぶんではない）。
+  // **`sourceConflict` は 5 行のまま**（青森 3・佐賀 2）——**広げて新しく増えてはいない。**
+  assert.equal(rows, 42, `本番の unmatched は 42 行のはず。増減したらこの対照を測り直すこと（実測 2026-09-24）`);
   assert.equal(conflicts, 5, "sourceConflict は 5 行（青森 3・佐賀 2）");
   // **真陽性が 1 件以上**（無ければ「全部 sourceConflict にしない実装」でも通ってしまう）
   assert.ok(conflicts >= 1, `本番に sourceConflict の真陽性が 1 件も無い（${conflicts} 件）。この対照は空回りしている`);
