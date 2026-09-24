@@ -28,7 +28,7 @@ export { CMAP_DIR, CMAP_PACKED };
  * **あらかじめ定義された CMap を pdfjs に渡す**（Issue #867 B 群。`../pdf-cmap.ts` に理由を書いた）。
  * 渡さないと、古い本のフォントで **showText が「グリフ 0 個」になり、文字が黙って消える**。
  */
-export async function readGlyphPages(bytes: Buffer): Promise<PageGeometry[]> {
+export async function readGlyphPages(bytes: Buffer, options: ReadGlyphOptions = {}): Promise<PageGeometry[]> {
   const loadingTask = getDocument({ data: new Uint8Array(bytes), verbosity: 0, ...CMAP_OPTIONS });
   const doc = await loadingTask.promise;
   const out: PageGeometry[] = [];
@@ -36,12 +36,58 @@ export async function readGlyphPages(bytes: Buffer): Promise<PageGeometry[]> {
     for (let i = 1; i <= doc.numPages; i++) {
       const page = await doc.getPage(i);
       const ops = await page.getOperatorList();
-      out.push(readGlyphPageOps(ops.fnArray, ops.argsArray, i));
+      out.push(readGlyphPageOps(ops.fnArray, ops.argsArray, i, options));
     }
   } finally {
     await loadingTask.destroy();
   }
   return out;
+}
+
+/**
+ * `readGlyphPages` / `readGlyphPageOps` の振る舞いの切り替え（Issue #982）。
+ */
+export interface ReadGlyphOptions {
+  /**
+   * **1 回の showText を、グリフ 1 つずつの別アイテムにするか**（既定 `false`）。
+   *
+   * ## なぜ要るか（**#982 の壁**）
+   *
+   * 既定（`false`）は **showText 1 回 = 1 アイテム**である。
+   * **三重の 17 本は 1 回の showText に複数のセルぶんの文字を入れている**ので、
+   * **1 アイテムが丸ごと 1 つの列に落ち、残りの列が空になる**。
+   *
+   * **実測（2026-09-24、`001088734.pdf` の 1 ページ目）**——1 行ぶんがこの 5 アイテムで出る:
+   *
+   * | アイテム | 何列ぶんか |
+   * |---|---|
+   * | `"議案第1号"` | 1 列（議案等番号） |
+   * | `"令和2年度三重県一般会計補正予算（第１０号）"` | 1 列（件名） |
+   * | **`"1/155049490"`** | **5 列**（議決月日・出席者数・表決者数・賛成者数・反対者数） |
+   * | `"可決"` | 1 列（議決結果） |
+   * | **`"○○○…議○○…"`（50 文字、w=493.4）** | **47 人ぶんの列** |
+   *
+   * **見出しも `"議案等番号件名"` の 1 アイテム**（2 列ぶん）で出る——
+   * **これが `column 0 header "" !== 議案等番号` の正体である。**
+   *
+   * ## **位置は推測ではない**（#569）
+   *
+   * **グリフ 1 つずつの x は、この関数が既にグリフ幅から積算している**——
+   * 既定の枝も同じループで `x` を進めており、**1 アイテムの `x`（左端）と `w` はその積算の結果である。**
+   * **割るのは「その途中の値も一緒に出す」だけで、新しい推定を 1 つも足していない。**
+   *
+   * ## **既定を `false` に保つ理由**（**`true` にすると読めている本が壊れる**）
+   *
+   * **表題と凡例は 1 アイテムの `str` を正規表現に掛けて見つけている**
+   * （`votes-pdf.ts` の `TITLE` / `LEGEND_ITEM`）。**全部を割ると 1 文字ずつになり当たらない。**
+   * **`votes-pdf.ts` には #867 A-2 で入った「同じ行の文字を x 順に繋ぐ」経路があるが、
+   * それは「1 アイテムで当たるものが 1 つも無いとき」しか使われない**——
+   * **つまり割ると経路が入れ替わり、今読めている本の `tableTop` が変わりうる。**
+   *
+   * **だから `votes-pdf.ts` は「既定で読んでみて、例外になった本だけ」割り直す**
+   * （`parseVotePdf` の 2 段構え）。**読めている本はこの枝に入らない。**
+   */
+  splitGlyphs?: boolean;
 }
 
 /** 単位行列（q/Q/cm を辿るときの初期値）。 */
@@ -122,7 +168,8 @@ const READABLE_TEXT_RENDERING_MODES: ReadonlySet<number> = new Set([0, 2]);
  * `q`/`Q` の入れ子を直接テストできるようにするため（三重のフィクスチャは
  * 変換ありの constructPath が 0 本で、掛けても掛けなくても同じ値になり違いを見せられない）。
  */
-export function readGlyphPageOps(fnArray: ArrayLike<number>, argsArray: ArrayLike<unknown>, pageNo: number): PageGeometry {
+export function readGlyphPageOps(fnArray: ArrayLike<number>, argsArray: ArrayLike<unknown>, pageNo: number, options: ReadGlyphOptions = {}): PageGeometry {
+  const { splitGlyphs = false } = options;
   const items: Item[] = [];
   /** このページで「文字を描け」と言われた回数（0 グリフのまま終わったら例外にする。Issue #867）。 */
   let showTextCalls = 0;
@@ -320,6 +367,8 @@ export function readGlyphPageOps(fnArray: ArrayLike<number>, argsArray: ArrayLik
       let x = tx;
       let str = "";
       let x0: number | undefined;
+      // 高さも text space の量なので `sy` を掛ける（Tf 1 / Tm 8.04 の本で h が 1 になるのを防ぐ）
+      const h = fontSize * sy;
       for (const g of args[0] as (number | { unicode?: string; width?: number } | null)[]) {
         if (typeof g === "number") {
           x -= (g / 1000) * fontSize * hScale * sx;
@@ -329,15 +378,19 @@ export function readGlyphPageOps(fnArray: ArrayLike<number>, argsArray: ArrayLik
         const w = ((g.width ?? 0) / 1000) * fontSize * hScale * sx;
         const u = (g.unicode ?? "").replace(/[\uE000-\uF8FF]/g, "〓"); // 私用領域（外字）は読めない（原文に無い文字を作らない）
         if (u.trim() !== "") {
+          // **`splitGlyphs` のときはグリフ 1 つを 1 アイテムにする**（Issue #982）。
+          // **幅は `w`（このグリフの送り幅）、左端は `x`**——**どちらも既定の枝が
+          // 1 アイテムの `x0` / `w` を作るのに使っているのと同じ値である**（推定を足していない）。
+          // **`charSpacing` を幅に入れないのは、字間は字の一部ではないから**
+          // （既定の枝でも最後のグリフの後ろの字間は `w` に入らない。`x0 + w` は最後のグリフの右端になる）。
+          if (splitGlyphs) items.push({ str: u, x, y: ty, w, h, cx: x + w / 2, cy: ty + h / 2 });
           x0 ??= x;
           str += u;
         }
         x += w + charSpacing * hScale * sx;
       }
-      if (str !== "" && x0 !== undefined) {
+      if (!splitGlyphs && str !== "" && x0 !== undefined) {
         const w = x - x0;
-        // 高さも text space の量なので `sy` を掛ける（Tf 1 / Tm 8.04 の本で h が 1 になるのを防ぐ）
-        const h = fontSize * sy;
         items.push({ str, x: x0, y: ty, w, h, cx: x0 + w / 2, cy: ty + h / 2 });
       }
       tx = x;
