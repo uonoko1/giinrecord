@@ -244,9 +244,30 @@ gh run list --workflow environment-protection.yml --limit 1
 
 ### 日次データ（`deploy-data.yml`）
 
-ETL の data PR がマージされると `etl.yml` / `districts.yml` が `gh workflow run deploy-data.yml --ref main` を起動し、staging と production（Environment `production-data`、承認なし）の両方に配る。
+起動する経路は 3 つある。
+
+| 起動 | いつ | staging | production-data |
+|---|---|---|---|
+| `gh workflow run`（`etl.yml` / `districts.yml` / `local-assemblies.yml` が data PR のマージ直後に叩く） | bot のデータ更新 | 配る | 配る |
+| `on.push`（`branches: [main]`, `paths: ["data/**"]`、#995） | **人が `data/` を含む PR をマージしたとき** | 配らない（同じ push で `deploy-staging.yml` が配るため） | 配る |
+| `schedule`（`30 21 * * *` = 06:30 JST） | 安全網 | 配る | 配る |
+
+**`on.push` は #995 で足した。** それ以前、**人が `data/` を含む PR をマージしても何も起動しなかった**——
+bot のマージ（`GITHUB_TOKEN`）は push イベントを起こさないので、
+起動していたのは bot の `gh workflow run` と安全網の cron だけだった。
+`origin/main` の全履歴で測ると、`data/` を触る 85 コミットのうち **29 本が人のマージ**で、
+その 29 本が deploy-data で公開されるまで **中央値 9.70h / p90 21.62h / 最大 27.99h**（29 本中 17 本が 6h 超）待っていた。
+**「最悪 24 時間」ではない**——安全網の cron の run が失敗・キャンセルされると 24h を超える。
+
+**二重起動はしない**（実測）。`deploy-staging.yml` は既に `on: push: branches: [main]` を持つので、
+その run 履歴が「どのマージが push を起こしたか」の実測になる。
+直近 400 run が覆う窓（2026-09-02T20:05Z〜2026-09-24T17:56Z）内の `data/` コミット 47 本のうち、
+**bot の 22 本は push run が 0 件、人の 25 本は 25 件**だった。
 
 - **staging** は `main` をそのままビルドする（従来どおり）。
+  ただし **push 起動のときだけ skip する**（`if: github.event_name != 'push'`）——
+  同じ push で `deploy-staging.yml` が同じ SHA から同じものを配るので、走らせると 2 回ビルドして 2 回 rsync することになる。
+  両者は `deploy-site.yml` の concurrency group `deploy-vps` で直列化されるので害は無いが、待ち行列が 1 本ぶん伸びるだけ無駄である（deploy ジョブの実測 73〜106s）。
 - **production** は「最後にリリースしたコード + `main` の `data/`」をビルドする（#134）。`main` にマージ済みで未リリースのコードは日次データと一緒に本番へ出ない。
   1. `resolve` ジョブが `scripts/ci/released-ref.sh resolve` で `refs/tags/released` の SHA を取る（タグが無ければ `main`。初回 Release 前のフォールバック）。
   2. `deploy-site.yml` がその SHA を checkout し、`data_ref: main` で `released-ref.sh overlay main`（`data/` を丸ごと main のものに置き換える。追加も削除も反映、`data/` 以外は触らない）→ `pnpm build` → rsync。
