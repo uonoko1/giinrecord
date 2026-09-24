@@ -1,42 +1,229 @@
 {
  "assemblyId": "pref-25",
  "countChecked": {
-  "checked": 10,
+  "checked": 52,
   "noCounts": 0,
-  "rows": 14,
-  "unreadableCells": 4
+  "rows": 163,
+  "unreadableCells": 111
  },
  "counts": {
-  "cells": 604,
-  "members": 44,
-  "rollcalls": 14,
+  "cells": 6886,
+  "members": 42,
+  "rollcalls": 163,
   "unknownCells": 0,
-  "unmatchedNames": 1
+  "unmatchedNames": 10
  },
- "fetchedAt": "2026-09-12T20:20:52.955Z",
- "rosterAsOf": "2026-09-13",
+ "fetchedAt": "2026-09-23T12:09:20.756Z",
+ "rosterAsOf": "2026-09-23",
  "sessionRosterCoverage": [
   {
    "date": "2026-08-10",
    "rollcalls": 10,
    "rosterAbsent": 0,
-   "rosterSeen": 44,
+   "rosterSeen": 42,
    "seatsChanged": 0,
    "sessionId": "2026-07",
-   "unmatchedNames": 1,
-   "unmatchedVotes": 8,
+   "unmatchedNames": 3,
+   "unmatchedVotes": 28,
    "votes": 440
   },
   {
    "date": "2026-06-30",
    "rollcalls": 4,
    "rosterAbsent": 3,
-   "rosterSeen": 41,
-   "seatsChanged": 0,
+   "rosterSeen": 39,
+   "seatsChanged": 2,
    "sessionId": "2026-06-rinji",
-   "unmatchedNames": 0,
-   "unmatchedVotes": 0,
+   "unmatchedNames": 2,
+   "unmatchedVotes": 8,
    "votes": 164
+  },
+  {
+   "date": "2026-04-28",
+   "rollcalls": 7,
+   "rosterAbsent": 4,
+   "rosterSeen": 38,
+   "seatsChanged": 3,
+   "sessionId": "2026-04-rinji",
+   "unmatchedNames": 3,
+   "unmatchedVotes": 21,
+   "votes": 287
+  },
+  {
+   "date": "2026-03-19",
+   "rollcalls": 17,
+   "rosterAbsent": 5,
+   "rosterSeen": 37,
+   "seatsChanged": 3,
+   "sessionId": "2026-02",
+   "unmatchedNames": 3,
+   "unmatchedVotes": 51,
+   "votes": 680
+  },
+  {
+   "date": "2026-01-26",
+   "rollcalls": 1,
+   "rosterAbsent": 5,
+   "rosterSeen": 37,
+   "seatsChanged": 3,
+   "sessionId": "2026-01-rinji",
+   "unmatchedNames": 3,
+   "unmatchedVotes": 3,
+   "votes": 40
+  },
+  {
+   "date": "2025-12-19",
+   "rollcalls": 12,
+   "rosterAbsent": 5,
+   "rosterSeen": 37,
+   "seatsChanged": 4,
+   "sessionId": "2025-11",
+   "unmatchedNames": 4,
+   "unmatchedVotes": 48,
+   "votes": 492
+  },
+  {
+   "date": "2025-10-17",
+   "rollcalls": 9,
+   "rosterAbsent": 4,
+   "rosterSeen": 38,
+   "seatsChanged": 4,
+   "sessionId": "2025-09",
+   "unmatchedNames": 4,
+   "unmatchedVotes": 36,
+   "votes": 371
+  },
+  {
+   "date": "2025-07-02",
+   "rollcalls": 11,
+   "rosterAbsent": 4,
+   "rosterSeen": 38,
+   "seatsChanged": 4,
+   "sessionId": "2025-06",
+   "unmatchedNames": 4,
+   "unmatchedVotes": 44,
+   "votes": 462
+  },
+  {
+   "date": "2025-04-25",
+   "rollcalls": 4,
+   "rosterAbsent": 4,
+   "rosterSeen": 38,
+   "seatsChanged": 4,
+   "sessionId": "2025-04-rinji",
+   "unmatchedNames": 4,
+   "unmatchedVotes": 16,
+   "votes": 168
+  },
+  {
+   "date": "2025-03-19",
+   "rollcalls": 16,
+   "rosterAbsent": 4,
+   "rosterSeen": 38,
+   "seatsChanged": 4,
+   "sessionId": "2025-02",
+   "unmatchedNames": 4,
+   "unmatchedVotes": 64,
+   "votes": 672
+  },
+  {
+   "date": "2024-12-20",
+   "rollcalls": 8,
+   "rosterAbsent": 4,
+   "rosterSeen": 38,
+   "seatsChanged": 4,
+   "sessionId": "2024-11",
+   "unmatchedNames": 4,
+   "unmatchedVotes": 32,
+   "votes": 336
+  },
+  {
+   "date": "2024-10-11",
+   "rollcalls": 7,
+   "rosterAbsent": 5,
+   "rosterSeen": 37,
+   "seatsChanged": 5,
+   "sessionId": "2024-09",
+   "unmatchedNames": 5,
+   "unmatchedVotes": 35,
+   "votes": 294
+  },
+  {
+   "date": "2024-07-12",
+   "rollcalls": 10,
+   "rosterAbsent": 5,
+   "rosterSeen": 37,
+   "seatsChanged": 5,
+   "sessionId": "2024-06",
+   "unmatchedNames": 6,
+   "unmatchedVotes": 60,
+   "votes": 430
+  },
+  {
+   "date": "2024-04-26",
+   "rollcalls": 4,
+   "rosterAbsent": 5,
+   "rosterSeen": 37,
+   "seatsChanged": 5,
+   "sessionId": "2024-04-rinji",
+   "unmatchedNames": 6,
+   "unmatchedVotes": 24,
+   "votes": 172
+  },
+  {
+   "date": "2024-03-19",
+   "rollcalls": 14,
+   "rosterAbsent": 5,
+   "rosterSeen": 37,
+   "seatsChanged": 5,
+   "sessionId": "2024-02",
+   "unmatchedNames": 6,
+   "unmatchedVotes": 84,
+   "votes": 602
+  },
+  {
+   "date": "2023-12-21",
+   "rollcalls": 10,
+   "rosterAbsent": 5,
+   "rosterSeen": 37,
+   "seatsChanged": 5,
+   "sessionId": "2023-11",
+   "unmatchedNames": 7,
+   "unmatchedVotes": 70,
+   "votes": 440
+  },
+  {
+   "date": "2023-10-13",
+   "rollcalls": 5,
+   "rosterAbsent": 5,
+   "rosterSeen": 37,
+   "seatsChanged": 5,
+   "sessionId": "2023-09",
+   "unmatchedNames": 7,
+   "unmatchedVotes": 35,
+   "votes": 220
+  },
+  {
+   "date": "2023-07-14",
+   "rollcalls": 8,
+   "rosterAbsent": 5,
+   "rosterSeen": 37,
+   "seatsChanged": 5,
+   "sessionId": "2023-06",
+   "unmatchedNames": 7,
+   "unmatchedVotes": 56,
+   "votes": 352
+  },
+  {
+   "date": "2023-05-09",
+   "rollcalls": 6,
+   "rosterAbsent": 5,
+   "rosterSeen": 37,
+   "seatsChanged": 5,
+   "sessionId": "2023-05-rinji",
+   "unmatchedNames": 7,
+   "unmatchedVotes": 42,
+   "votes": 264
   }
  ],
  "sessions": [
@@ -62,43 +249,448 @@
    "sessionLabel": "令和8年 6月臨時会議",
    "sourceUrl": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=258",
    "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg889_0428sanpi2.pdf",
+   "pdfUrls": [
+    "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg889_0428sanpi2.pdf"
+   ],
+   "rollcalls": 7,
+   "sessionId": "2026-04-rinji",
+   "sessionLabel": "令和8年 4月招集会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=255",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg879_0313sanpi_mae.pdf",
+   "pdfUrls": [
+    "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg879_0313sanpi_mae.pdf",
+    "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg880_0319sanpi.pdf"
+   ],
+   "rollcalls": 17,
+   "sessionId": "2026-02",
+   "sessionLabel": "令和8年 2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=252",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg871_R80126sanpi.pdf",
+   "pdfUrls": [
+    "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg871_R80126sanpi.pdf"
+   ],
+   "rollcalls": 1,
+   "sessionId": "2026-01-rinji",
+   "sessionLabel": "令和8年 1月臨時会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=254",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg862_1127sanpi.pdf",
+   "pdfUrls": [
+    "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg862_1127sanpi.pdf",
+    "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg864_1219sanpi_mae.pdf"
+   ],
+   "rollcalls": 12,
+   "sessionId": "2025-11",
+   "sessionLabel": "令和7年 11月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=250",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg853_0905sanpi_ato.pdf",
+   "pdfUrls": [
+    "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg853_0905sanpi_ato.pdf",
+    "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg857_1017sanpi.pdf"
+   ],
+   "rollcalls": 9,
+   "sessionId": "2025-09",
+   "sessionLabel": "令和7年 9月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=249",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg847_0702sanpi.pdf",
+   "pdfUrls": [
+    "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg847_0702sanpi.pdf"
+   ],
+   "rollcalls": 11,
+   "sessionId": "2025-06",
+   "sessionLabel": "令和7年 6月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=248",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg835_0425sanpi2.pdf",
+   "pdfUrls": [
+    "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg835_0425sanpi2.pdf"
+   ],
+   "rollcalls": 4,
+   "sessionId": "2025-04-rinji",
+   "sessionLabel": "令和7年 4月招集会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=247",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg829_0313sanpi-ato.pdf",
+   "pdfUrls": [
+    "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg829_0313sanpi-ato.pdf",
+    "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg831_0319sanpi-go2.pdf"
+   ],
+   "rollcalls": 16,
+   "sessionId": "2025-02",
+   "sessionLabel": "令和7年 2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=243",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg815_1128sanpi-go.pdf",
+   "pdfUrls": [
+    "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg815_1128sanpi-go.pdf",
+    "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg821_sanpi-go.pdf"
+   ],
+   "rollcalls": 8,
+   "sessionId": "2024-11",
+   "sessionLabel": "令和6年 11月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=242",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg809_sanpigo.pdf",
+   "pdfUrls": [
+    "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg809_sanpigo.pdf"
+   ],
+   "rollcalls": 7,
+   "sessionId": "2024-09",
+   "sessionLabel": "令和6年 9月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=241",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg798_0628go.pdf",
+   "pdfUrls": [
+    "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg798_0628go.pdf",
+    "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg799_0712go.pdf"
+   ],
+   "rollcalls": 10,
+   "sessionId": "2024-06",
+   "sessionLabel": "令和6年 6月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=240",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg792_0426sanpi-go.pdf",
+   "pdfUrls": [
+    "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg792_0426sanpi-go.pdf"
+   ],
+   "rollcalls": 4,
+   "sessionId": "2024-04-rinji",
+   "sessionLabel": "令和6年 4月招集会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=239",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg782_0312sanpi-koukaigo.pdf",
+   "pdfUrls": [
+    "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg782_0312sanpi-koukaigo.pdf",
+    "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg784_0319sanpi-go.pdf"
+   ],
+   "rollcalls": 14,
+   "sessionId": "2024-02",
+   "sessionLabel": "令和6年2月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=237",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg770_1129sanpi-go.pdf",
+   "pdfUrls": [
+    "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg770_1129sanpi-go.pdf",
+    "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg773_1221sanpi-koukaigo.pdf"
+   ],
+   "rollcalls": 10,
+   "sessionId": "2023-11",
+   "sessionLabel": "令和5年11月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=234",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg763_sanpikoukaigo.pdf",
+   "pdfUrls": [
+    "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg763_sanpikoukaigo.pdf"
+   ],
+   "rollcalls": 5,
+   "sessionId": "2023-09",
+   "sessionLabel": "令和5年 9月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=233",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg757_050714sanpi.pdf",
+   "pdfUrls": [
+    "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg757_050714sanpi.pdf"
+   ],
+   "rollcalls": 8,
+   "sessionId": "2023-06",
+   "sessionLabel": "令和5年 6月定例会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=232",
+   "unknownCells": 0
+  },
+  {
+   "pdfUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg749_050509sannpi.pdf",
+   "pdfUrls": [
+    "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg749_050509sannpi.pdf"
+   ],
+   "rollcalls": 6,
+   "sessionId": "2023-05-rinji",
+   "sessionLabel": "令和5年 5月招集会議",
+   "sourceUrl": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=231",
+   "unknownCells": 0
   }
  ],
  "sources": [
   {
-   "fetchedAt": "2026-09-12T20:20:52.955Z",
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
    "name": "滋賀県議会 議員名簿（五十音順）",
    "url": "https://www.shigaken-gikai.jp/g07_giinlistP.asp"
   },
   {
-   "fetchedAt": "2026-09-12T20:20:52.955Z",
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
    "name": "滋賀県議会 本会議の開催状況（年の一覧）",
    "url": "https://www.shigaken-gikai.jp/voices/g07_Congress.asp?YMSel=9999"
   },
   {
-   "fetchedAt": "2026-09-12T20:20:52.955Z",
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
    "name": "滋賀県議会 令和8年 7月定例会議賛否状況",
    "url": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=256"
   },
   {
-   "fetchedAt": "2026-09-12T20:20:52.955Z",
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
    "name": "滋賀県議会 令和8年 7月定例会議議案等賛否一覧（７月22日議決分）",
    "url": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg900_sanpi-0722-2.pdf"
   },
   {
-   "fetchedAt": "2026-09-12T20:20:52.955Z",
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
    "name": "滋賀県議会 令和8年 7月定例会議議案等賛否一覧（８月10日議決分）",
    "url": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg907_sanpi-080810-1.pdf"
   },
   {
-   "fetchedAt": "2026-09-12T20:20:52.955Z",
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
    "name": "滋賀県議会 令和8年 6月臨時会議賛否状況",
    "url": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=258"
   },
   {
-   "fetchedAt": "2026-09-12T20:20:52.955Z",
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
    "name": "滋賀県議会 令和8年 6月臨時会議議案等賛否一覧（６月30日議決分）",
    "url": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg898_sanpi2-080630%20.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和8年 4月招集会議賛否状況",
+   "url": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=255"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和8年 4月招集会議議案等賛否一覧（４月28日議決分）",
+   "url": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg889_0428sanpi2.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和8年 2月定例会議賛否状況",
+   "url": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=252"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和8年 2月定例会議議案等賛否一覧（３月13日議決分）",
+   "url": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg879_0313sanpi_mae.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和8年 2月定例会議議案等賛否一覧（３月19日議決分）",
+   "url": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg880_0319sanpi.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和8年 1月臨時会議賛否状況",
+   "url": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=254"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和8年 1月臨時会議議案等賛否一覧（１月26日議決分）",
+   "url": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg871_R80126sanpi.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和7年 11月定例会議賛否状況",
+   "url": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=250"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和7年 11月定例会議議案等賛否一覧（11月27日議決分）",
+   "url": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg862_1127sanpi.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和7年 11月定例会議議案等賛否一覧（12月19日議決分）",
+   "url": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg864_1219sanpi_mae.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和7年 9月定例会議賛否状況",
+   "url": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=249"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和7年 9月定例会議議案等賛否一覧（９月５日議決分）",
+   "url": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg853_0905sanpi_ato.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和7年 9月定例会議議案等賛否一覧（10月17日議決分）",
+   "url": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg857_1017sanpi.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和7年 6月定例会議賛否状況",
+   "url": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=248"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和7年 6月定例会議議案等賛否一覧（７月２日議決分）",
+   "url": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg847_0702sanpi.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和7年 4月招集会議賛否状況",
+   "url": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=247"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和7年 4月招集会議議案等賛否一覧（４月25日議決分）",
+   "url": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg835_0425sanpi2.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和7年 2月定例会議賛否状況",
+   "url": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=243"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和7年 2月定例会議議案等賛否一覧（３月13日議決分）",
+   "url": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg829_0313sanpi-ato.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和7年 2月定例会議議案等賛否一覧（３月19日議決分）",
+   "url": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg831_0319sanpi-go2.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和6年 11月定例会議賛否状況",
+   "url": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=242"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和6年 11月定例会議議案等賛否一覧（11月28日議決分）",
+   "url": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg815_1128sanpi-go.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和6年 11月定例会議議案等賛否一覧（12月20日議決分）",
+   "url": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg821_sanpi-go.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和6年 9月定例会議賛否状況",
+   "url": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=241"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和6年 9月定例会議議案等賛否一覧（10月11日議決分）",
+   "url": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg809_sanpigo.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和6年 6月定例会議賛否状況",
+   "url": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=240"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和6年 6月定例会議議案等賛否一覧（6月28日議決分）",
+   "url": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg798_0628go.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和6年 6月定例会議議案等賛否一覧（７月12日議決分）",
+   "url": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg799_0712go.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和6年 4月招集会議賛否状況",
+   "url": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=239"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和6年 4月招集会議議案等賛否一覧（４月26日議決分）",
+   "url": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg792_0426sanpi-go.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和6年2月定例会議賛否状況",
+   "url": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=237"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和6年2月定例会議議案等賛否一覧（３月12日議決分）",
+   "url": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg782_0312sanpi-koukaigo.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和6年2月定例会議議案等賛否一覧（３月19日議決分）",
+   "url": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg784_0319sanpi-go.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和5年11月定例会議賛否状況",
+   "url": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=234"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和5年11月定例会議議案等賛否一覧（11月29日議決分）",
+   "url": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg770_1129sanpi-go.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和5年11月定例会議議案等賛否一覧（12月21日議決分）",
+   "url": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg773_1221sanpi-koukaigo.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和5年 9月定例会議賛否状況",
+   "url": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=233"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和5年 9月定例会議議案等賛否一覧（10月13日議決分）",
+   "url": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg763_sanpikoukaigo.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和5年 6月定例会議賛否状況",
+   "url": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=232"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和5年 6月定例会議議案等賛否一覧（７月14日議決分）",
+   "url": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg757_050714sanpi.pdf"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和5年 5月招集会議賛否状況",
+   "url": "https://www.shigaken-gikai.jp/g07_gian_sanpi.asp?KaigiID=231"
+  },
+  {
+   "fetchedAt": "2026-09-23T12:09:20.756Z",
+   "name": "滋賀県議会 令和5年 5月招集会議議案等賛否一覧（５月９日議決分）",
+   "url": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg749_050509sannpi.pdf"
   }
  ]
 }

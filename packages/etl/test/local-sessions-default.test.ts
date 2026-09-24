@@ -201,7 +201,7 @@ test("#901 既定は議会ごとに持つ（全議会一律の 1 つの数にし
   }
 });
 
-test("#901 三重・徳島・奈良は 4、高知・島根は 5、宮城・鳥取は 11、佐賀は 13、青森は 14、秋田は 29、滋賀だけ 2 のまま（測った議会だけ広げる）", () => {
+test("#901 三重・徳島・奈良は 4、高知・島根は 5、宮城・鳥取は 11、佐賀は 13、青森は 14、滋賀は 19、秋田は 29（11 議会すべて測り終えた）", () => {
   assert.equal(defaultSessionsFor("mie"), 4, "三重は令和5年第2回定例会まで（2023年4月の一般選挙の後）");
   assert.equal(defaultSessionsFor("tokushima"), 4, "徳島は令和7年11月定例会まで（5 会期目は会期ページが例外、6 会期目以降は 1 本も読めない）");
   assert.equal(defaultSessionsFor("kochi"), 5, "高知は令和7年6月定例会まで（6 会期目の 2025-02 は text matrix が 1.00002 倍で止まる）");
@@ -235,19 +235,34 @@ test("#901 三重・徳島・奈良は 4、高知・島根は 5、宮城・鳥�
   // **半分そこそこ**。**先行 9 県でいちばん外れている**）——
   // **歯止めは `saga-sessions-widen.test.ts` の「氏名の集合の不連続」のテストである。**
   assert.equal(defaultSessionsFor("saga"), 13, "佐賀は令和5年5月臨時会まで（14 本目は 2023-04 の一般選挙の前）");
-  // **#901 の鳥取**: **11 会期（令和5年11月定例会まで）。12 会期目は会派の見出しの罫線が無く 3 本とも読めない。**
-  // **名簿の境ではない**——**読める 11 会期の `seatsChanged` は 0〜2 で、一般選挙の規模の跳ねが 1 回も出ない**
-  // （**いちばん古い読める会期が 2023年4月の一般選挙の後**）。**#928 も鳴らない**（`daysBefore` が負）。
-  assert.equal(defaultSessionsFor("tottori"), 11, "鳥取は令和5年11月定例会まで（12 会期目は罫線が無くて読めない）");
-  const measured = ["mie", "tokushima", "kochi", "akita", "nara", "miyagi", "aomori", "shimane", "saga", "tottori"];
+  // **滋賀は令和5年5月招集会議まで**——**20 会期目の 2023-02 は 2023-04 の一般選挙の向こう側**。
+  // **止める位置を決めたのは会期ごとの氏名の集合の不連続**（19↔20 で IN 12 / OUT 11。
+  // 他の 18 回の移り変わりは 0〜4 人）——**`rosterAsOf` の窓（#928）ではない**（#961。
+  // **20 会期目まで広げても窓の内側なので #928 は鳴らない**）。
+  // **滋賀で効いている上限は「読めるか」でもない**（index 146 本のうち 144 本が読め、
+  // 読めない 2 本はどちらも 2013〜2014 年でこの窓の外。**20 会期目も例外では止まらない**）。
+  // **歯止めは `shiga-sessions-widen.test.ts` の「氏名の集合の不連続」のテストである。**
+  assert.equal(defaultSessionsFor("shiga"), 19, "滋賀は令和5年5月招集会議まで（20 会期目は 2023-04 の一般選挙の前）");
+  // **鳥取は #901 の別 PR で 2 → 11 になった**（118 → 572 採決）。
+  // **`measured` に入れた以上、ここでも値を固定する**——**「測った」と書くだけでは検査にならない。**
+  assert.equal(defaultSessionsFor("tottori"), 11, "鳥取は #901 で 2 → 11 になった");
+  const measured = ["mie", "tokushima", "kochi", "akita", "nara", "miyagi", "aomori", "shimane", "saga", "tottori", "shiga"];
+  // ## **#901 で 11 議会すべてを測り終えた**（滋賀が最後の 1 県）
+  //
+  // **`others` は空になったので、「測っていない議会を巻き込んでいない」という検査は
+  //   もう何も主張しない**（空の配列は何を filter しても空）。**空回りする検査を残さない。**
+  // **代わりに「`measured` が 11 議会を過不足なく指している」ことを見る**——
+  // **議会を足したのに `measured` に入れ忘れたら、ここで落ちる。**
   const others = Object.keys(LOCAL_SOURCES).filter((n) => !measured.includes(n));
-  assert.equal(others.length, 1, `測っていない議会 ${others.length}`);
-  assert.deepEqual(
-    others.filter((n) => defaultSessionsFor(n) !== DEFAULT_LOCAL_SESSIONS),
-    [],
-    "**測っていない議会を巻き込んで広げない**（#901 は 1 県ずつ）",
-  );
-  assert.equal(DEFAULT_LOCAL_SESSIONS, 2, "これまでの一律の既定");
+  assert.deepEqual(others, [], "**測っていない議会**（#901 は 11 議会すべてを測り終えた）");
+  assert.equal(measured.length, Object.keys(LOCAL_SOURCES).length, "measured と LOCAL_SOURCES の数");
+  assert.equal(measured.length, 11, "母数（議会の数）");
+  assert.equal(new Set(measured).size, 11, "measured に重複がある（数だけ合っても中身が違う）");
+  assert.deepEqual(measured.filter((n) => !Object.hasOwn(LOCAL_SOURCES, n)), [], "LOCAL_SOURCES に無い名前が measured にある");
+  // **11 議会とも既定の 2 から動いている**（**「広げた」と書いてあるのに動いていない議会が無い**）
+  assert.deepEqual(measured.filter((n) => defaultSessionsFor(n) === DEFAULT_LOCAL_SESSIONS), [],
+    "**測ったと書いてあるのに既定の 2 のままの議会**");
+  assert.equal(DEFAULT_LOCAL_SESSIONS, 2, "これまでの一律の既定（知らない名前にはこれを返す）");
 });
 
 test("#901 知らない議会の名前には既定の 2 を返す（CLI が落ちる前にここで壊れない）", () => {
