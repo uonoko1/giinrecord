@@ -2142,33 +2142,10 @@ EOF
 }
 test_case "1006: 空白で理由の長さを水増しできない" t_1006_no_review_padding_does_not_count
 
-# ── 既知の穴を**テストで明示する**（#1009 のレビューが実測で見つけた）─────────────────
-# **この検査は「レビューを必ず走らせる」ことを保証しない。**
-# **担当者がレビューに返答し、その中で採決データの「賛成／反対」に触れると通る。**
-# 実測（PR 634 本・コメント 217 件）で通った 9 件のうち **3 件がこの形**: #224 / #457 / #566。
-#
-# **わざと「通る」を期待値にしている。** 直った時点でこのテストが落ちるので、
-# **穴が塞がったことに気づける**（塞ぐのは別 PBI）。
-# **「通るのが正しい」という意味ではない。**
-t_1006_known_hole_developer_reply_passes() {
-  local h; h=$(handler <<EOF
-handle() {
-  case "\$*" in
-    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
-    "api repos/uonoko1/giinrecord/issues/12/comments"*) echo '[{"user":{"login":"uonoko1"},"body":"レビューありがとうございます。3点とも指摘が妥当だったので直しました。注記は「上の議案情報の『賛成会派／反対会派』に…」と書き換えています。"}]' ;;
-    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '$REVIEW_GREEN_CHECKS' ;;
-    "pr merge 12 --squash --delete-branch") echo merged ;;
-    *) echo "unexpected: \$*" >&2; exit 99 ;;
-  esac
-}
-EOF
-)
-  run_script "$h" merge-when-green.sh 12
-  # **既知の穴**: レビュアーが走っていないのに通る（#224 の実物の形）。
-  # **これが 1 になったら穴が塞がったということ**なので、そのときはこのテストを消すこと。
-  assert_eq 0 "$STATUS" "既知の穴: 担当者の返答で通ってしまう（塞がったらこのテストを消す）"
-}
-test_case "1006: 【既知の穴】担当者のレビュー返答で通ってしまう（#224/#457/#566 の形）" t_1006_known_hole_developer_reply_passes
+# ── 【既知の穴】のテストは #1010 で消した ────────────────────────────────────────────
+# #1009 は「担当者の返答で通ってしまう」穴を**わざと「通る」を期待値にしたテスト**で
+# 明示し、「塞がったらこのテストを消すこと」と書いていた。**#1010 で塞いだので消した。**
+# **塞がったことは、下の `1010: 担当者の返答を通さない` が実物 6 件で確かめている。**
 
 # **API が落ちたのか、本当にコメントが 0 件なのかを区別する**（#757。#1009 のレビューの指摘）。
 # どちらも止まるが、**PO が次にやることが違う**（レビューを貼る／認証と通信を見る）。
@@ -2192,3 +2169,192 @@ EOF
   assert_not_contains "$LOG" "pr	merge	12" "マージを試みない"
 }
 test_case "1006: API が読めなかったときに「コメント 0 件」と言わない" t_1006_api_failure_is_not_zero_comments
+
+# ── #1010: 検査が読む綴りを `reviewer.md` が決める ──────────────────────────────────────
+# **何が壊れていたか**: #1006 の検査は「レビュー」の語を必須にしていたが、
+# **`reviewer.md` はその語を 1 度も規定していなかった**（実測 `grep -c 'レビュー[^ア]'` → **0 件**。
+# 「レビュ**アー**」は役割の説明で、報告の書き方ではない）。
+# **道具が語を推測し、仕様が何も決めていない状態**だったので、
+# **仕様どおりに書いた報告が弾かれ、意味の無い 6 文字が通った**（実測、この PR で再現）:
+#     `## 結論: マージしてよい。変異 3 件を当て直して全部落ちた。` → **status=1 止まる**
+#     `結論を先に: マージしてよい。指摘は 0 件。`                  → **status=1 止まる**
+#     `レビュー反対`（6 文字）                                      → **status=0 マージ**
+#
+# **直し方**: **`reviewer.md` に「報告の 1 行目は `## レビュー: <結論>`」を規定し、
+# 検査はその形だけを読む。** 道具が推測するのをやめ、仕様が綴りを決める。
+
+# #1010 の本物の形（`reviewer.md` が規定した 1 行目）
+REVIEW_HEAD_OK='[{"user":{"login":"uonoko1"},"body":"## レビュー: **マージしてよい**（3 度目の敵対的レビュー）\n\n変異 4 件を当て直して 4 件とも再現した。"}]'
+
+# review_case <期待status> <名前> <コメント本文(JSON文字列の中身)>
+# ハンドラの繰り返しを 1 か所にまとめる（#1010 で足すケースが多いので）。
+review_case() {
+  local want=$1 name=$2 body=$3 h
+  h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/issues/12/comments"*) echo '[{"user":{"login":"uonoko1"},"body":"$body"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '$REVIEW_GREEN_CHECKS' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq "$want" "$STATUS" "$name"
+  if [[ "$want" == 1 ]]; then
+    assert_not_contains "$LOG" "pr	merge	12" "マージを試みない: $name"
+  fi
+}
+
+# **仕様どおりに書いた報告は通る。** `reviewer.md` が規定した 3 つの結論を全部留める。
+t_1010_spec_form_passes() {
+  review_case 0 "1 行目が規定の形（マージしてよい）" \
+    '## レビュー: **マージしてよい**（3 度目の敵対的レビュー）\n\n変異 4 件を当て直して 4 件とも再現した。'
+  review_case 0 "1 行目が規定の形（直してから）" \
+    '## レビュー: **直してから**\n\n変異 M3 が素通りした。'
+  review_case 0 "1 行目が規定の形（反対）" \
+    '## レビュー: **反対**\n\nこの経路は別人の記録を出す。'
+  # 全角コロンも通す（日本語で書くので実際に起こる）
+  review_case 0 "全角コロンも通す" \
+    '## レビュー：マージしてよい\n\n指摘は 0 件。'
+}
+test_case "1010: reviewer.md が規定した 1 行目の形を通す（3 つの結論とも）" t_1010_spec_form_passes
+
+# **6 文字の無意味な文字列は通さない**（#1010 の実測。**これが一番効く**）。
+# 「レビュー」と「反対」を並べただけで通る形は、**歯止めではなく合言葉**である。
+t_1010_six_chars_no_longer_passes() {
+  review_case 1 "「レビュー反対」（6 文字）は通さない" 'レビュー反対'
+  review_case 1 "「レビューマージしてよい」も通さない" 'レビューマージしてよい'
+  review_case 1 "見出しでない 1 行目は通さない" 'レビューしました。マージしてよいです。'
+}
+test_case "1010: 見出しでない「レビュー」＋結論の語を通さない（6 文字の合言葉を塞ぐ）" t_1010_six_chars_no_longer_passes
+
+# **担当者の返答を通さない。** 実測（PR 634 本・コメント 218 件）で、
+# **`## …レビュー…` の見出しを持つコメント 36 件のうち 6 件が担当者の返答**だった。
+# **その 6 件の実物の見出しを、そのままフィクスチャにする。**
+# **どれも「レビュー」の直後が結論の語ではない**ので、1 行目の形で落ちる。
+t_1010_developer_reply_is_not_a_review() {
+  # #17 / #21 / #32 の実物
+  review_case 1 "## レビュー対応（#17/#21/#32 の実物）" \
+    '## レビュー対応\n\n指摘の 3 件を直しました。賛成会派／反対会派の注記も書き換えています。'
+  # #262 の実物
+  review_case 1 "## レビュー指摘を反映しました（#262 の実物）" \
+    '## レビュー指摘を反映しました（4件訂正）\n\n落ちたときの対応が正反対になるので直しました。'
+  # #457 の実物（#1009 が「既知の穴」として残した形）
+  review_case 1 "## レビュー3点に対応しました（#457 の実物）" \
+    '## レビュー3点に対応しました（e2e183ba）\n\n落ちたときの対応が正反対になる点も直しました。'
+  # #466 の実物
+  review_case 1 "## レビューへのお礼（#466 の実物）" \
+    '## レビューへのお礼と、引き取った指摘について\n\n賛成／反対の注記は別 Issue に切ります。'
+  # #224 の 2 件目（#1009 が「既知の穴」として残した形。本文は実物）
+  review_case 1 "レビューありがとうございます（#224 の 2 件目の実物）" \
+    'レビューありがとうございます。3点とも指摘が妥当だったので直しました。注記は「上の議案情報の『賛成会派／反対会派』に…」と書き換えています。'
+}
+test_case "1010: 担当者の返答を通さない（実測の 6 件の実物の見出し）" t_1010_developer_reply_is_not_a_review
+
+# **#1009 が残した誤検出 2 件が、この形で塞がる。**
+# **#1009 は「誤検出 3 件（#224 / #457 / #566）」と書いたが、#224 は誤りだった**
+# ——**#224 には本物のレビュー報告が在る**（`## レビュー: PR #224 収録範囲ページ /coverage/`）。
+# **正しくは 本物 8 件 / 誤検出 2 件**（#457・#566。この PR で数え直した。母数は PR 634 本・
+# コメント 218 件で、#1009 の 217 件との差 1 は #1009 自身に貼られたレビュー報告である）。
+t_1010_closes_the_known_holes() {
+  # #566 の実物（PO 自身の検算。列仕様の説明で「反対者数」と書いているだけ）
+  review_case 1 "#566（PO の検算。列仕様の「反対者数」）" \
+    '## PO: 必須指摘 2 件を直し、1 件は実測待ちのため一旦 draft に戻します\n\n賛成者数／反対者数／表決方法の 3 列です。'
+  # #945 / #622（**方向 2（`結論` も許す allowlist）を採ると通ってしまう** 2 件。
+  # この PR ではその方向を採らなかったので、ここでも落ちることを固定する）
+  review_case 1 "#945（PO の検算。結論の語を含むがレビューではない）" \
+    '## PO が確かめた\n\n結論として、請願第38号は反対 32 人を 0 人と公表することになる。'
+  review_case 1 "#622（PO の追試。結論の語を含むがレビューではない）" \
+    '## PO: 追試しました\n\n結論: 「𠮷 が消える」は本物です。賛成 28 / 反対 18。'
+}
+test_case "1010: #1009 が残した誤検出と、方向 2 で増える誤検出を通さない" t_1010_closes_the_known_holes
+
+# **票数の話の「反対」は、1 行目が規定の形でも本文にあるだけでは効かない**——という
+# 逆向きの確認。**本物の報告は、票数を論じていても通る**（レビューは採決データを論じる）。
+t_1010_real_review_may_discuss_votes() {
+  review_case 0 "本物の報告は票数を論じていても通る" \
+    '## レビュー: **マージしてよい**\n\nPDF が刷っている賛成数・反対数と、読み取ったセルが 8 行すべて一致（賛成 28 / 反対 18）。'
+}
+test_case "1010: 本物の報告は採決データの「反対」を含んでいても通る" t_1010_real_review_may_discuss_votes
+
+# **どの結論で当たったかを必ず読み上げる**（#1006 から引き継ぐ性質）。
+# 「直してから」のまま押している場合に、**PO がそれを見落とさないため**。
+t_1010_reads_out_the_verdict() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/issues/12/comments"*) echo '[{"user":{"login":"uonoko1"},"body":"## レビュー: **直してから**\n\n変異 M3 が素通りした。"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '$REVIEW_GREEN_CHECKS' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "マージした: \$ERR"
+  assert_contains "$ERR" "直してから" "どの結論で当たったかを読み上げる"
+}
+test_case "1010: どの結論で当たったかを読み上げる（「直してから」のまま押していないか）" t_1010_reads_out_the_verdict
+
+# **止まったときに、規定の綴りをそのまま見せる**（#1010 の再発を防ぐ唯一の手）。
+# **「レビューが要る」とだけ言われても、何と書けばよいかが分からない**
+# ——それが #1010 で起きたことである。
+t_1010_error_shows_the_exact_form() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/issues/12/comments"*) echo '[]' ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "止まる"
+  assert_contains "$ERR" "## レビュー: " "書くべき 1 行目をそのまま見せる"
+  assert_contains "$ERR" "マージしてよい" "結論の選択肢を見せる"
+  assert_contains "$ERR" "reviewer.md" "どこに規定があるかを指す"
+  assert_contains "$ERR" "コメント 0 件を見ました" "母数を出す（#757）"
+}
+test_case "1010: 止まったときに、書くべき 1 行目をそのまま見せる" t_1010_error_shows_the_exact_form
+
+# **複数コメントの中から拾う**（レビューは往復する）。母数も出す（#757）。
+t_1010_finds_among_many() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/issues/12/comments"*) echo '[{"user":{"login":"uonoko1"},"body":"## レビュー: **直してから**\n\n1 件ある。"},{"user":{"login":"uonoko1"},"body":"## レビュー対応\n\n直しました。"},{"user":{"login":"uonoko1"},"body":"## レビュー: **マージしてよい**（2 度目）\n\n直っている。"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '$REVIEW_GREEN_CHECKS' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "マージした: \$ERR"
+  assert_contains "$ERR" "コメント 3 件中" "母数を出す（#757）"
+}
+test_case "1010: 往復した複数コメントの中から拾う（母数も出す）" t_1010_finds_among_many
+
+# **1 行目でなければ通さない。** **本文の途中に見出しがあるだけでは足りない。**
+# #496 の実物がこの形（1 行目は「**承認します。マージします。**」で、
+# `## レビューが確かめたこと` は 31 行目）。
+# **#1009 は「#496 は見出しが無い」と書いたが、それも誤りだった**
+# ——**#496 には見出しが 2 本ある**（`^##\s*(敵対的)?レビュー` の一致行数は **2**）。
+# **この PR は「1 行目」を要求するので、#496 の形は落ちる。**
+# **それでよい**: #496 は `reviewer.md` が綴りを規定する前に書かれたもので、
+# **規定した後の報告は 1 行目に書かれる。過去の形に道具を合わせない。**
+t_1010_heading_must_be_first_line() {
+  review_case 1 "1 行目が見出しでない（#496 の実物の形）" \
+    '**承認します。マージします。** ただし**1点だけ直してから**にしてください。\n\n## レビューが確かめたこと\n\n数字は一致した。'
+}
+test_case "1010: 本文の途中の見出しでは通さない（1 行目であること）" t_1010_heading_must_be_first_line
