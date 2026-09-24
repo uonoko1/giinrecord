@@ -1788,3 +1788,407 @@ EOF
   assert_not_contains "$ERR" "を赤いまま通してマージします" "緑なのに「赤いまま通した」と言わない"
 }
 test_case "858: 赤が緑に変わったら「赤いまま通した」を持ち越さない" t_858_red_then_green_says_all_green
+
+# ── #1006: レビュー済みでない PR を止める ────────────────────────────────────────────────
+# **なぜラベルではないか**: `reviewed` ラベルは PO が 1 コマンドで付けられる。
+# 2026-09-23〜24 に 33 本（PO 31 / bot 2）をレビュー無しでマージした PO は「自分で検算したから十分だ」と
+# 判断していた。同じ PO が「自分で検算したから `reviewed` を付ける」と判断できる。
+# **自己申告の歯止めは歯止めではない。**
+# ここが見るのは**レビュアーの報告の実体**（`reviewer.md` の「結論を先に」の形）である。
+
+# 母数の検算に使う既定の検査（緑 1 件）。
+REVIEW_GREEN_CHECKS='{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}'
+
+# 本物の形（PR #1000 の 1 行目をそのまま。実測 2026-09-25）
+REVIEW_OK_COMMENT='[{"user":{"login":"uonoko1"},"body":"## レビュー: **マージしてよい**（3 度目の敵対的レビュー）\n\n変異 4 件を当て直して 4 件とも再現した。"}]'
+
+t_1006_blocks_without_review() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/issues/12/comments"*) echo '[]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '$REVIEW_GREEN_CHECKS' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "exit status"
+  assert_contains "$ERR" "レビュー" "なぜ止めたかを言う"
+  assert_not_contains "$LOG" "pr	merge	12" "マージを試みない"
+  assert_not_contains "$LOG" "check-runs" "検査を待たずに、先に止める（20 分待たせない）"
+}
+test_case "1006: レビューの報告が無い PR はマージしない" t_1006_blocks_without_review
+
+t_1006_allows_with_review() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/issues/12/comments"*) echo '$REVIEW_OK_COMMENT' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '$REVIEW_GREEN_CHECKS' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "マージした: \$ERR"
+  assert_contains "$LOG" "pr	merge	12	--squash	--delete-branch" "マージする"
+}
+test_case "1006: レビューの報告があればマージする" t_1006_allows_with_review
+
+# **「直してから」「反対」も『レビューは走った』とみなす**（実装の意図を固定する）。
+# ここを「マージしてよい」だけにすると、**直して再レビューを受けた PR と
+# 一度もレビューされていない PR が同じ扱い**になる。
+# この道具が見ているのは「レビュアーが走ったか」であって「許したか」ではない。
+t_1006_accepts_negative_verdict() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/issues/12/comments"*) echo '[{"user":{"login":"uonoko1"},"body":"## レビュー: **直してから**。変異 M3 が素通りした。"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '$REVIEW_GREEN_CHECKS' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "マージした: \$ERR"
+  assert_contains "$ERR" "直してから" "どの語で当たったかを読み上げる（PO が見落とさないため）"
+}
+test_case "1006: 「直してから」もレビューの報告として通す（ただし読み上げる）" t_1006_accepts_negative_verdict
+
+# **PO 自身の検算はレビューではない**（#1001）。実測: 直近 60 PR のコメント 14 件のうち
+# **13 件が「PO が測り直した」等の PO 自身の検算**で、レビュアーの報告は 1 件だけだった。
+# **その 13 件の形で素通りしてはいけない。**
+t_1006_po_recheck_is_not_a_review() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/issues/12/comments"*) echo '[{"user":{"login":"uonoko1"},"body":"## PO が測り直した\n\n三重の採決 365 → 733 件。担当者の数字と一致した。"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '$REVIEW_GREEN_CHECKS' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "止まる"
+  assert_contains "$ERR" "コメント 1 件を見ました" "母数を出す（#757）"
+  assert_not_contains "$LOG" "pr	merge	12" "マージを試みない"
+}
+test_case "1006: PO 自身の検算コメントはレビューとして通さない" t_1006_po_recheck_is_not_a_review
+
+# 逃げ道: **理由つきなら通す**。理由は**ログに必ず残る**（唯一の記録になるため）。
+t_1006_no_review_with_reason() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '$REVIEW_GREEN_CHECKS' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh --no-review 'レビュアーを立てられない障害中' 12
+  assert_eq 0 "$STATUS" "マージした: \$ERR"
+  assert_contains "$ERR" "レビュアーを立てられない障害中" "理由をログに残す"
+  assert_not_contains "$LOG" "issues/12/comments" "--no-review のときはコメントを読みに行かない"
+}
+test_case "1006: --no-review <理由> なら通す（理由はログに残る）" t_1006_no_review_with_reason
+
+# **理由の無い --no-review は通さない**（`pr-closes.sh` の「`Closes なし` だけでは通さない」）。
+# **何も書かずに通せるなら、逃げ道ではなく素通しである。**
+t_1006_no_review_requires_reason() {
+  local h; h=$(handler <<'EOF'
+handle() { echo "should not be called" >&2; exit 99; }
+EOF
+)
+  run_script "$h" merge-when-green.sh --no-review 12
+  assert_eq 2 "$STATUS" "usage で落ちる"
+  assert_contains "$ERR" "理由が要ります" "何が足りないかを言う"
+  assert_eq "" "$LOG" "gh を一度も呼ばない"
+}
+test_case "1006: --no-review に理由が無ければ usage（PR 番号を理由と読まない）" t_1006_no_review_requires_reason
+
+t_1006_no_review_requires_reason_at_end() {
+  local h; h=$(handler <<'EOF'
+handle() { echo "should not be called" >&2; exit 99; }
+EOF
+)
+  run_script "$h" merge-when-green.sh 12 --no-review
+  assert_eq 2 "$STATUS" "usage で落ちる"
+  assert_eq "" "$LOG" "gh を一度も呼ばない"
+}
+test_case "1006: 末尾の --no-review（理由なし）も usage" t_1006_no_review_requires_reason_at_end
+
+# **他のフラグを理由と読まない。** `--no-review --allow-nonrequired-red 12` を通すと、
+# 「理由 = --allow-nonrequired-red」という無意味な記録が残り、逃げ道が実質無条件になる。
+t_1006_no_review_does_not_eat_flags() {
+  local h; h=$(handler <<'EOF'
+handle() { echo "should not be called" >&2; exit 99; }
+EOF
+)
+  run_script "$h" merge-when-green.sh --no-review --allow-nonrequired-red 12
+  assert_eq 2 "$STATUS" "usage で落ちる"
+  assert_eq "" "$LOG" "gh を一度も呼ばない"
+}
+test_case "1006: --no-review が次のフラグを理由として飲み込まない" t_1006_no_review_does_not_eat_flags
+
+# **検査を待つ前に止める。** レビューが無いと分かっているのに 20 分ポーリングさせない。
+# （最初のテストでも見ているが、こちらは「赤い検査があっても、先にレビューで止まる」を固定する
+#   ——順序が逆だと、赤い検査のメッセージが出てレビューの話が埋もれる）
+t_1006_checked_before_polling() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"BEHIND","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/issues/12/comments"*) echo '[]' ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "止まる"
+  assert_not_contains "$LOG" "update-branch" "ブランチを動かす前に止める"
+  assert_not_contains "$LOG" "check-runs" "検査を待つ前に止める"
+}
+test_case "1006: ブランチを動かす前・検査を待つ前に止める" t_1006_checked_before_polling
+
+# **コメントが複数あって、レビューの報告が後ろに混ざっている場合**も拾う。
+# 実測（直近 60 PR）では 1 PR あたりコメント 1〜2 件だが、**レビューは往復する**設計なので
+# 「担当者の返答 → レビュアーの報告」の並びは普通に起こる。
+t_1006_finds_review_among_many_comments() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/issues/12/comments"*) echo '[{"user":{"login":"uonoko1"},"body":"## PO が測り直した\n\n数字は一致した。"},{"user":{"login":"uonoko1"},"body":"## 担当者の返答\n\n指摘の 2 件を直しました。"},{"user":{"login":"uonoko1"},"body":"## レビュー: **マージしてよい**（2 度目）\n\n直っている。"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '$REVIEW_GREEN_CHECKS' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "マージした: \$ERR"
+  assert_contains "$ERR" "コメント 3 件中" "母数を出す（#757）"
+}
+test_case "1006: 複数コメントの中のレビューの報告を拾う（母数も出す）" t_1006_finds_review_among_many_comments
+
+# **コメントが 0 件のときに「0 件を見た」と言う**（#757: 母数 0 を「きれい」と報告しない）。
+t_1006_reports_zero_denominator() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/issues/12/comments"*) echo '[]' ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "止まる"
+  assert_contains "$ERR" "コメント 0 件を見ました" "母数 0 をそう言う"
+  assert_contains "$ERR" "reviewer.md" "何をすればよいかを指す"
+}
+test_case "1006: コメント 0 件のときも母数を言う" t_1006_reports_zero_denominator
+
+# **`反対` はこの専案の「データの語」である**（採決の記録が賛成／反対でできている）。
+# 結論の語だけを本文のどこかから探す形だと、**PO 自身の検算コメントがすり抜ける**。
+# **実測（直近 60 PR）でそうなった 3 件を、そのままフィクスチャにする**:
+#   #947 / #945 / #942 — どれも票数の話で「反対」と書いているだけで、レビューではない。
+t_1006_vote_word_hantai_is_not_a_review() {
+  local body h
+  for body in \
+    '## PO が独立に数えた\n\n**PDF が刷っている賛成数・反対数と、読み取ったセルが 8 行すべて一致**（賛成 28 / 反対 18）。' \
+    '## PO が確かめた\n\n（請願第38号は反対 32 人を 0 人と公表することになる）/ #899 を踏んだ自己申告' \
+    '## PO が直した 1 件\n\n> **「反対者数の欄が空 = 0」と読む実装を実際に書いて測りました。**'
+  do
+    h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/issues/12/comments"*) echo '[{"user":{"login":"uonoko1"},"body":"$body"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '$REVIEW_GREEN_CHECKS' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+    run_script "$h" merge-when-green.sh 12
+    assert_eq 1 "$STATUS" "票数の話の「反対」はレビューではない: $body"
+    assert_not_contains "$LOG" "pr	merge	12" "マージを試みない: $body"
+  done
+}
+test_case "1006: 票数の話の「反対」をレビューとして通さない（実測の誤検出 3 件）" t_1006_vote_word_hantai_is_not_a_review
+
+# 逆向き: **「レビュー」の語があるだけでは通さない。** 両方が同じコメントに要る。
+t_1006_context_word_alone_is_not_enough() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/issues/12/comments"*) echo '[{"user":{"login":"uonoko1"},"body":"レビューをこれからお願いします。"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '$REVIEW_GREEN_CHECKS' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "「レビュー」だけでは通さない"
+  assert_not_contains "$LOG" "pr	merge	12" "マージを試みない"
+}
+test_case "1006: 「レビュー」の語だけでは通さない（結論の語も要る）" t_1006_context_word_alone_is_not_enough
+
+# **別々のコメントに分かれているものを合算しない。**
+# 「レビューします」というコメントと、票数の話で「反対」と書いたコメントが並んでいるだけで
+# 通ってしまうと、**上で塞いだ誤検出が別の形で戻ってくる。**
+t_1006_does_not_combine_across_comments() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/issues/12/comments"*) echo '[{"user":{"login":"uonoko1"},"body":"これからレビューを回します。"},{"user":{"login":"uonoko1"},"body":"## PO が測り直した\n\n賛成 28 / 反対 18 で一致した。"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '$REVIEW_GREEN_CHECKS' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "別々のコメントを合算しない"
+  assert_contains "$ERR" "コメント 2 件を見ました" "母数を出す（#757）"
+  assert_not_contains "$LOG" "pr	merge	12" "マージを試みない"
+}
+test_case "1006: 別々のコメントの「レビュー」と「反対」を合算しない" t_1006_does_not_combine_across_comments
+
+# ── #1009 のレビューが実測で破った 5 通り ────────────────────────────────────────────
+# 「空でない」だけでは**逃げ道が実質無条件**になる。とくに `--no-review . <pr>` は
+# **タイプ数が `--no-review <pr>` とほぼ変わらない**ので、
+# **「1 コマンドでは通せない」という設計目標を逃げ道の側が真っ先に破る。**
+t_1006_no_review_rejects_token_reasons() {
+  local reason h
+  # 空白1個 / ドット / 小数（is_int を回避）/ 単ハイフン（--* に当たらない）/ 改行 / タブ
+  for reason in ' ' '.' '12.5' '-x' $'\n' $'\t' '短い' 'abcdef'; do
+    h=$(handler <<'EOF'
+handle() { echo "should not be called" >&2; exit 99; }
+EOF
+)
+    run_script "$h" merge-when-green.sh --no-review "$reason" 12
+    assert_eq 2 "$STATUS" "理由として通してはいけない: [$reason]"
+    assert_eq "" "$LOG" "gh を一度も呼ばない: [$reason]"
+  done
+}
+test_case "1006: 中身の無い理由（空白・記号・小数・単ハイフン・短すぎ）を通さない" t_1006_no_review_rejects_token_reasons
+
+# **境界を両側から留める。** 片側だけだと「常に落とす」実装でも通る。
+# 7 は**実測で決めた値**（`Closes なし（…）` の本物の理由 88 件の最短が 7 文字 = `作業合意の更新`）。
+t_1006_no_review_boundary() {
+  local h
+  # 6 文字 → 落ちる
+  h=$(handler <<'EOF'
+handle() { echo "should not be called" >&2; exit 99; }
+EOF
+)
+  run_script "$h" merge-when-green.sh --no-review 'あいうえおか' 12
+  assert_eq 2 "$STATUS" "6 文字は落ちる"
+
+  # 7 文字 → 通る（実在する最短の理由そのもの）
+  h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '$REVIEW_GREEN_CHECKS' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh --no-review '作業合意の更新' 12
+  assert_eq 0 "$STATUS" "7 文字（実在する最短の理由）は通る: \$ERR"
+  assert_contains "$ERR" "作業合意の更新" "理由をログに残す"
+}
+test_case "1006: 理由の長さの境界（6 は落ちる / 7 は通る）" t_1006_no_review_boundary
+
+# **空白で水増しできない。** `'.      '` は見た目 7 文字でも中身は 1 文字。
+t_1006_no_review_padding_does_not_count() {
+  local h; h=$(handler <<'EOF'
+handle() { echo "should not be called" >&2; exit 99; }
+EOF
+)
+  run_script "$h" merge-when-green.sh --no-review '.      ' 12
+  assert_eq 2 "$STATUS" "空白で長さを水増しできない"
+  assert_eq "" "$LOG" "gh を一度も呼ばない"
+}
+test_case "1006: 空白で理由の長さを水増しできない" t_1006_no_review_padding_does_not_count
+
+# ── 既知の穴を**テストで明示する**（#1009 のレビューが実測で見つけた）─────────────────
+# **この検査は「レビューを必ず走らせる」ことを保証しない。**
+# **担当者がレビューに返答し、その中で採決データの「賛成／反対」に触れると通る。**
+# 実測（PR 634 本・コメント 217 件）で通った 9 件のうち **3 件がこの形**: #224 / #457 / #566。
+#
+# **わざと「通る」を期待値にしている。** 直った時点でこのテストが落ちるので、
+# **穴が塞がったことに気づける**（塞ぐのは別 PBI）。
+# **「通るのが正しい」という意味ではない。**
+t_1006_known_hole_developer_reply_passes() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/issues/12/comments"*) echo '[{"user":{"login":"uonoko1"},"body":"レビューありがとうございます。3点とも指摘が妥当だったので直しました。注記は「上の議案情報の『賛成会派／反対会派』に…」と書き換えています。"}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '$REVIEW_GREEN_CHECKS' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  # **既知の穴**: レビュアーが走っていないのに通る（#224 の実物の形）。
+  # **これが 1 になったら穴が塞がったということ**なので、そのときはこのテストを消すこと。
+  assert_eq 0 "$STATUS" "既知の穴: 担当者の返答で通ってしまう（塞がったらこのテストを消す）"
+}
+test_case "1006: 【既知の穴】担当者のレビュー返答で通ってしまう（#224/#457/#566 の形）" t_1006_known_hole_developer_reply_passes
+
+# **API が落ちたのか、本当にコメントが 0 件なのかを区別する**（#757。#1009 のレビューの指摘）。
+# どちらも止まるが、**PO が次にやることが違う**（レビューを貼る／認証と通信を見る）。
+t_1006_api_failure_is_not_zero_comments() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/issues/12/comments"*) echo "HTTP 503" >&2; exit 1 ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '$REVIEW_GREEN_CHECKS' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "読めなければ止まる（fail-safe）"
+  assert_contains "$ERR" "コメントを読めませんでした" "API が落ちたことを言う"
+  assert_not_contains "$ERR" "コメント 0 件を見ました" "「0 件だった」と言わない（区別する）"
+  assert_not_contains "$LOG" "pr	merge	12" "マージを試みない"
+}
+test_case "1006: API が読めなかったときに「コメント 0 件」と言わない" t_1006_api_failure_is_not_zero_comments

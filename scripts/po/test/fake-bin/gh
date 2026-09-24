@@ -16,6 +16,13 @@ source "$FAKE_GH_HANDLER"
 #   - HEAD は動いていない（起動時に読んだ値をそのまま返す。既定は "oid1"）
 # **その2つを検査するテストはハンドラ側で明示的に上書きする**（handle が先に見られる）。
 # 既定が検査を素通しさせていないことは、上書きしたテストが落ちることで確かめている。
+#
+# #1006 でレビュー済みの検査が増え、これも**どのテストの経路でも通る**ので既定を置く。
+# 既定は同じく「何も起きていない」側＝**レビューは済んでいる**（他の関心事を試している
+# 30 個のテストを、レビューの話で落とさない）。
+# **「既定が検査を素通しさせている」形にならないこと**は、
+# **`[]` に上書きしたテスト（1006: レビューの報告が無い PR はマージしない）が
+# 止まることで確かめている**——既定が効いてしまうなら、そのテストは通らない。
 handle_with_defaults() {
   local rc=0 err
   # handle は `exit 99` で知らない呼び出しを知らせるので、**サブシェルで**呼ぶ
@@ -32,6 +39,7 @@ handle_with_defaults() {
     case "$*" in
       "pr list --repo "*" --base "*" --state open --json number"*) echo '[]'; return 0 ;;
       "pr view "*"--json headRefOid"*) echo '{"headRefOid":"oid1"}'; return 0 ;;
+      "api repos/"*"/issues/"*"/comments"*) echo '[{"user":{"login":"uonoko1"},"body":"## レビュー: マージしてよい"}]'; return 0 ;;
     esac
   fi
   [[ -n "$err" ]] && printf '%s\n' "$err" >&2
