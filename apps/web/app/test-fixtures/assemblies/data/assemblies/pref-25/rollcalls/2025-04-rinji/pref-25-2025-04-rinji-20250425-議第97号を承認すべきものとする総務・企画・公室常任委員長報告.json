@@ -1,0 +1,57 @@
+{
+  "assemblyId": "pref-25",
+  "counts": {
+    "no": 2,
+    "present": 42,
+    "voting": 41,
+    "yes": 39
+  },
+  "date": "2025-04-25",
+  "id": "pref-25-2025-04-rinji-20250425-議第97号を承認すべきものとする総務・企画・公室常任委員長報告",
+  "kind": "議案等",
+  "number": "",
+  "page": 2,
+  "result": "承認",
+  "sessionId": "2025-04-rinji",
+  "sessionLabel": "令和7年 4月招集会議",
+  "sourceUrl": "https://www.shigaken-gikai.jp/voices/GikaiDoc/attach/Congress/Kg835_0425sanpi2.pdf",
+  "title": "議第97号を承認すべきものとする総務・企画・公室常任委員長報告",
+  "votes": [
+    {
+      "group": "自由民主党滋賀県議会議員団",
+      "memberId": "p_25_187",
+      "nameText": "谷 口 典 隆",
+      "value": {
+        "legend": "抽出不能",
+        "raw": "○"
+      }
+    },
+    {
+      "group": "自由民主党滋賀県議会議員団",
+      "memberId": "p_25_185",
+      "nameText": "田 中 英 樹",
+      "value": {
+        "legend": "抽出不能",
+        "raw": "○"
+      }
+    },
+    {
+      "group": "自由民主党滋賀県議会議員団",
+      "memberId": "p_25_186",
+      "nameText": "谷 成 隆",
+      "value": {
+        "legend": "抽出不能",
+        "raw": "○"
+      }
+    },
+    {
+      "group": "自由民主党滋賀県議会議員団",
+      "memberId": "p_25_184",
+      "nameText": "小 河 文 人",
+      "value": {
+        "legend": "抽出不能",
+        "raw": "○"
+      }
+    }
+  ]
+}
