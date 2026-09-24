@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { parseVotePdf, rowOrderedForTest as rowOrdered } from "../src/sources/local/mie/votes-pdf.ts";
 import type { Item } from "../src/sources/local/pdf-table.ts";
+import { comparatorsIn } from "./comparator-shape.ts";
 
 /**
  * **並べ替えが丸め誤差でひっくり返る問題**（Issue #999）。**三重の中だけで直している。**
@@ -254,54 +255,141 @@ test("#999 射程: 共有層 pdf-table.ts の sort は 2 か所で、どちら�
 });
 
 /**
- * **どの県のファイルにも「許容差つきの比較関数」が無いこと**（**構造で見る。文字列ではなく**）。
+ * **どの県のファイルにも「許容差つきの比較関数」が無いこと**（**構文木で見る。文字列ではなく**）。
  *
- * **レビュアーは徳島に非推移的な `tol` 付き `sort` を直接書いて緑を通した。**
- * **共有層は上の 2 つ（振る舞い・allowlist）が押さえるが、県ごとの写しはそれでは拾えない。**
+ * ## ここは #1000 まで denylist だった（#1008 が実測で穴を出した）
  *
- * ## 何を見るか: **「比較関数が、条件つきで `0` を返す」形**
+ * **#1000 が置いた検査は `/\.sort\(\s*\([^)]*\)\s*=>[^;]*?\?\s*0\s*:/` で、
+ * 「三項で、リテラル `0` を返す」という 1 つの綴りだけを禁じていた。**
+ * **#1008 で 10 通りの綴りを実際に当てて測った**（宮城の氏名の組み立てを差し替え、
+ * **`pdf-row-order.test.ts` の 19 件が赤くなるか**を見た。詳しい表は `comparator-shape.ts` の docblock）:
+ * **10 通りのうち 8 通りが 19 件中 0 件 fail（＝完全素通り）だった。**
+ * **いちばん普通の `if (Math.abs(a.y - b.y) <= t) return a.x - b.x;` も素通りした。**
  *
- * **許容差の本質はこれである**——**「近ければ同値とみなす」＝「条件つきで `0` を返す」。**
- * **`Math.abs` を使うかどうかは書き方の問題なので、そこを見ない。**
+ * ## だから allowlist にした（#858 と同じ向き: 黙って通る側に落ちない）
  *
- * **実測（2026-09-24、この形で 4 通りの書き方を試した）**:
+ * **`test/comparator-shape.ts` が、`sort` / `toSorted` の比較関数を構文木で拾い、
+ * 「差（`-`）と `||` の連鎖、および 0 にならない三項」だけを許す。**
+ * **それ以外は綴りを問わず落ちる**——**知らない書き方は「通す」ではなく「落とす」に倒れる。**
  *
- * | 書き方 | 捕まえるか |
- * |---|---|
- * | `Math.abs(a.y - b.y) <= tol ? 0 : …`（レビュアーの X5） | **捕まえる** |
- * | `(a.y - b.y) * (a.y - b.y) <= 1e-8 ? 0 : …`（`Math.abs` を使わない） | **捕まえる** |
- * | `Math.hypot(a.y - b.y) < w ? 0 : …`（定数を別名で持つ） | **捕まえる** |
- * | `near(a.y, b.y) ? 0 : …`（判定を関数に出す） | **捕まえる** |
- * | `b.y - a.y || a.x - b.x`（正しい比較） | 素通り（＝正） |
- * | `(a.big ? 1 : -1) || a.x - b.x`（三項だが `0` を返さない） | 素通り（＝正） |
- * | `rowOf.get(b)! - rowOf.get(a)! || a.x - b.x`（三重の直した形） | 素通り（＝正） |
+ * ## 母数（#757。「0 件」と「1 つも見ていない」を区別する）
  *
- * **三重の `rowOrdered` がこの検査に当たらないのは、たまたまではない**——
- * **許容差を比較関数の外（`cluster` による行への丸め）に出したからである。**
- * **「比較関数の中に許容差を置かない」ことが、そのまま検査になっている。**
- *
- * **これも完全ではない**（`sort` を経由せず自前で並べる、比較を別ファイルに置く、など）。
- * **共有層は振る舞いで押さえてあるので、ここは県ごとの写しを拾う二重目である。**
+ * **下限で押さえる**（**#1008: 68 という固定値は、許容差と無関係なファイルを足すだけで落ち、
+ * 次の人が「68 → 69」と機械的に書き換える運用になる。母数が「数えた証拠」でなく「写した数字」になる**）。
+ * **代わりに「県のディレクトリを全部読んだ」ほうを直接確かめる。**
+ * **実測（2026-09-25）: 県 11 / ファイル 68 / 比較関数 103 / allowlist から外れたもの 0。**
  */
-test("#999 射程: 比較関数の中で条件つきに 0 を返す（＝許容差つきの）sort は 1 つも無い", () => {
+test("#999 #1008 射程: 県ごとのファイルの比較関数が allowlist の形（差と || の連鎖）から外れていない", () => {
   const dir = new URL("../src/sources/local/", import.meta.url);
-  // **`.sort((…) => … ? 0 : …`**——**「近ければ同値」を比較関数の中でやっている形**
-  const TOL_COMPARE = /\.sort\(\s*\([^)]*\)\s*=>[^;]*?\?\s*0\s*:/;
-  const hits: string[] = [];
+  const bad: string[] = [];
+  const prefs: string[] = [];
   let scanned = 0;
+  let comparators = 0;
   for (const pref of readdirSync(dir)) {
     const sub = new URL(`${pref}/`, dir);
     try { if (!statSync(sub).isDirectory()) continue; } catch { continue; }
+    prefs.push(pref);
     for (const f of readdirSync(sub)) {
       if (!f.endsWith(".ts")) continue;
       scanned++;
-      const code = readFileSync(new URL(f, sub), "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
-      if (TOL_COMPARE.test(code)) hits.push(`${pref}/${f}`);
+      for (const c of comparatorsIn(f, readFileSync(new URL(f, sub), "utf8"))) {
+        comparators++;
+        if (c.reason) bad.push(`${pref}/${f}:${c.line} [${c.reason}] ${c.text}`);
+      }
     }
   }
-  // **母数**（#757）。「0 件」と「1 ファイルも読んでいない」を区別する
-  assert.equal(scanned, 68, `読んだファイル ${scanned}（実測 68。県のディレクトリの .ts 全部）`);
-  assert.deepEqual(hits, [], `比較関数の中に許容差を持つファイル: ${hits.join(" ")}`);
+  // **県のディレクトリを全部読んだこと**（**ファイル数の固定値ではなく、県の名前そのもので押さえる**。
+  // **県を足したらここが落ちる＝新しい県を検査に載せ忘れない**）
+  assert.deepEqual(prefs.sort(), ["akita", "aomori", "kochi", "mie", "miyagi", "nara", "saga", "shiga", "shimane", "tokushima", "tottori"],
+    `県のディレクトリ: ${prefs.join(" ")}`);
+  // **下限**（#1008）。**「1 ファイルも読んでいない」「1 つも比較関数を見ていない」を 0 件と区別する**
+  assert.ok(scanned > 60, `読んだファイル ${scanned}（実測 68。下限 60 で押さえる）`);
+  assert.ok(comparators > 90, `見た比較関数 ${comparators}（実測 103。下限 90 で押さえる）`);
+  assert.deepEqual(bad, [], `allowlist から外れた比較関数:\n${bad.join("\n")}`);
+});
+
+/**
+ * **`comparator-shape.ts` そのものを、合成したソースで固定する**（**リポジトリの今の中身に依存しない**）。
+ *
+ * **上の検査は「今のリポジトリに違反が無い」ことしか言わない**——
+ * **`comparatorsIn` が常に空を返すように壊れても、上は緑のままである。**
+ * **だからここで「違反を渡したら必ず落ちる」ほうを固定する。**
+ * **#1008 で旧 denylist を素通りした 8 通りを含む、16 通りをそのまま並べてある**
+ * （**残り 8 通りは、この allowlist のどの規則が効いているかを 1 つずつ殺して確かめるために足した**——
+ * **#1008 の変異の表で K1〜K9 のどれを殺しても必ず 1 件落ちる**ようにするため）。
+ */
+test("#999 #1008 射程: 旧 denylist を素通りした綴り 16 通りを、構文木の allowlist は全部落とす", () => {
+  // **#1008 の実測で「旧 denylist が 19 件中 0 件 fail」だったもの（8 通り）＋ 捕まえていた 2 通り ＋ 規則ごとの 6 通り**
+  const mutants: [string, string][] = [
+    ["if で早期 return", `xs.sort((a, b) => { if (Math.abs(a.y - b.y) <= t) return a.x - b.x; return b.y - a.y; });`],
+    ["三項だが 0 を書かない", `xs.sort((a, b) => Math.abs(a.y - b.y) <= t ? a.x - b.x : b.y - a.y);`],
+    ["Math.round で行に丸める", `xs.sort((a, b) => Math.round(b.y / t) - Math.round(a.y / t) || a.x - b.x);`],
+    ["toSorted", `xs.toSorted((a, b) => Math.abs(a.y - b.y) <= t ? 0 : b.y - a.y);`],
+    ["比較関数を定数に切り出す", `const CMP = (a, b) => Math.abs(a.y - b.y) <= t ? 0 : b.y - a.y; xs.sort(CMP);`],
+    ["分割代入", `xs.sort(({ y: ay, x: ax }, { y: by, x: bx }) => Math.abs(ay - by) <= t ? ax - bx : by - ay);`],
+    ["添字でプロパティを取る", `xs.sort((a, b) => Math.abs(a["y"] - b["y"]) <= t ? 0 : b["y"] - a["y"]);`],
+    ["?? で繋ぐ", `xs.sort((a, b) => (Math.abs(a.y - b.y) <= t ? undefined : b.y - a.y) ?? (a.x - b.x));`],
+    ["三項で 0 を返す（旧 denylist も捕まえていた）", `xs.sort((a, b) => Math.abs(a.y - b.y) <= t ? 0 : b.y - a.y);`],
+    ["function 式で書く", `xs.sort(function (a, b) { if (Math.abs(a.y - b.y) <= t) return 0; return b.y - a.y; });`],
+    // **`if` の枝の中身が allowlist に合う `-` でも落ちること**（**枝の式ではなく「本体の形」で落とす**）
+    ["if で早期 return（枝はどちらも素の差）", `xs.sort((a, b) => { if (near(a, b)) return a.x - b.x; return b.y - a.y; });`],
+    // **比較を関数呼び出しに丸ごと隠す**（**中が見えない＝許容差かどうか分からない。分からないものは落とす**）
+    ["比較を関数呼び出しに隠す", `xs.sort((a, b) => cmpWithTol(a, b));`],
+    // **同じファイルの中に定義が無い識別子**（**import してきた比較関数。追えないので落とす**）
+    ["追えない識別子を渡す", `import { CMP } from "./elsewhere.ts"; xs.sort(CMP);`],
+    // **本体の文が `return <式>;` 1 つでない**（**最初の文が return なので、
+    // 「唯一の文が return か」の規則では捕まらない。「文が 1 つ」の規則だけが捕まえている**）
+    ["本体の文が 2 つで、最初が return", `xs.sort((a, b) => { return rowOf(a, t) - rowOf(b, t) || a.x - b.x; log(a); });`],
+    // **本体の唯一の文が return ではない**（**文は 1 つなので「文が 1 つ」の規則では捕まらない。
+    // 「唯一の文が return か」の規則だけが捕まえている**）
+    ["本体の唯一の文が return ではない", `xs.sort((a, b) => { if (near(a, b)) return 0; });`],
+    ["本体の手前に許容差の丸めを置く", `xs.sort((a, b) => { const ay = Math.round(a.y / t); const by = Math.round(b.y / t); return by - ay || a.x - b.x; });`],
+  ];
+  for (const [name, code] of mutants) {
+    const found = comparatorsIn("m.ts", code);
+    assert.equal(found.length, 1, `${name}: 比較関数が 1 つ見つかるはず（${found.length}）`);
+    assert.ok(found[0].reason, `${name}: allowlist を素通りした（${found[0].text}）`);
+  }
+  // **今のリポジトリに実在する形は、1 つも落としてはいけない**（**偽陽性の検査**。
+  // **全部落とすだけの検査は「強い」のではなく使えない**）
+  const good = [
+    `xs.sort((a, b) => b.y - a.y || a.x - b.x);`,
+    `xs.sort((a, b) => a - b);`,
+    `xs.sort((a, b) => rowOf.get(b)! - rowOf.get(a)! || a.x - b.x);`,
+    `xs.sort((a, b) => b.year * 100 + b.month - (a.year * 100 + a.month) || (a.sessionId < b.sessionId ? 1 : -1));`,
+    `xs.sort((a, b) => b[1] - a[1] || b[0] - a[0]);`,
+    `xs.sort((a, b) => { return b.y - a.y || a.x - b.x; });`,
+  ];
+  for (const code of good) {
+    const found = comparatorsIn("g.ts", code);
+    assert.equal(found.length, 1, `比較関数が 1 つ見つかるはず: ${code}`);
+    assert.equal(found[0].reason, null, `正しい比較を落とした（偽陽性）: ${code} → ${found[0].reason}`);
+  }
+  // **比較関数を渡さない `sort()` は対象にしない**（文字列の既定順。許容差を書けない）
+  assert.deepEqual(comparatorsIn("n.ts", `xs.sort();`), []);
+});
+
+/**
+ * **この検査が捕まえられない形**（**塞げないと分かっていて残す。気づかずに残すのとは違う**）。
+ *
+ * **`sort` / `toSorted` を経由しない自前の並べ替え**は、構文木では「並べ替え」と分からない。
+ * **#1008 で手書きの挿入ソートを宮城に当てたところ、この検査でも素通りする**（下で固定する）。
+ *
+ * **共有層（`pdf-table.ts`）についてはこれで困らない**——
+ * **上の `joinVertical` の振る舞いの検査が、実装の書き方を一切見ずに落とすからである**
+ * （**#1000 のレビュアーが手書きの挿入ソートを当てても落ちた**）。
+ * **県ごとの写しには、対応する振る舞いの検査がまだ無い。そこが残っている穴である。**
+ *
+ * **倒れる向き（#569）**: **破られたとき起きるのは「別人の記録が出る」**——
+ * **議員の氏名が黙って別の順に組まれる**ので、**利用者からは検出できない。**
+ * **ただし #1008 の実測では、今のフィクスチャでこの穴が実害に届くかは確かめられていない**
+ * （**11 県 127 本・`joinVertical` 呼び出し 11,592 回で、「y が 3pt 以内で x が逆順」の対は 0 組**だった。
+ * **つまり今のデータでは許容差 3pt までは等価変異になる。守られているのではなく、データが揃っているだけである**）。
+ */
+test("#999 #1008 射程: sort を経由しない自前の並べ替えは、この検査では捕まえられない（既知の穴）", () => {
+  const manual = `const s = []; for (const c of cs) { let k = 0; while (k < s.length && !(Math.abs(s[k].y - c.y) <= t ? s[k].x > c.x : s[k].y < c.y)) k++; s.splice(k, 0, c); }`;
+  assert.deepEqual(comparatorsIn("manual.ts", manual), [],
+    "自前の並べ替えを捕まえられるようになったら、この検査（既知の穴の記録）を消して上の allowlist に寄せること");
 });
 
 test("#999 射程: rowOrdered を使っているのは三重だけ", () => {
