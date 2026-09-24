@@ -1,4 +1,4 @@
-import { bandIndex, cluster, EDGE, EPS, joinVertical, within, type Item, type PageGeometry } from "../pdf-table.ts";
+import { bandIndex, byRowThenColumn, cluster, EDGE, EPS, joinVertical, within, type Item, type PageGeometry } from "../pdf-table.ts";
 import { readGlyphPages } from "./glyphs.ts";
 import { warekiYear } from "./site.ts";
 import { legendKey } from "../glyph-variants.ts";
@@ -238,7 +238,7 @@ export function checkCellsAgainstLegend(cells: readonly string[], legend: Record
  */
 function joinedLines(items: Item[]): { y: number; text: string }[] {
   if (items.length === 0) return [];
-  const sorted = [...items].sort((a, b) => b.y - a.y || a.x - b.x);
+  const sorted = [...items].sort(byRowThenColumn);
   const out: { y: number; text: string }[] = [];
   let line: Item[] = [];
   const flush = () => { if (line.length > 0) out.push({ y: line[0].y, text: line.map((i) => i.str).join("") }); };
@@ -396,7 +396,7 @@ function readMembers(page: PageGeometry, grid: Grid, pageNo: number): VotePdfMem
   // 左 8 列の見出し（bodyTop〜top の結合セル）が期待どおりか（レイアウト変化の検出）
   for (let c = 0; c < LEFT_HEADERS.length; c++) {
     const chars = page.items.filter((i) => within(i.cx, grid.leftCols[c], grid.leftCols[c + 1]) && within(i.cy, grid.bodyTop, grid.top));
-    const text = chars.sort((a, b) => b.y - a.y || a.x - b.x).map((i) => i.str).join("").replace(/[\s　]+/g, "");
+    const text = chars.sort(byRowThenColumn).map((i) => i.str).join("").replace(/[\s　]+/g, "");
     if (text !== LEFT_HEADERS[c]) throw new Error(`${label}: column ${c} header "${text}" !== ${LEFT_HEADERS[c]}`);
   }
   // 会派見出し（結合セル。正式名称がそのまま載る。凡例は無い）
@@ -437,7 +437,7 @@ function readRows(page: PageGeometry, grid: Grid, pageNo: number, memberCount: n
     if (inRow.length === 0) continue; // 空の行（余白）
     const cellText = (c: number) => {
       const chars = inRow.filter((i) => within(i.cx, grid.leftCols[c], grid.leftCols[c + 1]));
-      return chars.sort((a, b) => b.y - a.y || a.x - b.x).map((i) => i.str).join("").replace(/[\s　]+/g, "");
+      return chars.sort(byRowThenColumn).map((i) => i.str).join("").replace(/[\s　]+/g, "");
     };
     const numberCell = cellText(0);
     const title = cellText(1);
