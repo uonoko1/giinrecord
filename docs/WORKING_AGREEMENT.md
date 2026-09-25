@@ -2254,7 +2254,8 @@ CI が機械的に見る分（`.github/workflows/security.yml`、Issue #133）: 
 
 **2026-09-24。PO（私）が、誤っていない数を「誤りだ」として撤回しかけた。**
 **レビューで止まった**（2 人が独立に同じ結論に達した）。
-`### 訂正する前に測る` の実例だが、あちらより悪い形である——**訂正の向きが逆だった。**
+「訂正する前に測る」（#1018。`## 並列作業の衝突回避` の中の一文で、見出しではない）の実例だが、
+あちらより悪い形である——**訂正の向きが逆だった。**
 
 **経緯。** `apps/web/app/routes/local-rollcall.tsx` の docblock に「採決 174 ページ」と書いてあった。
 私は `resultAbsent` を持つ採決を数えて **3 件**を得たので、「174 は誤り」と判断し、
@@ -2316,7 +2317,8 @@ description: `…（${rollCall.sessionLabel}・${rollCall.number}・${rollCall.r
 - **「検査で固定していない」は事実と違った。**
   `packages/etl/test/shiga-published-data.test.ts` が `assert.equal(absent.length, 3)` で固定していた。
 - **「固定すると ETL が正しく増やしたときに落ちるので固定しない」という判断も、既存方針と矛盾していた。**
-  `published-data-validate.test.ts` が同じ形で 4 つの数を固定している。
+  `published-data-validate.test.ts` が同じ形で **6 つの数**を固定している
+  （`CORPUS` の 6 キーを `assert.equal` 6 回。実測 2026-09-25）。
   **この repo の方針は「落ちたら数を見直す」であって「固定しない」ではない。**
 
 **本当の穴は別にあった:** 滋賀以外に `resultAbsent` を足しても誰も気づかない
