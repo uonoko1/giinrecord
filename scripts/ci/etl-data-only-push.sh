@@ -76,11 +76,20 @@ fi
 # `mapfile < <(...)` はプロセス置換の終了コードを捨てるので、git diff が落ちても空配列になり
 # 「差分 0 件」として通ってしまう。**一度ファイルに落として終了コードを見る。**
 DIFF_OUT=$(mktemp); trap 'rm -f "$DIFF_OUT"' EXIT
-if ! git diff --name-only "$BASE" HEAD > "$DIFF_OUT"; then
+# **`-z` で NUL 区切りにする。** 既定（`core.quotePath=true`）では、git は非 ASCII のパスを
+# **ダブルクォートで囲んで 8 進エスケープ**して出す:
+#   "data/bills/221/221-\350\241\206\346\263\225-12.json"
+# **すると `$p == "data/"*` が偽になり、`data/` の中のファイルが「外」と数えられる。**
+# **実測 2026-09-26（run 36270175353）**: 5 時間の作り直しが、この 3 本で落ちた——
+# `221-衆法-12.json` / `-26.json` / `-28.json`（どれも `data/` の中に在る）。
+# **「data/ の外に差分がある」と言って push を止めた**が、外には 1 件も無かった。
+# **日本語の議案名を持つファイルは、この経路を一度も通れなかった**ことになる。
+if ! git diff -z --name-only "$BASE" HEAD > "$DIFF_OUT"; then
   echo "FAIL: git diff --name-only $BASE HEAD が失敗した。比較できていないので push しない。" >&2
   exit 1
 fi
-mapfile -t PATHS < "$DIFF_OUT"
+# NUL 区切りを読む（`-d ""`）。**`mapfile -t` は改行区切りなので、`-z` の出力を 1 行として読む。**
+mapfile -t -d "" PATHS < "$DIFF_OUT"
 
 inside=0
 outside=0

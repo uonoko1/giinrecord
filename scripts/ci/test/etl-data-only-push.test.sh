@@ -312,6 +312,35 @@ test_case "rebase 衝突は push せず失敗する" case_rebase_conflict_fails
 test_case "rebase を外しても、古い土台は検査だけで止まる（tip 同士の比較）" case_check_alone_catches_stale_base
 test_case "3 本のデータ ETL ワークフローが全部この検査を通る" case_all_data_workflows_use_the_guard
 test_case "stale-base.sh はこの形を覆えない（候補 0 件）——だからこの検査が別に要る" case_stale_base_sh_does_not_cover_this_shape
+# **日本語のファイル名を持つ data/ のファイルが「data/ の外」と数えられていた。**
+#
+# git は既定（`core.quotePath=true`）で非 ASCII のパスを**ダブルクォートで囲んで 8 進エスケープ**する:
+#   "data/bills/221/221-\\350\\241\\206\\346\\263\\225-12.json"
+# **すると `$p == "data/"*` が偽になり、data/ の中のファイルが「外」に数えられて push が止まる。**
+#
+# **実測 2026-09-26（run 36270175353）**: 5 時間かけた全 22 回次の作り直しが、
+# この 3 本で落ちた——`221-衆法-12.json` / `-26.json` / `-28.json`（全部 data/ の中）。
+# **「data/ の外に差分がある」と言ったが、外には 1 件も無かった。**
+# **日本語の議案名を持つファイルは、この経路を一度も通れなかった。**
+case_japanese_filenames_are_inside_data() {
+  setup
+  (
+    cd "$WORK"
+    mkdir -p data/bills/221
+    printf '{"v":1}\n' > "data/bills/221/221-衆法-12.json"
+    printf '{"v":1}\n' > "data/bills/221/221-予算-1.json"
+    git add data
+    git switch -q -c data/refresh
+    git_q commit -qm "data: 日本語のファイル名"
+  )
+  PUSH=no run data/refresh
+  SUM=$(cat "$TMP/summary" 2>/dev/null || true)
+  assert_eq 0 "$STATUS" "日本語のファイル名でも成功する: $OUT"
+  assert_contains "$SUM" "の外 | 0" "日本語のファイル名を data/ の外と数えない"
+  assert_not_contains "$OUT" "data/ の外" "外に差分があるとは言わない"
+}
+test_case "日本語のファイル名を data/ の外と数えない（core.quotePath のエスケープ）" case_japanese_filenames_are_inside_data
+
 test_case "土台を解決できないときに「差分 0 件」で通さない（#757）" case_unresolvable_base_is_not_green
 
 echo
