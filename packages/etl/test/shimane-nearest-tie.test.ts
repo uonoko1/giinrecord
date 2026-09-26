@@ -57,11 +57,28 @@ import { nearestAnchor, parseVotePdf, UNKNOWN_CELL } from "../src/sources/local/
  * 変更前後で書き出して比較。330 行 / 11,613 セル / `unknownCells` 30 で、差分 0 バイト。**
  * **`tiedItems` / `tiedMarks` はどちらも 0。**（`data/` は 1 ファイルも変えていない。）
  *
- * ## 倒れる向き（**明記する**）
+ * ## 倒れる向き（**明記する**。**最初に書いた向きは偽だった**）
  *
- * **タイ → `undefined` → 票は置かれない → `UNKNOWN_CELL`（「不明」）。**
- * **＝「記録が出ない」側。「別人の記録が出る」側には倒れない。**
- * 票以外（議案番号・件名・採決結果・賛否・付託委員会）も同じく置かれず、
+ * **最初の版はこう書いていた**——「タイ → `undefined` → 票は置かれない → `UNKNOWN_CELL` →
+ * ＝記録が出ない側。別人の記録が出る側には倒れない」。**これは偽である。**
+ *
+ * **票を置かないと `cells` の組み立てが「○ ● の無い行」の道に落ち、そこには
+ * 「その列にラベルの塊が 1 つだけなら、行を覆っていなくてもそれを返す」枝が在った**
+ * （`votes-pdf.ts` の `hit.length === 0 && blocks.length === 1`）。
+ * **落とした票が「議⾧」「除斥」「棄権」になり、`rollcalls.ts` の `MAPPED` を通って
+ * `mapped: "投票なし"` として公開されえた**——**賛成した実在の議員が「投票していない」と出る。**
+ *
+ * **実測（総当たり。ref `9dc1f065`）**:
+ *
+ * | 母数 | 票が落ちた組 | **不明にならずラベルになったセル** |
+ * |---|---:|---:|
+ * | フィクスチャ 9 本・**990 組** | 955 | **18** → **0** |
+ * | **本番の 5 本**・**630 組** | 607 | **12** → **0** |
+ *
+ * **`tiedCols`（票を落とした列はラベルで埋めない）で塞いだ。**
+ * **塞いだあとの向きは、測ったうえで「`UNKNOWN_CELL`（記録が出ない側）」である**
+ * ——下の「ラベルで埋まらない」検査が 630 組を総当たりして固定する。
+ * 票以外（議案番号・件名・採決結果・賛否・付託委員会）は置かれず、
  * **空になるので既存の検査が例外で落とす**（黙って隣の行に入れない）。
  *
  * ## この検査が捕まえないもの（測っていないことは測っていないと書く）
@@ -311,6 +328,146 @@ test("#1023 島根: フィクスチャ 8 本 329 行 11,613 セルでタイは 0
   assert.equal(tiedItems, 0, `行が決まらなかった文字が ${tiedItems} 個（実測は 0）`);
 });
 
+/* ───────── 3b. 落とした票がラベルで埋まらない（#1023 のレビューで見つかった穴） ───────── */
+
+/**
+ * **タイで落とした票が「議⾧」「除斥」「棄権」にならないことを、総当たりで固定する。**
+ *
+ * **これはこの PBI でいちばん重い検査である。** **元の PR には 1 件も無かった。**
+ *
+ * **なぜ総当たりが要るか。** **実データに同距離のタイは 1 件も無い**（`nearest` 12,489 回で 0）。
+ * **だから「タイになったとき何が出るか」は本物の PDF では 1 度も観測できない。**
+ * **観測できないものを「安全だ」と書いたのが元の PR の誤りだった。**
+ * **`dropForTest` で「この (ページ, 列) の票は行が決まらなかったことにする」を外から起こし、
+ * 全ページ × 全列を総当たりして、落ちた先が必ず `UNKNOWN_CELL` であることを見る。**
+ *
+ * **実測（ref `9dc1f065`）**:
+ *
+ * | 母数 | 票が落ちた組 | **不明にならずラベルになったセル** |
+ * |---|---:|---:|
+ * | フィクスチャ 9 本・**990 組** | **955** | **18** → **0**（`tiedCols` で塞いだ後） |
+ * | **本番の 5 本**・**630 組** | **607** | **12** → **0** |
+ *
+ * **塞ぐ前に出た 12 件は実在の議員だった**（`○ → 議長` 高橋雅彦 / `○ → 除斥` 中島謙二 /
+ * `○ → 議⾧` 山根成二 / `○ → 除斥` 池田一）。
+ *
+ * **「落ちた組の数」も固定する**（955 / 607）——**0 組なら何も主張していない。**
+ * **`dropForTest` が効かなくなれば、この検査は「不一致 0 件」で静かに緑になる**（分類 4 の穴）。
+ *
+ * ## **この検査は重い**（測った。**隠さずに書く**）
+ *
+ * **990 組それぞれで `parseVotePdf` を呼ぶので PDF を 990 回読み直す。実測 140 秒。**
+ * **`readPages`（pdfjs）が費用のほぼ全部である**（1 本あたり `readPages` 211ms /
+ * `parseVotePdf` 154ms の実測——`readPages` は `parseVotePdf` の中でも呼ばれる）。
+ *
+ * **etl の全体は 196 秒 → 275 秒**（`node --test` はファイルを並行に流すので、
+ * 足した 140 秒のうち壁時計に出たのは約 79 秒）。
+ * **`ci.yml` の `check` job は実測 153〜225 秒に対して `timeout-minutes: 30` なので収まる。**
+ *
+ * **「ラベルの塊がある列」だけに絞れば 990 → 48 組に落ちる**（実測）**が、そうしなかった。**
+ * **絞る条件は「どの列が危ないか」という私の読みであり、読みが外れたら検査も外れる。**
+ * **総当たりなら読みが要らない。** **費用を払って読みを捨てた**、という判断である。
+ */
+test("#1023 島根: タイで落とした票は必ず 不明 になる（ラベルで埋めない。全ページ × 全列の総当たり）", async () => {
+  let combosAll = 0, droppedAll = 0, labelledAll = 0;
+  let combosProd = 0, droppedProd = 0, labelledProd = 0;
+  const labelled: string[] = [];
+  for (const file of votePdfs()) {
+    const bytes = readFileSync(`${FIXTURES}${file}`);
+    let base: Awaited<ReturnType<typeof parseVotePdf>>;
+    try { base = await parseVotePdf(bytes); } catch { continue; }
+    const isProd = (PRODUCTION_PDFS as readonly string[]).includes(file);
+    const pageNos = [...new Set(base.rows.map((r) => r.page))];
+    const nCols = base.members.length;
+    for (const page of pageNos) {
+      for (let col = 0; col < nCols; col++) {
+        combosAll++; if (isProd) combosProd++;
+        let got: Awaited<ReturnType<typeof parseVotePdf>>;
+        try { got = await parseVotePdf(bytes, { pageCol: `${page}:${col}` }); } catch { continue; }
+        let anyDrop = false;
+        for (let i = 0; i < base.rows.length; i++) {
+          const b = base.rows[i].cells[col];
+          const a = got.rows[i].cells[col];
+          if (b === a) continue;
+          anyDrop = true;
+          // **落ちたなら必ず 不明**。ラベル（議⾧・除斥・棄権…）になってはいけない
+          if (a === UNKNOWN_CELL) continue;
+          labelledAll++; if (isProd) labelledProd++;
+          if (labelled.length < 8) {
+            labelled.push(`${file} p${base.rows[i].page} ${base.rows[i].number} / ${base.members[col]}: ${b} → ${a}`);
+          }
+        }
+        if (anyDrop) { droppedAll++; if (isProd) droppedProd++; }
+      }
+    }
+  }
+  // **母数**（#757。**0 組を見ても何も主張しない**）
+  assert.equal(combosAll, 990, `前提: (ページ, 列) の組が ${combosAll}（実測は 990）`);
+  assert.equal(combosProd, 630, `前提: 本番 5 本の組が ${combosProd}（実測は 630）`);
+  assert.equal(droppedAll, 955, `前提: 票が落ちた組が ${droppedAll}（実測は 955）。dropForTest が効いていない疑い`);
+  assert.equal(droppedProd, 607, `前提: 本番で票が落ちた組が ${droppedProd}（実測は 607）`);
+  // **本題**（塞ぐ前は 18 / 12 だった）
+  assert.deepEqual(labelled, [],
+    `落とした票がラベルになった（全 ${labelledAll} 件 / 本番 ${labelledProd} 件。**#569 の重いほう——`
+    + `rollcalls.ts の MAPPED を通って mapped: "投票なし" になる**）`);
+  assert.equal(labelledProd, 0, `本番の 5 本で ${labelledProd} 件（塞ぐ前は 12 件）`);
+});
+
+/* ───────── 3c. `===` が拾う範囲を、測った数のまま固定する ───────── */
+
+/**
+ * **「`===` で足りる」は実測より強い書きぶりだった**（#1023 のレビューの指摘）。**その範囲を測って固定する。**
+ *
+ * **本物の `anchors` から隣り合う 2 つの幾何学的な中点 `(A[i]+A[i+1])/2` を全部作って通すと、
+ * 幾何学的には等距離なのに 3 分の 1 はタイと判定されない**（`(A[i]+A[i+1])/2` を double で
+ * 計算した時点で 1 位と 2 位の差が 0 にならない）。
+ *
+ * **実測（ref `9dc1f065`。フィクスチャ 8 本）**:
+ *
+ * | 母数 | **`undefined`（タイ）** | **行を選んだ** | 差の最小 / 中央 / 最大 |
+ * |---:|---:|---:|---|
+ * | **301 対** | **200（66.4%）** | **101（33.6%）** | **1.42e-14 / 5.68e-14 / 1.14e-13 pt** |
+ *
+ * **ただし 101 対とも `anchors` を逆順にしても答えは変わらない**（実測 0 対）——
+ * **差は `reduce` の走査順の産物ではなく、計算された double の実差なので決定的である。**
+ * **＝#1023 の元の問題（並び順が票の行き先を決める）は確かに消えている。**
+ *
+ * **そして実データの 1 位 2 位差の最小は 8.15996 pt で、1e-14 の領域とは 14 桁離れている。**
+ * **だからこれは「いま壊れる」ではなく「守る範囲は 66% である」という事実の記録である。**
+ */
+test("#1023 島根 nearestAnchor: 幾何学的な中点 301 対のうち 200 対がタイ、101 対は 1e-14 pt の差で行が選ばれる", async () => {
+  let pairs = 0, tie = 0, picked = 0, orderDependent = 0;
+  const gaps: number[] = [];
+  for (const file of votePdfs()) {
+    let pdf: Awaited<ReturnType<typeof parseVotePdf>>;
+    try { pdf = await parseVotePdf(readFileSync(`${FIXTURES}${file}`)); } catch { continue; }
+    for (const ra of pdf.rowAssignments) {
+      const A = ra.anchors;
+      for (let i = 0; i + 1 < A.length; i++) {
+        const y = (A[i] + A[i + 1]) / 2;
+        pairs++;
+        const got = nearestAnchor(A, y);
+        if (got === undefined) { tie++; continue; }
+        picked++;
+        const d = A.map((a) => Math.abs(a - y)).sort((p, q) => p - q);
+        gaps.push(d[1] - d[0]);
+        // **並び順に依っていないこと**（#1023 の元の問題が消えていることの確認）
+        if (nearestAnchor([...A].reverse(), y) !== got) orderDependent++;
+      }
+    }
+  }
+  gaps.sort((a, b) => a - b);
+  // **母数**（実測で固定する。#757）
+  assert.equal(pairs, 301, `前提: 隣り合う中点が ${pairs} 対（実測は 301）`);
+  assert.equal(tie, 200, `前提: タイと判定されたのが ${tie} 対（実測は 200 = 66.4%）`);
+  assert.equal(picked, 101, `前提: 行が選ばれたのが ${picked} 対（実測は 101 = 33.6%）`);
+  // **選ばれた 101 対の差は、どれも丸め誤差の下端の桁である**（1e-13 pt 未満）
+  assert.ok(gaps.at(-1)! < 1e-12, `選ばれた対の差の最大が ${gaps.at(-1)} pt（実測は 1.14e-13 pt 未満）`);
+  // **本題: 並び順に依らない**（#1023 の元の問題が消えていること）
+  assert.equal(orderDependent, 0,
+    `中点で anchors の並び順によって答えが変わった（${orderDependent} 対 / ${picked} 対）。**#1023 の元の問題が戻っている**`);
+});
+
 /* ───────────────── 4. 残る 6 県を、ソースの形で固定する ───────────────── */
 
 /**
@@ -330,9 +487,29 @@ test("#1023 島根: フィクスチャ 8 本 329 行 11,613 セルでタイは 0
  * **移れるのは「行の中」から「行の外（＝不明）」へだけ。**
  * **島根にはこの `within` によるふるいが無く、`nearest` が行を選ぶ。そこが違いの全部である。**
  *
- * **これは allowlist である**（「この 3 行が在ること」を要求する）。
- * **denylist ではないので「y を使う別の書き方を足した」ことは捕まえない。**
- * **ただし、この 3 行を消す／`it.cx` を `it.cy` に変えるといった壊し方は捕まえる**（変異で確かめた）。
+ * **これは allowlist（「この 3 行が在ること」を要求）と denylist（`Math.abs(...y...)` を禁じる）の併用である。**
+ * **ただし、この 3 行を消す／`it.cx` を `it.cy` に変えるといった壊し方は捕まえる**（変異 M6 / M7 で確かめた）。
+ *
+ * ## **すり抜ける形を、測って名指しで書く**（#1023 のレビューが実際に当てた）
+ *
+ * **「denylist なので穴がある」は元の PR が自分で開示していたが、レビュアーが実測した。**
+ * **次の 2 つは、この検査を素通りする**（どちらも **9 件中 fail 0**。ref `9dc1f065`）:
+ *
+ * | 変異 | すり抜ける理由 |
+ * |---|---|
+ * | **奈良**の `readRows` に `(ry - it.cy) ** 2` で行を選ぶ形を足す | **`Math.abs` を使わない**（2 乗で距離を作る）ので denylist の正規表現に当たらない |
+ * | **徳島**の `readRows` に `pickRowByY(it.cy)` を足す（allowlist の 3 行は残す） | **距離の計算を別の関数に出す**と `readRows` の本体に現れない |
+ *
+ * **＝この検査は「6 県が y で行を選んでいない」ことの保証ではない。**
+ * **「いまの 6 県が、いまの 3 行の形をしている」ことの固定である。**
+ * **本当に保証するには 6 県それぞれに振る舞いの検査（本物の PDF に摂動を当てる）が要るが、
+ * この PBI ではやっていない**（島根だけ `rowAssignments` を持っている）。**別の PBI が要る。**
+ *
+ * **denylist の部分は、自分を消す変異でも落ちない**（実測。この行の `if (nearestLike.length > 0)` を
+ * `if (false)` にしても **9 件中 fail 0**）——**いまの 6 県が 1 つも引っかかっていないので、
+ * 消しても違いが出ない。** **＝denylist は「将来の壊し方」にしか効かず、いま何も守っていない。**
+ * **allowlist の 3 行（`bandIndex(..., it.cx)` / `within(it.cy, ...)` / `unplaced`）は
+ * 消す変異で落ちる**（M6 / M7）**ので、守っているのはそちらである。**
  */
 test("#1023 6 県（高知・三重・宮城・奈良・徳島・鳥取）の票のセルは x だけで決まる", () => {
   const prefs = ["kochi", "mie", "miyagi", "nara", "tokushima", "tottori"] as const;
