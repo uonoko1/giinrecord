@@ -100,6 +100,29 @@ const CORPUS = {
   localMemberRows: 451, // うち地方議員（assemblyId が diet- で始まらない行）。**滋賀の名簿が 44 → 42 人**
   rollCallFiles: 4599, // assemblies/*/rollcalls/**/*.json（index.json を除く）。**#901 で三重 365 → 733、徳島 105 → 153、高知 104 → 221、秋田 157 → 785、奈良 125 → 180、宮城 133 → 584、青森 113 → 611**、滋賀 14 → 163
   voteCells: 198221, // その採決ファイルの votes[] の合計。**#901 で三重 17,032 → 34,590、徳島 3,780 → 5,562、高知 3,744 → 7,881、秋田 6,437 → 32,022、奈良 5,000 → 7,200、宮城 7,448 → 33,815、青森 5,111 → 29,015**、滋賀 604 → 6,886
+  // ## **`blankNumber*` / `resultAbsent*` は `local-rollcall.tsx` の docblock が主張している母数**（#1038）
+  //
+  // **コメントに書いただけの数は誰も守らない。** **実測 2026-09-25**:
+  // **レビュアーが docblock の数を `pref-02: 99` / `計 999` とでたらめに変えても、web の 1,379 件が全部緑だった**
+  // （`apps/web/app/routes/local-rollcall.tsx` の `・・` の説明。**コメントなので当然だが、つまり `data/` が動けば黙ってずれる**）。
+  // **ここに載せるのは、上の `#855 母数` のループが既に全採決ファイルを `JSON.parse` しているから**——**追加の走査は 0 本である。**
+  //
+  // **赤くなったら、まず「県が公表 PDF の様式を変えた」を疑うこと**（`memberRows` と同じ）。
+  // **`number` は一次資料の議案番号の欄で、空なのは「原本に書かれていない」という事実である**——
+  // **ETL が正しく県を増やしたときにも、様式の違う県が入ればここは動く。**
+  // **直すのは実装ではなくこの数**——**`data/` を作り直し、どの議会が何件動いたかをコミットメッセージに書く。**
+  // **「赤いから」と検査を緩めないこと**（#943）。**議会ごとの内訳を持っているのは、
+  // 合計だけだと内訳が入れ替わっても（171 + 3 が 172 + 2 になっても 174）気づかないからである。**
+  blankNumberByAssembly: { "pref-02": 2, "pref-04": 4, "pref-05": 2, "pref-25": 163, "pref-31": 3 } as Record<string, number>,
+  blankNumber: 174, // 上の内訳の合計（2 + 4 + 2 + 163 + 3）。**`・・` が出ていたページの数**（#1011 の実測）
+  // **`resultAbsent: true` の採決**。**`blankNumber` の部分集合である**——
+  // **内訳は 171（`number` 空だけ）+ 3（`number` 空 かつ `resultAbsent`）= 174。**
+  // **これが崩れると docblock の「別の母数だが部分集合」という説明が嘘になる**ので、
+  // 下で `resultAbsentWithNumber` を 0 に固定して「はみ出しが無い」ことを別に測っている。
+  // **`shiga-published-data.test.ts` も `absent.length === 3` を持っているが、あちらは滋賀だけを見る**——
+  // **滋賀以外に `resultAbsent` が生えても、あちらは緑のままである**（#1029）。**ここは 11 議会を横断して数える。**
+  resultAbsent: 3,
+  resultAbsentWithNumber: 0, // `resultAbsent` を持つのに `number` が空でない採決。**0 でなくなったら部分集合が崩れている**
 };
 
 const walkRollCalls = async (dir: string): Promise<string[]> => {
@@ -118,7 +141,7 @@ const walkRollCalls = async (dir: string): Promise<string[]> => {
  * **母数を先に測る。** **これが落ちたら、下の「違反 0 件」は意味を失っている**
  * （痩せたディレクトリを見て緑になっているのかもしれない。上の docblock の青森の実測）。
  */
-test("#855 母数: コミット済み data/ に 11 議会・4,599 採決・198,221 セル・1,223 名簿行がある", async () => {
+test("#855 母数: コミット済み data/ に 11 議会・4,599 採決・198,221 セル・1,223 名簿行がある（#1038: `number` 空 174・`resultAbsent` 3 も同じループで数える）", async () => {
   const assemblies = JSON.parse(await readFile(join(DATA, "assemblies/index.json"), "utf-8")) as Assembly[];
   const members = JSON.parse(await readFile(join(DATA, "members/index.json"), "utf-8")) as MemberSummary[];
   const local = assemblies.filter((a) => a.kind !== "national");
@@ -128,14 +151,31 @@ test("#855 母数: コミット済み data/ に 11 議会・4,599 採決・198,2
   assert.equal(members.filter((m) => m.assemblyId !== undefined && !m.assemblyId.startsWith("diet-")).length, CORPUS.localMemberRows);
   let files = 0;
   let cells = 0;
+  // **#1038: `local-rollcall.tsx` の docblock が主張している母数を、このループのついでに数える**（新しい走査を足さない）
+  const blankNumberByAssembly: Record<string, number> = {};
+  let resultAbsent = 0;
+  let resultAbsentWithNumber = 0;
   for (const a of local) {
     for (const f of await walkRollCalls(join(DATA, "assemblies", a.id, "rollcalls"))) {
       files++;
-      cells += (JSON.parse(await readFile(f, "utf-8")) as LocalRollCall).votes.length;
+      const rc = JSON.parse(await readFile(f, "utf-8")) as LocalRollCall;
+      cells += rc.votes.length;
+      if (rc.number === "") blankNumberByAssembly[a.id] = (blankNumberByAssembly[a.id] ?? 0) + 1;
+      if (rc.resultAbsent === true) {
+        resultAbsent++;
+        if (rc.number !== "") resultAbsentWithNumber++;
+      }
     }
   }
   assert.equal(files, CORPUS.rollCallFiles);
   assert.equal(cells, CORPUS.voteCells);
+  // **議会ごとの内訳で固定する**——**合計だけだと、議会をまたいで 1 件動いても（171 + 3 → 172 + 2）緑のままになる**
+  assert.deepEqual(blankNumberByAssembly, CORPUS.blankNumberByAssembly, "`number` が空の採決（`・・` が出ていたページ）の議会ごとの内訳");
+  const blankNumber = Object.values(blankNumberByAssembly).reduce((s, n) => s + n, 0);
+  assert.equal(blankNumber, CORPUS.blankNumber, "その合計");
+  assert.equal(resultAbsent, CORPUS.resultAbsent, "`resultAbsent: true` の採決（11 議会を横断して数える）");
+  // **部分集合であること**——**`resultAbsent` を持つのに `number` が空でないものが出たら、docblock の説明が嘘になる**
+  assert.equal(resultAbsentWithNumber, CORPUS.resultAbsentWithNumber, "`resultAbsent` を持つのに `number` が空でない採決");
 });
 
 /**
