@@ -222,6 +222,83 @@ t_this_pr_body_shape_passes() {
 }
 test_case "self: この PBI の PR 本文の形（Closes #793）は通る" t_this_pr_body_shape_passes
 
+# ── 7b. コードスパン／コードブロックの中の閉じる語は数えない（#977）──────────────────────
+# **GitHub は自動クローズの語をコードスパン（`` ` ``）とフェンス（```）の中では読まない。**
+# **この検査は文字列として読むので、「#N は閉じない」と説明した文まで拾っていた。**
+#
+# 実測（2026-09-25、マージ済み PR **630 本**を `closingIssuesReferences` と突き合わせた）:
+#   **取り出す番号が食い違うのは 11 本。うち 9 本はコードスパンが原因**
+#   （#520 #839 #850 #857 #893 #954 #975 …）。**逆向き（検査が拾わず GitHub が閉じる）は 0 本。**
+#   コードスパンを除いて測り直すと**食い違いは 2 本まで減る**（#130 = Issue が削除済み、
+#   #964 = 既定でない base への PR。**どちらも本文の綴りでは説明がつかない**）。
+t_code_span_is_not_a_closing_word() {
+  # **PR #960 で実際に起きた形**: 「この番号は閉じない」と説明する文の中の閉じる語。
+  run "## 何が問題だったか" \
+      "当初 \`Closes #943\` と書いていたが、#943 は無関係な自動起票の Issue だった。" \
+      "Closes #958"
+  assert_eq 0 "$STATUS" "バッククォート外の Closes #958 があるので通る"
+  assert_contains "$OUT" "#958" "GitHub が実際に閉じる番号は出す"
+  assert_not_contains "$OUT" "#943" "コードスパンの中の番号は出さない（GitHub も閉じない）"
+}
+test_case "code-span: 説明のための \`Closes #N\` は拾わない（PR #960 の実測）" t_code_span_is_not_a_closing_word
+
+t_only_code_span_fails() {
+  # **閉じる語がコードスパンの中にしか無い PR は、GitHub から見れば何も閉じない。**
+  # 実測: #839 #850 #857 #893 #954 は 1 行目が \`Closes #N\` だけで、
+  # **GitHub は 1 件も閉じず、PO が手で閉じていた**（closer=null）。
+  run "\`Closes #835\`" "" "## 何が問題だったか" "三重の賛否 PDF を測った。"
+  assert_eq 1 "$STATUS" "閉じる語がコードスパンの中だけなら落ちる（GitHub も閉じない）"
+  assert_contains "$OUT" "対応する Issue がどれかが書かれていません" "何が足りないかを言う"
+}
+test_case "code-span: 閉じる語がコードスパンの中だけの本文は落ちる（#839 の実測形）" t_only_code_span_fails
+
+t_fenced_block_is_not_a_closing_word() {
+  run "## 実行例" "\`\`\`" "\$ ./scripts/ci/pr-closes.sh body.md" "Closes #123" "\`\`\`" \
+      "説明おわり。"
+  assert_eq 1 "$STATUS" "フェンスの中の閉じる語は数えない"
+}
+test_case "code-span: フェンス（\`\`\`）の中の閉じる語は数えない" t_fenced_block_is_not_a_closing_word
+
+# **偽陽性を作らないこと**: 同じ行にコードスパンがあっても、**その外**の閉じる語は生きている。
+# **実測でここを踏み抜きかけた**: 「バッククォートを含む行を丸ごと捨てる」実装にすると、
+# **PR #334 #461 #766 #772 の 4 本が誤って赤くなる**——4 本とも 1 行目が
+# `Closes #N。…\`コード\`…` の形で、**GitHub は実際に閉じている**（それぞれ #333 #456 #759 #768）。
+t_closing_word_outside_span_on_same_line() {
+  run "Closes #759。**地方議会 10 議会目。** \`data/assemblies/pref-05/\` が出て通る。"
+  assert_eq 0 "$STATUS" "同じ行にコードスパンがあっても、その外の Closes #N は生きている"
+  assert_contains "$OUT" "#759" "拾うのはコードスパンの外の番号"
+}
+test_case "code-span: 同じ行のコードスパンの外にある Closes #N は通る（PR #766 の実測形）" t_closing_word_outside_span_on_same_line
+
+t_double_backtick_span_holds_single_backtick() {
+  # **閉じは「開きと同じ長さ」でなければならない**（CommonMark と同じ数え方）。
+  # `` で開いたスパンは、**中に単独の ` があっても閉じない**——
+  # ここを「どのバッククォートでも閉じる」にすると、**スパンが途中で切れて
+  # 中身の閉じる語が漏れ出す**（変異 M5 で実測: #111 が漏れた）。
+  # shellcheck disable=SC2016  # **文字どおりのバッククォート**を本文に入れている。展開させてはいけない
+  run '``コード \` の中 Closes #111 まだコード`` Closes #222'
+  assert_eq 0 "$STATUS" "スパン外の Closes #222 で通る"
+  assert_contains "$OUT" "#222" "スパンの外は拾う"
+  assert_not_contains "$OUT" "#111" "二重スパンの中は、単独のバッククォートでは閉じない"
+}
+test_case "code-span: 二重バッククォートのスパンは単独では閉じない（長さを数える）" t_double_backtick_span_holds_single_backtick
+
+t_escape_hatch_survives_code_span() {
+  # **逃げ道がコードスパンの巻き添えで壊れないこと**（壊れると全 PR が赤くなる、#790）。
+  run "\`pr-closes.sh\` の説明を直した。" "Closes なし（作業合意の更新）"
+  assert_eq 0 "$STATUS" "同じ本文にコードスパンがあっても逃げ道は通る"
+  assert_contains "$OUT" "対応する Issue が無いことが明示されています" "逃げ道で通ったことが分かる"
+}
+test_case "code-span: 本文にコードスパンがあっても逃げ道は通る" t_escape_hatch_survives_code_span
+
+t_unclosed_backtick_does_not_swallow_rest() {
+  # 閉じていないバッククォートは**コードスパンを作らない**（GitHub も同じ）。
+  # ここを「開いたら以降全部コード」にすると、閉じ忘れ 1 つで本文全体が無効になる。
+  run "残り 1 個の \` が閉じていない。Closes #401"
+  assert_eq 0 "$STATUS" "閉じていないバッククォートの後ろの Closes #N は生きている"
+}
+test_case "code-span: 閉じていないバッククォートは以降を飲み込まない" t_unclosed_backtick_does_not_swallow_rest
+
 # ── 8. ワークフローがこの検査を呼んでいること ──────────────────────────────────────────
 # **#504 の形: 1 つのファイルの中の検査は、そのファイル自身を守れない。**
 # **スクリプトを消しても CI が緑になるなら、この検査は存在しないのと同じ。**
