@@ -32,13 +32,28 @@ test("ワークフローが設定する user.email は、数字 ID 付きの nor
   assert.ok(files.length > 0, "ワークフローが 1 つも見つからない（走査が空回りしている）");
   const bad: string[] = [];
   let checked = 0;
+  // **値は allowlist、書き方も allowlist にする。**
+  // 最初の版はダブルクォートだけを拾っていた。**レビューの実測（使い捨て repo で実際にコミットして
+  // `%ae` を読んだ）では、次の 5 形が素通りしたうえで `etl@users.noreply.github.com` を刻んだ**:
+  //   シングルクォート / クォートなし / GIT_AUTHOR_EMAIL / git -c user.email= / git commit --author=
+  // **「値だけ allowlist で、書き方は denylist」だと列挙漏れが残る**（#858 / #1022 と同じ向き）。
+  // **メールアドレスらしい文字列を先に全部拾い、そのうえで形を要求する。**
+  // `[bot]` の角括弧を含める——`github-actions[bot]@…` が拾えなくなり、
+  // **母数 0 で緑になる**（最初にそう書いて `checked > 0` に捕まった）。
+  const EMAIL = /[A-Za-z0-9._%+\-\[\]]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g;
+  // 数字 ID 付きの GitHub noreply だけを通す（例: 41898282+github-actions[bot]@users.noreply.github.com）
+  const OK = /^\d+\+[^@]+@users\.noreply\.github\.com$/;
+  // コミットの身元を決めうる書き方（ここに現れたアドレスを検査する）
+  const IDENTITY = /(?:user\.email|GIT_AUTHOR_EMAIL|GIT_COMMITTER_EMAIL|--author)/;
   for (const f of files) {
     const text = readFileSync(join(dir, f), "utf8");
-    for (const m of text.matchAll(/git config (?:--\S+ )*user\.email\s+"([^"]+)"/g)) {
-      checked += 1;
-      const email = m[1] ?? "";
-      // 数字 ID 付きの GitHub noreply だけを通す（例: 41898282+github-actions[bot]@users.noreply.github.com）
-      if (!/^\d+\+[^@]+@users\.noreply\.github\.com$/.test(email)) bad.push(`${f}: ${email}`);
+    for (const line of text.split("\n")) {
+      if (!IDENTITY.test(line)) continue;
+      for (const m of line.matchAll(EMAIL)) {
+        checked += 1;
+        const email = m[0];
+        if (!OK.test(email)) bad.push(`${f}: ${email}`);
+      }
     }
   }
   // **母数を出す**（#757）: 0 件で緑になっていないことを、まず確かめる。
