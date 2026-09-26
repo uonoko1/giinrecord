@@ -142,6 +142,13 @@ export function LocalRollCallPage({ rollCall, assembly, meta }: { rollCall: Loca
  * **PO が 2026-09-24 に、この 2 つを取り違えて「174 は誤り」と撤回しかけた**
  * （レビューで止まった。#1025 / #1026）。**数を書くときは、どちらの母数かを必ず添えること。**
  *
+ * **この 174 と 3 は検査が持っている**（#1038）——
+ * `packages/etl/test/published-data-validate.test.ts` の `CORPUS.blankNumberByAssembly` /
+ * `blankNumber` / `resultAbsent` / `resultAbsentWithNumber`。**議会ごとの内訳まで固定してある。**
+ * **ここを直すときは向こうも直すこと**（**コメントだけを直すと、向こうが落ちて「なぜ」が分からなくなる**）。
+ * **それまでは誰も守っていなかった**——**実測 2026-09-25: `pref-02: 99` / `計 999` とでたらめに書き換えても
+ * web の 1,379 件が全部緑だった。**
+ *
  * **`resultAbsent` の無い空の `result`（読み取り事故）には出さない。** ETL が今までどおり違反として弾く形なので、
  * ここで「記載なし」と書くと事故を県のせいにしてしまう。
  */
