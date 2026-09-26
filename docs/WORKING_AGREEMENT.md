@@ -2442,7 +2442,7 @@ PR #1015 の担当者・そのレビュアー・PO の 3 者が独立に再現�
 **#1011 の表と 1 件の狂いもなく一致する。どちらの数も正しい。**
 **docblock が「どちらの数か」を書いていなかっただけである。**
 
-**機序も確かめた。** 修正前の meta description は `.filter(Boolean)` を持っていなかった
+**機序も確かめた。** 修正前の meta description は**空の欄を落としていなかった**
 （`eee3260d~1:apps/web/app/routes/local-rollcall.tsx`）:
 
 ```
@@ -2450,6 +2450,12 @@ description: `…（${rollCall.sessionLabel}・${rollCall.number}・${rollCall.r
 ```
 
 **`number` が空なら、`resultAbsent` と無関係に `・・` が出る。**
+
+**この節自身が、警告している罠を踏んでいた**（レビューの指摘。PO が追試）。
+初版は「`.filter(Boolean)` を持っていなかった」と書いたが、**同じファイルに
+`.filter(Boolean)` は既に 3 件あった**（meta description だけが落としていなかった）。
+**しかも実際の修正は `.filter((s) => s !== "")` という別の綴り**である。
+**「同じ値の別の綴り」を潰さずに数えた**——この節の隣が戒めていることそのものである。
 だから 174 のほうが「症状の数」として正しい。
 
 **レビュアーの指摘がいちばん鋭い:**
