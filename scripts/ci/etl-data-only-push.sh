@@ -88,7 +88,11 @@ if ! git diff -z --name-only "$BASE" HEAD > "$DIFF_OUT"; then
   echo "FAIL: git diff --name-only $BASE HEAD が失敗した。比較できていないので push しない。" >&2
   exit 1
 fi
-# NUL 区切りを読む（`-d ""`）。**`mapfile -t` は改行区切りなので、`-z` の出力を 1 行として読む。**
+# **`-d ""` で NUL を区切りにし、`-t` でその区切りを剥がす。**
+# （前の版のコメントは逆だった——`-t` は「改行用」ではなく「区切り文字を剥がす」指定で、
+#  `-z` の出力は 1 行ではなく NUL ごとに分かれる。レビューの指摘で訂正。）
+# **末尾の空要素は混ざらない**（git は各パスの後ろに NUL を置き、最後の NUL の後は空。
+#  `mapfile` はその空を要素にしない。レビューが実測で確認）。
 mapfile -t -d "" PATHS < "$DIFF_OUT"
 
 inside=0

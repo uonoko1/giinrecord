@@ -70,7 +70,11 @@ etl_writes_data() {
 
 run() { # run [args...]  — WORK の中で走らせる（REBASE は呼び出し側で上書きできる）
   set +e
+  # **`core.quotePath` を既定（true）に固定する。** 固定しないと、
+  # 走らせる人の設定が `false` のとき**バグ版でも 12/0 で緑になる**（レビューが実測）。
+  # **「直っているか」を測れない検査は、何も主張していない。**
   ( cd "$WORK" && GITHUB_STEP_SUMMARY="$TMP/summary" REBASE="${REBASE:-yes}" \
+      GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.quotePath GIT_CONFIG_VALUE_0=true \
       GIT_AUTHOR_NAME=etl GIT_AUTHOR_EMAIL=etl@test \
       GIT_COMMITTER_NAME=etl GIT_COMMITTER_EMAIL=etl@test \
       bash "$SCRIPT" "$@" ) > "$TMP/out" 2>&1
