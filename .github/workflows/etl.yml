@@ -112,8 +112,13 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # **メールアドレスに数字 ID を必ず付ける。** `etl@users.noreply.github.com` のような
+          # **裸のローカル部は、その名前の GitHub ユーザーに紐づく**——実在する無関係の人
+          # （github.com/etl）が Contributors に並んだ（実測 2026-09-27: `Co-Authored-By` に 55 件）。
+          # **利用者から見て「誰が作ったか」が事実と違う**ので、サービスの信頼に直接関わる。
+          # `41898282+github-actions[bot]@…` は GitHub Actions 自身の ID で、誤帰属しない。
           git config user.name "giinrecord-etl[bot]"
-          git config user.email "etl@users.noreply.github.com"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data
           CHANGED=$(git diff --cached --name-only | wc -l | tr -d ' ')
           echo "changed=$CHANGED" >> "$GITHUB_OUTPUT"
