@@ -79,6 +79,24 @@ export interface VotePdf {
   rows: VoteRow[];
   /** 置けなかったセルの数 */
   unknownCells: number;
+  /**
+   * **行の y が同距離で並んで、どの行のものか決められなかった文字の数**（Issue #1023）。
+   * **0 でなければ、その PDF は「置かれなかった票」を含む**（推定で置いていない）。
+   * **実測（2026-09-25。フィクスチャ 8 本 / `nearest` の呼び出し 12,489 回）で 0。**
+   */
+  tiedItems: number;
+  /** うち票（○ ●）だったもの（＝その分 `UNKNOWN_CELL` が増える）。**実測 11,154 回中 0。** */
+  tiedMarks: number;
+  /**
+   * **票（○ ●）の行き先を決めた入力そのもの**（ページごと。Issue #1023）。
+   *
+   * **検査が「合成した座標」ではなく「本物の座標」に摂動を当てられるようにするためのもの。**
+   * **合成した骨格で測っても「実データでどうか」は何も言えない**（#1002 の滋賀で同じ判断をしている）。
+   *
+   * **`anchors` はそのページの行の基準（議案番号の欄の y）、`markYs` は置こうとした票の y。**
+   * **`parseVotePdf` の出力には使わない**（読むのは検査だけ）。
+   */
+  rowAssignments: { page: number; anchors: number[]; markYs: number[] }[];
 }
 
 /**
@@ -437,6 +455,51 @@ function splitAtBoundary(it: Item, boundary: number): { left: Item; right: Item 
 }
 
 /**
+ * **y が最も近い行（議案番号の欄の y）を返す。同距離で並んだら `undefined`**（Issue #1023）。
+ *
+ * ## なぜタイを `undefined` にするか
+ *
+ * **島根は 11 県で唯一、票（○ ●）の行き先を y の比較だけで決めている。**
+ * 他県は `columnOf` / `bandIndex` で **x の帯へ置き直す**ので、y の丸め誤差は票に届かない（#1002）。
+ * 島根には置き直しが無く、**`nearest(it.y)` の結果がそのまま「どの議員のどの議案か」になる。**
+ *
+ * **同距離のタイになったとき、どちらの行を選ぶかは `reduce` の走査順（＝`anchors` の並び）が決める。**
+ * それは **PDF の中身に何の根拠も無い選び方**であり、外れれば **#569 の重いほう
+ * ——「別人の票が出る」——になる。利用者からは検出できない。
+ * **だから、決められないときは決めない。** 票は `UNKNOWN_CELL`（記録が出ない側）に落とす。
+ *
+ * ## 実測（2026-09-25。フィクスチャ 8 本）
+ *
+ * **この規則は、いまのデータの出力を 1 セルも変えない。**
+ *
+ * | 何を測ったか | 母数 | タイ | **2 位との差の最小** |
+ * |---|---:|---:|---:|
+ * | 票（○ ●）の行き先 | **11,154 回** | **0** | **16.560 pt** |
+ * | `nearest` の呼び出し全部（票・件名・付託・採決結果・賛否） | **12,489 回** | **0** | **8.160 pt** |
+ *
+ * **丸め誤差の桁は 1e-13 〜 1e-5 pt（#1000 の実測）で、いちばん際どい 8.160 pt とは 5 桁以上離れている。**
+ * **つまり「実データで起きる」ことを示したのではない。** 起きたときに**倒れる向きを固定した**だけである。
+ * **「たまたま安定している」を根拠にしない**ためのもので、`docs/WORKING_AGREEMENT.md` の
+ * 「迷ったら出さない側に倒す」をコードに書き下したもの。
+ *
+ * **等価の判定は `===` で行う**（許容差を入れない）。許容差つきの「ほぼ同距離」は
+ * **非推移的な比較**になり、#1000 で三重を壊したのと同じ形になる。
+ * ここで塞ぎたいのは**丸め誤差でぴったり並ぶ場合**なので、`===` で足りる。
+ */
+export function nearestAnchor(anchors: readonly number[], y: number): number | undefined {
+  if (anchors.length === 0) return undefined;
+  let best = anchors[0];
+  let bestD = Math.abs(anchors[0] - y);
+  let tied = false;
+  for (let i = 1; i < anchors.length; i++) {
+    const d = Math.abs(anchors[i] - y);
+    if (d < bestD) { best = anchors[i]; bestD = d; tied = false; }
+    else if (d === bestD) tied = true;
+  }
+  return tied ? undefined : best;
+}
+
+/**
  * 件名の欄を「行ごとのセル」に切り分ける（Issue #866）。
  *
  * **なぜ 1 行ずつ y の近い議案番号に入れてはいけないか。**
@@ -616,6 +679,11 @@ export async function parseVotePdf(bytes: Buffer): Promise<VotePdf> {
 
   const rows: VoteRow[] = [];
   let unknownCells = 0;
+  // #1023: 行の y が同距離で並んで置けなかった文字（票は UNKNOWN_CELL になる）
+  let tiedItems = 0;
+  let tiedMarks = 0;
+  // #1023: 票の行き先を決めた入力（検査が本物の座標に摂動を当てるため。出力には使わない）
+  const rowAssignments: { page: number; anchors: number[]; markYs: number[] }[] = [];
   let section: string | undefined;
   for (const [pi, page] of pages.entries()) {
     const head = heads[pi];
@@ -663,11 +731,14 @@ export async function parseVotePdf(bytes: Buffer): Promise<VotePdf> {
     // 行の基準: 議案番号の欄（1 議案に 1 つ）
     const anchors = cluster(numItems.map((i) => i.y), 4).sort((a, b) => b - a);
     if (anchors.length === 0) continue;
-    const nearest = (y: number): number => anchors.reduce((best, a) => (Math.abs(a - y) < Math.abs(best - y) ? a : best), anchors[0]);
+    // **同距離のタイは `undefined`**（#1023。上の `nearestAnchor` の docblock を見よ）
+    const nearest = (y: number): number | undefined => nearestAnchor(anchors, y);
     // 行の中心（議案番号の y）が最も近い行へ入れる。件名・採決結果・人数はどれも行の中心に揃っている
     const own = (items: Item[]): Map<number, Item[]> => {
       const map = new Map<number, Item[]>(anchors.map((a) => [a, [] as Item[]]));
-      for (const it of items) map.get(nearest(it.y))!.push(it);
+      // **行が決まらない文字は置かない**（#1023）。置かなければ議案番号・件名・採決結果が空になり、
+      // 下の検査が落とす（＝推定で隣の行へ入れない）。**黙ってどちらかに倒さない。**
+      for (const it of items) { const a = nearest(it.y); if (a !== undefined) map.get(a)!.push(it); else tiedItems++; }
       return map;
     };
     const numByRow = own(numItems);
@@ -714,6 +785,7 @@ export async function parseVotePdf(bytes: Buffer): Promise<VotePdf> {
       // 付託委員会の行が議案の数より少ない（＝付託の無い議案がある）。分けられないので今までどおり近い行へ
       for (const l of refLines) {
         const a = nearest(l[0].y);
+        if (a === undefined) { tiedItems++; continue; } // #1023: 行が決まらなければ置かない（付託委員会が空になり下で落ちる）
         refByRow.get(a)!.push(...l.map((i) => i.str.trim()));
         refYs.get(a)!.push(...l.map((i) => i.y));
       }
@@ -728,11 +800,17 @@ export async function parseVotePdf(bytes: Buffer): Promise<VotePdf> {
     // 「議⾧」「除斥」は縦書き 2 文字の結合セルで、○ ● の無い行をまとめて覆う（議長は複数の議案にわたって議長のまま）。
     // 列ごとに文字を集めておき、その列で ○ ● の無い行すべてにこのラベルを入れる。
     const labelByCol = new Map<number, Item[]>();
+    const markYs: number[] = [];
     for (const it of splitJoinedMarks(voteItems, colX)) {
       const col = colX.findIndex((x) => Math.abs(it.x - x) < 4);
       if (col < 0) { unknownCells++; continue; }
       if (it.str === "○" || it.str === "●") {
-        const row = markByRow.get(nearest(it.y))!;
+        // **票の行き先が同距離で決まらなければ、この票は置かない**（#1023）。
+        // 置かなければ下の `cells` が `UNKNOWN_CELL` になる（＝記録が出ない側。**別人の票にしない**）。
+        markYs.push(it.y); // #1023: 検査が本物の座標に摂動を当てられるように記録する
+        const a = nearest(it.y);
+        if (a === undefined) { tiedMarks++; tiedItems++; continue; }
+        const row = markByRow.get(a)!;
         if (row.has(col)) throw new Error(`page ${pi + 1}: two vote marks in one cell (col ${col})`);
         row.set(col, it);
       } else {
@@ -740,6 +818,7 @@ export async function parseVotePdf(bytes: Buffer): Promise<VotePdf> {
         labelByCol.get(col)!.push(it);
       }
     }
+    rowAssignments.push({ page: pi + 1, anchors: [...anchors], markYs });
     // 列ごとのラベルを、ラベルの縦の並び（結合セルのブロック）ごとにまとめる
     const labelBlocks = new Map<number, { text: string; y0: number; y1: number }[]>();
     for (const [col, items] of labelByCol) {
@@ -798,7 +877,7 @@ export async function parseVotePdf(bytes: Buffer): Promise<VotePdf> {
     if (!notes.some((n) => GICHO_NOTE.test(n))) throw new Error(`cell "${gicho[0]}" appears but the 議⾧ note is missing`);
     for (const c of gicho) legend.set(c, "議長");
   }
-  return { title, members, legend, notes, rows, unknownCells };
+  return { title, members, legend, notes, rows, unknownCells, tiedItems, tiedMarks, rowAssignments };
 }
 
 /* ---------- 議決結果一覧 PDF（議決日を読むためだけに使う） ---------- */
