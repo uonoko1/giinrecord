@@ -169,13 +169,17 @@ test("#855 母数: コミット済み data/ に 11 議会・4,599 採決・198,2
   }
   assert.equal(files, CORPUS.rollCallFiles);
   assert.equal(cells, CORPUS.voteCells);
+  // **狭い診断から順に当てる。** **`assert` は最初の1本で止まるので、順番が「何が起きたか」を決める**
+  // （**実測 2026-09-27**: 内訳の `deepEqual` を先に置いていたとき、`resultAbsent` のファイルの `number` を
+  // 埋める変異を当てても**内訳のほうが先に落ち、部分集合が崩れたことは画面に出なかった**）。
+  //
+  // **部分集合であること**——**`resultAbsent` を持つのに `number` が空でないものが出たら、docblock の説明が嘘になる**
+  assert.equal(resultAbsentWithNumber, CORPUS.resultAbsentWithNumber, "`resultAbsent` を持つのに `number` が空でない採決");
+  assert.equal(resultAbsent, CORPUS.resultAbsent, "`resultAbsent: true` の採決（11 議会を横断して数える）");
   // **議会ごとの内訳で固定する**——**合計だけだと、議会をまたいで 1 件動いても（171 + 3 → 172 + 2）緑のままになる**
   assert.deepEqual(blankNumberByAssembly, CORPUS.blankNumberByAssembly, "`number` が空の採決（`・・` が出ていたページ）の議会ごとの内訳");
   const blankNumber = Object.values(blankNumberByAssembly).reduce((s, n) => s + n, 0);
   assert.equal(blankNumber, CORPUS.blankNumber, "その合計");
-  assert.equal(resultAbsent, CORPUS.resultAbsent, "`resultAbsent: true` の採決（11 議会を横断して数える）");
-  // **部分集合であること**——**`resultAbsent` を持つのに `number` が空でないものが出たら、docblock の説明が嘘になる**
-  assert.equal(resultAbsentWithNumber, CORPUS.resultAbsentWithNumber, "`resultAbsent` を持つのに `number` が空でない採決");
 });
 
 /**
