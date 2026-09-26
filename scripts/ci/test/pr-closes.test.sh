@@ -321,6 +321,29 @@ t_wired_into_ci() {
   # **API を叩かない**（#793: 既存の CI を遅くしない）。イベントのペイロードから取る。
   assert_not_contains "$body" 'gh pr view' "PR 本文の取得に API を使っていない"
 }
+# **閉じの無いバッククォートの連続が O(N^2) にならないこと。**
+#
+# **実測（レビューの指摘、PO が追試）**: 先頭に 1 文字 + バッククォート 20,000 個の本文で
+# **54 秒**（`main` の版は 0.3 秒）。`substr()` の呼び出し数は N^2/2 で N=20,000 なら 2 億回。
+# **`ci.yml` の `timeout-minutes: 10` に賭ける形**になり、**本文は fork からでも誰でも書ける。**
+#
+# **なぜ 1 秒で測るか**: 秒は機械の負荷で動く（レビュアーは同じ入力で 583 秒と 1,175 秒を得た。
+# load average 33〜53 / 16 コア）。**1 秒は「O(N^2) なら絶対に超える」側に置いた閾値**で、
+# 直った版は実測 25 ms——**40 倍の余裕がある。** 遅い機械でも 1 秒は超えない。
+case_unclosed_backtick_run_is_not_quadratic() {
+  local f="$TMP/quad.md"
+  python3 -c "open('$f','w').write('a'+chr(96)*20000+chr(10)+'Closes #7'+chr(10))"
+  local start end ms
+  start=$(date +%s%N)
+  bash "$SCRIPT" "$f" > /dev/null 2>&1
+  local rc=$?
+  end=$(date +%s%N)
+  ms=$(( (end - start) / 1000000 ))
+  assert_eq 0 "$rc" "閉じの無い連続でも判定は通る（${ms}ms）"
+  [[ $ms -lt 1000 ]] || fail "20,000 個のバッククォートに ${ms}ms かかった（1000ms 未満であるべき。O(N^2) に戻っている）"
+}
+test_case "閉じの無いバッククォートの連続が O(N^2) にならない" case_unclosed_backtick_run_is_not_quadratic
+
 test_case "wiring: ci.yml がこの検査を呼び、スクリプトの存在を要求している（#504）" t_wired_into_ci
 
 echo

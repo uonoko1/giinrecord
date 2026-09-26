@@ -156,8 +156,15 @@ strip_code_spans() {
             for (x = i; x < found; x++) out = out " "
             i = found; continue
           }
-          # 閉じが無い → ただのバッククォート。飲み込まない
-          out = out c; i++; continue
+          # 閉じが無い → ただのバッククォート。飲み込まない。
+          # **連続のぶんを一度に進める（`i = j`）。** 1 文字ずつ進めると、
+          # **残りの連続を毎回また走査するので O(N^2) になる。**
+          # 実測（レビューの指摘、PO が追試）: 先頭に 1 文字 + バッククォート 20,000 個の本文で
+          # **54 秒**（`main` の版は 0.3 秒）。`substr()` の呼び出し数は N^2/2 で、
+          # N=20,000 なら 2 億回。**CI の `timeout-minutes: 10` に賭ける形になる。**
+          # `i = j` なら 1 回の走査で済む（同じ連続を二度見ない）。
+          for (x = i; x < j; x++) out = out substr(line, x, 1)
+          i = j; continue
         }
         out = out c; i++
       }
