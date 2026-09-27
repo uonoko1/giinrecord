@@ -48,6 +48,11 @@ test("ワークフローが設定する user.email は、数字 ID 付きの nor
   for (const f of files) {
     const text = readFileSync(join(dir, f), "utf8");
     for (const line of text.split("\n")) {
+      // **コメント行は飛ばす。** 飛ばさないと、**この検査を説明する日本語のコメントに
+      // `user.email` と書いた瞬間に赤くなる**（レビューの実測: `etl.yml` のコメントを
+      // 「メールアドレス」→「user.email」に書き換えるだけで落ちた）。**純粋に編集上の
+      // 書き換えで CI が落ちるのは偽陽性である。**
+      if (/^\s*#/.test(line)) continue;
       if (!IDENTITY.test(line)) continue;
       for (const m of line.matchAll(EMAIL)) {
         checked += 1;
@@ -59,4 +64,31 @@ test("ワークフローが設定する user.email は、数字 ID 付きの nor
   // **母数を出す**（#757）: 0 件で緑になっていないことを、まず確かめる。
   assert.ok(checked > 0, "user.email を設定している箇所が 1 つも見つからない（走査が空回りしている）");
   assert.deepEqual(bad, [], `裸のローカル部は無関係の GitHub ユーザーに紐づく。数字 ID 付きにすること:\n  ${bad.join("\n  ")}`);
+});
+
+/**
+ * **上の検査は、いま在る 3 件が全部正しいので `bad` が構造的に空**になる。
+ * **だから `OK` を「何でも通す」形に緩めても緑のまま通る**（レビューの実測）——
+ * **`OK` そのものが何も主張していない。** #858 を引きながら、同じ形を検査の中で作っていた。
+ *
+ * **だから `OK` を、通すべき綴りと通してはいけない綴りに直接当てる。**
+ * ここが落ちれば「正規表現が緩んだ」と分かる（走査の側とは別の理由で落ちる）。
+ */
+test("数字 ID 付きの noreply だけを通す正規表現そのものを検査する", () => {
+  const OK = /^\d+\+[^@]+@users\.noreply\.github\.com$/;
+  // 通すべき（実在の形）
+  for (const good of [
+    "41898282+github-actions[bot]@users.noreply.github.com",
+    "120390190+uonoko1@users.noreply.github.com",
+  ]) assert.ok(OK.test(good), `通すべき綴りが落ちた: ${good}`);
+  // 通してはいけない（#1043 の発端。裸のローカル部はその名前のユーザーに紐づく）
+  for (const bad of [
+    "dev@users.noreply.github.com",
+    "etl@users.noreply.github.com",
+    "bot@users.noreply.github.com",
+    "sakai.personal@gmail.com",
+    "41898282+github-actions[bot]@example.com",
+    "+uonoko1@users.noreply.github.com",
+    "120390190@users.noreply.github.com",
+  ]) assert.ok(!OK.test(bad), `通してはいけない綴りが通った: ${bad}`);
 });
