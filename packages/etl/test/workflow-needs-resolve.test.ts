@@ -193,6 +193,10 @@ function needsRefs(body: string): { job: string; output: string; raw: string }[]
 const workflowFiles = (): string[] =>
   readdirSync(wfDir)
     .filter((f) => f.endsWith(".yml") || f.endsWith(".yaml"))
+    // **`workflow-timeout.test.ts`（#574）がこのディレクトリに `probe-574-yaml-visibility.yaml` を
+    // 一時的に書いて消す。** `node --test` はテストファイルを並列に走らせるので、
+    // **`readdirSync` がその名前を見た直後に消えている**ことがある（#1036 で実測: `ENOENT` の flake）。
+    .filter((f) => !/^probe-/.test(f))
     .sort();
 
 test("#1017: needs.<job>.outputs.<out> を使う job は、その job を needs に挙げている（空文字に解決させない）", () => {

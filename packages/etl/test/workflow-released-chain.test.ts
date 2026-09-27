@@ -73,11 +73,31 @@ const wfDir = resolve(here, "../../../.github/workflows");
  * **`CALLERS = [...3 本]` の手書きリストをやめる**（#1036 の 2.）。
  * **#1017 のリストは 14 本中 3 本**で、`etl.yml` に壊れた鎖の job を足すと **3/3 緑**だった。
  * **#1008 / #1022 / #1043 と同じ型**——denylist は列挙漏れを原理的に塞げない。
+ *
+ * **`workflow-timeout.test.ts`（#574）が `probe-574-yaml-visibility.yaml` を
+ * このディレクトリに一時的に書いて消す。** `node --test` はテストファイルを並列に走らせるので、
+ * **`readdirSync` がその名前を見た直後に消えている**ことがある
+ * （**実測で踏んだ**: コメントを 1 行足しただけの偽陽性を確かめている最中に
+ * `ENOENT: probe-574-yaml-visibility.yaml` で落ちた。**変異とは無関係な flake で、
+ * CI がときどき赤くなる**）。
+ * **走査の途中で消えたファイルは飛ばす**——`readdirSync` の結果は「この瞬間の一覧」でしかない。
+ * **消えたことを飛ばしても母数の assert は効いている**（下限を割れば落ちる）。
  */
 const workflowFiles = (): string[] =>
   readdirSync(wfDir)
     .filter((f) => f.endsWith(".yml") || f.endsWith(".yaml"))
+    .filter((f) => !/^probe-/.test(f)) // 他のテストが書いては消す一時ファイル（#574）
     .sort();
+
+/** 走査の途中で消えたファイルは `undefined` を返す（上の flake を参照）。 */
+const readIfPresent = (f: string): string | undefined => {
+  try {
+    return readFileSync(join(wfDir, f), "utf8");
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code === "ENOENT") return undefined;
+    throw e;
+  }
+};
 
 const read = (f: string) => readFileSync(join(wfDir, f), "utf8");
 
@@ -238,7 +258,9 @@ test("#1036 (b)(c): job の outputs は、同じ job に実在する step の、
   let stepRefs = 0; // そのうち `steps.<id>.outputs.<n>` を参照しているものの数
 
   for (const f of files) {
-    for (const job of parseJobs(read(f))) {
+    const src = readIfPresent(f);
+    if (src === undefined) continue; // 走査中に消えた（#574 の probe）
+    for (const job of parseJobs(src)) {
       // 再利用ワークフローを呼ぶ job（`uses:`）の outputs は呼び先が宣言する。step は無い。
       const callsReusable = /^ {4}uses:\s*\S+\s*$/m.test(job.body);
       for (const [key, value] of job.outputs) {
@@ -462,6 +484,12 @@ test("#1036: 自前パースが deploy-data.yml の実体どおりに読めて�
   // 全ワークフローを走査したときの母数（走査対象が減ったら落ちる）
   const files = workflowFiles();
   assert.ok(files.length >= 15, `ワークフローが ${files.length} 本しか無い（実測 2026-09-28: 15 本）`);
-  const jobCount = files.reduce((n, f) => n + parseJobs(read(f)).length, 0);
+  const jobCount = files.reduce((n, f) => {
+    const src = readIfPresent(f);
+    return src === undefined ? n : n + parseJobs(src).length;
+  }, 0);
+  // **24 は `workflow-timeout.test.ts` の「#556 数え上げ」の job 名リスト（24 件）と一致する**
+  // ——**別の実装が別の目的で維持している値と突き合わせてある**ので、
+  // 「自分の写しを見て緑」になっていない。
   assert.ok(jobCount >= 24, `走査した job が ${jobCount} 件しか無い（実測 2026-09-28: 24 件）`);
 });
