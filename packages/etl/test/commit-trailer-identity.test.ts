@@ -67,11 +67,19 @@ import { dirname, resolve } from "node:path";
  *   git の author identity）。**合成はマージの瞬間に起きるので、PR の枝には存在しない。**
  *   **この検査が見るのは枝のコミットだけなので、合成された trailer には当たらない。**
  *
- * **通す必要が出た場合の逃げ道**: 環境変数 `GIINRECORD_TRAILER_EMAIL_ALLOW`
- * （カンマ区切り）に入れたアドレスは通る。**リポジトリには残らない。**
- * **既定は空**なので、**何も設定しなければ形の要求だけが効く。**
- * **これは「守れないもの」を増やす**（CI で設定すれば検査を素通しにできる）ので、
- * **下で「空であること」を検査に載せてある**——ローカルで一時的に使う以外の用途を潰す。
+ * **逃げ道（環境変数）は置かない。** **初版は `GIINRECORD_TRAILER_EMAIL_ALLOW` を置き、
+ * 「repo のどこからも設定されていない」ことを検査 1 本で守っていたが、レビューで消した。**
+ * 理由は 2 つで、どちらも実測である:
+ * - **通す必要が測って 0。** 上のとおり、本人アドレスの trailer 2 件はどちらも squash 合成で、
+ *   枝には出ない。**この検査の範囲（枝のコミットだけ）に本人アドレスが入る場面が無い。**
+ * - **grep の検査では守れない。** **環境変数だけで赤→緑にできる**
+ *   （レビューの実測: 誤帰属 trailer を枝に足して `pass 8 / fail 1` → 環境変数を渡すと `pass 9 / fail 0`）。
+ *   **`ci.yml` に書いた場合は grep が捕まえるが、Secrets / repo 変数 / runner の環境から渡されれば
+ *   grep には映らない。**
+ *
+ * **使う場面が無い逃げ道を、検査 1 本を足して維持するのは、守る面積を増やすだけである**（#1043 の
+ * 「守られていないコードは置かない」と同じ向き）。**将来必要になったら、必要だと測ってから足す。**
+ * **`allow` 引数は単体テスト用に残してある**（既定は空集合。環境は一切読まない）。
  */
 
 /** **数字 ID 付きの GitHub noreply だけを通す**（`workflow-commit-identity.test.ts` の `OK` と同じ形）。 */
@@ -91,24 +99,17 @@ const IDENTITY_TRAILERS =
 /** **メールアドレスらしい文字列**。`[bot]` の角括弧を含める（`github-actions[bot]@…` を落とさないため）。 */
 const EMAIL = /[A-Za-z0-9._%+\-[\]]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g;
 
-/** 環境変数で渡された、その場かぎりの許容リスト（既定は空。上の docblock を参照）。 */
-const envAllow = (): Set<string> =>
-  new Set(
-    (process.env.GIINRECORD_TRAILER_EMAIL_ALLOW ?? "")
-      .split(",")
-      .map((s) => s.trim().toLowerCase())
-      .filter((s) => s !== ""),
-  );
-
 /**
  * **1 つのメッセージ本文から、誤帰属するアドレスを取り出す。**
  *
  * **戻す 2 つ目の数（`checked`）が母数である**（#757）。
  * **`bad` が空でも `checked` が 0 なら「1 つも見ていない」**ので、呼ぶ側がそれを区別できる。
+ *
+ * **`allow` は単体テスト用の引数で、既定は空集合**——**環境変数は読まない**（上の docblock）。
  */
 export const misattributingTrailerEmails = (
   body: string,
-  allow: Set<string> = envAllow(),
+  allow: Set<string> = new Set<string>(),
 ): { bad: string[]; checked: number } => {
   const bad: string[] = [];
   let checked = 0;
@@ -130,6 +131,103 @@ const root = resolve(here, "../../..");
 
 const git = (...args: string[]): string =>
   execFileSync("git", ["-C", root, ...args], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+
+/** 末尾の改行だけを落とす（`%B` は末尾に改行を足し、生オブジェクトは足さない。それ以外は一致する）。 */
+const trimTrailingNewlines = (s: string): string => s.replace(/\n+$/, "");
+
+/**
+ * **コミットの生オブジェクトからメッセージ本文を取り出す**（`git cat-file commit`）。
+ *
+ * **これは `--pretty` を一切通らない独立の源である。** ヘッダ（`tree` / `parent` / `author` /
+ * `committer` / `gpgsig` …）は**最初の空行まで**で、そこから先が本文である
+ * （git のオブジェクト形式。実測で `%B` と末尾改行を除いて**バイト一致**することを確かめた）。
+ */
+const rawCommitMessage = (sha: string): string => {
+  const obj = git("cat-file", "commit", sha);
+  const sep = obj.indexOf("\n\n");
+  return sep < 0 ? "" : trimTrailingNewlines(obj.slice(sep + 2));
+};
+
+/**
+ * **走査に使う本文を取り、それが「本当にメッセージ全文か」を独立の源で確かめて返す。**
+ *
+ * ── **なぜこれが要るか（レビューが実測した穴。#1074 の最重要の直し）** ────────────────
+ *
+ * **初版は `git show -s --format=%B` の結果をそのまま走査に流し、母数は `shas.length > 0`
+ * だけだった。** **`shas.length > 0` は「コミットを列挙した」ことしか言っておらず、
+ * 「そのメッセージを読んだ」ことを何も言っていない。**
+ * **実データに当たる唯一の部分が、中身を空にしても緑になっていた**（レビューの実測。すべて 9/9 緑）:
+ *
+ * ```
+ * X1  misattributingTrailerEmails(git("show",…)) → misattributingTrailerEmails("")   pass 9 / fail 0
+ * X2  --format=%B → --format=%s（件名だけ。ありがちな「簡略化」）                     pass 9 / fail 0
+ * X3  --format=%B → --format=%(trailers:only=true)                                  pass 9 / fail 0
+ * ```
+ *
+ * **X3 がいちばん重い。** **この PBI の中核の発見は「`%(trailers)` は squash の区切りより上を
+ * 見ないので 1003 件（61%）が見えない」ことである。** **なのに `%(trailers)` に差し替えても緑だった**
+ * ——レビューは**使い捨て clone に「区切りより上に誤帰属 trailer を持つコミット」**（この PBI が
+ * 見つけた形そのもの）**を植えて、無改造なら `pass 8 / fail 1` で赤になるところを、
+ * X3 を当てると `pass 9 / fail 0` で通した。**
+ *
+ * **検査 8（`%(trailers)` に頼らない）は `misattributingTrailerEmails` を単体で当てているだけで、
+ * 範囲の走査が本文をどう取るかを一切拘束していなかった。**
+ *
+ * ── **どう解いたか: 母数を「読んだ本文そのもの」で取る** ─────────────────────────
+ *
+ * **「trailer が 0 件の PR は正常」なので、`checked` に下限は置けない**（#757。母数は 1 つではない）。
+ * **だから「読んだ trailer 行の数」ではなく、`--pretty` を通らない独立の源との一致で取る:**
+ *
+ * **走査に使った文字列は、`git cat-file commit` の生オブジェクトの本文と（末尾改行を除いて）
+ * 逐語で一致しなければならない。**
+ *
+ * **これが 3 変異すべてを落とす**——`""` も `%s`（件名だけ）も `%(trailers:only=true)`
+ * （件名も本文も落ちる）も、**生オブジェクトの本文と一致しない。**
+ * **`--pretty` の書式を何に差し替えても、`%B` 以外は一致しない**ので、
+ * **denylist（「`%s` を禁じる」）ではなく、形の要求になっている。**
+ *
+ * **加えて「読んだ行の総数」も母数として返す**——`assert` は上の一致で足りるが、
+ * **ログに出す数が 0 のまま緑だったのが穴の発端なので、行数を人が読める場所に出す。**
+ *
+ * ── **この番人自身が何も主張しないのを防ぐ** ─────────────────────────────────
+ *
+ * **番人を足しただけでは足りなかった。** **自分で変異を当てて 2 つ見つけた**（どちらも 9/9 緑で生き残った）:
+ *
+ * ```
+ * X4  rawCommitMessage も %B を読むようにする（比較を恒真にする）   pass 9 / fail 0
+ * X5  一致の assert を `if (false)` で無効化する                    pass 9 / fail 0
+ * ```
+ *
+ * **理由は「この枝の本文はどれも正しいので、番人が一度も火を噴かない」こと。**
+ * **#1043 と同じ形である**——**走査の側が構造的に緑なら、そこに置いた assert は何も主張しない。**
+ *
+ * **だから読み取りを差し替えられる形にし**（`read` 引数）、**下の検査で
+ * 「`%s` / `""` / `%(trailers)` で読んだら実際に落ちる」ことを本物のコミットに当てて固定する。**
+ * **X5 はその検査が落とす。X4 は「独立の源が `cat-file` であること」を同じ検査が語で固定する。**
+ */
+/** 走査に使う本文の読み方。既定は `%B`（メッセージ全文）。**差し替えられるのは検査のためである。** */
+const readBodyByFormat = (sha: string): string =>
+  trimTrailingNewlines(git("show", "-s", "--format=%B", sha));
+
+const scannedBody = (
+  sha: string,
+  read: (sha: string) => string = readBodyByFormat,
+): { body: string; lines: number } => {
+  const body = read(sha);
+  // **独立の源（`git cat-file commit` の生オブジェクト）と逐語で一致すること。**
+  // **ここが X1 / X2 / X3 を落とす番人である。**
+  assert.equal(
+    body,
+    rawCommitMessage(sha),
+    `走査に使った本文が、コミットの生オブジェクトの本文と一致しない` +
+      `（メッセージ全文ではないものを走査している。%s / %(trailers) / 空文字などに差し替わっていないか）: ${sha.slice(0, 8)}`,
+  );
+  // **メッセージが空のコミットは、ふつうには作れない**（`--allow-empty-message` が要る。
+  // 実測: `origin/main` 696 commits すべて 1 行以上）。
+  // **「一致」だけだと「両方とも空」で通ってしまう**ので、空でないことも言う。
+  assert.ok(body.length > 0, `メッセージ本文が空である（走査が空回りしている）: ${sha.slice(0, 8)}`);
+  return { body, lines: body.split("\n").length };
+};
 
 /**
  * **この PR が足すコミットだけを見る**（`merge-base(origin/main, HEAD)..HEAD`）。
@@ -212,8 +310,13 @@ test("この枝が足すコミットの trailer に、誤帰属するアドレ�
   }
   const bad: string[] = [];
   let checked = 0;
+  let scannedLines = 0;
   for (const sha of shas) {
-    const r = misattributingTrailerEmails(git("show", "-s", "--format=%B", sha));
+    // **`scannedBody` が「読んだものがメッセージ全文か」を独立の源で確かめる**
+    // （X1 / X2 / X3 の 3 変異はここで落ちる。関数の docblock に実測を書いた）。
+    const { body, lines } = scannedBody(sha);
+    scannedLines += lines;
+    const r = misattributingTrailerEmails(body);
     checked += r.checked;
     for (const email of r.bad) bad.push(`${sha.slice(0, 8)}: ${email}`);
   }
@@ -244,7 +347,15 @@ test("この枝が足すコミットの trailer に、誤帰属するアドレ�
         `merge-base=${mergeBase?.slice(0, 8)} HEAD=${head?.slice(0, 8)}`,
     );
   }
-  console.log(`[#1074] 枝が足したコミット ${shas.length} 件 / trailer のアドレス ${checked} 件を走査`);
+  // **本文の行数も出す**——**「アドレス 0 件」のまま緑だったのが穴の発端である**（X1 / X2）。
+  // **行数が 0 に落ちたら人の目にも映る**（assert は `scannedBody` の側が持っている）。
+  assert.ok(
+    scannedLines >= shas.length,
+    `本文の行数が コミット数 を下回った（1 行も無いメッセージを読んでいる）: 行 ${scannedLines} / コミット ${shas.length}`,
+  );
+  console.log(
+    `[#1074] 枝が足したコミット ${shas.length} 件 / 本文 ${scannedLines} 行 / trailer のアドレス ${checked} 件を走査`,
+  );
 });
 
 /**
@@ -443,44 +554,86 @@ test("squash merge の区切りより上の trailer も拾う（%(trailers) に�
 });
 
 /**
- * **`GIINRECORD_TRAILER_EMAIL_ALLOW` は逃げ道であり、検査を素通しにもできる。**
- * **だから「CI では空であること」を検査に載せる**——ローカルで一時的に使う以外の用途を潰す。
+ * **「本文を読んだ」ことを確かめる番人が、実際に火を噴くことを固定する。**
  *
- * **これが無いと、誰かが workflow に `GIINRECORD_TRAILER_EMAIL_ALLOW: noreply@anthropic.com` と
- * 書くだけで、この検査全体が黙って無力化される。**
+ * ── **なぜこの検査が要るか（自分で当てた変異）** ────────────────────────────────
+ *
+ * **`scannedBody` に「生オブジェクトと一致すること」の assert を足しただけでは、
+ * X1 / X2 / X3 は落ちるようになったが、番人そのものは何も主張していなかった。**
+ * **実測（どちらも 9/9 緑で生き残った）**:
+ *
+ * ```
+ * X4  rawCommitMessage も %B を読むようにして比較を恒真にする   pass 9 / fail 0
+ * X5  一致の assert を `if (false)` で無効化する                pass 9 / fail 0
+ * ```
+ *
+ * **理由は「この枝の本文はどれも正しく読めているので、番人が一度も火を噴かない」こと**
+ * ——**#1043 のレビューが `OK` について実測したのと同じ形である**（走査の側が構造的に緑なら、
+ * そこに置いた assert は何も言っていない）。
+ *
+ * ── **どう固定するか** ────────────────────────────────────────────────
+ *
+ * **本物のコミット（`HEAD`）に、間違った読み方を 3 通り当てて、3 通りとも落ちることを言う。**
+ * **落ちなければ番人が死んでいる。** **これは X5 を落とす**（assert が無効なら 3 通りとも落ちない）。
+ * **X4 も落とす**——**`rawCommitMessage` が `%B` を読むようになったら、`%s` の読み方が
+ * 「一致」してしまう**ので、`%s` の行が落ちなくなる。
+ *
+ * **`%(trailers:only=true)` を入れてあるのが要点である**——**この PBI の中核の発見
+ * （区切りより上が見えない）を無効化する変異が、いちばん効いてほしい場所で通っていた。**
  */
-test("逃げ道の環境変数は、リポジトリのどこからも設定されていない", () => {
-  // **`--untracked` を付ける**——付けないと、**まだコミットしていないこのファイル自身が
-  // 見えず「母数 0」で落ちる**（実測。最初にそう書いて自分の検算に捕まった）。
-  // **同時に、コミット前に workflow へ書き足された設定も見えるようになる。**
-  const hits = (() => {
-    try {
-      return git("grep", "-n", "--untracked", "--", "GIINRECORD_TRAILER_EMAIL_ALLOW")
-        .trim()
-        .split("\n")
-        .filter((l) => l !== "");
-    } catch {
-      return [] as string[];
-    }
-  })();
-  assert.ok(hits.length > 0, "自分自身を grep できていない（走査が空回りしている）");
-  const SELF = "packages/etl/test/commit-trailer-identity.test.ts:";
-  const outside = hits.filter((l) => !l.startsWith(SELF));
-  assert.deepEqual(
-    outside,
-    [],
-    "この検査の外から逃げ道の環境変数が設定されている（検査が無力化される）:\n  " + outside.join("\n  "),
+test("本文を読んだことを確かめる番人が、間違った読み方 3 通りで実際に落ちる", () => {
+  const head = git("rev-parse", "HEAD").trim();
+  // **番人が「一致」の基準に使う源は `cat-file`（生オブジェクト）でなければならない。**
+  // **`%B` 同士を比べる形（X4）にすると、下の `%s` が落ちなくなる。**
+  // **だから源が `--pretty` を通らないことを、まず語で固定する。**
+  assert.match(
+    rawCommitMessage.toString(),
+    /cat-file/,
+    "独立の源が `git cat-file` でなくなっている（`--pretty` 同士を比べると比較が恒真になる）",
   );
-  // **既定が空であること**——**未設定なら形の要求だけが効く。**
-  // （`envAllow()` の既定を `?? ""` から `?? "noreply@anthropic.com"` に変える変異はここが落とす。）
-  const saved = process.env.GIINRECORD_TRAILER_EMAIL_ALLOW;
-  delete process.env.GIINRECORD_TRAILER_EMAIL_ALLOW;
-  try {
-    assert.equal(envAllow().size, 0, "環境変数が未設定のときに許容集合が空でない");
-    // **未設定のままでも、誤帰属するアドレスが赤になること**（既定の許容集合が広がっていない）。
-    const { bad } = misattributingTrailerEmails("x\n\nCo-authored-by: C <noreply@anthropic.com>");
-    assert.deepEqual(bad, ["noreply@anthropic.com"], "既定の許容集合が広がっている");
-  } finally {
-    if (saved !== undefined) process.env.GIINRECORD_TRAILER_EMAIL_ALLOW = saved;
+  // **正しい読み方（既定）は通ること**——恒偽の検査になっていないことを言う。
+  const okRead = scannedBody(head);
+  assert.ok(okRead.lines >= 1, "既定の読み方で本文が 1 行も取れていない");
+
+  // **間違った読み方は、3 通りとも落ちること。**
+  const wrong: ReadonlyArray<readonly [string, (sha: string) => string]> = [
+    ["空文字（X1: 走査に何も流さない）", () => ""],
+    ["%s（X2: 件名だけ。ありがちな「簡略化」）", (sha) => trimTrailingNewlines(git("show", "-s", "--format=%s", sha))],
+    [
+      "%(trailers:only=true)（X3: git のパーサに頼る。区切りより上が落ちる）",
+      (sha) => trimTrailingNewlines(git("show", "-s", "--format=%(trailers:only=true)", sha)),
+    ],
+  ];
+  const survived: string[] = [];
+  for (const [name, read] of wrong) {
+    let threw = false;
+    try {
+      scannedBody(head, read);
+    } catch {
+      threw = true;
+    }
+    if (!threw) survived.push(name);
   }
+  assert.deepEqual(
+    survived,
+    [],
+    "本文を全文読んでいない読み方が番人を素通りした（番人が何も主張していない）:\n  " + survived.join("\n  "),
+  );
+  // **母数**（#757）: 当てた読み方の数そのものを固定する（配列を空にする変異はここが落ちる）。
+  assert.equal(wrong.length, 3, "間違った読み方の当て方が減っている");
+});
+
+/**
+ * **`allow` を省いて呼んだときに、許容集合が空であること**（既定が閉じている）。
+ *
+ * **初版はここに「逃げ道の環境変数がリポジトリのどこからも設定されていない」という検査を置いていた。**
+ * **レビューで環境変数そのものを消した**（上の docblock。**環境変数だけで赤→緑にできるのに、
+ * 通す必要が測って 0 だった**）。**残すのは「既定が広がっていない」ことだけである**——
+ * **他の検査はどれも `new Set()` を明示的に渡すので、既定の中身を誰も見ていない。**
+ * （`allow` の既定を `new Set(["noreply@anthropic.com"])` に変える変異はここだけが落とす。）
+ */
+test("許容集合の既定は空（第 2 引数を省いても誤帰属は赤になる）", () => {
+  const { bad, checked } = misattributingTrailerEmails("x\n\nCo-authored-by: C <noreply@anthropic.com>");
+  assert.equal(checked, 1, "既定の呼び方で走査していない（母数 0）");
+  assert.deepEqual(bad, ["noreply@anthropic.com"], "既定の許容集合が広がっている");
 });
