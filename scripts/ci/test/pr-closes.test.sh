@@ -329,7 +329,11 @@ t_wired_into_ci() {
 #
 # **なぜ 1 秒で測るか**: 秒は機械の負荷で動く（レビュアーは同じ入力で 583 秒と 1,175 秒を得た。
 # load average 33〜53 / 16 コア）。**1 秒は「O(N^2) なら絶対に超える」側に置いた閾値**で、
-# 直った版は実測 25 ms——**40 倍の余裕がある。** 遅い機械でも 1 秒は超えない。
+# **余裕は機械の負荷で変わる**（実測: 負荷が低いとき 25 ms / load 30 で 206〜274 ms /
+# 別のレビュアーは load 155 で 40 回中 1 回 1,963 ms を観測）。
+# **「遅い機械でも 1 秒は超えない」とは言えない**——初版はそう書き、レビューが測って否定した。
+# **言えるのは「O(N^2) なら 1 秒では終わらない」**ことだけである
+# （直す前は同じ入力で 54 秒（PO の実測）/ 90 秒（レビュアーの実測））。
 case_unclosed_backtick_run_is_not_quadratic() {
   local f="$TMP/quad.md"
   python3 -c "open('$f','w').write('a'+chr(96)*20000+chr(10)+'Closes #7'+chr(10))"
@@ -357,6 +361,20 @@ case_unclosed_backtick_run_is_not_quadratic() {
   python3 -c "open('$h','w').write('x Close'+chr(96)+chr(96)+'s #55'+chr(10))"
   set +e; OUT=$(bash "$SCRIPT" "$h" 2>&1); rc=$?; set -e
   assert_eq 1 "$rc" "スパンで割られた Close\`\`s は閉じる語として拾わない: $OUT"
+
+  # **閉じの長さは「同じ」でなければならない**（CommonMark の数え方）。
+  # **レビューの実測**: `if (r2 == run)` を `if (r2 >= run)` にすると 28/28 緑のまま、
+  # **GitHub が閉じない番号を拾う**——つまり**この PR が塞ごうとしている向きの穴が開く**:
+  #   本文: ``code ``` inside Closes #111 end`` Closes #222
+  #   いま      → 閉じる語があります: #222
+  #   r2 >= run → 閉じる語があります: #111 #222     ← #111 は GitHub が閉じない
+  local m="$TMP/len.md"
+  # shellcheck disable=SC2016  # バッククォートを literal で書くので単一引用符が正しい
+  printf '%s\n' '``code ``` inside Closes #111 end`` Closes #222' > "$m"
+  set +e; OUT=$(bash "$SCRIPT" "$m" 2>&1); rc=$?; set -e
+  assert_eq 0 "$rc" "二重スパンの本文は通る: $OUT"
+  assert_contains "$OUT" "#222" "スパンの外の番号は拾う"
+  assert_not_contains "$OUT" "#111" "スパンの中の番号は拾わない（閉じの長さが同じでなければ閉じない）"
 }
 test_case "閉じの無いバッククォートの連続が O(N^2) にならない" case_unclosed_backtick_run_is_not_quadratic
 
