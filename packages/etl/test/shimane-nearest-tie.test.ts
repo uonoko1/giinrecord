@@ -514,31 +514,40 @@ test("#1023/#1056 島根: タイで落とした票は必ず 不明 になる（�
  * #1023 の防壁（落とした列をラベルで埋めない）が丸ごと外れる。**
  * **最初の実装はそうなっていた**——**呼ぶ人が居なかっただけで、型は許していた。**
  *
- * ## **この検査は硬化を守れていない。測ったので、そう書く**（#1056。**等価変異である**）
+ * ## **一度「守る道が無い」と書いたが、それは誤りだった**（#1056 のレビュー）
  *
- * **硬化を元に戻す変異（`pageCol !== undefined &&` を外す）を当てても、この検査は緑のままだった**
- * （実測: 10/10 緑。追加する前も 9/9 緑）。**理由を確かめた**:
+ * **最初はこの検査だけを置き、「硬化を戻す変異は等価変異なので守れない」と書いた。**
+ * **理由の分析そのものは正しかった**——`tiedCols.add` が走る道は (a) 本物の同距離タイ
+ * (b) `dropForTest.pageCol` の 2 つだけで、**本物のタイは実データに 0 件**
+ * （`nearest` 12,489 回で 0。1 位 2 位差の最小は 16.56pt）。
+ * **だから `pageCol` 無しでは `tiedCols` が常に空で、旗の有無が出力に現れなかった。**
  *
- * **`tiedCols.add(col)` が走るのは `nearestAnchor` が `undefined` を返したときだけで、
- * その道は (a) 本物の同距離タイ (b) `dropForTest.pageCol` の 2 つしか無い。**
- * **本物のタイは実データに 1 件も無い**（`nearest` 12,489 回で 0）。
- * **だから `pageCol` を渡さなければ `tiedCols` は常に空で、旗が効くか否かは出力に現れない。**
+ * **誤りは「だから道が無い」と結論したことである。**
+ * **PDF の座標を作り替える必要はなく、`pageCol` の隣に「票は落とさず `tiedCols` だけを埋める」
+ * 分岐（`tieColForTest`）をもう 1 本足せばよかった**——**それで「本物のタイが 1 件出た」状態が作れる。**
  *
- * **＝この硬化は「いま起きている事故」を止めるものではなく、
- * 「本物のタイが 1 件出た日に、旗を単独で渡す呼び出しが在れば防壁が消える」道を先に塞ぐものである。**
- * **守りは検査ではなく型と実装の形で担保されている**（レビューで見つかった穴なので残す）。
+ * **実測（#1056。`{ tieColForTest: "4:18", keepTiedColsForTest: true }`、`pageCol` 無し）**:
  *
- * **ではこの検査は何を固定しているのか**: **本番 5 本の出力が「旗の有無で 1 セルも変わらない」こと。**
- * **本物のタイが出た日には、ここが差分を出して落ちる**（そのとき初めて硬化が効いていることも測れる）。
- * **0 セルを比べているのではなく、8,085 セルを比べて差が 0 であることを見ている**（#757 で母数を固定）。
+ * | | `不明` | **ラベルに化けたセル** |
+ * |---|---:|---:|
+ * | **硬化あり（いまの実装）** | **6**（票 4 + `議長` 2） | **0** |
+ * | 硬化を戻す（`pageCol` の条件を外す） | 0 | **4**（`○ → 議長` 高橋雅彦） |
+ *
+ * **＝いまは変異で守れている**（変異 M8 が Red。下の検査が両向きを見る）。
+ * **「道が無い」と書いて残すと、次に同じ壁に当たった人が探すのをやめる。だから訂正して残す。**
+ *
+ * **踏んだ落とし穴を 1 つ残す**: **最初は `tieColForTest` を「票を落とさず `tiedCols` だけ埋める」
+ * 形にしたが、それでは leak が 0 件で観測できなかった**——**票が `markByRow` に残るとその行は
+ * `mark.str` を返し、ラベルの枝に入らない。** **「ラベルに化ける」を見るには票が落ちていなければならない。**
+ * **`pageCol` と同じ状態を作り、違うのはキーだけ**にして、はじめて 6 / 4 が観測できた。
  */
-test("#1056 島根: keepTiedColsForTest を pageCol 無しで渡しても、出力は 1 セルも変わらない", async () => {
+test("#1056 島根: 本物のタイが出ても、keepTiedColsForTest 単独では #1023 の防壁が外れない", async () => {
   let rows = 0, cells = 0, diff = 0;
   for (const file of PRODUCTION_PDFS) {
     const bytes = readFileSync(`${FIXTURES}${file}`);
     const plain = await parseVotePdf(bytes);
     // **`pageCol` 無しで防壁外しだけを渡す**（型は許すので、渡せてしまう道を塞いだことを見る）
-    const alone = await parseVotePdf(bytes, { keepTiedColsForTest: true } as unknown as { pageCol: string });
+    const alone = await parseVotePdf(bytes, { keepTiedColsForTest: true });
     assert.equal(alone.rows.length, plain.rows.length, `${file}: 行数が変わった`);
     rows += plain.rows.length;
     for (let i = 0; i < plain.rows.length; i++) {
@@ -551,10 +560,38 @@ test("#1056 島根: keepTiedColsForTest を pageCol 無しで渡しても、出�
   // **母数**（本番 5 本。上の「本番でタイは 0 件」の検査と同じ数）
   assert.equal(rows, 231, `前提: 本番の採決は 231 行（実測 ${rows}）`);
   assert.equal(cells, 8085, `前提: 本番の (議員, セル) 対は 8,085（実測 ${cells}）`);
-  // **本題**: `pageCol` が無ければ防壁は外れない
   assert.equal(diff, 0,
-    `keepTiedColsForTest を単独で渡すと出力が ${diff} セル変わった。`
-    + `**#1023 の防壁が pageCol 無しで外せる**（検査だけのつもりの旗が、本番の道を開けている）`);
+    `keepTiedColsForTest を単独で渡すと出力が ${diff} セル変わった（本物のタイが 0 件のうちは差が出ない）`);
+
+  /*
+   * **本題: 本物のタイを 1 件合成して、硬化の両向きを見る**（#1056 のレビューが作った道）。
+   * **`tieColForTest` は `pageCol` と同じ状態を作るが、キーが違う**ので、
+   * **`pageCol` を経由せずに「行が決まらなかった」状態になる。**
+   * **硬化があれば旗は効かず、その列は `不明` に落ちる（6 セル ＝ 票 4 + 議長 2）。**
+   * **硬化を戻すと旗が単独で効いてしまい、4 セルがラベル（`○ → 議長`）に化ける。**
+   */
+  const bytes = readFileSync(`${FIXTURES}r0706_giinbetu_kekka.pdf`);
+  const base = await parseVotePdf(bytes);
+  const tied = await parseVotePdf(bytes, { tieColForTest: "4:18", keepTiedColsForTest: true });
+  let unknown = 0;
+  const leakedLabels: string[] = [];
+  for (let i = 0; i < base.rows.length; i++) {
+    const b = base.rows[i].cells[18], a = tied.rows[i].cells[18];
+    if (b === a) continue;
+    if (a === UNKNOWN_CELL) { unknown++; continue; }
+    leakedLabels.push(`${base.rows[i].number} / ${base.members[18]}: ${b} → ${a}`);
+  }
+  /*
+   * **本題を先に見る**（順番に意味がある）。**硬化を戻すと `unknown` も 0 になるので、
+   * 母数の assert を先に置くと「tieColForTest が効いていない」という誤った理由で落ちる。**
+   * **実際に起きた**（#1056。変異 M8 の失敗メッセージが `0 !== 2` になり、原因を指さなかった）。
+   */
+  assert.deepEqual(leakedLabels, [],
+    `keepTiedColsForTest が pageCol 無しで防壁を外している（${leakedLabels.length} 件。`
+    + `**#1023 の防壁が丸ごと消える最も重い形**。実測: 硬化を戻すと 4 件が \`○ → 議長\` になる）`);
+  // **母数**（0 セルを見ても何も言えない。#757。**上が通ってからここを見る**）
+  assert.equal(unknown, 6, `前提: 合成したタイで ${UNKNOWN_CELL} になったセルが ${unknown}（実測は 6）`
+    + `。0 なら tieColForTest が効いていない＝上の検査は何も守っていない`);
 });
 
 /* ───────── 3c. `===` が拾う範囲を、測った数のまま固定する ───────── */

@@ -48,7 +48,9 @@ jobs:
     # On a push, deploy-staging.yml already builds and rsyncs the very same staging artifact from the very
     # same sha (measured: 25 / 25 human data/ merges produced a deploy-staging push run). Running it here too
     # would build and rsync it twice; the two are serialised by deploy-site.yml's `deploy-vps` concurrency
-    # group, so the only cost is one more turn in the queue (deploy job: 73–106s over the last 6 runs) — but
+    # group, so the only cost is one more turn in the queue (the deploy job's measured duration lives in
+    # packages/etl/test/workflow-timeout.test.ts -- #1056: the "73-106s over the last 6 runs" written here
+    # was already stale, and a Japanese-only grep for 実測 did not see this English line) -- but
     # it is pure waste. cron and workflow_dispatch raise no push, so those paths still deliver staging here.
     if: github.event_name != 'push'
     uses: ./.github/workflows/deploy-site.yml

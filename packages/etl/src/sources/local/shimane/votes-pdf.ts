@@ -691,7 +691,36 @@ export function splitJoinedMarks(items: readonly Item[], colX: readonly number[]
  */
 export interface DropTiedForTest {
   /** `"${ページ番号}:${列}"`（例 `"4:18"`）。この列の票は「行が決まらなかった」ものとして落とす。 */
-  pageCol: string;
+  pageCol?: string;
+  /**
+   * **`pageCol` を使わずに `tiedCols` だけを埋める口**（Issue #1056 のレビュー）。
+   *
+   * **なぜ要るか。** **`keepTiedColsForTest` の硬化（`pageCol` と組でなければ効かない）を、
+   * 検査で守れなかった**——`tiedCols` が埋まる道は (a) 本物の同距離タイ (b) `pageCol` の 2 つだけで、
+   * **本物のタイは実データに 0 件**（`nearest` 12,489 回で 0。マージンの最小は 16.56pt）。
+   * **だから `pageCol` 無しでは `tiedCols` が常に空で、硬化を戻す変異が等価変異になっていた。**
+   *
+   * **「本物のタイを合成する道が無い」と書いたのは誤りだった**（#1056 のレビューが道を作った）:
+   * **PDF の座標を作り替える必要はなく、`pageCol` の隣にもう 1 本の分岐を足すだけでよい。**
+   * **`pageCol` と同じ「行が決まらなかった」状態を作る**（票を落として `tiedCols` に列を加える）。
+   * **違うのはキーだけ**——**`pageCol` を経由しないので、
+   * 「`pageCol` と組でなければ防壁を外さない」硬化そのものを検査できる。**
+   *
+   * **最初は「票を落とさず `tiedCols` だけ埋める」形にしたが、それでは leak が観測できなかった**
+   * （実測: 票が `markByRow` に残るので、その行は `mark.str` を返してラベルの枝に入らない。
+   * **変化するのは本物の `議長` 2 セルだけで、ラベルに化けるセルは 0 だった**）。
+   * **＝「ラベルに化ける」を見るには票が落ちていなければならない。**
+   *
+   * **実測（#1056。`{ tieColForTest: "4:18", keepTiedColsForTest: true }`、`pageCol` 無し）**:
+   *
+   * | | `不明` | **ラベルに化けたセル** |
+   * |---|---:|---:|
+   * | **硬化あり（いまの実装）** | 6 | **0** |
+   * | 硬化を戻す（`pageCol` の条件を外す） | 0 | **4**（`○ → 議長` 高橋雅彦） |
+   *
+   * **本番は渡さない**（`undefined` なら振る舞いは 1 ビットも変わらない）。
+   */
+  tieColForTest?: string;
   /**
    * **`tiedCols` の防壁を外して、#1023 のレビューが見つけた壊れた振る舞いを再現する**（Issue #1056）。
    *
@@ -950,7 +979,12 @@ export async function parseVotePdf(bytes: Buffer, dropForTest?: DropTiedForTest)
         // 置かなければ下の `cells` が `UNKNOWN_CELL` になる（＝記録が出ない側。**別人の票にしない**）。
         markYs.push(it.y); // #1023: 検査が本物の座標に摂動を当てられるように記録する
         // **検査だけが通る道**（`dropForTest` を渡さなければ `nearest(it.y)` そのまま）
-        const a = dropForTest?.pageCol === `${pi + 1}:${col}` ? undefined : nearest(it.y);
+        // #1056: `tieColForTest` は `pageCol` と同じ「行が決まらなかった」状態を作るが、
+        // **`pageCol` とは別のキーで指定する**——硬化（`pageCol` と組でなければ防壁を外さない）を
+        // 検査するには、`pageCol` を経由しない道が 1 本必要だった（#1056 のレビューが作った道）。
+        const tieHere = dropForTest?.pageCol === `${pi + 1}:${col}`
+          || dropForTest?.tieColForTest === `${pi + 1}:${col}`;
+        const a = tieHere ? undefined : nearest(it.y);
         if (a === undefined) { tiedMarks++; tiedItems++; tiedCols.add(col); continue; }
         const row = markByRow.get(a)!;
         if (row.has(col)) throw new Error(`page ${pi + 1}: two vote marks in one cell (col ${col})`);
@@ -1006,7 +1040,6 @@ export async function parseVotePdf(bytes: Buffer, dropForTest?: DropTiedForTest)
         // ○ ● が無い行は、その列の結合セル（議⾧・除斥）が覆っている。行を挟むブロックを選ぶ
         // **この列でタイで票を落としたなら、ラベルで埋めない**（Issue #1023 のレビューで見つかった。
         // 下の `labelBlocks` の docblock に実例と母数を書いた）。
-        // #1056: `keepTiedColsForTest` は検査だけが渡す（防壁を外した姿を再現して、検出できることを測る）
         // #1056: `keepTiedColsForTest` は検査だけが渡す（防壁を外した姿を再現して、検出できることを測る）。
         // **`pageCol` と組でなければ効かせない**——単独で渡せると #1023 の防壁が丸ごと外れる
         // （`tiedCols` は `dropForTest` と無関係に「本物のタイ」でも埋まる。#1056 のレビューの指摘）。
