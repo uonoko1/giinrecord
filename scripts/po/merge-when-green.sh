@@ -711,19 +711,39 @@ approve_pending_runs() {
 # （`issue-secrets` 29 / `docker-web` 1）——**`if:` で止めた job は「走らない」のではなく
 # `skipped` の check run が作られる**（job レベルの `if:` はワークフロー全体で 6 件）。
 #
-# **同名重複は「起きうる」ではなく、もう起きている**（#1050 が 2026-09-27 にマージされた直後に実測）:
+# **同名重複は「起きうる」ではなく、`main` で今まさに起きている**
+# （#1064 のレビューで PO が発見、担当者が追試。2026-09-27）:
+#
+#   $ gh api repos/<repo>/commits/7aeede2a/check-runs     ← 当時の main の HEAD
+#     production  skipped  2026-09-27T08:00:32Z    ← 1 番目（新しい）
+#     production  failure  2026-09-27T07:03:25Z    ← 2 番目（古い）
+#
+#   $ jq 'group_by(.name)|map(max_by(.started_at))|.[]|select(.name=="production")'
+#     production  skipped     ← **pass 扱い。failure が隠れる**
+#
+# **原因は `monitor.yml` の `production` / `staging`**（job レベルの `if:` 付き）で、
+# **スケジュール実行が同じ commit に何度も走り、`failure` のあとに `skipped` が乗る**。
+# **実測: main の直近 30 コミットに同名重複 7 グループ、うち 3 つが「fail + pass」の形**
+# （`7aeede2a` の `production` / `177a06ac` の `production` / `2f98748a` の `guard`）。
+#
+# **`production` / `staging` / `guard` はどちらの一覧にも無い＝必須扱い**（fail-closed）なので、
+# **`--allow-nonrequired-red` では通せない。黙って通るしかなかった。**
+#
+# **PR 側の経路も数えた**（そちらは「まだ起きていない」）:
 #   - `#1050` の前: 同名が同じ commit に 2 本並んだ例は **0 件 / 200 PR**（同じ workflow が
-#     同じ commit で 2 回走った例も **0 件 / 60 PR**）。**「0 件」であって「数えていない」ではない**
-#     ——`pull_request` が HEAD ごとに 1 回しか走らなかったため。
-#   - `#1050` の後: `pr-body.yml` が `types: [..., edited]` で走るようになり、**同じ head_sha に
-#     複数の run ができる**。実測（`actions/runs`、全 11 run）: `fed085e2` に **5 run**、
-#     `04b15d9b` に **2 run**。その commit の check-runs を読むと
-#     **`pr-closes` の check run が 5 本 / 2 本並んでいる**（実測）。
-#   - **`pr-closes` は必須チェックである**（REQUIRED_CHECKS）。しかも `pr-body.yml` は
-#     `cancel-in-progress: true` なので、**本文を続けて直すと走行中のものが `cancelled` になる**
-#     ——`cancelled` は fail 系。**`cancelled`(旧) と `success`(新) が並んだ瞬間に
-#     `max_by(.started_at)` は緑を採り、必須チェックが赤いままマージされる。**
-#     必須なので `--allow-nonrequired-red` では止められない＝**黙って通る。**
+#     同じ commit で 2 回走った例も **0 件 / 60 PR**）。**「0 件」であって「数えていない」ではない。**
+#   - `#1050` の後: `pr-body.yml` が `types: [..., edited]` で走るので**同じ head_sha に複数 run**が
+#     できる。実測: `fed085e2` に **5 run**、`04b15d9b` に **2 run** →
+#     **`pr-closes` の check run が 5 本 / 2 本並んでいる。**
+#   - **ただし `cancelled` になった例は 0 件**（実測: `pr-body.yml` の run 25 件は**全部 success**)。
+#     **`pr-body.yml` は速すぎて `cancel-in-progress` が発火していない**ので、
+#     **「`cancelled` と `success` が並ぶ」は推論であって実測ではない。**
+#     実測で裏付いているのは上の `production` の方である。
+#   - **`pr-closes` は GitHub の必須チェックではない**（実測:
+#     `branches/main/protection` の `required_status_checks.contexts` は
+#     `["check","gitleaks","forbidden-patterns","audit"]` の 4 件で、`pr-closes` は入っていない）。
+#     **この道具の REQUIRED_CHECKS には入っているので、止まるのはこの道具だけ**
+#     ——つまり **GitHub は許すので、この道具が唯一の歯止めだった。**
 #
 # **`skipped` は pass のまま置く**（#1054 やること 3）。**check-runs API では
 # 「走っていない」と「走らせる必要がなかった」を分けられない**: `conclusion: skipped` には
@@ -732,17 +752,30 @@ approve_pending_runs() {
 # ——`issue-secrets` は実測 61 PR に出る常連で、かつ REQUIRED/NONREQUIRED のどちらの
 # 一覧にも無い＝**必須扱い**なので、赤にすると**全 PR が永久に止まる。**
 #
-# **変異で確かめた（#1054、`scripts/dev/mutate.sh`。母数は po のテスト 173 件）:**
-#   M1 `max_by(severity)` → `max_by(.started_at)` に戻す                      → 5 件落ちた
-#   M2 `skipped` を pass の一覧から外す（選択肢 B）                            → 4 件落ちた
-#   M3 `severity` を全部 0 にする（重み付けを無効化）                          → 4 件落ちた
-#   M4 `severity` を反転（pass 2 / fail 0）                                    → 5 件落ちた
-#   M5 `group_by(.name) | map(max_by(severity))` を丸ごと消す                  → **1 件だけ**
-#   M6 `pending` の重みを `fail` より高くする                                  → 1 件落ちた
-# **M5 が 1 件しか落ちないのは検査の穴ではない**: 畳まなければ**同名の赤い行がそのまま残る**ので、
-# REQUIRED_RED には入る（＝マージは止まる）。落ちるのは「同名の run は 1 件として数える」だけで、
-# これは**件数のログが嘘になる**という別の害である。**M5 を殺すのはその 1 件の役目**なので、
-# その 1 件を消すと畳む処理が挙動に効かない飾りになる。
+# **変異で確かめた（#1054 / #1064 のレビュー後に測り直した。母数は po のテスト 176 件）:**
+#   M1 `max_by(severity)` → `max_by(.started_at)` に戻す        → 8 件落ちた
+#   M2 `skipped` を pass の一覧から外す（選択肢 B）              → 6 件落ちた
+#   M3 `severity` を全部 0 にする（= `map(last)` と等価）        → 2 件落ちた
+#   M4 `severity` を反転（pass 2 / fail 0）                      → 9 件落ちた
+#   M5 `group_by(.name) | map(max_by(severity))` を丸ごと消す    → 2 件落ちた
+#   M6 `pending` の重みを `fail` より高くする                    → 1 件落ちた
+#   X7 `map(max_by(severity))` → `map(first)`                    → 9 件落ちた
+#   X8 `map(max_by(severity))` → `map(last)`                     → 2 件落ちた
+#
+# **X7 / X8 / M3 は #1064 のレビューで足した変異で、最初は素通りしていた**（重要な反省）:
+# **X7 は 173 件中 172 件緑で通った。** 原因は**実装ではなく fixture の並び順**で、
+# **赤をいつも配列の先頭に置いていたので「重み最大を採る」と「先頭を採る」が区別できていなかった。**
+# 並びを本物の API と同じ「新しい順」に直したら 9 件落ちるようになった。
+# **さらに `max_by` は同値のとき最後の要素を返す**（実測: `[a,b,c] | max_by(0)` → `c`）ので、
+# **赤を末尾に置くだけでは M3 / X8 が素通りする**（実測: 並べ替え直後の M3 は 174 件全部緑だった）。
+# **赤を真ん中に置いた fixture**（`t_1054_red_in_the_middle` /
+# `t_1054_pending_beats_pass_in_same_name`）**だけが M3 / X8 を殺す。**
+# **位置で選ぶ実装を殺したいなら、赤を先頭・末尾・真ん中のすべてに置く必要がある。**
+#
+# **M5 が 2 件しか落ちないのは検査の穴ではない**: 畳まなければ**同名の赤い行がそのまま残る**ので、
+# REQUIRED_RED には入る（＝マージは止まる）。落ちるのは件数を見ている 2 件だけで、
+# これは**件数のログが嘘になる**という別の害である。その 2 件を消すと、
+# 畳む処理が挙動に効かない飾りになる。
 #
 # 作業合意「CI の状態は commit を固定して読む」（2026-09-05）:
 # branch protection が読むのも `commits/<PR の HEAD>/check-runs` なので、これに合わせる。
@@ -753,8 +786,11 @@ fetch_checks() {
       if .conclusion == null then "pending"
       elif (.conclusion == "success" or .conclusion == "neutral" or .conclusion == "skipped") then "pass"
       else "fail" end;
-    # 悪い順の重み。**同名グループからこれが最大の 1 件を採る**（fail が緑に塗り替えられない）
-    def severity: {"pass": 0, "pending": 1, "fail": 2}[bucket_of];
+    # 悪い順の重み。**同名グループからこれが最大の 1 件を採る**（fail が緑に塗り替えられない）。
+    # **`// 2` は fail-closed**（#1064 のレビュー指摘 5）: `{...}[key]` は**知らないキーで null を
+    # 返し、`max_by` は null を最小として扱う**ので、この表が痩せたり綴りを間違えたりすると
+    # **その bucket が「いちばん軽い」ことになって消える**。**分からないものは fail の重み**に倒す。
+    def severity: ({"pass": 0, "pending": 1, "fail": 2}[bucket_of]) // 2;
     [.check_runs[] | {name, status, conclusion, started_at, details_url}]
     | group_by(.name)
     | map(max_by(severity))
