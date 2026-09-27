@@ -242,13 +242,31 @@ const scannedBody = (
  * **この選択で守れないもの**（明記する）:
  * - **既に main に在る 1644 件は、この検査では永久に見えない。** 直すのは別の PBI。
  * - **`origin/main` や merge-base が取れない浅い checkout では、この検査は 1 件も見ない**
- *   （下で skip する。緑にはしない）。
+ *   （下で skip する。緑にはしない。**ただし「読めない」という主張は別の git コマンドで
+ *   裏づける**——理由の綴りだけで skip できないようにした。必須 2）。
  * - **main へ直 push されたコミットは、`..HEAD` が空になるので見えない**
  *   （`main` は protected で直 push できない設定を `branch-protection.yml` が固定している）。
  * - **squash merge が合成する trailer は、マージの瞬間に作られる**ので **枝には存在せず、
- *   この検査を通り抜ける。** **合成元は枝のコミットの author** なので、
- *   **author の側は `workflow-commit-identity.test.ts`（workflow の `user.email`）が受け持つ。**
- *   **#1074 の (B)（`etl@` 1 件）はこの経路であり、#1043 で既に閉じている。**
+ *   この検査（trailer の側）を通り抜ける。**
+ *   **合成元は「squash 対象のコミットの author」なので、そこは下の author / committer の検査が
+ *   受け持つ**（#1074 の必須 4 で足した）。
+ *
+ *   **初版はここに「author の側は `workflow-commit-identity.test.ts`（#1043）が受け持つ」と
+ *   書いていた。これは事実と違ったので訂正した。**
+ *   **あれは `.github/workflows/*.yml` に書かれた `user.email` の *綴り* の検査であって、
+ *   実際に刻まれた author を 1 件も読んでいない**（レビューと PO が独立に検算。
+ *   `child_process` を import していない）。**#1074 の (B)（`etl@` 1 件）は
+ *   #1043 では閉じていなかった。**
+ * - **マージコミットの author / committer は見ない**（下の docblock に測った理由。
+ *   本人が手元で作る `Merge branch 'main' into …` で毎回赤くなるのを避けるため）。
+ * - **`fork` からの PR では、`origin/main` を枝の側が動かせる**（レビューの実測。#1074 の任意）。
+ *   `actions/checkout` は fork PR でも `origin` を**その PR のリポジトリ**に向けるので、
+ *   **`git update-ref refs/remotes/origin/main <誤帰属コミット>` で範囲を空に近づけられる**
+ *   （実測: 本物の main なら `pass 8 / fail 1` で赤 → `origin/main` を誤帰属コミットまで
+ *   進めると `pass 9 / fail 0` で緑）。
+ *   **いまは単独リポジトリなので実害は低いが、範囲の取り方が「枝の側から動かせる ref」に
+ *   依存していることは事実である。** **`ci.yml` の fetch 段が毎回 `+refs/heads/main` を
+ *   名指しで上書き fetch するので、CI では上書きされて戻る**——**だが手元では戻らない。**
  */
 /**
  * **走らせないでよい理由は、この 2 つだけ。**
