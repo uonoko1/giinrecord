@@ -368,6 +368,38 @@ const addedCommits = (): {
   return { shas: out === "" ? [] : out.split("\n"), mergeBase, head };
 };
 
+/**
+ * **1 つのコミットの author / committer を読み、誤帰属するものを返す。**
+ *
+ * **マージコミットは対象外**（親が 2 つ以上。上の docblock に測った理由）。
+ * **戻す `checked` が母数である**（#757）——**マージなら 0、そうでなければ 2。**
+ *
+ * **生オブジェクトのヘッダと突き合わせて読む**——**`%ae` / `%ce` は `--pretty` なので、
+ * 取り違え（`%ce` を `%ae` にする）や空になる変異を、それ自身では検出できない。**
+ */
+const misattributingCommitIdentity = (
+  sha: string,
+): { bad: string[]; checked: number; merge: boolean } => {
+  const parents = git("show", "-s", "--format=%p", sha).trim().split(/\s+/).filter((x) => x !== "");
+  if (parents.length >= 2) return { bad: [], checked: 0, merge: true };
+  const ae = git("show", "-s", "--format=%ae", sha).trim().toLowerCase();
+  const ce = git("show", "-s", "--format=%ce", sha).trim().toLowerCase();
+  // **母数**: **生オブジェクトの `author` / `committer` ヘッダにも同じアドレスが在ること。**
+  // **`%ae` を `%ce` に取り違える／空になる変異は、ここで落ちる。**
+  const rawHeader = git("cat-file", "commit", sha).split("\n\n")[0] ?? "";
+  const bad: string[] = [];
+  let checked = 0;
+  for (const [kind, email] of [["author", ae], ["committer", ce]] as const) {
+    assert.ok(
+      new RegExp(`^${kind} .*<${email.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}>`, "m").test(rawHeader),
+      `${sha.slice(0, 8)}: ${kind} のアドレスが生オブジェクトのヘッダと一致しない（読み方が壊れている）: ${email}`,
+    );
+    checked += 1;
+    if (!OK.test(email)) bad.push(`${sha.slice(0, 8)}: ${kind}=${email}`);
+  }
+  return { bad, checked, merge: false };
+};
+
 test("この枝が足すコミットの trailer に、誤帰属するアドレスが無い", (t) => {
   const { shas, reason, lie, mergeBase, head } = addedCommits();
   // **「走らせない理由が成り立っていない」なら、skip ではなく落とす**（必須 2。R3 / R4 はここで落ちる）。
@@ -470,6 +502,202 @@ test("この枝が足すコミットの trailer に、誤帰属するアドレ�
  * **「trailer が無い」「アドレスが無い」のような、中身に依存する理由を足してはいけない**
  * ——それは skip ではなく、検査が通ったということである。
  */
+/**
+ * **枝が足すコミットの author / committer も、同じ `OK` を当てる**（#1074 の必須 4）。
+ *
+ * ── **なぜこれが要るか: trailer は結果で、author が起点である** ──────────────────────
+ *
+ * **PR の初版は「author の側は `workflow-commit-identity.test.ts`（#1043）が受け持つ」と書いた。
+ * これは事実と違った。** **レビューと PO が独立に検算した:**
+ *
+ * ```
+ * workflow-commit-identity.test.ts の import:
+ *   node:test / node:assert/strict / node:fs / node:url / node:path
+ *   → child_process が無い。grep で出てくる `git` は全部コメントか文字列リテラル。
+ *   → 実際のコミットの author を 1 件も読んでいない。
+ * ```
+ *
+ * **あれは `.github/workflows/*.yml` に書かれた `user.email` の *綴り* の検査であって、
+ * 「実際に刻まれた author」の検査ではない。** **workflow 以外の経路で author が汚れることは、
+ * 誰も止めていなかった**（すでに open だった PR、手元の `git config`、別の bot、fork）。
+ *
+ * **そしてこれが #1074 の実害そのものの経路である:**
+ *
+ * ```
+ * 1. cdc55734 が author=etl@users.noreply.github.com でコミットされた   ← 起点
+ * 2. squash merge が author から Co-authored-by を合成した
+ * 3. main に etl@ trailer が刻まれた → github.com/etl が Contributors に出た  ← 結果
+ * ```
+ *
+ * **レビューは、まったく同じ形（author が `etl@` / trailer は無し）を枝に足して
+ * 新テストと #1043 の両方を流し、`tests 14 / pass 14 / fail 0` で通ることを実測した。**
+ * **起点を検査していないなら、また起こる。**
+ *
+ * ── **マージコミットを外す理由（測ってから決めた）** ──────────────────────────────
+ *
+ * **`origin` の全ブランチ 12 本の枝の範囲（`merge-base..枝`）を数えた（2026-09-28、実測）:**
+ *
+ * ```
+ * マージでないコミット   43 件（重複除去）  … うち OK でない author/committer は 1 件
+ *                                            cdc55734 author=committer=etl@users.noreply.github.com
+ *                                            ＝ #1074 (B) の実害そのもの。偽陽性 0
+ * マージコミット          8 件              … うち OK でない author は 5 件（すべて本人の個人アドレス。
+ *                                            `Merge branch 'main' into …` を手元で作ったもの）
+ * ```
+ *
+ * **マージコミットまで見ると、本人が手元で `git merge main` するたびに赤くなる**
+ * ——**5/8 が落ちる。** **それは誤帰属ではない**（本人のアドレスは本人に紐づく）し、
+ * **GitHub もマージコミットを Contributors の帰属には使わない。**
+ * **`--no-merges` にすると、実害の 1 件だけが残り、偽陽性は 0 になる。**
+ *
+ * **この選択で守れないもの**（明記する）:
+ * - **マージコミットの author は見ない。** **squash merge が合成する trailer の元は
+ *   「squash 対象のコミット」の author** なので、**合成元は `--no-merges` の側に入る。**
+ *   **実害の経路は塞げている**が、**マージコミット自身の author を誤帰属に使う経路は残る。**
+ * - **本人の個人アドレスは、マージでないコミットの author に来たら赤になる。**
+ *   **実測ではそういうコミットは 43 件中 0 件**（本人は数字 ID 付きでコミットしている）。
+ *   **来たら、それは git の設定が戻ったということなので、赤にしてよい。**
+ */
+test("この枝が足すコミットの author / committer が誤帰属しない（trailer の起点を押さえる）", (t) => {
+  const { shas, reason, lie, mergeBase, head } = addedCommits();
+  assert.equal(lie, undefined, `走査を止める理由が成り立っていない: ${lie}`);
+  if (reason !== undefined) {
+    assert.ok(
+      reason === NO_BASE ? originMainReallyAbsent() : !mergeBaseObtainable(),
+      `「${reason}」で走らせないと言っているが、別の源では履歴が読める（検査が黙って無力化されている）`,
+    );
+    t.skip(`履歴が読めないので走らせない: ${reason}`);
+    return;
+  }
+  const bad: string[] = [];
+  let checked = 0;
+  let merges = 0;
+  for (const sha of shas) {
+    // **マージコミットは対象外**（上の docblock に測った理由）。
+    const r = misattributingCommitIdentity(sha);
+    if (r.merge) merges += 1;
+    checked += r.checked;
+    for (const e of r.bad) bad.push(e);
+  }
+  assert.deepEqual(
+    bad,
+    [],
+    "コミットの author / committer が無関係の GitHub ユーザーに誤帰属する。" +
+      "**squash merge はここから Co-authored-by を合成するので、trailer を直しても main に刻まれる**" +
+      "（#1074 の (B) がこの経路）。数字 ID 付きの `<id>+<name>@users.noreply.github.com` にすること:\n  " +
+      bad.join("\n  "),
+  );
+  // **母数（#757）。** **マージでないコミットが 1 件でもあるなら、アドレスは 2 件ずつ読めるはず。**
+  // **`shas` が空でないのに `checked` が 0 なら、全部マージだったか、走査が空回りしている。**
+  if (mergeBase !== head) {
+    assert.ok(
+      shas.length > 0,
+      `HEAD が merge-base と違うのに走査した範囲が空である: merge-base=${mergeBase?.slice(0, 8)} HEAD=${head?.slice(0, 8)}`,
+    );
+  }
+  assert.equal(
+    checked,
+    (shas.length - merges) * 2,
+    `読んだアドレスの数が「マージでないコミット × 2」と合わない（走査が空回りしている）: ` +
+      `checked=${checked} / commits=${shas.length} / merges=${merges}`,
+  );
+  console.log(
+    `[#1074] author/committer: マージでないコミット ${shas.length - merges} 件 / アドレス ${checked} 件を走査（マージ ${merges} 件は対象外）`,
+  );
+});
+
+/**
+ * **author / committer の検査が、実際に火を噴くことを固定する。**
+ *
+ * ── **なぜこの検査が要るか（自分で当てた変異。上と同じ形の罠）** ──────────────────────
+ *
+ * **author の走査を足しただけでは、何も主張していなかった。**
+ * **この枝の author はすべて数字 ID 付きなので、走査は構造的に緑になる。**
+ * **実測（すべて 11/11 緑で生き残った）**:
+ *
+ * ```
+ * A1  bad.push(...) を消す                        pass 11 / fail 0
+ * A2  マージ判定を `if (true)` にして全部を対象外  pass 11 / fail 0
+ * A3  %ce を %ae にする（committer を読まない）    pass 11 / fail 0
+ * A4  checked の母数 assert を恒真にする           pass 11 / fail 0
+ * ```
+ *
+ * ── **どう固定するか: `git commit-tree` で形の分かったコミットを作る** ────────────────
+ *
+ * **`git commit-tree` は ref を一切触らずにコミットオブジェクトを 1 つ書くだけである**
+ * （実測: `for-each-ref --points-at` は 0 件。到達不能なので `gc` が回収する）。
+ * **だから author / committer / 親の数を自由に決めた「本物のコミットオブジェクト」を作れる。**
+ *
+ * **当てる 4 形**（それぞれが上の変異のどれかを落とす）:
+ * ```
+ * 1. author=etl@ / committer=etl@ の単親コミット   → 赤 2 件（A1 が落ちる）
+ *                                                    ＝ #1074 (B) cdc55734 と同じ形
+ * 2. author だけ誤帰属の単親コミット                → 赤 1 件（author を読んでいる）
+ * 3. committer だけ誤帰属の単親コミット             → 赤 1 件（A3 が落ちる。%ce を読んでいる）
+ * 4. author が誤帰属の 2 親（マージ）コミット        → 赤 0 件 / checked 0（A2 が落ちる。
+ *                                                    マージを対象外にできている）
+ * ```
+ */
+test("author / committer の検査が、誤帰属する 3 形で実際に落ちる（マージは対象外）", () => {
+  const tree = git("rev-parse", "HEAD^{tree}").trim();
+  const p1 = git("rev-parse", "HEAD").trim();
+  const p2 = git("rev-parse", "HEAD~1").trim();
+  /** ref を触らずにコミットオブジェクトを 1 つ書く（`commit-tree`）。 */
+  const make = (author: string, committer: string, parents: string[]): string =>
+    execFileSync(
+      "git",
+      ["-C", root, "commit-tree", tree, ...parents.flatMap((x) => ["-p", x])],
+      {
+        input: "test: 検査に当てるためのコミット\n",
+        encoding: "utf8",
+        env: {
+          ...process.env,
+          GIT_AUTHOR_NAME: "A",
+          GIT_AUTHOR_EMAIL: author,
+          GIT_COMMITTER_NAME: "A",
+          GIT_COMMITTER_EMAIL: committer,
+        },
+      },
+    ).trim();
+  const ETL = "etl@users.noreply.github.com"; // #1074 (B) の実害そのもの
+  const GOOD = "120390190+uonoko1@users.noreply.github.com";
+  const OTHER = "person@example.com"; // 架空。実在の個人アドレスは書かない（#1043）
+
+  // 1. 両方が誤帰属の単親（cdc55734 と同じ形）
+  const both = misattributingCommitIdentity(make(ETL, ETL, [p1]));
+  assert.equal(both.merge, false, "単親のコミットをマージと判定している");
+  assert.equal(both.checked, 2, "単親のコミットでアドレスを 2 件読んでいない（母数）");
+  assert.deepEqual(
+    both.bad.map((b) => b.split(": ")[1]),
+    [`author=${ETL}`, `committer=${ETL}`],
+    "author / committer の両方が誤帰属しているのに赤にならない（#1074 (B) と同じ形）",
+  );
+  // 2. author だけ誤帰属
+  const onlyAuthor = misattributingCommitIdentity(make(ETL, GOOD, [p1]));
+  assert.deepEqual(
+    onlyAuthor.bad.map((b) => b.split(": ")[1]),
+    [`author=${ETL}`],
+    "author の誤帰属だけが赤にならない（author を読んでいない）",
+  );
+  // 3. committer だけ誤帰属（**`%ce` を `%ae` にする変異はここが落とす**）
+  const onlyCommitter = misattributingCommitIdentity(make(GOOD, ETL, [p1]));
+  assert.deepEqual(
+    onlyCommitter.bad.map((b) => b.split(": ")[1]),
+    [`committer=${ETL}`],
+    "committer の誤帰属だけが赤にならない（committer を読んでいない）",
+  );
+  // 4. 正しい 2 形は緑（偽陽性の確認）
+  const good = misattributingCommitIdentity(make(GOOD, GOOD, [p1]));
+  assert.deepEqual(good.bad, [], "正しいアドレスで赤になっている（偽陽性）");
+  assert.equal(good.checked, 2, "正しいコミットでアドレスを 2 件読んでいない（母数）");
+  // 5. マージコミットは対象外（**マージ判定を `if (true)` にする変異はここが落とす**——
+  //    対象外にした 1 件が `merge: true` / `checked: 0` で返ることを言う）。
+  const merge = misattributingCommitIdentity(make(OTHER, OTHER, [p1, p2]));
+  assert.equal(merge.merge, true, "2 親のコミットをマージと判定していない");
+  assert.equal(merge.checked, 0, "マージコミットのアドレスを読んでいる（偽陽性になる）");
+  assert.deepEqual(merge.bad, [], "マージコミットで赤になっている（本人の手元のマージで毎回赤になる）");
+});
+
 test("走らせない理由は「履歴が読めない」2 つだけ（skip で無力化できないようにする）", () => {
   assert.deepEqual(
     [...SKIP_REASONS],
@@ -716,7 +944,38 @@ test("squash merge の区切りより上の trailer も拾う（%(trailers) に�
  * （区切りより上が見えない）を無効化する変異が、いちばん効いてほしい場所で通っていた。**
  */
 test("本文を読んだことを確かめる番人が、間違った読み方 3 通りで実際に落ちる", () => {
-  const head = git("rev-parse", "HEAD").trim();
+  // **HEAD を使ってはいけない**（**最初にそう書いて、自分の検算に捕まった**）。
+  // **`HEAD` のメッセージが 1 行だけ（件名のみ）だと `%s` が本文と一致してしまい、
+  // `%s` の読み方が正しく落ちない**——**実測: `data: refresh …` のような 1 行のコミットを
+  // HEAD に足したら、この検査が `%s（X2）` を素通りさせた**（`pass 9 / fail 2` の 2 本目）。
+  // **検査が環境（HEAD の形）に依存していた。**
+  //
+  // **だから、形の分かっているコミットをその場で作る。**
+  // **`git commit-tree` は ref を一切触らずにコミットオブジェクトを 1 つ書くだけ**
+  // （実測: `for-each-ref --points-at` は 0 件。到達不能なので `gc` が回収する）。
+  // **件名 / 本文 / squash の区切り / 区切りより上と下の trailer をすべて含む形にしてある**
+  // ——**この PBI が見つけた形そのものを、番人に当てる。**
+  const body = [
+    "test: 番人に当てるための件名",
+    "",
+    "本文の段落。**`%s` はここから先を落とす。**",
+    "",
+    "Co-Authored-By: N <1+x@users.noreply.github.com>",
+    "",
+    "---------",
+    "",
+    "Co-authored-by: N <1+x@users.noreply.github.com>",
+  ].join("\n");
+  const tree = git("rev-parse", "HEAD^{tree}").trim();
+  const sample = execFileSync(
+    "git",
+    ["-C", root, "-c", "user.name=t", "-c", "user.email=t@example.com", "commit-tree", tree],
+    { input: body, encoding: "utf8" },
+  ).trim();
+  // **作ったものが狙った形であることを、まず確かめる**（母数。ここが崩れたら下は何も言っていない）。
+  assert.equal(rawCommitMessage(sample), body, "その場で作ったコミットの本文が狙った形になっていない");
+  assert.ok(body.split("\n").length >= 5, "1 行だけの本文で番人を当てようとしている（%s が一致してしまう）");
+
   // **番人が「一致」の基準に使う源は `cat-file`（生オブジェクト）でなければならない。**
   // **`%B` 同士を比べる形（X4）にすると、下の `%s` が落ちなくなる。**
   // **だから源が `--pretty` を通らないことを、まず語で固定する。**
@@ -726,8 +985,8 @@ test("本文を読んだことを確かめる番人が、間違った読み方 3
     "独立の源が `git cat-file` でなくなっている（`--pretty` 同士を比べると比較が恒真になる）",
   );
   // **正しい読み方（既定）は通ること**——恒偽の検査になっていないことを言う。
-  const okRead = scannedBody(head);
-  assert.ok(okRead.lines >= 1, "既定の読み方で本文が 1 行も取れていない");
+  const okRead = scannedBody(sample);
+  assert.equal(okRead.lines, body.split("\n").length, "既定の読み方で本文を全部読めていない");
 
   // **間違った読み方は、3 通りとも落ちること。**
   const wrong: ReadonlyArray<readonly [string, (sha: string) => string]> = [
@@ -742,7 +1001,7 @@ test("本文を読んだことを確かめる番人が、間違った読み方 3
   for (const [name, read] of wrong) {
     let threw = false;
     try {
-      scannedBody(head, read);
+      scannedBody(sample, read);
     } catch {
       threw = true;
     }
@@ -755,6 +1014,13 @@ test("本文を読んだことを確かめる番人が、間違った読み方 3
   );
   // **母数**（#757）: 当てた読み方の数そのものを固定する（配列を空にする変異はここが落ちる）。
   assert.equal(wrong.length, 3, "間違った読み方の当て方が減っている");
+  // **`%(trailers)` が本当に区切りより上を落とすことも、この場で実測して固定する**
+  // （**X3 が「等価な変異」でないことの根拠**——落ちる理由が実在することを言う）。
+  const trailersOnly = git("show", "-s", "--format=%(trailers:only=true)", sample);
+  const above = body.split("\n").filter((l) => /^co-authored-by:/i.test(l)).length;
+  const parsed = trailersOnly.split("\n").filter((l) => /^co-authored-by:/i.test(l)).length;
+  assert.equal(above, 2, "本文の trailer 行が 2 つでない（この検査の前提が崩れている）");
+  assert.equal(parsed, 1, "git のパーサが区切りより上も返すようになった（X3 が等価な変異になる）");
 });
 
 /**
