@@ -270,6 +270,41 @@ t_closing_word_outside_span_on_same_line() {
 }
 test_case "code-span: 同じ行のコードスパンの外にある Closes #N は通る（PR #766 の実測形）" t_closing_word_outside_span_on_same_line
 
+# **スパンの閉じの「直後」に閉じる語が来る形**（レビューの指摘で足した）。
+#
+# **上の #766 の形は `Closes` がスパンより前に在る**ので、
+# **「スパンの閉じの直後の 1 文字を食べる」変異では壊れない**——空白が食われるだけである。
+# **実測（レビュアー）**: `found = m` を `found = m + 1` にすると **28/28 緑のまま**、
+# **`` `strip_code_spans` ``Closes #900 が偽の赤になる**（`Closes` が `loses` に化ける）。
+# **39,528 通りの合成入力で判定が反転する入力が 48 件。等価変異ではない。**
+#
+# **`pr-closes.sh` の docblock 自身が「一番たちの悪い壊れ方」と名指しした形である。**
+# **`i = j + 1`（emit 側の同じ変異）は塞いだのに、`found` 側が空いていた。**
+t_closing_word_immediately_after_span() {
+  run "この検査は \`strip_code_spans\`Closes #900 で直った"
+  assert_eq 0 "$STATUS" "スパンの閉じの直後の Closes を飲み込まない"
+  assert_contains "$OUT" "#900" "スパンの直後の番号を拾う（1 文字ずれると loses になって拾えない）"
+}
+test_case "code-span: スパンの閉じの直後の Closes #N を飲み込まない（found = m + 1 を殺す）" t_closing_word_immediately_after_span
+
+# **閉じの無い連続の「最後の 1 文字」を落とす形**（レビューの指摘で足した）。
+#
+# **実測（レビュアー）**: emit の上限 `x < j` を `x < j - 1` にすると **28/28 緑のまま**、
+# **`Closes` と `#123` がくっついて `Closes#123` になり、偽の緑になる**:
+#   本文: PO への説明: Closes`#123 の形は閉じる語ではない
+#   いま      → rc=1（正しい。バッククォートが挟まるので GitHub は何も閉じない）
+#   x < j - 1 → rc=0 ← 緑
+# **22,912 通りで判定が反転する入力が 392 件。等価変異ではない。**
+#
+# **前のレビュアーは「等価変異かもしれない」と留保して指摘に数えなかった**——
+# **留保したことは正しい態度だが、等価ではなかった。**
+t_unclosed_run_keeps_last_char() {
+  run "PO への説明: Closes\`#123 の形は閉じる語ではない"
+  assert_eq 1 "$STATUS" "Closes と #N の間にバッククォートが挟まれば閉じる語ではない: $OUT"
+  assert_not_contains "$OUT" "#123" "くっつけて Closes#123 にしてはいけない（最後の 1 文字を落とすと起きる）"
+}
+test_case "code-span: 閉じの無い連続の最後の 1 文字を落とさない（x < j - 1 を殺す）" t_unclosed_run_keeps_last_char
+
 t_double_backtick_span_holds_single_backtick() {
   # **閉じは「開きと同じ長さ」でなければならない**（CommonMark と同じ数え方）。
   # `` で開いたスパンは、**中に単独の ` があっても閉じない**——
@@ -303,12 +338,43 @@ test_case "code-span: 閉じていないバッククォートは以降を飲み�
 # **#504 の形: 1 つのファイルの中の検査は、そのファイル自身を守れない。**
 # **スクリプトを消しても CI が緑になるなら、この検査は存在しないのと同じ。**
 t_wired_into_ci() {
-  local wf="$ROOT/.github/workflows/ci.yml"
+  # **#1039: この検査は ci.yml から pr-body.yml に移った。**
+  # ファイル名を 1 つに決め打ちすると、移した瞬間にこの検査は「探しているファイルが無い」で
+  # 落ちるか、あるいは（`cat` が空を返すなら）**何も見ずに落ちる**。
+  # **どのワークフローに在るかではなく「どこか 1 つのワークフローに在ること」を見る。**
+  # 2 つ以上に在るのも異常（同名の job が 2 つできてチェック名が衝突する）なので、
+  # **ちょうど 1 つ**を要求する。
+  local wfs=() f
+  for f in "$ROOT"/.github/workflows/*.yml "$ROOT"/.github/workflows/*.yaml; do
+    [[ -f "$f" ]] || continue
+    grep -q 'bash scripts/ci/pr-closes.sh' "$f" && wfs+=("$f")
+  done
+  assert_eq "1" "${#wfs[@]}" "pr-closes.sh を実行するワークフローはちょうど 1 つ（実際: ${wfs[*]:-なし}）"
+  local wf="${wfs[0]}"
   local body; body=$(cat "$wf")
+  # **#1039 / N1・N2: job が走っただけでは本文を測ったことにならない。**
+  # `step` の `if:` で本文判定だけを飛ばす／`run:` の先頭で `exit 0` する、という壊し方は
+  # **job を success のまま緑にしたうえで、本文を 1 度も測らない。**
+  # `pr-closes.sh` を実行する step に条件が付いていないことを見る。
+  # （この step は job の唯一の実行 step なので、条件が付く正当な理由が無い。）
+  # **job 全体を見る**（本文を測る step だけを見ると、その**前に**条件付き step を挿して
+  # 抜ける形が素通りする——変異 N1 で実際に素通りした）。`pr-closes` job の中に
+  # `if:` が 1 つも無いこと、`github.event.action` で分岐していないことを見る。
+  # **コメント行は落としてから見る**（このファイルの解説コメントに `if:` の字が出てくる）。
+  local job
+  job=$(awk '/^  pr-closes:/{f=1;next} f&&/^  [A-Za-z_]/{f=0} f' "$wf" | sed 's/[[:space:]]*#.*$//')
+  assert_not_contains "$job" "if:" "pr-closes job に if: が無い（付くと job は緑のまま本文を測らない。#1039 N1）"
+  assert_not_contains "$job" "github.event.action" \
+    "本文を測るかどうかをイベント種別で分岐していない（#1039 N1/N2: edited だけ測らない形を塞ぐ）"
+  # `run:` の中で早期に抜けていないこと。`pr-closes.sh` に食わせる行より前に `exit` は無い
+  # （`test -f ... || { ...; exit 1; }` は**在るべき** exit なので、`exit 0` だけを見る）。
+  local before_exec
+  before_exec=$(printf '%s\n' "$job" | sed -n '1,/pr-closes.sh -/p')
+  assert_not_contains "$before_exec" "exit 0" "本文を測る前に exit 0 していない（緑のまま測らない形。#1039 N2）"
   # **「ファイル名がどこかに出てくる」では足りない**（実測: ci.yml から実行の行だけを消す変異を
   # 当てると、`test -f` の行に名前が残るので、その書き方のテストは 19/19 緑のまま通ってしまった）。
   # **実行している行そのもの**を見る。
-  assert_contains "$body" 'bash scripts/ci/pr-closes.sh' "ci.yml がこの検査を実行している"
+  assert_contains "$body" 'bash scripts/ci/pr-closes.sh' "ワークフローがこの検査を実行している"
   # shellcheck disable=SC2016  # ci.yml の中の**文字どおりの**文字列を探している。展開させてはいけない
   assert_contains "$body" '"$PR_BODY" | bash scripts/ci/pr-closes.sh' "PR 本文を渡して実行している"
   # ワークフロー側に「スクリプトが存在すること」の要求があること（stale-base と同じ形、#504）
@@ -325,7 +391,8 @@ t_wired_into_ci() {
 #
 # **実測（レビューの指摘、PO が追試）**: 先頭に 1 文字 + バッククォート 20,000 個の本文で
 # **54 秒**（`main` の版は 0.3 秒）。`substr()` の呼び出し数は N^2/2 で N=20,000 なら 2 億回。
-# **`ci.yml` の `timeout-minutes: 10` に賭ける形**になり、**本文は fork からでも誰でも書ける。**
+# **`pr-body.yml` の `timeout-minutes: 10` に賭ける形**になり、**本文は fork からでも誰でも書ける**
+# （**#1050 でこの検査は `ci.yml` から `pr-body.yml` に移った**。実測: `pr-body.yml:66`）。
 #
 # **なぜ 1 秒で測るか**: 秒は機械の負荷で動く（レビュアーは同じ入力で 583 秒と 1,175 秒を得た。
 # load average 33〜53 / 16 コア）。**1 秒は「O(N^2) なら絶対に超える」側に置いた閾値**で、
@@ -378,7 +445,7 @@ case_unclosed_backtick_run_is_not_quadratic() {
 }
 test_case "閉じの無いバッククォートの連続が O(N^2) にならない" case_unclosed_backtick_run_is_not_quadratic
 
-test_case "wiring: ci.yml がこの検査を呼び、スクリプトの存在を要求している（#504）" t_wired_into_ci
+test_case "wiring: ワークフローがこの検査を呼び、スクリプトの存在を要求している（#504 / #1039）" t_wired_into_ci
 
 echo
 echo "passed: $PASS  failed: $FAIL"
