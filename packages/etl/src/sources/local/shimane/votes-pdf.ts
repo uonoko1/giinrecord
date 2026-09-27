@@ -103,7 +103,21 @@ export interface VotePdf {
    * **`anchors` はそのページの行の基準（議案番号の欄の y）、`markYs` は置こうとした票の y。**
    * **`parseVotePdf` の出力には使わない**（読むのは検査だけ）。
    */
-  rowAssignments: { page: number; anchors: number[]; markYs: number[] }[];
+  rowAssignments: {
+    page: number;
+    anchors: number[];
+    markYs: number[];
+    /**
+     * **そのページで「ラベルの塊」を持つ列**（Issue #1056）。
+     * **`cells` の組み立てがラベルで埋める候補は、この列に限られる**——
+     * `labelBlocks.get(col)` が空なら `hit` も空で `blocks.length === 1` も偽になり、
+     * **必ず `UNKNOWN_CELL` に落ちる。**
+     * **検査が総当たりを絞るために使う**（#1056。絞り方を「読み」ではなく実装の入力そのものから引く）。
+     */
+    labelCols: number[];
+    /** そのページで票（○ ●）が置かれた列（#1056。票の無い列は落とすものが無い） */
+    markCols: number[];
+  }[];
 }
 
 /**
@@ -677,7 +691,54 @@ export function splitJoinedMarks(items: readonly Item[], colX: readonly number[]
  */
 export interface DropTiedForTest {
   /** `"${ページ番号}:${列}"`（例 `"4:18"`）。この列の票は「行が決まらなかった」ものとして落とす。 */
-  pageCol: string;
+  pageCol?: string;
+  /**
+   * **`pageCol` を使わずに `tiedCols` だけを埋める口**（Issue #1056 のレビュー）。
+   *
+   * **なぜ要るか。** **`keepTiedColsForTest` の硬化（`pageCol` と組でなければ効かない）を、
+   * 検査で守れなかった**——`tiedCols` が埋まる道は (a) 本物の同距離タイ (b) `pageCol` の 2 つだけで、
+   * **本物のタイは実データに 0 件**（`nearest` 12,489 回で 0。マージンの最小は 16.56pt）。
+   * **だから `pageCol` 無しでは `tiedCols` が常に空で、硬化を戻す変異が等価変異になっていた。**
+   *
+   * **「本物のタイを合成する道が無い」と書いたのは誤りだった**（#1056 のレビューが道を作った）:
+   * **PDF の座標を作り替える必要はなく、`pageCol` の隣にもう 1 本の分岐を足すだけでよい。**
+   * **`pageCol` と同じ「行が決まらなかった」状態を作る**（票を落として `tiedCols` に列を加える）。
+   * **違うのはキーだけ**——**`pageCol` を経由しないので、
+   * 「`pageCol` と組でなければ防壁を外さない」硬化そのものを検査できる。**
+   *
+   * **最初は「票を落とさず `tiedCols` だけ埋める」形にしたが、それでは leak が観測できなかった**
+   * （実測: 票が `markByRow` に残るので、その行は `mark.str` を返してラベルの枝に入らない。
+   * **変化するのは本物の `議長` 2 セルだけで、ラベルに化けるセルは 0 だった**）。
+   * **＝「ラベルに化ける」を見るには票が落ちていなければならない。**
+   *
+   * **実測（#1056。`{ tieColForTest: "4:18", keepTiedColsForTest: true }`、`pageCol` 無し）**:
+   *
+   * | | `不明` | **ラベルに化けたセル** |
+   * |---|---:|---:|
+   * | **硬化あり（いまの実装）** | 6 | **0** |
+   * | 硬化を戻す（`pageCol` の条件を外す） | 0 | **4**（`○ → 議長` 高橋雅彦） |
+   *
+   * **本番は渡さない**（`undefined` なら振る舞いは 1 ビットも変わらない）。
+   */
+  tieColForTest?: string;
+  /**
+   * **`tiedCols` の防壁を外して、#1023 のレビューが見つけた壊れた振る舞いを再現する**（Issue #1056）。
+   *
+   * **なぜ要るか。** **防壁を入れた後の検査は「ラベルになったセルが 0 件」しか見ていなかった。**
+   * **`0 === 0` の比較なので、「防壁が効いた」と「そもそも何も起きなかった」を区別できない**
+   * **——検査を絞っても、絞りすぎて何も踏まなくなっても、同じように緑になる。**
+   *
+   * **そこで「防壁を外すと 18 セル（本番 12 セル）が必ず出る」ことを検査に入れる**（#1056 で実測）。
+   * **これが在れば、絞った 13 組が本当に 12 件を踏むことを直接示せる。**
+   *
+   * **`pageCol` と組でなければ効かない**（#1056 のレビュー。**最初の実装は独立に効いてしまっていた**——
+   * `tiedCols` は `dropForTest` と無関係に「本物のタイ」でも埋まるので、
+   * **`{ keepTiedColsForTest: true }` を `pageCol` 無しで渡すと #1023 の防壁が丸ごと外れた。**
+   * **呼ぶ人が居なかっただけで、型は許していた。** いまは両方揃って初めて効く）。
+   *
+   * **`dropForTest` を渡さない本番の呼び出しは 1 ビットも変わらない。**
+   */
+  keepTiedColsForTest?: boolean;
 }
 
 export async function parseVotePdf(bytes: Buffer, dropForTest?: DropTiedForTest): Promise<VotePdf> {
@@ -746,7 +807,7 @@ export async function parseVotePdf(bytes: Buffer, dropForTest?: DropTiedForTest)
   let tiedItems = 0;
   let tiedMarks = 0;
   // #1023: 票の行き先を決めた入力（検査が本物の座標に摂動を当てるため。出力には使わない）
-  const rowAssignments: { page: number; anchors: number[]; markYs: number[] }[] = [];
+  const rowAssignments: VotePdf["rowAssignments"] = [];
   let section: string | undefined;
   for (const [pi, page] of pages.entries()) {
     const head = heads[pi];
@@ -879,6 +940,11 @@ export async function parseVotePdf(bytes: Buffer, dropForTest?: DropTiedForTest)
      * | フィクスチャ 9 本・**990 組** | 955 | **18** → **0**（この `tiedCols` で） |
      * | **本番の 5 本**・**630 組** | 607 | **12** → **0** |
      *
+     * **#1056: 検査は総当たりをやめて 13 組（本番 8 組）に絞った。**
+     * **埋める枝が読む `labelBlocks` に居る列 ∩ 票が置かれた列だけを試す**
+     * （`rowAssignments.labelCols` / `.markCols`）。**18 セル / 本番 12 セルは 1 つも取りこぼさない**
+     * （990 組を総当たりして突き合わせた。ref `0f734507`）。`parseVotePdf` の呼び出しは 999 → 35 回。
+     *
      * **本番の 12 件は実在の議員だった**（`○ → 議長` 高橋雅彦 / `○ → 除斥` 中島謙二 /
      * `○ → 議⾧` 山根成二 / `○ → 除斥` 池田一）。**`rollcalls.ts` の `MAPPED` が
      * 「議長」「議案と一定の利害関係を有する議員」を `投票なし` に写す**ので、
@@ -937,7 +1003,12 @@ export async function parseVotePdf(bytes: Buffer, dropForTest?: DropTiedForTest)
         // 置かなければ下の `cells` が `UNKNOWN_CELL` になる（＝記録が出ない側。**別人の票にしない**）。
         markYs.push(it.y); // #1023: 検査が本物の座標に摂動を当てられるように記録する
         // **検査だけが通る道**（`dropForTest` を渡さなければ `nearest(it.y)` そのまま）
-        const a = dropForTest?.pageCol === `${pi + 1}:${col}` ? undefined : nearest(it.y);
+        // #1056: `tieColForTest` は `pageCol` と同じ「行が決まらなかった」状態を作るが、
+        // **`pageCol` とは別のキーで指定する**——硬化（`pageCol` と組でなければ防壁を外さない）を
+        // 検査するには、`pageCol` を経由しない道が 1 本必要だった（#1056 のレビューが作った道）。
+        const tieHere = dropForTest?.pageCol === `${pi + 1}:${col}`
+          || dropForTest?.tieColForTest === `${pi + 1}:${col}`;
+        const a = tieHere ? undefined : nearest(it.y);
         if (a === undefined) { tiedMarks++; tiedItems++; tiedCols.add(col); continue; }
         const row = markByRow.get(a)!;
         if (row.has(col)) throw new Error(`page ${pi + 1}: two vote marks in one cell (col ${col})`);
@@ -947,7 +1018,7 @@ export async function parseVotePdf(bytes: Buffer, dropForTest?: DropTiedForTest)
         labelByCol.get(col)!.push(it);
       }
     }
-    rowAssignments.push({ page: pi + 1, anchors: [...anchors], markYs });
+    const markCols = [...new Set([...markByRow.values()].flatMap((m) => [...m.keys()]))].sort((a, b) => a - b);
     // 列ごとのラベルを、ラベルの縦の並び（結合セルのブロック）ごとにまとめる
     const labelBlocks = new Map<number, { text: string; y0: number; y1: number }[]>();
     for (const [col, items] of labelByCol) {
@@ -960,6 +1031,11 @@ export async function parseVotePdf(bytes: Buffer, dropForTest?: DropTiedForTest)
       }
       labelBlocks.set(col, blocks.map((b) => ({ text: b.map((i) => i.str).join("").replace(/\s+/g, ""), y0: b.at(-1)!.y, y1: b[0].y })));
     }
+    // #1056: 検査が総当たりを絞るための入力（`labelBlocks` そのもの。**出力には使わない**）
+    rowAssignments.push({
+      page: pi + 1, anchors: [...anchors], markYs, markCols,
+      labelCols: [...labelBlocks.entries()].filter(([, b]) => b.length > 0).map(([c]) => c).sort((a, b) => a - b),
+    });
 
     for (const a of anchors) {
       const number = joinText(numByRow.get(a)!);
@@ -988,7 +1064,11 @@ export async function parseVotePdf(bytes: Buffer, dropForTest?: DropTiedForTest)
         // ○ ● が無い行は、その列の結合セル（議⾧・除斥）が覆っている。行を挟むブロックを選ぶ
         // **この列でタイで票を落としたなら、ラベルで埋めない**（Issue #1023 のレビューで見つかった。
         // 下の `labelBlocks` の docblock に実例と母数を書いた）。
-        if (tiedCols.has(col)) { unknownCells++; return UNKNOWN_CELL; }
+        // #1056: `keepTiedColsForTest` は検査だけが渡す（防壁を外した姿を再現して、検出できることを測る）。
+        // **`pageCol` と組でなければ効かせない**——単独で渡せると #1023 の防壁が丸ごと外れる
+        // （`tiedCols` は `dropForTest` と無関係に「本物のタイ」でも埋まる。#1056 のレビューの指摘）。
+        const unguard = dropForTest?.pageCol !== undefined && dropForTest.keepTiedColsForTest === true;
+        if (tiedCols.has(col) && !unguard) { unknownCells++; return UNKNOWN_CELL; }
         const blocks = labelBlocks.get(col) ?? [];
         const hit = blocks.filter((b) => b.y0 - CELL_GAP <= a && a <= b.y1 + CELL_GAP);
         if (hit.length === 1) return hit[0].text;
