@@ -71,21 +71,62 @@ test("#771 衆院・参院とも、氏名とかなは同じ行の同じ HTML か
     assert.ok(/const \{ name, legalName \} = parseNameCell\(a\.innerHTML\)|const name = normalize\(a\.text\)/.test(text), `${label}: 氏名も同じ行の a から`);
     // **名簿ページの取得は 1 か所だけ**（かな専用の 2 つ目の取得先が無い）。
     //
-    // **綴りではなく「await した取得の呼び出し」を数える**（2026-09-27 に直した）。
-    // **以前は `fetchText(` という綴りを数えていたので、#1037 の訂正で
-    // 検査用の差し替え口（`const get = fetchTextForTest ?? fetchText`）を足して
-    // 呼び出しを `await get(...)` にしたとき、`0 !== 1` で落ちた**——
-    // **守りたい性質（かな用の別系統が無い）は 1 バイトも壊れていないのに、綴りだけで落ちた。**
+    // **綴りではなく「取得の呼び出し」を数える**（2026-09-27。**2 度直した**）。
+    //
+    // **1 度目**: `fetchText(` という綴りを数えていたので、#1037 の訂正で差し替え口を足して
+    // 呼び出しを `await get(...)` にしたとき `0 !== 1` で落ちた
+    // （**守りたい性質は 1 バイトも壊れていないのに、綴りだけで落ちた**）。
+    //
+    // **2 度目**: そこで `await (fetchText|get)\(` と書いたが、**`await` を前置したことで
+    // `main` より弱くなった**（レビューの実測。PO も検算）:
+    // ```
+    // 参院に第 2 の取得を足す（Promise を変数に受けるだけ）
+    //   const pending = fetchTextOr404(url + "?kana", ...); void (await pending);
+    //     main の検査 /fetchText(Or404)?\(/  → 2 件で赤（捕まえる）
+    //     await 付きの検査                    → 1 件で緑（素通り）   ← 正味の低下
+    // ```
+    // **参院は差し替え口を持たないので、これは「別名を認めた代償」ではない**——
+    // **`await` という 1 語を足したせいで、触っていない院の守りまで落ちた。**
+    // **`await` を落とし、呼び出しの形だけを数える。**
+    // **`?? fetchText` や `typeof fetchText` は直後が `(` でないので数に入らない**（`main` と同じ）。
     //
     // **ラッパを 1 つ足して正規表現を満たす形で黙らせないこと**（それだと守りは 1 バイトも増えない。
-    // #1010 の「6 文字の合言葉」と同じ形になる）。**だから判定を意図の側に寄せた。**
-    const fetches = [...text.matchAll(/await (fetchText(Or404)?|get)\(/g)].length;
+    // #1010 の「6 文字の合言葉」と同じ形）。
+    // **`get(` は「メソッド呼び出しではない」ことを要求する**——
+    // **`\b` だけだと `byGroup.get(...)`（無関係な `Map.get`）を拾って偽陽性になった**（実測 2 件）。
+    // **`.` や `?.` が直前に無い `get(` だけを数える。**
+    const fetches = [...text.matchAll(/(?<![.\w$])(fetchText(Or404)?|get)\(/g)].length;
     assert.equal(fetches, 1, `${label}: 名簿の取得は 1 か所（かな用の別系統は無い）`);
-    // **`get` という別名を使う場合、それが `fetchText` 以外に解決してはいけない**——
+    // **別名を使う場合、それが `fetchText` 以外に解決してはいけない**——
     // **別名を認めた代償を、ここで閉じる。** **別名が 2 つ目の取得先を指せるなら、上の 1 か所は意味を失う。**
-    for (const m of text.matchAll(/const get = ([^;]+);/g)) {
-      assert.match(m[1], /^fetchTextForTest \?\? fetchText(Or404)?$/,
-        `${label}: 取得の別名が fetchText 以外に解決している: ${m[1]}`);
+    //
+    // **`const` だけ・`;` まで 1 行だけを見る形では、3 通りで素通りした**（レビューの実測）:
+    // **`let get = …` に変える / `const get =` の直後に改行を入れる**（`.` は改行に当たらない）。
+    // **改行 1 つでこの assert が完全に無効になった**ので、`[\s\S]` と `let|var` を含める。
+    for (const m of text.matchAll(/\b(?:const|let|var)\s+get\s*=([\s\S]*?);/g)) {
+      assert.match(m[1].trim(), /^fetchTextForTest \?\? fetchText(Or404)?$/,
+        `${label}: 取得の別名が fetchText 以外に解決している: ${m[1].trim()}`);
+    }
+    // **`fetchTextForTest` は 3 つの形にだけ現れてよい**——**宣言・代入・`??` の左**。
+    //
+    // **`if (!fetchTextForTest)` と書けると「本番だけ走る分岐」を作れる**——
+    // **差し替え口を刺したテストはその分岐に入らないので、URL 一覧の検査を丸ごと避けられる。**
+    // **レビューの実測: それで「かなだけ第 2 の取得先から上書きする」が 21/21 緑で通った**
+    // （`ROSTER_PAGES` の検査も 465 名も渡辺 6 名も 1 ページ失敗の検査も、全部無関係に緑）。
+    // **差し替え口を足した時点で生まれた新しい階級なので、ここで閉じる。**
+    //
+    // **allowlist で書く**（「条件に使うのを禁じる」という denylist だと、`&&` や三項や
+    // `Boolean(...)` を列挙し続けることになる）。
+    const ALLOWED_TEST_HOOK = [
+      /^let fetchTextForTest: typeof fetchText(Or404)? \| undefined;$/,          // 宣言
+      /^export function setFetchTextForTest\(f: typeof fetchText(Or404)? \| undefined\): void \{ fetchTextForTest = f; \}$/, // 代入
+      /^const get = fetchTextForTest \?\? fetchText(Or404)?;$/,                 // `??` の左
+    ];
+    for (const [i, line] of text.split("\n").entries()) {
+      if (!line.includes("fetchTextForTest")) continue;
+      const t = line.trim();
+      assert.ok(ALLOWED_TEST_HOOK.some((re) => re.test(t)),
+        `${label}: 差し替え口が許した 3 形（宣言・代入・?? の左）以外に現れている（${i + 1} 行目）: ${t}`);
     }
   }
 });
