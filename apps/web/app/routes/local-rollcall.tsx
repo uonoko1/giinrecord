@@ -144,10 +144,17 @@ export function LocalRollCallPage({ rollCall, assembly, meta }: { rollCall: Loca
  *
  * **この 174 と 3 は検査が持っている**（#1038）——
  * `packages/etl/test/published-data-validate.test.ts` の `CORPUS.blankNumberByAssembly` /
- * `blankNumber` / `resultAbsent` / `resultAbsentWithNumber`。**議会ごとの内訳まで固定してある。**
+ * `blankNumber` / `resultAbsentByAssembly` / `resultAbsent` / `resultAbsentWithNumber`。
+ * **どちらも議会ごとの内訳まで固定してある。**
  * **ここを直すときは向こうも直すこと**（**コメントだけを直すと、向こうが落ちて「なぜ」が分からなくなる**）。
  * **それまでは誰も守っていなかった**——**実測 2026-09-25: `pref-02: 99` / `計 999` とでたらめに書き換えても
  * web の 1,379 件が全部緑だった。**
+ *
+ * **「すべて滋賀」が検査に載ったのは #1053 である。** **#1038 が固定したのは合計 3 だけで、
+ * 内訳（`pref-25: 3`）は持っていなかった**——**実測 2026-09-27: 滋賀の `議長辞職の件` から
+ * `resultAbsent` を外し、青森（pref-02）の `number` が空の 1 件に `result: "" + resultAbsent: true` を
+ * 付ける変異（合計 3 のまま）を当てても、母数テストは緑で通った。**
+ * **`shiga-published-data.test.ts` も滋賀だけを見るので、滋賀以外に生えても緑のままだった**（#1029）。
  *
  * **`resultAbsent` の無い空の `result`（読み取り事故）には出さない。** ETL が今までどおり違反として弾く形なので、
  * ここで「記載なし」と書くと事故を県のせいにしてしまう。
