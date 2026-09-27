@@ -42,6 +42,13 @@
 #   4. dirty    : 未 stage の変更だけ = commit しても index には入らない
 #   （`?? .measure/` `?? .cache/` だけは残留に数えない。#787。**毎回鳴ると鳴っていること自体を見なくなる**）
 #
+# **走らせる場所に依らないこと**（#1070 の 2 度目のレビューで塞いだ穴）:
+#   `git rev-parse --git-path index` は**メインの作業ツリーでは相対パス**（`.git/index`）を返し、
+#   **linked worktree では絶対パス**を返す（手元 25 本で絶対 24 / 相対 1）。
+#   **相対パスを cwd 基準で解決すると、監査を走らせたディレクトリで答えが変わる**——
+#   **メインの作業ツリーだけ index を読まず、「作業中」の印が黙って消えた。**
+#   **いまは必ず `$path` 基準で解決し、読めなかった本数を母数として出す**（下の「index を読めず」）。
+#
 # 終了コード:
 #   0 = 残留が無い、または conflict/staged/dirty だけ（**鳴り続けないようにする**。#978）
 #   2 = 使い方が違う
@@ -96,7 +103,7 @@ while IFS= read -r line; do
 done < <(git worktree list --porcelain; echo)
 
 total=${#PATHS[@]}
-conflicts=0; deletions=0; staged_only=0; dirty_only=0; residue=0; unreadable=0; del_in_conflict=0
+conflicts=0; deletions=0; staged_only=0; dirty_only=0; residue=0; unreadable=0; del_in_conflict=0; idx_skipped=0
 
 for i in "${!PATHS[@]}"; do
   path="${PATHS[$i]}"; branch="${BRANCHES[$i]}"
@@ -139,18 +146,46 @@ for i in "${!PATHS[@]}"; do
   #     HEAD は他人のコミットで、動いているのは index のほうだけ）。
   #   - `stat` だけでも足りない: worktree を作り直した直後は index が新しく見える。
   # **遅いほうを採る = 「作業中かもしれない」を多めに付ける側に倒す**（この印は「触るな」の意味）。
+  #
+  # **`rev-parse --git-path index` が返すパスは、相対のことがある**（#1070 の 2 度目のレビューで実測）:
+  #   ```
+  #   $ git -C <メインの作業ツリー> rev-parse --git-path index   →  .git/index                  ← **相対**
+  #   $ git -C <linked worktree>    rev-parse --git-path index   →  /…/.git/worktrees/N/index   ← 絶対
+  #   ```
+  #   **手元の 25 本で数えると絶対 24 / 相対 1**（相対はメインの作業ツリーだけ）。
+  #   **相対パスは `git -C` に渡した `$path` 基準**であって、**監査を走らせた cwd 基準ではない。**
+  #   そのまま `-f` に渡すと **cwd 基準で評価され、メインの作業ツリーだけ黙ってスキップされる**:
+  #     - 別のツリーから走らせる → `-f .git/index` が偽 → **index を読まない**
+  #       → `rev1032/wt` と同じ形（HEAD は古く index だけ新しい）を**「放置」と誤判定する**
+  #     - cwd に**別 repo の** `.git/index` が在る → `-f` が真 → **無関係な repo の mtime を読む**
+  #       （実測で `最終更新は -29687988 分前` を出させた）
+  #   **どちらも「監査を走らせた場所で答えが変わる」**。**`$path` 基準で解決する。**
   last=$(git -C "$path" log -1 --format=%ct 2>/dev/null || echo 0)
   is_int "$last" || last=0
-  idx_mtime=$(git -C "$path" rev-parse --git-path index 2>/dev/null || true)
-  if [[ -n "$idx_mtime" && -f "$idx_mtime" ]]; then
-    idx_mtime=$(stat -c %Y "$idx_mtime" 2>/dev/null || echo 0)
+  idx_note=""
+  idx_path=$(git -C "$path" rev-parse --git-path index 2>/dev/null || true)
+  # **相対なら `$path` 基準に直す**（絶対はそのまま。**cwd は一度も使わない**）
+  [[ -n "$idx_path" && "$idx_path" != /* ]] && idx_path="$path/$idx_path"
+  if [[ -n "$idx_path" && -f "$idx_path" ]]; then
+    idx_mtime=$(stat -c %Y "$idx_path" 2>/dev/null || echo 0)
     is_int "$idx_mtime" && [[ "$idx_mtime" -gt "$last" ]] && last=$idx_mtime
+  else
+    # **黙って飛ばさない（#757 の母数の罠）。** **「index を見た結果 0 件」と
+    # 「index を一度も読めなかった」を同じ顔にしない。** 数えて、最後に本数を出す。
+    idx_skipped=$((idx_skipped+1))
+    idx_note=" **（index が読めず、最終更新は HEAD だけで見ています）**"
   fi
   age=$(( NOW - last ))
+  # **未来の時刻は 0 に丸める（#1070 のレビュー指摘【低】）。** HEAD のコミット日時が未来だと
+  # `最終更新は -120 分前` のような表示になる。**印が付く側（「触るな」側）は変えない**——
+  # **変えるのは表示だけ**であり、負の age は `-lt ACTIVE_WINDOW` で既に印が付いている。
+  [[ "$age" -lt 0 ]] && age=0
   active=""
   if [[ "$last" != 0 && "$age" -lt "$ACTIVE_WINDOW" ]]; then
     active=" — 最終更新は $(( age / 60 )) 分前。**誰かが作業中かもしれません**"
   fi
+  # **印が無い理由が「本当に古い」か「index を読めなかった」かを、その行で見分けられるようにする。**
+  active="${active}${idx_note}"
 
   # **分類は 1 本につき 1 つ**（内訳の合計が残留の本数と合うように。合わないと数字が信用されない）。
   # **重い順**: conflict > deletion > staged > dirty。
@@ -183,6 +218,9 @@ done
 
 # **母数を必ず出す（#757）。「残留 0 本」と「1 本も調べていない」を同じ顔にしない。**
 log "worktree $total 本を調べました: 残留 $residue 本（conflict $conflicts / deletion $deletions / staged $staged_only / dirty $dirty_only）、読めなかったもの $unreadable 本"
+# **index を読めなかった本数も母数として出す（#757）。** **読めていないなら「作業中」の印は
+# HEAD だけで判断しているので、印が無いことを「放置の証拠」として読んではいけない。**
+[[ "$idx_skipped" != "0" ]] && log "そのうち $idx_skipped 本は index の mtime を読めていません（最終更新は HEAD だけ。**印が無いことを放置の証拠にしないでください**）"
 
 # **conflict に分類したツリーの中にも D が在りうる**（今日の rev1032/wt がそれ）。
 # **conflict の数に隠れて D が見えなくなってはいけない**ので、別に数えて出す。

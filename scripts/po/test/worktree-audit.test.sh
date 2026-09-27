@@ -454,3 +454,176 @@ INNER
   assert_contains "$ERR" "worktree 3 本を調べました" "母数は 3 本"
 }
 test_case "audit: index が読めなくても止まらない (#1057)" t_audit_survives_missing_index
+
+# --- 相対パスの index（メインの作業ツリーの形） (#1070 の 2 度目のレビュー) -------------------------
+#
+# **`git rev-parse --git-path index` は、返すパスの形がツリーによって違う**（実測 2026-09-28）:
+#   ```
+#   $ git -C <メインの作業ツリー> rev-parse --git-path index   →  .git/index                  ← **相対**
+#   $ git -C <linked worktree>    rev-parse --git-path index   →  /…/.git/worktrees/N/index   ← 絶対
+#   ```
+#   **手元の 25 本で数えると絶対 24 / 相対 1。相対は 1 本だけ——メインの作業ツリーである。**
+#
+# **そこが守る対象の中心だった**: #1057 の事故 3 件のうち 1 件（`rp/1043w`）は PO 自身の手元で、
+# `worktree-audit.sh` のコメントも「メインの作業ツリーも数え、調べる」と書いている。
+#
+# **上の 3 件（`t_audit_uses_index_mtime_when_head_is_old` ほか）は fake が `echo "$idx"` で
+# 必ず絶対パスを返すので、相対の分岐を一度も通していなかった。** その結果:
+#   - **正しい修正（`$path` 基準で解決する）を当てても 36/36 緑**——**パス解決の意味が
+#     どこにも固定されていなかった。**
+#   - 実害（独立の sandbox で実演。HEAD 3 日前 + index いま = `rev1032/wt` の形）:
+#     ```
+#     linked worktree から走らせた: deletion … 削除が staged で 1 件（staged 1 件）   ← **印が無い**
+#     メインの作業ツリーから      : deletion … — 最終更新は 0 分前。誰かが作業中かもしれません
+#     ```
+#     **同じツリー・同じ状態で、監査を走らせた cwd だけで答えが変わった。**
+#   - 逆向きの偽陽性も実在: cwd に別 repo の `.git/index` が在ると `-f` が真になり、
+#     **無関係な repo の mtime を読む**（実測で `最終更新は -29687988 分前`）。
+#
+# **ここから下の 3 件が、その両方向を固定する。** `$path` を `mktemp -d` の実ディレクトリにして、
+# fake git に `.git/index` のような**相対パス**を返させる。
+
+t_audit_resolves_relative_index_against_worktree() {
+  # **メインの作業ツリーの形**: `rev-parse --git-path index` が `.git/index` を返し、
+  # **HEAD は 3 日前・index は 5 分前**（= `rev1032/wt` の形）。
+  # **相対パスを `$path` 基準で解決していなければ、印が付かない。**
+  local dir now head_ct idx_mt
+  dir=$(mktemp -d)
+  mkdir -p "$dir/.git"; : > "$dir/.git/index"
+  now=9000000
+  head_ct=$(( now - 3 * 86400 ))
+  idx_mt=$(( now - 300 ))
+  touch -d "@$idx_mt" "$dir/.git/index"
+
+  local h; h=$(handler <<EOF
+git_handle() {
+  case "\$*" in
+    "worktree list --porcelain") printf '%s\n' \\
+      "worktree $dir" "branch refs/heads/main" "" ;;
+    "-C $dir status --porcelain") printf '%s\n' "D  gone.ts" ;;
+    "-C $dir diff --cached --name-status") printf 'D\tgone.ts\n' ;;
+    "-C $dir log -1 --format=%ct") echo $head_ct ;;
+    # **本物のメインの作業ツリーがこう返す**（絶対ではなく相対）
+    "-C $dir rev-parse --git-path index") echo ".git/index" ;;
+    *) ;;
+  esac
+}
+handle() { echo '[]'; }
+EOF
+)
+  # **cwd は意図的に別の場所にする**（`$TMP` には `.git/index` が無い）。
+  # **cwd 基準で解決していると、ここで印が消える。**
+  AUDIT_NOW=$now run_script "$h" worktree-audit.sh
+  assert_eq 3 "$STATUS" "D が在るので 3: $ERR"
+  assert_contains "$ERR" "最終更新は 5 分前" "**相対パスを \$path 基準で解決する（cwd 基準ではない）**"
+  assert_contains "$ERR" "作業中かもしれません" "**メインの作業ツリーでも「作業中」の印が付く**"
+  assert_not_contains "$ERR" "index が読めず" "**読めているので、読めなかったとは言わない**"
+  rm -rf "$dir"
+}
+test_case "audit: 相対パスの index を worktree 基準で解決する (#1070)" t_audit_resolves_relative_index_against_worktree
+
+t_audit_ignores_cwd_index_for_relative_path() {
+  # **偽陽性の側**: cwd に**別 repo の** `.git/index` が在っても、そちらを読んではいけない。
+  # 対象のツリーには `.git/index` を**置かない**ので、正しい実装は「読めなかった」と言う。
+  # **cwd 基準で解決する実装は、cwd の index（未来の mtime）を読んで印を付けてしまう。**
+  local dir cwd now head_ct
+  dir=$(mktemp -d); cwd=$(mktemp -d)
+  mkdir -p "$cwd/.git"; : > "$cwd/.git/index"
+  now=9000000
+  head_ct=$(( now - 3 * 86400 ))
+  touch -d "@$(( now - 60 ))" "$cwd/.git/index"   # cwd 側は 1 分前（印が付く値）
+
+  local h; h=$(handler <<EOF
+git_handle() {
+  case "\$*" in
+    "worktree list --porcelain") printf '%s\n' \\
+      "worktree $dir" "branch refs/heads/main" "" ;;
+    "-C $dir status --porcelain") printf '%s\n' "D  gone.ts" ;;
+    "-C $dir diff --cached --name-status") printf 'D\tgone.ts\n' ;;
+    "-C $dir log -1 --format=%ct") echo $head_ct ;;
+    "-C $dir rev-parse --git-path index") echo ".git/index" ;;
+    *) ;;
+  esac
+}
+handle() { echo '[]'; }
+EOF
+)
+  # **サブシェルで囲まないこと**: `fail` は `CURRENT_FAILED=1` を立てるだけなので、
+  # **`( ... )` の中で assert すると失敗が親に伝わらず、テストが何も主張しなくなる**
+  # （変異の分類 4。実測: サブシェル版だと `idx_skipped` を潰す変異が 39/0 で生き残った）。
+  # cwd は元に戻す。
+  local back; back=$PWD
+  cd "$cwd" || { fail "cd \"\$cwd\" に失敗（テストが空振りするので落とす）"; return; }
+  AUDIT_NOW=$now run_script "$h" worktree-audit.sh
+  cd "$back" || { fail "cd で戻れなかった（後続のテストが別の cwd で走る）"; return; }
+  assert_not_contains "$ERR" "作業中かもしれません" "**cwd に在る別 repo の index を読まない（偽陽性）**"
+  assert_not_contains "$ERR" "最終更新は 1 分前" "**cwd 側の mtime を採らない**"
+  # **黙って飛ばさない**: 読めなかったことをその行と母数の両方で言う（#757）
+  assert_contains "$ERR" "index が読めず" "**読めなかったことを、その行で言う**"
+  assert_contains "$ERR" "1 本は index の mtime を読めていません" "**読めなかった本数を母数として出す**"
+  assert_contains "$ERR" "印が無いことを放置の証拠にしないでください" "**印の不在の意味を言う**"
+  rm -rf "$dir" "$cwd"
+}
+test_case "audit: 相対パスを cwd 基準で解決しない（別 repo の index を読まない） (#1070)" t_audit_ignores_cwd_index_for_relative_path
+
+t_audit_still_handles_absolute_index() {
+  # **絶対パスは絶対のまま扱う**（linked worktree の形。手元 25 本のうち 24 本）。
+  # **「相対なら足す」を「常に足す」にする改悪**を殺す: `$path/$abs` は存在しないので
+  # 印が消え、しかも「読めなかった」が立つ。
+  local dir idx now head_ct
+  dir=$(mktemp -d); idx="$dir/wt-index"
+  : > "$idx"
+  now=9000000
+  head_ct=$(( now - 3 * 86400 ))
+  touch -d "@$(( now - 300 ))" "$idx"
+
+  local h; h=$(handler <<EOF
+git_handle() {
+  case "\$*" in
+    "worktree list --porcelain") printf '%s\n' \\
+      "worktree /wt/linked" "branch refs/heads/fix/x" "" ;;
+    "-C /wt/linked status --porcelain") printf '%s\n' " M a.ts" ;;
+    "-C /wt/linked diff --cached --name-status") ;;
+    "-C /wt/linked log -1 --format=%ct") echo $head_ct ;;
+    # **絶対パス**（\$path とは無関係な場所を指す。linked worktree は .git/worktrees/N/index）
+    "-C /wt/linked rev-parse --git-path index") echo "$idx" ;;
+    *) ;;
+  esac
+}
+handle() { echo '[]'; }
+EOF
+)
+  AUDIT_NOW=$now run_script "$h" worktree-audit.sh
+  assert_contains "$ERR" "最終更新は 5 分前" "**絶対パスに \$path を足さない（linked worktree の 24/25）**"
+  assert_not_contains "$ERR" "index が読めず" "絶対パスは読めている"
+  rm -rf "$dir"
+}
+test_case "audit: 絶対パスの index はそのまま扱う (#1070)" t_audit_still_handles_absolute_index
+
+t_audit_never_shows_negative_age() {
+  # **【低】未来のコミット日時で `最終更新は -120 分前` と表示される**（#1070 のレビュー指摘）。
+  # **倒れる向きは安全**（印は付く＝「触るな」側）**ので直すのは表示だけ**。
+  # **印が消えないことも同じテストで見る**——表示を直すついでに守りを弱めていないか。
+  local h; h=$(handler <<'INNER'
+git_handle() {
+  case "$*" in
+    "worktree list --porcelain") printf '%s\n' \
+      "worktree /repo" "branch refs/heads/main" "" \
+      "worktree /wt/future" "" ;;
+    "-C /wt/future status --porcelain") printf '%s\n' " M a.ts" ;;
+    "-C /wt/future diff --cached --name-status") ;;
+    # **AUDIT_NOW より 2 時間先**のコミット日時（時計のずれ・手で打った --date）
+    "-C /wt/future log -1 --format=%ct") echo 9007200 ;;
+    *) ;;
+  esac
+}
+handle() { echo '[]'; }
+INNER
+)
+  AUDIT_NOW=9000000 run_script "$h" worktree-audit.sh
+  assert_not_contains "$ERR" "-120 分前" "**負の「分前」を表示しない**"
+  assert_contains "$ERR" "最終更新は 0 分前" "**未来は 0 分前に丸める**"
+  # **表示を直しても、印（＝「触るな」）は弱めない**
+  assert_contains "$ERR" "作業中かもしれません" "**未来の時刻でも印は付く（倒れる向きは「触るな」側）**"
+}
+test_case "audit: 未来のコミット日時で負の「分前」を出さない (#1070)" t_audit_never_shows_negative_age
