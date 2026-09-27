@@ -335,3 +335,122 @@ INNER
   assert_contains "$ERR" "未 stage の変更が 4 件" "**4 件すべて数える。除外は未追跡の .measure/ .cache/ ちょうどだけ**"
 }
 test_case "audit: .measure/ の除外を広げない (#1057/#787)" t_audit_measure_exception_is_narrow
+
+# --- 目玉: HEAD が古くても index の mtime で「作業中」を見る (#1057) ------------------------------
+#
+# **これがこの道具の一番効く部分である。** 2026-09-27 の `rev1032/wt` は
+# **HEAD が他人のコミットで、動いていたのは index のほうだけ**だった
+# （`UU` が 1 件・index の更新は数分前 = レビュアーが解決の途中）。
+# **HEAD のコミット時刻だけを見ると「放置」と誤判定し、消してよいツリーに見える。**
+#
+# **PR #1070 のレビューで、この経路を潰す変異が 33/33 全緑で通ることが分かった**:
+#   `s{[[ "$idx_mtime" -gt "$last" ]] && last=$idx_mtime}{true}` → passed: 33 failed: 0
+# **index mtime に触れるテストが 1 件も無かった**ので、ここで足す。
+#
+# 仕掛け: `git rev-parse --git-path index` は **git 呼び出しなので fake git で差し替えられる**。
+#   本物のファイルを 1 つ作り、その mtime を `AUDIT_NOW` の 5 分前に置いて、そのパスを返す。
+#   HEAD（`log -1 --format=%ct`）は **3 日前**にしておく。
+
+t_audit_uses_index_mtime_when_head_is_old() {
+  local dir idx now head_ct idx_mt
+  dir=$(mktemp -d); idx="$dir/index"
+  : > "$idx"
+  now=9000000
+  head_ct=$(( now - 3 * 86400 ))   # HEAD は 3 日前（ACTIVE_WINDOW 6h の外）
+  idx_mt=$(( now - 300 ))          # index は 5 分前（ACTIVE_WINDOW の内）
+  # **実ファイルの mtime を epoch で置く**（スクリプトは stat -c %Y で読む）
+  touch -d "@$idx_mt" "$idx"
+
+  local h; h=$(handler <<EOF
+git_handle() {
+  case "\$*" in
+    "worktree list --porcelain") printf '%s\n' \\
+      "worktree /repo" "branch refs/heads/main" "" \\
+      "worktree /wt/live" "" ;;
+    "-C /wt/live status --porcelain") printf '%s\n' "UU b.ts" ;;
+    "-C /wt/live diff --cached --name-status") ;;
+    # **HEAD は 3 日前**——これだけ見ると「放置」に見える
+    "-C /wt/live log -1 --format=%ct") echo $head_ct ;;
+    # **index は 5 分前**——本物のファイルを指す
+    "-C /wt/live rev-parse --git-path index") echo "$idx" ;;
+    *) ;;
+  esac
+}
+handle() { echo '[]'; }
+EOF
+)
+  AUDIT_NOW=$now run_script "$h" worktree-audit.sh
+  assert_eq 0 "$STATUS" "exit status: $ERR"
+  # **index を見ていれば「5 分前」になる。HEAD だけなら 4320 分前（= 3 日）で印が付かない。**
+  assert_contains "$ERR" "作業中かもしれません" "**HEAD が 3 日前でも、index が 5 分前なら作業中と言う**"
+  assert_contains "$ERR" "最終更新は 5 分前" "**index の mtime を採る（HEAD の 3 日前ではない）**"
+  assert_contains "$LOG" "$(printf 'rev-parse\t--git-path\tindex')" "**index の場所は git に訊く（fake で差し替えられる）**"
+  rm -rf "$dir"
+}
+test_case "audit: HEAD が古くても index の mtime で作業中を見る (#1057)" t_audit_uses_index_mtime_when_head_is_old
+
+t_audit_keeps_head_when_index_is_older() {
+  # **逆向きも見る**（`stat` だけでは足りない側）: worktree を作り直した直後は index が古く、
+  # **HEAD のほうが新しい**。**遅いほうを採る**ので、このときは HEAD が勝たなければならない。
+  local dir idx now head_ct idx_mt
+  dir=$(mktemp -d); idx="$dir/index"
+  : > "$idx"
+  now=9000000
+  head_ct=$(( now - 600 ))          # HEAD は 10 分前（ACTIVE_WINDOW の内）
+  idx_mt=$(( now - 5 * 86400 ))     # index は 5 日前（外）
+  touch -d "@$idx_mt" "$idx"
+
+  local h; h=$(handler <<EOF
+git_handle() {
+  case "\$*" in
+    "worktree list --porcelain") printf '%s\n' \\
+      "worktree /repo" "branch refs/heads/main" "" \\
+      "worktree /wt/fresh" "" ;;
+    "-C /wt/fresh status --porcelain") printf '%s\n' " M a.ts" ;;
+    "-C /wt/fresh diff --cached --name-status") ;;
+    "-C /wt/fresh log -1 --format=%ct") echo $head_ct ;;
+    "-C /wt/fresh rev-parse --git-path index") echo "$idx" ;;
+    *) ;;
+  esac
+}
+handle() { echo '[]'; }
+EOF
+)
+  AUDIT_NOW=$now run_script "$h" worktree-audit.sh
+  assert_contains "$ERR" "最終更新は 10 分前" "**index が古いときは HEAD を採る（遅いほうを採る）**"
+  assert_contains "$ERR" "作業中かもしれません" "印は付く"
+  rm -rf "$dir"
+}
+test_case "audit: index が古いときは HEAD を採る（遅いほうを採る） (#1057)" t_audit_keeps_head_when_index_is_older
+
+t_audit_survives_missing_index() {
+  # **index が読めないツリーでも落ちない**（消えた worktree・権限・fake が答えない場合）。
+  # `set -euo pipefail` なので、ここで止まると**残りの worktree を 1 本も調べない。**
+  local h; h=$(handler <<'INNER'
+git_handle() {
+  case "$*" in
+    "worktree list --porcelain") printf '%s\n' \
+      "worktree /repo" "branch refs/heads/main" "" \
+      "worktree /wt/noidx" "" \
+      "worktree /wt/after" "" ;;
+    "-C /wt/noidx status --porcelain") printf '%s\n' " M a.ts" ;;
+    "-C /wt/noidx diff --cached --name-status") ;;
+    "-C /wt/noidx log -1 --format=%ct") echo 1000000 ;;
+    # **存在しないパスを返す**（-f で落ちる）
+    "-C /wt/noidx rev-parse --git-path index") echo "/nonexistent/path/index" ;;
+    "-C /wt/after status --porcelain") printf '%s\n' "D  gone.ts" ;;
+    "-C /wt/after diff --cached --name-status") printf '%s\n' "D	gone.ts" ;;
+    "-C /wt/after log -1 --format=%ct") echo 1000000 ;;
+    *) ;;
+  esac
+}
+handle() { echo '[]'; }
+INNER
+)
+  AUDIT_NOW=9000000 run_script "$h" worktree-audit.sh
+  # **index が読めなくても、その後ろの worktree の D を見逃さない**
+  assert_eq 3 "$STATUS" "index が読めなくても止まらず、後続の D を見つける: $ERR"
+  assert_contains "$ERR" "gone.ts" "**1 本目で止まらず 2 本目まで調べる**"
+  assert_contains "$ERR" "worktree 3 本を調べました" "母数は 3 本"
+}
+test_case "audit: index が読めなくても止まらない (#1057)" t_audit_survives_missing_index
