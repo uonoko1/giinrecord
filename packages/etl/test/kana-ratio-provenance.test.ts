@@ -69,9 +69,24 @@ test("#771 衆院・参院とも、氏名とかなは同じ行の同じ HTML か
     assert.ok(/const cells = (tr\.querySelectorAll\("td"\)|tds\.map)/.test(text), `${label}: cells は同じ tr の td`);
     // **氏名も同じ行の `tds[0]`／`td a` の `<a>` から取る**（かなと同じ 1 行）
     assert.ok(/const \{ name, legalName \} = parseNameCell\(a\.innerHTML\)|const name = normalize\(a\.text\)/.test(text), `${label}: 氏名も同じ行の a から`);
-    // **名簿ページの取得は 1 か所だけ**（かな専用の 2 つ目の取得先が無い）
-    const fetches = [...text.matchAll(/fetchText(Or404)?\(/g)].length;
+    // **名簿ページの取得は 1 か所だけ**（かな専用の 2 つ目の取得先が無い）。
+    //
+    // **綴りではなく「await した取得の呼び出し」を数える**（2026-09-27 に直した）。
+    // **以前は `fetchText(` という綴りを数えていたので、#1037 の訂正で
+    // 検査用の差し替え口（`const get = fetchTextForTest ?? fetchText`）を足して
+    // 呼び出しを `await get(...)` にしたとき、`0 !== 1` で落ちた**——
+    // **守りたい性質（かな用の別系統が無い）は 1 バイトも壊れていないのに、綴りだけで落ちた。**
+    //
+    // **ラッパを 1 つ足して正規表現を満たす形で黙らせないこと**（それだと守りは 1 バイトも増えない。
+    // #1010 の「6 文字の合言葉」と同じ形になる）。**だから判定を意図の側に寄せた。**
+    const fetches = [...text.matchAll(/await (fetchText(Or404)?|get)\(/g)].length;
     assert.equal(fetches, 1, `${label}: 名簿の取得は 1 か所（かな用の別系統は無い）`);
+    // **`get` という別名を使う場合、それが `fetchText` 以外に解決してはいけない**——
+    // **別名を認めた代償を、ここで閉じる。** **別名が 2 つ目の取得先を指せるなら、上の 1 か所は意味を失う。**
+    for (const m of text.matchAll(/const get = ([^;]+);/g)) {
+      assert.match(m[1], /^fetchTextForTest \?\? fetchText(Or404)?$/,
+        `${label}: 取得の別名が fetchText 以外に解決している: ${m[1]}`);
+    }
   }
 });
 
