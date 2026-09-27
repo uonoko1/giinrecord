@@ -226,12 +226,43 @@ test_case "self: この PBI の PR 本文の形（Closes #793）は通る" t_thi
 # **#504 の形: 1 つのファイルの中の検査は、そのファイル自身を守れない。**
 # **スクリプトを消しても CI が緑になるなら、この検査は存在しないのと同じ。**
 t_wired_into_ci() {
-  local wf="$ROOT/.github/workflows/ci.yml"
+  # **#1039: この検査は ci.yml から pr-body.yml に移った。**
+  # ファイル名を 1 つに決め打ちすると、移した瞬間にこの検査は「探しているファイルが無い」で
+  # 落ちるか、あるいは（`cat` が空を返すなら）**何も見ずに落ちる**。
+  # **どのワークフローに在るかではなく「どこか 1 つのワークフローに在ること」を見る。**
+  # 2 つ以上に在るのも異常（同名の job が 2 つできてチェック名が衝突する）なので、
+  # **ちょうど 1 つ**を要求する。
+  local wfs=() f
+  for f in "$ROOT"/.github/workflows/*.yml "$ROOT"/.github/workflows/*.yaml; do
+    [[ -f "$f" ]] || continue
+    grep -q 'bash scripts/ci/pr-closes.sh' "$f" && wfs+=("$f")
+  done
+  assert_eq "1" "${#wfs[@]}" "pr-closes.sh を実行するワークフローはちょうど 1 つ（実際: ${wfs[*]:-なし}）"
+  local wf="${wfs[0]}"
   local body; body=$(cat "$wf")
+  # **#1039 / N1・N2: job が走っただけでは本文を測ったことにならない。**
+  # `step` の `if:` で本文判定だけを飛ばす／`run:` の先頭で `exit 0` する、という壊し方は
+  # **job を success のまま緑にしたうえで、本文を 1 度も測らない。**
+  # `pr-closes.sh` を実行する step に条件が付いていないことを見る。
+  # （この step は job の唯一の実行 step なので、条件が付く正当な理由が無い。）
+  # **job 全体を見る**（本文を測る step だけを見ると、その**前に**条件付き step を挿して
+  # 抜ける形が素通りする——変異 N1 で実際に素通りした）。`pr-closes` job の中に
+  # `if:` が 1 つも無いこと、`github.event.action` で分岐していないことを見る。
+  # **コメント行は落としてから見る**（このファイルの解説コメントに `if:` の字が出てくる）。
+  local job
+  job=$(awk '/^  pr-closes:/{f=1;next} f&&/^  [A-Za-z_]/{f=0} f' "$wf" | sed 's/[[:space:]]*#.*$//')
+  assert_not_contains "$job" "if:" "pr-closes job に if: が無い（付くと job は緑のまま本文を測らない。#1039 N1）"
+  assert_not_contains "$job" "github.event.action" \
+    "本文を測るかどうかをイベント種別で分岐していない（#1039 N1/N2: edited だけ測らない形を塞ぐ）"
+  # `run:` の中で早期に抜けていないこと。`pr-closes.sh` に食わせる行より前に `exit` は無い
+  # （`test -f ... || { ...; exit 1; }` は**在るべき** exit なので、`exit 0` だけを見る）。
+  local before_exec
+  before_exec=$(printf '%s\n' "$job" | sed -n '1,/pr-closes.sh -/p')
+  assert_not_contains "$before_exec" "exit 0" "本文を測る前に exit 0 していない（緑のまま測らない形。#1039 N2）"
   # **「ファイル名がどこかに出てくる」では足りない**（実測: ci.yml から実行の行だけを消す変異を
   # 当てると、`test -f` の行に名前が残るので、その書き方のテストは 19/19 緑のまま通ってしまった）。
   # **実行している行そのもの**を見る。
-  assert_contains "$body" 'bash scripts/ci/pr-closes.sh' "ci.yml がこの検査を実行している"
+  assert_contains "$body" 'bash scripts/ci/pr-closes.sh' "ワークフローがこの検査を実行している"
   # shellcheck disable=SC2016  # ci.yml の中の**文字どおりの**文字列を探している。展開させてはいけない
   assert_contains "$body" '"$PR_BODY" | bash scripts/ci/pr-closes.sh' "PR 本文を渡して実行している"
   # ワークフロー側に「スクリプトが存在すること」の要求があること（stale-base と同じ形、#504）
@@ -244,7 +275,7 @@ t_wired_into_ci() {
   # **API を叩かない**（#793: 既存の CI を遅くしない）。イベントのペイロードから取る。
   assert_not_contains "$body" 'gh pr view' "PR 本文の取得に API を使っていない"
 }
-test_case "wiring: ci.yml がこの検査を呼び、スクリプトの存在を要求している（#504）" t_wired_into_ci
+test_case "wiring: ワークフローがこの検査を呼び、スクリプトの存在を要求している（#504 / #1039）" t_wired_into_ci
 
 echo
 echo "passed: $PASS  failed: $FAIL"
