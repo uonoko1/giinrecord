@@ -79,6 +79,31 @@ export interface VotePdf {
   rows: VoteRow[];
   /** 置けなかったセルの数 */
   unknownCells: number;
+  /**
+   * **行の y が同距離で並んで、どの行のものか決められなかった文字の数**（Issue #1023）。
+   * **0 でなければ、その PDF は「置かれなかった票」を含む**（推定で置いていない）。
+   * **実測（2026-09-25。フィクスチャ 8 本 / `nearest` の呼び出し 12,489 回）で 0。**
+   */
+  tiedItems: number;
+  /**
+   * うち票（○ ●）だったもの（＝その分 `UNKNOWN_CELL` が増える）。
+   *
+   * **実測 0**。**母数は数え方で 2 つある**（#1023 のレビューで指摘された。どちらかを書くのではなく両方書く）:
+   * **フィクスチャ 9 本を通した `nearest` の呼び出しは 11,154 回**だが、
+   * **`rowAssignments` から観測できるのは 11,119 回**——**9 本目（`r0705rinji`）は
+   * 「1 つのセルに票が 2 つ」で例外になり、`rowAssignments` を返さない。**
+   */
+  tiedMarks: number;
+  /**
+   * **票（○ ●）の行き先を決めた入力そのもの**（ページごと。Issue #1023）。
+   *
+   * **検査が「合成した座標」ではなく「本物の座標」に摂動を当てられるようにするためのもの。**
+   * **合成した骨格で測っても「実データでどうか」は何も言えない**（#1002 の滋賀で同じ判断をしている）。
+   *
+   * **`anchors` はそのページの行の基準（議案番号の欄の y）、`markYs` は置こうとした票の y。**
+   * **`parseVotePdf` の出力には使わない**（読むのは検査だけ）。
+   */
+  rowAssignments: { page: number; anchors: number[]; markYs: number[] }[];
 }
 
 /**
@@ -437,6 +462,88 @@ function splitAtBoundary(it: Item, boundary: number): { left: Item; right: Item 
 }
 
 /**
+ * **y が最も近い行（議案番号の欄の y）を返す。同距離で並んだら `undefined`**（Issue #1023）。
+ *
+ * ## なぜタイを `undefined` にするか
+ *
+ * **島根は 11 県で唯一、票（○ ●）の行き先を y の比較だけで決めている。**
+ * 他県は `columnOf` / `bandIndex` で **x の帯へ置き直す**ので、y の丸め誤差は票に届かない（#1002）。
+ * 島根には置き直しが無く、**`nearest(it.y)` の結果がそのまま「どの議員のどの議案か」になる。**
+ *
+ * **同距離のタイになったとき、どちらの行を選ぶかは `reduce` の走査順（＝`anchors` の並び）が決める。**
+ * それは **PDF の中身に何の根拠も無い選び方**であり、外れれば **#569 の重いほう
+ * ——「別人の票が出る」——になる。利用者からは検出できない。
+ * **だから、決められないときは決めない。** 票は置かず、`UNKNOWN_CELL`（記録が出ない側）に落とす。
+ *
+ * ## **「落とせば不明になる」は自明ではなかった**（#1023 のレビューで覆された）
+ *
+ * **最初の実装は「タイ → 票を置かない → `UNKNOWN_CELL`」と書いていたが、それは偽だった。**
+ * **票を置かないと `cells` の組み立てが「○ ● が無い行」の道に落ち、
+ * そこには「その列にラベルの塊が 1 つだけなら、行を覆っていなくてもそれを返す」枝が在った**
+ * （下の `tiedCols` の注記を見よ）。**結果、落とした票が「議⾧」「除斥」「棄権」になり、
+ * `rollcalls.ts` の `MAPPED` を通って `mapped: "投票なし"` として公開されえた**
+ * ——**賛成した実在の議員が「投票していない」と出る。#569 の重いほうそのものである。**
+ *
+ * **実測（総当たり。ref `9dc1f065`）**: **全ページ × 全列で票を落とすと、
+ * フィクスチャ 9 本 990 組のうち 955 組で票が落ち、そのうち 18 セルが `UNKNOWN_CELL` でなくラベルになった。
+ * 本番の 5 本 630 組では 607 組 / 12 セル**（高橋雅彦・中島謙二・山根成二・池田一）。
+ * **`tiedCols` で塞いだ後は 18 → 0 / 12 → 0**（落ちた組の数 955 / 607 は変わらない）。
+ *
+ * **教訓**: **「安全な向きに落とす」と書くときは、落とした先に何が在るかを見ること。**
+ * **実データで 1 度も起きない道は、書いた本人にも見えない。**
+ *
+ * ## 実測（2026-09-25。フィクスチャ 8 本）
+ *
+ * **この規則は、いまのデータの出力を 1 セルも変えない。**
+ *
+ * | 何を測ったか | 母数 | タイ | **2 位との差の最小** |
+ * |---|---:|---:|---:|
+ * | 票（○ ●）の行き先 | **11,154 回**（読めた 8 本ぶんなら **11,119**） | **0** | **16.560 pt** |
+ * | `nearest` の呼び出し全部（票・件名・付託・採決結果・賛否） | **12,489 回** | **0** | **8.160 pt** |
+ *
+ * **丸め誤差の桁は 1e-13 〜 1e-5 pt（#1000 の実測）で、いちばん際どい 8.160 pt とは 5 桁以上離れている。**
+ * **つまり「実データで起きる」ことを示したのではない。** 起きたときに**倒れる向きを固定した**だけである。
+ * **「たまたま安定している」を根拠にしない**ためのもので、`docs/WORKING_AGREEMENT.md` の
+ * 「迷ったら出さない側に倒す」をコードに書き下したもの。
+ *
+ * **等価の判定は `===` で行う**（許容差を入れない）。許容差つきの「ほぼ同距離」は
+ * **非推移的な比較**になり、#1000 で三重を壊したのと同じ形になる。
+ *
+ * ## **`===` が拾うのは「完全な等距離」の 3 分の 2 である**（#1023 のレビューで測られた）
+ *
+ * **「`===` で足りる」と書いていたが、それは実測より強い書きぶりだった。**
+ * **本物の `anchors` から隣り合う 2 つの幾何学的な中点 `(A[i]+A[i+1])/2` を全部作って通すと**
+ * （ref `9dc1f065`、フィクスチャ 8 本）:
+ *
+ * | 母数 | **`undefined`（タイと判定）** | **行を選んだ** |
+ * |---:|---:|---:|
+ * | **301 対** | **200（66.4%）** | **101（33.6%）** |
+ *
+ * **幾何学的には等距離でも、`(A[i]+A[i+1])/2` を double で計算した時点で
+ * 1 位と 2 位の差が 0 にならない対が 3 分の 1 ある**——**差の実測は
+ * 最小 1.42e-14 / 中央 5.68e-14 / 最大 1.14e-13 pt。**
+ *
+ * **つまり「行を選ぶか不明にするか」を 1e-14 pt の差が決めている。**
+ * **その差の向きに PDF 上の根拠は無い。** ただし **101 対とも `anchors` を逆順にしても
+ * 答えは変わらない**（実測 0 対。差は走査順の産物ではなく計算された double の実差なので決定的）。
+ * **そして実データの 1 位 2 位差の最小は 8.15996 pt で、この 1e-14 の領域とは 14 桁離れている。**
+ * **だから「いま壊れる」ではなく、「`===` の守る範囲は完全な等距離の 66% である」が正しい書き方である。**
+ * **許容差を入れれば 100% になるが、非推移の比較を票の道に入れる（#1000）ほうが重い**ので入れない。
+ */
+export function nearestAnchor(anchors: readonly number[], y: number): number | undefined {
+  if (anchors.length === 0) return undefined;
+  let best = anchors[0];
+  let bestD = Math.abs(anchors[0] - y);
+  let tied = false;
+  for (let i = 1; i < anchors.length; i++) {
+    const d = Math.abs(anchors[i] - y);
+    if (d < bestD) { best = anchors[i]; bestD = d; tied = false; }
+    else if (d === bestD) tied = true;
+  }
+  return tied ? undefined : best;
+}
+
+/**
  * 件名の欄を「行ごとのセル」に切り分ける（Issue #866）。
  *
  * **なぜ 1 行ずつ y の近い議案番号に入れてはいけないか。**
@@ -554,7 +661,26 @@ export function splitJoinedMarks(items: readonly Item[], colX: readonly number[]
   return out;
 }
 
-export async function parseVotePdf(bytes: Buffer): Promise<VotePdf> {
+/**
+ * **検査だけが使う、タイを人工的に起こす指定**（Issue #1023 のレビュー）。
+ *
+ * **実データに同距離のタイは 1 件も無い**（`nearest` の呼び出し 12,489 回で 0。上の `nearestAnchor`）。
+ * **だから「タイになったとき何が出るか」は、本物の PDF では 1 度も観測できない。**
+ * **観測できないものを「安全だ」と書いたのが #1023 の PR の誤りだった**——
+ * **実際には 18 セルが `UNKNOWN_CELL` ではなくラベル（議⾧・除斥・棄権）になっていた。**
+ *
+ * **そこで「この (ページ, 列) の票は行が決まらなかったことにする」を外から指定できるようにした。**
+ * **検査がこれを全ページ × 全列に当てて総当たりし、ラベルで埋まる道に落ちないことを固定する。**
+ *
+ * **本番は渡さない**（`undefined` なら振る舞いは 1 ビットも変わらない。
+ * `parseVotePdf(bytes)` の 1 引数の呼び出しは全部そのまま）。
+ */
+export interface DropTiedForTest {
+  /** `"${ページ番号}:${列}"`（例 `"4:18"`）。この列の票は「行が決まらなかった」ものとして落とす。 */
+  pageCol: string;
+}
+
+export async function parseVotePdf(bytes: Buffer, dropForTest?: DropTiedForTest): Promise<VotePdf> {
   const pages = await readPages(bytes);
   if (pages.length === 0) throw new Error("empty PDF");
 
@@ -616,6 +742,11 @@ export async function parseVotePdf(bytes: Buffer): Promise<VotePdf> {
 
   const rows: VoteRow[] = [];
   let unknownCells = 0;
+  // #1023: 行の y が同距離で並んで置けなかった文字（票は UNKNOWN_CELL になる）
+  let tiedItems = 0;
+  let tiedMarks = 0;
+  // #1023: 票の行き先を決めた入力（検査が本物の座標に摂動を当てるため。出力には使わない）
+  const rowAssignments: { page: number; anchors: number[]; markYs: number[] }[] = [];
   let section: string | undefined;
   for (const [pi, page] of pages.entries()) {
     const head = heads[pi];
@@ -663,11 +794,14 @@ export async function parseVotePdf(bytes: Buffer): Promise<VotePdf> {
     // 行の基準: 議案番号の欄（1 議案に 1 つ）
     const anchors = cluster(numItems.map((i) => i.y), 4).sort((a, b) => b - a);
     if (anchors.length === 0) continue;
-    const nearest = (y: number): number => anchors.reduce((best, a) => (Math.abs(a - y) < Math.abs(best - y) ? a : best), anchors[0]);
+    // **同距離のタイは `undefined`**（#1023。上の `nearestAnchor` の docblock を見よ）
+    const nearest = (y: number): number | undefined => nearestAnchor(anchors, y);
     // 行の中心（議案番号の y）が最も近い行へ入れる。件名・採決結果・人数はどれも行の中心に揃っている
     const own = (items: Item[]): Map<number, Item[]> => {
       const map = new Map<number, Item[]>(anchors.map((a) => [a, [] as Item[]]));
-      for (const it of items) map.get(nearest(it.y))!.push(it);
+      // **行が決まらない文字は置かない**（#1023）。置かなければ議案番号・件名・採決結果が空になり、
+      // 下の検査が落とす（＝推定で隣の行へ入れない）。**黙ってどちらかに倒さない。**
+      for (const it of items) { const a = nearest(it.y); if (a !== undefined) map.get(a)!.push(it); else tiedItems++; }
       return map;
     };
     const numByRow = own(numItems);
@@ -714,6 +848,7 @@ export async function parseVotePdf(bytes: Buffer): Promise<VotePdf> {
       // 付託委員会の行が議案の数より少ない（＝付託の無い議案がある）。分けられないので今までどおり近い行へ
       for (const l of refLines) {
         const a = nearest(l[0].y);
+        if (a === undefined) { tiedItems++; continue; } // #1023: 行が決まらなければ置かない（付託委員会が空になり下で落ちる）
         refByRow.get(a)!.push(...l.map((i) => i.str.trim()));
         refYs.get(a)!.push(...l.map((i) => i.y));
       }
@@ -728,11 +863,59 @@ export async function parseVotePdf(bytes: Buffer): Promise<VotePdf> {
     // 「議⾧」「除斥」は縦書き 2 文字の結合セルで、○ ● の無い行をまとめて覆う（議長は複数の議案にわたって議長のまま）。
     // 列ごとに文字を集めておき、その列で ○ ● の無い行すべてにこのラベルを入れる。
     const labelByCol = new Map<number, Item[]>();
+    const markYs: number[] = [];
+    /*
+     * **タイで票を落とした列**（Issue #1023 のレビューで見つかった穴を塞ぐ）。
+     *
+     * **なぜ要るか。** 下の `cells` の組み立ては「`marks` に無い ⇒ ○ ● の無い行 ⇒
+     * その列の結合セル（議⾧・除斥）が覆っている」と読む。**その前提は「票が落ちない」ことに拠っていた。**
+     * **タイで票を落とす道（すぐ下の `a === undefined`）を作ると前提が崩れ、
+     * 落とした票が `hit.length === 0 && blocks.length === 1` の枝でラベルに化ける。**
+     *
+     * **実測（総当たり。ref `9dc1f065`。全ページ × 全列で票を落とす）**:
+     *
+     * | 母数 | 票が落ちた組 | **不明にならずラベルになったセル** |
+     * |---|---:|---:|
+     * | フィクスチャ 9 本・**990 組** | 955 | **18** → **0**（この `tiedCols` で） |
+     * | **本番の 5 本**・**630 組** | 607 | **12** → **0** |
+     *
+     * **本番の 12 件は実在の議員だった**（`○ → 議長` 高橋雅彦 / `○ → 除斥` 中島謙二 /
+     * `○ → 議⾧` 山根成二 / `○ → 除斥` 池田一）。**`rollcalls.ts` の `MAPPED` が
+     * 「議長」「議案と一定の利害関係を有する議員」を `投票なし` に写す**ので、
+     * **賛成した議員が「投票していない」として公開されえた。#569 の重いほうである。**
+     *
+     * **列ごとに持つ（行ごとではない）**——**票の行き先が決まらなかったのだから、
+     * その票がどの行のものだったかも分からない。** **だからその列は 1 行も推定で埋めない。**
+     * **荒いが、倒れる向きは `UNKNOWN_CELL`（記録が出ない側）である。**
+     * **実データでは `tiedCols` は常に空**（タイが 0 件なので）**＝出力は 1 セルも変わらない**（実測）。
+     *
+     * ## **なぜ `hit.length === 0 && blocks.length === 1` の行を消さなかったか**（測って決めた）
+     *
+     * **消すのがいちばん単純だが、消すと「いま読めている記録」が消える。** **実測（ref `9dc1f065`）**:
+     *
+     * | 直し方 | **タイで落ちた票がラベルになるセル**（本番） | **いま読めている票が `不明` になるセル**（本番） |
+     * |---|---:|---:|
+     * | 何もしない（元の PR） | **12** | 0 |
+     * | **その行を消す** | 0 | **261（本番 201）** ← `議長 → 不明` |
+     * | **`tiedCols`（これ）** | **0** | **0** |
+     *
+     * **消すと 261 セル（本番 201）が `議長` から `不明` に落ちる**
+     * （例: `r0606` 第87〜92号 / 中島謙二）——**その 261 セルはタイと無関係で、いま正しく読めている。**
+     * **`tiedCols` は「票が落ちた列だけ」を疑うので、その 261 セルを 1 つも失わずに 12 件を塞ぐ。**
+     * **だから消さずに、落とした列だけラベルを止める形にした。**
+     */
+    const tiedCols = new Set<number>();
     for (const it of splitJoinedMarks(voteItems, colX)) {
       const col = colX.findIndex((x) => Math.abs(it.x - x) < 4);
       if (col < 0) { unknownCells++; continue; }
       if (it.str === "○" || it.str === "●") {
-        const row = markByRow.get(nearest(it.y))!;
+        // **票の行き先が同距離で決まらなければ、この票は置かない**（#1023）。
+        // 置かなければ下の `cells` が `UNKNOWN_CELL` になる（＝記録が出ない側。**別人の票にしない**）。
+        markYs.push(it.y); // #1023: 検査が本物の座標に摂動を当てられるように記録する
+        // **検査だけが通る道**（`dropForTest` を渡さなければ `nearest(it.y)` そのまま）
+        const a = dropForTest?.pageCol === `${pi + 1}:${col}` ? undefined : nearest(it.y);
+        if (a === undefined) { tiedMarks++; tiedItems++; tiedCols.add(col); continue; }
+        const row = markByRow.get(a)!;
         if (row.has(col)) throw new Error(`page ${pi + 1}: two vote marks in one cell (col ${col})`);
         row.set(col, it);
       } else {
@@ -740,6 +923,7 @@ export async function parseVotePdf(bytes: Buffer): Promise<VotePdf> {
         labelByCol.get(col)!.push(it);
       }
     }
+    rowAssignments.push({ page: pi + 1, anchors: [...anchors], markYs });
     // 列ごとのラベルを、ラベルの縦の並び（結合セルのブロック）ごとにまとめる
     const labelBlocks = new Map<number, { text: string; y0: number; y1: number }[]>();
     for (const [col, items] of labelByCol) {
@@ -778,6 +962,9 @@ export async function parseVotePdf(bytes: Buffer): Promise<VotePdf> {
         const mark = marks.get(col);
         if (mark) return mark.str;
         // ○ ● が無い行は、その列の結合セル（議⾧・除斥）が覆っている。行を挟むブロックを選ぶ
+        // **この列でタイで票を落としたなら、ラベルで埋めない**（Issue #1023 のレビューで見つかった。
+        // 下の `labelBlocks` の docblock に実例と母数を書いた）。
+        if (tiedCols.has(col)) { unknownCells++; return UNKNOWN_CELL; }
         const blocks = labelBlocks.get(col) ?? [];
         const hit = blocks.filter((b) => b.y0 - CELL_GAP <= a && a <= b.y1 + CELL_GAP);
         if (hit.length === 1) return hit[0].text;
@@ -798,7 +985,7 @@ export async function parseVotePdf(bytes: Buffer): Promise<VotePdf> {
     if (!notes.some((n) => GICHO_NOTE.test(n))) throw new Error(`cell "${gicho[0]}" appears but the 議⾧ note is missing`);
     for (const c of gicho) legend.set(c, "議長");
   }
-  return { title, members, legend, notes, rows, unknownCells };
+  return { title, members, legend, notes, rows, unknownCells, tiedItems, tiedMarks, rowAssignments };
 }
 
 /* ---------- 議決結果一覧 PDF（議決日を読むためだけに使う） ---------- */
