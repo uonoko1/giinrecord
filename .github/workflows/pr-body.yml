@@ -1,0 +1,85 @@
+name: PR body
+# Issue #793: マージ済み PR 300 件のうち `Closes #N` があるのは 151 件だけだった（実測 2026-09-13。
+# 直近 50 件では 有 28 / 無 22 ＝ 44% が書いていない）。書いていない PR はマージしても Issue が
+# open のまま残り、実際に #763 / #771 が取り残された。#783 で作った scripts/po/board-audit.sh は
+# 「Closes #N を含む PR が MERGED なのに Issue が OPEN」を見る道具だが、本丸 3 件のうち検出できたのは
+# 1 件だけ——残る 2 件は閉じる語を一度も書いていなかった。道具の射程が半分なのは道具が緩すぎるからでは
+# なく PR の側が書いていないからなので、直すのは PR の側。語を緩めて「本文に #N が出るだけ」を拾うのは
+# 間違い（#569。#763 の検索には無関係な PR #450/#698/#461 が引っかかった）。
+#
+# 対応する Issue が本当に無い PR は実在する（作業合意・スプリント文書の更新。PO が 2026-09-13 に 3 本）。
+# それを機械的に赤くすると「赤いのが普通」になって誰も見なくなる——#790 がまさにその状態を扱っている。
+# だから `Closes なし（理由）` という逃げ道がある。ただし理由は省略できない（何も書かずに通せるなら今と同じ）。
+#
+# ── なぜ ci.yml から出したか（Issue #1039）───────────────────────────────────
+# **この検査は PR の本文を読む。だから本文が編集されたら測り直さなければならない。**
+# `ci.yml` の `on: pull_request:` は `types:` を書いていないので GitHub の既定
+# `opened` / `synchronize` / `reopened` だけで動き、**`edited` が入らない**。
+# 本文を直しても走り直さないので、**73 秒前の本文を見たまま赤で固定された**
+# （PR #1025、2026-09-25。PO は本題と無関係な空コミットを積んで回避した）。
+# **逆向きのほうが重い**: 本文から `Closes #N` を**消しても**走り直さないので**緑のまま**残る。
+# 実測（2026-09-27、全 653 PR を GraphQL で走査）: 本文編集のあった 41 件のうち
+# **最後の編集より後に CI の run が 0 件だった PR が 12 件**（12/12 で 0 件）。
+# この向きに実際に落ちた PR は 0 件だった——**「0 件」であって「数えていない」ではない**（#757）。
+#
+# **`ci.yml` に `edited` を足すのではなく、この検査だけを別ワークフローにした。**
+# `ci.yml` に足すと `edited` はタイトル編集でも発火するので、9 分かかる `check` を毎回巻き込む。
+# それを `if: github.event.action != 'edited'` で止めると、**止めた job は「走らない」のではなく
+# `conclusion: skipped` の check run が新しい `started_at` で作られる**（PR #1050 で実測）。
+# `scripts/po/merge-when-green.sh` は `group_by(.name) | map(max_by(.started_at))` で
+# **同名の最新 1 件だけ**を見て `skipped` を `pass` に入れるので、
+# **直前の run で赤かった必須チェックが、本文を 1 文字直すだけで緑に塗り替わる。**
+# 「赤いのに緑に見える」は #1021 のミスマージ 4 件と同じ構造なので、その道は採らなかった。
+#
+# **別ワークフローにしてもチェック名は変わらない**（Actions のチェック名は job 名だけで、
+# ワークフロー名は入らない）。実測: branch protection の必須 4 件は
+# `["check","gitleaks","forbidden-patterns","audit"]` で、そのうち 3 件はすでに `security.yml` にある。
+# **`pr-closes` は必須 4 件に入っていない**（`merge-when-green.sh` の `REQUIRED_CHECKS` は見る）。
+# **だから branch protection の設定変更は要らない。**
+on:
+  pull_request:
+    # **`edited` が本題**（本文・タイトルの編集）。既定の 3 つは `types:` を書くと消えるので必ず並べる
+    # （`types: [edited]` だけにすると PR を開いても走らなくなる = 検査が存在しなくなる）。
+    types: [opened, synchronize, reopened, edited]
+concurrency:
+  # ref ごとに直列化する。**本文を続けて直したときは最後のものだけを測れば足りる**ので
+  # `cancel-in-progress: true` でよい。**`ci.yml` とは group 名が別なので、
+  # 本文編集が `ci.yml` の走っている run（`check` は実測 中央値 531s）を cancel することはない。**
+  # これが同じ group だと必須チェックが cancel されて消える（#1039 で測った: 本文編集 86 回のうち
+  # 39 回（45%）が CI run の実行中に起きていた。created<=編集<=updated で数えた実測）。
+  group: pr-body-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  # 独立した job にしてあるのは stale-base と同じ理由: 10 分の build を待たずに答えが出るべきものだから。
+  # 本文は github.event.pull_request.body（イベントのペイロード）から取るので **API を 1 回も叩かない**。
+  # secret も token も要らないので **fork からの PR でも同じに動く**（forbidden-patterns が
+  # FORBIDDEN_PATTERNS_REQUIRED で fork を特別扱いしているのは secret が要るからで、ここは要らない）。
+  #
+  # **job 名は `pr-closes` のまま変えていない。** チェック名 = job 名なので、
+  # 名前を変えると `merge-when-green.sh` の `REQUIRED_CHECKS` と、その名前で待っている道具が全部ずれる。
+  pr-closes:
+    runs-on: ubuntu-latest
+    # #556: 実測 min 6 / med 8 / max 10s（n=32、2026-09-27）。stale-base（実測 max 13s）と同値の 10 分。
+    # API を叩かず install もしないので、ここが伸びる余地はほぼ無い。
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: PR 本文に Closes #N （または「Issue 無し」の明示）があること (#793)
+        env:
+          # env 経由で渡す。本文をそのまま run: に展開するとシェル差し込みになる（本文は誰でも書ける）。
+          #
+          # **本文を直したあと `gh run rerun` では緑にならない**（2026-09-14、PR #860 で実測）。
+          # ここはイベントのペイロードを読むので、rerun は **その run が作られた時点の本文**を再生する。
+          # **ただし #1039 以降、本文を直せば `edited` イベントで新しい run が起きる**ので、
+          # 空コミットも rerun も要らない（上の `types:` を見ること）。
+          # 押す前に手元で確かめる手順は docs/WORKING_AGREEMENT.md に書いた
+          # （**ここに書くと「CI は API を叩かない」の検査に当たる** ── pr-closes.test.sh の wiring）。
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          set -euo pipefail
+          # #504: 1 つのファイルの中の検査は、そのファイル自身を守れない。スクリプトを消した PR で
+          # この step が no-op になるのを防ぐため、存在の要求はスクリプトの外（ここ）に置く。
+          test -f scripts/ci/pr-closes.sh || { echo "scripts/ci/pr-closes.sh がありません（#793 の検査）"; exit 1; }
+          printf '%s' "$PR_BODY" | bash scripts/ci/pr-closes.sh -
