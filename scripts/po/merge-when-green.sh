@@ -721,6 +721,18 @@ approve_pending_runs() {
 # ——`issue-secrets` は実測 61 PR に出る常連で、かつ REQUIRED/NONREQUIRED のどちらの
 # 一覧にも無い＝**必須扱い**なので、赤にすると**全 PR が永久に止まる。**
 #
+# **変異で確かめた（#1054、`scripts/dev/mutate.sh`。母数は po のテスト 172 件）:**
+#   M1 `max_by(severity)` → `max_by(.started_at)` に戻す                      → 4 件落ちた
+#   M2 `skipped` を pass の一覧から外す（選択肢 B）                            → 4 件落ちた
+#   M3 `severity` を全部 0 にする（重み付けを無効化）                          → 4 件落ちた
+#   M4 `severity` を反転（pass 2 / fail 0）                                    → 5 件落ちた
+#   M5 `group_by(.name) | map(max_by(severity))` を丸ごと消す                  → **1 件だけ**
+#   M6 `pending` の重みを `fail` より高くする                                  → 1 件落ちた
+# **M5 が 1 件しか落ちないのは検査の穴ではない**: 畳まなければ**同名の赤い行がそのまま残る**ので、
+# REQUIRED_RED には入る（＝マージは止まる）。落ちるのは「同名の run は 1 件として数える」だけで、
+# これは**件数のログが嘘になる**という別の害である。**M5 を殺すのはその 1 件の役目**なので、
+# その 1 件を消すと畳む処理が挙動に効かない飾りになる。
+#
 # 作業合意「CI の状態は commit を固定して読む」（2026-09-05）:
 # branch protection が読むのも `commits/<PR の HEAD>/check-runs` なので、これに合わせる。
 fetch_checks() {
