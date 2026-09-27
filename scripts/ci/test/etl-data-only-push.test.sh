@@ -343,6 +343,35 @@ case_japanese_filenames_are_inside_data() {
   assert_contains "$SUM" "の外 | 0" "日本語のファイル名を data/ の外と数えない"
   assert_not_contains "$OUT" "data/ の外" "外に差分があるとは言わない"
 }
+# **`data/` の外に在る日本語のファイル名が、読める形で報告されること。**
+#
+# **M7（クォートだけ剥がして 8 進エスケープは残す）は、上の検査では捕まらない**
+# （レビューの実測: 12/0 緑）。**理由を測った**: `PATHS` の要素は
+#   (1) `$p == "data/"*` の判定
+#   (2) 外に在ったときの報告（`- $p`）
+# にしか使われない。**クォートを剥がせば `data/` で始まるので (1) は通る**——
+# **つまり (1) については M7 は等価変異である。**
+#
+# **しかし (2) は等価ではない。** 外に在るファイルが非 ASCII のとき、
+# **`- "data/…\350\241\206…"` と出て人が読めない。**
+# **「何が外に在るのか」を読めないと、直せない。** そこを要求する。
+case_outside_path_is_readable() {
+  setup
+  (
+    cd "$WORK"
+    mkdir -p docs
+    printf 'x\n' > "docs/日本語の設計.md"
+    printf '{"v":1}\n' > data/meta.json
+    git add -A
+    git switch -q -c data/refresh
+    git_q commit -qm "data: 外に日本語のファイル"
+  )
+  PUSH=no run data/refresh
+  assert_eq 1 "$STATUS" "data/ の外に差分があれば止まる"
+  assert_contains "$OUT" "日本語の設計" "外に在るファイル名が素のまま読める（8 進エスケープではない）"
+}
+test_case "data/ の外の日本語のファイル名が読める形で報告される（M7 を塞ぐ）" case_outside_path_is_readable
+
 test_case "日本語のファイル名を data/ の外と数えない（core.quotePath のエスケープ）" case_japanese_filenames_are_inside_data
 
 test_case "土台を解決できないときに「差分 0 件」で通さない（#757）" case_unresolvable_base_is_not_green
