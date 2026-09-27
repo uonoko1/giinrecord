@@ -31,7 +31,8 @@ jobs:
   resolve:
     runs-on: ubuntu-latest
     # #556 / #1056: 実測値は packages/etl/test/workflow-timeout.test.ts の表が 1 か所で持つ
-    # （ここには「4–13s」と書いてあったが、2026-09-27 の再測で max 45s。数を 2 か所に書くと片方が腐る）。
+    # （ここには「4–13s」と書いてあったが、2026-09-27 の再測では表のほうが大きかった。
+    #  数を 2 か所に書くと片方が腐るので、**再測した値も表にしか書かない**）。
     timeout-minutes: 10
     outputs:
       ref: ${{ steps.released.outputs.ref }}

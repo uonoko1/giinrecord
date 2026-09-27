@@ -23,7 +23,9 @@ name: PR body
 # この向きに実際に落ちた PR は 0 件だった——**「0 件」であって「数えていない」ではない**（#757）。
 #
 # **`ci.yml` に `edited` を足すのではなく、この検査だけを別ワークフローにした。**
-# `ci.yml` に足すと `edited` はタイトル編集でも発火するので、9 分かかる `check` を毎回巻き込む。
+# `ci.yml` に足すと `edited` はタイトル編集でも発火するので、**十数分かかる `check` を毎回巻き込む**
+# （所要時間は packages/etl/test/workflow-timeout.test.ts の表が 1 か所で持つ。#1056: ここには
+#  「9 分」と書いてあったが、2026-09-28 に測り直すと med は 10.5 分だった）。
 # それを `if: github.event.action != 'edited'` で止めると、**止めた job は「走らない」のではなく
 # `conclusion: skipped` の check run が新しい `started_at` で作られる**（PR #1050 で実測）。
 # `scripts/po/merge-when-green.sh` は `group_by(.name) | map(max_by(.started_at))` で
@@ -64,14 +66,16 @@ jobs:
   pr-closes:
     runs-on: ubuntu-latest
     # #556 / #1056: **実測値はここに書かない**（数が 2 か所にあると片方だけ腐る。#1056 で実際に腐った:
-    # ここには「max 10s / 伸びる余地はほぼ無い」と書いてあったが、**同じ 2026-09-27 に測り直すと max 77s** で、
-    # 7.7 倍食い違っていた）。**実測値は packages/etl/test/workflow-timeout.test.ts の表が 1 か所で持つ。**
-    # ここに残すのは負荷で動かない事実だけ: **この job は API を叩かず install もしないので、
-    # やっている仕事そのものは伸びない**（p90 は 9s。step の合計は全件 5〜8s）。**伸びるのは裾**
-    # （max 77s の内訳は #1056 のレビューが測った: 割り当て待ちは 2s、**`started_at` の後・最初の step の
-    #  前に 69 秒**、step 合計 5s）。**この 69 秒は「job の仕事」ではないが「job の時間」である**
-    # ——**`timeout-minutes` はランナーの立ち上がりも数える。** **だから「仕事が軽いから 10 分は多すぎる」
-    # とは読まないこと**（77s 基準の見積りが正しい）。stale-base と同値の 10 分。
+    # ここには「max 10s / 伸びる余地はほぼ無い」と書いてあったが、**同じ 2026-09-27 に測り直すと
+    # 7.7 倍食い違っていた**）。**実測値も max の内訳も packages/etl/test/workflow-timeout.test.ts の
+    # 表が 1 か所で持つ**（min/med/p90/max、`created_at`→`started_at`→最初の step→step 合計 の分解、
+    # 測った日と n つき）。
+    # ここに残すのは負荷で動かない事実と結論だけ:
+    #   ・**この job は API を叩かず install もしないので、やっている仕事そのものは伸びない**
+    #     （step の合計は表を見よ）。**伸びるのは裾**で、その裾はランナーの立ち上がりである。
+    #   ・**`timeout-minutes` はランナーの立ち上がりも数える**（`started_at` の後・最初の step の前の
+    #     空白も算入される）。**だから「仕事が軽いから 10 分は多すぎる」とは読まないこと**
+    #     ——**削る前に表の max を見よ。** stale-base と同値の 10 分。
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
