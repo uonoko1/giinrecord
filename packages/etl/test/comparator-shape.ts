@@ -66,9 +66,47 @@ import ts from "typescript";
  * `a.sessionId < b.sessionId ? 1 : -1` を文字列の同点崩しに使っている。これは正当である**——
  * **条件の両辺が `a` / `b` を入れ替えた鏡なので、入れ替えれば必ず向きが反転する。**
  * **だから「三項を丸ごと禁じる」は既存の正しいコードを殺す。**
- * **代わりに「条件が鏡になっているか」を要求した**（`isAntisymmetricCondition`）。
+ * **代わりに「条件が鏡になっているか」を要求した**（`isMirroredComparison`）。
  * **偽陽性の実測: `etl/src` の比較関数 143 個、リポジトリ全体で 582 個を
  * 旧実装と新実装の両方に通し、判定が変わったものは 0 件**である。
+ *
+ * ## PR #1062 のレビューで、さらに 2 つ見つかった（**どちらも「同じ質の穴」だった**）
+ *
+ * **塞いだはずの B1 が、綴りを変えるだけで素通りしていた**（**実測 2026-09-27**）:
+ *
+ * | # | 綴り | レビュー前 | いま |
+ * |---|---|---|---|
+ * | H1 | `Math.round(a.y/t) < Math.round(b.y/t) ? 1 : -1` | **素通り** | 落とす |
+ * | H1b/c/d | `Math.floor` / `\|0` / `toFixed` 版 | **素通り** | 落とす |
+ * | H6 | `b.y - a.y \|\| (Math.round(a.x/t) < Math.round(b.x/t) ? 1 : -1)` | **素通り** | 落とす |
+ * | H2 | `(b.y - b.y % t) - (a.y - a.y % t) \|\| a.x - b.x` | **素通り** | 落とす |
+ * | H2b | `(b.y / t) * t - (a.y / t) * t \|\| a.x - b.x` | **素通り** | 落とす |
+ *
+ * **H1 の原因**: **`checkExpr` が `hasRounding` を呼ぶのは `-` の枝だけで、
+ * 三項の条件は `hasRounding` を通っていなかった。**
+ * **`isMirroredComparison` は「鏡らしさ」しか見ないので、両辺を同じように丸めれば鏡のまま通る。**
+ *
+ * **H2 はこの検査が扱ってきたどの穴より悪い**——
+ * **`y - y % t` は反対称かつ推移的な「正しい全順序」なので、V8 の契約を破らない。**
+ * **`sort` は落ちず、要素数で結果が変わることも無い。それでいて許容差そのものである。**
+ * **実測（自分で検算した）: y 9 通り × x 3 通りから作った 729 対で反対称の破れ 0、
+ * 19,683 三つ組で推移の破れ 0。それでも `9.5 - 9.5 % 3 = 9` と `9.0 - 9.0 % 3 = 9` で
+ * 同じバケットに潰れ、氏名の前半と後半が丸ごと入れ替わる。**
+ * **他の穴は契約違反なのでいつか結果が揺れて気づける余地があったが、この形にはそれが無い。**
+ *
+ * **`%` は県の比較関数 103 個に 1 つも無い**（実測 0 件）ので丸ごと落とす。
+ * **`*` は丸ごと落とせない**——**`b.year * 100 + b.month - (a.year * 100 + a.month)` が
+ * 佐賀・滋賀・島根の 4 か所で実際に使われている**（実測 4 件）。
+ * **だから「掛ける相手に `/` が在るか」で区別する。**
+ * **追跡下の .ts の比較関数 275 個で、レビュー対応によって新たに落ちたものは 0 件。**
+ *
+ * **振る舞いの側にも 1 ケース足した**（`pdf-row-order.test.ts`）——
+ * **`%` の形は既存のケースの y がバケットの境界に当たらないので 1 件も落ちなかった**
+ * （**期待値が壊れていたからではない。この検査の期待値は手書きのリテラルで、
+ * リポジトリ全体に `.snap` も `toMatchSnapshot` も 0 件**）。
+ * **`y = 599.5 / 597.5`（差 2.0 pt = 許容差の約 24,000 倍）が `t = 3` で同じバケットに落ちる**
+ * ことを使って、**その領域をわざわざ通すケースを置いた。**
+ * **AST 側の `%` 規則を無効化した状態でも、このケースだけで赤くなることを確かめてある**（二重の歯止め）。
  *
  * ## 捕まえられない形（**塞げないと分かっていて残す**）
  *
@@ -81,7 +119,7 @@ import ts from "typescript";
  *   ```
  *   **塞ぐには「`sort` に渡っている配列がどこで作られたか」を追う必要があり、
  *   データフロー解析になる**（この道具の設計＝「1 つの比較関数を構文で見る」の外）。
- *   **県のファイルには `.map(` が 276 か所ある**（実測）ので、
+ *   **県のファイルには `.map(` が 286 か所ある**（実測。grep -o で数えた出現数。`grep -c` は行数なので 276 になる）ので、
  *   **「`.map` の中に丸めが在ったら落とす」にすると丸めと無関係な写しを大量に殺す。**
  * - **比較関数を別ファイルに置いて import する形**（この道具は 1 ファイルずつ見る）。
  *   **ただし `sort(CMP)` のように「識別子を渡す」形は、同じファイルの中に定義があれば追う。
@@ -171,12 +209,71 @@ function isBitwiseTruncation(n: ts.Node): boolean {
   }
 }
 
+/** 部分木のどこかに `/`（除算）があるか（`(y / t) * t` の内側を見るため）。 */
+function hasDivision(n: ts.Node): boolean {
+  if (ts.isBinaryExpression(n) && n.operatorToken.kind === ts.SyntaxKind.SlashToken) return true;
+  let found = false;
+  ts.forEachChild(n, (c) => { if (!found && hasDivision(c)) found = true; });
+  return found;
+}
+
+/**
+ * **算術だけで「行に丸める」形**か（**#1052 のレビュー指摘 2。いちばん悪い穴だった**）。
+ *
+ * **`hasRounding` は名前（`Math.round` など）とビット演算しか見ていなかった**ので、
+ * **次の 2 つは「丸め」と数えられず素通りしていた**（実測。**どちらも `reason: null`**）:
+ *
+ * ```js
+ * xs.sort((a, b) => (b.y - b.y % t) - (a.y - a.y % t) || a.x - b.x);  // 余りを引いて潰す
+ * xs.sort((a, b) => (b.y / t) * t - (a.y / t) * t || a.x - b.x);      // 割って掛けて潰す
+ * ```
+ *
+ * ## **これは他のどの穴より悪い**（**振る舞いの検査にも引っかからない**）
+ *
+ * **`y - y % t` は反対称かつ推移的な「正しい全順序」である**——
+ * **だから V8 の `sort` の契約を破らず、要素数でアルゴリズムが変わっても落ちない。**
+ * **それでいて許容差そのものである。**
+ *
+ * **実測（2026-09-27。自分で検算した）**:
+ * **`9.5 - 9.5 % 3 = 9` と `9.0 - 9.0 % 3 = 9` で同じバケットに潰れる。**
+ * **反対称性は `cmp(a,b) = 30` / `cmp(b,a) = -30` で保たれている。**
+ * **y と x の 9 × 3 = 27 通りの組から作った 729 対で反対称の破れ 0、
+ * 19,683 三つ組で推移の破れ 0**——**完全な全順序である。**
+ * **それでも `y = 9.5 / 9.0`、`x = 50 / 20` の 2 行で、氏名の 2 文字が入れ替わる。**
+ *
+ * **他の穴は「V8 の契約を破る」ので、いつか結果が揺れて気づける余地があった。
+ * この形にはそれが無い**——**黙って別人の氏名が出るだけである**（#569 の重いほう）。
+ * **`sort` を経由しない自前の並べ替え（B8 など）と違い、「塞げないと分かって残した」ものでもなく、
+ * #1052 が気づかずに残していた。** **レビューで指摘され、ここで塞ぐ。**
+ *
+ * ## 何を落とすか（**偽陽性を測ってから決めた**）
+ *
+ * - **`%`（剰余）を含む算術**: **県の比較関数 103 個に `%` は 1 つも無い**（実測 0 件）。
+ *   **丸め以外に比較関数で `%` を使う理由が無いので、丸ごと落とす。**
+ * - **`(… / …) * …` の形**（**除算を含む部分木に掛け算をする**）:
+ *   **`*` を丸ごと落とすことはできない**——
+ *   **`b.year * 100 + b.month - (a.year * 100 + a.month)` が
+ *   佐賀・滋賀・島根（`saga/index.ts`, `shiga/index.ts`, `shimane/index.ts`,
+ *   `shimane/sessions.ts`）の 4 か所で実際に使われている**（実測 grep で 4 件）。
+ *   **これらは除算を含まないので、「掛ける相手に `/` が在るか」で区別できる。**
+ */
+function isArithmeticRounding(n: ts.Node): boolean {
+  if (!ts.isBinaryExpression(n)) return false;
+  // **`%` は丸め**（県の比較関数に実例 0 件）
+  if (n.operatorToken.kind === ts.SyntaxKind.PercentToken) return true;
+  // **`(y / t) * t`**——**割った結果に掛ける形だけを落とす**（素の `year * 100` は通す）
+  if (n.operatorToken.kind === ts.SyntaxKind.AsteriskToken) {
+    return hasDivision(n.left) || hasDivision(n.right);
+  }
+  return false;
+}
+
 /**
  * 部分木のどこかに丸めがあるか（`Math.round(b.y / t) - …` を拾う）。
  * **#1052 で「ビット演算による切り捨て」も丸めとして拾うようにした。**
  */
 function hasRounding(n: ts.Node): boolean {
-  if (isRoundingCall(n) || isBitwiseTruncation(n)) return true;
+  if (isRoundingCall(n) || isBitwiseTruncation(n) || isArithmeticRounding(n)) return true;
   let found = false;
   ts.forEachChild(n, (c) => { if (!found && hasRounding(c)) found = true; });
   return found;
@@ -234,7 +331,14 @@ function normalized(n: ts.Node, sf: ts.SourceFile, ps: Params, swap: boolean): s
  * **条件が反対称と言える形か**（**#1052。ここが `b.y - a.y > t ? 1 : -1` を落とす規則である**）。
  *
  * **`<` / `>` / `<=` / `>=` の両辺が、2 つの引数をそのまま入れ替えた対になっていること**を要求する。
- * **`a.sessionId < b.sessionId` は入れ替えれば `b.sessionId < a.sessionId` になり向きが必ず反転する**ので許す。
+ * **`a.sessionId < b.sessionId` は入れ替えれば `b.sessionId < a.sessionId` になる**ので許す。
+ *
+ * **ただし「必ず向きが反転する」わけではない**（**#1052 のレビュー指摘 7。当初そう書いていたのは誤りだった**）——
+ * **等しいときは `<` がどちらも false になるので、`cmp(a,b)` も `cmp(b,a)` も `-1` を返し、反転しない。**
+ * **つまりこの関数は「反対称かどうか」を判定してはいない。「条件が鏡になっているか」だけを見ている**ので、
+ * **`isMirroredComparison` という名前にしてある**（**`isAntisymmetricCondition` だと次の人を誤らせる**）。
+ * **佐賀の 3 か所では `sessionId` が一意なので実害は無いが、一般には
+ * 「等しい要素の間の順序が入力順で決まる」**（`sort` の安定性に委ねられる）。
  * **`b.y - a.y > t` は右辺が `t`（引数を含まない）なので鏡になっていない**ので落とす——
  * **実測（2026-09-27）: `cmp(a,b)` も `cmp(b,a)` も `-1` を返し、
  * 同じ y の 4 要素 `ABCD` は `DCBA` に並べ替わった。**
@@ -246,7 +350,7 @@ function normalized(n: ts.Node, sf: ts.SourceFile, ps: Params, swap: boolean): s
  * V8 の契約違反としても「同値の扱いが不定」の範囲に収まる。**
  * **ここで落とすべきなのは「等しくない 2 つで向きが反転しない」形であり、それは鏡の検査が押さえる。**
  */
-function isAntisymmetricCondition(cond: ts.Expression, sf: ts.SourceFile, ps: Params): boolean {
+function isMirroredComparison(cond: ts.Expression, sf: ts.SourceFile, ps: Params): boolean {
   let c: ts.Expression = cond;
   while (ts.isParenthesizedExpression(c)) c = c.expression;
   if (!ts.isBinaryExpression(c)) return false;
@@ -259,6 +363,13 @@ function isAntisymmetricCondition(cond: ts.Expression, sf: ts.SourceFile, ps: Pa
     default:
       return false;
   }
+  // **条件の中に丸めがあれば落とす**（**#1052 のレビュー指摘 1。塞いだ B1 と同じ穴だった**）——
+  // **`Math.round(a.y / t) < Math.round(b.y / t) ? 1 : -1` は「鏡」の形をしているが、
+  // 行に丸めてから比べているので許容差そのものである。**
+  // **`checkExpr` が `hasRounding` を呼ぶのは `-` の枝だけで、三項の条件は通っていなかった。**
+  // **実測（2026-09-27）: `cmp(A,D)` も `cmp(D,A)` も `-1`（y = 9.5 / 9.0、t = 3）で、
+  // B1 と同じく反対称でない。** **佐賀の 3 か所は丸めを含まないので、これで死なない**（実測）。
+  if (hasRounding(c.left) || hasRounding(c.right)) return false;
   // **両辺が引数を含むこと**（**片側が閾値だと鏡にならない＝許容差**）
   const usesParam = (n: ts.Node): boolean => normalized(n, sf, ps, false).includes("@");
   if (!usesParam(c.left) || !usesParam(c.right)) return false;
@@ -280,7 +391,7 @@ function isNonZeroTernary(n: ts.Expression, sf: ts.SourceFile, ps: Params): bool
     return ts.isNumericLiteral(t) && Number(t.text) !== 0;
   };
   if (!lit(n.whenTrue) || !lit(n.whenFalse)) return false;
-  return isAntisymmetricCondition(n.condition, sf, ps);
+  return isMirroredComparison(n.condition, sf, ps);
 }
 
 /**
@@ -295,7 +406,7 @@ function checkExpr(n: ts.Expression, sf: ts.SourceFile, ps: Params): string | nu
     if (op === ts.SyntaxKind.MinusToken) {
       // `Math.round(b.y / t) - Math.round(a.y / t)` は文法には合うが、行への丸め＝許容差
       // **#1052 で `parseInt` / `toFixed` / `| 0` / `~~` も丸めとして数えるようにした**
-      if (hasRounding(n)) return "差の中に丸め（Math.round / parseInt / toFixed / `|0` など）がある＝行に丸めている";
+      if (hasRounding(n)) return "差の中に丸め（Math.round / parseInt / toFixed / `|0` / `% t` / `(y/t)*t` など）がある＝行に丸めている";
       return null;
     }
     if (op === ts.SyntaxKind.QuestionQuestionToken) return "`??` で繋いでいる（左が 0 でも右に落ちないので全順序にならない）";
@@ -304,7 +415,7 @@ function checkExpr(n: ts.Expression, sf: ts.SourceFile, ps: Params): string | nu
   if (ts.isConditionalExpression(n)) {
     return isNonZeroTernary(n, sf, ps)
       ? null
-      : "三項で、枝が非ゼロのリテラルでない、または条件が反対称な形（`a.k < b.k`）でない（許容差を書ける形）";
+      : "三項で、枝が非ゼロのリテラルでない、または条件が鏡の形（`a.k < b.k`）でない、または条件の中に丸めがある（許容差を書ける形）";
   }
   return "差（`-`）でも `||` の連鎖でもない式";
 }
