@@ -27,8 +27,11 @@ import { dirname, resolve } from "node:path";
  * 許容リスト（pull_request で走るが意図的に必須にしていない job）は #484/#499 の言う
  * 「allowlist は名指しし、その中身も固定する」形でハードコードする。
  *   ci.yml:stale-base          #536 の検査。#524 のレビューで既に必須外と確認済み
- *   ci.yml:pr-closes           #793 の検査。stale-base と同じく「PR の書き方」を見るもの。
- *                              必須に昇格させるには GitHub 側の branch protection への登録が要る
+ *   pr-body.yml:pr-closes      #793 の検査。stale-base と同じく「PR の書き方」を見るもの。
+ *                              必須に昇格させるには GitHub 側の branch protection への登録が要る。
+ *                              **#1039 で ci.yml から分けた**（本文を編集したら測り直させるため。
+ *                              ci.yml に edited を足すと、止めた job が conclusion: skipped の
+ *                              check run を作り、直前の failure を緑に塗り替える）
  *   ci.yml:docker-web          Issue #541 本文が名指しした例外そのもの
  *   branch-protection.yml:guard  自分自身の検査。paths 限定の pull_request でしか走らない
  *   environment-protection.yml:guard  同上（#661）。paths 限定なので、必須にすると
@@ -155,7 +158,9 @@ const EXEMPT_FROM_REQUIRED: readonly string[] = [
   // GitHub 側の branch protection に同じ名前を登録する必要があり、登録されていない必須チェックは
   // **全 PR を永久に pending にしてマージ不能にする**（環境を触れるのは PO だけ）。
   // 必須に昇格させるなら、GitHub 側の登録と同じ PR でここに移すこと。
-  "ci.yml:pr-closes",
+  // #1039: ci.yml から pr-body.yml に移った。**チェック名（= job 名）は変わっていない**ので
+  // REQUIRED_CHECKS も branch protection も変わらない。ここの鍵だけが変わる。
+  "pr-body.yml:pr-closes",
   "ci.yml:docker-web",
   "branch-protection.yml:guard",
   // #661: branch-protection.yml:guard と同じ理由。paths 限定の pull_request でしか走らないので、
@@ -198,7 +203,6 @@ test("数え上げそのものの検査: allJobs が全 workflow の job を拾�
     "branch-protection.yml:guard",
     "ci.yml:check",
     "ci.yml:docker-web",
-    "ci.yml:pr-closes",
     "ci.yml:stale-base",
     "deploy-data.yml:production",
     "deploy-data.yml:resolve",
@@ -212,6 +216,7 @@ test("数え上げそのものの検査: allJobs が全 workflow の job を拾�
     "local-assemblies.yml:local-assemblies",
     "monitor.yml:production",
     "monitor.yml:staging",
+    "pr-body.yml:pr-closes",
     "release.yml:production",
     "release.yml:released-tag",
     "security-alerts.yml:guard",
@@ -224,7 +229,15 @@ test("数え上げそのものの検査: allJobs が全 workflow の job を拾�
 
 test("数え上げそのものの検査: pull_request トリガーを持つ workflow を正しく識別できている", () => {
   const onPR = [...new Set(allJobs.filter((j) => j.onPullRequest).map((j) => j.file))].sort();
-  assert.deepEqual(onPR, ["branch-protection.yml", "ci.yml", "environment-protection.yml", "security-alerts.yml", "security.yml"]);
+  // #1039: pr-body.yml が増えた（pr-closes を ci.yml から分けた）。
+  assert.deepEqual(onPR, [
+    "branch-protection.yml",
+    "ci.yml",
+    "environment-protection.yml",
+    "pr-body.yml",
+    "security-alerts.yml",
+    "security.yml",
+  ]);
 });
 
 /**
@@ -268,9 +281,9 @@ test("#541 許容リスト（意図的に必須外にしている job）は中�
     [
       "branch-protection.yml:guard",
       "ci.yml:docker-web",
-      "ci.yml:pr-closes", // #793
       "ci.yml:stale-base",
       "environment-protection.yml:guard",
+      "pr-body.yml:pr-closes", // #793 / #1039（ci.yml から分けた）
       "security-alerts.yml:guard", // #786
       "security.yml:issue-secrets", // #940: PR では必ず skipped（実測）。必須にすると全 PR が詰まる
     ].sort(),

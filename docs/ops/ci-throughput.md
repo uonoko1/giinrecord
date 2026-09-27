@@ -266,6 +266,8 @@ merge queue は **N 本をまとめて 1 本の候補ブランチに積んで、
 4. **`concurrency` の group を見直す。** 現行は `ci-${{ github.ref }}` で、
    **merge_group の ref は候補ごとに別**なので衝突はしませんが、
    **キューの候補を `cancel-in-progress` で殺すとキューが詰まります。** 要検討。
+   **`pr-body.yml`（`pr-closes`。#1039 で `ci.yml` から分けた）にも `merge_group:` は要りません**
+   ——`pr-closes` は必須 4 件に入っていないので、キューの候補で報告されなくても詰まりません。
 5. **`scripts/po/merge-when-green.sh` を変える必要があります。**
    キューに入れるのは `gh pr merge --squash --auto` で、**マージは即座には起きません。**
    **現行スクリプトの「緑を確かめた HEAD だけがマージされる」不変条件（#389/#392/#414/#434/#446）は、
