@@ -107,26 +107,41 @@ test("#771 衆院・参院とも、氏名とかなは同じ行の同じ HTML か
       assert.match(m[1].trim(), /^fetchTextForTest \?\? fetchText(Or404)?$/,
         `${label}: 取得の別名が fetchText 以外に解決している: ${m[1].trim()}`);
     }
-    // **`fetchTextForTest` は 3 つの形にだけ現れてよい**——**宣言・代入・`??` の左**。
+    // **差し替え口と別名は、意味の粒度で閉じる**（**逐語では 2 度失敗した**）。
     //
-    // **`if (!fetchTextForTest)` と書けると「本番だけ走る分岐」を作れる**——
-    // **差し替え口を刺したテストはその分岐に入らないので、URL 一覧の検査を丸ごと避けられる。**
-    // **レビューの実測: それで「かなだけ第 2 の取得先から上書きする」が 21/21 緑で通った**
-    // （`ROSTER_PAGES` の検査も 465 名も渡辺 6 名も 1 ページ失敗の検査も、全部無関係に緑）。
-    // **差し替え口を足した時点で生まれた新しい階級なので、ここで閉じる。**
+    // **1 度目（denylist）**: 「条件に使うのを禁じる」形だと `&&` や三項や `Boolean(...)` を
+    // 列挙し続けることになる。**採らなかった。**
     //
-    // **allowlist で書く**（「条件に使うのを禁じる」という denylist だと、`&&` や三項や
-    // `Boolean(...)` を列挙し続けることになる）。
-    const ALLOWED_TEST_HOOK = [
-      /^let fetchTextForTest: typeof fetchText(Or404)? \| undefined;$/,          // 宣言
-      /^export function setFetchTextForTest\(f: typeof fetchText(Or404)? \| undefined\): void \{ fetchTextForTest = f; \}$/, // 代入
-      /^const get = fetchTextForTest \?\? fetchText(Or404)?;$/,                 // `??` の左
+    // **2 度目（行の逐語 allowlist）**: **無害な整形 5 通りすべてで偽陽性になった**（レビューの実測）:
+    // **`setFetchTextForTest` の本体を次の行に開く / 型注釈を展開する / 行末コメントを足す /
+    // `undefined | typeof fetchText` に順序を入れ替える / `export const … = (f) => {…}` に書く。**
+    // **いちばん痛いのは 1 つ目**——**1 行関数を 3 行に開くという普通の整形で落ち、
+    // しかも落ちた行は許されるはずの `fetchTextForTest = f;`（「代入」そのもの）だった。**
+    // **「代入」の許可が 1 行関数の逐語に埋まっていた**のが原因である。
+    //
+    // **そして逐語は緩くもあった**（レビューの実測。**21/21 緑**）——
+    // **`fetchTextForTest` の綴りを 1 バイトも動かさず、別の変数に本番判定を写せる:**
+    // ```
+    // const get = fetchTextForTest ?? fetchText;   ← 3 形の逐語。通る
+    // const isProd = get === fetchText;            ← fetchTextForTest の綴りが無い
+    //   if (isProd) { const mod = await import("../fetch.ts");
+    //                 await mod["fetchText"](…) }  ← ① も通る（直後が `"` で `(` が続かない）
+    // ```
+    // **だから見る対象を「`fetchTextForTest` を含む行」から「`get` に触る行」へ広げる。**
+    // **`get` は取得の別名なので、それを比較や代入に使う形は「本番だけ走る分岐」を作れる。**
+    const HOOK_OK = [
+      /^(let|const|var)\s+fetchTextForTest\b/,                    // 宣言（型注釈は何でもよい）
+      /^fetchTextForTest\s*=\s*f;?$/,                             // 代入（1 行でも 3 行でも）
+      /^export (function|const) setFetchTextForTest\b/,            // 差し替え口の入口
+      /^const get = fetchTextForTest \?\? fetchText(Or404)?;$/,    // `??` の左（ここは逐語で固定する）
+      /^const html = await get\(/,                                // 唯一の取得
     ];
     for (const [i, line] of text.split("\n").entries()) {
-      if (!line.includes("fetchTextForTest")) continue;
       const t = line.trim();
-      assert.ok(ALLOWED_TEST_HOOK.some((re) => re.test(t)),
-        `${label}: 差し替え口が許した 3 形（宣言・代入・?? の左）以外に現れている（${i + 1} 行目）: ${t}`);
+      // **`get` と `fetchTextForTest` に触る行だけを見る**（`byGroup.get(` のようなメソッドは除く）
+      if (!/(?<![.\w$])\bget\b/.test(t) && !t.includes("fetchTextForTest")) continue;
+      assert.ok(HOOK_OK.some((re) => re.test(t)),
+        `${label}: 取得の別名か差し替え口を、許した形以外で使っている（${i + 1} 行目）: ${t}`);
     }
   }
 });
