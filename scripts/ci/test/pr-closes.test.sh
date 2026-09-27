@@ -305,6 +305,25 @@ t_unclosed_run_keeps_last_char() {
 }
 test_case "code-span: 閉じの無い連続の最後の 1 文字を落とさない（x < j - 1 を殺す）" t_unclosed_run_keeps_last_char
 
+# **フェンスの開き行そのものも落とす**（レビューの指摘で足した）。
+#
+# **フェンスの「情報文字列」に閉じる語を書いた形**。**GitHub は lang 属性として読むので何も閉じない:**
+#
+#   $ gh api markdown -X POST -f text='```Closes #500\ncode\n```'
+#   <pre lang="Closes"><code>code</code></pre>        ← #500 は生きている
+#
+# **実測（レビュアー、PO が追試）**: フェンス行の `print ""` を `print line` にすると
+# **30/30 緑のまま、`pr-closes: ok — 閉じる語があります: #500` と言う**（偽の緑）。
+# **#977 が問題にした向き（閉じるつもりのない番号で緑）そのものである。**
+t_fence_info_string_is_not_a_closing_word() {
+  local f="$TMP/fence.md"
+  printf '%s\n' '```Closes #500' 'code' '```' > "$f"
+  set +e; OUT=$(bash "$SCRIPT" "$f" 2>&1); local rc=$?; set -e
+  assert_eq 1 "$rc" "フェンスの情報文字列の閉じる語は拾わない（GitHub は lang 属性として読む）: $OUT"
+  assert_not_contains "$OUT" "#500" "情報文字列の番号を拾ってはいけない"
+}
+test_case "fence: 情報文字列の Closes #N は閉じる語ではない（フェンス行を print line にすると落ちる）" t_fence_info_string_is_not_a_closing_word
+
 t_double_backtick_span_holds_single_backtick() {
   # **閉じは「開きと同じ長さ」でなければならない**（CommonMark と同じ数え方）。
   # `` で開いたスパンは、**中に単独の ` があっても閉じない**——
