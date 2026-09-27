@@ -201,6 +201,28 @@ jobs:
           # （validateDataset は validateLocalAssemblies を内側で呼ぶ厳密な上位集合。理由はテスト本体の docblock）
           grep -q 'validateDataset(DATA)' packages/etl/test/published-data-validate.test.ts || {
             echo "published-data-validate.test.ts が validateDataset を本番 data/ に当てていません"; exit 1; }
+      # #1074: packages/etl/test/commit-trailer-identity.test.ts は `merge-base(origin/main, HEAD)..HEAD`
+      # のコミットメッセージを走査して、`Co-authored-by:` の trailer に誤帰属するアドレスが無いことを見る。
+      # **この checkout は既定の `fetch-depth: 1`** なので、そのままだと `origin/main` も merge-base も
+      # 取れず、**その検査だけが skip になる**（実測: 浅い clone で `skipped 1`、他の 7 件は走る）。
+      # **深さ 1 のまま `main` の先端だけ fetch しても足りない**——`git merge-base` は exit 1 を返す
+      # （実測: 先端を fetch した直後はまだ共通祖先が見えない）。**`--deepen` が要る。**
+      # **全履歴（`fetch-depth: 0`）は要らない**: 枝は main から切るので、深さを少し足せば
+      # merge-base が見える（実測: `--deepen=5` で `merge-base` が exit 0 になり、
+      # 検査が `skipped 1` → `pass 8`（走査 1 commit / アドレス 1 件）に変わった）。
+      # 余裕を見て 50 にしている（枝が main から離れていても届くように）。
+      # **失敗しても止めない**（`|| true`）: ここが落ちて赤くなると、trailer とは無関係な PR まで
+      # 赤になる。**取れなければテストが skip になり、その skip は出力に残る。**
+      #
+      # `actions/checkout@v4` は pull_request では `refs/pull/N/merge` を取るだけなので、
+      # **`refs/remotes/origin/main` はそもそも作られない。** だから先に名指しで fetch する。
+      - name: コミット trailer の検査に merge-base を届かせる (#1074)
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch --quiet --depth=50 origin '+refs/heads/main:refs/remotes/origin/main' || true
+          git fetch --quiet --deepen=50 origin || true
+          git rev-parse --verify --quiet refs/remotes/origin/main || echo "origin/main が取れなかった（#1074 の検査は skip になる）"
+          git merge-base refs/remotes/origin/main HEAD || echo "merge-base が取れなかった（#1074 の検査は skip になる）"
       - run: pnpm test
       - run: pnpm build
         env: { SITE_ORIGIN: "${{ vars.SITE_ORIGIN }}" } # unset → relative URLs (#57); set the repo variable once the domain is decided (#938)

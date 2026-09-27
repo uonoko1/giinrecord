@@ -152,29 +152,40 @@ const git = (...args: string[]): string =>
  *   **author の側は `workflow-commit-identity.test.ts`（workflow の `user.email`）が受け持つ。**
  *   **#1074 の (B)（`etl@` 1 件）はこの経路であり、#1043 で既に閉じている。**
  */
-const addedCommits = (): { shas: string[]; reason?: string } => {
+/**
+ * **走らせないでよい理由は、この 2 つだけ。**
+ *
+ * **「skip」は赤にならないので、理由を増やせば検査は黙って無力化できる。**
+ * **だから理由の集合を逐語で固定する**（`SKIP_REASONS` を広げる変異は下のテストが落とす）。
+ */
+const NO_BASE = "refs/remotes/origin/main が無い";
+const NO_MERGE_BASE = "origin/main と HEAD の merge-base が取れない（浅い checkout）";
+const SKIP_REASONS: readonly string[] = [NO_BASE, NO_MERGE_BASE];
+
+const addedCommits = (): { shas: string[]; reason?: string; mergeBase?: string; head?: string } => {
   let base: string;
   try {
     base = git("rev-parse", "--verify", "--quiet", "refs/remotes/origin/main").trim();
   } catch {
-    return { shas: [], reason: "refs/remotes/origin/main が無い" };
+    return { shas: [], reason: NO_BASE };
   }
-  if (base === "") return { shas: [], reason: "refs/remotes/origin/main が無い" };
+  if (base === "") return { shas: [], reason: NO_BASE };
   // **浅い checkout では merge-base が取れない。** 取れないまま `A..B` を走らせると
   // **git は「B から届く範囲だけ」を返す**ので、母数が落ちて検査が無意味になる。
   let mergeBase: string;
   try {
     mergeBase = git("merge-base", base, "HEAD").trim();
   } catch {
-    return { shas: [], reason: "origin/main と HEAD の merge-base が取れない（浅い checkout）" };
+    return { shas: [], reason: NO_MERGE_BASE };
   }
-  if (mergeBase === "") return { shas: [], reason: "merge-base が空" };
+  if (mergeBase === "") return { shas: [], reason: NO_MERGE_BASE };
+  const head = git("rev-parse", "HEAD").trim();
   const out = git("rev-list", `${mergeBase}..HEAD`).trim();
-  return { shas: out === "" ? [] : out.split("\n") };
+  return { shas: out === "" ? [] : out.split("\n"), mergeBase, head };
 };
 
 test("この枝が足すコミットの trailer に、誤帰属するアドレスが無い", (t) => {
-  const { shas, reason } = addedCommits();
+  const { shas, reason, mergeBase, head } = addedCommits();
   if (reason !== undefined) {
     // **「落ちる」ではなく「明示的に skip」にした理由**:
     // **`pnpm test` を走らせる CI の `check` ジョブは `actions/checkout@v4` の既定
@@ -182,8 +193,20 @@ test("この枝が足すコミットの trailer に、誤帰属するアドレ�
     // `stale-base` ジョブと `security.yml` だけ）。**そこで落とすと、誤帰属が 1 件も無い PR まで
     // 赤になる**——**偽陽性で赤が常態になるのを避ける**（作業合意）。
     // **黙って緑にはしない**: skip は `node --test` の出力と CI のログに残り、
-    // **履歴が読める環境（開発者の手元・`fetch-depth: 0` の枝）では必ず走る。**
+    // **履歴が読める環境（開発者の手元・深さを足した checkout）では必ず走る。**
     // **「0 件だから緑」とは区別がつく形になっている**のが要点である。
+    //
+    // **skip は赤にならないので、「いつも skip」に潰されうる。**
+    // **実測（変異）: `if (reason !== undefined)` を `if (true)` に変えると、
+    // この行が無いときは 7 pass / 0 fail / skipped 1 で生き残った。**
+    // **下の `assert.ok` を足したら 8 pass / 1 fail になった**——
+    // **理由が `undefined` になったところで落ちる。**
+    // **そして CI 側では `ci.yml` の fetch 段が「取れなかった」を echo する**ので、
+    // **ログにも理由が残る。**
+    assert.ok(
+      SKIP_REASONS.includes(reason),
+      `知らない理由で skip しようとしている（検査が黙って無力化されている）: ${reason}`,
+    );
     t.skip(`履歴が読めないので走らせない: ${reason}`);
     return;
   }
@@ -201,10 +224,57 @@ test("この枝が足すコミットの trailer に、誤帰属するアドレ�
       "数字 ID 付きの `<id>+<name>@users.noreply.github.com` にするか、trailer を落とすこと:\n  " +
       bad.join("\n  "),
   );
-  // **母数**: この枝が足したコミット数と、そこから拾ったアドレス数を出す。
-  // **`checked` に下限を置かない**——**trailer を 1 つも書かない PR は 0 が正しい。**
-  // **「走査そのものが空回りしていない」ことは、下の実データのテストが母数ごと固定する。**
+  // **母数（#757）。** **`checked` そのものに下限は置けない**——**trailer を 1 つも書かない PR は
+  // アドレス 0 件が正しい。** **だが「コミットの数」には置ける。**
+  //
+  // **これは変異で見つけた穴である**（#705 の「検算が空回り」と同じ形）。
+  // **実測: `rev-list` の結果を `""` に潰す変異を当てたら 8 pass / 0 fail で生き残った。**
+  // **変異は当たっている（md5 が変わった）。振る舞いも変わっている
+  // （走査が 1 commit → 0 commit）。それでも緑だった**——
+  // **`bad` が空であることしか見ておらず、「見る対象そのものが消えた」ことを誰も見ていなかった。**
+  //
+  // **塞ぎ方**: **HEAD が merge-base と違うなら、範囲は空であってはならない。**
+  // （`merge-base == HEAD` は「枝が base に何も足していない」= main そのものを検査している状態で、
+  // そのときだけ 0 が正しい。）
+  if (mergeBase !== head) {
+    assert.ok(
+      shas.length > 0,
+      `HEAD が merge-base と違うのに走査した範囲が空である（走査が空回りしている）: ` +
+        `merge-base=${mergeBase?.slice(0, 8)} HEAD=${head?.slice(0, 8)}`,
+    );
+  }
   console.log(`[#1074] 枝が足したコミット ${shas.length} 件 / trailer のアドレス ${checked} 件を走査`);
+});
+
+/**
+ * **「走らせない理由」の集合を逐語で固定する。**
+ *
+ * **skip は赤にならない**ので、**理由を 1 つ増やすだけで検査は黙って無力化できる**
+ * （実測: `if (reason !== undefined)` を `if (true)` に潰す変異は **7 pass / 0 fail / skipped 1**
+ * で生き残った。**赤が出ないので、上のテスト自身では捕まえられない**）。
+ * **ここが「その変異を捕まえる唯一の番人」である**——理由が `undefined` や新しい文字列になれば、
+ * 上の `assert.ok(SKIP_REASONS.includes(reason))` が落ちる。
+ *
+ * **2 つの理由はどちらも「履歴が読めない」に限る。**
+ * **「trailer が無い」「アドレスが無い」のような、中身に依存する理由を足してはいけない**
+ * ——それは skip ではなく、検査が通ったということである。
+ */
+test("走らせない理由は「履歴が読めない」2 つだけ（skip で無力化できないようにする）", () => {
+  assert.deepEqual(
+    [...SKIP_REASONS],
+    [
+      "refs/remotes/origin/main が無い",
+      "origin/main と HEAD の merge-base が取れない（浅い checkout）",
+    ],
+    "走らせない理由が増えている（skip は赤にならないので、増やせば検査は黙って死ぬ）",
+  );
+  // **どちらも「履歴が読めない」ことしか言っていない**ことを、語で固定する。
+  for (const r of SKIP_REASONS) {
+    assert.ok(
+      /origin\/main|merge-base/.test(r),
+      `履歴の読めなさ以外を理由に skip しようとしている: ${r}`,
+    );
+  }
 });
 
 /**
