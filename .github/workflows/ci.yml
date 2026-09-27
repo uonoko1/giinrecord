@@ -204,12 +204,12 @@ jobs:
       # #1074: packages/etl/test/commit-trailer-identity.test.ts は `merge-base(origin/main, HEAD)..HEAD`
       # のコミットメッセージを走査して、`Co-authored-by:` の trailer に誤帰属するアドレスが無いことを見る。
       # **この checkout は既定の `fetch-depth: 1`** なので、そのままだと `origin/main` も merge-base も
-      # 取れず、**その検査だけが skip になる**（実測: 浅い clone で `skipped 1`、他の 7 件は走る）。
+      # 取れず、**その検査だけが skip になる**（実測: 浅い clone で `skipped 1`、他の 8 件は走る）。
       # **深さ 1 のまま `main` の先端だけ fetch しても足りない**——`git merge-base` は exit 1 を返す
       # （実測: 先端を fetch した直後はまだ共通祖先が見えない）。**`--deepen` が要る。**
       # **全履歴（`fetch-depth: 0`）は要らない**: 枝は main から切るので、深さを少し足せば
       # merge-base が見える（実測: `--deepen=5` で `merge-base` が exit 0 になり、
-      # 検査が `skipped 1` → `pass 8`（走査 1 commit / アドレス 1 件）に変わった）。
+      # 検査が `skipped 1` → `pass 9`（走査 1 commit / アドレス 1 件）に変わった）。
       # 余裕を見て 50 にしている（枝が main から離れていても届くように）。
       # **失敗しても止めない**（`|| true`）: ここが落ちて赤くなると、trailer とは無関係な PR まで
       # 赤になる。**取れなければテストが skip になり、その skip は出力に残る。**
