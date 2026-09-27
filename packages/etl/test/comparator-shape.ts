@@ -39,13 +39,54 @@ import ts from "typescript";
  * **`Math.round(b.y / t) - Math.round(a.y / t)` は `-` なので文法には合う**——
  * **だから `-` の両辺に「丸めの呼び出し」があるかも別に見る**（下の `roundish`）。
  *
+ * ## #1052 で塞いだ 7 通り（**#1034 のレビュアーが挙げた 8 通りを、1 つずつ再現して測った**）
+ *
+ * **8 通りすべてが実際に素通りした**（**実測 2026-09-27。`comparatorsIn` に直接当て、
+ * `reason === null` か、そもそも 0 件しか返らないことを確かめた。
+ * 「issue に書いてあるから」ではなく自分で再現している**）:
+ *
+ * | # | 綴り | #1034 | #1052 |
+ * |---|---|---|---|
+ * | B1 | `b.y - a.y > t ? 1 : -1` | **素通り（明示的に許していた）** | 落とす |
+ * | B2 | `xs["sort"](cmp)` | **0 件（見つからない）** | 落とす |
+ * | B3 | `Array.prototype.sort.call(xs, cmp)` | **0 件** | 落とす |
+ * | B4 | 同名の安全な定義をファイルの後ろに置く | **素通り** | 落とす（ambiguous） |
+ * | B5 | `(b.y / t) \| 0` / `~~(b.y / t)` | **素通り** | 落とす |
+ * | B6 | `parseInt(String(b.y / t), 10)` | **素通り** | 落とす |
+ * | B7 | `Number((b.y / t).toFixed(0))` | **素通り** | 落とす |
+ * | B8 | 先行する `.map()` の中で丸める | **素通り** | **塞げない（下に残す）** |
+ *
+ * **いちばん悪かったのは B1 である**——**「見落とし」ではなく「間違って許可した」形。**
+ * **`isNonZeroTernary` は「枝が非ゼロのリテラルか」だけを見ていたので、
+ * 条件が `差 > 閾値` でも許していた。** **実測: `cmp(a,b)` も `cmp(b,a)` も `-1` を返し
+ * （反対称でない）、同じ y の 4 要素 `ABCD` は `DCBA` に並べ替わる。**
+ *
+ * **なぜ「0 にならない三項」を許していたのか**（**塞ぐ前に調べた**）:
+ * **佐賀の 3 か所（`saga/index.ts:83,207,208`。実測 grep）が
+ * `a.sessionId < b.sessionId ? 1 : -1` を文字列の同点崩しに使っている。これは正当である**——
+ * **条件の両辺が `a` / `b` を入れ替えた鏡なので、入れ替えれば必ず向きが反転する。**
+ * **だから「三項を丸ごと禁じる」は既存の正しいコードを殺す。**
+ * **代わりに「条件が鏡になっているか」を要求した**（`isAntisymmetricCondition`）。
+ * **偽陽性の実測: `etl/src` の比較関数 143 個、リポジトリ全体で 582 個を
+ * 旧実装と新実装の両方に通し、判定が変わったものは 0 件**である。
+ *
  * ## 捕まえられない形（**塞げないと分かっていて残す**）
  *
  * - **`sort` / `toSorted` を経由しない自前の並べ替え**（挿入ソート・`reduce` など）。
  *   **共有層はこれを振る舞いの検査（`joinVertical`）が押さえるが、県ごとの写しは押さえない。**
+ * - **B8: 比較関数の手前で `.map()` の中で丸める形**（**#1052 で唯一塞げなかった**）:
+ *   ```js
+ *   const rs = xs.map((i) => ({ ...i, y: Math.round(i.y / t) }));
+ *   rs.sort((a, b) => b.y - a.y || a.x - b.x);   // ← 比較関数そのものは完全に正しい
+ *   ```
+ *   **塞ぐには「`sort` に渡っている配列がどこで作られたか」を追う必要があり、
+ *   データフロー解析になる**（この道具の設計＝「1 つの比較関数を構文で見る」の外）。
+ *   **県のファイルには `.map(` が 276 か所ある**（実測）ので、
+ *   **「`.map` の中に丸めが在ったら落とす」にすると丸めと無関係な写しを大量に殺す。**
  * - **比較関数を別ファイルに置いて import する形**（この道具は 1 ファイルずつ見る）。
  *   **ただし `sort(CMP)` のように「識別子を渡す」形は、同じファイルの中に定義があれば追う。
  *   追えなければ `unresolved` として落とす**（＝黙って通らない）。
+ *   **同名の宣言が 2 つ以上あれば `ambiguous` として落とす**（#1052。**スコープは見ていない**）。
  * - **県のディレクトリの外**（`pdf-table.ts` などの共有層）。**そちらは別の 2 つの検査が見る。**
  *
  * ## 倒れる向き（#569）——**「別人の記録が出る」側である**
@@ -82,8 +123,19 @@ export type Comparator = {
   readonly reason: string | null;
 };
 
-/** `Math.round` / `Math.floor` などの「丸め」の呼び出しか（行に丸める＝許容差そのもの）。 */
-const ROUNDING = new Set(["round", "floor", "ceil", "trunc"]);
+/**
+ * **「丸め」の呼び出しの名前**（行に丸める＝許容差そのもの）。
+ *
+ * **#1034 は `Math.*` の 4 つだけを見ていた**が、**#1052 で
+ * `parseInt` / `toFixed` / `toPrecision` が同じことをできると実測した**ので足した
+ * （**`parseInt(String(b.y / t), 10)` と `Number((b.y / t).toFixed(0))` は
+ * どちらも `reason: null` で素通りしていた**）。
+ */
+const ROUNDING = new Set([
+  "round", "floor", "ceil", "trunc",
+  // **#1052 で足した分**（**`Math.` の名前だけを見ていたので当たらなかった**）
+  "parseInt", "toFixed", "toPrecision",
+]);
 
 function isRoundingCall(n: ts.Node): boolean {
   if (!ts.isCallExpression(n)) return false;
@@ -93,51 +145,175 @@ function isRoundingCall(n: ts.Node): boolean {
   return false;
 }
 
-/** 部分木のどこかに丸めの呼び出しがあるか（`Math.round(b.y / t) - …` を拾う）。 */
+/**
+ * **ビット演算による整数への切り捨て**か（**#1052。`Math.*` ではないので名前では当たらない**）。
+ *
+ * **`(b.y / t) | 0` と `~~(b.y / t)` は `Math.trunc` と同じ**——
+ * **どちらも「行に丸めてから差を取る」を書ける**（実測: #1034 はどちらも素通りした）。
+ * **`>> 0` / `>>> 0` / `& -1` / `^ 0` も同じ効果なので一緒に落とす。**
+ *
+ * **偽陽性の心配**: **県のファイルの比較関数 103 個に、ビット演算を使っているものは 1 つも無い**
+ * （実測。`pnpm test` が緑であることで固定している）。
+ */
+function isBitwiseTruncation(n: ts.Node): boolean {
+  if (ts.isPrefixUnaryExpression(n) && n.operator === ts.SyntaxKind.TildeToken) return true;
+  if (!ts.isBinaryExpression(n)) return false;
+  switch (n.operatorToken.kind) {
+    case ts.SyntaxKind.BarToken:
+    case ts.SyntaxKind.AmpersandToken:
+    case ts.SyntaxKind.CaretToken:
+    case ts.SyntaxKind.GreaterThanGreaterThanToken:
+    case ts.SyntaxKind.GreaterThanGreaterThanGreaterThanToken:
+    case ts.SyntaxKind.LessThanLessThanToken:
+      return true;
+    default:
+      return false;
+  }
+}
+
+/**
+ * 部分木のどこかに丸めがあるか（`Math.round(b.y / t) - …` を拾う）。
+ * **#1052 で「ビット演算による切り捨て」も丸めとして拾うようにした。**
+ */
 function hasRounding(n: ts.Node): boolean {
-  if (isRoundingCall(n)) return true;
+  if (isRoundingCall(n) || isBitwiseTruncation(n)) return true;
   let found = false;
   ts.forEachChild(n, (c) => { if (!found && hasRounding(c)) found = true; });
   return found;
 }
 
-/** 0 にならない三項か（`a < b ? 1 : -1`。佐賀の文字列の同点崩しがこの形）。 */
-function isNonZeroTernary(n: ts.Expression): boolean {
+/** 比較関数の 2 つの引数に束縛された識別子の名前（分割代入も展開する）。 */
+type Params = { readonly left: ReadonlySet<string>; readonly right: ReadonlySet<string> };
+
+/** 1 つの引数に束縛される識別子を全部集める（`a` / `{ y: ay, x: ax }` / `[k]` のどれでも）。 */
+function bindingNames(p: ts.ParameterDeclaration | undefined): Set<string> {
+  const out = new Set<string>();
+  if (!p) return out;
+  const walk = (n: ts.Node): void => {
+    if (ts.isIdentifier(n)) { out.add(n.text); return; }
+    if (ts.isBindingElement(n)) { walk(n.name); return; }
+    ts.forEachChild(n, walk);
+  };
+  walk(p.name);
+  return out;
+}
+
+function paramsOf(fn: ts.ArrowFunction | ts.FunctionExpression): Params {
+  return { left: bindingNames(fn.parameters[0]), right: bindingNames(fn.parameters[1]) };
+}
+
+/**
+ * **式を「引数の役割」だけに正規化した綴り**にする。
+ * **`a` に束縛された名前は `@L`、`b` に束縛された名前は `@R` に置き換える**ので、
+ * **`a.sessionId` と `b.sessionId` は `@L.sessionId` / `@R.sessionId` になる。**
+ */
+function normalized(n: ts.Node, sf: ts.SourceFile, ps: Params, swap: boolean): string {
+  let out = "";
+  const emit = (x: ts.Node): void => {
+    if (ts.isIdentifier(x)) {
+      const isL = ps.left.has(x.text);
+      const isR = ps.right.has(x.text);
+      if (isL || isR) { out += (isL !== swap) ? "@L" : "@R"; return; }
+      out += x.text;
+      return;
+    }
+    if (x.getChildCount(sf) === 0) { out += x.getText(sf).replace(/\s+/g, ""); return; }
+    x.forEachChild(emit);
+    // 子を持つノードでも、演算子などのトークンは `forEachChild` に来ないので原文から補う
+    if (ts.isBinaryExpression(x)) out += `#${x.operatorToken.kind}`;
+    if (ts.isPropertyAccessExpression(x)) out += "#.";
+    if (ts.isElementAccessExpression(x)) out += "#[]";
+    if (ts.isCallExpression(x)) out += "#()";
+    if (ts.isPrefixUnaryExpression(x)) out += `#u${x.operator}`;
+  };
+  emit(n);
+  return out;
+}
+
+/**
+ * **条件が反対称と言える形か**（**#1052。ここが `b.y - a.y > t ? 1 : -1` を落とす規則である**）。
+ *
+ * **`<` / `>` / `<=` / `>=` の両辺が、2 つの引数をそのまま入れ替えた対になっていること**を要求する。
+ * **`a.sessionId < b.sessionId` は入れ替えれば `b.sessionId < a.sessionId` になり向きが必ず反転する**ので許す。
+ * **`b.y - a.y > t` は右辺が `t`（引数を含まない）なので鏡になっていない**ので落とす——
+ * **実測（2026-09-27）: `cmp(a,b)` も `cmp(b,a)` も `-1` を返し、
+ * 同じ y の 4 要素 `ABCD` は `DCBA` に並べ替わった。**
+ *
+ * **`<=` / `>=` を許すのは、`@L <= @R ? 1 : -1` が
+ * 「等しいときに 1、逆向きでも 1」＝反対称ではないからではない**——
+ * **確かに等しいときは両方 1 になるので厳密には反対称でない。**
+ * **しかし「等しい 2 つを入れ替えても結果の文字列は変わらない」ので実害が無く、
+ * V8 の契約違反としても「同値の扱いが不定」の範囲に収まる。**
+ * **ここで落とすべきなのは「等しくない 2 つで向きが反転しない」形であり、それは鏡の検査が押さえる。**
+ */
+function isAntisymmetricCondition(cond: ts.Expression, sf: ts.SourceFile, ps: Params): boolean {
+  let c: ts.Expression = cond;
+  while (ts.isParenthesizedExpression(c)) c = c.expression;
+  if (!ts.isBinaryExpression(c)) return false;
+  switch (c.operatorToken.kind) {
+    case ts.SyntaxKind.LessThanToken:
+    case ts.SyntaxKind.GreaterThanToken:
+    case ts.SyntaxKind.LessThanEqualsToken:
+    case ts.SyntaxKind.GreaterThanEqualsToken:
+      break;
+    default:
+      return false;
+  }
+  // **両辺が引数を含むこと**（**片側が閾値だと鏡にならない＝許容差**）
+  const usesParam = (n: ts.Node): boolean => normalized(n, sf, ps, false).includes("@");
+  if (!usesParam(c.left) || !usesParam(c.right)) return false;
+  // **左辺の `a`/`b` を入れ替えたものが右辺と一致すること**
+  return normalized(c.left, sf, ps, true) === normalized(c.right, sf, ps, false);
+}
+
+/**
+ * 0 にならない三項か（`a.k < b.k ? 1 : -1`。佐賀の文字列の同点崩し 3 か所がこの形）。
+ *
+ * **#1034 は「枝が非ゼロのリテラル」しか見ていなかった**ので、
+ * **`b.y - a.y > t ? 1 : -1` を明示的に許していた**（#1052 で実測）。
+ * **#1052 で「条件が反対称な形か」も要求する。**
+ */
+function isNonZeroTernary(n: ts.Expression, sf: ts.SourceFile, ps: Params): boolean {
   if (!ts.isConditionalExpression(n)) return false;
   const lit = (e: ts.Expression): boolean => {
     const t = ts.isPrefixUnaryExpression(e) && e.operator === ts.SyntaxKind.MinusToken ? e.operand : e;
     return ts.isNumericLiteral(t) && Number(t.text) !== 0;
   };
-  return lit(n.whenTrue) && lit(n.whenFalse);
+  if (!lit(n.whenTrue) || !lit(n.whenFalse)) return false;
+  return isAntisymmetricCondition(n.condition, sf, ps);
 }
 
 /**
  * 比較の**式**が allowlist の文法に合うか。合わなければ理由を返す。
  * 文法: `E := E - E | E || E | (E) | 非ゼロ三項 | 丸めを含まない任意の算術`
  */
-function checkExpr(n: ts.Expression): string | null {
-  if (ts.isParenthesizedExpression(n)) return checkExpr(n.expression);
+function checkExpr(n: ts.Expression, sf: ts.SourceFile, ps: Params): string | null {
+  if (ts.isParenthesizedExpression(n)) return checkExpr(n.expression, sf, ps);
   if (ts.isBinaryExpression(n)) {
     const op = n.operatorToken.kind;
-    if (op === ts.SyntaxKind.BarBarToken) return checkExpr(n.left) ?? checkExpr(n.right);
+    if (op === ts.SyntaxKind.BarBarToken) return checkExpr(n.left, sf, ps) ?? checkExpr(n.right, sf, ps);
     if (op === ts.SyntaxKind.MinusToken) {
       // `Math.round(b.y / t) - Math.round(a.y / t)` は文法には合うが、行への丸め＝許容差
-      if (hasRounding(n)) return "差の中に丸め（Math.round など）がある＝行に丸めている";
+      // **#1052 で `parseInt` / `toFixed` / `| 0` / `~~` も丸めとして数えるようにした**
+      if (hasRounding(n)) return "差の中に丸め（Math.round / parseInt / toFixed / `|0` など）がある＝行に丸めている";
       return null;
     }
     if (op === ts.SyntaxKind.QuestionQuestionToken) return "`??` で繋いでいる（左が 0 でも右に落ちないので全順序にならない）";
     return `許していない演算子 ${ts.tokenToString(n.operatorToken.kind) ?? op}`;
   }
   if (ts.isConditionalExpression(n)) {
-    return isNonZeroTernary(n) ? null : "三項で、枝が非ゼロのリテラルではない（近ければ同値、を書ける形）";
+    return isNonZeroTernary(n, sf, ps)
+      ? null
+      : "三項で、枝が非ゼロのリテラルでない、または条件が反対称な形（`a.k < b.k`）でない（許容差を書ける形）";
   }
   return "差（`-`）でも `||` の連鎖でもない式";
 }
 
 /** 比較関数の**本体**が allowlist の文法に合うか。 */
-function checkBody(fn: ts.ArrowFunction | ts.FunctionExpression): string | null {
+function checkBody(fn: ts.ArrowFunction | ts.FunctionExpression, sf: ts.SourceFile): string | null {
+  const ps = paramsOf(fn);
   const body = fn.body;
-  if (!ts.isBlock(body)) return checkExpr(body);
+  if (!ts.isBlock(body)) return checkExpr(body, sf, ps);
   // ブロック本体は `return <式>;` 1 つだけを許す（`if` で早期 return する形を落とす）
   const stmts = body.statements.filter((s) => !ts.isEmptyStatement(s));
   if (stmts.length !== 1) return `本体が文 ${stmts.length} 個（許すのは \`return <式>;\` 1 つだけ。if で早期 return する形は許容差を書けるので落とす）`;
@@ -147,21 +323,105 @@ function checkBody(fn: ts.ArrowFunction | ts.FunctionExpression): string | null 
   // 下の `checkExpr` が「差でも `||` でもない式」として落とすから**である。
   // **二重になっているだけで、無効な行ではない**（**`checkExpr` の既定を通す側に倒されたときの保険**）。
   if (!ts.isReturnStatement(only) || !only.expression) return "本体の唯一の文が `return <式>;` ではない";
-  return checkExpr(only.expression);
+  return checkExpr(only.expression, sf, ps);
 }
 
-/** 同じファイルの中で、識別子に束縛された比較関数を探す（`sort(CMP)` を追う）。 */
-function resolveLocal(sf: ts.SourceFile, name: string): ts.ArrowFunction | ts.FunctionExpression | null {
-  let out: ts.ArrowFunction | ts.FunctionExpression | null = null;
+/**
+ * 同じファイルの中で、識別子に束縛された比較関数を探す（`sort(CMP)` を追う）。
+ *
+ * **#1034 はファイル全体を歩いて、同名が見つかるたびに上書きしていた**ので、
+ * **「最後に出てきた定義」が勝っていた**（#1052 で実測）:
+ *
+ * ```js
+ * function f(){ const CMP = (a, b) => Math.abs(a.y - b.y) <= t ? 0 : b.y - a.y; xs.sort(CMP); }
+ * function g(){ const CMP = (a, b) => b.y - a.y || a.x - b.x; ys.sort(CMP); }
+ * // → #1034 では 2 件とも `reason: null`（素通り）。危険な側が安全な側に隠された
+ * ```
+ *
+ * **つまり「同名の安全な定義をファイルの後ろに置く」だけで検査を黙って無効化できた。**
+ * **allowlist を騙せるので、#1008 が直した「denylist の列挙漏れ」より質が悪い。**
+ *
+ * **どう直したか**: **見つかった宣言を全部集め、2 つ以上あったら
+ * 「どれを指しているか決められない」として `ambiguous` を返す**（**#569 の
+ * 「分からないものは通さない」側に倒す**）。
+ * **スコープの解決そのものはやらない**——
+ * **`ts.createSourceFile` だけでは束縛を解決できず、`ts.Program` を作ると
+ * 検査が型解決に依存して遅くなるためである。**
+ * **同名が 1 つだけなら今までどおり追う**（**県のファイルの実在する `sort(CMP)` は落とさない**）。
+ */
+type Resolved =
+  | { readonly kind: "fn"; readonly fn: ts.ArrowFunction | ts.FunctionExpression }
+  | { readonly kind: "none" }
+  | { readonly kind: "ambiguous"; readonly count: number };
+
+function resolveLocal(sf: ts.SourceFile, name: string): Resolved {
+  const found: (ts.ArrowFunction | ts.FunctionExpression)[] = [];
+  let sameNameDecls = 0;
   const walk = (n: ts.Node): void => {
-    if (ts.isVariableDeclaration(n) && ts.isIdentifier(n.name) && n.name.text === name && n.initializer) {
+    if (ts.isVariableDeclaration(n) && ts.isIdentifier(n.name) && n.name.text === name) {
+      sameNameDecls++;
       const init = n.initializer;
-      if (ts.isArrowFunction(init) || ts.isFunctionExpression(init)) out = init;
+      if (init && (ts.isArrowFunction(init) || ts.isFunctionExpression(init))) found.push(init);
     }
+    // **`function CMP(a, b) { … }` の宣言も「同名」として数える**
+    // （**関数宣言で影を作って、変数の側の判定を隠すのを防ぐ**）。
+    //
+    // **この 1 行を消しても検査は赤くならない**（#1052 で実測。**等価変異である**）——
+    // **`found` に入るのはアロー関数と関数式だけで、関数宣言は最初から入らない**ので、
+    // **「安全な関数宣言」が「危険な const」の判定を置き換えることは、この行が無くても起きない**
+    // （**実測: 安全な `function CMP` ＋ 危険な `const CMP` は、この行を消しても
+    //   `三項で、枝が非ゼロのリテラルでない…` として落ちる。理由が変わるだけである**）。
+    // **残すのは、`found` に関数宣言を入れるように変えたときの保険**である。
+    if (ts.isFunctionDeclaration(n) && n.name && n.name.text === name) sameNameDecls++;
     ts.forEachChild(n, walk);
   };
   walk(sf);
-  return out;
+  if (sameNameDecls > 1) return { kind: "ambiguous", count: sameNameDecls };
+  const only = found[0];
+  return only ? { kind: "fn", fn: only } : { kind: "none" };
+}
+
+/**
+ * **`sort` / `toSorted` の「呼び出し方」を見つける**（**#1052**）。
+ *
+ * **#1034 は `ts.isPropertyAccessExpression`（`xs.sort(...)`）だけを見ていた**ので、
+ * **次の 4 通りは「並べ替え」と気づかれず、`comparatorsIn` が 0 件を返していた**（実測）:
+ *
+ * | 綴り | #1034 |
+ * |---|---|
+ * | `xs["sort"](cmp)` | **0 件（見つからない）** |
+ * | `xs["toSorted"](cmp)` | **0 件** |
+ * | `Array.prototype.sort.call(xs, cmp)` | **0 件** |
+ * | `Array.prototype.sort.apply(xs, [cmp])` | **0 件** |
+ *
+ * **`0 件` は「違反が無い」と区別できない**ので、**検査としては素通りと同じである。**
+ *
+ * **返すのは「メソッド名」と「比較関数が何番目の引数か」**
+ * （**`call` は第 1 引数が `this` なので、比較関数は 2 番目**）。
+ */
+const SORT_METHODS = new Set(["sort", "toSorted"]);
+
+function sortCallOf(n: ts.CallExpression, sf: ts.SourceFile): { method: string; argIndex: number; spread: boolean } | null {
+  const e = n.expression;
+  // `xs.sort(cmp)` / `xs.toSorted(cmp)`
+  if (ts.isPropertyAccessExpression(e) && SORT_METHODS.has(e.name.text)) return { method: e.name.text, argIndex: 0, spread: false };
+  // **`xs["sort"](cmp)`**（**文字列リテラルの添字**）
+  if (ts.isElementAccessExpression(e) && e.argumentExpression && ts.isStringLiteralLike(e.argumentExpression)
+      && SORT_METHODS.has(e.argumentExpression.text)) {
+    return { method: e.argumentExpression.text, argIndex: 0, spread: false };
+  }
+  // **`….sort.call(xs, cmp)` / `….sort.apply(xs, [cmp])`**（**`this` を差し替える形**）
+  if (ts.isPropertyAccessExpression(e) && (e.name.text === "call" || e.name.text === "apply")) {
+    const inner = e.expression;
+    const innerName = ts.isPropertyAccessExpression(inner) ? inner.name.text
+      : ts.isElementAccessExpression(inner) && inner.argumentExpression && ts.isStringLiteralLike(inner.argumentExpression)
+        ? inner.argumentExpression.text : null;
+    if (innerName && SORT_METHODS.has(innerName)) {
+      return { method: `${innerName}.${e.name.text}`, argIndex: 1, spread: e.name.text === "apply" };
+    }
+  }
+  void sf;
+  return null;
 }
 
 /**
@@ -172,20 +432,27 @@ export function comparatorsIn(fileName: string, code: string): Comparator[] {
   const sf = ts.createSourceFile(fileName, code, ts.ScriptTarget.ESNext, true);
   const out: Comparator[] = [];
   const walk = (n: ts.Node): void => {
-    if (ts.isCallExpression(n) && ts.isPropertyAccessExpression(n.expression)) {
-      const method = n.expression.name.text;
-      if (method === "sort" || method === "toSorted") {
-        const arg = n.arguments[0];
+    if (ts.isCallExpression(n)) {
+      const call = sortCallOf(n, sf);
+      if (call) {
+        let arg: ts.Expression | undefined = n.arguments[call.argIndex];
+        // **`apply` は比較関数が配列リテラルの中に入る**（`sort.apply(xs, [cmp])`）
+        if (arg && call.spread && ts.isArrayLiteralExpression(arg)) arg = arg.elements[0];
         if (arg) {
           const line = sf.getLineAndCharacterOfPosition(arg.getStart(sf)).line + 1;
           const text = arg.getText(sf).replace(/\s+/g, " ");
-          let fn: ts.ArrowFunction | ts.FunctionExpression | null = null;
-          if (ts.isArrowFunction(arg) || ts.isFunctionExpression(arg)) fn = arg;
-          else if (ts.isIdentifier(arg)) fn = resolveLocal(sf, arg.text);
-          const reason = fn
-            ? checkBody(fn)
-            : "比較関数が同じファイルの中で見つからない（unresolved。追えないものは通さない）";
-          out.push({ method, line, text, reason });
+          let reason: string | null;
+          if (ts.isArrowFunction(arg) || ts.isFunctionExpression(arg)) reason = checkBody(arg, sf);
+          else if (ts.isIdentifier(arg)) {
+            const r = resolveLocal(sf, arg.text);
+            reason = r.kind === "fn" ? checkBody(r.fn, sf)
+              : r.kind === "ambiguous"
+                ? `同名の宣言が ${r.count} 個あり、どれを指しているか決められない（ambiguous。スコープは見ていないので通さない）`
+                : "比較関数が同じファイルの中で見つからない（unresolved。追えないものは通さない）";
+          } else {
+            reason = "比較関数が同じファイルの中で見つからない（unresolved。追えないものは通さない）";
+          }
+          out.push({ method: call.method, line, text, reason });
         }
       }
     }

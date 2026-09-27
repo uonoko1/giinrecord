@@ -359,6 +359,15 @@ test("#999 #1008 射程: 旧 denylist を素通りした綴り 16 通りを、�
     `xs.sort((a, b) => b.year * 100 + b.month - (a.year * 100 + a.month) || (a.sessionId < b.sessionId ? 1 : -1));`,
     `xs.sort((a, b) => b[1] - a[1] || b[0] - a[0]);`,
     `xs.sort((a, b) => { return b.y - a.y || a.x - b.x; });`,
+    // **#1052 で足した経路の「正しい形」**（**塞いだ代わりに正しいコードを殺していないこと**）
+    // **`apply` の配列リテラルを開けていないと、ここが `unresolved` になって偽陽性になる**
+    `Array.prototype.sort.apply(xs, [(a, b) => b.y - a.y || a.x - b.x]);`,
+    `Array.prototype.sort.call(xs, (a, b) => b.y - a.y || a.x - b.x);`,
+    `xs["sort"]((a, b) => b.y - a.y || a.x - b.x);`,
+    // **分割代入した引数で、鏡になっている三項**（**引数の束縛名を集めていないと落ちて偽陽性になる**）
+    `xs.sort(({ id: ai }, { id: bi }) => ai < bi ? 1 : -1);`,
+    // **佐賀の 3 か所が実際に使っている形**（`saga/index.ts:83,207,208`。**実測 grep で 3 件**）
+    `xs.sort((a, b) => key(b.sessionId) - key(a.sessionId) || (a.sessionId < b.sessionId ? 1 : -1));`,
   ];
   for (const code of good) {
     const found = comparatorsIn("g.ts", code);
@@ -367,6 +376,146 @@ test("#999 #1008 射程: 旧 denylist を素通りした綴り 16 通りを、�
   }
   // **比較関数を渡さない `sort()` は対象にしない**（文字列の既定順。許容差を書けない）
   assert.deepEqual(comparatorsIn("n.ts", `xs.sort();`), []);
+});
+/**
+ * **#1034 の allowlist を素通りする 7 通りを塞いだことを固定する**（Issue #1052）。
+ *
+ * **#1034 のレビュアーが 8 通りを挙げ、#1052 で 1 つずつ再現したところ 8 通りすべてが素通りした**
+ * （**実測 2026-09-27。`comparatorsIn` に直接当てて、`reason` が `null` か、
+ * そもそも比較関数として見つからない（0 件）ことを確かめた**）。
+ *
+ * **いちばん悪いのは 1 番目**——**`isNonZeroTernary` が「0 にならない三項」として
+ * 明示的に許していた**が、**条件が「差と閾値の比較」だと反対称ではない**:
+ *
+ * ```js
+ * const cmp = (a, b) => b.y - a.y > t ? 1 : -1;
+ * cmp(a, b) === -1 && cmp(b, a) === -1   // ← 両方 -1。反対称でない（実測）
+ * ```
+ *
+ * **同じ y の 4 要素 `ABCD` を `t = 3` で並べ替えると `DCBA` になる**（実測。
+ * **Issue #1052 は `CBAD` と書いていたが、要素数で V8 の経路が変わるので綴りは違う。
+ * 「並べ替わる」ことは同じ**）。
+ *
+ * ## なぜ「0 にならない三項」を許していたのか（**塞ぐ前に調べた**）
+ *
+ * **佐賀の 3 か所が実際にこの形を使っている**（`saga/index.ts:83,207,208`。実測 grep で 3 件）:
+ *
+ * ```js
+ * targets.sort((a, b) => b.year * 100 + b.month - (a.year * 100 + a.month) || (a.sessionId < b.sessionId ? 1 : -1));
+ * ```
+ *
+ * **これは文字列の同点崩しで、正当である**——**`a.sessionId < b.sessionId` は
+ * `a` と `b` を鏡に置いた関係演算なので、入れ替えれば必ず向きが反転する（反対称）。**
+ * **だから「三項を丸ごと禁じる」は既存の正しいコードを殺す。**
+ * **代わりに「条件が反対称と言える形か」を見る**——
+ * **`<` / `>` / `<=` / `>=` の両辺が、`a` と `b` をそのまま入れ替えた対になっていること**を要求する。
+ * **`b.y - a.y > t` は右辺が `t`（`a`/`b` を含まない）なので鏡になっていない＝落とす。**
+ *
+ * ## 塞げなかった 1 通り（**#1022 / #1008 と同じ向きで、実例つきで残す**）
+ *
+ * **先行する `.map()` の中で丸めてから、素の差で並べる形**は塞げない（下の検査で固定する）。
+ */
+test("#1052 射程: #1034 の allowlist を素通りしていた 7 通り（13 の綴り）を落とす", () => {
+  const mutants: [string, string][] = [
+    // **B1. 明示的に許していた形**（`isNonZeroTernary`）。**反対称でないので並べ替える**
+    ["B1 差と閾値を比べる三項（許容差そのもの）", `xs.sort((a, b) => b.y - a.y > t ? 1 : -1);`],
+    ["B1' Math.abs と閾値を比べる三項", `xs.sort((a, b) => Math.abs(a.y - b.y) <= t ? 1 : -1);`],
+    // **B2/B3. そもそも「並べ替え」と気づいていなかった形**
+    ["B2 添字で sort を呼ぶ", `xs["sort"]((a, b) => Math.abs(a.y - b.y) <= t ? 0 : b.y - a.y);`],
+    ["B2' 添字で toSorted を呼ぶ", `xs["toSorted"]((a, b) => Math.abs(a.y - b.y) <= t ? 0 : b.y - a.y);`],
+    ["B3 Array.prototype.sort.call", `Array.prototype.sort.call(xs, (a, b) => Math.abs(a.y - b.y) <= t ? 0 : b.y - a.y);`],
+    ["B3' Array.prototype.sort.apply", `Array.prototype.sort.apply(xs, [(a, b) => Math.abs(a.y - b.y) <= t ? 0 : b.y - a.y]);`],
+    // **B5〜B7. 丸めのヒューリスティックが `Math.*` の名前しか見ていなかった**
+    ["B5 |0 で切り捨てる", `xs.sort((a, b) => ((b.y / t) | 0) - ((a.y / t) | 0) || a.x - b.x);`],
+    ["B5' ~~ で切り捨てる", `xs.sort((a, b) => ~~(b.y / t) - ~~(a.y / t) || a.x - b.x);`],
+    ["B6 parseInt で切り捨てる", `xs.sort((a, b) => parseInt(String(b.y / t), 10) - parseInt(String(a.y / t), 10) || a.x - b.x);`],
+    ["B7 toFixed で丸める", `xs.sort((a, b) => Number((b.y / t).toFixed(0)) - Number((a.y / t).toFixed(0)) || a.x - b.x);`],
+    // **「鏡の照合」だけが捕まえる形**（**両辺が引数を含むので「両辺が引数を含むこと」では落ちない**）。
+    // **`a.y < b.y + 3 ? 1 : -1` は実測で `cmp(P,Q)` も `cmp(Q,P)` も `1`**（**反対称でない**）
+    ["B1b 片側に閾値を足した三項（鏡でない）", `xs.sort((a, b) => a.y < b.y + 3 ? 1 : -1);`],
+    // **左右で別のプロパティを見る三項**（**実測: 4 要素で入力順により `ADCB` / `ABCD` に割れる**）
+    ["B1c 左右で別のプロパティを比べる三項", `xs.sort((a, b) => a.y < b.x ? 1 : -1);`],
+    // **「両辺が引数を含むこと」だけが捕まえる形**（**両辺が同一なので鏡の照合は通ってしまう**——
+    // **実測: この検査を外すと `reason: null` になる。比較関数が定数 `-1` を返す＝並べ替えが任意になる**）
+    ["B1d 両辺が引数を含まない三項（定数を返す比較）", `xs.sort((a, b) => t < t ? 1 : -1);`],
+    // **分割代入した引数でも、閾値の三項は落とすこと**
+    // （**引数の束縛名を集めていないと `@L` / `@R` に写せず、鏡の照合が効かなくなる**）
+    ["B1e 分割代入 + 閾値の三項", `xs.sort(({ y: ay }, { y: by }) => by - ay > t ? 1 : -1);`],
+    // **分割代入の「プロパティ名」を引数の束縛名と混同しない**
+    // （**`{ y: ay }` の `y` は束縛名ではない。混ぜると、外側の変数 `y` / `x` が
+    //   引数扱いになって鏡の照合を通ってしまう**——**実測: `bindingNames` の
+    //   `isBindingElement` の枝を外すと、この綴りが `reason: null` になる**）
+    ["B1f 分割代入のプロパティ名と同名の外側の変数を比べる", `xs.sort(({ y: ay }, { x: bx }) => y < x ? 1 : -1);`],
+    // **`function` 宣言で影を作る形**（**`const` だけを数えていると、
+    // 関数宣言の側で同名を作って ambiguous を回避できる**）
+    ["B4b function 宣言で同名の影を作る", `function CMP(a, b) { return b.y - a.y || a.x - b.x; }\nfunction f(){ const CMP = (a, b) => Math.abs(a.y - b.y) <= t ? 0 : b.y - a.y; xs.sort(CMP); }`],
+  ];
+  for (const [name, code] of mutants) {
+    const found = comparatorsIn("m.ts", code);
+    assert.equal(found.length, 1, `${name}: 比較関数が 1 つ見つかるはず（${found.length}）`);
+    assert.ok(found[0].reason, `${name}: allowlist を素通りした（${found[0].text}）`);
+  }
+});
+
+/**
+ * **B4. `resolveLocal` がスコープを見ていなかった**（Issue #1052 の 3 番目。**質が悪い穴**）。
+ *
+ * **`resolveLocal` はファイル全体を歩いて、同名の変数宣言が見つかるたびに `out` を上書きしていた**ので、
+ * **「最後に出てきた定義」が勝つ。** **実測（2026-09-27）**:
+ *
+ * | ソース | #1034 の判定 |
+ * |---|---|
+ * | 危険な `CMP` が先・安全な `CMP` が後 → `sort(CMP)` 2 件 | **どちらも `reason: null`（素通り）** |
+ * | 安全な `CMP` が先・危険な `CMP` が後 → `sort(CMP)` 2 件 | どちらも落ちる |
+ *
+ * **つまり「同名の安全な定義をファイルの後ろに置く」だけで、検査そのものを黙って無効化できた。**
+ * **これは allowlist を騙せる**ので、**#1008 が直した「denylist の列挙漏れ」より質が悪い。**
+ *
+ * **どう直したか**: **同名の宣言が 2 つ以上見つかったら、どれを指しているか決められないので
+ * `unresolved` として落とす**（**#569 の「分からないものは通さない」側に倒す**）。
+ * **スコープの解決そのものはやらない**——
+ * **`ts.createSourceFile` だけでは束縛の解決ができず、`ts.Program` を作ると
+ * 検査が型解決に依存して重くなるためである。**
+ */
+test("#1052 射程: 同名の定義が 2 つ在るとき、後ろの安全な定義で判定が置き換わらない", () => {
+  // **危険が先・安全が後**（#1034 はこれで 2 件とも素通りしていた）
+  const shadowed = `function f(){ const CMP = (a, b) => Math.abs(a.y - b.y) <= t ? 0 : b.y - a.y; xs.sort(CMP); }
+function g(){ const CMP = (a, b) => b.y - a.y || a.x - b.x; ys.sort(CMP); }`;
+  const found = comparatorsIn("shadow.ts", shadowed);
+  assert.equal(found.length, 2, `sort が 2 件見つかるはず（${found.length}）`);
+  for (const c of found) assert.ok(c.reason, `同名の定義が 2 つ在るのに素通りした: ${c.text}`);
+  // **安全が先・危険が後でも同じ**（**向きに依らず「決められない」で落とす**）
+  const reversed = `function g(){ const CMP = (a, b) => b.y - a.y || a.x - b.x; ys.sort(CMP); }
+function f(){ const CMP = (a, b) => Math.abs(a.y - b.y) <= t ? 0 : b.y - a.y; xs.sort(CMP); }`;
+  for (const c of comparatorsIn("shadow2.ts", reversed)) assert.ok(c.reason, `素通りした: ${c.text}`);
+  // **同名が 1 つだけなら、今までどおり追える**（**「全部落とす」に倒れていないこと**）
+  const unique = `const CMP = (a, b) => b.y - a.y || a.x - b.x; xs.sort(CMP);`;
+  const u = comparatorsIn("uniq.ts", unique);
+  assert.equal(u.length, 1);
+  assert.equal(u[0].reason, null, `1 つしか無い定義を追えなくなった（偽陽性）: ${u[0].reason}`);
+});
+
+/**
+ * **塞げなかった 1 通り**（Issue #1052 の 8 つのうち、**これだけ残す**）。
+ *
+ * **比較関数の手前で `.map()` の中で y を丸めてしまうと、比較関数そのものは
+ * `b.y - a.y || a.x - b.x`（完全に正しい形）になる**ので、**比較関数を見ている限り区別できない。**
+ *
+ * **塞ぐには「`sort` に渡っている配列がどこで作られたか」を追う必要がある**——
+ * **データフロー解析であり、`comparatorsIn` の設計（1 つの比較関数を構文で見る）の外である。**
+ * **県のファイルには `.map(` が 276 か所ある**（実測 grep）ので、
+ * **「`.map` の中に丸めが在ったら落とす」にすると、丸めと無関係な写しを大量に殺す。**
+ *
+ * **倒れる向き（#569）**: **「別人の記録が出る」側**。**ただしこの形は、丸めた y が
+ * そのまま後段に流れるので、`joinVertical` の振る舞いの検査（上）に当たる可能性がある**——
+ * **共有層についてはそちらが押さえる。県ごとの写しは押さえない。そこが残っている穴である。**
+ */
+test("#1052 射程: 先行する .map() の中の丸めは捕まえられない（既知の穴）", () => {
+  const code = `const rs = xs.map((i) => ({ ...i, y: Math.round(i.y / t) })); rs.sort((a, b) => b.y - a.y || a.x - b.x);`;
+  const found = comparatorsIn("premap.ts", code);
+  assert.equal(found.length, 1, `比較関数が 1 つ見つかるはず（${found.length}）`);
+  assert.equal(found[0].reason, null,
+    "先行する .map() の丸めを捕まえられるようになったら、この検査（既知の穴の記録）を消すこと");
 });
 
 /**
