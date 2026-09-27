@@ -154,7 +154,12 @@ export function LocalRollCallPage({ rollCall, assembly, meta }: { rollCall: Loca
  * 内訳（`pref-25: 3`）は持っていなかった**——**実測 2026-09-27: 滋賀の `議長辞職の件` から
  * `resultAbsent` を外し、青森（pref-02）の `number` が空の 1 件に `result: "" + resultAbsent: true` を
  * 付ける変異（合計 3 のまま）を当てても、母数テストは緑で通った。**
- * **`shiga-published-data.test.ts` も滋賀だけを見るので、滋賀以外に生えても緑のままだった**（#1029）。
+ *
+ * **その入れ替えは `shiga-published-data.test.ts` が検出していた**（正確に書く。**実測 2026-09-27**:
+ * 同じ変異の下で `actual: 2 / expected: 3`。**滋賀が 1 件失ったことには反応する**）。
+ * **横断の内訳をそれでも足したのは、あちらが `{ skip: !hasData }` で
+ * `pref-25/meta.json` が無いと黙って skip するから**（**実測: `ℹ skipped 9`。母数テストは skip しない**）、
+ * **そして「滋賀が 2 になった」ではなく「どの議会が動いたか」を名指しさせるためである。**
  *
  * **`resultAbsent` の無い空の `result`（読み取り事故）には出さない。** ETL が今までどおり違反として弾く形なので、
  * ここで「記載なし」と書くと事故を県のせいにしてしまう。
