@@ -2486,9 +2486,49 @@ PR_BODY: ${{ github.event.pull_request.body }}
 ```
 
 **`gh run rerun` は「その run が作られた時点の本文」を再生する。**
-**本文を編集しても rerun では反映されない。**
+**本文を編集しても rerun では反映されない。これは今も変わらない。**
 
-**直し方**: **空コミットを push して新しい `synchronize` イベントを起こす。**
+**変わったのは「本文を編集したとき」である（#1039、2026-09-27）。**
+**`pr-closes` は `ci.yml` から `.github/workflows/pr-body.yml` に移った。**
+そちらの `on: pull_request:` に **`types: [opened, synchronize, reopened, edited]`** が付いたので、
+**本文を編集すると `edited` イベントで新しい run が起き、`pr-closes` が新しい本文で測り直す。**
+**空コミットはもう要らない。**
+
+**なぜそれまで必要だったか**: `types:` を書かないと GitHub の既定 `opened` / `synchronize` /
+`reopened` だけになり、**`edited` が入らない**。実測（2026-09-27、全 653 PR を GraphQL で走査）:
+本文編集のあった 41 件のうち **最後の編集より後に CI の run が 0 件だった PR が 12 件**。
+**危ないのは逆向きだった**——本文から `Closes #N` を**消しても**走り直さないので**緑のまま**残る。
+**「直したのに赤い」は人間から見えるが、「壊したのに緑」は誰からも見えない。**
+（この向きに実際に落ちた PR は 0 件だった。**「0 件」であって「数えていない」ではない**——
+12 件について判定に使われた本文と最終の本文の両方に `pr-closes.sh` を当てて確かめた。）
+
+**`edited` はタイトルの編集でも発火する。** だから **`ci.yml` には `edited` を足していない。**
+
+**`ci.yml` に足して、9 分かかる `check` を `if: github.event.action != 'edited'` で止める形は
+一度書いて、却下された**（PR #1050 のレビュー）。**理由を覚えておくこと**:
+
+> **`if:` で止めた job は「走らない」のではなく、`conclusion: skipped` の check run が
+> 新しい `started_at` で作られる。**
+
+`scripts/po/merge-when-green.sh` は `group_by(.name) | map(max_by(.started_at))` で
+**同名の最新 1 件だけ**を見て `skipped` を `pass` に入れるので、
+**直前の run で赤かった必須チェックが、本文を 1 文字直すだけで緑に塗り替わる。**
+実測（同じ jq に食わせた）: `check failure (10:00)` → `check skipped (10:05)` は `pass check skipped`。
+該当する母数は**本文編集 86 回のうち 18 回 / 15 PR**（直前の run が failure 8 + cancelled 10）。
+**「赤いのに緑に見える」は #1021 のミスマージ 4 件と同じ構造**なので、この道は採らない。
+
+**別ワークフローにしてもチェック名は変わらない**——Actions のチェック名は **job 名だけ**で、
+ワークフロー名は入らない（必須 4 件のうち 3 件はすでに `security.yml` にある）。
+**`concurrency` の group も別**なので、本文編集が `ci.yml` の走っている run を cancel しない
+（実測: 本文編集 86 回のうち 39 回（45%）が CI run の実行中だった）。
+固定しているのは `packages/etl/test/workflow-pr-body-edited.test.ts` と
+`scripts/ci/test/pr-closes.test.sh`（後者は **step の `if:` や早期 `exit 0` で
+「job は緑のまま本文を測らない」形**を塞ぐ）。
+
+**それでも run が 1 つも作られないときは**、下の「CI が 1 度も起動しないことがある」を見る
+（あれは本文の再生の話ではなく、run そのものが作られない別の症状である）。
+
+**まだ空コミットが要る場合**（`edited` でも run が起きない、など）:
 
 ```
 git commit --allow-empty -m "chore: 本文を直したので pr-closes を測り直す"
