@@ -121,6 +121,44 @@ const CORPUS = {
   // 下で `resultAbsentWithNumber` を 0 に固定して「はみ出しが無い」ことを別に測っている。
   // **`shiga-published-data.test.ts` も `absent.length === 3` を持っているが、あちらは滋賀だけを見る**——
   // **滋賀以外に `resultAbsent` が生えても、あちらは緑のままである**（#1029）。**ここは 11 議会を横断して数える。**
+  //
+  // ## **合計だけでは「すべて滋賀」を守れない**（#1053）
+  //
+  // **`local-rollcall.tsx` の docblock は「3 件、すべて滋賀」と書いている。**
+  // **合計 3 を固定しても、滋賀で 1 件減って他県で 1 件生えれば合計は 3 のままである**——
+  // **実測 2026-09-27**（`data/` に変異を当てて測った）:
+  // **滋賀の `議長辞職の件` から `resultAbsent` を外し、青森（pref-02）の `number` が空の 1 件を
+  // `result: "" + resultAbsent: true` にする**と（**合計 3 のまま／`blankNumberByAssembly` も 1 件も動かない／
+  // `resultAbsentWithNumber` も 0 のまま**）、**内訳を持たない状態の母数テストは緑で通った**
+  // （**`rollcalls/index.json` まで同期させて `validateDataset` の違反も 0 件にした変異でも、
+  // 修正前は `ℹ pass 3 / ℹ fail 0` で本丸まで緑だった**。#1053 のレビューの実測）。
+  //
+  // **`shiga-published-data.test.ts` はこの入れ替えを検出する**——**あちらの `absent.length === 3` は
+  // 滋賀が 1 件失えば落ちるので、同じ変異の下で `actual: 2 / expected: 3`（`pass 8 / fail 1`）になる**
+  // （**実測 2026-09-27**）。**反応するのは滋賀側の 3 → 2 にだけで、他県に生えたことは見えていない。**
+  //
+  // **それでも横断の内訳をここに置く理由は 2 つある**（どちらも実測 2026-09-27）:
+  // 1. **あちらは `{ skip: !hasData }` で、`pref-25/meta.json` が無いと黙って skip する**——
+  //    **`meta.json` を退かすと `ℹ skipped 9`（pass 0 / fail 0）で緑の顔をする。**
+  //    **同じ状態でこのテストは skip せず走る**（`ℹ tests 1 / pass 1 / skipped 0`）。
+  //    **「検出できる検査」と「走ることが保証されている検査」は別物である。**
+  // 2. **診断が狭い。** あちらは「滋賀が 2 になった」しか言わないが、
+  //    **ここの内訳は `{ 'pref-02': 1, 'pref-25': 2 }` と、どの議会が動いたかを名指しする。**
+  //
+  // **だから議会ごとの内訳で固定する**（`blankNumberByAssembly` と同じ形。#1038/#1051）。
+  // **実測 2026-09-27: 3 件はすべて `pref-25`（滋賀）の 2025 年 4 月招集会議**——
+  // `特別委員会改編動議` / `議第98号（人事案件）` / `議長辞職の件`。**3 件とも `number` も `result` も空である。**
+  //
+  // **赤くなったら、まず「別の県も議決結果の欄を空で出すようになった」を疑うこと**（`memberRows` と同じ）。
+  // **それは新しい事実であって不具合ではない**——**直すのは実装ではなくこの数と
+  // `local-rollcall.tsx` の docblock の「すべて滋賀」である。**
+  resultAbsentByAssembly: { "pref-25": 3 } as Record<string, number>,
+  // **合計。内訳から導くので、`data/` に対しては内訳と二重の検査である**（`blankNumber` と同じ形）。
+  // **正直に書いておく: 合計の `assert` を丸ごと削る変異は落ちなかった**（**実測 2026-09-27。等価変異**——
+  // **内訳の `deepEqual` が既に全部の数を固定しているから**）。**残っている仕事は「この 2 つのキーが
+  // 食い違ったら落ちる」ことだけで、そこは効いている**（**実測 2026-09-27: ここを 4 にすると
+  // `actual: 3 / expected: 4` で落ちた**）。**残す理由は、docblock が主張しているのが「3 件」という
+  // 合計の形だからである**（人が読む数と検査の数を一致させておく）。
   resultAbsent: 3,
   resultAbsentWithNumber: 0, // `resultAbsent` を持つのに `number` が空でない採決。**0 でなくなったら部分集合が崩れている**
 };
@@ -141,7 +179,7 @@ const walkRollCalls = async (dir: string): Promise<string[]> => {
  * **母数を先に測る。** **これが落ちたら、下の「違反 0 件」は意味を失っている**
  * （痩せたディレクトリを見て緑になっているのかもしれない。上の docblock の青森の実測）。
  */
-test("#855 母数: コミット済み data/ に 11 議会・4,599 採決・198,221 セル・1,222 名簿行がある（#1038: `number` 空 174・`resultAbsent` 3 も同じループで数える）", async () => {
+test("#855 母数: コミット済み data/ に 11 議会・4,599 採決・198,221 セル・1,222 名簿行がある（#1038: `number` 空 174・`resultAbsent` 3 も同じループで数える。#1053: どちらも議会ごとの内訳で固定する）", async () => {
   const assemblies = JSON.parse(await readFile(join(DATA, "assemblies/index.json"), "utf-8")) as Assembly[];
   const members = JSON.parse(await readFile(join(DATA, "members/index.json"), "utf-8")) as MemberSummary[];
   const local = assemblies.filter((a) => a.kind !== "national");
@@ -153,7 +191,7 @@ test("#855 母数: コミット済み data/ に 11 議会・4,599 採決・198,2
   let cells = 0;
   // **#1038: `local-rollcall.tsx` の docblock が主張している母数を、このループのついでに数える**（新しい走査を足さない）
   const blankNumberByAssembly: Record<string, number> = {};
-  let resultAbsent = 0;
+  const resultAbsentByAssembly: Record<string, number> = {};
   let resultAbsentWithNumber = 0;
   for (const a of local) {
     for (const f of await walkRollCalls(join(DATA, "assemblies", a.id, "rollcalls"))) {
@@ -162,7 +200,7 @@ test("#855 母数: コミット済み data/ に 11 議会・4,599 採決・198,2
       cells += rc.votes.length;
       if (rc.number === "") blankNumberByAssembly[a.id] = (blankNumberByAssembly[a.id] ?? 0) + 1;
       if (rc.resultAbsent === true) {
-        resultAbsent++;
+        resultAbsentByAssembly[a.id] = (resultAbsentByAssembly[a.id] ?? 0) + 1;
         if (rc.number !== "") resultAbsentWithNumber++;
       }
     }
@@ -175,6 +213,12 @@ test("#855 母数: コミット済み data/ に 11 議会・4,599 採決・198,2
   //
   // **部分集合であること**——**`resultAbsent` を持つのに `number` が空でないものが出たら、docblock の説明が嘘になる**
   assert.equal(resultAbsentWithNumber, CORPUS.resultAbsentWithNumber, "`resultAbsent` を持つのに `number` が空でない採決");
+  // **議会ごとの内訳を、合計より先に当てる**（#1053）。**合計だけでは「すべて滋賀」を守れない**——
+  // **滋賀で 1 件減って他県で 1 件生えても合計は 3 のままである**（上の CORPUS の実測 2026-09-27）。
+  // **合計より先に置くのは、内訳のほうが狭い診断だから**——**どの議会が動いたかが画面に出る。**
+  // **合計が動いたときも、内訳の diff がそのまま「どこで動いたか」を名指しする**ので、合計が後ろでも困らない。
+  assert.deepEqual(resultAbsentByAssembly, CORPUS.resultAbsentByAssembly, "`resultAbsent: true` の採決の議会ごとの内訳（合計が同じままでも入れ替わりを捕まえる）");
+  const resultAbsent = Object.values(resultAbsentByAssembly).reduce((s, n) => s + n, 0);
   assert.equal(resultAbsent, CORPUS.resultAbsent, "`resultAbsent: true` の採決（11 議会を横断して数える）");
   // **議会ごとの内訳で固定する**——**合計だけだと、議会をまたいで 1 件動いても（171 + 3 → 172 + 2）緑のままになる**
   assert.deepEqual(blankNumberByAssembly, CORPUS.blankNumberByAssembly, "`number` が空の採決（`・・` が出ていたページ）の議会ごとの内訳");
