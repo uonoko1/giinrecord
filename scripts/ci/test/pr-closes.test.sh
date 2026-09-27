@@ -335,12 +335,28 @@ case_unclosed_backtick_run_is_not_quadratic() {
   python3 -c "open('$f','w').write('a'+chr(96)*20000+chr(10)+'Closes #7'+chr(10))"
   local start end ms
   start=$(date +%s%N)
-  bash "$SCRIPT" "$f" > /dev/null 2>&1
-  local rc=$?
+  set +e; bash "$SCRIPT" "$f" > /dev/null 2>&1; local rc=$?; set -e
   end=$(date +%s%N)
   ms=$(( (end - start) / 1000000 ))
   assert_eq 0 "$rc" "閉じの無い連続でも判定は通る（${ms}ms）"
   [[ $ms -lt 1000 ]] || fail "20,000 個のバッククォートに ${ms}ms かかった（1000ms 未満であるべき。O(N^2) に戻っている）"
+
+  # **時間だけを測る検査は、正しさを主張していない**（レビューの指摘）。
+  # `i = j + 1` にすると 1 文字飲み込んで `Closes` が `loses` になり、**偽の赤**になる。
+  # emit のループを消すと `x Close``s #55` が**偽の緑**になる（GitHub は何も閉じない本文）。
+  # **速さと正しさの両方を、同じ検査で留める。**
+  local g="$TMP/quad2.md"
+  # 閉じの無い連続のあとに、飲み込まれてはいけない文字が続く形
+  python3 -c "open('$g','w').write('a'+chr(96)*2000+'Closes #7'+chr(10))"
+  set +e; OUT=$(bash "$SCRIPT" "$g" 2>&1); rc=$?; set -e
+  assert_eq 0 "$rc" "連続の直後の Closes を飲み込まない: $OUT"
+  assert_contains "$OUT" "#7" "拾った番号を読み上げる（1 文字ずれると loses になって拾えない）"
+
+  # 偽の緑の側: スパンで割られた `Close``s` は閉じる語ではない
+  local h="$TMP/quad3.md"
+  python3 -c "open('$h','w').write('x Close'+chr(96)+chr(96)+'s #55'+chr(10))"
+  set +e; OUT=$(bash "$SCRIPT" "$h" 2>&1); rc=$?; set -e
+  assert_eq 1 "$rc" "スパンで割られた Close\`\`s は閉じる語として拾わない: $OUT"
 }
 test_case "閉じの無いバッククォートの連続が O(N^2) にならない" case_unclosed_backtick_run_is_not_quadratic
 
