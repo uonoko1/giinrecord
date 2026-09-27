@@ -13,20 +13,36 @@ import { dirname, resolve } from "node:path";
  * `noreply@anthropic.com` がすり抜けた。
  * **これが #1043 が `github.com/claude` を捕まえられなかった理由である**（#1074）。
  *
- * ── 測った数（2026-09-28、`origin/main` = `068be5c2`、696 commits の全履歴）───────────
+ * ── 測った数（**基点を書く。基点が動くと数も動く**）─────────────────────────────
  *
- * **メッセージ本文の trailer 形の行（`Co-authored-by:`）に現れたアドレスの全数**:
+ * **メッセージ本文の trailer 形の行（`Co-authored-by:`）に現れたアドレスの全数。**
+ * **`git log <基点> --pretty=format:%B | grep -ciE '^[ \t]*co-authored-by[ \t]*:'` で数えた。**
+ *
  * ```
- * 1643  noreply@anthropic.com                                  ★ github.com/claude に誤帰属する
- *                                                                 （id=81847 / type=User /
- *                                                                  created_at=2009-05-07。実測）
- *  518  120390190+uonoko1@users.noreply.github.com              OK（数字 ID 付き）
- *   66  41898282+github-actions[bot]@users.noreply.github.com   OK（数字 ID 付き / type=Bot）
- *    2  （利用者本人の個人アドレス。下の「本人のアドレス」節）    squash が合成した 2 件だけ
- *    1  etl@users.noreply.github.com                            ★ github.com/etl（無関係の実在の人）
+ *                                                          068be5c2   796b18d1
+ *                                                          (696 cmt)  (697 cmt)
+ * noreply@anthropic.com   ★ github.com/claude に誤帰属        1643       1643
+ *                           （id=81847 / type=User /
+ *                            created_at=2009-05-07。実測）
+ * 120390190+uonoko1@users.noreply.github.com      OK          518        518
+ * 41898282+github-actions[bot]@users.noreply…     OK           66         67
+ * （利用者本人の個人アドレス。下の「本人のアドレス」節）           2          2
+ * etl@users.noreply.github.com  ★ github.com/etl              1          1
+ *                                                          ────────   ────────
+ * 合計（= co-authored-by 行の実数）                            2230       2231
  * ```
+ *
+ * **レビューは 67 / 2231 を実測し、PR 本文の 66 / 2230 を「誤り」とした。**
+ * **どちらも、その基点では正しい。** **自分で数え直して分かったのは、
+ * 数え直しの間に `796b18d1`（`data: districts …(#1077)`）が main に入っていたことである**
+ * ——**その 1 コミットが `41898282+github-actions[bot]@…` の trailer を 1 行足すので、
+ * 66 → 67 / 2230 → 2231 に動いた**（実測: `git rev-list --count 068be5c2..origin/main` = 1、
+ * その 1 件の `co-authored-by` 行は `github-actions[bot]` の 1 行）。
+ * **合計はどちらの基点でも行の実数と一致する**（1643+518+66+2+1 = 2230 /
+ * 1643+518+67+2+1 = 2231）。**だから「どちらが正しい数か」ではなく「どの基点の数か」を書く。**
+ *
  * **`Co-authored-by:` 以外に、アドレスを運ぶ trailer 形の token は 1 つも無い**
- * （全履歴を token ごとに数えた: `co-authored-by` 2230 行のみ）。
+ * （全履歴を token ごとに数えた）。
  *
  * ── **`git` の trailer パーサだけを見てはいけない**（この PBI で測って分かったこと）─────
  *
@@ -158,10 +174,12 @@ const rawCommitMessage = (sha: string): string => {
  * 「そのメッセージを読んだ」ことを何も言っていない。**
  * **実データに当たる唯一の部分が、中身を空にしても緑になっていた**（レビューの実測。すべて 9/9 緑）:
  *
+ * **数はすべて「測った時点の本数」で書く**（`0989337a` と同じ。検査は 9 本 → 12 本に増えた）。
  * ```
- * X1  misattributingTrailerEmails(git("show",…)) → misattributingTrailerEmails("")   pass 9 / fail 0
- * X2  --format=%B → --format=%s（件名だけ。ありがちな「簡略化」）                     pass 9 / fail 0
- * X3  --format=%B → --format=%(trailers:only=true)                                  pass 9 / fail 0
+ *                                                                          検査 9 本のとき  直した後（12 本）
+ * X1  走査に渡す本文を "" にする                                            pass 9 / fail 0  pass 10 / fail 2
+ * X2  --format=%B → --format=%s（件名だけ。ありがちな「簡略化」）             pass 9 / fail 0  pass 10 / fail 2
+ * X3  --format=%B → --format=%(trailers:only=true)                        pass 9 / fail 0  pass 10 / fail 2
  * ```
  *
  * **X3 がいちばん重い。** **この PBI の中核の発見は「`%(trailers)` は squash の区切りより上を
@@ -194,8 +212,9 @@ const rawCommitMessage = (sha: string): string => {
  * **番人を足しただけでは足りなかった。** **自分で変異を当てて 2 つ見つけた**（どちらも 9/9 緑で生き残った）:
  *
  * ```
- * X4  rawCommitMessage も %B を読むようにする（比較を恒真にする）   pass 9 / fail 0
- * X5  一致の assert を `if (false)` で無効化する                    pass 9 / fail 0
+ *                                                                検査 10 本のとき  直した後（12 本）
+ * X4  rawCommitMessage も %B を読む（比較を恒真にする）            pass 10 / fail 0  pass 11 / fail 1
+ * X5  一致の assert を `if (false)` で無効化                       pass 10 / fail 0  pass 11 / fail 1
  * ```
  *
  * **理由は「この枝の本文はどれも正しいので、番人が一度も火を噴かない」こと。**
