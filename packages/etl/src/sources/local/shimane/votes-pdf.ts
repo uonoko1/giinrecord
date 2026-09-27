@@ -702,7 +702,12 @@ export interface DropTiedForTest {
    * **そこで「防壁を外すと 18 セル（本番 12 セル）が必ず出る」ことを検査に入れる**（#1056 で実測）。
    * **これが在れば、絞った 13 組が本当に 12 件を踏むことを直接示せる。**
    *
-   * **`pageCol` と一緒でなければ何もしない**（`dropForTest` を渡さない本番の呼び出しは 1 ビットも変わらない）。
+   * **`pageCol` と組でなければ効かない**（#1056 のレビュー。**最初の実装は独立に効いてしまっていた**——
+   * `tiedCols` は `dropForTest` と無関係に「本物のタイ」でも埋まるので、
+   * **`{ keepTiedColsForTest: true }` を `pageCol` 無しで渡すと #1023 の防壁が丸ごと外れた。**
+   * **呼ぶ人が居なかっただけで、型は許していた。** いまは両方揃って初めて効く）。
+   *
+   * **`dropForTest` を渡さない本番の呼び出しは 1 ビットも変わらない。**
    */
   keepTiedColsForTest?: boolean;
 }
@@ -1002,7 +1007,11 @@ export async function parseVotePdf(bytes: Buffer, dropForTest?: DropTiedForTest)
         // **この列でタイで票を落としたなら、ラベルで埋めない**（Issue #1023 のレビューで見つかった。
         // 下の `labelBlocks` の docblock に実例と母数を書いた）。
         // #1056: `keepTiedColsForTest` は検査だけが渡す（防壁を外した姿を再現して、検出できることを測る）
-        if (tiedCols.has(col) && !dropForTest?.keepTiedColsForTest) { unknownCells++; return UNKNOWN_CELL; }
+        // #1056: `keepTiedColsForTest` は検査だけが渡す（防壁を外した姿を再現して、検出できることを測る）。
+        // **`pageCol` と組でなければ効かせない**——単独で渡せると #1023 の防壁が丸ごと外れる
+        // （`tiedCols` は `dropForTest` と無関係に「本物のタイ」でも埋まる。#1056 のレビューの指摘）。
+        const unguard = dropForTest?.pageCol !== undefined && dropForTest.keepTiedColsForTest === true;
+        if (tiedCols.has(col) && !unguard) { unknownCells++; return UNKNOWN_CELL; }
         const blocks = labelBlocks.get(col) ?? [];
         const hit = blocks.filter((b) => b.y0 - CELL_GAP <= a && a <= b.y1 + CELL_GAP);
         if (hit.length === 1) return hit[0].text;

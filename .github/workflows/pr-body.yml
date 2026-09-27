@@ -44,7 +44,9 @@ on:
 concurrency:
   # ref ごとに直列化する。**本文を続けて直したときは最後のものだけを測れば足りる**ので
   # `cancel-in-progress: true` でよい。**`ci.yml` とは group 名が別なので、
-  # 本文編集が `ci.yml` の走っている run（`check` は実測 中央値 531s）を cancel することはない。**
+  # 本文編集が `ci.yml` の走っている run（`check` は数分かかる。実測値は
+  # packages/etl/test/workflow-timeout.test.ts の表。#1056 で「中央値 531s」から動いた）を
+  # cancel することはない。**
   # これが同じ group だと必須チェックが cancel されて消える（#1039 で測った: 本文編集 86 回のうち
   # 39 回（45%）が CI run の実行中に起きていた。created<=編集<=updated で数えた実測）。
   group: pr-body-${{ github.ref }}
@@ -61,8 +63,13 @@ jobs:
   # 名前を変えると `merge-when-green.sh` の `REQUIRED_CHECKS` と、その名前で待っている道具が全部ずれる。
   pr-closes:
     runs-on: ubuntu-latest
-    # #556: 実測 min 6 / med 8 / max 10s（n=32、2026-09-27）。stale-base（実測 max 13s）と同値の 10 分。
-    # API を叩かず install もしないので、ここが伸びる余地はほぼ無い。
+    # #556 / #1056: **実測値はここに書かない**（数が 2 か所にあると片方だけ腐る。#1056 で実際に腐った:
+    # ここには「max 10s / 伸びる余地はほぼ無い」と書いてあったが、**同じ 2026-09-27 に測り直すと max 77s** で、
+    # 7.7 倍食い違っていた）。**実測値は packages/etl/test/workflow-timeout.test.ts の表が 1 か所で持つ。**
+    # ここに残すのは負荷で動かない事実だけ: **この job は API を叩かず install もしないので、
+    # やっている仕事そのものは伸びない**（p90 は 9s）。**伸びるのは待ち時間の裾**（max 77s は
+    # ランナーの割り当て待ちで、job の仕事ではない）——**だから「仕事が軽い」を「wall が短い」と
+    # 読み替えないこと。** stale-base と同値の 10 分。
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
