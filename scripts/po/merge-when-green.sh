@@ -710,9 +710,20 @@ approve_pending_runs() {
 # **実測（2026-09-27）**: 直近 200 PR の HEAD で、`conclusion: skipped` の check run は **30 件**
 # （`issue-secrets` 29 / `docker-web` 1）——**`if:` で止めた job は「走らない」のではなく
 # `skipped` の check run が作られる**（job レベルの `if:` はワークフロー全体で 6 件）。
-# **同名が同じ commit に 2 本並んだ例は 0 件**（同じ workflow が同じ commit で 2 回走った例も、
-# 直近 60 PR で 0 件）。**「0 件」であって「数えていない」ではない**——今は `pull_request` が
-# HEAD ごとに 1 回しか走らないため。**`edited` トリガ（#1050）が入ると 2 本目ができる。**
+#
+# **同名重複は「起きうる」ではなく、もう起きている**（#1050 が 2026-09-27 にマージされた直後に実測）:
+#   - `#1050` の前: 同名が同じ commit に 2 本並んだ例は **0 件 / 200 PR**（同じ workflow が
+#     同じ commit で 2 回走った例も **0 件 / 60 PR**）。**「0 件」であって「数えていない」ではない**
+#     ——`pull_request` が HEAD ごとに 1 回しか走らなかったため。
+#   - `#1050` の後: `pr-body.yml` が `types: [..., edited]` で走るようになり、**同じ head_sha に
+#     複数の run ができる**。実測（`actions/runs`、全 11 run）: `fed085e2` に **5 run**、
+#     `04b15d9b` に **2 run**。その commit の check-runs を読むと
+#     **`pr-closes` の check run が 5 本 / 2 本並んでいる**（実測）。
+#   - **`pr-closes` は必須チェックである**（REQUIRED_CHECKS）。しかも `pr-body.yml` は
+#     `cancel-in-progress: true` なので、**本文を続けて直すと走行中のものが `cancelled` になる**
+#     ——`cancelled` は fail 系。**`cancelled`(旧) と `success`(新) が並んだ瞬間に
+#     `max_by(.started_at)` は緑を採り、必須チェックが赤いままマージされる。**
+#     必須なので `--allow-nonrequired-red` では止められない＝**黙って通る。**
 #
 # **`skipped` は pass のまま置く**（#1054 やること 3）。**check-runs API では
 # 「走っていない」と「走らせる必要がなかった」を分けられない**: `conclusion: skipped` には
@@ -721,8 +732,8 @@ approve_pending_runs() {
 # ——`issue-secrets` は実測 61 PR に出る常連で、かつ REQUIRED/NONREQUIRED のどちらの
 # 一覧にも無い＝**必須扱い**なので、赤にすると**全 PR が永久に止まる。**
 #
-# **変異で確かめた（#1054、`scripts/dev/mutate.sh`。母数は po のテスト 172 件）:**
-#   M1 `max_by(severity)` → `max_by(.started_at)` に戻す                      → 4 件落ちた
+# **変異で確かめた（#1054、`scripts/dev/mutate.sh`。母数は po のテスト 173 件）:**
+#   M1 `max_by(severity)` → `max_by(.started_at)` に戻す                      → 5 件落ちた
 #   M2 `skipped` を pass の一覧から外す（選択肢 B）                            → 4 件落ちた
 #   M3 `severity` を全部 0 にする（重み付けを無効化）                          → 4 件落ちた
 #   M4 `severity` を反転（pass 2 / fail 0）                                    → 5 件落ちた

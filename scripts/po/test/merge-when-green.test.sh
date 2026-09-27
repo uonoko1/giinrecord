@@ -2691,3 +2691,36 @@ EOF
   assert_contains "$OUT$ERR" "all 2 checks green" "同名は 1 件として数える（3 本の run → 2 件）"
 }
 test_case "1054: 同名の run は 1 件として数える" t_1054_dup_counted_once
+
+# **いま本番で起きる形**（#1050 が 2026-09-27 にマージされた直後に実測）。
+# `pr-body.yml` が `types: [..., edited]` + `cancel-in-progress: true` で走るので、
+# **本文を続けて直すと、同じ commit に `pr-closes` の check run が複数本並ぶ。**
+# 実測: `fed085e2` に **5 本**、`04b15d9b` に **2 本**（`gh api commits/<sha>/check-runs`）。
+# 走行中のものは `cancelled`（fail 系）になるので、**`cancelled`(旧) + `success`(新)** が並ぶ。
+# **`pr-closes` は必須チェックなので `--allow-nonrequired-red` では止められない**
+# ——`max_by(.started_at)` だと**黙って通る。**
+t_1054_pr_closes_cancelled_then_success() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      echo '{"check_runs":[
+        {"name":"check","status":"completed","conclusion":"success","started_at":"2026-09-27T00:32:31Z"},
+        {"name":"pr-closes","status":"completed","conclusion":"cancelled","started_at":"2026-09-27T00:32:31Z","details_url":"u1"},
+        {"name":"pr-closes","status":"completed","conclusion":"success","started_at":"2026-09-27T00:34:54Z","details_url":"u2"}
+      ]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  # フラグ付きでも通らない（必須の赤）。**--allow-nonrequired-red が抜け道にならないことを固定する**
+  run_script "$h" merge-when-green.sh --allow-nonrequired-red 12
+  assert_eq 1 "$STATUS" "必須の赤なのでフラグ付きでも止まる"
+  assert_contains "$ERR" "pr-closes" "赤い必須検査の名前を言う"
+  assert_contains "$ERR" "--allow-nonrequired-red では通せません" "フラグでは通せないと言う"
+  assert_not_contains "$LOG" "pr	merge	12" "マージを試みない"
+}
+test_case "1054: pr-closes の cancelled(旧)+success(新) は必須の赤（フラグでも通さない）" t_1054_pr_closes_cancelled_then_success
