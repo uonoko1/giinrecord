@@ -2809,8 +2809,11 @@ test_case "1054: main の実例（production が skipped(新) で failure(旧) �
 # 174 件全部緑になった）。**赤を先頭に置いた fixture だけでは `map(first)` が素通りする**
 # （実測: 173 件中 172 件緑）。
 #
-# **だから赤を真ん中に置く。** `first` も `last` も緑を掴むので、
-# **「重み最大を採る」以外の実装では必ず落ちる。**
+# **だから赤を真ん中に置く。** `first` も `last` も緑を掴む。
+# **ただしこれだけでは足りない**（#1064 の 2 度目のレビュー）: **3 要素の「真ん中」＝ index 1 なので、
+# `map(.[1])` は赤を返して生き残る**（実測: 176 件全部緑で素通りした）。
+# **index 0 だけに赤を置いた 4 本の fixture**（`t_1054_red_at_index_zero_only_of_four`）
+# **と対で初めて、位置で選ぶ実装が全部落ちる。**
 # `production` の実例（新しい順: skipped / failure）に、さらに古い `success` を足した形。
 # **`monitor.yml` はスケジュールで何度も走るので、3 本以上並ぶのは実在の形である。**
 t_1054_red_in_the_middle() {
@@ -2866,3 +2869,58 @@ EOF
   assert_not_contains "$LOG" "pr	merge	12" "マージを試みない"
 }
 test_case "1054: 同名の pending は pass に負けない（真ん中に置いても）" t_1054_pending_beats_pass_in_same_name
+
+# **4 本並べて、赤を index 0 だけに置く**——**「位置で選ぶ実装」を網羅的に殺すため**
+# （#1064 の 2 度目のレビュー。**「先頭・末尾・真ん中に置け」という指針は誤りだった**:
+# **3 要素では「真ん中」＝ index 1 なので、`map(.[1])` は赤を返して生き残る。**
+# 実測: `map(if length>1 then .[1] else .[0] end)` が **176 件全部緑で素通りした。**
+# 私の 12 件の fixture は、重複グループの最悪の run が**例外なく index 1** に置かれていた）。
+#
+# **自分で検算した**（4 要素・赤を index 0 だけ）:
+#   max_by = failure  ← 本番実装
+#   first  = failure  ← 別の fixture（failure(新)+skipped(旧)）が殺す
+#   last   = skipped   .[1] = skipped   .[2] = success   .[-2] = success   min_by = skipped
+# **`max_by` と `first` 以外は全部「緑」を返す**ので、位置で選ぶ実装はここで落ちる。
+#
+# **実データでも別人の答えが出る**（`gh api commits/42f9c225/check-runs`。
+# `monitor.yml` が 10 分ごとに走るので同じ sha に run が積まれている実物）:
+#   etl        n=2   failure,failure
+#   guard      n=3   failure,success,failure
+#   production n=18  failure,skipped,failure,skipped,...
+#
+#   本番実装 max_by(severity) → 赤 3 件（etl / guard / production）
+#   変異 .[1]                 → 赤 1 件（etl のみ。**guard と production が黙って消える**）
+#
+# **`guard` も `production` もどちらの一覧にも無い＝必須扱い**なので、
+# **赤い必須チェックのままマージされる方向に倒れる——塞ごうとしたバグそのものである。**
+#
+# 並びは本物どおり「新しい順」。`monitor.yml` の `production` の実物の形
+# （`failure` のあとに `skipped` が何度も乗る）に合わせてある。
+t_1054_red_at_index_zero_only_of_four() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      echo '{"check_runs":[
+        {"name":"production","status":"completed","conclusion":"failure","started_at":"2026-09-27T08:00:32Z","details_url":"u1"},
+        {"name":"production","status":"completed","conclusion":"skipped","started_at":"2026-09-27T07:03:25Z","details_url":"u2"},
+        {"name":"production","status":"completed","conclusion":"success","started_at":"2026-09-27T06:01:11Z","details_url":"u3"},
+        {"name":"production","status":"completed","conclusion":"skipped","started_at":"2026-09-27T05:00:04Z","details_url":"u4"},
+        {"name":"check","status":"completed","conclusion":"success","started_at":"2026-09-27T08:00:00Z"}
+      ]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  # **フラグ付きでも通らない**（production はどちらの一覧にも無い＝必須扱い）
+  run_script "$h" merge-when-green.sh --allow-nonrequired-red 12
+  assert_eq 1 "$STATUS" "index 0 の赤を見落とさない（1〜3 番目は全部 pass 系）"
+  assert_contains "$ERR" "checks failed on PR #12: production" "必須扱いの赤として止める"
+  assert_not_contains "$LOG" "pr	merge	12" "マージを試みない"
+  # **4 run + 1 run を 2 件に畳む**（件数のログが嘘にならないこと）
+  assert_contains "$OUT$ERR" "検査 2 件 / 必須 2 件 / 赤 1 件" "5 run を 2 件に畳む"
+}
+test_case "1054: 4 本並んで赤が index 0 だけでも赤（.[1] / .[2] / last / min_by を殺す）" t_1054_red_at_index_zero_only_of_four
