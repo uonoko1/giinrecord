@@ -2447,3 +2447,247 @@ t_1010_accepts_tekitaiteki_prefix() {
     '## 敵対的レビュー：直してから\n\n1 件ある。'
 }
 test_case "1010: 「## 敵対的レビュー: <結論>」も通す（#223 の実物の形）" t_1010_accepts_tekitaiteki_prefix
+
+# --- #1054: 同名の check run が 2 本並ぶとき、新しい方だけを見て古い赤を捨てていた ------------
+#
+# **実測（2026-09-27、`gh api repos/<repo>/commits/<sha>/check-runs`）:**
+#   - `conclusion: skipped` の check run は**実在する**: 直近 200 PR の HEAD で **30 件**
+#     （`issue-secrets` 29 件 / `docker-web` 1 件）。**`if:` で止めた job は「走らない」のではなく、
+#     `skipped` の check run が作られる**（`security.yml` の `issue-secrets`、
+#     `ci.yml` の `stale-base` / `pr-closes`、`deploy-data.yml` の `staging` — job レベルの
+#     `if:` は実測 6 件）。
+#   - **同名の check run が同じ commit に 2 本以上並んだ例は、直近 200 PR の HEAD で 0 件**
+#     （同じ workflow が同じ commit で 2 回走った例も、直近 60 PR で 0 件）。
+#     **「0 件」であって「数えていない」ではない。** 今は `pull_request` が HEAD ごとに
+#     1 回しか走らないため。**#1050 が `edited` トリガを足すと、同じ HEAD に 2 本目の run が
+#     でき、この経路が生きる。**
+#
+# **穴の形**: `group_by(.name) | map(max_by(.started_at))` は同名グループから
+# **最新の 1 件だけ**を残す。`failure`(10:00) と `skipped`(10:05) が並ぶと `skipped` が勝ち、
+# `pass` に分類され、**REQUIRED_RED が空になってマージされる**。
+# **#1021 で 4 回起きた誤マージと同じ構造**（歯止めが在るつもりで無い）。
+#
+# **直し方 (A)**: 同名グループに fail 系（failure/cancelled/timed_out/...）が 1 件でもあれば
+# **fail を採る**。`started_at` の新旧を見ない。
+#   - 代償: **「赤かったものを直して緑にした後」も赤く見える。** ただしこの道具は
+#     **PR の HEAD commit を固定して読む**（`assert_head_unchanged` / `repin_head`）ので、
+#     「直した」なら HEAD が動いており、別の commit の check-runs を読む。**同じ commit の中で
+#     赤→緑に変わるのは `gh run rerun` の場合だけ**で、そのときは GitHub が
+#     **同じ check run を上書きする**（run_attempt が上がる）ので 2 本には並ばない
+#     ——実測で同名重複 0 件だったのがその裏付け。
+#   - **(B) `skipped` を pass から外す**は採らなかった: `issue-secrets` は実測 61 PR に出る
+#     常連で、**名前が REQUIRED/NONREQUIRED のどちらにも無い＝必須扱い**なので、
+#     (B) にすると**全 PR が永久に赤くなってこの道具が使えなくなる**。
+#   - **(C) `completed_at` / run id で見る**も採らなかった: 並び順を変えるだけで、
+#     **「新しい 1 件だけを見る」という形そのものが穴**である以上、直らない。
+#
+# **#1054 やること 3（`skipped` を「走っていない」と「走らせる必要がなかった」に分けられるか）:
+# 分けられない。** check-runs API の `conclusion: skipped` には、
+# **job の `if:` が false だった場合と、step が `continue-on-error` で飛んだ場合と、
+# `concurrency` でキャンセルされた場合の区別が無い**（`output` も空。実測で
+# `issue-secrets` の skipped は `started_at == completed_at` だったが、
+# これは「意図した skip」の印ではない）。**分けられないので、`skipped` は pass のまま置き、
+# 代わりに「同名に赤があれば赤」で守る。**
+
+# 同名 2 本（failure が古く、skipped が新しい）→ **赤と判定してマージしない**
+t_1054_skipped_does_not_mask_failure() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      echo '{"check_runs":[
+        {"name":"check","status":"completed","conclusion":"failure","started_at":"2026-09-26T10:00:00Z","details_url":"u1"},
+        {"name":"check","status":"completed","conclusion":"skipped","started_at":"2026-09-26T10:05:00Z","details_url":"u2"}
+      ]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "必須の赤でマージを拒む"
+  assert_contains "$ERR" "check" "赤い検査の名前を言う"
+  assert_not_contains "$LOG" "pr	merge	12" "マージを試みない"
+}
+test_case "1054: 同名の skipped(新) が failure(旧) を塗り替えない" t_1054_skipped_does_not_mask_failure
+
+# **順序を入れ替えても同じ**（failure が新しい側でも赤）。**`max_by` を残したままでも
+# こちらだけは通ってしまう**ので、上のテストと対で置く。
+t_1054_failure_newer_also_red() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      echo '{"check_runs":[
+        {"name":"check","status":"completed","conclusion":"skipped","started_at":"2026-09-26T10:00:00Z","details_url":"u1"},
+        {"name":"check","status":"completed","conclusion":"failure","started_at":"2026-09-26T10:05:00Z","details_url":"u2"}
+      ]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "必須の赤でマージを拒む"
+  assert_not_contains "$LOG" "pr	merge	12" "マージを試みない"
+}
+test_case "1054: 同名の failure(新) + skipped(旧) も赤" t_1054_failure_newer_also_red
+
+# **`success` も塗り替えない**（`skipped` だけの話ではない。`success`(新) が
+# `failure`(旧) を隠す形も同じ穴）。
+t_1054_success_does_not_mask_failure() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      echo '{"check_runs":[
+        {"name":"gitleaks","status":"completed","conclusion":"failure","started_at":"2026-09-26T10:00:00Z","details_url":"u1"},
+        {"name":"gitleaks","status":"completed","conclusion":"success","started_at":"2026-09-26T10:05:00Z","details_url":"u2"},
+        {"name":"check","status":"completed","conclusion":"success","started_at":"2026-09-26T10:00:00Z"}
+      ]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "必須の赤でマージを拒む"
+  assert_contains "$ERR" "gitleaks" "赤い検査の名前を言う"
+  assert_not_contains "$LOG" "pr	merge	12" "マージを試みない"
+}
+test_case "1054: 同名の success(新) も failure(旧) を塗り替えない" t_1054_success_does_not_mask_failure
+
+# **pending は赤より弱い**: 同名に fail があれば、pending が並んでいても**赤**として止める
+# （`pending` を採ると「待ち続けて POLL_MAX でタイムアウト」になり、
+# **「必須が赤い」という本当の理由がログに出ない**）。
+t_1054_fail_beats_pending_in_same_name() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      echo '{"check_runs":[
+        {"name":"check","status":"completed","conclusion":"failure","started_at":"2026-09-26T10:00:00Z","details_url":"u1"},
+        {"name":"check","status":"in_progress","conclusion":null,"started_at":"2026-09-26T10:05:00Z"}
+      ]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "必須の赤でマージを拒む"
+  assert_contains "$ERR" "checks failed" "赤として止める（タイムアウトではない）"
+  assert_not_contains "$ERR" "timed out" "pending 扱いで待たない"
+}
+test_case "1054: 同名に failure があれば pending より赤を採る" t_1054_fail_beats_pending_in_same_name
+
+# **必須でない検査では、今までどおり `--allow-nonrequired-red` で通せる**
+# （同名重複を赤く採るようにしても、`--allow-nonrequired-red` の意味は変えない）。
+t_1054_nonrequired_dup_still_passable() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      echo '{"check_runs":[
+        {"name":"stale-base","status":"completed","conclusion":"failure","started_at":"2026-09-26T10:00:00Z","details_url":"u1"},
+        {"name":"stale-base","status":"completed","conclusion":"skipped","started_at":"2026-09-26T10:05:00Z","details_url":"u2"},
+        {"name":"check","status":"completed","conclusion":"success","started_at":"2026-09-26T10:00:00Z"}
+      ]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  # フラグ無しでは止まる（黙って押さない）
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "フラグ無しでは止まる"
+  assert_contains "$ERR" "stale-base" "必須でない赤の名前を言う"
+  # フラグ付きなら通る（既存の動作を壊していない）
+  run_script "$h" merge-when-green.sh --allow-nonrequired-red 12
+  assert_eq 0 "$STATUS" "--allow-nonrequired-red で通る: $ERR"
+  assert_contains "$LOG" "pr	merge	12" "マージした"
+}
+test_case "1054: 必須でない同名重複の赤は --allow-nonrequired-red で通る" t_1054_nonrequired_dup_still_passable
+
+# **単独の `skipped` は今までどおり pass**（`issue-secrets` は実測 61 PR に出る常連。
+# ここを赤くすると全 PR が止まる）。
+t_1054_lone_skipped_still_passes() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      echo '{"check_runs":[
+        {"name":"check","status":"completed","conclusion":"success","started_at":"2026-09-26T10:00:00Z"},
+        {"name":"issue-secrets","status":"completed","conclusion":"skipped","started_at":"2026-09-26T10:00:00Z"}
+      ]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "単独の skipped は緑のまま: $ERR"
+  assert_contains "$LOG" "pr	merge	12" "マージした"
+}
+test_case "1054: 単独の skipped は今までどおり pass" t_1054_lone_skipped_still_passes
+
+# **同名が 2 本とも緑なら緑**（重複そのものを赤にしていない）。
+# **これが無いと「同名が 2 本あれば赤」という乱暴な直し方が素通りする。**
+t_1054_dup_all_green_stays_green() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      echo '{"check_runs":[
+        {"name":"check","status":"completed","conclusion":"success","started_at":"2026-09-26T10:00:00Z"},
+        {"name":"check","status":"completed","conclusion":"skipped","started_at":"2026-09-26T10:05:00Z"}
+      ]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "2 本とも pass 系なら緑: $ERR"
+  assert_contains "$LOG" "pr	merge	12" "マージした"
+}
+test_case "1054: 同名 2 本が両方 pass 系なら緑のまま" t_1054_dup_all_green_stays_green
+
+# **同名グループは 1 行に畳む**（必須の件数を二重に数えない）。
+# `required_total` が水増しされると、ログの「必須 N 件」が嘘になる。
+t_1054_dup_counted_once() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      echo '{"check_runs":[
+        {"name":"check","status":"completed","conclusion":"success","started_at":"2026-09-26T10:00:00Z"},
+        {"name":"check","status":"completed","conclusion":"skipped","started_at":"2026-09-26T10:05:00Z"},
+        {"name":"gitleaks","status":"completed","conclusion":"success","started_at":"2026-09-26T10:00:00Z"}
+      ]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "緑: $ERR"
+  assert_contains "$OUT$ERR" "all 2 checks green" "同名は 1 件として数える（3 本の run → 2 件）"
+}
+test_case "1054: 同名の run は 1 件として数える" t_1054_dup_counted_once

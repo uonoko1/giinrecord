@@ -695,22 +695,49 @@ approve_pending_runs() {
 # pending は conclusion が null なので3列目は空になる。既存の awk は $1/$2 しか見ないので
 # 列を足しても読み方は変わらない。
 #
-# 同名のチェックが複数回（再実行）現れることがあるので、`started_at` が最新の1件だけを見る
-# （古い run の conclusion で判定しない）。
+# 同名のチェックが複数回現れることがある。**そのとき「最新の1件」を見てはいけない**（#1054）:
+# `map(max_by(.started_at))` だと、**`failure`(10:00) と `skipped`(10:05) が並んだときに
+# `skipped` が勝って `pass` に分類され、REQUIRED_RED が空になってマージされる。**
+# **#1021 で 4 回起きた誤マージと同じ構造**（歯止めが在るつもりで無い）。
+#
+# **同名グループは「最も悪い 1 件」に畳む**: fail > pending > pass。
+#   - fail が 1 件でもあれば fail。**赤が新しい緑に塗り替えられない**
+#   - fail が無く pending があれば pending（まだ結論が出ていない）
+#   - 全部 pass 系なら pass
+# **重複そのものを赤にはしない**（2 本とも緑なら緑）。**件数は 1 件として数える**
+# （`required_total` を二重に数えると、ログの「必須 N 件」が嘘になる）。
+#
+# **実測（2026-09-27）**: 直近 200 PR の HEAD で、`conclusion: skipped` の check run は **30 件**
+# （`issue-secrets` 29 / `docker-web` 1）——**`if:` で止めた job は「走らない」のではなく
+# `skipped` の check run が作られる**（job レベルの `if:` はワークフロー全体で 6 件）。
+# **同名が同じ commit に 2 本並んだ例は 0 件**（同じ workflow が同じ commit で 2 回走った例も、
+# 直近 60 PR で 0 件）。**「0 件」であって「数えていない」ではない**——今は `pull_request` が
+# HEAD ごとに 1 回しか走らないため。**`edited` トリガ（#1050）が入ると 2 本目ができる。**
+#
+# **`skipped` は pass のまま置く**（#1054 やること 3）。**check-runs API では
+# 「走っていない」と「走らせる必要がなかった」を分けられない**: `conclusion: skipped` には
+# job の `if:` が false だった場合も、`concurrency` で消えた場合も同じ値が入り、
+# 区別する欄が無い。**分けられないので、`skipped` を赤にする（選択肢 B）は採らなかった**
+# ——`issue-secrets` は実測 61 PR に出る常連で、かつ REQUIRED/NONREQUIRED のどちらの
+# 一覧にも無い＝**必須扱い**なので、赤にすると**全 PR が永久に止まる。**
 #
 # 作業合意「CI の状態は commit を固定して読む」（2026-09-05）:
 # branch protection が読むのも `commits/<PR の HEAD>/check-runs` なので、これに合わせる。
 fetch_checks() {
   # shellcheck disable=SC2016  # $r/$bucket は jq の変数。シェルに展開させないためのシングルクォート
   gh api "repos/$REPO/commits/$HEAD_OID/check-runs" -q '
+    def bucket_of:
+      if .conclusion == null then "pending"
+      elif (.conclusion == "success" or .conclusion == "neutral" or .conclusion == "skipped") then "pass"
+      else "fail" end;
+    # 悪い順の重み。**同名グループからこれが最大の 1 件を採る**（fail が緑に塗り替えられない）
+    def severity: {"pass": 0, "pending": 1, "fail": 2}[bucket_of];
     [.check_runs[] | {name, status, conclusion, started_at, details_url}]
     | group_by(.name)
-    | map(max_by(.started_at))
+    | map(max_by(severity))
     | .[]
     | . as $r
-    | (if $r.conclusion == null then "pending"
-       elif ($r.conclusion == "success" or $r.conclusion == "neutral" or $r.conclusion == "skipped") then "pass"
-       else "fail" end) as $bucket
+    | ($r | bucket_of) as $bucket
     | "\($bucket)\t\($r.name)\t\($r.conclusion // "")\t\($r.details_url // "")"
   '
 }
