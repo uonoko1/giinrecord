@@ -360,6 +360,44 @@ t_fence_recognition_is_checked() {
 }
 test_case "fence: 認識行の 3 要素（行頭空白・チルダ・閉じたら戻る）を固定する" t_fence_recognition_is_checked
 
+# **フェンスの行頭空白の上限 3 の「両側」を固定する**（レビューの実測。**どちらも 32/0 素通りだった**）。
+#
+# **R3 のテストは空白 2 つを使っているので、上限 3 を一切固定していなかった:**
+#
+#   M06 上限を 2 に下げる: 空白 3 つがフェンスと見なされなくなる → **偽の緑**
+#   M07 上限を 4 に上げる: 空白 4 つがフェンスと見なされる      → **偽の赤**
+#
+# **M07 のほうが重い**——**本物の閉じる語を飲み込む向き**で、
+# **pr-closes.sh の docblock が「一番たちの悪い壊れ方」と名指しした形である。**
+# **CommonMark は fence indent を 3 つまでとし、4 つは字下げコードブロックである。**
+t_fence_indent_boundary() {
+  local a="$TMP/fence-3sp.md"
+  printf '%s\n' '   ```' '   Closes #601' '   ```' > "$a"
+  set +e; OUT=$(bash "$SCRIPT" "$a" 2>&1); local rc=$?; set -e
+  assert_eq 1 "$rc" "空白 3 つはフェンス（CommonMark の上限）: $OUT"
+
+  local b="$TMP/fence-4sp.md"
+  printf '%s\n' '    ```' 'Closes #602' '    ```' > "$b"
+  set +e; OUT=$(bash "$SCRIPT" "$b" 2>&1); rc=$?; set -e
+  assert_eq 0 "$rc" "空白 4 つはフェンスではない（本物の閉じる語を飲み込まない）: $OUT"
+  assert_contains "$OUT" "#602" "字下げされた開き記号をフェンスと見ると #602 を失う"
+}
+test_case "fence: 行頭空白の上限 3 の両側を固定する（M06 / M07 を殺す）" t_fence_indent_boundary
+
+# **閉じフェンスに文字が続く形**（レビューの実測。**next を外す変異が 32/0 素通りだった**）。
+#
+# **開きフェンスなら直下の if (infence) が吸収するので等価に見えるが、閉じフェンス側は違う**——
+# **infence が 0 になるので素通りし、行の中身がスパン処理を通って印字される。**
+# **GitHub はその行をコードブロックの中に入れるので、何も閉じない。**
+t_closing_fence_with_trailing_text() {
+  local f="$TMP/fence-trailing.md"
+  printf '%s\n' '```' 'code' '```Closes #500' > "$f"
+  set +e; OUT=$(bash "$SCRIPT" "$f" 2>&1); local rc=$?; set -e
+  assert_eq 1 "$rc" "閉じフェンスに続く文字は閉じる語として拾わない: $OUT"
+  assert_not_contains "$OUT" "#500" "コードブロックの中の番号を拾ってはいけない"
+}
+test_case "fence: 閉じフェンスに文字が続く形（next を外すと落ちる）" t_closing_fence_with_trailing_text
+
 t_double_backtick_span_holds_single_backtick() {
   # **閉じは「開きと同じ長さ」でなければならない**（CommonMark と同じ数え方）。
   # `` で開いたスパンは、**中に単独の ` があっても閉じない**——
