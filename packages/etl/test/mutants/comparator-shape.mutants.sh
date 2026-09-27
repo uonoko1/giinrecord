@@ -57,8 +57,19 @@ run "M11 分割代入の束縛名を集めない" 's{    if \(ts\.isBindingEleme
 run "M12 SORT_METHODS から toSorted を外す" 's{const SORT_METHODS = new Set\(\["sort", "toSorted"\]\);}{const SORT_METHODS = new Set(\["sort"\]);}'
 
 # ---- PR #1062 のレビューで見つかった穴に対応する変異（実測: 全部赤）----
-run "R1  三項の条件の丸めを見ない（レビュー前に戻す）" 's{  if \(hasRounding\(c\.left\) \|\| hasRounding\(c\.right\)\) return false;\n}{}'
+# **R1 の式は一度古くなった**（`hasRounding` → `hasRoundingDeep` に改名したので当たらなくなった）。
+# **`mutate.sh` が exit 3（md5 が変わらない）で落としたので「素通り」と誤記録せずに済んだ**——
+# **この道具が無ければ「fail 0 = 検査が弱い」と読み違えていた。**
+run "R1  三項の条件で丸めを一切見ない" 's{  if \(hasRoundingDeep\(c\.left, sf\) \|\| hasRoundingDeep\(c\.right, sf\)\) return false;}{}'
 run "R2  % を丸めと数えない" 's{if \(n\.operatorToken\.kind === ts\.SyntaxKind\.PercentToken\) return true;}{if (false) return true;}'
 run "R3  (y/t)*t を丸めと数えない" 's{    return hasDivision\(n\.left\) \|\| hasDivision\(n\.right\);}{    return false;}'
 run "R4  hasDivision を常に false" 's{function hasDivision\(n: ts\.Node\): boolean \{\n}{function hasDivision(n: ts.Node): boolean \{ return false;\n}'
 run "R5  === / !== を鏡の演算子に足す" 's{    case ts\.SyntaxKind\.GreaterThanEqualsToken:}{    case ts.SyntaxKind.GreaterThanEqualsToken:\n    case ts.SyntaxKind.EqualsEqualsEqualsToken:\n    case ts.SyntaxKind.ExclamationEqualsEqualsToken:\n    case ts.SyntaxKind.EqualsEqualsToken:}'
+
+# ---- PR #1062 のレビュー 3 巡目（ヘルパー関数の向こうの丸め）----
+run "S1  ヘルパーの中の丸めを見ない（1 段辿るのをやめる）" 's{        if \(body && hasRoundingDeep\(body, sf, new Set\(\[\.\.\.seen, name\]\)\)\) \{ found = true; return; \}}{        if (false) \{ found = true; return; \}}'
+run "S2  ヘルパーの本体を返さない" 's{  if \(decls !== 1\) return null;}{  return null;}'
+run "S3  三項の条件で浅い hasRounding に戻す" 's{  if \(hasRoundingDeep\(c\.left, sf\) \|\| hasRoundingDeep\(c\.right, sf\)\) return false;}{  if (hasRounding(c.left) \|\| hasRounding(c.right)) return false;}'
+run "S4  差の枝で浅い hasRounding に戻す" 's{      if \(hasRoundingDeep\(n, sf\)\) return "差の中に丸め}{      if (hasRounding(n)) return "差の中に丸め}'
+run "S5  文字列で切る形を丸めと数えない" 's{function isStringTruncation\(n: ts\.Node\): boolean \{\n}{function isStringTruncation(n: ts.Node): boolean \{ return false;\n}'
+run "S6  関数宣言のヘルパーの本体を集めない" 's{      if \(n\.body\) bodies\.push\(n\.body\);}{      if (false) bodies.push(n.body!);}'

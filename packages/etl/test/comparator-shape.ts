@@ -121,11 +121,57 @@ import ts from "typescript";
  *   データフロー解析になる**（この道具の設計＝「1 つの比較関数を構文で見る」の外）。
  *   **県のファイルには `.map(` が 286 か所ある**（実測。grep -o で数えた出現数。`grep -c` は行数なので 276 になる）ので、
  *   **「`.map` の中に丸めが在ったら落とす」にすると丸めと無関係な写しを大量に殺す。**
+ * - **B9: 辿れない呼び出しの向こうに丸めを置く形**（**#1052 のレビュー 3 巡目で足した**）。
+ *   **呼び出しを辿るのは「同じファイルの中で、同名の宣言がちょうど 1 つのとき」だけ**なので、
+ *   **次の 3 つは丸めが向こう側に在っても素通りする**（**`pdf-row-order.test.ts` で assert して固定**）:
+ *   ```js
+ *   import { ROW } from "./rows.ts";            // 別ファイル
+ *   const ROW = …; function f(){ const ROW = …; }  // 同名が 2 つで決められない
+ *   xs.sort((a, b) => R.row(b.y) - R.row(a.y));    // メソッド呼び出し（辿る先が無い）
+ *   ```
+ *   **「辿れなければ落とす」にしなかったのは偽陽性を測ったからである**——
+ *   **佐賀の `key` は同じファイルで 2 回宣言されている**（175 行目が文字列、206 行目がヘルパー）ので、
+ *   **「決められないなら落とす」にすると佐賀の 2 か所が死ぬ。**
+ *   **ここは denylist 側に倒れていることを承知で残す。**
  * - **比較関数を別ファイルに置いて import する形**（この道具は 1 ファイルずつ見る）。
  *   **ただし `sort(CMP)` のように「識別子を渡す」形は、同じファイルの中に定義があれば追う。
  *   追えなければ `unresolved` として落とす**（＝黙って通らない）。
  *   **同名の宣言が 2 つ以上あれば `ambiguous` として落とす**（#1052。**スコープは見ていない**）。
  * - **県のディレクトリの外**（`pdf-table.ts` などの共有層）。**そちらは別の 2 つの検査が見る。**
+ *
+ * ## 検討して採らなかった直し方——**「ファイル全体で y への丸めを探す」**（**測ったら偽陽性が出た**）
+ *
+ * **「式の中を歩くのをやめて、ファイル全体で `.y` への丸めを探す粗い網にすれば、
+ * ヘルパーに出しても `.map()` の中でも捕まる（B8 も要らなくなる）」という案を検討した。**
+ * **提案には「実コードに 0 件」という実測が添えられていたが、
+ * 自分で数え直したら 0 件ではなかった**（**提案者自身が「`y.toFixed` や分割代入を
+ * 拾えていない可能性がある」と書いていたとおりだった**）:
+ *
+ * ```
+ * kochi/votes-pdf.ts:351   kindLines.map((y) => y.toFixed(1)).join(" ")
+ * nara/votes-pdf.ts:190    kindLines.map((y) => y.toFixed(1)).join(" ")
+ * ```
+ *
+ * **どちらも `throw new Error(...)` の中の、人が読むための桁合わせである**——
+ * **比較にも並べ替えにも一切入らない。** **`toFixed` は `ROUNDING` に入っているので、
+ * 「ファイル全体で y への丸めを探す」網はこの 2 件を落とす＝偽陽性になる。**
+ *
+ * **だから採らなかった。** **代わりに「比較関数の中の呼び出しを 1 段辿る」（`hasRoundingDeep`）を選んだ**——
+ * **精密で、実測の偽陽性が 0 件である**（追跡下の比較関数 275 個で新たに落ちたもの 0）。
+ * **粗い網のほうが迂回されにくいのは確かなので、B9 として「辿れない形は素通りする」ことを
+ * 検査で明示して残した**（**塞いだつもりにならないように**）。
+ *
+ * ## **この検査の射程外**（**「許容差」ではないので、ここでは見ない**）
+ *
+ * **`String(a.y) < String(b.y)` / `Math.sin(a.y) - Math.sin(b.y)` / `Math.min(...)` を鏡に当てる形**は、
+ * **鏡の形をしていて素通りする**（実測）。**しかしこれらは「近ければ同値」ではなく
+ * 「単に間違ったキーで並べている」**——**#1008 / #1052 が見ているのは許容差であって、
+ * 「正しいキーで並べているか」ではない**（それは県ごとの振る舞いの検査の仕事である）。
+ * **射程外と判断して、塞いでいない。**
+ *
+ * **`y * (1/t) * t` も素通りするが、これは丸めではない**（**#1052 で心配して、測ったら外れた**）——
+ * **`600*(1/3)*3 = 600` に対して `599.9*(1/3)*3 = 599.8999999999999` で値は違い、
+ * 20 万対で符号が変わった回数は 0。定数倍は単調なので順序を変えない＝許容差にならない。**
  *
  * ## 倒れる向き（#569）——**「別人の記録が出る」側である**
  *
@@ -257,6 +303,32 @@ function hasDivision(n: ts.Node): boolean {
  *   `shimane/sessions.ts`）の 4 か所で実際に使われている**（実測 grep で 4 件）。
  *   **これらは除算を含まないので、「掛ける相手に `/` が在るか」で区別できる。**
  */
+/**
+ * **文字列に落として切る形**の丸めか（**#1052 のレビュー 3 巡目の指摘 D / E**）。
+ *
+ * **`ROUNDING` は「名前の集合」＝ denylist なので、名前も `%` も `/` も使わない形が残っていた**（実測）:
+ *
+ * ```js
+ * Number(String(b.y).split(".")[0]) - Number(String(a.y).split(".")[0]) || a.x - b.x  // D
+ * Number(String(b.y).slice(0, 2))   - Number(String(a.y).slice(0, 2))   || a.x - b.x  // E
+ * ```
+ *
+ * **D は正の y に対して `Math.trunc` と完全に同一。**
+ * **E は上 2 桁だけを見る＝10 単位のバケットで、`y = 599 / 591`（8pt 離れた別の行）が潰れる**
+ * （**実測: 正しい比較が `上下` を出すところで `下上` を出す**）。
+ * **どちらも反対称の破れ 0 / 推移の破れ 0＝正しい全順序なので、V8 は文句を言わない。**
+ *
+ * **偽陽性**: **県の比較関数 103 個に `String` / `split` / `slice` / `substring` / `padStart` を
+ * 使うものは 1 つも無い**（実測 0 件）。**比較関数で文字列を切る理由が無いので、丸ごと落とす。**
+ */
+const STRING_TRUNCATION = new Set(["split", "slice", "substring", "substr", "padStart", "padEnd"]);
+
+function isStringTruncation(n: ts.Node): boolean {
+  if (!ts.isCallExpression(n)) return false;
+  const e = n.expression;
+  return ts.isPropertyAccessExpression(e) && STRING_TRUNCATION.has(e.name.text);
+}
+
 function isArithmeticRounding(n: ts.Node): boolean {
   if (!ts.isBinaryExpression(n)) return false;
   // **`%` は丸め**（県の比較関数に実例 0 件）
@@ -269,13 +341,106 @@ function isArithmeticRounding(n: ts.Node): boolean {
 }
 
 /**
+ * **同じファイルの中で、名前に束縛された「値を返す関数」の本体を探す**（**#1052 のレビュー 3 巡目**）。
+ *
+ * **`resolveLocal` は「比較関数」を探すが、こちらは「比較関数の中から呼ばれるヘルパー」を探す。**
+ * **どちらも「同じファイルの同名の宣言を歩く」という同じ機構である**——
+ * **だから B8（`.map()` のデータフロー解析）と違い、この道具の設計の外ではない。**
+ *
+ * **同名の宣言が 2 つ以上あれば `null` を返して「決められない」ことを伝える**
+ * （**佐賀の `key` は 175 行目の文字列と 206 行目のヘルパーで 2 回宣言されている**——実測。
+ * **だから「決められないなら落とす」にすると佐賀の 2 か所が死ぬ。下の `hasRoundingDeep` を見よ**）。
+ */
+function resolveHelperBody(sf: ts.SourceFile, name: string): ts.Node | null {
+  const bodies: ts.Node[] = [];
+  let decls = 0;
+  const walk = (n: ts.Node): void => {
+    if (ts.isVariableDeclaration(n) && ts.isIdentifier(n.name) && n.name.text === name) {
+      decls++;
+      const init = n.initializer;
+      if (init && (ts.isArrowFunction(init) || ts.isFunctionExpression(init))) bodies.push(init.body);
+    }
+    if (ts.isFunctionDeclaration(n) && n.name && n.name.text === name) {
+      decls++;
+      if (n.body) bodies.push(n.body);
+    }
+    ts.forEachChild(n, walk);
+  };
+  walk(sf);
+  if (decls !== 1) return null;
+  return bodies[0] ?? null;
+}
+
+/**
  * 部分木のどこかに丸めがあるか（`Math.round(b.y / t) - …` を拾う）。
  * **#1052 で「ビット演算による切り捨て」も丸めとして拾うようにした。**
  */
 function hasRounding(n: ts.Node): boolean {
-  if (isRoundingCall(n) || isBitwiseTruncation(n) || isArithmeticRounding(n)) return true;
+  if (isRoundingCall(n) || isBitwiseTruncation(n) || isArithmeticRounding(n) || isStringTruncation(n)) return true;
   let found = false;
   ts.forEachChild(n, (c) => { if (!found && hasRounding(c)) found = true; });
+  return found;
+}
+
+/**
+ * **丸めを、呼び出しの 1 段向こうまで見る**（**#1052 のレビュー 3 巡目。塞いだ H2 が復活していた**）。
+ *
+ * ## 何が起きていたか
+ *
+ * **`hasRounding` は比較関数の式の中しか歩かない**ので、
+ * **丸めをヘルパー関数に 1 行出すだけで、塞いだはずの形が完全に復活する**（実測 2026-09-27）:
+ *
+ * ```js
+ * const ROW = (y) => y - (y % LINE_H);                 // ← 丸めはここに逃げている
+ * xs.sort((a, b) => ROW(b.y) - ROW(a.y) || a.x - b.x); // ← 式の中には丸めが無い
+ * ```
+ *
+ * **これは H2 と数学的に同一である**——
+ * **自分で検算した: `y = 599.5 / 597.5` はどちらもバケット 597 に落ち、
+ * `山田太郎` が `太郎山田` になる（H2 と 1 文字も違わない）。
+ * 1,089 対で反対称の破れ 0、35,937 三つ組で推移の破れ 0 で、正しい全順序である**——
+ * **だから V8 は文句を言わず、`sort` も落ちない。完全に無音で氏名が入れ替わる**（#569 の重いほう）。
+ *
+ * **「二重の歯止め」も効かない**——**振る舞いの検査を持つのは `rowOrdered`（三重）だけで、
+ * 他の 10 県の 21 個の比較関数には、この構文の検査しか無い。**
+ *
+ * ## なぜ B8 と同じ扱い（「塞げないと分かって残す」）にしなかったか
+ *
+ * **B8 は「`sort` に渡る配列がどこで作られたか」を追うデータフロー解析が要る。**
+ * **こちらは「比較関数の中の呼び出しを 1 段だけ辿る」だけで、
+ * `resolveLocal` が既にやっている機構（同じファイルの同名の宣言を歩く）をそのまま使える。**
+ * **設計の外ではないので、塞ぐほうを選んだ。**
+ *
+ * ## 辿れない呼び出しをどう扱うか（**#569 と偽陽性の両方を測って決めた**）
+ *
+ * **「辿れなければ落とす」にはしていない。** 理由は実測である:
+ * **県の比較関数 103 個のうち呼び出しを含むのは 3 個だけで、その中身は
+ * `rowOf.get`（Map の参照。三重）と `key`（佐賀。2 か所）である。**
+ * **`key` は同じファイルで 2 回宣言されている**（175 行目が文字列、206 行目がヘルパー）ので、
+ * **「決められないなら落とす」にすると佐賀の 2 か所が偽陽性で死ぬ。**
+ * **`rowOf.get` のようなメソッド呼び出しも、辿る先が無い。**
+ *
+ * **だから「辿れたら中を見る／辿れなければそのまま通す」**にした。
+ * **これは denylist 側に倒れる判断である**——
+ * **`import` してきたヘルパーに丸めを置けば、まだ素通りする**（下の `B9-import` で assert して残す）。
+ * **「塞いだつもり」にならないよう、捕まえられない形の一覧にも書いた。**
+ */
+function hasRoundingDeep(n: ts.Node, sf: ts.SourceFile, seen: ReadonlySet<string> = new Set()): boolean {
+  if (hasRounding(n)) return true;
+  let found = false;
+  const walk = (m: ts.Node): void => {
+    if (found) return;
+    if (ts.isCallExpression(m) && ts.isIdentifier(m.expression)) {
+      const name = m.expression.text;
+      // **再帰で無限に潜らない**（同じ名前を 2 度は辿らない）
+      if (!seen.has(name)) {
+        const body = resolveHelperBody(sf, name);
+        if (body && hasRoundingDeep(body, sf, new Set([...seen, name]))) { found = true; return; }
+      }
+    }
+    ts.forEachChild(m, walk);
+  };
+  walk(n);
   return found;
 }
 
@@ -369,7 +534,7 @@ function isMirroredComparison(cond: ts.Expression, sf: ts.SourceFile, ps: Params
   // **`checkExpr` が `hasRounding` を呼ぶのは `-` の枝だけで、三項の条件は通っていなかった。**
   // **実測（2026-09-27）: `cmp(A,D)` も `cmp(D,A)` も `-1`（y = 9.5 / 9.0、t = 3）で、
   // B1 と同じく反対称でない。** **佐賀の 3 か所は丸めを含まないので、これで死なない**（実測）。
-  if (hasRounding(c.left) || hasRounding(c.right)) return false;
+  if (hasRoundingDeep(c.left, sf) || hasRoundingDeep(c.right, sf)) return false;
   // **両辺が引数を含むこと**（**片側が閾値だと鏡にならない＝許容差**）
   const usesParam = (n: ts.Node): boolean => normalized(n, sf, ps, false).includes("@");
   if (!usesParam(c.left) || !usesParam(c.right)) return false;
@@ -406,7 +571,7 @@ function checkExpr(n: ts.Expression, sf: ts.SourceFile, ps: Params): string | nu
     if (op === ts.SyntaxKind.MinusToken) {
       // `Math.round(b.y / t) - Math.round(a.y / t)` は文法には合うが、行への丸め＝許容差
       // **#1052 で `parseInt` / `toFixed` / `| 0` / `~~` も丸めとして数えるようにした**
-      if (hasRounding(n)) return "差の中に丸め（Math.round / parseInt / toFixed / `|0` / `% t` / `(y/t)*t` など）がある＝行に丸めている";
+      if (hasRoundingDeep(n, sf)) return "差の中に丸め（Math.round / parseInt / toFixed / `|0` / `% t` / `(y/t)*t`、およびヘルパー関数 1 段の向こう）がある＝行に丸めている";
       return null;
     }
     if (op === ts.SyntaxKind.QuestionQuestionToken) return "`??` で繋いでいる（左が 0 でも右に落ちないので全順序にならない）";

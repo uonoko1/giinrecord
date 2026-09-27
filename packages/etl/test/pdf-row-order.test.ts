@@ -650,6 +650,105 @@ test("#1052 レビュー: 三項の条件の中の丸めと、`%` / `(y/t)*t` �
  * **`isMirroredComparison` の switch に `===` を足す変異を当てても赤くならなかった**ので、
  * **「足しても落ちる」ほうを検査で固定する。**
  */
+/**
+ * **丸めをヘルパー関数に 1 行出す形を落とす**（**#1052 のレビュー 3 巡目。塞いだ H2 が復活していた**）。
+ *
+ * **`hasRounding` は比較関数の式の中しか歩かないので、丸めが呼び出しの向こう側にあると見えなかった**
+ * （**実測 2026-09-27。5 通りすべて `reason: null`**）:
+ *
+ * | # | 綴り | レビュー前 |
+ * |---|---|---|
+ * | Y6-A | `const ROW = (y) => y - (y % H);` ＋ `ROW(b.y) - ROW(a.y)` | **素通り** |
+ * | Y6-B | `function rowOf(y) { return Math.round(y / H); }` | **素通り** |
+ * | Y6-C | `const ROW = (y) => Math.floor(y / H);` ＋ 三項 | **素通り** |
+ * | D | `Number(String(b.y).split(".")[0]) - …` | **素通り** |
+ * | E | `Number(String(b.y).slice(0, 2)) - …` | **素通り** |
+ *
+ * **Y6-A は塞いだ H2 と数学的に同一である**——**自分で検算した:
+ * `y = 599.5 / 597.5` はどちらもバケット 597 に落ち、`山田太郎` が `太郎山田` になる
+ * （H2 の出力と 1 文字も違わない）。1,089 対で反対称の破れ 0、35,937 三つ組で推移の破れ 0**
+ * ＝**正しい全順序なので V8 は文句を言わず、`sort` も落ちない。完全に無音である**（#569 の重いほう）。
+ *
+ * **「二重の歯止め」も効かない**——**振る舞いの検査を持つのは `rowOrdered`（三重）だけで、
+ * 他の 10 県の 21 個の比較関数には、この構文の検査しか無い。**
+ *
+ * ## なぜ B8 と同じ扱い（「塞げないと分かって残す」）にしなかったか
+ *
+ * **B8 は「`sort` に渡る配列がどこで作られたか」を追うデータフロー解析が要る。**
+ * **こちらは呼び出しを 1 段辿るだけで、`resolveLocal` が既に持っている機構
+ * （同じファイルの同名の宣言を歩く）をそのまま使える**ので、**設計の外ではない。**
+ *
+ * ## 偽陽性を測ってから決めた
+ *
+ * **県の比較関数 103 個のうち呼び出しを含むのは 3 個だけ**（実測）——
+ * **`rowOf.get`（Map の参照。三重）と `key`（佐賀の 2 か所）で、どちらも丸めを含まない。**
+ * **`String` / `split` / `slice` / `substring` / `padStart` を使うものは 0 個**（実測）。
+ * **追跡下の比較関数 275 個で、この対応によって新たに落ちたものは 0 件**（実測）。
+ */
+test("#1052 レビュー3: 丸めをヘルパー関数に出しても落とす（呼び出しを 1 段辿る）", () => {
+  const mutants: [string, string][] = [
+    ["Y6-A ヘルパーに % を出す", `const ROW = (y) => y - (y % LINE_H);\nxs.sort((a, b) => ROW(b.y) - ROW(a.y) || a.x - b.x);`],
+    ["Y6-B 関数宣言で Math.round", `function rowOf(y) { return Math.round(y / LINE_H); }\nxs.sort((a, b) => rowOf(b.y) - rowOf(a.y) || a.x - b.x);`],
+    ["Y6-C ヘルパー + 三項", `const ROW = (y) => Math.floor(y / LINE_H);\nxs.sort((a, b) => ROW(a.y) < ROW(b.y) ? 1 : -1);`],
+    // **2 段の間接でも辿る**（**`ROW` → `BK` → `%`**）
+    ["Y6-D 2 段の間接", `const BK = (y) => y - (y % H);\nconst ROW = (y) => BK(y);\nxs.sort((a, b) => ROW(b.y) - ROW(a.y) || a.x - b.x);`],
+    // **名前も `%` も `/` も使わない形**（**`ROUNDING` が denylist であることが原因だった**）
+    ["D String split で整数部（Math.trunc と同一）", `xs.sort((a, b) => Number(String(b.y).split('.')[0]) - Number(String(a.y).split('.')[0]) || a.x - b.x);`],
+    ["E String slice で上 2 桁（10 単位のバケット）", `xs.sort((a, b) => Number(String(b.y).slice(0, 2)) - Number(String(a.y).slice(0, 2)) || a.x - b.x);`],
+  ];
+  for (const [name, code] of mutants) {
+    const found = comparatorsIn("m.ts", code);
+    assert.equal(found.length, 1, `${name}: 比較関数が 1 つ見つかるはず（${found.length}）`);
+    assert.ok(found[0].reason, `${name}: allowlist を素通りした（${found[0].text}）`);
+  }
+  // **既存の正しいヘルパーを殺していないこと**（**佐賀の `key` と三重の `rowOf.get`。実測 3 か所**）
+  const good = [
+    `const key = (id) => order.get(id) ?? 0;\nxs.sort((a, b) => key(b.sessionId) - key(a.sessionId) || (a.sessionId < b.sessionId ? 1 : -1));`,
+    `xs.sort((a, b) => rowOf.get(b)! - rowOf.get(a)! || a.x - b.x);`,
+  ];
+  for (const code of good) {
+    const found = comparatorsIn("g.ts", code);
+    assert.equal(found.length, 1);
+    assert.equal(found[0].reason, null, `正しいヘルパーを落とした（偽陽性）: ${code} → ${found[0].reason}`);
+  }
+});
+
+/**
+ * **B9: 辿れない呼び出しの向こうの丸めは捕まえられない**
+ * （**塞げないと分かっていて残す。B8 と同じ扱い**）。
+ *
+ * **呼び出しを辿るのは「同じファイルの中で、同名の宣言がちょうど 1 つのとき」だけである**ので、
+ * **次の 3 つは丸めが向こう側に在っても素通りする**（実測。**下で assert して固定する**）:
+ *
+ * ```js
+ * import { ROW } from "./rows.ts";  xs.sort((a,b) => ROW(b.y) - ROW(a.y) || a.x - b.x);  // 別ファイル
+ * // 同名の宣言が 2 つ（どちらを指すか決められない）
+ * // R.row(b.y) のようなメソッド呼び出し（辿る先が無い）
+ * ```
+ *
+ * **「辿れなければ落とす」にしなかったのは、偽陽性を測ったからである**——
+ * **佐賀の `key` は同じファイルで 2 回宣言されている**（175 行目が文字列、206 行目がヘルパー）ので、
+ * **「決められないなら落とす」にすると佐賀の 2 か所が死ぬ。**
+ * **`rowOf.get` のようなメソッド呼び出しも辿る先が無い。**
+ *
+ * **つまりここは denylist 側に倒れている。** **それを承知で残す**（#1022 / #1008 と同じ向き）。
+ * **倒れる向きは「別人の記録が出る」側**（#569 の重いほう）**なので、
+ * 次の人が「塞いだつもり」にならないよう、素通りすることを検査で明示する。**
+ */
+test("#1052 レビュー3: B9 辿れない呼び出しの向こうの丸めは捕まえられない（既知の穴）", () => {
+  const holes: [string, string][] = [
+    ["別ファイルから import したヘルパー", `import { ROW } from "./rows.ts";\nxs.sort((a, b) => ROW(b.y) - ROW(a.y) || a.x - b.x);`],
+    ["同名のヘルパーが 2 つあって決められない", `const ROW = (y) => y - (y % H);\nfunction f(){ const ROW = (y) => y; xs.sort((a, b) => ROW(b.y) - ROW(a.y) || a.x - b.x); }`],
+    ["メソッド呼び出し（辿る先が無い）", `xs.sort((a, b) => R.row(b.y) - R.row(a.y) || a.x - b.x);`],
+  ];
+  for (const [name, code] of holes) {
+    const found = comparatorsIn("hole.ts", code);
+    assert.equal(found.length, 1, `${name}: 比較関数が 1 つ見つかるはず（${found.length}）`);
+    assert.equal(found[0].reason, null,
+      `${name}: 捕まえられるようになったら、この検査（既知の穴の記録）を消して上の allowlist に寄せること`);
+  }
+});
+
 test("#1052 レビュー: `===` / `!==` の三項は落とす（鏡の形だが全順序ですらない）", () => {
   for (const code of [
     `xs.sort((a, b) => a.y === b.y ? 1 : -1);`,
