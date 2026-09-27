@@ -324,6 +324,42 @@ t_fence_info_string_is_not_a_closing_word() {
 }
 test_case "fence: 情報文字列の Closes #N は閉じる語ではない（フェンス行を print line にすると落ちる）" t_fence_info_string_is_not_a_closing_word
 
+# **フェンスの認識行は 3 つのことを同時に言っている**——**`^[ ]{0,3}` / `(```|~~~)` / `!infence`。**
+# **R2 で 1 つ目を殺したが、残り 3 つは無検査だった**（レビューの実測。**各 31/0 緑で素通り**）。
+#
+#   R3 行頭空白を認めない（`^[ ]{0,3}` → `^`）      → 偽の緑
+#   R4 チルダを外す（`(```|~~~)` → `(```)`）        → 偽の緑
+#   N1 `infence = !infence` → `infence = 1`（閉じない） → **偽の赤**
+#
+# **N1 はこの PR 自身の本文の形である**（実行例のフェンスのあとに `Closes #977` を書く）——
+# **`pr-closes.sh` の docblock が「一番たちの悪い壊れ方」と名指しした形で、
+# この変異が入ると PR #1032 自身が赤くなるのに、テストは緑だった。**
+#
+# **どれも GitHub に `POST /markdown` で聞いて裏を取っている。**
+t_fence_recognition_is_checked() {
+  # R3: 行頭に空白 2 つ（CommonMark は 3 つまで許す）
+  local a="$TMP/fence-indent.md"
+  printf '%s\n' '  ```' '  Closes #501' '  ```' > "$a"
+  set +e; OUT=$(bash "$SCRIPT" "$a" 2>&1); local rc=$?; set -e
+  assert_eq 1 "$rc" "行頭に空白のあるフェンスも認識する（GitHub は <pre><code> にする）: $OUT"
+  assert_not_contains "$OUT" "#501" "字下げフェンスの中の番号は拾わない"
+
+  # R4: チルダのフェンス
+  local b="$TMP/fence-tilde.md"
+  printf '%s\n' '~~~' 'Closes #502' '~~~' > "$b"
+  set +e; OUT=$(bash "$SCRIPT" "$b" 2>&1); rc=$?; set -e
+  assert_eq 1 "$rc" "チルダのフェンスも認識する（CommonMark はこの 2 種だけを定める）: $OUT"
+  assert_not_contains "$OUT" "#502" "チルダフェンスの中の番号は拾わない"
+
+  # N1: フェンスを閉じたら普通の本文に戻る（**偽の赤を防ぐ**）
+  local c="$TMP/fence-closed.md"
+  printf '%s\n' '## 実行例' '```' 'bash foo.sh' '```' '' 'Closes #977' > "$c"
+  set +e; OUT=$(bash "$SCRIPT" "$c" 2>&1); rc=$?; set -e
+  assert_eq 0 "$rc" "フェンスを閉じたら普通の本文に戻る（この PR 自身の本文の形）: $OUT"
+  assert_contains "$OUT" "#977" "フェンスの外の閉じる語は生きている"
+}
+test_case "fence: 認識行の 3 要素（行頭空白・チルダ・閉じたら戻る）を固定する" t_fence_recognition_is_checked
+
 t_double_backtick_span_holds_single_backtick() {
   # **閉じは「開きと同じ長さ」でなければならない**（CommonMark と同じ数え方）。
   # `` で開いたスパンは、**中に単独の ` があっても閉じない**——
