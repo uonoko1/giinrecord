@@ -5804,7 +5804,7 @@
   },
   "current": true,
   "district": "京都3",
-  "group": "中道改革連合・無所属",
+  "group": "無所属",
   "house": "shugiin",
   "id": "h_761d532f90",
   "kana": "いずみ けんた",
@@ -6405,7 +6405,7 @@
  {
   "assemblyId": "diet-shugiin",
   "counts": {
-   "bills": 4,
+   "bills": 2,
    "questions": 0,
    "rollcalls": 0,
    "speeches": 28
@@ -8133,7 +8133,7 @@
  {
   "assemblyId": "diet-shugiin",
   "counts": {
-   "bills": 4,
+   "bills": 2,
    "questions": 0,
    "rollcalls": 0,
    "speeches": 21
@@ -8357,7 +8357,7 @@
  {
   "assemblyId": "diet-shugiin",
   "counts": {
-   "bills": 4,
+   "bills": 2,
    "questions": 0,
    "rollcalls": 0,
    "speeches": 60
@@ -8581,7 +8581,7 @@
  {
   "assemblyId": "diet-shugiin",
   "counts": {
-   "bills": 5,
+   "bills": 4,
    "questions": 0,
    "rollcalls": 0,
    "speeches": 68
@@ -9861,7 +9861,7 @@
  {
   "assemblyId": "diet-shugiin",
   "counts": {
-   "bills": 4,
+   "bills": 2,
    "questions": 0,
    "rollcalls": 0,
    "speeches": 11
@@ -12593,22 +12593,6 @@
   "id": "h_9bee4cd333",
   "kana": "わたなべ かつゆき",
   "name": "渡辺 勝幸"
- },
- {
-  "assemblyId": "diet-shugiin",
-  "counts": {
-   "bills": 1,
-   "questions": 0,
-   "rollcalls": 0,
-   "speeches": 5
-  },
-  "current": true,
-  "district": "（比）北海道",
-  "group": "自由民主党・無所属の会",
-  "house": "shugiin",
-  "id": "h_42df80d20e",
-  "kana": "わたなべ こういち",
-  "name": "渡辺 孝一"
  },
  {
   "assemblyId": "diet-shugiin",
