@@ -211,18 +211,35 @@ jobs:
       # merge-base が見える（実測: `--deepen=5` で `merge-base` が exit 0 になり、
       # 検査が `skipped 1` → `pass 9`（走査 1 commit / アドレス 1 件）に変わった）。
       # 余裕を見て 50 にしている（枝が main から離れていても届くように）。
-      # **失敗しても止めない**（`|| true`）: ここが落ちて赤くなると、trailer とは無関係な PR まで
-      # 赤になる。**取れなければテストが skip になり、その skip は出力に残る。**
       #
       # `actions/checkout@v4` は pull_request では `refs/pull/N/merge` を取るだけなので、
       # **`refs/remotes/origin/main` はそもそも作られない。** だから先に名指しで fetch する。
+      #
+      # ── **初版は最後の確認まで `|| true` にしていた**（レビューの指摘。#1074 の必須 2）───────
+      #
+      # **`|| true` + `shell: bash -e` なので、fetch が全滅しても step は exit 0 になっていた**
+      # （レビューが origin を差し替えて再現: fatal が 4 本出ても `STEP EXIT=0`）。
+      # **そのあとテストは `skipped 1` になり、`skipped > 0` を落とすものはリポジトリのどこにも無い。**
+      # **「fetch が壊れたら検査は静かに走らなくなり、CI は緑になる」経路が実在していた。**
+      #
+      # **直し方**: **fetch の 2 本は `|| true` のままでよい**（片方が失敗しても
+      # もう片方で届くことがある。一時的な network も拾いたくない）。
+      # **だが最後の確認は落とす**——**merge-base が届かなかったという事実は、
+      # 「trailer を検査しない」という事実そのものなので、緑で通してはいけない。**
+      # **ここが赤くなるのは fetch が壊れたときだけで、trailer の内容とは無関係である**
+      # （それは次の `pnpm test` が見る）。
       - name: コミット trailer の検査に merge-base を届かせる (#1074)
         if: github.event_name == 'pull_request'
         run: |
-          git fetch --quiet --depth=50 origin '+refs/heads/main:refs/remotes/origin/main' || true
-          git fetch --quiet --deepen=50 origin || true
-          git rev-parse --verify --quiet refs/remotes/origin/main || echo "origin/main が取れなかった（#1074 の検査は skip になる）"
-          git merge-base refs/remotes/origin/main HEAD || echo "merge-base が取れなかった（#1074 の検査は skip になる）"
+          set -uo pipefail
+          git fetch --quiet --depth=50 origin '+refs/heads/main:refs/remotes/origin/main' || echo "main の先端 fetch が失敗した（deepen で届くか見る）"
+          git fetch --quiet --deepen=50 origin || echo "deepen が失敗した（下の確認で落ちる）"
+          # **ここは落とす**（`|| true` を付けない）。取れていないなら、検査は走らない。
+          git rev-parse --verify --quiet refs/remotes/origin/main >/dev/null || {
+            echo "origin/main が取れなかった。#1074 の trailer 検査が skip になるので落とす"; exit 1; }
+          git merge-base refs/remotes/origin/main HEAD >/dev/null || {
+            echo "merge-base が取れなかった。#1074 の trailer 検査が skip になるので落とす"; exit 1; }
+          echo "merge-base: $(git merge-base refs/remotes/origin/main HEAD)"
       - run: pnpm test
       - run: pnpm build
         env: { SITE_ORIGIN: "${{ vars.SITE_ORIGIN }}" } # unset → relative URLs (#57); set the repo variable once the domain is decided (#938)

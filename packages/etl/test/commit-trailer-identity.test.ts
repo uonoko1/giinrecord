@@ -260,31 +260,130 @@ const NO_BASE = "refs/remotes/origin/main が無い";
 const NO_MERGE_BASE = "origin/main と HEAD の merge-base が取れない（浅い checkout）";
 const SKIP_REASONS: readonly string[] = [NO_BASE, NO_MERGE_BASE];
 
-const addedCommits = (): { shas: string[]; reason?: string; mergeBase?: string; head?: string } => {
+/**
+ * **`origin/main` が本当に無いことを、別の git コマンドで確かめる。**
+ *
+ * **理由の文字列を逐語で固定するだけでは足りなかった**（レビューの実測。必須 2）——
+ * **`SKIP_REASONS` は理由の *綴り* を守るだけで、「その理由が本当に成立しているか」を何も見ていない。**
+ * **許された理由で skip させる変異は 3 通りとも `pass 9 / fail 0 / skipped 1` で生き残った:**
+ *
+ * ```
+ * R2  `if (reason !== undefined)` → `if (true) { const reason = NO_BASE;`   skipped 1
+ * R3  `base = git("rev-parse",…)` → `base = ""`                            skipped 1
+ * R4  `mergeBase = git("merge-base",…)` → `mergeBase = ""`                 skipped 1
+ * ```
+ *
+ * **R3 / R4 は「ありがちな壊し方」そのものである**（ref の名前を書き間違える、
+ * `--quiet` の挙動を読み違える）。**そして `skipped > 0` を落とすものはリポジトリのどこにも無い**
+ * ——**`ci.yml` の fetch 段は `|| true` なので、fetch が全滅しても step は exit 0 になる**
+ * （レビューが origin を差し替えて再現した）。**「fetch が壊れたら検査は静かに走らなくなり、
+ * CI は緑になる」経路が実在していた。**
+ *
+ * **だから「走らせない」と言う前に、その主張を別の源で裏づける。**
+ * `rev-parse` が取れなかったと言うなら、**`for-each-ref` にも 1 件も出ないはず**である。
+ * **出るなら主張が嘘なので、skip ではなく落とす。**
+ */
+const originMainReallyAbsent = (): boolean => {
+  try {
+    return git("for-each-ref", "--format=%(refname)", "refs/remotes/origin/main").trim() === "";
+  } catch {
+    return true; // `for-each-ref` 自体が失敗するなら、git の履歴が読めていない
+  }
+};
+
+/**
+ * **merge-base が本当に取れないことを、その場でもう一度確かめる。**
+ *
+ * **`addedCommits` が返した `reason` の綴りを信じない**——**許された綴りを捏造する変異
+ * （R2b: `if (true) { const reason = NO_MERGE_BASE;`）は、綴りの逐語固定を素通りする**
+ * （実測: `pass 9 / fail 0 / skipped 1`）。**「走らせない」と言うなら、その主張を裏づける。**
+ */
+const mergeBaseObtainable = (): boolean => {
+  try {
+    return git("merge-base", "refs/remotes/origin/main", "HEAD").trim() !== "";
+  } catch {
+    return false;
+  }
+};
+
+const addedCommits = (): {
+  shas: string[];
+  reason?: string;
+  lie?: string;
+  mergeBase?: string;
+  head?: string;
+} => {
   let base: string;
   try {
     base = git("rev-parse", "--verify", "--quiet", "refs/remotes/origin/main").trim();
   } catch {
+    base = "";
+  }
+  if (base === "") {
+    // **主張を別の源で裏づける**（R3 はここで落ちる）。
+    if (!originMainReallyAbsent()) {
+      return {
+        shas: [],
+        lie: `origin/main が取れなかったと言っているが、for-each-ref には出ている` +
+          `（走査を止める理由が成り立っていない）: ${git("for-each-ref", "--format=%(refname) %(objectname)", "refs/remotes/origin/main").trim()}`,
+      };
+    }
     return { shas: [], reason: NO_BASE };
   }
-  if (base === "") return { shas: [], reason: NO_BASE };
   // **浅い checkout では merge-base が取れない。** 取れないまま `A..B` を走らせると
   // **git は「B から届く範囲だけ」を返す**ので、母数が落ちて検査が無意味になる。
   let mergeBase: string;
   try {
     mergeBase = git("merge-base", base, "HEAD").trim();
   } catch {
+    mergeBase = "";
+  }
+  if (mergeBase === "") {
+    // **`origin/main` が在るのに merge-base が取れないなら、それは「浅い」ではなく壊れている**
+    // ——**浅さの手当ては `ci.yml` の fetch 段が責任を持つ。そこが壊れたら赤くなるべきである**
+    // （レビューの指摘。R4 はここで落ちる）。
+    // **本当に浅くて届かない場合だけ skip を許す**ので、`--is-shallow-repository` で裏づける。
+    // **実測（2026-09-28）: `--depth=1` の clone は `is-shallow=true` で `origin/main` も無い
+    // （＝上の NO_BASE に落ちる）。`--deepen=50` を足すと shallow のままだが
+    // `origin/main` も merge-base も取れる**ので、CI はこちらの分岐に来ない。
+    const shallow = (() => {
+      try {
+        return git("rev-parse", "--is-shallow-repository").trim() === "true";
+      } catch {
+        return false;
+      }
+    })();
+    if (!shallow) {
+      return {
+        shas: [],
+        lie:
+          `origin/main（${base.slice(0, 8)}）は取れているのに merge-base が取れず、` +
+          `しかも浅い checkout でもない（走査を止める理由が成り立っていない）`,
+      };
+    }
     return { shas: [], reason: NO_MERGE_BASE };
   }
-  if (mergeBase === "") return { shas: [], reason: NO_MERGE_BASE };
   const head = git("rev-parse", "HEAD").trim();
   const out = git("rev-list", `${mergeBase}..HEAD`).trim();
   return { shas: out === "" ? [] : out.split("\n"), mergeBase, head };
 };
 
 test("この枝が足すコミットの trailer に、誤帰属するアドレスが無い", (t) => {
-  const { shas, reason, mergeBase, head } = addedCommits();
+  const { shas, reason, lie, mergeBase, head } = addedCommits();
+  // **「走らせない理由が成り立っていない」なら、skip ではなく落とす**（必須 2。R3 / R4 はここで落ちる）。
+  assert.equal(lie, undefined, `走査を止める理由が成り立っていない: ${lie}`);
   if (reason !== undefined) {
+    // **skip する前に、「本当に skip すべき状態か」を別の源で確かめ直す。**
+    // **これが R2（`if (true)` にして許された理由を捏造する変異）を落とす唯一の番人である**
+    // ——**`SKIP_REASONS` の逐語固定は理由の綴りしか守らないので、
+    // 許された綴りを渡されると通ってしまっていた**（レビューの実測: `pass 9 / fail 0 / skipped 1`）。
+    // **どちらの理由も、別の源で成り立つことを確かめる**（`reason` の綴りを信じない）。
+    // `NO_BASE`       → `for-each-ref` にも 1 件も出ないこと
+    // `NO_MERGE_BASE` → その場でもう一度 `merge-base` を叩いて、本当に取れないこと
+    assert.ok(
+      reason === NO_BASE ? originMainReallyAbsent() : !mergeBaseObtainable(),
+      `「${reason}」で走らせないと言っているが、別の源では履歴が読める（検査が黙って無力化されている）`,
+    );
     // **「落ちる」ではなく「明示的に skip」にした理由**:
     // **`pnpm test` を走らせる CI の `check` ジョブは `actions/checkout@v4` の既定
     // （`fetch-depth: 1`）で checkout する**（`ci.yml` 実測: `fetch-depth: 0` を持つのは
@@ -395,13 +494,32 @@ test("走らせない理由は「履歴が読めない」2 つだけ（skip で�
  * **`OK` そのものが何も主張していない。**
  *
  * **だから `OK` を、通すべき綴りと通してはいけない綴りに直接当てる。**
+ *
+ * ── **アンカーを外す変異が 3 通り、10/10 緑で生き残っていた**（レビューの実測。#1074 の必須 3）──
+ *
+ * ```
+ * N2  …github\.com$/ → …github\.com/    （末尾の $ を外す）   pass 10 / fail 0
+ * N4  /^\d+\+…       → /\d+\+…          （先頭の ^ を外す）   pass 10 / fail 0
+ * N6  [^@]+           → [^@]*            （ローカル部を空可に） pass 10 / fail 0
+ * ```
+ *
+ * **`OK` を「形の要求」として書いたのに、その形を守る検査自身が denylist**で、
+ * **列挙漏れがそのまま穴になっていた**（作業合意が繰り返し指摘している型。#1043 で同じ直し方をした）。
+ *
+ * **N2 は実害の形である**——**`…users.noreply.github.com.evil.com` は GitHub のユーザーに
+ * 紐づかない外部ドメイン**で、**`noreply@anthropic.com` とまったく同じクラスの誤帰属を生む。**
+ * **サフィックス攻撃の形が「通してはいけない」側に 1 つも入っていなかった。**
+ *
+ * **下の 3 形（`suffix` / `prefix` / `empty-local`）を足すと、N2 / N4 / N6 が全部落ちる**
+ * （実測は PR 本文）。**アンカーごとに 1 形ずつ対応させてある**ので、
+ * どのアンカーが外れたかがメッセージから分かる。
  */
 test("数字 ID 付きの noreply だけを通す正規表現そのものを検査する", () => {
-  for (const good of [
+  const good = [
     "41898282+github-actions[bot]@users.noreply.github.com",
     "120390190+uonoko1@users.noreply.github.com",
-  ]) assert.ok(OK.test(good), `通すべき綴りが落ちた: ${good}`);
-  for (const bad of [
+  ];
+  const bad = [
     "noreply@anthropic.com", // #1074 の発端。github.com/claude（id=81847、実在の個人）に誤帰属する
     "etl@users.noreply.github.com", // #1043 の発端。github.com/etl に誤帰属する
     "dev@users.noreply.github.com",
@@ -410,7 +528,23 @@ test("数字 ID 付きの noreply だけを通す正規表現そのものを検�
     "41898282+github-actions[bot]@example.com",
     "+uonoko1@users.noreply.github.com",
     "120390190@users.noreply.github.com",
-  ]) assert.ok(!OK.test(bad), `通してはいけない綴りが通った: ${bad}`);
+    // ── ここから下はレビューが素通りを実測した 3 形（必須 3）──────────────────
+    // **末尾アンカー（`$`）が要る**。これは実害の形である——`…github.com.evil.com` は
+    // **GitHub のユーザーに紐づかない外部ドメイン**で、誤帰属のクラスは anthropic.com と同じ。
+    "1+x@users.noreply.github.com.evil.com",
+    "1+x@users.noreply.github.company", // 末尾アンカーが無いと `.com` の後ろに何を足しても通る
+    // **先頭アンカー（`^`）が要る**。前に何を付けても通ってしまう。
+    "evil+1+x@users.noreply.github.com",
+    // **ローカル部は 1 文字以上（`[^@]+`）でなければならない**。
+    // `1+@users.noreply.github.com` は名前の無い形で、どのユーザーにも紐づかない。
+    "1+@users.noreply.github.com",
+  ];
+  // **母数**（#757）: **列挙そのものの本数を固定する。**
+  // **列挙が縮んだら、また同じアンカーの穴が開く**（N2 / N4 / N6 はこの列挙漏れで生き残っていた）。
+  assert.equal(good.length, 2, "通すべき綴りの列挙が縮んでいる");
+  assert.equal(bad.length, 12, "通してはいけない綴りの列挙が縮んでいる（アンカーを外す変異が素通りする）");
+  for (const e of good) assert.ok(OK.test(e), `通すべき綴りが落ちた: ${e}`);
+  for (const e of bad) assert.ok(!OK.test(e), `通してはいけない綴りが通った: ${e}`);
 });
 
 /**
