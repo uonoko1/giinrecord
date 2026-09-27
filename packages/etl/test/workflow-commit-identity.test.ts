@@ -59,7 +59,7 @@ const hasEmail = (line: string): boolean => new RegExp(EMAIL.source).test(line);
  * （レビューの実測: `git -c author.email=etl@users.noreply.github.com commit` は
  * **author が `etl@` になったまま 2 pass / 0 fail で通った**）。
  */
-const IDENTITY_KEYS = /(?:user\.email|author\.email|committer\.email|GIT_AUTHOR_EMAIL|GIT_COMMITTER_EMAIL|--author)/;
+const IDENTITY_KEYS = /(?:user\.email|author\.email|committer\.email|GIT_AUTHOR_EMAIL|GIT_COMMITTER_EMAIL|--author[= ])/;
 
 /**
  * **行をまたぐ書き方を畳んでから走査する。**
@@ -200,11 +200,17 @@ test("身元を決める書き方の列挙（IDENTITY_KEYS）が縮んでいな�
     "GIT_AUTHOR_EMAIL=x@y.z git commit -m x",
     "GIT_COMMITTER_EMAIL=x@y.z git commit -m x",
     "git commit --author='N <x@y.z>' -m x",
+    "git commit --author 'N <x@y.z>' -m x",
   ]) assert.ok(IDENTITY_KEYS.test(key), `身元を決める書き方が走査から漏れている: ${key}`);
   // 拾う必要が無い行（ここまで広げると、無関係な行のアドレスで赤くなる）
   for (const other of [
     "      - uses: actions/checkout@v4",
     "        run: pnpm install --frozen-lockfile",
+    // **`--author` の部分一致で拾ってはいけない行**（レビューの指摘）。
+    // **身元を変えないのに拾うと、無関係な行のアドレスで CI が赤くなる**
+    // （`--author` のままだと `git log --author-date-order` も `git shortlog --author-date` も拾った）。
+    "          git log --author-date-order -1",
+    "          git shortlog --author-date",
   ]) assert.ok(!IDENTITY_KEYS.test(other), `関係の無い行を拾っている: ${other}`);
 });
 
