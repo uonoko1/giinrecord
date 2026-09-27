@@ -64,8 +64,15 @@ jobs:
           bash scripts/ci/stale-base.sh --net-deletions "refs/remotes/origin/$BASE_REF" "$HEAD_SHA"
   check:
     runs-on: ubuntu-latest
-    # #556: 実測 min 153 / med 210 / max 225s（n=36）。同期の無限ループは testTimeout が効かず
-    # （イベントループごとブロックする）、ここだけが止められる。max の 8 倍。負荷で伸びる分の余裕（#538/#501）。
+    # #556: 同期の無限ループは testTimeout が効かず（イベントループごとブロックする）、ここだけが止められる。
+    # #1056: **実測値はここに書かない。** ここに書いた「min 153 / med 210 / max 225s（n=36）」は
+    # 2026-09-06 の測定で、2026-09-27 に測り直すと **max 630s**（#1030 のマージ前、n=28）だった
+    # ——**#1030 より前から 2.8 倍ずれていた。** 同じ数が 2 か所にあると、片方だけが腐る。
+    # **実測値は packages/etl/test/workflow-timeout.test.ts の表が 1 か所で持ち（測り方・n・測った日つき）、
+    # その表は `timeout-minutes` の値を assert で固定している**（腐れば CI が落ちる）。
+    # ここに残すのは機械の負荷で動かない事実だけ: **この値は実測の max の 2 倍以上を取る**
+    # （負荷で伸びる分の余裕。#538 はフルスイートが load 90 以上で 40% 落ちるのを、
+    #  #501 は個々が速いままでも wall が 4.4 倍に伸びるのを実測している）。
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -221,7 +228,8 @@ jobs:
     # comes from data/ (member name, bill title, tally, the primary-source link), not from a character count.
     needs: check
     runs-on: ubuntu-latest
-    # #556: 実測 min 72 / med 84 / max 96s（n=35）。max の 12 倍。
+    # #556 / #1056: 実測値は packages/etl/test/workflow-timeout.test.ts の表が 1 か所で持つ
+    # （測り方・n・測った日つき。数を 2 か所に書くと片方が腐る——上の `check` で実際に腐った）。
     timeout-minutes: 20
     env:
       SITE_DIR: ${{ github.workspace }}/apps/web/build/client

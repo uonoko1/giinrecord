@@ -103,7 +103,21 @@ export interface VotePdf {
    * **`anchors` はそのページの行の基準（議案番号の欄の y）、`markYs` は置こうとした票の y。**
    * **`parseVotePdf` の出力には使わない**（読むのは検査だけ）。
    */
-  rowAssignments: { page: number; anchors: number[]; markYs: number[] }[];
+  rowAssignments: {
+    page: number;
+    anchors: number[];
+    markYs: number[];
+    /**
+     * **そのページで「ラベルの塊」を持つ列**（Issue #1056）。
+     * **`cells` の組み立てがラベルで埋める候補は、この列に限られる**——
+     * `labelBlocks.get(col)` が空なら `hit` も空で `blocks.length === 1` も偽になり、
+     * **必ず `UNKNOWN_CELL` に落ちる。**
+     * **検査が総当たりを絞るために使う**（#1056。絞り方を「読み」ではなく実装の入力そのものから引く）。
+     */
+    labelCols: number[];
+    /** そのページで票（○ ●）が置かれた列（#1056。票の無い列は落とすものが無い） */
+    markCols: number[];
+  }[];
 }
 
 /**
@@ -678,6 +692,19 @@ export function splitJoinedMarks(items: readonly Item[], colX: readonly number[]
 export interface DropTiedForTest {
   /** `"${ページ番号}:${列}"`（例 `"4:18"`）。この列の票は「行が決まらなかった」ものとして落とす。 */
   pageCol: string;
+  /**
+   * **`tiedCols` の防壁を外して、#1023 のレビューが見つけた壊れた振る舞いを再現する**（Issue #1056）。
+   *
+   * **なぜ要るか。** **防壁を入れた後の検査は「ラベルになったセルが 0 件」しか見ていなかった。**
+   * **`0 === 0` の比較なので、「防壁が効いた」と「そもそも何も起きなかった」を区別できない**
+   * **——検査を絞っても、絞りすぎて何も踏まなくなっても、同じように緑になる。**
+   *
+   * **そこで「防壁を外すと 18 セル（本番 12 セル）が必ず出る」ことを検査に入れる**（#1056 で実測）。
+   * **これが在れば、絞った 13 組が本当に 12 件を踏むことを直接示せる。**
+   *
+   * **`pageCol` と一緒でなければ何もしない**（`dropForTest` を渡さない本番の呼び出しは 1 ビットも変わらない）。
+   */
+  keepTiedColsForTest?: boolean;
 }
 
 export async function parseVotePdf(bytes: Buffer, dropForTest?: DropTiedForTest): Promise<VotePdf> {
@@ -746,7 +773,7 @@ export async function parseVotePdf(bytes: Buffer, dropForTest?: DropTiedForTest)
   let tiedItems = 0;
   let tiedMarks = 0;
   // #1023: 票の行き先を決めた入力（検査が本物の座標に摂動を当てるため。出力には使わない）
-  const rowAssignments: { page: number; anchors: number[]; markYs: number[] }[] = [];
+  const rowAssignments: VotePdf["rowAssignments"] = [];
   let section: string | undefined;
   for (const [pi, page] of pages.entries()) {
     const head = heads[pi];
@@ -879,6 +906,11 @@ export async function parseVotePdf(bytes: Buffer, dropForTest?: DropTiedForTest)
      * | フィクスチャ 9 本・**990 組** | 955 | **18** → **0**（この `tiedCols` で） |
      * | **本番の 5 本**・**630 組** | 607 | **12** → **0** |
      *
+     * **#1056: 検査は総当たりをやめて 13 組（本番 8 組）に絞った。**
+     * **埋める枝が読む `labelBlocks` に居る列 ∩ 票が置かれた列だけを試す**
+     * （`rowAssignments.labelCols` / `.markCols`）。**18 セル / 本番 12 セルは 1 つも取りこぼさない**
+     * （990 組を総当たりして突き合わせた。ref `0f734507`）。`parseVotePdf` の呼び出しは 999 → 35 回。
+     *
      * **本番の 12 件は実在の議員だった**（`○ → 議長` 高橋雅彦 / `○ → 除斥` 中島謙二 /
      * `○ → 議⾧` 山根成二 / `○ → 除斥` 池田一）。**`rollcalls.ts` の `MAPPED` が
      * 「議長」「議案と一定の利害関係を有する議員」を `投票なし` に写す**ので、
@@ -923,7 +955,7 @@ export async function parseVotePdf(bytes: Buffer, dropForTest?: DropTiedForTest)
         labelByCol.get(col)!.push(it);
       }
     }
-    rowAssignments.push({ page: pi + 1, anchors: [...anchors], markYs });
+    const markCols = [...new Set([...markByRow.values()].flatMap((m) => [...m.keys()]))].sort((a, b) => a - b);
     // 列ごとのラベルを、ラベルの縦の並び（結合セルのブロック）ごとにまとめる
     const labelBlocks = new Map<number, { text: string; y0: number; y1: number }[]>();
     for (const [col, items] of labelByCol) {
@@ -936,6 +968,11 @@ export async function parseVotePdf(bytes: Buffer, dropForTest?: DropTiedForTest)
       }
       labelBlocks.set(col, blocks.map((b) => ({ text: b.map((i) => i.str).join("").replace(/\s+/g, ""), y0: b.at(-1)!.y, y1: b[0].y })));
     }
+    // #1056: 検査が総当たりを絞るための入力（`labelBlocks` そのもの。**出力には使わない**）
+    rowAssignments.push({
+      page: pi + 1, anchors: [...anchors], markYs, markCols,
+      labelCols: [...labelBlocks.entries()].filter(([, b]) => b.length > 0).map(([c]) => c).sort((a, b) => a - b),
+    });
 
     for (const a of anchors) {
       const number = joinText(numByRow.get(a)!);
@@ -964,7 +1001,8 @@ export async function parseVotePdf(bytes: Buffer, dropForTest?: DropTiedForTest)
         // ○ ● が無い行は、その列の結合セル（議⾧・除斥）が覆っている。行を挟むブロックを選ぶ
         // **この列でタイで票を落としたなら、ラベルで埋めない**（Issue #1023 のレビューで見つかった。
         // 下の `labelBlocks` の docblock に実例と母数を書いた）。
-        if (tiedCols.has(col)) { unknownCells++; return UNKNOWN_CELL; }
+        // #1056: `keepTiedColsForTest` は検査だけが渡す（防壁を外した姿を再現して、検出できることを測る）
+        if (tiedCols.has(col) && !dropForTest?.keepTiedColsForTest) { unknownCells++; return UNKNOWN_CELL; }
         const blocks = labelBlocks.get(col) ?? [];
         const hit = blocks.filter((b) => b.y0 - CELL_GAP <= a && a <= b.y1 + CELL_GAP);
         if (hit.length === 1) return hit[0].text;

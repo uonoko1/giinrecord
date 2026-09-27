@@ -77,7 +77,11 @@ import { nearestAnchor, parseVotePdf, UNKNOWN_CELL } from "../src/sources/local/
  *
  * **`tiedCols`（票を落とした列はラベルで埋めない）で塞いだ。**
  * **塞いだあとの向きは、測ったうえで「`UNKNOWN_CELL`（記録が出ない側）」である**
- * ——下の「ラベルで埋まらない」検査が 630 組を総当たりして固定する。
+ * ——下の「ラベルで埋まらない」検査が固定する。
+ * **#1056 でその検査を 990 組 → 13 組に絞った**（`labelCols ∩ markCols`。**18 セル / 本番 12 セルを
+ * 1 つも取りこぼさないことを、990 組を総当たりして突き合わせた**。ref `0f734507`）。
+ * **同時に「防壁を外すと 18 セル出る」ことも検査に入れた**——
+ * **それが無いと「0 件 === 0 件」の比較で、絞りすぎても緑になる**（#1056）。
  * 票以外（議案番号・件名・採決結果・賛否・付託委員会）は置かれず、
  * **空になるので既存の検査が例外で落とす**（黙って隣の行に入れない）。
  *
@@ -328,89 +332,144 @@ test("#1023 島根: フィクスチャ 8 本 329 行 11,613 セルでタイは 0
   assert.equal(tiedItems, 0, `行が決まらなかった文字が ${tiedItems} 個（実測は 0）`);
 });
 
-/* ───────── 3b. 落とした票がラベルで埋まらない（#1023 のレビューで見つかった穴） ───────── */
+/* ───────── 3b. 落とした票がラベルで埋まらない（#1023 のレビューで見つかった穴／#1056 で絞った） ───────── */
 
 /**
- * **タイで落とした票が「議⾧」「除斥」「棄権」にならないことを、総当たりで固定する。**
+ * **タイで落とした票が「議⾧」「除斥」「棄権」にならないことを固定する。**
  *
- * **これはこの PBI でいちばん重い検査である。** **元の PR には 1 件も無かった。**
+ * **これはこの検査群でいちばん重い検査である。** **#1023 の元の PR には 1 件も無かった。**
  *
- * **なぜ総当たりが要るか。** **実データに同距離のタイは 1 件も無い**（`nearest` 12,489 回で 0）。
- * **だから「タイになったとき何が出るか」は本物の PDF では 1 度も観測できない。**
- * **観測できないものを「安全だ」と書いたのが元の PR の誤りだった。**
- * **`dropForTest` で「この (ページ, 列) の票は行が決まらなかったことにする」を外から起こし、
- * 全ページ × 全列を総当たりして、落ちた先が必ず `UNKNOWN_CELL` であることを見る。**
+ * **なぜ人工的に落とす必要があるか。** **実データに同距離のタイは 1 件も無い**
+ * （`nearest` 12,489 回で 0）。**だから「タイになったとき何が出るか」は本物の PDF では
+ * 1 度も観測できない。観測できないものを「安全だ」と書いたのが #1023 の誤りだった。**
  *
- * **実測（ref `9dc1f065`）**:
+ * ## **#1056: 総当たり 990 組 → 13 組に絞った。捕まるものは 1 セルも変わらない**
  *
- * | 母数 | 票が落ちた組 | **不明にならずラベルになったセル** |
- * |---|---:|---:|
- * | フィクスチャ 9 本・**990 組** | **955** | **18** → **0**（`tiedCols` で塞いだ後） |
- * | **本番の 5 本**・**630 組** | **607** | **12** → **0** |
+ * **#1030（Issue #1023）は「全ページ × 全列」を総当たりした。** **担当者自身が
+ * 「48 組に絞れる（実測）のに絞らなかったのは判断で、測定ではない」と申告していた。**
+ * **#1056 で絞れるかを測った。**
  *
- * **塞ぐ前に出た 12 件は実在の議員だった**（`○ → 議長` 高橋雅彦 / `○ → 除斥` 中島謙二 /
- * `○ → 議⾧` 山根成二 / `○ → 除斥` 池田一）。
+ * **絞る前に、まず「何を捕まえていたか」を列挙した**（`tiedCols` の防壁を外して 990 組を全部通す。
+ * ref `0f734507`。**#1030 の数と 1 セルも違わずに再現した**）:
  *
- * **「落ちた組の数」も固定する**（955 / 607）——**0 組なら何も主張していない。**
- * **`dropForTest` が効かなくなれば、この検査は「不一致 0 件」で静かに緑になる**（分類 4 の穴）。
+ * | 母数 | 票が落ちた組 | **ラベルになったセル** | **その組** |
+ * |---:|---:|---:|---:|
+ * | **990 組**（9 本・28 ページ） | **955** | **18** | **7 組** |
+ * | **630 組**（本番 5 本） | **607** | **12** | **4 組** |
  *
- * ## **この検査は重い**（測った。**隠さずに書く**）
+ * **18 セルは 7 組からしか出ない。** 実例（**実在の議員である**）:
+ * `r0706 p4 col18 高橋雅彦 ○ → 議長`（4 セル）/ `r0706 p4 col24 中島謙二 ○ → 除斥`（4）/
+ * `r0806 p4 col21 山根成二 ○ → 議⾧`（2）/ `r0806 p4 col23 池田一 ○ → 除斥`（2）
+ * ＝**本番 12 セル**。残りは `r0606 p4 col25 中島謙二 ○ → 議長`（2）/
+ * `r0606 p4 col29 園山繁 ○ → 除斥除斥`（2）/ `r0609 p3 col7 岸道三 ○ → 棄権`（2）。
  *
- * **990 組それぞれで `parseVotePdf` を呼ぶので PDF を 990 回読み直す。実測 140 秒。**
- * **`readPages`（pdfjs）が費用のほぼ全部である**（1 本あたり `readPages` 211ms /
- * `parseVotePdf` 154ms の実測——`readPages` は `parseVotePdf` の中でも呼ばれる）。
+ * ### **絞る条件は「私の読み」ではなく、埋める側の入力そのものから引く**
  *
- * **etl の全体は 196 秒 → 275 秒**（`node --test` はファイルを並行に流すので、
- * 足した 140 秒のうち壁時計に出たのは約 79 秒）。
- * **`ci.yml` の `check` job は実測 153〜225 秒に対して `timeout-minutes: 30` なので収まる。**
+ * **ラベルで埋める枝は `labelBlocks.get(col)` を読む**（`hit.length === 1` または
+ * `hit.length === 0 && blocks.length === 1`）。**`labelBlocks` にその列が無ければ
+ * `blocks` は空で、どちらの枝も偽になり、必ず `UNKNOWN_CELL` に落ちる。**
+ * **そして票が 1 つも無い列では落とすものが無い**（実測: 落ちなかった 35 組は全部これ）。
  *
- * **「ラベルの塊がある列」だけに絞れば 990 → 48 組に落ちる**（実測）**が、そうしなかった。**
- * **絞る条件は「どの列が危ないか」という私の読みであり、読みが外れたら検査も外れる。**
- * **総当たりなら読みが要らない。** **費用を払って読みを捨てた**、という判断である。
+ * **だから候補は `labelCols ∩ markCols`**（両方 `rowAssignments` が実装から出している。#1056）。
+ * **「どの列が危ないか」を検査が読むのではなく、実装が使っている入力を検査が受け取る。**
+ *
+ * **最初は「base の `cells` にラベルが出ている列」で絞ろうとしたが、これには穴がある**——
+ * **その (ページ, 列) の全行に票が置かれていれば、ラベルの塊があっても `cells` には 1 つも現れない。**
+ * **その形はいまのフィクスチャには無いが（実測: 942 組を見て 0）、`labelBlocks` から引けば穴ごと消える。**
+ *
+ * **実測（ref `0f734507` + この PR）**:
+ *
+ * | | 組 | `parseVotePdf` の呼び出し | **検出したラベルのセル** |
+ * |---|---:|---:|---:|
+ * | **総当たり（#1030）** | 990（本番 630） | **999** | **18（本番 12）** |
+ * | **`labelCols ∩ markCols`（#1056）** | **13（本番 8）** | **35** | **18（本番 12）** |
+ *
+ * **取りこぼし 0。** **7 組は全部 13 組の中に居る**（`0f734507` で総当たりして突き合わせた）。
+ * **余分な 6 組**（`r0506 2:13` / `r0609 2:33` / `r0706 4:8` / `r0706 4:20` / `r0706 4:23` /
+ * `r0802 4:33`）**は落ちるがラベルにならない**——**安全側の余分なので残す。**
+ *
+ * ## **「0 件 === 0 件」で緑になっていた。それを直す**（#1056 の本題）
+ *
+ * **防壁を入れた後の #1030 の検査は `labelled` が空であることしか見ていない。**
+ * **`0 === 0` を比べているので、「防壁が効いた」と「そもそも何も踏んでいない」を区別できない。**
+ * **総当たりでも 13 組でも 0 組でも、同じように緑になる。**
+ *
+ * **そこで防壁を外した姿も同じ 13 組で測り、18 セル（本番 12 セル）が出ることを固定する**
+ * （`keepTiedColsForTest`）。**これが在れば「絞った 13 組が本当に 12 件を踏む」ことを直接言える。**
+ * **絞りすぎれば `detected` が 18 に届かずに落ちる。**
  */
-test("#1023 島根: タイで落とした票は必ず 不明 になる（ラベルで埋めない。全ページ × 全列の総当たり）", async () => {
-  let combosAll = 0, droppedAll = 0, labelledAll = 0;
-  let combosProd = 0, droppedProd = 0, labelledProd = 0;
-  const labelled: string[] = [];
+test("#1023/#1056 島根: タイで落とした票は必ず 不明 になる（ラベルで埋めない。13 組に絞り、防壁を外すと 18 セル出ることも測る）", async () => {
+  let combos = 0, combosProd = 0, dropped = 0, droppedProd = 0;
+  let detected = 0, detectedProd = 0;
+  const leaked: string[] = [];
+  const sites: string[] = [];
   for (const file of votePdfs()) {
     const bytes = readFileSync(`${FIXTURES}${file}`);
     let base: Awaited<ReturnType<typeof parseVotePdf>>;
+    // `r0705rinji` は「1 つのセルに票が 2 つ」で落ちる既知の本（この検査の対象ではない）
     try { base = await parseVotePdf(bytes); } catch { continue; }
     const isProd = (PRODUCTION_PDFS as readonly string[]).includes(file);
-    const pageNos = [...new Set(base.rows.map((r) => r.page))];
-    const nCols = base.members.length;
-    for (const page of pageNos) {
-      for (let col = 0; col < nCols; col++) {
-        combosAll++; if (isProd) combosProd++;
-        let got: Awaited<ReturnType<typeof parseVotePdf>>;
-        try { got = await parseVotePdf(bytes, { pageCol: `${page}:${col}` }); } catch { continue; }
+    for (const ra of base.rowAssignments) {
+      // **絞り込みは実装が使っている入力そのもの**（#1056。上の docblock を見よ）
+      for (const col of ra.labelCols.filter((c) => ra.markCols.includes(c))) {
+        combos++; if (isProd) combosProd++;
+        sites.push(`${file} ${ra.page}:${col}`);
+        const pageCol = `${ra.page}:${col}`;
+        // **防壁あり**（本番と同じ道）と **防壁なし**（#1023 のレビューが見つけた壊れた姿）を両方測る
+        const guarded = await parseVotePdf(bytes, { pageCol });
+        const unguarded = await parseVotePdf(bytes, { pageCol, keepTiedColsForTest: true });
         let anyDrop = false;
         for (let i = 0; i < base.rows.length; i++) {
           const b = base.rows[i].cells[col];
-          const a = got.rows[i].cells[col];
-          if (b === a) continue;
-          anyDrop = true;
-          // **落ちたなら必ず 不明**。ラベル（議⾧・除斥・棄権…）になってはいけない
-          if (a === UNKNOWN_CELL) continue;
-          labelledAll++; if (isProd) labelledProd++;
-          if (labelled.length < 8) {
-            labelled.push(`${file} p${base.rows[i].page} ${base.rows[i].number} / ${base.members[col]}: ${b} → ${a}`);
+          const g = guarded.rows[i].cells[col];
+          const u = unguarded.rows[i].cells[col];
+          const where = `${file} p${base.rows[i].page} ${base.rows[i].number} / ${base.members[col]}`;
+          if (b !== g) {
+            anyDrop = true;
+            // **落ちたなら必ず 不明**。ラベル（議⾧・除斥・棄権…）になってはいけない
+            if (g !== UNKNOWN_CELL && leaked.length < 8) leaked.push(`${where}: ${b} → ${g}`);
+            else if (g !== UNKNOWN_CELL) leaked.push(where);
           }
+          // **防壁を外すと出るはずのもの**（これが 0 なら、この組は何も踏んでいない）
+          if (b !== u && u !== UNKNOWN_CELL) { detected++; if (isProd) detectedProd++; }
         }
-        if (anyDrop) { droppedAll++; if (isProd) droppedProd++; }
+        if (anyDrop) { dropped++; if (isProd) droppedProd++; }
       }
     }
   }
-  // **母数**（#757。**0 組を見ても何も主張しない**）
-  assert.equal(combosAll, 990, `前提: (ページ, 列) の組が ${combosAll}（実測は 990）`);
-  assert.equal(combosProd, 630, `前提: 本番 5 本の組が ${combosProd}（実測は 630）`);
-  assert.equal(droppedAll, 955, `前提: 票が落ちた組が ${droppedAll}（実測は 955）。dropForTest が効いていない疑い`);
-  assert.equal(droppedProd, 607, `前提: 本番で票が落ちた組が ${droppedProd}（実測は 607）`);
-  // **本題**（塞ぐ前は 18 / 12 だった）
-  assert.deepEqual(labelled, [],
-    `落とした票がラベルになった（全 ${labelledAll} 件 / 本番 ${labelledProd} 件。**#569 の重いほう——`
+  // **母数**（#757。**0 組を見ても何も主張しない**。実測 ref `0f734507` + この PR）
+  assert.equal(combos, 13, `前提: 絞った (ページ, 列) の組が ${combos}（実測は 13。総当たりは 990）`);
+  assert.equal(combosProd, 8, `前提: 本番 5 本の組が ${combosProd}（実測は 8。総当たりは 630）`);
+  assert.equal(dropped, 13, `前提: 票が落ちた組が ${dropped}（実測は 13 ＝ 全部）。dropForTest が効いていない疑い`);
+  assert.equal(droppedProd, 8, `前提: 本番で票が落ちた組が ${droppedProd}（実測は 8 ＝ 全部）`);
+  // **絞った先が「同じ場所」であること**（予測を並べる。並びが変われば落ちる ＝ 黙って痩せない）
+  assert.deepEqual(sites, [
+    "r0506_giinbetu_kekka.pdf 2:13",
+    "r0606_giinbetu_kekka.pdf 4:25",
+    "r0606_giinbetu_kekka.pdf 4:29",
+    "r0609_giinbetu_kekka.pdf 2:33",
+    "r0609_giinbetu_kekka.pdf 3:7",
+    "r0706_giinbetu_kekka.pdf 4:8",
+    "r0706_giinbetu_kekka.pdf 4:18",
+    "r0706_giinbetu_kekka.pdf 4:20",
+    "r0706_giinbetu_kekka.pdf 4:23",
+    "r0706_giinbetu_kekka.pdf 4:24",
+    "r0802_giinbetu_kekka.pdf 4:33",
+    "r0806_giinbetu_kekka.pdf 4:21",
+    "r0806_giinbetu_kekka.pdf 4:23",
+  ], "絞り込んだ組が実測（13 組）と変わった。#1056 の測り直しが要る");
+  /*
+   * **検出能力**（#1056 の本題。**これが無いと下の `leaked` は `0 === 0` の比較になる**）。
+   * **防壁を外すと、この 13 組から 18 セル（本番 12 セル）が必ずラベルになる。**
+   * **絞りすぎればここが 18 に届かない。** **`dropForTest` が効かなくなればここが 0 になる。**
+   */
+  assert.equal(detected, 18, `防壁（tiedCols）を外して検出できたラベルのセルが ${detected}（実測は 18）。`
+    + `**絞りすぎか、dropForTest が効いていない**——18 に届かないなら下の検査は何も守っていない`);
+  assert.equal(detectedProd, 12, `本番 5 本で ${detectedProd} セル（実測は 12）。#1023 のレビューが見つけた 12 件そのもの`);
+  // **本題**（防壁があれば 0。**上の 18 と対になってはじめて意味を持つ**）
+  assert.deepEqual(leaked, [],
+    `落とした票がラベルになった（${leaked.length} 件。**#569 の重いほう——`
     + `rollcalls.ts の MAPPED を通って mapped: "投票なし" になる**）`);
-  assert.equal(labelledProd, 0, `本番の 5 本で ${labelledProd} 件（塞ぐ前は 12 件）`);
 });
 
 /* ───────── 3c. `===` が拾う範囲を、測った数のまま固定する ───────── */
