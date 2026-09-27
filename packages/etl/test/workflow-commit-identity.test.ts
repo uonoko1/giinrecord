@@ -24,6 +24,18 @@ import { dirname, join, resolve } from "node:path";
  * 次に `bot@` や `ci@` を書いた人を捕まえられない。**`数字+名前@users.noreply.github.com`
  * という形そのものを要求する。**
  */
+/**
+ * **数字 ID 付きの GitHub noreply だけを通す**
+ * （例: `41898282+github-actions[bot]@users.noreply.github.com`）。
+ *
+ * **定義は 1 か所だけ。** 初版は走査側と検査側に**同じ正規表現を 2 つ書いていた**ので、
+ * **走査側だけを緩めると検査側は自分の写しを見て緑のまま通った**（レビューの実測:
+ * `\d+\+` を `\d*\+?` にすると `etl@users.noreply.github.com` が素通りして 2/0 緑）。
+ * **#858 を引きながら、同じ形を検査の中で作っていた。**
+ * `scripts/ci/pr-closes.sh` が `CLOSING_RE` を写さずに実行時に取り出すのと同じ向きで直した。
+ */
+const OK = /^\d+\+[^@]+@users\.noreply\.github\.com$/;
+
 const here = dirname(fileURLToPath(import.meta.url));
 const dir = resolve(here, "../../../.github/workflows");
 const files = readdirSync(dir).filter((f) => f.endsWith(".yml") || f.endsWith(".yaml"));
@@ -41,8 +53,6 @@ test("ワークフローが設定する user.email は、数字 ID 付きの nor
   // `[bot]` の角括弧を含める——`github-actions[bot]@…` が拾えなくなり、
   // **母数 0 で緑になる**（最初にそう書いて `checked > 0` に捕まった）。
   const EMAIL = /[A-Za-z0-9._%+\-\[\]]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g;
-  // 数字 ID 付きの GitHub noreply だけを通す（例: 41898282+github-actions[bot]@users.noreply.github.com）
-  const OK = /^\d+\+[^@]+@users\.noreply\.github\.com$/;
   // コミットの身元を決めうる書き方（ここに現れたアドレスを検査する）
   const IDENTITY = /(?:user\.email|GIT_AUTHOR_EMAIL|GIT_COMMITTER_EMAIL|--author)/;
   for (const f of files) {
@@ -75,7 +85,6 @@ test("ワークフローが設定する user.email は、数字 ID 付きの nor
  * ここが落ちれば「正規表現が緩んだ」と分かる（走査の側とは別の理由で落ちる）。
  */
 test("数字 ID 付きの noreply だけを通す正規表現そのものを検査する", () => {
-  const OK = /^\d+\+[^@]+@users\.noreply\.github\.com$/;
   // 通すべき（実在の形）
   for (const good of [
     "41898282+github-actions[bot]@users.noreply.github.com",
