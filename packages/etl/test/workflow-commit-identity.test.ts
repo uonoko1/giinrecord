@@ -107,6 +107,38 @@ const commentRuleFor = (file: string): RegExp | null => {
  * 言語ごとに分ける            偽陽性 0 件  ← これを採る
  * ```
  */
+/**
+ * **「身元を設定している」と「綴りを例として書いている」を分ける**（#1066 の再々差し戻し）。
+ *
+ * **`#1103` が `.claude/agents/developer.md` に、直し方の手本として
+ * `git -c user.email=120390190+uonoko1@users.noreply.github.com commit --amend …` を
+ * *インラインのコードスパン*（バッククォート）で書いた。** **走査を追跡ファイル全体に
+ * 広げたので、これが「workflow が使う identity」として数えられ、逐語 allowlist が落ちた。**
+ *
+ * **これは偽陽性である。** **`120390190+uonoko1@…` は利用者本人の正しいアドレスで、
+ * 誤帰属ではない。** **そして md は誰にも実行されない**（実測 2026-09-29:
+ * 追跡 md 78 件のうち実行属性が付いたものは 0 件、`bash …md` で起動している箇所も 0 件）。
+ *
+ * **消すこともできない**——**`packages/etl/test/commit-identity-allowlist.test.ts`
+ * （main 側の検査）は、この綴りが `developer.md` に *在ること* を要求する。**
+ * **実測: その 1 行を消すと main 側の検査が fail 1 になる。**
+ * **2 つの検査が真正面から矛盾していたので、allowlist に足す解き方（緩める解き方）は採れない。**
+ *
+ * **分け方**: **md の「自己完結したコードスパン」を引用として扱う。**
+ * **スパンの中に *キーワードとアドレスの両方* が在るときだけ**取り除く。
+ * **片方しか入っていないスパンは残す**——**残さないと
+ * `` `git config user.email` = etl@… `` のような形が沈黙する**（実測で 1 件落ちた）。
+ *
+ * **md の囲みブロック（``` の中）と素の散文は、これまでどおり走査する。**
+ * **以前の約束（手順書に悪い例を逐語で書けば赤くなる）は変わらない。**
+ */
+const stripQuotedSpans = (file: string, line: string): string => {
+  if (!/\.md$/.test(file)) return line;
+  return line.replace(/`[^`]*`/g, (span) =>
+    IDENTITY_KEYS.test(span) && hasEmail(span) ? " " : span,
+  );
+};
+
 const isComment = (file: string, line: string): boolean => {
   const rule = commentRuleFor(file);
   return rule !== null && rule.test(line);
@@ -169,7 +201,7 @@ const IDENTITY_KEYS = /(?:user\.email|author\.email|committer\.email|GIT_AUTHOR_
  * （母数が膨らむと `checked > 0` の意味が薄れる）。
  */
 const foldContinuations = (file: string, text: string): string[] => {
-  const joined = text.split("\n");
+  const joined = text.split("\n").map((l) => stripQuotedSpans(file, l));
   const out: string[] = [];
   for (let i = 0; i < joined.length; i += 1) {
     out.push(joined[i]);
@@ -367,7 +399,7 @@ test("ワークフローが設定する user.email は、数字 ID 付きの nor
     if (text === null) continue;
     scanned += 1;
     // **母数は畳む前の実数で数える**（畳んだ窓は同じアドレスを 2 度通しうる）。
-    for (const line of text.split("\n")) {
+    for (const line of text.split("\n").map((l) => stripQuotedSpans(f, l))) {
       if (isComment(f, line)) continue;
       if (!IDENTITY_KEYS.test(line)) continue;
       for (const _ of line.matchAll(EMAIL)) checked += 1;
@@ -863,4 +895,106 @@ test("大小無視は判定と git grep の両方に効いている（片方だ�
     }
   };
   probe(grepFlags);
+});
+
+/**
+ * **「身元を設定している」と「綴りを例として書いている」の区別**（#1066 の再々差し戻し）。
+ *
+ * **走査を追跡ファイル全体に広げた副作用で、`.claude/agents/developer.md` の
+ * *手本* が「workflow が使う identity」として数えられ、逐語 allowlist が落ちた。**
+ *
+ * **緩める解き方（allowlist に足す）は採れなかった**——
+ * **`packages/etl/test/commit-identity-allowlist.test.ts` は、その綴りが
+ * `developer.md` に *在ること* を要求している。** **実測: 1 行消すと向こうが fail 1。**
+ * **2 つの検査が真正面から矛盾していたので、「例として書いてある」側を分けるしかない。**
+ *
+ * **ここが落ちれば「区別が壊れた」と分かる。**
+ */
+test("md の自己完結したコードスパンは、身元の設定ではなく引用として扱う", () => {
+  // **取り除く**: キーワードとアドレスが **同じスパンの中に両方** 在る（＝完結した手本）
+  for (const [line, why] of [
+    ["**落ちたら**: `git -c user.email=120390190+uonoko1@users.noreply.github.com commit --amend`",
+     "#1103 が developer.md に足した実物"],
+    ["例: `git config user.email \"etl@users.noreply.github.com\"` と書いてはいけない",
+     "悪い例を示す書き方"],
+  ]) {
+    const out = stripQuotedSpans("docs/a.md", line);
+    assert.ok(
+      !(IDENTITY_KEYS.test(out) && hasEmail(out)),
+      `完結したコードスパンを引用として扱っていない（偽陽性になる）: ${why}`,
+    );
+  }
+
+  // **残す**: スパンに **片方しか** 入っていない（取り除くと本物が沈黙する）
+  for (const [line, why] of [
+    ["`git config user.email` = etl@users.noreply.github.com", "キーワードだけがスパンの中"],
+    ["git config user.email = `etl@users.noreply.github.com`", "アドレスだけがスパンの中"],
+    ["` git config user.email etl@users.noreply.github.com", "バッククォートが閉じていない"],
+  ]) {
+    const out = stripQuotedSpans("docs/a.md", line);
+    assert.ok(
+      IDENTITY_KEYS.test(out) && hasEmail(out),
+      `取り除きすぎて本物が沈黙する: ${why}`,
+    );
+  }
+
+  // **md 以外には一切効かない**——**`.sh` や `.yml` のバッククォートはコマンド置換で、
+  // *実行される*。** **引用ではない。**
+  //
+  // **fixture は「取り除く条件に *当たる* 行」でなければならない**（#1066 で 2 度目の同じ過ち）。
+  // **最初は `` git config user.email `echo etl@…` `` を当てていたが、
+  // キーワードがスパンの *外* に在るので、`.md` 判定を外す変異を入れても何も変わらなかった**
+  // （実測 S3: `if (!/\.md$/…) return line;` を無効化しても 14 pass / 0 fail で生存）。
+  // **だからキーワードとアドレスを両方スパンの中に入れる。**
+  for (const f of [".github/workflows/x.yml", "scripts/ci/x.sh", "packages/etl/src/a.ts"]) {
+    const line = 'eval `git config user.email etl@users.noreply.github.com`';
+    const out = stripQuotedSpans(f, line);
+    assert.equal(out, line, `md 以外でコードスパンを取り除いている（実行される行が沈黙する）: ${f}`);
+  }
+
+  // **md の囲みブロックと素の散文は、これまでどおり走査する**（以前の約束は変わらない）。
+  for (const line of [
+    'git config user.email "etl@users.noreply.github.com"',
+    "    git config user.email etl@users.noreply.github.com",
+  ]) {
+    const out = stripQuotedSpans("docs/ops/a.md", line);
+    assert.ok(
+      IDENTITY_KEYS.test(out) && hasEmail(out),
+      `md の囲みブロック／散文まで取り除いている: ${line}`,
+    );
+  }
+});
+
+/**
+ * **この検査と `commit-identity-allowlist.test.ts` が矛盾していないこと。**
+ *
+ * **向こうは「`developer.md` に逐語のアドレスが *在る*」ことを要求し、
+ * こちらは「identity に使ってよいのは bot の逐語だけ」を要求する。**
+ * **走査を広げた結果、同じ 1 行が両方の対象になって衝突した。**
+ *
+ * **ここが落ちれば「また衝突した」と分かる**——
+ * **どちらかを消して辻褄を合わせるのではなく、区別のほうを直すこと。**
+ */
+test("エージェントの指示に在る手本のアドレスと衝突していない", () => {
+  const doc = join(repoRoot, ".claude/agents/developer.md");
+  let text: string;
+  try {
+    text = readFileSync(doc, "utf8");
+  } catch {
+    return; // **この枝に指示ファイルが無いなら、衝突のしようが無い**
+  }
+  const example = "120390190+uonoko1@users.noreply.github.com";
+  assert.ok(
+    text.includes(example),
+    `前提が崩れている（commit-identity-allowlist.test.ts はこの綴りが在ることを要求する）: ${example}`,
+  );
+  // **その行を走査に掛けても、identity として数えられないこと。**
+  for (const raw of text.split("\n")) {
+    if (!raw.includes(example)) continue;
+    const line = stripQuotedSpans(".claude/agents/developer.md", raw);
+    assert.ok(
+      !(IDENTITY_KEYS.test(line) && hasEmail(line)),
+      `手本の 1 行が identity として数えられている（逐語 allowlist が落ちる）: ${raw.trim().slice(0, 120)}`,
+    );
+  }
 });
