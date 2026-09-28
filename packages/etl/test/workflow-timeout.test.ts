@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync, writeFileSync, rmSync } from "node:fs";
+import { readFileSync, readdirSync, writeFileSync, rmSync, mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 
@@ -89,16 +90,23 @@ function jobsOfText(text: string, file: string): Job[] {
   });
 }
 
-function jobsOf(file: string): Job[] {
-  return jobsOfText(readFileSync(resolve(wfDir, file), "utf8"), file);
+function jobsOf(file: string, dir: string = wfDir): Job[] {
+  return jobsOfText(readFileSync(resolve(dir, file), "utf8"), file);
 }
 
-/** GitHub は `.yml` と `.yaml` の両方を実行する。`.yml` だけ見ると .yaml のワークフローが丸ごと不可視になる（#574）。 */
-function listAllJobs(): Job[] {
-  return readdirSync(wfDir)
+/**
+ * GitHub は `.yml` と `.yaml` の両方を実行する。`.yml` だけ見ると .yaml のワークフローが
+ * 丸ごと不可視になる（#574）。
+ *
+ * #1081: 走査先を引数にしてあるが、**既定は本物の `.github/workflows/`**である。
+ * 既定を変えると、このファイルの他の検査（数え上げ・timeout の値）が本番を見なくなる。
+ * 既定値が本物のディレクトリであることは下の「既定の走査先」の検査で固定してある。
+ */
+function listAllJobs(dir: string = wfDir): Job[] {
+  return readdirSync(dir)
     .filter((f) => f.endsWith(".yml") || f.endsWith(".yaml"))
     .sort()
-    .flatMap(jobsOf);
+    .flatMap((f) => jobsOf(f, dir));
 }
 
 const allJobs = listAllJobs();
@@ -140,51 +148,117 @@ test("#574 引用符付きの job 名で timeout-minutes が無ければ検出�
  * allJobs から丸ごと不可視だった。
  *
  * fixture 文字列に対するテスト（jobsOfText）だけでは、readdirSync のフィルタ行を壊しても
- * このリポジトリに実際の .yaml ファイルが無いため検出できない（実際に変異させて確かめた:
- * `.filter((f) => f.endsWith(".yml") || f.endsWith(".yaml"))` を
+ * 検出できない（実測: `.filter((f) => f.endsWith(".yml") || f.endsWith(".yaml"))` を
  * `.filter((f) => f.endsWith(".yml"))` に戻す変異は、fixture テストだけでは 10/10 緑のまま
- * 通ってしまう＝等価変異になる）。
- * そこで、実際に .github/workflows に .yaml ファイルを一時的に置き、
- * allJobs の実行結果（readdirSync を経由した本物のパス）で見えることを確認する。
- * 確実に後始末するため try/finally で削除する。
+ * 通る＝等価変異になる）。**readdirSync を本当に通すことが、この検査の検出能力の source である。**
  *
- * ## **この置き方は、ほかのテストファイルと競走する**（#1056 で踏んだ。**直していない**）
+ * ## **この置き方は、ほかのテストファイルと競走した**（#1056 で測り、**#1081 で直した**）
  *
- * **`node --test` はテストファイルを並行に流す。** **ここは本物の `.github/workflows/` に
- * ファイルを置いて消すので、同じディレクトリを `readdirSync` するほかのファイルが、
- * 「見えたのに開けない」瞬間に当たる**（`ENOENT` で落ちる）。
+ * **`node --test` はテストファイルを並行に流す。** **2026-09-28 まで、ここは本物の
+ * `.github/workflows/` にファイルを置いて消していたので、同じディレクトリを `readdirSync` する
+ * ほかのファイル（実測 8 本）が「見えたのに開けない」瞬間に当たった**（`ENOENT` で落ちる）。
+ * **全 PR のマージが止まった**（#1081）。
  *
- * **実測（2026-09-27。`workflow-timeout.test.ts` と `workflow-pr-body-edited.test.ts` を
+ * **実測（#1056。2026-09-27。`workflow-timeout.test.ts` と `workflow-pr-body-edited.test.ts` を
  * 2 ファイル並べて 6 回ずつ）**:
  *
  * | 版 | 落ちた回数 |
  * |---|---:|
- * | この PR（#1056） | **2 / 6** |
- * | **`origin/main`（0f734507。この PR の変更を戻したもの）** | **1 / 6** |
+ * | #1056 の PR | **2 / 6** |
+ * | **`origin/main`（0f734507。#1056 の変更を戻したもの）** | **1 / 6** |
  *
  * **＝#1056 が作った問題ではない。** **`pnpm test` の全走でも 1 回踏んだ**（435 秒の回）。
- * **直すには「本物のディレクトリに置かない」形（一時ディレクトリを渡す）が要るが、
- * それは #574 が「readdirSync を経由した本物のパスで見る」ために選んだ形を変えることになる。**
- * **この PBI の対象ではないので、測った数だけ残す。別の PBI が要る。**
+ * **#1081 で独立に再現したもの**: 書き手 1 本 + 読み手 7 本を 8 並列で 8 回走らせて **2 回赤**。
+ * 落ちた先は `workflow-pr-body-edited.test.ts:217` の readFileSync。
+ *
+ * ── #1081: 走査先は使い捨てのディレクトリにする ────────────────────────────
+ * 直し方は「消す」ではない（消すと #574 の穴が無検査に戻る）。
+ * **`listAllJobs(dir)` に走査先を渡せるようにし、ここでは mkdtempSync のディレクトリに
+ * 本物の `.yml` と `.yaml` を置いて呼ぶ。** readdirSync を通る経路は同一なので、
+ * フィルタ行の変異は同じように死ぬ（実測: 直した後も 1 fail）。
+ * **共有ディレクトリには 1 バイトも書かない。**
+ *
+ * `.yml` も一緒に置く理由: `.yaml` だけを置くと、フィルタを `.yaml` 単独に**狭める**変異
+ * （`f.endsWith(".yaml")` だけ）が通ってしまう。両方が見えることを 1 回で主張する。
  */
-test("#574 .yaml 拡張子のワークフローも allJobs（readdirSync 経由）から見える", () => {
-  const probeName = "probe-574-yaml-visibility.yaml";
-  const probePath = resolve(wfDir, probeName);
-  const probeYaml = ["jobs:", "  probejob:", "    runs-on: ubuntu-latest", "    timeout-minutes: 5", "    steps:", "      - run: echo hi", ""].join(
-    "\n",
-  );
-  writeFileSync(probePath, probeYaml, "utf8");
+test("#574 .yaml 拡張子のワークフローも listAllJobs（readdirSync 経由）から見える", () => {
+  const dir = mkdtempSync(resolve(tmpdir(), "seiji-wf-ext-"));
+  const yamlProbe = "probe-574-yaml-visibility.yaml";
+  const ymlProbe = "probe-574-yml-visibility.yml";
+  const probeYaml = (job: string) =>
+    ["jobs:", `  ${job}:`, "    runs-on: ubuntu-latest", "    timeout-minutes: 5", "    steps:", "      - run: echo hi", ""].join("\n");
+  writeFileSync(resolve(dir, yamlProbe), probeYaml("probejobyaml"), "utf8");
+  writeFileSync(resolve(dir, ymlProbe), probeYaml("probejobyml"), "utf8");
   try {
-    // モジュール読み込み時に評価済みの allJobs ではなく、実装本体の listAllJobs() を
-    // ここで再実行する（実装が使う関数そのものを呼ぶことで、フィルタ行の変異を確実に拾う）。
-    const jobs = listAllJobs();
-    assert.ok(
-      jobs.some((j) => j.file === probeName && j.name === "probejob"),
-      ".yaml ワークフローの job が数え上げに現れない",
-    );
+    // 実装本体の listAllJobs() を、走査先だけ差し替えて呼ぶ（readdirSync とフィルタ行は同じ）。
+    const found = listAllJobs(dir)
+      .map(id)
+      .sort();
+    assert.deepEqual(found, [`${yamlProbe}:probejobyaml`, `${ymlProbe}:probejobyml`].sort());
   } finally {
-    rmSync(probePath, { force: true });
+    rmSync(dir, { recursive: true, force: true });
   }
+});
+
+/**
+ * #1081 の穴: 走査先を引数にした結果、「テストは一時ディレクトリを見ているが**本番は本物の
+ * ディレクトリを見ている**」ことを誰も検査しなくなる（#1063 と同型）。
+ * **既定の走査先が本物の `.github/workflows/` であること**を、引数を渡さない呼び出しの結果で固定する。
+ *
+ * 母数はハードコードしない（下の「数え上げ」が名前ごと固定している）。ここが見るのは
+ * **既定と本物のディレクトリを明示的に渡した場合が同じになること**と、
+ * **一時ディレクトリの中身が混ざっていないこと**。
+ */
+test("#1081 listAllJobs() の既定の走査先は本物の .github/workflows（テストだけが差し替えられる）", () => {
+  assert.deepEqual(
+    listAllJobs().map(id).sort(),
+    listAllJobs(wfDir).map(id).sort(),
+  );
+  assert.ok(listAllJobs().length > 0, "既定の走査先に job が 1 つも無い（既定が空のディレクトリを指している）");
+  assert.deepEqual(
+    listAllJobs().filter((j) => j.file.startsWith("probe-")).map(id),
+    [],
+    "本物のディレクトリに probe- のファイルが残っている（共有ディレクトリを汚した）",
+  );
+});
+
+/**
+ * #1081: このファイルが本物の `.github/workflows/` に書き込む**手段を持たない**ことを、
+ * 自分のソースで固定する。値ではなく「手段を持たない」ことを固定する形
+ * （`scripts/ci/test/link-check.test.sh` が同じ形を使っている）。
+ * これを消すと、次に誰かが「一時的に置いて消す」を書いたときに、また全 PR が止まる。
+ *
+ * **`resolve(wfDir, ...)` だけを狙わない**——`join(wfDir, x)` でも、
+ * `const p = resolve(wfDir, x)` と一度変数に置いてから書いても同じことが起きる。
+ * そこで「書き込み API の行」と「`wfDir` から書き込み先のパスを作る行」の**両側**を見る:
+ * このファイルで書き込み API を呼んでよいのは `dir`（mkdtempSync で作った使い捨て）の中だけである。
+ *
+ * **これは denylist なので「これで全部」ではない**（`const d = wfDir;` と別名にすれば抜ける）。
+ * 抜けうる形をここに書いておく——それでも、素直に書いたときに必ず鳴るほうが無いより強い。
+ */
+const WRITE_API = /\b(writeFileSync|writeFile|mkdirSync|mkdir|cpSync|copyFileSync|appendFileSync|appendFile|rmSync|rm|unlinkSync|renameSync|symlinkSync|openSync)\s*\(/;
+test("#1081 このテストは共有ディレクトリ（wfDir）へ書き込む手段を持たない", () => {
+  const lines = readFileSync(fileURLToPath(import.meta.url), "utf8")
+    .split("\n")
+    .map((l, i) => ({ n: i + 1, l }))
+    // 行コメント（`*` で始まる docblock の中身と `//`）は本文ではないので落とす
+    .filter(({ l }) => !/^\s*(\*|\/\/|\/\*)/.test(l));
+
+  // (a) 書き込み API と wfDir が同じ行にある
+  const sameLine = lines.filter(({ l }) => WRITE_API.test(l) && /\bwfDir\b/.test(l)).map(({ n, l }) => `${n}: ${l.trim()}`);
+  assert.deepEqual(sameLine, [], "書き込み API に wfDir を渡している行がある（並行する読み手 8 本を ENOENT で壊す。#1081）");
+
+  // (b) wfDir からパスを組み立てている行が、宣言以外にある（変数に置いてから書く形を塞ぐ）
+  const derives = lines
+    .filter(({ l }) => /(resolve|join)\s*\(\s*wfDir\s*,/.test(l))
+    .map(({ n, l }) => `${n}: ${l.trim()}`);
+  assert.deepEqual(derives, [], "wfDir からパスを組み立てている行がある（読み取りは jobsOf(file, dir) 経由に寄せる。#1081）");
+
+  // (c) 書き込み API を呼ぶ行は、使い捨てディレクトリ `dir` を渡すものだけ
+  const writes = lines.filter(({ l }) => WRITE_API.test(l) && !/WRITE_API|assert\./.test(l));
+  const notTemp = writes.filter(({ l }) => !/\bdir\b/.test(l)).map(({ n, l }) => `${n}: ${l.trim()}`);
+  assert.deepEqual(notTemp, [], "書き込み先が使い捨てディレクトリ（dir）でない行がある。#1081");
+  assert.ok(writes.length >= 3, `書き込み API の行が ${writes.length} 本しか無い（この検査が空回りしている。#1081）`);
 });
 
 /**
