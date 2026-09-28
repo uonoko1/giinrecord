@@ -130,6 +130,12 @@ DIFF_MAX_LINES=${MUTATE_DIFF_MAX_LINES:-20}
 #   「逐語」でなくなる（そして #1114 の事故と同じで、当たりはするので md5 は通る）。
 #   perl は環境変数を %ENV で見るので、パターンは \Q..\E で、置換側は $ENV{...} で受ける。
 #   複数ファイル分を同時に持てるように、1 ファイルにつき連番の変数名を使う。
+#
+#   逐語性を支えているのは2つで、役割が違う（変異で測って分かった。#1114）:
+#     \Q..\E        パターン側のメタ文字を殺す。外すと `a.b` が `.` のワイルドカードとして効く
+#     $ENV{...}     値を式の本文に埋め込まない。外すと区切りの `/` も置換側の `$1` も効いてしまう
+#   `\Q` だけ外しても `./a/b/c` の検査は落ちない（`.` が任意1文字になっても自分自身には一致する）。
+#   区切り文字の安全は $ENV{...} のほうが担っている。両方要る。
 LITERAL_N=0
 # literal_expr <from> <to> → 逐語置換の perl 式を1行で返す（環境変数は export 済みにする）。
 #   $() の中で呼ぶと export が親に残らないので、**サブシェルの外で呼ぶこと**。
@@ -478,7 +484,9 @@ cmd_apply() {
   (($#)) || usage
   local a
   # 逐語の形（--from）が1つでも混ざっているなら --file 形に正規化して fold_from_to に通す。
-  if printf '%s\n' "$@" | grep -qx -- '--from'; then
+  # パイプにしない（#527）。grep -q は一致した時点で閉じるので、pipefail のもとでは
+  # 書き手の printf が SIGPIPE で死に、結果が確率的に偽になる。
+  if grep -qx -- '--from' <<< "$(printf '%s\n' "$@")"; then
     local -a norm=() prev_is_flagval=0
     for a in "$@"; do
       if ((prev_is_flagval)); then norm+=("$a"); prev_is_flagval=0; continue; fi
