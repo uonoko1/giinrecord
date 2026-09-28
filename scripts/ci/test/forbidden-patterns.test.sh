@@ -397,7 +397,9 @@ t_personal_address_prose_string_and_table_fail() {
 # 2. `Name <addr>` の形（#1092 が書いた形。git の author 表記をそのまま貼ると必ずこうなる）
 t_personal_address_in_author_notation_fails() {
   repo paauth
-  add "docs/ops/board-audit-log.tsv" "c864f750 の author → Daichi Sakai <$PERSONAL_ADDR>"
+  # **名前も SHA も架空にする**（#1126 レビュー）——最初ここに実在コミットの SHA と
+  # 利用者本人の実名を書いていた。**個人アドレスを止める検査が、個人の実名を入れていた。**
+  add "docs/ops/board-audit-log.tsv" "0000000 の author → Taro Yamada <$PERSONAL_ADDR>"
   run
   assert_eq 1 "$STATUS" "exit (#1092 が書いた author 表記の形)"
   assert_contains "$OUT" "docs/ops/board-audit-log.tsv" "file named"
@@ -438,6 +440,40 @@ t_personal_address_is_case_insensitive() {
   repo pacase; add "docs/a.md" "TARO.YAMADA@$(printf '%s' "$MAILDOM_G" | tr '[:lower:]' '[:upper:]')"
   run
   assert_eq 1 "$STATUS" "exit (大文字でも落ちる)"
+}
+
+# 6b. **ローカル部が短くても落ちる**（#1126 レビューで見つかった素通り）。
+#     **ローカル部の量指定子を `+` → `{3,}` に狭める変異が 43 件を全部緑で通り抜けた**——
+#     **フィクスチャのローカル部が全部 3 文字以上だったため。** 1〜2 文字を明示的に置く。
+t_personal_address_short_local_part_fails() {
+  repo pashort
+  add "docs/a.md" "a@$MAILDOM_G"
+  add "docs/b.md" "ab@$MAILDOM_G"
+  run
+  assert_eq 1 "$STATUS" "exit (1〜2 文字のローカル部でも落ちる)"
+  assert_contains "$OUT" "docs/a.md" "1 文字のローカル部"
+  assert_contains "$OUT" "docs/b.md" "2 文字のローカル部"
+}
+
+# 6c. **末尾が英文のピリオドでも落ちる**（#1126 レビュー。PO も再現）。
+#     **英文で最もふつうの形（文末ピリオド）が素通りしていた**——境界が `.` を除いていたため。
+t_personal_address_trailing_period_fails() {
+  repo padot
+  add "docs/a.md" "連絡先は taro.yamada@$MAILDOM_G."
+  add "docs/b.md" "連絡先は taro.yamada@$MAILDOM_G。"
+  add "docs/c.md" "連絡先は taro.yamada@$MAILDOM_G"
+  run
+  assert_eq 1 "$STATUS" "exit (文末ピリオド・句点・境界なしの 3 形すべて)"
+  assert_contains "$OUT" "docs/a.md" "英文の文末ピリオド（これが素通りしていた）"
+  assert_contains "$OUT" "docs/b.md" "日本語の句点"
+  assert_contains "$OUT" "docs/c.md" "境界なし"
+}
+
+# 6d. 提供者名で始まる**別の**ドメインは落とさない（境界から `.` を外した副作用の確認）。
+t_domain_with_extra_letters_is_not_flagged() {
+  repo paext; add "docs/a.md" "taro@${MAILDOM_G}x への連絡"
+  run
+  assert_eq 0 "$STATUS" "提供者名で始まるだけの別ドメインは落とさない: $OUT"
 }
 
 # 7. 母数（#757 と同じ作法）: 走査した追跡ファイル数を必ず出す。
@@ -494,6 +530,9 @@ test_case "架空アドレス（example.com / claude.ai / example.invalid / nore
 test_case "機関の連絡先（lg.jp）と CSS の断片は素通り (#1111)" t_institutional_addresses_pass
 test_case "個人アドレス: 別の提供者でも fail (#1111)" t_personal_address_other_consumer_domain_fails
 test_case "個人アドレス: 大文字小文字を問わない (#1111)" t_personal_address_is_case_insensitive
+test_case "個人アドレス: 1〜2 文字のローカル部でも fail (#1126 レビュー)" t_personal_address_short_local_part_fails
+test_case "個人アドレス: 英文の文末ピリオドでも fail (#1126 レビュー)" t_personal_address_trailing_period_fails
+test_case "提供者名で始まるだけの別ドメインは落とさない (#1126 レビュー)" t_domain_with_extra_letters_is_not_flagged
 test_case "personal-address: 母数を出す (#1111/#757)" t_personal_address_denominator_is_reported
 
 echo; echo "passed: $PASS  failed: $FAIL"

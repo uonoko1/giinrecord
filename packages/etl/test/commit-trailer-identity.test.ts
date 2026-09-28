@@ -4,6 +4,7 @@ import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
+import { FAKE_PERSON, FAKE_BOT, REQUIRED_TRAILER_ADDRESS } from "./fake-addresses.ts";
 
 /**
  * **コミットメッセージの `Co-authored-by:` trailer に書くメールアドレスは、
@@ -1086,7 +1087,7 @@ test("author / committer の検査が、誤帰属する 3 形で実際に落ち�
     commitTree({ tree, parents, message: "test: 検査に当てるためのコミット\n", author, committer });
   const ETL = "etl@users.noreply.github.com"; // #1074 (B) の実害そのもの
   const GOOD = "120390190+uonoko1@users.noreply.github.com";
-  const OTHER = "person@example.com"; // 架空。実在の個人アドレスは書かない（#1043）
+  const OTHER = FAKE_PERSON; // 架空。綴りは fake-addresses.ts が持つ（#1043 / #1111）
   // **2 親コミットの 2 番目の親も `commit-tree` で作る。**
   // **`HEAD~1` を使ってはいけない**——**depth=1 の checkout には存在せず、
   // main への push で毎回 throw していた**（上の docblock の実測）。
@@ -1791,9 +1792,9 @@ test("規約が要求する trailer は緑（#1075 が全 PR を赤にした偽�
     // **利用者本人の個人アドレスは逐語で書かない**（#1043）。
     // 実測では `<利用者本人の gmail>` → github.com/uonoko1（f15aad8d）。
     // ここでは同じ「ローカル部と同名のユーザーが実在するのに帰属しない」形を架空で置く。
-    "person@example.com",
-    "bot@claude.ai",
-    "x@example.com",
+    FAKE_PERSON,
+    FAKE_BOT,
+    "x@example.com", // ローカル部が 1 文字の形（この綴り自体が検査の対象なので逐語で置く）
   ]) {
     assert.ok(
       !misattributesViaGithubNoreply(e),
@@ -1844,10 +1845,10 @@ test("誤帰属の判定は users.noreply.github.com 宛てだけに掛かる（
     "120390190+uonoko1@users.noreply.github.com",
     "41898282+github-actions[bot]@users.noreply.github.com",
     // **別ドメイン**——**(A) の「登録済みアドレス」の道。実測で正しく帰属する 2 形**
-    "noreply@anthropic.com",
-    "person@example.com",
+    REQUIRED_TRAILER_ADDRESS,
+    FAKE_PERSON,
     // **別ドメイン（一般）**
-    "bot@claude.ai",
+    FAKE_BOT,
     "x@example.com",
     "etl@example.com", // 同じローカル部でもドメインが違えば github.com/etl にはならない
     // **サフィックスが違う**——**外部ドメインなので (A) の道であり、(B) では誤帰属しない**

@@ -27,6 +27,28 @@
  * ここの綴りをすべて素通りさせる**（実測: `scripts/ci/test/forbidden-patterns.test.sh` の
  * 「架空アドレス…は素通り」が、下の 4 つを 1 行に並べて exit 0 を確かめている）。
  *
+ * ## **どこまで移したか（実測。「唯一の出どころ」はまだ半分である）**
+ *
+ * **#1126 のレビューで「import しているのは 1 件だけ」と指摘された。そのとおりだった。**
+ * **数え直した結果（2026-09-29、`git grep -o` で逐語の綴りを全部拾った）**:
+ *
+ * | ファイル | 逐語の綴り | 移したか |
+ * |---|---|---|
+ * | `commit-trailer-identity.test.ts` | 11 → **4** | **7 件を定数に移した** |
+ * | `workflow-commit-identity.test.ts` | 1 → **0** | **移した** |
+ * | `scripts/ci/test/forbidden-patterns.test.sh` | 7 | **移せない**（シェルなので TS を import できない） |
+ * | ここ（定義） | 5 | — |
+ *
+ * **残っている 4 件は、綴り自体が検査の対象なので定数にすると何を見ているか分からなくなる**:
+ * `a.b_c%d+e-f@example.com`（ローカル部の記号を全部入れた形）、`x@example.com`（1 文字の
+ * ローカル部）、`etl@example.com`（`etl` というローカル部であることに意味がある）、
+ * `noreply@example.com`（`noreply` というローカル部であることに意味がある）。
+ * **これらを `FAKE_*` に隠すと、テストの意図が読めなくなる。だから意図して残している。**
+ *
+ * **シェル側の 7 件は、この定数を読めない**（`.sh` から `.ts` は import できない）。
+ * **代わりに `personal-address-guard.test.ts` が「ここの綴りが規則を素通りすること」を
+ * 毎回確かめているので、両者が食い違えば赤くなる。**
+ *
  * ## 綴りの根拠（勝手に増やさない）
  *
  * - `example.com` / `example.invalid` — **RFC 2606 が「文書用」に予約したドメイン。**
@@ -45,6 +67,9 @@ export const FAKE_PERSON = "person@example.com";
 /** 架空のもう 1 人（2 人を区別したいとき）。 */
 export const FAKE_OTHER = "other@example.com";
 
+/** 架空の「誰か」（ワークフローに紛れ込んだ第三者の連絡先を置くとき）。 */
+export const FAKE_SOMEONE = "someone@example.com";
+
 /** 架空の bot（実在ドメイン + 割り当ての無いローカル部。誤帰属の検査が使う）。 */
 export const FAKE_BOT = "bot@claude.ai";
 
@@ -58,4 +83,10 @@ export const FAKE_COMMIT_IDENTITY = "t@example.invalid";
 export const REQUIRED_TRAILER_ADDRESS = "noreply@anthropic.com";
 
 /** 上の架空アドレスの一覧（`personal-address` 規則が全部素通りさせることを確かめる用）。 */
-export const FAKE_ADDRESSES = [FAKE_PERSON, FAKE_OTHER, FAKE_BOT, FAKE_COMMIT_IDENTITY] as const;
+export const FAKE_ADDRESSES = [
+  FAKE_PERSON,
+  FAKE_OTHER,
+  FAKE_SOMEONE,
+  FAKE_BOT,
+  FAKE_COMMIT_IDENTITY,
+] as const;

@@ -198,7 +198,23 @@ report fixture-secret "$FIXTURE_OUT"
 # `yahoo\.(com` / `co\.jp` / `de)` のように割れて、「一覧に在るか」の検査が嘘になる。
 PERSONAL_MAIL_DOMAINS='gmail\.com|googlemail\.com|yahoo\.com|yahoo\.co\.jp|yahoo\.co\.uk|yahoo\.fr|yahoo\.de|ymail\.com|outlook\.com|outlook\.jp|hotmail\.com|hotmail\.co\.jp|hotmail\.co\.uk|live\.com|live\.jp|msn\.com|icloud\.com|me\.com|mac\.com|aol\.com|protonmail\.com|protonmail\.ch|proton\.me|pm\.me|gmx\.com|gmx\.net|gmx\.de|zoho\.com|mail\.ru|yandex\.ru|yandex\.com|qq\.com|163\.com|126\.com|naver\.com|daum\.net|nifty\.com|biglobe\.ne\.jp|so-net\.ne\.jp|ocn\.ne\.jp|plala\.or\.jp|docomo\.ne\.jp|ezweb\.ne\.jp|au\.com|softbank\.ne\.jp|i\.softbank\.jp'
 # ローカル部は 1 文字以上の RFC 5322 dot-atom。直前が `@` や英数字だとアドレスではない断片なので除く。
-PERSONAL_ADDR_RE="(^|[^A-Za-z0-9._%+@-])[A-Za-z0-9._%+-]+@($PERSONAL_MAIL_DOMAINS)([^A-Za-z0-9.-]|$)"
+#
+# **末尾の境界に `.` を含めない**（`[^A-Za-z0-9-]`。#1126 レビュー）——
+# **最初 `[^A-Za-z0-9.-]` と書いていて、英文で最もふつうの形が素通りした**（実測）:
+#
+#   | 行 | 旧 `[^A-Za-z0-9.-]` | 新 `[^A-Za-z0-9-]` |
+#   |---|---|---|
+#   | `連絡先は <ローカル部>@<提供者>.`（英文の文末ピリオド） | **exit 0（素通り）** | exit 1 |
+#   | `連絡先は <ローカル部>@<提供者>。`（日本語の句点） | exit 1 | exit 1 |
+#   | `連絡先は <ローカル部>@<提供者>`（境界なし） | exit 1 | exit 1 |
+#   | `<ローカル部>@<提供者>.evil.com`（提供者に似せた別ドメイン） | **exit 0（素通り）** | exit 1 |
+#   | `<ローカル部>@<提供者>x`（別ドメイン。当ててはいけない） | exit 0 | exit 0 |
+#
+# **`.` を境界から外しても「提供者名で始まる別ドメイン」は当たらない**——
+# `<提供者>x` は `x` が `[A-Za-z0-9-]` なので境界に合わないまま（実測。上の表の最終行）。
+# **`<提供者>.evil.com` は当たるようになるが、それは取りこぼしが減った側である**
+# （個人アドレスに見せかけた別ドメインを止めるのは、この規則の趣旨に合う）。
+PERSONAL_ADDR_RE="(^|[^A-Za-z0-9._%+@-])[A-Za-z0-9._%+-]+@($PERSONAL_MAIL_DOMAINS)([^A-Za-z0-9-]|$)"
 PERSONAL_N=$(printf '%s\n' "$FILES" | sed '/^$/d' | wc -l | tr -d ' ')
 # 母数（#757 と同じ作法）: 「0 件検出」と「1 本も読めていない」を同じ緑にしない。
 echo "personal-address: $PERSONAL_N file(s) scanned"
