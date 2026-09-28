@@ -90,7 +90,7 @@ test_case() {
 
 # ---- tests ---------------------------------------------------------------------------------
 # `PO_TEST_RUN_SH` tells the sourced files they are being sourced by this runner and not run
-# directly (#1124: `bash scripts/po/test/merge-when-green.test.sh` printed 200 lines of
+# directly (#1124: `bash scripts/po/test/merge-when-green.test.sh` printed 138 lines of
 # `test_case: command not found` and exited 0).
 export PO_TEST_RUN_SH=1
 for t in "$HERE"/*.test.sh; do

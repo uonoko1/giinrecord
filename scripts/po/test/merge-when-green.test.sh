@@ -1,7 +1,9 @@
 # shellcheck shell=bash
 # **Do not run this file directly** (#1124). It is sourced by scripts/po/test/run.sh, which
-# defines test_case / assert_* / run_script. Running it with `bash` used to print 200 lines of
-# `test_case: command not found` and then **exit 0** — an error that looked like a pass.
+# defines test_case / assert_* / run_script. Running it with `bash` printed nothing but
+# `test_case: command not found` and ran not one assertion — measured on origin/main, all 8
+# files: 221 such lines in total (merge-when-green 138, board-audit 29, worktree-audit 21,
+# worktree-sweep 12, etl-verify 6, board-set/measure-pbi/verify-site 5 each).
 [[ -n ${PO_TEST_RUN_SH:-} ]] || {
   echo "$(basename "${BASH_SOURCE[0]}"): このファイルは単体では走りません（run.sh が source します）。" >&2
   echo "  bash scripts/po/test/run.sh                       # 全部" >&2

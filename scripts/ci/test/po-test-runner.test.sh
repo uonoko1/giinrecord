@@ -5,7 +5,7 @@
 #   $ bash scripts/po/test/run.sh merge-when-green
 #     passed: 0  failed: 0     ← 1 件も当たらないのに exit 0
 #   $ bash scripts/po/test/merge-when-green.test.sh
-#     test_case: command not found（× 200 行）  ← exit 0
+#     test_case: command not found（× 138 行）  ← 1 つの assertion も走らない
 # どちらも #757 の軸（「0 件実行」と「0 件失敗」を区別する）そのもの。
 #
 # **なぜ scripts/po/test/ の中に置かないか**: run.sh は `$HERE/*.test.sh` を **source** する。
@@ -176,7 +176,8 @@ t_real_runner_no_filter_is_green() {
 # ==== 4. *.test.sh の直接実行 ================================================================
 
 t_direct_execution_of_a_real_test_file_fails_loudly() {
-  # **#1124 の 2 つめ。** `test_case: command not found` が 200 行出て exit 0 だった。
+  # **#1124 の 2 つめ。** origin/main で実測: `test_case: command not found` が **138 行**出て、
+  # assertion は 1 つも走らない（8 本の合計は 221 行）。
   local f="$PO_TEST_DIR/merge-when-green.test.sh"
   [[ -f $f ]] || { fail "前提: merge-when-green.test.sh が無い"; return; }
   set +e
@@ -187,7 +188,7 @@ t_direct_execution_of_a_real_test_file_fails_loudly() {
   assert_eq 2 "$st" "直接実行は exit 2（使い方の誤り）"
   assert_contains "$out" "run.sh" "run.sh から呼ぶよう案内する"
   assert_not_contains "$out" "command not found" "command not found を 1 行も出さない"
-  # 200 行のノイズではなく、短く読めること
+  # 138 行のノイズではなく、短く読めること
   local lines; lines=$(wc -l <<<"$out")
   [[ $lines -le 10 ]] || fail "直接実行の出力は 10 行以内: $lines 行"
 }
