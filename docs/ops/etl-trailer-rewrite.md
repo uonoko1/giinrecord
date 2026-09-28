@@ -38,7 +38,7 @@ test -s ~/giinrecord-branch-backup-20260928/protection-before.json && echo "保�
 
 **`/tmp` に置かない**（再起動で消える唯一の原本になる）。**`umask 077` で他ユーザーから読めなくする。**
 
-## 2. 一時解除（`enforce_admins` の DELETE だけ）
+## 2. 一時解除（**`enforce_admins` と `allow_force_pushes` の両方**）
 
 ```bash
 gh api -X DELETE repos/uonoko1/giinrecord/branches/main/protection/enforce_admins
@@ -172,14 +172,18 @@ fix/1081-workflow-dir-pollution / main / test/1074-commit-trailer-identity
 ## 4. push の前に検算する
 
 ```bash
-git log --branches --remotes --pretty=format:%B | grep -ciE '^[[:space:]]*Co-[Aa]uthored-[Bb]y:.*etl@users\.noreply'
+git log main --pretty=format:%B | grep -ciE '^[[:space:]]*Co-[Aa]uthored-[Bb]y:.*etl@users\.noreply'
 #   期待 0
-#   **`--branches --remotes` であって `--all` ではない。**
-#   **`--all` は `refs/original/` も歩く。** `filter-branch` は書き換え前の状態を
-#   `refs/original/refs/heads/main` に残すので、**成功した run でも `--all` は 1 を返す**
-#   （実測 2026-09-28: 完璧な書き換えの後でも `--all` → 1 / `--branches --remotes` → 0）。
-#   **「1 が出たから失敗した」と読んで止まると、protection が外れたまま残る。**
-#   **HEAD だけ（ref 引数なし）でも駄目**——他の枝に残っていても 0 と出る（上の 3b）。
+#
+#   **push の前は `main` を名指しで数えること。**
+#   **`--branches --remotes` / `--all` はどちらも 1 を返す**（実測 2026-09-28、白紙の repo で再現）:
+#     push の前は `refs/remotes/origin/main` がまだ書き換え前を指しているので、
+#     `--remotes` がそれを歩く。**`refs/original` を消しても 1 のまま残る。**
+#     （この手順書は 2026-09-28 まで「`--all` が悪い / `--branches --remotes` なら 0」と
+#      書いていたが誤りだった。**`-- --all` を付けて流した場合だけ 0 になる**——
+#      remote-tracking も書き換えられるため。**この手順書は範囲指定で流すので付かない。**）
+#
+#   **push の後は、全 ref で数え直すこと**（下の手順 6）。**main だけ 0 でも他の枝に残る。**
 git log --pretty=format:%B | grep -ciE 'etl@users\.noreply\.github\.com'
 #   期待: 書き換え前の「散文含む件数」から 1 引いた数（trailer 1 件だけ消えて散文は残る）。
 #   書き換え前に上の 0 節で数えておくこと。**この数も焼き付けない**（#1043 の説明文が増減する）。
@@ -215,7 +219,46 @@ bash deploy/monitor/branch-protection.sh uonoko1/giinrecord main
 `enforce_admins` / `strict` / 必須チェック 4 件の名前まで見る**（#499 を満たしている）。
 **自前 grep だと `allow_force_pushes` しか見ず、`enforce_admins` が false のままでも緑に見える。**
 
+## 5b. **枝も片付ける（これをやらないと終わっていない）**
+
+**`main` を書き換えただけでは終わらない。** **書き換え前の main を土台にしていた枝には残る。**
+**しかも手順 4 の検算（`git log main`）は 0 = 成功と出るので、気づけない。**
+
+**2026-09-28 の実地でこれを踏んだ**——**PO は main を書き換えて「終わった」と報告したが、
+5 本の枝に残っていた。** **レビューが白紙の repo で再現している**:
+**手順書どおり main だけ流すと `git log main` は 0 なのに `origin/side` に残る。**
+
+```bash
+# 1. どの枝に残っているか数える（綴りを決め打ちせず、git の trailer パーサで）
+for b in $(gh api repos/uonoko1/giinrecord/branches --jq '.[].name'); do
+  git fetch -q origin "refs/heads/$b:refs/remotes/origin/$b"
+  n=0
+  for s in $(git log "origin/$b" --format='%H' -40); do
+    c=$(git log -1 --pretty='%(trailers:only=true)' "$s" | grep -ciE '<消したアドレス>' || true)
+    n=$((n + ${c:-0}))
+  done
+  [ "${n:-0}" -gt 0 ] && echo "$b: $n 件"
+done
+```
+
+**枝ごとの片付け方**:
+
+| 枝の種類 | やること |
+|---|---|
+| **ETL が作り直す枝**（`data/*`） | **削除する。** `git push origin --delete <枝>`。**workflow が `git switch -c` で作り直す**ので安全（実地で `districts.yml` を手動起動して確認済み） |
+| **open PR の head** | **`git rebase origin/main` して force push。** **`update-branch` は使わない**（マージなので古い履歴が連結され、trailer が戻る） |
+| **それ以外の古い枝** | **中身が要るか確かめてから削除**（bundle で保全してから） |
+
+**終わったら、全 ref で 0 件を確認する**:
+
+```bash
+for b in $(gh api repos/uonoko1/giinrecord/branches --jq '.[].name'); do
+  git log "origin/$b" --format='%ae%n%ce'
+done | sort -u | grep -iE '<消したアドレス>'    # ← 何も出なければ author/committer は 0
+```
+
 ## 6. 流した後
+
 
 - **docs の SHA 参照を貼り替える。** **`0f734507` が 3 ファイル 9 行から「測った基点」として引かれている**
   （`shimane-nearest-tie.test.ts` 5 行 / `workflow-timeout.test.ts` 3 行 / `votes-pdf.ts` 1 行）。
