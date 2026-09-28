@@ -2537,8 +2537,24 @@ key(600.4) → 600    key(599.6) → 600      // 同じキーになる
 **この表自身が、この節の罠を 1 度踏んだ**（2026-09-28、レビューが見つけた）。
 **`dev@` の trailer を「1 件」と書いていたが、実体は 0 件だった。**
 **`grep -F 'dev@users.noreply.github.com'` が
-`seiji-kiroku-dev@users.noreply.github.com`（別アカウント）の部分文字列に当たっていた。**
+`seiji-kiroku-dev@users.noreply.github.com` の部分文字列に当たっていた。**
 **アドレス全体で一致を取ると 0 件。**
+
+**この訂正自身が、もう 1 度同じ罠を踏んだ**（レビューが見つけた）。
+**最初の訂正は `seiji-kiroku-dev@…` を「別アカウント」と書いたが、それも綴りからの推定だった。**
+
+```
+gh api users/seiji-kiroku-dev          → 404 Not Found（そんなアカウントは無い）
+git config --get user.name             → seiji-kiroku-dev   ← このリポジトリ自身の名前
+c864f750 の author                     → Daichi Sakai <sakai.personal@gmail.com>
+```
+
+**`seiji-kiroku-dev` は GitHub のアカウント名ではなく、このリポジトリの `user.name` である。**
+**実体は利用者本人で、`1e41501f` では同じ `user.name` が正しいアドレス
+`120390190+uonoko1@…` と対になっている。**
+
+**「実体を確かめろ」と説く節の中で、2 度続けてアドレスの綴りから実体を推定した。**
+**アカウントかどうかは `gh api users/<name>` で確かめる。綴りから決めない。**
 
 ```
 grep -ciE 'Co-Authored-By:.*dev@users\.noreply'                → 1   ← 部分一致（誤り）
