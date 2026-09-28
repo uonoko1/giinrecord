@@ -2417,7 +2417,7 @@ console.log(t,{assemblies,sessions,maxSeatsChanged});'
 
 | 軸 | 何を取り違えるか | 既存の節 |
 |---|---|---|
-| **denylist と allowlist** | **列挙漏れ**。「危ないもの」を並べると、並べていない綴りが通る | #333（`## CI と検査の作り方` の「`「危ないものを含まない」（denylist）ではなく`」）。#858 / #1043 が同じ軸の後の例 |
+| **denylist と allowlist** | **列挙漏れ**。「危ないもの」を並べると、並べていない綴りが通る | #333（`## CI と検査の作り方` の「`「危ないものを含まない」（denylist）ではなく`」）。#1043 が同じ軸の後の例 |
 | **母数** | **数えていないものを 0 と読む**。0 件と未計測が区別できない | #705 / #757（`## テストそのもの` の「検算が空回り」、`## 数字と測り方`） |
 | **代理と実体**（この節） | **近いものを測って本体を測ったことにする**。代理の側は正しく守られているのに、実体は無検査のまま | #1078 / #1091 / #1076 / #1080 |
 
@@ -2519,7 +2519,7 @@ key(600.4) → 600    key(599.6) → 600      // 同じキーになる
 | 計器 | 数 | 中身 |
 |---|---|---|
 | `gh api repos/.../contributors` | **2** | `uonoko1`, `github-actions[bot]` |
-| `gh api repos/.../stats/contributors` | **未計測** | `{}` を返す（**まだ計算中**。起票時は 4 だった） |
+| `gh api repos/.../stats/contributors` | **4**（05:37Z）／**未計測**（05:18Z） | **19 分で `{}` から 4 に変わった。** 同じ計器が、同じ日に、測る時刻で違う答えを返す（下を見よ） |
 | リポジトリページの初期 HTML（cache-busted） | **0** | **Contributors 欄は骨組みだけ**で、行が 1 つも入っていない（起票時は 2 だった） |
 | `graphs/contributors-data`（画面が描画に使うデータ） | **4** | `claude`, `etl`, `github-actions[bot]`, `uonoko1` |
 | **`_sidebar`（利用者が実際に見る欄）** | **5** | `claude`, `uonoko1`, **`dev`**, `github-actions[bot]`, `etl` |
@@ -2531,8 +2531,23 @@ key(600.4) → 600    key(599.6) → 600      // 同じキーになる
 
 | 綴り | author として | `Co-authored-by` trailer として |
 |---|---|---|
-| `dev@users.noreply.github.com` | **0 件** | **1 件** |
-| `etl@users.noreply.github.com` | **0 件** | **1 件** |
+| `dev@users.noreply.github.com` | **0 件** | **0 件** |
+| `etl@users.noreply.github.com` | **0 件** | **1 件**（`1e41501f`） |
+
+**この表自身が、この節の罠を 1 度踏んだ**（2026-09-28、レビューが見つけた）。
+**`dev@` の trailer を「1 件」と書いていたが、実体は 0 件だった。**
+**`grep -F 'dev@users.noreply.github.com'` が
+`seiji-kiroku-dev@users.noreply.github.com`（別アカウント）の部分文字列に当たっていた。**
+**アドレス全体で一致を取ると 0 件。**
+
+```
+grep -ciE 'Co-Authored-By:.*dev@users\.noreply'                → 1   ← 部分一致（誤り）
+trailer のアドレスを取り出して grep -cx 'dev@users.noreply...'  → 0   ← 実体
+拾っていた正体: <seiji-kiroku-dev@users.noreply.github.com>
+```
+
+**「綴りの集合か実体の集合か」を問う節の中で、綴りの部分一致で実体を数えていた。**
+**アドレスを数えるときは、部分一致ではなく境界を固定して数える。**
 
 **`_sidebar` は `cache-control: no-cache` を返すのに、サーバ側の事前計算値を返す**（実測）。
 **だから git 側を直しても即座には変わらない**——**上の `dev` はその実例である。**
