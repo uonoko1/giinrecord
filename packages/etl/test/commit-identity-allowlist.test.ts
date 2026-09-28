@@ -64,6 +64,44 @@ import { dirname, resolve, join } from "node:path";
  * **「他人の数字 ID の例」を書くこと自体が、他人の ID を書くことだった。**
  * **だからこのファイルは、落とす側の例に実在しうる数字を書かない**（下の `BAD` 参照）。
  *
+ * ── **直近 20 本のマージ済み PR で数え直した（2026-09-28。PBI の母数より多い）** ──────
+ *
+ * **PBI は「誤りは `219112946` の 1 件だけ」としていたが、`origin/main` の trailer 行を
+ * 数え直すと 3 種類在った**（`git log origin/main --pretty=format:%B` の
+ * `Co-authored-by:` 行を数えた。**この 3 つは全部、枝の author が起点である**）:
+ *
+ * ```
+ * 1708  noreply@anthropic.com                     → github.com/claude   （#1074。別 PBI）
+ *  519  120390190+uonoko1@…                       → uonoko1             OK
+ *   68  41898282+github-actions[bot]@…            → github-actions[bot] OK
+ *    2  （利用者本人の個人アドレス）                                       本人なので誤帰属ではない
+ *    1  seiji-kiroku-dev@users.noreply.github.com → 404（PR #1070）      ★ 数字 ID が無い形
+ *    1  etl@users.noreply.github.com              → github.com/etl      ★（#1074、PR #1059）
+ *    1  219112946+seiji-kiroku-dev@…              → MLehnus（PR #1064）  ★ 数字 ID が他人
+ * ```
+ *
+ * **直近 20 本のマージ済み PR の枝を直接読むと、138 個の author / committer のうち
+ * 10 個（7.2%）が allowlist の外だった**（3 本の PR に固まっている。
+ * `gh api repos/…/pulls/<n>/commits` で実測）:
+ *
+ * ```
+ * 124  120390190+uonoko1@…              OK
+ *   6  219112946+seiji-kiroku-dev@…     ★ PR #1064
+ *   4  41898282+github-actions[bot]@…   OK
+ *   2  seiji-kiroku-dev@…               ★ PR #1070
+ *   2  etl@users.noreply.github.com     ★ PR #1059
+ * ```
+ *
+ * **「1 件の事故」ではなく、直近 20 本に 3 本の割合で起きている。**
+ * **形の検査は 3 つのうち 2 つを落とせるが、`219112946` だけは落とせない**（実測）:
+ *
+ * ```
+ *                                       形(#1043/#1075)  逐語(この検査)
+ * 219112946+seiji-kiroku-dev@…          通す ★           落とす
+ * seiji-kiroku-dev@…                    落とす           落とす
+ * etl@users.noreply.github.com          落とす           落とす
+ * ```
+ *
  * ── **この検査が守るもの / 守らないもの** ───────────────────────────────────────────
  *
  * **守る**: **この枝が足すコミットに、逐語 allowlist に無いアドレスが刻まれていないこと。**
@@ -235,6 +273,7 @@ test("逐語 allowlist そのものを検査する（形が正しい他人の数
     "219112946+seiji-kiroku-dev@users.noreply.github.com", // ★ = github.com/MLehnus（実際に Contributors に出た）
     "noreply@anthropic.com", // #1074 の発端（github.com/claude に誤帰属）
     "etl@users.noreply.github.com", // #1074 の実害（github.com/etl）
+    "seiji-kiroku-dev@users.noreply.github.com", // PR #1070 で実際に刻まれた（`gh api users/…` は 404）
     "dev@users.noreply.github.com",
     "bot@users.noreply.github.com",
     "120390190+uonoko1@example.com", // 正しい数字 ID でもドメインが違えば別物
