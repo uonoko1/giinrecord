@@ -66,9 +66,11 @@ tools: Bash, Read, Edit, Write, Grep, Glob
 9. **PR を別の PR の上に積まない。** 必ず `origin/main` から切る。
 10. **作業が終わったら `git worktree remove` する。**
     **自分で `git worktree add` する場合は `.claude/worktrees/` に作らない**
-    （scratchpad 配下に作る）。**理由はディスク量ではない**——**worktree 1 本は
-    どこに作っても 400〜650M 使う**（実測 2026-09-28: scratchpad 配下の 4 本が
-    649M / 649M / 622M / 397M。内訳は `data/` 307M + `node_modules/` 252M）。
+    （scratchpad 配下に作る）。**理由はディスク量ではない**——**同じ内容の worktree は
+    どこに作っても同じ大きさで、`/home` と `/tmp` は同じデバイスなので移しても空きは動かない**
+    （実測 2026-09-28: `.claude/worktrees/` と scratchpad に同条件で 1 本ずつ作ると
+    **どちらも 370M で差 0M**。`df` で両方とも `/dev/sdc`）。
+    **大きさはコミットの内容で決まる**（`data/unmatched.json` が 28M か 46KB かで 649M と 622M に分かれる）。
     **理由は「PO のリポジトリ容量に混ざると、片付ける人が成果物と区別できない」こと。**
     **実際に #1081 の修正（未 push）が消える寸前だった。**
     **ただし PO が `isolation: worktree` で立てた場合、場所は PO が決めていて
