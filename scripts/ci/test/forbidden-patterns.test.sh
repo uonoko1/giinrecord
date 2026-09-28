@@ -43,6 +43,11 @@ GH_TOKEN="ghp_$(printf 'A%.0s' $(seq 1 36))"
 GH_PAT="github_pat_$(printf 'B%.0s' $(seq 1 30))"
 AWS_KEY="AKIA$(printf 'C%.0s' $(seq 1 16))"
 IP="203.0.113$(printf '.%s' 10)"
+# 個人アドレス（#1111）: **このファイルにも実在のアドレスは書かない。**
+# ローカル部は架空（`taro.yamada`）、ドメインだけが実在の個人メール提供者。組み立てて作る。
+MAILDOM_G="g""mail.com"           # 事故 3 件（#1092 / #1103 / #1108）のドメインはすべてこれ
+MAILDOM_Y="ya""hoo.co.jp"
+PERSONAL_ADDR="taro.yamada@$MAILDOM_G"
 
 t_clean_repo_passes() {
   repo clean; add "src/a.ts" "export const x = 1;"
@@ -368,6 +373,83 @@ t_fixture_secret_scope_is_fixtures_only() {
   assert_eq 0 "$STATUS" "docs は対象外: $OUT"
 }
 
+
+# ── personal-address（#1111）─────────────────────────────────────────────
+# 2026-09-28 に 3 本の PR が計 7 行の個人アドレスを追跡ファイルに入れかけた（#1092 1 / #1103 1 / #1108 5）。
+# 3 本ともレビュアーが見つけた。gitleaks も forbidden-patterns も 1 件も落としていない。
+
+# 1. 事故 3 件が実際に書いた 3 つの形（散文 / コード文字列 / 表の行）をそれぞれ落とす。
+t_personal_address_prose_string_and_table_fail() {
+  repo pa
+  add "packages/etl/test/fixtures/tokushima/ok.html" "<p>ok</p>"   # #757 の母数 error を避けるため
+  add "docs/WORKING_AGREEMENT.md" " * **\`$PERSONAL_ADDR\`（利用者本人の個人アドレス）はここに書かない。**"
+  add "packages/etl/test/x.test.ts" "    \"$PERSONAL_ADDR\", // 利用者本人"
+  add "docs/ops/notes.md" " * $PERSONAL_ADDR   github.com/sakai          id=15643"
+  run
+  assert_eq 1 "$STATUS" "exit"
+  assert_contains "$OUT" "personal-address" "rule named"
+  assert_contains "$OUT" "docs/WORKING_AGREEMENT.md" "散文の形（#1103 が書いた形）"
+  assert_contains "$OUT" "packages/etl/test/x.test.ts" "コード文字列の形（#1108 が書いた形）"
+  assert_contains "$OUT" "docs/ops/notes.md" "表の行の形（#1108 が書いた形）"
+  assert_not_contains "$OUT" "$PERSONAL_ADDR" "アドレス本体はログに出さない（出したらログが事故になる）"
+}
+
+# 2. `Name <addr>` の形（#1092 が書いた形。git の author 表記をそのまま貼ると必ずこうなる）
+t_personal_address_in_author_notation_fails() {
+  repo paauth
+  add "docs/ops/board-audit-log.tsv" "c864f750 の author → Daichi Sakai <$PERSONAL_ADDR>"
+  run
+  assert_eq 1 "$STATUS" "exit (#1092 が書いた author 表記の形)"
+  assert_contains "$OUT" "docs/ops/board-audit-log.tsv" "file named"
+}
+
+# 3. **偽陽性の検査（これが無いと使えない）**: 架空アドレスは素通りする。
+#    綴りは packages/etl/test/fake-addresses.ts が 1 か所で持つ（#1111）。
+t_fake_addresses_pass() {
+  repo pafake
+  add "packages/etl/test/fixtures/tokushima/ok.html" "<p>ok</p>"   # #757 の母数 error を避けるため
+  add "packages/etl/test/a.test.ts" 'const A = ["person@example.com", "x@example.com", "bot@claude.ai", "x@example.invalid", "noreply@anthropic.com", "someone@example.com", "t@example.invalid", "a.b_c%d+e-f@example.com"];'
+  add "docs/x.md" "連絡先は 120390190+uonoko1@users.noreply.github.com（数字 ID 付き noreply）"
+  run
+  assert_eq 0 "$STATUS" "架空アドレスと noreply は素通りする: $OUT"
+}
+
+# 4. 第三者の実在アドレスのうち、**機関の連絡先**は落とさない。
+#    フィクスチャの県庁 HTML には lg.jp の窓口アドレスが入っている（実測: 10 ファイル）。
+#    これを落とすと、直した人が検査ごと外す。
+t_institutional_addresses_pass() {
+  repo painst
+  add "packages/etl/test/fixtures/tokushima/gaiyou.html" '<a href="mailto:gikai@pref.tokushima.lg.jp">議会事務局</a>'
+  add "apps/web/app/lib/x.ts" 'const CSS = "rtal_m@d.css";'
+  run
+  assert_eq 0 "$STATUS" "機関アドレスと CSS の断片は通す: $OUT"
+}
+
+# 5. 別の個人メール提供者でも落ちる（規則が 1 ドメインの逐語になっていないこと）。
+t_personal_address_other_consumer_domain_fails() {
+  repo paoth; add "docs/a.md" "author: hanako.suzuki@$MAILDOM_Y"
+  run
+  assert_eq 1 "$STATUS" "exit (提供者が変わっても落ちる)"
+  assert_contains "$OUT" "personal-address" "rule named"
+}
+
+# 6. 大文字小文字を変えても落ちる（貼り直しで綴りが揺れる）。
+t_personal_address_is_case_insensitive() {
+  repo pacase; add "docs/a.md" "TARO.YAMADA@$(printf '%s' "$MAILDOM_G" | tr '[:lower:]' '[:upper:]')"
+  run
+  assert_eq 1 "$STATUS" "exit (大文字でも落ちる)"
+}
+
+# 7. 母数（#757 と同じ作法）: 走査した追跡ファイル数を必ず出す。
+#    「0 件検出」と「1 本も読めていない」を同じ緑にしない。
+t_personal_address_denominator_is_reported() {
+  repo paden; add "src/a.ts" "export const x = 1;"
+  run
+  assert_eq 0 "$STATUS" "exit"
+  assert_contains "$OUT" "personal-address:" "母数を出す"
+  assert_contains "$OUT" "file(s) scanned" "母数の単位"
+}
+
 test_case "forbidden-patterns.sh: bash -n" bash -n "$SCRIPT"
 test_case "clean repo passes; unset FORBIDDEN_PATTERNS is a warning" t_clean_repo_passes
 test_case "private key header → fail" t_private_key_header_fails
@@ -405,6 +487,14 @@ test_case "fixture-secret: 母数を出す (#757)" t_fixture_secret_denominator_
 test_case "fixture-secret: ETL ありでフィクスチャ 0 本は error (#757)" t_fixture_secret_zero_files_with_etl_is_an_error
 test_case "fixture-secret: ETL 無しなら 0 本は正常、母数は出す (#757)" t_fixture_secret_zero_files_without_etl_passes
 test_case "fixture-secret: 対象は fixtures のみ (#785)" t_fixture_secret_scope_is_fixtures_only
+
+test_case "個人アドレス: 散文・コード文字列・表の行 → fail (#1111)" t_personal_address_prose_string_and_table_fail
+test_case "個人アドレス: Name <addr> の author 表記 → fail (#1111/#1092)" t_personal_address_in_author_notation_fails
+test_case "架空アドレス（example.com / claude.ai / example.invalid / noreply）は素通り (#1111)" t_fake_addresses_pass
+test_case "機関の連絡先（lg.jp）と CSS の断片は素通り (#1111)" t_institutional_addresses_pass
+test_case "個人アドレス: 別の提供者でも fail (#1111)" t_personal_address_other_consumer_domain_fails
+test_case "個人アドレス: 大文字小文字を問わない (#1111)" t_personal_address_is_case_insensitive
+test_case "personal-address: 母数を出す (#1111/#757)" t_personal_address_denominator_is_reported
 
 echo; echo "passed: $PASS  failed: $FAIL"
 [[ $FAIL == 0 ]]

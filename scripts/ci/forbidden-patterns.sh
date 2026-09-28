@@ -10,6 +10,10 @@
 #   ip-address    a public IPv4 literal anywhere (the VPS is written as a domain, not an IP; no directory is exempt —
 #                 deploy/ and docs/ops/ are exactly where the IP used to live. Loopback, 0.0.0.0 and RFC1918
 #                 ranges are fine — they identify nothing)
+#   personal-address 個人メール提供者のドメインを持つアドレス（#1111。2026-09-28 に 3 本の PR が
+#                 計 7 行を入れかけ、3 回ともレビュアーだけが見つけた）。規則に実在のアドレスは書かず、
+#                 「ローカル部は任意 + 提供者ドメイン」という形で判定する。架空アドレスの綴りは
+#                 packages/etl/test/fake-addresses.ts が 1 か所で持つ（そこを使えば素通りする）
 #   fixture-secret 第三者サービスの鍵・トークンらしき値が test/fixtures/ の中にある（取得した HTML に
 #                 混ざって入ってくる。#750 / #785。フィクスチャが 1 本も無ければ exit 2 ——#757）
 #   forbidden     regexes from $FORBIDDEN_PATTERNS (newline separated; a repo secret set by the PO — names of the
@@ -161,6 +165,56 @@ FIXTURE_QUERY_SECRET_RE='[?&](token|key|api_?key|apikey|access_token|auth|secret
 FIXTURE_OUT=$(run_grep "$FIXTURE_FILES" -I -H -n -E \
   -e "$FIXTURE_GOOGLE_KEY_RE" -e "$FIXTURE_QUERY_SECRET_RE" | cut -d: -f1,2) || exit 2
 report fixture-secret "$FIXTURE_OUT"
+
+# personal-address (Issue #1111): 利用者本人の個人アドレスが追跡ファイルに入りかける事故が
+# 2026-09-28 の 1 日で 3 回起きた（#1092 に 1 行 / #1103 に 1 行 / #1108 に 5 行、計 7 行）。
+# **3 回ともレビュアーが見つけている。gitleaks も forbidden-patterns も 1 件も落としていない**（実測）。
+# 悪意ではなく「実測を逐語で書く」作法の副作用である——#1108 では同じファイルの 90 行目に
+# 「個人アドレスを書かない方針（実測: いまも 0 件）」と書きながら、同じ PR が 5 行足していた。
+#
+# ── なぜ「アドレスを書かずに」判定できるか ─────────────────────────────
+# **規則そのものに実在のアドレスを書いたら本末転倒なので、値ではなく「形」で判定する。**
+# **ローカル部は任意、ドメインだけを個人メール提供者に限る。** 事故 7 行はすべて同じ提供者
+# （消費者向けメール）で、ローカル部が違うだけだった（実測: 7/7 が下の G_DOMAINS の 1 つ）。
+#
+# 採らなかった案と、その理由（どれも実測）:
+#   (a) `git config user.email` と突き合わせる → **CI で何も検出しない。**
+#       実測: HOME に設定の無い環境（= Actions の checkout 直後）で `git config user.email` は
+#       空を返して exit 1。検査が必要なのはまさにその場所なので、この案は穴になる。
+#       加えて #1105 のとおり `.git/config` は全 worktree 共有で、誰でも書き換えられる。
+#   (b) `git log` の author と突き合わせる → 履歴が浅いチェックアウト（fetch-depth 既定は 1）で
+#       author が 1 人ぶんしか無く、取りこぼす。全履歴を引く前提にすると checkout の設定に依存する。
+#   (c) 「@ を含む文字列すべて」を落とす → **偽陽性で使えない。** 実測: いま追跡されている
+#       テキストのアドレスは、県議会事務局の窓口（`…@pref.*.lg.jp` が 10 ファイル）、
+#       架空アドレス（example.com 14 / example.invalid 7 / claude.ai 5）、
+#       規約が要求する `…@anthropic.com`（33）、`…@users.noreply.github.com`（90）、
+#       そして CSS の断片（`…@d.css` が 180）。落としたら誰かが検査ごと外す。
+#
+# 個人メール提供者のドメイン（denylist。値は「誰のものでもない提供者名」なので書いてよい）。
+# **ここに無い提供者は素通りする**——下の「塞げていない形」を参照。
+# **入れ子の括弧は使わない**（`yahoo\.(com|co\.jp)` のような畳み方をしない）:
+# **一覧を機械で読み返す側（packages/etl/test/personal-address-guard.test.ts）が
+# `|` で割るだけで全ドメインを得られるようにするため。** 実測: 畳んだ形だと
+# `yahoo\.(com` / `co\.jp` / `de)` のように割れて、「一覧に在るか」の検査が嘘になる。
+PERSONAL_MAIL_DOMAINS='gmail\.com|googlemail\.com|yahoo\.com|yahoo\.co\.jp|yahoo\.co\.uk|yahoo\.fr|yahoo\.de|ymail\.com|outlook\.com|outlook\.jp|hotmail\.com|hotmail\.co\.jp|hotmail\.co\.uk|live\.com|live\.jp|msn\.com|icloud\.com|me\.com|mac\.com|aol\.com|protonmail\.com|protonmail\.ch|proton\.me|pm\.me|gmx\.com|gmx\.net|gmx\.de|zoho\.com|mail\.ru|yandex\.ru|yandex\.com|qq\.com|163\.com|126\.com|naver\.com|daum\.net|nifty\.com|biglobe\.ne\.jp|so-net\.ne\.jp|ocn\.ne\.jp|plala\.or\.jp|docomo\.ne\.jp|ezweb\.ne\.jp|au\.com|softbank\.ne\.jp|i\.softbank\.jp'
+# ローカル部は 1 文字以上の RFC 5322 dot-atom。直前が `@` や英数字だとアドレスではない断片なので除く。
+PERSONAL_ADDR_RE="(^|[^A-Za-z0-9._%+@-])[A-Za-z0-9._%+-]+@($PERSONAL_MAIL_DOMAINS)([^A-Za-z0-9.-]|$)"
+PERSONAL_N=$(printf '%s\n' "$FILES" | sed '/^$/d' | wc -l | tr -d ' ')
+# 母数（#757 と同じ作法）: 「0 件検出」と「1 本も読めていない」を同じ緑にしない。
+echo "personal-address: $PERSONAL_N file(s) scanned"
+# -i: 貼り直しで綴りが揺れる（実測: #1043 は大文字混じりの users.NoReply.GitHub.Com を見落としていた）。
+# cut で file:line だけにする——**アドレス本体をログに出したら、ログ自体が事故になる。**
+PERSONAL_OUT=$(run_grep "$FILES" -I -H -n -i -E -e "$PERSONAL_ADDR_RE" | cut -d: -f1,2) || exit 2
+# 塞げていない形（denylist の宿命。「これで全部」ではない。分かっているものは書き残す）:
+#   - **上の一覧に無い提供者**: 勤務先や独自ドメインの個人アドレス（`<ローカル部>@example-corp.co.jp` の形）。
+#     ドメインだけでは個人か機関か区別できないので、原理的に形では判定できない。
+#   - **難読化**: `taro [at] gmail [dot] com` / `taro@gmail．com`（全角ピリオド）/ HTML エンティティ
+#     （`&#64;`）/ 行を跨ぐ形（grep は行単位）。
+#   - **アドレス以外の同定情報**: 電話番号・住所・本名だけの行。
+#   - **バイナリ**: grep -I が飛ばす（PDF のフィクスチャなど）。
+#   - **追跡されていないファイル**: git ls-files の外（そもそも repo に入らない）。
+#   これらは「隠れて通れる」形ではなく、レビューの diff に不自然な書き方として現れる（作業合意 #507）。
+report personal-address "$PERSONAL_OUT"
 
 # Strict octets (no leading zeros) and no neighbouring digit, letter or dot: keeps SVG path data and version strings (v1.2.3.4) out.
 OCTET='(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])'
