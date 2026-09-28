@@ -753,8 +753,15 @@ export interface DropTiedForTest {
    * **`"33"` を `"3"` `"3"` に割って 1 つ落とすと `"3"` が残り、`/^\d+$/` は通す**
    * ——**33 票が 3 票として公開される。** **#569 の重いほう（違う記録が出る）。**
    *
-   * 値は `"${ページ番号}:${yes|no}"`（例 `"1:yes"`）。**本番は渡さない**
-   * （`undefined` なら振る舞いは 1 ビットも変わらない）。
+   * 値は `"${ページ番号}:${yes|no}"`（例 `"1:yes"`）か、
+   * **行を選ぶ `"${ページ番号}:${yes|no}:${行の番号}"`**（例 `"1:yes:3"`。#1055 のレビュー B-2）。
+   * **行の番号は `anchors` の添字**で、`k` と `k+1` の中点でタイにする。**省くと 0（先頭行）。**
+   *
+   * **行を選べるようにした理由**: **先頭行に固定していたので、
+   * `countDropped` を `anchors[0]` だけに狭める変異が素通りしていた**
+   * ——**「1 文字でも落ちたら全行を疑う」という設計を、検査が 1 つも守れていなかった。**
+   *
+   * **本番は渡さない**（`undefined` なら振る舞いは 1 ビットも変わらない）。
    */
   splitCountForTest?: string;
   /**
@@ -762,11 +769,18 @@ export interface DropTiedForTest {
    *
    * - `"tie"`（既定）: **本物の同距離タイ**にする（隣り合う 2 行の中点へ動かす）。**検査 (1) が踏む道。**
    * - `"vanish"`: **黙って消す**（タイ以外の理由でアイテムが欠ける形。**検査 (2) だけが踏む道**）。
+   * - `"inflate"`: **桁を 1 つ増やして水増しする**（`"33"` → `"330"`）。**#1055 のレビュー B-2。**
    *
-   * **2 通り要る理由**: **検査 (1) は「落ちた事実」を、検査 (2) は「値そのもの」を見ている。**
+   * **3 通り要る理由**: **検査 (1) は「落ちた事実」を、検査 (2) は「値そのもの」を見ている。**
    * **1 通りしか踏めないと、片方を消しても緑のままになる**（#1056 で同じ穴を踏んだ）。
+   *
+   * **`"inflate"` が要る理由**（レビューが測った）: **切り詰めは票数を必ず小さくする**ので、
+   * **検査 (2) が捕まえた 35 組は全部 `公表値 < ○● の数` の向きだった**（逆向きは **0 組**）。
+   * **＝「厳密な `!==` が、緩い `<` より強い場面」が 1 度も踏まれておらず、
+   * `someMarksDropped` を常に `true` にする変異が素通りしていた。**
+   * **`"inflate"` は逆向き（`公表値 > ○● の数`）を作るので、厳密一致の枝だけが捕まえる。**
    */
-  splitCountModeForTest?: "tie" | "vanish";
+  splitCountModeForTest?: "tie" | "vanish" | "inflate";
 }
 
 export async function parseVotePdf(bytes: Buffer, dropForTest?: DropTiedForTest): Promise<VotePdf> {
@@ -918,16 +932,25 @@ export async function parseVotePdf(bytes: Buffer, dropForTest?: DropTiedForTest)
      * **`/^\d+$/` は「数字である」の検査であって「切り詰められていない」の検査ではない。**
      * だから**落ちた事実そのもの**を持ち回り、下で落とす。
      */
-    const countDropped = new Set<number>();
+    /*
+     * **なぜ「行ごと」ではなく「ページごと」の 1 つの旗なのか**（#1055 のレビュー B-2 で測り直した）。
+     *
+     * **落ちた文字が「どの行の何桁目だったか」は、落ちた時点で分からない。**
+     * **だからどの行の票数も信じられない**——**「1 文字でも落ちたら、その欄の全行を疑う」が正しい。**
+     *
+     * **最初は `Set<number>` に `anchors` を全部入れていたが、それは旗 1 つと完全に同じだった**
+     * （**`anchors[0]` だけに狭める変異が素通りした。行の走査は `anchors[0]` から始まるので、
+     * どの行が壊れていても必ず `anchors[0]` で先に落ちる**）。
+     * **観測できない区別を持たせたままにしない**ので、**旗 1 つに畳んだ。**
+     */
+    let countDropped = false;
     const ownCount = (items: Item[]): Map<number, Item[]> => {
       const map = new Map<number, Item[]>(anchors.map((a) => [a, [] as Item[]]));
       for (const it of items) {
         const a = nearest(it.y);
         if (a !== undefined) { map.get(a)!.push(it); continue; }
         tiedItems++;
-        // **どの行のものか決まらなかったので、どの行の票数も信じられない。**
-        // **1 文字でも落ちたら、その欄の全行を疑う**（落ちた文字が「どの行の桁だったか」は分からない）。
-        for (const x of anchors) countDropped.add(x);
+        countDropped = true;
       }
       return map;
     };
@@ -937,17 +960,52 @@ export async function parseVotePdf(bytes: Buffer, dropForTest?: DropTiedForTest)
      * （`tie` は本物の同距離タイに、`vanish` は黙って消す）。
      */
     const splitForTest = (items: Item[], which: "yes" | "no"): Item[] => {
-      if (dropForTest?.splitCountForTest !== `${pi + 1}:${which}`) return items;
+      const key = dropForTest?.splitCountForTest;
+      if (key === undefined) return items;
+      // `"${ページ}:${yes|no}"` または `"${ページ}:${yes|no}:${行の番号}"`（#1055 のレビュー B-2）
+      const parts = key.split(":");
+      if (parts[0] !== String(pi + 1) || parts[1] !== which) return items;
       if (anchors.length < 2) return items;
-      const mid = (anchors[0] + anchors[1]) / 2;
-      const mode = dropForTest.splitCountModeForTest ?? "tie";
+      /*
+       * **どの行でタイにするか**（#1055 のレビュー B-2）。
+       *
+       * **最初の版は `mid = (anchors[0]+anchors[1])/2` に固定していた**ので、
+       * **合成されるタイは必ず先頭行にしか落ちなかった。**
+       * **その結果 `countDropped` を `anchors[0]` だけに狭める変異が素通りした**
+       * ——**「1 文字でも落ちたら全行を疑う」という保守的な設計を、検査が 1 つも守れていなかった。**
+       * **母数 112 が大きく見えても、実際に触れていた anchor は 1 つだけだった。**
+       *
+       * **だから行を選べるようにする**（既定は今までどおり先頭）。
+       */
+      const k = parts.length > 2 ? Number(parts[2]) : 0;
+      if (!Number.isInteger(k) || k < 0 || k + 1 >= anchors.length) return items;
+      const mid = (anchors[k] + anchors[k + 1]) / 2;
+      const mode = dropForTest?.splitCountModeForTest ?? "tie";
       const out: Item[] = [];
+      /*
+       * **`k` 番目に見つかった 2 桁の票数を割る**（#1055 のレビュー B-2。**ここが肝だった**）。
+       *
+       * **最初の版は必ず「最初の 2 桁」を割っていた**ので、**切り詰められる行はいつも `anchors[0]`** だった
+       * （`k` は「落とした桁をどこへ置くか」しか変えず、**どの行の票数が壊れるかは変わらなかった**）。
+       * **だから `countDropped` を `anchors[0]` だけに狭める変異が素通りした。**
+       *
+       * **いまは `k` 番目の 2 桁を割る**ので、**`anchors[0]` 以外の行の票数が切り詰められる。**
+       */
+      let seen = 0;
       let done = false;
       for (const it of items) {
         const cs = [...it.str];
         if (done || cs.length < 2) { out.push(it); continue; }
+        if (seen++ < k) { out.push(it); continue; }
         done = true;
         const w = it.w / cs.length;
+        if (mode === "inflate") {
+          // **逆向き（公表値 > ○ ● の数）を作る**（#1055 のレビュー B-2）。
+          // **切り詰めは必ず数を小さくするので、`>=` と `!==` の差が 1 度も踏まれていなかった。**
+          // **桁を 1 つ増やして水増しし、厳密一致の枝だけが捕まえる状態を作る。**
+          out.push({ ...it, str: `${it.str}0` });
+          continue;
+        }
         // 1 桁目はそのまま、2 桁目だけ落とす（＝残るのは切り詰められた数）
         out.push({ ...it, str: cs[0], w });
         if (mode === "tie") out.push({ ...it, str: cs[1], x: it.x + w, w, y: mid });
@@ -1145,7 +1203,7 @@ export async function parseVotePdf(bytes: Buffer, dropForTest?: DropTiedForTest)
        * **形の検査は値の検査の代わりにならない**ので、**落ちた事実そのもの**で落とす。
        * **「34 票と誤って出す」より「この本を読まない」ほうが軽い**（#569）。
        */
-      if (countDropped.has(a)) throw new Error(`page ${pi + 1} ${number}: 賛成/反対 "${yesText}"/"${noText}" — 票数の欄に行が決まらなかった文字がある（切り詰められた数かもしれない。#1055）`);
+      if (countDropped) throw new Error(`page ${pi + 1} ${number}: 賛成/反対 "${yesText}"/"${noText}" — 票数の欄に行が決まらなかった文字がある（切り詰められた数かもしれない。#1055）`);
       const marks = markByRow.get(a)!;
       const cells = colX.map((_, col) => {
         const mark = marks.get(col);

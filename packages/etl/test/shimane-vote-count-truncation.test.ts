@@ -62,21 +62,30 @@ import { parseVotePdf, UNKNOWN_CELL } from "../src/sources/local/shimane/votes-p
  *
  * ## 変異テストの結果（**素通りした変異も書く**）
  *
- * | 変異 | 結果 |
- * |---|---|
- * | **検査 (2) を丸ごと消す** | **殺せた。35 組が素通りして違う票数が出た**（＝**これが効いている検査**） |
- * | **検査 (1) を丸ごと消す** | **殺せた**（21 → 0）。**ただし素通りは 0 件**——56 組は全部 検査 (2) が捕まえる |
- * | `someMarksDropped` を常に `false`（厳密一致だけ） | **殺せた**（#1023/#1056 の検査が 2 本落ちる。`>=` の枝は #1023 の振る舞いに要る） |
- * | **`someMarksDropped` を常に `true`（`>=` だけ）** | **素通りした（等価変異）** |
+ * **最初の版では 2 件が素通りしていた**（#1055 のレビュー B-2 が測って原因まで突き止めた）。
+ * **原因はどちらも「合成が 1 か所しか触らない」こと**——**母数が大きく見えても、
+ * 実際に踏んでいた行も向きも 1 つだけだった。** **自己参照の型である。**
  *
- * **最後の 1 つは等価変異である。理由を書く**（「たまたま緑」と区別するため）:
- * **切り詰めは票数を必ず小さくする**（`33 → 3`）ので、**`>=` でも必ず外れる。**
- * **厳密一致の枝が守っているのは逆向き（公表値 > 数えた数）で、それは切り詰めではなく
- * 「票が落ちた」側**——**そちらは `someMarksDropped` を `false` にする変異が殺している。**
- * **＝どちらの枝も検査で押さえられているが、この 1 つの変異だけは切り詰めの観点からは等価である。**
+ * | 変異 | 最初の版 | **いま** |
+ * |---|---|---|
+ * | **検査 (2) を丸ごと消す** | 殺せた | **殺せた（素通り 344 組）** |
+ * | **検査 (1) を丸ごと消す** | 殺せた（素通り 0） | **殺せた**（200 → 0） |
+ * | `someMarksDropped` を常に `false` | 殺せた（#1023/#1056 が 2 本落ちる） | **殺せた** |
+ * | **`someMarksDropped` を常に `true`** | **素通り（等価変異と書いた）** | **殺せる（inflate が 30 → 0）** |
+ * | **`countDropped` を `anchors[0]` だけに狭める** | **素通り** | **変異ごと消した**（下） |
  *
- * **＝検査 (1) は「効いている唯一の検査」ではなく、原因そのものを名指しする二重化である**
- * （検査 (2) が寄りかかる「公表値と ○ ● は一致する」という前提が将来崩れたときに残る）。
+ * **1 つ目の素通りの原因**: **切り詰めは票数を必ず小さくする**ので、
+ * **検査 (2) が捕まえた組は全部 `公表値 < ○● の数` の向きだった**（逆向きは 0 組）。
+ * **＝厳密な `!==` が緩い `<` より強い場面を、検査が 1 度も踏んでいなかった。**
+ * **`inflate`（桁を増やして水増しする）を足して逆向きを作った。**
+ *
+ * **2 つ目の素通りの原因**: **`splitForTest` が必ず「最初の 2 桁」を割っていた**ので、
+ * **壊れる行はいつも `anchors[0]` だった。**
+ * **`k` 番目の 2 桁を割れるようにして全部の行を掃いたが、それでもまだ素通りした**
+ * ——**行の走査は `anchors[0]` から始まるので、どの行が壊れていても必ず `anchors[0]` で先に落ちる。**
+ * **＝ `Set<number>` に全 anchor を入れるのは、旗 1 つと完全に同じだった。**
+ * **観測できない区別を残さないので、実装を `let countDropped = false` に畳んだ**
+ * （**変異が素通りしたのではなく、変異できる場所が無くなった**）。
  */
 
 const FIXTURES = fileURLToPath(new URL("./fixtures/shimane/", import.meta.url));
@@ -171,25 +180,29 @@ test("#1055 島根: 公表された票数は、その行に並んだ ○ ● の
  * - `tie` … **本物の同距離タイ**（隣り合う 2 行の中点へ動かす）。**検査 (1) が踏む。**
  * - `vanish` … **黙って消える**（タイ以外の理由でアイテムが欠ける形）。**検査 (2) だけが踏む。**
  *
- * ## 実測（2026-09-28）
+ * ## **すべての行を掃く**（#1055 のレビュー B-2）
+ *
+ * **最初の版は「ページごとに最初の 2 桁」しか割っていなかった**ので、
+ * **壊れる行はいつも `anchors[0]` だった。** **母数 112 が大きく見えても、実際に触れていた行は 1 つだけ。**
+ * **いまは `k` 番目の 2 桁を割り、`anchors[k]`/`anchors[k+1]` の中点でタイにする**ので、
+ * **全部の行を掃く**（**301 の隣り合う対 × tie/vanish ＝ 602 組**）。
+ *
+ * ## 実測（2026-09-29）
  *
  * | | 組 |
  * |---|---:|
- * | **(ページ, 欄, 落とし方) の組** | **112** |
- * | **切り詰めが実際に起きた組** | **56** |
- * | **うち 検査 (1)（落ちた事実）が捕まえた** | **21** |
- * | **うち 検査 (2)（○ ● との突き合わせ）が捕まえた** | **35** |
- * | **切り詰めが起きなかった組**（＝捕まえるものが無い） | **56** |
+ * | **(ページ, 行の対, 落とし方) の組** | **602** |
+ * | **切り詰めが実際に起きた組** | **544** |
+ * | **うち 検査 (1)（落ちた事実）が捕まえた** | **200** |
+ * | **うち 検査 (2)（○ ● との突き合わせ）が捕まえた** | **344** |
+ * | **切り詰めが起きなかった組**（＝捕まえるものが無い） | **58** |
  * | **切り詰めが起きたのに素通りした組** | **0** |
  *
- * **「起きなかった 56 組」の内訳も測ってある**（**これを書かないと「絞りすぎ」と区別できない**）:
- *
- * - **52 組**: その欄に 2 桁の値が 1 つも無い（`"0"` ばかりの反対欄）。**割るものが無い。**
- * - **4 組**: `tie` にしたつもりの中点が**完全な等距離にならなかった**
- *   （差 2.8e-14〜5.7e-14 pt。`nearestAnchor` は行を選ぶ）。**桁が落ちないので切り詰めも起きない。**
- *   **これは #1023 で測った「`===` の守る範囲は完全な等距離の 66%、残る 34% は 1e-14 pt の差で決まる」そのもの。**
+ * **「起きなかった 58 組」は、`tie` にしたつもりの中点が完全な等距離にならなかったもの**
+ * （差 2.8e-14〜5.7e-14 pt。`nearestAnchor` は行を選ぶので桁が落ちず、切り詰めも起きない）。
+ * **これは #1023 で測った「`===` の守る範囲は完全な等距離の 66%、残る 34% は 1e-14 pt の差で決まる」そのもの。**
  */
-test("#1055 島根: 票数を 1 桁ずつに割って 1 つ落とすと、必ず例外になる（112 組。素通り 0）", async () => {
+test("#1055 島根: どの行の票数を割って落としても、必ず例外になる（602 組。素通り 0）", async () => {
   let sites = 0;
   let caughtByDropFact = 0;
   let caughtByMarkTally = 0;
@@ -202,14 +215,14 @@ test("#1055 島根: 票数を 1 桁ずつに割って 1 つ落とすと、必ず
     // `r0705rinji` は「1 つのセルに票が 2 つ」で落ちる既知の本（上の 1 で固定してある）
     try { base = await parseVotePdf(bytes); } catch { continue; }
     const baseCounts = JSON.stringify(base.rows.map((r) => [r.counts.yes, r.counts.no]));
-    const pages = [...new Set(base.rows.map((r) => r.page))].sort((a, b) => a - b);
-    for (const page of pages) {
-      for (const which of ["yes", "no"] as const) {
+    // **`rowAssignments` は実装が使っている本物の `anchors`**（合成した座標ではない）
+    for (const ra of base.rowAssignments) {
+      for (let k = 0; k + 1 < ra.anchors.length; k++) {
         for (const mode of ["tie", "vanish"] as const) {
           sites++;
-          const where = `${file} ${page}:${which} ${mode}`;
+          const where = `${file} ${ra.page}:yes:${k} ${mode}`;
           try {
-            const v = await parseVotePdf(bytes, { splitCountForTest: `${page}:${which}`, splitCountModeForTest: mode });
+            const v = await parseVotePdf(bytes, { splitCountForTest: `${ra.page}:yes:${k}`, splitCountModeForTest: mode });
             // 例外にならなかった ⇒ **票数が 1 つも変わっていないこと**を確かめる。
             // **変わって素通りしたなら、それが #1055 そのもの（違う数が公開される）。**
             if (JSON.stringify(v.rows.map((r) => [r.counts.yes, r.counts.no])) === baseCounts) noChange++;
@@ -225,17 +238,68 @@ test("#1055 島根: 票数を 1 桁ずつに割って 1 つ落とすと、必ず
     }
   }
   // **母数**（#757）
-  assert.equal(sites, 112, `前提: (ページ, 欄, 落とし方) の組が ${sites}（実測は 112）`);
+  assert.equal(sites, 602, `前提: (ページ, 行の対, 落とし方) の組が ${sites}（実測は 602 ＝ 301 対 × 2）`);
   assert.deepEqual(otherError, [], `切り詰めと関係のない例外で落ちた（${otherError.length} 組）`);
   // **検出能力**（**これが 0 なら、下の `leaked` は何も守っていない**——#1056 の教訓）
-  assert.equal(caughtByDropFact, 21, `検査 (1)（落ちた事実）が捕まえた組が ${caughtByDropFact}（実測は 21）。`
+  assert.equal(caughtByDropFact, 200, `検査 (1)（落ちた事実）が捕まえた組が ${caughtByDropFact}（実測は 200）。`
     + "**0 に近づいたなら、合成が効いていないか検査が消えている**");
-  assert.equal(caughtByMarkTally, 35, `検査 (2)（○ ● との突き合わせ）が捕まえた組が ${caughtByMarkTally}（実測は 35）。`
+  assert.equal(caughtByMarkTally, 344, `検査 (2)（○ ● との突き合わせ）が捕まえた組が ${caughtByMarkTally}（実測は 344）。`
     + "**0 に近づいたなら、合成が効いていないか検査が消えている**");
-  assert.equal(noChange, 56, `切り詰めが起きなかった組が ${noChange}（実測は 56 ＝ 2 桁が無い 52 + 中点がタイにならない 4）`);
+  assert.equal(noChange, 58, `切り詰めが起きなかった組が ${noChange}（実測は 58 ＝ 中点が完全な等距離にならない対）`);
   // **本題**: **切り詰めが起きたのに素通りした組は 1 つも無い**
   assert.deepEqual(leaked, [], `票数が切り詰められたのに例外にならなかった（${leaked.length} 組）。`
     + "**#569 の重いほう——利用者から検出できない誤った票数が公開される**");
+});
+
+/* ───────── 3a. 逆向き（公表値 > ○ ● の数）も捕まえる ───────── */
+
+/**
+ * **切り詰めは票数を必ず小さくする**ので、上の 602 組は**全部 `公表値 < ○● の数` の向き**である。
+ * **＝「厳密な `!==` が、緩い `<` より強い場面」が 1 度も踏まれていなかった**（#1055 のレビュー B-2 が測った）。
+ *
+ * **その結果 `someMarksDropped` を常に `true` にする（＝厳密一致をやめて `>=` だけにする）変異が素通りしていた。**
+ *
+ * **そこで逆向きを作る**——**`inflate` は桁を 1 つ増やして水増しする**（`"33"` → `"330"`）。
+ * **`>=` は通すが、厳密一致だけが捕まえる。**
+ *
+ * ## 実測（2026-09-29）
+ *
+ * | | 組 |
+ * |---|---:|
+ * | **(ページ, 欄) の組** | **56** |
+ * | **例外になった組** | **30** |
+ * | **票数が変わらなかった組**（その欄に 2 桁が無い） | **26** |
+ * | **素通りした組** | **0** |
+ *
+ * **`someMarksDropped = true` の変異を当てると 30 → 0 になり、30 組が素通りする**（＝この検査が殺す）。
+ */
+test("#1055 島根: 票数を水増しして 公表値 > ○● にしても、必ず例外になる（56 組。素通り 0）", async () => {
+  let sites = 0;
+  let caught = 0;
+  let noChange = 0;
+  const leaked: string[] = [];
+  for (const file of votePdfs()) {
+    const bytes = readFileSync(`${FIXTURES}${file}`);
+    let base: Awaited<ReturnType<typeof parseVotePdf>>;
+    try { base = await parseVotePdf(bytes); } catch { continue; }
+    const baseCounts = JSON.stringify(base.rows.map((r) => [r.counts.yes, r.counts.no]));
+    const pages = [...new Set(base.rows.map((r) => r.page))].sort((a, b) => a - b);
+    for (const page of pages) {
+      for (const which of ["yes", "no"] as const) {
+        sites++;
+        try {
+          const v = await parseVotePdf(bytes, { splitCountForTest: `${page}:${which}`, splitCountModeForTest: "inflate" });
+          if (JSON.stringify(v.rows.map((r) => [r.counts.yes, r.counts.no])) === baseCounts) noChange++;
+          else leaked.push(`${file} ${page}:${which}`);
+        } catch { caught++; }
+      }
+    }
+  }
+  assert.equal(sites, 56, `前提: (ページ, 欄) の組が ${sites}（実測は 56）`);
+  assert.equal(caught, 30, `例外になった組が ${caught}（実測は 30）。`
+    + "**0 に近づいたなら、厳密一致の枝が消えている**（`someMarksDropped` を常に true にすると 0 になる）");
+  assert.equal(noChange, 26, `票数が変わらなかった組が ${noChange}（実測は 26 ＝ その欄に 2 桁が無い）`);
+  assert.deepEqual(leaked, [], `票数が水増しされたのに例外にならなかった（${leaked.length} 組）`);
 });
 
 /* ───────── 3b. 票も落ちているとき（`>=` が緩くなる道）でも素通りしない ───────── */
