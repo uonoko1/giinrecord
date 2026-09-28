@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import iconv from "iconv-lite";
 import {
-  decodeRosterPage, memberIdFromName, memberListUrl, parseAsOf, parseShugiinMemberList, ROSTER_PAGES, unmatchedShugiinGroups,
+  decodeRosterPage, memberIdFromName, memberListUrl, parseAsOf, parseShugiinMemberList, ROSTER_PAGES, setFetchTextForTest, unmatchedShugiinGroups, fetchShugiinMembers,
 } from "../src/sources/shugiin-members.ts";
 import { isKnownShugiinGroup, resolveShugiinGroup, SHUGIIN_GROUPS } from "../src/sources/shugiin-groups.ts";
 import { parseMemberList } from "../src/sources/sangiin-members.ts";
@@ -15,6 +15,44 @@ const fixture = (page: number) => readFileSync(new URL(`./fixtures/shugiin-giin-
 const SRC = memberListUrl(1);
 const page1 = decodeRosterPage(fixture(1));
 const all = ROSTER_PAGES.flatMap((p) => parseShugiinMemberList(decodeRosterPage(fixture(p)), memberListUrl(p), 221));
+
+/**
+ * **名簿は 10 ページある。** **途中で切れても、残ったページの議員は正しく出るので気づきにくい。**
+ *
+ * **実地でやった**（2026-09-27、#1037 の裏取り）: **手で 1〜5 ページしか取らずに
+ * 「上流の名簿に `渡辺` が 0 件」と測り、それを根拠にコミットメッセージに書いた。**
+ * **`渡辺` は 10 ページ目に 5 件ある**（藍理・勝幸・真太朗・創・博道）。
+ * **対照に置いた `塩崎` が 3 ページ目にあったので、対照は通ってしまい、取り落としに気づけなかった。**
+ * **五十音順の名簿で「わ」が最後に来るのは当然で、対照を前のページから採ると末尾の取り落としは検出できない。**
+ *
+ * **ETL の実装は最初から 10 ページ取っている**（`ROSTER_PAGES`）ので、**データは正しかった。
+ * 間違っていたのは人手の検算のほうである。**
+ *
+ * **この検査（列挙の固定）は、追加の守りを 0 しか足していない**（レビューの実測）:
+ * **`main` のテストのまま 9 ページに縮めても 11 pass / 2 fail で落ちる**
+ * （下の「10 ページ合計 465 名」が拾う）。**それでも残すのは、意図と根拠を同じ場所に置くためである。**
+ *
+ * **黙って壊れるのは取得の側だった**——**下の「10 ページ実際に取得している」を見よ。**
+ * **バイト数を比べるときはエンコーディングを添えること**: #1059 の 182,023 は
+ * **1〜5 ページを UTF-8 に変換したバイト数**で（生 Shift_JIS は 172,668）、
+ * **単位が違うまま比べて「合わない」と読み、原因を取り違えた。**
+ */
+test("名簿ページは 10 ページある（短くすると、わ行の議員が黙って消える）", () => {
+  assert.deepEqual([...ROSTER_PAGES], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  // **末尾ページから対照を採る**（前のページから採ると、末尾の取り落としを検出できない）。
+  const last = decodeRosterPage(fixture(ROSTER_PAGES[ROSTER_PAGES.length - 1]));
+  assert.match(last, /渡辺/, "末尾ページに わ行 が無い（名簿の構成が変わった可能性）");
+  // **全ページを結合したときだけ わ行 が入る**ことを、実数で示す。
+  const wa = all.filter((m) => m.name.startsWith("渡辺")).map((m) => m.name).sort();
+  assert.deepEqual(wa, ["渡辺 博道", "渡辺 創", "渡辺 勝幸", "渡辺 孝一", "渡辺 真太朗", "渡辺 藍理"].sort());
+  // **フィクスチャ（2026-02-18 現在）には `渡辺 孝一` が居る。** **いまの上流には居ない**
+  // （#1037 で辞職・失職。**実測 2026-09-27**: 全 10 ページを取って `孝一` の出現 0 件、
+  // `渡辺` は 5 名＝藍理・勝幸・真太朗・創・博道）。
+  // **ここでフィクスチャを更新して 5 名にしないこと**——**フィクスチャはその日付の名簿という
+  // 一次資料の写しで、「いま在職している人」の一覧ではない。** 上流が「現在」しか公開しない
+  // （過去の名簿をアーカイブしない）ので、**この写しだけが 2026-02-18 の事実を保持している。**
+  assert.equal(all.filter((m) => m.name === "渡辺 孝一").length, 1);
+});
 
 test("名簿ページは Shift_JIS: 生バイトをデコードすると氏名が読める（UTF-8 として読むと読めない）", () => {
   assert.match(page1, /逢沢　　一郎君/);
@@ -117,4 +155,82 @@ test("参院名簿と同じ index に統合: 参院側の index 行・詳細は�
     termEnd: undefined, current: true, counts: { rollcalls: 0, bills: 0, speeches: 0, questions: 0 },
   });
   assert.deepEqual(both.details[sangiin.length].timeline, []);
+});
+
+/**
+ * **`ROSTER_PAGES` を `deepEqual` で固定しても、取得の側は守られていない。**
+ *
+ * **レビューの実測（2026-09-27）**: `ROSTER_PAGES` は `[1..10]` のままで、
+ * 取得ループに次を入れると **etl の全 1,341 テストが 0 fail** で通った:
+ *
+ * | 変異 | 結果 |
+ * |---|---|
+ * | `if (page >= 5) break;` | **全 1,341 テスト 0 fail**（tsc も通る） |
+ * | ページごとに `try { … } catch { continue; }` | **52/52 緑** |
+ * | `for (const page of ROSTER_PAGES.slice(0, -1))` | **52/52 緑** |
+ *
+ * **「10 ページ列挙されている」と「10 ページ取れている」は別のことである。**
+ * **`fetchShugiinMembers` を呼ぶテストは、この検査を足すまで 1 本も無かった**
+ * （`grep -rn fetchShugiinMembers test/` が 0 件。呼び出し元は `src/cli.ts:86` だけ）。
+ *
+ * **倒れる向きは #1037 と同じ**——**わ行の議員が名簿から消え、「辞職した」と区別がつかない。**
+ * **#1037 の訂正で「`ROSTER_PAGES` が 10 ページのまま」を固定したが、それでは足りなかった。**
+ */
+test("名簿は 10 ページ実際に取得している（列挙だけでなく、要求した URL を実数で固定する）", async () => {
+  const asked: string[] = [];
+  setFetchTextForTest(async (url) => {
+    asked.push(url);
+    const page = Number(/(\d+)giin\.htm$/.exec(url)?.[1]);
+    assert.ok(Number.isInteger(page), `名簿以外の URL を取りに行っている: ${url}`);
+    return decodeRosterPage(fixture(page));
+  });
+  try {
+    const got = await fetchShugiinMembers(221);
+    // **要求した URL が 10 本ちょうど、かつ 1〜10 の全部**（順序も固定する）
+    assert.deepEqual(asked, ROSTER_PAGES.map((p) => memberListUrl(p)));
+    assert.equal(asked.length, 10, `取得回数が ${asked.length}（10 ページ取らなければ、わ行が黙って消える）`);
+    // **結合した結果の母数**（#757。**0 件を見ても何も主張しない**）
+    assert.equal(got.members.length, 465, `結合後の議員数が ${got.members.length}（フィクスチャ 2026-02-18 の実測は 465）`);
+    assert.equal(got.asOf, "2026-02-18");
+    // **末尾ページ由来の議員が実際に入っている**（途中で切れたら、ここが落ちる）
+    assert.equal(got.members.filter((m) => m.name.startsWith("渡辺")).length, 6);
+  } finally {
+    setFetchTextForTest(undefined);
+  }
+});
+
+/**
+ * **取得が失敗したページを黙って飛ばしてはいけない。**
+ *
+ * **上の検査だけでは足りなかった**（実測 2026-09-27）: 取得ループを
+ * `try { … } catch { continue; }` に変える変異は、**上の検査でも 15/15 緑で素通りした**——
+ * **差し替えた取得器が一度も例外を投げないので、`catch` に到達しない。**
+ * **「変異が、検査したい防御に届いていない」形である。**
+ *
+ * **だから、1 ページだけ失敗する取得器で当てる。**
+ * **9 ページ分の議員を返して黙って成功するのではなく、例外が外に出ることを要求する。**
+ * **倒れる向きは #1037 と同じ**——**上流が 1 ページだけ 5xx を返した日に、
+ * わ行の議員が名簿から消え、「辞職した」と区別がつかない。**
+ */
+test("名簿の 1 ページが取れなければ例外（9 ページ分で黙って成功しない）", async () => {
+  for (const broken of [1, 5, 10]) {
+    const asked: string[] = [];
+    setFetchTextForTest(async (url) => {
+      asked.push(url);
+      const page = Number(/(\d+)giin\.htm$/.exec(url)?.[1]);
+      if (page === broken) throw new Error(`HTTP 503 (test): page ${page}`);
+      return decodeRosterPage(fixture(page));
+    });
+    try {
+      await assert.rejects(
+        () => fetchShugiinMembers(221),
+        /HTTP 503 \(test\)/,
+        `${broken} ページ目が取れなくても例外にならなかった（黙って議員が消える）`,
+      );
+      // **母数**: そのページまで実際に要求している（0 回で「失敗した」ことにしていない）
+      assert.ok(asked.length >= 1, "1 ページも要求していない（走査が空回りしている）");
+    } finally {
+      setFetchTextForTest(undefined);
+    }
+  }
 });

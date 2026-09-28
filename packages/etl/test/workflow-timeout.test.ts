@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync, writeFileSync, rmSync } from "node:fs";
+import { readFileSync, readdirSync, writeFileSync, rmSync, mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 
@@ -89,16 +90,23 @@ function jobsOfText(text: string, file: string): Job[] {
   });
 }
 
-function jobsOf(file: string): Job[] {
-  return jobsOfText(readFileSync(resolve(wfDir, file), "utf8"), file);
+function jobsOf(file: string, dir: string = wfDir): Job[] {
+  return jobsOfText(readFileSync(resolve(dir, file), "utf8"), file);
 }
 
-/** GitHub は `.yml` と `.yaml` の両方を実行する。`.yml` だけ見ると .yaml のワークフローが丸ごと不可視になる（#574）。 */
-function listAllJobs(): Job[] {
-  return readdirSync(wfDir)
+/**
+ * GitHub は `.yml` と `.yaml` の両方を実行する。`.yml` だけ見ると .yaml のワークフローが
+ * 丸ごと不可視になる（#574）。
+ *
+ * #1081: 走査先を引数にしてあるが、**既定は本物の `.github/workflows/`**である。
+ * 既定を変えると、このファイルの他の検査（数え上げ・timeout の値）が本番を見なくなる。
+ * 既定値が本物のディレクトリであることは下の「既定の走査先」の検査で固定してある。
+ */
+function listAllJobs(dir: string = wfDir): Job[] {
+  return readdirSync(dir)
     .filter((f) => f.endsWith(".yml") || f.endsWith(".yaml"))
     .sort()
-    .flatMap(jobsOf);
+    .flatMap((f) => jobsOf(f, dir));
 }
 
 const allJobs = listAllJobs();
@@ -140,32 +148,117 @@ test("#574 引用符付きの job 名で timeout-minutes が無ければ検出�
  * allJobs から丸ごと不可視だった。
  *
  * fixture 文字列に対するテスト（jobsOfText）だけでは、readdirSync のフィルタ行を壊しても
- * このリポジトリに実際の .yaml ファイルが無いため検出できない（実際に変異させて確かめた:
- * `.filter((f) => f.endsWith(".yml") || f.endsWith(".yaml"))` を
+ * 検出できない（実測: `.filter((f) => f.endsWith(".yml") || f.endsWith(".yaml"))` を
  * `.filter((f) => f.endsWith(".yml"))` に戻す変異は、fixture テストだけでは 10/10 緑のまま
- * 通ってしまう＝等価変異になる）。
- * そこで、実際に .github/workflows に .yaml ファイルを一時的に置き、
- * allJobs の実行結果（readdirSync を経由した本物のパス）で見えることを確認する。
- * 確実に後始末するため try/finally で削除する。
+ * 通る＝等価変異になる）。**readdirSync を本当に通すことが、この検査の検出能力の source である。**
+ *
+ * ## **この置き方は、ほかのテストファイルと競走した**（#1056 で測り、**#1081 で直した**）
+ *
+ * **`node --test` はテストファイルを並行に流す。** **2026-09-28 まで、ここは本物の
+ * `.github/workflows/` にファイルを置いて消していたので、同じディレクトリを `readdirSync` する
+ * ほかのファイル（実測 8 本）が「見えたのに開けない」瞬間に当たった**（`ENOENT` で落ちる）。
+ * **全 PR のマージが止まった**（#1081）。
+ *
+ * **実測（#1056。2026-09-27。`workflow-timeout.test.ts` と `workflow-pr-body-edited.test.ts` を
+ * 2 ファイル並べて 6 回ずつ）**:
+ *
+ * | 版 | 落ちた回数 |
+ * |---|---:|
+ * | #1056 の PR | **2 / 6** |
+ * | **`origin/main`（0f734507。#1056 の変更を戻したもの）** | **1 / 6** |
+ *
+ * **＝#1056 が作った問題ではない。** **`pnpm test` の全走でも 1 回踏んだ**（435 秒の回）。
+ * **#1081 で独立に再現したもの**: 書き手 1 本 + 読み手 7 本を 8 並列で 8 回走らせて **2 回赤**。
+ * 落ちた先は `workflow-pr-body-edited.test.ts:217` の readFileSync。
+ *
+ * ── #1081: 走査先は使い捨てのディレクトリにする ────────────────────────────
+ * 直し方は「消す」ではない（消すと #574 の穴が無検査に戻る）。
+ * **`listAllJobs(dir)` に走査先を渡せるようにし、ここでは mkdtempSync のディレクトリに
+ * 本物の `.yml` と `.yaml` を置いて呼ぶ。** readdirSync を通る経路は同一なので、
+ * フィルタ行の変異は同じように死ぬ（実測: 直した後も 1 fail）。
+ * **共有ディレクトリには 1 バイトも書かない。**
+ *
+ * `.yml` も一緒に置く理由: `.yaml` だけを置くと、フィルタを `.yaml` 単独に**狭める**変異
+ * （`f.endsWith(".yaml")` だけ）が通ってしまう。両方が見えることを 1 回で主張する。
  */
-test("#574 .yaml 拡張子のワークフローも allJobs（readdirSync 経由）から見える", () => {
-  const probeName = "probe-574-yaml-visibility.yaml";
-  const probePath = resolve(wfDir, probeName);
-  const probeYaml = ["jobs:", "  probejob:", "    runs-on: ubuntu-latest", "    timeout-minutes: 5", "    steps:", "      - run: echo hi", ""].join(
-    "\n",
-  );
-  writeFileSync(probePath, probeYaml, "utf8");
+test("#574 .yaml 拡張子のワークフローも listAllJobs（readdirSync 経由）から見える", () => {
+  const dir = mkdtempSync(resolve(tmpdir(), "seiji-wf-ext-"));
+  const yamlProbe = "probe-574-yaml-visibility.yaml";
+  const ymlProbe = "probe-574-yml-visibility.yml";
+  const probeYaml = (job: string) =>
+    ["jobs:", `  ${job}:`, "    runs-on: ubuntu-latest", "    timeout-minutes: 5", "    steps:", "      - run: echo hi", ""].join("\n");
+  writeFileSync(resolve(dir, yamlProbe), probeYaml("probejobyaml"), "utf8");
+  writeFileSync(resolve(dir, ymlProbe), probeYaml("probejobyml"), "utf8");
   try {
-    // モジュール読み込み時に評価済みの allJobs ではなく、実装本体の listAllJobs() を
-    // ここで再実行する（実装が使う関数そのものを呼ぶことで、フィルタ行の変異を確実に拾う）。
-    const jobs = listAllJobs();
-    assert.ok(
-      jobs.some((j) => j.file === probeName && j.name === "probejob"),
-      ".yaml ワークフローの job が数え上げに現れない",
-    );
+    // 実装本体の listAllJobs() を、走査先だけ差し替えて呼ぶ（readdirSync とフィルタ行は同じ）。
+    const found = listAllJobs(dir)
+      .map(id)
+      .sort();
+    assert.deepEqual(found, [`${yamlProbe}:probejobyaml`, `${ymlProbe}:probejobyml`].sort());
   } finally {
-    rmSync(probePath, { force: true });
+    rmSync(dir, { recursive: true, force: true });
   }
+});
+
+/**
+ * #1081 の穴: 走査先を引数にした結果、「テストは一時ディレクトリを見ているが**本番は本物の
+ * ディレクトリを見ている**」ことを誰も検査しなくなる（#1063 と同型）。
+ * **既定の走査先が本物の `.github/workflows/` であること**を、引数を渡さない呼び出しの結果で固定する。
+ *
+ * 母数はハードコードしない（下の「数え上げ」が名前ごと固定している）。ここが見るのは
+ * **既定と本物のディレクトリを明示的に渡した場合が同じになること**と、
+ * **一時ディレクトリの中身が混ざっていないこと**。
+ */
+test("#1081 listAllJobs() の既定の走査先は本物の .github/workflows（テストだけが差し替えられる）", () => {
+  assert.deepEqual(
+    listAllJobs().map(id).sort(),
+    listAllJobs(wfDir).map(id).sort(),
+  );
+  assert.ok(listAllJobs().length > 0, "既定の走査先に job が 1 つも無い（既定が空のディレクトリを指している）");
+  assert.deepEqual(
+    listAllJobs().filter((j) => j.file.startsWith("probe-")).map(id),
+    [],
+    "本物のディレクトリに probe- のファイルが残っている（共有ディレクトリを汚した）",
+  );
+});
+
+/**
+ * #1081: このファイルが本物の `.github/workflows/` に書き込む**手段を持たない**ことを、
+ * 自分のソースで固定する。値ではなく「手段を持たない」ことを固定する形
+ * （`scripts/ci/test/link-check.test.sh` が同じ形を使っている）。
+ * これを消すと、次に誰かが「一時的に置いて消す」を書いたときに、また全 PR が止まる。
+ *
+ * **`resolve(wfDir, ...)` だけを狙わない**——`join(wfDir, x)` でも、
+ * `const p = resolve(wfDir, x)` と一度変数に置いてから書いても同じことが起きる。
+ * そこで「書き込み API の行」と「`wfDir` から書き込み先のパスを作る行」の**両側**を見る:
+ * このファイルで書き込み API を呼んでよいのは `dir`（mkdtempSync で作った使い捨て）の中だけである。
+ *
+ * **これは denylist なので「これで全部」ではない**（`const d = wfDir;` と別名にすれば抜ける）。
+ * 抜けうる形をここに書いておく——それでも、素直に書いたときに必ず鳴るほうが無いより強い。
+ */
+const WRITE_API = /\b(writeFileSync|writeFile|mkdirSync|mkdir|cpSync|copyFileSync|appendFileSync|appendFile|rmSync|rm|unlinkSync|renameSync|symlinkSync|openSync)\s*\(/;
+test("#1081 このテストは共有ディレクトリ（wfDir）へ書き込む手段を持たない", () => {
+  const lines = readFileSync(fileURLToPath(import.meta.url), "utf8")
+    .split("\n")
+    .map((l, i) => ({ n: i + 1, l }))
+    // 行コメント（`*` で始まる docblock の中身と `//`）は本文ではないので落とす
+    .filter(({ l }) => !/^\s*(\*|\/\/|\/\*)/.test(l));
+
+  // (a) 書き込み API と wfDir が同じ行にある
+  const sameLine = lines.filter(({ l }) => WRITE_API.test(l) && /\bwfDir\b/.test(l)).map(({ n, l }) => `${n}: ${l.trim()}`);
+  assert.deepEqual(sameLine, [], "書き込み API に wfDir を渡している行がある（並行する読み手 8 本を ENOENT で壊す。#1081）");
+
+  // (b) wfDir からパスを組み立てている行が、宣言以外にある（変数に置いてから書く形を塞ぐ）
+  const derives = lines
+    .filter(({ l }) => /(resolve|join)\s*\(\s*wfDir\s*,/.test(l))
+    .map(({ n, l }) => `${n}: ${l.trim()}`);
+  assert.deepEqual(derives, [], "wfDir からパスを組み立てている行がある（読み取りは jobsOf(file, dir) 経由に寄せる。#1081）");
+
+  // (c) 書き込み API を呼ぶ行は、使い捨てディレクトリ `dir` を渡すものだけ
+  const writes = lines.filter(({ l }) => WRITE_API.test(l) && !/WRITE_API|assert\./.test(l));
+  const notTemp = writes.filter(({ l }) => !/\bdir\b/.test(l)).map(({ n, l }) => `${n}: ${l.trim()}`);
+  assert.deepEqual(notTemp, [], "書き込み先が使い捨てディレクトリ（dir）でない行がある。#1081");
+  assert.ok(writes.length >= 3, `書き込み API の行が ${writes.length} 本しか無い（この検査が空回りしている。#1081）`);
 });
 
 /**
@@ -242,33 +335,128 @@ test("#556 uses: の job に timeout-minutes を書かない（GitHub が受け�
  * #501: 個々は速いままでも wall time は 4.4 倍に伸びた）。
  *
  *   job                              n   min   med   p90   max   → 設定
- *   ci.yml:check                    36   153   210   223   225s  → 30 分（max の 8 倍）
- *   ci.yml:docker-web               35    72    84    93    96s  → 20 分
+ *   ci.yml:check                    26   414   629   652   658s  → 30 分（max の 2.7 倍。**2026-09-27
+ *                                                                    再測。ref 0f734507 以降**。#1056）
+ *   ci.yml:docker-web               53    82    99   110   114s  → 20 分（max の 10.5 倍。2026-09-27 再測）
  *   ci.yml:stale-base               17     6     8    10    10s  → 10 分
- *   pr-body.yml:pr-closes           32     6     8     9    10s  → 10 分（#793。#1039 で ci.yml から
- *                                                                    分けた。実測 2026-09-27、n=32）
- *   deploy-data.yml:resolve         40     4     8    10    13s  → 10 分
- *   deploy-site.yml:deploy          40    28    56    62    71s  → 30 分（本番に触るので厚め）
- *   release.yml:released-tag        39     3     4     5     8s  → 10 分
- *   security.yml:gitleaks           40     7    11    13    48s  → 20 分（全履歴走査の週次がある）
- *   security.yml:forbidden-patterns 40     7    10    11    12s  → 10 分
+ *   pr-body.yml:pr-closes           32     6     7     9    77s  → 10 分（**2026-09-27 再測。max が
+ *                                                                    10 → 77s**。**p90 は 9s で、
+ *                                                                    max はランナー待ちの裾**。#1056）
+ *   deploy-data.yml:resolve         38     5     9    12    45s  → 10 分（**再測。max が 13 → 45s**）
+ *   deploy-site.yml:deploy          —     —     —     —     —    → 30 分（**呼び出し元の `production / deploy` と `staging / deploy` で測る:
+ *                                                                    production n=38 max 112s /
+ *                                                                    staging n=37 max 101s。**2026-09-27）
+ *   release.yml:released-tag        37     3     4     5     8s  → 10 分（再測。変わらず）
+ *   security.yml:gitleaks           40     9    11    15    16s  → 20 分（全履歴走査の週次がある。
+ *                                                                    再測で max 48 → 16s に下がった）
+ *   security.yml:forbidden-patterns 40     7     8    10    12s  → 10 分（再測。変わらず）
  *   security.yml:issue-secrets       0     -     -     -     -    → 10 分（**CI 実測はまだ 0 本**。
  *                                                                    手元で 1,359 件を 1 回の gh api
  *                                                                    ＋ python で読んで 6 秒。週次で
  *                                                                    しか走らないので n が溜まるのは
  *                                                                    遅い。溜まったら測り直すこと）
- *   security.yml:audit              40    11    13    16    25s  → 10 分
+ *   security.yml:audit              40     8    12    14    17s  → 10 分（再測。max 25 → 17s）
+ *   link-check.yml:link-check        3   146   187   335   335s  → 20 分（**手元の 107〜171s より遅い。
+ *                                                                    n=3 しか無い**。2026-09-27）
  *
  * 上限も固定する理由: 6 時間の既定に近い値を書くと、付いていても止まらない。
  * ここが落ちたら「実測し直して、この表ごと更新する」のが正しい直し方。
+ *
+ * ## **この表が実測値の 1 か所である**（Issue #1056）
+ *
+ * **`ci.yml` にも同じ数が書かれていて、そちらが腐った。** **実測（2026-09-27）**:
+ *
+ * | 何を読むか | min | med | p90 | max | n |
+ * |---|---:|---:|---:|---:|---:|
+ * | `ci.yml` のコメント（2026-09-06 の測定） | 153 | 210 | 223 | **225** | 36 |
+ * | **実測・#1030 マージ前**（〜 2026-09-27T00:07Z） | 371 | 537 | 592 | **630** | 28 |
+ * | **実測・#1030 マージ後** | 414 | 629 | 652 | **658** | 26 |
+ *
+ * **#1056 の Issue は 508 秒（手元のフルスイート）を #1030 のせいと読んだが、CI の `check` で測ると
+ * #1030 の寄与は max 630 → 658（+28s）／med 537 → 629（+92s）で、
+ * **225 → 630 のずれは #1030 より前から在った**（2.8 倍）。**数が 1 か所に無いと、こう取り違える。**
+ *
+ * **だから各ワークフローからは数を消し、この表を指すだけにした**（#1056。`ci.yml` の 2 か所 /
+ * `pr-body.yml` / `deploy-site.yml` / `deploy-data.yml` / `link-check.yml` / `security.yml` の 2 か所 /
+ * `release.yml`）。
+ *
+ * **これは「腐らない形」ではない。「1 か所に集めた」だけである**（#1056 のレビューの指摘。**正確に書く**）。
+ * **下の assert が固定しているのは `timeout-minutes` の値だけで、この表の秒数は 1 つも assert していない。**
+ * **＝秒数が古くなっても CI は落ちない。** **秒数を assert しない選択は意図的である**——
+ * **機械の負荷で 2 倍以上動くので、閾値を置くと偽陽性のほうが多くなる**（下の「規約」を見よ）。
+ * **効くのは「同じ数が 2 か所にあって片方だけ更新される」形を無くしたことだけである。**
+ *
+ * ## **表を更新するときの規約**（#1056。#1032 でも同じ型の陳腐化が起きている）
+ *
+ * **必ず「測った日」と「どの ref／どの期間の run を読んだか」を併記すること。**
+ * **「実測 225s」だけでは、いつの何の 225 秒か分からず、腐ったことに誰も気づけない。**
+ * **機械の負荷で 2 倍以上動く**（#1032 のレビュアーは同じジョブで 583 秒と 1,175 秒を得ている）ので、
+ * **1 本の数ではなく n つきの min/med/p90/max を書くこと。**
+ *
+ * ## **同じ形の陳腐化を全部数えた**（#1056 の 4 番。**「0 件」と「数えていない」を区別する**）
+ *
+ * **`grep -rnE '実測[^\n]*([0-9]+ *(秒|s[^a-z]))' .github/` で 14 行。**
+ * **そのうち job の所要時間を書いている 10 ジョブを 2026-09-27 に全部測り直した**（上の表）。
+ * **記録より max が伸びていたのは 4 ジョブ**:
+ *
+ * | job | 書いてあった max | **実測の max** | 倍 | `timeout-minutes` に対する余裕 |
+ * |---|---:|---:|---:|---:|
+ * | `pr-body.yml:pr-closes` | 10s | **77s** | 7.7 | 7.8 倍 |**（下の注を見よ）** |
+ * | `deploy-data.yml:resolve` | 13s | **45s** | 3.5 | 13.3 倍 |
+ * | `link-check.yml:link-check` | 171s | **335s** | 2.0 | 3.6 倍（**n=3 しか無い**） |
+ * | `deploy-site.yml:deploy` | 71s | **112s**（呼び出し元） | 1.6 | 16.1 倍 |
+ *
+ * **伸びていなかったのは 4 ジョブ**（`release.yml:released-tag` 8→8 /
+ * `security.yml:forbidden-patterns` 12→12 / `security.yml:audit` 25→17 /
+ * `security.yml:gitleaks` 48→16）。**`ci.yml:stale-base` と `security.yml:issue-secrets` は
+ * この測り直しで n を取っていない**（前者は #556 の n=17 のまま、後者は CI 実測がまだ 0 本）。
+ *
+ * **どれも `timeout-minutes` を破っていない**（最悪は `link-check` の 3.6 倍）。
+ * **＝いま落ちる問題は 1 つも無い。腐っているのは「余裕がどれだけあるか」の読みだけである。**
+ *
+ * ### **`pr-closes` は「日付を併記しても腐りに気づけなかった」実例である**（#1056 のレビュー）
+ *
+ * **`pr-body.yml` には「実測 min 6 / med 8 / max 10s（n=32、**2026-09-27**）／
+ * 伸びる余地はほぼ無い」と書いてあり、この表の「max 77s（n=16、**2026-09-27**）」と
+ * 同じ日付で 7.7 倍食い違っていた。** **日付が同じなので、次に読む人はどちらが新しいか判断できない**
+ * ——**「測った日と ref を併記すれば腐りに気づける」は、これだけでは足りない。**
+ * **数を 1 か所にするほうが効く**（だから `pr-body.yml` からは消した）。
+ *
+ * **そして「伸びる余地はほぼ無い」は、半分正しく半分誤りだった**（再測 n=32 で確定）:
+ *
+ * | | min | med | **p90** | max |
+ * |---|---:|---:|---:|---:|
+ * | `pr-body.yml:pr-closes` | 6 | 7 | **9** | **77** |
+ *
+ * **p90 が 9s なのに max が 77s**——**外れ値は 2 件だけ（77s / 43s）。**
+ *
+ * **77s の内訳**（#1056 のレビューが測った。**「割り当て待ち」と書いたのは私の誤りだった**）:
+ *
+ * | 区間 | 秒 |
+ * |---|---:|
+ * | `created_at` → `started_at`（**割り当て待ち**） | **2** |
+ * | **`started_at` → 最初の step（ランナーの立ち上がり）** | **69** |
+ * | step の合計（job の仕事） | **5** |
+ *
+ * **「API を叩かず install もしない＝仕事は伸びない」は正しい**（step は全件 5〜8s）。
+ * **「だから wall も伸びない」は誤り。**
+ * **そして 69 秒は「job の仕事」ではないが「job の時間」である——`timeout-minutes` はこれも数える。**
+ * **「割り当て待ちだから timeout には関係ない」と読むと 10 分を削る余地を作ってしまうので、
+ * そう書かないこと。** **仕事の軽さを wall の短さと読み替えない。**
  */
 test("#556 値が実測から外れていない（短すぎる = 偽陽性 / 長すぎる = 止まらない）", () => {
   const expected: Record<string, number> = {
+    // #1056: 実測 min 414 / med 629 / p90 652 / max 658s（n=26、2026-09-27、ref 0f734507 以降）。
+    // max の 2.7 倍。**ci.yml 側からは数を消した**（2 か所にあると片方が腐る。上の表を見よ）。
     "ci.yml:check": 30,
+    // #1056: 実測 min 82 / med 99 / p90 110 / max 114s（n=53、2026-09-27）。max の 10.5 倍。
     "ci.yml:docker-web": 20,
     "ci.yml:stale-base": 10,
-    // #793 / #1039: 実測 min 6 / med 8 / max 10s（n=32、2026-09-27）。#1039 で ci.yml から
-    // pr-body.yml に分けた（本文を編集したら測り直させるため）。stale-base と同値の 10 分。
+    // #793 / #1039 / #1056: **実測値は上の表が持つ**（ここに「min 6 / med 8 / max 10s」と
+    // 書いてあったが、**同じファイルの上の表は max 77s** で 7.7 倍食い違っていた。#1056 の
+    // レビューが見つけた: `pr-body.yml` から数を消したとき、**「2 か所」が「同じファイルの中で
+    // 2 か所」に縮んだだけだった**）。#1039 で ci.yml から pr-body.yml に分けた
+    // （本文を編集したら測り直させるため）。stale-base と同値の 10 分。
     "pr-body.yml:pr-closes": 10,
     "deploy-data.yml:resolve": 10,
     "deploy-site.yml:deploy": 30,

@@ -54,10 +54,27 @@ tools: Bash, Read, Edit, Write, Grep, Glob
 5. **push の前に CI と同じ検査を流す**: `pnpm lint && pnpm typecheck && pnpm test`。
    deploy/scripts を触ったら `bash scripts/ci/shellcheck.sh` と `deploy/test/*.test.sh` も。
    **`pnpm test` には etl が流れない**ので、etl を触ったら `pnpm --filter @seiji-kiroku/etl test` を別に叩く。
-6. **PR を出す**（`gh pr create --base main`）。本文には: 何が問題だったか／どう直したか／
+6. **コミットしたら即 `git push -u origin <branch>` する。PR を出すのはその後でいい。**
+   **worktree に置いたままにしない**——**セッションがプロセス終了で途切れると push されず、
+   worktree だけが残る。** **worktree はディスクを食うのでいつか誰かが消すが、
+   消す側には「この 649M に未 push の成果物が在る」ことが `du` では見えない**（#1087）。
+   **実害**: #1081（全 PR のマージを止めていた flake）の修正が、
+   ディスク片付けで消える寸前だった。**27 本のうち 10 本が未 push だった。**
+7. **PR を出す**（`gh pr create --base main`）。本文には: 何が問題だったか／どう直したか／
    **計測した数字**（推測で書かない）／変異テストの結果（どの変異で何件落ちたか）／対象外にしたものとその理由。
-7. **マージしない。** マージは PO が `scripts/po/merge-when-green.sh` で行う。
-8. **PR を別の PR の上に積まない。** 必ず `origin/main` から切る。
+8. **マージしない。** マージは PO が `scripts/po/merge-when-green.sh` で行う。
+9. **PR を別の PR の上に積まない。** 必ず `origin/main` から切る。
+10. **作業が終わったら `git worktree remove` する。**
+    **自分で `git worktree add` する場合は `.claude/worktrees/` に作らない**
+    （scratchpad 配下に作る）。**理由はディスク量ではない**——**worktree 1 本は
+    どこに作っても 400〜650M 使う**（実測 2026-09-28: scratchpad 配下の 4 本が
+    649M / 649M / 622M / 397M。内訳は `data/` 307M + `node_modules/` 252M）。
+    **理由は「PO のリポジトリ容量に混ざると、片付ける人が成果物と区別できない」こと。**
+    **実際に #1081 の修正（未 push）が消える寸前だった。**
+    **ただし PO が `isolation: worktree` で立てた場合、場所は PO が決めていて
+    あなたには選択権が無い**（`.claude/worktrees/agent-<id>/` に作られる）。
+    **その形で 649M が積もったので、PO 側が `isolation: worktree` を使わない運用にした。**
+    **この項目はあなたが自分で作る場合にしか効かない。**
 
 ## やってはいけないこと
 - PO の作業ツリーでの `git switch` / `git stash` / ファイル編集
@@ -102,3 +119,29 @@ scratchpad は**複数のエージェントで共有**されている。**直下
 どちらも**設計は検証済みだったので再構築できた**が、**測り直しの時間がまるごと無駄になった**。
 
 幽霊 worktree は `git worktree unlock` → `git worktree prune` で掃除する。
+
+## 前任者の worktree を引き継ぐときは、先に残留を見る
+
+**落ちたエージェントの worktree には staged が残る。** **`git commit` を叩くだけで他人の作業が消える。**
+
+```
+2026-09-25  PR #1033（担当者が 3 回交代）の worktree に、前任者の staged で
+            **テスト 301 行の削除**が残っていた。気づかなければ PR に乗っていた。
+2026-09-27  **PO が同じ形をもう 1 回踏みかけた**（staged 114 件・うち D が 10 件。
+            10 件はどれも**いま main に在るファイル**）。
+```
+
+**引き継ぐ前に、必ずこれを流す**（読むだけ。**何も消さない・何も commit しない**）:
+
+```
+scripts/po/worktree-audit.sh
+```
+
+- **`deletion` と出たツリーでは `git commit` を叩かない。** `git diff --cached --diff-filter=D` で
+  何が消えるか見る。**index だけ戻すなら `git reset`**（ワークツリーは触らない）
+- **`conflict` と出たツリーには触らない。** **誰かが解決の途中**である
+  （2026-09-27 の `rev1032/wt` は `UU` が 1 件・index の更新が数分前だった＝レビュアーが作業中）
+- **「作業中かもしれません」と付いたツリーは、勝手に片付けない**
+- **勝手に捨てない・勝手に commit しない。** **中身を PO に報告してから判断する**
+
+**そもそも引き継がず、自分専用の worktree を `origin/main` から切るほうが安全である。**

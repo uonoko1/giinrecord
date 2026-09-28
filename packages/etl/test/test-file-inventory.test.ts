@@ -414,3 +414,83 @@ test("#865 このファイル自身は skip / todo を使っていない（門�
     `**このファイルの \`test(...)\` が options（\`{ skip: ... }\` を置ける位置）を取っている。**
 **県ごとの検査を見張る側が skip できるようになったら、この階層はもう何も言っていない。**`);
 });
+
+/**
+ * #1081: **テストが `.github/workflows/` に実ファイルを書くと、そこを readdirSync する
+ * ほかのテストを ENOENT で壊す**（`node --test` はテストファイル単位で並行に走る）。
+ *
+ * **2026-09-28 に実際に全 PR のマージが止まった。** `workflow-timeout.test.ts` が
+ * `.yaml` の probe を本物のディレクトリに置いて消していて、**読み手 8 本**
+ * （deploy-test-inventory / workflow-data-pr-push / branch-protection-jobs /
+ *  workflow-commit-identity / workflow-pr-body-edited / test-file-inventory /
+ *  workflow-deploy-concurrency / workflow-timeout）のどれかが実行順しだいで落ちた。
+ * **実測（2026-09-28、同じ 8 本・concurrency=8・20 回）**: 直す前 **6/20 赤** → 直した後 **0/20 赤**。
+ * **`pnpm --filter @seiji-kiroku/etl test` そのままでも、直す前は 3 回中 1 回赤だった。**
+ *
+ * **`workflow-timeout.test.ts` は自分のソースで自分を見張っているが、それはあの 1 本だけである。**
+ * **ここは webTestFiles / etlTestFiles / ciTestFiles の全部（実測 2026-09-28: 298 本）を見る**
+ * ——**次に別のファイルが同じことを書いたときに鳴る。**
+ *
+ * **`deploy/test/*.test.sh` はこの 3 つの数え方に入らないので、ここは見ていない**
+ * （`deploy-test-inventory.test.ts` が別に数えている）。**シェル側は対象外である。**
+ *
+ * **これは denylist なので「これで全部」ではない。** **実測で確かめた、塞げていない形**:
+ *   - **`import { writeFileSync as __w }` と別名にする**（実測 2026-09-28: 12/12 緑で素通りした）
+ *   - `const d = ".github/" + "workflows";` のように文字列を割って組み立てる
+ *   - `execSync("cp x .github/workflows/")` のようにシェル越しに書く
+ *   - `process.chdir()` してから相対パスで書く
+ *
+ * **捕まえられることは実測した**（2026-09-28）:
+ *   - **全 PR を止めた実物のコードを戻す** → 赤。`workflow-timeout.test.ts:176` の writeFileSync と
+ *     `:186` の rmSync を、行番号つきで名指しした
+ *   - **別のファイル**（`workflow-commit-identity.test.ts`）に素直な形で書く → 赤。`:299` を名指し
+ *
+ * **素直に書いたときに必ず鳴るほうが、無いより強い。**
+ */
+test("#1081 どのテストも .github/workflows に書き込まない（並行する読み手を ENOENT で壊す）", () => {
+  const WRITE_API =
+    /\b(writeFileSync|writeFile|appendFileSync|appendFile|mkdirSync|mkdir|cpSync|copyFileSync|renameSync|symlinkSync|openSync|rmSync|unlinkSync|rmdirSync|createWriteStream)\s*\(/;
+  /** `.github/workflows` を指していると読める式（`wfDir` のような変数名も含む） */
+  const POINTS_AT_WF = /\.github[/\\]workflows|\bwfDir\b|\bworkflowsDir\b|\bworkflowDir\b/;
+  const all = [...webTestFiles(), ...etlTestFiles(), ...ciTestFiles()];
+  // **母数を固定する**（0 本を読んだら空振り。#514）
+  assert.ok(all.length >= 290, `テストファイルが ${all.length} 本しか読めていない（実測 2026-09-28: 298 本）。
+**数え方（webTestFiles / etlTestFiles / ciTestFiles）が痩せたなら、この下限も測り直すこと**（#514: 空振りに気づけるように）。`);
+
+  const offenders: string[] = [];
+  for (const rel of all) {
+    const lines = read(rel).split("\n");
+    // **1 行で見ると、元のバグを取り逃がす。**
+    // **実測（2026-09-28）**: 全 PR を止めた実際のコードは
+    // ```
+    // const probePath = resolve(wfDir, probeName);   // ← ここに wfDir
+    // writeFileSync(probePath, probeYaml, "utf8");   // ← ここに書き込み
+    // ```
+    // **と 2 行に分かれていたので、「同じ行に両方ある」だけを見る検査では 12/12 緑で素通りした。**
+    // **そこで「`.github/workflows` から作ったパスを入れた変数」を先に集め、その変数で書く行を見る。**
+    const tainted = new Set<string>();
+    for (const l of lines) {
+      if (/^\s*(\*|\/\/|\/\*)/.test(l)) continue;
+      if (!POINTS_AT_WF.test(l)) continue;
+      // `const x = ...` / `let x = ...` / `x = ...` の左辺を汚染扱いにする
+      const m = /(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*[:=]|^\s*([A-Za-z_$][\w$]*)\s*=/.exec(l);
+      if (m) tainted.add(m[1] ?? m[2]);
+    }
+    lines.forEach((l, i) => {
+      if (/^\s*(\*|\/\/|\/\*)/.test(l)) return;
+      if (!WRITE_API.test(l)) return;
+      // (a) 書き込み API の行そのものに `.github/workflows` / wfDir がある
+      // (b) 書き込み API の行が、`.github/workflows` から作った変数を使っている
+      const hit = POINTS_AT_WF.test(l) || [...tainted].some((v) => new RegExp(`\\b${v}\\b`).test(l));
+      if (hit) offenders.push(`${rel}:${i + 1}: ${l.trim()}`);
+    });
+  }
+  assert.deepEqual(
+    offenders,
+    [],
+    `**テストが .github/workflows に書き込んでいる。** 並行して readdirSync する読み手 8 本を
+ENOENT で壊し、全 PR のマージが止まる（#1081 で実際に起きた）。
+**直し方**: mkdtempSync で使い捨てのディレクトリを作り、走査先を引数で渡す
+（\`workflow-timeout.test.ts\` の \`listAllJobs(dir)\` が手本）。`,
+  );
+});
