@@ -100,45 +100,13 @@ const commentRuleFor = (file: string): RegExp | null => {
  * 走査を `.ts` に広げたときも `commit-trailer-identity.test.ts` の JSDoc 2 か所が赤くなった）。
  * **純粋に編集上の書き換えで CI が落ちるのは偽陽性である。**
  *
- * **実測 2026-09-29（候補 9 件を 3 通りで走査した）**:
+ * **実測 2026-09-29（候補を 3 通りで走査した）**:
  * ```
  * コメントを除外しない        偽陽性 2 件（commit-trailer-identity.test.ts の JSDoc）
  * `#` だけを除外する          偽陽性 2 件（同上。`.ts` に `#` は効かない）
  * 言語ごとに分ける            偽陽性 0 件  ← これを採る
  * ```
  */
-/**
- * **「身元を設定している」と「綴りを例として書いている」を分ける**（#1066 の再々差し戻し）。
- *
- * **`#1103` が `.claude/agents/developer.md` に、直し方の手本として
- * `git -c user.email=120390190+uonoko1@users.noreply.github.com commit --amend …` を
- * *インラインのコードスパン*（バッククォート）で書いた。** **走査を追跡ファイル全体に
- * 広げたので、これが「workflow が使う identity」として数えられ、逐語 allowlist が落ちた。**
- *
- * **これは偽陽性である。** **`120390190+uonoko1@…` は利用者本人の正しいアドレスで、
- * 誤帰属ではない。** **そして md は誰にも実行されない**（実測 2026-09-29:
- * 追跡 md 78 件のうち実行属性が付いたものは 0 件、`bash …md` で起動している箇所も 0 件）。
- *
- * **消すこともできない**——**`packages/etl/test/commit-identity-allowlist.test.ts`
- * （main 側の検査）は、この綴りが `developer.md` に *在ること* を要求する。**
- * **実測: その 1 行を消すと main 側の検査が fail 1 になる。**
- * **2 つの検査が真正面から矛盾していたので、allowlist に足す解き方（緩める解き方）は採れない。**
- *
- * **分け方**: **md の「自己完結したコードスパン」を引用として扱う。**
- * **スパンの中に *キーワードとアドレスの両方* が在るときだけ**取り除く。
- * **片方しか入っていないスパンは残す**——**残さないと
- * `` `git config user.email` = etl@… `` のような形が沈黙する**（実測で 1 件落ちた）。
- *
- * **md の囲みブロック（``` の中）と素の散文は、これまでどおり走査する。**
- * **以前の約束（手順書に悪い例を逐語で書けば赤くなる）は変わらない。**
- */
-const stripQuotedSpans = (file: string, line: string): string => {
-  if (!/\.md$/.test(file)) return line;
-  return line.replace(/`[^`]*`/g, (span) =>
-    IDENTITY_KEYS.test(span) && hasEmail(span) ? " " : span,
-  );
-};
-
 const isComment = (file: string, line: string): boolean => {
   const rule = commentRuleFor(file);
   return rule !== null && rule.test(line);
@@ -201,7 +169,7 @@ const IDENTITY_KEYS = /(?:user\.email|author\.email|committer\.email|GIT_AUTHOR_
  * （母数が膨らむと `checked > 0` の意味が薄れる）。
  */
 const foldContinuations = (file: string, text: string): string[] => {
-  const joined = text.split("\n").map((l) => stripQuotedSpans(file, l));
+  const joined = text.split("\n");
   const out: string[] = [];
   for (let i = 0; i < joined.length; i += 1) {
     out.push(joined[i]);
@@ -264,14 +232,22 @@ const UNRESOLVABLE = /@(?:[A-Za-z0-9-]+\.)*(?:invalid|test|example|localhost)$|@
  *
  * **母数**（実測 2026-09-29）:
  * ```
- * 追跡ファイル                                  10423
- *   うち #1066 の前に走査していた               15   (.github/workflows/*.yml   0.14%)
- *   うち #1066 の後に絞り込みの母数になる        10423 (git ls-files             100%)
- *   うち身元のキーワードを含む（実際に読む）     9     (git grep -lI             0.09%)
+ * 追跡ファイル                                  10426
+ *   うち #1066 の前に走査していた               15    (.github/workflows/*.yml   0.14%)
+ *   うち #1066 の後に絞り込みの母数になる        10426 (git ls-files             100%)
+ *   うち身元のキーワードを含む（実際に読む）     13    (git grep -lIzi           0.12%)
  *     .github/workflows/                        3
- *     packages/etl/test/                        2
+ *     packages/etl/test/                        3
  *     scripts/ci/test/                          3
+ *     .claude/agents/                           2
  *     scripts/dev/test/                         1
+ *     scripts/po/                               1
+ * ```
+ * **基点が動くと数も動く**（#1074）——**これは 2026-09-29 に
+ * `origin/main` を取り込んだ時点の数である。** **数え方:**
+ * ```
+ * git ls-files | wc -l
+ * git grep -lIziE -- '(user\.email|author\.email|committer\.email|GIT_AUTHOR_EMAIL|GIT_COMMITTER_EMAIL|--author[= ])' | tr '\0' '\n' | grep -c .
  * ```
  * **`scripts/` の本番スクリプトに身元を設定しているものは 0 件**（実測）——
  * **これは「見ていないから 0 件」ではなく「全部見たうえで 0 件」である。**
@@ -306,9 +282,9 @@ const trackedCount = execFileSync("git", ["ls-files", "-z"], {
 /**
  * **候補を絞るのに `git grep` を使う**（追跡ファイル全部を Node で読むと遅すぎる）。
  *
- * **実測 2026-09-29**: 全 9918 件を `readFileSync` すると **446 秒**かかった
+ * **実測 2026-09-29**: 追跡ファイル全件を `readFileSync` すると **446 秒**かかった
  * （`data/` の JSON が支配的）。**`git grep -lI` は 0.9 秒**で、
- * **10423 件 → 9 件**に絞る。**絞った後は Node 側が全行を見る**ので、判定は変わらない。
+ * **10426 件 → 13 件**に絞る。**絞った後は Node 側が全行を見る**ので、判定は変わらない。
  *
  * **`data/` の JSON の件数は、数え方で変わる**（レビューで 8905 と 8900 が並んだ。
  * **どちらも正しく、glob の意味が違う**）。**次に数える人が同じ数を出せるように、
@@ -399,7 +375,7 @@ test("ワークフローが設定する user.email は、数字 ID 付きの nor
     if (text === null) continue;
     scanned += 1;
     // **母数は畳む前の実数で数える**（畳んだ窓は同じアドレスを 2 度通しうる）。
-    for (const line of text.split("\n").map((l) => stripQuotedSpans(f, l))) {
+    for (const line of text.split("\n")) {
       if (isComment(f, line)) continue;
       if (!IDENTITY_KEYS.test(line)) continue;
       for (const _ of line.matchAll(EMAIL)) checked += 1;
@@ -422,12 +398,12 @@ test("ワークフローが設定する user.email は、数字 ID 付きの nor
   }
   // **母数を出す**（#757）: 0 件で緑になっていないことを、まず確かめる。
   // **「0 件」と「見ていないから 0 件」を区別する**——走査したファイル数も固定する。
-  // **実測 2026-09-29: 追跡 10423 件 → テキスト 9918 件。** 下限を置いて、
+  // **実測 2026-09-29: 追跡 10426 件。** 下限を置いて、
   // **`git ls-files` が空を返した / 1 ファイルしか読めなかったときに緑にならない**ようにする。
   // **追跡ファイルが数えられていること**（`git ls-files` が空を返したら走査は無意味）。
-  // **実測 2026-09-29: 10423 件。**
+  // **実測 2026-09-29: 10426 件。**
   assert.ok(trackedCount > 1000, `追跡ファイルが少なすぎる（${trackedCount} 件。走査が空回りしている）`);
-  // **候補が 1 件も無い ＝ `git grep` が空振りした**（パターンが壊れた等）。**実測 2026-09-29: 9 件。**
+  // **候補が 1 件も無い ＝ `git grep` が空振りした**（パターンが壊れた等）。**実測 2026-09-29: 13 件。**
   assert.ok(scanned > 0, "身元のキーワードを含むファイルが 1 件も無い（絞り込みが空回りしている）");
   assert.ok(checked > 0, "user.email を設定している箇所が 1 つも見つからない（走査が空回りしている）");
   assert.deepEqual(bad, [], `裸のローカル部は無関係の GitHub ユーザーに紐づく。数字 ID 付きにすること:\n  ${bad.join("\n  ")}`);
@@ -502,7 +478,32 @@ test("身元を決める書き方の列挙（IDENTITY_KEYS）が縮んでいな�
  * **それが狙いである**（「誰の名前でコミットするか」は黙って変わってよい設定ではない）。
  */
 test("ワークフローが使う identity は、本人確認した逐語のアドレスだけ", () => {
-  const EXPECT = "41898282+github-actions[bot]@users.noreply.github.com";
+  // **本人確認済みの逐語のアドレスだけを許す**（形ではなく綴りで固定する）。
+  //
+  // **2 件在るのは、走査が追跡ファイル全体に広がったから**（#1066）。
+  // **どちらも「実際にこのプロジェクトが使う identity」で、誤帰属しない:**
+  // ```
+  // 41898282+github-actions[bot]@…  GitHub Actions 自身（Bot。実在の人に紐づかない）
+  //                                 .github/workflows/{etl,districts,local-assemblies}.yml が設定する
+  // 120390190+uonoko1@…             この repo の所有者（本人確認済み: gh api user/120390190 → uonoko1）
+  //                                 .claude/agents/developer.md が「使うべき値」として書いている
+  // ```
+  //
+  // **`developer.md` の 1 行を「例だから」と走査から外す道は採らなかった**（#1066 の差し戻し）。
+  // **一度 `stripQuotedSpans` で「md のバッククォートの中は引用」として外したが、
+  // それは「バッククォートで囲めば何でも書ける」という逃げ場を作っていた**
+  // （レビューの実測: `.claude/agents/*.md` に
+  // `` `git config user.email etl@users.noreply.github.com` `` と書くと **14 pass / 0 fail で沈黙**。
+  // **囲まなければ 12 pass / 2 fail で捕まる**）。
+  // **`.claude/agents/*.md` はエージェントが読んで *従う* 指示であって、ただの散文ではない。**
+  // **この PR の発端そのものが、その証拠である。**
+  //
+  // **逐語で 2 件を許すほうが安全である**——**増えたら必ずここが落ちるので、
+  // 「誰の名前でコミットするか」が黙って変わることはない。**
+  const EXPECT = [
+    "120390190+uonoko1@users.noreply.github.com",
+    "41898282+github-actions[bot]@users.noreply.github.com",
+  ];
   const seen = new Set<string>();
   for (const f of files) {
     const text = readText(f);
@@ -519,8 +520,8 @@ test("ワークフローが使う identity は、本人確認した逐語のア�
   assert.ok(seen.size > 0, "identity を設定している箇所が 1 つも見つからない（走査が空回りしている）");
   assert.deepEqual(
     [...seen].sort(),
-    [EXPECT],
-    `本人確認していない identity が使われている（許すのは ${EXPECT} だけ）`,
+    [...EXPECT].sort(),
+    `本人確認していない identity が使われている（許すのは次の ${EXPECT.length} 件だけ）:\n  ${EXPECT.join("\n  ")}`,
   );
 });
 
@@ -590,8 +591,9 @@ test("走査の候補が .github/ の外にも届いている（範囲が狭ま�
     candidates.length > 0,
     "身元のキーワードを含むファイルが 1 件も無い（git grep が空回りしている）",
   );
-  // **`.github/` 以外の候補が在ること。** **実測 2026-09-29: 候補 9 件のうち 6 件が `.github/` の外**
-  // （`packages/etl/test/` 2 / `scripts/ci/test/` 3 / `scripts/dev/test/` 1）。
+  // **`.github/` 以外の候補が在ること。** **実測 2026-09-29: 候補 13 件のうち 10 件が `.github/` の外**
+  // （`packages/etl/test/` 3 / `scripts/ci/test/` 3 / `.claude/agents/` 2 /
+  // `scripts/dev/test/` 1 / `scripts/po/` 1）。
   const outside = candidates.filter((f) => !f.startsWith(".github/"));
   assert.ok(
     outside.length > 0,
@@ -898,103 +900,87 @@ test("大小無視は判定と git grep の両方に効いている（片方だ�
 });
 
 /**
- * **「身元を設定している」と「綴りを例として書いている」の区別**（#1066 の再々差し戻し）。
+ * **バッククォートで囲んでも、走査から外れてはいけない**（#1066 の再々差し戻し）。
  *
- * **走査を追跡ファイル全体に広げた副作用で、`.claude/agents/developer.md` の
- * *手本* が「workflow が使う identity」として数えられ、逐語 allowlist が落ちた。**
+ * **一度、md の「自己完結したコードスパン」を引用として取り除く実装を入れた**
+ * （`stripQuotedSpans`）。**`.claude/agents/developer.md` が直し方の手本として
+ * 逐語のアドレスを書いているのを「例であって設定ではない」と見なすためだった。**
  *
- * **緩める解き方（allowlist に足す）は採れなかった**——
- * **`packages/etl/test/commit-identity-allowlist.test.ts` は、その綴りが
- * `developer.md` に *在ること* を要求している。** **実測: 1 行消すと向こうが fail 1。**
- * **2 つの検査が真正面から矛盾していたので、「例として書いてある」側を分けるしかない。**
+ * **それは逃げ場を作っていた**（レビューの実測）:
+ * ```
+ * .claude/agents/*.md に
+ *   **必ずこうする**: `git config user.email etl@users.noreply.github.com`
+ *     → 14 pass / 0 fail    沈黙
+ *   同じ内容をバッククォート無しで
+ *     → 12 pass / 2 fail    捕まる
+ * ```
+ * **md にコマンドを書くときバッククォートで囲むのは最も自然な書き方**なので、
+ * **「囲んであるか」が新しい逃げ場になっていた**——**#1066 が塞ごうとした型そのもの。**
+ * **`.claude/agents/*.md` はエージェントが読んで *従う* 指示であって、ただの散文ではない。**
  *
- * **ここが落ちれば「区別が壊れた」と分かる。**
+ * **だから実装を丸ごと外し、逐語 allowlist を 2 件にした。**
+ * **「例として書いてある」ことを理由に走査から外さない。**
+ *
+ * **ここが落ちれば「囲めば通る」が戻ったと分かる。**
  */
-test("md の自己完結したコードスパンは、身元の設定ではなく引用として扱う", () => {
-  // **取り除く**: キーワードとアドレスが **同じスパンの中に両方** 在る（＝完結した手本）
-  for (const [line, why] of [
-    ["**落ちたら**: `git -c user.email=120390190+uonoko1@users.noreply.github.com commit --amend`",
-     "#1103 が developer.md に足した実物"],
-    ["例: `git config user.email \"etl@users.noreply.github.com\"` と書いてはいけない",
-     "悪い例を示す書き方"],
+test("バッククォートで囲んだだけでは走査から外れない", () => {
+  const line = "**必ずこうする**: `git config user.email etl@users.noreply.github.com`";
+  for (const f of [
+    ".claude/agents/developer.md",
+    ".claude/agents/probe.md",
+    "docs/ops/a.md",
+    "README.md",
   ]) {
-    const out = stripQuotedSpans("docs/a.md", line);
     assert.ok(
-      !(IDENTITY_KEYS.test(out) && hasEmail(out)),
-      `完結したコードスパンを引用として扱っていない（偽陽性になる）: ${why}`,
+      !isComment(f, line) && IDENTITY_KEYS.test(line) && hasEmail(line),
+      `バッククォートで囲むと走査から外れている（逃げ場になる）: ${f}`,
     );
-  }
-
-  // **残す**: スパンに **片方しか** 入っていない（取り除くと本物が沈黙する）
-  for (const [line, why] of [
-    ["`git config user.email` = etl@users.noreply.github.com", "キーワードだけがスパンの中"],
-    ["git config user.email = `etl@users.noreply.github.com`", "アドレスだけがスパンの中"],
-    ["` git config user.email etl@users.noreply.github.com", "バッククォートが閉じていない"],
-  ]) {
-    const out = stripQuotedSpans("docs/a.md", line);
-    assert.ok(
-      IDENTITY_KEYS.test(out) && hasEmail(out),
-      `取り除きすぎて本物が沈黙する: ${why}`,
-    );
-  }
-
-  // **md 以外には一切効かない**——**`.sh` や `.yml` のバッククォートはコマンド置換で、
-  // *実行される*。** **引用ではない。**
-  //
-  // **fixture は「取り除く条件に *当たる* 行」でなければならない**（#1066 で 2 度目の同じ過ち）。
-  // **最初は `` git config user.email `echo etl@…` `` を当てていたが、
-  // キーワードがスパンの *外* に在るので、`.md` 判定を外す変異を入れても何も変わらなかった**
-  // （実測 S3: `if (!/\.md$/…) return line;` を無効化しても 14 pass / 0 fail で生存）。
-  // **だからキーワードとアドレスを両方スパンの中に入れる。**
-  for (const f of [".github/workflows/x.yml", "scripts/ci/x.sh", "packages/etl/src/a.ts"]) {
-    const line = 'eval `git config user.email etl@users.noreply.github.com`';
-    const out = stripQuotedSpans(f, line);
-    assert.equal(out, line, `md 以外でコードスパンを取り除いている（実行される行が沈黙する）: ${f}`);
-  }
-
-  // **md の囲みブロックと素の散文は、これまでどおり走査する**（以前の約束は変わらない）。
-  for (const line of [
-    'git config user.email "etl@users.noreply.github.com"',
-    "    git config user.email etl@users.noreply.github.com",
-  ]) {
-    const out = stripQuotedSpans("docs/ops/a.md", line);
-    assert.ok(
-      IDENTITY_KEYS.test(out) && hasEmail(out),
-      `md の囲みブロック／散文まで取り除いている: ${line}`,
-    );
+    // **囲みの中のアドレスが、ちゃんと「形の検査」に掛かること。**
+    const bad = [...line.matchAll(EMAIL)].filter((m) => !UNRESOLVABLE.test(m[0]) && !OK.test(m[0]));
+    assert.ok(bad.length > 0, `囲みの中のアドレスを拾えていない: ${f}`);
   }
 });
 
 /**
- * **この検査と `commit-identity-allowlist.test.ts` が矛盾していないこと。**
+ * **`.claude/agents/*.md` が「逐語のアドレスを書いてある」ことは、
+ * main 側の `commit-identity-allowlist.test.ts` が要求している。**
+ * **こちらはそれを「走査して、逐語 allowlist に在ること」で受ける。**
  *
- * **向こうは「`developer.md` に逐語のアドレスが *在る*」ことを要求し、
- * こちらは「identity に使ってよいのは bot の逐語だけ」を要求する。**
- * **走査を広げた結果、同じ 1 行が両方の対象になって衝突した。**
+ * **2 つの検査は矛盾しない**——**同じ 1 つの綴りを、
+ * 片方は「在れ」、もう片方は「これ以外は許さない」と言っているだけである。**
  *
- * **ここが落ちれば「また衝突した」と分かる**——
- * **どちらかを消して辻褄を合わせるのではなく、区別のほうを直すこと。**
+ * **初版はここを「矛盾している」と読み違えた**（差し戻しの記録）:
+ * **`grep -v <アドレス>` で消して測ったので、*行 89 と行 111 の両方* が消え、
+ * main 側が落ちた。** **落ちた原因は行 89（単独行）で、行 111 ではなかった。**
+ * **1 行だけ消して測り直すと main 側は 4 pass / 0 fail のままだった。**
+ * **「消したら落ちた」を「その行のせいで落ちた」と読んだのが誤りだった。**
  */
-test("エージェントの指示に在る手本のアドレスと衝突していない", () => {
+test("エージェントの指示に在る逐語のアドレスは、allowlist に含まれている", () => {
   const doc = join(repoRoot, ".claude/agents/developer.md");
   let text: string;
   try {
     text = readFileSync(doc, "utf8");
   } catch {
-    return; // **この枝に指示ファイルが無いなら、衝突のしようが無い**
+    return; // **この枝に指示ファイルが無いなら、確かめようが無い**
   }
-  const example = "120390190+uonoko1@users.noreply.github.com";
-  assert.ok(
-    text.includes(example),
-    `前提が崩れている（commit-identity-allowlist.test.ts はこの綴りが在ることを要求する）: ${example}`,
-  );
-  // **その行を走査に掛けても、identity として数えられないこと。**
-  for (const raw of text.split("\n")) {
-    if (!raw.includes(example)) continue;
-    const line = stripQuotedSpans(".claude/agents/developer.md", raw);
+  const ALLOWED = [
+    "120390190+uonoko1@users.noreply.github.com",
+    "41898282+github-actions[bot]@users.noreply.github.com",
+  ];
+  // **指示ファイルの中で、身元を決める書き方の行に現れるアドレス**を全部集める。
+  const seen = new Set<string>();
+  for (const line of foldContinuations(".claude/agents/developer.md", text)) {
+    if (isComment(".claude/agents/developer.md", line)) continue;
+    if (!IDENTITY_KEYS.test(line)) continue;
+    for (const m of line.matchAll(EMAIL)) {
+      if (UNRESOLVABLE.test(m[0])) continue;
+      seen.add(m[0]);
+    }
+  }
+  for (const a of seen) {
     assert.ok(
-      !(IDENTITY_KEYS.test(line) && hasEmail(line)),
-      `手本の 1 行が identity として数えられている（逐語 allowlist が落ちる）: ${raw.trim().slice(0, 120)}`,
+      ALLOWED.includes(a),
+      `エージェントの指示が、allowlist に無い identity を手本として書いている: ${a}`,
     );
   }
 });
