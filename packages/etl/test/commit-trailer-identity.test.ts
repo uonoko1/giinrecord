@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 
@@ -98,7 +99,35 @@ import { dirname, resolve } from "node:path";
  * **`allow` 引数は単体テスト用に残してある**（既定は空集合。環境は一切読まない）。
  */
 
-/** **数字 ID 付きの GitHub noreply だけを通す**（`workflow-commit-identity.test.ts` の `OK` と同じ形）。 */
+/**
+ * **数字 ID 付きの GitHub noreply だけを通す**（`workflow-commit-identity.test.ts` の `OK` と同じ形）。
+ *
+ * ── **守れないもの: 数字 ID の *中身* は検査できない**（実例つき。2026-09-28 に実際に起きた）──
+ *
+ * **`OK` が言えるのは「数字 ID 付きの GitHub noreply の *形* をしている」ことだけで、
+ * 「その数字が本人の ID か」は言えない。** **逐語の allowlist に無い数字 ID は全部通る。**
+ * **#1043 のレビューが指摘した限界そのものである。**
+ *
+ * **実害が出た**（#1064 のマージで `origin/main` に入った。実測）:
+ *
+ * ```
+ * Co-authored-by: seiji-kiroku-dev <219112946+seiji-kiroku-dev@users.noreply.github.com>
+ *
+ * OK.test(…)                → true   ★ この検査は通す（形は正しい）
+ * gh api users/seiji-kiroku-dev → 404  （その名前の GitHub ユーザーは存在しない）
+ * gh api user/219112946        → login=MLehnus / id=219112946 / type=User
+ *                                       / created_at=2025-07-03
+ * ```
+ *
+ * **数字 ID が指しているのは `github.com/MLehnus` という無関係の実在の個人で、
+ * その人が Contributors に出た。** **`etl@` や `noreply@anthropic.com` と同じ誤帰属だが、
+ * 形が正しいのでこの検査は止められない。**
+ *
+ * **`120390190+uonoko1@` と `41898282+github-actions[bot]@` だけを逐語で許す形にすれば
+ * 止まるが、それは「新しい貢献者を足すたびに検査を直す」ことを意味する。**
+ * **どちらを採るかは別 PBI で PO が判断する**（#1074 の範囲外）。
+ * **ここでは「止められない」ことと、その実例を明記するに留める。**
+ */
 const OK = /^\d+\+[^@]+@users\.noreply\.github\.com$/;
 
 /**
@@ -147,6 +176,60 @@ const root = resolve(here, "../../..");
 
 const git = (...args: string[]): string =>
   execFileSync("git", ["-C", root, ...args], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+
+/**
+ * **`git commit-tree` を、identity を必ず渡して呼ぶ**（ref は一切触らない）。
+ *
+ * ── **なぜ 1 か所にまとめたか（3 度目のレビューの必須 1。CI が実際に赤くなった）** ──────────
+ *
+ * **CI の runner には git の identity が無い。** **`user.name` / `user.email` が未設定だと
+ * `commit-tree` は `fatal: empty ident name` で throw する。**
+ *
+ * **実機で赤くなった**（run 36383021832、`check: completed/failure`）:
+ * ```
+ * ✖ 「範囲が空でよい」の裏づけが、4 つの分岐で実際に火を噴く
+ *   Error: Command failed: git … commit-tree 9ee92ffb…
+ *   Author identity unknown
+ *   fatal: empty ident name (for <runner@…>) not allowed
+ *   ℹ tests 13 / pass 12 / fail 1
+ * ```
+ *
+ * **原因は「同じことを 3 か所で別々に書いていた」ことである**（直す前の実測）:
+ * ```
+ * 検査 3  の make    env: { GIT_AUTHOR_* , GIT_COMMITTER_* }   → 通る
+ * 検査 5  の mk      何も渡していない                          → ★ throw（CI が赤）
+ * 検査 11 の sample  -c user.name=… -c user.email=…            → 通る
+ * ```
+ * **2 つが別々の書き方で正しく、3 つ目だけが抜けていた。**
+ * **開発者の手元には identity が在るので、手元では 3 つとも緑になる。**
+ *
+ * **これは 2 度目のレビューの `HEAD~1` と同じクラスである**——
+ * **「開発者の手元では通るが、CI の素の環境では通らない」形を、同じ関数のすぐ隣でもう一度やった。**
+ * **同じクラスを 2 度踏んだので、次に足す人が忘れられない形にする**:
+ * **`commit-tree` を呼ぶ道をこの 1 本だけにして、identity を引数ではなく既定で入れる。**
+ * **下の検査が「呼び口が 1 本であること」を逐語で固定する。**
+ */
+const commitTree = (
+  opts: { tree: string; parents?: string[]; message: string; author?: string; committer?: string },
+): string => {
+  const who = "120390190+uonoko1@users.noreply.github.com";
+  return execFileSync(
+    "git",
+    ["-C", root, "commit-tree", opts.tree, ...(opts.parents ?? []).flatMap((x) => ["-p", x])],
+    {
+      input: opts.message,
+      encoding: "utf8",
+      // **identity は必ず渡す。** **既定を置いてあるので、呼ぶ側が忘れても CI で throw しない。**
+      env: {
+        ...process.env,
+        GIT_AUTHOR_NAME: "A",
+        GIT_AUTHOR_EMAIL: opts.author ?? who,
+        GIT_COMMITTER_NAME: "A",
+        GIT_COMMITTER_EMAIL: opts.committer ?? who,
+      },
+    },
+  ).trim();
+};
 
 /** 末尾の改行だけを落とす（`%B` は末尾に改行を足し、生オブジェクトは足さない。それ以外は一致する）。 */
 const trimTrailingNewlines = (s: string): string => s.replace(/\n+$/, "");
@@ -259,6 +342,9 @@ const scannedBody = (
  * **#1074 は「利用者に確認してから」として範囲外にしている。**
  *
  * **この選択で守れないもの**（明記する）:
+ * - **数字 ID の *中身* は検査できない。** **逐語の allowlist に無い数字 ID は通る**
+ *   ——**2026-09-28 に実際に誤帰属が 1 件入った**（`219112946+seiji-kiroku-dev@…` →
+ *   `github.com/MLehnus`。`OK` の docblock に実測）。**形は正しいので止められない。**
  * - **既に main に在る 1644 件は、この検査では永久に見えない。** 直すのは別の PBI。
  * - **`origin/main` や merge-base が取れない浅い checkout では、この検査は 1 件も見ない**
  *   （下で skip する。緑にはしない。**ただし「読めない」という主張は別の git コマンドで
@@ -856,23 +942,9 @@ test("この枝が足すコミットの author / committer が誤帰属しない
 test("author / committer の検査が、誤帰属する 3 形で実際に落ちる（マージは対象外）", () => {
   const tree = git("rev-parse", "HEAD^{tree}").trim();
   const p1 = git("rev-parse", "HEAD").trim();
-  /** ref を触らずにコミットオブジェクトを 1 つ書く（`commit-tree`）。 */
+  /** ref を触らずにコミットオブジェクトを 1 つ書く（`commitTree`。identity は既定で入る）。 */
   const make = (author: string, committer: string, parents: string[]): string =>
-    execFileSync(
-      "git",
-      ["-C", root, "commit-tree", tree, ...parents.flatMap((x) => ["-p", x])],
-      {
-        input: "test: 検査に当てるためのコミット\n",
-        encoding: "utf8",
-        env: {
-          ...process.env,
-          GIT_AUTHOR_NAME: "A",
-          GIT_AUTHOR_EMAIL: author,
-          GIT_COMMITTER_NAME: "A",
-          GIT_COMMITTER_EMAIL: committer,
-        },
-      },
-    ).trim();
+    commitTree({ tree, parents, message: "test: 検査に当てるためのコミット\n", author, committer });
   const ETL = "etl@users.noreply.github.com"; // #1074 (B) の実害そのもの
   const GOOD = "120390190+uonoko1@users.noreply.github.com";
   const OTHER = "person@example.com"; // 架空。実在の個人アドレスは書かない（#1043）
@@ -915,6 +987,50 @@ test("author / committer の検査が、誤帰属する 3 形で実際に落ち�
   assert.equal(merge.merge, true, "2 親のコミットをマージと判定していない");
   assert.equal(merge.checked, 0, "マージコミットのアドレスを読んでいる（偽陽性になる）");
   assert.deepEqual(merge.bad, [], "マージコミットで赤になっている（本人の手元のマージで毎回赤になる）");
+});
+
+/**
+ * **`commit-tree` を呼ぶ道が 1 本だけであることを、このファイル自身のソースで固定する**
+ * （3 度目のレビューの必須 1。**CI が実際に赤くなったので、クラスごと閉じる**）。
+ *
+ * **identity を渡し忘れた `commit-tree` は、開発者の手元では通り、CI の runner でだけ throw する。**
+ * **だから「手元で緑」では守れない。** **実機で 1 度、`pass 12 / fail 1` になった。**
+ *
+ * **同じ誤りを 2 度踏んでいる**（`HEAD~1` と `empty ident`。どちらも「手元では通る」形）。
+ * **3 度目を防ぐには、呼ぶ側の注意ではなく、呼び口の本数を固定する必要がある。**
+ *
+ * **`git` の argv に `commit-tree` を置く箇所は、`commitTree` の中の 1 つだけ。**
+ * **新しく足したくなったら、この検査が落ちて `commitTree` に気づく。**
+ *
+ * **綴りは実行時に組み立てる**（`"commit" + "-tree"`）。
+ * **この docblock や assert のメッセージにも同じ語が出るので、
+ * ソースに逐語で書くと検査が自分の文章を数えてしまう**
+ * （**実際にそうなった。最初 6 件、regex を狭めても 5 件を数えた**）。
+ */
+test("`commit-tree` を呼ぶ道は 1 本だけ（identity の渡し忘れを構造で防ぐ）", () => {
+  const src = readFileSync(fileURLToPath(import.meta.url), "utf8");
+  // **argv の位置だけを数える**: `"<綴り>",` の直後に次の引数が続く形。
+  // **綴りを組み立てるので、この行自身は当たらない。**
+  const argv = new RegExp(`"${"commit"}-tree",\\s*\\S`, "g");
+  const callSites = src.match(argv) ?? [];
+  assert.equal(
+    callSites.length,
+    1,
+    `git の argv に該当の綴りを置く箇所が ${callSites.length} 本ある。` +
+      `**identity を渡し忘れると CI の runner でだけ throw する**（実機で 1 度赤くなった）。` +
+      `commitTree() を通すこと`,
+  );
+  // **その 1 本が `commitTree` の中に在ること**（別の関数に移されていないこと）。
+  const fn = src.slice(src.indexOf(`const ${"commitTree"} =`), src.indexOf(`const ${"addedCommits"} =`));
+  assert.match(
+    fn,
+    new RegExp(`"${"commit"}-tree",\\s*\\S`),
+    "呼び口が commitTree の外に移っている（identity の既定が効かなくなる）",
+  );
+  // **その 1 本が identity を渡していること**を語で固定する。
+  for (const v of ["GIT_AUTHOR_NAME", "GIT_AUTHOR_EMAIL", "GIT_COMMITTER_NAME", "GIT_COMMITTER_EMAIL"]) {
+    assert.ok(fn.includes(v), `commitTree が ${v} を渡していない（CI の runner で throw する）`);
+  }
 });
 
 test("走らせない理由は「履歴が読めない」2 つだけ（skip で無力化できないようにする）", () => {
@@ -988,11 +1104,11 @@ test("「範囲が空でよい」の裏づけが、4 つの分岐で実際に火
   // **到達不能なコミットを 2 つ作り、既定の `isAncestor` がその関係を正しく答えるか**を見る。
   // **`commit-tree` は ref を触らないので、リポジトリの状態を変えない。**
   const tree = git("rev-parse", "HEAD^{tree}").trim();
+  // **`commitTree` を通す**——**identity を渡し忘れると CI の runner で throw する。**
+  // **ここが渡し忘れていて、実機 run 36383021832 が `pass 12 / fail 1` で赤くなった**
+  // （`fatal: empty ident name`。`commitTree` の docblock に経緯）。
   const mk = (parents: string[]): string =>
-    execFileSync("git", ["-C", root, "commit-tree", tree, ...parents.flatMap((x) => ["-p", x])], {
-      input: "test: 既定の源が git に聞いていることを見る\n",
-      encoding: "utf8",
-    }).trim();
+    commitTree({ tree, parents, message: "test: 既定の源が git に聞いていることを見る\n" });
   const parent = mk([]);
   const child = mk([parent]);
   assert.notEqual(parent, child, "commit-tree が同じコミットを 2 回返している");
@@ -1207,6 +1323,105 @@ test("身元を名指しする trailer の列挙が縮んでいない", () => {
 });
 
 /**
+ * **`EMAIL` そのものを当てる**（3 度目のレビューの必須 2。M7）。
+ *
+ * ── **なぜ要るか: 3 つの正規表現のうち、ここだけ検査が 1 本も無かった** ──────────────────
+ *
+ * ```
+ * OK                 通す 2 形 / 通してはいけない 13 形 + 母数        ← 守られている
+ * IDENTITY_TRAILERS  拾う 14 形 / 拾わない 6 形                      ← 守られている
+ * EMAIL              （検査なし）                                    ← ★ ここが穴だった
+ * ```
+ *
+ * **`EMAIL` は「走査する対象を決める」ので、狭めると *見なくなる*。**
+ * **`bad` に積まれないだけでなく、`checked`（母数）にも数えられない**ので、
+ * **走査カウンタは正常な数を出したまま、特定の形だけが静かに素通りする。**
+ *
+ * **実測した変異（どちらも直す前は `tests 14 / pass 14 / fail 0` で緑）**:
+ * ```
+ * M7  [A-Za-z]{2,} → {3,}   TLD が 2 文字のアドレスを全部見なくなる
+ *                           → bot@claude.ai / x@foo.io / x@foo.co が誤帰属のまま通る
+ * E3  matchAll → match      1 行の 2 件目以降を見なくなる
+ * ```
+ *
+ * **`claude.ai` は実在のドメインである。** **`noreply@anthropic.com` を弾いた次に
+ * そこへ書き換えられたら、M7 が当たっていれば誰も気づけない**——
+ * **走査した数は 9 のまま正常に見える。**
+ *
+ * **前回のレビューは E1（同じ形）を「履歴に該当が無いので低 severity」と判定し、
+ * 自分もそれに同意して足さなかった。** **3 度目のレビューはそれを「上げるべき」とし、PO も同意した。**
+ * **「履歴に無い」は「これから来ない」ではない**——**`OK` と `IDENTITY_TRAILERS` を
+ * 列挙で守っておきながら、`EMAIL` だけ無検査なのは筋が通らない。**
+ */
+test("メールアドレスの拾い方が狭まっていない（走査の対象そのものを固定する）", () => {
+  /** 1 行から拾えたアドレスの全部（`EMAIL` は `g` 付きなので毎回作り直す）。 */
+  const pick = (s: string): string[] => [...s.matchAll(EMAIL)].map((m) => m[0]);
+  const mustFind: readonly [string, string][] = [
+    // **TLD が 2 文字**（M7 が落とす。`claude.ai` は実在のドメインである）
+    ["Co-authored-by: N <bot@claude.ai>", "bot@claude.ai"],
+    ["Co-authored-by: N <x@foo.io>", "x@foo.io"],
+    ["Co-authored-by: N <x@foo.co>", "x@foo.co"],
+    // **`[bot]` の角括弧**（これを落とすと github-actions[bot] が見えなくなる）
+    [
+      "Co-authored-by: b <41898282+github-actions[bot]@users.noreply.github.com>",
+      "41898282+github-actions[bot]@users.noreply.github.com",
+    ],
+    // **数字 ID 付きの正しい形**（走査に入らなければ母数が落ちる）
+    [
+      "Co-authored-by: u <120390190+uonoko1@users.noreply.github.com>",
+      "120390190+uonoko1@users.noreply.github.com",
+    ],
+    // **#1074 の実害 2 形**
+    ["Co-Authored-By: C <noreply@anthropic.com>", "noreply@anthropic.com"],
+    ["Co-authored-by: e <etl@users.noreply.github.com>", "etl@users.noreply.github.com"],
+    // **ローカル部の記号**（`.` `_` `%` `+` `-`）
+    ["Co-authored-by: N <a.b_c%d+e-f@example.com>", "a.b_c%d+e-f@example.com"],
+    // **サブドメイン / ハイフンを含むドメイン**
+    ["Co-authored-by: N <x@a.b.example-site.com>", "x@a.b.example-site.com"],
+    // **長い TLD**
+    ["Co-authored-by: N <x@foo.technology>", "x@foo.technology"],
+  ];
+  assert.equal(mustFind.length, 10, "拾うべき綴りの列挙が縮んでいる（狭める変異が素通りする）");
+  for (const [line, want] of mustFind) {
+    assert.ok(
+      pick(line).includes(want),
+      `走査すべきアドレスを拾えていない（この形は誤帰属でも静かに通る）: ${want}`,
+    );
+  }
+  // **1 行に 2 件あるときは 2 件とも拾う**（E3 = `matchAll` → `match` がここで落ちる）。
+  const twoOnOneLine =
+    "Co-authored-by: N <120390190+uonoko1@users.noreply.github.com> <noreply@anthropic.com>";
+  assert.deepEqual(
+    pick(twoOnOneLine),
+    ["120390190+uonoko1@users.noreply.github.com", "noreply@anthropic.com"],
+    "1 行に 2 つ書かれたアドレスの 2 件目を拾えていない（2 件目に誤帰属を隠せる）",
+  );
+  // **`EMAIL` を直接当てるだけでは足りない**——**走査の本体（`misattributingTrailerEmails`）が
+  // 1 行から何件取るかは、別の場所（`for (const m of line.matchAll(EMAIL))`）が決めている。**
+  // **実測: 走査側だけを「先頭 1 件」に狭める変異は、`pick` の検査があっても `pass 15 / fail 0` で
+  // 生き残った**（`pick` はこの検査が持つ自前の helper で、本番の走査を通らないため
+  // ——作業合意の「配線が繋がっていない」）。**だから本体に当てる。**
+  const two = misattributingTrailerEmails(twoOnOneLine, new Set());
+  assert.deepEqual(
+    two.bad,
+    ["noreply@anthropic.com"],
+    "1 行に 2 つ書かれたアドレスの 2 件目の誤帰属を、走査の本体が見落としている",
+  );
+  assert.equal(two.checked, 2, "1 行から 2 件を走査していない（母数）");
+  // **アドレスでないものを拾わない**（偽陽性。広げる方向の変異を落とす）。
+  const mustNotFind = [
+    "Claude-Session: https://claude.ai/code/session_x", // **URL のホスト名を拾わない**
+    "Closes #1074",
+    "本文に @ とだけ書いた行",
+    "Co-authored-by: N <not-an-email>",
+  ];
+  assert.equal(mustNotFind.length, 4, "拾ってはいけない綴りの列挙が縮んでいる");
+  for (const line of mustNotFind) {
+    assert.deepEqual(pick(line), [], `アドレスでないものを拾っている（偽陽性）: ${line}`);
+  }
+});
+
+/**
  * **`git` の trailer パーサ（`%(trailers:only=true)`）に頼ると、
  * squash merge の区切りより上の `Co-Authored-By:` がまるごと落ちる**（この PBI の実測）。
  *
@@ -1296,11 +1511,8 @@ test("本文を読んだことを確かめる番人が、間違った読み方 3
     "Co-authored-by: N <1+x@users.noreply.github.com>",
   ].join("\n");
   const tree = git("rev-parse", "HEAD^{tree}").trim();
-  const sample = execFileSync(
-    "git",
-    ["-C", root, "-c", "user.name=t", "-c", "user.email=t@example.com", "commit-tree", tree],
-    { input: body, encoding: "utf8" },
-  ).trim();
+  // **`commitTree` を通す**（identity の渡し方を 1 本にまとめた。上の docblock）。
+  const sample = commitTree({ tree, message: body });
   // **作ったものが狙った形であることを、まず確かめる**（母数。ここが崩れたら下は何も言っていない）。
   assert.equal(rawCommitMessage(sample), body, "その場で作ったコミットの本文が狙った形になっていない");
   assert.ok(body.split("\n").length >= 5, "1 行だけの本文で番人を当てようとしている（%s が一致してしまう）");
