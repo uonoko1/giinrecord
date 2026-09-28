@@ -2972,17 +2972,27 @@ test_case "1054: 4 本並んで赤が index 0 だけでも赤（.[1] / .[2] / la
 #   変異      A          B          判定
 #   first     failure    skipped    殺せる     .[0:2]   failure  skipped  殺せる
 #   last      skipped    skipped    殺せる     .[0:3]   failure  skipped  殺せる
-#   .[1]      skipped    skipped    殺せる     .[0:4]   failure  failure  **★残る**
+#   .[1]      skipped    skipped    殺せる     .[0:4]   failure  failure  **★この 2 本では残る**
 #   .[2]      success    skipped    殺せる     .[-2:]   success  success  殺せる
 #   .[3]      skipped    failure    殺せる     .[-3:]   skipped  failure  殺せる
 #   .[-2]     success    success    殺せる     .[1:]    skipped  failure  殺せる
 #   min_by    skipped    skipped    殺せる
 #
-# **`.[0:4]` が残るのは構造的な限界で、fixture を伸ばしても消えない**——**測って確かめた**:
-# **`.[0:n]` は `n >= 配列の長さ` のとき配列全体を見るので、本番実装と同じ答えを返す。**
-# 赤を index >= n に置かない限り殺せず、**どんな有限の fixture にも「それより広い窓」がある。**
-# **だから「これで全部」とは書かない**（#1064 で 3 回続けて「全部」が外れた）。
-# 塞いだのは **T1 / T2 / U2 という、人が実際に書きそうな狭い窓**である。
+# **【訂正】ここに「`.[0:4]` が残るのは構造的な限界で、fixture を伸ばしても消えない」と
+# 書いていたが、それは誤りだった**（#1064 の 4 度目・5 度目のレビューで名指しの訂正を受けた。
+# **測ったら消えた**）。**長さ 8・赤 index 5 の fixture を 1 本足すと `.[0:4]` は落ちる**
+# （実測: 178 件全部緑 → 179 件中 1 件落ちる。下の `t_1054_red_at_index_five_of_eight`）。
+#
+# **正しい命題はこうである**（**全称命題から個別命題を導いてしまったのが誤りの形**）:
+#   - **正しい**: `.[0:n]` は `n >= 配列の長さ` のとき配列全体を見るので、本番実装と同じ答えを返す。
+#     **どんな有限の fixture にも「それより広い窓」がある。**
+#   - **正しい**: **どの特定の `n` も、長さ > n・赤を index >= n に置いた fixture 1 本で必ず殺せる。**
+#   - **誤り**: 「だから `.[0:4]` は殺せない」。**殺せないのは「全ての `n` を有限本で同時に」であって、
+#     個別の `n` は殺せる。**
+#
+# **これは #1067 で直したはずの型だった**（「構造的に不可能」と書く前に測る）。
+# **「これで全部と書かない」という態度は正しかったのに、その根拠として置いた命題が
+# 測れば崩れていた。** 記述を消し、**測った fixture を下に 2 本置いた。**
 t_1054_red_far_from_both_ends() {
   local h; h=$(handler <<'EOF'
 handle() {
@@ -3014,3 +3024,129 @@ EOF
   assert_contains "$OUT$ERR" "検査 2 件 / 必須 2 件 / 赤 1 件" "7 run を 2 件に畳む"
 }
 test_case "1054: 赤が先頭からも末尾からも離れていても赤（範囲を切る実装を殺す）" t_1054_red_far_from_both_ends
+
+# **8 本並べて、赤を index 5 に置く**——**「先頭側の窓」を、境界のすぐ外側まで殺すため**
+# （#1064 の 4 度目・5 度目のレビューの必須 2）。
+#
+# **これは訂正の fixture である。** 上の `t_1054_red_far_from_both_ends` のコメントに
+# 「`.[0:4]` は構造的に殺せない／fixture を伸ばしても消えない」と書いていたが、
+# **伸ばしたら消えた**。**この 1 本がその反証であり、同時に守りである。**
+#
+# **自分で jq に食わせて検算した**（`["skipped","skipped","skipped","skipped","skipped","failure","success","skipped"]`）:
+#   max_by(本番) = failure   ← 本番実装は赤を掴む（この fixture は本番実装では緑のまま通る）
+#   .[0:2] = skipped   .[0:3] = skipped   .[0:4] = skipped   .[0:5] = skipped   **← ここまで殺せる**
+#   .[0:6] = failure   ← 赤が index 5 なので窓に入る。**より長い fixture が要る（個別の n は殺せる）**
+#
+# **「どの特定の `n` も 1 本で殺せるが、全ての `n` を有限本で同時には殺せない」**——
+# これが測った結論である。**「殺せない」ではない。**
+#
+# **長さ 8 は実在の形である**: `42f9c225` の `production` は同じ sha に **18 本**積まれている
+# （`monitor.yml` が `*/10 * * * *`）。**8 本は実物より短い。**
+#
+# **この 1 本が同時に締める変異**（実測。下の PR 本文・ソースの表と同じ数字）:
+#   `map(.[0:4] | max_by(severity))`                     0 件 → 1 件
+#   `map(.[0:5] | max_by(severity))`                     0 件 → 1 件
+#   `map(if length > 6 then max_by(.started_at) else max_by(severity) end)`（N1d）  0 件 → 1 件
+t_1054_red_at_index_five_of_eight() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      # 並びは本物どおり「新しい順」。`monitor.yml` の production の実物の形に合わせてある
+      echo '{"check_runs":[
+        {"name":"production","status":"completed","conclusion":"skipped","started_at":"2026-09-27T08:00:32Z","details_url":"u1"},
+        {"name":"production","status":"completed","conclusion":"skipped","started_at":"2026-09-27T07:50:11Z","details_url":"u2"},
+        {"name":"production","status":"completed","conclusion":"skipped","started_at":"2026-09-27T07:40:07Z","details_url":"u3"},
+        {"name":"production","status":"completed","conclusion":"skipped","started_at":"2026-09-27T07:30:02Z","details_url":"u4"},
+        {"name":"production","status":"completed","conclusion":"skipped","started_at":"2026-09-27T07:20:55Z","details_url":"u5"},
+        {"name":"production","status":"completed","conclusion":"failure","started_at":"2026-09-27T07:10:44Z","details_url":"u6"},
+        {"name":"production","status":"completed","conclusion":"success","started_at":"2026-09-27T07:00:31Z","details_url":"u7"},
+        {"name":"production","status":"completed","conclusion":"skipped","started_at":"2026-09-27T06:50:18Z","details_url":"u8"},
+        {"name":"check","status":"completed","conclusion":"success","started_at":"2026-09-27T08:00:00Z"}
+      ]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  # **フラグ付きでも通らない**（production はどちらの一覧にも無い＝必須扱い）
+  run_script "$h" merge-when-green.sh --allow-nonrequired-red 12
+  assert_eq 1 "$STATUS" "先頭 5 件が全部 pass 系でも 6 番目の赤を見落とさない"
+  assert_contains "$ERR" "checks failed on PR #12: production" "必須扱いの赤として止める"
+  assert_not_contains "$LOG" "pr	merge	12" "マージを試みない"
+  # **8 run + 1 run を 2 件に畳む**（件数のログが嘘にならないこと）
+  assert_contains "$OUT$ERR" "検査 2 件 / 必須 2 件 / 赤 1 件" "9 run を 2 件に畳む"
+}
+test_case "1054: 8 本並んで赤が index 5 でも赤（.[0:4] / .[0:5] / 長さ条件を殺す）" t_1054_red_at_index_five_of_eight
+
+# **8 本並べて、赤を index 2 に置き、末尾 5 件を全部 pass 系にする**
+# ——**「末尾側の窓」を殺すため**（#1064 の 4 度目・5 度目のレビューの必須 1）。
+#
+# **これまでの fixture が 1 本も殺せていなかったクラスである**（実測: 178 件全部緑）:
+#   `map(.[-4:] | max_by(severity))`                          178 件全部緑
+#   `map(.[-5:] | max_by(severity))`                          178 件全部緑
+#   `map(sort_by(.started_at) | .[-4:] | max_by(severity))`    178 件全部緑
+#
+# **なぜ既存の 2 本が殺さなかったか**（自分で確かめた）:
+#   A `t_1054_red_at_index_zero_only_of_four`（長さ 4）→ `.[-4:]` は**配列全体**になる
+#   B `t_1054_red_far_from_both_ends`（長さ 6・赤 index 3）→ `.[-4:]` = index 2..5 に**赤が入る**
+# **赤を先頭寄りに置き、末尾 4 件以上を全部 pass にした fixture が 1 本も無かった。**
+# **境界のすぐ外側**——#1064 で 5 回続けて穴になったのと同じ型である。
+#
+# **実データで別人の答えが出る**（`42f9c225` の `production`、n=18。**PR が引用している実物**）:
+#   新しい順: failure,skipped,failure,skipped,failure,skipped,failure,skipped,
+#             failure,skipped,failure,success,skipped,success,skipped,success,skipped,success
+#   **末尾 4 件（最古の 4 件）が `skipped,success,skipped,success` で全部 pass 系**
+#
+#   本番実装 max_by(severity)              → RED: ["etl","guard","production"]
+#   変異 map(.[-4:] | max_by(severity))     → RED: ["etl","guard"]   **← production が黙って消える**
+#   変異 map(.[-5:] | max_by(severity))     → RED: ["etl","guard"]   **← 同じ**
+#
+# **`production` はどちらの一覧にも無い＝必須扱い**なので **`--allow-nonrequired-red` でも通せない
+# ——黙って通るしかない。塞ごうとしたバグそのものの向きである。**
+#
+# **長さは 8 にした。4 度目のレビューの「長さ 7」では `.[-5:]` が残る**
+# （5 度目のレビューが自分の PROBE で測って訂正した。自分でも jq で検算した）:
+#   長さ 7・赤 index 2 → `.[-5:]` = index 2..6 で**赤を掴む**（殺せない）
+#   長さ 8・赤 index 2 → `.[-5:]` = index 3..7 で**全部 pass**（殺せる）
+#
+# **検算**（`["skipped","skipped","failure","success","skipped","success","skipped","success"]`）:
+#   max_by(本番) = failure   ← 本番実装は赤を掴む
+#   .[-4:] = success   .[-5:] = success   **← ここまで殺せる**
+#   .[-6:] = failure   ← 赤が index 2 なので窓に入る。**先頭側と同じく、個別の n は殺せる**
+#   .[0:2] = skipped   **← 先頭側の狭い窓もついでに殺す**
+t_1054_red_early_with_all_pass_tail() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      # 並びは本物どおり「新しい順」。**末尾（最古）5 件を全部 pass 系にしてある**
+      echo '{"check_runs":[
+        {"name":"production","status":"completed","conclusion":"skipped","started_at":"2026-09-27T08:00:32Z","details_url":"u1"},
+        {"name":"production","status":"completed","conclusion":"skipped","started_at":"2026-09-27T07:50:11Z","details_url":"u2"},
+        {"name":"production","status":"completed","conclusion":"failure","started_at":"2026-09-27T07:40:07Z","details_url":"u3"},
+        {"name":"production","status":"completed","conclusion":"success","started_at":"2026-09-27T07:30:02Z","details_url":"u4"},
+        {"name":"production","status":"completed","conclusion":"skipped","started_at":"2026-09-27T07:20:55Z","details_url":"u5"},
+        {"name":"production","status":"completed","conclusion":"success","started_at":"2026-09-27T07:10:44Z","details_url":"u6"},
+        {"name":"production","status":"completed","conclusion":"skipped","started_at":"2026-09-27T07:00:31Z","details_url":"u7"},
+        {"name":"production","status":"completed","conclusion":"success","started_at":"2026-09-27T06:50:18Z","details_url":"u8"},
+        {"name":"check","status":"completed","conclusion":"success","started_at":"2026-09-27T08:00:00Z"}
+      ]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  # **フラグ付きでも通らない**（production はどちらの一覧にも無い＝必須扱い）
+  run_script "$h" merge-when-green.sh --allow-nonrequired-red 12
+  assert_eq 1 "$STATUS" "末尾 5 件が全部 pass 系でも先頭寄りの赤を見落とさない"
+  assert_contains "$ERR" "checks failed on PR #12: production" "必須扱いの赤として止める"
+  assert_not_contains "$LOG" "pr	merge	12" "マージを試みない"
+  # **8 run + 1 run を 2 件に畳む**（件数のログが嘘にならないこと）
+  assert_contains "$OUT$ERR" "検査 2 件 / 必須 2 件 / 赤 1 件" "9 run を 2 件に畳む"
+}
+test_case "1054: 末尾 5 件が全部 pass 系でも先頭寄りの赤は赤（.[-4:] / .[-5:] を殺す）" t_1054_red_early_with_all_pass_tail
