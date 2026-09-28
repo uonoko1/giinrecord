@@ -339,7 +339,13 @@ EOF
 )
   run_script "$h" merge-when-green.sh 12
   assert_eq 1 "$STATUS" "exit status"
+  # **#1116: 「check」だけでは締まらない。** タイムアウト文言
+  # `timed out after N polls waiting for checks on PR #12` の **`checks` に当たって通る**ので、
+  # **赤を読まずに止まった場合でも緑のまま**だった（PR #1116 が実際にそうなり、
+  # この assert が弱かったせいで気づけなかった）。**赤を読んだときにしか出ない文言で締める。**
+  assert_contains "$ERR" "checks failed on PR #12" "赤を読んで止める（タイムアウトで止まったのではない）"
   assert_contains "$ERR" "check" "names the failed check"
+  assert_not_contains "$ERR" "timed out" "タイムアウトではなく赤で止まる"
   assert_not_contains "$LOG" "pr	merge" "never merges"
 }
 test_case "merge: a failed check aborts without merging" t_merge_failed_check_aborts

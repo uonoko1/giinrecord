@@ -901,15 +901,33 @@ fetch_checks() {
   # **生 JSON を受ける（`-q` を付けない）。** `--paginate` は**ページごとに 1 個の JSON
   # ドキュメント**を吐くので、`-q` を付けると jq がドキュメントごとに走って
   # **畳み込みがページ境界をまたげない**（上の docblock の実測）。
-  raw=$(gh api "repos/$REPO/commits/$HEAD_OID/check-runs" --paginate) || return 1
+  #
+  # **`|| return 1` で応答を捨ててはいけない**（#1116 のレビューで見つかった。**PO も再現した**）。
+  # **gh は「赤いチェックを含む応答を出しきってから非ゼロで終わる」ことがある**ので、
+  # 捨てると**赤を読まずにタイムアウトへ倒れる**。**マージはしない（どちらも die）ので
+  # fail-open では無い**が、**止まる理由が「赤い」から「読めなかった」に変わる**——
+  # **ログが「何が起きたか」を伝えなくなる。**
+  #
+  # **対照実験**（`a failed check aborts without merging` の assert を
+  # `"checks failed on PR #12"` に締めて両方で流す）:
+  #   origin/main → passed: 199 failed: 0   ← 赤を読んでいる
+  #   捨てる版    → passed: 205 failed: 1   ← 赤を読んでいない
+  #
+  # **だから終了コードで捨てず、中身で決める。** 取りこぼしは下の母数の検算が捕まえるので、
+  # **「短い応答を黙って通す」道は開かない**（そちらは die する）。
+  raw=$(gh api "repos/$REPO/commits/$HEAD_OID/check-runs" --paginate) || true
 
   # **母数の検算**（#757）: `total_count` が言う件数だけ手元にあるか。
   # **どのページの `total_count` も同じ値**を返す（実測: per_page=5 の 11 ページ全部が 53）ので、
   # **最初の 1 つ**を母数とする。**少なければ取りこぼしている**ので、黙って緑にせず落ちる。
   # `total_count` が無い応答では検算しない（`null` を出して呼び出し側で読み飛ばす）。
+  #
+  # **読めなかった応答（空・壊れた JSON）は「検査 0 件」として返す**——
+  # **呼び出し側の `-gt 0`（#757）が pending 扱いで待ち続ける**ので、
+  # **「読めなかった」が「全部緑」になることはない。**
   local got want
-  got=$(jq -s '[.[].check_runs[]] | length' <<<"$raw") || return 1
-  want=$(jq -rs 'map(.total_count) | map(select(. != null)) | if length == 0 then "null" else .[0] end' <<<"$raw") || return 1
+  got=$(jq -s '[.[].check_runs[]] | length' <<<"$raw" 2>/dev/null) || return 0
+  want=$(jq -rs 'map(.total_count) | map(select(. != null)) | if length == 0 then "null" else .[0] end' <<<"$raw" 2>/dev/null) || return 0
   if [[ "$want" != "null" && "$got" -lt "$want" ]]; then
     die "check-runs を取りこぼしました: 手元 $got 件 / total_count $want 件（PR #$PR / $HEAD_OID）
        **取りこぼした分は「無い」ものとして扱われる**ので、走っていない検査を通したままマージしかねません。
