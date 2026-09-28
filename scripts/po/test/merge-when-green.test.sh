@@ -3275,3 +3275,41 @@ t_merge_allowlist_is_verbatim() {
   assert_not_contains "$src" '\d+\+[^@]+@users' "逐語 allowlist が形の要求に退化している"
 }
 test_case "merge: identity の allowlist が逐語で書かれている (#1101)" t_merge_allowlist_is_verbatim
+
+# **逐語の綴りは 2 か所に在る**（bash と TypeScript。言語が違うので共有できない）。
+# **初版はこの 2 つが「部分集合か」しか見ておらず、片方にだけアドレスを足すと素通りした**
+# ——**PR の「自信が無い点」に自分で書いた穴を、レビューが実測で確かめた:**
+#
+# ```
+# 尤もらしい ID を bash 側だけに足す   → shell 56 passed / 0 failed  （素通り）
+# 同じものを TypeScript 側だけに足す   → TS   4 pass / 0 fail        （素通り）
+# ```
+#
+# **「片方に足す」は、まさに誤帰属が入る形である**（#1101 は「誰かが身元を増やした」事故だった）。
+# **だから部分集合ではなく、両方向の一致を要求する**——**集合として同じであることを見る。**
+t_merge_allowlist_matches_typescript() {
+  local sh_list ts_list ts_file
+  ts_file="$PO_DIR/../../packages/etl/test/commit-identity-allowlist.test.ts"
+  [[ -f "$ts_file" ]] || { fail "TypeScript 側の allowlist が見つからない: $ts_file"; return; }
+  # **どちらも「逐語のアドレスだけを 1 行 1 個で」取り出して、並べ替えて比べる。**
+  # **拾う場所を間違えると空同士で一致してしまう**ので、下で母数を見る。
+  # **`|| true` が要る**: **`grep` は 0 件のとき終了コード 1 を返す**ので、
+  # **`set -e` の下では代入そのものでランナーが落ちる**（落ちると残りのテストが走らない＝
+  # **「赤」ではなく「無言で消える」**）。**実測で踏んだ**（抽出を空にする変異を当てたとき）。
+  sh_list=$(sed -n '/^ALLOWED_IDENTITIES=(/,/^)/p' "$PO_DIR/merge-when-green.sh" \
+    | grep -oE '[][A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+' | sort -u || true)
+  ts_list=$(sed -n '/^export const ALLOWED_IDENTITIES/,/^];/p' "$ts_file" \
+    | grep -oE '[][A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+' | sort -u || true)
+  # **母数**（#757）: **空同士が一致して緑になるのを防ぐ。**
+  # **実際に踏んだ**: **初版の文字クラス `[A-Za-z0-9._%+[]-]` は `[` が class を閉じてしまい、
+  # 両側とも 0 件になって「空 == 空」で緑になるところだった**——**この 2 行が止めた。**
+  # **`grep -c` は 0 件のとき終了コード 1 を返す**ので、`set -e` の下では
+  # **`|| true` を付けないとランナーごと落ちる**（落ちると残りのテストが走らない）。
+  local sh_n ts_n
+  sh_n=$(grep -c . <<<"$sh_list" || true)
+  ts_n=$(grep -c . <<<"$ts_list" || true)
+  assert_eq 2 "$sh_n" "bash 側から取れた件数（0 なら抽出が壊れている）"
+  assert_eq 2 "$ts_n" "TypeScript 側から取れた件数（0 なら抽出が壊れている）"
+  assert_eq "$sh_list" "$ts_list" "2 か所の allowlist がずれている（片方にだけ身元が足された）"
+}
+test_case "merge: identity の allowlist が 2 か所で完全に一致する (#1101)" t_merge_allowlist_matches_typescript

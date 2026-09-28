@@ -144,7 +144,21 @@ import { dirname, resolve, join } from "node:path";
  * **黙って増えてよい集合ではない**ので、逐語で持ち、増やすときは逆引きの結果を docblock に書く。
  *
  * **公開の noreply アドレスなので OSS のソースに書いてよい**——
- * **`sakai.personal@gmail.com`（利用者本人の個人アドレス）はここに書かない。**
+ * **利用者本人の個人アドレスはここに書かない**（#1043 / #1075 と同じ方針）。
+ * **「書かない」と言うために逐語で書くと、それ自体が 1 件目になる**——
+ * **初版はここに本人の個人アドレスを逐語で書いており、レビューで消した。**
+ * **`main` には 0 件だったので、この PR が最初の 1 件になるところだった。**
+ * **架空の綴り（`person@example.com`）で完全に言える。**
+ *
+ * ── **同じ綴りが `scripts/po/merge-when-green.sh` にも在る**（言語が違うので共有できない）──
+ *
+ * **片方にだけ身元を足すと、もう片方は知らないまま通してしまう**——
+ * **それはまさに #1101（誰かが身元を増やした事故）の形である。**
+ * **だから `merge-when-green.test.sh` の「2 か所で完全に一致する」が、
+ * 両方向の一致（集合として同じ）を要求している。**
+ * **片側だけに足す変異は、どちらの側から当てても `passed 56 / failed 1` で落ちる**（実測）。
+ *
+ * **ここに足すときは、必ず `merge-when-green.sh` の `ALLOWED_IDENTITIES` にも足すこと。**
  */
 export const ALLOWED_IDENTITIES: readonly string[] = [
   "120390190+uonoko1@users.noreply.github.com",

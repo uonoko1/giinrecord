@@ -538,7 +538,20 @@ fi
 # **測った費用**: **`gh api .../pulls/<PR>/commits` は 0.5 秒**（2026-09-28、#1064 の 9 コミット実測）。
 # **逐語 allowlist は上のテストと同じ 2 形**（本人確認済み。`gh api user/<id>` で逆引き）。
 # **2 か所に同じ綴りが在るのは重複だが、片方は TypeScript・片方は bash で、共有できない。**
-# **綴りがずれたら、このスクリプトのテストが落ちる**（`merge-when-green.test.sh`）。
+#
+# **初版はここに「綴りがずれたら、このスクリプトのテストが落ちる」と書いていた。誤りだった**
+# ——**当時の検査は `assert_contains` だけで「この 2 つを含むか」（部分集合）しか見ておらず、
+# 片方にだけアドレスを足すと素通りした。** **レビューが実測した:**
+#
+# ```
+# 尤もらしい ID を bash 側だけに足す   → shell 56 passed / 0 failed  （素通り）
+# 同じものを TypeScript 側だけに足す   → TS   4 pass / 0 fail        （素通り）
+# ```
+#
+# **「片方に足す」は、まさに誤帰属が入る形である。**
+# **いまは両方向の一致（集合として同じ）を要求している**
+# （`merge-when-green.test.sh` の「2 か所で完全に一致する」）。
+# **上の 2 つの変異は、どちらも `passed 56 / failed 1` で落ちる**（実測し直した）。
 ALLOWED_IDENTITIES=(
   "120390190+uonoko1@users.noreply.github.com"
   "41898282+github-actions[bot]@users.noreply.github.com"
