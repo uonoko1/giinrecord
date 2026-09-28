@@ -776,9 +776,23 @@ approve_pending_runs() {
 #   T1  `.[0:2] | max_by(severity)`（範囲を切る）                → 1 件（**追加前は 0 件＝素通り**）
 #   T2  `.[0:3] | max_by(severity)`（同）                        → 1 件（**追加前は 0 件＝素通り**）
 #   U2  `sort_by(.started_at)|reverse|.[0:2]|max_by(severity)`   → 1 件（**追加前は 0 件＝素通り**）
-#   T3  `.[0:4] | max_by(severity)`（同）                        → **0 件（構造的に殺せない。上に理由）**
 #   Z1  `// 2` → `// 0`                                         → **0 件（等価変異。上に理由）**
 #   Z2  `// 2` を削除                                           → **0 件（等価変異。上に理由）**
+#
+# **#1064 の 4 度目・5 度目のレビューで足した変異（母数は po のテスト 180 件）。
+# 6 件すべてが 178 件全部緑で素通りしていた**——**自分で当て直して再現し、直してから測った**:
+#   T3  `.[0:4] | max_by(severity)`                             → 0 件 → **1 件**（fixture C が殺す）
+#   T4  `.[0:5] | max_by(severity)`                             → 0 件 → **1 件**（同）
+#   H3  `.[-4:] | max_by(severity)`                             → 0 件 → **1 件**（fixture D が殺す）
+#   R5  `.[-5:] | max_by(severity)`                             → 0 件 → **1 件**（同）
+#   R6  `sort_by(.started_at) | .[-4:] | max_by(severity)`       → 0 件 → **1 件**（fixture C が殺す）
+#   N1d `if length > 6 then max_by(.started_at) else …`          → 0 件 → **2 件**（C と D の両方）
+#   T5  `.[0:6] | max_by(severity)`                             → **0 件のまま（下に理由。個別には殺せる）**
+#
+# **変異は `map(max_by(severity))` の「実物の jq 1 行」にだけ当てた。**
+# **罠がある**（5 度目のレビュアーが踏み、担当者も一度踏んだ）: **同じ文字列が上の M5 の行の
+# コメントにも出るので、ファイル全体への最初の 1 置換ではコメントだけが変わり、
+# 「全部素通り」に見える。** **行を固定してから測ること。**
 #
 # **X7 / X8 / M3 は #1064 のレビューで足した変異で、最初は素通りしていた**（重要な反省）:
 # **X7 は 173 件中 172 件緑で通った。** 原因は**実装ではなく fixture の並び順**で、
@@ -839,6 +853,29 @@ approve_pending_runs() {
 #
 # 作業合意「CI の状態は commit を固定して読む」（2026-09-05）:
 # branch protection が読むのも `commits/<PR の HEAD>/check-runs` なので、これに合わせる。
+#
+# **【この PR では直していない】`--paginate` が無く、実データで既に 30 件で切れている**
+# （#1064 の 4 度目・5 度目のレビューの指摘。**担当者も自分で測り直した**）:
+#
+#   $ gh api "repos/<repo>/commits/42f9c225/check-runs"              → returned 30 / total 53
+#   $ gh api "repos/<repo>/commits/42f9c225/check-runs?per_page=100" → returned 53 / total 53
+#
+#   30 件で消える名前（8 件）:
+#     audit / check / docker-web / forbidden-patterns / gitleaks / issue-secrets /
+#     pr-closes / stale-base
+#
+# **消えるのは branch protection の必須 4 件**（`check` / `gitleaks` / `forbidden-patterns` /
+# `audit`）**＋この道具の必須 `pr-closes` の、全部である。**
+# **かつ `required_total` に下限の検査が無い**（実測: `grep -cE 'required_total (-lt|<|-ne|!=)'`
+# は **0 件**。`main` でも 0 件）ので、**「必須 0 件・赤 0 件」を「all N checks green」と書いて
+# マージしうる。**
+#
+# **`origin/main` と 1 バイトも同じなので regression ではない**（`git show origin/main:` で照合）。
+# **この PR は同名の畳み込みを強化する PR なので無関係ではないが、持ち込んだものではない。**
+# **黙っていると「畳み込みは守った」と誤読されるので、直していないことをここに書く。**
+# **別 issue に立てた**（同名畳み込みの前段で母数そのものが欠ける問題）。
+# **上の変異表の数字は、どれもこの経路を触っていない**——テストの stub は JSON をそのまま返すので、
+# **ページングの欠落は 180 件のどのテストも見ていない。**
 fetch_checks() {
   # shellcheck disable=SC2016  # $r/$bucket は jq の変数。シェルに展開させないためのシングルクォート
   gh api "repos/$REPO/commits/$HEAD_OID/check-runs" -q '
