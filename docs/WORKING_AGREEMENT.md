@@ -2451,8 +2451,19 @@ yml に書かれた綴り   ← #1043 が見ているもの（allowlist で正�
 **#1043 が実際に author を止められたのは「workflow の `user.email` を直したから」であって
 「author を検査したから」ではない。** **workflow 以外の経路で author が汚れることは誰も止めていない。**
 **起点は author で、trailer はその結果である**（squash merge が author から `Co-authored-by` を合成する）。
-**2026-09-28 時点で、author 側を検査するものは main に無い**
-（`Co-authored-by` を持つのは `.github/workflows/etl.yml` とこのテストの 2 ファイルだけ。実測）。
+**この代理と実体のずれは、2026-09-27 に気づいてから 2026-09-28T12:10Z まで塞がれなかった**
+——**#1043 が「allowlist にしたから次も捕まる」と評価されたまま、
+実際に刻まれた author は 1 度も読まれていなかった。**
+
+**いまは塞がっている**（#1075 が `packages/etl/test/commit-trailer-identity.test.ts` を足した。
+**`node:child_process` を import して `git show -s --format=%ae` で実体を読む**。
+レビューの実測: `author=etl@…` のコミットを植てると **15 本中 2 本落ちる**——
+**一方 `workflow-commit-identity.test.ts` は 5/5 緑のまま**で、**代理と実体の差がそのまま出る**）。
+
+**塞がるまでに何が起きたか**: **その 1 日のあいだに、
+`219112946+seiji-kiroku-dev@…`（= `github.com/MLehnus`、無関係の実在の個人）が
+新たに main に入った**（#1064 のマージ。#1101）。
+**「代理は守られている」という評価が、実体の穴を 1 日ぶん開けたままにした。**
 
 **やること:**
 1. **「何を検査しているか」を、守りたいものと逐語で並べて書く。一致していなければ代理を測っている。**
@@ -2521,7 +2532,7 @@ key(600.4) → 600    key(599.6) → 600      // 同じキーになる
 | `gh api repos/.../contributors` | **2** | `uonoko1`, `github-actions[bot]` |
 | `gh api repos/.../stats/contributors` | **`{}`（05:18Z）→ 4（05:37Z）→ `{}`（08:0xZ）→ 5（09:0xZ）** | **同じ日に 4 回変わり、しかも往復した。** 片方向に収束するのではない。**この計器を根拠に使うなら、測った時刻を必ず書くこと** |
 | リポジトリページの初期 HTML（cache-busted） | **0** | **Contributors 欄は骨組みだけ**で、行が 1 つも入っていない（起票時は 2 だった） |
-| `graphs/contributors-data`（画面が描画に使うデータ） | **4 →（同じ日に）5** | `claude`, `etl`, `github-actions[bot]`, `uonoko1` |
+| `graphs/contributors-data`（画面が描画に使うデータ） | **4 → 5 →（履歴書き換え後）3** | 書き換え後は `uonoko1`, `claude`, `github-actions[bot]` だけ。**計算中は HTTP 202 を返す**（`{}` ではない） |
 | **`_sidebar`（利用者が実際に見る欄）** | **5 →（同じ日に）6** | `claude`, `uonoko1`, **`dev`**, `github-actions[bot]`, `etl`, **`MLehnus`**（#1064 のマージで増えた。#1101） |
 
 **利用者が見ているのは `_sidebar`**（`GET https://github.com/<owner>/<repo>/_sidebar`、`Accept: application/json`）。
