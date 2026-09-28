@@ -564,6 +564,19 @@ test("実在の人に紐づきえないドメインだけを除外している�
  * **`git` に `config` / `commit` を渡している呼び出しが無いこと**を要求する。
  */
 test("パス除外した 1 件（この検査ファイル自身）は、身元を設定していない", () => {
+  // **除外が「1 件だけ」であることを数で固定する。**
+  //
+  // **これは変異で見つけた穴である**（実測 2026-09-29。M10）:
+  // 除外を `f !== SELF` から `!f.startsWith("packages/etl/test/")` に広げると、
+  // **9 pass / 0 fail で生き残った**——**ディレクトリごと除外しても誰も気づかない。**
+  // **除外が広がれば、そこは identity の新しい逃げ場になる。**
+  const excluded = candidates.filter((f) => !files.includes(f));
+  assert.deepEqual(
+    excluded,
+    [SELF],
+    `パス除外は ${SELF} の 1 件だけ（除外が広がると、そこが identity の逃げ場になる）`,
+  );
+
   const self = readText(SELF);
   assert.ok(self !== null, `除外したファイルが読めない: ${SELF}`);
   const text = self as string;
