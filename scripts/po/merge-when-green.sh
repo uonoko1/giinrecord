@@ -80,6 +80,64 @@ DATA_BRANCH="data/refresh"
 REQUIRED_CHECKS=(check gitleaks forbidden-patterns audit pr-closes)
 NONREQUIRED_CHECKS=(stale-base docker-web)
 
+# SKIPPABLE_CHECKS — **`conclusion: skipped` を緑として数えてよい検査の名前**（#1069）。
+#
+# **問題**: `skipped` を一律 pass にしていたので、**必須 5 件が全部 `skipped` の PR が
+# 「all 5 checks green」でマージされた**（再現済み。`scripts/po/test/` の
+# `t_1069_all_required_skipped_is_red` がその形をそのまま固定している）。
+# **#757 の「母数を検算に入れる」の check-runs 版**: `skipped` は「0 件（問題なし）」ではなく
+# **「数えていない」**である。**数えていないものを緑と呼ばない。**
+#
+# **#1054 は「分けられない」と結論して `skipped` を pass のまま置いた。その根拠は
+# 「check-runs API の `conclusion: skipped` には、`if:` が false だった場合と
+# `concurrency` で消えた場合を区別する欄が無い」だった。これは API については正しい。**
+# **だが区別に API は要らない——`name` は在る。**
+# **「その job が PR で必ず skip されるか」は、workflow の `if:` を見れば分かる。**
+# **判断の材料は check run の中ではなく、この repo の `.github/workflows/` の中に在る。**
+#
+# **ここに載せてよい条件（1 つだけ）**:
+#   **job 直下の `if:` が `github.event_name` で閉じており、PR では必ず false になること。**
+#   ＝**その job は PR で「走らなかった」のではなく「走る対象ではなかった」。**
+#   この条件が本当に成り立っているかは
+#   `packages/etl/test/branch-protection-jobs.test.ts` の `GATED_BY_EVENT`（#940）が
+#   **workflow 側の `if:` を実際に読んで**固定している。**理由を書いた側と、理由が
+#   成り立つ側を、別のレイヤで突き合わせてある。**
+#
+# **実測（2026-09-28、直近 60 PR の HEAD の check-runs 483 件）:**
+#   conclusion 別   success 408 / skipped 63 / failure 12
+#   skipped 63 件の名前は **2 つだけ**:  issue-secrets 60 PR / docker-web 3 PR
+#   必須 5 件が skipped だった例  **0 件 / 295 件**（check 57+3 / gitleaks 60 /
+#                                 forbidden-patterns 60 / audit 60 / pr-closes 58+5）
+#
+# **`issue-secrets` を載せる理由**: `security.yml` の `if:` が
+# `github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'`。
+# **PR では構造的に必ず skipped**（実測 60 PR / 60 PR）。載せないと**全 PR が永久に止まる。**
+#
+# **`docker-web` を載せない理由（測って決めた）**: `docker-web` は `needs: check` で、
+# **`if:` を持たない**。**skipped になったのは「`check` が赤くて上流で落ちた」ときだけ**である。
+#   **実測: `docker-web` が skipped の PR = {1084, 1092, 1103}**
+#          **`check` が failure の PR   = {1084, 1092, 1103}**  ——**3/3 で完全に一致。**
+# つまりこれは「走る必要が無かった」ではなく**「赤の巻き添えで走れなかった」**。
+# **緑として数えてはいけない。** かつ**この 3 件はどれも必須の `check` が赤なので、
+# この道具はもともと止まる**——載せなくても正常な PR は止まらない。
+#
+# **`stale-base` / `pr-closes` / `deploy-data.yml:staging` を載せない理由**:
+# `stale-base` の `if:` は `github.event_name == 'pull_request'` で、**PR では真**（走る）。
+# `pr-closes` は本文を直せば緑にできる（`skipped` で通す理由が無い）。
+# `deploy-data.yml` は `pull_request` トリガーを持たないので PR の check-runs に出ない。
+# **実測の 63 件にこれらは 1 件も出ていない。**
+#
+# **知らない名前は載っていない＝ `skipped` なら赤**（fail-closed）。
+# 新しい job が `skipped` で現れたとき、黙って緑に数えられるより止まったほうがよい。
+SKIPPABLE_CHECKS=(issue-secrets)
+
+# is_skippable_check <name> → 0 なら「この名前の `skipped` は緑として数えてよい」
+is_skippable_check() {
+  local name=$1 n
+  for n in "${SKIPPABLE_CHECKS[@]}"; do [[ "$n" == "$name" ]] && return 0; done
+  return 1   # 知らない名前の skipped は赤（走っていない必須チェックを緑と呼ばない）
+}
+
 # is_required_check <name> → 0 なら「赤ければ絶対にマージしない」
 #   REQUIRED_CHECKS にある        → 0（必須）
 #   NONREQUIRED_CHECKS にある     → 1（必須でない。--allow-nonrequired-red で通せる）
@@ -517,6 +575,89 @@ else
   assert_reviewed
 fi
 
+# --- 1.6 枝のコミットの身元（#1101）------------------------------------------------------------
+# **何が起きたか**: 2026-09-28、**#1064 の枝の 3 コミットが
+# `219112946+seiji-kiroku-dev@users.noreply.github.com` で author されていた。**
+# **`219112946` は `github.com/MLehnus`（無関係の実在の個人）の ID である**
+# （正しい番号は `120390190` = `uonoko1`）。**担当者エージェントが数字を作った。**
+# **squash merge が author から `Co-authored-by` を合成し、`a72611ee` として main に刻まれ、
+# `_sidebar` の Contributors が 5 人 → 6 人になって `MLehnus` が出た。**
+#
+# **PO はマージ前に枝の author を見ていなかった。** **trailer だけ数えて author を見ない**のは
+# 作業合意の「代理と実体」そのもので、**起点は author、trailer はその結果である。**
+#
+# **なぜ CI だけに任せないか**（`packages/etl/test/commit-identity-allowlist.test.ts` が在る）:
+#   - **枝が削除されると、その author は `git log --all` から消える。**
+#     **実測: #1064 の枝は削除済みで、`git log --all | grep 219112946` は 0 件。**
+#     **残っているのは合成された trailer だけ**——**起点は GitHub の API にしか残っていない。**
+#     **マージする瞬間が、起点を読める最後の機会である。**
+#   - **CI は「その時 push されていた HEAD」で走る。** この道具は**マージ直前の実物**を読む。
+#
+# **測った費用**: **`gh api .../pulls/<PR>/commits` は 0.5 秒**（2026-09-28、#1064 の 9 コミット実測）。
+# **逐語 allowlist は上のテストと同じ 2 形**（本人確認済み。`gh api user/<id>` で逆引き）。
+# **2 か所に同じ綴りが在るのは重複だが、片方は TypeScript・片方は bash で、共有できない。**
+#
+# **初版はここに「綴りがずれたら、このスクリプトのテストが落ちる」と書いていた。誤りだった**
+# ——**当時の検査は `assert_contains` だけで「この 2 つを含むか」（部分集合）しか見ておらず、
+# 片方にだけアドレスを足すと素通りした。** **レビューが実測した:**
+#
+# ```
+# 尤もらしい ID を bash 側だけに足す   → shell 56 passed / 0 failed  （素通り）
+# 同じものを TypeScript 側だけに足す   → TS   4 pass / 0 fail        （素通り）
+# ```
+#
+# **「片方に足す」は、まさに誤帰属が入る形である。**
+# **いまは両方向の一致（集合として同じ）を要求している**
+# （`merge-when-green.test.sh` の「2 か所で完全に一致する」）。
+# **上の 2 つの変異は、どちらも `passed 56 / failed 1` で落ちる**（実測し直した）。
+ALLOWED_IDENTITIES=(
+  "120390190+uonoko1@users.noreply.github.com"
+  "41898282+github-actions[bot]@users.noreply.github.com"
+)
+
+assert_branch_identity() {
+  local emails rc=0 bad="" e total=0
+  # **読めなかったことを「きれい」と読まない**（#757）。`|| rc=$?` で失敗を分ける。
+  emails=$(gh api "repos/$REPO/pulls/$PR/commits" --paginate \
+    --jq '.[] | select((.parents | length) < 2) | .commit.author.email, .commit.committer.email') || rc=$?
+  if [[ "$rc" != 0 ]]; then
+    die "PR #$PR のコミットを読めませんでした（gh api が失敗）。マージしません。
+
+       **これは「身元がきれい」ではありません。** 確かめられなかったので止めています（#757）。
+         gh api repos/$REPO/pulls/$PR/commits
+       $URL"
+  fi
+  # **母数**: 1 件も読めていないのに緑にしない。**PR には必ずコミットが 1 つ以上在る。**
+  [[ -n "$emails" ]] && total=$(wc -l <<<"$emails")
+  if (( total == 0 )); then
+    die "PR #$PR のコミットが 1 件も読めませんでした（母数 0）。マージしません。
+       $URL"
+  fi
+  while IFS= read -r e; do
+    [[ -n "$e" ]] || continue
+    local ok=0 a
+    for a in "${ALLOWED_IDENTITIES[@]}"; do [[ "$e" == "$a" ]] && ok=1 && break; done
+    (( ok )) || { [[ "$bad" == *"$e"* ]] || bad+="$e "; }
+  done <<<"$emails"
+  if [[ -n "$bad" ]]; then
+    die "PR #$PR の枝に、本人確認していない identity でコミットされたものがあります。マージしません（#1101）。
+
+       見つかった: ${bad% }
+       許すのは:   ${ALLOWED_IDENTITIES[*]}
+
+       **squash merge は author から Co-authored-by を合成します。**
+       **このままマージすると、そのアドレスの持ち主が Contributors に出ます**
+       （2026-09-28 に実際に起きました: 219112946 → github.com/MLehnus）。
+
+       担当者にコミットし直してもらってください:
+         git -c user.email=${ALLOWED_IDENTITIES[0]} rebase --exec \\
+           'git commit --amend --reset-author --no-edit' origin/main
+       $URL"
+  fi
+  log "枝のコミットの身元を確かめました（$total 件すべて本人確認済みのアドレス）"
+}
+assert_branch_identity
+
 # --- 2. bring up to date ----------------------------------------------------------------------
 # merge_main_locally — fallback for `gh pr update-branch` being refused because the gh OAuth
 # token lacks the `workflow` scope (the PR touches .github/workflows/*, #200). Merges
@@ -935,10 +1076,20 @@ fetch_checks() {
   fi
 
   # shellcheck disable=SC2016  # $r/$bucket は jq の変数。シェルに展開させないためのシングルクォート
-  jq -rs '
+  # **#1069 との統合**（#1116 のレビューで手順を書き直した）。
+  # `skipped` を緑と数えてよい名前を jq に渡す。**`--argjson` を使う**——
+  # **`gh api` には無いが、素の `jq` には在る**（実測: `gh api --help` の `--argjson` は 0 件）。
+  # **#1093 で `gh api -q` をやめて `jq` を直接呼ぶようにしたので、
+  # 一覧をプログラム本文に文字列で埋め込む必要が無くなった**（引用の心配も消える）。
+  # #1069 が `jq -R . | jq -sc .` で引用を jq にやらせていた意図は、そのまま保たれる。
+  local skippable_json
+  skippable_json=$(printf '%s\n' "${SKIPPABLE_CHECKS[@]}" | jq -R . | jq -sc .)
+  jq -rs --argjson skippable "$skippable_json" '
     def bucket_of:
       if .conclusion == null then "pending"
-      elif (.conclusion == "success" or .conclusion == "neutral" or .conclusion == "skipped") then "pass"
+      elif (.conclusion == "success" or .conclusion == "neutral") then "pass"
+      elif .conclusion == "skipped" then
+        (if (.name as $n | $skippable | index($n)) then "pass" else "fail" end)
       else "fail" end;
     # 悪い順の重み。**同名グループからこれが最大の 1 件を採る**（fail が緑に塗り替えられない）。
     # **`// 2` は fail-closed**（#1064 のレビュー指摘 5）: `{...}[key]` は**知らないキーで null を

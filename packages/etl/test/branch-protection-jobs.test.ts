@@ -340,6 +340,69 @@ test("#541 許容リストの各要素は実在する job を指している（�
  * 必ず食い違いが出る。bash の `NAME=(a b c d)` という単純な配列リテラルなので、YAML と違って
  * ネストや複数行を持たず、そのまま安全にトークン分割できる。
  */
+/**
+ * #1069: **`scripts/po/merge-when-green.sh` の `SKIPPABLE_CHECKS`**（`conclusion: skipped` を
+ * 緑として数えてよい検査の名前）**が、`GATED_BY_EVENT` と一致している**ことを固定する。
+ *
+ * **背景**: merge-when-green.sh は `skipped` を一律 pass として数えていたので、
+ * **必須 5 件が全部 `skipped` の PR を「all 5 checks green」でマージした**（再現済み）。
+ * **`skipped` は「0 件（問題なし）」ではなく「数えていない」である**（#757）。
+ *
+ * **直し方**: `skipped` を緑と数えるのは、**その job が PR では構造的に走らない**と
+ * 分かっている名前だけに限る。**その「構造的に走らない」の根拠は、この上の
+ * `GATED_BY_EVENT` が workflow の `if:` を実際に読んで確かめている。**
+ *
+ * **ここで突き合わせる理由**: 根拠（`if:` がイベントで閉じている）と、
+ * それを使う側（merge-when-green.sh の一覧）が**別のファイルに在る**ので、
+ * 片方だけが増えても誰も気づかない。**`SKIPPABLE_CHECKS` に名前を足すと、
+ * ここで `GATED_BY_EVENT` にも足すことを強いられ、`GATED_BY_EVENT` に足すと
+ * workflow の `if:` の実在を #940 の検査が確かめる。**
+ *
+ * **`docker-web` を入れてはいけない**（#1069 で測った）: `needs: check` だけで
+ * **job 直下の `if:` を持たない**ので、その `skipped` は「走る必要が無かった」ではなく
+ * **「上流の `check` が赤くて巻き添えになった」**である（実測: docker-web が skipped の
+ * PR {1084, 1092, 1103} と check が failure の PR {1084, 1092, 1103} が 3/3 で一致）。
+ * **この検査は、それを足そうとすると落ちる**——`docker-web` に `if:` は無いので
+ * `GATED_BY_EVENT` に入れられず、入れなければここで食い違う。
+ */
+test("#1069 merge-when-green.sh の SKIPPABLE_CHECKS は、イベントで閉じた job だけである", () => {
+  const shPath = resolve(here, "../../../scripts/po/merge-when-green.sh");
+  const sh = readFileSync(shPath, "utf8");
+  const m = sh.match(/^SKIPPABLE_CHECKS=\(([^)]*)\)\s*$/m);
+  assert.ok(m, "scripts/po/merge-when-green.sh に SKIPPABLE_CHECKS=(...) が見つからない");
+  const fromShell = m[1].trim().split(/\s+/).filter(Boolean).sort();
+
+  // 母数（#757）: 空の一覧を緑にしない。空なら「skipped を緑と数える名前が 1 つも無い」で、
+  // **`issue-secrets` が全 PR に出る以上、この道具は全 PR で止まる**。
+  assert.ok(fromShell.length > 0, "SKIPPABLE_CHECKS が空。issue-secrets が全 PR で赤になる");
+
+  // `GATED_BY_EVENT`（上のテストが workflow の `if:` の実在を確かめている集合）の job 名。
+  // **ここをハードコードせず上のテストと同じ根拠から作る**のではなく、
+  // **両方を独立にハードコードする**（#499/#521: 同時に痩せたら気づけない形を避ける）。
+  const GATED_JOB_NAMES = ["issue-secrets"];
+
+  assert.deepEqual(
+    fromShell,
+    [...GATED_JOB_NAMES].sort(),
+    "SKIPPABLE_CHECKS と、イベントで閉じてあると確かめた job の一覧が食い違っている",
+  );
+
+  // その名前が本当に `if:` を持ち、イベントで閉じていること（#940 と同じ根拠をここでも引く）。
+  // **一覧に名前を足しただけでは通らない**——workflow 側に `if:` が無ければここで落ちる。
+  const GATED_SOURCE: Record<string, string> = { "issue-secrets": "security.yml" };
+  for (const name of fromShell) {
+    const file = GATED_SOURCE[name];
+    assert.ok(file, `${name} がどの workflow の job か決まっていない`);
+    const cond = jobIfOf(readFileSync(resolve(wfDir, file), "utf8"), name);
+    assert.ok(cond, `${file}:${name} に job 直下の \`if:\` が無い。PR で必ず skip されるとは言えない`);
+    assert.match(
+      cond,
+      /github\.event_name/,
+      `${file}:${name} の \`if:\` がイベントで閉じていない: ${cond}`,
+    );
+  }
+});
+
 test("#541 branch-protection.sh の REQUIRED_CHECKS と、このファイルの REQUIRED_CHECKS が一致する", () => {
   const shPath = resolve(here, "../../../deploy/monitor/branch-protection.sh");
   const sh = readFileSync(shPath, "utf8");

@@ -20,18 +20,27 @@ import { dirname, resolve } from "node:path";
  * **`git log <基点> --pretty=format:%B | grep -ciE '^[ \t]*co-authored-by[ \t]*:'` で数えた。**
  *
  * ```
- *                                                          068be5c2   796b18d1
- *                                                          (696 cmt)  (697 cmt)
- * noreply@anthropic.com   ★ github.com/claude に誤帰属        1643       1643
- *                           （id=81847 / type=User /
- *                            created_at=2009-05-07。実測）
- * 120390190+uonoko1@users.noreply.github.com      OK          518        518
- * 41898282+github-actions[bot]@users.noreply…     OK           66         67
+ *                                                          068be5c2   2f136cd1
+ *                                                          (696 cmt)  (711 cmt)
+ * noreply@anthropic.com         github.com/claude に帰属      1643       1708
+ *                               （**誤帰属ではない**。#1106 で
+ *                                実測し直した。下の「2 つの道」）
+ * 120390190+uonoko1@users.noreply.github.com      OK          518        529
+ * 41898282+github-actions[bot]@users.noreply…     OK           66         69
  * （利用者本人の個人アドレス。下の「本人のアドレス」節）           2          2
- * etl@users.noreply.github.com  ★ github.com/etl              1          1
+ * etl@users.noreply.github.com  ★ github.com/etl              1          0
+ * 219112946+seiji-kiroku-dev@users.noreply…       OK*          0          1
+ *                               （*形は正しいが github.com/MLehnus
+ *                                に帰属する。下の「守れないもの 1」）
  *                                                          ────────   ────────
- * 合計（= co-authored-by 行の実数）                            2230       2231
+ * 合計（= 身元 trailer 行の実数）                              2230       2309
  * ```
+ *
+ * **`etl@` が `1 → 0` に減っているのは直したからではない**——
+ * **`068be5c2` は現在の `origin/main` の祖先ではない**（実測: `git merge-base --is-ancestor
+ * 068be5c2 origin/main` が exit 1）。**その 1 件は別の系列に在り、いまの main には無い。**
+ * **`etl@` を含むコミットは `--all` でなら見つかる**（`1e41501f` / `a1325eaf` ほか）。
+ * **「基点が動くと数も動く」の実例である**（#1074 が同じ節で書いているとおり）。
  *
  * **レビューは 67 / 2231 を実測し、PR 本文の 66 / 2230 を「誤り」とした。**
  * **どちらも、その基点では正しい。** **自分で数え直して分かったのは、
@@ -39,16 +48,18 @@ import { dirname, resolve } from "node:path";
  * ——**その 1 コミットが `41898282+github-actions[bot]@…` の trailer を 1 行足すので、
  * 66 → 67 / 2230 → 2231 に動いた**（実測: `git rev-list --count 068be5c2..origin/main` = 1、
  * その 1 件の `co-authored-by` 行は `github-actions[bot]` の 1 行）。
- * **合計はどちらの基点でも行の実数と一致する**（1643+518+66+2+1 = 2230 /
- * 1643+518+67+2+1 = 2231）。**だから「どちらが正しい数か」ではなく「どの基点の数か」を書く。**
+ * **合計はどの基点でも行の実数と一致する**（1643+518+66+2+1 = 2230 /
+ * `2f136cd1` では 1708+529+69+2+0+1 = 2309）。
+ * **だから「どちらが正しい数か」ではなく「どの基点の数か」を書く。**
  *
  * **`Co-authored-by:` 以外に、アドレスを運ぶ trailer 形の token は 1 つも無い**
  * （全履歴を token ごとに数えた）。
  *
  * ── **`git` の trailer パーサだけを見てはいけない**（この PBI で測って分かったこと）─────
  *
- * **`git log --pretty='%(trailers:only=true)'` は `noreply@anthropic.com` を 640 しか返す。
- * 本文を直接読むと 1643 ある。** 差は **squash merge のメッセージの形** から来る:
+ * **`git log --pretty='%(trailers:only=true)'` は `noreply@anthropic.com` を 650 しか返す。
+ * 本文を直接読むと 1708 ある**（基点 `2f136cd1` / 711 commits。実測 2026-09-28）**。**
+ * 差は **squash merge のメッセージの形** から来る:
  *
  * ```
  * Closes #1053
@@ -100,35 +111,153 @@ import { dirname, resolve } from "node:path";
  */
 
 /**
- * **数字 ID 付きの GitHub noreply だけを通す**（`workflow-commit-identity.test.ts` の `OK` と同じ形）。
+ * **`users.noreply.github.com` の「ローカル部がユーザー名になる」形だけを問題にする**（#1106）。
  *
- * ── **守れないもの: 数字 ID の *中身* は検査できない**（実例つき。2026-09-28 に実際に起きた）──
+ * ── **#1075 はここを 1 ドメイン分ではなく *全ドメイン* に広げていた**（#1106 で実測して直した）──
  *
- * **`OK` が言えるのは「数字 ID 付きの GitHub noreply の *形* をしている」ことだけで、
- * 「その数字が本人の ID か」は言えない。** **逐語の allowlist に無い数字 ID は全部通る。**
- * **#1043 のレビューが指摘した限界そのものである。**
+ * **#1075 は「数字 ID 付きの GitHub noreply *でないもの* は全部誤帰属」と書いた。**
+ * **その結果、規約が全コミットに要求している `noreply@anthropic.com` が誤帰属と判定され、
+ * 開いている PR が全部赤になった**（#1092 / #1084 の `check`。#1106 の発端）。
+ * **`main` が緑だったのは直っていたからではなく、範囲が `merge-base..HEAD` なので
+ * `main` の上では空になるからである。**
  *
- * **実害が出た**（#1064 のマージで `origin/main` に入った。実測）:
+ * ── **GitHub が trailer のアドレスを人に解決する道は 2 つある**（#1106 で実測）───────────
+ *
+ * **GraphQL の `Commit.authors` は、GitHub が実際にそのコミットを誰に帰属させたかを返す。**
+ * **1 つのコミット（`1e41501f`）が 2 形を同時に持っていたので、同じ条件で並べて測れた:**
+ *
+ * ```
+ * trailer のアドレス                            GitHub が解決した user
+ * noreply@anthropic.com                        login=claude  databaseId=81847
+ * etl@users.noreply.github.com                 login=etl     databaseId=1859882
+ * 120390190+uonoko1@users.noreply.github.com   login=uonoko1 databaseId=120390190
+ * ```
+ *
+ * **(A) 登録済みメールアドレス**: そのアドレスを verified email として持つアカウントに解決する。
+ * **`noreply@anthropic.com` → `github.com/claude` はこの道である。**
+ * **ローカル部 `noreply` はユーザー名として読まれていない**——**実測: `github.com/noreply` は
+ * `id=1239515` で実在するのに、Contributors に 1 度も出ない**
+ * （`stats/contributors` = `github-actions[bot]` 59 / `claude` 650 / `uonoko1` 656。
+ * `noreply` は出ない。`main` の trailer 1708 件はすべて `claude` に行っている）。
+ * **利用者本人の個人アドレス（`@gmail.com`）→ `uonoko1` も同じ道である**（実測 `f15aad8d`）。
+ * **アドレスの逐語は書かない**（#1043。OSS なので grep でもスクレイパでも永久に拾われる）。
+ *
+ * **(B) `users.noreply.github.com` のローカル部**: このドメインでだけ、GitHub は
+ * **ローカル部をユーザー名（または `<id>+<name>` の `<id>`）として読む。**
+ * **実測で 2 形とも無関係の実在の個人に解決した:**
+ * ```
+ * etl@users.noreply.github.com  → github.com/etl  id=1859882  （実測 1e41501f / a1325eaf）
+ * dev@users.noreply.github.com  → github.com/dev  id=12158001 （実測 42f9c225）
+ * ```
+ *
+ * **これは観測だけではなく、GitHub の一次資料に明記されている**
+ * （`https://docs.github.com/en/account-and-profile/reference/email-addresses-reference`
+ * の "Your noreply email address"。2026-09-28 取得）:
+ *
+ * > If you created your account after July 18, 2017, your noreply email address is
+ * > **an ID number and your username in the form of `ID+USERNAME@users.noreply.github.com`**.
+ * > If you created your account prior to July 18, 2017, ... your noreply email address is
+ * > **`USERNAME@users.noreply.github.com`**.
+ * >
+ * > If you use your noreply email address for GitHub to make commits and then **change your
+ * > username, those commits will not be associated with your account. This does not apply if
+ * > you're using the ID-based noreply address from GitHub.**
+ *
+ * **後半が「なぜ数字 ID 付きだけが安全か」の一次資料である**——
+ * **裸の `USERNAME@` はユーザー名に束縛されるので、その名前を持つ別のアカウントに移りうる。**
+ * **数字 ID の形は ID に束縛されるので移らない。**
+ *
+ * **実測もこれと整合する**——**誤帰属した 2 つは、どちらも 2017-07-18 より前に作られた
+ * アカウントである**（`etl` は 2012-06-17 / `dev` は 2015-04-28。実測 `gh api users/<name>`）。
+ * **だから裸の `<name>@users.noreply.github.com` がその人の noreply アドレスとして成立する。**
+ *
+ * ── **この一次資料が言っていないこと（断定しない）** ───────────────────────────
+ *
+ * **一次資料は「noreply アドレスの *形*」を定めているだけで、
+ * 「他のドメインでローカル部が照合されない」とは明示していない。**
+ * **そこは実測で補っている**——**そして実測は「2 例で出なかった」であって、
+ * 「絶対に出ない」ではない:**
+ *
+ * ```
+ * trailer のアドレス          同名の GitHub ユーザー       実在           実際の帰属先
+ * noreply@anthropic.com      github.com/noreply        id=1239515      claude   (650)
+ * （利用者本人の個人 gmail）    github.com/sakai          id=15643        uonoko1  (656)
+ * etl@users.noreply.github…  github.com/etl            id=1859882      etl      ★ 誤帰属
+ * ```
+ * **`origin/main`（`2f136cd1`）の身元 trailer に出るドメインは 3 つだけである**
+ * （実測: `anthropic.com` 1708 / `users.noreply.github.com` 599 / `gmail.com` 2）。
+ * **`noreply` も `sakai` も実在するのに Contributors に出ない**
+ * （`github-actions[bot]` 59 / `claude` 650 / `uonoko1` 656 のみ）。
+ * **ドメインを問わずローカル部で照合しているなら、この 2 つも出ているはずである。**
+ * **出ていない、というのが測れた全部である。**
+ *
+ * ── **この検査が受け持つのは (B) だけである** ───────────────────────────────────
+ *
+ * **(A) は「そのアドレスを持っている人に帰属する」ので、この検査では誤りだと言えない**
+ * ——**アドレスの持ち主が誰かは、リポジトリの中からは判定できない。**
+ * **`noreply@anthropic.com` は規約が要求する trailer で、実測で `claude` に帰属している。**
+ * **これを赤にするのは偽陽性である**（下に偽陽性の検査を置いた）。
+ *
+ * **(B) は形だけで判定できる**——**`users.noreply.github.com` 宛てなのに
+ * `<数字>+<名前>` になっていなければ、ローカル部の綴りがそのままユーザー名として読まれ、
+ * その名前の他人に帰属する。** **だからここだけを赤にする。**
+ *
+ * ── **守れないもの（明記する）** ──────────────────────────────────────────────
+ *
+ * **1. 数字 ID の *中身* は検査できない**（実例つき。2026-09-28 に実際に起きた）:
  *
  * ```
  * Co-authored-by: seiji-kiroku-dev <219112946+seiji-kiroku-dev@users.noreply.github.com>
  *
- * OK.test(…)                → true   ★ この検査は通す（形は正しい）
+ * misattributesViaGithubNoreply(…) → false  ★ この検査は通す（形は正しい）
  * gh api users/seiji-kiroku-dev → 404  （その名前の GitHub ユーザーは存在しない）
  * gh api user/219112946        → login=MLehnus / id=219112946 / type=User
  *                                       / created_at=2025-07-03
  * ```
- *
  * **数字 ID が指しているのは `github.com/MLehnus` という無関係の実在の個人で、
- * その人が Contributors に出た。** **`etl@` や `noreply@anthropic.com` と同じ誤帰属だが、
- * 形が正しいのでこの検査は止められない。**
+ * その人が Contributors に出た。** **形が正しいのでこの検査は止められない。**
+ * **逐語の allowlist にすれば止まるが、新しい貢献者を足すたびに検査を直すことになる。**
+ * **どちらを採るかは別 PBI で PO が判断する。**
  *
- * **`120390190+uonoko1@` と `41898282+github-actions[bot]@` だけを逐語で許す形にすれば
- * 止まるが、それは「新しい貢献者を足すたびに検査を直す」ことを意味する。**
- * **どちらを採るかは別 PBI で PO が判断する**（#1074 の範囲外）。
- * **ここでは「止められない」ことと、その実例を明記するに留める。**
+ * **2. `users.noreply.github.com` 以外のドメインは、この検査では一切見ない。**
+ * **(A) の道で「そのアドレスを持つ他人」に帰属する可能性は残る**——
+ * **だがそれは「アドレスを間違えて書いた」場合であって、形からは判定できない。**
+ * **`workflow-commit-identity.test.ts`（#1043）が workflow の `user.email` の綴りを、
+ * 下の author / committer の検査が実際に刻まれた identity を受け持つ。**
  */
-const OK = /^\d+\+[^@]+@users\.noreply\.github\.com$/;
+/** `users.noreply.github.com` 宛てかどうか（**ローカル部がユーザー名として読まれるドメイン**）。 */
+const GITHUB_NOREPLY = /@users\.noreply\.github\.com$/;
+/** そのドメインで、**ローカル部がユーザー名として読まれない**唯一の形（`<数字 ID>+<名前>`）。 */
+const NUMERIC_ID = /^\d+\+[^@]+@users\.noreply\.github\.com$/;
+
+/**
+ * **そのアドレスが、GitHub の `users.noreply.github.com` 経由で他人に誤帰属するか。**
+ *
+ * **真になるのは「`users.noreply.github.com` 宛てなのに `<数字>+<名前>` でない」場合だけ。**
+ * **他のドメインは常に偽である**（上の docblock (A)。この経路では誤帰属しない）。
+ */
+export const misattributesViaGithubNoreply = (email: string): boolean =>
+  GITHUB_NOREPLY.test(email) && !NUMERIC_ID.test(email);
+
+/**
+ * **author / committer に要求する形**（trailer とは別の規則である。#1106 で分けた）。
+ *
+ * **trailer は「誰と一緒に書いたか」を名指しするので、他人の verified email を書くこと自体は
+ * ありうる**（`noreply@anthropic.com` → `github.com/claude`）。
+ * **だが author / committer は「この作業ツリーの `git config user.email`」であり、
+ * このリポジトリはそこに数字 ID 付きの GitHub noreply を使うと決めている**
+ * （`.git/config` の実測値は `120390190+uonoko1@users.noreply.github.com`）。
+ *
+ * **だからここは形を要求したままにする。** **実測で偽陽性が出ないことを確かめてある**:
+ * **`origin` の全ブランチ 12 本の枝の範囲で、マージでないコミット 43 件（重複除去）のうち
+ * この形を外れる author/committer は 1 件だけで、それは #1074 (B) の実害そのものだった**
+ * （`cdc55734` author=committer=`etl@users.noreply.github.com`）。
+ *
+ * **trailer 側の `misattributesViaGithubNoreply` と混ぜない**——
+ * **混ぜると「author に `noreply@anthropic.com` を書いても緑」になり、
+ * squash merge がそれを Co-authored-by に合成する経路が開く**（下の検査が固定する）。
+ */
+const AUTHOR_OK = /^\d+\+[^@]+@users\.noreply\.github\.com$/;
 
 /**
  * **trailer の形をした行のうち、コミットの帰属を決めるもの。**
@@ -163,7 +292,9 @@ export const misattributingTrailerEmails = (
     for (const m of line.matchAll(EMAIL)) {
       const email = m[0].toLowerCase();
       checked += 1;
-      if (OK.test(email)) continue;
+      // **`users.noreply.github.com` 経由の誤帰属だけを赤にする**（#1106。上の docblock (B)）。
+      // **他のドメインは、この経路では誤帰属しない**ので見ない。
+      if (!misattributesViaGithubNoreply(email)) continue;
       if (allow.has(email)) continue;
       bad.push(email);
     }
@@ -334,18 +465,26 @@ const scannedBody = (
 /**
  * **この PR が足すコミットだけを見る**（`merge-base(origin/main, HEAD)..HEAD`）。
  *
- * **なぜ全履歴を見ないか**: **いま在る履歴には 1644 件の誤帰属が既に刻まれている**
- * （`noreply@anthropic.com` 1643 / `etl@users.noreply.github.com` 1）。
- * **全履歴に当てると、この検査は `origin/main` で必ず赤になる**——
- * **赤が常態になった検査は誰も見なくなる**（作業合意の「偽陽性を出す検査」）。
- * **既存履歴を直すには protected branch の history rewrite が必要で 640 commits に触る**ので、
+ * **なぜ全履歴を見ないか**: **いま在る履歴に誤帰属が既に刻まれているから**である。
+ *
+ * **#1074 はここを「1644 件」と書いていたが、その内訳の 1643 件は
+ * `noreply@anthropic.com` で、実測すると誤帰属ではなかった**（#1106。`github.com/claude`
+ * に正しく帰属している）。**実際に誤帰属しているのは、現在の `origin/main`（`2f136cd1`）では
+ * `219112946+seiji-kiroku-dev@users.noreply.github.com` の 1 件だけである**
+ * （→ `github.com/MLehnus`。**形が正しいのでこの検査は止められない**。下の「守れないもの」）。
+ * **`etl@` は現在の main には 0 件**（`068be5c2` は現 main の祖先ではない。上の表）。
+ *
+ * **それでも全履歴には当てない**——**この検査は「枝が *足す* もの」を止めるためのもので、
+ * 既に刻まれたものを数え直すのは別の仕事である。**
+ * **既存履歴を直すには protected branch の history rewrite が必要で 711 commits に触る**ので、
  * **#1074 は「利用者に確認してから」として範囲外にしている。**
  *
  * **この選択で守れないもの**（明記する）:
  * - **数字 ID の *中身* は検査できない。** **逐語の allowlist に無い数字 ID は通る**
  *   ——**2026-09-28 に実際に誤帰属が 1 件入った**（`219112946+seiji-kiroku-dev@…` →
  *   `github.com/MLehnus`。`OK` の docblock に実測）。**形は正しいので止められない。**
- * - **既に main に在る 1644 件は、この検査では永久に見えない。** 直すのは別の PBI。
+ * - **既に main に在る誤帰属は、この検査では永久に見えない**（`2f136cd1` で 1 件。上の実測）。
+ *   直すのは別の PBI。
  * - **`origin/main` や merge-base が取れない浅い checkout では、この検査は 1 件も見ない**
  *   （下で skip する。緑にはしない。**ただし「読めない」という主張は別の git コマンドで
  *   裏づける**——理由の綴りだけで skip できないようにした。必須 2）。
@@ -661,7 +800,7 @@ const misattributingCommitIdentity = (
       `${sha.slice(0, 8)}: ${kind} のアドレスが生オブジェクトのヘッダと一致しない（読み方が壊れている）: ${email}`,
     );
     checked += 1;
-    if (!OK.test(email)) bad.push(`${sha.slice(0, 8)}: ${kind}=${email}`);
+    if (!AUTHOR_OK.test(email)) bad.push(`${sha.slice(0, 8)}: ${kind}=${email}`);
   }
   return { bad, checked, merge: false };
 };
@@ -1216,8 +1355,8 @@ test("数字 ID 付きの noreply だけを通す正規表現そのものを検�
   // **列挙が縮んだら、また同じアンカーの穴が開く**（N2 / N4 / N6 はこの列挙漏れで生き残っていた）。
   assert.equal(good.length, 2, "通すべき綴りの列挙が縮んでいる");
   assert.equal(bad.length, 13, "通してはいけない綴りの列挙が縮んでいる（アンカーを外す変異が素通りする）");
-  for (const e of good) assert.ok(OK.test(e), `通すべき綴りが落ちた: ${e}`);
-  for (const e of bad) assert.ok(!OK.test(e), `通してはいけない綴りが通った: ${e}`);
+  for (const e of good) assert.ok(AUTHOR_OK.test(e), `通すべき綴りが落ちた: ${e}`);
+  for (const e of bad) assert.ok(!AUTHOR_OK.test(e), `通してはいけない綴りが通った: ${e}`);
 });
 
 /**
@@ -1226,27 +1365,32 @@ test("数字 ID 付きの noreply だけを通す正規表現そのものを検�
  * **これが「いま在る履歴の 2 形を赤にできる」ことの証明である**（#1074 の受け入れ条件）。
  * **母数（`checked`）も一緒に固定する**（#757。`bad` が空でも `checked` が落ちていれば走査が壊れている）。
  */
-test("履歴に実際に在った 4 形を、赤 2 / 緑 2 に分ける（母数も固定する）", () => {
+test("履歴に実際に在った 5 形を、赤 2 / 緑 3 に分ける（母数も固定する）", () => {
   const body = [
     "fix: 何かを直した",
     "",
     "Closes #1074",
     "",
+    // **緑**: 規約が全コミットに要求する trailer。**実測で `github.com/claude` に帰属する**
+    // （#1106。ローカル部 `noreply` はユーザー名として読まれない）。
     "Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>",
     "Co-authored-by: uonoko1 <120390190+uonoko1@users.noreply.github.com>",
     "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
+    // **赤**: `users.noreply.github.com` のローカル部がそのままユーザー名になる 2 形。
+    // **実測: `etl` → id=1859882 / `dev` → id=12158001（どちらも無関係の実在の個人）。**
     "Co-authored-by: giinrecord-etl[bot] <etl@users.noreply.github.com>",
+    "Co-authored-by: seiji-kiroku-dev <dev@users.noreply.github.com>",
     "Claude-Session: https://claude.ai/code/session_x",
   ].join("\n");
   const { bad, checked } = misattributingTrailerEmails(body, new Set());
   assert.deepEqual(
     bad,
-    ["noreply@anthropic.com", "etl@users.noreply.github.com"],
-    "履歴に在った 2 つの誤帰属が赤にならない",
+    ["etl@users.noreply.github.com", "dev@users.noreply.github.com"],
+    "履歴に在った 2 つの誤帰属が赤にならない（または規約どおりの trailer を赤にしている）",
   );
-  // **母数**: trailer 形の行 4 つからアドレスを 4 つ拾っている
+  // **母数**: trailer 形の行 5 つからアドレスを 5 つ拾っている
   // （`Claude-Session:` は身元の trailer ではないので数に入らない）。
-  assert.equal(checked, 4, "走査したアドレス数が変わっている（走査が空回りしているか、広がりすぎている）");
+  assert.equal(checked, 5, "走査したアドレス数が変わっている（走査が空回りしているか、広がりすぎている）");
 });
 
 /**
@@ -1389,11 +1533,14 @@ test("メールアドレスの拾い方が狭まっていない（走査の対�
     );
   }
   // **1 行に 2 件あるときは 2 件とも拾う**（E3 = `matchAll` → `match` がここで落ちる）。
+  // **2 件目は「実際に誤帰属する形」にする**（#1106）——**`noreply@anthropic.com` は
+  // 実測で `github.com/claude` に正しく帰属するので、走査の本体は赤にしない。**
+  // **ここで確かめたいのは「2 件目を見落とさないこと」なので、2 件目を誤帰属の形にする。**
   const twoOnOneLine =
-    "Co-authored-by: N <120390190+uonoko1@users.noreply.github.com> <noreply@anthropic.com>";
+    "Co-authored-by: N <120390190+uonoko1@users.noreply.github.com> <etl@users.noreply.github.com>";
   assert.deepEqual(
     pick(twoOnOneLine),
-    ["120390190+uonoko1@users.noreply.github.com", "noreply@anthropic.com"],
+    ["120390190+uonoko1@users.noreply.github.com", "etl@users.noreply.github.com"],
     "1 行に 2 つ書かれたアドレスの 2 件目を拾えていない（2 件目に誤帰属を隠せる）",
   );
   // **`EMAIL` を直接当てるだけでは足りない**——**走査の本体（`misattributingTrailerEmails`）が
@@ -1404,7 +1551,7 @@ test("メールアドレスの拾い方が狭まっていない（走査の対�
   const two = misattributingTrailerEmails(twoOnOneLine, new Set());
   assert.deepEqual(
     two.bad,
-    ["noreply@anthropic.com"],
+    ["etl@users.noreply.github.com"],
     "1 行に 2 つ書かれたアドレスの 2 件目の誤帰属を、走査の本体が見落としている",
   );
   assert.equal(two.checked, 2, "1 行から 2 件を走査していない（母数）");
@@ -1426,8 +1573,9 @@ test("メールアドレスの拾い方が狭まっていない（走査の対�
  * squash merge の区切りより上の `Co-Authored-By:` がまるごと落ちる**（この PBI の実測）。
  *
  * **実測（`origin/main` = `068be5c2`、696 commits）**:
- * `%(trailers:only=true)` で `noreply@anthropic.com` は **640**。本文を直接読むと **1643**。
- * **1003 件、つまり 61% が見えていなかった。**
+ * `%(trailers:only=true)` で `noreply@anthropic.com` は **650**。本文を直接読むと **1708**。
+ * **1058 件、つまり 62% が見えていなかった**（基点 `2f136cd1` / 711 commits。実測 2026-09-28。
+ * `068be5c2` では 640 / 1643 で 61% だった）。
  *
  * **だから「本文を行ごとに走査する」ことを固定する。**
  * **`%(trailers)` に切り替える変異はここが落とす。**
@@ -1438,16 +1586,19 @@ test("squash merge の区切りより上の trailer も拾う（%(trailers) に�
     "",
     "Closes #1053",
     "",
-    "Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>", // 開発者が書いた分（区切りより上）
+    // **誤帰属する形を区切りの上下に 1 つずつ置く**（#1106）——**`noreply@anthropic.com` は
+    // 実測で正しく帰属するので、「拾えたか」を `bad` で測れない。**
+    // **`etl@` なら、拾えていれば必ず `bad` に出る。**
+    "Co-Authored-By: giinrecord-etl[bot] <etl@users.noreply.github.com>", // 開発者が書いた分（区切りより上）
     "Claude-Session: https://claude.ai/code/session_x",
     "",
     "---------",
     "",
-    "Co-authored-by: Claude Opus 5 <noreply@anthropic.com>", // squash が合成した分
+    "Co-authored-by: giinrecord-etl[bot] <etl@users.noreply.github.com>", // squash が合成した分
   ].join("\n");
   const { bad, checked } = misattributingTrailerEmails(body, new Set());
   assert.equal(checked, 2, "区切りより上の trailer を拾っていない（%(trailers) と同じ見落とし）");
-  assert.deepEqual(bad, ["noreply@anthropic.com", "noreply@anthropic.com"]);
+  assert.deepEqual(bad, ["etl@users.noreply.github.com", "etl@users.noreply.github.com"]);
   // **git のパーサが 1 しか返すこと**を、その場で実測して固定する。
   // **前提が変わったら（git が区切りより上も数えるようになったら）ここが落ちて気づける。**
   const parsed = execFileSync("git", ["interpret-trailers", "--parse"], { input: body, encoding: "utf8" });
@@ -1574,7 +1725,181 @@ test("本文を読んだことを確かめる番人が、間違った読み方 3
  * （`allow` の既定を `new Set(["noreply@anthropic.com"])` に変える変異はここだけが落とす。）
  */
 test("許容集合の既定は空（第 2 引数を省いても誤帰属は赤になる）", () => {
-  const { bad, checked } = misattributingTrailerEmails("x\n\nCo-authored-by: C <noreply@anthropic.com>");
+  const { bad, checked } = misattributingTrailerEmails("x\n\nCo-authored-by: e <etl@users.noreply.github.com>");
   assert.equal(checked, 1, "既定の呼び方で走査していない（母数 0）");
-  assert.deepEqual(bad, ["noreply@anthropic.com"], "既定の許容集合が広がっている");
+  assert.deepEqual(bad, ["etl@users.noreply.github.com"], "既定の許容集合が広がっている");
+});
+
+/**
+ * **規約が全コミットに要求する trailer が、この検査を通ること**（#1106。**偽陽性の検査**）。
+ *
+ * ── **これが無かったので #1075 が全 PR を赤にした** ──────────────────────────────
+ *
+ * **#1075 のレビューは「誤帰属 trailer を足すと落ちる」を確かめた**（**赤くなることは確かめた**）。
+ * **「規約どおりの trailer が通る」を一度も確かめていなかった**（**緑になることを確かめていない**）。
+ * **偽陽性の側を測っていなかったので、`OK` を「数字 ID 付き以外は全部誤帰属」と書いたことに
+ * 誰も気づかないまま main に入り、`merge-base..HEAD` が空でない PR が全部赤になった**
+ * （#1092 / #1084 の `check`。**`main` は範囲が空なので緑のままだった**）。
+ *
+ * **だから「赤になること」と対で「緑になること」を固定する。**
+ *
+ * ── **なぜ `noreply@anthropic.com` が誤帰属でないと言えるか（実測。推測で書かない）** ────
+ *
+ * **GraphQL の `Commit.authors` は、GitHub が実際にそのコミットを誰に帰属させたかを返す。**
+ * **`1e41501f` は 3 形を同時に持っていたので、同じ条件で並べて測れた**（2026-09-28）:
+ *
+ * ```
+ * noreply@anthropic.com                        → login=claude  databaseId=81847
+ * etl@users.noreply.github.com                 → login=etl     databaseId=1859882
+ * 120390190+uonoko1@users.noreply.github.com   → login=uonoko1 databaseId=120390190
+ * ```
+ *
+ * **`github.com/noreply` は実在する**（`id=1239515` / `created_at=2011-12-04`）**のに、
+ * そこへは 1 件も行っていない。** **`stats/contributors` にも出ない**
+ * （`github-actions[bot]` 59 / `claude` 650 / `uonoko1` 656。**`noreply` は出ない**）。
+ * **`origin/main`（711 commits）の trailer 1708 件はすべて `claude` に行っている。**
+ *
+ * **つまりローカル部がユーザー名として読まれるのは `users.noreply.github.com` の場合だけで、
+ * それ以外のドメインは「そのアドレスを verified email として持つアカウント」に解決される**
+ * （利用者本人の個人アドレス → `uonoko1` も同じ道。実測 `f15aad8d`）。
+ */
+test("規約が要求する trailer は緑（#1075 が全 PR を赤にした偽陽性そのもの）", () => {
+  // **#1092 / #1084 のコミットと同じ形**（規約が全コミットに要求する 2 行）。
+  const body = [
+    "fix(ci): 何かを直した",
+    "",
+    "Closes #1106",
+    "",
+    "Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>",
+    "Claude-Session: https://claude.ai/code/session_01NNvvWoGxL9KnKQBoHK3PyS",
+  ].join("\n");
+  const { bad, checked } = misattributingTrailerEmails(body);
+  assert.deepEqual(
+    bad,
+    [],
+    "規約が全コミットに要求する trailer を誤帰属と判定している" +
+      "（#1075 がこれで全 PR を赤にした。`noreply@anthropic.com` は実測で github.com/claude に帰属する）",
+  );
+  // **母数**（#757）: **`bad` が空なのは「見ていない」からかもしれない。**
+  // **1 件走査した上で空である**ことを言う。
+  assert.equal(checked, 1, "規約どおりの trailer を 1 件も走査していない（空回りで緑になっている）");
+  // **`users.noreply.github.com` 以外のドメインは、この経路では誤帰属しない**（上の docblock）。
+  // **ドメインを限定する条件を外す変異（`GITHUB_NOREPLY.test(email) &&` を落とす）は、
+  // ここで落ちる。**
+  for (const e of [
+    "noreply@anthropic.com", // 規約が要求する trailer。実測で github.com/claude
+    // **利用者本人の個人アドレスは逐語で書かない**（#1043）。
+    // 実測では `<利用者本人の gmail>` → github.com/uonoko1（f15aad8d）。
+    // ここでは同じ「ローカル部と同名のユーザーが実在するのに帰属しない」形を架空で置く。
+    "person@example.com",
+    "bot@claude.ai",
+    "x@example.com",
+  ]) {
+    assert.ok(
+      !misattributesViaGithubNoreply(e),
+      `users.noreply.github.com 以外のドメインを誤帰属と判定している（偽陽性）: ${e}`,
+    );
+  }
+  // **対で固定する**: **`users.noreply.github.com` 宛ての誤帰属 3 形は赤のままであること。**
+  // **ドメインの限定を「全部通す」方向に広げる変異は、ここで落ちる。**
+  for (const e of [
+    "etl@users.noreply.github.com", // 実測 github.com/etl (id=1859882)
+    "dev@users.noreply.github.com", // 実測 github.com/dev (id=12158001)
+    "noreply@users.noreply.github.com", // 同じ綴りでもドメインが違えば誤帰属する
+  ]) {
+    assert.ok(
+      misattributesViaGithubNoreply(e),
+      `users.noreply.github.com のローカル部がユーザー名になる形を通している: ${e}`,
+    );
+  }
+});
+
+/**
+ * **`misattributesViaGithubNoreply` そのものを、通す綴り / 通さない綴りに直接当てる**（#1106）。
+ *
+ * **上の検査は本物のメッセージに当てるので、`misattributesViaGithubNoreply` を
+ * 「常に false」に潰しても、この枝のメッセージが正しい限り緑のままである。**
+ * **だから述語そのものに当てる**（`AUTHOR_OK` を同じ理由で直接当てているのと同じ形）。
+ *
+ * **ドメインの限定は「`$` で終わる」ことが効いている**——
+ * **`@users.noreply.github.com.evil.com` は GitHub のユーザーに紐づかない外部ドメインなので、
+ * この経路では誤帰属しない**（**`noreply@anthropic.com` と同じ (A) の道になる**）。
+ * **`users.noreply.github.com` で終わらないものを「誤帰属」と言うと、また偽陽性になる。**
+ */
+test("誤帰属の判定は users.noreply.github.com 宛てだけに掛かる（述語そのものを検査する）", () => {
+  // **誤帰属する**（ローカル部がそのままユーザー名として読まれる）。
+  const misattributes = [
+    "etl@users.noreply.github.com",
+    "dev@users.noreply.github.com",
+    "noreply@users.noreply.github.com",
+    "claude@users.noreply.github.com",
+    "+uonoko1@users.noreply.github.com", // 数字 ID が無い
+    "1+@users.noreply.github.com", // 名前が無い
+    "a1+x@users.noreply.github.com", // 先頭が数字でない
+    "ETL@Users.NoReply.GitHub.Com".toLowerCase(), // 走査は小文字化してから当てる
+  ];
+  // **誤帰属しない**（この経路では他人のユーザー名にならない）。
+  const doesNot = [
+    // **正しい形**（数字 ID がユーザーを決める）
+    "120390190+uonoko1@users.noreply.github.com",
+    "41898282+github-actions[bot]@users.noreply.github.com",
+    // **別ドメイン**——**(A) の「登録済みアドレス」の道。実測で正しく帰属する 2 形**
+    "noreply@anthropic.com",
+    "person@example.com",
+    // **別ドメイン（一般）**
+    "bot@claude.ai",
+    "x@example.com",
+    "etl@example.com", // 同じローカル部でもドメインが違えば github.com/etl にはならない
+    // **サフィックスが違う**——**外部ドメインなので (A) の道であり、(B) では誤帰属しない**
+    "1+x@users.noreply.github.com.evil.com",
+    "x@users.noreply.github.company",
+    "x@users-noreply-github-com",
+  ];
+  // **母数**（#757）: **列挙が縮んだら、また同じ穴が開く。**
+  assert.equal(misattributes.length, 8, "誤帰属する綴りの列挙が縮んでいる");
+  assert.equal(doesNot.length, 10, "誤帰属しない綴りの列挙が縮んでいる（偽陽性の検査が痩せる）");
+  for (const e of misattributes) {
+    assert.ok(misattributesViaGithubNoreply(e), `誤帰属する綴りを通している: ${e}`);
+  }
+  for (const e of doesNot) {
+    assert.ok(!misattributesViaGithubNoreply(e), `誤帰属しない綴りを赤にしている（偽陽性）: ${e}`);
+  }
+});
+
+/**
+ * **「守れないもの」を、散文ではなく検査で固定する**（#1106）。
+ *
+ * **上の docblock は「数字 ID の *中身* は検査できない」と書いている。**
+ * **散文は読まれないし、変異でも落ちない。** **だから通ることを逐語で固定して、
+ * 「いつか閉じた／閉じたつもりになった」ときにここが落ちるようにする。**
+ *
+ * **#1106 で 4 形を本物のコミットに載せて測った**（`origin/main` の実装と、この枝の実装を
+ * 同じ手順で並べた。実測 2026-09-28）:
+ *
+ * ```
+ * trailer に載せた 1 形                                  origin/main   この枝
+ * etl@users.noreply.github.com                            赤            赤
+ * dev@users.noreply.github.com                            赤            赤
+ * 219112946+seiji-kiroku-dev@users.noreply.github.com     緑 ★          緑 ★   ← 変えていない
+ * noreply@anthropic.com                                   赤 ★★         緑     ← #1106 で直した
+ * ```
+ *
+ * **★ は #1074 が明記した既知の限界**（`github.com/MLehnus` に帰属するが形は正しい）。
+ * **#1106 はここを変えていない**——**閉じるなら逐語 allowlist が要り、それは別 PBI で
+ * PO が判断すると #1074 が書いている。**
+ * **★★ が #1106 で直した偽陽性である。**
+ */
+test("数字 ID の中身は検査できない、という限界がそのままであること（散文でなく検査で固定する）", () => {
+  // **形が正しいので通る。** **その数字が指すのは github.com/MLehnus という無関係の個人である**
+  // （実測 `gh api user/219112946` → login=MLehnus / created_at=2025-07-03）。
+  assert.ok(
+    !misattributesViaGithubNoreply("219112946+seiji-kiroku-dev@users.noreply.github.com"),
+    "数字 ID の中身を検査できるようになった（#1074 の既知の限界が閉じた）。" +
+      "閉じたのなら、それは良いことなので、この検査と上の docblock を一緒に直すこと",
+  );
+  // **author / committer の側も同じ限界を持つ**（同じ形を要求しているため）。
+  assert.ok(
+    AUTHOR_OK.test("219112946+seiji-kiroku-dev@users.noreply.github.com"),
+    "author 側の限界だけが閉じた（trailer 側と食い違っている）",
+  );
 });
