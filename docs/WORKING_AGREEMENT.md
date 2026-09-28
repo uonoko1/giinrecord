@@ -2519,15 +2519,21 @@ key(600.4) → 600    key(599.6) → 600      // 同じキーになる
 | 計器 | 数 | 中身 |
 |---|---|---|
 | `gh api repos/.../contributors` | **2** | `uonoko1`, `github-actions[bot]` |
-| `gh api repos/.../stats/contributors` | **4**（05:37Z）／**未計測**（05:18Z） | **19 分で `{}` から 4 に変わった。** 同じ計器が、同じ日に、測る時刻で違う答えを返す（下を見よ） |
+| `gh api repos/.../stats/contributors` | **`{}`（05:18Z）→ 4（05:37Z）→ `{}`（08:0xZ）→ 5（09:0xZ）** | **同じ日に 4 回変わり、しかも往復した。** 片方向に収束するのではない。**この計器を根拠に使うなら、測った時刻を必ず書くこと** |
 | リポジトリページの初期 HTML（cache-busted） | **0** | **Contributors 欄は骨組みだけ**で、行が 1 つも入っていない（起票時は 2 だった） |
-| `graphs/contributors-data`（画面が描画に使うデータ） | **4** | `claude`, `etl`, `github-actions[bot]`, `uonoko1` |
-| **`_sidebar`（利用者が実際に見る欄）** | **5** | `claude`, `uonoko1`, **`dev`**, `github-actions[bot]`, `etl` |
+| `graphs/contributors-data`（画面が描画に使うデータ） | **4 →（同じ日に）5** | `claude`, `etl`, `github-actions[bot]`, `uonoko1` |
+| **`_sidebar`（利用者が実際に見る欄）** | **5 →（同じ日に）6** | `claude`, `uonoko1`, **`dev`**, `github-actions[bot]`, `etl`, **`MLehnus`**（#1064 のマージで増えた。#1101） |
 
 **利用者が見ているのは `_sidebar`**（`GET https://github.com/<owner>/<repo>/_sidebar`、`Accept: application/json`）。
 **`gh api` では取れない**——REST のホストに付くので 404 になる。`curl` で github.com を直接叩くこと。
 
-**そして git 側の実体はこうである**（同時刻、`origin/main` 703 コミット全履歴の実測）:
+**そして git 側の実体はこうである**（同時刻の実測）。
+**範囲を必ず書くこと**——**下の 0 は「GitHub 上の全枝（`gh api branches` で列挙）」での 0 である。**
+**`git log --all` で測ると 740 が出るが、それはローカルの退避 ref（`refs/bkup/*`、
+枝を消す前に自分で作ったもの）を歩いているからで、GitHub には存在しない**
+（レビューがこの差で「まだ汚れが残っている」と読み、PO が検算して範囲の違いだと分かった）。
+**`gh api .../commits/<sha>` は参照されないオブジェクトも引けるので、
+「API で引ける」と「ref から辿れる」は別である。** **`_sidebar` が集計するのは後者。**
 
 | 綴り | author として | `Co-authored-by` trailer として |
 |---|---|---|
@@ -2546,7 +2552,7 @@ key(600.4) → 600    key(599.6) → 600      // 同じキーになる
 ```
 gh api users/seiji-kiroku-dev          → 404 Not Found（そんなアカウントは無い）
 git config --get user.name             → seiji-kiroku-dev   ← このリポジトリ自身の名前
-c864f750 の author                     → Daichi Sakai <sakai.personal@gmail.com>
+c864f750 の author                     → 利用者本人（アドレスはここに書かない。`git log -1 --format=%ae` で見る）
 ```
 
 **`seiji-kiroku-dev` は GitHub のアカウント名ではなく、このリポジトリの `user.name` である。**
