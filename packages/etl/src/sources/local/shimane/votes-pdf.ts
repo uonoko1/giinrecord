@@ -739,6 +739,34 @@ export interface DropTiedForTest {
    * **`dropForTest` を渡さない本番の呼び出しは 1 ビットも変わらない。**
    */
   keepTiedColsForTest?: boolean;
+  /**
+   * **票数の欄（賛成／反対）を「1 桁ずつのアイテム」に割って、そのうち 1 つを落とす**（Issue #1055）。
+   *
+   * **なぜ要るか。** **実データの票数はどの行も 1 アイテム**（実測 2026-09-28。
+   * **読めた 8 本 / 329 行 / yes・no 合わせて 666 アイテムのうち、2 アイテム以上の行は 0**）。
+   * **複数アイテムの票数を持つ本は `r0705rinji` の 1 本だけ**で、
+   * **その本は「1 つのセルに票が 2 つ」でより早く例外になり、この行まで到達しない。**
+   *
+   * **＝実データでは踏めないので、フィクスチャを足しても検査できない。**
+   * **そこで「票数の欄が複数アイテムになり、その 1 つが落ちる」状態を、本物の座標の上で合成する。**
+   *
+   * **`"33"` を `"3"` `"3"` に割って 1 つ落とすと `"3"` が残り、`/^\d+$/` は通す**
+   * ——**33 票が 3 票として公開される。** **#569 の重いほう（違う記録が出る）。**
+   *
+   * 値は `"${ページ番号}:${yes|no}"`（例 `"1:yes"`）。**本番は渡さない**
+   * （`undefined` なら振る舞いは 1 ビットも変わらない）。
+   */
+  splitCountForTest?: string;
+  /**
+   * **落とし方を選ぶ**（Issue #1055）。
+   *
+   * - `"tie"`（既定）: **本物の同距離タイ**にする（隣り合う 2 行の中点へ動かす）。**検査 (1) が踏む道。**
+   * - `"vanish"`: **黙って消す**（タイ以外の理由でアイテムが欠ける形。**検査 (2) だけが踏む道**）。
+   *
+   * **2 通り要る理由**: **検査 (1) は「落ちた事実」を、検査 (2) は「値そのもの」を見ている。**
+   * **1 通りしか踏めないと、片方を消しても緑のままになる**（#1056 で同じ穴を踏んだ）。
+   */
+  splitCountModeForTest?: "tie" | "vanish";
 }
 
 export async function parseVotePdf(bytes: Buffer, dropForTest?: DropTiedForTest): Promise<VotePdf> {
@@ -878,8 +906,56 @@ export async function parseVotePdf(bytes: Buffer, dropForTest?: DropTiedForTest)
     const titleCells = splitTitleCells(titleLines, anchors);
     const titleByRow = titleCells ?? own(titleItems);
     const resultByRow = own(body.filter((i) => inX(i, band.result)));
-    const yesByRow = own(body.filter((i) => inX(i, band.yes)));
-    const noByRow = own(body.filter((i) => inX(i, band.no)));
+    /**
+     * **賛成／反対の欄だけは「置けなかった文字が 1 つでもあったか」を覚えておく**（Issue #1055）。
+     *
+     * **`own` は行が決まらない文字を黙って落とす**（#1023。落とすのは正しい——推定で隣の行へ入れない）。
+     * **票（○ ●）なら落ちたセルが `不明` になって利用者から見える**が、
+     * **票数の欄は違う**——**`"34"` が 2 つのアイテムに分かれていて片方が落ちると、
+     * 残る `"3"` が `/^\d+$/` を黙って通り、`34 → 3` という別の数が公開される。**
+     * **「記録が出ない」ではなく「違う記録が出る」**（#569 の重いほう。利用者からは検出できない）。
+     *
+     * **`/^\d+$/` は「数字である」の検査であって「切り詰められていない」の検査ではない。**
+     * だから**落ちた事実そのもの**を持ち回り、下で落とす。
+     */
+    const countDropped = new Set<number>();
+    const ownCount = (items: Item[]): Map<number, Item[]> => {
+      const map = new Map<number, Item[]>(anchors.map((a) => [a, [] as Item[]]));
+      for (const it of items) {
+        const a = nearest(it.y);
+        if (a !== undefined) { map.get(a)!.push(it); continue; }
+        tiedItems++;
+        // **どの行のものか決まらなかったので、どの行の票数も信じられない。**
+        // **1 文字でも落ちたら、その欄の全行を疑う**（落ちた文字が「どの行の桁だったか」は分からない）。
+        for (const x of anchors) countDropped.add(x);
+      }
+      return map;
+    };
+    /**
+     * **検査だけが通る道**（#1055。`splitCountForTest` を渡さなければ入力をそのまま返す）。
+     * **票数の欄を 1 桁ずつに割って、2 桁目を「落ちた」状態にする**
+     * （`tie` は本物の同距離タイに、`vanish` は黙って消す）。
+     */
+    const splitForTest = (items: Item[], which: "yes" | "no"): Item[] => {
+      if (dropForTest?.splitCountForTest !== `${pi + 1}:${which}`) return items;
+      if (anchors.length < 2) return items;
+      const mid = (anchors[0] + anchors[1]) / 2;
+      const mode = dropForTest.splitCountModeForTest ?? "tie";
+      const out: Item[] = [];
+      let done = false;
+      for (const it of items) {
+        const cs = [...it.str];
+        if (done || cs.length < 2) { out.push(it); continue; }
+        done = true;
+        const w = it.w / cs.length;
+        // 1 桁目はそのまま、2 桁目だけ落とす（＝残るのは切り詰められた数）
+        out.push({ ...it, str: cs[0], w });
+        if (mode === "tie") out.push({ ...it, str: cs[1], x: it.x + w, w, y: mid });
+      }
+      return out;
+    };
+    const yesByRow = ownCount(splitForTest(body.filter((i) => inX(i, band.yes)), "yes"));
+    const noByRow = ownCount(splitForTest(body.filter((i) => inX(i, band.no)), "no"));
 
     // 付託委員会: 件名と同じく、上から順の行を議案の数ぶんの塊に切れ目なく分ける（#896。下の refLines を見よ）。
     // **隙間の大きさ（BLOCK_GAP）では分けられない**ことを 13 本で実測したので、閾値をやめた。
@@ -1057,6 +1133,15 @@ export async function parseVotePdf(bytes: Buffer, dropForTest?: DropTiedForTest)
       if (referredCommittees.length === 0) throw new Error(`page ${pi + 1} ${number}: 付託委員会 is empty`);
       checkReferredOffset(pi + 1, number, referredCommittees, referredOffset);
       if (!/^\d+$/.test(yesText) || !/^\d+$/.test(noText)) throw new Error(`page ${pi + 1} ${number}: 賛成/反対 "${yesText}"/"${noText}" is not a number`);
+      /*
+       * **切り詰めの検出 (1/2): 賛成／反対の欄で 1 文字でも置けなかったら、その本を落とす**（Issue #1055）。
+       *
+       * **`/^\d+$/` を通ったことは「切り詰められていない」ことの証明ではない。**
+       * **`"34"` の片方が落ちた `"3"` も `/^\d+$/` を通る。**
+       * **形の検査は値の検査の代わりにならない**ので、**落ちた事実そのもの**で落とす。
+       * **「34 票と誤って出す」より「この本を読まない」ほうが軽い**（#569）。
+       */
+      if (countDropped.has(a)) throw new Error(`page ${pi + 1} ${number}: 賛成/反対 "${yesText}"/"${noText}" — 票数の欄に行が決まらなかった文字がある（切り詰められた数かもしれない。#1055）`);
       const marks = markByRow.get(a)!;
       const cells = colX.map((_, col) => {
         const mark = marks.get(col);
@@ -1077,7 +1162,31 @@ export async function parseVotePdf(bytes: Buffer, dropForTest?: DropTiedForTest)
         unknownCells++;
         return UNKNOWN_CELL;
       });
-      rows.push({ kind: kindOf(section, band.numberHeader, number, pi + 1), number, title, referredCommittees, result, counts: { yes: Number(yesText), no: Number(noText) }, cells, page: pi + 1, titleOffset, referredOffset });
+      /*
+       * **切り詰めの検出 (2/2): 公表された票数を「その行に実際に並んだ ○ ● の数」と突き合わせる**（Issue #1055）。
+       *
+       * **`/^\d+$/` は欄の中の「形」しか見ない。** **同じ行の票そのものは独立した別の情報**なので、
+       * **これは形の検査ではなく値の検査である**——**`34 → 3` の切り詰めはここで必ず外れる。**
+       *
+       * **実測（2026-09-28。フィクスチャで読めた 8 本 / 329 行）: 不一致 0 行。**
+       * **`不明` のセルを持つ 27 行も含めて 0**（`不明` になるのは議⾧・除斥などの非投票セルで、
+       * ○ ● の数には最初から入っていない）。
+       *
+       * **タイで票が落ちたときだけは「実際に並んだ数」が測れない**（落ちた票は `不明` になる）。
+       * そのときは **`公表値 >= 数えた数`** だけを見る（#1023 の「落とす」振る舞いを壊さないため）。
+       * **`<` になったら、票数の側が切り詰められている**ので落とす。
+       */
+      const yesMarks = cells.filter((c) => c === "○").length;
+      const noMarks = cells.filter((c) => c === "●").length;
+      const yesNum = Number(yesText);
+      const noNum = Number(noText);
+      // **このページで票を落とした列があるか**（`tiedCols` はその列の全行を `不明` にする。#1023）。
+      // 落ちているなら「数えた数」は本物より小さいので、厳密な一致ではなく `公表値 >= 数えた数` で見る。
+      const someMarksDropped = tiedCols.size > 0;
+      if (someMarksDropped ? (yesNum < yesMarks || noNum < noMarks) : (yesNum !== yesMarks || noNum !== noMarks)) {
+        throw new Error(`page ${pi + 1} ${number}: 賛成/反対 の公表値 ${yesNum}/${noNum} が、同じ行に並んだ ○/● の数 ${yesMarks}/${noMarks} と合わない（票数が切り詰められた疑い。#1055）`);
+      }
+      rows.push({ kind: kindOf(section, band.numberHeader, number, pi + 1), number, title, referredCommittees, result, counts: { yes: yesNum, no: noNum }, cells, page: pi + 1, titleOffset, referredOffset });
     }
   }
   if (rows.length === 0) throw new Error("no rows found in the PDF");
