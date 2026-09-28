@@ -42,8 +42,12 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    # Issue #556: 実測 min 28 / med 56 / p90 62 / max 71s（n=40。呼び出し元 3 つの `*/deploy` job を
-    # `gh api .../runs/<id>/jobs` の completed_at − started_at で集計）。値は max の 25 倍。
+    # Issue #556 / #1056: **実測値はここに書かない**（数が 2 か所にあると片方だけ腐る。#1056 で
+    # 実際に腐った: ここには「max 71s / max の 25 倍」と書いてあったが、2026-09-27 の再測では
+    # max も倍率も違っていた）。**実測値も `timeout-minutes` に対する倍率も
+    # packages/etl/test/workflow-timeout.test.ts の表が
+    # 1 か所で持つ**（測り方・n・測った日つき。この job は `uses:` で呼ばれるので、
+    # 呼び出し元の `production / deploy` と `staging / deploy` で測る）。
     #
     # ここは**本番に触る唯一の job** なので、他より厚く取っている。切れたときに何が残るかを見て決めた:
     #   ・rsync より前（checkout / overlay / ビルド）で切れる → VPS には何も触れていない。無害。
@@ -53,7 +57,8 @@ jobs:
     #     ただし rsync 自身が `--timeout=120` を持つので、無応答なら 2 分で先に落ちる（#308）。
     #     再実行すれば同じ内容で上書きされ、`--delete` も含めて収束する（rsync は冪等）。
     # つまり「30 分で切る」ことが作り出す最悪の状態は、rsync が 30 分間**転送し続けた**場合だけで、
-    # 実測 71s に対して 25 倍の余裕がある。逆に timeout が無いと、固まった rsync が
+    # 実測に対しては大きな余裕がある（**具体の秒数と倍率は上記の表を見よ**。#1056）。
+    # 逆に timeout が無いと、固まった rsync が
     # concurrency group `deploy-vps` を最大 6 時間占有し、**その間のデプロイが全部詰まる**。
     # 詰まる側の害のほうが大きいと判断した。
     #
