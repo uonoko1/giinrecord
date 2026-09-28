@@ -59,6 +59,24 @@ import { parseVotePdf, UNKNOWN_CELL } from "../src/sources/local/shimane/votes-p
  * | うち `不明` のセルを持つ 27 行 | **0 行**（`不明` は議⾧・除斥などの非投票セルで ○ ● に入らない） |
  *
  * **この変更で本番の出力は 1 行も変わらない**（下の「本番が痩せない」の検査）。
+ *
+ * ## 変異テストの結果（**素通りした変異も書く**）
+ *
+ * | 変異 | 結果 |
+ * |---|---|
+ * | **検査 (2) を丸ごと消す** | **殺せた。35 組が素通りして違う票数が出た**（＝**これが効いている検査**） |
+ * | **検査 (1) を丸ごと消す** | **殺せた**（21 → 0）。**ただし素通りは 0 件**——56 組は全部 検査 (2) が捕まえる |
+ * | `someMarksDropped` を常に `false`（厳密一致だけ） | **殺せた**（#1023/#1056 の検査が 2 本落ちる。`>=` の枝は #1023 の振る舞いに要る） |
+ * | **`someMarksDropped` を常に `true`（`>=` だけ）** | **素通りした（等価変異）** |
+ *
+ * **最後の 1 つは等価変異である。理由を書く**（「たまたま緑」と区別するため）:
+ * **切り詰めは票数を必ず小さくする**（`33 → 3`）ので、**`>=` でも必ず外れる。**
+ * **厳密一致の枝が守っているのは逆向き（公表値 > 数えた数）で、それは切り詰めではなく
+ * 「票が落ちた」側**——**そちらは `someMarksDropped` を `false` にする変異が殺している。**
+ * **＝どちらの枝も検査で押さえられているが、この 1 つの変異だけは切り詰めの観点からは等価である。**
+ *
+ * **＝検査 (1) は「効いている唯一の検査」ではなく、原因そのものを名指しする二重化である**
+ * （検査 (2) が寄りかかる「公表値と ○ ● は一致する」という前提が将来崩れたときに残る）。
  */
 
 const FIXTURES = fileURLToPath(new URL("./fixtures/shimane/", import.meta.url));
@@ -218,6 +236,67 @@ test("#1055 島根: 票数を 1 桁ずつに割って 1 つ落とすと、必ず
   // **本題**: **切り詰めが起きたのに素通りした組は 1 つも無い**
   assert.deepEqual(leaked, [], `票数が切り詰められたのに例外にならなかった（${leaked.length} 組）。`
     + "**#569 の重いほう——利用者から検出できない誤った票数が公開される**");
+});
+
+/* ───────── 3b. 票も落ちているとき（`>=` が緩くなる道）でも素通りしない ───────── */
+
+/**
+ * **検査 (2) は、票（○ ●）がタイで落ちたページでは `公表値 >= 数えた数` に緩む**
+ * （落ちた票は `不明` になるので「数えた数」が本物より小さい。#1023 の振る舞いを壊さないため）。
+ *
+ * **その緩んだ道でも、票数の切り詰めが素通りしないことを測る。**
+ * **票の落下（#1056 が絞った 13 組）と票数の切り詰めを同時に起こす。**
+ *
+ * ## 実測（2026-09-28）
+ *
+ * | | 組 |
+ * |---|---:|
+ * | **(票を落とす列, 票数の欄, 落とし方) の組** | **52** |
+ * | **例外になった組** | **24** |
+ * | **票数が変わらなかった組**（2 桁が無い／中点がタイにならない） | **28** |
+ * | **票数が変わったのに素通りした組** | **0** |
+ */
+test("#1055 島根: 票も落ちているページ（`>=` に緩む道）でも、票数の切り詰めは素通りしない（52 組）", async () => {
+  // **#1056 が絞った 13 組**（`labelCols ∩ markCols`。あちらの検査が同じ並びを固定している）
+  const MARK_DROP_SITES: readonly (readonly [string, string])[] = [
+    ["r0506_giinbetu_kekka.pdf", "2:13"],
+    ["r0606_giinbetu_kekka.pdf", "4:25"],
+    ["r0606_giinbetu_kekka.pdf", "4:29"],
+    ["r0609_giinbetu_kekka.pdf", "2:33"],
+    ["r0609_giinbetu_kekka.pdf", "3:7"],
+    ["r0706_giinbetu_kekka.pdf", "4:8"],
+    ["r0706_giinbetu_kekka.pdf", "4:18"],
+    ["r0706_giinbetu_kekka.pdf", "4:20"],
+    ["r0706_giinbetu_kekka.pdf", "4:23"],
+    ["r0706_giinbetu_kekka.pdf", "4:24"],
+    ["r0802_giinbetu_kekka.pdf", "4:33"],
+    ["r0806_giinbetu_kekka.pdf", "4:21"],
+    ["r0806_giinbetu_kekka.pdf", "4:23"],
+  ] as const;
+  let sites = 0;
+  let caught = 0;
+  let noChange = 0;
+  const leaked: string[] = [];
+  for (const [file, pageCol] of MARK_DROP_SITES) {
+    const bytes = readFileSync(`${FIXTURES}${file}`);
+    const base = await parseVotePdf(bytes);
+    const baseCounts = JSON.stringify(base.rows.map((r) => [r.counts.yes, r.counts.no]));
+    const page = pageCol.split(":")[0];
+    for (const which of ["yes", "no"] as const) {
+      for (const mode of ["tie", "vanish"] as const) {
+        sites++;
+        try {
+          const v = await parseVotePdf(bytes, { pageCol, splitCountForTest: `${page}:${which}`, splitCountModeForTest: mode });
+          if (JSON.stringify(v.rows.map((r) => [r.counts.yes, r.counts.no])) === baseCounts) noChange++;
+          else leaked.push(`${file} 票=${pageCol} 票数=${page}:${which} ${mode}`);
+        } catch { caught++; }
+      }
+    }
+  }
+  assert.equal(sites, 52, `前提: 組が ${sites}（実測は 52 ＝ 13 組 × yes/no × tie/vanish）`);
+  assert.equal(caught, 24, `例外になった組が ${caught}（実測は 24）。**0 に近づいたなら合成が効いていない**`);
+  assert.equal(noChange, 28, `票数が変わらなかった組が ${noChange}（実測は 28）`);
+  assert.deepEqual(leaked, [], `票も落ちているページで、票数の切り詰めが素通りした（${leaked.length} 組）`);
 });
 
 /* ───────── 4. 本番が痩せない（足した検査が「出るはずの記録」を消していない） ───────── */

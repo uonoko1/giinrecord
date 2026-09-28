@@ -1087,6 +1087,10 @@ export async function parseVotePdf(bytes: Buffer, dropForTest?: DropTiedForTest)
         const a = tieHere ? undefined : nearest(it.y);
         if (a === undefined) { tiedMarks++; tiedItems++; tiedCols.add(col); continue; }
         const row = markByRow.get(a)!;
+        // **この例外を緩める人へ**（Issue #1055）: **これは `r0705rinji` が落ちている理由そのもので、
+        // その本は「票数の欄が 4 アイテムにまたがる」唯一の本である**（`第80号` の賛成欄が `["34","34","33","33"]`）。
+        // **ここが通るようになると、票数の切り詰め（`"34"` の片方が落ちて `"3"` が残る）へ到達する。**
+        // **下の #1055 の 2 つの検査がそれを受け止めるが、先にこの Issue を読むこと。**
         if (row.has(col)) throw new Error(`page ${pi + 1}: two vote marks in one cell (col ${col})`);
         row.set(col, it);
       } else {
