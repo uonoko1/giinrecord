@@ -20,18 +20,27 @@ import { dirname, resolve } from "node:path";
  * **`git log <基点> --pretty=format:%B | grep -ciE '^[ \t]*co-authored-by[ \t]*:'` で数えた。**
  *
  * ```
- *                                                          068be5c2   796b18d1
- *                                                          (696 cmt)  (697 cmt)
- * noreply@anthropic.com   ★ github.com/claude に誤帰属        1643       1643
- *                           （id=81847 / type=User /
- *                            created_at=2009-05-07。実測）
- * 120390190+uonoko1@users.noreply.github.com      OK          518        518
- * 41898282+github-actions[bot]@users.noreply…     OK           66         67
+ *                                                          068be5c2   2f136cd1
+ *                                                          (696 cmt)  (711 cmt)
+ * noreply@anthropic.com         github.com/claude に帰属      1643       1708
+ *                               （**誤帰属ではない**。#1106 で
+ *                                実測し直した。下の「2 つの道」）
+ * 120390190+uonoko1@users.noreply.github.com      OK          518        529
+ * 41898282+github-actions[bot]@users.noreply…     OK           66         69
  * （利用者本人の個人アドレス。下の「本人のアドレス」節）           2          2
- * etl@users.noreply.github.com  ★ github.com/etl              1          1
+ * etl@users.noreply.github.com  ★ github.com/etl              1          0
+ * 219112946+seiji-kiroku-dev@users.noreply…       OK*          0          1
+ *                               （*形は正しいが github.com/MLehnus
+ *                                に帰属する。下の「守れないもの 1」）
  *                                                          ────────   ────────
- * 合計（= co-authored-by 行の実数）                            2230       2231
+ * 合計（= 身元 trailer 行の実数）                              2230       2309
  * ```
+ *
+ * **`etl@` が `1 → 0` に減っているのは直したからではない**——
+ * **`068be5c2` は現在の `origin/main` の祖先ではない**（実測: `git merge-base --is-ancestor
+ * 068be5c2 origin/main` が exit 1）。**その 1 件は別の系列に在り、いまの main には無い。**
+ * **`etl@` を含むコミットは `--all` でなら見つかる**（`1e41501f` / `a1325eaf` ほか）。
+ * **「基点が動くと数も動く」の実例である**（#1074 が同じ節で書いているとおり）。
  *
  * **レビューは 67 / 2231 を実測し、PR 本文の 66 / 2230 を「誤り」とした。**
  * **どちらも、その基点では正しい。** **自分で数え直して分かったのは、
@@ -39,16 +48,18 @@ import { dirname, resolve } from "node:path";
  * ——**その 1 コミットが `41898282+github-actions[bot]@…` の trailer を 1 行足すので、
  * 66 → 67 / 2230 → 2231 に動いた**（実測: `git rev-list --count 068be5c2..origin/main` = 1、
  * その 1 件の `co-authored-by` 行は `github-actions[bot]` の 1 行）。
- * **合計はどちらの基点でも行の実数と一致する**（1643+518+66+2+1 = 2230 /
- * 1643+518+67+2+1 = 2231）。**だから「どちらが正しい数か」ではなく「どの基点の数か」を書く。**
+ * **合計はどの基点でも行の実数と一致する**（1643+518+66+2+1 = 2230 /
+ * `2f136cd1` では 1708+529+69+2+0+1 = 2309）。
+ * **だから「どちらが正しい数か」ではなく「どの基点の数か」を書く。**
  *
  * **`Co-authored-by:` 以外に、アドレスを運ぶ trailer 形の token は 1 つも無い**
  * （全履歴を token ごとに数えた）。
  *
  * ── **`git` の trailer パーサだけを見てはいけない**（この PBI で測って分かったこと）─────
  *
- * **`git log --pretty='%(trailers:only=true)'` は `noreply@anthropic.com` を 640 しか返す。
- * 本文を直接読むと 1643 ある。** 差は **squash merge のメッセージの形** から来る:
+ * **`git log --pretty='%(trailers:only=true)'` は `noreply@anthropic.com` を 650 しか返す。
+ * 本文を直接読むと 1708 ある**（基点 `2f136cd1` / 711 commits。実測 2026-09-28）**。**
+ * 差は **squash merge のメッセージの形** から来る:
  *
  * ```
  * Closes #1053
@@ -137,6 +148,47 @@ import { dirname, resolve } from "node:path";
  * etl@users.noreply.github.com  → github.com/etl  id=1859882  （実測 1e41501f / a1325eaf）
  * dev@users.noreply.github.com  → github.com/dev  id=12158001 （実測 42f9c225）
  * ```
+ *
+ * **これは観測だけではなく、GitHub の一次資料に明記されている**
+ * （`https://docs.github.com/en/account-and-profile/reference/email-addresses-reference`
+ * の "Your noreply email address"。2026-09-28 取得）:
+ *
+ * > If you created your account after July 18, 2017, your noreply email address is
+ * > **an ID number and your username in the form of `ID+USERNAME@users.noreply.github.com`**.
+ * > If you created your account prior to July 18, 2017, ... your noreply email address is
+ * > **`USERNAME@users.noreply.github.com`**.
+ * >
+ * > If you use your noreply email address for GitHub to make commits and then **change your
+ * > username, those commits will not be associated with your account. This does not apply if
+ * > you're using the ID-based noreply address from GitHub.**
+ *
+ * **後半が「なぜ数字 ID 付きだけが安全か」の一次資料である**——
+ * **裸の `USERNAME@` はユーザー名に束縛されるので、その名前を持つ別のアカウントに移りうる。**
+ * **数字 ID の形は ID に束縛されるので移らない。**
+ *
+ * **実測もこれと整合する**——**誤帰属した 2 つは、どちらも 2017-07-18 より前に作られた
+ * アカウントである**（`etl` は 2012-06-17 / `dev` は 2015-04-28。実測 `gh api users/<name>`）。
+ * **だから裸の `<name>@users.noreply.github.com` がその人の noreply アドレスとして成立する。**
+ *
+ * ── **この一次資料が言っていないこと（断定しない）** ───────────────────────────
+ *
+ * **一次資料は「noreply アドレスの *形*」を定めているだけで、
+ * 「他のドメインでローカル部が照合されない」とは明示していない。**
+ * **そこは実測で補っている**——**そして実測は「2 例で出なかった」であって、
+ * 「絶対に出ない」ではない:**
+ *
+ * ```
+ * trailer のアドレス          同名の GitHub ユーザー       実在           実際の帰属先
+ * noreply@anthropic.com      github.com/noreply        id=1239515      claude   (650)
+ * sakai.personal@gmail.com   github.com/sakai          id=15643        uonoko1  (656)
+ * etl@users.noreply.github…  github.com/etl            id=1859882      etl      ★ 誤帰属
+ * ```
+ * **`origin/main`（`2f136cd1`）の身元 trailer に出るドメインは 3 つだけである**
+ * （実測: `anthropic.com` 1708 / `users.noreply.github.com` 599 / `gmail.com` 2）。
+ * **`noreply` も `sakai` も実在するのに Contributors に出ない**
+ * （`github-actions[bot]` 59 / `claude` 650 / `uonoko1` 656 のみ）。
+ * **ドメインを問わずローカル部で照合しているなら、この 2 つも出ているはずである。**
+ * **出ていない、というのが測れた全部である。**
  *
  * ── **この検査が受け持つのは (B) だけである** ───────────────────────────────────
  *
@@ -412,18 +464,26 @@ const scannedBody = (
 /**
  * **この PR が足すコミットだけを見る**（`merge-base(origin/main, HEAD)..HEAD`）。
  *
- * **なぜ全履歴を見ないか**: **いま在る履歴には 1644 件の誤帰属が既に刻まれている**
- * （`noreply@anthropic.com` 1643 / `etl@users.noreply.github.com` 1）。
- * **全履歴に当てると、この検査は `origin/main` で必ず赤になる**——
- * **赤が常態になった検査は誰も見なくなる**（作業合意の「偽陽性を出す検査」）。
- * **既存履歴を直すには protected branch の history rewrite が必要で 640 commits に触る**ので、
+ * **なぜ全履歴を見ないか**: **いま在る履歴に誤帰属が既に刻まれているから**である。
+ *
+ * **#1074 はここを「1644 件」と書いていたが、その内訳の 1643 件は
+ * `noreply@anthropic.com` で、実測すると誤帰属ではなかった**（#1106。`github.com/claude`
+ * に正しく帰属している）。**実際に誤帰属しているのは、現在の `origin/main`（`2f136cd1`）では
+ * `219112946+seiji-kiroku-dev@users.noreply.github.com` の 1 件だけである**
+ * （→ `github.com/MLehnus`。**形が正しいのでこの検査は止められない**。下の「守れないもの」）。
+ * **`etl@` は現在の main には 0 件**（`068be5c2` は現 main の祖先ではない。上の表）。
+ *
+ * **それでも全履歴には当てない**——**この検査は「枝が *足す* もの」を止めるためのもので、
+ * 既に刻まれたものを数え直すのは別の仕事である。**
+ * **既存履歴を直すには protected branch の history rewrite が必要で 711 commits に触る**ので、
  * **#1074 は「利用者に確認してから」として範囲外にしている。**
  *
  * **この選択で守れないもの**（明記する）:
  * - **数字 ID の *中身* は検査できない。** **逐語の allowlist に無い数字 ID は通る**
  *   ——**2026-09-28 に実際に誤帰属が 1 件入った**（`219112946+seiji-kiroku-dev@…` →
  *   `github.com/MLehnus`。`OK` の docblock に実測）。**形は正しいので止められない。**
- * - **既に main に在る 1644 件は、この検査では永久に見えない。** 直すのは別の PBI。
+ * - **既に main に在る誤帰属は、この検査では永久に見えない**（`2f136cd1` で 1 件。上の実測）。
+ *   直すのは別の PBI。
  * - **`origin/main` や merge-base が取れない浅い checkout では、この検査は 1 件も見ない**
  *   （下で skip する。緑にはしない。**ただし「読めない」という主張は別の git コマンドで
  *   裏づける**——理由の綴りだけで skip できないようにした。必須 2）。
@@ -1512,8 +1572,9 @@ test("メールアドレスの拾い方が狭まっていない（走査の対�
  * squash merge の区切りより上の `Co-Authored-By:` がまるごと落ちる**（この PBI の実測）。
  *
  * **実測（`origin/main` = `068be5c2`、696 commits）**:
- * `%(trailers:only=true)` で `noreply@anthropic.com` は **640**。本文を直接読むと **1643**。
- * **1003 件、つまり 61% が見えていなかった。**
+ * `%(trailers:only=true)` で `noreply@anthropic.com` は **650**。本文を直接読むと **1708**。
+ * **1058 件、つまり 62% が見えていなかった**（基点 `2f136cd1` / 711 commits。実測 2026-09-28。
+ * `068be5c2` では 640 / 1643 で 61% だった）。
  *
  * **だから「本文を行ごとに走査する」ことを固定する。**
  * **`%(trailers)` に切り替える変異はここが落とす。**
