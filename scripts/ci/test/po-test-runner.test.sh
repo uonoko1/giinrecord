@@ -345,6 +345,14 @@ t_po_test_dir_is_the_only_filtering_runner() {
 t_other_test_dirs_are_self_contained() {
   # 他の 3 ディレクトリは **直接実行が正しい呼び方**なので、この PBI の守りを入れてはいけない。
   # 「自己完結している」＝ 自前の test_case を持つこと。ここが崩れたら #1124 と同じ穴が開く。
+  #
+  # **deploy/test を見ていないのは、手抜きではなく形が違うから**（#1130 のレビューが補足した）。
+  # `deploy/test` 24 本のうち **6 本**（apply-all / nginx-404 / nginx-headers / ops-user-setup /
+  # pipefail-sigpipe / run-remote）は `test_case()` ではなく `ok()` / `bad()` 方式で、
+  # **構造的にこの照合ができない**（実測。**これは欠陥ではない**——`test_case` が無くても
+  # 各ファイルが自前の終了判定を持ち、直接 `bash` して赤くなる）。
+  # **deploy/test をこのループに足すと 6 本が赤くなる。足さないこと。**
+  # deploy/test の本数と中身は packages/etl/test/deploy-test-inventory.test.ts が別に固定している。
   local d f n=0 bad=0
   for d in scripts/ci/test scripts/dev/test; do
     for f in "$ROOT/$d"/*.test.sh; do
@@ -352,8 +360,22 @@ t_other_test_dirs_are_self_contained() {
       grep -q '^test_case()' "$f" || { bad=$((bad+1)); fail "$d/$(basename "$f"): 自前の test_case が無い"; }
     done
   done
-  [[ $n -ge 12 ]] || fail "母数: scripts/ci/test + scripts/dev/test が 12 本以上（実測 12 本）: $n"
+  [[ $n -ge 12 ]] || fail "母数: scripts/ci/test + scripts/dev/test が 12 本以上（実測 13 本）: $n"
   assert_eq 0 "$bad" "全 $n 本が自己完結"
+  # **deploy/test は「1 ファイル = 1 実行」であることだけ見る**（呼び方が同じであること）。
+  # CI の glob ループが直接 bash しているので、run.sh 相当のものが現れたら #1124 を数え直す。
+  local dn=0
+  for f in "$ROOT"/deploy/test/*.test.sh; do dn=$((dn+1)); done
+  [[ $dn -ge 24 ]] || fail "母数: deploy/test が 24 本以上（実測 24 本）: $dn"
+  # **`[[ ... ]] && fail ...` と書かないこと。** ファイルが無い（＝正常）とき `[[ ]]` が
+  # 非ゼロを返し、それが関数の戻り値になる。**`set -euo pipefail` なのでそこで
+  # ファイルごと止まり、この後のテストと要約が 1 行も出ないまま exit 1 になる**
+  # （実測: 19 本のうち 18 本目で止まり、`passed:` の行が出なかった。
+  #  **「走っていないのに赤」で、しかも理由が読めない**——#1124 の裏返しの形）。
+  # `if` で書けば最後の評価が真になる。
+  if [[ -e "$ROOT/deploy/test/run.sh" ]]; then
+    fail "deploy/test に run.sh が現れた——#1124 の穴を数え直すこと"
+  fi
 }
 
 # ---- run ------------------------------------------------------------------------------------
