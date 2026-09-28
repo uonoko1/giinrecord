@@ -233,7 +233,10 @@ bash deploy/monitor/branch-protection.sh uonoko1/giinrecord main
 for b in $(gh api repos/uonoko1/giinrecord/branches --jq '.[].name'); do
   git fetch -q origin "refs/heads/$b:refs/remotes/origin/$b"
   n=0
-  for s in $(git log "origin/$b" --format='%H' -40); do
+  # **`-40` のような上限を付けないこと**——**41 件目より下に汚れが在ると
+  # 「0 件（きれい）」と出る**（実測 2026-09-29、使い捨ての repo で再現）。
+  # **この節は「これをやらないと終わっていない」ための検算なので、全数を見る。**
+  for s in $(git log "origin/$b" --format='%H'); do
     c=$(git log -1 --pretty='%(trailers:only=true)' "$s" | grep -ciE '<消したアドレス>' || true)
     n=$((n + ${c:-0}))
   done
@@ -363,7 +366,7 @@ tree          完全同一（コードは 1 バイトも変わっていない）
 |---|---|
 | `dev-etl-branches.bundle` | 最初に消した 17 本 |
 | `open-pbi-branches.bundle` | 開いていた PBI の枝 |
-| **`pre-rewrite-main.bundle`** | **書き換え前の main（`4696f048`）。他のどの bundle にも入っていなかった**——誤帰属 trailer を 9 件持つことで「書き換え前」だと確認できる |
+| **`pre-rewrite-main.bundle`** | **書き換え前の main（`4696f048`）。他のどの bundle にも入っていなかった**——**散文込みの本文全体で `etl@users.noreply` / `219112946+` に 9 件、trailer 行に限れば 3 件**当たる（**数え方で違う数が出るので両方書く**。実測 2026-09-29）ことで「書き換え前」だと確認できる |
 | **`local-stale-branches.bundle`** | **手元にだけ在った枝 175 本**（後述） |
 
 **手元の枝を消すときは、到達性で判定しないこと。**
@@ -408,6 +411,11 @@ GitHub には存在しない ref の分まで数える**（実測: `--all` で 7
 リモートに実在する 5 枝＋タグに絞ると **0/0/0**）。**GitHub が見るのはリモートの ref だけ。**
 
 ```
-REFS=$(git ls-remote --heads origin | awk '{print "origin/"substr($2,12)}')
-git log $REFS --tags --pretty=format:%B | grep -icE '<パターン>'
+# **`$REFS` に入れて渡さないこと**——**zsh は変数を単語分割しないので、
+# git は複数行を「1 個の ref 名」として受け取り `fatal: ambiguous argument` で死ぬ。**
+# **しかも `grep -c` に繋ぐと画面には `0` と出るので「誤帰属なし」に見える**
+# （実測 2026-09-29。利用者のシェルは zsh）。**コマンド置換を直接渡す。**
+git log $(git ls-remote --heads origin | awk '{print "origin/"substr($2,12)}') \
+  --tags --pretty=format:%B | grep -icE '<パターン>'
+# 検算: zsh / bash のどちらで流しても同じ数になること（実測: 両方 2354）
 ```
