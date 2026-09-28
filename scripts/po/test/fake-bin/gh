@@ -40,6 +40,16 @@ handle_with_defaults() {
       "pr list --repo "*" --base "*" --state open --json number"*) echo '[]'; return 0 ;;
       "pr view "*"--json headRefOid"*) echo '{"headRefOid":"oid1"}'; return 0 ;;
       "api repos/"*"/issues/"*"/comments"*) echo '[{"user":{"login":"uonoko1"},"body":"## レビュー: マージしてよい"}]'; return 0 ;;
+      # #1101 で枝のコミットの身元の検査が増え、これも**どのテストの経路でも通る**ので既定を置く。
+      # 既定は同じく「何も起きていない」側＝**本人確認済みのアドレスでコミットされている**
+      # （他の関心事を試しているテストを、身元の話で落とさない）。
+      # **本物の API と同じ JSON を返す**（上の `--jq` が本物の jq で評価するので、
+      # 形が違えば落ちる——**`parents` を持たない形にすると `select` が通らない**）。
+      # **「既定が検査を素通しさせている」形にならないこと**は、
+      # **誤った数字 ID に上書きしたテストが止まることで確かめている**（#1101 の 3 本）。
+      "api repos/"*"/pulls/"*"/commits"*)
+        echo '[{"parents":[{"sha":"p1"}],"commit":{"author":{"email":"120390190+uonoko1@users.noreply.github.com"},"committer":{"email":"120390190+uonoko1@users.noreply.github.com"}}}]'
+        return 0 ;;
     esac
   fi
   [[ -n "$err" ]] && printf '%s\n' "$err" >&2
