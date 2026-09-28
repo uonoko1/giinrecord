@@ -1,4 +1,13 @@
 # shellcheck shell=bash
+# **Do not run this file directly** (#1124). It is sourced by scripts/po/test/run.sh, which
+# defines test_case / assert_* / run_script. Running it with `bash` used to print 200 lines of
+# `test_case: command not found` and then **exit 0** — an error that looked like a pass.
+[[ -n ${PO_TEST_RUN_SH:-} ]] || {
+  echo "$(basename "${BASH_SOURCE[0]}"): このファイルは単体では走りません（run.sh が source します）。" >&2
+  echo "  bash scripts/po/test/run.sh                       # 全部" >&2
+  echo "  bash scripts/po/test/run.sh ${BASH_SOURCE[0]##*/} # このファイルだけ" >&2
+  exit 2
+}
 # Tests for scripts/po/etl-verify.sh (sourced by run.sh)
 
 # The script asks for one run per workflow and the latest data/refresh PR, then prints facts.
