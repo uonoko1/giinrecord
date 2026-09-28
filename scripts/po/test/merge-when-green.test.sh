@@ -52,7 +52,10 @@ t_merge_green_merges() {
 handle() {
   case "$*" in
     "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
-    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"},{"name":"lint","status":"completed","conclusion":"skipped","started_at":"t1"}]}' ;;
+    # #1069: `skipped` を緑と数えてよいのは SKIPPABLE_CHECKS に載った名前だけになった。
+    # **ここは実在する正当な skip に置き換える**（`issue-secrets` は実測で直近 60 PR の 60 件に出る）。
+    # **架空の `lint` のままだと「走っていない必須チェック」になり、赤が正しい。**
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"},{"name":"issue-secrets","status":"completed","conclusion":"skipped","started_at":"t1"}]}' ;;
     "pr merge 12 --squash --delete-branch") echo merged ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
@@ -2677,7 +2680,7 @@ handle() {
     "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
       echo '{"check_runs":[
         {"name":"check","status":"completed","conclusion":"success","started_at":"2026-09-26T10:00:00Z"},
-        {"name":"check","status":"completed","conclusion":"skipped","started_at":"2026-09-26T10:05:00Z"}
+        {"name":"check","status":"completed","conclusion":"neutral","started_at":"2026-09-26T10:05:00Z"}
       ]}' ;;
     "pr merge 12 --squash --delete-branch") echo merged ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
@@ -2701,7 +2704,7 @@ handle() {
     "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
       echo '{"check_runs":[
         {"name":"check","status":"completed","conclusion":"success","started_at":"2026-09-26T10:00:00Z"},
-        {"name":"check","status":"completed","conclusion":"skipped","started_at":"2026-09-26T10:05:00Z"},
+        {"name":"check","status":"completed","conclusion":"neutral","started_at":"2026-09-26T10:05:00Z"},
         {"name":"gitleaks","status":"completed","conclusion":"success","started_at":"2026-09-26T10:00:00Z"}
       ]}' ;;
     "pr merge 12 --squash --delete-branch") echo merged ;;
@@ -2790,11 +2793,18 @@ handle() {
     "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
     "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
       # 実物をそのまま（並び順も実物どおり: 新しい skipped が先）
+      # **#1069 の後も `production` の形はそのまま残す**: `production` は SKIPPABLE_CHECKS に
+      # 無いので `skipped` も `failure` も fail になり、**どちらを採っても赤**。
+      # **つまりこの検査は #1054 の保証（新しい緑が古い赤を塗り替えない）を弱めていない。**
+      # **`staging` の古い側だけ `skipped` → `neutral` に替えた**（#1069）——
+      # `skipped` のままだと `staging` も赤くなり、**「重複そのものを赤にしていない」という
+      # この検査の主張が消えてしまう**。`neutral` は `skipped` と同じ pass 系で、
+      # **名前に依らず緑**なので、主張だけを残せる。
       echo '{"check_runs":[
         {"name":"production","status":"completed","conclusion":"skipped","started_at":"2026-09-27T08:00:32Z","details_url":"u1"},
         {"name":"production","status":"completed","conclusion":"failure","started_at":"2026-09-27T07:03:25Z","details_url":"u2"},
         {"name":"staging","status":"completed","conclusion":"success","started_at":"2026-09-27T08:00:34Z"},
-        {"name":"staging","status":"completed","conclusion":"skipped","started_at":"2026-09-27T07:03:23Z"},
+        {"name":"staging","status":"completed","conclusion":"neutral","started_at":"2026-09-27T07:03:23Z"},
         {"name":"check","status":"completed","conclusion":"success","started_at":"2026-09-27T08:00:00Z"}
       ]}' ;;
     "pr merge 12 --squash --delete-branch") echo merged ;;
@@ -2872,7 +2882,7 @@ handle() {
     "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
     "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
       echo '{"check_runs":[
-        {"name":"check","status":"completed","conclusion":"skipped","started_at":"2026-09-27T08:00:32Z"},
+        {"name":"check","status":"completed","conclusion":"neutral","started_at":"2026-09-27T08:00:32Z"},
         {"name":"check","status":"in_progress","conclusion":null,"started_at":"2026-09-27T07:03:25Z"},
         {"name":"check","status":"completed","conclusion":"success","started_at":"2026-09-27T06:01:11Z"}
       ]}' ;;
@@ -3150,6 +3160,226 @@ EOF
   assert_contains "$OUT$ERR" "検査 2 件 / 必須 2 件 / 赤 1 件" "9 run を 2 件に畳む"
 }
 test_case "1054: 末尾 5 件が全部 pass 系でも先頭寄りの赤は赤（.[-4:] / .[-5:] を殺す）" t_1054_red_early_with_all_pass_tail
+
+# --- #1069: `skipped` を pass として数えていたので、走っていない必須チェックが緑になっていた ------
+#
+# **再現（この PR を書く前に、`origin/main` の素の状態で実際に走らせた）:**
+#   必須 5 件（check / gitleaks / forbidden-patterns / audit / pr-closes）を全部
+#   `conclusion: skipped` にした check-runs を返すと——
+#     [..] all 5 checks green
+#     [..] squash-merging PR #12 and deleting feat/x
+#   **STATUS=0 でマージされた。** **1 行も走っていないのに「全部緑」。**
+#
+# **これは #757「母数を検算に入れる」の check-runs 版である。**
+# **`skipped` は「0 件（問題なし）」ではなく「数えていない」。**
+#
+# **#1054 は「分けられない」と結論して `skipped` を pass のまま置いた**（同ファイル上部の
+# 「#1054 やること 3」）。**その根拠——「check-runs API の `conclusion: skipped` には
+# `if:` が false だった場合と `concurrency` で消えた場合を区別する欄が無い」——は
+# API については正しい。**
+# **だが区別に API は要らない。`name` が在る。**
+# **「その job が PR で必ず skip されるか」は `.github/workflows/` の `if:` を見れば分かる。**
+# **#1054 は「check run の中で分ける」ことだけを試して、「名前で分ける」を試していなかった。**
+#
+# **実測（2026-09-28、直近 60 PR の HEAD の check-runs、`--paginate`、母数 483 件）:**
+#   conclusion 別   success 408 / skipped 63 / failure 12
+#   **skipped 63 件の名前は 2 つだけ**:  `issue-secrets` 60 PR / `docker-web` 3 PR
+#   **必須 5 件が skipped だった例  0 件 / 295 件**
+#     （check 57 success + 3 failure / gitleaks 60 / forbidden-patterns 60 /
+#       audit 60 / pr-closes 58 success + 5 failure）
+#   **つまり「必須が skipped」は実データに 1 件も無い**——赤にしても正常な PR は止まらない。
+#
+# **`docker-web` を SKIPPABLE_CHECKS に入れなかったのは測って決めた:**
+#   **`docker-web` が skipped の PR = {1084, 1092, 1103}**
+#   **`check` が failure の PR      = {1084, 1092, 1103}**   ——**3/3 で完全一致。**
+#   `docker-web` は `needs: check` を持ち、**job 直下の `if:` を持たない**。
+#   **skipped は「走る必要が無かった」ではなく「上流の `check` が赤くて巻き添えになった」**。
+#   **緑と数えてはいけない。** かつ**この 3 件はどれも必須の `check` が赤なので、
+#   この道具はもともと止まる**——入れなくても正常な PR は止まらない。
+
+# **(1) 穴そのもの**: 必須 5 件が全部 skipped → **マージしない**
+t_1069_all_required_skipped_is_red() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      echo '{"check_runs":[
+        {"name":"check","status":"completed","conclusion":"skipped","started_at":"t1","details_url":"u1"},
+        {"name":"gitleaks","status":"completed","conclusion":"skipped","started_at":"t1","details_url":"u2"},
+        {"name":"forbidden-patterns","status":"completed","conclusion":"skipped","started_at":"t1","details_url":"u3"},
+        {"name":"audit","status":"completed","conclusion":"skipped","started_at":"t1","details_url":"u4"},
+        {"name":"pr-closes","status":"completed","conclusion":"skipped","started_at":"t1","details_url":"u5"}
+      ]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  # **`--allow-nonrequired-red` を付けても通らない**（全部が必須なので）
+  run_script "$h" merge-when-green.sh --allow-nonrequired-red 12
+  assert_eq 1 "$STATUS" "必須が全部 skipped なのでマージしない"
+  assert_not_contains "$LOG" "pr	merge	12" "マージを試みない"
+  # **「all 5 checks green」と言わせない**——それがこの穴の見え方そのものだった
+  assert_not_contains "$OUT$ERR" "all 5 checks green" "走っていないものを「全部緑」と呼ばない"
+  # **5 件すべてを名指しする**（どれが走っていないのかを押す人が読める）
+  local n; n=$(grep -c . <<<"$ERR" || true)
+  assert_contains "$ERR" "check" "check を名指しする"
+  assert_contains "$ERR" "gitleaks" "gitleaks を名指しする"
+  assert_contains "$ERR" "forbidden-patterns" "forbidden-patterns を名指しする"
+  assert_contains "$ERR" "audit" "audit を名指しする"
+  assert_contains "$ERR" "pr-closes" "pr-closes を名指しする"
+  assert_contains "$OUT$ERR" "検査 5 件 / 必須 5 件 / 赤 5 件" "母数と赤の数を出す（#757）"
+  [[ "$n" -gt 0 ]] || fail "stderr が空"
+}
+test_case "1069: 必須が全部 skipped なら「全部緑」ではなく赤" t_1069_all_required_skipped_is_red
+
+# **(2) 必須 1 件だけが skipped でも止まる**（全部揃わないと気づけない、では守りにならない）。
+# **他の 4 件が本当に緑**なので、**`skipped` の 1 件だけが差**である。
+t_1069_single_required_skipped_is_red() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      echo '{"check_runs":[
+        {"name":"check","status":"completed","conclusion":"success","started_at":"t1"},
+        {"name":"gitleaks","status":"completed","conclusion":"skipped","started_at":"t1","details_url":"u2"},
+        {"name":"forbidden-patterns","status":"completed","conclusion":"success","started_at":"t1"},
+        {"name":"audit","status":"completed","conclusion":"success","started_at":"t1"},
+        {"name":"pr-closes","status":"completed","conclusion":"success","started_at":"t1"}
+      ]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh --allow-nonrequired-red 12
+  assert_eq 1 "$STATUS" "必須 1 件が skipped でも止まる"
+  assert_contains "$ERR" "checks failed on PR #12: gitleaks" "走っていない 1 件を名指しする"
+  assert_not_contains "$LOG" "pr	merge	12" "マージを試みない"
+}
+test_case "1069: 必須 1 件だけが skipped でも赤" t_1069_single_required_skipped_is_red
+
+# **(3) 正常系——これが無いとこの道具は使えない**（PBI が名指しで要求した確認）。
+# **実測した本物の顔ぶれ**（PR #1108 の HEAD `c91202fe`、2026-09-28）をそのまま置く:
+#   skipped  issue-secrets
+#   success  audit / check / docker-web / forbidden-patterns / gitleaks / pr-closes / stale-base
+# **`issue-secrets` は直近 60 PR の 60 件すべてに skipped で出る**ので、
+# **ここが赤くなるとこの道具は全 PR で使えなくなる。** **マージできることを固定する。**
+t_1069_legitimate_skip_still_merges() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      echo '{"check_runs":[
+        {"name":"issue-secrets","status":"completed","conclusion":"skipped","started_at":"t1"},
+        {"name":"audit","status":"completed","conclusion":"success","started_at":"t1"},
+        {"name":"check","status":"completed","conclusion":"success","started_at":"t1"},
+        {"name":"docker-web","status":"completed","conclusion":"success","started_at":"t1"},
+        {"name":"forbidden-patterns","status":"completed","conclusion":"success","started_at":"t1"},
+        {"name":"gitleaks","status":"completed","conclusion":"success","started_at":"t1"},
+        {"name":"pr-closes","status":"completed","conclusion":"success","started_at":"t1"},
+        {"name":"stale-base","status":"completed","conclusion":"success","started_at":"t1"}
+      ]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  # **フラグ無しでマージできること**（`--allow-nonrequired-red` が要るようでは使えない）
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "正当な skip を含む実物の顔ぶれでマージできる: $ERR"
+  assert_contains "$LOG" "pr	merge	12	--squash	--delete-branch" "マージした"
+  assert_contains "$OUT$ERR" "all 8 checks green" "8 件を緑として数える"
+}
+test_case "1069: 正当な skip（issue-secrets）の実物の顔ぶれはマージできる" t_1069_legitimate_skip_still_merges
+
+# **(4) `docker-web` の skipped は緑にしない**（SKIPPABLE_CHECKS を広げすぎない側の固定）。
+# **実測で `docker-web` の skipped は `check` が赤いときだけ起きる**（3/3）。
+# ここでは**その巻き添えの形をそのまま置く**——`check` が failure で `docker-web` が skipped。
+# **`check` が必須なのでどのみち止まるが、`docker-web` も赤として数える**ことを見る。
+t_1069_docker_web_skip_not_green() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      echo '{"check_runs":[
+        {"name":"check","status":"completed","conclusion":"failure","started_at":"t1","details_url":"u1"},
+        {"name":"docker-web","status":"completed","conclusion":"skipped","started_at":"t1","details_url":"u2"},
+        {"name":"issue-secrets","status":"completed","conclusion":"skipped","started_at":"t1"},
+        {"name":"gitleaks","status":"completed","conclusion":"success","started_at":"t1"},
+        {"name":"forbidden-patterns","status":"completed","conclusion":"success","started_at":"t1"},
+        {"name":"audit","status":"completed","conclusion":"success","started_at":"t1"},
+        {"name":"pr-closes","status":"completed","conclusion":"success","started_at":"t1"}
+      ]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh --allow-nonrequired-red 12
+  assert_eq 1 "$STATUS" "必須の check が赤なので止まる"
+  assert_contains "$ERR" "checks failed on PR #12: check" "必須の赤を名指しする"
+  # **`docker-web` は「必須でない赤」として数える**（緑に混ぜない）
+  assert_contains "$ERR" "docker-web" "巻き添えの skipped も赤として出す"
+  # **`issue-secrets` は赤に入らない**（正当な skip なので緑のまま）
+  # **必須は 6 件**（5 件ではない）。**`issue-secrets` は REQUIRED_CHECKS にも
+  # NONREQUIRED_CHECKS にも無いので、`is_required_check` の fail-closed で必須に数えられる**
+  # ——**これは #1069 の前からそうで、この PR は変えていない**（`--allow-nonrequired-red` の
+  # 扱いに関わるので、**測った値をそのまま書く**。予想は 5 件で、外れた）。
+  # **害は無い**（緑を赤にする向きなので、誤ってマージする側には倒れない）が、
+  # **毎 PR で「知らない検査があります」と鳴る**。**#1069 の範囲外なので触らない。**
+  assert_contains "$OUT$ERR" "検査 7 件 / 必須 6 件 / 赤 2 件" "issue-secrets は赤に数えない（赤は check と docker-web の 2 件）"
+  assert_not_contains "$LOG" "pr	merge	12" "マージを試みない"
+}
+test_case "1069: docker-web の skipped は緑にしない（上流の赤の巻き添え）" t_1069_docker_web_skip_not_green
+
+# **(5) 知らない名前の skipped は赤**（fail-closed）。
+# **新しい job が `skipped` で現れたとき、黙って緑に数えられるより止まったほうがよい。**
+# **`SKIPPABLE_CHECKS` を「知らない名前も通す」形に緩める変異を殺す。**
+t_1069_unknown_skip_is_red() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      echo '{"check_runs":[
+        {"name":"check","status":"completed","conclusion":"success","started_at":"t1"},
+        {"name":"gitleaks","status":"completed","conclusion":"success","started_at":"t1"},
+        {"name":"forbidden-patterns","status":"completed","conclusion":"success","started_at":"t1"},
+        {"name":"audit","status":"completed","conclusion":"success","started_at":"t1"},
+        {"name":"pr-closes","status":"completed","conclusion":"success","started_at":"t1"},
+        {"name":"brand-new-job","status":"completed","conclusion":"skipped","started_at":"t1","details_url":"u9"}
+      ]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh --allow-nonrequired-red 12
+  assert_eq 1 "$STATUS" "知らない名前の skipped は赤（fail-closed）"
+  assert_contains "$ERR" "brand-new-job" "知らない名前を名指しする"
+  assert_not_contains "$LOG" "pr	merge	12" "マージを試みない"
+}
+test_case "1069: 知らない名前の skipped は赤（fail-closed）" t_1069_unknown_skip_is_red
+
+# **(6) `SKIPPABLE_CHECKS` の中身を固定する**（#484/#499: allowlist は名指しし、中身も固定する）。
+# **痩せても増えても落ちる。** **増える側を止めるのが要点**——`skipped` を緑と数える名前が
+# 黙って増えると、この PR で塞いだ穴がそのまま開き直る。
+t_1069_skippable_list_is_pinned() {
+  local list
+  list=$(grep -E '^SKIPPABLE_CHECKS=\(' "$(dirname "${BASH_SOURCE[0]}")/../merge-when-green.sh")
+  assert_eq 'SKIPPABLE_CHECKS=(issue-secrets)' "$list" "skipped を緑と数える名前の一覧"
+}
+test_case "1069: SKIPPABLE_CHECKS の中身が固定されている" t_1069_skippable_list_is_pinned
 
 # --- 枝のコミットの身元（#1101）---------------------------------------------------------------
 # **2026-09-28、#1064 の枝の 3 コミットが `219112946+seiji-kiroku-dev@…` で author されていた。**

@@ -80,6 +80,64 @@ DATA_BRANCH="data/refresh"
 REQUIRED_CHECKS=(check gitleaks forbidden-patterns audit pr-closes)
 NONREQUIRED_CHECKS=(stale-base docker-web)
 
+# SKIPPABLE_CHECKS — **`conclusion: skipped` を緑として数えてよい検査の名前**（#1069）。
+#
+# **問題**: `skipped` を一律 pass にしていたので、**必須 5 件が全部 `skipped` の PR が
+# 「all 5 checks green」でマージされた**（再現済み。`scripts/po/test/` の
+# `t_1069_all_required_skipped_is_red` がその形をそのまま固定している）。
+# **#757 の「母数を検算に入れる」の check-runs 版**: `skipped` は「0 件（問題なし）」ではなく
+# **「数えていない」**である。**数えていないものを緑と呼ばない。**
+#
+# **#1054 は「分けられない」と結論して `skipped` を pass のまま置いた。その根拠は
+# 「check-runs API の `conclusion: skipped` には、`if:` が false だった場合と
+# `concurrency` で消えた場合を区別する欄が無い」だった。これは API については正しい。**
+# **だが区別に API は要らない——`name` は在る。**
+# **「その job が PR で必ず skip されるか」は、workflow の `if:` を見れば分かる。**
+# **判断の材料は check run の中ではなく、この repo の `.github/workflows/` の中に在る。**
+#
+# **ここに載せてよい条件（1 つだけ）**:
+#   **job 直下の `if:` が `github.event_name` で閉じており、PR では必ず false になること。**
+#   ＝**その job は PR で「走らなかった」のではなく「走る対象ではなかった」。**
+#   この条件が本当に成り立っているかは
+#   `packages/etl/test/branch-protection-jobs.test.ts` の `GATED_BY_EVENT`（#940）が
+#   **workflow 側の `if:` を実際に読んで**固定している。**理由を書いた側と、理由が
+#   成り立つ側を、別のレイヤで突き合わせてある。**
+#
+# **実測（2026-09-28、直近 60 PR の HEAD の check-runs 483 件）:**
+#   conclusion 別   success 408 / skipped 63 / failure 12
+#   skipped 63 件の名前は **2 つだけ**:  issue-secrets 60 PR / docker-web 3 PR
+#   必須 5 件が skipped だった例  **0 件 / 295 件**（check 57+3 / gitleaks 60 /
+#                                 forbidden-patterns 60 / audit 60 / pr-closes 58+5）
+#
+# **`issue-secrets` を載せる理由**: `security.yml` の `if:` が
+# `github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'`。
+# **PR では構造的に必ず skipped**（実測 60 PR / 60 PR）。載せないと**全 PR が永久に止まる。**
+#
+# **`docker-web` を載せない理由（測って決めた）**: `docker-web` は `needs: check` で、
+# **`if:` を持たない**。**skipped になったのは「`check` が赤くて上流で落ちた」ときだけ**である。
+#   **実測: `docker-web` が skipped の PR = {1084, 1092, 1103}**
+#          **`check` が failure の PR   = {1084, 1092, 1103}**  ——**3/3 で完全に一致。**
+# つまりこれは「走る必要が無かった」ではなく**「赤の巻き添えで走れなかった」**。
+# **緑として数えてはいけない。** かつ**この 3 件はどれも必須の `check` が赤なので、
+# この道具はもともと止まる**——載せなくても正常な PR は止まらない。
+#
+# **`stale-base` / `pr-closes` / `deploy-data.yml:staging` を載せない理由**:
+# `stale-base` の `if:` は `github.event_name == 'pull_request'` で、**PR では真**（走る）。
+# `pr-closes` は本文を直せば緑にできる（`skipped` で通す理由が無い）。
+# `deploy-data.yml` は `pull_request` トリガーを持たないので PR の check-runs に出ない。
+# **実測の 63 件にこれらは 1 件も出ていない。**
+#
+# **知らない名前は載っていない＝ `skipped` なら赤**（fail-closed）。
+# 新しい job が `skipped` で現れたとき、黙って緑に数えられるより止まったほうがよい。
+SKIPPABLE_CHECKS=(issue-secrets)
+
+# is_skippable_check <name> → 0 なら「この名前の `skipped` は緑として数えてよい」
+is_skippable_check() {
+  local name=$1 n
+  for n in "${SKIPPABLE_CHECKS[@]}"; do [[ "$n" == "$name" ]] && return 0; done
+  return 1   # 知らない名前の skipped は赤（走っていない必須チェックを緑と呼ばない）
+}
+
 # is_required_check <name> → 0 なら「赤ければ絶対にマージしない」
 #   REQUIRED_CHECKS にある        → 0（必須）
 #   NONREQUIRED_CHECKS にある     → 1（必須でない。--allow-nonrequired-red で通せる）
@@ -969,11 +1027,33 @@ approve_pending_runs() {
 # **上の変異表の数字は、どれもこの経路を触っていない**——テストの stub は JSON をそのまま返すので、
 # **ページングの欠落は 180 件のどのテストも見ていない。**
 fetch_checks() {
+  # **`skipped` を緑と数えてよい名前を jq に渡す**（#1069）。**シェル配列を唯一の出どころにする**
+  # ——jq 側に名前を書き写すと、2 か所が別々に痩せたときに誰も気づけない。
+  #
+  # **なぜ `--argjson` を使わないか**: **`gh api` に `--argjson` は無い**
+  # （実測: `gh api --help` が持つのは `-q/--jq` と `-t/--template` だけ）。
+  # 渡せるのは jq の**プログラム本文だけ**なので、一覧を**プログラムの中に埋め込む**。
+  # **引用は jq 自身にやらせる**（`jq -R . | jq -sc .`）——名前に `"` や `\` が入っても
+  # プログラムが壊れない。シェルの文字列連結で引用符を書かない。
+  local skippable_json
+  skippable_json=$(printf '%s\n' "${SKIPPABLE_CHECKS[@]}" | jq -R . | jq -sc .)
   # shellcheck disable=SC2016  # $r/$bucket は jq の変数。シェルに展開させないためのシングルクォート
   gh api "repos/$REPO/commits/$HEAD_OID/check-runs" -q '
+    # **`$skippable` は上のシェル配列から作った jq の配列リテラル**（#1069）。
+    def skippable: '"$skippable_json"';
+
+    # **`skipped` は名前を見て分ける**（#1069）。
+    # **`skipped` は「0 件（問題なし）」ではなく「数えていない」**（#757）。
+    # 緑と数えてよいのは、**その job が PR では構造的に走らない**と分かっている名前だけ
+    # （`SKIPPABLE_CHECKS` の docblock に条件と実測が在る）。
+    # **それ以外の `skipped` は `fail`** ——「走っていない必須チェック」を緑と呼ばない。
+    # **判定は名前だけでできる。** check-runs API は skip の理由を持たないが、
+    # **workflow の `if:` は持っている**——そちらを見て決めた一覧がこれである。
     def bucket_of:
       if .conclusion == null then "pending"
-      elif (.conclusion == "success" or .conclusion == "neutral" or .conclusion == "skipped") then "pass"
+      elif (.conclusion == "success" or .conclusion == "neutral") then "pass"
+      elif .conclusion == "skipped" then
+        (if (.name as $n | skippable | index($n)) then "pass" else "fail" end)
       else "fail" end;
     # 悪い順の重み。**同名グループからこれが最大の 1 件を採る**（fail が緑に塗り替えられない）。
     # **`// 2` は fail-closed**（#1064 のレビュー指摘 5）: `{...}[key]` は**知らないキーで null を
