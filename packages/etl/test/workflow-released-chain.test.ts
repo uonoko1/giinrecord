@@ -227,6 +227,64 @@ function outputBindings(jobLines: string[]): Map<string, string> {
   return out;
 }
 
+/**
+ * **step の頭の行から、その step のマッピングのキーが並ぶ桁を出す**（#1100）。
+ *
+ * **インデントの深さは「構造」の代理であって、構造そのものではない。**
+ * **実体はこうである**: step は `steps:` の下のシーケンス項目で、**頭の行は `<空白>- <最初のキー>`**。
+ * **YAML ではその `- ` が占める桁のぶんだけ右に、同じマッピングの残りのキーが並ぶ。**
+ * **つまりキーの桁は、頭の行そのものが決めている——定数ではない。**
+ *
+ * ```yaml
+ *       - id: released      ← 頭の行。空白 6 + "- " 2 = キーの桁は 8
+ *         run: |            ← 8。同じ step の直下
+ *         with:
+ *           ref: main       ← 10。孫。step の直下ではない
+ * ```
+ *
+ * **`^ {6}(?:- )?` の決め打ちをやめる理由**:
+ * **`{6,8}` のように「いま在る深さを並べる」直しは denylist の裏返しで**（#333 / #1008）、
+ * **次に 10 スペースが来たときに同じ事故になる。**
+ *
+ * ── **どこまで追従するか（測った。誇張しない）** ─────────────────────────────
+ *
+ * **追従するのは「step の中のキーの桁」だけである。**
+ * **`steps:` と `- ` の深さは、呼び手の `parseSteps` が `^ {4}steps:` / `^ {6}- ` で
+ * 決め打ちしたままである**（この PR では触っていない）。
+ *
+ * **実測（2026-09-29。`parseSteps` に合成 YAML を食わせた）:**
+ * ```
+ * steps: が 4 / 頭が 6（いまの実体）   → 読める   ["six"]
+ * steps: が 6 / 頭が 8                 → 読めない []
+ * steps: が 8 / 頭が 10                → 読めない []
+ * steps: が 2 / 頭が 4                 → 読めない []
+ * ```
+ * **つまり「job や steps: の深さが変わっても追従する」とは言えない。**
+ * **初版の docblock はそう書いていたが、実測と反対だったので撤回した**（レビュー指摘 A-1）。
+ *
+ * **それでも決め打ちを残してよい理由**: **`parseSteps` は job 直下の行を受け取るので、
+ * `steps:` は必ず 4、step の頭は必ず 6 である**（job 見出しが 2 スペースであることから導かれる）。
+ * **実測: 実体の step の頭は 6 スペースが 128 件、4 スペースが 11 件（後者は `steps:` 配下ではない）。**
+ * **この関数が実際に広げたのは「同じ深さでも `- ` の後ろの桁が違う形」への追従**であり、
+ * **素朴な `{6,8}` との差が M4c で 1 件しか出ないのは、そのためである。**
+ */
+/**
+ * **step の頭の行の `<空白>-<空白>` を、同じ幅の空白に畳む**（#1100）。
+ *
+ * **フラグを付けない。** **`^` が文字列の先頭だけに当たるので、頭の行だけが畳まれる。**
+ * **`/m` や `/g` を足すと `run:` ブロックの中の `- id:` まで畳んでしまう**
+ * ——**その差は下の検査で逐語に固定してある**（定義はここ 1 か所。#1043）。
+ */
+const foldStepDash = (body: string, re: RegExp = /^( *)-( +)/): string =>
+  body.replace(re, (_m, a: string, b: string) => " ".repeat(a.length + 1 + b.length));
+
+const stepKeyColumn = (head: string): number => {
+  const m = head.match(/^( *)-( +)/);
+  // 頭の行でない（呼び手が `      - ` で始まる行だけを渡すので、ここには来ない）
+  if (!m) return head.match(/^ */)![0].length;
+  return m[1].length + 1 + m[2].length;
+};
+
 /** job 直下の `steps:` を step 単位に切る（`      - ` で始まる行が step の頭）。 */
 function parseSteps(jobLines: string[]): Step[] {
   const i = jobLines.findIndex((l) => /^ {4}steps:\s*$/.test(l));
@@ -248,8 +306,12 @@ function parseSteps(jobLines: string[]): Step[] {
       }
     }
     const body = jobLines.slice(at, end).join("\n");
-    // step の直下のキーは `      - id: x` か `        id: x` の 2 形で書ける
-    const key = (k2: string) => body.match(new RegExp(`^ {6}(?:- )?${k2}:\\s*(.+)$`, "m"))?.[1]?.trim();
+    // **step の直下のキーが並ぶ桁は、頭の行が決める**（#1100。深さを決め打ちしない）。
+    // 頭の行の `- ` の後ろ（= その桁）と、以降の行のその桁と、2 形のどちらでも同じ 1 つのキーである。
+    const col = stepKeyColumn(jobLines[at]);
+    // 頭の行の `<空白>-<空白>` は「キーの桁を埋めるもの」なので、空白と同じに畳んで読む
+    const flat = foldStepDash(body);
+    const key = (k2: string) => flat.match(new RegExp(`^ {${col}}${k2}:\\s*(.+)$`, "m"))?.[1]?.trim();
     return { id: key("id")?.replace(/^["']|["']$/g, ""), body, uses: key("uses") };
   });
 }
@@ -625,4 +687,371 @@ test("#1036: 自前パースが deploy-data.yml の実体どおりに読めて�
   // ——**別の実装が別の目的で維持している値と突き合わせてある**ので、
   // 「自分の写しを見て緑」になっていない。
   assert.ok(jobCount >= 24, `走査した job が ${jobCount} 件しか無い（実測 2026-09-28: 24 件）`);
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// #1100 — step の直下のキーを「深さの決め打ち」ではなく「頭の行の形」から読む
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * **#1100: `key()` が `^ {6}(?:- )?` を要求していたので、8 スペースの `id:` を読めなかった。**
+ *
+ * **母数（2026-09-28 実測。`.github/workflows/` の 15 本）:**
+ *
+ * ```
+ * $ grep -rnE '^ *(- )?id:' .github/workflows --include='*.yml' | 先頭の空白を数える
+ *    6 sp  3 件   deploy-data.yml:43 / deploy-site.yml:90 / etl.yml:54     ← 読めていた
+ *    8 sp  8 件   ci.yml:149,152,297,300 / districts.yml:49 / etl.yml:111
+ *                 / link-check.yml:67 / local-assemblies.yml:56           ← 読めていなかった
+ * ```
+ *
+ * **11 件中 8 件、つまり多数派が読めていなかった。**
+ * **パーサが見ていた step の id は 112 step 中 3 件だけだった**（実測）。
+ *
+ * ── **なぜ「6 か 8 のどちらでもよい」にしないか** ────────────────────────────
+ *
+ * **インデントの深さは「構造」の代理であって、構造そのものではない。**
+ * `{6}` を `{6,8}` に緩めるのは、**いま在る 2 つの深さを列挙する denylist の裏返し**で、
+ * **次に 10 スペースが来たら同じ事故になる**（#333 / #1008 の型）。
+ *
+ * **ただし正直に測ると、`{6,8}` はこのリポジトリの実体では全部読める**
+ * （実測 M4c: 58 中 **57 pass / 1 fail**。落ちたのは下の (5) `-   ` の 1 件だけで、
+ * 孫の (4) も実体の母数 (2)(3) も通る）。**「10 スペースの孫を拾ってしまう」は誤りだった**
+ * ——`{6,8}` は 10 スペースには届かないので拾わない。
+ * **`{6,8}` が本当に落ちるのは「桁が 6 でも 8 でもない形」のほうである**
+ * （実測: 10 スペースでも 4 スペースでも `undefined` を返す）。
+ *
+ * **それでも決め打ちを採らないのは、`{6,8}` が「いま在る 2 つの値」を写しているだけで、
+ * 桁が何で決まるのかを一度も言っていないからである。**
+ * **次に桁が動いたとき、`{6,8}` は黙って `undefined` を返す**——
+ * **`id:` が読めない step は「id の無い step」と見分けが付かず、
+ * `steps.<id>` の参照は「参照先が無い」と報告される**（いま起きているのがこれである）。
+ *
+ * **実体はこうである**: step は `steps:` の下のシーケンス項目で、
+ * **その頭の行 `      - ` の `- ` がちょうど 2 桁を占めるので、
+ * step 自身のマッピングのキーは「頭の行のインデント + 2」の桁に並ぶ。**
+ * **つまりキーの桁は、頭の行そのものが決めている。定数ではない。**
+ * **だから頭の行から桁を計算して、その桁のキーだけを step の直下と見る。**
+ *
+ * **これで `- ` の後ろに空白が増えた形（`-   id: x`）に、書き換えずに追従する。**
+ *
+ * **`steps:` と `- ` の深さのほうは追従しない**——**`parseSteps` の入口が
+ * `^ {4}steps:` / `^ {6}- ` を決め打ちしているため**（上の `stepKeyColumn` の docblock に実測を置いた）。
+ * **初版はここに「6 / 8 / 10 スペースのどれでも読め」と書いていたが、
+ * その検査は 1 本も存在せず、測ったら 8 / 10 / 4 はどれも読めなかった**（レビュー指摘 A-1）。
+ * **下の (4) の 10 スペースは「孫として拾ってはいけない」側で、向きが逆である。**
+ */
+test("#1100: step の直下のキーは、頭の行のインデントから決まる（深さを決め打ちしない）", () => {
+  // `parseSteps` は `jobLines`（job 名の次の行から）を受け取る
+  const jobLines = (s: string) => s.replace(/^\n/, "").replace(/\n$/, "").split("\n");
+
+  // (1) `- id:` の形（6 スペース。直す前から読めていた 3 件の形）
+  const onDash = parseSteps(
+    jobLines(`
+    steps:
+      - id: released
+        run: echo hi
+`),
+  );
+  assert.deepEqual(
+    onDash.map((s) => s.id),
+    ["released"],
+    "`- id:` の形（頭の行に id）が読めない",
+  );
+
+  // (2) **`name:` が先に来て `id:` が 8 スペースの形——このリポジトリの 11 件中 8 件**
+  const belowDash = parseSteps(
+    jobLines(`
+    steps:
+      - name: resolve released ref
+        id: released
+        run: echo hi
+`),
+  );
+  assert.deepEqual(
+    belowDash.map((s) => s.id),
+    ["released"],
+    "8 スペースの `id:` が読めない（#1100 の本体。実体の 11 件中 8 件がこの形）",
+  );
+
+  // (3) `uses:` も同じ `key()` を通るので、同じく両方の形で読めること
+  assert.equal(
+    parseSteps(jobLines(`
+    steps:
+      - uses: actions/checkout@v4
+`))[0].uses,
+    "actions/checkout@v4",
+  );
+  assert.equal(
+    parseSteps(jobLines(`
+    steps:
+      - name: check out
+        uses: actions/checkout@v4
+`))[0].uses,
+    "actions/checkout@v4",
+    "8 スペースの `uses:` が読めない（`uses:` を見落とすと外部 action の step を自前 step と誤判定する）",
+  );
+
+  // (4) **孫のキーを step の直下と読み違えない**——`with:` の下の `id:` は step の id ではない。
+  //     **これは `{6,8}` の素朴な直しでも通る**（実測 M4c）。**桁を計算する側が緩みすぎていないことの確認**で、
+  //     `{6,8}` との差を測っているのは (5) のほうである。
+  const grandchild = parseSteps(
+    jobLines(`
+    steps:
+      - name: comment
+        uses: actions/github-script@v7
+        with:
+          id: not-a-step-id
+          script: console.log(1)
+`),
+  );
+  assert.equal(
+    grandchild[0].id,
+    undefined,
+    "`with:` の下（10 スペース）の `id:` を step の id として拾っている（構造ではなく綴りを見ている）",
+  );
+
+  // (5) **`- ` の後ろの空白が 1 つでない形にも追従する**（桁は頭の行が決める）。
+  //     **`{6,8}` の素朴な直しと差が出るのは、実測ではここ 1 件だけである**（M4c: 57 pass / 1 fail）。
+  //     いまの実体には無い形だが、**桁を数えずに頭の行から出していることの、ただ 1 つの直接の証拠**である。
+  assert.deepEqual(
+    parseSteps(jobLines(`
+    steps:
+      -   name: spaced
+          id: spaced-id
+`)).map((s) => s.id),
+    ["spaced-id"],
+    "`-   ` の後ろの桁に追従していない（`+2` を決め打ちしている）",
+  );
+
+  // (5b) **頭の行そのものに載ったキー**を `-   ` の形で読む。
+  //      **(5) だけでは足りない**——(5) の `id:` は頭の「次の行」に在るので、
+  //      畳み幅を `+2` に決め打ちしても（頭の行が読めなくなるだけで）次の行の桁は合ってしまう。
+  //      **実測: `+2` の変異は (5) を通り抜ける**（畳んだ頭が 8 桁・`col` が 10 桁でも、
+  //      2 行目の `id:` は 10 桁に在るため）。**頭の行に載せて初めて、畳み幅そのものを測れる。**
+  assert.deepEqual(
+    parseSteps(jobLines(`
+    steps:
+      -   id: on-the-dash-line
+          run: echo hi
+`)).map((s) => s.id),
+    ["on-the-dash-line"],
+    "頭の行に載った `-   id:` が読めない（畳み幅が `- ` の実際の桁と合っていない）",
+  );
+
+  // (6) 隣の step のキーを混ぜない（step の境が効いていること）
+  const two = parseSteps(
+    jobLines(`
+    steps:
+      - name: first
+        run: echo one
+      - name: second
+        id: second-id
+        run: echo two
+`),
+  );
+  assert.deepEqual(two.map((s) => s.id), [undefined, "second-id"], "step の境を越えてキーを拾っている");
+});
+
+/**
+ * **`- ` を畳む `replace` にフラグを付けないことを固定する**（レビュー指摘 A-3）。
+ *
+ * **`flat` の `body.replace(/^( *)-( +)/, …)` はフラグを持たない。**
+ * **フラグが無いので `^` は文字列の先頭だけに当たり、`body` は必ず step の頭の行で始まる**
+ * ——**だから「頭の行の `- ` だけを畳む」が成立している。**
+ *
+ * ── **ここで「素通りする変異」を追試したら、結論が変わった（そのまま残す）** ─────────
+ *
+ * **レビュアーの実測**: `flat` の式**単体**に当てると、`/gm` は `run:` の中の行を畳んで
+ * `"from-a-heredoc-or-docs"` を返す（as-shipped は `undefined`）。**この再現は正しい。**
+ * **PO も追試して同じ結果を得た。**
+ *
+ * **しかし `parseSteps` を通すと、`/m` も `/gm` も as-shipped と同じ結果になる。**
+ * **追試（2026-09-29。合成 YAML を `parseSteps` に食わせた）:**
+ * ```
+ * run: の中の `- id:` が 10 スペース   shipped [null]        /m [null]        /gm [null]
+ * run: の中の `- id:` が  6 スペース   shipped [null,"at-six"] /m 同じ         /gm 同じ
+ * ```
+ *
+ * **理由は桁の算術で尽きる**（例ではなく網羅）:
+ * - **step の頭は必ず 6 スペース**（`parseSteps` が `^ {6}- ` しか head にしない）→ **`col` は必ず 8**
+ * - **body の 2 行目以降に深さ 6 未満の行は入らない**（`^ {6}` でないと `steps:` を抜ける判定に当たる）
+ * - **深さちょうど 6 の `- ` 行は「次の step の頭」なので、境で切れて body に入らない**
+ * - **深さ 7 以上の `- ` 行は、畳むと `d + 1 + 空白数 >= 9 > 8 = col`** → **拾われない**
+ *
+ * **つまり `/m` `/gm` は、`parseSteps` 経由では等価変異である。**
+ * **「落ちないのは検査が弱いから」ではなく、「呼び手が到達させないから」だった**
+ * （作業合意「落ちない変異が等価変異なら、そう書いて残す」）。
+ *
+ * **それでも検査を置く理由**: **この等価性は `parseSteps` の入口の決め打ち
+ * （`^ {4}steps:` / `^ {6}- `）に依存している。** **入口を構造的にした瞬間に崩れる。**
+ * **だから「畳み込みの式そのもの」に当てて、フラグが付いたら落ちるようにする**
+ * ——**呼び手の都合に守られている状態を、検査のほうで固定しておく。**
+ *
+ * ── **検査を置いた後の実測（2026-09-29）** ──────────────────────────────────
+ * ```
+ * N1  既定の正規表現に /m       59 / 0   ← **真に等価**。落ちなくて正しい（下記）
+ * N2  既定の正規表現に /gm      58 / 1   ← **撃墜**（この検査が落とす）
+ * N3  `+ 1 + b.length` → `+ 2`  58 / 1   ← **撃墜**（上の (5b) が落とす）
+ * ```
+ *
+ * **N1 が等価である理由**: **`/m` はグローバルでないので「最初の一致」しか置換しない。**
+ * **`body` は必ず step の頭の行で始まり、頭の行は必ず `^( *)-( +)` に当たる**ので、
+ * **最初の一致は常に頭の行になる。** **実測: フラグ無しと `/m` の出力は文字列として一致し、
+ * `/gm` だけが一致しない。** **だから N1 は「検査の穴」ではない。**
+ *
+ * **N3 について 1 つ記録する**（自分で踏んだ）: **初版はこの検査の中に畳み込みの式を
+ * 書き写していた。** **その結果 N3 の変異が実装と検査の両方に当たり、
+ * 検査が自分の写しを見て 59 / 0 で素通りした**——**#1043 の型そのものである。**
+ * **`foldStepDash` を 1 定義にして呼ぶ形に直したら 58 / 1 で落ちるようになった。**
+ * **さらに (5) だけでは N3 を捕まえられなかった**（`id:` が頭の「次の行」に在るので、
+ * 畳み幅を間違えても 2 行目の桁は合ってしまう）——**(5b) で頭の行に載せて初めて測れた。**
+ */
+test("#1100: `- ` の畳み込みは頭の行だけに効く（フラグを付けると run: の中の `- id:` を拾う）", () => {
+  // **実装と同じ `foldStepDash` を呼ぶ**（写しを 2 つ置かない。#1043）。
+  // **初版はここに同じ式を書き写していた**——**その結果 N3（`+1+b.length` → `+2`）の変異が
+  // 実装と検査の両方に当たり、検査が自分の写しを見て緑のままになった**（59/59 で素通り）。
+  // **1 定義にしたら 58/1 で落ちる。**
+  // step の頭（6 スペース）+ `run:` の中に、頭とまったく同じ綴りの行
+  const body = [
+    "      - name: write a workflow",
+    "        run: |",
+    "          cat <<'YAML' > out.yml",
+    "      - id: from-a-heredoc-or-docs",
+  ].join("\n");
+  const readId = (s: string) => s.match(new RegExp("^ {8}id:\\s*(.+)$", "m"))?.[1]?.trim();
+
+  // **実装と同じ「フラグ無し」**: 頭の行だけ畳むので、`run:` の中の行は残り、id は読めない
+  assert.equal(
+    readId(foldStepDash(body)),
+    undefined,
+    "フラグ無しの畳み込みが `run:` の中の `- id:` を拾っている",
+  );
+
+  // **`/gm` を付けると拾う**——**この検査が何かを主張していることの対照**
+  // （恒真ではない: 同じ入力で結果が変わることを、ここで示している）
+  assert.equal(
+    readId(foldStepDash(body, /^( *)-( +)/gm)),
+    "from-a-heredoc-or-docs",
+    "`/gm` でも拾えないなら、この fixture は畳み込みの差を測れていない（fixture を疑う）",
+  );
+});
+
+/**
+ * **#1100 の母数を実体に固定する**（#757）。
+ *
+ * **「0 件だから緑」も「数えていないから緑」も塞ぐ**——
+ * **`.github/workflows/` に実在する `id:` の件数を grep と同じ規則で数え、
+ * パーサが見つけた件数と突き合わせる。**
+ *
+ * **直す前の実測: 実体 11 件 / パーサが見たのは 3 件**（8 件を黙って落としていた）。
+ * **直した後: 11 / 11。**
+ *
+ * **この 1 本は、ワークフローに step を足したり `id:` を増やしたりすると落ちる**（意図した動作）。
+ * **落ちたら数え直す**——**「パーサが実体を全部見ているか」を人手で再確認する合図である。**
+ */
+test("#1100: パーサが見つける step の id が、実体の `id:` 行と 1 件も食い違わない（母数）", () => {
+  const files = workflowFiles();
+  assert.ok(files.length >= 15, `ワークフローが ${files.length} 本しか無い（実測 2026-09-28: 15 本）`);
+
+  // 実体側: `id:` と書いてある行を、パーサとは**別の読み方**で数える（自分の写しを見ない。#1043）
+  const literal: { file: string; indent: number; id: string }[] = [];
+  for (const f of files) {
+    const src = readIfPresent(f);
+    if (src === undefined) continue;
+    for (const line of src.split("\n").map(stripComment)) {
+      const m = line.match(/^( *)(?:- )?id:\s*(.+)$/);
+      if (m) literal.push({ file: f, indent: m[1].length, id: m[2].trim().replace(/^["']|["']$/g, "") });
+    }
+  }
+
+  // パーサ側
+  const parsed: { file: string; id: string }[] = [];
+  let steps = 0;
+  for (const f of files) {
+    const src = readIfPresent(f);
+    if (src === undefined) continue;
+    for (const job of parseJobs(src)) {
+      for (const s of job.steps) {
+        steps++;
+        if (s.id) parsed.push({ file: f, id: s.id });
+      }
+    }
+  }
+
+  // 母数（走査が空回りしていないこと）
+  assert.ok(steps >= 100, `走査した step が ${steps} 件しか無い（実測 2026-09-28: 112 件）`);
+  assert.ok(literal.length >= 11, `実体の \`id:\` が ${literal.length} 件しか無い（実測 2026-09-28: 11 件）`);
+
+  // **8 スペースの id: が多数派であることを固定する**——
+  // **fixture が 6 スペースばかりだと、8 スペースの検査を足したつもりで何も守っていない**（#1100 の注文）。
+  const deep = literal.filter((x) => x.indent === 8);
+  assert.ok(
+    deep.length >= 8,
+    `8 スペースの \`id:\` が ${deep.length} 件しか無い（実測 2026-09-28: 11 件中 8 件が 8 スペース）。` +
+      "実体が浅い形ばかりになったなら、上の parse の検査だけが #1100 を守っている",
+  );
+
+  // **本体**: 実体に在る id を、パーサが 1 件残らず同じファイルで見つけている
+  const key = (x: { file: string; id: string }) => `${x.file}:${x.id}`;
+  const missing = literal.map(key).filter((k) => !parsed.map(key).includes(k));
+  assert.deepEqual(
+    missing,
+    [],
+    `実体に在る \`id:\` をパーサが見ていない（直す前は 8 件が見えていなかった）:\n  ${missing.join("\n  ")}`,
+  );
+  assert.equal(
+    parsed.length,
+    literal.length,
+    `パーサが見た id が ${parsed.length} 件、実体は ${literal.length} 件（直す前は 3 / 11 だった）`,
+  );
+});
+
+/**
+ * **#1100: `steps.<id>.outputs.<n>` の参照先が、すべて実在の step に辿れる。**
+ *
+ * **これまでは job の `outputs:` に書かれた 2 件しか辿っていなかった**
+ * （`deploy-data.yml resolve.ref` / `deploy-site.yml deploy.sha`。どちらも 6 スペースの id）。
+ * **実体には `steps.*` の参照が 21 件ある**（2026-09-28 実測）——
+ * **直す前に辿れたのは 4 件だけだった**（`deploy-data` の `released` / `deploy-site` の `head` /
+ * `etl.yml` の `date` 2 件。どれも 6 スペースの id）。
+ * **残る 17 件は step の本体（`if:` / `env:` / `key:`）の中から 8 スペースの id を指していたので、
+ * 直す前は 1 件も辿れなかった**（実測: この検査を直す前のパーサに当てると 17 件が `bad` に出る）。
+ *
+ * **参照先が無い `steps.*` は Actions では空文字に解決され、黙って通る**
+ * （`if: steps.pr.outputs.number != ''` は常に真、`env: PR: ${{ steps.pr.outputs.number }}` は空）。
+ * **鎖の検査が見ていなかった 19 件も、同じ性質の穴である。**
+ */
+test("#1100: すべての `steps.<id>.outputs.<n>` 参照が、同じ job の実在する step を指している（21 件）", () => {
+  const files = workflowFiles();
+  const bad: string[] = [];
+  let refs = 0;
+
+  for (const f of files) {
+    const src = readIfPresent(f);
+    if (src === undefined) continue;
+    for (const job of parseJobs(src)) {
+      const ids = new Set(job.steps.map((s) => s.id).filter(Boolean) as string[]);
+      // job の outputs: と step の本体の両方を見る（`if:` は `${{ }}` 無しでも書けるので別に拾う）
+      const texts = [...[...job.outputs.values()], ...job.steps.map((s) => s.body)];
+      for (const t of texts) {
+        for (const m of t.matchAll(/steps\.([A-Za-z_][\w-]*)\.outputs\.([A-Za-z_][\w-]*)/g)) {
+          refs++;
+          if (!ids.has(m[1])) {
+            bad.push(
+              `${f}: job \`${job.id}\` が \`steps.${m[1]}.outputs.${m[2]}\` を参照しているが、` +
+                `\`id: ${m[1]}\` の step が無い（実在する id: ${JSON.stringify([...ids])}）→ 空文字に解決される`,
+            );
+          }
+        }
+      }
+    }
+  }
+
+  // 母数（#757）。**直す前はここが 21 件のうち 18 件を「参照先が無い」と報告した。**
+  assert.ok(
+    refs >= 21,
+    `\`steps.*.outputs.*\` の参照が ${refs} 件しか見つからない（実測 2026-09-28: 21 件）。走査が空回りしていないか`,
+  );
+  assert.deepEqual(bad, [], `参照先の step が無い:\n  ${bad.join("\n  ")}`);
 });
