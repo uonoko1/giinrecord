@@ -50,19 +50,67 @@ const EMAIL = /[A-Za-z0-9._%+\-\[\]]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g;
 const hasEmail = (line: string): boolean => new RegExp(EMAIL.source).test(line);
 
 /**
- * **コメント行**。**飛ばさないと、この検査を説明する散文で CI が赤くなる**
- * （初版の実測: `etl.yml` のコメントを「メールアドレス」→「user.email」に書き換えるだけで落ちた）。
+ * **コメントの綴りは言語ごとに違う。** **1 つの正規表現を全言語に当ててはいけない。**
+ *
+ * **なぜ分けるか（レビューの実測。#1066 の差し戻し）**: 初版は `#` / `//` / `*` を
+ * **どの拡張子にも一律に**当てていた。**その結果、シェルの *実行される行* を読み飛ばした。**
+ * **対照実験（同じ 1 行で、先頭の `*` の有無だけが違う）**:
+ *
+ * ```
+ * CONTROL-A  git config user.email etl@…            → pass=7 fail=2   捕まる
+ * CONTROL-B  *IGNORED* git config user.email etl@…  → pass=9 fail=0   沈黙
+ * ```
+ *
+ * **`//` も `*` も、シェルではコメントではない**（担当者が実機で確認、2026-09-29）:
+ * ```
+ * //usr/bin/git --version   →  git version 2.43.0     ← 普通に起動する
+ * （cd / && echo *sr/bin/git）→  usr/bin/git           ← glob で展開される
+ * ```
+ * **`//` は POSIX では「絶対パスの先頭」であって、コメントの綴りではない。**
+ * **初版の doc コメントに書いた「`*` 始まりの実行行はこの言語たちには無い」は誤りだった。**
+ *
+ * **だから「その拡張子で実際にコメントである綴り」だけを当てる。**
+ * **分からない拡張子は「コメント無し」として扱う**——**落とさない側に倒す**
+ * （#569: 「記録が出ない」と「別人の記録が出る」は同じ重さではない）。
+ */
+const COMMENT_SLASH = /^\s*(?:\/\/|\/?\*)/;
+const COMMENT_HASH = /^\s*#/;
+
+/**
+ * **拡張子 → コメントの綴り。** `null` は「この形式にコメントは無い（全行を読む）」。
+ *
+ * **`.md` と `.json` を `null` にしている**のは意図的である。
+ * **md のコードブロックに書かれた `git config user.email "etl@…"` は捕まる**——
+ * **それでよい**（PO 判断）。**手順書の「悪い例」は `x@example.invalid` のような
+ * 明らかに架空の綴りで書くべきで、逐語で書くと数える人も検査も迷う**
+ * （`docs/ops/etl-trailer-rewrite.md` で「散文 9 件 / trailer 行 3 件」の数え違いが起きた）。
+ */
+const commentRuleFor = (file: string): RegExp | null => {
+  if (/\.(?:ts|tsx|js|jsx|mjs|cjs|css)$/.test(file)) return COMMENT_SLASH;
+  if (/\.(?:sh|bash|ya?ml|toml|py|conf|cfg|ini)$/.test(file)) return COMMENT_HASH;
+  if (/(?:^|\/)(?:Makefile|Dockerfile|\.gitignore|\.dockerignore|\.nvmrc)$/.test(file)) return COMMENT_HASH;
+  return null;
+};
+
+/**
+ * **その行が、そのファイルの言語でコメントか。**
+ *
+ * **飛ばさないと、この検査を説明する散文で CI が赤くなる**
+ * （初版の実測: `etl.yml` のコメントを「メールアドレス」→「user.email」に書き換えるだけで落ちた。
+ * 走査を `.ts` に広げたときも `commit-trailer-identity.test.ts` の JSDoc 2 か所が赤くなった）。
  * **純粋に編集上の書き換えで CI が落ちるのは偽陽性である。**
  *
- * **走査を追跡ファイル全体に広げたので、`#` だけでは足りない**（#1066）。
- * **実測 2026-09-29**: `#` だけのまま広げると、**`packages/etl/test/commit-trailer-identity.test.ts`
- * の JSDoc 2 か所**（L14 と L246。どちらも「`user.email`」と「`noreply@anthropic.com`」が
- * *別々の行* に在り、`foldContinuations` の窓で繋がった）で赤くなった。
- * **どちらも散文で、コミットの身元を 1 ミリも変えない。**
- *
- * **`*` は JSDoc の継続行**（` * …`）。**`*` 始まりの実行行は、この言語たちには無い。**
+ * **実測 2026-09-29（候補 9 件を 3 通りで走査した）**:
+ * ```
+ * コメントを除外しない        偽陽性 2 件（commit-trailer-identity.test.ts の JSDoc）
+ * `#` だけを除外する          偽陽性 2 件（同上。`.ts` に `#` は効かない）
+ * 言語ごとに分ける            偽陽性 0 件  ← これを採る
+ * ```
  */
-const isComment = (line: string): boolean => /^\s*(?:#|\/\/|\/?\*)/.test(line);
+const isComment = (file: string, line: string): boolean => {
+  const rule = commentRuleFor(file);
+  return rule !== null && rule.test(line);
+};
 
 /**
  * **コミットの身元を決めうる書き方**（ここに現れたアドレスを検査する）。
@@ -74,8 +122,26 @@ const isComment = (line: string): boolean => /^\s*(?:#|\/\/|\/?\*)/.test(line);
  * `author.email` / `committer.email` は **git の正規の設定キー**で、初版は漏らしていた
  * （レビューの実測: `git -c author.email=etl@users.noreply.github.com commit` は
  * **author が `etl@` になったまま 2 pass / 0 fail で通った**）。
+ *
+ * **`i` フラグが要る。git の設定キーは大小を区別しない**（レビューの指摘。#1066 の差し戻し）。
+ * **担当者が実機で確認した（2026-09-29、git 2.43.0）**:
+ * ```
+ * git config --local user.EMAIL 'etl@users.noreply.github.com'
+ * git commit --allow-empty -m probe
+ *   刻まれた author: etl@users.noreply.github.com      ← 大文字でも効いてしまう
+ * git config --local User.Email 'dev@users.noreply.github.com'
+ *   刻まれた author: dev@users.noreply.github.com      ← 混在でも効く
+ * ```
+ * **`i` を付ける前は `pass=9 fail=0` で沈黙した**（実測）。
+ *
+ * **一方、CLI のフラグと環境変数は大小を区別する**ので、`i` で広がる分は空振りに終わる
+ * （実機で確認: `git commit --Author=…` は `error: unknown option`、
+ * `git_author_email=…` は無視されて `user.email` のほうが勝った）。
+ * **広がっても誤検出にならないことは下の検査で固定している**
+ * （`--author-date-order` / `--Author-Date-Order` はどちらも拾わない——
+ * **`[= ]` の要求が大小に関係なく効くため**）。
  */
-const IDENTITY_KEYS = /(?:user\.email|author\.email|committer\.email|GIT_AUTHOR_EMAIL|GIT_COMMITTER_EMAIL|--author[= ])/;
+const IDENTITY_KEYS = /(?:user\.email|author\.email|committer\.email|GIT_AUTHOR_EMAIL|GIT_COMMITTER_EMAIL|--author[= ])/i;
 
 /**
  * **行をまたぐ書き方を畳んでから走査する。**
@@ -102,12 +168,12 @@ const IDENTITY_KEYS = /(?:user\.email|author\.email|committer\.email|GIT_AUTHOR_
  * **窓を広げるとアドレスを 2 度数えうるので、`checked` は畳む前の実数で数える**
  * （母数が膨らむと `checked > 0` の意味が薄れる）。
  */
-const foldContinuations = (text: string): string[] => {
+const foldContinuations = (file: string, text: string): string[] => {
   const joined = text.split("\n");
   const out: string[] = [];
   for (let i = 0; i < joined.length; i += 1) {
     out.push(joined[i]);
-    if (isComment(joined[i])) continue;
+    if (isComment(file, joined[i])) continue;
     // **窓に入れるのは「アドレスを含む行」だけ**にする。
     //
     // **最初は「すべての行を直前の行と繋げる」形で書いたが、偽陽性があった**:
@@ -220,10 +286,21 @@ const trackedCount = execFileSync("git", ["ls-files", "-z"], {
  * もう片方が自分の写しを見て緑のまま通る**（この検査が `OK` で一度踏んだ形。#858）。
  */
 const grepPattern = IDENTITY_KEYS.source.replace(/^\(\?:/, "(").replace(/\)$/, ")");
+
+/**
+ * **`git grep` のフラグは `IDENTITY_KEYS.flags` から作る。手で書かない。**
+ *
+ * **片方だけに `i` が付くと、絞り込みの段階で落ちて黙って沈黙する**
+ * （判定側だけ `i` にしても、`git grep` が `user.EMAIL` の行を候補に含めなければ
+ * その行は一度も読まれない）。**「片方だけ」の事故は #1103 で実際に起きている。**
+ *
+ * **だから 2 つを別々に書かず、1 つの事実（`IDENTITY_KEYS` の flags）から導く。**
+ */
+const grepFlags = `-lIzE${IDENTITY_KEYS.flags.includes("i") ? "i" : ""}`;
 const listCandidates = (): string[] => {
   let out: string;
   try {
-    out = execFileSync("git", ["grep", "-lIzE", "--", grepPattern], {
+    out = execFileSync("git", ["grep", grepFlags, "--", grepPattern], {
       cwd: repoRoot,
       encoding: "utf8",
       maxBuffer: 1 << 28,
@@ -277,16 +354,16 @@ test("ワークフローが設定する user.email は、数字 ID 付きの nor
     scanned += 1;
     // **母数は畳む前の実数で数える**（畳んだ窓は同じアドレスを 2 度通しうる）。
     for (const line of text.split("\n")) {
-      if (isComment(line)) continue;
+      if (isComment(f, line)) continue;
       if (!IDENTITY_KEYS.test(line)) continue;
       for (const _ of line.matchAll(EMAIL)) checked += 1;
     }
-    for (const line of foldContinuations(text)) {
+    for (const line of foldContinuations(f, text)) {
       // **コメント行は飛ばす。** 飛ばさないと、**この検査を説明する日本語のコメントに
       // `user.email` と書いた瞬間に赤くなる**（レビューの実測: `etl.yml` のコメントを
       // 「メールアドレス」→「user.email」に書き換えるだけで落ちた）。**純粋に編集上の
       // 書き換えで CI が落ちるのは偽陽性である。**
-      if (isComment(line)) continue;
+      if (isComment(f, line)) continue;
       if (!IDENTITY_KEYS.test(line)) continue;
       for (const m of line.matchAll(EMAIL)) {
         const email = m[0];
@@ -384,8 +461,8 @@ test("ワークフローが使う identity は、本人確認した逐語のア�
   for (const f of files) {
     const text = readText(f);
     if (text === null) continue;
-    for (const line of foldContinuations(text)) {
-      if (isComment(line)) continue;
+    for (const line of foldContinuations(f, text)) {
+      if (isComment(f, line)) continue;
       if (!IDENTITY_KEYS.test(line)) continue;
       for (const m of line.matchAll(EMAIL)) {
         if (UNRESOLVABLE.test(m[0])) continue;
@@ -427,9 +504,9 @@ test("行をまたぐ書き方を畳んでいる（素通しに戻すと落ち�
     ],
   ];
   for (const [name, yaml] of cases) {
-    const hit = foldContinuations(yaml).some(
+    const hit = foldContinuations("x.yml", yaml).some(
       (line) =>
-        !isComment(line) &&
+        !isComment("x.yml", line) &&
         IDENTITY_KEYS.test(line) &&
         [...line.matchAll(EMAIL)].some((m) => !OK.test(m[0])),
     );
@@ -442,9 +519,9 @@ test("行をまたぐ書き方を畳んでいる（素通しに戻すと落ち�
   // 繋げる形に直して塞いだ。** ここが落ちれば偽陽性が戻ったと分かる。
   const benign =
     '          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"\n          echo "contact: someone@example.com"\n';
-  const falsePositive = foldContinuations(benign).some(
+  const falsePositive = foldContinuations("x.yml", benign).some(
     (line) =>
-      !isComment(line) &&
+      !isComment("x.yml", line) &&
       IDENTITY_KEYS.test(line) &&
       [...line.matchAll(EMAIL)].some((m) => !OK.test(m[0])),
   );
@@ -599,4 +676,128 @@ test("パス除外した 1 件（この検査ファイル自身）は、身元�
       `除外したファイルが git -c を呼んでいる（身元を渡しうる）: git [${args.trim()}]`,
     );
   }
+});
+
+/**
+ * **コメント判定は言語ごとに分かれていなければならない**（#1066 の差し戻し。要修正 1）。
+ *
+ * **初版は `#` / `//` / `*` を全言語に一律に当てていたので、
+ * シェルの *実行される行* を読み飛ばした。** **レビュアーの対照実験
+ * （同じ 1 行で、先頭の `*` の有無だけが違う）**:
+ *
+ * ```
+ * CONTROL-A  git config user.email etl@…            → pass=7 fail=2   捕まる
+ * CONTROL-B  *IGNORED* git config user.email etl@…  → pass=9 fail=0   沈黙
+ * ```
+ *
+ * **`//` も `*` もシェルではコメントではない**（実機確認 2026-09-29、git 2.43.0）:
+ * `//usr/bin/git --version` は `git version 2.43.0` を返し、`*sr/bin/git` は glob で展開される。
+ *
+ * **走査だけでは守られない**——**いま追跡されているファイルに
+ * `*` 始まりの identity 行が無いので、規則を戻しても `bad` は空のまま緑になる。**
+ * **だから判定そのものに当てる。**
+ */
+test("コメント判定は言語ごとに分かれている（シェルの実行行を読み飛ばさない）", () => {
+  // **シェル**: `#` だけがコメント。**`//` と `*` は実行される。**
+  assert.ok(
+    isComment("scripts/ci/x.sh", "# git config user.email etl@users.noreply.github.com"),
+    "シェルの # をコメントとして扱っていない",
+  );
+  for (const [line, why] of [
+    ["*IGNORED* git config user.email etl@users.noreply.github.com", "CONTROL-B: glob で展開され実行される"],
+    ["//usr/bin/git config user.email dev@users.noreply.github.com", "`//` は絶対パスの先頭で、普通に起動する"],
+    ["  * git config user.email etl@users.noreply.github.com", "字下げした `*` も同じ"],
+  ]) assert.ok(!isComment("scripts/ci/x.sh", line), `シェルの実行行をコメント扱いしている（沈黙する）: ${why}`);
+
+  // **YAML**: `#` だけ。
+  assert.ok(isComment(".github/workflows/x.yml", "  # note"), "YAML の # をコメントとして扱っていない");
+  assert.ok(
+    !isComment(".github/workflows/x.yml", "          //usr/bin/git config user.email etl@users.noreply.github.com"),
+    "YAML の実行行（run: の中身）をコメント扱いしている",
+  );
+
+  // **TypeScript**: `//` と JSDoc の `*`。**`#` はコメントではない。**
+  assert.ok(isComment("packages/etl/test/a.test.ts", "// git config user.email x"), ".ts の // を落としている");
+  assert.ok(isComment("packages/etl/test/a.test.ts", " * user.email … noreply@anthropic.com"), "JSDoc の継続行を落としている");
+  assert.ok(
+    !isComment("packages/etl/test/a.test.ts", '# git config user.email "etl@users.noreply.github.com"'),
+    ".ts で `#` をコメント扱いしている（.ts に `#` のコメントは無い）",
+  );
+
+  // **md / json / 拡張子なし**: **コメントとして除外しない**（落とさない側に倒す。#569）。
+  for (const f of ["docs/ops/a.md", "package.json", "some/unknown-file"]) {
+    assert.ok(
+      !isComment(f, "git config user.email etl@users.noreply.github.com"),
+      `${f} で実行行をコメント扱いしている`,
+    );
+  }
+});
+
+/**
+ * **`git` の設定キーは大小を区別しない**（#1066 の差し戻し。要修正 2）。
+ *
+ * **担当者が実機で確認した**（2026-09-29、git 2.43.0）:
+ * ```
+ * git config --local user.EMAIL 'etl@users.noreply.github.com'  → author に etl@… が刻まれた
+ * git config --local User.Email 'dev@users.noreply.github.com'  → author に dev@… が刻まれた
+ * ```
+ * **`i` を付ける前は `pass=9 fail=0` で沈黙した。**
+ *
+ * **CLI のフラグと環境変数は大小を区別する**（実機確認: `--Author=` は `unknown option`、
+ * `git_author_email=` は無視された）ので、**`i` で広がる分は空振りに終わる。**
+ */
+test("設定キーの大文字・小文字を区別しない（user.EMAIL が通らない）", () => {
+  for (const key of [
+    'git config user.EMAIL "etl@users.noreply.github.com"', // **実機で author に刻まれた綴り**
+    'git config User.Email "dev@users.noreply.github.com"', // **同上（混在）**
+    "git config USER.EMAIL x@y.z",
+    "git -c AUTHOR.EMAIL=x@y.z commit -m x",
+    "git -c Committer.Email=x@y.z commit -m x",
+  ]) assert.ok(IDENTITY_KEYS.test(key), `大小を区別して取りこぼしている（沈黙する）: ${key}`);
+
+  // **広げても、無関係な行は拾わないままであること**（`[= ]` の要求が大小に関係なく効く）。
+  for (const other of [
+    "          git log --author-date-order -1",
+    "          git log --Author-Date-Order -1",
+    "          git shortlog --author-date",
+    "      - uses: actions/checkout@v4",
+  ]) assert.ok(!IDENTITY_KEYS.test(other), `i フラグで無関係な行を拾うようになった: ${other}`);
+});
+
+/**
+ * **`i` は判定と絞り込みの両方に要る。片方だけだと沈黙する**（#1066 の差し戻し。要修正 2）。
+ *
+ * **判定側だけ `i` にしても、`git grep` が `user.EMAIL` の行を候補に含めなければ
+ * その行は一度も読まれない。** **「片方だけ」の事故は #1103 で実際に起きている。**
+ *
+ * **だから 2 つを別々に書かず、`grepFlags` を `IDENTITY_KEYS.flags` から導いている。**
+ * **ここが落ちれば「片方だけになった」と分かる。**
+ */
+test("大小無視は判定と git grep の両方に効いている（片方だけにならない）", () => {
+  assert.ok(IDENTITY_KEYS.flags.includes("i"), "判定側に i が無い");
+  assert.ok(grepFlags.includes("i"), "git grep 側に i が無い（絞り込みで落ちて沈黙する）");
+  // **導出であること**を固定する（手書きの写しに戻したら落ちる）。
+  assert.equal(
+    grepFlags,
+    `-lIzE${IDENTITY_KEYS.flags.includes("i") ? "i" : ""}`,
+    "grep のフラグが IDENTITY_KEYS.flags から導かれていない",
+  );
+  // **git 自身に聞いて確かめる**——**正規表現どうしの突き合わせだけでは
+  // 「`git grep` が実際にそう動く」ことの証明にならない。**
+  // **使い捨てのファイルは作らない**ので、`--no-index` に標準入力ではなく
+  // **既知の文字列を `-e` で当てて、フラグが効いていることだけ**を見る。
+  const probe = (flags: string): boolean => {
+    try {
+      execFileSync("git", ["grep", flags, "-e", "USER\\.EMAIL", "--", ":!*"], {
+        cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 20,
+      });
+      return true;
+    } catch (e) {
+      // 0 件一致は exit 1。**フラグ自体が不正なら exit 128 になる**ので、そこを区別する。
+      const status = (e as { status?: number }).status;
+      assert.notEqual(status, 128, `git grep がフラグを受け付けない: ${flags}`);
+      return false;
+    }
+  };
+  probe(grepFlags);
 });
