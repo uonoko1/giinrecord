@@ -636,6 +636,44 @@ t_dollar_warning_would_not_have_caught_these() {
   assert_contains "$safe" '$' "単引用符で正しく書いた式にこそ $ が残る"
 }
 
+# --expect は「逐語の部分文字列」で突き合わせる。正規表現一致に化けると、
+# `.` `*` `$` `[` を含む宣言が**常に通る**——宣言したのに何も守っていない状態になる。
+# レビュー（#1127）で、grep から -F を外す変異が 63 件緑のまま素通りすることが分かった。
+# この PR が閉じたい穴と同種（道具が意図と違う挙動に化けても誰も気づかない）なので、
+# 逐語であることを振る舞いで固定する。
+t_expect_matches_literally_not_as_a_regex() {
+  repo
+  # `.` は正規表現なら任意 1 文字。逐語なら「点そのもの」。
+  # 置換後のファイルに `a.c` は無く、`abc` だけが在る形を作る。
+  printf 'const s = "abc";\n' > "$R/src/app.ts"
+  local before; before=$(md5 "$R/src/app.ts")
+  run apply src/app.ts 's/abc/abd/' --expect 'a.d'
+  assert_eq 5 "$STATUS" "'a.d' は逐語では一致しないので exit 5（正規表現なら abd に当たって通ってしまう）"
+  assert_eq "$before" "$(md5 "$R/src/app.ts")" "巻き戻す"
+}
+# `*` を含む宣言（正規表現なら直前文字の 0 回以上）。
+# 置換後は `xw`。`xz*w` は**正規表現なら当たる**（z が 0 回）が、逐語では当たらない。
+# fixture がこの差を作っていないと、-F の有無どちらでも落ちるだけの弱い検査になる。
+t_expect_does_not_treat_star_as_a_quantifier() {
+  repo; printf 'const s = "xyz";\n' > "$R/src/app.ts"
+  run apply src/app.ts 's/xyz/xw/' --expect 'xz*w'
+  assert_eq 5 "$STATUS" "'xz*w' は逐語では一致しない（正規表現なら z が 0 回で xw に当たってしまう）"
+}
+# `$` を含む宣言（正規表現なら行末）。
+# 置換後の行は `const s = "xw";`。`xw";$` は**正規表現なら行末に当たる**が、逐語では
+# ドル記号そのものが要るので当たらない。
+t_expect_does_not_treat_dollar_as_end_of_line() {
+  repo; printf 'const s = "xyz";\n' > "$R/src/app.ts"
+  run apply src/app.ts 's/xyz/xw/' --expect 'xw";$'
+  assert_eq 5 "$STATUS" 'xw";$ は逐語では一致しない（正規表現なら行末扱いで通ってしまう）'
+}
+# 逐語で本当に在る場合は通る（厳しすぎる側も固定する）
+t_expect_passes_on_a_literal_dot_that_really_is_there() {
+  repo; printf 'const s = "a.c";\n' > "$R/src/app.ts"
+  run apply src/app.ts 's/a\.c/a.d/' --expect 'a.d'
+  assert_eq 0 "$STATUS" "点そのものが在れば通る: $OUT"
+}
+
 # ---- 偽陽性: 既存の正しい使い方が、この仕組みで止まらないこと -------------------------------
 # これが崩れると全員の作業が止まる。
 t_no_new_failures_for_plain_expr_usage() {

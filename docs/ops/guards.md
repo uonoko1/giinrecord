@@ -110,7 +110,7 @@ grep してから起票してください（**今日の 5 件はそこにあり�
 | 秘密・サーバー情報がリポジトリに入る | `scripts/ci/forbidden-patterns.sh`（`private-key` / `github-token` / `aws-key` / `env-file` / `ip-address` / `forbidden`。#133） |
 | 破壊的な git（`reset --hard` 等）を scripts に書いて未コミットの作業を消す | `scripts/ci/forbidden-patterns.sh` の `destructive-git` 規則（#542/#557）。退避は `scripts/dev/mutate.sh` を使う |
 | 利用者本人の個人アドレスが追跡ファイルに入る | `scripts/ci/forbidden-patterns.sh` の `personal-address` 規則（#1111。2026-09-28 に 3 本の PR が計 7 行を入れかけ、3 回ともレビュアーだけが見つけた）。架空アドレスの綴りは `packages/etl/test/fake-addresses.ts` の `FAKE_ADDRESSES` を使う |
-| 変異が「当たりはしたが、狙った箇所ではない」まま測って偽の数字を出す | `scripts/dev/mutate.sh` が当てた差分を毎回標準エラーに出す（何行・どの行）。宣言して自動で止めたいときは `--expect`（違えば exit 5 でコマンドを走らせない）、式を書きたくないときは `--from` / `--to` の逐語置換。`scripts/dev/test/mutate.test.sh` が両側を測る（#1114。md5 は「変わったか」しか見ないので、`$` がシェルに食われて式が化けても通る——3 人が計 3 回踏んだ） |
+| 変異が「当たりはしたが、狙った箇所ではない」まま測って偽の数字を出す | `scripts/dev/mutate.sh` が当てた差分を毎回標準エラーに出す（何行・どの行）。宣言して止めたいときは `--expect`（違えば exit 5 でコマンドを走らせない。ただし「その文字列が在るか」しか見ないので、止める力は宣言した分だけ——全件に効くのは差分のほう）、式を書きたくないときは `--from` / `--to` の逐語置換。`scripts/dev/test/mutate.test.sh` が両側を測る（#1114。md5 は「変わったか」しか見ないので、`$` がシェルに食われて式が化けても通る——3 人が計 3 回踏んだ） |
 | 高深刻度の脆弱性を無期限に放置する | `scripts/ci/audit.sh`（`audit-ignore.txt` の例外は必ず期限付き）と `scripts/ci/audit-ignore.txt`（#133） |
 | shellcheck の対象・版が CI と手元でずれる | `scripts/ci/shellcheck.sh`（`--list` の対象と `--pinned-version` の固定版が 1 か所。#154/#552） |
 | ビルド成果物がリポジトリに入る | `apps/web/app/lib/repo-hygiene.test.ts`（`check-ignore` で判定。文字列一致ではなく git の判定） |
