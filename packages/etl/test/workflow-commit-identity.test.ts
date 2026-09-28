@@ -275,8 +275,21 @@ const trackedCount = execFileSync("git", ["ls-files", "-z"], {
  * **候補を絞るのに `git grep` を使う**（追跡ファイル全部を Node で読むと遅すぎる）。
  *
  * **実測 2026-09-29**: 全 9918 件を `readFileSync` すると **446 秒**かかった
- * （`data/*.json` が 2417 件在り、そこが支配的）。**`git grep -lI` は 0.9 秒**で、
+ * （`data/` の JSON が支配的）。**`git grep -lI` は 0.9 秒**で、
  * **10423 件 → 9 件**に絞る。**絞った後は Node 側が全行を見る**ので、判定は変わらない。
+ *
+ * **`data/` の JSON の件数は、数え方で変わる**（レビューで 8905 と 8900 が並んだ。
+ * **どちらも正しく、glob の意味が違う**）。**次に数える人が同じ数を出せるように、
+ * コマンドごと書き残す**（#757）:
+ * ```
+ * git ls-files 'data/*.json'      → 8905   git の pathspec の `*` は `/` を跨ぐ（全階層）
+ * git ls-files 'data/**\/*.json'  → 8900   直下の 5 件を含まない
+ *   差の 5 件 = data/{meta,unmatched,unmatched-bills,unmatched-groups,group-mismatch}.json
+ * git ls-files '*.json'           → 8961   data/ の外も含む追跡 JSON の全部
+ * ```
+ * **初版はここに 2417 と書いていたが、それは誤りだった**——
+ * `git ls-files | sed 's/.*\.//' | uniq -c` で数えたときに、
+ * **パスの一部が `json"` として別に数えられていた。**
  *
  * **絞り込みは「身元のキーワードを 1 つでも含むファイル」**——`foldContinuations` の窓は
  * **同じファイルの隣り合う行**しか繋がないので、**キーワードがどこにも無いファイルは
@@ -726,12 +739,51 @@ test("コメント判定は言語ごとに分かれている（シェルの実�
   );
 
   // **md / json / 拡張子なし**: **コメントとして除外しない**（落とさない側に倒す。#569）。
-  for (const f of ["docs/ops/a.md", "package.json", "some/unknown-file"]) {
-    assert.ok(
-      !isComment(f, "git config user.email etl@users.noreply.github.com"),
-      `${f} で実行行をコメント扱いしている`,
-    );
+  //
+  // **fixture は「どれかの規則に *当たる* 行」でなければならない**（レビューの指摘。#1066 の再差し戻し）。
+  // **初版は `git config user.email etl@…` しか当てていなかった**——**`g` で始まるので
+  // `#` にも `//` にも `*` にも当たらず、`commentRuleFor` が何を返しても assert が通った。**
+  // **実測: `return null;` を `return COMMENT_HASH;` に変える変異が 12 pass / 0 fail で生存した**
+  // （同型の「`md` を `COMMENT_HASH` 側に足す」変異も生存）。
+  // **その状態では、`.md` と拡張子なしスクリプトの `# git config user.email etl@…` が沈黙した。**
+  //
+  // **だから各規則の *先頭文字* を持つ行を当てる。** ここが落ちれば「安全側に倒す」が壊れたと分かる。
+  for (const f of ["docs/ops/a.md", "package.json", "some/unknown-file", "LICENSE", "justfile"]) {
+    for (const line of [
+      // **`#` で始まる行**——`COMMENT_HASH` を返すようになったら、ここが落ちる
+      "# git config user.email etl@users.noreply.github.com",
+      "#git config user.email etl@users.noreply.github.com",
+      // **`//` と `*` で始まる行**——`COMMENT_SLASH` を返すようになったら、ここが落ちる
+      "//usr/bin/git config user.email etl@users.noreply.github.com",
+      "* git config user.email etl@users.noreply.github.com",
+      "/* git config user.email etl@users.noreply.github.com",
+      // **どの規則にも当たらない行**（初版はこれだけだった。単独では何も主張しない）
+      "git config user.email etl@users.noreply.github.com",
+    ]) {
+      assert.ok(
+        !isComment(f, line),
+        `コメント規則の無い形式でコメント扱いしている（沈黙する）: ${f} :: ${line}`,
+      );
+    }
   }
+
+  // **`.md` を `COMMENT_HASH` 側に足す変異**も、ここで落ちる
+  // （**md の `#` は見出しであって、コードブロックの中身を読み飛ばす理由にならない**）。
+  assert.ok(
+    !isComment("docs/ops/etl-trailer-rewrite.md", "# git config user.email etl@users.noreply.github.com"),
+    "md の # をコメント扱いしている（手順書のコードブロックが沈黙する）",
+  );
+
+  // **逆向きも固定する**——**`#` を持つ形式で `#` を落としてはいけない。**
+  //
+  // **これは「安全側」なので、走査だけでは落ちない**（読む行が増えるだけで、
+  // いまの追跡ファイルには「コメントの中に裸のアドレス」が無いため。
+  // **実測: `ya?ml` を列挙から外しても走査の 2 本は緑のままだった**——
+  // **落ちたのはこの assert だけ**）。
+  // **それでも固定するのは、偽陽性は「純粋に編集上の書き換えで CI が赤くなる」形だからで、
+  // いま無いだけでコメントに例示のアドレスを 1 行足せば起きる。**
+  assert.ok(isComment("scripts/ci/x.sh", "# note"), "シェルの # を落としている");
+  assert.ok(isComment(".github/workflows/x.yml", "  # note"), "YAML の # を落としている");
 });
 
 /**
