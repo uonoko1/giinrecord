@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 
@@ -53,8 +53,17 @@ import { dirname, resolve } from "node:path";
  *   release.yml      production   ref: inputs.ref      （needs 参照なし）
  *   deploy-staging.yml staging    ref: github.sha      （needs 参照なし）
  * `needs.*.outputs.*` を参照している箇所は 2 つ（deploy-data の production、release の released-tag）。
- * 下の検査は 3 ワークフロー（deploy-data 3 job / release 2 job / deploy-staging 1 job、計 6 job）を
- * 走査し、参照 2 件すべてを検証する。**0 件だったら落とす**（「参照が無い」と「数えていない」を分ける）。
+ *
+ * **走査の範囲を #1036 で直した。** 初版は「3 ワークフロー / 6 job」だった——**手書きの 3 本**で、
+ * **`etl.yml` に壊れた鎖の job を足すとこのファイルは 3/3 緑だった**（#1036 で実測）。
+ * **いまは `readdirSync` で全 15 ワークフロー / 24 job を走査する**（2026-09-28 実測）。
+ * 参照 2 件すべてを検証する。**0 件だったら落とす**（「参照が無い」と「数えていない」を分ける）。
+ *
+ * ── #1017 が塞いだのは鎖 5 環のうち 1 環だけだった（#1036）──────────────────
+ * **`resolve` job の内部 3 環（`outputs` の束縛 / step の `id` / `$GITHUB_OUTPUT` に書く名前）は
+ * 無防備だった。** 下の `assert.deepEqual(resolveJob.outputs, ["ref"])` は**キー名しか見ておらず、
+ * 何に束縛されているかを一度も読んでいない**ので、`ref: main` と書いても通った。
+ * **その 3 環は `workflow-released-chain.test.ts`（#1036）が構造で要求している。**
  *
  * ── 塞げていない穴（変異で見つけた。この PBI の対象外にした）────────────
  * **`deploy-staging.yml` の `ref: ${{ github.sha }}` を `main` に書き換えても、何も落ちない**
@@ -173,14 +182,31 @@ function needsRefs(body: string): { job: string; output: string; raw: string }[]
   return out;
 }
 
-/** deploy-site.yml を呼ぶ 3 本（呼ばれる側の deploy-site.yml 自身は job 1 本で needs を持たない）。 */
-const CALLERS = ["deploy-data.yml", "release.yml", "deploy-staging.yml"];
+/**
+ * **`.github/workflows/` の全ワークフロー**（#1036 の 2.）。
+ *
+ * **初版は `["deploy-data.yml", "release.yml", "deploy-staging.yml"]` の手書き 3 本だった。**
+ * **14 本中 3 本の denylist で、`etl.yml` に壊れた鎖の job を足すとこのファイルは 3/3 緑だった**
+ * （#1036 で実測。#1008 / #1022 / #1043 と同じ型——**列挙は漏れがそのまま穴になる**）。
+ * **`readdirSync` の全走査にした。** 下の母数の assert も、実数（15 本 / 24 job）に合わせて測り直した。
+ */
+const workflowFiles = (): string[] =>
+  readdirSync(wfDir)
+    .filter((f) => f.endsWith(".yml") || f.endsWith(".yaml"))
+    // **`probe-` の除外は置かない**（#1082 のレビューで実測: `.github/workflows/probe-evil.yml` を
+    // 置くと壊れた鎖の job が 7/7 緑になり、**母数の `equal(jobCount, 24)` すら鳴らなかった**
+    // ——2 ファイルが同じ除外を持つので、その job は「存在しないこと」になっていた）。
+    // **除外は denylist で、列挙漏れがそのまま穴になる**（#333）。
+    // **flake（#574 の probe が並行して現れて消える）は #1086 が本筋で直した**——
+    // probe は一時ディレクトリに書くようになり、実ディレクトリには現れない
+    // （`workflow-timeout.test.ts` の「本物のディレクトリに probe- のファイルが残っている」検査が守る）。
+    .sort();
 
 test("#1017: needs.<job>.outputs.<out> を使う job は、その job を needs に挙げている（空文字に解決させない）", () => {
   const broken: string[] = [];
   let refCount = 0;
   let jobCount = 0;
-  for (const f of CALLERS) {
+  for (const f of workflowFiles()) {
     for (const job of parseJobs(read(f))) {
       jobCount++;
       for (const r of job.refs) {
@@ -195,14 +221,19 @@ test("#1017: needs.<job>.outputs.<out> を使う job は、その job を needs 
     }
   }
   // 母数を固定する。0 件で緑になったら「参照が消えた」のか「数えていない」のか分からない（#1017 の 3.）。
-  assert.equal(jobCount, 6, `走査した job 数が変わった（deploy-data 3 / release 2 / deploy-staging 1 = 6）: ${jobCount}`);
+  //
+  // **#1036 で 6 → 24 に測り直した**（手書き 3 本 → `readdirSync` の全 15 本）。
+  // **`24` は独立に維持されている `workflow-timeout.test.ts` の「#556 数え上げ」の
+  // job 名リスト（24 件）と一致する**——**別の実装が別の目的で数えた値と突き合わせてある。**
+  // `equal` のままにする（`>=` にすると job を消したときに気づけない）。
+  assert.equal(jobCount, 24, `走査した job 数が変わった（実測 2026-09-28: 15 ワークフロー / 24 job）: ${jobCount}`);
   assert.ok(refCount >= 2, `needs.*.outputs.* の参照が ${refCount} 件しか見つからない（実測 2 件: deploy-data の production, release の released-tag）`);
   assert.deepEqual(broken, [], `needs が宛先を指していない参照がある:\n${broken.join("\n")}`);
 });
 
 test("#1017: 参照先の job が、その名前の output を実際に宣言している", () => {
   const broken: string[] = [];
-  for (const f of CALLERS) {
+  for (const f of workflowFiles()) {
     const jobs = parseJobs(read(f));
     const byId = new Map(jobs.map((j) => [j.id, j]));
     for (const job of jobs) {
