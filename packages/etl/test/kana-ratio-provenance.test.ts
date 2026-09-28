@@ -69,9 +69,102 @@ test("#771 衆院・参院とも、氏名とかなは同じ行の同じ HTML か
     assert.ok(/const cells = (tr\.querySelectorAll\("td"\)|tds\.map)/.test(text), `${label}: cells は同じ tr の td`);
     // **氏名も同じ行の `tds[0]`／`td a` の `<a>` から取る**（かなと同じ 1 行）
     assert.ok(/const \{ name, legalName \} = parseNameCell\(a\.innerHTML\)|const name = normalize\(a\.text\)/.test(text), `${label}: 氏名も同じ行の a から`);
-    // **名簿ページの取得は 1 か所だけ**（かな専用の 2 つ目の取得先が無い）
-    const fetches = [...text.matchAll(/fetchText(Or404)?\(/g)].length;
+    // **名簿ページの取得は 1 か所だけ**（かな専用の 2 つ目の取得先が無い）。
+    //
+    // **綴りではなく「取得の呼び出し」を数える**（2026-09-27。**2 度直した**）。
+    //
+    // **1 度目**: `fetchText(` という綴りを数えていたので、#1037 の訂正で差し替え口を足して
+    // 呼び出しを `await get(...)` にしたとき `0 !== 1` で落ちた
+    // （**守りたい性質は 1 バイトも壊れていないのに、綴りだけで落ちた**）。
+    //
+    // **2 度目**: そこで `await (fetchText|get)\(` と書いたが、**`await` を前置したことで
+    // `main` より弱くなった**（レビューの実測。PO も検算）:
+    // ```
+    // 参院に第 2 の取得を足す（Promise を変数に受けるだけ）
+    //   const pending = fetchTextOr404(url + "?kana", ...); void (await pending);
+    //     main の検査 /fetchText(Or404)?\(/  → 2 件で赤（捕まえる）
+    //     await 付きの検査                    → 1 件で緑（素通り）   ← 正味の低下
+    // ```
+    // **参院は差し替え口を持たないので、これは「別名を認めた代償」ではない**——
+    // **`await` という 1 語を足したせいで、触っていない院の守りまで落ちた。**
+    // **`await` を落とし、呼び出しの形だけを数える。**
+    // **`?? fetchText` や `typeof fetchText` は直後が `(` でないので数に入らない**（`main` と同じ）。
+    //
+    // **ラッパを 1 つ足して正規表現を満たす形で黙らせないこと**（それだと守りは 1 バイトも増えない。
+    // #1010 の「6 文字の合言葉」と同じ形）。
+    // **`get(` は「メソッド呼び出しではない」ことを要求する**——
+    // **`\b` だけだと `byGroup.get(...)`（無関係な `Map.get`）を拾って偽陽性になった**（実測 2 件）。
+    // **`.` や `?.` が直前に無い `get(` だけを数える。**
+    //
+    // **3 度目**: その否定後読みを交替群の外に置いたので、**`get` だけでなく `fetchText` にも掛かり、
+    // `mod.fetchTextOr404(` が数に入らなくなった**（レビューの 6 度目の指摘、PO も検算。基点 `e546730b`）:
+    // ```
+    // 対象: const a = mod.fetchTextOr404(url); const b = byGroup.get(k);
+    //   /(?<![.\w$])(fetchText(Or404)?|get)\(/   → 0 件   ← 拾えていない
+    //   /fetchText(Or404)?\(|(?<![.\w$])get\(/   → 1 件   ← 拾える（byGroup.get( は拾わない）
+    // ```
+    // **これは `await` の前置と同じ型の低下である**（2 度目の失敗と構造が同じ）——
+    // **正規表現に 1 語（ここでは後読みの位置）を足して、触っていない院の守りを落とした。**
+    // **実測（基点 `e546730b`、対象 2 ファイル 21 本）:**
+    // ```
+    //                                    直す前        直した後
+    // 基準（無改造）                      21/0 緑       21/0 緑
+    // M1   参院に mod.fetchTextOr404(     21/0 緑 ←    20/1 赤    main は 2 件で赤だった（正味の低下）
+    // A9   衆院・本番だけの枝が kana 上書き  21/0 緑 ←    20/1 赤    465 名全員の ID が変わる形
+    // A13b get に触らず mod.fetchText(    21/0 緑 ←    20/1 赤
+    // FP-1〜FP-5（無害な整形 5 通り）       21/0 緑       21/0 緑    偽陽性を増やしていない
+    // ```
+    // **後読みは `get` にだけ掛ける。** **`fetchText` は `.` の後ろでも数える**——
+    // **`mod.fetchTextOr404(` は「2 つ目の取得先」そのものなので、除外する理由が無い。**
+    // **母数（#757）**: `assert.equal` なので **0 件でも落ちる**（実測）。
+    const fetches = [...text.matchAll(/fetchText(Or404)?\(|(?<![.\w$])get\(/g)].length;
     assert.equal(fetches, 1, `${label}: 名簿の取得は 1 か所（かな用の別系統は無い）`);
+    // **別名を使う場合、それが `fetchText` 以外に解決してはいけない**——
+    // **別名を認めた代償を、ここで閉じる。** **別名が 2 つ目の取得先を指せるなら、上の 1 か所は意味を失う。**
+    //
+    // **`const` だけ・`;` まで 1 行だけを見る形では、3 通りで素通りした**（レビューの実測）:
+    // **`let get = …` に変える / `const get =` の直後に改行を入れる**（`.` は改行に当たらない）。
+    // **改行 1 つでこの assert が完全に無効になった**ので、`[\s\S]` と `let|var` を含める。
+    for (const m of text.matchAll(/\b(?:const|let|var)\s+get\s*=([\s\S]*?);/g)) {
+      assert.match(m[1].trim(), /^fetchTextForTest \?\? fetchText(Or404)?$/,
+        `${label}: 取得の別名が fetchText 以外に解決している: ${m[1].trim()}`);
+    }
+    // **差し替え口と別名は、意味の粒度で閉じる**（**逐語では 2 度失敗した**）。
+    //
+    // **1 度目（denylist）**: 「条件に使うのを禁じる」形だと `&&` や三項や `Boolean(...)` を
+    // 列挙し続けることになる。**採らなかった。**
+    //
+    // **2 度目（行の逐語 allowlist）**: **無害な整形 5 通りすべてで偽陽性になった**（レビューの実測）:
+    // **`setFetchTextForTest` の本体を次の行に開く / 型注釈を展開する / 行末コメントを足す /
+    // `undefined | typeof fetchText` に順序を入れ替える / `export const … = (f) => {…}` に書く。**
+    // **いちばん痛いのは 1 つ目**——**1 行関数を 3 行に開くという普通の整形で落ち、
+    // しかも落ちた行は許されるはずの `fetchTextForTest = f;`（「代入」そのもの）だった。**
+    // **「代入」の許可が 1 行関数の逐語に埋まっていた**のが原因である。
+    //
+    // **そして逐語は緩くもあった**（レビューの実測。**21/21 緑**）——
+    // **`fetchTextForTest` の綴りを 1 バイトも動かさず、別の変数に本番判定を写せる:**
+    // ```
+    // const get = fetchTextForTest ?? fetchText;   ← 3 形の逐語。通る
+    // const isProd = get === fetchText;            ← fetchTextForTest の綴りが無い
+    //   if (isProd) { const mod = await import("../fetch.ts");
+    //                 await mod["fetchText"](…) }  ← ① も通る（直後が `"` で `(` が続かない）
+    // ```
+    // **だから見る対象を「`fetchTextForTest` を含む行」から「`get` に触る行」へ広げる。**
+    // **`get` は取得の別名なので、それを比較や代入に使う形は「本番だけ走る分岐」を作れる。**
+    const HOOK_OK = [
+      /^(let|const|var)\s+fetchTextForTest\b/,                    // 宣言（型注釈は何でもよい）
+      /^fetchTextForTest\s*=\s*f;?$/,                             // 代入（1 行でも 3 行でも）
+      /^export (function|const) setFetchTextForTest\b/,            // 差し替え口の入口
+      /^const get = fetchTextForTest \?\? fetchText(Or404)?;$/,    // `??` の左（ここは逐語で固定する）
+      /^const html = await get\(/,                                // 唯一の取得
+    ];
+    for (const [i, line] of text.split("\n").entries()) {
+      const t = line.trim();
+      // **`get` と `fetchTextForTest` に触る行だけを見る**（`byGroup.get(` のようなメソッドは除く）
+      if (!/(?<![.\w$])\bget\b/.test(t) && !t.includes("fetchTextForTest")) continue;
+      assert.ok(HOOK_OK.some((re) => re.test(t)),
+        `${label}: 取得の別名か差し替え口を、許した形以外で使っている（${i + 1} 行目）: ${t}`);
+    }
   }
 });
 

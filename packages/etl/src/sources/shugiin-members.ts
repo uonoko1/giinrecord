@@ -28,15 +28,30 @@ export function decodeRosterPage(bytes: Buffer): string {
   return iconv.decode(bytes, "Shift_JIS");
 }
 
+/**
+ * **取得の差し替え口**（`setCacheDirForTest` と同じ向き。検査だけが使う）。
+ *
+ * **これが無いと「10 ページ取れている」ことを誰も検査できない。**
+ * **実測（レビューの指摘、2026-09-27）: `ROSTER_PAGES` は `[1..10]` のままでも、
+ * 取得ループに `if (page >= 5) break;` を入れると etl の全 1,341 テストが 0 fail で通った。**
+ * **`ROSTER_PAGES` の中身を `deepEqual` で固定しても、取得の側は守られていない**——
+ * **「列挙されている」と「取れている」は別のことである。**
+ *
+ * **倒れる向きは #1037 と同じ**: **わ行の議員が名簿から消え、「辞職した」と区別がつかない。**
+ */
+let fetchTextForTest: typeof fetchText | undefined;
+export function setFetchTextForTest(f: typeof fetchText | undefined): void { fetchTextForTest = f; }
+
 /** 10 ページすべてを取得して結合する。asOf はページ上部の「令和N年M月D日現在」。 */
 export async function fetchShugiinMembers(session: number): Promise<{ members: Member[]; asOf?: string }> {
   const members: Member[] = [];
   let asOf: string | undefined;
+  const get = fetchTextForTest ?? fetchText;
   for (const page of ROSTER_PAGES) {
     const url = memberListUrl(page);
     // **session を渡さない**（#294）。衆院名簿の URL には回次が無く、常に「現在」の名簿を返すので、
     // 回次で古さを判定できない。作り直しのキャッシュ（ETL_CACHE_CLOSED_SESSIONS）でも毎回取得する。
-    const html = await fetchText(url, "shift_jis", { noCache: true });
+    const html = await get(url, "shift_jis", { noCache: true });
     asOf ??= parseAsOf(html);
     members.push(...parseShugiinMemberList(html, url, session));
   }
