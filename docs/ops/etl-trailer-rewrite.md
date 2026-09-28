@@ -58,7 +58,7 @@ gh api -X DELETE repos/uonoko1/giinrecord/branches/main/protection/enforce_admin
 git status --short                      # ← 空であることを目で見る
 git checkout main && git fetch origin main && git reset --hard origin/main
 git filter-branch -f --msg-filter \
-  'grep -viE "^[[:space:]]*Co-[Aa]uthored-[Bb]y:.*<etl@users\.noreply\.github\.com>[[:space:]]*$"' \
+  'grep -viE "^[[:space:]]*Co-[Aa]uthored-[Bb]y:.*<(etl@users|219112946\+[^@]*@users)\.noreply\.github\.com>[[:space:]]*$"' \
   1e41501f^..main || { echo "FILTER FAILED — push しないこと"; exit 1; }
 ```
 
@@ -67,6 +67,31 @@ git filter-branch -f --msg-filter \
 `msg filter failed:` で止まるが、1 ブロックで貼ると次の `push --force` が走る）。
 
 **`1e41501f^..main` の `^` は必要**（trailer を持つのは `1e41501f` 自身）。
+
+### 2 つのアドレスを 1 回で消す（#1101）
+
+**2026-09-28、`#1064` のマージで `219112946+seiji-kiroku-dev@users.noreply.github.com` が
+main に入った**（担当者エージェントが**他人の数字 ID を発明した**）。
+**`219112946` は `github.com/MLehnus`（無関係の実在の個人）である。**
+
+```
+gh api user/219112946   → MLehnus      ← 誤り
+gh api user/120390190   → uonoko1      ← 正しい番号（git config に在った）
+```
+
+**履歴の数字 ID 付きアドレスを全部逆引きして、誤りは 1 件だけと確かめた**（PO の実測）:
+
+```
+120390190+uonoko1@users.noreply.github.com              → uonoko1              ✓
+41898282+github-actions[bot]@users.noreply.github.com   → github-actions[bot]  ✓
+219112946+seiji-kiroku-dev@users.noreply.github.com     → MLehnus              ★
+```
+
+**上の filter は両方を 1 回で落とす。** **force push は 1 回で済むほうが安全である**
+（protection を外している時間が短い）。
+
+**`a72611ee` が対象なので、範囲 `1e41501f^..main` に含まれる**（`1e41501f` より新しい）。
+**当日に `git log --branches --remotes --pretty=format:%B | grep -c 219112946` で数えること。**
 
 ## 3b. `main` だけでは足りない（`1e41501f` は複数の枝の祖先）
 
