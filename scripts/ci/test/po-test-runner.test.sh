@@ -114,6 +114,113 @@ t_filter_matches_file_stem() {
   assert_not_contains "$OUT" "TWO: only thing" "beta.test.sh は走らない"
 }
 
+t_defined_count_is_the_total_not_the_selected() {
+  # **レビュー #1130 の指摘 1。** `(of K defined)` が**この PR の目玉**なのに、
+  # **K を一度も検査していなかった。** `${#NAMES[@]}` を `$RAN` に変えると
+  # `passed: 138  failed: 0  (of 138 defined)` と出て「全部走った」と嘘をつき、
+  # **検査 14/14 が素通りした**（PO が再現、私も再現した）。
+  # **K は「定義された総数」であって「走った数」ではない。** 絞ったときに差が出ることを見る。
+  mkfixture
+  run_fixture alpha           # 定義 3 本のうち 2 本だけ走る
+  assert_eq 0 "$STATUS" "絞っても通る"
+  assert_contains "$OUT" "passed: 2" "走ったのは 2 本"
+  assert_contains "$OUT" "(of 3 defined)" "定義は 3 本（走った数 2 と違う値であること）"
+  assert_not_contains "$OUT" "(of 2 defined)" "定義の欄に「走った数」を書かない"
+}
+
+t_defined_count_matches_the_unfiltered_total() {
+  # 上の裏取り。**「3」は fixture のファイルから導いた数**ではなく、
+  # **引数なしで走らせたときの実行数と一致すること**で固定する
+  # （`(of 3 defined)` だけだと、定数 3 を書いても通ってしまう）。
+  mkfixture
+  run_fixture                 # 絞らない
+  local all_ran; all_ran=$(sed -n 's/^passed: \([0-9]*\).*/\1/p' <<<"$OUT")
+  local all_def; all_def=$(sed -n 's/.*(of \([0-9]*\) defined).*/\1/p' <<<"$OUT")
+  assert_eq "$all_ran" "$all_def" "絞らなければ「走った数」と「定義」が一致する"
+  # 絞ると定義は動かず、走った数だけ減る
+  run_fixture alpha
+  local few_def; few_def=$(sed -n 's/.*(of \([0-9]*\) defined).*/\1/p' <<<"$OUT")
+  assert_eq "$all_def" "$few_def" "絞っても「定義」は動かない"
+}
+
+t_real_runner_defined_count_is_the_total() {
+  # 本物の 8 本でも同じ。**絞ったときに「定義」が縮まないこと。**
+  set +e
+  local all few
+  all=$(bash "$RUNNER" 2>&1)
+  few=$(bash "$RUNNER" merge-when-green 2>&1)
+  set -e
+  local all_ran all_def few_ran few_def
+  all_ran=$(sed -n 's/^passed: \([0-9]*\).*/\1/p' <<<"$all")
+  all_def=$(sed -n 's/.*(of \([0-9]*\) defined).*/\1/p' <<<"$all")
+  few_ran=$(sed -n 's/^passed: \([0-9]*\).*/\1/p' <<<"$few")
+  few_def=$(sed -n 's/.*(of \([0-9]*\) defined).*/\1/p' <<<"$few")
+  assert_eq "$all_ran" "$all_def" "引数なしでは「走った数」＝「定義」"
+  assert_eq "$all_def" "$few_def" "絞っても「定義」は動かない（実測 221）"
+  [[ ${few_ran:-0} -lt ${few_def:-0} ]] || fail "絞れば走った数 < 定義: ran=$few_ran def=$few_def"
+}
+
+t_filter_does_not_match_the_directory_path() {
+  # **レビュー #1130 の指摘 2。** `CURRENT_FILE=$(basename "$t")` を `CURRENT_FILE="$t"` に
+  # すると、`$t` は**絶対パス**なので `run.sh scripts` / `run.sh tmp` が
+  # **221 件全部に当たった**（PO が再現、私も再現: 0 件 → 221 件、検査 14/14 素通り）。
+  # **#1124 の裏返しで、しかも「0 件」が二度と起きなくなるので、足したゲートごと無力化される。**
+  #
+  # **合成 fixture では測れない**——fixture は $TMP（/tmp 配下）に在るので、
+  # そのパスに `scripts` は含まれない。**本物の runner に当てる必要がある**
+  # （レビュアーの指摘どおり）。
+  # **語はハードコードせず、本物のパスから derive する**——`scripts` を直に書くと、
+  # この検査が「私が選んだ 1 語」の話になる。$PO_TEST_DIR の全ディレクトリ成分のうち、
+  # **どのファイル名にも含まれない**ものを全部試す。
+  # （`test` は `*.test.sh` に正しく当たるので除外される。実測: 8 ファイル名すべてにヒット。
+  #  この作業ツリーは /tmp/... 配下なので `tmp` や `claude` も成分に入るが、どれも同じ扱い。）
+  local word out st n=0
+  local -a probes=()
+  local IFS=/
+  for word in $PO_TEST_DIR; do
+    [[ -n $word ]] || continue
+    # そのファイル名を持つテストファイルが 1 本でもあれば、**当たるのが正しい**ので除外
+    local hits=0 f
+    for f in "$PO_TEST_DIR"/*.test.sh; do [[ $(basename "$f") == *"$word"* ]] && hits=1; done
+    [[ $hits == 0 ]] && probes+=("$word")
+  done
+  unset IFS
+  [[ ${#probes[@]} -ge 1 ]] || { fail "母数: 試す語が 1 つも作れなかった（パス=$PO_TEST_DIR）"; return; }
+  for word in "${probes[@]}"; do
+    n=$((n+1))
+    set +e
+    out=$(bash "$RUNNER" "$word" 2>&1); st=$?
+    set -e
+    local ran def
+    ran=$(sed -n 's/^passed: \([0-9]*\).*/\1/p' <<<"$out")
+    def=$(sed -n 's/.*(of \([0-9]*\) defined).*/\1/p' <<<"$out")
+    # ディレクトリ名に当たってしまうと全件（ran == def）になる。**そこを落とす。**
+    [[ ${ran:-0} -lt ${def:-1} ]] || fail "[$word] がディレクトリ名に当たって全件走った: ran=$ran def=$def"
+  done
+  # `scripts` はどのテスト名にもファイル名にも無いので、**0 件 = exit 1** が正しい姿。
+  # （実測: テスト名 0 件ヒット / ファイル名 0 件ヒット。`po` はテスト名に 7 件あるので使わない。）
+  set +e
+  out=$(bash "$RUNNER" scripts 2>&1); st=$?
+  set -e
+  assert_eq 1 "$st" "run.sh scripts は 0 件で exit 1（ディレクトリ名には当たらない）"
+  [[ $n -ge 1 ]] || fail "試した語が 0 個"
+}
+
+t_current_file_holds_a_basename_not_a_path() {
+  # 上の挙動テストが「たまたま当たらない語」に依存しないよう、**性質そのもの**も固定する。
+  # CURRENT_FILE に `/` が入っていたら、それはパスであってファイル名ではない。
+  mkfixture
+  cat > "$TMP/po/test/probe.test.sh" <<'EOF'
+# shellcheck shell=bash
+echo "PROBE_CURRENT_FILE=[$CURRENT_FILE]"
+t_probe() { :; }
+test_case "PROBE: marker" t_probe
+EOF
+  run_fixture
+  assert_contains "$OUT" "PROBE_CURRENT_FILE=[probe.test.sh]" "CURRENT_FILE はファイル名そのもの"
+  assert_not_contains "$OUT" "PROBE_CURRENT_FILE=[/" "CURRENT_FILE に絶対パスが入っていない"
+}
+
 t_real_runner_accepts_the_filter_that_broke() {
   # **合成 fixture だけだと、私の思い込みを測っているだけになる。**
   # 本物の scripts/po/test/ に対して、#1124 で 0 件だった文字列を渡して 1 件以上走ることを見る。
@@ -254,6 +361,11 @@ test_case "当たらないフィルタは exit 1（走っていないのに緑�
 test_case "当たらないフィルタは、存在するテスト名を案内する" t_no_match_filter_lists_what_exists
 test_case "フィルタがファイル名（alpha.test.sh）でも効く" t_filter_matches_file_basename
 test_case "フィルタがファイル名の語幹（alpha）でも効く" t_filter_matches_file_stem
+test_case "(of K defined) は定義の総数で、走った数ではない (#1130 指摘 1)" t_defined_count_is_the_total_not_the_selected
+test_case "絞っても「定義」は動かず、走った数だけ減る (#1130 指摘 1)" t_defined_count_matches_the_unfiltered_total
+test_case "本物の run.sh でも「定義」は絞っても縮まない (#1130 指摘 1)" t_real_runner_defined_count_is_the_total
+test_case "フィルタがディレクトリ名に当たらない (#1130 指摘 2)" t_filter_does_not_match_the_directory_path
+test_case "CURRENT_FILE はパスではなくファイル名 (#1130 指摘 2)" t_current_file_holds_a_basename_not_a_path
 test_case "本物の run.sh に merge-when-green を渡して 1 件以上走る" t_real_runner_accepts_the_filter_that_broke
 test_case "引数なしは全部走る（偽陽性）" t_no_filter_runs_everything
 test_case "当たるフィルタは従来どおり絞れる（偽陽性）" t_matching_filter_still_narrows
