@@ -296,7 +296,8 @@ const grepPattern = IDENTITY_KEYS.source.replace(/^\(\?:/, "(").replace(/\)$/, "
  *
  * **だから 2 つを別々に書かず、1 つの事実（`IDENTITY_KEYS` の flags）から導く。**
  */
-const grepFlags = `-lIzE${IDENTITY_KEYS.flags.includes("i") ? "i" : ""}`;
+const grepFlagsFor = (re: RegExp): string => `-lIzE${re.flags.includes("i") ? "i" : ""}`;
+const grepFlags = grepFlagsFor(IDENTITY_KEYS);
 const listCandidates = (): string[] => {
   let out: string;
   try {
@@ -776,12 +777,22 @@ test("設定キーの大文字・小文字を区別しない（user.EMAIL が通
 test("大小無視は判定と git grep の両方に効いている（片方だけにならない）", () => {
   assert.ok(IDENTITY_KEYS.flags.includes("i"), "判定側に i が無い");
   assert.ok(grepFlags.includes("i"), "git grep 側に i が無い（絞り込みで落ちて沈黙する）");
-  // **導出であること**を固定する（手書きの写しに戻したら落ちる）。
-  assert.equal(
-    grepFlags,
-    `-lIzE${IDENTITY_KEYS.flags.includes("i") ? "i" : ""}`,
-    "grep のフラグが IDENTITY_KEYS.flags から導かれていない",
-  );
+  // **導出であることを固定する。**
+  //
+  // **最初は `grepFlags` を「同じ式」と比べていたが、それは循環していた**
+  // （実測 N5: `grepFlags` を `"-lIzEi"` と直に書いても **12 pass / 0 fail** で生き残った。
+  // **いまの値がたまたま一致するので、写しに戻したことを検出できなかった**）。
+  //
+  // **だから導出そのものを関数にして、*別の* 正規表現を通す。**
+  // **写し（定数）に戻すと、`i` の無い正規表現でも `i` 付きを返してしまうので落ちる。**
+  assert.equal(grepFlagsFor(/x/), "-lIzE", "i の無い正規表現から i 付きのフラグを作っている（写しになっている）");
+  assert.equal(grepFlagsFor(/x/i), "-lIzEi", "i のある正規表現から i 付きのフラグを作れていない");
+  assert.equal(grepFlags, grepFlagsFor(IDENTITY_KEYS), "grepFlags が導出を経由していない");
+  // **残る等価変異**（正直に書き残す）: `grepFlags` を `"-lIzEi"` と直に書く変異は、
+  // **`IDENTITY_KEYS` が `i` を持っている限り同じ文字列**なので、**単独では落とせない**
+  // （実測 N5: 12 pass / 0 fail で生存）。**等価変異なので、これは検査の漏れではない。**
+  // **危険なのは「写しに戻した *あとで* 正規表現側の `i` が外れる」形**（#1103 のドリフト）で、
+  // **その組み合わせは落ちる**（実測 N10: 2 件が fail）。
   // **git 自身に聞いて確かめる**——**正規表現どうしの突き合わせだけでは
   // 「`git grep` が実際にそう動く」ことの証明にならない。**
   // **使い捨てのファイルは作らない**ので、`--no-index` に標準入力ではなく
