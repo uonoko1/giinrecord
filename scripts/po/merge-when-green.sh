@@ -695,22 +695,222 @@ approve_pending_runs() {
 # pending は conclusion が null なので3列目は空になる。既存の awk は $1/$2 しか見ないので
 # 列を足しても読み方は変わらない。
 #
-# 同名のチェックが複数回（再実行）現れることがあるので、`started_at` が最新の1件だけを見る
-# （古い run の conclusion で判定しない）。
+# 同名のチェックが複数回現れることがある。**そのとき「最新の1件」を見てはいけない**（#1054）:
+# `map(max_by(.started_at))` だと、**`failure`(10:00) と `skipped`(10:05) が並んだときに
+# `skipped` が勝って `pass` に分類され、REQUIRED_RED が空になってマージされる。**
+# **#1021 で 4 回起きた誤マージと同じ構造**（歯止めが在るつもりで無い）。
+#
+# **同名グループは「最も悪い 1 件」に畳む**: fail > pending > pass。
+#   - fail が 1 件でもあれば fail。**赤が新しい緑に塗り替えられない**
+#   - fail が無く pending があれば pending（まだ結論が出ていない）
+#   - 全部 pass 系なら pass
+# **重複そのものを赤にはしない**（2 本とも緑なら緑）。**件数は 1 件として数える**
+# （`required_total` を二重に数えると、ログの「必須 N 件」が嘘になる）。
+#
+# **実測（2026-09-27、直近 60 PR の HEAD）**: `conclusion: skipped` の check run は **60 件**、
+# **その 60 件すべてが `issue-secrets`** で、**60 PR すべてに 1 件ずつ出ている（60/60 PR）**。
+# **`if:` で止めた job は「走らない」のではなく `skipped` の check run が作られる**
+# （job レベルの `if:` はワークフロー全体で 6 件）。
+# **この数字は 1 回測り直している**（#1064 の 2 度目のレビュー指摘）: 最初に
+# 「直近 200 PR で 30 件」と書いたが、**同じソースに「`issue-secrets` は 61 PR に出る常連」とも
+# 書いてしまい、自分自身と桁が合っていなかった。** 60 PR で既に 60 件なので、前者が誤り
+# （古い PR には `security.yml` の当該 job がまだ無く、母数の取り方が揃っていなかった）。
+# **結論は弱まるどころか強まる——`skipped` は例外ではなく全 PR に出る。**
+#
+# **同名重複は「起きうる」ではなく、`main` で今まさに起きている**
+# （#1064 のレビューで PO が発見、担当者が追試。2026-09-27）:
+#
+#   $ gh api repos/<repo>/commits/7aeede2a/check-runs     ← 当時の main の HEAD
+#     production  skipped  2026-09-27T08:00:32Z    ← 1 番目（新しい）
+#     production  failure  2026-09-27T07:03:25Z    ← 2 番目（古い）
+#
+#   $ jq 'group_by(.name)|map(max_by(.started_at))|.[]|select(.name=="production")'
+#     production  skipped     ← **pass 扱い。failure が隠れる**
+#
+# **原因は `monitor.yml` の `production` / `staging`**（job レベルの `if:` 付き）で、
+# **スケジュール実行が同じ commit に何度も走り、`failure` のあとに `skipped` が乗る**。
+# **実測: main の直近 30 コミットに同名重複 7 グループ、うち 3 つが「fail + pass」の形**
+# （`7aeede2a` の `production` / `177a06ac` の `production` / `2f98748a` の `guard`）。
+#
+# **`production` / `staging` / `guard` はどちらの一覧にも無い＝必須扱い**（fail-closed）なので、
+# **`--allow-nonrequired-red` では通せない。黙って通るしかなかった。**
+#
+# **PR 側の経路でも、もう起きている**（#1050 はマージ済み。「生きる」ではなく「生きている」）:
+#   - `#1050` の前: 同名が同じ commit に 2 本並んだ例は **0 件 / 200 PR**（同じ workflow が
+#     同じ commit で 2 回走った例も **0 件 / 60 PR**）。**「0 件」であって「数えていない」ではない。**
+#   - `#1050` の後: `pr-body.yml` が `types: [..., edited]` で走るので**同じ head_sha に複数 run**が
+#     できる。**実測（直近 60 PR の HEAD、2026-09-27）: `pr-closes` の n=2 が 5 PR**
+#     （#1032 / #1043 / #1062 / #1064 / #1068。**#1064 はこの変更自身の PR である**）。
+#     run 単位でも `fed085e2` に **5 run**、`04b15d9b` に **2 run** を実測した。
+#   - **ただし `cancelled` になった例は 0 件**（実測: `pr-body.yml` の run 25 件は**全部 success**)。
+#     **`pr-body.yml` は速すぎて `cancel-in-progress` が発火していない**ので、
+#     **「`cancelled` と `success` が並ぶ」は推論であって実測ではない。**
+#     実測で裏付いているのは上の `production` の方である。
+#   - **`pr-closes` は GitHub の必須チェックではない**（実測:
+#     `branches/main/protection` の `required_status_checks.contexts` は
+#     `["check","gitleaks","forbidden-patterns","audit"]` の 4 件で、`pr-closes` は入っていない）。
+#     **この道具の REQUIRED_CHECKS には入っているので、止まるのはこの道具だけ**
+#     ——つまり **GitHub は許すので、この道具が唯一の歯止めだった。**
+#
+# **`skipped` は pass のまま置く**（#1054 やること 3）。**check-runs API では
+# 「走っていない」と「走らせる必要がなかった」を分けられない**: `conclusion: skipped` には
+# job の `if:` が false だった場合も、`concurrency` で消えた場合も同じ値が入り、
+# 区別する欄が無い。**分けられないので、`skipped` を赤にする（選択肢 B）は採らなかった**
+# ——`issue-secrets` は**実測で直近 60 PR の 60 件すべてに出る**（上の数字と同じ測定）。
+# かつ REQUIRED/NONREQUIRED のどちらの一覧にも無い＝**必須扱い**なので、
+# 赤にすると**全 PR が永久に止まる。**
+#
+# **変異で確かめた（#1064 の 3 度目のレビュー後に全部測り直した。母数は po のテスト 178 件）:**
+#   M1  `max_by(severity)` → `max_by(.started_at)` に戻す       → 9 件落ちた
+#   M2  `skipped` を pass の一覧から外す（選択肢 B）             → 6 件落ちた
+#   M3  `severity` を全部 0 にする（= `map(last)` と等価）       → 4 件落ちた
+#   M4  `severity` を反転（pass 2 / fail 0）                     → 11 件落ちた
+#   M5  `group_by(.name) | map(max_by(severity))` を丸ごと消す   → 4 件落ちた
+#   M6  `pending` の重みを `fail` より高くする                   → 1 件落ちた
+#   X7  `map(first)`                                            → 10 件落ちた
+#   X8  `map(last)`                                             → 4 件落ちた
+#   X9  `.[1]`（単独グループを壊さない形）                       → 2 件（**1 本目のレビュー時は 0 件＝素通り**）
+#   X10 `.[2]`（同）                                            → 11 件落ちた
+#   X11 `.[-2]`（同）                                           → 9 件落ちた
+#   X12 `map(min_by(severity))`                                 → 11 件落ちた
+#   T1  `.[0:2] | max_by(severity)`（範囲を切る）                → 1 件（**追加前は 0 件＝素通り**）
+#   T2  `.[0:3] | max_by(severity)`（同）                        → 1 件（**追加前は 0 件＝素通り**）
+#   U2  `sort_by(.started_at)|reverse|.[0:2]|max_by(severity)`   → 1 件（**追加前は 0 件＝素通り**）
+#   Z1  `// 2` → `// 0`                                         → **0 件（等価変異。上に理由）**
+#   Z2  `// 2` を削除                                           → **0 件（等価変異。上に理由）**
+#
+# **#1064 の 4 度目・5 度目のレビューで足した変異（母数は po のテスト 180 件）。
+# 6 件すべてが 178 件全部緑で素通りしていた**——**自分で当て直して再現し、直してから測った**:
+#   T3  `.[0:4] | max_by(severity)`                             → 0 件 → **1 件**（fixture C が殺す）
+#   T4  `.[0:5] | max_by(severity)`                             → 0 件 → **1 件**（同）
+#   H3  `.[-4:] | max_by(severity)`                             → 0 件 → **1 件**（fixture D が殺す）
+#   R5  `.[-5:] | max_by(severity)`                             → 0 件 → **1 件**（同）
+#   R6  `sort_by(.started_at) | .[-4:] | max_by(severity)`       → 0 件 → **1 件**（fixture C が殺す）
+#   N1d `if length > 6 then max_by(.started_at) else …`          → 0 件 → **2 件**（C と D の両方）
+#   T5  `.[0:6] | max_by(severity)`                             → **0 件のまま（下に理由。個別には殺せる）**
+#
+# **母数の守り（#757）も変異で確かめた——この PR で壊していない**:
+#   `if [[ -z "$pending" && "$total" -gt 0 ]]` → `if [[ -z "$pending" ]]`  → **2 件落ちた**
+#     FAIL `858: 母数が 0 のときは緑にしない（--allow-nonrequired-red があっても）`
+#     FAIL `merge: data/refresh → approves action_required runs while waiting`
+#
+# **偽陽性も測り直した——0/20 から動いていない**: マージ済み PR 20 件で
+# 旧実装（`max_by(.started_at)`）と新実装（`max_by(severity)`）の赤い名前の集合を突き合わせ、
+# **差があった PR は 0 / 20。** **この変更で新たに止まる PR は 1 件も無い。**
+#
+# **変異は `map(max_by(severity))` の「実物の jq 1 行」にだけ当てた。**
+# **罠がある**（5 度目のレビュアーが踏み、担当者も一度踏んだ）: **同じ文字列が上の M5 の行の
+# コメントにも出るので、ファイル全体への最初の 1 置換ではコメントだけが変わり、
+# 「全部素通り」に見える。** **行を固定してから測ること。**
+#
+# **X7 / X8 / M3 は #1064 のレビューで足した変異で、最初は素通りしていた**（重要な反省）:
+# **X7 は 173 件中 172 件緑で通った。** 原因は**実装ではなく fixture の並び順**で、
+# **赤をいつも配列の先頭に置いていたので「重み最大を採る」と「先頭を採る」が区別できていなかった。**
+# 並びを本物の API と同じ「新しい順」に直したら 9 件落ちるようになった。
+# **さらに `max_by` は同値のとき最後の要素を返す**（実測: `[a,b,c] | max_by(0)` → `c`）ので、
+# **赤を末尾に置くだけでは M3 / X8 が素通りする**（実測: 並べ替え直後の M3 は 174 件全部緑だった）。
+#
+# **「先頭・末尾・真ん中に置け」という指針は誤りだった**（#1064 の 2 度目のレビューで判明）:
+# **3 要素では「真ん中」＝ index 1 なので、`map(.[1])` は赤を返して生き残る。**
+# 実測: `map(if length>1 then .[1] else .[0] end)`（単独グループを壊さない形の `.[1]`）が
+# **176 件全部緑で素通りした。** 当時の fixture 12 件は、重複グループの最悪の run が
+# **例外なく index 1** に置かれていた。
+#
+# **「4 本並べて赤を index 0 だけに置けば足りる」という次の指針も誤りだった**
+# （#1064 の 3 度目のレビュー）。**index 0 の fixture は「位置で選ぶ実装」を全部殺すが、
+# 「見る範囲を切る」実装は殺さない**——**赤が先頭にあると、先頭だけを見る窓は赤を掴む。**
+# 実測（当時の 177 件）: **どちらも 177 件全部緑で素通りした**
+#   T1 `map(.[0:2] | max_by(severity))`
+#   U2 `map(sort_by(.started_at) | reverse | .[0:2] | max_by(severity))`
+# **U2 がとくに怖い**: 「再実行は直近の試行だけ見ればいい」は **M1 を直すときに人が書きそうな
+# 中間形**で、`severity` も `group_by` も `// 2` も正しく残るので**目視では違和感が無い。**
+#
+# **いま fixture は 4 本立てで守っている**（自分で検算した）:
+#   A `t_1054_red_at_index_zero_only_of_four`   赤 index 0（4 本）
+#     → `first` 以外の**位置で選ぶ実装**が全部落ちる（`first` は赤が先頭の別 fixture が殺す）
+#   B `t_1054_red_far_from_both_ends`           赤 index 3（6 本）
+#     → `.[0:2]` / `.[0:3]` / `.[1:]` / `.[-2:]` など**狭い範囲を切る実装**が落ちる
+#   C `t_1054_red_at_index_five_of_eight`       赤 index 5（8 本）
+#     → `.[0:4]` / `.[0:5]` と**長さで分岐する実装**（`length > 6`）が落ちる
+#   D `t_1054_red_early_with_all_pass_tail`     赤 index 2・末尾 5 件全 pass（8 本）
+#     → `.[-4:]` / `.[-5:]` など**末尾側の窓**が落ちる
+#
+# **【訂正】ここに「`.[0:4]` は構造的に殺せない／fixture を伸ばしても消えない」と書いていたが、
+# それは誤りだった**（#1064 の 4 度目・5 度目のレビューで名指しの訂正を受けた。**測ったら消えた**）。
+# **C を 1 本足したら `.[0:4]` は落ちた**（実測 0 件 → 1 件）。
+#
+# **正しい命題**（**誤りの形は、正しい全称命題から誤った個別命題を導いたこと**）:
+#   - **正しい**: `.[0:n]` は `n >= 配列の長さ` のとき配列全体を見るので本番実装と同じ答えを返す。
+#     **どんな有限の fixture にも「それより広い窓」がある。**
+#   - **正しい**: **どの特定の `n` も、長さ > n・赤を index >= n に置いた fixture 1 本で必ず殺せる。**
+#   - **誤り**: 「だから `.[0:4]` は殺せない」。**殺せないのは「全ての `n` を有限本で同時に」であって、
+#     個別の `n` は殺せる。**
+#
+# **「構造的に不可能」と書く前に測る**（#1067 で直した規則。ここで同じ型をまた踏んだ）。
+#
+# **#1064 では「これで全部」が 3 回続けて外れ、その後「構造的に殺せない」も外れた**
+# ——1 回目「3 位置を揃える」、2 回目「index 0 だけで十分」、3 回目「`.[0:n]` は構造的」、
+# 4 回目「末尾側の窓 `.[-n:]` を 1 本も見ていなかった」。**だから「全部」とは書かない。**
+# **5 回連続で穴は「境界のすぐ外側」だった**ので、いま塞げているのも
+# **C / D が届く n までである**（先頭側 `.[0:5]` まで、末尾側 `.[-5:]` まで）。
+# **より広い窓（`.[0:6]` / `.[-6:]`）は生き残る。個別には殺せるが、この 4 本では殺していない。**
+#
+# **M5 が 4 件しか落ちないのは検査の穴ではない**: 畳まなければ**同名の赤い行がそのまま残る**ので、
+# REQUIRED_RED には入る（＝マージは止まる）。落ちるのは件数を見ている 4 件だけで、
+# これは**件数のログが嘘になる**という別の害である。その 4 件を消すと、
+# 畳む処理が挙動に効かない飾りになる。
 #
 # 作業合意「CI の状態は commit を固定して読む」（2026-09-05）:
 # branch protection が読むのも `commits/<PR の HEAD>/check-runs` なので、これに合わせる。
+#
+# **【この PR では直していない】`--paginate` が無く、実データで既に 30 件で切れている**
+# （#1064 の 4 度目・5 度目のレビューの指摘。**担当者も自分で測り直した**）:
+#
+#   $ gh api "repos/<repo>/commits/42f9c225/check-runs"              → returned 30 / total 53
+#   $ gh api "repos/<repo>/commits/42f9c225/check-runs?per_page=100" → returned 53 / total 53
+#
+#   30 件で消える名前（8 件）:
+#     audit / check / docker-web / forbidden-patterns / gitleaks / issue-secrets /
+#     pr-closes / stale-base
+#
+# **消えるのは branch protection の必須 4 件**（`check` / `gitleaks` / `forbidden-patterns` /
+# `audit`）**＋この道具の必須 `pr-closes` の、全部である。**
+# **かつ `required_total` に下限の検査が無い**（実測: `grep -cE 'required_total (-lt|<|-ne|!=)'`
+# は **0 件**。`main` でも 0 件）ので、**「必須 0 件・赤 0 件」を「all N checks green」と書いて
+# マージしうる。**
+#
+# **`origin/main` と 1 バイトも同じなので regression ではない**（`git show origin/main:` で照合）。
+# **この PR は同名の畳み込みを強化する PR なので無関係ではないが、持ち込んだものではない。**
+# **黙っていると「畳み込みは守った」と誤読されるので、直していないことをここに書く。**
+# **別 issue に立てた: #1093**（同名畳み込みの前段で母数そのものが欠ける問題）。
+# **上の変異表の数字は、どれもこの経路を触っていない**——テストの stub は JSON をそのまま返すので、
+# **ページングの欠落は 180 件のどのテストも見ていない。**
 fetch_checks() {
   # shellcheck disable=SC2016  # $r/$bucket は jq の変数。シェルに展開させないためのシングルクォート
   gh api "repos/$REPO/commits/$HEAD_OID/check-runs" -q '
+    def bucket_of:
+      if .conclusion == null then "pending"
+      elif (.conclusion == "success" or .conclusion == "neutral" or .conclusion == "skipped") then "pass"
+      else "fail" end;
+    # 悪い順の重み。**同名グループからこれが最大の 1 件を採る**（fail が緑に塗り替えられない）。
+    # **`// 2` は fail-closed**（#1064 のレビュー指摘 5）: `{...}[key]` は**知らないキーで null を
+    # 返し、`max_by` は null を最小として扱う**ので、この表が痩せたり綴りを間違えたりすると
+    # **その bucket が「いちばん軽い」ことになって消える**。**分からないものは fail の重み**に倒す。
+    #
+    # **これは「単独では変異で殺せない防御」である**（#1064 の 2 度目のレビュー。**測った**):
+    #   `// 2` → `// 0` にする  → 177 件全部緑（0 件落ちた）
+    #   `// 2` を削除する        → 177 件全部緑（0 件落ちた）
+    # **上の表が正しい限り `bucket_of` は 3 語しか返さないので、`// 2` は到達不能**（等価変異）。
+    # **効くことは jq で直接確かめた**が、**テストは有無を区別できない**——
+    # つまり**これは測って裏づけた防御ではなく、表が痩せた将来に備えた保険**である。
+    # そう明記しておく（**測っていないものを、測ったものと並べない**）。
+    def severity: ({"pass": 0, "pending": 1, "fail": 2}[bucket_of]) // 2;
     [.check_runs[] | {name, status, conclusion, started_at, details_url}]
     | group_by(.name)
-    | map(max_by(.started_at))
+    | map(max_by(severity))
     | .[]
     | . as $r
-    | (if $r.conclusion == null then "pending"
-       elif ($r.conclusion == "success" or $r.conclusion == "neutral" or $r.conclusion == "skipped") then "pass"
-       else "fail" end) as $bucket
+    | ($r | bucket_of) as $bucket
     | "\($bucket)\t\($r.name)\t\($r.conclusion // "")\t\($r.details_url // "")"
   '
 }
