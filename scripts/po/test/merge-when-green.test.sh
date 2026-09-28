@@ -342,7 +342,13 @@ EOF
 )
   run_script "$h" merge-when-green.sh 12
   assert_eq 1 "$STATUS" "exit status"
+  # **#1116: 「check」だけでは締まらない。** タイムアウト文言
+  # `timed out after N polls waiting for checks on PR #12` の **`checks` に当たって通る**ので、
+  # **赤を読まずに止まった場合でも緑のまま**だった（PR #1116 が実際にそうなり、
+  # この assert が弱かったせいで気づけなかった）。**赤を読んだときにしか出ない文言で締める。**
+  assert_contains "$ERR" "checks failed on PR #12" "赤を読んで止める（タイムアウトで止まったのではない）"
   assert_contains "$ERR" "check" "names the failed check"
+  assert_not_contains "$ERR" "timed out" "タイムアウトではなく赤で止まる"
   assert_not_contains "$LOG" "pr	merge" "never merges"
 }
 test_case "merge: a failed check aborts without merging" t_merge_failed_check_aborts
@@ -1214,10 +1220,14 @@ handle() {
   case "$*" in
     "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
     "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      # #1093: **必須の名前を 1 件混ぜてある。** 必須 0 件は緑にしないので（fail-closed）、
+      # `docker-web` だけの fixture だとこのテストは「pending を待つ」ではなく
+      # 「必須が 0 件」で止まってしまう。**本物の PR には必ず必須 5 件が走る**ので、
+      # 必須を持たせたほうが実データに近い。**pending の判定そのものは変えていない。**
       if [ "$(bump)" -lt 2 ]; then
-        echo '{"check_runs":[{"name":"docker-web","status":"in_progress","conclusion":null,"started_at":"t1"}]}'
+        echo '{"check_runs":[{"name":"docker-web","status":"in_progress","conclusion":null,"started_at":"t1"},{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}'
       else
-        echo '{"check_runs":[{"name":"docker-web","status":"completed","conclusion":"success","started_at":"t1"}]}'
+        echo '{"check_runs":[{"name":"docker-web","status":"completed","conclusion":"success","started_at":"t1"},{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}'
       fi ;;
     "pr merge 12 --squash --delete-branch") echo merged ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
@@ -3160,6 +3170,228 @@ EOF
   assert_contains "$OUT$ERR" "検査 2 件 / 必須 2 件 / 赤 1 件" "9 run を 2 件に畳む"
 }
 test_case "1054: 末尾 5 件が全部 pass 系でも先頭寄りの赤は赤（.[-4:] / .[-5:] を殺す）" t_1054_red_early_with_all_pass_tail
+
+# ---- #1093: check-runs のページングと母数の検算 ---------------------------------------------
+#
+# **実測（2026-09-28、`42f9c225` は実在の main のコミット）**:
+#   gh api ".../check-runs"                        → returned 30 / total_count 53
+#   gh api ".../check-runs" --paginate             → returned 53 / total_count 53（**1 ページ**）
+#   gh api ".../check-runs?per_page=5" --paginate  → **11 個の JSON ドキュメント**（5×10 + 3）
+#
+# **`--paginate` は「ページを 1 個の JSON に畳む」わけではない**（gh 2.89.0 で測った）。
+# **オブジェクト応答では、ページごとに 1 個の JSON ドキュメントを並べて吐く。**
+# `-q` を付けると **jq はドキュメントごとに走る**ので、`group_by` の畳み込みが
+# **ページ境界をまたげない**——同名の run が別ページに分かれたら、畳まれずに 2 行出る。
+# 上の per_page=5 の実測で `.check_runs|length` は `5` が 10 行、と**複数行**返った。
+#
+# だからこの PR は **`-q` をやめ、生 JSON を `jq -s` で束ねてから 1 回だけ畳む。**
+# `--paginate` は付ける（gh が per_page=100 を補うので、100 件までは 1 ページで足りる。
+# **100 件を超えたら本当に複数ページになる**ので、束ねる側が要る）。
+
+# 2 ページに分かれ、**同名の run がページ境界をまたぐ**。
+# 1 ページ目に `check` の success、2 ページ目に同じ `check` の failure。
+# 畳み込みがページをまたげないと **success 1 件 + failure 1 件の 2 行**になり、
+# 「畳んで 1 件」という件数のログが嘘になる。**赤は拾えるが件数が嘘になる**ので件数で見る。
+t_1093_folds_across_page_boundary() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      # gh --paginate が吐く形: **1 ページ = 1 個の JSON ドキュメント**を続けて出す
+      echo '{"total_count":4,"check_runs":[
+        {"name":"check","status":"completed","conclusion":"success","started_at":"t2","details_url":"u1"},
+        {"name":"gitleaks","status":"completed","conclusion":"success","started_at":"t2"}
+      ]}'
+      echo '{"total_count":4,"check_runs":[
+        {"name":"check","status":"completed","conclusion":"failure","started_at":"t1","details_url":"u2"},
+        {"name":"gitleaks","status":"completed","conclusion":"success","started_at":"t1"}
+      ]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "ページ境界をまたぐ赤で止まる"
+  assert_contains "$ERR" "checks failed on PR #12: check" "必須の赤として止める"
+  # **4 run を 2 件に畳む。** ページごとに畳むと「検査 3 件」や「検査 4 件」になる
+  assert_contains "$OUT$ERR" "検査 2 件 / 必須 2 件 / 赤 1 件" "2 ページ 4 run を名前 2 件に畳む"
+  assert_not_contains "$LOG" "pr	merge	12" "マージを試みない"
+}
+test_case "1093: ページ境界をまたいで同名を畳む（--paginate は JSON を複数返す）" t_1093_folds_across_page_boundary
+
+# **`--paginate` が実際に付いていること**を呼び出しの形で見る。
+# 付いていなければ GitHub の既定 30 件で切れる（実測 30/53）。
+t_1093_passes_paginate_flag() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"total_count":2,"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"},{"name":"gitleaks","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "緑ならマージ: $ERR"
+  local call; call=$(grep 'check-runs' <<<"$LOG" | head -1)
+  assert_contains "$call" "--paginate" "check-runs を --paginate で呼ぶ（既定 30 件で切らせない）"
+}
+test_case "1093: check-runs の呼び出しに --paginate が付く" t_1093_passes_paginate_flag
+
+# **母数の検算**（#757 の「0 件と数えていないを区別する」の、check-runs 版）。
+# `total_count` が言う件数より少ない run しか手元に無いなら、**取りこぼしている**。
+# 黙って「全部緑」にせず、落ちる。
+t_1093_short_read_fails_closed() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      # **本物の 30/53 と同じ形**: total_count は 53 だが 2 件しか返らない
+      echo '{"total_count":53,"check_runs":[
+        {"name":"check","status":"completed","conclusion":"success","started_at":"t1"},
+        {"name":"gitleaks","status":"completed","conclusion":"success","started_at":"t1"}
+      ]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "取りこぼしたら落ちる（黙って緑にしない）"
+  assert_contains "$ERR" "2" "手元の件数を言う"
+  assert_contains "$ERR" "53" "total_count を言う"
+  assert_not_contains "$LOG" "pr	merge	12" "マージを試みない"
+}
+test_case "1093: total_count より少なければ落ちる（30/53 の形）" t_1093_short_read_fails_closed
+
+# 母数の検算は **等しければ通る**（検算そのものが常に落ちる置物になっていないこと）
+t_1093_exact_count_passes() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"total_count":3,"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"},{"name":"check","status":"completed","conclusion":"success","started_at":"t0"},{"name":"gitleaks","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "total_count と一致すれば通る: $ERR"
+  # **畳んだ後の 2 件ではなく、生の 3 件と突き合わせる**（畳む前の母数で検算する）
+  assert_contains "$OUT$ERR" "all 2 checks green" "畳んだ件数でログを書く"
+}
+test_case "1093: total_count と一致すれば通る（検算が置物でないこと）" t_1093_exact_count_passes
+
+# **`total_count` が無い応答**（fixture や古い応答）で落とさない。
+# 検算は「total_count があるときに、それより少なければ落ちる」であって、
+# 「total_count が無ければ落ちる」ではない——**無い場合まで落とすと、
+# この道具が別の理由で止まる**（母数を知らないことと、取りこぼすことは別）。
+t_1093_missing_total_count_is_tolerated() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"},{"name":"gitleaks","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "total_count が無くても落とさない: $ERR"
+}
+test_case "1093: total_count が無い応答では検算しない" t_1093_missing_total_count_is_tolerated
+
+# **必須の母数の下限**（issue #1093 の 2 番目）。
+# ページングの欠落と噛み合うと「必須 0 件・赤 0 件」で「all N checks green」と書いて
+# マージしうる。**必須が 1 件も見えないなら、それは「全部緑」ではなく「数えていない」。**
+# 母数 0 件（#757）と同じ強さで塞ぐ。
+t_1093_zero_required_fails_closed() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      # **必須の名前が 1 つも無い**（check / gitleaks / forbidden-patterns / audit / pr-closes）。
+      # 必須でないと明記された名前だけが緑で返る形
+      echo '{"total_count":2,"check_runs":[
+        {"name":"stale-base","status":"completed","conclusion":"success","started_at":"t1"},
+        {"name":"docker-web","status":"completed","conclusion":"success","started_at":"t1"}
+      ]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "必須が 0 件なら緑にしない"
+  assert_not_contains "$LOG" "pr	merge	12" "マージを試みない"
+  assert_not_contains "$OUT$ERR" "all 2 checks green" "「全部緑」と書かない"
+}
+test_case "1093: 必須が 0 件なら緑にしない（fail-closed）" t_1093_zero_required_fails_closed
+
+# **実データの形**（PO が PR #1108 の head で実測した並びを写したもの）:
+#   skipped  issue-secrets   ← 条件付き job の正当な skip
+#   skipped  docker-web      ← 同上
+#   success  audit / check / forbidden-patterns / gitleaks / pr-closes / stale-base
+#   **`pr-closes` が 2 件**（再実行した分だけ check-runs が積もる）
+#
+# **再実行のたびに積もる**ので、`--paginate` が効いてくるのは**手こずった PR** である。
+# ここでは**その積もった形が 2 ページに分かれ、しかも同名が両ページにまたがる**場合に、
+# **畳んだ件数と母数の両方が正しいこと**を見る。
+# **`pr-closes` は必須**なので、畳み損ねると「必須 N 件」のログが嘘になる。
+t_1093_real_shape_reruns_across_pages() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      # 1 ページ目（新しい順）: 再実行した pr-closes の 2 本目までが入る
+      # **#1069 との統合**: `docker-web` は `SKIPPABLE_CHECKS`（`issue-secrets` のみ）に
+      # 無いので、**`skipped` のままだと #1069 の規則で赤になる。**
+      # このテストが見たいのは**ページ境界をまたぐ畳み込み**なので `success` にした
+      # （`issue-secrets` の skipped は allowlist に在るので、そのまま残す）。
+      # **JSON の中に `#` のコメントは書けない**（シェルの単一引用符の中は素通しなので、
+      # 書くと jq が `Invalid numeric literal` で落ちる。実際に一度そうした）。
+      echo '{"total_count":9,"check_runs":[
+        {"name":"issue-secrets","status":"completed","conclusion":"skipped","started_at":"t9"},
+        {"name":"docker-web","status":"completed","conclusion":"success","started_at":"t8"},
+        {"name":"pr-closes","status":"completed","conclusion":"success","started_at":"t7"},
+        {"name":"audit","status":"completed","conclusion":"success","started_at":"t6"},
+        {"name":"check","status":"completed","conclusion":"success","started_at":"t5"}
+      ]}'
+      # 2 ページ目: **同じ pr-closes の 1 本目**（再実行前）がこちらに落ちる
+      echo '{"total_count":9,"check_runs":[
+        {"name":"forbidden-patterns","status":"completed","conclusion":"success","started_at":"t4"},
+        {"name":"gitleaks","status":"completed","conclusion":"success","started_at":"t3"},
+        {"name":"stale-base","status":"completed","conclusion":"success","started_at":"t2"},
+        {"name":"pr-closes","status":"completed","conclusion":"success","started_at":"t1"}
+      ]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "全部緑ならマージする: $ERR"
+  # **9 run が名前 8 件に畳まれる**（pr-closes の 2 本が 1 件になる）。
+  # ページごとに畳むと pr-closes が 2 件のまま残って 9 件になる
+  assert_contains "$OUT$ERR" "all 8 checks green" "9 run を名前 8 件に畳む（pr-closes の再実行 2 本を 1 件に）"
+  assert_contains "$LOG" "pr	merge	12" "マージする"
+}
+test_case "1093: 再実行で積もった実データの形（同名がページ境界をまたぐ）" t_1093_real_shape_reruns_across_pages
 
 # --- #1069: `skipped` を pass として数えていたので、走っていない必須チェックが緑になっていた ------
 #
