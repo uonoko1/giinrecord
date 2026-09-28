@@ -15,6 +15,31 @@
 #   結果は全部無意味になる（#514 で実際に起きた）。
 #   ここでは当てる前後の md5 を比べ、変わっていなければ落とす。
 #
+# なぜ md5 だけでは足りなかったか（#1114。#514 の対策は半分しか塞いでいなかった）:
+#   #514 の事故には2つの形があるのに、md5 は片方しか見ていなかった。
+#
+#     空振り（ファイルが変わらない）     → md5 で捕まる（exit 3）
+#     誤爆（意図と違うものに変わった）   → md5 は通る。緑のまま偽の数字が出る   ← 塞げていなかった
+#
+#   誤爆のほうが質が悪い。空振りは exit 3 で止まるので少なくとも嘘の数字は出ないが、
+#   誤爆は「測定が走って、結果が出て、それが間違っている」。測った本人にしか気づけない。
+#
+#   2026-09-29 までに3人が計3回踏んだ（#1100 の担当者が1回、#1115 のレビュアーが2回）。
+#   3回とも原因は同じで、`--expr` の中の `$` が shell に補間されたこと:
+#     ${k2}           → 空に展開され、式が「何にも一致しない正規表現」や別の式に化けた
+#     $((residue+1))  → 算術展開で数値になり、意図と違う場所に当たった
+#   偽の「52/6」「20 件 fail」「51 tests / 1 fail」が出た。3人とも自力で気づいて測り直したが、
+#   気づかなければ PR 本文に載っていた。
+#
+#   **補間は mutate.sh が呼ばれる前に終わっている。** 受け取った時点で `$` は既に消えているので、
+#   「式に `$` が在ったら警告」では1件も捕まらない（むしろ単引用符で正しく書いた `s/(a)(b)/$2$1/`
+#   のほうに `$` が残るので、誤検出にしかならない）。捕まえられるのは「何が実際に変わったか」だけ。
+#   そこで3つ足した:
+#     1. 当たったら必ず差分を標準エラーに出す（何行・どの行が変わったか）。目に入るので飛ばせない。
+#     2. --expect '<置換後に含まれるはずの文字列>' で宣言させ、突き合わせる（exit 5 で自動で止まる）。
+#     3. --from / --to の逐語置換。perl の式を書かないので、メタ文字も区切り文字も後方参照も効かない。
+#        3人が python の逐語置換に逃げたのは、この形が欲しかったから。
+#
 #   scripts/dev/mutate.sh run --file F --expr E [--file F2 --expr E2 ...] -- <コマンド>
 #       退避 → 当てる（当たったか検査）→ コマンド → 必ず戻す。コマンドの終了コードを返す。
 #       ふだんはこれだけ使えばよい。
@@ -22,7 +47,9 @@
 #   scripts/dev/mutate.sh restore                 退避から戻す（異常終了のあとの復旧もこれ）
 #   scripts/dev/mutate.sh status                  変異が当たったままなら 1 を返して名前を出す
 #
-# E は perl の式（例 's/ORIGINAL/MUTANT/g'）。退避は同じ場所に <ファイル>.mutate-sv で置く。
+# E は perl の式（例 's/ORIGINAL/MUTANT/g'）。**必ず単引用符で囲むこと**（$ が shell に食われる。#1114）。
+# 式を書きたくないときは --expr の代わりに --from <文字列> --to <文字列> で逐語置換できる。
+# 退避は同じ場所に <ファイル>.mutate-sv で置く。
 set -euo pipefail
 
 SV_EXT=.mutate-sv
@@ -37,18 +64,28 @@ usage() {
   cat >&2 <<'USAGE'
 変異テストの「当てる／戻す」道具（Issue #542）。git を使わないので、あなたの未コミットの作業は消えない。
 
-  mutate.sh run --file <path> --expr <perl式> [--file <path> --expr <式> ...] -- <cmd> [args...]
-      退避 → 当てる → 当たったか確認 → <cmd> → 必ず戻す。<cmd> の終了コードを返す。ふだんはこれ。
-  mutate.sh apply <path> <perl式> [<path> <perl式> ...]   退避して当てる（戻すのは自分で restore）
+  mutate.sh run --file <path> (--expr <perl式> | --from <文字列> --to <文字列>) [--expect <文字列>]
+                [--file ... ] -- <cmd> [args...]
+      退避 → 当てる → 当たったか確認 → 差分を表示 → <cmd> → 必ず戻す。<cmd> の終了コードを返す。ふだんはこれ。
+  mutate.sh apply <path> <perl式> [--expect <文字列>] [<path> <perl式> ...]   退避して当てる（戻すのは自分で restore）
+  mutate.sh apply <path> --from <文字列> --to <文字列> [--expect <文字列>]    逐語置換の形
   mutate.sh restore   退避（<path>.mutate-sv）から戻す。異常終了のあとの復旧もこれ
   mutate.sh status    変異が当たったまま残っていれば 1 を返して名指しする
+
+perl 式は **必ず単引用符で囲む**こと。二重引用符だと ${k2} や $((n+1)) が shell に食われて
+別の式に化け、しかも「当たりはする」ので md5 は通る（#1114 で3人が計3回踏んだ）。
+当たった変異の差分は毎回標準エラーに出る。意図と違う行に当たっていないか、そこで目を通すこと。
+自動で止めたいときは --expect に「置換後に含まれるはずの文字列」を宣言する。
 
 例:
   mutate.sh run --file apps/web/app/routes/member.css --expr 's/font-weight/X/g' \
     -- pnpm --filter web test
+  mutate.sh run --file src/tally.ts --from 'residue + 1' --to 'residue' --expect 'return residue;' \
+    -- pnpm --filter web test
 
 終了コード: 0 成功 / 1 拒否（外のパス・回収できない場所・退避が残っている・戻せなかった） / 2 使い方
             3 変異が当たらなかった（パターン不一致） / 4 測っている間に変異が外れた（測定は無効）
+            5 当たったが --expect の宣言と違う（意図と違う変異。測らせない）
 USAGE
   exit 2
 }
@@ -83,6 +120,57 @@ resolve() {
 }
 
 sums() { md5sum "$1" | cut -d' ' -f1; }
+
+# 当たった変異の差分を何行まで見せるか。事故の形は「1 行のつもりが N 行」なので、
+# 全体の行数は必ず出したうえで、本文だけ切る（端末が流れて結局読まれなくなるのを避ける）。
+DIFF_MAX_LINES=${MUTATE_DIFF_MAX_LINES:-20}
+
+# 逐語置換（--from / --to）は、値を perl の式に埋め込まず環境変数で渡す。
+#   式に埋め込むと、区切り文字 `/` も、正規表現のメタ文字も、置換側の `$1` も効いてしまい、
+#   「逐語」でなくなる（そして #1114 の事故と同じで、当たりはするので md5 は通る）。
+#   perl は環境変数を %ENV で見るので、パターンは \Q..\E で、置換側は $ENV{...} で受ける。
+#   複数ファイル分を同時に持てるように、1 ファイルにつき連番の変数名を使う。
+LITERAL_N=0
+# literal_expr <from> <to> → 逐語置換の perl 式を1行で返す（環境変数は export 済みにする）。
+#   $() の中で呼ぶと export が親に残らないので、**サブシェルの外で呼ぶこと**。
+#   結果は LITERAL_EXPR に置く（戻り値を $() で受け取らせないため）。
+LITERAL_EXPR=''
+literal_expr() {
+  local from=$1 to=$2 n=$LITERAL_N
+  LITERAL_N=$((LITERAL_N + 1))
+  eval "export MUTATE_FROM_$n=\$from MUTATE_TO_$n=\$to"
+  # shellcheck disable=SC2016  # $ENV{...} は perl に渡す文字列。shell に展開させてはいけない（それが #1114 の事故そのもの）
+  LITERAL_EXPR='s/\Q$ENV{MUTATE_FROM_'"$n"'}\E/$ENV{MUTATE_TO_'"$n"'}/g'
+}
+
+# show_diff <file> <save> → 変異で実際に何行が・どう変わったかを標準エラーに出す。
+#   これが #1114 の中心。md5 の対 `a1b2… → c3d4…` は人間に何も伝えないので、
+#   「意図と違う行に当たった」が目に入らなかった。差分なら飛ばせない。
+#   標準出力には出さない（`-- pnpm test` の出力を集計するのを邪魔しないため）。
+show_diff() {
+  local file=$1 save=$2 rel n
+  rel=${file#"$(root)"/}
+  # diff は差分があると exit 1 を返す。ここでは「あるのが当たり前」なので拾い直す。
+  local body; body=$(diff -U0 -- "$save" "$file" 2>/dev/null || true)
+  # 実際に置き換わった行数（+ 側を数える。@@ とヘッダは除く）
+  n=$(printf '%s\n' "$body" | grep -c '^+[^+]' || true)
+  [[ -n $n ]] || n=0
+  echo "mutate: $rel で $n 行が変わった。意図した変異か、下の差分で確かめること" >&2
+  local shown=0 line
+  while IFS= read -r line; do
+    case $line in
+      ---*|+++*|@@*) continue ;;
+      [-+]*) ;;
+      *) continue ;;
+    esac
+    if ((shown >= DIFF_MAX_LINES)); then
+      echo "  … 以降は省略（全体で $n 行が変わっている。MUTATE_DIFF_MAX_LINES で増やせる）" >&2
+      break
+    fi
+    echo "  $line" >&2
+    shown=$((shown + 1))
+  done <<< "$body"
+}
 
 # 退避と一緒に「当てた直後の md5」を記録する。restore はそれと一致するときだけ上書きする。
 # .mutate-sv は crash を越えて残り、しかも gitignore されているので git status からは見えない。
@@ -163,8 +251,28 @@ cmd_restore() {
 # apply_pairs <path> <expr> [...] → 退避 → 当てる → 当たったか検査。
 # 1つでも空振りしたら、そこまでに当てたものを全部戻して落とす。
 # 「半端に当たった状態」で測らせないため（どの結果も信用できなくなる）。
+# 引数の形は <path> <perl式> [--expect <文字列>] の繰り返し。--expect は直前のファイルに係る。
+# --from / --to は cmd_apply / cmd_run が先に perl の式に畳んでからここへ来る。
+# 走査の結果は PAIR_EXPECTS（位置で files に対応）に置く。
+PAIR_EXPECTS=()
 apply_pairs() {
+  local -a rest=()
+  PAIR_EXPECTS=()
+  while (($#)); do
+    case $1 in
+      --expect)
+        [[ ${2-} ]] || usage
+        ((${#PAIR_EXPECTS[@]} > 0)) || usage        # 係る相手が無い --expect は使い方の誤り
+        [[ -z ${PAIR_EXPECTS[-1]} ]] || usage       # 同じファイルに2回は受けない
+        PAIR_EXPECTS[${#PAIR_EXPECTS[@]} - 1]=$2; shift 2 ;;
+      *)
+        [[ ${2-} ]] || usage
+        rest+=("$1" "$2"); PAIR_EXPECTS+=(""); shift 2 ;;
+    esac
+  done
+  set -- "${rest[@]}"
   (($# >= 2 && $# % 2 == 0)) || usage
+  local -a EXPECTS=("${PAIR_EXPECTS[@]}")
 
   local existing
   existing=$(find_saves)
@@ -223,6 +331,23 @@ apply_pairs() {
     MUTATED_FILES+=("$f"); MUTATED_SUMS+=("$after")
     done_files+=("$f")
     echo "mutate: 当てた ${f#"$(root)"/}  md5 $before → $after"
+
+    # #1114: md5 の対は人間に何も伝えない。実際に何行が・どう変わったかを必ず見せる。
+    # 「意図と違う行に当たった」は、これを見れば測る前に気づける。飛ばす操作は無い。
+    show_diff "$f" "$f$SV_EXT"
+
+    # --expect が在れば、宣言と突き合わせて自動で止める（目視に頼らない側）。
+    local want=${EXPECTS[$i]-}
+    if [[ -n $want ]] && ! grep -qF -- "$want" "$f"; then
+      cp -p -- "$f$SV_EXT" "$f"; rm -f -- "$f$SV_EXT" "$(meta_path "$f")"
+      rollback done_files[@]
+      echo "mutate: 当たったが、--expect の宣言と違う（意図と違う変異。測らせない）" >&2
+      echo "  ファイル: ${f#"$(root)"/}" >&2
+      echo "  式:       $e" >&2
+      echo "  --expect: $want" >&2
+      echo "  置換後のファイルにこの文字列が無い。式が shell の補間で化けていないか確かめること（#1114）" >&2
+      exit 5
+    fi
   done
 }
 
@@ -237,18 +362,70 @@ rollback() {
   done
 }
 
-cmd_run() {
-  local -a pairs=() cmd=()
+# fold_from_to <args...> → --from X --to Y を perl の逐語置換式に畳んで、
+# apply_pairs が読める <path> <expr> [--expect ...] の並びに直す。
+# 結果は FOLDED に置く。--expr と --from を同じファイルに両方渡したら拒否する
+# （どちらが効くか曖昧なまま測らせない）。
+FOLDED=()
+fold_from_to() {
+  FOLDED=()
+  local have_expr=0 have_from=0 from='' to=''
+  # 直前のファイルについて --expr / --from の状態を持ち回る。
+  flush_pending() {
+    if ((have_from)); then
+      ((have_expr == 0)) || die "同じファイルに --expr と --from の両方は渡せない（どちらが効くか曖昧になる）"
+      [[ -n $from && -n $to ]] || usage        # --from だけ／--to だけは使い方の誤り
+      literal_expr "$from" "$to"; FOLDED+=("$LITERAL_EXPR")
+    fi
+    have_expr=0; have_from=0; from=''; to=''
+  }
+  local first=1
   while (($#)); do
     case $1 in
-      --file) [[ ${2-} ]] || usage; pairs+=("$2"); shift 2 ;;
-      --expr) [[ ${2-} ]] || usage; pairs+=("$2"); shift 2 ;;
-      --)     shift; cmd=("$@"); break ;;
-      *)      usage ;;
+      --file)
+        [[ ${2-} ]] || usage
+        ((first)) || flush_pending
+        first=0
+        FOLDED+=("$2"); shift 2 ;;
+      --expr)
+        [[ ${2-} ]] || usage
+        ((first == 0)) || usage
+        ((have_from == 0)) || die "同じファイルに --expr と --from の両方は渡せない（どちらが効くか曖昧になる）"
+        have_expr=1; FOLDED+=("$2"); shift 2 ;;
+      --from)
+        [[ ${2-} ]] || usage
+        ((first == 0)) || usage
+        ((have_expr == 0)) || die "同じファイルに --expr と --from の両方は渡せない（どちらが効くか曖昧になる）"
+        have_from=1; from=$2; shift 2 ;;
+      --to)
+        [[ ${2-} ]] || usage
+        ((have_from)) || usage                  # --to だけ先に来るのは使い方の誤り
+        to=$2; shift 2 ;;
+      --expect)
+        [[ ${2-} ]] || usage
+        flush_pending
+        FOLDED+=(--expect "$2"); shift 2
+        # --expect を畳んだ時点で、そのファイルの式は確定している。
+        first=0 ;;
+      *) usage ;;
     esac
   done
-  ((${#pairs[@]} >= 2)) || usage
+  ((first == 0)) || usage
+  flush_pending
+}
+
+cmd_run() {
+  local -a raw=() cmd=()
+  while (($#)); do
+    case $1 in
+      --) shift; cmd=("$@"); break ;;
+      *)  raw+=("$1"); shift ;;
+    esac
+  done
+  ((${#raw[@]} >= 2)) || usage
   ((${#cmd[@]} >= 1)) || usage
+  fold_from_to "${raw[@]}"
+  local -a pairs=("${FOLDED[@]}")
 
   apply_pairs "${pairs[@]}"
 
@@ -295,9 +472,31 @@ on_signal() {
   kill -s "$sig" -- "$$"
 }
 
+# apply は位置引数の形（<path> <expr>）と、--from / --to の形の両方を受ける。
+# 後者は --file を書かない形なので、先頭のパスを --file に読み替えてから畳む。
+cmd_apply() {
+  (($#)) || usage
+  local a
+  # 逐語の形（--from）が1つでも混ざっているなら --file 形に正規化して fold_from_to に通す。
+  if printf '%s\n' "$@" | grep -qx -- '--from'; then
+    local -a norm=() prev_is_flagval=0
+    for a in "$@"; do
+      if ((prev_is_flagval)); then norm+=("$a"); prev_is_flagval=0; continue; fi
+      case $a in
+        --from|--to|--expect|--expr) norm+=("$a"); prev_is_flagval=1 ;;
+        *) norm+=(--file "$a") ;;
+      esac
+    done
+    fold_from_to "${norm[@]}"
+    apply_pairs "${FOLDED[@]}"
+    return
+  fi
+  apply_pairs "$@"
+}
+
 case "${1-}" in
   run)     shift; cmd_run "$@" ;;
-  apply)   shift; apply_pairs "$@" ;;
+  apply)   shift; cmd_apply "$@" ;;
   restore) shift; (($# == 0)) || usage; cmd_restore ;;
   status)  shift; (($# == 0)) || usage; cmd_status ;;
   *)       usage ;;
