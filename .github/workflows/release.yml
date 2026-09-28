@@ -32,7 +32,8 @@ jobs:
     # only contents: write for the tag ref (REST API, no checkout). Rollback = Release an older sha; the tag follows.
     needs: production
     runs-on: ubuntu-latest
-    # #556: 実測 3–8s（n=39）。tag を動かすだけ。
+    # #556 / #1056: 実測値は packages/etl/test/workflow-timeout.test.ts の表が 1 か所で持つ
+    # （2026-09-27 の再測でも変わらず。tag を動かすだけなので伸びる仕事が無い）。
     timeout-minutes: 10
     permissions:
       contents: write

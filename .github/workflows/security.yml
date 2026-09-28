@@ -26,7 +26,8 @@ permissions:
 jobs:
   gitleaks:
     runs-on: ubuntu-latest
-    # #556: 実測 min 7 / med 11 / max 48s（n=40）。週次は全履歴を走査するので max が跳ねる。必須チェック。
+    # #556 / #1056: 実測値は packages/etl/test/workflow-timeout.test.ts の表が 1 か所で持つ
+    # （数を 2 か所に書くと片方が腐る）。週次は全履歴を走査するので max が跳ねる。必須チェック。
     timeout-minutes: 20
     permissions:
       contents: read
@@ -48,7 +49,8 @@ jobs:
 
   forbidden-patterns:
     runs-on: ubuntu-latest
-    # #556: 実測 7–12s（n=40）。必須チェック。
+    # #556 / #1056: 実測値は packages/etl/test/workflow-timeout.test.ts の表が 1 か所で持つ
+    # （2026-09-27 の再測でも変わらず）。必須チェック。
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
@@ -81,7 +83,7 @@ jobs:
 
   audit:
     runs-on: ubuntu-latest
-    # #556: 実測 min 11 / med 13 / max 25s（n=40）。必須チェック。
+    # #556 / #1056: 実測値は packages/etl/test/workflow-timeout.test.ts の表が 1 か所で持つ。必須チェック。
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
