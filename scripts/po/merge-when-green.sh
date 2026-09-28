@@ -517,6 +517,76 @@ else
   assert_reviewed
 fi
 
+# --- 1.6 枝のコミットの身元（#1101）------------------------------------------------------------
+# **何が起きたか**: 2026-09-28、**#1064 の枝の 3 コミットが
+# `219112946+seiji-kiroku-dev@users.noreply.github.com` で author されていた。**
+# **`219112946` は `github.com/MLehnus`（無関係の実在の個人）の ID である**
+# （正しい番号は `120390190` = `uonoko1`）。**担当者エージェントが数字を作った。**
+# **squash merge が author から `Co-authored-by` を合成し、`a72611ee` として main に刻まれ、
+# `_sidebar` の Contributors が 5 人 → 6 人になって `MLehnus` が出た。**
+#
+# **PO はマージ前に枝の author を見ていなかった。** **trailer だけ数えて author を見ない**のは
+# 作業合意の「代理と実体」そのもので、**起点は author、trailer はその結果である。**
+#
+# **なぜ CI だけに任せないか**（`packages/etl/test/commit-identity-allowlist.test.ts` が在る）:
+#   - **枝が削除されると、その author は `git log --all` から消える。**
+#     **実測: #1064 の枝は削除済みで、`git log --all | grep 219112946` は 0 件。**
+#     **残っているのは合成された trailer だけ**——**起点は GitHub の API にしか残っていない。**
+#     **マージする瞬間が、起点を読める最後の機会である。**
+#   - **CI は「その時 push されていた HEAD」で走る。** この道具は**マージ直前の実物**を読む。
+#
+# **測った費用**: **`gh api .../pulls/<PR>/commits` は 0.5 秒**（2026-09-28、#1064 の 9 コミット実測）。
+# **逐語 allowlist は上のテストと同じ 2 形**（本人確認済み。`gh api user/<id>` で逆引き）。
+# **2 か所に同じ綴りが在るのは重複だが、片方は TypeScript・片方は bash で、共有できない。**
+# **綴りがずれたら、このスクリプトのテストが落ちる**（`merge-when-green.test.sh`）。
+ALLOWED_IDENTITIES=(
+  "120390190+uonoko1@users.noreply.github.com"
+  "41898282+github-actions[bot]@users.noreply.github.com"
+)
+
+assert_branch_identity() {
+  local emails rc=0 bad="" e total=0
+  # **読めなかったことを「きれい」と読まない**（#757）。`|| rc=$?` で失敗を分ける。
+  emails=$(gh api "repos/$REPO/pulls/$PR/commits" --paginate \
+    --jq '.[] | select((.parents | length) < 2) | .commit.author.email, .commit.committer.email') || rc=$?
+  if [[ "$rc" != 0 ]]; then
+    die "PR #$PR のコミットを読めませんでした（gh api が失敗）。マージしません。
+
+       **これは「身元がきれい」ではありません。** 確かめられなかったので止めています（#757）。
+         gh api repos/$REPO/pulls/$PR/commits
+       $URL"
+  fi
+  # **母数**: 1 件も読めていないのに緑にしない。**PR には必ずコミットが 1 つ以上在る。**
+  [[ -n "$emails" ]] && total=$(wc -l <<<"$emails")
+  if (( total == 0 )); then
+    die "PR #$PR のコミットが 1 件も読めませんでした（母数 0）。マージしません。
+       $URL"
+  fi
+  while IFS= read -r e; do
+    [[ -n "$e" ]] || continue
+    local ok=0 a
+    for a in "${ALLOWED_IDENTITIES[@]}"; do [[ "$e" == "$a" ]] && ok=1 && break; done
+    (( ok )) || { [[ "$bad" == *"$e"* ]] || bad+="$e "; }
+  done <<<"$emails"
+  if [[ -n "$bad" ]]; then
+    die "PR #$PR の枝に、本人確認していない identity でコミットされたものがあります。マージしません（#1101）。
+
+       見つかった: ${bad% }
+       許すのは:   ${ALLOWED_IDENTITIES[*]}
+
+       **squash merge は author から Co-authored-by を合成します。**
+       **このままマージすると、そのアドレスの持ち主が Contributors に出ます**
+       （2026-09-28 に実際に起きました: 219112946 → github.com/MLehnus）。
+
+       担当者にコミットし直してもらってください:
+         git -c user.email=${ALLOWED_IDENTITIES[0]} rebase --exec \\
+           'git commit --amend --reset-author --no-edit' origin/main
+       $URL"
+  fi
+  log "枝のコミットの身元を確かめました（$total 件すべて本人確認済みのアドレス）"
+}
+assert_branch_identity
+
 # --- 2. bring up to date ----------------------------------------------------------------------
 # merge_main_locally — fallback for `gh pr update-branch` being refused because the gh OAuth
 # token lacks the `workflow` scope (the PR touches .github/workflows/*, #200). Merges

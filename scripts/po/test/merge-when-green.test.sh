@@ -3150,3 +3150,128 @@ EOF
   assert_contains "$OUT$ERR" "検査 2 件 / 必須 2 件 / 赤 1 件" "9 run を 2 件に畳む"
 }
 test_case "1054: 末尾 5 件が全部 pass 系でも先頭寄りの赤は赤（.[-4:] / .[-5:] を殺す）" t_1054_red_early_with_all_pass_tail
+
+# --- 枝のコミットの身元（#1101）---------------------------------------------------------------
+# **2026-09-28、#1064 の枝の 3 コミットが `219112946+seiji-kiroku-dev@…` で author されていた。**
+# **`219112946` は `github.com/MLehnus`（無関係の実在の個人）の ID である。**
+# **squash merge が author から `Co-authored-by` を合成し、その人が Contributors に出た。**
+# **PO はマージ前に枝の author を見ていなかった。**
+#
+# **`--jq` は本物の jq が評価する**ので、ここの JSON は本物の API と同じ形で書く。
+MWG_BAD_COMMITS='[{"parents":[{"sha":"p1"}],"commit":{"author":{"email":"219112946+seiji-kiroku-dev@users.noreply.github.com"},"committer":{"email":"219112946+seiji-kiroku-dev@users.noreply.github.com"}}}]'
+
+t_merge_refuses_wrong_numeric_id() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/pulls/12/commits"*) echo '$MWG_BAD_COMMITS' ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "exit status"
+  assert_contains "$ERR" "219112946+seiji-kiroku-dev@users.noreply.github.com" "見つかったアドレスを名指しする"
+  assert_contains "$ERR" "Contributors" "何が起きるかを書く"
+  assert_not_contains "$LOG" "pr	merge	12" "マージしない"
+}
+test_case "merge: 枝が他人の数字 ID で author されていたらマージしない (#1101)" t_merge_refuses_wrong_numeric_id
+
+# **形は正しいので、#1043 / #1075 の正規表現（`/^\d+\+[^@]+@users\.noreply\.github\.com$/`）は
+# 2 つとも通す。** **逐語 allowlist だけが落とせる**——**その差をここで固定する。**
+t_merge_refuses_any_unverified_numeric_id() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    # **形としては完全に正しい**（数字 + `+` + login + GitHub の noreply ドメイン）。
+    "api repos/uonoko1/giinrecord/pulls/12/commits"*) echo '[{"parents":[{"sha":"p1"}],"commit":{"author":{"email":"120390191+uonoko1@users.noreply.github.com"},"committer":{"email":"120390191+uonoko1@users.noreply.github.com"}}}]' ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "exit status"
+  assert_contains "$ERR" "120390191+uonoko1" "1 桁違いでも落とす（形では区別できない）"
+  assert_not_contains "$LOG" "pr	merge	12" "マージしない"
+}
+test_case "merge: 形が正しくても本人確認していない数字 ID なら止める (#1101)" t_merge_refuses_any_unverified_numeric_id
+
+# **読めなかったことを「きれい」と読まない**（#757）。**母数 0 で緑にしない。**
+t_merge_refuses_when_commits_unreadable() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/pulls/12/commits"*) echo "HTTP 503" >&2; exit 1 ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "exit status"
+  assert_contains "$ERR" "身元がきれい" "読めなかったことを「きれい」と読まないと書く"
+  assert_not_contains "$LOG" "pr	merge	12" "マージしない"
+}
+test_case "merge: 枝のコミットを読めなければマージしない（母数 0 を緑にしない, #1101）" t_merge_refuses_when_commits_unreadable
+
+# **bot のコミット（データ更新 PR）は通らなければならない**——**偽陽性が出ると、
+# データ更新が毎回止まる。**
+t_merge_allows_bot_identity() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/pulls/12/commits"*) echo '[{"parents":[{"sha":"p1"}],"commit":{"author":{"email":"41898282+github-actions[bot]@users.noreply.github.com"},"committer":{"email":"41898282+github-actions[bot]@users.noreply.github.com"}}}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "exit status: $ERR"
+  assert_contains "$LOG" "pr	merge	12" "bot の identity はマージできる"
+}
+test_case "merge: github-actions[bot] の identity は通る（偽陽性を出さない, #1101）" t_merge_allows_bot_identity
+
+# **マージコミットは対象外**（`--no-merges` 相当の `select((.parents|length) < 2)`）。
+# **理由は #1075 が測ってある**: **本人が手元で `git merge main` するたびに赤くなり、
+# 8 件中 5 件が落ちる。** **squash merge が trailer を合成する元は squash 対象のコミットなので、
+# 実害の経路は対象内に残る。**
+t_merge_ignores_merge_commits() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    # 親が 2 つ = 手元で `git merge main` したマージコミット。本人の個人アドレスが author。
+    "api repos/uonoko1/giinrecord/pulls/12/commits"*) echo '[{"parents":[{"sha":"p1"},{"sha":"p2"}],"commit":{"author":{"email":"someone@example.com"},"committer":{"email":"someone@example.com"}}},{"parents":[{"sha":"p1"}],"commit":{"author":{"email":"120390190+uonoko1@users.noreply.github.com"},"committer":{"email":"120390190+uonoko1@users.noreply.github.com"}}}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "exit status: $ERR"
+  assert_contains "$LOG" "pr	merge	12" "マージコミットの author では止めない"
+}
+test_case "merge: マージコミットの author は見ない（偽陽性, #1101）" t_merge_ignores_merge_commits
+
+# **逐語の綴りは、このスクリプトと `packages/etl/test/commit-identity-allowlist.test.ts` の
+# 2 か所に在る**（TypeScript と bash で共有できない）。**ずれたら気づけるように固定する。**
+t_merge_allowlist_is_verbatim() {
+  local src
+  src=$(cat "$PO_DIR/merge-when-green.sh")
+  assert_contains "$src" '"120390190+uonoko1@users.noreply.github.com"' "本人の逐語アドレスを持っている"
+  assert_contains "$src" '"41898282+github-actions[bot]@users.noreply.github.com"' "bot の逐語アドレスを持っている"
+  # **形の正規表現に退化していないこと**（それだと #1101 が素通りする）。
+  assert_not_contains "$src" '\d+\+[^@]+@users' "逐語 allowlist が形の要求に退化している"
+}
+test_case "merge: identity の allowlist が逐語で書かれている (#1101)" t_merge_allowlist_is_verbatim
