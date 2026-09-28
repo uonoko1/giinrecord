@@ -68,9 +68,20 @@ git filter-branch -f --msg-filter \
 
 **`1e41501f^..main` の `^` は必要**（trailer を持つのは `1e41501f` 自身）。
 
-## 3b. `main` だけでは足りない（`1e41501f` は 12 本の枝の祖先）
+## 3b. `main` だけでは足りない（`1e41501f` は複数の枝の祖先）
 
-**実測（2026-09-28）**: **`1e41501f` は GitHub 上の生きている 12 本の枝すべての祖先である。**
+**当日に数えること。枝の数は動く**（実測の履歴: 12 本 → **9 本**。#1063 / #1064 / #1088 がマージされ、
+`docs/1088-breakdown` / `docs/1092-axes` が新たに生えた）:
+
+```bash
+for br in $(gh api repos/uonoko1/giinrecord/branches --jq '.[].name'); do
+  git fetch -q origin "refs/heads/$br:refs/remotes/origin/$br"
+  git merge-base --is-ancestor 1e41501f "origin/$br" && echo "$br"
+done
+```
+
+**下の一覧は 2026-09-28 時点のもので、そのまま使わないこと**——**ベタ書きの一覧は denylist なので、
+新しく生えた枝を素通りする**（レビューの指摘）。
 
 ```
 data/districts / data/refresh / docs/1059-correction / docs/1074-rewrite-procedure /
@@ -79,9 +90,14 @@ fix/1052-comparator-allowlist-bypass / fix/1054-skipped-overwrites-failure /
 fix/1081-workflow-dir-pollution / main / test/1074-commit-trailer-identity
 ```
 
-**`main` だけ書き換えると、残り 11 本に trailer が残る。**
-**そして手順 4 の検算（`git log ...`、ref 引数なし = HEAD のみ）は `0` = 成功と出る。**
-**`--all` で数えると残っている**（レビュアーの実測: 同じクローンで 56 件）。
+**`main` だけ書き換えると、残りの枝に trailer が残る。**
+**そして手順 4 の検算を ref 引数なし（= HEAD のみ）で流すと `0` = 成功と出る。**
+**`--branches --remotes` で数えると残っている。**
+
+**「同じクローンで 56 件」という初版の記述は誤りだった**（レビューの実測）——
+**`git log` は同じコミットを 1 度しか訪れず、trailer を持つのは `1e41501f` 1 本だけなので
+原理的に最大 1。** **56 は死んだ remote-tracking ref を数えた値で、
+`refs/remotes` を消すと 1 になる。**
 
 **`_sidebar` は全 ref を集計するので、これでは目的を達しない**
 （`dev` を消したときは 17 本すべてを消したから 0 になった）。
@@ -91,15 +107,21 @@ fix/1081-workflow-dir-pollution / main / test/1074-commit-trailer-identity
 | | やり方 | いつ選ぶか |
 |---|---|---|
 | **(a)** | **open PR を全部マージ / 閉じてから、main だけ書き換える** | **推奨。** 枝が無ければ `main` だけで足りる |
-| (b) | 12 本すべてを書き換えて force push する | 急ぐとき。**ただしレビュー中の PR の head が全部無効になる**（#1080） |
+| (b) | 該当する枝すべてを書き換えて force push する | 急ぐとき。**ただしレビュー中の PR の head が全部無効になる**（#1080） |
 
 **(a) を推す。** **`etl@` trailer 1 件は 2 時間で消えるものではないので、急ぐ理由が無い。**
 
 ## 4. push の前に検算する
 
 ```bash
-git log --all --pretty=format:%B | grep -ciE '^[[:space:]]*Co-[Aa]uthored-[Bb]y:.*etl@users\.noreply'
-#   期待 0   ← **`--all` を必ず付ける。** HEAD だけ見ると「0」と出て他の枝に残る（上の 3b）
+git log --branches --remotes --pretty=format:%B | grep -ciE '^[[:space:]]*Co-[Aa]uthored-[Bb]y:.*etl@users\.noreply'
+#   期待 0
+#   **`--branches --remotes` であって `--all` ではない。**
+#   **`--all` は `refs/original/` も歩く。** `filter-branch` は書き換え前の状態を
+#   `refs/original/refs/heads/main` に残すので、**成功した run でも `--all` は 1 を返す**
+#   （実測 2026-09-28: 完璧な書き換えの後でも `--all` → 1 / `--branches --remotes` → 0）。
+#   **「1 が出たから失敗した」と読んで止まると、protection が外れたまま残る。**
+#   **HEAD だけ（ref 引数なし）でも駄目**——他の枝に残っていても 0 と出る（上の 3b）。
 git log --pretty=format:%B | grep -ciE 'etl@users\.noreply\.github\.com'
 #   期待: 書き換え前の「散文含む件数」から 1 引いた数（trailer 1 件だけ消えて散文は残る）。
 #   書き換え前に上の 0 節で数えておくこと。**この数も焼き付けない**（#1043 の説明文が増減する）。
@@ -161,7 +183,7 @@ curl -s https://github.com/uonoko1/giinrecord/_sidebar \
 
 | # | 誤り | なぜ危険か |
 |---|---|---|
-| A | `-X PUT .../enforce_admins` | **PUT は存在しない**（GET/POST/DELETE のみ）。**404 で落ちても、自前 grep は `allow_force_pushes` しか見ないので緑に見える。** **私は当初「翌朝の cron（06:23 JST）が気づくので最長 24 時間」と書いたが、それも誤りだった**——**その cron は 6 回連続 failure で死んでいる**（`BRANCH_PROTECTION_TOKEN` が無く HTTP 403 → exit 2。`branch-protection.sh` は exit 2 で return するので判定行に届かない。**#547 が開いたまま**）。**つまり検出手段はゼロで、期間は無期限だった。** |
+| A | `-X PUT .../enforce_admins` | **PUT は存在しない**（GET/POST/DELETE のみ）。**404 で落ちても、自前 grep は `allow_force_pushes` しか見ないので緑に見える。** **私は当初「翌朝の cron（06:23 JST）が気づくので最長 24 時間」と書いたが、それも誤りだった**——**その cron は 23 回連続 failure で死んでいる（実測 2026-09-28。私は 6 回、前回のレビューは 8 回と書いたが、どちらも少なく見積もっていた）**（`BRANCH_PROTECTION_TOKEN` が無く HTTP 403 → exit 2。`branch-protection.sh` は exit 2 で return するので判定行に届かない。**#547 が開いたまま**）。**つまり検出手段はゼロで、期間は無期限だった。** |
 | B | `-X PATCH .../protection` | **PATCH は存在しない**（GET/PUT/DELETE のみ）。**`PUT` に直すと全置換で必須チェック 4 件が消える。** |
 | C | `allow_force_pushes` を触っていた | **触る必要が無い**（`enforce_admins` の DELETE だけで通る）。**触ったせいで B の危険を自分で作っていた。** |
 | D | `update-branch` で rebase するつもりだった | **あれはマージなので、消した trailer が main に戻る。** |
