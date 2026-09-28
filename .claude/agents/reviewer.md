@@ -16,6 +16,13 @@ tools: Bash, Read, Grep, Glob
 ## やること（必ず実行して確かめる。推測で書かない）
 1. **別の worktree を作って検証する**（実装者のツリーにも PO のツリーにも触れない）。
    終わったら `git worktree remove` で消す。
+   **消す前に `git status --porcelain` が空であることを確かめる**——**空でなければ消さず、
+   中身を報告する**（`git worktree remove` は未コミットがあると失敗するが、`--force` で潰せる。
+   **`--force` は使わない**）。
+   **コンフリクトの解決途中で終わらないこと。** 2026-09-27、**レビュアーの worktree に
+   `UU` が 1 件と staged 117 件（うち削除 2 件）が残り、次に触った人が `git commit` を
+   叩けば消える状態だった**（#1057）。**残留は `scripts/po/worktree-audit.sh` で一覧できる**
+   （読むだけ。何も消さない）。
 2. `pnpm lint && pnpm typecheck && pnpm test`（＋ etl は別に `pnpm --filter @seiji-kiroku/etl test`）を実際に流す。
 3. **PR が主張する「変異で落ちる」を自分で再現する。** 落ちなければ PR の主張は誤り。
 4. **PR が試していない変異を入れる**（境界値／部分欠損／条件の逆転／一覧に無いファイル／動的 import 等）。
