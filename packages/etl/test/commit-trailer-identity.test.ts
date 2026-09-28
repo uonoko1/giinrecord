@@ -1861,3 +1861,41 @@ test("誤帰属の判定は users.noreply.github.com 宛てだけに掛かる（
     assert.ok(!misattributesViaGithubNoreply(e), `誤帰属しない綴りを赤にしている（偽陽性）: ${e}`);
   }
 });
+
+/**
+ * **「守れないもの」を、散文ではなく検査で固定する**（#1106）。
+ *
+ * **上の docblock は「数字 ID の *中身* は検査できない」と書いている。**
+ * **散文は読まれないし、変異でも落ちない。** **だから通ることを逐語で固定して、
+ * 「いつか閉じた／閉じたつもりになった」ときにここが落ちるようにする。**
+ *
+ * **#1106 で 4 形を本物のコミットに載せて測った**（`origin/main` の実装と、この枝の実装を
+ * 同じ手順で並べた。実測 2026-09-28）:
+ *
+ * ```
+ * trailer に載せた 1 形                                  origin/main   この枝
+ * etl@users.noreply.github.com                            赤            赤
+ * dev@users.noreply.github.com                            赤            赤
+ * 219112946+seiji-kiroku-dev@users.noreply.github.com     緑 ★          緑 ★   ← 変えていない
+ * noreply@anthropic.com                                   赤 ★★         緑     ← #1106 で直した
+ * ```
+ *
+ * **★ は #1074 が明記した既知の限界**（`github.com/MLehnus` に帰属するが形は正しい）。
+ * **#1106 はここを変えていない**——**閉じるなら逐語 allowlist が要り、それは別 PBI で
+ * PO が判断すると #1074 が書いている。**
+ * **★★ が #1106 で直した偽陽性である。**
+ */
+test("数字 ID の中身は検査できない、という限界がそのままであること（散文でなく検査で固定する）", () => {
+  // **形が正しいので通る。** **その数字が指すのは github.com/MLehnus という無関係の個人である**
+  // （実測 `gh api user/219112946` → login=MLehnus / created_at=2025-07-03）。
+  assert.ok(
+    !misattributesViaGithubNoreply("219112946+seiji-kiroku-dev@users.noreply.github.com"),
+    "数字 ID の中身を検査できるようになった（#1074 の既知の限界が閉じた）。" +
+      "閉じたのなら、それは良いことなので、この検査と上の docblock を一緒に直すこと",
+  );
+  // **author / committer の側も同じ限界を持つ**（同じ形を要求しているため）。
+  assert.ok(
+    AUTHOR_OK.test("219112946+seiji-kiroku-dev@users.noreply.github.com"),
+    "author 側の限界だけが閉じた（trailer 側と食い違っている）",
+  );
+});
