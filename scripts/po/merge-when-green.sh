@@ -863,31 +863,61 @@ approve_pending_runs() {
 # 作業合意「CI の状態は commit を固定して読む」（2026-09-05）:
 # branch protection が読むのも `commits/<PR の HEAD>/check-runs` なので、これに合わせる。
 #
-# **【この PR では直していない】`--paginate` が無く、実データで既に 30 件で切れている**
-# （#1064 の 4 度目・5 度目のレビューの指摘。**担当者も自分で測り直した**）:
+# **【#1093 で直した】`--paginate` が無く、実データで 30 件で切れていた**
+# （#1064 の 4 度目・5 度目のレビューの指摘。**#1093 の担当者も自分で測り直した**）:
 #
-#   $ gh api "repos/<repo>/commits/42f9c225/check-runs"              → returned 30 / total 53
-#   $ gh api "repos/<repo>/commits/42f9c225/check-runs?per_page=100" → returned 53 / total 53
+#   $ gh api "repos/<repo>/commits/42f9c225/check-runs"              → returned 30 / total_count 53
+#   $ gh api "repos/<repo>/commits/42f9c225/check-runs" --paginate   → returned 53 / total_count 53
 #
-#   30 件で消える名前（8 件）:
+#   30 件で消えていた名前（8 件）:
 #     audit / check / docker-web / forbidden-patterns / gitleaks / issue-secrets /
 #     pr-closes / stale-base
 #
-# **消えるのは branch protection の必須 4 件**（`check` / `gitleaks` / `forbidden-patterns` /
+# **消えていたのは branch protection の必須 4 件**（`check` / `gitleaks` / `forbidden-patterns` /
 # `audit`）**＋この道具の必須 `pr-closes` の、全部である。**
-# **かつ `required_total` に下限の検査が無い**（実測: `grep -cE 'required_total (-lt|<|-ne|!=)'`
-# は **0 件**。`main` でも 0 件）ので、**「必須 0 件・赤 0 件」を「all N checks green」と書いて
-# マージしうる。**
+# **消えたチェックは「無い」ものとして扱われる**ので、赤がそこに居れば黙って緑になる。
 #
-# **`origin/main` と 1 バイトも同じなので regression ではない**（`git show origin/main:` で照合）。
-# **この PR は同名の畳み込みを強化する PR なので無関係ではないが、持ち込んだものではない。**
-# **黙っていると「畳み込みは守った」と誤読されるので、直していないことをここに書く。**
-# **別 issue に立てた: #1093**（同名畳み込みの前段で母数そのものが欠ける問題）。
-# **上の変異表の数字は、どれもこの経路を触っていない**——テストの stub は JSON をそのまま返すので、
-# **ページングの欠落は 180 件のどのテストも見ていない。**
+# **`--paginate` だけでは足りない**（#1093 で測った。gh 2.89.0）:
+#
+#   $ gh api ".../check-runs?per_page=5" --paginate | jq -s length   → **11**
+#
+# **`--paginate` はオブジェクト応答を 1 個の JSON に畳まない**——**ページごとに 1 個の JSON
+# ドキュメントを並べて吐く。** `-q` を付けると **jq はドキュメントごとに走る**ので、
+# **`group_by` の畳み込みがページ境界をまたげない**（同名の run が別ページに分かれると
+# 畳まれずに 2 行出て、「検査 N 件」のログが嘘になる）。実測で `.check_runs|length` は
+# **`5` が 10 行**返った（1 行ではない）。
+#
+# **だから `-q` をやめ、生 JSON を受けて `jq -s` で束ねてから 1 回だけ畳む。**
+# `--paginate` は付ける: **gh は per_page を指定しないと `--paginate` 時に 100 を補う**ので
+# 100 件までは 1 ページで足りるが、**100 件を超えたら本当に複数ページになる**（束ねる側が要る）。
+#
+# **母数の検算**（#757 の「0 件と数えていないを区別する」の check-runs 版）:
+# **`total_count` より少ない run しか手元に無いなら、取りこぼしている。**
+# **黙って「全部緑」にせず落ちる。** 30/53 はまさにこの形だった。
+# `total_count` が**無い**応答では検算しない——「母数を知らない」と「取りこぼした」は別で、
+# 無いだけで止めるとこの道具が別の理由で動かなくなる。
 fetch_checks() {
+  local raw
+  # **生 JSON を受ける（`-q` を付けない）。** `--paginate` は**ページごとに 1 個の JSON
+  # ドキュメント**を吐くので、`-q` を付けると jq がドキュメントごとに走って
+  # **畳み込みがページ境界をまたげない**（上の docblock の実測）。
+  raw=$(gh api "repos/$REPO/commits/$HEAD_OID/check-runs" --paginate) || return 1
+
+  # **母数の検算**（#757）: `total_count` が言う件数だけ手元にあるか。
+  # **どのページの `total_count` も同じ値**を返す（実測: per_page=5 の 11 ページ全部が 53）ので、
+  # **最初の 1 つ**を母数とする。**少なければ取りこぼしている**ので、黙って緑にせず落ちる。
+  # `total_count` が無い応答では検算しない（`null` を出して呼び出し側で読み飛ばす）。
+  local got want
+  got=$(jq -s '[.[].check_runs[]] | length' <<<"$raw") || return 1
+  want=$(jq -rs 'map(.total_count) | map(select(. != null)) | if length == 0 then "null" else .[0] end' <<<"$raw") || return 1
+  if [[ "$want" != "null" && "$got" -lt "$want" ]]; then
+    die "check-runs を取りこぼしました: 手元 $got 件 / total_count $want 件（PR #$PR / $HEAD_OID）
+       **取りこぼした分は「無い」ものとして扱われる**ので、走っていない検査を通したままマージしかねません。
+       gh のページングが効いていない可能性があります: gh api \"repos/$REPO/commits/$HEAD_OID/check-runs\" --paginate | jq -s '[.[].check_runs[]] | length'"
+  fi
+
   # shellcheck disable=SC2016  # $r/$bucket は jq の変数。シェルに展開させないためのシングルクォート
-  gh api "repos/$REPO/commits/$HEAD_OID/check-runs" -q '
+  jq -rs '
     def bucket_of:
       if .conclusion == null then "pending"
       elif (.conclusion == "success" or .conclusion == "neutral" or .conclusion == "skipped") then "pass"
@@ -905,14 +935,16 @@ fetch_checks() {
     # つまり**これは測って裏づけた防御ではなく、表が痩せた将来に備えた保険**である。
     # そう明記しておく（**測っていないものを、測ったものと並べない**）。
     def severity: ({"pass": 0, "pending": 1, "fail": 2}[bucket_of]) // 2;
-    [.check_runs[] | {name, status, conclusion, started_at, details_url}]
+    # **`-s` で全ページを 1 本の配列に束ねてから畳む**（`[.[].check_runs[]]`）。
+    # ページごとに畳むと、同名の run が別ページに分かれたとき 2 件に数えられる。
+    [.[].check_runs[] | {name, status, conclusion, started_at, details_url}]
     | group_by(.name)
     | map(max_by(severity))
     | .[]
     | . as $r
     | ($r | bucket_of) as $bucket
     | "\($bucket)\t\($r.name)\t\($r.conclusion // "")\t\($r.details_url // "")"
-  '
+  ' <<<"$raw"
 }
 
 # classify_failures — fail の行を「必須」と「必須でない」に振り分け、シェル変数に置く。
@@ -1007,6 +1039,20 @@ $NONREQUIRED_RED_LOGS"
       if update_if_behind; then
         log "[$i/$POLL_MAX] checks were green on an old base; waiting for them to re-run"
       else
+        # **必須の母数の下限**（#1093）。**母数 0 件は #757 で塞いである**（上の `-gt 0`）が、
+        # **必須の母数 0 件は塞がれていなかった**（実測: `grep -cE 'required_total (-lt|<|-ne|!=)'`
+        # が main で **0 件**）。**必須が 1 件も見えていないなら、それは「全部緑」ではなく
+        # 「数えていない」である。** `--paginate` の欠落（30/53）と噛み合うと
+        # **「必須 0 件・赤 0 件」を「all N checks green」と書いてマージしうる**形だった。
+        # **REQUIRED_CHECKS は 5 件あり、どれも PR に必ず走る**ので、0 件は異常である。
+        # **`--allow-nonrequired-red` でも通さない**（このフラグは「必須は緑」を前提にした逃げ道で、
+        # 必須が数えられていない状態はその前提そのものが崩れている）。
+        if [[ "$required_total" -eq 0 ]]; then
+          die "必須の検査が 1 件も見つかりません（検査 $total 件 / 必須 0 件・PR #$PR / $HEAD_OID）
+       これは「全部緑」ではなく「数えていない」です。必須として数える名前: ${REQUIRED_CHECKS[*]}
+       手元で数えるなら:
+         gh api \"repos/$REPO/commits/$HEAD_OID/check-runs\" --paginate | jq -rs '[.[].check_runs[].name] | unique'"
+        fi
         if [[ -n "${PROCEEDED_OVER_RED:-}" ]]; then
           log "必須 $required_total 件は緑。$PROCEEDED_OVER_RED を赤いまま通してマージします"
         else
