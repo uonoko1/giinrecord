@@ -343,6 +343,149 @@ const mergeBaseObtainable = (): boolean => {
   }
 };
 
+/**
+ * **走査した範囲が空だったとき、その「空」が本当に正しいかを別の源で裏づける。**
+ *
+ * ── **なぜこれが要るか（2 度目のレビューの実測。必須 2。R9）** ──────────────────────────
+ *
+ * **初版の母数 assert は `if (mergeBase !== head)` で囲われていた。**
+ * **「`merge-base == HEAD` なら枝は base に何も足していないので 0 が正しい」という理屈だが、
+ * その前提そのものを 1 行の変異で作れる:**
+ *
+ * ```
+ * R9   mergeBase = git("merge-base", "HEAD", "HEAD").trim();   ← 1 行だけ書き換える
+ *   → [#1074] 枝が足したコミット 0 件 / 本文 0 行 / trailer のアドレス 0 件を走査
+ *   → [#1074] author/committer: マージでないコミット 0 件 / アドレス 0 件を走査
+ *   → tests 12 / pass 12 / fail 0 / skipped 0     ★ 12/12 緑（走査が全消え）
+ * ```
+ *
+ * **「ありがちな壊し方」である**（`merge-base` の引数を取り違える）。
+ * **同じ「走査を空にする」変異でも `rev-list` の側（R10: 範囲を `HEAD..HEAD`）は
+ * `pass 10 / fail 2` で落ちる**——**落ちるかどうかが「どこを壊したか」で変わるのは、
+ * 母数が構造で守られていないということである。**
+ * **R9 は skip すらしない**——**`0 件` とログに出して、`skipped 0` で緑を返す。**
+ *
+ * **そして同じ根から、実際に 2 つの害が出ていた:**
+ *
+ * ```
+ * (a) push: branches: [main] で CI が走ると merge-base == HEAD になり、0 件走査で緑
+ *     （実機: fetch step は `if: github.event_name == 'pull_request'` なので push では走らない）
+ * (b) fork PR は refs/remotes/origin/main を枝の側から動かせる
+ *     （レビューの実測: 本物の main なら pass 10 / fail 2 → update-ref で pass 12 / fail 0）
+ * ```
+ *
+ * ── **どう解くか: 「空でよい」と言うなら、別の源で裏づける** ──────────────────────────
+ *
+ * **`merge-base == HEAD` の綴りを信じない**（`originMainReallyAbsent` / `mergeBaseObtainable` と
+ * 同じ形）。**範囲が空であることの意味は「HEAD が origin/main の祖先か同一」であり、
+ * それは `git merge-base --is-ancestor` が `merge-base` とは別に答える:**
+ *
+ * ```
+ *                               mergeBase == head   is-ancestor HEAD origin/main
+ * ふつうの PR の枝                   違う                 exit 1
+ * main への push（正しく 0 件）       同じ                 exit 0   ← ここだけ空を許す
+ * R9（枝の上で 1 行変異）             同じ（捏造）          exit 1   ★ 裏づけが取れない → 落とす
+ * ```
+ *
+ * **実測（2026-09-28、この worktree と depth=1 clone）:**
+ * ```
+ * depth=1 clone（main の先端 = origin/main）  is-ancestor → exit 0
+ * test/1074-… の枝                            is-ancestor → exit 1
+ * ```
+ *
+ * **これで R9 と (a) が分かれる**——**(a) は「本当に main を検査している」ので空が正しく、
+ * R9 は枝の上なので裏づけが取れずに落ちる。**
+ *
+ * ── **(b)（fork の `update-ref`）だけは、これでは閉じない。閉じないと書く** ──────────────
+ *
+ * **`update-ref refs/remotes/origin/main HEAD` をすると HEAD は本当に祖先になる**ので、
+ * **`is-ancestor` は exit 0 を返す**（実測。使い捨て clone で再現した）。
+ * **ローカルの ref だけを見るどの git コマンドも、この 2 つを区別できない**
+ * ——**枝の側が書けるものを、枝の側が書けるもので裏づけても意味がないからである。**
+ *
+ * **区別できる源は 1 つだけある**: **`git ls-remote origin refs/heads/main`**
+ * ——**これは remote に問い合わせるので、ローカルの ref をいくら書き換えても変わらない**
+ * （実測: `update-ref` 後も `ls-remote` は本物の main の sha を返した）。
+ * **だから「空でよい」と言うときだけ、`ls-remote` にも同じことを言わせる。**
+ *
+ * **`ls-remote` は network を叩くので落ちうる。** **落ちたときに黙って通すのは、
+ * まさに `|| true` で踏んだ形なので、そうしない**——**「裏づけが取れなかった」と言って落とす。**
+ * **範囲が空でないときは `ls-remote` を一度も叩かない**ので、
+ * **ふつうの PR の速度と安定性は変わらない**（実測: 空でない枝では呼ばれない）。
+ *
+ * ── **この番人自身が何も主張しないのを防ぐ**（X4 / X5 と同じ罠。自分で変異を当てて見つけた）──
+ *
+ * **番人を足しただけでは足りなかった。** **この枝は範囲が空にならないので、
+ * `emptyRangeIsTrustworthy` は一度も呼ばれない**——**だから中身を潰しても緑で通る:**
+ *
+ * ```
+ * G1  関数の先頭に `return { ok: true, why: "G1" };` を足す（番人を恒真にする）
+ *   → tests 12 / pass 12 / fail 0     ★ 12/12 緑（実測）
+ * ```
+ *
+ * **走査の側が構造的に緑なら、そこに置いた assert は何も主張しない**
+ * （`scannedBody` の `read` 引数と同じ理由で、同じ解き方をする）。
+ * **だから 2 つの源を差し替えられる形にし**（`isAncestor` / `remoteMain` 引数）、
+ * **下の検査で「4 つの分岐が実際にどう答えるか」を本物のコミットに当てて固定する。**
+ */
+/** **`a` は `b` の祖先か同一か**（`merge-base --is-ancestor` の終了コード）。**既定の源 1。** */
+const isAncestorByGit = (a: string, b: string): boolean => {
+  try {
+    execFileSync("git", ["-C", root, "merge-base", "--is-ancestor", a, b], { stdio: "ignore" });
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+/** **origin が実際に持っている `main` の sha**（`ls-remote`。**ローカルの ref では書き換えられない**）。**既定の源 2。** */
+const remoteMainByLsRemote = (): string =>
+  git("ls-remote", "origin", "refs/heads/main").split("\t")[0]?.trim() ?? "";
+
+const emptyRangeIsTrustworthy = (
+  isAncestor: (a: string, b: string) => boolean = isAncestorByGit,
+  remoteMain: () => string = remoteMainByLsRemote,
+): { ok: boolean; why: string } => {
+  // 1. **ローカルの源**: HEAD は origin/main の祖先か同一か。
+  //    **R9 はここで落ちる**（枝の上では祖先ではない）。
+  if (!isAncestor("HEAD", "refs/remotes/origin/main")) {
+    return {
+      ok: false,
+      why:
+        "範囲が空なのに、HEAD は refs/remotes/origin/main の祖先ではない" +
+        "（merge-base が HEAD と等しいという主張が別の源で裏づけられない。" +
+        "merge-base の取り方が壊れていないか）",
+    };
+  }
+  // 2. **remote の源**: ローカルの ref は枝の側から書ける（fork PR の `update-ref`）。
+  //    **`ls-remote` だけは remote に聞くので書き換えられない。**
+  //    **取れなかったら黙って通さない**（`|| true` で踏んだ形にしない）。
+  let remote: string;
+  try {
+    remote = remoteMain();
+  } catch {
+    return {
+      ok: false,
+      why:
+        "範囲が空だが、origin の main を ls-remote で確かめられなかった" +
+        "（空である裏づけが取れないので、緑にはしない）",
+    };
+  }
+  if (remote === "") {
+    return { ok: false, why: "範囲が空だが、ls-remote が origin の main を返さなかった" };
+  }
+  if (!isAncestor("HEAD", remote)) {
+    return {
+      ok: false,
+      why:
+        `範囲が空で、ローカルの refs/remotes/origin/main では HEAD が祖先に見えるが、` +
+        `origin が実際に持っている main（${remote.slice(0, 8)}）の祖先ではない` +
+        `（refs/remotes/origin/main が書き換えられている。fork PR の経路）`,
+    };
+  }
+  return { ok: true, why: `HEAD は origin の main（${remote.slice(0, 8)}）の祖先か同一である` };
+};
+
 const addedCommits = (): {
   shas: string[];
   reason?: string;
@@ -505,14 +648,20 @@ test("この枝が足すコミットの trailer に、誤帰属するアドレ�
   // （走査が 1 commit → 0 commit）。それでも緑だった**——
   // **`bad` が空であることしか見ておらず、「見る対象そのものが消えた」ことを誰も見ていなかった。**
   //
-  // **塞ぎ方**: **HEAD が merge-base と違うなら、範囲は空であってはならない。**
-  // （`merge-base == HEAD` は「枝が base に何も足していない」= main そのものを検査している状態で、
-  // そのときだけ 0 が正しい。）
-  if (mergeBase !== head) {
+  // **塞ぎ方**: **範囲が空なら、空であることを別の源で裏づける。**
+  //
+  // **初版は `if (mergeBase !== head)` で母数 assert を囲っていた**——
+  // **`mergeBase` を `head` と等しくする 1 行の変異（R9）が、その囲いをそのまま素通りした**
+  // （実測: `tests 12 / pass 12 / fail 0`。走査は 0 件でログにも `0 件` と出る）。
+  // **「空でよい」の根拠を、空にした本人（`mergeBase`）に言わせていたのが誤りである。**
+  // **`emptyRangeIsTrustworthy` が別の 2 源（`--is-ancestor` と `ls-remote`）で裏づける**
+  // （関数の docblock に実測と、閉じないもの）。
+  if (shas.length === 0) {
+    const t = emptyRangeIsTrustworthy();
     assert.ok(
-      shas.length > 0,
-      `HEAD が merge-base と違うのに走査した範囲が空である（走査が空回りしている）: ` +
-        `merge-base=${mergeBase?.slice(0, 8)} HEAD=${head?.slice(0, 8)}`,
+      t.ok,
+      `走査した範囲が空である（走査が空回りしている）: ${t.why}` +
+        ` / merge-base=${mergeBase?.slice(0, 8)} HEAD=${head?.slice(0, 8)}`,
     );
   }
   // **本文の行数も出す**——**「アドレス 0 件」のまま緑だったのが穴の発端である**（X1 / X2）。
@@ -626,10 +775,15 @@ test("この枝が足すコミットの author / committer が誤帰属しない
   );
   // **母数（#757）。** **マージでないコミットが 1 件でもあるなら、アドレスは 2 件ずつ読めるはず。**
   // **`shas` が空でないのに `checked` が 0 なら、全部マージだったか、走査が空回りしている。**
-  if (mergeBase !== head) {
+  //
+  // **空のときは別の源で裏づける**（必須 2。R9 はここでも落ちる。
+  // 上の trailer 側と同じ理由なので、同じ番人を使う）。
+  if (shas.length === 0) {
+    const t = emptyRangeIsTrustworthy();
     assert.ok(
-      shas.length > 0,
-      `HEAD が merge-base と違うのに走査した範囲が空である: merge-base=${mergeBase?.slice(0, 8)} HEAD=${head?.slice(0, 8)}`,
+      t.ok,
+      `走査した範囲が空である（走査が空回りしている）: ${t.why}` +
+        ` / merge-base=${mergeBase?.slice(0, 8)} HEAD=${head?.slice(0, 8)}`,
     );
   }
   assert.equal(
@@ -674,11 +828,34 @@ test("この枝が足すコミットの author / committer が誤帰属しない
  * 4. author が誤帰属の 2 親（マージ）コミット        → 赤 0 件 / checked 0（A2 が落ちる。
  *                                                    マージを対象外にできている）
  * ```
+ *
+ * ── **`HEAD~1` を使ってはいけない（`push: branches: [main]` で CI が毎回赤くなっていた）** ──
+ *
+ * **初版は 4 形目（2 親）の 2 番目の親を `git rev-parse HEAD~1` で取っていた。**
+ * **`ci.yml` の `check` ジョブは `on: pull_request` と `on: push: branches: [main]` の
+ * 両方で走る**（`if:` は付いていない）。**そして `actions/checkout@v4` の既定は `fetch-depth: 1` で、
+ * 新しい fetch step は `if: github.event_name == 'pull_request'` なので push では走らない。**
+ * **depth=1 の checkout に `HEAD~1` は存在しない**ので、**この検査は trailer の内容とは無関係に
+ * main への push ごとに throw していた。**
+ *
+ * **実機ログで push 時の checkout の形が確定している**
+ * （レビューが `gh run view 36349678166 --log` で実測。`fetch-depth: 1` / `fetch --depth=1`）。
+ * **レビューが depth=1 clone で実測した数: `pass 11 / fail 1`。**
+ * **こちらでも同じ条件（`git clone --depth=1`）で再現した**（下の「測った数」）。
+ *
+ * **偽陽性で赤が常態になる**——**この検査自身の docblock が「赤が常態になった検査は誰も見なくなる」
+ * と書いている形そのものである。**
+ *
+ * **直し**: **`HEAD~1` に依存しない。** **2 番目の親も `commit-tree` で作る**
+ * ——`make(GOOD, GOOD, [p1])` は `HEAD` を親に持つ単親コミットを 1 つ書くだけなので、
+ * **`HEAD` 1 つしか無い depth=1 の checkout でも作れる。**
+ * **これで 12 本すべてが depth=1 でも走る**（実測: `pass 12 / fail 0`）。
+ * **`fetch` の `if:` を外す道もあったが、それでも push では `merge-base == HEAD` になるので
+ * 1 の (a)（0 件走査で緑）は残る**——**そちらは下の `emptyRangeIsTrustworthy` が受け持つ。**
  */
 test("author / committer の検査が、誤帰属する 3 形で実際に落ちる（マージは対象外）", () => {
   const tree = git("rev-parse", "HEAD^{tree}").trim();
   const p1 = git("rev-parse", "HEAD").trim();
-  const p2 = git("rev-parse", "HEAD~1").trim();
   /** ref を触らずにコミットオブジェクトを 1 つ書く（`commit-tree`）。 */
   const make = (author: string, committer: string, parents: string[]): string =>
     execFileSync(
@@ -699,6 +876,11 @@ test("author / committer の検査が、誤帰属する 3 形で実際に落ち�
   const ETL = "etl@users.noreply.github.com"; // #1074 (B) の実害そのもの
   const GOOD = "120390190+uonoko1@users.noreply.github.com";
   const OTHER = "person@example.com"; // 架空。実在の個人アドレスは書かない（#1043）
+  // **2 親コミットの 2 番目の親も `commit-tree` で作る。**
+  // **`HEAD~1` を使ってはいけない**——**depth=1 の checkout には存在せず、
+  // main への push で毎回 throw していた**（上の docblock の実測）。
+  // **`HEAD` を親に持つ単親コミットなら、`HEAD` 1 つしか無い checkout でも書ける。**
+  const p2 = make(GOOD, GOOD, [p1]);
 
   // 1. 両方が誤帰属の単親（cdc55734 と同じ形）
   const both = misattributingCommitIdentity(make(ETL, ETL, [p1]));
@@ -754,6 +936,94 @@ test("走らせない理由は「履歴が読めない」2 つだけ（skip で�
 });
 
 /**
+ * **「範囲が空でよい」を裏づける番人が、実際に火を噴くことを固定する**（必須 2 の後半）。
+ *
+ * **この枝は範囲が空にならないので `emptyRangeIsTrustworthy` は一度も呼ばれない。**
+ * **だから番人を恒真に潰す変異（G1: 先頭に `return { ok: true }` を足す）が
+ * `tests 12 / pass 12 / fail 0` で生き残った**（実測。上の docblock）。
+ *
+ * **2 つの源を引数で差し替えて、4 つの分岐が実際にどう答えるかを直接当てる。**
+ * **これは「実データに当てない単体の検査」だが、それが要る理由は
+ * 走査の側が構造的に緑だからである**（X4 / X5 を `read` 引数で解いたのと同じ形）。
+ *
+ * **当てる 4 形**（`why` の語も見る——分岐を取り違える変異を落とすため）:
+ * ```
+ * 1. 両方の源が「祖先である」と言う                → ok      （main への push。0 件が正しい）
+ * 2. ローカルの源が「祖先でない」と言う             → 落とす  （R9。枝の上で merge-base を捏造）
+ * 3. ローカルは祖先だが、remote の main の祖先でない → 落とす  （fork の update-ref）
+ * 4. ls-remote が throw / 空を返す                 → 落とす  （裏づけが取れないので緑にしない）
+ * ```
+ */
+test("「範囲が空でよい」の裏づけが、4 つの分岐で実際に火を噴く", () => {
+  const REAL = "53e3c8cc"; // 綴りは何でもよい（差し替えた源しか見ないので）
+  const FORGED = "a91f6b62";
+  // 1. 両方の源が祖先だと言う → 空でよい（main への push）
+  const push = emptyRangeIsTrustworthy(() => true, () => REAL);
+  assert.equal(push.ok, true, "main への push（両方の源が祖先と言う）で落ちている（偽陽性）");
+  assert.match(push.why, /祖先か同一/, "通した理由が「祖先か同一」になっていない");
+  // 2. ローカルの源が「祖先でない」と言う → 落とす（R9 がここで落ちる）
+  const r9 = emptyRangeIsTrustworthy((_a, b) => b !== "refs/remotes/origin/main", () => REAL);
+  assert.equal(r9.ok, false, "HEAD が origin/main の祖先でないのに、空の範囲を通している（R9）");
+  assert.match(r9.why, /refs\/remotes\/origin\/main の祖先ではない/, "落とした理由がローカルの源になっていない");
+  // 3. ローカルは祖先と言うが、remote の main の祖先ではない → 落とす（fork の update-ref）
+  const fork = emptyRangeIsTrustworthy((_a, b) => b === "refs/remotes/origin/main", () => REAL);
+  assert.equal(fork.ok, false, "refs/remotes/origin/main が書き換えられているのに通している（fork の経路）");
+  assert.match(fork.why, /書き換えられている/, "落とした理由が remote の源になっていない");
+  // 4a. `ls-remote` が throw → 落とす（黙って通さない。`|| true` の形にしない）
+  const threw = emptyRangeIsTrustworthy(() => true, () => {
+    throw new Error("network");
+  });
+  assert.equal(threw.ok, false, "ls-remote が落ちたのに空の範囲を通している（裏づけが取れていない）");
+  assert.match(threw.why, /確かめられなかった/, "落とした理由が ls-remote の失敗になっていない");
+  // 4b. `ls-remote` が空を返す → 落とす
+  const empty = emptyRangeIsTrustworthy(() => true, () => "");
+  assert.equal(empty.ok, false, "ls-remote が何も返さないのに空の範囲を通している");
+  assert.match(empty.why, /返さなかった/, "落とした理由が「返さなかった」になっていない");
+  // **既定の源が本当に git を叩いていることを固定する。**
+  // **「既定が何もしない（常に true / 常に空でない綴りを返す）」に潰す変異を落とす。**
+  //
+  // **答えの真偽では固定できない**——**この枝では既定は `false`、main への push では `true` で、
+  // どちらを書いても片方で偽陽性になる**（それがこの PR が直している 1 の (b) そのものである）。
+  // **だから「既定が返す答え」ではなく「既定が本物の git に聞いていること」を当てる:**
+  // **到達不能なコミットを 2 つ作り、既定の `isAncestor` がその関係を正しく答えるか**を見る。
+  // **`commit-tree` は ref を触らないので、リポジトリの状態を変えない。**
+  const tree = git("rev-parse", "HEAD^{tree}").trim();
+  const mk = (parents: string[]): string =>
+    execFileSync("git", ["-C", root, "commit-tree", tree, ...parents.flatMap((x) => ["-p", x])], {
+      input: "test: 既定の源が git に聞いていることを見る\n",
+      encoding: "utf8",
+    }).trim();
+  const parent = mk([]);
+  const child = mk([parent]);
+  assert.notEqual(parent, child, "commit-tree が同じコミットを 2 回返している");
+  // **既定の源 1 を、答えの分かっている 2 形に当てる。**
+  // **`parent` は `child` の祖先で、`child` は `parent` の祖先ではない。**
+  // **恒真（常に true）に潰す変異は 2 つ目で落ち、恒偽は 1 つ目で落ちる。**
+  assert.equal(isAncestorByGit(parent, child), true, "親が子の祖先だと答えられていない（既定の源 1）");
+  assert.equal(isAncestorByGit(child, parent), false, "子が親の祖先だと答えている（既定の源 1 が恒真）");
+  // **既定の源 2 が、`ls-remote` の書式（`<sha>\t<ref>`）から sha を取れていること。**
+  // **`origin` の main の sha は 40 桁の hex である**（綴りそのものは基点で動くので当てない）。
+  assert.match(
+    remoteMainByLsRemote(),
+    /^[0-9a-f]{40}$/,
+    "既定の源 2 が origin の main の sha を返していない（ls-remote の読み方が壊れている）",
+  );
+  // **そして既定の 2 源が、この番人に実際に配線されていること**
+  // （引数の既定値を「常に ok を返すもの」に差し替える変異を落とす）。
+  // **答えの真偽では固定できない**——**この枝では `false`、main への push では `true` になる**
+  // （それがこの PR が直している 1 の (b) そのものである）。
+  // **だから「既定が返す答え」ではなく「既定の源で計算した答えと一致すること」を当てる。**
+  const expected = isAncestorByGit("HEAD", "refs/remotes/origin/main")
+    && isAncestorByGit("HEAD", remoteMainByLsRemote());
+  assert.equal(
+    emptyRangeIsTrustworthy().ok,
+    expected,
+    "既定の 2 源が番人に配線されていない（既定を差し替える変異が素通りする）",
+  );
+  assert.equal(FORGED.length, 8, "綴りの長さが変わっている");
+});
+
+/**
  * **上の検査は、この枝が正しい trailer だけを書いていれば `bad` が構造的に空になる。**
  * **だから `OK` を「何でも通す」形に緩めても緑のまま通る**（#1043 のレビューが同じ穴を実測した）。
  * **`OK` そのものが何も主張していない。**
@@ -778,6 +1048,19 @@ test("走らせない理由は「履歴が読めない」2 つだけ（skip で�
  * **下の 3 形（`suffix` / `prefix` / `empty-local`）を足すと、N2 / N4 / N6 が全部落ちる**
  * （実測は PR 本文）。**アンカーごとに 1 形ずつ対応させてある**ので、
  * どのアンカーが外れたかがメッセージから分かる。
+ *
+ * ── **同じクラスがもう 1 つ残っていた**（2 度目のレビューの実測。必須 3）───────────────
+ *
+ * ```
+ * N7  /^\d+\+[^@]+@users\.noreply\.github\.com$/ → …@users.noreply.github.com$/
+ *     （`\.` を `.` に。ドメインのドットを未エスケープにする）              pass 12 / fail 0
+ * ```
+ *
+ * **`.` は任意の 1 文字なので、区切りがドットでない綴りが全部通るようになる**
+ * （`1+x@users-noreply-github-com` / `1+x@usersXnoreplyXgithubXcom`）。
+ * **「アンカーを 3 形で守った」だけでは足りず、ドットのエスケープも 1 形で守る必要があった**
+ * ——**列挙で守っている以上、列挙漏れは全部そのまま穴である。**
+ * **`bad` に 1 形足して母数を 12 → 13 にした**（実測: N7 が `pass 12 / fail 1` で落ちる）。
  */
 test("数字 ID 付きの noreply だけを通す正規表現そのものを検査する", () => {
   const good = [
@@ -803,11 +1086,20 @@ test("数字 ID 付きの noreply だけを通す正規表現そのものを検�
     // **ローカル部は 1 文字以上（`[^@]+`）でなければならない**。
     // `1+@users.noreply.github.com` は名前の無い形で、どのユーザーにも紐づかない。
     "1+@users.noreply.github.com",
+    // ── 2 度目のレビューが素通りを実測した 1 形（N7）──────────────────────────────
+    // **ドメインのドットはエスケープが要る（`\.`）**。
+    // **`\.` を `.` に書き落とすのは、この種の正規表現でいちばんありがちな見落ちである**
+    // （実測: `OK = /^\d+\+[^@]+@users.noreply.github.com$/` は 12/12 緑で生き残った）。
+    // **`.` は任意の 1 文字なので、区切りがドットでない綴りが全部通る**
+    // ——`users-noreply-github-com` / `usersXnoreplyXgithubXcom` など。
+    // **severity は N2（`…github.com.evil.com`）より低い**（TLD が無いので実在ドメインになりにくい）
+    // **が、「形の要求を守る検査が denylist」という構造は同じである。**
+    "1+x@users-noreply-github-com",
   ];
   // **母数**（#757）: **列挙そのものの本数を固定する。**
   // **列挙が縮んだら、また同じアンカーの穴が開く**（N2 / N4 / N6 はこの列挙漏れで生き残っていた）。
   assert.equal(good.length, 2, "通すべき綴りの列挙が縮んでいる");
-  assert.equal(bad.length, 12, "通してはいけない綴りの列挙が縮んでいる（アンカーを外す変異が素通りする）");
+  assert.equal(bad.length, 13, "通してはいけない綴りの列挙が縮んでいる（アンカーを外す変異が素通りする）");
   for (const e of good) assert.ok(OK.test(e), `通すべき綴りが落ちた: ${e}`);
   for (const e of bad) assert.ok(!OK.test(e), `通してはいけない綴りが通った: ${e}`);
 });
