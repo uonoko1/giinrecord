@@ -105,19 +105,20 @@ const wfDir = resolve(here, "../../../.github/workflows");
  * **#1017 のリストは 14 本中 3 本**で、`etl.yml` に壊れた鎖の job を足すと **3/3 緑**だった。
  * **#1008 / #1022 / #1043 と同じ型**——denylist は列挙漏れを原理的に塞げない。
  *
- * **`workflow-timeout.test.ts`（#574）が `probe-574-yaml-visibility.yaml` を
- * このディレクトリに一時的に書いて消す。** `node --test` はテストファイルを並列に走らせるので、
- * **`readdirSync` がその名前を見た直後に消えている**ことがある
- * （**実測で踏んだ**: コメントを 1 行足しただけの偽陽性を確かめている最中に
- * `ENOENT: probe-574-yaml-visibility.yaml` で落ちた。**変異とは無関係な flake で、
- * CI がときどき赤くなる**）。
- * **走査の途中で消えたファイルは飛ばす**——`readdirSync` の結果は「この瞬間の一覧」でしかない。
- * **消えたことを飛ばしても母数の assert は効いている**（下限を割れば落ちる）。
+ * **`probe-` の除外は置かない**（#1082 のレビューで実測）。
+ * **初版は flake 避けに `.filter((f) => !/^probe-/.test(f))` を置いていたが、これも denylist だった**
+ * ——`.github/workflows/probe-evil.yml`（壊れた鎖を持つ job）を置くと**このファイルと
+ * `workflow-needs-resolve.test.ts` で 7/7 緑**になり、**母数の `equal(jobCount, 24)` すら鳴らなかった**
+ * （2 ファイルが同じ除外を持つので、その job は「存在しないこと」になる。
+ * **母数で気づく道まで塞がれていた**。#333 / #757）。
+ *
+ * **flake の本筋は #1086（#1081）が直した**——`workflow-timeout.test.ts` の #574 検査は
+ * probe を一時ディレクトリに書くようになり、実ディレクトリには現れない。
+ * **`readIfPresent` の try/catch は残す**（走査の途中で消えたファイルを飛ばす一般の備え）。
  */
 const workflowFiles = (): string[] =>
   readdirSync(wfDir)
     .filter((f) => f.endsWith(".yml") || f.endsWith(".yaml"))
-    .filter((f) => !/^probe-/.test(f)) // 他のテストが書いては消す一時ファイル（#574）
     .sort();
 
 /** 走査の途中で消えたファイルは `undefined` を返す（上の flake を参照）。 */
@@ -266,6 +267,30 @@ function parseSteps(jobLines: string[]): Step[] {
  * **`uses:` の step（外部 action）は、出力を action 側が宣言するのでここでは判定できない**
  * ——**その場合は「不明」として通す**（偽陽性を作らないため。`actions/cache` の `cache-hit` など）。
  */
+/**
+ * **行ごとの `<pattern>` に当たる最後の 1 件の捕獲を返す**（#1082 のレビューで見つかった穴）。
+ *
+ * **シェルも `$GITHUB_OUTPUT` も「最後が勝つ」:**
+ * ```
+ * REF=$(bash scripts/ci/released-ref.sh resolve)
+ * REF=main                                        ← 実行時に効くのはこちら
+ * ```
+ * ```
+ * ref=<released タグの sha>
+ * ref=main                                        ← Actions が採るのはこちら（追記ファイル）
+ * ```
+ *
+ * **`String.match` は `m` フラグでも最初の 1 件しか返す**ので、それで読むと
+ * **「検査が読む行」と「実行時に効く行」が別物になる**——
+ * **`REF=main` への「置換」は捕まえられても、次の行への「追記」は素通りする。**
+ * **実測（この直しの前）: G1 / G4 / G5 とも 54 pass / 0 fail、etl 全体でも緑だった。**
+ *
+ * **だから `matchAll` で全件拾って `.at(-1)` を採る**——**実行系と同じ読み方をする。**
+ * 定義はここ 1 か所だけ（走査側と検査側に写しを 2 つ書かない。#1043 の型）。
+ */
+const lastAssignment = (body: string, pattern: string): string | undefined =>
+  [...body.matchAll(new RegExp(`^\\s*${pattern}`, "gm"))].at(-1)?.[1]?.trim();
+
 function githubOutputNames(step: Step): Set<string> {
   const out = new Set<string>();
   for (const line of step.body.split("\n")) {
@@ -425,11 +450,20 @@ test("#134 / #1036 (a)〜(e): deploy-data の production の ref は、released-
   // **`REF=$(bash scripts/ci/released-ref.sh resolve)` → `REF=main` にすると（Y3）ここで落ちる。**
   // **シェル変数を辿る**: `<name>=$VAR` / `<name>=${VAR}` / `<name>=$(...)` の右辺を見て、
   // その VAR が `released-ref.sh resolve` の出力で代入されていることを要求する。
-  const assign = step.body.match(new RegExp(`^\\s*echo\\s+"?${stepOutput}=([^"\\s]*)"?\\s*>>`, "m"))?.[1];
+  //
+  // **「最後が勝つ」を読む**（#1082 のレビューで見つかった穴。G1 / G4 / G5）。
+  // **`String.match` は `m` フラグでも最初の 1 件しか返す。** それで読むと
+  // **「置換」は捕まえるが「追記」は捕まえない**——`REF=$(...)` の次の行に `REF=main` を
+  // 1 行足すだけで、**検査は 1 行目を読み、シェルは 2 行目を使う**ので素通りする
+  // （実測: G1 / G4 / G5 とも 54 pass / 0 fail で緑だった）。
+  // **`$GITHUB_OUTPUT` も追記ファイルなので、同じ名前を 2 回書けば Actions は最後の行を採る。**
+  // **だから `lastAssignment` で「最後の 1 件」を読む**（#333 の向き。
+  // 禁じる綴りを並べるのではなく、実行系と同じ読み方をする）。
+  const assign = lastAssignment(step.body, `echo\\s+"?${stepOutput}=([^"\\s]*)"?\\s*>>`);
   assert.ok(assign, `step \`${stepId}\` の \`${stepOutput}=\` の右辺が読めない`);
   const varName = assign.match(/^\$\{?([A-Za-z_]\w*)\}?$/)?.[1];
   const source = varName
-    ? step.body.match(new RegExp(`^\\s*${varName}=(.+)$`, "m"))?.[1]?.trim()
+    ? lastAssignment(step.body, `${varName}=(.+)`) // 変数への最後の代入（シェルと同じ）
     : assign; // 変数を経由せず直に書いている形
   assert.ok(source, `\`${stepOutput}=${assign}\` の出どころ（${varName ?? "直値"}）が step の中に見つからない`);
   assert.match(
@@ -483,6 +517,67 @@ test("#1036: steps.<id>.outputs.<n> の定義そのものを検査する（通�
   ]) {
     assert.ok(!ok(bad), `通してはいけない綴りが通った: ${bad}`);
   }
+});
+
+/**
+ * **`lastAssignment` が「最後が勝つ」を読んでいることを逐語で当てる**（#1082 のレビュー）。
+ *
+ * **上の鎖の検査は、いま在る実体が `REF=` 1 回だけなので、`lastAssignment` を
+ * `match`（最初の 1 件）に戻しても緑のまま通る。** **つまり走査の側からは、この関数が
+ * 「最初」を読んでいるか「最後」を読んでいるかが見えない**（#1043 と同じ型）。
+ * **だから関数そのものに当てる。**
+ *
+ * **これは「置換」ではなく「追記」の形である**（#333 の向き）——
+ * **禁じる綴りを並べるのではなく、実行系と同じ読み方をしていることを要求する。**
+ * **`REF=main` への置換だけを検査していると、次に 1 行追記した人を捕まえられない。**
+ *
+ * **実測（2026-09-28。この直しの前は 3 種とも素通りした）:**
+ *
+ * | 変異（`deploy-data.yml` に 1 行足す） | 直す前 | 直した後 |
+ * |---|---|---|
+ * | **G1** `REF=$(...resolve)` の次の行に `REF=main` | **54 pass / 0 fail** | 53 / **1** |
+ * | **G4** `echo "ref=main" >> "$GITHUB_OUTPUT"` を 2 行目に追記 | **54 / 0** | 53 / **1** |
+ * | **G5** `REF="${OVERRIDE:-main}"` を次の行に | **54 / 0** | 53 / **1** |
+ *
+ * （母数は鎖 3 ファイル = `workflow-released-chain` / `workflow-needs-resolve` / `deploy-docker`。
+ * **「置換」の変異は直す前から赤だった**: `REF=main` への置換は 51 / 3。**追記だけが抜けていた。**）
+ */
+test("#1082: シェルと $GITHUB_OUTPUT の「最後が勝つ」を読む（追記で抜けさせない）", () => {
+  // 実体と同じ形（代入 1 回）。最後 = 最初なので、そのまま読める
+  assert.match(
+    lastAssignment('          REF=$(bash scripts/ci/released-ref.sh resolve)\n', "REF=(.+)")!,
+    /released-ref\.sh\s+resolve/,
+  );
+
+  // **G1**: `REF=` を 2 回。シェルが使うのは 2 行目なので、読むのも 2 行目
+  assert.equal(
+    lastAssignment("          REF=$(bash scripts/ci/released-ref.sh resolve)\n          REF=main\n", "REF=(.+)"),
+    "main",
+    "G1: 追記された `REF=main` ではなく 1 行目を読んでいる（シェルは最後の代入を使う）",
+  );
+
+  // **G5**: 追記の右辺が既定値つきの展開でも、読むのは最後の行
+  assert.equal(
+    lastAssignment(
+      '          REF=$(bash scripts/ci/released-ref.sh resolve)\n          REF="${OVERRIDE:-main}"\n',
+      "REF=(.+)",
+    ),
+    '"${OVERRIDE:-main}"',
+    "G5: 追記された `REF=\"${OVERRIDE:-main}\"` ではなく 1 行目を読んでいる",
+  );
+
+  // **G4**: `$GITHUB_OUTPUT` は追記ファイル。同じ名前を 2 回書けば Actions は最後の行を採る
+  assert.equal(
+    lastAssignment(
+      '          echo "ref=$REF" >> "$GITHUB_OUTPUT"\n          echo "ref=main" >> "$GITHUB_OUTPUT"\n',
+      'echo\\s+"?ref=([^"\\s]*)"?\\s*>>',
+    ),
+    "main",
+    "G4: $GITHUB_OUTPUT に 2 回書かれた `ref=` の 1 行目を読んでいる（Actions は最後の行を採る）",
+  );
+
+  // 1 件も当たらなければ undefined（「読めない」と「読んだ結果が空」を混ぜない）
+  assert.equal(lastAssignment("          echo hi\n", "REF=(.+)"), undefined);
 });
 
 /**

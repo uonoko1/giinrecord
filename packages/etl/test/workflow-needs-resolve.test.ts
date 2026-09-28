@@ -193,10 +193,13 @@ function needsRefs(body: string): { job: string; output: string; raw: string }[]
 const workflowFiles = (): string[] =>
   readdirSync(wfDir)
     .filter((f) => f.endsWith(".yml") || f.endsWith(".yaml"))
-    // **`workflow-timeout.test.ts`（#574）がこのディレクトリに `probe-574-yaml-visibility.yaml` を
-    // 一時的に書いて消す。** `node --test` はテストファイルを並列に走らせるので、
-    // **`readdirSync` がその名前を見た直後に消えている**ことがある（#1036 で実測: `ENOENT` の flake）。
-    .filter((f) => !/^probe-/.test(f))
+    // **`probe-` の除外は置かない**（#1082 のレビューで実測: `.github/workflows/probe-evil.yml` を
+    // 置くと壊れた鎖の job が 7/7 緑になり、**母数の `equal(jobCount, 24)` すら鳴らなかった**
+    // ——2 ファイルが同じ除外を持つので、その job は「存在しないこと」になっていた）。
+    // **除外は denylist で、列挙漏れがそのまま穴になる**（#333）。
+    // **flake（#574 の probe が並行して現れて消える）は #1086 が本筋で直した**——
+    // probe は一時ディレクトリに書くようになり、実ディレクトリには現れない
+    // （`workflow-timeout.test.ts` の「本物のディレクトリに probe- のファイルが残っている」検査が守る）。
     .sort();
 
 test("#1017: needs.<job>.outputs.<out> を使う job は、その job を needs に挙げている（空文字に解決させない）", () => {
