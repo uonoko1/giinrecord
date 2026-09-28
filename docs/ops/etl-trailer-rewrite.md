@@ -16,7 +16,8 @@ git log origin/main --pretty=format:%B \
   | grep -ciE '^[[:space:]]*Co-[Aa]uthored-[Bb]y:.*etl@users\.noreply'   # 消す対象（期待 1）
 ```
 
-**実測の履歴**: 2026-09-28 に「4 件」→ #1067/#1068 で **7 件** → #1085 で **8 件**。
+**実測の履歴**: 2026-09-28 に「4 件」→ #1067/#1068 で 7 件 → #1085 で 8 件 → #1070 で **9 件**。
+**4 回動いた。** **この数は焼き付けない。上のコマンドで当日に出すこと。**
 **#1080 の「基点が動く」罠。当日に数え直すこと。**
 
 ## 0b. 流す前提
@@ -67,13 +68,41 @@ git filter-branch -f --msg-filter \
 
 **`1e41501f^..main` の `^` は必要**（trailer を持つのは `1e41501f` 自身）。
 
+## 3b. `main` だけでは足りない（`1e41501f` は 12 本の枝の祖先）
+
+**実測（2026-09-28）**: **`1e41501f` は GitHub 上の生きている 12 本の枝すべての祖先である。**
+
+```
+data/districts / data/refresh / docs/1059-correction / docs/1074-rewrite-procedure /
+docs/1087-push-immediately / fix/977-pr-closes-literal / fix/1036-released-chain-links /
+fix/1052-comparator-allowlist-bypass / fix/1054-skipped-overwrites-failure /
+fix/1081-workflow-dir-pollution / main / test/1074-commit-trailer-identity
+```
+
+**`main` だけ書き換えると、残り 11 本に trailer が残る。**
+**そして手順 4 の検算（`git log ...`、ref 引数なし = HEAD のみ）は `0` = 成功と出る。**
+**`--all` で数えると残っている**（レビュアーの実測: 同じクローンで 56 件）。
+
+**`_sidebar` は全 ref を集計するので、これでは目的を達しない**
+（`dev` を消したときは 17 本すべてを消したから 0 になった）。
+
+**やり方は 2 つ。どちらを選ぶかは open PR の数で決める:**
+
+| | やり方 | いつ選ぶか |
+|---|---|---|
+| **(a)** | **open PR を全部マージ / 閉じてから、main だけ書き換える** | **推奨。** 枝が無ければ `main` だけで足りる |
+| (b) | 12 本すべてを書き換えて force push する | 急ぐとき。**ただしレビュー中の PR の head が全部無効になる**（#1080） |
+
+**(a) を推す。** **`etl@` trailer 1 件は 2 時間で消えるものではないので、急ぐ理由が無い。**
+
 ## 4. push の前に検算する
 
 ```bash
-git log --pretty=format:%B | grep -ciE '^[[:space:]]*Co-[Aa]uthored-[Bb]y:.*etl@users\.noreply'
-#   期待 0
+git log --all --pretty=format:%B | grep -ciE '^[[:space:]]*Co-[Aa]uthored-[Bb]y:.*etl@users\.noreply'
+#   期待 0   ← **`--all` を必ず付ける。** HEAD だけ見ると「0」と出て他の枝に残る（上の 3b）
 git log --pretty=format:%B | grep -ciE 'etl@users\.noreply\.github\.com'
-#   期待 7（#1043 の説明文。trailer 1 件だけ消えて散文は残る = 消し過ぎていない）
+#   期待: 書き換え前の「散文含む件数」から 1 引いた数（trailer 1 件だけ消えて散文は残る）。
+#   書き換え前に上の 0 節で数えておくこと。**この数も焼き付けない**（#1043 の説明文が増減する）。
 git rev-list --count main
 #   期待: 書き換え前と同じ（コミットは消えない）
 git rev-parse main^{tree}
@@ -83,8 +112,14 @@ git rev-parse main^{tree}
 **8 = trailer 1 + 散文 7 で、書き換え後が 7。** **算術が閉じていれば消し過ぎ / 消し漏れが無い。**
 
 ```bash
-git push --force origin main
+git push --force-with-lease origin main
 ```
+
+**`--force` ではなく `--force-with-lease`。** **ETL の cron が 06:00 JST に main へ auto-merge する**
+（`etl.yml:4` の `cron: "0 21 * * *"`）。**素の `--force` はその間に入ったデータコミットを黙って消す。**
+**`--force-with-lease` なら、他人が push していたら拒否される。**
+
+**06:00 JST の前後は流さないこと。**
 
 ## 5. protection を即座に復元して、復元できたことを確かめる
 
@@ -126,7 +161,7 @@ curl -s https://github.com/uonoko1/giinrecord/_sidebar \
 
 | # | 誤り | なぜ危険か |
 |---|---|---|
-| A | `-X PUT .../enforce_admins` | **PUT は存在しない**（GET/POST/DELETE のみ）。**404 で落ちても、自前 grep は `allow_force_pushes` しか見ないので緑に見える。** 気づけるのは翌朝の cron（06:23 JST）だけで、**最長 24 時間、必須チェック 0 件で main に push できる。** |
+| A | `-X PUT .../enforce_admins` | **PUT は存在しない**（GET/POST/DELETE のみ）。**404 で落ちても、自前 grep は `allow_force_pushes` しか見ないので緑に見える。** **私は当初「翌朝の cron（06:23 JST）が気づくので最長 24 時間」と書いたが、それも誤りだった**——**その cron は 6 回連続 failure で死んでいる**（`BRANCH_PROTECTION_TOKEN` が無く HTTP 403 → exit 2。`branch-protection.sh` は exit 2 で return するので判定行に届かない。**#547 が開いたまま**）。**つまり検出手段はゼロで、期間は無期限だった。** |
 | B | `-X PATCH .../protection` | **PATCH は存在しない**（GET/PUT/DELETE のみ）。**`PUT` に直すと全置換で必須チェック 4 件が消える。** |
 | C | `allow_force_pushes` を触っていた | **触る必要が無い**（`enforce_admins` の DELETE だけで通る）。**触ったせいで B の危険を自分で作っていた。** |
 | D | `update-branch` で rebase するつもりだった | **あれはマージなので、消した trailer が main に戻る。** |
