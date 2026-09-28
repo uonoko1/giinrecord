@@ -357,8 +357,57 @@ tree          完全同一（コードは 1 バイトも変わっていない）
 ## 復元（万一のとき）
 
 削除した 17 本のブランチの bundle と手順は `~/giinrecord-branch-backup-20260928/` に在る
-（`RESTORE.md` / `dev-etl-branches.bundle` / `open-pbi-branches.bundle` / `tips.txt`、
-どちらも `git bundle verify` 済み）。
+（すべて `git bundle verify` 済み）:
+
+| bundle | 中身 |
+|---|---|
+| `dev-etl-branches.bundle` | 最初に消した 17 本 |
+| `open-pbi-branches.bundle` | 開いていた PBI の枝 |
+| **`pre-rewrite-main.bundle`** | **書き換え前の main（`4696f048`）。他のどの bundle にも入っていなかった**——誤帰属 trailer を 9 件持つことで「書き換え前」だと確認できる |
+| **`local-stale-branches.bundle`** | **手元にだけ在った枝 175 本**（後述） |
+
+**手元の枝を消すときは、到達性で判定しないこと。**
+**履歴を書き換えると SHA が全部変わるので、`origin/main..<枝>` は
+「マージ済みの古い枝」でも数百件を返す**（実測: 327 本中ほぼ全部が「未マージ」に見えた）。
+**中身で判定する**——**枝の先端の `tree` が `origin/main` の履歴に在るか**:
+
+```
+t=$(git rev-parse "<枝>^{tree}")
+git log origin/main --pretty='%T' | grep -qx "$t" && echo "中身は main に在る"
+```
+
+実測 2026-09-28: **327 本のうち 153 本は tree が main に在り、175 本は無かった。**
+**175 本から拾えた Issue 108 件は全部 CLOSED だった**（仕事は出荷済み）。
+**それでも消す前に bundle に取った**（#1087 の「`du` では未 push の成果物が見えない」）。
 
 **protection は `protection-before.json` に保存してある**が、
 **`PUT` で戻すと全置換になるので、中身を見て `branch-protection.sh` の期待値と突き合わせること。**
+
+## 書き換えても `_sidebar` は直らない（2026-09-28 の実測。**これが結論**）
+
+**git 側を 0 件にしても、利用者が画面で見る数字は変わらなかった。**
+
+```
+2026-09-28 13:13Z（書き換えから 14 時間後）に同時刻で測った:
+
+  _sidebar                    6 人  claude / uonoko1 / dev / ga[bot] / etl / MLehnus  ★利用者が見るもの
+  graphs/contributors-data    3 人  uonoko1 656 / claude 650 / ga[bot] 59
+  api /contributors           2 人  uonoko1 653 / ga[bot] 58
+  git（リモート 5 枝＋全タグ）  0 件  trailer も author も committer も 3 形すべて 0
+```
+
+**`graphs/contributors-data` は再計算された（HTTP 202 → 200 で 3 人）。**
+**`_sidebar` だけが 14 時間以上、古い 6 人を返し続けた**（`cache-control: no-cache` なのに）。
+
+**つまりこの手順書で直せるのは git 側までで、`_sidebar` はこちらから更新できない。**
+**「書き換えれば Contributors が直る」と期待しないこと。** **GitHub Support に出すしかない。**
+
+**測るときの注意**: **`git log --all` を使わないこと。**
+**`refs/original/`・`refs/bkup/*`・`refs/remotes/pr*` を歩くので、
+GitHub には存在しない ref の分まで数える**（実測: `--all` で 77/535/14 件、
+リモートに実在する 5 枝＋タグに絞ると **0/0/0**）。**GitHub が見るのはリモートの ref だけ。**
+
+```
+REFS=$(git ls-remote --heads origin | awk '{print "origin/"substr($2,12)}')
+git log $REFS --tags --pretty=format:%B | grep -icE '<パターン>'
+```
