@@ -738,6 +738,10 @@ test("#1052 レビュー3: 丸めをヘルパー関数に出しても落とす�
 test("#1052 レビュー3: B9 辿れない呼び出しの向こうの丸めは捕まえられない（既知の穴）", () => {
   const holes: [string, string][] = [
     ["別ファイルから import したヘルパー", `import { ROW } from "./rows.ts";\nxs.sort((a, b) => ROW(b.y) - ROW(a.y) || a.x - b.x);`],
+    // **「別ファイル」は 4 通りある**（**#1062 のレビュー 3 巡目の指摘 3。列挙が名前付き import だけだった**）
+    ["default import", `import ROW from "./rows.ts";\nxs.sort((a, b) => ROW(b.y) - ROW(a.y) || a.x - b.x);`],
+    ["require（CJS）", `const { ROW } = require("./rows.ts");\nxs.sort((a, b) => ROW(b.y) - ROW(a.y) || a.x - b.x);`],
+    ["動的 import", `const { ROW } = await import("./rows.ts");\nxs.sort((a, b) => ROW(b.y) - ROW(a.y) || a.x - b.x);`],
     ["同名のヘルパーが 2 つあって決められない", `const ROW = (y) => y - (y % H);\nfunction f(){ const ROW = (y) => y; xs.sort((a, b) => ROW(b.y) - ROW(a.y) || a.x - b.x); }`],
     ["メソッド呼び出し（辿る先が無い）", `xs.sort((a, b) => R.row(b.y) - R.row(a.y) || a.x - b.x);`],
   ];
@@ -747,6 +751,203 @@ test("#1052 レビュー3: B9 辿れない呼び出しの向こうの丸めは�
     assert.equal(found[0].reason, null,
       `${name}: 捕まえられるようになったら、この検査（既知の穴の記録）を消して上の allowlist に寄せること`);
   }
+});
+
+/**
+ * **B10: 丸めの「名前の集合」に載っていない綴りで行に潰す形**
+ * （**#1062 のレビュー 3 巡目の指摘 1 と 4 巡目の指摘 2。塞げないと分かって残す。B8 / B9 と同じ扱い**）。
+ *
+ * ## 何が残っているか
+ *
+ * **この道具の「丸め」の判定だけは allowlist ではない**——
+ * **`ROUNDING` と `STRING_TRUNCATION` という 2 つの名前の集合＝denylist である**
+ * （**`comparator-shape.ts` の docblock が #1052 の時点で自分でそう診断しているのに、
+ * 直しがもう 1 つの名前の集合だった**）。
+ * **だから `Math.round` を `const rnd = Math.round` と別名にするだけで外れる。**
+ *
+ * **下の 17 通りを `comparatorsIn` に当てて数えた**（**2026-09-28。全部 `reason: null`**）。
+ *
+ * ## 無音であることを自分で検算した（**レビュアーの数字を写していない**）
+ *
+ * **y 12 通り × x 3 通り = 36 点から 1,296 対で反対称の破れ、46,656 三つ組で推移の破れを数えた**
+ * ——**17 通りすべて破れ 0＝正しい全順序である。**
+ * **V8 の `sort` の契約を破らないので、要素数でアルゴリズムが変わっても落ちない。**
+ *
+ * **それでいて許容差そのものである**（y 590〜610 の 0.1 刻み 40,000 対で単調性の破れ 0 かつ、
+ * 隔たった y を潰す）:
+ *
+ * ```
+ * Intl / toLocaleString / toFixed 別名        潰れる最大の隔たり 0.9pt（潰れた対 1,760）
+ * 別名 rnd / カンマ / Reflect / Uint32 / BigInt                 2.9pt（5,420〜5,600）
+ * at(0) / charAt(0) / String()[0] / toExponential               9.9pt（14,900〜20,000）
+ * （比較のため）Math.round(y/3)*3 = #1052 で塞いだ形             2.9pt（5,600）
+ * ```
+ *
+ * ## 県のファイルに植えて測った（**鳥取の氏名を組む経路**）
+ *
+ * **`tottori/votes-pdf.ts` の `joinText`（`nameText` を組む行が呼ぶ）を差し替えて、
+ * `pdf-row-order` ＋ 鳥取の 7 ファイルを走らせた**（`scripts/dev/mutate.sh` で当てた。md5 で確認）:
+ *
+ * ```
+ * Intl.NumberFormat（0.9pt）   tests 87 / pass 87 / fail 0   ← 完全に無音
+ * toLocaleString（0.9pt）      tests 87 / pass 87 / fail 0   ← 完全に無音
+ * 別名 rnd(y / 3)（2.9pt）      tests 87 / pass 87 / fail 0   ← 完全に無音
+ * （参考）at(0)（9.9pt）        tests 49 / pass 44 / fail 5   ← 粗すぎてフィクスチャが崩れる
+ * ```
+ *
+ * **細かいバケットのほうが無音である**——**倒れる向きは「別人の記録が出る」側**（#569 の重いほう）。
+ *
+ * **PO が渡した `const rnd = Math.round; rnd(y / 3) * 3` は、実は落ちる**（実測。訂正）——
+ * **`* 3` が `(y / t) * t` の規則に当たるからで、`ROUNDING` が捕まえているのではない。**
+ * **`* 3` を書かない `rnd(y / 3)` は素通りする**（**順序としては同値**）。**下はそちらを固定する。**
+ *
+ * ## なぜ塞がないか（**代案 2 つを測った**）
+ *
+ * **(1)「比較関数の中に文字列化が現れたら落とす」**（レビュー 3 巡目の案）:
+ * **`at` / `charAt` / 添字 / `replace` / `Intl` / `toLocaleString` は塞がるが、
+ * `別名 rnd` / `カンマ` / `Reflect` / `Uint32Array.of` / `BigInt` は文字列を通らないので残る**
+ * （**17 通りのうち 5 通りが素通りのまま。実測**）。
+ *
+ * **(2)「差の枝に呼び出しを許さない」**: **17 通りは全部塞がる。**
+ * **しかし追跡下に、呼び出しを含んだまま正しく通っている比較関数が 5 個ある**（実測）——
+ * **`OK=220 / REJ=55` が `REJ=60` になる＝偽陽性 5 件**（#943 の「正しいコードを殺す」向き）:
+ *
+ * ```
+ * brand-assets.test.ts:31          Number(a.getAttribute("cy")) - Number(b.getAttribute("cy"))
+ * mie/votes-pdf.ts:357             rowOf.get(b)! - rowOf.get(a)!
+ * saga/index.ts:207,208            key(b.sessionId) - key(a.sessionId)
+ * miyagi-published-data.test.ts:245  Number(b) - Number(a)
+ * ```
+ *
+ * **そして「正当な 5 個」と「17 通りの穴」を構文で分ける手がかりが無い**（ここが決め手である）——
+ * **佐賀の `key(b.sessionId)` と `F.format(b.y)` / `ROW(b.y)` は同じ形、
+ * 三重の `rowOf.get(b)` と宮城の `Number(b)` も同じ形である。**
+ * **違うのはプロパティの名前だけ**（`sessionId` か `y` か）——
+ * **そこで分けるのは「`y` という名前の denylist」であり、
+ * #1022 が「分割代入で回避できる」と実測した型の穴に戻る。**
+ *
+ * ## 構造的に何が要るか
+ *
+ * **「その呼び出しが単調なバケット写像か」を決める必要がある。**
+ * **これは呼ばれる関数の値域を評価することで、構文木の外である**
+ * （**`Math.round` は組み込みで本体が無く、`Number` / `BigInt` / `Uint32Array` も同じ**）。
+ * **B8 がデータフロー解析を要るのと同じ理由で、この道具の設計＝
+ * 「1 つの比較関数を構文で見る」の外にある。**
+ *
+ * ## 射程の線引きで逃げていないこと（**測って区別した**）
+ *
+ * **射程外に置いた `String(a.y) < String(b.y)` は、40,000 対で潰れた対が 0
+ * ＝「近ければ同値」ではない**（単に間違ったキー）ので射程外で正しい。
+ * **B10 の 17 通りは潰れた対が 1,760〜20,000 ＝ 定義上の許容差バケットである。**
+ *
+ * **レビュアーの一覧から 2 つ外した**（**測ったら許容差ではなかった。訂正**）:
+ * - **`Number(b.y.toString(2))`**: **潰れた対 0 / 単調性の破れ 0**——
+ *   **2 進表記を `Number` に戻しても値は一意で、潰れない。**
+ * - **`new Date(b.y * 1000).getSeconds()`**: **単調性の破れ 20,200**（**60 で巡回する**）——
+ *   **単調でない＝「間違ったキー」。**
+ *
+ * **「単調かつ潰す」の両方が要る。片方だけなら射程外である。**
+ */
+test("#1062 レビュー4: B10 丸めの名前の集合に載っていない 17 通りは捕まえられない（既知の穴）", () => {
+  const holes: [string, string][] = [
+    // **別名・包み方を変えるだけで `ROUNDING` から外れる形**
+    ["B10-1 Math.round の別名", `const rnd = Math.round;\nxs.sort((a, b) => rnd(b.y / 3) - rnd(a.y / 3) || a.x - b.x);`],
+    ["B10-2 カンマ式で包む", `xs.sort((a, b) => (0, Math.round)(b.y / H) - (0, Math.round)(a.y / H) || a.x - b.x);`],
+    ["B10-3 Reflect.apply", `xs.sort((a, b) => Reflect.apply(Math.round, null, [b.y / H]) - Reflect.apply(Math.round, null, [a.y / H]) || a.x - b.x);`],
+    ["B10-4 Number.prototype.toFixed の別名", `const R = Number.prototype.toFixed;\nxs.sort((a, b) => Number(R.call(b.y, 0)) - Number(R.call(a.y, 0)) || a.x - b.x);`],
+    ["B10-5 toExponential", `xs.sort((a, b) => Number(b.y.toExponential(1)) - Number(a.y.toExponential(1)) || a.x - b.x);`],
+    // **丸めの名前も `%` も `/` も使わずに整数バケットを作る形**
+    ["B10-6 Uint32Array.of（TypedArray への代入が切り捨て）", `xs.sort((a, b) => Uint32Array.of(b.y / 3)[0] - Uint32Array.of(a.y / 3)[0] || a.x - b.x);`],
+    ["B10-7 BigInt の整数除算", `xs.sort((a, b) => Number(BigInt(b.y) / 3n) - Number(BigInt(a.y) / 3n) || a.x - b.x);`],
+    ["B10-8 正規表現 exec で整数部", `const RE = /^(\\d+)/;\nxs.sort((a, b) => Number(RE.exec(String(b.y))[1]) - Number(RE.exec(String(a.y))[1]) || a.x - b.x);`],
+    ["B10-9 String().match で整数部", `xs.sort((a, b) => Number(String(b.y).match(/^\\d+/)[0]) - Number(String(a.y).match(/^\\d+/)[0]) || a.x - b.x);`],
+    // **`STRING_TRUNCATION` に載っていない文字列の切り方**
+    ["B10-10 String().at(0)", `xs.sort((a, b) => Number(String(b.y).at(0)) - Number(String(a.y).at(0)) || a.x - b.x);`],
+    ["B10-11 String().charAt(0)", `xs.sort((a, b) => Number(String(b.y).charAt(0)) - Number(String(a.y).charAt(0)) || a.x - b.x);`],
+    ["B10-12 String()[0]（添字なので CallExpression の判定に届かない）", `xs.sort((a, b) => Number(String(b.y)[0]) - Number(String(a.y)[0]) || a.x - b.x);`],
+    ["B10-13 String().replace で小数を落とす", `xs.sort((a, b) => Number(String(b.y).replace(/\\..*/, "")) - Number(String(a.y).replace(/\\..*/, "")) || a.x - b.x);`],
+    // **書式化による 1pt のバケット**（**塞いだ `Math.round(y/3)*3` の 2.9pt より本物の許容差に近い**）
+    ["B10-14 Intl.NumberFormat の format", `xs.sort((a, b) => Number(F.format(b.y)) - Number(F.format(a.y)) || a.x - b.x);`],
+    ["B10-15 toLocaleString", `xs.sort((a, b) => Number(b.y.toLocaleString("en", { maximumFractionDigits: 0 })) - Number(a.y.toLocaleString("en", { maximumFractionDigits: 0 })) || a.x - b.x);`],
+    // **三項の条件側とヘルパー経由**（**#1052 が塞いだ 2 つの経路も、綴りを変えれば通る**）
+    ["B10-16 三項の条件側（Intl）", `xs.sort((a, b) => F.format(a.y) < F.format(b.y) ? 1 : -1);`],
+    ["B10-17 ヘルパー経由（別名 + 丸め。1 段辿っても名前で当たらない）", `const rnd = Math.round;\nconst ROW = (y) => rnd(y / 3);\nxs.sort((a, b) => ROW(b.y) - ROW(a.y) || a.x - b.x);`],
+  ];
+  for (const [name, code] of holes) {
+    const found = comparatorsIn("hole.ts", code);
+    assert.equal(found.length, 1, `${name}: 比較関数が 1 つ見つかるはず（${found.length}）`);
+    assert.equal(found[0].reason, null,
+      `${name}: 捕まえられるようになったら、この検査（既知の穴の記録）を消して上の allowlist に寄せること`);
+  }
+  // **「文字列化を丸ごと落とす」案では塞がらない 5 通り**（**代案 (1) が十分でないことを固定する**）——
+  // **文字列を一度も通らないので、文字列化を禁じても素通りする。**
+  const notStringy = ["B10-1 Math.round の別名", "B10-2 カンマ式で包む", "B10-3 Reflect.apply",
+                      "B10-6 Uint32Array.of（TypedArray への代入が切り捨て）", "B10-7 BigInt の整数除算"];
+  for (const name of notStringy) {
+    const code = holes.find(([n]) => n === name)?.[1];
+    assert.ok(code, `${name} が holes の一覧から消えている（B10 の記録が痩せている）`);
+    assert.ok(!/String|toString|toLocaleString|format|\.at\(|charAt|replace|`/.test(code),
+      `${name}: 文字列化を含んでいる（「文字列化を落とす」案で塞がるなら、この記録を書き直すこと）`);
+  }
+  // **`Math.round(y / 3) * 3` は落ちる**（**PO が渡した綴り。`* 3` が `(y/t)*t` に当たる**）——
+  // **B10-1 が素通りするのは「`* 3` を書かない」ときだけであることを固定する。**
+  const withMul = comparatorsIn("mul.ts", `const rnd = Math.round;\nxs.sort((a, b) => rnd(b.y / 3) * 3 - rnd(a.y / 3) * 3 || a.x - b.x);`);
+  assert.equal(withMul.length, 1);
+  assert.ok(withMul[0].reason, "`rnd(y / 3) * 3` は `(y/t)*t` の規則で落ちるはず（落ちなくなったら B10-1 の説明を直すこと）");
+});
+
+/**
+ * **B10 の一覧から外した 2 つ**（**測ったら「許容差」ではなかった。射程外である**）。
+ *
+ * **レビュー 4 巡目の一覧に `toString(2)` と `new Date(y*1000).getSeconds()` が入っていたが、
+ * 自分で数えたら「単調かつ潰す」を満たさなかった**（y 590〜610 の 0.1 刻み 40,000 対）:
+ *
+ * ```
+ * Number(y.toString(2))          単調性の破れ 0 / 潰れた対 0      ← 潰さない＝許容差ではない
+ * new Date(y*1000).getSeconds()  単調性の破れ 20,200              ← 60 で巡回＝単調でない
+ * ```
+ *
+ * **どちらも「単に間違ったキーで並べている」側**で、
+ * **`String(a.y) < String(b.y)` と同じ扱い＝この検査（#1008「許容差つきになっていないか」）の射程外である。**
+ * **素通りすること自体は B10 と同じだが、理由が違うので分けて記録する。**
+ */
+test("#1062 レビュー4: 射程外——単調でない／潰さないキーは「許容差」ではない", () => {
+  const outOfScope: [string, string][] = [
+    ["toString(2)（潰れた対 0）", `xs.sort((a, b) => Number(b.y.toString(2)) - Number(a.y.toString(2)) || a.x - b.x);`],
+    ["Date.getSeconds（60 で巡回＝単調でない）", `xs.sort((a, b) => new Date(b.y * 1000).getSeconds() - new Date(a.y * 1000).getSeconds() || a.x - b.x);`],
+    ["String 比較（#1052 から射程外。潰れた対 0）", `xs.sort((a, b) => String(a.y) < String(b.y) ? 1 : -1);`],
+  ];
+  for (const [name, code] of outOfScope) {
+    const found = comparatorsIn("oos.ts", code);
+    assert.equal(found.length, 1, `${name}: 比較関数が 1 つ見つかるはず（${found.length}）`);
+    assert.equal(found[0].reason, null, `${name}: 射程外として素通りさせている記録（落とすようにしたらここを消すこと）`);
+  }
+  // **「潰さない」を数字で固定する**（**射程外という判断の根拠そのもの。ここが崩れたら判断を見直す**）
+  const ys: number[] = [];
+  for (let i = 0; i <= 200; i++) ys.push(Number((590 + i * 0.1).toFixed(1)));
+  const collapsed = (k: (y: number) => number): { mono: number; col: number } => {
+    let mono = 0, col = 0;
+    for (const p of ys) for (const q of ys) {
+      if (p === q) continue;
+      const kp = k(p), kq = k(q);
+      if (kp === kq) { col++; continue; }
+      if (Math.sign(kp - kq) !== Math.sign(p - q)) mono++;
+    }
+    return { mono, col };
+  };
+  const bin = collapsed((y) => Number(y.toString(2)));
+  assert.deepEqual(bin, { mono: 0, col: 0 },
+    "toString(2) が潰すようになった（＝許容差になった）なら、射程外という判断を見直すこと");
+  const sec = collapsed((y) => new Date(Math.trunc(y) * 1000).getSeconds());
+  assert.ok(sec.mono > 0,
+    "getSeconds が単調になったなら（巡回しないなら）、射程外という判断を見直すこと");
+  // **比較のため: 塞いだ形と B10 の形は「単調かつ潰す」を満たす**
+  const bucket = collapsed((y) => Math.round(y / 3) * 3);
+  assert.equal(bucket.mono, 0, "塞いだ Math.round(y/3)*3 は単調のはず");
+  assert.ok(bucket.col > 0, "塞いだ Math.round(y/3)*3 は潰すはず（これが「許容差」の定義）");
+  const intl = collapsed((y) => Number(y.toLocaleString("en", { maximumFractionDigits: 0 })));
+  assert.equal(intl.mono, 0, "B10-15 toLocaleString は単調のはず");
+  assert.ok(intl.col > 0, "B10-15 toLocaleString は潰すはず＝許容差である（だから B10 に載せている）");
 });
 
 test("#1052 レビュー: `===` / `!==` の三項は落とす（鏡の形だが全順序ですらない）", () => {

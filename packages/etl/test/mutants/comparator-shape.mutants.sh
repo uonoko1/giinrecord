@@ -73,3 +73,18 @@ run "S3  三項の条件で浅い hasRounding に戻す" 's{  if \(hasRoundingDe
 run "S4  差の枝で浅い hasRounding に戻す" 's{      if \(hasRoundingDeep\(n, sf\)\) return "差の中に丸め}{      if (hasRounding(n)) return "差の中に丸め}'
 run "S5  文字列で切る形を丸めと数えない" 's{function isStringTruncation\(n: ts\.Node\): boolean \{\n}{function isStringTruncation(n: ts.Node): boolean \{ return false;\n}'
 run "S6  関数宣言のヘルパーの本体を集めない" 's{      if \(n\.body\) bodies\.push\(n\.body\);}{      if (false) bodies.push(n.body!);}'
+
+# ---- PR #1062 のレビュー 4 巡目（B10: 名前の集合に載っていない 17 通り）----
+# **B10 は「塞げないと分かって残した穴」なので、変異の向きが逆である**——
+# **他の行は「守りを外したら赤くなるか」を測るが、ここは「穴を塞いだら赤くなるか」を測る。**
+# **赤くなれば「B10 の記録が本物（何も主張していない検査ではない）」ことの証拠になる**
+# （**変異の分類 4「テストが何も主張していない」を弾くため**）。
+# **赤くなったときの assert のメッセージは「捕まえられるようになったら記録を消して
+#   allowlist に寄せること」で、次の人がやることを名指ししている。**
+run "T1  STRING_TRUNCATION に at/charAt を足す（B10-10/11 を塞ぐ）" 's{"padStart", "padEnd"\]}{"padStart", "padEnd", "at", "charAt"\]}'
+run "T2  ROUNDING に toExponential を足す（B10-5 を塞ぐ）" 's{"parseInt", "toFixed", "toPrecision",}{"parseInt", "toFixed", "toPrecision", "toExponential",}'
+run "T3  ROUNDING に format/toLocaleString を足す（B10-14/15 を塞ぐ）" 's{"parseInt", "toFixed", "toPrecision",}{"parseInt", "toFixed", "toPrecision", "format", "toLocaleString",}'
+# **T4 は「文字列化を丸ごう落とす」案（レビュー 3 巡目の案 (1)）を当てたもの。**
+# **B10 の 12 通りは塞がるが、`別名 rnd` / カンマ / `Reflect` / `Uint32Array` / `BigInt` は残る**
+# ——**それを B10 の検査が `notStringy` として固定している。**
+run "T4  文字列化を丸ごと落とす（案 (1)。5 通りは残る）" 's{  return ts\.isPropertyAccessExpression\(e\) && STRING_TRUNCATION\.has\(e\.name\.text\);}{  if (ts.isIdentifier(e) && (e.text === "String" \|\| e.text === "Number")) return true;\n  return ts.isPropertyAccessExpression(e);}'
