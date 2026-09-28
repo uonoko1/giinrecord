@@ -47,6 +47,64 @@ test("#999 y が本当に違えば大きい順（上から下）。x は見な�
   assert.equal(join([at("下", 591.6, 0), at("上", 600, 999)]), "上下");
 });
 
+/**
+ * **`%` で行に潰す形を、振る舞いの側からも捕まえる**（Issue #1052 のレビュー指摘 2）。
+ *
+ * ## なぜこのケースが要るのか（**既存のケースは、この欠陥の在る領域を通らない**）
+ *
+ * **`%` で潰す形（`(b.y - b.y % t) - (a.y - a.y % t) || a.x - b.x`）は、
+ * 反対称かつ推移的な「正しい全順序」なので、V8 の契約を破らない**——
+ * **`sort` は落ちず、要素数で結果が変わることも無い。**
+ * **だから「非推移性」や「入力順で結果が割れる」を見ている既存の検査では原理的に捕まらない。**
+ *
+ * **さらに、この PR のレビューで測って分かったこと**:
+ * **`%` の変異を植てても、既存のケースは 1 つも落ちない**——
+ * **期待値が壊れていたからではなく**（**この検査の期待値は手書きのリテラルで、
+ * リポジトリ全体に `.snap` も `toMatchSnapshot` も 0 件。実装の出力を記録した形ではない**）、
+ * **既存のケースの y が、`%` で潰すバケットの境界に当たらないからである**（実測）:
+ *
+ * | 既存のケース | 正しい実装 | `%` を植えた版 |
+ * |---|---|---|
+ * | `石川原`（y が同じ） | `石川原` | **`石川原`（同じ）** |
+ * | `上下`（y の差 8.4） | `上下` | **`上下`（同じ）** |
+ * | 小さい文字（y の差 5e-4） | `右左` | **`右左`（同じ）** |
+ *
+ * **`600 % 3 = 0` に対して `599.9995 % 3 = 2.9995` なので、
+ * 600 と 599.9995 は 600 と 597 の別のバケットに分かれ、順序が保たれてしまう。**
+ * **氏名が入れ替わるのは「2 行が同じバケットに落ちる」ときだけ**——
+ * **y の差が `t` 未満で、かつ `t` の倍数をまたがない必要がある。**
+ *
+ * ## だから、その領域をわざわざ通す
+ *
+ * **`y = 599.5` と `y = 597.5`**（**差 2.0 pt。許容差 `h * 1e-5 = 8.4e-5` の約 24,000 倍なので、
+ * これは「丸め誤差」ではなく本物の別の行である**）。
+ * **`t = 3` で潰すと `599.5 - 599.5 % 3 = 597` と `597.5 - 597.5 % 3 = 597` で同じバケットに落ちる**（実測）。
+ * **x を逆に置くと、正しい実装が `山田太郎` を出すところで `%` 版は `太郎山田` を出す**（実測）——
+ * **氏名の前半と後半が丸ごと入れ替わる。**
+ *
+ * **倒れる向き（#569）**: **「別人の記録が出る」側**。**落ちずに、読めたまま中身が入れ替わる。**
+ *
+ * **このケースは「いま緑になるもの」を足しているだけなので、それ自体では何も守らない。**
+ * **`%` の形を `rowOrdered` に植てて、この検査が本当に赤くなることを確かめてある**
+ * （**変異の表の H2-beh。植えると 2 件落ち、うち 1 件はこの検査である**）。
+ */
+test("#1052 レビュー: 同じ `%` バケットに落ちる 2 行でも、y 降順 → x 昇順のまま（丸めを振る舞いの側でも押さえる）", () => {
+  // **前提を先に固定する**（**等価な検査になっていないこと**）
+  const tol = 8.4 * 1e-5;
+  assert.ok(599.5 - 597.5 > tol * 1000, "前提: y の差は許容差よりはるかに大きい＝本物の別の行");
+  assert.equal(599.5 - (599.5 % 3), 597.5 - (597.5 % 3), "前提: t=3 で潰すと同じバケットに落ちる");
+  // **2 文字**（上の行の x のほうが大きいので、y を潰すと順序が逆になる）
+  assert.equal(join([at("下", 597.5, 10), at("上", 599.5, 50)]), "上下");
+  // **入力の順序に依らない**
+  assert.equal(join([at("上", 599.5, 50), at("下", 597.5, 10)]), "上下");
+  // **氏名の形**（**`%` で潰すと `太郎山田` になる。前半と後半が丸ごと入れ替わる**）
+  const name = [at("田", 599.5, 60), at("山", 599.5, 50), at("郎", 597.5, 20), at("太", 597.5, 10)];
+  assert.equal(join(name), "山田太郎");
+  // **全順列で 1 通り**（**この形の丸めは反対称かつ推移的なので、順序依存では捕まらない。
+  // それでも結果が 1 通りであることは押さえておく**）
+  assert.deepEqual([...allPermutationResults(name)], ["山田太郎"]);
+});
+
 /* ---------- 2. 許容差が小さすぎないこと ---------- */
 
 /**
@@ -359,6 +417,15 @@ test("#999 #1008 射程: 旧 denylist を素通りした綴り 16 通りを、�
     `xs.sort((a, b) => b.year * 100 + b.month - (a.year * 100 + a.month) || (a.sessionId < b.sessionId ? 1 : -1));`,
     `xs.sort((a, b) => b[1] - a[1] || b[0] - a[0]);`,
     `xs.sort((a, b) => { return b.y - a.y || a.x - b.x; });`,
+    // **#1052 で足した経路の「正しい形」**（**塞いだ代わりに正しいコードを殺していないこと**）
+    // **`apply` の配列リテラルを開けていないと、ここが `unresolved` になって偽陽性になる**
+    `Array.prototype.sort.apply(xs, [(a, b) => b.y - a.y || a.x - b.x]);`,
+    `Array.prototype.sort.call(xs, (a, b) => b.y - a.y || a.x - b.x);`,
+    `xs["sort"]((a, b) => b.y - a.y || a.x - b.x);`,
+    // **分割代入した引数で、鏡になっている三項**（**引数の束縛名を集めていないと落ちて偽陽性になる**）
+    `xs.sort(({ id: ai }, { id: bi }) => ai < bi ? 1 : -1);`,
+    // **佐賀の 3 か所が実際に使っている形**（`saga/index.ts:83,207,208`。**実測 grep で 3 件**）
+    `xs.sort((a, b) => key(b.sessionId) - key(a.sessionId) || (a.sessionId < b.sessionId ? 1 : -1));`,
   ];
   for (const code of good) {
     const found = comparatorsIn("g.ts", code);
@@ -367,6 +434,563 @@ test("#999 #1008 射程: 旧 denylist を素通りした綴り 16 通りを、�
   }
   // **比較関数を渡さない `sort()` は対象にしない**（文字列の既定順。許容差を書けない）
   assert.deepEqual(comparatorsIn("n.ts", `xs.sort();`), []);
+});
+/**
+ * **#1034 の allowlist を素通りする 7 通りを塞いだことを固定する**（Issue #1052）。
+ *
+ * **#1034 のレビュアーが 8 通りを挙げ、#1052 で 1 つずつ再現したところ 8 通りすべてが素通りした**
+ * （**実測 2026-09-27。`comparatorsIn` に直接当てて、`reason` が `null` か、
+ * そもそも比較関数として見つからない（0 件）ことを確かめた**）。
+ *
+ * **いちばん悪いのは 1 番目**——**`isNonZeroTernary` が「0 にならない三項」として
+ * 明示的に許していた**が、**条件が「差と閾値の比較」だと反対称ではない**:
+ *
+ * ```js
+ * const cmp = (a, b) => b.y - a.y > t ? 1 : -1;
+ * cmp(a, b) === -1 && cmp(b, a) === -1   // ← 両方 -1。反対称でない（実測）
+ * ```
+ *
+ * **同じ y の 4 要素 `ABCD` を `t = 3` で並べ替えると `DCBA` になる**（実測。
+ * **Issue #1052 は `CBAD` と書いていたが、要素数で V8 の経路が変わるので綴りは違う。
+ * 「並べ替わる」ことは同じ**）。
+ *
+ * ## なぜ「0 にならない三項」を許していたのか（**塞ぐ前に調べた**）
+ *
+ * **佐賀の 3 か所が実際にこの形を使っている**（`saga/index.ts:83,207,208`。実測 grep で 3 件）:
+ *
+ * ```js
+ * targets.sort((a, b) => b.year * 100 + b.month - (a.year * 100 + a.month) || (a.sessionId < b.sessionId ? 1 : -1));
+ * ```
+ *
+ * **これは文字列の同点崩しで、正当である**——**`a.sessionId < b.sessionId` は
+ * `a` と `b` を鏡に置いた関係演算なので、入れ替えれば必ず向きが反転する（反対称）。**
+ * **だから「三項を丸ごと禁じる」は既存の正しいコードを殺す。**
+ * **代わりに「条件が反対称と言える形か」を見る**——
+ * **`<` / `>` / `<=` / `>=` の両辺が、`a` と `b` をそのまま入れ替えた対になっていること**を要求する。
+ * **`b.y - a.y > t` は右辺が `t`（`a`/`b` を含まない）なので鏡になっていない＝落とす。**
+ *
+ * ## 塞げなかった 1 通り（**#1022 / #1008 と同じ向きで、実例つきで残す**）
+ *
+ * **先行する `.map()` の中で丸めてから、素の差で並べる形**は塞げない（下の検査で固定する）。
+ */
+test("#1052 射程: #1034 の allowlist を素通りしていた 7 通り（13 の綴り）を落とす", () => {
+  const mutants: [string, string][] = [
+    // **B1. 明示的に許していた形**（`isNonZeroTernary`）。**反対称でないので並べ替える**
+    ["B1 差と閾値を比べる三項（許容差そのもの）", `xs.sort((a, b) => b.y - a.y > t ? 1 : -1);`],
+    ["B1' Math.abs と閾値を比べる三項", `xs.sort((a, b) => Math.abs(a.y - b.y) <= t ? 1 : -1);`],
+    // **B2/B3. そもそも「並べ替え」と気づいていなかった形**
+    ["B2 添字で sort を呼ぶ", `xs["sort"]((a, b) => Math.abs(a.y - b.y) <= t ? 0 : b.y - a.y);`],
+    ["B2' 添字で toSorted を呼ぶ", `xs["toSorted"]((a, b) => Math.abs(a.y - b.y) <= t ? 0 : b.y - a.y);`],
+    ["B3 Array.prototype.sort.call", `Array.prototype.sort.call(xs, (a, b) => Math.abs(a.y - b.y) <= t ? 0 : b.y - a.y);`],
+    ["B3' Array.prototype.sort.apply", `Array.prototype.sort.apply(xs, [(a, b) => Math.abs(a.y - b.y) <= t ? 0 : b.y - a.y]);`],
+    // **B5〜B7. 丸めのヒューリスティックが `Math.*` の名前しか見ていなかった**
+    ["B5 |0 で切り捨てる", `xs.sort((a, b) => ((b.y / t) | 0) - ((a.y / t) | 0) || a.x - b.x);`],
+    ["B5' ~~ で切り捨てる", `xs.sort((a, b) => ~~(b.y / t) - ~~(a.y / t) || a.x - b.x);`],
+    ["B6 parseInt で切り捨てる", `xs.sort((a, b) => parseInt(String(b.y / t), 10) - parseInt(String(a.y / t), 10) || a.x - b.x);`],
+    ["B7 toFixed で丸める", `xs.sort((a, b) => Number((b.y / t).toFixed(0)) - Number((a.y / t).toFixed(0)) || a.x - b.x);`],
+    // **「鏡の照合」だけが捕まえる形**（**両辺が引数を含むので「両辺が引数を含むこと」では落ちない**）。
+    // **`a.y < b.y + 3 ? 1 : -1` は実測で `cmp(P,Q)` も `cmp(Q,P)` も `1`**（**反対称でない**）
+    ["B1b 片側に閾値を足した三項（鏡でない）", `xs.sort((a, b) => a.y < b.y + 3 ? 1 : -1);`],
+    // **左右で別のプロパティを見る三項**（**実測: 4 要素で入力順により `ADCB` / `ABCD` に割れる**）
+    ["B1c 左右で別のプロパティを比べる三項", `xs.sort((a, b) => a.y < b.x ? 1 : -1);`],
+    // **「両辺が引数を含むこと」だけが捕まえる形**（**両辺が同一なので鏡の照合は通ってしまう**——
+    // **実測: この検査を外すと `reason: null` になる。比較関数が定数 `-1` を返す＝並べ替えが任意になる**）
+    ["B1d 両辺が引数を含まない三項（定数を返す比較）", `xs.sort((a, b) => t < t ? 1 : -1);`],
+    // **分割代入した引数でも、閾値の三項は落とすこと**
+    // （**引数の束縛名を集めていないと `@L` / `@R` に写せず、鏡の照合が効かなくなる**）
+    ["B1e 分割代入 + 閾値の三項", `xs.sort(({ y: ay }, { y: by }) => by - ay > t ? 1 : -1);`],
+    // **分割代入の「プロパティ名」を引数の束縛名と混同しない**
+    // （**`{ y: ay }` の `y` は束縛名ではない。混ぜると、外側の変数 `y` / `x` が
+    //   引数扱いになって鏡の照合を通ってしまう**——**実測: `bindingNames` の
+    //   `isBindingElement` の枝を外すと、この綴りが `reason: null` になる**）
+    ["B1f 分割代入のプロパティ名と同名の外側の変数を比べる", `xs.sort(({ y: ay }, { x: bx }) => y < x ? 1 : -1);`],
+    // **`function` 宣言で影を作る形**（**`const` だけを数えていると、
+    // 関数宣言の側で同名を作って ambiguous を回避できる**）
+    ["B4b function 宣言で同名の影を作る", `function CMP(a, b) { return b.y - a.y || a.x - b.x; }\nfunction f(){ const CMP = (a, b) => Math.abs(a.y - b.y) <= t ? 0 : b.y - a.y; xs.sort(CMP); }`],
+  ];
+  for (const [name, code] of mutants) {
+    const found = comparatorsIn("m.ts", code);
+    assert.equal(found.length, 1, `${name}: 比較関数が 1 つ見つかるはず（${found.length}）`);
+    assert.ok(found[0].reason, `${name}: allowlist を素通りした（${found[0].text}）`);
+  }
+});
+
+/**
+ * **B4. `resolveLocal` がスコープを見ていなかった**（Issue #1052 の 3 番目。**質が悪い穴**）。
+ *
+ * **`resolveLocal` はファイル全体を歩いて、同名の変数宣言が見つかるたびに `out` を上書きしていた**ので、
+ * **「最後に出てきた定義」が勝つ。** **実測（2026-09-27）**:
+ *
+ * | ソース | #1034 の判定 |
+ * |---|---|
+ * | 危険な `CMP` が先・安全な `CMP` が後 → `sort(CMP)` 2 件 | **どちらも `reason: null`（素通り）** |
+ * | 安全な `CMP` が先・危険な `CMP` が後 → `sort(CMP)` 2 件 | どちらも落ちる |
+ *
+ * **つまり「同名の安全な定義をファイルの後ろに置く」だけで、検査そのものを黙って無効化できた。**
+ * **これは allowlist を騙せる**ので、**#1008 が直した「denylist の列挙漏れ」より質が悪い。**
+ *
+ * **どう直したか**: **同名の宣言が 2 つ以上見つかったら、どれを指しているか決められないので
+ * `unresolved` として落とす**（**#569 の「分からないものは通さない」側に倒す**）。
+ * **スコープの解決そのものはやらない**——
+ * **`ts.createSourceFile` だけでは束縛の解決ができず、`ts.Program` を作ると
+ * 検査が型解決に依存して重くなるためである。**
+ */
+test("#1052 射程: 同名の定義が 2 つ在るとき、後ろの安全な定義で判定が置き換わらない", () => {
+  // **危険が先・安全が後**（#1034 はこれで 2 件とも素通りしていた）
+  const shadowed = `function f(){ const CMP = (a, b) => Math.abs(a.y - b.y) <= t ? 0 : b.y - a.y; xs.sort(CMP); }
+function g(){ const CMP = (a, b) => b.y - a.y || a.x - b.x; ys.sort(CMP); }`;
+  const found = comparatorsIn("shadow.ts", shadowed);
+  assert.equal(found.length, 2, `sort が 2 件見つかるはず（${found.length}）`);
+  for (const c of found) assert.ok(c.reason, `同名の定義が 2 つ在るのに素通りした: ${c.text}`);
+  // **安全が先・危険が後でも同じ**（**向きに依らず「決められない」で落とす**）
+  const reversed = `function g(){ const CMP = (a, b) => b.y - a.y || a.x - b.x; ys.sort(CMP); }
+function f(){ const CMP = (a, b) => Math.abs(a.y - b.y) <= t ? 0 : b.y - a.y; xs.sort(CMP); }`;
+  for (const c of comparatorsIn("shadow2.ts", reversed)) assert.ok(c.reason, `素通りした: ${c.text}`);
+  // **同名が 1 つだけなら、今までどおり追える**（**「全部落とす」に倒れていないこと**）
+  const unique = `const CMP = (a, b) => b.y - a.y || a.x - b.x; xs.sort(CMP);`;
+  const u = comparatorsIn("uniq.ts", unique);
+  assert.equal(u.length, 1);
+  assert.equal(u[0].reason, null, `1 つしか無い定義を追えなくなった（偽陽性）: ${u[0].reason}`);
+});
+
+/**
+ * **塞げなかった 1 通り**（Issue #1052 の 8 つのうち、**これだけ残す**）。
+ *
+ * **比較関数の手前で `.map()` の中で y を丸めてしまうと、比較関数そのものは
+ * `b.y - a.y || a.x - b.x`（完全に正しい形）になる**ので、**比較関数を見ている限り区別できない。**
+ *
+ * **塞ぐには「`sort` に渡っている配列がどこで作られたか」を追う必要がある**——
+ * **データフロー解析であり、`comparatorsIn` の設計（1 つの比較関数を構文で見る）の外である。**
+ * **県のファイルには `.map(` が 286 か所ある**（実測。出現数。`grep -c` は行数なので 276 になる）ので、
+ * **「`.map` の中に丸めが在ったら落とす」にすると、丸めと無関係な写しを大量に殺す。**
+ *
+ * **倒れる向き（#569）**: **「別人の記録が出る」側**。**ただしこの形は、丸めた y が
+ * そのまま後段に流れるので、`joinVertical` の振る舞いの検査（上）に当たる可能性がある**——
+ * **共有層についてはそちらが押さえる。県ごとの写しは押さえない。そこが残っている穴である。**
+ */
+/**
+ * **PR #1062 のレビューで見つかった 2 つの穴を固定する**（Issue #1052。**どちらも「同じ質の穴」**）。
+ *
+ * **塞いだはずの B1 が、綴りを変えるだけで素通りしていた**（**実測 2026-09-27。自分で再現した**）:
+ *
+ * | # | 綴り | レビュー前 |
+ * |---|---|---|
+ * | H1 | `Math.round(a.y/t) < Math.round(b.y/t) ? 1 : -1` | **素通り** |
+ * | H1b | `Math.floor(...)` 版 | **素通り** |
+ * | H1c | `((a.y/t)\|0) < ((b.y/t)\|0) ? 1 : -1` | **素通り** |
+ * | H1d | `(a.y/t).toFixed(0) < (b.y/t).toFixed(0) ? 1 : -1` | **素通り** |
+ * | H6 | `b.y - a.y \|\| (Math.round(a.x/t) < Math.round(b.x/t) ? 1 : -1)` | **素通り** |
+ * | H2 | `(b.y - b.y % t) - (a.y - a.y % t) \|\| a.x - b.x` | **素通り** |
+ * | H2b | `(b.y / t) * t - (a.y / t) * t \|\| a.x - b.x` | **素通り** |
+ *
+ * **原因（H1 系）**: **`checkExpr` が `hasRounding` を呼ぶのは `-` の枝だけで、
+ * 三項の条件は `hasRounding` を通っていなかった。** **`isMirroredComparison` は
+ * 「鏡らしさ」しか見ていないので、両辺を同じように丸めれば鏡のまま通る。**
+ * **実測: `cmp(A,D)` も `cmp(D,A)` も `-1`（y = 9.5 / 9.0、t = 3）で、B1 と同じく反対称でない。**
+ *
+ * ## **H2 は他のどの穴より悪い**（**振る舞いの検査にも引っかからない**）
+ *
+ * **`y - y % t` は反対称かつ推移的な「正しい全順序」である**——
+ * **だから V8 の契約を破らず、`sort` が落ちることも、要素数で結果が変わることも無い。**
+ * **それでいて許容差そのものである。**
+ *
+ * **自分で検算した（2026-09-27）**:
+ * **`9.5 - 9.5 % 3 = 9` と `9.0 - 9.0 % 3 = 9` で同じバケットに潰れる。**
+ * **反対称性は `cmp(a,b) = 30` / `cmp(b,a) = -30` で保たれている。**
+ * **y 9 通り × x 3 通りから作った 729 対で反対称の破れ 0、19,683 三つ組で推移の破れ 0。**
+ * **それでも `y = 9.5 / 9.0`、`x = 50 / 20` の 2 行では、
+ * 正しい比較が `山田` を出すところで `田山` を出す**——**氏名の 2 文字が入れ替わる。**
+ *
+ * **他の穴は V8 の契約を破るので、いつか結果が揺れて気づける余地があった。この形にはそれが無い。**
+ * **B8 のように「塞げないと分かって残した」ものでもなく、#1052 が気づかずに残していた。**
+ *
+ * ## 偽陽性を測ってから決めた（**#943 の逆向き——正しいコードを殺さないこと**）
+ *
+ * **`%` は県の比較関数 103 個に 1 つも無い**（実測 0 件）ので丸ごと落とす。
+ * **`*` は丸ごと落とせない**——**`b.year * 100 + b.month - (a.year * 100 + a.month)` が
+ * 佐賀・滋賀・島根の 4 か所で実際に使われている**（実測 4 件）。
+ * **だから「掛ける相手に `/` が在るか」で区別している。**
+ * **追跡下の .ts の比較関数 275 個で、レビュー対応によって新たに落ちたものは 0 件**（実測）。
+ */
+test("#1052 レビュー: 三項の条件の中の丸めと、`%` / `(y/t)*t` の丸めを落とす", () => {
+  const mutants: [string, string][] = [
+    ["H1 条件を Math.round で丸める", `xs.sort((a, b) => Math.round(a.y/t) < Math.round(b.y/t) ? 1 : -1);`],
+    ["H1b 条件を Math.floor で丸める", `xs.sort((a, b) => Math.floor(a.y/t) < Math.floor(b.y/t) ? 1 : -1);`],
+    ["H1c 条件を |0 で丸める", `xs.sort((a, b) => ((a.y/t)|0) < ((b.y/t)|0) ? 1 : -1);`],
+    ["H1d 条件を toFixed で丸める", `xs.sort((a, b) => (a.y/t).toFixed(0) < (b.y/t).toFixed(0) ? 1 : -1);`],
+    ["H6 || の右の枝に丸めの三項を隠す", `xs.sort((a, b) => b.y - a.y || (Math.round(a.x/t) < Math.round(b.x/t) ? 1 : -1));`],
+    // **H2: 反対称かつ推移的なので V8 の契約を破らない。振る舞いの検査にも引っかからない**
+    ["H2 余りを引いて行に潰す", `xs.sort((a, b) => (b.y - b.y % t) - (a.y - a.y % t) || a.x - b.x);`],
+    ["H2b 割って掛けて行に潰す", `xs.sort((a, b) => (b.y / t) * t - (a.y / t) * t || a.x - b.x);`],
+  ];
+  for (const [name, code] of mutants) {
+    const found = comparatorsIn("m.ts", code);
+    assert.equal(found.length, 1, `${name}: 比較関数が 1 つ見つかるはず（${found.length}）`);
+    assert.ok(found[0].reason, `${name}: allowlist を素通りした（${found[0].text}）`);
+  }
+  // **`*` を丸ごと落としていないこと**（**佐賀・滋賀・島根の 4 か所が実際に使っている形。
+  // 実測 grep で 4 件。`%` と違って `*` は正当な用例が在る**）
+  const good = [
+    `xs.sort((a, b) => b.year * 100 + b.month - (a.year * 100 + a.month) || (a.sessionId < b.sessionId ? 1 : -1));`,
+    `xs.sort((a, b) => b.year * 100 + b.month - (a.year * 100 + a.month) || b.kaigiId - a.kaigiId);`,
+    `xs.sort((a, b) => b.year * 100 + b.month - (a.year * 100 + a.month));`,
+  ];
+  for (const code of good) {
+    const found = comparatorsIn("g.ts", code);
+    assert.equal(found.length, 1);
+    assert.equal(found[0].reason, null, `正しい比較を落とした（偽陽性）: ${code} → ${found[0].reason}`);
+  }
+});
+
+/**
+ * **`===` / `!==` は「鏡の比較」に足してはいけない**（**PR #1062 のレビュー指摘 5 の N1**）。
+ *
+ * **`a.y === b.y ? 1 : -1` は鏡の形をしているが、全順序ですらない**——
+ * **等しければどちらも `1`、等しくなければどちらも `-1` を返す。**
+ * **`isMirroredComparison` の switch に `===` を足す変異を当てても赤くならなかった**ので、
+ * **「足しても落ちる」ほうを検査で固定する。**
+ */
+/**
+ * **丸めをヘルパー関数に 1 行出す形を落とす**（**#1052 のレビュー 3 巡目。塞いだ H2 が復活していた**）。
+ *
+ * **`hasRounding` は比較関数の式の中しか歩かないので、丸めが呼び出しの向こう側にあると見えなかった**
+ * （**実測 2026-09-27。5 通りすべて `reason: null`**）:
+ *
+ * | # | 綴り | レビュー前 |
+ * |---|---|---|
+ * | Y6-A | `const ROW = (y) => y - (y % H);` ＋ `ROW(b.y) - ROW(a.y)` | **素通り** |
+ * | Y6-B | `function rowOf(y) { return Math.round(y / H); }` | **素通り** |
+ * | Y6-C | `const ROW = (y) => Math.floor(y / H);` ＋ 三項 | **素通り** |
+ * | D | `Number(String(b.y).split(".")[0]) - …` | **素通り** |
+ * | E | `Number(String(b.y).slice(0, 2)) - …` | **素通り** |
+ *
+ * **Y6-A は塞いだ H2 と数学的に同一である**——**自分で検算した:
+ * `y = 599.5 / 597.5` はどちらもバケット 597 に落ち、`山田太郎` が `太郎山田` になる
+ * （H2 の出力と 1 文字も違わない）。1,089 対で反対称の破れ 0、35,937 三つ組で推移の破れ 0**
+ * ＝**正しい全順序なので V8 は文句を言わず、`sort` も落ちない。完全に無音である**（#569 の重いほう）。
+ *
+ * **「二重の歯止め」も効かない**——**振る舞いの検査を持つのは `rowOrdered`（三重）だけで、
+ * 他の 10 県の 21 個の比較関数には、この構文の検査しか無い。**
+ *
+ * ## なぜ B8 と同じ扱い（「塞げないと分かって残す」）にしなかったか
+ *
+ * **B8 は「`sort` に渡る配列がどこで作られたか」を追うデータフロー解析が要る。**
+ * **こちらは呼び出しを 1 段辿るだけで、`resolveLocal` が既に持っている機構
+ * （同じファイルの同名の宣言を歩く）をそのまま使える**ので、**設計の外ではない。**
+ *
+ * ## 偽陽性を測ってから決めた
+ *
+ * **県の比較関数 103 個のうち呼び出しを含むのは 3 個だけ**（実測）——
+ * **`rowOf.get`（Map の参照。三重）と `key`（佐賀の 2 か所）で、どちらも丸めを含まない。**
+ * **`String` / `split` / `slice` / `substring` / `padStart` を使うものは 0 個**（実測）。
+ * **追跡下の比較関数 275 個で、この対応によって新たに落ちたものは 0 件**（実測）。
+ */
+test("#1052 レビュー3: 丸めをヘルパー関数に出しても落とす（呼び出しを 1 段辿る）", () => {
+  const mutants: [string, string][] = [
+    ["Y6-A ヘルパーに % を出す", `const ROW = (y) => y - (y % LINE_H);\nxs.sort((a, b) => ROW(b.y) - ROW(a.y) || a.x - b.x);`],
+    ["Y6-B 関数宣言で Math.round", `function rowOf(y) { return Math.round(y / LINE_H); }\nxs.sort((a, b) => rowOf(b.y) - rowOf(a.y) || a.x - b.x);`],
+    ["Y6-C ヘルパー + 三項", `const ROW = (y) => Math.floor(y / LINE_H);\nxs.sort((a, b) => ROW(a.y) < ROW(b.y) ? 1 : -1);`],
+    // **2 段の間接でも辿る**（**`ROW` → `BK` → `%`**）
+    ["Y6-D 2 段の間接", `const BK = (y) => y - (y % H);\nconst ROW = (y) => BK(y);\nxs.sort((a, b) => ROW(b.y) - ROW(a.y) || a.x - b.x);`],
+    // **名前も `%` も `/` も使わない形**（**`ROUNDING` が denylist であることが原因だった**）
+    ["D String split で整数部（Math.trunc と同一）", `xs.sort((a, b) => Number(String(b.y).split('.')[0]) - Number(String(a.y).split('.')[0]) || a.x - b.x);`],
+    ["E String slice で上 2 桁（10 単位のバケット）", `xs.sort((a, b) => Number(String(b.y).slice(0, 2)) - Number(String(a.y).slice(0, 2)) || a.x - b.x);`],
+  ];
+  for (const [name, code] of mutants) {
+    const found = comparatorsIn("m.ts", code);
+    assert.equal(found.length, 1, `${name}: 比較関数が 1 つ見つかるはず（${found.length}）`);
+    assert.ok(found[0].reason, `${name}: allowlist を素通りした（${found[0].text}）`);
+  }
+  // **既存の正しいヘルパーを殺していないこと**（**佐賀の `key` と三重の `rowOf.get`。実測 3 か所**）
+  const good = [
+    `const key = (id) => order.get(id) ?? 0;\nxs.sort((a, b) => key(b.sessionId) - key(a.sessionId) || (a.sessionId < b.sessionId ? 1 : -1));`,
+    `xs.sort((a, b) => rowOf.get(b)! - rowOf.get(a)! || a.x - b.x);`,
+  ];
+  for (const code of good) {
+    const found = comparatorsIn("g.ts", code);
+    assert.equal(found.length, 1);
+    assert.equal(found[0].reason, null, `正しいヘルパーを落とした（偽陽性）: ${code} → ${found[0].reason}`);
+  }
+});
+
+/**
+ * **B9: 辿れない呼び出しの向こうの丸めは捕まえられない**
+ * （**塞げないと分かっていて残す。B8 と同じ扱い**）。
+ *
+ * **呼び出しを辿るのは「同じファイルの中で、同名の宣言がちょうど 1 つのとき」だけである**ので、
+ * **次の 3 つは丸めが向こう側に在っても素通りする**（実測。**下で assert して固定する**）:
+ *
+ * ```js
+ * import { ROW } from "./rows.ts";  xs.sort((a,b) => ROW(b.y) - ROW(a.y) || a.x - b.x);  // 別ファイル
+ * // 同名の宣言が 2 つ（どちらを指すか決められない）
+ * // R.row(b.y) のようなメソッド呼び出し（辿る先が無い）
+ * ```
+ *
+ * **「辿れなければ落とす」にしなかったのは、偽陽性を測ったからである**——
+ * **佐賀の `key` は同じファイルで 2 回宣言されている**（175 行目が文字列、206 行目がヘルパー）ので、
+ * **「決められないなら落とす」にすると佐賀の 2 か所が死ぬ。**
+ * **`rowOf.get` のようなメソッド呼び出しも辿る先が無い。**
+ *
+ * **つまりここは denylist 側に倒れている。** **それを承知で残す**（#1022 / #1008 と同じ向き）。
+ * **倒れる向きは「別人の記録が出る」側**（#569 の重いほう）**なので、
+ * 次の人が「塞いだつもり」にならないよう、素通りすることを検査で明示する。**
+ */
+test("#1052 レビュー3: B9 辿れない呼び出しの向こうの丸めは捕まえられない（既知の穴）", () => {
+  const holes: [string, string][] = [
+    ["別ファイルから import したヘルパー", `import { ROW } from "./rows.ts";\nxs.sort((a, b) => ROW(b.y) - ROW(a.y) || a.x - b.x);`],
+    // **「別ファイル」は 4 通りある**（**#1062 のレビュー 3 巡目の指摘 3。列挙が名前付き import だけだった**）
+    ["default import", `import ROW from "./rows.ts";\nxs.sort((a, b) => ROW(b.y) - ROW(a.y) || a.x - b.x);`],
+    ["require（CJS）", `const { ROW } = require("./rows.ts");\nxs.sort((a, b) => ROW(b.y) - ROW(a.y) || a.x - b.x);`],
+    ["動的 import", `const { ROW } = await import("./rows.ts");\nxs.sort((a, b) => ROW(b.y) - ROW(a.y) || a.x - b.x);`],
+    ["同名のヘルパーが 2 つあって決められない", `const ROW = (y) => y - (y % H);\nfunction f(){ const ROW = (y) => y; xs.sort((a, b) => ROW(b.y) - ROW(a.y) || a.x - b.x); }`],
+    ["メソッド呼び出し（辿る先が無い）", `xs.sort((a, b) => R.row(b.y) - R.row(a.y) || a.x - b.x);`],
+  ];
+  for (const [name, code] of holes) {
+    const found = comparatorsIn("hole.ts", code);
+    assert.equal(found.length, 1, `${name}: 比較関数が 1 つ見つかるはず（${found.length}）`);
+    assert.equal(found[0].reason, null,
+      `${name}: 捕まえられるようになったら、この検査（既知の穴の記録）を消して上の allowlist に寄せること`);
+  }
+});
+
+/**
+ * **B10: 丸めの「名前の集合」に載っていない綴りで行に潰す形**
+ * （**#1062 のレビュー 3 巡目の指摘 1 と 4 巡目の指摘 2。塞げないと分かって残す。B8 / B9 と同じ扱い**）。
+ *
+ * ## 何が残っているか
+ *
+ * **この道具の「丸め」の判定だけは allowlist ではない**——
+ * **`ROUNDING` と `STRING_TRUNCATION` という 2 つの名前の集合＝denylist である**
+ * （**`comparator-shape.ts` の docblock が #1052 の時点で自分でそう診断しているのに、
+ * 直しがもう 1 つの名前の集合だった**）。
+ * **だから `Math.round` を `const rnd = Math.round` と別名にするだけで外れる。**
+ *
+ * **下の 17 通りを `comparatorsIn` に当てて数えた**（**2026-09-28。全部 `reason: null`**）。
+ *
+ * ## 無音であることを自分で検算した（**レビュアーの数字を写していない**）
+ *
+ * **y 12 通り × x 3 通り = 36 点から 1,296 対で反対称の破れ、46,656 三つ組で推移の破れを数えた**
+ * ——**17 通りすべて破れ 0＝正しい全順序である。**
+ * **V8 の `sort` の契約を破らないので、要素数でアルゴリズムが変わっても落ちない。**
+ *
+ * **それでいて許容差そのものである**（y 590〜610 の 0.1 刻み 40,000 対で単調性の破れ 0 かつ、
+ * 隔たった y を潰す）:
+ *
+ * ```
+ * Intl / toLocaleString / toFixed 別名        潰れる最大の隔たり 0.9pt（潰れた対 1,760）
+ * 別名 rnd / カンマ / Reflect / Uint32 / BigInt                 2.9pt（5,420〜5,600）
+ * at(0) / charAt(0) / String()[0] / toExponential               9.9pt（14,900〜20,000）
+ * （比較のため）Math.round(y/3)*3 = #1052 で塞いだ形             2.9pt（5,600）
+ * ```
+ *
+ * ## 県のファイルに植えて測った（**鳥取の氏名を組む経路**）
+ *
+ * **`tottori/votes-pdf.ts` の `joinText`（`nameText` を組む行が呼ぶ）を差し替えて、
+ * `pdf-row-order` ＋ 鳥取の 7 ファイルを走らせた**（`scripts/dev/mutate.sh` で当てた。md5 で確認）:
+ *
+ * ```
+ * Intl.NumberFormat（0.9pt）   tests 87 / pass 87 / fail 0   ← 完全に無音
+ * toLocaleString（0.9pt）      tests 87 / pass 87 / fail 0   ← 完全に無音
+ * 別名 rnd(y / 3)（2.9pt）      tests 87 / pass 87 / fail 0   ← 完全に無音
+ * （参考）at(0)（9.9pt）        tests 49 / pass 44 / fail 5   ← 粗すぎてフィクスチャが崩れる
+ * ```
+ *
+ * **細かいバケットのほうが無音である**——**倒れる向きは「別人の記録が出る」側**（#569 の重いほう）。
+ *
+ * **PO が渡した `const rnd = Math.round; rnd(y / 3) * 3` は、実は落ちる**（実測。訂正）——
+ * **`* 3` が `(y / t) * t` の規則に当たるからで、`ROUNDING` が捕まえているのではない。**
+ * **`* 3` を書かない `rnd(y / 3)` は素通りする**（**順序としては同値**）。**下はそちらを固定する。**
+ *
+ * ## なぜ塞がないか（**代案 2 つを測った**）
+ *
+ * **(1)「比較関数の中に文字列化が現れたら落とす」**（レビュー 3 巡目の案）:
+ * **`at` / `charAt` / 添字 / `replace` / `Intl` / `toLocaleString` は塞がるが、
+ * `別名 rnd` / `カンマ` / `Reflect` / `Uint32Array.of` / `BigInt` は文字列を通らないので残る**
+ * （**17 通りのうち 5 通りが素通りのまま。実測**）。
+ *
+ * **(2)「差の枝に呼び出しを許さない」**: **17 通りは全部塞がる。**
+ * **しかし追跡下に、呼び出しを含んだまま正しく通っている比較関数が 5 個ある**（実測）——
+ * **`OK=220 / REJ=55` が `REJ=60` になる＝偽陽性 5 件**（#943 の「正しいコードを殺す」向き）:
+ *
+ * ```
+ * 射程外  brand-assets.test.ts:31          Number(a.getAttribute("cy")) - Number(b.getAttribute("cy"))
+ * 射程内  mie/votes-pdf.ts:357             rowOf.get(b)! - rowOf.get(a)!
+ * 射程内  saga/index.ts:207,208            key(b.sessionId) - key(a.sessionId)
+ * 射程外  miyagi-published-data.test.ts:245  Number(b) - Number(a)
+ * ```
+ *
+ * **「射程内／射程外」は後から足した**——**この検査が強制されるのは `src/sources/local/` だけで、
+ * 5 個のうち 2 個はその外である。** **この数え違いが、下の誤った結論を招いた。**
+ *
+ * **この 5 個を並べて「構文で分ける手がかりが無い」と書いていたが、それは誤りだった**
+ * （**レビュー 5 巡目が第三の案を実装して反証した。下を見よ**）。
+ *
+ * ## 狭められるが、閉じられない（**「構造的に不可能」と書いていたのは誤りだった**）
+ *
+ * **2026-09-28 まで、ここには「構造的に無理」と書いてあった。**
+ * **レビュー 5 巡目が案 (3) を実装して、実測で反証した。**
+ *
+ * **どこを間違えたか**: **「正当な 5 個」と数えたが、この検査が強制される射程は
+ * `src/sources/local/` だけである**（上の `#999 #1008 射程: 県ごとのファイルの比較関数が …` が
+ * `../src/sources/local/` しか読まない）——
+ * **`brand-assets.test.ts`（`apps/web`）と `miyagi-published-data.test.ts`（`packages/etl/test`）は
+ * その外。** **射程内に在るのは `rowOf.get`（三重）と `key`（佐賀）の 2 綴りだけだった。**
+ * **「5 個と 17 個を構文で分ける」問題ではなく、「射程内の 2 綴りを逐語で列挙する」問題だった。**
+ *
+ * **案 (3): 呼ばれる側（callee）の綴りだけを逐語の allowlist にする。**
+ * **レビュアーの実測: 17/17 REJECT、県の比較関数 103 個で違反 0、追跡下は REJ 55 → 57、
+ * 上の `#999 #1008 射程` のテストは緑のまま**（**案 (1) はそれを `T4 fail=6` で落としていた**）。
+ *
+ * **「`y` という名前の denylist に戻る」という懸念自体は正しかった。**
+ * **だが案 (3) は呼ばれる側の綴りしか見ないので、引数のプロパティ名を一度も見ない。**
+ *
+ * ## それでも閉じない（**レビュアー自身が実測した**）
+ *
+ * **丸めのヘルパーを `key` という名前にすれば、案 (3) を通る。**
+ * **穴は「どんな呼び出しの綴りでも」から「2 つの名前のどちらかを騙る」に狭まるだけで、閉じない。**
+ * **だから B8 / B9 と同じ扱いで残す。**
+ *
+ * **案 (3) を入れなかった理由**: **在るが、穴を閉じないので入れない。**
+ * **入れると射程内の 2 綴りを逐語で持ち、県がヘルパーを書くたびに列挙を足す運用が増える
+ * （`ROUNDING` と同じ保守の形）——その対価が「`key` を騙れば抜ける」までの狭まりである。**
+ * **狭める価値はあるので、やるなら別 PBI で運用の重さごと測って決めるのがよい。**
+ *
+ * **次の人へ**: **これは「不可能」ではない。射程を数え直せば手がかりは在る。**
+ *
+ * ## 射程の線引きで逃げていないこと（**測って区別した**）
+ *
+ * **射程外に置いた `String(a.y) < String(b.y)` は、40,000 対で潰れた対が 0
+ * ＝「近ければ同値」ではない**（単に間違ったキー）ので射程外で正しい。
+ * **B10 の 17 通りは潰れた対が 1,760〜20,000 ＝ 定義上の許容差バケットである。**
+ *
+ * **レビュアーの一覧から 2 つ外した**（**測ったら許容差ではなかった。訂正**）:
+ * - **`Number(b.y.toString(2))`**: **潰れた対 0 / 単調性の破れ 0**——
+ *   **2 進表記を `Number` に戻しても値は一意で、潰れない。**
+ * - **`new Date(b.y * 1000).getSeconds()`**: **単調性の破れ 20,200**（**60 で巡回する**）——
+ *   **単調でない＝「間違ったキー」。**
+ *
+ * **「単調かつ潰す」の両方が要る。片方だけなら射程外である。**
+ */
+test("#1062 レビュー4: B10 丸めの名前の集合に載っていない 17 通りは捕まえられない（既知の穴）", () => {
+  const holes: [string, string][] = [
+    // **別名・包み方を変えるだけで `ROUNDING` から外れる形**
+    ["B10-1 Math.round の別名", `const rnd = Math.round;\nxs.sort((a, b) => rnd(b.y / 3) - rnd(a.y / 3) || a.x - b.x);`],
+    ["B10-2 カンマ式で包む", `xs.sort((a, b) => (0, Math.round)(b.y / H) - (0, Math.round)(a.y / H) || a.x - b.x);`],
+    ["B10-3 Reflect.apply", `xs.sort((a, b) => Reflect.apply(Math.round, null, [b.y / H]) - Reflect.apply(Math.round, null, [a.y / H]) || a.x - b.x);`],
+    ["B10-4 Number.prototype.toFixed の別名", `const R = Number.prototype.toFixed;\nxs.sort((a, b) => Number(R.call(b.y, 0)) - Number(R.call(a.y, 0)) || a.x - b.x);`],
+    ["B10-5 toExponential", `xs.sort((a, b) => Number(b.y.toExponential(1)) - Number(a.y.toExponential(1)) || a.x - b.x);`],
+    // **丸めの名前も `%` も `/` も使わずに整数バケットを作る形**
+    ["B10-6 Uint32Array.of（TypedArray への代入が切り捨て）", `xs.sort((a, b) => Uint32Array.of(b.y / 3)[0] - Uint32Array.of(a.y / 3)[0] || a.x - b.x);`],
+    ["B10-7 BigInt の整数除算", `xs.sort((a, b) => Number(BigInt(b.y) / 3n) - Number(BigInt(a.y) / 3n) || a.x - b.x);`],
+    ["B10-8 正規表現 exec で整数部", `const RE = /^(\\d+)/;\nxs.sort((a, b) => Number(RE.exec(String(b.y))[1]) - Number(RE.exec(String(a.y))[1]) || a.x - b.x);`],
+    ["B10-9 String().match で整数部", `xs.sort((a, b) => Number(String(b.y).match(/^\\d+/)[0]) - Number(String(a.y).match(/^\\d+/)[0]) || a.x - b.x);`],
+    // **`STRING_TRUNCATION` に載っていない文字列の切り方**
+    ["B10-10 String().at(0)", `xs.sort((a, b) => Number(String(b.y).at(0)) - Number(String(a.y).at(0)) || a.x - b.x);`],
+    ["B10-11 String().charAt(0)", `xs.sort((a, b) => Number(String(b.y).charAt(0)) - Number(String(a.y).charAt(0)) || a.x - b.x);`],
+    ["B10-12 String()[0]（添字なので CallExpression の判定に届かない）", `xs.sort((a, b) => Number(String(b.y)[0]) - Number(String(a.y)[0]) || a.x - b.x);`],
+    ["B10-13 String().replace で小数を落とす", `xs.sort((a, b) => Number(String(b.y).replace(/\\..*/, "")) - Number(String(a.y).replace(/\\..*/, "")) || a.x - b.x);`],
+    // **書式化による 1pt のバケット**（**塞いだ `Math.round(y/3)*3` の 2.9pt より本物の許容差に近い**）
+    ["B10-14 Intl.NumberFormat の format", `xs.sort((a, b) => Number(F.format(b.y)) - Number(F.format(a.y)) || a.x - b.x);`],
+    ["B10-15 toLocaleString", `xs.sort((a, b) => Number(b.y.toLocaleString("en", { maximumFractionDigits: 0 })) - Number(a.y.toLocaleString("en", { maximumFractionDigits: 0 })) || a.x - b.x);`],
+    // **三項の条件側とヘルパー経由**（**#1052 が塞いだ 2 つの経路も、綴りを変えれば通る**）
+    ["B10-16 三項の条件側（Intl）", `xs.sort((a, b) => F.format(a.y) < F.format(b.y) ? 1 : -1);`],
+    ["B10-17 ヘルパー経由（別名 + 丸め。1 段辿っても名前で当たらない）", `const rnd = Math.round;\nconst ROW = (y) => rnd(y / 3);\nxs.sort((a, b) => ROW(b.y) - ROW(a.y) || a.x - b.x);`],
+  ];
+  for (const [name, code] of holes) {
+    const found = comparatorsIn("hole.ts", code);
+    assert.equal(found.length, 1, `${name}: 比較関数が 1 つ見つかるはず（${found.length}）`);
+    assert.equal(found[0].reason, null,
+      `${name}: 捕まえられるようになったら、この検査（既知の穴の記録）を消して上の allowlist に寄せること`);
+  }
+  // **「文字列化を丸ごと落とす」案では塞がらない 5 通り**（**代案 (1) が十分でないことを固定する**）——
+  // **文字列を一度も通らないので、文字列化を禁じても素通りする。**
+  const notStringy = ["B10-1 Math.round の別名", "B10-2 カンマ式で包む", "B10-3 Reflect.apply",
+                      "B10-6 Uint32Array.of（TypedArray への代入が切り捨て）", "B10-7 BigInt の整数除算"];
+  for (const name of notStringy) {
+    const code = holes.find(([n]) => n === name)?.[1];
+    assert.ok(code, `${name} が holes の一覧から消えている（B10 の記録が痩せている）`);
+    assert.ok(!/String|toString|toLocaleString|format|\.at\(|charAt|replace|`/.test(code),
+      `${name}: 文字列化を含んでいる（「文字列化を落とす」案で塞がるなら、この記録を書き直すこと）`);
+  }
+  // **`Math.round(y / 3) * 3` は落ちる**（**PO が渡した綴り。`* 3` が `(y/t)*t` に当たる**）——
+  // **B10-1 が素通りするのは「`* 3` を書かない」ときだけであることを固定する。**
+  const withMul = comparatorsIn("mul.ts", `const rnd = Math.round;\nxs.sort((a, b) => rnd(b.y / 3) * 3 - rnd(a.y / 3) * 3 || a.x - b.x);`);
+  assert.equal(withMul.length, 1);
+  assert.ok(withMul[0].reason, "`rnd(y / 3) * 3` は `(y/t)*t` の規則で落ちるはず（落ちなくなったら B10-1 の説明を直すこと）");
+});
+
+/**
+ * **B10 の一覧から外した 2 つ**（**測ったら「許容差」ではなかった。射程外である**）。
+ *
+ * **レビュー 4 巡目の一覧に `toString(2)` と `new Date(y*1000).getSeconds()` が入っていたが、
+ * 自分で数えたら「単調かつ潰す」を満たさなかった**（y 590〜610 の 0.1 刻み 40,000 対）:
+ *
+ * ```
+ * Number(y.toString(2))          単調性の破れ 0 / 潰れた対 0      ← 潰さない＝許容差ではない
+ * new Date(y*1000).getSeconds()  単調性の破れ 20,200              ← 60 で巡回＝単調でない
+ * ```
+ *
+ * **どちらも「単に間違ったキーで並べている」側**で、
+ * **`String(a.y) < String(b.y)` と同じ扱い＝この検査（#1008「許容差つきになっていないか」）の射程外である。**
+ * **素通りすること自体は B10 と同じだが、理由が違うので分けて記録する。**
+ */
+test("#1062 レビュー4: 射程外——単調でない／潰さないキーは「許容差」ではない", () => {
+  const outOfScope: [string, string][] = [
+    ["toString(2)（潰れた対 0）", `xs.sort((a, b) => Number(b.y.toString(2)) - Number(a.y.toString(2)) || a.x - b.x);`],
+    ["Date.getSeconds（60 で巡回＝単調でない）", `xs.sort((a, b) => new Date(b.y * 1000).getSeconds() - new Date(a.y * 1000).getSeconds() || a.x - b.x);`],
+    ["String 比較（#1052 から射程外。潰れた対 0）", `xs.sort((a, b) => String(a.y) < String(b.y) ? 1 : -1);`],
+  ];
+  for (const [name, code] of outOfScope) {
+    const found = comparatorsIn("oos.ts", code);
+    assert.equal(found.length, 1, `${name}: 比較関数が 1 つ見つかるはず（${found.length}）`);
+    assert.equal(found[0].reason, null, `${name}: 射程外として素通りさせている記録（落とすようにしたらここを消すこと）`);
+  }
+  // **「潰さない」を数字で固定する**（**射程外という判断の根拠そのもの。ここが崩れたら判断を見直す**）
+  const ys: number[] = [];
+  for (let i = 0; i <= 200; i++) ys.push(Number((590 + i * 0.1).toFixed(1)));
+  const collapsed = (k: (y: number) => number): { mono: number; col: number } => {
+    let mono = 0, col = 0;
+    for (const p of ys) for (const q of ys) {
+      if (p === q) continue;
+      const kp = k(p), kq = k(q);
+      if (kp === kq) { col++; continue; }
+      if (Math.sign(kp - kq) !== Math.sign(p - q)) mono++;
+    }
+    return { mono, col };
+  };
+  const bin = collapsed((y) => Number(y.toString(2)));
+  assert.deepEqual(bin, { mono: 0, col: 0 },
+    "toString(2) が潰すようになった（＝許容差になった）なら、射程外という判断を見直すこと");
+  const sec = collapsed((y) => new Date(Math.trunc(y) * 1000).getSeconds());
+  assert.ok(sec.mono > 0,
+    "getSeconds が単調になったなら（巡回しないなら）、射程外という判断を見直すこと");
+  // **比較のため: 塞いだ形と B10 の形は「単調かつ潰す」を満たす**
+  const bucket = collapsed((y) => Math.round(y / 3) * 3);
+  assert.equal(bucket.mono, 0, "塞いだ Math.round(y/3)*3 は単調のはず");
+  assert.ok(bucket.col > 0, "塞いだ Math.round(y/3)*3 は潰すはず（これが「許容差」の定義）");
+  const intl = collapsed((y) => Number(y.toLocaleString("en", { maximumFractionDigits: 0 })));
+  assert.equal(intl.mono, 0, "B10-15 toLocaleString は単調のはず");
+  assert.ok(intl.col > 0, "B10-15 toLocaleString は潰すはず＝許容差である（だから B10 に載せている）");
+});
+
+test("#1052 レビュー: `===` / `!==` の三項は落とす（鏡の形だが全順序ですらない）", () => {
+  for (const code of [
+    `xs.sort((a, b) => a.y === b.y ? 1 : -1);`,
+    `xs.sort((a, b) => a.y !== b.y ? 1 : -1);`,
+    `xs.sort((a, b) => a.y == b.y ? 1 : -1);`,
+  ]) {
+    const found = comparatorsIn("m.ts", code);
+    assert.equal(found.length, 1);
+    assert.ok(found[0].reason, `等値の三項が素通りした: ${code}`);
+  }
+});
+
+test("#1052 射程: 先行する .map() の中の丸めは捕まえられない（既知の穴）", () => {
+  const code = `const rs = xs.map((i) => ({ ...i, y: Math.round(i.y / t) })); rs.sort((a, b) => b.y - a.y || a.x - b.x);`;
+  const found = comparatorsIn("premap.ts", code);
+  assert.equal(found.length, 1, `比較関数が 1 つ見つかるはず（${found.length}）`);
+  assert.equal(found[0].reason, null,
+    "先行する .map() の丸めを捕まえられるようになったら、この検査（既知の穴の記録）を消すこと");
 });
 
 /**
