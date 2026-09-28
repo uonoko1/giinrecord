@@ -58,7 +58,7 @@ gh api -X DELETE repos/uonoko1/giinrecord/branches/main/protection/enforce_admin
 git status --short                      # ← 空であることを目で見る
 git checkout main && git fetch origin main && git reset --hard origin/main
 git filter-branch -f --msg-filter \
-  'grep -viE "^[[:space:]]*Co-[Aa]uthored-[Bb]y:.*<(etl@users|219112946\+[^@]*@users)\.noreply\.github\.com>[[:space:]]*$"' \
+  'grep -viE "^[[:space:]]*Co-[Aa]uthored-[Bb]y:.*<(etl@|(219112946\+)?seiji-kiroku-dev@)users\.noreply\.github\.com>[[:space:]]*$"' \
   1e41501f^..main || { echo "FILTER FAILED — push しないこと"; exit 1; }
 ```
 
@@ -92,6 +92,36 @@ gh api user/120390190   → uonoko1      ← 正しい番号（git config に在
 
 **`a72611ee` が対象なので、範囲 `1e41501f^..main` に含まれる**（`1e41501f` より新しい）。
 **当日に `git log --branches --remotes --pretty=format:%B | grep -c 219112946` で数えること。**
+
+### 消す対象は 2 つではなく 3 つだった（#1101 の担当者が測り直した）
+
+**PO は「誤りは `219112946` の 1 件だけ」と書いたが、誤りだった。**
+**`origin/main` の `Co-authored-by:` を全部列挙して分類すると 3 種類在る**（PO が検算）:
+
+```
+etl@users.noreply.github.com                        → github.com/etl      （#1059）1e41501f
+219112946+seiji-kiroku-dev@users.noreply.github.com → github.com/MLehnus  （#1064）a72611ee
+seiji-kiroku-dev@users.noreply.github.com           → 404（いま実在しない）（#1070）c864f750
+```
+
+**3 つ目を見落としたのは、PO が「数字 ID 付きアドレス」だけを逆引きしたから**——
+**数字 ID の無い形が分類から漏れていた。** **これも範囲の取り方の誤りである。**
+
+**3 つとも範囲 `1e41501f^..main` に含まれることを検算済み。**
+**上の filter は 3 つとも落とす**（実測: 散文・`noreply@anthropic.com`・正しい `120390190+` は残る。
+`bash -n` で構文も確認）。
+
+**当日は「綴りを決め打ちせず、分類して」数えること**:
+
+```bash
+git log origin/main --pretty=format:%B \
+  | grep -oiE '^[[:space:]]*Co-[Aa]uthored-[Bb]y:[^<]*<[^>]+>' \
+  | grep -oE '<[^>]+>' | tr -d '<>' | sort -u
+```
+
+**出てきたアドレスを 1 つずつ `gh api user/<id>` か `gh api users/<name>` で確かめる。**
+**`999+dev@…` のような「架空のつもりの数字」も実在する**——**`id=999` は `github.com/maxthelion`**
+（#1043 のレビューが架空のつもりで書いた綴りが、実在の個人だった。#1101 の担当者が発見）。
 
 ## 3b. `main` だけでは足りない（`1e41501f` は複数の枝の祖先）
 
