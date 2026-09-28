@@ -67,12 +67,40 @@ import { groupAt } from "../src/group-history.ts";
  *
  * **合計 258,671 件（全 316,672 件の 82%）が、固定値を 1 つも書かずに守られる。**
  *
+ * ### **「正当な増加で落ちない」ことを、別の版で確かめた**
+ *
+ * **理屈だけでは足りないので、`--sessions` を広げる前の版（`4034733a`）の `data/` を
+ * 丸ごと取り出して、同じ導出を当てた**（実測 2026-09-28）:
+ *
+ * | 種別 | `4034733a` の合計 | いまの合計 | その版での議員ごとの食い違い |
+ * |---|---|---|---|
+ * | `localVote` | **130,355** | 189,703（**+59,348**） | **0** |
+ * | `stance` | **47,867** | 47,659（**−208**） | **0** |
+ * | `vote` | — | 69,966 | **0** |
+ *
+ * **データが 59,348 件増えても、208 件減っても、導出は両方の版で食い違い 0 だった**——
+ * **つまりこの検査は、どちらの版に当てても緑である。**
+ * **固定値を持っていないので、増えた側と導き元が一緒に動くかぎり赤くならない。**
+ *
  * ## **合計だけでは守れない**（#1053 と同じ理由）
  *
  * **#1053 の実例では「滋賀 3→2・青森 0→1 の入れ替え」が合計 3 のまま素通りした。**
- * **ここでも同じことが起きうる**——**議員 A の 5 件を議員 B に移せば、合計も種別ごとの内訳も
- * 議会ごとの内訳も 1 件も動かない。** **だから突き合わせは議員ごとに行う**
- * （`deepEqual` で `{議員id: 件数}` の表ごと比べる）。**入れ替えは「導いた表」と食い違うので落ちる。**
+ * **ここでも同じことが起きうる**——**だから突き合わせは議員ごとに行う。**
+ *
+ * **机上の話ではない。実際に入れ替えを当てて測った**（実測 2026-09-28）——
+ * **同じ会派の 2 人（`h_00eb6be49c` と `h_06b89f3449`。stance の集合が完全に一致する）の間で
+ * 1 件を移す**（**A 105 → 104、B 105 → 106**）。**このとき:**
+ *
+ * | 見ている粒度 | 変異の前 | 変異の後 | 気づくか |
+ * |---|---|---|---|
+ * | timeline 合計 | 316,672 | **316,672** | **気づかない** |
+ * | `stance` の合計 | 47,659 | **47,659** | **気づかない** |
+ * | 議会ごと（`diet-shugiin` の `stance`） | 47,659 | **47,659** | **気づかない** |
+ * | **議員ごと** | — | — | **落ちる** |
+ *
+ * **合計・種別ごと・議会ごとは 1 件も動かない**（上の 3 行は変異を当てた状態で数え直した実測値）。
+ * **議員ごとに比べたときだけ落ち、しかも両側を名指しする**——
+ * `{ h_06b89f3449: { timeline: 106, derived: 105 }, h_00eb6be49c: { timeline: 104, derived: 105 } }`。
  *
  * ## 導けない種別（`committeeRole` / `attendance`）
  *
@@ -103,6 +131,10 @@ const DATA = fileURLToPath(new URL("../../../data/", import.meta.url));
  */
 const UNDERIVABLE = {
   committeeRoleByAssembly: { "diet-sangiin": 5322, "diet-shugiin": 2020 } as Record<string, number>,
+  // **正直に書いておく: 合計の `assert` を丸ごと削る変異は落ちなかった**（**実測 2026-09-28。等価変異**——
+  // **上の内訳の `deepEqual` が既に両方の数を固定しているから**。#1053 の `resultAbsent` と同じ）。
+  // **残っている仕事は「この 2 つのキーが食い違ったら落ちる」ことだけで、そこは効いている**
+  // （**実測 2026-09-28: ここを 7343 にすると `actual: 7342 / expected: 7343` で落ちた**）。
   committeeRole: 7342,
   // **参院の委員会の発議者だけに付く**（`dataset.ts`: `attendance row is allowed only for house=sangiin`）
   attendanceByAssembly: { "diet-sangiin": 24 } as Record<string, number>,
@@ -171,6 +203,30 @@ let billsScan: Promise<Bill[]> | undefined;
 const readBills = () => (billsScan ??= readBillsOnce());
 
 /**
+ * **議員ごとの表を突き合わせて、食い違った議員だけを名指しする。**
+ *
+ * **`assert.deepEqual` を表そのものに当てると、落ちたときに 456 行が画面に出る**
+ * （**実測 2026-09-28: 1 人の 105 件を消しただけで、`actual` と `expected` に
+ * 456 人ぶんの数が並び、どこが違うのか読めなかった**）。
+ * **狭い診断から出す**（#1053 の `resultAbsentByAssembly` と同じ考え方）——
+ * **食い違いだけを `{議員id: {timeline: n, 導出: m}}` の形にして比べる。**
+ * **一致していれば空の表どうしになるので、落ちない。**
+ */
+const assertSameByMember = (
+  actual: Record<string, number>,
+  derived: Record<string, number>,
+  what: string,
+) => {
+  const diff: Record<string, { timeline: number; derived: number }> = {};
+  for (const id of new Set([...Object.keys(actual), ...Object.keys(derived)])) {
+    const a = actual[id] ?? 0;
+    const d = derived[id] ?? 0;
+    if (a !== d) diff[id] = { timeline: a, derived: d };
+  }
+  assert.deepEqual(diff, {}, `${what}（食い違った議員だけを出す。timeline = member ファイルの行数、derived = 導き元から数えた件数）`);
+};
+
+/**
  * **導出 1: 国会の採決**（`vote`）。
  *
  * **`rollcalls 配下の json` の `votes[]` のうち `memberId` が付いているセルが、
@@ -190,7 +246,7 @@ test("#1061 vote: 議員ごとの件数が rollcalls/ の memberId 付きセル�
   // **母数を先に出す**（#757）。**0 件を見て緑になっていないことを、数字で示す**
   assert.ok(cells > 0, "rollcalls/ のセルが 0 件。走査先が空になっている");
   assert.ok(Object.keys(derived).length > 0, "memberId 付きのセルが 0 件。突き合わせる相手がいない");
-  assert.deepEqual(byKind.vote ?? {}, derived, "timeline の vote 行と rollcalls/ の memberId 付きセルが議員ごとに食い違っている");
+  assertSameByMember(byKind.vote ?? {}, derived, "timeline の vote 行と rollcalls/ の memberId 付きセルが議員ごとに食い違っている");
 });
 
 /**
@@ -215,7 +271,7 @@ test("#1061 localVote: 議員ごとの件数が assemblies/*/rollcalls/ の memb
   }
   assert.ok(cells > 0, "地方議会の採決セルが 0 件。走査先が空になっている");
   assert.ok(Object.keys(derived).length > 0, "memberId 付きのセルが 0 件。突き合わせる相手がいない");
-  assert.deepEqual(byKind.localVote ?? {}, derived, "timeline の localVote 行と採決ファイルの memberId 付きセルが議員ごとに食い違っている");
+  assertSameByMember(byKind.localVote ?? {}, derived, "timeline の localVote 行と採決ファイルの memberId 付きセルが議員ごとに食い違っている");
 });
 
 /**
@@ -259,7 +315,7 @@ test("#1061 stance: 議員ごとの件数が bills/ の shugiinGroupStance × te
   }
   assert.ok(withStance > 0, "shugiinGroupStance を持つ議案が 0 件。導出の入力が空になっている");
   assert.ok(shugiin.length > 0, "衆院の議員が 0 人。導出の入力が空になっている");
-  assert.deepEqual(byKind.stance ?? {}, derived, "timeline の stance 行と、bills/ の会派賛否 × terms から導ける件数が議員ごとに食い違っている（会派が動いたなら data/ を作り直すこと。#1061）");
+  assertSameByMember(byKind.stance ?? {}, derived, "timeline の stance 行と、bills/ の会派賛否 × terms から導ける件数が議員ごとに食い違っている（会派が動いたなら data/ を作り直すこと。#1061）");
 });
 
 /**
@@ -282,7 +338,7 @@ test("#1061 bill（衆院）: 議員ごとの件数が bills/ の submitters/sup
   const actual: Record<string, number> = {};
   for (const [id, n] of Object.entries(byKind.bill ?? {})) if (details.get(id)?.house === "shugiin") actual[id] = n;
   assert.ok(Object.keys(derived).length > 0, "submitters/supporters が 0 件。導出の入力が空になっている");
-  assert.deepEqual(actual, derived, "timeline の bill 行（衆院）と bills/ の submitters/supporters が議員ごとに食い違っている");
+  assertSameByMember(actual, derived, "timeline の bill 行（衆院）と bills/ の submitters/supporters が議員ごとに食い違っている");
 });
 
 /**
