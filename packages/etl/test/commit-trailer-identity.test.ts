@@ -139,7 +139,8 @@ import { dirname, resolve } from "node:path";
  * `id=1239515` で実在するのに、Contributors に 1 度も出ない**
  * （`stats/contributors` = `github-actions[bot]` 59 / `claude` 650 / `uonoko1` 656。
  * `noreply` は出ない。`main` の trailer 1708 件はすべて `claude` に行っている）。
- * **`sakai.personal@gmail.com` → `uonoko1` も同じ道である**（実測 `f15aad8d`）。
+ * **利用者本人の個人アドレス（`@gmail.com`）→ `uonoko1` も同じ道である**（実測 `f15aad8d`）。
+ * **アドレスの逐語は書かない**（#1043。OSS なので grep でもスクレイパでも永久に拾われる）。
  *
  * **(B) `users.noreply.github.com` のローカル部**: このドメインでだけ、GitHub は
  * **ローカル部をユーザー名（または `<id>+<name>` の `<id>`）として読む。**
@@ -180,7 +181,7 @@ import { dirname, resolve } from "node:path";
  * ```
  * trailer のアドレス          同名の GitHub ユーザー       実在           実際の帰属先
  * noreply@anthropic.com      github.com/noreply        id=1239515      claude   (650)
- * sakai.personal@gmail.com   github.com/sakai          id=15643        uonoko1  (656)
+ * （利用者本人の個人 gmail）    github.com/sakai          id=15643        uonoko1  (656)
  * etl@users.noreply.github…  github.com/etl            id=1859882      etl      ★ 誤帰属
  * ```
  * **`origin/main`（`2f136cd1`）の身元 trailer に出るドメインは 3 つだけである**
@@ -1760,7 +1761,7 @@ test("許容集合の既定は空（第 2 引数を省いても誤帰属は赤�
  *
  * **つまりローカル部がユーザー名として読まれるのは `users.noreply.github.com` の場合だけで、
  * それ以外のドメインは「そのアドレスを verified email として持つアカウント」に解決される**
- * （`sakai.personal@gmail.com` → `uonoko1` も同じ道。実測 `f15aad8d`）。
+ * （利用者本人の個人アドレス → `uonoko1` も同じ道。実測 `f15aad8d`）。
  */
 test("規約が要求する trailer は緑（#1075 が全 PR を赤にした偽陽性そのもの）", () => {
   // **#1092 / #1084 のコミットと同じ形**（規約が全コミットに要求する 2 行）。
@@ -1787,7 +1788,10 @@ test("規約が要求する trailer は緑（#1075 が全 PR を赤にした偽�
   // ここで落ちる。**
   for (const e of [
     "noreply@anthropic.com", // 規約が要求する trailer。実測で github.com/claude
-    "sakai.personal@gmail.com", // 利用者本人。実測で github.com/uonoko1（f15aad8d）
+    // **利用者本人の個人アドレスは逐語で書かない**（#1043）。
+    // 実測では `<利用者本人の gmail>` → github.com/uonoko1（f15aad8d）。
+    // ここでは同じ「ローカル部と同名のユーザーが実在するのに帰属しない」形を架空で置く。
+    "person@example.com",
     "bot@claude.ai",
     "x@example.com",
   ]) {
@@ -1841,7 +1845,7 @@ test("誤帰属の判定は users.noreply.github.com 宛てだけに掛かる（
     "41898282+github-actions[bot]@users.noreply.github.com",
     // **別ドメイン**——**(A) の「登録済みアドレス」の道。実測で正しく帰属する 2 形**
     "noreply@anthropic.com",
-    "sakai.personal@gmail.com",
+    "person@example.com",
     // **別ドメイン（一般）**
     "bot@claude.ai",
     "x@example.com",
