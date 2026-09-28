@@ -44,7 +44,10 @@ test -s ~/giinrecord-branch-backup-20260928/protection-before.json && echo "保�
 gh api -X DELETE repos/uonoko1/giinrecord/branches/main/protection/enforce_admins
 ```
 
-**`allow_force_pushes` は触らない。** **`enforce_admins` を外すだけで force push は通る**
+**`enforce_admins` を外すだけでは force push は通らない**（**2026-09-28 に実地で確かめた。
+下の「実地でぶつかった壁」を見よ**）。**`allow_force_pushes` も一時的に ON にする必要が在る。**
+
+~~**`allow_force_pushes` は触らない。** **`enforce_admins` を外すだけで force push は通る**~~
 （`deploy/monitor/branch-protection.sh:20` と `docs/ops/deploy.md:57` の
 `Bypassed rule violations` がその記録）。
 
@@ -234,13 +237,72 @@ curl -s https://github.com/uonoko1/giinrecord/_sidebar \
   （GitHub 側のサーバサイド事前計算キャッシュ）。**消えなければ、どの ref にも存在しないのに
   Contributors に出続けるという実測を持って GitHub Support に出す。**
 
+## 実地でぶつかった壁（2026-09-28、本番で流した記録）
+
+**この手順書は 6 回レビューを受けたが、実地で 2 つ壁にぶつかった。**
+**どちらも「読んで分かる」形ではなく「流して初めて分かる」形だった。**
+
+### 壁 1: `enforce_admins` を外すだけでは push が拒否される
+
+```
+enforce_admins=false / allow_force_pushes=false で push
+  → ! [remote rejected]  main -> main (protected branch hook declined)
+```
+
+**手順書は「`allow_force_pushes` は触らない。`enforce_admins` を外すだけで通る」と書いていたが、誤り。**
+**#1084 のレビューが「必須 3」として警告していたとおりだった**——
+**根拠にしていた `Bypassed rule violations` は必須チェック迂回の記録で、force push の記録ではない。**
+
+### 壁 2: `allow_force_pushes` だけ ON にしても通らない
+
+```
+enforce_admins=true / allow_force_pushes=true で push
+  → 同じく rejected
+```
+
+**`enforce_admins=true` だと、force push の許可が管理者にも適用されない。**
+**両方を同時に緩める必要が在る。**
+
+```
+enforce_admins=false / allow_force_pushes=true
+  → + 4696f048...1460b189 main -> main (forced update)   ← 通った
+```
+
+### だから手順はこうなる
+
+**`enforce_admins` の DELETE に加えて、`allow_force_pushes` を ON にする。**
+**ただし `PUT .../protection` は全置換で必須チェックが消えるので、
+API では触らず Web UI（Settings → Branches → main の Edit）で操作するほうが安全である。**
+
+```
+Settings → Branches → main → Edit
+  □ Do not allow bypassing the above settings   ← OFF（= enforce_admins=false）
+  ☑ Allow force pushes                          ← ON
+```
+
+**終わったら両方を元に戻す**（`enforce_admins` は `gh api --method POST .../enforce_admins` で戻せる。
+**`allow_force_pushes` は Web UI で戻す**）。
+
+**保護が外れていた時間: 約 3 分**（2 回に分けて、その都度 `branch-protection.sh` で復元を確認した）。
+
+### 流した結果（実測）
+
+```
+誤帰属 3 種   0 件   （etl / MLehnus / seiji-kiroku-dev@）
+219112946     0 件
+散文 etl@     7 件   （#1043 の説明文は残った = 消し過ぎていない）
+anthropic     1708 件（不変）
+コミット数    709   （不変）
+tree          完全同一（コードは 1 バイトも変わっていない）
+```
+
 ## 初版の誤り（同じ轍を踏まないために残す）
 
 | # | 誤り | なぜ危険か |
 |---|---|---|
 | A | `-X PUT .../enforce_admins` | **PUT は存在しない**（GET/POST/DELETE のみ）。**404 で落ちても、自前 grep は `allow_force_pushes` しか見ないので緑に見える。** **私は当初「翌朝の cron（06:23 JST）が気づくので最長 24 時間」と書いたが、それも誤りだった**——**その cron は 23 回連続 failure で死んでいる（実測 2026-09-28。私は 6 回、前回のレビューは 8 回と書いたが、どちらも少なく見積もっていた）**（`BRANCH_PROTECTION_TOKEN` が無く HTTP 403 → exit 2。`branch-protection.sh` は exit 2 で return するので判定行に届かない。**#547 が開いたまま**）。**つまり検出手段はゼロで、期間は無期限だった。** |
 | B | `-X PATCH .../protection` | **PATCH は存在しない**（GET/PUT/DELETE のみ）。**`PUT` に直すと全置換で必須チェック 4 件が消える。** |
-| C | `allow_force_pushes` を触っていた | **触る必要が無い**（`enforce_admins` の DELETE だけで通る）。**触ったせいで B の危険を自分で作っていた。** |
+| C | ~~`allow_force_pushes` を触っていた~~ | **この「誤り」の指摘自体が誤りだった**（2026-09-28 の実地で判明）。**`enforce_admins` の DELETE だけでは push は拒否される。** 下の「実地でぶつかった壁」を見よ |
 | D | `update-branch` で rebase するつもりだった | **あれはマージなので、消した trailer が main に戻る。** |
 | E | `reset --hard` が無かった | **古い main を push してマージ済みの PR が消える。** |
 | F | 「docs の SHA 参照 0 ファイル」 | **誤り。3 ファイル 9 行在った。** |
