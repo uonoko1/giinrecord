@@ -1,8 +1,9 @@
 import { parse, type HTMLElement } from "node-html-parser";
 import type {
-  Bill, BillKind, BillReferralEntry, BillReferredCommittee, BillSummary, ShugiinGroupStance,
+  Bill, BillKind, BillReferralEntry, BillReferredCommittee, BillSummary, House, ShugiinGroupStance,
 } from "@seiji-kiroku/shared";
 import { fetchText } from "../fetch.ts";
+import { isKnownReferralCommittee } from "./bill-referral-committees.ts";
 import { warekiToIso } from "./sangiin-members.ts";
 
 /**
@@ -118,10 +119,10 @@ export function parseShugiinBill(html: string, sourceUrl: string, list?: { statu
   const result = compact({ shugiin: shugiin.text, sangiin: sangiin.text, promulgated: promulgation.date, lawNumber: promulgation.text });
   const stance = groupStance(cell("衆議院審議時会派態度"), cell("衆議院審議時賛成会派"), cell("衆議院審議時反対会派"));
   const referral = compactObject({
-    shugiinPreliminary: referralEntry(cell("衆議院予備付託年月日／衆議院予備付託委員会")),
-    shugiin: referralEntry(cell("衆議院付託年月日／衆議院付託委員会")),
-    sangiinPreliminary: referralEntry(cell("参議院予備付託年月日／参議院予備付託委員会")),
-    sangiin: referralEntry(cell("参議院付託年月日／参議院付託委員会")),
+    shugiinPreliminary: referralEntry("shugiin", cell("衆議院予備付託年月日／衆議院予備付託委員会")),
+    shugiin: referralEntry("shugiin", cell("衆議院付託年月日／衆議院付託委員会")),
+    sangiinPreliminary: referralEntry("sangiin", cell("参議院予備付託年月日／参議院予備付託委員会")),
+    sangiin: referralEntry("sangiin", cell("参議院付託年月日／参議院付託委員会")),
   });
 
   return {
@@ -146,15 +147,19 @@ export function parseShugiinBill(html: string, sourceUrl: string, list?: { statu
 }
 
 /**
- * 付託先の位置に書かれるが **付託先ではない** 文言（#1133）。
+ * 付託先の位置に書かれるが、**委員会でないと分かっている**文言（#1133）。
  *
- * **ここに載せた語だけを付託先から外す。** 「委員会」で終わらない語を機械的に外すと、
- * 一次資料が実際に使っている「決算行政監視」「政治改革に関する特別」「憲法審査会」まで落ちる
- * （実測: ページは常任委員会に「委員会」を付けずに書く）。
+ * **これは「委員会かどうか」の判定ではない**——判定は許可リスト
+ * （`bill-referral-committees.ts`）が行い、**知らない値はすべて止まる。**
+ * **ここが決めるのは、止めた値を `noteText` と `unknownText` のどちらに置くかだけ**である:
+ *   `noteText`    委員会でないと**数えて分かっている**値（下の 2 語）
+ *   `unknownText` **まだ数えていない**値（新しい表現かもしれないし、切り出しの誤りかもしれない）
  *
- * **語を増やすときは実データを数えてからにする。** 2026-09-30 に 1,941 件の経過ページ
- * （衆・参・予備・本の 4 欄 = 7,764 欄）を全数取得して数えた結果、付託先の位置に現れた値は
- * **41 種類**で、うち委員会でないのは次の 2 つだけだった（`docs/research/bill-referral.md`）:
+ * **この 2 つを分ける理由**: 「付託を省略した」は**一次資料が書いている事実**で、
+ * 「知らない値が出た」は**私たちの表が追いついていない状態**である。混ぜると、
+ * **表を直すべき箇所が「省略」に埋もれて見えなくなる。**
+ *
+ * 2026-09-30 の全数調査（`docs/research/bill-referral.md`）で数えた値:
  *   審査省略      衆 149 件 / 参 6 件
  *   審査省略要求   衆 2 件（204-決議-2 と 201-決議-3。どちらも解任・不信任決議案）
  *
@@ -169,14 +174,27 @@ const NON_COMMITTEE_REFERRAL_TEXTS: ReadonlySet<string> = new Set(["審査省略
  * 「／」だけ（空欄）→ undefined（**空文字や「不明」を作らない**）。
  *
  * 付託先の文字列は **原文のまま**。「委員会」を足さない・言い換えない・院どうしで揃えない。
+ *
+ * ## 知らない値は `committee` にしない（#1133。利用者の判断 2026-09-30）
+ *
+ * **`committee` に入るのは、その回次・その院で実際に記録されていたと数えた名前だけ**
+ * （`bill-referral-committees.ts` の許可リスト）。
+ * **それ以外は `unknownText` に原文のまま入れる**——**黙って捨てない**（記録が在ったことは事実なので）
+ * **が、委員会名としては出さない**（`toBillSummary` が拾わず、`validateDataset` が違反にする）。
+ *
+ * **なぜ denylist をやめたか**: 以前は「委員会でない値」を列挙して除外していたが、
+ * **列挙に無い値は委員会名として素通りする。実際に `審査省略要求` が素通りしていた。**
  */
-function referralEntry(text: string): BillReferralEntry | undefined {
+function referralEntry(house: House, text: string): BillReferralEntry | undefined {
   const { date, text: right } = splitDateResult(text);
   if (right === undefined) return date === undefined ? undefined : { date };
-  return compactObject({
-    date,
-    ...(NON_COMMITTEE_REFERRAL_TEXTS.has(right) ? { noteText: right } : { committee: right }),
-  });
+  // 許可リストは**付託日**で引く（議案の `session` は提出回次で、付託された時期とは限らない）。
+  // **日付が読めない欄は照合できないので通さない**（実測では委員会名のある欄は必ず日付を持つ）。
+  if (date !== undefined && isKnownReferralCommittee(date, house, right)) return compactObject({ date, committee: right });
+  // 数えた名前でない = 委員会名として出せない。原文は unknownText に残す（捨てない）。
+  // `審査省略` / `審査省略要求` は「委員会でないと分かっている値」なので noteText に分ける。
+  const key = NON_COMMITTEE_REFERRAL_TEXTS.has(right) ? "noteText" : "unknownText";
+  return compactObject({ date, [key]: right }) as BillReferralEntry;
 }
 
 /** 値が undefined のキーを落とす。全部 undefined なら undefined（欄ごと持たない）。 */

@@ -229,20 +229,20 @@ describe("付託: data/ に書く前の検査（#1133）", () => {
   });
 
   test("「審査省略」を committee として書いたら違反（付託先ではない）", () => {
-    const bill = b({ shugiin: { committee: "審査省略" } });
-    assert.match(check(bill, s([{ house: "shugiin", committee: "審査省略" }])).join("\n"), /must be a committee recorded in the source/);
+    const bill = b({ shugiin: { date: "2026-03-05", committee: "審査省略" } });
+    assert.match(check(bill, s([{ house: "shugiin", committee: "審査省略" }])).join("\n"), /is not recorded in the source/);
   });
 
   test("空文字・「不明」「なし」を committee として書いたら違反", () => {
     for (const bad of ["", "不明", "なし", "-", "ー", "－", "審査省略要求"]) {
-      const bill = b({ shugiin: { committee: bad } });
-      assert.match(check(bill, s([{ house: "shugiin", committee: bad }])).join("\n"), /must be a committee recorded in the source/, bad);
+      const bill = b({ shugiin: { date: "2026-03-05", committee: bad } });
+      assert.match(check(bill, s([{ house: "shugiin", committee: bad }])).join("\n"), /is not recorded in the source/, bad);
     }
   });
 
   test("committee と noteText の両方を持っていたら違反（一次資料は片方しか書かない）", () => {
-    const bill = b({ shugiin: { committee: "国土交通", noteText: "審査省略" } });
-    assert.match(check(bill, s([{ house: "shugiin", committee: "国土交通" }])).join("\n"), /has both committee and noteText/);
+    const bill = b({ shugiin: { date: "2026-03-05", committee: "国土交通", noteText: "審査省略" } });
+    assert.match(check(bill, s([{ house: "shugiin", committee: "国土交通" }])).join("\n"), /has 2 of committee\/noteText\/unknownText/);
   });
 
   test("中身の無い付託の欄を持っていたら違反（欄ごと落とすのが正）", () => {

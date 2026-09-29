@@ -1,7 +1,7 @@
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import type { Dirent } from "node:fs";
 import { join } from "node:path";
-import type { Assembly, Bill, BillReferralEntry, BillReferredCommittee, BillSessionCount, BillSummary, DatasetMeta, MemberAssemblyCount, MemberDetail, MemberSpeeches, MemberSummary, RollCall, RollCallSummary } from "@seiji-kiroku/shared";
+import type { Assembly, Bill, BillReferralEntry, BillReferredCommittee, BillSessionCount, BillSummary, DatasetMeta, House, MemberAssemblyCount, MemberDetail, MemberSpeeches, MemberSummary, RollCall, RollCallSummary } from "@seiji-kiroku/shared";
 import type { Aggregated } from "./aggregate.ts";
 import { DIET_ASSEMBLY_IDS } from "./assemblies.ts";
 import { isDietMemberRow, kanaNameRatioExceeds, membersByAssembly, mergeAssemblies, mergeMemberIndex, readMemberIndex, validateLocalAssemblies } from "./local-assemblies.ts";
@@ -10,6 +10,7 @@ import { stableJson } from "./json.ts";
 import type { GroupMismatch } from "./match-votes.ts";
 import { readUnmatched, writeUnmatched, type UnmatchedRow } from "./unmatched.ts";
 import { toBillSummary } from "./sources/shugiin-bills.ts";
+import { isKnownReferralCommittee } from "./sources/bill-referral-committees.ts";
 import type { UnmatchedBill } from "./sources/sangiin-bills.ts";
 import { memberListUrl, type UnmatchedGroup } from "./sources/sangiin-members.ts";
 import { memberListUrl as shugiinMemberListUrl } from "./sources/shugiin-members.ts";
@@ -162,31 +163,53 @@ const BILL_ID = /^(\d+)-[^-]+-[^-]+$/;
  * 付託先でない文言を付託先として出すと、利用者からは見分けがつかない虚偽になる
  * （「審査省略委員会に付託された」という事実は存在しない）。
  */
-const NOT_A_COMMITTEE = new Set(["審査省略", "審査省略要求", "", "不明", "なし", "-", "ー", "－"]);
-
 /**
- * 議案の付託（#1133）の検査。**`bills/index.json` が原本（`bills/{session}/{id}.json`）と食い違っていないこと**と、
- * **付託先でない文言が付託先として出ていないこと**を見る。
+ * 議案の付託（#1133）の検査。**`data/` に書かれる前に、推測が混ざっていないかを見る。**
  *
- * 一覧は本付託だけを 衆 → 参 の順に持つ（予備付託を混ぜない）。ここで導き直して突き合わせるので、
- * 一覧だけを書き換えても、原本だけを書き換えても落ちる。
+ * 見るのは 3 つ:
+ *   1. **`committee` が、その回次・その院で数えた名前か**（`isKnownReferralCommittee`）。
+ *      **知らない値は違反**——CI が赤くなる。**これが強制力の本体**である
+ *      （利用者の判断 2026-09-30「推測で入れたくないので強制力を持たせて」）。
+ *   2. **1 つの欄が矛盾した値を持っていないか**（`committee` と `noteText` の同居など）。
+ *   3. **`bills/index.json` が原本（`bills/{session}/{id}.json`）と食い違っていないか**。
+ *      一覧は本付託だけを 衆 → 参 の順に持つ。**ここで原本から導き直して突き合わせる**ので、
+ *      **一覧だけを書き換えても、原本だけを書き換えても落ちる。**
+ *
+ * **パーサ（`referralEntry`）も同じ許可リストで止めている**ので、検査はふつう発火しない。
+ * **二重になっているのは意図である**——パーサを迂回して `data/` に書く経路
+ * （手で編集した JSON・別の source・将来の参院側 ETL）でも止めるため。
  */
 export function billReferralViolations(rel: string, indexRel: string, b: Bill, s: BillSummary): string[] {
   const v: string[] = [];
-  const entries: [string, BillReferralEntry | undefined][] = [
-    ["shugiinPreliminary", b.referral?.shugiinPreliminary], ["shugiin", b.referral?.shugiin],
-    ["sangiinPreliminary", b.referral?.sangiinPreliminary], ["sangiin", b.referral?.sangiin],
+  const entries: [string, House, BillReferralEntry | undefined][] = [
+    ["shugiinPreliminary", "shugiin", b.referral?.shugiinPreliminary],
+    ["shugiin", "shugiin", b.referral?.shugiin],
+    ["sangiinPreliminary", "sangiin", b.referral?.sangiinPreliminary],
+    ["sangiin", "sangiin", b.referral?.sangiin],
   ];
-  for (const [key, e] of entries) {
+  for (const [key, house, e] of entries) {
     if (e === undefined) continue;
-    if (e.committee === undefined && e.noteText === undefined && e.date === undefined) {
+    if (e.committee === undefined && e.noteText === undefined && e.unknownText === undefined && e.date === undefined) {
       v.push(`${rel}: referral.${key} is present but empty (omit the field instead)`);
     }
-    if (e.committee !== undefined && NOT_A_COMMITTEE.has(e.committee)) {
-      v.push(`${rel}: referral.${key}.committee must be a committee recorded in the source, got ${JSON.stringify(e.committee)}`);
+    // 許可リスト（#1133）。**数えた時期・数えた院の名前でなければ、それが何であれ止める**。
+    // 引くのは**付託日**（議案の session は提出回次で、付託された時期とは限らない）。
+    // **日付の無い committee も止める**（照合できない値を通さない）。
+    if (e.committee !== undefined && !(e.date !== undefined && isKnownReferralCommittee(e.date, house, e.committee))) {
+      v.push(`${rel}: referral.${key}.committee ${JSON.stringify(e.committee)} is not recorded in the source on ${e.date ?? "(no date)"} for ${house} (bill-referral-committees.ts). Count the period before adding it.`);
     }
-    if (e.committee !== undefined && e.noteText !== undefined) {
-      v.push(`${rel}: referral.${key} has both committee and noteText (the source records one value)`);
+    const kinds = [e.committee, e.noteText, e.unknownText].filter((x) => x !== undefined).length;
+    if (kinds > 1) {
+      v.push(`${rel}: referral.${key} has ${kinds} of committee/noteText/unknownText (the source records one value)`);
+    }
+  }
+  // 一覧の行も単独で検査する。**原本を経由せず一覧にだけ差し込まれた値**もここで止まる
+  // （下の突き合わせだけだと "does not match" としか言えず、何が悪いのか分からない）
+  for (const [i, rc] of (s.referredCommittees ?? []).entries()) {
+    // 一覧には日付が無いので、原本の同じ院の本付託の日付で引く（無ければ照合できない＝止める）
+    const date = rc.house === "shugiin" ? b.referral?.shugiin?.date : b.referral?.sangiin?.date;
+    if (date === undefined || !isKnownReferralCommittee(date, rc.house, rc.committee)) {
+      v.push(`${indexRel}: referredCommittees[${i}] ${JSON.stringify(rc.committee)} is not recorded in the source on ${date ?? "(no date in " + rel + ")"} for ${rc.house} (bill-referral-committees.ts)`);
     }
   }
   // 一覧の付託先は原本から機械的に導ける。導き直して一致しなければ、どちらかが書き換えられている
