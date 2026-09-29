@@ -63,6 +63,9 @@ import type { House } from "@seiji-kiroku/shared";
  * 即座に落ちた**——**参議院 `労働・社会政策`**（`keika/5516.htm`。生ページで確認）。
  * **2001 年の中央省庁再編の前は委員会の構成が違う。**
  *
+ * **現在の表には上限を置いていない**（新しい委員会ができれば**名前**で止まるので、
+ * 日付の上限は要らない。置くと日次 ETL のたびに窓を伸ばす手作業になる）。
+ *
  * **`docs/research/backfill-142-199.md` のとおり、第142〜199回は「取得できる」と確認済みの範囲で
  * あって、対象外ではない。** そこで**第142回 241 件も全数取得して表に入れた**——
  * **衆 25 / 参 18 種類が出て、その大半は現在の表に無い名前だった**
@@ -113,7 +116,7 @@ import type { House } from "@seiji-kiroku/shared";
  */
 interface ReferralEra {
   /**
-   * **この表が根拠を持つ付託日の範囲**（両端を含む。ISO）。
+   * **この表が根拠を持つ付託日の範囲**（両端を含む。ISO）。`to` を省くと上限なし。
    *
    * **回次ではなく日付で切る。** 理由は 2 つ:
    *   1. **議案の `session` は「提出回次」であって「付託された回次」ではない。**
@@ -126,7 +129,8 @@ interface ReferralEra {
    * `審査省略` 系か空欄だけで、どちらも委員会名を出さない）。なので日付で引けないことは起きない。
    */
   readonly from: string;
-  readonly to: string;
+  /** **省略 = 上限なし**（いま有効な委員会の表。下の `ERA_MODERN` の注を読むこと）。 */
+  readonly to?: string;
   /** この範囲を数えた出どころ（何を全数取得したか）。 */
   readonly countedFrom: string;
   readonly shugiin: readonly string[];
@@ -142,8 +146,16 @@ interface ReferralEra {
  */
 const ERA_MODERN: ReferralEra = {
   from: "2019-10-04",
-  to: "2026-07-23",
-  countedFrom: "data/bills/index.json の 1,941 件（第195〜221回）",
+  // **上限を置かない。** 数えた最後の付託日は 2026-07-23 だが、**それは「最後に数えた日」であって
+  // 「委員会が変わった日」ではない。** 上限を置くと、**次の ETL で 7/24 以降に付託された議案が
+  // 正しい名前でも全部止まる**（日次で回すたびに窓を伸ばす手作業が要る＝#1114 で何度も記録した
+  // 「手順であって仕組みではない」形になる）。
+  //
+  // **上限が無くても allowlist は効いている**: 止めるのは**名前**であって日付ではない。
+  // **次に省庁再編が起きて新しい委員会ができれば、その名前が表に無いので止まる**
+  // ——そのとき初めて数え直して、新しい時期の表を足せばよい。
+  // **下限は要る**（2019-10-04 より前は別の委員会だったことを実測している）。
+  countedFrom: "data/bills/index.json の 1,941 件（第195〜221回。数えた付託日は 2019-10-04〜2026-07-23）",
   shugiin: [
     "決算行政監視", // 440
     "総務", // 146
@@ -271,7 +283,7 @@ const ERAS: readonly ReferralEra[] = [ERA_MODERN, ERA_1998];
  * ISO の日付は辞書順が時系列順なので、文字列のまま比較してよい。
  */
 function eraOf(date: string): ReferralEra | undefined {
-  return ERAS.find((e) => e.from <= date && date <= e.to);
+  return ERAS.find((e) => e.from <= date && (e.to === undefined || date <= e.to));
 }
 
 
@@ -286,8 +298,9 @@ export function referralAllowlistCoversDate(date: string): boolean {
 }
 
 /** 数えた期間（テストが母数を固定するため。古い順）。 */
-export function countedReferralPeriods(): readonly { from: string; to: string; countedFrom: string }[] {
-  return [...ERAS].sort((a, b) => (a.from < b.from ? -1 : 1)).map((e) => ({ from: e.from, to: e.to, countedFrom: e.countedFrom }));
+export function countedReferralPeriods(): readonly { from: string; to?: string; countedFrom: string }[] {
+  return [...ERAS].sort((a, b) => (a.from < b.from ? -1 : 1))
+    .map((e) => ({ from: e.from, ...(e.to !== undefined ? { to: e.to } : {}), countedFrom: e.countedFrom }));
 }
 
 /**
@@ -312,7 +325,7 @@ export function allReferralCommittees(): readonly string[] {
  * **「私たちがまだ数えていない値」**であり、委員会名として出すのは推測になる。
  *
  * **偽になる 4 つの場合**（どれも「止める」に倒す）:
- *   1. **数えていない時期**（1999〜2019年・2026年8月以降）——表に根拠が無い
+ *   1. **数えていない時期**（1998-06-19〜2019-10-03 の約 21 年）——表に根拠が無い
  *   2. **その時期には無かった名前**（2026 年の付託に `大蔵`）——別の時代の名前
  *   3. **その院の表に無い名前**（衆の欄に `外交防衛`）——院を取り違えている
  *   4. **どの表にも無い名前**——新しい表現か、切り出しを誤っている

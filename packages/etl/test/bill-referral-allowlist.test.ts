@@ -56,7 +56,7 @@ describe("許可リストの母数（#1133）", () => {
   });
 
   test("数えていない時期の許可リストは空（何も通さない）", () => {
-    for (const date of ["1999-01-01", "2005-06-01", "2019-10-03", "2026-07-24"]) {
+    for (const date of ["1999-01-01", "2005-06-01", "2019-10-03", "1998-06-19"]) {
       assert.deepEqual(referralCommitteeAllowlist(date, "shugiin"), [], date);
       assert.deepEqual(referralCommitteeAllowlist(date, "sangiin"), [], date);
     }
@@ -240,17 +240,33 @@ describe("許可リスト: 実データは違反ゼロ（偽陽性が無いこ�
 });
 
 describe("許可リスト: 数えていない時期は止まる（#1133）", () => {
-  test("数えた期間は 2 つ（1997-06-17〜1998-06-18 と 2019-10-04〜2026-07-23）", () => {
+  test("数えた期間は 2 つ。1998年は閉じた窓、現在の表は上限なし", () => {
     const periods = countedReferralPeriods();
     assert.equal(periods.length, 2);
-    assert.deepEqual(periods.map((p) => [p.from, p.to]), [
-      ["1997-06-17", "1998-06-18"],
-      ["2019-10-04", "2026-07-23"],
-    ]);
+    assert.deepEqual(periods[0], { from: "1997-06-17", to: "1998-06-18", countedFrom: periods[0]!.countedFrom });
+    assert.equal(periods[1]?.from, "2019-10-04");
+    // **上限を置かない**（置くと日次 ETL のたびに窓を伸ばす手作業になる。止めるのは名前であって日付ではない）
+    assert.equal(periods[1]?.to, undefined);
+  });
+
+  test("数えた最後の付託日（2026-07-23）より後も通る——上限を置いていない", () => {
+    // 上限を置くと「次の国会で付託された議案が、正しい名前でも全部止まる」ことになる
+    for (const date of ["2026-07-24", "2026-12-31", "2030-01-01"]) {
+      assert.equal(referralAllowlistCoversDate(date), true, date);
+      assert.equal(isKnownReferralCommittee(date, "shugiin", "内閣"), true, date);
+    }
+  });
+
+  test("上限が無くても新しい委員会は止まる（止めるのは名前であって日付ではない）", () => {
+    // 次の省庁再編で新しい委員会ができたら、その名前が表に無いので止まる
+    for (const date of ["2026-07-24", "2030-01-01"]) {
+      assert.equal(isKnownReferralCommittee(date, "shugiin", "こども家庭"), false, date);
+      assert.equal(isKnownReferralCommittee(date, "shugiin", "大蔵"), false, `${date} 大蔵（1998年の名前）`);
+    }
   });
 
   test("数えていない時期は、正しい委員会名でも通らない（表に根拠が無いので）", () => {
-    // 1999〜2019年（省庁再編を挟む 20 年）と、窓の外側 1 日
+    // 1998-06-19 〜 2019-10-03 の約 21 年（省庁再編を挟む）を数えていない
     for (const date of ["1998-06-19", "1999-01-01", "2005-06-01", "2015-03-10", "2019-10-03"]) {
       assert.equal(referralAllowlistCoversDate(date), false, date);
       assert.equal(isKnownReferralCommittee(date, "shugiin", "内閣"), false, `${date} 内閣`);
@@ -258,18 +274,14 @@ describe("許可リスト: 数えていない時期は止まる（#1133）", () 
     }
   });
 
-  test("窓の両端はちょうど含む（off-by-one が無い）", () => {
+  test("窓の端はちょうど含む（off-by-one が無い）", () => {
     for (const date of ["1997-06-17", "1998-06-18", "2019-10-04", "2026-07-23"]) {
       assert.equal(referralAllowlistCoversDate(date), true, date);
     }
-    for (const date of ["1997-06-16", "1998-06-19", "2019-10-03", "2026-07-24"]) {
+    // 1998年の窓は閉じている。現在の表は下限だけ
+    for (const date of ["1997-06-16", "1998-06-19", "2019-10-03"]) {
       assert.equal(referralAllowlistCoversDate(date), false, date);
     }
-  });
-
-  test("未来（数えた窓より後）も通らない——数えるまで止まる", () => {
-    assert.equal(referralAllowlistCoversDate("2026-07-24"), false);
-    assert.equal(isKnownReferralCommittee("2027-01-01", "shugiin", "内閣"), false);
   });
 
   test("1998年の旧称は1998年でだけ通る（現在の時期では通らない）", () => {
