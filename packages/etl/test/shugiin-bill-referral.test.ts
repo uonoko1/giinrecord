@@ -116,6 +116,21 @@ describe("付託: 「審査省略」は付託先ではない（#1133）", () => 
     assert.equal(b.referral?.shugiin?.committee, undefined);
     assert.equal(b.referral?.shugiin?.noteText, "審査省略");
   });
+
+  test("「審査省略要求」も委員会ではない（全数調査で見つけた 2 件目の形）", () => {
+    // 1DD23DA「法務委員長義家弘介君解任決議案」（第204回）。衆「／ 審査省略要求」
+    // 1,941 件を全数で数えるまで、この値が在ることを知らなかった（5 件の抽出では出ない）
+    const b = bill("1DD23DA");
+    assert.equal(b.referral?.shugiin?.committee, undefined);
+    assert.equal(b.referral?.shugiin?.noteText, "審査省略要求");
+    assert.deepEqual(toBillSummary(b).referredCommittees, undefined);
+  });
+
+  test("「審査省略」と「審査省略要求」を同じものに潰さない（別の事実）", () => {
+    // 前方一致で片付けると、要求しただけなのか省略されたのかが消える
+    assert.equal(bill("1DE1FF6").referral?.shugiin?.noteText, "審査省略");
+    assert.equal(bill("1DD23DA").referral?.shugiin?.noteText, "審査省略要求");
+  });
 });
 
 describe("付託: 古い回次でも同じ欄が読める（#1133）", () => {
@@ -219,7 +234,7 @@ describe("付託: data/ に書く前の検査（#1133）", () => {
   });
 
   test("空文字・「不明」「なし」を committee として書いたら違反", () => {
-    for (const bad of ["", "不明", "なし", "-", "ー", "－"]) {
+    for (const bad of ["", "不明", "なし", "-", "ー", "－", "審査省略要求"]) {
       const bill = b({ shugiin: { committee: bad } });
       assert.match(check(bill, s([{ house: "shugiin", committee: bad }])).join("\n"), /must be a committee recorded in the source/, bad);
     }

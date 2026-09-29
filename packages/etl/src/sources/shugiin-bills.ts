@@ -153,10 +153,15 @@ export function parseShugiinBill(html: string, sourceUrl: string, list?: { statu
  * （実測: ページは常任委員会に「委員会」を付けずに書く）。
  *
  * **語を増やすときは実データを数えてからにする。** 2026-09-30 に 1,941 件の経過ページ
- * （衆・参・予備・本の 4 欄 = 7,764 欄）を全数取得して数えた結果、付託先の位置に現れる
- * 「委員会でない値」はこの 1 種類だけだった（`docs/research/bill-referral.md`）。
+ * （衆・参・予備・本の 4 欄 = 7,764 欄）を全数取得して数えた結果、付託先の位置に現れた値は
+ * **41 種類**で、うち委員会でないのは次の 2 つだけだった（`docs/research/bill-referral.md`）:
+ *   審査省略      衆 149 件 / 参 6 件
+ *   審査省略要求   衆 2 件（204-決議-2 と 201-決議-3。どちらも解任・不信任決議案）
+ *
+ * **「審査省略」で前方一致させない。** それでは「審査省略要求」と区別できず、
+ * **要求しただけなのか省略されたのか**という別の事実を 1 つに潰してしまう。原文で照合する。
  */
-const NON_COMMITTEE_REFERRAL_TEXTS: ReadonlySet<string> = new Set(["審査省略"]);
+const NON_COMMITTEE_REFERRAL_TEXTS: ReadonlySet<string> = new Set(["審査省略", "審査省略要求"]);
 
 /**
  * 「令和 8年 3月 5日 ／ 財務金融」→ { date: "2026-03-05", committee: "財務金融" }。
