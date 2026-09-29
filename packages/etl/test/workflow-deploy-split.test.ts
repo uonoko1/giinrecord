@@ -232,17 +232,35 @@ test("#1137 rsync する job は build job の成果物を artifact で受け取
     /actions\/checkout@/,
     "rsync する job が checkout している（リポジトリのコードがこの job に入る。#1137）",
   );
-  // artifact 名は build 側と deploy 側で一致していなければならない（食い違うと download が落ちる）
+  // artifact 名は upload 側と download 側で一致していなければならない（食い違うと download が落ちる）。
+  //
+  // **2 つの名前は逐語では一致しない。** 同じ「ビルドした sha」を、upload 側は自分の step の
+  // 出力（`steps.<id>.outputs.sha`）から、download 側は `needs.<builder>.outputs.sha` から読む。
+  // そこで**両方を「ビルドした sha」という同じ記号に正規化してから比べる**。
+  // **job 名や step の id を逐語で書かない**（名前を変えただけで空回りする形にしない）。
   const builder = jobs.find((j) => j.file === sender.file && /actions\/upload-artifact@/.test(j.body));
   assert.ok(builder, `${sender.file} に upload-artifact する job が無い`);
   const nameOf = (b: string) => b.match(/^\s*name:\s*(site-[^\n]*)$/m)?.[1]?.trim();
   const up = nameOf(builder.body);
   const down = nameOf(sender.body);
   assert.ok(up, "upload-artifact の name が読めない");
+  assert.ok(down, "download-artifact の name が読めない");
+  const normalise = (s: string) =>
+    s
+      .replace(/\$\{\{\s*steps\.[A-Za-z0-9_-]+\.outputs\.sha\s*\}\}/g, "<BUILT_SHA>")
+      .replace(/\$\{\{\s*needs\.[A-Za-z0-9_-]+\.outputs\.sha\s*\}\}/g, "<BUILT_SHA>");
   assert.equal(
-    down,
-    up?.replace("steps.head.outputs.sha", "needs.build.outputs.sha"),
+    normalise(down ?? ""),
+    normalise(up ?? ""),
     `artifact 名が upload 側と download 側で食い違っている（download が落ちる）: up=${up} down=${down}`,
+  );
+  // 正規化が空回り（両方が `<BUILT_SHA>` を含まないまま一致）していないこと
+  assert.match(normalise(up ?? ""), /<BUILT_SHA>/, "artifact 名にビルドした sha が入っていない（呼び出しごとに衝突しうる）");
+  // download 側は `needs.<builder>` を辿っている（自分の step の出力を騙っていない）
+  assert.match(
+    down ?? "",
+    new RegExp(`needs\\.${builder.name}\\.outputs\\.sha`),
+    `download 側の artifact 名が \`needs.${builder.name}.outputs.sha\` を参照していない`,
   );
 });
 
@@ -253,6 +271,14 @@ test("#1137 artifact に入れるのは rsync する 1 ディレクトリだけ�
   assert.deepEqual(paths, ["apps/web/build/client"], `artifact の path が 1 件ではない: ${paths.join(", ")}`);
   const days = builder.body.match(/^\s*retention-days:\s*(\d+)\s*$/m)?.[1];
   assert.ok(days && Number(days) <= 3, `retention-days が ${days}（短く保つ。成果物を runner の外に長く置かない）`);
+  // **空の artifact を上げさせない。** `upload-artifact` の既定は `warn` なので、ビルドが
+  // 何も出さなくても警告だけで緑になり、deploy job が空を受け取って `rsync --delete` が
+  // 配信中のサイトを消す。分割前は同じ workspace の中で rsync していたので、この経路は無かった。
+  assert.match(
+    builder.body,
+    /^\s*if-no-files-found:\s*error\s*$/m,
+    "upload-artifact に `if-no-files-found: error` が無い（既定の warn では空の artifact が緑で通り、rsync --delete が配信中のサイトを消す。#1137）",
+  );
 });
 
 test("#1137 / #134 workflow_call の outputs.sha は、いまも step の出力まで辿れる（release.yml が使う）", () => {
