@@ -2,7 +2,9 @@ import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import iconv from "iconv-lite";
+import type { Bill, BillSummary } from "@seiji-kiroku/shared";
 import { parseShugiinBill, toBillSummary } from "../src/sources/shugiin-bills.ts";
+import { billReferralViolations } from "../src/dataset.ts";
 
 /**
  * 議案の「付託」（#1133）。
@@ -53,10 +55,28 @@ describe("付託: 記録された付託先を原文のまま写す（#1133）", 
     assert.equal(bill("1DE153E").referral?.shugiin?.committee, "政治改革に関する特別");
   });
 
-  test("予備付託も別の欄として残す（本付託と混ぜない）", () => {
-    // 1DE14C2「令和八年度一般会計予算」は衆に予備付託が無く、参に予備付託がある。
-    const b = parseShugiinBill(fixture("shugiin-keika-1DE14D6"), keika("1DE14D6"));
+  test("予備付託は本付託と別の欄。同じ委員会でも日付が違うので、潰すと日付が1つ失われる", () => {
+    // 1DDEF5A「自殺対策基本法の一部を改正する法律案」（第217回 参法5）
+    //   衆議院予備付託年月日／衆議院予備付託委員会  令和 7年 4月15日 ／ 厚生労働
+    //   衆議院付託年月日／衆議院付託委員会          令和 7年 4月16日 ／ 厚生労働
+    const b = bill("1DDEF5A");
+    assert.deepEqual(b.referral?.shugiinPreliminary, { date: "2025-04-15", committee: "厚生労働" });
+    assert.deepEqual(b.referral?.shugiin, { date: "2025-04-16", committee: "厚生労働" });
+  });
+
+  test("予備付託の欄が空なら予備付託を持たない（本付託で埋めない）", () => {
+    // 1DE14D6 は衆の予備付託が「／」だけ。本付託は「令和 8年 3月 5日 ／ 財務金融」
+    const b = bill("1DE14D6");
     assert.equal(b.referral?.shugiinPreliminary, undefined);
+    assert.equal(b.referral?.shugiin?.committee, "財務金融");
+  });
+
+  test("参の予備付託だけがあり衆には無い議案でも、欄ごとに別々に残る", () => {
+    // 1DE14C2「令和八年度一般会計予算」: 衆予備 空 / 衆本 予算(2/20) / 参予備 予算(2/20) / 参本 予算(3/13)
+    const b = bill("1DE14C2");
+    assert.equal(b.referral?.shugiinPreliminary, undefined);
+    assert.deepEqual(b.referral?.sangiinPreliminary, { date: "2026-02-20", committee: "予算" });
+    assert.deepEqual(b.referral?.sangiin, { date: "2026-03-13", committee: "予算" });
   });
 });
 
@@ -132,10 +152,92 @@ describe("付託: bills/index.json の行（#1133）", () => {
 
   test("一覧の行は本付託だけ（予備付託を混ぜて二重に数えない）", () => {
     const row = toBillSummary(bill("1DE14C2"));
-    // 1DE14C2 は衆予備付託が空、衆本付託「予算」、参予備付託「予算」、参本付託「予算」
+    // 1DE14C2 は衆予備付託が空、衆本付託「予算」、参予備付託「予算」、参本付託「予算」。
+    // 参の予備と本は同じ「予算」なので、混ぜると参が 2 回並ぶ
     assert.deepEqual(row.referredCommittees, [
       { house: "shugiin", committee: "予算" },
       { house: "sangiin", committee: "予算" },
     ]);
+  });
+
+  test("衆の予備付託と本付託が同じ委員会の議案でも、一覧に 1 回しか出ない", () => {
+    // 1DDEF5A は衆予備「厚生労働」・衆本「厚生労働」・参本「審査省略」。
+    // 予備付託を混ぜると「厚生労働」が 2 回並び、2 つの委員会に付託されたように見える
+    const row = toBillSummary(bill("1DDEF5A"));
+    assert.deepEqual(row.referredCommittees, [{ house: "shugiin", committee: "厚生労働" }]);
+    assert.equal(row.referredCommittees?.length, 1);
+  });
+
+  test("一覧の付託先は重複しない（同じ院・同じ委員会が 2 行並ばない）", () => {
+    for (const id of ["1DE14C2", "1DDEF5A", "1DE14D6", "1DE1E6A", "1DE1582", "5516"]) {
+      const rows = toBillSummary(bill(id)).referredCommittees ?? [];
+      const keys = rows.map((r) => `${r.house}\t${r.committee}`);
+      assert.equal(new Set(keys).size, keys.length, `${id}: 付託先が重複している ${JSON.stringify(rows)}`);
+    }
+  });
+});
+
+describe("付託: data/ に書く前の検査（#1133）", () => {
+  const b = (referral: Bill["referral"]): Bill =>
+    ({ id: "221-閣法-3", session: 221, kind: "閣法", house: "shugiin", title: "T", sourceUrl: keika("1DE14D6"), ...(referral ? { referral } : {}) });
+  const s = (referredCommittees?: BillSummary["referredCommittees"]): BillSummary =>
+    ({ id: "221-閣法-3", session: 221, kind: "閣法", house: "shugiin", title: "T", sourceUrl: keika("1DE14D6"), ...(referredCommittees ? { referredCommittees } : {}) });
+  const check = (bill: Bill, sum: BillSummary) => billReferralViolations("bills/221/221-閣法-3.json", "bills/index.json[0]", bill, sum);
+
+  test("原本と一覧が一致していれば違反なし", () => {
+    const bill = b({ shugiin: { date: "2026-03-05", committee: "財務金融" }, sangiin: { date: "2026-03-23", committee: "財政金融" } });
+    assert.deepEqual(check(bill, s([{ house: "shugiin", committee: "財務金融" }, { house: "sangiin", committee: "財政金融" }])), []);
+  });
+
+  test("付託が無い議案は、原本も一覧も持たなければ違反なし", () => {
+    assert.deepEqual(check(b(undefined), s(undefined)), []);
+  });
+
+  test("一覧だけ委員会名を言い換えたら違反（原本から導き直して突き合わせる）", () => {
+    const bill = b({ shugiin: { date: "2026-03-06", committee: "外務" } });
+    assert.match(check(bill, s([{ house: "shugiin", committee: "外交" }])).join("\n"), /referredCommittees does not match/);
+  });
+
+  test("原本に無い付託先を一覧が持っていたら違反（分野を後から足せない）", () => {
+    assert.match(check(b(undefined), s([{ house: "shugiin", committee: "環境" }])).join("\n"), /referredCommittees does not match/);
+  });
+
+  test("原本にあるのに一覧が落としていたら違反", () => {
+    const bill = b({ shugiin: { date: "2026-03-06", committee: "外務" } });
+    assert.match(check(bill, s(undefined)).join("\n"), /referredCommittees does not match/);
+  });
+
+  test("予備付託は一覧に出さない。出したら違反", () => {
+    const bill = b({ shugiinPreliminary: { date: "2025-04-15", committee: "厚生労働" }, shugiin: { date: "2025-04-16", committee: "厚生労働" } });
+    assert.deepEqual(check(bill, s([{ house: "shugiin", committee: "厚生労働" }])), []);
+    assert.match(check(bill, s([{ house: "shugiin", committee: "厚生労働" }, { house: "shugiin", committee: "厚生労働" }])).join("\n"), /does not match/);
+  });
+
+  test("「審査省略」を committee として書いたら違反（付託先ではない）", () => {
+    const bill = b({ shugiin: { committee: "審査省略" } });
+    assert.match(check(bill, s([{ house: "shugiin", committee: "審査省略" }])).join("\n"), /must be a committee recorded in the source/);
+  });
+
+  test("空文字・「不明」「なし」を committee として書いたら違反", () => {
+    for (const bad of ["", "不明", "なし", "-", "ー", "－"]) {
+      const bill = b({ shugiin: { committee: bad } });
+      assert.match(check(bill, s([{ house: "shugiin", committee: bad }])).join("\n"), /must be a committee recorded in the source/, bad);
+    }
+  });
+
+  test("committee と noteText の両方を持っていたら違反（一次資料は片方しか書かない）", () => {
+    const bill = b({ shugiin: { committee: "国土交通", noteText: "審査省略" } });
+    assert.match(check(bill, s([{ house: "shugiin", committee: "国土交通" }])).join("\n"), /has both committee and noteText/);
+  });
+
+  test("中身の無い付託の欄を持っていたら違反（欄ごと落とすのが正）", () => {
+    assert.match(check(b({ shugiin: {} }), s(undefined)).join("\n"), /is present but empty/);
+  });
+
+  test("実データ（経過ページ）から作った議案は違反なし", () => {
+    for (const id of ["1DE14D6", "1DE14C2", "1DDEF5A", "1DE1E6A", "1DE213E", "1DE1582", "5516", "1DE115E"]) {
+      const bill = parseShugiinBill(fixture(`shugiin-keika-${id}`), keika(id));
+      assert.deepEqual(billReferralViolations(`bills/x.json`, `bills/index.json[0]`, bill, toBillSummary(bill)), [], id);
+    }
   });
 });
