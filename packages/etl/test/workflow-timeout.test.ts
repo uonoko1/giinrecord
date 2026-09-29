@@ -278,6 +278,7 @@ test("#556 数え上げ: jobs: 直下の job を全部拾えている（拾え�
     "deploy-data.yml:production",
     "deploy-data.yml:resolve",
     "deploy-data.yml:staging",
+    "deploy-site.yml:build",
     "deploy-site.yml:deploy",
     "deploy-staging.yml:staging",
     "districts.yml:districts",
@@ -343,9 +344,18 @@ test("#556 uses: の job に timeout-minutes を書かない（GitHub が受け�
  *                                                                    10 → 77s**。**p90 は 9s で、
  *                                                                    max はランナー待ちの裾**。#1056）
  *   deploy-data.yml:resolve         38     5     9    12    45s  → 10 分（**再測。max が 13 → 45s**）
- *   deploy-site.yml:deploy          —     —     —     —     —    → 30 分（**呼び出し元の `production / deploy` と `staging / deploy` で測る:
+ *   deploy-site.yml:build           —     —     —     —     —    → 25 分（**#1137 で job を割ったあとの
+ *                                                                    新しい job。CI 実測はまだ 0 本**。
+ *                                                                    割る前の「ビルド + rsync」は
  *                                                                    production n=38 max 112s /
- *                                                                    staging n=37 max 101s。**2026-09-27）
+ *                                                                    staging n=37 max 101s（2026-09-27）で、
+ *                                                                    そのうち rsync は数秒である。
+ *                                                                    n が溜まったら測り直すこと）
+ *   deploy-site.yml:deploy          —     —     —     —     —    → 10 分（**#1137 で rsync だけになった。
+ *                                                                    CI 実測はまだ 0 本**。割る前は
+ *                                                                    「ビルド + rsync」で production n=38
+ *                                                                    max 112s / staging n=37 max 101s
+ *                                                                    （2026-09-27）。n が溜まったら測り直す）
  *   release.yml:released-tag        37     3     4     5     8s  → 10 分（再測。変わらず）
  *   security.yml:gitleaks           40     9    11    15    16s  → 20 分（全履歴走査の週次がある。
  *                                                                    再測で max 48 → 16s に下がった）
@@ -459,7 +469,12 @@ test("#556 値が実測から外れていない（短すぎる = 偽陽性 / 長
     // （本文を編集したら測り直させるため）。stale-base と同値の 10 分。
     "pr-body.yml:pr-closes": 10,
     "deploy-data.yml:resolve": 10,
-    "deploy-site.yml:deploy": 30,
+    // #1137: 割る前は 1 つの job の 30 分が「ビルド + rsync」を覆っていた。
+    // いまは build が 25 分（checkout / overlay / install / ビルド。VPS に触らない）、
+    // deploy が 10 分（artifact の download と rsync だけ）。**この 2 つとも CI 実測はまだ 0 本**で、
+    // 割る前の合計（max 112s）を根拠に分配してある。n が溜まったら上の表ごと測り直すこと。
+    "deploy-site.yml:build": 25,
+    "deploy-site.yml:deploy": 10,
     // #646: 実測 171s（2026-09-08、本番の data/ 83 件を手元から通しで。1 ラウンド 83 秒 +
     // 再試行の待ち 60 秒 + 落ちた 3 件）。最悪（83 × 30s タイムアウト × 2 ラウンド ≒ 83 分）は切りたいので 20 分。
     "link-check.yml:link-check": 20,

@@ -765,7 +765,11 @@ test("deploy-site.yml: data_ref 入力（既定空）で released-ref.sh overlay
   assert.match(deploySite, /^\s+data_ref:\s*\n(\s+\w+:[^\n]*\n)*?\s+default: ""$/m);
   assert.match(deploySite, /scripts\/ci\/released-ref\.sh overlay "\$DATA_REF"/);
   assert.match(deploySite, /DATA_REF: \$\{\{ inputs\.data_ref \}\}/);
-  assert.match(deploySite, /^\s+sha:\s*\n\s+description:[^\n]*\n\s+value: \$\{\{ jobs\.deploy\.outputs\.sha \}\}$/m);
+  // #1137: `pnpm build` する job と deploy 鍵を持つ job を割ったので、`sha` を出すのは
+  // **ビルド側（`build`）**になった（checkout して HEAD を読むのはそちらだけ）。
+  // **この 1 行は綴りしか見ていない。** 束縛が step の出力まで辿れることは
+  // workflow-released-chain.test.ts と workflow-deploy-split.test.ts が構造で見ている。
+  assert.match(deploySite, /^\s+sha:\s*\n\s+description:[^\n]*\n\s+value: \$\{\{ jobs\.build\.outputs\.sha \}\}$/m);
   const overlayAt = orderLastIndexOf(deploySite, "released-ref.sh overlay");
   assert.ok(
     overlayAt > orderIndexOf(deploySite, "actions/checkout") && overlayAt < orderIndexOf(deploySite, "pnpm build"),
