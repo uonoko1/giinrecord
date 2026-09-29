@@ -585,7 +585,8 @@ describe("writeDataset / validateDataset: docs/DATA_CONTRACT.md の不変条件"
   test("bills/index.json は軽量な行（id・回次・種別・院・件名・状況・出典）で、回次降順・id 昇順", () => {
     const index = readJson<BillSummary[]>(dir, "bills/index.json");
     assert.deepEqual(index.map((b) => b.id), ["221-衆法-1", "221-閣法-3", "219-決算-1DE115E"]);
-    assert.deepEqual(index[0], { id: "221-衆法-1", session: 221, kind: "衆法", house: "shugiin", title: "政治資金規正法の一部を改正する法律案", status: "衆議院で閉会中審査", sourceUrl: `${KEIKA}/1DE153E.htm` });
+    // referredCommittees は経過ページの付託欄の原文（#1133）。「委員会」を足さず、分野に言い換えない
+    assert.deepEqual(index[0], { id: "221-衆法-1", session: 221, kind: "衆法", house: "shugiin", title: "政治資金規正法の一部を改正する法律案", status: "衆議院で閉会中審査", referredCommittees: [{ house: "shugiin", committee: "政治改革に関する特別" }], sourceUrl: `${KEIKA}/1DE153E.htm` });
     cleanup();
   });
 

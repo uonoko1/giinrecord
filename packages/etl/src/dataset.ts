@@ -1,7 +1,7 @@
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import type { Dirent } from "node:fs";
 import { join } from "node:path";
-import type { Assembly, Bill, BillSessionCount, BillSummary, DatasetMeta, MemberAssemblyCount, MemberDetail, MemberSpeeches, MemberSummary, RollCall, RollCallSummary } from "@seiji-kiroku/shared";
+import type { Assembly, Bill, BillReferralEntry, BillReferredCommittee, BillSessionCount, BillSummary, DatasetMeta, MemberAssemblyCount, MemberDetail, MemberSpeeches, MemberSummary, RollCall, RollCallSummary } from "@seiji-kiroku/shared";
 import type { Aggregated } from "./aggregate.ts";
 import { DIET_ASSEMBLY_IDS } from "./assemblies.ts";
 import { isDietMemberRow, kanaNameRatioExceeds, membersByAssembly, mergeAssemblies, mergeMemberIndex, readMemberIndex, validateLocalAssemblies } from "./local-assemblies.ts";
@@ -154,6 +154,50 @@ const ATTENDANCE_SOURCE = /^https:\/\/kokkai\.ndl\.go\.jp\/txt\/[0-9A-Za-z]+\/\d
 const SPEECH_SOURCE = ATTENDANCE_SOURCE;
 /** bills/ の id は `{提出回次}-{種別原文}-{番号 or 経過ページ id}`。 */
 const BILL_ID = /^(\d+)-[^-]+-[^-]+$/;
+
+/**
+ * 付託の記録として **出してはいけない値**（#1133）。
+ *
+ * この欄は「この議案はどの分野か」ではなく「どこに付託されたと一次資料が書いているか」である。
+ * 付託先でない文言を付託先として出すと、利用者からは見分けがつかない虚偽になる
+ * （「審査省略委員会に付託された」という事実は存在しない）。
+ */
+const NOT_A_COMMITTEE = new Set(["審査省略", "", "不明", "なし", "-", "ー", "－"]);
+
+/**
+ * 議案の付託（#1133）の検査。**`bills/index.json` が原本（`bills/{session}/{id}.json`）と食い違っていないこと**と、
+ * **付託先でない文言が付託先として出ていないこと**を見る。
+ *
+ * 一覧は本付託だけを 衆 → 参 の順に持つ（予備付託を混ぜない）。ここで導き直して突き合わせるので、
+ * 一覧だけを書き換えても、原本だけを書き換えても落ちる。
+ */
+export function billReferralViolations(rel: string, indexRel: string, b: Bill, s: BillSummary): string[] {
+  const v: string[] = [];
+  const entries: [string, BillReferralEntry | undefined][] = [
+    ["shugiinPreliminary", b.referral?.shugiinPreliminary], ["shugiin", b.referral?.shugiin],
+    ["sangiinPreliminary", b.referral?.sangiinPreliminary], ["sangiin", b.referral?.sangiin],
+  ];
+  for (const [key, e] of entries) {
+    if (e === undefined) continue;
+    if (e.committee === undefined && e.noteText === undefined && e.date === undefined) {
+      v.push(`${rel}: referral.${key} is present but empty (omit the field instead)`);
+    }
+    if (e.committee !== undefined && NOT_A_COMMITTEE.has(e.committee)) {
+      v.push(`${rel}: referral.${key}.committee must be a committee recorded in the source, got ${JSON.stringify(e.committee)}`);
+    }
+    if (e.committee !== undefined && e.noteText !== undefined) {
+      v.push(`${rel}: referral.${key} has both committee and noteText (the source records one value)`);
+    }
+  }
+  // 一覧の付託先は原本から機械的に導ける。導き直して一致しなければ、どちらかが書き換えられている
+  const expected: BillReferredCommittee[] = [];
+  if (b.referral?.shugiin?.committee) expected.push({ house: "shugiin", committee: b.referral.shugiin.committee });
+  if (b.referral?.sangiin?.committee) expected.push({ house: "sangiin", committee: b.referral.sangiin.committee });
+  if (stableJson(s.referredCommittees ?? []) !== stableJson(expected)) {
+    v.push(`${indexRel}: referredCommittees does not match ${rel} (main referrals only, shugiin then sangiin)`);
+  }
+  return v;
+}
 
 /**
  * `bills/by-session.json`（#411）: `bills/index.json` を院・回次ごとに数えた行。house 昇順・回次昇順（決定的な並び）。
@@ -371,6 +415,7 @@ export async function validateDataset(dir: string): Promise<string[]> {
     for (const key of ["submitters", "supporters"] as const) {
       for (const id of b[key] ?? []) if (!ids.has(id)) v.push(`${rel}: ${key} memberId ${id} not in members/index.json`);
     }
+    v.push(...billReferralViolations(rel, `bills/index.json[${i}]`, b, s));
   }
   // bills/by-session.json（#411）は index.json から機械的に導ける集計。食い違えば /coverage が違う件数を出すので止める
   const bySession = await read<BillSessionCount[]>("bills/by-session.json");

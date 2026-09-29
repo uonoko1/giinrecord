@@ -1,5 +1,7 @@
 import { parse, type HTMLElement } from "node-html-parser";
-import type { Bill, BillKind, BillSummary, ShugiinGroupStance } from "@seiji-kiroku/shared";
+import type {
+  Bill, BillKind, BillReferralEntry, BillReferredCommittee, BillSummary, ShugiinGroupStance,
+} from "@seiji-kiroku/shared";
 import { fetchText } from "../fetch.ts";
 import { warekiToIso } from "./sangiin-members.ts";
 
@@ -115,6 +117,12 @@ export function parseShugiinBill(html: string, sourceUrl: string, list?: { statu
   const received = compact({ shugiin: warekiToIso(cell("衆議院議案受理年月日")), sangiin: warekiToIso(cell("参議院議案受理年月日")) });
   const result = compact({ shugiin: shugiin.text, sangiin: sangiin.text, promulgated: promulgation.date, lawNumber: promulgation.text });
   const stance = groupStance(cell("衆議院審議時会派態度"), cell("衆議院審議時賛成会派"), cell("衆議院審議時反対会派"));
+  const referral = compactObject({
+    shugiinPreliminary: referralEntry(cell("衆議院予備付託年月日／衆議院予備付託委員会")),
+    shugiin: referralEntry(cell("衆議院付託年月日／衆議院付託委員会")),
+    sangiinPreliminary: referralEntry(cell("参議院予備付託年月日／参議院予備付託委員会")),
+    sangiin: referralEntry(cell("参議院付託年月日／参議院付託委員会")),
+  });
 
   return {
     id: `${session}-${kindText}-${number ?? keikaId}`,
@@ -132,8 +140,44 @@ export function parseShugiinBill(html: string, sourceUrl: string, list?: { statu
     ...(list?.status ? { status: list.status } : {}),
     ...(result ? { result } : {}),
     ...(stance ? { shugiinGroupStance: stance } : {}),
+    ...(referral ? { referral } : {}),
     sourceUrl,
   };
+}
+
+/**
+ * 付託先の位置に書かれるが **付託先ではない** 文言（#1133）。
+ *
+ * **ここに載せた語だけを付託先から外す。** 「委員会」で終わらない語を機械的に外すと、
+ * 一次資料が実際に使っている「決算行政監視」「政治改革に関する特別」「憲法審査会」まで落ちる
+ * （実測: ページは常任委員会に「委員会」を付けずに書く）。
+ *
+ * **語を増やすときは実データを数えてからにする。** 2026-09-30 に 1,941 件の経過ページ
+ * （衆・参・予備・本の 4 欄 = 7,764 欄）を全数取得して数えた結果、付託先の位置に現れる
+ * 「委員会でない値」はこの 1 種類だけだった（`docs/research/bill-referral.md`）。
+ */
+const NON_COMMITTEE_REFERRAL_TEXTS: ReadonlySet<string> = new Set(["審査省略"]);
+
+/**
+ * 「令和 8年 3月 5日 ／ 財務金融」→ { date: "2026-03-05", committee: "財務金融" }。
+ * 「／ 審査省略」→ { noteText: "審査省略" }（**委員会として扱わない**）。
+ * 「／」だけ（空欄）→ undefined（**空文字や「不明」を作らない**）。
+ *
+ * 付託先の文字列は **原文のまま**。「委員会」を足さない・言い換えない・院どうしで揃えない。
+ */
+function referralEntry(text: string): BillReferralEntry | undefined {
+  const { date, text: right } = splitDateResult(text);
+  if (right === undefined) return date === undefined ? undefined : { date };
+  return compactObject({
+    date,
+    ...(NON_COMMITTEE_REFERRAL_TEXTS.has(right) ? { noteText: right } : { committee: right }),
+  });
+}
+
+/** 値が undefined のキーを落とす。全部 undefined なら undefined（欄ごと持たない）。 */
+function compactObject<T extends object>(obj: T): T | undefined {
+  const entries = Object.entries(obj).filter(([, v]) => v !== undefined);
+  return entries.length ? (Object.fromEntries(entries) as T) : undefined;
 }
 
 /** 「衆議院審議時会派態度」が空欄なら undefined（未審議・閉会中審査）。unanimous はページが「全会一致」と書いたときだけ。 */
@@ -160,7 +204,30 @@ export function parseNameList(text: string): string[] {
 
 /** `data/bills/index.json` の行。 */
 export function toBillSummary(b: Bill): BillSummary {
-  return { id: b.id, session: b.session, kind: b.kind, house: b.house, title: b.title, ...(b.status ? { status: b.status } : {}), sourceUrl: b.sourceUrl };
+  const referred = referredCommittees(b);
+  return {
+    id: b.id, session: b.session, kind: b.kind, house: b.house, title: b.title,
+    ...(b.status ? { status: b.status } : {}),
+    ...(referred.length ? { referredCommittees: referred } : {}),
+    sourceUrl: b.sourceUrl,
+  };
+}
+
+/**
+ * 一覧に出す付託先（#1133）。**本付託だけ**を 衆 → 参 の順で。
+ *
+ * - **予備付託は入れない**（同じ委員会が 2 回並び、付託が 2 件あったように見える）。
+ * - **`noteText`（審査省略）は入れない**——付託先ではないので、一覧の付託先に混ぜない。
+ * - **記録が無ければ空配列**を返し、呼び出し側が欄ごと落とす（「分野なし」を値にしない）。
+ */
+function referredCommittees(b: Bill): BillReferredCommittee[] {
+  const out: BillReferredCommittee[] = [];
+  const push = (house: BillReferredCommittee["house"], e: BillReferralEntry | undefined) => {
+    if (e?.committee) out.push({ house, committee: e.committee });
+  };
+  push("shugiin", b.referral?.shugiin);
+  push("sangiin", b.referral?.sangiin);
+  return out;
 }
 
 /**
