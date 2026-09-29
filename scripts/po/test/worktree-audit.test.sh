@@ -1,4 +1,15 @@
 # shellcheck shell=bash
+# **Do not run this file directly** (#1124). It is sourced by scripts/po/test/run.sh, which
+# defines test_case / assert_* / run_script. Running it with `bash` printed nothing but
+# `test_case: command not found` and ran not one assertion — measured on origin/main, all 8
+# files: 221 such lines in total (merge-when-green 138, board-audit 29, worktree-audit 21,
+# worktree-sweep 12, etl-verify 6, board-set/measure-pbi/verify-site 5 each).
+[[ -n ${PO_TEST_RUN_SH:-} ]] || {
+  echo "$(basename "${BASH_SOURCE[0]}"): このファイルは単体では走りません（run.sh が source します）。" >&2
+  echo "  bash scripts/po/test/run.sh                       # 全部" >&2
+  echo "  bash scripts/po/test/run.sh ${BASH_SOURCE[0]##*/} # このファイルだけ" >&2
+  exit 2
+}
 # Tests for scripts/po/worktree-audit.sh (sourced by run.sh)
 #
 # **これは「消す」道具ではなく「見る」道具**なので、検査の重心は
@@ -11,6 +22,85 @@
 # 実在のツリーを作らずに済むよう、`worktree-audit.sh` は
 #   `AUDIT_NOW`（現在時刻の epoch 秒）と `git -C <path> log -1 --format=%ct`
 # で「最終更新時刻」を取る。テストはその 2 つを固定する。
+
+# ---- allowlist: この道具が呼んでよい git の形（#1089） ----------------------------------------
+#
+# **denylist をやめた理由（実測）**: ここは以前「禁じる 8 個（remove/reset/checkout/clean/restore/
+# stash/branch -D/commit）」を名指ししていた。**列挙に無い形は素通りする**——
+# **#1070 の 3 度目のレビューが 6 形を注入し、6 通りとも 40/40 緑だった。**
+# **そのうち `git rm -r --cached .` は、この道具が存在する理由の事故そのものである**
+# （#1057: 引き継いだ worktree の staged が他人の成果物を消す）。
+#
+# **allowlist が「これで全部」と言えるのは、サブコマンドの集合についてだけである**（#1089 のレビュー）。
+# `$LOG` は fake `git` が**その筋書きで実行された呼び出しを 1 行も落とさず**記録している
+# （`scripts/po/test/fake-bin/git`）ので、**実行された git については、
+# 列挙に無いものはサブコマンドが何であれ落ちる**——**denylist と違って語の列挙に依存しない。**
+# **検査を書き足さなくても、次に破壊的な呼び出しを足した人が捕まる。**
+# **ただし「実行された git」に限る。** **到達しない枝に置かれた git は `$LOG` に現れない**
+# （下の「塞げていない形」の 1 番目）。
+#
+# 許す 5 形（`scripts/po/worktree-audit.sh` が実際に呼ぶ全部。2026-09-28 実測）:
+#   git worktree list --porcelain
+#   git -C <path> status --porcelain
+#   git -C <path> diff --cached --name-status
+#   git -C <path> log -1 --format=%ct
+#   git -C <path> rev-parse --git-path index
+# **どれも読むだけである**（`worktree list` は `add`/`remove`/`prune` と違い一覧を出すだけ、
+# `diff --cached` は index を読むだけ、`rev-parse` はパスを解決するだけ）。
+#
+# **`-C <path>` は剥がしてから照合する**（path はツリーごとに変わるので逐語では比べられない）。
+# **剥がすのは先頭の 1 回だけ**にしてある——`git -C /a -C /b rm .` のように 2 回目を許すと、
+# **剥がした残りが `-C /b rm .` になって照合に落ちる**（つまり素通りしない）。
+#
+# **塞げていない形**（allowlist でも「この道具が壊さない」の全証明にはならない。#1089）:
+#   - **実行されない枝に置かれた git は見えない**（**これが一番大きい**。#1089 のレビューが実測）。
+#     **検査が見るのは `$LOG` = その 1 筋書きで実際に走った git だけ**なので、
+#     **テストが通らない枝に破壊的な呼び出しを書くと素通りする。** **実測 3 形、どれも 42/0 緑**:
+#       `unreadable` 枝（status が取れないツリー）に `git rm -rf --cached .`
+#       末尾の `exit 0` の直前に `git clean -xfd`
+#       `dirty_only` 枝に `git checkout -- .`
+#     **これは allowlist にして生まれた穴ではない**——**旧 denylist でも同じく素通りした**
+#     （`checkout` は旧 8 語に在ったのに `dirty_only` 枝では 40/0 緑。実測）。
+#     **塞ぐには「実行された呼び出し」ではなく「ソースに書かれた呼び出し」を見る必要がある**
+#     ——それは `scripts/ci/forbidden-patterns.sh` の `destructive-git` の役割である
+#     （**あちらは静的に grep する。両者は役割が違い、二重管理ではない**）。
+#     **ただしその規則は `git rm` / `worktree remove` / `update-ref` / `branch -D` を持っていない**
+#     ので、**いまは両方のゲートを抜ける形が在る。これは #1123 で扱う。**
+#   - **git 以外の道具**: `rm -rf "$path"` / `find -delete` / `>` でのリダイレクト。
+#     **fake `git` は git しか記録しないので、この検査の射程外である。**
+#     （`scripts/ci/forbidden-patterns.sh` の `destructive-git` も同じ限界を書いている）
+#   - **許した 5 形そのものの引数を伸ばす形**: この照合は逐語一致なので
+#     `status --porcelain -z` のような変種は**落ちる**（素通りはしない）。**引数を足すなら
+#     ここに書き足すことになる**——それが「読むだけか」をレビューで見る機会になる。
+#   - **この関数を呼ばないテストを足す形**: 検査は `t_audit_never_destroys` の 1 件だけが呼ぶ。
+assert_git_calls_read_only() {
+  local log=$1 msg=$2 line rest
+  local -a allowed=(
+    "worktree	list	--porcelain"
+    "status	--porcelain"
+    "diff	--cached	--name-status"
+    "log	-1	--format=%ct"
+    "rev-parse	--git-path	index"
+  )
+  local seen=0 ok
+  while IFS= read -r line; do
+    [[ -z "$line" ]] && continue
+    # fake `git` は "git<TAB>引数…" で記録する。git 以外（gh）の行はここでは見ない
+    [[ "$line" == "git	"* ]] || continue
+    seen=$((seen+1))
+    rest="${line#git	}"
+    # **先頭の `-C <path>` を 1 回だけ剥がす**（2 回目以降は剥がさない＝照合に落ちる）
+    if [[ "$rest" == "-C	"* ]]; then rest="${rest#-C	}"; rest="${rest#*	}"; fi
+    ok=0
+    for a in "${allowed[@]}"; do [[ "$rest" == "$a" ]] && { ok=1; break; }; done
+    [[ $ok == 1 ]] || fail "$msg: 許していない git の呼び出し [$line]
+（読み取り専用の 5 形だけを許しています。足すなら assert_git_calls_read_only の allowed に
+理由つきで書き足してください——それが「本当に読むだけか」を人が見る機会です）"
+  done <<< "$log"
+  # **母数を出す（#757）。「1 行も見ていない」を「違反 0」と同じ顔にしない。**
+  # **$LOG が空なら照合は何も見ていないので、緑は何の証明にもならない。**
+  [[ $seen -gt 0 ]] || fail "$msg: git の呼び出しが \$LOG に 1 行も無い（照合が空振りしています）"
+}
 
 t_audit_flags_staged_deletions() {
   local h; h=$(handler <<'EOF'
@@ -196,20 +286,20 @@ handle() { echo '[]'; }
 EOF
 )
   AUDIT_NOW=9000000 run_script "$h" worktree-audit.sh
-  # **まず「本当に走った」ことを確かめる**（走らなければ下の 8 個は空振りで緑になる）
+  # **まず「本当に走った」ことを確かめる**（走らなければ下の照合は空振りで緑になる）
   assert_eq 3 "$STATUS" "D が在るので 3 で終わる: $ERR"
   assert_contains "$LOG" "$(printf '\tstatus\t--porcelain')" "**読む git は呼んでいる（空振りの緑を防ぐ）**"
-  # **この道具は 1 つも壊さない。** 読む git だけを呼ぶ
-  assert_not_contains "$LOG" "$(printf 'worktree\tremove')" "**worktree remove を呼ばない**"
-  assert_not_contains "$LOG" "$(printf '\treset\t')" "**reset を呼ばない**"
-  assert_not_contains "$LOG" "$(printf '\tcheckout\t')" "**checkout を呼ばない**"
-  assert_not_contains "$LOG" "$(printf '\tclean\t')" "**clean を呼ばない**"
-  assert_not_contains "$LOG" "$(printf '\trestore\t')" "**restore を呼ばない**"
-  assert_not_contains "$LOG" "$(printf '\tstash')" "**stash を呼ばない（stash はリポジトリ共有）**"
-  assert_not_contains "$LOG" "$(printf 'branch\t-D')" "**ブランチを消さない**"
-  assert_not_contains "$LOG" "$(printf '\tcommit')" "**commit を呼ばない（それが事故そのもの）**"
+  # **この道具は 1 つも壊さない。** 読む git **だけ**を呼ぶ。
+  #
+  # **ここは allowlist である**（#1089）。**以前は「禁じる 8 個」を名指しする denylist だった**が、
+  # **列挙に無い破壊的な呼び出しが素通りした**——**レビュアーが 6 形を注入して 6 通りとも 40/40 緑**。
+  # **そのうち `git rm -r --cached .` は、この道具が存在する理由の事故そのものである**
+  # （#1057: 引き継いだ worktree の staged が他人の成果物を消す）。
+  # **denylist は「これで全部」と言えない。allowlist なら言える。**
+  # **足す側が検査を書き足さなくても捕まる**のが、この形に変えた理由である。
+  assert_git_calls_read_only "$LOG" "**読み取り専用の 5 形以外の git を呼ばない**"
 }
-test_case "audit: 破壊的な git を 1 つも呼ばない (#1057)" t_audit_never_destroys
+test_case "audit: 破壊的な git を 1 つも呼ばない (#1057, allowlist 化 #1089)" t_audit_never_destroys
 
 t_audit_no_gh_dependency() {
   local h; h=$(handler <<'EOF'
@@ -627,3 +717,65 @@ INNER
   assert_contains "$ERR" "作業中かもしれません" "**未来の時刻でも印は付く（倒れる向きは「触るな」側）**"
 }
 test_case "audit: 未来のコミット日時で負の「分前」を出さない (#1070)" t_audit_never_shows_negative_age
+
+t_audit_counts_unreadable_worktrees() {
+  # **status が取れないツリー**（消えた worktree・権限・壊れた .git）。**#1089 まで無検査だった**——
+  # **実装は正しかったが固定されていなかった**（変異 2 通り「数えない」「ログに出さない」が
+  # どちらも 40/40 緑だった。2026-09-28 実測）。
+  # **これは #757 の母数の罠そのものである**: 「調べた結果きれいだった」と
+  # **「そもそも読めなかった」を同じ顔にすると、PO は読めていないツリーを安全だと思う。**
+  local h; h=$(handler <<'EOF2'
+git_handle() {
+  case "$*" in
+    "worktree list --porcelain") printf '%s\n' \
+      "worktree /repo" "branch refs/heads/main" "" \
+      "worktree /wt/gone" "branch refs/heads/fix/gone" "" \
+      "worktree /wt/ok" "branch refs/heads/fix/ok" "" ;;
+    # **ディレクトリごと消えた worktree**（幽霊。git には登録が残る）
+    "-C /wt/gone status --porcelain") exit 128 ;;
+    "-C /wt/ok status --porcelain") printf '%s\n' "M  a.ts" ;;
+    "-C /wt/ok diff --cached --name-status") printf '%s\n' "M	a.ts" ;;
+    *"log -1 --format=%ct") echo 1000000 ;;
+    *) ;;
+  esac
+}
+handle() { echo '[]'; }
+EOF2
+)
+  AUDIT_NOW=9000000 run_script "$h" worktree-audit.sh
+  # **読めないツリーが在っても止まらない**（後続を調べ続ける）
+  assert_eq 0 "$STATUS" "読めないツリーが在っても走り切る: $ERR"
+  assert_contains "$ERR" "読めない /wt/gone" "**読めなかったツリーを名指しする**"
+  assert_contains "$ERR" "status が取れませんでした" "**読めなかった理由を言う**"
+  # **母数（#757）**: 読めなかった本数を必ず出す。「0 本」と「数えていない」を分ける
+  assert_contains "$ERR" "読めなかったもの 1 本" "**読めなかった本数を数えて出す**"
+  # **読めなかったツリーを「残留」に数えない**（status が取れていないので分類できない）
+  assert_contains "$ERR" "worktree 3 本" "母数は 3 本（読めないものも母数には入る）"
+  assert_contains "$ERR" "残留 1 本" "**残留は読めた 1 本だけ（読めないものを混ぜない）**"
+}
+test_case "audit: status が読めない worktree を数えて名指しする (#1089)" t_audit_counts_unreadable_worktrees
+
+t_audit_reports_zero_unreadable() {
+  # **裏側**: 全部読めたときは「読めなかったもの 0 本」と**明示する**。
+  # **0 を書かないと、「読めなかった」の行が無いことが「全部読めた」の証拠にならない**
+  # （出さない変異が素通りする。#1089 で実測）。
+  local h; h=$(handler <<'EOF2'
+git_handle() {
+  case "$*" in
+    "worktree list --porcelain") printf '%s\n' \
+      "worktree /repo" "branch refs/heads/main" "" ;;
+    "-C /repo status --porcelain") ;;
+    "-C /repo diff --cached --name-status") ;;
+    *"log -1 --format=%ct") echo 1000000 ;;
+    *) ;;
+  esac
+}
+handle() { echo '[]'; }
+EOF2
+)
+  AUDIT_NOW=9000000 run_script "$h" worktree-audit.sh
+  assert_eq 0 "$STATUS" "きれいなら 0: $ERR"
+  assert_contains "$ERR" "読めなかったもの 0 本" "**0 本であることを明示する（数えていないと区別する）**"
+  assert_not_contains "$ERR" "読めない /" "読めているので、読めなかったとは言わない"
+}
+test_case "audit: 全部読めたときは「読めなかったもの 0 本」と言う (#1089)" t_audit_reports_zero_unreadable

@@ -1,13 +1,25 @@
 #!/usr/bin/env bash
 # Minimal test runner for scripts/po/*.sh (no bats). Each test runs a script with a fake `gh`
 # placed first on PATH; assertions check exit status, stdout/stderr and the recorded gh calls.
-#   bash scripts/po/test/run.sh            # run all
-#   bash scripts/po/test/run.sh merge      # run tests whose name contains "merge"
+#   bash scripts/po/test/run.sh                       # run all
+#   bash scripts/po/test/run.sh merge                 # tests whose NAME contains "merge"
+#   bash scripts/po/test/run.sh merge-when-green      # ...or whose FILE is merge-when-green.test.sh
+#
+# **A filter that matches nothing is an error, not a pass** (#1124). It used to print
+# `passed: 0  failed: 0` and exit 0 — "0 executed" read exactly like "0 failed" (#757), so
+# `run.sh merge-when-green` looked green while running not one line of anything.
+# The filter now also matches the *file* a case came from, because `merge-when-green` is the
+# obvious thing to type (it is the name of the script under test, and of the file holding its
+# tests) and it was never a test name. Both spellings work; neither is silently empty.
 set -euo pipefail
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 PO_DIR=$(dirname "$HERE")
 FILTER=${1:-}
 PASS=0; FAIL=0; FAILED=()
+# **`RAN` counts cases that were selected; `NAMES` remembers every case that exists.**
+# Without RAN there is no way to tell "everything passed" from "nothing ran".
+RAN=0; NAMES=()
+CURRENT_FILE=""    # basename of the *.test.sh being sourced, so the filter can match it
 
 # ---- harness -------------------------------------------------------------------------------
 TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
@@ -55,9 +67,21 @@ assert_not_contains() { [[ "$1" != *"$2"* ]] || fail "$3: expected NOT to contai
 $1"; }
 fail() { CURRENT_FAILED=1; echo "    x $1"; }
 
+# A case is selected when the filter is empty, or matches its name, or matches the file it came
+# from (`merge-when-green.test.sh`, or the stem `merge-when-green`).
+selected() {
+  local name=$1
+  [[ -z "$FILTER" ]] && return 0
+  [[ "$name" == *"$FILTER"* ]] && return 0
+  [[ -n "$CURRENT_FILE" && "$CURRENT_FILE" == *"$FILTER"* ]] && return 0
+  return 1
+}
+
 test_case() {
   local name=$1; shift
-  [[ -z "$FILTER" || "$name" == *"$FILTER"* ]] || return 0
+  NAMES+=("$name")
+  selected "$name" || return 0
+  RAN=$((RAN+1))
   CURRENT_FAILED=0
   "$@"
   if [[ $CURRENT_FAILED == 0 ]]; then PASS=$((PASS+1)); echo "ok   $name"
@@ -65,11 +89,29 @@ test_case() {
 }
 
 # ---- tests ---------------------------------------------------------------------------------
+# `PO_TEST_RUN_SH` tells the sourced files they are being sourced by this runner and not run
+# directly (#1124: `bash scripts/po/test/merge-when-green.test.sh` printed 138 lines of
+# `test_case: command not found` and exited 0).
+export PO_TEST_RUN_SH=1
 for t in "$HERE"/*.test.sh; do
+  CURRENT_FILE=$(basename "$t")
   # shellcheck source=/dev/null
   source "$t"
 done
+CURRENT_FILE=""
 
 echo
-echo "passed: $PASS  failed: $FAIL"
+echo "passed: $PASS  failed: $FAIL  (of ${#NAMES[@]} defined)"
 if [[ $FAIL -gt 0 ]]; then printf '  - %s\n' "${FAILED[@]}"; exit 1; fi
+
+# **Nothing ran is a failure** (#1124). Reported last so the count above is still visible, and
+# with the available names, because "no match" without "here is what exists" just moves the
+# guessing one step along.
+if [[ $RAN == 0 ]]; then
+  echo
+  echo "run.sh: フィルタ [$FILTER] に当たるテストが 0 件でした（定義 ${#NAMES[@]} 件、実行 0 件）。" >&2
+  echo "  **0 件実行は緑ではありません。** フィルタはテスト名、または *.test.sh のファイル名に当たります。" >&2
+  echo "  当たるもの:" >&2
+  printf '    %s\n' "${NAMES[@]}" >&2
+  exit 1
+fi

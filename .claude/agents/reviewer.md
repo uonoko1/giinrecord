@@ -31,6 +31,34 @@ tools: Bash, Read, Grep, Glob
 6. **テストの期待値が検査対象と同じ源から来ていないか**（自己参照。bills が痩せれば期待値も痩せる型）。
 7. denylist になっていないか（列挙漏れが即穴になる型。allowlist にすべきか）。
 
+## コミットの身元（`user.email`）を自分で決めない
+
+**レビュアーもコミットすることがある**（検証用の使い捨てコミット・枝への追記）。
+**`user.email` を設定・上書きしない。** **`git config` に在る値をそのまま使う。**
+**`git -c user.email=…` も `GIT_AUTHOR_EMAIL=` も `--author` も使わない。**
+
+**使う唯一の綴りはこれである**（本人確認済み。`gh api user/120390190` → `login=uonoko1`）:
+
+```
+120390190+uonoko1@users.noreply.github.com
+```
+
+**2026-09-28 に、担当者エージェントが `219112946+seiji-kiroku-dev@…` という数字を作り、
+`github.com/MLehnus`（無関係の実在の個人）が Contributors に出た**（#1101）。
+**形（`<数字>+<名前>@users.noreply.github.com`）を真似ても、その数字は推測できない。**
+
+**レビューで見ること**:
+- **PR の枝のコミットの author / committer を読む**——**本文の trailer だけ数えて author を
+  見ないのは「代理と実体」そのもの**（作業合意）:
+  ```
+  gh api repos/uonoko1/giinrecord/pulls/<PR>/commits --paginate \
+    --jq '[.[] | .commit.author.email, .commit.committer.email] | .[]' | sort | uniq -c
+  ```
+  **実測 0.5 秒**（2026-09-28、#1064 の 9 コミット）。
+- **使い捨てのフィクスチャに、実在しうる数字 ID を書かない。**
+  **`999+dev@users.noreply.github.com` は `id=999` = `github.com/maxthelion` という
+  実在の個人だった**——**「他人の数字 ID の例」を書くこと自体が、他人の ID を書くことである。**
+
 ## 報告（日本語）
 
 **報告の 1 行目は、必ずこの形で書く**（`<結論>` は下の 3 つのどれか 1 つ。**綴りもそのまま**）:

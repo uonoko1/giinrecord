@@ -78,6 +78,38 @@ tools: Bash, Read, Edit, Write, Grep, Glob
     **その形で 649M が積もったので、PO 側が `isolation: worktree` を使わない運用にした。**
     **この項目はあなたが自分で作る場合にしか効かない。**
 
+## コミットの身元（`user.email`）を自分で決めない
+
+**`git config` に在る値をそのまま使う。** **`user.email` を設定・上書きしない。**
+**`git -c user.email=…` も `GIT_AUTHOR_EMAIL=` も `--author` も使わない。**
+
+**使う唯一の綴りはこれである**（本人確認済み。`gh api user/120390190` → `login=uonoko1`）:
+
+```
+120390190+uonoko1@users.noreply.github.com
+```
+
+**この値は `.git/config` に在り、worktree でも既定で効く。** **何もしなければ正しく刻まれる。**
+**確かめるなら読むだけにする**: `git config user.email`
+
+**2026-09-28 に、担当者エージェントが数字を作った**（#1101）:
+
+```
+書かれた値: 219112946+seiji-kiroku-dev@users.noreply.github.com
+            ^^^^^^^^^ = github.com/MLehnus（無関係の実在の個人）
+正しい値:   120390190 = uonoko1
+```
+
+**`git grep 219112946 origin/main` は 0 件、`grep -rn 219112946 .claude/` も 0 件。**
+**リポジトリのどこにも書かれていない数字だった。** **正しい値は `git config` に在ったのに、
+読まずに書いた。** **`_sidebar` の Contributors が 5 人 → 6 人になり、`MLehnus` が出た。**
+
+- **数字 ID の形（`<数字>+<名前>@users.noreply.github.com`）を真似ても意味が無い。**
+  **その数字は GitHub のアカウント ID であって、名前から決まらない。** **推測できない。**
+- **`packages/etl/test/commit-identity-allowlist.test.ts` が、この枝が足すコミットの
+  author / committer を逐語で照合する。** **違う値で commit すると CI が落ちる。**
+  **落ちたら**: `git -c user.email=120390190+uonoko1@users.noreply.github.com commit --amend --reset-author --no-edit`
+
 ## やってはいけないこと
 - PO の作業ツリーでの `git switch` / `git stash` / ファイル編集
 - **`git stash` を使うこと**（worktree を分けても **stash はリポジトリ共有**。`pop` は「一番上」を取るので

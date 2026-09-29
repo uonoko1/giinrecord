@@ -109,6 +109,7 @@ grep してから起票してください（**今日の 5 件はそこにあり�
 | **push される前に rebase された枝が、main の行を黙って消す**（`merge-base` が既に main の先端なので上の検査は `ok` と言う） | `scripts/ci/stale-base.sh` の `--net-deletions` モード（ファイルが残ったまま base の行が差し引きで減っていないかを見る）。テストは `scripts/ci/test/stale-base.test.sh` の `t_net_deletions_catches_a_rebased_branch_that_dropped_the_bases_lines`。**直近 60 PR で 4 件に火が点き、うち 2 件が実地の事故**（#832 は 3 ファイル 286 行、#761 は 2 ファイル 33 行。残る 2 件 #740 / #794 は手で読んで意図した置き換え・移設だった）。**証拠ではなく合図なので、意図した削除なら PR 本文に理由を書く**（#836） |
 | 秘密・サーバー情報がリポジトリに入る | `scripts/ci/forbidden-patterns.sh`（`private-key` / `github-token` / `aws-key` / `env-file` / `ip-address` / `forbidden`。#133） |
 | 破壊的な git（`reset --hard` 等）を scripts に書いて未コミットの作業を消す | `scripts/ci/forbidden-patterns.sh` の `destructive-git` 規則（#542/#557）。退避は `scripts/dev/mutate.sh` を使う |
+| 利用者本人の個人アドレスが追跡ファイルに入る | `scripts/ci/forbidden-patterns.sh` の `personal-address` 規則（#1111。2026-09-28 に 3 本の PR が計 7 行を入れかけ、3 回ともレビュアーだけが見つけた）。架空アドレスの綴りは `packages/etl/test/fake-addresses.ts` の `FAKE_ADDRESSES` を使う |
 | 高深刻度の脆弱性を無期限に放置する | `scripts/ci/audit.sh`（`audit-ignore.txt` の例外は必ず期限付き）と `scripts/ci/audit-ignore.txt`（#133） |
 | shellcheck の対象・版が CI と手元でずれる | `scripts/ci/shellcheck.sh`（`--list` の対象と `--pinned-version` の固定版が 1 か所。#154/#552） |
 | ビルド成果物がリポジトリに入る | `apps/web/app/lib/repo-hygiene.test.ts`（`check-ignore` で判定。文字列一致ではなく git の判定） |
