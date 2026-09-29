@@ -4,6 +4,7 @@ import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
+import { FAKE_SOMEONE } from "./fake-addresses.ts";
 
 /**
  * **CI がコミットするときのメールアドレスは、数字 ID 付きでなければならない。**
@@ -428,7 +429,7 @@ test("数字 ID 付きの noreply だけを通す正規表現そのものを検�
     "dev@users.noreply.github.com",
     "etl@users.noreply.github.com",
     "bot@users.noreply.github.com",
-    "someone@example.com", // **実在の個人アドレスを OSS のソースに書かないこと**（レビューの指摘）。外部ドメインが落ちることは架空のアドレスで完全に言える
+    FAKE_SOMEONE, // **実在の個人アドレスを OSS のソースに書かないこと**（レビューの指摘）。外部ドメインが落ちることは架空のアドレスで完全に言える
     "41898282+github-actions[bot]@example.com",
     "+uonoko1@users.noreply.github.com",
     "120390190@users.noreply.github.com",
