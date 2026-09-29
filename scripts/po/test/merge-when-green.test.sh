@@ -1,4 +1,15 @@
 # shellcheck shell=bash
+# **Do not run this file directly** (#1124). It is sourced by scripts/po/test/run.sh, which
+# defines test_case / assert_* / run_script. Running it with `bash` printed nothing but
+# `test_case: command not found` and ran not one assertion — measured on origin/main, all 8
+# files: 221 such lines in total (merge-when-green 138, board-audit 29, worktree-audit 21,
+# worktree-sweep 12, etl-verify 6, board-set/measure-pbi/verify-site 5 each).
+[[ -n ${PO_TEST_RUN_SH:-} ]] || {
+  echo "$(basename "${BASH_SOURCE[0]}"): このファイルは単体では走りません（run.sh が source します）。" >&2
+  echo "  bash scripts/po/test/run.sh                       # 全部" >&2
+  echo "  bash scripts/po/test/run.sh ${BASH_SOURCE[0]##*/} # このファイルだけ" >&2
+  exit 2
+}
 # Tests for scripts/po/merge-when-green.sh (sourced by run.sh)
 
 t_merge_rejects_non_numeric() {
@@ -342,7 +353,13 @@ EOF
 )
   run_script "$h" merge-when-green.sh 12
   assert_eq 1 "$STATUS" "exit status"
+  # **#1116: 「check」だけでは締まらない。** タイムアウト文言
+  # `timed out after N polls waiting for checks on PR #12` の **`checks` に当たって通る**ので、
+  # **赤を読まずに止まった場合でも緑のまま**だった（PR #1116 が実際にそうなり、
+  # この assert が弱かったせいで気づけなかった）。**赤を読んだときにしか出ない文言で締める。**
+  assert_contains "$ERR" "checks failed on PR #12" "赤を読んで止める（タイムアウトで止まったのではない）"
   assert_contains "$ERR" "check" "names the failed check"
+  assert_not_contains "$ERR" "timed out" "タイムアウトではなく赤で止まる"
   assert_not_contains "$LOG" "pr	merge" "never merges"
 }
 test_case "merge: a failed check aborts without merging" t_merge_failed_check_aborts
@@ -1214,10 +1231,14 @@ handle() {
   case "$*" in
     "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
     "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      # #1093: **必須の名前を 1 件混ぜてある。** 必須 0 件は緑にしないので（fail-closed）、
+      # `docker-web` だけの fixture だとこのテストは「pending を待つ」ではなく
+      # 「必須が 0 件」で止まってしまう。**本物の PR には必ず必須 5 件が走る**ので、
+      # 必須を持たせたほうが実データに近い。**pending の判定そのものは変えていない。**
       if [ "$(bump)" -lt 2 ]; then
-        echo '{"check_runs":[{"name":"docker-web","status":"in_progress","conclusion":null,"started_at":"t1"}]}'
+        echo '{"check_runs":[{"name":"docker-web","status":"in_progress","conclusion":null,"started_at":"t1"},{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}'
       else
-        echo '{"check_runs":[{"name":"docker-web","status":"completed","conclusion":"success","started_at":"t1"}]}'
+        echo '{"check_runs":[{"name":"docker-web","status":"completed","conclusion":"success","started_at":"t1"},{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}'
       fi ;;
     "pr merge 12 --squash --delete-branch") echo merged ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
@@ -3161,6 +3182,228 @@ EOF
 }
 test_case "1054: 末尾 5 件が全部 pass 系でも先頭寄りの赤は赤（.[-4:] / .[-5:] を殺す）" t_1054_red_early_with_all_pass_tail
 
+# ---- #1093: check-runs のページングと母数の検算 ---------------------------------------------
+#
+# **実測（2026-09-28、`42f9c225` は実在の main のコミット）**:
+#   gh api ".../check-runs"                        → returned 30 / total_count 53
+#   gh api ".../check-runs" --paginate             → returned 53 / total_count 53（**1 ページ**）
+#   gh api ".../check-runs?per_page=5" --paginate  → **11 個の JSON ドキュメント**（5×10 + 3）
+#
+# **`--paginate` は「ページを 1 個の JSON に畳む」わけではない**（gh 2.89.0 で測った）。
+# **オブジェクト応答では、ページごとに 1 個の JSON ドキュメントを並べて吐く。**
+# `-q` を付けると **jq はドキュメントごとに走る**ので、`group_by` の畳み込みが
+# **ページ境界をまたげない**——同名の run が別ページに分かれたら、畳まれずに 2 行出る。
+# 上の per_page=5 の実測で `.check_runs|length` は `5` が 10 行、と**複数行**返った。
+#
+# だからこの PR は **`-q` をやめ、生 JSON を `jq -s` で束ねてから 1 回だけ畳む。**
+# `--paginate` は付ける（gh が per_page=100 を補うので、100 件までは 1 ページで足りる。
+# **100 件を超えたら本当に複数ページになる**ので、束ねる側が要る）。
+
+# 2 ページに分かれ、**同名の run がページ境界をまたぐ**。
+# 1 ページ目に `check` の success、2 ページ目に同じ `check` の failure。
+# 畳み込みがページをまたげないと **success 1 件 + failure 1 件の 2 行**になり、
+# 「畳んで 1 件」という件数のログが嘘になる。**赤は拾えるが件数が嘘になる**ので件数で見る。
+t_1093_folds_across_page_boundary() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      # gh --paginate が吐く形: **1 ページ = 1 個の JSON ドキュメント**を続けて出す
+      echo '{"total_count":4,"check_runs":[
+        {"name":"check","status":"completed","conclusion":"success","started_at":"t2","details_url":"u1"},
+        {"name":"gitleaks","status":"completed","conclusion":"success","started_at":"t2"}
+      ]}'
+      echo '{"total_count":4,"check_runs":[
+        {"name":"check","status":"completed","conclusion":"failure","started_at":"t1","details_url":"u2"},
+        {"name":"gitleaks","status":"completed","conclusion":"success","started_at":"t1"}
+      ]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "ページ境界をまたぐ赤で止まる"
+  assert_contains "$ERR" "checks failed on PR #12: check" "必須の赤として止める"
+  # **4 run を 2 件に畳む。** ページごとに畳むと「検査 3 件」や「検査 4 件」になる
+  assert_contains "$OUT$ERR" "検査 2 件 / 必須 2 件 / 赤 1 件" "2 ページ 4 run を名前 2 件に畳む"
+  assert_not_contains "$LOG" "pr	merge	12" "マージを試みない"
+}
+test_case "1093: ページ境界をまたいで同名を畳む（--paginate は JSON を複数返す）" t_1093_folds_across_page_boundary
+
+# **`--paginate` が実際に付いていること**を呼び出しの形で見る。
+# 付いていなければ GitHub の既定 30 件で切れる（実測 30/53）。
+t_1093_passes_paginate_flag() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"total_count":2,"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"},{"name":"gitleaks","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "緑ならマージ: $ERR"
+  local call; call=$(grep 'check-runs' <<<"$LOG" | head -1)
+  assert_contains "$call" "--paginate" "check-runs を --paginate で呼ぶ（既定 30 件で切らせない）"
+}
+test_case "1093: check-runs の呼び出しに --paginate が付く" t_1093_passes_paginate_flag
+
+# **母数の検算**（#757 の「0 件と数えていないを区別する」の、check-runs 版）。
+# `total_count` が言う件数より少ない run しか手元に無いなら、**取りこぼしている**。
+# 黙って「全部緑」にせず、落ちる。
+t_1093_short_read_fails_closed() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      # **本物の 30/53 と同じ形**: total_count は 53 だが 2 件しか返らない
+      echo '{"total_count":53,"check_runs":[
+        {"name":"check","status":"completed","conclusion":"success","started_at":"t1"},
+        {"name":"gitleaks","status":"completed","conclusion":"success","started_at":"t1"}
+      ]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "取りこぼしたら落ちる（黙って緑にしない）"
+  assert_contains "$ERR" "2" "手元の件数を言う"
+  assert_contains "$ERR" "53" "total_count を言う"
+  assert_not_contains "$LOG" "pr	merge	12" "マージを試みない"
+}
+test_case "1093: total_count より少なければ落ちる（30/53 の形）" t_1093_short_read_fails_closed
+
+# 母数の検算は **等しければ通る**（検算そのものが常に落ちる置物になっていないこと）
+t_1093_exact_count_passes() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"total_count":3,"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"},{"name":"check","status":"completed","conclusion":"success","started_at":"t0"},{"name":"gitleaks","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "total_count と一致すれば通る: $ERR"
+  # **畳んだ後の 2 件ではなく、生の 3 件と突き合わせる**（畳む前の母数で検算する）
+  assert_contains "$OUT$ERR" "all 2 checks green" "畳んだ件数でログを書く"
+}
+test_case "1093: total_count と一致すれば通る（検算が置物でないこと）" t_1093_exact_count_passes
+
+# **`total_count` が無い応答**（fixture や古い応答）で落とさない。
+# 検算は「total_count があるときに、それより少なければ落ちる」であって、
+# 「total_count が無ければ落ちる」ではない——**無い場合まで落とすと、
+# この道具が別の理由で止まる**（母数を知らないことと、取りこぼすことは別）。
+t_1093_missing_total_count_is_tolerated() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"},{"name":"gitleaks","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "total_count が無くても落とさない: $ERR"
+}
+test_case "1093: total_count が無い応答では検算しない" t_1093_missing_total_count_is_tolerated
+
+# **必須の母数の下限**（issue #1093 の 2 番目）。
+# ページングの欠落と噛み合うと「必須 0 件・赤 0 件」で「all N checks green」と書いて
+# マージしうる。**必須が 1 件も見えないなら、それは「全部緑」ではなく「数えていない」。**
+# 母数 0 件（#757）と同じ強さで塞ぐ。
+t_1093_zero_required_fails_closed() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      # **必須の名前が 1 つも無い**（check / gitleaks / forbidden-patterns / audit / pr-closes）。
+      # 必須でないと明記された名前だけが緑で返る形
+      echo '{"total_count":2,"check_runs":[
+        {"name":"stale-base","status":"completed","conclusion":"success","started_at":"t1"},
+        {"name":"docker-web","status":"completed","conclusion":"success","started_at":"t1"}
+      ]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "必須が 0 件なら緑にしない"
+  assert_not_contains "$LOG" "pr	merge	12" "マージを試みない"
+  assert_not_contains "$OUT$ERR" "all 2 checks green" "「全部緑」と書かない"
+}
+test_case "1093: 必須が 0 件なら緑にしない（fail-closed）" t_1093_zero_required_fails_closed
+
+# **実データの形**（PO が PR #1108 の head で実測した並びを写したもの）:
+#   skipped  issue-secrets   ← 条件付き job の正当な skip
+#   skipped  docker-web      ← 同上
+#   success  audit / check / forbidden-patterns / gitleaks / pr-closes / stale-base
+#   **`pr-closes` が 2 件**（再実行した分だけ check-runs が積もる）
+#
+# **再実行のたびに積もる**ので、`--paginate` が効いてくるのは**手こずった PR** である。
+# ここでは**その積もった形が 2 ページに分かれ、しかも同名が両ページにまたがる**場合に、
+# **畳んだ件数と母数の両方が正しいこと**を見る。
+# **`pr-closes` は必須**なので、畳み損ねると「必須 N 件」のログが嘘になる。
+t_1093_real_shape_reruns_across_pages() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      # 1 ページ目（新しい順）: 再実行した pr-closes の 2 本目までが入る
+      # **#1069 との統合**: `docker-web` は `SKIPPABLE_CHECKS`（`issue-secrets` のみ）に
+      # 無いので、**`skipped` のままだと #1069 の規則で赤になる。**
+      # このテストが見たいのは**ページ境界をまたぐ畳み込み**なので `success` にした
+      # （`issue-secrets` の skipped は allowlist に在るので、そのまま残す）。
+      # **JSON の中に `#` のコメントは書けない**（シェルの単一引用符の中は素通しなので、
+      # 書くと jq が `Invalid numeric literal` で落ちる。実際に一度そうした）。
+      echo '{"total_count":9,"check_runs":[
+        {"name":"issue-secrets","status":"completed","conclusion":"skipped","started_at":"t9"},
+        {"name":"docker-web","status":"completed","conclusion":"success","started_at":"t8"},
+        {"name":"pr-closes","status":"completed","conclusion":"success","started_at":"t7"},
+        {"name":"audit","status":"completed","conclusion":"success","started_at":"t6"},
+        {"name":"check","status":"completed","conclusion":"success","started_at":"t5"}
+      ]}'
+      # 2 ページ目: **同じ pr-closes の 1 本目**（再実行前）がこちらに落ちる
+      echo '{"total_count":9,"check_runs":[
+        {"name":"forbidden-patterns","status":"completed","conclusion":"success","started_at":"t4"},
+        {"name":"gitleaks","status":"completed","conclusion":"success","started_at":"t3"},
+        {"name":"stale-base","status":"completed","conclusion":"success","started_at":"t2"},
+        {"name":"pr-closes","status":"completed","conclusion":"success","started_at":"t1"}
+      ]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "全部緑ならマージする: $ERR"
+  # **9 run が名前 8 件に畳まれる**（pr-closes の 2 本が 1 件になる）。
+  # ページごとに畳むと pr-closes が 2 件のまま残って 9 件になる
+  assert_contains "$OUT$ERR" "all 8 checks green" "9 run を名前 8 件に畳む（pr-closes の再実行 2 本を 1 件に）"
+  assert_contains "$LOG" "pr	merge	12" "マージする"
+}
+test_case "1093: 再実行で積もった実データの形（同名がページ境界をまたぐ）" t_1093_real_shape_reruns_across_pages
+
 # --- #1069: `skipped` を pass として数えていたので、走っていない必須チェックが緑になっていた ------
 #
 # **再現（この PR を書く前に、`origin/main` の素の状態で実際に走らせた）:**
@@ -3380,3 +3623,166 @@ t_1069_skippable_list_is_pinned() {
   assert_eq 'SKIPPABLE_CHECKS=(issue-secrets)' "$list" "skipped を緑と数える名前の一覧"
 }
 test_case "1069: SKIPPABLE_CHECKS の中身が固定されている" t_1069_skippable_list_is_pinned
+
+# --- 枝のコミットの身元（#1101）---------------------------------------------------------------
+# **2026-09-28、#1064 の枝の 3 コミットが `219112946+seiji-kiroku-dev@…` で author されていた。**
+# **`219112946` は `github.com/MLehnus`（無関係の実在の個人）の ID である。**
+# **squash merge が author から `Co-authored-by` を合成し、その人が Contributors に出た。**
+# **PO はマージ前に枝の author を見ていなかった。**
+#
+# **`--jq` は本物の jq が評価する**ので、ここの JSON は本物の API と同じ形で書く。
+MWG_BAD_COMMITS='[{"parents":[{"sha":"p1"}],"commit":{"author":{"email":"219112946+seiji-kiroku-dev@users.noreply.github.com"},"committer":{"email":"219112946+seiji-kiroku-dev@users.noreply.github.com"}}}]'
+
+t_merge_refuses_wrong_numeric_id() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/pulls/12/commits"*) echo '$MWG_BAD_COMMITS' ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "exit status"
+  assert_contains "$ERR" "219112946+seiji-kiroku-dev@users.noreply.github.com" "見つかったアドレスを名指しする"
+  assert_contains "$ERR" "Contributors" "何が起きるかを書く"
+  assert_not_contains "$LOG" "pr	merge	12" "マージしない"
+}
+test_case "merge: 枝が他人の数字 ID で author されていたらマージしない (#1101)" t_merge_refuses_wrong_numeric_id
+
+# **形は正しいので、#1043 / #1075 の正規表現（`/^\d+\+[^@]+@users\.noreply\.github\.com$/`）は
+# 2 つとも通す。** **逐語 allowlist だけが落とせる**——**その差をここで固定する。**
+t_merge_refuses_any_unverified_numeric_id() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    # **形としては完全に正しい**（数字 + `+` + login + GitHub の noreply ドメイン）。
+    "api repos/uonoko1/giinrecord/pulls/12/commits"*) echo '[{"parents":[{"sha":"p1"}],"commit":{"author":{"email":"120390191+uonoko1@users.noreply.github.com"},"committer":{"email":"120390191+uonoko1@users.noreply.github.com"}}}]' ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "exit status"
+  assert_contains "$ERR" "120390191+uonoko1" "1 桁違いでも落とす（形では区別できない）"
+  assert_not_contains "$LOG" "pr	merge	12" "マージしない"
+}
+test_case "merge: 形が正しくても本人確認していない数字 ID なら止める (#1101)" t_merge_refuses_any_unverified_numeric_id
+
+# **読めなかったことを「きれい」と読まない**（#757）。**母数 0 で緑にしない。**
+t_merge_refuses_when_commits_unreadable() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/pulls/12/commits"*) echo "HTTP 503" >&2; exit 1 ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "exit status"
+  assert_contains "$ERR" "身元がきれい" "読めなかったことを「きれい」と読まないと書く"
+  assert_not_contains "$LOG" "pr	merge	12" "マージしない"
+}
+test_case "merge: 枝のコミットを読めなければマージしない（母数 0 を緑にしない, #1101）" t_merge_refuses_when_commits_unreadable
+
+# **bot のコミット（データ更新 PR）は通らなければならない**——**偽陽性が出ると、
+# データ更新が毎回止まる。**
+t_merge_allows_bot_identity() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/pulls/12/commits"*) echo '[{"parents":[{"sha":"p1"}],"commit":{"author":{"email":"41898282+github-actions[bot]@users.noreply.github.com"},"committer":{"email":"41898282+github-actions[bot]@users.noreply.github.com"}}}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "exit status: $ERR"
+  assert_contains "$LOG" "pr	merge	12" "bot の identity はマージできる"
+}
+test_case "merge: github-actions[bot] の identity は通る（偽陽性を出さない, #1101）" t_merge_allows_bot_identity
+
+# **マージコミットは対象外**（`--no-merges` 相当の `select((.parents|length) < 2)`）。
+# **理由は #1075 が測ってある**: **本人が手元で `git merge main` するたびに赤くなり、
+# 8 件中 5 件が落ちる。** **squash merge が trailer を合成する元は squash 対象のコミットなので、
+# 実害の経路は対象内に残る。**
+t_merge_ignores_merge_commits() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    # 親が 2 つ = 手元で `git merge main` したマージコミット。本人の個人アドレスが author。
+    "api repos/uonoko1/giinrecord/pulls/12/commits"*) echo '[{"parents":[{"sha":"p1"},{"sha":"p2"}],"commit":{"author":{"email":"someone@example.com"},"committer":{"email":"someone@example.com"}}},{"parents":[{"sha":"p1"}],"commit":{"author":{"email":"120390190+uonoko1@users.noreply.github.com"},"committer":{"email":"120390190+uonoko1@users.noreply.github.com"}}}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "exit status: $ERR"
+  assert_contains "$LOG" "pr	merge	12" "マージコミットの author では止めない"
+}
+test_case "merge: マージコミットの author は見ない（偽陽性, #1101）" t_merge_ignores_merge_commits
+
+# **逐語の綴りは、このスクリプトと `packages/etl/test/commit-identity-allowlist.test.ts` の
+# 2 か所に在る**（TypeScript と bash で共有できない）。**ずれたら気づけるように固定する。**
+t_merge_allowlist_is_verbatim() {
+  local src
+  src=$(cat "$PO_DIR/merge-when-green.sh")
+  assert_contains "$src" '"120390190+uonoko1@users.noreply.github.com"' "本人の逐語アドレスを持っている"
+  assert_contains "$src" '"41898282+github-actions[bot]@users.noreply.github.com"' "bot の逐語アドレスを持っている"
+  # **形の正規表現に退化していないこと**（それだと #1101 が素通りする）。
+  assert_not_contains "$src" '\d+\+[^@]+@users' "逐語 allowlist が形の要求に退化している"
+}
+test_case "merge: identity の allowlist が逐語で書かれている (#1101)" t_merge_allowlist_is_verbatim
+
+# **逐語の綴りは 2 か所に在る**（bash と TypeScript。言語が違うので共有できない）。
+# **初版はこの 2 つが「部分集合か」しか見ておらず、片方にだけアドレスを足すと素通りした**
+# ——**PR の「自信が無い点」に自分で書いた穴を、レビューが実測で確かめた:**
+#
+# ```
+# 尤もらしい ID を bash 側だけに足す   → shell 56 passed / 0 failed  （素通り）
+# 同じものを TypeScript 側だけに足す   → TS   4 pass / 0 fail        （素通り）
+# ```
+#
+# **「片方に足す」は、まさに誤帰属が入る形である**（#1101 は「誰かが身元を増やした」事故だった）。
+# **だから部分集合ではなく、両方向の一致を要求する**——**集合として同じであることを見る。**
+t_merge_allowlist_matches_typescript() {
+  local sh_list ts_list ts_file
+  ts_file="$PO_DIR/../../packages/etl/test/commit-identity-allowlist.test.ts"
+  [[ -f "$ts_file" ]] || { fail "TypeScript 側の allowlist が見つからない: $ts_file"; return; }
+  # **どちらも「逐語のアドレスだけを 1 行 1 個で」取り出して、並べ替えて比べる。**
+  # **拾う場所を間違えると空同士で一致してしまう**ので、下で母数を見る。
+  # **`|| true` が要る**: **`grep` は 0 件のとき終了コード 1 を返す**ので、
+  # **`set -e` の下では代入そのものでランナーが落ちる**（落ちると残りのテストが走らない＝
+  # **「赤」ではなく「無言で消える」**）。**実測で踏んだ**（抽出を空にする変異を当てたとき）。
+  sh_list=$(sed -n '/^ALLOWED_IDENTITIES=(/,/^)/p' "$PO_DIR/merge-when-green.sh" \
+    | grep -oE '[][A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+' | sort -u || true)
+  ts_list=$(sed -n '/^export const ALLOWED_IDENTITIES/,/^];/p' "$ts_file" \
+    | grep -oE '[][A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+' | sort -u || true)
+  # **母数**（#757）: **空同士が一致して緑になるのを防ぐ。**
+  # **実際に踏んだ**: **初版の文字クラス `[A-Za-z0-9._%+[]-]` は `[` が class を閉じてしまい、
+  # 両側とも 0 件になって「空 == 空」で緑になるところだった**——**この 2 行が止めた。**
+  # **`grep -c` は 0 件のとき終了コード 1 を返す**ので、`set -e` の下では
+  # **`|| true` を付けないとランナーごと落ちる**（落ちると残りのテストが走らない）。
+  local sh_n ts_n
+  sh_n=$(grep -c . <<<"$sh_list" || true)
+  ts_n=$(grep -c . <<<"$ts_list" || true)
+  assert_eq 2 "$sh_n" "bash 側から取れた件数（0 なら抽出が壊れている）"
+  assert_eq 2 "$ts_n" "TypeScript 側から取れた件数（0 なら抽出が壊れている）"
+  assert_eq "$sh_list" "$ts_list" "2 か所の allowlist がずれている（片方にだけ身元が足された）"
+}
+test_case "merge: identity の allowlist が 2 か所で完全に一致する (#1101)" t_merge_allowlist_matches_typescript
