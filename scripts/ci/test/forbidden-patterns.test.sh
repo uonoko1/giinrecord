@@ -342,6 +342,51 @@ t_destructive_git_worktree_sweep_is_the_only_exception() {
     assert_contains "$OUT" "destructive-git" "[$form] rule name"
   done
 }
+# **例外の穴（実装中に実測で踏んだ）**: 例外を「行」で外す形にすると、**例外の語と別の破壊的な形を
+# 1 行に同居させるだけで、行ごと落ちて素通りする**。`grep` は行単位なので、この穴は
+# 「行を外す」設計に必ず付いてくる。**実測した素通り**（origin/main ではなく、この PR の途中の実装で）:
+#   scripts/po/worktree-sweep.sh に
+#   `git rm -r --cached .; git reset --hard; git worktree remove --force /x` → **clean**
+# **いまは例外の在る形を別の正規表現に分け、一般の形からは 1 ファイルも外していない**ので落ちる。
+t_destructive_git_exception_does_not_shield_the_same_line() {
+  local i=0 form
+  for form in "$G rm -r --cached .; $G worktree remove /x" \
+              "$G worktree remove /x; $G reset --hard" \
+              "$G branch -D x && $G rm --cached ." \
+              "$G worktree remove /x  # $G rm はここでは使わない"; do
+    i=$((i+1)); repo "dgh$i"; add scripts/po/worktree-sweep.sh "$form"; run
+    assert_eq 1 "$STATUS" "[$form] 例外のファイルでも同居は落ちる: $OUT"
+    assert_contains "$OUT" "destructive-git" "[$form] rule name"
+  done
+}
+# **行末コメントの中のサブコマンドは落ちる**（**既存の振る舞い。#1123 が変えたものではない**）。
+# 実測して確かめた: origin/main の `reset +--hard` も同じで、
+# `git checkout main  # git reset --hard は使わない` は**落ちる**。
+# **`MID` が `#` を除くのは「フラグを探す範囲」の話**で、**サブコマンド名そのものには効かない**
+# （`git reset --hard` / `git rm` は `MID` を通らずに直接並んでいる）。
+# **行頭コメント（`# …`）だけが通る**（`grep -v '^[^:]+:[0-9]+: *#'` が落としている）。
+# **この非対称を固定しておく**——次の人が「コメントなら通るはず」と考えて穴を作らないため。
+t_destructive_git_subcommand_in_trailing_comment_is_flagged() {
+  local i=0 form
+  for form in "$G checkout main  # $G reset --hard は使わない" \
+              "echo ok  # $G rm --cached は使わない"; do
+    i=$((i+1)); repo "dgt$i"; add scripts/x.sh "$form"; run
+    assert_eq 1 "$STATUS" "[$form] 行末コメントの中でも落ちる（既存の振る舞い）: $OUT"
+  done
+  # 行頭コメントは通る（対比）
+  repo dgt0; add scripts/x.sh "# $G rm --cached は使わない（#1123）"; run
+  assert_eq 0 "$STATUS" "行頭コメントは通る: $OUT"
+}
+# `worktree-sweep.sh` は**失敗したときのログ文**に `git worktree remove` という語を含む（124 行目）。
+# **呼び出しではない**ので落としてはいけない。**例外はこのファイル全体なので通る**が、
+# **例外が無いファイルでログ文に書いた場合は落ちる**——それは受け入れる（語を書かずに
+# `log "片付けに失敗しました"` と書けばよい。**偽陽性の代償は 1 行の書き換えで済む**）。
+t_destructive_git_sweep_log_message_passes() {
+  repo dgl
+  add scripts/po/worktree-sweep.sh "log \"残す \$path (\$branch): $G worktree remove が失敗しました\""
+  run
+  assert_eq 0 "$STATUS" "例外ファイルのログ文は通る: $OUT"
+}
 # **母数（#757）**: 「0 件」と「1 本も見ていない」を同じ緑にしない。
 # `GIT_FILES` のパスの綴りが変わったり `ls-files` が空を返したりすると、
 # **静的検査は「全部の行を見る」という前提のほうが先に壊れる**。件数は常に出す。
@@ -597,6 +642,9 @@ test_case "destructive git in a comment is allowed (#542)" t_destructive_git_in_
 test_case "destructive git: rm --cached / worktree remove / update-ref -d / branch -D も落ちる (#1123)" t_destructive_git_index_and_ref_forms_fail
 test_case "worktree list/add/prune・branch -d・rm --dry-run は通る (#1123)" t_destructive_git_index_and_ref_safe_forms_pass
 test_case "worktree remove / branch -D の例外は worktree-sweep.sh だけ (#1123)" t_destructive_git_worktree_sweep_is_the_only_exception
+test_case "例外の語と同居させても素通りしない (#1123)" t_destructive_git_exception_does_not_shield_the_same_line
+test_case "行末コメントの中のサブコマンドは落ちる（既存の振る舞い） (#1123)" t_destructive_git_subcommand_in_trailing_comment_is_flagged
+test_case "worktree-sweep.sh のログ文は通る (#1123)" t_destructive_git_sweep_log_message_passes
 test_case "destructive git: 母数を出す (#1123/#757)" t_destructive_git_prints_denominator
 test_case "destructive git: 対象 0 本でも母数を出す (#1123/#757)" t_destructive_git_zero_files_is_not_clean
 

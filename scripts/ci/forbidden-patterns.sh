@@ -136,8 +136,17 @@ reset +--hard|\
 clean +$MID(-[A-Za-z]*f[A-Za-z]*|--force)([[:space:]]|$)|\
 stash([[:space:]]|$)|\
 rm([[:space:]]|$)|\
+update-ref +$MID(-d|--delete)([[:space:]]|$))"
+# **例外を持つ形は、別の正規表現に分けて持つ**（#1123。**最初は 1 本にまとめて穴を作った**）。
+# **実測した失敗**: 例外を「このファイルのこの行」で外す形にしたら、`worktree-sweep.sh` の行に
+# `git rm -r --cached .; git reset --hard; git worktree remove --force /x` と 1 行で書いたものが
+# **`clean` で通った**——**同じ行に例外の語が在ると、行ごと落ちてしまう**ためである。
+# **`grep` は行単位なので、「行を外す」形の例外は必ずこの穴を持つ。**
+# **だから例外の在る形だけを別の regex にして、そちらの検出結果だけをファイル名で外す。**
+# **上の `DESTRUCTIVE_GIT_RE` には例外が 1 つも無い**（`restore --help` / `rm --dry-run` は
+# 「無害な形」であって「特定ファイルの例外」ではない）。
+DESTRUCTIVE_GIT_SWEEP_RE="(^|[^#[:alnum:]_-])git +(\
 worktree +remove([[:space:]]|$)|\
-update-ref +$MID(-d|--delete)([[:space:]]|$)|\
 branch +$MID-[A-Za-z]*D[A-Za-z]*([[:space:]]|$))"
 # `restore` / `rm` above match every invocation and the safe forms are dropped again below. For `restore` there
 # is no safe target at all (`git restore <path>` overwrites that path from the index — 実測), so only `--help`
@@ -146,22 +155,25 @@ branch +$MID-[A-Za-z]*D[A-Za-z]*([[:space:]]|$))"
 # throw-away repo under $TMP, but the rule cannot tell that from the text, and pretending it can is how holes
 # are made. That line is rewritten to `git update-index --force-remove`, which touches only the index (#1123).
 #
-# **`worktree remove` / `branch -D` の例外は 1 ファイルだけ**: `scripts/po/worktree-sweep.sh` は
+DESTRUCTIVE_GIT_ALLOW_RE='git[[:space:]]+(restore[[:space:]]+(--help|-h)([[:space:]]|$)|rm[[:space:]]+'$MID'(--dry-run|-n)([[:space:]]|$))'
+# **`worktree remove` / `branch -D` を書いてよいファイルは 1 本だけ**: `scripts/po/worktree-sweep.sh` は
 # **マージ済みの worktree を片付けることが存在理由の道具**である（#726。PO が手で走らせる。
 # `--force` は使わず、未コミット・未 push が在れば残す——その判断は道具自身のテストが固定している）。
-# **例外はファイル名で与える**（行内のコメント印にしない）: **印は貼り付けられるが、
-# ファイル名を足すには diff にそのファイル名が出るので、レビューで必ず見える。**
-# **例外はこの 2 形だけ**——同じファイルに `git rm` や `reset --hard` を書いたら落ちる。
-DESTRUCTIVE_GIT_ALLOW_RE='git[[:space:]]+(restore[[:space:]]+(--help|-h)([[:space:]]|$)|rm[[:space:]]+'$MID'(--dry-run|-n)([[:space:]]|$))'
-# **`[^:]*` で「行頭から git まで」を書かない**（実測で踏んだ）: `worktree-sweep.sh:124` は
-# `log "残す $path ($branch): git worktree remove が失敗しました…"` という**ログ文**で、
-# 行の中に `:` が在るため `[^:]*` では届かず、**呼び出しでもないのに落ちた**。
-# ここは「このファイルの行で、`worktree remove` か `branch -D` を含むもの」だけを外す。
-DESTRUCTIVE_GIT_ALLOW_FILE_RE='^scripts/po/worktree-sweep\.sh:[0-9]+:.*git[[:space:]]+(worktree[[:space:]]+remove|branch[[:space:]]+-D)([[:space:]]|$)'
+# **例外はファイル名で与える**（行内のコメント印にしない）: **印はどこにでも貼り付けられるが、
+# ファイル名を足すと diff にそのファイル名が出るので、レビューで必ず見える。**
+# **除外するのは「このファイルか」だけ**で、行の中身は見ない——**行の中身で外そうとすると
+# 上に書いた穴（1 行に別の破壊的な形を同居させる）が開く。** `DESTRUCTIVE_GIT_RE` の側は
+# **このファイルでも一切外れない**ので、`git rm` を書けば同居していても落ちる（実測）。
+DESTRUCTIVE_GIT_SWEEP_FILE='scripts/po/worktree-sweep.sh'
+# 一般の形: 例外はファイル単位では 1 つも無い（無害な形を落とす `ALLOW_RE` だけ）
 GIT_OUT=$(run_grep "$GIT_FILES" -I -H -n -E -e "$DESTRUCTIVE_GIT_RE" \
   | grep -v -E '^[^:]+:[0-9]+: *#' \
-  | { grep -v -E "$DESTRUCTIVE_GIT_ALLOW_RE" || true; } \
-  | { grep -v -E "$DESTRUCTIVE_GIT_ALLOW_FILE_RE" || true; } | cut -d: -f1,2 || true)
+  | { grep -v -E "$DESTRUCTIVE_GIT_ALLOW_RE" || true; } | cut -d: -f1,2 || true)
+# `worktree remove` / `branch -D`: 上の 1 ファイルだけを対象から外す（-F で逐語。ファイル名は正規表現ではない）
+GIT_SWEEP_FILES=$(printf '%s\n' "$GIT_FILES" | grep -v -x -F "$DESTRUCTIVE_GIT_SWEEP_FILE" || true)
+GIT_SWEEP_OUT=$(run_grep "$GIT_SWEEP_FILES" -I -H -n -E -e "$DESTRUCTIVE_GIT_SWEEP_RE" \
+  | grep -v -E '^[^:]+:[0-9]+: *#' | cut -d: -f1,2 || true)
+GIT_OUT=$(printf '%s\n%s\n' "$GIT_OUT" "$GIT_SWEEP_OUT" | grep . || true)
 # 塞げていない形（denylist の宿命。「これで全部」ではない。分かっているものは書き残す）:
 #   - 名前を変えた呼び出し: `g=git; $g restore .` / `alias g=git` / `eval "$cmd restore ."` / `"g""it" restore .`
 #   - 引数を組み立てる形: `git "$sub" .` や `git restore "$@"`（$sub / $@ の中身は静的には読めない）
