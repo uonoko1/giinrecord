@@ -216,6 +216,7 @@ test("数え上げそのものの検査: allJobs が全 workflow の job を拾�
     "deploy-data.yml:production",
     "deploy-data.yml:resolve",
     "deploy-data.yml:staging",
+    "deploy-site.yml:build",
     "deploy-site.yml:deploy",
     "deploy-staging.yml:staging",
     "districts.yml:districts",
