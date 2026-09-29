@@ -2445,11 +2445,23 @@ console.log(t,{assemblies,sessions,maxSeatsChanged});'
 
 ```
 yml に書かれた綴り   ← #1043 が見ているもの（allowlist で正しく守られている）
-実際に刻まれた author ← 守りたかったもの（誰も見ていない）
+実際に刻まれた author ← 守りたかったもの（当時は誰も見ていなかった）
 ```
 
 **#1043 が実際に author を止められたのは「workflow の `user.email` を直したから」であって
-「author を検査したから」ではない。** **workflow 以外の経路で author が汚れることは誰も止めていない。**
+「author を検査したから」ではない。** **workflow 以外の経路で author が汚れることは、
+当時は誰も止めていなかった。**
+
+**いまは塞がっている**（**実測 2026-09-29、基点 `26109428`**）:
+
+| いま何が author を見ているか | 実測 |
+|---|---|
+| `packages/etl/test/workflow-commit-identity.test.ts`（#1122） | **`node:child_process` を import。検査 14 本**（以前は 5 本で綴りだけ） |
+| `scripts/po/merge-when-green.sh`（#1103） | **`.commit.author.email` を読み、逐語 allowlist と突き合わせる** |
+| `packages/etl/test/commit-trailer-identity.test.ts`（#1075 / #1108） | **`git show -s --format=%ae` で実体を読む。検査 18 本** |
+
+**この節は「塞がっていない」ことを論拠にしていたので、
+塞がったあとも現在形で残すと偽になる**——**それ自体がこの節の主題である。**
 **起点は author で、trailer はその結果である**（squash merge が author から `Co-authored-by` を合成する）。
 **この代理と実体のずれは、2026-09-27 に気づいてから 2026-09-28T12:10Z まで塞がれなかった**
 ——**#1043 が「allowlist にしたから次も捕まる」と評価されたまま、
@@ -2569,11 +2581,14 @@ key(600.4) → 600    key(599.6) → 600      // 同じキーになる
 | 綴り | author として | `Co-authored-by` trailer として |
 |---|---|---|
 | `dev@users.noreply.github.com` | **0 件** | **0 件** |
-| `etl@users.noreply.github.com` | **0 件** | **1 件**（`1e41501f`。**基点 `2f136cd1` 時点**） |
+| `etl@users.noreply.github.com` | **0 件** | **1 件**（`1e41501f`。**基点 `4696f048` = 書き換え前の main**） |
 
-**この表の `1 件` は、いまは 0 件である**（**実測 2026-09-29、基点 `15a9f78f`**）——
-**#1074 の書き換えで `1e41501f` は `02e48234` に置き換わり、いまの `origin/main` から辿れない**
-（`git merge-base --is-ancestor 1e41501f origin/main` が exit 1）。
+**基点を 4 度書き損じた**（この節の記録として残す）:
+**`2f136cd1` と書いたが、そこでも既に 0 件だった**
+（`git merge-base --is-ancestor 1e41501f 2f136cd1` が exit 1。
+**#1074 の書き換えは `2f136cd1` より前に流れていた**）。
+**1 件が在るのは `4696f048`（書き換え前の main。`pre-rewrite-main.bundle` に在る）だけである**
+——**実測: `4696f048` で 1 件、`2f136cd1` で 0 件、いまの main で 0 件。**
 **GitHub に在る全枝と全タグを走査しても 0 件。**
 **つまりこの行自身が、この節の「基点を書け」を破っていた**（レビューが見つけた）。
 
