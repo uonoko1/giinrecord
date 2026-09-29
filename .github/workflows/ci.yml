@@ -124,8 +124,10 @@ jobs:
           # （#720 の「実数 − 3」。テストを増やした PR がそのついでに上げる）。
           # #943 で scripts/ci/test/etl-data-only-push.test.sh が増え**実測 36 本**になったので 31 → 33 に上げる
           # （#720 の「実数 − 3」。テストを増やした PR がそのついでに上げる）。
-          echo "loop ran: $ran (floor 33)"
-          [ "$ran" -ge 33 ] || { echo "FAIL: fewer test files ran than expected — glob narrowed or files deleted"; exit 1; }
+          # #1124 で scripts/ci/test/po-test-runner.test.sh が増え**実測 37 本**になったので 33 → 34 に上げる
+          # （#720 の「実数 − 3」。テストを増やした PR がそのついでに上げる）。
+          echo "loop ran: $ran (floor 34)"
+          [ "$ran" -ge 34 ] || { echo "FAIL: fewer test files ran than expected — glob narrowed or files deleted"; exit 1; }
       # #814: **スタブと実装が同じ誤りを共有して緑になった**（`gh secret set --body-file` は存在しない）。
       # リポジトリの中どうしを突き合わせても一致してしまうので、**本物の `gh --help` を一次資料にする。**
       # `--help` だけなので**認証も網も副作用も要らない**（`--no-store` は公開鍵を取りに行くので 401 になる。

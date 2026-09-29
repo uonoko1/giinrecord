@@ -655,10 +655,24 @@ git push                             → 動く（git プロトコル）
 ## テスト
 
 ```
-bash scripts/po/test/run.sh          # 全部
-bash scripts/po/test/run.sh merge    # 名前でフィルタ
+bash scripts/po/test/run.sh                    # 全部（実測 221 件、2026-09-29 の main + #1124）
+bash scripts/po/test/run.sh merge              # テスト名でフィルタ
+bash scripts/po/test/run.sh merge-when-green   # ファイル名でも効く（実測 138 件）
 shellcheck -x scripts/po/*.sh scripts/po/test/run.sh scripts/po/test/fake-bin/* scripts/po/test/*.test.sh
 ```
+
+- **フィルタが 1 件も当たらなければ `exit 1`**（#1124）。**「0 件実行」は緑ではない**（#757）。
+  以前は `passed: 0  failed: 0` と出して **exit 0** だったので、
+  **1 行も走っていないのに通ったように見えた**（PO 自身がこの誤った走らせ方を配っていた）。
+  要約は `passed: N  failed: M  (of K defined)` で、**実行と定義の差**が読める。
+- **`*.test.sh` を直接 `bash` しない。** この 8 本は run.sh が **source** する断片で、
+  `test_case` も `assert_*` も持っていない。直接実行すると **`exit 2`** で
+  「run.sh から呼んでください」と言う（以前は `test_case: command not found` が
+  **138 行**出たうえで **exit 0** だった）。
+- **run.sh は `scripts/po/test/` にしか無い。** 他の 3 つ（`scripts/ci/test` 11 本 /
+  `scripts/dev/test` 1 本 / `deploy/test` 24 本）は **1 ファイル = 1 実行**の自己完結型で、
+  **直接 `bash` するのが正しい呼び方**（CI の glob ループがそうしている）。
+  この違いは `scripts/ci/test/po-test-runner.test.sh` が両側から固定している。
 
 - `scripts/po/test/fake-bin/gh` を PATH の先頭に置いて本物の `gh` を置き換える。各テストは `handle()` 関数（引数列 `$*` で case 分岐）で API の返答（JSON）を決め、
   `-q/--jq` は本物の `jq -r` で適用する（テストには jq が要る。CI の ubuntu-latest には入っている）。
