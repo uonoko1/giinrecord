@@ -97,9 +97,29 @@ report env-file "$ENV_FILES"
 #   git reset --mixed / --soft, git reset HEAD -- <path>, git clean --dry-run, git checkout -b, git checkout main,
 #   git checkout <ref> -- <path>, git restore --help.
 #
+# Extended by #1123 with the forms that destroy the *index* and *refs* rather than the working tree. They are
+# here because `git rm -r --cached .` walked through both gates on origin/main (measured, see the docblock of
+# scripts/po/test/worktree-audit.test.sh): the dynamic gate only sees git calls the scenario actually executed,
+# and this rule did not know the word `rm`. Candidate set measured on origin/main: 5 of 25 forms matched.
+#   git rm --cached/-r/-f  un-tracks (`--cached`) or deletes; the next commit then removes everything. **This is
+#                          #1057 itself** — a handed-over worktree whose staged deletions wipe someone else's work.
+#   git worktree remove    deletes the tree, and with it anything not yet pushed (#1087: a fix for #1081 was one
+#                          cleanup away from being lost; 10 of 27 branches were un-pushed).
+#   git update-ref -d      deletes a ref, making its commits unreachable.
+#   git branch -D          deletes an unmerged branch (unlike -d, it does not refuse).
+# NOT matched, also reasoned form by form (they lose nothing, so blocking them would only make people delete
+# this rule — the #557 lesson): git worktree list / add / prune / unlock (prune only drops the *registration* of
+# a tree that is already gone, which developer.md recommends for ghost worktrees), git branch -d (git refuses
+# unless merged), git update-ref <ref> <sha> (advances, does not delete), git rm --dry-run / -n (does nothing).
+#
 # This is a denylist, so it is not a proof that nothing destructive gets through — see 塞げていない形 in the
 # comment below the regex. It raises the cost of writing one by hand, which is what makes it visible in review.
 GIT_FILES=$(printf '%s\n' "$FILES" | grep -E '^(scripts|deploy|\.github)/' || true)
+GIT_N=$(printf '%s\n' "$GIT_FILES" | sed '/^$/d' | wc -l | tr -d ' ')
+# 母数（#757 と同じ作法）: **静的検査の取り柄は「全部の行を見る」ことだけ**なので、
+# その「全部」が何本だったかを言わないと、緑が何の証明にもならない。`ls-files` が空を返しても
+# パスの綴りが変わっても、症状は「0 件検出」と見分けがつかない（実測: origin/main では 124 本）。
+echo "destructive-git: $GIT_N file(s) scanned"
 # MID = whatever may sit between the subcommand and the force flag, so the flag does not have to come first.
 # It must cover plain words as well as options: `git checkout mybranch -f` and `git clean untracked.txt -f` are
 # destructive too (実測: both lose uncommitted work). `| ; & ( ) < > #` are excluded so the match cannot run past
@@ -114,20 +134,53 @@ checkout +(-- +)?\\.([[:space:]]|$)|\
 restore([[:space:]]+(--help|-h)([[:space:]]|$)|[[:space:]]|$)|\
 reset +--hard|\
 clean +$MID(-[A-Za-z]*f[A-Za-z]*|--force)([[:space:]]|$)|\
-stash([[:space:]]|$))"
-# `restore` above matches every invocation and then the `--help` / `-h` form is dropped again below: unlike
-# checkout, there is no safe target for restore (`git restore <path>` overwrites that path from the index — 実測).
-DESTRUCTIVE_GIT_ALLOW_RE='git[[:space:]]+restore[[:space:]]+(--help|-h)([[:space:]]|$)'
+stash([[:space:]]|$)|\
+rm([[:space:]]|$)|\
+worktree +remove([[:space:]]|$)|\
+update-ref +$MID(-d|--delete)([[:space:]]|$)|\
+branch +$MID-[A-Za-z]*D[A-Za-z]*([[:space:]]|$))"
+# `restore` / `rm` above match every invocation and the safe forms are dropped again below. For `restore` there
+# is no safe target at all (`git restore <path>` overwrites that path from the index — 実測), so only `--help`
+# survives. For `rm` the only harmless form is a dry run: `git rm -q <path>` still deletes (実測), which is why
+# the existing use in scripts/ci/test/released-ref.test.sh:32 is caught rather than excused — it builds a
+# throw-away repo under $TMP, but the rule cannot tell that from the text, and pretending it can is how holes
+# are made. That line is rewritten to `git update-index --force-remove`, which touches only the index (#1123).
+#
+# **`worktree remove` / `branch -D` の例外は 1 ファイルだけ**: `scripts/po/worktree-sweep.sh` は
+# **マージ済みの worktree を片付けることが存在理由の道具**である（#726。PO が手で走らせる。
+# `--force` は使わず、未コミット・未 push が在れば残す——その判断は道具自身のテストが固定している）。
+# **例外はファイル名で与える**（行内のコメント印にしない）: **印は貼り付けられるが、
+# ファイル名を足すには diff にそのファイル名が出るので、レビューで必ず見える。**
+# **例外はこの 2 形だけ**——同じファイルに `git rm` や `reset --hard` を書いたら落ちる。
+DESTRUCTIVE_GIT_ALLOW_RE='git[[:space:]]+(restore[[:space:]]+(--help|-h)([[:space:]]|$)|rm[[:space:]]+'$MID'(--dry-run|-n)([[:space:]]|$))'
+# **`[^:]*` で「行頭から git まで」を書かない**（実測で踏んだ）: `worktree-sweep.sh:124` は
+# `log "残す $path ($branch): git worktree remove が失敗しました…"` という**ログ文**で、
+# 行の中に `:` が在るため `[^:]*` では届かず、**呼び出しでもないのに落ちた**。
+# ここは「このファイルの行で、`worktree remove` か `branch -D` を含むもの」だけを外す。
+DESTRUCTIVE_GIT_ALLOW_FILE_RE='^scripts/po/worktree-sweep\.sh:[0-9]+:.*git[[:space:]]+(worktree[[:space:]]+remove|branch[[:space:]]+-D)([[:space:]]|$)'
 GIT_OUT=$(run_grep "$GIT_FILES" -I -H -n -E -e "$DESTRUCTIVE_GIT_RE" \
   | grep -v -E '^[^:]+:[0-9]+: *#' \
-  | { grep -v -E "$DESTRUCTIVE_GIT_ALLOW_RE" || true; } | cut -d: -f1,2 || true)
+  | { grep -v -E "$DESTRUCTIVE_GIT_ALLOW_RE" || true; } \
+  | { grep -v -E "$DESTRUCTIVE_GIT_ALLOW_FILE_RE" || true; } | cut -d: -f1,2 || true)
 # 塞げていない形（denylist の宿命。「これで全部」ではない。分かっているものは書き残す）:
 #   - 名前を変えた呼び出し: `g=git; $g restore .` / `alias g=git` / `eval "$cmd restore ."` / `"g""it" restore .`
 #   - 引数を組み立てる形: `git "$sub" .` や `git restore "$@"`（$sub / $@ の中身は静的には読めない）
 #   - git 以外の道具: `rm -rf`, `jj`, `hg revert`, IDE の操作
 #   - 行を跨ぐ形: grep は行単位なので `git restore \` + 改行 + `.` は当たらない
 #   - コメント行（意図的。この規則の理由を書けなくなるため）
+#   - **歴史を書き換える形**（#1123 で意図的に足さなかった）: `git push --force` / `reflog expire` /
+#     `gc --prune=now` / `filter-branch`。**どれも未コミットの作業を消さない**（消すのは push 済みの歴史）
+#     ので、この規則の趣旨（= 手元の未コミットを守る）から外れる。**`scripts/ci/etl-data-only-push.sh` が
+#     `git push --delete` を正当に使っている**（実測 2 行）ので、足すと例外が要る側に倒れる。
+#     **歴史の側は別の守り（`docs/ops/guards.md` の表と、保護ブランチ）が持つ。**
+#   - **`worktree-sweep.sh` の中の `worktree remove` / `branch -D`**（例外。上に理由を書いた）
 #   これらは「隠れて通れる」形ではなく、レビューの diff に不自然な書き方として現れる（作業合意 #507）。
+#
+# **この規則が塞げない「もう 1 つの軸」**（#1123。語の集合ではなく、見る場所の違い）:
+#   静的なこの規則は **`scripts/` `deploy/` `.github/` の全行**を見るが、**語の列挙が不完全**である。
+#   動的な検査（`scripts/po/test/worktree-audit.test.sh` の allowlist）は **語について完全**だが、
+#   **その筋書きで実行された呼び出しだけ**を見るので、到達しない枝は見えない。
+#   **二重管理ではなく、不完全さの向きが逆の 2 枚である**（表は docs/ops/guards.md に在る）。
 report destructive-git "$GIT_OUT"
 
 # fixture-secret (Issue #785, 同じ機序で #750): 取得した第三者の HTML をそのままフィクスチャに置くと、

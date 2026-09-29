@@ -279,6 +279,87 @@ t_destructive_git_in_comments_is_allowed() {
   assert_eq 0 "$STATUS" "コメントは通す: $OUT"
 }
 
+# ---- #1123: index と枝を壊す形（両方のゲートを素通りしていた） -----------------------------------
+#
+# **`git rm -r --cached .` は 2 つのゲートを両方素通りした**（origin/main で実測。#1115 のレビュー）:
+#   ゲート 1（`scripts/po/test/worktree-audit.test.sh` の allowlist）は
+#     **その筋書きで実行された git しか見ない**ので、到達しない枝に書くと見えない
+#     （実測: `unreadable` 枝に入れて `passed: 21  failed: 0`）。
+#   ゲート 2（この規則）は **`git rm` という語を持っていなかった**
+#     （実測: 候補 25 形のうち HIT 5 / MISS 20。`reset --hard` `clean` `checkout --force`
+#      `restore` `stash` の 5 形だけを持っていた）。
+# **`git rm -r --cached .` は追跡を全部外す**——作業ファイルは残るが、次のコミットが全削除になる。
+# **#1057 の事故そのもの**（引き継いだ worktree の staged が他人の成果物を消す）。
+#
+# ここで足す形はすべて「未コミットの作業／他人の成果物が実際に失われる」ことを根拠にしている:
+#   git rm --cached / -r / -f    index から外す・作業ファイルを消す（`--cached` は次のコミットで全削除）
+#   git worktree remove          ツリーごと消す（未 push の成果物が消える。#1087 で実際に消える寸前だった）
+#   git update-ref -d            参照を消す（そのコミットが到達不能になる）
+#   git branch -D                マージしていない枝を消す（-d と違い確認しない）
+t_destructive_git_index_and_ref_forms_fail() {
+  local i=0 form
+  for form in "$G rm -r --cached ." "$G rm --cached file" "$G rm -rf --cached ." \
+              "$G rm --cached -r ." "$G rm -f file" "$G rm -q data/old.json" \
+              "$G worktree remove /path/to/wt" "$G worktree remove --force /path/to/wt" \
+              "$G update-ref -d refs/heads/x" "$G branch -D mybranch" "$G branch -D -r origin/x"; do
+    i=$((i+1)); repo "dgi$i"; add scripts/dev/harness.sh "$form"; run
+    assert_eq 1 "$STATUS" "[$form] → fail: $OUT"
+    assert_contains "$OUT" "destructive-git" "[$form] rule name"
+    assert_contains "$OUT" "scripts/dev/harness.sh" "[$form] names the file"
+  done
+}
+# **足しすぎていないこと。** ここに並ぶ形は「未コミットの作業を 1 つも失わない」ので落としてはいけない
+# （落とすと正当な使い方が止まり、誰かがこの規則ごと外す——#557 で得た教訓）。
+#   git worktree list / add      一覧を出す・作る（`worktree-audit.sh` が実際に呼ぶ形）
+#   git worktree prune           **消えたツリーの登録だけ**を掃除する（作業ツリーには触らない。
+#                                作法（developer.md）が幽霊 worktree の掃除にこれを薦めている）
+#   git branch -d                マージ済みでなければ git 自身が断る
+#   git update-ref refs/… <sha>  参照を進める（-d が無ければ消さない）
+#   git rm --dry-run / -n        何もしない
+t_destructive_git_index_and_ref_safe_forms_pass() {
+  local i=0 form
+  for form in "$G worktree list --porcelain" "$G worktree add /path -b feat/x origin/main" \
+              "$G worktree prune" "$G worktree unlock /path" "$G branch -d mybranch" \
+              "$G branch --list" "$G update-ref refs/heads/x HEAD" \
+              "$G rm --dry-run --cached ." "$G rm -n --cached ."; do
+    i=$((i+1)); repo "dgs$i"; add scripts/x.sh "$form"; run
+    assert_eq 0 "$STATUS" "[$form] → pass: $OUT"
+  done
+}
+# **正当な用途の例外は 1 ファイルだけ、しかも「そのファイルの存在理由がそれ」であるものに限る。**
+# `scripts/po/worktree-sweep.sh` は**マージ済みの worktree を片付けるための道具**なので、
+# `git worktree remove` と `git branch -D` がその本体である（#726）。**例外はこのファイルだけ。**
+# **他のファイルに同じ行を書いたら落ちる**ことを、同じ 2 形で対にして固定する
+# （例外が「どこでも通る」方向に広がったら、この対が崩れる）。
+t_destructive_git_worktree_sweep_is_the_only_exception() {
+  local i=0 form
+  for form in "$G worktree remove \"\$path\"" "$G branch -D \"\$branch\""; do
+    i=$((i+1))
+    repo "dgx$i"; add scripts/po/worktree-sweep.sh "$form"; run
+    assert_eq 0 "$STATUS" "[$form] worktree-sweep.sh では通る: $OUT"
+    repo "dgy$i"; add scripts/po/other-tool.sh "$form"; run
+    assert_eq 1 "$STATUS" "[$form] 別のファイルでは落ちる: $OUT"
+    assert_contains "$OUT" "destructive-git" "[$form] rule name"
+  done
+}
+# **母数（#757）**: 「0 件」と「1 本も見ていない」を同じ緑にしない。
+# `GIT_FILES` のパスの綴りが変わったり `ls-files` が空を返したりすると、
+# **静的検査は「全部の行を見る」という前提のほうが先に壊れる**。件数は常に出す。
+t_destructive_git_prints_denominator() {
+  repo dgn; add scripts/a.sh "echo ok"; add deploy/b.sh "echo ok"; add docs/c.md "docs"; run
+  assert_eq 0 "$STATUS" "exit: $OUT"
+  # scripts/a.sh と deploy/b.sh の 2 本だけが対象（README.md と docs/c.md は対象外）
+  assert_contains "$OUT" "destructive-git: 2 file(s) scanned" "母数を出す"
+}
+# **対象が 0 本なら、それは clean ではない**（fixture-secret が #757 で通った道と同じ）。
+# `scripts/` `deploy/` `.github/` のどれかが在るのに 0 本になったら、走査対象の抽出が壊れている。
+# **この repo では起こり得ない**（124 本在る。実測）が、**0 本を緑で通すと気づけない。**
+t_destructive_git_zero_files_is_not_clean() {
+  repo dgz; add docs/only.md "何も走査対象が無い repo"; run
+  assert_eq 0 "$STATUS" "対象ディレクトリが 1 つも無ければ 0 本が正しい: $OUT"
+  assert_contains "$OUT" "destructive-git: 0 file(s) scanned" "0 本でも母数は出す"
+}
+
 # Issue #785: 取得した第三者の HTML をフィクスチャに保存すると、そのページが埋め込んでいる
 # 鍵・トークンが一緒に入ってくる。#750（青森 ?token=）と #785（徳島 maps.googleapis.com ?key=AIza…）で
 # 2 回起きた。gitleaks v8.30.1 の既定ルールは徳島の形を検出しない（実測: no leaks found）ので、
@@ -513,6 +594,11 @@ test_case "destructive git: -f が先頭でない形も落ちる (#557)" t_destr
 test_case "行末コメントの中の -f は落とさない (#557)" t_force_flag_in_trailing_comment_is_not_flagged
 test_case "destructive git outside scripts/ is allowed (#542)" t_destructive_git_outside_scripts_is_allowed
 test_case "destructive git in a comment is allowed (#542)" t_destructive_git_in_comments_is_allowed
+test_case "destructive git: rm --cached / worktree remove / update-ref -d / branch -D も落ちる (#1123)" t_destructive_git_index_and_ref_forms_fail
+test_case "worktree list/add/prune・branch -d・rm --dry-run は通る (#1123)" t_destructive_git_index_and_ref_safe_forms_pass
+test_case "worktree remove / branch -D の例外は worktree-sweep.sh だけ (#1123)" t_destructive_git_worktree_sweep_is_the_only_exception
+test_case "destructive git: 母数を出す (#1123/#757)" t_destructive_git_prints_denominator
+test_case "destructive git: 対象 0 本でも母数を出す (#1123/#757)" t_destructive_git_zero_files_is_not_clean
 
 test_case "fixture に Google API キー（AIza…）→ fail (#785)" t_fixture_google_maps_key_fails
 test_case "fixture に AIza…（クエリ文字列の外）→ fail (#785/#762)" t_fixture_google_key_outside_query_string_fails
