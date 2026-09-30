@@ -65,6 +65,9 @@ PRUNED_DIRS='.git
 node_modules'
 # apply_pairs が当てたファイルと、当てた直後の md5（run が測定後に照合する）
 MUTATED_FILES=(); MUTATED_SUMS=()
+# run だけが 1 にする。apply は当てたまま残すのが仕様なので、restore の trap を仕掛けない。
+ARM_RESTORE_TRAP=0
+TRAP_ARMED=0
 
 usage() {
   cat >&2 <<'USAGE'
@@ -319,6 +322,12 @@ apply_pairs() {
     done
   done
 
+  # ここより前は disk に何も書いていない（「退避が残っている」拒否もここより前に済んでいる）。
+  # だから handler を仕掛けるのはここ。1 行でも書いた後に仕掛けると、その間に殺されたぶんが
+  # 戻らない（#1114 の余波。詳しくは arm_restore_trap の上のコメント）。
+  # 逆にこれより前で仕掛けると、他人が残した退避を「自分が作ったもの」として戻してしまう。
+  arm_restore_trap
+
   local -a done_files=()
   local i f e before after
   for i in "${!files[@]}"; do
@@ -441,22 +450,16 @@ cmd_run() {
   fold_from_to "${raw[@]}"
   local -a pairs=("${FOLDED[@]}")
 
+  # 退避を作る前に handler を仕掛けさせる。apply_pairs が最初の cp の直前で arm する
+  # （ここで仕掛けると「他人の退避が残っている」拒否より前になり、それを戻してしまう）。
+  ARM_RESTORE_TRAP=1
   apply_pairs "${pairs[@]}"
 
-  # ここから先は INT / TERM / HUP を受けても戻す（KILL では戻せないが、退避は残るので後から restore できる）。
-  # trap の本体は「シグナルを受けた時点」で展開されるので、そこに $1 と書くと
-  # シグナル名ではなく cmd_run の第1引数（--file）になる。実際そう書いていて壊れていた。
-  # シグナル名は trap を仕掛ける時点で埋め込む。
-  local sig
-  for sig in INT TERM HUP; do
-    # shellcheck disable=SC2064  # $sig を「いま」展開したいので、あえて二重引用符
-    trap "on_signal $sig" "$sig"
-  done
   set +e
   "${cmd[@]}"
   local st=$?
   set -e
-  trap - INT TERM HUP
+  disarm_restore_trap
 
   # 測っている間に変異が外れていないか確かめる。外れていたら、その測定結果は
   # 「変異なしで測った」ものなので無意味（#514 と同じ形）。exit 0 で済ませない。
@@ -477,12 +480,48 @@ cmd_run() {
   return $st
 }
 
+# arm_restore_trap → INT / TERM / HUP を受けたら戻す handler を仕掛ける（run のときだけ）。
+#   **必ず「退避を作る cp」より前に呼ぶこと。** これが #1114 の余波の核心である:
+#   もとの実装は apply_pairs が全部終わってから cmd_run で trap を仕掛けていたので、
+#     cp（退避ができる）→ perl（変異が当たる）→ echo → trap
+#   の間ずっと「退避と変異が disk に在るのに handler が無い」瞬間が在った。
+#   実測（#1114 の枝と、その基点の両方）:
+#     「当てた」のログで kill      基点 16/16 緑 / 枝 24 回中 6 回赤（show_diff が幅を広げた）
+#     退避が現れた瞬間に kill      基点 10 回中 9 回赤 / 枝 10 回中 10 回赤
+#   **窓は show_diff が作ったのではなく、最初から在った。** だから show_diff を echo の前に
+#   動かす（幅を狭める）のではなく、trap を cp より前に出して**窓そのものを無くす**。
+#   KILL では戻せないが、退避は残るので後から restore できる。
+#   trap の本体は「シグナルを受けた時点」で展開されるので、そこに $1 と書くと
+#   シグナル名ではなく呼び出し元の第1引数（--file）になる。実際そう書いていて壊れていた。
+#   シグナル名は trap を仕掛ける時点で埋め込む。
+arm_restore_trap() {
+  ((ARM_RESTORE_TRAP)) || return 0
+  ((TRAP_ARMED == 0)) || return 0
+  local sig
+  for sig in INT TERM HUP; do
+    # shellcheck disable=SC2064  # $sig を「いま」展開したいので、あえて二重引用符
+    trap "on_signal $sig" "$sig"
+  done
+  TRAP_ARMED=1
+}
+
+# disarm_restore_trap → handler を外す（正常経路で自分で戻すとき、二重に戻さないため）
+disarm_restore_trap() {
+  trap - INT TERM HUP
+  TRAP_ARMED=0
+}
+
 # on_signal <シグナル名> → 戻してから、そのシグナルで自分を殺し直す
 # （呼び出し元に「シグナルで死んだ」と正しく伝えるための作法）
 on_signal() {
   local sig=$1
-  trap - INT TERM HUP
-  cmd_restore >&2 || true
+  disarm_restore_trap
+  # trap を cp より前に仕掛けたので、「まだ何も当てていない」状態で来ることがある。
+  # そこで cmd_restore を呼ぶと「戻すものが無い」が出る。それは restore が二重に走った
+  # ときの合図と同じ文言なので、出すと検査の意味が消える（そして人も誤読する）。
+  if [[ -n $(find_saves) ]]; then
+    cmd_restore >&2 || true
+  fi
   kill -s "$sig" -- "$$"
 }
 

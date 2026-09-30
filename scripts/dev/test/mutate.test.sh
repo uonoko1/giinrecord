@@ -386,6 +386,88 @@ assert_signal_restores() {
   assert_not_contains "$(cat "$log")" "戻すものが無い" "$sig: 二重に restore していない"
 }
 
+# ---- #1114 の余波: 「退避が在るのに trap が無い瞬間」が実在した -------------------------------
+# 上の 2 本は「当てた」がログに出てから kill する。そこには **ログに出るより前** の窓が映らない。
+#   退避を作る cp → 変異を当てる perl → 「当てた」の echo → （show_diff）→ trap の設置
+# ログの合図は 3 番目なので、1〜2 番目で殺されたときのことを 1 本も見ていなかった。
+# 実測（#1114 の枝 f7a4e002 と、その基点 5775056f の両方）:
+#   「当てた」で kill      … 基点 16/16 緑、この枝 24 回中 6 回赤（show_diff が窓を広げた）
+#   退避が現れた瞬間に kill … 基点 10 回中 9 回赤、この枝 10 回中 10 回赤
+# **窓は show_diff が作ったのではなく、最初から在った。** show_diff は幅を広げて、
+# 既存のテストに見える所まで持ってきただけ。だから直し方は「echo の前に動かす」ではなく
+# 「退避を作る前に trap を仕掛ける」でなければならない（幅を狭めるのではなく窓を無くす）。
+#
+# この検査は disk を busy-wait で見張り、**退避が現れた瞬間**に kill する。
+# trap が cp より後に在るかぎり、ほぼ必ず赤になる（上の実測どおり）。
+t_restores_when_killed_the_instant_the_save_appears() {
+  repo; local before; before=$(md5 "$R/src/app.ts")
+  local log="$TMP/sig.early.log"
+  ( cd "$R" && setsid bash "$SCRIPT" run --file src/app.ts --expr 's/ORIGINAL/MUTANT/' -- sleep 30 ) > "$log" 2>&1 &
+  local runner=$!
+  # sleep を挟まない。挟むと窓を通り過ぎてしまい、この検査が何も見なくなる。
+  local spun=0
+  until [[ -e "$R/src/app.ts$SV_EXT" ]]; do
+    spun=$((spun+1)); [[ $spun -lt 4000000 ]] || { fail "early: 退避が現れないまま時間切れ"; kill -KILL "$runner" 2>/dev/null; return 0; }
+  done
+  local pgid; pgid=$(ps -o pgid= -p "$runner" 2>/dev/null | tr -d ' ')
+  [[ -n $pgid ]] || { fail "early: pgid が取れない"; return 0; }
+  kill -TERM -- -"$pgid" 2>/dev/null
+  wait "$runner" 2>/dev/null || true
+  local waited=0
+  until [[ ! -e "$R/src/app.ts$SV_EXT" ]]; do
+    sleep 0.05; waited=$((waited+1)); [[ $waited -lt 100 ]] || break
+  done
+  assert_eq "$before" "$(md5 "$R/src/app.ts")" "early: 退避が現れた瞬間に殺されても戻っている"
+  assert_eq "" "$(find "$R" -name '*'"$SV_EXT" -print)" "early: 退避も残っていない"
+  assert_not_contains "$(cat "$log")" "invalid signal specification" "early: trap の中で kill が失敗していない"
+}
+
+# 上の behavioral な検査は「速い機械では窓を通り過ぎて緑になる」ことが原理的に在りうる
+# （赤にするには窓の中で殺せないといけない）。だから **並び自身** も直接読む。
+# こちらは機械の速さに依存しないので、並びが戻ったら必ず赤になる。
+t_the_restore_trap_is_armed_before_anything_is_written() {
+  local src="$HERE/../mutate.sh"
+  # 退避を作る cp は apply_pairs の中に1つだけある。その行より前に trap の設置が在ること。
+  local cp_line trap_line
+  # 見つからないときは空にする（pipefail のもとで grep の 1 が検査ごと落とすのを避ける）。
+  # 同じ文字列はコメントにも出てくる（#577 の説明）ので、行頭が # の行は数えない。
+  # ここを「コメントも拾う」形にすると、コメントの位置で結果が変わる弱い検査になる。
+  # shellcheck disable=SC2016  # ソースの文字列を逐語で探すための単引用符（展開させたら別物を探す）
+  cp_line=$( { grep -n '^[^#]*cp -p -- "\$f" "\$f\$SV_EXT"' "$src" || true; } | head -1 | cut -d: -f1)
+  trap_line=$( { grep -n '^[[:space:]]*arm_restore_trap$' "$src" || true; } | head -1 | cut -d: -f1)
+  assert_ne "" "$cp_line" "退避を作る cp の行が見つかる"
+  assert_ne "" "$trap_line" "trap を仕掛ける呼び出し（arm_restore_trap）が見つかる"
+  if [[ -n $cp_line && -n $trap_line ]]; then
+    [[ $trap_line -lt $cp_line ]] || fail "trap の設置（$trap_line 行）が、退避を作る cp（$cp_line 行）より後にある。この順だと「退避が在るのに handler が無い瞬間」が残る"
+  fi
+  # そして run はその arm を必ず有効にしていること（apply は当てたままにするので有効にしない）。
+  local run_body; run_body=$(sed -n '/^cmd_run() {/,/^}/p' "$src")
+  assert_contains "$run_body" "ARM_RESTORE_TRAP=1" "run は restore の trap を有効にする"
+  local apply_body; apply_body=$(sed -n '/^cmd_apply() {/,/^}/p' "$src")
+  assert_not_contains "$apply_body" "ARM_RESTORE_TRAP=1" "apply は有効にしない（当てたまま残すのが仕様）"
+}
+
+# 何も当てていない状態でシグナルを受けたら、「戻すものが無い」と言わずに黙って死ぬこと。
+# trap を cp より前に出したので、この状態でシグナルが来る道ができた。
+# ここで cmd_restore を呼ぶと、上の 2 本が見ている「二重に restore していない」の合図
+# （＝戻すものが無い）が偽で出る。
+t_signal_before_anything_is_applied_says_nothing_about_restoring() {
+  repo
+  # 退避が1つも無い状態の restore は「戻すものが無い」と言って 0 を返す（既存の仕様。変えない）。
+  run restore
+  assert_eq 0 "$STATUS" "退避が無い restore は 0"
+  assert_contains "$OUT" "戻すものが無い" "restore 単体ではこの文言が出る（既存の仕様）"
+  # 「退避が現れる前」に殺されたときは、シグナル handler はこの文言を出してはいけない。
+  # 出すと、上の 3 本が見ている合図（＝二重 restore の検出）が偽で鳴り、検査が意味を失う。
+  # 端末からこの瞬間だけを狙って撃つことはできない（撃てたらそれは flaky な検査になる）ので、
+  # handler 自身が「退避が在るか」を先に見ていることを読む。
+  # この形は道具に検査専用の抜け道を足さずに済む（抜け道は本番の経路を1本増やす）。
+  local sig_body; sig_body=$(sed -n '/^on_signal() {/,/^}/p' "$SCRIPT")
+  assert_contains "$sig_body" "find_saves" "on_signal は退避が在るかを先に見る"
+  # shellcheck disable=SC2016  # ソースの文字列を逐語で探す（$sig を展開したら探すものが変わる）
+  assert_contains "$sig_body" 'kill -s "$sig"' "on_signal は最後に同じシグナルで自分を殺し直す"
+}
+
 # ---- 必須5-N3: 退避ファイル自身を対象にできない -----------------------------------------------
 # 「退避が残っている」拒否より先にこの guard へ届く場所に置く必要がある。
 # find_saves は node_modules を刈るので、そこに置けば「退避が残っている」判定には引っかからない。
