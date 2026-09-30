@@ -293,6 +293,7 @@ test("#556 数え上げ: jobs: 直下の job を全部拾えている（拾え�
     "deploy-data.yml:production",
     "deploy-data.yml:resolve",
     "deploy-data.yml:staging",
+    "build-site.yml:build",
     "deploy-site.yml:build",
     "deploy-site.yml:deploy",
     "deploy-staging.yml:staging",
@@ -322,6 +323,9 @@ test("#556 数え上げ: uses: で再利用ワークフローを呼ぶ job（tim
   assert.deepEqual(uses, [
     "deploy-data.yml:production",
     "deploy-data.yml:staging",
+    // #1137: deploy-site.yml の `build` は build-site.yml を呼ぶ job になった
+    // （ビルドを別ファイルに出して、そこに secrets を渡さないため）。
+    "deploy-site.yml:build",
     "deploy-staging.yml:staging",
     "release.yml:production",
   ]);
@@ -361,18 +365,20 @@ test("#556 uses: の job に timeout-minutes を書かない（GitHub が受け�
  *                                                                    10 → 77s**。**p90 は 9s で、
  *                                                                    max はランナー待ちの裾**。#1056）
  *   deploy-data.yml:resolve         38     5     9    12    45s  → 10 分（**再測。max が 13 → 45s**）
- *   deploy-site.yml:build           —     —     —     —     —    → 25 分（**#1137 で job を割ったあとの
- *                                                                    新しい job。CI 実測はまだ 0 本**。
- *                                                                    割る前の「ビルド + rsync」は
- *                                                                    production n=38 max 112s /
- *                                                                    staging n=37 max 101s（2026-09-27）で、
- *                                                                    そのうち rsync は数秒である。
- *                                                                    n が溜まったら測り直すこと）
- *   deploy-site.yml:deploy          —     —     —     —     —    → 10 分（**#1137 で rsync だけになった。
- *                                                                    CI 実測はまだ 0 本**。割る前は
- *                                                                    「ビルド + rsync」で production n=38
- *                                                                    max 112s / staging n=37 max 101s
- *                                                                    （2026-09-27）。n が溜まったら測り直す）
+ *   build-site.yml:build            —     —     —     —     —    → 30 分（**#1137 で切り出した新しい
+ *                                                                    workflow。CI 実測はまだ 0 本**——
+ *                                                                    `workflow_call` 専用なので PR の run に
+ *                                                                    出てこない。**初回はマージ後の push が本番**）
+ *   deploy-site.yml:deploy          —     —     —     —     —    → 30 分（**#1137 で download + rsync だけに
+ *                                                                    なった。CI 実測はまだ 0 本**）
+ *
+ *   **#1137 の分割で増えた仕事を実測していない。** 割る前の「ビルド + rsync」は
+ *   production n=38 max 112s / staging n=37 max 101s（2026-09-27、呼び出し元の job で測った）。
+ *   分割後は **`apps/web/build/client/` が artifact として 1 往復する**——このディレクトリは
+ *   `data/members/*.json` と `data/data-archive.zip` を含むので小さくない（どちらもサイトが
+ *   配信する実体なので artifact から外せない）。**upload / download / 展開の所要は 0 本である。**
+ *   **だから分割前の 30 分を両方に置いた**（減らすのは n が溜まってから。薄くして本番の初回を
+ *   落とすほうが害が大きい）。**最初の数 run を見て測り直すこと。**
  *   release.yml:released-tag        37     3     4     5     8s  → 10 分（再測。変わらず）
  *   security.yml:gitleaks           40     9    11    15    16s  → 20 分（全履歴走査の週次がある。
  *                                                                    再測で max 48 → 16s に下がった）
@@ -487,11 +493,15 @@ test("#556 値が実測から外れていない（短すぎる = 偽陽性 / 長
     "pr-body.yml:pr-closes": 10,
     "deploy-data.yml:resolve": 10,
     // #1137: 割る前は 1 つの job の 30 分が「ビルド + rsync」を覆っていた。
-    // いまは build が 25 分（checkout / overlay / install / ビルド。VPS に触らない）、
-    // deploy が 10 分（artifact の download と rsync だけ）。**この 2 つとも CI 実測はまだ 0 本**で、
-    // 割る前の合計（max 112s）を根拠に分配してある。n が溜まったら上の表ごと測り直すこと。
-    "deploy-site.yml:build": 25,
-    "deploy-site.yml:deploy": 10,
+    // いまはビルドが別ファイル（build-site.yml）で 30 分、rsync する deploy が 30 分。
+    // **どちらも CI 実測はまだ 0 本**（`deploy-site.yml` は `workflow_call` 専用なので
+    // PR の run には出てこない。初回はマージ後の push が本番である）。
+    // **だから分割前の 30 分を減らさずに両方に置いた。**
+    // 分割で増えた仕事は artifact の upload / download / 展開で、**`apps/web/build/client/` は
+    // 小さくない**（`data/members/*.json` と `data/data-archive.zip` を含む）。
+    // **薄くして本番の初回を落とすほうが害が大きい**ので、n が溜まってから削る。
+    "build-site.yml:build": 30,
+    "deploy-site.yml:deploy": 30,
     // #1179: **この 2 本は #556 の数え上げには在ったが、この expected 表には無かった**
     // （鍵が 14 本で、どちらも入っていなかった）。**結果、`timeout-minutes: 30` 側も
     // 待ち合わせのループ上限側も誰も固定しておらず、`seq 1 900`（= 300 分）が素通りした**

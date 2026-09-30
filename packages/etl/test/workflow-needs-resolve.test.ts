@@ -56,7 +56,7 @@ import { dirname, resolve } from "node:path";
  *
  * **走査の範囲を #1036 で直した。** 初版は「3 ワークフロー / 6 job」だった——**手書きの 3 本**で、
  * **`etl.yml` に壊れた鎖の job を足すとこのファイルは 3/3 緑だった**（#1036 で実測）。
- * **いまは `readdirSync` で全 15 ワークフロー / 25 job を走査する**（2026-09-30 実測。#1137 で 24 → 25）。
+ * **いまは `readdirSync` で全 16 ワークフロー / 26 job を走査する**（2026-09-30 実測。#1137 で 24 → 26）。
  * 参照 2 件すべてを検証する。**0 件だったら落とす**（「参照が無い」と「数えていない」を分ける）。
  *
  * ── #1017 が塞いだのは鎖 5 環のうち 1 環だけだった（#1036）──────────────────
@@ -167,7 +167,19 @@ function keysUnder(jobLines: string[], key: string, indent: number): string[] {
   const out: string[] = [];
   for (let j = i + 1; j < jobLines.length; j++) {
     if (jobLines[j].trim() === "") continue;
-    if (!new RegExp(`^ {${indent + 2}}\\S`).test(jobLines[j])) break; // 兄弟キーへ戻った
+    const depth = jobLines[j].length - jobLines[j].trimStart().length;
+    // **より深い行は読み飛ばす（`break` しない）。**
+    //
+    // #1137: ここは `break` だった。**`workflow_call.outputs` は
+    // `sha:` → `description:` / `value:`（indent + 4）というネストしたマップなので、
+    // 2 つめ以降のキーに到達する前に打ち切っていた。** 実害が出るまで気づかなかったのは、
+    // それまでこのリポジトリの再利用ワークフローの `outputs:` が
+    // **どれも 1 キーだけ**だったからである（`deploy-site.yml` の `sha` /
+    // `deploy-data.yml` の `ref`。どちらも 1 つ）。
+    // #1137 で `build-site.yml` が `sha` と `artifact` の 2 つを宣言したときに初めて
+    // 「2 つめが見えない」＝「宣言しているのに宣言していないと言う」偽陽性になった。
+    if (depth > indent + 2) continue;
+    if (depth <= indent) break; // 兄弟キー（か浅い行）へ戻った
     const m = jobLines[j].match(new RegExp(`^ {${indent + 2}}([A-Za-z_][\\w-]*):`));
     if (m) out.push(m[1]);
   }
@@ -188,7 +200,7 @@ function needsRefs(body: string): { job: string; output: string; raw: string }[]
  * **初版は `["deploy-data.yml", "release.yml", "deploy-staging.yml"]` の手書き 3 本だった。**
  * **14 本中 3 本の denylist で、`etl.yml` に壊れた鎖の job を足すとこのファイルは 3/3 緑だった**
  * （#1036 で実測。#1008 / #1022 / #1043 と同じ型——**列挙は漏れがそのまま穴になる**）。
- * **`readdirSync` の全走査にした。** 下の母数の assert も、実数（15 本 / 25 job）に合わせて測り直した。
+ * **`readdirSync` の全走査にした。** 下の母数の assert も、実数（16 本 / 26 job）に合わせて測り直した。
  */
 const workflowFiles = (): string[] =>
   readdirSync(wfDir)
@@ -223,12 +235,13 @@ test("#1017: needs.<job>.outputs.<out> を使う job は、その job を needs 
   // 母数を固定する。0 件で緑になったら「参照が消えた」のか「数えていない」のか分からない（#1017 の 3.）。
   //
   // **#1036 で 6 → 24 に測り直した**（手書き 3 本 → `readdirSync` の全 15 本）。
-  // **#1137 で 24 → 25**（`deploy-site.yml` の 1 job を `build` / `deploy` の 2 つに割った。
-  // ビルドと deploy 鍵を同じ job に置かないため）。
-  // **`25` は独立に維持されている `workflow-timeout.test.ts` の「#556 数え上げ」の
-  // job 名リスト（25 件）と一致する**——**別の実装が別の目的で数えた値と突き合わせてある。**
+  // **#1137 で 24 → 26**（`deploy-site.yml` を `build`（build-site.yml を呼ぶ）/ `deploy` の
+  // 2 job に割り、ビルドの実体を新しいファイル `build-site.yml` に出した。
+  // **同じ workflow の中で job を割っても `secrets` 文脈は分かれない**ので、ファイルを分ける必要があった）。
+  // **`26` は独立に維持されている `workflow-timeout.test.ts` の「#556 数え上げ」の
+  // job 名リスト（26 件）と一致する**——**別の実装が別の目的で数えた値と突き合わせてある。**
   // `equal` のままにする（`>=` にすると job を消したときに気づけない）。
-  assert.equal(jobCount, 25, `走査した job 数が変わった（実測 2026-09-30: 15 ワークフロー / 25 job）: ${jobCount}`);
+  assert.equal(jobCount, 26, `走査した job 数が変わった（実測 2026-09-30: 16 ワークフロー / 26 job）: ${jobCount}`);
   assert.ok(refCount >= 2, `needs.*.outputs.* の参照が ${refCount} 件しか見つからない（実測 2 件: deploy-data の production, release の released-tag）`);
   assert.deepEqual(broken, [], `needs が宛先を指していない参照がある:\n${broken.join("\n")}`);
 });
@@ -262,6 +275,44 @@ test("#1017: 参照先の job が、その名前の output を実際に宣言し
     }
   }
   assert.deepEqual(broken, [], `参照先に存在しない output を使っている:\n${broken.join("\n")}`);
+});
+
+/**
+ * #1137: **`keysUnder` は 2 つめ以降の output が見えなかった**（`break` していた）。
+ *
+ * `workflow_call.outputs` は `<name>:` → `description:` / `value:` というネストしたマップなので、
+ * 深い行で打ち切ると 1 キーしか読めない。**このリポジトリの再利用ワークフローの `outputs:` が
+ * どれも 1 キーだけだったので、実害が出るまで気づかなかった**（`deploy-site.yml` の `sha` /
+ * `deploy-data.yml` の `ref`）。#1137 で `build-site.yml` が 2 つ宣言したとき、
+ * 上の「参照先が output を宣言している」検査が**宣言しているのに宣言していないと言った**（偽陽性）。
+ *
+ * **偽陽性は偽陰性と同じくらい悪い**——「検査が落ちたから直す」の向きが逆になる。
+ */
+test("#1137: keysUnder はネストしたマップでも 2 つめ以降のキーを読める（偽陽性の再発防止）", () => {
+  const lines = [
+    "on:",
+    "  workflow_call:",
+    "    outputs:",
+    "      sha:",
+    '        description: "first"',
+    "        value: ${{ jobs.b.outputs.sha }}",
+    "      artifact:",
+    '        description: "second"',
+    "        value: ${{ jobs.b.outputs.artifact }}",
+    "      third:",
+    "        value: ${{ jobs.b.outputs.third }}",
+    "permissions:",
+    "  contents: read",
+  ];
+  assert.deepEqual(keysUnder(lines, "outputs", 4), ["sha", "artifact", "third"]);
+  // 兄弟キー（`permissions:`）で止まること——止まらないと無関係なキーを拾う
+  assert.ok(!keysUnder(lines, "outputs", 4).includes("permissions"));
+});
+
+/** 実体でも 2 つ読めていること（合成だけで固定すると、本物の綴りが変わっても気づけない） */
+test("#1137: build-site.yml の outputs が 2 つとも読める（実体の母数）", () => {
+  const declared = keysUnder(read("build-site.yml").split("\n").map(stripComment), "outputs", 4);
+  assert.deepEqual(declared, ["sha", "artifact"], `build-site.yml の outputs が読めていない: ${JSON.stringify(declared)}`);
 });
 
 test("#134: deploy-data の production は resolve の ref を受け、data/ だけを main から載せる", () => {
