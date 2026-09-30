@@ -129,7 +129,9 @@ printf '%s\n' "$VAR" | while IFS= read -r n; do ... done
 gh issue comment N --body "... `alt` ..."
 
 # 良い
-cat > <scratchpad>/body.md <<'EOF'      ← **クォート付き**（`<<EOF` だと展開される）
+# **`<<'EOF'` のクォートが要点。`<<EOF`（クォート無し）だと中身が展開される。**
+# **注釈を演算子と同じ行に書かないこと**——bash は `EOF` を見つけられず、後続行を全部飲む（実測）。
+cat > <scratchpad>/body.md <<'EOF'
 ...
 EOF
 gh issue comment N --body-file <scratchpad>/body.md
@@ -156,8 +158,10 @@ gh api repos/.../issues/comments/<id> -q .body | grep '<消えていないか確
 **語彙で grep して数えるときは、日英両方の言い方を拾う。**
 **2026-09-30、PO が「測れなかったと言える道具は 15 本中 0 本」と数えたが、
 日本語の言い方でしか grep しておらず、英語で書いてある `scanned nothing` を数え落としていた。**
-**真値は 7/14 だった。**
+**真値は 7/14 だった**（母数＝`scripts/po/*.sh` + `deploy/monitor/*.sh` + `scripts/ci/*.sh` のうち**判定語を持つ 14 本**）。
 
 **さらに: 原則は語彙として現れないことがある。**
-**`die_fetch` という関数名からは「測れなかったと言っている」ことが読めない。**
-**grep では原理的に届かないので、設計を読む必要が在る。**
+**例**: `scripts/ci/forbidden-patterns.sh:143-152` は「1 本も無いのは clean ではない」を実装しているが、
+その判定は `"the check scanned nothing. That is not 'clean'."` という**英語の文**で書かれている。
+**「測れなかった」で grep すると 0 件になる。**
+**原則が関数名や分岐の形だけで表されていることも在るので、設計を読む必要が在る。**
