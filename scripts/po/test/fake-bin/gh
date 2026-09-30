@@ -63,11 +63,48 @@ for a in "$@"; do
   prev=$a
 done
 
-if [[ -z "$JQ" ]]; then handle_with_defaults "$@"; exit $?; fi
+# ---- ページングを真似る（#1157）-------------------------------------------------------------
+# **何が壊れていたか**: **この fake は `--paginate` を 1 度も見ていなかった。**
+# **だから `merge-when-green.sh` から `--paginate` を落としても、この fake は全件を返し続け、
+# 143 本すべてが緑のままだった**（#1151 のレビュアーの実測）。
+# **本物の穴は check-runs 側で実際に起きている**（#1093: 30/53 で必須 5 件が消えた）。
+#
+# **本物の `gh api` の振る舞い**（#1093 で実測。gh 2.89.0）:
+#   - **`per_page` を指定しないと 1 ページ 30 件**で切れる。
+#   - **`--paginate` を付けると gh が `per_page` に 100 を補い、全ページを取る。**
+#
+# **だからここでは「`--paginate` が無ければ配列を先頭 30 件で切る」**。
+# **`total_count` は切らない**——**本物も切らない**（どのページも同じ母数を返す）。
+# **これが「母数は在るのに手元が足りない」＝ #1093 の形そのものである。**
+#
+# **配列そのもの（`pulls/<n>/commits`）と、オブジェクトの中の配列
+# （`check-runs` の `.check_runs`）の両方を切る**——**この道具はどちらも読む。**
+# **30 件以下の応答は 1 バイトも変わらない**ので、既存の 226 本には影響しない
+# （実測: いま在る fixture の最大は 3 件）。
+FAKE_PER_PAGE=${FAKE_PER_PAGE:-30}
+paginate_emulate() {
+  local body=$1 paginated=$2
+  [[ "$paginated" == 1 ]] && { printf '%s' "$body"; return 0; }
+  # **JSON でなければ触らない**（`merged` のような素のテキストを返す handler が在る）。
+  jq -e . >/dev/null 2>&1 <<<"$body" || { printf '%s' "$body"; return 0; }
+  jq -c --argjson n "$FAKE_PER_PAGE" '
+    if type == "array" then .[0:$n]
+    elif type == "object" then
+      with_entries(if (.value | type) == "array" then .value |= .[0:$n] else . end)
+    else . end' <<<"$body" 2>/dev/null || printf '%s' "$body"
+}
+
+PAGINATED=0
+for a in "$@"; do [[ "$a" == "--paginate" ]] && PAGINATED=1; done
 
 set +e
 out=$(handle_with_defaults "$@")
 rc=$?
 set -e
+[[ -n "$out" ]] && out=$(paginate_emulate "$out" "$PAGINATED")
+if [[ -z "$JQ" ]]; then
+  [[ -n "$out" ]] && printf '%s\n' "$out"
+  exit "$rc"
+fi
 [[ -n "$out" ]] && jq -r "$JQ" <<<"$out"
 exit "$rc"

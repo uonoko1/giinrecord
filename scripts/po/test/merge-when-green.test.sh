@@ -3981,3 +3981,275 @@ test_case "1125: fixture に author != committer の形が在る（母数つき�
 #
 # **もし将来「どちら側が不正だったか」をメッセージに出すようにしたら、
 # この入れ替えは等価でなくなる**——**そのときはここに検査を足すこと。**
+
+# --- 完全一致でなければならない（#1157）--------------------------------------------------------
+# **何が壊れていたか**: **`assert_branch_identity` の照合を完全一致（`==`）から部分一致
+# （`== *"$a"*` / `== *"$e"*`）に変えても、143 本すべてが緑のままだった**
+# （#1151 のレビュアーの実測。その PR はこの行を 1 つも触っていない）。
+# **実装は正しく `==` を使っている。守るテストが 1 本も無かった。**
+#
+# **これはこのリポジトリが 2 回踏んだ事故と同じ型である**（記憶の `address-counting-substring-trap`）
+# ——**`dev@users.noreply.github.com` を数えたつもりで
+# `seiji-kiroku-dev@users.noreply.github.com` に当たり、対策の正規表現でも再発した**
+# （`-` が `[^0-9+]` を満たしていた）。
+#
+# **向きは #569**: **身元未確認のコミットを持つ PR がマージされる。利用者からは検出できない。**
+#
+# ── **部分一致には 2 つの向きが在り、通る値が違う** ──────────────────────────────────
+#
+# **`[[ "$e" == *"$a"* ]]`（見つかった値が allowlist を「含む」）** は
+# **allowlist のアドレスに前後を足した形を通す。**
+# **`[[ "$a" == *"$e"* ]]`（allowlist が見つかった値を「含む」）** は
+# **allowlist のアドレスの部分文字列を通す**——**裸のローカル部 + noreply ドメイン**がこれに当たる。
+# **どちらも「別人に帰属する実在しうるアドレス」なので、片方だけ守っても穴は残る。**
+#
+# ── **架空アドレスの作法**（#1111）─────────────────────────────────────────────
+#
+# **`packages/etl/test/fake-addresses.ts` の `FAKE_ADDRESSES` は
+# `.sh` から import できない**（bash から TypeScript は読めない。
+# `guards.md` の表にも「シェル側の 7 件は移せない」と書いてある）。
+# **だからここは下の 2 定数で 1 か所に持つ**——**各 handler に直書きしない**（2 か所に書かない）。
+#
+# **綴りの根拠**（どちらも実在の個人に帰属しない形を選んである）:
+#   - `MWG_PREFIXED_IDENTITY` — **`evil+` を前に足した形。** **`commit-trailer-identity.test.ts`
+#     が同じ趣旨で `evil+1+x@users.noreply.github.com` を持っている**ので、その作法に合わせた。
+#     **`evil+…` というローカル部は GitHub のどのユーザーにも解決しない。**
+#   - `MWG_BARE_LOCAL_IDENTITY` — **数字 ID を落とした形**（逆向きの部分一致で通る）。
+#     **`github-actions[bot]@users.noreply.github.com` は allowlist の
+#     `41898282+github-actions[bot]@users.noreply.github.com` の部分文字列である。**
+#     **裸のローカル部が noreply ドメインに付いた形は、このリポジトリが
+#     `etl@users.noreply.github.com` / `dev@users.noreply.github.com` として
+#     既に追跡ファイルに書いている同じクラスである**（#1043 / #1074）。
+#     **本人（`uonoko1`）の裸の綴りは使わない**——**それは実在のアドレスで、
+#     追跡ファイルに個人アドレスを書かない方針に触れる**（#1111。
+#     **実測 2026-09-30: `git grep` で追跡ファイル中 0 件。この PBI で足さない**）。
+#     **逆向きの部分一致を通すという性質は、どちらの綴りでも同じである**（下の 2 本が実測で示す）。
+MWG_PREFIXED_IDENTITY='evil+120390190+uonoko1@users.noreply.github.com'
+MWG_BARE_LOCAL_IDENTITY='github-actions[bot]@users.noreply.github.com'
+
+# **向き 1**: **`[[ "$e" == *"$a"* ]]`（見つかった値が allowlist を含む）を落とす。**
+# **`evil+120390190+uonoko1@…` は allowlist の本人アドレスを丸ごと含む**ので、
+# **部分一致に変えるとこれが通る。** **完全一致なら落ちる。**
+t_1157_refuses_prefixed_identity() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1","commits":1}' ;;
+    "api repos/uonoko1/giinrecord/pulls/12/commits"*) echo '[{"parents":[{"sha":"p1"}],"commit":{"author":{"email":"$MWG_PREFIXED_IDENTITY"},"committer":{"email":"$MWG_PREFIXED_IDENTITY"}}}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "exit status（allowlist を含むだけの値は通さない）"
+  assert_contains "$ERR" "$MWG_PREFIXED_IDENTITY" "見つかったアドレスを名指しする"
+  assert_not_contains "$LOG" "pr	merge	12" "マージしない"
+}
+test_case "1157: allowlist のアドレスを前置で含む値は通さない（部分一致に変えたら落ちる）" t_1157_refuses_prefixed_identity
+
+# **向き 2**: **`[[ "$a" == *"$e"* ]]`（allowlist が見つかった値を含む）を落とす。**
+# **`github-actions[bot]@…` は allowlist の bot アドレスの部分文字列**なので、
+# **逆向きの部分一致に変えるとこれが通る。** **完全一致なら落ちる。**
+#
+# **向き 1 のテストではこの変異は落ちない**——**`evil+…` は allowlist の
+# 部分文字列ではないので、逆向きの部分一致でも通らず、そのテストは緑のまま通る。**
+# **だから 2 本要る**（実測は PR 本文）。
+t_1157_refuses_bare_local_identity() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1","commits":1}' ;;
+    "api repos/uonoko1/giinrecord/pulls/12/commits"*) echo '[{"parents":[{"sha":"p1"}],"commit":{"author":{"email":"$MWG_BARE_LOCAL_IDENTITY"},"committer":{"email":"$MWG_BARE_LOCAL_IDENTITY"}}}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "exit status（allowlist の部分文字列は通さない）"
+  assert_contains "$ERR" "$MWG_BARE_LOCAL_IDENTITY" "見つかったアドレスを名指しする"
+  assert_not_contains "$LOG" "pr	merge	12" "マージしない"
+}
+test_case "1157: allowlist のアドレスの部分文字列は通さない（逆向きの部分一致に変えたら落ちる）" t_1157_refuses_bare_local_identity
+
+# --- 枝のコミットの取得に --paginate が要る（#1157）---------------------------------------------
+# **何が壊れていたか**: **`assert_branch_identity` から `--paginate` を落としても、
+# 143 本すべてが緑のままだった**（#1151 のレビュアーの実測。その PR はこの行を触っていない）。
+#
+# **穴は 3 段重なっていた:**
+#   1. **`scripts/po/test/fake-bin/gh` が `--paginate` を 1 度も見ていなかった**
+#      ——**付いていようといまいと全件返していた**ので、落としても差が出なかった。
+#   2. **fixture の最大が 3 件だった**——**本物の境界（30 件）を 1 つも越えていない。**
+#   3. **母数がアドレスの行数だった**——**30 件ぶんの 60 行が数えられるので、
+#      「母数 0 で落ちる」門も通る。** **母数が在ることが「取りこぼしていない」の証明に
+#      なっていなかった**（#757 の型）。
+#
+# **本物の穴は同じファイルの check-runs 側で実際に起きている**
+# （#1093 / #1116: **30 件で切れて必須 5 件が丸ごと消えた**）。
+# **片方だけ直っていた。**
+#
+# ── **なぜ 31 件なのか** ──────────────────────────────────────────────────
+#
+# **`gh api` は `per_page` を指定しないと 1 ページ 30 件で切る**（#1093 の実測。gh 2.89.0）。
+# **30 件では境界を越えない**ので、**`--paginate` が在っても無くても同じ 30 件が返り、
+# 変異が観測できない。** **31 件で初めて「31 / 30」の差が出る。**
+#
+# **向きは #569**: **31 件目以降の author / committer が読まれず、
+# 身元未確認のコミットを持つ PR がマージされる。利用者からは検出できない。**
+
+# mwg_commits_json <件数> <末尾のアドレス> → PR の commits API と同じ形の JSON 配列
+#
+# **最後の 1 件だけアドレスを差し替える**——**そこが「切られる側」である。**
+# **前の 30 件は本人確認済みにしておく**ので、**31 件目を読めていれば落ち、
+# 読めていなければ通る**（= 変異が観測できる）。
+# **`--jq` は本物の jq が評価する**ので、`parents` を持つ本物と同じ形で作る。
+mwg_commits_json() {
+  local n=$1 last=$2 ok='120390190+uonoko1@users.noreply.github.com'
+  jq -cn --argjson n "$n" --arg ok "$ok" --arg last "$last" '
+    [range($n) | . as $i | (if $i == ($n - 1) then $last else $ok end) as $e
+     | {parents: [{sha: "p\($i)"}], commit: {author: {email: $e}, committer: {email: $e}}}]'
+}
+
+# **`--paginate` を落とすと 31 件目が読まれない**ことを、**両側から**固定する。
+#
+# **テスト 1（落とす側）**: **31 件目だけが本人確認外。** **全部読めていれば落ちる。**
+# **`--paginate` を落とすと 30 件しか読めず、その 1 件が消える**
+# ——**そのとき母数の検算（手元 30 / PR が言う 31）が落とす。**
+# **どちらの経路でも exit 1 になるが、理由が変わる**ので、**メッセージを見て区別する。**
+t_1157_reads_past_the_first_page() {
+  local commits; commits=$(mwg_commits_json 31 'evil+120390190+uonoko1@users.noreply.github.com')
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/pulls/12/commits"*) echo '$commits' ;;
+    "api repos/uonoko1/giinrecord/pulls/12"*) echo '{"commits":31}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "exit status（31 件目が本人確認外）"
+  # **31 件目を読めていることの証拠**: **そのアドレスを名指ししている。**
+  # **`--paginate` を落とすと 30 件しか読めないので、この assert が落ちる。**
+  assert_contains "$ERR" "evil+120390190+uonoko1@users.noreply.github.com" \
+    "31 件目（2 ページ目）の author を読んでいる"
+  assert_not_contains "$LOG" "pr	merge	12" "マージしない"
+}
+test_case "1157: 枝のコミットを 31 件目まで読む（--paginate を落としたら落ちる）" t_1157_reads_past_the_first_page
+
+# **テスト 2（母数の側）**: **31 件すべて本人確認済みなのに、PR は 32 件と言っている。**
+# **身元は 1 件も汚れていないので、身元の門では止まらない**
+# ——**母数の検算だけが止められる形である**（#1093 の 30/53 と同じ型の、commits 版）。
+#
+# **これが要る理由**: **テスト 1 だけだと「31 件目を読む」は守れるが、
+# 「読んだ数と PR が言う数を突き合わせる」ほうは守れない。**
+# **検算そのものを消す変異（`assert_denominator` の呼び出しを落とす）は
+# テスト 1 では落ちない**——**31 件目を読めているなら検算は要らないので緑になる。**
+t_1157_short_read_of_commits_fails_closed() {
+  local commits; commits=$(mwg_commits_json 31 '120390190+uonoko1@users.noreply.github.com')
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    # **31 件しか返らない**（どのアドレスも本人確認済み）。
+    "api repos/uonoko1/giinrecord/pulls/12/commits"*) echo '$commits' ;;
+    # **PR は 32 件だと言っている**＝**1 件取りこぼしている。**
+    "api repos/uonoko1/giinrecord/pulls/12"*) echo '{"commits":32}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "取りこぼしたら落ちる（身元が全部きれいでも）"
+  assert_contains "$ERR" "31" "手元の件数を言う"
+  assert_contains "$ERR" "32" "PR が言う件数を言う"
+  assert_not_contains "$LOG" "pr	merge	12" "マージしない"
+}
+test_case "1157: 読んだコミット数が PR の言う数より少なければ落ちる（母数の検算）" t_1157_short_read_of_commits_fails_closed
+
+# **検算は「等しければ通る」**（常に落ちる置物になっていないこと）。
+# **加えて母数が出力に在ることを見る**（#757 / #1157 の受け入れ条件）。
+t_1157_exact_commit_count_passes_and_reports() {
+  local commits; commits=$(mwg_commits_json 31 '120390190+uonoko1@users.noreply.github.com')
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/pulls/12/commits"*) echo '$commits' ;;
+    "api repos/uonoko1/giinrecord/pulls/12"*) echo '{"commits":31}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "31 == 31 なら通る: $ERR"
+  # **母数が出力に在る**（#757）: **読んだ件数 / PR が言う件数の両方。**
+  assert_contains "$OUT$ERR" "コミット 31 件 / PR が言う 31 件" "母数を出力に書く"
+  assert_contains "$LOG" "pr	merge	12" "取りこぼしていなければマージできる"
+}
+test_case "1157: 読んだコミット数と PR の言う数が一致すれば通り、母数を出す" t_1157_exact_commit_count_passes_and_reports
+
+# **母数を読めなかったときは検算しない**（「母数を知らない」と「取りこぼした」は別。#757）。
+# **`.commits` を読めない（空が返る）ときに止めると、この道具が別の理由で動かなくなる。**
+# **そのかわり、出力には「母数は読めなかった」と分かるように書く**——
+# **「読めなかった」を「一致した」と書かない。**
+t_1157_unknown_denominator_does_not_block() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/pulls/12/commits"*) echo '[{"parents":[{"sha":"p1"}],"commit":{"author":{"email":"120390190+uonoko1@users.noreply.github.com"},"committer":{"email":"120390190+uonoko1@users.noreply.github.com"}}}]' ;;
+    # **母数の問い合わせが失敗する**（権限・API エラー）。
+    "api repos/uonoko1/giinrecord/pulls/12"*) echo "HTTP 403" >&2; exit 1 ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "母数を読めないだけでは止めない: $ERR"
+  assert_contains "$OUT$ERR" "PR が言う ? 件" "母数を読めなかったことを書く（一致したと書かない）"
+}
+test_case "1157: 母数を読めなくても止めないが、読めなかったと書く" t_1157_unknown_denominator_does_not_block
+
+# **fake gh が `--paginate` を見ていること自体を固定する**（#1157）。
+#
+# **これが無いと、上の 3 本は「fake が全件返すから緑」なだけで、
+# `--paginate` を落とす変異を 1 件も落とせない**——**穴 2 の正体がまさにそれだった。**
+# **だから「fake の側の振る舞い」を直接測る。**
+t_1157_fake_gh_emulates_paging() {
+  local h out_with out_without
+  h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "api things"*) jq -cn '[range(31) | {n: .}]' ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  out_with=$(PATH="$HERE/fake-bin:$PATH" FAKE_GH_LOG=/dev/null FAKE_GH_HANDLER="$h" \
+    FAKE_UNHANDLED=/dev/null gh api things --paginate | jq -s '[.[][]] | length')
+  out_without=$(PATH="$HERE/fake-bin:$PATH" FAKE_GH_LOG=/dev/null FAKE_GH_HANDLER="$h" \
+    FAKE_UNHANDLED=/dev/null gh api things | jq -s '[.[][]] | length')
+  assert_eq 31 "$out_with" "--paginate が在れば全件返る"
+  assert_eq 30 "$out_without" "--paginate が無ければ 30 件で切れる（本物と同じ）"
+}
+test_case "1157: fake gh が --paginate の有無で 31 件 / 30 件を返し分ける" t_1157_fake_gh_emulates_paging
