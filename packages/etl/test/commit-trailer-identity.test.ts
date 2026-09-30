@@ -1127,12 +1127,12 @@ const addedCommits = (): {
  * **`mergeBase` 自体を偽る変異（R9）は `emptyRangeIsTrustworthy` が受け持っている**ので、
  * ここは「列と数が一致するか」だけを見る。
  */
-const commitCountByRevList = (mergeBase: string): number => {
-  const out = git("rev-list", "--count", `${mergeBase}..HEAD`).trim();
+const commitCountByRevList = (range: string): number => {
+  const out = git("rev-list", "--count", range).trim();
   const n = Number(out);
   assert.ok(
     Number.isInteger(n) && n >= 0,
-    `rev-list --count がコミット数を返さない（母数の床が効かない）: ${JSON.stringify(out)}`,
+    `コミット数が数として返ってこない（母数の床が効かない）: ${JSON.stringify(out)}`,
   );
   return n;
 };
@@ -1388,9 +1388,9 @@ test("この枝が足すコミットの trailer に、誤帰属するアドレ�
   // （`.slice()` も `--max-count` も、こちらの数は縮められない）。
   assert.equal(
     shas.length,
-    commitCountByRevList(mergeBase ?? ""),
-    `走査するコミットの数が、rev-list --count と合わない（列が縮んでいる）: ` +
-      `列 ${shas.length} 件 / 数 ${commitCountByRevList(mergeBase ?? "")} 件`,
+    commitCountByRevList(`${mergeBase ?? ""}..HEAD`),
+    `走査するコミットの数が、別プロセスで数えた数と合わない（列が縮んでいる）: ` +
+      `列 ${shas.length} 件 / 数 ${commitCountByRevList(`${mergeBase ?? ""}..HEAD`)} 件`,
   );
   // **2. 「どのコミットを読んだか」を守る**（#1118 のレビューが見つけた穴 2。P8）。
   // **1 コミットごとの床は、訪ねられなかったコミットには何も言えない**ので、
@@ -1519,9 +1519,9 @@ test("この枝が足すコミットの author / committer が誤帰属しない
   }
   assert.equal(
     shas.length,
-    commitCountByRevList(mergeBase ?? ""),
-    `走査するコミットの数が、rev-list --count と合わない（列が縮んでいる）: ` +
-      `列 ${shas.length} 件 / 数 ${commitCountByRevList(mergeBase ?? "")} 件`,
+    commitCountByRevList(`${mergeBase ?? ""}..HEAD`),
+    `走査するコミットの数が、別プロセスで数えた数と合わない（列が縮んでいる）: ` +
+      `列 ${shas.length} 件 / 数 ${commitCountByRevList(`${mergeBase ?? ""}..HEAD`)} 件`,
   );
   assertVisitedEveryCommit(visited, shas);
   assert.deepEqual(
@@ -2447,12 +2447,12 @@ test("コミットの数と「どれを読んだか」を守る番人が、間�
   // **`rev-list --count` は sha の列を作る呼び出しとは別のプロセスなので、
   // 列を縮める変異では縮まない**——**それが床になる根拠である。**
   const mergeBase = git("merge-base", "refs/remotes/origin/main", "HEAD").trim();
-  const counted = commitCountByRevList(mergeBase);
+  const counted = commitCountByRevList(`${mergeBase}..HEAD`);
   const listed = git("rev-list", `${mergeBase}..HEAD`).trim();
   assert.equal(
     counted,
     listed === "" ? 0 : listed.split("\n").length,
-    "rev-list --count と rev-list の列の長さが合わない（床の前提が崩れている）",
+    "別プロセスで数えた数と、列の長さが合わない（床の前提が崩れている）",
   );
   // **床が「走査の列とは独立である」ことを、語ではなく振る舞いで測る**
   // （#1118 の 2 度目のレビューが見つけた穴 B）。
@@ -2480,39 +2480,43 @@ test("コミットの数と「どれを読んだか」を守る番人が、間�
   // **だから `HEAD~1..HEAD`（必ず 1 件）と `HEAD..HEAD`（必ず 0 件）を渡して、
   // 1 と 0 を返すことを言う。**
   //
-  // **この枝の走査の列は 1 件ではない**（下で母数として固定する）ので、
-  // **自己参照の実装はここで落ちる。**
-  const scanned = git("rev-list", `${mergeBase}..HEAD`).trim();
-  const scannedCount = scanned === "" ? 0 : scanned.split("\n").length;
-  assert.ok(
-    scannedCount >= 2,
-    `この枝の走査の列が 1 件以下なので、床の独立性を測れない` +
-      `（枝にコミットを 2 件以上足してから測ること）: ${scannedCount} 件`,
-  );
-  // **1 件しかない範囲**: 自己参照なら `scannedCount`（2 以上）を返すので落ちる。
+  // **測る対象は、その場で `commit-tree` で作った到達不能な列にする**——
+  // **枝のコミット数に依存させない。**
+  //
+  // **初版は `HEAD~1..HEAD` と「枝が 2 コミット以上」を前提にしていた。**
+  // **それは 1 コミットだけの PR を全部赤にする偽陽性なので捨てた**
+  // （**「測れない」と言って落ちる形でも、赤は赤である**）。
+  //
+  // **`commit-tree` は ref を触らずにコミットオブジェクトを書くだけ**なので、
+  // **1 段 / 2 段 / 3 段の列を好きなだけ作れる。**
+  // **床が自己参照（走査の列から数を作る）なら、どの列を渡されても同じ数を返すので落ちる。**
+  const base = git("rev-parse", "HEAD").trim();
+  const c1 = commitTree({ tree, parents: [base], message: "test: 床の独立性 1" });
+  const c2 = commitTree({ tree, parents: [c1], message: "test: 床の独立性 2" });
+  const c3 = commitTree({ tree, parents: [c2], message: "test: 床の独立性 3" });
+  // **長さの違う 4 つの範囲で、それぞれ違う数を返すこと。**
+  // **自己参照の実装は 4 つとも同じ数を返すので、必ずどれかで落ちる。**
+  const probes: ReadonlyArray<readonly [string, number]> = [
+    [`${base}..${base}`, 0],
+    [`${base}..${c1}`, 1],
+    [`${base}..${c2}`, 2],
+    [`${base}..${c3}`, 3],
+  ];
+  for (const [range, want] of probes) {
+    assert.equal(
+      commitCountByRevList(range),
+      want,
+      `コミット数の床が、長さ ${want} の範囲で ${want} を返さない` +
+        `（走査の列から数を作っていないか。範囲 ${range.slice(0, 20)}…）`,
+    );
+  }
+  // **母数**（#757）: 当てた範囲の数そのものを固定する（配列を空にする変異はここが落ちる）。
+  assert.equal(probes.length, 4, "床に当てた範囲の数が減っている");
+  // **4 つの答えが全部違うこと**——**同じ数を返す実装では「長さが違う範囲」を測れていない。**
   assert.equal(
-    commitCountByRevList(git("rev-parse", "HEAD~1").trim()),
-    1,
-    "コミット数の床が、1 件だけの範囲で 1 を返さない（走査の列から数を作っていないか）",
-  );
-  // **空の範囲**: 同じ理由で落ちる。
-  assert.equal(
-    commitCountByRevList(git("rev-parse", "HEAD").trim()),
-    0,
-    "コミット数の床が、空の範囲で 0 を返さない（走査の列から数を作っていないか）",
-  );
-  // **その場で作った到達不能なコミットでも、正しい数を返すこと。**
-  // **`commit-tree` で親を 2 代さかのぼる列を作ると、床は 2 を返さなければならない**
-  // ——**走査の列（`scannedCount`）とは無関係の数である。**
-  const tip = commitTree({
-    tree: git("rev-parse", "HEAD^{tree}").trim(),
-    parents: [commitTree({ tree: git("rev-parse", "HEAD^{tree}").trim(), parents: [git("rev-parse", "HEAD").trim()], message: "test: 床の独立性 1" })],
-    message: "test: 床の独立性 2",
-  });
-  assert.equal(
-    git("rev-list", "--count", `${git("rev-parse", "HEAD").trim()}..${tip}`).trim(),
-    "2",
-    "その場で作った 2 段の列が 2 件にならない（この検査の前提が崩れている）",
+    new Set(probes.map(([range]) => commitCountByRevList(range))).size,
+    4,
+    "床が長さの違う 4 範囲に同じ数を返している（走査の列から数を作っている）",
   );
 });
 
