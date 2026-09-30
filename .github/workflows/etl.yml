@@ -136,8 +136,23 @@ jobs:
           bash scripts/ci/etl-data-only-push.sh "$DATA_BRANCH"
           NUMBER=$(gh pr list --head "$DATA_BRANCH" --state open --json number -q ".[0].number")
           if [ -z "$NUMBER" ]; then
+            # #1132: 2 行目の `Closes なし（理由）` は `scripts/ci/pr-closes.sh` の逃げ道である。
+            # **これが無いと毎回 `pr-closes` が赤くなる**（実測 2026-09-30: 自動データ PR 60 本のうち
+            # 59 本が赤。緑の 1 本は PO が本文を手で直した #1131）。**赤の中身は無害だが、
+            # 無害な赤が毎日 1 件並ぶと本物の赤を見落とす。** さらに `--auto` は必須チェックの緑を
+            # 待つので、**マージも止まる**（#1131 は 02:47 → 03:08 の 21 分）。
+            #
+            # **`--body "…\n…"` と書いてはいけない。** bash の二重引用符の中の `\n` は改行にならず
+            # （実測: `od -c` で `\` `n` の 2 文字）、**`gh` も `--body` の値を解釈しない**ので、
+            # PR 本文に `\n` という 2 文字がそのまま出る。だから `printf '%s\n'` で組む。
+            # **バッククォートで囲まないこと**——コードスパンの中は検査が読まない（#977）。
+            # 検証は packages/etl/test/workflow-data-pr-push.test.ts が本物の pr-closes.sh に食わせて行う。
+            BODY=$(printf '%s\n' \
+              "Automated ETL output. Validated by validateDataset in the ETL run; CI builds the site with it." \
+              "" \
+              "Closes なし（データの自動更新。対応する Issue は無い）")
             gh pr create --base main --head "$DATA_BRANCH" --title "data: refresh $STAMP" \
-              --body "Automated ETL output. Validated by validateDataset in the ETL run; CI builds the site with it." --label etl
+              --body "$BODY" --label etl
             NUMBER=$(gh pr list --head "$DATA_BRANCH" --state open --json number -q ".[0].number")
           fi
           test -n "$NUMBER"   # PR が無ければここで失敗させる（サイレント失敗対策）

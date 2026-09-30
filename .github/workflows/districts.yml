@@ -69,8 +69,14 @@ jobs:
           bash scripts/ci/etl-data-only-push.sh "$DATA_BRANCH"
           NUMBER=$(gh pr list --head "$DATA_BRANCH" --state open --json number -q ".[0].number")
           if [ -z "$NUMBER" ]; then
+            # #1132: 2 行目の `Closes なし（理由）` は `scripts/ci/pr-closes.sh` の逃げ道である。
+            # 経緯と `printf` で組む理由は .github/workflows/etl.yml の同じ箇所に書いた。
+            BODY=$(printf '%s\n' \
+              "Automated districts ETL output (KEN_ALL × 総務省 小選挙区の区域). Validated by validateDistricts in the ETL run." \
+              "" \
+              "Closes なし（データの自動更新。対応する Issue は無い）")
             gh pr create --base main --head "$DATA_BRANCH" --title "data: districts $STAMP" \
-              --body "Automated districts ETL output (KEN_ALL × 総務省 小選挙区の区域). Validated by validateDistricts in the ETL run." --label etl
+              --body "$BODY" --label etl
             NUMBER=$(gh pr list --head "$DATA_BRANCH" --state open --json number -q ".[0].number")
           fi
           test -n "$NUMBER"   # PR が無ければここで失敗させる（サイレント失敗対策）
