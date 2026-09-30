@@ -198,22 +198,48 @@ describe("許可リスト: 知らない値は止まる（#1133）", () => {
     assert.deepEqual(row.referredCommittees, [{ house: "sangiin", committee: "外交防衛" }]);
   });
 
+  /**
+   * **`referral` 側の検査**（`dataset.ts` の `referral.{key}.committee`）を名指しする。
+   * **`/not recorded in the source/` だけでは足りない**——**一覧の行を見るループも同じ語で違反を出す**
+   * ので、どちらが出したのか区別できない（#1136 レビューが見つけた相乗りと同じ型）。
+   * **`referral.shugiin.committee` まで含めて照合する。**
+   */
   test("検査: 知らない値が referral に在れば違反として止まる（CI が赤くなる）", () => {
     const b: Bill = { id: "221-閣法-3", session: 221, kind: "閣法", house: "shugiin", title: "T", sourceUrl: keika("1DE14D6"), referral: { shugiin: { date: "2026-03-05", committee: "宇宙開発特別" } } };
     const s: BillSummary = { id: b.id, session: 221, kind: "閣法", house: "shugiin", title: "T", sourceUrl: b.sourceUrl, referredCommittees: [{ house: "shugiin", committee: "宇宙開発特別" }] };
-    assert.match(billReferralViolations("bills/221/x.json", "bills/index.json[0]", b, s).join("\n"), /not recorded in the source|許可/);
+    const v = billReferralViolations("bills/221/x.json", "bills/index.json[0]", b, s);
+    assert.equal(v.filter((m) => /referral\.shugiin\.committee "宇宙開発特別" is not recorded/.test(m)).length, 1, JSON.stringify(v));
   });
 
   test("検査: 院を取り違えた値も止まる（参の名前が衆の欄に在る）", () => {
     const b: Bill = { id: "221-閣法-3", session: 221, kind: "閣法", house: "shugiin", title: "T", sourceUrl: keika("1DE14D6"), referral: { shugiin: { date: "2026-03-05", committee: "外交防衛" } } };
     const s: BillSummary = { id: b.id, session: 221, kind: "閣法", house: "shugiin", title: "T", sourceUrl: b.sourceUrl, referredCommittees: [{ house: "shugiin", committee: "外交防衛" }] };
-    assert.notDeepEqual(billReferralViolations("bills/221/x.json", "bills/index.json[0]", b, s), []);
+    const v = billReferralViolations("bills/221/x.json", "bills/index.json[0]", b, s);
+    // 「参の名前だから衆では通らない」を出しているのが referral 側であることを名指しする
+    assert.equal(v.filter((m) => /referral\.shugiin\.committee "外交防衛" is not recorded/.test(m)).length, 1, JSON.stringify(v));
   });
 
-  test("検査: 一覧だけに知らない値を書いても止まる（原本を経由しない差し込み）", () => {
+  /**
+   * **一覧の行を単独で見るループ**（`dataset.ts` の `referredCommittees[i]`）を測る。
+   *
+   * **`notDeepEqual(..., [])` では足りない。** この形は**導出との突き合わせ**
+   * （`referredCommittees does not match`）も必ず出すので、**ループを黙らせても緑のままになる**
+   * ——`assert` が通った理由が別の検査だったことに気づけない
+   * （#1136 のレビューが同じ型の相乗りを 1 件見つけた。**これはその近所でもう 1 件見つけたもの**）。
+   *
+   * **だから「どのメッセージが出たか」を名指しする。**
+   * 2 件出るのが正しい: ループの 1 件＋導出の食い違いの 1 件。
+   */
+  test("検査: 一覧だけに知らない値を書いても止まる（ループが出す 1 件を名指しする）", () => {
     const b: Bill = { id: "221-閣法-3", session: 221, kind: "閣法", house: "shugiin", title: "T", sourceUrl: keika("1DE14D6") };
     const s: BillSummary = { id: b.id, session: 221, kind: "閣法", house: "shugiin", title: "T", sourceUrl: b.sourceUrl, referredCommittees: [{ house: "shugiin", committee: "宇宙開発特別" }] };
-    assert.notDeepEqual(billReferralViolations("bills/221/x.json", "bills/index.json[0]", b, s), []);
+    const v = billReferralViolations("bills/221/x.json", "bills/index.json[0]", b, s);
+    // 一覧の行を単独で見るループが出す 1 件（これが本題）
+    const byLoop = v.filter((m) => /referredCommittees\[0\] "宇宙開発特別" is not recorded/.test(m));
+    assert.equal(byLoop.length, 1, `ループの違反が 1 件であること: ${JSON.stringify(v)}`);
+    // 導出との突き合わせも別に出る（この 2 件は別の検査なので、片方で他方を代用しない）
+    assert.equal(v.filter((m) => /referredCommittees does not match/.test(m)).length, 1);
+    assert.equal(v.length, 2, JSON.stringify(v));
   });
 
   test("検査: 9 形すべてが止まる（母数つき。通ったものが 1 つでもあれば落ちる）", () => {
@@ -318,10 +344,50 @@ describe("許可リスト: 数えていない時期は止まる（#1133）", () 
     assert.match(billReferralViolations("bills/150/x.json", "bills/index.json[0]", b, s).join("\n"), /2000-01-01/);
   });
 
-  test("検査: 日付の無い committee も止まる（照合できない値を通さない）", () => {
-    const b: Bill = { id: "221-閣法-3", session: 221, kind: "閣法", house: "shugiin", title: "T", sourceUrl: keika("X"), referral: { shugiin: { committee: "内閣" } } };
-    const s: BillSummary = { id: b.id, session: 221, kind: "閣法", house: "shugiin", title: "T", sourceUrl: b.sourceUrl, referredCommittees: [{ house: "shugiin", committee: "内閣" }] };
-    assert.match(billReferralViolations("bills/221/x.json", "bills/index.json[0]", b, s).join("\n"), /no date/);
+  /**
+   * **日付の無い `committee` を止めているのは `dataset.ts` の `e.date !== undefined &&` である。**
+   *
+   * **この検査は「予備付託の欄」で測る。** 本付託で測ると**別の検査に相乗りしてしまい、
+   * ガードを外しても落ちない**（2026-09-30 の #1136 レビューが実測。**外して 61/61 緑だった**）:
+   *   - `referredCommittees` を埋めると、**一覧の行を単独で見るループ**（`dataset.ts` の
+   *     `referredCommittees[i]`）が日付を引けずに違反を出す
+   *   - 埋めないと、**原本から導き直して突き合わせる検査**が `does not match` を出す
+   *
+   * **予備付託はどちらにも触らない**（一覧に載らないので導出にも現れない）ので、
+   * **違反がちょうど 1 件**になり、その 1 件はガードからしか出ない。
+   * **だから件数まで固定する**——`assert.match` だけだと、また別の検査の文字列を拾いうる。
+   */
+  test("検査: 日付の無い committee も止まる（予備付託で測る。他の検査に相乗りしない）", () => {
+    const b: Bill = { id: "221-閣法-3", session: 221, kind: "閣法", house: "shugiin", title: "T", sourceUrl: keika("X"), referral: { shugiinPreliminary: { committee: "内閣" } } };
+    // 一覧は空。予備付託は一覧に載らないので、これが原本と一致した状態である
+    const s: BillSummary = { id: b.id, session: 221, kind: "閣法", house: "shugiin", title: "T", sourceUrl: b.sourceUrl };
+    const v = billReferralViolations("bills/221/x.json", "bills/index.json[0]", b, s);
+    assert.equal(v.length, 1, `ガードだけが出す 1 件であること: ${JSON.stringify(v)}`);
+    assert.match(v[0]!, /referral\.shugiinPreliminary\.committee/);
+    assert.match(v[0]!, /no date/);
+    // 同じ形で日付を足せば違反は消える（この検査が日付だけを見ていることの裏。恒真でない）
+    const ok: Bill = { ...b, referral: { shugiinPreliminary: { date: "2026-03-05", committee: "内閣" } } };
+    assert.deepEqual(billReferralViolations("bills/221/x.json", "bills/index.json[0]", ok, s), []);
+  });
+
+  /**
+   * **パーサ側のガード**（`shugiin-bills.ts` の `date !== undefined &&`）も別に測る。
+   * **検査側だけ直しても、パーサのガードは無検査のまま残る。**
+   *
+   * 実ページの付託欄から**日付だけを消す**（委員会名は残す）。
+   * 素の実装は「照合できないので committee にしない」＝ `unknownText` に入れる。
+   */
+  test("パーサ: 日付の無い付託先は committee にならない（日付だけを消して測る）", () => {
+    const html = fixture("shugiin-keika-1DE1582").replace(
+      /(衆議院付託年月日／衆議院付託委員会<\/span><\/TD>\s*<TD[^>]*>(?:<span[^>]*>)?\s*)令和 8年 3月 6日/,
+      "$1",
+    );
+    const b = parseShugiinBill(html, keika("1DE1582"));
+    assert.equal(b.referral?.shugiin?.date, undefined, "日付の削除が当たっていない");
+    assert.equal(b.referral?.shugiin?.committee, undefined, "日付が無いのに committee として出ている");
+    assert.equal(b.referral?.shugiin?.unknownText, "外務");
+    // 一覧にも載らない
+    assert.deepEqual(toBillSummary(b).referredCommittees, [{ house: "sangiin", committee: "外交防衛" }]);
   });
 
   test("パーサ: 数えていない時期では委員会名を出さず unknownText に入れる", () => {
