@@ -279,6 +279,298 @@ t_destructive_git_in_comments_is_allowed() {
   assert_eq 0 "$STATUS" "コメントは通す: $OUT"
 }
 
+# ---- #1123: index と枝を壊す形（両方のゲートを素通りしていた） -----------------------------------
+#
+# **`git rm -r --cached .` は 2 つのゲートを両方素通りした**（origin/main で実測。#1115 のレビュー）:
+#   ゲート 1（`scripts/po/test/worktree-audit.test.sh` の allowlist）は
+#     **その筋書きで実行された git しか見ない**ので、到達しない枝に書くと見えない
+#     （実測: `unreadable` 枝に入れて `passed: 21  failed: 0`）。
+#   ゲート 2（この規則）は **`git rm` という語を持っていなかった**
+#     （実測: 候補 25 形のうち HIT 5 / MISS 20。`reset --hard` `clean` `checkout --force`
+#      `restore` `stash` の 5 形だけを持っていた）。
+# **`git rm -r --cached .` は追跡を全部外す**——作業ファイルは残るが、次のコミットが全削除になる。
+# **#1057 の事故そのもの**（引き継いだ worktree の staged が他人の成果物を消す）。
+#
+# ここで足す形はすべて「未コミットの作業／他人の成果物が実際に失われる」ことを根拠にしている:
+#   git rm --cached / -r / -f    index から外す・作業ファイルを消す（`--cached` は次のコミットで全削除）
+#   git worktree remove          ツリーごと消す（未 push の成果物が消える。#1087 で実際に消える寸前だった）
+#   git update-ref -d            参照を消す（そのコミットが到達不能になる）
+#   git branch -D                マージしていない枝を消す（-d と違い確認しない）
+t_destructive_git_index_and_ref_forms_fail() {
+  local i=0 form
+  for form in "$G rm -r --cached ." "$G rm --cached file" "$G rm -rf --cached ." \
+              "$G rm --cached -r ." "$G rm -f file" "$G rm -q data/old.json" \
+              "$G worktree remove /path/to/wt" "$G worktree remove --force /path/to/wt" \
+              "$G update-ref -d refs/heads/x" "$G branch -D mybranch" "$G branch -D -r origin/x"; do
+    i=$((i+1)); repo "dgi$i"; add scripts/dev/harness.sh "$form"; run
+    assert_eq 1 "$STATUS" "[$form] → fail: $OUT"
+    assert_contains "$OUT" "destructive-git" "[$form] rule name"
+    assert_contains "$OUT" "scripts/dev/harness.sh" "[$form] names the file"
+  done
+}
+# **足しすぎていないこと。** ここに並ぶ形は「未コミットの作業を 1 つも失わない」ので落としてはいけない
+# （落とすと正当な使い方が止まり、誰かがこの規則ごと外す——#557 で得た教訓）。
+#   git worktree list / add      一覧を出す・作る（`worktree-audit.sh` が実際に呼ぶ形）
+#   git worktree prune           **消えたツリーの登録だけ**を掃除する（作業ツリーには触らない。
+#                                作法（developer.md）が幽霊 worktree の掃除にこれを薦めている）
+#   git branch -d                マージ済みでなければ git 自身が断る
+#   git update-ref refs/… <sha>  参照を進める（-d が無ければ消さない）
+#   git rm --dry-run / -n        何もしない
+t_destructive_git_index_and_ref_safe_forms_pass() {
+  local i=0 form
+  for form in "$G worktree list --porcelain" "$G worktree add /path -b feat/x origin/main" \
+              "$G worktree prune" "$G worktree unlock /path" "$G branch -d mybranch" \
+              "$G branch --list" "$G update-ref refs/heads/x HEAD" \
+              "$G rm --dry-run --cached ." "$G rm -n --cached ."; do
+    i=$((i+1)); repo "dgs$i"; add scripts/x.sh "$form"; run
+    assert_eq 0 "$STATUS" "[$form] → pass: $OUT"
+  done
+}
+# ---- #1123 レビュー: `git` の前置きオプションを挟むと全形が素通りしていた ------------------------
+#
+# **`git +(` はサブコマンドが `git` の直後に来ることを要求する。** **前置きオプションが入ると全滅した。**
+# **これは #1123 が作った穴ではなく、#542 からずっと在った**（`reset --hard` / `clean` /
+# `restore` / `stash` / `checkout -f` も同じく素通りした。実測 18 形で HIT 3 / MISS 15）。
+#
+# **とりわけ危ないのは `-C <path>`**: **問題の当事者 `scripts/po/worktree-audit.sh` は
+# git 呼び出し 5 本中 4 本が `git -C "$path"` 形**である。
+# **#1057 をあのファイルに書き込む最も自然な形が、規則に掛からなかった。**
+#
+# **前置きオプションの一覧は git(1) の「OPTIONS」から採った**（値を取るもの／取らないものを分けて
+# 書く必要がある: `-C <path>` は次の語を食うが `--no-pager` は食わない）。
+t_destructive_git_global_options_do_not_shield() {
+  local i=0 form
+  for form in "$G -C \"\$p\" rm -r --cached ." "$G --git-dir=/x rm -r --cached ." \
+              "$G -c user.name=x rm -r --cached ." "$G --no-pager rm -r --cached ." \
+              "$G -C /a -C /b rm -r --cached ." "$G --no-pager -C \"\$p\" rm --cached ." \
+              "$G -C \"\$p\" reset --hard" "$G -C \"\$p\" clean -xfd" \
+              "$G -C \"\$p\" restore ." "$G -C \"\$p\" stash" "$G -C \"\$p\" checkout -f ." \
+              "$G --work-tree=/x reset --hard" "$G -P rm --cached ." \
+              "$G --exec-path=/x rm --cached ." "$G -C \"\$p\" update-ref -d refs/heads/x"; do
+    i=$((i+1)); repo "dgg$i"; add scripts/dev/harness.sh "$form"; run
+    assert_eq 1 "$STATUS" "[$form] → fail: $OUT"
+    assert_contains "$OUT" "destructive-git" "[$form] rule name"
+  done
+}
+# **例外を持つ形（`worktree remove` / `branch -D`）も同じ穴を持っていた。** 別 regex なので別に固定する。
+t_destructive_git_global_options_do_not_shield_sweep_forms() {
+  local i=0 form
+  for form in "$G -C \"\$p\" worktree remove /x" "$G -C \"\$p\" branch -D foo" \
+              "$G --no-pager worktree remove /x" "$G -c core.x=1 branch -D foo"; do
+    i=$((i+1)); repo "dggs$i"; add scripts/po/other-tool.sh "$form"; run
+    assert_eq 1 "$STATUS" "[$form] → fail: $OUT"
+    assert_contains "$OUT" "destructive-git" "[$form] rule name"
+  done
+}
+# **前置きオプションを許したことで、無害な形を落としていないこと**（足しすぎの検査）。
+# **`-C` は次の語を食う**ので、`git -C /x status` の `status` をサブコマンドとして読めること
+# ——読めなければ「`-C` の値」と「サブコマンド」の境界がずれている。
+t_destructive_git_global_options_keep_safe_forms_passing() {
+  local i=0 form
+  for form in "$G -C \"\$p\" status --porcelain" "$G -C \"\$p\" worktree list --porcelain" \
+              "$G -C \"\$p\" diff --cached --name-status" "$G -C \"\$p\" log -1 --format=%ct" \
+              "$G -C \"\$p\" rev-parse --git-path index" "$G -C \"\$p\" branch -d foo" \
+              "$G -C \"\$p\" reset --mixed" "$G -C \"\$p\" rm --dry-run --cached ." \
+              "$G -c user.name=x commit --amend --no-edit" "$G --no-pager log -1"; do
+    i=$((i+1)); repo "dggp$i"; add scripts/x.sh "$form"; run
+    assert_eq 0 "$STATUS" "[$form] → pass: $OUT"
+  done
+}
+# ---- #1123 レビュー: regex は持っていたがテストが固定していなかった 2 形（#557 と同じ型） -------
+#
+# **`branch +$MID-[A-Za-z]*D[A-Za-z]*` を `-D` に、`(-d|--delete)` を `(-d)` に縮めても
+# 54/0 緑だった**（レビュアーの実測）。**regex が持っているだけでは守りにならない。**
+# **`git branch -rD foo` は実際に消す**（`-r` と `-D` が融合した形）。
+t_destructive_git_fused_and_long_flags_fail() {
+  local i=0 form
+  for form in "$G branch -rD foo" "$G branch -Dr foo" "$G branch --delete --force foo" \
+              "$G update-ref --delete refs/heads/x" "$G worktree remove --force /x" \
+              "$G clean -xfd" "$G clean -fdx" "$G clean -dxf" "$G rm -rf --cached ."; do
+    i=$((i+1)); repo "dgfl$i"; add scripts/po/other-tool.sh "$form"; run
+    assert_eq 1 "$STATUS" "[$form] → fail: $OUT"
+    assert_contains "$OUT" "destructive-git" "[$form] rule name"
+  done
+}
+# **正当な用途の例外は 1 ファイルだけ、しかも「そのファイルの存在理由がそれ」であるものに限る。**
+# `scripts/po/worktree-sweep.sh` は**マージ済みの worktree を片付けるための道具**なので、
+# `git worktree remove` と `git branch -D` がその本体である（#726）。**例外はこのファイルだけ。**
+# **他のファイルに同じ行を書いたら落ちる**ことを、同じ 2 形で対にして固定する
+# （例外が「どこでも通る」方向に広がったら、この対が崩れる）。
+t_destructive_git_worktree_sweep_is_the_only_exception() {
+  local i=0 form
+  for form in "$G worktree remove \"\$path\"" "$G branch -D \"\$branch\""; do
+    i=$((i+1))
+    repo "dgx$i"; add scripts/po/worktree-sweep.sh "$form"; run
+    assert_eq 0 "$STATUS" "[$form] worktree-sweep.sh では通る: $OUT"
+    repo "dgy$i"; add scripts/po/other-tool.sh "$form"; run
+    assert_eq 1 "$STATUS" "[$form] 別のファイルでは落ちる: $OUT"
+    assert_contains "$OUT" "destructive-git" "[$form] rule name"
+  done
+}
+# ---- #1123 レビュー後: `$GLOBAL` を足してあらわになった正当な用途（3 ファイル 6 行） -------------
+#
+# **`git -C` 形を読めるようにしたら、旧規則が見逃していた真陽性 6 行が出た**（偽陽性ではない）。
+# **例外は「ファイル × 形」の組で与える。** ファイルだけ／形だけでは広すぎる。
+# **対にして固定する**: 例外のファイルでは通り、**別のファイルでは同じ行が落ちる**。
+t_destructive_git_per_file_form_exceptions() {
+  local i=0
+  # merge-when-green.sh: **自分が作った一時 worktree** を後片付けする（担当者のツリーではない）
+  i=$((i+1)); repo "dgpf$i"; add scripts/po/merge-when-green.sh "$G -C \"\$root\" worktree remove --force \"\$wt\""; run
+  assert_eq 0 "$STATUS" "merge-when-green の worktree remove は通る: $OUT"
+  i=$((i+1)); repo "dgpf$i"; add scripts/po/other.sh "$G -C \"\$root\" worktree remove --force \"\$wt\""; run
+  assert_eq 1 "$STATUS" "別ファイルの worktree remove は落ちる: $OUT"
+  # mutate.test.sh: **「他人の stash を奪わない」ことを確かめる検査**が使い捨て repo に stash を積む
+  i=$((i+1)); repo "dgpf$i"; add scripts/dev/test/mutate.test.sh "$G -C \"\$R\" stash -q -u"; run
+  assert_eq 0 "$STATUS" "mutate.test.sh の stash は通る: $OUT"
+  i=$((i+1)); repo "dgpf$i"; add scripts/dev/test/other.test.sh "$G -C \"\$R\" stash -q -u"; run
+  assert_eq 1 "$STATUS" "別ファイルの stash は落ちる: $OUT"
+  # **形は混ざらない**: stash の例外ファイルに worktree remove を書いたら落ちる（逆も同じ）
+  i=$((i+1)); repo "dgpf$i"; add scripts/dev/test/mutate.test.sh "$G worktree remove /x"; run
+  assert_eq 1 "$STATUS" "stash 例外のファイルでも worktree remove は落ちる: $OUT"
+  i=$((i+1)); repo "dgpf$i"; add scripts/po/merge-when-green.sh "$G stash"; run
+  assert_eq 1 "$STATUS" "worktree remove 例外のファイルでも stash は落ちる: $OUT"
+  # **例外は「その形」だけ**: どの例外ファイルでも `git rm` は落ちる
+  local f
+  for f in scripts/po/worktree-sweep.sh scripts/po/merge-when-green.sh scripts/dev/test/mutate.test.sh; do
+    i=$((i+1)); repo "dgpf$i"; add "$f" "$G rm -r --cached ."; run
+    assert_eq 1 "$STATUS" "[$f] 例外ファイルでも $G rm は落ちる: $OUT"
+  done
+}
+# **例外の一覧そのものを逐語で固定する**（**上の対のテストだけでは足りない。実測で穴を見つけた**）:
+# **変異 MU9「stash の例外に別ファイルを 1 本足す」が 61/0 で生き残った**——
+# **対のテストは「私が選んだ 1 本の否定例」しか見ていない**ので、
+# **一覧に**別の**名前が増えても気づかない。** **一覧の中身と本数を直接読む。**
+#
+# **例外を足すこと自体は禁じない**（正当な用途は在る）。**黙って増えることを禁じる**:
+# **ここを書き換えないと CI が落ちる**ので、**diff に「例外を増やした」ことが必ず出る。**
+t_destructive_git_exception_lists_are_exactly_these() {
+  # **実装を source せずに、代入だけを取り出して評価する**（`awk` で `NAME='…'` の
+  # 開きから閉じまでを取る。**1 行で閉じる形と複数行に跨る形の両方が在る**ので、
+  # 「開いたら閉じるまで」を数えて切る——`sed` の範囲指定だと、
+  # **1 行で閉じている代入で「閉じ」が見つからず、ファイル末尾まで飲み込んだ**（実測））。
+  local src="$HERE/../forbidden-patterns.sh" sweep stash
+  extract_list() { # extract_list <VAR 名>
+    awk -v name="$1" '
+      index($0, name "=\x27") == 1 {
+        sub("^" name "=\x27", ""); inside = 1
+      }
+      inside {
+        if (sub(/\x27.*$/, "")) { if (length($0)) print; exit }
+        print; next
+      }
+    ' "$src"
+  }
+  sweep=$(extract_list DESTRUCTIVE_GIT_SWEEP_FILES | grep . || true)
+  stash=$(extract_list DESTRUCTIVE_GIT_STASH_FILES | grep . || true)
+  assert_eq "scripts/po/worktree-sweep.sh
+scripts/po/merge-when-green.sh" "$sweep" "worktree remove / branch -D の例外は この 2 本ちょうど"
+  assert_eq "scripts/dev/test/mutate.test.sh" "$stash" "stash の例外は この 1 本ちょうど"
+  # **一覧に挙げたファイルが実在すること**（改名・削除で例外が幽霊になると、
+  # 「例外が効いている」と思ったまま守りが緩む。**幽霊は grep -v -x -F で黙って空振りする**）
+  local f
+  while IFS= read -r f; do
+    [[ -z "$f" ]] && continue
+    [[ -f "$HERE/../../../$f" ]] || fail "例外に挙げたファイルが実在しない: $f"
+  done <<< "$sweep
+$stash"
+}
+# **例外の穴（実装中に実測で踏んだ）**: 例外を「行」で外す形にすると、**例外の語と別の破壊的な形を
+# 1 行に同居させるだけで、行ごと落ちて素通りする**。`grep` は行単位なので、この穴は
+# 「行を外す」設計に必ず付いてくる。**実測した素通り**（origin/main ではなく、この PR の途中の実装で）:
+#   scripts/po/worktree-sweep.sh に
+#   `git rm -r --cached .; git reset --hard; git worktree remove --force /x` → **clean**
+# **いまは例外の在る形を別の正規表現に分け、一般の形からは 1 ファイルも外していない**ので落ちる。
+t_destructive_git_exception_does_not_shield_the_same_line() {
+  local i=0 form
+  for form in "$G rm -r --cached .; $G worktree remove /x" \
+              "$G worktree remove /x; $G reset --hard" \
+              "$G branch -D x && $G rm --cached ." \
+              "$G worktree remove /x  # $G rm はここでは使わない"; do
+    i=$((i+1)); repo "dgh$i"; add scripts/po/worktree-sweep.sh "$form"; run
+    assert_eq 1 "$STATUS" "[$form] 例外のファイルでも同居は落ちる: $OUT"
+    assert_contains "$OUT" "destructive-git" "[$form] rule name"
+  done
+}
+# **行末コメントの中のサブコマンドは落ちる**（**既存の振る舞い。#1123 が変えたものではない**）。
+# 実測して確かめた: origin/main の `reset +--hard` も同じで、
+# `git checkout main  # git reset --hard は使わない` は**落ちる**。
+# **`MID` が `#` を除くのは「フラグを探す範囲」の話**で、**サブコマンド名そのものには効かない**
+# （`git reset --hard` / `git rm` は `MID` を通らずに直接並んでいる）。
+# **行頭コメント（`# …`）だけが通る**（`grep -v '^[^:]+:[0-9]+: *#'` が落としている）。
+# **この非対称を固定しておく**——次の人が「コメントなら通るはず」と考えて穴を作らないため。
+t_destructive_git_subcommand_in_trailing_comment_is_flagged() {
+  local i=0 form
+  for form in "$G checkout main  # $G reset --hard は使わない" \
+              "echo ok  # $G rm --cached は使わない"; do
+    i=$((i+1)); repo "dgt$i"; add scripts/x.sh "$form"; run
+    assert_eq 1 "$STATUS" "[$form] 行末コメントの中でも落ちる（既存の振る舞い）: $OUT"
+  done
+  # 行頭コメントは通る（対比）
+  repo dgt0; add scripts/x.sh "# $G rm --cached は使わない（#1123）"; run
+  assert_eq 0 "$STATUS" "行頭コメントは通る: $OUT"
+}
+# `worktree-sweep.sh` は**失敗したときのログ文**に `git worktree remove` という語を含む（124 行目）。
+# **呼び出しではない**ので落としてはいけない。**例外はこのファイル全体なので通る**が、
+# **例外が無いファイルでログ文に書いた場合は落ちる**——それは受け入れる（語を書かずに
+# `log "片付けに失敗しました"` と書けばよい。**偽陽性の代償は 1 行の書き換えで済む**）。
+t_destructive_git_sweep_log_message_passes() {
+  repo dgl
+  add scripts/po/worktree-sweep.sh "log \"残す \$path (\$branch): $G worktree remove が失敗しました\""
+  run
+  assert_eq 0 "$STATUS" "例外ファイルのログ文は通る: $OUT"
+}
+# **母数（#757）**: 「0 件」と「1 本も見ていない」を同じ緑にしない。
+# `GIT_FILES` のパスの綴りが変わったり `ls-files` が空を返したりすると、
+# **静的検査は「対象の全行を見る」という前提のほうが先に壊れる**。件数は常に出す。
+# **「対象」は追跡ファイル全部ではない**（シェルスクリプトと CI 設定だけ。実測 125 / 10,430 本）。
+t_destructive_git_prints_denominator() {
+  repo dgn; add scripts/a.sh "echo ok"; add deploy/b.sh "echo ok"; add docs/c.md "docs"; run
+  assert_eq 0 "$STATUS" "exit: $OUT"
+  # scripts/a.sh と deploy/b.sh の 2 本だけが対象（README.md と docs/c.md は対象外）
+  assert_contains "$OUT" "destructive-git: 2 file(s) scanned" "母数を出す"
+}
+# **対象が 0 本なら、それは clean ではない**（fixture-secret が #757 で通った道と同じ）。
+# `scripts/` `deploy/` `.github/` のどれかが在るのに 0 本になったら、走査対象の抽出が壊れている。
+# **この repo では起こり得ない**（125 本在る。実測）が、**0 本を緑で通すと気づけない。**
+t_destructive_git_zero_files_is_not_clean() {
+  repo dgz; add docs/only.md "何も走査対象が無い repo"; run
+  assert_eq 0 "$STATUS" "対象ディレクトリが 1 つも無ければ 0 本が正しい: $OUT"
+  assert_contains "$OUT" "destructive-git: 0 file(s) scanned" "0 本でも母数は出す"
+}
+# ---- #1123 レビュー: 走査範囲を「ディレクトリ」から「シェルスクリプトであること」に広げた -------
+#
+# **3 ディレクトリだけを見ていたのに「全行を見る」と書いていた**（#1122 と同じ型）。
+# **レビュアーの実測**: `packages/etl/test/mutants/comparator-shape.mutants.sh`（**追跡された `.sh`**）に
+# `git rm -r --cached .` を入れると **clean で素通り**した。
+# **そのファイルはまさに変異ハーネスの記録**であり、**`destructive-git` が最も守るべき種類**である
+# （#542 の事故 3 件はすべて変異ハーネスだった）。
+# **広げる代償は 1 本だけだと先に数えた**（3 ディレクトリの外の追跡 `.sh` は実測 1 本:
+# `packages/etl/test/mutants/comparator-shape.mutants.sh`）。
+#
+# **`packages/etl/` を含むパスはここでは使わない**（実測で踏んだ）: `fixture-secret` 規則（#757）が
+# **`packages/etl/` が在るのに `test/fixtures/` が 0 本なら exit 2** にするので、
+# **この検査の合否が別の規則に乗っ取られる。** 見たいのは走査範囲だけなので、
+# **同じ「3 ディレクトリの外の `.sh`」を別の場所で作る。**
+t_destructive_git_covers_shell_scripts_outside_the_three_dirs() {
+  local i=0 f
+  for f in test/mutants/comparator-shape.mutants.sh apps/web/tools/helper.sh tools/x.sh a.sh; do
+    i=$((i+1)); repo "dgsh$i"; add "$f" "$G rm -r --cached ."; run
+    assert_eq 1 "$STATUS" "[$f] → fail: $OUT"
+    assert_contains "$OUT" "destructive-git" "[$f] rule name"
+    assert_contains "$OUT" "$f" "[$f] names the file"
+  done
+}
+# **広げすぎていないこと。** **`docs/` は依然として対象外**（この規則の理由を文章で書けなくなる。
+# #542 の設計。`docs/` 配下の `.sh` もそのまま対象外にしてある——手順書に例を置く余地を残す）。
+# **`.sh` でない追跡ファイルも対象外**（`.ts` / `.md` / `.json`。**追跡 10,430 本を全部見るわけではない**）。
+t_destructive_git_does_not_cover_docs_or_non_shell() {
+  local i=0 f
+  for f in docs/ops/example.sh docs/WORKING_AGREEMENT.md src/a.ts README.md notes.txt; do
+    i=$((i+1)); repo "dgns$i"; add "$f" "$G rm -r --cached ."; run
+    assert_eq 0 "$STATUS" "[$f] → pass（対象外）: $OUT"
+  done
+}
+
 # Issue #785: 取得した第三者の HTML をフィクスチャに保存すると、そのページが埋め込んでいる
 # 鍵・トークンが一緒に入ってくる。#750（青森 ?token=）と #785（徳島 maps.googleapis.com ?key=AIza…）で
 # 2 回起きた。gitleaks v8.30.1 の既定ルールは徳島の形を検出しない（実測: no leaks found）ので、
@@ -513,6 +805,22 @@ test_case "destructive git: -f が先頭でない形も落ちる (#557)" t_destr
 test_case "行末コメントの中の -f は落とさない (#557)" t_force_flag_in_trailing_comment_is_not_flagged
 test_case "destructive git outside scripts/ is allowed (#542)" t_destructive_git_outside_scripts_is_allowed
 test_case "destructive git in a comment is allowed (#542)" t_destructive_git_in_comments_is_allowed
+test_case "destructive git: rm --cached / worktree remove / update-ref -d / branch -D も落ちる (#1123)" t_destructive_git_index_and_ref_forms_fail
+test_case "worktree list/add/prune・branch -d・rm --dry-run は通る (#1123)" t_destructive_git_index_and_ref_safe_forms_pass
+test_case "git の前置きオプション（-C 等）で素通りしない (#1123 レビュー)" t_destructive_git_global_options_do_not_shield
+test_case "前置きオプション: worktree remove / branch -D も素通りしない (#1123 レビュー)" t_destructive_git_global_options_do_not_shield_sweep_forms
+test_case "前置きオプションを許しても無害な形は通る (#1123 レビュー)" t_destructive_git_global_options_keep_safe_forms_passing
+test_case "融合フラグ（-rD）と長い綴り（--delete --force）も落ちる (#1123 レビュー)" t_destructive_git_fused_and_long_flags_fail
+test_case "worktree remove / branch -D の例外は worktree-sweep.sh だけ (#1123)" t_destructive_git_worktree_sweep_is_the_only_exception
+test_case "例外は「ファイル × 形」の組で、形は混ざらない (#1123 レビュー)" t_destructive_git_per_file_form_exceptions
+test_case "例外の一覧は逐語でこの 3 本ちょうど（黙って増えない） (#1123 レビュー)" t_destructive_git_exception_lists_are_exactly_these
+test_case "例外の語と同居させても素通りしない (#1123)" t_destructive_git_exception_does_not_shield_the_same_line
+test_case "行末コメントの中のサブコマンドは落ちる（既存の振る舞い） (#1123)" t_destructive_git_subcommand_in_trailing_comment_is_flagged
+test_case "worktree-sweep.sh のログ文は通る (#1123)" t_destructive_git_sweep_log_message_passes
+test_case "destructive git: 母数を出す (#1123/#757)" t_destructive_git_prints_denominator
+test_case "destructive git: 対象 0 本でも母数を出す (#1123/#757)" t_destructive_git_zero_files_is_not_clean
+test_case "3 ディレクトリの外の .sh も見る (#1123 レビュー)" t_destructive_git_covers_shell_scripts_outside_the_three_dirs
+test_case "docs/ と .sh でないものは対象外のまま (#1123 レビュー)" t_destructive_git_does_not_cover_docs_or_non_shell
 
 test_case "fixture に Google API キー（AIza…）→ fail (#785)" t_fixture_google_maps_key_fails
 test_case "fixture に AIza…（クエリ文字列の外）→ fail (#785/#762)" t_fixture_google_key_outside_query_string_fails
