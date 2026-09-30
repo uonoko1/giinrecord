@@ -185,6 +185,15 @@ const EXEMPT_FROM_REQUIRED: readonly string[] = [
   //
   // Issue は push と無関係に書かれるので、PR ごとに見ても意味が無い。週次で十分である。
   "security.yml:issue-secrets",
+  // #1110: branch-protection.yml:guard / environment-protection.yml:guard / security-alerts.yml:guard
+  // とまったく同じ理由。**paths 限定の pull_request でしか走らないので、必須チェックにすると
+  // その paths を触らない PR では永久に pending のまま**マージできなくなる。
+  //
+  // そもそもこの job が見るのは「いまボードと PR が止まっていないか」で、**PR の内容とは無関係**
+  // ——他人の PBI が止まっていることで自分の PR が赤くなるべきではない。
+  // **PR で走るときは実際の GitHub を読まない**（`if: github.event_name != 'pull_request'`）ので、
+  // PR 上では単体テストだけが走る。
+  "scrum-monitor.yml:monitor",
 ];
 
 /**
@@ -219,6 +228,9 @@ test("数え上げそのものの検査: allJobs が全 workflow の job を拾�
     "pr-body.yml:pr-closes",
     "release.yml:production",
     "release.yml:released-tag",
+    // #1110: スクラムの停滞監視の入口。paths 限定の pull_request を持つので
+    // EXEMPT_FROM_REQUIRED に入っている（理由はそちらに書いてある）。
+    "scrum-monitor.yml:monitor",
     "security-alerts.yml:guard",
     "security.yml:gitleaks",
     "security.yml:issue-secrets",
@@ -230,11 +242,14 @@ test("数え上げそのものの検査: allJobs が全 workflow の job を拾�
 test("数え上げそのものの検査: pull_request トリガーを持つ workflow を正しく識別できている", () => {
   const onPR = [...new Set(allJobs.filter((j) => j.onPullRequest).map((j) => j.file))].sort();
   // #1039: pr-body.yml が増えた（pr-closes を ci.yml から分けた）。
+  // #1110: scrum-monitor.yml が増えた（監視そのものを触る PR でテストを走らせるため、
+  // paths 限定の pull_request を持つ）。
   assert.deepEqual(onPR, [
     "branch-protection.yml",
     "ci.yml",
     "environment-protection.yml",
     "pr-body.yml",
+    "scrum-monitor.yml",
     "security-alerts.yml",
     "security.yml",
   ]);
@@ -286,6 +301,7 @@ test("#541 許容リスト（意図的に必須外にしている job）は中�
       "pr-body.yml:pr-closes", // #793 / #1039（ci.yml から分けた）
       "security-alerts.yml:guard", // #786
       "security.yml:issue-secrets", // #940: PR では必ず skipped（実測）。必須にすると全 PR が詰まる
+      "scrum-monitor.yml:monitor", // #1110: paths 限定の pull_request。必須にすると全 PR が詰まる
     ].sort(),
   );
 });
