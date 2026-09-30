@@ -1,6 +1,9 @@
 import { parse, type HTMLElement } from "node-html-parser";
-import type { Bill, BillKind, BillSummary, ShugiinGroupStance } from "@seiji-kiroku/shared";
+import type {
+  Bill, BillKind, BillReferralEntry, BillReferredCommittee, BillSummary, House, ShugiinGroupStance,
+} from "@seiji-kiroku/shared";
 import { fetchText } from "../fetch.ts";
+import { isKnownReferralCommittee } from "./bill-referral-committees.ts";
 import { warekiToIso } from "./sangiin-members.ts";
 
 /**
@@ -115,6 +118,12 @@ export function parseShugiinBill(html: string, sourceUrl: string, list?: { statu
   const received = compact({ shugiin: warekiToIso(cell("衆議院議案受理年月日")), sangiin: warekiToIso(cell("参議院議案受理年月日")) });
   const result = compact({ shugiin: shugiin.text, sangiin: sangiin.text, promulgated: promulgation.date, lawNumber: promulgation.text });
   const stance = groupStance(cell("衆議院審議時会派態度"), cell("衆議院審議時賛成会派"), cell("衆議院審議時反対会派"));
+  const referral = compactObject({
+    shugiinPreliminary: referralEntry("shugiin", cell("衆議院予備付託年月日／衆議院予備付託委員会")),
+    shugiin: referralEntry("shugiin", cell("衆議院付託年月日／衆議院付託委員会")),
+    sangiinPreliminary: referralEntry("sangiin", cell("参議院予備付託年月日／参議院予備付託委員会")),
+    sangiin: referralEntry("sangiin", cell("参議院付託年月日／参議院付託委員会")),
+  });
 
   return {
     id: `${session}-${kindText}-${number ?? keikaId}`,
@@ -132,8 +141,66 @@ export function parseShugiinBill(html: string, sourceUrl: string, list?: { statu
     ...(list?.status ? { status: list.status } : {}),
     ...(result ? { result } : {}),
     ...(stance ? { shugiinGroupStance: stance } : {}),
+    ...(referral ? { referral } : {}),
     sourceUrl,
   };
+}
+
+/**
+ * 付託先の位置に書かれるが、**委員会でないと分かっている**文言（#1133）。
+ *
+ * **これは「委員会かどうか」の判定ではない**——判定は許可リスト
+ * （`bill-referral-committees.ts`）が行い、**知らない値はすべて止まる。**
+ * **ここが決めるのは、止めた値を `noteText` と `unknownText` のどちらに置くかだけ**である:
+ *   `noteText`    委員会でないと**数えて分かっている**値（下の 2 語）
+ *   `unknownText` **まだ数えていない**値（新しい表現かもしれないし、切り出しの誤りかもしれない）
+ *
+ * **この 2 つを分ける理由**: 「付託を省略した」は**一次資料が書いている事実**で、
+ * 「知らない値が出た」は**私たちの表が追いついていない状態**である。混ぜると、
+ * **表を直すべき箇所が「省略」に埋もれて見えなくなる。**
+ *
+ * 2026-09-30 の全数調査（`docs/research/bill-referral.md`）で数えた値:
+ *   審査省略      衆 149 件 / 参 6 件
+ *   審査省略要求   衆 2 件（204-決議-2 と 201-決議-3。どちらも解任・不信任決議案）
+ *
+ * **「審査省略」で前方一致させない。** それでは「審査省略要求」と区別できず、
+ * **要求しただけなのか省略されたのか**という別の事実を 1 つに潰してしまう。原文で照合する。
+ */
+const NON_COMMITTEE_REFERRAL_TEXTS: ReadonlySet<string> = new Set(["審査省略", "審査省略要求"]);
+
+/**
+ * 「令和 8年 3月 5日 ／ 財務金融」→ { date: "2026-03-05", committee: "財務金融" }。
+ * 「／ 審査省略」→ { noteText: "審査省略" }（**委員会として扱わない**）。
+ * 「／」だけ（空欄）→ undefined（**空文字や「不明」を作らない**）。
+ *
+ * 付託先の文字列は **原文のまま**。「委員会」を足さない・言い換えない・院どうしで揃えない。
+ *
+ * ## 知らない値は `committee` にしない（#1133。利用者の判断 2026-09-30）
+ *
+ * **`committee` に入るのは、その回次・その院で実際に記録されていたと数えた名前だけ**
+ * （`bill-referral-committees.ts` の許可リスト）。
+ * **それ以外は `unknownText` に原文のまま入れる**——**黙って捨てない**（記録が在ったことは事実なので）
+ * **が、委員会名としては出さない**（`toBillSummary` が拾わず、`validateDataset` が違反にする）。
+ *
+ * **なぜ denylist をやめたか**: 以前は「委員会でない値」を列挙して除外していたが、
+ * **列挙に無い値は委員会名として素通りする。実際に `審査省略要求` が素通りしていた。**
+ */
+function referralEntry(house: House, text: string): BillReferralEntry | undefined {
+  const { date, text: right } = splitDateResult(text);
+  if (right === undefined) return date === undefined ? undefined : { date };
+  // 許可リストは**付託日**で引く（議案の `session` は提出回次で、付託された時期とは限らない）。
+  // **日付が読めない欄は照合できないので通さない**（実測では委員会名のある欄は必ず日付を持つ）。
+  if (date !== undefined && isKnownReferralCommittee(date, house, right)) return compactObject({ date, committee: right });
+  // 数えた名前でない = 委員会名として出せない。原文は unknownText に残す（捨てない）。
+  // `審査省略` / `審査省略要求` は「委員会でないと分かっている値」なので noteText に分ける。
+  const key = NON_COMMITTEE_REFERRAL_TEXTS.has(right) ? "noteText" : "unknownText";
+  return compactObject({ date, [key]: right }) as BillReferralEntry;
+}
+
+/** 値が undefined のキーを落とす。全部 undefined なら undefined（欄ごと持たない）。 */
+function compactObject<T extends object>(obj: T): T | undefined {
+  const entries = Object.entries(obj).filter(([, v]) => v !== undefined);
+  return entries.length ? (Object.fromEntries(entries) as T) : undefined;
 }
 
 /** 「衆議院審議時会派態度」が空欄なら undefined（未審議・閉会中審査）。unanimous はページが「全会一致」と書いたときだけ。 */
@@ -160,7 +227,30 @@ export function parseNameList(text: string): string[] {
 
 /** `data/bills/index.json` の行。 */
 export function toBillSummary(b: Bill): BillSummary {
-  return { id: b.id, session: b.session, kind: b.kind, house: b.house, title: b.title, ...(b.status ? { status: b.status } : {}), sourceUrl: b.sourceUrl };
+  const referred = referredCommittees(b);
+  return {
+    id: b.id, session: b.session, kind: b.kind, house: b.house, title: b.title,
+    ...(b.status ? { status: b.status } : {}),
+    ...(referred.length ? { referredCommittees: referred } : {}),
+    sourceUrl: b.sourceUrl,
+  };
+}
+
+/**
+ * 一覧に出す付託先（#1133）。**本付託だけ**を 衆 → 参 の順で。
+ *
+ * - **予備付託は入れない**（同じ委員会が 2 回並び、付託が 2 件あったように見える）。
+ * - **`noteText`（審査省略）は入れない**——付託先ではないので、一覧の付託先に混ぜない。
+ * - **記録が無ければ空配列**を返し、呼び出し側が欄ごと落とす（「分野なし」を値にしない）。
+ */
+function referredCommittees(b: Bill): BillReferredCommittee[] {
+  const out: BillReferredCommittee[] = [];
+  const push = (house: BillReferredCommittee["house"], e: BillReferralEntry | undefined) => {
+    if (e?.committee) out.push({ house, committee: e.committee });
+  };
+  push("shugiin", b.referral?.shugiin);
+  push("sangiin", b.referral?.sangiin);
+  return out;
 }
 
 /**

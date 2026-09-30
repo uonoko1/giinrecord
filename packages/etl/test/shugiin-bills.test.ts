@@ -186,7 +186,10 @@ describe("bills/index.json の行", () => {
     const bill = parseShugiinBill(fixture("shugiin-keika-1DE14D6"), keika("1DE14D6"), { status: "成立" });
     assert.deepEqual(toBillSummary(bill), {
       id: "221-閣法-3", session: 221, kind: "閣法", house: "shugiin", title: "所得税法等の一部を改正する法律案",
-      status: "成立", sourceUrl: keika("1DE14D6"),
+      status: "成立",
+      // 付託先は院ごとに原文のまま（#1133）。衆「財務金融」と参「財政金融」を片方に揃えない
+      referredCommittees: [{ house: "shugiin", committee: "財務金融" }, { house: "sangiin", committee: "財政金融" }],
+      sourceUrl: keika("1DE14D6"),
     });
   });
 });

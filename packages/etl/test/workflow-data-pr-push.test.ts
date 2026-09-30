@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
@@ -149,5 +150,202 @@ test("#943: 検査は push より前に走る（落ちたら push しない）",
   assert.ok(
     outsideCheck < firstPush,
     `${GUARD}: 検査（行 ${outsideCheck + 1}）が push（行 ${firstPush + 1}）より後にある`,
+  );
+});
+
+/**
+ * Issue #1132: **データ PR の本文に閉じる語が無いので、`pr-closes` が毎回赤くなっていた。**
+ *
+ * 実測（2026-09-30、`gh pr list --state all --limit 1000` の 687 本のうち
+ * 自動データ PR を `scripts/ci/pr-closes.sh` に掛けた）:
+ *
+ *   **自動データ PR 60 本のうち 59 本が赤。**（内訳: `data: refresh` 50 本 /
+ *   `data: districts` 4 本 / `data: local assemblies` 6 本）
+ *   **緑だった 1 本は #1131 で、PO が本文を手で直したものである。**
+ *
+ * **止まるものは何も無い。** `pr-closes` は branch protection の必須チェックではない
+ * （**その事実は `.github/workflows/pr-body.yml` が 1 か所で持っている**ので、
+ *  必須の一覧をここに書き写さない——#1056 で数を 2 か所に置いて実際に腐らせた）。
+ * 実測（2026-09-30、直近の自動データ PR 8 本）: **8 本すべて `pr-closes` が赤のまま
+ * マージされ、どれも最後の必須チェックの完了から数秒〜2 分で入っている**
+ * （#1131 は必須の `check` が 02:58:52 に緑 → **02:59:32 マージ**。
+ *  `pr-closes` が緑になったのは 03:08:23 で、**マージの 9 分あと**）。
+ *
+ * **害は「マージが遅れること」ではなく「毎日 1 件の赤が並ぶこと」である**
+ * ——**赤に慣れて本物の赤を見落とす**。
+ * **PO は #1131 のとき実際に「また ETL か」で済ませかけた**（Issue #1132 のコメント）。
+ *
+ * **最初この節に「`--auto` が待つのでマージが 21 分止まっていた」と書いた。誤りだった。**
+ * **2 つの `pr-closes` の時刻の差を取って「止まっていた」と呼んだだけで、
+ * マージが何を待っていたかを一度も見ていなかった**（実測すると 8/8 で待っていない）。
+ * **時刻の差は、因果の証拠にならない。**
+ *
+ * ## なぜ「検査を黙らせる」側を選ばなかったか
+ *
+ * **`pr-closes.sh` も `pr-body.yml` も 1 行も変えていない。**
+ * `data: refresh` を対象外にする分岐（`if:` の skip や検査側の除外リスト）を足すと、
+ * **その分岐の射程がずれた日に、人が出す PR でも検査が効かなくなる**——
+ * そして**効かなくなったことは緑からは読めない**。
+ *
+ * 逃げ道は**すでに `pr-closes.sh` に在る**（`Closes なし（理由）`。#793 で
+ * PO 自身が作業合意の更新 PR に使い始めた形）。**それを使うだけで済むなら、
+ * 検査の側に穴を開ける理由が無い。**
+ *
+ * **だからこのテストは「本物の `pr-closes.sh` に、ワークフローが実際に書く本文を食わせる」**。
+ * 逃げ道の綴りをここに写して `includes()` で見る形にはしない——
+ * **写した綴りは、`pr-closes.sh` が綴りを変えた日に嘘になる**（`pr-closes.sh` が
+ * `CLOSING_RE` を board-audit.sh から実行時に取り出しているのと同じ理由）。
+ *
+ * **3 本すべてに掛かる**（`data: refresh` だけ直して他の 2 本を残すと、
+ * 頻度が下がるだけで同じ赤が残る）。**4 本目が足されても、上の `dataPrWorkflows` が
+ * 中身から拾うので、このテストがそのまま掛かる**——denylist にならない。
+ */
+
+/**
+ * ワークフローが `gh pr create --body` に渡す本文を取り出す。
+ *
+ * **本文を正規表現で読んで「シェルならこうなるだろう」と組み直さない。**
+ * 最初にそう書いて**間違えた**: `--body "…\n\n…"` を「`\n` は改行」と解いたが、
+ * **bash の二重引用符の中の `\n` は改行にならない**（実測: `od -c` が `\` `n` の 2 文字を出す。
+ * `gh` も `--body` の値を解釈しない）。**解く側が間違っていると、テストは
+ * 実際には出ない本文を測って緑になる**——#1124 と同じ「測る道具が嘘をつく」形である。
+ *
+ * だから**ワークフローに書かれている代入文を、そのまま bash に実行させる**。
+ * 組み立て方（`printf` か `cat <<EOF` か素の文字列か）が変わっても、
+ * **bash が出す答えが本物**なので、このテストは付いていける。
+ */
+function prCreateBodies(w: Workflow): string[] {
+  // 行継続（`\` + 改行）をつなぐ。以後 1 行 = 1 文とみなせる。
+  const lines = w.code.replace(/\\\n\s*/g, " ").split("\n");
+  const bodies: string[] = [];
+  for (const [i, line] of lines.entries()) {
+    if (!/\bgh pr create\b/.test(line)) continue;
+    const m = line.match(/--body\s+("(?:[^"\\]|\\.)*"|\S+)/);
+    assert.ok(m, `${w.file}:${i + 1}: gh pr create に --body が無い: ${line.trim()}`);
+    // `--body` の値が変数参照なら、その変数への代入文を**同じ step の中から**探して前に置く。
+    const varName = m[1].match(/^"?\$\{?([A-Za-z_][A-Za-z0-9_]*)\}?"?$/)?.[1];
+    const prelude = varName
+      ? lines
+          .slice(0, i)
+          .filter((l) => new RegExp(`^\\s*${varName}=`).test(l))
+          .join("\n")
+      : "";
+    if (varName) {
+      assert.ok(
+        prelude.length > 0,
+        `${w.file}:${i + 1}: --body が $${varName} を参照しているが、代入文が見つからない`,
+      );
+    }
+    // **bash に組ませる。** `printf '%s'` で出すので末尾の改行の有無まで実物と同じ。
+    const script = `${prelude}\nprintf '%s' ${m[1]}`;
+    const r = spawnSync("bash", ["-c", script], { encoding: "utf8" });
+    assert.equal(r.status, 0, `${w.file}:${i + 1}: 本文の組み立てを bash で再現できない: ${r.stderr}`);
+    bodies.push(r.stdout);
+  }
+  return bodies;
+}
+
+const PR_CLOSES = "scripts/ci/pr-closes.sh";
+
+test("#1132: データ PR ワークフローの本文を取り出せている（母数を出す）", () => {
+  assert.ok(dataPrWorkflows.length > 0, "母数が 0（拾い方が壊れている）");
+  const counts = dataPrWorkflows.map((w) => `${w.file}=${prCreateBodies(w).length}`);
+  for (const w of dataPrWorkflows) {
+    assert.ok(
+      prCreateBodies(w).length > 0,
+      `${w.file}: gh pr create の --body を取り出せない。` +
+        `書き方が変わったならこのテストの取り出し方を直すこと（黙って 0 件になると検査が消える）。` +
+        `全 ${dataPrWorkflows.length} 本の内訳: ${counts.join(", ")}`,
+    );
+  }
+});
+
+test("#1132: データ PR の本文は本物の pr-closes.sh を通る（毎日の赤が消えること）", () => {
+  const checker = resolve(repoRoot, PR_CLOSES);
+  assert.ok(dataPrWorkflows.length > 0, "母数が 0（拾い方が壊れている）");
+  let checked = 0;
+  for (const w of dataPrWorkflows) {
+    for (const body of prCreateBodies(w)) {
+      const r = spawnSync("bash", [checker, "-"], { input: body, encoding: "utf8" });
+      assert.equal(
+        r.status,
+        0,
+        `${w.file}: この本文では pr-closes が赤になる（exit ${r.status}）。\n` +
+          `--- 本文 ---\n${body}\n--- 検査の言い分 ---\n${r.stderr}${r.stdout}`,
+      );
+      checked++;
+    }
+  }
+  // #757: 「0 件だった」と「数えていない」を出力で区別できるようにする。
+  assert.ok(
+    checked >= 3,
+    `検査に掛けた本文が ${checked} 件しかない（データ PR ワークフローは ${dataPrWorkflows.length} 本）`,
+  );
+});
+
+test("#1132: 本文が複数行に分かれている（\\n の 2 文字が PR 本文に出ていない）", () => {
+  // **この PBI の実装で一度踏んだ罠をここで留める。**
+  // `--body "1 行目\n\nCloses なし（…）"` と書くと、**bash の二重引用符の中の `\n` は
+  // 改行にならない**（実測: `od -c` が `\` `n` の 2 文字を出す）。`gh` も値を解釈しないので、
+  // **PR 本文に `\n` という 2 文字がそのまま出る。**
+  // **`pr-closes` は通ってしまう**（行単位で見るので、1 行に全部入っていても当たる）——
+  // **つまり緑だけを見ていると気づけない。** 利用者に見えるのは崩れた本文だけである。
+  assert.ok(dataPrWorkflows.length > 0, "母数が 0（拾い方が壊れている）");
+  let checked = 0;
+  for (const w of dataPrWorkflows) {
+    for (const body of prCreateBodies(w)) {
+      assert.ok(
+        !body.includes("\\n"),
+        `${w.file}: PR 本文に \\n の 2 文字が入っている（改行になっていない）: ${JSON.stringify(body)}`,
+      );
+      assert.ok(
+        body.split("\n").length >= 2,
+        `${w.file}: 本文が 1 行しかない。閉じる語は別の行に置くこと: ${JSON.stringify(body)}`,
+      );
+      checked++;
+    }
+  }
+  assert.ok(checked >= 3, `見た本文が ${checked} 件しかない`);
+});
+
+test("#1132: 閉じる語の無い本文なら赤になる（測る道具が空振りしていない）", () => {
+  // **上のテストが「本文を直したから緑」なのか「何も測っていないから緑」なのかを分ける。**
+  // #1124 と同じ形（フィルタが 0 件でも緑になっていた）。
+  // **#1132 の直前まで main に在った本文**（実測: マージ済み `data: refresh` 50 本のうち
+  // 49 本がこの綴りだった）を食わせて、赤になることを見る。
+  const checker = resolve(repoRoot, PR_CLOSES);
+  const before =
+    "Automated ETL output. Validated by validateDataset in the ETL run; CI builds the site with it.";
+  const r = spawnSync("bash", [checker, "-"], { input: before, encoding: "utf8" });
+  assert.equal(
+    r.status,
+    1,
+    `#1132 以前の本文で pr-closes が緑になった。検査が空振りしているか、検査が緩んだ` +
+      `（exit ${r.status}）: ${r.stderr}${r.stdout}`,
+  );
+});
+
+test("#1132: 検査の側に穴を開けていない（pr-closes.sh / pr-body.yml がデータ PR を名指ししない）", () => {
+  // **この PBI は「検査を弱める」方向に倒れうる**ので、倒れていないことを固定する。
+  // `data: refresh` や `data/` の枝名、bot の名前を**検査の側が**知っていたら、
+  // それは「この PR では検査しない」という分岐であり、**射程がずれた日に人の PR も素通りする。**
+  // **素通りしたことは緑からは読めない**ので、ここで形として止める。
+  const suspects = [PR_CLOSES, ".github/workflows/pr-body.yml"];
+  const NAMES = /data:\s*refresh|data\/refresh|data\/districts|data\/local-assemblies|github-actions\[bot\]|giinrecord-etl/;
+  const offenders: string[] = [];
+  for (const rel of suspects) {
+    const text = readFileSync(resolve(repoRoot, rel), "utf8");
+    for (const [i, raw] of text.split("\n").entries()) {
+      // **コメントは読まない。** 説明としてデータ PR に触れるのは構わない——
+      // 検査を分岐させているのは実行される行だけである。
+      const line = stripComment(raw);
+      if (NAMES.test(line)) offenders.push(`${rel}:${i + 1}: ${line.trim()}`);
+    }
+  }
+  assert.deepEqual(
+    offenders,
+    [],
+    `検査の側がデータ PR を名指ししている（${offenders.length} 件 / ${suspects.length} ファイルを見た）。` +
+      `#1132 は本文の側で直す PBI であって、検査に穴を開ける PBI ではない:\n${offenders.join("\n")}`,
   );
 });
