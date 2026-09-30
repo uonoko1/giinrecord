@@ -357,6 +357,67 @@ EOF
 }
 test_case "monitor: STALE_MINUTES が実際に効く（同じ入力で答えが変わる）" t_mon_threshold_is_configurable
 
+# **【#1150 の 2 人目のレビュー 軽微】境界値を fixture に置く。**
+#
+# **`-ge` → `-gt` と「未来時刻を 0 に丸める」の削除が、どちらも緑だった**
+# ——**閾値とちょうど等しい値と、未来の時刻が fixture に 1 つも無かったから。**
+# **`started_at` / `group_by` の鍵と同じ、fixture の薄さである。**
+#
+# **閾値は「$STALE_MINUTES 分以上」の意味である**（`-ge`）。
+# **ちょうど 90 分は鳴る**——**`-gt` にすると鳴らなくなる。**
+t_mon_threshold_is_inclusive() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr list --repo "*" --state open"*) echo '[]' ;;
+    # **ちょうど 90 分前**（MONITOR_NOW=1790712000 = 2026-09-29T20:00:00Z の 90 分前）
+    "pr list --repo "*"--search 301 in:head"*) echo '$(pr_search 391:fix/301-a:2026-09-29T18:30:00Z)' ;;
+    # **89 分前**（1 分だけ内側。こちらは鳴らない）
+    "pr list --repo "*"--search 302 in:head"*) echo '$(pr_search 392:fix/302-b:2026-09-29T18:31:00Z)' ;;
+    "api graphql"*) echo '$(board_page 301:OPEN:"In Progress":2026-09-29T18:30:00Z 302:OPEN:"In Progress":2026-09-29T18:31:00Z)' ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 3 "$STATUS" "**ちょうど閾値は鳴る（-ge。-gt にすると鳴らない）**: $ERR"
+  assert_contains "$ERR" "判定不能 #301" "**ちょうど 90 分は「以上」に含む**"
+  assert_not_contains "$ERR" "#302" "**89 分は含まない（1 分の差で分かれる）**"
+  assert_contains "$ERR" "90 分静かです" "**境界の値をそのまま出す**"
+}
+test_case "monitor: 閾値はちょうどの値を含む（-ge。#1150 2 人目 軽微）" t_mon_threshold_is_inclusive
+
+# **未来の時刻を 0 に丸める**（`worktree-audit.sh` と同じ扱い）。
+# **丸めを消すと `-1440 分静かです` のような負の表示が出る。**
+# **印が付く側は変わらない**（負の age は閾値未満なので鳴らない）ので、**変わるのは表示だけ**
+# ——**だから「負の数を出さない」ことを逐語で固定するしかない。**
+t_mon_future_timestamp_is_clamped() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr list --repo "*" --state open"*) echo '[]' ;;
+    # **PR の updatedAt が 1 日先**（時計のずれで実際に起こりうる）。
+    # **Issue より PR が新しい**ので「動いている」の行に入り、そこで age が表示される
+    # ——**丸めを消すと、その行に負の分数が出る。**
+    "pr list --repo "*"--search 303 in:head"*) echo '$(pr_search 393:fix/303-c:2026-09-30T20:00:00Z)' ;;
+    "api graphql"*) echo '$(board_page 303:OPEN:"In Progress":2026-09-29T08:00:00Z)' ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 0 "$STATUS" "**未来の時刻は鳴らさない**: $ERR"
+  # **負の分数を出力に出さない**（丸めを消すと `-1440` が出る）
+  assert_not_contains "$ERR" "-1440 分前" "**負の分数を出さない（未来時刻を 0 に丸める）**"
+  assert_contains "$ERR" "0 分前に動いています" "**未来は 0 分前として出す**"
+  assert_not_contains "$ERR" "判定不能 #303" "未来の時刻で鳴らさない"
+}
+test_case "monitor: 未来の時刻は 0 に丸める（負の分数を出さない。#1150 2 人目 軽微）" t_mon_future_timestamp_is_clamped
+
 t_mon_ignores_other_statuses() {
   local h; h=$(handler <<EOF
 handle() {
@@ -478,6 +539,49 @@ EOF
   assert_contains "$ERR" "対応する PR が無いもの 1 件" "**母数に出す**"
 }
 test_case "monitor: PR 検索は部分一致なので枝名で照合し直す（外れを採らない）" t_mon_reverifies_search_results
+
+# **【#1150 の 2 人目のレビュー 要修正 1】ボードのページングを打ち切ると盲目になる。**
+#
+# **レビュアーの実測**: **`break` で打ち切ると、実データで 459 件 → 100 件、
+# 停滞 2 件 → 0 件になり、しかも `MONITOR-BROKEN` が出ず「節 2/2 を測れました」と言った。**
+# **設計（「黙って 0 を出さない」）に直接反している。**
+#
+# **原因は fixture の薄さ**（**`max_by(severity)` の `started_at` / `group_by` の鍵と同型**）:
+# **`board_page()` が全 fixture で `"hasNextPage":false` を固定していた**ので、
+# **2 ページ目が存在せず、打ち切りを測れなかった。**
+# **実測で In Progress の 2 件はどちらも 1 ページ目に載っていない。**
+#
+# **ここでは 2 ページに分け、In Progress を 2 ページ目にだけ置く。**
+# **打ち切ると In Progress が 0 件になり、かつ totalCount の検算が落ちる**
+# ——**「0 件」ではなく「測れなかった」と言うことを固定する。**
+t_mon_board_follows_pagination() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr list --repo "*" --state open"*) echo '[]' ;;
+    "pr list --repo "*"--search 202 in:head"*) echo '[]' ;;
+    # **1 ページ目**: In Progress は 1 件も載っていない（hasNextPage=true）
+    "api graphql"*"cursor=CUR2"*) echo '{"data":{"node":{"items":{"totalCount":2,"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[
+      {"content":{"number":202,"state":"OPEN","updatedAt":"2026-09-29T08:00:00Z"},"fieldValueByName":{"name":"In Progress"}}]}}}}' ;;
+    "api graphql"*) echo '{"data":{"node":{"items":{"totalCount":2,"pageInfo":{"hasNextPage":true,"endCursor":"CUR2"},"nodes":[
+      {"content":{"number":201,"state":"OPEN","updatedAt":"2026-09-29T19:59:00Z"},"fieldValueByName":{"name":"Backlog"}}]}}}}' ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  # **2 ページ目まで追えば In Progress が 1 件見つかり、静かなので判定不能になる**
+  assert_eq 3 "$STATUS" "**2 ページ目を追えば In Progress が見つかる**: $ERR"
+  assert_contains "$ERR" "判定不能 #202" "**2 ページ目の In Progress を拾う（打ち切ると消える）**"
+  assert_contains "$ERR" "項目 2 件を見ました" "**2 ページ合わせて 2 件（1 件ではない）**"
+  assert_contains "$ERR" "totalCount 2" "母数を出す"
+  assert_not_contains "$ERR" "MONITOR-BROKEN" "**全部追えていれば壊れたと言わない**"
+  # **2 ページ目を実際に取りに行ったことを、呼び出しログで固定する**
+  assert_contains "$LOG" "CUR2" "**endCursor を渡して 2 ページ目を引いている**"
+}
+test_case "monitor: ボードの 2 ページ目まで追う（打ち切ると In Progress が消える。#1150 2 人目 要修正 1）" t_mon_board_follows_pagination
 
 # **【#1150 のレビュー N8】ボードのページングで黙って盲目にならない。**
 # **レビュアーの実測**: **打ち切ると 457 件中 357 件が消え「In Progress 0 件」で exit 0 になった。**

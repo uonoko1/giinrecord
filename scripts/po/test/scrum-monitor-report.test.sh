@@ -127,6 +127,12 @@ t_mr_silent_zero_is_broken() {
   assert_eq 0 "$MR_STATUS" "exit status: $MR_ERR"
   assert_contains "$MR_LOG" "fail $MR_BROKEN" "**exit 0 でも締めの行が無ければ「測れていない」**"
   assert_not_contains "$MR_LOG" "ok $MR_BROKEN" "**閉じてはいけない**"
+  # **【#1150 の 2 人目のレビュー 要修正 2】「止まっている」に触ってはいけない。**
+  # **rc=4 側には同じ断定が在るのに、この分岐には無かった**ので、
+  # **「監視が死んだから止まっている作業は無い」と閉じる変異が素通りした**（実測 0 件落ち）。
+  # **測れていないことを根拠に「もう止まっていない」と言うのが #1110 が起きた形そのものである。**
+  assert_not_contains "$MR_LOG" "ok $MR_STALLED" "**測れていないのに「止まっていない」と言わない（#1110 の再来）**"
+  assert_not_contains "$MR_LOG" "fail $MR_STALLED" "**測れていないのに「止まっている」とも言わない**"
   assert_contains "$MR_BODY" "締めの行を出していません" "**何がおかしいかを書く**"
   assert_contains "$MR_BODY" "**なし＝監視が途中で死んでいます**" "締めの行の有無を本文に書く"
   # **バックティックを本文に書いてはいけない**（`worktree-audit.sh` が同じ罠を逐語で書いている:
