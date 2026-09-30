@@ -136,8 +136,32 @@ jobs:
           bash scripts/ci/etl-data-only-push.sh "$DATA_BRANCH"
           NUMBER=$(gh pr list --head "$DATA_BRANCH" --state open --json number -q ".[0].number")
           if [ -z "$NUMBER" ]; then
+            # #1132: 2 行目の `Closes なし（理由）` は `scripts/ci/pr-closes.sh` の逃げ道である。
+            # **これが無いと毎回 `pr-closes` が赤くなる**（実測 2026-09-30: 自動データ PR 60 本のうち
+            # 59 本が赤。緑の 1 本は PO が本文を手で直した #1131）。
+            #
+            # **止まるものは何も無い。** `pr-closes` は branch protection の必須チェックではない
+            # （**その事実は `.github/workflows/pr-body.yml` が 1 か所で持っている**ので、
+            #  必須の一覧をここに書き写さない——#1056 で数を 2 か所に置いて実際に腐らせた）。
+            # 実測（2026-09-30、直近の自動データ PR 8 本）: **8 本すべて `pr-closes` が赤のまま
+            # マージされ、どれも最後の必須チェックの完了から数秒〜2 分で入っている**
+            # （#1131 は必須の `check` が 02:58:52 に緑 → **02:59:32 マージ**。
+            #  `pr-closes` が緑になったのは 03:08:23 で、**マージの 9 分あと**）。
+            #
+            # **害は「マージが遅れること」ではなく「毎日 1 件の赤が並ぶこと」である**
+            # ——**赤に慣れて本物の赤を見落とす**。#1132 が扱っているのはそこだけ。
+            #
+            # **`--body "…\n…"` と書いてはいけない。** bash の二重引用符の中の `\n` は改行にならず
+            # （実測: `od -c` で `\` `n` の 2 文字）、**`gh` も `--body` の値を解釈しない**ので、
+            # PR 本文に `\n` という 2 文字がそのまま出る。だから `printf '%s\n'` で組む。
+            # **バッククォートで囲まないこと**——コードスパンの中は検査が読まない（#977）。
+            # 検証は packages/etl/test/workflow-data-pr-push.test.ts が本物の pr-closes.sh に食わせて行う。
+            BODY=$(printf '%s\n' \
+              "Automated ETL output. Validated by validateDataset in the ETL run; CI builds the site with it." \
+              "" \
+              "Closes なし（データの自動更新。対応する Issue は無い）")
             gh pr create --base main --head "$DATA_BRANCH" --title "data: refresh $STAMP" \
-              --body "Automated ETL output. Validated by validateDataset in the ETL run; CI builds the site with it." --label etl
+              --body "$BODY" --label etl
             NUMBER=$(gh pr list --head "$DATA_BRANCH" --state open --json number -q ".[0].number")
           fi
           test -n "$NUMBER"   # PR が無ければここで失敗させる（サイレント失敗対策）
