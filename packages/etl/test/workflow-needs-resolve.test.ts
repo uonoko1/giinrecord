@@ -223,10 +223,11 @@ test("#1017: needs.<job>.outputs.<out> を使う job は、その job を needs 
   // 母数を固定する。0 件で緑になったら「参照が消えた」のか「数えていない」のか分からない（#1017 の 3.）。
   //
   // **#1036 で 6 → 24 に測り直した**（手書き 3 本 → `readdirSync` の全 15 本）。
-  // **`24` は独立に維持されている `workflow-timeout.test.ts` の「#556 数え上げ」の
-  // job 名リスト（24 件）と一致する**——**別の実装が別の目的で数えた値と突き合わせてある。**
+  // **#1110 で 24 → 25**（`scrum-monitor.yml` の `monitor` が 1 本増えた。ワークフローは 16 本）。
+  // **`25` は独立に維持されている `workflow-timeout.test.ts` の「#556 数え上げ」の
+  // job 名リスト（25 件）と一致する**——**別の実装が別の目的で数えた値と突き合わせてある。**
   // `equal` のままにする（`>=` にすると job を消したときに気づけない）。
-  assert.equal(jobCount, 24, `走査した job 数が変わった（実測 2026-09-28: 15 ワークフロー / 24 job）: ${jobCount}`);
+  assert.equal(jobCount, 25, `走査した job 数が変わった（実測 2026-09-30: 16 ワークフロー / 25 job）: ${jobCount}`);
   assert.ok(refCount >= 2, `needs.*.outputs.* の参照が ${refCount} 件しか見つからない（実測 2 件: deploy-data の production, release の released-tag）`);
   assert.deepEqual(broken, [], `needs が宛先を指していない参照がある:\n${broken.join("\n")}`);
 });
