@@ -400,12 +400,23 @@ const rawCommitMessage = (sha: string): string => rawCommitObject(sha).body;
  *
  * **`git cat-file commit` の出力は、最初の空行までが git のオブジェクトヘッダである**
  * （git のオブジェクト形式。`tree` は必ず 1 行目に来る）。
- * **`--pretty` のどの書式もこのヘッダを作れない**——`%B` も `%s` も `%(trailers)` も、
- * **`tree <40 桁の hex>` という行を返さない**（実測で確かめてある。下の検査が固定する）。
+ * **本文を運ぶ `--pretty` の書式は、このヘッダを作れない**——`%B` も `%s` も `%(trailers)` も、
+ * **`tree <40 桁の hex>` という行を返さない**（測った 4 書式で確かめた。下の検査が固定する）。
+ *
+ * **ただし「どの書式も作れない」ではない**（レビュアーが実測して指摘。訂正する）:
+ * **`--format='tree %T'` は `^tree [0-9a-f]{40}$` を満たす**
+ * （実測 2026-09-30: `git show -s --format='tree %T' HEAD` が 1 行ヒットする）。
+ * **つまりヘッダの形の要求は、書式の denylist と同じ強さしか無い。**
+ * **それでも穴にはならない**——**ヘッダを偽れても、本文の等値と
+ * `assertBodyFillsObject` の絶対の床が縮退を捕まえる**
+ * （レビュアーの実測: ヘッダを `tree %T` で偽る変異は単独では等価（19/0）、
+ * 縮退と組むと落ちる）。**この番人は「1 段目」であって、単独で立っているのではない。**
  *
  * **だから「源が独立であること」を、源が返した *ヘッダの形* で要求する。**
  * **M6 のように呼び口を `%B` の読み手に差し替えると、ヘッダが取れないので落ちる**
- * ——**関数名を何に変えても、`--pretty` を通った値ではヘッダを作れないからである。**
+ * ——**本文を運ぶ書式では、ヘッダの行を作れないからである**
+ * （`tree %T` のような「ヘッダだけを模す書式」は作れるが、それでは本文が取れないので
+ * 等値と絶対の床が落とす）。
  */
 const rawCommitObject = (sha: string): { header: string; body: string } => {
   const obj = git("cat-file", "commit", sha);
@@ -419,8 +430,11 @@ const rawCommitObject = (sha: string): { header: string; body: string } => {
  *
  * **1 行目が `tree <40 桁 hex>` であることを要求する**（git のオブジェクト形式。
  * commit オブジェクトは必ず `tree` で始まる）。
- * **`--pretty` の書式はこれを作れない**ので、**これを満たす値は `cat-file`（または
- * それと同等に生オブジェクトを読むもの）から来たとしか言えない。**
+ * **本文を運ぶ `--pretty` の書式はこれを作れない。**
+ * **ただし `--format='tree %T'` のように、ヘッダの行だけを模す書式は作れる**
+ * （レビュアーの実測。上の docblock に訂正を書いた）。
+ * **だからこれは「生オブジェクトから来た」の証明ではなく、
+ * 「本文を運ぶ書式に差し替わっていない」ことの 1 段目の主張である。**
  */
 const RAW_COMMIT_HEADER = /^tree [0-9a-f]{40}$/m;
 
@@ -528,12 +542,43 @@ const RAW_COMMIT_HEADER = /^tree [0-9a-f]{40}$/m;
  * **これで「0 件見つかった」と「0 件しか走査していない」が分かれる**（#757）——
  * **前者は数え直しも 0 件を返し、後者は数え直しが 0 でない数を返す。**
  *
- * **番人 2 つが、それぞれ何かを主張していることも変異で確かめた**:
+ * **番人が、それぞれ何かを主張していることも変異で確かめた**:
  * ```
  * N4  assertBodyFillsObject を `if (true) return;` で潰す   足す前 pass 18 / fail 0 → pass 17 / fail 1
- * N5  突き合わせの相手を走査の結果そのものにする（恒真化）    pass 19 / fail 0  ★ 生き残る（下に理由）
+ * N5  突き合わせの相手を走査の結果そのものにする（恒真化）    pass 20 / fail 0  ★ 生き残る（下に理由）
  * N6  N5 + M6b + %s 縮退                                   pass 17 / fail 2
  * ```
+ *
+ * ── **#1118 のレビューが見つけた穴 2 つ。どちらも「1 コミットごと」では届かなかった** ────────
+ *
+ * **ここまでの床は 3 段とも「訪ねたコミットについて」の主張である。**
+ * **だから「訪ねるコミットの数」と「どのコミットを訪ねたか」には何も言っていなかった。**
+ *
+ * **実測（2026-09-30、基点 `f8bfa16f`、枝に 2 コミット。走査は「本文 89 行 / アドレス 2 件」）:**
+ *
+ * ```
+ * 穴 1: コミット数に床が無い
+ *   P2   rev-list の結果を .slice(0, 1)                   直す前 pass 19 / fail 0  → pass 17 / fail 2
+ *   P4   rev-list に --max-count=1                        直す前 pass 19 / fail 0  → pass 17 / fail 2
+ *   P12  rev-list に --first-parent --max-count=1          直す前 pass 19 / fail 0  → pass 17 / fail 2
+ *        → ログが「2 件 / 89 行 / 2 件」→「1 件 / 24 行 / 1 件」に潰れて全緑だった
+ *
+ * 穴 2: 「どのコミットを読んだか」を守るのが突き合わせ 1 本だけだった
+ *   P8      scannedBody(sha) → scannedBody(shas[0] ?? sha)   直す前 pass 18 / fail 1
+ *   N5+P8   P8 + 突き合わせの恒真化                           直す前 pass 19 / fail 0  ★素通り
+ *                                                           → pass 18 / fail 1
+ * ```
+ *
+ * **初版は「N5 は冗長の除去だから許容」と書いた。それは外れていた**
+ * ——**1 コミットごとの床は、そもそも訪ねられなかったコミットには何も言えない。**
+ * **`N6` が落ちることはこれを否定しない**（N6 は本文が縮む形＝床の範囲、
+ * P8 はコミットが訪ねられない形＝床の範囲外）。
+ *
+ * **塞ぎ方は 2 つ**（どちらも `assertVisitedEveryCommit` / `commitCountByRevList` の docblock に実測）:
+ * - **`rev-list --count` を別プロセスで叩いてコミット数を突き合わせる**（列を縮めても縮まない）。
+ * - **`scannedBody` に「自分が読んだ sha」を返させ、その列を範囲の列と逐語で突き合わせる。**
+ *   **呼ぶ側にループ変数を記録させる形では駄目だった**——**実測: `visited.push(sha)` と
+ *   書いた初版は N5+P8 を `pass 19 / fail 0` で通した。** **記録の出どころを読んだ本人にする。**
  */
 /** 走査に使う本文の読み方。既定は `%B`（メッセージ全文）。**差し替えられるのは検査のためである。** */
 const readBodyByFormat = (sha: string): string =>
@@ -543,13 +588,16 @@ const scannedBody = (
   sha: string,
   read: (sha: string) => string = readBodyByFormat,
   raw: (sha: string) => { header: string; body: string } = rawCommitObject,
-): { body: string; lines: number } => {
+): { body: string; lines: number; readSha: string } => {
   const body = read(sha);
   const independent = raw(sha);
   // **まず「独立の源が本当に生オブジェクトか」を、返ってきた値の構造で確かめる**（#1118）。
   // **綴り（`cat-file` の語）ではなく形で要求するので、呼び口を `%B` の読み手に
-  // 差し替える変異（M6）はここで落ちる**——**`--pretty` のどの書式も
+  // 差し替える変異（M6）はここで落ちる**——**本文を運ぶ `--pretty` の書式は
   // `tree <40 桁 hex>` のヘッダを作れない。**
+  // **`--format='tree %T'` のようにヘッダだけを模す書式は作れる**ので、
+  // **これは 1 段目であって、単独で立つ番人ではない**
+  // （下の等値と `assertBodyFillsObject` が 2 段目・3 段目。上の docblock に実測）。
   assert.match(
     independent.header,
     RAW_COMMIT_HEADER,
@@ -578,7 +626,13 @@ const scannedBody = (
   // **走査に使った本文が、オブジェクトの「ヘッダ + 空行」の残り全部を占めていること**を要求する。
   // **`%s` に縮退すると残りを占めないので、ここで落ちる**——**比較相手が何であっても落ちる。**
   assertBodyFillsObject(sha, body);
-  return { body, lines: body.split("\n").length };
+  // **自分が実際に読んだ sha を返す**（#1118 のレビュー。P8 / N5+P8 を落とす）。
+  //
+  // **呼ぶ側に「読んだ sha」を記録させてはいけない**——**呼ぶ側はループ変数を書けるので、
+  // `scannedBody(shas[0])` を呼びながら `visited.push(sha)` と書ける**
+  // （**実際にそう書いて、N5 + P8 が pass 19 / fail 0 で素通りした**）。
+  // **記録の出どころを、読んだ本人にする。**
+  return { body, lines: body.split("\n").length, readSha: sha };
 };
 
 /**
@@ -672,7 +726,7 @@ const assertBodyFillsObject = (sha: string, body: string): void => {
  * **前者は独立の数え直しも 0 件を返し、後者は独立の数え直しが 0 でない数を返す。**
  *
  * **この関数は `--pretty` を一切使わない**（`git show --format=…` を呼ばない）。
- * **下の検査がそれを、`%B` などの書式が生オブジェクトのヘッダを作れないことと合わせて固定する。**
+ * **下の検査がそれを、測った 4 書式が生オブジェクトのヘッダを作れないことと合わせて固定する。**
  */
 const independentScanTotals = (shas: readonly string[]): { lines: number; addresses: number } => {
   let lines = 0;
@@ -1022,6 +1076,96 @@ const addedCommits = (): {
 };
 
 /**
+ * **走査するコミットの「数」そのものに絶対の床を置く**（#1118 のレビューが見つけた穴）。
+ *
+ * ── **なぜ 1 コミットごとの床では足りないのか（レビュアーの実測）** ──────────────────────
+ *
+ * **#1118 の初版が足した床は 3 段とも「1 コミットごと」の主張だった**
+ * （ヘッダの形 / `cat-file -s` のバイト数 / 本文と trailer の数え直し）。
+ * **どれも「訪ねたコミットについて」しか言っていないので、
+ * 「訪ねるコミットの数」が縮んでも 1 件も落ちない。**
+ *
+ * **実測（2026-09-30、基点 `f8bfa16f`、枝に 2 コミット。走査は「本文 89 行 / アドレス 2 件」）:**
+ *
+ * ```
+ * P2   rev-list の結果を .slice(0, 1) にする                    pass 19 / fail 0  ★素通り
+ * P4   rev-list に --max-count=1 を足す                          pass 19 / fail 0  ★素通り
+ * P12  rev-list に --first-parent --max-count=1 を足す            pass 19 / fail 0  ★素通り
+ *      → ログが「2 件 / 89 行 / 2 件」→「1 件 / 24 行 / 1 件」に潰れて全緑
+ * ```
+ *
+ * **総崩れ（`HEAD..HEAD` で 0 件）は `emptyRangeIsTrustworthy` が落とす。**
+ * **だから「0 件」と「n 件」の間だけに段差が在り、`n−1` 件までなら黙って落とせた**
+ * ——**issue #1118 が名指しした自己参照と同型である**
+ * （**数え直しも author/committer 側も同じ `shas` を受けるので、一緒に縮む**）。
+ *
+ * ── **どう塞ぐか: `rev-list --count` を別呼びで突き合わせる** ─────────────────────────
+ *
+ * **`git rev-list --count <range>` は、sha の列を作る呼び出しとは別のプロセスで、
+ * 範囲のコミット数だけを返す。** **列を `.slice()` しても `--max-count` を足しても、
+ * こちらの数は縮まない**（**別の呼び出しなので、同じ変異が両方に当たらない**）。
+ *
+ * **範囲の綴りは `addedCommits` が返した `mergeBase` から作り直す**——
+ * **`mergeBase` 自体を偽る変異（R9）は `emptyRangeIsTrustworthy` が受け持っている**ので、
+ * ここは「列と数が一致するか」だけを見る。
+ */
+const commitCountByRevList = (mergeBase: string): number => {
+  const out = git("rev-list", "--count", `${mergeBase}..HEAD`).trim();
+  const n = Number(out);
+  assert.ok(
+    Number.isInteger(n) && n >= 0,
+    `rev-list --count がコミット数を返さない（母数の床が効かない）: ${JSON.stringify(out)}`,
+  );
+  return n;
+};
+
+/**
+ * **走査が「範囲のコミットを全部訪ねたか」を、訪問の記録そのもので確かめる**（#1118 のレビュー）。
+ *
+ * ── **なぜ「数の突き合わせ」だけでは足りないのか（レビュアーの反例 P8）** ──────────────────
+ *
+ * **初版は「突き合わせを恒真化する変異（N5）は冗長の除去だから許容」と書いた。**
+ * **これは外れていた。** **レビュアーが反例を出した:**
+ *
+ * ```
+ * P8  scannedBody(sha) → scannedBody(shas[0] ?? sha)   ← 2 件目以降を 1 度も読まない
+ *     無改造 + P8   pass 18 / fail 1   ← 突き合わせが落とす
+ *     N5    + P8    pass 19 / fail 0   ★ 緑になる
+ * ```
+ *
+ * **1 コミットごとの床は、そもそも訪ねられなかったコミットには何も言えない。**
+ * **「走査がどのコミットを読んだか」を守っているのは突き合わせだけだった**
+ * ——**だからそれを恒真化できる状態を残してはいけない。**
+ *
+ * **`N6` が落ちることはこれを否定しない**——**N6 は本文が縮む形（床の範囲）で、
+ * P8 はコミットが訪ねられない形（床の範囲外）である。**
+ *
+ * ── **どう塞ぐか: 訪ねた sha の列を、走査の側に記録させる** ────────────────────────────
+ *
+ * **数（`lines` / `addresses`）ではなく、**
+ * **「どの sha に `scannedBody` を呼んだか」を順番つきで持ち、範囲の列と逐語で突き合わせる。**
+ *
+ * **これが P8 を落とす**——**`shas[0]` を 2 回読むと、訪問の記録が
+ * `[a, a]` になって範囲の `[a, b]` と一致しない。**
+ * **数だけを比べる形では `[a, a]` と `[a, b]` の行数が偶然一致しうるが、
+ * 列の逐語比較なら一致しない。**
+ *
+ * **そして「訪問の記録」は走査のループが作るので、
+ * 突き合わせの *相手* を恒真化しても（N5）この列は縮まない**
+ * ——**恒真化するには走査のループ自体を書き換えるしかなく、それは P8 そのものである。**
+ */
+const assertVisitedEveryCommit = (visited: readonly string[], shas: readonly string[]): void => {
+  assert.deepEqual(
+    [...visited],
+    [...shas],
+    `走査が範囲のコミットを 1 件ずつ順に読んでいない` +
+      `（読み飛ばし・同じコミットの二重読み・列の縮小のいずれか）: ` +
+      `読んだ ${visited.length} 件 = ${visited.map((x) => x.slice(0, 8)).join(",")} / ` +
+      `範囲 ${shas.length} 件 = ${shas.map((x) => x.slice(0, 8)).join(",")}`,
+  );
+};
+
+/**
  * **1 つのコミットの author / committer を読み、誤帰属するものを返す。**
  *
  * **マージコミットは対象外**（親が 2 つ以上。上の docblock に測った理由）。
@@ -1032,9 +1176,10 @@ const addedCommits = (): {
  */
 const misattributingCommitIdentity = (
   sha: string,
-): { bad: string[]; checked: number; merge: boolean } => {
+): { bad: string[]; checked: number; merge: boolean; readSha: string } => {
   const parents = git("show", "-s", "--format=%p", sha).trim().split(/\s+/).filter((x) => x !== "");
-  if (parents.length >= 2) return { bad: [], checked: 0, merge: true };
+  // **`readSha` を返すのは trailer 側と同じ理由**（#1118 のレビュー。読んだ本人に記録させる）。
+  if (parents.length >= 2) return { bad: [], checked: 0, merge: true, readSha: sha };
   const ae = git("show", "-s", "--format=%ae", sha).trim().toLowerCase();
   const ce = git("show", "-s", "--format=%ce", sha).trim().toLowerCase();
   // **母数**: **生オブジェクトの `author` / `committer` ヘッダにも同じアドレスが在ること。**
@@ -1050,7 +1195,7 @@ const misattributingCommitIdentity = (
     checked += 1;
     if (!AUTHOR_OK.test(email)) bad.push(`${sha.slice(0, 8)}: ${kind}=${email}`);
   }
-  return { bad, checked, merge: false };
+  return { bad, checked, merge: false, readSha: sha };
 };
 
 test("この枝が足すコミットの trailer に、誤帰属するアドレスが無い", (t) => {
@@ -1095,10 +1240,16 @@ test("この枝が足すコミットの trailer に、誤帰属するアドレ�
   const bad: string[] = [];
   let checked = 0;
   let scannedLines = 0;
+  // **`scannedBody` が「自分が読んだ sha」を返すので、それを順番つきで記録する**
+  // （#1118 のレビュー。P8 / N5+P8 を落とす）。
+  // **ループ変数ではなく戻り値を使うのが要点である**——**`scannedBody(shas[0] ?? sha)` と
+  // 書かれたら `readSha` が `shas[0]` になるので、記録が範囲の列と一致しなくなる。**
+  const visited: string[] = [];
   for (const sha of shas) {
     // **`scannedBody` が「読んだものがメッセージ全文か」を独立の源で確かめる**
     // （X1 / X2 / X3 の 3 変異はここで落ちる。関数の docblock に実測を書いた）。
-    const { body, lines } = scannedBody(sha);
+    const { body, lines, readSha } = scannedBody(sha);
+    visited.push(readSha);
     scannedLines += lines;
     const r = misattributingTrailerEmails(body);
     checked += r.checked;
@@ -1143,21 +1294,29 @@ test("この枝が足すコミットの trailer に、誤帰属するアドレ�
     scannedLines >= shas.length,
     `本文の行数が コミット数 を下回った（1 行も無いメッセージを読んでいる）: 行 ${scannedLines} / コミット ${shas.length}`,
   );
-  // **母数を、走査とは別の経路でもう一度数えて突き合わせる**（#1118 / #757）。
+  // **1. コミットの「数」に絶対の床を置く**（#1118 のレビューが見つけた穴 1。P2 / P4 / P12）。
+  // **列を作る呼び出しとは *別のプロセス* で数を取り、突き合わせる**
+  // （`.slice()` も `--max-count` も、こちらの数は縮められない）。
+  assert.equal(
+    shas.length,
+    commitCountByRevList(mergeBase ?? ""),
+    `走査するコミットの数が、rev-list --count と合わない（列が縮んでいる）: ` +
+      `列 ${shas.length} 件 / 数 ${commitCountByRevList(mergeBase ?? "")} 件`,
+  );
+  // **2. 「どのコミットを読んだか」を守る**（#1118 のレビューが見つけた穴 2。P8）。
+  // **1 コミットごとの床は、訪ねられなかったコミットには何も言えない**ので、
+  // **訪問の記録そのものを範囲の列と突き合わせる。**
+  // **この番人は走査のループが作る列を見るので、突き合わせの相手を恒真化しても縮まない。**
+  assertVisitedEveryCommit(visited, shas);
+  // **3. 母数を、走査とは別の経路でもう一度数えて突き合わせる**（#1118 / #757）。
   // **`scannedBody` の等値をどう恒真化しても、この数え直しは `scannedBody` を通らない**ので、
   // **走査が縮んだら食い違いとして出る。**
   //
-  // **この突き合わせ自身を潰す変異は、この枝では緑で生き残る**（明記する）:
-  // ```
-  // N5  突き合わせの相手を走査の結果そのものにする（恒真化）   pass 19 / fail 0  ★ 生き残る
-  // N6  N5 + 走査の比較を恒真化 + %B → %s に縮退              pass 17 / fail 2
-  // ```
-  // **N5 が生き残るのは、この枝の本文がどれも正しく読めていて、
-  // 2 つの数え方が構造的に一致するからである**（X4 / X5 / G1 と同じ罠）。
-  // **害が出る組み合わせ（N6）は落ちる**——**絶対の床（`assertBodyFillsObject`）が
-  // `scannedBody` の側に在り、そちらは突き合わせに依存しないからである。**
-  // **つまり N5 は「冗長を 1 本外す」変異で、守りは残っている。**
-  // **数え直しそのものが何かを主張していることは、下の専用の検査が固定する。**
+  // **初版はここに「この突き合わせを恒真化する変異（N5）は冗長の除去だから許容」と書いていた。**
+  // **それは外れていた**（レビュアーの反例 P8。`assertVisitedEveryCommit` の docblock に実測）。
+  // **1 コミットごとの床は、そもそも訪ねられなかったコミットには何も言えない。**
+  // **いまは「訪問の記録」が別の番人として同じことを守っているので、
+  // どちらか一方を恒真化しても、もう一方が落とす。**
   const independentTotals = independentScanTotals(shas);
   assert.deepEqual(
     { lines: scannedLines, addresses: checked },
@@ -1256,13 +1415,26 @@ test("この枝が足すコミットの author / committer が誤帰属しない
   const bad: string[] = [];
   let checked = 0;
   let merges = 0;
+  // **trailer 側と同じ 2 つの番人を持つ**（#1118 のレビュー。P2 / P4 / P12 / P8）。
+  // **`shas` は trailer 側と同じ `addedCommits()` から来るので、縮むときは一緒に縮む**
+  // ——**だから両方に床を置く。**
+  const visited: string[] = [];
   for (const sha of shas) {
     // **マージコミットは対象外**（上の docblock に測った理由）。
     const r = misattributingCommitIdentity(sha);
+    // **読んだ本人が返した sha を記録する**（ループ変数を書かない。trailer 側と同じ理由）。
+    visited.push(r.readSha);
     if (r.merge) merges += 1;
     checked += r.checked;
     for (const e of r.bad) bad.push(e);
   }
+  assert.equal(
+    shas.length,
+    commitCountByRevList(mergeBase ?? ""),
+    `走査するコミットの数が、rev-list --count と合わない（列が縮んでいる）: ` +
+      `列 ${shas.length} 件 / 数 ${commitCountByRevList(mergeBase ?? "")} 件`,
+  );
+  assertVisitedEveryCommit(visited, shas);
   assert.deepEqual(
     bad,
     [],
@@ -1958,15 +2130,30 @@ test("本文を読んだことを確かめる番人が、間違った読み方 3
     "独立の源が git の生オブジェクトを返していない（`--pretty` 同士を比べると比較が恒真になる）",
   );
   assert.equal(independent.body, body, "独立の源が本文を全文返していない");
-  // **`--pretty` のどの書式もこのヘッダを作れない**ことを、その場で実測して固定する
+  // **本文を運ぶ `--pretty` の書式がこのヘッダを作れない**ことを、その場で実測して固定する。
+  // **これは書式の denylist である**（「どの書式も作れない」は偽。
+  // `--format='tree %T'` は満たす。レビュアーの実測。上の docblock に訂正を書いた）。
+  // **denylist でも役に立つのは、ヘッダを偽れても本文が取れないので
+  // 等値と絶対の床が落とすからである。**
   // （**「構造で要求する」が成り立つ根拠**。ここが崩れたら上の assert は何も言っていない）。
-  for (const fmt of ["%B", "%s", "%(trailers:only=true)", "%an%ae%cn%ce%H%T%P"]) {
+  const bodyCarryingFormats = ["%B", "%s", "%(trailers:only=true)", "%an%ae%cn%ce%H%T%P"];
+  for (const fmt of bodyCarryingFormats) {
     assert.doesNotMatch(
       git("show", "-s", `--format=${fmt}`, sample),
       RAW_COMMIT_HEADER,
-      `--pretty の書式 ${fmt} が生オブジェクトのヘッダを作れてしまう（構造での要求が成り立たない）`,
+      `本文を運ぶ書式 ${fmt} が生オブジェクトのヘッダを作れてしまう（1 段目の要求が成り立たない）`,
     );
   }
+  // **母数**（#757）: 当てた書式の数を固定する（配列を空にする変異はここが落ちる）。
+  assert.equal(bodyCarryingFormats.length, 4, "当てた書式の数が減っている");
+  // **「どの書式も作れない」が *偽* であることも、その場で実測して残す**
+  // （レビュアーの指摘。**散文を実測に合わせる**——上の docblock で訂正済み）。
+  // **これが在ることで、次に読む人が「1 段目は denylist である」ことを見落とさない。**
+  assert.match(
+    git("show", "-s", "--format=tree %T", sample),
+    RAW_COMMIT_HEADER,
+    "`--format='tree %T'` がヘッダの形を満たさなくなった（1 段目が denylist だという前提が変わった）",
+  );
   // **そして「独立の源を `--pretty` の読み手に差し替えたら `scannedBody` が落ちる」ことを、
   // 実際に当てて言う**（M6 をこの検査が捕まえる形にしておく。語ではなく振る舞いで）。
   assert.throws(
@@ -2102,6 +2289,89 @@ test("母数の数え直しが、走査が縮んだことを実際に言える�
   // **母数**（#757）: 当てたコミットの数そのものを固定する（配列を空にする変異はここが落ちる）。
   assert.equal(shas.length, 2, "当てたコミットの数が減っている");
   assert.deepEqual(independentScanTotals([]), { lines: 0, addresses: 0 }, "空の範囲で 0 を返さない");
+});
+
+/**
+ * **コミットの「数」と「どれを読んだか」を守る 2 つの番人が、実際に火を噴くことを固定する**
+ * （#1118 のレビューが見つけた穴 1 / 穴 2）。
+ *
+ * ── **なぜこの検査が要るか（X4 / X5 / G1 / N4 と同じ罠を 3 度目に踏んだ）** ────────────────
+ *
+ * **番人を足しただけでは、何も主張していなかった。**
+ * **この枝は範囲のコミットを全部・1 回ずつ読むので、2 つの番人は構造的に緑になる。**
+ * **実測（2026-09-30、基点 `f8bfa16f`、枝に 2 コミット）:**
+ *
+ * ```
+ * Q1  assertVisitedEveryCommit を `if (true) return;` で潰す   pass 19 / fail 0  ★生き残った
+ * ```
+ *
+ * ── **どう固定するか: 番人に「間違った訪問の仕方」を直接当てる** ──────────────────────────
+ *
+ * **`git commit-tree` で形の分かったコミットを 3 つ作り**（ref は触らない。上の docblock）、
+ * **範囲の列に対して「読み飛ばし」「二重読み」「順番違い」「縮小」を当てて、4 通りとも落ちることを言う。**
+ * **落ちなければ番人が死んでいる。**
+ *
+ * **正しい訪問では落ちないことも言う**（恒偽の検査になっていないこと）。
+ */
+test("コミットの数と「どれを読んだか」を守る番人が、間違った訪問の仕方で実際に落ちる", () => {
+  const tree = git("rev-parse", "HEAD^{tree}").trim();
+  const shas = [
+    commitTree({ tree, message: "test: 訪問の記録に当てる 1" }),
+    commitTree({ tree, message: "test: 訪問の記録に当てる 2" }),
+    commitTree({ tree, message: "test: 訪問の記録に当てる 3" }),
+  ];
+  // **3 つが別のコミットになっていることを、まず確かめる**（母数。ここが崩れたら下は何も言っていない）。
+  assert.equal(new Set(shas).size, 3, "その場で作った 3 つが同じコミットになっている");
+
+  // **正しい訪問（全部・1 回ずつ・同じ順）では落ちない。**
+  assert.doesNotThrow(
+    () => assertVisitedEveryCommit(shas, shas),
+    "正しい訪問でも番人が落ちる（恒偽になっている）",
+  );
+
+  // **間違った訪問は、4 通りとも落ちること。**
+  const wrong: ReadonlyArray<readonly [string, readonly string[]]> = [
+    ["縮小（P2 / P4 / P12: 列が半分に潰れる）", shas.slice(0, 1)],
+    ["読み飛ばし（2 件目を読まない）", [shas[0] ?? "", shas[2] ?? ""]],
+    ["二重読み（P8: 1 件目を 3 回読む）", [shas[0] ?? "", shas[0] ?? "", shas[0] ?? ""]],
+    ["順番違い（列の順に読んでいない）", [shas[2] ?? "", shas[1] ?? "", shas[0] ?? ""]],
+  ];
+  const survived: string[] = [];
+  for (const [name, visited] of wrong) {
+    let threw = false;
+    try {
+      assertVisitedEveryCommit(visited, shas);
+    } catch {
+      threw = true;
+    }
+    if (!threw) survived.push(name);
+  }
+  assert.deepEqual(
+    survived,
+    [],
+    "間違った訪問が番人を素通りした（番人が何も主張していない）:\n  " + survived.join("\n  "),
+  );
+  // **母数**（#757）: 当てた形の数そのものを固定する（配列を空にする変異はここが落ちる）。
+  assert.equal(wrong.length, 4, "間違った訪問の当て方が減っている");
+
+  // **コミット数の床のほうも、実際に数を返していることを言う。**
+  // **`rev-list --count` は sha の列を作る呼び出しとは別のプロセスなので、
+  // 列を縮める変異では縮まない**——**それが床になる根拠である。**
+  const mergeBase = git("merge-base", "refs/remotes/origin/main", "HEAD").trim();
+  const counted = commitCountByRevList(mergeBase);
+  const listed = git("rev-list", `${mergeBase}..HEAD`).trim();
+  assert.equal(
+    counted,
+    listed === "" ? 0 : listed.split("\n").length,
+    "rev-list --count と rev-list の列の長さが合わない（床の前提が崩れている）",
+  );
+  // **`--count` が「列とは別の呼び出しである」ことを語でも固定する**
+  // ——**同じ呼び出しから両方を作る形にすると、床にならない。**
+  assert.match(
+    commitCountByRevList.toString(),
+    /rev-list.*--count/s,
+    "コミット数の床が `rev-list --count` を別呼びしていない（列と一緒に縮む）",
+  );
 });
 
 test("許容集合の既定は空（第 2 引数を省いても誤帰属は赤になる）", () => {
