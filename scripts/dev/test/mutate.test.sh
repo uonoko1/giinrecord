@@ -492,8 +492,10 @@ t_run_refuses_a_leftover_save_without_touching_it() {
   # 拒否の時点では handler を仕掛けていないこと（仕掛けていたら他人の退避を戻しうる）。
   local src_body; src_body=$(sed -n '/^apply_pairs() {/,/^}/p' "$SCRIPT")
   local refuse_off arm_off
-  refuse_off=$(printf '%s\n' "$src_body" | grep -n '退避が残っている。先に restore' | head -1 | cut -d: -f1)
-  arm_off=$(printf '%s\n' "$src_body" | grep -n '^[[:space:]]*arm_restore_trap$' | head -1 | cut -d: -f1)
+  # 見つからないときは空にする。ここで grep の 1 を pipefail に拾わせると、
+  # **この検査が落ちるのではなく、以降の検査ごと set -e で止まる**（残りが測られない）。
+  refuse_off=$( { printf '%s\n' "$src_body" | grep -n '退避が残っている。先に restore' || true; } | head -1 | cut -d: -f1)
+  arm_off=$( { printf '%s\n' "$src_body" | grep -n '^[[:space:]]*arm_restore_trap$' || true; } | head -1 | cut -d: -f1)
   assert_ne "" "$refuse_off" "拒否の行が apply_pairs の中にある"
   assert_ne "" "$arm_off" "arm の行が apply_pairs の中にある"
   if [[ -n $refuse_off && -n $arm_off ]]; then
