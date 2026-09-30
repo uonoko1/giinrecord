@@ -468,6 +468,39 @@ t_signal_before_anything_is_applied_says_nothing_about_restoring() {
   assert_contains "$sig_body" 'kill -s "$sig"' "on_signal は最後に同じシグナルで自分を殺し直す"
 }
 
+# trap を「早く仕掛ける」方向には、行き過ぎると別の事故になる境界がある。
+# **「他人の退避が残っている」拒否より前**で仕掛けると、run は着手を拒否したのに、
+# その直後にシグナルを受けたら handler が **他人の退避を自分のものとして戻す**。
+# 前の人が測っている最中のファイルを、別の人の Ctrl-C が書き戻すことになる。
+# だから arm は「拒否を済ませた後、最初の cp の前」の 1 点でなければならない。
+t_run_refuses_a_leftover_save_without_touching_it() {
+  repo
+  # 誰かが当てたまま残した退避を作る（apply は当てたまま残すのが仕様）。
+  run apply src/app.ts 's/ORIGINAL/MUTANT/'
+  assert_eq 0 "$STATUS" "先に apply が通る: $OUT"
+  local save="$R/src/app.ts$SV_EXT"
+  [[ -f $save ]] || { fail "前提の退避が作れていない"; return 0; }
+  local save_md5 target_md5
+  save_md5=$(md5 "$save"); target_md5=$(md5 "$R/src/app.ts")
+  # そこへ別の run が来る。拒否されること、そして退避と対象の両方が1バイトも動かないこと。
+  run run --file src/app.ts --expr 's/MUTANT/SECOND/' -- touch ran
+  assert_ne 0 "$STATUS" "退避が残っているので run は拒否する"
+  assert_contains "$OUT" "退避が残っている" "理由を言う"
+  [[ ! -e "$R/ran" ]] || fail "コマンドを走らせない"
+  assert_eq "$save_md5" "$(md5 "$save")" "他人の退避に触らない"
+  assert_eq "$target_md5" "$(md5 "$R/src/app.ts")" "他人が当てた対象にも触らない"
+  # 拒否の時点では handler を仕掛けていないこと（仕掛けていたら他人の退避を戻しうる）。
+  local src_body; src_body=$(sed -n '/^apply_pairs() {/,/^}/p' "$SCRIPT")
+  local refuse_off arm_off
+  refuse_off=$(printf '%s\n' "$src_body" | grep -n '退避が残っている。先に restore' | head -1 | cut -d: -f1)
+  arm_off=$(printf '%s\n' "$src_body" | grep -n '^[[:space:]]*arm_restore_trap$' | head -1 | cut -d: -f1)
+  assert_ne "" "$refuse_off" "拒否の行が apply_pairs の中にある"
+  assert_ne "" "$arm_off" "arm の行が apply_pairs の中にある"
+  if [[ -n $refuse_off && -n $arm_off ]]; then
+    [[ $arm_off -gt $refuse_off ]] || fail "arm（$arm_off 行目）が「退避が残っている」拒否（$refuse_off 行目）より前にある。この順だと他人の退避を戻しうる"
+  fi
+}
+
 # ---- 必須5-N3: 退避ファイル自身を対象にできない -----------------------------------------------
 # 「退避が残っている」拒否より先にこの guard へ届く場所に置く必要がある。
 # find_saves は node_modules を刈るので、そこに置けば「退避が残っている」判定には引っかからない。
