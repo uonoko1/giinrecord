@@ -114,11 +114,30 @@ report env-file "$ENV_FILES"
 #
 # This is a denylist, so it is not a proof that nothing destructive gets through — see 塞げていない形 in the
 # comment below the regex. It raises the cost of writing one by hand, which is what makes it visible in review.
-GIT_FILES=$(printf '%s\n' "$FILES" | grep -E '^(scripts|deploy|\.github)/' || true)
+# ── 走査範囲（#1123 のレビューで広げた。#1122 と同じ型の指摘） ─────────────────────────
+# **`scripts/` `deploy/` `.github/` の 3 ディレクトリだけを見ていたのに、
+# 「全行を見る」と書いていた**（追跡 10,430 本のうち 124 本）。
+# **レビュアーの実測**: `packages/etl/test/mutants/comparator-shape.mutants.sh`（**追跡された `.sh`**）に
+# `git rm -r --cached .` を入れると **clean で素通り**した。
+#
+# **範囲を「ディレクトリ」から「シェルスクリプトであること」に変えた。** 理由:
+#   - **`destructive-git` が守るのは「変異ハーネスを書く人」である**（#542 の事故 3 件はすべて
+#     変異ハーネスだった）。**`comparator-shape.mutants.sh` はまさに変異ハーネスの記録**であり、
+#     **ディレクトリで切ると、規則が最も守るべきファイルが外に落ちる。**
+#   - **ディレクトリの列挙は、ファイルが移動するたびに黙って穴が開く**（#1122 が直したのと同じ型）。
+#   - **`.sh` は 3 ディレクトリの外に 1 本しか無い**（実測。広げる代償が小さいことを先に数えた）。
+# **`docs/` は依然として対象外**（この規則の理由を文章で書けなくなるため。#542 の設計どおり）。
+#
+# **拾い方**: 3 ディレクトリの全ファイル（`.yml` のワークフローを含む）＋ **どこに在っても `.sh`**。
+# **`docs/` 配下の `.sh` は除く**（手順書に例として置く余地を残す。いま 0 本。実測）。
+GIT_FILES=$(printf '%s\n' "$FILES" \
+  | grep -E '^(scripts|deploy|\.github)/|\.sh$' \
+  | grep -v -E '^docs/' || true)
 GIT_N=$(printf '%s\n' "$GIT_FILES" | sed '/^$/d' | wc -l | tr -d ' ')
-# 母数（#757 と同じ作法）: **静的検査の取り柄は「全部の行を見る」ことだけ**なので、
-# その「全部」が何本だったかを言わないと、緑が何の証明にもならない。`ls-files` が空を返しても
-# パスの綴りが変わっても、症状は「0 件検出」と見分けがつかない（実測: origin/main では 124 本）。
+# 母数（#757 と同じ作法）: **「0 件検出」と「1 本も読めていない」を同じ緑にしない。**
+# `ls-files` が空を返してもパスの綴りが変わっても、症状は区別がつかない
+# （実測: 広げる前 124 本 → 広げた後 125 本。追跡ファイル全体は 10,430 本なので、
+#  **この規則は「全行」ではなく「シェルスクリプトと CI 設定の全行」を見る**）。
 echo "destructive-git: $GIT_N file(s) scanned"
 # MID = whatever may sit between the subcommand and the force flag, so the flag does not have to come first.
 # It must cover plain words as well as options: `git checkout mybranch -f` and `git clean untracked.txt -f` are
@@ -128,13 +147,44 @@ echo "destructive-git: $GIT_N file(s) scanned"
 # fails to match `git clean -f` when a `+`-quantified group is itself starred (実測), which silently un-blocks
 # the very form the rule was written for.
 MID='[^|;&()<>#]*'
-DESTRUCTIVE_GIT_RE="(^|[^#[:alnum:]_-])git +(\
+# GLOBAL = git の**前置きオプション**（サブコマンドより前に来るもの）。**0 個以上を許す。**
+#
+# **なぜ要るか（#1123 のレビューが実測。これは #1123 が作った穴ではなく #542 から在った）**:
+# **`git +(` はサブコマンドが `git` の直後に来ることを要求していた**ので、
+# **前置きオプションを 1 つ挟むだけで、この規則の全形が素通りした**（実測 18 形で HIT 3 / MISS 15。
+# `reset --hard` / `clean -xfd` / `restore .` / `stash` / `checkout -f .` も全部通った）:
+#
+#   git rm -r --cached .            → 捕まる
+#   git -C "$p" rm -r --cached .    → **素通り**
+#   git --no-pager rm --cached .    → **素通り**
+#
+# **とりわけ `-C <path>` が危ない**: **問題の当事者 `scripts/po/worktree-audit.sh` は
+# git 呼び出し 5 本中 4 本が `git -C "$path"` 形**である。
+# **#1057 をあのファイルに書き込む最も自然な形が、規則に掛からなかった。**
+#
+# **値を取るものと取らないものを分けて書く**（git(1) の OPTIONS から採った。**`-C <path>` は
+# 次の語を食う**ので、食わせないと `path` がサブコマンドの位置に居座って照合が壊れる）:
+#   値を取る（次の語を食う）  -C <path> / -c <name>=<value> / --exec-path / --git-dir /
+#                             --work-tree / --namespace / --super-prefix / --config-env
+#                             （`=` で繋ぐ形と、空白で分ける形の両方が在る）
+#   値を取らない              --no-pager / -p / -P / --paginate / --no-replace-objects /
+#                             --bare / --literal-pathspecs / --glob-pathspecs / --icase-pathspecs /
+#                             --no-optional-locks / --no-lazy-fetch / --no-advice
+#
+# **`*` で囲む形（`(…)*`）にしてある。** 上のコメントが警告している「`+` 量化したグループを
+# `*` で囲むと GNU grep の ERE が取り落とす」形を避けるため、**中身に `+` 量化を置かない**
+# （`[^ ]+` ではなく `[^[:space:]|;&()<>#]*` を使い、区切りの空白だけを `[[:space:]]+` で持つ）。
+# **実測で `git -C /a -C /b rm --cached .`（2 個）と 0 個の両方が当たることを確かめた。**
+GLOBAL_VAL='(-C|-c|--exec-path|--git-dir|--work-tree|--namespace|--super-prefix|--config-env)'
+GLOBAL_FLAG='(--no-pager|-p|-P|--paginate|--no-replace-objects|--bare|--literal-pathspecs|--glob-pathspecs|--icase-pathspecs|--no-optional-locks|--no-lazy-fetch|--no-advice)'
+# `${…}` で囲む: `$GLOBAL_FLAG[` は配列添字と読まれる（shellcheck SC1087。実際に落ちた）
+GLOBAL="(${GLOBAL_VAL}(=[^[:space:]|;&()<>#]*[[:space:]]+|[[:space:]]+[^[:space:]|;&()<>#]*[[:space:]]+)|${GLOBAL_FLAG}[[:space:]]+)*"
+DESTRUCTIVE_GIT_RE="(^|[^#[:alnum:]_-])git +$GLOBAL(\
 checkout +$MID(-f|--force)([[:space:]]|$)|\
 checkout +(-- +)?\\.([[:space:]]|$)|\
 restore([[:space:]]+(--help|-h)([[:space:]]|$)|[[:space:]]|$)|\
 reset +--hard|\
 clean +$MID(-[A-Za-z]*f[A-Za-z]*|--force)([[:space:]]|$)|\
-stash([[:space:]]|$)|\
 rm([[:space:]]|$)|\
 update-ref +$MID(-d|--delete)([[:space:]]|$))"
 # **例外を持つ形は、別の正規表現に分けて持つ**（#1123。**最初は 1 本にまとめて穴を作った**）。
@@ -145,17 +195,25 @@ update-ref +$MID(-d|--delete)([[:space:]]|$))"
 # **だから例外の在る形だけを別の regex にして、そちらの検出結果だけをファイル名で外す。**
 # **上の `DESTRUCTIVE_GIT_RE` には例外が 1 つも無い**（`restore --help` / `rm --dry-run` は
 # 「無害な形」であって「特定ファイルの例外」ではない）。
-DESTRUCTIVE_GIT_SWEEP_RE="(^|[^#[:alnum:]_-])git +(\
+# **`$GLOBAL` はこちらにも要る**（同じ穴を持っていた。実測: `git -C "$p" worktree remove /x` → 素通り）。
+# **`branch` の融合フラグと長い綴りもここで持つ**: `-rD` / `-Dr`（`-r` と `-D` が 1 語に融合した形。
+# **実際に消す**）と `--delete --force`（`-D` の長い綴り。git が正式に受ける）。
+DESTRUCTIVE_GIT_SWEEP_RE="(^|[^#[:alnum:]_-])git +$GLOBAL(\
 worktree +remove([[:space:]]|$)|\
-branch +$MID-[A-Za-z]*D[A-Za-z]*([[:space:]]|$))"
+branch +$MID(-[A-Za-z]*D[A-Za-z]*|--delete +$MID--force|--force +$MID--delete)([[:space:]]|$))"
 # `restore` / `rm` above match every invocation and the safe forms are dropped again below. For `restore` there
 # is no safe target at all (`git restore <path>` overwrites that path from the index — 実測), so only `--help`
 # survives. For `rm` the only harmless form is a dry run: `git rm -q <path>` still deletes (実測), which is why
-# the existing use in scripts/ci/test/released-ref.test.sh:32 is caught rather than excused — it builds a
+# the existing use in scripts/ci/test/released-ref.test.sh is caught rather than excused — it builds a
 # throw-away repo under $TMP, but the rule cannot tell that from the text, and pretending it can is how holes
-# are made. That line is rewritten to `git update-index --force-remove`, which touches only the index (#1123).
+# are made. **That line now uses plain `rm data/old.json` + the `git add -A` on the next line** (#1123).
+# **Do NOT reach for `git update-index --force-remove` instead**: this rule does not detect it (実測 MISS),
+# so it would look like a way to satisfy the check while still writing to the index. An earlier draft of this
+# very comment claimed that rewrite had been made; it had not, and the reviewer caught it (#1123 review).
 #
-DESTRUCTIVE_GIT_ALLOW_RE='git[[:space:]]+(restore[[:space:]]+(--help|-h)([[:space:]]|$)|rm[[:space:]]+'$MID'(--dry-run|-n)([[:space:]]|$))'
+# **`$GLOBAL` はここにも要る**: 上の検出側が `git -C /x rm --dry-run .` を拾うようになったので、
+# **無害な形を外す側も同じ前置きを読めないと、偽陽性になる**（実測で確かめた）。
+DESTRUCTIVE_GIT_ALLOW_RE="git[[:space:]]+$GLOBAL(restore[[:space:]]+(--help|-h)([[:space:]]|\$)|rm[[:space:]]+$MID(--dry-run|-n)([[:space:]]|\$))"
 # **`worktree remove` / `branch -D` を書いてよいファイルは 1 本だけ**: `scripts/po/worktree-sweep.sh` は
 # **マージ済みの worktree を片付けることが存在理由の道具**である（#726。PO が手で走らせる。
 # `--force` は使わず、未コミット・未 push が在れば残す——その判断は道具自身のテストが固定している）。
@@ -164,16 +222,41 @@ DESTRUCTIVE_GIT_ALLOW_RE='git[[:space:]]+(restore[[:space:]]+(--help|-h)([[:spac
 # **除外するのは「このファイルか」だけ**で、行の中身は見ない——**行の中身で外そうとすると
 # 上に書いた穴（1 行に別の破壊的な形を同居させる）が開く。** `DESTRUCTIVE_GIT_RE` の側は
 # **このファイルでも一切外れない**ので、`git rm` を書けば同居していても落ちる（実測）。
-DESTRUCTIVE_GIT_SWEEP_FILE='scripts/po/worktree-sweep.sh'
-# 一般の形: 例外はファイル単位では 1 つも無い（無害な形を落とす `ALLOW_RE` だけ）
+#
+# **`$GLOBAL` を足したことで、正当な用途が 3 ファイル 6 行あらわになった**（#1123 のレビュー後に実測。
+# **どれも旧規則が `git -C` 形を読めずに見逃していた真陽性であって、偽陽性ではない**）。
+# **例外は「ファイル × 形」の組で与える。** **ファイルだけ、あるいは形だけでは広すぎる。**
+#   scripts/po/worktree-sweep.sh   worktree remove / branch -D   マージ済み worktree を片付ける道具
+#                                                                 そのもの（#726）
+#   scripts/po/merge-when-green.sh worktree remove                **自分が作った一時 worktree** を
+#                                                                 後片付けする 2 行（`$tmp` 配下。
+#                                                                 担当者のツリーではない）
+#   scripts/dev/test/mutate.test.sh  stash                        **「mutate.sh が他人の stash を
+#                                                                 奪わない」ことを確かめる検査**が、
+#                                                                 使い捨て repo に stash を積む 4 行。
+#                                                                 **この形を禁じると、stash を守る
+#                                                                 検査そのものが書けなくなる。**
+# **形ごとに別の変数で持つ**（`worktree remove` の例外が `stash` に波及しないように）。
+DESTRUCTIVE_GIT_SWEEP_FILES='scripts/po/worktree-sweep.sh
+scripts/po/merge-when-green.sh'
+DESTRUCTIVE_GIT_STASH_FILES='scripts/dev/test/mutate.test.sh'
+# **`stash` は他の一般形と分けて、別の走査で持つ**（`worktree remove` と同じ作り）。
+# **こうすると例外は「ファイル一覧を 1 本減らす」だけになり、行の中身を見ないで済む**
+# ——行の中身で外すと「1 行に別の破壊的な形を同居させる」穴が開く（この PR の途中で実測した）。
+DESTRUCTIVE_GIT_STASH_RE="(^|[^#[:alnum:]_-])git +${GLOBAL}stash([[:space:]]|\$)"
+# 一般の形（`stash` を除く）: 例外はファイル単位では 1 つも無い（無害な形を落とす `ALLOW_RE` だけ）
 GIT_OUT=$(run_grep "$GIT_FILES" -I -H -n -E -e "$DESTRUCTIVE_GIT_RE" \
   | grep -v -E '^[^:]+:[0-9]+: *#' \
   | { grep -v -E "$DESTRUCTIVE_GIT_ALLOW_RE" || true; } | cut -d: -f1,2 || true)
-# `worktree remove` / `branch -D`: 上の 1 ファイルだけを対象から外す（-F で逐語。ファイル名は正規表現ではない）
-GIT_SWEEP_FILES=$(printf '%s\n' "$GIT_FILES" | grep -v -x -F "$DESTRUCTIVE_GIT_SWEEP_FILE" || true)
+# `stash`: 上の 1 ファイルだけを対象から外す
+GIT_STASH_FILES=$(printf '%s\n' "$GIT_FILES" | grep -v -x -F "$DESTRUCTIVE_GIT_STASH_FILES" || true)
+GIT_STASH_OUT=$(run_grep "$GIT_STASH_FILES" -I -H -n -E -e "$DESTRUCTIVE_GIT_STASH_RE" \
+  | grep -v -E '^[^:]+:[0-9]+: *#' | cut -d: -f1,2 || true)
+# `worktree remove` / `branch -D`: 上の 2 ファイルを対象から外す（-F で逐語。ファイル名は正規表現ではない）
+GIT_SWEEP_FILES=$(printf '%s\n' "$GIT_FILES" | grep -v -x -F "$DESTRUCTIVE_GIT_SWEEP_FILES" || true)
 GIT_SWEEP_OUT=$(run_grep "$GIT_SWEEP_FILES" -I -H -n -E -e "$DESTRUCTIVE_GIT_SWEEP_RE" \
   | grep -v -E '^[^:]+:[0-9]+: *#' | cut -d: -f1,2 || true)
-GIT_OUT=$(printf '%s\n%s\n' "$GIT_OUT" "$GIT_SWEEP_OUT" | grep . || true)
+GIT_OUT=$(printf '%s\n%s\n%s\n' "$GIT_OUT" "$GIT_STASH_OUT" "$GIT_SWEEP_OUT" | grep . || true)
 # 塞げていない形（denylist の宿命。「これで全部」ではない。分かっているものは書き残す）:
 #   - 名前を変えた呼び出し: `g=git; $g restore .` / `alias g=git` / `eval "$cmd restore ."` / `"g""it" restore .`
 #   - 引数を組み立てる形: `git "$sub" .` や `git restore "$@"`（$sub / $@ の中身は静的には読めない）
@@ -189,7 +272,8 @@ GIT_OUT=$(printf '%s\n%s\n' "$GIT_OUT" "$GIT_SWEEP_OUT" | grep . || true)
 #   これらは「隠れて通れる」形ではなく、レビューの diff に不自然な書き方として現れる（作業合意 #507）。
 #
 # **この規則が塞げない「もう 1 つの軸」**（#1123。語の集合ではなく、見る場所の違い）:
-#   静的なこの規則は **`scripts/` `deploy/` `.github/` の全行**を見るが、**語の列挙が不完全**である。
+#   静的なこの規則は **シェルスクリプトと CI 設定の全行**（実測 125 本。**追跡 10,430 本の全部ではない**）
+#   を見るが、**語の列挙が不完全**である。
 #   動的な検査（`scripts/po/test/worktree-audit.test.sh` の allowlist）は **語について完全**だが、
 #   **その筋書きで実行された呼び出しだけ**を見るので、到達しない枝は見えない。
 #   **二重管理ではなく、不完全さの向きが逆の 2 枚である**（表は docs/ops/guards.md に在る）。

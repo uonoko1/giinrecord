@@ -108,7 +108,7 @@ grep してから起票してください（**今日の 5 件はそこにあり�
 | 古い `main` から切った枝が、main が得た行を黙って消す | `scripts/ci/stale-base.sh`（`merge-base` より後に main が得た行が枝に無いかを見る）。テストは `scripts/ci/test/stale-base.test.sh`（#536） |
 | **push される前に rebase された枝が、main の行を黙って消す**（`merge-base` が既に main の先端なので上の検査は `ok` と言う） | `scripts/ci/stale-base.sh` の `--net-deletions` モード（ファイルが残ったまま base の行が差し引きで減っていないかを見る）。テストは `scripts/ci/test/stale-base.test.sh` の `t_net_deletions_catches_a_rebased_branch_that_dropped_the_bases_lines`。**直近 60 PR で 4 件に火が点き、うち 2 件が実地の事故**（#832 は 3 ファイル 286 行、#761 は 2 ファイル 33 行。残る 2 件 #740 / #794 は手で読んで意図した置き換え・移設だった）。**証拠ではなく合図なので、意図した削除なら PR 本文に理由を書く**（#836） |
 | 秘密・サーバー情報がリポジトリに入る | `scripts/ci/forbidden-patterns.sh`（`private-key` / `github-token` / `aws-key` / `env-file` / `ip-address` / `forbidden`。#133） |
-| 破壊的な git（`reset --hard` 等）を scripts に書いて未コミットの作業を消す | `scripts/ci/forbidden-patterns.sh` の `destructive-git` 規則（#542/#557/#1123）。退避は `scripts/dev/mutate.sh` の `mutate.sh run` を使う。**この規則は静的に全行を見るが語の列挙が不完全である**——動的に見る側とどう補い合うかは下の「破壊的な git を見る 2 枚」 |
+| 破壊的な git（`reset --hard` 等）を scripts に書いて未コミットの作業を消す | `scripts/ci/forbidden-patterns.sh` の `destructive-git` 規則（#542/#557/#1123）。退避は `scripts/dev/mutate.sh` の `mutate.sh run` を使う。**この規則が見るのはシェルスクリプトと CI 設定だけ（実測 125 本。追跡 10,430 本の全部ではない）で、語の列挙も不完全である**——動的に見る側とどう補い合うかは下の「破壊的な git を見る 2 枚」 |
 | 到達しない枝に書かれた破壊的な git が、静的・動的の両方のゲートを素通りする | `scripts/po/test/worktree-audit.test.sh` の `assert_git_calls_read_only` が**実行された呼び出し**を allowlist で見て、`scripts/ci/forbidden-patterns.sh` の `DESTRUCTIVE_GIT_SWEEP_RE` が**書かれた行**を静的に見る。**2 枚の不完全さの向きが逆**（#1089/#1115/#1123。`git rm -r --cached .` が両方を素通りしていた。実測） |
 | 利用者本人の個人アドレスが追跡ファイルに入る | `scripts/ci/forbidden-patterns.sh` の `personal-address` 規則（#1111。2026-09-28 に 3 本の PR が計 7 行を入れかけ、3 回ともレビュアーだけが見つけた）。架空アドレスの綴りは `packages/etl/test/fake-addresses.ts` の `FAKE_ADDRESSES` を使う |
 | 高深刻度の脆弱性を無期限に放置する | `scripts/ci/audit.sh`（`audit-ignore.txt` の例外は必ず期限付き）と `scripts/ci/audit-ignore.txt`（#133） |
@@ -129,10 +129,10 @@ grep してから起票してください（**今日の 5 件はそこにあり�
 
 ```
                     語の集合                      見る場所
-静的                denylist なので不完全         scripts/ deploy/ .github/ の
-  forbidden-        （列挙に無い形は素通りする）    追跡ファイル全行
-  patterns.sh の                                 （実測 124 本。母数を出力に書く）
-  destructive-git
+静的                denylist なので不完全         シェルスクリプト（.sh）と
+  forbidden-        （列挙に無い形は素通りする）    CI 設定（scripts/ deploy/ .github/）
+  patterns.sh の                                 の全行。**追跡 10,430 本の全部ではない**
+  destructive-git                                （実測 125 本。母数を出力に書く）
 
 動的                実行された呼び出しについては   その筋書きで実際に
   worktree-         完全（列挙に無い形は           実行された呼び出しだけ

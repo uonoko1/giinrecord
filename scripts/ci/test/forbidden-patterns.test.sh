@@ -326,6 +326,71 @@ t_destructive_git_index_and_ref_safe_forms_pass() {
     assert_eq 0 "$STATUS" "[$form] → pass: $OUT"
   done
 }
+# ---- #1123 レビュー: `git` の前置きオプションを挟むと全形が素通りしていた ------------------------
+#
+# **`git +(` はサブコマンドが `git` の直後に来ることを要求する。** **前置きオプションが入ると全滅した。**
+# **これは #1123 が作った穴ではなく、#542 からずっと在った**（`reset --hard` / `clean` /
+# `restore` / `stash` / `checkout -f` も同じく素通りした。実測 18 形で HIT 3 / MISS 15）。
+#
+# **とりわけ危ないのは `-C <path>`**: **問題の当事者 `scripts/po/worktree-audit.sh` は
+# git 呼び出し 5 本中 4 本が `git -C "$path"` 形**である。
+# **#1057 をあのファイルに書き込む最も自然な形が、規則に掛からなかった。**
+#
+# **前置きオプションの一覧は git(1) の「OPTIONS」から採った**（値を取るもの／取らないものを分けて
+# 書く必要がある: `-C <path>` は次の語を食うが `--no-pager` は食わない）。
+t_destructive_git_global_options_do_not_shield() {
+  local i=0 form
+  for form in "$G -C \"\$p\" rm -r --cached ." "$G --git-dir=/x rm -r --cached ." \
+              "$G -c user.name=x rm -r --cached ." "$G --no-pager rm -r --cached ." \
+              "$G -C /a -C /b rm -r --cached ." "$G --no-pager -C \"\$p\" rm --cached ." \
+              "$G -C \"\$p\" reset --hard" "$G -C \"\$p\" clean -xfd" \
+              "$G -C \"\$p\" restore ." "$G -C \"\$p\" stash" "$G -C \"\$p\" checkout -f ." \
+              "$G --work-tree=/x reset --hard" "$G -P rm --cached ." \
+              "$G --exec-path=/x rm --cached ." "$G -C \"\$p\" update-ref -d refs/heads/x"; do
+    i=$((i+1)); repo "dgg$i"; add scripts/dev/harness.sh "$form"; run
+    assert_eq 1 "$STATUS" "[$form] → fail: $OUT"
+    assert_contains "$OUT" "destructive-git" "[$form] rule name"
+  done
+}
+# **例外を持つ形（`worktree remove` / `branch -D`）も同じ穴を持っていた。** 別 regex なので別に固定する。
+t_destructive_git_global_options_do_not_shield_sweep_forms() {
+  local i=0 form
+  for form in "$G -C \"\$p\" worktree remove /x" "$G -C \"\$p\" branch -D foo" \
+              "$G --no-pager worktree remove /x" "$G -c core.x=1 branch -D foo"; do
+    i=$((i+1)); repo "dggs$i"; add scripts/po/other-tool.sh "$form"; run
+    assert_eq 1 "$STATUS" "[$form] → fail: $OUT"
+    assert_contains "$OUT" "destructive-git" "[$form] rule name"
+  done
+}
+# **前置きオプションを許したことで、無害な形を落としていないこと**（足しすぎの検査）。
+# **`-C` は次の語を食う**ので、`git -C /x status` の `status` をサブコマンドとして読めること
+# ——読めなければ「`-C` の値」と「サブコマンド」の境界がずれている。
+t_destructive_git_global_options_keep_safe_forms_passing() {
+  local i=0 form
+  for form in "$G -C \"\$p\" status --porcelain" "$G -C \"\$p\" worktree list --porcelain" \
+              "$G -C \"\$p\" diff --cached --name-status" "$G -C \"\$p\" log -1 --format=%ct" \
+              "$G -C \"\$p\" rev-parse --git-path index" "$G -C \"\$p\" branch -d foo" \
+              "$G -C \"\$p\" reset --mixed" "$G -C \"\$p\" rm --dry-run --cached ." \
+              "$G -c user.name=x commit --amend --no-edit" "$G --no-pager log -1"; do
+    i=$((i+1)); repo "dggp$i"; add scripts/x.sh "$form"; run
+    assert_eq 0 "$STATUS" "[$form] → pass: $OUT"
+  done
+}
+# ---- #1123 レビュー: regex は持っていたがテストが固定していなかった 2 形（#557 と同じ型） -------
+#
+# **`branch +$MID-[A-Za-z]*D[A-Za-z]*` を `-D` に、`(-d|--delete)` を `(-d)` に縮めても
+# 54/0 緑だった**（レビュアーの実測）。**regex が持っているだけでは守りにならない。**
+# **`git branch -rD foo` は実際に消す**（`-r` と `-D` が融合した形）。
+t_destructive_git_fused_and_long_flags_fail() {
+  local i=0 form
+  for form in "$G branch -rD foo" "$G branch -Dr foo" "$G branch --delete --force foo" \
+              "$G update-ref --delete refs/heads/x" "$G worktree remove --force /x" \
+              "$G clean -xfd" "$G clean -fdx" "$G clean -dxf" "$G rm -rf --cached ."; do
+    i=$((i+1)); repo "dgfl$i"; add scripts/po/other-tool.sh "$form"; run
+    assert_eq 1 "$STATUS" "[$form] → fail: $OUT"
+    assert_contains "$OUT" "destructive-git" "[$form] rule name"
+  done
+}
 # **正当な用途の例外は 1 ファイルだけ、しかも「そのファイルの存在理由がそれ」であるものに限る。**
 # `scripts/po/worktree-sweep.sh` は**マージ済みの worktree を片付けるための道具**なので、
 # `git worktree remove` と `git branch -D` がその本体である（#726）。**例外はこのファイルだけ。**
@@ -340,6 +405,35 @@ t_destructive_git_worktree_sweep_is_the_only_exception() {
     repo "dgy$i"; add scripts/po/other-tool.sh "$form"; run
     assert_eq 1 "$STATUS" "[$form] 別のファイルでは落ちる: $OUT"
     assert_contains "$OUT" "destructive-git" "[$form] rule name"
+  done
+}
+# ---- #1123 レビュー後: `$GLOBAL` を足してあらわになった正当な用途（3 ファイル 6 行） -------------
+#
+# **`git -C` 形を読めるようにしたら、旧規則が見逃していた真陽性 6 行が出た**（偽陽性ではない）。
+# **例外は「ファイル × 形」の組で与える。** ファイルだけ／形だけでは広すぎる。
+# **対にして固定する**: 例外のファイルでは通り、**別のファイルでは同じ行が落ちる**。
+t_destructive_git_per_file_form_exceptions() {
+  local i=0
+  # merge-when-green.sh: **自分が作った一時 worktree** を後片付けする（担当者のツリーではない）
+  i=$((i+1)); repo "dgpf$i"; add scripts/po/merge-when-green.sh "$G -C \"\$root\" worktree remove --force \"\$wt\""; run
+  assert_eq 0 "$STATUS" "merge-when-green の worktree remove は通る: $OUT"
+  i=$((i+1)); repo "dgpf$i"; add scripts/po/other.sh "$G -C \"\$root\" worktree remove --force \"\$wt\""; run
+  assert_eq 1 "$STATUS" "別ファイルの worktree remove は落ちる: $OUT"
+  # mutate.test.sh: **「他人の stash を奪わない」ことを確かめる検査**が使い捨て repo に stash を積む
+  i=$((i+1)); repo "dgpf$i"; add scripts/dev/test/mutate.test.sh "$G -C \"\$R\" stash -q -u"; run
+  assert_eq 0 "$STATUS" "mutate.test.sh の stash は通る: $OUT"
+  i=$((i+1)); repo "dgpf$i"; add scripts/dev/test/other.test.sh "$G -C \"\$R\" stash -q -u"; run
+  assert_eq 1 "$STATUS" "別ファイルの stash は落ちる: $OUT"
+  # **形は混ざらない**: stash の例外ファイルに worktree remove を書いたら落ちる（逆も同じ）
+  i=$((i+1)); repo "dgpf$i"; add scripts/dev/test/mutate.test.sh "$G worktree remove /x"; run
+  assert_eq 1 "$STATUS" "stash 例外のファイルでも worktree remove は落ちる: $OUT"
+  i=$((i+1)); repo "dgpf$i"; add scripts/po/merge-when-green.sh "$G stash"; run
+  assert_eq 1 "$STATUS" "worktree remove 例外のファイルでも stash は落ちる: $OUT"
+  # **例外は「その形」だけ**: どの例外ファイルでも `git rm` は落ちる
+  local f
+  for f in scripts/po/worktree-sweep.sh scripts/po/merge-when-green.sh scripts/dev/test/mutate.test.sh; do
+    i=$((i+1)); repo "dgpf$i"; add "$f" "$G rm -r --cached ."; run
+    assert_eq 1 "$STATUS" "[$f] 例外ファイルでも $G rm は落ちる: $OUT"
   done
 }
 # **例外の穴（実装中に実測で踏んだ）**: 例外を「行」で外す形にすると、**例外の語と別の破壊的な形を
@@ -398,11 +492,44 @@ t_destructive_git_prints_denominator() {
 }
 # **対象が 0 本なら、それは clean ではない**（fixture-secret が #757 で通った道と同じ）。
 # `scripts/` `deploy/` `.github/` のどれかが在るのに 0 本になったら、走査対象の抽出が壊れている。
-# **この repo では起こり得ない**（124 本在る。実測）が、**0 本を緑で通すと気づけない。**
+# **この repo では起こり得ない**（125 本在る。実測）が、**0 本を緑で通すと気づけない。**
 t_destructive_git_zero_files_is_not_clean() {
   repo dgz; add docs/only.md "何も走査対象が無い repo"; run
   assert_eq 0 "$STATUS" "対象ディレクトリが 1 つも無ければ 0 本が正しい: $OUT"
   assert_contains "$OUT" "destructive-git: 0 file(s) scanned" "0 本でも母数は出す"
+}
+# ---- #1123 レビュー: 走査範囲を「ディレクトリ」から「シェルスクリプトであること」に広げた -------
+#
+# **3 ディレクトリだけを見ていたのに「全行を見る」と書いていた**（#1122 と同じ型）。
+# **レビュアーの実測**: `packages/etl/test/mutants/comparator-shape.mutants.sh`（**追跡された `.sh`**）に
+# `git rm -r --cached .` を入れると **clean で素通り**した。
+# **そのファイルはまさに変異ハーネスの記録**であり、**`destructive-git` が最も守るべき種類**である
+# （#542 の事故 3 件はすべて変異ハーネスだった）。
+# **広げる代償は 1 本だけだと先に数えた**（3 ディレクトリの外の追跡 `.sh` は実測 1 本:
+# `packages/etl/test/mutants/comparator-shape.mutants.sh`）。
+#
+# **`packages/etl/` を含むパスはここでは使わない**（実測で踏んだ）: `fixture-secret` 規則（#757）が
+# **`packages/etl/` が在るのに `test/fixtures/` が 0 本なら exit 2** にするので、
+# **この検査の合否が別の規則に乗っ取られる。** 見たいのは走査範囲だけなので、
+# **同じ「3 ディレクトリの外の `.sh`」を別の場所で作る。**
+t_destructive_git_covers_shell_scripts_outside_the_three_dirs() {
+  local i=0 f
+  for f in test/mutants/comparator-shape.mutants.sh apps/web/tools/helper.sh tools/x.sh a.sh; do
+    i=$((i+1)); repo "dgsh$i"; add "$f" "$G rm -r --cached ."; run
+    assert_eq 1 "$STATUS" "[$f] → fail: $OUT"
+    assert_contains "$OUT" "destructive-git" "[$f] rule name"
+    assert_contains "$OUT" "$f" "[$f] names the file"
+  done
+}
+# **広げすぎていないこと。** **`docs/` は依然として対象外**（この規則の理由を文章で書けなくなる。
+# #542 の設計。`docs/` 配下の `.sh` もそのまま対象外にしてある——手順書に例を置く余地を残す）。
+# **`.sh` でない追跡ファイルも対象外**（`.ts` / `.md` / `.json`。**追跡 10,430 本を全部見るわけではない**）。
+t_destructive_git_does_not_cover_docs_or_non_shell() {
+  local i=0 f
+  for f in docs/ops/example.sh docs/WORKING_AGREEMENT.md src/a.ts README.md notes.txt; do
+    i=$((i+1)); repo "dgns$i"; add "$f" "$G rm -r --cached ."; run
+    assert_eq 0 "$STATUS" "[$f] → pass（対象外）: $OUT"
+  done
 }
 
 # Issue #785: 取得した第三者の HTML をフィクスチャに保存すると、そのページが埋め込んでいる
@@ -641,12 +768,19 @@ test_case "destructive git outside scripts/ is allowed (#542)" t_destructive_git
 test_case "destructive git in a comment is allowed (#542)" t_destructive_git_in_comments_is_allowed
 test_case "destructive git: rm --cached / worktree remove / update-ref -d / branch -D も落ちる (#1123)" t_destructive_git_index_and_ref_forms_fail
 test_case "worktree list/add/prune・branch -d・rm --dry-run は通る (#1123)" t_destructive_git_index_and_ref_safe_forms_pass
+test_case "git の前置きオプション（-C 等）で素通りしない (#1123 レビュー)" t_destructive_git_global_options_do_not_shield
+test_case "前置きオプション: worktree remove / branch -D も素通りしない (#1123 レビュー)" t_destructive_git_global_options_do_not_shield_sweep_forms
+test_case "前置きオプションを許しても無害な形は通る (#1123 レビュー)" t_destructive_git_global_options_keep_safe_forms_passing
+test_case "融合フラグ（-rD）と長い綴り（--delete --force）も落ちる (#1123 レビュー)" t_destructive_git_fused_and_long_flags_fail
 test_case "worktree remove / branch -D の例外は worktree-sweep.sh だけ (#1123)" t_destructive_git_worktree_sweep_is_the_only_exception
+test_case "例外は「ファイル × 形」の組で、形は混ざらない (#1123 レビュー)" t_destructive_git_per_file_form_exceptions
 test_case "例外の語と同居させても素通りしない (#1123)" t_destructive_git_exception_does_not_shield_the_same_line
 test_case "行末コメントの中のサブコマンドは落ちる（既存の振る舞い） (#1123)" t_destructive_git_subcommand_in_trailing_comment_is_flagged
 test_case "worktree-sweep.sh のログ文は通る (#1123)" t_destructive_git_sweep_log_message_passes
 test_case "destructive git: 母数を出す (#1123/#757)" t_destructive_git_prints_denominator
 test_case "destructive git: 対象 0 本でも母数を出す (#1123/#757)" t_destructive_git_zero_files_is_not_clean
+test_case "3 ディレクトリの外の .sh も見る (#1123 レビュー)" t_destructive_git_covers_shell_scripts_outside_the_three_dirs
+test_case "docs/ と .sh でないものは対象外のまま (#1123 レビュー)" t_destructive_git_does_not_cover_docs_or_non_shell
 
 test_case "fixture に Google API キー（AIza…）→ fail (#785)" t_fixture_google_maps_key_fails
 test_case "fixture に AIza…（クエリ文字列の外）→ fail (#785/#762)" t_fixture_google_key_outside_query_string_fails
