@@ -261,6 +261,68 @@ test("#1140 かなが 1 人に当たっても、所属院が違えば結びつ�
   assert.equal(ok.entries[0].memberId, "h_d9603ac1a4");
 });
 
+/**
+ * **かなの経路も「在職の確認」を通す**（#230。レビューの指摘 X1）。
+ *
+ * ## 何が無検査だったか
+ *
+ * **`resolvePost` の `.filter((m) => tenureVerified(m, at))` を丸ごと削除しても、
+ * 24 本すべてが緑だった**（実測 2026-09-30）。
+ *
+ * **向きは #569。** かなが**任期満了した議員にしか当たらない**行だと、
+ * **退職者のレコードに現職の役職が 1 行付く。利用者からは検出できない。**
+ *
+ * **この歯止めは実際に働いている**（実測 2026-09-30、このフィクスチャの参院 306 かなキー）:
+ * **「かなが 1 人だけに当たり、その 1 人が在職の確認を通らない」キーが 57 件ある。**
+ * 削除すれば、その 57 人のうち誰かのかなが名簿に出た瞬間に誤同定になる。
+ *
+ * ## なぜ既存のテストで足りなかったか
+ *
+ * **`tenureVerified` は 4 か所で直接 assert しているが、それは「事実の固定」であって
+ * 「かなの経路がそれを使っていることの固定」ではない。**
+ * **上の「母数の検算」（穴 1）と同じ型**——**在ることは、効いていることの証明にならない。**
+ * だから**経路を通して**呼び、外した瞬間に落ちる形にする。
+ */
+test("#1140 かなが任期満了した議員にしか当たらない行は結びつかない（退職者に現職の役職が付かない）", () => {
+  // **証人**: 参院 `m_013015` 河野 義博。`to: 2025-07-28` で、内閣の発足日 2026-09-17 より前。
+  // **かな `かわの よしひろ` は参院でこの 1 人にしか当たらない**ので、
+  // 在職の確認が無ければ「1 人に決まった」として紐づいてしまう。
+  const kono = ROSTER.find((m) => m.id === "m_013015");
+  assert.ok(kono !== undefined, "m_013015 が名簿に無い（前提が変わった）");
+  assert.equal(kono.name, "河野 義博");
+  assert.deepEqual(kono.terms.map((t) => t.to), ["2025-07-28"]);
+  const at = { session: LATEST_SESSION, date: "2026-09-17" };
+  // 前提 (a): **かなでは 1 人にだけ当たる**（＝在職の確認以外に落とすものが無い）。
+  assert.deepEqual((indexByKana(ROSTER.filter((m) => m.house === "sangiin")).get("かわのよしひろ") ?? []).map((m) => m.id), ["m_013015"]);
+  // 前提 (b): **その 1 人は在職の確認を通らない**（任期満了日が発足日より前）。
+  assert.equal(tenureVerified(kono, at), false);
+
+  // **氏名が無い行**（官邸が氏名を画像にしている形）で引く。かなでしか引けない。
+  const post: CabinetPost = {
+    kind: "閣僚等",
+    roles: ["法務大臣"],
+    kana: "かわの よしひろ",
+    house: "sangiin",
+    effectiveDate: "2026-09-17",
+    effectiveDateText: "令和８年９月１７日発足",
+    sourceUrl: meiboPageUrl(CABINET, "index.html"),
+  };
+  const r = matchCabinetPosts([post], ROSTER, { session: LATEST_SESSION });
+  assert.deepEqual(r.tally, { total: 1, byName: 0, byKana: 0, unresolved: 1 });
+  // **1 行も結びついていない**（退職者に現職の役職が付いていない）。
+  assert.equal(r.entries.length, 0, "任期満了した議員に現職の役職が紐づいた");
+  assert.equal(r.unresolved.length, 1);
+  assert.equal(r.unresolved[0].reason, "no-candidate");
+  assert.equal(r.unresolved[0].kana, "かわの よしひろ");
+  // 記録そのものは失わない（出典は残る）。
+  assert.equal(r.unresolved[0].sourceUrl, "https://www.kantei.go.jp/jp/105/meibo/index.html");
+
+  // **歯止めが救済を殺していない**: 在職中の議員のかななら、同じ経路で決まる。
+  const ok = matchCabinetPosts([{ ...post, kana: "よしい あきら" }], ROSTER, { session: LATEST_SESSION });
+  assert.deepEqual(ok.tally, { total: 1, byName: 0, byKana: 1, unresolved: 0 });
+  assert.equal(ok.entries[0].memberId, "m_022042");
+});
+
 test("#1140 氏名が名簿に在るのに絞れなかった行は、かなに落とさない（別人に化けるのを防ぐ）", () => {
   // **危険な向き**: 名簿に**同姓同名で、かなが違う 2 人**が居るとき、氏名では割れない。
   // そこでかなに落とすと、**かなが一致した片方に「確信を持って」紐づいてしまう。**
