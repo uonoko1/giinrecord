@@ -64,6 +64,21 @@ jobs:
         run: |
           set -euo pipefail
           bash scripts/ci/stale-base.sh --net-deletions "refs/remotes/origin/$BASE_REF" "$HEAD_SHA"
+      # Issue #1156: 2026-09-30、**`data/` 一式が丸ごと巻き戻る形が 4 つのゲートを全部通った。**
+      # 日次 ETL が `main` に `data/` を入れたあと、分岐済みの枝をそのままマージすると、枝の古い
+      # `data/` が `main` の新しい `data/` を上書きする。実測（#1149 / #1127）:
+      #   origin/main  "fetchedAt": "2026-09-29T23:59:47.817Z"
+      #   枝           "fetchedAt": "2026-09-29T00:43:05.576Z"
+      # 上の 2 つの step はどちらも通った——枝は `data/` を 1 行も触っていないので 1 つ目の候補に
+      # 入らず、差分は 34 行減って 34 行増えるので 2 つ目の `added >= lost` を満たす。
+      # **行数は打ち消せるが、時刻は打ち消せない。** だから 3 つ目の step は時刻そのものを見る。
+      - name: The branch must not merge a data/meta.json older than the base's (#1156)
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          bash scripts/ci/stale-base.sh --data-freshness "refs/remotes/origin/$BASE_REF" "$HEAD_SHA"
   check:
     runs-on: ubuntu-latest
     # #556: 同期の無限ループは testTimeout が効かず（イベントループごとブロックする）、ここだけが止められる。

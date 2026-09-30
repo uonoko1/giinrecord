@@ -12,6 +12,12 @@
 #              registered and reachable; see the block below for why silence elsewhere is deliberate.
 #     exit 2 — usage / a ref that does not resolve  (an unresolvable base is NOT reported as clean)
 #
+#   scripts/ci/stale-base.sh --data-freshness [<base-ref>] [<head-ref>]     Issue #1156
+#     exit 0 — data/meta.json の fetchedAt は後退していない（または両側に無く、対象外）
+#     exit 1 — 枝の fetchedAt が <base-ref> より古い（data/ が丸ごと巻き戻る形）
+#            — OR fetchedAt を**測れなかった**（読めない／無い／日付として解釈できない）。
+#              「測れなかった」を「古くない」として通さない（#1158）
+#
 # ── What is measured, and why it is not "there are deletions" ───────────────────────────────────
 #   Deliberate deletions are legitimate: dropping a check that is no longer needed, a refactor, deleting
 #   a whole file. What is never deliberate is deleting a line the author **never saw**. Per file:
@@ -63,6 +69,7 @@ usage() {
   echo "usage: $0 [<base-ref>] [<head-ref>]" >&2
   echo "       $0 --verify <lines-file> [<head-ref>]" >&2
   echo "       $0 --net-deletions [<base-ref>] [<head-ref>]" >&2
+  echo "       $0 --data-freshness [<base-ref>] [<head-ref>]" >&2
   exit 2
 }
 
@@ -102,6 +109,160 @@ if [[ ${1:-} == --verify ]]; then
     exit 1
   fi
   echo "stale-base --verify: $total 行すべて ${3:-HEAD} にあります"
+  exit 0
+fi
+
+# --data-freshness [<base-ref>] [<head-ref>] — Issue #1156.
+#
+# 何が壊れていたか。**2026-09-30、`data/` 一式（34 行）が丸ごと巻き戻る形が 4 つのゲートを全部通った。**
+# 日次 ETL が `main` に `data/` を入れたあと、分岐済みの枝をそのままマージすると、枝の側は
+# 古い `data/` を持っているので `main` の新しい `data/` を上書きする。実測（#1149 / #1127、2026-09-30）:
+#
+#   origin/main  "fetchedAt": "2026-09-29T23:59:47.817Z"
+#   枝           "fetchedAt": "2026-09-29T00:43:05.576Z"
+#
+#   引数なしの検査    枝は `data/` を 1 行も触っていない（own-data = 0）ので候補にならない  → ok
+#   --net-deletions   34 行減って 34 行増える → 差し引き 0（`added >= lost`）             → ok
+#   check             `fetchedAt` を見る検査が無い                                          → ok
+#   レビュー           大きな差分に埋もれる                                                 → 通った
+#
+# **行数は打ち消せるが、時刻は打ち消せない。** `--net-deletions` の `added < lost` は「差し引き 0」で
+# 通る作りで（それは正しい——意図した書き換えを毎回鳴らさないため）、行の数え方を変えても
+# この形には届かない。だから行ではなく**時刻そのもの**を見る。
+#
+#   base の data/meta.json の fetchedAt  >  head の fetchedAt   → 落ちる
+#
+# 型を区別しない理由。当初は「枝のコミットが `data/` を書いた（`git add -A` で拾った）型 B」と
+# 「base が古いだけの型 A」を分ける案だった。**実測で型 B は 0 本**（開いていた 10 本すべてを
+# `vs-main` と `own-data` で測った結果、#1156 のコメントに在る）。そして**どちらも
+# 「古い時刻をマージしようとしている」**ので、どちらも止めてよい。型 A は
+# `scripts/po/merge-when-green.sh` の `update-branch`（`:12`）で解消するので、
+# 落ちても答えは「rebase せよ」であり、誤報にならない。**`merge-base` を取る必要も無い。**
+#
+# ── 「測れなかった」を黙って通さない（#1158） ─────────────────────────────────────────
+# `data/meta.json` が読めない／`fetchedAt` が無い／日付として解釈できない → **exit 1 で「測れません」と言う。**
+# 「比較できなかった」を「古くない」と扱わない。理由は実測: **`gh` はレート制限時に `exit 0` で
+# エラー文字列を返し、`jq` は `null` を返して 0 件に見える。** 「0 件」と「取れなかった」の区別が要る。
+# head から `data/meta.json` を消すだけでこの検査を黙らせられる、という抜け道も同じ扱いで塞がる。
+# **両側に無いときだけ黙る**: 比較の対象がそもそも無いのは「測れなかった」ではない
+#   （この検査より前に作られたフィクスチャ・`data/` を持たないチェックアウトが該当する）。
+#
+# 日付の読み方は `date -u -d` に投げない: ISO 8601 の `Z` 付きの文字列は**辞書順の比較が
+# 時刻順の比較と一致する**（固定長・UTC・ゼロ埋め）。外部コマンドに投げるほうが、
+# ロケールやエラー時の exit 0 を持ち込む分だけ弱い。形が ISO 8601 かどうかだけを厳密に見て、
+# 比較は文字列でする。
+if [[ ${1:-} == --data-freshness ]]; then
+  shift
+  [[ $# -le 2 ]] || usage
+  DF_BASE=${1:-origin/main}
+  DF_HEAD=${2:-HEAD}
+  DF_PATH=${STALE_BASE_META_PATH:-data/meta.json}
+  df_resolve() {
+    local sha
+    sha=$(git rev-parse --verify --quiet "$1^{commit}") || {
+      echo "stale-base: ref を解決できません: $1" >&2
+      echo "  origin/main が無いなら  git fetch origin  を先に実行してください。" >&2
+      exit 2
+    }
+    echo "$sha"
+  }
+  DF_BASE_SHA=$(df_resolve "$DF_BASE")
+  DF_HEAD_SHA=$(df_resolve "$DF_HEAD")
+
+  # df_read <tree-ish> → fetchedAt を stdout に、状態を終了コードで返す。
+  #   0 = 読めた（値を出す） / 3 = そのツリーに blob が無い / 4 = 読めたが値として使えない（理由を出す）
+  # **「無い」（3）と「使えない」（4）を分ける**のがこの関数の要点で、上位がそれぞれ別の判断をする。
+  df_read() {
+    local tree=$1 type raw val
+    type=$(git cat-file -t "$tree:$DF_PATH" 2>/dev/null) || return 3
+    [[ $type == blob ]] || return 3
+    raw=$(git show "$tree:$DF_PATH") || { echo "blob を読めませんでした"; return 4; }
+    # `jq -e` は null / false でも非 0 を返すので、「キーが無い」と「JSON が壊れている」の
+    # どちらも非 0 になる。区別は下のメッセージで付ける（両方 exit 1 の材料なので、
+    # 検査の判断としては同じ側に落ちる）。
+    if ! val=$(printf '%s' "$raw" | jq -re '.fetchedAt' 2>/dev/null); then
+      if printf '%s' "$raw" | jq -e . >/dev/null 2>&1; then
+        echo "fetchedAt がありません（JSON としては読めました）"
+      else
+        echo "JSON として読めません"
+      fi
+      return 4
+    fi
+    # ISO 8601 の UTC 形式のみ。固定長・ゼロ埋め・UTC なので、この形に限れば辞書順 = 時刻順。
+    # ここを緩めると（例えばオフセット付きを通すと）文字列比較が時刻比較でなくなる。
+    if [[ ! $val =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]+)?Z$ ]]; then
+      echo "日付として解釈できません: $val"
+      return 4
+    fi
+    echo "$val"
+    return 0
+  }
+
+  set +e
+  DF_BASE_VAL=$(df_read "$DF_BASE_SHA"); DF_BASE_RC=$?
+  DF_HEAD_VAL=$(df_read "$DF_HEAD_SHA"); DF_HEAD_RC=$?
+  set -e
+
+  # 両側に無いなら対象外（比較するものが無い、という事実。「測れなかった」ではない）。
+  if [[ $DF_BASE_RC == 3 && $DF_HEAD_RC == 3 ]]; then
+    echo "stale-base --data-freshness: 対象外 — $DF_BASE も $DF_HEAD も $DF_PATH を持っていません"
+    exit 0
+  fi
+
+  df_state() { # <rc> <val> → 出力に書く文字列
+    case $1 in
+      0) echo "$2" ;;
+      3) echo "(このツリーに $DF_PATH がありません)" ;;
+      *) echo "(測れません: $2)" ;;
+    esac
+  }
+
+  if [[ $DF_BASE_RC != 0 || $DF_HEAD_RC != 0 ]]; then
+    cat >&2 <<DFUNMEASURABLE
+stale-base --data-freshness: $DF_PATH の fetchedAt を**測れません**。
+
+  $DF_BASE = ${DF_BASE_SHA:0:8} : $(df_state "$DF_BASE_RC" "$DF_BASE_VAL")
+  この枝   = ${DF_HEAD_SHA:0:8} : $(df_state "$DF_HEAD_RC" "$DF_HEAD_VAL")
+
+**「測れなかった」を「古くない」として通しません。** 片側だけ $DF_PATH が無い／
+fetchedAt が無い／日付として解釈できない、のいずれかです。
+
+  · $DF_PATH を消したのなら、消してよい理由を PR 本文に書いてください
+    （**消すとこの検査そのものが黙る**ので、黙らせる形での解決はしないこと）
+  · 土台が古いだけなら、base を進めてください:
+
+      gh pr update-branch <PR番号>      # scripts/po/merge-when-green.sh が BEHIND のとき呼ぶのと同じもの
+      # または
+      git fetch origin && git rebase origin/main
+DFUNMEASURABLE
+    exit 1
+  fi
+
+  # 固定長・ゼロ埋めの UTC ISO 8601 に限っているので、辞書順の比較が時刻順の比較になる。
+  if [[ $DF_HEAD_VAL < $DF_BASE_VAL ]]; then
+    cat >&2 <<DFSTALE
+stale-base --data-freshness: この枝の $DF_PATH の fetchedAt が $DF_BASE より**古い**です。
+
+  $DF_BASE = ${DF_BASE_SHA:0:8} : $DF_BASE_VAL
+  この枝   = ${DF_HEAD_SHA:0:8} : $DF_HEAD_VAL   ← こちらが古い
+
+このままマージすると、**$DF_BASE の $DF_PATH（と同じ更新で入った $DF_PATH 以外の data/ 一式）が
+枝の古い版で上書きされます。** 実測 2026-09-30: この形は引数なしの検査も
+\`--net-deletions\` も通りました（枝は data/ を 1 行も触っておらず、差分は 34 行減って 34 行増える
+ので差し引き 0 です）。**行数は打ち消せますが、時刻は打ち消せません。**
+
+**枝が古いだけです。base を進めてください:**
+
+  gh pr update-branch <PR番号>      # scripts/po/merge-when-green.sh が BEHIND のとき呼ぶのと同じもの
+  # または
+  git fetch origin && git rebase origin/main
+
+**この検査を外す・$DF_PATH を対象から除く・fetchedAt を手で書き換えて黙らせる、のいずれもしないこと。**
+DFSTALE
+    exit 1
+  fi
+
+  echo "stale-base --data-freshness: ok — $DF_PATH の fetchedAt は後退していません（$DF_BASE: $DF_BASE_VAL ／ この枝: $DF_HEAD_VAL）"
   exit 0
 fi
 

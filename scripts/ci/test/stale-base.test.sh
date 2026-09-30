@@ -615,6 +615,169 @@ t_net_deletions_is_not_confused_by_a_diverged_branch() {
   assert_not_contains "$OUT" "教訓 X" "a line main gained after the fork is the default mode's business"
 }
 
+# --- #1156: data/meta.json の fetchedAt は後退してはいけない --------------------------------------
+# **実測で起きた穴**（2026-09-30）。日次 ETL が `main` に `data/` を入れたあと、分岐済みの枝を
+# そのままマージすると **`data/` が丸ごと巻き戻る**。それが 4 つのゲートを全部通った:
+#   引数なしの検査    main が足した行は枝に在る（枝は data/ を触っていない）        → ok
+#   --net-deletions   34 行減って 34 行増える → 差し引き 0                          → ok
+#   check             fetchedAt を見る検査が無い                                     → ok
+#   レビュー           大きな差分に埋もれる                                          → 通った
+# **行数は打ち消せるが、時刻は打ち消せない。** 実測（#1149 / #1127、2026-09-30）:
+#   origin/main  "fetchedAt": "2026-09-29T23:59:47.817Z"
+#   枝           "fetchedAt": "2026-09-29T00:43:05.576Z"
+# `--net-deletions` は「差し引き 0」で通るので、行の数え方を変えても届かない。時刻を直接見る。
+#
+# write_meta <fetchedAt> — data/meta.json をその時刻で書く
+write_meta() {
+  mkdir -p "$W/data"
+  printf '{\n "fetchedAt": "%s",\n "sessions": [200, 201]\n}\n' "$1" > "$W/data/meta.json"
+}
+# new_repo_with_data → main が data/meta.json を持つ状態。origin/main も動かす。
+new_repo_with_data() {
+  new_repo
+  write_meta '2026-09-29T00:00:00.000Z'
+  commit "data: 初回"
+  g update-ref refs/remotes/origin/main main
+}
+
+t_freshness_stale_data_fails() {
+  # #1149 / #1127 の形そのまま: main の日次 ETL が進み、枝は古い fetchedAt を持ったまま。
+  new_repo_with_data; BASE_SHA=$(g rev-parse HEAD)
+  branch_from main topic
+  printf -- '- **教訓 私**\n' >> "$W/docs/WORKING_AGREEMENT.md"
+  commit "my lesson"
+  g checkout -q main
+  write_meta '2026-09-29T23:59:47.817Z'          # 日次 ETL が main に入る
+  commit "data: refresh"
+  g update-ref refs/remotes/origin/main main
+  g checkout -q topic
+  run --data-freshness origin/main topic
+  assert_eq 1 "$STATUS" "古い fetchedAt をマージしようとしている枝は落ちる: $OUT"
+  assert_contains "$OUT" "2026-09-29T23:59:47.817Z" "母数: main 側の時刻を出す（#757）"
+  assert_contains "$OUT" "2026-09-29T00:00:00.000Z" "母数: 枝側の時刻を出す（#757）"
+  assert_contains "$OUT" "update-branch" "対処を検査自身が持つ（update-branch）"
+  assert_contains "$OUT" "rebase" "対処を検査自身が持つ（rebase）"
+}
+
+t_freshness_data_refresh_pr_passes() {
+  # ETL 自身の `data: refresh` PR。**fetchedAt が進む**ので通らなければならない。
+  new_repo_with_data
+  branch_from main topic
+  write_meta '2026-09-30T02:02:00.000Z'
+  commit "data: refresh 2026-09-30T02:02Z"
+  run --data-freshness origin/main topic
+  assert_eq 0 "$STATUS" "fetchedAt が進む PR は通る: $OUT"
+  assert_contains "$OUT" "ok" "ok と言う"
+}
+
+t_freshness_equal_timestamp_passes() {
+  # data/ を 1 行も触らない普通の PR。**偽陽性 0** でなければならない（開いている 8 本のうち 6 本がこの形）。
+  new_repo_with_data
+  branch_from main topic
+  printf -- '- **教訓 私**\n' >> "$W/docs/WORKING_AGREEMENT.md"
+  commit "my lesson"
+  run --data-freshness origin/main topic
+  assert_eq 0 "$STATUS" "同じ時刻なら通る: $OUT"
+}
+
+t_freshness_missing_field_is_measured_as_unmeasurable() {
+  # #1158: この検査は「測れなかった」を言えなければならない。**黙って通さない。**
+  # `gh` はレート制限で exit 0 とエラー文字列を返し、`jq` は null を返す——「無い」と「取れなかった」の区別が要る。
+  new_repo_with_data
+  branch_from main topic
+  printf '{\n "sessions": [200]\n}\n' > "$W/data/meta.json"      # fetchedAt が無い
+  commit "fetchedAt を落とす"
+  run --data-freshness origin/main topic
+  assert_eq 1 "$STATUS" "fetchedAt が無いのを ok と言わない: $OUT"
+  assert_contains "$OUT" "測れません" "「測れなかった」と言う（「古くない」と扱わない）"
+  # **「キーが無い」と「値が日付として読めない」は別の事実で、直し方も違う**（前者は ETL の
+  # 出力側、後者は値そのもの）。だから同じ「測れません」で済ませずに、理由を名指しする。
+  # **変異で確認済み**: `jq -re` を `jq -r` にすると **exit 1 は保たれる**（`null` が ISO の形の
+  # 検査で弾かれて 4 を返すため）が、**メッセージが「日付として解釈できません: null」に化ける**。
+  # この assert が無いと、その変異は 51 件すべて緑のまま生き残る（実測）。
+  assert_contains "$OUT" "fetchedAt がありません" "「キーが無い」を「値が読めない」と混ぜない"
+  assert_not_contains "$OUT" "解釈できません: null" "jq の null をそのまま値として扱っていない"
+}
+
+t_freshness_unparseable_timestamp_is_not_a_pass() {
+  new_repo_with_data
+  branch_from main topic
+  write_meta 'きのう'
+  commit "日付として読めない値"
+  run --data-freshness origin/main topic
+  assert_eq 1 "$STATUS" "日付として解釈できない値を ok と言わない: $OUT"
+  assert_contains "$OUT" "測れません" "「測れなかった」と言う"
+}
+
+t_freshness_non_utc_offset_is_not_compared_as_a_string() {
+  # **辞書順の比較が時刻順の比較になるのは、固定長・ゼロ埋め・UTC（`Z`）に限った話である。**
+  # オフセット付き（`+09:00`）を通すと前提が崩れる: 下の 2 つは実際の時刻は head のほうが**古い**のに、
+  # 文字列としては head のほうが**大きい**（`2026-09-30T08:00:00+09:00` = 2026-09-29T23:00Z < 23:59:47Z）。
+  # だから形の検査はここを緩めてはいけない。**変異で確認済み**: `Z$` を `.*$` に緩めると
+  # この case だけが落ちる（他の 50 件は全部緑のまま——`きのう` は `T…` の部分で先に弾かれるので、
+  # この fixture が無いと「オフセットを通す」変異が生き残る）。
+  new_repo_with_data
+  g checkout -q main
+  write_meta '2026-09-29T23:59:47.817Z'
+  commit "data: refresh"
+  g update-ref refs/remotes/origin/main main
+  branch_from main topic
+  write_meta '2026-09-30T08:00:00+09:00'      # = 2026-09-29T23:00:00Z、実時刻は古い。文字列では大きい
+  commit "オフセット付きの時刻"
+  run --data-freshness origin/main topic
+  assert_eq 1 "$STATUS" "UTC 以外の綴りを文字列比較で通さない: $OUT"
+  assert_contains "$OUT" "測れません" "「測れなかった」と言う（黙って通さない）"
+}
+
+t_freshness_invalid_json_is_not_a_pass() {
+  new_repo_with_data
+  branch_from main topic
+  printf '{ これは JSON ではない\n' > "$W/data/meta.json"
+  commit "JSON を壊す"
+  run --data-freshness origin/main topic
+  assert_eq 1 "$STATUS" "JSON として読めないのを ok と言わない: $OUT"
+  assert_contains "$OUT" "測れません" "「測れなかった」と言う"
+}
+
+t_freshness_no_meta_on_either_side_is_not_this_checks_business() {
+  # data/meta.json がそもそも無いリポジトリ（既存フィクスチャ）では黙る。**両側に無い**のは
+  # 比較の対象が無いということで、「測れなかった」ではない。
+  new_repo
+  branch_from main topic
+  printf -- '- **教訓 私**\n' >> "$W/docs/WORKING_AGREEMENT.md"
+  commit "my lesson"
+  run --data-freshness origin/main topic
+  assert_eq 0 "$STATUS" "両側に data/meta.json が無いなら対象外: $OUT"
+}
+
+t_freshness_base_has_meta_but_head_deleted_it_is_measured() {
+  # base には在るのに head で消えている。**これは「測れなかった」**（黙って通すと、
+  # data/meta.json を消すだけでこの検査を無効化できる）。
+  new_repo_with_data
+  branch_from main topic
+  g rm -q data/meta.json
+  g commit -qm "data/meta.json を消す"
+  run --data-freshness origin/main topic
+  assert_eq 1 "$STATUS" "head から消えているのを ok と言わない: $OUT"
+  assert_contains "$OUT" "測れません" "「測れなかった」と言う"
+}
+
+t_freshness_rejects_an_unresolvable_ref() {
+  new_repo_with_data
+  run --data-freshness origin/nope HEAD
+  assert_eq 2 "$STATUS" "解決できない ref は exit 2（ok と言わない）: $OUT"
+  assert_not_contains "$OUT" "ok" "ok と言わない"
+}
+
+t_freshness_is_wired_into_ci() {
+  # #504: 1 つのファイルの中の検査は、そのファイル自身を守れない。**走らせている行**を assert する
+  # （名前が出ているだけでは足りない——`test -f` の行が名前を生かしてしまう）。
+  local wf="$HERE/../../../.github/workflows/ci.yml"
+  local body; body=$(cat "$wf")
+  assert_contains "$body" 'bash scripts/ci/stale-base.sh --data-freshness' \
+    "ci.yml が --data-freshness を実行している（#1156）"
+}
+
 test_case "古い main から切って、その後 main が足した行を消す枝 → 落ちる" t_stale_base_deleting_main_lines_fails
 test_case "消える行が '- ' で始まっても検出する（^-- で除外されない）" t_bullet_lines_are_not_missed
 test_case "消える行が '+' で始まっても検出する" t_lost_line_starting_with_plus_is_not_missed
@@ -738,4 +901,15 @@ test_case "20 行を超える報告で SIGPIPE で死なない（--net-deletions
 test_case "--net-deletions はバイナリを対象にしない（#836）" t_net_deletions_skips_binary_files
 test_case "wiring: ci.yml が --net-deletions を呼び、引数なしの検査も残っている（#836／#504）" t_net_deletions_is_wired_into_ci
 test_case "枝が main と分岐している（遅れ かつ 進んでいる）だけでは黙る（#836）" t_net_deletions_is_not_confused_by_a_diverged_branch
+test_case "main より古い fetchedAt をマージしようとする枝 → 落ちる（#1156）" t_freshness_stale_data_fails
+test_case "ETL 自身の data: refresh PR は通る（fetchedAt が進む、#1156）" t_freshness_data_refresh_pr_passes
+test_case "data/ を触らない普通の PR は通る（偽陽性 0、#1156）" t_freshness_equal_timestamp_passes
+test_case "fetchedAt が無い → 「測れません」と言って落ちる（#1158）" t_freshness_missing_field_is_measured_as_unmeasurable
+test_case "日付として解釈できない → 「測れません」と言って落ちる（#1158）" t_freshness_unparseable_timestamp_is_not_a_pass
+test_case "JSON として読めない → 「測れません」と言って落ちる（#1158）" t_freshness_invalid_json_is_not_a_pass
+test_case "UTC 以外の綴り（+09:00）は文字列比較の前提を崩すので通さない（#1156）" t_freshness_non_utc_offset_is_not_compared_as_a_string
+test_case "両側に data/meta.json が無いなら対象外（#1156）" t_freshness_no_meta_on_either_side_is_not_this_checks_business
+test_case "base に在って head で消えている → 「測れません」（消せば黙る穴を作らない、#1156）" t_freshness_base_has_meta_but_head_deleted_it_is_measured
+test_case "--data-freshness も解決できない ref を通さない（#1156）" t_freshness_rejects_an_unresolvable_ref
+test_case "wiring: ci.yml が --data-freshness を呼ぶ（#1156／#504）" t_freshness_is_wired_into_ci
 echo "passed $PASS, failed $FAIL"; [[ $FAIL == 0 ]]
