@@ -373,11 +373,56 @@ const trimTrailingNewlines = (s: string): string => s.replace(/\n+$/, "");
  * `committer` / `gpgsig` …）は**最初の空行まで**で、そこから先が本文である
  * （git のオブジェクト形式。実測で `%B` と末尾改行を除いて**バイト一致**することを確かめた）。
  */
-const rawCommitMessage = (sha: string): string => {
+const rawCommitMessage = (sha: string): string => rawCommitObject(sha).body;
+
+/**
+ * **生オブジェクトを「ヘッダ」と「本文」に分けて返す**（`git cat-file commit`）。
+ *
+ * ── **なぜ本文だけでなくヘッダも返すのか（#1118。これが自己参照を塞ぐ鍵である）** ──────────
+ *
+ * **`scannedBody` の番人は「走査に使った本文 == 独立の源の本文」で成り立っていたが、
+ * その「独立の源」が本当に独立かを、何も確かめていなかった。**
+ * **実測（2026-09-30、基点 `61770bd5`、枝に 3 コミット）:**
+ *
+ * ```
+ * M6  scannedBody の比較相手 rawCommitMessage(sha) → readBodyByFormat(sha)
+ *     （＝ %B と %B を比べる。比較が恒真になる）              tests 18 / pass 18 / fail 0
+ * M7  M6 + readBodyByFormat の既定を %B → %s に縮退           tests 18 / pass 17 / fail 1
+ *     そのとき走査は「本文 18 行 / アドレス 3 件」→「本文 3 行 / アドレス 0 件」に潰れる
+ *     ★ 潰れた当の検査（範囲の走査）は 2 本とも緑のまま。落ちたのは fixture 側の 1 本だけ
+ * ```
+ *
+ * **既存の番人は `rawCommitMessage.toString()` に `cat-file` の語が在ることを見ていた**が、
+ * **M6 は `rawCommitMessage` を書き換えない**——**呼び口を差し替えるだけなので、
+ * 語の検査は素通りする。** **「独立の源の綴り」を守っても、「独立の源が使われたか」は守れない。**
+ *
+ * ── **どう塞ぐか: 綴りではなく、返ってきた値の構造で確かめる** ──────────────────────
+ *
+ * **`git cat-file commit` の出力は、最初の空行までが git のオブジェクトヘッダである**
+ * （git のオブジェクト形式。`tree` は必ず 1 行目に来る）。
+ * **`--pretty` のどの書式もこのヘッダを作れない**——`%B` も `%s` も `%(trailers)` も、
+ * **`tree <40 桁の hex>` という行を返さない**（実測で確かめてある。下の検査が固定する）。
+ *
+ * **だから「源が独立であること」を、源が返した *ヘッダの形* で要求する。**
+ * **M6 のように呼び口を `%B` の読み手に差し替えると、ヘッダが取れないので落ちる**
+ * ——**関数名を何に変えても、`--pretty` を通った値ではヘッダを作れないからである。**
+ */
+const rawCommitObject = (sha: string): { header: string; body: string } => {
   const obj = git("cat-file", "commit", sha);
   const sep = obj.indexOf("\n\n");
-  return sep < 0 ? "" : trimTrailingNewlines(obj.slice(sep + 2));
+  if (sep < 0) return { header: trimTrailingNewlines(obj), body: "" };
+  return { header: obj.slice(0, sep), body: trimTrailingNewlines(obj.slice(sep + 2)) };
 };
+
+/**
+ * **それが「git の生オブジェクトのヘッダ」であること。**
+ *
+ * **1 行目が `tree <40 桁 hex>` であることを要求する**（git のオブジェクト形式。
+ * commit オブジェクトは必ず `tree` で始まる）。
+ * **`--pretty` の書式はこれを作れない**ので、**これを満たす値は `cat-file`（または
+ * それと同等に生オブジェクトを読むもの）から来たとしか言えない。**
+ */
+const RAW_COMMIT_HEADER = /^tree [0-9a-f]{40}$/m;
 
 /**
  * **走査に使う本文を取り、それが「本当にメッセージ全文か」を独立の源で確かめて返す。**
@@ -437,7 +482,58 @@ const rawCommitMessage = (sha: string): string => {
  *
  * **だから読み取りを差し替えられる形にし**（`read` 引数）、**下の検査で
  * 「`%s` / `""` / `%(trailers)` で読んだら実際に落ちる」ことを本物のコミットに当てて固定する。**
- * **X5 はその検査が落とす。X4 は「独立の源が `cat-file` であること」を同じ検査が語で固定する。**
+ * **X5 はその検査が落とす。**
+ *
+ * ── **#1118: 「独立の源」を *語* で固定しても足りなかった** ───────────────────────────
+ *
+ * **初版は X4 を「`rawCommitMessage.toString()` に `cat-file` の語が在るか」で固定していた。**
+ * **それは自己参照の変異を 1 本も捕まえなかった。**
+ *
+ * **実測（2026-09-30、基点 `origin/main` = `61770bd5`、枝に 3 コミット。
+ * 走査は「本文 18 行 / trailer のアドレス 3 件」）:**
+ *
+ * ```
+ *                                                            直す前（18 本）   直した後（19 本）
+ * M6   scannedBody の比較相手を readBodyByFormat(sha) に      pass 18 / fail 0  pass 16 / fail 2
+ *      差し替える（%B と %B を比べる。等値が恒真になる）
+ * M6b  ヘッダは生オブジェクトから、本文だけ %B から取る         pass 18 / fail 0  pass 18 / fail 0（※）
+ * M7   M6 + readBodyByFormat の既定を %B → %s に縮退          pass 17 / fail 1  pass 16 / fail 2
+ *      → 走査が「18 行 / 3 件」→「3 行 / 0 件」に潰れる
+ *      ★ 直す前は、潰れた当の検査（範囲の走査）が緑のままだった
+ * M7b  M6b + 同じ縮退                                        pass 17 / fail 1  pass 16 / fail 2
+ * N3   M6b + 数え直しも %B から取る + 同じ縮退                 pass 17 / fail 1  pass 16 / fail 2
+ *      （走査 3 行 / 数え直しも 3 行 で「一致」する）
+ * ```
+ * **（※ M6b 単独は等価な変異である**——**`readBodyByFormat` が `%B` を読んでいる限り
+ * 走査は正しく「18 行 / 3 件」で、振る舞いが変わらない。**
+ * **害が出るのは縮退と組んだときで、その組み合わせ（M7b / N3）は落ちる。）**
+ *
+ * **M6 が語の検査を素通りした理由**: **`rawCommitMessage` を書き換えないからである。**
+ * **呼び口を差し替えるだけなので、関数の綴りは無傷のまま等値が恒真になる。**
+ * **「独立の源の綴り」を守っても、「独立の源が使われたか」は守れない。**
+ *
+ * ── **#1118 でどう塞いだか: 母数に「絶対の床」を足す** ──────────────────────────────
+ *
+ * **等値は相対的な主張なので、両辺を同じように縮退させれば forge できる**（N3 が実例）。
+ * **だから「一致」に加えて、縮退させられない数を 1 つ持つ:**
+ *
+ * **`git cat-file -s <sha>` が返すオブジェクトのバイト数**
+ * （`assertBodyFillsObject`。**`--pretty` を通らないし、メッセージの読み方にも依存しない**）。
+ *
+ * **走査に使った本文は、オブジェクトの「ヘッダ + 空行」の残り全部を占めなければならない。**
+ * **`%s` / `""` / `%(trailers)` はどれも占めないので、比較相手が何であっても落ちる。**
+ *
+ * **加えて、母数（本文の行数と身元 trailer のアドレス数）を
+ * `scannedBody` を一切通らない経路でもう一度数え、突き合わせる**（`independentScanTotals`）。
+ * **これで「0 件見つかった」と「0 件しか走査していない」が分かれる**（#757）——
+ * **前者は数え直しも 0 件を返し、後者は数え直しが 0 でない数を返す。**
+ *
+ * **番人 2 つが、それぞれ何かを主張していることも変異で確かめた**:
+ * ```
+ * N4  assertBodyFillsObject を `if (true) return;` で潰す   足す前 pass 18 / fail 0 → pass 17 / fail 1
+ * N5  突き合わせの相手を走査の結果そのものにする（恒真化）    pass 19 / fail 0  ★ 生き残る（下に理由）
+ * N6  N5 + M6b + %s 縮退                                   pass 17 / fail 2
+ * ```
  */
 /** 走査に使う本文の読み方。既定は `%B`（メッセージ全文）。**差し替えられるのは検査のためである。** */
 const readBodyByFormat = (sha: string): string =>
@@ -446,13 +542,25 @@ const readBodyByFormat = (sha: string): string =>
 const scannedBody = (
   sha: string,
   read: (sha: string) => string = readBodyByFormat,
+  raw: (sha: string) => { header: string; body: string } = rawCommitObject,
 ): { body: string; lines: number } => {
   const body = read(sha);
+  const independent = raw(sha);
+  // **まず「独立の源が本当に生オブジェクトか」を、返ってきた値の構造で確かめる**（#1118）。
+  // **綴り（`cat-file` の語）ではなく形で要求するので、呼び口を `%B` の読み手に
+  // 差し替える変異（M6）はここで落ちる**——**`--pretty` のどの書式も
+  // `tree <40 桁 hex>` のヘッダを作れない。**
+  assert.match(
+    independent.header,
+    RAW_COMMIT_HEADER,
+    `突き合わせる相手が git の生オブジェクトではない` +
+      `（\`tree <40 桁 hex>\` のヘッダが無い。--pretty を通った値と比べていないか）: ${sha.slice(0, 8)}`,
+  );
   // **独立の源（`git cat-file commit` の生オブジェクト）と逐語で一致すること。**
   // **ここが X1 / X2 / X3 を落とす番人である。**
   assert.equal(
     body,
-    rawCommitMessage(sha),
+    independent.body,
     `走査に使った本文が、コミットの生オブジェクトの本文と一致しない` +
       `（メッセージ全文ではないものを走査している。%s / %(trailers) / 空文字などに差し替わっていないか）: ${sha.slice(0, 8)}`,
   );
@@ -460,7 +568,134 @@ const scannedBody = (
   // 実測: `origin/main` 696 commits すべて 1 行以上）。
   // **「一致」だけだと「両方とも空」で通ってしまう**ので、空でないことも言う。
   assert.ok(body.length > 0, `メッセージ本文が空である（走査が空回りしている）: ${sha.slice(0, 8)}`);
+  // **そして「走査に使った本文」そのものに、絶対の床を当てる**（#1118）。
+  //
+  // **上の等値（`body == independent.body`）は相対的な主張なので、両辺を同じように
+  // 縮退させれば forge できる**（実測 N3: 走査 3 行 / 数え直しも 3 行 で一致して pass 17 / fail 1）。
+  // **`git cat-file -s` はオブジェクトのバイト数を、メッセージの読み方と無関係に返す**ので、
+  // **これは縮退させられない**（`--pretty` の書式を何に変えても `cat-file -s` は同じ数を返す）。
+  //
+  // **走査に使った本文が、オブジェクトの「ヘッダ + 空行」の残り全部を占めていること**を要求する。
+  // **`%s` に縮退すると残りを占めないので、ここで落ちる**——**比較相手が何であっても落ちる。**
+  assertBodyFillsObject(sha, body);
   return { body, lines: body.split("\n").length };
+};
+
+/**
+ * **その本文が、コミットオブジェクトの「ヘッダ + 空行」の残り全部を占めていること**（#1118）。
+ *
+ * **`git cat-file -s <sha>` はオブジェクトのバイト数を返す。**
+ * **commit オブジェクトは「ヘッダ + 空行 + 本文」の全部である**ので、
+ * **`size == ヘッダ + 2 + 本文（末尾改行を含む）` が恒等的に成り立つ。**
+ * **`trimTrailingNewlines` が落とした末尾改行の分だけが差になる**（実測で 0〜2 バイト）。
+ *
+ * **これが「絶対の床」である理由**: **`cat-file -s` は `--pretty` を通らないし、
+ * メッセージの読み方にも依存しない。** **走査の側をどう縮退させても、この数は縮まない。**
+ * **だから「両側を同じように縮退させて一致を forge する」形（N3）が、ここで落ちる。**
+ *
+ * **ヘッダのバイト数は `cat-file commit` から取る**——**ここだけは生オブジェクトに頼る。**
+ * **頼っていることを隠さないために、ヘッダが生オブジェクトの形であることも言う。**
+ */
+const assertBodyFillsObject = (sha: string, body: string): void => {
+  const obj = git("cat-file", "commit", sha);
+  const sep = obj.indexOf("\n\n");
+  assert.ok(sep >= 0, `生オブジェクトにヘッダと本文の区切りが無い: ${sha.slice(0, 8)}`);
+  const header = obj.slice(0, sep);
+  assert.match(
+    header,
+    RAW_COMMIT_HEADER,
+    `生オブジェクトのヘッダが取れていない（絶対の床が効かない）: ${sha.slice(0, 8)}`,
+  );
+  const size = Number(git("cat-file", "-s", sha).trim());
+  assert.ok(
+    Number.isFinite(size) && size > 0,
+    `cat-file -s がオブジェクトの大きさを返さない: ${sha.slice(0, 8)}`,
+  );
+  const missing = size - Buffer.byteLength(header, "utf8") - 2 - Buffer.byteLength(body, "utf8");
+  assert.ok(
+    // **落とした末尾改行の分だけが差**（実測: `%B` の読み方では 0〜2 バイト）。
+    missing >= 0 && missing <= 2,
+    `走査に使った本文が、コミットオブジェクトの残り全部を占めていない` +
+      `（メッセージ全文ではないものを走査している。%s / %(trailers) / 空文字に縮退していないか）: ` +
+      `${sha.slice(0, 8)} / オブジェクト ${size} バイト、ヘッダ ${Buffer.byteLength(header, "utf8")} バイト、` +
+      `走査した本文 ${Buffer.byteLength(body, "utf8")} バイト、説明できない差 ${missing} バイト`,
+  );
+};
+
+/**
+ * **走査の母数（本文の行数と身元 trailer のアドレス数）を、`--pretty` を一切通らずに数え直す**（#1118）。
+ *
+ * ── **なぜ「独立にもう一度数える」形が要るのか（#1118 で実測した穴）** ────────────────────
+ *
+ * **`scannedBody` の番人は「走査に使った本文 == 独立の源の本文」という *1 か所の等値* で
+ * 成り立っていた。** **等値は、どちらの辺を動かしても成り立たせられる**——
+ * **だから呼び口を差し替える変異（自己参照化）で恒真にできる。**
+ *
+ * **実測（2026-09-30、基点 `61770bd5`、枝に 3 コミット / 本文 18 行 / アドレス 3 件）:**
+ *
+ * ```
+ * 変異                                                                 この検査を足す前   足した後
+ * M6   scannedBody の比較相手を readBodyByFormat(sha) にする（恒真化）   pass 18 / fail 0   （下に実測）
+ * M6b  ヘッダだけ生オブジェクトから取り、本文を %B から取る              pass 18 / fail 0
+ * M7   M6 + readBodyByFormat の既定を %B → %s に縮退                    pass 17 / fail 1
+ *      走査が「本文 18 行 / アドレス 3 件」→「本文 3 行 / アドレス 0 件」に潰れる
+ *      ★ 潰れた当の検査（範囲の走査）は緑のまま。落ちたのは fixture 側の 1 本だけ
+ * M7b  M6b + 同じ縮退                                                   pass 17 / fail 1（同じ）
+ * ```
+ *
+ * **「ヘッダの形を要求する」では M6b を捕まえられなかった**（実測 18/18 緑）
+ * ——**本物のヘッダを渡しながら本文だけ `%B` から取れるからである。**
+ * **等値の片辺を守っても、もう片辺が自由なら等値は恒真にできる。**
+ *
+ * ── **どう解くか: 母数を、走査とは別の経路でもう一度数える**（#757）────────────────────
+ *
+ * **「一致するか」ではなく「いくつか」を、**
+ * **`git cat-file commit` だけを使って独立に数え、production の走査と突き合わせる。**
+ *
+ * **これが M6 / M6b / M7 / M7b をまとめて落とす**——
+ * **`scannedBody` の中でどう恒真化しても、この数え直しは `scannedBody` を一切通らない**ので、
+ * **走査が縮んだら「18 行 3 件」対「3 行 0 件」の食い違いとして必ず出る。**
+ *
+ * **「0 件見つかった」と「0 件しか走査していない」が、ここで初めて分かれる**——
+ * **前者は独立の数え直しも 0 件を返し、後者は独立の数え直しが 0 でない数を返す。**
+ *
+ * **この関数は `--pretty` を一切使わない**（`git show --format=…` を呼ばない）。
+ * **下の検査がそれを、`%B` などの書式が生オブジェクトのヘッダを作れないことと合わせて固定する。**
+ */
+const independentScanTotals = (shas: readonly string[]): { lines: number; addresses: number } => {
+  let lines = 0;
+  let addresses = 0;
+  for (const sha of shas) {
+    const { header, body } = rawCommitObject(sha);
+    // **数え直しの側も、自分が生オブジェクトを読んだことを言う**
+    // （この関数自身を `%B` の読み手に差し替える変異は、ここで落ちる）。
+    assert.match(
+      header,
+      RAW_COMMIT_HEADER,
+      `母数の数え直しが生オブジェクトを読んでいない: ${sha.slice(0, 8)}`,
+    );
+    // **数え直しの側にも同じ絶対の床を当てる**（#1118）。
+    //
+    // ── **なぜ「2 つの数え方が一致する」では足りないのか（実測）** ─────────────────────
+    //
+    // **一致は相対的な主張なので、両側を同じように縮退させれば forge できる。**
+    // **実測（2026-09-30、基点 `61770bd5`、枝に 3 コミット / 本文 18 行 / アドレス 3 件）:**
+    //
+    // ```
+    // N3  走査の比較を恒真化 + 数え直しも %B から取る + %B → %s に縮退
+    //     → 走査 3 行 / 0 件、数え直しも 3 行 / 0 件（一致する）  pass 17 / fail 1
+    //     ★ 走査が潰れているのに、突き合わせだけでは通った
+    // ```
+    //
+    // **`assertBodyFillsObject` は `cat-file -s` に頼るので縮退させられない**（その docblock）。
+    assertBodyFillsObject(sha, body);
+    lines += body.split("\n").length;
+    for (const line of body.split("\n")) {
+      if (!IDENTITY_TRAILERS.test(line)) continue;
+      addresses += [...line.matchAll(EMAIL)].length;
+    }
+  }
+  return { lines, addresses };
 };
 
 /**
@@ -896,8 +1131,33 @@ test("この枝が足すコミットの trailer に、誤帰属するアドレ�
     scannedLines >= shas.length,
     `本文の行数が コミット数 を下回った（1 行も無いメッセージを読んでいる）: 行 ${scannedLines} / コミット ${shas.length}`,
   );
+  // **母数を、走査とは別の経路でもう一度数えて突き合わせる**（#1118 / #757）。
+  // **`scannedBody` の等値をどう恒真化しても、この数え直しは `scannedBody` を通らない**ので、
+  // **走査が縮んだら食い違いとして出る。**
+  //
+  // **この突き合わせ自身を潰す変異は、この枝では緑で生き残る**（明記する）:
+  // ```
+  // N5  突き合わせの相手を走査の結果そのものにする（恒真化）   pass 19 / fail 0  ★ 生き残る
+  // N6  N5 + 走査の比較を恒真化 + %B → %s に縮退              pass 17 / fail 2
+  // ```
+  // **N5 が生き残るのは、この枝の本文がどれも正しく読めていて、
+  // 2 つの数え方が構造的に一致するからである**（X4 / X5 / G1 と同じ罠）。
+  // **害が出る組み合わせ（N6）は落ちる**——**絶対の床（`assertBodyFillsObject`）が
+  // `scannedBody` の側に在り、そちらは突き合わせに依存しないからである。**
+  // **つまり N5 は「冗長を 1 本外す」変異で、守りは残っている。**
+  // **数え直しそのものが何かを主張していることは、下の専用の検査が固定する。**
+  const independentTotals = independentScanTotals(shas);
+  assert.deepEqual(
+    { lines: scannedLines, addresses: checked },
+    independentTotals,
+    `走査した母数が、生オブジェクトから独立に数え直した母数と合わない` +
+      `（走査が縮んでいる。本文の読み方が %B から差し替わっていないか）: ` +
+      `走査 = 本文 ${scannedLines} 行 / アドレス ${checked} 件、` +
+      `数え直し = 本文 ${independentTotals.lines} 行 / アドレス ${independentTotals.addresses} 件`,
+  );
   console.log(
-    `[#1074] 枝が足したコミット ${shas.length} 件 / 本文 ${scannedLines} 行 / trailer のアドレス ${checked} 件を走査`,
+    `[#1074/#1118] 枝が足したコミット ${shas.length} 件 / 本文 ${scannedLines} 行 / trailer のアドレス ${checked} 件を走査` +
+      `（生オブジェクトからの数え直し: ${independentTotals.lines} 行 / ${independentTotals.addresses} 件）`,
   );
 });
 
@@ -1669,13 +1929,54 @@ test("本文を読んだことを確かめる番人が、間違った読み方 3
   assert.equal(rawCommitMessage(sample), body, "その場で作ったコミットの本文が狙った形になっていない");
   assert.ok(body.split("\n").length >= 5, "1 行だけの本文で番人を当てようとしている（%s が一致してしまう）");
 
-  // **番人が「一致」の基準に使う源は `cat-file`（生オブジェクト）でなければならない。**
-  // **`%B` 同士を比べる形（X4）にすると、下の `%s` が落ちなくなる。**
-  // **だから源が `--pretty` を通らないことを、まず語で固定する。**
+  // **番人が「一致」の基準に使う源は生オブジェクトでなければならない。**
+  // **`%B` 同士を比べる形（X4 / M6）にすると、下の `%s` が落ちなくなる。**
+  //
+  // **初版はここを `rawCommitMessage.toString()` に `cat-file` の語が在るかで見ていた。**
+  // **それは M6 を捕まえられなかった**（#1118。実測 `tests 18 / pass 18 / fail 0`）
+  // ——**M6 は `rawCommitMessage` を書き換えず、`scannedBody` の *呼び口* を
+  // `readBodyByFormat` に差し替える。** **関数の綴りは無傷なので、語の検査は素通りする。**
+  //
+  // **だから語ではなく、返ってきた値の構造で固定する:**
+  // **独立の源は `tree <40 桁 hex>` で始まる git のオブジェクトヘッダを返さなければならない。**
+  const independent = rawCommitObject(sample);
   assert.match(
-    rawCommitMessage.toString(),
-    /cat-file/,
-    "独立の源が `git cat-file` でなくなっている（`--pretty` 同士を比べると比較が恒真になる）",
+    independent.header,
+    RAW_COMMIT_HEADER,
+    "独立の源が git の生オブジェクトを返していない（`--pretty` 同士を比べると比較が恒真になる）",
+  );
+  assert.equal(independent.body, body, "独立の源が本文を全文返していない");
+  // **`--pretty` のどの書式もこのヘッダを作れない**ことを、その場で実測して固定する
+  // （**「構造で要求する」が成り立つ根拠**。ここが崩れたら上の assert は何も言っていない）。
+  for (const fmt of ["%B", "%s", "%(trailers:only=true)", "%an%ae%cn%ce%H%T%P"]) {
+    assert.doesNotMatch(
+      git("show", "-s", `--format=${fmt}`, sample),
+      RAW_COMMIT_HEADER,
+      `--pretty の書式 ${fmt} が生オブジェクトのヘッダを作れてしまう（構造での要求が成り立たない）`,
+    );
+  }
+  // **そして「独立の源を `--pretty` の読み手に差し替えたら `scannedBody` が落ちる」ことを、
+  // 実際に当てて言う**（M6 をこの検査が捕まえる形にしておく。語ではなく振る舞いで）。
+  assert.throws(
+    () => scannedBody(sample, readBodyByFormat, (sha) => ({ header: "", body: readBodyByFormat(sha) })),
+    /生オブジェクトではない/,
+    "独立の源を `--pretty` の読み手に差し替えても番人が落ちない（M6 がまた通る）",
+  );
+  // **「両側を同じように縮退させて一致を forge する」形（N3）も落ちること。**
+  //
+  // **比較相手を、走査と同じ縮退した読み手にすると等値は成り立つ**——
+  // **それでも `assertBodyFillsObject` の絶対の床（`cat-file -s`）が落とす。**
+  // **これが「一致」と「絶対の床」を両方持っている理由である**（実測 N3 は床が無いとき pass 17 / fail 1）。
+  const degraded = (sha: string): string => trimTrailingNewlines(git("show", "-s", "--format=%s", sha));
+  assert.throws(
+    () => scannedBody(sample, degraded, (sha) => ({ header: rawCommitObject(sha).header, body: degraded(sha) })),
+    /残り全部を占めていない/,
+    "走査と比較相手を同じように縮退させると番人が素通りする（N3 がまた通る）",
+  );
+  // **床が「誰にでも落ちる」ものではないことも言う**（恒偽の検査になっていないこと）。
+  assert.doesNotThrow(
+    () => assertBodyFillsObject(sample, rawCommitMessage(sample)),
+    "正しく読んだ本文でも絶対の床が落ちる（床が恒偽になっている）",
   );
   // **正しい読み方（既定）は通ること**——恒偽の検査になっていないことを言う。
   const okRead = scannedBody(sample);
@@ -1725,6 +2026,72 @@ test("本文を読んだことを確かめる番人が、間違った読み方 3
  * **他の検査はどれも `new Set()` を明示的に渡すので、既定の中身を誰も見ていない。**
  * （`allow` の既定を `new Set(["noreply@anthropic.com"])` に変える変異はここだけが落とす。）
  */
+/**
+ * **母数の数え直しが、実際に「走査が縮んだこと」を言えることを固定する**（#1118）。
+ *
+ * ── **なぜこの検査が要るか（自分で当てた変異。X4 / X5 / G1 と同じ罠）** ──────────────────
+ *
+ * **数え直しと突き合わせを足しただけでは、何も主張していなかった。**
+ * **この枝の本文はどれも正しく読めるので、走査と数え直しは構造的に一致する**
+ * ——**だから突き合わせを恒真に潰しても緑で通る。**
+ *
+ * **実測（2026-09-30、基点 `61770bd5`、枝に 3 コミット / 本文 18 行 / アドレス 3 件）:**
+ * ```
+ * N5  突き合わせの相手を走査の結果そのものにする（恒真化）   pass 18 / fail 0   ← この検査を足す前
+ * ```
+ *
+ * ── **どう固定するか: 形と母数の分かったコミットを作って、数え直しに当てる** ─────────────
+ *
+ * **`git commit-tree` は ref を触らずにコミットオブジェクトを 1 つ書く**（上の docblock）。
+ * **本文の行数と身元 trailer のアドレス数が分かっているコミットを 2 つ作り、
+ * 数え直しがその合計を返すことを言う。**
+ *
+ * **そして「縮退した読み方では、この合計に届かない」ことも同じ場で言う**
+ * ——**それが「母数が縮んだら食い違う」の根拠である。**
+ */
+test("母数の数え直しが、走査が縮んだことを実際に言える（数え直しそのものを検査する）", () => {
+  const tree = git("rev-parse", "HEAD^{tree}").trim();
+  // **1 通目: 本文 5 行 / 身元 trailer のアドレス 1 件。**
+  const a = [
+    "test: 数え直しに当てる 1 通目",
+    "",
+    "本文の段落。",
+    "",
+    `Co-Authored-By: N <${REQUIRED_TRAILER_ADDRESS}>`,
+  ];
+  // **2 通目: 本文 3 行 / 身元 trailer のアドレス 2 件**（1 行に 2 つ書いた形も拾うこと）。
+  const b = [
+    "test: 数え直しに当てる 2 通目",
+    "",
+    `Signed-off-by: N <${REQUIRED_TRAILER_ADDRESS}> <${FAKE_PERSON}>`,
+  ];
+  const shas = [
+    commitTree({ tree, message: a.join("\n") }),
+    commitTree({ tree, message: b.join("\n") }),
+  ];
+  // **狙った形になっていることを、まず確かめる**（母数。ここが崩れたら下は何も言っていない）。
+  assert.equal(rawCommitMessage(shas[0] ?? ""), a.join("\n"), "1 通目が狙った形になっていない");
+  assert.equal(rawCommitMessage(shas[1] ?? ""), b.join("\n"), "2 通目が狙った形になっていない");
+
+  // **数え直しが、行数とアドレス数の合計をそのまま返すこと。**
+  assert.deepEqual(
+    independentScanTotals(shas),
+    { lines: a.length + b.length, addresses: 1 + 2 },
+    "母数の数え直しが、本文の行数と身元 trailer のアドレス数を数えていない",
+  );
+  // **数え直しは `--pretty` を通らない**ので、**件名だけの読み方より必ず大きい**
+  // ——**「走査が縮んだら食い違う」の根拠を、その場で実測して固定する。**
+  const subjectOnlyLines = shas.length; // `%s` は 1 コミット 1 行
+  assert.ok(
+    independentScanTotals(shas).lines > subjectOnlyLines,
+    `数え直しが件名だけの読み方と同じ行数を返している（縮退を検出できない）: ` +
+      `${independentScanTotals(shas).lines} 行 / 件名だけなら ${subjectOnlyLines} 行`,
+  );
+  // **母数**（#757）: 当てたコミットの数そのものを固定する（配列を空にする変異はここが落ちる）。
+  assert.equal(shas.length, 2, "当てたコミットの数が減っている");
+  assert.deepEqual(independentScanTotals([]), { lines: 0, addresses: 0 }, "空の範囲で 0 を返さない");
+});
+
 test("許容集合の既定は空（第 2 引数を省いても誤帰属は赤になる）", () => {
   const { bad, checked } = misattributingTrailerEmails("x\n\nCo-authored-by: e <etl@users.noreply.github.com>");
   assert.equal(checked, 1, "既定の呼び方で走査していない（母数 0）");
