@@ -3786,3 +3786,176 @@ t_merge_allowlist_matches_typescript() {
   assert_eq "$sh_list" "$ts_list" "2 か所の allowlist がずれている（片方にだけ身元が足された）"
 }
 test_case "merge: identity の allowlist が 2 か所で完全に一致する (#1101)" t_merge_allowlist_matches_typescript
+
+# --- author と committer は別の値である（#1125）------------------------------------------------
+# **何が壊れていたか**: **#1101 で足した fixture 5 本すべてが `author == committer` だった**
+# ——**だから実装がどちらを読んでいるかを、テストが 1 件も区別できなかった。**
+# **変異 3 件が素通りした**（2026-09-30 実測。`scripts/po/test/run.sh merge-when-green.test.sh`）:
+#
+# ```
+# M6   --jq から `.commit.committer.email` を落とす（author しか見ない）   passed: 138  failed: 0
+# M6b  逆に `.commit.author.email` を落とす（committer しか見ない）        passed: 138  failed: 0
+# M13  母数の門を `(( total == 0 ))` → `(( total < 0 ))` に                passed: 138  failed: 0
+# ```
+#
+# **これは作業合意の「代理と実体」の形である**——**「author を検査している」ことになっていたが、
+# 実際に測っていたのは「author と committer が一致した 1 つの値」だった。**
+#
+# ── **実際の履歴では、author と committer は一致しないほうが普通である**（実測）───────────
+#
+# **`origin/main` の非マージ 725 件を数えた**（2026-09-30、`git log --no-merges --pretty='%ae|%ce'`）:
+#
+# ```
+# 一致しない  674 件（93.0%）   committer は全部 noreply@github.com（= GitHub の squash merge）
+# 一致する     51 件（ 7.0%）
+# ```
+#
+# **fixture は 5/5 が「一致する」側だった**——**93% を占める形を 1 本も持っていなかった。**
+#
+# ── **`noreply@github.com` を fixture に書いてよい根拠**（実測 2026-09-30）───────────────
+#
+# **`github.com/noreply` は実在のアカウントである**（`gh api users/noreply` → `login=noreply`）。
+# **だが `noreply@github.com` はそこに帰属しない**——**裸のローカル部がユーザー名に解決されるのは
+# ドメインが `@users.noreply.github.com` のときだけである。**
+# **裏づけ: main の 674 件が `noreply@github.com` で committer されているのに、
+# `gh api repos/uonoko1/giinrecord/contributors` は `uonoko1` と `github-actions[bot]` の
+# 2 人しか返さない**（`noreply` は出ない）。**誰の個人アドレスでもない、GitHub の service address である。**
+#
+# **だから「committer が allowlist の外」を試すのに、実在の他人を巻き込まずに済む。**
+
+# **プローブ 1**: **author は本人、committer は allowlist の外。**
+# **これが squash merge / rebase の形である**（committer だけが別人になる）。
+# **M6（author しか見ない）は、author が本人なので通してしまう → このテストが落ちる。**
+t_merge_refuses_unverified_committer() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    # **author は本人確認済み**。**committer だけが違う**（GitHub の squash merge の形）。
+    "api repos/uonoko1/giinrecord/pulls/12/commits"*) echo '[{"parents":[{"sha":"p1"}],"commit":{"author":{"email":"120390190+uonoko1@users.noreply.github.com"},"committer":{"email":"noreply@github.com"}}}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "exit status（committer が allowlist の外なら止める）"
+  assert_contains "$ERR" "noreply@github.com" "committer 側のアドレスを名指しする"
+  assert_not_contains "$LOG" "pr	merge	12" "マージしない"
+}
+test_case "merge: committer だけが本人確認外でも止める（author しか見ない実装を落とす, #1125）" t_merge_refuses_unverified_committer
+
+# **プローブ 2**: **逆向き。committer は本人、author は allowlist の外。**
+# **これが #1101 の実害そのものの形である**（`git commit --amend` せずに rebase されると、
+# committer が rebase した人＝本人になり、author に誤った身元が残る）。
+# **M6b（committer しか見ない）は、committer が本人なので通してしまう → このテストが落ちる。**
+#
+# **アドレスは架空のものを使う**（#1111。実在しうる他人の数字 ID を例に書かない
+# ——`999+dev@` が `github.com/maxthelion` だった前例が在る）。
+t_merge_refuses_unverified_author_with_ok_committer() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    # **committer は本人確認済み**（rebase した人）。**author だけが違う。**
+    "api repos/uonoko1/giinrecord/pulls/12/commits"*) echo '[{"parents":[{"sha":"p1"}],"commit":{"author":{"email":"someone@example.com"},"committer":{"email":"120390190+uonoko1@users.noreply.github.com"}}}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "exit status（author が allowlist の外なら止める）"
+  assert_contains "$ERR" "someone@example.com" "author 側のアドレスを名指しする"
+  assert_not_contains "$LOG" "pr	merge	12" "マージしない"
+}
+test_case "merge: author だけが本人確認外でも止める（committer しか見ない実装を落とす, #1125）" t_merge_refuses_unverified_author_with_ok_committer
+
+# **プローブ 3**: **author != committer で、両方とも本人確認済み**（偽陽性の確認）。
+# **上の 2 本だけだと「一致しなければ落とす」実装でも緑になる**
+# ——**それは bot のデータ更新 PR を手元で rebase するたびに止まる誤りである。**
+# **見ているのは「一致するか」ではなく「両方が allowlist に在るか」だと固定する。**
+t_merge_allows_differing_but_allowed_identities() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    # **author は bot・committer は本人**（bot の PR を手元で rebase した形）。**両方 allowlist 内。**
+    "api repos/uonoko1/giinrecord/pulls/12/commits"*) echo '[{"parents":[{"sha":"p1"}],"commit":{"author":{"email":"41898282+github-actions[bot]@users.noreply.github.com"},"committer":{"email":"120390190+uonoko1@users.noreply.github.com"}}}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "exit status: $ERR"
+  assert_contains "$LOG" "pr	merge	12" "author != committer でも両方 allowlist 内なら通す"
+}
+test_case "merge: author != committer でも両方が本人確認済みなら通す（偽陽性, #1125）" t_merge_allows_differing_but_allowed_identities
+
+# **プローブ 4**: **`gh api` が成功して `[]` を返す経路。**
+# **既存の #1101 の 3 本は「`gh api` が exit 1 で落ちる」経路しか試していなかった**
+# ——**成功して空が返る経路が未試験だったので、母数の門を `(( total < 0 ))` に変えても
+# 素通りした**（M13。実測 passed: 138 failed: 0）。
+#
+# **`[]` は実際に起こりうる**: **PR の HEAD が force-push された直後や、
+# 権限の都合で commits が空で返ることがある。** **そのとき「身元はきれい」と読んではいけない**
+# ——**1 件も見ていないのだから、確かめられていない**（#757）。
+t_merge_refuses_when_commits_empty() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    # **API は成功している**（exit 0）。**中身が空の配列である**——ここが exit 1 との違い。
+    "api repos/uonoko1/giinrecord/pulls/12/commits"*) echo '[]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "exit status（母数 0 で緑にしない）"
+  assert_contains "$ERR" "母数 0" "母数が 0 だと名指しする"
+  assert_not_contains "$LOG" "pr	merge	12" "マージしない"
+}
+test_case "merge: commits が空配列で返ったらマージしない（母数 0 を緑にしない, #1125）" t_merge_refuses_when_commits_empty
+
+# **fixture の母数を固定する**（#757 / #1125）。
+#
+# **#1101 の穴は「fixture が 5/5 とも author == committer」だった。**
+# **同じ形に戻ることを防ぐ**——**「author != committer」の fixture が減ったら落ちる。**
+# **上で足した 3 本 = 落とす 2 本 + 通す 1 本。** **落とす側だけだと「一致しなければ落とす」
+# 実装が通ってしまう**ので、通す側も母数に入っている。
+t_1125_fixtures_have_differing_author_and_committer() {
+  local file json n same=0 diff=0 total=0 a c i
+  file="$HERE/merge-when-green.test.sh"
+  # **JSON をそのまま jq に渡して、author と committer を「値として」比べる。**
+  # **部分一致 grep は使わない**——**`dev@users.noreply.github.com` を探すと
+  # `seiji-kiroku-dev@users.noreply.github.com` に当たる**（このリポジトリで 2 回踏んだ）。
+  while IFS= read -r json; do
+    n=$(jq 'length' <<<"$json" 2>/dev/null) || continue
+    for ((i = 0; i < n; i++)); do
+      a=$(jq -r ".[$i].commit.author.email // empty" <<<"$json")
+      c=$(jq -r ".[$i].commit.committer.email // empty" <<<"$json")
+      [[ -n "$a" && -n "$c" ]] || continue
+      total=$((total + 1))
+      if [[ "$a" == "$c" ]]; then same=$((same + 1)); else diff=$((diff + 1)); fi
+    done
+  done < <(grep -oE '\[\{"parents".*\}\]' "$file" || true)
+  # **母数**: **抽出そのものが壊れて 0 件になったら、下の 2 つは「0 >= 0」で緑になる。**
+  # **だから先に「取れているか」を見る。**
+  [[ "$total" -ge 8 ]] || fail "fixture の抽出が壊れている（commit オブジェクト $total 件しか取れない）"
+  # **`author != committer` を持つ fixture が在ること**（#1125 が足したもの）。
+  [[ "$diff" -ge 3 ]] || fail "author != committer の fixture が $diff 件しかない（#1125 の穴に戻っている）"
+  # **`author == committer` の側も残っていること**（#1101 の 5 本。消すと元の実害が無検査になる）。
+  [[ "$same" -ge 5 ]] || fail "author == committer の fixture が $same 件しかない（#1101 の形を消している）"
+}
+test_case "1125: fixture に author != committer の形が在る（母数つき）" t_1125_fixtures_have_differing_author_and_committer
