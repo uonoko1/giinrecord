@@ -436,6 +436,44 @@ t_destructive_git_per_file_form_exceptions() {
     assert_eq 1 "$STATUS" "[$f] 例外ファイルでも $G rm は落ちる: $OUT"
   done
 }
+# **例外の一覧そのものを逐語で固定する**（**上の対のテストだけでは足りない。実測で穴を見つけた**）:
+# **変異 MU9「stash の例外に別ファイルを 1 本足す」が 61/0 で生き残った**——
+# **対のテストは「私が選んだ 1 本の否定例」しか見ていない**ので、
+# **一覧に**別の**名前が増えても気づかない。** **一覧の中身と本数を直接読む。**
+#
+# **例外を足すこと自体は禁じない**（正当な用途は在る）。**黙って増えることを禁じる**:
+# **ここを書き換えないと CI が落ちる**ので、**diff に「例外を増やした」ことが必ず出る。**
+t_destructive_git_exception_lists_are_exactly_these() {
+  # **実装を source せずに、代入だけを取り出して評価する**（`awk` で `NAME='…'` の
+  # 開きから閉じまでを取る。**1 行で閉じる形と複数行に跨る形の両方が在る**ので、
+  # 「開いたら閉じるまで」を数えて切る——`sed` の範囲指定だと、
+  # **1 行で閉じている代入で「閉じ」が見つからず、ファイル末尾まで飲み込んだ**（実測））。
+  local src="$HERE/../forbidden-patterns.sh" sweep stash
+  extract_list() { # extract_list <VAR 名>
+    awk -v name="$1" '
+      index($0, name "=\x27") == 1 {
+        sub("^" name "=\x27", ""); inside = 1
+      }
+      inside {
+        if (sub(/\x27.*$/, "")) { if (length($0)) print; exit }
+        print; next
+      }
+    ' "$src"
+  }
+  sweep=$(extract_list DESTRUCTIVE_GIT_SWEEP_FILES | grep . || true)
+  stash=$(extract_list DESTRUCTIVE_GIT_STASH_FILES | grep . || true)
+  assert_eq "scripts/po/worktree-sweep.sh
+scripts/po/merge-when-green.sh" "$sweep" "worktree remove / branch -D の例外は この 2 本ちょうど"
+  assert_eq "scripts/dev/test/mutate.test.sh" "$stash" "stash の例外は この 1 本ちょうど"
+  # **一覧に挙げたファイルが実在すること**（改名・削除で例外が幽霊になると、
+  # 「例外が効いている」と思ったまま守りが緩む。**幽霊は grep -v -x -F で黙って空振りする**）
+  local f
+  while IFS= read -r f; do
+    [[ -z "$f" ]] && continue
+    [[ -f "$HERE/../../../$f" ]] || fail "例外に挙げたファイルが実在しない: $f"
+  done <<< "$sweep
+$stash"
+}
 # **例外の穴（実装中に実測で踏んだ）**: 例外を「行」で外す形にすると、**例外の語と別の破壊的な形を
 # 1 行に同居させるだけで、行ごと落ちて素通りする**。`grep` は行単位なので、この穴は
 # 「行を外す」設計に必ず付いてくる。**実測した素通り**（origin/main ではなく、この PR の途中の実装で）:
@@ -483,7 +521,8 @@ t_destructive_git_sweep_log_message_passes() {
 }
 # **母数（#757）**: 「0 件」と「1 本も見ていない」を同じ緑にしない。
 # `GIT_FILES` のパスの綴りが変わったり `ls-files` が空を返したりすると、
-# **静的検査は「全部の行を見る」という前提のほうが先に壊れる**。件数は常に出す。
+# **静的検査は「対象の全行を見る」という前提のほうが先に壊れる**。件数は常に出す。
+# **「対象」は追跡ファイル全部ではない**（シェルスクリプトと CI 設定だけ。実測 125 / 10,430 本）。
 t_destructive_git_prints_denominator() {
   repo dgn; add scripts/a.sh "echo ok"; add deploy/b.sh "echo ok"; add docs/c.md "docs"; run
   assert_eq 0 "$STATUS" "exit: $OUT"
@@ -774,6 +813,7 @@ test_case "前置きオプションを許しても無害な形は通る (#1123 �
 test_case "融合フラグ（-rD）と長い綴り（--delete --force）も落ちる (#1123 レビュー)" t_destructive_git_fused_and_long_flags_fail
 test_case "worktree remove / branch -D の例外は worktree-sweep.sh だけ (#1123)" t_destructive_git_worktree_sweep_is_the_only_exception
 test_case "例外は「ファイル × 形」の組で、形は混ざらない (#1123 レビュー)" t_destructive_git_per_file_form_exceptions
+test_case "例外の一覧は逐語でこの 3 本ちょうど（黙って増えない） (#1123 レビュー)" t_destructive_git_exception_lists_are_exactly_these
 test_case "例外の語と同居させても素通りしない (#1123)" t_destructive_git_exception_does_not_shield_the_same_line
 test_case "行末コメントの中のサブコマンドは落ちる（既存の振る舞い） (#1123)" t_destructive_git_subcommand_in_trailing_comment_is_flagged
 test_case "worktree-sweep.sh のログ文は通る (#1123)" t_destructive_git_sweep_log_message_passes
