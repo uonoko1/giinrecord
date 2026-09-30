@@ -3959,3 +3959,25 @@ t_1125_fixtures_have_differing_author_and_committer() {
   [[ "$same" -ge 5 ]] || fail "author == committer の fixture が $same 件しかない（#1101 の形を消している）"
 }
 test_case "1125: fixture に author != committer の形が在る（母数つき）" t_1125_fixtures_have_differing_author_and_committer
+
+# ── **等価変異として残るもの（測って確かめた。穴ではない）** ─────────────────────────────
+#
+# **`--jq` の 2 つのキーを入れ替える変異**は、**当たっても緑のまま通る**
+# （実測 2026-09-30: `passed: 143 failed: 0`。**当たったことは md5 の変化と
+# `grep -nF` で確かめた**——空振りではない）:
+#
+# ```
+# .commit.author.email, .commit.committer.email
+#   → .commit.committer.email, .commit.author.email    passed: 143  failed: 0
+# ```
+#
+# **これは本当に等価である。** **実装は 2 つの値を 1 本の平らな並びに集めて、
+# 「全部が allowlist に在るか」だけを見る**——**順序に意味が無く、
+# エラーメッセージもどちら側だったかを言わない**（アドレスだけを名指しする）。
+# **だから「取り違え」は観測できる差を作らない。**
+#
+# **観測できる差を作るのは「片方を読まなくなる」変異だけ**で、
+# **そちらは上の 2 本（M6 / M6b）がそれぞれ 1 件ずつ落として押さえている。**
+#
+# **もし将来「どちら側が不正だったか」をメッセージに出すようにしたら、
+# この入れ替えは等価でなくなる**——**そのときはここに検査を足すこと。**
