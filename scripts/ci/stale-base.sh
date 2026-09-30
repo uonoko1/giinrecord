@@ -17,6 +17,14 @@
 #     exit 1 — 枝の fetchedAt が <base-ref> より古い（data/ が丸ごと巻き戻る形）
 #            — OR fetchedAt を**測れなかった**（読めない／無い／日付として解釈できない）。
 #              「測れなかった」を「古くない」として通さない（#1158）
+#     **残っている限界（この PR では直していない）**: `stale-base` という check-run 名は
+#     `scripts/po/merge-when-green.sh` の `NONREQUIRED_CHECKS` に入っている（#858）。理由は
+#     `--net-deletions` が「赤いが通してよい」が正常に起こる検査だから（実地 5 件中 3 件）。
+#     **この `--data-freshness` step はそちらではない**——赤なら必ず rebase が答えで、
+#     「赤いまま通してよい」場合が無い。だが 3 つの step が 1 つの job（= 1 つの check-run 名）に
+#     同居しているので、**`--allow-nonrequired-red` はこの step の赤も一緒に通す。**
+#     分けるには job を割る必要があり、それは branch protection の必須一覧
+#     （packages/etl/test/branch-protection-jobs.test.ts）に触る別の判断なので、ここでは触らない。
 #
 # ── What is measured, and why it is not "there are deletions" ───────────────────────────────────
 #   Deliberate deletions are legitimate: dropping a check that is no longer needed, a refactor, deleting
