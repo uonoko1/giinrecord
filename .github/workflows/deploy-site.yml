@@ -6,25 +6,34 @@ name: Deploy site (reusable)
 #   deploy-data.yml     dispatched by etl.yml → staging + production-data   (daily data; docs/ops/deploy.md)
 # Issue #134: optional `data_ref` overlays data/ from that ref onto the checkout (production-data: code = tag `released`,
 # data = main). Output `sha` = the built commit (release.yml moves the `released` tag to it).
-# Every environment needs the same four secrets: DEPLOY_SSH_KEY, DEPLOY_HOST, DEPLOY_USER, DEPLOY_KNOWN_HOSTS.
 # The deploy user has no docker privilege; the containers bind-mount the target directories, nothing is restarted.
 #
-# Issue #1137 (項目 1): **`build` と `deploy` は別の job である。**
-#   build   — main に入ったコードを runner の上で実行する（`pnpm install` / `pnpm build`）。
-#             **secrets を一切参照しない。environment も付けない**（environment を付けると
-#             そこに束ねた DEPLOY_* が `secrets` 文脈に入ってしまう）。成果物は artifact で渡す。
-#   deploy  — artifact を受け取って rsync するだけ。**ビルドをしない**（リポジトリのコードを
-#             1 行も実行しない。checkout もしない）。deploy 鍵を持つのはこちらだけ。
-# **なぜ分けたか**: `deploy-staging.yml` は `push: branches:[main]` で承認なしにこれを呼ぶので、
-# 1 つの job だったときは **`vite.config.ts` や `package.json` の `build` に 1 行入れれば
-# deploy 鍵を取り出せた**（鍵は rrsync に固定されているので VPS 上のコード実行にはならないが、
-# staging と本番の配信内容は書き換えられる）。build 側に鍵が無ければ、main に入れても鍵は漏れない。
-# この分割が崩れないことは packages/etl/test/workflow-deploy-split.test.ts が機械で守る。
+# ── Issue #1137（項目 1）: ビルドは**この workflow の中で走らない** ─────────────
+# `deploy-staging.yml` は `push: branches:[main]` で承認なしにこれを呼ぶので、ビルドと deploy 鍵が
+# 同じ場所に居ると **`main` に入ったコードが鍵を持つ runner の上で走る**（`vite.config.ts` や
+# 各パッケージの `package.json` の `build` に 1 行入れれば鍵が取れた）。
+#
+# **鍵の在りか（2026-09-30 実測。コメントではなく `gh api` で確かめた）:**
+#   repos/<repo>/actions/secrets                      total_count=5   ← DEPLOY_* 4 件はここ
+#   repos/<repo>/environments/{staging,production,production-data}/secrets  すべて total_count=0
+# **`DEPLOY_*` は repository secret である。** だから `environment:` を付けない job を作っても
+# 鍵は遠ざからない。**同じ workflow の中で job を割っても、`secrets` 文脈は workflow 単位なので
+# 分かれない**（`${{ toJSON(secrets) }}` / `secrets['DEPLOY_SSH_KEY']` で読める）。
+#
+# **だから場所を分けた。** ビルドは `build-site.yml` に在り、この workflow は
+# **`secrets:` を 1 つも書かずに** それを呼ぶ。呼び先が読めるのは呼び出し元が明示的に渡した
+# secrets だけなので、**`build-site.yml` の `secrets` 文脈は空である**。
+# 鍵はこの workflow の `deploy` job だけが持ち、その job は artifact を受け取って rsync するだけで
+# **リポジトリのコードを 1 行も実行しない（checkout もしない）**。
+#
+# **呼び出し元は `secrets: inherit` をやめ、`DEPLOY_*` 4 件を名指しで渡す**
+# （`inherit` だと `FORBIDDEN_PATTERNS` や将来増える secret も一緒に流れ込む）。
+# この形が崩れないことは packages/etl/test/workflow-deploy-split.test.ts が機械で守る。
 on:
   workflow_call:
     inputs:
       environment:
-        description: "GitHub Environment (staging | production | production-data): supplies the DEPLOY_* secrets"
+        description: "GitHub Environment (staging | production | production-data): the deployment record for this rsync"
         required: true
         type: string
       site_origin:
@@ -45,6 +54,17 @@ on:
         required: false
         type: string
         default: ""
+    secrets:
+      # #1137: 名指しで宣言する。呼び出し元の `secrets: inherit` をやめたので、
+      # ここに無い secret は届かない（`FORBIDDEN_PATTERNS` などが流れ込まない）。
+      DEPLOY_SSH_KEY:
+        required: true
+      DEPLOY_HOST:
+        required: true
+      DEPLOY_USER:
+        required: true
+      DEPLOY_KNOWN_HOSTS:
+        required: true
     outputs:
       sha:
         description: "Commit actually built (HEAD of the checkout, before the data overlay)"
@@ -52,57 +72,15 @@ on:
 permissions:
   contents: read
 jobs:
+  # #1137: ビルドは**別の workflow**で走る。`secrets:` を渡さないので、そこでは鍵が読めない。
+  # **この行に `secrets:` を足さないこと**（足した時点で #1137 が元に戻る）。
   build:
-    runs-on: ubuntu-latest
-    # #1137: **この job は secrets を持たない。** だから `environment:` を付けない
-    # （`environment` は DEPLOY_* の出どころなので、付けた時点でこの job が鍵を持つ）。
-    # `concurrency` も付けない——`deploy-vps` は rrsync のロックの単位で、ビルド中ずっと
-    # 占有すると他のデプロイが待たされるだけである（ロックを要るのは rsync する側だけ）。
-    #
-    # Issue #556 / #1056: **実測値はここに書かない**（数が 2 か所にあると片方だけ腐る。#1056 で
-    # 実際に腐った）。**実測値も `timeout-minutes` に対する倍率も
-    # packages/etl/test/workflow-timeout.test.ts の表が 1 か所で持つ**（測り方・n・測った日つき）。
-    #
-    # この job は **VPS に触らない**。checkout / overlay / install / ビルドだけなので、
-    # どこで切れても外に副作用が残らない（artifact が上がらないので deploy job が動かないだけ）。
-    # 分割前は「ビルド + rsync」を 1 つの 30 分が覆っていた。**いまはビルド側がこの 25 分、
-    # rsync 側が deploy job の 10 分**で、合計は分割前と同程度に収めてある。
-    timeout-minutes: 25
-    outputs:
-      sha: ${{ steps.head.outputs.sha }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.ref }}
-      - id: head
-        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-      - name: Overlay data/ from data_ref (no-op when empty)
-        env:
-          DATA_REF: ${{ inputs.data_ref }}
-        run: bash scripts/ci/released-ref.sh overlay "$DATA_REF"
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with: { node-version-file: .nvmrc, cache: pnpm }
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm build
-        env:
-          SITE_ORIGIN: ${{ inputs.site_origin }}
-      - name: Guard — target_dir is one of the two web roots
-        env:
-          TARGET_DIR: ${{ inputs.target_dir }}
-        run: |
-          case "$TARGET_DIR" in site|staging) ;; *) echo "bad target_dir: $TARGET_DIR"; exit 1 ;; esac
-      # #1137: **artifact に入れるのは rsync する 1 ディレクトリだけ**（分割前に rsync していたものと
-      # 同じ `apps/web/build/client/`）。それ以外を入れると、余計なものが VPS に届く経路になる。
-      # 名前に target_dir を入れる: deploy-data.yml は 1 つの run の中でこのワークフローを 2 回
-      # （staging と production-data）呼ぶので、名前が同じだと衝突する。
-      # retention-days は最短の 1（デプロイ直後に用が済む。runner の外に長く置かない）。
-      - uses: actions/upload-artifact@v4
-        with:
-          name: site-${{ inputs.target_dir }}-${{ steps.head.outputs.sha }}
-          path: apps/web/build/client
-          retention-days: 1
-          if-no-files-found: error
+    uses: ./.github/workflows/build-site.yml
+    with:
+      site_origin: ${{ inputs.site_origin }}
+      target_dir: ${{ inputs.target_dir }}
+      ref: ${{ inputs.ref }}
+      data_ref: ${{ inputs.data_ref }}
   deploy:
     needs: build
     runs-on: ubuntu-latest
@@ -111,29 +89,34 @@ jobs:
     # max も倍率も違っていた）。**実測値も `timeout-minutes` に対する倍率も
     # packages/etl/test/workflow-timeout.test.ts の表が 1 か所で持つ**（測り方・n・測った日つき）。
     #
-    # ここは**本番に触る唯一の job** である。#1137 でビルドを別 job に出したので、この job に
-    # 残っているのは **artifact の download と rsync だけ**（リポジトリのコードを実行しない）。
+    # ここは**本番に触る唯一の job** である。#1137 でビルドを別 workflow に出したので、
+    # この job に残っているのは **artifact の download と rsync だけ**
+    # （リポジトリのコードを実行しない。checkout もしない）。
     # 切れたときに何が残るかを見て決めた:
-    #   ・rsync より前（artifact の download）で切れる → VPS には何も触れていない。無害。
+    #   ・rsync より前（artifact の download と展開）で切れる → VPS には何も触れていない。無害。
     #   ・rsync の最中に切れる → 転送済みのファイルだけが新しい、混ざった状態が残りうる。
     #     ただし rsync 自身が `--timeout=120` を持つので、無応答なら 2 分で先に落ちる（#308）。
     #     再実行すれば同じ内容で上書きされ、`--delete` も含めて収束する（rsync は冪等）。
-    # つまりこの timeout が作り出す最悪の状態は、rsync が制限時間いっぱい**転送し続けた**場合だけで、
-    # 実測に対しては大きな余裕がある（**具体の秒数と倍率は上記の表を見よ**。#1056）。
     # 逆に timeout が無いと、固まった rsync が
     # concurrency group `deploy-vps` を最大 6 時間占有し、**その間のデプロイが全部詰まる**。
     # 詰まる側の害のほうが大きいと判断した。
     #
-    # **分割前の 30 分は「ビルド + rsync」を覆っていた。** いまビルドは build job の側に在り、
-    # ここに残る仕事は download と転送だけなので 10 分にした（ビルドの分を二重に持たない）。
+    # **分割前の 30 分は「ビルド + rsync」を覆っていた。** ビルドは build-site.yml 側に在るので、
+    # ここに残る仕事は download / 展開 / 転送だけである。**ただし artifact は小さくない**
+    # （`apps/web/build/client/` には `data/members/*.json` と `data/data-archive.zip` が入る。
+    # どちらもサイトが配信する実体なので外せない）。**分割前は同じ workspace の中で rsync していたので
+    # この往復は存在しなかった。download と展開の所要は CI 実測がまだ 0 本**
+    # （`deploy-site.yml` は `workflow_call` 専用で、PR の run には出てこない）。
+    # **だから分割前と同じ 30 分を置いた**（減らすのは実測が n 本溜まってからにする。
+    # 薄くして本番の初回を落とすほうが害が大きい）。**数字は上の表に置く。**
     #
     # 承認待ちは起きない（#659）。3 つの environment とも protection_rules が `[]` で、
     # required reviewers は置いていない（置かない理由は docs/ops/deploy.md）。2026-09-08 実測:
     # `?status=waiting` の total_count は全 3,256 run 中 0、production の直近 10 deployment の
     # status も `queued`/`in_progress`/`success` だけで `waiting` は無い。
-    # もし将来 reviewers を置くなら、承認待ちがこの 10 分に算入されるかを実際に待たせて確かめること
+    # もし将来 reviewers を置くなら、承認待ちがこの 30 分に算入されるかを実際に待たせて確かめること
     # （このリポジトリの履歴では一度も待っていないので、まだ確かめられていない）。
-    timeout-minutes: 10
+    timeout-minutes: 30
     environment: ${{ inputs.environment }}
     concurrency:
       # Issue #308: deploy 鍵は authorized_keys の command= で `rrsync /var/www/giinrecord` に
@@ -145,13 +128,13 @@ jobs:
       # （deploy-staging.yml / deploy-data.yml / release.yml）すべてがこれ1つで直列化される。
       #
       # #1137: **ロックを要るのは rsync する job だけなので、group はこちらに付ける。**
-      # build job に付けるとビルドの間ずっと `deploy-vps` を占有し、他のデプロイが待たされる。
+      # ビルドする側に付けるとビルドの間ずっと `deploy-vps` を占有し、他のデプロイが待たされる。
       group: deploy-vps
       cancel-in-progress: false
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: site-${{ inputs.target_dir }}-${{ needs.build.outputs.sha }}
+          name: ${{ needs.build.outputs.artifact }}
           path: site
       - name: Guard — target_dir is one of the two web roots
         env:
@@ -185,8 +168,8 @@ jobs:
           TARGET_DIR: ${{ inputs.target_dir }}
           REF: ${{ inputs.ref }}
           DATA_REF: ${{ inputs.data_ref }}
-          # #1137: この job は checkout しないので `git rev-parse HEAD` が使えない。
-          # ビルドした sha は build job の output から受け取る（`sha` output と同じ値）。
+          # #1137: この job は checkout しないので HEAD を読めない。
+          # ビルドした sha は build-site.yml の output から受け取る（`sha` output と同じ値）。
           BUILT_SHA: ${{ needs.build.outputs.sha }}
         run: |
           echo "deployed ref \`$REF\` ($BUILT_SHA)${DATA_REF:+ + data/ from \`$DATA_REF\`} to \`/var/www/giinrecord/$TARGET_DIR/\` (environment $ENVIRONMENT, SITE_ORIGIN=${ORIGIN:-(relative)})" >> "$GITHUB_STEP_SUMMARY"
