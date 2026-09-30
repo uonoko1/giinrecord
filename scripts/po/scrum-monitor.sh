@@ -203,7 +203,19 @@ pr_section() {
         elif .conclusion == "skipped" then "skipped"
         else "fail" end;
       def severity: ({"pass": 0, "skipped": 1, "pending": 2, "fail": 3}[bucket_of]) // 3;
-      [.[].check_runs[] | {name, conclusion}]
+      # **`started_at` を落とさずに持つ。** **使っていないのに残す理由が在る**（実測）:
+      # **これを落とすと、変異テストが `max_by(severity)` の正しさを測れなくなる。**
+      #   投影が `{name, conclusion}` だったとき:
+      #     max_by(severity)     → fail   ← 正しい
+      #     max_by(.started_at)  → fail   ← **偶然一致する**（`.started_at` が全要素 null になり、
+      #                                     `max_by` は同値のとき**最後の要素**を返す。
+      #                                     fixture の最後が failure だったので偶然 fail）
+      #   投影が `{name, conclusion, started_at}` なら:
+      #     max_by(severity)     → fail
+      #     max_by(.started_at)  → **pass** ← 2 つの設計が実際に分かれる
+      # **つまり `started_at` が無いと「畳み方を取り替える変異」が生き残る**
+      # ——**テストが常に緑になり、設計を守っていないのに守っているように見える。**
+      [.[].check_runs[] | {name, conclusion, started_at}]
       | group_by(.name) | map(max_by(severity)) | .[] | bucket_of
     ' <<<"$raw" 2>/dev/null) || collapsed=""
 
