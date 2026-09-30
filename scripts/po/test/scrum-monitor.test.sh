@@ -1,0 +1,872 @@
+# shellcheck shell=bash
+# **Do not run this file directly** (#1124). It is sourced by scripts/po/test/run.sh, which
+# defines test_case / assert_* / run_script. Running it with `bash` prints nothing but
+# `test_case: command not found` and runs not one assertion.
+[[ -n ${PO_TEST_RUN_SH:-} ]] || {
+  echo "$(basename "${BASH_SOURCE[0]}"): このファイルは単体では走りません（run.sh が source します）。" >&2
+  echo "  bash scripts/po/test/run.sh                       # 全部" >&2
+  echo "  bash scripts/po/test/run.sh ${BASH_SOURCE[0]##*/} # このファイルだけ" >&2
+  exit 2
+}
+# Tests for scripts/po/scrum-monitor.sh (sourced by run.sh)
+#
+# **検査の重心**: **「測れなかった」を「異常なし」と言わないこと**（#1110 の要件 5 / #1094）。
+# **取りこぼし（`--paginate` の欠落・`total_count` の不一致）で黙って緑にならないこと**が
+# この道具が存在する理由なので、そこに検査を厚く置く。
+#
+# **`log()` は stderr に書く**ので、断定は `$ERR` に対して行う（他の scripts/po/test と同じ）。
+#
+# **worktree の節だけは実在のディレクトリを使う**——`-d` と `stat` は fake `git` で偽装できない。
+# `$TMP` の下に作るので、実在の worktree は 1 本も触らない（`MONITOR_SKIP_LOCAL=1` で
+# 飛ばすテストと、実在の temp ディレクトリを使うテストの 2 通りで測る）。
+
+# ---- ヘルパ -----------------------------------------------------------------------------------
+# check-runs の応答を 1 ページぶん組む。`$1` = total_count、`$2..` = `name:conclusion`
+# （conclusion が `null` なら実行中）。**本物の API と同じ形にする**——
+# **`gh --paginate` はページごとに 1 個の JSON ドキュメントを吐く**ので、
+# 複数ページを試すテストはこれを 2 回並べて返す。
+cr_page() {
+  local total=$1; shift
+  local runs="" n c
+  for spec in "$@"; do
+    n="${spec%%:*}"; c="${spec#*:}"
+    [[ "$c" == "null" ]] && c=null || c="\"$c\""
+    runs+="{\"name\":\"$n\",\"conclusion\":$c},"
+  done
+  echo "{\"total_count\":$total,\"check_runs\":[${runs%,}]}"
+}
+
+# ボードの GraphQL 応答。`$1..` = `number:state:status:updatedAt`
+board_page() {
+  local nodes=""
+  for spec in "$@"; do
+    IFS=: read -r n st stat up <<<"$spec"
+    nodes+="{\"content\":{\"number\":$n,\"state\":\"$st\",\"updatedAt\":\"$up\"},\"fieldValueByName\":{\"name\":\"$stat\"}},"
+  done
+  echo "{\"data\":{\"node\":{\"items\":{\"pageInfo\":{\"hasNextPage\":false,\"endCursor\":null},\"nodes\":[${nodes%,}]}}}}"
+}
+
+# 1 件ずつ引く PR 検索（`gh pr list --search "<番号> in:head"`）の応答。
+# `$1..` = `prnumber:branch:updatedAt`
+# **本物の検索は部分一致で外れが混ざる**（実測: `1137 in:head` が
+# `feat/1110-scrum-monitor` と `fix/693-pdf-table-ctm` も返した）ので、
+# **外れを混ぜた fixture も使う**（実装が自分で照合し直していることを測るため）。
+pr_search() {
+  local rows=""
+  for spec in "$@"; do
+    IFS=: read -r pn br up <<<"$spec"
+    rows+="{\"number\":$pn,\"headRefName\":\"$br\",\"updatedAt\":\"$up\"},"
+  done
+  echo "[${rows%,}]"
+}
+
+# ---- 1. PR の節 -------------------------------------------------------------------------------
+
+t_mon_all_green() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr list --repo "*) echo '[{"number":11,"headRefOid":"sha11","isDraft":false}]' ;;
+    "api repos/"*"/commits/sha11/check-runs --paginate")
+      echo '$(cr_page 3 check:success gitleaks:success audit:success)' ;;
+    "api graphql"*) echo '$(board_page 20:OPEN:Ready:2026-09-29T20:00:00Z)' ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 0 "$STATUS" "全部緑なら exit 0: $ERR"
+  assert_contains "$ERR" "PR 1 本を見ました" "**母数を出す（#757）**"
+  assert_contains "$ERR" "赤 0 本" "**「赤 0 本」と言い切れるのは測れたときだけ**"
+  assert_contains "$ERR" "check-run 計 3 件 / total_count 計 3 件" "**取れた件数と母数の両方を出す**"
+  assert_contains "$ERR" "節 2/2 を測れました" "**締めの行が出る（これが無ければ途中で死んでいる）**"
+  assert_not_contains "$ERR" "MONITOR-BROKEN" "測れているときに壊れたと言わない"
+}
+test_case "monitor: 全部緑 → exit 0、母数つきで報告し MONITOR-BROKEN を出さない" t_mon_all_green
+
+t_mon_red_check() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr list --repo "*) echo '[{"number":12,"headRefOid":"sha12","isDraft":false}]' ;;
+    "api repos/"*"/commits/sha12/check-runs --paginate")
+      echo '$(cr_page 3 check:failure gitleaks:success audit:null)' ;;
+    "api graphql"*) echo '$(board_page 20:OPEN:Ready:2026-09-29T20:00:00Z)' ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 3 "$STATUS" "赤が在れば exit 3（測定は成功している）: $ERR"
+  assert_contains "$ERR" "赤 PR #12" "**PR を番号で名指しする**"
+  assert_contains "$ERR" "赤 1 件" "赤の件数"
+  assert_contains "$ERR" "実行中 1 件" "実行中を赤と混ぜない"
+  assert_not_contains "$ERR" "MONITOR-BROKEN" "**赤が在ることは「測れなかった」ではない**"
+}
+test_case "monitor: 赤い検査 → exit 3、PR 番号と件数を出す（実行中と混ぜない）" t_mon_red_check
+
+# **これが #1093 / #1116 の形そのものである。** **取りこぼしを「赤 0 件」と言ってはいけない。**
+t_mon_short_page_is_broken() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr list --repo "*) echo '[{"number":13,"headRefOid":"sha13","isDraft":false}]' ;;
+    # **total_count 53 と言いながら 2 件しか返らない**（#1093 の 30/53 と同じ形）
+    "api repos/"*"/commits/sha13/check-runs --paginate")
+      echo '$(cr_page 53 check:success gitleaks:success)' ;;
+    "api graphql"*) echo '$(board_page 20:OPEN:Ready:2026-09-29T20:00:00Z)' ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 4 "$STATUS" "**取りこぼしは exit 4（MONITOR-BROKEN）。緑にしない**: $ERR"
+  assert_contains "$ERR" "MONITOR-BROKEN" "壊れたと言う"
+  assert_contains "$ERR" "手元 2 件 / total_count 53 件" "**両方の数字を出す（#757）**"
+  assert_contains "$ERR" "赤を見落としている可能性" "**何を信じてはいけないかを言う**"
+}
+test_case "monitor: total_count より少ない check-runs → exit 4（#1093 の 30/53 の形）" t_mon_short_page_is_broken
+
+# **`--paginate` を実際に付けているか**を、呼び出しログで固定する。
+# **付いていないと 30 件で切れる**（#1093 で必須 5 件が丸ごと消えた）。
+t_mon_uses_paginate() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr list --repo "*) echo '[{"number":14,"headRefOid":"sha14","isDraft":false}]' ;;
+    "api repos/"*"/commits/sha14/check-runs --paginate")
+      echo '$(cr_page 1 check:success)' ;;
+    "api graphql"*) echo '$(board_page 20:OPEN:Ready:2026-09-29T20:00:00Z)' ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 0 "$STATUS" "exit status: $ERR"
+  assert_contains "$LOG" "check-runs	--paginate" "**--paginate を付けて呼ぶ（#1093）**"
+}
+test_case "monitor: check-runs は --paginate を付けて呼ぶ (#1093)" t_mon_uses_paginate
+
+# **`--paginate` は複数ページを 1 個の JSON に畳まない**（#1093 の実測）。
+# **ページごとに 1 個のドキュメントが並ぶので、束ねてから畳まないと同名が 2 件に数えられる。**
+# ここでは **`check` が 2 ページに分かれ、片方が failure** の形にする——
+# **束ねずにページごとに畳むと、2 ページ目の success だけを見て緑になる。**
+t_mon_folds_across_pages() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr list --repo "*) echo '[{"number":15,"headRefOid":"sha15","isDraft":false}]' ;;
+    "api repos/"*"/commits/sha15/check-runs --paginate")
+      echo '$(cr_page 2 check:failure)'
+      echo '$(cr_page 2 check:success)' ;;
+    "api graphql"*) echo '$(board_page 20:OPEN:Ready:2026-09-29T20:00:00Z)' ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 3 "$STATUS" "**ページを跨いだ failure を見落とさない**: $ERR"
+  assert_contains "$ERR" "赤 PR #15" "赤として挙げる"
+  assert_contains "$ERR" "赤 1 件" "**2 ページを 1 件に畳む（2 件と数えない）**"
+}
+test_case "monitor: --paginate の複数ドキュメントを束ねてから畳む (#1093)" t_mon_folds_across_pages
+
+# **同名の畳み方が `merge-when-green.sh` と揃っているか**（#1110 の要件 2 / #1128）。
+# **古い failure → 新しい success** は **failure を採る**。
+# **これはゲートと同じ目である**（ゲートが止める PR を monitor が緑と見たら、PO には
+# 「詰まっていない」ように見える）。
+t_mon_collapses_worst() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr list --repo "*) echo '[{"number":16,"headRefOid":"sha16","isDraft":false}]' ;;
+    "api repos/"*"/commits/sha16/check-runs --paginate")
+      echo '{"total_count":2,"check_runs":[
+        {"name":"pr-closes","conclusion":"success","started_at":"2026-09-29T03:08:15Z"},
+        {"name":"pr-closes","conclusion":"failure","started_at":"2026-09-29T02:47:20Z"}]}' ;;
+    "api graphql"*) echo '$(board_page 20:OPEN:Ready:2026-09-29T20:00:00Z)' ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 3 "$STATUS" "**同名は最も悪いものを採る（merge-when-green.sh と同じ目）**: $ERR"
+  assert_contains "$ERR" "赤 1 件" "**新しい success で塗り替えない（#1128）**"
+}
+test_case "monitor: 同名の check-run は最も悪いものを採る (merge-when-green と同じ。#1128)" t_mon_collapses_worst
+
+# **`skipped` を赤にも緑にも数えない**（#1069 の一覧を複製しないため）。**別の列で出す。**
+# **【#1150 のレビュー N2】畳み込みの「鍵」が `.name` であることを固定する。**
+#
+# **レビュアーの実測**: **`group_by(.name)` を消しても 0 件落ちた。**
+# **原因は fixture**——**「同名の重複」と「別名だが同じ conclusion」が同時に在る形が無く、
+# `group_by(.conclusion)` に変えても同じ答えになっていた。**
+# **これは M3（`started_at` を投影から落としていた）とまったく同じ型の見落としである。**
+#
+# **この fixture は 2 つの鍵を分ける**（実測。`jq` に直接当てて確かめた）:
+#   ```
+#   check    failure  01:00      group_by(.name)       → fail 1 / pass 2  （検査 3 件）
+#   check    success  02:00      group_by(.conclusion) → fail 1 / pass 1  （検査 2 件）
+#   audit    success  01:00
+#   gitleaks success  01:00
+#   ```
+# **`check` の重複が畳まれ、`audit` と `gitleaks` は別々に残る**のが正しい。
+# **conclusion で畳むと `audit` と `gitleaks` が 1 つになって消える。**
+# **だから「畳んだ後の件数」を逐語で固定する**——**赤の数だけでは両者が同じになる。**
+t_mon_collapse_key_is_the_name() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr list --repo "*" --state open"*) echo '[{"number":18,"headRefOid":"sha18","isDraft":false}]' ;;
+    "api repos/"*"/commits/sha18/check-runs --paginate")
+      echo '{"total_count":4,"check_runs":[
+        {"name":"check","conclusion":"failure","started_at":"2026-09-29T01:00:00Z"},
+        {"name":"check","conclusion":"success","started_at":"2026-09-29T02:00:00Z"},
+        {"name":"audit","conclusion":"success","started_at":"2026-09-29T01:00:00Z"},
+        {"name":"gitleaks","conclusion":"success","started_at":"2026-09-29T01:00:00Z"}]}' ;;
+    "api graphql"*) echo '$(board_page 20:OPEN:Ready:2026-09-29T20:00:00Z)' ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 3 "$STATUS" "赤が在れば exit 3: $ERR"
+  # **`check` の 2 件が 1 件に畳まれ、悪いほう（failure）が採られる**
+  assert_contains "$ERR" "赤 1 件" "**同名を畳んで赤 1 件（2 件と数えない）**"
+  # **`audit` と `gitleaks` は別名なので畳まれない**——**conclusion で畳むと 1 件になって消える。**
+  # **緑の件数は出力に出ないので、実行中と skipped が 0 であることと合わせて
+  # 「検査 4/4 件」で母数を固定する**（取りこぼしの検算が効いていることも兼ねる）。
+  # **これが鍵を固定する断定である**: `check` の重複が畳まれて 3 件（check/audit/gitleaks）。
+  # **conclusion で畳むと 2 件になる**（audit と gitleaks が 1 つに潰れる）。
+  assert_contains "$ERR" "別名 3 件に畳みました" "**鍵は .name（conclusion で畳むと 2 件になる）**"
+  assert_contains "$ERR" "検査 4/4 件" "**畳む前の母数は 4 件**"
+  assert_contains "$ERR" "実行中 0 件" "実行中は 0"
+  assert_contains "$ERR" "skipped 0 件" "skipped は 0"
+}
+test_case "monitor: 畳み込みの鍵は .name（conclusion で畳むと別名が消える。#1150 レビュー N2)" t_mon_collapse_key_is_the_name
+
+t_mon_skipped_is_its_own_column() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr list --repo "*) echo '[{"number":17,"headRefOid":"sha17","isDraft":false}]' ;;
+    "api repos/"*"/commits/sha17/check-runs --paginate")
+      echo '$(cr_page 3 check:failure issue-secrets:skipped audit:success)' ;;
+    "api graphql"*) echo '$(board_page 20:OPEN:Ready:2026-09-29T20:00:00Z)' ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 3 "$STATUS" "exit status: $ERR"
+  assert_contains "$ERR" "赤 1 件" "**skipped を赤に数えない**"
+  assert_contains "$ERR" "skipped 1 件" "**skipped を別の列で出す（緑にも数えない）**"
+}
+test_case "monitor: skipped は赤にも緑にも数えず別の列で出す (#1069 の一覧を複製しない)" t_mon_skipped_is_its_own_column
+
+t_mon_pr_list_fails() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr list --repo "*) echo "boom" >&2; exit 1 ;;
+    "api graphql"*) echo '$(board_page 20:OPEN:Ready:2026-09-29T20:00:00Z)' ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 4 "$STATUS" "**PR を 1 本も見られなかったら exit 4。緑にしない**: $ERR"
+  assert_contains "$ERR" "MONITOR-BROKEN" "壊れたと言う"
+  assert_contains "$ERR" "開いている PR の一覧が取れませんでした" "何が取れなかったかを言う"
+  assert_not_contains "$ERR" "赤 0 本" "**「赤 0 本」と言ってはいけない（数えていない）**"
+}
+test_case "monitor: PR の一覧が取れない → exit 4（「赤 0 本」と言わない。#757）" t_mon_pr_list_fails
+
+# ---- 2. ボードの節 ----------------------------------------------------------------------------
+
+# **90 分（既定）を超えて動いていない In Progress を挙げる。**
+t_mon_stale_inprogress() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    # 節 1（開いている PR の赤）は空にする
+    "pr list --repo "*" --state open"*) echo '[]' ;;
+    # #31 は 2 時間前、#32 は 5 分前。**どちらも対応する PR は同じだけ静か**にしておく
+    "pr list --repo "*"--search 31 in:head"*) echo '$(pr_search 91:fix/31-a:2026-09-29T18:00:00Z)' ;;
+    "pr list --repo "*"--search 32 in:head"*) echo '$(pr_search 92:fix/32-b:2026-09-29T19:55:00Z)' ;;
+    "api graphql"*) echo '$(board_page 31:OPEN:"In Progress":2026-09-29T18:00:00Z 32:OPEN:"In Progress":2026-09-29T19:55:00Z)' ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  # 2026-09-29T20:00:00Z
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 3 "$STATUS" "判定不能が在れば exit 3: $ERR"
+  # **「停滞」と断定しない。「判定不能」と出す**（#1150 のレビュー【重】。ListAgents を呼べない）
+  assert_contains "$ERR" "判定不能 #31" "**2 時間静かなものを挙げる**"
+  assert_not_contains "$ERR" "#32" "**5 分前に動いたものは挙げない（誤報しない）**"
+  assert_contains "$ERR" "In Progress 2 件（**判定不能 1 件**" "**母数と内訳を出す**"
+  assert_contains "$ERR" "120 分静かです" "**何分静かかを出す**"
+  assert_contains "$ERR" "区別できません" "**断定しないことを見出しに出す（注記に逃がさない）**"
+  assert_not_contains "$ERR" "停滞 #31" "**「停滞」と断定しない**"
+}
+test_case "monitor: Issue も PR も静かなものは「判定不能」として挙げる（断定しない。#1150 レビュー）" t_mon_stale_inprogress
+
+t_mon_threshold_is_configurable() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr list --repo "*" --state open"*) echo '[]' ;;
+    "pr list --repo "*"--search 33 in:head"*) echo '$(pr_search 93:fix/33-c:2026-09-29T19:30:00Z)' ;;
+    "api graphql"*) echo '$(board_page 33:OPEN:"In Progress":2026-09-29T19:30:00Z)' ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  # 30 分前。既定 90 分では鳴らない
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 0 "$STATUS" "30 分では既定の 90 分に届かない: $ERR"
+  assert_not_contains "$ERR" "#33" "既定では鳴らない"
+  # 20 分に下げると鳴る（**閾値が実際に効いていることを固定する**）
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 STALE_MINUTES=20 run_script "$h" scrum-monitor.sh
+  assert_eq 3 "$STATUS" "**閾値を下げれば同じ入力で鳴る**: $ERR"
+  assert_contains "$ERR" "判定不能 #33" "閾値が効いている"
+  assert_contains "$ERR" "閾値 20 分" "**使った閾値を出力に書く**"
+}
+test_case "monitor: STALE_MINUTES が実際に効く（同じ入力で答えが変わる）" t_mon_threshold_is_configurable
+
+# **【#1150 の 2 人目のレビュー 軽微】境界値を fixture に置く。**
+#
+# **`-ge` → `-gt` と「未来時刻を 0 に丸める」の削除が、どちらも緑だった**
+# ——**閾値とちょうど等しい値と、未来の時刻が fixture に 1 つも無かったから。**
+# **`started_at` / `group_by` の鍵と同じ、fixture の薄さである。**
+#
+# **閾値は「$STALE_MINUTES 分以上」の意味である**（`-ge`）。
+# **ちょうど 90 分は鳴る**——**`-gt` にすると鳴らなくなる。**
+t_mon_threshold_is_inclusive() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr list --repo "*" --state open"*) echo '[]' ;;
+    # **ちょうど 90 分前**（MONITOR_NOW=1790712000 = 2026-09-29T20:00:00Z の 90 分前）
+    "pr list --repo "*"--search 301 in:head"*) echo '$(pr_search 391:fix/301-a:2026-09-29T18:30:00Z)' ;;
+    # **89 分前**（1 分だけ内側。こちらは鳴らない）
+    "pr list --repo "*"--search 302 in:head"*) echo '$(pr_search 392:fix/302-b:2026-09-29T18:31:00Z)' ;;
+    "api graphql"*) echo '$(board_page 301:OPEN:"In Progress":2026-09-29T18:30:00Z 302:OPEN:"In Progress":2026-09-29T18:31:00Z)' ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 3 "$STATUS" "**ちょうど閾値は鳴る（-ge。-gt にすると鳴らない）**: $ERR"
+  assert_contains "$ERR" "判定不能 #301" "**ちょうど 90 分は「以上」に含む**"
+  assert_not_contains "$ERR" "#302" "**89 分は含まない（1 分の差で分かれる）**"
+  assert_contains "$ERR" "90 分静かです" "**境界の値をそのまま出す**"
+}
+test_case "monitor: 閾値はちょうどの値を含む（-ge。#1150 2 人目 軽微）" t_mon_threshold_is_inclusive
+
+# **未来の時刻を 0 に丸める**（`worktree-audit.sh` と同じ扱い）。
+# **丸めを消すと `-1440 分静かです` のような負の表示が出る。**
+# **印が付く側は変わらない**（負の age は閾値未満なので鳴らない）ので、**変わるのは表示だけ**
+# ——**だから「負の数を出さない」ことを逐語で固定するしかない。**
+t_mon_future_timestamp_is_clamped() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr list --repo "*" --state open"*) echo '[]' ;;
+    # **PR の updatedAt が 1 日先**（時計のずれで実際に起こりうる）。
+    # **Issue より PR が新しい**ので「動いている」の行に入り、そこで age が表示される
+    # ——**丸めを消すと、その行に負の分数が出る。**
+    "pr list --repo "*"--search 303 in:head"*) echo '$(pr_search 393:fix/303-c:2026-09-30T20:00:00Z)' ;;
+    "api graphql"*) echo '$(board_page 303:OPEN:"In Progress":2026-09-29T08:00:00Z)' ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 0 "$STATUS" "**未来の時刻は鳴らさない**: $ERR"
+  # **負の分数を出力に出さない**（丸めを消すと `-1440` が出る）
+  assert_not_contains "$ERR" "-1440 分前" "**負の分数を出さない（未来時刻を 0 に丸める）**"
+  assert_contains "$ERR" "0 分前に動いています" "**未来は 0 分前として出す**"
+  assert_not_contains "$ERR" "判定不能 #303" "未来の時刻で鳴らさない"
+}
+test_case "monitor: 未来の時刻は 0 に丸める（負の分数を出さない。#1150 2 人目 軽微）" t_mon_future_timestamp_is_clamped
+
+t_mon_ignores_other_statuses() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr list --repo "*) echo '[]' ;;
+    # Backlog / In Review / Done / CLOSED はどれも「止まった作業」ではない
+    "api graphql"*) echo '$(board_page 41:OPEN:Backlog:2026-01-01T00:00:00Z 42:OPEN:"In Review":2026-01-01T00:00:00Z 43:OPEN:Done:2026-01-01T00:00:00Z 44:CLOSED:"In Progress":2026-01-01T00:00:00Z)' ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 0 "$STATUS" "**In Progress 以外は鳴らさない**: $ERR"
+  assert_contains "$ERR" "項目 4 件を見ました" "**母数は 4 件（見たことは出す）**"
+  assert_contains "$ERR" "In Progress 0 件" "**In Progress は 0 件**"
+}
+test_case "monitor: Backlog / In Review / Done / CLOSED は停滞に数えない" t_mon_ignores_other_statuses
+
+t_mon_board_empty_is_broken() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr list --repo "*) echo '[]' ;;
+    "api graphql"*) echo '{"data":{"node":{"items":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[]}}}}' ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 4 "$STATUS" "**ボードが 0 件なら「空」と言い切らず壊れたと言う（#757）**: $ERR"
+  assert_contains "$ERR" "ボードが空なのか読めていないのか区別できません" "区別できないと言う"
+}
+test_case "monitor: ボードの項目が 0 件 → exit 4（空と読めないを区別しない。#757）" t_mon_board_empty_is_broken
+
+t_mon_board_bad_timestamp() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr list --repo "*" --state open"*) echo '[]' ;;
+    "pr list --repo "*"--search 51 in:head"*) echo '[]' ;;
+    "api graphql"*) echo '{"data":{"node":{"items":{"totalCount":1,"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[
+      {"content":{"number":51,"state":"OPEN","updatedAt":null},"fieldValueByName":{"name":"In Progress"}}]}}}}' ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 4 "$STATUS" "**時刻が読めないものは鳴らさず、測れなかったと言う**: $ERR"
+  assert_contains "$ERR" "更新時刻が取れていません" "何が取れなかったかを言う"
+  assert_contains "$ERR" "判定不能 0 件は下限です" "**0 件が下限であることを言う（#757）**"
+  # **これが tab の畳み込みを固定する断定である**（**実測でここに落ちた**）。
+  # **`read` は tab を IFS の空白として扱い、連続した tab を 1 個に畳む**:
+  #   printf 'a\t\tb\n' | while IFS=$'\t' read -r x y z  →  **[a][b][]**
+  # **`updatedAt` が null だと Status が 1 つ前にずれて読まれ、この項目は
+  # `In Progress` の照合に落ちて黙って消える**——**`In Progress 0 件` になる。**
+  # **「測っていないのに 0 件」**はこの道具が存在する理由そのものの形なので、
+  # **本数を逐語で固定する。**
+  assert_contains "$ERR" "In Progress 1 件" "**時刻が無くても In Progress として数える（tab の畳み込みでずれない）**"
+  assert_contains "$ERR" "時刻が取れなかったもの 1 件" "**取れなかった件数を出す**"
+  assert_not_contains "$ERR" "In Progress 0 件" "**黙って消えてはいけない**"
+}
+test_case "monitor: In Progress の更新時刻が取れない → 鳴らさず exit 4（0 件は下限と言う）" t_mon_board_bad_timestamp
+
+# **【#1150 のレビュー【重】】Issue が静かでも PR が動いていれば鳴らさない。**
+# **レビュアーの実測では誤報率 83%（6 件中 5 件）だった**——
+# **#1110/#1123/#1125/#1129/#1137 は Issue が 676〜2,307 分静かだが、
+# 対応する PR は 0〜10 分前に触られていた。** **真の停滞は #867 の 1 件だけ。**
+# **これは閾値の問題ではない**（閾値を 10 倍にしても 4 件は依然鳴る）。
+t_mon_pr_activity_silences_quiet_issue() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr list --repo "*" --state open"*) echo '[]' ;;
+    # **#1137 の実物の形**: Issue は 720 分静か、PR #1142 は 54 分前
+    "pr list --repo "*"--search 1137 in:head"*) echo '$(pr_search 1142:ci/1137-split-build-deploy:2026-09-29T19:06:00Z)' ;;
+    "api graphql"*) echo '$(board_page 1137:OPEN:"In Progress":2026-09-29T08:00:00Z)' ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 0 "$STATUS" "**PR が動いていれば鳴らさない（誤報 83% の直し）**: $ERR"
+  assert_not_contains "$ERR" "判定不能 #1137" "**Issue が 720 分静かでも鳴らさない**"
+  assert_contains "$ERR" "動いている #1137" "**なぜ鳴らさなかったかを出す（黙って救わない）**"
+  assert_contains "$ERR" "PR #1142 が 54 分前" "**どの PR がいつ動いたかを出す**"
+  assert_contains "$ERR" "鳴らさなかったもの 1 件" "**救った件数を母数に出す**"
+}
+test_case "monitor: Issue が静かでも PR が動いていれば鳴らさない (#1150 レビュー【重】誤報 83%)" t_mon_pr_activity_silences_quiet_issue
+
+# **検索は部分一致なので、返ってきたものを自分で照合し直す**（実測:
+# `1137 in:head` が `feat/1110-scrum-monitor` と `fix/693-pdf-table-ctm` も返した）。
+# **照合しないと、無関係な PR の新しい時刻で「動いている」ことになって黙る。**
+t_mon_reverifies_search_results() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr list --repo "*" --state open"*) echo '[]' ;;
+    # **外れだけを返す**（どれも 61 の枝ではない）。**新しい時刻を持たせて罠にする**
+    "pr list --repo "*"--search 61 in:head"*) echo '$(pr_search 99:feat/1110-scrum-monitor:2026-09-29T19:59:00Z 98:fix/693-pdf-table-ctm:2026-09-29T19:59:00Z)' ;;
+    "api graphql"*) echo '$(board_page 61:OPEN:"In Progress":2026-09-29T08:00:00Z)' ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 3 "$STATUS" "**枝名が一致しない PR で黙ってはいけない**: $ERR"
+  assert_contains "$ERR" "判定不能 #61" "**外れを採らないので、静かなままと判定する**"
+  assert_contains "$ERR" "対応する PR が 1 本もありません" "**照合の結果「無い」と言う**"
+  assert_contains "$ERR" "対応する PR が無いもの 1 件" "**母数に出す**"
+}
+test_case "monitor: PR 検索は部分一致なので枝名で照合し直す（外れを採らない）" t_mon_reverifies_search_results
+
+# **【#1150 の 2 人目のレビュー 要修正 1】ボードのページングを打ち切ると盲目になる。**
+#
+# **レビュアーの実測**: **`break` で打ち切ると、実データで 459 件 → 100 件、
+# 停滞 2 件 → 0 件になり、しかも `MONITOR-BROKEN` が出ず「節 2/2 を測れました」と言った。**
+# **設計（「黙って 0 を出さない」）に直接反している。**
+#
+# **原因は fixture の薄さ**（**`max_by(severity)` の `started_at` / `group_by` の鍵と同型**）:
+# **`board_page()` が全 fixture で `"hasNextPage":false` を固定していた**ので、
+# **2 ページ目が存在せず、打ち切りを測れなかった。**
+# **実測で In Progress の 2 件はどちらも 1 ページ目に載っていない。**
+#
+# **ここでは 2 ページに分け、In Progress を 2 ページ目にだけ置く。**
+# **打ち切ると In Progress が 0 件になり、かつ totalCount の検算が落ちる**
+# ——**「0 件」ではなく「測れなかった」と言うことを固定する。**
+t_mon_board_follows_pagination() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr list --repo "*" --state open"*) echo '[]' ;;
+    "pr list --repo "*"--search 202 in:head"*) echo '[]' ;;
+    # **1 ページ目**: In Progress は 1 件も載っていない（hasNextPage=true）
+    "api graphql"*"cursor=CUR2"*) echo '{"data":{"node":{"items":{"totalCount":2,"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[
+      {"content":{"number":202,"state":"OPEN","updatedAt":"2026-09-29T08:00:00Z"},"fieldValueByName":{"name":"In Progress"}}]}}}}' ;;
+    "api graphql"*) echo '{"data":{"node":{"items":{"totalCount":2,"pageInfo":{"hasNextPage":true,"endCursor":"CUR2"},"nodes":[
+      {"content":{"number":201,"state":"OPEN","updatedAt":"2026-09-29T19:59:00Z"},"fieldValueByName":{"name":"Backlog"}}]}}}}' ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  # **2 ページ目まで追えば In Progress が 1 件見つかり、静かなので判定不能になる**
+  assert_eq 3 "$STATUS" "**2 ページ目を追えば In Progress が見つかる**: $ERR"
+  assert_contains "$ERR" "判定不能 #202" "**2 ページ目の In Progress を拾う（打ち切ると消える）**"
+  assert_contains "$ERR" "項目 2 件を見ました" "**2 ページ合わせて 2 件（1 件ではない）**"
+  assert_contains "$ERR" "totalCount 2" "母数を出す"
+  assert_not_contains "$ERR" "MONITOR-BROKEN" "**全部追えていれば壊れたと言わない**"
+  # **2 ページ目を実際に取りに行ったことを、呼び出しログで固定する**
+  assert_contains "$LOG" "CUR2" "**endCursor を渡して 2 ページ目を引いている**"
+}
+test_case "monitor: ボードの 2 ページ目まで追う（打ち切ると In Progress が消える。#1150 2 人目 要修正 1）" t_mon_board_follows_pagination
+
+# **【#1150 のレビュー N8】ボードのページングで黙って盲目にならない。**
+# **レビュアーの実測**: **打ち切ると 457 件中 357 件が消え「In Progress 0 件」で exit 0 になった。**
+# **PO も同じ形を踏んでいる**（`gh project item-list --limit 300` が 450 件のうち 300 件だけ返し、
+# 「Ready が 0 件」と誤判定した）。
+t_mon_board_short_page_is_broken() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr list --repo "*" --state open"*) echo '[]' ;;
+    # **totalCount 457 と言いながら 1 件しか返さず、hasNextPage も false**（打ち切られた形）
+    "api graphql"*) echo '{"data":{"node":{"items":{"totalCount":457,"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[
+      {"content":{"number":71,"state":"OPEN","updatedAt":"2026-09-29T19:59:00Z"},"fieldValueByName":{"name":"Backlog"}}]}}}}' ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 4 "$STATUS" "**取りこぼしは exit 4。「In Progress 0 件」で緑にしない**: $ERR"
+  assert_contains "$ERR" "MONITOR-BROKEN" "壊れたと言う"
+  assert_contains "$ERR" "手元 1 件 / totalCount 457 件" "**両方の数字を出す（#757）**"
+  assert_contains "$ERR" "停滞 0 件を「異常なし」と読まないでください" "**何を信じてはいけないかを言う**"
+}
+test_case "monitor: ボードの項目が totalCount より少ない → exit 4 (#1150 レビュー N8)" t_mon_board_short_page_is_broken
+
+# **`totalCount` と一致していれば、ページングは足りている**（上の検査が
+# 「常に MONITOR-BROKEN」になっていないことを固定する）。
+t_mon_board_full_page_is_measured() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr list --repo "*" --state open"*) echo '[]' ;;
+    "pr list --repo "*"--search "*) echo '[]' ;;
+    "api graphql"*) echo '{"data":{"node":{"items":{"totalCount":2,"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[
+      {"content":{"number":72,"state":"OPEN","updatedAt":"2026-09-29T19:59:00Z"},"fieldValueByName":{"name":"Backlog"}},
+      {"content":{"number":73,"state":"OPEN","updatedAt":"2026-09-29T19:59:00Z"},"fieldValueByName":{"name":"Ready"}}]}}}}' ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 0 "$STATUS" "**母数が合っていれば測れたと言う**: $ERR"
+  assert_contains "$ERR" "totalCount 2" "**母数を出力に書く**"
+  assert_not_contains "$ERR" "取りこぼしました" "合っているときに取りこぼしと言わない"
+}
+test_case "monitor: ボードの項目が totalCount と一致 → 測れたと言う（常に赤にしない）" t_mon_board_full_page_is_measured
+
+# **PR を 1 件も引けなければ「対応表が無い」ので、Issue の静けさだけで判断することになる。**
+# **それは誤報 83% の状態に戻ることなので、測れなかったと言う。**
+t_mon_pr_lookup_failure_is_broken() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr list --repo "*" --state open"*) echo '[]' ;;
+    "pr list --repo "*"--search "*) echo "boom" >&2; exit 1 ;;
+    "api graphql"*) echo '$(board_page 81:OPEN:"In Progress":2026-09-29T08:00:00Z)' ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 4 "$STATUS" "**対応表が作れなければ exit 4**: $ERR"
+  assert_contains "$ERR" "PR を引けませんでした" "何が引けなかったかを言う"
+  assert_contains "$ERR" "対応表が欠けています" "**対応表が欠けていると言う**"
+  assert_contains "$ERR" "引けなかったもの 1 件" "**件数を母数に出す**"
+}
+test_case "monitor: PR の対応表が作れない → exit 4（Issue の静けさだけで判断しない）" t_mon_pr_lookup_failure_is_broken
+
+t_mon_board_graphql_fails() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr list --repo "*) echo '[]' ;;
+    "api graphql"*) echo "boom" >&2; exit 1 ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 4 "$STATUS" "ボードが読めなければ exit 4: $ERR"
+  assert_contains "$ERR" "スクラムボードが読めませんでした" "何が読めなかったかを言う"
+  assert_contains "$ERR" "節 1/2 を測れました" "**測れた節の数を出す（1/2 と 2/2 が区別できる）**"
+}
+test_case "monitor: ボードの GraphQL が失敗 → exit 4、測れた節の数を出す" t_mon_board_graphql_fails
+
+# ---- 3. worktree の節 -------------------------------------------------------------------------
+#
+# **実在のディレクトリを使う**（`-d` と `stat` は fake `git` では偽装できない）。
+# **$TMP の下だけを使うので、実在の worktree は 1 本も触らない。**
+
+t_mon_stale_worktree() {
+  local live="$TMP/wt-live" stale="$TMP/wt-stale"
+  mkdir -p "$live/.git" "$stale/.git"
+  : > "$live/.git/index";  touch -d "@1790711700" "$live/.git/index"   # 5 分前
+  : > "$stale/.git/index"; touch -d "@1790704800" "$stale/.git/index"  # 120 分前
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr list --repo "*) echo '[]' ;;
+    "api graphql"*) echo '$(board_page 20:OPEN:Ready:2026-09-29T20:00:00Z)' ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+git_handle() {
+  case "\$*" in
+    "worktree list --porcelain") printf '%s\n' "worktree $live" "" "worktree $stale" "" ;;
+    "-C $live rev-parse --git-path index")  echo "$live/.git/index" ;;
+    "-C $stale rev-parse --git-path index") echo "$stale/.git/index" ;;
+    *"log -1 --format=%ct") echo 1 ;;
+    "-C "*" status --porcelain") ;;
+    "-C "*" diff --cached --name-status") ;;
+    *) ;;
+  esac
+}
+EOF
+)
+  MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 3 "$STATUS" "停滞 worktree が在れば exit 3: $ERR"
+  assert_contains "$ERR" "停滞 worktree: 120 分" "**120 分止まっているものを挙げる**"
+  assert_contains "$ERR" "worktree 2 本を見ました: 停滞 1 本" "**母数と内訳（5 分前のものは挙げない）**"
+  # **OSS なのでパスを出さない**（#1110 の作法）
+  assert_not_contains "$ERR" "$live" "**worktree のパスを出力に書かない（OSS）**"
+  assert_not_contains "$ERR" "$stale" "**停滞しているツリーのパスも書かない（OSS）**"
+}
+test_case "monitor: 停滞 worktree を挙げ、パスは出力に書かない（OSS）" t_mon_stale_worktree
+
+t_mon_ghost_worktree() {
+  local live="$TMP/wt-g-live" ghost="$TMP/wt-g-ghost"
+  mkdir -p "$live/.git"; : > "$live/.git/index"; touch -d "@1790711700" "$live/.git/index"
+  rm -rf "$ghost"
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr list --repo "*) echo '[]' ;;
+    "api graphql"*) echo '$(board_page 20:OPEN:Ready:2026-09-29T20:00:00Z)' ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+git_handle() {
+  case "\$*" in
+    "worktree list --porcelain") printf '%s\n' "worktree $live" "" "worktree $ghost" "" ;;
+    "-C $live rev-parse --git-path index") echo "$live/.git/index" ;;
+    *"log -1 --format=%ct") echo 1 ;;
+    "-C "*" status --porcelain") ;;
+    "-C "*" diff --cached --name-status") ;;
+    *) ;;
+  esac
+}
+EOF
+)
+  MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 3 "$STATUS" "幽霊が在れば exit 3: $ERR"
+  assert_contains "$ERR" "幽霊 1 本" "**幽霊を数える（#1099 の変異 2）**"
+  assert_contains "$ERR" "未 push の成果物が在りうる" "**消す前に人が見るべきだと言う（#1087）**"
+  assert_not_contains "$ERR" "$ghost" "**幽霊のパスも出力に書かない（OSS）**"
+}
+test_case "monitor: 幽霊 worktree（登録は在るがディレクトリが無い）を数える" t_mon_ghost_worktree
+
+# **worktree-audit.sh の判定をここに書き直さない**（#1110）。**呼んで、終了コードを伝える。**
+t_mon_delegates_to_worktree_audit() {
+  local live="$TMP/wt-d-live"
+  mkdir -p "$live/.git"; : > "$live/.git/index"; touch -d "@1790711700" "$live/.git/index"
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr list --repo "*) echo '[]' ;;
+    "api graphql"*) echo '$(board_page 20:OPEN:Ready:2026-09-29T20:00:00Z)' ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+git_handle() {
+  case "\$*" in
+    "worktree list --porcelain") printf '%s\n' "worktree $live" "branch refs/heads/x" "" ;;
+    "-C $live rev-parse --git-path index") echo "$live/.git/index" ;;
+    # **worktree-audit.sh が見る形**: staged に削除が在る → あちらが exit 3 を返す
+    "-C $live status --porcelain") printf '%s\n' "D  src/a.ts" ;;
+    "-C $live diff --cached --name-status") printf '%s\n' "D	src/a.ts" ;;
+    *"log -1 --format=%ct") echo 1790711700 ;;
+    *) ;;
+  esac
+}
+EOF
+)
+  MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 3 "$STATUS" "**worktree-audit.sh の exit 3 を伝える**: $ERR"
+  assert_contains "$ERR" "worktree-audit.sh が exit 3 を返しました" "**判定を委ねたことを言う**"
+  assert_contains "$ERR" "commit すると他人の成果物が消えます" "**何が危ないかを言う（#1033 / #1057）**"
+  assert_contains "$LOG" "git	worktree	list	--porcelain" "worktree-audit.sh が実際に走った"
+}
+test_case "monitor: 残留の分類は worktree-audit.sh に委ね、その exit 3 を伝える (#1110)" t_mon_delegates_to_worktree_audit
+
+t_mon_skip_local_is_announced() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr list --repo "*) echo '[]' ;;
+    "api graphql"*) echo '$(board_page 20:OPEN:Ready:2026-09-29T20:00:00Z)' ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 0 "$STATUS" "exit status: $ERR"
+  assert_contains "$ERR" "MONITOR_SKIP_LOCAL=1 のため飛ばしました" "**飛ばしたことを黙らない（#1094）**"
+  assert_contains "$ERR" "節 2/2 を測れました" "**飛ばした節は母数から外す（3/3 と 2/2 が区別できる）**"
+  assert_not_contains "$LOG" "git	worktree	list" "**飛ばしたら git を呼ばない**"
+}
+test_case "monitor: MONITOR_SKIP_LOCAL=1 は飛ばしたことを言い、母数から外す (#1094)" t_mon_skip_local_is_announced
+
+# ---- 4. 道具自身が壊れたこと（#1110 の要件 5 / #1094）-----------------------------------------
+
+# **「測れなかった」と「行動が要る」が重なったら 4 を返す**（**測れなかったほうが重い**）。
+t_mon_broken_beats_findings() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    # 赤（行動が要る）と、ボードが読めない（測れなかった）を同時に起こす
+    "pr list --repo "*) echo '[{"number":61,"headRefOid":"sha61","isDraft":false}]' ;;
+    "api repos/"*"/commits/sha61/check-runs --paginate")
+      echo '$(cr_page 1 check:failure)' ;;
+    "api graphql"*) echo "boom" >&2; exit 1 ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 4 "$STATUS" "**測れなかったほうが重い（3 ではなく 4）**: $ERR"
+  assert_contains "$ERR" "赤 PR #61" "測れた側の事実はちゃんと出す"
+  assert_contains "$ERR" "行動が要る事実 1 件" "**件数も出す**"
+  assert_contains "$ERR" "この出力を『異常なし』として読まないでください" "**信じてはいけないと言う**"
+}
+test_case "monitor: 測れなかった節と赤が同時に在れば exit 4（測れなかったほうが重い）" t_mon_broken_beats_findings
+
+# **締めの 1 行は必ず出る**——**入口がこの行の有無で「監視自身の死」を検出する**（#547 / #1110）。
+t_mon_always_prints_closing_line() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr list --repo "*) echo "boom" >&2; exit 1 ;;
+    "api graphql"*) echo "boom" >&2; exit 1 ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 4 "$STATUS" "全部測れなくても exit 4（0 ではない）: $ERR"
+  assert_contains "$ERR" "scrum-monitor: 終了（節 0/2 を測れました" "**1 つも測れなくても締めの行は出る**"
+  assert_contains "$ERR" "測れなかった節が 2 件" "**測れなかった節の数を出す**"
+}
+test_case "monitor: 全部測れなくても締めの行を出す（入口がこれで死を検出する。#547）" t_mon_always_prints_closing_line
+
+t_mon_rejects_args() {
+  local h; h=$(handler <<'EOF'
+handle() { echo '[]'; }
+git_handle() { :; }
+EOF
+)
+  run_script "$h" scrum-monitor.sh --wat
+  assert_eq 2 "$STATUS" "知らない引数は usage（exit 2）"
+  assert_contains "$ERR" "usage" "usage を出す"
+}
+test_case "monitor: 知らない引数は exit 2" t_mon_rejects_args
+
+t_mon_rejects_bad_threshold() {
+  local h; h=$(handler <<'EOF'
+handle() { echo '[]'; }
+git_handle() { :; }
+EOF
+)
+  STALE_MINUTES=abc run_script "$h" scrum-monitor.sh
+  assert_eq 1 "$STATUS" "**閾値が数でなければ落ちる（0 分として扱って全件鳴らさない）**"
+  assert_contains "$ERR" "STALE_MINUTES" "何が悪いかを言う"
+}
+test_case "monitor: STALE_MINUTES が数でなければ落ちる（全件鳴らさない）" t_mon_rejects_bad_threshold
