@@ -175,14 +175,43 @@ export function matchCabinetPosts(
     }
   }
 
-  // **母数の検算**（#757）。合わないまま返すと、取り落としが「0 件」に化ける。
-  const sum = tally.byName + tally.byKana + tally.unresolved;
-  if (sum !== tally.total) throw new Error(`cabinet tally mismatch: ${sum} !== ${tally.total} (byName=${tally.byName} byKana=${tally.byKana} unresolved=${tally.unresolved})`);
+  assertTallyConsistent(tally, entries, unresolved, posts.length);
 
   // 並びは memberId → 区分 → 役職名（取得順に依存させない）。`localeCompare` は使わない
   // （実行環境のロケールで日本語の並びが変わる。`match-committee.ts` と同じ理由）。
   entries.sort((a, b) => cmp(a.memberId, b.memberId) || cmp(a.kind, b.kind) || cmp(a.role, b.role));
   return { entries, unresolved, tally };
+}
+
+/**
+ * **母数の検算**（#757）。合わないまま返すと、取り落としが「0 件」に化ける。
+ *
+ * **足し算だけでは足りない。** `total` を 1 行ごとに増やし、分類も 1 行ごとに増やす作りだと、
+ * 「足すのを忘れた」以外の壊れ方（**行を読み飛ばす** / **同じ行を 2 回数える**）は
+ * 合計が合ったまますり抜ける。だから**出力そのもの**と突き合わせる:
+ *
+ * 1. `byName + byKana + unresolved === total`（分類が漏れていない）
+ * 2. `total === 入力の行数`（**読み飛ばした行が無い**）
+ * 3. `unresolved の行数 === tally.unresolved`（不明の数と不明の行が一致する）
+ * 4. `名寄せできた人数 === byName + byKana`（役職の行ではなく**人数**で数える）
+ *
+ * **4 が「別人の記録が出る」に直接効く**——同じ人に 2 回紐づけば人数が減って落ちる。
+ *
+ * 純粋関数にして export しているのは、**この検査自身を検査できるようにするため**
+ * （変異で `throw` を消したとき、外から呼ぶテストが無いと 1 件も落ちなかった）。
+ */
+export function assertTallyConsistent(
+  tally: CabinetMatchTally,
+  entries: readonly MatchedCabinetRole[],
+  unresolved: readonly UnresolvedCabinetPost[],
+  inputRows: number,
+): void {
+  const sum = tally.byName + tally.byKana + tally.unresolved;
+  if (sum !== tally.total) throw new Error(`cabinet tally mismatch: ${sum} !== total ${tally.total} (byName=${tally.byName} byKana=${tally.byKana} unresolved=${tally.unresolved})`);
+  if (tally.total !== inputRows) throw new Error(`cabinet tally mismatch: total ${tally.total} !== input rows ${inputRows}（行を読み飛ばしている）`);
+  if (unresolved.length !== tally.unresolved) throw new Error(`cabinet tally mismatch: unresolved rows ${unresolved.length} !== tally.unresolved ${tally.unresolved}`);
+  const people = new Set(entries.map((e) => e.memberId)).size;
+  if (people !== tally.byName + tally.byKana) throw new Error(`cabinet tally mismatch: resolved people ${people} !== byName+byKana ${tally.byName + tally.byKana}（同じ議員に 2 回紐づいた可能性）`);
 }
 
 type Resolution =

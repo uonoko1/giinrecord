@@ -6,7 +6,8 @@ import { mergeRosters } from "../src/aggregate.ts";
 import { parseMemberList } from "../src/sources/sangiin-members.ts";
 import { decodeRosterPage, memberListUrl, parseShugiinMemberList, ROSTER_PAGES } from "../src/sources/shugiin-members.ts";
 import { CABINET, MEIBO_PAGES, meiboPageUrl, parseMeiboPage, type CabinetPost } from "../src/sources/kantei-cabinet.ts";
-import { indexByKana, matchCabinetPosts } from "../src/match-cabinet.ts";
+import { assertTallyConsistent, indexByKana, matchCabinetPosts } from "../src/match-cabinet.ts";
+import { indexByName, resolveMember, tenureVerified } from "../src/match-votes.ts";
 
 /**
  * 首相官邸の閣僚等名簿を衆参の名簿に名寄せする（Issue #1140。調査は #1135）。
@@ -129,20 +130,69 @@ test("#1140 兼務・複数役職は 1 人の複数行になり、役職名は�
   );
 });
 
-test("#1140 同姓同名は所属院で割れる（中田 宏 / 白坂 亜紀 / 田中 昌史）", () => {
-  // **この 3 人は参院にも同じ氏名の行が在る**（#1135 の 7 組のうち 3 組）。
-  // 名簿を院で分けずに引くと 2 件になり、割れずに落ちる。
+/**
+ * **同姓同名 3 組が正しい側に付き、参院側の同名には 1 行も付かない**（#1135 の 7 組のうち 3 組）。
+ *
+ * ## 割っているのは所属院ではなく「在職の確認」だった（変異で分かった）
+ *
+ * **M3（`poolOf` から院の絞り込みを外し、名簿全体から引く）を当てても、このテストは落ちなかった。**
+ * 理由を測った（実測 2026-09-30、このフィクスチャの名簿）:
+ *
+ *     中田 宏    m_022001/sangiin  terms=[[216,216,"2025-07-28"]]  tenureVerified=false
+ *                h_cdaa8fb9e3/shugiin terms=[[221,null,null]]        tenureVerified=true
+ *     白坂 亜紀  m_023004/sangiin  同上 false ／ h_c81186438a/shugiin true
+ *     田中 昌史  m_023001/sangiin  同上 false ／ h_0c798613f6/shugiin true
+ *
+ * **3 組とも参院側の任期満了日が 2025-07-28 で、内閣の発足日 2026-09-18 より前である。**
+ * だから `resolveMember` の在職の確認（#230）で参院側が候補から落ち、**院で絞らなくても
+ * 衆院側 1 人に決まる。** **「院で割れている」と書くのは、この名簿では正確ではない。**
+ *
+ * **院の絞り込みは効いていないのではなく、別の場所で効いている**——**かなの索引**である
+ * （下の「院が違えば結びつかない」が M3 で落ちる。**M3 で落ちたテストはそれ 1 本だけだった**）。
+ *
+ * **将来 3 組の参院側が在職中に戻れば（再選など）、在職の確認では割れなくなり、
+ * そのときは院の絞り込みが唯一の決め手になる。** 両方を別々に検査しておく。
+ */
+test("#1140 同姓同名 3 組は衆院側に付き、参院側の同名には 1 行も付かない（割っているのは在職の確認）", () => {
+  const at = { session: LATEST_SESSION, date: "2026-09-18" };
   for (const [name, expected] of [["中田 宏", "h_cdaa8fb9e3"], ["白坂 亜紀", "h_c81186438a"], ["田中 昌史", "h_0c798613f6"]] as const) {
     const both = ROSTER.filter((m) => m.name.replace(/[\s　]/g, "") === name.replace(/\s/g, ""));
     assert.equal(both.length, 2, `${name} が名簿に 2 人いない（前提が崩れた）`);
     assert.deepEqual([...new Set(both.map((m) => m.house))].sort(), ["sangiin", "shugiin"]);
+    // **何が候補から落としているのかを名指しで固定する**（「割れている」で済ませない）。
+    const sangiinTwin = both.find((m) => m.house === "sangiin");
+    const shugiinTwin = both.find((m) => m.house === "shugiin");
+    assert.equal(tenureVerified(sangiinTwin!, at), false, `${name} の参院側が在職の確認を通っている（前提が変わった）`);
+    assert.equal(tenureVerified(shugiinTwin!, at), true);
     const rows = matched.entries.filter((e) => e.memberId === expected);
     assert.ok(rows.length > 0, `${name} が ${expected} に紐づいていない`);
     assert.equal(rows[0].resolvedBy, "name");
     // **参院側の同名には 1 行も付いていない**（別人の記録が出ていない）。
-    const sangiinTwin = both.find((m) => m.house === "sangiin");
     assert.equal(matched.entries.filter((e) => e.memberId === sangiinTwin?.id).length, 0, `${name} の参院側に記録が付いている`);
   }
+});
+
+test("#1140 両院に在職中の同姓同名は、院で絞らなければ割れない（絞りが唯一の決め手になる場合）", () => {
+  // **在職の確認では落ちない形**（両方その回次の名簿に載っている）を組んで、
+  // **院の絞り込みが無ければ不明になる**ことを示す。実在の名簿にこの形は今は無いが、
+  // 参院側が再選すれば起きる（上のテストの docblock）。
+  const t = (house: "shugiin" | "sangiin") => ({ house, group: "自由民主党・無所属の会", district: "東京", from: "", sessionFrom: LATEST_SESSION });
+  const pair: Member[] = [
+    { id: "m_sameS", name: "鬼木 誠", kana: "おにき まこと", house: "sangiin", terms: [t("sangiin")], sourceUrl: "x" },
+    { id: "h_sameH", name: "鬼木 誠", kana: "おにき まこと", house: "shugiin", terms: [t("shugiin")], sourceUrl: "x" },
+  ];
+  const post: CabinetPost = {
+    kind: "副大臣", roles: ["防衛副大臣"], name: "鬼木 誠", kana: "おにき まこと", house: "shugiin",
+    effectiveDate: "2026-09-18", effectiveDateText: "令和８年９月１８日", sourceUrl: meiboPageUrl(CABINET, "fukudaijin.html"),
+  };
+  // 院で絞る（実装の挙動）: 衆院側 1 人に決まる。
+  const r = matchCabinetPosts([post], pair, { session: LATEST_SESSION });
+  assert.deepEqual(r.tally, { total: 1, byName: 1, byKana: 0, unresolved: 0 });
+  assert.equal(r.entries[0].memberId, "h_sameH");
+  // **院で絞らなければ 2 人のまま**＝絞りを外せば決まらない（在職の確認では落ちない）。
+  assert.equal(tenureVerified(pair[0], { session: LATEST_SESSION, date: "2026-09-18" }), true);
+  assert.equal(tenureVerified(pair[1], { session: LATEST_SESSION, date: "2026-09-18" }), true);
+  assert.equal(resolveMember(indexByName(pair), "鬼木 誠", undefined, { session: LATEST_SESSION, date: "2026-09-18" }), undefined);
 });
 
 test("#1140 かな+院 が衝突したら「不明」になり、どちらの議員にも結びつかない（伊藤 孝江 / 伊藤 孝恵）", () => {
@@ -243,12 +293,32 @@ test("#1140 氏名が名簿に在るのに絞れなかった行は、かなに�
   assert.equal(gaiji.entries[0].memberId, "h_twinA");
 });
 
-test("#1140 母数が合わなければ例外にする（黙って足りない数を返さない）", () => {
-  // 検算そのものを確かめる。`total` は 1 行ごとに 1 増え、分類は必ずどれか 1 つに入る。
-  const r = matchCabinetPosts(POSTS, ROSTER, { session: LATEST_SESSION });
-  assert.equal(r.tally.total, 76);
-  assert.doesNotThrow(() => matchCabinetPosts([], ROSTER, { session: LATEST_SESSION }));
-  assert.deepEqual(matchCabinetPosts([], ROSTER, { session: LATEST_SESSION }).tally, { total: 0, byName: 0, byKana: 0, unresolved: 0 });
+/**
+ * **検算そのものを検査する**（#757）。
+ *
+ * **これが無いと検算は無検査だった**——**変異 M10（`throw` を `if (false)` で殺す）を当てても、
+ * 24 本のテストが 1 件も落ちなかった。** 正しい入力では検算は発火しないので、
+ * 「検算が在る」ことは「検算が効く」ことの証明にならない。**外から壊した値で呼ぶ。**
+ */
+test("#1140 母数が合わなければ例外にする（4 つの壊れ方を全部落とす）", () => {
+  const ok = matchCabinetPosts(POSTS, ROSTER, { session: LATEST_SESSION });
+  assert.equal(ok.tally.total, 76);
+  // 正しい組み合わせは通る。
+  assert.doesNotThrow(() => assertTallyConsistent(ok.tally, ok.entries, ok.unresolved, POSTS.length));
+
+  // (1) 分類の合計が母数に足りない（足すのを忘れた）。
+  assert.throws(() => assertTallyConsistent({ ...ok.tally, byKana: 4 }, ok.entries, ok.unresolved, POSTS.length), /!== total/);
+  // (2) **行を読み飛ばした**（母数そのものが入力より少ない）。合計は合っているのに間違っている形。
+  assert.throws(() => assertTallyConsistent({ total: 75, byName: 70, byKana: 5, unresolved: 0 }, ok.entries, ok.unresolved, POSTS.length), /読み飛ばしている/);
+  // (3) 不明の数と不明の行が食い違う（数だけ 0 にして行を捨てる形）。
+  assert.throws(() => assertTallyConsistent({ ...ok.tally, byName: 70, unresolved: 1 }, ok.entries, ok.unresolved, POSTS.length), /unresolved rows/);
+  // (4) **同じ議員に 2 回紐づいた**（人数が減る）。**「別人の記録が出る」に直接効く検査。**
+  const dup = ok.entries.map((e) => ({ ...e, memberId: ok.entries[0].memberId }));
+  assert.throws(() => assertTallyConsistent(ok.tally, dup, ok.unresolved, POSTS.length), /2 回紐づいた/);
+
+  // 0 件は 0 件として通る（「0 件」と「数えていない」を区別する）。
+  const empty = matchCabinetPosts([], ROSTER, { session: LATEST_SESSION });
+  assert.deepEqual(empty.tally, { total: 0, byName: 0, byKana: 0, unresolved: 0 });
 });
 
 test("#1140 並びは memberId → 区分 → 役職名（取得順に依存しない）", () => {
