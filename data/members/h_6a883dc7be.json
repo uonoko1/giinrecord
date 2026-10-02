@@ -271,6 +271,19 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105253X00220260602/0"
   },
   {
+   "committee": "法務委員会",
+   "date": "2026-05-29",
+   "estimated": false,
+   "firstDate": "2026-05-29",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-29",
+   "meetingId": "122105206X01520260529_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105206X01520260529/0"
+  },
+  {
    "committee": "決算行政監視委員会",
    "date": "2026-05-27",
    "estimated": false,
