@@ -181,8 +181,8 @@ const buildingFiles = [...new Set(jobs.filter((j) => buildsCode(j.body)).map((j)
 // ─────────────────────────────────────────────────────────────────────────────
 
 test("#1137 母数: 走査が空回りしていない（ファイル数 / job 数 / 各性質の件数）", () => {
-  assert.ok(workflowFiles().length >= 16, `ワークフローが ${workflowFiles().length} 本しか見えていない（実測 2026-09-30: 16 本）`);
-  assert.ok(jobs.length >= 26, `job が ${jobs.length} 件しか読めていない（実測 2026-09-30: 26 件）`);
+  assert.ok(workflowFiles().length >= 17, `ワークフローが ${workflowFiles().length} 本しか見えていない（実測 2026-10-04: 17 本）`);
+  assert.ok(jobs.length >= 27, `job が ${jobs.length} 件しか読めていない（実測 2026-10-04: 27 件。#1110 の scrum-monitor.yml を取り込んで 26 → 27）`);
 
   const builders = jobs.filter((j) => buildsCode(j.body)).map(id);
   const withSecrets = jobs.filter((j) => secretLines(j.body).length > 0).map(id);
@@ -190,7 +190,7 @@ test("#1137 母数: 走査が空回りしていない（ファイル数 / job �
 
   // どれかが 0 件なら、下の検査は全部空回りする。
   assert.ok(builders.length >= 3, `ビルドする job が ${builders.length} 件（実測 3 件: ${builders.join(", ")}）`);
-  assert.ok(withSecrets.length >= 5, `\`secrets\` を使う job が ${withSecrets.length} 件（実測 2026-09-30: 11 件）: ${withSecrets.join(", ")}`);
+  assert.ok(withSecrets.length >= 5, `\`secrets\` を使う job が ${withSecrets.length} 件（実測 2026-10-04: 17 件）: ${withSecrets.join(", ")}`);
   assert.deepEqual(senders, ["deploy-site.yml:deploy"], "rsync する job が実測（1 件）から変わった");
   // **ビルドを含むファイルは 2 つだけである。** `build-site.yml`（#1137 で切り出した先）と
   // `ci.yml`（VPS に触らない。`secrets` を 1 語も持たないことは下で別に固定する）。

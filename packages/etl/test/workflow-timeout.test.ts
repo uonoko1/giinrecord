@@ -292,6 +292,8 @@ test("#556 数え上げ: jobs: 直下の job を全部拾えている（拾え�
     "pr-body.yml:pr-closes",
     "release.yml:production",
     "release.yml:released-tag",
+    // #1110: スクラムの停滞監視の入口（`scripts/po/scrum-monitor.sh` を 10 分ごとに回す）。
+    "scrum-monitor.yml:monitor",
     "security-alerts.yml:guard",
     "security.yml:audit",
     "security.yml:forbidden-patterns",
@@ -513,6 +515,13 @@ test("#556 値が実測から外れていない（短すぎる = 偽陽性 / 長
     // 再試行の待ち 60 秒 + 落ちた 3 件）。最悪（83 × 30s タイムアウト × 2 ラウンド ≒ 83 分）は切りたいので 20 分。
     "link-check.yml:link-check": 20,
     "release.yml:released-tag": 10,
+    // #1110: 手元で本物の API に当てて実測（n=3、2026-09-30）: **wall 17 / 18 / 19s**
+    // （開いている PR 4 本・check-run 32 件・ボードの項目 454 件を読んだ実行）。
+    // **max の約 32 倍の 10 分**。**ボードの項目数に比例して伸びる**（いまは 454 件で 12s 弱）
+    // ので、項目が 10 倍になっても 10 分には届かない見込み。
+    // **この job は `issues: write` を持ち Issue を開閉するので、無限ループで回り続けるのが
+    // いちばん困る**——短めに切ってある。
+    "scrum-monitor.yml:monitor": 10,
     "security.yml:gitleaks": 20,
     "security.yml:forbidden-patterns": 10,
     // #940: CI 実測は 0 本。手元で 1,359 件を 6 秒（gh api 1 回 + python）。件数は Issue が

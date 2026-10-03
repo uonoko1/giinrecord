@@ -3,6 +3,12 @@
  "id": "207-ＮＨＫ決算-1DDDE12",
  "kind": "その他",
  "kindText": "ＮＨＫ決算",
+ "referral": {
+  "shugiin": {
+   "committee": "総務",
+   "date": "2025-01-24"
+  }
+ },
  "session": 207,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDE12.htm",
  "status": "未了",

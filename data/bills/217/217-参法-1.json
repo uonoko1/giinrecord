@@ -6,6 +6,12 @@
  "received": {
   "sangiin": "2025-02-05"
  },
+ "referral": {
+  "sangiin": {
+   "committee": "内閣",
+   "date": "2025-05-30"
+  }
+ },
  "session": 217,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE146.htm",
  "status": "未了",

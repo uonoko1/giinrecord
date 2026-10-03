@@ -3,6 +3,12 @@
  "id": "216-国有財産-1DE0B8A",
  "kind": "その他",
  "kindText": "国有財産",
+ "referral": {
+  "shugiin": {
+   "committee": "決算行政監視",
+   "date": "2026-01-23"
+  }
+ },
  "session": 216,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B8A.htm",
  "status": "未了",

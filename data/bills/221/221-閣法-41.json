@@ -7,6 +7,16 @@
   "sangiin": "2026-06-25",
   "shugiin": "2026-03-31"
  },
+ "referral": {
+  "sangiin": {
+   "committee": "デジタル社会の形成及び人工知能の活用等に関する特別",
+   "date": "2026-07-07"
+  },
+  "shugiin": {
+   "committee": "内閣",
+   "date": "2026-06-12"
+  }
+ },
  "result": {
   "lawNumber": "59",
   "promulgated": "2026-07-17",

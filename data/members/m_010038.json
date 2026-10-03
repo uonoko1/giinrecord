@@ -1090,7 +1090,7 @@
    "kind": "committeeRole",
    "lastDate": "2026-07-24",
    "meetingId": "122114183X00120260415_000",
-   "meetings": 5,
+   "meetings": 6,
    "role": "幹事",
    "session": 221,
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122114183X00120260415/0"
@@ -1127,19 +1127,6 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0407-v001.htm",
    "title": "令和八年度一般会計予算",
    "value": "賛成"
-  },
-  {
-   "committee": "総務委員会",
-   "date": "2026-04-02",
-   "estimated": false,
-   "firstDate": "2026-04-02",
-   "kind": "committeeRole",
-   "lastDate": "2026-07-24",
-   "meetingId": "122114601X00520260402_000",
-   "meetings": 8,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122114601X00520260402/0"
   },
   {
    "date": "2026-03-31",
@@ -1327,6 +1314,19 @@
    "sourceUrl": "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0330-v001.htm",
    "title": "日程第１　令和八年度一般会計暫定予算",
    "value": "賛成"
+  },
+  {
+   "committee": "総務委員会",
+   "date": "2026-03-24",
+   "estimated": false,
+   "firstDate": "2026-03-24",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122114601X00220260324_000",
+   "meetings": 9,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122114601X00220260324/0"
   },
   {
    "date": "2026-03-23",

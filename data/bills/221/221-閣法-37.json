@@ -7,6 +7,16 @@
   "sangiin": "2026-04-28",
   "shugiin": "2026-03-27"
  },
+ "referral": {
+  "sangiin": {
+   "committee": "沖縄・北方問題及び地方に関する特別",
+   "date": "2026-05-19"
+  },
+  "shugiin": {
+   "committee": "地域活性化・こども政策・デジタル社会形成に関する特別",
+   "date": "2026-04-15"
+  }
+ },
  "result": {
   "lawNumber": "27",
   "promulgated": "2026-06-03",

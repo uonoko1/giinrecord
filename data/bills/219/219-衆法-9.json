@@ -3,6 +3,12 @@
  "id": "219-衆法-9",
  "kind": "衆法",
  "number": 9,
+ "referral": {
+  "shugiin": {
+   "committee": "厚生労働",
+   "date": "2026-01-23"
+  }
+ },
  "session": 219,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0CC2.htm",
  "status": "未了",

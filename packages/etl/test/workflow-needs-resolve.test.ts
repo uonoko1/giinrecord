@@ -56,7 +56,7 @@ import { dirname, resolve } from "node:path";
  *
  * **走査の範囲を #1036 で直した。** 初版は「3 ワークフロー / 6 job」だった——**手書きの 3 本**で、
  * **`etl.yml` に壊れた鎖の job を足すとこのファイルは 3/3 緑だった**（#1036 で実測）。
- * **いまは `readdirSync` で全 16 ワークフロー / 26 job を走査する**（2026-09-30 実測。#1137 で 24 → 26）。
+ * **いまは `readdirSync` で全 17 ワークフロー / 27 job を走査する**（2026-10-04 実測。#1137 で +2 / #1110 で +1）。
  * 参照 2 件すべてを検証する。**0 件だったら落とす**（「参照が無い」と「数えていない」を分ける）。
  *
  * ── #1017 が塞いだのは鎖 5 環のうち 1 環だけだった（#1036）──────────────────
@@ -200,7 +200,7 @@ function needsRefs(body: string): { job: string; output: string; raw: string }[]
  * **初版は `["deploy-data.yml", "release.yml", "deploy-staging.yml"]` の手書き 3 本だった。**
  * **14 本中 3 本の denylist で、`etl.yml` に壊れた鎖の job を足すとこのファイルは 3/3 緑だった**
  * （#1036 で実測。#1008 / #1022 / #1043 と同じ型——**列挙は漏れがそのまま穴になる**）。
- * **`readdirSync` の全走査にした。** 下の母数の assert も、実数（16 本 / 26 job）に合わせて測り直した。
+ * **`readdirSync` の全走査にした。** 下の母数の assert も、実数（17 本 / 27 job）に合わせて測り直した。
  */
 const workflowFiles = (): string[] =>
   readdirSync(wfDir)
@@ -235,13 +235,16 @@ test("#1017: needs.<job>.outputs.<out> を使う job は、その job を needs 
   // 母数を固定する。0 件で緑になったら「参照が消えた」のか「数えていない」のか分からない（#1017 の 3.）。
   //
   // **#1036 で 6 → 24 に測り直した**（手書き 3 本 → `readdirSync` の全 15 本）。
-  // **#1137 で 24 → 26**（`deploy-site.yml` を `build`（build-site.yml を呼ぶ）/ `deploy` の
+  // **#1137 で +2**（`deploy-site.yml` を `build`（build-site.yml を呼ぶ）/ `deploy` の
   // 2 job に割り、ビルドの実体を新しいファイル `build-site.yml` に出した。
   // **同じ workflow の中で job を割っても `secrets` 文脈は分かれない**ので、ファイルを分ける必要があった）。
-  // **`26` は独立に維持されている `workflow-timeout.test.ts` の「#556 数え上げ」の
-  // job 名リスト（26 件）と一致する**——**別の実装が別の目的で数えた値と突き合わせてある。**
+  // **#1110 で +1**（`scrum-monitor.yml` の `monitor`）。**24 + 2 + 1 = 27**
+  // （この 2 本は同じ基点 24 から別々に伸びていたので、マージで足し合わせた。
+  // **足し算で決めずに `readdirSync` の実測で確かめた**: 17 ワークフロー / 27 job）。
+  // **`27` は独立に維持されている `workflow-timeout.test.ts` の「#556 数え上げ」の
+  // job 名リスト（27 件）と一致する**——**別の実装が別の目的で数えた値と突き合わせてある。**
   // `equal` のままにする（`>=` にすると job を消したときに気づけない）。
-  assert.equal(jobCount, 26, `走査した job 数が変わった（実測 2026-09-30: 16 ワークフロー / 26 job）: ${jobCount}`);
+  assert.equal(jobCount, 27, `走査した job 数が変わった（実測 2026-10-04: 17 ワークフロー / 27 job）: ${jobCount}`);
   assert.ok(refCount >= 2, `needs.*.outputs.* の参照が ${refCount} 件しか見つからない（実測 2 件: deploy-data の production, release の released-tag）`);
   assert.deepEqual(broken, [], `needs が宛先を指していない参照がある:\n${broken.join("\n")}`);
 });
