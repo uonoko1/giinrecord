@@ -15,6 +15,16 @@ jobs:
   # docs-only PR ("1 file changed"), so nothing here knew.
   # Own job, first, with full history: `fetch-depth: 0` is required (the default depth-1 checkout has no
   # merge-base to compare against) and the answer is worth having before the 10-minute build starts.
+  #
+  # **#1162: この job に入れてよいのは「赤いなら絶対に通してはいけない」検査だけである。**
+  # check-run 名は job 名なので、**step をここに足すと `merge-when-green.sh` の
+  # `REQUIRED_CHECKS` の `stale-base` が、その step も覆う**（それが狙い）。
+  # **「赤いが読んだうえで通してよい」検査は下の `stale-base-net-deletions` に置く。**
+  # **混ぜると `--allow-nonrequired-red` が両方を一緒に通す**——それが #1162 の穴だった。
+  #
+  # **#1161（`--data-freshness`、#1156）がマージされたら、その step はこの job に入れる**
+  # （`data/` が巻き戻る形は「赤いが通してよい」ではないので、必須側に属する）。
+  # **#1161 は本 PR の時点で未マージなので、その step はまだここに無い。**
   stale-base:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
@@ -41,7 +51,35 @@ jobs:
           # Measured on the reconstructed #531 shape (docs/WORKING_AGREEMENT.md, base 85570ec2, main
           # dd5ac2ef): against the merge ref it reports 0 lines, against the head it reports 50.
           bash scripts/ci/stale-base.sh "refs/remotes/origin/$BASE_REF" "$HEAD_SHA"
-      # Issue #836: the step above passed while PR #832 removed 286 lines across 3 files that #820,
+  # Issue #1162: **これは `stale-base` と別の job である。** 同じ job に置くと check-run 名が 1 つに
+  # なり、**`scripts/po/merge-when-green.sh --allow-nonrequired-red` を 1 回使うと、この step の赤と
+  # 上の job の赤が一緒に通る。**
+  #
+  # **2 つの赤は性質が違う:**
+  #   上の job（既定 #536・将来 `--data-freshness` #1156）  → **通してはいけない。** main が足した行の
+  #       消失と `data/` の巻き戻しで、どちらも「赤いが通してよい」状態が起こらない
+  #   この job（`--net-deletions` #836）                   → **読んだうえで通してよいことが在る。**
+  #       関数やブロックを移動するたびに鳴り、**`scripts/ci/stale-base.sh` 自身が「赤いまま人が
+  #       PR 本文を読んで判断する契約」だと明記している**。先例 #794 は赤のまま main に在る
+  #
+  # **実測（PO、2026-10-03）**: #1154 のマージで `--allow-nonrequired-red` を初めて使った。
+  # そのとき step は 2 つで、job の step 単位の結論は
+  # `step 3 success`（既定）/ `step 4 failure`（`--net-deletions`）だった
+  # ——**通したのは `--net-deletions` の赤 1 件だけ**だったが、**それは step 単位で人が読んで
+  # 確かめたからであり、道具は区別していなかった。**
+  #
+  # **この job を上に戻す（= step として同居させる）と、`merge-when-green.sh` の
+  # `NONREQUIRED_CHECKS` に `stale-base-net-deletions` が浮き、
+  # `packages/etl/test/branch-protection-jobs.test.ts` が落ちる。**
+  stale-base-net-deletions:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    # 上の job と同じ理由（#556 / #1056）。測り直しに入っていないので #556 の n=17 のまま。
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      # Issue #836: the default mode passed while PR #832 removed 286 lines across 3 files that #820,
       # #824, #827 and #831 had already merged (by `git diff --numstat`, over ALL files, not just docs:
       # WORKING_AGREEMENT.md -17, research/local-assemblies.md -210, sprints/sprint-28.md -59), and
       # PR #761 removed 33 lines across 2 files that #762 had merged — still absent from main today.
@@ -50,12 +88,12 @@ jobs:
       # "nothing" — the gap stale-base.sh documents in its own header. `--verify` is the documented
       # answer but needs a list captured before the rebase, and there was none: the very first commit
       # ever pushed was already missing the lines (measured on both PRs).
-      # This second step asks a question that needs no history: does this branch take more of the base's
+      # This asks a question that needs no history: does this branch take more of the base's
       # lines out of a file than it puts back, while the file survives. Measured over the last 60 merged
       # PRs it fires on 4 — #832 and #761 (the real incidents) plus #740 and #794, which were read by
       # hand and are deliberate (a resolved decision rewritten in place; per-prefecture code moved into
       # one shared function that is still in main). So it is a 2-in-4 signal that a human resolves in
-      # the PR body, not a proof — and it is a SECOND step, not a replacement: the step above is exact
+      # the PR body, not a proof — and it is a SECOND check, not a replacement: the default mode is exact
       # and still catches the un-rebased shape.
       - name: The branch must not quietly take more of the base's lines out of a file than it puts back (#836)
         env:
@@ -63,6 +101,11 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           set -euo pipefail
+          # #1162: この job は `stale-base` と別プロセスなので、**自分で fetch する**
+          # （上の job の `git fetch` はここには効かない）。**#504 と同じ理由でスクリプトの
+          # 存在も自分で要求する**——この job だけが残った形でも no-op にならないように。
+          test -f scripts/ci/stale-base.sh || { echo "scripts/ci/stale-base.sh がありません（#836 の検査）"; exit 1; }
+          git fetch --quiet origin "+refs/heads/$BASE_REF:refs/remotes/origin/$BASE_REF" "$HEAD_SHA"
           bash scripts/ci/stale-base.sh --net-deletions "refs/remotes/origin/$BASE_REF" "$HEAD_SHA"
   check:
     runs-on: ubuntu-latest
