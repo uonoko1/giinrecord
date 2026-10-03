@@ -1561,9 +1561,10 @@ t_858_check_lists_are_pinned() {
   # `stale-base` を**部分文字列に含む**ので、`grep stale-base` では区別できない
   # ——#1101 で `dev@` が `seiji-kiroku-dev@` に当たったのとまったく同じ罠である。
   # **#1162 の穴そのものがこの形**なので、ここだけは逐語の集合として見る。
-  has() {  # has <値> <並び> → 0 なら在る
-    local want=$1 el
-    for el in $2; do [[ "$el" == "$want" ]] && return 0; done
+  has() {  # has <値> <並び（空白区切り）> → 0 なら在る
+    local want=$1 el; local -a arr
+    read -ra arr <<<"$2"   # **`for el in $2` と書かない**（作業合意の罠 1）
+    for el in "${arr[@]}"; do [[ "$el" == "$want" ]] && return 0; done
     return 1
   }
   # **GitHub の branch protection に登録されている 4 件は、1 件も必須外に落ちていない**
@@ -4198,10 +4199,15 @@ t_1162_split_denominator_is_pinned() {
   # **`stale-base` が必須でない側に残っていないこと**を、部分一致ではなく**値として**見る
   # （#1162 の穴そのものに戻る形。`stale-base-net-deletions` は `stale-base` を部分文字列に
   #  含むので、`grep stale-base` では区別できない——アドレスと同じ罠である）。
-  local n found=0
-  # shellcheck disable=SC2001
-  for n in $(sed -e 's/^NONREQUIRED_CHECKS=(//' -e 's/)$//' <<<"$nonreq"); do
-    [[ "$n" == "stale-base" ]] && found=1
+  # **`for n in $VAR` と書かない**（zsh は変数を単語分割しないので 1 回しか回らず、
+  # **数え落としが「0 件」というきれいな答えになる**。作業合意の罠 1）。
+  # ここは bash で走るが、同じ形を書かない方針に合わせて `read -ra` で配列にする。
+  local -a nr; local el found=0
+  read -ra nr <<<"$(tr -d '()' <<<"$nonreq" | sed 's/^NONREQUIRED_CHECKS=//')"
+  # 母数（#757）: 分解できていなければ下のループは 0 回で、found は 0 のまま緑になる。
+  assert_eq 2 "${#nr[@]}" "NONREQUIRED_CHECKS を 2 要素に分解できている（母数）"
+  for el in "${nr[@]}"; do
+    [[ "$el" == "stale-base" ]] && found=1
   done
   assert_eq 0 "$found" "stale-base が NONREQUIRED_CHECKS に在る＝#1162 の穴に戻っている"
 }
