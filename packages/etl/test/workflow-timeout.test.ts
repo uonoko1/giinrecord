@@ -95,6 +95,21 @@ function jobsOf(file: string, dir: string = wfDir): Job[] {
 }
 
 /**
+ * ワークフローの**生のテキスト**を読む（#1179）。**コメントを落とさない。**
+ *
+ * **`stripComment` を通さないのは意図である**——**`run:` ブロックの中で `#` を落とすと、
+ * シェルの文字列やコメント付きの行が壊れる**（メモリの「YAML の # 落としは安全ではない」）。
+ * **ここを使う側は逐語の正規表現しか当てない。**
+ *
+ * **`jobsOf` と同じ `(file, dir)` の形にしてある**のは #1081 の自己検査のためである
+ * （`resolve(wfDir, …)` と書くと「共有ディレクトリへ書き込む手段」の検査が鳴る。
+ *  読み取りはこの helper 経由に寄せる、というのがその検査の求めている形）。
+ */
+function textOf(file: string, dir: string = wfDir): string {
+  return readFileSync(resolve(dir, file), "utf8");
+}
+
+/**
  * GitHub は `.yml` と `.yaml` の両方を実行する。`.yml` だけ見ると .yaml のワークフローが
  * 丸ごと不可視になる（#574）。
  *
@@ -462,6 +477,44 @@ test("#556 値が実測から外れていない（短すぎる = 偽陽性 / 長
     "pr-body.yml:pr-closes": 10,
     "deploy-data.yml:resolve": 10,
     "deploy-site.yml:deploy": 30,
+    // #1179: **この 2 本は #556 の数え上げには在ったが、この expected 表には無かった**
+    // （鍵が 14 本で、どちらも入っていなかった）。**結果、`timeout-minutes: 30` 側も
+    // 待ち合わせのループ上限側も誰も固定しておらず、`seq 1 900`（= 300 分）が素通りした**
+    // （#1179 のレビューの実測: `pass 12 / fail 0`）。
+    //
+    // **実測 2026-10-04、基点 `53e121fe`**（job 全体の wall。`gh api .../runs/<id>/jobs` の
+    // `completed_at - started_at`。success / failure のみ、cancelled は除く）:
+    //
+    //   job                                     n   min   med   p90   max   → 設定
+    //   districts.yml:districts                 5   227   674  1011  1011s  → 40 分（max の 2.4 倍）
+    //   local-assemblies.yml:local-assemblies   7   168   282   401   401s  → 40 分（max の 6.0 倍）
+    //
+    // **この max は「仕事の重さ」ではない**——**job の wall には
+    // 「データ PR のマージを待っている時間」が含まれる**ので、CI の速さと他 PR の混み具合で動く
+    // （`districts` の 1,011s のうち **895s が待ち合わせ**で、仕事は 111s だった）。
+    // **だから「仕事が重いから 40 分」ではなく「待ち合わせ 30 分が収まるように 40 分」である**
+    // （下の #1179 の検査がその関係を固定している）。
+    //
+    // **「直近 5 本のうち 1 本が 65 分」という指摘を追いかけた**（PO。**run の wall を見ると本当である**）。
+    // **ただし `timeout-minutes` が見る時間は 274s だった。** **run `32674062613` の内訳**
+    // （実測 2026-10-04。`pr-closes` の 77s を区間に分けたのと同じ形）:
+    //
+    //   run created        2026-08-23T23:35:34Z
+    //   **job created**    2026-08-24T00:35:55Z   ← **ここまで 60 分。job がまだ存在しない**
+    //   job started        2026-08-24T00:35:57Z   （割り当て待ち 2s）
+    //   最初の step        2026-08-24T00:35:57Z   （ランナー立ち上がり 0s）
+    //   job completed      2026-08-24T00:40:31Z   → **started → completed = 274s**
+    //
+    // **60 分は job が作られる前の待ちで、`timeout-minutes` は数えない。**
+    // **これは `pr-closes` の 69 秒とは別の区間である**——
+    // **あちらは `started → 最初の step` で、`timeout-minutes` が数える側だった**
+    // （上の docblock の注意書き。**「割り当て待ちだから関係ない」と読み替えてはいけない**のは
+    //  `started` 以降の話で、ここは `job created` より前なので当てはまらない）。
+    //
+    // **それでも n はまだ薄い**（月次なので溜まるのが遅い。`districts` n=5 / `local-assemblies` n=7）。
+    // **溜まったら測り直すこと**（`security.yml:issue-secrets` と同じ扱い）。
+    "districts.yml:districts": 40,
+    "local-assemblies.yml:local-assemblies": 40,
     // #646: 実測 171s（2026-09-08、本番の data/ 83 件を手元から通しで。1 ラウンド 83 秒 +
     // 再試行の待ち 60 秒 + 落ちた 3 件）。最悪（83 × 30s タイムアウト × 2 ラウンド ≒ 83 分）は切りたいので 20 分。
     "link-check.yml:link-check": 20,
@@ -499,4 +552,100 @@ test("#556 値が実測から外れていない（短すぎる = 偽陽性 / 長
 test("#556 etl.yml はホステッドランナーの上限 360 分のまま（データ量で伸びるので別扱い）", () => {
   const etl = allJobs.find((j) => id(j) === "etl.yml:etl");
   assert.equal(etl?.timeout, 360);
+});
+
+/**
+ * **データ PR の待ち合わせが、その job の `timeout-minutes` に収まっていること**（#1179 のレビュー）。
+ *
+ * ## 何が起きていたか
+ *
+ * **#1175 で待ち合わせを 15 分 → 30 分にしたとき、`districts.yml` と `local-assemblies.yml` は
+ * `timeout-minutes: 30` だった。** **待ち合わせだけで job の予算を使い切る形になり、**
+ * **ループが最後まで回れない**——**GitHub が先に job を殺すので:**
+ *
+ * - **`exit 1` の行に到達しない**
+ * - **そこで書いている `GITHUB_STEP_SUMMARY` の診断が残らない**（＝**止まった理由が消える**）
+ *
+ * **診断が消えるのは #1175 の主題そのものである**（人が原因を追えなくなる）。
+ *
+ * ## なぜ「値を 2 つ固定する」だけでは足りないか（#1056 と同じ型）
+ *
+ * **ループ上限（`seq 1 N`）と `timeout-minutes` は別のファイルの別の行に在る。**
+ * **両方を定数として固定しても、「片方だけ動かす」変更は両方の assert を通る**
+ * （どちらの定数も新しい値に書き換えれば緑になるので、**矛盾そのものは誰も見ていない**）。
+ *
+ * **だからここは値ではなく関係を固定する**:
+ *
+ * ```
+ * ループ上限 × sleep 秒 ＋ 固定費 ≤ timeout-minutes × 60
+ * ```
+ *
+ * **3 つの数（上限・sleep・timeout）はすべてワークフローから読む**ので、
+ * **このテストは数を 1 つも持たない**（持つのは固定費だけ。下記）。
+ *
+ * ## 固定費（**この検査が唯一ハードコードする数**）
+ *
+ * **待ち合わせステップより前の全 step の合計**（checkout ＋ buildx ＋ docker build ＋
+ * ETL 本体 ＋ PR 更新）。**実測 2026-10-04、基点 `53e121fe`**
+ * （`gh api repos/.../actions/runs/<id>/jobs` の `steps[]` の `started_at`／`completed_at` を、
+ *  `Wait for data PR merge` より前だけ合計した）:
+ *
+ * | job | n | min | med | p90 | max |
+ * |---|---:|---:|---:|---:|---:|
+ * | `districts.yml:districts` | **5** | 97 | 114 | 138 | **138s** |
+ * | `local-assemblies.yml:local-assemblies` | **7** | 89 | 130 | 185 | **185s** |
+ * | 両方あわせて | **12** | 89 | 115 | 175 | **185s** |
+ *
+ * **`etl.yml:etl` の固定費はここでは測っていない**——**ETL 本体がデータ量で伸びるので、
+ * 固定費という概念が当てはまらない**（だから `etl.yml` は `timeout-minutes: 360` と
+ * ステップ側の `timeout-minutes: 330` で別に守られている）。
+ * **それでも関係の検査には含める**: 360 分 × 60 = 21,600s に対して
+ * 待ち合わせは 1,800s なので、**どの固定費を当てても通る**。
+ *
+ * **固定費には余裕を乗せる**（機械の負荷で 2 倍以上動く。上の「表を更新するときの規約」）。
+ * **max 185s の 2 倍を切り上げて 400s を使う。**
+ *
+ * ## **この検査の限界**（#1056 の「腐らない形ではない」と同じ。**正確に書く**）
+ *
+ * **固定費の 400s は実測から取った定数で、assert していない。**
+ * **＝ETL 本体が遅くなって固定費が 400s を超えても、この検査は落ちない。**
+ * **固定費が伸びたかどうかは、上の表を測り直すしかない**（n つきで。日付と基点を併記して）。
+ * **効くのは「ループ上限と timeout の一方だけが動く」形を塞いだことだけである。**
+ */
+test("#1179 データ PR の待ち合わせ（seq 1 N × sleep 秒）＋ 固定費が、その job の timeout-minutes に収まっている", () => {
+  /** 固定費の上限（秒）。上の表の max 185s の 2 倍強。**実測から取った定数で、assert していない** */
+  const FIXED_COST_BUDGET_SEC = 400;
+  const files = readdirSync(wfDir).filter((f) => f.endsWith(".yml") || f.endsWith(".yaml")).sort();
+  /** `{ "<file>:<job>": { loops, sleepSec, timeout } }`。**数はワークフローから読む**（定数を置かない） */
+  const found: Record<string, { loops: number; sleepSec: number; timeout: number | undefined }> = {};
+  for (const f of files) {
+    // **コメントを落とさない生のテキストを読む**（`run:` の中で `#` を落とすと行が壊れる。
+    // メモリの「YAML の # 落としは安全ではない」。ここは逐語の正規表現しか当てない）
+    const text = textOf(f);
+    const loop = text.match(/^\s*for i in \$\(seq 1 (\d+)\); do/m);
+    if (!loop) continue;
+    const slp = text.match(/^\s*sleep (\d+)\s*$/m);
+    assert.ok(slp, `${f}: 待ち合わせのループが在るのに sleep の行が読めない（この検査が空回りする）`);
+    const jobs = jobsOf(f).filter((j) => j.kind === "runs-on");
+    assert.equal(jobs.length, 1, `${f}: 待ち合わせを持つワークフローの job が 1 本でない（${jobs.length} 本）。どの job の予算か決められない`);
+    found[id(jobs[0])] = { loops: Number(loop[1]), sleepSec: Number(slp[1]), timeout: jobs[0].timeout };
+  }
+  // **母数を先に固定する**（#757 / #500: 入口を固定しないと、本体が痩せても誰も気づかない）。
+  // **待ち合わせを持つワークフローを足したら、ここが落ちて「予算が足りるか」を考えることになる**
+  assert.deepEqual(Object.keys(found).sort(), [
+    "districts.yml:districts",
+    "etl.yml:etl",
+    "local-assemblies.yml:local-assemblies",
+  ], "データ PR の待ち合わせ（seq 1 N）を持つ job の集合が変わった。足したなら予算が足りるかを確かめること（#1179）");
+  const over: Record<string, { 待ち合わせ秒: number; 固定費: number; 必要: number; 予算: number }> = {};
+  for (const [key, v] of Object.entries(found)) {
+    assert.ok(v.timeout !== undefined, `${key}: timeout-minutes が無い（#556 の検査が先に落ちるはずだが、念のため）`);
+    const waitSec = v.loops * v.sleepSec;
+    const need = waitSec + FIXED_COST_BUDGET_SEC;
+    const budget = v.timeout * 60;
+    if (need > budget) over[key] = { 待ち合わせ秒: waitSec, 固定費: FIXED_COST_BUDGET_SEC, 必要: need, 予算: budget };
+  }
+  assert.deepEqual(over, {}, "待ち合わせ（seq 1 N × sleep 秒）＋ 固定費が timeout-minutes を超えている。"
+    + "**job が先に殺されるので `exit 1` に到達せず、GITHUB_STEP_SUMMARY の診断が残らない**（止まった理由が消える。#1179）。"
+    + "ループを縮めるか timeout-minutes を伸ばすこと");
 });
