@@ -1,0 +1,28 @@
+name: Probe 1137 caller
+# Issue #1137 の実験用。**この workflow は捨てる**（実験のあと削除する）。
+# 目的: 「呼び出し先に `secrets:` を渡さなければ、呼び先の `secrets` 文脈が空である」
+# を GitHub 上で実際に確かめる（build-site.yml は pnpm build を走らせるので代理で測る）。
+# **値は 1 文字も出さない。** 出すのは件数と、既に公開されている名前だけ。
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  # (1) secrets を渡さない呼び出し（= deploy-site.yml が build-site.yml を呼ぶ形）
+  without-secrets:
+    uses: ./.github/workflows/probe-callee.yml
+    with:
+      label: without-secrets
+  # (2) 名指しで 1 件だけ渡す呼び出し（= deploy-site.yml の deploy 側が受け取る形）
+  with-one-secret:
+    uses: ./.github/workflows/probe-callee-one.yml
+    with:
+      label: with-one-secret
+    secrets:
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+  # (3) inherit（直す前の形。全部流れ込むことを示す）
+  with-inherit:
+    uses: ./.github/workflows/probe-callee.yml
+    with:
+      label: with-inherit
+    secrets: inherit

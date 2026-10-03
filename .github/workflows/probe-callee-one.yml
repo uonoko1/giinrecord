@@ -1,0 +1,28 @@
+name: Probe 1137 callee (declares one)
+# Issue #1137 の実験用。**捨てる。** `DEPLOY_HOST` だけを宣言する呼び先。
+# 「名指しで渡した 1 件だけが入る」ことを示す（残り 4 件が入らないこと）。
+on:
+  workflow_call:
+    inputs:
+      label:
+        required: true
+        type: string
+    secrets:
+      DEPLOY_HOST:
+        required: true
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Count the secrets context (names and count only, never values)
+        env:
+          ALL: ${{ toJSON(secrets) }}
+          LABEL: ${{ inputs.label }}
+        run: |
+          n=$(printf '%s' "$ALL" | jq 'keys | length')
+          names=$(printf '%s' "$ALL" | jq -r 'keys | join(",")')
+          echo "PROBE label=$LABEL count=$n names=[$names]"
+          echo "PROBE label=$LABEL count=$n names=[$names]" >> "$GITHUB_STEP_SUMMARY"

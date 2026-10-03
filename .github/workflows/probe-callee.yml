@@ -1,0 +1,26 @@
+name: Probe 1137 callee (declares nothing)
+# Issue #1137 の実験用。**捨てる。** `secrets` の宣言を 1 つも置かない呼び先。
+# **値は出さない**: toJSON(secrets) を jq でキー名と件数にしてから出す。
+# キー名はこのリポジトリの YAML に既に書かれているので、公開しても新しい情報は出ない。
+on:
+  workflow_call:
+    inputs:
+      label:
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Count the secrets context (names and count only, never values)
+        env:
+          ALL: ${{ toJSON(secrets) }}
+          LABEL: ${{ inputs.label }}
+        run: |
+          n=$(printf '%s' "$ALL" | jq 'keys | length')
+          names=$(printf '%s' "$ALL" | jq -r 'keys | join(",")')
+          echo "PROBE label=$LABEL count=$n names=[$names]"
+          echo "PROBE label=$LABEL count=$n names=[$names]" >> "$GITHUB_STEP_SUMMARY"
