@@ -21,7 +21,24 @@ env:
 jobs:
   local-assemblies:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # **40 分（#1179 のレビュー）。** **30 分では、待ち合わせの 30 分と job の予算が同じで、
+    # ループが最後まで回れなかった**——**`exit 1` の行に到達せず、
+    # `GITHUB_STEP_SUMMARY` に書いている「なぜ止まったか」が残らない。**
+    # **診断が消えるのは #1175 の主題そのもの**なので、予算を広げるほうを採った。
+    #
+    # **実測（2026-10-04、基点 `53e121fe`。待ち合わせより前の全 step の合計 = 固定費）:**
+    #
+    #   job                               n   min   med   p90   max
+    #   districts.yml:districts           5    97   114   138   138s
+    #   local-assemblies.yml:local-assemblies
+    #                                     7    89   130   185   185s
+    #   両方あわせて                      12    89   115   175   185s
+    #
+    # **予算の計算**: 待ち合わせ 90 × 20s = 1,800s ＋ 固定費 max 185s = **1,985s**。
+    # **30 分（1,800s）では足りない。40 分（2,400s）なら余裕 415s（6.9 分）。**
+    # **この関係は `packages/etl/test/workflow-timeout.test.ts` が検査で固定している**
+    # （「待ち合わせの上限 × 20s ＋ 固定費 ≤ timeout-minutes」。片方だけ動かすと落ちる）。
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
 
@@ -130,7 +147,11 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR: ${{ steps.pr.outputs.number }}
         run: |
-          for i in $(seq 1 45); do   # 45 × 20s = 15 min
+          # **15 分 → 30 分（#1175）。** 測った根拠は `.github/workflows/etl.yml` の同じステップの
+          # コメントに 1 か所だけ置いてある（数字を複数箇所に写すと腐る。#1056）。
+          # **この枝でも余裕が足りていなかった**: 実測 2026-10-04、`data/districts` の ci.yml は
+          # **最長 13 分**（成功）で、15 分に対する余裕は 2 分だった。
+          for i in $(seq 1 90); do   # 90 × 20s = 30 min
             STATE=$(gh pr view "$PR" --json state -q .state)
             echo "[$i] PR #$PR state=$STATE"
             case "$STATE" in
@@ -147,7 +168,7 @@ jobs:
             done
             sleep 20
           done
-          echo "PR #$PR が 15 分以内にマージされなかった（required check が走っていない／失敗？）" >> "$GITHUB_STEP_SUMMARY"
+          echo "PR #$PR が 30 分以内にマージされなかった（required check が走っていない／失敗？）" >> "$GITHUB_STEP_SUMMARY"
           exit 1
 
       - name: Open failure Issue (deduped by title)
