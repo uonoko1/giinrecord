@@ -13,8 +13,8 @@
 #     exit 2 — usage / a ref that does not resolve  (an unresolvable base is NOT reported as clean)
 #
 #   scripts/ci/stale-base.sh --data-freshness [<base-ref>] [<head-ref>]     Issue #1156
-#     exit 0 — data/meta.json の fetchedAt は後退していない（または両側に無く、対象外）
-#     exit 1 — 枝の fetchedAt が <base-ref> より古い（data/ が丸ごと巻き戻る形）
+#     exit 0 — data/**/meta.json の fetchedAt がどれも後退していない（見た件数を必ず出す）
+#     exit 1 — どれかの fetchedAt が <base-ref> より古い（data/ が丸ごと巻き戻る形）
 #            — OR fetchedAt を**測れなかった**（読めない／無い／日付として解釈できない）。
 #              「測れなかった」を「古くない」として通さない（#1158）
 #     **残っている限界（この PR では直していない）**: `stale-base` という check-run 名は
@@ -138,7 +138,26 @@ fi
 # 通る作りで（それは正しい——意図した書き換えを毎回鳴らさないため）、行の数え方を変えても
 # この形には届かない。だから行ではなく**時刻そのもの**を見る。
 #
-#   base の data/meta.json の fetchedAt  >  head の fetchedAt   → 落ちる
+#   base の <対象の meta.json> の fetchedAt  >  head の同じファイルの fetchedAt   → 落ちる
+#
+# ── 対象は `data/meta.json` 1 件ではない（#1156 のレビューが実測で否定した） ─────────────
+# この検査の最初の版は `data/meta.json` だけを見ていた。**`data/meta.json` は `data/` の代表では
+# なかった。** 日次 ETL 以外に**月次**のワークフローが 2 本あり、どちらも `data/meta.json` を
+# 進めないまま別の `meta.json` を進める:
+#   .github/workflows/districts.yml        cron "0 20 1 * *"   data/districts/meta.json のみ
+#   .github/workflows/local-assemblies.yml cron "0 20 4 * *"   data/assemblies/*/meta.json
+# 実測（probe を組んで確認。`2f136cd1` = `data: districts` は `data/districts/meta.json` だけを
+# 触っており、`data/meta.json` を動かしていない）:
+#   git diff --numstat origin/main <probe> -- data/  →  54  54  data/districts/meta.json
+#   既定モード / --net-deletions / --data-freshness（1 件版）  すべて rc=0（素通り）
+# **月次なので巻き戻る幅は 1 か月ぶん。** だから `data/**/meta.json` を全部見る。
+#
+# 列挙にしない理由（レビューの指摘）: **新しい `data/*/meta.json` が生えると列挙漏れが即穴**になる
+# ——denylist の型。`git ls-tree -r -- <pathspec>` で**ツリーから glob で拾う**。
+# （`git ls-files` は**未追跡ファイルを見ない**ので使わない。ツリーを読めば、チェックアウトされて
+# いないファイルも数えられる。）
+# 広げても偽陽性は増えない（実測、開いている枝 9 本 × 13 件 = 母数 117 組 → 増える赤 0 件。
+# main 直近 300 コミットで fetchedAt の後退 0 件。13 件すべてが同じ ISO 8601 UTC 形式）。
 #
 # 型を区別しない理由。当初は「枝のコミットが `data/` を書いた（`git add -A` で拾った）型 B」と
 # 「base が古いだけの型 A」を分ける案だった。**実測で型 B は 0 本**（開いていた 10 本すべてを
@@ -148,12 +167,18 @@ fi
 # 落ちても答えは「rebase せよ」であり、誤報にならない。**`merge-base` を取る必要も無い。**
 #
 # ── 「測れなかった」を黙って通さない（#1158） ─────────────────────────────────────────
-# `data/meta.json` が読めない／`fetchedAt` が無い／日付として解釈できない → **exit 1 で「測れません」と言う。**
+# 対象の `meta.json` が片側に無い／`fetchedAt` が無い／日付として解釈できない
+# → **exit 1 で「測れません」と言う。**
 # 「比較できなかった」を「古くない」と扱わない。理由は実測: **`gh` はレート制限時に `exit 0` で
 # エラー文字列を返し、`jq` は `null` を返して 0 件に見える。** 「0 件」と「取れなかった」の区別が要る。
-# head から `data/meta.json` を消すだけでこの検査を黙らせられる、という抜け道も同じ扱いで塞がる。
-# **両側に無いときだけ黙る**: 比較の対象がそもそも無いのは「測れなかった」ではない
+# head からファイルを消すだけでこの検査を黙らせられる、という抜け道も同じ扱いで塞がる。
+# **対象が 1 件も無いときだけ黙る**: 比較の対象がそもそも無いのは「測れなかった」ではない
 #   （この検査より前に作られたフィクスチャ・`data/` を持たないチェックアウトが該当する）。
+#
+# ── 母数（#757） ─────────────────────────────────────────────────────────────────────
+# **見たファイル数を、成功時も失敗時も必ず出す。** 「13 件見た」と「1 件しか見ていない」が
+# 出力で区別できないと、対象が静かに 1 件に縮んでも同じ顔をする——**この検査の最初の版が
+# まさにそれだった**（`data/meta.json` 1 件だけを見て `ok` と言っていた）。
 #
 # 日付の読み方は `date -u -d` に投げない: ISO 8601 の `Z` 付きの文字列は**辞書順の比較が
 # 時刻順の比較と一致する**（固定長・UTC・ゼロ埋め）。外部コマンドに投げるほうが、
@@ -164,7 +189,22 @@ if [[ ${1:-} == --data-freshness ]]; then
   [[ $# -le 2 ]] || usage
   DF_BASE=${1:-origin/main}
   DF_HEAD=${2:-HEAD}
-  DF_PATH=${STALE_BASE_META_PATH:-data/meta.json}
+  # 対象は **ツリーの中の名前を正規表現で絞って拾う**。列挙にしない理由は #1156 のレビュー:
+  # **新しい `data/*/meta.json` が生えると列挙漏れが即穴になる**（denylist の型）。
+  #
+  # **シェルの glob も git の pathspec も使わない。** どちらも使えなかった（実測 2026-09-30）:
+  #   · `git ls-tree -r -- $VAR`（クォート無し）は、**シェルが作業ツリーに対して先に展開する。**
+  #     本番では 13 件に見えるが、それは「チェックアウトされている実体」を数えているだけで、
+  #     **ツリーを読んでいない。** 実体が無ければ黙って縮む（`git ls-files` が未追跡を
+  #     見ないのと同じ型の罠。**この検査の 1 つ前の版が実際にこれだった**——13 件出るので
+  #     正しく見え、pathspec として渡すと 1 件しか当たらない）
+  #   · `git ls-tree -r -- 'data/*/meta.json'`（クォートあり）は git の pathspec になるが、
+  #     **git の `*` は `/` を跨がない**ので `data/meta.json` の 1 件しか当たらない（実測）
+  #   · `:(glob)data/**/meta.json` は `ls-tree` が受け付けない
+  #     （`fatal: pathspec magic not supported by this command: 'glob'`。実測）
+  # そこで**ツリー全体を列挙して名前で絞る**。深さに依存しない（`data/meta.json` も
+  # `data/assemblies/pref-02/meta.json` も同じ式で当たる）。
+  DF_RE=${STALE_BASE_META_RE:-^data/([^/]+/)*meta\.json$}
   df_resolve() {
     local sha
     sha=$(git rev-parse --verify --quiet "$1^{commit}") || {
@@ -177,14 +217,44 @@ if [[ ${1:-} == --data-freshness ]]; then
   DF_BASE_SHA=$(df_resolve "$DF_BASE")
   DF_HEAD_SHA=$(df_resolve "$DF_HEAD")
 
-  # df_read <tree-ish> → fetchedAt を stdout に、状態を終了コードで返す。
+  # df_paths <tree-ish> <出力先> → そのツリーに在る対象パスを 1 行 1 件で書く。
+  # **ツリーだけを読む**（作業ツリーを見ない）ので、チェックアウトされていないファイルも数える。
+  #
+  # **`ls-tree` の失敗と `grep` の「0 件」を分ける。** `grep` は 1 件も見つけないと exit 1 を
+  # 返し、`set -o pipefail` の下ではパイプライン全体が落ちる——なので `|| :` が要る。
+  # だが `ls-tree | tr | grep || :` と一息に書くと、**`|| :` が `ls-tree` の失敗まで飲む。**
+  # そうなると「ツリーを読めなかった」が「対象 0 件」に化け、下の `DF_SEEN -eq 0` が
+  # **「対象外」と言って exit 0 する**——**測れなかったものが緑になる**。
+  # `#1158` で塞いだ「測れなかったを通さない」と同じ穴が、列挙の側に開く。
+  # そこで `ls-tree` を**先に単独で**走らせて rc を見る（失敗は呼び出し側で exit 1 の材料）。
+  # 到達性の実測: `DF_BASE_SHA` / `DF_HEAD_SHA` は `df_resolve`（`rev-parse --verify
+  # <ref>^{commit}`）を通った SHA なので、ここで `ls-tree` が失敗するにはオブジェクトの
+  # 欠損が要る（ref の操作では作れなかった）。**到達しにくいが、飲んでよい理由にはならない。**
+  df_paths() {
+    local tree=$1 out=$2
+    git ls-tree -r -z --name-only "$tree" > "$out.raw" 2>/dev/null || return 5
+    tr '\0' '\n' < "$out.raw" | LC_ALL=C grep -E "$DF_RE" | LC_ALL=C sort -u > "$out" || :
+  }
+
+  # 両側の和集合が対象。**base にしか無いもの（head が消した）も head にしか無いものも見る**
+  # ——片側だけに在る形は「測れなかった」であり、黙って通してはいけない（下記）。
+  DFTMP=$(mktemp -d); trap 'rm -rf "$DFTMP"' EXIT
+  for dfside in "base:$DF_BASE_SHA" "head:$DF_HEAD_SHA"; do
+    df_paths "${dfside#*:}" "$DFTMP/${dfside%%:*}-paths" || {
+      echo "stale-base --data-freshness: ${dfside%%:*} 側（${dfside#*:}）のツリーを列挙できませんでした（git ls-tree が失敗）。**「列挙できなかった」を「対象 0 件」として通しません。**" >&2
+      exit 1
+    }
+  done
+  LC_ALL=C sort -u "$DFTMP/base-paths" "$DFTMP/head-paths" > "$DFTMP/paths"
+
+  # df_read <tree-ish> <path> → fetchedAt を stdout に、状態を終了コードで返す。
   #   0 = 読めた（値を出す） / 3 = そのツリーに blob が無い / 4 = 読めたが値として使えない（理由を出す）
   # **「無い」（3）と「使えない」（4）を分ける**のがこの関数の要点で、上位がそれぞれ別の判断をする。
   df_read() {
-    local tree=$1 type raw val
-    type=$(git cat-file -t "$tree:$DF_PATH" 2>/dev/null) || return 3
+    local tree=$1 path=$2 type raw val
+    type=$(git cat-file -t "$tree:$path" 2>/dev/null) || return 3
     [[ $type == blob ]] || return 3
-    raw=$(git show "$tree:$DF_PATH") || { echo "blob を読めませんでした"; return 4; }
+    raw=$(git show "$tree:$path") || { echo "blob を読めませんでした"; return 4; }
     # `jq -e` は null / false でも非 0 を返すので、「キーが無い」と「JSON が壊れている」の
     # どちらも非 0 になる。区別は下のメッセージで付ける（両方 exit 1 の材料なので、
     # 検査の判断としては同じ側に落ちる）。
@@ -206,36 +276,68 @@ if [[ ${1:-} == --data-freshness ]]; then
     return 0
   }
 
-  set +e
-  DF_BASE_VAL=$(df_read "$DF_BASE_SHA"); DF_BASE_RC=$?
-  DF_HEAD_VAL=$(df_read "$DF_HEAD_SHA"); DF_HEAD_RC=$?
-  set -e
-
-  # 両側に無いなら対象外（比較するものが無い、という事実。「測れなかった」ではない）。
-  if [[ $DF_BASE_RC == 3 && $DF_HEAD_RC == 3 ]]; then
-    echo "stale-base --data-freshness: 対象外 — $DF_BASE も $DF_HEAD も $DF_PATH を持っていません"
-    exit 0
-  fi
-
-  df_state() { # <rc> <val> → 出力に書く文字列
+  df_state() { # <rc> <val> <path> → 出力に書く文字列
     case $1 in
       0) echo "$2" ;;
-      3) echo "(このツリーに $DF_PATH がありません)" ;;
+      3) echo "(このツリーに $3 がありません)" ;;
       *) echo "(測れません: $2)" ;;
     esac
   }
 
-  if [[ $DF_BASE_RC != 0 || $DF_HEAD_RC != 0 ]]; then
+  # 母数（#757）: **見たファイル数**を必ず出す。「13 件見た」と「1 件しか見ていない」を
+  # 区別できないと、対象が静かに 1 件に縮んでも出力は同じ顔をする（#1156 の最初の版がそれだった）。
+  DF_SEEN=0; DF_STALE=0; DF_UNMEASURABLE=0
+  DF_STALE_REPORT="$DFTMP/stale"; DF_UNM_REPORT="$DFTMP/unmeasurable"
+  : > "$DF_STALE_REPORT"; : > "$DF_UNM_REPORT"
+
+  while IFS= read -r dfpath; do
+    [[ -n "$dfpath" ]] || continue
+    DF_SEEN=$((DF_SEEN + 1))
+    set +e
+    dfbv=$(df_read "$DF_BASE_SHA" "$dfpath"); dfbrc=$?
+    dfhv=$(df_read "$DF_HEAD_SHA" "$dfpath"); dfhrc=$?
+    set -e
+    # 両側に無いのは対象外（和集合から来ているので通常起こらないが、pathspec が
+    # ディレクトリ等に当たった場合に備える）。比較するものが無いのは「測れなかった」ではない。
+    if [[ $dfbrc == 3 && $dfhrc == 3 ]]; then
+      DF_SEEN=$((DF_SEEN - 1))
+      continue
+    fi
+    if [[ $dfbrc != 0 || $dfhrc != 0 ]]; then
+      DF_UNMEASURABLE=$((DF_UNMEASURABLE + 1))
+      { echo "  $dfpath"
+        echo "    $DF_BASE : $(df_state "$dfbrc" "$dfbv" "$dfpath")"
+        echo "    この枝   : $(df_state "$dfhrc" "$dfhv" "$dfpath")"
+      } >> "$DF_UNM_REPORT"
+      continue
+    fi
+    # 固定長・ゼロ埋めの UTC ISO 8601 に限っているので、辞書順の比較が時刻順の比較になる。
+    if [[ $dfhv < $dfbv ]]; then
+      DF_STALE=$((DF_STALE + 1))
+      { echo "  $dfpath"
+        echo "    $DF_BASE : $dfbv"
+        echo "    この枝   : $dfhv   ← こちらが古い"
+      } >> "$DF_STALE_REPORT"
+    fi
+  done < "$DFTMP/paths"
+
+  # 対象が 1 件も無い（`data/` を持たないチェックアウト）。比較の対象が無いのは事実であって
+  # 「測れなかった」ではない。
+  if [[ $DF_SEEN -eq 0 ]]; then
+    echo "stale-base --data-freshness: 対象外 — $DF_BASE と $DF_HEAD のどちらにも対象の meta.json がありません（対象の式: $DF_RE）"
+    exit 0
+  fi
+
+  if [[ $DF_UNMEASURABLE -gt 0 ]]; then
     cat >&2 <<DFUNMEASURABLE
-stale-base --data-freshness: $DF_PATH の fetchedAt を**測れません**。
+stale-base --data-freshness: $DF_SEEN 件のうち $DF_UNMEASURABLE 件の fetchedAt を**測れません**。
 
-  $DF_BASE = ${DF_BASE_SHA:0:8} : $(df_state "$DF_BASE_RC" "$DF_BASE_VAL")
-  この枝   = ${DF_HEAD_SHA:0:8} : $(df_state "$DF_HEAD_RC" "$DF_HEAD_VAL")
+$(cat "$DF_UNM_REPORT")
 
-**「測れなかった」を「古くない」として通しません。** 片側だけ $DF_PATH が無い／
+**「測れなかった」を「古くない」として通しません。** 片側だけファイルが無い／
 fetchedAt が無い／日付として解釈できない、のいずれかです。
 
-  · $DF_PATH を消したのなら、消してよい理由を PR 本文に書いてください
+  · そのファイルを消したのなら、消してよい理由を PR 本文に書いてください
     （**消すとこの検査そのものが黙る**ので、黙らせる形での解決はしないこと）
   · 土台が古いだけなら、base を進めてください:
 
@@ -246,18 +348,20 @@ DFUNMEASURABLE
     exit 1
   fi
 
-  # 固定長・ゼロ埋めの UTC ISO 8601 に限っているので、辞書順の比較が時刻順の比較になる。
-  if [[ $DF_HEAD_VAL < $DF_BASE_VAL ]]; then
+  if [[ $DF_STALE -gt 0 ]]; then
     cat >&2 <<DFSTALE
-stale-base --data-freshness: この枝の $DF_PATH の fetchedAt が $DF_BASE より**古い**です。
+stale-base --data-freshness: $DF_SEEN 件のうち $DF_STALE 件の fetchedAt が $DF_BASE より**古い**です。
 
-  $DF_BASE = ${DF_BASE_SHA:0:8} : $DF_BASE_VAL
-  この枝   = ${DF_HEAD_SHA:0:8} : $DF_HEAD_VAL   ← こちらが古い
+  $DF_BASE = ${DF_BASE_SHA:0:8}
+  この枝   = ${DF_HEAD_SHA:0:8}
 
-このままマージすると、**$DF_BASE の $DF_PATH（と同じ更新で入った $DF_PATH 以外の data/ 一式）が
+$(cat "$DF_STALE_REPORT")
+
+このままマージすると、**$DF_BASE の上のファイル（と同じ更新で入った data/ 一式）が
 枝の古い版で上書きされます。** 実測 2026-09-30: この形は引数なしの検査も
-\`--net-deletions\` も通りました（枝は data/ を 1 行も触っておらず、差分は 34 行減って 34 行増える
-ので差し引き 0 です）。**行数は打ち消せますが、時刻は打ち消せません。**
+\`--net-deletions\` も通りました（枝は data/ を 1 行も触っておらず、差分は減った行数と
+増えた行数が等しいので差し引き 0 です。日次の \`data/meta.json\` で 34 行、
+月次の \`data/districts/meta.json\` で 54 行）。**行数は打ち消せますが、時刻は打ち消せません。**
 
 **枝が古いだけです。base を進めてください:**
 
@@ -265,12 +369,12 @@ stale-base --data-freshness: この枝の $DF_PATH の fetchedAt が $DF_BASE �
   # または
   git fetch origin && git rebase origin/main
 
-**この検査を外す・$DF_PATH を対象から除く・fetchedAt を手で書き換えて黙らせる、のいずれもしないこと。**
+**この検査を外す・ファイルを対象から除く・fetchedAt を手で書き換えて黙らせる、のいずれもしないこと。**
 DFSTALE
     exit 1
   fi
 
-  echo "stale-base --data-freshness: ok — $DF_PATH の fetchedAt は後退していません（$DF_BASE: $DF_BASE_VAL ／ この枝: $DF_HEAD_VAL）"
+  echo "stale-base --data-freshness: ok — $DF_SEEN 件の meta.json の fetchedAt は、どれも後退していません（$DF_BASE: ${DF_BASE_SHA:0:8} ／ この枝: ${DF_HEAD_SHA:0:8}）"
   exit 0
 fi
 

@@ -778,6 +778,229 @@ t_freshness_is_wired_into_ci() {
     "ci.yml が --data-freshness を実行している（#1156）"
 }
 
+# --- #1156 レビュー: 対象は `data/meta.json` 1 件ではない ------------------------------------------
+# **レビュアーが probe 枝で実証した**（2026-09-30）。`data/meta.json` は `data/` の代表ではなかった:
+# 月次の 2 本（`districts.yml` cron "0 20 1 * *" / `local-assemblies.yml` cron "0 20 4 * *"）は
+# **`data/meta.json` を進めないまま**別の `meta.json` を進める。実測（`2f136cd1` は
+# `data/districts/meta.json` だけを触っている）:
+#   git diff --numstat origin/main <probe> -- data/  →  54  54  data/districts/meta.json
+#   既定モード / --net-deletions / --data-freshness（1 件版）  すべて rc=0（素通り）
+# **月次なので巻き戻る幅は 1 か月ぶん。**
+#
+# **この節の fixture が無いと、対象を 1 件に縮める変異が 51 件すべて緑のまま生き残る**（実測）。
+#
+# write_meta_at <path> <fetchedAt> — 任意の meta.json をその時刻で書く
+write_meta_at() {
+  mkdir -p "$W/$(dirname "$1")"
+  printf '{\n "fetchedAt": "%s",\n "sessions": [200, 201]\n}\n' "$2" > "$W/$1"
+}
+# new_repo_with_nested_data → data/meta.json のほかに districts と assemblies を 2 件持つ。
+# **本番の形（13 件）に合わせて「入れ子が在る」ことを fixture に持たせる**のが要点で、
+# 1 件だけの fixture では「1 件しか見ていない」を検出できない。
+new_repo_with_nested_data() {
+  new_repo
+  write_meta_at data/meta.json                   '2026-09-29T00:00:00.000Z'
+  write_meta_at data/districts/meta.json         '2026-09-01T00:00:00.000Z'
+  write_meta_at data/assemblies/pref-02/meta.json '2026-09-04T00:00:00.000Z'
+  write_meta_at data/assemblies/pref-04/meta.json '2026-09-04T00:00:00.000Z'
+  commit "data: 初回（入れ子つき）"
+  g update-ref refs/remotes/origin/main main
+}
+
+t_freshness_counts_every_meta_json_it_saw() {
+  # **母数（#757）**: 見た件数を出力に出す。「4 件見た」と「1 件しか見ていない」が
+  # 区別できなければ、対象が静かに縮んでも出力は同じ顔をする。
+  new_repo_with_nested_data
+  branch_from main topic
+  printf -- '- **教訓 私**\n' >> "$W/docs/WORKING_AGREEMENT.md"
+  commit "my lesson"
+  run --data-freshness origin/main topic
+  assert_eq 0 "$STATUS" "全部同じ時刻なら通る: $OUT"
+  assert_contains "$OUT" "4 件" "見たファイル数を出す（data/meta.json + districts + assemblies 2 件）"
+}
+
+t_freshness_catches_a_rollback_of_districts_only() {
+  # **レビュアーの probe そのままの形**: `data/meta.json` は進んでいる（または同じ）のに、
+  # `data/districts/meta.json` だけが巻き戻っている。**月次の更新を枝が上書きする形。**
+  new_repo_with_nested_data
+  branch_from main topic
+  printf -- '- **教訓 私**\n' >> "$W/docs/WORKING_AGREEMENT.md"
+  commit "my lesson"
+  g checkout -q main
+  write_meta_at data/districts/meta.json '2026-10-01T00:00:00.000Z'   # 月次が main に入る
+  commit "data: districts"
+  g update-ref refs/remotes/origin/main main
+  g checkout -q topic
+  run --data-freshness origin/main topic
+  assert_eq 1 "$STATUS" "districts だけの巻き戻しも落とす: $OUT"
+  assert_contains "$OUT" "data/districts/meta.json" "どのファイルが古いか名指しする"
+  assert_contains "$OUT" "2026-10-01T00:00:00.000Z" "母数: main 側の時刻"
+  assert_contains "$OUT" "2026-09-01T00:00:00.000Z" "母数: 枝側の時刻"
+  assert_contains "$OUT" "4 件のうち 1 件" "見た件数と古い件数の両方を出す（#757）"
+  assert_contains "$OUT" "update-branch" "対処を検査自身が持つ"
+}
+
+t_freshness_catches_a_rollback_of_a_nested_assembly_only() {
+  # `data/assemblies/<pref>/meta.json` は**もう 1 段深い**。glob が 1 段しか見ていないと
+  # ここだけが素通りする（`data/*/meta.json` だけでは当たらない）。
+  new_repo_with_nested_data
+  branch_from main topic
+  printf -- '- **教訓 私**\n' >> "$W/docs/WORKING_AGREEMENT.md"
+  commit "my lesson"
+  g checkout -q main
+  write_meta_at data/assemblies/pref-04/meta.json '2026-10-05T00:00:00.000Z'
+  commit "data: local assemblies"
+  g update-ref refs/remotes/origin/main main
+  g checkout -q topic
+  run --data-freshness origin/main topic
+  assert_eq 1 "$STATUS" "2 段深い assemblies の巻き戻しも落とす: $OUT"
+  assert_contains "$OUT" "data/assemblies/pref-04/meta.json" "入れ子のパスを名指しする"
+  assert_not_contains "$OUT" "pref-02" "巻き戻っていない同階層のファイルは挙げない（偽陽性 0）"
+}
+
+t_freshness_denominator_grows_when_a_new_meta_json_appears() {
+  # **列挙ではなく glob であることを固定する**（レビューの指摘: 列挙だと
+  # 新しい `data/*/meta.json` が生えた瞬間に列挙漏れが穴になる = denylist の型）。
+  # **新しい meta.json を足したら母数が増えること**を検査する。ここが緑のまま
+  # 実装を列挙に戻すと、この case が落ちる。
+  new_repo_with_nested_data
+  run --data-freshness origin/main main
+  assert_contains "$OUT" "4 件" "前提: いま 4 件"
+  g checkout -q main
+  write_meta_at data/newthing/meta.json '2026-09-29T00:00:00.000Z'
+  commit "data: 新しい meta.json が生える"
+  g update-ref refs/remotes/origin/main main
+  run --data-freshness origin/main main
+  assert_contains "$OUT" "5 件" "新しい meta.json が生えたら母数が増える（列挙ではなく glob）"
+}
+
+t_freshness_reports_every_stale_file_not_just_the_first() {
+  # 複数が同時に巻き戻る形（`update-branch` を長く放置すると起こる）。**全部挙げる。**
+  new_repo_with_nested_data
+  branch_from main topic
+  printf -- '- **教訓 私**\n' >> "$W/docs/WORKING_AGREEMENT.md"
+  commit "my lesson"
+  g checkout -q main
+  write_meta_at data/meta.json                   '2026-09-30T00:00:00.000Z'
+  write_meta_at data/districts/meta.json         '2026-10-01T00:00:00.000Z'
+  write_meta_at data/assemblies/pref-02/meta.json '2026-10-05T00:00:00.000Z'
+  commit "data: 日次 + 月次 2 本が入る"
+  g update-ref refs/remotes/origin/main main
+  g checkout -q topic
+  run --data-freshness origin/main topic
+  assert_eq 1 "$STATUS" "落ちる: $OUT"
+  assert_contains "$OUT" "4 件のうち 3 件" "古い件数を数える（1 件で打ち切らない）"
+  assert_contains "$OUT" "data/meta.json" "1 件目"
+  assert_contains "$OUT" "data/districts/meta.json" "2 件目"
+  assert_contains "$OUT" "data/assemblies/pref-02/meta.json" "3 件目"
+}
+
+t_freshness_nested_file_deleted_in_head_is_unmeasurable() {
+  # 入れ子のファイルを消して黙らせる抜け道も塞がっていること（1 件版で塞いだのと同じ性質を、
+  # 広げた後も全ファイルについて持つ）。
+  new_repo_with_nested_data
+  branch_from main topic
+  g rm -q data/districts/meta.json
+  g commit -qm "districts の meta.json を消す"
+  run --data-freshness origin/main topic
+  assert_eq 1 "$STATUS" "入れ子のファイルを消しても ok と言わない: $OUT"
+  assert_contains "$OUT" "測れません" "「測れなかった」と言う"
+  assert_contains "$OUT" "data/districts/meta.json" "どのファイルが測れないか名指しする"
+}
+
+t_freshness_wiring_does_not_narrow_to_one_file() {
+  # #504 の形。**ci.yml が `--data-freshness` を呼んでいるだけでは足りない**——
+  # 対象が 1 件に縮んでいないことは、スクリプト側の既定 glob が持つ。
+  # ここでは「既定が `data/meta.json` 単独に戻っていない」ことを固定する
+  # （実測: 既定を `data/meta.json` 1 件に縮める変異は、この case が無いと 51 件すべて緑のまま通る）。
+  local sb; sb=$(cat "$HERE/../stale-base.sh")
+  # 既定は**深さに依存しない正規表現**であること。`data/meta.json` 直打ちに縮んでいないこと。
+  assert_contains "$sb" '([^/]+/)*meta' "既定の対象が深さに依存しない式になっている"
+  assert_not_contains "$sb" 'STALE_BASE_META_RE:-^data/meta\.json$}' \
+    "既定が data/meta.json 1 件に縮んでいない"
+  # **シェルの glob に頼っていないこと。** クォート無しの変数を pathspec に渡すと、
+  # **シェルが作業ツリーに対して先に展開する**——本番では 13 件出るので正しく見えるが、
+  # ツリーを読んでいない（実体が無ければ黙って縮む）。実測でこの形を踏んだので固定する。
+  #
+  # **逐語で変数名まで書かない。** 最初はこの行が `--name-only "$1" -- $` を禁じていたが、
+  # `df_paths` が引数を `local tree=$1` で受けるように変わった瞬間に**空振りになった**
+  # （`"$1"` という綴りがソースから消えたので、禁じた形が二度と現れない＝常に緑）。
+  # 見るべきは変数名ではなく「`ls-tree` に pathspec を渡していない」ことなので、
+  # `--name-only` のあとに `--` が続かないことを、綴りに依存しない形で見る。
+  # **コメント行は除く。** 上の解説が「こう書くと駄目」の例として
+  # `git ls-tree -r -- <pathspec>` を逐語で持っているので、素朴に grep すると
+  # **解説そのものに当たって常に落ちる**（実測でそうなった）。見たいのは実行される行だけ。
+  local lstree_lines
+  lstree_lines=$(printf '%s\n' "$sb" \
+    | LC_ALL=C grep -v '^[[:space:]]*#' \
+    | LC_ALL=C grep -F 'ls-tree' | LC_ALL=C grep -F ' -- ' || :)
+  assert_eq "" "$lstree_lines" \
+    "ls-tree に pathspec を渡していない（git の * は / を跨がず、クォート無しならシェルが作業ツリーで展開する）"
+}
+
+t_freshness_default_args_are_origin_main_and_head() {
+  # **レビューの X1/X2**: 既定の引数値（`origin/main` と `HEAD`）が 1 件もテストされていない
+  # ——`DF_BASE=${1:-origin/main}` / `DF_HEAD=${2:-HEAD}` を別の値に変えても全件緑だった。
+  # CI は引数を明示して渡すので CI の正しさには届かないが、**手元で引数なしで叩くのが
+  # 既定の使い方**なので固定する。
+  new_repo_with_nested_data
+  branch_from main topic
+  printf -- '- **教訓 私**\n' >> "$W/docs/WORKING_AGREEMENT.md"
+  commit "my lesson"
+  g checkout -q main
+  write_meta_at data/districts/meta.json '2026-10-01T00:00:00.000Z'
+  commit "data: districts"
+  g update-ref refs/remotes/origin/main main
+  g checkout -q topic          # HEAD = topic（引数を渡さない）
+  run --data-freshness         # 引数なし = origin/main と HEAD
+  assert_eq 1 "$STATUS" "引数なしで origin/main と HEAD を比べる: $OUT"
+  assert_contains "$OUT" "data/districts/meta.json" "既定の引数でも同じ答えを出す"
+  assert_contains "$OUT" "origin/main" "既定の base は origin/main"
+}
+
+t_freshness_unlistable_tree_is_not_zero_targets() {
+  # **`|| :` が `ls-tree` の失敗まで飲んでいないこと。**
+  # `ls-tree | tr | grep || :` と一息に書くと、`grep` の「0 件」（pipefail で rc=1）を
+  # 通すための `|| :` が **`ls-tree` の失敗も飲む**。すると「ツリーを列挙できなかった」が
+  # 「対象 0 件」に化け、`DF_SEEN -eq 0` の枝が**「対象外」と言って exit 0** する——
+  # #1158 で塞いだ「測れなかったを通さない」と同じ穴が、列挙の側に開く。
+  #
+  # 到達性: 本番の SHA は `df_resolve`（`rev-parse --verify <ref>^{commit}`）を通っているので、
+  # ここで `ls-tree` が失敗するにはオブジェクトの欠損が要る（ref の操作では作れなかった）。
+  # **だから `git` の shim で `ls-tree` だけを失敗させて、穴の有無そのものを測る。**
+  new_repo_with_nested_data
+  local shim="$W/.shim" real_git
+  real_git=$(command -v git)
+  mkdir -p "$shim"
+  { echo '#!/usr/bin/env bash'
+    echo '# ls-tree だけを失敗させ、ほかは本物の git に渡す shim。'
+    echo '# 本物の git は絶対パスで呼ぶ（PATH 経由だと自分自身に戻って無限再帰する）。'
+    # shellcheck disable=SC2016  # shim の**中身**なので、ここで展開してはいけない
+    echo 'if [[ ${1:-} == ls-tree ]]; then echo "fatal: simulated object store failure" >&2; exit 128; fi'
+    # shellcheck disable=SC2016  # 同じ理由。"$@" は shim が実行されるときに展開される
+    printf 'exec %q "$@"\n' "$real_git"
+  } > "$shim/git"
+  chmod +x "$shim/git"
+  set +e
+  OUT=$(cd "$W" && PATH="$shim:$PATH" bash "$SCRIPT" --data-freshness origin/main main 2>&1); STATUS=$?
+  set -e
+  assert_eq 1 "$STATUS" "ツリーを列挙できないなら exit 1（「対象 0 件」として通さない）: $OUT"
+  assert_not_contains "$OUT" "対象外" "「対象外」と言って黙らない"
+  assert_not_contains "$OUT" "後退していません" "成功の断定をしない"
+}
+
+t_freshness_too_many_args_is_usage_not_a_pass() {
+  # **レビューの X4**: 引数個数のガード。3 つ渡したら usage（exit 2）で、**ok と言わない**。
+  new_repo_with_nested_data
+  run --data-freshness origin/main main extra
+  assert_eq 2 "$STATUS" "引数が多すぎるときは exit 2: $OUT"
+  # `ok` の部分一致で見てはいけない: usage の `[<base-ref>]` に `ok` は無いが `--net-deletions`
+  # 等の綴りに紛れる余地が在り、**部分一致は「アドレスは値として数える」の罠そのもの**。
+  # この検査が言ってはいけないのは「後退していません」（成功の断定）なので、それを見る。
+  assert_not_contains "$OUT" "後退していません" "成功の断定をしない"
+  assert_contains "$OUT" "usage" "使い方を出す"
+}
+
 test_case "古い main から切って、その後 main が足した行を消す枝 → 落ちる" t_stale_base_deleting_main_lines_fails
 test_case "消える行が '- ' で始まっても検出する（^-- で除外されない）" t_bullet_lines_are_not_missed
 test_case "消える行が '+' で始まっても検出する" t_lost_line_starting_with_plus_is_not_missed
@@ -912,4 +1135,14 @@ test_case "両側に data/meta.json が無いなら対象外（#1156）" t_fresh
 test_case "base に在って head で消えている → 「測れません」（消せば黙る穴を作らない、#1156）" t_freshness_base_has_meta_but_head_deleted_it_is_measured
 test_case "--data-freshness も解決できない ref を通さない（#1156）" t_freshness_rejects_an_unresolvable_ref
 test_case "wiring: ci.yml が --data-freshness を呼ぶ（#1156／#504）" t_freshness_is_wired_into_ci
+test_case "見た meta.json の件数を出す（母数、#757／#1156 レビュー）" t_freshness_counts_every_meta_json_it_saw
+test_case "districts だけの巻き戻し（月次）も落とす（#1156 レビュー）" t_freshness_catches_a_rollback_of_districts_only
+test_case "2 段深い assemblies だけの巻き戻しも落とす（#1156 レビュー）" t_freshness_catches_a_rollback_of_a_nested_assembly_only
+test_case "新しい meta.json が生えたら母数が増える（列挙ではなく glob、#1156 レビュー）" t_freshness_denominator_grows_when_a_new_meta_json_appears
+test_case "古いものを全部挙げる（1 件で打ち切らない、#1156 レビュー）" t_freshness_reports_every_stale_file_not_just_the_first
+test_case "入れ子のファイルを消しても「測れません」（黙らせる穴を塞ぐ、#1156 レビュー）" t_freshness_nested_file_deleted_in_head_is_unmeasurable
+test_case "既定の対象が 1 件に縮んでいない（#504 の形、#1156 レビュー）" t_freshness_wiring_does_not_narrow_to_one_file
+test_case "引数なしなら origin/main と HEAD（レビューの X1/X2）" t_freshness_default_args_are_origin_main_and_head
+test_case "ツリーを列挙できないのを「対象 0 件」として通さない（|| : が ls-tree の失敗を飲まない）" t_freshness_unlistable_tree_is_not_zero_targets
+test_case "引数が多すぎるときは usage で落ちる（レビューの X4）" t_freshness_too_many_args_is_usage_not_a_pass
 echo "passed $PASS, failed $FAIL"; [[ $FAIL == 0 ]]
