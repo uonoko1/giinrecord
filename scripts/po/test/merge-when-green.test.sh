@@ -3914,6 +3914,13 @@ handle() {
     "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
     # **API は成功している**（exit 0）。**中身が空の配列である**——ここが exit 1 との違い。
     "api repos/uonoko1/giinrecord/pulls/12/commits"*) echo '[]' ;;
+    # **母数も 0 だと言わせる**（#1163 のレビューの指摘 2 で既定が入ったので明示する）。
+    # **ここを書かないと既定の `{"commits":1}` が効き、0 / 1 で母数の検算が先に落ちる**
+    # ——**どちらも exit 1 でマージもしないので安全の向きは同じだが、
+    # このテストが名乗っている「母数 0 を名指しする」経路を通らなくなる。**
+    # **「PR は 0 件だと言っているのに手元も 0 件」＝取りこぼしではない**ので、
+    # **止める理由は母数 0 のほうでなければならない。**
+    "api repos/uonoko1/giinrecord/pulls/12"*) echo '{"commits":0}' ;;
     "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
     "pr merge 12 --squash --delete-branch") echo merged ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
@@ -4294,3 +4301,169 @@ EOF
   assert_contains "$OUT$ERR" "コミット 31 件 / PR が言う 30 件" "食い違いを黙って隠さない"
 }
 test_case "1157: 手元が母数より多いだけでは止めない（再実行で増える側は正常）" t_1157_more_than_denominator_passes
+
+# --- `--paginate` の応答は「ページごとに 1 ドキュメント」である（#1157 / #1163 の指摘 1）-------
+#
+# **何が壊れていたか**: **`seen` を数える `jq -s` の畳み込み経路が、一度も実行されていなかった。**
+# **`scripts/po/test/fake-bin/gh` の `paginate_emulate` が、`--paginate` でも
+# 単一ドキュメントを返していた**ので——**複数ドキュメントを吐く fixture は
+# リポジトリに 0 件だった**（#1163 のレビュアーの実測）。
+#
+# **単一ドキュメントでは `jq -s '[.[][]]'` と `jq '[.[]]'` が同じ数を返す**（実測:
+# `[{"a":1},{"a":2}]` でどちらも 2）。**つまり `-s` は等価変異でしかなく、
+# 落とせるテストが存在しえなかった。**
+#
+# **本物の `gh api --paginate` はページごとに 1 個の JSON ドキュメントを吐く**
+# （#1093 で実測: `?per_page=5` の 53 件 → `jq -s length` が **11**）。
+# **`merge-when-green.sh` の docblock はそう書いてあり、`jq -s` が在る理由もそれである**
+# ——**書いてあるのに、測っていなかった。**
+#
+# **head（150/0）で素通りしていた 3 変異と、倒れる向き:**
+#
+# ```
+# jq -s を落とす                      → 150/0  （単一ドキュメントでは等価。本物では 1 ページ目だけ数える）
+# seen=0 のフォールバックを 999999 に  → 150/0  **マージを通す側**（#569）
+# seen=0 のフォールバックを $want に   → 150/0  **マージを通す側**（#569）
+# ```
+#
+# **999999 のほうがとくに悪い**: **レビュアーは 2 ドキュメントの fixture で、
+# `コミット 999999 件 / PR が言う 32 件` という明らかに嘘の数を出しながら
+# `pr merge` まで走ることを実測した。** **「母数を出す」ことが「母数が正しい」の
+# 証明になっていなかった**（#757 の型）。**しかも 999999 を読むテストが 1 つも無かった。**
+
+# **テスト A（fake の側）**: **`--paginate` の応答が複数ドキュメントであることを直接測る。**
+# **これが無いと、下の B・C は「fake がたまたま 1 ドキュメントで返すから緑」になりうる。**
+# **`t_1157_fake_gh_emulates_paging` は「全件返る」しか見ていない**
+# ——**1 ドキュメントに畳んで返しても 31 件なので、あのテストは通ってしまう。**
+t_1163_paginate_emits_one_document_per_page() {
+  local h docs items sliced
+  h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "api things"*) jq -cn '[range(31) | {n: .}]' ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  # **`fake_gh` に寄せる**（`local -a env=(...)` と書くと `env` コマンドを隠してしまう）。
+  fake_gh() { PATH="$HERE/fake-bin:$PATH" FAKE_GH_LOG=/dev/null FAKE_GH_HANDLER="$h" \
+    FAKE_UNHANDLED=/dev/null gh "$@"; }
+  # **31 件 / 1 ページ 30 件 → 2 ページ = 2 ドキュメント。**
+  docs=$(fake_gh api things --paginate | grep -c .)
+  assert_eq 2 "$docs" "--paginate は**ページごとに 1 ドキュメント**を吐く（本物と同じ）"
+  # **畳めば 31 件**（`jq -s` が要る理由がここに在る）。
+  items=$(fake_gh api things --paginate | jq -s '[.[][]] | length')
+  assert_eq 31 "$items" "jq -s で畳むと全件になる"
+  # **畳まなければ 1 ページ目の 30 件しか数えられない**——**`jq -s` を落とすと起きること。**
+  sliced=$(fake_gh api things --paginate | jq '[.[]] | length' | head -1)
+  assert_eq 30 "$sliced" "**-s を落とすと 1 ページ目の 30 件しか数えない**（等価変異ではない）"
+  unset -f fake_gh
+}
+test_case "1163: --paginate の応答はページごとに 1 ドキュメント（jq -s が要る理由）" t_1163_paginate_emits_one_document_per_page
+
+# **テスト B（`jq -s` を落とすと落ちる）**: **2 ページに分かれた 31 件すべて本人確認済み、
+# PR も 31 件だと言っている。** **畳めていれば 31 == 31 で通る。**
+# **`jq -s` を落とすと `seen` が 1 ページ目の 30 件になり、30 < 31 で母数の検算が落とす。**
+#
+# **これは `t_1157_exact_commit_count_passes_and_reports` と同じ形に見えるが、違う:**
+# **あちらは fake が単一ドキュメントを返していたので `-s` が効いていなかった。**
+# **いま fake が本物と同じく分割して吐くので、同じ assert が `-s` を守る。**
+t_1163_folds_pages_before_counting() {
+  local commits; commits=$(mwg_commits_json 31 '120390190+uonoko1@users.noreply.github.com')
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    # **fake が 2 ドキュメント（30 件 + 1 件）に分けて吐く。**
+    "api repos/uonoko1/giinrecord/pulls/12/commits"*) echo '$commits' ;;
+    "api repos/uonoko1/giinrecord/pulls/12"*) echo '{"commits":31}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "ページを畳めば 31 == 31 で通る: $ERR"
+  # **ここが `jq -s` を落とすと落ちる**: **畳めないと 30 件になり、30 / 31 で die する。**
+  assert_contains "$OUT$ERR" "コミット 31 件 / PR が言う 31 件" \
+    "**ページをまたいで畳んだ件数**を出す（1 ページ目だけなら 30 件になる）"
+  assert_contains "$LOG" "pr	merge	12" "取りこぼしていなければマージできる"
+}
+test_case "1163: ページをまたいで畳んでから数える（jq -s を落としたら落ちる）" t_1163_folds_pages_before_counting
+
+# **テスト C（フォールバックが嘘の数を出してはいけない）**:
+# **`seen` が壊れた応答で読めなかったとき、`|| seen=0` は「0 件」に倒れる**
+# ——**0 は母数より小さいので、母数の検算が die する側に倒れる**（#569 の正しい向き）。
+#
+# **フォールバックを 999999 や `$want` に変えると、`assert_denominator` は
+# 「手元のほうが多い／等しい」と読んで通してしまう**
+# ——**1 件もコミットを読めていないのに、身元の門も母数の門も越える。**
+#
+# **向き**: **マージを通す側**（#569）。**利用者からは検出できない。**
+#
+# **どうやって「読めない応答」を作るか**: **`--paginate` の応答の 1 ページ目が
+# 壊れた JSON だと、`jq -s` は全体を捨てる。** **本物でもそうなる**
+# （途中でネットワークが切れた・プロキシが HTML を挟んだ）。
+# **壊れた JSON は fake の `paginate_emulate` が触らず素のまま通す**ので、
+# **`merge-when-green.sh` の `jq -s` が受け取って失敗する。**
+t_1163_unreadable_count_falls_back_to_zero_not_a_lie() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    # **壊れた JSON**（`jq -s` が失敗する）。**gh 自体は成功している**（exit 0）ので、
+    # 上の「読めなかったら die」の経路には入らない——**ここを通るのは数えるところである。**
+    "api repos/uonoko1/giinrecord/pulls/12/commits"*) printf '%s\n' '{"not json' ;;
+    # **PR は 32 件だと言っている。**
+    "api repos/uonoko1/giinrecord/pulls/12"*) echo '{"commits":32}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "数えられなかったら止まる（0 件に倒れる）"
+  assert_not_contains "$LOG" "pr	merge	12" "**マージしない**（向きは #569）"
+  # **出す数は 0 でなければならない。** **999999 や 32 を出す実装はここで落ちる。**
+  assert_contains "$ERR" "手元 0 件 / 母数 32 件" \
+    "**読めなかったら 0 件と言う**（嘘の数を出さない。999999 / \$want に変えたら落ちる）"
+  assert_not_contains "$OUT$ERR" "999999" "明らかに嘘の数を出さない"
+}
+test_case "1163: コミット数を数えられなければ 0 件に倒れる（嘘の数を出してマージしない）" t_1163_unreadable_count_falls_back_to_zero_not_a_lie
+
+# **テスト D（母数の既定が全テストで効いていること）**（#1163 の指摘 2）。
+#
+# **何が壊れていたか**: **`api repos/.../pulls/12` に答えるハンドラが 5 本しか無く、
+# 151 件のうち 146 件が `PR が言う ? 件` に落ちていた**——**母数の検算が
+# 「母数を知らない」で素通りする側に倒れ、ほぼ全テストで不活性だった。**
+# **`handle_with_defaults` は他の普遍的に到達する呼び出しには既定値を持っていたのに、
+# この新しい呼び出しには持っていなかった。**
+#
+# **だから既定を足した。** **ここでは「既定が効いている」ことを直接測る**
+# ——**既定を消すと、この assert が `PR が言う ? 件` になって落ちる。**
+t_1163_denominator_default_is_active() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    # **commits も母数も、ハンドラは 1 つも答えない**（既定に任せる）。
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "既定は「何も起きていない」側（1 件 / 1 件）: $ERR"
+  # **既定が無いとここが `PR が言う ? 件` になる**＝**検算が不活性だったことの計器。**
+  assert_contains "$OUT$ERR" "コミット 1 件 / PR が言う 1 件" \
+    "**母数の既定が効いている**（無いと ? 件になり、検算がほぼ全テストで不活性になる）"
+  assert_not_contains "$OUT$ERR" "PR が言う ? 件" "既定が在るのに「読めなかった」と書かない"
+}
+test_case "1163: 母数の既定が効いている（ハンドラが答えなくても検算が走る）" t_1163_denominator_default_is_active

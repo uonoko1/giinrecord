@@ -50,6 +50,17 @@ handle_with_defaults() {
       "api repos/"*"/pulls/"*"/commits"*)
         echo '[{"parents":[{"sha":"p1"}],"commit":{"author":{"email":"120390190+uonoko1@users.noreply.github.com"},"committer":{"email":"120390190+uonoko1@users.noreply.github.com"}}}]'
         return 0 ;;
+      # #1157 でコミットの母数の検算が増え、これも**どのテストの経路でも通る**ので既定を置く
+      # （#1163 のレビューの指摘 2）。
+      # **既定が無かったあいだ、151 件のうち 146 件が `PR が言う ? 件` に落ちていた**
+      # ——**母数の検算が「母数を知らない」で素通りする側に倒れ、ほぼ全テストで不活性だった。**
+      # **既定は上の commits の既定と同じ 1 件**＝**取りこぼしていない**（他の関心事を
+      # 試しているテストを、母数の話で落とさない）。
+      # **この節は上の `/commits` より後に書く**——**`case` は上から見るので、
+      # 先に書くと `/commits` の呼び出しをこちらが飲んでしまう。**
+      # **「既定が検査を素通しさせている」形にならないこと**は、
+      # **母数をずらしたテスト（1157 の 2 本）が止まることで確かめている。**
+      "api repos/"*"/pulls/"*) echo '{"commits":1}'; return 0 ;;
     esac
   fi
   [[ -n "$err" ]] && printf '%s\n' "$err" >&2
@@ -72,26 +83,68 @@ done
 # **本物の `gh api` の振る舞い**（#1093 で実測。gh 2.89.0）:
 #   - **`per_page` を指定しないと 1 ページ 30 件**で切れる。
 #   - **`--paginate` を付けると gh が `per_page` に 100 を補い、全ページを取る。**
+#   - **`--paginate` は複数ページを 1 個の JSON に畳まない**——**ページごとに 1 個の JSON
+#     ドキュメントを並べて吐く**（実測: `?per_page=5` の 53 件 → `jq -s length` が **11**）。
 #
-# **だからここでは「`--paginate` が無ければ配列を先頭 30 件で切る」**。
+# **初版はこの 3 つめを真似ていなかった**（#1163 のレビューの指摘 1）。
+# **`--paginate` でも単一ドキュメントを返していたので、`merge-when-green.sh` 側の
+# `jq -s` の畳み込み経路が一度も実行されていなかった**——
+# **レビュアーの実測: 複数ドキュメントを吐く fixture はリポジトリに 0 件。**
+# **その結果、以下の 3 変異がどれも 150 passed / 0 failed で素通りしていた:**
+#
+# ```
+# jq -s を落とす                     → 150/0   （単一ドキュメントでは等価変異）
+# seen=0 のフォールバックを 999999 に → 150/0   **マージを通す側に倒れる**
+# seen=0 のフォールバックを $want に  → 150/0   **マージを通す側に倒れる**
+# ```
+#
+# **999999 のほうは、`コミット 999999 件 / PR が言う 32 件` という明らかに嘘の数を
+# 出しながらマージまで走った**（レビュアーが 2 ドキュメントの fixture で実測）。
+# **「母数を出す」ことが「母数が正しい」の証明になっていなかった**（#757 の型）。
+#
+# **だからここでは本物と同じく「ページごとに 1 ドキュメント」を吐く:**
+#   - **`--paginate` が無ければ 1 ページ目だけ**（先頭 `FAKE_PER_PAGE` 件）。
+#   - **`--paginate` が在れば、`FAKE_PER_PAGE` 件ずつに切った JSON ドキュメントを順に吐く。**
 # **`total_count` は切らない**——**本物も切らない**（どのページも同じ母数を返す）。
-# **これが「母数は在るのに手元が足りない」＝ #1093 の形そのものである。**
 #
 # **配列そのもの（`pulls/<n>/commits`）と、オブジェクトの中の配列
 # （`check-runs` の `.check_runs`）の両方を切る**——**この道具はどちらも読む。**
-# **30 件以下の応答は 1 バイトも変わらない**ので、既存の 226 本には影響しない
-# （実測: いま在る fixture の最大は 3 件）。
+#
+# **`FAKE_PER_PAGE` 件以下の応答は 1 バイトも変わらない**（ページが 1 つなのでドキュメントも 1 つ）。
+# **実測: `scripts/po/test/*.test.sh` の 234 件のうち、2 ドキュメント以上になる fixture は
+# #1157 の 5 本だけで、残り 229 件の応答は従来と同一である。**
 FAKE_PER_PAGE=${FAKE_PER_PAGE:-30}
+# 応答に含まれる配列の最大長（ページ数を決めるのに使う）。配列が無ければ 0。
+fake_max_array_len() {
+  jq -r '
+    if type == "array" then length
+    elif type == "object" then ([.[] | select(type == "array") | length] | max // 0)
+    else 0 end' <<<"$1" 2>/dev/null || echo 0
+}
+# 応答の中の配列を [from:to] で切る（オブジェクトなら中の配列それぞれを切る）
+fake_slice() {
+  jq -c --argjson a "$2" --argjson b "$3" '
+    if type == "array" then .[$a:$b]
+    elif type == "object" then
+      with_entries(if (.value | type) == "array" then .value |= .[$a:$b] else . end)
+    else . end' <<<"$1" 2>/dev/null || printf '%s' "$1"
+}
 paginate_emulate() {
-  local body=$1 paginated=$2
-  [[ "$paginated" == 1 ]] && { printf '%s' "$body"; return 0; }
+  local body=$1 paginated=$2 n=$FAKE_PER_PAGE len from
   # **JSON でなければ触らない**（`merged` のような素のテキストを返す handler が在る）。
   jq -e . >/dev/null 2>&1 <<<"$body" || { printf '%s' "$body"; return 0; }
-  jq -c --argjson n "$FAKE_PER_PAGE" '
-    if type == "array" then .[0:$n]
-    elif type == "object" then
-      with_entries(if (.value | type) == "array" then .value |= .[0:$n] else . end)
-    else . end' <<<"$body" 2>/dev/null || printf '%s' "$body"
+  len=$(fake_max_array_len "$body")
+  [[ "$len" =~ ^[0-9]+$ ]] || len=0
+  # **`--paginate` が無ければ 1 ページ目だけ**（本物と同じ。母数は切らない）。
+  if [[ "$paginated" != 1 ]]; then fake_slice "$body" 0 "$n"; return 0; fi
+  # **1 ページで収まるなら 1 ドキュメント**（従来と 1 バイトも変わらない）。
+  if (( len <= n )); then printf '%s' "$body"; return 0; fi
+  # **収まらなければ、ページごとに 1 ドキュメントを改行で区切って吐く**（本物と同じ）。
+  from=0
+  while (( from < len )); do
+    fake_slice "$body" "$from" "$(( from + n ))"
+    from=$(( from + n ))
+  done
 }
 
 PAGINATED=0
