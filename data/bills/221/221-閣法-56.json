@@ -7,6 +7,16 @@
   "sangiin": "2026-06-02",
   "shugiin": "2026-04-07"
  },
+ "referral": {
+  "sangiin": {
+   "committee": "厚生労働",
+   "date": "2026-07-06"
+  },
+  "shugiin": {
+   "committee": "厚生労働",
+   "date": "2026-05-26"
+  }
+ },
  "result": {
   "lawNumber": "60",
   "promulgated": "2026-07-17",

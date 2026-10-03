@@ -1290,6 +1290,19 @@
    "value": "賛成"
   },
   {
+   "committee": "総務委員会",
+   "date": "2026-03-24",
+   "estimated": false,
+   "firstDate": "2026-03-24",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-24",
+   "meetingId": "122114601X00220260324_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122114601X00220260324/0"
+  },
+  {
    "committee": "外交防衛委員会",
    "date": "2026-03-24",
    "estimated": false,

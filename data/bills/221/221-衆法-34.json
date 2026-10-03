@@ -6,6 +6,12 @@
  "received": {
   "shugiin": "2026-07-16"
  },
+ "referral": {
+  "shugiin": {
+   "committee": "議院運営",
+   "date": "2026-07-23"
+  }
+ },
  "result": {
   "shugiin": "閉会中審査"
  },

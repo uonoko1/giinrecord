@@ -3,6 +3,12 @@
  "id": "217-衆法-23",
  "kind": "衆法",
  "number": 23,
+ "referral": {
+  "shugiin": {
+   "committee": "財務金融",
+   "date": "2026-01-23"
+  }
+ },
  "session": 217,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0CDA.htm",
  "status": "未了",

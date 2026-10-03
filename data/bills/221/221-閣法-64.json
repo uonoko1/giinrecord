@@ -7,6 +7,16 @@
   "sangiin": "2026-07-10",
   "shugiin": "2026-06-30"
  },
+ "referral": {
+  "sangiin": {
+   "committee": "皇室典範等の一部を改正する法律案特別",
+   "date": "2026-07-14"
+  },
+  "shugiin": {
+   "committee": "議院運営",
+   "date": "2026-07-09"
+  }
+ },
  "result": {
   "lawNumber": "66",
   "promulgated": "2026-07-24",

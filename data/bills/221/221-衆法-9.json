@@ -6,6 +6,12 @@
  "received": {
   "shugiin": "2026-05-15"
  },
+ "referral": {
+  "shugiin": {
+   "committee": "法務",
+   "date": "2026-05-26"
+  }
+ },
  "result": {
   "shugiin": "否決"
  },
