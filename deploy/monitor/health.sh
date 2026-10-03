@@ -103,7 +103,9 @@ check_analytics() {
     found=$((found + 1))
     # 要約行（aggregate.sh が 2 行目に置く `# <date>	pv=N	pages=M	per-page=X`）から pv を読む。
     # 要約行が無い旧い TSV でも読めるように、本文の pv 列（4 列目）の合計にも落ちる。
-    pv=$(sed -n 's/^#.*\bpv=\([0-9][0-9]*\).*/\1/p' "$tsv" | head -1)
+    # `| head -1` は書かない（#527: pipefail のもとで sed が SIGPIPE で死んで確率的に偽になる）。
+    # `T;q` で sed 自身に 1 件目で止めさせる。scripts/ci/shellcheck.sh の found_version と同じ形。
+    pv=$(sed -n 's/^#.*\bpv=\([0-9][0-9]*\).*/\1/p;T;q' "$tsv")
     [ -n "$pv" ] || pv=$(awk -F '\t' 'NR>1 && $0 !~ /^#/ { s += $4 } END { print s + 0 }' "$tsv")
     [ "$pv" -gt 0 ] && nonzero=$((nonzero + 1))
   done
