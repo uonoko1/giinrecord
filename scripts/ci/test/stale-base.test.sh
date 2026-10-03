@@ -579,13 +579,93 @@ t_net_deletions_is_wired_into_ci() {
   local body; body=$(cat "$wf")
   assert_contains "$body" 'bash scripts/ci/stale-base.sh --net-deletions' \
     "ci.yml が --net-deletions を実行している（#836）"
-  # The default mode must stay too: --net-deletions is a SECOND step, not a replacement. The default
+  # The default mode must stay too: --net-deletions is a SECOND check, not a replacement. The default
   # mode names the exact lines and is the only one that is exact for the un-rebased shape.
   # shellcheck disable=SC2016  # ci.yml の中の**文字どおりの**文字列を探している
   assert_contains "$body" 'bash scripts/ci/stale-base.sh "refs/remotes/origin/$BASE_REF" "$HEAD_SHA"' \
     "引数なしの検査は置き換えずに残っている（#536）"
   assert_contains "$body" 'test -f scripts/ci/stale-base.sh' \
     "スクリプトの存在自体をワークフローが要求する（#504）"
+}
+
+# --- #1162: 2 つのモードは**別の job**に在る ----------------------------------------------------
+# **check-run 名は job 名である。** 同じ job の step は check run を共有するので、
+# `scripts/po/merge-when-green.sh --allow-nonrequired-red` を 1 回使うと
+# **その job の step が全部一緒に通る。**
+#
+# **`--net-deletions` は「赤いまま人が PR 本文を読んで判断する契約」の検査**
+# （このファイルの上の方と `stale-base.sh:148` に書いてある。先例 #794 は赤のまま main に在る）。
+# **既定モード（#536）はそうではない**——main が足した行が消えているのだから、通してはいけない。
+#
+# **上の `t_net_deletions_is_wired_into_ci` は、2 つの起動が ci.yml の
+# どこかに在ることしか見ていない。** 同じ job に戻しても緑のままである（**実測**: #1162 の
+# 実装前の main がまさにその形で、この検査は 40/40 緑だった）。**だからこれが別に要る。**
+#
+# job の切り出しは**インデント規則**で行う（`jobs:` の直下の深さの鍵が job 名）。
+# 正規表現で YAML の構文を推測しない（作業合意「言語の構造は、その言語の実装に解かせる」の
+# bash で可能な範囲——ここは「2 スペースの鍵」という単一の規則だけで足りる）。
+# `run:` の中のコメントは落とさない（落とすとコマンドが切れる）。
+#
+# **深さ 2 のコメントは、どの job の本文でもない**（次の job の見出しコメントである）。
+# **最初に書いたときはこれを前の job に数えてしまい**、`stale-base-net-deletions` の
+# 見出しコメント（`--net-deletions` の語を含む）が `stale-base` の本文に混ざって、
+# **この検査が落ちた**（実測: `passed 40, failed 1`）。**落ちたのは実装ではなく切り出しだった。**
+# だから `in_job` は**深さ 4 以上の行だけ**で保ち、深さ 2 のコメントで一旦切る。
+ci_job_body() {
+  local wf=$1 job=$2
+  awk -v job="$job" '
+    /^jobs:[[:space:]]*$/ { in_jobs=1; next }
+    in_jobs && /^[^[:space:]]/ { in_jobs=0 }
+    !in_jobs { next }
+    # 深さ 2 のコメント = 次の job の見出し。どの job の本文でもないので in_job を落とす。
+    /^  #/ { in_job=0; next }
+    /^[[:space:]]*$/ { if (in_job) print; next }
+    {
+      # この job ブロックの深さは 2（ci.yml の jobs: 直下）
+      if ($0 ~ /^  [A-Za-z_][A-Za-z0-9_-]*:[[:space:]]*$/) {
+        name=$0; sub(/^  /,"",name); sub(/:[[:space:]]*$/,"",name)
+        in_job = (name == job) ? 1 : 0
+        next
+      }
+      if (in_job) print
+    }
+  ' "$wf"
+}
+
+t_1162_two_modes_live_in_different_jobs() {
+  local wf="$HERE/../../../.github/workflows/ci.yml"
+  local sb nd
+  sb=$(ci_job_body "$wf" stale-base)
+  nd=$(ci_job_body "$wf" stale-base-net-deletions)
+  # 母数（#757）: 本文が取れていなければ、下の assert_not_contains は全部「含まない」で緑になる。
+  # **先に「取れているか」を見る。**
+  assert_contains "$sb" 'runs-on' "job stale-base の本文が取れている（取れていなければ以降は無意味）"
+  assert_contains "$nd" 'runs-on' "job stale-base-net-deletions の本文が取れている"
+  # **必須側（stale-base）に `--net-deletions` が在ってはいけない。**
+  assert_not_contains "$sb" '--net-deletions' \
+    "必須側の job に --net-deletions が同居していない（#1162。同居すると赤 1 回で両方通る）"
+  # **必須外（stale-base-net-deletions）に既定モードが在ってはいけない。**
+  # shellcheck disable=SC2016  # ci.yml の中の**文字どおりの**文字列を探している
+  assert_not_contains "$nd" 'stale-base.sh "refs/remotes/origin/$BASE_REF"' \
+    "必須外の job に既定モード（#536）が同居していない（#1162）"
+  # それぞれが自分のモードを持っていること（**痩せたら落とす**、#499）。
+  assert_contains "$nd" 'bash scripts/ci/stale-base.sh --net-deletions' \
+    "必須外の job が --net-deletions を走らせている"
+  # shellcheck disable=SC2016
+  assert_contains "$sb" 'bash scripts/ci/stale-base.sh "refs/remotes/origin/$BASE_REF" "$HEAD_SHA"' \
+    "必須側の job が既定モードを走らせている"
+  # **割った job も自分で fetch する**（別プロセスなので、もう一方の `git fetch` は効かない）。
+  assert_contains "$nd" 'git fetch --quiet origin' \
+    "割った job は自分で fetch する（#1162。しないと base ref が解決できず exit 2 になる）"
+  # **#504: この job だけが残った形でも no-op にならないよう、存在要求も両方に在る。**
+  assert_contains "$nd" 'test -f scripts/ci/stale-base.sh' \
+    "割った job もスクリプトの存在を自分で要求する（#504）"
+  assert_contains "$sb" 'test -f scripts/ci/stale-base.sh' \
+    "必須側の job もスクリプトの存在を要求する（#504）"
+  # **両方が PR でだけ走ること**（片方の `if:` が消えると push でも走り、main への push で
+  # base と head が同じになって意味を失う）。
+  assert_contains "$sb" "github.event_name == 'pull_request'" "必須側は PR でだけ走る"
+  assert_contains "$nd" "github.event_name == 'pull_request'" "必須外も PR でだけ走る"
 }
 
 t_net_deletions_is_not_confused_by_a_diverged_branch() {
@@ -737,5 +817,6 @@ test_case "20 行を超える報告で SIGPIPE で死なない（引数なし、
 test_case "20 行を超える報告で SIGPIPE で死なない（--net-deletions、#836）" t_a_long_report_does_not_die_of_sigpipe_net_deletions
 test_case "--net-deletions はバイナリを対象にしない（#836）" t_net_deletions_skips_binary_files
 test_case "wiring: ci.yml が --net-deletions を呼び、引数なしの検査も残っている（#836／#504）" t_net_deletions_is_wired_into_ci
+test_case "1162: 2 つのモードは別の job に在る（check-run 名を分けてある）" t_1162_two_modes_live_in_different_jobs
 test_case "枝が main と分岐している（遅れ かつ 進んでいる）だけでは黙る（#836）" t_net_deletions_is_not_confused_by_a_diverged_branch
 echo "passed $PASS, failed $FAIL"; [[ $FAIL == 0 ]]

@@ -130,6 +130,41 @@ function jobIfOf(text: string, jobName: string): string | null {
   return null;
 }
 
+/**
+ * job の**本文**（その job ブロックの行だけ）を取り出す（#1162）。`jobIfOf` と同じ
+ * インデント規則で job の先頭を見つけ、**次の同じ深さの鍵が来るまで**を本文とする。
+ * コメントは落とさない——**落とすと `run:` の中の `#` から先が消えて、コマンドが切れる**。
+ */
+function jobBodyOf(text: string, jobName: string): string | null {
+  const raw = text.split("\n");
+  const lines = raw.map(stripComment);
+  const jobsAt = lines.findIndex((l) => /^jobs:\s*$/.test(l));
+  if (jobsAt < 0) return null;
+  let at = -1;
+  let indent = -1;
+  for (let i = jobsAt + 1; i < lines.length; i++) {
+    const l = lines[i];
+    if (l.trim() === "") continue;
+    if (!/^\s/.test(l)) break;
+    const ind = l.length - l.trimStart().length;
+    const m = HEAD_LINE.exec(l.trim());
+    if (indent < 0) indent = ind;
+    if (ind === indent && m && (m[1] ?? m[2] ?? m[3]) === jobName) {
+      at = i;
+      break;
+    }
+  }
+  if (at < 0) return null;
+  const out: string[] = [];
+  for (let i = at + 1; i < raw.length; i++) {
+    if (lines[i].trim() === "") { out.push(raw[i]); continue; }
+    const ind = lines[i].length - lines[i].trimStart().length;
+    if (ind <= indent) break;
+    out.push(raw[i]);          // **生の行**（`run:` の中身を壊さないため）
+  }
+  return out.join("\n");
+}
+
 function jobsOf(file: string): Job[] {
   const text = readFileSync(resolve(wfDir, file), "utf8");
   const onPR = hasPullRequestTrigger(text);
@@ -153,6 +188,13 @@ const id = (j: { file: string; name: string }) => `${j.file}:${j.name}`;
  */
 const EXEMPT_FROM_REQUIRED: readonly string[] = [
   "ci.yml:stale-base",
+  // #1162: `stale-base` から割った `--net-deletions` の job。**GitHub の branch protection は
+  // 変えていない**（実測 2026-10-03: `required_status_checks.contexts` は
+  // `["check","gitleaks","forbidden-patterns","audit"]` の 4 件で、`stale-base` はもともと入っていない
+  // ——`has_stale_base: false`）。**だから割っても GitHub 側の必須は 0 件も動かない。**
+  // **区別しているのは `scripts/po/merge-when-green.sh` の `REQUIRED_CHECKS` /
+  // `NONREQUIRED_CHECKS` だけで、それは下の #1162 の検査が突き合わせる。**
+  "ci.yml:stale-base-net-deletions",
   // #793: stale-base と同じ扱い。どちらも「PR の書き方」を見る検査で、本体の正しさは見ていない。
   // **必須チェックにするかどうかは PO の判断**——REQUIRED_CHECKS に足すだけでは足りず、
   // GitHub 側の branch protection に同じ名前を登録する必要があり、登録されていない必須チェックは
@@ -213,6 +255,10 @@ test("数え上げそのものの検査: allJobs が全 workflow の job を拾�
     "ci.yml:check",
     "ci.yml:docker-web",
     "ci.yml:stale-base",
+    // #1162: `--net-deletions` を `stale-base` から**別の job に割った**。check-run 名は job 名なので、
+    // step として同居していると `merge-when-green.sh --allow-nonrequired-red` が
+    // 「赤いが通してよい」赤と「絶対に通してはいけない」赤を一緒に通す。
+    "ci.yml:stale-base-net-deletions",
     "deploy-data.yml:production",
     "deploy-data.yml:resolve",
     "deploy-data.yml:staging",
@@ -297,6 +343,7 @@ test("#541 許容リスト（意図的に必須外にしている job）は中�
       "branch-protection.yml:guard",
       "ci.yml:docker-web",
       "ci.yml:stale-base",
+      "ci.yml:stale-base-net-deletions", // #1162: stale-base から割った --net-deletions の job
       "environment-protection.yml:guard",
       "pr-body.yml:pr-closes", // #793 / #1039（ci.yml から分けた）
       "security-alerts.yml:guard", // #786
@@ -417,6 +464,101 @@ test("#1069 merge-when-green.sh の SKIPPABLE_CHECKS は、イベントで閉じ
       `${file}:${name} の \`if:\` がイベントで閉じていない: ${cond}`,
     );
   }
+});
+
+/**
+ * #1162: **`stale-base` という 1 つの check-run 名に、性質の違う検査が同居していた。**
+ *
+ * **check-run 名は job 名である。** step がいくつ在っても check run は 1 本なので、
+ * `scripts/po/merge-when-green.sh --allow-nonrequired-red` を 1 回使うと
+ * **同じ job の step が全部一緒に通る。**
+ *
+ * **`stale-base` が `NONREQUIRED_CHECKS` に在った理由は `--net-deletions`（#836）だけ**である
+ * ——関数やブロックを移動するたびに鳴り、**`scripts/ci/stale-base.sh` 自身が「赤いまま人が
+ * PR 本文を読んで判断する契約」だと明記している**（先例 #794 は赤のまま main に在る）。
+ * **だが同じ job の他の step はそうではない**: 既定モード（#536、main が足した行の消失）と
+ * `--data-freshness`（#1156、`data/` の巻き戻し）は、**赤いなら絶対に通してはいけない。**
+ *
+ * **実測（PO、2026-10-03）**: #1154 のマージでこのフラグを初めて使った。そのときの
+ * job の step 単位の結論は `step 3 success`（既定）/ `step 4 failure`（`--net-deletions`）で、
+ * **通ったのは `--net-deletions` の赤 1 件だけ**だったが、**それを確かめたのは人であって、
+ * 道具は区別していなかった。** #1161 がマージされて step が 3 つになると穴が開く。
+ *
+ * **ここで突き合わせるもの**: **`merge-when-green.sh` が「必須でない」と呼んでいる job 名の
+ * 本文に、「通してはいけない」検査の起動が混ざっていないこと。** これは**別のファイル同士**の
+ * 突き合わせである——`ci.yml` だけを読んでも、`merge-when-green.sh` だけを読んでも分からない。
+ *
+ * **`stale-base.sh` のモード一覧をここに持つ理由**: `--verify` は CI では走らない
+ * （失敗メッセージが案内する手元向けのモード）。**CI で走るモードだけを分類する。**
+ */
+test("#1162 必須でない job の本文に、通してはいけない検査が混ざっていない", () => {
+  const shPath = resolve(here, "../../../scripts/po/merge-when-green.sh");
+  const sh = readFileSync(shPath, "utf8");
+  const nonreq = sh.match(/^NONREQUIRED_CHECKS=\(([^)]*)\)\s*$/m);
+  assert.ok(nonreq, "merge-when-green.sh に NONREQUIRED_CHECKS=(...) が見つからない");
+  const nonrequired = nonreq[1].trim().split(/\s+/).filter(Boolean);
+  // 母数（#757）: 空なら下のループが 0 回まわって「問題なし」になる。
+  assert.ok(nonrequired.length > 0, "NONREQUIRED_CHECKS が空。この検査は何も見ていない");
+
+  // `scripts/ci/stale-base.sh` の CI で走るモードを、**赤の性質で**二分する（ハードコード、#499）。
+  // 左は「赤いまま人が読んで通すことが在る」、右は「赤いなら絶対に通してはいけない」。
+  const PASSABLE_WHEN_RED = ["--net-deletions"];
+  const NEVER_PASSABLE_WHEN_RED = [
+    "--data-freshness", // #1156: data/ が丸ごと巻き戻る（#1161 で ci.yml に入る）
+  ];
+  // 既定モード（#536）は**フラグを持たない**ので、起動の形で見分ける:
+  // `stale-base.sh "refs/remotes/...` のように、第 1 引数が ref である呼び出し。
+  const DEFAULT_MODE_CALL = /stale-base\.sh\s+"refs\/remotes\//;
+
+  const ciText = readFileSync(resolve(wfDir, "ci.yml"), "utf8");
+  let checkedJobs = 0;
+  for (const jobName of nonrequired) {
+    const body = jobBodyOf(ciText, jobName);
+    if (body === null) continue;   // ci.yml 以外の job（将来 workflow が増えたとき）
+    checkedJobs++;
+    for (const mode of NEVER_PASSABLE_WHEN_RED) {
+      assert.ok(
+        !body.includes(mode),
+        `ci.yml:${jobName} は merge-when-green.sh の NONREQUIRED_CHECKS に在るのに、` +
+          `\`${mode}\` を走らせている。--allow-nonrequired-red がその赤も一緒に通す（#1162）`,
+      );
+    }
+    assert.ok(
+      !DEFAULT_MODE_CALL.test(body),
+      `ci.yml:${jobName} は NONREQUIRED_CHECKS に在るのに、stale-base.sh の既定モード（#536）を` +
+        `走らせている。--allow-nonrequired-red が main の行の消失も通す（#1162）`,
+    );
+  }
+  // 母数: `ci.yml` の job を 1 つも見ていなければ、上の assert は 1 件も走っていない。
+  assert.ok(checkedJobs > 0, `NONREQUIRED_CHECKS の中に ci.yml の job が 1 つも無い: ${nonrequired.join(", ")}`);
+
+  // **逆向き**: 「赤いまま通してよい」検査が、**必須でない job の中に在る**こと。
+  // これが無いと、`--net-deletions` を必須側に移して**抜け道そのものを消しても**上は緑になる
+  // （#858 が解いた #856 の詰まりに戻る。**痩せたら落とす**、#499）。
+  for (const mode of PASSABLE_WHEN_RED) {
+    const jobsRunningIt = nonrequired.filter((n) => (jobBodyOf(ciText, n) ?? "").includes(mode));
+    assert.deepEqual(
+      jobsRunningIt.length,
+      1,
+      `\`${mode}\`（赤いまま人が読んで通す契約の検査）を走らせる「必須でない」job が ` +
+        `${jobsRunningIt.length} 件。1 件であるべき（0 件なら #856 の詰まりに戻り、` +
+        `2 件以上なら同じ赤が 2 か所から出る）`,
+    );
+  }
+
+  // **`stale-base.sh` の起動が、必須側と必須外に分かれて在ること**を母数で押さえる。
+  // ci.yml 全体での起動件数と、必須外の job での起動件数が**同数**なら、
+  // **必須側に 1 件も残っていない**＝割れていない。
+  const allCalls = (ciText.match(/bash scripts\/ci\/stale-base\.sh/g) ?? []).length;
+  const nonrequiredCalls = nonrequired
+    .map((n) => ((jobBodyOf(ciText, n) ?? "").match(/bash scripts\/ci\/stale-base\.sh/g) ?? []).length)
+    .reduce((a, b) => a + b, 0);
+  assert.ok(allCalls >= 2, `ci.yml の stale-base.sh の起動が ${allCalls} 件。割れていない（#1162）`);
+  assert.ok(
+    nonrequiredCalls >= 1 && nonrequiredCalls < allCalls,
+    `stale-base.sh の起動 ${allCalls} 件のうち、必須でない job に在るのは ${nonrequiredCalls} 件。` +
+      `1 件以上かつ全部ではない（全部なら必須側が空＝#1162 の穴が全開）`,
+  );
 });
 
 test("#541 branch-protection.sh の REQUIRED_CHECKS と、このファイルの REQUIRED_CHECKS が一致する", () => {

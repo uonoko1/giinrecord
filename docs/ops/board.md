@@ -314,27 +314,34 @@ scripts/po/merge-when-green.sh --no-review 'レビュアーを立てられない
 **母数**（実測 2026-09-21、直近 12 件のマージ済み PR は全部同じ）:
 **1 PR につき check-run は 7 件**——`audit` / `check` / `docker-web` / `forbidden-patterns` /
 `gitleaks` / `pr-closes` / `stale-base`。
+**#1162 で `stale-base` job を 2 つに割ったので、いまは 8 件**（`stale-base-net-deletions` が増えた）。
 
 | | 名前 | 赤いとき |
 |---|---|---|
-| **必須 5 件** | `check` `gitleaks` `forbidden-patterns` `audit` `pr-closes` | **絶対にマージしない**（`--allow-nonrequired-red` でも通らない） |
-| **必須でない 2 件** | `stale-base` `docker-web` | 何がどう赤いかと**その job のログの URL**を出して**既定では止まる**。`--allow-nonrequired-red` があるときだけ、読み上げてからマージする |
+| **必須 6 件** | `check` `gitleaks` `forbidden-patterns` `audit` `pr-closes` `stale-base` | **絶対にマージしない**（`--allow-nonrequired-red` でも通らない） |
+| **必須でない 2 件** | `stale-base-net-deletions` `docker-web` | 何がどう赤いかと**その job のログの URL**を出して**既定では止まる**。`--allow-nonrequired-red` があるときだけ、読み上げてからマージする |
 | 一覧に無い名前 | （新しい job） | **必須として扱い**、「知らない検査がある」と言う |
 
 **線引きは「赤いが通してよい状態が、正常に起こりうるか」である。**
 
-- **`stale-base` は起こる。** 2 つ目の step（`--net-deletions`、#836）は #846 の担当者自身が
+- **`stale-base-net-deletions`（#836）は起こる。** #846 の担当者自身が
   **「合図であって証拠ではありません（4 件中 2 件が本物）」**と書いている。**実地 5 件中 3 件が
   「通してよい」側だった。** **PR #856 がこれで詰まり、PO が手で `gh pr merge` を打った。**
   **これが #858 の本題である。**
+- **`stale-base`（既定モード #536）は起こらない。** **main が足した行が枝から消えている**のだから、
+  通してよい理由が無い（rebase すれば緑になる）。**#1162 までこの 2 つは同じ job に在り、
+  check-run 名が 1 つだった**ので、**`--allow-nonrequired-red` を 1 回使うと両方が一緒に通った。**
+  **job を割り、名前を分けた。** **`--data-freshness`（#1156、`data/` の巻き戻し）も
+  同じ理由で必須側の `stale-base` job に入る**（#1161 のマージ後）。
 - **`pr-closes` は起こらない。** 「本文に `Closes #N`（または『Closes なし（理由）』）を書いたか」
   を見るだけで、**赤いなら本文を直せば緑にできる。** だから必須のまま。
 - **`docker-web` は起こりうる**（環境要因で落ちることがある）が、**赤は本物のことが多い**
   ——nginx の設定・CSP・SPA フォールバックの壊れは、**ここでしか見ていない**。
 
 **GitHub の branch protection に登録されているのは 4 件**（`check` / `gitleaks` /
-`forbidden-patterns` / `audit`。実測）。**`pr-closes` は登録できない**（PR 本文依存なので
-「全 PR が永久に pending」になる。理由は
+`forbidden-patterns` / `audit`。実測 2026-10-03 も同じ 4 件で、**`stale-base` は入っていない**
+——`has_stale_base: false`）。**`pr-closes` と `stale-base` は登録していない**
+（`pr-closes` は PR 本文依存なので「全 PR が永久に pending」になる。理由は
 `packages/etl/test/branch-protection-jobs.test.ts` の `EXEMPT_FROM_REQUIRED`）が、
 **この道具は GitHub より厳しくてよい**ので必須として扱っている。**逆は許されない**
 ——GitHub が必須にしているものをここで外すと、道具が保護を跨ぐことになる。
@@ -346,14 +353,14 @@ scripts/po/merge-when-green.sh <pr>                           # まずこれ。�
 scripts/po/merge-when-green.sh --allow-nonrequired-red <pr>   # 読んだうえで通す
 ```
 
-**止まったときの出力**（`stale-base` だけが赤い＝#856 の形）:
+**止まったときの出力**（`stale-base-net-deletions` だけが赤い＝#856 の形）:
 
 ```
-[..] 検査 7 件 / 必須 5 件 / 赤 1 件（必須の赤: なし / 必須でない赤: stale-base (failure)）
-error: checks failed on PR #12: stale-base (failure)
-       これは必須の検査ではありません（必須 5 件は全部緑）。GitHub はマージを許します。
+[..] 検査 8 件 / 必須 6 件 / 赤 1 件（必須の赤: なし / 必須でない赤: stale-base-net-deletions (failure)）
+error: checks failed on PR #12: stale-base-net-deletions (failure)
+       これは必須の検査ではありません（必須 6 件は全部緑）。GitHub はマージを許します。
        **なぜ赤いのかを読んでから**判断してください。赤い検査のログ:
-         stale-base (failure): https://github.com/.../actions/runs/.../job/...
+         stale-base-net-deletions (failure): https://github.com/.../actions/runs/.../job/...
        手元で読むなら:
          gh pr checks 12
          gh run view --log-failed --job <上の URL 末尾の数字>
@@ -371,10 +378,18 @@ error: checks failed on PR #12: stale-base (failure)
 **ログは後から「何が起きたか」を読む唯一の記録**なので、そこに嘘を混ぜない:
 
 ```
-[..] 必須でない検査が赤いまま進みます（--allow-nonrequired-red）: stale-base (failure)
+[..] 必須でない検査が赤いまま進みます（--allow-nonrequired-red）: stale-base-net-deletions (failure)
 [..] 赤い検査のログ:
-         stale-base (failure): https://github.com/.../job/...
-[..] 必須 5 件は緑。stale-base (failure) を赤いまま通してマージします
+         stale-base-net-deletions (failure): https://github.com/.../job/...
+[..] 必須 6 件は緑。stale-base-net-deletions (failure) を赤いまま通してマージします
+```
+
+**`stale-base`（既定モード）や `--data-freshness` の赤は、このフラグでも通らない**（#1162）:
+
+```
+[..] 検査 8 件 / 必須 6 件 / 赤 1 件（必須の赤: stale-base / 必須でない赤: なし）
+error: checks failed on PR #12: stale-base
+       必須の検査が赤いので、マージしません。--allow-nonrequired-red では通せません。
 ```
 
 **「必須でないから無視してよい」ではない。**

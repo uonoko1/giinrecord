@@ -1285,6 +1285,9 @@ test_case "merge: conclusion:failure は status に関わらず失敗として�
 # **母数**（実測、直近 12 件のマージ済み PR は全部同じ）: 1 PR につき check-run は **7 件**
 #   audit, check, docker-web, forbidden-patterns, gitleaks, pr-closes, stale-base
 # このうち **必須 5 件** / **必須でない 2 件（stale-base, docker-web）**。
+# **#1162 で `stale-base` job を 2 つに割ったので、いまは 1 PR につき 8 件で
+# 必須 6 件 / 必須でない 2 件（stale-base-net-deletions, docker-web）。**
+# **上の 7 件は #858 当時の実測であって、いまの値ではない**（測った日つきで残す）。
 #
 # **`stale-base` が必須でない側なのが #858 の本題**: 2 つ目の step（`--net-deletions`、#836）は
 # #846 の担当者自身が「**合図であって証拠ではありません**（4 件中 2 件が本物）」と書いており、
@@ -1456,7 +1459,9 @@ EOF
   run_script "$h" merge-when-green.sh --allow-nonrequired-red 12
   assert_eq 0 "$STATUS" "マージした: $ERR"
   assert_contains "$ERR" "検査 7 件" "母数: 見た件数"
-  assert_contains "$ERR" "必須 5 件" "母数: 必須の件数（stale-base を外したので 6 → 5）"
+  # **#1162 で 5 → 6**: `stale-base` を必須側に移した（この fixture の 7 件のうち
+  # `docker-web` だけが必須外になったので、必須は 6 件）。
+  assert_contains "$ERR" "必須 6 件" "母数: 必須の件数（#1162 で stale-base が必須側に入り 5 → 6）"
   assert_contains "$ERR" "赤 1 件" "母数: 赤の件数"
 }
 test_case "858: 母数を出力に書く（検査 N 件 / 必須 M 件 / 赤 K 件）" t_858_reports_denominator
@@ -1542,14 +1547,46 @@ test_case "858: 知らないフラグは usage で落とす（似た名前で素
 # **REQUIRED_CHECKS / NONREQUIRED_CHECKS を固定する**（#499: 期待値はハードコードする）。
 # 配列を実行時に対象から読み出すと自己参照になるので、**ここに独立して書き写す**。
 # 中身が痩せる・入れ替わる・GitHub 側の登録と食い違う、のどれが起きてもここが落ちる。
+# **#1162 で値が変わった**（`stale-base` を必須側へ、抜け道は `stale-base-net-deletions` だけへ）。
+# **値そのものはこのファイル末尾の `t_1162_split_denominator_is_pinned` が持つ**
+# ——同じ値を 2 か所に書くと片方だけが腐る（#1056 で実測されている形）。
+# **ここが見るのは「この道具が GitHub の登録 4 件より厳しい側にしか動いていないこと」**である。
 t_858_check_lists_are_pinned() {
-  local req nonreq
-  req=$(grep -E '^REQUIRED_CHECKS=' "$PO_DIR/merge-when-green.sh")
-  nonreq=$(grep -E '^NONREQUIRED_CHECKS=' "$PO_DIR/merge-when-green.sh")
-  assert_eq 'REQUIRED_CHECKS=(check gitleaks forbidden-patterns audit pr-closes)' "$req" \
-    "必須 5 件（GitHub の登録 4 件 + この道具が上乗せする pr-closes）"
-  assert_eq 'NONREQUIRED_CHECKS=(stale-base docker-web)' "$nonreq" \
-    "必須でないのは stale-base / docker-web の 2 件（抜け道を増やすなら意識的にここを直す）"
+  local req nonreq c n in_req in_nonreq
+  req=$(sed -e 's/^REQUIRED_CHECKS=(//' -e 's/)$//' \
+    <<<"$(grep -E '^REQUIRED_CHECKS=' "$PO_DIR/merge-when-green.sh")")
+  nonreq=$(sed -e 's/^NONREQUIRED_CHECKS=(//' -e 's/)$//' \
+    <<<"$(grep -E '^NONREQUIRED_CHECKS=' "$PO_DIR/merge-when-green.sh")")
+  # **名前は「値として」照合する**（部分一致にしない）。`stale-base-net-deletions` は
+  # `stale-base` を**部分文字列に含む**ので、`grep stale-base` では区別できない
+  # ——#1101 で `dev@` が `seiji-kiroku-dev@` に当たったのとまったく同じ罠である。
+  # **#1162 の穴そのものがこの形**なので、ここだけは逐語の集合として見る。
+  has() {  # has <値> <並び> → 0 なら在る
+    local want=$1 el
+    for el in $2; do [[ "$el" == "$want" ]] && return 0; done
+    return 1
+  }
+  # **GitHub の branch protection に登録されている 4 件は、1 件も必須外に落ちていない**
+  # （実測 2026-10-03: `required_status_checks.contexts` =
+  #  `["check","gitleaks","forbidden-patterns","audit"]`。**この 4 件がそのまま母数**）。
+  # **GitHub が必須にしているものをここで外すと、この道具が保護を跨ぐことになる**（#858 の但し書き）。
+  for c in check gitleaks forbidden-patterns audit; do
+    has "$c" "$req"    && in_req=1    || in_req=0
+    has "$c" "$nonreq" && in_nonreq=1 || in_nonreq=0
+    assert_eq 1 "$in_req"    "GitHub 登録の必須 '$c' が REQUIRED_CHECKS に在る"
+    assert_eq 0 "$in_nonreq" "GitHub 登録の必須 '$c' が必須外に落ちていない"
+  done
+  # **この道具が上乗せする分**（GitHub 側には登録していないが、ここでは必須にするもの）。
+  for c in pr-closes stale-base; do
+    has "$c" "$req"    && in_req=1    || in_req=0
+    has "$c" "$nonreq" && in_nonreq=1 || in_nonreq=0
+    assert_eq 1 "$in_req"    "'$c' は必須側（pr-closes は #858 / stale-base は #1162）"
+    assert_eq 0 "$in_nonreq" "'$c' が必須外に落ちていない（値として照合）"
+  done
+  # 母数（#757）: 両方の並びが空でないこと。空なら上の has は全部「無い」になり、
+  # **4 件の `in_req` が落ちる**ので空では緑にならないが、`nonreq` 側は空でも緑になる。
+  n=$(wc -w <<<"$nonreq")
+  assert_eq 2 "$n" "NONREQUIRED_CHECKS は 2 件（値は末尾の #1162 の検査が固定する）"
 }
 test_case "858: 必須 / 必須でないの一覧をハードコードで固定する（#499）" t_858_check_lists_are_pinned
 
@@ -1664,14 +1701,21 @@ test_case "858: 「知らない検査」の note は顔ぶれが同じなら 1 �
 # **数字そのものをこの道具が作り直すことはしない**——検査が既に数えたものを二重に実装すると、
 # 片方が古くなったときに嘘をつく。
 
+# **#1162: 赤い check-run の名前を `stale-base` → `stale-base-net-deletions` に替えた。**
+# **#856 で赤かったのは `--net-deletions` の step**であり、**その step は #1162 で
+# 自分の job（= 自分の check-run 名）を持った。** `stale-base` という名前のままにすると、
+# **この fixture は「main が足した行が消えている PR をフラグで通す」形になり、
+# 下の `t_..._merges_with_flag` が #1162 が塞いだはずの穴をそのまま要求してしまう。**
+# **必須側（`stale-base`）は success として並べる**ので、母数 7 件は変わらない。
 STALE_BASE_RED_CHECKS='{"check_runs":[
       {"name":"check","status":"completed","conclusion":"success","started_at":"t1","details_url":"https://example.invalid/check"},
       {"name":"gitleaks","status":"completed","conclusion":"success","started_at":"t1","details_url":"https://example.invalid/gitleaks"},
       {"name":"forbidden-patterns","status":"completed","conclusion":"success","started_at":"t1","details_url":"https://example.invalid/fp"},
       {"name":"audit","status":"completed","conclusion":"success","started_at":"t1","details_url":"https://example.invalid/audit"},
       {"name":"pr-closes","status":"completed","conclusion":"success","started_at":"t1","details_url":"https://example.invalid/prcloses"},
+      {"name":"stale-base","status":"completed","conclusion":"success","started_at":"t1","details_url":"https://example.invalid/sbdefault"},
       {"name":"docker-web","status":"completed","conclusion":"success","started_at":"t1","details_url":"https://example.invalid/docker"},
-      {"name":"stale-base","status":"completed","conclusion":"failure","started_at":"t1","details_url":"https://example.invalid/runs/1/job/2"}]}'
+      {"name":"stale-base-net-deletions","status":"completed","conclusion":"failure","started_at":"t1","details_url":"https://example.invalid/runs/1/job/2"}]}'
 
 t_858_856_shape_stops_and_points_at_the_log() {
   local h; h=$(handler <<EOF
@@ -1686,8 +1730,11 @@ EOF
 )
   run_script "$h" merge-when-green.sh 12
   assert_eq 1 "$STATUS" "既定では止まる"
-  assert_contains "$ERR" "stale-base (failure)" "何がどう赤いかを名指しする"
-  assert_contains "$ERR" "必須 5 件は全部緑" "必須が緑であることを言う（GitHub はマージを許す状態）"
+  assert_contains "$ERR" "stale-base-net-deletions (failure)" "何がどう赤いかを名指しする"
+  # **#1162 で 5 → 6**: この fixture は 8 件になり（`stale-base` を success で足した）、
+  # **必須外は `docker-web` と `stale-base-net-deletions` の 2 件**なので必須は 6 件。
+  # **予想は 7 件で、外れた**——測った値を書く。
+  assert_contains "$ERR" "必須 6 件は全部緑" "必須が緑であることを言う（GitHub はマージを許す状態）"
   # **本題**: 押す人が「何行が減っているか」を読みに行ける場所を指しているか。
   assert_contains "$ERR" "https://example.invalid/runs/1/job/2" "赤い検査の job ログの URL を出す"
   assert_contains "$ERR" "gh run view --log-failed" "手元で読む手順も出す"
@@ -1696,7 +1743,7 @@ EOF
   # **緑の検査のログは出さない**（7 件全部の URL を並べたら、赤がどれか分からなくなる）
   assert_not_contains "$ERR" "https://example.invalid/check" "緑の検査の URL は出さない"
 }
-test_case "858: #856 の形（stale-base だけ赤）は止まり、ログの URL を指す" t_858_856_shape_stops_and_points_at_the_log
+test_case "858: #856 の形（--net-deletions だけ赤）は止まり、ログの URL を指す" t_858_856_shape_stops_and_points_at_the_log
 
 t_858_856_shape_merges_with_flag_and_records_the_log() {
   local h; h=$(handler <<EOF
@@ -1713,14 +1760,17 @@ EOF
   run_script "$h" merge-when-green.sh --allow-nonrequired-red 12
   assert_eq 0 "$STATUS" "必須が全部緑なのでマージできる: $ERR"
   assert_contains "$LOG" $'pr\tmerge\t12' "マージした"
-  assert_contains "$ERR" "必須でない検査が赤いまま進みます（--allow-nonrequired-red）: stale-base (failure)" \
+  assert_contains "$ERR" "必須でない検査が赤いまま進みます（--allow-nonrequired-red）: stale-base-net-deletions (failure)" \
     "押す直前に「押す」と言う"
   # **押したときにも URL を残す**——あとから「何を見て押したのか」を追えるように。
   assert_contains "$ERR" "https://example.invalid/runs/1/job/2" "押したときもログの URL を記録する"
 }
 test_case "858: #856 の形は --allow-nonrequired-red でマージでき、そのときログの URL も残る" t_858_856_shape_merges_with_flag_and_records_the_log
 
-# `stale-base` が赤くても、**必須が赤ければ通らない**（抜け道が `stale-base` 経由で広がらない）。
+# 必須でない検査が赤くても、**必須が赤ければ通らない**（抜け道が `--net-deletions` 経由で広がらない）。
+# **#1162: ここの名前も `stale-base` → `stale-base-net-deletions`。**
+# `stale-base` のままだと**赤 2 件がどちらも必須**になり、「必須でない赤も併せて言う」という
+# この検査の主張が消える（実測: `必須でない赤: stale-base` の行が出なくなる）。
 t_858_stale_base_red_plus_required_red_never_merges() {
   local h; h=$(handler <<'EOF'
 handle() {
@@ -1728,7 +1778,7 @@ handle() {
     "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
     "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[
       {"name":"check","status":"completed","conclusion":"failure","started_at":"t1","details_url":"https://example.invalid/check"},
-      {"name":"stale-base","status":"completed","conclusion":"failure","started_at":"t1","details_url":"https://example.invalid/sb"}]}' ;;
+      {"name":"stale-base-net-deletions","status":"completed","conclusion":"failure","started_at":"t1","details_url":"https://example.invalid/sb"}]}' ;;
     "pr merge 12 --squash --delete-branch") echo merged ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
@@ -1738,10 +1788,10 @@ EOF
   run_script "$h" merge-when-green.sh --allow-nonrequired-red 12
   assert_eq 1 "$STATUS" "必須の check が赤いので止まる"
   assert_contains "$ERR" "check" "必須の赤を名指しする"
-  assert_contains "$ERR" "必須でない赤: stale-base" "必須でない赤も併せて言う"
+  assert_contains "$ERR" "必須でない赤: stale-base-net-deletions" "必須でない赤も併せて言う"
   assert_not_contains "$LOG" $'pr\tmerge' "絶対にマージしない"
 }
-test_case "858: stale-base が赤くても、必須が赤ければマージしない" t_858_stale_base_red_plus_required_red_never_merges
+test_case "858: 必須でない検査が赤くても、必須が赤ければマージしない" t_858_stale_base_red_plus_required_red_never_merges
 
 # **ログの URL が取れなかったとき、黙って行を落とさない。**
 # `details_url` が null の check-run は実在しうる（外部 App のチェック）。
@@ -1753,7 +1803,7 @@ handle() {
     "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
     "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[
       {"name":"check","status":"completed","conclusion":"success","started_at":"t1","details_url":null},
-      {"name":"stale-base","status":"completed","conclusion":"failure","started_at":"t1","details_url":null}]}' ;;
+      {"name":"stale-base-net-deletions","status":"completed","conclusion":"failure","started_at":"t1","details_url":null}]}' ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
 }
@@ -1761,7 +1811,7 @@ EOF
 )
   run_script "$h" merge-when-green.sh 12
   assert_eq 1 "$STATUS" "既定では止まる"
-  assert_contains "$ERR" "stale-base (failure)" "赤い検査は名指しする"
+  assert_contains "$ERR" "stale-base-net-deletions (failure)" "赤い検査は名指しする"
   assert_contains "$ERR" "ログの URL が取れませんでした" "URL が無いことを言う（行を黙って落とさない）"
 }
 test_case "858: ログの URL が取れなくても、赤い検査の行は落とさずそう言う" t_858_missing_details_url_is_said
@@ -1782,8 +1832,8 @@ EOF
 )
   run_script "$h" merge-when-green.sh --allow-nonrequired-red 12
   assert_eq 0 "$STATUS" "マージした: $ERR"
-  assert_not_contains "$ERR" "all 7 checks green" "赤いまま通したのに「全部緑」と言わない"
-  assert_contains "$ERR" "stale-base (failure) を赤いまま通してマージします" "何を通したかを言う"
+  assert_not_contains "$ERR" "all 8 checks green" "赤いまま通したのに「全部緑」と言わない"
+  assert_contains "$ERR" "stale-base-net-deletions (failure) を赤いまま通してマージします" "何を通したかを言う"
 }
 test_case "858: 赤いまま通したときは「all N checks green」と言わない" t_858_does_not_claim_all_green_when_proceeding_over_red
 
@@ -1795,10 +1845,14 @@ handle() {
   case "$*" in
     "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
     "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      # **#1162: 赤くする名前は `stale-base-net-deletions`。**
+      # この検査の主張は「**必須でない**赤が緑に変わったら持ち越さない」であり、
+      # `stale-base` は #1162 で必須側に移ったので、その名前では 1 回目の poll で
+      # `die` して 2 回目に進めない（**主張ごと消える**）。
       if [ "$(bump)" -lt 2 ]; then
-        echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1","details_url":"u1"},{"name":"stale-base","status":"completed","conclusion":"failure","started_at":"t1","details_url":"u2"},{"name":"docker-web","status":"in_progress","conclusion":null,"started_at":"t1","details_url":"u3"}]}'
+        echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1","details_url":"u1"},{"name":"stale-base-net-deletions","status":"completed","conclusion":"failure","started_at":"t1","details_url":"u2"},{"name":"docker-web","status":"in_progress","conclusion":null,"started_at":"t1","details_url":"u3"}]}'
       else
-        echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1","details_url":"u1"},{"name":"stale-base","status":"completed","conclusion":"success","started_at":"t1","details_url":"u2"},{"name":"docker-web","status":"completed","conclusion":"success","started_at":"t1","details_url":"u3"}]}'
+        echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1","details_url":"u1"},{"name":"stale-base-net-deletions","status":"completed","conclusion":"success","started_at":"t1","details_url":"u2"},{"name":"docker-web","status":"completed","conclusion":"success","started_at":"t1","details_url":"u3"}]}'
       fi ;;
     "pr merge 12 --squash --delete-branch") echo merged ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
@@ -2645,9 +2699,12 @@ handle() {
   case "$*" in
     "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
     "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      # **#1162: 名前は `stale-base-net-deletions`。** この検査の主張は「**必須でない**
+      # 同名重複の赤はフラグで通る」であり、`stale-base` は #1162 で必須側に移ったので
+      # その名前では**フラグでも通らず、主張が裏返る**。
       echo '{"check_runs":[
-        {"name":"stale-base","status":"completed","conclusion":"skipped","started_at":"2026-09-26T10:05:00Z","details_url":"u2"},
-        {"name":"stale-base","status":"completed","conclusion":"failure","started_at":"2026-09-26T10:00:00Z","details_url":"u1"},
+        {"name":"stale-base-net-deletions","status":"completed","conclusion":"skipped","started_at":"2026-09-26T10:05:00Z","details_url":"u2"},
+        {"name":"stale-base-net-deletions","status":"completed","conclusion":"failure","started_at":"2026-09-26T10:00:00Z","details_url":"u1"},
         {"name":"check","status":"completed","conclusion":"success","started_at":"2026-09-26T10:00:00Z"}
       ]}' ;;
     "pr merge 12 --squash --delete-branch") echo merged ;;
@@ -2659,7 +2716,7 @@ EOF
   # フラグ無しでは止まる（黙って押さない）
   run_script "$h" merge-when-green.sh 12
   assert_eq 1 "$STATUS" "フラグ無しでは止まる"
-  assert_contains "$ERR" "stale-base" "必須でない赤の名前を言う"
+  assert_contains "$ERR" "stale-base-net-deletions" "必須でない赤の名前を言う"
   # フラグ付きなら通る（既存の動作を壊していない）
   run_script "$h" merge-when-green.sh --allow-nonrequired-red 12
   assert_eq 0 "$STATUS" "--allow-nonrequired-red で通る: $ERR"
@@ -3333,10 +3390,12 @@ handle() {
   case "$*" in
     "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
     "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
-      # **必須の名前が 1 つも無い**（check / gitleaks / forbidden-patterns / audit / pr-closes）。
+      # **必須の名前が 1 つも無い**（check / gitleaks / forbidden-patterns / audit /
+      # pr-closes / **stale-base**。**#1162 で stale-base が必須側に移ったので、
+      # この fixture から外さないと「必須 1 件」になり、この検査が何も主張しなくなる**）。
       # 必須でないと明記された名前だけが緑で返る形
       echo '{"total_count":2,"check_runs":[
-        {"name":"stale-base","status":"completed","conclusion":"success","started_at":"t1"},
+        {"name":"stale-base-net-deletions","status":"completed","conclusion":"success","started_at":"t1"},
         {"name":"docker-web","status":"completed","conclusion":"success","started_at":"t1"}
       ]}' ;;
     "pr merge 12 --squash --delete-branch") echo merged ;;
@@ -4467,3 +4526,170 @@ EOF
   assert_not_contains "$OUT$ERR" "PR が言う ? 件" "既定が在るのに「読めなかった」と書かない"
 }
 test_case "1163: 母数の既定が効いている（ハンドラが答えなくても検算が走る）" t_1163_denominator_default_is_active
+
+# ── #1162: `stale-base` という 1 つの check-run 名に、性質の違う step が同居していた ──────
+#
+# **何が問題だったか**（PO が 2026-10-03 に実測し、#1161 の担当者が自己申告した）:
+# `NONREQUIRED_CHECKS=(stale-base docker-web)` の `stale-base` が「必須でない」側に在る理由は、
+# **`--net-deletions`（#836）が「赤いが通してよい」検査だから**である
+# ——関数を移動するたびに鳴り、**検査自身が「赤いまま人が本文を読んで判断する契約」だと
+# 明記している**（`scripts/ci/stale-base.sh:148`。先例 #794 が赤のまま main に在る）。
+#
+# **だが同じ check-run 名の下に在る他の step は、そうではない:**
+#
+#   既定モード（#536）        main が足した行を落としている        → 通してはいけない
+#   --net-deletions（#836）   移動・整理で正常に赤くなる            → 読んだうえで通してよい
+#   --data-freshness（#1156） data/ が丸ごと巻き戻る              → 通してはいけない
+#
+# **check-run 名は job 名である。** step がいくつ在っても check run は 1 本なので、
+# **`--allow-nonrequired-red` を 1 回使うと、同じ job の step が全部一緒に通る。**
+#
+# **直し方**: `ci.yml` で job を 2 つに割り、名前を分ける。
+#   `stale-base`                   既定（+ #1161 がマージされたら `--data-freshness`）→ **必須**
+#   `stale-base-net-deletions`     `--net-deletions` のみ                            → **必須でない**
+#
+# **GitHub の branch protection は変わっていない**（実測 2026-10-03:
+# `required_status_checks.contexts` は `["check","gitleaks","forbidden-patterns","audit"]` の 4 件で、
+# **`stale-base` はもともと入っていない**——`has_stale_base: false`）。
+# **つまり改名で「必須が 0 件になる窓」は開かない。** **止めるのはこの道具だけであり、
+# この道具が #1154 で実際に唯一の歯止めだった。**
+
+# 【受け入れ条件の向き 1】**`--net-deletions` だけはフラグで通る**（抜け道の正当な用途が残っている）。
+t_1162_net_deletions_red_merges_with_flag() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[
+      {"name":"check","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"gitleaks","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"forbidden-patterns","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"audit","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"pr-closes","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"stale-base","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"docker-web","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"stale-base-net-deletions","status":"completed","conclusion":"failure","started_at":"t1","details_url":"u-nd"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh --allow-nonrequired-red 12
+  assert_eq 0 "$STATUS" "--net-deletions の赤はフラグで通る（#794 の先例がこの形）: $ERR"
+  assert_contains "$LOG" $'pr\tmerge\t12' "マージした"
+  assert_contains "$ERR" "stale-base-net-deletions" "黙って押さない: 名指しする"
+  assert_contains "$ERR" "u-nd" "読む先（job のログ）を指す"
+}
+test_case "1162: --net-deletions の赤だけは --allow-nonrequired-red で通る（抜け道の正当な用途）" \
+  t_1162_net_deletions_red_merges_with_flag
+
+# 【受け入れ条件の向き 2a】**既定モード（main の行の消失）はフラグでも通らない。**
+# **これが #1162 の本題である。** 改名前は同じ `stale-base` という名前だったので、
+# この赤が `--net-deletions` の赤と区別できず、フラグ 1 つで一緒に通っていた。
+#
+# **fixture の要点: `stale-base` だけを赤にする。**
+# 最初に書いたときは `stale-base-net-deletions` も一緒に赤にしていたので、
+# **改名前の main でもこの検査は緑だった**（実測: `passed: 144 failed: 3` で、
+# この 1 本は `ok` だった）——`stale-base-net-deletions` が**知らない名前**として
+# fail-closed で必須に数えられ、そちらだけで止まっていたからである。
+# **つまり「`stale-base` が必須になった」ことを 1 文字も確かめていなかった。**
+# 赤を 1 本に絞って初めて、この検査は改名の有無を区別する。
+t_1162_default_mode_red_never_merges_even_with_flag() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[
+      {"name":"check","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"gitleaks","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"forbidden-patterns","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"audit","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"pr-closes","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"docker-web","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"stale-base-net-deletions","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"stale-base","status":"completed","conclusion":"failure","started_at":"t1","details_url":"u-sb"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh --allow-nonrequired-red 12
+  assert_eq 1 "$STATUS" "main の行の消失はフラグでも通らない"
+  assert_contains "$ERR" "--allow-nonrequired-red では通せません" "フラグでは通せないと言う"
+  assert_contains "$ERR" "stale-base" "赤い必須検査を名指しする"
+  assert_not_contains "$LOG" $'pr\tmerge' "マージを試みない"
+}
+test_case "1162: 既定モード（main の行の消失）の赤はフラグでも通らない" \
+  t_1162_default_mode_red_never_merges_even_with_flag
+
+# 【受け入れ条件の向き 2b】**`data/` の巻き戻し（`--data-freshness`、#1156）もフラグでも通らない。**
+#
+# **#1161 がマージされると `--data-freshness` は `stale-base` job の 3 つ目の step になる**
+# （この PR の `ci.yml` はまだその step を持っていない——#1161 が未マージなので）。
+# **その形では check-run 名が `stale-base` になり、上の 2a がそのまま覆う。**
+#
+# **ここでは「もし別の job 名として現れたら」も覆う**——`stale-base-data-freshness` は
+# `REQUIRED_CHECKS` にも `NONREQUIRED_CHECKS` にも載っていない**知らない名前**なので、
+# `is_required_check` の fail-closed（どちらにも無い → 必須）で**必須として扱われる**。
+# **これが「足し忘れても安全側に倒れる」ことの実測である**（#1162 のやること 3）。
+t_1162_data_freshness_red_never_merges_even_with_flag() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[
+      {"name":"check","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"gitleaks","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"forbidden-patterns","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"audit","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"pr-closes","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"stale-base","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"docker-web","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"stale-base-net-deletions","status":"completed","conclusion":"failure","started_at":"t1","details_url":"u-nd"},
+      {"name":"stale-base-data-freshness","status":"completed","conclusion":"failure","started_at":"t1","details_url":"u-df"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh --allow-nonrequired-red 12
+  assert_eq 1 "$STATUS" "data/ の巻き戻しはフラグでも通らない（知らない名前は必須。fail-closed）"
+  assert_contains "$ERR" "--allow-nonrequired-red では通せません" "フラグでは通せないと言う"
+  assert_contains "$ERR" "stale-base-data-freshness" "赤い必須検査を名指しする"
+  # `log` は stderr に出る（`$LOG` は gh の呼び出し記録であって、この道具の出力ではない）。
+  assert_contains "$ERR" "知らない検査があります" "一覧に足し忘れていることも言う（黙って必須に倒さない）"
+  assert_not_contains "$LOG" $'pr\tmerge' "マージを試みない"
+}
+test_case "1162: data/ の巻き戻しの赤はフラグでも通らない（一覧に足し忘れても fail-closed）" \
+  t_1162_data_freshness_red_never_merges_even_with_flag
+
+# **一覧を固定する**（#499: 期待値はハードコードする）。上の `t_858_check_lists_are_pinned` を
+# #1162 の形に更新したので、ここでは**分けた母数**を書き残す。
+#   分けた job     2 件（stale-base / stale-base-net-deletions）
+#   必須にした数   1 件（stale-base）
+#   必須でない数   1 件（stale-base-net-deletions）
+# **`docker-web` は従来どおり必須でない**ので、`NONREQUIRED_CHECKS` は 2 件のまま
+# （中身が `stale-base` → `stale-base-net-deletions` に入れ替わった）。
+t_1162_split_denominator_is_pinned() {
+  local req nonreq
+  req=$(grep -E '^REQUIRED_CHECKS=' "$PO_DIR/merge-when-green.sh")
+  nonreq=$(grep -E '^NONREQUIRED_CHECKS=' "$PO_DIR/merge-when-green.sh")
+  assert_eq 'REQUIRED_CHECKS=(check gitleaks forbidden-patterns audit pr-closes stale-base)' "$req" \
+    "必須 6 件（従来の 5 件 + 割った stale-base）"
+  assert_eq 'NONREQUIRED_CHECKS=(stale-base-net-deletions docker-web)' "$nonreq" \
+    "必須でないのは 2 件。stale-base ではなく stale-base-net-deletions（抜け道の口を狭めた）"
+  # **`stale-base` が必須でない側に残っていないこと**を、部分一致ではなく**値として**見る
+  # （#1162 の穴そのものに戻る形。`stale-base-net-deletions` は `stale-base` を部分文字列に
+  #  含むので、`grep stale-base` では区別できない——アドレスと同じ罠である）。
+  local n found=0
+  # shellcheck disable=SC2001
+  for n in $(sed -e 's/^NONREQUIRED_CHECKS=(//' -e 's/)$//' <<<"$nonreq"); do
+    [[ "$n" == "stale-base" ]] && found=1
+  done
+  assert_eq 0 "$found" "stale-base が NONREQUIRED_CHECKS に在る＝#1162 の穴に戻っている"
+}
+test_case "1162: 割った母数を固定する（必須 6 件 / 必須でない 2 件・値として照合）" \
+  t_1162_split_denominator_is_pinned
