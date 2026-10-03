@@ -63,8 +63,8 @@ import { dirname, resolve } from "node:path";
  * **`inherit` は 4 つの `DEPLOY_*` を全部流し込む**——**これが直す前に実際に起きていたことで、
  * 推測ではなく実測で再現した。**
  *
- * ログに値・IP・ホスト名・内部パスは 0 件（147 行を `BEGIN .*PRIVATE` / `ssh-ed25519` /
- * IPv4 / `sakura|conoha|vps` / `/home/|/var/|/etc/|/srv/` で走査。GitHub 側のマスク `***` が 12 件）。
+ * ログに値・IP・ホスト名・内部パス・事業者名は 0 件（147 行を、鍵の形 / IPv4 / 事業者名 /
+ * 絶対パスの綴りで走査した。GitHub 側のマスク `***` が 12 件）。
  * **実験の枝と PR は捨てた**（リポジトリに probe を残さない）。
  *
  * ── **検査は denylist をやめ、allowlist にした** ───────────────────────
