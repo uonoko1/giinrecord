@@ -130,7 +130,11 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR: ${{ steps.pr.outputs.number }}
         run: |
-          for i in $(seq 1 45); do   # 45 × 20s = 15 min
+          # **15 分 → 30 分（#1175）。** 測った根拠は `.github/workflows/etl.yml` の同じステップの
+          # コメントに 1 か所だけ置いてある（数字を複数箇所に写すと腐る。#1056）。
+          # **この枝でも余裕が足りていなかった**: 実測 2026-10-04、`data/districts` の ci.yml は
+          # **最長 13 分**（成功）で、15 分に対する余裕は 2 分だった。
+          for i in $(seq 1 90); do   # 90 × 20s = 30 min
             STATE=$(gh pr view "$PR" --json state -q .state)
             echo "[$i] PR #$PR state=$STATE"
             case "$STATE" in
@@ -147,7 +151,7 @@ jobs:
             done
             sleep 20
           done
-          echo "PR #$PR が 15 分以内にマージされなかった（required check が走っていない／失敗？）" >> "$GITHUB_STEP_SUMMARY"
+          echo "PR #$PR が 30 分以内にマージされなかった（required check が走っていない／失敗？）" >> "$GITHUB_STEP_SUMMARY"
           exit 1
 
       - name: Open failure Issue (deduped by title)
