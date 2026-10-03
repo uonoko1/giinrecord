@@ -7,6 +7,16 @@
   "sangiin": "2026-05-19",
   "shugiin": "2026-03-06"
  },
+ "referral": {
+  "sangiin": {
+   "committee": "災害対策及び東日本大震災復興特別",
+   "date": "2026-05-22"
+  },
+  "shugiin": {
+   "committee": "災害対策特別",
+   "date": "2026-04-14"
+  }
+ },
  "result": {
   "lawNumber": "62",
   "promulgated": "2026-07-17",

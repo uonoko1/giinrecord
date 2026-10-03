@@ -6,6 +6,12 @@
  "received": {
   "sangiin": "2026-07-15"
  },
+ "referral": {
+  "sangiin": {
+   "committee": "沖縄・北方問題及び地方に関する特別",
+   "date": "2026-07-21"
+  }
+ },
  "session": 221,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2CDA.htm",
  "status": "未了",

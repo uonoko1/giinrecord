@@ -6,6 +6,12 @@
  "received": {
   "sangiin": "2025-04-25"
  },
+ "referral": {
+  "sangiin": {
+   "committee": "厚生労働",
+   "date": "2025-05-21"
+  }
+ },
  "session": 217,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF052.htm",
  "status": "未了",

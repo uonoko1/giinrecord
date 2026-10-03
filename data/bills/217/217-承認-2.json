@@ -7,6 +7,16 @@
   "sangiin": "2025-04-24",
   "shugiin": "2025-04-18"
  },
+ "referral": {
+  "sangiin": {
+   "committee": "国土交通",
+   "date": "2025-05-12"
+  },
+  "shugiin": {
+   "committee": "国土交通",
+   "date": "2025-04-22"
+  }
+ },
  "result": {
   "sangiin": "承認",
   "shugiin": "承認"

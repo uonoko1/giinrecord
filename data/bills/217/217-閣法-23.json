@@ -7,6 +7,16 @@
   "sangiin": "2025-03-27",
   "shugiin": "2025-02-18"
  },
+ "referral": {
+  "sangiin": {
+   "committee": "外交防衛",
+   "date": "2025-03-31"
+  },
+  "shugiin": {
+   "committee": "外務",
+   "date": "2025-03-19"
+  }
+ },
  "result": {
   "lawNumber": "21",
   "promulgated": "2025-04-16",

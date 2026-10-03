@@ -7,6 +7,16 @@
   "sangiin": "2025-04-18",
   "shugiin": "2025-02-28"
  },
+ "referral": {
+  "sangiin": {
+   "committee": "法務",
+   "date": "2025-04-23"
+  },
+  "shugiin": {
+   "committee": "法務",
+   "date": "2025-03-27"
+  }
+ },
  "result": {
   "lawNumber": "39",
   "promulgated": "2025-05-23",

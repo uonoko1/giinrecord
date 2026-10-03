@@ -6,6 +6,12 @@
  "received": {
   "shugiin": "2025-03-11"
  },
+ "referral": {
+  "shugiin": {
+   "committee": "政治改革に関する特別",
+   "date": "2025-03-11"
+  }
+ },
  "session": 217,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEC06.htm",
  "status": "撤回",
