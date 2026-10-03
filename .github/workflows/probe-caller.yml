@@ -4,6 +4,8 @@ name: Probe 1137 caller
 # を GitHub 上で実際に確かめる（build-site.yml は pnpm build を走らせるので代理で測る）。
 # **値は 1 文字も出さない。** 出すのは件数と、既に公開されている名前だけ。
 on:
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
