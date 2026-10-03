@@ -254,7 +254,11 @@ t_analytics_consecutive_zero_is_a_failure() {
   fresh anzero
   analytics_days 0 0 0
   run_health && fail "連続 0 行を成功として扱ってはいけない（これが 39 日続いた）"
-  assert_contains "$(cat "$P/monitor.log")" "analytics" "analytics を異常として報告する"
+  local log; log=$(cat "$P/monitor.log")
+  assert_contains "$log" "analytics" "analytics を異常として報告する"
+  # こちらは「測れて 0 件」。上の「測れていない」と**別の理由**で落ちること。
+  assert_contains "$log" "0 page views in 3/3" "測れた日数つきで「0 件」と言っていない"
+  assert_not_contains "$log" "no TSV" "測れているのに「測れていない」と言ってはいけない"
   assert_contains "$(cat "$P/home/monitor/latest.json")" '"analytics"' "latest.json にも出る"
 }
 
@@ -272,7 +276,14 @@ t_analytics_missing_tsv_is_a_failure() {
   # 「0 件」ではなく「測れていない」。これも黙らせない。
   analytics_days - - -
   run_health && fail "TSV が無いのを成功として扱ってはいけない"
-  assert_contains "$(cat "$P/monitor.log")" "analytics" "不在も analytics の異常"
+  local log; log=$(cat "$P/monitor.log")
+  assert_contains "$log" "analytics" "不在も analytics の異常"
+  # **理由まで見る。** 「0 件」と「測れていない」を分けるのがこの PBI の軸なのに、
+  # 「analytics という語が在る」だけを見ていると両者が同じに見える——実測（#1184 の変異）:
+  # `if [ "$found" = 0 ]` を `if false` に潰しても $nonzero も 0 なので別のメッセージで落ち、
+  # **変異が 1 件も検出されなかった**。理由の逐語で釘を打つ。
+  assert_contains "$log" "no TSV" "「測れていない」として報告していない（「0 件」と区別する）"
+  assert_not_contains "$log" "0 page views" "TSV が無いのを「0 件」と言ってはいけない"
 }
 
 t_analytics_absent_dir_says_nothing() {
@@ -291,12 +302,17 @@ t_analytics_zero_actually_opens_an_issue() {
   run_health || true
   assert_not_contains "$(cat "$LOG")" "curl" "1 回目はまだ開かない"
   run_health || true
-  assert_contains "$(cat "$LOG.urls")" "/repos/example/repo/issues" "2 回目で Issue API を叩く"
-  local api; api=$(cat "$LOG.api")
+  assert_contains "$(cat "$LOG.urls" 2>/dev/null || true)" "/repos/example/repo/issues" "2 回目で Issue API を叩く"
+  # **`$(cat <無いファイル>)` は set -e でスイート全体を殺す。** 変異で API が呼ばれなくなると
+  # $LOG.api が作られず、ここで**検出済みの失敗を報告する前に**スクリプトが死ぬ——
+  # 実測（#1184 の変異テスト）: `check_analytics` の呼び出しを潰す変異で
+  # 「x 2 回目で Issue API を叩く」は出るのに **FAIL 行が出ず、残り 2 本も走らなかった**。
+  # **落ちたことが見えない失敗は、守っていないのと同じ。** 不在を空文字として読む。
+  local api; api=$(cat "$LOG.api" 2>/dev/null || true)
   assert_contains "$api" '"title": "[monitor] vps: analytics"' "題は analytics"
   assert_contains "$api" '"labels": ["monitor"]' "label monitor"
   assert_not_contains "$api" "$P" "本文にローカルパスを出さない"
-  assert_eq "42" "$(cat "$P/state/issue.analytics")" "Issue 番号を覚える"
+  assert_eq "42" "$(cat "$P/state/issue.analytics" 2>/dev/null || true)" "Issue 番号を覚える"
 }
 
 t_analytics_recovers_and_closes() {

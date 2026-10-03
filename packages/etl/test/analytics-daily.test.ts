@@ -105,6 +105,11 @@ test("daily.sh: 読む先のログが 1 つも無ければ非 0 で落ちる（#
   const dir = mkdtempSync(join(tmpdir(), "analytics-"));
   const r = tryDaily("2026-08-22", { log: join(dir, "renamed-away.access.log") });
   assert.notEqual(r.status, 0, `不在のログで成功してはいけない: ${r.stdout}`);
+  // **3 であること（4 ではない）まで見る。** 「測れなかった」と「測れて 0 件」は別の事実で、
+  // 別の終了コードにしてある（docs/ops/analytics.md の表）。`notEqual(0)` だけだと
+  // 両者の区別が消える——実測: `-s` を `-f` に変えると空ログが 3 ではなく 4 になるのに、
+  // notEqual(0) しか見ていなかったので**変異が 1 件も落ちなかった**（等価変異ではない）。
+  assert.equal(r.status, 3, `3 = 読む先が無い。got ${r.status}: ${r.stderr}`);
   // 「どのファイルも無い」とだけ言う。ログの中身や行は出さない。
   assert.match(r.stderr, /no such log/i);
 });
@@ -121,7 +126,7 @@ test("daily.sh: ログが不在のときは 0 行の TSV を置かない（空�
 test("daily.sh: ログは在るが指定日の PV が 1 行も無ければ非 0 で落ち、TSV は置く（cron が走ったことは残す）", () => {
   // ログは実在し中身も在るが、求めた日のアクセスが 0 行。
   const r = tryDaily("2026-01-01");
-  assert.notEqual(r.status, 0, `0 行を成功として報告してはいけない: ${r.stdout}`);
+  assert.equal(r.status, 4, `4 = 測れて 0 件（3 = 読む先が無い とは別）: ${r.stderr}`);
   assert.match(`${r.stdout}${r.stderr}`, /0 rows/);
   // 「ログが無い」と「ログは在るが 0 行」は別物。TSV が在るかどうかで区別できるようにする。
   const tsv = join(r.out, "2026-01-01.tsv");
@@ -129,9 +134,12 @@ test("daily.sh: ログは在るが指定日の PV が 1 行も無ければ非 0 
   assert.match(readFileSync(tsv, "utf8"), /pv=0\tpages=0/);
 });
 
-test("daily.sh: 空のログファイル（0 バイト）も「測れなかった」として非 0 で落ちる", () => {
+test("daily.sh: 空のログファイル（0 バイト）は exit 3（「0 件」ではなく「測れなかった」）", () => {
   const r = tryDaily("2026-08-22", { writeLog: "" });
-  assert.notEqual(r.status, 0, `空ログを成功として報告してはいけない: ${r.stdout}`);
+  // **3 であること。** 0 バイトの access log は「静かな日」ではなく「nginx がそこに書いていない」で、
+  // 計器が壊れている側。`-s` を `-f` にすると 4（測れて 0 件）に化けるので、そこを釘で打つ。
+  assert.equal(r.status, 3, `空ログは 3。got ${r.status}: ${r.stderr}`);
+  assert.match(r.stderr, /no such log/i);
 });
 
 test("daily.sh: ローテーション後（.log が無く .log.1 だけ在る）は成功する", () => {
