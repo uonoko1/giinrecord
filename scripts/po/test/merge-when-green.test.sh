@@ -4253,3 +4253,44 @@ EOF
   assert_eq 30 "$out_without" "--paginate が無ければ 30 件で切れる（本物と同じ）"
 }
 test_case "1157: fake gh が --paginate の有無で 31 件 / 30 件を返し分ける" t_1157_fake_gh_emulates_paging
+
+# **手元が母数より「多い」ときは落とさない**（#1157）。
+#
+# **これは意図した非対称である。** **`assert_denominator` は `(( got < want ))` しか見ない。**
+#
+# **なぜ多い側を見ないか:**
+#   - **check-runs**: **同じ名前の run が再実行で増える**ので、**`total_count` より手元が多いのは
+#     正常である**（実測 #1093）。**ここで落とすと、再実行した PR が全部止まる。**
+#   - **commits**: **`.commits` はマージコミットも含む**ので、**`seen` と一致する**
+#     （実測 2026-09-30: #1150 が 7/7・マージ 1 件、#1147 が 7/7・マージ 2 件）。
+#     **もし将来 `.commits` が「非マージだけ」を数えるようになったら `seen > want` になるが、
+#     それは取りこぼしではないので止めてはいけない。**
+#
+# **この非対称に検査が無かった**——**`(( got < want ))` を `(( got > want ))` に変える変異（M5）は
+# 落ちたが、それは「少ない側が落ちなくなった」からで、「多い側が落ちるようになった」ことは
+# 誰も見ていなかった。** **向きを両方見る実装（`!=`）に変えても、M5 は落ちない。**
+# **だからここで「多い側は通る」を固定する。**
+t_1157_more_than_denominator_passes() {
+  local commits; commits=$(mwg_commits_json 31 '120390190+uonoko1@users.noreply.github.com')
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    # **31 件取れている**のに——
+    "api repos/uonoko1/giinrecord/pulls/12/commits"*) echo '$commits' ;;
+    # **PR は 30 件だと言っている**（手元のほうが多い）。**取りこぼしではないので通す。**
+    "api repos/uonoko1/giinrecord/pulls/12"*) echo '{"commits":30}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "手元が母数より多いだけでは止めない: $ERR"
+  assert_contains "$LOG" "pr	merge	12" "多い側で止めると再実行した PR が全部止まる"
+  # **それでも母数は出す**（#757）。**「多い」ことが目で見える。**
+  assert_contains "$OUT$ERR" "コミット 31 件 / PR が言う 30 件" "食い違いを黙って隠さない"
+}
+test_case "1157: 手元が母数より多いだけでは止めない（再実行で増える側は正常）" t_1157_more_than_denominator_passes
