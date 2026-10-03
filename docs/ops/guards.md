@@ -108,7 +108,8 @@ grep してから起票してください（**今日の 5 件はそこにあり�
 | 古い `main` から切った枝が、main が得た行を黙って消す | `scripts/ci/stale-base.sh`（`merge-base` より後に main が得た行が枝に無いかを見る）。テストは `scripts/ci/test/stale-base.test.sh`（#536） |
 | **push される前に rebase された枝が、main の行を黙って消す**（`merge-base` が既に main の先端なので上の検査は `ok` と言う） | `scripts/ci/stale-base.sh` の `--net-deletions` モード（ファイルが残ったまま base の行が差し引きで減っていないかを見る）。テストは `scripts/ci/test/stale-base.test.sh` の `t_net_deletions_catches_a_rebased_branch_that_dropped_the_bases_lines`。**直近 60 PR で 4 件に火が点き、うち 2 件が実地の事故**（#832 は 3 ファイル 286 行、#761 は 2 ファイル 33 行。残る 2 件 #740 / #794 は手で読んで意図した置き換え・移設だった）。**証拠ではなく合図なので、意図した削除なら PR 本文に理由を書く**（#836） |
 | 秘密・サーバー情報がリポジトリに入る | `scripts/ci/forbidden-patterns.sh`（`private-key` / `github-token` / `aws-key` / `env-file` / `ip-address` / `forbidden`。#133） |
-| 破壊的な git（`reset --hard` 等）を scripts に書いて未コミットの作業を消す | `scripts/ci/forbidden-patterns.sh` の `destructive-git` 規則（#542/#557）。退避は `scripts/dev/mutate.sh` を使う |
+| 破壊的な git（`reset --hard` 等）を scripts に書いて未コミットの作業を消す | `scripts/ci/forbidden-patterns.sh` の `destructive-git` 規則（#542/#557/#1123）。退避は `scripts/dev/mutate.sh` の `mutate.sh run` を使う。**この規則が見るのはシェルスクリプトと CI 設定だけ（実測 125 本。追跡 10,430 本の全部ではない）で、語の列挙も不完全である**——動的に見る側とどう補い合うかは下の「破壊的な git を見る 2 枚」 |
+| 到達しない枝に書かれた破壊的な git が、静的・動的の両方のゲートを素通りする | `scripts/po/test/worktree-audit.test.sh` の `assert_git_calls_read_only` が**実行された呼び出し**を allowlist で見て、`scripts/ci/forbidden-patterns.sh` の `DESTRUCTIVE_GIT_SWEEP_RE` が**書かれた行**を静的に見る。**2 枚の不完全さの向きが逆**（#1089/#1115/#1123。`git rm -r --cached .` が両方を素通りしていた。実測） |
 | 利用者本人の個人アドレスが追跡ファイルに入る | `scripts/ci/forbidden-patterns.sh` の `personal-address` 規則（#1111。2026-09-28 に 3 本の PR が計 7 行を入れかけ、3 回ともレビュアーだけが見つけた）。架空アドレスの綴りは `packages/etl/test/fake-addresses.ts` の `FAKE_ADDRESSES` を使う |
 | 高深刻度の脆弱性を無期限に放置する | `scripts/ci/audit.sh`（`audit-ignore.txt` の例外は必ず期限付き）と `scripts/ci/audit-ignore.txt`（#133） |
 | shellcheck の対象・版が CI と手元でずれる | `scripts/ci/shellcheck.sh`（`--list` の対象と `--pinned-version` の固定版が 1 か所。#154/#552） |
@@ -117,6 +118,47 @@ grep してから起票してください（**今日の 5 件はそこにあり�
 | 相手のサーバーから取得したキャッシュを worktree ごと黙って捨て、次に再取得をかける | `scripts/po/worktree-sweep.sh` が消す直前に `取得したものが入っていれば、次に再取得が要ります` と捨てる本数を出す（`.measure/` が無いツリーでは黙る——毎回鳴ると見なくなる）。`scripts/po/test/worktree-sweep.test.sh` が両側を測る（#787。PO が #769 の 32MB を確かめて分かった: 群馬から取得した賛否 PDF 110 本のキャッシュだった） |
 | 本番のコードが「最後のリリース」から外れる | `scripts/ci/released-ref.sh`（`resolve` / `overlay`。#134） |
 | スプリント文書が「次に持ち越すもの」を落とし、次の計画がゼロから始まる | `packages/etl/test/sprint-doc-shape.test.ts` の `REQUIRED_SECTIONS` と `FIRST_ENFORCED_SPRINT`。雛形は `docs/sprints/TEMPLATE.md` の `次に持ち越すもの`（#682。3 回中 2 回落とした） |
+
+### 破壊的な git を見る 2 枚（#1123）
+
+**2 枚あるのは二重管理ではありません。不完全さの向きが逆なので、補い合っています。**
+
+**この節に Markdown の表を書かないでください**（この文書の表は「事故 / 防いでいるもの」の
+2 列だけを機械が読みます。3 列の表を足すと `packages/etl/test/guards-inventory.test.ts` が
+**5 列に割れている**と言って落ちます——実測で踏みました）。**以下はコードブロックです。**
+
+```
+                    語の集合                      見る場所
+静的                denylist なので不完全         シェルスクリプト（.sh）と
+  forbidden-        （列挙に無い形は素通りする）    CI 設定（scripts/ deploy/ .github/）
+  patterns.sh の                                 の全行。**追跡 10,430 本の全部ではない**
+  destructive-git                                （実測 125 本。母数を出力に書く）
+
+動的                実行された呼び出しについては   その筋書きで実際に
+  worktree-         完全（列挙に無い形は           実行された呼び出しだけ
+  audit.test.sh の  サブコマンドが何であれ落ちる） （到達しない枝は見えない）
+  allowlist
+```
+
+**両方の隙間に落ちる形**（これが #1123 の事実です。`origin/main` で実測しました）:
+
+```
+到達しない枝に、静的な列挙に無い語を書く
+  例: worktree-audit.sh の unreadable 枝（テストが到達しない）に  git rm -r --cached .
+  → 動的は「実行されていない」ので見えない   passed: 21  failed: 0
+  → 静的は rm という語を持っていなかった     forbidden-patterns: clean
+  （候補 25 形で当たったのは 5 形だけだった: reset --hard / clean / checkout --force /
+    restore / stash。残る 20 形は素通りした）
+```
+
+**#1123 で静的側に `rm` / `worktree remove` / `update-ref -d` / `branch -D` を足しました。**
+**しかし静的側は denylist のままなので、「これで全部」ではありません**
+（塞げていない形は規則の下に列挙してあります）。**次に穴を探すときは、
+上の図の「右下」——到達しない枝——に、左上の列挙に無い語を置いてみてください。**
+
+**逆向きの誤読にも注意してください**（#1115 のレビュー指摘）:
+**allowlist が「これで全部」と言えるのは、サブコマンドの集合についてだけ**です。
+**到達する枝の集合については言えません。**
 
 ## 配信（nginx / VPS）
 

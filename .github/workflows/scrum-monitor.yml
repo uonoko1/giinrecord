@@ -1,0 +1,114 @@
+name: Scrum monitor
+# Issue #1110: スクラムが止まっていないかを見張る自動の入口。
+#
+# なぜ要るか（PO が 2 回実測した。#1110 と #1099 のコメント）:
+#   PO はこれと同じ監視を `scratchpad` に立てていた。**scratchpad はセッション固有なので、
+#   セッションが終わると消える。** **2026-09-29〜30 の 1 日で 2 回消えた。**
+#     1 回目  セッション再開で監視が止まった  →  **PO が気づかず、監視なしで進めた**
+#     2 回目  スクリプト自体が消えた          →  `MONITOR-BROKEN` が出て気づいた
+#   **その日 23 本マージしており、そのあいだ監視が 2 回死んでいた。**
+#   **この workflow は「PO の画面」ではなく GitHub に住むので、セッションと一緒に消えない。**
+#
+# **入口自身が死んだことを検出できること**（#1110 の受け入れ条件 2。**#547 の教訓**):
+#   **`BRANCH_PROTECTION_TOKEN` が無い cron が 23 回連続 failure で死んでいて、誰も気づかなかった。**
+#   **「入口を作った」だけでは足りない。** ここでは 3 重に見る:
+#     1. 監視の**終了コード**（0 / 3 / 4 / それ以外）→ `scrum-monitor-report.sh` が Issue にする。
+#        **知らない終了コードは「測れていない」として Issue が立つ**（判定に届かないまま死んだ形）。
+#     2. 監視の**締めの行**（`scrum-monitor: 終了（節 N/M を測れました…）`）。
+#        **exit 0 で出力が空という形が在りうる**ので、終了コードだけでは足りない。
+#     3. **`if: always()` の後段**。step が落ちても（checkout 失敗・gh 不在・timeout）
+#        **Issue を立てる step が走る。** **ここが #547 で抜けていた穴である**——
+#        判定行に届く前に死ぬと、失敗が Actions の履歴にしか残らない。
+#
+# 判定と報告の対応（どの終了コードでどの Issue を開閉するか）は
+# **`scripts/po/scrum-monitor-report.sh` にある。ここに直接書かない**:
+# インラインの `run:` に書いていた間、それを検査するものが 1 つも無く、レビューが
+# タイトルの入れ替え・分岐の削除・`set +e` の削除を入れても**テストは素通りした**（#546）。
+# いまは `scripts/po/test/scrum-monitor-report.test.sh` が 10 通りを固定している。
+#
+# Issue の開閉は `monitor.yml` / `branch-protection.yml` と同じ `deploy/monitor/report.sh` に任せる
+# （**タイトルが同一性なので、鳴り続けても Issue が溜まらない**。2 つ目の仕組みを作らない）。
+#
+# Issue 本文にサーバー情報を書かない（OSS）。`scrum-monitor.sh` は worktree のパスも枝名も
+# 出さない設計で、`scripts/po/test/scrum-monitor.test.sh` がそれを固定している。
+on:
+  schedule:
+    # **10 分ごと**（PO が scratchpad で回していた間隔と同じ。#1099 の実測）。
+    # **`monitor.yml` も `*/10` を使うが、あちらは production の外部プローブで、
+    # 立てる Issue のタイトルも違う**ので同じ Issue を取り合わない。
+    # **ずらす**（`*/10` ではなく `3,13,23,33,43,53`）——同時刻に走らせると
+    # Actions の並列枠を取り合い、どちらかが遅れる。
+    - cron: "3,13,23,33,43,53 * * * *"
+  pull_request:
+    # **監視そのものを触る PR では、その場でテストを走らせて壊れていないことを見る**
+    # （`branch-protection.yml` と同じ形）。**実際の GitHub は読まない**——
+    # fork からの PR に `issues: write` は渡らず、Issue の開閉もしたくない。
+    paths:
+      - ".github/workflows/scrum-monitor.yml"
+      - "scripts/po/scrum-monitor.sh"
+      - "scripts/po/scrum-monitor-report.sh"
+      - "scripts/po/test/scrum-monitor.test.sh"
+      - "scripts/po/test/scrum-monitor-report.test.sh"
+  workflow_dispatch:
+permissions:
+  contents: read
+  issues: write
+  # **`pull-requests: read` は要らない**: `gh pr list` は `contents: read` の GITHUB_TOKEN で
+  # 公開リポジトリの PR を読める（`checks: read` も同様に不要——check-runs は
+  # `repos/.../commits/<sha>/check-runs` で読めて、`contents: read` で足りる）。
+  # **最小権限にする**: この job は `issues: write` を持つので、余分な読みを足さない。
+concurrency:
+  group: scrum-monitor
+  cancel-in-progress: false
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: unit tests (gh / git / report.sh are stubs, no network)
+        run: bash scripts/po/test/run.sh scrum-monitor
+      # **schedule / workflow_dispatch のときだけ実際に測る**（PR では上のテストで足りる）。
+      # **`continue-on-error` は使わない**: 落ちたら次の step が `always()` で拾う。
+      - name: watch the scrum → Issue
+        if: github.event_name != 'pull_request'
+        id: watch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # **`MONITOR_SKIP_LOCAL=1`**: worktree は PO の手元にしか無い。
+          # **ここには 1 本しか無いので、測れないものを測ったふりにしない**
+          # （`scrum-monitor.sh` は飛ばしたことを出力に書き、母数からも外す）。
+          MONITOR_SKIP_LOCAL: "1"
+        run: |
+          bash scripts/po/scrum-monitor-report.sh \
+            "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+      # **#547 の穴を塞ぐ step。** **上の step が判定に届かずに死んだ場合**
+      # （checkout 失敗・gh が居ない・timeout-minutes での打ち切り・OOM）、
+      # **`scrum-monitor-report.sh` 自体が走っていないので Issue は立たない。**
+      # **そのときここが立てる。** **これが無いと、失敗は Actions の履歴にしか残らず、
+      # 23 回連続で死んでいても誰も気づかない。**
+      #
+      # **`steps.watch.outcome` を見る**（`always()` の中では `success()` が使えない形を避ける）。
+      # **`skipped`（PR の場合）は何もしない。**
+      - name: 入口自身が死んだら Issue を立てる (#547)
+        if: always() && github.event_name != 'pull_request' && steps.watch.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          # **本文にサーバー情報を書かない**（OSS）。run の URL と、どの step が落ちたかだけ。
+          body="$RUNNER_TEMP/entrypoint-dead.md"
+          {
+            echo "**スクラム監視の入口そのものが失敗しました。** 監視は走っていません。"
+            echo
+            echo "- 落ちた step: \`watch the scrum → Issue\`（outcome=\`${{ steps.watch.outcome }}\`）"
+            echo "- 実行: $RUN_URL"
+            echo
+            echo "**\`scrum-monitor-report.sh\` の判定に届いていないので、"
+            echo "止まっている作業が在るかどうかは分かっていません。**"
+            echo
+            echo "#547 の型です（\`BRANCH_PROTECTION_TOKEN\` が無い cron が 23 回連続 failure で"
+            echo "死んでいて、誰も気づかなかった）。**原因を直したらこの Issue を閉じてください**"
+            echo "（open のままだと次の失敗はこの Issue への重複になりません——タイトルが同一性です）。"
+          } > "$body"
+          bash deploy/monitor/report.sh "[monitor] scrum: 監視の入口が動いていない" fail "$body"

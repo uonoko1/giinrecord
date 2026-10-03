@@ -3,6 +3,16 @@
   "house": "shugiin",
   "id": "221-予算-1",
   "kind": "予算",
+  "referredCommittees": [
+   {
+    "committee": "予算",
+    "house": "shugiin"
+   },
+   {
+    "committee": "予算",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE14C2.htm",
   "status": "成立",
@@ -12,6 +22,16 @@
   "house": "shugiin",
   "id": "221-予算-2",
   "kind": "予算",
+  "referredCommittees": [
+   {
+    "committee": "予算",
+    "house": "shugiin"
+   },
+   {
+    "committee": "予算",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE14C6.htm",
   "status": "成立",
@@ -21,6 +41,16 @@
   "house": "shugiin",
   "id": "221-予算-3",
   "kind": "予算",
+  "referredCommittees": [
+   {
+    "committee": "予算",
+    "house": "shugiin"
+   },
+   {
+    "committee": "予算",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE14CA.htm",
   "status": "成立",
@@ -30,6 +60,16 @@
   "house": "shugiin",
   "id": "221-予算-4",
   "kind": "予算",
+  "referredCommittees": [
+   {
+    "committee": "予算",
+    "house": "shugiin"
+   },
+   {
+    "committee": "予算",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE23D6.htm",
   "status": "成立",
@@ -39,6 +79,16 @@
   "house": "shugiin",
   "id": "221-予算-5",
   "kind": "予算",
+  "referredCommittees": [
+   {
+    "committee": "予算",
+    "house": "shugiin"
+   },
+   {
+    "committee": "予算",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE23DA.htm",
   "status": "成立",
@@ -48,6 +98,16 @@
   "house": "shugiin",
   "id": "221-予算-6",
   "kind": "予算",
+  "referredCommittees": [
+   {
+    "committee": "予算",
+    "house": "shugiin"
+   },
+   {
+    "committee": "予算",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE23DE.htm",
   "status": "成立",
@@ -57,6 +117,16 @@
   "house": "shugiin",
   "id": "221-予算-7",
   "kind": "予算",
+  "referredCommittees": [
+   {
+    "committee": "予算",
+    "house": "shugiin"
+   },
+   {
+    "committee": "予算",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE28CE.htm",
   "status": "成立",
@@ -66,6 +136,16 @@
   "house": "shugiin",
   "id": "221-予算-8",
   "kind": "予算",
+  "referredCommittees": [
+   {
+    "committee": "予算",
+    "house": "shugiin"
+   },
+   {
+    "committee": "予算",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE28D2.htm",
   "status": "成立",
@@ -93,6 +173,12 @@
   "house": "shugiin",
   "id": "221-参法-11",
   "kind": "参法",
+  "referredCommittees": [
+   {
+    "committee": "農林水産",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2A6E.htm",
   "status": "未了",
@@ -156,6 +242,12 @@
   "house": "shugiin",
   "id": "221-参法-18",
   "kind": "参法",
+  "referredCommittees": [
+   {
+    "committee": "沖縄・北方問題及び地方に関する特別",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2CAA.htm",
   "status": "参議院議了",
@@ -183,6 +275,12 @@
   "house": "shugiin",
   "id": "221-参法-20",
   "kind": "参法",
+  "referredCommittees": [
+   {
+    "committee": "沖縄・北方問題及び地方に関する特別",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2CDA.htm",
   "status": "未了",
@@ -264,6 +362,16 @@
   "house": "shugiin",
   "id": "221-承認-1",
   "kind": "承認",
+  "referredCommittees": [
+   {
+    "committee": "総務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "総務",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE15BE.htm",
   "status": "両院承認",
@@ -273,6 +381,16 @@
   "house": "shugiin",
   "id": "221-承諾-1DE203A",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   },
+   {
+    "committee": "決算",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE203A.htm",
   "status": "両院承諾",
@@ -282,6 +400,16 @@
   "house": "shugiin",
   "id": "221-承諾-1DE204E",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   },
+   {
+    "committee": "決算",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE204E.htm",
   "status": "両院承諾",
@@ -291,6 +419,12 @@
   "house": "shugiin",
   "id": "221-承諾-1DE2062",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2062.htm",
   "status": "衆議院で閉会中審査",
@@ -300,6 +434,12 @@
   "house": "shugiin",
   "id": "221-承諾-1DE287A",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE287A.htm",
   "status": "衆議院で閉会中審査",
@@ -309,6 +449,12 @@
   "house": "shugiin",
   "id": "221-承諾-1DE288E",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE288E.htm",
   "status": "衆議院で閉会中審査",
@@ -318,6 +464,16 @@
   "house": "shugiin",
   "id": "221-条約-1",
   "kind": "条約",
+  "referredCommittees": [
+   {
+    "committee": "外務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "外交防衛",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE21DA.htm",
   "status": "両院承認",
@@ -327,6 +483,16 @@
   "house": "shugiin",
   "id": "221-条約-10",
   "kind": "条約",
+  "referredCommittees": [
+   {
+    "committee": "外務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "外交防衛",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE246E.htm",
   "status": "両院承認",
@@ -336,6 +502,16 @@
   "house": "shugiin",
   "id": "221-条約-11",
   "kind": "条約",
+  "referredCommittees": [
+   {
+    "committee": "外務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "外交防衛",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2482.htm",
   "status": "両院承認",
@@ -345,6 +521,16 @@
   "house": "shugiin",
   "id": "221-条約-12",
   "kind": "条約",
+  "referredCommittees": [
+   {
+    "committee": "外務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "外交防衛",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2496.htm",
   "status": "両院承認",
@@ -354,6 +540,16 @@
   "house": "shugiin",
   "id": "221-条約-2",
   "kind": "条約",
+  "referredCommittees": [
+   {
+    "committee": "外務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "外交防衛",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE21EE.htm",
   "status": "両院承認",
@@ -363,6 +559,16 @@
   "house": "shugiin",
   "id": "221-条約-3",
   "kind": "条約",
+  "referredCommittees": [
+   {
+    "committee": "外務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "外交防衛",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2202.htm",
   "status": "両院承認",
@@ -372,6 +578,16 @@
   "house": "shugiin",
   "id": "221-条約-4",
   "kind": "条約",
+  "referredCommittees": [
+   {
+    "committee": "外務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "外交防衛",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2216.htm",
   "status": "両院承認",
@@ -381,6 +597,16 @@
   "house": "shugiin",
   "id": "221-条約-5",
   "kind": "条約",
+  "referredCommittees": [
+   {
+    "committee": "外務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "外交防衛",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE222A.htm",
   "status": "両院承認",
@@ -390,6 +616,16 @@
   "house": "shugiin",
   "id": "221-条約-6",
   "kind": "条約",
+  "referredCommittees": [
+   {
+    "committee": "外務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "外交防衛",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE223E.htm",
   "status": "両院承認",
@@ -399,6 +635,16 @@
   "house": "shugiin",
   "id": "221-条約-7",
   "kind": "条約",
+  "referredCommittees": [
+   {
+    "committee": "外務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "外交防衛",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2252.htm",
   "status": "両院承認",
@@ -408,6 +654,16 @@
   "house": "shugiin",
   "id": "221-条約-8",
   "kind": "条約",
+  "referredCommittees": [
+   {
+    "committee": "外務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "外交防衛",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2446.htm",
   "status": "両院承認",
@@ -417,6 +673,16 @@
   "house": "shugiin",
   "id": "221-条約-9",
   "kind": "条約",
+  "referredCommittees": [
+   {
+    "committee": "外務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "外交防衛",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE245A.htm",
   "status": "両院承認",
@@ -435,6 +701,12 @@
   "house": "shugiin",
   "id": "221-衆法-1",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "政治改革に関する特別",
+    "house": "shugiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE153E.htm",
   "status": "衆議院で閉会中審査",
@@ -444,6 +716,12 @@
   "house": "shugiin",
   "id": "221-衆法-10",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "議院運営",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE28CA.htm",
   "status": "成立",
@@ -453,6 +731,16 @@
   "house": "shugiin",
   "id": "221-衆法-11",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "憲法審査会",
+    "house": "shugiin"
+   },
+   {
+    "committee": "憲法審査会",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE28DE.htm",
   "status": "成立",
@@ -462,6 +750,12 @@
   "house": "shugiin",
   "id": "221-衆法-12",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "政治改革に関する特別",
+    "house": "shugiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE290A.htm",
   "status": "衆議院で閉会中審査",
@@ -471,6 +765,12 @@
   "house": "shugiin",
   "id": "221-衆法-13",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "総務",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE28F6.htm",
   "status": "成立",
@@ -480,6 +780,12 @@
   "house": "shugiin",
   "id": "221-衆法-14",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "政治改革に関する特別",
+    "house": "shugiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE293A.htm",
   "status": "衆議院で閉会中審査",
@@ -489,6 +795,12 @@
   "house": "shugiin",
   "id": "221-衆法-15",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "議院運営",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE293E.htm",
   "status": "成立",
@@ -498,6 +810,12 @@
   "house": "shugiin",
   "id": "221-衆法-16",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "総務",
+    "house": "shugiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE295A.htm",
   "status": "衆議院で閉会中審査",
@@ -507,6 +825,12 @@
   "house": "shugiin",
   "id": "221-衆法-17",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "財務金融",
+    "house": "shugiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE296E.htm",
   "status": "衆議院で閉会中審査",
@@ -516,6 +840,16 @@
   "house": "shugiin",
   "id": "221-衆法-18",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "内閣",
+    "house": "shugiin"
+   },
+   {
+    "committee": "内閣",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE29A2.htm",
   "status": "成立",
@@ -525,6 +859,12 @@
   "house": "shugiin",
   "id": "221-衆法-19",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "内閣",
+    "house": "shugiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE29BA.htm",
   "status": "衆議院で閉会中審査",
@@ -534,6 +874,12 @@
   "house": "shugiin",
   "id": "221-衆法-2",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "財務金融",
+    "house": "shugiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1F62.htm",
   "status": "衆議院で閉会中審査",
@@ -543,6 +889,12 @@
   "house": "shugiin",
   "id": "221-衆法-20",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "内閣",
+    "house": "shugiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE29CE.htm",
   "status": "衆議院で閉会中審査",
@@ -552,6 +904,12 @@
   "house": "shugiin",
   "id": "221-衆法-21",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "法務",
+    "house": "shugiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE29E2.htm",
   "status": "衆議院で閉会中審査",
@@ -561,6 +919,12 @@
   "house": "shugiin",
   "id": "221-衆法-22",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "内閣",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2A26.htm",
   "status": "成立",
@@ -570,6 +934,12 @@
   "house": "shugiin",
   "id": "221-衆法-23",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "文教科学",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2A2A.htm",
   "status": "成立",
@@ -579,6 +949,12 @@
   "house": "shugiin",
   "id": "221-衆法-24",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "地域活性化・こども政策・デジタル社会形成に関する特別",
+    "house": "shugiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2A92.htm",
   "status": "衆議院で閉会中審査",
@@ -588,6 +964,12 @@
   "house": "shugiin",
   "id": "221-衆法-25",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "地域活性化・こども政策・デジタル社会形成に関する特別",
+    "house": "shugiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2AA6.htm",
   "status": "本院議了",
@@ -597,6 +979,16 @@
   "house": "shugiin",
   "id": "221-衆法-26",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "政治改革に関する特別",
+    "house": "shugiin"
+   },
+   {
+    "committee": "政治改革に関する特別",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2AAA.htm",
   "status": "成立",
@@ -606,6 +998,16 @@
   "house": "shugiin",
   "id": "221-衆法-27",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "地域活性化・こども政策・デジタル社会形成に関する特別",
+    "house": "shugiin"
+   },
+   {
+    "committee": "沖縄・北方問題及び地方に関する特別",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2ACE.htm",
   "status": "成立",
@@ -615,6 +1017,12 @@
   "house": "shugiin",
   "id": "221-衆法-28",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "政治改革に関する特別",
+    "house": "shugiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2AE2.htm",
   "status": "衆議院で閉会中審査",
@@ -624,6 +1032,12 @@
   "house": "shugiin",
   "id": "221-衆法-29",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "こども・子育て・若者活躍に関する特別",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2BCA.htm",
   "status": "成立",
@@ -633,6 +1047,12 @@
   "house": "shugiin",
   "id": "221-衆法-3",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "内閣",
+    "house": "shugiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1E7E.htm",
   "status": "本院議了",
@@ -642,6 +1062,12 @@
   "house": "shugiin",
   "id": "221-衆法-30",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "財務金融",
+    "house": "shugiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2BEA.htm",
   "status": "衆議院で閉会中審査",
@@ -651,6 +1077,12 @@
   "house": "shugiin",
   "id": "221-衆法-31",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "総務",
+    "house": "shugiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2BEE.htm",
   "status": "衆議院で閉会中審査",
@@ -660,6 +1092,12 @@
   "house": "shugiin",
   "id": "221-衆法-32",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "経済産業",
+    "house": "shugiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2BF2.htm",
   "status": "衆議院で閉会中審査",
@@ -669,6 +1107,12 @@
   "house": "shugiin",
   "id": "221-衆法-33",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "経済産業",
+    "house": "shugiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2BF6.htm",
   "status": "衆議院で閉会中審査",
@@ -678,6 +1122,12 @@
   "house": "shugiin",
   "id": "221-衆法-34",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "議院運営",
+    "house": "shugiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2C4A.htm",
   "status": "衆議院で閉会中審査",
@@ -687,6 +1137,12 @@
   "house": "shugiin",
   "id": "221-衆法-35",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "政治改革に関する特別",
+    "house": "shugiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2C6E.htm",
   "status": "衆議院で閉会中審査",
@@ -696,6 +1152,12 @@
   "house": "shugiin",
   "id": "221-衆法-36",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "国土交通",
+    "house": "shugiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2C82.htm",
   "status": "衆議院で閉会中審査",
@@ -705,6 +1167,12 @@
   "house": "shugiin",
   "id": "221-衆法-37",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "経済産業",
+    "house": "shugiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2C92.htm",
   "status": "衆議院で閉会中審査",
@@ -714,6 +1182,12 @@
   "house": "shugiin",
   "id": "221-衆法-38",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "国土交通",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2CF6.htm",
   "status": "成立",
@@ -723,6 +1197,12 @@
   "house": "shugiin",
   "id": "221-衆法-4",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "国土交通",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1E6A.htm",
   "status": "成立",
@@ -732,6 +1212,12 @@
   "house": "shugiin",
   "id": "221-衆法-5",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "災害対策及び東日本大震災復興特別",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1F66.htm",
   "status": "成立",
@@ -741,6 +1227,12 @@
   "house": "shugiin",
   "id": "221-衆法-6",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "文部科学",
+    "house": "shugiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE233A.htm",
   "status": "衆議院で閉会中審査",
@@ -750,6 +1242,12 @@
   "house": "shugiin",
   "id": "221-衆法-7",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "厚生労働",
+    "house": "shugiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE280A.htm",
   "status": "衆議院で閉会中審査",
@@ -759,6 +1257,12 @@
   "house": "shugiin",
   "id": "221-衆法-8",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "農林水産",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE280E.htm",
   "status": "成立",
@@ -768,6 +1272,12 @@
   "house": "shugiin",
   "id": "221-衆法-9",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "法務",
+    "house": "shugiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2846.htm",
   "status": "本院議了",
@@ -777,6 +1287,16 @@
   "house": "shugiin",
   "id": "221-閣法-1",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "財務金融",
+    "house": "shugiin"
+   },
+   {
+    "committee": "財政金融",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE14CE.htm",
   "status": "成立",
@@ -786,6 +1306,16 @@
   "house": "shugiin",
   "id": "221-閣法-10",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "外務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "外交防衛",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1582.htm",
   "status": "成立",
@@ -795,6 +1325,16 @@
   "house": "shugiin",
   "id": "221-閣法-11",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "農林水産",
+    "house": "shugiin"
+   },
+   {
+    "committee": "農林水産",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1596.htm",
   "status": "成立",
@@ -804,6 +1344,16 @@
   "house": "shugiin",
   "id": "221-閣法-12",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "農林水産",
+    "house": "shugiin"
+   },
+   {
+    "committee": "農林水産",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE15AA.htm",
   "status": "成立",
@@ -813,6 +1363,16 @@
   "house": "shugiin",
   "id": "221-閣法-13",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "災害対策特別",
+    "house": "shugiin"
+   },
+   {
+    "committee": "災害対策及び東日本大震災復興特別",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1612.htm",
   "status": "成立",
@@ -822,6 +1382,16 @@
   "house": "shugiin",
   "id": "221-閣法-14",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "災害対策特別",
+    "house": "shugiin"
+   },
+   {
+    "committee": "災害対策及び東日本大震災復興特別",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1626.htm",
   "status": "成立",
@@ -831,6 +1401,16 @@
   "house": "shugiin",
   "id": "221-閣法-15",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "経済産業",
+    "house": "shugiin"
+   },
+   {
+    "committee": "経済産業",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE163A.htm",
   "status": "成立",
@@ -840,6 +1420,16 @@
   "house": "shugiin",
   "id": "221-閣法-16",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "国土交通",
+    "house": "shugiin"
+   },
+   {
+    "committee": "国土交通",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE164E.htm",
   "status": "成立",
@@ -849,6 +1439,16 @@
   "house": "shugiin",
   "id": "221-閣法-17",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "環境",
+    "house": "shugiin"
+   },
+   {
+    "committee": "環境",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1662.htm",
   "status": "成立",
@@ -858,6 +1458,16 @@
   "house": "shugiin",
   "id": "221-閣法-18",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "安全保障",
+    "house": "shugiin"
+   },
+   {
+    "committee": "外交防衛",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1E66.htm",
   "status": "成立",
@@ -867,6 +1477,16 @@
   "house": "shugiin",
   "id": "221-閣法-19",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "法務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "法務",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1F02.htm",
   "status": "成立",
@@ -876,6 +1496,16 @@
   "house": "shugiin",
   "id": "221-閣法-2",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "財務金融",
+    "house": "shugiin"
+   },
+   {
+    "committee": "財政金融",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE14D2.htm",
   "status": "成立",
@@ -885,6 +1515,16 @@
   "house": "shugiin",
   "id": "221-閣法-20",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "法務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "法務",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1F16.htm",
   "status": "成立",
@@ -894,6 +1534,16 @@
   "house": "shugiin",
   "id": "221-閣法-21",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "外務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "外交防衛",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1F2A.htm",
   "status": "成立",
@@ -903,6 +1553,16 @@
   "house": "shugiin",
   "id": "221-閣法-22",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "国土交通",
+    "house": "shugiin"
+   },
+   {
+    "committee": "国土交通",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1F3E.htm",
   "status": "成立",
@@ -912,6 +1572,16 @@
   "house": "shugiin",
   "id": "221-閣法-23",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "国土交通",
+    "house": "shugiin"
+   },
+   {
+    "committee": "国土交通",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1F52.htm",
   "status": "成立",
@@ -921,6 +1591,16 @@
   "house": "shugiin",
   "id": "221-閣法-24",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "内閣",
+    "house": "shugiin"
+   },
+   {
+    "committee": "内閣",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1FCA.htm",
   "status": "成立",
@@ -930,6 +1610,16 @@
   "house": "shugiin",
   "id": "221-閣法-25",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "厚生労働",
+    "house": "shugiin"
+   },
+   {
+    "committee": "厚生労働",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1FDE.htm",
   "status": "成立",
@@ -939,6 +1629,16 @@
   "house": "shugiin",
   "id": "221-閣法-26",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "経済産業",
+    "house": "shugiin"
+   },
+   {
+    "committee": "経済産業",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1FF2.htm",
   "status": "成立",
@@ -948,6 +1648,16 @@
   "house": "shugiin",
   "id": "221-閣法-27",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "財務金融",
+    "house": "shugiin"
+   },
+   {
+    "committee": "財政金融",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2076.htm",
   "status": "成立",
@@ -957,6 +1667,16 @@
   "house": "shugiin",
   "id": "221-閣法-28",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "農林水産",
+    "house": "shugiin"
+   },
+   {
+    "committee": "農林水産",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE209E.htm",
   "status": "成立",
@@ -966,6 +1686,16 @@
   "house": "shugiin",
   "id": "221-閣法-29",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "農林水産",
+    "house": "shugiin"
+   },
+   {
+    "committee": "農林水産",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE20B2.htm",
   "status": "成立",
@@ -975,6 +1705,16 @@
   "house": "shugiin",
   "id": "221-閣法-3",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "財務金融",
+    "house": "shugiin"
+   },
+   {
+    "committee": "財政金融",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE14D6.htm",
   "status": "成立",
@@ -984,6 +1724,16 @@
   "house": "shugiin",
   "id": "221-閣法-30",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "内閣",
+    "house": "shugiin"
+   },
+   {
+    "committee": "内閣",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE20F6.htm",
   "status": "成立",
@@ -993,6 +1743,16 @@
   "house": "shugiin",
   "id": "221-閣法-31",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "内閣",
+    "house": "shugiin"
+   },
+   {
+    "committee": "内閣",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2162.htm",
   "status": "成立",
@@ -1002,6 +1762,16 @@
   "house": "shugiin",
   "id": "221-閣法-32",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "総務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "総務",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2176.htm",
   "status": "成立",
@@ -1011,6 +1781,16 @@
   "house": "shugiin",
   "id": "221-閣法-33",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "総務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "総務",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE218A.htm",
   "status": "成立",
@@ -1020,6 +1800,16 @@
   "house": "shugiin",
   "id": "221-閣法-34",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "総務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "総務",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE219E.htm",
   "status": "成立",
@@ -1029,6 +1819,16 @@
   "house": "shugiin",
   "id": "221-閣法-35",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "農林水産",
+    "house": "shugiin"
+   },
+   {
+    "committee": "農林水産",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE21B2.htm",
   "status": "成立",
@@ -1038,6 +1838,16 @@
   "house": "shugiin",
   "id": "221-閣法-36",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "経済産業",
+    "house": "shugiin"
+   },
+   {
+    "committee": "経済産業",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE21C6.htm",
   "status": "成立",
@@ -1047,6 +1857,16 @@
   "house": "shugiin",
   "id": "221-閣法-37",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "地域活性化・こども政策・デジタル社会形成に関する特別",
+    "house": "shugiin"
+   },
+   {
+    "committee": "沖縄・北方問題及び地方に関する特別",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE234E.htm",
   "status": "成立",
@@ -1056,6 +1876,16 @@
   "house": "shugiin",
   "id": "221-閣法-38",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "国土交通",
+    "house": "shugiin"
+   },
+   {
+    "committee": "国土交通",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2362.htm",
   "status": "成立",
@@ -1065,6 +1895,16 @@
   "house": "shugiin",
   "id": "221-閣法-39",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "国土交通",
+    "house": "shugiin"
+   },
+   {
+    "committee": "国土交通",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2376.htm",
   "status": "成立",
@@ -1074,6 +1914,16 @@
   "house": "shugiin",
   "id": "221-閣法-4",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "総務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "総務",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE14DA.htm",
   "status": "成立",
@@ -1083,6 +1933,16 @@
   "house": "shugiin",
   "id": "221-閣法-40",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "内閣",
+    "house": "shugiin"
+   },
+   {
+    "committee": "デジタル社会の形成及び人工知能の活用等に関する特別",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE238A.htm",
   "status": "成立",
@@ -1092,6 +1952,16 @@
   "house": "shugiin",
   "id": "221-閣法-41",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "内閣",
+    "house": "shugiin"
+   },
+   {
+    "committee": "デジタル社会の形成及び人工知能の活用等に関する特別",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2432.htm",
   "status": "成立",
@@ -1101,6 +1971,16 @@
   "house": "shugiin",
   "id": "221-閣法-42",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "法務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "法務",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE24AA.htm",
   "status": "成立",
@@ -1110,6 +1990,16 @@
   "house": "shugiin",
   "id": "221-閣法-43",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "法務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "法務",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2576.htm",
   "status": "成立",
@@ -1119,6 +2009,16 @@
   "house": "shugiin",
   "id": "221-閣法-44",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "法務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "法務",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE258A.htm",
   "status": "成立",
@@ -1128,6 +2028,16 @@
   "house": "shugiin",
   "id": "221-閣法-45",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "厚生労働",
+    "house": "shugiin"
+   },
+   {
+    "committee": "厚生労働",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE259E.htm",
   "status": "成立",
@@ -1137,6 +2047,16 @@
   "house": "shugiin",
   "id": "221-閣法-46",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "農林水産",
+    "house": "shugiin"
+   },
+   {
+    "committee": "農林水産",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE25B2.htm",
   "status": "成立",
@@ -1146,6 +2066,16 @@
   "house": "shugiin",
   "id": "221-閣法-47",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "農林水産",
+    "house": "shugiin"
+   },
+   {
+    "committee": "農林水産",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE25C6.htm",
   "status": "成立",
@@ -1155,6 +2085,16 @@
   "house": "shugiin",
   "id": "221-閣法-48",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "農林水産",
+    "house": "shugiin"
+   },
+   {
+    "committee": "農林水産",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE25DA.htm",
   "status": "成立",
@@ -1164,6 +2104,16 @@
   "house": "shugiin",
   "id": "221-閣法-49",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "環境",
+    "house": "shugiin"
+   },
+   {
+    "committee": "環境",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE25EE.htm",
   "status": "成立",
@@ -1173,6 +2123,16 @@
   "house": "shugiin",
   "id": "221-閣法-5",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "総務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "総務",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE14DE.htm",
   "status": "成立",
@@ -1182,6 +2142,16 @@
   "house": "shugiin",
   "id": "221-閣法-50",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "安全保障",
+    "house": "shugiin"
+   },
+   {
+    "committee": "外交防衛",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2602.htm",
   "status": "成立",
@@ -1191,6 +2161,16 @@
   "house": "shugiin",
   "id": "221-閣法-51",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "内閣",
+    "house": "shugiin"
+   },
+   {
+    "committee": "内閣",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2616.htm",
   "status": "成立",
@@ -1200,6 +2180,16 @@
   "house": "shugiin",
   "id": "221-閣法-52",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "環境",
+    "house": "shugiin"
+   },
+   {
+    "committee": "環境",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE262A.htm",
   "status": "成立",
@@ -1209,6 +2199,16 @@
   "house": "shugiin",
   "id": "221-閣法-53",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "地域活性化・こども政策・デジタル社会形成に関する特別",
+    "house": "shugiin"
+   },
+   {
+    "committee": "デジタル社会の形成及び人工知能の活用等に関する特別",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE26DE.htm",
   "status": "成立",
@@ -1218,6 +2218,16 @@
   "house": "shugiin",
   "id": "221-閣法-54",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "地域活性化・こども政策・デジタル社会形成に関する特別",
+    "house": "shugiin"
+   },
+   {
+    "committee": "デジタル社会の形成及び人工知能の活用等に関する特別",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE26F2.htm",
   "status": "成立",
@@ -1227,6 +2237,16 @@
   "house": "shugiin",
   "id": "221-閣法-55",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "文部科学",
+    "house": "shugiin"
+   },
+   {
+    "committee": "文教科学",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2706.htm",
   "status": "成立",
@@ -1236,6 +2256,16 @@
   "house": "shugiin",
   "id": "221-閣法-56",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "厚生労働",
+    "house": "shugiin"
+   },
+   {
+    "committee": "厚生労働",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE271A.htm",
   "status": "成立",
@@ -1245,6 +2275,16 @@
   "house": "shugiin",
   "id": "221-閣法-57",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "財務金融",
+    "house": "shugiin"
+   },
+   {
+    "committee": "財政金融",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE278A.htm",
   "status": "成立",
@@ -1254,6 +2294,16 @@
   "house": "shugiin",
   "id": "221-閣法-58",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "厚生労働",
+    "house": "shugiin"
+   },
+   {
+    "committee": "厚生労働",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE279E.htm",
   "status": "成立",
@@ -1263,6 +2313,16 @@
   "house": "shugiin",
   "id": "221-閣法-59",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "環境",
+    "house": "shugiin"
+   },
+   {
+    "committee": "環境",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE27B2.htm",
   "status": "成立",
@@ -1272,6 +2332,16 @@
   "house": "shugiin",
   "id": "221-閣法-6",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "財務金融",
+    "house": "shugiin"
+   },
+   {
+    "committee": "財政金融",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE14E2.htm",
   "status": "成立",
@@ -1281,6 +2351,16 @@
   "house": "shugiin",
   "id": "221-閣法-60",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "環境",
+    "house": "shugiin"
+   },
+   {
+    "committee": "環境",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE27C6.htm",
   "status": "成立",
@@ -1290,6 +2370,16 @@
   "house": "shugiin",
   "id": "221-閣法-61",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "法務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "法務",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2822.htm",
   "status": "成立",
@@ -1299,6 +2389,16 @@
   "house": "shugiin",
   "id": "221-閣法-62",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "文部科学",
+    "house": "shugiin"
+   },
+   {
+    "committee": "文教科学",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2836.htm",
   "status": "成立",
@@ -1308,6 +2408,16 @@
   "house": "shugiin",
   "id": "221-閣法-63",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "厚生労働",
+    "house": "shugiin"
+   },
+   {
+    "committee": "厚生労働",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE28F2.htm",
   "status": "成立",
@@ -1317,6 +2427,16 @@
   "house": "shugiin",
   "id": "221-閣法-64",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "議院運営",
+    "house": "shugiin"
+   },
+   {
+    "committee": "皇室典範等の一部を改正する法律案特別",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2B16.htm",
   "status": "成立",
@@ -1326,6 +2446,16 @@
   "house": "shugiin",
   "id": "221-閣法-7",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "財務金融",
+    "house": "shugiin"
+   },
+   {
+    "committee": "財政金融",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1506.htm",
   "status": "成立",
@@ -1335,6 +2465,16 @@
   "house": "shugiin",
   "id": "221-閣法-8",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "文部科学",
+    "house": "shugiin"
+   },
+   {
+    "committee": "文教科学",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE151A.htm",
   "status": "成立",
@@ -1344,6 +2484,16 @@
   "house": "shugiin",
   "id": "221-閣法-9",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "文部科学",
+    "house": "shugiin"
+   },
+   {
+    "committee": "文教科学",
+    "house": "sangiin"
+   }
+  ],
   "session": 221,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE152E.htm",
   "status": "成立",
@@ -1362,6 +2512,16 @@
   "house": "shugiin",
   "id": "219-予算-1",
   "kind": "予算",
+  "referredCommittees": [
+   {
+    "committee": "予算",
+    "house": "shugiin"
+   },
+   {
+    "committee": "予算",
+    "house": "sangiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE08FE.htm",
   "status": "成立",
@@ -1371,6 +2531,16 @@
   "house": "shugiin",
   "id": "219-予算-2",
   "kind": "予算",
+  "referredCommittees": [
+   {
+    "committee": "予算",
+    "house": "shugiin"
+   },
+   {
+    "committee": "予算",
+    "house": "sangiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0902.htm",
   "status": "成立",
@@ -1443,6 +2613,12 @@
   "house": "shugiin",
   "id": "219-国有財産-1DE071A",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE071A.htm",
   "status": "衆議院で閉会中審査",
@@ -1452,6 +2628,12 @@
   "house": "shugiin",
   "id": "219-国有財産-1DE072E",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE072E.htm",
   "status": "衆議院で閉会中審査",
@@ -1461,6 +2643,12 @@
   "house": "shugiin",
   "id": "219-国有財産-1DE0B9E",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B9E.htm",
   "status": "未了",
@@ -1470,6 +2658,12 @@
   "house": "shugiin",
   "id": "219-国有財産-1DE0BA2",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0BA2.htm",
   "status": "未了",
@@ -1479,6 +2673,12 @@
   "house": "shugiin",
   "id": "219-国有財産-1DE116E",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE116E.htm",
   "status": "衆議院で閉会中審査",
@@ -1488,6 +2688,12 @@
   "house": "shugiin",
   "id": "219-国有財産-1DE1172",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1172.htm",
   "status": "衆議院で閉会中審査",
@@ -1497,6 +2703,12 @@
   "house": "shugiin",
   "id": "219-決算-1DE06AA",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE06AA.htm",
   "status": "衆議院で閉会中審査",
@@ -1506,6 +2718,12 @@
   "house": "shugiin",
   "id": "219-決算-1DE06C2",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE06C2.htm",
   "status": "衆議院で閉会中審査",
@@ -1515,6 +2733,12 @@
   "house": "shugiin",
   "id": "219-決算-1DE06DA",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE06DA.htm",
   "status": "衆議院で閉会中審査",
@@ -1524,6 +2748,12 @@
   "house": "shugiin",
   "id": "219-決算-1DE06F2",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE06F2.htm",
   "status": "衆議院で閉会中審査",
@@ -1533,6 +2763,12 @@
   "house": "shugiin",
   "id": "219-決算-1DE0B8E",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B8E.htm",
   "status": "未了",
@@ -1542,6 +2778,12 @@
   "house": "shugiin",
   "id": "219-決算-1DE0B92",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B92.htm",
   "status": "未了",
@@ -1551,6 +2793,12 @@
   "house": "shugiin",
   "id": "219-決算-1DE0B96",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B96.htm",
   "status": "未了",
@@ -1560,6 +2808,12 @@
   "house": "shugiin",
   "id": "219-決算-1DE0B9A",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B9A.htm",
   "status": "未了",
@@ -1569,6 +2823,12 @@
   "house": "shugiin",
   "id": "219-決算-1DE115E",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE115E.htm",
   "status": "衆議院で閉会中審査",
@@ -1578,6 +2838,12 @@
   "house": "shugiin",
   "id": "219-決算-1DE1162",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1162.htm",
   "status": "衆議院で閉会中審査",
@@ -1587,6 +2853,12 @@
   "house": "shugiin",
   "id": "219-決算-1DE1166",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1166.htm",
   "status": "衆議院で閉会中審査",
@@ -1596,6 +2868,12 @@
   "house": "shugiin",
   "id": "219-決算-1DE116A",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE116A.htm",
   "status": "衆議院で閉会中審査",
@@ -1605,6 +2883,12 @@
   "house": "shugiin",
   "id": "219-衆法-1",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "財務金融",
+    "house": "shugiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0D06.htm",
   "status": "未了",
@@ -1614,6 +2898,12 @@
   "house": "shugiin",
   "id": "219-衆法-10",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "厚生労働",
+    "house": "sangiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE089E.htm",
   "status": "成立",
@@ -1632,6 +2922,12 @@
   "house": "shugiin",
   "id": "219-衆法-12",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "法務",
+    "house": "shugiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C9E.htm",
   "status": "未了",
@@ -1641,6 +2937,12 @@
   "house": "shugiin",
   "id": "219-衆法-13",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "国土交通",
+    "house": "shugiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C2A.htm",
   "status": "未了",
@@ -1650,6 +2952,12 @@
   "house": "shugiin",
   "id": "219-衆法-14",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "議院運営",
+    "house": "sangiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0A0E.htm",
   "status": "成立",
@@ -1659,6 +2967,12 @@
   "house": "shugiin",
   "id": "219-衆法-15",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "議院運営",
+    "house": "sangiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0A12.htm",
   "status": "成立",
@@ -1668,6 +2982,12 @@
   "house": "shugiin",
   "id": "219-衆法-16",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "内閣",
+    "house": "shugiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B16.htm",
   "status": "未了",
@@ -1677,6 +2997,12 @@
   "house": "shugiin",
   "id": "219-衆法-17",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "文部科学",
+    "house": "shugiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0CFE.htm",
   "status": "未了",
@@ -1686,6 +3012,12 @@
   "house": "shugiin",
   "id": "219-衆法-18",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "経済産業",
+    "house": "shugiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C4E.htm",
   "status": "未了",
@@ -1695,6 +3027,12 @@
   "house": "shugiin",
   "id": "219-衆法-19",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "国土交通",
+    "house": "shugiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C2E.htm",
   "status": "未了",
@@ -1713,6 +3051,12 @@
   "house": "shugiin",
   "id": "219-衆法-3",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "総務",
+    "house": "shugiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0BDA.htm",
   "status": "未了",
@@ -1722,6 +3066,12 @@
   "house": "shugiin",
   "id": "219-衆法-4",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "財務金融",
+    "house": "shugiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0CE6.htm",
   "status": "未了",
@@ -1731,6 +3081,12 @@
   "house": "shugiin",
   "id": "219-衆法-5",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "文教科学",
+    "house": "sangiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE07EE.htm",
   "status": "成立",
@@ -1740,6 +3096,12 @@
   "house": "shugiin",
   "id": "219-衆法-6",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "内閣",
+    "house": "shugiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0AA6.htm",
   "status": "未了",
@@ -1749,6 +3111,12 @@
   "house": "shugiin",
   "id": "219-衆法-7",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "国土交通",
+    "house": "shugiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C26.htm",
   "status": "未了",
@@ -1767,6 +3135,12 @@
   "house": "shugiin",
   "id": "219-衆法-9",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "厚生労働",
+    "house": "shugiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0CC2.htm",
   "status": "未了",
@@ -1794,6 +3168,16 @@
   "house": "shugiin",
   "id": "219-閣法-1",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "内閣",
+    "house": "shugiin"
+   },
+   {
+    "committee": "内閣",
+    "house": "sangiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE05FA.htm",
   "status": "成立",
@@ -1803,6 +3187,16 @@
   "house": "shugiin",
   "id": "219-閣法-10",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "安全保障",
+    "house": "shugiin"
+   },
+   {
+    "committee": "外交防衛",
+    "house": "sangiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0992.htm",
   "status": "成立",
@@ -1812,6 +3206,16 @@
   "house": "shugiin",
   "id": "219-閣法-2",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "内閣",
+    "house": "shugiin"
+   },
+   {
+    "committee": "内閣",
+    "house": "sangiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0612.htm",
   "status": "成立",
@@ -1821,6 +3225,16 @@
   "house": "shugiin",
   "id": "219-閣法-3",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "法務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "法務",
+    "house": "sangiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE062A.htm",
   "status": "成立",
@@ -1830,6 +3244,16 @@
   "house": "shugiin",
   "id": "219-閣法-4",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "国土交通",
+    "house": "shugiin"
+   },
+   {
+    "committee": "国土交通",
+    "house": "sangiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0642.htm",
   "status": "成立",
@@ -1839,6 +3263,16 @@
   "house": "shugiin",
   "id": "219-閣法-5",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "内閣",
+    "house": "shugiin"
+   },
+   {
+    "committee": "内閣",
+    "house": "sangiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0996.htm",
   "status": "成立",
@@ -1848,6 +3282,16 @@
   "house": "shugiin",
   "id": "219-閣法-6",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "内閣",
+    "house": "shugiin"
+   },
+   {
+    "committee": "内閣",
+    "house": "sangiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE099A.htm",
   "status": "成立",
@@ -1857,6 +3301,16 @@
   "house": "shugiin",
   "id": "219-閣法-7",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "総務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "総務",
+    "house": "sangiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE094A.htm",
   "status": "成立",
@@ -1866,6 +3320,16 @@
   "house": "shugiin",
   "id": "219-閣法-8",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "法務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "法務",
+    "house": "sangiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0962.htm",
   "status": "成立",
@@ -1875,6 +3339,16 @@
   "house": "shugiin",
   "id": "219-閣法-9",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "法務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "法務",
+    "house": "sangiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE097A.htm",
   "status": "成立",
@@ -1884,6 +3358,12 @@
   "house": "shugiin",
   "id": "219-ＮＨＫ決算-1DE0A9E",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "総務",
+    "house": "shugiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0A9E.htm",
   "status": "未了",
@@ -1893,6 +3373,12 @@
   "house": "shugiin",
   "id": "219-ＮＨＫ決算-1DE1136",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "総務",
+    "house": "shugiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1136.htm",
   "status": "未了",
@@ -1902,6 +3388,12 @@
   "house": "shugiin",
   "id": "219-ＮＨＫ決算-1DE117A",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "総務",
+    "house": "shugiin"
+   }
+  ],
   "session": 219,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE117A.htm",
   "status": "本院議了",
@@ -1920,6 +3412,16 @@
   "house": "shugiin",
   "id": "218-衆法-1",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "財務金融",
+    "house": "shugiin"
+   },
+   {
+    "committee": "財政金融",
+    "house": "sangiin"
+   }
+  ],
   "session": 218,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE024E.htm",
   "status": "成立",
@@ -1938,6 +3440,16 @@
   "house": "shugiin",
   "id": "217-予算-2",
   "kind": "予算",
+  "referredCommittees": [
+   {
+    "committee": "予算",
+    "house": "shugiin"
+   },
+   {
+    "committee": "予算",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE042.htm",
   "status": "成立",
@@ -1947,6 +3459,16 @@
   "house": "shugiin",
   "id": "217-予算-3",
   "kind": "予算",
+  "referredCommittees": [
+   {
+    "committee": "予算",
+    "house": "shugiin"
+   },
+   {
+    "committee": "予算",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE046.htm",
   "status": "成立",
@@ -1956,6 +3478,12 @@
   "house": "shugiin",
   "id": "217-参法-1",
   "kind": "参法",
+  "referredCommittees": [
+   {
+    "committee": "内閣",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE146.htm",
   "status": "未了",
@@ -2010,6 +3538,12 @@
   "house": "shugiin",
   "id": "217-参法-5",
   "kind": "参法",
+  "referredCommittees": [
+   {
+    "committee": "厚生労働",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEF5A.htm",
   "status": "成立",
@@ -2028,6 +3562,12 @@
   "house": "shugiin",
   "id": "217-参法-7",
   "kind": "参法",
+  "referredCommittees": [
+   {
+    "committee": "厚生労働",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF052.htm",
   "status": "未了",
@@ -2046,6 +3586,12 @@
   "house": "shugiin",
   "id": "217-参法-9",
   "kind": "参法",
+  "referredCommittees": [
+   {
+    "committee": "内閣",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF29A.htm",
   "status": "成立",
@@ -2055,6 +3601,16 @@
   "house": "shugiin",
   "id": "217-承認-1",
   "kind": "承認",
+  "referredCommittees": [
+   {
+    "committee": "総務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "総務",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE442.htm",
   "status": "両院承認",
@@ -2064,6 +3620,16 @@
   "house": "shugiin",
   "id": "217-承認-2",
   "kind": "承認",
+  "referredCommittees": [
+   {
+    "committee": "国土交通",
+    "house": "shugiin"
+   },
+   {
+    "committee": "国土交通",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEF72.htm",
   "status": "両院承認",
@@ -2073,6 +3639,16 @@
   "house": "shugiin",
   "id": "217-承認-3",
   "kind": "承認",
+  "referredCommittees": [
+   {
+    "committee": "経済産業",
+    "house": "shugiin"
+   },
+   {
+    "committee": "経済産業",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEF8A.htm",
   "status": "両院承認",
@@ -2082,6 +3658,12 @@
   "house": "shugiin",
   "id": "217-承諾-1DDEDDE",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEDDE.htm",
   "status": "衆議院で閉会中審査",
@@ -2091,6 +3673,12 @@
   "house": "shugiin",
   "id": "217-承諾-1DDEDF2",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEDF2.htm",
   "status": "衆議院で閉会中審査",
@@ -2100,6 +3688,12 @@
   "house": "shugiin",
   "id": "217-承諾-1DDF092",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF092.htm",
   "status": "衆議院で閉会中審査",
@@ -2109,6 +3703,12 @@
   "house": "shugiin",
   "id": "217-承諾-1DDF5D2",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF5D2.htm",
   "status": "衆議院で閉会中審査",
@@ -2118,6 +3718,12 @@
   "house": "shugiin",
   "id": "217-承諾-1DDF5DA",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF5DA.htm",
   "status": "衆議院で閉会中審査",
@@ -2127,6 +3733,12 @@
   "house": "shugiin",
   "id": "217-承諾-1DDF5E2",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF5E2.htm",
   "status": "衆議院で閉会中審査",
@@ -2136,6 +3748,12 @@
   "house": "shugiin",
   "id": "217-承諾-1DE020E",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE020E.htm",
   "status": "衆議院で閉会中審査",
@@ -2145,6 +3763,12 @@
   "house": "shugiin",
   "id": "217-承諾-1DE0212",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0212.htm",
   "status": "衆議院で閉会中審査",
@@ -2154,6 +3778,12 @@
   "house": "shugiin",
   "id": "217-承諾-1DE0216",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0216.htm",
   "status": "衆議院で閉会中審査",
@@ -2163,6 +3793,12 @@
   "house": "shugiin",
   "id": "217-承諾-1DE0B6A",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B6A.htm",
   "status": "未了",
@@ -2172,6 +3808,12 @@
   "house": "shugiin",
   "id": "217-承諾-1DE0B6E",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B6E.htm",
   "status": "未了",
@@ -2181,6 +3823,12 @@
   "house": "shugiin",
   "id": "217-承諾-1DE0B72",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B72.htm",
   "status": "未了",
@@ -2190,6 +3838,16 @@
   "house": "shugiin",
   "id": "217-条約-1",
   "kind": "条約",
+  "referredCommittees": [
+   {
+    "committee": "外務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "外交防衛",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE5DE.htm",
   "status": "両院承認",
@@ -2199,6 +3857,16 @@
   "house": "shugiin",
   "id": "217-条約-10",
   "kind": "条約",
+  "referredCommittees": [
+   {
+    "committee": "外務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "外交防衛",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEBD2.htm",
   "status": "両院承認",
@@ -2208,6 +3876,16 @@
   "house": "shugiin",
   "id": "217-条約-11",
   "kind": "条約",
+  "referredCommittees": [
+   {
+    "committee": "外務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "外交防衛",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEBEA.htm",
   "status": "両院承認",
@@ -2217,6 +3895,16 @@
   "house": "shugiin",
   "id": "217-条約-12",
   "kind": "条約",
+  "referredCommittees": [
+   {
+    "committee": "外務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "外交防衛",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEC02.htm",
   "status": "両院承認",
@@ -2226,6 +3914,16 @@
   "house": "shugiin",
   "id": "217-条約-13",
   "kind": "条約",
+  "referredCommittees": [
+   {
+    "committee": "外務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "外交防衛",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEE9A.htm",
   "status": "両院承認",
@@ -2235,6 +3933,16 @@
   "house": "shugiin",
   "id": "217-条約-2",
   "kind": "条約",
+  "referredCommittees": [
+   {
+    "committee": "外務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "外交防衛",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE5F6.htm",
   "status": "両院承認",
@@ -2244,6 +3952,16 @@
   "house": "shugiin",
   "id": "217-条約-3",
   "kind": "条約",
+  "referredCommittees": [
+   {
+    "committee": "外務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "外交防衛",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE60E.htm",
   "status": "両院承認",
@@ -2253,6 +3971,16 @@
   "house": "shugiin",
   "id": "217-条約-4",
   "kind": "条約",
+  "referredCommittees": [
+   {
+    "committee": "外務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "外交防衛",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE626.htm",
   "status": "両院承認",
@@ -2262,6 +3990,16 @@
   "house": "shugiin",
   "id": "217-条約-5",
   "kind": "条約",
+  "referredCommittees": [
+   {
+    "committee": "外務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "外交防衛",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE63E.htm",
   "status": "両院承認",
@@ -2271,6 +4009,16 @@
   "house": "shugiin",
   "id": "217-条約-6",
   "kind": "条約",
+  "referredCommittees": [
+   {
+    "committee": "外務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "外交防衛",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE656.htm",
   "status": "両院承認",
@@ -2280,6 +4028,16 @@
   "house": "shugiin",
   "id": "217-条約-7",
   "kind": "条約",
+  "referredCommittees": [
+   {
+    "committee": "外務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "外交防衛",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE66E.htm",
   "status": "両院承認",
@@ -2289,6 +4047,16 @@
   "house": "shugiin",
   "id": "217-条約-8",
   "kind": "条約",
+  "referredCommittees": [
+   {
+    "committee": "外務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "外交防衛",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE686.htm",
   "status": "両院承認",
@@ -2298,6 +4066,16 @@
   "house": "shugiin",
   "id": "217-条約-9",
   "kind": "条約",
+  "referredCommittees": [
+   {
+    "committee": "外務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "外交防衛",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEBBA.htm",
   "status": "両院承認",
@@ -2325,6 +4103,12 @@
   "house": "shugiin",
   "id": "217-衆法-1",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "厚生労働",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0CB2.htm",
   "status": "未了",
@@ -2334,6 +4118,16 @@
   "house": "shugiin",
   "id": "217-衆法-10",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "政治改革に関する特別",
+    "house": "shugiin"
+   },
+   {
+    "committee": "政治改革に関する特別",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE53E.htm",
   "status": "成立",
@@ -2343,6 +4137,12 @@
   "house": "shugiin",
   "id": "217-衆法-11",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "経済産業",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C3E.htm",
   "status": "未了",
@@ -2352,6 +4152,12 @@
   "house": "shugiin",
   "id": "217-衆法-12",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "総務",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0BCA.htm",
   "status": "未了",
@@ -2370,6 +4176,12 @@
   "house": "shugiin",
   "id": "217-衆法-14",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "政治改革に関する特別",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEC06.htm",
   "status": "撤回",
@@ -2379,6 +4191,12 @@
   "house": "shugiin",
   "id": "217-衆法-15",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "災害対策特別",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDED3A.htm",
   "status": "成立",
@@ -2388,6 +4206,12 @@
   "house": "shugiin",
   "id": "217-衆法-16",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "国土交通",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDED3E.htm",
   "status": "成立",
@@ -2397,6 +4221,12 @@
   "house": "shugiin",
   "id": "217-衆法-17",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "総務",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEDBA.htm",
   "status": "成立",
@@ -2406,6 +4236,12 @@
   "house": "shugiin",
   "id": "217-衆法-18",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "議院運営",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEDCA.htm",
   "status": "成立",
@@ -2415,6 +4251,12 @@
   "house": "shugiin",
   "id": "217-衆法-19",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "農林水産",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEDC2.htm",
   "status": "成立",
@@ -2424,6 +4266,12 @@
   "house": "shugiin",
   "id": "217-衆法-2",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "厚生労働",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0CB6.htm",
   "status": "未了",
@@ -2433,6 +4281,12 @@
   "house": "shugiin",
   "id": "217-衆法-20",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "農林水産",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEDC6.htm",
   "status": "成立",
@@ -2460,6 +4314,12 @@
   "house": "shugiin",
   "id": "217-衆法-23",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "財務金融",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0CDA.htm",
   "status": "未了",
@@ -2469,6 +4329,12 @@
   "house": "shugiin",
   "id": "217-衆法-24",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "国土交通",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C36.htm",
   "status": "未了",
@@ -2478,6 +4344,12 @@
   "house": "shugiin",
   "id": "217-衆法-25",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "財務金融",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0CDE.htm",
   "status": "未了",
@@ -2496,6 +4368,12 @@
   "house": "shugiin",
   "id": "217-衆法-27",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "総務",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0BCE.htm",
   "status": "未了",
@@ -2505,6 +4383,12 @@
   "house": "shugiin",
   "id": "217-衆法-28",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "議院運営",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEFD6.htm",
   "status": "成立",
@@ -2514,6 +4398,12 @@
   "house": "shugiin",
   "id": "217-衆法-29",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "法務",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C86.htm",
   "status": "未了",
@@ -2523,6 +4413,12 @@
   "house": "shugiin",
   "id": "217-衆法-3",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "厚生労働",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0292.htm",
   "status": "未了",
@@ -2532,6 +4428,12 @@
   "house": "shugiin",
   "id": "217-衆法-30",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "法務",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C8A.htm",
   "status": "未了",
@@ -2541,6 +4443,12 @@
   "house": "shugiin",
   "id": "217-衆法-31",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "内閣",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B02.htm",
   "status": "未了",
@@ -2550,6 +4458,12 @@
   "house": "shugiin",
   "id": "217-衆法-32",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "法務",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C96.htm",
   "status": "未了",
@@ -2559,6 +4473,12 @@
   "house": "shugiin",
   "id": "217-衆法-33",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "国土交通",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF10E.htm",
   "status": "成立",
@@ -2568,6 +4488,12 @@
   "house": "shugiin",
   "id": "217-衆法-34",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "国土交通",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF112.htm",
   "status": "成立",
@@ -2577,6 +4503,12 @@
   "house": "shugiin",
   "id": "217-衆法-35",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "法務",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C82.htm",
   "status": "未了",
@@ -2586,6 +4518,12 @@
   "house": "shugiin",
   "id": "217-衆法-36",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "総務",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF12E.htm",
   "status": "成立",
@@ -2595,6 +4533,12 @@
   "house": "shugiin",
   "id": "217-衆法-37",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "内閣",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF132.htm",
   "status": "成立",
@@ -2604,6 +4548,12 @@
   "house": "shugiin",
   "id": "217-衆法-38",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "農林水産",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C66.htm",
   "status": "未了",
@@ -2613,6 +4563,12 @@
   "house": "shugiin",
   "id": "217-衆法-39",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "農林水産",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C6A.htm",
   "status": "未了",
@@ -2631,6 +4587,12 @@
   "house": "shugiin",
   "id": "217-衆法-40",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "農林水産",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C6E.htm",
   "status": "未了",
@@ -2640,6 +4602,12 @@
   "house": "shugiin",
   "id": "217-衆法-41",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "農林水産",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C72.htm",
   "status": "未了",
@@ -2649,6 +4617,12 @@
   "house": "shugiin",
   "id": "217-衆法-42",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "農林水産",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C76.htm",
   "status": "未了",
@@ -2658,6 +4632,12 @@
   "house": "shugiin",
   "id": "217-衆法-43",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "内閣",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B06.htm",
   "status": "未了",
@@ -2667,6 +4647,12 @@
   "house": "shugiin",
   "id": "217-衆法-44",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "内閣",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B0A.htm",
   "status": "未了",
@@ -2676,6 +4662,12 @@
   "house": "shugiin",
   "id": "217-衆法-45",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "内閣",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B0E.htm",
   "status": "未了",
@@ -2685,6 +4677,12 @@
   "house": "shugiin",
   "id": "217-衆法-46",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "総務",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0BD2.htm",
   "status": "未了",
@@ -2694,6 +4692,12 @@
   "house": "shugiin",
   "id": "217-衆法-47",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "総務",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0BD6.htm",
   "status": "未了",
@@ -2703,6 +4707,12 @@
   "house": "shugiin",
   "id": "217-衆法-48",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "文教科学",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF1EE.htm",
   "status": "成立",
@@ -2712,6 +4722,12 @@
   "house": "shugiin",
   "id": "217-衆法-49",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "厚生労働",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF1F2.htm",
   "status": "成立",
@@ -2739,6 +4755,12 @@
   "house": "shugiin",
   "id": "217-衆法-51",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "議院運営",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B5A.htm",
   "status": "未了",
@@ -2748,6 +4770,12 @@
   "house": "shugiin",
   "id": "217-衆法-52",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "財務金融",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0CE2.htm",
   "status": "未了",
@@ -2757,6 +4785,16 @@
   "house": "shugiin",
   "id": "217-衆法-53",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "財務金融",
+    "house": "shugiin"
+   },
+   {
+    "committee": "財政金融",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF286.htm",
   "status": "未了",
@@ -2766,6 +4804,12 @@
   "house": "shugiin",
   "id": "217-衆法-54",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "経済産業",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C42.htm",
   "status": "未了",
@@ -2802,6 +4846,12 @@
   "house": "shugiin",
   "id": "217-衆法-58",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "総務",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0BC2.htm",
   "status": "未了",
@@ -2811,6 +4861,12 @@
   "house": "shugiin",
   "id": "217-衆法-59",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "議院運営",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B5E.htm",
   "status": "未了",
@@ -2820,6 +4876,12 @@
   "house": "shugiin",
   "id": "217-衆法-6",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "文部科学",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0CF2.htm",
   "status": "未了",
@@ -2829,6 +4891,12 @@
   "house": "shugiin",
   "id": "217-衆法-60",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "内閣",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B12.htm",
   "status": "未了",
@@ -2838,6 +4906,12 @@
   "house": "shugiin",
   "id": "217-衆法-61",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "法務",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C9A.htm",
   "status": "未了",
@@ -2847,6 +4921,12 @@
   "house": "shugiin",
   "id": "217-衆法-62",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "農林水産",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C7A.htm",
   "status": "未了",
@@ -2856,6 +4936,12 @@
   "house": "shugiin",
   "id": "217-衆法-63",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "国土交通",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C22.htm",
   "status": "未了",
@@ -2865,6 +4951,12 @@
   "house": "shugiin",
   "id": "217-衆法-64",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "法務",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C8E.htm",
   "status": "未了",
@@ -2874,6 +4966,12 @@
   "house": "shugiin",
   "id": "217-衆法-65",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "法務",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C92.htm",
   "status": "未了",
@@ -2883,6 +4981,12 @@
   "house": "shugiin",
   "id": "217-衆法-66",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "環境",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C16.htm",
   "status": "未了",
@@ -2892,6 +4996,12 @@
   "house": "shugiin",
   "id": "217-衆法-7",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "文部科学",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0CF6.htm",
   "status": "未了",
@@ -2901,6 +5011,12 @@
   "house": "shugiin",
   "id": "217-衆法-8",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "厚生労働",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0CBA.htm",
   "status": "未了",
@@ -2910,6 +5026,16 @@
   "house": "shugiin",
   "id": "217-衆法-9",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "政治改革に関する特別",
+    "house": "shugiin"
+   },
+   {
+    "committee": "政治改革に関する特別",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE53A.htm",
   "status": "成立",
@@ -2928,6 +5054,12 @@
   "house": "shugiin",
   "id": "217-規則-2",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "議院運営",
+    "house": "shugiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B62.htm",
   "status": "未了",
@@ -2955,6 +5087,16 @@
   "house": "shugiin",
   "id": "217-閣法-1",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "財務金融",
+    "house": "shugiin"
+   },
+   {
+    "committee": "財政金融",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE0CA.htm",
   "status": "成立",
@@ -2964,6 +5106,16 @@
   "house": "shugiin",
   "id": "217-閣法-10",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "厚生労働",
+    "house": "shugiin"
+   },
+   {
+    "committee": "厚生労働",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE206.htm",
   "status": "成立",
@@ -2973,6 +5125,16 @@
   "house": "shugiin",
   "id": "217-閣法-11",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "経済産業",
+    "house": "shugiin"
+   },
+   {
+    "committee": "経済産業",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE21E.htm",
   "status": "成立",
@@ -2982,6 +5144,16 @@
   "house": "shugiin",
   "id": "217-閣法-12",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "国土交通",
+    "house": "shugiin"
+   },
+   {
+    "committee": "国土交通",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE236.htm",
   "status": "成立",
@@ -2991,6 +5163,16 @@
   "house": "shugiin",
   "id": "217-閣法-13",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "国土交通",
+    "house": "shugiin"
+   },
+   {
+    "committee": "国土交通",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE24E.htm",
   "status": "成立",
@@ -3000,6 +5182,16 @@
   "house": "shugiin",
   "id": "217-閣法-14",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "法務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "法務",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE32E.htm",
   "status": "成立",
@@ -3009,6 +5201,16 @@
   "house": "shugiin",
   "id": "217-閣法-15",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "厚生労働",
+    "house": "shugiin"
+   },
+   {
+    "committee": "厚生労働",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE346.htm",
   "status": "成立",
@@ -3018,6 +5220,16 @@
   "house": "shugiin",
   "id": "217-閣法-16",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "安全保障",
+    "house": "shugiin"
+   },
+   {
+    "committee": "外交防衛",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE35E.htm",
   "status": "成立",
@@ -3027,6 +5239,16 @@
   "house": "shugiin",
   "id": "217-閣法-17",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "東日本大震災復興・防災・災害対策に関する特別",
+    "house": "shugiin"
+   },
+   {
+    "committee": "災害対策特別",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE3B2.htm",
   "status": "成立",
@@ -3036,6 +5258,16 @@
   "house": "shugiin",
   "id": "217-閣法-18",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "東日本大震災復興・防災・災害対策に関する特別",
+    "house": "shugiin"
+   },
+   {
+    "committee": "災害対策特別",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE3CA.htm",
   "status": "成立",
@@ -3045,6 +5277,16 @@
   "house": "shugiin",
   "id": "217-閣法-19",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "総務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "総務",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE3E2.htm",
   "status": "成立",
@@ -3054,6 +5296,16 @@
   "house": "shugiin",
   "id": "217-閣法-2",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "総務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "総務",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE0E2.htm",
   "status": "成立",
@@ -3063,6 +5315,16 @@
   "house": "shugiin",
   "id": "217-閣法-20",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "政治改革に関する特別",
+    "house": "shugiin"
+   },
+   {
+    "committee": "政治改革に関する特別",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE3FA.htm",
   "status": "成立",
@@ -3072,6 +5334,16 @@
   "house": "shugiin",
   "id": "217-閣法-21",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "厚生労働",
+    "house": "shugiin"
+   },
+   {
+    "committee": "厚生労働",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0296.htm",
   "status": "成立",
@@ -3081,6 +5353,16 @@
   "house": "shugiin",
   "id": "217-閣法-22",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "農林水産",
+    "house": "shugiin"
+   },
+   {
+    "committee": "農林水産",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE42A.htm",
   "status": "成立",
@@ -3090,6 +5372,16 @@
   "house": "shugiin",
   "id": "217-閣法-23",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "外務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "外交防衛",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE50E.htm",
   "status": "成立",
@@ -3099,6 +5391,16 @@
   "house": "shugiin",
   "id": "217-閣法-24",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "財務金融",
+    "house": "shugiin"
+   },
+   {
+    "committee": "財政金融",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE556.htm",
   "status": "成立",
@@ -3108,6 +5410,16 @@
   "house": "shugiin",
   "id": "217-閣法-25",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "財務金融",
+    "house": "shugiin"
+   },
+   {
+    "committee": "財政金融",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE56E.htm",
   "status": "成立",
@@ -3117,6 +5429,16 @@
   "house": "shugiin",
   "id": "217-閣法-26",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "農林水産",
+    "house": "shugiin"
+   },
+   {
+    "committee": "農林水産",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE586.htm",
   "status": "成立",
@@ -3126,6 +5448,16 @@
   "house": "shugiin",
   "id": "217-閣法-27",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "環境",
+    "house": "shugiin"
+   },
+   {
+    "committee": "環境",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE59E.htm",
   "status": "成立",
@@ -3135,6 +5467,16 @@
   "house": "shugiin",
   "id": "217-閣法-28",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "経済産業",
+    "house": "shugiin"
+   },
+   {
+    "committee": "経済産業",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE5C6.htm",
   "status": "成立",
@@ -3144,6 +5486,16 @@
   "house": "shugiin",
   "id": "217-閣法-29",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "内閣",
+    "house": "shugiin"
+   },
+   {
+    "committee": "内閣",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE7A2.htm",
   "status": "成立",
@@ -3153,6 +5505,16 @@
   "house": "shugiin",
   "id": "217-閣法-3",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "総務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "総務",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE0FA.htm",
   "status": "成立",
@@ -3162,6 +5524,16 @@
   "house": "shugiin",
   "id": "217-閣法-30",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "法務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "法務",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE7BA.htm",
   "status": "成立",
@@ -3171,6 +5543,16 @@
   "house": "shugiin",
   "id": "217-閣法-31",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "農林水産",
+    "house": "shugiin"
+   },
+   {
+    "committee": "農林水産",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE7D2.htm",
   "status": "成立",
@@ -3180,6 +5562,16 @@
   "house": "shugiin",
   "id": "217-閣法-32",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "消費者問題に関する特別",
+    "house": "shugiin"
+   },
+   {
+    "committee": "消費者問題に関する特別",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE826.htm",
   "status": "成立",
@@ -3189,6 +5581,16 @@
   "house": "shugiin",
   "id": "217-閣法-33",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "経済産業",
+    "house": "shugiin"
+   },
+   {
+    "committee": "経済産業",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE83E.htm",
   "status": "成立",
@@ -3198,6 +5600,16 @@
   "house": "shugiin",
   "id": "217-閣法-34",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "国土交通",
+    "house": "shugiin"
+   },
+   {
+    "committee": "国土交通",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE856.htm",
   "status": "成立",
@@ -3207,6 +5619,16 @@
   "house": "shugiin",
   "id": "217-閣法-35",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "地域活性化・こども政策・デジタル社会形成に関する特別",
+    "house": "shugiin"
+   },
+   {
+    "committee": "地方創生及びデジタル社会の形成等に関する特別",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE8D2.htm",
   "status": "成立",
@@ -3216,6 +5638,16 @@
   "house": "shugiin",
   "id": "217-閣法-36",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "内閣",
+    "house": "shugiin"
+   },
+   {
+    "committee": "内閣",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE8EA.htm",
   "status": "成立",
@@ -3225,6 +5657,16 @@
   "house": "shugiin",
   "id": "217-閣法-37",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "財務金融",
+    "house": "shugiin"
+   },
+   {
+    "committee": "財政金融",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE902.htm",
   "status": "成立",
@@ -3234,6 +5676,16 @@
   "house": "shugiin",
   "id": "217-閣法-38",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "財務金融",
+    "house": "shugiin"
+   },
+   {
+    "committee": "財政金融",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE91A.htm",
   "status": "成立",
@@ -3243,6 +5695,16 @@
   "house": "shugiin",
   "id": "217-閣法-39",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "財務金融",
+    "house": "shugiin"
+   },
+   {
+    "committee": "財政金融",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE932.htm",
   "status": "成立",
@@ -3252,6 +5714,16 @@
   "house": "shugiin",
   "id": "217-閣法-4",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "内閣",
+    "house": "shugiin"
+   },
+   {
+    "committee": "内閣",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE15E.htm",
   "status": "成立",
@@ -3261,6 +5733,16 @@
   "house": "shugiin",
   "id": "217-閣法-40",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "地域活性化・こども政策・デジタル社会形成に関する特別",
+    "house": "shugiin"
+   },
+   {
+    "committee": "内閣",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE94A.htm",
   "status": "成立",
@@ -3270,6 +5752,16 @@
   "house": "shugiin",
   "id": "217-閣法-41",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "地域活性化・こども政策・デジタル社会形成に関する特別",
+    "house": "shugiin"
+   },
+   {
+    "committee": "地方創生及びデジタル社会の形成等に関する特別",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE976.htm",
   "status": "成立",
@@ -3279,6 +5771,16 @@
   "house": "shugiin",
   "id": "217-閣法-42",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "法務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "法務",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE98E.htm",
   "status": "成立",
@@ -3288,6 +5790,16 @@
   "house": "shugiin",
   "id": "217-閣法-43",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "法務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "法務",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE9A6.htm",
   "status": "成立",
@@ -3297,6 +5809,16 @@
   "house": "shugiin",
   "id": "217-閣法-44",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "法務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "法務",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE9BE.htm",
   "status": "成立",
@@ -3306,6 +5828,16 @@
   "house": "shugiin",
   "id": "217-閣法-45",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "農林水産",
+    "house": "shugiin"
+   },
+   {
+    "committee": "農林水産",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE9D6.htm",
   "status": "成立",
@@ -3315,6 +5847,16 @@
   "house": "shugiin",
   "id": "217-閣法-46",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "内閣",
+    "house": "shugiin"
+   },
+   {
+    "committee": "内閣",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE9EE.htm",
   "status": "成立",
@@ -3324,6 +5866,16 @@
   "house": "shugiin",
   "id": "217-閣法-47",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "内閣",
+    "house": "shugiin"
+   },
+   {
+    "committee": "内閣",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEA06.htm",
   "status": "成立",
@@ -3333,6 +5885,16 @@
   "house": "shugiin",
   "id": "217-閣法-48",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "経済産業",
+    "house": "shugiin"
+   },
+   {
+    "committee": "経済産業",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEB5A.htm",
   "status": "成立",
@@ -3342,6 +5904,16 @@
   "house": "shugiin",
   "id": "217-閣法-49",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "内閣",
+    "house": "shugiin"
+   },
+   {
+    "committee": "内閣",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEB72.htm",
   "status": "成立",
@@ -3351,6 +5923,16 @@
   "house": "shugiin",
   "id": "217-閣法-5",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "内閣",
+    "house": "shugiin"
+   },
+   {
+    "committee": "内閣",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE176.htm",
   "status": "成立",
@@ -3360,6 +5942,16 @@
   "house": "shugiin",
   "id": "217-閣法-50",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "厚生労働",
+    "house": "shugiin"
+   },
+   {
+    "committee": "厚生労働",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEB8A.htm",
   "status": "成立",
@@ -3369,6 +5961,16 @@
   "house": "shugiin",
   "id": "217-閣法-51",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "環境",
+    "house": "shugiin"
+   },
+   {
+    "committee": "環境",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEBA2.htm",
   "status": "成立",
@@ -3378,6 +5980,16 @@
   "house": "shugiin",
   "id": "217-閣法-52",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "内閣",
+    "house": "shugiin"
+   },
+   {
+    "committee": "内閣",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDECBE.htm",
   "status": "成立",
@@ -3387,6 +5999,16 @@
   "house": "shugiin",
   "id": "217-閣法-53",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "内閣",
+    "house": "shugiin"
+   },
+   {
+    "committee": "内閣",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDECD6.htm",
   "status": "成立",
@@ -3396,6 +6018,16 @@
   "house": "shugiin",
   "id": "217-閣法-54",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "総務",
+    "house": "shugiin"
+   },
+   {
+    "committee": "総務",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDECEE.htm",
   "status": "成立",
@@ -3405,6 +6037,16 @@
   "house": "shugiin",
   "id": "217-閣法-55",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "国土交通",
+    "house": "shugiin"
+   },
+   {
+    "committee": "国土交通",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDED06.htm",
   "status": "成立",
@@ -3414,6 +6056,16 @@
   "house": "shugiin",
   "id": "217-閣法-56",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "安全保障",
+    "house": "shugiin"
+   },
+   {
+    "committee": "外交防衛",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDED1E.htm",
   "status": "成立",
@@ -3423,6 +6075,16 @@
   "house": "shugiin",
   "id": "217-閣法-57",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "厚生労働",
+    "house": "shugiin"
+   },
+   {
+    "committee": "厚生労働",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDED36.htm",
   "status": "成立",
@@ -3432,6 +6094,16 @@
   "house": "shugiin",
   "id": "217-閣法-58",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "国土交通",
+    "house": "shugiin"
+   },
+   {
+    "committee": "国土交通",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEE82.htm",
   "status": "成立",
@@ -3441,6 +6113,16 @@
   "house": "shugiin",
   "id": "217-閣法-59",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "厚生労働",
+    "house": "shugiin"
+   },
+   {
+    "committee": "厚生労働",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF07E.htm",
   "status": "成立",
@@ -3450,6 +6132,16 @@
   "house": "shugiin",
   "id": "217-閣法-6",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "財務金融",
+    "house": "shugiin"
+   },
+   {
+    "committee": "財政金融",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE18E.htm",
   "status": "成立",
@@ -3459,6 +6151,16 @@
   "house": "shugiin",
   "id": "217-閣法-7",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "財務金融",
+    "house": "shugiin"
+   },
+   {
+    "committee": "財政金融",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE1D6.htm",
   "status": "成立",
@@ -3468,6 +6170,16 @@
   "house": "shugiin",
   "id": "217-閣法-8",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "文部科学",
+    "house": "shugiin"
+   },
+   {
+    "committee": "文教科学",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE1BE.htm",
   "status": "成立",
@@ -3477,6 +6189,16 @@
   "house": "shugiin",
   "id": "217-閣法-9",
   "kind": "閣法",
+  "referredCommittees": [
+   {
+    "committee": "文部科学",
+    "house": "shugiin"
+   },
+   {
+    "committee": "文教科学",
+    "house": "sangiin"
+   }
+  ],
   "session": 217,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDE1EE.htm",
   "status": "成立",
@@ -3558,6 +6280,12 @@
   "house": "shugiin",
   "id": "216-国有財産-1DDDDF6",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDDF6.htm",
   "status": "衆議院で閉会中審査",
@@ -3567,6 +6295,12 @@
   "house": "shugiin",
   "id": "216-国有財産-1DDDDFA",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDDFA.htm",
   "status": "衆議院で閉会中審査",
@@ -3576,6 +6310,12 @@
   "house": "shugiin",
   "id": "216-国有財産-1DDF64A",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF64A.htm",
   "status": "衆議院で閉会中審査",
@@ -3585,6 +6325,12 @@
   "house": "shugiin",
   "id": "216-国有財産-1DDF652",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF652.htm",
   "status": "衆議院で閉会中審査",
@@ -3594,6 +6340,12 @@
   "house": "shugiin",
   "id": "216-国有財産-1DE022A",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE022A.htm",
   "status": "衆議院で閉会中審査",
@@ -3603,6 +6355,12 @@
   "house": "shugiin",
   "id": "216-国有財産-1DE022E",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE022E.htm",
   "status": "衆議院で閉会中審査",
@@ -3612,6 +6370,12 @@
   "house": "shugiin",
   "id": "216-国有財産-1DE0B86",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B86.htm",
   "status": "未了",
@@ -3621,6 +6385,12 @@
   "house": "shugiin",
   "id": "216-国有財産-1DE0B8A",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B8A.htm",
   "status": "未了",
@@ -3630,6 +6400,12 @@
   "house": "shugiin",
   "id": "216-国有財産-1DE1156",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1156.htm",
   "status": "衆議院で閉会中審査",
@@ -3639,6 +6415,12 @@
   "house": "shugiin",
   "id": "216-国有財産-1DE115A",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE115A.htm",
   "status": "衆議院で閉会中審査",
@@ -3684,6 +6466,16 @@
   "house": "shugiin",
   "id": "216-承諾-1DDDDE6",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   },
+   {
+    "committee": "決算",
+    "house": "sangiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDDE6.htm",
   "status": "両院承諾",
@@ -3693,6 +6485,16 @@
   "house": "shugiin",
   "id": "216-承諾-1DDDDEA",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   },
+   {
+    "committee": "決算",
+    "house": "sangiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDDEA.htm",
   "status": "両院承諾",
@@ -3702,6 +6504,16 @@
   "house": "shugiin",
   "id": "216-承諾-1DDDDEE",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   },
+   {
+    "committee": "決算",
+    "house": "sangiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDDEE.htm",
   "status": "両院承諾",
@@ -3711,6 +6523,16 @@
   "house": "shugiin",
   "id": "216-承諾-1DDDDF2",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   },
+   {
+    "committee": "決算",
+    "house": "sangiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDDF2.htm",
   "status": "両院承諾",
@@ -3756,6 +6578,12 @@
   "house": "shugiin",
   "id": "216-決算-1DDDDFE",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDDFE.htm",
   "status": "衆議院で閉会中審査",
@@ -3765,6 +6593,12 @@
   "house": "shugiin",
   "id": "216-決算-1DDDE02",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDE02.htm",
   "status": "衆議院で閉会中審査",
@@ -3774,6 +6608,12 @@
   "house": "shugiin",
   "id": "216-決算-1DDDE06",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDE06.htm",
   "status": "衆議院で閉会中審査",
@@ -3783,6 +6623,12 @@
   "house": "shugiin",
   "id": "216-決算-1DDDE0A",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDE0A.htm",
   "status": "衆議院で閉会中審査",
@@ -3792,6 +6638,12 @@
   "house": "shugiin",
   "id": "216-決算-1DDF5EA",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF5EA.htm",
   "status": "衆議院で閉会中審査",
@@ -3801,6 +6653,12 @@
   "house": "shugiin",
   "id": "216-決算-1DDF5F2",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF5F2.htm",
   "status": "衆議院で閉会中審査",
@@ -3810,6 +6668,12 @@
   "house": "shugiin",
   "id": "216-決算-1DDF602",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF602.htm",
   "status": "衆議院で閉会中審査",
@@ -3819,6 +6683,12 @@
   "house": "shugiin",
   "id": "216-決算-1DDF616",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF616.htm",
   "status": "衆議院で閉会中審査",
@@ -3828,6 +6698,12 @@
   "house": "shugiin",
   "id": "216-決算-1DE021A",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE021A.htm",
   "status": "衆議院で閉会中審査",
@@ -3837,6 +6713,12 @@
   "house": "shugiin",
   "id": "216-決算-1DE021E",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE021E.htm",
   "status": "衆議院で閉会中審査",
@@ -3846,6 +6728,12 @@
   "house": "shugiin",
   "id": "216-決算-1DE0222",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0222.htm",
   "status": "衆議院で閉会中審査",
@@ -3855,6 +6743,12 @@
   "house": "shugiin",
   "id": "216-決算-1DE0226",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0226.htm",
   "status": "衆議院で閉会中審査",
@@ -3864,6 +6758,12 @@
   "house": "shugiin",
   "id": "216-決算-1DE0B76",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B76.htm",
   "status": "未了",
@@ -3873,6 +6773,12 @@
   "house": "shugiin",
   "id": "216-決算-1DE0B7A",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B7A.htm",
   "status": "未了",
@@ -3882,6 +6788,12 @@
   "house": "shugiin",
   "id": "216-決算-1DE0B7E",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B7E.htm",
   "status": "未了",
@@ -3891,6 +6803,12 @@
   "house": "shugiin",
   "id": "216-決算-1DE0B82",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B82.htm",
   "status": "未了",
@@ -3900,6 +6818,12 @@
   "house": "shugiin",
   "id": "216-決算-1DE1146",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1146.htm",
   "status": "衆議院で閉会中審査",
@@ -3909,6 +6833,12 @@
   "house": "shugiin",
   "id": "216-決算-1DE114A",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE114A.htm",
   "status": "衆議院で閉会中審査",
@@ -3918,6 +6848,12 @@
   "house": "shugiin",
   "id": "216-決算-1DE114E",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE114E.htm",
   "status": "衆議院で閉会中審査",
@@ -3927,6 +6863,12 @@
   "house": "shugiin",
   "id": "216-決算-1DE1152",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "決算行政監視",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE1152.htm",
   "status": "衆議院で閉会中審査",
@@ -3936,6 +6878,12 @@
   "house": "shugiin",
   "id": "216-衆法-1",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "財務金融",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0CD2.htm",
   "status": "未了",
@@ -3945,6 +6893,12 @@
   "house": "shugiin",
   "id": "216-衆法-10",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "政治改革に関する特別",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDD8A.htm",
   "status": "撤回",
@@ -4008,6 +6962,12 @@
   "house": "shugiin",
   "id": "216-衆法-17",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "財務金融",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0CD6.htm",
   "status": "未了",
@@ -4017,6 +6977,12 @@
   "house": "shugiin",
   "id": "216-衆法-18",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "内閣",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDE26.htm",
   "status": "未了",
@@ -4026,6 +6992,12 @@
   "house": "shugiin",
   "id": "216-衆法-19",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "厚生労働",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0CAA.htm",
   "status": "未了",
@@ -4053,6 +7025,12 @@
   "house": "shugiin",
   "id": "216-衆法-21",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "消費者問題に関する特別",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDDA2.htm",
   "status": "未了",
@@ -4071,6 +7049,12 @@
   "house": "shugiin",
   "id": "216-衆法-23",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "厚生労働",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0CAE.htm",
   "status": "未了",
@@ -4080,6 +7064,12 @@
   "house": "shugiin",
   "id": "216-衆法-24",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "内閣",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B32.htm",
   "status": "未了",
@@ -4089,6 +7079,12 @@
   "house": "shugiin",
   "id": "216-衆法-25",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "文部科学",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0CEE.htm",
   "status": "未了",
@@ -4098,6 +7094,12 @@
   "house": "shugiin",
   "id": "216-衆法-3",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "財務金融",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDDB6.htm",
   "status": "撤回",
@@ -4107,6 +7109,12 @@
   "house": "shugiin",
   "id": "216-衆法-4",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "財務金融",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE023A.htm",
   "status": "未了",
@@ -4116,6 +7124,12 @@
   "house": "shugiin",
   "id": "216-衆法-5",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "経済産業",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C46.htm",
   "status": "未了",
@@ -4251,6 +7265,12 @@
   "house": "shugiin",
   "id": "216-ＮＨＫ決算-1DDDE1E",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "総務",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDE1E.htm",
   "status": "未了",
@@ -4260,6 +7280,12 @@
   "house": "shugiin",
   "id": "216-ＮＨＫ決算-1DDF3E6",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "総務",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF3E6.htm",
   "status": "未了",
@@ -4269,6 +7295,12 @@
   "house": "shugiin",
   "id": "216-ＮＨＫ決算-1DE01CE",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "総務",
+    "house": "shugiin"
+   }
+  ],
   "session": 216,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE01CE.htm",
   "status": "本院議了",
@@ -4278,6 +7310,12 @@
   "house": "shugiin",
   "id": "215-衆法-1",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "地域活性化・こども政策・デジタル社会形成に関する特別",
+    "house": "shugiin"
+   }
+  ],
   "session": 215,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDDAA.htm",
   "status": "撤回",
@@ -4287,6 +7325,12 @@
   "house": "shugiin",
   "id": "215-衆法-2",
   "kind": "衆法",
+  "referredCommittees": [
+   {
+    "committee": "厚生労働",
+    "house": "shugiin"
+   }
+  ],
   "session": 215,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0CA6.htm",
   "status": "未了",
@@ -6213,6 +9257,12 @@
   "house": "shugiin",
   "id": "212-ＮＨＫ決算-1DDDE1A",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "総務",
+    "house": "shugiin"
+   }
+  ],
   "session": 212,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDE1A.htm",
   "status": "未了",
@@ -6222,6 +9272,12 @@
   "house": "shugiin",
   "id": "212-ＮＨＫ決算-1DDF3E2",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "総務",
+    "house": "shugiin"
+   }
+  ],
   "session": 212,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF3E2.htm",
   "status": "未了",
@@ -6231,6 +9287,12 @@
   "house": "shugiin",
   "id": "212-ＮＨＫ決算-1DE01CA",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "総務",
+    "house": "shugiin"
+   }
+  ],
   "session": 212,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE01CA.htm",
   "status": "本院議了",
@@ -8472,6 +11534,12 @@
   "house": "shugiin",
   "id": "210-ＮＨＫ決算-1DDDE16",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "総務",
+    "house": "shugiin"
+   }
+  ],
   "session": 210,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDE16.htm",
   "status": "未了",
@@ -8481,6 +11549,12 @@
   "house": "shugiin",
   "id": "210-ＮＨＫ決算-1DDF3DE",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "総務",
+    "house": "shugiin"
+   }
+  ],
   "session": 210,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF3DE.htm",
   "status": "未了",
@@ -8490,6 +11564,12 @@
   "house": "shugiin",
   "id": "210-ＮＨＫ決算-1DE01C6",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "総務",
+    "house": "shugiin"
+   }
+  ],
   "session": 210,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE01C6.htm",
   "status": "本院議了",
@@ -11127,6 +14207,12 @@
   "house": "shugiin",
   "id": "207-ＮＨＫ決算-1DDDE12",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "総務",
+    "house": "shugiin"
+   }
+  ],
   "session": 207,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDE12.htm",
   "status": "未了",
@@ -11136,6 +14222,12 @@
   "house": "shugiin",
   "id": "207-ＮＨＫ決算-1DDF3DA",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "総務",
+    "house": "shugiin"
+   }
+  ],
   "session": 207,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDF3DA.htm",
   "status": "未了",
@@ -11145,6 +14237,12 @@
   "house": "shugiin",
   "id": "207-ＮＨＫ決算-1DE01C2",
   "kind": "その他",
+  "referredCommittees": [
+   {
+    "committee": "総務",
+    "house": "shugiin"
+   }
+  ],
   "session": 207,
   "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE01C2.htm",
   "status": "本院議了",

@@ -7,6 +7,19 @@
   "sangiin": "2025-04-15",
   "shugiin": "2025-04-16"
  },
+ "referral": {
+  "sangiin": {
+   "noteText": "審査省略"
+  },
+  "shugiin": {
+   "committee": "厚生労働",
+   "date": "2025-04-16"
+  },
+  "shugiinPreliminary": {
+   "committee": "厚生労働",
+   "date": "2025-04-15"
+  }
+ },
  "result": {
   "lawNumber": "64",
   "promulgated": "2025-06-11",

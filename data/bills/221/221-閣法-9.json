@@ -7,6 +7,16 @@
   "sangiin": "2026-03-13",
   "shugiin": "2026-02-27"
  },
+ "referral": {
+  "sangiin": {
+   "committee": "文教科学",
+   "date": "2026-03-26"
+  },
+  "shugiin": {
+   "committee": "文部科学",
+   "date": "2026-03-10"
+  }
+ },
  "result": {
   "lawNumber": "7",
   "promulgated": "2026-03-31",

@@ -3,6 +3,12 @@
  "id": "217-衆法-39",
  "kind": "衆法",
  "number": 39,
+ "referral": {
+  "shugiin": {
+   "committee": "農林水産",
+   "date": "2026-01-23"
+  }
+ },
  "session": 217,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C6A.htm",
  "status": "未了",
