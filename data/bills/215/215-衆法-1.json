@@ -3,6 +3,12 @@
  "id": "215-衆法-1",
  "kind": "衆法",
  "number": 1,
+ "referral": {
+  "shugiin": {
+   "committee": "地域活性化・こども政策・デジタル社会形成に関する特別",
+   "date": "2025-01-24"
+  }
+ },
  "session": 215,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDDAA.htm",
  "status": "撤回",

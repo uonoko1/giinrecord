@@ -148,16 +148,16 @@ const DATA = fileURLToPath(new URL("../../../data/", import.meta.url));
 
 /**
  * **導けない種別の母数**（`committeeRole` / `attendance`）。**議会ごとの内訳で固定する。**
- * **実測 2026-09-28。** **合計だけだと、院をまたいで入れ替わっても（衆 2,020 ＋ 参 5,322 が
- * 2,021 ＋ 5,321 になっても 7,342）気づけない**ので内訳を持つ（#1053 と同じ理由）。
+ * **実測 2026-10-04**（2026-09-28 は 衆 2,020 ＋ 参 5,322 = 7,342 だった）**。** **合計だけだと、院をまたいで入れ替わっても（衆 2,047 ＋ 参 5,323 が
+ * 2,048 ＋ 5,322 になっても 7,370）気づけない**ので内訳を持つ（#1053 と同じ理由）。
  */
 const UNDERIVABLE = {
-  committeeRoleByAssembly: { "diet-sangiin": 5322, "diet-shugiin": 2020 } as Record<string, number>,
+  committeeRoleByAssembly: { "diet-sangiin": 5323, "diet-shugiin": 2047 } as Record<string, number>,
   // **正直に書いておく: 合計の `assert` を丸ごと削る変異は落ちなかった**（**実測 2026-09-28。等価変異**——
   // **上の内訳の `deepEqual` が既に両方の数を固定しているから**。#1053 の `resultAbsent` と同じ）。
   // **残っている仕事は「この 2 つのキーが食い違ったら落ちる」ことだけで、そこは効いている**
   // （**実測 2026-09-28: ここを 7343 にすると `actual: 7342 / expected: 7343` で落ちた**）。
-  committeeRole: 7342,
+  committeeRole: 7370,
   // **参院の委員会の発議者だけに付く**（`dataset.ts`: `attendance row is allowed only for house=sangiin`）
   attendanceByAssembly: { "diet-sangiin": 24 } as Record<string, number>,
   attendance: 24,

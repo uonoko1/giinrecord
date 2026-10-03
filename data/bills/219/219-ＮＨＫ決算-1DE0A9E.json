@@ -6,6 +6,12 @@
  "received": {
   "shugiin": "2025-12-16"
  },
+ "referral": {
+  "shugiin": {
+   "committee": "総務",
+   "date": "2025-12-16"
+  }
+ },
  "session": 219,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0A9E.htm",
  "status": "未了",

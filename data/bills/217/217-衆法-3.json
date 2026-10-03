@@ -3,6 +3,12 @@
  "id": "217-衆法-3",
  "kind": "衆法",
  "number": 3,
+ "referral": {
+  "shugiin": {
+   "committee": "厚生労働",
+   "date": "2025-10-21"
+  }
+ },
  "session": 217,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0292.htm",
  "status": "未了",

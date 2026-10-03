@@ -3,6 +3,12 @@
  "id": "219-衆法-18",
  "kind": "衆法",
  "number": 18,
+ "referral": {
+  "shugiin": {
+   "committee": "経済産業",
+   "date": "2026-01-23"
+  }
+ },
  "session": 219,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C4E.htm",
  "status": "未了",

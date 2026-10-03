@@ -3,6 +3,12 @@
  "id": "216-ＮＨＫ決算-1DE01CE",
  "kind": "その他",
  "kindText": "ＮＨＫ決算",
+ "referral": {
+  "shugiin": {
+   "committee": "総務",
+   "date": "2025-10-21"
+  }
+ },
  "result": {
   "shugiin": "異議がない"
  },

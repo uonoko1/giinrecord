@@ -3,6 +3,12 @@
  "id": "217-衆法-63",
  "kind": "衆法",
  "number": 63,
+ "referral": {
+  "shugiin": {
+   "committee": "国土交通",
+   "date": "2026-01-23"
+  }
+ },
  "session": 217,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C22.htm",
  "status": "未了",
