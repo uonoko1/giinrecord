@@ -7,7 +7,7 @@
 #   だから **VPS の IP はこのスクリプトが自分で引く**（`giinrecord.jp` の A レコード）。
 #   **鍵も `~/.ssh/sakura-vps/id_ed25519` にある前提で明示する**（`Host giinops` が無い端末でも通る）。
 #
-# 何をするか（**3 つ**）:
+# 何をするか（**4 つ**）:
 #   1. **`site.conf` を本番に反映する**（#610 / #654 / #746）——ssh が要る。PO の端末には接続先が無い。
 #   2. **branch protection 監視用の PAT を secret に置く**（#790 / #550 / #547）——
 #      **`Branch protection` ワークフローが 6 日連続で failure だった。** 設計は正しく、
@@ -18,6 +18,11 @@
 #      secret scanning / Dependabot のアラートも `GITHUB_TOKEN` では読めない
 #      （**CI 上で実測: 両方 HTTP 403**。run 34753557512）。**2 とは別の secret**
 #      （`SECURITY_ALERTS_TOKEN`）で、**要る権限も違う**（Secret scanning / Dependabot alerts の Read-only）。
+#   4. **PV 集計のスクリプトを設置し直し、計器が動いていることを実測する**（#1184）——ssh が要る。
+#      **PV の計器が 39 日間、無言で壊れていた。** 設置済みの `daily.sh` が改名前のログ名
+#      （存在しないファイル）を読み、**0 行の TSV を書いて exit 0 で成功を報告していた**。
+#      **リポジトリ側は最初から正しく、設置し直していないという手順の穴。**
+#      **設置して終わりにしない**——そのあと `daily.sh` を走らせて終了コードと `pv`/`pages` を見る。
 #
 # **やらないこと**:
 #   - **`git stash` 2 件の drop（#543）**——**`scripts/ci/forbidden-patterns.sh` が
@@ -324,6 +329,58 @@ else
   else
     log "  gh secret set に失敗しました（gh の認証を確かめてください: gh auth status）"
     fail=1
+  fi
+fi
+
+# ---- 4. PV 集計のスクリプトを設置し直し、計器が動いていることを実測する（#1184）------------------
+# **PV の計器が 39 日間、無言で壊れていた。** VPS に設置済みの `daily.sh` が改名前のログ名
+# （存在しないファイル）を読み、**0 行の TSV を書いて exit 0 で成功を報告していた**。cron は毎日
+# 発火し TSV も毎日できていたので、**どの計器も赤くならなかった**。
+# **リポジトリ側のコードは最初から正しく、設置し直していないという手順の穴だった**
+# （`go-live.sh` の `migrate_legacy()` はディレクトリを `mv` するだけで、中のスクリプトは古いまま）。
+#
+# **PO ができない理由は接続手段**（PO の端末に VPS への ssh が無い）。1. と同じ。
+# リポジトリ側はこの PR で直してある: `vps-analytics-setup.sh` が**自分の隣のスクリプトを install する**
+# ようになったので、checkout から走らせれば以後は自動で揃う（`docs/ops/analytics.md`）。
+#
+# **「設置し直した」で終わらせない。** 置いただけでは「測れている」とは言えない（#790 の
+# 「置いた」と「緑になった」は別、と同じ形）。設置のあと `daily.sh` を実際に走らせ、**終了コードを見る**:
+#   0 = 測れて PV が 1 件以上 / 3 = 読む先が無い（計器が壊れている）/ 4 = 測れて 0 件
+echo
+log "== PV 集計のスクリプトを設置し直し、計器を実測する（#1184）=="
+if ! target=$(ssh_target); then
+  log "  ssh の接続先が分かりません。--host <IP> か GIINOPS_HOST=<IP> で渡してください"
+  fail=1
+else
+  # checkout を更新してから setup を走らせる。setup が $HERE の aggregate.sh / daily.sh を
+  # /usr/local/lib/giinrecord-analytics/ に install する（stdin 経由では install できないので、
+  # **ファイルとして**実行する）。そのあと今日ぶんを手で集計して、終了コードと要約行を見る。
+  acmd='sudo -n git -C /opt/giinrecord pull --ff-only'
+  acmd="$acmd && sudo -n bash /opt/giinrecord/deploy/analytics/vps-analytics-setup.sh"
+  acmd="$acmd && (sudo -n ANALYTICS_OUT=/home/ubuntu/analytics ANALYTICS_OWNER=ubuntu"
+  acmd="$acmd /usr/local/lib/giinrecord-analytics/daily.sh \"\$(date +%F)\"; echo \"daily.sh exit=\$?\")"
+  acmd="$acmd; head -2 /home/ubuntu/analytics/\"\$(date +%F)\".tsv"
+  if [[ "$APPLY" = 0 ]]; then
+    # **接続先は出さない**（1. と同じ。このログが貼られても漏れないように）。
+    log "  [dry-run] ssh <giinops@VPS> '$acmd'"
+  else
+    log "  ssh で設置し直します（接続先は伏せます）"
+    set_ssh_opts "$target"
+    # shellcheck disable=SC2029  # $acmd はローカルで組み立てた固定文字列。リモート側での展開が意図どおり
+    if ssh "${ssh_opts[@]}" "$target" "$acmd"; then
+      log "  設置し直しました。**上の出力の 3 点を Claude に伝えてください**:"
+      log "    1) daily.sh exit=0 か（3 ならまだ読む先が無い＝ログ名か access_log を疑う）"
+      log "    2) 2 行目の '# <日付> pv=N pages=M per-page=X.XX' の N と M"
+      log "    3) per-page が 1.0 に近ければクローラ、3 以上なら人が読んでいる形（#1178 の実測）"
+      log "  **翌日の cron 後にもう一度**: head -2 ~/analytics/\$(date -d yesterday +%F).tsv"
+      log "    （受け入れ条件 1 は「翌日の TSV が 1 行より多いこと」。要約行が入ったので 2 行より多いこと）"
+    else
+      # 終了コードは daily.sh の 3 / 4 でも非 0 になる。**それも「伝えるべき結果」なので失敗にする。**
+      log "  ssh または設置・集計が失敗しました（daily.sh の exit 3 / 4 もここに来ます）"
+      log "    exit 3 = 読む先のログが無い（#1184 そのもの）。exit 4 = 測れて 0 件"
+      log "    上の出力をそのまま Claude に伝えてください"
+      fail=1
+    fi
   fi
 fi
 
