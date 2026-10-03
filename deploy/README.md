@@ -93,9 +93,16 @@ directories are bind-mounted, nothing to restart.
 **No environment has required reviewers** (#659; measured 2026-09-08 — `protection_rules` is `[]` for all three). A
 Release publishes as soon as it is dispatched; there is no approve button. See `docs/ops/deploy.md` for why.
 
-GitHub Environment secrets (identical in `staging`, `production`, `production-data`): `DEPLOY_SSH_KEY`, `DEPLOY_HOST`,
-`DEPLOY_USER`, `DEPLOY_KNOWN_HOSTS`. To rotate the key: `ssh-keygen -t ed25519 -C "giinrecord github-actions deploy"`,
-replace the line tagged `giinrecord github-actions` in `~ubuntu/.ssh/authorized_keys`, update `DEPLOY_SSH_KEY` everywhere.
+**Repository** secrets (not environment secrets): `DEPLOY_SSH_KEY`, `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_KNOWN_HOSTS`.
+This line used to read "GitHub Environment secrets (identical in `staging`, `production`, `production-data`)" and
+**that was wrong** — measured 2026-09-30 (#1137): `actions/secrets` holds 5 (the four above plus `FORBIDDEN_PATTERNS`)
+while all three `environments/*/secrets` hold **0**. The wrong line is what led #1137's first attempt to believe that
+omitting `environment:` on a job kept the deploy key away from it; it does not, because a repository secret reaches
+every job the caller passes secrets to. The callers therefore name the four explicitly instead of `secrets: inherit`,
+and the build runs in `build-site.yml`, which is called with no `secrets:` at all (measured: its `secrets` context
+holds only `github_token`). To rotate the key: `ssh-keygen -t ed25519 -C "giinrecord github-actions deploy"`, replace
+the line tagged `giinrecord github-actions` in `~ubuntu/.ssh/authorized_keys`, then update `DEPLOY_SSH_KEY` (one
+place, repository level).
 
 > **Rename (gikailog → giinrecord)**: the key line on the VPS still reads `gikailog github-actions deploy` and
 > `command="/usr/bin/rrsync /var/www/gikailog"` until a human edits it. `deploy/ops-user-setup.sh` only matches the

@@ -52,6 +52,9 @@ const setup = uncommented(read("deploy/vps-setup.sh"));
 const setupCode = setup.replace(/<<'?(\w+)'?\n[\s\S]*?\n\1\n/g, "");
 const ci = read(".github/workflows/ci.yml");
 const deploySite = read(".github/workflows/deploy-site.yml");
+// #1137: ビルドは deploy-site.yml から出して、secrets を渡さない別の再利用ワークフローに移した
+// （`DEPLOY_*` は repository secret なので、同じ workflow の中で job を割っても `secrets` 文脈は分かれない）。
+const buildSite = read(".github/workflows/build-site.yml");
 const deployStaging = read(".github/workflows/deploy-staging.yml");
 const release = read(".github/workflows/release.yml");
 const deployData = read(".github/workflows/deploy-data.yml");
@@ -421,14 +424,15 @@ test("#570: indexOf によるステップ順序判定は、行頭コメントに
     "素の indexOf はコメントのせいで「起動後に叩く」の判定が崩れる",
   );
 
-  // 3. deploy-site.yml: checkout / pnpm build のあいだに overlay があるかの判定
-  const deploySiteWithComment = deploySite.replace(
-    "  deploy:\n",
-    "  deploy:\n    # note: pnpm build happens here, mentioning actions/checkout too (#570 repro)\n",
+  // 3. build-site.yml: checkout / pnpm build のあいだに overlay があるかの判定
+  //    （#1137 でビルドを deploy-site.yml から build-site.yml に移したので、対象がこちらになった）
+  const buildSiteWithComment = buildSite.replace(
+    "  build:\n",
+    "  build:\n    # note: pnpm build happens here, mentioning actions/checkout too (#570 repro)\n",
   );
-  const overlayAt = deploySiteWithComment.lastIndexOf("released-ref.sh overlay");
+  const overlayAt = buildSiteWithComment.lastIndexOf("released-ref.sh overlay");
   assert.ok(
-    !(overlayAt > deploySiteWithComment.indexOf("actions/checkout") && overlayAt < deploySiteWithComment.indexOf("pnpm build")),
+    !(overlayAt > buildSiteWithComment.indexOf("actions/checkout") && overlayAt < buildSiteWithComment.indexOf("pnpm build")),
     "素の indexOf はコメントのせいで「checkout の後・build の前」の判定が崩れる",
   );
 });
@@ -454,13 +458,14 @@ test("#570: orderIndexOf / orderLastIndexOf はコメントを除いた本文で
     "コメントを除いた本文で見れば、起動後に叩くことは崩れない",
   );
 
-  const deploySiteWithComment = deploySite.replace(
-    "  deploy:\n",
-    "  deploy:\n    # note: pnpm build happens here, mentioning actions/checkout too (#570 repro)\n",
+  // #1137: 対象は build-site.yml（ビルドの順序を見る検査なので、ビルドが在るファイルを見る）
+  const buildSiteWithComment = buildSite.replace(
+    "  build:\n",
+    "  build:\n    # note: pnpm build happens here, mentioning actions/checkout too (#570 repro)\n",
   );
-  const overlayAt = orderLastIndexOf(deploySiteWithComment, "released-ref.sh overlay");
+  const overlayAt = orderLastIndexOf(buildSiteWithComment, "released-ref.sh overlay");
   assert.ok(
-    overlayAt > orderIndexOf(deploySiteWithComment, "actions/checkout") && overlayAt < orderIndexOf(deploySiteWithComment, "pnpm build"),
+    overlayAt > orderIndexOf(buildSiteWithComment, "actions/checkout") && overlayAt < orderIndexOf(buildSiteWithComment, "pnpm build"),
     "コメントを除いた本文で見れば、checkout の後・build の前であることは崩れない",
   );
 });
@@ -640,12 +645,18 @@ test("deploy-site.yml: 再利用ワークフロー。environment / site_origin /
   assert.match(deploySite, /workflow_call:/);
   for (const input of ["environment", "site_origin", "target_dir", "ref"]) assert.match(deploySite, new RegExp(`^\\s+${input}:`, "m"), input);
   assert.match(deploySite, /environment: \$\{\{ inputs\.environment \}\}/);
-  assert.match(deploySite, /SITE_ORIGIN: \$\{\{ inputs\.site_origin \}\}/);
+  // #1137: `SITE_ORIGIN` を env に置くのはビルドする側（build-site.yml）。deploy-site.yml は
+  // それを input として受け取り、そのまま渡すだけである。
+  assert.match(deploySite, /site_origin: \$\{\{ inputs\.site_origin \}\}/);
+  assert.match(buildSite, /SITE_ORIGIN: \$\{\{ inputs\.site_origin \}\}/);
   assert.match(deploySite, /ref: \$\{\{ inputs\.ref \}\}/);
   assert.match(deploySite, /rsync -az --delete --exclude '\.well-known'/);
   assert.match(deploySite, /\/var\/www\/giinrecord\/\$TARGET_DIR\//);
   assert.match(deploySite, /TARGET_DIR: \$\{\{ inputs\.target_dir \}\}/);
   assert.doesNotMatch(uncommented(deploySite), /docker/);
+  assert.doesNotMatch(uncommented(buildSite), /docker/);
+  // #1137: rsync するのは deploy-site.yml だけ。ビルドする側は VPS に触らない。
+  assert.doesNotMatch(uncommented(buildSite), /rsync/);
 });
 
 test("deploy-staging.yml: main への push で environment staging、SITE_ORIGIN=https://staging.giinrecord.jp、rsync 先 staging", () => {
@@ -758,17 +769,35 @@ test("release.yml: 成功時だけ GITHUB_TOKEN（contents: write）で refs/tag
   assert.match(release, /contents: write/);
   assert.match(release, /needs\.production\.outputs\.sha/);
   assert.match(release, /refs\/tags\/released/);
-  assert.doesNotMatch(release, /DEPLOY_SSH_KEY/, "the tag job must not touch the deploy key");
+  // #1137: **この 1 行はファイル全体を見ていた。** `secrets: inherit` をやめて DEPLOY_* を
+  // 名指しで渡すようにしたので、`production` job（`deploy-site.yml` を呼ぶ側）には
+  // `DEPLOY_SSH_KEY:` の行が在る。**守りたいのは「`released-tag` job が鍵を持たないこと」**
+  // なので、その job の本文だけを見る（ファイル全体で禁じると、渡す側の 1 行で落ちてしまう）。
+  const tagJob = release.slice(release.indexOf("  released-tag:"));
+  assert.doesNotMatch(tagJob, /DEPLOY_/, "the tag job must not touch the deploy key");
+  // `production` job のほうは、鍵を**渡す**だけで自分では使わない（`uses:` の job なので step が無い）
+  const prodJob = release.slice(release.indexOf("  production:"), release.indexOf("  released-tag:"));
+  assert.match(prodJob, /DEPLOY_SSH_KEY: \$\{\{ secrets\.DEPLOY_SSH_KEY \}\}/, "#1137: 名指しで渡す形になっていない");
+  assert.doesNotMatch(prodJob, /secrets: inherit/, "#1137: inherit は宣言していない secret まで流す");
 });
 
 test("deploy-site.yml: data_ref 入力（既定空）で released-ref.sh overlay を呼び、ビルドした sha を output に出す", () => {
+  // #1137: `data_ref` の入口は deploy-site.yml のまま（呼び出し元の契約）。overlay を**実行する**のは
+  // ビルド側（build-site.yml）に移った。両方を見る——入口だけ見ると渡し忘れに気づけない。
   assert.match(deploySite, /^\s+data_ref:\s*\n(\s+\w+:[^\n]*\n)*?\s+default: ""$/m);
-  assert.match(deploySite, /scripts\/ci\/released-ref\.sh overlay "\$DATA_REF"/);
-  assert.match(deploySite, /DATA_REF: \$\{\{ inputs\.data_ref \}\}/);
-  assert.match(deploySite, /^\s+sha:\s*\n\s+description:[^\n]*\n\s+value: \$\{\{ jobs\.deploy\.outputs\.sha \}\}$/m);
-  const overlayAt = orderLastIndexOf(deploySite, "released-ref.sh overlay");
+  assert.match(deploySite, /data_ref: \$\{\{ inputs\.data_ref \}\}/, "#1137: deploy-site.yml が data_ref をビルド側に渡していない");
+  assert.match(buildSite, /^\s+data_ref:\s*\n(\s+\w+:[^\n]*\n)*?\s+default: ""$/m);
+  assert.match(buildSite, /scripts\/ci\/released-ref\.sh overlay "\$DATA_REF"/);
+  assert.match(buildSite, /DATA_REF: \$\{\{ inputs\.data_ref \}\}/);
+  // #1137: `pnpm build` する job と deploy 鍵を持つ job を割ったので、`sha` を出すのは
+  // **ビルド側（`build`）**になった（checkout して HEAD を読むのはそちらだけ）。
+  // **この 1 行は綴りしか見ていない。** 束縛が step の出力まで辿れることは
+  // workflow-released-chain.test.ts と workflow-deploy-split.test.ts が構造で見ている。
+  assert.match(deploySite, /^\s+sha:\s*\n\s+description:[^\n]*\n\s+value: \$\{\{ jobs\.build\.outputs\.sha \}\}$/m);
+  // #1137: overlay / checkout / build は build-site.yml の側に在る
+  const overlayAt = orderLastIndexOf(buildSite, "released-ref.sh overlay");
   assert.ok(
-    overlayAt > orderIndexOf(deploySite, "actions/checkout") && overlayAt < orderIndexOf(deploySite, "pnpm build"),
+    overlayAt > orderIndexOf(buildSite, "actions/checkout") && overlayAt < orderIndexOf(buildSite, "pnpm build"),
     "overlay runs after checkout and before the build",
   );
 });

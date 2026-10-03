@@ -1,0 +1,132 @@
+# **このファイルに `secrets` という語を書かないこと**（`name:` にも書かない。
+# workflow-deploy-split.test.ts の (A) がコメント外の全行を見ており、`name:` の値も対象である）。
+name: Build site (reusable, no deploy key)
+# Issue #1137（項目 1）。**この workflow は deploy 鍵に触れない場所である。**
+#
+# ── なぜ別ファイルに切ったか（最初の設計は誤っていた）────────────────────
+# 最初は `deploy-site.yml` の中で job を 2 つに割り、build job に `environment:` を付けない
+# ことで鍵を遠ざけたつもりだった。**これは誤りだった。** 2026-09-30 実測:
+#
+#   repos/<repo>/actions/secrets                      total_count=5   ← DEPLOY_* 4 件はここ
+#   repos/<repo>/environments/staging/secrets         total_count=0
+#   repos/<repo>/environments/production/secrets      total_count=0
+#   repos/<repo>/environments/production-data/secrets total_count=0
+#
+# **`DEPLOY_*` は environment secret ではなく repository secret である。**
+# そして呼び出し元が `secrets: inherit` を書いていたので、**`environment:` の有無に関係なく
+# 呼び先の全 job が鍵を読めた**（`${{ toJSON(secrets) }}` や `secrets['DEPLOY_SSH_KEY']` で）。
+# **同じ workflow の中で job を割っても、`secrets` 文脈は workflow 単位なので分かれない。**
+# `deploy-site.yml:9` のコメント（"Every environment needs the same four secrets"）を
+# 設定と照らさずに信じたのが原因である（このリポジトリが繰り返している「代理と実体」）。
+#
+# ── いまの形 ────────────────────────────────────────────────────
+# `deploy-site.yml` はこの workflow を **`secrets:` を 1 つも書かずに** 呼ぶ。
+# 呼び先が読めるのは呼び出し元が明示的に渡した secrets だけなので、
+# **この workflow の `secrets` 文脈は空である**。`main` に入ったビルドスクリプトが
+# `toJSON(secrets)` を書いても、出てくるものが無い。
+#
+# **`environment:` を書かないこと。** 書くとその environment の secrets が入る余地ができる。
+# **`secrets:` を書かないこと**（`workflow_call.secrets` の宣言も置かない。
+# 宣言が無ければ呼び出し元は渡せない）。
+# これらは packages/etl/test/workflow-deploy-split.test.ts が機械で守る。
+on:
+  workflow_call:
+    inputs:
+      site_origin:
+        description: "SITE_ORIGIN for the build (https://staging.giinrecord.jp → robots Disallow + noindex)"
+        required: true
+        type: string
+      target_dir:
+        description: "Web root the caller deploys into (site | staging). Only used to name the artifact."
+        required: true
+        type: string
+      ref:
+        description: "Git ref to build"
+        required: false
+        type: string
+        default: main
+      data_ref:
+        description: "Optional ref whose data/ replaces the checkout's data/ before the build (scripts/ci/released-ref.sh overlay)"
+        required: false
+        type: string
+        default: ""
+    outputs:
+      sha:
+        description: "Commit actually built (HEAD of the checkout, before the data overlay)"
+        value: ${{ jobs.build.outputs.sha }}
+      artifact:
+        description: "Name of the artifact holding apps/web/build/client/ (the caller downloads it and sends it to the VPS)"
+        value: ${{ jobs.build.outputs.artifact }}
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    # #556 / #1056: **実測値はここに書かない**（数が 2 か所にあると片方だけ腐る）。
+    # **実測値も `timeout-minutes` に対する倍率も packages/etl/test/workflow-timeout.test.ts の
+    # 表が 1 か所で持つ**（測り方・n・測った日つき）。
+    #
+    # この job は **VPS に触らない**（rsync は呼び出し元の側に在る）。checkout / overlay /
+    # install / ビルド / artifact の upload だけなので、どこで切れても外に副作用が残らない
+    # （artifact が上がらないので rsync する job が動かないだけ）。
+    #
+    # 分割前は 1 つの job の 30 分が「ビルド + rsync」を覆っていた。**いまはここが 30 分、
+    # rsync 側が別に持つ。** ビルドに artifact の upload が足されたので、分割前の 30 分から
+    # 減らしていない（**upload の所要は CI 実測がまだ 0 本**。表を見よ）。
+    timeout-minutes: 30
+    outputs:
+      sha: ${{ steps.head.outputs.sha }}
+      artifact: ${{ steps.artifact.outputs.name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+      - id: head
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Overlay data/ from data_ref (no-op when empty)
+        env:
+          DATA_REF: ${{ inputs.data_ref }}
+        run: bash scripts/ci/released-ref.sh overlay "$DATA_REF"
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+        env:
+          SITE_ORIGIN: ${{ inputs.site_origin }}
+      - name: Guard — target_dir is one of the two web roots
+        env:
+          TARGET_DIR: ${{ inputs.target_dir }}
+        run: |
+          case "$TARGET_DIR" in site|staging) ;; *) echo "bad target_dir: $TARGET_DIR"; exit 1 ;; esac
+      # artifact の名前は呼び出し元に output で返す（両側で綴りを二重に持たない）。
+      # `target_dir` と sha を入れる: deploy-data.yml は 1 つの run の中で deploy-site.yml を
+      # 2 回（staging と production-data）呼ぶので、名前が同じだと衝突する。
+      - id: artifact
+        env:
+          TARGET_DIR: ${{ inputs.target_dir }}
+          SHA: ${{ steps.head.outputs.sha }}
+        run: echo "name=site-$TARGET_DIR-$SHA" >> "$GITHUB_OUTPUT"
+      # **artifact に入れるのは rsync する 1 ディレクトリだけ**（分割前に rsync していたものと
+      # 同じ `apps/web/build/client/`）。それ以外を入れると、余計なものが VPS に届く経路になる。
+      #
+      # **このディレクトリは大きい**（`data/members/*.json` と `data/data-archive.zip` が
+      # 入る。**どちらも実行時にサイトが fetch する実体なので外せない**——
+      # `app/routes/compare.tsx` が `/data/members/{id}.json`、`components/ZipLookup.tsx` が
+      # `/data/districts/zip/{上3桁}.json`、`routes/about.tsx` が `/data/data-archive.zip`）。
+      # **実測値は packages/etl/test/workflow-timeout.test.ts の表が持つ。**
+      #
+      # **`compression-level` は既定（6）のままにする。** 最初は `compression-level: 0` を
+      # 書いていたが、**実測が否定した**（根拠にした「中身の大半は既に圧縮済み」が事実と違った。
+      # 圧縮済みは全体の 5.1% しかなく、残りは 5 分の 1 に縮む。**level 6 のほうが展開も速い**）。
+      # **数と測り方は workflow-deploy-split.test.ts の docblock が 1 か所で持つ。**
+      #
+      # `if-no-files-found: error`: 既定は `warn` なので、ビルドが何も出さなくても警告だけで
+      # 緑になり、呼び出し元が空の artifact を受け取って `rsync --delete` が配信中のサイトを消す。
+      # 分割前は同じ workspace の中で rsync していたので、この経路は無かった。
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.artifact.outputs.name }}
+          path: apps/web/build/client
+          retention-days: 1
+          if-no-files-found: error
