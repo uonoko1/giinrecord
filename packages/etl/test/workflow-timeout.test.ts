@@ -355,13 +355,37 @@ test("#556 uses: の job に timeout-minutes を書かない（GitHub が受け�
  *   deploy-site.yml:deploy          —     —     —     —     —    → 30 分（**#1137 で download + rsync だけに
  *                                                                    なった。CI 実測はまだ 0 本**）
  *
- *   **#1137 の分割で増えた仕事を実測していない。** 割る前の「ビルド + rsync」は
+ *   **#1137 の分割で増えた仕事の CI 実測は 0 本である。** 割る前の「ビルド + rsync」は
  *   production n=38 max 112s / staging n=37 max 101s（2026-09-27、呼び出し元の job で測った）。
- *   分割後は **`apps/web/build/client/` が artifact として 1 往復する**——このディレクトリは
- *   `data/members/*.json` と `data/data-archive.zip` を含むので小さくない（どちらもサイトが
- *   配信する実体なので artifact から外せない）。**upload / download / 展開の所要は 0 本である。**
- *   **だから分割前の 30 分を両方に置いた**（減らすのは n が溜まってから。薄くして本番の初回を
- *   落とすほうが害が大きい）。**最初の数 run を見て測り直すこと。**
+ *   分割後は **`apps/web/build/client/` が artifact として 1 往復する**。
+ *
+ *   **CI では測れないので、手元で artifact の圧縮と展開だけを測った**（2026-10-04、
+ *   `SITE_ORIGIN=https://staging.giinrecord.jp pnpm build` の出力 **957 MB / 15,769 ファイル**。
+ *   `zip` / `unzip` は `upload-artifact@v4` / `download-artifact@v4` と同じ zip 形式。
+ *   **これは runner の実測ではない**——手元のマシンの数で、ネットワークの時間は含まない）:
+ *
+ *     何を                              level 0   level 6（既定）
+ *     zip（upload 側の圧縮）              33.8s      67.6s
+ *     サイズ（片道）                      908 MB     183 MB
+ *     unzip（download 側の展開）          20.1s      15.9s
+ *     往復のバイト（upload + download）  1,815 MB    367 MB
+ *
+ *   **既定の 6 を使う**（この PR の最初の版は `compression-level: 0` を書いていたが、
+ *   根拠にした「中身の大半は既に圧縮済み」が実測で否定された。圧縮済みのバイトは
+ *   **46 MB / 901 MB = 5.1%** しかない。測り方と表は
+ *   `workflow-deploy-split.test.ts` の docblock が 1 か所で持つ）。
+ *
+ *   **artifact から `data/` を外せないことも確かめた**（2026-10-04。外すのが一番効く案だった）:
+ *   `data/members/` 218 MB は `/compare` が `/data/members/{id}.json` を fetch し、
+ *   `data/districts/` 14 MB は `ZipLookup` が `/data/districts/zip/{上3桁}.json` を fetch し、
+ *   `data/data-archive.zip` 37 MB は `/about` の一括ダウンロードが指す。
+ *   **どれも実行時にサイトが配信する実体なので、外すとサイトが壊れる。**
+ *   外せるのは `unmatched*.json` / `group-mismatch.json`（合計 104 KB、app から 1 か所も
+ *   fetch されない）だけで、**957 MB に対して 0.01% なので割に合わない**
+ *   （`path:` に除外の列挙が増え、1 件の path を固定している検査も緩める必要が出る）。
+ *
+ *   **だから分割前の 30 分を両方に置いた**（減らすのは CI の n が溜まってから。薄くして
+ *   本番の初回を落とすほうが害が大きい）。**最初の数 run を見て測り直すこと。**
  *   release.yml:released-tag        37     3     4     5     8s  → 10 分（再測。変わらず）
  *   security.yml:gitleaks           40     9    11    15    16s  → 20 分（全履歴走査の週次がある。
  *                                                                    再測で max 48 → 16s に下がった）

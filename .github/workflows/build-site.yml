@@ -111,10 +111,15 @@ jobs:
       # 同じ `apps/web/build/client/`）。それ以外を入れると、余計なものが VPS に届く経路になる。
       #
       # **このディレクトリは大きい**（`data/members/*.json` と `data/data-archive.zip` が
-      # 入る。どちらもサイトが配信する実体なので外せない）。**実測値は
-      # packages/etl/test/workflow-timeout.test.ts の表が持つ。**
-      # `compression-level: 0` にする: 中身の大半は既に圧縮済みの zip と、gzip で nginx が
-      # 配る JSON である。upload 側で再圧縮しても縮まず、CPU 時間だけ増える。
+      # 入る。**どちらも実行時にサイトが fetch する実体なので外せない**——
+      # `app/routes/compare.tsx` が `/data/members/{id}.json`、`components/ZipLookup.tsx` が
+      # `/data/districts/zip/{上3桁}.json`、`routes/about.tsx` が `/data/data-archive.zip`）。
+      # **実測値は packages/etl/test/workflow-timeout.test.ts の表が持つ。**
+      #
+      # **`compression-level` は既定（6）のままにする。** 最初は `compression-level: 0` を
+      # 書いていたが、**実測が否定した**（根拠にした「中身の大半は既に圧縮済み」が事実と違った。
+      # 圧縮済みは全体の 5.1% しかなく、残りは 5 分の 1 に縮む。**level 6 のほうが展開も速い**）。
+      # **数と測り方は workflow-deploy-split.test.ts の docblock が 1 か所で持つ。**
       #
       # `if-no-files-found: error`: 既定は `warn` なので、ビルドが何も出さなくても警告だけで
       # 緑になり、呼び出し元が空の artifact を受け取って `rsync --delete` が配信中のサイトを消す。
@@ -125,4 +130,3 @@ jobs:
           path: apps/web/build/client
           retention-days: 1
           if-no-files-found: error
-          compression-level: 0
