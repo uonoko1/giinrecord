@@ -42,15 +42,42 @@ import { dirname, resolve } from "node:path";
  * secrets だけなので、**`build-site.yml` の `secrets` 文脈は空である**。
  * 呼び出し元 4 か所は `secrets: inherit` をやめ、`DEPLOY_*` 4 件を名指しで渡す。
  *
+ * ── **これを GitHub の上で実測した**（2026-10-04。この PR の最大の「自信が無い点」だった）──
+ * **「渡さなければ空になる」は GitHub の文書どおりの理解でしかなく、誰も目で見ていなかった。**
+ * `deploy-site.yml` は `workflow_call` 専用なので PR の CI では絶対に走らず、
+ * **初回はマージ後の push が本番**——という状態だった。
+ *
+ * **だから捨てる枝（`chore/1137-secrets-probe`）で、呼び方だけを変えた 3 つを同時に走らせた。**
+ * 呼び先は `${{ toJSON(secrets) }}` を受け取り、**`jq` でキー名と件数にしてから出す**
+ * （**値は 1 文字も出さない**。キー名はこのリポジトリの YAML に既に書かれている）。
+ * 実測（run 37146968077、`push`、conclusion success）:
+ *
+ *   呼び方                                      secrets 文脈の中身                               件数
+ *   `secrets:` を書かない（= いまの形）         github_token だけ                                 **1**
+ *   `DEPLOY_HOST:` だけ名指しで渡す             DEPLOY_HOST, github_token                            2
+ *   `secrets: inherit`（直す前の形）            DEPLOY_HOST, DEPLOY_KNOWN_HOSTS, DEPLOY_SSH_KEY,  **6**
+ *                                               DEPLOY_USER, FORBIDDEN_PATTERNS, github_token
+ *
+ * **`secrets:` を書かない呼び方では `DEPLOY_SSH_KEY` が文脈に無い**（`github_token` は
+ * GitHub が常に入れるもので、`permissions: contents: read` に絞られている）。
+ * **`inherit` は 4 つの `DEPLOY_*` を全部流し込む**——**これが直す前に実際に起きていたことで、
+ * 推測ではなく実測で再現した。**
+ *
+ * ログに値・IP・ホスト名・内部パスは 0 件（147 行を `BEGIN .*PRIVATE` / `ssh-ed25519` /
+ * IPv4 / `sakura|conoha|vps` / `/home/|/var/|/etc/|/srv/` で走査。GitHub 側のマスク `***` が 12 件）。
+ * **実験の枝と PR は捨てた**（リポジトリに probe を残さない）。
+ *
  * ── **検査は denylist をやめ、allowlist にした** ───────────────────────
  * **「`DEPLOY_` という綴りを禁じる」のではなく、「ビルドが在る workflow では `secrets` という
  * 語が出る形を一切許さない」**。綴りを列挙しないので、`toJSON(secrets)` でも
  * `secrets['X']` でも `secrets.ANY` でも、**まだ思いついていない形でも**落ちる。
  *
- * ── 母数（2026-09-30 実測、基点 08e72c6e + この枝）──────────────────
- * 走査: `.github/workflows/` の 16 ファイル / 26 job。
+ * ── 母数（2026-10-04 実測、基点 5fb62347 + この枝）──────────────────
+ * 走査: `.github/workflows/` の 17 ファイル / 27 job。
  * **ビルドを含む workflow ファイルは 2 件**（`build-site.yml` / `ci.yml`）。
- * **`secrets` という語（コメント外）を持つ job は 11 件。**
+ * **`secrets` という語（コメント外）を持つ job は 17 件**（#1110 の `scrum-monitor.yml` を
+ * 取り込んで 11 → 17。**その job は `secrets.GITHUB_TOKEN` を使うがビルドしない**ので
+ * (A) の対象は 2 件から変わらない）。
  * **`ci.yml` は 0 件**（コメント外。`FORBIDDEN_PATTERNS` を使うのは `security.yml` 側で、
  * ビルドする job とはファイルが別である。これは実測して確かめた——最初は
  * 「ci.yml も secrets を使う」と書いたが、コメントを落として数えたら 0 件だった）。
@@ -408,6 +435,56 @@ test("#1137 artifact に入れるのは rsync する 1 ディレクトリだけ�
  * だから **`compression-level` を既定（6）に戻し、`0` を禁じる**。
  * **`0` を書くと往復が 5 倍になり、deploy 側の timeout に一番近い仕事が重くなる。**
  */
+/**
+ * #1137 のレビュー 2.: **`DEPLOY_*` を「environment secret」と書いた文書が、この PR の最初の版を誤らせた。**
+ *
+ * **`deploy/README.md:96` が「GitHub Environment secrets (identical in `staging`, `production`,
+ * `production-data`)」と書いていた。** 実体は repository secret である（2026-09-30 実測。
+ * `actions/secrets` が 5 件 / 3 つの environment の secrets が**どれも 0 件**）。
+ * **この 1 行を読んで「environment を付けなければ鍵は届かない」と信じたのが、最初の直しが
+ * 鍵を遠ざけていなかった原因である**（「代理と実体」——綴りを実体の代わりに読んだ）。
+ *
+ * **だから綴りを機械で縛る。** environment の実配置は**リポジトリの中身ではない**ので
+ * ここから直接は測れない（`#659` の承認待ちの検査と同じ制約）。**測れるのは
+ * 「文書とワークフローが、実態と矛盾する約束をしていないか」だけである。**
+ *
+ * **denylist ではなく allowlist にする**（#659 の同じ検査が、denylist では変異 4 件を
+ * すり抜けたと記録している）。**`environment secret` という語が出る行を全部拾い、
+ * そのうち「そうではない」と否定している行だけを許す。**
+ * 新しい言い回しで「environment secret である」と書けば、許可リストに載らないので落ちる。
+ */
+test("#1137 文書が `DEPLOY_*` を environment secret と書いていない（実体は repository secret）", () => {
+  const files = ["deploy/README.md", "docs/ops/deploy.md", ".github/workflows/deploy-site.yml", ".github/workflows/build-site.yml"];
+  // 「environment secret ではない」と否定している行だけを許す（日本語・英語の両方）。
+  const ALLOWED = [
+    /ではなく|ではない/,
+    /\bnot\b/i,
+    /\bwrong\b/i,
+    /used to read/i,
+    /\b0\b/, // 「environments/*/secrets が 0 件」のような実測の記述
+  ];
+  const offenders: string[] = [];
+  let scanned = 0;
+  for (const f of files) {
+    const abs = resolve(here, "../../..", f);
+    for (const [n, line] of readFileSync(abs, "utf8").split("\n").entries()) {
+      if (!/environment secrets?/i.test(line)) continue;
+      scanned++;
+      if (!ALLOWED.some((re) => re.test(line))) offenders.push(`${f}:${n + 1}: ${line.trim()}`);
+    }
+  }
+  // **0 件で緑になる形を塞ぐ**（#757）。綴りが 1 行も見つからないなら、走査が空回りしている。
+  assert.ok(scanned >= 3, `\`environment secret\` という綴りが ${scanned} 行しか見つからない（実測 2026-10-04: 5 行）。走査が空回りしている`);
+  assert.deepEqual(
+    offenders,
+    [],
+    "`DEPLOY_*` を environment secret と書いている行がある。**実体は repository secret である**" +
+      "（2026-09-30 実測: `actions/secrets` 5 件 / `environments/*/secrets` 3 つとも 0 件）。" +
+      "**この綴りが #1137 の最初の直しを誤らせた。**\n  " +
+      offenders.join("\n  "),
+  );
+});
+
 test("#1137 artifact を非圧縮（compression-level: 0）で往復させない", () => {
   const builder = jobs.find((j) => /actions\/upload-artifact@/.test(j.body) && buildsCode(j.body));
   assert.ok(builder, "ビルドして upload-artifact する job が無い");
