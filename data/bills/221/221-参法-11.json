@@ -6,6 +6,12 @@
  "received": {
   "sangiin": "2026-06-24"
  },
+ "referral": {
+  "sangiin": {
+   "committee": "農林水産",
+   "date": "2026-07-07"
+  }
+ },
  "session": 221,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE2A6E.htm",
  "status": "未了",

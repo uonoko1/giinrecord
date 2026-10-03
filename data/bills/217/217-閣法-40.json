@@ -7,6 +7,16 @@
   "sangiin": "2025-04-04",
   "shugiin": "2025-03-07"
  },
+ "referral": {
+  "sangiin": {
+   "committee": "内閣",
+   "date": "2025-04-14"
+  },
+  "shugiin": {
+   "committee": "地域活性化・こども政策・デジタル社会形成に関する特別",
+   "date": "2025-03-31"
+  }
+ },
  "result": {
   "lawNumber": "29",
   "promulgated": "2025-04-25",

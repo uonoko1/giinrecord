@@ -7,6 +7,16 @@
   "sangiin": "2026-05-19",
   "shugiin": "2026-03-19"
  },
+ "referral": {
+  "sangiin": {
+   "committee": "内閣",
+   "date": "2026-05-27"
+  },
+  "shugiin": {
+   "committee": "内閣",
+   "date": "2026-04-28"
+  }
+ },
  "result": {
   "lawNumber": "38",
   "promulgated": "2026-06-17",

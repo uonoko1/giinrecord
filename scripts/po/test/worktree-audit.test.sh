@@ -64,8 +64,12 @@
 #     **塞ぐには「実行された呼び出し」ではなく「ソースに書かれた呼び出し」を見る必要がある**
 #     ——それは `scripts/ci/forbidden-patterns.sh` の `destructive-git` の役割である
 #     （**あちらは静的に grep する。両者は役割が違い、二重管理ではない**）。
-#     **ただしその規則は `git rm` / `worktree remove` / `update-ref` / `branch -D` を持っていない**
-#     ので、**いまは両方のゲートを抜ける形が在る。これは #1123 で扱う。**
+#     **#1123 でその規則に `git rm` / `worktree remove` / `update-ref -d` / `branch -D` を足した。**
+#     **上の 3 形はどれも静的な側で落ちる**（実測。`git rm -r --cached .` を 113 行目に置くと
+#     `!! destructive-git: scripts/po/worktree-audit.sh:113`）。
+#     **ただし静的な側は denylist のままなので、「これで全部」ではない**——
+#     **2 枚の守備範囲の表は `docs/ops/guards.md` の「破壊的な git を見る 2 枚」に在る。**
+#     **ここの allowlist が「これで全部」と言えるのは、あくまでサブコマンドの集合についてだけである。**
 #   - **git 以外の道具**: `rm -rf "$path"` / `find -delete` / `>` でのリダイレクト。
 #     **fake `git` は git しか記録しないので、この検査の射程外である。**
 #     （`scripts/ci/forbidden-patterns.sh` の `destructive-git` も同じ限界を書いている）

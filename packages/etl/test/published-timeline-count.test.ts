@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Bill, LocalRollCall, Member, MemberDetail, MemberSummary, RollCall } from "@seiji-kiroku/shared";
 import { groupAt } from "../src/group-history.ts";
+import { assertSameByMember } from "./same-by-member.ts";
 
 /**
  * **`timeline` の件数を守る**（Issue #1061）。
@@ -143,21 +144,37 @@ import { groupAt } from "../src/group-history.ts";
  * 上の表と違って「動いてよい数」である**——**`data/` を作り直し、
  * どの院が何件動いたかをコミットメッセージに書いてこの数を直す。**
  * **「赤いから」と検査を緩めないこと**（#943）。
+ *
+ * ## **この 6 本では守れないことが 1 つある**（Issue #1129）
+ *
+ * **突き合わせの走査を片側に縮めても、この 6 本は全部緑である**
+ * （**実測 2026-09-30、`data/` は `61770bd5`**）:
+ *
+ * | 当てた変異 | この 6 本 |
+ * |---|---|
+ * | `...Object.keys(derived)` を落とす | **pass 6 / fail 0** |
+ * | `...Object.keys(actual)` を落とす | **pass 6 / fail 0** |
+ *
+ * **`data/` がきれいなら、定義上どちらの側にも「片側だけのキー」は無い**——
+ * **だから「片側にしか無いキー」を見逃す壊れ方は、ここからは測れない。**
+ * **`assertSameByMember` は `test/same-by-member.ts` に出してあり、
+ * `test/same-by-member.test.ts` が fixture で両方向を固定している**（#1129）。
+ * **この 6 本が言えるのは「いまの `data/` が導出と一致している」ことだけである。**
  */
 const DATA = fileURLToPath(new URL("../../../data/", import.meta.url));
 
 /**
  * **導けない種別の母数**（`committeeRole` / `attendance`）。**議会ごとの内訳で固定する。**
- * **実測 2026-09-28。** **合計だけだと、院をまたいで入れ替わっても（衆 2,020 ＋ 参 5,322 が
- * 2,021 ＋ 5,321 になっても 7,342）気づけない**ので内訳を持つ（#1053 と同じ理由）。
+ * **実測 2026-10-04**（2026-09-28 は 衆 2,020 ＋ 参 5,322 = 7,342 だった）**。** **合計だけだと、院をまたいで入れ替わっても（衆 2,047 ＋ 参 5,323 が
+ * 2,048 ＋ 5,322 になっても 7,370）気づけない**ので内訳を持つ（#1053 と同じ理由）。
  */
 const UNDERIVABLE = {
-  committeeRoleByAssembly: { "diet-sangiin": 5322, "diet-shugiin": 2020 } as Record<string, number>,
+  committeeRoleByAssembly: { "diet-sangiin": 5323, "diet-shugiin": 2047 } as Record<string, number>,
   // **正直に書いておく: 合計の `assert` を丸ごと削る変異は落ちなかった**（**実測 2026-09-28。等価変異**——
   // **上の内訳の `deepEqual` が既に両方の数を固定しているから**。#1053 の `resultAbsent` と同じ）。
   // **残っている仕事は「この 2 つのキーが食い違ったら落ちる」ことだけで、そこは効いている**
   // （**実測 2026-09-28: ここを 7343 にすると `actual: 7342 / expected: 7343` で落ちた**）。
-  committeeRole: 7342,
+  committeeRole: 7370,
   // **参院の委員会の発議者だけに付く**（`dataset.ts`: `attendance row is allowed only for house=sangiin`）
   attendanceByAssembly: { "diet-sangiin": 24 } as Record<string, number>,
   attendance: 24,
@@ -223,30 +240,6 @@ const readBillsOnce = async (): Promise<Bill[]> =>
   Promise.all((await walkJson(join(DATA, "bills"))).map((f) => readJson<Bill>(f)));
 let billsScan: Promise<Bill[]> | undefined;
 const readBills = () => (billsScan ??= readBillsOnce());
-
-/**
- * **議員ごとの表を突き合わせて、食い違った議員だけを名指しする。**
- *
- * **`assert.deepEqual` を表そのものに当てると、落ちたときに 456 行が画面に出る**
- * （**実測 2026-09-28: 1 人の 105 件を消しただけで、`actual` と `expected` に
- * 456 人ぶんの数が並び、どこが違うのか読めなかった**）。
- * **狭い診断から出す**（#1053 の `resultAbsentByAssembly` と同じ考え方）——
- * **食い違いだけを `{議員id: {timeline: n, 導出: m}}` の形にして比べる。**
- * **一致していれば空の表どうしになるので、落ちない。**
- */
-const assertSameByMember = (
-  actual: Record<string, number>,
-  derived: Record<string, number>,
-  what: string,
-) => {
-  const diff: Record<string, { timeline: number; derived: number }> = {};
-  for (const id of new Set([...Object.keys(actual), ...Object.keys(derived)])) {
-    const a = actual[id] ?? 0;
-    const d = derived[id] ?? 0;
-    if (a !== d) diff[id] = { timeline: a, derived: d };
-  }
-  assert.deepEqual(diff, {}, `${what}（食い違った議員だけを出す。timeline = member ファイルの行数、derived = 導き元から数えた件数）`);
-};
 
 /**
  * **導出 1: 国会の採決**（`vote`）。

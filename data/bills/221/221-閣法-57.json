@@ -7,6 +7,16 @@
   "sangiin": "2026-06-11",
   "shugiin": "2026-04-10"
  },
+ "referral": {
+  "sangiin": {
+   "committee": "財政金融",
+   "date": "2026-06-15"
+  },
+  "shugiin": {
+   "committee": "財務金融",
+   "date": "2026-05-28"
+  }
+ },
  "result": {
   "lawNumber": "64",
   "promulgated": "2026-07-23",

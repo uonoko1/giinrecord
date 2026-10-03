@@ -29,7 +29,10 @@ make_repo() {
     mkdir -p data src
     echo 1 > data/a.json; echo 1 > src/app.ts; echo stale > data/old.json
     git add -A && git commit -qm A
-    echo 2 > data/a.json; echo new > data/new.json; git rm -q data/old.json; echo 2 > src/app.ts
+    # `rm` + 次行の `git add -A` で削除を載せる。**`git rm` は使わない**（#1123 で
+    # `destructive-git` 規則が `git rm` を持つようになった。ここは使い捨ての $TMP なので害は無いが、
+    # **規則は「$TMP の中か」をテキストからは判定できない**——判定できるふりをすると穴になる）。
+    echo 2 > data/a.json; echo new > data/new.json; rm data/old.json; echo 2 > src/app.ts
     git add -A && git commit -qm B )
   git clone -q --bare "$TMP/src" "$TMP/remote"
   A=$(git -C "$TMP/src" rev-parse HEAD~1); B=$(git -C "$TMP/src" rev-parse HEAD)

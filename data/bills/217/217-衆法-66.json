@@ -3,6 +3,12 @@
  "id": "217-衆法-66",
  "kind": "衆法",
  "number": 66,
+ "referral": {
+  "shugiin": {
+   "committee": "環境",
+   "date": "2026-01-23"
+  }
+ },
  "session": 217,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C16.htm",
  "status": "未了",
