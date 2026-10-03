@@ -382,6 +382,51 @@ test("#1137 artifact に入れるのは rsync する 1 ディレクトリだけ�
   );
 });
 
+/**
+ * #1137 のレビュー 3.: **artifact は 1 往復で 2 回まるごと動く**（分割前は同じ workspace の中に
+ * 在って、rsync が `-az` の差分だけ送っていた）。**だから圧縮を効かせる。**
+ *
+ * ── この PR の最初の版は `compression-level: 0` だった。実測が否定した ──────────
+ * 根拠は「中身の大半は既に圧縮済みの zip と、nginx が gzip で配る JSON。再圧縮しても縮まず
+ * CPU 時間だけ増える」だった。**前半が事実と違っていた**（2026-10-04 実測。
+ * `SITE_ORIGIN=… pnpm build` の出力 957 MB / 15,769 ファイル）:
+ *
+ * | | 実測 |
+ * |---|---:|
+ * | **既に圧縮済みのバイト**（`.zip` `.png` `.woff2` `.gz` `.br` `.ico` `.jpg`。377 件） | **46 MB / 901 MB = 5.1%** |
+ * | 残り（JSON / HTML / `.data`。15,392 件） | 855 MB = 94.9% |
+ * | `zip -0`（= `compression-level: 0`） | **908 MB** / 作成 33.8s / 展開 **20.1s** |
+ * | `zip -6`（= 既定） | **183 MB** / 作成 67.6s / 展開 **15.9s** |
+ *
+ * **「nginx が gzip で配る」は転送時の話で、artifact の中では非圧縮のまま置かれる。**
+ * 圧縮済みなのは 5.1% しかなく、残りの 94.9% は **5.0 分の 1** に縮む。
+ *
+ * **往復のバイト数**: level 0 は 1,815 MB、level 6 は 367 MB（**1,448 MB の差**）。
+ * **しかも level 6 のほうが展開も速い**（15.9s < 20.1s。読むバイトが 5 分の 1 なので、
+ * 伸長の CPU より I/O の節約が勝つ）。**払うのは build 側の +33.8s だけである。**
+ *
+ * だから **`compression-level` を既定（6）に戻し、`0` を禁じる**。
+ * **`0` を書くと往復が 5 倍になり、deploy 側の timeout に一番近い仕事が重くなる。**
+ */
+test("#1137 artifact を非圧縮（compression-level: 0）で往復させない", () => {
+  const builder = jobs.find((j) => /actions\/upload-artifact@/.test(j.body) && buildsCode(j.body));
+  assert.ok(builder, "ビルドして upload-artifact する job が無い");
+  const level = builder.body.match(/^\s*compression-level:\s*(\d+)\s*$/m)?.[1];
+  assert.notEqual(
+    level,
+    "0",
+    "upload-artifact に `compression-level: 0` が付いている。**実測（2026-10-04）では既定の 6 のほうが" +
+      "往復 183 MB（level 0 は 908 MB）で、展開も速い（15.9s < 20.1s）。** 既に圧縮済みの中身は" +
+      "全体の 5.1% しかない（46 MB / 901 MB）。上の docblock の表を見よ",
+  );
+  // 低い値（1〜3）も禁じない代わりに、書くなら docblock の表に根拠が要る。
+  // ここで固定するのは「0 でないこと」だけにする（6 を assert すると、将来 1〜3 で測り直したときに
+  // 実測より検査が強くなる）。
+  if (level !== undefined) {
+    assert.ok(Number(level) >= 1 && Number(level) <= 9, `compression-level が範囲外: ${level}`);
+  }
+});
+
 test("#1137 / #134 workflow_call の outputs.sha は、ビルドした commit まで辿れる（release.yml が使う）", () => {
   const src = read("deploy-site.yml");
   const m = src.match(/^\s+sha:\s*\n(?:\s+description:[^\n]*\n)?\s+value: \$\{\{ jobs\.([A-Za-z0-9_-]+)\.outputs\.sha \}\}$/m);
