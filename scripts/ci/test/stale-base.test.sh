@@ -729,6 +729,29 @@ t_freshness_non_utc_offset_is_not_compared_as_a_string() {
   assert_contains "$OUT" "測れません" "「測れなかった」と言う（黙って通さない）"
 }
 
+t_freshness_trailing_garbage_after_the_Z_is_not_a_pass() {
+  # **形の検査の末尾の `$` が効いていることを固定する**（#1156 の再レビュー）。
+  # `^…Z$` の `$` を外すと、**`Z` の後ろに何が付いていても形の検査を通る。**
+  # しかもその「何か」は文字列比較で**大きい**側に働くので、実時刻が巻き戻っていても
+  # `head > base` になり **rc=0 で緑**になる——`+09:00` を弾く case は `Z` が
+  # 無いので先に落ち、ここには届かない。
+  # **実測（再レビューの XJ）**: 末尾の `$` を外す変異は、この case が無いと
+  # **61 件すべて緑のまま生き残った。**
+  new_repo_with_data
+  g checkout -q main
+  write_meta '2026-09-29T23:59:47.817Z'
+  commit "data: refresh"
+  g update-ref refs/remotes/origin/main main
+  branch_from main topic
+  # 実時刻は base と同じ瞬間だが、末尾にゴミが付いている。**文字列としては base より大きい**
+  # ので、形の検査が緩むと「進んでいる」と読まれて緑になる。
+  write_meta '2026-09-29T23:59:47.817Z-but-actually-rolled-back'
+  commit "Z の後ろにゴミが付いた時刻"
+  run --data-freshness origin/main topic
+  assert_eq 1 "$STATUS" "Z の後ろのゴミを ok と言わない（末尾の \$ が効いている）: $OUT"
+  assert_contains "$OUT" "測れません" "「測れなかった」と言う（黙って通さない）"
+}
+
 t_freshness_invalid_json_is_not_a_pass() {
   new_repo_with_data
   branch_from main topic
@@ -958,6 +981,46 @@ t_freshness_default_args_are_origin_main_and_head() {
   assert_contains "$OUT" "origin/main" "既定の base は origin/main"
 }
 
+t_freshness_works_in_a_bare_repo_without_an_index() {
+  # **作業ツリーも index も無いリポジトリで、本物の巻き戻しを見つけられること**（再レビューの (c)）。
+  #
+  # なぜこの fixture が要るか: `git ls-tree` を `git ls-files` に差し替える変異は、
+  # ふつうの fixture では**ほぼ捕まらない**（実測 2/62、しかもその 2 件は `git` シムの
+  # 副産物で、実質 0 件）。`ls-files` は index を読み、fixture では index がツリーと
+  # 一致しているので**偶然同じ答えになる**。
+  #
+  # **bare なリポジトリでは答えが分かれる**（実測）:
+  #   git ls-tree -r --name-only main   → data/meta.json, data/districts/meta.json
+  #   git ls-files                      → **何も出ない（index が無い）**
+  # そのため `ls-files` 版は本物の巻き戻しを
+  #   「対象外 — どちらにも対象の meta.json がありません」**rc=0（緑）**
+  # にする（実測）。**(a) と同型の「測れなかったが緑になる」穴。**
+  # ここを固定すると、`ls-files` 化の変異が初めて本当に捕まる。
+  #
+  # （`git ls-files --with-tree=<tree>` ならツリーを読むので bare でも答えは一致する。
+  #  つまり差し替えが**必ず**穴になるわけではないが、素朴な `ls-files` は穴になる。）
+  local bare="$TMP/bare"
+  rm -rf "$bare"; mkdir -p "$bare"
+  # まず普通のリポジトリを作る: main が月次で districts を進め、topic は進める前の枝。
+  new_repo_with_nested_data
+  branch_from main topic
+  g checkout -q main
+  write_meta_at data/districts/meta.json '2026-10-01T00:00:00.000Z'
+  commit "data: districts（月次）"
+  g update-ref refs/remotes/origin/main main
+  # bare に clone する。**作業ツリーも index も無い。**
+  git clone -q --bare "$W" "$bare/repo.git"
+  git -C "$bare/repo.git" update-ref refs/remotes/origin/main refs/heads/main
+  assert_eq "true" "$(git -C "$bare/repo.git" rev-parse --is-bare-repository)" "前提: bare である"
+  assert_eq "" "$(git -C "$bare/repo.git" ls-files)" "前提: index が無い（ls-files は何も見ない）"
+  set +e
+  OUT=$(cd "$bare/repo.git" && bash "$SCRIPT" --data-freshness refs/remotes/origin/main topic 2>&1); STATUS=$?
+  set -e
+  assert_eq 1 "$STATUS" "bare でも本物の巻き戻しを見つける（ツリーを読んでいる）: $OUT"
+  assert_contains "$OUT" "data/districts/meta.json" "どのファイルが古いか名指しする"
+  assert_not_contains "$OUT" "対象外" "「対象の meta.json がありません」と言って黙らない"
+}
+
 t_freshness_unlistable_tree_is_not_zero_targets() {
   # **`|| :` が `ls-tree` の失敗まで飲んでいないこと。**
   # `ls-tree | tr | grep || :` と一息に書くと、`grep` の「0 件」（pipefail で rc=1）を
@@ -1131,6 +1194,7 @@ test_case "fetchedAt が無い → 「測れません」と言って落ちる（
 test_case "日付として解釈できない → 「測れません」と言って落ちる（#1158）" t_freshness_unparseable_timestamp_is_not_a_pass
 test_case "JSON として読めない → 「測れません」と言って落ちる（#1158）" t_freshness_invalid_json_is_not_a_pass
 test_case "UTC 以外の綴り（+09:00）は文字列比較の前提を崩すので通さない（#1156）" t_freshness_non_utc_offset_is_not_compared_as_a_string
+test_case "Z の後ろにゴミが付いた時刻を通さない（末尾の \$ が効いている、再レビュー XJ）" t_freshness_trailing_garbage_after_the_Z_is_not_a_pass
 test_case "両側に data/meta.json が無いなら対象外（#1156）" t_freshness_no_meta_on_either_side_is_not_this_checks_business
 test_case "base に在って head で消えている → 「測れません」（消せば黙る穴を作らない、#1156）" t_freshness_base_has_meta_but_head_deleted_it_is_measured
 test_case "--data-freshness も解決できない ref を通さない（#1156）" t_freshness_rejects_an_unresolvable_ref
@@ -1143,6 +1207,7 @@ test_case "古いものを全部挙げる（1 件で打ち切らない、#1156 �
 test_case "入れ子のファイルを消しても「測れません」（黙らせる穴を塞ぐ、#1156 レビュー）" t_freshness_nested_file_deleted_in_head_is_unmeasurable
 test_case "既定の対象が 1 件に縮んでいない（#504 の形、#1156 レビュー）" t_freshness_wiring_does_not_narrow_to_one_file
 test_case "引数なしなら origin/main と HEAD（レビューの X1/X2）" t_freshness_default_args_are_origin_main_and_head
+test_case "bare（index が無い）でも本物の巻き戻しを見つける（再レビュー (c)、ls-files 化を捕まえる）" t_freshness_works_in_a_bare_repo_without_an_index
 test_case "ツリーを列挙できないのを「対象 0 件」として通さない（|| : が ls-tree の失敗を飲まない）" t_freshness_unlistable_tree_is_not_zero_targets
 test_case "引数が多すぎるときは usage で落ちる（レビューの X4）" t_freshness_too_many_args_is_usage_not_a_pass
 echo "passed $PASS, failed $FAIL"; [[ $FAIL == 0 ]]
