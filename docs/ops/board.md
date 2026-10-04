@@ -313,28 +313,35 @@ scripts/po/merge-when-green.sh --no-review 'レビュアーを立てられない
 
 **母数**（実測 2026-09-21、直近 12 件のマージ済み PR は全部同じ）:
 **1 PR につき check-run は 7 件**——`audit` / `check` / `docker-web` / `forbidden-patterns` /
-`gitleaks` / `pr-closes` / `stale-base`。
+`gitleaks` / `pr-closes` / `stale-base`（**#1162 で `stale-base-net-deletions` が増えて 8 件**）。
+**#1162 で `stale-base` job を 2 つに割ったので、いまは 8 件**（`stale-base-net-deletions` が増えた）。
 
 | | 名前 | 赤いとき |
 |---|---|---|
-| **必須 5 件** | `check` `gitleaks` `forbidden-patterns` `audit` `pr-closes` | **絶対にマージしない**（`--allow-nonrequired-red` でも通らない） |
-| **必須でない 2 件** | `stale-base` `docker-web` | 何がどう赤いかと**その job のログの URL**を出して**既定では止まる**。`--allow-nonrequired-red` があるときだけ、読み上げてからマージする |
+| **必須 6 件** | `check` `gitleaks` `forbidden-patterns` `audit` `pr-closes` `stale-base` | **絶対にマージしない**（`--allow-nonrequired-red` でも通らない） |
+| **必須でない 2 件** | `stale-base-net-deletions` `docker-web` | 何がどう赤いかと**その job のログの URL**を出して**既定では止まる**。`--allow-nonrequired-red` があるときだけ、読み上げてからマージする |
 | 一覧に無い名前 | （新しい job） | **必須として扱い**、「知らない検査がある」と言う |
 
 **線引きは「赤いが通してよい状態が、正常に起こりうるか」である。**
 
-- **`stale-base` は起こる。** 2 つ目の step（`--net-deletions`、#836）は #846 の担当者自身が
+- **`stale-base-net-deletions`（#836）は起こる。** #846 の担当者自身が
   **「合図であって証拠ではありません（4 件中 2 件が本物）」**と書いている。**実地 5 件中 3 件が
   「通してよい」側だった。** **PR #856 がこれで詰まり、PO が手で `gh pr merge` を打った。**
   **これが #858 の本題である。**
+- **`stale-base`（既定モード #536）は起こらない。** **main が足した行が枝から消えている**のだから、
+  通してよい理由が無い（rebase すれば緑になる）。**#1162 までこの 2 つは同じ job に在り、
+  check-run 名が 1 つだった**ので、**`--allow-nonrequired-red` を 1 回使うと両方が一緒に通った。**
+  **job を割り、名前を分けた。** **`--data-freshness`（#1156、`data/` の巻き戻し）も
+  同じ理由で必須側の `stale-base` job に入る**（#1161 のマージ後）。
 - **`pr-closes` は起こらない。** 「本文に `Closes #N`（または『Closes なし（理由）』）を書いたか」
   を見るだけで、**赤いなら本文を直せば緑にできる。** だから必須のまま。
 - **`docker-web` は起こりうる**（環境要因で落ちることがある）が、**赤は本物のことが多い**
   ——nginx の設定・CSP・SPA フォールバックの壊れは、**ここでしか見ていない**。
 
 **GitHub の branch protection に登録されているのは 4 件**（`check` / `gitleaks` /
-`forbidden-patterns` / `audit`。実測）。**`pr-closes` は登録できない**（PR 本文依存なので
-「全 PR が永久に pending」になる。理由は
+`forbidden-patterns` / `audit`。実測 2026-10-03 も同じ 4 件で、**`stale-base` は入っていない**
+——`has_stale_base: false`）。**`pr-closes` と `stale-base` は登録していない**
+（`pr-closes` は PR 本文依存なので「全 PR が永久に pending」になる。理由は
 `packages/etl/test/branch-protection-jobs.test.ts` の `EXEMPT_FROM_REQUIRED`）が、
 **この道具は GitHub より厳しくてよい**ので必須として扱っている。**逆は許されない**
 ——GitHub が必須にしているものをここで外すと、道具が保護を跨ぐことになる。
@@ -346,14 +353,14 @@ scripts/po/merge-when-green.sh <pr>                           # まずこれ。�
 scripts/po/merge-when-green.sh --allow-nonrequired-red <pr>   # 読んだうえで通す
 ```
 
-**止まったときの出力**（`stale-base` だけが赤い＝#856 の形）:
+**止まったときの出力**（`stale-base-net-deletions` だけが赤い＝#856 の形）:
 
 ```
-[..] 検査 7 件 / 必須 5 件 / 赤 1 件（必須の赤: なし / 必須でない赤: stale-base (failure)）
-error: checks failed on PR #12: stale-base (failure)
-       これは必須の検査ではありません（必須 5 件は全部緑）。GitHub はマージを許します。
+[..] 検査 8 件 / 必須 6 件 / 赤 1 件（必須の赤: なし / 必須でない赤: stale-base-net-deletions (failure)）
+error: checks failed on PR #12: stale-base-net-deletions (failure)
+       これは必須の検査ではありません（必須 6 件は全部緑）。GitHub はマージを許します。
        **なぜ赤いのかを読んでから**判断してください。赤い検査のログ:
-         stale-base (failure): https://github.com/.../actions/runs/.../job/...
+         stale-base-net-deletions (failure): https://github.com/.../actions/runs/.../job/...
        手元で読むなら:
          gh pr checks 12
          gh run view --log-failed --job <上の URL 末尾の数字>
@@ -371,10 +378,18 @@ error: checks failed on PR #12: stale-base (failure)
 **ログは後から「何が起きたか」を読む唯一の記録**なので、そこに嘘を混ぜない:
 
 ```
-[..] 必須でない検査が赤いまま進みます（--allow-nonrequired-red）: stale-base (failure)
+[..] 必須でない検査が赤いまま進みます（--allow-nonrequired-red）: stale-base-net-deletions (failure)
 [..] 赤い検査のログ:
-         stale-base (failure): https://github.com/.../job/...
-[..] 必須 5 件は緑。stale-base (failure) を赤いまま通してマージします
+         stale-base-net-deletions (failure): https://github.com/.../job/...
+[..] 必須 6 件は緑。stale-base-net-deletions (failure) を赤いまま通してマージします
+```
+
+**`stale-base`（既定モード）や `--data-freshness` の赤は、このフラグでも通らない**（#1162）:
+
+```
+[..] 検査 8 件 / 必須 6 件 / 赤 1 件（必須の赤: stale-base / 必須でない赤: なし）
+error: checks failed on PR #12: stale-base
+       必須の検査が赤いので、マージしません。--allow-nonrequired-red では通せません。
 ```
 
 **「必須でないから無視してよい」ではない。**
@@ -643,7 +658,7 @@ git push                             → 動く（git プロトコル）
 
 | コマンド | すること | 終了コード |
 |---|---|---|
-| `scripts/po/merge-when-green.sh [--allow-nonrequired-red] [--no-review <理由>] <pr>` | OPEN かつ非 draft を確認 → **レビュアーの報告が PR のコメントに在ることを確認**（#1006。`.claude/agents/reviewer.md` の結論の語 `マージしてよい` / `直してから` / `反対` のどれかを含むコメントが 1 件以上。**無ければ検査を待たずにその場で終了**し、母数（見たコメントの件数）を出す。`--no-review <理由>` で飛ばせるが**理由は省略できず、ログに残る**） → BEHIND なら `gh pr update-branch` → `gh pr checks` を 20 秒ごと最大 60 回（20 分）見て、全部 pass/skipping になったら `gh pr merge --squash --delete-branch`。**必須の検査**（`check` / `gitleaks` / `forbidden-patterns` / `audit` / `pr-closes`）が 1 つでも赤なら何もせず終了（`--allow-nonrequired-red` があっても）。**必須でない検査**（`stale-base` / `docker-web`）だけが赤いときは、何がどう赤いかと**その job のログの URL**を出したうえで既定では終了し、`--allow-nonrequired-red` があるときだけ読み上げてからマージする（#858）。一覧に無い名前は必須として扱い、そのことを言う。赤いまま通した場合は「all N checks green」とは言わない。head が `data/refresh` のときだけ、待っている間に `action_required` の run を承認する（他のブランチでは承認しない）。`gh pr merge` が非ゼロで返っても PR の state を読み直し、検査した HEAD がそのまま MERGED なら成功として終わる（#434。UNKNOWN のときマージ成功でも非ゼロが返る／`--delete-branch` のローカル削除が worktree に阻まれる） | 0 マージ済 / 1 失敗・タイムアウト / 2 引数エラー |
+| `scripts/po/merge-when-green.sh [--allow-nonrequired-red] [--no-review <理由>] <pr>` | OPEN かつ非 draft を確認 → **レビュアーの報告が PR のコメントに在ることを確認**（#1006。`.claude/agents/reviewer.md` の結論の語 `マージしてよい` / `直してから` / `反対` のどれかを含むコメントが 1 件以上。**無ければ検査を待たずにその場で終了**し、母数（見たコメントの件数）を出す。`--no-review <理由>` で飛ばせるが**理由は省略できず、ログに残る**） → BEHIND なら `gh pr update-branch` → `gh pr checks` を 20 秒ごと最大 60 回（20 分）見て、全部 pass/skipping になったら `gh pr merge --squash --delete-branch`。**必須の検査**（`check` / `gitleaks` / `forbidden-patterns` / `audit` / `pr-closes` / `stale-base`。**`stale-base` は #1162 で必須側に移った**）が 1 つでも赤なら何もせず終了（`--allow-nonrequired-red` があっても）。**必須でない検査**（`stale-base-net-deletions` / `docker-web`）だけが赤いときは、何がどう赤いかと**その job のログの URL**を出したうえで既定では終了し、`--allow-nonrequired-red` があるときだけ読み上げてからマージする（#858）。一覧に無い名前は必須として扱い、そのことを言う。赤いまま通した場合は「all N checks green」とは言わない。head が `data/refresh` のときだけ、待っている間に `action_required` の run を承認する（他のブランチでは承認しない）。`gh pr merge` が非ゼロで返っても PR の state を読み直し、検査した HEAD がそのまま MERGED なら成功として終わる（#434。UNKNOWN のときマージ成功でも非ゼロが返る／`--delete-branch` のローカル削除が worktree に阻まれる） | 0 マージ済 / 1 失敗・タイムアウト / 2 引数エラー |
 | `scripts/po/board-set.sh <issue> <Backlog\|Ready\|In Progress\|In Review\|Done>` | Issue のボード上の item を探し（無ければ追加し）、Status を設定 | 0 / 1 / 2 |
 | `scripts/po/verify-site.sh [production\|staging\|all]` | `ssh $VPS_SSH_HOST`（既定 `giinops`）で VPS 内から主要 URL（`/`, `/about/`, `/terms`, `/privacy`, `/members/`, `/rollcalls/`, `/assemblies/`, `/data/meta.json`, `/sitemap.xml`）の HTTP コードと `<title>` を一覧する（読み取りのみ。PO 手元の curl が 000 を返す問題の回避、#182）。production は `curl --resolve giinrecord.jp:443:127.0.0.1`（証明書検証あり）。staging は host nginx が Cloudflare 以外を 403 にする（#163）ので、コンテナのポート `127.0.0.1:8083` に `Host: staging.giinrecord.jp` で当てる（デプロイ済みビルドの確認であり、Access の確認ではない） | 0 = 全部 200 / 1 = 200 以外あり（行末に `NG`）/ 2 引数エラー |
 | `scripts/po/board-audit.sh [--fix]` | ボードと Issue と PR の食い違いを 5 種類列挙する（既定は読むだけ）。`Closes/Fixes/Resolves #N` の形に限り、`gh pr view` で MERGED を個別に確認してから閉じる。母数（Issue / ボード項目 / マージ済み PR の件数と、閉じる語がある PR の本数、`In Progress` の内訳）を必ず出す。`inprogress-no-trace`（#809）は**列挙するだけで `--fix` でも直さない**（`STALE_HOURS` 既定 24）。**`--fix` は直したことを `docs/ops/board-audit-log.tsv` に追記する**（#919。`BOARD_AUDIT_LOG` で移せる） | 0 = 食い違い 0 / 1 = 食い違いあり（`--fix` なら残ったものあり）/ 2 引数エラー / 4 母数が 0（読めていない）/ 5 台帳に書けなかった |

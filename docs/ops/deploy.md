@@ -183,8 +183,14 @@ Issue `[monitor] repo: main の保護設定を読めない` が**自動で閉じ
 `packages/etl/test/branch-protection-jobs.test.ts` が、bash の sed/grep ではなく
 YAML のインデント規則で job を数え上げ、**双方向**に突き合わせる:
 (A) pull_request で走る job のうち、許容リスト（`docker-web` / `stale-base` /
-branch-protection.yml 自身の `guard`）に無いものは全部必須チェックに入っている、
+`stale-base-net-deletions` / branch-protection.yml 自身の `guard`）に無いものは
+全部必須チェックに入っている、
 (B) 必須チェックの各要素は実在する job に対応している。
+
+**#1162 で 1 つ足した**: **`merge-when-green.sh` が「必須でない」と呼んでいる job 名の本文に、
+「赤いなら絶対に通してはいけない」検査の起動が混ざっていないこと。**
+**check-run 名は job 名なので、step をどう置くかが `--allow-nonrequired-red` の
+効く範囲を決める**——`ci.yml` だけを読んでも、`merge-when-green.sh` だけを読んでも分からない。
 job を**改名**しても**丸ごと消して**も、どちらも落ちることを実測済み
 （旧 bash 版は「消す」方向だけ通ってしまっていた——消すと突き合わせる側の集合が痩せ、
 部分集合の判定が自動的に満たされるため。#521 の review が見つけた）。

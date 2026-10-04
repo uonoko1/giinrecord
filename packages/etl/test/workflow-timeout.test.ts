@@ -290,6 +290,10 @@ test("#556 数え上げ: jobs: 直下の job を全部拾えている（拾え�
     "ci.yml:check",
     "ci.yml:docker-web",
     "ci.yml:stale-base",
+    // #1162: `--net-deletions` を `stale-base` から割った job。**check-run 名は job 名**なので、
+    // step として同居していると `merge-when-green.sh --allow-nonrequired-red` が
+    // 「赤いまま読んで通す契約」の赤と「絶対に通してはいけない」赤を一緒に通す。
+    "ci.yml:stale-base-net-deletions",
     "deploy-data.yml:production",
     "deploy-data.yml:resolve",
     "deploy-data.yml:staging",
@@ -361,6 +365,12 @@ test("#556 uses: の job に timeout-minutes を書かない（GitHub が受け�
  *                                                                    再測。ref 0f734507 以降**。#1056）
  *   ci.yml:docker-web               53    82    99   110   114s  → 20 分（max の 10.5 倍。2026-09-27 再測）
  *   ci.yml:stale-base               17     6     8    10    10s  → 10 分
+ *   ci.yml:stale-base-net-deletions  0     —     —     —     —    → 10 分（**#1162 で割った。
+ *                                                                    CI 実測は 0 本。** `stale-base`
+ *                                                                    と同じ `fetch-depth: 0` の
+ *                                                                    checkout + 同じスクリプトの
+ *                                                                    別モードなので同値を置いたが、
+ *                                                                    **これは測った値ではない**）
  *   pr-body.yml:pr-closes           32     6     7     9    77s  → 10 分（**2026-09-27 再測。max が
  *                                                                    10 → 77s**。**p90 は 9s で、
  *                                                                    max はランナー待ちの裾**。#1056）
@@ -467,6 +477,7 @@ test("#556 uses: の job に timeout-minutes を書かない（GitHub が受け�
  * `security.yml:forbidden-patterns` 12→12 / `security.yml:audit` 25→17 /
  * `security.yml:gitleaks` 48→16）。**`ci.yml:stale-base` と `security.yml:issue-secrets` は
  * この測り直しで n を取っていない**（前者は #556 の n=17 のまま、後者は CI 実測がまだ 0 本）。
+ * **#1162 で足した `ci.yml:stale-base-net-deletions` も CI 実測 0 本である。**
  *
  * **どれも `timeout-minutes` を破っていない**（最悪は `link-check` の 3.6 倍）。
  * **＝いま落ちる問題は 1 つも無い。腐っているのは「余裕がどれだけあるか」の読みだけである。**
@@ -509,6 +520,11 @@ test("#556 値が実測から外れていない（短すぎる = 偽陽性 / 長
     // #1056: 実測 min 82 / med 99 / p90 110 / max 114s（n=53、2026-09-27）。max の 10.5 倍。
     "ci.yml:docker-web": 20,
     "ci.yml:stale-base": 10,
+    // #1162: **実測 0 本。** `stale-base` から割った job で、同じ `fetch-depth: 0` の checkout と
+    // 同じスクリプトの別モードを走らせるので同値の 10 分を置いた。**「腐っていない」ではなく
+    // 「測っていない」である**（#1056 と同じ区別。`ci.yml:stale-base` 自身も #556 の n=17 のまま）。
+    // **CI で走り始めたら上の表に n を足すこと。**
+    "ci.yml:stale-base-net-deletions": 10,
     // #793 / #1039 / #1056: **実測値は上の表が持つ**（ここに「min 6 / med 8 / max 10s」と
     // 書いてあったが、**同じファイルの上の表は max 77s** で 7.7 倍食い違っていた。#1056 の
     // レビューが見つけた: `pr-body.yml` から数を消したとき、**「2 か所」が「同じファイルの中で
