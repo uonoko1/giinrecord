@@ -28,8 +28,9 @@ GitHub Actions  security-alerts.yml ──毎日 06:53 JST──▶ GitHub 自�
 | check | 条件 | 失敗時に疑うもの |
 |---|---|---|
 | `http` | `/`・`/members/`・`/assemblies/`・`/data/meta.json` が 200、HTML の `<title>` に『議員レコード』。加えて**議会ページ `/assemblies/{id}`**（#248、下記） | コンテナ停止（502）、ホスト nginx 停止、rsync 先が空（404）、DNS、プリレンダー漏れ |
-| `data` | `meta.fetchedAt`（トップレベル＝ETL 実行時刻）が 48 時間以内 | `etl.yml` の失敗、data PR が未マージ、`deploy-data.yml` の失敗 |
+| `data` | `meta.fetchedAt`（トップレベル＝ETL 実行時刻）が 48 時間以内。**古いときは main 側も読んで、どちら側の故障かを理由に書く**（#1185、下記） | 理由が `main も古い` → ETL 側 / `main は新しい` → deploy 側 / `main を読めなかった` → **まだ分かっていない** |
 | `tls` | 証明書の残り 14 日以上 | certbot の自動更新が止まっている（`sudo certbot renew --dry-run`） |
+| `deploy` | **production のみ。** main に `data/` が入ってから **30 分**以内に `deploy-data.yml` の run が始まったか（#1185） | ETL が落ちて dispatch が起きず、`on: push` も GITHUB_TOKEN のマージでは発火しない窓 |
 
 - production は `*/10`、staging は毎時 7 分（両方 `workflow_dispatch` 可）。
 - staging は Cloudflare Access の裏（#163）：repo secrets `CF_ACCESS_CLIENT_ID` / `CF_ACCESS_CLIENT_SECRET`（Service Token）でヘッダを付けて
@@ -37,6 +38,25 @@ GitHub Actions  security-alerts.yml ──毎日 06:53 JST──▶ GitHub 自�
 - **2 回連続**（60 秒空けて再試行）で失敗した check だけ Issue にする（`deploy/monitor/run.sh`）。1 回だけの失敗は run のログに残るのみ。
 - Issue は title `[monitor] production: http` のように **環境 × check で 1 つ**。同名の open Issue があれば作らない（`deploy/monitor/report.sh`）。check が通れば「Recovered」コメントを付けて close する。
 - 本文に書くのは環境名・check・理由（パスと HTTP status、経過時間、残日数）・run へのリンクだけ。
+- **鳴り続けているあいだ、Issue は黙らない（#1185）。** 毎 round（10 分ごと）**開いている Issue に経過をコメントする**
+  （何時間続いているか・いまの理由・報告が入った回数の**下限**）。**6 時間**（`MONITOR_ESCALATE_HOURS`）を越えたら
+  **題の末尾に `— Nh 継続` を足し、ラベル `escalated` を付ける**——**改題もラベルも Issue の一覧で見える**ので、
+  1 本開けば「1 回目か 50 回目か」が分かる。**改題は 1 回だけ**（10 分ごとに改題すると通知で埋もれる）。
+  復旧時は `escalated` を外して題を素に戻してから閉じる。
+
+#### どちら側の故障か（`data` が失敗したとき・#1185）
+
+**「main も古い」と「main は新しいのに出ていない」は原因も対処も別**なので、理由に名指しする。
+
+| 理由に出る語 | 意味 | やること |
+|---|---|---|
+| `main も古い (Nh) → ETL 側` | main の `data/meta.json` も 48h より古い | ETL を見る（`etl.yml` の run、#1175 / #1179） |
+| `main は新しい (Nh) のに本番は (Mh) → deploy 側` | main には新しいデータが在るが本番に出ていない | `deploy-data.yml` を `workflow_dispatch` で起動する |
+| `main を読めなかった (…)` | **まだ分かっていない。** raw が落ちた・`fetchedAt` が壊れた・読み先が未設定 | **「古くない」と読まないこと。** 両方を調べる |
+
+- main 側は `raw.githubusercontent.com/<repo>/main/data/meta.json` を読む（`PROBE_MAIN_META_URL`）。
+- **`data` が通っているときは main を読まない。** 切り分けは失敗時の情報で、可用性の判定には使っていない
+  ——だから **raw が落ちていても監視は赤くならない**し、**落ちたことは `data` が失敗した時点で理由に出る**（黙らない）。
 
 #### 議会ページの監視（#248）
 
@@ -222,7 +242,11 @@ ssh "$VPS_SSH_HOST" 'sudo mv /etc/cron.d/giinrecord-monitor /root/giinrecord-mon
 | Monitor が失敗したが Issue が無い | 1 回目だけ失敗（2 回目で回復） | 何もしない。続くなら run のログを見る |
 | `[monitor] production: tls` | certbot の自動更新失敗 | `sudo certbot renew`、`systemctl list-timers \| grep certbot` |
 | `[monitor] production: data` と `[monitor] vps: site-production` が同時 | ETL か deploy-data の失敗（データが届いていない） | Actions の ETL / Deploy data |
-| `[monitor] production: data` だけ（vps 側は OK） | rsync は届いたが `fetchedAt` が古い＝ETL は走ったがデータを更新していない | ETL のログ |
+| `[monitor] production: data` だけ（vps 側は OK） | rsync は届いたが `fetchedAt` が古い＝ETL は走ったがデータを更新していない | **まず Issue の理由を読む**（`main も古い` / `main は新しい` / `main を読めなかった`。上の表） |
+| `[monitor] production: deploy` | main に `data/` が入って 30 分以上、`deploy-data.yml` が始まっていない | Actions → Deploy data を `workflow_dispatch` で起動 |
+| `[monitor] production: deploy` の理由が `測れなかった` | `gh run list` が落ちた（権限・レート・障害） | **「異常なし」ではない。** run の履歴を手で見る |
+| `[monitor] <env>: <check>` の本文が `no verdict` | check が判定に届く前に死んだ（probe が途中で落ちた） | **緑ではない。** run のログを見る（#1185） |
+| Issue に `escalated` ラベルと `— Nh 継続` | 6 時間以上続いている | **その N は実際の経過時間である。** 優先して見る |
 | log に `note: no token at …` | トークン未設置 | 初回セットアップ 3 |
 | log に `note: API … HTTP 401/403` | PAT 失効・権限不足（Issues: write が要る）・リポジトリ指定漏れ | PAT を作り直す |
 | log に `note: API … curl failed` | VPS からの outbound が不通 | 監視自体は続く。復旧後に自動で報告される |
@@ -244,4 +268,19 @@ ssh "$VPS_SSH_HOST" 'sudo mv /etc/cron.d/giinrecord-monitor /root/giinrecord-mon
 - 外部 check は `deploy/monitor/probe.sh` と `deploy/test/monitor-probe.test.sh`（curl/openssl/gh は stub）。
 - VPS check は `deploy/monitor/health.sh` と `deploy/test/monitor-health.test.sh`（docker/systemctl/df/curl は stub）。
 - セットアップは `deploy/monitor/setup.sh` と `deploy/test/monitor-setup.test.sh`（`MONITOR_SETUP_PREFIX`）。
+- `deploy` check は `deploy/monitor/deploy-started.sh`（同じ `monitor-probe.test.sh` が守る）。**N = 30 分の根拠は
+  そのファイルの冒頭に実測（母数つき）で在る。** 変えるなら測り直してそこを書き換える。
 - スケジュールは `monitor.yml`。staging の cron を変えたら job の `if:` の文字列も同じにする。
+
+### GitHub Actions の cron は「予定どおり」には走らない（実測・#1185）
+
+**閾値や safety net を設計するときの前提になるので、測った値を残す。**
+
+- `monitor.yml`（`*/10`、production）: **直近 300 本の schedule run を見て、窓 612.3h（2026-09-08T17:26Z〜2026-10-04T05:45Z）。
+  期待 3,674 本に対して実際 300 本＝実行率 8.2%。** 連続 run の間隔は p50 100.5 分 / p90 266.6 分 / max 456.6 分。
+  **1 日あたり 8〜15 本**（期待 144 本）。
+- `deploy-data.yml`（`30 21 * * *`、safety net）: **42 本・42 日ぶんを見て、24 時間以内に走らなかった日は 0 日。
+  ただし毎回遅れる**——21:30Z からの遅れは p50 約 126 分 / 最大 479 分で、**近日は 2〜3.5 時間遅れて日付をまたいでいる**。
+
+**だから「cron が N 分ごとに鳴る」を前提にした設計は書けない。** 10 分 cron でも**実際には 1〜7 時間空く**ので、
+「M 回連続で失敗したら」ではなく **経過時間（Issue の `createdAt` から）**でエスカレーションを決めている。

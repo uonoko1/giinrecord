@@ -24,6 +24,21 @@
 #          title check alone would pass; deploy/test/monitor-probe.test.sh pins both cases).
 #   data   meta.fetchedAt (top-level, the ETL's run time) is at most PROBE_MAX_AGE_HOURS (48) old — the daily ETL +
 #          deploy-data.yml is alive
+#          Issue #1185: **古いとき、原因が 2 つに分かれるのでどちらかを名指しする。**
+#            「main も古い」            → ETL が止まっている（#1175 / #1179 の領域）
+#            「main は新しいが出ていない」→ deploy が走っていない／届いていない
+#          **実測（#1185 の 93 時間）**: 2026-10-03T22:00Z の本番は fetchedAt `2026-09-29T23:59:47Z`（94h）で、
+#          **main の `data/meta.json` も同じ `2026-09-29T23:59:47Z` だった**
+#          （`git show 99dac9d7:data/meta.json`）。つまり今回は **前者（ETL 側）**で、
+#          `deploy-data.yml` は 09-29〜10-03 の毎日 success していた（`gh run list` で 5/5 本）。
+#          **報告がどちら側か言えなければ、見た人は毎回両方を調べ直すことになる。**
+#          どこから main を読むかは `PROBE_MAIN_META_URL` が決める（未設定なら読まない。
+#          **読まないことも理由に書く**——黙って従来どおりに倒すと、
+#          **区別する機能が無言で死んでいても誰も気づかない**。それが #1185 そのものの型）。
+#          **読めなかったときに「古くない」と解釈しない**（#1056）: 理由は `main を読めなかった` になり、
+#          **ETL 側とも deploy 側とも断定しない。**
+#          **本番が健康なときは main を読まない**（10 分ごとに外部へ 1 要求増やす理由が無く、
+#          読み先が落ちているだけで監視が赤くなるのも避ける。この経路は fail 時の切り分け専用）。
 #   tls    the certificate presented for the origin's host is valid for at least PROBE_TLS_MIN_DAYS (14) more days
 # Reasons contain only the path, the HTTP status, ages and day counts — never headers, bodies or addresses.
 # Issue #163: staging sits behind Cloudflare Access. With CF_ACCESS_CLIENT_ID / CF_ACCESS_CLIENT_SECRET set (a
@@ -39,6 +54,9 @@ MAX_AGE_HOURS=${PROBE_MAX_AGE_HOURS:-48}
 TLS_MIN_DAYS=${PROBE_TLS_MIN_DAYS:-14}
 TIMEOUT=${PROBE_TIMEOUT:-20}
 TITLE_MUST_CONTAIN=${PROBE_TITLE:-議員レコード}
+# #1185: main 側の data/meta.json をどこから読むか。**未設定なら読まない**（手元で probe.sh を
+# 叩いたときの振る舞いを変えない）。monitor.yml が raw の URL を渡す。
+MAIN_META_URL=${PROBE_MAIN_META_URL:-}
 ASSEMBLY_SAMPLE=${PROBE_ASSEMBLY_SAMPLE:-3}   # assembly pages fetched per run (#248); 0 = none
 
 # origin = https://<host> only (no path, no http): the paths are appended here and the host is reused for TLS
@@ -144,6 +162,38 @@ if [ "$ASSEMBLY_SAMPLE" -gt 0 ] && [ "$assemblies_ok" = 1 ]; then
 fi
 if [ ${#http_reasons[@]} -eq 0 ]; then ok http; else fail http "$(IFS=';'; echo "${http_reasons[*]}")"; fi
 
+# main_side_verdict <production age in hours> → one short phrase naming WHICH side is broken (#1185).
+# **出すのは 3 通りだけで、どれも「分からない」と区別が付くこと**:
+#   `main も古い (Nh)`        main の fetchedAt も limit より古い → ETL 側
+#   `main は新しい (Nh)`      main は limit 以内 → deploy 側（main に在るのに出ていない）
+#   `main を読めなかった (…)`  取れなかった／解釈できなかった／読み先が未設定 → **測れていない**
+# **理由に URL やホスト名を出さない**（OSS。Issue 本文に載る）。出すのは時間と、取れなかった理由の種別だけ。
+main_side_verdict() {
+  local prod_age=$1 code body fetched ep age
+  if [ -z "$MAIN_META_URL" ]; then
+    echo "main を読めなかった (読み先が設定されていない: PROBE_MAIN_META_URL)"; return 0
+  fi
+  body="$TMP/main-meta.json"
+  code=$(curl -sS --max-time "$TIMEOUT" -o "$body" -w '%{http_code}' "$MAIN_META_URL" 2>/dev/null) || code=000
+  if [ "$code" != 200 ]; then
+    echo "main を読めなかった (HTTP $code)"; return 0
+  fi
+  fetched=$(grep -o '"fetchedAt": *"[^"]*"' "$body" | head -1 | sed 's/.*: *"//; s/"$//')
+  ep=''
+  if [ -n "$fetched" ]; then ep=$(date -u -d "$fetched" +%s 2>/dev/null || true); fi
+  if [ -z "$ep" ]; then
+    echo "main を読めなかった (fetchedAt missing or unparseable)"; return 0
+  fi
+  age=$(( ($(date +%s) - ep) / 3600 ))
+  if [ "$age" -gt "$MAX_AGE_HOURS" ]; then
+    # **ETL 側**。main に新しいデータがそもそも無いので、deploy を起動しても何も変わらない。
+    echo "main も古い (${age}h) → ETL 側 (#1175 / #1179)"
+  else
+    # **deploy 側**。main には ${age}h のデータが在るのに、本番は ${prod_age}h。
+    echo "main は新しい (${age}h) のに本番は ${prod_age}h → deploy 側 (deploy-data.yml を起動)"
+  fi
+}
+
 # ---- data ----
 if [ "$meta_code" != 200 ]; then
   fail data "meta.json not fetched ($meta_code)"
@@ -155,7 +205,13 @@ else
     fail data "fetchedAt missing or unparseable"
   else
     age_h=$(( ($(date +%s) - fetched_epoch) / 3600 ))
-    if [ "$age_h" -le "$MAX_AGE_HOURS" ]; then ok data; else fail data "fetchedAt ${age_h}h old (limit ${MAX_AGE_HOURS}h)"; fi
+    if [ "$age_h" -le "$MAX_AGE_HOURS" ]; then
+      ok data
+    else
+      # #1185: 古いときだけ main 側を読み、**どちら側の故障かを名指しする。**
+      # **ここで「読めなかった」を「古くない」に倒さないこと**（#1056）。
+      fail data "fetchedAt ${age_h}h old (limit ${MAX_AGE_HOURS}h); $(main_side_verdict "$age_h")"
+    fi
   fi
 fi
 
