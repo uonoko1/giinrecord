@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync, statSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 
@@ -108,7 +109,7 @@ const ciTestFiles = (): string[] =>
 // **その場合は今の値を据え置く**（この規則は「離れすぎを詰める」ためのもので、
 // **緩める口実にしてはいけない**）。
 const WEB_TEST_FILES_MIN = 95; // 実測 2026-09-21: walk() で 98（− 3。#720 の規則）。**85 のままだと 13 本消しても落ちなかった**——#951 が session-roster-coverage の 2 本を足すついでに詰め直した（2026-09-13 は 87 本で「下げないので 85 のまま」と書いたが、その後 11 本増えたのに下限が動いていなかった）
-const ETL_TEST_FILES_MIN = 189; // 実測 2026-09-28: readdirSync で 192（− 3。#720 の規則）。**#1061 が published-timeline-count.test.ts を足して 191 → 192**（下限 188 → 189。**origin/main は既に 191 本で、直前のコメントの「190」は古かった**——置く前に数え直した）。以前: 実測 2026-09-28: readdirSync で 190（− 3。#720 の規則）。**#1036 が workflow-released-chain.test.ts を足して 189 → 190**（下限 186 → 187）。以前: 実測 2026-09-27（main 取り込み後）: readdirSync で 189（− 3。#720 の規則）。**#1050 が workflow-pr-body-edited.test.ts を足したぶんを詰め直した**（188 → 189）。**Contributors の誤帰属を止める workflow-commit-identity.test.ts を足して 187 → 188**（main を取り込む前は 186 → 187 だった。**main 側が 1 本増えていたので測り直した**）。以前: 実測 2026-09-25（#1017）: readdirSync で 184（− 3。#720 の規則）。#1017 が workflow-needs-resolve.test.ts を足して 183 → 184。**164 のままでは 20 本消しても落ちなかった**——#943 が 167 本の時点で置いてから main が 17 本増えたのに、下限だけが置き去りになっていた（#720 が詰めた「実数から離れたぶんだけ守っていない」がまた開いた）。以前の経緯: **#943 が workflow-data-pr-push.test.ts を足して 166 → 167**（下限 159 → 164）。**#951 が local-session-roster-coverage.test.ts を足して 165 → 166**（下限 159 → 161）。#928 が 156 → 157、**#901 が local-sessions-default.test.ts と local-cli-sessions.test.ts を足して 157 → 159**、高知の kochi-petition-branch.test.ts と kochi-widened-anchors.test.ts で 159 → 161、秋田の akita-vote-alignment.test.ts で 161 → 162。**139 のままだと 18 本消しても落ちなかった**
+const ETL_TEST_FILES_MIN = 200; // 実測 2026-10-04: readdirSync で 203（− 3。#720 の規則）。**#1190 が bills-optional-field-session-reach.test.ts を足して 202 → 203**（下限 189 → 200。**main を取り込み直して数え直した**——枝を切ったときは 201 本だったが、取り込み時点で 202 本に増えていた。**189 のままだと 12 本消しても落ちなかった**——#1061 が 189 に置いてから main が 10 本増えたのに下限が置き去りだった。#720 が詰めた「実数から離れたぶんだけ守っていない」がまた開いていた）。以前: 実測 2026-09-28: readdirSync で 192（− 3。#720 の規則）。**#1061 が published-timeline-count.test.ts を足して 191 → 192**（下限 188 → 189。**origin/main は既に 191 本で、直前のコメントの「190」は古かった**——置く前に数え直した）。以前: 実測 2026-09-28: readdirSync で 190（− 3。#720 の規則）。**#1036 が workflow-released-chain.test.ts を足して 189 → 190**（下限 186 → 187）。以前: 実測 2026-09-27（main 取り込み後）: readdirSync で 189（− 3。#720 の規則）。**#1050 が workflow-pr-body-edited.test.ts を足したぶんを詰め直した**（188 → 189）。**Contributors の誤帰属を止める workflow-commit-identity.test.ts を足して 187 → 188**（main を取り込む前は 186 → 187 だった。**main 側が 1 本増えていたので測り直した**）。以前: 実測 2026-09-25（#1017）: readdirSync で 184（− 3。#720 の規則）。#1017 が workflow-needs-resolve.test.ts を足して 183 → 184。**164 のままでは 20 本消しても落ちなかった**——#943 が 167 本の時点で置いてから main が 17 本増えたのに、下限だけが置き去りになっていた（#720 が詰めた「実数から離れたぶんだけ守っていない」がまた開いた）。以前の経緯: **#943 が workflow-data-pr-push.test.ts を足して 166 → 167**（下限 159 → 164）。**#951 が local-session-roster-coverage.test.ts を足して 165 → 166**（下限 159 → 161）。#928 が 156 → 157、**#901 が local-sessions-default.test.ts と local-cli-sessions.test.ts を足して 157 → 159**、高知の kochi-petition-branch.test.ts と kochi-widened-anchors.test.ts で 159 → 161、秋田の akita-vote-alignment.test.ts で 161 → 162。**139 のままだと 18 本消しても落ちなかった**
 const CI_TEST_FILES_MIN = 6; // 実測 2026-09-13: readdirSync で 7（− 1。母数が小さいので幅も小さく）
 
 test("#533: apps/web のテストファイル集合が下限を割らない（vitest の include glob を消しても足しても検出する）", () => {
@@ -263,6 +264,128 @@ test("#855 ci.yml が「本番 data/ に不変条件を当てるテスト」の�
   );
   // validateDataset は validateLocalAssemblies を内側で呼ぶ厳密な上位集合（理由はテスト本体の docblock）
   assert.ok(body.includes("validateDataset(DATA)"), "validateDataset を本番 data/ に当てていない（#855）");
+});
+
+/**
+ * Issue #1190: **「取り込む項目を増やしたら古い回次に遡る」を言うテストも、本数の下限では名指しできない。**
+ *
+ * **#855 とまったく同じ構造である**——`bills-optional-field-session-reach.test.ts` を消しても、
+ * **別のテストが 1 本増えていれば `ETL_TEST_FILES_MIN` は満たされる。**
+ *
+ * **なぜこのファイルを名指しする価値が在るか**: **#1136 は正しく実装され、テストも緑で、マージされた。
+ * それでも利用者には 4 日間ほとんど出なかった**（既定回次の内側 331/387 = 85.5% に対し、
+ * 外側 60/1,554 = 3.9%。**22.2 倍の差**）。**実装の正しさとデータの反映は別の事象で、
+ * 後者を見ている検査はこの 1 本だけである。**
+ *
+ * **ci.yml 側にも `test -f` を置いてある**（テストを消しても残る層。#504）。
+ * **ここはその ci.yml の行が今も在ることを、ci.yml ではないファイルから固定する。**
+ */
+test("#1190 ci.yml が「項目の遡りを本番 data/ から検出するテスト」の存在を要求している（消しても無言で緑にならない）", () => {
+  const ci = read(".github/workflows/ci.yml");
+  assert.ok(
+    ci.includes("test -f packages/etl/test/bills-optional-field-session-reach.test.ts"),
+    "ci.yml が bills-optional-field-session-reach.test.ts の存在を要求していない（#1190／#504）",
+  );
+  let body: string;
+  try { body = read("packages/etl/test/bills-optional-field-session-reach.test.ts"); } catch {
+    assert.fail(`packages/etl/test/bills-optional-field-session-reach.test.ts が無い（#1190）。
+**本数の下限では止まらない**（何か 1 本増えれば埋まるので、このファイルを名指しできない）。
+取り込む項目が既定回次の外に遡っていない形（#1136 の signature）を見ている唯一のものなので、
+消すなら理由をここに書くこと。`);
+  }
+  // **本番の data/ を指していること。** 一時ディレクトリに当てても、コミット済みの data/ は見ていない。
+  assert.ok(
+    body.includes('fileURLToPath(new URL("../../../data/", import.meta.url))'),
+    "bills-optional-field-session-reach.test.ts がコミット済み data/ を読んでいない（#1190）",
+  );
+  // **既定回次の内外で分けていること。** 全件の割合だけを見ても、境界が回次と一致している形は見えない。
+  assert.ok(
+    body.includes("DEFAULT_SESSIONS"),
+    "bills-optional-field-session-reach.test.ts が DEFAULT_SESSIONS の内外で数えていない（#1190）",
+  );
+  // **ここまでは「綴りが在るか」しか見ていない。**
+  // **レビュアーの変異 Y**: 上の 2 つの綴りだけ残した **9 行の no-op** に差し替えると、
+  // `test -f` も 2 つの grep も通り、**etl 全体が全緑になる**（実測。2,426 本全緑）。
+  // **文字列の存在は「実行される位置に在る」ことを示さない。**
+  // **なので、中身ではなく「この 2 本が実際に登録されて走ったか」を見る**（下の実行テスト）。
+  assert.ok(
+    body.includes(DETECTOR_TESTS[0]) && body.includes(DETECTOR_TESTS[1]),
+    "bills-optional-field-session-reach.test.ts の 2 本のテスト名が変わっている（#1190）。実行で突き合わせるので、名前を変えるならこの表も直すこと",
+  );
+});
+
+/** 検出テストが登録する 2 本の名前（**実行して在ることを確かめる**。綴りの grep では no-op を止められない） */
+const DETECTOR_TESTS = [
+  "#1190 母数: bills/index.json の省略可能な項目は REACH の表と一致する",
+  "#1190 省略可能な項目が「既定回次の内側だけ取り込まれている」形になっていない",
+] as const;
+
+/**
+ * Issue #1190（レビュアーの変異 Y への対応）: **`test -f` と `grep` は、名前だけ残った
+ * 空ファイルを止められない。**
+ *
+ * **実測**: 検出テストを「`grep` の対象文字列 2 つだけ残した 9 行の no-op」に差し替えると、
+ * **`ci.yml` の 3 つの検査がすべて通り、etl 2,426 本が全緑になった**（0 fail）。
+ * **`grep` が見ているのは綴りの存在だけで、それが実行される位置に在るかは見ていない。**
+ *
+ * **`grep` を増やしても同じ穴が残る**（増やした綴りも no-op に貼れる）。
+ * **「本当に読んでいる」は、実行して確かめるしかない。**
+ *
+ * ここでは**検出テストを子プロセスで実際に走らせ**、
+ * **2 本が名前つきで登録され、どちらも pass したこと**を見る。
+ * **レビュアーの変異 Y（綴りだけ残した 9 行の no-op）は、これで 0 fail → 2 fail になる**（実測）。
+ *
+ * ## **塞げていない形（正直に）**
+ *
+ * **テスト名まで複製した no-op は、いまも通る**（変異 Y2。実測 0 fail）:
+ *
+ * ```ts
+ * test("#1190 母数: bills/index.json の省略可能な項目は REACH の表と一致する（…）", () => {});
+ * test("#1190 省略可能な項目が「既定回次の内側だけ取り込まれている」形になっていない（…）", () => {});
+ * ```
+ *
+ * **つまりこれは「綴り」から「名前つきで登録され pass したか」へ一段上げただけで、
+ * 「中身が本当に data/ を読んでいるか」は依然として見ていない。**
+ * **到達点を上げたが、完全ではない。**
+ *
+ * **ここから先を塞ぐには、検出テスト側が「何件数えたか」を外から観測できる形
+ * （件数を標準出力に出す・値を export する）にする必要が在るが、
+ * それは検出テストの設計変更なので #1190 の範囲に入れていない。**
+ */
+test("#1190 検出テストは「名前だけ残った空ファイル」では通らない（grep ではなく実行で確かめる）", () => {
+  const rel = "test/bills-optional-field-session-reach.test.ts";
+  const r = spawnSync(
+    process.execPath,
+    ["--test", "--test-reporter=tap", "--import", "tsx", rel],
+    {
+      cwd: new URL("../", import.meta.url),
+      encoding: "utf8",
+      timeout: 120_000,
+      // **`node:test` は「テストの中からテストを走らせる」のを拒否して何も出さない**
+      // （実測: `Warning: node:test run() is being called recursively within a test file.
+      // skipping running files.` が出て TAP が 0 行になる）。
+      // **親が立てている実行中フラグを子から外す**と、子は独立した実行として走る。
+      env: { ...process.env, NODE_TEST_CONTEXT: undefined } as NodeJS.ProcessEnv,
+    },
+  );
+  const out = `${r.stdout ?? ""}${r.stderr ?? ""}`;
+  assert.equal(r.status, 0, `検出テストが落ちている（#1190）:\n${out.slice(-2000)}`);
+  for (const name of DETECTOR_TESTS) {
+    // **TAP は `#` を `\#` に escape する**（コメント開始文字なので）。**1 個目だけでなく全部。**
+    // 実測: `ok 1 - \#1190 ...（\#1136 はこの形で ...` の形で出る。
+    // 行番号（`ok 1` / `ok 2`）に依存しないよう、`ok <n> - ` の後ろで照合する。
+    const escaped = name.replaceAll("#", "\\#");
+    const ok = new RegExp(`^ok \\d+ - ${escaped.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`, "m").test(out);
+    assert.ok(
+      ok,
+      `検出テスト「${name}」が走っていない（#1190）。
+**ファイルは在るのに中身が空になっている**（レビュアーの変異 Y の形）。
+test -f と grep は綴りしか見ないので、これが唯一この形を止める検査である。
+TAP の出力:\n${out.slice(0, 2000)}`,
+    );
+  }
+  // **0 件を見て緑になっていないこと**（#757）。検出テスト自身が 2 本とも走ったことを数で固定する。
+  assert.match(out, /^# pass 2$/m, `検出テストの pass 数が 2 でない（#1190）:\n${out.slice(-1500)}`);
 });
 
 /**

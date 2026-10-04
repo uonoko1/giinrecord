@@ -7,6 +7,15 @@
   "sangiin": "2022-11-29",
   "shugiin": "2022-11-29"
  },
+ "referral": {
+  "sangiin": {
+   "committee": "厚生労働",
+   "date": "2022-12-02"
+  },
+  "shugiin": {
+   "noteText": "審査省略"
+  }
+ },
  "result": {
   "lawNumber": "98",
   "promulgated": "2022-12-14",

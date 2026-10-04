@@ -7,6 +7,15 @@
   "sangiin": "2023-11-14",
   "shugiin": "2023-11-14"
  },
+ "referral": {
+  "sangiin": {
+   "committee": "議院運営",
+   "date": "2023-11-16"
+  },
+  "shugiin": {
+   "noteText": "審査省略"
+  }
+ },
  "result": {
   "lawNumber": "75",
   "promulgated": "2023-11-24",

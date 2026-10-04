@@ -7,6 +7,16 @@
   "sangiin": "2020-11-24",
   "shugiin": "2020-11-04"
  },
+ "referral": {
+  "sangiin": {
+   "committee": "外交防衛",
+   "date": "2020-11-27"
+  },
+  "shugiin": {
+   "committee": "外務",
+   "date": "2020-11-12"
+  }
+ },
  "result": {
   "sangiin": "承認",
   "shugiin": "承認"

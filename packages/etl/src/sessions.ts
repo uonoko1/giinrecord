@@ -303,6 +303,42 @@ export function dropCarriedSpeeches(carried: readonly CarriedEntry[], fetched: r
 }
 
 /**
+ * **取得し直した委員会の役職と同じ行の引き継ぎを落とす（Issue #1190）。`dropCarriedSpeeches` と同じ形。**
+ *
+ * **なぜ要るか**: `cli.ts` は衆院の委員会名簿を、発言と同じ理由で `memberSession` について**毎回取得する**
+ * （衆院名簿は「現在」の 1 回次分しか無いので。#71 / #236）。
+ * **`committeeRole` は `isCarriable` でもある**ので、
+ * **`memberSession` が carried になる実行——過去回次だけの手動実行（遡り）——では
+ * 取得した行と引き継いだ行の両方が timeline に入って二重になる。**
+ *
+ * **実測 2026-10-04**（#1190 の遡り `pnpm etl 200 … 216` の直後）:
+ * **9,417 行のうち 2,047 行が重複**（異なりは 7,370 で `origin/main` と同じ）。
+ * **2,047 は ETL のログの `(2047 committeeRole entries matched)` と逐語で一致する**
+ * ——**取得した行がまるごと二重になっていた。**
+ * **日次実行では発火しない**（`memberSession` は常に target なので carried に入らない）。
+ *
+ * **行の同一性は `(memberId, session, committee, meetingId)`**
+ * ——`packages/etl/test/published-timeline-count.test.ts`（#1175）が本番 `data/` で見ている鍵と**同じもの**にする。
+ * **`meetingId` だけでは足りない**: 同じ会議録に複数の委員会・複数の委員が載る。
+ *
+ * **取得が空なら何も落とさない**（取り漏れで既に出ている役職を消さない。`dropCarriedSpeeches` と同じ判断）。
+ *
+ * **`attendance` には要らない**: `fetchCommitteeAttendance` は `targets` の回次しか取らないので、
+ * **carried の回次とぶつからない。** **ぶつかるのは「carried なのに取得する」種別だけ**である。
+ */
+export function dropCarriedCommitteeRoles(
+  carried: readonly CarriedEntry[],
+  fetched: readonly { memberId: string; session: number; committee: string; firstMeetingId: string }[],
+): CarriedEntry[] {
+  const k = (memberId: string, session: number, committee: string, meetingId: string) =>
+    [memberId, session, committee, meetingId].join("\u0000");
+  const keys = new Set(fetched.map((f) => k(f.memberId, f.session, f.committee, f.firstMeetingId)));
+  if (keys.size === 0) return [...carried];
+  return carried.filter((c) =>
+    c.entry.kind !== "committeeRole" || !keys.has(k(c.memberId, c.entry.session, c.entry.committee, c.entry.meetingId)));
+}
+
+/**
  * 引き継げる行か（前回出力から作り直せない行だけ引き継ぐ）。
  *
  * **新しい種別を timeline に足したら、ここに足すかどうかを必ず判断する。**

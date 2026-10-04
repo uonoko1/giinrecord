@@ -3,6 +3,12 @@
  "id": "196-衆法-39",
  "kind": "衆法",
  "number": 39,
+ "referral": {
+  "shugiin": {
+   "committee": "厚生労働",
+   "date": "2021-10-04"
+  }
+ },
  "session": 196,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD2882.htm",
  "status": "未了",

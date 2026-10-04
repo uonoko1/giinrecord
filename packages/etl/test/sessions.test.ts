@@ -4,7 +4,7 @@ import { mkdtemp, mkdir, writeFile, rm, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Bill, Member, MemberDetail, RollCall, RollCallSummary, TimelineEntry } from "@seiji-kiroku/shared";
-import { planSessions, readCarried, decisionOfResult, lostVoteMatches, lostTimelineEntries, lostSessionEntries, readSessionCounts, sessionCounts, sessionOfEntry, dropCarriedSpeeches, carriedTenureVerified } from "../src/sessions.ts";
+import { planSessions, readCarried, decisionOfResult, lostVoteMatches, lostTimelineEntries, lostSessionEntries, readSessionCounts, sessionCounts, sessionOfEntry, dropCarriedSpeeches, dropCarriedCommitteeRoles, carriedTenureVerified } from "../src/sessions.ts";
 import type { CarriedEntry } from "../src/aggregate.ts";
 import { stableJson } from "../src/json.ts";
 
@@ -378,6 +378,105 @@ describe("dropCarriedSpeeches: 取得した発言と同じ speechId の引き継
   test("取得が空なら引き継ぎ行はそのまま（取り漏れで既存の発言を消さない）", () => {
     const carried: CarriedEntry[] = [{ memberId: "h_1", entry: speechEntry("122115254X00120260605_001", 221) }];
     assert.deepEqual(dropCarriedSpeeches(carried, []), carried);
+  });
+});
+
+/**
+ * **#1190: `committeeRole` も `memberSession` が carried のときに二重になる。**
+ *
+ * ## 何が起きたか（**実測で見つけた。#1190 の遡りで実際に出た**）
+ *
+ * **`cli.ts` は衆院の委員会名簿（`committeeRole`）を、発言と同じ理由で `memberSession` について毎回取得する**
+ * （`rosterTargets` に `[memberSession, "shugiin", …]` が常に入る）。
+ * **`committeeRole` は `isCarriable` でもある**（`sessions.ts` の `isCarriable`）。
+ * **だから `memberSession` が carried になる実行——つまり過去回次だけの手動実行（遡り）——では、
+ * 取得した行と引き継いだ行の両方が timeline に入る。**
+ *
+ * **`dropCarriedSpeeches` は `kind === "speech"` しか落とさないので、`committeeRole` は素通りしていた。**
+ *
+ * **実測 2026-10-04**（`pnpm etl 200 … 216` を流した直後の `data/`）:
+ *
+ * | | 行 | 重複 | 異なり |
+ * |---|---:|---:|---:|
+ * | `origin/main`（日次実行の出力。221 は target） | 7,370 | **0** | 7,370 |
+ * | 遡りの直後（221 は carried） | **9,417** | **2,047** | 7,370 |
+ *
+ * **2,047 は ETL のログの `session 221: 333 shugiin committee rosters … (2047 committeeRole entries matched …)`
+ * と逐語で一致する**——**取得した行がまるごと二重になっていた**（`shugiin|221` が 4,094 = 2,047 × 2）。
+ *
+ * **日次実行では発火しない**（221 は常に target なので carried に入らない）。
+ * **遡りのときだけ出る。** **だから #1175 がこの検査を足すまで、誰も気づけなかった。**
+ *
+ * ## なぜ `attendance` は足さないか
+ *
+ * **`attendance` は `targets` の回次だけ取得する**（`fetchCommitteeAttendance` は `for (const session of targets)`）。
+ * **carried の回次を取得しないので、取得と引き継ぎがぶつからない。**
+ * **ぶつかるのは「carried なのに取得する」種別だけ**——いまは `speech`（#236）と `committeeRole`（#1190）の 2 つ。
+ */
+describe("dropCarriedCommitteeRoles: 取得した委員会名簿と同じ行の引き継ぎを落とす（#1190）", () => {
+  const roleEntry = (meetingId: string, session: number, committee: string): TimelineEntry =>
+    ({ kind: "committeeRole", estimated: false, session, date: "2026-06-05", committee, role: "委員", meetings: 1,
+       firstDate: "2026-06-05", lastDate: "2026-06-05", meetingId, sourceUrl: `https://kokkai.ndl.go.jp/txt/${meetingId}/1` });
+  /** 取得した側（matchCommitteeRoles の出力）。`firstMeetingId` が timeline の `meetingId` になる（aggregate.ts）。 */
+  const fetchedRole = (meetingId: string, session: number, committee: string, memberId = "h_1") =>
+    ({ memberId, session, committee, firstMeetingId: meetingId });
+  const otherKind: TimelineEntry = { kind: "vote", session: 221, date: "2026-06-05", rollCallId: "221-0605-v001", title: "案件", value: "賛成", result: "可決（賛成 1・反対 0）", sourceUrl: "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0605-v001.htm" };
+
+  test("取得した (回次, 委員会名, meetingId) の引き継ぎ行だけ落ち、他の回次・他の委員会・他の kind は残る", () => {
+    const carried: CarriedEntry[] = [
+      { memberId: "h_1", entry: roleEntry("122104601X00120260303_000", 221, "総務委員会") },      // 取得し直した分（落ちる）
+      { memberId: "h_1", entry: roleEntry("122104601X00120260303_000", 221, "法務委員会") },      // 同じ会議録・別の委員会（残る）
+      { memberId: "h_1", entry: roleEntry("120015254X00120191204_000", 200, "総務委員会") },      // 別回次（残る）
+      { memberId: "m_1", entry: otherKind },                                                      // 別 kind（残る）
+    ];
+    const fetched = [fetchedRole("122104601X00120260303_000", 221, "総務委員会")];
+    assert.deepEqual(
+      dropCarriedCommitteeRoles(carried, fetched).map((c) => [c.memberId, c.entry.kind, c.entry.session, "committee" in c.entry ? c.entry.committee : ""]),
+      [["h_1", "committeeRole", 221, "法務委員会"], ["h_1", "committeeRole", 200, "総務委員会"], ["m_1", "vote", 221, ""]],
+    );
+  });
+
+  test("議員が違えば落とさない（同じ会議録の別の委員は別の行）", () => {
+    const carried: CarriedEntry[] = [{ memberId: "h_2", entry: roleEntry("122104601X00120260303_000", 221, "総務委員会") }];
+    const fetched = [fetchedRole("122104601X00120260303_000", 221, "総務委員会", "h_1")];
+    assert.deepEqual(dropCarriedCommitteeRoles(carried, fetched), carried);
+  });
+
+  // **meetingId が同一性の鍵に入っていること。**
+  // **#1190 の変異 K（鍵から meetingId を抜く）が、これが無いと 0 fail で生き残った。**
+  // 同じ議員・同じ回次・同じ委員会でも、**会議録が違えば別の行**（#1175 と同じ鍵）。
+  test("会議録が違えば落とさない（memberId・回次・委員会が同じでも meetingId が別なら別の行）", () => {
+    const carried: CarriedEntry[] = [{ memberId: "h_1", entry: roleEntry("122104601X00120260303_000", 221, "総務委員会") }];
+    const fetched = [fetchedRole("122104601X00220260310_000", 221, "総務委員会", "h_1")];
+    assert.deepEqual(
+      dropCarriedCommitteeRoles(carried, fetched),
+      carried,
+      "meetingId が鍵に入っていないと、別の会議の行まで落ちる",
+    );
+  });
+
+  test("取得が空なら引き継ぎ行はそのまま（取り漏れで既存の役職を消さない）", () => {
+    const carried: CarriedEntry[] = [{ memberId: "h_1", entry: roleEntry("122104601X00120260303_000", 221, "総務委員会") }];
+    assert.deepEqual(dropCarriedCommitteeRoles(carried, []), carried);
+  });
+
+  // **#1175 が本番 data/ で見ている形を、ここでは最小の入力で固定する。**
+  // **遡り（memberSession が carried）で取得した行がまるごと二重になるのが #1190 の実害だった。**
+  test("遡りの形: 取得した行をそのまま carried にも持つと、落とさなければ 2 倍になる", () => {
+    const rows: CarriedEntry[] = [
+      { memberId: "h_1", entry: roleEntry("122104601X00120260303_000", 221, "総務委員会") },
+      { memberId: "h_2", entry: roleEntry("122104601X00120260303_000", 221, "総務委員会") },
+    ];
+    // 取得した行と同じものが carried にも在る（readCarried が前回出力から戻す）
+    const fetched = rows.map((r) => fetchedRole("122104601X00120260303_000", 221, "総務委員会", r.memberId));
+    assert.equal(dropCarriedCommitteeRoles(rows, fetched).length, 0, "取得し直した行は引き継がない");
+    // 落とした後に取得分を足すと、ちょうど 1 倍になる（2,047 が 4,094 にならない）
+    assert.equal(dropCarriedCommitteeRoles(rows, fetched).length + fetched.length, rows.length);
+  });
+
+  test("cli.ts が dropCarriedCommitteeRoles を呼んでいる（呼ばなくなると遡りで二重行が出る）", async () => {
+    const src = await readFile(new URL("../src/cli.ts", import.meta.url), "utf-8");
+    assert.ok(/dropCarriedCommitteeRoles\(/.test(src), "遡りの二重行は dropCarriedCommitteeRoles で防ぐ（#1190）");
   });
 });
 

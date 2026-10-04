@@ -7,6 +7,15 @@
   "sangiin": "2022-03-17",
   "shugiin": "2022-03-17"
  },
+ "referral": {
+  "sangiin": {
+   "committee": "議院運営",
+   "date": "2022-04-05"
+  },
+  "shugiin": {
+   "noteText": "審査省略"
+  }
+ },
  "result": {
   "lawNumber": "22",
   "promulgated": "2022-04-13",

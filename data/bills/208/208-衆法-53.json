@@ -3,6 +3,12 @@
  "id": "208-衆法-53",
  "kind": "衆法",
  "number": 53,
+ "referral": {
+  "shugiin": {
+   "committee": "法務",
+   "date": "2024-10-01"
+  }
+ },
  "session": 208,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDC4E6.htm",
  "status": "未了",

@@ -7,6 +7,16 @@
   "sangiin": "2022-02-22",
   "shugiin": "2022-01-25"
  },
+ "referral": {
+  "sangiin": {
+   "committee": "財政金融",
+   "date": "2022-03-04"
+  },
+  "shugiin": {
+   "committee": "財務金融",
+   "date": "2022-02-01"
+  }
+ },
  "result": {
   "lawNumber": "4",
   "promulgated": "2022-03-31",

@@ -3,6 +3,12 @@
  "id": "211-衆法-9",
  "kind": "衆法",
  "number": 9,
+ "referral": {
+  "shugiin": {
+   "committee": "経済産業",
+   "date": "2024-10-01"
+  }
+ },
  "session": 211,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDC57E.htm",
  "status": "未了",

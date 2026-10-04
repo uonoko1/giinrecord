@@ -3,6 +3,12 @@
  "id": "210-衆法-7",
  "kind": "衆法",
  "number": 7,
+ "referral": {
+  "shugiin": {
+   "committee": "安全保障",
+   "date": "2024-10-01"
+  }
+ },
  "session": 210,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDC432.htm",
  "status": "未了",
