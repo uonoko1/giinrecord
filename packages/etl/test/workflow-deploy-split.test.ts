@@ -117,8 +117,19 @@ const read = (f: string) => readFileSync(resolve(wfDir, f), "utf8");
  * **ブロックスカラー（`|` / `>`）の中かどうかは 1 行だけでは分からない**ので、
  * そこは `uncommented()` 側（複数行を見る）が受け持つ。
  */
-function commentStart(line: string): number {
-  let quote: "'" | '"' | null = null;
+type Quote = "'" | '"' | null;
+
+/**
+ * 1 行を走査して、**コメントの開始位置**と、**行末でクォートが開いたままか**を返す。
+ *
+ * `open` を返すのが要点である。**YAML の引用スカラーは行をまたげる**ので、
+ * 開いたまま終わった行の**次の行は、まだ値の途中**であり `#` はコメントにならない
+ * （#1137 レビュー 3 回目。下の `uncommented` が持ち越す）。
+ *
+ * @param from 前の行から持ち越したクォート（開いていなければ null）
+ */
+function scanLine(line: string, from: Quote = null): { comment: number; open: Quote } {
+  let quote: Quote = from;
   for (let i = 0; i < line.length; i++) {
     const c = line[i];
     if (quote) {
@@ -133,12 +144,15 @@ function commentStart(line: string): number {
       continue;
     }
     // (1) 行頭、または直前が空白
-    if (c === "#" && (i === 0 || /\s/.test(line[i - 1]))) return i;
+    if (c === "#" && (i === 0 || /\s/.test(line[i - 1]))) return { comment: i, open: null };
   }
-  return -1;
+  return { comment: -1, open: quote };
 }
 
-/** 行末コメントを落とす（**ブロックスカラーの中では使わない**。`uncommented` を見よ） */
+/** 1 行の中でコメントが始まる位置（無ければ -1）。持ち越しを考えない用途だけ */
+const commentStart = (line: string) => scanLine(line).comment;
+
+/** 行末コメントを落とす（**ブロックスカラーと複数行クォートの中では使わない**。`uncommented` を見よ） */
 function stripComment(line: string): string {
   const i = commentStart(line);
   return (i < 0 ? line : line.slice(0, i)).trimEnd();
@@ -156,19 +170,42 @@ const uncommented = (s: string) => {
   const indentOf = (l: string) => l.length - l.trimStart().length;
   /** ブロックスカラーの中なら、その導入行のインデント。外なら null */
   let blockAt: number | null = null;
+  /** 前の行の終わりで開いたままの引用符（複数行スカラーの途中）。外なら null */
+  let openQuote: Quote = null;
   return lines
     .map((l) => {
+      // (a) ブロックスカラー（`|` / `>`）の中身は 1 文字も落とさない
       if (blockAt !== null) {
         if (l.trim() === "" || indentOf(l) > blockAt) return l; // 中身は**そのまま**
         blockAt = null; // ブロックが閉じた
       }
-      const out = stripComment(l);
+      // (b) 複数行の引用スカラーの途中も、1 文字も落とさない。
+      //     **ここが #1137 レビュー 3 回目で塞いだ穴である**（`NOTE: "a` の次の行の
+      //     `# ${{ secrets.X }}` は値の一部で、GitHub が展開する）。
+      if (openQuote !== null) {
+        openQuote = scanLine(l, openQuote).open;
+        return l;
+      }
+      const { comment, open } = scanLine(l);
+      openQuote = open;
+      const out = comment < 0 ? l.trimEnd() : l.slice(0, comment).trimEnd();
       // 導入行そのものはコメントを落としてから判定する（`run: |  # note` の形）。
       // `|` `>` に続く `-`/`+`（chomp）と桁数の指示（`|2`）も受ける。
-      // **最初は `/^\s*-?\s*[|>].../` も or で並べていたが、変異で消しても 28/28 緑だった
-      // ——`(^|:)` が `- |` の形も拾うので死んだ枝だった。検査の中の死んだ枝は、
-      // 守っているつもりの範囲を実際より広く見せるので外した。**
-      if (/(^|:)\s*[|>][-+]?\d?\s*$/.test(out)) blockAt = indentOf(l);
+      //
+      // **2 つの正規表現の和が要る。** `(^|:)\s*[|>]` は `|` の直前に `^` か `:` を
+      // 要求するので **`      - |`（シーケンス要素そのものがブロックスカラー）では false** になる。
+      // `^\s*-?\s*[|>]` はその形を拾うが、代わりに `run: |` を拾わない。
+      // **私は一度これを「死んだ枝」と書いて外したが、それは事実として誤りだった**
+      // **検算（母数 22 形。導入行 15 形 ＋ 導入行でない 7 形）**:
+      //   前者だけ true  6 形（`run: |` `- run: |` `script: >` `run: |-` `run: >` `- run: >+`）
+      //   後者だけ true  8 形（`- |` `- >` `-   |` `- |-` `- |2` `- >+` `- |`(浅) `-|`）
+      //   両方 true      1 形（`      |`）／両方 false 7 形（導入行でないもの）
+      // **入れ子ではなく、ほぼ相補である。** 和を取ると 22 形すべてで期待どおりになる
+      // （導入行 15 形が true、導入行でない 7 形が false）。
+      if (/(^|:)\s*[|>][-+]?\d?\s*$/.test(out) || /^\s*-?\s*[|>][-+]?\d?\s*$/.test(out)) {
+        blockAt = indentOf(l);
+        openQuote = null; // 導入行で開いたクォートは持ち越さない（`|` の後ろに値は来ない）
+      }
       return out;
     })
     .join("\n");
@@ -286,8 +323,8 @@ const buildingFiles = [...new Set(jobs.filter((j) => buildsCode(j.body)).map((j)
 // ─────────────────────────────────────────────────────────────────────────────
 
 test("#1137 母数: 走査が空回りしていない（ファイル数 / job 数 / 各性質の件数）", () => {
-  assert.ok(workflowFiles().length >= 16, `ワークフローが ${workflowFiles().length} 本しか見えていない（実測 2026-09-30: 16 本）`);
-  assert.ok(jobs.length >= 26, `job が ${jobs.length} 件しか読めていない（実測 2026-09-30: 26 件）`);
+  assert.ok(workflowFiles().length >= 17, `ワークフローが ${workflowFiles().length} 本しか見えていない（実測 2026-10-04: 17 本）`);
+  assert.ok(jobs.length >= 27, `job が ${jobs.length} 件しか読めていない（実測 2026-10-04: 27 件。#1110 の scrum-monitor.yml を取り込んで 26 → 27）`);
 
   const builders = jobs.filter((j) => buildsCode(j.body)).map(id);
   const withSecrets = jobs.filter((j) => secretLines(j.body).length > 0).map(id);
@@ -295,7 +332,7 @@ test("#1137 母数: 走査が空回りしていない（ファイル数 / job �
 
   // どれかが 0 件なら、下の検査は全部空回りする。
   assert.ok(builders.length >= 3, `ビルドする job が ${builders.length} 件（実測 3 件: ${builders.join(", ")}）`);
-  assert.ok(withSecrets.length >= 5, `\`secrets\` を使う job が ${withSecrets.length} 件（実測 2026-09-30: 11 件）: ${withSecrets.join(", ")}`);
+  assert.ok(withSecrets.length >= 5, `\`secrets\` を使う job が ${withSecrets.length} 件（実測 2026-10-04: 17 件）: ${withSecrets.join(", ")}`);
   assert.deepEqual(senders, ["deploy-site.yml:deploy"], "rsync する job が実測（1 件）から変わった");
   // **ビルドを含むファイルは 2 つだけである。** `build-site.yml`（#1137 で切り出した先）と
   // `ci.yml`（VPS に触らない。`secrets` を 1 語も持たないことは下で別に固定する）。
@@ -746,7 +783,9 @@ test("#1137 検査の検査: uses: の値を読めている（別 workflow へ�
 //
 // ── 偽陽性を増やさないことも同時に固定する（レビュアーが測って「正しい挙動」と明記）──
 //   `KEY: ${{ env.X }} # ${{ secrets.X }}`（クォート無しの行末コメント）は **緑のまま**
-//   `build-site.yml` の docblock が `secrets` を 18 回書いて **緑のまま**
+//   `build-site.yml` の docblock が `secrets` を正当に書いて **緑のまま**
+//   （実測 2026-10-04: **15 行 / 17 回**。母数は `build-site.yml` の 132 行。
+//   **レビュー依頼の「18 回」はどの数え方でも出ない**とレビュアーが裁定した）
 // **「コメント落としを全部やめる」のは誤りである。** 上の 2 つが赤くなる。
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -867,7 +906,7 @@ test("#1137 レビュー: 本物の行末コメントは落ちたままである
   // `build-site.yml` の docblock は `secrets` を何度も正当に書く。**緑のまま**であること。
   const doc = read("build-site.yml");
   const rawDocHits = doc.split("\n").filter((l) => /^\s*#/.test(l) && /\bsecrets\b/i.test(l)).length;
-  assert.ok(rawDocHits >= 15, `build-site.yml の docblock が \`secrets\` を ${rawDocHits} 行しか書いていない（実測 2026-10-04: 18 行）。この検査が空回りしている`);
+  assert.ok(rawDocHits >= 15, `build-site.yml の docblock が \`secrets\` を ${rawDocHits} 行しか書いていない（実測 2026-10-04: **15 行 / 17 回**。母数は 132 行）。この検査が空回りしている`);
   assert.deepEqual(secretLines(uncommented(doc)), [], "build-site.yml の docblock が偽陽性になった");
 });
 
@@ -892,4 +931,183 @@ test("#1137 レビュー: `secrets` の照合は大文字小文字を区別し�
   const l = `${FENCE}KEY: ${"${{"} SECRETS.DEPLOY_SSH_KEY ${"}}"}`;
   assert.deepEqual(secretLines(l), [l.trim()], "大文字 `SECRETS.` を拾えていない");
   assert.equal(secretLines(`${FENCE}ALL: ${"${{"} toJSON(Secrets) ${"}}"}`).length, 1, "`toJSON(Secrets)` を拾えていない");
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// #1137 レビュー 3 回目: **引用スカラーは行をまたげる。**
+//
+// YAML の引用スカラー（`"…"` / `'…'`）は複数行に渡せる。だから次の 2 行目の `#` は
+// **コメントではなく値の一部**であり、`${{ secrets.X }}` は GitHub が展開する:
+//
+//     env:
+//       NOTE: "build notes
+//         # ${{ secrets.DEPLOY_SSH_KEY }}"
+//
+// **行ごとにコメントを落とすと、検査が見る 3 行目は空白だけになる**（鍵がそこで消える）。
+// PO の実測（2026-10-03）: `secrets` を含む行の数 **0**。`actionlint` も **rc=0**。
+// レビュアーの実測: 4 形 4/4 が **29/29 緑 ＋ actionlint exit 0 ＋ forbidden-patterns clean**。
+//
+// **これは回帰ではなく残存である**（`ecddd17a` に当てても 21/21 緑で、修正前も見逃していた）。
+// ただし **actionlint を素通りする実行可能な経路**なので塞ぐ。
+//
+// 直し方はブロックスカラーと同じ構造にする: `commentStart` が「行末でクォートが
+// 開いたままか」を返し、`uncommented` がそれを**次の行に持ち越す**。開いている間は行をそのまま返す。
+// ─────────────────────────────────────────────────────────────────────────────
+
+test("#1137 レビュー3: 二重引用スカラーが行をまたぐとき、2 行目の `#` はコメントではない", () => {
+  const yaml = [
+    "jobs:",
+    "  x:",
+    "    runs-on: ubuntu-latest",
+    "    steps:",
+    "      - run: pnpm build",
+    "        env:",
+    '          NOTE: "build notes',
+    `            # ${"${{"} secrets.DEPLOY_SSH_KEY ${"}}"}"`,
+    "",
+  ].join("\n");
+  assert.equal(
+    secretLines(uncommented(yaml)).length,
+    1,
+    "複数行にまたがる二重引用スカラーの 2 行目を、本物のコメントと取り違えている（**鍵はここに展開される**）",
+  );
+  const [j] = jobsOfText(yaml, "probe.yml");
+  assert.equal(secretLines(j.body).length, 1, "job 本文の側でも取り違えている");
+});
+
+test("#1137 レビュー3: 単一引用スカラーが行をまたぐときも同じ", () => {
+  const yaml = [
+    "jobs:",
+    "  x:",
+    "    runs-on: ubuntu-latest",
+    "    steps:",
+    "      - run: pnpm build",
+    "        env:",
+    "          NOTE: 'build notes",
+    `            # ${"${{"} secrets.DEPLOY_SSH_KEY ${"}}"}'`,
+    "",
+  ].join("\n");
+  assert.equal(secretLines(uncommented(yaml)).length, 1, "複数行にまたがる単一引用スカラーを取り違えている");
+});
+
+test("#1137 レビュー3: 3 行以上にまたがる引用スカラー（中間行にも `#`）と、閉じた直後の本物のコメント", () => {
+  // **末尾に本物の行末コメントを置くのが要点である。**
+  // これが無いと、「持ち越しを 1 行で打ち切る」変異（Q2 / Q5）が**検出 1 件のまま**になって
+  // 素通りする。打ち切ると引用がいつまでも閉じないので、**後ろの本物のコメントまで
+  // 値として残り、検出が 2 件になる**（＝偽陽性）。両方向を 1 つの fixture で固定する。
+  for (const mid of [
+    [`            # ${"${{"} secrets.DEPLOY_SSH_KEY ${"}}"}`, '            b"'],
+    [`            # ${"${{"} secrets.DEPLOY_SSH_KEY ${"}}"}`, "            b", '            c"'],
+  ]) {
+    const yaml = [
+      "jobs:",
+      "  x:",
+      "    runs-on: ubuntu-latest",
+      "    steps:",
+      "      - run: pnpm build",
+      "        env:",
+      '          NOTE: "a',
+      ...mid,
+      `          KEY: ${"${{"} env.X ${"}}"} # ${"${{"} secrets.OTHER ${"}}"}`, // 引用が閉じた後ろ = 本物のコメント
+      "",
+    ].join("\n");
+    const hits = secretLines(uncommented(yaml));
+    assert.equal(
+      hits.length,
+      1,
+      `${mid.length + 1} 行にまたがる引用スカラーの扱いが誤っている（1 件だけ拾うべき。` +
+        `2 件なら引用が閉じていない＝偽陽性、0 件なら中間行を落としている＝見逃し）:\n  ${hits.join("\n  ")}`,
+    );
+    assert.match(hits[0], /DEPLOY_SSH_KEY/, "拾ったのが引用の中の鍵ではない");
+  }
+});
+
+test("#1137 レビュー3: `run:` 自体が複数行の引用スカラーのとき", () => {
+  const yaml = [
+    "jobs:",
+    "  x:",
+    "    runs-on: ubuntu-latest",
+    "    steps:",
+    '      - run: "echo a',
+    `          # ${"${{"} secrets.DEPLOY_SSH_KEY ${"}}"}"`,
+    "      - run: pnpm build",
+    "",
+  ].join("\n");
+  assert.equal(secretLines(uncommented(yaml)).length, 1, "`run:` が複数行の引用スカラーの形を取り違えている");
+});
+
+test("#1137 レビュー3: 引用が同じ行で閉じていれば、その後ろの `#` は本物のコメント（偽陽性を増やさない）", () => {
+  // **持ち越しが行き過ぎると、ここが赤くなる。** 向きを両方固定する。
+  const yaml = [
+    "jobs:",
+    "  x:",
+    "    runs-on: ubuntu-latest",
+    "    steps:",
+    "      - run: pnpm build",
+    "        env:",
+    '          NOTE: "closed here"',
+    `          KEY: ${"${{"} env.X ${"}}"} # ${"${{"} secrets.X ${"}}"}`,
+    "",
+  ].join("\n");
+  assert.deepEqual(secretLines(uncommented(yaml)), [], "引用が閉じた後ろの本物のコメントまで残している（偽陽性）");
+  // `''` / `\"` の逃がしも、同じ行で閉じていると見なせること
+  assert.deepEqual(secretLines(uncommented(`          A: 'it''s closed' # ${"${{"} secrets.X ${"}}"}`)), []);
+  assert.deepEqual(secretLines(uncommented(`          A: "a \\" b" # ${"${{"} secrets.X ${"}}"}`)), []);
+});
+
+test("#1137 レビュー3: `- |`（シーケンス要素そのものがブロックスカラー）の中の `#` はコメントではない", () => {
+  // **私は「`(^|:)` が `- |` も拾うので死んだ枝」と書いたが、それは誤りだった。**
+  // `(^|:)\s*[|>]` は `|` の直前に `^` か `:` を要求するので、`      - |` は false になる。
+  // 検算（母数 22 形）: 残した枝だけでは `- |` `- >` `-   |` `- |-` `- |2` `- >+` `- |`(浅) `-|` の
+  // **8 形が false**。外した枝はそれらを拾っていた。**両方の和が要る**ので戻した。
+  // **変異でも両方向を確かめた**: 戻した枝だけを消すとこの検査が落ち（1 件）、
+  // 元から在った枝だけを消すと別の 5 件が落ちる。**どちらも死んでいない。**
+  const yaml = [
+    "jobs:",
+    "  x:",
+    "    runs-on: ubuntu-latest",
+    "    strategy:",
+    "      matrix:",
+    "        s:",
+    "          - |",
+    `            # ${"${{"} secrets.DEPLOY_SSH_KEY ${"}}"}`,
+    "    steps:",
+    "      - run: pnpm build",
+    "",
+  ].join("\n");
+  assert.equal(secretLines(uncommented(yaml)).length, 1, "`- |` の中身をコメントとして落としている");
+});
+
+test("#1137 レビュー3: `run: >` / `run: |-` / `run: |2` の中の `#` もコメントではない", () => {
+  // レビュアーが「実装は守っているが fixture が固定していない」と指摘した 3 形のうち 2 形。
+  for (const intro of ["run: >", "run: |-", "run: |2", "run: >-", "run: >+", "run: |+"]) {
+    const yaml = [
+      "jobs:",
+      "  x:",
+      "    runs-on: ubuntu-latest",
+      "    steps:",
+      `      - ${intro}`,
+      `          # ${"${{"} secrets.DEPLOY_SSH_KEY ${"}}"}`,
+      "      - run: pnpm build",
+      "",
+    ].join("\n");
+    assert.equal(secretLines(uncommented(yaml)).length, 1, `\`${intro}\` の中身をコメントとして落としている`);
+  }
+});
+
+test("#1137 レビュー3: ブロックスカラーの中の空行のあとの `#` もコメントではない", () => {
+  // レビュアーが指摘した 3 形の残り 1 形。空行でブロックが閉じたと誤判定すると見逃す。
+  const yaml = [
+    "jobs:",
+    "  x:",
+    "    runs-on: ubuntu-latest",
+    "    steps:",
+    "      - run: |",
+    "          echo a",
+    "",
+    `          # ${"${{"} secrets.DEPLOY_SSH_KEY ${"}}"}`,
+    "      - run: pnpm build",
+    "",
+  ].join("\n");
+  assert.equal(secretLines(uncommented(yaml)).length, 1, "ブロック内の空行でブロックが閉じたと誤判定している");
 });
