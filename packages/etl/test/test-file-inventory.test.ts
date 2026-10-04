@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync, statSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 
@@ -302,6 +303,89 @@ test("#1190 ci.yml が「項目の遡りを本番 data/ から検出するテス
     body.includes("DEFAULT_SESSIONS"),
     "bills-optional-field-session-reach.test.ts が DEFAULT_SESSIONS の内外で数えていない（#1190）",
   );
+  // **ここまでは「綴りが在るか」しか見ていない。**
+  // **レビュアーの変異 Y**: 上の 2 つの綴りだけ残した **9 行の no-op** に差し替えると、
+  // `test -f` も 2 つの grep も通り、**etl 全体が全緑になる**（実測。2,426 本全緑）。
+  // **文字列の存在は「実行される位置に在る」ことを示さない。**
+  // **なので、中身ではなく「この 2 本が実際に登録されて走ったか」を見る**（下の実行テスト）。
+  assert.ok(
+    body.includes(DETECTOR_TESTS[0]) && body.includes(DETECTOR_TESTS[1]),
+    "bills-optional-field-session-reach.test.ts の 2 本のテスト名が変わっている（#1190）。実行で突き合わせるので、名前を変えるならこの表も直すこと",
+  );
+});
+
+/** 検出テストが登録する 2 本の名前（**実行して在ることを確かめる**。綴りの grep では no-op を止められない） */
+const DETECTOR_TESTS = [
+  "#1190 母数: bills/index.json の省略可能な項目は REACH の表と一致する",
+  "#1190 省略可能な項目が「既定回次の内側だけ取り込まれている」形になっていない",
+] as const;
+
+/**
+ * Issue #1190（レビュアーの変異 Y への対応）: **`test -f` と `grep` は、名前だけ残った
+ * 空ファイルを止められない。**
+ *
+ * **実測**: 検出テストを「`grep` の対象文字列 2 つだけ残した 9 行の no-op」に差し替えると、
+ * **`ci.yml` の 3 つの検査がすべて通り、etl 2,426 本が全緑になった**（0 fail）。
+ * **`grep` が見ているのは綴りの存在だけで、それが実行される位置に在るかは見ていない。**
+ *
+ * **`grep` を増やしても同じ穴が残る**（増やした綴りも no-op に貼れる）。
+ * **「本当に読んでいる」は、実行して確かめるしかない。**
+ *
+ * ここでは**検出テストを子プロセスで実際に走らせ**、
+ * **2 本が名前つきで登録され、どちらも pass したこと**を見る。
+ * **レビュアーの変異 Y（綴りだけ残した 9 行の no-op）は、これで 0 fail → 2 fail になる**（実測）。
+ *
+ * ## **塞げていない形（正直に）**
+ *
+ * **テスト名まで複製した no-op は、いまも通る**（変異 Y2。実測 0 fail）:
+ *
+ * ```ts
+ * test("#1190 母数: bills/index.json の省略可能な項目は REACH の表と一致する（…）", () => {});
+ * test("#1190 省略可能な項目が「既定回次の内側だけ取り込まれている」形になっていない（…）", () => {});
+ * ```
+ *
+ * **つまりこれは「綴り」から「名前つきで登録され pass したか」へ一段上げただけで、
+ * 「中身が本当に data/ を読んでいるか」は依然として見ていない。**
+ * **到達点を上げたが、完全ではない。**
+ *
+ * **ここから先を塞ぐには、検出テスト側が「何件数えたか」を外から観測できる形
+ * （件数を標準出力に出す・値を export する）にする必要が在るが、
+ * それは検出テストの設計変更なので #1190 の範囲に入れていない。**
+ */
+test("#1190 検出テストは「名前だけ残った空ファイル」では通らない（grep ではなく実行で確かめる）", () => {
+  const rel = "test/bills-optional-field-session-reach.test.ts";
+  const r = spawnSync(
+    process.execPath,
+    ["--test", "--test-reporter=tap", "--import", "tsx", rel],
+    {
+      cwd: new URL("../", import.meta.url),
+      encoding: "utf8",
+      timeout: 120_000,
+      // **`node:test` は「テストの中からテストを走らせる」のを拒否して何も出さない**
+      // （実測: `Warning: node:test run() is being called recursively within a test file.
+      // skipping running files.` が出て TAP が 0 行になる）。
+      // **親が立てている実行中フラグを子から外す**と、子は独立した実行として走る。
+      env: { ...process.env, NODE_TEST_CONTEXT: undefined } as NodeJS.ProcessEnv,
+    },
+  );
+  const out = `${r.stdout ?? ""}${r.stderr ?? ""}`;
+  assert.equal(r.status, 0, `検出テストが落ちている（#1190）:\n${out.slice(-2000)}`);
+  for (const name of DETECTOR_TESTS) {
+    // **TAP は `#` を `\#` に escape する**（コメント開始文字なので）。**1 個目だけでなく全部。**
+    // 実測: `ok 1 - \#1190 ...（\#1136 はこの形で ...` の形で出る。
+    // 行番号（`ok 1` / `ok 2`）に依存しないよう、`ok <n> - ` の後ろで照合する。
+    const escaped = name.replaceAll("#", "\\#");
+    const ok = new RegExp(`^ok \\d+ - ${escaped.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`, "m").test(out);
+    assert.ok(
+      ok,
+      `検出テスト「${name}」が走っていない（#1190）。
+**ファイルは在るのに中身が空になっている**（レビュアーの変異 Y の形）。
+test -f と grep は綴りしか見ないので、これが唯一この形を止める検査である。
+TAP の出力:\n${out.slice(0, 2000)}`,
+    );
+  }
+  // **0 件を見て緑になっていないこと**（#757）。検出テスト自身が 2 本とも走ったことを数で固定する。
+  assert.match(out, /^# pass 2$/m, `検出テストの pass 数が 2 でない（#1190）:\n${out.slice(-1500)}`);
 });
 
 /**

@@ -281,7 +281,11 @@ jobs:
           set -euo pipefail
           test -f packages/etl/test/bills-optional-field-session-reach.test.ts || {
             echo "packages/etl/test/bills-optional-field-session-reach.test.ts がありません（#1190 の検査）"; exit 1; }
-          # 名前だけ残った空ファイルで通らないように、本番 data/ と DEFAULT_SESSIONS を実際に見ていることを確かめる
+          # **ここが見るのは「ファイルの存在」と「本番 data/ を指す綴りが在ること」だけである。**
+          # **名前だけ残った空ファイルは、ここでは止まらない**（#1190 のレビューで実測:
+          # 下の 2 つの綴りだけ残した 9 行の no-op で、この 3 つの検査も etl 全体も全緑になった）。
+          # **その形は packages/etl/test/test-file-inventory.test.ts が、検出テストを実際に走らせて止める。**
+          # ここは #504 の層（テストを消されても残る層）としてファイルの存在だけを担保する。
           grep -q 'fileURLToPath(new URL("../../../data/", import.meta.url))' packages/etl/test/bills-optional-field-session-reach.test.ts || {
             echo "bills-optional-field-session-reach.test.ts がコミット済み data/ を読んでいません（#1190）"; exit 1; }
           grep -q 'DEFAULT_SESSIONS' packages/etl/test/bills-optional-field-session-reach.test.ts || {
