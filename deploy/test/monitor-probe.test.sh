@@ -708,6 +708,53 @@ t_deploy_started_output_has_no_paths() {
   assert_not_contains "$(cat "$P/out")" "$TMP" "ローカルパスを出さない"
 }
 
+# ---- run.sh: deploy check と「判定行が無い」(#1185) ----
+# **MONITOR_DATA_COMMIT_AT が渡っていなければ deploy check を足さない**（staging と手元で
+# 振る舞いを変えない。測れないものを check にしない）
+t_run_no_deploy_check_without_commit_time() {
+  fresh run_nodeploy
+  run_run production https://giinrecord.jp || fail "exit $? $(cat "$P/out")"
+  assert_not_contains "$(cat "$P/out")" "deploy" "時刻が無ければ deploy は出ない"
+  assert_not_contains "$(cat "$LOG")" "gh issue list --label monitor --state open --limit 100 --search \"[monitor] production: deploy\"" "deploy の Issue も触らない"
+}
+# **渡っていれば 4 つめの check として扱われ、Issue も既存の仕組みで立つ**
+t_run_deploy_check_opens_the_issue() {
+  fresh run_deploy_fail
+  H_RUNS='[]' MONITOR_DATA_COMMIT_AT="$(MIN_AGO 90)" \
+    run_run production https://giinrecord.jp && fail "expected non-zero"
+  local log; log=$(cat "$LOG")
+  assert_contains "$(cat "$P/out")" "fail deploy" "deploy が fail"
+  assert_contains "$log" "gh issue create --title [monitor] production: deploy" "既存の report.sh がそのまま Issue にする"
+}
+t_run_deploy_check_ok_is_quiet() {
+  fresh run_deploy_ok
+  H_RUNS="[{\"createdAt\":\"$(MIN_AGO 3)\"}]" MONITOR_DATA_COMMIT_AT="$(MIN_AGO 10)" \
+    run_run production https://giinrecord.jp || fail "exit $? $(cat "$P/out")"
+  assert_contains "$(cat "$P/out")" "ok deploy" "ok"
+  assert_not_contains "$(cat "$LOG")" "gh issue create" "作らない"
+}
+# **判定行が 1 本も出なかった check を ok に倒さない**（#1185 / #1056）。
+# **これが一番危ない形**: probe.sh が途中で死ぬと該当 check の行が消え、
+# 旧実装では `r1`/`r2` が両方空なので **else（= ok 扱い）に落ちて緑になっていた。**
+t_run_missing_verdict_is_not_ok() {
+  fresh run_novedict
+  # probe.sh を「tls の行を出さない」版に差し替える（stub ではなく本物の probe.sh を迂回する）
+  mkdir -p "$P/mon"
+  cp "$MON/report.sh" "$MON/deploy-started.sh" "$MON/run.sh" "$P/mon/"
+  cat > "$P/mon/probe.sh" <<'FAKE'
+#!/usr/bin/env bash
+echo "ok http"
+echo "ok data"
+exit 0
+FAKE
+  PATH="$BIN:$PATH" bash "$P/mon/run.sh" production https://giinrecord.jp > "$P/out" 2>&1 && fail "判定行が無いのに緑にしてはいけない"
+  local log; log=$(cat "$LOG")
+  assert_contains "$log" "gh issue create --title [monitor] production: tls" "tls の Issue が立つ"
+  assert_not_contains "$log" "gh issue create --title [monitor] production: http" "http は ok なので立たない"
+  [ -f "$LOG.body" ] || { fail "本文が無い"; return; }
+  assert_contains "$(cat "$LOG.body")" "no verdict" "判定が無かったと書く"
+}
+
 test_case "monitor scripts: bash -n" t_syntax
 test_case "probe: 正常なら http/data/tls すべて ok、/ /members/ /data/meta.json と TLS を見る" t_probe_ok
 test_case "probe: /members/ が 502 なら http が fail（パスと status を理由に）" t_probe_http_status
@@ -773,6 +820,11 @@ test_case "deploy-started: data/ のコミットが無ければ ok" t_deploy_sta
 test_case "deploy-started: コミット時刻が壊れていれば『測れなかった』" t_deploy_started_bad_timestamp_is_unmeasured
 test_case "deploy-started: コミットより前の run を後続と数えない（毎日 success でも fail）" t_deploy_started_ignores_runs_before_the_commit
 test_case "deploy-started: 出力にローカルパスを出さない" t_deploy_started_output_has_no_paths
+
+test_case "run: MONITOR_DATA_COMMIT_AT が無ければ deploy check を足さない（#1185）" t_run_no_deploy_check_without_commit_time
+test_case "run: deploy check が fail なら既存の report.sh がそのまま Issue にする（入口を増やさない）" t_run_deploy_check_opens_the_issue
+test_case "run: deploy check が ok なら何も作らない" t_run_deploy_check_ok_is_quiet
+test_case "run: 判定行が 1 本も出なかった check を ok に倒さない（#1185 / #1056）" t_run_missing_verdict_is_not_ok
 
 echo; echo "passed: $PASS  failed: $FAIL"
 [[ $FAIL == 0 ]]
