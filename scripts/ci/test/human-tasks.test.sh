@@ -470,6 +470,44 @@ t_no_set_x() {
 }
 test_case "human-tasks: トークンがログに出る書き方をしていない" t_no_set_x
 
+# ---- #1184: PV 集計のスクリプトを設置し直し、計器が動いていることを実測する ----------------------
+# **PV の計器が 39 日間、無言で壊れていた。** VPS に設置済みの daily.sh が改名前のログ名
+# （存在しないファイル）を読み、0 行の TSV を書いて exit 0 で成功を報告していた。
+# **リポジトリ側のコードは最初から正しく、設置し直していないという手順の穴だった。**
+# PO ができない理由は**接続手段**（PO の端末に VPS への ssh が無い）。1. と同じ。
+#
+# **「設置し直した」で終わらせない。** 置いただけでは「測れている」とは言えない
+# （#790 の「置いた」と「緑になった」は別、と同じ形）。設置のあとに daily.sh を実際に走らせ、
+# **その終了コードを見る**。3 = 読む先が無い（計器が壊れている）、4 = 0 件、0 = 測れた。
+t_analytics_reinstall_is_run() {
+  run bash "$SCRIPT" --yes
+  assert_contains "$LOG" "vps-analytics-setup.sh" "**設置し直しを実行していない**（#1184）"
+  assert_contains "$LOG" "git -C /opt/giinrecord pull" "checkout を更新せずに設置している"
+}
+test_case "human-tasks: 集計スクリプトを checkout から設置し直す（#1184）" t_analytics_reinstall_is_run
+
+t_analytics_verifies_the_instrument() {
+  run bash "$SCRIPT" --yes
+  # setup だけで終わらず、daily.sh を実際に走らせて計器が動くことを見る
+  assert_contains "$LOG" "daily.sh" "**設置しただけで「直った」と言ってはいけない**"
+}
+test_case "human-tasks: 設置後に daily.sh を走らせて計器を実測する（#1184）" t_analytics_verifies_the_instrument
+
+t_analytics_dry_run_does_not_ssh() {
+  run bash "$SCRIPT"
+  assert_contains "$OUT" "vps-analytics-setup.sh" "dry-run でも何をするかは出す"
+  assert_not_contains "$LOG" "ssh " "**dry-run では ssh を実行しない**"
+}
+test_case "human-tasks: #1184 の作業も dry-run では実行しない" t_analytics_dry_run_does_not_ssh
+
+t_analytics_does_not_leak_the_host() {
+  run bash "$SCRIPT" --yes
+  # 1. と同じ扱い: 出力はユーザーが貼るので、接続先を出さない
+  assert_not_contains "$OUT" "203.0.113" "接続先を出力に出さない"
+  assert_contains "$OUT" "接続先は伏せます" "伏せたことを言う"
+}
+test_case "human-tasks: #1184 の作業でも接続先を出力に出さない" t_analytics_does_not_leak_the_host
+
 echo
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]

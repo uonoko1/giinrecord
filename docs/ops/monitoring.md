@@ -103,6 +103,14 @@ VPS の cron は自前のマシンなので間引かれない。実測（`/var/l
 | `nginx` | `systemctl is-active nginx` が `active` | `systemctl status nginx`、`nginx -t` |
 | `disk` | web root のあるファイルシステム使用率 ≤ 85% | `journalctl --vacuum`、docker の `json-file` ログ、他サイトの増分（共用 VPS） |
 | `site-production` / `site-staging` | `/var/www/giinrecord/{site,staging}/data/meta.json` が存在し更新 48 時間以内 | `deploy-data.yml` / Release / Deploy (staging) の失敗、rrsync の鍵 |
+| `checkout-owner` | `/opt/giinrecord` 配下に root 以外が所有するファイルが無い（#333 の前提） | `find /opt/giinrecord ! -user root`。前提が崩れると `giinops` の sudo allowlist から root を取れる |
+| `analytics` | 直近 3 日（`MONITOR_ANALYTICS_DAYS`）の `~ubuntu/analytics/*.tsv` に **`pv>0` の日が 1 つ以上**ある。TSV が 1 つも無いのも失敗（#1184） | **まず設置済みスクリプトの新しさ**（`docs/ops/analytics.md` の設置し直し）。次に `access_log … noip`、cron、`/var/log/giinrecord-analytics.log` |
+
+**`analytics` が在る理由**（#1184）: PV の計器が **39 日間、無言で壊れていた**。設置済みの `daily.sh` が改名前のログ名（存在しないファイル）を読み、**0 行の TSV を書いて exit 0 で成功を報告していた**。cron は毎日発火し TSV も毎日できていたので、**どの計器も赤くならなかった**。「0 件」と「測れなかった」が区別されていなかった（#757 / #1158 と同じ型）。`daily.sh` は非 0 で落ちるようにしたが、**その非 0 は cron ログに入るだけで誰も読まない**ので、声になるのはこの check だけ。**新しい監視の入口は作っていない**（#1110 の軸——入口が増えると入口自身の死を誰も見なくなる）。
+
+- 判定は TSV の **`pv` の値**で、行数ではない。`pv=0` の日の TSV もヘッダ＋要約行で**必ず 2 行**在るので、行数で見ると永遠に 0 にならない（それが 39 日の片方の原因そのもの）。
+- **連続**で見るのは、小さなサイトの静かな 1 日に `pv=0` が在りうるから。1 日で Issue を開けば騒がしくなり、騒がしい監視は読まれなくなる。3 日ぜんぶ 0 なら静かな日ではない（この check 自体も 2 回連続で初めて Issue になる）。
+- `~ubuntu/analytics/` が無いホスト（集計を置かない構成）では**何も言わない**。
 
 - 結果は毎回 `/var/log/giinrecord-monitor.log`（root 600）に 1 行（`<UTC> OK` / `<UTC> FAIL <check>: <理由>; …`）。このログは `/etc/logrotate.d/giinrecord-monitor`（monthly・12 世代・`maxsize 32M`、#288）で回る。肥大の確認手順は `docs/ops/log-rotation.md`。最新の結果は `~ubuntu/monitor/latest.json`（owner ubuntu、600）にも置く（`{"checkedAt","ok","failures":[…]}`）。
 - 2 回連続（10 分）で失敗した check は Issue `[monitor] vps: <check>`。Issue 番号は `/var/lib/giinrecord-monitor/issue.<check>`（root）に覚え、消えていても同名の open Issue を採用して重複させない。復旧でコメント＋close。
@@ -221,6 +229,7 @@ ssh "$VPS_SSH_HOST" 'sudo mv /etc/cron.d/giinrecord-monitor /root/giinrecord-mon
 | `health.sh: refusing symlinked …` | `~ubuntu/monitor` がシンボリックリンク | 消して `setup.sh` を再実行 |
 | 同じ check で Issue が 2 つ | 人が title を編集した／label を外した | 片方を close。title は触らない |
 | `[monitor] vps: disk` | 共用 VPS の他サイト・docker ログ・journal | `df -h`、`docker system df`、`journalctl --disk-usage`。他サイトの資産は触らない |
+| `[monitor] vps: analytics` | 直近 3 日の PV 集計がぜんぶ 0、または TSV が無い | **設置済みの `daily.sh` が古くないか**を最初に見る（#1184 の実例）。`docs/ops/analytics.md` の「セットアップ／設置し直し」と失敗モード |
 
 ## やらないこと
 
