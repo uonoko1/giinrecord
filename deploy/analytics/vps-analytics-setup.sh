@@ -6,7 +6,8 @@
 #   1. installs gawk (aggregate.sh uses gawk's match(s, re, arr))
 #   2. defines the IP-less log_format "noip" (http{} context)
 #   3. checks the giinrecord server block logs to the dedicated IP-less access log (written by vps-setup.sh)
-#   4. creates the root-owned script dir /usr/local/lib/giinrecord-analytics and ~ubuntu/analytics (700)
+#   4. creates the root-owned script dir /usr/local/lib/giinrecord-analytics and ~ubuntu/analytics (700),
+#      and INSTALLS aggregate.sh / daily.sh into it from this checkout (Issue #1184 -- see below)
 #   5. installs /etc/cron.d/giinrecord-analytics: 00:10 daily, as ROOT, aggregates yesterday and hands
 #      only the TSV to ubuntu (install -o ubuntu -m 600)
 #   6. installs /etc/logrotate.d/giinrecord-analytics (Issue #288): the cron log below matched no logrotate
@@ -19,8 +20,25 @@
 # adm would let a leaked key read every log on the shared VPS (other sites' access logs with IP/UA, auth.log,
 # syslog). Likewise root never executes anything under ubuntu's writable home: scripts are copied into
 # $TOOLS by sudo install (see docs/ops/analytics.md), so a leaked key cannot escalate via the cron either.
+#
+# Issue #1184 -- why step 4 installs the scripts instead of printing how to:
+#   For 39 days the PV instrument measured nothing and reported success. The scripts on the VPS were the
+#   pre-rename copies: deploy/go-live.sh's migrate_legacy() `mv`s /usr/local/lib/<old>-analytics to the new
+#   name, so the DIRECTORY was renamed but the daily.sh inside it still read the old access-log name -- and
+#   the log itself had been renamed. Nothing re-installed the scripts, because this file only `echo`ed the
+#   scp/install command for a human to run, and nobody ran it.
+#   The two sibling root-owned copies on this host did not have the hole: deploy/monitor/setup.sh installs
+#   health.sh from its own directory, and cloudflare-allowlist.sh --install-cron installs itself. 1 of 3.
+#   So this one now does the same thing, and go-live.sh step 8/8 (which runs this script after step 2/8 has
+#   `git pull`ed the checkout) re-installs the current scripts on every go-live and every rename.
+#   The install is still root-owned 755 from a root-owned path: the root cron must never execute a file a
+#   non-root user could edit (that constraint is unchanged, see the adm note above).
+#   Tests: packages/etl/test/analytics-daily.test.ts
+#
 #   Tests: deploy/test/nginx-reload.test.sh (sourced with ANALYTICS_SETUP_NO_MAIN=1; nginx/systemctl are stubs)
 set -euo pipefail
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # reload_nginx: test, reload only on success, else exit 1 (never `nginx -t && systemctl reload` — under set -e
 # a failing `nginx -t` inside an && list is swallowed and the script goes on). Same as deploy/vps-setup.sh.
@@ -57,6 +75,22 @@ fi
 reload_nginx
 
 install -d -o root -g root -m 755 "$TOOLS"
+# #1184: install the scripts, do not just explain how. `$HERE` is this checkout, so a go-live (or any
+# re-run of this setup) picks up whatever the repository currently says -- including after a rename.
+# This script is also run piped over stdin (`sudo bash -s`, see the logrotate note above); in that case
+# $HERE is the caller's cwd and the files are not there, so say so loudly rather than leaving the stale
+# copies in place and reporting success. Leaving stale copies silently is the whole bug of #1184.
+if [ -f "$HERE/aggregate.sh" ] && [ -f "$HERE/daily.sh" ]; then
+  install -o root -g root -m 755 "$HERE/aggregate.sh" "$TOOLS/aggregate.sh"
+  install -o root -g root -m 755 "$HERE/daily.sh" "$TOOLS/daily.sh"
+  echo "installed from this checkout: $TOOLS/{aggregate,daily}.sh"
+else
+  echo "!! $HERE has no aggregate.sh / daily.sh, so the scripts in $TOOLS were NOT refreshed." >&2
+  echo "   (This happens when the setup is piped over stdin.) The cron below will keep running whatever" >&2
+  echo "   is already there -- which may be a pre-rename copy that measures nothing (#1184). Run from a" >&2
+  echo "   checkout instead:  sudo bash /opt/giinrecord/deploy/analytics/vps-analytics-setup.sh" >&2
+  exit 1
+fi
 if [ -L "$OUT_DIR" ]; then echo "refusing: $OUT_DIR is a symlink" >&2; exit 1; fi
 install -d -o "$OWNER" -g "$OWNER" -m 700 "$OUT_DIR"
 touch "$CRON_LOG" && chmod 600 "$CRON_LOG"
@@ -101,8 +135,11 @@ cat > /etc/logrotate.d/giinrecord-analytics <<'LOGROTATE'
 LOGROTATE
 chmod 644 /etc/logrotate.d/giinrecord-analytics
 
-echo "analytics ready. Install scripts (root-owned, so the root cron never runs anything ubuntu can edit):"
-echo "  scp deploy/analytics/{aggregate,daily}.sh \"\${VPS_SSH_HOST:-sakura-vps}\":/tmp/ && ssh \"\${VPS_SSH_HOST:-sakura-vps}\" 'sudo install -o root -g root -m 755 /tmp/aggregate.sh /tmp/daily.sh $TOOLS/ && rm /tmp/aggregate.sh /tmp/daily.sh'"
+echo "analytics ready. Scripts are root-owned in $TOOLS (the root cron never runs anything $OWNER can edit)."
+echo "Verify the instrument now instead of waiting for tomorrow's cron (#1184 -- 39 days of silent zeros):"
+echo "  sudo ANALYTICS_OUT=$OUT_DIR ANALYTICS_OWNER=$OWNER $TOOLS/daily.sh \"\$(date +%F)\""
+echo "  # exit 0 = measured, with 'pv=N pages=M' on the line. exit 3 = nothing to read. exit 4 = 0 page views."
+echo "  head -2 $OUT_DIR/\$(date +%F).tsv   # line 2 is '# <date> pv=N pages=M per-page=X.XX'"
 }
 
 # Tests source this file with ANALYTICS_SETUP_NO_MAIN=1 to use reload_nginx() alone

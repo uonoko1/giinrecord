@@ -35,8 +35,18 @@ bash scripts/human-tasks.sh          # 何をするかだけ出す（dry-run）
 bash scripts/human-tasks.sh --yes    # 実行する（**引数はこれだけ**）
 ```
 
-**入っているのは 1 つだけ**: **`site.conf` を本番に反映する**（#610 / #654）。
-**PO ができない理由は接続手段**（PO の端末に `Host giinops` が無い）。
+**入っているのは 4 つ**: **`site.conf` を本番に反映する**（#610 / #654）、
+**`BRANCH_PROTECTION_TOKEN` を置く**（#790）、**`SECURITY_ALERTS_TOKEN` を置く**（#786）、
+**PV 集計のスクリプトを設置し直して計器を実測する**（#1184）。
+**PO ができない理由は接続手段**（PO の端末に `Host giinops` が無い）か、
+**PAT の生成が GitHub の画面でしかできないこと**。
+
+**#1184 は「設置し直していない」という手順の穴だった。** PV の計器が 39 日間、無言で壊れていた
+（設置済みの `daily.sh` が改名前のログ名を読み、0 行の TSV を書いて exit 0 で成功報告していた）。
+リポジトリ側はもう直っている（`vps-analytics-setup.sh` が自分の隣のスクリプトを install する）ので、
+**checkout から setup を 1 回走らせれば以後は自動で揃う**。手順は `docs/ops/analytics.md`。
+**設置して終わりにしないこと**——`daily.sh` を走らせて**終了コードと `pv`/`pages` を見る**
+（0 = 測れた / 3 = 読む先が無い / 4 = 測れて 0 件）。
 
 **VPS の IP はスクリプトが `giinrecord.jp` の A レコードを引く。**
 **鍵も `~/.ssh/sakura-vps/id_ed25519` を明示する**（`Host giinops` が無い端末では
