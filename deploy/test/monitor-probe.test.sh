@@ -764,6 +764,50 @@ FAKE
   assert_contains "$(cat "$LOG.body")" "no verdict" "判定が無かったと書く"
 }
 
+# **ラウンド 2 だけ判定行が消えた形を、`ok` に倒さない**（#1185 / #1194 のレビュー）。
+# **上のテストとは別の形である**: 上は「両方のラウンドで行が無い」で、
+# **こちらは「1 回目に fail が出て、2 回目で probe が死ぬ」**——**実際に起きるのはこちら**
+# （10 分ごとに走るので、2 回目だけが刺さる確率は 1 回目だけのそれと同じ）。
+# **旧実装では `[ -n "$r1" ] && [ -n "$r2" ]` が偽になって else（= ok 扱い）に落ち、
+# 39 時間 escalated だった Issue に「Recovered: the check passed again」が書かれて閉じた。**
+# **check は 1 度も通っていないのに。** しかも `escalated` ラベルと `— Nh 継続` の題が同時に剥がれ、
+# 次に立て直される Issue は `createdAt` が新しいので **経過時間が 0h に戻る**
+# ——**93 時間の障害が永遠に「0h・escalated 無し」に見え続ける。** #1185 のより悪い版である。
+t_run_second_round_died_does_not_close() {
+  fresh run_r2died
+  mkdir -p "$P/mon"
+  cp "$MON/report.sh" "$MON/deploy-started.sh" "$MON/run.sh" "$P/mon/"
+  # 1 回目は #1185 の実値の形で `fail data`、2 回目は 1 行も出さずに exit 137（SIGKILL 相当）
+  cat > "$P/mon/probe.sh" <<'FAKE'
+#!/usr/bin/env bash
+if [ -f "$ROUND_MARK" ]; then exit 137; fi
+touch "$ROUND_MARK"
+echo "ok http"
+echo "fail data fetchedAt 93h old (limit 48h); main も古い (93h) → ETL 側"
+echo "ok tls"
+exit 1
+FAKE
+  # 開いている Issue は #1172 の実値（39 時間前・`escalated` 付き）
+  H_OPEN="[{\"number\":1172,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(MIN_AGO 2340)\",\"labels\":[{\"name\":\"monitor\"},{\"name\":\"escalated\"}],\"comments\":[{},{},{}]}]" \
+  ROUND_MARK="$P/mark" PATH="$BIN:$PATH" bash "$P/mon/run.sh" production https://giinrecord.jp > "$P/out" 2>&1 \
+    && fail "2 回目の probe が死んだのに緑にしてはいけない: $(cat "$P/out")"
+  local log; log=$(cat "$LOG")
+  # **鎖の 3 つの環を 1 つずつ固定する**（レビュアーが実スクリプトで再現した鎖）
+  assert_not_contains "$log" "gh issue close 1172" "通っていない check で Issue を閉じない"
+  assert_not_contains "$log" "Recovered" "通っていない check を『passed again』と書かない"
+  assert_not_contains "$log" "--remove-label escalated" "escalated を剥がさない（経過時間の計器を巻き戻さない）"
+  # **#1172 には「まだ失敗している」が入り、閉じるのではなく経過が積まれる**
+  assert_contains "$log" "gh issue comment 1172" "開いている Issue には継続を報告する"
+  assert_contains "$(cat "$P/out")" "still failing" "閉じずに継続として扱う"
+  # **1 回目に ok だった http / tls も「測れていない」として扱う**——**ラウンド 2 は走ったのに
+  # 1 行も出していないので、この 2 つも再測できていない。** 「1 回目が ok だったから ok」は
+  # **前のラウンドの結果で今のラウンドの無測定を埋めること**で、#1185 の型そのものである。
+  # **Issue は題で重複排除されるので、10 分ごとに増え続けはしない**（check あたり 1 本）。
+  assert_contains "$log" "gh issue create --title [monitor] production: http" "再測できていない check も黙らせない"
+  [ -f "$LOG.body" ] || { fail "本文が無い"; return; }
+  assert_contains "$(cat "$LOG.body")" "no verdict" "判定が無かったと書く"
+}
+
 # **createdAt が読めないときに、もっともらしい嘘の経過時間を書かないこと**（#1185）。
 # **実測**: GNU date は `-d ""` をエラーにせず **今日の 00:00Z** として受ける
 # （`date -u -d "" '+%Y-%m-%dT%H:%M:%SZ'` → `2026-10-04T00:00:00Z`、同時刻 09:36Z）。
@@ -855,6 +899,7 @@ test_case "run: MONITOR_DATA_COMMIT_AT が無ければ deploy check を足さな
 test_case "run: deploy check が fail なら既存の report.sh がそのまま Issue にする（入口を増やさない）" t_run_deploy_check_opens_the_issue
 test_case "run: deploy check が ok なら何も作らない" t_run_deploy_check_ok_is_quiet
 test_case "run: 判定行が 1 本も出なかった check を ok に倒さない（#1185 / #1056）" t_run_missing_verdict_is_not_ok
+test_case "run: 2 回目の probe が死んで判定行が消えた check を ok に倒さない（Issue を閉じない・#1185）" t_run_second_round_died_does_not_close
 
 test_case "report: createdAt が読めなければ経過時間を作らない（date -d '' は今日の 00:00Z になる・#1185）" t_report_unreadable_created_at_is_not_a_number
 

@@ -49,8 +49,10 @@ export PROBE_NOW=${PROBE_NOW:-$(date +%s)}
 # one round = probe.sh's lines, plus deploy-started.sh's line when the commit time was handed in (#1185).
 # **`|| true` でまとめて飲まないこと**: それぞれの終了コードは「何かが fail した」の重複情報で、
 # 判定は下の `grep '^fail <check> '` が行の内容で行う。**行が 1 本も出なかった形は
-# `CHECKS` のループで `r1`/`r2` のどちらも空になり、fail として扱われない**ので、
+# `CHECKS` のループで `r1`/`r2` が空になり、fail として扱われない**ので、
 # **出力が空という形を別に検出する**（下の missing_lines）。
+# **片方のラウンドだけ欠けた形も同じく「測れていない」**: 1 回目に fail が出て 2 回目が死ぬと
+# `[ -n "$r1" ] && [ -n "$r2" ]` が偽になり **`ok` として Issue を閉じてしまう**。
 one_round() {
   local out=$1
   bash "$HERE/probe.sh" "$ORIGIN" > "$out" || true
@@ -79,12 +81,19 @@ for check in "${CHECKS[@]}"; do
   title="[monitor] $ENV_NAME: $check"
   r1=$(grep "^fail $check " "$TMP/r1" || true)
   r2=$(grep "^fail $check " "$TMP/r2" || true)
-  # **どちらのラウンドでも 1 行も出なかった check は「測れていない」。**
+  # **どちらか一方のラウンドでも 1 行も出なかった check は「測れていない」。**
   # **ここを `ok` に倒すと、probe.sh が途中で死んだ日に黙って緑になる**（#1185 の型）。
-  if ! grep -q "^\(ok\|fail\) $check\b" "$TMP/r1" && ! grep -q "^\(ok\|fail\) $check\b" "$TMP/r2"; then
+  # **`&&`（両方のラウンドで欠けたときだけ）では足りない**——**実際に起きるのは片側だけ死ぬ形である。**
+  # 1 回目に `fail` が出て 2 回目の probe が死ぬと、下の `[ -n "$r1" ] && [ -n "$r2" ]` が偽になり
+  # **`ok` に落ちて `report.sh … ok` が走る**。**39 時間 `escalated` だった Issue に
+  # 「Recovered: the check passed again」が書かれて閉じる。check は 1 度も通っていないのに。**
+  # しかも `escalated` と `— Nh 継続` の題が同時に剥がれ、次に立て直される Issue は
+  # `createdAt` が新しいので **経過時間が 0h に戻る**（#1185 のより悪い版）。
+  # **ラウンド 1 が全部 ok のときは上で `cp r1 r2` しているので、ここが誤爆することはない。**
+  if ! grep -q "^\(ok\|fail\) $check\b" "$TMP/r1" || ! grep -q "^\(ok\|fail\) $check\b" "$TMP/r2"; then
     EXIT=1
     cat > "$TMP/body.$check" <<BODY
-External check **${check}** of **${ENV_NAME}** (${ORIGIN}) **produced no verdict at all** in either round.
+External check **${check}** of **${ENV_NAME}** (${ORIGIN}) **produced no verdict** in at least one of the rounds.
 
 - reason: \`judgement line missing (the check did not report ok or fail)\`
 - first seen: $(date -u +%Y-%m-%dT%H:%M:%SZ)
