@@ -7,6 +7,16 @@
   "sangiin": "2019-11-19",
   "shugiin": "2019-10-15"
  },
+ "referral": {
+  "sangiin": {
+   "committee": "経済産業",
+   "date": "2019-11-20"
+  },
+  "shugiin": {
+   "committee": "経済産業",
+   "date": "2019-11-07"
+  }
+ },
  "result": {
   "lawNumber": "67",
   "promulgated": "2019-12-06",

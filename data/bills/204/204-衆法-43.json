@@ -3,6 +3,12 @@
  "id": "204-衆法-43",
  "kind": "衆法",
  "number": 43,
+ "referral": {
+  "shugiin": {
+   "committee": "内閣",
+   "date": "2021-10-04"
+  }
+ },
  "session": 204,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD2812.htm",
  "status": "未了",

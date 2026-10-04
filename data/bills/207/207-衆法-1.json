@@ -3,6 +3,12 @@
  "id": "207-衆法-1",
  "kind": "衆法",
  "number": 1,
+ "referral": {
+  "shugiin": {
+   "committee": "議院運営",
+   "date": "2022-10-03"
+  }
+ },
  "session": 207,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD71BE.htm",
  "status": "撤回",

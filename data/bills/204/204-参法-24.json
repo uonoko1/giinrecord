@@ -6,6 +6,12 @@
  "received": {
   "sangiin": "2021-03-10"
  },
+ "referral": {
+  "sangiin": {
+   "committee": "議院運営",
+   "date": "2021-04-22"
+  }
+ },
  "session": 204,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD213E.htm",
  "status": "未了",

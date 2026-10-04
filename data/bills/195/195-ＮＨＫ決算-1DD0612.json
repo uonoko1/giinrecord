@@ -3,6 +3,12 @@
  "id": "195-ＮＨＫ決算-1DD0612",
  "kind": "その他",
  "kindText": "ＮＨＫ決算",
+ "referral": {
+  "shugiin": {
+   "committee": "総務",
+   "date": "2020-10-26"
+  }
+ },
  "session": 195,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD0612.htm",
  "status": "未了",

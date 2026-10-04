@@ -3,6 +3,12 @@
  "id": "198-衆法-36",
  "kind": "衆法",
  "number": 36,
+ "referral": {
+  "shugiin": {
+   "committee": "東日本大震災復興特別",
+   "date": "2021-10-08"
+  }
+ },
  "session": 198,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD29CA.htm",
  "status": "未了",

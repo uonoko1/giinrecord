@@ -3,6 +3,12 @@
  "id": "197-国有財産-1DCF5DA",
  "kind": "その他",
  "kindText": "国有財産",
+ "referral": {
+  "shugiin": {
+   "committee": "決算行政監視",
+   "date": "2020-09-16"
+  }
+ },
  "result": {
   "shugiin": "閉会中審査"
  },

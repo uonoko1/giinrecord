@@ -3,6 +3,12 @@
  "id": "208-衆法-39",
  "kind": "衆法",
  "number": 39,
+ "referral": {
+  "shugiin": {
+   "committee": "政治改革に関する特別",
+   "date": "2024-10-04"
+  }
+ },
  "session": 208,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDC39A.htm",
  "status": "未了",

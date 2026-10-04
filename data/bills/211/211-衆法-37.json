@@ -3,6 +3,12 @@
  "id": "211-衆法-37",
  "kind": "衆法",
  "number": 37,
+ "referral": {
+  "shugiin": {
+   "committee": "財務金融",
+   "date": "2024-10-01"
+  }
+ },
  "session": 211,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDC51E.htm",
  "status": "未了",

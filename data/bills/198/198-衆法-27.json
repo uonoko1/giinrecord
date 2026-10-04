@@ -3,6 +3,12 @@
  "id": "198-衆法-27",
  "kind": "衆法",
  "number": 27,
+ "referral": {
+  "shugiin": {
+   "committee": "内閣",
+   "date": "2021-10-04"
+  }
+ },
  "session": 198,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD27EE.htm",
  "status": "未了",

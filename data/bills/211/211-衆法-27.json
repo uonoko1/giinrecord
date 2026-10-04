@@ -3,6 +3,12 @@
  "id": "211-衆法-27",
  "kind": "衆法",
  "number": 27,
+ "referral": {
+  "shugiin": {
+   "committee": "議院運営",
+   "date": "2024-10-01"
+  }
+ },
  "session": 211,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDC3F2.htm",
  "status": "未了",

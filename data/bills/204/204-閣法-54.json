@@ -7,6 +7,16 @@
   "sangiin": "2021-05-18",
   "shugiin": "2021-03-05"
  },
+ "referral": {
+  "sangiin": {
+   "committee": "地方創生及び消費者問題に関する特別",
+   "date": "2021-05-21"
+  },
+  "shugiin": {
+   "committee": "消費者問題に関する特別",
+   "date": "2021-04-22"
+  }
+ },
  "result": {
   "lawNumber": "72",
   "promulgated": "2021-06-16",

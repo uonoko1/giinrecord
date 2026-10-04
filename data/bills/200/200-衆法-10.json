@@ -3,6 +3,12 @@
  "id": "200-衆法-10",
  "kind": "衆法",
  "number": 10,
+ "referral": {
+  "shugiin": {
+   "committee": "文部科学",
+   "date": "2021-10-04"
+  }
+ },
  "session": 200,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD2872.htm",
  "status": "未了",

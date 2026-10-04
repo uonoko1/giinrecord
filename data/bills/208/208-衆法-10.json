@@ -6,6 +6,12 @@
  "received": {
   "shugiin": "2022-03-14"
  },
+ "referral": {
+  "shugiin": {
+   "committee": "内閣",
+   "date": "2022-03-17"
+  }
+ },
  "result": {
   "shugiin": "否決"
  },

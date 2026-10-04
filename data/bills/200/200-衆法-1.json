@@ -6,6 +6,12 @@
  "received": {
   "shugiin": "2019-10-24"
  },
+ "referral": {
+  "shugiin": {
+   "committee": "文部科学",
+   "date": "2019-12-06"
+  }
+ },
  "session": 200,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCE3DE.htm",
  "status": "未了",

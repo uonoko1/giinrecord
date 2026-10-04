@@ -3,6 +3,12 @@
  "id": "210-ＮＨＫ決算-1DD771E",
  "kind": "その他",
  "kindText": "ＮＨＫ決算",
+ "referral": {
+  "shugiin": {
+   "committee": "総務",
+   "date": "2023-01-23"
+  }
+ },
  "session": 210,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD771E.htm",
  "status": "未了",

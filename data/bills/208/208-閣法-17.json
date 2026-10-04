@@ -7,6 +7,16 @@
   "sangiin": "2022-03-24",
   "shugiin": "2022-02-04"
  },
+ "referral": {
+  "sangiin": {
+   "committee": "政治倫理の確立及び選挙制度に関する特別",
+   "date": "2022-03-24"
+  },
+  "shugiin": {
+   "committee": "政治倫理の確立及び公職選挙法改正に関する特別",
+   "date": "2022-03-09"
+  }
+ },
  "result": {
   "lawNumber": "16",
   "promulgated": "2022-04-06",

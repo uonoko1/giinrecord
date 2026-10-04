@@ -3,6 +3,12 @@
  "id": "204-衆法-45",
  "kind": "衆法",
  "number": 45,
+ "referral": {
+  "shugiin": {
+   "committee": "厚生労働",
+   "date": "2021-10-04"
+  }
+ },
  "session": 204,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD28CA.htm",
  "status": "未了",

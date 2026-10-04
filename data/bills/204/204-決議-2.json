@@ -6,6 +6,11 @@
  "received": {
   "shugiin": "2021-05-14"
  },
+ "referral": {
+  "shugiin": {
+   "noteText": "審査省略要求"
+  }
+ },
  "session": 204,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD23DA.htm",
  "status": "撤回",

@@ -7,6 +7,15 @@
   "sangiin": "2024-06-13",
   "shugiin": "2024-06-11"
  },
+ "referral": {
+  "sangiin": {
+   "committee": "内閣",
+   "date": "2024-06-17"
+  },
+  "shugiin": {
+   "noteText": "審査省略"
+  }
+ },
  "result": {
   "lawNumber": "68",
   "promulgated": "2024-06-26",
