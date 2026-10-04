@@ -3,6 +3,12 @@
  "id": "208-衆法-18",
  "kind": "衆法",
  "number": 18,
+ "referral": {
+  "shugiin": {
+   "committee": "国土交通",
+   "date": "2024-10-01"
+  }
+ },
  "session": 208,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDC542.htm",
  "status": "未了",

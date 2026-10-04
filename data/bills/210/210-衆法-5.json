@@ -6,6 +6,12 @@
  "received": {
   "shugiin": "2022-10-21"
  },
+ "referral": {
+  "shugiin": {
+   "committee": "厚生労働",
+   "date": "2022-10-25"
+  }
+ },
  "session": 210,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD746E.htm",
  "status": "未了",

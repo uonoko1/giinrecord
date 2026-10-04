@@ -375,6 +375,19 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104889X01520260527/0"
   },
   {
+   "committee": "内閣委員会",
+   "date": "2026-05-27",
+   "estimated": false,
+   "firstDate": "2026-05-27",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-27",
+   "meetingId": "122104889X01520260527_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104889X01520260527/0"
+  },
+  {
    "billId": "221-衆法-10",
    "date": "2026-05-26",
    "estimated": true,
@@ -425,6 +438,19 @@
    "stanceText": "少数",
    "status": "本院議了",
    "title": "刑事訴訟法の一部を改正する法律案"
+  },
+  {
+   "committee": "法務委員会",
+   "date": "2026-05-08",
+   "estimated": false,
+   "firstDate": "2026-05-08",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-08",
+   "meetingId": "122105206X00820260508_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105206X00820260508/0"
   },
   {
    "committee": "法務委員会",
@@ -1205,6 +1231,19 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105007X00320260312/0"
   },
   {
+   "committee": "農林水産委員会",
+   "date": "2026-03-12",
+   "estimated": false,
+   "firstDate": "2026-03-12",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-26",
+   "meetingId": "122105007X00320260312_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105007X00320260312/0"
+  },
+  {
    "billId": "221-衆法-2",
    "date": "2026-03-10",
    "kind": "bill",
@@ -1396,6 +1435,32 @@
    "role": "委員",
    "session": 221,
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00720260306/0"
+  },
+  {
+   "committee": "予算委員会",
+   "date": "2026-03-06",
+   "estimated": false,
+   "firstDate": "2026-03-06",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-06",
+   "meetingId": "122105261X00720260306_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00720260306/0"
+  },
+  {
+   "committee": "国土交通委員会",
+   "date": "2026-03-06",
+   "estimated": false,
+   "firstDate": "2026-03-06",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104319X00120260306_000",
+   "meetings": 14,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104319X00120260306/0"
   },
   {
    "committee": "国土交通委員会",
@@ -1628,6 +1693,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "政治改革に関する特別委員会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104575X00120260220_000",
+   "meetings": 9,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104575X00120260220/0"
   },
   {
    "committee": "政治改革に関する特別委員会",

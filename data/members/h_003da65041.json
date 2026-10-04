@@ -30,6 +30,19 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104037X00220260826/0"
   },
   {
+   "committee": "議院運営委員会庶務小委員会",
+   "date": "2026-08-26",
+   "estimated": false,
+   "firstDate": "2026-08-26",
+   "kind": "committeeRole",
+   "lastDate": "2026-08-26",
+   "meetingId": "122104037X00220260826_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104037X00220260826/0"
+  },
+  {
    "billId": "221-衆法-38",
    "date": "2026-07-22",
    "estimated": true,
@@ -67,6 +80,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "皇室典範等の一部を改正する法律案"
+  },
+  {
+   "committee": "沖縄及び北方問題に関する特別委員会",
+   "date": "2026-06-29",
+   "estimated": false,
+   "firstDate": "2026-06-29",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122103895X00320260629_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122103895X00320260629/0"
   },
   {
    "committee": "沖縄及び北方問題に関する特別委員会",
@@ -251,6 +277,19 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104780X00120260602/0"
   },
   {
+   "committee": "懲罰委員会",
+   "date": "2026-06-02",
+   "estimated": false,
+   "firstDate": "2026-06-02",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-02",
+   "meetingId": "122104780X00120260602_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104780X00120260602/0"
+  },
+  {
    "billId": "221-衆法-10",
    "date": "2026-05-26",
    "estimated": true,
@@ -301,6 +340,19 @@
    "stanceText": "少数",
    "status": "本院議了",
    "title": "刑事訴訟法の一部を改正する法律案"
+  },
+  {
+   "committee": "国家基本政策委員会",
+   "date": "2026-05-14",
+   "estimated": false,
+   "firstDate": "2026-05-14",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-14",
+   "meetingId": "122104292X00120260514_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104292X00120260514/0"
   },
   {
    "committee": "国家基本政策委員会",
@@ -587,6 +639,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "民法等の一部を改正する法律案"
+  },
+  {
+   "committee": "環境委員会",
+   "date": "2026-04-03",
+   "estimated": false,
+   "firstDate": "2026-04-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104006X00120260403_000",
+   "meetings": 15,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104006X00120260403/0"
   },
   {
    "committee": "環境委員会",
@@ -1057,6 +1122,19 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104601X00520260313/0"
   },
   {
+   "committee": "総務委員会",
+   "date": "2026-03-13",
+   "estimated": false,
+   "firstDate": "2026-03-13",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-13",
+   "meetingId": "122104601X00520260313_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104601X00520260313/0"
+  },
+  {
    "billId": "221-衆法-5",
    "date": "2026-03-12",
    "estimated": true,
@@ -1081,6 +1159,19 @@
    "stanceText": "少数",
    "status": "本院議了",
    "title": "予算委員長坂本哲志君解任決議案"
+  },
+  {
+   "committee": "災害対策特別委員会",
+   "date": "2026-03-12",
+   "estimated": false,
+   "firstDate": "2026-03-12",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-12",
+   "meetingId": "122104339X00320260312_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104339X00320260312/0"
   },
   {
    "committee": "災害対策特別委員会",
@@ -1330,6 +1421,19 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00420260303/0"
   },
   {
+   "committee": "予算委員会",
+   "date": "2026-03-03",
+   "estimated": false,
+   "firstDate": "2026-03-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-22",
+   "meetingId": "122105261X00420260303_000",
+   "meetings": 3,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00420260303/0"
+  },
+  {
    "billId": "221-閣法-9",
    "date": "2026-02-27",
    "estimated": true,
@@ -1499,6 +1603,32 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104183X00120260220/0"
   },
   {
+   "committee": "憲法審査会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-02-20",
+   "meetingId": "122104183X00120260220_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104183X00120260220/0"
+  },
+  {
+   "committee": "沖縄及び北方問題に関する特別委員会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-19",
+   "meetingId": "122103895X00120260220_000",
+   "meetings": 2,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122103895X00120260220/0"
+  },
+  {
    "committee": "沖縄及び北方問題に関する特別委員会",
    "date": "2026-02-20",
    "estimated": false,
@@ -1523,6 +1653,32 @@
    "role": "委員",
    "session": 221,
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104040X00120260219/0"
+  },
+  {
+   "committee": "議院運営委員会図書館運営小委員会",
+   "date": "2026-02-19",
+   "estimated": false,
+   "firstDate": "2026-02-19",
+   "kind": "committeeRole",
+   "lastDate": "2026-08-26",
+   "meetingId": "122104040X00120260219_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104040X00120260219/0"
+  },
+  {
+   "committee": "議院運営委員会",
+   "date": "2026-02-18",
+   "estimated": false,
+   "firstDate": "2026-02-18",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104024X00120260218_000",
+   "meetings": 39,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104024X00120260218/0"
   },
   {
    "committee": "議院運営委員会",

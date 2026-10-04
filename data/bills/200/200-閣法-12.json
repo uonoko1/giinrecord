@@ -6,6 +6,16 @@
  "received": {
   "shugiin": "2020-04-10"
  },
+ "referral": {
+  "sangiin": {
+   "committee": "法務",
+   "date": "2019-12-09"
+  },
+  "shugiin": {
+   "committee": "法務",
+   "date": "2020-04-13"
+  }
+ },
  "result": {
   "lawNumber": "33",
   "promulgated": "2020-05-29",

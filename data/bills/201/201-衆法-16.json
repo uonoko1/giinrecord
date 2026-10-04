@@ -7,6 +7,16 @@
   "sangiin": "2020-06-02",
   "shugiin": "2020-05-29"
  },
+ "referral": {
+  "sangiin": {
+   "committee": "政治倫理の確立及び選挙制度に関する特別",
+   "date": "2020-06-04"
+  },
+  "shugiin": {
+   "committee": "政治倫理の確立及び公職選挙法改正に関する特別",
+   "date": "2020-05-29"
+  }
+ },
  "result": {
   "lawNumber": "45",
   "promulgated": "2020-06-12",

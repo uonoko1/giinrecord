@@ -405,6 +405,19 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122103815X00220260409/0"
   },
   {
+   "committee": "安全保障委員会",
+   "date": "2026-04-09",
+   "estimated": false,
+   "firstDate": "2026-04-09",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-14",
+   "meetingId": "122103815X00220260409_000",
+   "meetings": 7,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122103815X00220260409/0"
+  },
+  {
    "billId": "221-閣法-56",
    "date": "2026-04-07",
    "estimated": true,

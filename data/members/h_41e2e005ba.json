@@ -30,6 +30,19 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104575X01220260724/0"
   },
   {
+   "committee": "政治改革に関する特別委員会",
+   "date": "2026-07-24",
+   "estimated": false,
+   "firstDate": "2026-07-24",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104575X01220260724_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104575X01220260724/0"
+  },
+  {
    "billId": "221-衆法-38",
    "date": "2026-07-22",
    "estimated": true,
@@ -67,6 +80,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "皇室典範等の一部を改正する法律案"
+  },
+  {
+   "committee": "地域活性化・こども政策・デジタル社会形成に関する特別委員会",
+   "date": "2026-06-30",
+   "estimated": false,
+   "firstDate": "2026-06-30",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-30",
+   "meetingId": "122105367X00920260630_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105367X00920260630/0"
   },
   {
    "committee": "地域活性化・こども政策・デジタル社会形成に関する特別委員会",
@@ -145,6 +171,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "有人国境離島地域の保全及び特定有人国境離島地域に係る地域社会の維持に関する特別措置法の一部を改正する法律案"
+  },
+  {
+   "committee": "議院運営委員会院内の警察及び秩序に関する小委員会",
+   "date": "2026-06-19",
+   "estimated": false,
+   "firstDate": "2026-06-19",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-19",
+   "meetingId": "122104025X00120260619_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104025X00120260619/0"
   },
   {
    "committee": "議院運営委員会院内の警察及び秩序に関する小委員会",
@@ -264,6 +303,19 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104127X00120260527/0"
   },
   {
+   "committee": "決算行政監視委員会",
+   "date": "2026-05-27",
+   "estimated": false,
+   "firstDate": "2026-05-27",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104127X00120260527_000",
+   "meetings": 3,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104127X00120260527/0"
+  },
+  {
    "billId": "221-衆法-10",
    "date": "2026-05-26",
    "estimated": true,
@@ -275,6 +327,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "国会議員の歳費、旅費及び手当等に関する法律の一部を改正する法律案"
+  },
+  {
+   "committee": "法務委員会",
+   "date": "2026-05-20",
+   "estimated": false,
+   "firstDate": "2026-05-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-20",
+   "meetingId": "122105206X01120260520_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105206X01120260520/0"
   },
   {
    "committee": "法務委員会",
@@ -327,6 +392,19 @@
    "stanceText": "少数",
    "status": "本院議了",
    "title": "刑事訴訟法の一部を改正する法律案"
+  },
+  {
+   "committee": "国家基本政策委員会",
+   "date": "2026-05-14",
+   "estimated": false,
+   "firstDate": "2026-05-14",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-14",
+   "meetingId": "122104292X00120260514_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104292X00120260514/0"
   },
   {
    "committee": "国家基本政策委員会",
@@ -405,6 +483,19 @@
    "stanceText": "全会一致",
    "status": "成立",
    "title": "自動車の運転により人を死傷させる行為等の処罰に関する法律及び道路交通法の一部を改正する法律案"
+  },
+  {
+   "committee": "災害対策特別委員会",
+   "date": "2026-04-16",
+   "estimated": false,
+   "firstDate": "2026-04-16",
+   "kind": "committeeRole",
+   "lastDate": "2026-04-16",
+   "meetingId": "122104339X00520260416_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104339X00520260416/0"
   },
   {
    "committee": "災害対策特別委員会",
@@ -626,6 +717,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "民法等の一部を改正する法律案"
+  },
+  {
+   "committee": "環境委員会",
+   "date": "2026-04-03",
+   "estimated": false,
+   "firstDate": "2026-04-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104006X00120260403_000",
+   "meetings": 15,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104006X00120260403/0"
   },
   {
    "committee": "環境委員会",
@@ -1382,6 +1486,19 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00120260226/0"
   },
   {
+   "committee": "予算委員会",
+   "date": "2026-02-26",
+   "estimated": false,
+   "firstDate": "2026-02-26",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-27",
+   "meetingId": "122105261X00120260226_000",
+   "meetings": 9,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00120260226/0"
+  },
+  {
    "billId": "221-閣法-6",
    "date": "2026-02-20",
    "estimated": true,
@@ -1497,6 +1614,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "議院運営委員会",
+   "date": "2026-02-18",
+   "estimated": false,
+   "firstDate": "2026-02-18",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104024X00120260218_000",
+   "meetings": 36,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104024X00120260218/0"
   },
   {
    "committee": "議院運営委員会",

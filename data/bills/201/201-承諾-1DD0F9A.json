@@ -6,6 +6,16 @@
  "received": {
   "sangiin": "2021-04-20"
  },
+ "referral": {
+  "sangiin": {
+   "committee": "決算",
+   "date": "2021-05-28"
+  },
+  "shugiin": {
+   "committee": "決算行政監視",
+   "date": "2021-01-18"
+  }
+ },
  "result": {
   "sangiin": "承諾",
   "shugiin": "承諾"

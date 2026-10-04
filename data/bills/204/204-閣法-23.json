@@ -7,6 +7,16 @@
   "sangiin": "2021-05-20",
   "shugiin": "2021-02-05"
  },
+ "referral": {
+  "sangiin": {
+   "committee": "経済産業",
+   "date": "2021-05-26"
+  },
+  "shugiin": {
+   "committee": "経済産業",
+   "date": "2021-04-27"
+  }
+ },
  "result": {
   "lawNumber": "70",
   "promulgated": "2021-06-16",

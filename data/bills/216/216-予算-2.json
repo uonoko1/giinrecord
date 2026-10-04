@@ -7,6 +7,20 @@
   "sangiin": "2024-12-12",
   "shugiin": "2024-12-09"
  },
+ "referral": {
+  "sangiin": {
+   "committee": "予算",
+   "date": "2024-12-12"
+  },
+  "sangiinPreliminary": {
+   "committee": "予算",
+   "date": "2024-12-09"
+  },
+  "shugiin": {
+   "committee": "予算",
+   "date": "2024-12-09"
+  }
+ },
  "result": {
   "sangiin": "可決",
   "shugiin": "可決"

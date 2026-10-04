@@ -6,6 +6,12 @@
  "received": {
   "shugiin": "2022-10-17"
  },
+ "referral": {
+  "shugiin": {
+   "committee": "消費者問題に関する特別",
+   "date": "2022-12-09"
+  }
+ },
  "session": 210,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD7426.htm",
  "status": "未了",

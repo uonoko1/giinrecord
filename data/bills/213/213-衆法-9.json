@@ -3,6 +3,12 @@
  "id": "213-衆法-9",
  "kind": "衆法",
  "number": 9,
+ "referral": {
+  "shugiin": {
+   "committee": "内閣",
+   "date": "2024-10-01"
+  }
+ },
  "session": 213,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDC4C2.htm",
  "status": "未了",

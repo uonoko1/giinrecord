@@ -167,6 +167,19 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104025X00120260619/0"
   },
   {
+   "committee": "議院運営委員会院内の警察及び秩序に関する小委員会",
+   "date": "2026-06-19",
+   "estimated": false,
+   "firstDate": "2026-06-19",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-19",
+   "meetingId": "122104025X00120260619_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104025X00120260619/0"
+  },
+  {
    "billId": "221-衆法-18",
    "date": "2026-06-16",
    "estimated": true,
@@ -592,6 +605,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "民法等の一部を改正する法律案"
+  },
+  {
+   "committee": "法務委員会",
+   "date": "2026-04-03",
+   "estimated": false,
+   "firstDate": "2026-04-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122105206X00120260403_000",
+   "meetings": 22,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105206X00120260403/0"
   },
   {
    "committee": "法務委員会",
@@ -1465,6 +1491,19 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104040X00120260219/0"
   },
   {
+   "committee": "議院運営委員会図書館運営小委員会",
+   "date": "2026-02-19",
+   "estimated": false,
+   "firstDate": "2026-02-19",
+   "kind": "committeeRole",
+   "lastDate": "2026-08-26",
+   "meetingId": "122104040X00120260219_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104040X00120260219/0"
+  },
+  {
    "committee": "議院運営委員会庶務小委員会",
    "date": "2026-02-19",
    "estimated": false,
@@ -1476,6 +1515,32 @@
    "role": "委員",
    "session": 221,
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104037X00120260219/0"
+  },
+  {
+   "committee": "議院運営委員会庶務小委員会",
+   "date": "2026-02-19",
+   "estimated": false,
+   "firstDate": "2026-02-19",
+   "kind": "committeeRole",
+   "lastDate": "2026-08-26",
+   "meetingId": "122104037X00120260219_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104037X00120260219/0"
+  },
+  {
+   "committee": "議院運営委員会",
+   "date": "2026-02-18",
+   "estimated": false,
+   "firstDate": "2026-02-18",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104024X00120260218_000",
+   "meetings": 38,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104024X00120260218/0"
   },
   {
    "committee": "議院運営委員会",

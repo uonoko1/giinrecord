@@ -7,6 +7,15 @@
   "sangiin": "2019-11-29",
   "shugiin": "2019-11-28"
  },
+ "referral": {
+  "sangiin": {
+   "committee": "災害対策特別",
+   "date": "2019-12-04"
+  },
+  "shugiin": {
+   "noteText": "審査省略"
+  }
+ },
  "result": {
   "lawNumber": "74",
   "promulgated": "2019-12-13",

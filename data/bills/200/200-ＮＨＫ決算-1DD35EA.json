@@ -3,6 +3,12 @@
  "id": "200-ＮＨＫ決算-1DD35EA",
  "kind": "その他",
  "kindText": "ＮＨＫ決算",
+ "referral": {
+  "shugiin": {
+   "committee": "総務",
+   "date": "2021-11-11"
+  }
+ },
  "session": 200,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD35EA.htm",
  "status": "未了",

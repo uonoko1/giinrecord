@@ -131,6 +131,19 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105367X01220260713/0"
   },
   {
+   "committee": "地域活性化・こども政策・デジタル社会形成に関する特別委員会",
+   "date": "2026-07-13",
+   "estimated": false,
+   "firstDate": "2026-07-13",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-15",
+   "meetingId": "122105367X01220260713_000",
+   "meetings": 3,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105367X01220260713/0"
+  },
+  {
    "billId": "221-衆法-29",
    "date": "2026-07-10",
    "estimated": true,
@@ -389,6 +402,19 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104780X00120260602/0"
   },
   {
+   "committee": "懲罰委員会",
+   "date": "2026-06-02",
+   "estimated": false,
+   "firstDate": "2026-06-02",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-02",
+   "meetingId": "122104780X00120260602_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104780X00120260602/0"
+  },
+  {
    "billId": "221-衆法-10",
    "date": "2026-05-26",
    "estimated": true,
@@ -465,6 +491,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "食育基本法の一部を改正する法律案"
+  },
+  {
+   "committee": "国土交通委員会",
+   "date": "2026-04-22",
+   "estimated": false,
+   "firstDate": "2026-04-22",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-03",
+   "meetingId": "122104319X00620260422_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104319X00620260422/0"
   },
   {
    "committee": "国土交通委員会",
@@ -725,6 +764,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "民法等の一部を改正する法律案"
+  },
+  {
+   "committee": "環境委員会",
+   "date": "2026-04-03",
+   "estimated": false,
+   "firstDate": "2026-04-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104006X00120260403_000",
+   "meetings": 15,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104006X00120260403/0"
   },
   {
    "committee": "環境委員会",
@@ -1408,6 +1460,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "防災庁設置法案"
+  },
+  {
+   "committee": "予算委員会",
+   "date": "2026-03-04",
+   "estimated": false,
+   "firstDate": "2026-03-04",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-04",
+   "meetingId": "122105261X00520260304_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00520260304/0"
   },
   {
    "committee": "予算委員会",

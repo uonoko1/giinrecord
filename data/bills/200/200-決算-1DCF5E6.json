@@ -3,6 +3,12 @@
  "id": "200-決算-1DCF5E6",
  "kind": "その他",
  "kindText": "決算",
+ "referral": {
+  "shugiin": {
+   "committee": "決算行政監視",
+   "date": "2020-09-16"
+  }
+ },
  "result": {
   "shugiin": "閉会中審査"
  },

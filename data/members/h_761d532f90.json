@@ -52,6 +52,32 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104080X01120260603/0"
   },
   {
+   "committee": "経済産業委員会",
+   "date": "2026-06-03",
+   "estimated": false,
+   "firstDate": "2026-06-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-03",
+   "meetingId": "122104080X01120260603_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104080X01120260603/0"
+  },
+  {
+   "committee": "内閣委員会",
+   "date": "2026-05-20",
+   "estimated": false,
+   "firstDate": "2026-05-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-20",
+   "meetingId": "122104889X01320260520_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104889X01320260520/0"
+  },
+  {
    "committee": "内閣委員会",
    "date": "2026-05-20",
    "estimated": false,
@@ -74,6 +100,19 @@
    "status": "本院議了",
    "submitterText": "西村 智奈美君外三名",
    "title": "刑事訴訟法の一部を改正する法律案"
+  },
+  {
+   "committee": "災害対策特別委員会",
+   "date": "2026-05-12",
+   "estimated": false,
+   "firstDate": "2026-05-12",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-12",
+   "meetingId": "122104339X00820260512_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104339X00820260512/0"
   },
   {
    "committee": "災害対策特別委員会",
@@ -135,6 +174,32 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00620260305/0"
   },
   {
+   "committee": "予算委員会",
+   "date": "2026-03-05",
+   "estimated": false,
+   "firstDate": "2026-03-05",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-12",
+   "meetingId": "122105261X00620260305_000",
+   "meetings": 2,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00620260305/0"
+  },
+  {
+   "committee": "文部科学委員会",
+   "date": "2026-03-03",
+   "estimated": false,
+   "firstDate": "2026-03-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122105124X00120260303_000",
+   "meetings": 13,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105124X00120260303/0"
+  },
+  {
    "committee": "文部科学委員会",
    "date": "2026-03-03",
    "estimated": false,
@@ -157,6 +222,19 @@
    "status": "衆議院で閉会中審査",
    "submitterText": "落合 貴之君外四名",
    "title": "政治資金規正法の一部を改正する法律案"
+  },
+  {
+   "committee": "憲法審査会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104183X00120260220_000",
+   "meetings": 13,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104183X00120260220/0"
   },
   {
    "committee": "憲法審査会",

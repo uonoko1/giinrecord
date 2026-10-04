@@ -3,6 +3,12 @@
  "id": "200-ＮＨＫ決算-1DD5E22",
  "kind": "その他",
  "kindText": "ＮＨＫ決算",
+ "referral": {
+  "shugiin": {
+   "committee": "総務",
+   "date": "2022-08-03"
+  }
+ },
  "session": 200,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD5E22.htm",
  "status": "未了",

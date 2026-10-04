@@ -8,6 +8,16 @@
   "sangiin": "2020-03-26",
   "shugiin": "2020-03-13"
  },
+ "referral": {
+  "sangiin": {
+   "committee": "内閣",
+   "date": "2020-03-30"
+  },
+  "shugiin": {
+   "committee": "内閣",
+   "date": "2020-03-24"
+  }
+ },
  "result": {
   "sangiin": "可決",
   "shugiin": "可決"

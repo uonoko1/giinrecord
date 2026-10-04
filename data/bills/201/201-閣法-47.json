@@ -7,6 +7,16 @@
   "sangiin": "2020-06-02",
   "shugiin": "2020-03-10"
  },
+ "referral": {
+  "sangiin": {
+   "committee": "内閣",
+   "date": "2020-06-08"
+  },
+  "shugiin": {
+   "committee": "科学技術・イノベーション推進特別",
+   "date": "2020-05-27"
+  }
+ },
  "result": {
   "lawNumber": "63",
   "promulgated": "2020-06-24",

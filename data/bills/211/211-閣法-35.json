@@ -7,6 +7,16 @@
   "sangiin": "2023-02-28",
   "shugiin": "2023-04-14"
  },
+ "referral": {
+  "sangiin": {
+   "committee": "文教科学",
+   "date": "2023-04-10"
+  },
+  "shugiin": {
+   "committee": "文部科学",
+   "date": "2023-05-19"
+  }
+ },
  "result": {
   "lawNumber": "38",
   "promulgated": "2023-05-31",

@@ -7,6 +7,16 @@
   "sangiin": "2020-11-20",
   "shugiin": "2020-10-30"
  },
+ "referral": {
+  "sangiin": {
+   "committee": "農林水産",
+   "date": "2020-11-30"
+  },
+  "shugiin": {
+   "committee": "農林水産",
+   "date": "2020-11-18"
+  }
+ },
  "result": {
   "lawNumber": "79",
   "promulgated": "2020-12-11",

@@ -7,6 +7,16 @@
   "sangiin": "2024-02-20",
   "shugiin": "2024-02-16"
  },
+ "referral": {
+  "sangiin": {
+   "committee": "総務",
+   "date": "2024-02-20"
+  },
+  "shugiin": {
+   "committee": "総務",
+   "date": "2024-02-16"
+  }
+ },
  "result": {
   "lawNumber": "2",
   "promulgated": "2024-02-21",

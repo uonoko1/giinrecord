@@ -1018,6 +1018,19 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105007X00220260311/0"
   },
   {
+   "committee": "農林水産委員会",
+   "date": "2026-03-11",
+   "estimated": false,
+   "firstDate": "2026-03-11",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122105007X00220260311_000",
+   "meetings": 15,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105007X00220260311/0"
+  },
+  {
    "billId": "221-閣法-23",
    "date": "2026-03-10",
    "estimated": true,

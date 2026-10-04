@@ -6,6 +6,11 @@
  "received": {
   "shugiin": "2021-06-07"
  },
+ "referral": {
+  "shugiin": {
+   "noteText": "審査省略"
+  }
+ },
  "result": {
   "shugiin": "可決"
  },

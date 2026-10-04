@@ -3,6 +3,12 @@
  "id": "213-閣法-53",
  "kind": "閣法",
  "number": 53,
+ "referral": {
+  "sangiin": {
+   "committee": "内閣",
+   "date": "2024-06-20"
+  }
+ },
  "session": 213,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDC5FE.htm",
  "status": "未了",

@@ -6,12 +6,15 @@
  "referral": {
   "shugiin": {
    "committee": "厚生労働",
-   "date": "2026-01-23"
+   "date": "2024-11-28"
   }
  },
+ "result": {
+  "shugiin": "閉会中審査"
+ },
  "session": 215,
- "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0CA6.htm",
- "status": "未了",
+ "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDD7B6.htm",
+ "status": "衆議院で閉会中審査",
  "submitterGroups": [
   "立憲民主党・無所属"
  ],
@@ -21,9 +24,10 @@
   "柚木道義",
   "中島克仁",
   "井坂信彦",
-  "早稲田ゆき"
+  "早稲田ゆき",
+  "堤かなめ"
  ],
- "submitterText": "階 猛君外五名",
+ "submitterText": "階 猛君外六名",
  "supporterNames": [
   "青柳陽一郎",
   "青山大人",
@@ -117,6 +121,7 @@
   "橋本慧悟",
   "長谷川嘉一",
   "波多野翼",
+  "馬場雄基",
   "原口一博",
   "伴野豊",
   "平岡秀夫",

@@ -195,6 +195,19 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104575X00220260611/0"
   },
   {
+   "committee": "政治改革に関する特別委員会",
+   "date": "2026-06-11",
+   "estimated": false,
+   "firstDate": "2026-06-11",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104575X00220260611_000",
+   "meetings": 11,
+   "role": "理事",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104575X00220260611/0"
+  },
+  {
    "billId": "221-閣法-63",
    "date": "2026-06-09",
    "estimated": true,
@@ -260,6 +273,19 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104127X00120260527/0"
   },
   {
+   "committee": "決算行政監視委員会",
+   "date": "2026-05-27",
+   "estimated": false,
+   "firstDate": "2026-05-27",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104127X00120260527_000",
+   "meetings": 3,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104127X00120260527/0"
+  },
+  {
    "billId": "221-衆法-10",
    "date": "2026-05-26",
    "estimated": true,
@@ -271,6 +297,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "国会議員の歳費、旅費及び手当等に関する法律の一部を改正する法律案"
+  },
+  {
+   "committee": "外務委員会",
+   "date": "2026-05-22",
+   "estimated": false,
+   "firstDate": "2026-05-22",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-22",
+   "meetingId": "122103968X01220260522_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122103968X01220260522/0"
   },
   {
    "committee": "外務委員会",
@@ -336,6 +375,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "人工衛星等の打上げ及び人工衛星の管理に関する法律等の一部を改正する法律案"
+  },
+  {
+   "committee": "法務委員会",
+   "date": "2026-04-24",
+   "estimated": false,
+   "firstDate": "2026-04-24",
+   "kind": "committeeRole",
+   "lastDate": "2026-04-24",
+   "meetingId": "122105206X00720260424_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105206X00720260424/0"
   },
   {
    "committee": "法務委員会",
@@ -609,6 +661,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "民法等の一部を改正する法律案"
+  },
+  {
+   "committee": "安全保障委員会",
+   "date": "2026-04-03",
+   "estimated": false,
+   "firstDate": "2026-04-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122103815X00120260403_000",
+   "meetings": 9,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122103815X00120260403/0"
   },
   {
    "committee": "安全保障委員会",
@@ -1196,6 +1261,19 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105262X00120260310/0"
   },
   {
+   "committee": "予算委員会公聴会",
+   "date": "2026-03-10",
+   "estimated": false,
+   "firstDate": "2026-03-10",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-10",
+   "meetingId": "122105262X00120260310_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105262X00120260310/0"
+  },
+  {
    "billId": "221-閣法-18",
    "date": "2026-03-06",
    "estimated": true,
@@ -1378,6 +1456,19 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00120260226/0"
   },
   {
+   "committee": "予算委員会",
+   "date": "2026-02-26",
+   "estimated": false,
+   "firstDate": "2026-02-26",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-27",
+   "meetingId": "122105261X00120260226_000",
+   "meetings": 17,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00120260226/0"
+  },
+  {
    "billId": "221-閣法-6",
    "date": "2026-02-20",
    "estimated": true,
@@ -1508,6 +1599,32 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104575X00120260220/0"
   },
   {
+   "committee": "政治改革に関する特別委員会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-02-20",
+   "meetingId": "122104575X00120260220_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104575X00120260220/0"
+  },
+  {
+   "committee": "憲法審査会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-02-20",
+   "meetingId": "122104183X00120260220_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104183X00120260220/0"
+  },
+  {
    "committee": "憲法審査会",
    "date": "2026-02-20",
    "estimated": false,
@@ -1532,6 +1649,32 @@
    "role": "委員",
    "session": 221,
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104040X00120260219/0"
+  },
+  {
+   "committee": "議院運営委員会図書館運営小委員会",
+   "date": "2026-02-19",
+   "estimated": false,
+   "firstDate": "2026-02-19",
+   "kind": "committeeRole",
+   "lastDate": "2026-02-19",
+   "meetingId": "122104040X00120260219_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104040X00120260219/0"
+  },
+  {
+   "committee": "議院運営委員会",
+   "date": "2026-02-18",
+   "estimated": false,
+   "firstDate": "2026-02-18",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122104024X00120260218_000",
+   "meetings": 29,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104024X00120260218/0"
   },
   {
    "committee": "議院運営委員会",

@@ -182,6 +182,19 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105007X01320260609/0"
   },
   {
+   "committee": "農林水産委員会",
+   "date": "2026-06-09",
+   "estimated": false,
+   "firstDate": "2026-06-09",
+   "kind": "committeeRole",
+   "lastDate": "2026-06-09",
+   "meetingId": "122105007X01320260609_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105007X01320260609/0"
+  },
+  {
    "billId": "221-衆法-11",
    "date": "2026-06-05",
    "estimated": true,
@@ -232,6 +245,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "国会議員の歳費、旅費及び手当等に関する法律の一部を改正する法律案"
+  },
+  {
+   "committee": "総務委員会",
+   "date": "2026-05-26",
+   "estimated": false,
+   "firstDate": "2026-05-26",
+   "kind": "committeeRole",
+   "lastDate": "2026-05-26",
+   "meetingId": "122104601X01120260526_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104601X01120260526/0"
   },
   {
    "committee": "総務委員会",
@@ -1305,6 +1331,32 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00420260303/0"
   },
   {
+   "committee": "予算委員会",
+   "date": "2026-03-03",
+   "estimated": false,
+   "firstDate": "2026-03-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-03-03",
+   "meetingId": "122105261X00420260303_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00420260303/0"
+  },
+  {
+   "committee": "文部科学委員会",
+   "date": "2026-03-03",
+   "estimated": false,
+   "firstDate": "2026-03-03",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122105124X00120260303_000",
+   "meetings": 14,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105124X00120260303/0"
+  },
+  {
    "committee": "文部科学委員会",
    "date": "2026-03-03",
    "estimated": false,
@@ -1483,6 +1535,19 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
+  },
+  {
+   "committee": "地域活性化・こども政策・デジタル社会形成に関する特別委員会",
+   "date": "2026-02-20",
+   "estimated": false,
+   "firstDate": "2026-02-20",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-24",
+   "meetingId": "122105367X00120260220_000",
+   "meetings": 13,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105367X00120260220/0"
   },
   {
    "committee": "地域活性化・こども政策・デジタル社会形成に関する特別委員会",

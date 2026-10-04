@@ -7,6 +7,16 @@
   "sangiin": "2023-04-13",
   "shugiin": "2023-03-03"
  },
+ "referral": {
+  "sangiin": {
+   "committee": "国土交通",
+   "date": "2023-04-24"
+  },
+  "shugiin": {
+   "committee": "国土交通",
+   "date": "2023-04-05"
+  }
+ },
  "result": {
   "lawNumber": "24",
   "promulgated": "2023-05-12",

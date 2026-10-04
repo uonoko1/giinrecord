@@ -7,6 +7,16 @@
   "sangiin": "2023-03-24",
   "shugiin": "2023-02-10"
  },
+ "referral": {
+  "sangiin": {
+   "committee": "総務",
+   "date": "2023-03-29"
+  },
+  "shugiin": {
+   "committee": "総務",
+   "date": "2023-03-13"
+  }
+ },
  "result": {
   "sangiin": "承認",
   "shugiin": "承認"
