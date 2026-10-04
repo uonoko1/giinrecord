@@ -94,6 +94,79 @@ function hasPullRequestTrigger(text: string): boolean {
 }
 
 /**
+ * トップレベルの `on: pull_request:` が **`paths:` で絞られている**かどうか（#1180）。
+ *
+ * **なぜ要るか**: `paths:` で絞られた job は、**その paths を触らない PR では
+ * check-run がそもそも作られない。** だから `merge-when-green.sh` の
+ * 「必須 N 件」に毎回数えることはできず、**出てきたときだけ見ればよい。**
+ *
+ * **実測（2026-10-04）**: 直近 60 件のマージ済み PR のうち、guard の paths を
+ * 触ったのは **PR #1150 の 1 件だけ**で、そのとき **`monitor` が `success` で現れた**
+ * （HEAD `c0506cbe`）。**残り 59 件には 1 件も出ていない。**
+ *
+ * `hasPullRequestTrigger` と同じインデント規則で読む（正規表現で全文を漁らない）。
+ * **`pull_request:` ブロックの中に `paths:` か `paths-ignore:` が在るか**だけを見る
+ * ——**中身の妥当性は見ない**（それは別の問い）。
+ */
+function pullRequestIsPathLimited(text: string): boolean {
+  const lines = text.split("\n").map(stripComment);
+  const start = lines.findIndex((l) => /^on:\s*$/.test(l));
+  if (start < 0) return false;
+  let prAt = -1;
+  let prIndent = -1;
+  for (let i = start + 1; i < lines.length; i++) {
+    const l = lines[i];
+    if (l.trim() === "") continue;
+    if (!/^\s/.test(l)) break;
+    const ind = l.length - l.trimStart().length;
+    if (prAt < 0 && /^\s{2}pull_request:\s*$/.test(l)) {
+      prAt = i;
+      prIndent = ind;
+      continue;
+    }
+    if (prAt >= 0) {
+      if (ind <= prIndent) break;   // 次のトリガーに入った
+      if (ind === prIndent + 2 && /^(paths|paths-ignore):\s*$/.test(l.trim())) return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * **job 直下の `if:` が、`pull_request` イベントで必ず false になる**か（#1180）。
+ *
+ * **`/github\.event_name/` に当たるかどうかでは判定できない**——**これは実測で踏んだ。**
+ * **`ci.yml` の `stale-base` と `stale-base-net-deletions` の `if:` は**
+ * **`github.event_name == 'pull_request'` で、同じ正規表現に当たるが意味は正反対である**
+ * （「PR でだけ走る」）。#940 の検査は `issue-secrets` 1 件にしか使っていないので
+ * あの緩さで足りていたが、**一般の述語としては使えない。**
+ *
+ * **ここでは `github.event_name` を `'pull_request'` に束縛して、式を実際に畳む。**
+ * **扱う形は `==` / `!=` / `||` / `&&` と括弧の無い単純な連言・選言だけ**で、
+ * **それ以外（`github.event.*` を見る・関数呼び出し・括弧）は「判定できない」として
+ * `false` を返す**——**分からないものを「PR では走らない」と言わない**（fail-closed）。
+ * **実測（2026-10-04）**: この repo の job 直下の `if:` は 6 件あり、全部この形で読める。
+ */
+function jobIfIsFalseOnPullRequest(cond: string | null): boolean {
+  if (cond === null) return false;
+  if (/[()]/.test(cond)) return false;                       // 括弧は畳まない（fail-closed）
+  const orParts = cond.split("||");
+  const evalAtom = (atom: string): boolean | null => {
+    const m = /^\s*github\.event_name\s*(==|!=)\s*'([a-z_]+)'\s*$/.exec(atom);
+    if (!m) return null;                                     // 読めない項（fail-closed）
+    return m[1] === "==" ? m[2] === "pull_request" : m[2] !== "pull_request";
+  };
+  // `a || b` が false ⟺ すべての選言肢が false。各選言肢は連言 `x && y`。
+  for (const orPart of orParts) {
+    const andParts = orPart.split("&&");
+    const values = andParts.map(evalAtom);
+    if (values.some((v) => v === null)) return false;        // 1 つでも読めなければ判定しない
+    if (values.every((v) => v === true)) return false;       // この選言肢が true → 式は true
+  }
+  return true;
+}
+
+/**
  * job 直下の `if:` を取り出す（#940）。`jobNamesOfText` と同じ考え方で、`jobs:` の下の
  * job ブロックを見つけ、そのブロック内で**さらに 1 段深い** `if:` を拾う。
  * steps の中の `if:` は 2 段以上深いので拾わない。
@@ -632,5 +705,220 @@ test("#541 branch-protection.sh の REQUIRED_CHECKS と、このファイルの 
     fromShell,
     [...REQUIRED_CHECKS].sort(),
     "branch-protection.sh の REQUIRED_CHECKS と packages/etl 側の REQUIRED_CHECKS が食い違っている",
+  );
+});
+
+/**
+ * #1180: **`merge-when-green.sh` の 3 つの配列と、workflow の job 名を突き合わせる。**
+ *
+ * ## 何が問題だったか（実測）
+ *
+ * **マージの門が毎回・必ずこう鳴っていた**（実測 4 回。2026-10-03 に 2 回、10-04 に 2 回）:
+ *
+ *     note: 知らない検査があります（必須として扱います。…）: issue-secrets stale-base-net-deletions
+ *
+ * **毎回鳴る警告は読まれなくなる**ので、**本当に新しい job が増えたときの同じ文面が埋もれる**
+ * ——**#1185（93 時間正しく鳴っていた監視を誰も見なかった）の前段階そのものである。**
+ *
+ * **そして実害は警告だけではなかった**: どちらの配列にも無い名前は
+ * `is_required_check` の fail-closed で**必須に数えられる**。**`EXEMPT_FROM_REQUIRED`
+ * （このファイルの上の allowlist）は、まさにその job たちを「必須にしてはいけない」と
+ * 明記している**——必須にすると全 PR が永久に pending になるからである。
+ * **2 つのファイルが逆のことを言っていた。**
+ *
+ * ## 受け入れ条件 4 への答え: **完全な導出はできない。できない理由を書く**
+ *
+ * **「`ci.yml` から 3 つの配列を導出する」は、`REQUIRED` と `NONREQUIRED` の**
+ * **境目については原理的にできない。** 理由は 2 つある:
+ *
+ * **(1) 「赤いが通してよい」は YAML に書かれていない。**
+ * `stale-base`（必須）と `stale-base-net-deletions`（必須でない）は、**YAML の上では
+ * 同じ形をした 2 つの job である**——`if:` も `needs:` も `runs-on:` も同じで、
+ * 違うのは `run:` が渡すフラグだけ。**両者を分けているのは
+ * 「`--net-deletions` は移動・整理で正常に赤くなる（4 件中 2 件が本物）」という
+ * 人間の判断**であって、**機械が読める標識ではない**（#836 / #858 / #1162）。
+ * **導出すると、この判断が消える。**
+ *
+ * **(2) 必須かどうかの最終的な権限は GitHub 側に在り、リポジトリの中に無い。**
+ * `required_status_checks.contexts` は **4 件**（実測 2026-10-03:
+ * `["check","gitleaks","forbidden-patterns","audit"]`）で、**`ci.yml` には書かれていない。**
+ * **この道具はそれより厳しくしてよいが、緩めてはいけない**（#858 の但し書き）。
+ * **`ci.yml` から導出すると、GitHub 側の 4 件との関係が切れる。**
+ *
+ * **＝ だから「導出」ではなく「突き合わせ」にした。** **値は 3 つとも人が書く**（#499:
+ * 期待値はハードコードする）**が、「どれかに載っていること」は機械が確かめる。**
+ * **人が忘れられるのは「足すこと」だけで、「足し忘れ」は必ず落ちる。**
+ *
+ * **導出できる部分はある**: **`PR_GATED_CHECKS` の中身は workflow から判定できる**
+ * （`if:` がイベントで閉じている / `pull_request:` が `paths:` で絞られている）。
+ * **下の 2 本目がそれを実際に判定して、人が書いた一覧と突き合わせる。**
+ *
+ * ## 走査が縮退したら落ちる（#1147 / #1118 で 2 回踏んだ型）
+ *
+ * **母数を 3 つとも assert する**: job が 0 件・配列が読めない・配列が空、のどれでも落ちる。
+ */
+function shellArrayOf(sh: string, name: string): string[] {
+  const m = sh.match(new RegExp(`^${name}=\\(([^)]*)\\)\\s*$`, "m"));
+  assert.ok(m, `scripts/po/merge-when-green.sh に ${name}=(...) が見つからない`);
+  return m[1].trim().split(/\s+/).filter(Boolean);
+}
+
+test("#1180 PR に現れうる job は、merge-when-green.sh の 3 つの配列のどれかに載っている", () => {
+  const shPath = resolve(here, "../../../scripts/po/merge-when-green.sh");
+  const sh = readFileSync(shPath, "utf8");
+
+  const required = shellArrayOf(sh, "REQUIRED_CHECKS");
+  const nonrequired = shellArrayOf(sh, "NONREQUIRED_CHECKS");
+  const prGated = shellArrayOf(sh, "PR_GATED_CHECKS");
+
+  // 母数（#757）: 3 つとも空でないこと。**空なら下の差集合が「全部載っている」に見える**
+  // ——いや、逆に全部落ちる向きだが、**`prGated` が空のときだけは
+  // 「#1180 の前に戻った」ことが差集合に出ない場合がある**ので明示的に見る。
+  assert.ok(required.length > 0, "REQUIRED_CHECKS が空（配列を読めていない。#1147 の縮退）");
+  assert.ok(nonrequired.length > 0, "NONREQUIRED_CHECKS が空（配列を読めていない）");
+  assert.ok(prGated.length > 0, "PR_GATED_CHECKS が空（#1180 の前に戻っている）");
+
+  // **check-run 名は job 名である**（workflow の名前ではない）。`guard` は 3 つの
+  // workflow に在るが、check-run としては 1 つの名前にしかならない。
+  const onPRJobNames = [...new Set(allJobs.filter((j) => j.onPullRequest).map((j) => j.name))].sort();
+
+  // 母数（#757）: **glob が 0 件 / YAML が読めない**と、ここが空になって下の差集合が
+  // 空になり「全部載っている」という嘘の緑になる（#1147 / #1118 で 2 回踏んだ型）。
+  assert.ok(
+    onPRJobNames.length >= 8,
+    `pull_request で走る job が ${onPRJobNames.length} 件しか見つからない（実測 2026-10-04 は 11 件）。` +
+      `走査が縮退している（#1147 / #1118）`,
+  );
+
+  const known = new Set([...required, ...nonrequired, ...prGated]);
+  const missing = onPRJobNames.filter((n) => !known.has(n));
+  assert.deepEqual(
+    missing,
+    [],
+    `PR の check-run として現れうる job が merge-when-green.sh のどの配列にも無い: ${missing.join(", ")}。` +
+      `**この道具は毎回「知らない検査があります」と鳴り、かつ fail-closed で必須に数える**` +
+      `（paths 限定の guard なら、赤いとき --allow-nonrequired-red でも通せなくなる）。` +
+      `REQUIRED_CHECKS / NONREQUIRED_CHECKS / PR_GATED_CHECKS のどれかに足すこと（#1180）`,
+  );
+
+  // **逆向き（痩せたら落とす。#499）**: 配列にある名前は、実在する job に対応している。
+  // **これが無いと、job を消しても改名しても配列が浮いたまま緑になる。**
+  const allJobNames = new Set(allJobs.map((j) => j.name));
+  const dangling = [...known].filter((n) => !allJobNames.has(n)).sort();
+  assert.deepEqual(
+    dangling,
+    [],
+    `merge-when-green.sh の配列に名前があるが、対応する job が実在しない（消えた/改名された）: ${dangling.join(", ")}`,
+  );
+});
+
+/**
+ * #1180: **`PR_GATED_CHECKS` に載せてよい条件が、workflow 側で本当に成り立っているか。**
+ *
+ * **#940 が `EXEMPT_FROM_REQUIRED` に対してやったことの、`PR_GATED_CHECKS` 版である**
+ * ——**理由を書いた側（配列）と、理由が成り立つ側（workflow）を突き合わせる。**
+ *
+ * **載せてよい条件は 2 つだけ**（どちらも「PR の内容と無関係に走らないことがある」）:
+ *   (a) job 直下の `if:` が `github.event_name` で閉じている（PR では必ず skipped）
+ *   (b) `on: pull_request:` が `paths:` で絞られている（触らない PR では check-run が出ない）
+ *
+ * **これが #1180 の受け入れ条件 3 が言う「2 層目」である。**
+ * **1 層目**（`EXEMPT_FROM_REQUIRED` との一致、下）は**「必須にしてはいけない job と
+ * 一致しているか」**を見る。**2 層目**（ここ）は**「なぜ必須にしてはいけないのか」**を
+ * **workflow の実ファイルで**確かめる。**相補的である**: 1 層目は
+ * `EXEMPT_FROM_REQUIRED` 自身が腐ったら一緒に腐るが、**2 層目は workflow を読むので
+ * 腐らない。** 逆に 2 層目は「条件を満たす job を配列から落とす」のを検出しないが、
+ * **1 層目が検出する。**
+ */
+test("#1180 PR_GATED_CHECKS の各名前は、`if:` で閉じているか paths で絞られている", () => {
+  const shPath = resolve(here, "../../../scripts/po/merge-when-green.sh");
+  const prGated = shellArrayOf(readFileSync(shPath, "utf8"), "PR_GATED_CHECKS");
+  assert.ok(prGated.length > 0, "PR_GATED_CHECKS が空。この検査は何も見ていない（#757）");
+
+  let gatedByIf = 0;
+  let gatedByPaths = 0;
+  for (const name of prGated) {
+    // **その名前を持つ job が在る workflow を全部見る**（`guard` は 3 ファイルに在る）。
+    const owners = allJobs.filter((j) => j.name === name);
+    assert.ok(owners.length > 0, `PR_GATED_CHECKS の \`${name}\` に対応する job が実在しない`);
+    for (const owner of owners) {
+      const text = readFileSync(resolve(wfDir, owner.file), "utf8");
+      const cond = jobIfOf(text, name);
+      // **`/github\.event_name/` に当たるかでは判定しない**（`stale-base` の
+      // `if: github.event_name == 'pull_request'` が当たってしまう。実測で踏んだ）。
+      // **式を `pull_request` で畳んで、必ず false になることを確かめる。**
+      const byIf = jobIfIsFalseOnPullRequest(cond);
+      const byPaths = pullRequestIsPathLimited(text);
+      assert.ok(
+        byIf || byPaths,
+        `${owner.file}:${name} は PR_GATED_CHECKS に在るのに、job 直下の \`if:\` が` +
+          `イベントで閉じてもおらず、\`on: pull_request:\` が \`paths:\` でも絞られていない。` +
+          `**つまりこの job は PR で必ず走る**ので、走らなかったら異常である（#1180）`,
+      );
+      if (byIf) gatedByIf++;
+      else gatedByPaths++;
+    }
+  }
+  // 母数（#757）: **2 つの条件がどちらも実在していること。** 片方が 0 件なら、
+  // その枝は 1 度も踏まれていない＝**条件を 1 つしか検査していない。**
+  assert.ok(gatedByIf > 0, `\`if:\` で閉じた job が 0 件（(a) の枝が空回りしている）`);
+  assert.ok(gatedByPaths > 0, `paths で絞られた job が 0 件（(b) の枝が空回りしている）`);
+});
+
+/**
+ * #1180: **`PR_GATED_CHECKS` と `EXEMPT_FROM_REQUIRED` が同じものを指している**こと。
+ *
+ * **これが「2 つのファイルが逆のことを言っていた」を塞ぐ 1 層目である。**
+ * `EXEMPT_FROM_REQUIRED` は「**必須にしてはいけない** job」の一覧で、
+ * `PR_GATED_CHECKS` は「merge-when-green.sh が**必須に数えない** job」の一覧。
+ * **同じことを 2 つのファイルで言っているので、ずれたら落とす**（#1056 / #1189 と同じ型）。
+ *
+ * **`stale-base` / `stale-base-net-deletions` / `docker-web` / `pr-closes` は
+ * `EXEMPT_FROM_REQUIRED` に在るが `PR_GATED_CHECKS` には**入らない**:
+ * **あれらは PR で必ず走る**（`if:` はイベントで閉じておらず、`paths:` でも絞られていない）。
+ * **「GitHub の必須に登録していない」と「PR で走らないことがある」は別の問いである。**
+ * **その差は下で明示的に固定する**——**差が消えたら落ちる。**
+ */
+test("#1180 PR_GATED_CHECKS は、必須外 allowlist のうち「PR で走らないことがある」ものと一致する", () => {
+  const shPath = resolve(here, "../../../scripts/po/merge-when-green.sh");
+  const prGated = [...shellArrayOf(readFileSync(shPath, "utf8"), "PR_GATED_CHECKS")].sort();
+
+  // `EXEMPT_FROM_REQUIRED` のうち、**workflow が「PR で走らないことがある」と言っている**もの。
+  // **ここは導出する**（workflow の実ファイルから判定する）——**この一覧だけは
+  // 人が書かなくてよい部分である。**
+  const gatedFromWorkflows = [
+    ...new Set(
+      EXEMPT_FROM_REQUIRED.filter((jobId) => {
+        const [file, name] = jobId.split(":");
+        const text = readFileSync(resolve(wfDir, file), "utf8");
+        const cond = jobIfOf(text, name);
+        return jobIfIsFalseOnPullRequest(cond) || pullRequestIsPathLimited(text);
+      }).map((jobId) => jobId.split(":")[1]),
+    ),
+  ].sort();
+
+  // 母数（#757）: 0 件なら下の deepEqual は「両方空」で緑になりうる。
+  assert.ok(
+    gatedFromWorkflows.length > 0,
+    "必須外 allowlist に「PR で走らないことがある」job が 1 件も無い（判定が縮退している）",
+  );
+
+  assert.deepEqual(
+    prGated,
+    gatedFromWorkflows,
+    `merge-when-green.sh の PR_GATED_CHECKS と、workflow から導いた「PR で走らないことがある job」が食い違っている。` +
+      `**片方だけ直すと、門が毎回鳴るか（足りない）、走るはずの job を数えなくなる（多い）**（#1180）`,
+  );
+
+  // **差を固定する**（#499: allowlist は中身も固定する）。**`EXEMPT_FROM_REQUIRED` に
+  // 在るが `PR_GATED_CHECKS` に無い＝「PR で必ず走るが、GitHub の必須には登録していない」job。**
+  // **この差が空になったら、上の deepEqual は「全部 gated」でも通ってしまう。**
+  const alwaysRunsOnPR = [...new Set(EXEMPT_FROM_REQUIRED.map((e) => e.split(":")[1]))]
+    .filter((n) => !prGated.includes(n))
+    .sort();
+  assert.deepEqual(
+    alwaysRunsOnPR,
+    ["docker-web", "pr-closes", "stale-base", "stale-base-net-deletions"],
+    "「PR で必ず走るが必須にしていない」job の顔ぶれが変わった（#1180）",
   );
 });
