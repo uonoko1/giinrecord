@@ -116,6 +116,54 @@ DATA_BRANCH="data/refresh"
 REQUIRED_CHECKS=(check gitleaks forbidden-patterns audit pr-closes stale-base)
 NONREQUIRED_CHECKS=(stale-base-net-deletions docker-web)
 
+# PR_GATED_CHECKS — **「この PR で走る対象ではなかった」検査の名前**（#1180）。**第 3 の箱である。**
+#
+# **何が問題だったか**: 門は**毎回・必ず**こう鳴っていた（実測 4 回。2026-10-03 に 2 回、
+# 10-04 に 2 回。#1187 / #1161 / #1188 / #1163 のマージ時）:
+#   note: 知らない検査があります（必須として扱います。…）: issue-secrets stale-base-net-deletions
+# **毎回鳴る警告は読まれなくなる**ので、**本当に新しい job が増えたときの同じ文面が埋もれる。**
+# **#1185（93 時間正しく鳴っていた監視を誰も見なかった）の前段階そのものである。**
+#
+# **なぜ `NONREQUIRED_CHECKS` ではないのか**——**これが #1180 の本題である。**
+# **あの箱の意味は「赤いが、人がログを読んだうえで通してよい」**であり、
+# **`--allow-nonrequired-red` の抜け道はその箱の大きさぶんだけ開く**（#858 / #1162）。
+# **ここに入る名前はそうではない**: **PR では構造的に走らない**ので、
+# **そもそも赤くなりようがない。** **赤くなったら前提が崩れたということで、
+# 通してはいけない。** **性質の違うものを同じ箱に入れると、箱の意味が薄まる。**
+#
+#   REQUIRED_CHECKS      赤ければ絶対に止める
+#   NONREQUIRED_CHECKS   赤くても --allow-nonrequired-red で通してよい（**抜け道**）
+#   PR_GATED_CHECKS      **この PR では走らないことがある。走ったなら必須と同じ**（抜け道ではない）
+#
+# **`is_required_check` はこの配列を引かない**（下）。**つまりここに名前を足しても
+# 「赤ければ止める」は 1 ミリも緩まない。** 変わるのは `is_known_check` だけ
+# ——**「知らない」と言うのをやめるだけである。**
+#
+# ── 載せてよい条件（2 つ。どちらも「PR の内容と無関係に走らないことがある」）──────────
+#   (a) **job 直下の `if:` が `github.event_name` で閉じている**（PR では必ず skipped）
+#   (b) **`on: pull_request:` が `paths:` で絞られている**（触らない PR では check-run が出ない）
+#
+# **どちらも `packages/etl/test/branch-protection-jobs.test.ts` の `EXEMPT_FROM_REQUIRED` が
+# 「必須にしてはいけない」と明記している job である**（必須にすると全 PR が永久に pending）。
+# **そして `is_required_check` の fail-closed は、この一覧に無い名前を必須に数える**
+# ——**つまり 2 つのファイルが逆のことを言っていた。** 同ファイルの #1180 の検査が、
+# **この配列と `EXEMPT_FROM_REQUIRED` の job 名が一致することを機械で突き合わせる。**
+#
+# ── 実測（2026-10-04）────────────────────────────────────────────────
+# **(a) の実測**: 直近 5 PR（#1187 #1161 #1188 #1163 #1179）の check-runs に
+#   `issue-secrets skipped` が **5/5 で出た**。**毎回鳴っていたのはこれである。**
+# **(b) の実測**: **`monitor`（`scrum-monitor.yml`）が PR #1150 の HEAD（c0506cbe）に
+#   `success` で出ていた**——`.github/workflows/scrum-monitor.yml` と
+#   `scripts/po/scrum-monitor.sh` を触った PR だからである。
+#   **直近 60 件のマージ済み PR のうち guard の paths を触ったのはこの 1 件だけ**なので
+#   **毎回は鳴らないが、鳴るときは確実に鳴る**——**しかも fail-closed で必須に数えられるので、
+#   赤いと `--allow-nonrequired-red` でも通せなくなっていた。**
+#
+# **`guard` が 3 つの workflow に在るが、check-run 名は job 名なので 1 つ**
+# （`branch-protection.yml` / `environment-protection.yml` / `security-alerts.yml` の
+# job 名はどれも `guard`）。**名前で区別できないので、3 つまとめてこの 1 語が覆う。**
+PR_GATED_CHECKS=(issue-secrets monitor guard)
+
 # SKIPPABLE_CHECKS — **`conclusion: skipped` を緑として数えてよい検査の名前**（#1069）。
 #
 # **問題**: `skipped` を一律 pass にしていたので、**必須 5 件が全部 `skipped` の PR が
@@ -195,13 +243,39 @@ is_required_check() {
   return 0   # 知らない名前は必須（新しい job が黙って抜け道に落ちない）
 }
 
-# is_known_check <name> → 0 なら**どちらかの配列に載っている**。
+# is_pr_gated_check <name> → 0 なら「この PR で走る対象だったとは限らない」（#1180）。
+# **`is_required_check` とは別の問いである**——あちらは**赤いときにどうするか**を決め、
+# こちらは**「必須 N 件」として数えるかどうか**を決める。
+#
+# **なぜ分けるのか**: **`issue-secrets` は PR では必ず skipped になる**ので、
+# **「必須 N 件は緑」の N に数えるのは事実と違う**（#757: `skipped` は「問題なし」ではなく
+# **「数えていない」**）。**数えていないものを、数えた件数に混ぜない。**
+# **実測**: #1069 がこれを測って「必須 6 件」と書き残している（5 件だと予想して外した）。
+#
+# **赤いときの扱いは 1 ミリも変えない**——`is_required_check` はこの配列を引かないので、
+# **PR_GATED_CHECKS の名前が本当に failure になったら、従来どおり fail-closed で止まる**
+# （`t_1180_pr_skipped_box_is_not_a_bypass` がその形を固定している）。
+is_pr_gated_check() {
+  local name=$1 n
+  for n in "${PR_GATED_CHECKS[@]}"; do [[ "$n" == "$name" ]] && return 0; done
+  return 1
+}
+
+# is_known_check <name> → 0 なら**3 つの配列のどれかに載っている**。
 # 載っていない名前は必須として扱う（上）が、**扱いが正しいかは誰も確かめていない**ので、
 # そのことを言う（#858）。ここが無いと REQUIRED_CHECKS は「知らない名前も必須」に
 # 吸収されて**挙動に効かない飾り**になり、中身が痩せても誰も気づかない。
+#
+# **#1180: `PR_GATED_CHECKS` もここで引く。** **「知らない」の反対は「必須か必須でないか
+# 決めてある」ではなく「見て判断してある」である。** paths や `if:` で絞られた job は
+# **「この PR では走る対象ではなかった」と判断済み**なので、知らない名前ではない。
+# **`is_required_check` はこの配列を引かない**ので、**ここに足しても「赤ければ止める」は
+# 緩まない**——**鳴るのをやめるだけ**である。
 is_known_check() {
   local name=$1 n
-  for n in "${REQUIRED_CHECKS[@]}" "${NONREQUIRED_CHECKS[@]}"; do [[ "$n" == "$name" ]] && return 0; done
+  for n in "${REQUIRED_CHECKS[@]}" "${NONREQUIRED_CHECKS[@]}" "${PR_GATED_CHECKS[@]}"; do
+    [[ "$n" == "$name" ]] && return 0
+  done
   return 1
 }
 
@@ -1271,9 +1345,16 @@ wait_for_green() {
     # （`gh run rerun` や、update-branch で走り直した場合）。持ち越すと
     # 「緑なのに赤いまま通した」と嘘のログを残す。
     PROCEEDED_OVER_RED=""
-    while IFS=$'\t' read -r _ n _; do
+    while IFS=$'\t' read -r bucket n _; do
       [[ -n "$n" ]] || continue
-      if is_required_check "$n"; then required_total=$((required_total + 1)); fi
+      # **#1180: PR で走る対象でなかった検査は「必須 N 件」に数えない。**
+      # **ただし赤いものは数える**——`is_required_check` は `PR_GATED_CHECKS` を引かないので
+      # **赤ければ必須として止まる**。**止める対象を母数から落とすと、「必須 N 件は緑」が嘘になる**
+      # （#757: 母数と判定は同じものを数える）。**`bucket` は fetch_checks の 1 列目**で、
+      # pass / pending / fail の 3 語しか来ない。
+      if is_required_check "$n" && ! { is_pr_gated_check "$n" && [[ "$bucket" != "fail" ]]; }; then
+        required_total=$((required_total + 1))
+      fi
       if ! is_known_check "$n"; then unknown_checks+="$n "; fi
     done <<<"$checks"
     unknown_checks=${unknown_checks% }
@@ -1281,7 +1362,7 @@ wait_for_green() {
     # **同じ顔ぶれでは 1 回だけ**言う: wait_for_green は最大 60 回まわるので、毎回出すと
     # 「毎回鳴る警告」になって読まれなくなる。顔ぶれが変わったら（新しい job が増えたら）また言う。
     if [[ -n "$unknown_checks" && "$unknown_checks" != "${unknown_announced:-}" ]]; then
-      log "note: 知らない検査があります（必須として扱います。REQUIRED_CHECKS / NONREQUIRED_CHECKS に足してください）: $unknown_checks"
+      log "note: 知らない検査があります（必須として扱います。REQUIRED_CHECKS / NONREQUIRED_CHECKS / PR_GATED_CHECKS に足してください）: $unknown_checks"
       unknown_announced=$unknown_checks
     fi
     if [[ -n "$failed" ]]; then
