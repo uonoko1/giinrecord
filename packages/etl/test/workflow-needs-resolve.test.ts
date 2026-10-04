@@ -56,7 +56,9 @@ import { dirname, resolve } from "node:path";
  *
  * **走査の範囲を #1036 で直した。** 初版は「3 ワークフロー / 6 job」だった——**手書きの 3 本**で、
  * **`etl.yml` に壊れた鎖の job を足すとこのファイルは 3/3 緑だった**（#1036 で実測）。
- * **いまは `readdirSync` で全 15 ワークフロー / 24 job を走査する**（2026-09-28 実測）。
+ * **いまは `readdirSync` で `.github/workflows/` の全ワークフロー・全 job を走査する。**
+ * **何本・何 job かはここに書かない**（#1189: 書くと実体から腐る。下の #1189 の検査が禁じている）——
+ * 本数は `workflowFiles().length`、job 数は `canonicalJobIds().length` が持っている。
  * 参照 2 件すべてを検証する。**0 件だったら落とす**（「参照が無い」と「数えていない」を分ける）。
  *
  * ── #1017 が塞いだのは鎖 5 環のうち 1 環だけだった（#1036）──────────────────
@@ -188,7 +190,8 @@ function needsRefs(body: string): { job: string; output: string; raw: string }[]
  * **初版は `["deploy-data.yml", "release.yml", "deploy-staging.yml"]` の手書き 3 本だった。**
  * **14 本中 3 本の denylist で、`etl.yml` に壊れた鎖の job を足すとこのファイルは 3/3 緑だった**
  * （#1036 で実測。#1008 / #1022 / #1043 と同じ型——**列挙は漏れがそのまま穴になる**）。
- * **`readdirSync` の全走査にした。** 下の母数の assert も、実数（15 本 / 24 job）に合わせて測り直した。
+ * **`readdirSync` の全走査にした。** 下の母数の assert は、**数を書かず** `workflow-timeout.test.ts` の
+ * 一覧の長さから導出する（#1162）。**ここにも実数を書かない**（#1189: 2 回腐った）。
  */
 const workflowFiles = (): string[] =>
   readdirSync(wfDir)
@@ -201,6 +204,81 @@ const workflowFiles = (): string[] =>
     // probe は一時ディレクトリに書くようになり、実ディレクトリには現れない
     // （`workflow-timeout.test.ts` の「本物のディレクトリに probe- のファイルが残っている」検査が守る）。
     .sort();
+
+/**
+ * **job 数の期待値を、別ファイルが維持している job 名の一覧から導出する**（#1162）。
+ *
+ * **2026-10-04 まで、ここは `assert.equal(jobCount, 25)` という裸の数値だった。**
+ * 25 の正しさは**コメントで主張されていただけ**だった（当時の逐語）:
+ *
+ *     **`25` は独立に維持されている `workflow-timeout.test.ts` の「#556 数え上げ」の
+ *     job 名リスト（25 件）と一致する**——**別の実装が別の目的で数えた値と突き合わせてある。**
+ *
+ * **突き合わせは人の目でしか行われていなかったので、維持されなかった。**
+ * #1162 が `ci.yml` の `stale-base` を 2 つの job に割ったとき、**job 名の一覧を持つ 3 か所**
+ * （`workflow-timeout.test.ts` / `branch-protection-jobs.test.ts` / `docs/ops/ci-throughput.md`）は
+ * 直されたが、**数値だけを持つこの 1 か所は直されず、CI で初めて落ちた**
+ * （run 37186553065 / job 111389582166。**2358 件中 1 件だけの失敗**）。
+ *
+ * **一覧は数えられるが、数値は単独では検証できない。** だから**数値を一覧の長さから導出する。**
+ * こうすると、job を足した／割った／消した人は**一覧（1 か所）を直せば両方が同時に動く**。
+ * **「一覧を直さずに数値だけ合わせる」という操作が存在しなくなる。**
+ *
+ * **並行して実際に衝突していた**（PO 報告 2026-10-04）: PR #1142 が `deploy-site.yml` を
+ * `build` / `deploy` に割り `build-site.yml` を新設して **+2**、この PR が `stale-base` を割って **+1**。
+ * **どちらが後にマージされても、裸の数値は相手の増分を知らないので間違いになる。**
+ * 導出にすれば、どちらの順序でも一覧の長さが真値を運ぶ。
+ *
+ * ── なぜ `import` ではなく「ソースを読む」のか ─────────────────────────────
+ * `workflow-timeout.test.ts` から一覧を `export` して import すると、
+ * `node --test --import tsx test/*.test.ts` が**同じファイルを 2 回読み込み、
+ * その中のテストが二重に走る**（その数も二重に数えられる）。
+ * また**この PR は #1142 と `workflow-timeout.test.ts` で衝突している**ので、
+ * そのファイルへの変更は増やさない（**このファイルは 1 バイトも触らない**）。
+ * **テストのソースを読む形はこのディレクトリに先例がある**
+ * （`kochi-x-anchor-roster.test.ts:356` が `kochi-vote-alignment.test.ts` を `readFileSync` している）。
+ *
+ * ── 抽出が空振りしたら落とす ───────────────────────────────────────────
+ * **「一覧が読めなかった」が「0 件」になって緑になるのが、この型の最悪の壊れ方である**
+ * （#1082 で実際に起きた: 母数の `equal(jobCount, 24)` すら鳴らなかった）。
+ * だから下限と、**必ず在る 1 件**（`ci.yml:check` ——`check` は branch protection の
+ * 必須 contexts に入っているので消せない。実測 2026-10-04: contexts は
+ * `check` / `gitleaks` / `forbidden-patterns` / `audit` の 4 件）の実在を先に要求する。
+ */
+const CANON = resolve(here, "workflow-timeout.test.ts");
+const CANON_TEST = "#556 数え上げ: jobs: 直下の job を全部拾えている";
+
+/** `workflow-timeout.test.ts` の「#556 数え上げ」が固定している `<file>:<job>` の一覧。 */
+function canonicalJobIds(): string[] {
+  const src = readFileSync(CANON, "utf8");
+  const at = src.indexOf(CANON_TEST);
+  assert.ok(at >= 0, `${CANON} に「${CANON_TEST}」のテストが無い（一覧の持ち主が改名された？）`);
+  // そのテストの本体（次の `]);` まで）だけを見る。ファイル全体から拾うと、
+  // 別のテストが持つ部分集合（`uses:` の 4 件など）や、コメント中の job 名まで数えてしまう。
+  //
+  // **この終端は、いまは等価変異である**（#1162 で実測 2026-10-04）。
+  // `src.slice(at, end)` を `src.slice(at)` に変えても **4/4 緑のまま**だった。理由は測って分かった:
+  // 同ファイルの `uses:` の一覧（4 件）は**この 26 件の真部分集合**で、`new Set` が重複を落とすので
+  // **集合の差が空**になる（scoped 26 / 終端なし 26 / 差 `[]`）。
+  // **それでも終端を置く。** `workflow-timeout.test.ts` が**この 26 に無い job 名**を
+  // どこかに 1 つ書いた日（例: 削除した job を「以前は在った」として列挙する、probe の名前を足す）に、
+  // 終端が無いと母数が黙って増え、**実体とずれたまま緑になる**。
+  // **「いま等価」は「要らない」ではない**——いま差が空なのは一覧の中身の偶然であって、設計上の保証ではない。
+  const end = src.indexOf("]);", at);
+  assert.ok(end > at, `${CANON} の「${CANON_TEST}」の一覧の終端（]);）が見つからない`);
+  const body = src.slice(at, end);
+  const ids = [...body.matchAll(/^\s*"([A-Za-z0-9_-]+\.ya?ml:[A-Za-z_][A-Za-z0-9_-]*)",$/gm)].map((m) => m[1]);
+  return [...new Set(ids)].sort();
+}
+
+test("#1162: 母数の持ち主は 1 か所（workflow-timeout の一覧から導出できている）", () => {
+  const ids = canonicalJobIds();
+  // 抽出が空回りしていないこと。**下限なので、job が増えても更新は要らない**（#1175 と同じ形）。
+  assert.ok(ids.length >= 20, `一覧から ${ids.length} 件しか抽出できていない（抽出が空回りしている。下限 20）`);
+  assert.ok(ids.includes("ci.yml:check"), `一覧に ci.yml:check が無い（抽出が壊れている。check は branch protection の必須 contexts なので消せない）: ${JSON.stringify(ids.slice(0, 5))}`);
+  // 一覧の形そのもの（`<file>.yml:<job>`）が崩れていないこと。
+  assert.deepEqual(ids.filter((s) => !/^[a-z0-9-]+\.yml:[A-Za-z_][A-Za-z0-9_-]*$/.test(s)), [], "一覧に <file>.yml:<job> の形でない要素がある");
+});
 
 test("#1017: needs.<job>.outputs.<out> を使う job は、その job を needs に挙げている（空文字に解決させない）", () => {
   const broken: string[] = [];
@@ -223,11 +301,18 @@ test("#1017: needs.<job>.outputs.<out> を使う job は、その job を needs 
   // 母数を固定する。0 件で緑になったら「参照が消えた」のか「数えていない」のか分からない（#1017 の 3.）。
   //
   // **#1036 で 6 → 24 に測り直した**（手書き 3 本 → `readdirSync` の全 15 本）。
-  // **#1110 で 24 → 25**（`scrum-monitor.yml` の `monitor` が 1 本増えた。ワークフローは 16 本）。
-  // **`25` は独立に維持されている `workflow-timeout.test.ts` の「#556 数え上げ」の
-  // job 名リスト（25 件）と一致する**——**別の実装が別の目的で数えた値と突き合わせてある。**
+  // **#1110 で 24 → 25**（`scrum-monitor.yml` の `monitor` が 1 本増えた）。
+  // **#1162 で裸の数値をやめ、`workflow-timeout.test.ts` の一覧の長さから導出する**
+  // （理由は `canonicalJobIds` の上に書いた。**数値を手で合わせる経路を無くす**）。
+  // **現在値はここに書かない**（#1189: 書くと腐る）。`expected.length` が実行時の真値である。
   // `equal` のままにする（`>=` にすると job を消したときに気づけない）。
-  assert.equal(jobCount, 25, `走査した job 数が変わった（実測 2026-09-30: 16 ワークフロー / 25 job）: ${jobCount}`);
+  const expected = canonicalJobIds();
+  assert.equal(
+    jobCount,
+    expected.length,
+    `走査した job 数が、workflow-timeout.test.ts の「${CANON_TEST}」の一覧（${expected.length} 件）と合わない: ${jobCount}。` +
+      `**どちらかが実体とずれている。** job を足した／割った／消したなら、**一覧のほうを直す**（この数値は一覧から導出されるので、ここは直さない）`,
+  );
   assert.ok(refCount >= 2, `needs.*.outputs.* の参照が ${refCount} 件しか見つからない（実測 2 件: deploy-data の production, release の released-tag）`);
   assert.deepEqual(broken, [], `needs が宛先を指していない参照がある:\n${broken.join("\n")}`);
 });
@@ -293,4 +378,135 @@ test("#134: deploy-data の production は resolve の ref を受け、data/ だ
   // data/ は main から（コードと混ぜない）
   const dataRef = production.body.match(/^ {6}data_ref:\s*(.+)$/m)?.[1]?.trim();
   assert.equal(dataRef, "main", `production の data_ref が main でない: ${dataRef}`);
+});
+
+/**
+ * **#1189: 散文が現在値を語ると、実体とずれても機械が黙る。**
+ *
+ * **2026-10-04 に実測した腐り方**（基点 `cc08ea5a`。**逐語はここに写さない**——理由は下記）:
+ * 2 行の散文が「いまはこれだけ走査する」と現在形で言っており、**その 4 つの数が全部ずれていた**
+ * （ワークフロー数も job 数も、2026-09-28 の実測のまま固まっていた）。
+ * **4 テストは全部緑だった**——**散文は機械が読まないので、ずれても何も起きない。**
+ *
+ * **#1056 と同じ型**（「人が目で揃える」は維持されない）。#1162 が `jobCount` の
+ * **裸の数値**を一覧からの導出に替えたが、**同じ数を語る散文は裸のまま残っていた。**
+ * **「assert を導出にする」だけでは足りない**——読む人が最初に信じるのは散文のほうである。
+ *
+ * ── 塞ぎ方 ────────────────────────────────────────────────────────────
+ * **散文から現在値を消す。** 「いま何本 / 何 job か」は `workflowFiles().length` と
+ * `canonicalJobIds().length` が持っている。**散文は「どこが母数の持ち主か」だけを言う。**
+ *
+ * **それだけでは、次に誰かが書き戻したときにまた腐る。** だから**この検査が、
+ * このファイルのコメントに「現在形の数の主張」が無いことを自分のソースで固定する。**
+ *
+ * ── 現在形と歴史の見分け方 ─────────────────────────────────────────────
+ * **歴史の数は正しい。消してはいけない**（#1082 / #1162 当時の逐語を 2 か所が引いている。
+ * いまの値に直したら**その事件の記録が壊れる**。下の `HISTORIC_QUOTES` が固定している）。
+ * 区別は**時制**で付く。現在形の印（`いまは` / `現在は` / `実数` / `実測 <日付>`）を持つ行だけを見る。
+ *
+ * **この説明文そのものが検査対象である**（自分のソースを読むので）。
+ * だから**ここに逐語や現在値を書かない**——書くと母数が自分の文章量で動く。実測で踏んだ。
+ *
+ * **これは denylist なので「これで全部」ではない**（「全 16 本を走査する」と
+ * 印無しで書けば抜ける）。**それでも、腐った 2 行は両方ともこの印を持っていた**——
+ * **素直に書いたときに必ず鳴るほうが、無いより強い。** 抜けうる形はここに書いておく。
+ */
+
+/**
+ * 「いまこうである」と言っている印。
+ *
+ * **時制だけでは足りなかった**（実測 2026-10-04）: 腐っていた 2 行のうち片方は
+ * 「実数（N 本 / M job）に合わせて測り直した」と**過去形**で書いてあったが、
+ * **`実数` という語が現在値を主張していた**（測り直した先の値は、いまの値のはずだから）。
+ * **時制の語と「実数・実体の数」の語の両方を印にする。**
+ *
+ * **`実測 <日付>` の後ろにコロンを要求しない**（実測で踏んだ）:
+ * `実測 <日付>（補足の括弧）: <数> ...` のように**日付とコロンの間に括弧が挟まる**と、
+ * コロンを要求する形では**素通りした**（例をここに逐語で写すと、この検査自身が鳴る）。
+ * **いちばん腐りやすい「最新の実測値」の行が、ちょうどその形だった。**
+ */
+const PRESENT_TENSE = /いまは|現在は|実数|実測\s*20\d\d-\d\d-\d\d/;
+/**
+ * 走査対象の規模を語る数（`16 ワークフロー` / `26 job` / `16 本`）。
+ *
+ * **`\b` を単位の後ろに置かない**——JS の `\b` は ASCII 語境界なので、
+ * `ワークフロー` の直後では成立せず、**`15 ワークフロー` を数え落とす**（実測で踏んだ:
+ * 1 行に 2 つある主張のうち 1 つしか報告されなかった）。否定先読みで代わりにする。
+ */
+const SCALE_CLAIM = /(\d+)\s*\*{0,2}\s*(ワークフロー|job(?![A-Za-z])|本(?!物|筋|番|質|来|体))/g;
+
+test("#1189: このファイルの散文は、走査規模の現在値を数で書かない（書くと腐るため）", () => {
+  const self = readFileSync(fileURLToPath(import.meta.url), "utf8").split("\n");
+  // コメント行だけを見る（docblock の `*` と `//`）。コード中の数値は assert が守っている。
+  const comments = self
+    .map((l, i) => ({ n: i + 1, l }))
+    .filter(({ l }) => /^\s*(\*|\/\/)/.test(l));
+  assert.ok(comments.length >= 60, `コメント行が ${comments.length} 行しか拾えていない（抽出が空回りしている。実測 2026-10-04: 100 行超）`);
+
+  const offenders = comments
+    .filter(({ l }) => PRESENT_TENSE.test(l))
+    .flatMap(({ n, l }) => [...l.matchAll(SCALE_CLAIM)].map((m) => `${n}: ${m[0].trim()} ← ${l.trim()}`));
+
+  assert.deepEqual(
+    offenders,
+    [],
+    "散文が走査規模の現在値を数で主張している。**この数は機械が読まないので、実体が変わっても黙って嘘になる**" +
+      `（#1189 で実際に 4 つ腐った）。母数は workflowFiles().length / canonicalJobIds().length が持っている——` +
+      `散文は持ち主を指すだけにする。歴史として語るなら現在形の印（いまは / 現在は / 実数 / 実測 <日付>）を外す:\n${offenders.join("\n")}`,
+  );
+});
+
+/**
+ * 歴史として記録された逐語。**「当時そう書かれていた」という事実**であって、いまの job 数ではない。
+ * **上の検査に押されて一括置換すると、その事件の記録がいまの値に化けて消える。**
+ *
+ * 照合は**事件番号と逐語の対**で行う（`equal(jobCount, N)` を数え上げる形にすると、
+ * **この検査自身の説明文に書いた `N` まで数えてしまい、母数が自分の文章量で動く**——実測で踏んだ）。
+ *
+ * ── 当時の数を、逐語の中に埋めない ─────────────────────────────────────
+ * **参照する数を、監査する文字列と同じ形で書いてはいけない**（実測 2026-10-04 で踏んだ）。
+ * 逐語を `"... equal(jobCount, 24) ..."` と丸ごと持つと、**`s/24/26/g` の一括置換が
+ * 歴史の記述とこの参照の両方に当たり、26 を 26 と比べて緑になる**
+ * （変異は 2 行のつもりで **3 行**に当たっていた。**期待値が、壊したい対象と一緒に動いた**）。
+ * **一括置換で道連れにならない形**——数は `era` に数値として持ち、逐語は数を含まない断片
+ * （`quote`）で探して、**その行に `era` の数が在ることを別に要求する。**
+ */
+const HISTORIC_QUOTES: { issue: string; quote: string; era: number; why: string }[] = [
+  { issue: "#1082", quote: "すら鳴らなかった", era: 24, why: "probe-evil.yml を置いたとき母数の assert すら鳴らなかった（当時 24）" },
+  { issue: "#1162", quote: "という裸の数値だった", era: 25, why: "導出に替える前の形（当時 25）" },
+];
+
+test("#1189: 歴史として記録された逐語が、現在値に書き換えられていない", () => {
+  const self = readFileSync(fileURLToPath(import.meta.url), "utf8");
+  // **コメント行だけを見る**——`HISTORIC_QUOTES` の文字列リテラル自身や assert のメッセージまで
+  // 数えると、**母数がこの検査の書き方で動く**（実測で踏んだ: 2 のはずが 4 になった）。
+  const commentLines = self.split("\n").filter((l) => /^\s*(\*|\/\/)/.test(l));
+  assert.ok(commentLines.length >= 60, `コメント行が ${commentLines.length} 行しか拾えていない（抽出が空回りしている）`);
+
+  // 逐語（数を含まない断片）を引いている行に、**当時の数が載っているか**を見る。
+  // `jobCount` の数だけを一括置換する変異は、`era` を道連れにできないのでここで鳴る。
+  const broken: string[] = [];
+  for (const { issue, quote, era, why } of HISTORIC_QUOTES) {
+    const cites = commentLines.filter((l) => l.includes(quote) && /equal\(jobCount,/.test(l));
+    if (cites.length === 0) {
+      broken.push(`${issue}: 「${quote}」を含む equal(jobCount, ...) の記述が 1 つも無い（${why}）`);
+      continue;
+    }
+    const wrong = cites.filter((l) => !new RegExp(`equal\\(jobCount, ${era}\\)`).test(l));
+    for (const l of wrong) broken.push(`${issue}: 当時の数は ${era} のはずだが違う数になっている（${why}）: ${l.trim()}`);
+  }
+  assert.deepEqual(
+    broken,
+    [],
+    "歴史の逐語が消えた／現在値に書き換えられた。**これは当時の記録で、いまの job 数ではない**——" +
+      `現在値に直してはいけない（#1189 受け入れ条件 2）:\n${broken.join("\n")}`,
+  );
+
+  // 片方だけ残っても気づけるように、引用されている箇所の数も見る。
+  const cited = HISTORIC_QUOTES.map(({ issue, quote }) => `${issue}=${commentLines.filter((l) => l.includes(quote) && /equal\(jobCount,/.test(l)).length}`);
+  assert.deepEqual(
+    cited,
+    ["#1082=2", "#1162=1"],
+    `歴史の逐語を引いているコメントの数が変わった: ${JSON.stringify(cited)}（実測 2026-10-04: #1082 は 2 か所——除外 denylist の説明と空振りガードの理由、#1162 は 1 か所——導出に替えた経緯）`,
+  );
 });

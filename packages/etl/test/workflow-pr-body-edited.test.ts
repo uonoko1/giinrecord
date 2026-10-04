@@ -476,7 +476,11 @@ test("#1039 必須の 4 つ（check/gitleaks/forbidden-patterns/audit）は PR �
 for (const action of ["synchronize", "opened", "reopened"]) {
   test(`#1039 ${action} では ci.yml / pr-body.yml / security.yml の job が全部走る`, () => {
     const running = jobsRunningFor(action);
-    for (const n of ["ci.yml:stale-base", "ci.yml:check", "ci.yml:docker-web", "pr-body.yml:pr-closes", "security.yml:gitleaks", "security.yml:forbidden-patterns", "security.yml:audit"]) {
+    // #1162: `stale-base-net-deletions` を足した。**割った job は、割る前と同じく
+    // `synchronize` / `opened` / `reopened` で走らなければならない。**
+    // これを書かないと、**割ったほうの 1 本だけ #1039 の穴が無検査**になる
+    // （`if:` を書き損じて止めても、ここは緑のまま）。
+    for (const n of ["ci.yml:stale-base", "ci.yml:stale-base-net-deletions", "ci.yml:check", "ci.yml:docker-web", "pr-body.yml:pr-closes", "security.yml:gitleaks", "security.yml:forbidden-patterns", "security.yml:audit"]) {
       assert.ok(running.has(n), `${n} が ${action} で走らない`);
     }
   });
