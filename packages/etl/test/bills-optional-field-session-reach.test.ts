@@ -111,7 +111,7 @@ interface Reach {
  */
 const REACH: Record<string, Reach> = {
   // **#1190 で第200〜216回を取り直した後の実測**（取り直す前: 内 331/387・外 60/1554 ＝ 22.2 倍）。
-  referredCommittees: { inside: 0, insideTotal: 0, outside: 0, outsideTotal: 0 },
+  referredCommittees: { inside: 331, insideTotal: 387, outside: 60, outsideTotal: 1554 },
 };
 
 /** 値が「在る」か。空配列は「無い」（`writeDataset` は空配列を書かないが、書かれても 0 件と数える）。 */
