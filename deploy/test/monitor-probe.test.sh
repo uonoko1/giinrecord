@@ -30,7 +30,11 @@ done
 #                       unknown path; #325 made that a **404**, so pair it with H_CODE_ASSEMBLY=404)
 #   H_OPEN             JSON array gh returns for the open-issue search;  H_CURL_EXIT  make curl fail outright
 #                      #1185: the objects may carry createdAt / labels / comments, which is how report.sh learns
-#                      how long the Issue has been open and how many rounds already reported into it
+#                      how long the Issue has been open and how many rounds already reported into it.
+#                      **Use gh's real shapes** (verified against `gh issue list --json labels,comments`):
+#                      `labels` is an array of objects with a `name`, `comments` is an ARRAY (its length is
+#                      the count — report.sh's jq does `.comments|length`). A fixture with `"comments": 4`
+#                      would be a number and would not exercise the same expression.
 #   H_MAIN_META        body served for the raw main data/meta.json (#1185); H_MAIN_CODE its HTTP status
 #   H_MAIN_URL_BASE    where probe.sh is told to read main from (the tests point it at the stubbed curl)
 #   H_RUNS             JSON gh returns for the deploy-data.yml run list (#1185); H_RUNS_EXIT makes gh fail
@@ -78,20 +82,25 @@ case "$cmd" in
     if [[ "$1" == x509 ]]; then echo "notAfter=${H_NOT_AFTER-$(LC_ALL=C date -u -d '+60 days' '+%b %d %H:%M:%S %Y GMT')}"; fi ;;
   gh)
     case "$1 $2" in
-      "issue list")   # emulate gh's --jq: the open Issue whose title equals $TITLE (exported by report.sh).
-        # #1185: report.sh now needs more than the number (createdAt, labels, comment count), so the stub answers
-        # one TSV line "<number> <createdAt> <labels,…> <comments>" — the same fields the real --jq produces.
-        # #1185: the real --jq strips report.sh's escalation suffix before comparing, so that a retitled
-        # Issue is still recognised as the same one. **The stub must do the same split**, or the test for
-        # "a retitled Issue is not created again" would pass only because the fixture compares exactly.
-        python3 -c 'import json,os,sys
-sep=os.environ.get("SUFFIX_SEP"," \u2014 ")
-want=os.environ.get("TITLE")
-m=[i for i in json.loads(sys.argv[1]) if i["title"].split(sep)[0]==want]
-if m:
-    i=m[0]
-    print("\t".join([str(i["number"]), i.get("createdAt",""),
-                     ",".join(l["name"] for l in i.get("labels",[])), str(i.get("comments",0))]))' "${H_OPEN:-[]}" ;;
+      "issue list")
+        # **report.sh が渡した `--jq` の式を、本物の jq で実行する。**
+        # **自分で同じ絞り込みを書き直してはいけない**（#1185 の実測でここに踏んだ):
+        # stub 側に python で同じ判定を書いていたあいだ、**report.sh の `--jq` を
+        # `map(select(.title == $ENV.TITLE))` に書き換える変異が 68 テスト全緑で素通りした。**
+        # 式が fixture に二重に在ると、**実装側の式は誰も検査していない。**
+        # gh は `--json a,b` で取れるフィールドだけを `--jq` に渡すので、ここでも同じ形にする。
+        jqexpr=''; jsonfields=''
+        for ((i=1;i<=$#;i++)); do
+          [[ "${!i}" == "--jq" ]]   && { j=$((i+1)); jqexpr=${!j}; }
+          [[ "${!i}" == "--json" ]] && { j=$((i+1)); jsonfields=${!j}; }
+        done
+        if [ -n "$jqexpr" ]; then
+          # `--json number,title,createdAt,labels,comments` の形に合わせて、H_OPEN から
+          # 要求されたフィールドだけを残す（gh の挙動。余分を渡すと式の検査が甘くなる）。
+          printf '%s' "${H_OPEN:-[]}" \
+            | jq -c --arg f "$jsonfields" '[.[] | with_entries(select(.key as $k | ($f|split(",")) | index($k)))]' \
+            | jq -r "$jqexpr"
+        fi ;;
       "issue edit")   ;;
       "run list")     # deploy-data.yml run history (#1185)
         [ -n "${H_RUNS_EXIT:-}" ] && exit "$H_RUNS_EXIT"
@@ -483,7 +492,7 @@ HOURS_AGO() { date -u -d "-$1 hours" +%Y-%m-%dT%H:%M:%SZ; }
 t_report_repeat_comments_elapsed() {
   fresh r_elapsed
   echo "reason body" > "$P/body"
-  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(MIN_AGO 30)\",\"comments\":0}]" \
+  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(MIN_AGO 30)\",\"comments\":[]}]" \
     run_report "[monitor] production: data" fail "$P/body" || fail "exit $? $(cat "$P/out")"
   local log; log=$(cat "$LOG")
   assert_not_contains "$log" "gh issue create" "まだ同じ Issue（作り直さない）"
@@ -494,7 +503,7 @@ t_report_repeat_comments_elapsed() {
 t_report_repeat_body_has_elapsed_hours() {
   fresh r_elapsed_body
   echo "fetchedAt 93h old (limit 48h)" > "$P/body"
-  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(HOURS_AGO 7)\",\"comments\":4}]" \
+  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(HOURS_AGO 7)\",\"comments\":[{},{},{},{}]}]" \
     run_report "[monitor] production: data" fail "$P/body" || fail "exit $? $(cat "$P/out")"
   [ -f "$LOG.comment" ] || { fail "コメント本文が採れていない"; return; }
   local c; c=$(cat "$LOG.comment")
@@ -509,7 +518,7 @@ t_report_escalates_past_threshold() {
   fresh r_esc
   echo "body" > "$P/body"
   MONITOR_ESCALATE_HOURS=6 \
-  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(HOURS_AGO 7)\",\"comments\":4}]" \
+  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(HOURS_AGO 7)\",\"comments\":[{},{},{},{}]}]" \
     run_report "[monitor] production: data" fail "$P/body" || fail "exit $? $(cat "$P/out")"
   local log; log=$(cat "$LOG")
   assert_contains "$log" "gh issue edit 5" "扱いが変わる（edit される）"
@@ -524,7 +533,7 @@ t_report_does_not_escalate_before_threshold() {
   fresh r_noesc
   echo "body" > "$P/body"
   MONITOR_ESCALATE_HOURS=6 \
-  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(HOURS_AGO 2)\",\"comments\":1}]" \
+  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(HOURS_AGO 2)\",\"comments\":[{}]}]" \
     run_report "[monitor] production: data" fail "$P/body" || fail "exit $? $(cat "$P/out")"
   local log; log=$(cat "$LOG")
   assert_not_contains "$log" "gh issue edit" "まだ扱いは変えない"
@@ -537,7 +546,7 @@ t_report_escalates_only_once() {
   fresh r_esc_once
   echo "body" > "$P/body"
   MONITOR_ESCALATE_HOURS=6 \
-  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(HOURS_AGO 9)\",\"comments\":8,\"labels\":[{\"name\":\"monitor\"},{\"name\":\"escalated\"}]}]" \
+  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(HOURS_AGO 9)\",\"comments\":[{},{},{},{},{},{},{},{}],\"labels\":[{\"name\":\"monitor\"},{\"name\":\"escalated\"}]}]" \
     run_report "[monitor] production: data" fail "$P/body" || fail "exit $? $(cat "$P/out")"
   assert_not_contains "$(cat "$LOG")" "gh issue edit" "すでに escalated なら edit しない"
 }
@@ -548,7 +557,7 @@ t_report_finds_the_issue_after_the_title_changed() {
   fresh r_esc_find
   echo "body" > "$P/body"
   MONITOR_ESCALATE_HOURS=6 \
-  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data — 9h 継続\",\"createdAt\":\"$(HOURS_AGO 9)\",\"comments\":8,\"labels\":[{\"name\":\"escalated\"}]}]" \
+  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data — 9h 継続\",\"createdAt\":\"$(HOURS_AGO 9)\",\"comments\":[{},{},{},{},{},{},{},{}],\"labels\":[{\"name\":\"escalated\"}]}]" \
     run_report "[monitor] production: data" fail "$P/body" || fail "exit $? $(cat "$P/out")"
   assert_not_contains "$(cat "$LOG")" "gh issue create" "改題した自分の Issue をもう一度立てない"
 }
@@ -565,7 +574,7 @@ t_report_ok_removes_escalated_label() {
 t_report_escalation_comment_has_no_paths() {
   fresh r_esc_safe
   echo "fetchedAt 93h old" > "$P/body"
-  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(HOURS_AGO 7)\",\"comments\":4}]" \
+  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(HOURS_AGO 7)\",\"comments\":[{},{},{},{}]}]" \
     run_report "[monitor] production: data" fail "$P/body" || fail "exit $?"
   [ -f "$LOG.comment" ] || { fail "no comment body"; return; }
   assert_not_contains "$(cat "$LOG.comment")" "$TMP" "ローカルパスを出さない"

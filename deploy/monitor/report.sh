@@ -47,6 +47,10 @@ SUFFIX_SEP=" — "
 # The open Issue with this title (the search is a substring match, so filter again). Since #1185 the title may
 # carry the escalation suffix, so the comparison strips it: `<title>` and `<title> — 9h 継続` are the SAME Issue.
 # Returns one TSV line "<number>\t<createdAt>\t<labels,…>\t<comments>", or nothing.
+# **`// []` / `// ""` が要る**: `.labels[]` は labels が null / 欠けていると
+# `Cannot iterate over null` で jq 自体が落ち、**`open_issue` が空を返す**。
+# **空は「開いている Issue が無い」と同じ形なので、report.sh は新しい Issue を作る**
+# ——**1 回の障害で Issue が増殖する。** 実測: stub に本物の jq を通した途端にこれで 7 件落ちた。
 export TITLE SUFFIX_SEP   # read by the --jq filter below
 open_issue() {
   # shellcheck disable=SC2016  # $ENV.* is jq syntax, expanded by gh, not by the shell
@@ -54,7 +58,7 @@ open_issue() {
     --json number,title,createdAt,labels,comments \
     --jq 'map(select((.title | split($ENV.SUFFIX_SEP) | .[0]) == $ENV.TITLE))
           | .[0] // empty
-          | [(.number|tostring), .createdAt, ([.labels[].name] | join(",")), ((.comments|length)|tostring)]
+          | [(.number|tostring), (.createdAt // ""), ([(.labels // [])[].name] | join(",")), (((.comments // []) | length)|tostring)]
           | @tsv'
 }
 
