@@ -421,6 +421,28 @@ test("#1137: keysUnder はネストしたマップでも 2 つめ以降のキー
   assert.deepEqual(keysUnder(lines, "outputs", 4), ["sha", "artifact", "third"]);
   // 兄弟キー（`permissions:`）で止まること——止まらないと無関係なキーを拾う
   assert.ok(!keysUnder(lines, "outputs", 4).includes("permissions"));
+
+  // ── **`depth <= indent` は 2 つの境界を同時に守っている。assert も 2 本要る** ──
+  //
+  // #1137 レビュー 8 回目: **`<=` は複合である**——「**同じ** indent」(`===`) と
+  // 「**浅い** indent」(`<`) の 2 つで止まる。**上の `lines` は前者しか試していない。**
+  // `secrets:` が indent 4 なので、**`<=` を `===` に変える変異（R9）では
+  // そこで止まってしまい、`permissions:`（indent 0）に到達しない。**
+  //
+  // **1 つの配列では両方を押さえられない**（実測）。**先に来た兄弟で止まるため**である:
+  //   同一 indent(4) を先に置く → R3 (`<=`→`<`) は捕まるが **R9 は素通り**
+  //   浅い indent(2) を先に置く → R9 は捕まるが **R3 が素通り**
+  // **だから配列を 2 つにする。** 期待値は上と同じなので、**新しい値を手で書き下ろさない**
+  // （書き下ろすと、検査対象と同じ思い込みから期待値を作ることになる）。
+  //
+  // **向きは偽陰性である。** `<` 側を落とすと、**indent 0 の `env:` の下に
+  // 深く書いたキーが output として読める**（`env:` を indent 0、子を indent 6 に書く形は
+  // **YAML として正当で actionlint rc=0**。実測で確かめた）。そうなると
+  // **消し忘れた `needs.*.outputs.X` の参照が、無関係なキーに同じ名前が在るだけで黙って緑になる。**
+  const shallower = lines.flatMap((l) =>
+    l === "    secrets:" ? ["  shallower:", "      NOT_AN_OUTPUT: x", l] : [l],
+  );
+  assert.deepEqual(keysUnder(shallower, "outputs", 4), ["sha", "artifact", "third"]);
 });
 
 /** 実体でも 2 つ読めていること（合成だけで固定すると、本物の綴りが変わっても気づけない） */
