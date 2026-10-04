@@ -203,13 +203,31 @@ jobs:
 
       # auto-merge は CI 完了を待つだけで Deploy を起動しない（GITHUB_TOKEN のマージは push イベントを起こさない）ので、
       # マージを待ってから deploy-data.yml（staging + production-data）を明示的に起動する。
+      #
+      # **待ち時間を 15 分 → 30 分にした（#1175）。測った根拠:**
+      #
+      # | 測ったもの | 実測（2026-10-04） |
+      # |---|---|
+      # | 自動データ PR 12 本の「PR 作成 → マージ」 | **健全な 10 本は 5〜14 分**（最長 #1169 の **14 分**） |
+      # | 同じ 12 本のうち外れた 2 本 | #1173 **950 分** ／ #1059 **319 分**（どちらも**人が手で動かした**） |
+      # | `data/refresh` 枝の ci.yml の所要時間 | **7〜13 分**（成功した 3 本は 11 / 13 / 13 分） |
+      #
+      # **15 分では、測った最悪の成功（13 分）に対して余裕が 2 分しか無かった。**
+      # **#1169 は 14 分でマージされており、あと 1 分で待ち合わせが尽きていた**——
+      # **CI が少し遅れるだけで、何も壊れていないのに ETL が failure を報告する。**
+      #
+      # **伸ばしても「止まるのを遅らせる」ことにはならない。** 外れた 2 本は 950 分と 319 分で、
+      # **どんな待ち時間でも届かない**（あれは検査が赤いか人の介入が要る状態で、待っても変わらない）。
+      # **#1175 の本体は、その「検査が赤くなる原因」を
+      # `packages/etl/test/published-timeline-count.test.ts` の側で直したほうである。**
+      # ここは**健全な場合の余裕が足りていなかった**という別の欠陥を、測った数字で詰めただけ。
       - name: Wait for data PR merge, then deploy
         if: steps.pr.outputs.number != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR: ${{ steps.pr.outputs.number }}
         run: |
-          for i in $(seq 1 45); do   # 45 × 20s = 15 min
+          for i in $(seq 1 90); do   # 90 × 20s = 30 min（測った最長の成功 13 分の 2 倍以上。上のコメントの表）
             STATE=$(gh pr view "$PR" --json state -q .state)
             echo "[$i] PR #$PR state=$STATE"
             case "$STATE" in
@@ -228,7 +246,7 @@ jobs:
             done
             sleep 20
           done
-          echo "PR #$PR が 15 分以内にマージされなかった（required check が走っていない／失敗？）" >> "$GITHUB_STEP_SUMMARY"
+          echo "PR #$PR が 30 分以内にマージされなかった（required check が走っていない／失敗？）" >> "$GITHUB_STEP_SUMMARY"
           exit 1
 
       - name: Open failure Issue (deduped by title)
