@@ -9,6 +9,7 @@
 #   disk                                    filesystem of the web root is used more than MONITOR_DISK_MAX % (85)
 #   site-production / site-staging          rsync target missing, or its data/meta.json older than MONITOR_STALE_HOURS (48)
 #   checkout-owner                          /opt/giinrecord に root 以外が所有するファイルがある（#333 の前提が崩れた）
+#   analytics                               直近 MONITOR_ANALYTICS_DAYS 日ぶんの PV 集計が、ぜんぶ 0 か、1 つも無い（#1184）
 #
 # Outputs:
 #   $MONITOR_LOG (/var/log/giinrecord-monitor.log, root 600): one line per run, "<UTC time> OK" or "<UTC time> FAIL <check>: <why>; …"
@@ -35,6 +36,8 @@ API="${MONITOR_API:-https://api.github.com}"
 DISK_MAX="${MONITOR_DISK_MAX:-85}"
 STALE_HOURS="${MONITOR_STALE_HOURS:-48}"
 CHECKOUT_DIR="${MONITOR_CHECKOUT_DIR:-/opt/giinrecord}"
+ANALYTICS_DIR="${MONITOR_ANALYTICS_DIR:-/home/ubuntu/analytics}"
+ANALYTICS_DAYS="${MONITOR_ANALYTICS_DAYS:-3}"
 FAILS_BEFORE_REPORT="${MONITOR_FAILS_BEFORE_REPORT:-2}"
 NOW_ISO=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 NOW_EPOCH=$(date +%s)
@@ -42,7 +45,7 @@ NOW_EPOCH=$(date +%s)
 FAILED=()            # check names that failed this run
 declare -A WHY=()    # check name → short reason (for the log only)
 failure() { FAILED+=("$1"); WHY[$1]=$2; }
-ALL_CHECKS=(container-web container-web-staging nginx disk site-production site-staging checkout-owner)
+ALL_CHECKS=(container-web container-web-staging nginx disk site-production site-staging checkout-owner analytics)
 
 # ---- checks -------------------------------------------------------------------------------------------------------
 check_container() { # check_container <check> <container name>
@@ -71,6 +74,47 @@ check_checkout_owner() {
   n=$(find "$CHECKOUT_DIR" ! -user root 2>/dev/null | head -20 | grep -c . || true)
   [ "$n" = 0 ] || failure checkout-owner "${n}+ files not owned by root"
 }
+# #1184: PV の計器が 39 日間、無言で壊れていた。VPS に設置済みの daily.sh が改名前のログ名
+# （存在しないファイル）を読み、0 行の TSV を書いて exit 0 で成功を報告していた。cron は毎日発火し、
+# TSV も毎日できていたので、どの計器も赤くならなかった。**「0 件」と「測れなかった」が
+# 区別されていなかった**（#757 / #1158 と同じ型）。
+#
+# daily.sh 側は非 0 で落ちるようにしたが、**その非 0 は cron ログに入るだけで誰も読まない**。
+# 声になるのはここだけなので、連続 0 行をこの check が見る。新しい入口は作らない（#1110 の軸——
+# 入口が増えると入口自身の死を誰も見なくなる）。
+#
+# 判定は TSV の **pv の値**。行数ではない。0 の日の TSV もヘッダ＋要約行で必ず 2 行在るので、
+# 行数で見ると永遠に 0 にならない——それが 39 日の片方の原因そのものだった。
+#
+# 「連続」で見る理由: 小さなサイトの静かな 1 日に pv=0 は在りうる。1 日で Issue を開けば騒がしくなり、
+# 騒がしい監視は読まれなくなる。逆に $ANALYTICS_DAYS 日ぜんぶ 0 なら、それは静かな日ではない。
+# （この check 自体も 2 回連続で初めて Issue になるので、実際には日数×2 回ぶんの余裕が在る。）
+#
+# TSV が 1 つも無いのも異常にする: cron が走っていない／daily.sh が exit 3 している状態で、
+# 「0 件」ではなく「測れていない」。**どちらも黙らせない**が、集計を置かない構成
+# （staging など）では何も言わない（checkout-owner と同じ扱い）。
+check_analytics() {
+  local day tsv pv found=0 nonzero=0 i=0
+  [ -d "$ANALYTICS_DIR" ] || return 0   # 集計を置かない構成なら何も言わない
+  while [ "$i" -lt "$ANALYTICS_DAYS" ]; do
+    day=$(date -u -d "$i days ago" +%F); i=$((i + 1))
+    tsv="$ANALYTICS_DIR/$day.tsv"
+    [ -f "$tsv" ] || continue
+    found=$((found + 1))
+    # 要約行（aggregate.sh が 2 行目に置く `# <date>	pv=N	pages=M	per-page=X`）から pv を読む。
+    # 要約行が無い旧い TSV でも読めるように、本文の pv 列（4 列目）の合計にも落ちる。
+    # `| head -1` は書かない（#527: pipefail のもとで sed が SIGPIPE で死んで確率的に偽になる）。
+    # `T;q` で sed 自身に 1 件目で止めさせる。scripts/ci/shellcheck.sh の found_version と同じ形。
+    pv=$(sed -n 's/^#.*\bpv=\([0-9][0-9]*\).*/\1/p;T;q' "$tsv")
+    [ -n "$pv" ] || pv=$(awk -F '\t' 'NR>1 && $0 !~ /^#/ { s += $4 } END { print s + 0 }' "$tsv")
+    [ "$pv" -gt 0 ] && nonzero=$((nonzero + 1))
+  done
+  if [ "$found" = 0 ]; then
+    failure analytics "no TSV in the last ${ANALYTICS_DAYS}d"
+  elif [ "$nonzero" = 0 ]; then
+    failure analytics "0 page views in ${found}/${ANALYTICS_DAYS} measured days"
+  fi
+}
 check_site() { # check_site <check> <dir>
   local meta="$2/data/meta.json" mtime age_h
   if [ ! -d "$2" ]; then failure "$1" "directory missing"; return; fi
@@ -87,6 +131,7 @@ check_disk
 check_site site-production "$SITE_DIR"
 check_site site-staging "$STAGING_DIR"
 check_checkout_owner
+check_analytics
 
 # ---- log + latest.json --------------------------------------------------------------------------------------------
 log() { printf '%s %s\n' "$NOW_ISO" "$*" >> "$LOG"; }

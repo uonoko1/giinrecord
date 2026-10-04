@@ -65,7 +65,11 @@ fresh() {
   export STUB_LOG="$LOG" STUB_HANDLER="$TMP/handler"
   export MONITOR_LOG="$P/monitor.log" MONITOR_STATE_DIR="$P/state" MONITOR_TOKEN_FILE="$P/token" \
     MONITOR_SITE_DIR="$P/site" MONITOR_STAGING_DIR="$P/staging" MONITOR_LATEST_DIR="$P/home/monitor" \
-    MONITOR_REPO="example/repo" MONITOR_OWNER="$ME" MONITOR_CHECKOUT_DIR="$P/nonexistent-checkout"
+    MONITOR_REPO="example/repo" MONITOR_OWNER="$ME" MONITOR_CHECKOUT_DIR="$P/nonexistent-checkout" \
+    MONITOR_ANALYTICS_DIR="$P/analytics"
+  mkdir -p "$P/analytics"
+  # 既定は「直近 MONITOR_ANALYTICS_DAYS 日ぶん、すべて pv>0」= 正常。
+  analytics_days 1 1 1
   unset H_WEB H_STAGING H_NGINX H_DISK H_API_LIST H_API_RESP
 }
 run_health() { PATH="$BIN:$PATH" bash "$SCRIPT" > "$P/out" 2>&1; }
@@ -214,6 +218,122 @@ t_checkout_owner_foreign_file_is_a_failure() {
   assert_contains "$(cat "$P/monitor.log")" "checkout-owner" "checkout-owner を異常として報告する"
 }
 
+# ------------------------------------------------------------------------------------------------------------
+# #1184: PV の計器が 39 日間、無言で壊れていた。設置済み daily.sh が改名前のログ名を読み、
+# 0 行の TSV を書いて exit 0 で成功報告していた。cron は毎日発火し TSV も毎日できていたので
+# どの計器も赤くならなかった。**「0 件」と「測れなかった」が区別されていなかった**（#757 / #1158 と同じ型）。
+#
+# daily.sh 側は非 0 で落ちるようにしたが、その非 0 は cron ログに入るだけで誰も読まない。
+# **連続 0 行を声にする**のがこの check の仕事。新しい入口は作らず health.sh に寄せる（#1110 の軸）。
+#
+# analytics_days <pv> <pv> ...  → 直近 N 日ぶんの TSV を作る（引数の順＝新しい日から過去へ）。
+# 引数が "-" ならその日の TSV を作らない（= cron が走らなかった／daily.sh が exit 3 した日）。
+analytics_days() {
+  local i=0 pv
+  rm -f "$P/analytics"/*.tsv
+  for pv in "$@"; do
+    local day; day=$(date -u -d "$i days ago" +%F)
+    i=$((i + 1))
+    [ "$pv" = "-" ] && continue
+    {
+      printf 'date\tpage\treferrer\tpv\n'
+      printf '# %s\tpv=%s\tpages=1\tper-page=%s.00\n' "$day" "$pv" "$pv"
+      if [ "$pv" -gt 0 ]; then printf '%s\t/\t-\t%s\n' "$day" "$pv"; fi
+    } > "$P/analytics/$day.tsv"
+  done
+}
+
+t_analytics_ok_when_recent_days_have_page_views() {
+  fresh anok
+  analytics_days 5 3 9
+  run_health || fail "exit $? $(cat "$P/out")"
+  assert_contains "$(cat "$P/monitor.log")" " OK" "pv>0 の日が在れば何も言わない"
+}
+
+t_analytics_consecutive_zero_is_a_failure() {
+  fresh anzero
+  analytics_days 0 0 0
+  run_health && fail "連続 0 行を成功として扱ってはいけない（これが 39 日続いた）"
+  local log; log=$(cat "$P/monitor.log")
+  assert_contains "$log" "analytics" "analytics を異常として報告する"
+  # こちらは「測れて 0 件」。上の「測れていない」と**別の理由**で落ちること。
+  assert_contains "$log" "0 page views in 3/3" "測れた日数つきで「0 件」と言っていない"
+  assert_not_contains "$log" "no TSV" "測れているのに「測れていない」と言ってはいけない"
+  assert_contains "$(cat "$P/home/monitor/latest.json")" '"analytics"' "latest.json にも出る"
+}
+
+t_analytics_one_quiet_day_is_not_a_failure() {
+  fresh anquiet
+  # 小さなサイトの静かな 1 日は在りうる。1 日だけの 0 で Issue を開けば騒がしくなる。
+  analytics_days 0 4 7
+  run_health || fail "exit $? $(cat "$P/out")"
+  assert_not_contains "$(cat "$P/monitor.log")" "analytics" "1 日だけの 0 は異常にしない"
+}
+
+t_analytics_missing_tsv_is_a_failure() {
+  fresh anmissing
+  # TSV が 1 つも無い = cron が走っていない／daily.sh が exit 3 している。
+  # 「0 件」ではなく「測れていない」。これも黙らせない。
+  analytics_days - - -
+  run_health && fail "TSV が無いのを成功として扱ってはいけない"
+  local log; log=$(cat "$P/monitor.log")
+  assert_contains "$log" "analytics" "不在も analytics の異常"
+  # **理由まで見る。** 「0 件」と「測れていない」を分けるのがこの PBI の軸なのに、
+  # 「analytics という語が在る」だけを見ていると両者が同じに見える——実測（#1184 の変異）:
+  # `if [ "$found" = 0 ]` を `if false` に潰しても $nonzero も 0 なので別のメッセージで落ち、
+  # **変異が 1 件も検出されなかった**。理由の逐語で釘を打つ。
+  assert_contains "$log" "no TSV" "「測れていない」として報告していない（「0 件」と区別する）"
+  assert_not_contains "$log" "0 page views" "TSV が無いのを「0 件」と言ってはいけない"
+}
+
+t_analytics_absent_dir_says_nothing() {
+  fresh anabsent
+  rm -rf "$P/analytics"
+  # 集計を置いていない構成（staging など）では何も言わない。checkout-owner と同じ扱い。
+  run_health || fail "exit $? $(cat "$P/out")"
+  assert_contains "$(cat "$P/monitor.log")" " OK" "集計ディレクトリが無い構成では黙る"
+}
+
+# **「開くはず」ではなく、実際に開いた証拠を出す。** 人工的に連続 0 行を作り、
+# 2 回連続で POST /issues が飛び、本文と題が analytics であることを逐語で確かめる。
+t_analytics_zero_actually_opens_an_issue() {
+  fresh anissue; with_token
+  analytics_days 0 0 0
+  run_health || true
+  assert_not_contains "$(cat "$LOG")" "curl" "1 回目はまだ開かない"
+  run_health || true
+  assert_contains "$(cat "$LOG.urls" 2>/dev/null || true)" "/repos/example/repo/issues" "2 回目で Issue API を叩く"
+  # **`$(cat <無いファイル>)` は set -e でスイート全体を殺す。** 変異で API が呼ばれなくなると
+  # $LOG.api が作られず、ここで**検出済みの失敗を報告する前に**スクリプトが死ぬ——
+  # 実測（#1184 の変異テスト）: `check_analytics` の呼び出しを潰す変異で
+  # 「x 2 回目で Issue API を叩く」は出るのに **FAIL 行が出ず、残り 2 本も走らなかった**。
+  # **落ちたことが見えない失敗は、守っていないのと同じ。** 不在を空文字として読む。
+  local api; api=$(cat "$LOG.api" 2>/dev/null || true)
+  assert_contains "$api" '"title": "[monitor] vps: analytics"' "題は analytics"
+  assert_contains "$api" '"labels": ["monitor"]' "label monitor"
+  assert_not_contains "$api" "$P" "本文にローカルパスを出さない"
+  assert_eq "42" "$(cat "$P/state/issue.analytics" 2>/dev/null || true)" "Issue 番号を覚える"
+}
+
+t_analytics_recovers_and_closes() {
+  fresh anrecover; with_token
+  echo 42 > "$P/state/issue.analytics"; echo 2 > "$P/state/fails.analytics"
+  analytics_days 11 2 3
+  run_health || fail "exit $? $(cat "$P/out")"
+  assert_contains "$(cat "$LOG.api")" '"state": "closed"' "PV が戻れば close する"
+  assert_missing "$P/state/issue.analytics" "状態を消す"
+}
+
+# 0 行の判定を「ファイルの行数」でやると、ヘッダ＋要約行の 2 行が在るので永遠に 0 にならない
+# （これが 39 日の片方の原因そのもの）。pv の値を読んでいることを、行数が同じで pv が違う形で問う。
+t_analytics_reads_pv_not_line_count() {
+  fresh anpv
+  analytics_days 0 0 0
+  assert_eq "2" "$(wc -l < "$P/analytics/$(date -u +%F).tsv" | tr -d ' ')" "0 の日も 2 行は在る（前提の確認）"
+  run_health && fail "2 行在ることを根拠に緑にしてはいけない"
+  assert_contains "$(cat "$P/monitor.log")" "analytics" "pv の値を見ている"
+}
+
 test_case "health.sh: bash -n" t_syntax
 test_case "正常: OK をログし latest.json（600）を書き、API は呼ばない" t_all_ok
 test_case "異常: コンテナ unhealthy・nginx inactive・ディスク>85% をそれぞれ検出" t_detects_each_failure
@@ -228,6 +348,14 @@ test_case "latest.json: 置き場がシンボリックリンクなら書かな�
 test_case "報告: 検出できるチェックはすべて ALL_CHECKS に載っている" t_every_failable_check_is_reportable
 test_case "checkout: 無い構成では何も言わない" t_checkout_owner_absent_is_ok
 test_case "checkout: root 以外が所有するファイルがあれば異常（#333 の前提）" t_checkout_owner_foreign_file_is_a_failure
+test_case "analytics: 直近に pv>0 の日が在れば何も言わない" t_analytics_ok_when_recent_days_have_page_views
+test_case "analytics: 連続 0 行は異常（#1184 の 39 日）" t_analytics_consecutive_zero_is_a_failure
+test_case "analytics: 1 日だけの 0 は異常にしない（静かな日は在りうる）" t_analytics_one_quiet_day_is_not_a_failure
+test_case "analytics: TSV が 1 つも無い（cron が走っていない）も異常" t_analytics_missing_tsv_is_a_failure
+test_case "analytics: 集計を置かない構成では何も言わない" t_analytics_absent_dir_says_nothing
+test_case "analytics: 連続 0 行で Issue が実際に開く（開いた証拠）" t_analytics_zero_actually_opens_an_issue
+test_case "analytics: PV が戻れば Issue を close する" t_analytics_recovers_and_closes
+test_case "analytics: 判定は pv の値。行数（ヘッダ＋要約で常に 2 行）ではない" t_analytics_reads_pv_not_line_count
 
 echo; echo "passed: $PASS  failed: $FAIL"
 [[ $FAIL == 0 ]]

@@ -54,6 +54,9 @@ DATA_BRANCH="data/refresh"
 # **母数**（実測 2026-09-21、直近 12 件のマージ済み PR は全部同じ）: 1 PR につき check-run は **7 件**
 #   audit, check, docker-web, forbidden-patterns, gitleaks, pr-closes, stale-base
 # このうち **必須 5 件** / **必須でない 2 件（stale-base, docker-web）**。
+# **#1162 で `stale-base` job を 2 つに割ったので、いまは 1 PR につき **8 件**で
+# **必須 6 件** / **必須でない 2 件（stale-base-net-deletions, docker-web）**
+# （下の #1162 の節に理由が在る。**この行の 7 件は #858 当時の実測であって、いまの値ではない**）。
 #
 # **なぜ `stale-base` が必須でない側なのか**——**これが #858 の本題である**。
 # `stale-base` の 2 つ目の step（`--net-deletions`、#836）は、#846 の担当者自身が
@@ -77,8 +80,41 @@ DATA_BRANCH="data/refresh"
 #
 # 期待値は**ハードコードする**（#499）。実行時に GitHub の protection API を読みに行かない:
 # それは管理権限が要り（#540 で実測）、読めないときにこの分岐が黙って緩んでしまう。
-REQUIRED_CHECKS=(check gitleaks forbidden-patterns audit pr-closes)
-NONREQUIRED_CHECKS=(stale-base docker-web)
+#
+# --- #1162: `stale-base` という 1 つの名前に、性質の違う検査が同居していた -------------------
+#
+# **上の #858 の論は「`--net-deletions` は赤いが通してよい」で正しい。** **間違っていたのは、
+# その理由で `stale-base` という check-run 名を丸ごと必須外にしたことである。**
+# **check-run 名は job 名なので、同じ job の step は全部まとめて必須外になる。**
+#
+#   既定モード（#536）        main が足した行が枝から消えている   → **通してはいけない**
+#   --net-deletions（#836）   移動・整理で正常に赤くなる          → 読んだうえで通してよい
+#   --data-freshness（#1156） `data/` が丸ごと巻き戻る           → **通してはいけない**
+#
+# **`--allow-nonrequired-red` を 1 回使うと、この 3 つが一緒に通る。**
+#
+# **実測（PO、2026-10-03）**: #1154 のマージでこのフラグを初めて使った。そのとき `ci.yml` の
+# step は 2 つで、job の step 単位の結論は `step 3 success`（既定）/ `step 4 failure`
+# （`--net-deletions`）だった。**通ったのは `--net-deletions` の赤 1 件だけ**だが、
+# **それを確かめたのは人であって、この道具は区別していなかった。**
+#
+# **直し方**: `ci.yml` で job を割り、名前を分ける（#1162）。
+#   `stale-base`                 既定（#1161 後は `--data-freshness` も）→ **必須。フラグでも通せない**
+#   `stale-base-net-deletions`   `--net-deletions` のみ                 → **必須でない**
+#
+# **GitHub の branch protection は変わらない**（実測 2026-10-03:
+# `required_status_checks.contexts` は `["check","gitleaks","forbidden-patterns","audit"]` の 4 件で、
+# **`stale-base` はもともと入っていない**——`has_stale_base: false`）。
+# **だから改名で「必須が 0 件になる窓」は開かない。** **GitHub は依然 `stale-base` の赤でも
+# マージを許すので、止めるのはこの道具だけである**（`pr-closes` とまったく同じ位置づけ。
+# **この道具は GitHub より厳しくてよい。逆は許されない**——上の #858 の但し書きのとおり）。
+#
+# **`stale-base-net-deletions` を足し忘れても安全側に倒れる**（下の `is_required_check` の
+# fail-closed）。**実測**: どちらの配列にも載せずに赤くすると、`知らない検査があります` を
+# 出したうえで**必須として止まる**（`scripts/po/test/merge-when-green.test.sh` の
+# `t_1162_data_freshness_red_never_merges_even_with_flag` が、まさにその形を固定している）。
+REQUIRED_CHECKS=(check gitleaks forbidden-patterns audit pr-closes stale-base)
+NONREQUIRED_CHECKS=(stale-base-net-deletions docker-web)
 
 # SKIPPABLE_CHECKS — **`conclusion: skipped` を緑として数えてよい検査の名前**（#1069）。
 #
@@ -121,8 +157,9 @@ NONREQUIRED_CHECKS=(stale-base docker-web)
 # **緑として数えてはいけない。** かつ**この 3 件はどれも必須の `check` が赤なので、
 # この道具はもともと止まる**——載せなくても正常な PR は止まらない。
 #
-# **`stale-base` / `pr-closes` / `deploy-data.yml:staging` を載せない理由**:
-# `stale-base` の `if:` は `github.event_name == 'pull_request'` で、**PR では真**（走る）。
+# **`stale-base` / `stale-base-net-deletions` / `pr-closes` / `deploy-data.yml:staging` を
+# 載せない理由**: `stale-base` と `stale-base-net-deletions`（#1162 で割った）の `if:` は
+# どちらも `github.event_name == 'pull_request'` で、**PR では真**（走る）。
 # `pr-closes` は本文を直せば緑にできる（`skipped` で通す理由が無い）。
 # `deploy-data.yml` は `pull_request` トリガーを持たないので PR の check-runs に出ない。
 # **実測の 63 件にこれらは 1 件も出ていない。**
@@ -166,6 +203,30 @@ is_known_check() {
   local name=$1 n
   for n in "${REQUIRED_CHECKS[@]}" "${NONREQUIRED_CHECKS[@]}"; do [[ "$n" == "$name" ]] && return 0; done
   return 1
+}
+
+# assert_denominator <手元の件数> <母数> <何を数えているか> <復旧のヒント> → 足りなければ die
+#
+# **なぜ 1 つの関数に寄せたか**（#1157）: **この道具は 2 か所でページングされた一覧を読む**
+# ——**`commits/<sha>/check-runs`（#1093）と `pulls/<PR>/commits`（#1157）である。**
+# **check-runs 側は 2026-09-28 に実際に 30 件で切れて必須 5 件が丸ごと消えた**（#1093 / #1116）。
+# **同じファイルの中で、そちらは直り、commits 側は無検査のまま残っていた。**
+# **判定を 2 か所に書くと、片方だけ直る形がまた起きる**ので、**比較はここにしか無い。**
+#
+# **「母数を知らない」と「取りこぼした」は別である**（#757）:
+# **母数が `null` / 空 / 数字でないときは検算しない**——**無いだけで止めると、
+# この道具が別の理由で動かなくなる。** **少ないときだけ落ちる。**
+#
+# **多いときは落とさない**: **check-runs は同じ名前の run が再実行で増えることがあり、
+# `total_count` より手元が多いのは正常**（実測 #1093）。**取りこぼしの向きだけを見る。**
+assert_denominator() {
+  local got=$1 want=$2 what=$3 hint=$4
+  [[ "$want" =~ ^[0-9]+$ ]] || return 0     # 母数を知らない → 検算しない（止めない）
+  [[ "$got"  =~ ^[0-9]+$ ]] || return 0
+  (( got < want )) || return 0
+  die "$what を取りこぼしました: 手元 $got 件 / 母数 $want 件（PR #$PR）
+       **取りこぼした分は「無い」ものとして扱われる**ので、確かめていないものを通したままマージしかねません。
+       gh のページングが効いていない可能性があります: $hint"
 }
 
 USAGE='merge-when-green.sh [--allow-nonrequired-red] [--no-review <理由>] <pr-number>'
@@ -616,10 +677,16 @@ ALLOWED_IDENTITIES=(
 )
 
 assert_branch_identity() {
-  local emails rc=0 bad="" e total=0
+  local raw emails rc=0 bad="" e total=0 seen want
   # **読めなかったことを「きれい」と読まない**（#757）。`|| rc=$?` で失敗を分ける。
-  emails=$(gh api "repos/$REPO/pulls/$PR/commits" --paginate \
-    --jq '.[] | select((.parents | length) < 2) | .commit.author.email, .commit.committer.email') || rc=$?
+  #
+  # **生 JSON を受ける（`--jq` を付けない）**（#1157）。**理由は 2 つある:**
+  #   1. **`--paginate` はページごとに 1 個の JSON ドキュメントを吐く**ので、
+  #      **`--jq` を付けると jq がドキュメントごとに走り、畳み込みがページ境界をまたげない**
+  #      （check-runs 側の docblock に同じ実測が在る）。
+  #   2. **コミットの件数を数えるには配列の長さが要る**（アドレスの行数では数えられない
+  #      ——**1 コミットが 2 行出すし、マージコミットは 0 行になる**）。
+  raw=$(gh api "repos/$REPO/pulls/$PR/commits" --paginate) || rc=$?
   if [[ "$rc" != 0 ]]; then
     die "PR #$PR のコミットを読めませんでした（gh api が失敗）。マージしません。
 
@@ -627,6 +694,52 @@ assert_branch_identity() {
          gh api repos/$REPO/pulls/$PR/commits
        $URL"
   fi
+  # **手元に何コミット在るか**（**ページをまたいで畳む**ので `jq -s`）。
+  # **壊れた JSON / 空は 0 件として扱う**——下の母数の門が落とす。
+  seen=$(jq -s '[.[][]] | length' <<<"$raw" 2>/dev/null) || seen=0
+  [[ "$seen" =~ ^[0-9]+$ ]] || seen=0
+
+  # --- ページングの検算（#1157。**check-runs 側の #1093 と同じ型**）---------------------------
+  # **何が壊れていたか**: **`--paginate` を落としても 143 本すべてが緑だった。**
+  # **`gh api` は `per_page` を指定しないと 30 件で切る**ので、
+  # **31 件以上のコミットを持つ枝では 31 件目以降の author / committer が読まれない。**
+  # **しかも当時の母数はアドレスの行数だった**ので、**30 件ぶんの 60 行が数えられて門も通った**
+  # ——**「母数が在る」ことが「取りこぼしていない」の証明になっていなかった。**
+  #
+  # **だから母数は、ページングされる一覧の外から取る。**
+  # **`repos/<repo>/pulls/<PR>` の `.commits` は整数のカウンタ**なので、
+  # **定義上ページで切られない**（実測 2026-09-30: PR #1144 で `.commits` = 3、
+  # `pulls/1144/commits` の配列長も 3。費用は 0.58 秒。型は `number`）。
+  # **`--jq` ではなく `-q` を使う**（単一オブジェクト応答なのでページの畳み込みは要らない）。
+  #
+  # **`.commits` はマージコミットも含む**（実測 2026-09-30。**初版はここを測れていなかった**
+  # ——**`#1144` はマージコミット 0 件だったので、ずれるかどうかを確かめられていなかった**）:
+  #
+  # ```
+  # PR #1150   .commits=7   --paginate の実取得=7   うちマージコミット=1
+  # PR #1147   .commits=7   --paginate の実取得=7   うちマージコミット=2
+  # ```
+  #
+  # **`seen` は非マージも含めた全件を数える**ので、**この 2 つは同じ母数を指している。**
+  # **`.commits` のほうが「非マージだけ」を数えていたら、
+  # マージコミットを持つ枝で毎回 `seen > want` になっていた**——**それは
+  # `assert_denominator` が落とさない向き**（取りこぼしの向きだけを見る）**なので黙って通る。**
+  # **つまり偽陽性ではなく「検算が効かなくなる」形だった。だから測る必要があった。**
+  #
+  # **身元を見るのは非マージだけ（下の `select`）だが、母数はここで全件を突き合わせる。**
+  # **理由**: **取りこぼしは「どのコミットが消えたか」を選べない**
+  # ——**ページの切れ目は親の数を見ないので、非マージだけ数えると
+  # 「マージコミットが消えた」と「非マージが消えた」を区別できない。**
+  #
+  # **読めなかったら検算しない**（`assert_denominator` が数字でない母数を素通りさせる）。
+  # **「母数を知らない」で止めると、この道具が別の理由で動かなくなる**（#757）。
+  want=$(gh api "repos/$REPO/pulls/$PR" -q '.commits' 2>/dev/null) || want=""
+  local commits_hint="gh api \"repos/$REPO/pulls/$PR/commits\" --paginate | jq -s '[.[][]] | length'"
+  assert_denominator "$seen" "$want" "PR #$PR の枝のコミット" "$commits_hint"
+
+  # **身元を見るのは非マージコミットだけ**（`select((.parents | length) < 2)`。理由は #1075）。
+  emails=$(jq -rs '.[][] | select((.parents | length) < 2) | .commit.author.email, .commit.committer.email' \
+    <<<"$raw" 2>/dev/null) || emails=""
   # **母数**: 1 件も読めていないのに緑にしない。**PR には必ずコミットが 1 つ以上在る。**
   [[ -n "$emails" ]] && total=$(wc -l <<<"$emails")
   if (( total == 0 )); then
@@ -654,7 +767,10 @@ assert_branch_identity() {
            'git commit --amend --reset-author --no-edit' origin/main
        $URL"
   fi
-  log "枝のコミットの身元を確かめました（$total 件すべて本人確認済みのアドレス）"
+  # **母数を出す**（#757 / #1157）: **「何件見たか」だけでは「全部見たか」が分からない。**
+  # **読んだコミット数 / PR が言うコミット数**を並べる——**合っていないことが目で見える。**
+  # **母数を読めなかったときは `?` と書く**（**「読めなかった」を「一致した」と書かない**）。
+  log "枝のコミットの身元を確かめました（コミット $seen 件 / PR が言う ${want:-?} 件、アドレス $total 件すべて本人確認済み）"
 }
 assert_branch_identity
 
@@ -1066,14 +1182,15 @@ fetch_checks() {
   # **読めなかった応答（空・壊れた JSON）は「検査 0 件」として返す**——
   # **呼び出し側の `-gt 0`（#757）が pending 扱いで待ち続ける**ので、
   # **「読めなかった」が「全部緑」になることはない。**
+  #
+  # **比較そのものは `assert_denominator` にしか無い**（#1157）。
+  # **ここと `assert_branch_identity` の 2 か所が同じ型の穴を持っていて、
+  # check-runs 側だけが直っていた**——**判定を 2 か所に書くと、また片方だけ直る。**
   local got want
   got=$(jq -s '[.[].check_runs[]] | length' <<<"$raw" 2>/dev/null) || return 0
   want=$(jq -rs 'map(.total_count) | map(select(. != null)) | if length == 0 then "null" else .[0] end' <<<"$raw" 2>/dev/null) || return 0
-  if [[ "$want" != "null" && "$got" -lt "$want" ]]; then
-    die "check-runs を取りこぼしました: 手元 $got 件 / total_count $want 件（PR #$PR / $HEAD_OID）
-       **取りこぼした分は「無い」ものとして扱われる**ので、走っていない検査を通したままマージしかねません。
-       gh のページングが効いていない可能性があります: gh api \"repos/$REPO/commits/$HEAD_OID/check-runs\" --paginate | jq -s '[.[].check_runs[]] | length'"
-  fi
+  local checks_hint="gh api \"repos/$REPO/commits/$HEAD_OID/check-runs\" --paginate | jq -s '[.[].check_runs[]] | length'"
+  assert_denominator "$got" "$want" "check-runs（$HEAD_OID）" "$checks_hint"
 
   # shellcheck disable=SC2016  # $r/$bucket は jq の変数。シェルに展開させないためのシングルクォート
   # **#1069 との統合**（#1116 のレビューで手順を書き直した）。

@@ -1285,6 +1285,9 @@ test_case "merge: conclusion:failure は status に関わらず失敗として�
 # **母数**（実測、直近 12 件のマージ済み PR は全部同じ）: 1 PR につき check-run は **7 件**
 #   audit, check, docker-web, forbidden-patterns, gitleaks, pr-closes, stale-base
 # このうち **必須 5 件** / **必須でない 2 件（stale-base, docker-web）**。
+# **#1162 で `stale-base` job を 2 つに割ったので、いまは 1 PR につき 8 件で
+# 必須 6 件 / 必須でない 2 件（stale-base-net-deletions, docker-web）。**
+# **上の 7 件は #858 当時の実測であって、いまの値ではない**（測った日つきで残す）。
 #
 # **`stale-base` が必須でない側なのが #858 の本題**: 2 つ目の step（`--net-deletions`、#836）は
 # #846 の担当者自身が「**合図であって証拠ではありません**（4 件中 2 件が本物）」と書いており、
@@ -1456,7 +1459,9 @@ EOF
   run_script "$h" merge-when-green.sh --allow-nonrequired-red 12
   assert_eq 0 "$STATUS" "マージした: $ERR"
   assert_contains "$ERR" "検査 7 件" "母数: 見た件数"
-  assert_contains "$ERR" "必須 5 件" "母数: 必須の件数（stale-base を外したので 6 → 5）"
+  # **#1162 で 5 → 6**: `stale-base` を必須側に移した（この fixture の 7 件のうち
+  # `docker-web` だけが必須外になったので、必須は 6 件）。
+  assert_contains "$ERR" "必須 6 件" "母数: 必須の件数（#1162 で stale-base が必須側に入り 5 → 6）"
   assert_contains "$ERR" "赤 1 件" "母数: 赤の件数"
 }
 test_case "858: 母数を出力に書く（検査 N 件 / 必須 M 件 / 赤 K 件）" t_858_reports_denominator
@@ -1542,14 +1547,47 @@ test_case "858: 知らないフラグは usage で落とす（似た名前で素
 # **REQUIRED_CHECKS / NONREQUIRED_CHECKS を固定する**（#499: 期待値はハードコードする）。
 # 配列を実行時に対象から読み出すと自己参照になるので、**ここに独立して書き写す**。
 # 中身が痩せる・入れ替わる・GitHub 側の登録と食い違う、のどれが起きてもここが落ちる。
+# **#1162 で値が変わった**（`stale-base` を必須側へ、抜け道は `stale-base-net-deletions` だけへ）。
+# **値そのものはこのファイル末尾の `t_1162_split_denominator_is_pinned` が持つ**
+# ——同じ値を 2 か所に書くと片方だけが腐る（#1056 で実測されている形）。
+# **ここが見るのは「この道具が GitHub の登録 4 件より厳しい側にしか動いていないこと」**である。
 t_858_check_lists_are_pinned() {
-  local req nonreq
-  req=$(grep -E '^REQUIRED_CHECKS=' "$PO_DIR/merge-when-green.sh")
-  nonreq=$(grep -E '^NONREQUIRED_CHECKS=' "$PO_DIR/merge-when-green.sh")
-  assert_eq 'REQUIRED_CHECKS=(check gitleaks forbidden-patterns audit pr-closes)' "$req" \
-    "必須 5 件（GitHub の登録 4 件 + この道具が上乗せする pr-closes）"
-  assert_eq 'NONREQUIRED_CHECKS=(stale-base docker-web)' "$nonreq" \
-    "必須でないのは stale-base / docker-web の 2 件（抜け道を増やすなら意識的にここを直す）"
+  local req nonreq c n in_req in_nonreq
+  req=$(sed -e 's/^REQUIRED_CHECKS=(//' -e 's/)$//' \
+    <<<"$(grep -E '^REQUIRED_CHECKS=' "$PO_DIR/merge-when-green.sh")")
+  nonreq=$(sed -e 's/^NONREQUIRED_CHECKS=(//' -e 's/)$//' \
+    <<<"$(grep -E '^NONREQUIRED_CHECKS=' "$PO_DIR/merge-when-green.sh")")
+  # **名前は「値として」照合する**（部分一致にしない）。`stale-base-net-deletions` は
+  # `stale-base` を**部分文字列に含む**ので、`grep stale-base` では区別できない
+  # ——#1101 で `dev@` が `seiji-kiroku-dev@` に当たったのとまったく同じ罠である。
+  # **#1162 の穴そのものがこの形**なので、ここだけは逐語の集合として見る。
+  has() {  # has <値> <並び（空白区切り）> → 0 なら在る
+    local want=$1 el; local -a arr
+    read -ra arr <<<"$2"   # **`for el in $2` と書かない**（作業合意の罠 1）
+    for el in "${arr[@]}"; do [[ "$el" == "$want" ]] && return 0; done
+    return 1
+  }
+  # **GitHub の branch protection に登録されている 4 件は、1 件も必須外に落ちていない**
+  # （実測 2026-10-03: `required_status_checks.contexts` =
+  #  `["check","gitleaks","forbidden-patterns","audit"]`。**この 4 件がそのまま母数**）。
+  # **GitHub が必須にしているものをここで外すと、この道具が保護を跨ぐことになる**（#858 の但し書き）。
+  for c in check gitleaks forbidden-patterns audit; do
+    has "$c" "$req"    && in_req=1    || in_req=0
+    has "$c" "$nonreq" && in_nonreq=1 || in_nonreq=0
+    assert_eq 1 "$in_req"    "GitHub 登録の必須 '$c' が REQUIRED_CHECKS に在る"
+    assert_eq 0 "$in_nonreq" "GitHub 登録の必須 '$c' が必須外に落ちていない"
+  done
+  # **この道具が上乗せする分**（GitHub 側には登録していないが、ここでは必須にするもの）。
+  for c in pr-closes stale-base; do
+    has "$c" "$req"    && in_req=1    || in_req=0
+    has "$c" "$nonreq" && in_nonreq=1 || in_nonreq=0
+    assert_eq 1 "$in_req"    "'$c' は必須側（pr-closes は #858 / stale-base は #1162）"
+    assert_eq 0 "$in_nonreq" "'$c' が必須外に落ちていない（値として照合）"
+  done
+  # 母数（#757）: 両方の並びが空でないこと。空なら上の has は全部「無い」になり、
+  # **4 件の `in_req` が落ちる**ので空では緑にならないが、`nonreq` 側は空でも緑になる。
+  n=$(wc -w <<<"$nonreq")
+  assert_eq 2 "$n" "NONREQUIRED_CHECKS は 2 件（値は末尾の #1162 の検査が固定する）"
 }
 test_case "858: 必須 / 必須でないの一覧をハードコードで固定する（#499）" t_858_check_lists_are_pinned
 
@@ -1664,14 +1702,21 @@ test_case "858: 「知らない検査」の note は顔ぶれが同じなら 1 �
 # **数字そのものをこの道具が作り直すことはしない**——検査が既に数えたものを二重に実装すると、
 # 片方が古くなったときに嘘をつく。
 
+# **#1162: 赤い check-run の名前を `stale-base` → `stale-base-net-deletions` に替えた。**
+# **#856 で赤かったのは `--net-deletions` の step**であり、**その step は #1162 で
+# 自分の job（= 自分の check-run 名）を持った。** `stale-base` という名前のままにすると、
+# **この fixture は「main が足した行が消えている PR をフラグで通す」形になり、
+# 下の `t_..._merges_with_flag` が #1162 が塞いだはずの穴をそのまま要求してしまう。**
+# **必須側（`stale-base`）は success として並べる**ので、母数 7 件は変わらない。
 STALE_BASE_RED_CHECKS='{"check_runs":[
       {"name":"check","status":"completed","conclusion":"success","started_at":"t1","details_url":"https://example.invalid/check"},
       {"name":"gitleaks","status":"completed","conclusion":"success","started_at":"t1","details_url":"https://example.invalid/gitleaks"},
       {"name":"forbidden-patterns","status":"completed","conclusion":"success","started_at":"t1","details_url":"https://example.invalid/fp"},
       {"name":"audit","status":"completed","conclusion":"success","started_at":"t1","details_url":"https://example.invalid/audit"},
       {"name":"pr-closes","status":"completed","conclusion":"success","started_at":"t1","details_url":"https://example.invalid/prcloses"},
+      {"name":"stale-base","status":"completed","conclusion":"success","started_at":"t1","details_url":"https://example.invalid/sbdefault"},
       {"name":"docker-web","status":"completed","conclusion":"success","started_at":"t1","details_url":"https://example.invalid/docker"},
-      {"name":"stale-base","status":"completed","conclusion":"failure","started_at":"t1","details_url":"https://example.invalid/runs/1/job/2"}]}'
+      {"name":"stale-base-net-deletions","status":"completed","conclusion":"failure","started_at":"t1","details_url":"https://example.invalid/runs/1/job/2"}]}'
 
 t_858_856_shape_stops_and_points_at_the_log() {
   local h; h=$(handler <<EOF
@@ -1686,8 +1731,11 @@ EOF
 )
   run_script "$h" merge-when-green.sh 12
   assert_eq 1 "$STATUS" "既定では止まる"
-  assert_contains "$ERR" "stale-base (failure)" "何がどう赤いかを名指しする"
-  assert_contains "$ERR" "必須 5 件は全部緑" "必須が緑であることを言う（GitHub はマージを許す状態）"
+  assert_contains "$ERR" "stale-base-net-deletions (failure)" "何がどう赤いかを名指しする"
+  # **#1162 で 5 → 6**: この fixture は 8 件になり（`stale-base` を success で足した）、
+  # **必須外は `docker-web` と `stale-base-net-deletions` の 2 件**なので必須は 6 件。
+  # **予想は 7 件で、外れた**——測った値を書く。
+  assert_contains "$ERR" "必須 6 件は全部緑" "必須が緑であることを言う（GitHub はマージを許す状態）"
   # **本題**: 押す人が「何行が減っているか」を読みに行ける場所を指しているか。
   assert_contains "$ERR" "https://example.invalid/runs/1/job/2" "赤い検査の job ログの URL を出す"
   assert_contains "$ERR" "gh run view --log-failed" "手元で読む手順も出す"
@@ -1696,7 +1744,7 @@ EOF
   # **緑の検査のログは出さない**（7 件全部の URL を並べたら、赤がどれか分からなくなる）
   assert_not_contains "$ERR" "https://example.invalid/check" "緑の検査の URL は出さない"
 }
-test_case "858: #856 の形（stale-base だけ赤）は止まり、ログの URL を指す" t_858_856_shape_stops_and_points_at_the_log
+test_case "858: #856 の形（--net-deletions だけ赤）は止まり、ログの URL を指す" t_858_856_shape_stops_and_points_at_the_log
 
 t_858_856_shape_merges_with_flag_and_records_the_log() {
   local h; h=$(handler <<EOF
@@ -1713,14 +1761,17 @@ EOF
   run_script "$h" merge-when-green.sh --allow-nonrequired-red 12
   assert_eq 0 "$STATUS" "必須が全部緑なのでマージできる: $ERR"
   assert_contains "$LOG" $'pr\tmerge\t12' "マージした"
-  assert_contains "$ERR" "必須でない検査が赤いまま進みます（--allow-nonrequired-red）: stale-base (failure)" \
+  assert_contains "$ERR" "必須でない検査が赤いまま進みます（--allow-nonrequired-red）: stale-base-net-deletions (failure)" \
     "押す直前に「押す」と言う"
   # **押したときにも URL を残す**——あとから「何を見て押したのか」を追えるように。
   assert_contains "$ERR" "https://example.invalid/runs/1/job/2" "押したときもログの URL を記録する"
 }
 test_case "858: #856 の形は --allow-nonrequired-red でマージでき、そのときログの URL も残る" t_858_856_shape_merges_with_flag_and_records_the_log
 
-# `stale-base` が赤くても、**必須が赤ければ通らない**（抜け道が `stale-base` 経由で広がらない）。
+# 必須でない検査が赤くても、**必須が赤ければ通らない**（抜け道が `--net-deletions` 経由で広がらない）。
+# **#1162: ここの名前も `stale-base` → `stale-base-net-deletions`。**
+# `stale-base` のままだと**赤 2 件がどちらも必須**になり、「必須でない赤も併せて言う」という
+# この検査の主張が消える（実測: `必須でない赤: stale-base` の行が出なくなる）。
 t_858_stale_base_red_plus_required_red_never_merges() {
   local h; h=$(handler <<'EOF'
 handle() {
@@ -1728,7 +1779,7 @@ handle() {
     "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
     "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[
       {"name":"check","status":"completed","conclusion":"failure","started_at":"t1","details_url":"https://example.invalid/check"},
-      {"name":"stale-base","status":"completed","conclusion":"failure","started_at":"t1","details_url":"https://example.invalid/sb"}]}' ;;
+      {"name":"stale-base-net-deletions","status":"completed","conclusion":"failure","started_at":"t1","details_url":"https://example.invalid/sb"}]}' ;;
     "pr merge 12 --squash --delete-branch") echo merged ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
@@ -1738,10 +1789,10 @@ EOF
   run_script "$h" merge-when-green.sh --allow-nonrequired-red 12
   assert_eq 1 "$STATUS" "必須の check が赤いので止まる"
   assert_contains "$ERR" "check" "必須の赤を名指しする"
-  assert_contains "$ERR" "必須でない赤: stale-base" "必須でない赤も併せて言う"
+  assert_contains "$ERR" "必須でない赤: stale-base-net-deletions" "必須でない赤も併せて言う"
   assert_not_contains "$LOG" $'pr\tmerge' "絶対にマージしない"
 }
-test_case "858: stale-base が赤くても、必須が赤ければマージしない" t_858_stale_base_red_plus_required_red_never_merges
+test_case "858: 必須でない検査が赤くても、必須が赤ければマージしない" t_858_stale_base_red_plus_required_red_never_merges
 
 # **ログの URL が取れなかったとき、黙って行を落とさない。**
 # `details_url` が null の check-run は実在しうる（外部 App のチェック）。
@@ -1753,7 +1804,7 @@ handle() {
     "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
     "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[
       {"name":"check","status":"completed","conclusion":"success","started_at":"t1","details_url":null},
-      {"name":"stale-base","status":"completed","conclusion":"failure","started_at":"t1","details_url":null}]}' ;;
+      {"name":"stale-base-net-deletions","status":"completed","conclusion":"failure","started_at":"t1","details_url":null}]}' ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
 }
@@ -1761,7 +1812,7 @@ EOF
 )
   run_script "$h" merge-when-green.sh 12
   assert_eq 1 "$STATUS" "既定では止まる"
-  assert_contains "$ERR" "stale-base (failure)" "赤い検査は名指しする"
+  assert_contains "$ERR" "stale-base-net-deletions (failure)" "赤い検査は名指しする"
   assert_contains "$ERR" "ログの URL が取れませんでした" "URL が無いことを言う（行を黙って落とさない）"
 }
 test_case "858: ログの URL が取れなくても、赤い検査の行は落とさずそう言う" t_858_missing_details_url_is_said
@@ -1782,8 +1833,8 @@ EOF
 )
   run_script "$h" merge-when-green.sh --allow-nonrequired-red 12
   assert_eq 0 "$STATUS" "マージした: $ERR"
-  assert_not_contains "$ERR" "all 7 checks green" "赤いまま通したのに「全部緑」と言わない"
-  assert_contains "$ERR" "stale-base (failure) を赤いまま通してマージします" "何を通したかを言う"
+  assert_not_contains "$ERR" "all 8 checks green" "赤いまま通したのに「全部緑」と言わない"
+  assert_contains "$ERR" "stale-base-net-deletions (failure) を赤いまま通してマージします" "何を通したかを言う"
 }
 test_case "858: 赤いまま通したときは「all N checks green」と言わない" t_858_does_not_claim_all_green_when_proceeding_over_red
 
@@ -1795,10 +1846,14 @@ handle() {
   case "$*" in
     "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
     "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      # **#1162: 赤くする名前は `stale-base-net-deletions`。**
+      # この検査の主張は「**必須でない**赤が緑に変わったら持ち越さない」であり、
+      # `stale-base` は #1162 で必須側に移ったので、その名前では 1 回目の poll で
+      # `die` して 2 回目に進めない（**主張ごと消える**）。
       if [ "$(bump)" -lt 2 ]; then
-        echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1","details_url":"u1"},{"name":"stale-base","status":"completed","conclusion":"failure","started_at":"t1","details_url":"u2"},{"name":"docker-web","status":"in_progress","conclusion":null,"started_at":"t1","details_url":"u3"}]}'
+        echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1","details_url":"u1"},{"name":"stale-base-net-deletions","status":"completed","conclusion":"failure","started_at":"t1","details_url":"u2"},{"name":"docker-web","status":"in_progress","conclusion":null,"started_at":"t1","details_url":"u3"}]}'
       else
-        echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1","details_url":"u1"},{"name":"stale-base","status":"completed","conclusion":"success","started_at":"t1","details_url":"u2"},{"name":"docker-web","status":"completed","conclusion":"success","started_at":"t1","details_url":"u3"}]}'
+        echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1","details_url":"u1"},{"name":"stale-base-net-deletions","status":"completed","conclusion":"success","started_at":"t1","details_url":"u2"},{"name":"docker-web","status":"completed","conclusion":"success","started_at":"t1","details_url":"u3"}]}'
       fi ;;
     "pr merge 12 --squash --delete-branch") echo merged ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
@@ -2645,9 +2700,12 @@ handle() {
   case "$*" in
     "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
     "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      # **#1162: 名前は `stale-base-net-deletions`。** この検査の主張は「**必須でない**
+      # 同名重複の赤はフラグで通る」であり、`stale-base` は #1162 で必須側に移ったので
+      # その名前では**フラグでも通らず、主張が裏返る**。
       echo '{"check_runs":[
-        {"name":"stale-base","status":"completed","conclusion":"skipped","started_at":"2026-09-26T10:05:00Z","details_url":"u2"},
-        {"name":"stale-base","status":"completed","conclusion":"failure","started_at":"2026-09-26T10:00:00Z","details_url":"u1"},
+        {"name":"stale-base-net-deletions","status":"completed","conclusion":"skipped","started_at":"2026-09-26T10:05:00Z","details_url":"u2"},
+        {"name":"stale-base-net-deletions","status":"completed","conclusion":"failure","started_at":"2026-09-26T10:00:00Z","details_url":"u1"},
         {"name":"check","status":"completed","conclusion":"success","started_at":"2026-09-26T10:00:00Z"}
       ]}' ;;
     "pr merge 12 --squash --delete-branch") echo merged ;;
@@ -2659,7 +2717,7 @@ EOF
   # フラグ無しでは止まる（黙って押さない）
   run_script "$h" merge-when-green.sh 12
   assert_eq 1 "$STATUS" "フラグ無しでは止まる"
-  assert_contains "$ERR" "stale-base" "必須でない赤の名前を言う"
+  assert_contains "$ERR" "stale-base-net-deletions" "必須でない赤の名前を言う"
   # フラグ付きなら通る（既存の動作を壊していない）
   run_script "$h" merge-when-green.sh --allow-nonrequired-red 12
   assert_eq 0 "$STATUS" "--allow-nonrequired-red で通る: $ERR"
@@ -3333,10 +3391,12 @@ handle() {
   case "$*" in
     "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
     "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
-      # **必須の名前が 1 つも無い**（check / gitleaks / forbidden-patterns / audit / pr-closes）。
+      # **必須の名前が 1 つも無い**（check / gitleaks / forbidden-patterns / audit /
+      # pr-closes / **stale-base**。**#1162 で stale-base が必須側に移ったので、
+      # この fixture から外さないと「必須 1 件」になり、この検査が何も主張しなくなる**）。
       # 必須でないと明記された名前だけが緑で返る形
       echo '{"total_count":2,"check_runs":[
-        {"name":"stale-base","status":"completed","conclusion":"success","started_at":"t1"},
+        {"name":"stale-base-net-deletions","status":"completed","conclusion":"success","started_at":"t1"},
         {"name":"docker-web","status":"completed","conclusion":"success","started_at":"t1"}
       ]}' ;;
     "pr merge 12 --squash --delete-branch") echo merged ;;
@@ -3914,6 +3974,13 @@ handle() {
     "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
     # **API は成功している**（exit 0）。**中身が空の配列である**——ここが exit 1 との違い。
     "api repos/uonoko1/giinrecord/pulls/12/commits"*) echo '[]' ;;
+    # **母数も 0 だと言わせる**（#1163 のレビューの指摘 2 で既定が入ったので明示する）。
+    # **ここを書かないと既定の `{"commits":1}` が効き、0 / 1 で母数の検算が先に落ちる**
+    # ——**どちらも exit 1 でマージもしないので安全の向きは同じだが、
+    # このテストが名乗っている「母数 0 を名指しする」経路を通らなくなる。**
+    # **「PR は 0 件だと言っているのに手元も 0 件」＝取りこぼしではない**ので、
+    # **止める理由は母数 0 のほうでなければならない。**
+    "api repos/uonoko1/giinrecord/pulls/12"*) echo '{"commits":0}' ;;
     "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
     "pr merge 12 --squash --delete-branch") echo merged ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
@@ -3981,3 +4048,654 @@ test_case "1125: fixture に author != committer の形が在る（母数つき�
 #
 # **もし将来「どちら側が不正だったか」をメッセージに出すようにしたら、
 # この入れ替えは等価でなくなる**——**そのときはここに検査を足すこと。**
+
+# --- 完全一致でなければならない（#1157）--------------------------------------------------------
+# **何が壊れていたか**: **`assert_branch_identity` の照合を完全一致（`==`）から部分一致
+# （`== *"$a"*` / `== *"$e"*`）に変えても、143 本すべてが緑のままだった**
+# （#1151 のレビュアーの実測。その PR はこの行を 1 つも触っていない）。
+# **実装は正しく `==` を使っている。守るテストが 1 本も無かった。**
+#
+# **これはこのリポジトリが 2 回踏んだ事故と同じ型である**（記憶の `address-counting-substring-trap`）
+# ——**`dev@users.noreply.github.com` を数えたつもりで
+# `seiji-kiroku-dev@users.noreply.github.com` に当たり、対策の正規表現でも再発した**
+# （`-` が `[^0-9+]` を満たしていた）。
+#
+# **向きは #569**: **身元未確認のコミットを持つ PR がマージされる。利用者からは検出できない。**
+#
+# ── **部分一致には 2 つの向きが在り、通る値が違う** ──────────────────────────────────
+#
+# **`[[ "$e" == *"$a"* ]]`（見つかった値が allowlist を「含む」）** は
+# **allowlist のアドレスに前後を足した形を通す。**
+# **`[[ "$a" == *"$e"* ]]`（allowlist が見つかった値を「含む」）** は
+# **allowlist のアドレスの部分文字列を通す**——**裸のローカル部 + noreply ドメイン**がこれに当たる。
+# **どちらも「別人に帰属する実在しうるアドレス」なので、片方だけ守っても穴は残る。**
+#
+# ── **架空アドレスの作法**（#1111）─────────────────────────────────────────────
+#
+# **`packages/etl/test/fake-addresses.ts` の `FAKE_ADDRESSES` は
+# `.sh` から import できない**（bash から TypeScript は読めない。
+# `guards.md` の表にも「シェル側の 7 件は移せない」と書いてある）。
+# **だからここは下の 2 定数で 1 か所に持つ**——**各 handler に直書きしない**（2 か所に書かない）。
+#
+# **綴りの根拠**（どちらも実在の個人に帰属しない形を選んである）:
+#   - `MWG_PREFIXED_IDENTITY` — **`evil+` を前に足した形。** **`commit-trailer-identity.test.ts`
+#     が同じ趣旨で `evil+1+x@users.noreply.github.com` を持っている**ので、その作法に合わせた。
+#     **`evil+…` というローカル部は GitHub のどのユーザーにも解決しない。**
+#   - `MWG_BARE_LOCAL_IDENTITY` — **数字 ID を落とした形**（逆向きの部分一致で通る）。
+#     **`github-actions[bot]@users.noreply.github.com` は allowlist の
+#     `41898282+github-actions[bot]@users.noreply.github.com` の部分文字列である。**
+#     **裸のローカル部が noreply ドメインに付いた形は、このリポジトリが
+#     `etl@users.noreply.github.com` / `dev@users.noreply.github.com` として
+#     既に追跡ファイルに書いている同じクラスである**（#1043 / #1074）。
+#     **本人（`uonoko1`）の裸の綴りは使わない**——**それは実在のアドレスで、
+#     追跡ファイルに個人アドレスを書かない方針に触れる**（#1111。
+#     **実測 2026-09-30: `git grep` で追跡ファイル中 0 件。この PBI で足さない**）。
+#     **逆向きの部分一致を通すという性質は、どちらの綴りでも同じである**（下の 2 本が実測で示す）。
+MWG_PREFIXED_IDENTITY='evil+120390190+uonoko1@users.noreply.github.com'
+MWG_BARE_LOCAL_IDENTITY='github-actions[bot]@users.noreply.github.com'
+
+# **向き 1**: **`[[ "$e" == *"$a"* ]]`（見つかった値が allowlist を含む）を落とす。**
+# **`evil+120390190+uonoko1@…` は allowlist の本人アドレスを丸ごと含む**ので、
+# **部分一致に変えるとこれが通る。** **完全一致なら落ちる。**
+t_1157_refuses_prefixed_identity() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1","commits":1}' ;;
+    "api repos/uonoko1/giinrecord/pulls/12/commits"*) echo '[{"parents":[{"sha":"p1"}],"commit":{"author":{"email":"$MWG_PREFIXED_IDENTITY"},"committer":{"email":"$MWG_PREFIXED_IDENTITY"}}}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "exit status（allowlist を含むだけの値は通さない）"
+  assert_contains "$ERR" "$MWG_PREFIXED_IDENTITY" "見つかったアドレスを名指しする"
+  assert_not_contains "$LOG" "pr	merge	12" "マージしない"
+}
+test_case "1157: allowlist のアドレスを前置で含む値は通さない（部分一致に変えたら落ちる）" t_1157_refuses_prefixed_identity
+
+# **向き 2**: **`[[ "$a" == *"$e"* ]]`（allowlist が見つかった値を含む）を落とす。**
+# **`github-actions[bot]@…` は allowlist の bot アドレスの部分文字列**なので、
+# **逆向きの部分一致に変えるとこれが通る。** **完全一致なら落ちる。**
+#
+# **向き 1 のテストではこの変異は落ちない**——**`evil+…` は allowlist の
+# 部分文字列ではないので、逆向きの部分一致でも通らず、そのテストは緑のまま通る。**
+# **だから 2 本要る**（実測は PR 本文）。
+t_1157_refuses_bare_local_identity() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1","commits":1}' ;;
+    "api repos/uonoko1/giinrecord/pulls/12/commits"*) echo '[{"parents":[{"sha":"p1"}],"commit":{"author":{"email":"$MWG_BARE_LOCAL_IDENTITY"},"committer":{"email":"$MWG_BARE_LOCAL_IDENTITY"}}}]' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "exit status（allowlist の部分文字列は通さない）"
+  assert_contains "$ERR" "$MWG_BARE_LOCAL_IDENTITY" "見つかったアドレスを名指しする"
+  assert_not_contains "$LOG" "pr	merge	12" "マージしない"
+}
+test_case "1157: allowlist のアドレスの部分文字列は通さない（逆向きの部分一致に変えたら落ちる）" t_1157_refuses_bare_local_identity
+
+# --- 枝のコミットの取得に --paginate が要る（#1157）---------------------------------------------
+# **何が壊れていたか**: **`assert_branch_identity` から `--paginate` を落としても、
+# 143 本すべてが緑のままだった**（#1151 のレビュアーの実測。その PR はこの行を触っていない）。
+#
+# **穴は 3 段重なっていた:**
+#   1. **`scripts/po/test/fake-bin/gh` が `--paginate` を 1 度も見ていなかった**
+#      ——**付いていようといまいと全件返していた**ので、落としても差が出なかった。
+#   2. **fixture の最大が 3 件だった**——**本物の境界（30 件）を 1 つも越えていない。**
+#   3. **母数がアドレスの行数だった**——**30 件ぶんの 60 行が数えられるので、
+#      「母数 0 で落ちる」門も通る。** **母数が在ることが「取りこぼしていない」の証明に
+#      なっていなかった**（#757 の型）。
+#
+# **本物の穴は同じファイルの check-runs 側で実際に起きている**
+# （#1093 / #1116: **30 件で切れて必須 5 件が丸ごと消えた**）。
+# **片方だけ直っていた。**
+#
+# ── **なぜ 31 件なのか** ──────────────────────────────────────────────────
+#
+# **`gh api` は `per_page` を指定しないと 1 ページ 30 件で切る**（#1093 の実測。gh 2.89.0）。
+# **30 件では境界を越えない**ので、**`--paginate` が在っても無くても同じ 30 件が返り、
+# 変異が観測できない。** **31 件で初めて「31 / 30」の差が出る。**
+#
+# **向きは #569**: **31 件目以降の author / committer が読まれず、
+# 身元未確認のコミットを持つ PR がマージされる。利用者からは検出できない。**
+
+# mwg_commits_json <件数> <末尾のアドレス> → PR の commits API と同じ形の JSON 配列
+#
+# **最後の 1 件だけアドレスを差し替える**——**そこが「切られる側」である。**
+# **前の 30 件は本人確認済みにしておく**ので、**31 件目を読めていれば落ち、
+# 読めていなければ通る**（= 変異が観測できる）。
+# **`--jq` は本物の jq が評価する**ので、`parents` を持つ本物と同じ形で作る。
+mwg_commits_json() {
+  local n=$1 last=$2 ok='120390190+uonoko1@users.noreply.github.com'
+  jq -cn --argjson n "$n" --arg ok "$ok" --arg last "$last" '
+    [range($n) | . as $i | (if $i == ($n - 1) then $last else $ok end) as $e
+     | {parents: [{sha: "p\($i)"}], commit: {author: {email: $e}, committer: {email: $e}}}]'
+}
+
+# **`--paginate` を落とすと 31 件目が読まれない**ことを、**両側から**固定する。
+#
+# **テスト 1（落とす側）**: **31 件目だけが本人確認外。** **全部読めていれば落ちる。**
+# **`--paginate` を落とすと 30 件しか読めず、その 1 件が消える**
+# ——**そのとき母数の検算（手元 30 / PR が言う 31）が落とす。**
+# **どちらの経路でも exit 1 になるが、理由が変わる**ので、**メッセージを見て区別する。**
+t_1157_reads_past_the_first_page() {
+  local commits; commits=$(mwg_commits_json 31 'evil+120390190+uonoko1@users.noreply.github.com')
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/pulls/12/commits"*) echo '$commits' ;;
+    "api repos/uonoko1/giinrecord/pulls/12"*) echo '{"commits":31}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "exit status（31 件目が本人確認外）"
+  # **31 件目を読めていることの証拠**: **そのアドレスを名指ししている。**
+  # **`--paginate` を落とすと 30 件しか読めないので、この assert が落ちる。**
+  assert_contains "$ERR" "evil+120390190+uonoko1@users.noreply.github.com" \
+    "31 件目（2 ページ目）の author を読んでいる"
+  assert_not_contains "$LOG" "pr	merge	12" "マージしない"
+}
+test_case "1157: 枝のコミットを 31 件目まで読む（--paginate を落としたら落ちる）" t_1157_reads_past_the_first_page
+
+# **テスト 2（母数の側）**: **31 件すべて本人確認済みなのに、PR は 32 件と言っている。**
+# **身元は 1 件も汚れていないので、身元の門では止まらない**
+# ——**母数の検算だけが止められる形である**（#1093 の 30/53 と同じ型の、commits 版）。
+#
+# **これが要る理由**: **テスト 1 だけだと「31 件目を読む」は守れるが、
+# 「読んだ数と PR が言う数を突き合わせる」ほうは守れない。**
+# **検算そのものを消す変異（`assert_denominator` の呼び出しを落とす）は
+# テスト 1 では落ちない**——**31 件目を読めているなら検算は要らないので緑になる。**
+t_1157_short_read_of_commits_fails_closed() {
+  local commits; commits=$(mwg_commits_json 31 '120390190+uonoko1@users.noreply.github.com')
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    # **31 件しか返らない**（どのアドレスも本人確認済み）。
+    "api repos/uonoko1/giinrecord/pulls/12/commits"*) echo '$commits' ;;
+    # **PR は 32 件だと言っている**＝**1 件取りこぼしている。**
+    "api repos/uonoko1/giinrecord/pulls/12"*) echo '{"commits":32}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "取りこぼしたら落ちる（身元が全部きれいでも）"
+  assert_contains "$ERR" "31" "手元の件数を言う"
+  assert_contains "$ERR" "32" "PR が言う件数を言う"
+  assert_not_contains "$LOG" "pr	merge	12" "マージしない"
+}
+test_case "1157: 読んだコミット数が PR の言う数より少なければ落ちる（母数の検算）" t_1157_short_read_of_commits_fails_closed
+
+# **検算は「等しければ通る」**（常に落ちる置物になっていないこと）。
+# **加えて母数が出力に在ることを見る**（#757 / #1157 の受け入れ条件）。
+t_1157_exact_commit_count_passes_and_reports() {
+  local commits; commits=$(mwg_commits_json 31 '120390190+uonoko1@users.noreply.github.com')
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/pulls/12/commits"*) echo '$commits' ;;
+    "api repos/uonoko1/giinrecord/pulls/12"*) echo '{"commits":31}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "31 == 31 なら通る: $ERR"
+  # **母数が出力に在る**（#757）: **読んだ件数 / PR が言う件数の両方。**
+  assert_contains "$OUT$ERR" "コミット 31 件 / PR が言う 31 件" "母数を出力に書く"
+  assert_contains "$LOG" "pr	merge	12" "取りこぼしていなければマージできる"
+}
+test_case "1157: 読んだコミット数と PR の言う数が一致すれば通り、母数を出す" t_1157_exact_commit_count_passes_and_reports
+
+# **母数を読めなかったときは検算しない**（「母数を知らない」と「取りこぼした」は別。#757）。
+# **`.commits` を読めない（空が返る）ときに止めると、この道具が別の理由で動かなくなる。**
+# **そのかわり、出力には「母数は読めなかった」と分かるように書く**——
+# **「読めなかった」を「一致した」と書かない。**
+t_1157_unknown_denominator_does_not_block() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/pulls/12/commits"*) echo '[{"parents":[{"sha":"p1"}],"commit":{"author":{"email":"120390190+uonoko1@users.noreply.github.com"},"committer":{"email":"120390190+uonoko1@users.noreply.github.com"}}}]' ;;
+    # **母数の問い合わせが失敗する**（権限・API エラー）。
+    "api repos/uonoko1/giinrecord/pulls/12"*) echo "HTTP 403" >&2; exit 1 ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "母数を読めないだけでは止めない: $ERR"
+  assert_contains "$OUT$ERR" "PR が言う ? 件" "母数を読めなかったことを書く（一致したと書かない）"
+}
+test_case "1157: 母数を読めなくても止めないが、読めなかったと書く" t_1157_unknown_denominator_does_not_block
+
+# **fake gh が `--paginate` を見ていること自体を固定する**（#1157）。
+#
+# **これが無いと、上の 3 本は「fake が全件返すから緑」なだけで、
+# `--paginate` を落とす変異を 1 件も落とせない**——**穴 2 の正体がまさにそれだった。**
+# **だから「fake の側の振る舞い」を直接測る。**
+t_1157_fake_gh_emulates_paging() {
+  local h out_with out_without
+  h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "api things"*) jq -cn '[range(31) | {n: .}]' ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  out_with=$(PATH="$HERE/fake-bin:$PATH" FAKE_GH_LOG=/dev/null FAKE_GH_HANDLER="$h" \
+    FAKE_UNHANDLED=/dev/null gh api things --paginate | jq -s '[.[][]] | length')
+  out_without=$(PATH="$HERE/fake-bin:$PATH" FAKE_GH_LOG=/dev/null FAKE_GH_HANDLER="$h" \
+    FAKE_UNHANDLED=/dev/null gh api things | jq -s '[.[][]] | length')
+  assert_eq 31 "$out_with" "--paginate が在れば全件返る"
+  assert_eq 30 "$out_without" "--paginate が無ければ 30 件で切れる（本物と同じ）"
+}
+test_case "1157: fake gh が --paginate の有無で 31 件 / 30 件を返し分ける" t_1157_fake_gh_emulates_paging
+
+# **手元が母数より「多い」ときは落とさない**（#1157）。
+#
+# **これは意図した非対称である。** **`assert_denominator` は `(( got < want ))` しか見ない。**
+#
+# **なぜ多い側を見ないか:**
+#   - **check-runs**: **同じ名前の run が再実行で増える**ので、**`total_count` より手元が多いのは
+#     正常である**（実測 #1093）。**ここで落とすと、再実行した PR が全部止まる。**
+#   - **commits**: **`.commits` はマージコミットも含む**ので、**`seen` と一致する**
+#     （実測 2026-09-30: #1150 が 7/7・マージ 1 件、#1147 が 7/7・マージ 2 件）。
+#     **もし将来 `.commits` が「非マージだけ」を数えるようになったら `seen > want` になるが、
+#     それは取りこぼしではないので止めてはいけない。**
+#
+# **この非対称に検査が無かった**——**`(( got < want ))` を `(( got > want ))` に変える変異（M5）は
+# 落ちたが、それは「少ない側が落ちなくなった」からで、「多い側が落ちるようになった」ことは
+# 誰も見ていなかった。** **向きを両方見る実装（`!=`）に変えても、M5 は落ちない。**
+# **だからここで「多い側は通る」を固定する。**
+t_1157_more_than_denominator_passes() {
+  local commits; commits=$(mwg_commits_json 31 '120390190+uonoko1@users.noreply.github.com')
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    # **31 件取れている**のに——
+    "api repos/uonoko1/giinrecord/pulls/12/commits"*) echo '$commits' ;;
+    # **PR は 30 件だと言っている**（手元のほうが多い）。**取りこぼしではないので通す。**
+    "api repos/uonoko1/giinrecord/pulls/12"*) echo '{"commits":30}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "手元が母数より多いだけでは止めない: $ERR"
+  assert_contains "$LOG" "pr	merge	12" "多い側で止めると再実行した PR が全部止まる"
+  # **それでも母数は出す**（#757）。**「多い」ことが目で見える。**
+  assert_contains "$OUT$ERR" "コミット 31 件 / PR が言う 30 件" "食い違いを黙って隠さない"
+}
+test_case "1157: 手元が母数より多いだけでは止めない（再実行で増える側は正常）" t_1157_more_than_denominator_passes
+
+# --- `--paginate` の応答は「ページごとに 1 ドキュメント」である（#1157 / #1163 の指摘 1）-------
+#
+# **何が壊れていたか**: **`seen` を数える `jq -s` の畳み込み経路が、一度も実行されていなかった。**
+# **`scripts/po/test/fake-bin/gh` の `paginate_emulate` が、`--paginate` でも
+# 単一ドキュメントを返していた**ので——**複数ドキュメントを吐く fixture は
+# リポジトリに 0 件だった**（#1163 のレビュアーの実測）。
+#
+# **単一ドキュメントでは `jq -s '[.[][]]'` と `jq '[.[]]'` が同じ数を返す**（実測:
+# `[{"a":1},{"a":2}]` でどちらも 2）。**つまり `-s` は等価変異でしかなく、
+# 落とせるテストが存在しえなかった。**
+#
+# **本物の `gh api --paginate` はページごとに 1 個の JSON ドキュメントを吐く**
+# （#1093 で実測: `?per_page=5` の 53 件 → `jq -s length` が **11**）。
+# **`merge-when-green.sh` の docblock はそう書いてあり、`jq -s` が在る理由もそれである**
+# ——**書いてあるのに、測っていなかった。**
+#
+# **head（150/0）で素通りしていた 3 変異と、倒れる向き:**
+#
+# ```
+# jq -s を落とす                      → 150/0  （単一ドキュメントでは等価。本物では 1 ページ目だけ数える）
+# seen=0 のフォールバックを 999999 に  → 150/0  **マージを通す側**（#569）
+# seen=0 のフォールバックを $want に   → 150/0  **マージを通す側**（#569）
+# ```
+#
+# **999999 のほうがとくに悪い**: **レビュアーは 2 ドキュメントの fixture で、
+# `コミット 999999 件 / PR が言う 32 件` という明らかに嘘の数を出しながら
+# `pr merge` まで走ることを実測した。** **「母数を出す」ことが「母数が正しい」の
+# 証明になっていなかった**（#757 の型）。**しかも 999999 を読むテストが 1 つも無かった。**
+
+# **テスト A（fake の側）**: **`--paginate` の応答が複数ドキュメントであることを直接測る。**
+# **これが無いと、下の B・C は「fake がたまたま 1 ドキュメントで返すから緑」になりうる。**
+# **`t_1157_fake_gh_emulates_paging` は「全件返る」しか見ていない**
+# ——**1 ドキュメントに畳んで返しても 31 件なので、あのテストは通ってしまう。**
+t_1163_paginate_emits_one_document_per_page() {
+  local h docs items sliced
+  h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "api things"*) jq -cn '[range(31) | {n: .}]' ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  # **`fake_gh` に寄せる**（`local -a env=(...)` と書くと `env` コマンドを隠してしまう）。
+  fake_gh() { PATH="$HERE/fake-bin:$PATH" FAKE_GH_LOG=/dev/null FAKE_GH_HANDLER="$h" \
+    FAKE_UNHANDLED=/dev/null gh "$@"; }
+  # **31 件 / 1 ページ 30 件 → 2 ページ = 2 ドキュメント。**
+  docs=$(fake_gh api things --paginate | grep -c .)
+  assert_eq 2 "$docs" "--paginate は**ページごとに 1 ドキュメント**を吐く（本物と同じ）"
+  # **畳めば 31 件**（`jq -s` が要る理由がここに在る）。
+  items=$(fake_gh api things --paginate | jq -s '[.[][]] | length')
+  assert_eq 31 "$items" "jq -s で畳むと全件になる"
+  # **畳まなければ 1 ページ目の 30 件しか数えられない**——**`jq -s` を落とすと起きること。**
+  sliced=$(fake_gh api things --paginate | jq '[.[]] | length' | head -1)
+  assert_eq 30 "$sliced" "**-s を落とすと 1 ページ目の 30 件しか数えない**（等価変異ではない）"
+  unset -f fake_gh
+}
+test_case "1163: --paginate の応答はページごとに 1 ドキュメント（jq -s が要る理由）" t_1163_paginate_emits_one_document_per_page
+
+# **テスト B（`jq -s` を落とすと落ちる）**: **2 ページに分かれた 31 件すべて本人確認済み、
+# PR も 31 件だと言っている。** **畳めていれば 31 == 31 で通る。**
+# **`jq -s` を落とすと `seen` が 1 ページ目の 30 件になり、30 < 31 で母数の検算が落とす。**
+#
+# **これは `t_1157_exact_commit_count_passes_and_reports` と同じ形に見えるが、違う:**
+# **あちらは fake が単一ドキュメントを返していたので `-s` が効いていなかった。**
+# **いま fake が本物と同じく分割して吐くので、同じ assert が `-s` を守る。**
+t_1163_folds_pages_before_counting() {
+  local commits; commits=$(mwg_commits_json 31 '120390190+uonoko1@users.noreply.github.com')
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    # **fake が 2 ドキュメント（30 件 + 1 件）に分けて吐く。**
+    "api repos/uonoko1/giinrecord/pulls/12/commits"*) echo '$commits' ;;
+    "api repos/uonoko1/giinrecord/pulls/12"*) echo '{"commits":31}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "ページを畳めば 31 == 31 で通る: $ERR"
+  # **ここが `jq -s` を落とすと落ちる**: **畳めないと 30 件になり、30 / 31 で die する。**
+  assert_contains "$OUT$ERR" "コミット 31 件 / PR が言う 31 件" \
+    "**ページをまたいで畳んだ件数**を出す（1 ページ目だけなら 30 件になる）"
+  assert_contains "$LOG" "pr	merge	12" "取りこぼしていなければマージできる"
+}
+test_case "1163: ページをまたいで畳んでから数える（jq -s を落としたら落ちる）" t_1163_folds_pages_before_counting
+
+# **テスト C（フォールバックが嘘の数を出してはいけない）**:
+# **`seen` が壊れた応答で読めなかったとき、`|| seen=0` は「0 件」に倒れる**
+# ——**0 は母数より小さいので、母数の検算が die する側に倒れる**（#569 の正しい向き）。
+#
+# **フォールバックを 999999 や `$want` に変えると、`assert_denominator` は
+# 「手元のほうが多い／等しい」と読んで通してしまう**
+# ——**1 件もコミットを読めていないのに、身元の門も母数の門も越える。**
+#
+# **向き**: **マージを通す側**（#569）。**利用者からは検出できない。**
+#
+# **どうやって「読めない応答」を作るか**: **`--paginate` の応答の 1 ページ目が
+# 壊れた JSON だと、`jq -s` は全体を捨てる。** **本物でもそうなる**
+# （途中でネットワークが切れた・プロキシが HTML を挟んだ）。
+# **壊れた JSON は fake の `paginate_emulate` が触らず素のまま通す**ので、
+# **`merge-when-green.sh` の `jq -s` が受け取って失敗する。**
+t_1163_unreadable_count_falls_back_to_zero_not_a_lie() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    # **壊れた JSON**（`jq -s` が失敗する）。**gh 自体は成功している**（exit 0）ので、
+    # 上の「読めなかったら die」の経路には入らない——**ここを通るのは数えるところである。**
+    "api repos/uonoko1/giinrecord/pulls/12/commits"*) printf '%s\n' '{"not json' ;;
+    # **PR は 32 件だと言っている。**
+    "api repos/uonoko1/giinrecord/pulls/12"*) echo '{"commits":32}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "数えられなかったら止まる（0 件に倒れる）"
+  assert_not_contains "$LOG" "pr	merge	12" "**マージしない**（向きは #569）"
+  # **出す数は 0 でなければならない。** **999999 や 32 を出す実装はここで落ちる。**
+  assert_contains "$ERR" "手元 0 件 / 母数 32 件" \
+    "**読めなかったら 0 件と言う**（嘘の数を出さない。999999 / \$want に変えたら落ちる）"
+  assert_not_contains "$OUT$ERR" "999999" "明らかに嘘の数を出さない"
+}
+test_case "1163: コミット数を数えられなければ 0 件に倒れる（嘘の数を出してマージしない）" t_1163_unreadable_count_falls_back_to_zero_not_a_lie
+
+# **テスト D（母数の既定が全テストで効いていること）**（#1163 の指摘 2）。
+#
+# **何が壊れていたか**: **`api repos/.../pulls/12` に答えるハンドラが 5 本しか無く、
+# 151 件のうち 146 件が `PR が言う ? 件` に落ちていた**——**母数の検算が
+# 「母数を知らない」で素通りする側に倒れ、ほぼ全テストで不活性だった。**
+# **`handle_with_defaults` は他の普遍的に到達する呼び出しには既定値を持っていたのに、
+# この新しい呼び出しには持っていなかった。**
+#
+# **だから既定を足した。** **ここでは「既定が効いている」ことを直接測る**
+# ——**既定を消すと、この assert が `PR が言う ? 件` になって落ちる。**
+t_1163_denominator_default_is_active() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[{"name":"check","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    # **commits も母数も、ハンドラは 1 つも答えない**（既定に任せる）。
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "既定は「何も起きていない」側（1 件 / 1 件）: $ERR"
+  # **既定が無いとここが `PR が言う ? 件` になる**＝**検算が不活性だったことの計器。**
+  assert_contains "$OUT$ERR" "コミット 1 件 / PR が言う 1 件" \
+    "**母数の既定が効いている**（無いと ? 件になり、検算がほぼ全テストで不活性になる）"
+  assert_not_contains "$OUT$ERR" "PR が言う ? 件" "既定が在るのに「読めなかった」と書かない"
+}
+test_case "1163: 母数の既定が効いている（ハンドラが答えなくても検算が走る）" t_1163_denominator_default_is_active
+
+# ── #1162: `stale-base` という 1 つの check-run 名に、性質の違う step が同居していた ──────
+#
+# **何が問題だったか**（PO が 2026-10-03 に実測し、#1161 の担当者が自己申告した）:
+# `NONREQUIRED_CHECKS=(stale-base docker-web)` の `stale-base` が「必須でない」側に在る理由は、
+# **`--net-deletions`（#836）が「赤いが通してよい」検査だから**である
+# ——関数を移動するたびに鳴り、**検査自身が「赤いまま人が本文を読んで判断する契約」だと
+# 明記している**（`scripts/ci/stale-base.sh:148`。先例 #794 が赤のまま main に在る）。
+#
+# **だが同じ check-run 名の下に在る他の step は、そうではない:**
+#
+#   既定モード（#536）        main が足した行を落としている        → 通してはいけない
+#   --net-deletions（#836）   移動・整理で正常に赤くなる            → 読んだうえで通してよい
+#   --data-freshness（#1156） data/ が丸ごと巻き戻る              → 通してはいけない
+#
+# **check-run 名は job 名である。** step がいくつ在っても check run は 1 本なので、
+# **`--allow-nonrequired-red` を 1 回使うと、同じ job の step が全部一緒に通る。**
+#
+# **直し方**: `ci.yml` で job を 2 つに割り、名前を分ける。
+#   `stale-base`                   既定（+ #1161 がマージされたら `--data-freshness`）→ **必須**
+#   `stale-base-net-deletions`     `--net-deletions` のみ                            → **必須でない**
+#
+# **GitHub の branch protection は変わっていない**（実測 2026-10-03:
+# `required_status_checks.contexts` は `["check","gitleaks","forbidden-patterns","audit"]` の 4 件で、
+# **`stale-base` はもともと入っていない**——`has_stale_base: false`）。
+# **つまり改名で「必須が 0 件になる窓」は開かない。** **止めるのはこの道具だけであり、
+# この道具が #1154 で実際に唯一の歯止めだった。**
+
+# 【受け入れ条件の向き 1】**`--net-deletions` だけはフラグで通る**（抜け道の正当な用途が残っている）。
+t_1162_net_deletions_red_merges_with_flag() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[
+      {"name":"check","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"gitleaks","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"forbidden-patterns","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"audit","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"pr-closes","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"stale-base","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"docker-web","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"stale-base-net-deletions","status":"completed","conclusion":"failure","started_at":"t1","details_url":"u-nd"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh --allow-nonrequired-red 12
+  assert_eq 0 "$STATUS" "--net-deletions の赤はフラグで通る（#794 の先例がこの形）: $ERR"
+  assert_contains "$LOG" $'pr\tmerge\t12' "マージした"
+  assert_contains "$ERR" "stale-base-net-deletions" "黙って押さない: 名指しする"
+  assert_contains "$ERR" "u-nd" "読む先（job のログ）を指す"
+}
+test_case "1162: --net-deletions の赤だけは --allow-nonrequired-red で通る（抜け道の正当な用途）" \
+  t_1162_net_deletions_red_merges_with_flag
+
+# 【受け入れ条件の向き 2a】**既定モード（main の行の消失）はフラグでも通らない。**
+# **これが #1162 の本題である。** 改名前は同じ `stale-base` という名前だったので、
+# この赤が `--net-deletions` の赤と区別できず、フラグ 1 つで一緒に通っていた。
+#
+# **fixture の要点: `stale-base` だけを赤にする。**
+# 最初に書いたときは `stale-base-net-deletions` も一緒に赤にしていたので、
+# **改名前の main でもこの検査は緑だった**（実測: `passed: 144 failed: 3` で、
+# この 1 本は `ok` だった）——`stale-base-net-deletions` が**知らない名前**として
+# fail-closed で必須に数えられ、そちらだけで止まっていたからである。
+# **つまり「`stale-base` が必須になった」ことを 1 文字も確かめていなかった。**
+# 赤を 1 本に絞って初めて、この検査は改名の有無を区別する。
+t_1162_default_mode_red_never_merges_even_with_flag() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[
+      {"name":"check","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"gitleaks","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"forbidden-patterns","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"audit","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"pr-closes","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"docker-web","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"stale-base-net-deletions","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"stale-base","status":"completed","conclusion":"failure","started_at":"t1","details_url":"u-sb"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh --allow-nonrequired-red 12
+  assert_eq 1 "$STATUS" "main の行の消失はフラグでも通らない"
+  assert_contains "$ERR" "--allow-nonrequired-red では通せません" "フラグでは通せないと言う"
+  assert_contains "$ERR" "stale-base" "赤い必須検査を名指しする"
+  assert_not_contains "$LOG" $'pr\tmerge' "マージを試みない"
+}
+test_case "1162: 既定モード（main の行の消失）の赤はフラグでも通らない" \
+  t_1162_default_mode_red_never_merges_even_with_flag
+
+# 【受け入れ条件の向き 2b】**`data/` の巻き戻し（`--data-freshness`、#1156）もフラグでも通らない。**
+#
+# **#1161 がマージされると `--data-freshness` は `stale-base` job の 3 つ目の step になる**
+# （この PR の `ci.yml` はまだその step を持っていない——#1161 が未マージなので）。
+# **その形では check-run 名が `stale-base` になり、上の 2a がそのまま覆う。**
+#
+# **ここでは「もし別の job 名として現れたら」も覆う**——`stale-base-data-freshness` は
+# `REQUIRED_CHECKS` にも `NONREQUIRED_CHECKS` にも載っていない**知らない名前**なので、
+# `is_required_check` の fail-closed（どちらにも無い → 必須）で**必須として扱われる**。
+# **これが「足し忘れても安全側に倒れる」ことの実測である**（#1162 のやること 3）。
+t_1162_data_freshness_red_never_merges_even_with_flag() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[
+      {"name":"check","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"gitleaks","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"forbidden-patterns","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"audit","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"pr-closes","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"stale-base","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"docker-web","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"stale-base-net-deletions","status":"completed","conclusion":"failure","started_at":"t1","details_url":"u-nd"},
+      {"name":"stale-base-data-freshness","status":"completed","conclusion":"failure","started_at":"t1","details_url":"u-df"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh --allow-nonrequired-red 12
+  assert_eq 1 "$STATUS" "data/ の巻き戻しはフラグでも通らない（知らない名前は必須。fail-closed）"
+  assert_contains "$ERR" "--allow-nonrequired-red では通せません" "フラグでは通せないと言う"
+  assert_contains "$ERR" "stale-base-data-freshness" "赤い必須検査を名指しする"
+  # `log` は stderr に出る（`$LOG` は gh の呼び出し記録であって、この道具の出力ではない）。
+  assert_contains "$ERR" "知らない検査があります" "一覧に足し忘れていることも言う（黙って必須に倒さない）"
+  assert_not_contains "$LOG" $'pr\tmerge' "マージを試みない"
+}
+test_case "1162: data/ の巻き戻しの赤はフラグでも通らない（一覧に足し忘れても fail-closed）" \
+  t_1162_data_freshness_red_never_merges_even_with_flag
+
+# **一覧を固定する**（#499: 期待値はハードコードする）。上の `t_858_check_lists_are_pinned` を
+# #1162 の形に更新したので、ここでは**分けた母数**を書き残す。
+#   分けた job     2 件（stale-base / stale-base-net-deletions）
+#   必須にした数   1 件（stale-base）
+#   必須でない数   1 件（stale-base-net-deletions）
+# **`docker-web` は従来どおり必須でない**ので、`NONREQUIRED_CHECKS` は 2 件のまま
+# （中身が `stale-base` → `stale-base-net-deletions` に入れ替わった）。
+t_1162_split_denominator_is_pinned() {
+  local req nonreq
+  req=$(grep -E '^REQUIRED_CHECKS=' "$PO_DIR/merge-when-green.sh")
+  nonreq=$(grep -E '^NONREQUIRED_CHECKS=' "$PO_DIR/merge-when-green.sh")
+  assert_eq 'REQUIRED_CHECKS=(check gitleaks forbidden-patterns audit pr-closes stale-base)' "$req" \
+    "必須 6 件（従来の 5 件 + 割った stale-base）"
+  assert_eq 'NONREQUIRED_CHECKS=(stale-base-net-deletions docker-web)' "$nonreq" \
+    "必須でないのは 2 件。stale-base ではなく stale-base-net-deletions（抜け道の口を狭めた）"
+  # **`stale-base` が必須でない側に残っていないこと**を、部分一致ではなく**値として**見る
+  # （#1162 の穴そのものに戻る形。`stale-base-net-deletions` は `stale-base` を部分文字列に
+  #  含むので、`grep stale-base` では区別できない——アドレスと同じ罠である）。
+  # **`for n in $VAR` と書かない**（zsh は変数を単語分割しないので 1 回しか回らず、
+  # **数え落としが「0 件」というきれいな答えになる**。作業合意の罠 1）。
+  # ここは bash で走るが、同じ形を書かない方針に合わせて `read -ra` で配列にする。
+  local -a nr; local el found=0
+  read -ra nr <<<"$(tr -d '()' <<<"$nonreq" | sed 's/^NONREQUIRED_CHECKS=//')"
+  # 母数（#757）: 分解できていなければ下のループは 0 回で、found は 0 のまま緑になる。
+  assert_eq 2 "${#nr[@]}" "NONREQUIRED_CHECKS を 2 要素に分解できている（母数）"
+  for el in "${nr[@]}"; do
+    [[ "$el" == "stale-base" ]] && found=1
+  done
+  assert_eq 0 "$found" "stale-base が NONREQUIRED_CHECKS に在る＝#1162 の穴に戻っている"
+}
+test_case "1162: 割った母数を固定する（必須 6 件 / 必須でない 2 件・値として照合）" \
+  t_1162_split_denominator_is_pinned
