@@ -386,8 +386,31 @@ test("#1137: keysUnder はネストしたマップでも 2 つめ以降のキー
     "      artifact:",
     '        description: "second"',
     "        value: ${{ jobs.b.outputs.artifact }}",
+    // **空行は値の途中でも現れうる（YAML として正当）。`continue` でなく `break` にすると
+    // #1137 の偽陽性が同じ逐語で戻る**（R6。実測: `build-site.yml` の 2 キーの間に空行 1 行を
+    // 入れるだけで「output `artifact` を宣言していない（宣言: ["sha"]）」が復活する）。
+    // **この 1 行で押さえる**（テストも assert も増えない）。
+    "",
     "      third:",
     "        value: ${{ jobs.b.outputs.third }}",
+    // ── **同じ indent（4）の兄弟キー。`depth <= indent` の `=` が効く唯一の位置である** ──
+    //
+    // #1137 レビュー 7 回目: **この 3 行が無いと、`<=` を `<` に変える変異（R3）が 6/6 緑で通る。**
+    // 旧実装 `if (!/^ {indent+2}\S/.test(l)) break;` は **indent+2 以外のあらゆる行で止まった**ので、
+    // 同一 indent の兄弟の境界を**暗黙に**守っていた。**この枝はその 1 行を 2 つの条件に分けた**ので、
+    // **同一 indent を守るのは `depth <= indent` の `=` だけ**になった。
+    //
+    // **下の `permissions:` では `=` を試せない**——indent 0 なので `<` でも止まる（`0 < 4`）。
+    // **`=` が効くのは「ちょうど同じ indent」の兄弟が在るときだけ**である。
+    //
+    // **向きは偽陰性で、こちらのほうが悪い。** `=` を落とすと
+    // **`secrets:` の下の鍵の名前が output として読める**（実測: `["sha","artifact","third","DEPLOY_SSH_KEY"]`）。
+    // そうなると、**消し忘れた `needs.*.outputs.X` の参照が、無関係な兄弟キーに同じ名前が在るだけで
+    // 黙って緑になる。** **`deploy-site.yml` の `workflow_call` は実際に
+    // `inputs:` / `secrets:` / `outputs:` を同一 indent に 3 つ持っている**ので、合成だけの話ではない。
+    "    secrets:",
+    "      DEPLOY_SSH_KEY:",
+    "        required: true",
     "permissions:",
     "  contents: read",
   ];
