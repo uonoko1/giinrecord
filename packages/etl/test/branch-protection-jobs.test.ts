@@ -165,6 +165,38 @@ function jobBodyOf(text: string, jobName: string): string | null {
   return out.join("\n");
 }
 
+/**
+ * job 本文のうち、**実行される行だけ**を返す（#1162 のレビューで見つけた偽陽性）。
+ *
+ * **`jobBodyOf` は生の行を返す**（`run:` の中身を壊さないための意図的な設計）。
+ * そのため `body.includes("--data-freshness")` は**コメント行にも当たる。**
+ *
+ * **レビュアーの実測（2026-10-04）**: **コードを 1 行も変えず、`--data-freshness` という語を
+ * 含むコメントを 1 行足すだけで `fail 1`。しかもメッセージが「`--data-freshness` を
+ * 走らせている」と、事実でないことを言う。**
+ * **この PR 自身、該当コメントが job ヘッダの上に在るおかげでぎりぎり通っていた**
+ * ——**コメントを 1 行動かすと赤くなる。**
+ *
+ * **向きが逆の同じ型が PR #1142 に在る**（`stripComment` が YAML の `#` を無条件に落として、
+ * `run:` ブロック内の `${{ secrets.X }}` を見逃していた）。**あちらは「本文をコメントとして捨てる」、
+ * こちらは「コメントを本文として読む」。** **#1142 は未マージなので、そこから import はしない**
+ * （main に在るものだけを使う）。
+ *
+ * ── どう見分けるか ────────────────────────────────────────────────
+ * **行頭（インデントのみを除いた先頭）が `#` の行を落とす。** それだけにする。
+ * **行中の `#` は落とさない**——`run:` ブロックの中では `#` はシェルのコメントだが、
+ * `bash foo.sh --flag "a#b"` のような形もあり、**YAML の層では判定できない。**
+ * **ここで要るのは「コメント行だけの行を落とす」ことで、それは行頭だけ見れば足りる**
+ * （`ci.yml` の該当箇所は実測で全部この形）。
+ * **落としすぎる側（偽陰性）には倒さない**ので、行中の `#` 以降は残す。
+ */
+function executableLinesOf(jobBody: string): string {
+  return jobBody
+    .split("\n")
+    .filter((l) => !/^\s*#/.test(l))
+    .join("\n");
+}
+
 function jobsOf(file: string): Job[] {
   const text = readFileSync(resolve(wfDir, file), "utf8");
   const onPR = hasPullRequestTrigger(text);
@@ -500,43 +532,70 @@ test("#1162 必須でない job の本文に、通してはいけない検査が
   // 母数（#757）: 空なら下のループが 0 回まわって「問題なし」になる。
   assert.ok(nonrequired.length > 0, "NONREQUIRED_CHECKS が空。この検査は何も見ていない");
 
-  // `scripts/ci/stale-base.sh` の CI で走るモードを、**赤の性質で**二分する（ハードコード、#499）。
-  // 左は「赤いまま人が読んで通すことが在る」、右は「赤いなら絶対に通してはいけない」。
+  // **「赤いまま人が読んで通す契約」の検査**（#836）。**これだけが必須外 job に在ってよい。**
   const PASSABLE_WHEN_RED = ["--net-deletions"];
-  const NEVER_PASSABLE_WHEN_RED = [
-    "--data-freshness", // #1156: data/ が丸ごと巻き戻る（#1161 で ci.yml に入る）
-  ];
-  // 既定モード（#536）は**フラグを持たない**ので、起動の形で見分ける:
-  // `stale-base.sh "refs/remotes/...` のように、第 1 引数が ref である呼び出し。
-  const DEFAULT_MODE_CALL = /stale-base\.sh\s+"refs\/remotes\//;
+
+  // ── なぜ denylist ではなく allowlist なのか（#1162 のレビューで実測した偽陰性）────────
+  //
+  // **2026-10-04 まで、ここは「通してはいけないモードの綴りを列挙する」denylist だった:**
+  //
+  //     const NEVER_PASSABLE_WHEN_RED = ["--data-freshness"];
+  //     const DEFAULT_MODE_CALL = /stale-base\.sh\s+"refs\/remotes\//;
+  //
+  // **既定モード（#536）はフラグを持たないので、起動の綴り 1 通りで見分けていた。**
+  // **だから `BASE="refs/remotes/origin/$BASE_REF"` と括り出して渡すだけで素通りした。**
+  //
+  // **実測（2026-10-04、このファイルの変異で確認）**: 必須外 job の中に
+  //     BASE="refs/remotes/origin/$BASE_REF"
+  //     bash scripts/ci/stale-base.sh "$BASE" "$HEAD_SHA"     ← **既定モード（#536）**
+  // を足すと、**このファイルは 10/10 緑**だった。
+  // **つまり「main の行の消失を必須外 job に移す」ことを、この検査は止められなかった**
+  // ——**この PR が塞いだはずの穴そのもの**（`--allow-nonrequired-red` が #536 の赤も通す）。
+  //
+  // **denylist は列挙漏れがそのまま穴になる**（#333）。**モードは今後も増える**し、
+  // **綴りは `"$BASE"` のように自由に変えられる。** 両方を先読みで列挙するのは不可能である。
+  //
+  // **反転する**: **必須外 job の `stale-base.sh` の起動は、
+  // `--net-deletions` を逐語で持つものだけが許される。** それ以外が 1 件でも在れば落とす。
+  // **新しいモードを足した人は、何も書かなくても安全側（必須側）に倒れる**
+  // ——必須外 job に置けば、allowlist に無いので落ちる。
+  // **これは #1136 で「付託先を denylist → allowlist に変えた」のと同じ型であり、
+  // このリポジトリの方針でもある。**
+  const INVOCATION = /^.*bash\s+scripts\/ci\/stale-base\.sh.*$/gm;
 
   const ciText = readFileSync(resolve(wfDir, "ci.yml"), "utf8");
   let checkedJobs = 0;
+  let allowedCalls = 0;
   for (const jobName of nonrequired) {
-    const body = jobBodyOf(ciText, jobName);
-    if (body === null) continue;   // ci.yml 以外の job（将来 workflow が増えたとき）
+    const rawBody = jobBodyOf(ciText, jobName);
+    if (rawBody === null) continue;   // ci.yml 以外の job（将来 workflow が増えたとき）
     checkedJobs++;
-    for (const mode of NEVER_PASSABLE_WHEN_RED) {
-      assert.ok(
-        !body.includes(mode),
-        `ci.yml:${jobName} は merge-when-green.sh の NONREQUIRED_CHECKS に在るのに、` +
-          `\`${mode}\` を走らせている。--allow-nonrequired-red がその赤も一緒に通す（#1162）`,
-      );
-    }
-    assert.ok(
-      !DEFAULT_MODE_CALL.test(body),
-      `ci.yml:${jobName} は NONREQUIRED_CHECKS に在るのに、stale-base.sh の既定モード（#536）を` +
-        `走らせている。--allow-nonrequired-red が main の行の消失も通す（#1162）`,
+    // **コメント行は落とす**（偽陽性。`executableLinesOf` の上に実測を書いた）。
+    const body = executableLinesOf(rawBody);
+    const calls = body.match(INVOCATION) ?? [];
+    const notAllowed = calls.filter((c) => !PASSABLE_WHEN_RED.some((m) => c.includes(m)));
+    assert.deepEqual(
+      notAllowed.map((c) => c.trim()),
+      [],
+      `ci.yml:${jobName} は merge-when-green.sh の NONREQUIRED_CHECKS に在るのに、` +
+        `\`${PASSABLE_WHEN_RED.join(" / ")}\` 以外の stale-base.sh を走らせている。` +
+        `--allow-nonrequired-red がその赤も一緒に通す（#1162）。` +
+        `**必須外 job に置いてよいのは「赤いまま人が読んで通す契約」の検査だけ**で、` +
+        `既定モード（#536 main の行の消失）も --data-freshness（#1156 data/ の巻き戻し）も` +
+        `そうではない——**必須側の job に置くこと**`,
     );
+    allowedCalls += calls.length;
   }
   // 母数: `ci.yml` の job を 1 つも見ていなければ、上の assert は 1 件も走っていない。
   assert.ok(checkedJobs > 0, `NONREQUIRED_CHECKS の中に ci.yml の job が 1 つも無い: ${nonrequired.join(", ")}`);
+  // 母数（#757）: allowlist は「1 件も無い」を無条件に許す。**起動が 0 件なら何も見ていない。**
+  assert.ok(allowedCalls > 0, `必須外 job の中に stale-base.sh の起動が 1 件も無い（この検査は空回りしている。#1162）`);
 
   // **逆向き**: 「赤いまま通してよい」検査が、**必須でない job の中に在る**こと。
   // これが無いと、`--net-deletions` を必須側に移して**抜け道そのものを消しても**上は緑になる
   // （#858 が解いた #856 の詰まりに戻る。**痩せたら落とす**、#499）。
   for (const mode of PASSABLE_WHEN_RED) {
-    const jobsRunningIt = nonrequired.filter((n) => (jobBodyOf(ciText, n) ?? "").includes(mode));
+    const jobsRunningIt = nonrequired.filter((n) => executableLinesOf(jobBodyOf(ciText, n) ?? "").includes(mode));
     assert.deepEqual(
       jobsRunningIt.length,
       1,
@@ -549,9 +608,10 @@ test("#1162 必須でない job の本文に、通してはいけない検査が
   // **`stale-base.sh` の起動が、必須側と必須外に分かれて在ること**を母数で押さえる。
   // ci.yml 全体での起動件数と、必須外の job での起動件数が**同数**なら、
   // **必須側に 1 件も残っていない**＝割れていない。
-  const allCalls = (ciText.match(/bash scripts\/ci\/stale-base\.sh/g) ?? []).length;
+  // **コメント行を数えない**（この行数が偽陽性で膨らむと、下の `<` が意味を失う）。
+  const allCalls = (executableLinesOf(ciText).match(/bash scripts\/ci\/stale-base\.sh/g) ?? []).length;
   const nonrequiredCalls = nonrequired
-    .map((n) => ((jobBodyOf(ciText, n) ?? "").match(/bash scripts\/ci\/stale-base\.sh/g) ?? []).length)
+    .map((n) => (executableLinesOf(jobBodyOf(ciText, n) ?? "").match(/bash scripts\/ci\/stale-base\.sh/g) ?? []).length)
     .reduce((a, b) => a + b, 0);
   assert.ok(allCalls >= 2, `ci.yml の stale-base.sh の起動が ${allCalls} 件。割れていない（#1162）`);
   assert.ok(
