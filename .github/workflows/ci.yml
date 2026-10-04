@@ -242,10 +242,10 @@ jobs:
           web=$(find apps/web/app \( -name '*.test.ts' -o -name '*.test.tsx' \) | wc -l)
           etl=$(find packages/etl/test -maxdepth 1 -name '*.test.ts' | wc -l)
           echo "apps/web test files: $web (floor 95)"
-          echo "packages/etl test files: $etl (floor 189)"
+          echo "packages/etl test files: $etl (floor 199)"
           fail=0
           [ "$web" -ge 95 ] || { echo "FAIL: apps/web test files dropped below floor"; fail=1; }
-          [ "$etl" -ge 189 ] || { echo "FAIL: packages/etl test files dropped below floor"; fail=1; }
+          [ "$etl" -ge 199 ] || { echo "FAIL: packages/etl test files dropped below floor"; fail=1; }
           [ "$fail" = 0 ]
       # #855: `validateLocalAssemblies` / `validateDataset` は在ったのに、**コミット済みの `data/` には
       # 誰も走らせていなかった**（呼び出し元は ETL の CLI と県ごとの run テストだけで、どちらも
@@ -269,6 +269,23 @@ jobs:
           # （validateDataset は validateLocalAssemblies を内側で呼ぶ厳密な上位集合。理由はテスト本体の docblock）
           grep -q 'validateDataset(DATA)' packages/etl/test/published-data-validate.test.ts || {
             echo "published-data-validate.test.ts が validateDataset を本番 data/ に当てていません"; exit 1; }
+      # #1190: packages/etl/test/bills-optional-field-session-reach.test.ts は、**取り込む項目を増やした変更が
+      # 既定回次（DEFAULT_SESSIONS）の外に遡っていない形**を、コミット済みの `data/bills/index.json` から検出する。
+      # **#1136 は正しく実装され、テストも緑で、マージされたのに、利用者には 4 日間ほとんど出なかった**
+      # （日次 ETL が触るのは直近 2 年だけで、第216回以前の 1,554 件は一度も取り直されていなかった。
+      # 実測: 内側 331/387 = 85.5% に対し外側 60/1,554 = 3.9% の 22.2 倍差）。
+      # **上の本数の下限はこのファイルを名指しできない**（#855 と同じ理由。何か 1 本増えれば埋まる）。
+      # **だから存在の要求をワークフロー側に置く**——`test -f` と、実際に本番 `data/` を読んでいることの確認。
+      - name: 項目の遡りを本番 data/ から検出するテストが在ること (#1190, #504)
+        run: |
+          set -euo pipefail
+          test -f packages/etl/test/bills-optional-field-session-reach.test.ts || {
+            echo "packages/etl/test/bills-optional-field-session-reach.test.ts がありません（#1190 の検査）"; exit 1; }
+          # 名前だけ残った空ファイルで通らないように、本番 data/ と DEFAULT_SESSIONS を実際に見ていることを確かめる
+          grep -q 'fileURLToPath(new URL("../../../data/", import.meta.url))' packages/etl/test/bills-optional-field-session-reach.test.ts || {
+            echo "bills-optional-field-session-reach.test.ts がコミット済み data/ を読んでいません（#1190）"; exit 1; }
+          grep -q 'DEFAULT_SESSIONS' packages/etl/test/bills-optional-field-session-reach.test.ts || {
+            echo "bills-optional-field-session-reach.test.ts が DEFAULT_SESSIONS の内外で数えていません（#1190）"; exit 1; }
       # #1074: packages/etl/test/commit-trailer-identity.test.ts は `merge-base(origin/main, HEAD)..HEAD`
       # のコミットメッセージを走査して、`Co-authored-by:` の trailer に誤帰属するアドレスが無いことを見る。
       # **この checkout は既定の `fetch-depth: 1`** なので、そのままだと `origin/main` も merge-base も

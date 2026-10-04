@@ -108,7 +108,7 @@ const ciTestFiles = (): string[] =>
 // **その場合は今の値を据え置く**（この規則は「離れすぎを詰める」ためのもので、
 // **緩める口実にしてはいけない**）。
 const WEB_TEST_FILES_MIN = 95; // 実測 2026-09-21: walk() で 98（− 3。#720 の規則）。**85 のままだと 13 本消しても落ちなかった**——#951 が session-roster-coverage の 2 本を足すついでに詰め直した（2026-09-13 は 87 本で「下げないので 85 のまま」と書いたが、その後 11 本増えたのに下限が動いていなかった）
-const ETL_TEST_FILES_MIN = 189; // 実測 2026-09-28: readdirSync で 192（− 3。#720 の規則）。**#1061 が published-timeline-count.test.ts を足して 191 → 192**（下限 188 → 189。**origin/main は既に 191 本で、直前のコメントの「190」は古かった**——置く前に数え直した）。以前: 実測 2026-09-28: readdirSync で 190（− 3。#720 の規則）。**#1036 が workflow-released-chain.test.ts を足して 189 → 190**（下限 186 → 187）。以前: 実測 2026-09-27（main 取り込み後）: readdirSync で 189（− 3。#720 の規則）。**#1050 が workflow-pr-body-edited.test.ts を足したぶんを詰め直した**（188 → 189）。**Contributors の誤帰属を止める workflow-commit-identity.test.ts を足して 187 → 188**（main を取り込む前は 186 → 187 だった。**main 側が 1 本増えていたので測り直した**）。以前: 実測 2026-09-25（#1017）: readdirSync で 184（− 3。#720 の規則）。#1017 が workflow-needs-resolve.test.ts を足して 183 → 184。**164 のままでは 20 本消しても落ちなかった**——#943 が 167 本の時点で置いてから main が 17 本増えたのに、下限だけが置き去りになっていた（#720 が詰めた「実数から離れたぶんだけ守っていない」がまた開いた）。以前の経緯: **#943 が workflow-data-pr-push.test.ts を足して 166 → 167**（下限 159 → 164）。**#951 が local-session-roster-coverage.test.ts を足して 165 → 166**（下限 159 → 161）。#928 が 156 → 157、**#901 が local-sessions-default.test.ts と local-cli-sessions.test.ts を足して 157 → 159**、高知の kochi-petition-branch.test.ts と kochi-widened-anchors.test.ts で 159 → 161、秋田の akita-vote-alignment.test.ts で 161 → 162。**139 のままだと 18 本消しても落ちなかった**
+const ETL_TEST_FILES_MIN = 199; // 実測 2026-10-04: readdirSync で 202（− 3。#720 の規則）。**#1190 が bills-optional-field-session-reach.test.ts を足して 201 → 202**（下限 189 → 199。**189 のままだと 12 本消しても落ちなかった**——#1061 が 189 に置いてから main が 10 本増えたのに下限が置き去りだった。#720 が詰めた「実数から離れたぶんだけ守っていない」がまた開いていた）。以前: 実測 2026-09-28: readdirSync で 192（− 3。#720 の規則）。**#1061 が published-timeline-count.test.ts を足して 191 → 192**（下限 188 → 189。**origin/main は既に 191 本で、直前のコメントの「190」は古かった**——置く前に数え直した）。以前: 実測 2026-09-28: readdirSync で 190（− 3。#720 の規則）。**#1036 が workflow-released-chain.test.ts を足して 189 → 190**（下限 186 → 187）。以前: 実測 2026-09-27（main 取り込み後）: readdirSync で 189（− 3。#720 の規則）。**#1050 が workflow-pr-body-edited.test.ts を足したぶんを詰め直した**（188 → 189）。**Contributors の誤帰属を止める workflow-commit-identity.test.ts を足して 187 → 188**（main を取り込む前は 186 → 187 だった。**main 側が 1 本増えていたので測り直した**）。以前: 実測 2026-09-25（#1017）: readdirSync で 184（− 3。#720 の規則）。#1017 が workflow-needs-resolve.test.ts を足して 183 → 184。**164 のままでは 20 本消しても落ちなかった**——#943 が 167 本の時点で置いてから main が 17 本増えたのに、下限だけが置き去りになっていた（#720 が詰めた「実数から離れたぶんだけ守っていない」がまた開いた）。以前の経緯: **#943 が workflow-data-pr-push.test.ts を足して 166 → 167**（下限 159 → 164）。**#951 が local-session-roster-coverage.test.ts を足して 165 → 166**（下限 159 → 161）。#928 が 156 → 157、**#901 が local-sessions-default.test.ts と local-cli-sessions.test.ts を足して 157 → 159**、高知の kochi-petition-branch.test.ts と kochi-widened-anchors.test.ts で 159 → 161、秋田の akita-vote-alignment.test.ts で 161 → 162。**139 のままだと 18 本消しても落ちなかった**
 const CI_TEST_FILES_MIN = 6; // 実測 2026-09-13: readdirSync で 7（− 1。母数が小さいので幅も小さく）
 
 test("#533: apps/web のテストファイル集合が下限を割らない（vitest の include glob を消しても足しても検出する）", () => {
@@ -263,6 +263,45 @@ test("#855 ci.yml が「本番 data/ に不変条件を当てるテスト」の�
   );
   // validateDataset は validateLocalAssemblies を内側で呼ぶ厳密な上位集合（理由はテスト本体の docblock）
   assert.ok(body.includes("validateDataset(DATA)"), "validateDataset を本番 data/ に当てていない（#855）");
+});
+
+/**
+ * Issue #1190: **「取り込む項目を増やしたら古い回次に遡る」を言うテストも、本数の下限では名指しできない。**
+ *
+ * **#855 とまったく同じ構造である**——`bills-optional-field-session-reach.test.ts` を消しても、
+ * **別のテストが 1 本増えていれば `ETL_TEST_FILES_MIN` は満たされる。**
+ *
+ * **なぜこのファイルを名指しする価値が在るか**: **#1136 は正しく実装され、テストも緑で、マージされた。
+ * それでも利用者には 4 日間ほとんど出なかった**（既定回次の内側 331/387 = 85.5% に対し、
+ * 外側 60/1,554 = 3.9%。**22.2 倍の差**）。**実装の正しさとデータの反映は別の事象で、
+ * 後者を見ている検査はこの 1 本だけである。**
+ *
+ * **ci.yml 側にも `test -f` を置いてある**（テストを消しても残る層。#504）。
+ * **ここはその ci.yml の行が今も在ることを、ci.yml ではないファイルから固定する。**
+ */
+test("#1190 ci.yml が「項目の遡りを本番 data/ から検出するテスト」の存在を要求している（消しても無言で緑にならない）", () => {
+  const ci = read(".github/workflows/ci.yml");
+  assert.ok(
+    ci.includes("test -f packages/etl/test/bills-optional-field-session-reach.test.ts"),
+    "ci.yml が bills-optional-field-session-reach.test.ts の存在を要求していない（#1190／#504）",
+  );
+  let body: string;
+  try { body = read("packages/etl/test/bills-optional-field-session-reach.test.ts"); } catch {
+    assert.fail(`packages/etl/test/bills-optional-field-session-reach.test.ts が無い（#1190）。
+**本数の下限では止まらない**（何か 1 本増えれば埋まるので、このファイルを名指しできない）。
+取り込む項目が既定回次の外に遡っていない形（#1136 の signature）を見ている唯一のものなので、
+消すなら理由をここに書くこと。`);
+  }
+  // **本番の data/ を指していること。** 一時ディレクトリに当てても、コミット済みの data/ は見ていない。
+  assert.ok(
+    body.includes('fileURLToPath(new URL("../../../data/", import.meta.url))'),
+    "bills-optional-field-session-reach.test.ts がコミット済み data/ を読んでいない（#1190）",
+  );
+  // **既定回次の内外で分けていること。** 全件の割合だけを見ても、境界が回次と一致している形は見えない。
+  assert.ok(
+    body.includes("DEFAULT_SESSIONS"),
+    "bills-optional-field-session-reach.test.ts が DEFAULT_SESSIONS の内外で数えていない（#1190）",
+  );
 });
 
 /**
