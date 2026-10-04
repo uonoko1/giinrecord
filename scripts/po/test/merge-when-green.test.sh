@@ -4627,8 +4627,8 @@ test_case "1162: 既定モード（main の行の消失）の赤はフラグで�
 
 # 【受け入れ条件の向き 2b】**`data/` の巻き戻し（`--data-freshness`、#1156）もフラグでも通らない。**
 #
-# **#1161 がマージされると `--data-freshness` は `stale-base` job の 3 つ目の step になる**
-# （この PR の `ci.yml` はまだその step を持っていない——#1161 が未マージなので）。
+# **`--data-freshness` は `stale-base` job の 2 つ目の検査 step である**（#1161 でそこに置いた
+# ——必須でない `stale-base-net-deletions` に置くと `--allow-nonrequired-red` が通してしまう）。
 # **その形では check-run 名が `stale-base` になり、上の 2a がそのまま覆う。**
 #
 # **ここでは「もし別の job 名として現れたら」も覆う**——`stale-base-data-freshness` は

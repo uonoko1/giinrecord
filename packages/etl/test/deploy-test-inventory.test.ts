@@ -772,6 +772,10 @@ const DEPLOY_SUBJECTS_PINNED = [
   "deploy/go-live.sh",
   "deploy/monitor/branch-protection-report.sh",
   "deploy/monitor/branch-protection.sh",
+  // #1185: 「main に data/ が入ったのに deploy-data.yml が始まっていない」を見る。
+  // probe.sh と同じ 1 行形式を出すだけで、Issue の開閉は run.sh / report.sh がそのまま扱う
+  // （#1110 の軸: 新しい監視の入口を増やさない）。
+  "deploy/monitor/deploy-started.sh",
   "deploy/monitor/environment-protection-report.sh",
   "deploy/monitor/environment-protection.sh",
   "deploy/monitor/health.sh",
@@ -857,6 +861,8 @@ const SUBJECT_OWNERS: Record<string, string> = {
   "deploy/monitor/probe.sh": "monitor-probe.test.sh",
   "deploy/monitor/report.sh": "monitor-probe.test.sh",
   "deploy/monitor/run.sh": "monitor-probe.test.sh",
+  // #1185: probe/report/run と同じテストが守る（1 行形式も Issue の開閉も同じ仕組みに乗っている）
+  "deploy/monitor/deploy-started.sh": "monitor-probe.test.sh",
   "deploy/monitor/security-alerts-report.sh": "security-alerts-report.test.sh",
   "deploy/monitor/security-alerts.sh": "security-alerts.test.sh",
   "deploy/monitor/setup.sh": "monitor-setup.test.sh",
@@ -889,6 +895,8 @@ const SUBJECT_OWNERS_PINNED: Record<string, string> = {
   "deploy/monitor/probe.sh": "monitor-probe.test.sh",
   "deploy/monitor/report.sh": "monitor-probe.test.sh",
   "deploy/monitor/run.sh": "monitor-probe.test.sh",
+  // #1185: probe/report/run と同じテストが守る（1 行形式も Issue の開閉も同じ仕組みに乗っている）
+  "deploy/monitor/deploy-started.sh": "monitor-probe.test.sh",
   "deploy/monitor/security-alerts-report.sh": "security-alerts-report.test.sh",
   "deploy/monitor/security-alerts.sh": "security-alerts.test.sh",
   "deploy/monitor/setup.sh": "monitor-setup.test.sh",

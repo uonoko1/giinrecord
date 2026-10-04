@@ -11,6 +11,31 @@ name: Monitor
 # Issue #163: staging is behind Cloudflare Access; the probe authenticates with a service token (repo secrets
 # CF_ACCESS_CLIENT_ID / CF_ACCESS_CLIENT_SECRET, passed as env — never argv). Without them the staging job warns and
 # skips instead of opening a false Issue. Setup and rotation: docs/ops/staging-access.md.
+# Issue #1185 — **main に在るデータが 93 時間、利用者に出ていなかった。しかも監視は正しく鳴っていた。**
+# ここで足したのは 3 つで、**どれも新しい入口を作らず、この workflow と deploy/monitor/ の中に収めている**
+# （#1110 の軸: **入口が増えると入口自身の死を誰も見なくなる**——それが #1185 の原因そのもの）:
+#   1. **鳴り続けているあいだ、Issue に経過を書く**（`report.sh`）。
+#      実測: #1172 は 39 時間開いていて、そのあいだ監視からのコメントは 0 件だった。
+#      6h（`MONITOR_ESCALATE_HOURS`）を越えたら**題に経過を足し `escalated` ラベルを付ける**
+#      ——**どちらも Issue の一覧で見える**ので、1 本見れば「何回目か」が分かる。
+#   2. **`data` が古いとき、「main も古い」と「main は新しいのに出ていない」を分ける**（`probe.sh`）。
+#      前者は ETL 側、後者は deploy 側で、**対処が別**である。main 側は raw.githubusercontent.com の
+#      `data/meta.json` を読む。**読めなかったら「測れなかった」と書き、「古くない」に倒さない**（#1056）。
+#   3. **`data/` が main に入ったのに deploy が始まらなかったことを見る**（`deploy-started.sh`、production のみ）。
+#      N = 30 分の根拠は `deploy/monitor/deploy-started.sh` の冒頭に実測（母数つき）で在る。
+#
+# **なぜ raw.githubusercontent.com を読むのか / その経路が落ちたらどうなるか**:
+#   この job はすでに `actions/checkout` でリポジトリを持っているので、**checkout した `data/meta.json` を
+#   読めば済むように見える。だが読めない**——`deploy-data.yml` が本番に載せるのは **main の `data/`** で、
+#   monitor.yml の checkout は**この run が始まった時点の main**である。遅延（実測で 2〜3.5 時間）や
+#   概念上のずれを避けたいなら「いま本番が見ている main」を見る必要が在り、
+#   **checkout は「いま」ではない**。だから raw を読む。
+#   **落ちたときに黙らない**: `probe.sh` の `main_side_verdict` は HTTP が 200 でなければ
+#   `main を読めなかった (HTTP <code>)` を理由に書く。**その行は `data` の fail の理由に入るので、
+#   Issue に出る。** つまり**切り分け機能が死んだことは、`data` が fail した時点で読める。**
+#   （逆に `data` が ok のときは main を読まない設計なので、**raw が落ちていても監視は赤くならない**
+#   ——切り分けは fail 時の情報であって、可用性の判定には使っていない。）
+#
 # Runbook: docs/ops/monitoring.md. Issue bodies contain the environment, the check, the reason and a link to the run —
 # never server details.
 on:
@@ -31,9 +56,31 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          # #1185: `deploy` check は「main の `data/` の最新コミット時刻」を要るので、
+          # **その 1 本が読める深さだけ**取る（既定の depth=1 では `git log -- data/` が空になる）。
+          # **全履歴は要らない**（毎 10 分の run なので取得時間がそのまま監視の遅延になる）。
+          fetch-depth: 200
+      - name: main の data/ の最新コミット時刻（#1185）
+        id: datacommit
+        run: |
+          # **空になりうる**（fetch-depth の窓に data/ のコミットが無い場合）。
+          # **空は「コミットが無い」として deploy-started.sh に渡され、そこで `ok` になる**
+          # ——**窓が浅すぎて見えていないのに fail を立てるのは嘘**なので、そう倒す。
+          # **その代わり、空だったことをログに残す**（黙って効かなくなる形を避ける。#1185）。
+          AT=$(git log -1 --format=%cI -- data/ || true)
+          if [ -z "$AT" ]; then
+            echo "::warning::main の data/ のコミットが fetch-depth の窓に無く、deploy check は走りません（#1185）"
+          fi
+          echo "at=$AT" >> "$GITHUB_OUTPUT"
       - name: probe https://giinrecord.jp (twice on failure) → Issues
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # #1185: main 側の fetchedAt の読み先。**落ちても監視は赤くならないが、
+          # `data` が fail したときに「読めなかった」と Issue に出る**（黙らない）。
+          PROBE_MAIN_META_URL: https://raw.githubusercontent.com/${{ github.repository }}/main/data/meta.json
+          # #1185: `data/` が main に入ってから deploy が始まったかを見るための基点。
+          MONITOR_DATA_COMMIT_AT: ${{ steps.datacommit.outputs.at }}
         run: bash deploy/monitor/run.sh production https://giinrecord.jp
   staging:
     if: github.event_name != 'schedule' || github.event.schedule == '7 * * * *'
