@@ -21,7 +21,7 @@ import { committeePageUrl, fetchCommitteeRosters } from "./sources/kokkai-commit
 import { matchCommitteeRoles, type MatchedCommitteeRole } from "./match-committee.ts";
 import { buildDataset, mergeRosters, rosterSessionsFor, type Roster } from "./aggregate.ts";
 import { dietAssemblies, readSessionsOnDisk, validateDataset, writeDataset } from "./dataset.ts";
-import { carriedTenureVerified, dropCarriedSpeeches, lostSessionEntries, lostTimelineEntries, lostVoteMatches, planSessions, readCarried, readSessionCounts } from "./sessions.ts";
+import { carriedTenureVerified, dropCarriedCommitteeRoles, dropCarriedSpeeches, lostSessionEntries, lostTimelineEntries, lostVoteMatches, planSessions, readCarried, readSessionCounts } from "./sessions.ts";
 import { readMemberIndex } from "./local-assemblies.ts";
 
 /**
@@ -299,7 +299,14 @@ for (const [session, house, roster] of rosterTargets) {
 // 落ちた行はその回次を取り直せば現行の名寄せで作り直される（紐づかなければ unmatched に載る）。
 const carriedOnRoster = carriedTenureVerified(carried.entries, [...members, ...shugiin.members]);
 // 取得し直した衆院発言と同じ speechId の引き継ぎ行は落とす（#236）。memberSession が carried の実行でこれが効く。
-const carriedEntries = dropCarriedSpeeches(carriedOnRoster, shugiinSpeeches.speeches);
+// 取得し直した委員会の役職と同じ行の引き継ぎも落とす（#1190）。発言（#236）と同じ構造で、
+// **衆院の委員会名簿は memberSession について毎回取得する**ので、memberSession が carried になる
+// 実行（過去回次だけの手動実行＝遡り）では取得分と引き継ぎ分が二重になる。
+// **実測 2026-10-04**（`pnpm etl 200 … 216` の直後）: committeeRole 9,417 行のうち **2,047 行が重複**
+// （異なりは 7,370 で日次実行の出力と同じ）。**2,047 はログの `(2047 committeeRole entries matched)` と逐語で一致**
+// ＝取得した行がまるごと二重だった。**日次実行では発火しない**（memberSession は常に target）。
+// 検出していたのは packages/etl/test/published-timeline-count.test.ts（#1175）の行の同一性の検査だけ。
+const carriedEntries = dropCarriedCommitteeRoles(dropCarriedSpeeches(carriedOnRoster, shugiinSpeeches.speeches), committeeRoles);
 if (carried.entries.length) {
   const offRoster = carried.entries.length - carriedOnRoster.length;
   const refetched = carriedOnRoster.length - carriedEntries.length;
