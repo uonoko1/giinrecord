@@ -632,11 +632,34 @@ ci_job_body() {
   ' "$wf"
 }
 
+# job 本文のうち、**実行される行だけ**を返す（#1161 で踏んだ偽陽性）。
+#
+# **`ci_job_body` は生の行を返す**（`run:` の中身を壊さないための意図的な設計）。
+# そのため下の `assert_not_contains "$sb" '--net-deletions'` は**コメント行にも当たる。**
+#
+# **実測（2026-10-04、#1161）**: `--data-freshness` の step を必須側の job に移し、
+# その見出しコメントに「既定モードと `--net-deletions` はどちらも通った」と**事実の説明を
+# 1 行書いただけ**で `passed 63, failed 1`。**コードは 1 行も変えていない。**
+# しかもメッセージは「必須側の job に --net-deletions が同居している」と、**事実でないこと**を言う。
+#
+# **同じ偽陽性を `packages/etl/test/branch-protection-jobs.test.ts` は既に塞いでいる**
+# （#1187 のレビューが見つけ、`executableLinesOf` を入れた）。**こちらの層には入っていなかった**
+# ——**2 層のうち片方だけが直っていた。** 同じ規則をここにも置く。
+#
+# **行頭（インデントのみを除いた先頭）が `#` の行を落とす。それだけにする。**
+# **行中の `#` は落とさない**——`run:` の中では `#` はシェルのコメントだが、
+# `bash foo.sh --flag "a#b"` のような形もあり、**YAML の層では判定できない。**
+# **落としすぎる側（偽陰性）には倒さない。**
+ci_job_exec_lines() { grep -v '^[[:space:]]*#' || true; }
+
 t_1162_two_modes_live_in_different_jobs() {
   local wf="$HERE/../../../.github/workflows/ci.yml"
   local sb nd
-  sb=$(ci_job_body "$wf" stale-base)
-  nd=$(ci_job_body "$wf" stale-base-net-deletions)
+  # **コメント行を落とす**（上の `ci_job_exec_lines` に実測を書いた）。
+  # **母数は落とす前の本文で見る**——落としすぎて空になったら、下の assert は全部
+  # 「含まない」で緑になるので、`runs-on` が残っていることを先に確かめる。
+  sb=$(ci_job_body "$wf" stale-base | ci_job_exec_lines)
+  nd=$(ci_job_body "$wf" stale-base-net-deletions | ci_job_exec_lines)
   # 母数（#757）: 本文が取れていなければ、下の assert_not_contains は全部「含まない」で緑になる。
   # **先に「取れているか」を見る。**
   assert_contains "$sb" 'runs-on' "job stale-base の本文が取れている（取れていなければ以降は無意味）"
@@ -879,6 +902,33 @@ t_freshness_is_wired_into_ci() {
   local body; body=$(cat "$wf")
   assert_contains "$body" 'bash scripts/ci/stale-base.sh --data-freshness' \
     "ci.yml が --data-freshness を実行している（#1156）"
+
+  # **#1161 / #1162: 「どこかに在る」だけでは足りない。どの job に在るかが結論を変える。**
+  #
+  # **check-run 名は job 名である。** `--data-freshness` を
+  # `stale-base-net-deletions`（`merge-when-green.sh` の `NONREQUIRED_CHECKS`）に置くと、
+  # **`--allow-nonrequired-red` 1 回でこの赤も一緒に通る**——
+  # **この検査が止めようとしている `data/` の巻き戻しが、フラグ 1 回で素通りする。**
+  #
+  # **実測（2026-10-04、本物の `merge-when-green.sh` に ci.yml 由来の check-run 名を食わせた）**:
+  #   必須外 job に在るとき（#1187 マージ直後の 767fa157 の ci.yml）
+  #       check-run 名 stale-base-net-deletions → rc=0、**`gh pr merge` が呼ばれた**
+  #   必須側 job に在るとき（この版）
+  #       check-run 名 stale-base               → rc=1、`--allow-nonrequired-red では通せません`、
+  #                                                `gh pr merge` は呼ばれない
+  #
+  # **上の行（`body` への assert）は、この 2 つを区別できない**——
+  # 起動の綴りは**どちらの job でも同じ**だからである。
+  local sb nd
+  sb=$(ci_job_body "$wf" stale-base | ci_job_exec_lines)
+  nd=$(ci_job_body "$wf" stale-base-net-deletions | ci_job_exec_lines)
+  # 母数（#757）: 本文が取れていなければ、下の 2 つは「含まない / 含む」が偶然決まる。
+  assert_contains "$sb" 'runs-on' "job stale-base の本文が取れている（取れていなければ以降は無意味）"
+  assert_contains "$nd" 'runs-on' "job stale-base-net-deletions の本文が取れている"
+  assert_contains "$sb" 'bash scripts/ci/stale-base.sh --data-freshness' \
+    "--data-freshness は**必須側**の job に在る（赤なら答えは常に rebase。#1161／#1162）"
+  assert_not_contains "$nd" '--data-freshness' \
+    "--data-freshness が必須外の job に在ってはいけない（--allow-nonrequired-red が通してしまう。#1162）"
 }
 
 # --- #1156 レビュー: 対象は `data/meta.json` 1 件ではない ------------------------------------------

@@ -17,14 +17,14 @@
 #     exit 1 — どれかの fetchedAt が <base-ref> より古い（data/ が丸ごと巻き戻る形）
 #            — OR fetchedAt を**測れなかった**（読めない／無い／日付として解釈できない）。
 #              「測れなかった」を「古くない」として通さない（#1158）
-#     **残っている限界（この PR では直していない）**: `stale-base` という check-run 名は
-#     `scripts/po/merge-when-green.sh` の `NONREQUIRED_CHECKS` に入っている（#858）。理由は
-#     `--net-deletions` が「赤いが通してよい」が正常に起こる検査だから（実地 5 件中 3 件）。
-#     **この `--data-freshness` step はそちらではない**——赤なら必ず rebase が答えで、
-#     「赤いまま通してよい」場合が無い。だが 3 つの step が 1 つの job（= 1 つの check-run 名）に
-#     同居しているので、**`--allow-nonrequired-red` はこの step の赤も一緒に通す。**
-#     分けるには job を割る必要があり、それは branch protection の必須一覧
-#     （packages/etl/test/branch-protection-jobs.test.ts）に触る別の判断なので、ここでは触らない。
+#     **このモードの赤はフラグでも通せない**（#1162 で解決済み。以前ここに「残っている限界」と
+#     書いてあったものは、もう限界ではない）。`stale-base` という check-run 名は
+#     `scripts/po/merge-when-green.sh` の `NONREQUIRED_CHECKS` に**入っていない**——#1162 で
+#     `ci.yml` の job を 2 つに割り、「赤いまま人が読んで通す契約」の `--net-deletions`（#836）
+#     だけを `stale-base-net-deletions` に出した。**`--data-freshness` は必須側の `stale-base`
+#     job に在る**（赤なら答えは常に rebase で、「赤いまま通してよい」場合が無いため）。
+#     **必須でない job に移すと CI が落ちる**: `packages/etl/test/branch-protection-jobs.test.ts`
+#     の allowlist が、必須外 job に許す `stale-base.sh` の起動を `--net-deletions` だけに限る。
 #
 # ── What is measured, and why it is not "there are deletions" ───────────────────────────────────
 #   Deliberate deletions are legitimate: dropping a check that is no longer needed, a refactor, deleting
