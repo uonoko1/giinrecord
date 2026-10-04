@@ -764,6 +764,27 @@ FAKE
   assert_contains "$(cat "$LOG.body")" "no verdict" "判定が無かったと書く"
 }
 
+# **createdAt が読めないときに、もっともらしい嘘の経過時間を書かないこと**（#1185）。
+# **実測**: GNU date は `-d ""` をエラーにせず **今日の 00:00Z** として受ける
+# （`date -u -d "" '+%Y-%m-%dT%H:%M:%SZ'` → `2026-10-04T00:00:00Z`、同時刻 09:36Z）。
+# **だから guard が無いと、93 時間続いている障害が「9h 継続」と書かれる**
+# ——**もっともらしいので誰も疑わない。** #1185 の本体（鳴っているのに読まれない）より質が悪い。
+# `escalated` の閾値も経過時間で決まるので、**嘘の経過はエスカレーションの取りこぼしにもなる。**
+t_report_unreadable_created_at_is_not_a_number() {
+  fresh r_badcreated
+  echo "fetchedAt 93h old" > "$P/body"
+  MONITOR_ESCALATE_HOURS=6 \
+  H_OPEN='[{"number":5,"title":"[monitor] production: data","comments":[{},{},{},{}]}]' \
+    run_report "[monitor] production: data" fail "$P/body" || fail "exit $? $(cat "$P/out")"
+  [ -f "$LOG.comment" ] || { fail "コメント本文が採れていない"; return; }
+  local c; c=$(cat "$LOG.comment")
+  assert_contains "$c" "測れません" "経過を測れなかったと書く"
+  # **数字の経過を書いていないこと。** `Nh 継続` の形が在れば、それは作った数字である。
+  if grep -qE '[0-9]+h 継続' <<<"$c"; then fail "createdAt が無いのに経過時間を書いている: $c"; fi
+  # **測れていない経過で escalate しないこと**（題を書き換えてしまうと戻せない）
+  assert_not_contains "$(cat "$LOG")" "gh issue edit" "測れていない経過で改題しない"
+}
+
 test_case "monitor scripts: bash -n" t_syntax
 test_case "probe: 正常なら http/data/tls すべて ok、/ /members/ /data/meta.json と TLS を見る" t_probe_ok
 test_case "probe: /members/ が 502 なら http が fail（パスと status を理由に）" t_probe_http_status
@@ -834,6 +855,8 @@ test_case "run: MONITOR_DATA_COMMIT_AT が無ければ deploy check を足さな
 test_case "run: deploy check が fail なら既存の report.sh がそのまま Issue にする（入口を増やさない）" t_run_deploy_check_opens_the_issue
 test_case "run: deploy check が ok なら何も作らない" t_run_deploy_check_ok_is_quiet
 test_case "run: 判定行が 1 本も出なかった check を ok に倒さない（#1185 / #1056）" t_run_missing_verdict_is_not_ok
+
+test_case "report: createdAt が読めなければ経過時間を作らない（date -d '' は今日の 00:00Z になる・#1185）" t_report_unreadable_created_at_is_not_a_number
 
 echo; echo "passed: $PASS  failed: $FAIL"
 [[ $FAIL == 0 ]]
