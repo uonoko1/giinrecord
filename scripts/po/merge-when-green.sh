@@ -54,6 +54,9 @@ DATA_BRANCH="data/refresh"
 # **母数**（実測 2026-09-21、直近 12 件のマージ済み PR は全部同じ）: 1 PR につき check-run は **7 件**
 #   audit, check, docker-web, forbidden-patterns, gitleaks, pr-closes, stale-base
 # このうち **必須 5 件** / **必須でない 2 件（stale-base, docker-web）**。
+# **#1162 で `stale-base` job を 2 つに割ったので、いまは 1 PR につき **8 件**で
+# **必須 6 件** / **必須でない 2 件（stale-base-net-deletions, docker-web）**
+# （下の #1162 の節に理由が在る。**この行の 7 件は #858 当時の実測であって、いまの値ではない**）。
 #
 # **なぜ `stale-base` が必須でない側なのか**——**これが #858 の本題である**。
 # `stale-base` の 2 つ目の step（`--net-deletions`、#836）は、#846 の担当者自身が
@@ -77,8 +80,41 @@ DATA_BRANCH="data/refresh"
 #
 # 期待値は**ハードコードする**（#499）。実行時に GitHub の protection API を読みに行かない:
 # それは管理権限が要り（#540 で実測）、読めないときにこの分岐が黙って緩んでしまう。
-REQUIRED_CHECKS=(check gitleaks forbidden-patterns audit pr-closes)
-NONREQUIRED_CHECKS=(stale-base docker-web)
+#
+# --- #1162: `stale-base` という 1 つの名前に、性質の違う検査が同居していた -------------------
+#
+# **上の #858 の論は「`--net-deletions` は赤いが通してよい」で正しい。** **間違っていたのは、
+# その理由で `stale-base` という check-run 名を丸ごと必須外にしたことである。**
+# **check-run 名は job 名なので、同じ job の step は全部まとめて必須外になる。**
+#
+#   既定モード（#536）        main が足した行が枝から消えている   → **通してはいけない**
+#   --net-deletions（#836）   移動・整理で正常に赤くなる          → 読んだうえで通してよい
+#   --data-freshness（#1156） `data/` が丸ごと巻き戻る           → **通してはいけない**
+#
+# **`--allow-nonrequired-red` を 1 回使うと、この 3 つが一緒に通る。**
+#
+# **実測（PO、2026-10-03）**: #1154 のマージでこのフラグを初めて使った。そのとき `ci.yml` の
+# step は 2 つで、job の step 単位の結論は `step 3 success`（既定）/ `step 4 failure`
+# （`--net-deletions`）だった。**通ったのは `--net-deletions` の赤 1 件だけ**だが、
+# **それを確かめたのは人であって、この道具は区別していなかった。**
+#
+# **直し方**: `ci.yml` で job を割り、名前を分ける（#1162）。
+#   `stale-base`                 既定（#1161 後は `--data-freshness` も）→ **必須。フラグでも通せない**
+#   `stale-base-net-deletions`   `--net-deletions` のみ                 → **必須でない**
+#
+# **GitHub の branch protection は変わらない**（実測 2026-10-03:
+# `required_status_checks.contexts` は `["check","gitleaks","forbidden-patterns","audit"]` の 4 件で、
+# **`stale-base` はもともと入っていない**——`has_stale_base: false`）。
+# **だから改名で「必須が 0 件になる窓」は開かない。** **GitHub は依然 `stale-base` の赤でも
+# マージを許すので、止めるのはこの道具だけである**（`pr-closes` とまったく同じ位置づけ。
+# **この道具は GitHub より厳しくてよい。逆は許されない**——上の #858 の但し書きのとおり）。
+#
+# **`stale-base-net-deletions` を足し忘れても安全側に倒れる**（下の `is_required_check` の
+# fail-closed）。**実測**: どちらの配列にも載せずに赤くすると、`知らない検査があります` を
+# 出したうえで**必須として止まる**（`scripts/po/test/merge-when-green.test.sh` の
+# `t_1162_data_freshness_red_never_merges_even_with_flag` が、まさにその形を固定している）。
+REQUIRED_CHECKS=(check gitleaks forbidden-patterns audit pr-closes stale-base)
+NONREQUIRED_CHECKS=(stale-base-net-deletions docker-web)
 
 # SKIPPABLE_CHECKS — **`conclusion: skipped` を緑として数えてよい検査の名前**（#1069）。
 #
@@ -121,8 +157,9 @@ NONREQUIRED_CHECKS=(stale-base docker-web)
 # **緑として数えてはいけない。** かつ**この 3 件はどれも必須の `check` が赤なので、
 # この道具はもともと止まる**——載せなくても正常な PR は止まらない。
 #
-# **`stale-base` / `pr-closes` / `deploy-data.yml:staging` を載せない理由**:
-# `stale-base` の `if:` は `github.event_name == 'pull_request'` で、**PR では真**（走る）。
+# **`stale-base` / `stale-base-net-deletions` / `pr-closes` / `deploy-data.yml:staging` を
+# 載せない理由**: `stale-base` と `stale-base-net-deletions`（#1162 で割った）の `if:` は
+# どちらも `github.event_name == 'pull_request'` で、**PR では真**（走る）。
 # `pr-closes` は本文を直せば緑にできる（`skipped` で通す理由が無い）。
 # `deploy-data.yml` は `pull_request` トリガーを持たないので PR の check-runs に出ない。
 # **実測の 63 件にこれらは 1 件も出ていない。**
