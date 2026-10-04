@@ -145,19 +145,6 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122103895X00220260619/0"
   },
   {
-   "committee": "沖縄及び北方問題に関する特別委員会",
-   "date": "2026-06-19",
-   "estimated": false,
-   "firstDate": "2026-06-19",
-   "kind": "committeeRole",
-   "lastDate": "2026-07-24",
-   "meetingId": "122103895X00220260619_000",
-   "meetings": 3,
-   "role": "理事",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122103895X00220260619/0"
-  },
-  {
    "billId": "221-衆法-18",
    "date": "2026-06-16",
    "kind": "bill",
@@ -338,19 +325,6 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104339X00620260423/0"
   },
   {
-   "committee": "災害対策特別委員会",
-   "date": "2026-04-23",
-   "estimated": false,
-   "firstDate": "2026-04-23",
-   "kind": "committeeRole",
-   "lastDate": "2026-04-23",
-   "meetingId": "122104339X00620260423_000",
-   "meetings": 1,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104339X00620260423/0"
-  },
-  {
    "billId": "221-衆法-8",
    "date": "2026-04-22",
    "estimated": true,
@@ -362,19 +336,6 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "食育基本法の一部を改正する法律案"
-  },
-  {
-   "committee": "文部科学委員会",
-   "date": "2026-04-22",
-   "estimated": false,
-   "firstDate": "2026-04-22",
-   "kind": "committeeRole",
-   "lastDate": "2026-06-24",
-   "meetingId": "122105124X00720260422_000",
-   "meetings": 2,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105124X00720260422/0"
   },
   {
    "committee": "文部科学委員会",
@@ -635,19 +596,6 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "民法等の一部を改正する法律案"
-  },
-  {
-   "committee": "環境委員会",
-   "date": "2026-04-03",
-   "estimated": false,
-   "firstDate": "2026-04-03",
-   "kind": "committeeRole",
-   "lastDate": "2026-07-24",
-   "meetingId": "122104006X00120260403_000",
-   "meetings": 15,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104006X00120260403/0"
   },
   {
    "committee": "環境委員会",
@@ -1235,19 +1183,6 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105262X00120260310/0"
   },
   {
-   "committee": "予算委員会公聴会",
-   "date": "2026-03-10",
-   "estimated": false,
-   "firstDate": "2026-03-10",
-   "kind": "committeeRole",
-   "lastDate": "2026-03-10",
-   "meetingId": "122105262X00120260310_000",
-   "meetings": 1,
-   "role": "理事",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105262X00120260310/0"
-  },
-  {
    "billId": "221-閣法-18",
    "date": "2026-03-06",
    "estimated": true,
@@ -1415,19 +1350,6 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "金融機能の強化のための特別措置に関する法律等の一部を改正する法律案"
-  },
-  {
-   "committee": "予算委員会",
-   "date": "2026-02-26",
-   "estimated": false,
-   "firstDate": "2026-02-26",
-   "kind": "committeeRole",
-   "lastDate": "2026-07-27",
-   "meetingId": "122105261X00120260226_000",
-   "meetings": 17,
-   "role": "理事",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00120260226/0"
   },
   {
    "committee": "予算委員会",

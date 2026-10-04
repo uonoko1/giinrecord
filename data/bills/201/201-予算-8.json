@@ -7,20 +7,6 @@
   "sangiin": "2020-04-29",
   "shugiin": "2020-04-27"
  },
- "referral": {
-  "sangiin": {
-   "committee": "予算",
-   "date": "2020-04-29"
-  },
-  "sangiinPreliminary": {
-   "committee": "予算",
-   "date": "2020-04-27"
-  },
-  "shugiin": {
-   "committee": "予算",
-   "date": "2020-04-27"
-  }
- },
  "result": {
   "sangiin": "可決",
   "shugiin": "可決"

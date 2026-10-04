@@ -7,20 +7,6 @@
   "sangiin": "2021-03-02",
   "shugiin": "2021-01-18"
  },
- "referral": {
-  "sangiin": {
-   "committee": "予算",
-   "date": "2021-03-02"
-  },
-  "sangiinPreliminary": {
-   "committee": "予算",
-   "date": "2021-01-18"
-  },
-  "shugiin": {
-   "committee": "予算",
-   "date": "2021-01-18"
-  }
- },
  "result": {
   "sangiin": "可決",
   "shugiin": "可決"

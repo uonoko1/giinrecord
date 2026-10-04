@@ -131,19 +131,6 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104006X01420260714/0"
   },
   {
-   "committee": "環境委員会",
-   "date": "2026-07-14",
-   "estimated": false,
-   "firstDate": "2026-07-14",
-   "kind": "committeeRole",
-   "lastDate": "2026-07-14",
-   "meetingId": "122104006X01420260714_000",
-   "meetings": 1,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104006X01420260714/0"
-  },
-  {
    "billId": "221-衆法-29",
    "date": "2026-07-10",
    "estimated": true,
@@ -1307,32 +1294,6 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105262X00120260310/0"
   },
   {
-   "committee": "予算委員会公聴会",
-   "date": "2026-03-10",
-   "estimated": false,
-   "firstDate": "2026-03-10",
-   "kind": "committeeRole",
-   "lastDate": "2026-03-10",
-   "meetingId": "122105262X00120260310_000",
-   "meetings": 1,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105262X00120260310/0"
-  },
-  {
-   "committee": "農林水産委員会",
-   "date": "2026-03-10",
-   "estimated": false,
-   "firstDate": "2026-03-10",
-   "kind": "committeeRole",
-   "lastDate": "2026-07-24",
-   "meetingId": "122105007X00120260310_000",
-   "meetings": 16,
-   "role": "理事",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105007X00120260310/0"
-  },
-  {
    "committee": "農林水産委員会",
    "date": "2026-03-10",
    "estimated": false,
@@ -1524,19 +1485,6 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "金融機能の強化のための特別措置に関する法律等の一部を改正する法律案"
-  },
-  {
-   "committee": "予算委員会",
-   "date": "2026-02-26",
-   "estimated": false,
-   "firstDate": "2026-02-26",
-   "kind": "committeeRole",
-   "lastDate": "2026-07-27",
-   "meetingId": "122105261X00120260226_000",
-   "meetings": 17,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00120260226/0"
   },
   {
    "committee": "予算委員会",

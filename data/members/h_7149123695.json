@@ -225,19 +225,6 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104127X00120260527/0"
   },
   {
-   "committee": "決算行政監視委員会",
-   "date": "2026-05-27",
-   "estimated": false,
-   "firstDate": "2026-05-27",
-   "kind": "committeeRole",
-   "lastDate": "2026-07-24",
-   "meetingId": "122104127X00120260527_000",
-   "meetings": 3,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104127X00120260527/0"
-  },
-  {
    "billId": "221-衆法-10",
    "date": "2026-05-26",
    "estimated": true,
@@ -1406,19 +1393,6 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
-  },
-  {
-   "committee": "憲法審査会",
-   "date": "2026-02-20",
-   "estimated": false,
-   "firstDate": "2026-02-20",
-   "kind": "committeeRole",
-   "lastDate": "2026-07-24",
-   "meetingId": "122104183X00120260220_000",
-   "meetings": 14,
-   "role": "会長",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104183X00120260220/0"
   },
   {
    "committee": "憲法審査会",

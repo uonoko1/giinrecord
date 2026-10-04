@@ -144,19 +144,6 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104024X03420260710/0"
   },
   {
-   "committee": "議院運営委員会",
-   "date": "2026-07-10",
-   "estimated": false,
-   "firstDate": "2026-07-10",
-   "kind": "committeeRole",
-   "lastDate": "2026-07-10",
-   "meetingId": "122104024X03420260710_000",
-   "meetings": 1,
-   "role": "理事",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104024X03420260710/0"
-  },
-  {
    "billId": "221-閣法-64",
    "date": "2026-06-30",
    "estimated": true,
@@ -438,19 +425,6 @@
    "stanceText": "少数",
    "status": "本院議了",
    "title": "刑事訴訟法の一部を改正する法律案"
-  },
-  {
-   "committee": "国家基本政策委員会",
-   "date": "2026-05-14",
-   "estimated": false,
-   "firstDate": "2026-05-14",
-   "kind": "committeeRole",
-   "lastDate": "2026-05-14",
-   "meetingId": "122104292X00120260514_000",
-   "meetings": 1,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104292X00120260514/0"
   },
   {
    "committee": "国家基本政策委員会",
@@ -1626,19 +1600,6 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
-  },
-  {
-   "committee": "憲法審査会",
-   "date": "2026-02-20",
-   "estimated": false,
-   "firstDate": "2026-02-20",
-   "kind": "committeeRole",
-   "lastDate": "2026-07-24",
-   "meetingId": "122104183X00120260220_000",
-   "meetings": 14,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104183X00120260220/0"
   },
   {
    "committee": "憲法審査会",

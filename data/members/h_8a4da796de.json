@@ -56,19 +56,6 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104575X01120260701/0"
   },
   {
-   "committee": "政治改革に関する特別委員会",
-   "date": "2026-07-01",
-   "estimated": false,
-   "firstDate": "2026-07-01",
-   "kind": "committeeRole",
-   "lastDate": "2026-07-01",
-   "meetingId": "122104575X01120260701_000",
-   "meetings": 1,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104575X01120260701/0"
-  },
-  {
    "billId": "221-閣法-64",
    "date": "2026-06-30",
    "estimated": true,
@@ -145,19 +132,6 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "有人国境離島地域の保全及び特定有人国境離島地域に係る地域社会の維持に関する特別措置法の一部を改正する法律案"
-  },
-  {
-   "committee": "経済産業委員会",
-   "date": "2026-06-17",
-   "estimated": false,
-   "firstDate": "2026-06-17",
-   "kind": "committeeRole",
-   "lastDate": "2026-06-17",
-   "meetingId": "122104080X01420260617_000",
-   "meetings": 1,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104080X01420260617/0"
   },
   {
    "committee": "経済産業委員会",
@@ -262,19 +236,6 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計補正予算（第１号）"
-  },
-  {
-   "committee": "消費者問題に関する特別委員会",
-   "date": "2026-05-28",
-   "estimated": false,
-   "firstDate": "2026-05-28",
-   "kind": "committeeRole",
-   "lastDate": "2026-07-24",
-   "meetingId": "122104536X00220260528_000",
-   "meetings": 3,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104536X00220260528/0"
   },
   {
    "committee": "消費者問題に関する特別委員会",
@@ -420,19 +381,6 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105206X00320260414/0"
   },
   {
-   "committee": "法務委員会",
-   "date": "2026-04-14",
-   "estimated": false,
-   "firstDate": "2026-04-14",
-   "kind": "committeeRole",
-   "lastDate": "2026-04-14",
-   "meetingId": "122105206X00320260414_000",
-   "meetings": 1,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105206X00320260414/0"
-  },
-  {
    "billId": "221-閣法-60",
    "date": "2026-04-10",
    "estimated": true,
@@ -483,19 +431,6 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "金融商品取引法及び資金決済に関する法律の一部を改正する法律案"
-  },
-  {
-   "committee": "憲法審査会",
-   "date": "2026-04-09",
-   "estimated": false,
-   "firstDate": "2026-04-09",
-   "kind": "committeeRole",
-   "lastDate": "2026-04-09",
-   "meetingId": "122104183X00220260409_000",
-   "meetings": 1,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104183X00220260409/0"
   },
   {
    "committee": "憲法審査会",
@@ -665,19 +600,6 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "民法等の一部を改正する法律案"
-  },
-  {
-   "committee": "厚生労働委員会",
-   "date": "2026-04-03",
-   "estimated": false,
-   "firstDate": "2026-04-03",
-   "kind": "committeeRole",
-   "lastDate": "2026-07-24",
-   "meetingId": "122104260X00120260403_000",
-   "meetings": 20,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104260X00120260403/0"
   },
   {
    "committee": "厚生労働委員会",
@@ -1265,32 +1187,6 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104339X00220260310/0"
   },
   {
-   "committee": "災害対策特別委員会",
-   "date": "2026-03-10",
-   "estimated": false,
-   "firstDate": "2026-03-10",
-   "kind": "committeeRole",
-   "lastDate": "2026-07-24",
-   "meetingId": "122104339X00220260310_000",
-   "meetings": 9,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104339X00220260310/0"
-  },
-  {
-   "committee": "国土交通委員会",
-   "date": "2026-03-10",
-   "estimated": false,
-   "firstDate": "2026-03-10",
-   "kind": "committeeRole",
-   "lastDate": "2026-05-13",
-   "meetingId": "122104319X00220260310_000",
-   "meetings": 2,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104319X00220260310/0"
-  },
-  {
    "committee": "国土交通委員会",
    "date": "2026-03-10",
    "estimated": false,
@@ -1588,19 +1484,6 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
-  },
-  {
-   "committee": "沖縄及び北方問題に関する特別委員会",
-   "date": "2026-02-20",
-   "estimated": false,
-   "firstDate": "2026-02-20",
-   "kind": "committeeRole",
-   "lastDate": "2026-02-20",
-   "meetingId": "122103895X00120260220_000",
-   "meetings": 1,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122103895X00120260220/0"
   },
   {
    "committee": "沖縄及び北方問題に関する特別委員会",

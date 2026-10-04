@@ -238,32 +238,6 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105206X01220260522/0"
   },
   {
-   "committee": "法務委員会",
-   "date": "2026-05-22",
-   "estimated": false,
-   "firstDate": "2026-05-22",
-   "kind": "committeeRole",
-   "lastDate": "2026-05-22",
-   "meetingId": "122105206X01220260522_000",
-   "meetings": 1,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105206X01220260522/0"
-  },
-  {
-   "committee": "議院運営委員会",
-   "date": "2026-05-19",
-   "estimated": false,
-   "firstDate": "2026-05-19",
-   "kind": "committeeRole",
-   "lastDate": "2026-06-19",
-   "meetingId": "122104024X02320260519_000",
-   "meetings": 3,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104024X02320260519/0"
-  },
-  {
    "committee": "議院運営委員会",
    "date": "2026-05-19",
    "estimated": false,
@@ -1070,19 +1044,6 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X01020260312/0"
   },
   {
-   "committee": "予算委員会",
-   "date": "2026-03-12",
-   "estimated": false,
-   "firstDate": "2026-03-12",
-   "kind": "committeeRole",
-   "lastDate": "2026-03-12",
-   "meetingId": "122105261X01020260312_000",
-   "meetings": 1,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X01020260312/0"
-  },
-  {
    "billId": "221-閣法-23",
    "date": "2026-03-10",
    "estimated": true,
@@ -1250,19 +1211,6 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "防災庁設置法案"
-  },
-  {
-   "committee": "国土交通委員会",
-   "date": "2026-03-06",
-   "estimated": false,
-   "firstDate": "2026-03-06",
-   "kind": "committeeRole",
-   "lastDate": "2026-07-24",
-   "meetingId": "122104319X00120260306_000",
-   "meetings": 14,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104319X00120260306/0"
   },
   {
    "committee": "国土交通委員会",

@@ -167,19 +167,6 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104889X02020260617/0"
   },
   {
-   "committee": "内閣委員会",
-   "date": "2026-06-17",
-   "estimated": false,
-   "firstDate": "2026-06-17",
-   "kind": "committeeRole",
-   "lastDate": "2026-06-17",
-   "meetingId": "122104889X02020260617_000",
-   "meetings": 1,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104889X02020260617/0"
-  },
-  {
    "billId": "221-衆法-18",
    "date": "2026-06-16",
    "estimated": true,
@@ -280,19 +267,6 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計補正予算（第１号）"
-  },
-  {
-   "committee": "法務委員会",
-   "date": "2026-06-03",
-   "estimated": false,
-   "firstDate": "2026-06-03",
-   "kind": "committeeRole",
-   "lastDate": "2026-06-03",
-   "meetingId": "122105206X01720260603_000",
-   "meetings": 1,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105206X01720260603/0"
   },
   {
    "committee": "法務委員会",
@@ -438,19 +412,6 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105367X00220260414/0"
   },
   {
-   "committee": "地域活性化・こども政策・デジタル社会形成に関する特別委員会",
-   "date": "2026-04-14",
-   "estimated": false,
-   "firstDate": "2026-04-14",
-   "kind": "committeeRole",
-   "lastDate": "2026-07-24",
-   "meetingId": "122105367X00220260414_000",
-   "meetings": 13,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105367X00220260414/0"
-  },
-  {
    "billId": "221-閣法-60",
    "date": "2026-04-10",
    "estimated": true,
@@ -501,19 +462,6 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "金融商品取引法及び資金決済に関する法律の一部を改正する法律案"
-  },
-  {
-   "committee": "外務委員会",
-   "date": "2026-04-08",
-   "estimated": false,
-   "firstDate": "2026-04-08",
-   "kind": "committeeRole",
-   "lastDate": "2026-04-08",
-   "meetingId": "122103968X00520260408_000",
-   "meetings": 1,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122103968X00520260408/0"
   },
   {
    "committee": "外務委員会",
@@ -683,19 +631,6 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "民法等の一部を改正する法律案"
-  },
-  {
-   "committee": "厚生労働委員会",
-   "date": "2026-04-03",
-   "estimated": false,
-   "firstDate": "2026-04-03",
-   "kind": "committeeRole",
-   "lastDate": "2026-07-24",
-   "meetingId": "122104260X00120260403_000",
-   "meetings": 19,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104260X00120260403/0"
   },
   {
    "committee": "厚生労働委員会",
@@ -1554,19 +1489,6 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
-  },
-  {
-   "committee": "政治改革に関する特別委員会",
-   "date": "2026-02-20",
-   "estimated": false,
-   "firstDate": "2026-02-20",
-   "kind": "committeeRole",
-   "lastDate": "2026-07-24",
-   "meetingId": "122104575X00120260220_000",
-   "meetings": 10,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104575X00120260220/0"
   },
   {
    "committee": "政治改革に関する特別委員会",

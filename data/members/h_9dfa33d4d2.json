@@ -360,19 +360,6 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104080X00320260415/0"
   },
   {
-   "committee": "経済産業委員会",
-   "date": "2026-04-15",
-   "estimated": false,
-   "firstDate": "2026-04-15",
-   "kind": "committeeRole",
-   "lastDate": "2026-04-15",
-   "meetingId": "122104080X00320260415_000",
-   "meetings": 1,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104080X00320260415/0"
-  },
-  {
    "billId": "221-閣法-60",
    "date": "2026-04-10",
    "estimated": true,
@@ -1175,19 +1162,6 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105007X00120260310/0"
   },
   {
-   "committee": "農林水産委員会",
-   "date": "2026-03-10",
-   "estimated": false,
-   "firstDate": "2026-03-10",
-   "kind": "committeeRole",
-   "lastDate": "2026-07-24",
-   "meetingId": "122105007X00120260310_000",
-   "meetings": 15,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105007X00120260310/0"
-  },
-  {
    "billId": "221-閣法-18",
    "date": "2026-03-06",
    "estimated": true,
@@ -1483,19 +1457,6 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
-  },
-  {
-   "committee": "消費者問題に関する特別委員会",
-   "date": "2026-02-20",
-   "estimated": false,
-   "firstDate": "2026-02-20",
-   "kind": "committeeRole",
-   "lastDate": "2026-07-24",
-   "meetingId": "122104536X00120260220_000",
-   "meetings": 4,
-   "role": "理事",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104536X00120260220/0"
   },
   {
    "committee": "消費者問題に関する特別委員会",

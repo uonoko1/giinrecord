@@ -156,19 +156,6 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104183X01020260618/0"
   },
   {
-   "committee": "憲法審査会",
-   "date": "2026-06-18",
-   "estimated": false,
-   "firstDate": "2026-06-18",
-   "kind": "committeeRole",
-   "lastDate": "2026-06-18",
-   "meetingId": "122104183X01020260618_000",
-   "meetings": 1,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104183X01020260618/0"
-  },
-  {
    "billId": "221-衆法-15",
    "date": "2026-06-16",
    "estimated": true,
@@ -310,19 +297,6 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105206X00920260515/0"
   },
   {
-   "committee": "法務委員会",
-   "date": "2026-05-15",
-   "estimated": false,
-   "firstDate": "2026-05-15",
-   "kind": "committeeRole",
-   "lastDate": "2026-05-15",
-   "meetingId": "122105206X00920260515_000",
-   "meetings": 1,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105206X00920260515/0"
-  },
-  {
    "billId": "221-閣法-40",
    "date": "2026-04-24",
    "estimated": true,
@@ -347,19 +321,6 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "食育基本法の一部を改正する法律案"
-  },
-  {
-   "committee": "議院運営委員会",
-   "date": "2026-04-21",
-   "estimated": false,
-   "firstDate": "2026-04-21",
-   "kind": "committeeRole",
-   "lastDate": "2026-05-14",
-   "meetingId": "122104024X01820260421_000",
-   "meetings": 2,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104024X01820260421/0"
   },
   {
    "committee": "議院運営委員会",
@@ -475,19 +436,6 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "金融商品取引法及び資金決済に関する法律の一部を改正する法律案"
-  },
-  {
-   "committee": "外務委員会",
-   "date": "2026-04-08",
-   "estimated": false,
-   "firstDate": "2026-04-08",
-   "kind": "committeeRole",
-   "lastDate": "2026-04-08",
-   "meetingId": "122103968X00520260408_000",
-   "meetings": 1,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122103968X00520260408/0"
   },
   {
    "committee": "外務委員会",
@@ -1151,19 +1099,6 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105007X00220260311/0"
   },
   {
-   "committee": "農林水産委員会",
-   "date": "2026-03-11",
-   "estimated": false,
-   "firstDate": "2026-03-11",
-   "kind": "committeeRole",
-   "lastDate": "2026-03-11",
-   "meetingId": "122105007X00220260311_000",
-   "meetings": 1,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105007X00220260311/0"
-  },
-  {
    "billId": "221-衆法-2",
    "date": "2026-03-10",
    "kind": "bill",
@@ -1409,19 +1344,6 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104376X00120260303/0"
   },
   {
-   "committee": "財務金融委員会",
-   "date": "2026-03-03",
-   "estimated": false,
-   "firstDate": "2026-03-03",
-   "kind": "committeeRole",
-   "lastDate": "2026-07-24",
-   "meetingId": "122104376X00120260303_000",
-   "meetings": 13,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104376X00120260303/0"
-  },
-  {
    "billId": "221-衆法-1",
    "date": "2026-03-02",
    "kind": "bill",
@@ -1470,19 +1392,6 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "金融機能の強化のための特別措置に関する法律等の一部を改正する法律案"
-  },
-  {
-   "committee": "予算委員会",
-   "date": "2026-02-27",
-   "estimated": false,
-   "firstDate": "2026-02-27",
-   "kind": "committeeRole",
-   "lastDate": "2026-07-27",
-   "meetingId": "122105261X00220260227_000",
-   "meetings": 3,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00220260227/0"
   },
   {
    "committee": "予算委員会",
@@ -1613,19 +1522,6 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
-  },
-  {
-   "committee": "地域活性化・こども政策・デジタル社会形成に関する特別委員会",
-   "date": "2026-02-20",
-   "estimated": false,
-   "firstDate": "2026-02-20",
-   "kind": "committeeRole",
-   "lastDate": "2026-07-24",
-   "meetingId": "122105367X00120260220_000",
-   "meetings": 8,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105367X00120260220/0"
   },
   {
    "committee": "地域活性化・こども政策・デジタル社会形成に関する特別委員会",

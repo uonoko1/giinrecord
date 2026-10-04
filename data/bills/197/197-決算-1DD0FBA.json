@@ -3,12 +3,6 @@
  "id": "197-決算-1DD0FBA",
  "kind": "その他",
  "kindText": "決算",
- "referral": {
-  "shugiin": {
-   "committee": "決算行政監視",
-   "date": "2021-01-18"
-  }
- },
  "result": {
   "shugiin": "議決"
  },

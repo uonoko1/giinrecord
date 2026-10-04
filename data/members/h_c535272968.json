@@ -550,19 +550,6 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104889X00120260403/0"
   },
   {
-   "committee": "内閣委員会",
-   "date": "2026-04-03",
-   "estimated": false,
-   "firstDate": "2026-04-03",
-   "kind": "committeeRole",
-   "lastDate": "2026-07-24",
-   "meetingId": "122104889X00120260403_000",
-   "meetings": 27,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104889X00120260403/0"
-  },
-  {
    "billId": "221-閣法-41",
    "date": "2026-03-31",
    "estimated": true,
@@ -1135,19 +1122,6 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105262X00120260310/0"
   },
   {
-   "committee": "予算委員会公聴会",
-   "date": "2026-03-10",
-   "estimated": false,
-   "firstDate": "2026-03-10",
-   "kind": "committeeRole",
-   "lastDate": "2026-03-10",
-   "meetingId": "122105262X00120260310_000",
-   "meetings": 1,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105262X00120260310/0"
-  },
-  {
    "billId": "221-閣法-18",
    "date": "2026-03-06",
    "estimated": true,
@@ -1330,19 +1304,6 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00120260226/0"
   },
   {
-   "committee": "予算委員会",
-   "date": "2026-02-26",
-   "estimated": false,
-   "firstDate": "2026-02-26",
-   "kind": "committeeRole",
-   "lastDate": "2026-07-24",
-   "meetingId": "122105261X00120260226_000",
-   "meetings": 16,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00120260226/0"
-  },
-  {
    "billId": "221-閣法-6",
    "date": "2026-02-20",
    "estimated": true,
@@ -1458,19 +1419,6 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
-  },
-  {
-   "committee": "東日本大震災復興及び原子力問題調査特別委員会",
-   "date": "2026-02-20",
-   "estimated": false,
-   "firstDate": "2026-02-20",
-   "kind": "committeeRole",
-   "lastDate": "2026-02-20",
-   "meetingId": "122105387X00120260220_000",
-   "meetings": 1,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105387X00120260220/0"
   },
   {
    "committee": "東日本大震災復興及び原子力問題調査特別委員会",

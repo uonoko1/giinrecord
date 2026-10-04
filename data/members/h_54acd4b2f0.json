@@ -288,19 +288,6 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104376X00920260513/0"
   },
   {
-   "committee": "財務金融委員会",
-   "date": "2026-05-13",
-   "estimated": false,
-   "firstDate": "2026-05-13",
-   "kind": "committeeRole",
-   "lastDate": "2026-05-13",
-   "meetingId": "122104376X00920260513_000",
-   "meetings": 1,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104376X00920260513/0"
-  },
-  {
    "billId": "221-閣法-40",
    "date": "2026-04-24",
    "estimated": true,
@@ -377,32 +364,6 @@
    "role": "委員",
    "session": 221,
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104889X00520260416/0"
-  },
-  {
-   "committee": "内閣委員会",
-   "date": "2026-04-16",
-   "estimated": false,
-   "firstDate": "2026-04-16",
-   "kind": "committeeRole",
-   "lastDate": "2026-05-15",
-   "meetingId": "122104889X00520260416_000",
-   "meetings": 5,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104889X00520260416/0"
-  },
-  {
-   "committee": "憲法審査会",
-   "date": "2026-04-16",
-   "estimated": false,
-   "firstDate": "2026-04-16",
-   "kind": "committeeRole",
-   "lastDate": "2026-07-09",
-   "meetingId": "122104183X00320260416_000",
-   "meetings": 3,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104183X00320260416/0"
   },
   {
    "committee": "憲法審査会",
@@ -624,19 +585,6 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "民法等の一部を改正する法律案"
-  },
-  {
-   "committee": "法務委員会",
-   "date": "2026-04-03",
-   "estimated": false,
-   "firstDate": "2026-04-03",
-   "kind": "committeeRole",
-   "lastDate": "2026-07-24",
-   "meetingId": "122105206X00120260403_000",
-   "meetings": 21,
-   "role": "理事",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105206X00120260403/0"
   },
   {
    "committee": "法務委員会",
@@ -1224,32 +1172,6 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104601X00320260310/0"
   },
   {
-   "committee": "総務委員会",
-   "date": "2026-03-10",
-   "estimated": false,
-   "firstDate": "2026-03-10",
-   "kind": "committeeRole",
-   "lastDate": "2026-03-10",
-   "meetingId": "122104601X00320260310_000",
-   "meetings": 1,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104601X00320260310/0"
-  },
-  {
-   "committee": "国土交通委員会",
-   "date": "2026-03-10",
-   "estimated": false,
-   "firstDate": "2026-03-10",
-   "kind": "committeeRole",
-   "lastDate": "2026-07-22",
-   "meetingId": "122104319X00220260310_000",
-   "meetings": 2,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104319X00220260310/0"
-  },
-  {
    "committee": "国土交通委員会",
    "date": "2026-03-10",
    "estimated": false,
@@ -1391,19 +1313,6 @@
    "stanceText": "多数",
    "status": "両院承認",
    "title": "放送法第七十条第二項の規定に基づき、承認を求めるの件"
-  },
-  {
-   "committee": "予算委員会",
-   "date": "2026-03-03",
-   "estimated": false,
-   "firstDate": "2026-03-03",
-   "kind": "committeeRole",
-   "lastDate": "2026-06-04",
-   "meetingId": "122105261X00420260303_000",
-   "meetings": 4,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00420260303/0"
   },
   {
    "committee": "予算委員会",

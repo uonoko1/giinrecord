@@ -3,12 +3,6 @@
  "id": "195-決算-1DCDCBA",
  "kind": "その他",
  "kindText": "決算",
- "referral": {
-  "shugiin": {
-   "committee": "決算行政監視",
-   "date": "2019-10-04"
-  }
- },
  "result": {
   "shugiin": "閉会中審査"
  },

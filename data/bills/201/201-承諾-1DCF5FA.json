@@ -3,12 +3,6 @@
  "id": "201-承諾-1DCF5FA",
  "kind": "その他",
  "kindText": "承諾",
- "referral": {
-  "shugiin": {
-   "committee": "決算行政監視",
-   "date": "2020-09-16"
-  }
- },
  "result": {
   "shugiin": "閉会中審査"
  },

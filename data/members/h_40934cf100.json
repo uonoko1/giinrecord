@@ -303,19 +303,6 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105124X00720260422/0"
   },
   {
-   "committee": "文部科学委員会",
-   "date": "2026-04-22",
-   "estimated": false,
-   "firstDate": "2026-04-22",
-   "kind": "committeeRole",
-   "lastDate": "2026-04-22",
-   "meetingId": "122105124X00720260422_000",
-   "meetings": 1,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105124X00720260422/0"
-  },
-  {
    "billId": "221-閣法-52",
    "date": "2026-04-17",
    "estimated": true,
@@ -1135,19 +1122,6 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105262X00120260310/0"
   },
   {
-   "committee": "予算委員会公聴会",
-   "date": "2026-03-10",
-   "estimated": false,
-   "firstDate": "2026-03-10",
-   "kind": "committeeRole",
-   "lastDate": "2026-03-10",
-   "meetingId": "122105262X00120260310_000",
-   "meetings": 1,
-   "role": "理事",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105262X00120260310/0"
-  },
-  {
    "billId": "221-閣法-18",
    "date": "2026-03-06",
    "estimated": true,
@@ -1330,19 +1304,6 @@
    "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00120260226/0"
   },
   {
-   "committee": "予算委員会",
-   "date": "2026-02-26",
-   "estimated": false,
-   "firstDate": "2026-02-26",
-   "kind": "committeeRole",
-   "lastDate": "2026-07-27",
-   "meetingId": "122105261X00120260226_000",
-   "meetings": 17,
-   "role": "理事",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122105261X00120260226/0"
-  },
-  {
    "billId": "221-閣法-6",
    "date": "2026-02-20",
    "estimated": true,
@@ -1458,19 +1419,6 @@
    "stanceText": "多数",
    "status": "成立",
    "title": "令和八年度一般会計予算"
-  },
-  {
-   "committee": "政治改革に関する特別委員会",
-   "date": "2026-02-20",
-   "estimated": false,
-   "firstDate": "2026-02-20",
-   "kind": "committeeRole",
-   "lastDate": "2026-02-20",
-   "meetingId": "122104575X00120260220_000",
-   "meetings": 1,
-   "role": "委員",
-   "session": 221,
-   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122104575X00120260220/0"
   },
   {
    "committee": "政治改革に関する特別委員会",

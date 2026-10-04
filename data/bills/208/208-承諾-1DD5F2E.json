@@ -3,12 +3,6 @@
  "id": "208-承諾-1DD5F2E",
  "kind": "その他",
  "kindText": "承諾",
- "referral": {
-  "shugiin": {
-   "committee": "決算行政監視",
-   "date": "2022-08-03"
-  }
- },
  "result": {
   "shugiin": "閉会中審査"
  },
