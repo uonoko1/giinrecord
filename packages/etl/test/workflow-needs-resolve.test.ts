@@ -169,7 +169,19 @@ function keysUnder(jobLines: string[], key: string, indent: number): string[] {
   const out: string[] = [];
   for (let j = i + 1; j < jobLines.length; j++) {
     if (jobLines[j].trim() === "") continue;
-    if (!new RegExp(`^ {${indent + 2}}\\S`).test(jobLines[j])) break; // 兄弟キーへ戻った
+    const depth = jobLines[j].length - jobLines[j].trimStart().length;
+    // **より深い行は読み飛ばす（`break` しない）。**
+    //
+    // #1137: ここは `break` だった。**`workflow_call.outputs` は
+    // `sha:` → `description:` / `value:`（indent + 4）というネストしたマップなので、
+    // 2 つめ以降のキーに到達する前に打ち切っていた。** 実害が出るまで気づかなかったのは、
+    // それまでこのリポジトリの再利用ワークフローの `outputs:` が
+    // **どれも 1 キーだけ**だったからである（`deploy-site.yml` の `sha` /
+    // `deploy-data.yml` の `ref`。どちらも 1 つ）。
+    // #1137 で `build-site.yml` が `sha` と `artifact` の 2 つを宣言したときに初めて
+    // 「2 つめが見えない」＝「宣言しているのに宣言していないと言う」偽陽性になった。
+    if (depth > indent + 2) continue;
+    if (depth <= indent) break; // 兄弟キー（か浅い行）へ戻った
     const m = jobLines[j].match(new RegExp(`^ {${indent + 2}}([A-Za-z_][\\w-]*):`));
     if (m) out.push(m[1]);
   }
@@ -304,6 +316,14 @@ test("#1017: needs.<job>.outputs.<out> を使う job は、その job を needs 
   // **#1110 で 24 → 25**（`scrum-monitor.yml` の `monitor` が 1 本増えた）。
   // **#1162 で裸の数値をやめ、`workflow-timeout.test.ts` の一覧の長さから導出する**
   // （理由は `canonicalJobIds` の上に書いた。**数値を手で合わせる経路を無くす**）。
+  //
+  // **#1137 とのマージでこの導出が効いた**（歴史。当時の数はここに書かない——#1189）。
+  // #1162 は「どちらが後にマージされても、裸の数値は相手の増分を知らないので間違いになる」と
+  // 書いていた。**その状況がそのまま起きた**: #1162 が `ci.yml:stale-base` を 2 つに割り、
+  // #1137 が `deploy-site.yml` を `build` / `deploy` に割って `build-site.yml` を新設した。
+  // **#1137 側は裸の数値を持っていたが、それは #1162 の増分を知らない数だった。**
+  // **導出にしたので、衝突の解決でどちらの数も書かずに済んだ**——
+  // 真値は `workflow-timeout.test.ts` の一覧が運ぶ（その一覧は両方の job を含んだ形で自動マージされた）。
   // **現在値はここに書かない**（#1189: 書くと腐る）。`expected.length` が実行時の真値である。
   // `equal` のままにする（`>=` にすると job を消したときに気づけない）。
   const expected = canonicalJobIds();
@@ -346,6 +366,89 @@ test("#1017: 参照先の job が、その名前の output を実際に宣言し
     }
   }
   assert.deepEqual(broken, [], `参照先に存在しない output を使っている:\n${broken.join("\n")}`);
+});
+
+/**
+ * #1137: **`keysUnder` は 2 つめ以降の output が見えなかった**（`break` していた）。
+ *
+ * `workflow_call.outputs` は `<name>:` → `description:` / `value:` というネストしたマップなので、
+ * 深い行で打ち切ると 1 キーしか読めない。**このリポジトリの再利用ワークフローの `outputs:` が
+ * どれも 1 キーだけだったので、実害が出るまで気づかなかった**（`deploy-site.yml` の `sha` /
+ * `deploy-data.yml` の `ref`）。#1137 で `build-site.yml` が 2 つ宣言したとき、
+ * 上の「参照先が output を宣言している」検査が**宣言しているのに宣言していないと言った**（偽陽性）。
+ *
+ * **偽陽性は偽陰性と同じくらい悪い**——「検査が落ちたから直す」の向きが逆になる。
+ */
+test("#1137: keysUnder はネストしたマップでも 2 つめ以降のキーを読める（偽陽性の再発防止）", () => {
+  const lines = [
+    "on:",
+    "  workflow_call:",
+    "    outputs:",
+    "      sha:",
+    '        description: "first"',
+    "        value: ${{ jobs.b.outputs.sha }}",
+    "      artifact:",
+    '        description: "second"',
+    "        value: ${{ jobs.b.outputs.artifact }}",
+    // **空行は値の途中でも現れうる（YAML として正当）。`continue` でなく `break` にすると
+    // #1137 の偽陽性が同じ逐語で戻る**（R6。実測: `build-site.yml` の 2 キーの間に空行 1 行を
+    // 入れるだけで「output `artifact` を宣言していない（宣言: ["sha"]）」が復活する）。
+    // **この 1 行で押さえる**（テストも assert も増えない）。
+    "",
+    "      third:",
+    "        value: ${{ jobs.b.outputs.third }}",
+    // ── **同じ indent（4）の兄弟キー。`depth <= indent` の `=` が効く唯一の位置である** ──
+    //
+    // #1137 レビュー 7 回目: **この 3 行が無いと、`<=` を `<` に変える変異（R3）が 6/6 緑で通る。**
+    // 旧実装 `if (!/^ {indent+2}\S/.test(l)) break;` は **indent+2 以外のあらゆる行で止まった**ので、
+    // 同一 indent の兄弟の境界を**暗黙に**守っていた。**この枝はその 1 行を 2 つの条件に分けた**ので、
+    // **同一 indent を守るのは `depth <= indent` の `=` だけ**になった。
+    //
+    // **下の `permissions:` では `=` を試せない**——indent 0 なので `<` でも止まる（`0 < 4`）。
+    // **`=` が効くのは「ちょうど同じ indent」の兄弟が在るときだけ**である。
+    //
+    // **向きは偽陰性で、こちらのほうが悪い。** `=` を落とすと
+    // **`secrets:` の下の鍵の名前が output として読める**（実測: `["sha","artifact","third","DEPLOY_SSH_KEY"]`）。
+    // そうなると、**消し忘れた `needs.*.outputs.X` の参照が、無関係な兄弟キーに同じ名前が在るだけで
+    // 黙って緑になる。** **`deploy-site.yml` の `workflow_call` は実際に
+    // `inputs:` / `secrets:` / `outputs:` を同一 indent に 3 つ持っている**ので、合成だけの話ではない。
+    "    secrets:",
+    "      DEPLOY_SSH_KEY:",
+    "        required: true",
+    "permissions:",
+    "  contents: read",
+  ];
+  assert.deepEqual(keysUnder(lines, "outputs", 4), ["sha", "artifact", "third"]);
+  // 兄弟キー（`permissions:`）で止まること——止まらないと無関係なキーを拾う
+  assert.ok(!keysUnder(lines, "outputs", 4).includes("permissions"));
+
+  // ── **`depth <= indent` は 2 つの境界を同時に守っている。assert も 2 本要る** ──
+  //
+  // #1137 レビュー 8 回目: **`<=` は複合である**——「**同じ** indent」(`===`) と
+  // 「**浅い** indent」(`<`) の 2 つで止まる。**上の `lines` は前者しか試していない。**
+  // `secrets:` が indent 4 なので、**`<=` を `===` に変える変異（R9）では
+  // そこで止まってしまい、`permissions:`（indent 0）に到達しない。**
+  //
+  // **1 つの配列では両方を押さえられない**（実測）。**先に来た兄弟で止まるため**である:
+  //   同一 indent(4) を先に置く → R3 (`<=`→`<`) は捕まるが **R9 は素通り**
+  //   浅い indent(2) を先に置く → R9 は捕まるが **R3 が素通り**
+  // **だから配列を 2 つにする。** 期待値は上と同じなので、**新しい値を手で書き下ろさない**
+  // （書き下ろすと、検査対象と同じ思い込みから期待値を作ることになる）。
+  //
+  // **向きは偽陰性である。** `<` 側を落とすと、**indent 0 の `env:` の下に
+  // 深く書いたキーが output として読める**（`env:` を indent 0、子を indent 6 に書く形は
+  // **YAML として正当で actionlint rc=0**。実測で確かめた）。そうなると
+  // **消し忘れた `needs.*.outputs.X` の参照が、無関係なキーに同じ名前が在るだけで黙って緑になる。**
+  const shallower = lines.flatMap((l) =>
+    l === "    secrets:" ? ["  shallower:", "      NOT_AN_OUTPUT: x", l] : [l],
+  );
+  assert.deepEqual(keysUnder(shallower, "outputs", 4), ["sha", "artifact", "third"]);
+});
+
+/** 実体でも 2 つ読めていること（合成だけで固定すると、本物の綴りが変わっても気づけない） */
+test("#1137: build-site.yml の outputs が 2 つとも読める（実体の母数）", () => {
+  const declared = keysUnder(read("build-site.yml").split("\n").map(stripComment), "outputs", 4);
+  assert.deepEqual(declared, ["sha", "artifact"], `build-site.yml の outputs が読めていない: ${JSON.stringify(declared)}`);
 });
 
 test("#134: deploy-data の production は resolve の ref を受け、data/ だけを main から載せる", () => {

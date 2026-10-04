@@ -9,9 +9,20 @@ Issue #85・#939。構成と初回セットアップは `deploy/README.md`。こ
 | staging | https://staging.giinrecord.jp | `web-staging`（127.0.0.1:8083）← `/var/www/giinrecord/staging` | `main` への push で自動（`deploy-staging.yml`） | 自動（`deploy-data.yml`） |
 | production | https://giinrecord.jp | `web`（127.0.0.1:8081）← `/var/www/giinrecord/site` | 手動リリース（`release.yml`、成功時にタグ `released` を更新） | 自動（`deploy-data.yml`：コードは `released`、`data/` は `main`） |
 
-- 3 つとも再利用ワークフロー `deploy-site.yml`（`pnpm build` → `rsync --delete`）を呼ぶだけ。違いは Environment・`SITE_ORIGIN`・rsync 先・（production-data だけ）`data_ref: main` の overlay。
+- 3 つとも再利用ワークフロー `deploy-site.yml` を呼ぶだけ。違いは Environment・`SITE_ORIGIN`・rsync 先・（production-data だけ）`data_ref: main` の overlay。
+- **`deploy-site.yml` はビルドしない**（#1137）。`build-site.yml`（`pnpm build` → `upload-artifact`）を
+  **`secrets:` を 1 つも渡さずに**呼び、`deploy` job が `download-artifact` → `rsync --delete` する。
+  **`main` に入ったコードは deploy 鍵の無い runner で走る**——`deploy-staging.yml` は `push: branches:[main]` で
+  承認なしに走るので、ビルドと鍵が同じ場所に在ると `vite.config.ts` に 1 行入れるだけで鍵が取れた。
 - staging ビルド（`SITE_ORIGIN=https://staging.giinrecord.jp`）は `robots.txt` が `Disallow: /`、全ページに `<meta name="robots" content="noindex, nofollow">`（`apps/web/app/lib/seo.ts`）。さらにコンテナの `site.conf` が Host `staging.giinrecord.jp` に `X-Robots-Tag: noindex, nofollow` を付ける。
-- GitHub Environment：`staging`、`production`、`production-data`。3 つとも同じ `DEPLOY_*` secrets。
+- GitHub Environment：`staging`、`production`、`production-data`。
+  **`DEPLOY_*` 4 件は environment secret ではなく repository secret である**（#1137。2026-09-30 実測:
+  `repos/uonoko1/giinrecord/actions/secrets` が 5 件、3 つの environment の `secrets` はすべて `total_count=0`）。
+  **ここには以前「3 つとも同じ `DEPLOY_*` secrets」と書いてあり、それを「environment から来る」と読んだ結果、
+  #1137 の最初の直しが鍵を遠ざけていなかった。** environment は**デプロイの記録**として付けている。
+- **呼び出し元は `secrets: inherit` を使わない**（#1137）。`DEPLOY_*` 4 件を名指しで渡し、
+  `deploy-site.yml` 側も `workflow_call.secrets` で 4 件だけを宣言する。`inherit` は
+  **宣言していない secret まで**呼び先の全 job に流すので、`build-site.yml` でも鍵が読めてしまう。
 - **承認（required reviewers）は 3 つとも置いていない**（#659。2026-09-08 実測。`gh api repos/uonoko1/giinrecord/environments` の `protection_rules` が 3 つとも `[]`）。
   **したがって Release は押した人がそのまま本番に出す**——**承認待ちにはならない。**
   置いていない理由は 3 つ:
@@ -276,7 +287,7 @@ bot のマージ（`GITHUB_TOKEN`）は push イベントを起こさないの�
   両者は `deploy-site.yml` の concurrency group `deploy-vps` で直列化されるので害は無いが、待ち行列が 1 本ぶん伸びるだけ無駄である（deploy ジョブの実測 73〜106s）。
 - **production** は「最後にリリースしたコード + `main` の `data/`」をビルドする（#134）。`main` にマージ済みで未リリースのコードは日次データと一緒に本番へ出ない。
   1. `resolve` ジョブが `scripts/ci/released-ref.sh resolve` で `refs/tags/released` の SHA を取る（タグが無ければ `main`。初回 Release 前のフォールバック）。
-  2. `deploy-site.yml` がその SHA を checkout し、`data_ref: main` で `released-ref.sh overlay main`（`data/` を丸ごと main のものに置き換える。追加も削除も反映、`data/` 以外は触らない）→ `pnpm build` → rsync。
+  2. `deploy-site.yml` が `build-site.yml` を呼び、そこがその SHA を checkout し、`data_ref: main` で `released-ref.sh overlay main`（`data/` を丸ごと main のものに置き換える。追加も削除も反映、`data/` 以外は触らない）→ `pnpm build` → artifact。`deploy-site.yml` の `deploy` job がそれを受け取って rsync（#1137）。
 - タグ `released` は **Release が成功したときだけ** `release.yml` の `released-tag` ジョブが REST API（`GITHUB_TOKEN`、`contents: write`）で動かす（`production` environment の外で走るので deploy secrets を持たない）。ロールバックで古い SHA を Release すればタグもそこへ戻る。手で打ち直すなら `git push -f origin <sha>:refs/tags/released`（次の deploy-data から効く）。
 - 確認：Actions → Deploy data の Summary に `production code ref: <sha>` と `deployed ref <sha> + data/ from main` が出る。`gh api repos/uonoko1/giinrecord/git/ref/tags/released` で現在のタグ。
 - 注意：`released` が指す SHA には `scripts/ci/released-ref.sh` が含まれている必要がある（#134 以前の SHA を Release するとタグは動くが次の deploy-data が overlay ステップで失敗する。その場合は新しい SHA を Release し直す）。

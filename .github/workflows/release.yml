@@ -26,7 +26,13 @@ jobs:
       site_origin: ${{ vars.SITE_ORIGIN }}
       target_dir: site
       ref: ${{ inputs.ref }}
-    secrets: inherit
+    secrets:
+      # #1137: `inherit` をやめ、DEPLOY_* 4 件を名指しで渡す。`inherit` だと
+      # `FORBIDDEN_PATTERNS` や将来増える secret も呼び先の全 job に流れ込む。
+      DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+      DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
   released-tag:
     # Only on success (default `needs` semantics). Runs outside the `production` environment: no deploy secret,
     # only contents: write for the tag ref (REST API, no checkout). Rollback = Release an older sha; the tag follows.

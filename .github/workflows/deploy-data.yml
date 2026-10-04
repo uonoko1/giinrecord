@@ -60,7 +60,13 @@ jobs:
       site_origin: https://staging.giinrecord.jp
       target_dir: staging
       ref: main
-    secrets: inherit
+    secrets:
+      # #1137: `inherit` をやめ、DEPLOY_* 4 件を名指しで渡す。`inherit` だと
+      # `FORBIDDEN_PATTERNS` や将来増える secret も呼び先の全 job に流れ込む。
+      DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+      DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
   production:
     needs: resolve
     uses: ./.github/workflows/deploy-site.yml
@@ -70,4 +76,10 @@ jobs:
       target_dir: site
       ref: ${{ needs.resolve.outputs.ref }}
       data_ref: main
-    secrets: inherit
+    secrets:
+      # #1137: `inherit` をやめ、DEPLOY_* 4 件を名指しで渡す。`inherit` だと
+      # `FORBIDDEN_PATTERNS` や将来増える secret も呼び先の全 job に流れ込む。
+      DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+      DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
