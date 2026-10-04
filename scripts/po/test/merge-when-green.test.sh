@@ -3633,13 +3633,22 @@ EOF
   # **`docker-web` は「必須でない赤」として数える**（緑に混ぜない）
   assert_contains "$ERR" "docker-web" "巻き添えの skipped も赤として出す"
   # **`issue-secrets` は赤に入らない**（正当な skip なので緑のまま）
-  # **必須は 6 件**（5 件ではない）。**`issue-secrets` は REQUIRED_CHECKS にも
-  # NONREQUIRED_CHECKS にも無いので、`is_required_check` の fail-closed で必須に数えられる**
-  # ——**これは #1069 の前からそうで、この PR は変えていない**（`--allow-nonrequired-red` の
-  # 扱いに関わるので、**測った値をそのまま書く**。予想は 5 件で、外れた）。
-  # **害は無い**（緑を赤にする向きなので、誤ってマージする側には倒れない）が、
-  # **毎 PR で「知らない検査があります」と鳴る**。**#1069 の範囲外なので触らない。**
-  assert_contains "$OUT$ERR" "検査 7 件 / 必須 6 件 / 赤 2 件" "issue-secrets は赤に数えない（赤は check と docker-web の 2 件）"
+  #
+  # **#1180 で 6 件 → 5 件になった**（**この数字が動いたこと自体が #1180 の成果である**）。
+  # **#1069 のときはこう書いてあった**（逐語で残す。**測った値を書き換えずに、
+  # なぜ動いたかを足す**）:
+  #   > **必須は 6 件**（5 件ではない）。**`issue-secrets` は REQUIRED_CHECKS にも
+  #   > NONREQUIRED_CHECKS にも無いので、`is_required_check` の fail-closed で必須に数えられる**
+  #   > ——**これは #1069 の前からそうで、この PR は変えていない**（予想は 5 件で、外れた）。
+  #   > **害は無い**（緑を赤にする向きなので、誤ってマージする側には倒れない）が、
+  #   > **毎 PR で「知らない検査があります」と鳴る**。**#1069 の範囲外なので触らない。**
+  #
+  # **#1180 が `PR_GATED_CHECKS` を足して、その「範囲外」を閉じた。**
+  # **`issue-secrets` は skipped（＝走る対象ではなかった）なので母数に数えない**
+  # ——**#1069 自身が引いた #757 の原則（`skipped` は「問題なし」ではなく「数えていない」）が、
+  # 母数の側にも効くようになった。** **数えていないものを、数えた件数に混ぜない。**
+  # **赤ければ従来どおり数えて止める**（`t_1180_pr_skipped_box_is_not_a_bypass`）。
+  assert_contains "$OUT$ERR" "検査 7 件 / 必須 5 件 / 赤 2 件" "issue-secrets は赤にも母数にも数えない（赤は check と docker-web の 2 件）"
   assert_not_contains "$LOG" "pr	merge	12" "マージを試みない"
 }
 test_case "1069: docker-web の skipped は緑にしない（上流の赤の巻き添え）" t_1069_docker_web_skip_not_green
@@ -4699,3 +4708,166 @@ t_1162_split_denominator_is_pinned() {
 }
 test_case "1162: 割った母数を固定する（必須 6 件 / 必須でない 2 件・値として照合）" \
   t_1162_split_denominator_is_pinned
+
+# --- #1180: 毎回鳴る「知らない検査」を黙らせる ------------------------------------------------
+#
+# **実測（PO、2026-10-03 と 10-04 で合計 4 回）**: マージのたびに必ずこう鳴っていた。
+#   note: 知らない検査があります（必須として扱います。REQUIRED_CHECKS / NONREQUIRED_CHECKS に
+#   足してください）: issue-secrets stale-base-net-deletions
+#
+# **毎回・必ず鳴る警告は読まれなくなる**ので、**本当に新しい job が増えたときの同じ文面が
+# 埋もれる**。#1185（93 時間正しく鳴っていた監視を誰も見なかった）の前段階そのものである。
+#
+# **fixture は作り物ではない**——**PR #1187 の HEAD（8f95ff3a）の check-runs API の応答を
+# そのまま写した 9 件**である（実測 2026-10-04。`conclusion` もそのまま）。
+#
+# **`issue-secrets` を `NONREQUIRED_CHECKS` に入れて黙らせてはいけない**（受け入れ条件 2）。
+# そちらは**「赤いが人が読んで通してよい」**の意味で、`--allow-nonrequired-red` の抜け道が
+# 広がる。**`issue-secrets` はそういうものではない**——**PR では構造的に走らない**
+# （`security.yml` の `if:` が `github.event_name` で閉じている）。
+# **性質が違うものを同じ箱に入れると、箱の意味が薄まる。** 第 3 の箱に入れる。
+t_1180_real_world_check_set_is_quiet() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[
+      {"name":"audit","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"check","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"docker-web","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"forbidden-patterns","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"gitleaks","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"issue-secrets","status":"completed","conclusion":"skipped","started_at":"t1"},
+      {"name":"pr-closes","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"stale-base","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"stale-base-net-deletions","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "本番どおりの顔ぶれならマージする: $ERR"
+  # **受け入れ条件 1**: どちらの名前でも鳴らない。
+  assert_not_contains "$ERR" "知らない検査があります" "本番の 9 件（実測）で黙っている"
+  assert_not_contains "$ERR" "issue-secrets stale-base-net-deletions" "観測された文面そのものが出ない"
+}
+test_case "1180: 本番の check-runs 9 件（PR #1187 の実測）で「知らない検査」を言わない" \
+  t_1180_real_world_check_set_is_quiet
+
+# **受け入れ条件 2**: **`issue-secrets` を「必須」として扱っていない。**
+#
+# **これは文面の問題ではなく、数の問題である。** `is_required_check` は
+# 「どちらの配列にも無い → 必須」(fail-closed) なので、**`issue-secrets` はこれまで
+# 必須に数えられていた**（#1069 が実測して「範囲外なので触らない」と書き残している:
+# `assert_contains "$OUT$ERR" "検査 7 件 / 必須 6 件 / 赤 2 件"` の 6 件がそれ）。
+#
+# **「必須」は「赤ければ絶対にマージしない」の意味で、`issue-secrets` にそれを言うのは誤り**
+# ——**PR では構造的に走らないので、赤くなりようがない。**
+# **母数の行に出る「必須 N 件」で見る**（#757: 数で見る。文面だけだと数え落としが見えない）。
+t_1180_issue_secrets_is_not_counted_as_required() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[
+      {"name":"check","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"gitleaks","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"forbidden-patterns","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"audit","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"pr-closes","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"stale-base","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"issue-secrets","status":"completed","conclusion":"skipped","started_at":"t1"},
+      {"name":"docker-web","status":"completed","conclusion":"failure","started_at":"t1","details_url":"u-dw"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh --allow-nonrequired-red 12
+  assert_eq 0 "$STATUS" "必須でない docker-web だけが赤ならフラグで通る: $ERR"
+  # **検査 8 件 / 必須 6 件**（check gitleaks forbidden-patterns audit pr-closes stale-base）。
+  # **`issue-secrets` は必須に数えない**——数えていたら 7 件になる。
+  assert_contains "$OUT$ERR" "検査 8 件 / 必須 6 件 / 赤 1 件" \
+    "issue-secrets を必須に数えない（数えていれば必須 7 件になる）"
+}
+test_case "1180: issue-secrets を「必須」として扱わない（母数の数で見る）" \
+  t_1180_issue_secrets_is_not_counted_as_required
+
+# **受け入れ条件 2 の裏**: **第 3 の箱は `--allow-nonrequired-red` の抜け道を広げない。**
+#
+# **`issue-secrets` を `NONREQUIRED_CHECKS` に入れて黙らせる実装**なら、この検査は緑になる
+# ——だから**この 1 本が「楽な直し方」を殺す。**
+# **`issue-secrets` が本当に赤く（failure）なったら、それは「PR では走らないはず」の前提が
+# 崩れているということ**なので、**フラグでも通してはいけない。**
+t_1180_pr_skipped_box_is_not_a_bypass() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[
+      {"name":"check","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"gitleaks","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"forbidden-patterns","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"audit","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"pr-closes","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"stale-base","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"issue-secrets","status":"completed","conclusion":"failure","started_at":"t1","details_url":"u-is"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh --allow-nonrequired-red 12
+  assert_eq 1 "$STATUS" "issue-secrets が本当に赤いならフラグでも通らない（前提が崩れている）"
+  assert_contains "$ERR" "--allow-nonrequired-red では通せません" "フラグでは通せないと言う"
+  assert_contains "$ERR" "issue-secrets" "名指しする"
+  assert_not_contains "$LOG" $'pr\tmerge' "マージを試みない"
+}
+test_case "1180: PR では走らないはずの検査が本当に赤いなら、フラグでも通らない" \
+  t_1180_pr_skipped_box_is_not_a_bypass
+
+# **#1180 のやること 3（PO のコメントで新しく分かったこと）**:
+# **paths 限定の guard も、その paths を触る PR では check-run として現れる。**
+#
+# **実測（2026-10-04、PR #1150 の HEAD c0506cbe）**: `.github/workflows/scrum-monitor.yml` と
+# `scripts/po/scrum-monitor.sh` を触った PR で、**`monitor` という check-run が success で出た。**
+# 直近 60 件のマージ済み PR のうち、guard の paths を触ったのは**この 1 件だけ**なので、
+# **`issue-secrets` のように毎回は鳴らないが、鳴るときは確実に鳴る。**
+#
+# **しかも害は警告だけではない**: `monitor` はどちらの配列にも無いので
+# **fail-closed で「必須」に数えられる**——**paths 限定の guard が赤いと、
+# `--allow-nonrequired-red` でも通せなくなる。** これらの guard は
+# `packages/etl/test/branch-protection-jobs.test.ts` の `EXEMPT_FROM_REQUIRED` が
+# **「必須にしてはいけない」と明記している job** である（必須にすると全 PR が詰まる）。
+# **2 つのファイルが逆のことを言っている。**
+t_1180_paths_gated_guards_are_known() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[
+      {"name":"audit","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"check","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"docker-web","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"forbidden-patterns","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"gitleaks","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"issue-secrets","status":"completed","conclusion":"skipped","started_at":"t1"},
+      {"name":"monitor","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"pr-closes","status":"completed","conclusion":"success","started_at":"t1"},
+      {"name":"stale-base","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 0 "$STATUS" "マージする: $ERR"
+  assert_not_contains "$ERR" "知らない検査があります" "PR #1150 の実測の顔ぶれでも黙っている"
+}
+test_case "1180: paths 限定の guard が現れる PR（#1150 の実測）でも「知らない検査」を言わない" \
+  t_1180_paths_gated_guards_are_known
