@@ -442,6 +442,19 @@ describe("dropCarriedCommitteeRoles: 取得した委員会名簿と同じ行の�
     assert.deepEqual(dropCarriedCommitteeRoles(carried, fetched), carried);
   });
 
+  // **meetingId が同一性の鍵に入っていること。**
+  // **#1190 の変異 K（鍵から meetingId を抜く）が、これが無いと 0 fail で生き残った。**
+  // 同じ議員・同じ回次・同じ委員会でも、**会議録が違えば別の行**（#1175 と同じ鍵）。
+  test("会議録が違えば落とさない（memberId・回次・委員会が同じでも meetingId が別なら別の行）", () => {
+    const carried: CarriedEntry[] = [{ memberId: "h_1", entry: roleEntry("122104601X00120260303_000", 221, "総務委員会") }];
+    const fetched = [fetchedRole("122104601X00220260310_000", 221, "総務委員会", "h_1")];
+    assert.deepEqual(
+      dropCarriedCommitteeRoles(carried, fetched),
+      carried,
+      "meetingId が鍵に入っていないと、別の会議の行まで落ちる",
+    );
+  });
+
   test("取得が空なら引き継ぎ行はそのまま（取り漏れで既存の役職を消さない）", () => {
     const carried: CarriedEntry[] = [{ memberId: "h_1", entry: roleEntry("122104601X00120260303_000", 221, "総務委員会") }];
     assert.deepEqual(dropCarriedCommitteeRoles(carried, []), carried);
