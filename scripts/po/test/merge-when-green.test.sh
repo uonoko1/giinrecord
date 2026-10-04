@@ -4871,3 +4871,36 @@ EOF
 }
 test_case "1180: paths 限定の guard が現れる PR（#1150 の実測）でも「知らない検査」を言わない" \
   t_1180_paths_gated_guards_are_known
+
+# **#1180 × #1093 の噛み合わせ**: **`PR_GATED_CHECKS` を母数から引いた結果、
+# 必須が 0 件になったら、それは「全部緑」ではなく「数えていない」である。**
+#
+# **レビューで指摘された形**（#1056 の型）: **この PR は `required_total` を**
+# **減らす向きに変える**ので、**減らした結果 0 件になる経路**を作っていないかを確かめる。
+# **`issue-secrets` と `guard` しか返ってこない応答**（`--paginate` の欠落や、
+# workflow の改名で必須 job が丸ごと消えた場合に起こりうる）で、**マージしてはいけない。**
+#
+# **#1093 の `required_total -eq 0` が受け止める**——**この検査は、その守りが
+# #1180 の変更後も効いていることを固定する**（**減らす変更を入れた人が、
+# 減らした先に穴が無いことを示す**）。
+t_1180_only_gated_checks_is_not_green() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*) echo '{"check_runs":[
+      {"name":"issue-secrets","status":"completed","conclusion":"skipped","started_at":"t1"},
+      {"name":"guard","status":"completed","conclusion":"success","started_at":"t1"}]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  run_script "$h" merge-when-green.sh 12
+  assert_eq 1 "$STATUS" "必須が 0 件ならマージしない（「全部緑」ではなく「数えていない」）"
+  assert_contains "$ERR" "必須の検査が 1 件も見つかりません" "数えていないと言う（#1093）"
+  assert_not_contains "$LOG" $'pr\tmerge' "マージを試みない"
+}
+test_case "1180: PR で走らない検査しか返ってこなければ「必須 0 件」で止まる（母数を減らした先に穴が無い）" \
+  t_1180_only_gated_checks_is_not_green
