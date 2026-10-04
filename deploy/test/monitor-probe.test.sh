@@ -29,6 +29,11 @@ done
 #                      ("$SPA_FALLBACK" emulates nginx's /__spa-fallback.html — the body nginx now serves for an
 #                       unknown path; #325 made that a **404**, so pair it with H_CODE_ASSEMBLY=404)
 #   H_OPEN             JSON array gh returns for the open-issue search;  H_CURL_EXIT  make curl fail outright
+#                      #1185: the objects may carry createdAt / labels / comments, which is how report.sh learns
+#                      how long the Issue has been open and how many rounds already reported into it
+#   H_MAIN_META        body served for the raw main data/meta.json (#1185); H_MAIN_CODE its HTTP status
+#   H_MAIN_URL_BASE    where probe.sh is told to read main from (the tests point it at the stubbed curl)
+#   H_RUNS             JSON gh returns for the deploy-data.yml run list (#1185); H_RUNS_EXIT makes gh fail
 cat > "$TMP/handler" <<'H'
 #!/usr/bin/env bash
 cmd=$1; shift
@@ -53,6 +58,9 @@ case "$cmd" in
     # -K <file>: keep a copy of the curl config (mode + content) — probe.sh deletes it on exit
     for ((i=1;i<=$#;i++)); do [[ "${!i}" == "-K" ]] && { j=$((i+1)); { stat -c %A "${!j}"; cat "${!j}"; } > "$STUB_LOG.curlrc"; }; done
     case "$url" in
+      # #1185: main's own data/meta.json, read over https from the repository host. It is a DIFFERENT origin from
+      # the site, so it gets its own case — matched before the site's /data/meta.json below.
+      *main-meta*)      printf '%s' "${H_MAIN_META-$(printf '{"fetchedAt": "%s"}' "$(date -u +%Y-%m-%dT%H:%M:%SZ)")}" > "$out"; printf '%s' "${H_MAIN_CODE:-200}" ;;
       */data/meta.json) printf '{\n "fetchedAt": "%s",\n "sources": [{"fetchedAt": "2020-01-01T00:00:00Z"}]\n}\n' "${H_FETCHED_AT:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}" > "$out"; printf '%s' "${H_CODE_META:-200}" ;;
       */assemblies/)    assembly_list_html > "$out"; printf '%s' "${H_CODE_ASSEMBLIES:-200}" ;;
       */assemblies/*)   # a real assembly page names itself and carries the site name in its <title>
@@ -70,14 +78,33 @@ case "$cmd" in
     if [[ "$1" == x509 ]]; then echo "notAfter=${H_NOT_AFTER-$(LC_ALL=C date -u -d '+60 days' '+%b %d %H:%M:%S %Y GMT')}"; fi ;;
   gh)
     case "$1 $2" in
-      "issue list")   # emulate gh's --jq: the number of the open issue whose title equals $TITLE (exported by report.sh)
+      "issue list")   # emulate gh's --jq: the open Issue whose title equals $TITLE (exported by report.sh).
+        # #1185: report.sh now needs more than the number (createdAt, labels, comment count), so the stub answers
+        # one TSV line "<number> <createdAt> <labels,…> <comments>" — the same fields the real --jq produces.
+        # #1185: the real --jq strips report.sh's escalation suffix before comparing, so that a retitled
+        # Issue is still recognised as the same one. **The stub must do the same split**, or the test for
+        # "a retitled Issue is not created again" would pass only because the fixture compares exactly.
         python3 -c 'import json,os,sys
-m=[i["number"] for i in json.loads(sys.argv[1]) if i["title"]==os.environ.get("TITLE")]
-print(m[0]) if m else None' "${H_OPEN:-[]}" ;;
+sep=os.environ.get("SUFFIX_SEP"," \u2014 ")
+want=os.environ.get("TITLE")
+m=[i for i in json.loads(sys.argv[1]) if i["title"].split(sep)[0]==want]
+if m:
+    i=m[0]
+    print("\t".join([str(i["number"]), i.get("createdAt",""),
+                     ",".join(l["name"] for l in i.get("labels",[])), str(i.get("comments",0))]))' "${H_OPEN:-[]}" ;;
+      "issue edit")   ;;
+      "run list")     # deploy-data.yml run history (#1185)
+        [ -n "${H_RUNS_EXIT:-}" ] && exit "$H_RUNS_EXIT"
+        printf '%s' "${H_RUNS:-[]}" ;;
       "issue create")   # keep a copy of the body (run.sh deletes its temp files on exit)
         for ((i=1;i<=$#;i++)); do [[ "${!i}" == "--body-file" ]] && { j=$((i+1)); cat "${!j}" >> "$STUB_LOG.body"; }; done
         echo "https://github.com/example/repo/issues/99" ;;
-      "issue close"|"issue comment"|"label create") ;;
+      "issue comment")  # #1185: keep a copy of the escalation comment body (report.sh deletes its temp file)
+        # **末尾に `true` が要る**: `for` の最後の反復で `[[ ]]` が偽だと `$?` が 1 のまま残り、
+        # **stub が exit 1 を返して report.sh の `set -e` を落とす**（実測でここに踏んだ。
+        # 「実装が壊れている」ように見えるが fixture の側だった）。
+        for ((i=1;i<=$#;i++)); do [[ "${!i}" == "--body-file" ]] && { j=$((i+1)); cat "${!j}" >> "$STUB_LOG.comment"; }; done; true ;;
+      "issue close"|"label create") ;;
     esac ;;
   sleep) ;;
 esac
@@ -90,15 +117,18 @@ assert_contains() { [[ "$1" == *"$2"* ]] || fail "$3: expected to contain [$2] i
 assert_not_contains() { [[ "$1" != *"$2"* ]] || fail "$3: expected NOT to contain [$2] in: $1"; }
 
 fresh() {
-  P="$TMP/$1"; mkdir -p "$P"; LOG="$P/stub.log"; : > "$LOG"; rm -f "$LOG.body" "$LOG.curlrc"
+  P="$TMP/$1"; mkdir -p "$P"; LOG="$P/stub.log"; : > "$LOG"; rm -f "$LOG.body" "$LOG.curlrc" "$LOG.comment"
   export STUB_LOG="$LOG" STUB_HANDLER="$TMP/handler"
   unset H_CODE_ROOT H_CODE_MEMBERS H_CODE_META H_TITLE H_FETCHED_AT H_NOT_AFTER H_OPEN H_CURL_EXIT
   unset H_CODE_ASSEMBLIES H_CODE_ASSEMBLY H_IDS H_ASSEMBLY_BODY PROBE_ASSEMBLY_SAMPLE PROBE_NOW
+  unset H_MAIN_META H_MAIN_CODE H_MAIN_URL_BASE H_RUNS H_RUNS_EXIT
+  unset MONITOR_ESCALATE_HOURS PROBE_MAIN_META_URL PROBE_DEPLOY_LAG_MINUTES
   unset CF_ACCESS_CLIENT_ID CF_ACCESS_CLIENT_SECRET MONITOR_REQUIRE_CF_ACCESS
 }
 run_probe()  { PATH="$BIN:$PATH" bash "$MON/probe.sh" "$@" > "$P/out" 2>&1; }
 run_report() { PATH="$BIN:$PATH" bash "$MON/report.sh" "$@" > "$P/out" 2>&1; }
 run_run()    { PATH="$BIN:$PATH" bash "$MON/run.sh" "$@" > "$P/out" 2>&1; }
+run_deploy_started() { PATH="$BIN:$PATH" bash "$MON/deploy-started.sh" "$@" > "$P/out" 2>&1; }
 
 test_case() {
   local name=$1; shift; CURRENT_FAILED=0
@@ -106,7 +136,7 @@ test_case() {
   if [[ $CURRENT_FAILED == 0 ]]; then PASS=$((PASS+1)); echo "ok   $name"; else FAIL=$((FAIL+1)); echo "FAIL $name"; fi
 }
 
-t_syntax() { for s in probe report run; do bash -n "$MON/$s.sh" || fail "bash -n $s"; done; }
+t_syntax() { for s in probe report run deploy-started; do bash -n "$MON/$s.sh" || fail "bash -n $s"; done; }
 
 # ---- probe.sh ----
 t_probe_ok() {
@@ -441,6 +471,243 @@ H
   assert_not_contains "$(cat "$LOG")" "gh issue create" "not reported"
 }
 
+# ---- report.sh: escalation while the failure continues (#1185) ----
+# 実測（#1185）: `[monitor] production: data` は 2026-10-02T06:20Z に立ち、2026-10-03T22:14Z に閉じた
+# ——**39 時間開いていて、そのあいだ監視からのコメントは 0 件**だった（`gh issue view 1172` の
+# comments は 3 件で、3 件とも PO か「Recovered」）。**監視は 10 分ごとに正しく鳴っていた**が、
+# 鳴った先は Actions のログで、**Issue を見ただけでは 1 回目か 50 回目か分からなかった。**
+# だからここでは「同名が開いている」を**黙って終わらせない**。
+MIN_AGO() { date -u -d "-$1 minutes" +%Y-%m-%dT%H:%M:%SZ; }
+HOURS_AGO() { date -u -d "-$1 hours" +%Y-%m-%dT%H:%M:%SZ; }
+
+t_report_repeat_comments_elapsed() {
+  fresh r_elapsed
+  echo "reason body" > "$P/body"
+  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(MIN_AGO 30)\",\"comments\":0}]" \
+    run_report "[monitor] production: data" fail "$P/body" || fail "exit $? $(cat "$P/out")"
+  local log; log=$(cat "$LOG")
+  assert_not_contains "$log" "gh issue create" "まだ同じ Issue（作り直さない）"
+  assert_contains "$log" "gh issue comment 5" "開いている Issue に経過を書く"
+}
+# **経過時間が本文に数字で出ること。** 「93h old」は probe の理由行に在ったが、
+# **Issue 側には出ていなかった**（#1185 の受け入れ条件 1）。
+t_report_repeat_body_has_elapsed_hours() {
+  fresh r_elapsed_body
+  echo "fetchedAt 93h old (limit 48h)" > "$P/body"
+  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(HOURS_AGO 7)\",\"comments\":4}]" \
+    run_report "[monitor] production: data" fail "$P/body" || fail "exit $? $(cat "$P/out")"
+  [ -f "$LOG.comment" ] || { fail "コメント本文が採れていない"; return; }
+  local c; c=$(cat "$LOG.comment")
+  assert_contains "$c" "7h" "経過時間が時間で出る"
+  assert_contains "$c" "93h old" "いまの理由も出る（1 回目の理由のままにしない）"
+}
+# **閾値を越えたら扱いが変わること**（受け入れ条件 1）。選んだのは
+#   (a) タイトルの先頭に経過を出す  (b) ラベル `escalated` を足す
+# **両方**にしたのは、**どちらも「Issue の一覧」で見える**から。本文の先頭だけだと
+# **一覧では区別が付かず、1172 が 39 時間見られなかった形がそのまま残る。**
+t_report_escalates_past_threshold() {
+  fresh r_esc
+  echo "body" > "$P/body"
+  MONITOR_ESCALATE_HOURS=6 \
+  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(HOURS_AGO 7)\",\"comments\":4}]" \
+    run_report "[monitor] production: data" fail "$P/body" || fail "exit $? $(cat "$P/out")"
+  local log; log=$(cat "$LOG")
+  assert_contains "$log" "gh issue edit 5" "扱いが変わる（edit される）"
+  assert_contains "$log" "--add-label" "ラベルが足される"
+  assert_contains "$log" "escalated" "ラベル名 escalated"
+  assert_contains "$log" "--title" "タイトルも変わる"
+  assert_contains "$log" "7h" "タイトルに経過が入る（一覧で見える）"
+}
+# **閾値の手前では扱いを変えない**（鳴り始めた瞬間に escalated にしてしまうと、
+# **escalated が常態になって意味を失う**）。
+t_report_does_not_escalate_before_threshold() {
+  fresh r_noesc
+  echo "body" > "$P/body"
+  MONITOR_ESCALATE_HOURS=6 \
+  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(HOURS_AGO 2)\",\"comments\":1}]" \
+    run_report "[monitor] production: data" fail "$P/body" || fail "exit $? $(cat "$P/out")"
+  local log; log=$(cat "$LOG")
+  assert_not_contains "$log" "gh issue edit" "まだ扱いは変えない"
+  assert_contains "$log" "gh issue comment 5" "でも経過は書く（黙らない）"
+}
+# **一度 escalated にしたら、以後の round で edit を繰り返さない**
+# （10 分ごとに title を書き換えると通知が 6 回/時 鳴り、**読まれなくなる**——#1185 の本体が
+#  「鳴っていたのに読まれない」なので、ここで同じ穴を作らない）。
+t_report_escalates_only_once() {
+  fresh r_esc_once
+  echo "body" > "$P/body"
+  MONITOR_ESCALATE_HOURS=6 \
+  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(HOURS_AGO 9)\",\"comments\":8,\"labels\":[{\"name\":\"monitor\"},{\"name\":\"escalated\"}]}]" \
+    run_report "[monitor] production: data" fail "$P/body" || fail "exit $? $(cat "$P/out")"
+  assert_not_contains "$(cat "$LOG")" "gh issue edit" "すでに escalated なら edit しない"
+}
+# **既に escalated なタイトルでも同一性が壊れないこと。** タイトルを書き換える設計なので、
+# **書き換えた後に同名検索が効かなくなると Issue が増殖する**（1 回の障害で 100 本立つ）。
+# だから検索は**接尾辞を剥がした素のタイトル**で突き合わせる。
+t_report_finds_the_issue_after_the_title_changed() {
+  fresh r_esc_find
+  echo "body" > "$P/body"
+  MONITOR_ESCALATE_HOURS=6 \
+  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data — 9h 継続\",\"createdAt\":\"$(HOURS_AGO 9)\",\"comments\":8,\"labels\":[{\"name\":\"escalated\"}]}]" \
+    run_report "[monitor] production: data" fail "$P/body" || fail "exit $? $(cat "$P/out")"
+  assert_not_contains "$(cat "$LOG")" "gh issue create" "改題した自分の Issue をもう一度立てない"
+}
+# **復旧したら escalated を落として閉じる**（次の障害が escalated で始まってはいけない）。
+t_report_ok_removes_escalated_label() {
+  fresh r_esc_clear
+  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data — 9h 継続\",\"createdAt\":\"$(HOURS_AGO 9)\",\"labels\":[{\"name\":\"escalated\"}]}]" \
+    run_report "[monitor] production: data" ok || fail "exit $? $(cat "$P/out")"
+  local log; log=$(cat "$LOG")
+  assert_contains "$log" "gh issue close 5" "閉じる"
+  assert_contains "$log" "--remove-label" "escalated を外す"
+}
+# 本文にサーバー情報を入れない（OSS）
+t_report_escalation_comment_has_no_paths() {
+  fresh r_esc_safe
+  echo "fetchedAt 93h old" > "$P/body"
+  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(HOURS_AGO 7)\",\"comments\":4}]" \
+    run_report "[monitor] production: data" fail "$P/body" || fail "exit $?"
+  [ -f "$LOG.comment" ] || { fail "no comment body"; return; }
+  assert_not_contains "$(cat "$LOG.comment")" "$TMP" "ローカルパスを出さない"
+}
+
+# ---- probe.sh: main も古いのか、main は新しいのに出ていないのか (#1185 受け入れ条件 2) ----
+# 実測（#1185）: 2026-10-03T22:00Z の本番は fetchedAt 2026-09-29T23:59:47Z（94h）で、
+# **main も同じ 2026-09-29T23:59:47Z だった**（`git show 99dac9d7:data/meta.json`）。
+# つまり今回は **「main も古い」= ETL が止まっていた**側で、deploy は毎日 success していた。
+# **報告がどちら側か言えなければ、PO は毎回両方を調べ直すことになる。**
+t_probe_data_says_main_is_stale_too() {
+  fresh p_main_stale
+  local old; old="$(date -u -d '-90 hours' +%Y-%m-%dT%H:%M:%S.000Z)"
+  H_FETCHED_AT="$old" H_MAIN_META="{\"fetchedAt\": \"$old\"}" \
+    PROBE_MAIN_META_URL="https://example.invalid/main-meta" run_probe https://giinrecord.jp && fail "expected non-zero"
+  local out; out=$(cat "$P/out")
+  assert_contains "$out" "fail data" "data が fail"
+  assert_contains "$out" "main も古い" "どちら側かを名指しする"
+}
+t_probe_data_says_main_is_fresh_but_undeployed() {
+  fresh p_main_fresh
+  H_FETCHED_AT="$(date -u -d '-90 hours' +%Y-%m-%dT%H:%M:%S.000Z)" \
+  H_MAIN_META="{\"fetchedAt\": \"$(date -u -d '-1 hours' +%Y-%m-%dT%H:%M:%S.000Z)\"}" \
+    PROBE_MAIN_META_URL="https://example.invalid/main-meta" run_probe https://giinrecord.jp && fail "expected non-zero"
+  local out; out=$(cat "$P/out")
+  assert_contains "$out" "fail data" "data が fail"
+  assert_contains "$out" "main は新しい" "deploy 側だと名指しする"
+  assert_not_contains "$out" "main も古い" "ETL 側と言わない"
+}
+# **取れなかったときに「古くない」と解釈しないこと**（#1056 / 受け入れ条件 2）。
+# **これがこの設計の一番危ない所**: main を読めないときに黙って従来どおりに倒すと、
+# **区別する機能が無言で死んでいても誰も気づかない**（#1185 そのものの型）。
+t_probe_main_unreadable_is_reported_as_unmeasured() {
+  fresh p_main_down
+  H_FETCHED_AT="$(date -u -d '-90 hours' +%Y-%m-%dT%H:%M:%S.000Z)" H_MAIN_CODE=503 \
+    PROBE_MAIN_META_URL="https://example.invalid/main-meta" run_probe https://giinrecord.jp && fail "expected non-zero"
+  local out; out=$(cat "$P/out")
+  assert_contains "$out" "fail data" "data は fail のまま"
+  assert_contains "$out" "main を読めなかった" "測れなかったと書く"
+  assert_not_contains "$out" "main も古い" "読めなかったのに ETL 側と断定しない"
+  assert_not_contains "$out" "main は新しい" "読めなかったのに deploy 側と断定しない"
+}
+# **本番が健康なときは main を読まない。** 10 分ごとに外部へ 1 要求増やす理由が無く、
+# **読みに行く先が落ちているだけで監視が赤くなる**のは避ける（この経路は fail 時の切り分け専用）。
+t_probe_does_not_read_main_when_production_is_fresh() {
+  fresh p_main_quiet
+  PROBE_MAIN_META_URL="https://example.invalid/main-meta" run_probe https://giinrecord.jp || fail "exit $? $(cat "$P/out")"
+  assert_not_contains "$(cat "$LOG")" "main-meta" "健康なら main は読まない"
+}
+# main 側の fetchedAt が壊れていても「古くない」にしない
+t_probe_main_meta_unparseable_is_unmeasured() {
+  fresh p_main_bad
+  H_FETCHED_AT="$(date -u -d '-90 hours' +%Y-%m-%dT%H:%M:%S.000Z)" H_MAIN_META='{"fetchedAt": "not-a-date"}' \
+    PROBE_MAIN_META_URL="https://example.invalid/main-meta" run_probe https://giinrecord.jp && fail "expected non-zero"
+  assert_contains "$(cat "$P/out")" "main を読めなかった" "読めたが解釈できない＝測れていない"
+}
+# **main を読む先が設定されていなければ、黙って従来どおり**（env が無い環境＝手元の probe.sh で
+# 振る舞いが変わらないこと）。ただし**その場合も「区別していない」と書く**。
+t_probe_without_main_url_still_fails_data() {
+  fresh p_main_unset
+  H_FETCHED_AT="$(date -u -d '-90 hours' +%Y-%m-%dT%H:%M:%S.000Z)" run_probe https://giinrecord.jp && fail "expected non-zero"
+  local out; out=$(cat "$P/out")
+  assert_contains "$out" "fail data" "data は fail"
+  assert_not_contains "$(cat "$LOG")" "main-meta" "設定が無ければ読まない"
+}
+# 理由にサーバー情報が出ない
+t_probe_main_reason_has_no_server_details() {
+  fresh p_main_safe
+  H_FETCHED_AT="$(date -u -d '-90 hours' +%Y-%m-%dT%H:%M:%S.000Z)" H_MAIN_CODE=503 \
+    PROBE_MAIN_META_URL="https://example.invalid/main-meta" run_probe https://giinrecord.jp && true
+  assert_not_contains "$(cat "$P/out")" "example.invalid" "読んだ URL を理由に出さない"
+}
+
+# ---- deploy-started.sh: data/ が main に入ったのに deploy が始まらなかった (#1185 受け入れ条件 3) ----
+# **N = 30 分**にした根拠（実測。母数つき）:
+#   `gh run list --workflow deploy-data.yml --limit 300` の **98 run**（2026-08-23T15:30Z〜2026-10-04T01:40Z）と、
+#   同じ窓の origin/main で `data/` を触った **79 コミット**を突き合わせ、各コミットから**次に始まった
+#   deploy-data run まで**の分を数えた。**79 本すべてに後続 run が在った。**
+#     bot の `data:` コミット   母数 52 本  **49 本が 0.03〜0.42 分**、残り 3 本が 251.9 / 335.8 / 650.6 分
+#     人のマージ（data: 以外） 母数 27 本  p50 339.3 / p90 1127.5 / max 1367.3 分
+#   **bot 側は 0.42 分と 251.9 分のあいだが空っぽ**（1/2/5/10/15/30/60/120 分のどの境でも 49/52 のまま）。
+#   **30 分はその空白の中に在るので、どこに置いても同じ 49/52 を分ける。**
+#   **人のマージは対象にしない**（dispatch する設計がそもそも無く、cron 待ちが正常。
+#   27 本中 24 本が 30 分超なので、含めれば常時鳴る）。
+t_deploy_started_ok_when_a_run_followed() {
+  fresh ds_ok
+  H_RUNS="[{\"createdAt\":\"$(MIN_AGO 3)\"}]" \
+    run_deploy_started "$(MIN_AGO 10)" || fail "exit $? $(cat "$P/out")"
+  assert_contains "$(cat "$P/out")" "ok deploy" "コミットの後に run が在れば ok"
+}
+# **今回の形**: data/ が入ったのに N 分以内に run が 1 本も無い
+t_deploy_started_fails_when_no_run_followed() {
+  fresh ds_none
+  H_RUNS="[{\"createdAt\":\"$(MIN_AGO 600)\"}]" \
+    run_deploy_started "$(MIN_AGO 90)" && fail "expected non-zero"
+  local out; out=$(cat "$P/out")
+  assert_contains "$out" "fail deploy" "fail になる"
+  assert_contains "$out" "90" "何分経ったかを数字で出す"
+}
+# **N の手前では鳴らない**（0.42 分で始まるのが常態なので、30 分の手前で鳴らせば常時赤になる）
+t_deploy_started_quiet_inside_the_window() {
+  fresh ds_window
+  H_RUNS='[]' PROBE_DEPLOY_LAG_MINUTES=30 \
+    run_deploy_started "$(MIN_AGO 10)" || fail "10 分はまだ窓の中: $(cat "$P/out")"
+  assert_contains "$(cat "$P/out")" "ok deploy" "窓の中は ok"
+}
+# **run を数えられなかったら「始まった」にしない**（#1056。gh が落ちた・権限が無い・
+# レートに当たった、のいずれでも「異常なし」と言ってはいけない）
+t_deploy_started_gh_failure_is_unmeasured() {
+  fresh ds_gh
+  H_RUNS_EXIT=1 run_deploy_started "$(MIN_AGO 90)" && fail "expected non-zero"
+  local out; out=$(cat "$P/out")
+  assert_contains "$out" "測れなかった" "測れなかったと書く"
+  assert_not_contains "$out" "ok deploy" "測れていないのに ok にしない"
+}
+# **コミットが無い（data/ を触っていない）日は ok**。鳴らす理由が無い
+t_deploy_started_no_commit_is_ok() {
+  fresh ds_nocommit
+  H_RUNS='[]' run_deploy_started "" || fail "exit $? $(cat "$P/out")"
+  assert_contains "$(cat "$P/out")" "ok deploy" "data/ のコミットが無ければ ok"
+}
+# **コミット時刻が壊れていたら測れなかった扱い**（空文字＝無しとは区別する）
+t_deploy_started_bad_timestamp_is_unmeasured() {
+  fresh ds_badts
+  H_RUNS='[]' run_deploy_started "not-a-date" && fail "expected non-zero"
+  assert_contains "$(cat "$P/out")" "測れなかった" "解釈できない時刻は測れていない"
+}
+# **コミットより前の run を「後続」と数えない**（これを間違えると今回の 93 時間が
+# 「毎日 success だったので ok」になる——実測で deploy は毎日 success していた）
+t_deploy_started_ignores_runs_before_the_commit() {
+  fresh ds_before
+  H_RUNS="[{\"createdAt\":\"$(MIN_AGO 120)\"},{\"createdAt\":\"$(MIN_AGO 200)\"}]" \
+    run_deploy_started "$(MIN_AGO 90)" && fail "コミット前の run で ok にしてはいけない"
+  assert_contains "$(cat "$P/out")" "fail deploy" "前の run は後続ではない"
+}
+# 出力にサーバー情報・ローカルパスを出さない（OSS）
+t_deploy_started_output_has_no_paths() {
+  fresh ds_safe
+  H_RUNS='[]' run_deploy_started "$(MIN_AGO 90)" && true
+  assert_not_contains "$(cat "$P/out")" "$TMP" "ローカルパスを出さない"
+}
+
 test_case "monitor scripts: bash -n" t_syntax
 test_case "probe: 正常なら http/data/tls すべて ok、/ /members/ /data/meta.json と TLS を見る" t_probe_ok
 test_case "probe: /members/ が 502 なら http が fail（パスと status を理由に）" t_probe_http_status
@@ -482,6 +749,30 @@ test_case "run: 2 回連続で fail した check だけ Issue" t_run_reports_aft
 test_case "run: Issue 本文は環境名・理由・run へのリンクのみ（ローカルパス無し）" t_run_body_has_no_secrets_or_paths
 test_case "run: 2 回のラウンドは同じ議会ページを見る（巡回が途中でずれない・#248）" t_run_both_rounds_probe_the_same_assemblies
 test_case "run: 1 回だけの失敗は報告しない" t_run_transient_failure_not_reported
+
+test_case "report: 継続中は開いている Issue に経過をコメントする（黙って終わらない・#1185）" t_report_repeat_comments_elapsed
+test_case "report: コメント本文に経過時間と今の理由が数字で出る（#1185）" t_report_repeat_body_has_elapsed_hours
+test_case "report: 閾値を越えたら扱いが変わる（改題＋ラベル escalated・一覧で見える）" t_report_escalates_past_threshold
+test_case "report: 閾値の手前では扱いを変えない（でも経過は書く）" t_report_does_not_escalate_before_threshold
+test_case "report: 一度 escalated にしたら毎 round 改題しない（通知で埋もれさせない）" t_report_escalates_only_once
+test_case "report: 改題した後も同名検索が効き、Issue が増殖しない" t_report_finds_the_issue_after_the_title_changed
+test_case "report: 復旧時は escalated を外して閉じる（次の障害が escalated で始まらない）" t_report_ok_removes_escalated_label
+test_case "report: 継続コメントにローカルパスを出さない" t_report_escalation_comment_has_no_paths
+test_case "probe: 本番が古く main も古ければ『main も古い』（ETL 側・#1185）" t_probe_data_says_main_is_stale_too
+test_case "probe: 本番が古く main が新しければ『main は新しい』（deploy 側・#1185）" t_probe_data_says_main_is_fresh_but_undeployed
+test_case "probe: main を読めなければ『測れなかった』（古くないと解釈しない・#1056）" t_probe_main_unreadable_is_reported_as_unmeasured
+test_case "probe: 本番が健康なら main は読まない（要求を増やさない）" t_probe_does_not_read_main_when_production_is_fresh
+test_case "probe: main の fetchedAt が壊れていても『測れなかった』" t_probe_main_meta_unparseable_is_unmeasured
+test_case "probe: main の読み先が未設定でも data の fail は従来どおり" t_probe_without_main_url_still_fails_data
+test_case "probe: main 側の理由に URL やサーバー情報を出さない" t_probe_main_reason_has_no_server_details
+test_case "deploy-started: コミットの後に run が在れば ok（#1185）" t_deploy_started_ok_when_a_run_followed
+test_case "deploy-started: N 分以内に run が無ければ fail（経過を数字で）" t_deploy_started_fails_when_no_run_followed
+test_case "deploy-started: N 分の手前では鳴らない" t_deploy_started_quiet_inside_the_window
+test_case "deploy-started: run を数えられなければ『測れなかった』（ok にしない）" t_deploy_started_gh_failure_is_unmeasured
+test_case "deploy-started: data/ のコミットが無ければ ok" t_deploy_started_no_commit_is_ok
+test_case "deploy-started: コミット時刻が壊れていれば『測れなかった』" t_deploy_started_bad_timestamp_is_unmeasured
+test_case "deploy-started: コミットより前の run を後続と数えない（毎日 success でも fail）" t_deploy_started_ignores_runs_before_the_commit
+test_case "deploy-started: 出力にローカルパスを出さない" t_deploy_started_output_has_no_paths
 
 echo; echo "passed: $PASS  failed: $FAIL"
 [[ $FAIL == 0 ]]
