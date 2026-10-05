@@ -309,6 +309,10 @@ pr_section() {
   local list prs=0 red_prs=0 pending_prs=0 broken=0 runs_seen=0 runs_want=0
   # **`gh` の stderr を捨てずに受ける器**（#1210。ボードの節と同じ）。
   local gh_err_file gh_err gh_cls
+  # **`die` は exit 1 で、この道具の 0/2/3/4 のどれでもない。** **それでよい**（確かめた）:
+  # **`scrum-monitor-report.sh:133` が「知らない終了コードは測れていない」として Issue を立てる**
+  # ——**黙って緑にならない。** **`unmeasured` に落とさない理由**: `mktemp` が失敗する環境では
+  # 残りの節も測れないので、節単位の「測れなかった」より「道具が動かない」のほうが事実に近い。
   gh_err_file=$(mktemp) || die "一時ファイルを作れませんでした"
   # shellcheck disable=SC2064  # 展開は今やる（この関数を抜けるときに消したい）
   trap "rm -f '$gh_err_file'" RETURN
