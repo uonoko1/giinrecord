@@ -103,11 +103,6 @@ async function seed(dir: string): Promise<void> {
 }
 
 /**
- * **取得する関数を差し替えるローダ。** 各モジュールの原文の末尾に数行足して export を上書きする。
- * **`cli.ts` は 1 行も変えない。** `DATA` だけは `cli.ts` のソースを置換して向け直す
- * （`DATA` は `const` で外から差し替えられないため。**置換するのは書き出し先の 1 行だけ**）。
- */
-/**
  * **参院 議案情報の fixture**（`fetchBills` が返す 1 件）。
  * - `NO_MATCH`: 案件名が一致しない＝**突合が当たらない**。209-1128-v010 の実際の形。
  * - `MATCHES`: 案件名が一致する＝**突合が当たる**。前回の語と違う審議結果を入れて、どちらが勝つか見る。
@@ -115,105 +110,144 @@ async function seed(dir: string): Promise<void> {
 const NO_MATCH = { title: "まったく別の法律案", decision: "可決" } as const;
 const MATCHES = { title: "租税特別措置法及び東日本大震災の被災者等に係る国税関係法律の臨時特例に関する法律の一部を改正する法律案", decision: "否決" } as const;
 
-function loaderSource(dataDir: string, bill: { title: string; decision: string }, breakRestore = false): string {
-  // **モジュールの原文は残したまま、取得する関数だけを差し替える。**
-  //
-  // **末尾に `const f__stub = …` を足す形（#901 がやっている形）は使えない**——
-  // `f` は `async function f` で既に宣言されているので
-  // `Identifier 'f' has already been declared` で落ちる（実測 2026-10-05）。
-  //
-  // **ローダに届くのは tsx が変換した後のソースである**（実測 2026-10-05）:
-  // `export` は宣言から外され、末尾の 1 行にまとめられている——
-  // `export{RollCallParseError,listRollCalls,parseRollCall,…};`
-  //
-  // **だからその export の 1 語だけを差し替える**: `listRollCalls` → `listRollCalls__stub as listRollCalls`。
-  // 原文の実装は宣言ごとそのまま残り（誰も呼ばない）、**公開される名前だけが stub を指す。**
-  // **置換が当たらなければ例外にする**——**当たっていないのに当たったつもりで測ると
-  // 本物の取得が走ってネットワークに出る**（#514 の形）。
-  const stubs: [string, string[], string][] = [
-    ["src/sources/sangiin-members.ts", ["fetchMembers"],
-      `const fetchMembers__stub = async (s) => (s === 209 || s === 221 ? ${JSON.stringify([MEMBER])} : undefined);`],
-    ["src/sources/shugiin-members.ts", ["fetchShugiinMembers"],
-      `const fetchShugiinMembers__stub = async () => ({ members: [], asOf: "2026-10-01" });`],
+/**
+ * **`cli.ts` が import する先を差し替える。**
+ *
+ * ## tsx の出力の形に依存しない（**CI で 1 回落ちてから直した**）
+ *
+ * **最初は `load` フックで、tsx が変換した後のソースを書き換えていた**
+ * （`export{a,b,c};` の 1 語を `NAME__stub as NAME` にする）。
+ * **手元（Node 24.10.0）では通ったが、CI（Node 24.21.0）で落ちた**——
+ * `export{…}` の行が無く、`__export(exports, {...})` 系の別の形だった。
+ *
+ * **`.nvmrc` は major しか固定しないので、patch は勝手に上がる。**
+ * **「いまの tsx がこう出す」に依存した検査は、いつ落ちてもおかしくない。**
+ *
+ * **だから `resolve` フックで差し替える**: `cli.ts` からの import だけを、
+ * **実ファイルとして書き出した stub** に向ける。stub は原文を `export *` で読み直し、
+ * 差し替えたい名前だけを自分で export する。**変換後のソースを一切見ない。**
+ *
+ * `cli.ts` 以外からの import（`sangiin-bills.ts` を `match-bills.ts` が読むなど）は差し替えない——
+ * **`parentURL` で判定する**ので、純粋関数（`matchBillResults` など）は本物が効く。
+ */
+interface Stub {
+  /** 差し替える `cli.ts` からの import 指定子（`cli.ts` のソースにある相対パスそのまま）。 */
+  readonly spec: string;
+  /** stub ファイルの中身。`REAL` が原文のモジュールの URL に置き換わる。 */
+  readonly source: string;
+}
+
+function stubsFor(bill: { title: string; decision: string }): Stub[] {
+  return [
+    { spec: "./sources/sangiin-members.ts", source: [
+      `export * from REAL;`,
+      `export const fetchMembers = async (s) => (s === 209 || s === 221 ? ${JSON.stringify([MEMBER])} : undefined);`,
+    ].join("\n") },
+    { spec: "./sources/shugiin-members.ts", source: [
+      `export * from REAL;`,
+      `export const fetchShugiinMembers = async () => ({ members: [], asOf: "2026-10-01" });`,
+    ].join("\n") },
     // **投票結果ページは「取り直せる」**ようにする——**これが遡りの本質である。**
     // 遡りでは対象の回次の採決がネットワークから取り直され、`carried` に入らない。
-    // 一覧を空にすると採決そのものが消えて別の壊れ方になるので、取り直した体にする
-    // （`parseRollCall` が fixture の採決を返す）。**判定の語は投票結果ページに無い**（#26）ので、
-    // 取り直した採決に語は付かない——**語は前回出力から戻すしかない。**
-    ["src/sources/sangiin-votes.ts", ["listRollCalls", "parseRollCall", "standingVoteNote"], [
-      `const listRollCalls__stub = async (s) => (s === 209 ? [{ href: ${JSON.stringify(ROLL_CALL.sourceUrl)}, title: ${JSON.stringify(ROLL_CALL.title)} }] : []);`,
-      `const parseRollCall__stub = () => (${JSON.stringify(ROLL_CALL)});`,
-      `const standingVoteNote__stub = () => undefined;`,
-    ].join("\n")],
+    // 一覧を空にすると採決そのものが消えて別の壊れ方になるので、取り直した体にする。
+    // **判定の語は投票結果ページに無い**（#26）ので、取り直した採決に語は付かない——
+    // **語は前回出力から戻すしかない。**
+    { spec: "./sources/sangiin-votes.ts", source: [
+      `export * from REAL;`,
+      `export const listRollCalls = async (s) => (s === 209 ? [{ href: ${JSON.stringify(ROLL_CALL.sourceUrl)}, title: ${JSON.stringify(ROLL_CALL.title)} }] : []);`,
+      `export const parseRollCall = () => (${JSON.stringify(ROLL_CALL)});`,
+      `export const standingVoteNote = () => undefined;`,
+    ].join("\n") },
     // **参院 議案情報は「取れたが案件名が一致しない」状態にする**——これが 209-1128-v010 の実際の形。
     // 空配列ではなく議案を 1 件返すので、「取得に失敗した」とは区別できる（#1056）。
-    // `matchBillResults` / `toBillDecisions` は原文のまま効く（突合の挙動を模造しない）。
-    ["src/sources/sangiin-bills.ts", ["fetchBills"],
-      `const fetchBills__stub = async () => [{ id: "209-閣法-1", session: 209, kind: "閣法", house: "sangiin", title: ${JSON.stringify(bill.title)}, submitterText: "内閣", plenary: [{ decision: ${JSON.stringify(bill.decision)}, date: "2025-11-28" }], sourceUrl: "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/209/meisai/m209080209001.htm" }];`],
-    ["src/sources/kokkai-speeches.ts", ["fetchSpeeches"], `const fetchSpeeches__stub = async () => [];`],
-    ["src/sources/shugiin-bills.ts", ["fetchShugiinBills"], `const fetchShugiinBills__stub = async () => [];`],
-    ["src/sources/shugiin-questions.ts", ["fetchShugiinQuestions"], `const fetchShugiinQuestions__stub = async () => [];`],
-    ["src/sources/sangiin-questions.ts", ["fetchSangiinQuestions"], `const fetchSangiinQuestions__stub = async () => [];`],
-    ["src/sources/kokkai-attendance.ts", ["fetchCommitteeAttendance"], `const fetchCommitteeAttendance__stub = async () => [];`],
-    ["src/sources/kokkai-committee.ts", ["fetchCommitteeRosters"], `const fetchCommitteeRosters__stub = async () => [];`],
+    // `matchBillResults` / `toBillDecisions` は `export * from REAL` でそのまま効く（突合を模造しない）。
+    { spec: "./sources/sangiin-bills.ts", source: [
+      `export * from REAL;`,
+      `export const fetchBills = async () => [{ id: "209-閣法-1", session: 209, kind: "閣法", house: "sangiin", title: ${JSON.stringify(bill.title)}, submitterText: "内閣", plenary: [{ decision: ${JSON.stringify(bill.decision)}, date: "2025-11-28" }], sourceUrl: "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/209/meisai/m209080209001.htm" }];`,
+    ].join("\n") },
+    { spec: "./sources/kokkai-speeches.ts", source: [`export * from REAL;`, `export const fetchSpeeches = async () => [];`].join("\n") },
+    { spec: "./sources/shugiin-bills.ts", source: [`export * from REAL;`, `export const fetchShugiinBills = async () => [];`].join("\n") },
+    { spec: "./sources/shugiin-questions.ts", source: [`export * from REAL;`, `export const fetchShugiinQuestions = async () => [];`].join("\n") },
+    { spec: "./sources/sangiin-questions.ts", source: [`export * from REAL;`, `export const fetchSangiinQuestions = async () => [];`].join("\n") },
+    { spec: "./sources/kokkai-attendance.ts", source: [`export * from REAL;`, `export const fetchCommitteeAttendance = async () => [];`].join("\n") },
+    { spec: "./sources/kokkai-committee.ts", source: [`export * from REAL;`, `export const fetchCommitteeRosters = async () => [];`].join("\n") },
     // **`fetchText` も塞ぐ**（上の差し替えから漏れた経路が 1 本でも在れば HTTP に出る）。
     // `cli.ts` は投票結果ページだけ `fetchText` を直に呼ぶので、その 1 本は空文字を返す
     // （`standingVoteNote` / `parseRollCall` は上で差し替えてあるので中身は使われない）。
     // **それ以外の URL は例外にする**——**黙ってネットワークに出ることが無い。**
-    ["src/fetch.ts", ["fetchText"], [
-      `const fetchText__stub = async (u) => {`,
+    // **実際にこれが漏れを 1 本捕まえた。**
+    { spec: "./fetch.ts", source: [
+      `export * from REAL;`,
+      `export const fetchText = async (u) => {`,
       `  if (/\\/touhyoulist\\//.test(u)) return "";`,
       `  throw new Error("fixture が塞いでいない取得: " + u);`,
       `};`,
-    ].join("\n")],
+    ].join("\n") },
   ];
-  const cases = stubs.map(([rel, names, extra]) => {
-    const steps = names.map((n) =>
-      `    { const re = new RegExp("([{,])${n}([,}])"); `
-      + `const next2 = src.replace(re, "$1${n}__stub as ${n}$2"); `
-      + `if (next2 === src) throw new Error("${rel} の export から ${n} を差し替えられなかった（本物の取得が走る）"); src = next2; }`
-    ).join("\n");
-    return [
-      `  if (p.endsWith(${JSON.stringify(rel)})) {`,
-      `    let src = r.source.toString();`,
-      `    if (!/export\\{/.test(src)) throw new Error(${JSON.stringify(rel)} + " に export{…} の行が無い（tsx の出力の形が変わった）");`,
-      steps,
-      `    return { ...r, source: src + "\\n" + ${JSON.stringify(extra)} + "\\n" };`,
-      `  }`,
-    ].join("\n");
-  }).join("\n");
+}
+
+/**
+ * stub ファイルを `work/stubs/` に書き出し、`resolve` フックのソースを返す。
+ *
+ * **`DATA`（書き出し先）だけは `load` で `cli.ts` のソースを置換する**——
+ * `const` なので外から差し替えられない。**置換は `new URL(…)` の 1 か所だけ**で、
+ * **当たらなければ例外にする**（黙って実物の `data/` に書き出す形を作らない）。
+ * **`import.meta.url` を含む文字列は tsx が変換しても残る**ので、ここは形に依存しない。
+ */
+async function writeLoader(work: string, dataDir: string, bill: { title: string; decision: string }, breakRestore: boolean): Promise<string> {
+  const etlSrc = pathToFileURL(join(repo, "packages/etl/src/")).href;
+  const stubDir = join(work, "stubs");
+  await mkdir(stubDir, { recursive: true });
+  const map: [string, string][] = [];
+  for (const [i, st] of stubsFor(bill).entries()) {
+    const real = new URL(st.spec.replace(/^\.\//, ""), etlSrc).href;
+    const file = join(stubDir, `stub${i}.mjs`);
+    await writeFile(file, st.source.replace(/\bREAL\b/g, JSON.stringify(real)) + "\n");
+    map.push([real, pathToFileURL(file).href]);
+  }
   // **復元の経路だけを壊す fixture**（`breakRestore`）。`readCarried` が返す `previousDecisions` を
   // 空にする——**復元元が在るのに復元が効かない**状態、つまり #1206 そのものの形である。
   // **cli.ts の歯止め（`lostDecisions` → `process.exit(1)`）が鳴るのはこのときだけ**なので、
   // これが無いと歯止めを消す変異が素通りする（実測 2026-10-05: 25 件すべて緑だった）。
-  const breakCase = breakRestore
-    ? [
-        '  if (p.endsWith("src/sessions.ts")) {',
-        '    let src = r.source.toString();',
-        '    const re = new RegExp("([{,])readCarried([,}])");',
-        '    const next2 = src.replace(re, "$1readCarried__stub as readCarried$2");',
-        '    if (next2 === src) throw new Error("sessions.ts の export から readCarried を差し替えられなかった");',
-        '    return { ...r, source: next2 + "\\nconst readCarried__stub = async (...a) => { const c = await readCarried(...a); return { ...c, previousDecisions: new Map() }; };\\n" };',
-        '  }',
-      ].join("\n")
-    : "";
+  if (breakRestore) {
+    const real = new URL("sessions.ts", etlSrc).href;
+    const file = join(stubDir, "stub-sessions.mjs");
+    await writeFile(file, [
+      `import { readCarried as real } from ${JSON.stringify(real)};`,
+      `export * from ${JSON.stringify(real)};`,
+      `export const readCarried = async (...a) => ({ ...(await real(...a)), previousDecisions: new Map() });`,
+      ``,
+    ].join("\n"));
+    map.push([real, pathToFileURL(file).href]);
+  }
+  const cliUrl = pathToFileURL(join(repo, "packages/etl/src/cli.ts")).href;
   const dataUrl = pathToFileURL(join(dataDir, "/")).href;
-  return [
-    'export async function load(url, context, next) {',
-    '  const r = await next(url, context);',
-    '  const p = url.replace(/\\\\/g, "/").replace(/\\?.*$/, "");',
-    cases,
-    breakCase,
-    '  if (p.endsWith("src/cli.ts")) {',
-    // **tsx は空白を詰めてから渡してくる**（実測: `new URL("../../../data/",import.meta.url)`）
-    `    const re = /new URL\\(\\s*"\\.\\.\\/\\.\\.\\/\\.\\.\\/data\\/"\\s*,\\s*import\\.meta\\.url\\s*\\)/;`,
-    `    const src = r.source.toString().replace(re, ${JSON.stringify(JSON.stringify(dataUrl))});`,
-    '    if (src === r.source.toString()) throw new Error("cli.ts の DATA を差し替えられなかった（書き出し先が実物の data/ のままになる）");',
-    '    return { ...r, source: src };',
-    '  }',
-    '  return r;',
-    '}',
+  const loader = [
+    `const MAP = new Map(${JSON.stringify(map)});`,
+    `const CLI = ${JSON.stringify(cliUrl)};`,
+    `export async function resolve(spec, ctx, next) {`,
+    `  const r = await next(spec, ctx);`,
+    //   **`cli.ts` からの import だけ**を差し替える（他から読まれた分は本物のまま）
+    `  if (ctx.parentURL !== CLI) return r;`,
+    `  const to = MAP.get(r.url);`,
+    `  return to ? { ...r, url: to, shortCircuit: true } : r;`,
+    `}`,
+    `export async function load(url, context, next) {`,
+    `  const r = await next(url, context);`,
+    `  if (url !== CLI) return r;`,
+    //   tsx は空白を詰めることがあるので正規表現で当てる
+    // （テンプレートリテラルの中なので、ローダに出す `\` は 2 つ書く）
+    `  const re = /new URL\\(\\s*"\\.\\.\\/\\.\\.\\/\\.\\.\\/data\\/"\\s*,\\s*import\\.meta\\.url\\s*\\)/;`,
+    `  const src = r.source.toString().replace(re, ${JSON.stringify(JSON.stringify(dataUrl))});`,
+    `  if (src === r.source.toString()) throw new Error("cli.ts の DATA を差し替えられなかった（書き出し先が実物の data/ のままになる）");`,
+    `  return { ...r, source: src };`,
+    `}`,
+    ``,
   ].join("\n");
+  await writeFile(join(work, "loader.mjs"), loader);
+  // **差し替えの表が空でないこと**（空のまま走ると本物の取得が全部走る。#514 / #757 の母数）
+  assert.equal(map.length, breakRestore ? 12 : 11, "差し替えの表の件数が意図と食い違っている");
+  return loader;
 }
 
 /** `pnpm etl <sessions>` を、取得なし・一時ディレクトリで走らせて、書かれた `rollcalls/index.json` を返す。 */
@@ -226,14 +260,14 @@ async function etl(
   const data = join(work, "data");
   await mkdir(data, { recursive: true });
   await seed(data);
-  const loader = loaderSource(data, bill, opts.breakRestore ?? false);
-  // **fixture が本当にこの形で入っていること**を、ローダのソースの上で確かめる。
+  const breakRestore = opts.breakRestore ?? false;
+  await writeLoader(work, data, bill, breakRestore);
+  // **fixture が本当にこの形で入っていること**を、書き出した stub の上で確かめる。
   // 空振りに気づかず測ると、結果が全部無意味になる（#514）
-  // （ローダのソースは二重に JSON で囲まれているので、逐語ではなく中身の文字列で見る）
-  assert.ok(loader.includes(bill.title), "fixture の議案名がローダに入っていない");
-  assert.ok(loader.includes(bill.decision), "fixture の審議結果がローダに入っていない");
-  assert.equal(loader.includes("readCarried__stub"), opts.breakRestore ?? false, "breakRestore の差し替えが意図と食い違っている");
-  await writeFile(join(work, "loader.mjs"), loader);
+  const billStub = await readFile(join(work, "stubs", "stub3.mjs"), "utf8");
+  assert.ok(billStub.includes(bill.title), `fixture の議案名が stub に入っていない: ${billStub.slice(0, 300)}`);
+  assert.ok(billStub.includes(bill.decision), `fixture の審議結果が stub に入っていない: ${billStub.slice(0, 300)}`);
+  assert.ok(billStub.includes("fetchBills"), "差し替えたのは fetchBills の stub ではない");
   const hook = join(work, "hook.mjs");
   await writeFile(hook, [
     'import { register } from "node:module";',
