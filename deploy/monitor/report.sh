@@ -64,14 +64,31 @@ open_issue() {
 
 ROW=$(open_issue)
 NUM=''; CREATED=''; LABELS=''; NCOMMENTS=''
-if [ -n "$ROW" ]; then IFS=$'\t' read -r NUM CREATED LABELS NCOMMENTS <<<"$ROW"; fi
+# **`IFS=$'\t' read` では読まない**（#1198 受け入れ条件 3）。**タブは「IFS の空白文字」なので、
+# 連続するタブが 1 つに畳まれ、空の欄が消えて以降がずれる。** 実測（bash 5.2 / 2026-10-05）:
+#     ROW=$'5\t2026-10-01T00:00:00Z\t\t4'            ← labels が空の形
+#     IFS=$'\t' read -r NUM CREATED LABELS NCOMMENTS   → LABELS=[4] NCOMMENTS=[]
+# **壊れるのは 2 つ**: (a) 「すでに escalated か」の判定に数字が入る、
+# (b) 報告回数が常に「1 回以上」になる（#1185 の「1 回目か 50 回目か分からない」に戻る）。
+# **`cut -f` は欄を畳まない**ので、空欄が在っても位置が動かない。
+# **`tr` で区切りを別の文字に替える案は採らない**: ラベル名にその文字が入れば同じ事故になる。
+if [ -n "$ROW" ]; then
+  NUM=$(printf '%s' "$ROW" | cut -f1)
+  CREATED=$(printf '%s' "$ROW" | cut -f2)
+  LABELS=$(printf '%s' "$ROW" | cut -f3)
+  NCOMMENTS=$(printf '%s' "$ROW" | cut -f4)
+fi
 
 # elapsed_hours <iso8601> → whole hours since then, or empty when the timestamp is unusable.
 # **空を「0 時間」にしない**: createdAt が読めなかったのに「立ったばかり」と書くと、
 # **93 時間続いている障害が「1 時間目」に見える**（#1185 が起きた形の縮小版）。
 elapsed_hours() {
-  # **空文字を date に渡さない**: GNU date は `-d ""` を **epoch 0** として受けるので、
-  # 「createdAt が分からない」が「56 年前から継続中」になる。**測れていないなら空を返す。**
+  # **空文字を date に渡さない**: GNU date は `-d ""` をエラーにせず **今日の 00:00Z** として受ける。
+  # 実測（coreutils 9.4 / 2026-10-05T03:09Z）: `date -u -d "" '+%Y-%m-%dT%H:%M:%SZ'` → `2026-10-05T00:00:00Z`
+  # （`+%s` は 1791158400。**epoch 0 ではない**）。
+  # **だから危険の向きは「56 年前」ではなく「数時間」である**——**もっともらしいので誰も疑わない。**
+  # 93 時間続いている障害が「3h 継続」と書かれ、`escalated` の閾値（経過時間で決まる）も取りこぼす。
+  # **epoch 0 なら一目で嘘と分かるが、今日の 00:00Z は分からない。** **測れていないなら空を返す。**
   [[ "$1" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T ]] || return 0
   local ep
   ep=$(date -u -d "$1" +%s 2>/dev/null) || return 0

@@ -104,7 +104,11 @@ case "$cmd" in
       "issue edit")   ;;
       "run list")     # deploy-data.yml run history (#1185)
         [ -n "${H_RUNS_EXIT:-}" ] && exit "$H_RUNS_EXIT"
-        printf '%s' "${H_RUNS:-[]}" ;;
+        # **`${H_RUNS:-[]}` ではなく `${H_RUNS-[]}`**（#1198 R10b）: **`:-` は「空文字」も
+        # 既定値に差し替えるので、`H_RUNS=''`（gh が exit 0 で何も出さない形）を
+        # fixture から作れなかった。** 本物の gh は、レートに当たった・応答が途切れた等で
+        # **stdout が空のまま exit 0 になり得る**。**そこを `[]` と同じ扱いにしてはいけない。**
+        printf '%s' "${H_RUNS-[]}" ;;
       "issue create")   # keep a copy of the body (run.sh deletes its temp files on exit)
         for ((i=1;i<=$#;i++)); do [[ "${!i}" == "--body-file" ]] && { j=$((i+1)); cat "${!j}" >> "$STUB_LOG.body"; }; done
         echo "https://github.com/example/repo/issues/99" ;;
@@ -380,18 +384,18 @@ t_report_creates_once() {
 t_report_dedups() {
   fresh r_dup
   echo "body" > "$P/body"
-  H_OPEN='[{"number":5,"title":"[monitor] production: http"}]' run_report "[monitor] production: http" fail "$P/body" || fail "exit $?"
+  H_OPEN='[{"number":5,"title":"[monitor] production: http","labels":[{"name":"monitor"}]}]' run_report "[monitor] production: http" fail "$P/body" || fail "exit $?"
   assert_not_contains "$(cat "$LOG")" "gh issue create" "no duplicate"
 }
 t_report_exact_title_only() {
   fresh r_exact
   echo "body" > "$P/body"
-  H_OPEN='[{"number":5,"title":"[monitor] production: http (old)"}]' run_report "[monitor] production: http" fail "$P/body" || fail "exit $?"
+  H_OPEN='[{"number":5,"title":"[monitor] production: http (old)","labels":[{"name":"monitor"}]}]' run_report "[monitor] production: http" fail "$P/body" || fail "exit $?"
   assert_contains "$(cat "$LOG")" "gh issue create" "similar title is not the same issue"
 }
 t_report_closes_on_ok() {
   fresh r_close
-  H_OPEN='[{"number":5,"title":"[monitor] production: http"}]' run_report "[monitor] production: http" ok || fail "exit $?"
+  H_OPEN='[{"number":5,"title":"[monitor] production: http","labels":[{"name":"monitor"}]}]' run_report "[monitor] production: http" ok || fail "exit $?"
   local log; log=$(cat "$LOG")
   assert_contains "$log" "gh issue comment 5" "recovery comment"
   assert_contains "$log" "gh issue close 5" "closed"
@@ -492,7 +496,7 @@ HOURS_AGO() { date -u -d "-$1 hours" +%Y-%m-%dT%H:%M:%SZ; }
 t_report_repeat_comments_elapsed() {
   fresh r_elapsed
   echo "reason body" > "$P/body"
-  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(MIN_AGO 30)\",\"comments\":[]}]" \
+  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(MIN_AGO 30)\",\"labels\":[{\"name\":\"monitor\"}],\"comments\":[]}]" \
     run_report "[monitor] production: data" fail "$P/body" || fail "exit $? $(cat "$P/out")"
   local log; log=$(cat "$LOG")
   assert_not_contains "$log" "gh issue create" "まだ同じ Issue（作り直さない）"
@@ -503,7 +507,7 @@ t_report_repeat_comments_elapsed() {
 t_report_repeat_body_has_elapsed_hours() {
   fresh r_elapsed_body
   echo "fetchedAt 93h old (limit 48h)" > "$P/body"
-  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(HOURS_AGO 7)\",\"comments\":[{},{},{},{}]}]" \
+  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(HOURS_AGO 7)\",\"labels\":[{\"name\":\"monitor\"}],\"comments\":[{},{},{},{}]}]" \
     run_report "[monitor] production: data" fail "$P/body" || fail "exit $? $(cat "$P/out")"
   [ -f "$LOG.comment" ] || { fail "コメント本文が採れていない"; return; }
   local c; c=$(cat "$LOG.comment")
@@ -518,7 +522,7 @@ t_report_escalates_past_threshold() {
   fresh r_esc
   echo "body" > "$P/body"
   MONITOR_ESCALATE_HOURS=6 \
-  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(HOURS_AGO 7)\",\"comments\":[{},{},{},{}]}]" \
+  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(HOURS_AGO 7)\",\"labels\":[{\"name\":\"monitor\"}],\"comments\":[{},{},{},{}]}]" \
     run_report "[monitor] production: data" fail "$P/body" || fail "exit $? $(cat "$P/out")"
   local log; log=$(cat "$LOG")
   assert_contains "$log" "gh issue edit 5" "扱いが変わる（edit される）"
@@ -533,7 +537,7 @@ t_report_does_not_escalate_before_threshold() {
   fresh r_noesc
   echo "body" > "$P/body"
   MONITOR_ESCALATE_HOURS=6 \
-  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(HOURS_AGO 2)\",\"comments\":[{}]}]" \
+  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(HOURS_AGO 2)\",\"labels\":[{\"name\":\"monitor\"}],\"comments\":[{}]}]" \
     run_report "[monitor] production: data" fail "$P/body" || fail "exit $? $(cat "$P/out")"
   local log; log=$(cat "$LOG")
   assert_not_contains "$log" "gh issue edit" "まだ扱いは変えない"
@@ -574,7 +578,7 @@ t_report_ok_removes_escalated_label() {
 t_report_escalation_comment_has_no_paths() {
   fresh r_esc_safe
   echo "fetchedAt 93h old" > "$P/body"
-  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(HOURS_AGO 7)\",\"comments\":[{},{},{},{}]}]" \
+  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(HOURS_AGO 7)\",\"labels\":[{\"name\":\"monitor\"}],\"comments\":[{},{},{},{}]}]" \
     run_report "[monitor] production: data" fail "$P/body" || fail "exit $?"
   [ -f "$LOG.comment" ] || { fail "no comment body"; return; }
   assert_not_contains "$(cat "$LOG.comment")" "$TMP" "ローカルパスを出さない"
@@ -818,7 +822,7 @@ t_report_unreadable_created_at_is_not_a_number() {
   fresh r_badcreated
   echo "fetchedAt 93h old" > "$P/body"
   MONITOR_ESCALATE_HOURS=6 \
-  H_OPEN='[{"number":5,"title":"[monitor] production: data","comments":[{},{},{},{}]}]' \
+  H_OPEN='[{"number":5,"title":"[monitor] production: data","labels":[{"name":"monitor"}],"comments":[{},{},{},{}]}]' \
     run_report "[monitor] production: data" fail "$P/body" || fail "exit $? $(cat "$P/out")"
   [ -f "$LOG.comment" ] || { fail "コメント本文が採れていない"; return; }
   local c; c=$(cat "$LOG.comment")
@@ -826,6 +830,282 @@ t_report_unreadable_created_at_is_not_a_number() {
   # **数字の経過を書いていないこと。** `Nh 継続` の形が在れば、それは作った数字である。
   if grep -qE '[0-9]+h 継続' <<<"$c"; then fail "createdAt が無いのに経過時間を書いている: $c"; fi
   # **測れていない経過で escalate しないこと**（題を書き換えてしまうと戻せない）
+  assert_not_contains "$(cat "$LOG")" "gh issue edit" "測れていない経過で改題しない"
+}
+
+# ---- #1198: 変異が素通りしていた 5 か所の守り ----
+# **どれも「今日の振る舞いは正しい」が実測で確認されている。守りが無いだけだった。**
+# 基点 eaff0d40 で `scripts/dev/mutate.sh` を 5 件当て、**5 件すべてが 70 passed / 0 failed** だった。
+
+# **R3: 閾値の等号の向き**（`report.sh` の `-ge` → `-gt`）。
+# **既存の `t_report_escalates_past_threshold` は 7h vs 6h なので、`-gt` でも通る。**
+# **境界そのものを置かないと、等号の向きは誰も見ていない。**
+# `HOURS_AGO 6` に 30 秒の余白を足しているのは、**整数割りが 5 に落ちないため**
+# （実測: `-6 hours` でちょうど 6。経過は増える方向にしか動かないので 6 を下回らないが、
+#  余白を置けば「6 でなく 7」になる余地も無い——テストは数秒で終わる）。
+t_report_escalates_exactly_at_the_threshold() {
+  fresh r_esc_edge
+  echo "body" > "$P/body"
+  local at; at=$(date -u -d "-6 hours -30 seconds" +%Y-%m-%dT%H:%M:%SZ)
+  MONITOR_ESCALATE_HOURS=6 \
+  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$at\",\"labels\":[{\"name\":\"monitor\"}],\"comments\":[{},{}]}]" \
+    run_report "[monitor] production: data" fail "$P/body" || fail "exit $? $(cat "$P/out")"
+  local log; log=$(cat "$LOG")
+  # **6h は「6 時間以上」に入る**（docs/ops/monitoring.md が「6 時間以上」と書いている側）
+  assert_contains "$log" "gh issue edit 5" "ちょうど閾値なら扱いが変わる（境界を含む）"
+  assert_contains "$(cat "$P/out")" "6h >= 6h" "判定に使った両方の数を出す"
+}
+# **境界の片側だけでは向きが決まらない**ので、1 時間手前も固定する（`-gt` を殺すのは上、
+# `-ge` を `-le` のような向きに替える変異を殺すのはこちら）。
+t_report_does_not_escalate_one_hour_before() {
+  fresh r_esc_edge2
+  echo "body" > "$P/body"
+  local at; at=$(date -u -d "-5 hours -30 minutes" +%Y-%m-%dT%H:%M:%SZ)
+  MONITOR_ESCALATE_HOURS=6 \
+  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$at\",\"labels\":[{\"name\":\"monitor\"}],\"comments\":[{},{}]}]" \
+    run_report "[monitor] production: data" fail "$P/body" || fail "exit $? $(cat "$P/out")"
+  assert_not_contains "$(cat "$LOG")" "gh issue edit" "5h では扱いを変えない"
+}
+
+# **R14 (M7 の型): fixture が実物と違っていた。**
+# **実測**（`run.sh` に probe の stub を食わせて、`gh issue create --body-file` が受け取った
+# 本文をそのまま採った。2026-10-05）:
+#
+#     External check **http** of **production** (https://giinrecord.jp) failed twice in a row, 60s apart.
+#     (空行)
+#     - reason: `/ 503`
+#     - first seen: 2026-10-05T03:10:35Z
+#     - run: https://github.com/example/repo/actions/runs/123
+#
+# **`- reason: ` という接頭辞と、値を囲むバックティックが在る。**
+# ここまでの report.sh のテストは `echo "reason body" > "$P/body"` のような
+# **接頭辞の無い本文**を渡していたので、`sed -n 's/^- reason: //p'` を
+# **どう書き換えても誰も気付かなかった**（抽出は何も取り出さず、空の行が出るだけ）。
+# **だから fixture を実物の形に替える。**「テストを変異に合わせる」のではない。
+REAL_FAIL_BODY() {
+  # run.sh:111-119 が実際に書く形（値は #1185 の実測の理由）
+  cat <<BODY
+External check **data** of **production** (https://giinrecord.jp) failed twice in a row, 60s apart.
+
+- reason: \`fetchedAt 93h old (limit 48h); main も古い (93h) → ETL 側\`
+- first seen: $(date -u +%Y-%m-%dT%H:%M:%SZ)
+- run: https://github.com/example/repo/actions/runs/123
+
+What the check means and what to do: \`docs/ops/monitoring.md\`. This Issue is closed automatically once the check passes again.
+BODY
+}
+t_report_reason_comes_from_the_real_body_shape() {
+  fresh r_reason_shape
+  REAL_FAIL_BODY > "$P/body"
+  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(HOURS_AGO 2)\",\"labels\":[{\"name\":\"monitor\"}],\"comments\":[{},{}]}]" \
+    run_report "[monitor] production: data" fail "$P/body" || fail "exit $? $(cat "$P/out")"
+  [ -f "$LOG.comment" ] || { fail "コメント本文が採れていない"; return; }
+  local c; c=$(cat "$LOG.comment")
+  # **抽出した理由が「いまの理由」の行に出ていること。** 空のまま通してはいけない。
+  assert_contains "$c" "いまの理由: " "理由の行が在る"
+  assert_contains "$c" "fetchedAt 93h old (limit 48h)" "実物の本文から理由を取り出せている"
+  assert_contains "$c" "ETL 側" "理由の末尾まで取れている（途中で切れていない）"
+  # **「いまの理由:」が空のまま出ていないこと**——これが R14 で起きる形である。
+  if grep -qE '^- いまの理由: *$' <<<"$c"; then fail "理由を取り出せていない（抽出が実物の形と合っていない）: $c"; fi
+  # **本文の他の行を理由と間違えないこと**（`s/^- //p` のような緩い抽出を殺す）
+  assert_not_contains "$c" "いまの理由: first seen" "ハイフンで始まる別の行を理由にしない"
+  assert_not_contains "$c" "いまの理由: run:" "run のリンクを理由にしない"
+}
+# **判定行が出なかったときの本文も、同じ接頭辞の形である**（run.sh:95-104）。
+# **2 つの本文で接頭辞が揃っていること自体を固定する**——片方だけ変えても抽出が壊れる。
+t_report_reason_from_the_no_verdict_body() {
+  fresh r_reason_noverdict
+  cat > "$P/body" <<BODY
+External check **tls** of **production** (https://giinrecord.jp) **produced no verdict** in at least one of the rounds.
+
+- reason: \`judgement line missing (the check did not report ok or fail)\`
+- first seen: $(date -u +%Y-%m-%dT%H:%M:%SZ)
+BODY
+  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: tls\",\"createdAt\":\"$(HOURS_AGO 2)\",\"labels\":[{\"name\":\"monitor\"}],\"comments\":[{}]}]" \
+    run_report "[monitor] production: tls" fail "$P/body" || fail "exit $? $(cat "$P/out")"
+  assert_contains "$(cat "$LOG.comment")" "judgement line missing" "no verdict の本文からも理由を取り出せる"
+}
+# **実物とテストの接頭辞がずれたら落ちること**を、run.sh 側からも固定する。
+# **上の 2 つは「report.sh は `- reason: ` を読める」を言っている。**
+# **こちらは「run.sh は `- reason: ` を書いている」**——**両方無いと、
+# 片方を変えたときにもう片方が追従せず、抽出が黙って空になる**（これが #1142 の M7 の型）。
+t_run_body_reason_line_has_the_prefix_report_reads() {
+  fresh run_prefix
+  H_CODE_ROOT=503 run_run production https://giinrecord.jp && fail "expected non-zero"
+  [ -f "$LOG.body" ] || { fail "本文が無い"; return; }
+  local body; body=$(cat "$LOG.body")
+  # **逐語で固定する。** `report.sh` の `sed -n 's/^- reason: //p'` がこの形に依存している。
+  # shellcheck disable=SC2016  # バックティックは run.sh が本文に書くリテラルで、展開させない
+  assert_contains "$body" '- reason: `/ 503`' "run.sh の理由行は report.sh が読む形で書かれている"
+  # **report.sh の抽出式そのものを、run.sh が出した本文に当てる**（自己参照にしない）。
+  local extracted; extracted=$(sed -n 's/^- reason: //p' "$LOG.body" | head -1)
+  # shellcheck disable=SC2016
+  assert_eq '`/ 503`' "$extracted" "実物の本文に report.sh の抽出を当てると理由が出る"
+}
+
+# **R5: `ROUNDS` を 1 に固定する変異。**
+# **「この Issue に報告が入った回数」は下限でも情報である**（#757: 数には母数が要る）。
+# **1 に固定されると、50 回目でも「1 回以上」になり、#1185 の「1 回目か 50 回目か分からない」に戻る。**
+t_report_round_count_grows_with_the_comments() {
+  fresh r_rounds
+  REAL_FAIL_BODY > "$P/body"
+  # **コメントが 12 件なら、このラウンドを足して 13 回以上**
+  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(HOURS_AGO 2)\",\"labels\":[{\"name\":\"monitor\"}],\"comments\":[{},{},{},{},{},{},{},{},{},{},{},{}]}]" \
+    run_report "[monitor] production: data" fail "$P/body" || fail "exit $? $(cat "$P/out")"
+  local c; c=$(cat "$LOG.comment")
+  assert_contains "$c" "**13 回以上**" "コメント数 + 1 が回数になる（12 + 1）"
+  assert_contains "$c" "下限" "下限であることを明示する（#757）"
+}
+# **2 つの値で固定する**: 1 点だけだと `ROUNDS=13` のような定数への変異が通る。
+t_report_round_count_differs_between_two_issues() {
+  fresh r_rounds2
+  REAL_FAIL_BODY > "$P/body"
+  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(HOURS_AGO 2)\",\"labels\":[{\"name\":\"monitor\"}],\"comments\":[{},{}]}]" \
+    run_report "[monitor] production: data" fail "$P/body" || fail "exit $? $(cat "$P/out")"
+  assert_contains "$(cat "$LOG.comment")" "**3 回以上**" "コメント 2 件なら 3 回以上"
+  # **初回（コメント 0 件）は「1 回以上」**。ここが `ROUNDS=1` と一致するので、
+  # **上の 2 つと合わせて初めて向きが決まる。**
+  fresh r_rounds3
+  REAL_FAIL_BODY > "$P/body"
+  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(HOURS_AGO 2)\",\"labels\":[{\"name\":\"monitor\"}],\"comments\":[]}]" \
+    run_report "[monitor] production: data" fail "$P/body" || fail "exit $? $(cat "$P/out")"
+  assert_contains "$(cat "$LOG.comment")" "**1 回以上**" "コメントが無ければ 1 回以上"
+}
+
+# **R10b: `deploy-started.sh` が run の一覧として空文字を受けたとき。**
+# **これは #1056 の「0 件」と「測れなかった」の区別そのもの。**
+# `gh run list --json createdAt` は**成功すれば必ず JSON を返す**（run が無ければ `[]`）。
+# **空文字は「応答が読めなかった」**——`[]` ではない。**ここを `ok` に倒すと、
+# 読めなかった応答が全部緑に見える。**
+t_deploy_started_empty_response_is_unmeasured() {
+  fresh ds_empty
+  # **gh は exit 0 で、何も出さない**（レート制限のメッセージが stderr に出て stdout が空、等）
+  H_RUNS='' run_deploy_started "$(MIN_AGO 90)" && fail "空の応答を ok にしてはいけない"
+  local out; out=$(cat "$P/out")
+  assert_contains "$out" "測れなかった" "測れなかったと書く"
+  assert_contains "$out" "空の応答" "空だったことを名指しする"
+  assert_not_contains "$out" "ok deploy" "ok にしない"
+}
+# **「本当に 0 件」は別の言い方になること**（#1056 の両側）。**両方 fail だが理由が違う。**
+# **ここを分けないと、毎日の運用で「測れなかった」が常態になって読まれなくなる**
+# ——`[]` は gh が正しく答えた形なので、**「run が 0 本」として報告する**。
+t_deploy_started_distinguishes_zero_from_unmeasured() {
+  fresh ds_zero
+  H_RUNS='[]' run_deploy_started "$(MIN_AGO 90)" && fail "expected non-zero"
+  local out; out=$(cat "$P/out")
+  assert_contains "$out" "run が 0 本" "0 件は 0 件として書く"
+  assert_not_contains "$out" "測れなかった" "正しく答えた応答を『測れなかった』にしない（毎日鳴らせない）"
+}
+
+# **X2: 判定が出たかの検査を `r2` だけに狭める変異。**
+# **`||` の両辺は対称なのに、#1194 が足したテストは `r1` 側しか殺していなかった**
+# （R12 = `r1` だけに狭める は殺せ、X2 = `r2` だけに狭める は 70 全緑で素通りした）。
+# **「片方を直したら、対になる側も確かめる」**——このリポジトリで繰り返している型である。
+#
+# **ここで固定する形**: **1 回目の probe が死んで（1 行も出さず）、2 回目は全部 ok。**
+# `r1` には判定が無く `r2` には在るので、**`r2` だけを見る実装は「ok」と言って
+# 開いている Issue を閉じる。** **check は 1 回も通っていないのに。**
+# **誤報にならない根拠**: run.sh は `grep -q '^fail ' "$TMP/r1"` が真のときだけ 2 回目を走らせ、
+# それ以外は `cp r1 r2` する。**1 回目が「1 行も無い」なら fail 行も無いので 2 回目は走らず、
+# `r2` は `r1` の複製**＝実運用では `r1` だけが空になる形は起きない。
+# **だから probe.sh を迂回して、その経路を人工的に作って固定する。**
+t_run_first_round_died_does_not_close() {
+  fresh run_r1died
+  mkdir -p "$P/mon"
+  cp "$MON/report.sh" "$MON/deploy-started.sh" "$MON/run.sh" "$P/mon/"
+  # 1 回目は 1 行も出さずに exit 137、2 回目は全部 ok
+  # （`r1` が空 → 上の `cp` に落ちないよう、run.sh の retry を通すために fail 行を 1 本だけ出す
+  #  ——**http の fail で 2 回目に入り、data と tls の判定が `r1` から欠けている形**にする）
+  cat > "$P/mon/probe.sh" <<'FAKE'
+#!/usr/bin/env bash
+if [ -f "$ROUND_MARK" ]; then
+  echo "ok http"; echo "ok data"; echo "ok tls"; exit 0
+fi
+touch "$ROUND_MARK"
+echo "fail http / 503"
+exit 1
+FAKE
+  # 開いている Issue は #1172 の実値（39 時間前・`escalated` 付き）
+  H_OPEN="[{\"number\":1172,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(MIN_AGO 2340)\",\"labels\":[{\"name\":\"monitor\"},{\"name\":\"escalated\"}],\"comments\":[{},{},{}]}]" \
+  ROUND_MARK="$P/mark" PATH="$BIN:$PATH" bash "$P/mon/run.sh" production https://giinrecord.jp > "$P/out" 2>&1 \
+    && fail "1 回目に判定が無いのに緑にしてはいけない: $(cat "$P/out")"
+  local log; log=$(cat "$LOG")
+  # **`r1` に data / tls の判定が無い**ので、2 回目が ok でも「測れていない」である
+  assert_contains "$log" "gh issue create --title [monitor] production: tls" "r1 で測れていない check を黙らせない"
+  assert_not_contains "$log" "gh issue close 1172" "r1 で測れていない check の Issue を閉じない"
+  assert_not_contains "$log" "Recovered" "測れていない check を『passed again』と書かない"
+  assert_not_contains "$log" "--remove-label escalated" "escalated を剥がさない"
+  [ -f "$LOG.body" ] || { fail "本文が無い"; return; }
+  assert_contains "$(cat "$LOG.body")" "no verdict" "判定が無かったと書く"
+}
+# **`||` の両辺が両方効いていること**を、1 本のテストで対にして固定する。
+# **片側だけのテストを 2 本置くより、ここで「両方向」を宣言したほうが、
+# 次に誰かが片側を削ったときに何が失われるかが読める。**
+t_run_verdict_check_looks_at_both_rounds() {
+  fresh run_both_rounds
+  mkdir -p "$P/mon"
+  cp "$MON/report.sh" "$MON/deploy-started.sh" "$MON/run.sh" "$P/mon/"
+  # **ラウンド 1 は tls が欠け、ラウンド 2 は data が欠ける。**
+  # **どちらか片側しか見ない実装では、欠けた 2 つのうち 1 つを取りこぼす。**
+  cat > "$P/mon/probe.sh" <<'FAKE'
+#!/usr/bin/env bash
+if [ -f "$ROUND_MARK" ]; then
+  echo "fail http / 503"; echo "ok tls"; exit 1
+fi
+touch "$ROUND_MARK"
+echo "fail http / 503"; echo "ok data"; exit 1
+FAKE
+  ROUND_MARK="$P/mark" PATH="$BIN:$PATH" bash "$P/mon/run.sh" production https://giinrecord.jp > "$P/out" 2>&1 \
+    && fail "expected non-zero"
+  local log; log=$(cat "$LOG")
+  assert_contains "$log" "gh issue create --title [monitor] production: tls" "r1 で欠けた tls を拾う（r2 だけを見ていない）"
+  assert_contains "$log" "gh issue create --title [monitor] production: data" "r2 で欠けた data を拾う（r1 だけを見ていない）"
+}
+
+# **`IFS=$'\t' read` はタブを「IFS の空白」として扱うので、連続するタブを 1 つに畳む**
+# （受け入れ条件 3）。**実測**（bash 5.2 / 2026-10-05）:
+#     ROW=$'5\t2026-10-01T00:00:00Z\t\t4'
+#     IFS=$'\t' read -r NUM CREATED LABELS NCOMMENTS <<<"$ROW"
+#     → NUM=[5] CREATED=[2026-10-01T00:00:00Z] LABELS=[4] NCOMMENTS=[]
+# **labels が空だと、comments の数が labels に入り、comments が空になる。**
+# **壊れるのは 2 つ**: (a) 「すでに escalated か」の判定（LABELS に数字が入る）、
+# (b) 報告回数（NCOMMENTS が空 → 常に「1 回以上」）。
+# **今日は到達しない**——`--label monitor` で絞るので labels が空にならない。
+# **しかし「いま空にならない」は「将来も空にならない」ではない。**
+t_report_handles_an_issue_with_no_labels() {
+  fresh r_nolabels
+  REAL_FAIL_BODY > "$P/body"
+  # **labels が空配列** = TSV の 3 欄目が空になる形（jq の `join(",")` が "" を出す）
+  MONITOR_ESCALATE_HOURS=6 \
+  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(HOURS_AGO 9)\",\"labels\":[],\"comments\":[{},{},{},{},{},{},{}]}]" \
+    run_report "[monitor] production: data" fail "$P/body" || fail "exit $? $(cat "$P/out")"
+  local c; c=$(cat "$LOG.comment")
+  # **(b) 欄がずれていなければ、7 + 1 = 8 回以上になる**（ずれると NCOMMENTS が空で「1 回以上」）
+  assert_contains "$c" "**8 回以上**" "labels が空でも comments の数が読める（欄がずれていない）"
+  # **(a) LABELS に数字が入り込んでいないこと**: escalated は入っていないので、9h なら escalate する
+  assert_contains "$(cat "$LOG")" "gh issue edit 5" "labels が空なら escalated 未付与＝閾値超えで扱いが変わる"
+}
+# **labels も comments も空の形**（どちらの欄も空）。**畳まれると 2 欄ずれる。**
+t_report_handles_an_issue_with_no_labels_and_no_comments() {
+  fresh r_nolabels2
+  REAL_FAIL_BODY > "$P/body"
+  MONITOR_ESCALATE_HOURS=6 \
+  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(HOURS_AGO 2)\",\"labels\":[],\"comments\":[]}]" \
+    run_report "[monitor] production: data" fail "$P/body" || fail "exit $? $(cat "$P/out")"
+  assert_contains "$(cat "$LOG")" "gh issue comment 5" "番号は正しく読めている（1 欄目がずれていない）"
+  assert_contains "$(cat "$LOG.comment")" "**1 回以上**" "comments が空なら 1 回以上"
+}
+# **escalated が付いている Issue で、labels の前の欄が空の形。**
+# **createdAt が空（= 読めない）かつ labels に escalated** ——**畳まれると escalated を
+# 見落として毎 round 改題する**（10 分ごとに通知が鳴り、読まれなくなる。#1185 の型）。
+t_report_sees_escalated_when_created_at_is_empty() {
+  fresh r_shift_esc
+  REAL_FAIL_BODY > "$P/body"
+  MONITOR_ESCALATE_HOURS=6 \
+  H_OPEN='[{"number":5,"title":"[monitor] production: data","labels":[{"name":"escalated"}],"comments":[{},{}]}]' \
+    run_report "[monitor] production: data" fail "$P/body" || fail "exit $? $(cat "$P/out")"
+  # createdAt が無いので経過は測れない。**それでも labels は正しい欄から読めていること。**
+  assert_contains "$(cat "$LOG.comment")" "**3 回以上**" "createdAt が空でも comments の数が読める"
   assert_not_contains "$(cat "$LOG")" "gh issue edit" "測れていない経過で改題しない"
 }
 
@@ -902,6 +1182,21 @@ test_case "run: 判定行が 1 本も出なかった check を ok に倒さな�
 test_case "run: 2 回目の probe が死んで判定行が消えた check を ok に倒さない（Issue を閉じない・#1185）" t_run_second_round_died_does_not_close
 
 test_case "report: createdAt が読めなければ経過時間を作らない（date -d '' は今日の 00:00Z になる・#1185）" t_report_unreadable_created_at_is_not_a_number
+
+test_case "report: ちょうど閾値（6h）でも扱いが変わる（境界を含む・#1198 R3）" t_report_escalates_exactly_at_the_threshold
+test_case "report: 閾値の 1 時間手前（5h）では扱いを変えない（向きを固定・#1198 R3）" t_report_does_not_escalate_one_hour_before
+test_case "report: 理由は run.sh が実際に書く - reason: の行から取る（#1198 R14 / M7）" t_report_reason_comes_from_the_real_body_shape
+test_case "report: no verdict の本文からも同じ接頭辞で理由が取れる（#1198 R14）" t_report_reason_from_the_no_verdict_body
+test_case "run: 本文の理由行は report.sh の抽出が読める形で書かれている（両側を固定・#1198 R14）" t_run_body_reason_line_has_the_prefix_report_reads
+test_case "report: 報告回数はコメント数 + 1（1 に固定しない・#1198 R5）" t_report_round_count_grows_with_the_comments
+test_case "report: 報告回数は Issue ごとに変わる（定数への変異も殺す・#1198 R5）" t_report_round_count_differs_between_two_issues
+test_case "deploy-started: run 一覧が空の応答なら『測れなかった』（ok にしない・#1198 R10b / #1056）" t_deploy_started_empty_response_is_unmeasured
+test_case "deploy-started: 正しく答えた空配列は『run が 0 本』——『測れなかった』と区別する（#1198 / #1056）" t_deploy_started_distinguishes_zero_from_unmeasured
+test_case "run: 1 回目の probe が死んで判定行が消えた check を ok に倒さない（#1198 X2）" t_run_first_round_died_does_not_close
+test_case "run: 判定の検査は両方のラウンドを見る（片側に狭められない・#1198 X2）" t_run_verdict_check_looks_at_both_rounds
+test_case "report: labels が空でも TSV の欄がずれない（タブは IFS の空白・#1198 受け入れ条件 3）" t_report_handles_an_issue_with_no_labels
+test_case "report: labels も comments も空でも欄がずれない（#1198 受け入れ条件 3）" t_report_handles_an_issue_with_no_labels_and_no_comments
+test_case "report: createdAt が空でも escalated を正しい欄から読む（#1198 受け入れ条件 3）" t_report_sees_escalated_when_created_at_is_empty
 
 echo; echo "passed: $PASS  failed: $FAIL"
 [[ $FAIL == 0 ]]
