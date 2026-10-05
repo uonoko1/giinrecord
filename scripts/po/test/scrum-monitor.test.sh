@@ -675,6 +675,264 @@ EOF
 }
 test_case "monitor: ボードの GraphQL が失敗 → exit 4、測れた節の数を出す" t_mon_board_graphql_fails
 
+# ---- 2b. 「なぜ測れなかったか」が読み分けられること（#1210）------------------------------------
+#
+# **何が壊れていたか**: `gh api graphql ... 2>/dev/null` が `gh` の言い分を捨てていた。
+# **残る一文は「GraphQL が返りませんでした」だけで、原因を含まない。**
+# **だから CI のログを読んだ人は「たぶん一時障害」と推測する。**
+#
+# **実害（#1210 の本文。これは仮定ではなく起きたこと）:**
+#   #1168 を閉じた   2026-10-04T13:02:50Z  根拠「手元で再測定して 3/3・rc=0」
+#   #1203 が立った   2026-10-04T14:29:31Z  同じ理由（board が読めない）
+#   間隔             **87 分**
+# **PO は「手元の PAT（`project` スコープ有り）」で測って緑を見た。**
+# **失敗した経路（`secrets.GITHUB_TOKEN`、`project` スコープ無し）は一度も試していない。**
+#
+# **だから検査は 3 つを固定する:**
+#   1. **`gh` の言い分が出力に出る**（捨てない）
+#   2. **「権限が無い」と「返らなかった」が読み分けられる**（別の語で出る）
+#   3. **そのときも秘密・パス・枝名・トークンは出ない**（allowlist 寄りに通す）
+
+# `gh` が権限の不足を言って落ちる形。**本物の文面は `gh` のバージョンと API で変わる**ので、
+# **fixture は「`gh` がこう言った」という一次の文字列をそのまま置き、
+# 実装がそれを分類できることだけを測る**（文面そのものを実装に焼き込まない）。
+t_mon_board_permission_error_is_named() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr list --repo "*) echo '[]' ;;
+    "api graphql"*)
+      echo 'gh: Your token has not been granted the required scopes to execute this query. The '"'"'id'"'"' field requires one of the following scopes: ['"'"'read:project'"'"'], but your token has only been granted the: ['"'"'repo'"'"'] scopes.' >&2
+      exit 1 ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 4 "$STATUS" "ボードが読めなければ exit 4: $ERR"
+  # **1. gh の言い分が出る**（**これが #1210 の本体。捨てると誤診が起きる**）
+  assert_contains "$ERR" "required scopes" "**gh の言い分を出力に出す（2>/dev/null に戻すとここが落ちる）**"
+  assert_contains "$ERR" "read:project" "**どのスコープが足りないかが読める**"
+  # **2. 「権限が無い」と名指しする**（**「待てば直る」と推測されないため**）
+  assert_contains "$ERR" "権限が足りません" "**権限の不足だと名指しする**"
+  assert_contains "$ERR" "この環境では構造的に測れません" "**待っても直らないと言う（#1210 のやること 2）**"
+  assert_not_contains "$ERR" "一時的" "**権限の不足を「一時的」と言ってはいけない（#1168 の誤診）**"
+}
+test_case "monitor: ボードが権限で読めない → gh の言い分を出し「構造的に測れない」と言う (#1210)" t_mon_board_permission_error_is_named
+
+# **一時的に返らなかった形**（5xx / タイムアウト）。**上と同じ exit 4 だが、文が違う。**
+# **この 2 本が同じ文を出すなら、読み分けは出来ていない。**
+t_mon_board_transient_error_is_distinguished() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr list --repo "*) echo '[]' ;;
+    "api graphql"*)
+      echo 'gh: Something went wrong while executing your query. This may be the result of a timeout, or it could be a GitHub bug.' >&2
+      exit 1 ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 4 "$STATUS" "ボードが読めなければ exit 4: $ERR"
+  assert_contains "$ERR" "timeout" "**gh の言い分を出力に出す**"
+  assert_contains "$ERR" "一時的" "**一時障害の疑いだと言う**"
+  assert_not_contains "$ERR" "権限が足りません" "**権限の不足と混ぜない（これが読み分け）**"
+  assert_not_contains "$ERR" "構造的に測れません" "**待てば直るものを「構造的」と言わない**"
+}
+test_case "monitor: ボードが一時的に返らない → 「一時的」と言い、権限の不足と混ぜない (#1210)" t_mon_board_transient_error_is_distinguished
+
+# **原因が分からない形**（`gh` が何も言わずに落ちた）。
+# **「分からない」を「一時的」や「権限」に倒さない**——**倒すと #1168 の誤診が再現する。**
+t_mon_board_silent_failure_says_so() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr list --repo "*) echo '[]' ;;
+    "api graphql"*) exit 1 ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 4 "$STATUS" "ボードが読めなければ exit 4: $ERR"
+  assert_contains "$ERR" "gh は何も言いませんでした" "**言い分が無かったことを言う**"
+  assert_not_contains "$ERR" "一時的" "**分からないものを「一時的」に倒さない（#1168 の誤診の型）**"
+  assert_not_contains "$ERR" "権限が足りません" "**分からないものを「権限」にも倒さない**"
+}
+test_case "monitor: gh が何も言わずに落ちた → 「何も言わなかった」と言い、原因を推測しない (#1210)" t_mon_board_silent_failure_says_so
+
+# **秘密を出さない**（#1210 の受け入れ条件 2。**既存の「パスも枝名も出さない」と同じ検査に載せる**）。
+#
+# **`gh` の stderr をそのまま流すと何が出るか**——**実際に出うるものを fixture に全部混ぜる:**
+#   - `Authorization: Bearer ghp_…` / `token ghs_…`     ← トークンの断片
+#   - `https://api.github.com/...?token=…`              ← URL とクエリ
+#   - worktree の絶対パス                               ← 担当者の手元を指す
+#   - 枝名                                              ← 担当者を指す
+# **だから raw をそのまま流す実装では、この検査が落ちる**（それが狙いである）。
+t_mon_board_error_text_does_not_leak() {
+  # **架空の鍵の綴りに本物の接頭辞（`ghp_` 等）を使わない**（`forbidden-patterns.sh` の
+  # `github-token` 規則に当たる。**実測で当たった**: `scrum-monitor.test.sh:781`）。
+  # **この検査が測りたいのは「`_` のあとに 20 文字以上続く語」を落とす規則**で、
+  # **接頭辞の綴りには依存していない**——**依存させてはいけない**
+  # （知らない鍵の綴りに無力な denylist になる）。
+  local secretish="faketoken_AAAABBBBCCCCDDDDEEEEFFFFGGGG"
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr list --repo "*) echo '[]' ;;
+    "api graphql"*)
+      echo 'gh: HTTP 401: Bad credentials (https://api.github.com/graphql?access_token=$secretish)' >&2
+      echo 'Authorization: Bearer $secretish' >&2
+      echo 'cwd=/home/someone/Development/gikailog/.claude/worktrees/agent-7 branch=feat/999-secret-slug' >&2
+      exit 1 ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 4 "$STATUS" "ボードが読めなければ exit 4: $ERR"
+  # **HTTP の状態は出していい**（これが無いと原因が読めない）
+  assert_contains "$ERR" "HTTP 401" "**HTTP の状態は読めるように出す**"
+  assert_contains "$ERR" "権限が足りません" "**401 は権限の側に分類する**"
+  # **出してはいけないもの**
+  assert_not_contains "$ERR" "$secretish" "**トークンの断片を出さない**"
+  assert_not_contains "$ERR" "Bearer" "**Authorization ヘッダを出さない**"
+  assert_not_contains "$ERR" "https://" "**URL を出さない（クエリに鍵が乗りうる）**"
+  assert_not_contains "$ERR" "/home/" "**絶対パスを出さない（OSS）**"
+  assert_not_contains "$ERR" "worktrees" "**worktree のパスを出さない（OSS）**"
+  assert_not_contains "$ERR" "999-secret-slug" "**枝名を出さない（枝名は担当者を指す）**"
+}
+test_case "monitor: gh の言い分を出すときも鍵・URL・パス・枝名は出さない (#1210)" t_mon_board_error_text_does_not_leak
+
+# **長い stderr を無制限に流さない**（Issue 本文にコピーされるので、1 行の上限と総量を決める）。
+t_mon_board_error_text_is_bounded() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr list --repo "*) echo '[]' ;;
+    "api graphql"*)
+      echo "gh: HTTP 502: $(head -c 4000 < /dev/zero | tr '\0' 'x')" >&2
+      for i in $(seq 1 40); do echo "gh: noise line $i"; done >&2
+      exit 1 ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 4 "$STATUS" "ボードが読めなければ exit 4: $ERR"
+  assert_contains "$ERR" "HTTP 502" "**先頭は出す**"
+  # **母数を出す**（#757）: 何行のうち何行を出したか。**黙って切らない。**
+  assert_contains "$ERR" "41 行のうち" "**捨てた行数が読める（黙って切らない）**"
+  [[ ${#ERR} -lt 4000 ]] || fail "**stderr を無制限に流していません**: ${#ERR} 文字"
+}
+test_case "monitor: gh の言い分は上限つきで出し、何行のうち何行かを言う (#1210)" t_mon_board_error_text_is_bounded
+
+# **同じ欠陥は 1 か所ではない**（#1210 の本文はボードの 1 行を名指しするが、**全部数えた**）。
+# **`scripts/po/scrum-monitor.sh` の `gh` 呼び出しは 4 か所**:
+#   270  `gh pr list --state open`      → 言い分を捨てていた。**しかも文が原因を推測していた**
+#                                         （「gh の認証切れ／rate limit かもしれません」）
+#   284  `gh api .../check-runs`        → **対象外**。ここは意図的に rc を捨てる設計で
+#                                         （赤を含む応答を出しきってから非ゼロで終わる gh のため）、
+#                                         **失敗は `jq` 側の「読めなかった」で検出している。**
+#                                         stderr を混ぜると全 PR ぶん出て、Issue 本文が溢れる。
+#   521  `gh api graphql`（ボード）      → **#1210 が名指しした 1 行**
+#   588  `gh pr list --search`           → 言い分を捨てていた
+# **推測の文を残すのが一番悪い**——**「かもしれません」は読む人の推測を誘導する。**
+# **#1168 を閉じた理由がまさにそれである。**
+
+t_mon_pr_list_error_text_is_shown() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr list --repo "*)
+      echo 'gh: HTTP 403: API rate limit exceeded for installation ID 1234.' >&2
+      exit 1 ;;
+    "api graphql"*) echo '{"data":{"node":{"items":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[]}}}}' ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 4 "$STATUS" "**PR を 1 本も見られなかったら exit 4**: $ERR"
+  assert_contains "$ERR" "rate limit exceeded" "**gh の言い分を出す（PR の節も同じ欠陥だった）**"
+  # **推測の文を残さない**（これが #1168 の誤診を誘導した形）
+  assert_not_contains "$ERR" "かもしれません" "**原因を推測する文を残さない（gh が言っている）**"
+  assert_not_contains "$ERR" "installation ID 1234" "**ID のような識別子は出さない**"
+}
+test_case "monitor: PR の一覧が取れない → gh の言い分を出し、原因を推測しない (#1210)" t_mon_pr_list_error_text_is_shown
+
+t_mon_pr_search_error_text_is_shown() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr list --repo "*" --state open"*) echo '[]' ;;
+    "pr list --repo "*"--search "*)
+      echo 'gh: Your token has not been granted the required scopes' >&2
+      exit 1 ;;
+    "api graphql"*) echo '{"data":{"node":{"items":{"pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[{"content":{"number":81,"state":"OPEN","updatedAt":"2026-09-29T08:00:00Z"},"fieldValueByName":{"name":"In Progress"}}]}}}}' ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 4 "$STATUS" "**対応表が作れなければ exit 4**: $ERR"
+  assert_contains "$ERR" "PR を引けませんでした" "何が引けなかったかを言う"
+  assert_contains "$ERR" "required scopes" "**gh の言い分を出す（PR 検索も同じ欠陥だった）**"
+  assert_contains "$ERR" "権限が足りません" "**権限の不足だと名指しする**"
+}
+test_case "monitor: PR 検索が失敗 → gh の言い分を出し、権限の不足を名指しする (#1210)" t_mon_pr_search_error_text_is_shown
+
+# **分類の表そのものを測る**（#1210 の受け入れ条件 3）。
+# **`permission` と `transient` の両方について、代表的な gh の文面を 1 つずつ通す。**
+# **ここが無いと、分類の分岐を丸ごと削っても「どちらか一方の」テストしか落ちない。**
+t_mon_classifier_table() {
+  local spec
+  # `<fixture>|<出てほしい語>|<出てはいけない語>`
+  local -a cases=(
+    'gh: HTTP 403: Resource not accessible by integration|権限が足りません|一時的'
+    'gh: HTTP 502 Bad Gateway|一時的|権限が足りません'
+    'gh: Post "api": dial tcp: lookup api: no such host|一時的|権限が足りません'
+    'gh: GraphQL: INSUFFICIENT_SCOPES|権限が足りません|一時的'
+    'gh: wat|原因を分類できませんでした|権限が足りません'
+  )
+  local fx want deny
+  for spec in "${cases[@]}"; do
+    IFS='|' read -r fx want deny <<<"$spec"
+    local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr list --repo "*) echo '[]' ;;
+    "api graphql"*) echo '$fx' >&2; exit 1 ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+    MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+    assert_eq 4 "$STATUS" "[$fx] 測れなければ exit 4"
+    assert_contains "$ERR" "$want" "[$fx] **$want と言う**"
+    assert_not_contains "$ERR" "$deny" "[$fx] **$deny と混ぜない**"
+  done
+}
+test_case "monitor: 分類の表（permission / transient / unknown の 5 通り）が読み分けられる (#1210)" t_mon_classifier_table
+
 # ---- 3. worktree の節 -------------------------------------------------------------------------
 #
 # **実在のディレクトリを使う**（`-d` と `stat` は fake `git` では偽装できない）。

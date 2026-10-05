@@ -110,6 +110,122 @@ UNMEASURED=()     # 測れなかった節の名前と理由
 
 unmeasured() { UNMEASURED+=("$1"); log "MONITOR-BROKEN $1"; }
 
+# ---- `gh` の言い分を、安全に、分類して出す（#1210）--------------------------------------------
+#
+# **何が壊れていたか**: この道具は `gh ... 2>/dev/null` で **`gh` の言い分を捨てていた。**
+# 残るのは「GraphQL が返りませんでした」という**原因を含まない一文**だけで、
+# **CI のログを読んだ人には「権限が無い（永久に緑にならない）」と
+# 「一時的に返らなかった（待てば直る）」が区別できない。**
+#
+# **実害（#1210。仮定ではなく起きたこと）:**
+#   #1168 を閉じた   2026-10-04T13:02:50Z  根拠「手元で再測定して 3/3・rc=0」
+#   #1203 が立った   2026-10-04T14:29:31Z  同じ理由（board が読めない）
+#   間隔             **87 分**
+# **PO は `project` スコープを持つ手元の PAT で測って緑を見た。**
+# **失敗した経路（`secrets.GITHUB_TOKEN`）は一度も試していない。**
+# **つまり「ログが読みにくい」ではなく、これが誤診を生んだ原因である。**
+#
+# **なぜ raw をそのまま流さないか**（#1210 の受け入れ条件 2）:
+# **この出力は Issue にコピーされ、OSS として公開される。** `gh` の stderr には
+# **URL（クエリに鍵が乗りうる）・`Authorization` ヘッダ・絶対パス・枝名**が出うる。
+# **だから denylist ではなく allowlist 寄りにする**——
+# **「安全だと分かっている文字だけを通し、残りは `?` に潰す」。**
+# **denylist（「`ghp_` を消す」）は、知らない鍵の綴りに対して無力である。**
+#
+# 通すもの: ASCII の英数・空白・`.,:;!?'"()[]{}<>=/-_+*#%&@$` の一部。
+# **ただし `/` を含む語（パス）・`://` を含む語（URL）・`Authorization` の値は語ごと落とす。**
+
+# gh_err_sanitize <生の stderr> → 安全化した 1 行以上（最大 GH_ERR_MAX_LINES 行）
+#
+# **「何行のうち何行を出したか」を必ず添える**（#757 の母数）——**黙って切らない。**
+GH_ERR_MAX_LINES=${GH_ERR_MAX_LINES:-3}
+GH_ERR_MAX_CHARS=${GH_ERR_MAX_CHARS:-300}
+gh_err_sanitize() {
+  local raw=$1 total kept shown
+  total=$(printf '%s' "$raw" | grep -c '' || true)
+  [[ -z "$raw" ]] && { printf 'gh は何も言いませんでした（stderr が空でした）'; return; }
+  # 1) **鍵・URL・パス・ヘッダを語ごと落とす**（allowlist 寄り: 残す語を選ぶのではなく、
+  #    **危険な形を含む語をまるごと `[除去]` に替える**。部分を残すと鍵の断片が漏れる）。
+  #    - `://` を含む語        → URL
+  #    - `/` を含む語          → パス（`read:project` のような `:` 区切りは残る）
+  #    - `_` のあとに 20 文字以上続く語 → トークンらしきもの（`ghp_` 等の綴りに依存しない）
+  #    - `Authorization:` から行末まで
+  # 2) **残った文字のうち、allowlist の外は `?` に潰す。**
+  # 3) **行数と 1 行の長さを切る。**
+  # **allowlist は `tr -cd` で書く**——**`sed` の bracket 式に `{}` を入れると
+  # 区間指定と解釈されて `Invalid content of \{\}` で落ちる**（実測。
+  # **しかもパイプラインの途中なので出力は空になり、「安全化できた」ように見えた**
+  # ——**sed が落ちたことが、サニタイズが効いた顔をしていた。** この PBI の形そのものである）。
+  # **`tr -cd` は補集合を消すので、綴りを間違えると「消えすぎる」側に倒れる**（安全な向き）。
+  # **伏せ字は ASCII の `[redacted]` にする**（`[除去]` のような多バイト文字にしない）。
+  # **`tr` はバイト単位なので、多バイト文字を集合に書くと
+  # `range-endpoints are in reverse collating sequence order` で落ちる**（実測）
+  # ——**そして落ちた `tr` は何も出さないので、「全部安全化できた」顔になる。**
+  # **`-` は集合の最後に置く**（途中に置くと `"-\n` のような範囲と解釈される。実測で落ちた）。
+  kept=$(printf '%s' "$raw" \
+    | sed -E 's/[Aa]uthorization:.*$/[redacted]/' \
+    | sed -E 's#[^[:space:]]*://[^[:space:]]*#[redacted]#g' \
+    | sed -E 's#[^[:space:]]*/[^[:space:]]*#[redacted]#g' \
+    | sed -E 's/[^[:space:]]*_[A-Za-z0-9]{20,}[^[:space:]]*/[redacted]/g' \
+    | sed -E 's/\b([Ii][Dd]|installation|user|owner|org|login|node_id)[:=]? *[A-Za-z0-9_-]+/\1 [redacted]/g' \
+    | head -n "$GH_ERR_MAX_LINES" \
+    | LC_ALL=C tr -cd "A-Za-z0-9 .,:;!?()[]<>=_+*#%&@\$'\"\n-" \
+    | cut -c "1-$GH_ERR_MAX_CHARS" \
+    | tr '\n' '/' )
+  kept=${kept%/}
+  # **`[すべて除去されました]` と「空」を区別する**——**空のまま出すと
+  # 「gh は何も言わなかった」と読まれる**（それは別の事実である）。
+  [[ -z "$kept" ]] && kept='[すべて除去されました]'
+  # **実際に出した行数を言う**（**`GH_ERR_MAX_LINES` をそのまま書くと、
+  # 1 行しか無いときに「3 行のうち先頭 3 行」と嘘になる**）。
+  shown=$GH_ERR_MAX_LINES
+  [[ "$total" -lt "$shown" ]] && shown=$total
+  printf '%s（gh の stderr %s 行のうち先頭 %s 行）' "$kept" "$total" "$shown"
+}
+
+# gh_err_class <生の stderr> → `permission` / `transient` / `unknown`
+#
+# **3 値である理由**: **「分からない」を「一時的」に倒すと #1168 の誤診が再現する。**
+# **倒す向きが非対称**——「一時的」と言われた人は待つ（＝閉じる）が、
+# **「分からない」と言われた人は調べる。** **だから分からないときは分からないと言う。**
+#
+# **分類の根拠は `gh` が実際に言う文面である**（#1210 の受け入れ条件 1 で実測した）。
+# **文面は gh のバージョンで変わりうる**ので、**当たらなければ `unknown` に落ちる**
+# （`permission` や `transient` を既定にしない。**既定は推測である**）。
+gh_err_class() {
+  local raw=$1
+  [[ -z "$raw" ]] && { printf 'unknown'; return; }
+  case "$raw" in
+    # **rate limit を先に見る**（**`HTTP 403` より前**）。**順番が意味を持つ**:
+    # **GitHub は rate limit を `HTTP 403` で返す**ので、`HTTP 403` を先に書くと
+    # **「待てば直るもの」を「権限が足りません」と断言してしまう**
+    # ——**#1168 の誤診の鏡像**（向きは逆だが、同じ「断言が間違っている」形である）。
+    # **テストが実測で捕まえた**（fixture: `gh: HTTP 403: API rate limit exceeded ...`）。
+    *"rate limit"*|*"abuse detection"*|*"secondary rate"*) printf 'transient'; return ;;
+    # **権限・スコープ・認証**（**待っても直らない側**）
+    *"required scopes"*|*"has not been granted"*|*"read:project"*|*"read:org"*) printf 'permission'; return ;;
+    *"HTTP 401"*|*"Bad credentials"*|*"HTTP 403"*|*"Resource not accessible"*) printf 'permission'; return ;;
+    *"INSUFFICIENT_SCOPES"*|*"FORBIDDEN"*|*"Must have admin rights"*) printf 'permission'; return ;;
+    # **一時的に返らなかった側**（**待てば直る**）
+    *"HTTP 50"*|*"timeout"*|*"timed out"*|*"Something went wrong while executing your query"*) printf 'transient'; return ;;
+    *"connection refused"*|*"no such host"*|*"EOF"*) printf 'transient'; return ;;
+  esac
+  printf 'unknown'
+}
+
+# gh_err_verdict <class> → 読む人に行動を伝える一文
+#
+# **「権限が無い」と「返らなかった」が読み分けられること**が #1210 の受け入れ条件 3 である。
+gh_err_verdict() {
+  case "$1" in
+    permission) printf '**権限が足りません。この環境では構造的に測れません**（待っても直りません。トークンの射程を変えるしかありません）' ;;
+    transient)  printf '**一時的に返らなかった疑いです**（次の実行で直るなら一時障害です。続くなら一時的ではありません）' ;;
+    # **ここに「一時的」という語を書かない**（**書くと `transient` と grep で区別できなくなる**
+    # ——`scrum-monitor-report.sh` と読む人の両方が、語で読み分けている）。
+    *)          printf '**原因を分類できませんでした**（待てば直るとも、権限の不足とも、まだ言えません。下の gh の言い分を読んでください）' ;;
+  esac
+}
+
 # ---- 1. 開いている PR の赤い検査 --------------------------------------------------------------
 #
 # **`--paginate` が必要である**（#1093 で実測。**#1116 で必須 5 件が丸ごと消えた**）:
@@ -157,10 +273,20 @@ unmeasured() { UNMEASURED+=("$1"); log "MONITOR-BROKEN $1"; }
 # **monitor はマージを決めないので、判断を持つ必要が無い**（持つと二重管理になる）。
 pr_section() {
   local list prs=0 red_prs=0 pending_prs=0 broken=0 runs_seen=0 runs_want=0
+  # **`gh` の stderr を捨てずに受ける器**（#1210。ボードの節と同じ）。
+  local gh_err_file gh_err gh_cls
+  gh_err_file=$(mktemp) || die "一時ファイルを作れませんでした"
+  # shellcheck disable=SC2064  # 展開は今やる（この関数を抜けるときに消したい）
+  trap "rm -f '$gh_err_file'" RETURN
 
   if ! list=$(gh pr list --repo "$REPO" --state open --limit 200 \
-      --json number,headRefOid,isDraft --jq '.[] | [(.number|tostring), .headRefOid, (.isDraft|tostring)] | @tsv' 2>/dev/null); then
-    unmeasured "PR: 開いている PR の一覧が取れませんでした（gh の認証切れ／rate limit かもしれません）"
+      --json number,headRefOid,isDraft --jq '.[] | [(.number|tostring), .headRefOid, (.isDraft|tostring)] | @tsv' 2>"$gh_err_file"); then
+    # **元の文は「gh の認証切れ／rate limit かもしれません」と原因を推測していた**（#1210）。
+    # **推測を残すのが一番悪い**——**読む人は「かもしれません」を結論として受け取る。**
+    # **#1168 を閉じた理由がまさにそれである。** **gh が言っていることを出す。**
+    gh_err=$(cat "$gh_err_file" 2>/dev/null || true)
+    gh_cls=$(gh_err_class "$gh_err")
+    unmeasured "PR: 開いている PR の一覧が取れませんでした。$(gh_err_verdict "$gh_cls") gh の言い分: $(gh_err_sanitize "$gh_err")"
     return
   fi
 
@@ -370,12 +496,18 @@ issue_number_from_branch() {
 
 board_section() {
   local page cursor="" has_next next_cursor first_line
+  # **`gh` の stderr を捨てずに受ける器**（#1210）。`mktemp` は失敗しうるので `||` で落とす。
+  local gh_err_file gh_err gh_cls
+  gh_err_file=$(mktemp) || die "一時ファイルを作れませんでした"
+  # shellcheck disable=SC2064  # 展開は今やる（この関数を抜けるときに消したい）
+  trap "rm -f '$gh_err_file'" RETURN
   local -a NUMS=()
   local items=0
 
   local -A PR_SEEN=()      # issue 番号 → その番号を持つ PR の最新 updatedAt（epoch）
   local -A PR_WHICH=()     # issue 番号 → その PR 番号（ログに出す）
   local pr_lookups=0 pr_matched=0 pr_lookup_failed=0
+  local pr_err_first=""    # PR 検索が失敗したときの `gh` の言い分（**最初の 1 件だけ**。#1210）
 
   # shellcheck disable=SC2016  # $cursor / $project は GraphQL の変数
   local Q='query($project:ID!,$cursor:String){ node(id:$project){ ... on ProjectV2 {
@@ -410,8 +542,13 @@ board_section() {
               (.data.node.items.nodes[] | select(.content.number != null)
                 | ["item", (.content.number|tostring), (.content.state // "-"), (.content.updatedAt // "-"),
                    (.fieldValueByName.name // "-")])
-              | @tsv' 2>/dev/null); then
-      unmeasured "board: スクラムボードが読めませんでした（GraphQL が返りませんでした）"
+              | @tsv' 2>"$gh_err_file"); then
+      # **`gh` の言い分を捨てない**（#1210。**`2>/dev/null` に戻すと検査が落ちる**）。
+      # **原因が読めないと、読んだ人は「たぶん一時障害」と推測する**
+      # ——**PO は実際にそう推測して #1168 を閉じ、87 分後に #1203 が立った。**
+      gh_err=$(cat "$gh_err_file" 2>/dev/null || true)
+      gh_cls=$(gh_err_class "$gh_err")
+      unmeasured "board: スクラムボードが読めませんでした。$(gh_err_verdict "$gh_cls") gh の言い分: $(gh_err_sanitize "$gh_err")"
       return
     fi
     first_line=1; has_next="false"; next_cursor=""
@@ -468,9 +605,14 @@ board_section() {
     pr_lookups=$((pr_lookups+1))
     if ! pr_rows=$(gh pr list --repo "$REPO" --state all --limit 100 \
         --search "$ip_num in:head" --json number,headRefName,updatedAt \
-        --jq '.[] | [(.number|tostring), (.headRefName // "-"), (.updatedAt // "-")] | @tsv' 2>/dev/null); then
+        --jq '.[] | [(.number|tostring), (.headRefName // "-"), (.updatedAt // "-")] | @tsv' 2>"$gh_err_file"); then
       # **引けなければ「PR が無い」と混同しない**（#757）。**数えて、最後に測れなかったと言う。**
       pr_lookup_failed=$((pr_lookup_failed+1))
+      # **`gh` の言い分は最初の 1 件だけ覚える**（#1210）。
+      # **In Progress が 8 件在れば 8 回同じことを言うので、Issue 本文が同じ文で埋まる**
+      # ——**鳴り続ける監視は見られなくなる**（`worktree-audit.sh` と同じ理由）。
+      # **「最初の 1 件だけ」と断ること**。**件数は下の母数で別に出る。**
+      [[ -z "$pr_err_first" ]] && pr_err_first=$(cat "$gh_err_file" 2>/dev/null || true)
       continue
     fi
     while IFS=$'\t' read -r pn br pup; do
@@ -542,7 +684,8 @@ board_section() {
     unmeasured "board: 項目が 0 件でした。**ボードが空なのか読めていないのか区別できません**"
   elif [[ "$pr_lookup_failed" != 0 ]]; then
     # **対応表が欠けると「PR が無い」に見えて誤報に戻る**ので、測れていないと言う。
-    unmeasured "board: In Progress $pr_lookups 件のうち $pr_lookup_failed 件で PR を引けませんでした（**対応表が欠けています。判定不能 $undecidable 件は上限です**）"
+    gh_cls=$(gh_err_class "$pr_err_first")
+    unmeasured "board: In Progress $pr_lookups 件のうち $pr_lookup_failed 件で PR を引けませんでした（**対応表が欠けています。判定不能 $undecidable 件は上限です**）。$(gh_err_verdict "$gh_cls") gh の言い分（最初の 1 件）: $(gh_err_sanitize "$pr_err_first")"
   elif [[ "$unknown" != 0 ]]; then
     unmeasured "board: In Progress $inprogress 件のうち $unknown 件の更新時刻が取れていません（**判定不能 $undecidable 件は下限です**）"
   else
