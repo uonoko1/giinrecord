@@ -938,7 +938,14 @@ t_run_body_reason_line_has_the_prefix_report_reads() {
   # shellcheck disable=SC2016  # バックティックは run.sh が本文に書くリテラルで、展開させない
   assert_contains "$body" '- reason: `/ 503`' "run.sh の理由行は report.sh が読む形で書かれている"
   # **report.sh の抽出式そのものを、run.sh が出した本文に当てる**（自己参照にしない）。
-  local extracted; extracted=$(sed -n 's/^- reason: //p' "$LOG.body" | head -1)
+  # **パイプの末尾に `head` を置かない**（#527 / #1198 のレビューで CI が赤になった形）:
+  # `pipefail` のもとで `head -1` が先に終わると、書き手が SIGPIPE(141) で死に、
+  # **grep/sed が 0 を返しているのにパイプライン全体が偽になる。**
+  # 実測（2026-10-05・bash 5.2）: 一致が 1 行だけの本文では 0/3000 だが、
+  # **`- reason: ` が 20,000 行ある入力では 200/200 で偽になる**（sed の出力が
+  # パイプのバッファ 64KB を超えた瞬間から確定的に落ちる）。
+  # **「いま落ちない」は「将来も落ちない」ではない**ので、パイプをやめる。
+  local extracted; extracted=$(head -1 < <(sed -n 's/^- reason: //p' "$LOG.body"))
   # shellcheck disable=SC2016
   assert_eq '`/ 503`' "$extracted" "実物の本文に report.sh の抽出を当てると理由が出る"
 }
