@@ -31,3 +31,60 @@
 2026-09-24T02:17:47Z	fixed	985	(載っていない)	Backlog/In Progress	not-on-board
 2026-09-24T02:17:47Z	fixed	986	(載っていない)	Backlog/In Progress	not-on-board
 2026-09-24T02:17:47Z	run	-	-	-	issues=364 board=360 prs=300 findings=12 fixed=12 left=0
+2026-09-28T12:15:24Z	fixed	1074	In Review	Done	closed-issue-not-done
+2026-09-28T12:15:24Z	fixed	1102	(載っていない)	Backlog	not-on-board
+2026-09-28T12:15:24Z	run	-	-	-	issues=428 board=427 prs=300 findings=2 fixed=2 left=0
+2026-09-28T20:25:10Z	fixed	1055	Backlog	Done	closed-issue-not-done
+2026-09-28T20:25:10Z	fixed	1069	Backlog	Done	closed-issue-not-done
+2026-09-28T20:25:10Z	fixed	1089	Backlog	Done	closed-issue-not-done
+2026-09-28T20:25:10Z	fixed	1093	Backlog	Done	closed-issue-not-done
+2026-09-28T20:25:10Z	fixed	1100	Backlog	Done	closed-issue-not-done
+2026-09-28T20:25:10Z	fixed	1101	Ready	Done	closed-issue-not-done
+2026-09-28T20:25:10Z	fixed	1105	(載っていない)	Backlog	not-on-board
+2026-09-28T20:25:10Z	fixed	1106	(載っていない)	Done	not-on-board
+2026-09-28T20:25:10Z	fixed	1107	(載っていない)	Done	not-on-board
+2026-09-28T20:25:10Z	fixed	1109	(載っていない)	Backlog	not-on-board
+2026-09-28T20:25:10Z	fixed	1110	(載っていない)	Backlog	not-on-board
+2026-09-28T20:25:10Z	fixed	1111	(載っていない)	Backlog	not-on-board
+2026-09-28T20:25:10Z	fixed	1112	(載っていない)	Backlog	not-on-board
+2026-09-28T20:25:10Z	fixed	1114	(載っていない)	Backlog	not-on-board
+2026-09-28T20:25:10Z	fixed	1118	(載っていない)	Backlog	not-on-board
+2026-09-28T20:25:10Z	fixed	1120	(載っていない)	Backlog	not-on-board
+2026-09-28T20:25:10Z	fixed	1123	(載っていない)	Backlog	not-on-board
+2026-09-28T20:25:10Z	fixed	1124	(載っていない)	Backlog	not-on-board
+2026-09-28T20:25:10Z	fixed	1125	(載っていない)	Backlog	not-on-board
+2026-09-28T20:25:10Z	fixed	1128	(載っていない)	Backlog	not-on-board
+2026-09-28T20:25:10Z	fixed	1129	(載っていない)	Backlog	not-on-board
+2026-09-28T20:25:10Z	run	-	-	-	issues=443 board=428 prs=300 findings=21 fixed=21 left=0
+2026-09-28T20:30:02Z	fixed	1061	Backlog	Done	closed-issue-not-done
+2026-09-28T20:30:02Z	run	-	-	-	issues=443 board=443 prs=300 findings=1 fixed=1 left=0
+2026-09-28T21:48:16Z	fixed	1066	Backlog	Done	closed-issue-not-done
+2026-09-28T21:48:16Z	run	-	-	-	issues=443 board=443 prs=300 findings=1 fixed=1 left=0
+2026-09-29T00:55:26Z	fixed	1124	Backlog	Done	closed-issue-not-done
+2026-09-29T00:55:26Z	run	-	-	-	issues=443 board=443 prs=300 findings=1 fixed=1 left=0
+2026-09-29T19:55:41Z	fixed	1111	Backlog	Done	closed-issue-not-done
+2026-09-29T19:55:41Z	fixed	1132	(載っていない)	Backlog	not-on-board
+2026-09-29T19:55:41Z	fixed	1133	(載っていない)	Backlog	not-on-board
+2026-09-29T19:55:41Z	fixed	1134	(載っていない)	Backlog	not-on-board
+2026-09-29T19:55:41Z	fixed	1135	(載っていない)	Backlog	not-on-board
+2026-09-29T19:55:41Z	run	-	-	-	issues=450 board=446 prs=300 findings=5 fixed=5 left=0
+2026-10-03T18:30:46Z	fixed	1167	(載っていない)	Done	not-on-board
+2026-10-03T18:30:46Z	fixed	1168	(載っていない)	Backlog	not-on-board
+2026-10-03T18:30:46Z	fixed	1171	(載っていない)	Backlog	not-on-board
+2026-10-03T18:30:46Z	fixed	1172	(載っていない)	Backlog	not-on-board
+2026-10-03T18:30:46Z	fixed	1174	(載っていない)	Backlog	not-on-board
+2026-10-03T18:30:46Z	fixed	1175	(載っていない)	Backlog	not-on-board
+2026-10-03T18:30:46Z	run	-	-	-	issues=471 board=465 prs=300 findings=6 fixed=6 left=0
+2026-10-04T07:43:32Z	fixed	1177	(載っていない)	Backlog	not-on-board
+2026-10-04T07:43:32Z	fixed	1178	(載っていない)	Backlog	not-on-board
+2026-10-04T07:43:32Z	fixed	1180	(載っていない)	Backlog	not-on-board
+2026-10-04T07:43:32Z	fixed	1181	(載っていない)	Backlog	not-on-board
+2026-10-04T07:43:32Z	fixed	1182	(載っていない)	Backlog	not-on-board
+2026-10-04T07:43:32Z	fixed	1183	(載っていない)	Backlog	not-on-board
+2026-10-04T07:43:32Z	fixed	1184	(載っていない)	Backlog	not-on-board
+2026-10-04T07:43:32Z	fixed	1185	(載っていない)	Backlog	not-on-board
+2026-10-04T07:43:32Z	run	-	-	-	issues=479 board=471 prs=300 findings=8 fixed=8 left=0
+2026-10-04T08:04:18Z	fixed	1189	(載っていない)	Backlog	not-on-board
+2026-10-04T08:04:18Z	run	-	-	-	issues=480 board=479 prs=300 findings=1 fixed=1 left=0
+2026-10-04T08:25:11Z	fixed	1190	(載っていない)	Backlog	not-on-board
+2026-10-04T08:25:11Z	run	-	-	-	issues=481 board=480 prs=300 findings=1 fixed=1 left=0
