@@ -116,7 +116,8 @@ describe("readCarried: 前回出力（data/）から引き継ぐ回次の採決�
   test("data/ が空なら全部空", async () => {
     const dir = await mkdtemp(join(tmpdir(), "carried-"));
     try {
-      assert.deepEqual(await readCarried(dir, [200]), { rollCalls: [], decisions: new Map(), matchedVotes: new Map(), bills: [], entries: [], withoutSession: 0 });
+      // previousDecisions（#1206）は回次で絞らない復元元。前回出力が無いので空。
+      assert.deepEqual(await readCarried(dir, [200]), { rollCalls: [], decisions: new Map(), previousDecisions: new Map(), matchedVotes: new Map(), bills: [], entries: [], withoutSession: 0 });
     } finally {
       await rm(dir, { recursive: true, force: true });
     }

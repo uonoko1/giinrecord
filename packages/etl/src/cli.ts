@@ -21,7 +21,7 @@ import { committeePageUrl, fetchCommitteeRosters } from "./sources/kokkai-commit
 import { matchCommitteeRoles, type MatchedCommitteeRole } from "./match-committee.ts";
 import { buildDataset, mergeRosters, rosterSessionsFor, type Roster } from "./aggregate.ts";
 import { dietAssemblies, readSessionsOnDisk, validateDataset, writeDataset } from "./dataset.ts";
-import { carriedTenureVerified, dropCarriedCommitteeRoles, dropCarriedSpeeches, lostSessionEntries, lostTimelineEntries, lostVoteMatches, planSessions, readCarried, readSessionCounts } from "./sessions.ts";
+import { carriedTenureVerified, dropCarriedCommitteeRoles, dropCarriedSpeeches, lostDecisions, lostSessionEntries, lostTimelineEntries, lostVoteMatches, planSessions, readCarried, readRollCallIndex, readSessionCounts, restoreDecisions } from "./sessions.ts";
 import { readMemberIndex } from "./local-assemblies.ts";
 
 /**
@@ -167,16 +167,26 @@ for (const session of targets) {
   console.log(`session ${session}: ${list.length} bills (${toBillDecisions(list).length} decisions)`);
   allBills.push(...list);
 }
+// 突合は今回取得した回次の議案情報（allBills）に対してだけ行う。carried の回次の議案情報は取っていないので
+// 当たるはずがなく、unmatched に落ちるだけになる。
 const carriedIds = new Set(carried.rollCalls.map((rc) => rc.id));
 const bills = matchBillResults(rollCalls.filter((rc) => !carriedIds.has(rc.id)), toBillDecisions(allBills));
-const decisions = new Map([...bills.results].map(([id, r]) => [id, r.decision]));
-for (const rc of carried.rollCalls) {
-  const decision = carried.decisions.get(rc.id);
-  if (decision) decisions.set(rc.id, decision);
-  else bills.unmatched.push({ rollCallId: rc.id, title: rc.title, sourceUrl: rc.sourceUrl });
-}
+// **前回出力の語は、carried だけでなく targets の回次にも戻す**（#1206）。
+// かつてこのループは `carried.rollCalls` だけを回していた。遡り（`pnpm etl 200 … 216`）では対象の回次が
+// targets に入って carried から出るので、**復元が一切効かず前回は出ていた語が消えた**
+// （実測 2026-10-04: 380 行のうち 209-1128-v010 の「可決」1 件。票数は残り判定の語だけが落ちる）。
+// 日次 cron は既定 5 回次しか触らないので発火しない——**遡りでだけ出る壊れ方の 3 件目**（#1190 / #1205）。
+// 復元元は `rollcalls/index.json` だけである（個票は result を持たない。参院 議案情報は data/ に残らない）。
+// 今回の突合が当たった採決は今回の語を採る（議案情報の訂正で古い語を残さない。restoreDecisions）。
+const restored = restoreDecisions(new Map([...bills.results].map(([id, r]) => [id, r.decision])), carried.previousDecisions, rollCalls);
+const decisions = restored.decisions;
+// 語が 1 つも付かなかった採決だけを unmatched-bills.json に出す（`bills.unmatched` は今回の突合だけを見ているので、
+// 復元で語が付いた採決がそこに残る。stillMissing から作り直して二重に数えない）。
+const missing = new Set(restored.stillMissing);
+const unmatchedBills = rollCalls.filter((rc) => missing.has(rc.id)).map((rc) => ({ rollCallId: rc.id, title: rc.title, sourceUrl: rc.sourceUrl }));
+if (restored.restored.length) console.log(`roll call decisions restored from the previous rollcalls/index.json: ${restored.restored.length} (bill titles did not match this time)`);
 // 人事案件・決議など議案情報に載らない採決は得票のみの表示になる。件数を出して運用者が確認できるようにする。
-if (bills.unmatched.length) console.warn(`roll calls without bill decision: ${bills.unmatched.length} (see data/unmatched-bills.json)`);
+if (unmatchedBills.length) console.warn(`roll calls without bill decision: ${unmatchedBills.length} (see data/unmatched-bills.json)`);
 // 提出法案: 参法の発議者（議案ページに載る筆頭者。「外N名」の氏名は公表されていない）を名簿に名寄せして timeline の bill 行にする（Issue #56）。
 const proposed = matchBills(allBills, members);
 console.log(`bills: ${allBills.filter((b) => b.kind === "参法").length} 参法, ${proposed.entries.length} proposer entries matched`);
@@ -328,6 +338,8 @@ if (groupMismatch.length) console.warn(`group mismatch (matched by name only): $
 // writeDataset が members/ を消す前に読む（消失検出用。#235 / #256）
 const previousIndex = await readMemberIndex(DATA);
 const previousSessionCounts = await readSessionCounts(DATA);
+// 前回出力の採決一覧（#1206 の判定の語の後退検出用）。writeDataset が rollcalls/index.json を上書きする前に読む。
+const previousRollCallIndex = await readRollCallIndex(DATA);
 
 const dataset = {
   // 議会一覧（#156）: 国会の2行。members の assemblyId（diet-sangiin / diet-shugiin）はこの id を指す。
@@ -336,7 +348,7 @@ const dataset = {
   rollCallDetails: rollCalls,
   bills: shugiinMatched.bills,
   unmatched,
-  unmatchedBills: bills.unmatched,
+  unmatchedBills,
   unmatchedGroups: [...groupsUnknown, ...shugiinGroupsUnknown],
   groupMismatch,
   meta: {
@@ -386,6 +398,21 @@ const dataset = {
     console.error(`timeline entries lost for a specific session since the previous output (carried entries dropped?): ${lost.length}`);
     for (const l of lost) console.error(`  ${l.assemblyId} session ${l.session} ${l.kind}: ${l.before} -> ${l.after}`);
     console.error("  data/ is unchanged. Re-run with the affected sessions (`pnpm etl <session>...`) to regenerate them.");
+    process.exit(1);
+  }
+}
+
+// 前回出力で判定の語（可決・否決・同意…）が出ていた採決から、語が消えていないか（#1206）。
+// 語は投票結果ページに無く参院 議案情報の案件名突合で付けるので、突合が外れると票数だけが残って
+// 「この採決がどうなったか」が読めなくなる。**遡りは CI で流せない**（冷えたキャッシュで 5 時間超。#1209）ので、
+// 壊れ方そのものを日次の経路に置く。既定 5 回次のどれかで語が落ちた日に、その日の実行が止まる。
+// 語が別の語に変わった（議案情報の訂正）・語が増えた・採決ごと消えた分は対象外（lostDecisions のコメント）。
+{
+  const lost = lostDecisions(previousRollCallIndex, dataset.rollCalls);
+  if (lost.length) {
+    console.error(`roll call decisions lost since the previous output (bill title match broke, and the previous word could not be restored?): ${lost.length}`);
+    for (const l of lost) console.error(`  ${l.id} (session ${l.session}): ${l.before} -> (no decision)`);
+    console.error("  data/ is unchanged. The decision word only exists in data/rollcalls/index.json; losing it loses the fact (#26).");
     process.exit(1);
   }
 }
