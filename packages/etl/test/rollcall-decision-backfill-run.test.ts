@@ -115,7 +115,7 @@ async function seed(dir: string): Promise<void> {
 const NO_MATCH = { title: "まったく別の法律案", decision: "可決" } as const;
 const MATCHES = { title: "租税特別措置法及び東日本大震災の被災者等に係る国税関係法律の臨時特例に関する法律の一部を改正する法律案", decision: "否決" } as const;
 
-function loaderSource(dataDir: string, bill: { title: string; decision: string }): string {
+function loaderSource(dataDir: string, bill: { title: string; decision: string }, breakRestore = false): string {
   // **モジュールの原文は残したまま、取得する関数だけを差し替える。**
   //
   // **末尾に `const f__stub = …` を足す形（#901 がやっている形）は使えない**——
@@ -182,12 +182,28 @@ function loaderSource(dataDir: string, bill: { title: string; decision: string }
       `  }`,
     ].join("\n");
   }).join("\n");
+  // **復元の経路だけを壊す fixture**（`breakRestore`）。`readCarried` が返す `previousDecisions` を
+  // 空にする——**復元元が在るのに復元が効かない**状態、つまり #1206 そのものの形である。
+  // **cli.ts の歯止め（`lostDecisions` → `process.exit(1)`）が鳴るのはこのときだけ**なので、
+  // これが無いと歯止めを消す変異が素通りする（実測 2026-10-05: 25 件すべて緑だった）。
+  const breakCase = breakRestore
+    ? [
+        '  if (p.endsWith("src/sessions.ts")) {',
+        '    let src = r.source.toString();',
+        '    const re = new RegExp("([{,])readCarried([,}])");',
+        '    const next2 = src.replace(re, "$1readCarried__stub as readCarried$2");',
+        '    if (next2 === src) throw new Error("sessions.ts の export から readCarried を差し替えられなかった");',
+        '    return { ...r, source: next2 + "\\nconst readCarried__stub = async (...a) => { const c = await readCarried(...a); return { ...c, previousDecisions: new Map() }; };\\n" };',
+        '  }',
+      ].join("\n")
+    : "";
   const dataUrl = pathToFileURL(join(dataDir, "/")).href;
   return [
     'export async function load(url, context, next) {',
     '  const r = await next(url, context);',
     '  const p = url.replace(/\\\\/g, "/").replace(/\\?.*$/, "");',
     cases,
+    breakCase,
     '  if (p.endsWith("src/cli.ts")) {',
     // **tsx は空白を詰めてから渡してくる**（実測: `new URL("../../../data/",import.meta.url)`）
     `    const re = /new URL\\(\\s*"\\.\\.\\/\\.\\.\\/\\.\\.\\/data\\/"\\s*,\\s*import\\.meta\\.url\\s*\\)/;`,
@@ -201,37 +217,53 @@ function loaderSource(dataDir: string, bill: { title: string; decision: string }
 }
 
 /** `pnpm etl <sessions>` を、取得なし・一時ディレクトリで走らせて、書かれた `rollcalls/index.json` を返す。 */
-async function etl(sessions: number[], bill: { title: string; decision: string } = NO_MATCH): Promise<{ rows: RollCallSummary[]; log: string }> {
+async function etl(
+  sessions: number[],
+  bill: { title: string; decision: string } = NO_MATCH,
+  opts: { breakRestore?: boolean } = {},
+): Promise<{ rows: RollCallSummary[]; log: string; code: number }> {
   const work = await mkdtemp(join(tmpdir(), "giinrecord-1206-"));
   const data = join(work, "data");
   await mkdir(data, { recursive: true });
   await seed(data);
-  const loader = loaderSource(data, bill);
+  const loader = loaderSource(data, bill, opts.breakRestore ?? false);
   // **fixture が本当にこの形で入っていること**を、ローダのソースの上で確かめる。
   // 空振りに気づかず測ると、結果が全部無意味になる（#514）
   // （ローダのソースは二重に JSON で囲まれているので、逐語ではなく中身の文字列で見る）
   assert.ok(loader.includes(bill.title), "fixture の議案名がローダに入っていない");
   assert.ok(loader.includes(bill.decision), "fixture の審議結果がローダに入っていない");
+  assert.equal(loader.includes("readCarried__stub"), opts.breakRestore ?? false, "breakRestore の差し替えが意図と食い違っている");
   await writeFile(join(work, "loader.mjs"), loader);
   const hook = join(work, "hook.mjs");
   await writeFile(hook, [
     'import { register } from "node:module";',
     `register("./loader.mjs", ${JSON.stringify(pathToFileURL(join(work, "/")).href)});`,
   ].join("\n"));
-  const { stdout, stderr } = await run(
-    process.execPath,
-    ["--import", "tsx", "--import", pathToFileURL(hook).href, join(repo, "packages/etl/src/cli.ts"), ...sessions.map(String)],
-    { cwd: join(repo, "packages/etl"), timeout: 180_000, maxBuffer: 32 * 1024 * 1024 },
-  );
-  const rows = JSON.parse(await readFile(join(data, "rollcalls", "index.json"), "utf8")) as RollCallSummary[];
-  return { rows, log: stdout + stderr };
+  // **非0終了も「結果」である**（歯止めが鳴ったこと自体を測る）。throw させずに終了コードを受け取る。
+  let code = 0;
+  let out = "";
+  try {
+    const { stdout, stderr } = await run(
+      process.execPath,
+      ["--import", "tsx", "--import", pathToFileURL(hook).href, join(repo, "packages/etl/src/cli.ts"), ...sessions.map(String)],
+      { cwd: join(repo, "packages/etl"), timeout: 180_000, maxBuffer: 32 * 1024 * 1024 },
+    );
+    out = stdout + stderr;
+  } catch (err) {
+    const e = err as { code?: number; stdout?: string; stderr?: string };
+    code = typeof e.code === "number" ? e.code : -1;
+    out = (e.stdout ?? "") + (e.stderr ?? "");
+  }
+  const raw = await readFile(join(data, "rollcalls", "index.json"), "utf8");
+  return { rows: JSON.parse(raw) as RollCallSummary[], log: out, code };
 }
 
 const resultOf = (rows: RollCallSummary[]): string | undefined => rows.find((s) => s.id === "209-1128-v010")?.result;
 
 test("#1206 遡り（対象の回次を取り直す実行）でも、前回出力の判定の語が残る", async () => {
   // targets = [209] / carried = [221]。**209 が carried から出る**＝元のコードでは復元が効かない形
-  const { rows, log } = await etl([209]);
+  const { rows, log, code } = await etl([209]);
+  assert.equal(code, 0, `ETL が非0で終わった:\n${log.slice(-1500)}`);
   assert.equal(rows.length, 1, `採決が 1 件書かれているはず:\n${log.slice(-1500)}`);
   assert.equal(resultOf(rows), "可決（賛成 1・反対 0）", `遡りで判定の語が消えた。cli.ts の restoreDecisions を見る:\n${log.slice(-1500)}`);
   // **復元が「効いた」とログで言っていること**（黙って通るのと区別する。#1056）
@@ -241,15 +273,37 @@ test("#1206 遡り（対象の回次を取り直す実行）でも、前回出�
 test("#1206 日次の形（対象外の回次として引き継ぐ実行）でも語が残る——こちらは元から壊れていない", async () => {
   // targets = [221] / carried = [209]。**この経路は #1206 の前から正しく動いていた**。
   // 直したことで壊していないことを見る（片側を直して対の側を壊す形を塞ぐ）。
-  const { rows, log } = await etl([221]);
+  const { rows, log, code } = await etl([221]);
+  assert.equal(code, 0, `ETL が非0で終わった:\n${log.slice(-1500)}`);
   assert.equal(resultOf(rows), "可決（賛成 1・反対 0）", `引き継ぎ側で語が消えた:\n${log.slice(-1500)}`);
 });
 
 test("#1206 今回の突合が当たれば、前回と違っても今回の語を採る（古い語で上書きしない。受け入れ条件 2）", async () => {
   // 参院 議案情報の議案名を採決の案件名と一致させ、審議結果を「否決」にする。
   // **前回出力は「可決」**なので、復元が今回の突合を上書きしていれば「可決」が出て落ちる。
-  const { rows, log } = await etl([209], MATCHES);
+  const { rows, log, code } = await etl([209], MATCHES);
+  assert.equal(code, 0, `ETL が非0で終わった:\n${log.slice(-1500)}`);
   assert.equal(resultOf(rows), "否決（賛成 1・反対 0）", `今回の突合（否決）が前回の語（可決）に上書きされた:\n${log.slice(-1500)}`);
   // 今回当たった採決は復元の対象にしない（件数が 0 件＝ログに行が出ない）
   assert.doesNotMatch(log, /roll call decisions restored/, `今回当たったのに復元も走っている:\n${log.slice(-1500)}`);
+});
+
+/**
+ * **歯止めが鳴ることを測る**（受け入れ条件 3 の「変異で示す」側）。
+ *
+ * **これが無いと、`cli.ts` の `lostDecisions` → `process.exit(1)` を丸ごと消しても
+ * 1 件も落ちない**（実測 2026-10-05: `const lost = lostDecisions(…)` を `const lost = []` に
+ * 置き換えて 25 件すべて緑だった）。
+ *
+ * **復元の経路だけを壊して**（`readCarried` の `previousDecisions` を空にする）、
+ * **歯止めが語の消失を名指しして、`data/` を書かずに止まること**を見る。
+ */
+test("#1206 復元が効かなくなったら、歯止めが語の消失を名指しして data/ を書かずに止まる", async () => {
+  const { rows, log, code } = await etl([209], NO_MATCH, { breakRestore: true });
+  assert.equal(code, 1, `語が消えたのに ETL が 0 で終わった（歯止めが鳴っていない）:\n${log.slice(-2000)}`);
+  // **何が消えたかを名指ししていること**（「違反 1 件」だけでは運用者が何も直せない）
+  assert.match(log, /roll call decisions lost since the previous output/, `歯止めのメッセージが出ていない:\n${log.slice(-2000)}`);
+  assert.match(log, /209-1128-v010 \(session 209\): 可決 -> \(no decision\)/, `消えた採決と語を名指ししていない:\n${log.slice(-2000)}`);
+  // **data/ が書き換わっていない**（壊れた出力を公開しない）。前回出力の語がそのまま残る
+  assert.equal(resultOf(rows), "可決（賛成 244・反対 0）", "止めたのに data/ が上書きされている");
 });
