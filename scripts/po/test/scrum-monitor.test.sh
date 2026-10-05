@@ -814,15 +814,56 @@ EOF
 }
 test_case "monitor: gh の言い分を出すときも鍵・URL・パス・枝名は出さない (#1210)" t_mon_board_error_text_does_not_leak
 
+# **鍵が「裸で」出てくる形を別に測る**（上の fixture では鍵が URL と
+# `Authorization` の中に在り、**先の 2 つの規則が先に消していたので、
+# この規則を丸ごと消しても 0 件落ちた**——実測。**だから fixture を足す**）。
+#
+# **規則は接頭辞の綴りに依存しない**（`_` のあとに 20 文字以上続く語を落とす）。
+# **依存させてはいけない**——**知らない鍵の綴りに無力な denylist になる。**
+t_mon_board_bare_token_is_redacted() {
+  local bare="sometoken_ZZZZYYYYXXXXWWWWVVVVUUUU"
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr list --repo "*) echo '[]' ;;
+    "api graphql"*)
+      echo 'gh: HTTP 401: token $bare was rejected' >&2
+      exit 1 ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 4 "$STATUS" "ボードが読めなければ exit 4: $ERR"
+  assert_contains "$ERR" "HTTP 401" "**HTTP の状態は読めるように出す**"
+  assert_not_contains "$ERR" "$bare" "**裸で出てきた鍵らしき語も落とす（接頭辞の綴りに依存しない）**"
+  assert_not_contains "$ERR" "ZZZZYYYY" "**部分も残さない（断片でも鍵は鍵である）**"
+}
+test_case "monitor: URL でもヘッダでもない裸の鍵らしき語を落とす (#1210)" t_mon_board_bare_token_is_redacted
+
 # **長い stderr を無制限に流さない**（Issue 本文にコピーされるので、1 行の上限と総量を決める）。
+#
+# **上限は 2 つで、どちらも必要である**（**片方だけ外しても落ちる形にする**）:
+#   `head -n $GH_ERR_MAX_LINES`（既定 3）   行数
+#   `cut -c 1-$GH_ERR_MAX_CHARS`（既定 300） 1 行の長さ
+# **実測で初版の断定はどちらも殺せなかった**（`< 4000` が緩すぎた。
+# **`head` を外しても 361 → 1039 文字で、4000 に届かなかった**）。
+# **だから fixture は「長い行を何本も」にし、断定は設計の関係式そのものにする。**
+#
+#   出る長さ ≈ min(行数, 3) × min(1 行の長さ, 300) + 定型文
+# **つまり 1,000 文字の行を 40 本もらっても、900 文字 + 定型文に収まる。**
 t_mon_board_error_text_is_bounded() {
   local h; h=$(handler <<'EOF'
 handle() {
   case "$*" in
     "pr list --repo "*) echo '[]' ;;
     "api graphql"*)
-      echo "gh: HTTP 502: $(head -c 4000 < /dev/zero | tr '\0' 'x')" >&2
-      for i in $(seq 1 40); do echo "gh: noise line $i"; done >&2
+      # **長い行を 41 本**（1 本目だけ HTTP の状態を持つ。残りも 1,000 文字ある）
+      long=$(head -c 1000 < /dev/zero | tr '\0' 'x')
+      echo "gh: HTTP 502: $long" >&2
+      for i in $(seq 1 40); do echo "gh: noise $i $long"; done >&2
       exit 1 ;;
     *) echo "unexpected: $*" >&2; exit 99 ;;
   esac
@@ -834,8 +875,18 @@ EOF
   assert_eq 4 "$STATUS" "ボードが読めなければ exit 4: $ERR"
   assert_contains "$ERR" "HTTP 502" "**先頭は出す**"
   # **母数を出す**（#757）: 何行のうち何行を出したか。**黙って切らない。**
-  assert_contains "$ERR" "41 行のうち" "**捨てた行数が読める（黙って切らない）**"
-  [[ ${#ERR} -lt 4000 ]] || fail "**stderr を無制限に流していません**: ${#ERR} 文字"
+  assert_contains "$ERR" "41 行のうち先頭 3 行" "**何行のうち何行を出したかが読める（黙って切らない）**"
+  # **関係式そのものを断定する。** **上限は `$ERR` 全体ではなく、`gh` の言い分の部分に効く**
+  # ——**`$ERR` には監視の他の行も入り、しかも `unmeasured` の文は 2 回出る**
+  # （`log` で 1 回、末尾の一覧で 1 回）。**実測:**
+  #   sanitize したものだけ           929 文字（3 行 × 300 文字 + 定型文）
+  #   `$ERR` 全体（現行）           2,369 文字（= 929 × 2 + 監視の他の行）
+  #   `head` を外した `$ERR`       **12,000 文字超**（41 行 × 300）
+  #   `cut` を外した `$ERR`         **6,000 文字超**（3 行 × 1,000）
+  # **だから閾値は 3,000 に置く**（現行 2,369 を通し、どちらの変異も破る）。
+  # **「現行より少し上」に置くこと**——**4000 に置いていた初版は、
+  # `head` を外しても落ちなかった**（1,039 文字で届かなかった。実測）。
+  [[ ${#ERR} -lt 3000 ]] || fail "**上限が効いていません**（3 行 × 300 文字が設計）: ${#ERR} 文字"
 }
 test_case "monitor: gh の言い分は上限つきで出し、何行のうち何行かを言う (#1210)" t_mon_board_error_text_is_bounded
 
@@ -904,7 +955,30 @@ test_case "monitor: PR 検索が失敗 → gh の言い分を出し、権限の�
 t_mon_classifier_table() {
   local spec
   # `<fixture>|<出てほしい語>|<出てはいけない語>`
+  # **先頭 3 件は実測した文面である**（#1210 の受け入れ条件 1。
+  # **`gh` は HTTP の状態を行末の括弧に入れる**——`HTTP 401:` ではなく `(HTTP 401)`。
+  # **fixture を推測で書くと、実装が当たらない形を測ってしまう**）:
+  #   GH_TOKEN=<無効な値> gh api graphql -f query='query{ viewer{ login } }'
+  #     → gh: Bad credentials (HTTP 401)
+  #   gh api repos/torvalds/linux/actions/secrets
+  #     → gh: You must have repository read permissions or ... (HTTP 403)
+  #   gh api graphql -f query='query{ node(id:"<存在しない PVT_ id>"){ ... } }'
+  #     → gh: Could not resolve to a node with the global id of '...'
+  #
+  # **3 つめは `unknown` に落ちる。それが正しい。**
+  # **GraphQL は「見る権限が無いノード」を「存在しないノード」として隠す**ので、
+  # **この文面は「権限が無い」の症状でもありうるが、確定しない。**
+  # **`permission` に倒すと、本当に id が間違っている場合に嘘になる**
+  # ——**「分からない」を断言に倒すのが #1168 の誤診の型である。**
   local -a cases=(
+    # **rate limit は `HTTP 403` で返る**ので、**`transient` と `permission` の
+    # どちらに倒れるかが `case` の順番で決まる**（#1210 の実装のコメント）。
+    # **この 2 件が無いと、順番を入れ替える変異が 0 件落ちた**（実測）。
+    'gh: HTTP 403: API rate limit exceeded for user ID 0.|一時的|権限が足りません'
+    'gh: HTTP 403: You have exceeded a secondary rate limit.|一時的|権限が足りません'
+    'gh: Bad credentials (HTTP 401)|権限が足りません|一時的'
+    'gh: You must have repository read permissions or have the repository secrets fine-grained permission. (HTTP 403)|権限が足りません|一時的'
+    "gh: Could not resolve to a node with the global id of 'PVT_kwDOAAAAAAAAAAA'|原因を分類できませんでした|権限が足りません"
     'gh: HTTP 403: Resource not accessible by integration|権限が足りません|一時的'
     'gh: HTTP 502 Bad Gateway|一時的|権限が足りません'
     'gh: Post "api": dial tcp: lookup api: no such host|一時的|権限が足りません'
@@ -931,7 +1005,7 @@ EOF
     assert_not_contains "$ERR" "$deny" "[$fx] **$deny と混ぜない**"
   done
 }
-test_case "monitor: 分類の表（permission / transient / unknown の 5 通り）が読み分けられる (#1210)" t_mon_classifier_table
+test_case "monitor: 分類の表（実測 3 件を含む 10 通り）が読み分けられる (#1210)" t_mon_classifier_table
 
 # ---- 3. worktree の節 -------------------------------------------------------------------------
 #
