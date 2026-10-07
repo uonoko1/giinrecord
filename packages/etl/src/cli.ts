@@ -10,7 +10,7 @@ import { shardUnmatched, type UnmatchedRow } from "./unmatched.ts";
 import { billListUrl, committeeBills, fetchBills, matchBillResults, toBillDecisions, type Bill } from "./sources/sangiin-bills.ts";
 import { matchSpeeches, speechRosters } from "./match-speeches.ts";
 import { matchBills } from "./match-bills.ts";
-import { fetchShugiinBills, shugiinBillListUrl } from "./sources/shugiin-bills.ts";
+import { addShugiinBillPage, fetchShugiinBills, shugiinBillListUrl } from "./sources/shugiin-bills.ts";
 import { matchShugiinBills } from "./match-shugiin-bills.ts";
 import { fetchShugiinQuestions, shugiinQuestionListUrl } from "./sources/shugiin-questions.ts";
 import { fetchSangiinQuestions, sangiinQuestionListUrl } from "./sources/sangiin-questions.ts";
@@ -195,14 +195,28 @@ if (committee.length) console.log(`bills: ${committee.length} 参法 by committe
 unmatched.push(...proposed.unmatched);
 
 // 衆院 議案情報（Issue #72）: 一覧（審議回次）→経過ページ。提出者一覧・賛成者は個人名（事実）、会派態度は会派単位（推定）で Bill.shugiinGroupStance にだけ入る。
-// 継続審議の議案は複数回次の一覧に同じ経過ページで載るので id で重複を除く（後の回次の一覧＝新しい状態を採る）。
-// 前回出力の議案（data/bills/）を先に入れ、今回取得した分で上書きする（引き継ぐ回次の議案を消さない。#103）。
+//
+// **継続審議の議案は、審議回次ごとに「別 URL」の経過ページを持つ**（#1218。実測で確かめた）。
+// 以前ここには「複数回次の一覧に**同じ経過ページで**載る」と書いてあったが**それは誤りで**、
+// `id`（`{提出回次}-{種類}-{番号}`）が同じまま中身の違うページが複数できる。
+// **後勝ちの `set` で潰すと、審議の途中で欄がまだ空の最新回次のページが勝ち、
+// 前の回次が記録していた付託・審議結果・受理日が消える**（実測 18 件 / 1,941。うち付託 4 件）。
+// **各ページは「その回次に起きたこと」の部分的な記録**なので、`addShugiinBillPage` で重ねる
+// （書いている欄は後のページを採り、**書いていない欄は前の値を消さない**）。
+//
+// **重ねる順序は `addShugiinBillPage` の中に閉じてある。** ここで `previous` を取り出して
+// 自分で `merge` を呼ぶと、**引数を取り違えたときに「古いページが勝つ」形に戻るのに
+// 検査が鳴らない**（#1218 のレビュー指摘 1。実測で 21/79 件の付託日が古い値に化けた）。
+//
+// 前回出力の議案（data/bills/）を先に入れ、今回取得した分を重ねる（引き継ぐ回次の議案を消さない。#103）。
 const shugiinBills = new Map<string, SharedBill>(carried.bills.map((b) => [b.id, b]));
+let shugiinMergedPages = 0;
 for (const session of targets) {
   const list = await fetchShugiinBills(session);
   console.log(`session ${session}: ${list.length} shugiin bills (${list.filter((b) => b.shugiinGroupStance).length} with group stance)`);
-  for (const b of list) shugiinBills.set(b.id, b);
+  for (const b of list) if (addShugiinBillPage(shugiinBills, b)) shugiinMergedPages++;
 }
+if (shugiinMergedPages) console.log(`shugiin bills: merged ${shugiinMergedPages} additional session pages onto existing bills (#1218)`);
 // 提出者・賛成者は衆院の名簿に名寄せして timeline の bill 行にする（Issue #73）。名簿は「現在」の1回次分（memberSession）しか無いので、
 // 名寄せされるのはその回次に提出された議案だけ。過去回次の議案は氏名のまま残る（名簿 PBI #71 で回次ごとの名簿が入れば広がる）。
 const shugiinMatched = matchShugiinBills([...shugiinBills.values()], shugiin.members);

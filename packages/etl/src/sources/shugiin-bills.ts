@@ -254,6 +254,110 @@ function referredCommittees(b: Bill): BillReferredCommittee[] {
 }
 
 /**
+ * **同じ議案の、審議回次ごとの経過ページを重ねる**（#1218）。
+ *
+ * ## なぜ要るか（実測で分かった原因）
+ *
+ * **衆院は「議案 1 件につき 1 ページ」ではなく「(提出回次, 番号, 審議回次) につき 1 ページ」を出す。**
+ * 継続審議の議案は、審議回次ごとに **別 URL の経過ページ**が増える。
+ * **`id` は `{提出回次}-{種類}-{番号}` なので、それら全部が同じ id に衝突する。**
+ *
+ * 実測（2026-10-07、一次資料を直接取得。`216-衆法-9`）:
+ * ```
+ *   kaiji216  keika/1DDDBA6  付託 2024-12-10 政治改革に関する特別  結果 閉会中審査  受理 2024-12-09
+ *   kaiji217  keika/1DDDD82  付託 2025-01-24 政治改革に関する特別  結果 閉会中審査  受理 (空)
+ *   kaiji218  keika/1DDF436  付託 2025-08-01 政治改革に関する特別  結果 閉会中審査  受理 (空)
+ *   kaiji219  keika/1DE0196  付託 2025-10-24 政治改革に関する特別  結果 閉会中審査  受理 (空)
+ *   kaiji220  keika/1DE0AEE  **付託 (空)**                         結果 (空)       受理 (空)
+ * ```
+ *
+ * **各ページは「その審議回次に何が起きたか」の部分的な記録**であって、議案の全体像ではない。
+ * **欄が空なのは「付託されていない」ではなく「その回次ではまだ付託されていない」である。**
+ *
+ * 衝突を `Map.set` の後勝ちで解いていたため、**審議の途中で欄がまだ空の最新回次のページが勝ち、
+ * 前の回次が記録していた事実が丸ごと消えた。** 実測（`origin/main` → PR #1222 の `data/`。
+ * `data/bills/` の **1,941 件を全数**）:
+ * ```
+ *   キーが消えた議案     18 件 / 1,941   （18/18 すべて sourceUrl が別ページに変わっている）
+ *     result   が消えた  18 件
+ *     received が消えた  16 件
+ *     referral が消えた   4 件  ← bills/index.json の referredCommittees 1,660 → 1,656（#1218）
+ * ```
+ * **kaiji220 の一覧に載った 216-衆法 は 11 件で、そのうち付託欄が空だったのがちょうど 4 件。
+ * 落ちた 4 件と完全に一致する**（`216-衆法-9 / 12 / 13 / 22`）。
+ * 残りの 7 件は第220回の付託が記録されていたので件数が変わらず、**「特別委員会だから」でも
+ * 「閉会中審査だから」でもない**——**最新ページの欄が空かどうか**だけで決まっていた。
+ *
+ * ## 規則
+ *
+ * **後のページが書いていない欄は、前のページが書いた値を消さない。**
+ * **後のページが書いている欄は、後のページを採る**（「新しい状態を採る」は変えない。
+ * 付託日が回次ごとに更新されるのは一次資料がそう書いているからで、潰してはいけない）。
+ *
+ * - **`undefined`（欄が無い）では上書きしない。**
+ * - **空文字・空配列・空オブジェクトでも上書きしない**——ただし `supporterNames` は例外で、
+ *   パーサが「欄が無い」= `undefined` と「欄はあるが空」= `[]` を分けている（`parseShugiinBill`）。
+ *   **`[]` は「賛成者の欄が在って空」という事実の記録**なので、そちらは採る。
+ * - **`id` が違うものは混ぜない**（取り違えを黙って通さない）。
+ *
+ * **欄ごとの浅いマージである**（`referral` の中を欄単位で混ぜない）。
+ * **理由**: `referral` は 1 ページが 4 欄を一度に書く。欄単位で混ぜると
+ * **第216回の衆院付託と第220回の参院付託を 1 件の `referral` に並べる**ことになり、
+ * **一次資料のどのページにも無い組み合わせを作ってしまう。** ページ単位で採る。
+ */
+export function mergeShugiinBill(previous: Bill, next: Bill): Bill {
+  if (previous.id !== next.id) throw new Error(`mergeShugiinBill: 違う議案を混ぜようとした（${previous.id} と ${next.id}）`);
+  // **「後のページが書いた欄だけ」を集めてから重ねる。** `Bill` に index signature を足さずに
+  // 欄ごとの判定を書くため、`Partial<Bill>` を組み立てて最後に 1 回展開する。
+  const written: Partial<Bill> = {};
+  for (const key of Object.keys(next) as (keyof Bill)[]) {
+    const value = next[key];
+    if (keepsPrevious(key, value)) continue;
+    Object.assign(written, { [key]: value });
+  }
+  return { ...previous, ...written };
+}
+
+/**
+ * **取り込みの 1 歩**: 取得したページ `page` を `bills` に重ねる（#1218 のレビュー指摘 1）。
+ * **既にその id が在れば重ねた**ことを示す `true` を返す（cli がログで数を言うため）。
+ *
+ * ## なぜ cli のループではなく関数にするか
+ *
+ * **引数順は「`mergeShugiinBill` という語が在るか」では守れない。**
+ * `mergeShugiinBill(previous, page)` を `mergeShugiinBill(page, previous)` に取り違えると
+ * **「古いページが新しいページを上書きする」**——#1218 が直したバグがそのまま戻るのに、
+ * **語は在るのでソースを見る検査は落ちない。**
+ *
+ * **実測（レビューが一次資料 79 件で測った）**: 引数を逆にすると
+ * **21/79 件の付託日が古い値に化けるのに、`referredCommittees` の件数は 1 件しか動かない。**
+ * **件数でも語でも鳴らない＝「黙って別の値が出る」**形で、
+ * **「記録が出ない」より重い**（利用者が自分では気づけない）。
+ *
+ * **だから順序を 1 か所に閉じ込めて、振る舞いで固定する。**
+ * **呼び出し側は `previous` を触らない**ので、取り違えようがない。
+ */
+export function addShugiinBillPage(bills: Map<string, Bill>, page: Bill): boolean {
+  const previous = bills.get(page.id);
+  // **`previous` が先・`page`（新しいページ）が後**。この順序がこの関数の全部である。
+  bills.set(page.id, previous ? mergeShugiinBill(previous, page) : page);
+  return previous !== undefined;
+}
+
+/** パーサが「欄が無い」と「欄はあるが空」を分けている欄（空配列も事実として採る）。 */
+const EMPTY_IS_RECORDED: ReadonlySet<string> = new Set(["supporterNames"]);
+
+/** 後のページのこの値では上書きしない（= 前のページの値を残す）か。 */
+function keepsPrevious(key: keyof Bill, value: unknown): boolean {
+  if (value === undefined) return true;
+  if (EMPTY_IS_RECORDED.has(key)) return false;
+  if (value === "") return true;
+  if (Array.isArray(value)) return value.length === 0;
+  if (value !== null && typeof value === "object") return Object.keys(value).length === 0;
+  return false;
+}
+
+/**
  * 一覧→各経過ページを順に取得して Bill[] にする。経過ページは審議が進むと内容が変わるので、ディスクキャッシュを使わない。
  * どちらも Shift_JIS。
  */
