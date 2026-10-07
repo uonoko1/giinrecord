@@ -907,9 +907,25 @@ t_report_reason_comes_from_the_real_body_shape() {
   assert_contains "$c" "ETL 側" "理由の末尾まで取れている（途中で切れていない）"
   # **「いまの理由:」が空のまま出ていないこと**——これが R14 で起きる形である。
   if grep -qE '^- いまの理由: *$' <<<"$c"; then fail "理由を取り出せていない（抽出が実物の形と合っていない）: $c"; fi
-  # **本文の他の行を理由と間違えないこと**（`s/^- //p` のような緩い抽出を殺す）
-  assert_not_contains "$c" "いまの理由: first seen" "ハイフンで始まる別の行を理由にしない"
-  assert_not_contains "$c" "いまの理由: run:" "run のリンクを理由にしない"
+  # **行そのものを固定する**（#1198 のレビュー指摘 1）。
+  # **以前はここに `assert_not_contains "$c" "いまの理由: first seen"` 等を 2 本置いていたが、恒真だった。**
+  # 実測（2026-10-07・bash 5.2）: `s/^- reason: //p` → **`s/^- //p`** の緩和を当てても **84 passed / 0 failed**。
+  # 理由は 2 つ: (a) `- reason:` が本文の最初の `- ` 行なので、緩めても `head -1` が**同じ行**を拾う。
+  # (b) 出力は `- いまの理由: reason: \`…\`` と**目に見えて劣化する**のに、
+  # `assert_contains` は**部分一致**なので「前にゴミが付いた」形が全部通る。
+  # **だから部分一致をやめ、行を 1 本取り出して `assert_eq` で全体を突き合わせる。**
+  # 取り出しに `grep`/`sed` のパイプを使わない（#527: `pipefail` のもとでパイプ末尾の
+  # 早期終了読み手が書き手を SIGPIPE で殺す）。bash の前方一致で 1 行ずつ見る。
+  local reason_line="" line; local n=0
+  while IFS= read -r line; do
+    [[ "$line" == "- いまの理由: "* ]] || continue
+    reason_line="$line"; n=$((n+1))
+  done <<<"$c"
+  # **1 本だけ在ること**も固定する（行が増える変異・消える変異の両方を見る）。
+  assert_eq 1 "$n" "「いまの理由」の行はコメントにちょうど 1 本"
+  # shellcheck disable=SC2016  # バックティックは report.sh が本文に書くリテラルで、展開させない
+  assert_eq '- いまの理由: `fetchedAt 93h old (limit 48h); main も古い (93h) → ETL 側`' \
+    "$reason_line" "理由の行は実物の本文の reason 行と一字一句同じ（接頭辞も余りも付かない）"
 }
 # **判定行が出なかったときの本文も、同じ接頭辞の形である**（run.sh:95-104）。
 # **2 つの本文で接頭辞が揃っていること自体を固定する**——片方だけ変えても抽出が壊れる。
