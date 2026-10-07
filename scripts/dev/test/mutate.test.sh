@@ -442,6 +442,16 @@ t_restores_when_killed_the_instant_the_save_appears() {
 #   "(on_signal TERM)"             40 回中 1 回 parse error
 # **どの綴りでも起きる。** つまり「trap の書き方を直す」では塞げない。
 #
+# **#1255 が「測っていない」と書いていた、窓の幅を決める違いも測った。**
+# 予想は「CI runner は手元より遅いので窓が広い」だったが、**逆だった**。
+# 同じ機械・同じハーネスで CPU 数だけを変えて基点（origin/main）を測ると:
+#   taskset -c 0      （1 CPU）   100 回中 0 回赤
+#   taskset -c 0,1    （2 CPU）   150 回中 1 回赤
+#   制限なし          （16 CPU）  200 回中 3 回赤
+# **効くのは遅さではなく並列度である。** 撃つ側と撃たれる側が同時に走れないと、
+# 「$( ) の途中」という一瞬にシグナルを届けられない。だから 1 CPU では再現しない。
+# （この検査は SIGKILL で撃つので、どちらの条件でも同じ結果になる。それが狙いである。）
+#
 # だから設計を変える: **死にかけのシェル自身に戻させない。**
 # 退避を作る前に、別プロセスの見張りを立てる。見張りは親の死を待ち、
 # 親が自分で戻せていなければ（＝退避がまだ在れば）代わりに戻す。
@@ -509,6 +519,28 @@ t_apply_has_no_watchdog() {
   assert_eq 0 "$STATUS" "あとから restore で戻せる: $OUT"
 }
 
+# 見張りを足したことで、**退避が正当に残る経路**が 1 つできた:
+# run の最後の restore が stale（その場所に人の作業が書かれている）で拒否すると、退避は残る。
+# このとき見張りを解除してしまうと、最後の砦が消える。だから解除の条件は
+# 「親が終わったら」ではなく「戻っていたら」にしてある。
+# **そして見張り自身も同じ restore を呼ぶので、同じ理由で同じように拒否しなければならない。**
+# ここで見張りが上書きしたら、この道具が防ごうとしている事故を道具自身が起こす。
+t_the_watchdog_refuses_to_overwrite_work_written_during_the_run() {
+  repo
+  # 測っている間に、対象ファイルを「今日の作業」で上書きするコマンドを渡す。
+  # run の restore は stale を見て拒否し、退避を残す（既存の仕様）。
+  run run --file src/app.ts --expr 's/ORIGINAL/MUTANT/' -- \
+      bash -c 'printf "MY IMPORTANT NEW FEATURE\n" > src/app.ts'
+  assert_ne 0 "$STATUS" "stale なら run は 0 を返さない: $OUT"
+  assert_eq 'MY IMPORTANT NEW FEATURE' "$(cat "$R/src/app.ts")" "run は今日の作業を消さない"
+  assert_eq 1 "$(find "$R" -name '*'"$SV_EXT" | wc -l)" "退避は残る（人が判断できるように）"
+  # 親はもう終わっている。見張りが生きていれば、ここで上書きしうる。
+  sleep 1
+  assert_eq 'MY IMPORTANT NEW FEATURE' "$(cat "$R/src/app.ts")" "見張りも今日の作業を消さない"
+  assert_eq 1 "$(find "$R" -name '*'"$SV_EXT" | wc -l)" "見張りは退避も消さない"
+  assert_work_intact watchdog-stale
+}
+
 # 設計を読む側。見張りが「親の死」を待っていること、親とは別プロセスであることを、
 # ソースから直接固定する。behavioral な検査が通り過ぎても、ここは機械の速さに依存しない。
 t_the_watchdog_is_a_separate_process_that_outlives_the_shell() {
@@ -521,8 +553,8 @@ t_the_watchdog_is_a_separate_process_that_outlives_the_shell() {
   assert_contains "$body" 'restore' "見張りは restore の経路を使って戻す（別実装を持たない）"
   assert_not_contains "$body" 'cp -p --' "見張りは自前で cp しない（restore に任せる）"
   # 見張りは退避を作る cp より前に立てないと、立つ前に殺された分が戻らない。
-  # shellcheck disable=SC2016  # ソースの文字列を逐語で探す
   local cp_line watch_line
+  # shellcheck disable=SC2016  # ソースの文字列を逐語で探す（展開させたら別物を探す）
   cp_line=$( { grep -n '^[^#]*cp -p -- "\$f" "\$f\$SV_EXT"' "$src" || true; } | head -1 | cut -d: -f1)
   watch_line=$( { grep -n '^[[:space:]]*start_watchdog$' "$src" || true; } | head -1 | cut -d: -f1)
   assert_ne "" "$watch_line" "見張りを立てる呼び出しが在る"

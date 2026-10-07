@@ -550,7 +550,9 @@ start_watchdog() {
   # （親が死ぬ＝印が残る＝見張りが働く、という向きにしておく）。
   WATCHDOG_FLAG=$(mktemp -t mutate-watchdog.XXXXXX)
   local self=$0 parent=$$ top; top=$(root)
-  # shellcheck disable=SC2086  # setsid に渡すのは固定の語だけ
+  # shellcheck disable=SC2016  # 見張りの本体は**親のシェルに展開させてはいけない**。
+  # 展開すると親の変数が焼き込まれ、親が死んだ後に意味を失う（$flag / $parent が空になる）。
+  # 値は位置引数で渡す（下の mutate-watchdog 以降）。
   setsid bash -c '
     flag=$1; parent=$2; self=$3; top=$4
     # 親が死ぬまで待つ。kill -0 は「シグナルを送らずに生存だけ見る」。
