@@ -174,13 +174,21 @@ describe("本番 data/ の計測: unmatched.json の行が名簿の覆う回次�
 
   test("名簿は国会の回次をいくつか覆っている（名簿が読めていない実行をこの検査の緑に化けさせない）", () => {
     // 覆う回次が 0 なら下の検査は全部「覆わない」になって無意味に赤くなる。先に母数が在ることを確かめる。
-    assert.ok(covered.size > 0, `名簿が 1 回次も覆っていない（members/ を読めていない）`);
+    assert.ok(covered.size > 0, "名簿が 1 回次も覆っていない（members/ を読めていない）");
   });
 
   test("**`unmatched.json` の発言の行に、名簿が覆わない回次が 1 つも無い**", () => {
     // **これが Issue #1247 の壊れた状態で鳴る検査である。**
-    // 実測 2026-10-08（`origin/main` = eaff0d40 の時点）: 発言 157,222 行のうち **156,977 行**が
-    // 名簿の覆わない回次（第200〜215回）だった。名簿が覆うのは第216回以降だけである。
+    //
+    // **実測 2026-10-08**（`origin/main` = `eaff0d40` の時点、この PR を当てる前）:
+    // 発言 157,222 行のうち **156,977 行**が名簿の覆わない回次（第200〜215回）だった。
+    // 名簿が覆うのは第216回以降だけである（`meta.json` の roster の出典も 6 件しか無い）。
+    //
+    // **この検査は `data/` が作り直されるまで赤いままである。** 直し方は 2 つしか無い:
+    //   1. この PR のコードで ETL を流し直す（遡りの対象回次で発言を取りに行かなくなる）
+    //   2. 名簿の無い回次の発言行を `unmatched.json` から取り除く
+    // **期待値をいまの実測に合わせて書き換えて緑にしてはいけない**（#1189 / `expected-table-is-not-a-knob`）。
+    // **減った方向に合わせると、この検査は壊れた状態を永久に通す。**
     const offRoster = rows.filter((r) => r.speechId !== undefined && r.session !== undefined && !covered.has(r.session));
     const sessions = [...new Set(offRoster.map((r) => r.session))].sort((a, b) => (a ?? 0) - (b ?? 0));
     assert.deepEqual(
@@ -196,6 +204,43 @@ describe("本番 data/ の計測: unmatched.json の行が名簿の覆う回次�
       false,
       `unmatched.json が ${rows.length} 行で上限 ${unmatchedMagnitudeLimit()} を超えている（#1247）`,
     );
+  });
+});
+
+/* ------------------------------------------------------------------------------------------------
+ * `meta.json` だけから導く同じ事実（`members/` を読まずに確かめる）。
+ *
+ * **これは上の検査と独立の計器である。** `meta.sessions`（出力が覆うと言っている回次）と
+ * `meta.sources` の参院名簿の出典（**実際に取れた名簿**）を突き合わせる。
+ * **名簿の出典が無い回次の氏名を突合しに行ったなら、その回次の氏名は全件 unmatched になる。**
+ *
+ * **実測 2026-10-08**（`eaff0d40`）: `meta.sessions` は 22 回次（第200〜221回）、
+ * 参院名簿の出典は **6 件（第216〜221回）**。**16 回次ぶんの名簿が無い。**
+ * ---------------------------------------------------------------------------------------------- */
+
+describe("本番 meta.json の計測: 名簿の出典が無い回次で氏名を突合していないか", () => {
+  const meta = readJsonFile<{ sessions: number[]; sources: { name: string; kind?: string }[] }>(join(DATA, "meta.json"));
+  /** `参議院 議員一覧（第N回）` から回次を引く（`cli.ts` が書いている名前。衆院は回次ではなく日付なので除く）。 */
+  const rosterSessionsInMeta = [...new Set(
+    meta.sources.filter((s) => s.kind === "roster").flatMap((s) => {
+      const m = s.name.match(/^参議院 議員一覧（第(\d+)回）$/);
+      return m ? [Number(m[1])] : [];
+    }),
+  )].sort((a, b) => a - b);
+
+  test("参院名簿の出典が meta.json に在る（出典を書いていない出力をこの検査の緑に化けさせない）", () => {
+    assert.ok(rosterSessionsInMeta.length > 0, "meta.sources に参院名簿の出典が 1 件も無い");
+  });
+
+  test("**発言が `unmatched.json` に入っている回次は、全部 meta.json に名簿の出典が在る**", () => {
+    // 名簿の出典が無い回次の発言を取りに行ったなら、その氏名は `tenureVerified` で全件落ちる（#230）。
+    const rows = readJsonFile<{ speechId?: string; session?: number }[]>(join(DATA, "unmatched.json"));
+    const inMeta = new Set(rosterSessionsInMeta);
+    const without = [...new Set(
+      rows.filter((r) => r.speechId !== undefined && r.session !== undefined && !inMeta.has(r.session)).map((r) => r.session),
+    )].sort((a, b) => (a ?? 0) - (b ?? 0));
+    assert.deepEqual(without, [],
+      `名簿の出典が無い回次の発言が unmatched.json に入っている（#1247）。meta.json の参院名簿は 第${rosterSessionsInMeta.join(" ")}回`);
   });
 });
 
