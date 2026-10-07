@@ -1,5 +1,7 @@
 name: tmp-1230-token-probe
-on: workflow_dispatch
+on:
+  push:
+    branches: [fix/1230-monitor-third-state]
 permissions:
   contents: read
   issues: write
