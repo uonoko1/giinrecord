@@ -26,6 +26,31 @@
 # **だから外から時間で切って、切ったことを自分で言う**（`waiting-loops-must-fail-closed`:
 # 測れなかったことを「測れた」に倒さない）。
 #
+# ## **なぜ 1 回しか試さないか**（#1257 のレビュー。**この PR の最初の版は 2 回試していた**）
+#
+# **`timeout` は直接の子にしかシグナルを送る。`apt-get` は孫なので、生き残る。**
+# **実測（2026-10-07）**:
+#
+#   timeout 1 bash -c 'bash -c "trap \"\" TERM; sleep 20" & wait'
+#     → timeout rc=124（1 秒で返る）／**孫の `sleep 20` は生存**（pgrep で PID を確認）
+#
+# **生き残った apt は dpkg のロックを握り続ける。** だから 2 回目はミラーではなくロックで落ちる:
+#
+#   試行 1 が 2s で時間切れ（rc=124）
+#   試行 2/2 …
+#   E: Could not get lock /var/lib/dpkg/lock-frontend
+#   playwright-deps: install が rc=100 で落ちた。時間切れではないので、ミラー障害ではない。
+#   → **SCRIPT rc=1**
+#
+# **これは #1254 の目的の逆である**——**本物のミラー障害が「ミラー障害ではない」と
+# 報告されて `exit 1` になる。** 再試行の経路が、呼び分けを自分で壊していた。
+#
+# **2 回試す道を残すには孫まで殺す実装（プロセスグループごと KILL）が必要だが、
+# それは #1254 の射程外なので入れない。** **1 回で測って、測れなかったと言う。**
+# **副作用として、合計予算（旧 `PLAYWRIGHT_DEPS_TOTAL_BUDGET_SEC=900`）が不要になった**
+# ——1 回しか試さないので「1 回の予算」が合計でもある。
+# **同じ制約を 2 つの数が分担する形が 1 本減った**（`two-numbers-in-two-files-drift`）。
+#
 # ## 何分で諦めるか——その数はここに無い
 #
 # **`PLAYWRIGHT_DEPS_BUDGET_SEC` は `packages/etl/test/workflow-timeout.test.ts` の表が
@@ -34,12 +59,14 @@
 # （`packages/etl/test/playwright-deps-budget.test.ts` が逐語で突き合わせる）。
 #
 #   scripts/ci/playwright-deps.sh --cache-hit <true|false>   入れる（install-deps / install --with-deps）
-#   scripts/ci/playwright-deps.sh --budget-sec               予算（秒）だけを出す。他は何も出さない
+#   scripts/ci/playwright-deps.sh --budget-sec               1 回の予算（秒）だけを出す。他は何も出さない
+#   scripts/ci/playwright-deps.sh --attempts                 試行回数だけを出す。他は何も出さない
 #
 # 終了コード:
 #   0  入った
 #   1  入らなかった（コマンドが落ちた）。**ミラーのせいではない**ので、そう言う
 #   7  **予算を使い切った**（= ミラーに届かなかった／遅すぎた）。**この 7 が「測れなかった」である**
+#      **1 と 7 の呼び分けがこのスクリプトの要点である**（#1254 の実害は「無言」だった）
 #
 # テスト: scripts/ci/test/playwright-deps.test.sh
 set -euo pipefail
@@ -52,22 +79,18 @@ set -euo pipefail
 # （偽陽性の赤を、別の偽陽性の赤に付け替えることになる）。
 PLAYWRIGHT_DEPS_BUDGET_SEC=600
 
-# 何回試すか。**ミラー障害は 18 分で表情を変えた**（上の実測）ので、1 回で諦めない。
-# **予算は 1 回ごとに適用する**（合計ではない）。2 回とも使い切る最悪は
-# 2 × 600s = 20 分で、`check` の 30 分 / `docker-web` の 20 分のどちらにも収まらない……
-# のではなく **`docker-web` の 20 分はちょうど食い切る**。だから**合計にも上限を置く**（下の TOTAL）。
-PLAYWRIGHT_DEPS_ATTEMPTS=2
-# 合計の上限（秒）。**job の `timeout-minutes` より内側で終わること**が要点で、
-# いちばん短い `docker-web` の 20 分 = 1200s に対して 900s（75%）。
-# 残り 300s で step の後片付けと、この step の後ろの step（browser-check 等）が走る。
-PLAYWRIGHT_DEPS_TOTAL_BUDGET_SEC=900
+# 何回試すか。**1 回である**（理由は上の節: `timeout` は孫を殺さないので、
+# 2 回目は dpkg のロックで rc=100 になり、ミラー障害が「ミラー障害ではない」に化ける）。
+# **この 1 は「まだ測っていない」ではなく「2 を測って、害があると分かった」値である。**
+# **`docker-web` の 20 分 = 1200s に対して 1 × 600s なので、job の timeout の内側で終わる**
+# （残り 600s で、この step の後ろの step（browser-check 等）が走る）。
+PLAYWRIGHT_DEPS_ATTEMPTS=1
 
 if [[ ${1:-} == --budget-sec ]]; then echo "$PLAYWRIGHT_DEPS_BUDGET_SEC"; exit 0; fi
 if [[ ${1:-} == --attempts ]]; then echo "$PLAYWRIGHT_DEPS_ATTEMPTS"; exit 0; fi
-if [[ ${1:-} == --total-budget-sec ]]; then echo "$PLAYWRIGHT_DEPS_TOTAL_BUDGET_SEC"; exit 0; fi
 
 if [[ ${1:-} != --cache-hit || -z ${2:-} ]]; then
-  echo "usage: $0 --cache-hit <true|false> | --budget-sec | --attempts | --total-budget-sec" >&2
+  echo "usage: $0 --cache-hit <true|false> | --budget-sec | --attempts" >&2
   exit 2
 fi
 case "$2" in
@@ -94,19 +117,18 @@ attempt=0
 while :; do
   attempt=$((attempt + 1))
   elapsed=$(( $(date +%s) - started ))
-  remaining=$(( PLAYWRIGHT_DEPS_TOTAL_BUDGET_SEC - elapsed ))
-  # この試行に与える秒数は「1 回の予算」と「合計の残り」の小さいほう。
   this_budget=$PLAYWRIGHT_DEPS_BUDGET_SEC
-  [[ $remaining -lt $this_budget ]] && this_budget=$remaining
-
-  if [[ $this_budget -le 0 ]]; then
-    echo "playwright-deps: 合計予算 ${PLAYWRIGHT_DEPS_TOTAL_BUDGET_SEC}s を使い切った（経過 ${elapsed}s）" >&2
-    echo "playwright-deps: ミラーに届かなかった（apt の取得が終わらない）。Ubuntu のミラー障害が疑われる。コードの赤ではない。" >&2
-    exit 7
-  fi
 
   echo "playwright-deps: 試行 ${attempt}/${PLAYWRIGHT_DEPS_ATTEMPTS}（この試行の上限 ${this_budget}s、合計の経過 ${elapsed}s）"
   set +e
+  # **`--kill-after` は「無言で張り付く」ことそのものを塞ぐ。** **実測（2026-10-07）**:
+  #   timeout --signal=TERM --kill-after=2s 1s bash -c 'trap "" TERM; sleep 30'
+  #     → rc=137、**3 秒**（= 予算 1s + kill-after 2s）で返る
+  #   timeout --signal=TERM          1s bash -c 'trap "" TERM; sleep 8'
+  #     → rc=124 だが **10 秒**かかる（**子が終わるまで timeout 自身が待つ**）
+  # **`--kill-after` が無いと、TERM を無視する子に予算を踏み越えられる**
+  # ——それは #1254 の「無言で `timeout-minutes` を食い切る」と同じ形である。
+  # **この引数は `scripts/ci/test/playwright-deps.test.sh` の t_kill_after_bounds_the_overrun が固定する。**
   timeout --signal=TERM --kill-after=30s "${this_budget}s" "${CMD[@]}"
   rc=$?
   set -e
@@ -124,6 +146,8 @@ while :; do
       echo "playwright-deps: ミラーに届かなかった（${PLAYWRIGHT_DEPS_ATTEMPTS} 回とも時間切れ）。Ubuntu のミラー障害が疑われる。コードの赤ではない。" >&2
       exit 7
     fi
+    # **いまは ATTEMPTS=1 なので、ここには来ない**（上の `-ge` が必ず成立する）。
+    # **経路は残す**——孫まで殺す実装が入れば ATTEMPTS を上げられる。その日まで到達不能である。
     echo "playwright-deps: 入れ直す" >&2
     continue
   fi

@@ -23,8 +23,15 @@ import { dirname, resolve } from "node:path";
  * （#556 / #1056: 同じ数が 2 か所に在ると片方が腐る。実測で `ci.yml` の 225s と
  *  `workflow-timeout.test.ts` の 658s が 2.8 倍食い違った）。
  * **ここが固定するのは「値」ではなく「関係」である**:
- *   合計予算 < いちばん短い job の `timeout-minutes`
+ *   1 回の予算 × 試行回数 < いちばん短い job の `timeout-minutes`   …… **上限**
+ *   1 回の予算 >= 実測で success した最遅の step（554s）            …… **下限**（#1257）
  * **この関係なら、予算を動かしても `timeout-minutes` を動かしても、崩れた側で落ちる。**
+ *
+ * **#1257 のレビューまで、この表は上限しか持っていなかった。**
+ * **＝予算が小さくなる方向の変異（600 → 1）を全部通していた**（レビュアーの実測で
+ * etl 64/64・bash 9/9 がどちらも緑）。**下限は下のテストが持つ。**
+ * **554 だけが「数」としてこのファイルに在る**——**それは観測値であって設定値ではない**
+ * （設定値 600 はスクリプトが 1 か所で持ち、ここは `ask()` で読む）。
  *
  * ## 実測（2026-10-07。`gh api .../runs/<id>/jobs` の step の `completed_at - started_at`）
  *
@@ -144,10 +151,10 @@ test("#1254 どちらの step も apt を直に叩かない（素の playwright 
   }
 });
 
-test("#1254 合計予算は、いちばん短い job の timeout-minutes の内側で終わる", () => {
-  const total = ask("--total-budget-sec");
+test("#1254 最悪（1 回の予算 × 試行回数）は、いちばん短い job の timeout-minutes の内側で終わる", () => {
   const per = ask("--budget-sec");
   const attempts = ask("--attempts");
+  const worst = per * attempts;
 
   // **この step を実際に走らせる job の timeout-minutes だけを見る**（いまは check 30 / docker-web 20）。
   // **その 20 / 30 という数はここに書かない**——ci.yml から読む（#1056: 数は 1 か所）。
@@ -163,13 +170,62 @@ test("#1254 合計予算は、いちばん短い job の timeout-minutes の内�
   const shortest = Math.min(...steps.map((s) => s.timeout));
 
   assert.ok(
-    total < shortest * 60,
-    `合計予算 ${total}s が、この step を持つ job のいちばん短い timeout-minutes ` +
+    worst < shortest * 60,
+    `最悪 ${worst}s（1 回 ${per}s × ${attempts} 回）が、この step を持つ job のいちばん短い timeout-minutes ` +
       `(${shortest} 分 = ${shortest * 60}s; jobs: ${steps.map((s) => `${s.job}=${s.timeout}`).join(", ")}) に収まっていない。` +
       `収まらないと job 側の cancelled が先に来て、「ミラーに届かなかった」を言えないまま無言で終わる（#1254）`,
   );
-  assert.ok(per <= total, `1 回の予算 ${per}s が合計 ${total}s を超えている`);
-  assert.ok(attempts >= 2, `1 回で諦めると、18 分で表情を変えるミラー障害を取りこぼす（実測は docblock）`);
+  // **#1257 のレビュー指摘 1**: 試行は **1 回**である。
+  // `timeout` は直接の子にしかシグナルを送らないので `apt-get`（孫）が生き残り、
+  // **dpkg のロックを握ったまま 2 回目が rc=100 で落ちる**。すると時間切れではないので
+  // スクリプトは「ミラー障害ではない」と言って `exit 1` する——**#1254 の目的の逆である。**
+  // **2 回試す道には孫までプロセスグループごと KILL する実装が要る**（#1254 の射程外）。
+  // **この上限（1 回まで）が無いと、再試行が呼び分けを自分で壊す形に戻れる。**
+  assert.equal(
+    attempts,
+    1,
+    `試行は 1 回でなければならない（いまは ${attempts}）。` +
+      `timeout は孫（apt-get）を殺さないので、2 回目は dpkg のロックで rc=100 になり、` +
+      `本物のミラー障害が「ミラー障害ではない」と報告されて exit 1 する（#1257 のレビュー指摘 1）`,
+  );
+});
+
+/**
+ * **#1257 のレビュー指摘 2: 下限の守りが無かった。**
+ *
+ * **レビュアーの変異が完全に緑だった**: `BUDGET_SEC` 600 → 1 ／ 旧 TOTAL 900 → 2 で
+ * **etl 64/64 pass、bash 9/9 pass**。**いまの検査は「上限（job の timeout の内側）」しか
+ * 見ていないので、予算が小さくなる方向には歯止めが無かった。**
+ * **`check-the-polarity-not-just-the-movement`: 片側しか見ていない検査は、
+ * もう片側の壊れ方を全部通す。**
+ *
+ * **554 は観測値である**（2026-10-07、174 step を数えた）:
+ *
+ *   600s を超えた step: **2 件**（どちらも cancelled 済みの `docker-web`）
+ *   **成功した中で最も遅い step: 554s**（run 37663904608 の `check`。
+ *     `apt-get update` は 12.6 MB を 1 秒で取り、`install` が 32.5 MB を
+ *     **59.9 kB/s** で 9 分 2 秒かけた末に **success** で終わった）
+ *
+ * **＝予算を 554s より下に置くと、実際に成功した run を落とすことになる。**
+ * **偽陽性の赤（無言の cancelled）を、別の偽陽性の赤（届いていたのに時間切れ）に
+ * 付け替えるだけである。** だから下限をここで固定する。
+ */
+test("#1257 1 回の予算は、実測で成功した中で最も遅い 554s を下回らない（下限の守り）", () => {
+  /**
+   * **成功した中で最も遅い step の秒数**（2026-10-07、ci.yml の 174 step を数えた実測値）。
+   * **これは「理想」ではなく「実際に success で終わった最遅の観測値」である。**
+   * **ここを下回る予算は、通る見込みが在るものを落とす。**
+   */
+  const SLOWEST_SUCCESS_SEC = 554;
+  const per = ask("--budget-sec");
+  assert.ok(
+    per >= SLOWEST_SUCCESS_SEC,
+    `1 回の予算が ${per}s になっている。**実測で success で終わった最も遅い step は ` +
+      `${SLOWEST_SUCCESS_SEC}s**（2026-10-07、174 step。run 37663904608 の check が ` +
+      `install を 59.9 kB/s で 9 分 2 秒かけて通した）。` +
+      `これを下回ると、届いていたものを「ミラーに届かなかった」と言って落とす（#1257 のレビュー指摘 2）。` +
+      `下げるなら、まず packages/etl/test/workflow-timeout.test.ts の表を測り直すこと。`,
+  );
 });
 
 test("#1254 スクリプトは「ミラーに届かなかった」と言える（語が実物に在る）", () => {
