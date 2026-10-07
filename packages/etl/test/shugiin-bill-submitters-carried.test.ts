@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { Bill, Member } from "@seiji-kiroku/shared";
 import { matchShugiinBills, unattestedBillMatches } from "../src/match-shugiin-bills.ts";
+import { normalizeName } from "../src/match-votes.ts";
 import { addShugiinBillPage } from "../src/sources/shugiin-bills.ts";
 
 /**
@@ -195,5 +196,34 @@ describe("#1236 data/bills/ の実物に食い違いが無いこと（母数つ�
     // **母数が 0 なら「clean」ではなく「測れていない」。** 検査ごと落とす（#1056）。
     assert.ok(report.checked > 0, `ID を持つ欄が 0 件。検査が何も見ていない（議案 ${bills.length} 件 / 衆院名簿 ${members.length} 人 / 覆わず数えなかった欄 ${report.skippedUncovered} 件）`);
     assert.deepEqual(report.rows, [], `氏名から引けない ID が在る（母数 ${report.checked} 欄 / 議案 ${bills.length} 件）: ${JSON.stringify(report.rows)}`);
+  });
+
+  /**
+   * **氏名を手で突き合わせると「壊れている」と誤読する**（#1236 のレビューで PO と実装者が別々に踏んだ）。
+   *
+   * **名簿は `重徳 和彦`、議案の個票は `重徳和彦`** で、**同じ人なのに文字列が違う。**
+   * `resolveMember` は内部で `normalizeName`（空白除去・NFKC・異体字）を通すので正しく引けるが、
+   * **`names.includes(member.name)` のように素で比べると 0 件に見える。**
+   *
+   * **実測（`221-決議-1`、書き換えていない `data/` の値）**:
+   * ```
+   * 正規化なしで一致  0 / 5   ← ここで止めると「ID が全部ずれている」と読める
+   * 正規化ありで一致  5 / 5   ← 正しい
+   * ```
+   * **「0 件」はこの PBI の検査の正常値でもある**ため、**誤読した 0 と正しい 0 が見分けられない。**
+   * **だから差が実在することを検査で固定する**（散文に書くだけでは、測り直す人がまた踏む）。
+   */
+  test("素の文字列比較は使えない（名簿は `姓 名`、個票は `姓名`）。正規化の有無で数が変わることを固定する", async () => {
+    const root = new URL("../../../data", import.meta.url).pathname;
+    const memberIndex = JSON.parse(await readFile(join(root, "members", "index.json"), "utf8")) as { id: string; name: string }[];
+    const byId = new Map(memberIndex.map((m) => [m.id, m]));
+    const bill = JSON.parse(await readFile(join(root, "bills", "221", "221-決議-1.json"), "utf8")) as Bill;
+    const names = bill.submitterNames ?? [];
+    const ids = bill.submitters ?? [];
+    assert.ok(ids.length > 0, "母数が消えている（この議案は submitters を持つ前提の検査）");
+    const rawHits = ids.filter((id) => names.includes(byId.get(id)?.name ?? " "));
+    const normHits = ids.filter((id) => names.map(normalizeName).includes(normalizeName(byId.get(id)?.name ?? " ")));
+    assert.equal(normHits.length, ids.length, `正規化すれば全件一致するはず（母数 ${ids.length} 件）`);
+    assert.equal(rawHits.length, 0, `素の比較は 1 件も当たらない（母数 ${ids.length} 件）。この差が「0 件」の誤読の正体である`);
   });
 });
