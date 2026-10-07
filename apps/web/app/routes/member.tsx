@@ -5,7 +5,7 @@ import { SiteFooter } from "../components/SiteFooter";
 import { MoreButton } from "../components/MoreButton";
 import type { Assembly } from "@seiji-kiroku/shared";
 import { assemblyPath, findAssembly, isLocalMember, joinVoteSubjects, localVoteTone, voteSubjectNote } from "../lib/assemblies";
-import type { BillEntry, BillRole, CabinetRoleEntry, CommitteeRoleEntry, DatasetMeta, LocalVoteEntry, MemberDetail, MemberSpeeches, QuestionEntry, SpeechEntry, StanceEntry, TimelineEntry, VoteEntry } from "../lib/data-contract";
+import type { BillEntry, BillRole, CommitteeRoleEntry, DatasetMeta, LocalVoteEntry, MemberDetail, MemberSpeeches, QuestionEntry, SpeechEntry, StanceEntry, TimelineEntry, VoteEntry } from "../lib/data-contract";
 import { defaultDataDir, readAssemblies, readLocalAssemblyMeta, readLocalRollCallIndex, readMemberDetail, readMemberSpeechCount, readMeta } from "../lib/data-files";
 import { type LossyNameMatch, lossyNameMatchFor } from "../lib/lossy-name";
 import { formatDate, formatDateTime, formatYearMonth } from "../lib/format";

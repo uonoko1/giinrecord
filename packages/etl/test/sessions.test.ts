@@ -540,6 +540,37 @@ describe("#236 回帰: 最新回次が carried の実行でも衆院の発言は
     } finally { await rm(dir, { recursive: true, force: true }); }
   });
 
+  /**
+   * **閣僚等の役職は引き継がない**（#1152）。
+   *
+   * **この検査は変異テストで見つけた穴である。** `isCarriable` の `case "cabinetRole": return false;`
+   * を `return true;` に変えても、**255 件のテストが 1 件も落ちなかった**（実測 2026-10-08）。
+   *
+   * **挙動は変わらないのに害が在る**: `cabinetRole` は `session` を持たないので、
+   * `readCarried` は `withoutSession++` して落とす——**行は増えも減りもしない。**
+   * **だが `cli.ts:54` が「`pnpm etl <session>` でその回次を取り直せば戻る」と案内する。**
+   * **閣僚等の名簿に回次は無いので、その案内は成り立たない**（取り直しても 1 行も戻らない）。
+   * **運用者を存在しない復旧手順に送る**ので、`withoutSession` に数えてはいけない。
+   */
+  test("#1152 閣僚等の役職は引き継がない（session が無いので withoutSession に数えてもいけない）", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "carried-cabinet-"));
+    try {
+      const d = detail("h_1", IDS);
+      d.timeline = [
+        { kind: "cabinetRole", estimated: false, date: "2026-09-17", section: "閣僚等", role: "財務大臣",
+          effectiveDateText: "令和８年９月１７日発足", cabinet: 105,
+          sourceUrl: "https://www.kantei.go.jp/jp/105/meibo/index.html" } as never,
+        ...d.timeline,
+      ];
+      await write(dir, d);
+      const carried = await readCarried(dir, [221]);
+      assert.equal(carried.entries.filter((c) => c.entry.kind === "cabinetRole").length, 0, "cabinetRole が引き継がれている（名簿を毎回取り直すので二重になる）");
+      // **これが変異で落ちる assert である**: `isCarriable` が true を返すと 0 → 1 に動く
+      assert.equal(carried.withoutSession, 0,
+        "cabinetRole を withoutSession に数えている。cli.ts が「その回次を取り直せば戻る」と案内するが、閣僚等の名簿に回次は無いので戻らない（#1152）");
+    } finally { await rm(dir, { recursive: true, force: true }); }
+  });
+
   test("cli.ts は衆院発言の取得を条件分岐で囲まない（取得を丸ごとスキップする述語を復活させない）", async () => {
     const src = await readFile(new URL("../src/cli.ts", import.meta.url), "utf8");
     // #242 で第4引数（会議の範囲 SPEECH_SCOPE）が付いた。守るのは「条件分岐で囲まないこと」であって引数の数ではない
