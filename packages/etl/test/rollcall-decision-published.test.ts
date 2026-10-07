@@ -117,16 +117,22 @@ test("公開されている採決一覧から、判定の語が減っていな�
  * **索引にだけ語を差し込む／申告だけ消す**という別の壊れ方を塞ぐ（#1133 が `referredCommittees` で
  * 原本と索引を突き合わせているのと同じ考え方）。
  *
- * **実測 2026-10-05**（`data/` の全数）:
+ * ## **現在値を散文に書かない**（#1189 / #1200）
+ *
+ * **ここには当初「380 行 / 語を持つ 347 / 語を持たない 33 / unmatched-bills 33」と
+ * 実測値を書いていた。** `data/` が直った（語が 1 件戻った）ときに**散文だけが取り残され、
+ * 実物は 348 / 32 / 32 になっていた**（レビューが指摘。実測 2026-10-07）。
+ * **機械が読まない数なので、ずれても誰も落とさない。**
+ *
+ * **だから数は書かない。** 代わりに**関係式を下の検査が持つ**:
  *
  * ```
- * rollcalls/index.json           380 行
- *   判定の語を持つ               347
- *   語を持たない                  33
- * unmatched-bills.json            33 行
- * 語が無いのに unmatched-bills に居ない:  0
- * 語が在るのに unmatched-bills に居る:    0
+ * 「語を持たない採決の集合」 ＝ 「unmatched-bills.json が申告している集合」   （逐語で一致）
+ * かつ 語を持つ行 > 0 かつ 語を持たない行 > 0                                （どちらも空でない）
  * ```
+ *
+ * **母数が片方でも 0 なら、この検査は何も突き合わせていない**ので失敗にする（#757）。
+ * **ずれたら実測値が失敗メッセージに出る**ので、散文を直す必要が無い。
  */
 test("判定の語を持たない採決の集合が、unmatched-bills.json と逐語で一致する", async () => {
   const rows = JSON.parse(await readFile(resolve(root, INDEX), "utf8")) as RollCallSummary[];
@@ -138,6 +144,12 @@ test("判定の語を持たない採決の集合が、unmatched-bills.json と�
   const silentlyMissing = [...withoutWord].filter((id) => !declared.has(id)).sort();
   const falselyDeclared = [...declared].filter((id) => !withoutWord.has(id)).sort();
 
-  assert.deepEqual(silentlyMissing, [], `判定の語が無いのに unmatched-bills.json に申告が無い採決（語が黙って消えた兆候）: ${silentlyMissing.join(" ")}`);
-  assert.deepEqual(falselyDeclared, [], `unmatched-bills.json に「突合できなかった」と書いてあるのに索引には語が在る採決（索引にだけ差し込まれた兆候）: ${falselyDeclared.join(" ")}`);
+  // **母数（#757）**: 片方が空だと、集合の比較は「0 件と 0 件が一致した」になり何も主張しない。
+  // **数は散文に書かず、ここで「空でないこと」だけを固定する**（実測値はずれても、関係式はずれない。#1189）
+  const withWord = rows.length - withoutWord.size;
+  assert.ok(withWord > 0, `${INDEX} の ${rows.length} 行に判定の語を持つ行が 1 つも無い。検査が何も見ていない`);
+  assert.ok(withoutWord.size > 0, `${INDEX} の ${rows.length} 行すべてが語を持つ。unmatched-bills.json との比較が空集合同士になり、何も主張していない（人事案件・決議は語を持たないので、実データでは必ず 1 件以上在る）`);
+
+  assert.deepEqual(silentlyMissing, [], `判定の語が無いのに unmatched-bills.json に申告が無い採決（語が黙って消えた兆候。語を持つ ${withWord} / 語を持たない ${withoutWord.size} / 申告 ${declared.size} を突き合わせた）: ${silentlyMissing.join(" ")}`);
+  assert.deepEqual(falselyDeclared, [], `unmatched-bills.json に「突合できなかった」と書いてあるのに索引には語が在る採決（索引にだけ差し込まれた兆候。語を持つ ${withWord} / 語を持たない ${withoutWord.size} / 申告 ${declared.size} を突き合わせた）: ${falselyDeclared.join(" ")}`);
 });
