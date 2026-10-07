@@ -1313,7 +1313,13 @@ t_freshness_1191_lexicographic_order_equals_chronological_order() {
   # 形の検査の**正規表現そのもの**を本番の行から取り出す（`if` 文を書き換えるのではなく、
   # 式だけを抜く。逐語で写さないので、本番側を緩めればここも一緒に緩む＝関係式を測れる）。
   local shape_re
-  shape_re=$(printf '%s\n' "$sb" | LC_ALL=C grep -oE '\^\[0-9\]\{4\}[^ ]*\$' | head -1)
+  # **パイプの末尾に `head` を置かない**（#527）。`pipefail` のもとで `head` が先に閉じると
+  # 書き手が SIGPIPE で死に、**入力の大きさ次第で確率的に失敗する**。
+  # （`stale-base.sh` 自身のヘッダが同じ罠を記録している: 40 行の fixture では再現せず、
+  # パイプバッファ 64 KiB を超えて初めて出る。いまの `stale-base.sh` は 64 KiB 未満なので
+  # 手元では一度も落ちなかったが、ファイルが育てば落ちる。）
+  # `head` をやめて、`grep` 自身に 1 件で止めさせる（`-m 1`）。入力は here-string で渡す。
+  shape_re=$(LC_ALL=C grep -m 1 -oE '\^\[0-9\]\{4\}[^ ]*\$' <<<"$sb")
   {
     printf 'set -uo pipefail\n'
     # 取り出した式を、変数経由で `=~` に渡す関数にする（式の中のメタ文字は展開させない）。
