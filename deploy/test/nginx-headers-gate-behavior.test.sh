@@ -304,7 +304,7 @@ t_gates_were_extracted() {
   local fn body
   for fn in "${GATE_FNS[@]}"; do
     body=$(extract_fn "$fn")
-    grep -qF "$(printf '%s' "$body" | tail -2 | head -1)" "$HARNESS" ||       fail "$fn の末尾がハーネスに入っていない（切り出しが途中で切れている）"
+    grep -qF "$(head -1 < <(printf '%s' "$body" | tail -2))" "$HARNESS" ||       fail "$fn の末尾がハーネスに入っていない（切り出しが途中で切れている）"
   done
 }
 

@@ -260,7 +260,7 @@ t_good_locations_pass_probe_generation() {
     # 「プローブ生成が location を拒んだ」という失敗は出てはいけない。
     case "$OUT" in
       *'扱えない文字か形が入っている'*|*'未対応の location'*|*'docroot の外に出る'*)
-        fail "$name [$loc]: 正しい形なのにプローブ生成が拒んだ: $(printf '%s' "$OUT" | grep -E '扱えない文字か形|未対応|docroot の外' | head -1)";;
+        fail "$name [$loc]: 正しい形なのにプローブ生成が拒んだ: $(head -1 < <(printf '%s' "$OUT" | grep -E '扱えない文字か形|未対応|docroot の外'))";;
     esac
     rm -f "$conf"
   done
@@ -304,10 +304,10 @@ t_newline_location_does_not_escape() {
 t_real_site_conf_is_accepted() {
   run_target "$DEPLOY/nginx/site.conf"
   case "$OUT" in
-    *'扱えない文字か形が入っている'*) fail "本物の site.conf をプローブ生成が拒んだ: $(printf '%s' "$OUT" | grep '扱えない文字か形' | head -3)";;
+    *'扱えない文字か形が入っている'*) fail "本物の site.conf をプローブ生成が拒んだ: $(head -3 < <(printf '%s' "$OUT" | grep '扱えない文字か形'))";;
   esac
   case "$OUT" in
-    *'未対応の location'*) fail "本物の site.conf に未対応の location がある: $(printf '%s' "$OUT" | grep '未対応' | head -3)";;
+    *'未対応の location'*) fail "本物の site.conf に未対応の location がある: $(head -3 < <(printf '%s' "$OUT" | grep '未対応'))";;
   esac
 }
 
