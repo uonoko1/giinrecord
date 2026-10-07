@@ -21,6 +21,12 @@ name: Monitor
 #   2. **`data` が古いとき、「main も古い」と「main は新しいのに出ていない」を分ける**（`probe.sh`）。
 #      前者は ETL 側、後者は deploy 側で、**対処が別**である。main 側は raw.githubusercontent.com の
 #      `data/meta.json` を読む。**読めなかったら「測れなかった」と書き、「古くない」に倒さない**（#1056）。
+#      **#1230 で 3 つ目が足された**: 2 分岐は**どちらも「何かが壊れている」を前提にしていた**ので、
+#      **ETL は健全なのに日次の `data/refresh` の PR を止めてある状態が `→ ETL 側` に畳まれていた**
+#      （#1221 が 70 時間以上、壊れていない ETL を指し続けた）。いまは `main も古い` のときだけ
+#      `gh pr list --head data/refresh` を 1 回叩き、**止めてあるのか／緑待ちなのか（#1227）を言う。**
+#      **`pull-requests: read` は要らない**（public。2026-10-07T15:51Z に下の `permissions` のまま実測し、
+#      `gh pr list --json number,state,autoMergeRequest,createdAt` が exit 0 で返ることを確かめた）。
 #   3. **`data/` が main に入ったのに deploy が始まらなかったことを見る**（`deploy-started.sh`、production のみ）。
 #      N = 30 分の根拠は `deploy/monitor/deploy-started.sh` の冒頭に実測（母数つき）で在る。
 #

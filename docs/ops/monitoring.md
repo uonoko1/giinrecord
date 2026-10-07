@@ -28,7 +28,7 @@ GitHub Actions  security-alerts.yml ──毎日 06:53 JST──▶ GitHub 自�
 | check | 条件 | 失敗時に疑うもの |
 |---|---|---|
 | `http` | `/`・`/members/`・`/assemblies/`・`/data/meta.json` が 200、HTML の `<title>` に『議員レコード』。加えて**議会ページ `/assemblies/{id}`**（#248、下記） | コンテナ停止（502）、ホスト nginx 停止、rsync 先が空（404）、DNS、プリレンダー漏れ |
-| `data` | `meta.fetchedAt`（トップレベル＝ETL 実行時刻）が 48 時間以内。**古いときは main 側も読んで、どちら側の故障かを理由に書く**（#1185、下記） | 理由が `main も古い` → ETL 側 / `main は新しい` → deploy 側 / `main を読めなかった` → **まだ分かっていない** |
+| `data` | `meta.fetchedAt`（トップレベル＝ETL 実行時刻）が 48 時間以内。**古いときは main 側と `data/refresh` の PR も読んで、どちら側か／そもそも壊れているのかを理由に書く**（#1185 / #1230、下記） | 理由が `main も古い … → ETL 側` → ETL / `… → 止めてある` → **壊れていない**（PR を読む） / `main は新しい` → deploy 側 / `…読めなかった`・`…数えられなかった` → **まだ分かっていない** |
 | `tls` | 証明書の残り 14 日以上 | certbot の自動更新が止まっている（`sudo certbot renew --dry-run`） |
 | `deploy` | **production のみ。** main に `data/` が入ってから **30 分**以内に `deploy-data.yml` の run が始まったか（#1185） | ETL が落ちて dispatch が起きず、`on: push` も GITHUB_TOKEN のマージでは発火しない窓 |
 
@@ -46,19 +46,34 @@ GitHub Actions  security-alerts.yml ──毎日 06:53 JST──▶ GitHub 自�
   **だから題の `Nh` は、最初に escalate した時点で凍る**（#1198。下の表を見ること）。
   復旧時は `escalated` を外して題を素に戻してから閉じる。
 
-#### どちら側の故障か（`data` が失敗したとき・#1185）
+#### どちら側の故障か（`data` が失敗したとき・#1185 / #1230）
 
-**「main も古い」と「main は新しいのに出ていない」は原因も対処も別**なので、理由に名指しする。
+**「main も古い」「main は新しいのに出ていない」「意図して止めてある」は原因も対処も別**なので、理由に名指しする。
+
+**#1230 で 3 つ目が足された。** それまでの 2 分岐は**どちらも「何かが壊れている」を前提にしていた**ので、
+**ETL は健全なのに日次の PR を止めてある状態が `→ ETL 側` に畳まれていた**
+——**#1221 がそれで 70 時間以上、壊れていない ETL を指していた。**
 
 | 理由に出る語 | 意味 | やること |
 |---|---|---|
-| `main も古い (Nh) → ETL 側` | main の `data/meta.json` も 48h より古い | ETL を見る（`etl.yml` の run、#1175 / #1179） |
+| `main も古い (Nh) → ETL 側` | main の `data/meta.json` も 48h より古く、**`data/refresh` に止まっている PR も無い** | ETL を見る（`etl.yml` の run、#1175 / #1179） |
+| `main も古い (Nh); refresh #N が open（auto-merge 解除済み）→ 止めてある` | **ETL は健全。** 新しいデータは PR に在り、入れない判断がされている | **ETL を見ない。** `#N` を読み、止めている理由が解決済みかを見る |
+| `main も古い (Nh); refresh #N が未マージで閉じられている → 止めてある` | 同上。**PR は閉じられている**（次の refresh が作り直す） | 同上。閉じた理由（データの欠落など）が直っているかを見る |
+| `main も古い (Nh); refresh #N が open（auto-merge 有効）→ 緑になれば入る` | **止まっていない。** 緑になった瞬間に入る（#1227） | **CI の赤を見る。** 止めたいなら auto-merge を解除する（でないと誰かが緑にした瞬間に入る） |
+| `main も古い (Nh); refresh の PR を数えられなかった (…)` | **まだ分かっていない。** `gh pr list` が落ちた・応答が空・解釈できない | **「止めてある」とも「ETL 側」とも読まないこと** |
 | `main は新しい (Nh) のに本番は (Mh) → deploy 側` | main には新しいデータが在るが本番に出ていない | `deploy-data.yml` を `workflow_dispatch` で起動する |
 | `main を読めなかった (…)` | **まだ分かっていない。** raw が落ちた・`fetchedAt` が壊れた・読み先が未設定 | **「古くない」と読まないこと。** 両方を調べる |
 
 - main 側は `raw.githubusercontent.com/<repo>/main/data/meta.json` を読む（`PROBE_MAIN_META_URL`）。
 - **`data` が通っているときは main を読まない。** 切り分けは失敗時の情報で、可用性の判定には使っていない
   ——だから **raw が落ちていても監視は赤くならない**し、**落ちたことは `data` が失敗した時点で理由に出る**（黙らない）。
+- **`data/refresh` の PR を見るのも `main も古い` のときだけ**（`PROBE_REFRESH_BRANCH`。空にすれば見ない）。
+  **見るのは「いちばん新しい 1 本」だけ**で、**main の `fetchedAt` より古い PR では上書きしない**
+  ——入れても main が新しくならない PR は鮮度落ちの理由ではないし、**その歯止めが無いと
+  「ETL が死ぬ直前に閉じられた 1 本」が永久に「止めてある」を言い続ける。**
+  なぜ最新 1 本かは実測で決めた（根拠は `deploy/monitor/probe.sh` の `refresh_hold_verdict` 冒頭。
+  **母数 57 本のうち CLOSED 未マージは 4 本で、そのうち 3 本は「次の refresh が作られる 0.0 時間前」に
+  閉じられた正常系**＝次の run が前の PR を畳んだだけ。最新 1 本に絞ると**誤検出は 4 本中 0 本**）。
 
 #### 議会ページの監視（#248）
 
@@ -244,7 +259,7 @@ ssh "$VPS_SSH_HOST" 'sudo mv /etc/cron.d/giinrecord-monitor /root/giinrecord-mon
 | Monitor が失敗したが Issue が無い | 1 回目だけ失敗（2 回目で回復） | 何もしない。続くなら run のログを見る |
 | `[monitor] production: tls` | certbot の自動更新失敗 | `sudo certbot renew`、`systemctl list-timers \| grep certbot` |
 | `[monitor] production: data` と `[monitor] vps: site-production` が同時 | ETL か deploy-data の失敗（データが届いていない） | Actions の ETL / Deploy data |
-| `[monitor] production: data` だけ（vps 側は OK） | rsync は届いたが `fetchedAt` が古い＝ETL は走ったがデータを更新していない | **まず Issue の理由を読む**（`main も古い` / `main は新しい` / `main を読めなかった`。上の表） |
+| `[monitor] production: data` だけ（vps 側は OK） | rsync は届いたが `fetchedAt` が古い＝ETL は走ったがデータを更新していない、**または意図して止めてある**（#1230） | **まず Issue の理由を読む**（`main も古い … → ETL 側` / `… → 止めてある` / `main は新しい` / `…読めなかった`。上の表）。**`止めてある` なら ETL を見に行かない** |
 | `[monitor] production: deploy` | main に `data/` が入って 30 分以上、`deploy-data.yml` が始まっていない | Actions → Deploy data を `workflow_dispatch` で起動 |
 | `[monitor] production: deploy` の理由が `測れなかった` | `gh run list` が落ちた（権限・レート・障害） | **「異常なし」ではない。** run の履歴を手で見る |
 | `[monitor] <env>: <check>` の本文が `no verdict` | check が判定に届く前に死んだ（probe が途中で落ちた） | **緑ではない。** run のログを見る（#1185） |

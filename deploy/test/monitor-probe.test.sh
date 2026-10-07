@@ -783,7 +783,7 @@ t_probe_merged_pr_does_not_override() {
 # docs/ops/monitoring.md と Issue の履歴（#1221 の 4 本のコメント）が指す語が消える。
 t_probe_no_refresh_pr_keeps_the_exact_old_wording() {
   fresh p_hold_absent
-  local old age; old=$(STALE_90H)
+  local old; old=$(STALE_90H)
   H_FETCHED_AT="$old" H_MAIN_META="{\"fetchedAt\": \"$old\"}" H_PRS='[]' \
     PROBE_MAIN_META_URL="https://example.invalid/main-meta" run_probe https://giinrecord.jp && fail "expected non-zero"
   local out; out=$(cat "$P/out")
@@ -835,7 +835,8 @@ t_probe_pr_list_empty_response_is_unmeasured() {
   local old; old=$(STALE_90H)
   H_FETCHED_AT="$old" H_MAIN_META="{\"fetchedAt\": \"$old\"}" H_PRS='' \
     PROBE_MAIN_META_URL="https://example.invalid/main-meta" run_probe https://giinrecord.jp && fail "expected non-zero"
-  assert_contains "$(cat "$P/out")" "refresh の PR を数えられなかった" "空の応答は `[]` ではない"
+  # 説明文をバックティックで囲まない（shell の置換として実行されかける。gh の --body と同じ罠）
+  assert_contains "$(cat "$P/out")" "refresh の PR を数えられなかった" "空の応答は空配列ではない"
 }
 # **枝で引いていること。** stub は `--head` が無い `pr list` を exit 4 で拒むので、
 # probe.sh が枝を渡さなくなればここが落ちる（**全 PR の最新を見てしまう形を塞ぐ**）。
