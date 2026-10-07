@@ -166,10 +166,22 @@ test("#1227 止めたことが Job summary に出る（黙って armed にしな
   for (const w of autoMergeWorkflows) {
     const summaryStep = w.code.split(/^      - name: /m).find((s) => s.startsWith("Job summary"));
     assert.ok(summaryStep, `${w.file} に Job summary の step が無い`);
+    // **「GATE という語が在る」では足りない。** `env:` の束縛を外しても、本文の
+    // `case "${GATE:-}"` に語が残るので `includes("GATE")` は通る——**そして実行時は
+    // 毎回空になり、表は必ず「門まで到達していない」と言う。**
+    // **止めたことが永久に表から消えるのに、検査は緑**である。
+    // （実測: `GATE: ${{ steps.pr.outputs.gate }}` を別の env に差し替える変異で **0 fail** だった。
+    //  この assert を足して **1 fail** になった。）
     assert.match(
       summaryStep,
-      /GATE/,
-      `${w.file}: Job summary が門の結果（GATE）を読んでいない。止めたことが人の読む表に出ない（#1056）`,
+      /^\s*GATE:\s*\$\{\{\s*steps\.pr\.outputs\.gate\s*\}\}\s*$/m,
+      `${w.file}: Job summary の env: に \`GATE: \${{ steps.pr.outputs.gate }}\` が無い。` +
+        `本文に GATE の語が在っても、束縛が無ければ実行時は空で、止めたことが表に出ない（#1056）`,
+    );
+    assert.match(
+      summaryStep,
+      /\$\{GATE:?-?\}|"\$GATE"|\$GATE\b/,
+      `${w.file}: Job summary が $GATE を読んでいない（束縛しただけで使っていない）`,
     );
     assert.match(
       summaryStep,
