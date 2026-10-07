@@ -29,6 +29,18 @@ export interface Carried {
   rollCalls: RollCall[];
   /** 採決 id → 議案情報の審議結果（原文）。rollcalls/index.json の result から戻す（decisionOfResult）。 */
   decisions: Map<string, string>;
+  /**
+   * 採決 id → 前回出力の審議結果（原文）。**回次で絞らない**（#1206）。
+   *
+   * `decisions` は carried の回次だけなので、**遡り（対象の回次が targets に入る実行）では復元元が空になる**。
+   * 判定の語は投票結果ページに無く（#26）参院 議案情報の案件名突合で付けているので、案件名が一致しない採決
+   * （209-1128-v010 など）は突合に当たらず、**前回は出ていた語が消える**。実測 2026-10-04 で 380 行のうち 1 件。
+   *
+   * **語が残っているのは `rollcalls/index.json` だけ**である。個票（`rollcalls/{session}/{id}.json`）は
+   * `result` を持たず（実測 40/40 で不在）、参院 議案情報は `data/` に永続化していない（`data/bills/` は衆院の別出典）。
+   * 復元元はこの 1 つしか無いので、回次で捨てずに全部読む。使う側は `restoreDecisions`。
+   */
+  previousDecisions: Map<string, string>;
   /** 採決 id → 前回出力で memberId が付いていた票の数。再突合の後退（名簿の取り漏れ）を cli が検出する（lostVoteMatches）。 */
   matchedVotes: Map<string, number>;
   /** data/bills/ の全議案。継続審議の議案は提出回次（carried）の下にあっても今回の回次の一覧に載るので、全部を先に入れて取得分で上書きする。 */
@@ -216,6 +228,87 @@ export function decisionOfResult(result: string): string | undefined {
   return result.match(/^(.+?)（賛成 \d+・反対 \d+）$/)?.[1];
 }
 
+/**
+ * **今回の突合（`matchBillResults`）に、前回出力の判定の語を足す**（Issue #1206）。
+ *
+ * 判定の語（可決・否決・同意・承認・是認・承諾・修正・除名）は投票結果ページに無い（#26）。
+ * 参院 議案情報の審議結果を**案件名の完全一致**で突合して付けているので、案件名が議案名と
+ * 一字でも違う採決は当たらない。前回は当たっていた採決が今回当たらなければ、語は消える。
+ *
+ * **復元の規則（受け入れ条件 2）:**
+ * - **今回の突合が勝つ。** `fresh` に在る語は、前回と違っていても上書きしない。
+ *   参院 議案情報が訂正されて「可決」→「否決」になった場合に、古い語を残さないため。
+ * - **今回何も当たらなかった採決にだけ**、前回の語を戻す。
+ * - **今回の出力に無い採決（`rollCalls` に居ない id）の語は持ち込まない。** 消えた採決を索引に復活させない。
+ * - **前回も語が無かった採決は語を持たない**（`previous` に `decisionOfResult` が語を返した行しか入っていない）。
+ *   人事案件・決議は議案情報に載らないので、これが正常な状態である。推定で語を作らない。
+ *
+ * **`restored` と `stillMissing` を返すのは、cli が「戻した」と「元から無い」を**
+ * **ログで区別して出すため**である（「0 件」と「測れなかった」を混ぜない。#1056）。
+ */
+export function restoreDecisions(
+  fresh: ReadonlyMap<string, string>,
+  previous: ReadonlyMap<string, string>,
+  rollCalls: readonly { id: string }[],
+): { decisions: Map<string, string>; restored: string[]; stillMissing: string[] } {
+  const decisions = new Map<string, string>();
+  const restored: string[] = [];
+  const stillMissing: string[] = [];
+  for (const rc of rollCalls) {
+    const now = fresh.get(rc.id);
+    if (now) { decisions.set(rc.id, now); continue; }
+    const before = previous.get(rc.id);
+    if (before) { decisions.set(rc.id, before); restored.push(rc.id); continue; }
+    stillMissing.push(rc.id);
+  }
+  return { decisions, restored, stillMissing };
+}
+
+/**
+ * 前回出力の `rollcalls/index.json`（`lostDecisions` の基点）。無ければ空（初回実行）。
+ *
+ * `readCarried` の中ではなく別の関数にしてあるのは、**cli が `writeDataset` の直前の検査で使う**ためで、
+ * `previousSessionCounts` / `previousIndex`（#235 / #256）と同じ位置づけである。
+ */
+export async function readRollCallIndex(dir: string): Promise<RollCallSummary[]> {
+  return readJson<RollCallSummary[]>(join(dir, "rollcalls", "index.json"), []);
+}
+
+/**
+ * **判定の語を持っていた採決が、今回の出力で語を失っていないか**（Issue #1206）。
+ *
+ * **これは「遡りでだけ出る壊れ方」を遡りを流さずに捕まえるための歯止めである。**
+ * 遡り（`pnpm etl 200 … 216`）は冷えたキャッシュで 5 時間を超えるので CI では流せない（#1209）。
+ * だから**壊れ方そのものを日次の経路に置く**: ETL は毎回この検査を通るので、復元が効かなくなれば
+ * （既定 5 回次のどれかで突合が外れた日に）その日の実行が止まる。遡りを待つ必要が無い。
+ *
+ * **見るのは「語を失ったこと」だけ。**
+ * - 語が**別の語に変わった**のは落とさない（議案情報の訂正。事実が変わったなら従う）
+ * - 語が**増えた**のは落とさない（突合が広がった）
+ * - **採決そのものが今回の出力に無い**のは落とさない。回次を減らす意図的な再構築まで止めてしまうし、
+ *   行の消失は `lostSessionEntries`（#256）/ `lostTimelineEntries`（#235）の担当である
+ * - **前回出力が無い初回実行**は `previous` が空なので何も言わない
+ *
+ * **見ないこと**: 語が正しいか（前回の語が誤っていた場合は、今回も同じ誤りが戻る）。
+ * ここで守るのは「前回公開していた事実を黙って落とさない」ことだけで、語の正しさは突合側の責任である。
+ */
+export function lostDecisions(
+  previous: readonly RollCallSummary[],
+  next: readonly RollCallSummary[],
+): { id: string; session: number; before: string; after: string | undefined }[] {
+  const after = new Map(next.map((s) => [s.id, s]));
+  const lost: { id: string; session: number; before: string; after: string | undefined }[] = [];
+  for (const p of previous) {
+    const before = decisionOfResult(p.result);
+    if (!before) continue;
+    const now = after.get(p.id);
+    if (!now) continue; // 採決ごと消えた分はここの担当ではない（lostSessionEntries / lostTimelineEntries）
+    const a = decisionOfResult(now.result);
+    if (a === undefined) lost.push({ id: p.id, session: p.session, before, after: a });
+  }
+  return lost.sort((x, y) => x.session - y.session || (x.id < y.id ? -1 : x.id > y.id ? 1 : 0));
+}
+
 /** 参院 議案情報の議案ページ（timeline の参法 bill 行の出典）。衆院の bill 行（経過ページ）は bills/ から作り直すので引き継がない。 */
 const SANGIIN_BILL_SOURCE = /^https:\/\/www\.sangiin\.go\.jp\/japanese\/joho1\/kousei\/gian\/\d+\/meisai\//;
 
@@ -231,9 +324,13 @@ export async function readCarried(dir: string, carried: readonly number[]): Prom
     }
   }
   const decisions = new Map<string, string>();
+  const previousDecisions = new Map<string, string>();
   for (const s of await readJson<RollCallSummary[]>(join(dir, "rollcalls", "index.json"), [])) {
-    const decision = set.has(s.session) ? decisionOfResult(s.result) : undefined;
-    if (decision) decisions.set(s.id, decision);
+    const decision = decisionOfResult(s.result);
+    // 語の無い result（得票のみ）からは何も戻さない。「前回も語が無かった」を「可決だった」に化けさせない（#1056）
+    if (!decision) continue;
+    previousDecisions.set(s.id, decision);
+    if (set.has(s.session)) decisions.set(s.id, decision);
   }
   const bills: Bill[] = [];
   for (const s of await readJson<BillSummary[]>(join(dir, "bills", "index.json"), [])) {
@@ -261,7 +358,7 @@ export async function readCarried(dir: string, carried: readonly number[]): Prom
       if (set.has(session)) entries.push({ memberId: row.id, entry: { ...entry, session } });
     }
   }
-  return { rollCalls, decisions, matchedVotes, bills, entries, withoutSession };
+  return { rollCalls, decisions, previousDecisions, matchedVotes, bills, entries, withoutSession };
 }
 
 /**
