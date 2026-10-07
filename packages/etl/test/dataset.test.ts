@@ -10,7 +10,6 @@ import type { DatasetMeta } from "@seiji-kiroku/shared";
 import { DIET_ASSEMBLY_IDS, billUnmatchedViolations, billsBySession, dietAssemblies, membersByAssembly, readSessionsOnDisk, resolveSessions, writeDataset, validateDataset, type Dataset } from "../src/dataset.ts";
 import { stableJson } from "../src/json.ts";
 import { matchVotes } from "../src/match-votes.ts";
-import type { MatchedBill } from "../src/match-bills.ts";
 import { parseRollCall } from "../src/sources/sangiin-votes.ts";
 import { parseMemberList } from "../src/sources/sangiin-members.ts";
 import { parseShugiinBill } from "../src/sources/shugiin-bills.ts";
@@ -829,115 +828,73 @@ describe("resolveSessions: 今回処理する回次 = 指定回次 ∪ data/ に
   });
 });
 
+
 /**
- * 議案の提出者・賛成者の未突合（#1229）。
+ * 衆院 議案の提出者・賛成者の未突合（#1229）。
  *
  * **票にはこの検査が在り、議案には無かった。** `unmatchedKeys` が 1 本の Set で
- * `"rollCallId" in u ? ... : ""` と書かれていたため、議案の行は全部空文字に畳まれて鍵にならなかった。
- * 実測（`origin/main` 272cb286 → `origin/data/refresh` 646d54e9）: 票 22,818 行は 1 行も動かないまま、
- * 議案は **191 行 → 2 行**。`data/unmatched/` が **17 → 9 ファイル・493 行減**で CI は緑だった。
+ * `"rollCallId" in u ? ... : ""` と書かれていたため、`rollCallId` を持たない行は
+ * **すべて空文字 `""` に畳まれて鍵にならなかった**。
  *
- * **fixture は実物から採る**。実 HTML（Shift_JIS）の衆院 経過ページから作るのは:
- *   - `1DE213E` = **221-参法-1**「竹詰 仁君外一名」——**消えた 189 行と同じ形**
- *     （参法・`submitterText` に「君」・`submitterNames` も `submitters` も無い）
- *   - `1DDEF5A` = **217-参法-5**「厚生労働委員長」——**消えてはいけない 6 件と同じ形**（委員会発議）
- *   - `1DE153E` = **221-衆法-1**（提出者 5 名・賛成者 69 名）——衆院側（`UnmatchedShugiinBillName`）
+ * **fixture は実物から採る。** 実 HTML（Shift_JIS）の衆院 経過ページ `1DE153E` = **221-衆法-1**
+ * （提出者 5 名・賛成者 69 名）を使う。**実 `data/` の不足の形そのもの**である
+ * （221-衆法-26 は賛成者 153 名中 152 名、221-衆法-27 は 59 名中 58 名が紐づき、残り 1 名が unmatched）。
+ *
+ * **参法の発議者はここでは検査しない。** 理由は `billUnmatchedViolations` の docblock に実測つきで在る
+ * （`data/bills/` は carried の回次も保持するが `matchBills` は `targets` ぶんしか見ないので、
+ * 「氏名が在るのに unmatched に無い」は正常に起こる。既定の run で 189 件誤検出した）。
  */
-describe("billUnmatchedViolations: 議案の提出者・賛成者が unmatched に載っていない状態を捕まえる（#1229）", () => {
-  const SANPOU = realBill("1DE213E");       // 221-参法-1「竹詰 仁君外一名」
-  const COMMITTEE = realBill("1DDEF5A");    // 217-参法-5「厚生労働委員長」
+describe("billUnmatchedViolations: 衆院 議案の提出者・賛成者が unmatched に載っていない状態を捕まえる（#1229）", () => {
   const SHUGIIN = realBill("1DE153E");      // 221-衆法-1
-  const NONE = { billNameKeys: new Set<string>(), proposerBillIds: new Set<string>(), timelineBillIds: new Set<string>() };
-  const keys = (o: Partial<typeof NONE>) => ({ ...NONE, ...o });
   const rel = (b: Bill) => `bills/${b.session}/${b.id}.json`;
   const ids = (n: number) => Array.from({ length: n }, (_, i) => `m_00700${i % 7}`) as never;
+  const none = new Set<string>();
 
   test("fixture は実物の形をしている（これが崩れたら以下の検査は空回りする）", () => {
-    assert.equal(SANPOU.id, "221-参法-1");
-    assert.equal(SANPOU.kind, "参法");
-    assert.equal(SANPOU.submitterText, "竹詰 仁君外一名");
-    assert.equal(SANPOU.submitterNames, undefined, "参院 議案情報の Bill は data/ に残らないので氏名の配列は無い");
-    assert.equal(SANPOU.submitters, undefined);
-    assert.equal(COMMITTEE.submitterText, "厚生労働委員長");
+    assert.equal(SHUGIIN.id, "221-衆法-1");
     assert.equal(SHUGIIN.submitterNames?.length, 5);
     assert.equal(SHUGIIN.supporterNames?.length, 69);
+    assert.equal(SHUGIIN.submitters, undefined);
+    assert.equal(SHUGIIN.supporters, undefined);
   });
 
-  test("参法の発議者が timeline にも unmatched にも無ければ違反（消えた 189 行の形）", () => {
-    const v = billUnmatchedViolations(rel(SANPOU), SANPOU, NONE);
-    assert.equal(v.length, 1, v.join("\n"));
-    assert.match(v[0], /221-参法-1/);
-    assert.match(v[0], /竹詰 仁君外一名/);
-    assert.match(v[0], /neither in any member timeline \(bill row\) nor in unmatched/);
-  });
-
-  test("参法の発議者が unmatched に載っていれば違反ではない", () => {
-    assert.deepEqual(billUnmatchedViolations(rel(SANPOU), SANPOU, keys({ proposerBillIds: new Set(["221-参法-1"]) })), []);
-  });
-
-  test("参法の発議者が timeline の bill 行として紐づいていれば違反ではない（突合できて消えた形）", () => {
-    assert.deepEqual(billUnmatchedViolations(rel(SANPOU), SANPOU, keys({ timelineBillIds: new Set(["221-参法-1"]) })), []);
-  });
-
-  test("別の議案で載っていても、この議案の代わりにはならない（billId まで見る）", () => {
-    const v = billUnmatchedViolations(rel(SANPOU), SANPOU, keys({ proposerBillIds: new Set(["221-参法-2"]), timelineBillIds: new Set(["221-参法-2"]) }));
-    assert.equal(v.length, 1, v.join("\n"));
-  });
-
-  test("委員会発議の参法（submitterText に「君」が無い）は違反にしない——実測 6 件を誤検出しない", () => {
-    assert.deepEqual(billUnmatchedViolations(rel(COMMITTEE), COMMITTEE, NONE), []);
-  });
-
-  test("参法でない議案（閣法・衆法・予算…）の submitterText は見ない", () => {
-    const kakuhou = realBill("1DE14D6"); // 221-閣法-3「内閣」
-    assert.equal(kakuhou.kind, "閣法");
-    assert.deepEqual(billUnmatchedViolations(rel(kakuhou), kakuhou, NONE), []);
-    // 「君」が入っていても参法でなければ対象外（衆法の提出者は衆院名簿側の検査で見る）
-    const shuhou: Bill = { ...realBill("1DE1E7E"), submitters: undefined, supporters: undefined };
-    assert.equal(shuhou.kind, "衆法");
-    assert.match(shuhou.submitterText ?? "", /君/);
-    assert.deepEqual(billUnmatchedViolations(rel(shuhou), shuhou, NONE), []);
-  });
-
-  test("衆院 議案: 名寄せが走ったのに紐づかなかった賛成者が unmatched に無ければ違反（191 → 2 で残った 2 行の形）", () => {
+  test("名寄せが走ったのに紐づかなかった賛成者が unmatched に無ければ違反", () => {
     const b: Bill = { ...SHUGIIN, submitters: ids(5), supporters: ids(68) };
-    const v = billUnmatchedViolations(rel(b), b, NONE);
+    const v = billUnmatchedViolations(rel(b), b, none);
     assert.equal(v.length, 1, v.join("\n"));
     assert.match(v[0], /1 of 69 supporterNames are not linked \(supporters has 68\) but only 0 are listed/);
   });
 
-  test("衆院 議案: 紐づかなかった賛成者が unmatched に載っていれば違反ではない", () => {
+  test("紐づかなかった賛成者が unmatched に載っていれば違反ではない", () => {
     const b: Bill = { ...SHUGIIN, submitters: ids(5), supporters: ids(68) };
     const name = (b.supporterNames ?? [])[68];
-    assert.deepEqual(billUnmatchedViolations(rel(b), b, keys({ billNameKeys: new Set([`${b.id}\t${name}`]) })), []);
+    assert.deepEqual(billUnmatchedViolations(rel(b), b, new Set([`${b.id}\t${name}`])), []);
   });
 
-  test("衆院 議案: 不足が 2 人なら 1 人載せただけでは足りない（数で突き合わせている）", () => {
+  test("不足が 2 人なら 1 人載せただけでは足りない（数で突き合わせている）", () => {
     const b: Bill = { ...SHUGIIN, submitters: ids(5), supporters: ids(67) };
     const names = b.supporterNames ?? [];
-    const one = billUnmatchedViolations(rel(b), b, keys({ billNameKeys: new Set([`${b.id}\t${names[67]}`]) }));
+    const one = billUnmatchedViolations(rel(b), b, new Set([`${b.id}\t${names[67]}`]));
     assert.equal(one.length, 1, one.join("\n"));
     assert.match(one[0], /2 of 69 supporterNames are not linked \(supporters has 67\) but only 1 are listed/);
-    assert.deepEqual(billUnmatchedViolations(rel(b), b, keys({ billNameKeys: new Set([`${b.id}\t${names[67]}`, `${b.id}\t${names[68]}`]) })), []);
+    assert.deepEqual(billUnmatchedViolations(rel(b), b, new Set([`${b.id}\t${names[67]}`, `${b.id}\t${names[68]}`])), []);
   });
 
-  test("衆院 議案: 提出者の側も見る（賛成者だけ数えて提出者を見逃さない）", () => {
+  test("提出者の側も見る（賛成者だけ数えて提出者を見逃さない）", () => {
     const b: Bill = { ...SHUGIIN, submitters: ids(4), supporters: ids(69) };
-    const v = billUnmatchedViolations(rel(b), b, NONE);
+    const v = billUnmatchedViolations(rel(b), b, none);
     assert.equal(v.length, 1, v.join("\n"));
     assert.match(v[0], /1 of 5 submitterNames are not linked \(submitters has 4\)/);
   });
 
-  test("衆院 議案: 名寄せを試みていない議案（submitters / supporters が両方無い）は対象外——名簿が覆わない回次の氏名を確認表に流さない", () => {
-    assert.equal(SHUGIIN.submitters, undefined);
-    assert.equal(SHUGIIN.supporters, undefined);
+  test("名寄せを試みていない議案（submitters / supporters が両方無い）は対象外——名簿が覆わない回次の氏名を確認表に流さない", () => {
     assert.ok((SHUGIIN.submitterNames?.length ?? 0) > 0);
-    assert.deepEqual(billUnmatchedViolations(rel(SHUGIIN), SHUGIIN, NONE), []);
+    assert.deepEqual(billUnmatchedViolations(rel(SHUGIIN), SHUGIIN, none), []);
   });
 
-  test("衆院 議案: 提出者だけ紐づき 賛成者欄が空（実 data に 10 件ある形）は違反にしない", () => {
+  test("提出者だけ紐づき 賛成者欄が空（実 data に 10 件ある形）は違反にしない", () => {
     const b: Bill = { ...SHUGIIN, submitterNames: ["国土交通委員長"], submitters: ids(1), supporterNames: [], supporters: undefined };
-    assert.deepEqual(billUnmatchedViolations(rel(b), b, NONE), []);
+    assert.deepEqual(billUnmatchedViolations(rel(b), b, none), []);
   });
 
   test("鍵は種類ごとに分かれている: 票の形の鍵を議案の鍵として使えない（空文字に畳まない）", () => {
@@ -945,82 +902,45 @@ describe("billUnmatchedViolations: 議案の提出者・賛成者が unmatched �
     const b: Bill = { ...SHUGIIN, submitters: ids(5), supporters: ids(68) };
     const name = (b.supporterNames ?? [])[68];
     const voteShaped = new Set([`221-0605-v001\t${name}`, "", `\t${name}`]);
-    assert.equal(billUnmatchedViolations(rel(b), b, keys({ billNameKeys: voteShaped })).length, 1);
+    assert.equal(billUnmatchedViolations(rel(b), b, voteShaped).length, 1);
   });
 });
 
 /**
- * 上の純粋関数が `validateDataset` から実際に呼ばれ、**鍵と timeline が配線されている**こと（#1229）。
+ * 上の純粋関数が `validateDataset` から実際に呼ばれ、**鍵が配線されている**こと（#1229）。
  * **関数が正しいだけでは `data/` は守られない**——呼ばれていなければ CI は緑のままになる。
- * ここは `writeDataset` + `validateDataset` の往復なので重い。**配線の数だけ置く（4 本）。**
+ * ここは `writeDataset` + `validateDataset` の往復なので重い。**配線の数だけ置く（2 本）。**
  */
-describe("validateDataset は議案の未突合の検査を実際に呼ぶ（#1229）", () => {
+describe("validateDataset は衆院 議案の未突合の検査を実際に呼ぶ（#1229）", () => {
   let dir: string;
   beforeEach(async () => {
     dir = mkdtempSync(join(tmpdir(), "seiji-unmatched-bill-"));
-    const d = realDataset();
-    // 221-参法-1（氏名が載る参法）と 217-参法-5（委員会発議）を足す
-    await writeDataset(dir, { ...d, bills: [...d.bills, realBill("1DE213E"), realBill("1DDEF5A")] });
+    await writeDataset(dir, realDataset());
   });
   const cleanup = () => rmSync(dir, { recursive: true, force: true });
+  const linked = (n: number) => readJson<MemberSummary[]>(dir, "members/index.json").slice(0, n).map((m) => m.id) as never;
 
-  test("参法の発議者が unmatched にも timeline にも無い data/ は違反になる（委員会発議の 1 件は誤検出しない）", async () => {
+  test("紐づかなかった賛成者が unmatched に無い data/ は違反になる", async () => {
+    patch<Bill>(dir, "bills/221/221-衆法-1.json", (x) => ({ ...x, submitters: linked(5), supporters: linked(68) }));
     const v = (await validateDataset(dir)).filter((x) => x.includes("#1229"));
     assert.equal(v.length, 1, v.join("\n"));
-    assert.match(v[0], /bills\/221\/221-参法-1\.json/);
-    assert.deepEqual(v.filter((x) => x.includes("217-参法-5")), []);
+    assert.match(v[0], /bills\/221\/221-衆法-1\.json: 1 of 69 supporterNames are not linked/);
     cleanup();
   });
 
-  test("timeline の bill 行として紐づいている参法は違反にしない（突合できて消えた形）", async () => {
-    // **変異 M7（`timelineBillIds.add(e.billId)` を外す）は fixture では 1 件も落ちなかった**
-    // ——realDataset の timeline に参法の bill 行が 1 本も無かったため。
-    // **同じ変異を実 `data/` に当てると、正しく突合できている参法 42 件が全部違反になる**（実測）。
-    // この検査がその配線を見る: **「突合できたから消えた」を機械が言えるのはこの経路だけである。**
-    const members = parseMemberList(fixture("sangiin-giin-221"), ROSTER, 221);
-    const d = realDataset();
-    const proposer: MatchedBill = {
-      memberId: members[0].id, billId: "221-参法-1", date: "2026-03-10", title: "x法律案",
-      role: "提出者", submitterText: "竹詰 仁君外一名",
-      sourceUrl: "https://www.sangiin.go.jp/japanese/joho1/kousei/gian/221/meisai/m221100221001.htm",
-    };
-    await writeDataset(dir, {
-      ...d,
-      ...buildDataset(members, d.rollCallDetails, new Map(), realSpeeches(members), [proposer]),
-      assemblies: d.assemblies, rollCallDetails: d.rollCallDetails,
-      bills: [...d.bills, realBill("1DE213E"), realBill("1DDEF5A")],
-      unmatched: [], unmatchedBills: d.unmatchedBills, unmatchedGroups: d.unmatchedGroups,
-      groupMismatch: d.groupMismatch, meta: d.meta,
-    });
-    // timeline に bill 行が実際に在ることを先に確かめる（無ければこの検査は空回りする）
-    const detail = readJson<{ timeline: { kind: string; billId?: string }[] }>(dir, `members/${members[0].id}.json`);
-    assert.ok(detail.timeline.some((e) => e.kind === "bill" && e.billId === "221-参法-1"), "fixture に参法の bill 行が無い");
-    assert.deepEqual((await validateDataset(dir)).filter((x) => x.includes("#1229")), []);
-    cleanup();
-  });
-
-  test("衆院 議案の氏名の鍵は billId まで含む——同じ氏名が別の議案で載っていても代わりにならない", async () => {
-    // **変異 M5（`${u.billId}\t${u.nameText}` → `${u.nameText}`）が、純粋関数の検査だけでは
-    // 1 件も落ちなかった**（鍵を直接渡していたので構築側が通っていなかった）。この検査が構築側を見る。
+  test("氏名の鍵は billId まで含み、unmatched/{session}.json も読む（#219 の分割ファイル）", async () => {
+    // **変異（`${u.billId}\t${u.nameText}` → `${u.nameText}`）は、純粋関数の検査だけでは 1 件も落ちない**
+    // （鍵を直接渡していて構築側が通らない）。この検査が構築側を見る。
     const names = realBill("1DE153E").supporterNames ?? [];
-    const roster = readJson<MemberSummary[]>(dir, "members/index.json");
-    patch<Bill>(dir, "bills/221/221-衆法-1.json", (x) => ({ ...x, submitters: roster.slice(0, 5).map((m) => m.id) as never, supporters: roster.slice(0, 68).map((m) => m.id) as never }));
-    const row = { kind: "bill" as const, nameText: names[68], group: "", billId: "221-参法-1" };
-    // 氏名は合っているが billId が別の議案 → 221-衆法-1 の不足は埋まらない
-    writeFileSync(join(dir, "unmatched.json"), stableJson([row, { nameText: "竹詰仁", group: "", billId: "221-参法-1" }]));
+    patch<Bill>(dir, "bills/221/221-衆法-1.json", (x) => ({ ...x, submitters: linked(5), supporters: linked(68) }));
+    const row = { kind: "bill" as const, nameText: names[68], group: "" };
+    mkdirSync(join(dir, "unmatched"), { recursive: true });
+    // 氏名は合っているが billId が別の議案 → 不足は埋まらない
+    writeFileSync(join(dir, "unmatched", "221.json"), stableJson([{ ...row, billId: "221-衆法-2" }]));
     const wrong = (await validateDataset(dir)).filter((x) => x.includes("#1229"));
     assert.equal(wrong.length, 1, wrong.join("\n"));
-    assert.match(wrong[0], /221-衆法-1\.json: 1 of 69 supporterNames are not linked/);
-    // 同じ氏名を正しい billId で載せれば埋まる
-    writeFileSync(join(dir, "unmatched.json"), stableJson([{ ...row, billId: "221-衆法-1" }, { nameText: "竹詰仁", group: "", billId: "221-参法-1" }]));
-    assert.deepEqual((await validateDataset(dir)).filter((x) => x.includes("#1229")), []);
-    cleanup();
-  });
-
-  test("unmatched/{session}.json に載せれば違反ではない（#219 の分割ファイルも鍵として読む）", async () => {
-    writeFileSync(join(dir, "unmatched.json"), stableJson([]));
-    mkdirSync(join(dir, "unmatched"), { recursive: true });
-    writeFileSync(join(dir, "unmatched", "221.json"), stableJson([{ nameText: "竹詰仁", group: "", billId: "221-参法-1" }]));
+    // 正しい billId で、分割ファイル側に載せれば埋まる
+    writeFileSync(join(dir, "unmatched", "221.json"), stableJson([{ ...row, billId: "221-衆法-1" }]));
     assert.deepEqual((await validateDataset(dir)).filter((x) => x.includes("#1229")), []);
     cleanup();
   });
