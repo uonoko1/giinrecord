@@ -223,6 +223,88 @@ export function billReferralViolations(rel: string, indexRel: string, b: Bill, s
 }
 
 /**
+ * **衆院 議案の提出者・賛成者**が、`data/` の上で
+ * **「名簿の誰かに紐づいた」か「未突合として載っている」かのどちらか**になっていることの検査（#1229）。
+ *
+ * **票にはこの検査が在り、議案には無かった。** `unmatchedKeys` が 1 本の Set で
+ * `"rollCallId" in u ? ... : ""` と書かれていたため、`rollCallId` を持たない行
+ * （議案の提出者・賛成者、質問主意書、発言、委員会）は**すべて空文字 `""` に畳まれ、鍵として存在しなかった**。
+ * 票の側だけが守られ、議案の側は検査が無いまま通っていた。
+ *
+ * **根拠は同じ議案ファイルの中に在る。** `submitterNames` / `supporterNames` が
+ * ページの氏名（原文）で、`submitters` / `supporters` が紐づいた `memberId`。
+ * **氏名の数 − id の数 = 未突合の数**でなければならない。
+ *
+ * **`submitters` / `supporters` が両方とも無い議案は対象外。** 名寄せを試みていないからである
+ * （`matchShugiinBills`: 衆院名簿が覆わない回次は紐づけず unmatched にも出さない。
+ * 全氏名を確認表に流すと名簿 PBI で解消するものが運用者の表を埋める）。
+ * **「名寄せが走ったのに unmatched が無い」形だけを見る。**
+ *
+ * **この形は `data/` の状態に依存しない。** 根拠（氏名）と結果（id）が同じファイルに在るので、
+ * **どの回次が今回の対象だったかに関わらず成立する**。実測でも 5 つの基点すべてで違反 0 件のまま、
+ * 実在する不足（1〜2 件）を取りこぼさずに照合できている（下表）。
+ *
+ * | 基点 | 名寄せが走った議案 | 不足が在る欄 | unmatched で埋まる | 違反 |
+ * |---|---:|---:|---:|---:|
+ * | `origin/main` (eaff0d40) | 39 | 2 | 2 | **0** |
+ * | `origin/data/refresh` (646d54e9) | 39 | 2 | 2 | **0** |
+ * | aa3bdf85 | 39 | 2 | 2 | **0** |
+ * | 0981a373 | 39 | 1 | 1 | **0** |
+ * | da69dee8 | 39 | 1 | 1 | **0** |
+ *
+ * 不足の実物（main）: 221-衆法-26 は賛成者 153 名中 152 名、221-衆法-27 は 59 名中 58 名が紐づき、
+ * 残りの 1 名ずつが `unmatched` に在る（`{"kind":"bill","nameText":"渡辺孝一",...}` /
+ * `{"kind":"bill","nameText":"東徹君",...}`。後者は上流が「君」を落としていない原文で、両側とも逐語で一致する）。
+ *
+ * ## **参法の発議者（`UnmatchedBillProposer`）は、ここでは検査しない**
+ *
+ * **検査しようとして、前提が成り立たないことを実測で確かめた。** 残す:
+ *
+ * `matchBills` の入力は `allBills` で、**`targets` の回次ぶんしか取得していない**（`cli.ts`）。
+ * 一方 `data/bills/` は **carried の回次の議案も保持する**（#103）。
+ * つまり「`data/bills/` に氏名付きの参法が在るのに unmatched にも timeline にも無い」状態は、
+ * **その回次が今回の対象でなかっただけ**で正常に起こる。
+ *
+ * 実測（参法 237 件 = 氏名が載る 231 ＋ 委員会発議 6）: **timeline に在るのは 42 件で、
+ * どの基点でも 42 件のまま動かない**。残る 189 件が unmatched に在るかどうかだけが基点で変わる:
+ *
+ * | 基点 | shards | `unmatched.json` の行 | `billId` 型 | 189 件は unmatched に |
+ * |---|---:|---:|---:|---|
+ * | da69dee8 | 9 | 549 | 1 | 無い |
+ * | 6e6b9b99 | 17 | 223,087 | 190 | 在る |
+ * | 0981a373 | 9 | 549 | 1 | 無い |
+ * | 02e48234 | 17 | 222,873 | 191 | 在る |
+ * | aa3bdf85 | 9 | 335 | 2 | 無い |
+ * | eaff0d40 | 17 | 222,578 | 191 | 在る |
+ *
+ * **8 基点で例外なく `shards=17` ⟷ `billId` 約 190、`shards=9` ⟷ `billId` 1〜2 に対応する。**
+ * `shards=17` は全回次を遡った run（`targets` が 200〜221）で、`shards=9` は既定の run。
+ * **「191 → 2」は喪失ではなく、遡ったかどうかの差である。**
+ * **これを違反にすると、既定の run が毎回 189 件赤くなる**（実測: aa3bdf85 / 0981a373 / da69dee8 の
+ * 3 基点すべてで 189 件。どれも正常な出力である）。
+ *
+ * **参法の発議者を検査するには「どの回次が今回の対象だったか」が `data/` 側に要る。**
+ * `meta.sessions` は対象と carried を区別しないので、現状の `data/` では足りない。**別 PBI。**
+ */
+export function billUnmatchedViolations(rel: string, b: Bill, billNameKeys: ReadonlySet<string>): string[] {
+  const v: string[] = [];
+  // 名寄せが走った議案（id が 1 つ以上付いた）だけを見る
+  if (!((b.submitters?.length ?? 0) > 0 || (b.supporters?.length ?? 0) > 0)) return v;
+  for (const [namesKey, idsKey] of [["submitterNames", "submitters"], ["supporterNames", "supporters"]] as const) {
+    const names = b[namesKey] ?? [];
+    const linked = (b[idsKey] ?? []).length;
+    // 紐づかなかった人数（氏名 − id）ぶんが unmatched に載っていなければならない。
+    // **数えるのは「unmatched に在る氏名」の側である**——「無い側」を数えると紐づいた人まで混ざり、
+    // **1 人落ちても 68 人ぶんの余裕に埋もれて鳴らない**（最初にそう書いて、変異ではなく fixture で気づいた）。
+    const listed = names.filter((n) => billNameKeys.has(`${b.id}\t${n}`)).length;
+    if (names.length - linked > listed) {
+      v.push(`${rel}: ${names.length - linked} of ${names.length} ${namesKey} are not linked (${idsKey} has ${linked}) but only ${listed} are listed in unmatched.json / unmatched/{session}.json (#1229)`);
+    }
+  }
+  return v;
+}
+
+/**
  * `bills/by-session.json`（#411）: `bills/index.json` を院・回次ごとに数えた行。house 昇順・回次昇順（決定的な並び）。
  * 0 件の (house, session) の行は作らない（行が無い＝0 件。`/coverage` の回次の範囲は行のある回次だけから数える）。
  */
@@ -392,7 +474,18 @@ export async function validateDataset(dir: string): Promise<string[]> {
   }
 
   const unmatched = await readUnmatched(dir);
-  const unmatchedKeys = new Set(unmatched.map((u) => ("rollCallId" in u ? `${u.rollCallId}\t${u.nameText}` : "")));
+  // 鍵は **行の種類ごとに別の集合**にする（#1229）。
+  // かつてここは 1 本の Set で、`"rollCallId" in u ? ... : ""` と書いてあった——
+  // **`rollCallId` を持たない行（議案の提出者・賛成者、質問主意書、発言、委員会）はすべて空文字 `""` に畳まれ、
+  // 鍵として存在しなかった。** 票の側だけが守られ、議案の側は検査が無いまま
+  // **191 行 → 2 行（8 ファイル・493 行）が黙って消えた**のに CI が緑だった（実測）。
+  // 畳まない形（種類ごとの Set）にすれば、片方だけ守られる状態が構造として作れない。
+  const unmatchedVoteKeys = new Set<string>();
+  const unmatchedBillNameKeys = new Set<string>();
+  for (const u of unmatched) {
+    if ("rollCallId" in u) unmatchedVoteKeys.add(`${u.rollCallId}\t${u.nameText}`);
+    else if ("billId" in u) unmatchedBillNameKeys.add(`${u.billId}\t${u.nameText}`);
+  }
   const summaries = (await read<RollCallSummary[]>("rollcalls/index.json")) ?? [];
   let matchedVotes = 0;
   for (let i = 0; i < summaries.length; i++) {
@@ -409,7 +502,7 @@ export async function validateDataset(dir: string): Promise<string[]> {
     for (const vote of rc.votes) {
       if (!VOTE_VALUES.has(vote.value)) v.push(`${rel}: vote value must be 賛成/反対/投票なし, got ${vote.value} (${vote.nameText})`);
       if (vote.memberId === "") {
-        if (!unmatchedKeys.has(`${rc.id}\t${vote.nameText}`)) v.push(`${rel}: "${vote.nameText}" has empty memberId but is not listed in unmatched.json / unmatched/{session}.json`);
+        if (!unmatchedVoteKeys.has(`${rc.id}\t${vote.nameText}`)) v.push(`${rel}: "${vote.nameText}" has empty memberId but is not listed in unmatched.json / unmatched/{session}.json`);
       } else if (!ids.has(vote.memberId)) v.push(`${rel}: memberId ${vote.memberId} not in members/index.json`);
       else matchedVotes++;
     }
@@ -439,6 +532,7 @@ export async function validateDataset(dir: string): Promise<string[]> {
       for (const id of b[key] ?? []) if (!ids.has(id)) v.push(`${rel}: ${key} memberId ${id} not in members/index.json`);
     }
     v.push(...billReferralViolations(rel, `bills/index.json[${i}]`, b, s));
+    v.push(...billUnmatchedViolations(rel, b, unmatchedBillNameKeys));
   }
   // bills/by-session.json（#411）は index.json から機械的に導ける集計。食い違えば /coverage が違う件数を出すので止める
   const bySession = await read<BillSessionCount[]>("bills/by-session.json");
