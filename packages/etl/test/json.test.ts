@@ -91,7 +91,14 @@ describe("jsonKeyOrderViolations: 直列化されたテキストのキーの並�
   test("キーに見える文字列が値の中にあっても誤検出しない", () => {
     assert.deepEqual(jsonKeyOrderViolations('{\n "a": "\\"z\\": 1, \\"b\\": 2",\n "b": "{}"\n}\n'), []);
     assert.deepEqual(jsonKeyOrderViolations('{\n "a": "}\\n \\"z\\":",\n "b": 1\n}\n'), []);
-    // キーにエスケープが入っていても、解いた生の文字で比べる（"a\"b" < "ab"）
+    // キーにエスケープが入っていたら、**解いた生の文字**で比べる（綴りのままで比べると判定が変わる）。
+    // 解いた文字: "a\nb" (0x0A) < "a b" (0x20) → 順序は正しい＝違反 0。
+    // 綴りのまま:  "a\\nb" の 2 文字目は "\\"(0x5C) > " "(0x20) → 誤って違反になる。
+    // この 1 対は「エスケープを解く」行を外すと落ちる（380 対のうち 48 対がこの性質を持つ。残りは等価）。
+    assert.deepEqual(jsonKeyOrderViolations('{\n "a\\nb": 1,\n "a b": 2\n}\n'), []);
+    // \u 形式も解く（"U+0001" < "A" は解けば true、綴りのままなら "\\"(0x5C) > "A"(0x41) で false）
+    assert.deepEqual(jsonKeyOrderViolations('{\n "\\u0001": 1,\n "A": 2\n}\n'), []);
+    // 引用符のエスケープが入ったキーでも文字列の終わりを読み違えない（"a\"b" < "ab"）
     assert.deepEqual(jsonKeyOrderViolations('{\n "a\\"b": 1,\n "ab": 2\n}\n'), []);
   });
   test("同じキーが 2 度出てきたら違反（辞書順の厳密増加が崩れている）", () => {
