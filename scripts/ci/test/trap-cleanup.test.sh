@@ -328,10 +328,24 @@ SHAPE_TAIL='|| echo "warn: cleanup left $TMP behind (not a test failure)" >&2; e
 # `verbatim-checked` が 38 → 37 になり、下限 `-ge 35` に吸収されて **9 passed / 0 failed** で素通りした）。
 # 探すのは `cleanup() {` だけにして、**中身の綴りは照合の側で落とす。**
 # 「見つからない」も「綴りが違う」も、どちらも失敗にする（下の n == total）。
+#
+# **`| head -1` で済ませない。** pipefail のもとで早期終了する読み手をパイプの末尾に置くと、
+# 書き手が SIGPIPE(141) で死んで**確率的に偽になる**（#527）。
+# `deploy/test/pipefail-sigpipe.test.sh` が実際にこれを捕まえた
+# （最初に書いた版が `grep … | grep -v … | head -1` で、pass=24 fail=1）。
+# 最初の 1 件で break する読み取りループにして、入力は process substitution で受ける。
 real_cleanup_def() {
-  grep -h '^[[:space:]]*cleanup() {\|; cleanup() {' "$1" \
-    | grep -v -E "^(NEW_SHAPE=|[[:space:]]*printf )" \
-    | head -1
+  local line
+  while IFS= read -r line; do
+    # **この検査ファイル自身が持つ fixture / 自分の grep パターンを除く。**
+    # 除くのは「行の中で `cleanup() {` より前に引用符が在る」もの、つまり
+    # 文字列の中に綴りを持っているだけの行（`NEW_SHAPE='…'` / `printf '…'` / `grep '…'`）。
+    # **本物の定義行は、`cleanup() {` の前に `TMP=$(mktemp -d); ` しか来ない**（実物 38/38 で確認）。
+    [[ ${line%%cleanup() \{*} == *[\'\"]* ]] && continue
+    printf '%s\n' "$line"
+    return 0
+  done < <(grep -h '^[[:space:]]*cleanup() {\|; cleanup() {' "$1" || true)
+  return 0
 }
 
 # shape_of <行> → 先頭の `TMP=$(mktemp -d); ` と末尾の `; trap cleanup EXIT` を剥がした芯を出す。
