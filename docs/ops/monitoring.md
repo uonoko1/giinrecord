@@ -209,6 +209,45 @@ bash scripts/human-tasks.sh --yes --set-security-alerts-token
 3. Dependabot なら: Dependabot が出している PR を取り込む。取り込めない事情があるなら `scripts/ci/audit-ignore.txt` に**期限と理由を付けて**書く（`scripts/ci/audit.sh`）。
 4. アラートが 0 件になれば、**次の実行で Issue は自動で閉じる**。手で閉じなくてよい。
 
+### スクラムボード（Projects v2）（`.github/workflows/scrum-monitor.yml`）
+
+**スクラムの監視のうち、ボードの節が `GITHUB_TOKEN` では測れない**（#1212 / #1203）。
+
+**`GITHUB_TOKEN` で読めない監視は 3 件あり、原因はすべて同じである。** **手順も同じ形にしてある**——違う形にすると取り違える:
+
+| 鳴る Issue | 読めないもの | secret | 要る権限 |
+|---|---|---|---|
+| `[monitor] repo: main の保護設定を読めない`（#547） | `main` の保護設定 | `BRANCH_PROTECTION_TOKEN` | **Repository** permissions: `Administration: Read-only` |
+| `[monitor] repo: security アラートを読めない`（#821） | secret scanning / Dependabot | `SECURITY_ALERTS_TOKEN` | **Repository** permissions: `Secret scanning alerts` / `Dependabot alerts` を `Read-only` |
+| `[monitor] scrum: 監視が測れていない`（#1203） | **Projects v2（ボード）** | **`SCRUM_BOARD_TOKEN`** | **Account** permissions: `Projects: Read-only` |
+
+**3 件目だけ `Account permissions` である。** Projects v2 は**リポジトリの資源ではなく user/org の資源**なので、`Repository permissions` をいくら付けても読めない。
+
+**`permissions:` に `projects:` と書くのは誤り。** そんなキーは存在せず、書くと **#540 と同じく workflow が構文として拒否されて検査ごと動かなくなる**（受け付けるスコープの全部は上の security アラートの節に列挙してある。`repository-projects` は**クラシックの Projects** 用で、Projects v2 には効かない）。**PAT しか手が無い。**
+
+#### **PAT が要る（人間の作業）**
+
+作り方（**上の 2 件とまったく同じ流儀**）:
+
+1. GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token
+2. **Resource owner**: ボードを持っているアカウント
+3. **Account permissions**（**Repository permissions ではない**）: `Projects: Read-only` **だけ**（それ以外は No access。**書き込みを与えない**——監視は読むだけである）
+4. 有効期限を設定し、期限を `docs/ops/board.md` に控える
+5. **置くのはスクリプトでできる**（ブラウザが要るのは上の 1〜4 だけ）:
+
+```
+bash scripts/human-tasks.sh --yes --set-board-token
+# ↑ を打ってから、**トークンを貼って Enter**
+```
+
+  **トークンは引数では渡せない**（`--board-token <PAT>` は usage で弾かれる）。シェルの履歴と `ps` に残るため。受け取り口は**標準入力か環境変数 `SCRUM_BOARD_TOKEN` の 2 つだけ**（`BRANCH_PROTECTION_TOKEN` / `SECURITY_ALERTS_TOKEN` と同じ流儀。#790 / #786 / #1212）。
+
+  **3 つの PAT は別物なので、同時には指定できない**（`--set-token` / `--set-security-alerts-token` / `--set-board-token` を 2 つ以上並べると usage で弾かれる）。**1 回の実行で読める標準入力は 1 本**なので、どの secret に入るかが決められないためである。**複数置くなら回を分けて打つ。**
+
+  これは secret `SCRUM_BOARD_TOKEN` を置いたうえで、**そのトークンで実際にボードを読めるか**まで確かめる（**置けただけでは成功と言わない**。権限の足りない PAT も secret としては置けてしまう）。確認は**ボードそのものを GraphQL で叩く**——Projects v2 は REST では読めないので、別の API で代用すると「読めるつもりで読めていない」になる。トークンは**出力にもログにも出さない**（長さだけ出す）。
+
+**PAT を置くまでの間も、監視は動き続ける。** いまはボードの節を「**測れなかった**」と正しく報告しており（`MONITOR-BROKEN board:` / 節 N/M の母数）、**「異常なし」とは言っていない**。**この振る舞いを壊さないこと**——「0 件」と「測れなかった」は別である（#1056 / #757）。**置くと節の母数が増え、ボードの節が測れるようになる。**
+
 ## 初回セットアップ
 
 ### GitHub 側
