@@ -1151,16 +1151,34 @@ test_case "monitor: バックティックと多バイト文字を語ごと落と
 # **fixture の鍵に本物の接頭辞を使わない**（`forbidden-patterns.sh` の `fixture-secret`）。
 # **`deadbeef…` は純英字 32 文字で、hex としても読める**——**形 1 を長さだけが止めている**
 # ことを示すのにちょうどよい。
+#
+# **スコープ規則（形 4 = `^[a-z]{1,12}:[a-z]{1,12}$`）の上限も、同じ理由で無検査だった**
+# （#1235 = #1217 の 3 巡目のレビュー X1 / X2。**実測 2026-10-08・基点 272cb286 で
+# どちらも 303 passed / 0 failed で素通りした**）。
+# **この規則は `read:project` のような OAuth のスコープ名を通すために在る**
+# （`gh_err_sanitize` の散文 4）。**だが数字や長さを許すと内部の情報が通る。**
+#
+#   **数字を許す変異**  `[a-z]` → `[a-z0-9]`   → **`db01:5432` が通る**（ホスト名とポート）
+#   **長さを許す変異**  `{1,12}` → `{1,40}`    → **`db01` は 4 文字なので長さでは止まらない。**
+#                                                **数字を含まないことが止めている**ので、
+#                                                **長さの変異を殺すには長い純英字の `a:b` 形が要る**
+# **だから fixture は 2 つ要る**（**1 行では X2 を殺せない**）:
+#   `db01:5432`                      → **数字**を許す変異で漏れる
+#   `averyverylongname:averylongsub` → **長さ**を許す変異で漏れる（各節 13 文字以上・純英字）
+# **通る側（`read:project` が残ること）は `t_mon_pr_search_error_text_is_shown` が既に固定している**
+# ——**規則を消す／狭める向きの変異はそちらで死ぬ**ので、ここでは重ねない。
 t_mon_err_allowlist_upper_bounds_are_fixed() {
   local pass24="abcdefghijklmnopqrstuvwx"          # 24 文字 → 通る
   local stop25="abcdefghijklmnopqrstuvwxy"         # 25 文字 → 止まる
   local hexkey="deadbeefcafebabedeadbeefcafebabe"  # 32 文字の純英字（hex 鍵の形）
+  local hostport="db01:5432"                       # 数字を許すと通る（内部ホスト名とポート）
+  local longscope="averyverylongname:averylongsub" # 各節 13 文字以上 → 長さを許すと通る
   local h; h=$(handler <<EOF
 handle() {
   case "\$*" in
     "pr list --repo "*) echo '[]' ;;
     "api graphql"*)
-      echo 'gh: HTTP 502 word $pass24 word $stop25 key $hexkey port 54321 node 987654321098765 code 1234' >&2
+      echo 'gh: HTTP 502 word $pass24 word $stop25 key $hexkey port 54321 node 987654321098765 code 1234 host $hostport scope $longscope' >&2
       exit 1 ;;
     *) echo "unexpected: \$*" >&2; exit 99 ;;
   esac
@@ -1180,6 +1198,11 @@ EOF
   assert_not_contains "$ERR" "deadbeef" "**断片も残さない**"
   assert_not_contains "$ERR" "54321" "**5 桁の数は止まる（ポート番号）**"
   assert_not_contains "$ERR" "987654321098765" "**15 桁の数も止まる（node id）**"
+  # **スコープ規則の上限**（#1235 X1 / X2）。**どちらも「さらに通す」向きの変異で死ぬ。**
+  assert_not_contains "$ERR" "$hostport"  "**スコープ規則は数字を通さない（db01:5432 が漏れる・#1235 X1）**"
+  assert_not_contains "$ERR" "db01"       "**ホスト名の断片も残さない**"
+  assert_not_contains "$ERR" "$longscope" "**スコープ規則は各節 12 文字まで（長い a:b が漏れる・#1235 X2）**"
+  assert_not_contains "$ERR" "averyverylongname" "**断片も残さない**"
 }
 test_case "monitor: allowlist の上限（24 文字 / 4 桁）を両側から固定する (#1217 P1/P2)" t_mon_err_allowlist_upper_bounds_are_fixed
 
