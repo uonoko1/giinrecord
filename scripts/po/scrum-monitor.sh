@@ -126,70 +126,140 @@ unmeasured() { UNMEASURED+=("$1"); log "MONITOR-BROKEN $1"; }
 # **つまり「ログが読みにくい」ではなく、これが誤診を生んだ原因である。**
 #
 # **なぜ raw をそのまま流さないか**（#1210 の受け入れ条件 2）:
-# **この出力は Issue にコピーされ、OSS として公開される。** `gh` の stderr には
-# **URL（クエリに鍵が乗りうる）・`Authorization` ヘッダ・絶対パス・枝名**が出うる。
-# **だから denylist ではなく allowlist 寄りにする**——
-# **「安全だと分かっている文字だけを通し、残りは消す」。**
-# **denylist（「`ghp_` を消す」）は、知らない鍵の綴りに対して無力である**
-# ——**鍵の接頭辞は増える**ので、綴りを列挙する側は必ず遅れる。
+# **この出力は Issue にコピーされ、OSS として公開される**（`unmeasured` →
+# `scrum-monitor-report.sh` → **public リポジトリの Issue 本文**）。`gh` の stderr には
+# **URL（クエリに鍵が乗りうる）・`Authorization` ヘッダ・絶対パス・枝名・
+# 内部のホスト名・内部 IP・ポート**が出うる。
 #
-# 通すもの（`tr -cd` の集合。これ以外は**消える**）:
-#   `A-Za-z0-9` 空白 `. , : ; ! ? ( ) [ ] < > = _ + * # % & @ $ ' " 改行 -`
-# **`/` は通さない**（パスの区切り）。**多バイト文字も通さない。**
-# **ただし先に、`/` を含む語（パス）・`://` を含む語（URL）・
-# `_` のあとに 20 文字以上続く語（鍵らしきもの）・`Authorization` の値は、
-# `[redacted]` として語ごと落とす**——**文字単位で消すと鍵の断片が残る。**
+# **初版は「allowlist」と宣言していたが、秘密を落としていた層は denylist だった**
+# （#1217 のレビューと PO が実測）。`tr -cd` の allowlist は**文字集合しか見ていない**ので、
+# **「安全な文字だけで綴られた秘密」は素通りする。** 実測で漏れた 5 形:
+#
+#   error connecting to internal-db.<内部ドメイン>   → **そのまま**（`/` も `_`+20 も無い）
+#   dial tcp 10.0.3.17:5432: connect: refused        → **IP:port がそのまま**
+#   token ghp_ABCDEFGHIJKLMNOPQRS invalid            → **`_` の後 19 文字で `{20,}` の外**
+#   Bearer sk-ant-verysecretvalue99                  → **ヘッダ名が無いので規則が当たらない**
+#   query?token=abcdefghijklmnop&user=x              → **鍵が残り、無害な `x` だけ伏せた**
+#
+# **5 形目が一番危ない読み方を誘う**——**伏せ字が出ているので「効いている」と見えるが、
+# 伏せたのは鍵ではない。** **denylist は「列挙に無い形」を必ず通す。**
+#
+# **だから向きを変える: 「危ない形を列挙して消す」から
+# 「安全だと分かっている形だけを通す」へ。**
+# **倒れる向きは「消えすぎる」側である**（**読めなくなっても、漏れるより良い**）。
+#
+# **何を通せば足りるか**は、この出力の用途から決まる。**役目は `gh_err_class` の
+# `permission` / `transient` / `unknown` の判別を人が追認できることだけ**で、
+# **固有名詞を 1 つも必要としない。** 実測した `gh` 2.89.0 の stderr（4 形）は
+# すべて**英単語・`HTTP <番号>`・句読点**だけで判別できる:
+#   gh: Bad credentials (HTTP 401)
+#   gh: You must have repository read permissions or ... fine-grained permission. (HTTP 403)
+#   gh: Could not resolve to a node with the global id of '<伏せる>'
+#   error connecting to <伏せる> / check your internet connection or <伏せる>
+# **4 形目のホスト名と URL は、判別には要らない**（「接続できなかった」で足りる）。
 
 # gh_err_sanitize <生の stderr> → 安全化した 1 行以上（最大 GH_ERR_MAX_LINES 行）
 #
 # **「何行のうち何行を出したか」を必ず添える**（#757 の母数）——**黙って切らない。**
 GH_ERR_MAX_LINES=${GH_ERR_MAX_LINES:-3}
 GH_ERR_MAX_CHARS=${GH_ERR_MAX_CHARS:-300}
+# **語の形の allowlist**（`gh_err_allow`）。**これに当たらない語は、まるごと `[redacted]`。**
+#   1. 英字だけの語（ハイフンで繋いだ複合語も可）。24 文字まで
+#      → `credentials` `fine-grained` `rate` `host`。**秘密は英字だけでは綴れない**
+#        ——と言い切れないので長さで上限を置く（24 文字。実測した gh の最長語は
+#        `INSUFFICIENT_SCOPES` の 19 文字）
+#   2. 4 桁までの数（`401` `403` `502` `1234`）
+#      → **5 桁以上は通さない**（ポート番号・ID・連番は長い）
+#   3. 大文字と `_` だけの語（`HTTP` `INSUFFICIENT_SCOPES` `NOT_FOUND` `FORBIDDEN`）
+#   4. **小文字 2 節を `:` で繋いだ語**（`read:project` `read:org` `admin:org`）。各節 12 文字まで
+#      → **OAuth のスコープ名**。**これは判別に要る**——「権限が足りない」と言われた人が
+#        **どのスコープを足せばよいか**を読めなければ、`permission` の verdict が行動に繋がらない
+#        （#1210 の目的そのもの）。**`a.b` や `a:1234` は通さない**ので、
+#        ホスト名（`.` を持つ）と IP:port（数字を持つ）は当たらない。
+# **芯を判定する前に、前後の句読点を剥がす**（`(HTTP` `403)` `credentials,` を
+# 「英単語」として通すため）。**剥がした句読点はそのまま戻す。**
+#
+# **この形で、上の 5 形はすべて落ちる**:
+#   `internal-db.giinrecord.local` → 芯に `.` が残り 1 に当たらない
+#   `10.0.3.17:5432:`              → 芯に `.` と `:` が残る（末尾の `:` は剥がれるが中は残る）
+#   `ghp_ABCDEFGHIJKLMNOPQRS`      → 小文字と `_` の混在は 1 も 3 も通らない（**長さに依存しない**）
+#   `sk-ant-verysecretvalue99`     → 数字が混じるので 1 を通らない
+#   `query?token=abcdefghijklmnop&user=x` → `?` `=` `&` が芯に在る
+# **バックティック・多バイト文字・`/`・`@`・`$` を含む語も、同じ理由で落ちる**
+# （**初版は `tr -cd` でこれらを文字単位で消していたが、その層は 1 件も検査されていなかった**
+# ——#1217 レビューの N1。**いまは語ごと落ち、検査が在る**）。
+#
+# **識別子の値を落とす規則を 1 本だけ足す**: `ID` / `installation` / `user` / `owner` /
+# `org` / `login` / `node_id` / `number` の**直後に来た数**は、上の 2 を通ってしまうので
+# `[redacted]` にする（`installation ID 1234` → `installation ID [redacted]`）。
+# **これは allowlist の例外なので denylist 的だが、向きは「さらに消す」側である**
+# ——**通す側を広げていない。**
+#
+# **`Authorization` の行は、その語より後ろを全部 `[redacted]` にする**（同じ「さらに消す」側）。
+# **語の形だけでは足りない**: `Authorization: Bearer <鍵>` の `Bearer` は
+# **「英字だけの 6 文字」なので allowlist の 1 に当たって通る。**
+# **`<鍵>` は落ちるので漏洩にはならない**が、**`Bearer` が残ると
+# 「ヘッダを出した」ことになる**ので、ヘッダ名を見たら行末まで伏せる
+# （`scrum-monitor.test.sh` の `assert_not_contains "$ERR" "Bearer"` がこれを固定している）。
+#
+# **`awk` を使う**（`sed` では語ごとの判定が書けない。`scripts/po/` の
+# `merge-when-green.sh` / `board-audit.sh` / `worktree-audit.sh` / `measure-pbi.sh`
+# が既に `awk` を使っているので、依存は増えない）。
+# **`LC_ALL=C` で呼ぶ**——**ロケール依存の文字クラスで多バイト文字が「英字」に数えられると、
+# allowlist が静かに広がる。**
+# **伏せ字は ASCII の `[redacted]` にする**（`[除去]` のような多バイト文字にしない。
+# **多バイト文字は語の allowlist に当たらないので、伏せ字自身が伏せられる**）。
+gh_err_allow() {
+  LC_ALL=C awk '
+    function safe(t) {
+      if (t == "")                                              return 1
+      if (t ~ /^[A-Za-z]+(-[A-Za-z]+)*$/ && length(t) <= 24)    return 1
+      if (t ~ /^[0-9]{1,4}$/)                                   return 1
+      if (t ~ /^[A-Z][A-Z_]*$/ && length(t) <= 24)              return 1
+      if (t ~ /^[a-z]{1,12}:[a-z]{1,12}$/)                      return 1
+      return 0
+    }
+    {
+      out = ""; prev = ""; tail = 0
+      n = split($0, w, / /)
+      for (i = 1; i <= n; i++) {
+        t = w[i]
+        if (t == "") continue
+        pre = ""; post = ""
+        while (t ~ /^[("\047\[]/)       { pre  = pre substr(t, 1, 1);              t = substr(t, 2) }
+        while (t ~ /[.,:;!?)"\047\]]$/) { post = substr(t, length(t), 1) post;     t = substr(t, 1, length(t) - 1) }
+        if (tail) {
+          word = "[redacted]"
+        } else if (!safe(t)) {
+          word = "[redacted]"
+        } else if (t ~ /^[0-9]+$/ && tolower(prev) ~ /^(id|installation|user|owner|org|login|node_id|number)$/) {
+          word = "[redacted]"
+        } else {
+          word = pre t post
+        }
+        if (tolower(t) ~ /^authorization$/) tail = 1
+        prev = t
+        out = out (out == "" ? "" : " ") word
+      }
+      print out
+    }'
+}
 gh_err_sanitize() {
   local raw=$1 total kept shown
   total=$(printf '%s' "$raw" | grep -c '' || true)
   [[ -z "$raw" ]] && { printf 'gh は何も言いませんでした（stderr が空でした）'; return; }
-  # 1) **鍵・URL・パス・ヘッダを語ごと `[redacted]` に替える**（**文字単位で消すと
-  #    鍵の断片が残る**ので、危険な形を含む語はまるごと落とす）:
-  #    - `://` を含む語        → URL
-  #    - `/` を含む語          → パス（`read:project` のような `:` 区切りは残る）
-  #    - `_` のあとに 20 文字以上続く語 → トークンらしきもの（`ghp_` 等の綴りに依存しない）
-  #    - `Authorization:` から行末まで
-  #    - `ID`/`installation`/`user`/`owner`/`org`/`login`/`node_id` に続く値（識別子）
-  # 2) **allowlist の外の文字を消す**（`tr -cd`）。
-  # 3) **行数と 1 行の長さを切る。**
-  # **allowlist は `tr -cd` で書く**——**`sed` の bracket 式に `{}` を入れると
-  # 区間指定と解釈されて `Invalid content of \{\}` で落ちる**（実測。
-  # **しかもパイプラインの途中なので出力は空になり、「安全化できた」ように見えた**
-  # ——**sed が落ちたことが、サニタイズが効いた顔をしていた。** この PBI の形そのものである）。
-  # **`tr -cd` は補集合を消すので、綴りを間違えると「消えすぎる」側に倒れる**（安全な向き）。
-  # **伏せ字は ASCII の `[redacted]` にする**（`[除去]` のような多バイト文字にしない）。
-  # **`tr` はバイト単位なので、多バイト文字を集合に書くと
-  # `range-endpoints are in reverse collating sequence order` で落ちる**（実測）
-  # ——**そして落ちた `tr` は何も出さないので、「全部安全化できた」顔になる。**
-  # **`-` は集合の最後に置く**（途中に置くと `"-\n` のような範囲と解釈される。実測で落ちた）。
-  #
-  # **`://` の行と `/` の行は URL については等価である**（**変異で測った**:
-  # **`://` の行だけ外しても 0 件落ちた**——**どの URL も `/` を含むので下の行が先に拾う**）。
-  # **消さずに残す理由**: **`://` を持ちながら `/` を持たない形**（`mailto:`・独自スキーム）には
-  # 上だけが効き、**`/` を持ちながら `://` を持たない形**（絶対パス・相対パス）には下だけが効く。
-  # **どちらかを消すと、その片側が素通りする。** **この冗長は意図である。**
-  #
   # **注意: `\` で続く行の途中にコメントを書けない**（bash は `|` を見つけられず
   # `syntax error near unexpected token` で落ちる。**実測で 297 件全部が落ちた**）。
   kept=$(printf '%s' "$raw" \
-    | sed -E 's/[Aa]uthorization:.*$/[redacted]/' \
-    | sed -E 's#[^[:space:]]*://[^[:space:]]*#[redacted]#g' \
-    | sed -E 's#[^[:space:]]*/[^[:space:]]*#[redacted]#g' \
-    | sed -E 's/[^[:space:]]*_[A-Za-z0-9]{20,}[^[:space:]]*/[redacted]/g' \
-    | sed -E 's/\b([Ii][Dd]|installation|user|owner|org|login|node_id)[:=]? *[A-Za-z0-9_-]+/\1 [redacted]/g' \
     | head -n "$GH_ERR_MAX_LINES" \
-    | LC_ALL=C tr -cd "A-Za-z0-9 .,:;!?()[]<>=_+*#%&@\$'\"\n-" \
+    | gh_err_allow \
     | cut -c "1-$GH_ERR_MAX_CHARS" \
     | tr '\n' '/' )
   kept=${kept%/}
   # **`[すべて除去されました]` と「空」を区別する**——**空のまま出すと
   # 「gh は何も言わなかった」と読まれる**（それは別の事実である）。
+  # **空になる形は実在する**: **ASCII 以外だけで綴られた stderr**
+  # （`gh_err_sanitize 'パスが見つかりません'` → これ）。
   [[ -z "$kept" ]] && kept='[すべて除去されました]'
   # **実際に出した行数を言う**（**`GH_ERR_MAX_LINES` をそのまま書くと、
   # 1 行しか無いときに「3 行のうち先頭 3 行」と嘘になる**）。
@@ -254,8 +324,15 @@ gh_err_verdict() {
   case "$1" in
     permission) printf '**権限が足りません。この環境では構造的に測れません**（待っても直りません。トークンの射程を変えるしかありません）' ;;
     transient)  printf '**一時的に返らなかった疑いです**（次の実行で直るなら一時障害です。続くなら一時的ではありません）' ;;
-    # **ここに「一時的」という語を書かない**（**書くと `transient` と grep で区別できなくなる**
-    # ——`scrum-monitor-report.sh` と読む人の両方が、語で読み分けている）。
+    # **ここに「一時的」という語を書かない**（**書くと `transient` の文と区別できなくなる**）。
+    # **読み分けるのは人間だけである**（#1217 のレビューで実測。初版のここには
+    # 「`scrum-monitor-report.sh` と読む人の両方が、語で読み分けている」と書いて在ったが、
+    # **`scrum-monitor-report.sh` はこれらの語を 1 か所も grep していない**:
+    #   grep -c '一時的\|構造的\|permission\|transient\|unknown\|分類' scripts/po/scrum-monitor-report.sh
+    #     → **0**（母数: 同ファイル 143 行）
+    # **機械の制約だと書くと、次に触る人が在りもしない制約に縛られる**——[[verify-before-citing]]）。
+    # **語を固定しているのは `scrum-monitor.test.sh` の `assert_not_contains` である**
+    # （`t_mon_classifier_table` が 10 通りについて、出てほしい語と出てはいけない語を両方向に固定する）。
     *)          printf '**原因を分類できませんでした**（待てば直るとも、権限の不足とも、まだ言えません。下の gh の言い分を読んでください）' ;;
   esac
 }
