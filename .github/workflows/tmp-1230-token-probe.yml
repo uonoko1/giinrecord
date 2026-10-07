@@ -1,0 +1,29 @@
+name: tmp-1230-token-probe
+on: workflow_dispatch
+permissions:
+  contents: read
+  issues: write
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    steps:
+      - name: gh pr list with monitor.yml's exact permissions
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set +e
+          echo "=== A: gh pr list --state open --json number,headRefName,autoMergeRequest ==="
+          gh pr list --state open --json number,headRefName,autoMergeRequest --limit 100 > a.json 2> a.err
+          echo "A_EXIT=$?"
+          echo "A_LEN=$(wc -c < a.json)"; head -c 400 a.json; echo
+          echo "A_ERR:"; head -c 400 a.err; echo
+          echo "=== B: gh pr list --state all --head data/refresh ==="
+          gh pr list --state all --head data/refresh --json number,state,autoMergeRequest,createdAt,closedAt --limit 10 > b.json 2> b.err
+          echo "B_EXIT=$?"
+          head -c 600 b.json; echo
+          echo "B_ERR:"; head -c 400 b.err; echo
+          echo "=== C: gh run list (actions:read? deploy-started.sh depends on this) ==="
+          gh run list --workflow deploy-data.yml --limit 3 --json createdAt > c.json 2> c.err
+          echo "C_EXIT=$?"; head -c 300 c.json; echo
+          echo "C_ERR:"; head -c 300 c.err; echo
