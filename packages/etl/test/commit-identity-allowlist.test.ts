@@ -241,6 +241,24 @@ const NO_MERGE_BASE = "origin/main と HEAD の merge-base が取れない（浅
  * **到達するのは「`origin` を別名にしている」「fetch していない」など
  * 利用者の作業環境の都合であり、そこで赤にしても誤帰属は防げない**（push 前に CI が見る）。
  * **だから `CI` が立っているときだけ落とす。**
+ *
+ * ── **`CI` は代理である。本当の条件は `origin/main` の到達性** ─────────────────────
+ *
+ * **`CI` が立っていることは「履歴が読めるはず」の代理に過ぎない。**
+ * **この検査が走る `check` job の checkout は `ci.yml:146` で `fetch-depth` 指定が無く、
+ * 既定の 1 である**（`pnpm test` は `ci.yml:332` でこの job が回す）。
+ * `refs/remotes/origin/main` は **`ci.yml:320` の「merge-base を届かせる」step が
+ * `--depth=50` ＋ `--deepen=50` で後から作っている**。
+ *
+ * **そしてその step には `if: github.event_name == 'pull_request'` が付いている**（`ci.yml:321`）。
+ * **つまり `push` の run では `CI=true` でも `origin/main` が無い。**
+ * **そこで「常に落とす」にすると、誤帰属とは無関係に push の CI が永久に赤くなる**
+ * ——だから「常に赤」ではなく `CI` を見る形を採った。
+ *
+ * **残る穴**: `pull_request` 以外の run（`push` / `workflow_dispatch`）では、
+ * **誤帰属ではなく checkout の都合でこの assert が赤くなる。**
+ * **fail-closed としては正しい側（測れないなら赤）なので受け入れている**（#1056）。
+ * **`pull_request` 以外で赤を踏んだら、まず `ci.yml:321` の `if` を見ること。**
  */
 const failClosedOnUnreadableHistory = (): boolean =>
   process.env.CI !== undefined && process.env.CI !== "" && process.env.CI !== "false";
