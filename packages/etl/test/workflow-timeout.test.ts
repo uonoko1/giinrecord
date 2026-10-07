@@ -426,6 +426,35 @@ test("#556 uses: の job に timeout-minutes を書かない（GitHub が受け�
  *   link-check.yml:link-check        3   146   187   335   335s  → 20 分（**手元の 107〜171s より遅い。
  *                                                                    n=3 しか無い**。2026-09-27）
  *
+ * ## **step 単位の数も、この表が持つ**（#1254）
+ *
+ * **`ci.yml` の "Install Chromium for Playwright" は job ではなく step だが、
+ * 1 つの step が 20 分の `timeout-minutes` を丸ごと食って job を cancelled にした**ので、
+ * **同じ表に入れる**（#1056 の「数は 1 か所」。`scripts/ci/playwright-deps.sh` の
+ * `PLAYWRIGHT_DEPS_BUDGET_SEC` はこの数から決めた値で、
+ *  `packages/etl/test/playwright-deps-budget.test.ts` が関係を固定する）。
+ *
+ * **実測 2026-10-07、基点 `2aac8927`**（`gh api .../runs/<id>/jobs` の step の
+ * `completed_at - started_at`。**母数は ci.yml の直近 100 run のうち completed な run が持つ
+ * この step の全件 = 160 step**。`check` 94 / `docker-web` 66。skipped の 0s も含む）:
+ *
+ *   step: ci.yml の "Install Chromium for Playwright"
+ *   日           n   min   med   max   **60s 以上**   設定
+ *   2026-10-04  50     0    14    35        0        → 1 回 600s / 合計 900s
+ *   2026-10-05  19     0    13    16        0
+ *   2026-10-06   1    18    18    18        0
+ *   **2026-10-07  90     0    14  1152       15**     ← **障害の日。17% が 60s を超えた**
+ *
+ * **4 日しか見ていないので「何日に 1 回起きるか」は数えていない。**
+ * **言えるのは「起きる日は step の 17% が 60s を超えた」までである。**
+ *
+ * **600s（1 回の予算）の出どころ**: 障害の日に**通った**いちばん遅い例が **554s**
+ * （run 37663904608 の `check`。`apt-get update` は 1 秒で通り、`install` が
+ *  32.5 MB を **59.9 kB/s** で 9 分 2 秒かけた）。**554s を切ると、通る見込みのものを落とす**
+ * ——偽陽性の赤を別の偽陽性の赤に付け替えるだけになるので、その上に取った。
+ * **900s（合計）の出どころ**: いちばん短い `docker-web` の 20 分 = 1200s の 75%。
+ * **残り 300s で、この step の後ろの step（browser-check 等）が走る。**
+ *
  * 上限も固定する理由: 6 時間の既定に近い値を書くと、付いていても止まらない。
  * ここが落ちたら「実測し直して、この表ごと更新する」のが正しい直し方。
  *

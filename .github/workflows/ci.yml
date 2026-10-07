@@ -193,9 +193,13 @@ jobs:
           # #1124 で scripts/ci/test/po-test-runner.test.sh が増え**実測 37 本**になったので 33 → 34 に上げる
           # （#720 の「実数 − 3」。テストを増やした PR がそのついでに上げる）。
           # #1244 で scripts/ci/test/trap-cleanup.test.sh が増え**実測 38 本**になったので 34 → 35 に上げる
+          # #1254 で scripts/ci/test/playwright-deps.test.sh も増え、**両方入って実測 39 本**に
+          # なったので 35 → 36。**2 本が別々に「実測 38・floor 35」と書いた**ので、
+          # 両方入ると差が 4 になり **4 本消えても緑**だった。
+          # 関係式（実数 − floor = 3）を機械が見ていないのが根本で、それは #1264。
           # （#720 の「実数 − 3」。テストを増やした PR がそのついでに上げる）。
-          echo "loop ran: $ran (floor 35)"
-          [ "$ran" -ge 35 ] || { echo "FAIL: fewer test files ran than expected — glob narrowed or files deleted"; exit 1; }
+          echo "loop ran: $ran (floor 36)"
+          [ "$ran" -ge 36 ] || { echo "FAIL: fewer test files ran than expected — glob narrowed or files deleted"; exit 1; }
       # #814: **スタブと実装が同じ誤りを共有して緑になった**（`gh secret set --body-file` は存在しない）。
       # リポジトリの中どうしを突き合わせても一致してしまうので、**本物の `gh --help` を一次資料にする。**
       # `--help` だけなので**認証も網も副作用も要らない**（`--no-store` は公開鍵を取りに行くので 401 になる。
@@ -223,13 +227,14 @@ jobs:
         with:
           path: ~/.cache/ms-playwright
           key: playwright-chromium-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      # #1254: apt のミラー障害で `install-deps` が無言のまま 20 分を使い切り、job が
+      # **cancelled** になった（実測 2026-10-07: この step 単体で 1132s / 1152s）。
+      # **cancelled は「コードが赤い」と見分けが付かない**ので、
+      # **時間で切って「ミラーに届かなかった」と言う**形に移した（exit 7）。
+      # **docker-web の同名 step と同じスクリプトを呼ぶ**（2 か所にあると片方だけ直る。
+      # packages/etl/test/playwright-deps-budget.test.ts が両方が呼んでいることを固定する）。
       - name: Install Chromium for Playwright
-        run: |
-          if [ "${{ steps.playwright-cache.outputs.cache-hit }}" = "true" ]; then
-            pnpm --filter web exec playwright install-deps chromium
-          else
-            pnpm --filter web exec playwright install --with-deps chromium
-          fi
+        run: bash scripts/ci/playwright-deps.sh --cache-hit "${{ steps.playwright-cache.outputs.cache-hit == 'true' }}"
       # #533: `pnpm test` runs vitest (apps/web) and `node --test` (packages/etl), both driven by a glob
       # (vitest.config.ts's `include`, and `test/*.test.ts` in packages/etl/package.json). A glob that
       # quietly matches fewer files makes tests disappear with no red anywhere — the deleted test simply
@@ -392,14 +397,10 @@ jobs:
         with:
           path: ~/.cache/ms-playwright
           key: playwright-chromium-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      # #1254: check の同名 step と同じスクリプト。理由はそちらのコメントに書いた。
+      # browsers come from the cache; the OS deps (fonts, libs) are cheap and always installed
       - name: Install Chromium for Playwright
-        # browsers come from the cache; the OS deps (fonts, libs) are cheap and always installed
-        run: |
-          if [ "${{ steps.playwright-cache.outputs.cache-hit }}" = "true" ]; then
-            pnpm --filter web exec playwright install-deps chromium
-          else
-            pnpm --filter web exec playwright install --with-deps chromium
-          fi
+        run: bash scripts/ci/playwright-deps.sh --cache-hit "${{ steps.playwright-cache.outputs.cache-hit == 'true' }}"
       - name: Browser check (#194) — no console error / CSP violation on /, /members/, /rollcalls/, a member page; members search filters; and (#479) the records are readable with JavaScript disabled
         run: pnpm --filter web browser-check -- --url http://127.0.0.1:8081
       - name: Staging noindex — X-Robots-Tag only for Host staging.giinrecord.jp (deploy/nginx/site.conf)
