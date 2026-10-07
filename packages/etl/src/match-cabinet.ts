@@ -59,6 +59,8 @@ export interface MatchedCabinetRole {
   kind: CabinetPostKind;
   /** 役職名の原文（例「内閣府特命担当大臣（金融）」「兼内閣府副大臣」）。 */
   role: string;
+  /** 内閣の代（名簿 URL に入る。例 105）。**取得した代をそのまま持つ**（URL から読み直さない）。#1152 */
+  cabinet: number;
   /** 内閣の発足日（ISO）。**ページごとに違う**（閣僚 09-17 / 副大臣・政務官 09-18）。 */
   effectiveDate: string;
   /** 名簿の日付表記の原文（例「令和８年９月１７日発足」）。 */
@@ -123,11 +125,12 @@ export function indexByKana(members: readonly Member[]): KanaIndex {
  *
  * `at` は在職の確認に使う文脈（`resolveMember` と同じ `RecordAt`）。
  * `session` は ETL が扱っている最新回次、`date` は**その行の内閣発足日**（ページごとに違う）。
+ * `cabinet` は取得した内閣の代（出力の行に載せる。**URL から読み直さず、取った値をそのまま運ぶ**）。
  */
 export function matchCabinetPosts(
   posts: readonly CabinetPost[],
   members: readonly Member[],
-  at: { session: number },
+  at: { session: number; cabinet: number },
 ): { entries: MatchedCabinetRole[]; unresolved: UnresolvedCabinetPost[]; tally: CabinetMatchTally } {
   const nameIdx: Partial<Record<House, NameIndex>> = {};
   const kanaIdx: Partial<Record<House, KanaIndex>> = {};
@@ -167,6 +170,7 @@ export function matchCabinetPosts(
         house: post.house,
         kind: post.kind,
         role,
+        cabinet: at.cabinet,
         effectiveDate: post.effectiveDate,
         effectiveDateText: post.effectiveDateText,
         resolvedBy: resolved.by,

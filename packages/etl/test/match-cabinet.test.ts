@@ -39,6 +39,8 @@ import { indexByName, resolveMember, tenureVerified } from "../src/match-votes.t
 const fx = (name: string) => new URL(`./fixtures/${name}`, import.meta.url);
 const SANGIIN_SESSIONS = [216, 217, 218, 219, 220, 221] as const;
 const LATEST_SESSION = 221;
+/** 名寄せの文脈（#1152 で内閣の代が加わった。出力の行に載る値で、URL から読み直さない）。 */
+const AT = { session: LATEST_SESSION, cabinet: CABINET };
 
 const sangiin = mergeRosters(SANGIIN_SESSIONS.map((s) => ({
   session: s,
@@ -52,7 +54,7 @@ const meibo = (file: string, kind: "閣僚等" | "副大臣" | "大臣政務官"
   parseMeiboPage(readFileSync(fx(`kantei-meibo-105-20260930-${file.replace(".html", "")}.html`), "utf-8"), meiboPageUrl(CABINET, file), kind);
 const POSTS: CabinetPost[] = MEIBO_PAGES.flatMap((p) => meibo(p.file, p.kind).posts);
 
-const matched = matchCabinetPosts(POSTS, ROSTER, { session: LATEST_SESSION });
+const matched = matchCabinetPosts(POSTS, ROSTER, AT);
 const byId = new Map(ROSTER.map((m) => [m.id, m]));
 
 test("#1140 名簿は 772 人（参 307 / 衆 465）で、かな+院 の衝突は 1 組だけ", () => {
@@ -186,7 +188,7 @@ test("#1140 両院に在職中の同姓同名は、院で絞らなければ割�
     effectiveDate: "2026-09-18", effectiveDateText: "令和８年９月１８日", sourceUrl: meiboPageUrl(CABINET, "fukudaijin.html"),
   };
   // 院で絞る（実装の挙動）: 衆院側 1 人に決まる。
-  const r = matchCabinetPosts([post], pair, { session: LATEST_SESSION });
+  const r = matchCabinetPosts([post], pair, AT);
   assert.deepEqual(r.tally, { total: 1, byName: 1, byKana: 0, unresolved: 0 });
   assert.equal(r.entries[0].memberId, "h_sameH");
   // **院で絞らなければ 2 人のまま**＝絞りを外せば決まらない（在職の確認では落ちない）。
@@ -207,7 +209,7 @@ test("#1140 かな+院 が衝突したら「不明」になり、どちらの議
     effectiveDateText: "令和８年９月１７日発足",
     sourceUrl: meiboPageUrl(CABINET, "index.html"),
   };
-  const r = matchCabinetPosts([post], ROSTER, { session: LATEST_SESSION });
+  const r = matchCabinetPosts([post], ROSTER, AT);
   assert.deepEqual(r.tally, { total: 1, byName: 0, byKana: 0, unresolved: 1 });
   // **1 行も議員に結びついていない。**
   assert.equal(r.entries.length, 0);
@@ -233,7 +235,7 @@ test("#1140 名簿に居ない人（官僚・大臣が議員でない場合）�
     effectiveDateText: "令和８年９月１７日発足",
     sourceUrl: meiboPageUrl(CABINET, "index.html"),
   };
-  const r = matchCabinetPosts([post], ROSTER, { session: LATEST_SESSION });
+  const r = matchCabinetPosts([post], ROSTER, AT);
   assert.deepEqual(r.tally, { total: 1, byName: 0, byKana: 0, unresolved: 1 });
   assert.equal(r.entries.length, 0);
   assert.equal(r.unresolved[0].reason, "no-candidate");
@@ -251,12 +253,12 @@ test("#1140 かなが 1 人に当たっても、所属院が違えば結びつ�
     effectiveDateText: "令和８年９月１７日発足",
     sourceUrl: meiboPageUrl(CABINET, "index.html"),
   };
-  const r = matchCabinetPosts([post], ROSTER, { session: LATEST_SESSION });
+  const r = matchCabinetPosts([post], ROSTER, AT);
   assert.deepEqual(r.tally, { total: 1, byName: 0, byKana: 0, unresolved: 1 });
   assert.equal(r.entries.length, 0);
   assert.equal(r.unresolved[0].reason, "no-candidate");
   // 衆院として出せば決まる（院だけが違いであることを示す）。
-  const ok = matchCabinetPosts([{ ...post, house: "shugiin" }], ROSTER, { session: LATEST_SESSION });
+  const ok = matchCabinetPosts([{ ...post, house: "shugiin" }], ROSTER, AT);
   assert.deepEqual(ok.tally, { total: 1, byName: 0, byKana: 1, unresolved: 0 });
   assert.equal(ok.entries[0].memberId, "h_d9603ac1a4");
 });
@@ -307,7 +309,7 @@ test("#1140 かなが任期満了した議員にしか当たらない行は結�
     effectiveDateText: "令和８年９月１７日発足",
     sourceUrl: meiboPageUrl(CABINET, "index.html"),
   };
-  const r = matchCabinetPosts([post], ROSTER, { session: LATEST_SESSION });
+  const r = matchCabinetPosts([post], ROSTER, AT);
   assert.deepEqual(r.tally, { total: 1, byName: 0, byKana: 0, unresolved: 1 });
   // **1 行も結びついていない**（退職者に現職の役職が付いていない）。
   assert.equal(r.entries.length, 0, "任期満了した議員に現職の役職が紐づいた");
@@ -318,7 +320,7 @@ test("#1140 かなが任期満了した議員にしか当たらない行は結�
   assert.equal(r.unresolved[0].sourceUrl, "https://www.kantei.go.jp/jp/105/meibo/index.html");
 
   // **歯止めが救済を殺していない**: 在職中の議員のかななら、同じ経路で決まる。
-  const ok = matchCabinetPosts([{ ...post, kana: "よしい あきら" }], ROSTER, { session: LATEST_SESSION });
+  const ok = matchCabinetPosts([{ ...post, kana: "よしい あきら" }], ROSTER, AT);
   assert.deepEqual(ok.tally, { total: 1, byName: 0, byKana: 1, unresolved: 0 });
   assert.equal(ok.entries[0].memberId, "m_022042");
 });
@@ -345,12 +347,12 @@ test("#1140 氏名が名簿に在るのに絞れなかった行は、かなに�
   };
   // 前提の確認: かなだけで引けば 1 人に当たってしまう（＝落とせば紐づく）。
   assert.deepEqual((indexByKana(twins).get("やまだいちろう") ?? []).map((m) => m.id), ["h_twinA"]);
-  const r = matchCabinetPosts([post], twins, { session: 221 });
+  const r = matchCabinetPosts([post], twins, AT);
   assert.deepEqual(r.tally, { total: 1, byName: 0, byKana: 0, unresolved: 1 });
   assert.equal(r.entries.length, 0, "氏名で割れていないのに、かなで紐づいた");
   assert.equal(r.unresolved[0].reason, "no-candidate");
   // **氏名が名簿に無い行（外字）なら、同じかなでちゃんと救済される**（この歯止めが救済を殺していない）。
-  const gaiji = matchCabinetPosts([{ ...post, name: undefined }], twins, { session: 221 });
+  const gaiji = matchCabinetPosts([{ ...post, name: undefined }], twins, AT);
   assert.deepEqual(gaiji.tally, { total: 1, byName: 0, byKana: 1, unresolved: 0 });
   assert.equal(gaiji.entries[0].memberId, "h_twinA");
 });
@@ -363,7 +365,7 @@ test("#1140 氏名が名簿に在るのに絞れなかった行は、かなに�
  * 「検算が在る」ことは「検算が効く」ことの証明にならない。**外から壊した値で呼ぶ。**
  */
 test("#1140 母数が合わなければ例外にする（4 つの壊れ方を全部落とす）", () => {
-  const ok = matchCabinetPosts(POSTS, ROSTER, { session: LATEST_SESSION });
+  const ok = matchCabinetPosts(POSTS, ROSTER, AT);
   assert.equal(ok.tally.total, 76);
   // 正しい組み合わせは通る。
   assert.doesNotThrow(() => assertTallyConsistent(ok.tally, ok.entries, ok.unresolved, POSTS.length));
@@ -379,13 +381,13 @@ test("#1140 母数が合わなければ例外にする（4 つの壊れ方を全
   assert.throws(() => assertTallyConsistent(ok.tally, dup, ok.unresolved, POSTS.length), /2 回紐づいた/);
 
   // 0 件は 0 件として通る（「0 件」と「数えていない」を区別する）。
-  const empty = matchCabinetPosts([], ROSTER, { session: LATEST_SESSION });
+  const empty = matchCabinetPosts([], ROSTER, AT);
   assert.deepEqual(empty.tally, { total: 0, byName: 0, byKana: 0, unresolved: 0 });
 });
 
 test("#1140 並びは memberId → 区分 → 役職名（取得順に依存しない）", () => {
   const shuffled = [...POSTS].reverse();
-  const a = matchCabinetPosts(POSTS, ROSTER, { session: LATEST_SESSION });
-  const b = matchCabinetPosts(shuffled, ROSTER, { session: LATEST_SESSION });
+  const a = matchCabinetPosts(POSTS, ROSTER, AT);
+  const b = matchCabinetPosts(shuffled, ROSTER, AT);
   assert.deepEqual(b.entries, a.entries, "取得順を変えると出力の並びが変わる");
 });

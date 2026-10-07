@@ -6,6 +6,23 @@ import { tenureVerified } from "./match-votes.ts";
 import type { MatchedBill } from "./match-bills.ts";
 import type { MatchedAttendance } from "./match-attendance.ts";
 import type { MatchedCommitteeRole } from "./match-committee.ts";
+import type { MatchedCabinetRole } from "./match-cabinet.ts";
+
+/**
+ * **行に書かれている回次**（**無い種別が在る**。#1152）。
+ *
+ * **`cabinetRole`（大臣・副大臣・大臣政務官）は `session` という欄そのものを持たない**——
+ * **大臣の任免は内閣が行うので、国会の回次と結びつかない**（名簿に在るのは内閣の発足日だけ）。
+ * **発足日から回次を逆算すると、一次資料に書かれていない値を作ることになる。**
+ *
+ * **この関数を通さずに `entry.session` を読まないこと。** 直に読むと、
+ * **`cabinetRole` を足した時点で型が合わなくなる**（それが #1152 の着手時に 21 か所で起きたことで、
+ * **型検査が全部名指ししてくれた**）。`as` で押し通すと、**回次 `undefined` が
+ * `${undefined}` のような鍵に化けて静かに混ざる。**
+ */
+export function sessionField(entry: TimelineEntry): number | undefined {
+  return "session" in entry && typeof entry.session === "number" ? entry.session : undefined;
+}
 
 /** 集約結果（純粋関数の出力）。ファイルへの書き出しは dataset.ts が担う。 */
 export interface Aggregated {
@@ -112,7 +129,7 @@ export function summarizeRollCall(rc: RollCall, decision?: string): RollCallSumm
  * 名簿と突合済みの採決・発言から、議員ごとの timeline（`members/{id}.json`）・発言（`members/{id}/speeches.json`）・一覧を組み立てる。
  * - memberId が空（未突合）の票・memberId の無い発言は unmatched.json 側で扱うのでどこにも入れない。
  * - 名簿にない memberId は名寄せの不整合なので例外にする（黙って捨てない）。
- * - 並びは日付降順。同日は kind（vote → bill → stance → question → attendance → committeeRole → speech）、次に採決 id / 発言 id の降順で安定させる（差分最小化）。
+ * - 並びは日付降順。同日は kind（vote → bill → stance → question → attendance → committeeRole → cabinetRole → speech）、次に採決 id / 発言 id の降順で安定させる（差分最小化）。
  * - 発言（#242）は timeline ではなく speeches（`members/{id}/speeches.json`）に入る。並びは timeline と同じ日付降順。
  *   会議名は会議録の原文（「本会議 第19号」「予算委員会第一分科会 第2号」）なので、本会議と委員会は表示で区別できる。
  *   議長・大臣・委員長など position 付きの発言（議事進行・政府答弁・委員長報告）も事実として入れ、position を原文のまま載せる。
@@ -148,6 +165,15 @@ export function buildDataset(
   committeeRoles: readonly MatchedCommitteeRole[] = [],
   /** 対象外の回次から引き継ぐ行（#103）。memberId は名簿に無ければ例外。 */
   carried: readonly CarriedEntry[] = [],
+  /**
+   * 大臣・副大臣・大臣政務官の役職（matchCabinetPosts の出力。memberId は衆参の名簿）。#1152
+   * **`session` を持たない唯一の種別**（大臣の任免は内閣が行うので回次と結びつかない）。
+   *
+   * **`carried` の後ろに置いてある。** 引数が 11 本になったので位置が読みにくいが、
+   * **ここに足したのは既存の呼び出し側（`cli.ts`）の引数の位置を 1 つも動かさないため**である
+   * （#1152 の着手時に `cli.ts` を別の PR（#1252）が触っていた）。
+   */
+  cabinetRoles: readonly MatchedCabinetRole[] = [],
 ): Aggregated {
   const summarize = (rc: RollCall) => summarizeRollCall(rc, decisions.get(rc.id));
   const timelines = new Map<string, TimelineEntry[]>(members.map((m) => [m.id, []]));
@@ -247,10 +273,24 @@ export function buildDataset(
       firstDate: c.firstDate, lastDate: c.lastDate, meetingId: c.firstMeetingId, sourceUrl: c.sourceUrl,
     });
   }
+  // 閣僚等の役職（matchCabinetPosts の出力、#1152）。**1 人 × 1 役職で 1 行**（兼務は丸めない）。
+  // date は**内閣の発足日**（名簿に書いてある）。**回次は付けない**——大臣の任免は内閣が行うので
+  // 国会の回次と結びつかず、発足日から逆算すると一次資料に無い値を作ることになる。
+  // **終了日も持たない**（名簿に書かれていない。#1141。載せるのは現職だけなので推定が要らない）。
+  for (const c of cabinetRoles) {
+    const what = `cabinetRole ${c.role} ("${c.nameText}")`;
+    const timeline = timelineOf(c.memberId, what);
+    // 名簿の所属院で名寄せしてあるので、院が食い違ったら名寄せの不整合（黙って捨てない）。
+    if (houseOf.get(c.memberId) !== c.house) throw new Error(`${what} refers to member ${c.memberId} of house ${String(houseOf.get(c.memberId))} (名簿の院は ${c.house})`);
+    timeline.push({
+      kind: "cabinetRole", estimated: false, date: c.effectiveDate,
+      section: c.kind, role: c.role, effectiveDateText: c.effectiveDateText, cabinet: c.cabinet, sourceUrl: c.sourceUrl,
+    });
+  }
   // 対象外の回次から引き継ぐ行（#103）。そのまま入れる（再解釈しない）。名簿に無い memberId は他の行と同じく例外。
   // speech の引き継ぎ行は timeline ではなく speeches に入れる（#242。行き先が変わっても引き継ぎ自体は止めない）。
   for (const c of carried) {
-    const timeline = timelineOf(c.memberId, `carried ${c.entry.kind} (session ${c.entry.session})`);
+    const timeline = timelineOf(c.memberId, `carried ${c.entry.kind} (session ${String(sessionField(c.entry))})`);
     if (c.entry.kind === "speech") speechesOf.set(c.memberId, [...(speechesOf.get(c.memberId) ?? []), c.entry]);
     else timeline.push(c.entry);
   }
@@ -280,7 +320,7 @@ function sessionOfBillId(billId: string): number {
 }
 
 type Sortable = { date: string; kind?: TimelineEntry["kind"]; id?: string; rollCallId?: string; speechId?: string; billId?: string; questionId?: string; meetingId?: string };
-const KIND_ORDER: Record<TimelineEntry["kind"], number> = { vote: 0, bill: 1, stance: 2, question: 3, attendance: 4, committeeRole: 5, speech: 6 };
+const KIND_ORDER: Record<TimelineEntry["kind"], number> = { vote: 0, bill: 1, stance: 2, question: 3, attendance: 4, committeeRole: 5, cabinetRole: 6, speech: 7 };
 const sortKey = (x: Sortable) => x.rollCallId ?? x.speechId ?? x.billId ?? x.questionId ?? x.meetingId ?? x.id ?? "";
 const byDateDesc = (a: Sortable, b: Sortable) =>
   cmp(b.date, a.date) || KIND_ORDER[a.kind ?? "vote"] - KIND_ORDER[b.kind ?? "vote"] || cmp(sortKey(b), sortKey(a));

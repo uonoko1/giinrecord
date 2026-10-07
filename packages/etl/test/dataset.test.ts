@@ -353,6 +353,93 @@ describe("writeDataset / validateDataset: docs/DATA_CONTRACT.md の不変条件"
     cleanup();
   });
 
+  /* ---------- 閣僚等の役職（cabinetRole、#1152） ---------- */
+
+  /**
+   * **`cabinetRole` だけが `session` を持たない。**
+   * 「全行が回次を持つ」（#103）の例外を 1 つ作ったので、**その穴が `cabinetRole` だけに閉じていること**を
+   * ここで固定する。**他の種別の回次を消したら、今までどおり落ちなければならない。**
+   */
+  const CABINET_ROW = {
+    kind: "cabinetRole", estimated: false, date: "2026-09-17",
+    section: "閣僚等", role: "財務大臣", effectiveDateText: "令和８年９月１７日発足",
+    cabinet: 105, sourceUrl: "https://www.kantei.go.jp/jp/105/meibo/index.html",
+  };
+  /** timeline の先頭に閣僚の行を置く（既存の行は 2026-07-24 以前なので、日付降順を壊さない）。 */
+  const withCabinet = (over: Record<string, unknown> = {}) =>
+    patch<{ timeline: unknown[] }>(dir, "members/m_007006.json", (d) => ({ ...d, timeline: [{ ...CABINET_ROW, ...over }, ...d.timeline] }));
+
+  test("cabinetRole 行は session を持たなくても違反にならない（大臣の任免は回次と結びつかない。#1152）", async () => {
+    withCabinet();
+    assert.deepEqual(await validateDataset(dir), []);
+    cleanup();
+  });
+
+  test("cabinetRole に session を付けたら違反（一次資料に無い回次を作っている。#1152）", async () => {
+    withCabinet({ session: 221 });
+    assert.match((await validateDataset(dir)).join("\n"), /cabinetRole row must not have a session/);
+    cleanup();
+  });
+
+  test("cabinetRole の sourceUrl は官邸の名簿ページでなければ違反（全行に一次資料。#1152）", async () => {
+    withCabinet({ sourceUrl: "https://www.kantei.go.jp/jp/105/index.html" });
+    assert.match((await validateDataset(dir)).join("\n"), /cabinetRole sourceUrl must be the 官邸の閣僚等名簿/);
+    cleanup();
+  });
+
+  test("cabinetRole の sourceUrl のホストが官邸でなければ違反（別の出典に差し替えられていない）", async () => {
+    withCabinet({ sourceUrl: "https://example.com/jp/105/meibo/index.html" });
+    assert.match((await validateDataset(dir)).join("\n"), /sourceUrl host not allowed: example\.com/);
+    cleanup();
+  });
+
+  test("cabinetRole の section が名簿の 3 区分でなければ違反（役職名から分類を作っていない）", async () => {
+    withCabinet({ section: "大臣" });
+    assert.match((await validateDataset(dir)).join("\n"), /cabinetRole section must be one of 閣僚等\/副大臣\/大臣政務官/);
+    cleanup();
+  });
+
+  test("cabinetRole の role が空なら違反", async () => {
+    withCabinet({ role: "" });
+    assert.match((await validateDataset(dir)).join("\n"), /cabinetRole role must not be empty/);
+    cleanup();
+  });
+
+  test("cabinetRole の estimated が false でなければ違反（事実の行に推定を混ぜない）", async () => {
+    withCabinet({ estimated: true });
+    assert.match((await validateDataset(dir)).join("\n"), /cabinetRole row must have estimated: false/);
+    cleanup();
+  });
+
+  test("cabinetRole の cabinet（内閣の代）が sourceUrl の代と違えば違反（URL と値が食い違う）", async () => {
+    withCabinet({ cabinet: 104 });
+    assert.match((await validateDataset(dir)).join("\n"), /cabinetRole cabinet 104 !== sourceUrl/);
+    cleanup();
+  });
+
+  test("cabinetRole の effectiveDateText が空なら違反（名簿の原文の日付表記を落としていない）", async () => {
+    withCabinet({ effectiveDateText: "" });
+    assert.match((await validateDataset(dir)).join("\n"), /cabinetRole effectiveDateText must not be empty/);
+    cleanup();
+  });
+
+  test("cabinetRole に終了日の欄を付けたら違反（「いつまで」は名簿に書かれていない。#1141 / #1152）", async () => {
+    for (const key of ["endDate", "untilDate", "lastDate", "toDate"]) {
+      withCabinet({ [key]: "2026-10-01" });
+      assert.match((await validateDataset(dir)).join("\n"), new RegExp(`cabinetRole row must not have ${key}`), key);
+      patch<{ timeline: unknown[] }>(dir, "members/m_007006.json", (d) => ({ ...d, timeline: d.timeline.slice(1) }));
+    }
+    cleanup();
+  });
+
+  test("cabinetRole 以外の行の session を消したら今までどおり違反（例外が cabinetRole だけに閉じている。#103）", async () => {
+    patch<{ timeline: Record<string, unknown>[] }>(dir, "members/m_007006.json", (d) => ({
+      ...d, timeline: [{ ...CABINET_ROW }, ...d.timeline.map((e, i) => (i === 0 ? { ...e, session: undefined } : e))],
+    }));
+    assert.match((await validateDataset(dir)).join("\n"), /timeline\[1\]: session must be an integer/);
+    cleanup();
+  });
+
   /* ---------- 発言（members/{id}/speeches.json、#242） ---------- */
 
   test("発言は members/{id}/speeches.json に書き、timeline には speech 行を置かない（#242）", () => {

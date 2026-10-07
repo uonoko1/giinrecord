@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Bill, Member, MemberDetail, RollCall, RollCallSummary, TimelineEntry } from "@seiji-kiroku/shared";
 import { planSessions, readCarried, decisionOfResult, lostVoteMatches, lostTimelineEntries, lostSessionEntries, readSessionCounts, sessionCounts, sessionOfEntry, dropCarriedSpeeches, dropCarriedCommitteeRoles, carriedTenureVerified } from "../src/sessions.ts";
-import type { CarriedEntry } from "../src/aggregate.ts";
+import { sessionField, type CarriedEntry } from "../src/aggregate.ts";
 import { stableJson } from "../src/json.ts";
 
 // Issue #103: 日次 ETL は直近 5 回次（DEFAULT_SESSIONS）だけ取得し、data/ に既にある他の回次（第200〜216回など）は
@@ -100,7 +100,7 @@ describe("readCarried: 前回出力（data/）から引き継ぐ回次の採決�
       assert.deepEqual([...carried.matchedVotes], [["200-1204-v001", 1]]);
       assert.deepEqual([...carried.decisions], [["200-1204-v001", "可決"]]);
       assert.deepEqual(carried.bills.map((b) => b.id), ["200-衆法-1"]);
-      assert.deepEqual(carried.entries.map((c) => [c.memberId, c.entry.kind, c.entry.session, (c.entry as { sourceUrl: string }).sourceUrl.includes("kousei/gian")]), [
+      assert.deepEqual(carried.entries.map((c) => [c.memberId, c.entry.kind, sessionField(c.entry), (c.entry as { sourceUrl: string }).sourceUrl.includes("kousei/gian")]), [
         ["m_1", "speech", 200, false],
         ["m_1", "bill", 200, true],
         ["m_1", "question", 200, false],
@@ -159,7 +159,7 @@ describe("readCarried: 前回出力（data/）から引き継ぐ回次の採決�
   test("新形式（#242）: carried の回次の発言を members/{id}/speeches.json から引き継ぐ", async () => {
     await withData([], [s221, c200, s200], async (dir) => {
       const carried = await readCarried(dir, [200]);
-      assert.deepEqual(carried.entries.map((c) => [c.memberId, c.entry.kind, c.entry.session, (c.entry as { speechId: string }).speechId]), [
+      assert.deepEqual(carried.entries.map((c) => [c.memberId, c.entry.kind, sessionField(c.entry), (c.entry as { speechId: string }).speechId]), [
         ["m_1", "speech", 200, "120014911X00120191203_005"],
         ["m_1", "speech", 200, "120015254X00120191204_001"],
       ]);
@@ -255,12 +255,12 @@ describe("readCarried: #103 以前の出力（session 無し）の question / �
 
       const carried = await readCarried(dir, [221]);
       // どの議員のどの質問かを名指しで固定する（件数だけのテストにしない。WORKING_AGREEMENT のテスト方針）
-      assert.deepEqual(carried.entries.map((c) => [c.memberId, c.entry.kind, c.entry.session, (c.entry as { questionId?: string }).questionId]), [
+      assert.deepEqual(carried.entries.map((c) => [c.memberId, c.entry.kind, sessionField(c.entry), (c.entry as { questionId?: string }).questionId]), [
         ["h_93effd86cb", "question", 221, "221-shugiin-1"],
         ["h_93effd86cb", "question", 221, "221-shugiin-3"],
       ]);
       // 引き継いだ行には回次が入っているので、次の出力は #103 以後の形になる（同じ事故を繰り返さない）
-      assert.equal(carried.entries[0]?.entry.session, 221);
+      assert.equal(carried.entries[0] === undefined ? undefined : sessionField(carried.entries[0].entry), 221);
       // 回次の引けない speech 行だけが「引き継げない」件数に残る
       assert.equal(carried.withoutSession, 1);
     } finally {
@@ -373,7 +373,7 @@ describe("dropCarriedSpeeches: 取得した発言と同じ speechId の引き継
       { memberId: "m_1", entry: voteEntry },                                       // 発言でない行（残る）
     ];
     const fetched = [{ id: "122115254X00120260605_001" }];
-    assert.deepEqual(dropCarriedSpeeches(carried, fetched).map((c) => [c.memberId, c.entry.kind, c.entry.session]), [["h_1", "speech", 200], ["m_1", "vote", 221]]);
+    assert.deepEqual(dropCarriedSpeeches(carried, fetched).map((c) => [c.memberId, c.entry.kind, sessionField(c.entry)]), [["h_1", "speech", 200], ["m_1", "vote", 221]]);
   });
 
   test("取得が空なら引き継ぎ行はそのまま（取り漏れで既存の発言を消さない）", () => {
@@ -432,7 +432,7 @@ describe("dropCarriedCommitteeRoles: 取得した委員会名簿と同じ行の�
     ];
     const fetched = [fetchedRole("122104601X00120260303_000", 221, "総務委員会")];
     assert.deepEqual(
-      dropCarriedCommitteeRoles(carried, fetched).map((c) => [c.memberId, c.entry.kind, c.entry.session, "committee" in c.entry ? c.entry.committee : ""]),
+      dropCarriedCommitteeRoles(carried, fetched).map((c) => [c.memberId, c.entry.kind, sessionField(c.entry), "committee" in c.entry ? c.entry.committee : ""]),
       [["h_1", "committeeRole", 221, "法務委員会"], ["h_1", "committeeRole", 200, "総務委員会"], ["m_1", "vote", 221, ""]],
     );
   });
