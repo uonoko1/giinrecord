@@ -242,23 +242,30 @@ const NO_MERGE_BASE = "origin/main と HEAD の merge-base が取れない（浅
  * 利用者の作業環境の都合であり、そこで赤にしても誤帰属は防げない**（push 前に CI が見る）。
  * **だから `CI` が立っているときだけ落とす。**
  *
- * ── **`CI` は代理である。本当の条件は `origin/main` の到達性** ─────────────────────
+ * ── **`origin/main` が無いのは `pull_request` だけである**（レビューの実測。2026-10-08）────
  *
- * **`CI` が立っていることは「履歴が読めるはず」の代理に過ぎない。**
- * **この検査が走る `check` job の checkout は `ci.yml:146` で `fetch-depth` 指定が無く、
- * 既定の 1 である**（`pnpm test` は `ci.yml:332` でこの job が回す）。
- * `refs/remotes/origin/main` は **`ci.yml:320` の「merge-base を届かせる」step が
- * `--depth=50` ＋ `--deepen=50` で後から作っている**。
+ * **初版のこの節は「`push` の run では `CI=true` でも `origin/main` が無い」と書いていたが、
+ * それは誤りだった。** `push` では **`actions/checkout` 自身が作る。**
  *
- * **そしてその step には `if: github.event_name == 'pull_request'` が付いている**（`ci.yml:321`）。
- * **つまり `push` の run では `CI=true` でも `origin/main` が無い。**
- * **そこで「常に落とす」にすると、誤帰属とは無関係に push の CI が永久に赤くなる**
- * ——だから「常に赤」ではなく `CI` を見る形を採った。
+ * **理由は refspec の右辺である。** `fetch-depth: 1`（既定）でも checkout は
+ * `+<commit>:refs/remotes/origin/<branch>` を fetch するので、
+ * **`push`（`github.ref` = `refs/heads/main`）では右辺が `refs/remotes/origin/main` そのもの**
+ * ——**作られる。** 作られないのは **`pull_request` だけ**で、
+ * そのとき右辺は `refs/remotes/pull/N/merge` になる。
+ * **`ci.yml:304-305` が元からそう書いてある**（「pull_request では … そもそも作られない」）。
  *
- * **残る穴**: `pull_request` 以外の run（`push` / `workflow_dispatch`）では、
- * **誤帰属ではなく checkout の都合でこの assert が赤くなる。**
- * **fail-closed としては正しい側（測れないなら赤）なので受け入れている**（#1056）。
- * **`pull_request` 以外で赤を踏んだら、まず `ci.yml:321` の `if` を見ること。**
+ * **実測 3 件**（レビュー）:
+ *   (a) `actions/checkout` の `src/ref-helper.ts:89-91` が `REFS/HEADS/` の ref に対して
+ *       `+<commit>:refs/remotes/origin/<branch>` を返す
+ *   (b) 同じ refspec を手で叩くと `refs/remotes/origin/main` が在り、`merge-base` は exit 0。
+ *       その checkout で `CI=true` にして走らせると **pass 7 / fail 0 / skipped 0**
+ *   (c) 直近の `--event=push` の CI **12 件すべて success**。run 37660230784 のログは
+ *       merge-base の step が走っていないのに **`skipped 0` / `pass 2467`**
+ *       （ref が無ければ `skipped 1` になる）
+ *
+ * **だから `CI` を見る理由は、この節ではなく上の「手元を赤にしない理由」である。**
+ * **`push` が赤くなる心配は無い**ので、「残る穴」も無い
+ * （`workflow_dispatch` は `ci.yml` の `on:` に無いので、そこで赤くなることもあり得ない）。
  */
 const failClosedOnUnreadableHistory = (): boolean =>
   process.env.CI !== undefined && process.env.CI !== "" && process.env.CI !== "false";
