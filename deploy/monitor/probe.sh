@@ -39,6 +39,12 @@
 #          **ETL 側とも deploy 側とも断定しない。**
 #          **本番が健康なときは main を読まない**（10 分ごとに外部へ 1 要求増やす理由が無く、
 #          読み先が落ちているだけで監視が赤くなるのも避ける。この経路は fail 時の切り分け専用）。
+#          Issue #1230: **2 分岐はどちらも「何かが壊れている」を前提にしていた。第 3 の状態が在る**——
+#            「main も古いが、ETL は健全で、日次の PR を意図して止めてある」
+#          **#1221 はこれで 70 時間以上「→ ETL 側」と言い続け、壊れていない ETL を指していた。**
+#          そこで **`main も古い` のときだけ `data/refresh` の PR の状態を見る**（`refresh_hold_verdict`）。
+#          **armed な auto-merge は「止まっている」と言わない**（緑になった瞬間に入るので。#1227）。
+#          **数えられなければ「止めてある」にも「ETL 側」にも倒さず、そう書く**（#1056）。
 #   tls    the certificate presented for the origin's host is valid for at least PROBE_TLS_MIN_DAYS (14) more days
 # Reasons contain only the path, the HTTP status, ages and day counts — never headers, bodies or addresses.
 # Issue #163: staging sits behind Cloudflare Access. With CF_ACCESS_CLIENT_ID / CF_ACCESS_CLIENT_SECRET set (a
@@ -57,6 +63,9 @@ TITLE_MUST_CONTAIN=${PROBE_TITLE:-議員レコード}
 # #1185: main 側の data/meta.json をどこから読むか。**未設定なら読まない**（手元で probe.sh を
 # 叩いたときの振る舞いを変えない）。monitor.yml が raw の URL を渡す。
 MAIN_META_URL=${PROBE_MAIN_META_URL:-}
+# #1230: 日次の ETL が出力を載せる枝の名前（etl.yml の `DATA_BRANCH`）。**この枝の PR の状態が、
+# 「main が古いのは故障か、意図して止めてあるのか」を分ける**。空にすれば見に行かない。
+REFRESH_BRANCH=${PROBE_REFRESH_BRANCH-data/refresh}
 ASSEMBLY_SAMPLE=${PROBE_ASSEMBLY_SAMPLE:-3}   # assembly pages fetched per run (#248); 0 = none
 
 # origin = https://<host> only (no path, no http): the paths are appended here and the host is reused for TLS
@@ -162,12 +171,106 @@ if [ "$ASSEMBLY_SAMPLE" -gt 0 ] && [ "$assemblies_ok" = 1 ]; then
 fi
 if [ ${#http_reasons[@]} -eq 0 ]; then ok http; else fail http "$(IFS=';'; echo "${http_reasons[*]}")"; fi
 
+# refresh_hold_verdict <main age in hours> → `main も古い` の**理由を 1 つ上書きできるときだけ**一句返す (#1230)。
+#
+# **なぜ要るか（#1230。#1221 が 70 時間以上これで誤帰属していた）**:
+#   `main も古い → ETL 側` は「何かが壊れている」を前提にしている。**壊れていない第 3 の状態が在る**——
+#   **ETL は毎晩新しいデータを作っているが、PO がその PR を意図して止めている**。
+#   `→ ETL 側 (#1175 / #1179)` を読んだ人は**壊れていない ETL を見に行く**。
+#   **誤帰属した監視が何度も空振りすると、次の本物の ETL 故障でも誰も見に行かなくなる**（#1185 の型の逆向き）。
+#
+# **実測（2026-10-07T15:51Z、`gh pr list --state all --head data/refresh`、母数 57 本 = 全状態）**:
+#   MERGED            48 本  ← 正常系。auto-merge が armed で、作られて数分〜十数時間で入る
+#   CLOSED 未マージ      4 本  ← #1170 / #1208 / #1220 / #1222。**どれも auto-merge は解除されていた**
+#   OPEN               0 本  （測った時点。#1222 が 13:56Z に閉じられた直後）
+#   4 本のうち **3 本（#1170 / #1208 / #1220）は「次の refresh が作られる 0.0 時間前」に閉じられていた**
+#   ——**次の run が前の PR を畳んだだけ**で、これは正常系の一部である。**それ単体は「止めてある」ではない。**
+#   **だから見るのは「いちばん新しい 1 本」だけにする**: 畳まれた 3 本は定義上「いちばん新しい」になれないので、
+#   **この規則での誤検出は 4 本中 0 本**になる。残る 1 本（#1222）が、いま #1221 が指している状態そのものである。
+#
+# **返す句は 4 通りで、どれも「ETL 側」と混ざらないこと**:
+#   `refresh #N が open（auto-merge 解除済み）→ 止めてある（ETL 側ではない）`
+#   `refresh #N が open（auto-merge 有効）→ 緑になれば入る（止まっているとは言えない）`   ← #1227。**armed は止まっていない**
+#   `refresh #N が未マージで閉じられている → 止めてある（ETL 側ではない）`
+#   `refresh の PR を数えられなかった (…)`   ← **「止めてある」に倒さない**（#1056。測れていないことを書く）
+# **何も言えないときは空文字を返す**。そのとき呼び出し側は**いまと一字一句同じ `→ ETL 側` を出す**（退行させない）。
+#
+# **main より古い PR では上書きしない。** 閉じた PR を見る規則には、これが唯一の歯止めである——
+# **ETL が本当に死んだ直後に誰かが PR を閉じていたら、その 1 本が永久に「止めてある」を言い続ける。**
+# 「その PR を入れれば main が新しくなる」のでなければ、止めてあることは鮮度落ちの理由ではない。
+#
+# gh を使って良いことは**実測で確かめた**（手元の PAT ではなく CI の `secrets.GITHUB_TOKEN` で。#1168 / #1210）:
+#   2026-10-07T15:51:31Z、monitor.yml と同じ `permissions: contents: read / issues: write` の job で
+#   `gh pr list --state all --head data/refresh --json number,state,autoMergeRequest,createdAt` が
+#   **exit 0 で #1222 / #1220 / #1208 … を返した**（`autoMergeRequest` の中身も取れた）。
+#   **`pull-requests: read` を足す必要は無い**（public リポジトリ）。同じ job で `gh run list` も exit 0 だった
+#   （`deploy-started.sh` が依存している経路）。
+# **出力に URL・ホスト名・アカウント名を書かない**（OSS。Issue 本文に載る）。出すのは PR 番号と状態だけ。
+refresh_hold_verdict() {
+  local main_age=$1 prs newest
+  [ "$REFRESH_BRANCH" != "" ] || { echo ""; return 0; }
+  # **取れなければ「止めてある」に倒さない**（#1056）。黙って ETL 側に戻すのも駄目で、
+  # **区別する機能が死んだことが Issue から読めなくなる**（それが #1185 そのものの型）。
+  if ! prs=$(gh pr list --state all --head "$REFRESH_BRANCH" \
+      --json number,state,autoMergeRequest,createdAt --limit 20 2>/dev/null); then
+    echo "refresh の PR を数えられなかった (一覧を取得できない)"; return 0
+  fi
+  if [ -z "$prs" ]; then
+    echo "refresh の PR を数えられなかった (空の応答)"; return 0
+  fi
+  # いちばん新しい 1 本だけを見る（上の実測: 畳まれた 3 本を誤検出しないための要点）。
+  # `main_age` は「main の fetchedAt が何時間前か」。PR がそれより古ければ入れても main は新しくならない。
+  newest=$(printf '%s' "$prs" | python3 -c '
+import json,sys,datetime
+try:
+    rs = json.load(sys.stdin)
+except Exception:
+    print("UNREADABLE"); sys.exit(0)
+if not isinstance(rs, list):
+    print("UNREADABLE"); sys.exit(0)
+rs = [r for r in rs if r.get("createdAt")]
+if not rs:
+    print("NONE"); sys.exit(0)
+r = max(rs, key=lambda x: x["createdAt"])
+try:
+    created = datetime.datetime.fromisoformat(r["createdAt"].replace("Z", "+00:00"))
+except Exception:
+    print("UNREADABLE"); sys.exit(0)
+age_h = (datetime.datetime.now(datetime.timezone.utc) - created).total_seconds() / 3600
+print("%s %s %s %.4f" % (r.get("number"), r.get("state"), "armed" if r.get("autoMergeRequest") else "disarmed", age_h))
+' 2>/dev/null) || newest=UNREADABLE
+  case "$newest" in
+    UNREADABLE|'') echo "refresh の PR を数えられなかった (応答を解釈できない)"; return 0 ;;
+    NONE)          echo ""; return 0 ;;   # PR が 1 本も無い → 言えることが無い。ETL 側のまま
+  esac
+  local num state auto pr_age_h
+  read -r num state auto pr_age_h <<<"$newest"
+  # **PR が main より古ければ上書きしない。** 入れても main は新しくならないので、止めてあることは理由ではない。
+  if ! awk -v a="$pr_age_h" -v m="$main_age" 'BEGIN { exit !(a < m) }'; then
+    echo ""; return 0
+  fi
+  case "$state" in
+    OPEN)
+      if [ "$auto" = armed ]; then
+        # #1227: **armed は「誰かが緑にした瞬間に入る」ので、止まっているとは言えない。**
+        echo "refresh #${num} が open（auto-merge 有効）→ 緑になれば入る（止まっているとは言えない）"
+      else
+        echo "refresh #${num} が open（auto-merge 解除済み）→ 止めてある（ETL 側ではない）"
+      fi ;;
+    MERGED) echo "" ;;   # 入っているのに main が古い → 入れた中身の問題。ETL 側のまま
+    CLOSED) echo "refresh #${num} が未マージで閉じられている → 止めてある（ETL 側ではない）" ;;
+    *)      echo "" ;;
+  esac
+}
+
 # main_side_verdict <production age in hours> → one short phrase naming WHICH side is broken (#1185).
 # **出すのは 3 通りだけで、どれも「分からない」と区別が付くこと**:
 #   `main も古い (Nh)`        main の fetchedAt も limit より古い → ETL 側
 #   `main は新しい (Nh)`      main は limit 以内 → deploy 側（main に在るのに出ていない）
 #   `main を読めなかった (…)`  取れなかった／解釈できなかった／読み先が未設定 → **測れていない**
 # **理由に URL やホスト名を出さない**（OSS。Issue 本文に載る）。出すのは時間と、取れなかった理由の種別だけ。
+# #1230: `main も古い` のときだけ、**第 3 の状態（意図して止めてある）を上書きできる**。
+# **`refresh_hold_verdict` が空を返したら、いまと一字一句同じ `→ ETL 側 (#1175 / #1179)` を出す**（退行させない）。
 main_side_verdict() {
   local prod_age=$1 code body fetched ep age
   if [ -z "$MAIN_META_URL" ]; then
@@ -186,8 +289,16 @@ main_side_verdict() {
   fi
   age=$(( ($(date +%s) - ep) / 3600 ))
   if [ "$age" -gt "$MAX_AGE_HOURS" ]; then
-    # **ETL 側**。main に新しいデータがそもそも無いので、deploy を起動しても何も変わらない。
-    echo "main も古い (${age}h) → ETL 側 (#1175 / #1179)"
+    # #1230: **ここが 2 つに分かれる。** main に新しいデータが無いのは
+    #   (a) ETL が作れていない（本物の故障）か、(b) 作れているが**意図して止めてある**かで、**対処が逆**である。
+    # **(b) を言えるときだけ上書きし、言えなければ従来どおり (a) を出す**（下の `else` の 1 行は不変）。
+    local hold; hold=$(refresh_hold_verdict "$age")
+    if [ -n "$hold" ]; then
+      echo "main も古い (${age}h); ${hold}"
+    else
+      # **ETL 側**。main に新しいデータがそもそも無いので、deploy を起動しても何も変わらない。
+      echo "main も古い (${age}h) → ETL 側 (#1175 / #1179)"
+    fi
   else
     # **deploy 側**。main には ${age}h のデータが在るのに、本番は ${prod_age}h。
     echo "main は新しい (${age}h) のに本番は ${prod_age}h → deploy 側 (deploy-data.yml を起動)"
