@@ -982,6 +982,10 @@ t_mon_classifier_table() {
     'gh: HTTP 403: Resource not accessible by integration|権限が足りません|一時的'
     'gh: HTTP 502 Bad Gateway|一時的|権限が足りません'
     'gh: Post "api": dial tcp: lookup api: no such host|一時的|権限が足りません'
+    # **gh 2.89.0 が接続に失敗したときの実際の文面**（#1217 のレビューが実測）。
+    # **`no such host` でも `connection refused` でもない**ので、初版は `unknown` に落としていた。
+    # **一番ありふれた一時障害がこれである。**
+    'error connecting to api.example.invalid|一時的|権限が足りません'
     'gh: GraphQL: INSUFFICIENT_SCOPES|権限が足りません|一時的'
     'gh: wat|原因を分類できませんでした|権限が足りません'
   )
@@ -1005,7 +1009,7 @@ EOF
     assert_not_contains "$ERR" "$deny" "[$fx] **$deny と混ぜない**"
   done
 }
-test_case "monitor: 分類の表（実測 3 件を含む 10 通り）が読み分けられる (#1210)" t_mon_classifier_table
+test_case "monitor: 分類の表が読み分けられる（実測した文面を含む。件数は cases 配列が母数。#1210)" t_mon_classifier_table
 
 # ---- 2c. **サニタイザの中核が無検査だった 4 か所**（#1217 のレビューで実測）--------------------
 #

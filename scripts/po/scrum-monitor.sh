@@ -313,6 +313,17 @@ gh_err_class() {
     # **一時的に返らなかった側**（**待てば直る**）
     *"HTTP 50"*|*"timeout"*|*"timed out"*|*"Something went wrong while executing your query"*) printf 'transient'; return ;;
     *"connection refused"*|*"no such host"*|*"EOF"*) printf 'transient'; return ;;
+    # **`error connecting to` が一番ありふれた一時障害である**（#1217 のレビューが実測）。
+    # **初版は `no such host` / `connection refused` / `timeout` を見ていたが、
+    # `gh` 2.89.0 が実際に吐くのは `error connecting to <host>` だった**ので当たらず、
+    # **`unknown` に落ちていた。** **倒れる向きは安全側だが、
+    # 「一時障害を一時障害と言える」がこの PBI の半分なので、効き目が半分だった。**
+    # **実測で採った文面**（[[fixtures-and-prose-drift-from-reality]]）:
+    #   GH_HOST=<存在しないホスト> gh api graphql -f query='query{viewer{login}}'
+    #     → error connecting to <host>
+    #       check your internet connection or <URL>
+    # **サニタイザがホスト名を伏せても、この英単語 3 語は残る**ので分類できる。
+    *"error connecting to"*) printf 'transient'; return ;;
   esac
   printf 'unknown'
 }
