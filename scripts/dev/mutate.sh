@@ -327,6 +327,8 @@ apply_pairs() {
   # 戻らない（#1114 の余波。詳しくは arm_restore_trap の上のコメント）。
   # 逆にこれより前で仕掛けると、他人が残した退避を「自分が作ったもの」として戻してしまう。
   arm_restore_trap
+  # 見張りも cp より前に立てる（#1255）。trap が走らないことが在るので、こちらが最後の砦。
+  start_watchdog
 
   local -a done_files=()
   local i f e before after
@@ -504,6 +506,93 @@ arm_restore_trap() {
   done
   TRAP_ARMED=1
 }
+
+# ---- #1255: trap は「仕掛けてあっても走らない」ことがある --------------------------------------
+# #1114 で trap を cp より前に出し、「退避が在るのに handler が無い瞬間」は消した。
+# それでも #1251 の CI が同じ落ち方（**変異が残り、退避も残る**）を捕まえた。
+#
+# 原因は窓ではなく、**trap そのものが走らないこと**だった。実測（この枝で特定）:
+#   退避が現れた瞬間に SIGTERM   60 回中 1 回 / 80 回中 1 回 / 200 回中 3 回が赤
+#   赤い回の標準エラーは必ずこの 1 行だけ:
+#     mutate.sh: trap: line 2: unexpected EOF while looking for matching `)'
+#   DEBUG trap で追うと **on_signal には一度も入っていない**。
+#   bash は trap の「文字列」をシグナルを受けた時点で parse し直す。その瞬間にパーサが
+#   $( ) の途中だと、trap の本体を「$( ) の続き」として読んでしまい、閉じ括弧が無いまま
+#   EOF に達して落ちる。**handler は走らず、そのままシェルが死ぬ。**
+#
+# trap の本体をどう綴っても逃げられない（この枝で測った。各回 setsid + グループへ TERM）:
+#   "on_signal TERM"（いまの形）  40 回中 1 回 parse error
+#   on_signal（引数なしの裸）     40 回中 0 回 → N を増やすと **150 回中 5 回**
+#   "{ on_signal TERM; }"         40 回中 1 回 parse error
+#   "(on_signal TERM)"            40 回中 1 回 parse error
+# **「trap の書き方を直す」では塞げない。** そして SIGKILL では trap は定義上走らない。
+#
+# だから設計を変える: **死にかけのシェル自身に戻させない。**
+# 退避を作る前に、別プロセスの見張りを立てる。見張りは親の死を待ち、
+# 親が自分で戻せていなければ（＝退避がまだ在れば）代わりに戻す。
+# 見張りは親とは別の bash なので、親のパーサがどんな状態で死のうと関係ない。
+# trap は残す（速い経路で、かつ「戻した」のログを人に見せられる）。見張りは最後の砦である。
+WATCHDOG_PID=''
+WATCHDOG_FLAG=''
+
+# start_watchdog → 親の死を待って、退避が残っていたら戻す見張りを別プロセスで立てる。
+#   **必ず「退避を作る cp」より前に呼ぶこと**（理由は trap と同じ。立つ前に殺されたぶんが戻らない）。
+#   setsid でプロセスグループの外に出す。出さないと、検査や人が撃つ
+#   `kill -TERM -- -<pgid>` が見張りごと殺してしまい、最後の砦が消える。
+#   見張りが自分で復元の実装を持つと、本物の restore と挙動がずれていく
+#   （stale の判定を持たない見張りは、人の作業を黙って上書きする）。だから
+#   見張りは自分自身を `mutate.sh restore` として呼び直す。経路は 1 本に保つ。
+start_watchdog() {
+  ((ARM_RESTORE_TRAP)) || return 0
+  [[ -z $WATCHDOG_PID ]] || return 0
+  # 「もう要らない」を見張りに伝える印。親が消すと、見張りは何もせずに去る。
+  # ファイルで伝えるのは、親が SIGKILL で死ぬときに「伝え損なう」経路を作らないため
+  # （親が死ぬ＝印が残る＝見張りが働く、という向きにしておく）。
+  WATCHDOG_FLAG=$(mktemp -t mutate-watchdog.XXXXXX)
+  local self=$0 parent=$$ top; top=$(root)
+  # shellcheck disable=SC2086  # setsid に渡すのは固定の語だけ
+  setsid bash -c '
+    flag=$1; parent=$2; self=$3; top=$4
+    # 親が死ぬまで待つ。kill -0 は「シグナルを送らずに生存だけ見る」。
+    while [[ -e $flag ]] && kill -0 "$parent" 2>/dev/null; do sleep 0.05; done
+    # 印が消えていれば、親は正常に終わって自分で戻した。何も触らない。
+    [[ -e $flag ]] || exit 0
+    rm -f -- "$flag"
+    # 親は戻さずに死んだ。退避が残っていれば restore を代わりに走らせる。
+    # 残っていなければ（trap が間に合った場合）何もしない。
+    cd -- "$top" || exit 0
+    bash "$self" status >/dev/null 2>&1 && exit 0
+    bash "$self" restore >/dev/null 2>&1 || true
+  ' mutate-watchdog "$WATCHDOG_FLAG" "$parent" "$self" "$top" >/dev/null 2>&1 &
+  WATCHDOG_PID=$!
+  # 親の job table から外す。残すと終了時に "Terminated" が stderr に漏れて、
+  # 変異の出力を読んでいる人と、出力を見ている検査の両方を惑わせる。
+  disown "$WATCHDOG_PID" 2>/dev/null || true
+}
+
+# stop_watchdog → 見張りに「もう要らない」と伝える。
+#   印を消すだけで、見張りは次の目覚めで自分から去る。殺しに行かないのは、
+#   見張りが setsid で別グループに居て、PID が再利用されている可能性が在るため
+#   （知らないプロセスを撃つより、印を消して待つほうが安全側）。
+#
+#   **退避が 1 つでも残っているなら解除しない。** 「親が終わった」と「戻っている」は別である。
+#   - restore が stale で拒否した（人の作業が在るので上書きしない）→ 退避は残る。
+#     このとき見張りも同じ restore を呼ぶので、同じ理由で同じように拒否する。何も壊れない。
+#   - restore が cp に失敗した → 退避が残る。見張りがもう一度試す。
+#   解除する条件を「終わったら」ではなく「戻っていたら」にしておくと、
+#   **解除の判断を間違えても安全な側に倒れる**（余計に見張りが残るだけで、何も上書きしない）。
+stop_watchdog() {
+  [[ -n $WATCHDOG_FLAG ]] || return 0
+  [[ -z $(find_saves) ]] || return 0
+  rm -f -- "$WATCHDOG_FLAG"
+  WATCHDOG_FLAG=''
+  WATCHDOG_PID=''
+}
+
+# 親がどの経路で終わっても見張りを解除する（exit 3 / exit 5 / die / 正常終了）。
+# EXIT の trap は $( ) のサブシェルでは走らない（親の 1 回だけ）ことを確かめてある。
+# ここを個々の exit の手前に書くと、必ずどれかを書き落とす。1 か所にする。
+trap stop_watchdog EXIT
 
 # disarm_restore_trap → handler を外す（正常経路で自分で戻すとき、二重に戻さないため）
 disarm_restore_trap() {

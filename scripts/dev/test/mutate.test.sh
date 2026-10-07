@@ -422,6 +422,118 @@ t_restores_when_killed_the_instant_the_save_appears() {
   assert_not_contains "$(cat "$log")" "invalid signal specification" "early: trap の中で kill が失敗していない"
 }
 
+# ---- #1255: trap は「仕掛けてあっても走らない」ことがある -------------------------------------
+# #1114 で trap を cp より前に出して「退避が在るのに handler が無い瞬間」は消した。
+# それでも #1251 の CI で同じ落ち方（**変異が残り、退避も残る**）が出た。
+#
+# 実測（この枝で特定した。手順は下の t_... の上に書いてある）:
+#   退避が現れた瞬間に SIGTERM   60 回中 1 回赤 / 80 回中 1 回赤 / 200 回中 3 回赤
+#   赤い回の標準エラーは必ずこれ 1 行だけ:
+#     mutate.sh: trap: line 2: unexpected EOF while looking for matching `)'
+#   DEBUG trap で追うと、**on_signal には一度も入っていない**。
+#   bash は trap の「文字列」をシグナルを受けた時点で parse し直すが、
+#   その時点でパーサが $( ) の途中だと、trap の本体を「$( ) の続き」として読んでしまい、
+#   閉じ括弧が無いまま EOF に達して落ちる。**handler は走らない。**
+#
+# trap の本体の形を変えても逃げられない（この枝で測った。各回 setsid + プロセスグループへ TERM）:
+#   "on_signal TERM"（いまの形）   40 回中 1 回 parse error
+#   on_signal（引数なしの裸）      40 回中 0 回 → N を増やすと **150 回中 5 回**
+#   "{ on_signal TERM; }"          40 回中 1 回 parse error
+#   "(on_signal TERM)"             40 回中 1 回 parse error
+# **どの綴りでも起きる。** つまり「trap の書き方を直す」では塞げない。
+#
+# だから設計を変える: **死にかけのシェル自身に戻させない。**
+# 退避を作る前に、別プロセスの見張りを立てる。見張りは親の死を待ち、
+# 親が自分で戻せていなければ（＝退避がまだ在れば）代わりに戻す。
+# 見張りは親とは別の bash なので、親のパーサがどんな状態で死のうと関係ない。
+
+# **この検査は機械の速さに依存しない**（受け入れ条件3）。SIGKILL は trap を一切走らせないので、
+# 「窓の中で殺せたかどうか」という運の要素が無い。**どの機械でも必ず同じ結果になる。**
+# そして SIGKILL は TERM の parse 失敗より厳しい条件なので、ここが緑なら TERM の経路も戻る
+# （TERM で handler が走らなかったときに残るのは、SIGKILL とまったく同じ状態である）。
+t_restores_even_when_the_shell_is_sigkilled() {
+  repo; local before; before=$(md5 "$R/src/app.ts")
+  local log="$TMP/sig.kill.log"
+  ( cd "$R" && setsid bash "$SCRIPT" run --file src/app.ts --expr 's/ORIGINAL/MUTANT/' -- sleep 30 ) > "$log" 2>&1 &
+  local runner=$!
+  # ここは「当てた」を待つ。窓を狙う必要が無い（KILL はどこで撃っても trap が走らない）ので、
+  # 待てるだけ待ってから確実に撃つ。これが速さに依存しない理由。
+  local waited=0
+  until grep -q '当てた' "$log" 2>/dev/null; do
+    sleep 0.05; waited=$((waited+1)); [[ $waited -lt 200 ]] || { fail "kill: 変異が当たらないまま時間切れ"; kill -KILL "$runner" 2>/dev/null; return 0; }
+  done
+  assert_contains "$(cat "$R/src/app.ts")" MUTANT "kill: 撃つ前に変異は当たっている"
+  local pgid; pgid=$(ps -o pgid= -p "$runner" 2>/dev/null | tr -d ' ')
+  [[ -n $pgid ]] || { fail "kill: pgid が取れない"; return 0; }
+  kill -KILL -- -"$pgid" 2>/dev/null
+  wait "$runner" 2>/dev/null || true
+  # 見張りは親が死んでから動くので、ここだけは待つ。待つ上限は固定で、
+  # 「時間切れ」は赤として扱う（遅い機械で緑に化けないように、黙って抜けない）。
+  waited=0
+  until [[ ! -e "$R/src/app.ts$SV_EXT" ]]; do
+    sleep 0.05; waited=$((waited+1))
+    [[ $waited -lt 200 ]] || { fail "kill: 10 秒待っても退避が消えない（見張りが戻していない）"; break; }
+  done
+  assert_eq "$before" "$(md5 "$R/src/app.ts")" "kill: SIGKILL で殺されても戻っている"
+  assert_eq "" "$(find "$R" -name '*'"$SV_EXT" -print)" "kill: 退避も残っていない"
+  assert_eq "" "$(find "$R" -name "*$SV_EXT.md5" -print)" "kill: meta も残っていない"
+}
+
+# 見張りが「親が自分で戻した後」に二度と触らないこと。
+# ここを外すと、run が正常に終わった直後に見張りが古い退避を書き戻し、
+# **この道具が防ごうとしている事故（人の作業を黙って上書きする）を道具自身が起こす。**
+t_the_watchdog_does_not_touch_anything_after_a_normal_run() {
+  repo; local before; before=$(md5 "$R/src/app.ts")
+  run run --file src/app.ts --expr 's/ORIGINAL/MUTANT/' -- true
+  assert_eq 0 "$STATUS" "正常な run は 0: $OUT"
+  assert_eq "$before" "$(md5 "$R/src/app.ts")" "run の直後は戻っている"
+  # run が戻した後、その場所に「今日の作業」を書く。見張りが生きていれば、これを上書きする。
+  printf 'MY IMPORTANT NEW FEATURE\n' > "$R/src/app.ts"
+  local mine; mine=$(md5 "$R/src/app.ts")
+  sleep 1
+  assert_eq "$mine" "$(md5 "$R/src/app.ts")" "見張りは run の後に書き戻さない"
+  assert_eq "" "$(find "$R" -name '*'"$SV_EXT" -print)" "退避も作り直さない"
+  assert_work_intact watchdog-after-normal-run
+}
+
+# 見張りは run のときだけ立てる。apply は「当てたまま残す」のが仕様なので、
+# 見張りが立つと apply の直後に変異が戻されてしまう（仕様が壊れる）。
+t_apply_has_no_watchdog() {
+  repo
+  run apply src/app.ts 's/ORIGINAL/MUTANT/'
+  assert_eq 0 "$STATUS" "apply は 0: $OUT"
+  sleep 1
+  assert_contains "$(cat "$R/src/app.ts")" MUTANT "apply の変異は残ったまま（見張りが戻していない）"
+  assert_eq 1 "$(find "$R" -name '*'"$SV_EXT" | wc -l)" "退避も残ったまま"
+  run restore
+  assert_eq 0 "$STATUS" "あとから restore で戻せる: $OUT"
+}
+
+# 設計を読む側。見張りが「親の死」を待っていること、親とは別プロセスであることを、
+# ソースから直接固定する。behavioral な検査が通り過ぎても、ここは機械の速さに依存しない。
+t_the_watchdog_is_a_separate_process_that_outlives_the_shell() {
+  local src="$HERE/../mutate.sh"
+  local body; body=$(sed -n '/^start_watchdog() {/,/^}/p' "$src")
+  assert_ne "" "$body" "見張りを立てる関数（start_watchdog）が在る"
+  assert_contains "$body" "setsid" "見張りは親のプロセスグループの外に出る（グループへの kill で一緒に死なない）"
+  # 見張りは自分自身を `mutate.sh restore` として呼び直す。復元の実装を 2 本持たせない
+  # （持たせると、stale の判定を欠いた見張りが人の作業を黙って上書きする側に回る）。
+  assert_contains "$body" 'restore' "見張りは restore の経路を使って戻す（別実装を持たない）"
+  assert_not_contains "$body" 'cp -p --' "見張りは自前で cp しない（restore に任せる）"
+  # 見張りは退避を作る cp より前に立てないと、立つ前に殺された分が戻らない。
+  # shellcheck disable=SC2016  # ソースの文字列を逐語で探す
+  local cp_line watch_line
+  cp_line=$( { grep -n '^[^#]*cp -p -- "\$f" "\$f\$SV_EXT"' "$src" || true; } | head -1 | cut -d: -f1)
+  watch_line=$( { grep -n '^[[:space:]]*start_watchdog$' "$src" || true; } | head -1 | cut -d: -f1)
+  assert_ne "" "$watch_line" "見張りを立てる呼び出しが在る"
+  if [[ -n $cp_line && -n $watch_line ]]; then
+    [[ $watch_line -lt $cp_line ]] || fail "見張りの設置（$watch_line 行）が、退避を作る cp（$cp_line 行）より後にある"
+  fi
+  # そして run だけが立てる（apply は当てたまま残すのが仕様）。
+  local run_body; run_body=$(sed -n '/^cmd_run() {/,/^}/p' "$src")
+  assert_contains "$run_body" "ARM_RESTORE_TRAP=1" "run は見張りと trap を有効にする"
+}
+
 # 上の behavioral な検査は「速い機械では窓を通り過ぎて緑になる」ことが原理的に在りうる
 # （赤にするには窓の中で殺せないといけない）。だから **並び自身** も直接読む。
 # こちらは機械の速さに依存しないので、並びが戻ったら必ず赤になる。
