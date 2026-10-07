@@ -860,8 +860,15 @@ handle() {
   case "$*" in
     "pr list --repo "*) echo '[]' ;;
     "api graphql"*)
-      # **長い行を 41 本**（1 本目だけ HTTP の状態を持つ。残りも 1,000 文字ある）
-      long=$(head -c 1000 < /dev/zero | tr '\0' 'x')
+      # **長い行を 41 本**（1 本目だけ HTTP の状態を持つ。残りも 1,400 文字ほど在る）
+      # **語は `credentials`（allowlist の形 1 を通る純英字 11 文字）を並べる。**
+      # **`xxxx…` では測れない**（#1217 の 2 回目のレビューが実測）:
+      # **`gh_err_allow` は 1,000 文字の `x` を 1 語と見て `[redacted]`（10 文字）に畳む**ので、
+      # **`head` と `cut` の限界に届かず、M7 / M8 がどちらも 302/0 で生き残った。**
+      # **守りを消したのではなく、守りを試す材料が消えた**
+      # ——**サニタイザが denylist から allowlist に変わった副作用である。**
+      # **fixture は「allowlist を素通りする語」でなければ、上限を試せない。**
+      long=$(for _ in $(seq 1 120); do printf 'credentials '; done)
       echo "gh: HTTP 502: $long" >&2
       for i in $(seq 1 40); do echo "gh: noise $i $long"; done >&2
       exit 1 ;;
@@ -876,17 +883,28 @@ EOF
   assert_contains "$ERR" "HTTP 502" "**先頭は出す**"
   # **母数を出す**（#757）: 何行のうち何行を出したか。**黙って切らない。**
   assert_contains "$ERR" "41 行のうち先頭 3 行" "**何行のうち何行を出したかが読める（黙って切らない）**"
-  # **関係式そのものを断定する。** **上限は `$ERR` 全体ではなく、`gh` の言い分の部分に効く**
+  # **関係式を断定する。数は散文に書かない**（#1189 / #1200 の型。
+  # **初版はここに「2,369 / 12,000 超 / 6,000 超」と書いていたが、
+  # サニタイザを allowlist に替えたら実測が動いた**——**散文の数は必ずずれる**）。
+  #
+  # **上限は `$ERR` 全体ではなく、`gh` の言い分の部分に効く**
   # ——**`$ERR` には監視の他の行も入り、しかも `unmeasured` の文は 2 回出る**
-  # （`log` で 1 回、末尾の一覧で 1 回）。**実測:**
-  #   sanitize したものだけ           929 文字（3 行 × 300 文字 + 定型文）
-  #   `$ERR` 全体（現行）           2,369 文字（= 929 × 2 + 監視の他の行）
-  #   `head` を外した `$ERR`       **12,000 文字超**（41 行 × 300）
-  #   `cut` を外した `$ERR`         **6,000 文字超**（3 行 × 1,000）
-  # **だから閾値は 3,000 に置く**（現行 2,369 を通し、どちらの変異も破る）。
-  # **「現行より少し上」に置くこと**——**4000 に置いていた初版は、
-  # `head` を外しても落ちなかった**（1,039 文字で届かなかった。実測）。
-  [[ ${#ERR} -lt 3000 ]] || fail "**上限が効いていません**（3 行 × 300 文字が設計）: ${#ERR} 文字"
+  # （`log` で 1 回、末尾の一覧で 1 回）。**だから閾値は関係式から導く:**
+  #
+  #   gh の言い分 ≦ min(行数, GH_ERR_MAX_LINES) × min(1 行, GH_ERR_MAX_CHARS) + 定型文
+  #   $ERR        ≦ （それ）× 2 + 監視の他の行
+  #
+  # **設計の定数はここに逐語で持つ**（**実装から読まない**。
+  # [[expected-table-is-not-a-knob]]: **実装を読むと、実装を緩めたとき表も一緒に緩む**）。
+  # **余白は「定型文 + 監視の他の行」のぶんで、両方の変異を破れるだけ小さく取る。**
+  local max_lines=3 max_chars=300 overhead=1200
+  local bound=$(( max_lines * max_chars * 2 + overhead ))
+  [[ ${#ERR} -lt $bound ]] || fail "**上限が効いていません**（${max_lines} 行 × ${max_chars} 文字が設計。上限 ${bound}）: ${#ERR} 文字"
+  # **fixture が本当に限界に届いているかを、同じ検査で見張る**（**これが無いと、
+  # fixture が畳まれて 0 件落ちる状態に戻っても誰も気づかない**——**今回それが起きた**）。
+  # **1 行の素の長さ（1,440 文字）が `max_chars` を超え、行数（41）が `max_lines` を超えること。**
+  assert_contains "$ERR" "41 行のうち先頭 3 行" "**fixture が行数の限界を超えている（超えないと head を試せない）**"
+  [[ ${#ERR} -gt $(( max_lines * max_chars )) ]] || fail "**fixture が限界に届いていません**（畳まれて短くなった疑い）: ${#ERR} 文字"
 }
 test_case "monitor: gh の言い分は上限つきで出し、何行のうち何行かを言う (#1210)" t_mon_board_error_text_is_bounded
 
@@ -1111,6 +1129,59 @@ EOF
   assert_contains "$ERR" "HTTP 403"    "**HTTP の状態は残る**"
 }
 test_case "monitor: バックティックと多バイト文字を語ごと落とす (#1217 N1)" t_mon_err_allowlist_drops_shell_metacharacters
+
+# **allowlist の「上限」を固定する**（#1217 の 2 回目のレビュー P1 / P2。**どちらも 302/0 で生存した**）。
+#
+# **N1 は「allowlist を無効化する」向きを測っていたが、「allowlist を広げる」向きが無検査だった。**
+# **穴では在らない**（いまの値では正しく伏せる）**が、広げても誰も気づかない。**
+# **#1224 と同じ「正しいが検査されていない」型である。**
+#
+# **この 2 つの数が、この allowlist で何を止めているか**（実測）:
+#   `length(t) <= 24` → **純英字で綴られた鍵**（`deadbeefcafebabe…` のような hex は
+#                        形 1 を通ってしまうので、**長さだけが止めている**）
+#   `^[0-9]{1,4}$`    → **ポート番号・node id**（`54321` / `987654321098765`）
+#
+# **境界値を両側から測る**（**通る側と止まる側の両方**。片側だけでは
+# 「全部通す」変異も「全部止める」変異も捕まらない）:
+#   24 文字の純英字 → **通る**（`HTTP` の文が読めなくなっては困る）
+#   25 文字の純英字 → **止まる**
+#    4 桁の数       → **通る**（`401` `403` `502` が読めなくなっては困る）
+#    5 桁の数       → **止まる**
+#
+# **fixture の鍵に本物の接頭辞を使わない**（`forbidden-patterns.sh` の `fixture-secret`）。
+# **`deadbeef…` は純英字 32 文字で、hex としても読める**——**形 1 を長さだけが止めている**
+# ことを示すのにちょうどよい。
+t_mon_err_allowlist_upper_bounds_are_fixed() {
+  local pass24="abcdefghijklmnopqrstuvwx"          # 24 文字 → 通る
+  local stop25="abcdefghijklmnopqrstuvwxy"         # 25 文字 → 止まる
+  local hexkey="deadbeefcafebabedeadbeefcafebabe"  # 32 文字の純英字（hex 鍵の形）
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr list --repo "*) echo '[]' ;;
+    "api graphql"*)
+      echo 'gh: HTTP 502 word $pass24 word $stop25 key $hexkey port 54321 node 987654321098765 code 1234' >&2
+      exit 1 ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 4 "$STATUS" "ボードが読めなければ exit 4: $ERR"
+  # **通る側**（**締めすぎを捕まえる**。これが無いと「全部伏せる」実装でも緑になる）
+  assert_contains "$ERR" "$pass24" "**24 文字の純英字は通る（gh の英文が読めなくなっては困る）**"
+  assert_contains "$ERR" "HTTP 502" "**4 桁までの数は通る（HTTP の状態が読めなくなっては困る）**"
+  assert_contains "$ERR" "code 1234" "**4 桁の数は通る（境界のすぐ内側）**"
+  # **止まる側**（**広げすぎを捕まえる**。P1 / P2 がここで死ぬ）
+  assert_not_contains "$ERR" "$stop25" "**25 文字の純英字は止まる（長さの上限が効いている）**"
+  assert_not_contains "$ERR" "$hexkey" "**純英字で綴られた鍵は長さだけが止めている**"
+  assert_not_contains "$ERR" "deadbeef" "**断片も残さない**"
+  assert_not_contains "$ERR" "54321" "**5 桁の数は止まる（ポート番号）**"
+  assert_not_contains "$ERR" "987654321098765" "**15 桁の数も止まる（node id）**"
+}
+test_case "monitor: allowlist の上限（24 文字 / 4 桁）を両側から固定する (#1217 P1/P2)" t_mon_err_allowlist_upper_bounds_are_fixed
 
 # **N5: `[すべて除去されました]` と「gh は何も言わなかった」を区別する。**
 #
