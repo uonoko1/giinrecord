@@ -2802,10 +2802,20 @@ test_case "1054: 同名の run は 1 件として数える" t_1054_dup_counted_o
 # `pr-body.yml` が `types: [..., edited]` で走るので、**本文を続けて直すと、同じ commit に
 # `pr-closes` の check run が複数本並ぶ**——実測: `fed085e2` に **5 本**、`04b15d9b` に **2 本**。
 #
-# **ただし `cancelled` になった例は実測 0 件**（`pr-body.yml` の run 25 件は**全部 success**。
-# 速すぎて `cancel-in-progress` が発火していない）。**この fixture の `cancelled` は推論である。**
-# **実測で裏付いているのは `production` の方**（下の `t_1054_monitor_...` を見よ）。
-# それでもこの形を置くのは、**`cancelled` が fail 系として扱われること**と、
+# **この fixture の `cancelled` はもう推論ではない**（#1216 で測り直した。
+# **かつてここには「実測 0 件」「推論である」と書いてあった**）。
+# **実測 2026-10-07、`pr-body.yml` の run 380 件**（母数は 380。以前の 25 件ではない）:
+# `success` 354 / `failure` 23 / `cancelled` 3。**`cancelled` は 3 件あった。**
+# **この道具が読む check-runs の層でも並んでいる**:
+#   50f25493  pr-closes  success 10:14:00Z / cancelled 10:13:48Z  （2026-10-04）
+#   db622d9b  pr-closes  success 05:37:32Z / cancelled 05:37:29Z  （2026-09-28）
+#   7b46a050  pr-closes  cancelled 04:21:22Z / success 04:21:27Z  （2026-10-05、#1216 の起票）
+# **発火条件は `git push --force-with-lease`**（`pr-body.yml` の
+# `cancel-in-progress: true` が、走っている 1 本目を取り消す）。
+# **本文の `edited` 経路では head_sha が変わらないので、この形にはならない。**
+# **この fixture の並び（`success` が新しく `cancelled` が古い）は `7b46a050` の実測と同じ向き**
+# である。
+# この形を置く理由は変わらない: **`cancelled` が fail 系として扱われること**と、
 # **この道具の REQUIRED_CHECKS に載っている名前はフラグでも通せないこと**を固定するため。
 #
 # **そして実際に効いている**（#1064 の 3 度目のレビューで指摘され、担当者が追試した）:
@@ -2847,6 +2857,70 @@ EOF
   assert_not_contains "$LOG" "pr	merge	12" "マージを試みない"
 }
 test_case "1054: pr-closes の cancelled(旧)+success(新) はこの道具の必須の赤（フラグでも通さない）" t_1054_pr_closes_cancelled_then_success
+
+# --- #1216: force-push で取り消された `pr-closes` の、実物をそのまま置く ----------------------
+#
+# **上の fixture は手で組んだ 3 行**（`cancelled` と `success` を隣に並べたもの）だった。
+# **こちらは実物の API 応答をそのまま写したものである**（#1216 で測った）:
+#
+#   $ gh api repos/<repo>/commits/50f25493/check-runs --paginate   （2026-10-04。PR #1142）
+#     0  docker-web           success    10:27:27Z
+#     1  pr-closes            success    10:14:00Z    ← 新しい（force-push の 2 本目）
+#     2  stale-base           success    10:13:50Z
+#     3  check                success    10:13:50Z
+#     4  issue-secrets        skipped    10:13:45Z
+#     5  forbidden-patterns   success    10:13:47Z
+#     6  gitleaks             success    10:13:47Z
+#     7  pr-closes            cancelled  10:13:48Z    ← 古い（force-push で取り消された 1 本目）
+#     8  audit                success    10:13:47Z
+#
+# **手で組んだ fixture と違う点が 2 つあり、どちらも実物の性質である**:
+#   1. **同名の 2 本が隣に並んでいない**（間に 5 件の別名が挟まる）。`group_by` が
+#      並び順に依らず名前で束ねることを、実物の形で固定する。
+#   2. **`issue-secrets` が `skipped` で居る**。**これは緑のまま**でなければならない
+#      （SKIPPABLE_CHECKS）——**取り消された run を赤くする話が、別の名前まで赤くしていない**
+#      ことを確かめる。**赤の一覧が `pr-closes` だけ**であることを見る。
+#
+# **この sha は 2026-10-07 の時点でも `pr-closes` が `cancelled` のまま赤い**
+# （PR #1142 が実際に解決したのは `da04dee8` を push したときで、**rerun ではない**）。
+# **だからこの道具は「再実行で直る」と案内しない**（merge-when-green.sh の docblock に理由）。
+t_1216_pr_closes_cancelled_real_array() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr view 12 --json state,"*) echo '{"state":"OPEN","isDraft":false,"headRefName":"feat/x","mergeStateStatus":"CLEAN","url":"u","headRefOid":"oid1"}' ;;
+    "api repos/uonoko1/giinrecord/commits/"*"/check-runs"*)
+      # **実物の並び順そのまま**（50f25493。`details_url` だけ短くした）
+      echo '{"check_runs":[
+        {"name":"docker-web","status":"completed","conclusion":"success","started_at":"2026-10-04T10:27:27Z"},
+        {"name":"pr-closes","status":"completed","conclusion":"success","started_at":"2026-10-04T10:14:00Z","details_url":"u-new"},
+        {"name":"stale-base","status":"completed","conclusion":"success","started_at":"2026-10-04T10:13:50Z"},
+        {"name":"check","status":"completed","conclusion":"success","started_at":"2026-10-04T10:13:50Z"},
+        {"name":"issue-secrets","status":"completed","conclusion":"skipped","started_at":"2026-10-04T10:13:45Z"},
+        {"name":"forbidden-patterns","status":"completed","conclusion":"success","started_at":"2026-10-04T10:13:47Z"},
+        {"name":"gitleaks","status":"completed","conclusion":"success","started_at":"2026-10-04T10:13:47Z"},
+        {"name":"pr-closes","status":"completed","conclusion":"cancelled","started_at":"2026-10-04T10:13:48Z","details_url":"u-old"},
+        {"name":"audit","status":"completed","conclusion":"success","started_at":"2026-10-04T10:13:47Z"}
+      ]}' ;;
+    "pr merge 12 --squash --delete-branch") echo merged ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+EOF
+)
+  # **フラグ付きでも通らない**（pr-closes は REQUIRED_CHECKS）
+  run_script "$h" merge-when-green.sh --allow-nonrequired-red 12
+  assert_eq 1 "$STATUS" "取り消された必須の赤はフラグ付きでも止まる"
+  assert_not_contains "$LOG" "pr	merge	12" "マージを試みない"
+  # **赤は pr-closes だけ**。`issue-secrets` の `skipped` を巻き込んでいない
+  assert_contains "$ERR" "checks failed on PR #12: pr-closes" "赤は pr-closes だけ"
+  assert_contains "$ERR" "--allow-nonrequired-red では通せません" "フラグでは通せないと言う"
+  # **9 run → 8 件に畳む**（pr-closes の 2 本が 1 件）。**必須は 5 件**:
+  # check / gitleaks / forbidden-patterns / audit / pr-closes / stale-base の 6 件のうち
+  # 全部が居るので 6 件。`issue-secrets` は PR_GATED_CHECKS かつ赤くないので数えない。
+  assert_contains "$OUT$ERR" "検査 8 件 / 必須 6 件 / 赤 1 件" "9 run を 8 件に畳み、母数を出す"
+}
+test_case "1216: force-push で取り消された pr-closes（実物の並び順そのまま）" t_1216_pr_closes_cancelled_real_array
 
 # **main で今まさに起きている実例**（#1064 のレビューで PO が発見、担当者が追試。
 # `gh api repos/<repo>/commits/7aeede2a/check-runs`——**当時の main の HEAD**）:
