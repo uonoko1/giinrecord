@@ -74,7 +74,10 @@ describe("#1236 carried の submitters / supporters は氏名より長生きし�
     assert.deepEqual(unmatched, [{ kind: "bill", nameText: "別人太郎", group: "", billId: "221-衆法-1" }]);
   });
 
-  test("一部だけ引けたときも、引けた人だけになる（引けなかった人の古い ID は残らない）", () => {
+  test("一部だけ引けたときは #1232 より前から安全だった（`resolve` が非 undefined を返すので配列ごと差し替わる）。**この修正で変わらない**", () => {
+    // **発火の条件を取り違えないために残す。** `resolve` は **1 件も当たらなかったときだけ** `undefined` を返す
+    // （`return ids.length ? ids : undefined`）。1 件でも当たれば配列ごと差し替わるので、古い ID は元から残らない。
+    // **#1236 が効くのは「全部外れた」場合だけ**である（下の 3 件）。
     const members = [member("s_1", "落合 貴之"), member("s_2", "中野 洋昌")];
     const stale = bill({ id: "221-衆法-1", submitterNames: ["落合貴之", "別人太郎"], submitters: ["s_1", "s_2"] });
     const { bills } = matchShugiinBills([stale], members);
