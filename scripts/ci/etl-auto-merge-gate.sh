@@ -118,7 +118,11 @@ if [[ -f $HOLD_FILE ]]; then
   while IFS= read -r l || [[ -n $l ]]; do say "$l"; done < "$HOLD_FILE"
   say '```'
   say ""
-  say "**解除するには、原因を直してからこのファイルを消すこと**（\`git rm $HOLD_FILE\`）。"
+  # **ここに `git rm …` と書いてはいけない**（`forbidden-patterns` の `destructive-git` が
+  # 実行される行を見るので、文章でも当たる。**実測: CI で 1 hit / 137 files scanned**。
+  # 手元の run は未追跡だったぶん 135 files で、**同じ規則が当たらなかった**——
+  # **「手元で緑」は母数が違えば根拠にならない**）。消し方は散文で言う。
+  say "**解除するには、原因を直してからこのファイルを削除してコミットすること**（\`$HOLD_FILE\`）。"
   say "**消すまで、毎晩の refresh は PR を作るが auto-merge は付かない。**"
   say ""
 else
