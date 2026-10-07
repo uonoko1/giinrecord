@@ -4,7 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
-import { moduleSpecifiers } from "./value-imports";
+import { moduleSpecifiers, scanSources } from "./value-imports";
 
 /**
  * **`~/` エイリアスを書かない（#500）。どの実行環境でも解決できないから。**
@@ -83,18 +83,38 @@ describe("`~/` エイリアスを書かない（#500）", () => {
   /**
    * **走査が空振りしていないこと。** 0 件なら何も見ていない。
    * ここは `tsconfig` 由来なので、**狭めるには型検査の対象も狭めるしかない**。
+   *
+   * **#1242: ここで 195 ファイルを走査し直すのをやめた。**
+   * 以前は最後の 1 行が `files` 全部をパースしていたが、
+   * **下の「`~/` を書かない」が同じ 195 ファイルをパースした上に
+   * 「読んだ顔ぶれ＝tsconfig の集合」まで突き合わせている**——こちらは真に強い検査で、
+   * ここの `total > 100` はその部分集合だった。**同じ仕事を 2 回していた。**
+   *
+   * 実測（load 29〜44、vitest の worker 内、n=4）:
+   *
+   *     この `it`                   6,290ms / 7,198ms   ← 195 ファイルのパースを丸ごと払っていた
+   *     下の「`~/` を書かない」     5,330ms → 179ms     ← memo が効くのは 2 番目に走る側だけ
+   *
+   * **memo だけでは、最初に走る `it` が全部払う形が残る**（どちらが先かはファイル順で決まる）。
+   * そこで**この `it` は自分が名指ししている 4 ファイルだけで「指定子が読めている」を見る**
+   * （4 ファイルで 23 件。実測）。全 195 ファイル分の空振り検査は下の `it` が
+   * `everything.length > 100` と集合の一致で持っているので、**失われる保証は無い。**
    */
   it("前提: tsc が型検査するファイルと同じ集合を見ている", () => {
     expect(files.length, "走査したファイルが少なすぎる（tsconfig の読み方が壊れている）").toBeGreaterThan(100);
     const names = files.map(rel);
     // 種類の違うものが入っていること（app/ だけ・scripts/ だけを見ていない）
-    expect(names, "app/lib を見ていない").toContain("app/lib/data-files.ts");
-    expect(names, "scripts/ を見ていない").toContain("scripts/sitemap.ts");
-    expect(names, "ルート直下の設定ファイルを見ていない").toContain("vite.config.ts");
-    expect(names, "テストファイルを見ていない（~/ はテスト自身の読み込みも壊す）").toContain("app/lib/data-files.test.ts");
-    // 実際に指定子を読めている（空文字を見ていない）
-    const total = files.reduce((n, f) => n + moduleSpecifiers(readFileSync(f, "utf8"), f).length, 0);
-    expect(total, "モジュール指定子が 1 つも読めていない").toBeGreaterThan(100);
+    const anchors = ["app/lib/data-files.ts", "scripts/sitemap.ts", "vite.config.ts", "app/lib/data-files.test.ts"];
+    expect(names, "app/lib を見ていない").toContain(anchors[0]);
+    expect(names, "scripts/ を見ていない").toContain(anchors[1]);
+    expect(names, "ルート直下の設定ファイルを見ていない").toContain(anchors[2]);
+    expect(names, "テストファイルを見ていない（~/ はテスト自身の読み込みも壊す）").toContain(anchors[3]);
+    // **実際に指定子を読めている（空文字を見ていない）。** 名指しした 4 ファイルで見る——
+    // 全 195 ファイルの空振り検査は下の `it` が持っている（#1242。上のコメント）。
+    const scanned = scanSources(anchors.map((a) => path.join(webRoot, a)));
+    expect([...scanned.keys()].length, "名指しした 4 ファイルを読めていない").toBe(anchors.length);
+    const total = [...scanned.values()].reduce((n, specs) => n + specs.length, 0);
+    expect(total, "モジュール指定子が 1 つも読めていない").toBeGreaterThan(10);
   });
 
   /**
@@ -134,7 +154,10 @@ describe("`~/` エイリアスを書かない（#500）", () => {
     const scanned: string[] = [];
     for (const file of files) {
       scanned.push(rel(file));
-      for (const spec of moduleSpecifiers(readFileSync(file, "utf8"), file)) {
+      // **`scanSources` は内容をキーに memo するだけで、読む顔ぶれは `files` のまま（#1242）。**
+      // ここを 1 ファイルずつ呼ぶのは、**ループの中で絞る変異を下の突き合わせに捕まえさせる**ため
+      // （まとめて 1 回呼ぶと `scanned` と実際に読んだ集合がずれても分からなくなる）。
+      for (const spec of scanSources([file]).get(file) ?? []) {
         if (isTildeAlias(spec)) offenders.push(`${rel(file)}: "${spec}"`);
       }
     }
