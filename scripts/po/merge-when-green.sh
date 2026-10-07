@@ -1073,10 +1073,47 @@ approve_pending_runs() {
 #     できる。**実測（直近 60 PR の HEAD、2026-09-27）: `pr-closes` の n=2 が 5 PR**
 #     （#1032 / #1043 / #1062 / #1064 / #1068。**#1064 はこの変更自身の PR である**）。
 #     run 単位でも `fed085e2` に **5 run**、`04b15d9b` に **2 run** を実測した。
-#   - **ただし `cancelled` になった例は 0 件**（実測: `pr-body.yml` の run 25 件は**全部 success**)。
-#     **`pr-body.yml` は速すぎて `cancel-in-progress` が発火していない**ので、
-#     **「`cancelled` と `success` が並ぶ」は推論であって実測ではない。**
-#     実測で裏付いているのは上の `production` の方である。
+#   - **`cancelled` と `success` が並ぶ形も実測した**（#1216。**かつてここには「推論であって
+#     実測ではない」と書いてあった**。測り直したので書き換える）。
+#     **実測 2026-10-07、`pr-body.yml` の run 380 件**（`actions/workflows/<id>/runs --paginate`
+#     の全件。母数は 380 で、以前の 25 件ではない）: `success` 354 / `failure` 23 / `cancelled` 3。
+#     **`cancelled` は 0 件ではなく 3 件だった。**
+#     **その 3 件は 3/3 で、同じ head_sha に `success` の run が並んでいる**
+#     （`50f25493` / `db622d9b` / `1b87ea85`）。
+#
+#     **check-runs の層でも並ぶ**（**この道具が読むのはこちらである**）:
+#       50f25493  pr-closes  success    2026-10-04T10:14:00Z
+#       50f25493  pr-closes  cancelled  2026-10-04T10:13:48Z
+#       db622d9b  pr-closes  success    2026-09-28T05:37:32Z
+#       db622d9b  pr-closes  cancelled  2026-09-28T05:37:29Z
+#       7b46a050  pr-closes  cancelled  2026-10-05T04:21:22Z   ← 起票時の実測（#1216 本文）
+#       7b46a050  pr-closes  success    2026-10-05T04:21:27Z   （5 秒差）
+#
+#     **run の層と check-runs の層は一致しない。** `1b87ea85` は **run が `cancelled` なのに
+#     check-runs は `success` が 2 本**で、**この道具からは `cancelled` が見えない**。
+#     **run を数えて「この道具が何を見るか」を言ってはいけない**——層が違う。
+#
+#     **発火条件（再現の手順）**: **`git push --force-with-lease`**。
+#     `pr-body.yml` は `concurrency: {group: pr-body-${github.ref}, cancel-in-progress: true}`
+#     なので、**1 本目が走っている間に同じ ref を差し替えると 1 本目が取り消される**。
+#     1. PR を立てる（`pr-closes` が走り出す）
+#     2. **数秒以内に force-push する**（`git rebase origin/main` の押し直しなど）
+#     3. 1 本目が `cancelled`、2 本目が `success` で、同じ head_sha に並ぶ
+#     **「速すぎて発火しない」と書いていたのは本文の `edited` 経路の話**で、
+#     **`edited` は head_sha を変えないので取り消しても同じ sha の中の話になる**。
+#     **force-push 経路では発火する。**
+#
+#     **`gh run rerun` では緑にならない**（#1216 の筋道。**実測で 3/3**）:
+#     **`cancelled` を持った 3 つの sha は、2026-10-07 の時点でも 3/3 がその sha で赤いまま**
+#     （`50f25493` と `db622d9b` は `cancelled` のまま、`7b46a050` は rerun して `failure`）。
+#     **1 件も緑になっていない。** rerun は check run の conclusion を置き換えはするが、
+#     **置き換えた先が緑とは限らない**——`7b46a050` の rerun は**古い本文を replay して
+#     `failure`** を返した（`gh run rerun` は attempt 1 の payload を使う）。
+#     **3 件が実際に解決したのは、どれも「新しい commit を push して head_sha を変えた」**
+#     （`7b46a050`→`7f474626` は空コミット、`50f25493`→`da04dee8`、`db622d9b`→`2178f885`）。
+#     **だからこの道具は「再実行で解消できる」と案内しない**（#1216 やること 2 は見送った。
+#     **実測 3/3 で解消していないので、言えば嘘になる**）。**案内するなら「押し直す」である。**
+#     **ここは緩めない**: `cancelled` を無視すると**本当に取り消された検査が緑に見える**。
 #   - **`pr-closes` は GitHub の必須チェックではない**（実測:
 #     `branches/main/protection` の `required_status_checks.contexts` は
 #     `["check","gitleaks","forbidden-patterns","audit"]` の 4 件で、`pr-closes` は入っていない）。
