@@ -289,6 +289,12 @@ const readJson = async <T>(p: string): Promise<T> => JSON.parse(await readFile(p
  */
 const scanOnce = async () => {
   const index = await readJson<MemberSummary[]>(join(DATA, "members/index.json"));
+  /**
+   * **`meta.json` の出典**。**閣僚等名簿（#1152）が「まだ生成されていない」のか
+   * 「消えた」のかを区別する唯一の観測点**である（下の cabinetRole の検査が読む）。
+   */
+  const meta = await readJson<{ sources?: { kind?: string }[] }>(join(DATA, "meta.json"));
+  const cabinetSourceDeclared = (meta.sources ?? []).some((x) => x.kind === "cabinet");
   /** `{ 種別: { 議員id: 件数 } }`。**0 件の議員は載せない**（「無い」と「0」を同じ形にする） */
   const byKind: Record<string, Record<string, number>> = {};
   const byKindAssembly: Record<string, Record<string, number>> = {};
@@ -353,7 +359,7 @@ const scanOnce = async () => {
       }
     }
   }
-  return { index, byKind, byKindAssembly, byKindAssemblySession, dupRowKeys, cabinet, details, empty };
+  return { index, byKind, byKindAssembly, byKindAssemblySession, dupRowKeys, cabinet, cabinetSourceDeclared, details, empty };
 };
 
 let scan: ReturnType<typeof scanOnce> | undefined;
@@ -622,10 +628,32 @@ const CABINET_FLOOR = {
  * **だから件数そのものを見る。** **76 人 / 134 行が消えたら、ここが落ちる。**
  */
 test("#1117/#1152 cabinetRole: 大臣・副大臣・大臣政務官の行が下限を割っていない（0 件と「数えていない」を区別する。#757）", async () => {
-  const { cabinet } = await countTimelines();
+  const { cabinet, cabinetSourceDeclared } = await countTimelines();
+  // **「まだ生成されていない」と「消えた」を区別する**（#1175 の事故を作り直さないため）。
+  //
+  // **`data/` は ETL が別の PR（`data: refresh`）で更新する**ので、**この種別を足したコードが main に
+  // 入った瞬間から、次の ETL 実行までの間、`data/` には 1 行も無い。**
+  // **そこで無条件に `rows > 0` を要求すると、その間 main が赤になり全 PR のマージが止まる**
+  // ——**#1175 がまさにその形で日次 cron を 2 日止めた。**
+  //
+  // **だが「赤いから黙らせる」のでもない**（#943）。**観測できる事実で分岐する**:
+  // **`meta.json` の `sources` に `kind: "cabinet"` が在るか。**
+  // **これは「この種別を出す ETL が実際に走ったか」を示す**（`cli.ts` が書く行）。
+  //
+  //   走った（宣言が在る） → **行が 0 件なら落ちる**（記録が消えた側。守りは全部効く）
+  //   走っていない        → **宣言も行も無いことだけを確かめて通す**（まだ生成されていない）
+  //
+  // **「宣言は在るのに行が 0」は落ちる。** **それが「消えた」の形である。**
+  if (!cabinetSourceDeclared) {
+    assert.equal(cabinet.rows, 0,
+      "meta.json の sources に kind: \"cabinet\" が無いのに cabinetRole の行が在る"
+      + "（出典を宣言せずに行を書いている＝一次資料の記録が meta から消えている。#1152）");
+    return; // **まだ ETL が走っていない。** 次の `data: refresh` で宣言が付き、下の守りが全部効き始める
+  }
   // **母数を先に出す**（#757）。**ここが 0 なら、下の下限は全部「0 >= 0」で通ってしまう**
-  assert.ok(cabinet.rows > 0, "cabinetRole の行が 0 件。走査先が空か、data/ に 1 行も出ていない"
-    + "（「0 件」と「数えていない」を区別する。#757。**この PBI は「出したのに誰にも見えない」を直すものである**）");
+  assert.ok(cabinet.rows > 0, "meta.json は閣僚等名簿を出典に挙げているのに cabinetRole の行が 0 件。"
+    + "**ETL は走ったが行が 1 つも出ていない**（名寄せが全滅した / 名簿の形が変わった）。"
+    + "（「0 件」と「数えていない」を区別する。#757）");
   assert.ok(cabinet.rows >= CABINET_FLOOR.rows,
     `cabinetRole の行が ${cabinet.rows} 件（下限 ${CABINET_FLOOR.rows}）。名簿 3 ページのどれかが落ちていないか`
     + "（#1037 の形: 1 ページ落とすとその層の全員が「役職に就いていない」と区別がつかなくなる）");
@@ -663,7 +691,10 @@ test("#1117/#1152 cabinetRole: 大臣・副大臣・大臣政務官の行が下�
  * **実測 2026-10-08: 134 行で重複 0 件**（1 人が最大 7 役職を持つが、役職名はすべて異なる）。
  */
 test("#1152 cabinetRole: 行の同一性（議員id × 内閣の代 × 区分 × 役職名）が重複していない（固定値を使わない検算）", async () => {
-  const { cabinet } = await countTimelines();
+  const { cabinet, cabinetSourceDeclared } = await countTimelines();
+  // **上の検査と同じ分岐**（まだ ETL が走っていないなら重複を数える対象が無い）。
+  // **重複の検査は「行が在るとき」にしか意味を持たない**ので、ここは素直に抜ける。
+  if (!cabinetSourceDeclared) return;
   // **母数**（#757）: 何行を見た上での「重複 0」なのかを必ず出す
   assert.ok(cabinet.rows > 0, "cabinetRole の行が 0 件。重複を数える対象が無い（0 件を見て緑になっていないことを示す。#757）");
   assert.deepEqual(cabinet.dupRows, [], `cabinetRole の行が重複している（${cabinet.rows} 行を見た。同じ役職を 2 回数えている）`);

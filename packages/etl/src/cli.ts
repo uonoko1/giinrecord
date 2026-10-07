@@ -19,6 +19,8 @@ import { attendancePageUrl, fetchCommitteeAttendance } from "./sources/kokkai-at
 import { matchAttendance, type MatchedAttendance } from "./match-attendance.ts";
 import { committeePageUrl, fetchCommitteeRosters } from "./sources/kokkai-committee.ts";
 import { matchCommitteeRoles, type MatchedCommitteeRole } from "./match-committee.ts";
+import { CABINET, fetchCabinetPosts, meiboPageUrl } from "./sources/kantei-cabinet.ts";
+import { matchCabinetPosts, type MatchedCabinetRole } from "./match-cabinet.ts";
 import { buildDataset, mergeRosters, rosterSessionsFor, type Roster } from "./aggregate.ts";
 import { dietAssemblies, readSessionsOnDisk, validateDataset, writeDataset } from "./dataset.ts";
 import { carriedTenureVerified, dropCarriedCommitteeRoles, dropCarriedSpeeches, lostDecisions, lostSessionEntries, lostTimelineEntries, lostVoteMatches, planSessions, readCarried, readRollCallIndex, readSessionCounts, restoreDecisions } from "./sessions.ts";
@@ -316,6 +318,39 @@ for (const [session, house, roster] of rosterTargets) {
   committeeRoles.push(...matched.entries);
   unmatched.push(...matched.unmatched);
 }
+// 大臣・副大臣・大臣政務官（Issue #1152。取得と名寄せは #1140）: 首相官邸の閣僚等名簿 3 ページを取り、
+// 衆参の名簿に名寄せして timeline の cabinetRole 行にする。
+//
+// **回次で絞らない。** 名簿は「いまの内閣」しか公開していないので、**毎回まるごと取り直す**
+// （だから `isCarriable` は false。引き継ぐと辞任した大臣の役職が「現職」として残り続ける）。
+// 在職の確認（#230）には `memberSession` を使う——名簿に回次は無く、在るのは内閣の発足日だけなので、
+// 「いま ETL が扱っている回次に在職しているか」で確かめる。
+//
+// **母数を全部出す**（#757。「0 件」と「数えていない」を区別する）:
+//   取得した行 / 氏名で決まった数 / かなで決まった数 / 決まらなかった数 / 役職の行数 / 人数 /
+//   所属院の欄が無くて落とした行数（事務方の内閣官房副長官・内閣法制局長官。国会議員ではない）
+const cabinetRoles: MatchedCabinetRole[] = [];
+{
+  const { pages, posts } = await fetchCabinetPosts(CABINET);
+  const matched = matchCabinetPosts(posts, [...members, ...shugiin.members], { session: memberSession, cabinet: CABINET });
+  const withoutHouse = pages.reduce((n, p) => n + p.withoutHouse, 0);
+  const people = new Set(matched.entries.map((e) => e.memberId)).size;
+  const t = matched.tally;
+  console.log(`cabinet ${CABINET}: ${pages.length} meibo pages, ${t.total} rows (${t.byName} by name, ${t.byKana} by kana, ${t.unresolved} unresolved)`
+    + `; ${matched.entries.length} cabinetRole entries for ${people} members; ${withoutHouse} rows dropped (no 所属院 column: 事務方)`);
+  for (const p of pages) console.log(`  ${p.kind}: ${p.posts.length} rows, ${p.effectiveDateText} (${p.effectiveDate}) ${p.sourceUrl}`);
+  // **決まらなかった行は名指しで出す**（#1149 の宿題: `unresolved` が 0 から動いたことに気づく仕組み）。
+  // **紐づけはしない**（2 人以上に当たったら「別人の記録が出る」ほうの害になる。#569）。
+  if (matched.unresolved.length) {
+    console.warn(`cabinet: ${matched.unresolved.length} rows could not be resolved to a member (NOT linked to anyone; #569)`);
+    for (const u of matched.unresolved) {
+      console.warn(`  ${u.reason}: ${u.nameText || "(氏名が画像)"} / ${u.kana} / ${u.house} / ${u.roles.join("・")}`
+        + `${u.candidates ? ` candidates=${u.candidates.join(",")}` : ""}`);
+    }
+  }
+  cabinetRoles.push(...matched.entries);
+}
+
 // 引き継ぐ回次の speech / question / attendance / 参法 bill 行（#103）。名簿から消えた memberId の行は付け先が無いので落とし、件数を出す
 // （その回次を指定して取り直せば現行名簿で名寄せし直される）。
 // 引き継ぎは前回出力の memberId をそのまま戻すので、採決（再突合する）と違って名寄せがやり直されない。
@@ -358,7 +393,7 @@ const previousRollCallIndex = await readRollCallIndex(DATA);
 const dataset = {
   // 議会一覧（#156）: 国会の2行。members の assemblyId（diet-sangiin / diet-shugiin）はこの id を指す。
   assemblies: dietAssemblies(memberSession),
-  ...buildDataset([...members, ...shugiin.members], rollCalls, decisions, speeches, proposed.entries, shugiinMatched.bills, questions.questions, attendance, committeeRoles, carriedEntries),
+  ...buildDataset([...members, ...shugiin.members], rollCalls, decisions, speeches, proposed.entries, shugiinMatched.bills, questions.questions, attendance, committeeRoles, carriedEntries, cabinetRoles),
   rollCallDetails: rollCalls,
   bills: shugiinMatched.bills,
   unmatched,
@@ -383,6 +418,8 @@ const dataset = {
       ...targets.map((s) => ({ name: `衆議院 議案情報（第${s}回）`, url: shugiinBillListUrl(s), fetchedAt, house: "shugiin" as const, kind: "bill" as const })),
       ...targets.map((s) => ({ name: `衆議院 質問答弁情報（第${s}回）`, url: shugiinQuestionListUrl(s), fetchedAt, house: "shugiin" as const, kind: "question" as const })),
       ...targets.map((s) => ({ name: `参議院 質問主意書（第${s}回）`, url: sangiinQuestionListUrl(s), fetchedAt, house: "sangiin" as const, kind: "question" as const })),
+      // **house は both**（大臣は衆参どちらからも出る。実測 2026-10-08: 134 行のうち 衆 103 / 参 31）
+      { name: `首相官邸 閣僚等名簿（第${CABINET}代内閣）`, url: meiboPageUrl(CABINET, "index.html"), fetchedAt, house: "both" as const, kind: "cabinet" as const },
     ],
   },
 };
