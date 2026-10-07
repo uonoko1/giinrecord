@@ -1238,24 +1238,27 @@ t_freshness_1191_naive_local_time_cannot_read_as_newer() {
   # 既存の 2 case はどちらもここに届かない（#1161 レビューの実測）:
   #   · `+09:00` を弾く case  → **`Z` が無いので先に落ちて**ここに来ない（`Z?$` でも同じ）
   #   · 「`Z` の後ろのゴミ」の case → `Z?$` でも `Z` の後ろは弾かれるので何も変わらない
+  # **1 か所で綴る**（`write_meta` と下の母数の判定で同じ値を使う。写すとずれる）。
+  local base_t='2026-10-04T01:29:00.000Z'
+  # **実時刻は base より 28 分古い**（JST 10:00 = UTC 01:00）。だが**文字列としては大きい**
+  # （"10" > "01"）。形の検査が `Z` を任意にした瞬間に「進んでいる」と読まれて緑になる。
+  local head_t='2026-10-04T10:00:00.000'
   new_repo_with_data
   g checkout -q main
-  write_meta '2026-10-04T01:29:00.000Z'
+  write_meta "$base_t"
   commit "data: refresh"
   g update-ref refs/remotes/origin/main main
   branch_from main topic
-  # **実時刻は base より 28 分古い**（JST 10:00 = UTC 01:00）。だが**文字列としては大きい**
-  # （"10" > "01"）。形の検査が `Z` を任意にした瞬間に「進んでいる」と読まれて緑になる。
-  write_meta '2026-10-04T10:00:00.000'
+  write_meta "$head_t"
   commit "タイムゾーンの無い裸の時刻"
   run --data-freshness origin/main topic
   assert_eq 1 "$STATUS" "タイムゾーンの無い裸の時刻を ok と言わない（Z が必須。#1191）: $OUT"
   assert_contains "$OUT" "測れません" "「測れなかった」と言う（黙って通さない）"
-  assert_contains "$OUT" "2026-10-04T10:00:00.000" "どの値が読めなかったか名指しする"
+  assert_contains "$OUT" "$head_t" "どの値が読めなかったか名指しする"
   # **母数（#757）: この fixture が「辞書順では検出できない」側であることを、この case 自身が示す。**
-  # ここが false なら fixture が弱く、`Z` を任意にする変異は辞書順の比較だけで捕まってしまう
+  # ここが真なら fixture が弱く、`Z` を任意にする変異は辞書順の比較だけで捕まってしまう
   # ——つまり**形の検査を測っていない**。PO が最初に踏んだ誤判定がこれ。
-  if [[ '2026-10-04T10:00:00.000' < '2026-10-04T01:29:00.000Z' ]]; then
+  if [[ $head_t < $base_t ]]; then
     fail "fixture が弱い: 裸の値が辞書順で base より小さい。時差ぶん大きく見える値でなければ形の検査を測れない"
   fi
 }
@@ -1307,15 +1310,23 @@ t_freshness_1191_lexicographic_order_equals_chronological_order() {
   # `df_read` の形の検査と `df_cmp_key` を、本番のソースから切り出して実行可能にする。
   # 切り出せなければ以降は無意味なので、母数（#757）として先に見る。
   local shim="$TMP/relshim.sh"
+  # 形の検査の**正規表現そのもの**を本番の行から取り出す（`if` 文を書き換えるのではなく、
+  # 式だけを抜く。逐語で写さないので、本番側を緩めればここも一緒に緩む＝関係式を測れる）。
+  local shape_re
+  shape_re=$(printf '%s\n' "$sb" | LC_ALL=C grep -oE '\^\[0-9\]\{4\}[^ ]*\$' | head -1)
   {
-    echo 'set -uo pipefail'
-    # 形の検査の正規表現（本番の行をそのまま使う）
-    printf '%s\n' "$sb" | LC_ALL=C grep -F 'if [[ ! $val =~ ^[0-9]{4}' \
-      | LC_ALL=C sed -e 's/^ *//' -e 's/if \[\[ ! /df_shape_ok() { local val=$1; [[ /' \
-                    -e 's/ \]\]; then/ ]]; }/'
+    printf 'set -uo pipefail\n'
+    # 取り出した式を、変数経由で `=~` に渡す関数にする（式の中のメタ文字は展開させない）。
+    printf 'DF_SHAPE_RE=%q\n' "$shape_re"
+    # shellcheck disable=SC2016  # `$1` / `$DF_SHAPE_RE` は**生成するファイルの中で**展開される
+    printf 'df_shape_ok() { [[ $1 =~ $DF_SHAPE_RE ]]; }\n'
     # df_cmp_key の本体（本番の定義をそのまま取る）
     printf '%s\n' "$sb" | LC_ALL=C sed -n '/^  df_cmp_key() {$/,/^  }$/p' | LC_ALL=C sed 's/^  //'
   } > "$shim"
+  # 母数（#757）: 式が取れていなければ以降は無意味。
+  if [[ -z $shape_re ]]; then
+    fail "stale-base.sh から日付の形の正規表現を読み出せなかった（以降の判定は無意味）"; return
+  fi
   # 母数（#757）: 切り出せたか。どちらかが欠けていれば、下の判定は「通る」ではなく「測れていない」。
   if ! LC_ALL=C grep -q 'df_shape_ok()' "$shim"; then
     fail "stale-base.sh から形の検査を切り出せなかった（以降の判定は無意味）"; return
@@ -1395,17 +1406,20 @@ t_freshness_1191_sub_second_rollback_is_detected() {
   # **穴は 1 秒未満に限られる**（秒が繰り上がれば生の比較でも検出できる）ので #1156 の
   # 日次 ETL の巻き戻しには届かないが、**不変条件は破れている。**
   # `df_cmp_key` の正規化を外す変異を、この case が捕まえる。
+  # **1 か所で綴る**（`write_meta`・母数の判定・報告の assert が同じ値を使う）。
+  local base_t='2026-10-04T01:29:00.500Z'
+  local head_t='2026-10-04T01:29:00Z'          # **0.5 秒の後退。小数部が無い綴り**
   new_repo_with_data
   g checkout -q main
-  write_meta '2026-10-04T01:29:00.500Z'
+  write_meta "$base_t"
   commit "data: refresh（小数部あり）"
   g update-ref refs/remotes/origin/main main
   branch_from main topic
-  write_meta '2026-10-04T01:29:00Z'            # **0.5 秒の後退。小数部が無い綴り**
+  write_meta "$head_t"
   commit "小数部の無い綴りで 0.5 秒戻る"
   # 母数（#757）: この fixture が「生の辞書順では検出できない」側であることを、case 自身が示す。
   # ここが検出できてしまうなら fixture が弱く、正規化を測っていない。
-  if [[ '2026-10-04T01:29:00Z' < '2026-10-04T01:29:00.500Z' ]]; then
+  if [[ $head_t < $base_t ]]; then
     fail "fixture が弱い: 生の辞書順でも検出できてしまう（正規化を測れない）"
   fi
   run --data-freshness origin/main topic
@@ -1413,7 +1427,7 @@ t_freshness_1191_sub_second_rollback_is_detected() {
   assert_contains "$OUT" "古い" "後退として報告する（「測れません」ではない）"
   # **報告は生の綴りで出す**（正規化した `…000000000` を出すと、利用者が data/meta.json を
   # grep して突き合わせられない。比較用と表示用を分けてある）。
-  assert_contains "$OUT" "2026-10-04T01:29:00.500Z" "base 側を原文の綴りで出す"
+  assert_contains "$OUT" "$base_t" "base 側を原文の綴りで出す"
   assert_not_contains "$OUT" "000000000" "正規化した鍵を利用者に見せない（表示は原文）"
 }
 
