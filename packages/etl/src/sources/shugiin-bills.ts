@@ -307,19 +307,22 @@ function referredCommittees(b: Bill): BillReferredCommittee[] {
  */
 export function mergeShugiinBill(previous: Bill, next: Bill): Bill {
   if (previous.id !== next.id) throw new Error(`mergeShugiinBill: 違う議案を混ぜようとした（${previous.id} と ${next.id}）`);
-  const out = { ...previous } as Record<string, unknown>;
-  for (const [key, value] of Object.entries(next)) {
+  // **「後のページが書いた欄だけ」を集めてから重ねる。** `Bill` に index signature を足さずに
+  // 欄ごとの判定を書くため、`Partial<Bill>` を組み立てて最後に 1 回展開する。
+  const written: Partial<Bill> = {};
+  for (const key of Object.keys(next) as (keyof Bill)[]) {
+    const value = next[key];
     if (keepsPrevious(key, value)) continue;
-    out[key] = value;
+    Object.assign(written, { [key]: value });
   }
-  return out as Bill;
+  return { ...previous, ...written };
 }
 
 /** パーサが「欄が無い」と「欄はあるが空」を分けている欄（空配列も事実として採る）。 */
 const EMPTY_IS_RECORDED: ReadonlySet<string> = new Set(["supporterNames"]);
 
 /** 後のページのこの値では上書きしない（= 前のページの値を残す）か。 */
-function keepsPrevious(key: string, value: unknown): boolean {
+function keepsPrevious(key: keyof Bill, value: unknown): boolean {
   if (value === undefined) return true;
   if (EMPTY_IS_RECORDED.has(key)) return false;
   if (value === "") return true;
