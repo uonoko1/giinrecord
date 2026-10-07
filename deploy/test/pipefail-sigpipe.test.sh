@@ -57,7 +57,78 @@ scan() {
   local f=$1 pretty="$TMP/pretty"
   bash --pretty-print "$ROOT/$f" > "$pretty" 2>/dev/null || return 0
   awk -v sink="$EARLY_EXIT_SINK" '
-    BEGIN { hd = "" }
+    # take_subs(s, out): s の中の `$( … )` と `` ` … ` `` の**本体**を out[1..k] に取り出し、
+    # 取り出した部分を "QQ" に置き換えた s を返す。
+    #
+    # **なぜ要るか**（#1225）: 旧実装は `"[^"]*"` でダブルクォートを**行ごと畳んでいた**ので、
+    #   echo "- いまの理由: $(sed -n ... | head -1 || true)"
+    # が `echo QQ$BODYQQ` になり、**パイプが消えて飛ばされていた**（検出器は「0 件」と報告）。
+    # `$( … )` の中身は**文字列リテラルではなく、独立したパイプラインの構文**である。
+    # だから「ダブルクォートを畳まない」にするのではなく（`"a | b"` を誤検出する）、
+    # **本体を切り離して別のパイプラインとして見る**。
+    #
+    # **シングルクォートの中の `$(` は展開されない**ので取り出さない。
+    # `$((…))`（算術展開）はコマンドではないので除外する。
+    function take_subs(s, out, sq0,   i, n, c, sq, res, depth, body, k) {
+      n = length(s); sq = sq0; k = 0; res = ""
+      for (i = 1; i <= n; i++) {
+        c = substr(s, i, 1)
+        if (c == "\\") { res = res c substr(s, i+1, 1); i++; continue }
+        if (sq) { res = res c; if (c == "'"'"'") sq = 0; continue }
+        if (c == "'"'"'") { res = res c; sq = 1; continue }
+        if (c == "`") {                      # `` ` … ` `` : 次の ` まで
+          i++; body = ""
+          while (i <= n && substr(s, i, 1) != "`") {
+            if (substr(s, i, 1) == "\\") { body = body substr(s, i, 2); i += 2; continue }
+            body = body substr(s, i, 1); i++
+          }
+          k++; out[k] = body; res = res "QQ"; continue
+        }
+        if (c == "$" && substr(s, i+1, 1) == "(" && substr(s, i+2, 1) != "(") {
+          depth = 1; i += 2; body = ""
+          while (i <= n && depth > 0) {
+            c = substr(s, i, 1)
+            if (c == "\\") { body = body c substr(s, i+1, 1); i += 2; continue }
+            if (c == "(") depth++
+            else if (c == ")") { depth--; if (depth == 0) break }
+            body = body c; i++
+          }
+          k++; out[k] = body; res = res "QQ"; continue
+        }
+        res = res c
+      }
+      SQ_OPEN = sq            # **行をまたぐシングルクォートの状態を呼び出し側に返す**
+      return res
+    }
+    # pipelines(s, out, nout): s と、その中のコマンド置換の本体を**再帰的に**ばらして out[] に積む。
+    # 入れ子の `$( echo "$(cmd | head)" )` も届く。
+    function pipelines(s, out, nout, sq0,   bodies, rest, j, mysq) {
+      delete bodies
+      rest = take_subs(s, bodies, sq0)
+      # **この呼びの結果を先に確保する。** 下の再帰が SQ_OPEN を上書きするため。
+      mysq = SQ_OPEN
+      nout++; out[nout] = rest
+      # 入れ子の本体は、それ自体が完結したコマンドなので sq=0 から見る
+      for (j = 1; j in bodies; j++) nout = pipelines(bodies[j], out, nout, 0)
+      SQ_OPEN = mysq
+      return nout
+    }
+    # tail_is_sink(s): s をパイプで分け、末尾のコマンドが早期終了する読み手なら 1。
+    # ここに来る s はコマンド置換を剥がした後なので、残る引用符は**文字列リテラル**である。
+    function tail_is_sink(s,   t, n, seg, last) {
+      t = s
+      gsub(/'"'"'[^'"'"']*'"'"'/, "QQ", t)   # シングルクォートの中身
+      gsub(/"[^"]*"/, "QQ", t)               # ダブルクォートの中身（リテラルのみ）
+      gsub(/\|\|/, "\001", t)                # || を隠す
+      if (index(t, "|") == 0) return 0
+      n = split(t, seg, "|")
+      last = seg[n]
+      gsub(/\001/, "||", last)
+      sub(/;.*$/, "", last)                  # `; then` `; do` などを落とす
+      sub(/^[ \t]+/, "", last)
+      return (last ~ sink) ? 1 : 0
+    }
+    BEGIN { hd = ""; sqcarry = 0 }
     hd != "" { if ($0 == hd || $0 == "\t" hd) { hd = "" } ; next }
     {
       raw = $0
@@ -67,17 +138,18 @@ scan() {
         sub(/^<<-?[ \t]*/, "", t); gsub(/'"'"'/, "", t)
         hd = t
       }
-      s = raw
-      gsub(/'"'"'[^'"'"']*'"'"'/, "QQ", s)   # シングルクォートの中身
-      gsub(/"[^"]*"/, "QQ", s)               # ダブルクォートの中身
-      gsub(/\|\|/, "\001", s)                # || を隠す
-      if (index(s, "|") == 0) next
-      n = split(s, seg, "|")
-      last = seg[n]
-      gsub(/\001/, "||", last)
-      sub(/;.*$/, "", last)                  # `; then` `; do` などを落とす
-      sub(/^[ \t]+/, "", last)
-      if (last ~ sink) printf "%d\t%s\n", NR, raw
+      # 行自体と、その中のコマンド置換の本体を、**それぞれ別のパイプラインとして**見る
+      # **行をまたぐシングルクォートを持ち越す**（#1225）。
+      # `bash --pretty-print` は複数行のシングルクォート（awk プログラム等）を**行のまま**残す。
+      # 持ち越さないと、その中の注釈に書いた `$(cmd | head)` を**構文として読んでしまう**
+      # （実測: この検査ファイル自身の awk の注釈 2 行が誤検出された）。
+      delete P
+      SQ_OPEN = sqcarry
+      np = pipelines(raw, P, 0, sqcarry)
+      sqcarry = SQ_OPEN
+      for (pi = 1; pi <= np; pi++) {
+        if (tail_is_sink(P[pi])) { printf "%d\t%s\n", NR, raw; next }
+      }
     }
   ' "$pretty"
 }
@@ -150,6 +222,32 @@ selfcheck good "文字列の中の ${P} grep -q"    "X=\"cat f $P grep -q PAT\""
 selfcheck good "heredoc の中の ${P} grep -q"  "cat <<HD
 cat f $P grep -q PAT
 HD"
+
+# --- ダブルクォートの中の `$( … )`（#1225）---
+# **`$( … )` の中身は構文であって文字列リテラルではない。**
+# 旧実装は `"[^"]*"` で行ごと畳んでいたので、`echo "… $(cmd | head -1)"` の
+# パイプが消え、**検出器が「0 件」と報告していた**（本番の deploy/monitor/report.sh:98 が素通り）。
+selfcheck bad  "\"…\$(cmd ${P} head -1)…\" の中"   "echo \"- reason: \$(sed -n s/a/b/p f $P head -1 || true)\""
+selfcheck bad  "\"\$(cmd ${P} grep -q)\" の中"      "echo \"x: \$(cat f $P grep -q PAT)\""
+selfcheck bad  "入れ子の \$( \$( ${P} head ) )"      "v=\$(echo \"\$(cat f $P head -2)\")"
+selfcheck bad  "バックティックの中の ${P} head"       "v=\`cat f $P head -1\`"
+
+# --- `$( … )` を見るようにしても誤検出してはいけない形（#1225）---
+# **正しく書かれた `head -1 < <(…)` を挙げないこと。**
+# deploy/test/monitor-probe.test.sh:325 / :964 に実例が在る。
+selfcheck good "\$(head -1 < <(cmd))"               "id=\$(head -1 < <(sed -n s/a/b/p f))"
+selfcheck good "\$(head -1 < <(cmd ${P} sed))"      "id=\$(head -1 < <(grep -oE x f $P sed s/a/b/))"
+selfcheck good "シングルクォートの中の \$(${P}head)" "X='literal \$(cat f $P head -1)'"
+# **行をまたぐシングルクォート**（awk / python のプログラムを '…' で渡す形）。
+# `bash --pretty-print` はこれを**行のまま**残すので、1 行ずつ見ると
+# 途中の行が「開いたシングルクォートの中」だと分からない。
+# **持ち越さないと、注釈に書いた `$(cmd | head)` を構文として読んでしまう**
+# （実測: この検査ファイル自身の awk の注釈 2 行が誤検出された）。
+selfcheck good "行をまたぐ '…' の中の \$(${P}head)" "awk '
+  # echo \"x: \$(sed -n s/a/b/p f $P head -1)\"
+  { print }
+' f"
+selfcheck good "\$(cmd ${P} wc -l) の中"            "echo \"n: \$(cat f $P wc -l)\""
 
 echo "== pipefail のもとで、早期終了する読み手をパイプの末尾に置かない（#527） =="
 echo "   検査対象: ${#FILES[@]} ファイル（scripts/ci/shellcheck.sh --list）"
