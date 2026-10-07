@@ -136,8 +136,54 @@ describe("mergeShugiinBill: 後のページが書いていない欄は、前の�
     assert.deepEqual(merged.referral, { shugiin: { date: "2024-12-10", committee: "政治改革に関する特別" } });
   });
 
+  test("referral はページ単位で採る——一次資料のどのページにも無い組み合わせを作らない", () => {
+    // **これが一番危ない形**（「別人の記録が出る」と同型の、利用者から検出できない虚偽）。
+    // 欄単位で混ぜると、**第216回の衆院付託と別の回次の参院付託を 1 件の referral に並べる**ことになる。
+    const prev: Bill = { ...bill(S216), referral: { shugiin: { date: "2024-12-10", committee: "政治改革に関する特別" } } };
+    const next: Bill = { ...bill(S217), referral: { sangiin: { date: "2025-06-01", committee: "政治改革に関する特別" } } };
+    const merged = mergeShugiinBill(prev, next);
+    // 後のページの referral をそのまま採る（shugiin を混ぜ込んで 2 院ぶんにしない）
+    assert.deepEqual(merged.referral, { sangiin: { date: "2025-06-01", committee: "政治改革に関する特別" } });
+    assert.equal(Object.keys(merged.referral!).length, 1, "2 つのページの付託が 1 件の referral に混ざっている");
+  });
+
   test("id の違う議案を混ぜたら落とす（取り違えを黙って通さない）", () => {
     assert.throws(() => mergeShugiinBill(bill(S216), bill(T216)), /216-衆法-9.*216-衆法-10|216-衆法-10.*216-衆法-9/);
+  });
+});
+
+describe("同じ回次の一覧の中でも衝突する（回次を跨がなくても起きる。#1218）", () => {
+  /**
+   * **`217-予算-1` は kaiji217 の一覧に 2 ページ載っている。**
+   * ```
+   *   keika/1DDE03E  衆 2025-01-24 予算 ／ 参(予備) 2025-01-24 予算 ／ 参 2025-03-04 予算
+   *   keika/1DDEE9E  **3 欄とも空**
+   * ```
+   * **「後の回次が勝つ」ではなく「一覧に後から出たページが勝つ」ので、同じ回次の中でも事実が消える。**
+   * **実測: `origin/main` の `data/bills/217/217-予算-1.json` は既に `referral` を持たない**
+   * ——#1218 が報告された 4 件より前から、**誰にも数えられずに落ちていた。**
+   */
+  const Y1 = "1DDE03E";
+  const Y2 = "1DDEE9E";
+
+  test("2 ページは同じ id で、後のページは両院の付託が空", () => {
+    for (const k of [Y1, Y2]) assert.equal(bill(k).id, "217-予算-1", k);
+    assert.deepEqual(bill(Y1).referral, {
+      shugiin: { date: "2025-01-24", committee: "予算" },
+      sangiinPreliminary: { date: "2025-01-24", committee: "予算" },
+      sangiin: { date: "2025-03-04", committee: "予算" },
+    });
+    assert.equal(bill(Y2).referral, undefined);
+  });
+
+  test("マージすれば両院の付託が残る（後勝ちでは両方消える）", () => {
+    const merged = mergeShugiinBill(bill(Y1), bill(Y2));
+    assert.deepEqual(toBillSummary(merged).referredCommittees, [
+      { house: "shugiin", committee: "予算" },
+      { house: "sangiin", committee: "予算" },
+    ]);
+    // 後勝ちだと欄ごと落ちる（これが main の現状）
+    assert.equal(toBillSummary(bill(Y2)).referredCommittees, undefined);
   });
 });
 
