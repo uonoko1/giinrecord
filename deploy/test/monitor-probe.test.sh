@@ -531,6 +531,7 @@ t_report_repeat_body_has_elapsed_hours() {
   fresh r_elapsed_body
   # **実物の形で書く**（`run.sh` が出す `- reason: \`…\``。[[fixtures-and-prose-drift-from-reality]]）
   # ——**接頭辞の無い本文では抽出が空になり、理由の行を検査できない。**
+  # shellcheck disable=SC2016  # バックティックは run.sh が本文に書くリテラルで、展開させない
   printf -- '- reason: `fetchedAt 93h old (limit 48h)`\n' > "$P/body"
   H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(HOURS_AGO 7)\",\"labels\":[{\"name\":\"monitor\"}],\"comments\":[{},{},{},{}]}]" \
     run_report "[monitor] production: data" fail "$P/body" || fail "exit $? $(cat "$P/out")"
