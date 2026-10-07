@@ -1,7 +1,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { Bill, BillSummary, Member, MemberDetail, MemberSpeeches, MemberSummary, RollCall, RollCallSummary, TimelineEntry } from "@seiji-kiroku/shared";
-import type { CarriedEntry } from "./aggregate.ts";
+import { sessionField, type CarriedEntry } from "./aggregate.ts";
 import { DEFAULT_SESSIONS } from "./dataset.ts";
 import { isDietMemberRow, readMemberIndex } from "./local-assemblies.ts";
 import { tenureVerified } from "./match-votes.ts";
@@ -59,9 +59,11 @@ export interface Carried {
  * 質問主意書（`questionId` = `{回次}-{house}-{番号}`）と参法（`billId` = `{提出回次}-{種別}-{番号}`）は
  * id の先頭が回次なので引ける（DATA_CONTRACT「未突合の置き場所」の sessionOfUnmatched と同じ規約）。
  * 発言（`speechId`）と委員会出席（`meetingId`）は NDL の会議録 id で回次を含まないので引けない（推定しない）。
+ * **`cabinetRole` は欄そのものが無く、id からも引けない**（#1152。`undefined` を返す）。
  */
 export function sessionOfEntry(entry: TimelineEntry): number | undefined {
-  if (typeof entry.session === "number") return entry.session;
+  const field = sessionField(entry);
+  if (field !== undefined) return field;
   const id = entry.kind === "question" ? entry.questionId : entry.kind === "bill" ? entry.billId : undefined;
   if (id === undefined) return undefined;
   const head = id.split("-")[0];
@@ -168,8 +170,9 @@ export function sessionCounts(details: readonly CountedDetail[]): SessionCounts 
     for (const e of [...(d.timeline ?? []), ...(d.speeches ?? [])]) {
       const kind = COUNTED_KIND[e.kind as keyof typeof COUNTED_KIND];
       if (!kind) continue;
-      if (typeof e.session !== "number") continue; // #103 以前の行。回次を推定しない
-      const key = `${assemblyId}\t${e.session}\t${kind}`;
+      const session = sessionField(e);
+      if (session === undefined) continue; // #103 以前の行。回次を推定しない
+      const key = `${assemblyId}\t${session}\t${kind}`;
       out.set(key, (out.get(key) ?? 0) + 1);
     }
   }
@@ -446,13 +449,23 @@ export function dropCarriedCommitteeRoles(
  * vote / stance を引き継がないのは「消しても良い」からではなく、**ファイルから作り直せる**ため:
  * vote は `rollcalls/{session}/` を現行名簿で再突合し、stance は `bills/` の会派態度から組み直す。
  */
-function isCarriable(e: TimelineEntry): boolean {
+function isCarriable(e: TimelineEntry): e is CarriableEntry {
   switch (e.kind) {
     case "speech": case "question": case "attendance": case "committeeRole": return true;
     case "bill": return SANGIIN_BILL_SOURCE.test(e.sourceUrl);
+    // **`cabinetRole` は引き継がない**（#1152）。**名簿を毎回取り直す**ので前回出力から戻す必要が無く、
+    // **そもそも回次を持たないので `readCarried` の回次の集合に入れようがない。**
+    // **引き継いだら、辞任した大臣の役職が「現職」として残り続ける**（#569 の「別人の記録」と同じ型の害）。
+    case "cabinetRole": return false;
     default: return false;
   }
 }
+
+/**
+ * 引き継げる行の型（`isCarriable` が絞る先）。**`session` を必ず持つ種別だけ**である
+ * ——`readCarried` は回次で絞って引き継ぐので、回次の無い行は引き継ぎようがない（#1152）。
+ */
+type CarriableEntry = Exclude<TimelineEntry, { kind: "cabinetRole" }>;
 
 async function listJson(dir: string): Promise<string[]> {
   try { return (await readdir(dir)).filter((f) => f.endsWith(".json")).sort().map((f) => join(dir, f)); } catch { return []; }
@@ -478,6 +491,10 @@ export function carriedTenureVerified(carried: readonly CarriedEntry[], members:
   return carried.filter((c) => {
     const member = byId.get(c.memberId);
     if (member === undefined) return false;
-    return tenureVerified(member, { session: c.entry.session, date: c.entry.date });
+    // 引き継ぎ行は必ず回次を持つ（`readCarried` が `session === undefined` の行を落としている）。
+    // **`cabinetRole` はそもそも引き継がない**（`isCarriable` が false。名簿を毎回取り直すので。#1152）。
+    const session = sessionField(c.entry);
+    if (session === undefined) return false;
+    return tenureVerified(member, { session, date: c.entry.date });
   });
 }
