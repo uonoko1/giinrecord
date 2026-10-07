@@ -6,7 +6,7 @@ import type { Aggregated } from "./aggregate.ts";
 import { DIET_ASSEMBLY_IDS } from "./assemblies.ts";
 import { isDietMemberRow, kanaNameRatioExceeds, membersByAssembly, mergeAssemblies, mergeMemberIndex, readMemberIndex, validateLocalAssemblies } from "./local-assemblies.ts";
 export { membersByAssembly } from "./local-assemblies.ts";
-import { stableJson } from "./json.ts";
+import { jsonKeyOrderViolations, stableJson } from "./json.ts";
 import type { GroupMismatch } from "./match-votes.ts";
 import { readUnmatched, writeUnmatched, type UnmatchedRow } from "./unmatched.ts";
 import { toBillSummary } from "./sources/shugiin-bills.ts";
@@ -336,6 +336,9 @@ export async function validateDataset(dir: string): Promise<string[]> {
     let value: T;
     try { value = JSON.parse(text) as T; } catch { v.push(`${rel}: not JSON`); return undefined; }
     if (text !== stableJson(value)) v.push(`${rel}: not in stableJson form (sorted keys, indent 1, trailing newline)`);
+    // #1226: キーの並びは**テキストから**も見る。上の行だけだと両辺が同じ直列化を通るので、
+    // キーの並びについては恒真になり得る（`JSON.parse` が整数様キーを数値昇順に並べ替えるため）。
+    for (const line of jsonKeyOrderViolations(text)) v.push(`${rel}: ${line}`);
     return value;
   };
   const checkSource = (rel: string, rec: { sourceUrl?: unknown }, label = "") => {

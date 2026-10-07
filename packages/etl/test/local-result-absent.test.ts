@@ -130,5 +130,7 @@ test("#901 契約: `resultAbsent: true` のときだけ `result` の空を通す
   rc.result = "可決";
   await writeFile(file, JSON.stringify(rc));
   const v3 = await validateLocalAssemblies(dir);
-  assert.equal(v3.filter((l) => l.includes("resultAbsent")).length, 1, `${JSON.stringify(v3)}`);
+  // #1226: `includes("resultAbsent")` で数えると、キーの並びの違反（`keys out of order: "votes" before "resultAbsent"`）
+  // も当たってしまう（この fixture は JSON.stringify で書くのでキーが未ソート）。見たいのはこの 1 文なので、そこで数える。
+  assert.equal(v3.filter((l) => l.includes("resultAbsent is only for an empty result")).length, 1, `${JSON.stringify(v3)}`);
 });

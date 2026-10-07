@@ -3,7 +3,7 @@ import { join, relative, sep } from "node:path";
 import type {
   Assembly, AssemblyId, AssemblySession, LocalAssemblyMeta, LocalMember, LocalMemberDetail, LocalRollCall, LocalRollCallSummary, LocalUnmatchedName, LocalVoteEntry, MemberAssemblyCount, MemberSummary,
 } from "@seiji-kiroku/shared";
-import { stableJson } from "./json.ts";
+import { jsonKeyOrderViolations, stableJson } from "./json.ts";
 import { conflictingRosterNames, isLossyName, nonNameCharacters, unmatchedReason } from "./sources/local/name-match.ts";
 import { normalizeTitle } from "./sources/local/title-normalize.ts";
 import { MIYAGI_ASSEMBLY } from "./sources/local/miyagi/site.ts";
@@ -1273,6 +1273,8 @@ export async function validateLocalAssemblies(dir: string): Promise<string[]> {
       let value: T;
       try { value = JSON.parse(text) as T; } catch { v.push(`${rel}: not JSON`); return undefined; }
       if (text !== stableJson(value)) v.push(`${rel}: not in stableJson form (sorted keys, indent 1, trailing newline)`);
+      // #1226: キーの並びは**テキストから**も見る（上の行は両辺が同じ直列化を通るので、並びについては恒真になり得る）。
+      for (const line of jsonKeyOrderViolations(text)) v.push(`${rel}: ${line}`);
       return value;
     };
     const checkSource = (label: string, rec: { sourceUrl?: unknown }) => {

@@ -275,6 +275,25 @@ describe("writeDataset / validateDataset: docs/DATA_CONTRACT.md の不変条件"
     cleanup();
   });
 
+  /**
+   * #1226: `text !== stableJson(JSON.parse(text))` だけだと、整数様キーの並びについては恒真だった
+   * （`JSON.parse` も `Object.fromEntries` も整数様キーを数値昇順に並べ替えるので、両辺が同じ壊れ方を再生する）。
+   * ここでは**逐語のテキスト**を置いて、キーの並びそのものを見ていることを確かめる。
+   */
+  test("整数様キーが数値昇順（辞書順ではない）に並んだ JSON は違反（#1226）", async () => {
+    // "9" と "10": 数値昇順なら "9" が先、辞書順なら "10" が先。値は JSON として妥当なまま。
+    writeFileSync(join(dir, "meta.json"), '{\n "9": 1,\n "10": 2\n}\n');
+    const v = await validateDataset(dir);
+    assert.ok(v.some((x) => x.includes("meta.json") && x.includes('keys out of order: "9" before "10"')), v.join("\n"));
+    cleanup();
+  });
+
+  test("キーの並びの検査は data/ 相当の正常なファイルを誤検出しない（#1226）", async () => {
+    // beforeEach が書いたばかりのデータセットは stableJson で書かれている＝違反 0
+    assert.deepEqual((await validateDataset(dir)).filter((x) => x.includes("keys out of order")), []);
+    cleanup();
+  });
+
   test("result に得票（賛成 N・反対 N）が含まれていなければ違反（可否だけにしない）", async () => {
     patch<RollCallSummary[]>(dir, "rollcalls/index.json", (list) => list.map((s, i) => (i === 0 ? { ...s, result: "可決" } : s)));
     assert.match((await validateDataset(dir)).join("\n"), /rollcalls\/index\.json\[0\]: result/);
