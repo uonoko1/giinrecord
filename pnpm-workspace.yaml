@@ -4,3 +4,10 @@ packages:
 allowBuilds:
   esbuild: true
   sharp: true
+
+# GHSA-68fv-2mgg-jv7q（high）: source-map-js <1.2.2 が indexed source-map の
+# オフセットで event loop を止められる。**宣言していない推移依存**（vite>postcss 経由で 5 経路）
+# なので、ここで持ち上げる。pnpm v11 は package.json の pnpm.overrides を読まない
+# （警告を出して無視する）ため、設定の置き場はこのファイルである。
+overrides:
+  source-map-js: ">=1.2.2"
