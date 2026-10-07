@@ -39,9 +39,11 @@ GitHub Actions  security-alerts.yml ──毎日 06:53 JST──▶ GitHub 自�
 - Issue は title `[monitor] production: http` のように **環境 × check で 1 つ**。同名の open Issue があれば作らない（`deploy/monitor/report.sh`）。check が通れば「Recovered」コメントを付けて close する。
 - 本文に書くのは環境名・check・理由（パスと HTTP status、経過時間、残日数）・run へのリンクだけ。
 - **鳴り続けているあいだ、Issue は黙らない（#1185）。** 毎 round（10 分ごと）**開いている Issue に経過をコメントする**
-  （何時間続いているか・いまの理由・報告が入った回数の**下限**）。**6 時間**（`MONITOR_ESCALATE_HOURS`）を越えたら
-  **題の末尾に `— Nh 継続` を足し、ラベル `escalated` を付ける**——**改題もラベルも Issue の一覧で見える**ので、
+  （何時間続いているか・いまの理由・報告が入った回数の**下限**）。**6 時間以上**（`MONITOR_ESCALATE_HOURS`。
+  実装は `-ge` なので**ちょうど 6 時間も含む**）になったら **題の末尾に `— Nh 継続` を足し、
+  ラベル `escalated` を付ける**——**改題もラベルも Issue の一覧で見える**ので、
   1 本開けば「1 回目か 50 回目か」が分かる。**改題は 1 回だけ**（10 分ごとに改題すると通知で埋もれる）。
+  **だから題の `Nh` は、最初に escalate した時点で凍る**（#1198。下の表を見ること）。
   復旧時は `escalated` を外して題を素に戻してから閉じる。
 
 #### どちら側の故障か（`data` が失敗したとき・#1185）
@@ -246,7 +248,7 @@ ssh "$VPS_SSH_HOST" 'sudo mv /etc/cron.d/giinrecord-monitor /root/giinrecord-mon
 | `[monitor] production: deploy` | main に `data/` が入って 30 分以上、`deploy-data.yml` が始まっていない | Actions → Deploy data を `workflow_dispatch` で起動 |
 | `[monitor] production: deploy` の理由が `測れなかった` | `gh run list` が落ちた（権限・レート・障害） | **「異常なし」ではない。** run の履歴を手で見る |
 | `[monitor] <env>: <check>` の本文が `no verdict` | check が判定に届く前に死んだ（probe が途中で落ちた） | **緑ではない。** run のログを見る（#1185） |
-| Issue に `escalated` ラベルと `— Nh 継続` | 6 時間以上続いている | **その N は実際の経過時間である。** 優先して見る |
+| Issue に `escalated` ラベルと `— Nh 継続` | 6 時間以上続いている | **その N は「最初に escalate した時点」の経過であって、いまの経過ではない**（改題は 1 回だけなので凍る。#1198）。**いまの経過は最新のコメントに在る**。優先して見る |
 | log に `note: no token at …` | トークン未設置 | 初回セットアップ 3 |
 | log に `note: API … HTTP 401/403` | PAT 失効・権限不足（Issues: write が要る）・リポジトリ指定漏れ | PAT を作り直す |
 | log に `note: API … curl failed` | VPS からの outbound が不通 | 監視自体は続く。復旧後に自動で報告される |
