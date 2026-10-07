@@ -38,6 +38,12 @@ done
 #   H_MAIN_META        body served for the raw main data/meta.json (#1185); H_MAIN_CODE its HTTP status
 #   H_MAIN_URL_BASE    where probe.sh is told to read main from (the tests point it at the stubbed curl)
 #   H_RUNS             JSON gh returns for the deploy-data.yml run list (#1185); H_RUNS_EXIT makes gh fail
+#   H_PRS              JSON gh returns for `pr list --head <branch>` (#1230); H_PRS_EXIT makes gh fail.
+#                      **Use gh's real shapes** (verified in CI against `gh pr list --json
+#                      number,state,autoMergeRequest,createdAt,headRefName`): `state` is "OPEN"/"CLOSED"/"MERGED",
+#                      `autoMergeRequest` is an OBJECT when auto-merge is armed and **null** when it is not,
+#                      `createdAt` is ISO 8601 with a trailing Z. `headRefName` is what the stub filters on —
+#                      the stub refuses a `pr list` without `--head`, so the branch filter is really exercised.
 cat > "$TMP/handler" <<'H'
 #!/usr/bin/env bash
 cmd=$1; shift
@@ -109,6 +115,23 @@ case "$cmd" in
         # fixture から作れなかった。** 本物の gh は、レートに当たった・応答が途切れた等で
         # **stdout が空のまま exit 0 になり得る**。**そこを `[]` と同じ扱いにしてはいけない。**
         printf '%s' "${H_RUNS-[]}" ;;
+      "pr list")      # #1230: data/refresh の PR の状態（第 3 の状態 = 意図して止めてある）
+        [ -n "${H_PRS_EXIT:-}" ] && exit "$H_PRS_EXIT"
+        # **`--head` を本物と同じようにサーバ側の絞り込みとして効かせる。**
+        # ここで H_PRS をそのまま返すと、**probe.sh が `--head` をまったく渡さなくても
+        # テストは緑になる**（= 枝で引いている設計が誰にも検査されない。#1228 の型）。
+        # 本物の gh は `--head <branch>` に一致する PR だけを返すので、fixture も
+        # `headRefName` を持たせて同じ絞り込みをする。
+        head=''
+        for ((i=1;i<=$#;i++)); do [[ "${!i}" == "--head" ]] && { j=$((i+1)); head=${!j}; }; done
+        # **`--head` が無ければ stub 側で落とす。** 本物の gh ならリポジトリの全 PR が返り、
+        # 「いちばん新しい 1 本」が refresh と無関係な PR になる。黙って全件返すと
+        # **枝で引いている設計が検査されないまま緑になる**。
+        if [ -z "$head" ]; then echo "gh pr list: --head が無い（probe.sh は枝で引く設計）" >&2; exit 4; fi
+        # `${H_PRS-[]}`（`:-` ではない）: **空文字の応答も fixture から作れること**（#1198 R10b と同じ理由）。
+        printf '%s' "${H_PRS-[]}" \
+          | jq -c --arg h "$head" 'if type=="array" then [.[] | select(.headRefName == $h)] else . end' \
+          2>/dev/null || printf '%s' "${H_PRS-[]}" ;;
       "issue create")   # keep a copy of the body (run.sh deletes its temp files on exit)
         for ((i=1;i<=$#;i++)); do [[ "${!i}" == "--body-file" ]] && { j=$((i+1)); cat "${!j}" >> "$STUB_LOG.body"; }; done
         echo "https://github.com/example/repo/issues/99" ;;
@@ -134,7 +157,7 @@ fresh() {
   export STUB_LOG="$LOG" STUB_HANDLER="$TMP/handler"
   unset H_CODE_ROOT H_CODE_MEMBERS H_CODE_META H_TITLE H_FETCHED_AT H_NOT_AFTER H_OPEN H_CURL_EXIT
   unset H_CODE_ASSEMBLIES H_CODE_ASSEMBLY H_IDS H_ASSEMBLY_BODY PROBE_ASSEMBLY_SAMPLE PROBE_NOW
-  unset H_MAIN_META H_MAIN_CODE H_MAIN_URL_BASE H_RUNS H_RUNS_EXIT
+  unset H_MAIN_META H_MAIN_CODE H_MAIN_URL_BASE H_RUNS H_RUNS_EXIT H_PRS H_PRS_EXIT PROBE_REFRESH_BRANCH
   unset MONITOR_ESCALATE_HOURS PROBE_MAIN_META_URL PROBE_DEPLOY_LAG_MINUTES
   unset CF_ACCESS_CLIENT_ID CF_ACCESS_CLIENT_SECRET MONITOR_REQUIRE_CF_ACCESS
 }
@@ -650,6 +673,232 @@ t_probe_main_reason_has_no_server_details() {
   H_FETCHED_AT="$(date -u -d '-90 hours' +%Y-%m-%dT%H:%M:%S.000Z)" H_MAIN_CODE=503 \
     PROBE_MAIN_META_URL="https://example.invalid/main-meta" run_probe https://giinrecord.jp && true
   assert_not_contains "$(cat "$P/out")" "example.invalid" "読んだ URL を理由に出さない"
+}
+
+# ---- probe.sh: 第 3 の状態 — ETL は健全で、意図して止めてある (#1230) ----
+# **#1221 がこれで 70 時間以上「→ ETL 側 (#1175 / #1179)」と言い続けた。** 2 分岐はどちらも
+# 「何かが壊れている」を前提にしていたので、**壊れていない状態を言う語が無かった。**
+#
+# **実測（2026-10-07T15:51Z、CI の `secrets.GITHUB_TOKEN` で
+#   `gh pr list --state all --head data/refresh --json number,state,autoMergeRequest,createdAt`。
+#   monitor.yml と同じ `permissions: contents: read / issues: write`）**:
+#     exit 0。母数 57 本（全状態）= MERGED 48 / CLOSED 未マージ 4 / OPEN 0（#1222 が 13:56Z に閉じた直後）
+#     **`pull-requests: read` は要らなかった**（public リポジトリ）。同じ job の `gh run list` も exit 0。
+#   CLOSED 未マージの 4 本のうち **3 本は「次の refresh が作られる 0.0 時間前」に閉じられていた**
+#   （#1170 / #1208 / #1220 ＝ 次の run が前の PR を畳んだだけ。正常系の一部）。
+#   **だから見るのは「いちばん新しい 1 本」だけ**にしてある: 畳まれた 3 本は定義上「いちばん新しい」に
+#   なれないので、**この規則での誤検出は 4 本中 0 本**。残る #1222 が #1221 の指している状態そのもの。
+#
+# fixture の形は本物の gh から採った（`fixtures-and-prose-drift-from-reality`）:
+#   `autoMergeRequest` は armed のとき**オブジェクト**、解除されていると **null**。
+PR_JSON() {  # PR_JSON <number> <state> <armed|disarmed> <hours ago>
+  local armed=null
+  [ "$3" = armed ] && armed='{"mergeMethod":"SQUASH","enabledAt":"2026-10-04T01:30:06Z","enabledBy":{"is_bot":true,"login":"app/github-actions"}}'
+  printf '{"number":%s,"state":"%s","autoMergeRequest":%s,"createdAt":"%s","headRefName":"data/refresh"}' \
+    "$1" "$2" "$armed" "$(date -u -d "-$4 hours" +%Y-%m-%dT%H:%M:%SZ)"
+}
+STALE_90H() { date -u -d '-90 hours' +%Y-%m-%dT%H:%M:%S.000Z; }
+
+# **状態 3a**: refresh の PR が open で auto-merge が解除されている → **止めてある。ETL 側ではない。**
+t_probe_third_state_open_and_disarmed_is_held() {
+  fresh p_hold_open
+  local old; old=$(STALE_90H)
+  H_FETCHED_AT="$old" H_MAIN_META="{\"fetchedAt\": \"$old\"}" \
+  H_PRS="[$(PR_JSON 1222 OPEN disarmed 12)]" \
+    PROBE_MAIN_META_URL="https://example.invalid/main-meta" run_probe https://giinrecord.jp && fail "expected non-zero"
+  local out; out=$(cat "$P/out")
+  assert_contains "$out" "fail data" "data は fail のまま（鮮度落ちは事実）"
+  assert_contains "$out" "main も古い" "main が古いことは言う"
+  assert_contains "$out" "refresh #1222 が open（auto-merge 解除済み）" "どの PR が止まっているか名指しする"
+  assert_contains "$out" "止めてある" "意図して止めてあると言う"
+  # **これが #1230 の本体**: 壊れていない ETL を指さないこと。
+  assert_not_contains "$out" "ETL 側 (#1175 / #1179)" "健全な ETL を見に行かせない"
+}
+# **状態 3b**: open だが auto-merge が armed → **止まっているとは言えない**（#1227。緑になれば入る）。
+t_probe_third_state_open_but_armed_is_not_held() {
+  fresh p_hold_armed
+  local old; old=$(STALE_90H)
+  H_FETCHED_AT="$old" H_MAIN_META="{\"fetchedAt\": \"$old\"}" \
+  H_PRS="[$(PR_JSON 1186 OPEN armed 5)]" \
+    PROBE_MAIN_META_URL="https://example.invalid/main-meta" run_probe https://giinrecord.jp && fail "expected non-zero"
+  local out; out=$(cat "$P/out")
+  assert_contains "$out" "refresh #1186 が open（auto-merge 有効）" "armed だと書く"
+  assert_contains "$out" "緑になれば入る" "armed は「入る途中」であると書く"
+  assert_not_contains "$out" "止めてある" "armed を「止めてある」と言わない"
+  assert_not_contains "$out" "ETL 側 (#1175 / #1179)" "armed でも健全な ETL は指さない"
+}
+# **状態 3c**: いちばん新しい refresh の PR が未マージで閉じられている（#1222 のいまの形）。
+# **#1222 は 2026-10-07T13:56Z に閉じられたので、「open なら」だけでは #1221 を説明できない。**
+t_probe_third_state_closed_unmerged_is_held() {
+  fresh p_hold_closed
+  local old; old=$(STALE_90H)
+  H_FETCHED_AT="$old" H_MAIN_META="{\"fetchedAt\": \"$old\"}" \
+  H_PRS="[$(PR_JSON 1222 CLOSED disarmed 13)]" \
+    PROBE_MAIN_META_URL="https://example.invalid/main-meta" run_probe https://giinrecord.jp && fail "expected non-zero"
+  local out; out=$(cat "$P/out")
+  assert_contains "$out" "refresh #1222 が未マージで閉じられている" "閉じられた PR も名指しする"
+  assert_contains "$out" "止めてある" "閉じられた＝入れない判断がされている"
+  assert_not_contains "$out" "ETL 側 (#1175 / #1179)" "健全な ETL を見に行かせない"
+}
+# **畳まれた古い PR を「止めてある」にしない。** 実測の 4 本中 3 本は「次の refresh が作られる
+# 0.0 時間前」に閉じられた正常系で、**そのとき新しい PR のほうが「いちばん新しい」になる。**
+t_probe_newest_pr_wins_over_superseded_ones() {
+  fresh p_hold_newest
+  local old; old=$(STALE_90H)
+  # #1220（12 時間前・CLOSED、次の run が畳んだ）と #1222（1 時間前・OPEN）。見るのは #1222。
+  H_FETCHED_AT="$old" H_MAIN_META="{\"fetchedAt\": \"$old\"}" \
+  H_PRS="[$(PR_JSON 1220 CLOSED disarmed 12),$(PR_JSON 1222 OPEN disarmed 1)]" \
+    PROBE_MAIN_META_URL="https://example.invalid/main-meta" run_probe https://giinrecord.jp && fail "expected non-zero"
+  local out; out=$(cat "$P/out")
+  assert_contains "$out" "refresh #1222" "いちばん新しい 1 本を見る"
+  assert_not_contains "$out" "#1220" "畳まれた古い PR を名指ししない"
+}
+# **main より古い PR では上書きしない。** これが閉じた PR を見る規則の唯一の歯止めで、
+# **ETL が本当に死ぬ直前に誰かが PR を閉じていたら、その 1 本が永久に「止めてある」を言い続ける。**
+# 入れても main が新しくならない PR は、鮮度落ちの理由ではない。
+t_probe_pr_older_than_main_does_not_override() {
+  fresh p_hold_older
+  # main の fetchedAt は 90 時間前。PR は 100 時間前（＝ main より古い）→ ETL 側のまま。
+  local old; old=$(STALE_90H)
+  H_FETCHED_AT="$old" H_MAIN_META="{\"fetchedAt\": \"$old\"}" \
+  H_PRS="[$(PR_JSON 900 OPEN disarmed 100)]" \
+    PROBE_MAIN_META_URL="https://example.invalid/main-meta" run_probe https://giinrecord.jp && fail "expected non-zero"
+  local out; out=$(cat "$P/out")
+  assert_contains "$out" "ETL 側 (#1175 / #1179)" "main より古い PR は理由にならない"
+  assert_not_contains "$out" "止めてある" "入れても main が新しくならない PR で上書きしない"
+}
+# **MERGED なら上書きしない**（入っているのに main が古い＝中身の問題。ETL 側のまま）。
+t_probe_merged_pr_does_not_override() {
+  fresh p_hold_merged
+  local old; old=$(STALE_90H)
+  H_FETCHED_AT="$old" H_MAIN_META="{\"fetchedAt\": \"$old\"}" \
+  H_PRS="[$(PR_JSON 1186 MERGED armed 2)]" \
+    PROBE_MAIN_META_URL="https://example.invalid/main-meta" run_probe https://giinrecord.jp && fail "expected non-zero"
+  local out; out=$(cat "$P/out")
+  assert_contains "$out" "ETL 側 (#1175 / #1179)" "入っている PR は止めてある理由にならない"
+  assert_not_contains "$out" "止めてある" "MERGED を「止めてある」と言わない"
+}
+# ---- 受け入れ条件 2: refresh の PR が無ければ、**いまと一字一句同じ文言**（退行させない）----
+# **これが #1230 で一番壊しやすい所。** 第 3 の枝を足すときに既存の 2 分岐の文字列をいじると、
+# docs/ops/monitoring.md と Issue の履歴（#1221 の 4 本のコメント）が指す語が消える。
+t_probe_no_refresh_pr_keeps_the_exact_old_wording() {
+  fresh p_hold_absent
+  local old; old=$(STALE_90H)
+  H_FETCHED_AT="$old" H_MAIN_META="{\"fetchedAt\": \"$old\"}" H_PRS='[]' \
+    PROBE_MAIN_META_URL="https://example.invalid/main-meta" run_probe https://giinrecord.jp && fail "expected non-zero"
+  local out; out=$(cat "$P/out")
+  # 時間は実行時刻で動くので、そこだけ正規表現にして**残りは逐語で**固定する。
+  [[ "$out" =~ fail\ data\ fetchedAt\ [0-9]+h\ old\ \(limit\ 48h\)\;\ main\ も古い\ \([0-9]+h\)\ →\ ETL\ 側\ \(#1175\ /\ #1179\) ]] \
+    || fail "PR が無いときの文言が変わった: $out"
+  assert_not_contains "$out" "refresh #" "PR が無いのに PR 番号を出さない"
+  assert_not_contains "$out" "止めてある" "PR が無いのに止めてあると言わない"
+}
+# **deploy 側の 1 行も不変**（`fix-one-side-check-the-mirror`: 片側を直したら対の側を確かめる）。
+# **main が新しいときは refresh の PR を見に行かないこと**——10 分ごとに gh を 1 回叩く理由が無い。
+t_probe_deploy_side_wording_and_no_pr_lookup() {
+  fresh p_hold_mirror
+  H_FETCHED_AT="$(STALE_90H)" \
+  H_MAIN_META="{\"fetchedAt\": \"$(date -u -d '-1 hours' +%Y-%m-%dT%H:%M:%S.000Z)\"}" \
+  H_PRS="[$(PR_JSON 1222 OPEN disarmed 1)]" \
+    PROBE_MAIN_META_URL="https://example.invalid/main-meta" run_probe https://giinrecord.jp && fail "expected non-zero"
+  local out; out=$(cat "$P/out")
+  [[ "$out" =~ main\ は新しい\ \([0-9]+h\)\ のに本番は\ [0-9]+h\ →\ deploy\ 側\ \(deploy-data\.yml\ を起動\) ]] \
+    || fail "deploy 側の文言が変わった: $out"
+  assert_not_contains "$out" "refresh #" "main が新しいなら PR の状態は理由にならない"
+  assert_not_contains "$(cat "$LOG")" "pr list" "main が新しいなら gh を叩かない"
+}
+# **main を読めなかったときも PR を見に行かない**（測れていないのに第 3 の状態を名乗らせない。#1056）。
+t_probe_unreadable_main_does_not_claim_held() {
+  fresh p_hold_unmeasured
+  H_FETCHED_AT="$(STALE_90H)" H_MAIN_CODE=503 \
+  H_PRS="[$(PR_JSON 1222 OPEN disarmed 1)]" \
+    PROBE_MAIN_META_URL="https://example.invalid/main-meta" run_probe https://giinrecord.jp && fail "expected non-zero"
+  local out; out=$(cat "$P/out")
+  assert_contains "$out" "main を読めなかった" "測れていないと書く"
+  assert_not_contains "$out" "止めてある" "測れていないのに「止めてある」と断定しない"
+}
+# **PR の一覧が取れないときに「止めてある」にも「ETL 側」にも倒さない**（#1056）。
+# **倒した先がどちらでも、区別する機能が無言で死んだことが Issue から読めなくなる**（#1185 の型）。
+t_probe_pr_list_unreadable_is_reported_as_unmeasured() {
+  fresh p_hold_gh_down
+  local old; old=$(STALE_90H)
+  H_FETCHED_AT="$old" H_MAIN_META="{\"fetchedAt\": \"$old\"}" H_PRS_EXIT=1 \
+    PROBE_MAIN_META_URL="https://example.invalid/main-meta" run_probe https://giinrecord.jp && fail "expected non-zero"
+  local out; out=$(cat "$P/out")
+  assert_contains "$out" "refresh の PR を数えられなかった" "測れなかったと書く"
+  assert_not_contains "$out" "止めてある" "取れないのに止めてあると言わない"
+  assert_not_contains "$out" "ETL 側 (#1175 / #1179)" "取れないのに ETL 側と断定しない"
+}
+# **gh が exit 0 で空を返す形**（レート・応答の途切れ）。`[]` と同じ扱いにしてはいけない。
+t_probe_pr_list_empty_response_is_unmeasured() {
+  fresh p_hold_gh_empty
+  local old; old=$(STALE_90H)
+  H_FETCHED_AT="$old" H_MAIN_META="{\"fetchedAt\": \"$old\"}" H_PRS='' \
+    PROBE_MAIN_META_URL="https://example.invalid/main-meta" run_probe https://giinrecord.jp && fail "expected non-zero"
+  # 説明文をバックティックで囲まない（shell の置換として実行されかける。gh の --body と同じ罠）
+  assert_contains "$(cat "$P/out")" "refresh の PR を数えられなかった" "空の応答は空配列ではない"
+}
+# **枝で引いていること。** stub は `--head` が無い `pr list` を exit 4 で拒むので、
+# probe.sh が枝を渡さなくなればここが落ちる（**全 PR の最新を見てしまう形を塞ぐ**）。
+t_probe_queries_the_refresh_branch_by_name() {
+  fresh p_hold_branch
+  local old; old=$(STALE_90H)
+  H_FETCHED_AT="$old" H_MAIN_META="{\"fetchedAt\": \"$old\"}" \
+  H_PRS="[$(PR_JSON 1222 OPEN disarmed 1)]" \
+    PROBE_MAIN_META_URL="https://example.invalid/main-meta" run_probe https://giinrecord.jp && fail "expected non-zero"
+  assert_contains "$(cat "$LOG")" "--head data/refresh" "枝の名前で引く"
+  assert_contains "$(cat "$P/out")" "refresh #1222" "枝で引いた結果を使う"
+}
+# **別の枝の PR は理由にならない**（stub が `--head` で絞るので、一致しなければ 0 件＝ETL 側のまま）。
+t_probe_other_branch_pr_is_not_a_reason() {
+  fresh p_hold_other
+  local old; old=$(STALE_90H)
+  H_FETCHED_AT="$old" H_MAIN_META="{\"fetchedAt\": \"$old\"}" \
+  H_PRS='[{"number":1230,"state":"OPEN","autoMergeRequest":null,"createdAt":"2026-10-07T15:00:00Z","headRefName":"fix/1230-something"}]' \
+    PROBE_MAIN_META_URL="https://example.invalid/main-meta" run_probe https://giinrecord.jp && fail "expected non-zero"
+  local out; out=$(cat "$P/out")
+  assert_contains "$out" "ETL 側 (#1175 / #1179)" "refresh 以外の枝の PR は理由にならない"
+  assert_not_contains "$out" "止めてある" "別の枝の PR で「止めてある」と言わない"
+}
+# **理由にサーバー情報・URL・アカウント名を出さない**（OSS。Issue 本文に載る）。
+t_probe_hold_reason_has_no_server_details() {
+  fresh p_hold_safe
+  local old; old=$(STALE_90H)
+  H_FETCHED_AT="$old" H_MAIN_META="{\"fetchedAt\": \"$old\"}" \
+  H_PRS="[$(PR_JSON 1222 OPEN disarmed 1)]" \
+    PROBE_MAIN_META_URL="https://example.invalid/main-meta" run_probe https://giinrecord.jp && true
+  local out; out=$(cat "$P/out")
+  assert_not_contains "$out" "example.invalid" "読んだ URL を出さない"
+  assert_not_contains "$out" "github-actions" "PR を作ったアカウント名を出さない"
+  assert_not_contains "$out" "$TMP" "ローカルパスを出さない"
+}
+# **PROBE_REFRESH_BRANCH='' なら見に行かない**（手元で叩いたときに gh を要求しないこと）。
+t_probe_refresh_branch_can_be_disabled() {
+  fresh p_hold_off
+  local old; old=$(STALE_90H)
+  H_FETCHED_AT="$old" H_MAIN_META="{\"fetchedAt\": \"$old\"}" \
+  H_PRS="[$(PR_JSON 1222 OPEN disarmed 1)]" PROBE_REFRESH_BRANCH='' \
+    PROBE_MAIN_META_URL="https://example.invalid/main-meta" run_probe https://giinrecord.jp && fail "expected non-zero"
+  assert_contains "$(cat "$P/out")" "ETL 側 (#1175 / #1179)" "切ってあれば従来どおり"
+  assert_not_contains "$(cat "$LOG")" "pr list" "切ってあれば gh を叩かない"
+}
+# **3 つの状態の文言が互いに違うこと**（受け入れ条件 1）。**同じ語になっていれば区別できていない。**
+t_probe_three_states_have_three_distinct_wordings() {
+  fresh p_hold_distinct
+  local old; old=$(STALE_90H) ; local etl deploy held
+  H_FETCHED_AT="$old" H_MAIN_META="{\"fetchedAt\": \"$old\"}" H_PRS='[]' \
+    PROBE_MAIN_META_URL="https://example.invalid/main-meta" run_probe https://giinrecord.jp && true
+  etl=$(grep '^fail data' "$P/out" || true)
+  H_FETCHED_AT="$old" H_MAIN_META="{\"fetchedAt\": \"$(date -u -d '-1 hours' +%Y-%m-%dT%H:%M:%S.000Z)\"}" H_PRS='[]' \
+    PROBE_MAIN_META_URL="https://example.invalid/main-meta" run_probe https://giinrecord.jp && true
+  deploy=$(grep '^fail data' "$P/out" || true)
+  H_FETCHED_AT="$old" H_MAIN_META="{\"fetchedAt\": \"$old\"}" H_PRS="[$(PR_JSON 1222 OPEN disarmed 1)]" \
+    PROBE_MAIN_META_URL="https://example.invalid/main-meta" run_probe https://giinrecord.jp && true
+  held=$(grep '^fail data' "$P/out" || true)
+  for s in "$etl" "$deploy" "$held"; do [ -n "$s" ] || fail "3 つの理由のどれかが空"; done
+  [ "$etl" != "$deploy" ] || fail "ETL 側と deploy 側が同じ文言"
+  [ "$etl" != "$held" ]   || fail "ETL 側と「止めてある」が同じ文言（#1230 そのもの）"
+  [ "$deploy" != "$held" ] || fail "deploy 側と「止めてある」が同じ文言"
 }
 
 # ---- deploy-started.sh: data/ が main に入ったのに deploy が始まらなかった (#1185 受け入れ条件 3) ----
@@ -1189,6 +1438,23 @@ test_case "probe: 本番が健康なら main は読まない（要求を増や�
 test_case "probe: main の fetchedAt が壊れていても『測れなかった』" t_probe_main_meta_unparseable_is_unmeasured
 test_case "probe: main の読み先が未設定でも data の fail は従来どおり" t_probe_without_main_url_still_fails_data
 test_case "probe: main 側の理由に URL やサーバー情報を出さない" t_probe_main_reason_has_no_server_details
+# #1230: 第 3 の状態（ETL は健全で、意図して止めてある）
+test_case "probe: refresh が open で auto-merge 解除なら『止めてある』（#1230）" t_probe_third_state_open_and_disarmed_is_held
+test_case "probe: refresh が open で auto-merge armed なら『止まっているとは言えない』（#1227 / #1230）" t_probe_third_state_open_but_armed_is_not_held
+test_case "probe: refresh が未マージで閉じられていれば『止めてある』（#1222 のいまの形・#1230）" t_probe_third_state_closed_unmerged_is_held
+test_case "probe: 見るのはいちばん新しい refresh の PR 1 本（畳まれた 3 本を誤検出しない・#1230）" t_probe_newest_pr_wins_over_superseded_ones
+test_case "probe: main より古い refresh の PR では上書きしない（#1230）" t_probe_pr_older_than_main_does_not_override
+test_case "probe: MERGED な refresh の PR では上書きしない（#1230）" t_probe_merged_pr_does_not_override
+test_case "probe: refresh の PR が無ければ一字一句同じ『→ ETL 側』（#1230 受け入れ条件 2）" t_probe_no_refresh_pr_keeps_the_exact_old_wording
+test_case "probe: deploy 側の 1 行は不変で、main が新しければ gh を叩かない（#1230）" t_probe_deploy_side_wording_and_no_pr_lookup
+test_case "probe: main を読めなければ『止めてある』と断定しない（#1056 / #1230）" t_probe_unreadable_main_does_not_claim_held
+test_case "probe: PR の一覧が取れなければ両側に倒さず『数えられなかった』（#1056 / #1230）" t_probe_pr_list_unreadable_is_reported_as_unmeasured
+test_case "probe: gh が exit 0 で空を返す形を [] と同じ扱いにしない（#1230）" t_probe_pr_list_empty_response_is_unmeasured
+test_case "probe: refresh の枝の名前で引く（全 PR の最新を見る形を塞ぐ・#1230）" t_probe_queries_the_refresh_branch_by_name
+test_case "probe: 別の枝の PR は『止めてある』の理由にならない（#1230）" t_probe_other_branch_pr_is_not_a_reason
+test_case "probe: 『止めてある』の理由に URL・アカウント名・ローカルパスを出さない（#1230）" t_probe_hold_reason_has_no_server_details
+test_case "probe: PROBE_REFRESH_BRANCH='' なら gh を叩かず従来どおり（#1230）" t_probe_refresh_branch_can_be_disabled
+test_case "probe: 3 つの状態の理由が互いに違う文言である（#1230 受け入れ条件 1）" t_probe_three_states_have_three_distinct_wordings
 test_case "deploy-started: コミットの後に run が在れば ok（#1185）" t_deploy_started_ok_when_a_run_followed
 test_case "deploy-started: N 分以内に run が無ければ fail（経過を数字で）" t_deploy_started_fails_when_no_run_followed
 test_case "deploy-started: N 分の手前では鳴らない" t_deploy_started_quiet_inside_the_window
