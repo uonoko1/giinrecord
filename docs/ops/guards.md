@@ -50,6 +50,7 @@ grep してから起票してください（**今日の 5 件はそこにあり�
 
 | 事故 | 防いでいるもの |
 |---|---|
+| **喪失を運ぶデータ PR が、人が auto-merge を外し忘れた日に自分でマージされる**（個票に復元元が無い項目が在るので戻らない） | 門は `scripts/ci/etl-auto-merge-gate.sh` で、人が置く停止ファイル（`HOLD_FILE`）と `origin/main` の tip から消えた `data/` のファイル（`name-status`）を見て `exit 10` を返す。データ PR を作る 3 本（etl / districts / local-assemblies）はそれを先に通し、10 なら `--auto` を打たない: `.github/workflows/etl.yml` の `GATE_RC` と `auto-merge` の行。振る舞いは `scripts/ci/test/etl-auto-merge-gate.test.sh` の `t_deleted_file_withholds` と `t_clean_refresh_arms`（止める側と止めない側の両方）、配線は `packages/etl/test/workflow-auto-merge-gate.test.ts` の `autoMergeWorkflows`（#1227/#1229） |
 | 一次資料の URL がリンク切れになったまま気付かない | `packages/etl/src/fetch.ts` の `if (!res.ok) throw new Error` で ETL が落ち、`.github/workflows/etl.yml` の `Open failure Issue` が Issue を立てる |
 | ETL が回らない月の間にリンクが死ぬ（地方は月1回） | `scripts/ci/link-check.sh`（`LINK_CHECK_UA` で名乗り、`2回とも落ちたものだけ` を報告）を `.github/workflows/link-check.yml` が週1（`Link check (weekly)`）で回す。テストは `scripts/ci/test/link-check.test.sh`（#646） |
 | 別人の記録を出す（表決 PDF の氏名 → 名簿） | `packages/etl/src/sources/local/name-match.ts` は候補が 2 人以上なら `return { memberId: "", candidates: [] }` で**選ばない**（#569）。テストは `packages/etl/test/local-name-match.test.ts` |
