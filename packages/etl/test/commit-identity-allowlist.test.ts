@@ -116,7 +116,11 @@ import { dirname, resolve, join } from "node:path";
  *   実害の経路は `--no-merges` の側に入っている。**
  * - **trailer 本文は見ない。** **そこは #1075 が受け持つ**（衝突を避けるため、
  *   このファイルは author / committer だけを見る。下の「#1075 との関係」を参照）。
- * - **履歴が読めない浅い checkout では 1 件も見ない**（skip する。緑にはしない）。
+ * - **履歴が読めない浅い checkout では 1 件も見ない。**
+ *   **CI（`CI` が立っている）では落とす。手元では skip する**（#1233。到達条件は
+ *   `failClosedOnUnreadableHistory` の docblock に実測で在る）。
+ *   **初版はここに「skip する。緑にはしない」と書いていたが、`t.skip()` は
+ *   `skipped 1 / fail 0` で終了コード 0 なので、成り立っていなかった。**
  *
  * ── **#1075（`commit-trailer-identity.test.ts`）との関係** ──────────────────────────
  *
@@ -187,9 +191,59 @@ const gitOrUndefined = (...args: string[]): string | undefined => {
   }
 };
 
-/** **履歴が読めないときだけ skip する。** **理由は 2 つしか無い**（#1075 と同じ形）。 */
+/** **履歴が読めないときだけ走らせない。** **理由は 2 つしか無い**（#1075 と同じ形）。 */
 const NO_BASE = "refs/remotes/origin/main が無い";
 const NO_MERGE_BASE = "origin/main と HEAD の merge-base が取れない（浅い checkout）";
+
+/**
+ * **「履歴が読めない」を CI では赤にする。手元では skip のままにする**（#1233）。
+ *
+ * ── **到達条件は実測した。両方とも到達する**（2026-10-08、基点 `272cb286`）────────────
+ *
+ * **`git clone --depth 1` では到達しない**（PBI 本文の PO の実測。`clone` は
+ * `refs/remotes/origin/main` を作り、HEAD = main の先端なので merge-base も取れる）。
+ * **だが `actions/checkout` は `clone` を使わない**——**`git init` + 単一 ref の
+ * `fetch` なので、`refs/remotes/origin/main` はそもそも作られない:**
+ *
+ * ```
+ * git init . ; git remote add origin <url>
+ * git fetch --no-tags --depth=1 origin '+<sha>:refs/remotes/origin/<branch>'
+ * git for-each-ref 'refs/remotes/**'  →  refs/remotes/origin/<branch> だけ
+ * git rev-parse --verify --quiet refs/remotes/origin/main  →  exit 1   ← NO_BASE に到達
+ * node --test commit-identity-allowlist.test.ts            →  skipped 1 / fail 0 / exit 0
+ * ```
+ *
+ * **`NO_MERGE_BASE` も到達する**（main の先端だけを深さ 1 で足し、HEAD が離れている場合）:
+ *
+ * ```
+ * git fetch --depth=1 origin '+refs/heads/main:refs/remotes/origin/main'
+ * git merge-base refs/remotes/origin/main HEAD  →  exit 1              ← NO_MERGE_BASE に到達
+ * ```
+ *
+ * ── **なぜ CI では赤にするか** ──────────────────────────────────────────────────────
+ *
+ * **`ci.yml` の `check` job の checkout は既定の `fetch-depth: 1` である**（`:146`）。
+ * **履歴は「merge-base を届かせる」step（`:320`）が `--deepen=50` で足している。**
+ * **だがその step には `if: github.event_name == 'pull_request'` が付いている**ので、
+ * **`push`（main）では走らない。** **そして `ci.yml` は `push: branches: [main]` でも起動する。**
+ *
+ * **つまり「fetch 段が壊れた」「trigger が変わった」「job が増えた」のどれでも、
+ * この検査は `skipped 1 / fail 0 / exit 0` になり、CI は緑のまま通る。**
+ * **守っているのは「他人への誤帰属」**（#1101 で `MLehnus` が Contributors に出た）
+ * **なので、「測れなかった」を緑にしてはいけない**（#1056 の fail-closed）。
+ *
+ * **#1069 / #1054 は CI の層で「skipped を緑に数える」を 2 回直している。**
+ * **これは同じ型が検査コードの層で 3 回目なので、ここで閉じる。**
+ *
+ * ── **手元を赤にしない理由**（skip を全部やめない） ─────────────────────────────────
+ *
+ * **手元の clone は `origin/main` を持つので、通常は到達しない。**
+ * **到達するのは「`origin` を別名にしている」「fetch していない」など
+ * 利用者の作業環境の都合であり、そこで赤にしても誤帰属は防げない**（push 前に CI が見る）。
+ * **だから `CI` が立っているときだけ落とす。**
+ */
+const failClosedOnUnreadableHistory = (): boolean =>
+  process.env.CI !== undefined && process.env.CI !== "" && process.env.CI !== "false";
 
 /**
  * **この枝が `origin/main` に足すコミット**（マージでないもの）。
@@ -230,8 +284,22 @@ export const commitIdentities = (raw: string): { kind: string; email: string }[]
 test("この枝が足すコミットの author / committer が、本人確認した逐語のアドレスだけ", (t) => {
   const { shas, reason } = addedCommits();
   if (reason !== undefined) {
-    // **黙って緑にしない**: skip は `node --test` の出力と CI のログに残る。
-    // **履歴が読める環境（手元・`fetch-depth: 0`）では必ず走る。**
+    // **CI では落とす**（#1233）。**`t.skip()` が出すのは `skipped 1 / fail 0` で、
+    // 終了コードは 0 である**——**初版はここに「緑にはしない」と書いていたが、成り立っていなかった。**
+    // **到達条件は上の `failClosedOnUnreadableHistory` の docblock に実測で在る。**
+    assert.ok(
+      !failClosedOnUnreadableHistory(),
+      `**履歴が読めないので、この枝のコミットを 1 つも検査できていない**: ${reason}
+
+**これは「誤帰属が無い」ではなく「測れなかった」である**（#1056 の fail-closed）。
+**CI では緑にしない**——**この検査が守っているのは他人への誤帰属**（#1101）。
+
+**直し方**: **\`ci.yml\` の「コミット trailer の検査に merge-base を届かせる」step が
+\`origin/main\` と merge-base を取れているか見ること。** **その step は
+\`if: github.event_name == 'pull_request'\` なので、\`push\` では走らない。**`,
+    );
+    // **手元（CI の外）では skip のまま**: 到達するのは利用者の作業環境の都合で、
+    // **push 前に CI が見る**（上の docblock の「手元を赤にしない理由」）。
     t.skip(`履歴が読めないので走らせない: ${reason}`);
     return;
   }
@@ -255,7 +323,25 @@ test("この枝が足すコミットの author / committer が、本人確認し
     bad,
     [],
     `本人確認していない identity でコミットされています（許すのは ${ALLOWED_IDENTITIES.join(" / ")} だけ）。
-コミットし直してください:  git -c user.email=${ALLOWED_IDENTITIES[0]} commit --amend --reset-author --no-edit
+
+**直し方は 1 つである: コミットを直す。** **ALLOWED_IDENTITIES には足さない**（#1231）。
+**ここに足せば緑になるが、この検査の存在理由が消える**——
+**守っているのは「形は正しい他人の数字 ID」を落とすこと**（#1101 で \`MLehnus\` が
+Contributors に実際に出た）。**足した瞬間、その誤帰属は通るようになる。**
+
+  1 本だけなら:  git commit --amend --reset-author --no-edit
+  複数本なら:    GIT_COMMITTER_EMAIL=${ALLOWED_IDENTITIES[0]} \\
+                   git rebase --committer-date-is-author-date origin/main
+
+**\`git config\` は叩かない**——**worktree 間で共有されるので、走っている他のエージェント全員に波及する。**
+**木が変わっていないことを \`git diff --stat <旧 HEAD> HEAD\` が空になることで確かめ、
+\`--force-with-lease=<枝>:<測った SHA>\` で push する。**
+
+**\`gh pr update-branch --rebase\` は使わない**——**枝の全コミットの committer を
+自分のアドレスに書き換えるので、この検査が必ず赤になる**（#1214 で PO が踏んだ。実測は
+docs/WORKING_AGREEMENT.md の「コミットの身元」節）。**既定の \`gh pr update-branch\`（マージ）は
+committer を書き換えない**ので、BEHIND の解消はそちらを使う（\`scripts/po/merge-when-green.sh\` が呼ぶのもそれ）。
+
 ${bad.join("\n")}`,
   );
   // **範囲が空なのは正常**（main 上）だが、**空でないのに 1 件も見ていないのは異常である。**
@@ -396,4 +482,108 @@ test("エージェントの指示に、本人確認した逐語のアドレス�
     [],
     `エージェントの指示に、使うべき逐語のアドレス（${need}）が書かれていない`,
   );
+});
+
+/**
+ * **「測れなかったときに落ちる」こと自体を検査する**（#1233）。
+ *
+ * **上の走査は、履歴が読める環境では `reason === undefined` の筋しか通らない**
+ * ——**だから fail-closed の分岐は、普通に走らせても一度も踏まれない。**
+ * **踏まれない分岐は「書いてあるだけ」なので、ここで直接当てる。**
+ *
+ * **#1069 / #1054 は CI の層で同じ型（skipped を緑に数える）を 2 回直している。**
+ * **3 回目をこの層で閉じるので、閉じ方が退行しないようにする。**
+ */
+test("#1233 履歴が読めないとき、CI では落ちる（手元では skip のまま）", () => {
+  const src = readFileSync(resolve(root, "packages/etl/test/commit-identity-allowlist.test.ts"), "utf8");
+  // **自分のソースを読めていること**（読めなければ下は全部空振りする。#514）
+  assert.ok(src.includes("#1233 履歴が読めないとき"), "自分のソースを読めていない");
+
+  // **`t.skip(` の手前に `assert` が在ること。**
+  // **`t.skip()` だけなら `skipped 1 / fail 0 / exit 0` で、CI は緑になる。**
+  const idx = src.indexOf("t.skip(`履歴が読めないので走らせない");
+  assert.ok(idx > 0, "走査の skip 行が見つからない（この検査が対象を見失っている）");
+  const before = src.slice(0, idx);
+  const guardIdx = before.lastIndexOf("failClosedOnUnreadableHistory()");
+  // **`assert.ok(` は `failClosedOnUnreadableHistory()` より手前に在る**ので、
+  // **その間だけを見る**（`guardIdx` から後ろを見ると、呼び出しの後ろしか入らない）。
+  const assertIdx = before.lastIndexOf("assert.ok(", guardIdx);
+  assert.ok(
+    guardIdx > 0 && assertIdx > 0 && guardIdx - assertIdx < 200,
+    "**`t.skip()` の手前に fail-closed の assert が無い。**\n" +
+      "**`t.skip()` が出すのは `skipped 1 / fail 0` で、終了コードは 0 である**——\n" +
+      "**「測れなかった」が緑になると、他人への誤帰属（#1101）が通る。**",
+  );
+
+  // **CI の判定が `CI` 環境変数を見ていること**（別の条件に差し替わると、CI で落ちなくなる）
+  assert.ok(
+    /failClosedOnUnreadableHistory\s*=\s*\(\)[^;]*process\.env\.CI/.test(src),
+    "fail-closed の判定が `process.env.CI` を見ていない（CI で落ちなくなる）",
+  );
+});
+
+/**
+ * **実際に `assert.ok(!…)` で落ちる側を踏む**（#1233）。
+ *
+ * **上の検査はソースの形を見ているだけなので、「書いてある」しか言えない。**
+ * **ここは判定関数そのものに両側を当てる**——**`CI` が立っていれば落とす側に、
+ * 立っていなければ skip 側に倒れること。**
+ */
+test("#1233 fail-closed の判定が、CI の有無で両側に倒れる", () => {
+  const saved = process.env.CI;
+  try {
+    for (const on of ["1", "true", "TRUE"]) {
+      process.env.CI = on;
+      assert.ok(failClosedOnUnreadableHistory(), `CI=${on} なのに落とさない側に倒れている`);
+    }
+    // **`false` と空文字は「CI ではない」**（`actions/checkout` 以外の実行環境で
+    // `CI=false` を立てる道具が在るため）
+    for (const off of ["", "false"]) {
+      process.env.CI = off;
+      assert.ok(!failClosedOnUnreadableHistory(), `CI=${JSON.stringify(off)} なのに落とす側に倒れている`);
+    }
+    delete process.env.CI;
+    assert.ok(!failClosedOnUnreadableHistory(), "CI が無いのに落とす側に倒れている（手元が赤くなる）");
+  } finally {
+    if (saved === undefined) delete process.env.CI;
+    else process.env.CI = saved;
+  }
+});
+
+/**
+ * **赤になった人が読む場所に、直し方が書いて在ること**（#1231）。
+ *
+ * **`ALLOWED_IDENTITIES` に足せば緑になる**——**そして、この検査が守っている
+ * 「形は正しい他人の数字 ID を落とす」が消える**（#1101 の再発）。
+ * **だから「足すな / コミットを直せ」を、失敗メッセージ自身が持つ。**
+ *
+ * **これは代理である**（作業合意「代理と実体」）——**散文が在ることは、人が読むことの保証ではない。**
+ * **だが失敗メッセージは `node --test` の出力と CI のログに必ず出るので、
+ * 「落ちた人が読む場所」としては最も確実な置き場所である。**
+ */
+test("#1231 失敗メッセージに「allowlist に足さない / コミットを直す」が在る", () => {
+  const src = readFileSync(resolve(root, "packages/etl/test/commit-identity-allowlist.test.ts"), "utf8");
+  assert.ok(src.includes("#1231 失敗メッセージに"), "自分のソースを読めていない");
+
+  // **失敗メッセージの本体を切り出す**（docblock や他の検査の文を数えないように、
+  // `bad` の `assert.deepEqual` の第 3 引数だけを見る）
+  const start = src.indexOf("本人確認していない identity でコミットされています");
+  assert.ok(start > 0, "失敗メッセージが見つからない（この検査が対象を見失っている）");
+  const msg = src.slice(start, src.indexOf("${bad.join", start));
+  assert.ok(msg.length > 200, `失敗メッセージが ${msg.length} 文字しか無い（切り出しが空振りしている）`);
+
+  const need: readonly [string, string][] = [
+    ["ALLOWED_IDENTITIES には足さない", "allowlist を触らない、が書かれていない"],
+    ["commit --amend --reset-author", "1 本を直す手順が書かれていない"],
+    ["git rebase --committer-date-is-author-date", "複数本を直す手順が書かれていない"],
+    ["GIT_COMMITTER_EMAIL", "committer を環境変数で渡す形が書かれていない（git config を叩かせてしまう）"],
+    ["force-with-lease", "push の仕方が書かれていない"],
+    ["gh pr update-branch --rebase", "committer を書き換える操作の名前が書かれていない（#1231 の発端）"],
+    ["#1101", "allowlist に足してはいけない理由（誤帰属の実害）が書かれていない"],
+  ];
+  const missing = need.filter(([k]) => !msg.includes(k)).map(([k, why]) => `${k}: ${why}`);
+  assert.deepEqual(missing, [], `**赤になった人が読む場所に、直し方が足りない**（#1231）`);
+
+  // **母数**（#757）: **7 件のうち何件見たかを数える。0 件を見て緑になったら何も言っていない。**
+  assert.equal(need.length, 7, `要求の件数が変わっている: ${need.length}`);
 });
