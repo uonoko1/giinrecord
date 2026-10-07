@@ -31,7 +31,7 @@ PASS=0; FAIL=0
 ok()  { PASS=$((PASS+1)); echo "  ok   - $1"; }
 bad() { FAIL=$((FAIL+1)); echo "  FAIL - $1"; }
 
-TMP=$(mktemp -d); trap '__rc=$?; rm -rf "$TMP" || echo "warn: cleanup left $TMP behind (not a test failure)" >&2; exit $__rc' EXIT
+TMP=$(mktemp -d); cleanup() { local __rc=$?; rm -rf "$TMP" || echo "warn: cleanup left $TMP behind (not a test failure)" >&2; exit "$__rc"; }; trap cleanup EXIT
 
 # 検査対象は scripts/ci/shellcheck.sh に列挙させる（対象の決め方を自分で発明しない）。
 # 「全部数えた」と言うために、対象集合は 1 か所からしか来ないようにする。

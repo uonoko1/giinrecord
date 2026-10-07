@@ -22,7 +22,7 @@ ROOT=$(cd "$HERE/../../.." && pwd)
 RUNNER="$ROOT/scripts/po/test/run.sh"
 PO_TEST_DIR="$ROOT/scripts/po/test"
 PASS=0; FAIL=0; FAILED=()
-TMP=$(mktemp -d); trap '__rc=$?; rm -rf "$TMP" || echo "warn: cleanup left $TMP behind (not a test failure)" >&2; exit $__rc' EXIT
+TMP=$(mktemp -d); cleanup() { local __rc=$?; rm -rf "$TMP" || echo "warn: cleanup left $TMP behind (not a test failure)" >&2; exit "$__rc"; }; trap cleanup EXIT
 
 fail() { echo "    x $1"; CURRENT_FAILED=1; }
 assert_eq()           { [[ "$2" == "$1" ]] || fail "$3: expected [$1] got [$2]"; }

@@ -42,7 +42,7 @@ test_case() {
 [ -f "$SCRIPT" ] || { echo "FATAL: $SCRIPT が無い"; exit 1; }
 command -v openssl >/dev/null || { echo "FATAL: openssl が要る"; exit 1; }
 
-TMP=$(mktemp -d); trap '__rc=$?; rm -rf "$TMP" || echo "warn: cleanup left $TMP behind (not a test failure)" >&2; exit $__rc' EXIT
+TMP=$(mktemp -d); cleanup() { local __rc=$?; rm -rf "$TMP" || echo "warn: cleanup left $TMP behind (not a test failure)" >&2; exit "$__rc"; }; trap cleanup EXIT
 
 # --- nginx / systemctl のスタブ ------------------------------------------------
 # 呼ばれたことを $STUB_LOG に残し、$STUB_NGINX_RC / $STUB_SYSTEMCTL_RC で失敗させられる。
