@@ -209,7 +209,32 @@ export type CommitteeRoleEntry = {
   /** firstDate の会議録の冒頭情報の URL。 */
   sourceUrl: string;
 };
-export type TimelineEntry = VoteEntry | BillEntry | SpeechEntry | StanceEntry | QuestionEntry | AttendanceEntry | CommitteeRoleEntry | LocalVoteEntry;
+/**
+ * 大臣・副大臣・大臣政務官として職に在る事実（首相官邸の閣僚等名簿。#1152）。
+ *
+ * **`session` を持たない唯一の国会の行である**——大臣の任免は内閣が行うので回次と結びつかない。
+ * 画面は `groupBySession` が「回次不明」の節に落とす（#103 からある既存の挙動）。
+ *
+ * **終了日を持たない。** 「いつから」は名簿に書いてある（内閣の発足日）が、
+ * **「いつまで」は書かれていない**（#1141）。**だから画面に期間を作らない。**
+ */
+export type CabinetRoleEntry = {
+  kind: "cabinetRole";
+  estimated: false;
+  /** timeline の並びに使う日付＝内閣の発足日（名簿に書いてある）。 */
+  date: string;
+  /** 名簿のページの区分。役職名から導いた分類ではない。 */
+  section: "閣僚等" | "副大臣" | "大臣政務官";
+  /** 役職名の原文（例「内閣府特命担当大臣（金融）」）。丸めない・言い換えない。 */
+  role: string;
+  /** 名簿の日付表記の原文（例「令和８年９月１７日発足」）。 */
+  effectiveDateText: string;
+  /** 内閣の代（名簿 URL に入る。例 105）。 */
+  cabinet: number;
+  /** 名簿ページの URL。一次資料。 */
+  sourceUrl: string;
+};
+export type TimelineEntry = VoteEntry | BillEntry | SpeechEntry | StanceEntry | QuestionEntry | AttendanceEntry | CommitteeRoleEntry | CabinetRoleEntry | LocalVoteEntry;
 
 /** `assemblies/{assemblyId}/rollcalls/index.json`（LocalRollCallSummary[]）の1行のうち Web が読む項目（#204） */
 export interface LocalRollCallSubject {
