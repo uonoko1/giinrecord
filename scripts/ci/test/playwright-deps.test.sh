@@ -65,12 +65,18 @@ with_budget() { # with_budget <1回の秒> <試行回数> → $TMP/pw.sh
 # **ci.yml 全体の最小値を取ってはいけない**——`stale-base` の 10 分はこの step を走らせない
 # ので、関係の無い数で落ちる（packages/etl/test/playwright-deps-budget.test.ts の同じ注を見よ）。
 # **読めなければテストを落とす**（0 や空で通すと、下の比較が空振りして常に緑になる）。
+# **`| head -1` を使わない**（#527: `pipefail` のもとで早期終了する読み手をパイプの末尾に置くと、
+# 書き手が SIGPIPE で死んで**確率的に**偽になる。`scripts/ci/shellcheck.sh` の検査が CI で落とした）。
+# **最小値は awk の中で取る**——パイプが 1 本も無くなる。
 shortest_job_timeout_minutes() {
   awk '
     /^  [A-Za-z0-9_-]+:[[:space:]]*$/ { job=$1; sub(/:$/,"",job); t="" }
     /^    timeout-minutes:[[:space:]]*[0-9]+[[:space:]]*$/ { t=$2 }
-    /^      - name: Install Chromium for Playwright[[:space:]]*$/ { if (t != "") print t }
-  ' "$ROOT/.github/workflows/ci.yml" | sort -n | head -1
+    /^      - name: Install Chromium for Playwright[[:space:]]*$/ {
+      if (t != "" && (min == "" || t + 0 < min + 0)) min = t
+    }
+    END { if (min != "") print min }
+  ' "$ROOT/.github/workflows/ci.yml"
 }
 
 # ---- 入った場合 -------------------------------------------------------------------------------
