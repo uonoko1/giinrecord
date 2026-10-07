@@ -4,7 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
-import { moduleSpecifiers } from "./value-imports";
+import { moduleSpecifiers, scanSources } from "./value-imports";
 
 /**
  * **`~/` エイリアスを書かない（#500）。どの実行環境でも解決できないから。**
@@ -93,7 +93,7 @@ describe("`~/` エイリアスを書かない（#500）", () => {
     expect(names, "ルート直下の設定ファイルを見ていない").toContain("vite.config.ts");
     expect(names, "テストファイルを見ていない（~/ はテスト自身の読み込みも壊す）").toContain("app/lib/data-files.test.ts");
     // 実際に指定子を読めている（空文字を見ていない）
-    const total = files.reduce((n, f) => n + moduleSpecifiers(readFileSync(f, "utf8"), f).length, 0);
+    const total = [...scanSources(files).values()].reduce((n, specs) => n + specs.length, 0);
     expect(total, "モジュール指定子が 1 つも読めていない").toBeGreaterThan(100);
   });
 
@@ -134,7 +134,10 @@ describe("`~/` エイリアスを書かない（#500）", () => {
     const scanned: string[] = [];
     for (const file of files) {
       scanned.push(rel(file));
-      for (const spec of moduleSpecifiers(readFileSync(file, "utf8"), file)) {
+      // **`scanSources` は内容をキーに memo するだけで、読む顔ぶれは `files` のまま（#1242）。**
+      // ここを 1 ファイルずつ呼ぶのは、**ループの中で絞る変異を下の突き合わせに捕まえさせる**ため
+      // （まとめて 1 回呼ぶと `scanned` と実際に読んだ集合がずれても分からなくなる）。
+      for (const spec of scanSources([file]).get(file) ?? []) {
         if (isTildeAlias(spec)) offenders.push(`${rel(file)}: "${spec}"`);
       }
     }

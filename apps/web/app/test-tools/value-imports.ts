@@ -118,7 +118,13 @@ export function metaGlobs(code: string, fileName = "x.ts"): string[] {
  * コメントと文字列リテラルは AST なので最初から対象外（`"~/lib/x"` という**ただの文字列**は拾わない）。
  */
 export function moduleSpecifiers(code: string, fileName = "x.ts"): string[] {
-  const sf = ts.createSourceFile(fileName, code, ts.ScriptTarget.Latest, true);
+  // **`setParentNodes` は立てない（#1242）。** この関数は `.parent` も `node.getText()` も
+  // 使わない（指定子は `StringLiteralLike.text` から直に取る）。立てると親リンクを張る分だけ
+  // 遅くなり、実測で **195 ファイルの median 756ms → 566ms**（約 1.3 倍）の差が出た。
+  // 答えは 1 件も変わらない（195 ファイルと 20 形の fixture すべてで突き合わせ済み・差 0 件）。
+  // **`valueImports` / `dynamicImports` / `metaGlobs` は `node.getText(sf)` を呼ぶので
+  // そちらは `true` のままでなければならない**（false にすると空文字が返って静かに黙る）。
+  const sf = ts.createSourceFile(fileName, code, ts.ScriptTarget.Latest, false);
   const found: string[] = [];
   const walk = (node: ts.Node): void => {
     // import / export ... from（型だけ・副作用・再エクスポートを含む）
@@ -230,3 +236,63 @@ export function entriesReaching(
   }
   return hits;
 }
+
+/**
+ * **同じ内容を 2 度パースしない形で、ファイル群の指定子を集める（#1242）。**
+ *
+ * なぜ要るか: `no-path-alias.test.ts` は 2 つの `it` が**同じ 195 ファイルをそれぞれ走査する**。
+ * 2026-10-07 に**2 人の実装者が独立に**、`apps/web` を 1 行も触っていない枝で
+ * この 1 ファイルが共有の `testTimeout: 20000` を超えて落ちるのを踏んだ。
+ *
+ * **内訳**（vitest の worker 内、load average 28〜43）:
+ *
+ *     tsconfig の解析と走査                      54ms   ← 走査は問題ではない
+ *     readFileSync x195（1.25MB）                22ms   ← **I/O は問題ではない**
+ *     ts.createSourceFile x195（1 回目）      1,754ms   ← **ここが全部**
+ *     ts.createSourceFile x195（2 回目）      1,148ms   ← **同じものをもう一度**
+ *
+ * **#538 の手（`Promise.all` での I/O 並列化）は効かない**——並列化できる I/O が 22ms しか無く、
+ * 残りはパースの CPU 時間である。**#501 の「2 回読むのをやめる」が当たる形。**
+ *
+ * **なぜ `beforeAll` や module scope に上げないか**（#520 / #556）:
+ * `testTimeout` は `tests` にだけ効き、`collect`（import 時）は管轄外。上に上げると
+ * **速くなるのではなく、誰も見ていない予算に荷重が移るだけ**になる。
+ * それに `no-path-alias.test.ts` の設計は「走査を `it` の中に置き、読んだ顔ぶれを
+ * その場で tsconfig と突き合わせる」ことで変異（ループ内の `continue` で絞る形）を捕まえている。
+ * **上に上げるとその結合が切れる。** だから `it` は従来どおり自分で全ファイルを走査しつつ、
+ * **パースだけを共有する。**
+ *
+ * **キーは内容そのもの**（ファイル名や mtime ではない）。名前でキャッシュすると
+ * **書き換えたのに古い答えを返す**——`~/` を足したのに緑、という最悪の形になる。
+ * `scan-budget.test.ts` が「同じ名前で内容を変えたら新しい答えを返す」ことを固定している。
+ *
+ * `parsed` は**実際にパースした回数**。時間ではなく回数で見るのは、
+ * 時間が負荷で 3 倍以上ぶれるため（負荷の高い日に誤って落ちる検査にしない）。
+ */
+type ScanSources = {
+  (files: string[], readFile?: (f: string) => string): Map<string, string[]>;
+  /** 実際に `ts.createSourceFile` を通った回数（memo が効いていれば 2 周目は増えない） */
+  parsed: number;
+};
+
+const specifierMemo = new Map<string, string[]>();
+
+export const scanSources: ScanSources = Object.assign(
+  (files: string[], readFile: (f: string) => string = (f) => readFileSync(f, "utf8")): Map<string, string[]> => {
+    const out = new Map<string, string[]>();
+    for (const file of files) {
+      const code = readFile(file);
+      const cached = specifierMemo.get(code);
+      if (cached) {
+        out.set(file, cached);
+        continue;
+      }
+      const specs = moduleSpecifiers(code, file);
+      scanSources.parsed += 1;
+      specifierMemo.set(code, specs);
+      out.set(file, specs);
+    }
+    return out;
+  },
+  { parsed: 0 },
+);
