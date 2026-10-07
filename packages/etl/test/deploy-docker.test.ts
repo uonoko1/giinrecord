@@ -302,7 +302,16 @@ test("site.conf: script-src は 'self' 'unsafe-inline'（inline hydration script
 
 test("ci.yml: docker-web は URL smoke の後に Playwright（chromium）の browser-check を 8081 に対して実行する（#194）", () => {
   const job = ci.slice(ci.indexOf("  docker-web:"));
-  assert.match(job, /playwright install --with-deps chromium/);
+  // #1254: `pnpm --filter web exec playwright install --with-deps chromium` は
+  // **`scripts/ci/playwright-deps.sh` に移した**（apt のミラー障害でこの step だけが
+  // 20 分の timeout-minutes を食い切り、job が無言で cancelled になっていた。実測 1132s / 1152s）。
+  // **ここが見るのは「chromium を入れる step が在ること」で、入れ方そのものはスクリプトが持つ。**
+  // **スクリプトの側にその逐語が在ることを、この場で確かめる**（指す先が空になったら落ちるように。
+  // メモリの `fixtures-and-prose-drift-from-reality`: 指している先は実物から読む）。
+  assert.match(job, /bash scripts\/ci\/playwright-deps\.sh --cache-hit /);
+  const depsScript = read("scripts/ci/playwright-deps.sh");
+  assert.match(depsScript, /playwright install --with-deps chromium/, "cache-miss 側で chromium を入れる");
+  assert.match(depsScript, /playwright install-deps chromium/, "cache-hit 側で OS の依存を入れる");
   assert.match(job, /actions\/cache@v4[\s\S]*?ms-playwright/, "chromium download is cached");
   assert.match(job, /browser-check -- --url http:\/\/127\.0\.0\.1:8081/);
   assert.ok(
