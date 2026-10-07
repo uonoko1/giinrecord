@@ -21,7 +21,7 @@ import { committeePageUrl, fetchCommitteeRosters } from "./sources/kokkai-commit
 import { matchCommitteeRoles, type MatchedCommitteeRole } from "./match-committee.ts";
 import { buildDataset, mergeRosters, rosterSessionsFor, type Roster } from "./aggregate.ts";
 import { dietAssemblies, readSessionsOnDisk, validateDataset, writeDataset } from "./dataset.ts";
-import { carriedTenureVerified, dropCarriedCommitteeRoles, dropCarriedSpeeches, lostDecisions, lostSessionEntries, lostTimelineEntries, lostVoteMatches, planSessions, readCarried, readRollCallIndex, readSessionCounts, restoreDecisions } from "./sessions.ts";
+import { carriedTenureVerified, dropCarriedCommitteeRoles, dropCarriedSpeeches, lostDecisions, lostSessionEntries, lostTimelineEntries, lostVoteMatches, planSessions, readCarried, readRollCallIndex, readSessionCounts, restoreDecisions, rosterCoveredSessions, sessionsWithoutRoster, unmatchedMagnitudeExceeded, unmatchedMagnitudeLimit } from "./sessions.ts";
 import { readMemberIndex } from "./local-assemblies.ts";
 
 /**
@@ -89,6 +89,36 @@ const shugiinGroupsUnknown = unmatchedShugiinGroups(shugiin.members);
 if (shugiinGroupsUnknown.length) {
   console.warn(`unknown shugiin group abbreviations: ${shugiinGroupsUnknown.length} (see data/unmatched-groups.json; add to shugiin-groups.ts)`);
   for (const g of shugiinGroupsUnknown) console.warn(`  ${g.group}: ${g.memberIds.join(", ")}`);
+}
+
+// **名簿がその回次の在職を確認できない targets の回次（#1247）。**
+//
+// 参院名簿 `giin/{N}/giin.htm` は**第216回以降しか公開されていない**（上のループで 404 を飛ばしている）。
+// 遡り（`pnpm etl 200 … 216`）はその回次を targets に入れるので、下の発言・委員会名簿のループが
+// 会議録 API から氏名を取りに行くが、`tenureVerified` はその回次の在職を名簿から確認できず
+// **候補を 1 人も残さない**（#230。正しい振る舞い）。取った氏名は**全件** unmatched に落ちる。
+//
+// **実測 2026-10-08**（実物の fixture。`packages/etl/test/roster-covered-sessions.test.ts`）:
+// 同じ名簿・同じコードで**第204回は出席者 117 名が 0 件突合・117 件 unmatched**、
+// **第217回は 93 名が 93 件突合・0 件 unmatched**。回次が名簿の範囲に在るかどうかだけが違う。
+//
+// 発言（`speechId`）と委員会出席（`meetingId`）は回次を id から引けないので
+// `sessionOfUnmatched` が回次別ファイルに分けられず、**まるごと `unmatched.json` に入る**（#219 の設計）。
+// `/coverage` が読む唯一のファイルがそれなので、**6 週間 335 行 ⟷ 222,578 行で振動していた**。
+//
+// **衆院側には同じ規則が既に在る**（下の「過去回次を取っても tenureVerified が候補を落として
+// 全件 unmatched になるだけ。取りに行かない」）。**参院側に回次ごとの判定が無かった**だけである。
+//
+// **採決には効かせない**。票の未突合は `rollCallId` から回次を引けるので回次別ファイルに分かれ、
+// `unmatched.json` には入らない。第142〜199回の全票が未突合になるのは #217 から承知の設計で、
+// **遡りの価値はそこに在る**ので、名簿の無い回次の採決は今までどおり取る。
+const coveredSessions = rosterCoveredSessions(members);
+const uncoveredTargets = sessionsWithoutRoster(targets, members);
+const nameMatchableTargets = targets.filter((s) => !uncoveredTargets.includes(s));
+if (uncoveredTargets.length) {
+  console.warn(`sessions without a sangiin roster covering them: ${uncoveredTargets.join(" ")} (roster covers ${coveredSessions.length ? `${coveredSessions[0]}-${coveredSessions[coveredSessions.length - 1]}` : "nothing"})`);
+  console.warn("  speeches and committee rosters are NOT fetched for those sessions: tenureVerified cannot confirm tenure there, so every name would fall into data/unmatched.json (#1247)");
+  console.warn("  roll calls ARE still fetched for them (unmatched votes shard by rollCallId and do not reach /coverage)");
 }
 
 const rollCalls: RollCall[] = [];
@@ -239,7 +269,7 @@ console.log(`questions: ${rawQuestions.length} total, ${questions.questions.filt
 unmatched.push(...questions.unmatched);
 
 // 発言: 国会会議録API（公開まで約1ヶ月のラグ。meta.sources[].fetchedAt が「いつ時点の会議録か」を示す）。
-// 参院は全回次（targets）を回次ごとの参院名簿に突合する。
+// 参院は targets のうち**名簿が覆う回次**を、回次ごとの参院名簿に突合する（#1247。nameMatchableTargets）。
 //
 // 会議の範囲（Issue #242）: 本会議だけでなく**委員会・分科会・審査会・連合審査会・公聴会・調査会**も取る（SPEECH_SCOPE = "all"）。
 // API は nameOfMeeting を外すだけで同じ形のレコードを返す（#263 が第221回 70,544 件・#242 が第201・204回の分科会で確認）。
@@ -264,7 +294,8 @@ unmatched.push(...questions.unmatched);
 // 在職の確認（#230）は名簿を足しても緩まない: 衆院名簿が覆わない回次（第217・219回）は tenureVerified が候補を落とす。
 const speechMembers = speechRosters(members, shugiin.members);
 const speeches: Speech[] = [];
-for (const session of targets) {
+// 名簿が覆う回次だけ（#1247。nameMatchableTargets）。覆わない回次は取っても全件 unmatched になる。
+for (const session of nameMatchableTargets) {
   const matched = matchSpeeches(await fetchSpeeches(session, "sangiin", SPEECH_SCOPE), speechMembers);
   const matchedCount = matched.speeches.filter((s) => s.memberId).length;
   const positioned = matched.speeches.filter((s) => s.memberId && s.position).length;
@@ -288,7 +319,8 @@ const shugiinSpeeches = matchSpeeches(await fetchSpeeches(memberSession, "shugii
 // 委員会出席（Issue #109）: 委員会会議録の冒頭「出席者」欄の「発議者」（参議院側だけ。案件に参法がある会議録だけ）を参院名簿に名寄せし、
 // timeline の attendance 行（「委員会に発議者として出席」）にする。出席した発議者は発議者全員ではないので Bill.submitters / bill 行には決して入れない。
 const attendance: MatchedAttendance[] = [];
-for (const session of targets) {
+// 名簿が覆う回次だけ（#1247）。委員会出席の未突合は `meetingId` で回次を引けないので unmatched.json に入る。
+for (const session of nameMatchableTargets) {
   const meetings = await fetchCommitteeAttendance(session);
   const matched = matchAttendance(meetings, members);
   console.log(`session ${session}: ${meetings.length} committee meetings with 参法 proposers in attendance (${matched.entries.length} attendance entries matched, ${matched.unmatched.length} unmatched)`);
@@ -300,12 +332,16 @@ for (const session of targets) {
 // 記録するのは**出席の事実**であって在任期間ではない（会議録に就任日・退任日は無い。PO の判断、#244）。
 //
 // 取得する回次の範囲は発言（#73 / #242）と同じ理由で院ごとに違う。混ぜて読まない:
-//   - 参院: targets の全回次。参院名簿は回次ごとに公開があり、その回次の在職を確認できる。
+//   - 参院: targets のうち**名簿が覆う回次だけ**（#1247。nameMatchableTargets）。
+//     参院名簿は回次ごとに公開が在るが、**公開が在るのは第216回以降だけ**である（第215回以前は 404）。
+//     ここにはかつて「targets の全回次」と書いてあり、**その前提が遡りでは成り立たなかった**。
 //   - 衆院: memberSession の 1 回次だけ。衆院名簿は「現在」の 1 回次分しか無い（#71）ので、
 //     過去回次を取っても `tenureVerified` が候補を落として全件 unmatched になるだけ。取りに行かない。
 const committeeRoles: MatchedCommitteeRole[] = [];
 const rosterTargets: [number, House, Member[]][] = [
-  ...targets.map((s): [number, House, Member[]] => [s, "sangiin", members]),
+  // 参院: 名簿が覆う targets の回次だけ（#1247）。「参院名簿は回次ごとに公開がある」のは**第216回以降**で、
+  // それより前の回次を取ると衆院の過去回次と同じ理由で全件 unmatched になる（実測 第204回 117/117）。
+  ...nameMatchableTargets.map((s): [number, House, Member[]] => [s, "sangiin", members]),
   [memberSession, "shugiin", shugiin.members],
 ];
 for (const [session, house, roster] of rosterTargets) {
@@ -343,6 +379,17 @@ if (unmatched.length) {
   const perSession = [...bySession].sort((a, b) => a[0] - b[0]).map(([s, rows]) => `${s}:${rows.length}`).join(" ");
   console.warn(`unmatched: ${unmatched.length} (see data/unmatched/{session}.json and data/unmatched.json)`);
   console.warn(`  by session: ${perSession}${rest.length ? ` (no session: ${rest.length})` : ""}`);
+  // **`/coverage` が読む `unmatched.json` の桁の歯止め（#1247）。**
+  // `sessionOfUnmatched` が発言・委員会出席を回次別に分けないのは「/coverage から見えなくなるから」＋
+  // **「件数が小さいから」**である。件数が小さいという前提が崩れたら、分けない判断の根拠も崩れている。
+  // 上の回次の絞り込みが効いていれば届かない値なので、**ここに来るのは別の経路で同じ壊れ方をしたとき**である
+  // （壊れた出力を公開せずに止める。`lostVoteMatches` と同じ位置づけ）。
+  if (unmatchedMagnitudeExceeded(rest.length)) {
+    console.error(`data/unmatched.json would have ${rest.length} rows, over the limit of ${unmatchedMagnitudeLimit()} (#1247)`);
+    console.error("  that file is the only unmatched file /coverage reads, and it is not sharded by session on purpose (sessionOfUnmatched cannot read a session out of speechId / meetingId)");
+    console.error("  a count this large means names were matched against rosters that cannot confirm tenure for their session; refusing to publish it");
+    process.exit(1);
+  }
 }
 // 氏名だけで紐づき、採決ページの会派がどの回次の名簿の会派とも違った票は data/group-mismatch.json に永続化する（Issue #24）。
 // 名簿に現れない会派改称・移籍なら正常、名簿にいない旧議員が同名の現職に紐づいていたら誤りなので、運用者がファイルで確認する。
