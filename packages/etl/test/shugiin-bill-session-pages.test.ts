@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import iconv from "iconv-lite";
 import type { Bill } from "@seiji-kiroku/shared";
-import { mergeShugiinBill, parseShugiinBill, toBillSummary } from "../src/sources/shugiin-bills.ts";
+import { addShugiinBillPage, mergeShugiinBill, parseShugiinBill, toBillSummary } from "../src/sources/shugiin-bills.ts";
 
 /**
  * **同じ議案に、審議回次ごとの別の経過ページが在る**（#1218）。
@@ -195,20 +195,85 @@ describe("cli.ts の取り込みループが後勝ちに戻っていないこと
    */
   const src = readFileSync(new URL("../src/cli.ts", import.meta.url), "utf8");
 
-  test("衆院議案の取り込みは mergeShugiinBill を通る", () => {
-    assert.match(src, /mergeShugiinBill/, "cli.ts が mergeShugiinBill を呼んでいない（後勝ちに戻っている）");
-    assert.match(src, /import \{[^}]*mergeShugiinBill[^}]*\} from "\.\/sources\/shugiin-bills\.ts";/);
+  test("衆院議案の取り込みは addShugiinBillPage を通る", () => {
+    assert.match(src, /addShugiinBillPage/, "cli.ts が addShugiinBillPage を呼んでいない（後勝ちに戻っている）");
+    assert.match(src, /import \{[^}]*addShugiinBillPage[^}]*\} from "\.\/sources\/shugiin-bills\.ts";/);
   });
 
   test("取得したページを素のまま set する行が無い（後勝ちの形が復活していない）", () => {
     // **これが喪失そのものの形**: `for (const b of list) shugiinBills.set(b.id, b);`
+    // **`shugiinBills.set(` が 1 つも無いのが正しい**（重ねるのは addShugiinBillPage の役目）。
+    // **「0 件だから clean」ではない**ので、取り込みループ自体が在ることを別に確かめる。
+    assert.match(src, /for \(const b of list\)/, "取り込みループが見つからない（検査が何も見ていない）");
     const lastWins = [...src.matchAll(/shugiinBills\.set\(([^)]*)\)/g)].map((m) => m[1]!.trim());
-    assert.ok(lastWins.length > 0, "shugiinBills.set の呼び出しが見つからない（検査が何も見ていない）");
-    for (const args of lastWins) {
-      assert.ok(
-        /mergeShugiinBill/.test(args) || !/,\s*b\s*$/.test(args),
-        `取得したページを素のまま上書きしている: shugiinBills.set(${args})`,
-      );
-    }
+    assert.deepEqual(lastWins, [], "cli.ts が自分で shugiinBills.set している（後勝ちに戻せる形）");
+  });
+});
+
+describe("取り込みの順序: 新しいページが古いページに負けないこと（#1218 レビュー指摘 1）", () => {
+  /**
+   * **引数順は「語が在るか」では守れない。**
+   *
+   * `mergeShugiinBill(previous, b)` を `mergeShugiinBill(b, previous)` に変えると
+   * **「古いページが新しいページを上書きする」**——この PR が直したバグがそのまま戻る。
+   * **それでも `mergeShugiinBill` という語は在るので、ソースを見る検査は落ちない。**
+   *
+   * **実測（レビューが一次資料 79 件で測った）**: 引数を逆にすると
+   * **21/79 件の付託日が古い値に化けるのに、`referredCommittees` の件数は 1 件しか動かない。**
+   * **件数の検査でも、語を見る検査でも鳴らない**＝**黙って別の値が出る**形である。
+   *
+   * **だから「取り込みの 1 歩」を関数に出して、振る舞いで固定する。**
+   */
+  test("addShugiinBillPage: 同じ id の 2 ページ目を重ねても、新しいページの値が勝つ", () => {
+    const bills = new Map<string, Bill>();
+    addShugiinBillPage(bills, bill(S216));
+    addShugiinBillPage(bills, bill(S217));
+    const got = bills.get("216-衆法-9")!;
+    // **第217回のページが書いた付託日を採る**（引数が逆だと 2024-12-10 のまま＝古いページが勝つ）
+    assert.deepEqual(got.referral, { shugiin: { date: "2025-01-24", committee: "政治改革に関する特別" } });
+    assert.equal(got.sourceUrl, `${BASE}/keika/${S217}.htm`, "新しいページの sourceUrl を採っていない");
+    // **第216回のページだけが書いた受理日は残る**（これが #1218 の修正そのもの）
+    assert.deepEqual(got.received, { shugiin: "2024-12-09" });
+  });
+
+  test("addShugiinBillPage: 欄が空の最新ページを重ねても、前のページの事実が残る", () => {
+    const bills = new Map<string, Bill>();
+    addShugiinBillPage(bills, bill(S216));
+    addShugiinBillPage(bills, bill(S220));
+    const got = bills.get("216-衆法-9")!;
+    assert.deepEqual(got.referral, { shugiin: { date: "2024-12-10", committee: "政治改革に関する特別" } });
+    assert.deepEqual(got.result, { shugiin: "閉会中審査" });
+  });
+
+  test("addShugiinBillPage: 3 ページを順に重ねると、最後に書かれた付託日になる", () => {
+    const bills = new Map<string, Bill>();
+    for (const k of [S216, S217, S220]) addShugiinBillPage(bills, bill(k));
+    const got = bills.get("216-衆法-9")!;
+    // S220 は付託が空なので、最後に「書いた」のは S217
+    assert.equal(got.referral?.shugiin?.date, "2025-01-24");
+    // **引数が逆だと S216 の 2024-12-10 になる**
+    assert.notEqual(got.referral?.shugiin?.date, "2024-12-10", "古いページが勝っている（引数順が逆）");
+    assert.equal(bills.size, 1, "同じ id が 2 行になっている");
+  });
+
+  test("addShugiinBillPage: 初めて見る id はそのまま入る", () => {
+    const bills = new Map<string, Bill>();
+    addShugiinBillPage(bills, bill(T216));
+    assert.deepEqual(bills.get("216-衆法-10"), bill(T216));
+    assert.equal(bills.size, 1);
+  });
+
+  test("addShugiinBillPage: 重ねた回数を返す（cli のログが数を言えること）", () => {
+    const bills = new Map<string, Bill>();
+    assert.equal(addShugiinBillPage(bills, bill(S216)), false, "初出で true を返している");
+    assert.equal(addShugiinBillPage(bills, bill(S217)), true, "衝突したのに false を返している");
+  });
+
+  test("cli.ts は addShugiinBillPage を使い、自分で set していない", () => {
+    const src = readFileSync(new URL("../src/cli.ts", import.meta.url), "utf8");
+    assert.match(src, /addShugiinBillPage\(shugiinBills, b\)/, "cli.ts が addShugiinBillPage を呼んでいない");
+    // **引数順を自前で書ける形（直接 set / 直接 merge）が残っていないこと**
+    assert.doesNotMatch(src, /shugiinBills\.set\(/, "cli.ts が自分で shugiinBills.set している（引数順を取り違えられる）");
+    assert.doesNotMatch(src, /mergeShugiinBill\(/, "cli.ts が自分で mergeShugiinBill を呼んでいる（引数順を取り違えられる）");
   });
 });

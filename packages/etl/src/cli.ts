@@ -10,7 +10,7 @@ import { shardUnmatched, type UnmatchedRow } from "./unmatched.ts";
 import { billListUrl, committeeBills, fetchBills, matchBillResults, toBillDecisions, type Bill } from "./sources/sangiin-bills.ts";
 import { matchSpeeches, speechRosters } from "./match-speeches.ts";
 import { matchBills } from "./match-bills.ts";
-import { fetchShugiinBills, mergeShugiinBill, shugiinBillListUrl } from "./sources/shugiin-bills.ts";
+import { addShugiinBillPage, fetchShugiinBills, shugiinBillListUrl } from "./sources/shugiin-bills.ts";
 import { matchShugiinBills } from "./match-shugiin-bills.ts";
 import { fetchShugiinQuestions, shugiinQuestionListUrl } from "./sources/shugiin-questions.ts";
 import { fetchSangiinQuestions, sangiinQuestionListUrl } from "./sources/sangiin-questions.ts";
@@ -201,8 +201,12 @@ unmatched.push(...proposed.unmatched);
 // `id`（`{提出回次}-{種類}-{番号}`）が同じまま中身の違うページが複数できる。
 // **後勝ちの `set` で潰すと、審議の途中で欄がまだ空の最新回次のページが勝ち、
 // 前の回次が記録していた付託・審議結果・受理日が消える**（実測 18 件 / 1,941。うち付託 4 件）。
-// **各ページは「その回次に起きたこと」の部分的な記録**なので、`mergeShugiinBill` で重ねる
+// **各ページは「その回次に起きたこと」の部分的な記録**なので、`addShugiinBillPage` で重ねる
 // （書いている欄は後のページを採り、**書いていない欄は前の値を消さない**）。
+//
+// **重ねる順序は `addShugiinBillPage` の中に閉じてある。** ここで `previous` を取り出して
+// 自分で `merge` を呼ぶと、**引数を取り違えたときに「古いページが勝つ」形に戻るのに
+// 検査が鳴らない**（#1218 のレビュー指摘 1。実測で 21/79 件の付託日が古い値に化けた）。
 //
 // 前回出力の議案（data/bills/）を先に入れ、今回取得した分を重ねる（引き継ぐ回次の議案を消さない。#103）。
 const shugiinBills = new Map<string, SharedBill>(carried.bills.map((b) => [b.id, b]));
@@ -210,11 +214,7 @@ let shugiinMergedPages = 0;
 for (const session of targets) {
   const list = await fetchShugiinBills(session);
   console.log(`session ${session}: ${list.length} shugiin bills (${list.filter((b) => b.shugiinGroupStance).length} with group stance)`);
-  for (const b of list) {
-    const previous = shugiinBills.get(b.id);
-    if (previous) shugiinMergedPages++;
-    shugiinBills.set(b.id, previous ? mergeShugiinBill(previous, b) : b);
-  }
+  for (const b of list) if (addShugiinBillPage(shugiinBills, b)) shugiinMergedPages++;
 }
 if (shugiinMergedPages) console.log(`shugiin bills: merged ${shugiinMergedPages} additional session pages onto existing bills (#1218)`);
 // 提出者・賛成者は衆院の名簿に名寄せして timeline の bill 行にする（Issue #73）。名簿は「現在」の1回次分（memberSession）しか無いので、

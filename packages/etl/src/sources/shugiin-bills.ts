@@ -318,6 +318,32 @@ export function mergeShugiinBill(previous: Bill, next: Bill): Bill {
   return { ...previous, ...written };
 }
 
+/**
+ * **取り込みの 1 歩**: 取得したページ `page` を `bills` に重ねる（#1218 のレビュー指摘 1）。
+ * **既にその id が在れば重ねた**ことを示す `true` を返す（cli がログで数を言うため）。
+ *
+ * ## なぜ cli のループではなく関数にするか
+ *
+ * **引数順は「`mergeShugiinBill` という語が在るか」では守れない。**
+ * `mergeShugiinBill(previous, page)` を `mergeShugiinBill(page, previous)` に取り違えると
+ * **「古いページが新しいページを上書きする」**——#1218 が直したバグがそのまま戻るのに、
+ * **語は在るのでソースを見る検査は落ちない。**
+ *
+ * **実測（レビューが一次資料 79 件で測った）**: 引数を逆にすると
+ * **21/79 件の付託日が古い値に化けるのに、`referredCommittees` の件数は 1 件しか動かない。**
+ * **件数でも語でも鳴らない＝「黙って別の値が出る」**形で、
+ * **「記録が出ない」より重い**（利用者が自分では気づけない）。
+ *
+ * **だから順序を 1 か所に閉じ込めて、振る舞いで固定する。**
+ * **呼び出し側は `previous` を触らない**ので、取り違えようがない。
+ */
+export function addShugiinBillPage(bills: Map<string, Bill>, page: Bill): boolean {
+  const previous = bills.get(page.id);
+  // **`previous` が先・`page`（新しいページ）が後**。この順序がこの関数の全部である。
+  bills.set(page.id, previous ? mergeShugiinBill(previous, page) : page);
+  return previous !== undefined;
+}
+
 /** パーサが「欄が無い」と「欄はあるが空」を分けている欄（空配列も事実として採る）。 */
 const EMPTY_IS_RECORDED: ReadonlySet<string> = new Set(["supporterNames"]);
 
