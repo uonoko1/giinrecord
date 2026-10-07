@@ -1,6 +1,8 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { Member, MemberTerm } from "@seiji-kiroku/shared";
 import { mergeRosters } from "../src/aggregate.ts";
 import { parseMemberList } from "../src/sources/sangiin-members.ts";
@@ -135,5 +137,138 @@ describe("unmatchedMagnitudeExceeded: /coverage が読む unmatched.json の桁�
     const limit = unmatchedMagnitudeLimit();
     assert.ok(limit > 549 * 4, `上限 ${limit} は健全な実測 549 行に近すぎる`);
     assert.ok(limit < 222578 / 4, `上限 ${limit} は壊れた実測 222,578 行に近すぎる`);
+  });
+});
+
+/* ------------------------------------------------------------------------------------------------
+ * 本番 `data/` に対する計測（計器が**壊れた状態で実際に鳴る**ことを示す）。
+ *
+ * `check-the-metric-moves-when-broken`: **壊れたときに動かない数は計器では無い。**
+ * ここで見るのは「`unmatched.json` に入っている行の回次が、名簿が覆う範囲に在るか」である。
+ * **健全な状態では覆う範囲しか現れず、壊れた状態では覆わない回次が大量に現れる。**
+ *
+ * **下限も上限も固定値を置かない**（#1175 が絶対値をやめた理由と同じ）。
+ * 見るのは**比率ではなく「覆わない回次の行が在るか」という事実**で、
+ * これは名簿（`members/`）と `unmatched.json` の両方から導出する。
+ * ---------------------------------------------------------------------------------------------- */
+
+const DATA = fileURLToPath(new URL("../../../data/", import.meta.url));
+
+const readJsonFile = <T>(file: string): T => JSON.parse(readFileSync(file, "utf-8")) as T;
+
+/** 本番 `data/members/` から国会の名簿を組み直す（index.json は terms を持たないので個票を読む）。 */
+const publishedDietMembers = (): Member[] => {
+  const index = readJsonFile<{ id: string; assemblyId?: string }[]>(join(DATA, "members/index.json"));
+  const out: Member[] = [];
+  for (const row of index) {
+    if (!row.assemblyId?.startsWith("diet-")) continue;
+    out.push(readJsonFile<Member>(join(DATA, "members", `${row.id}.json`)));
+  }
+  return out;
+};
+
+describe("本番 data/ の計測: unmatched.json の行が名簿の覆う回次に収まっているか", () => {
+  const members = publishedDietMembers();
+  const covered = new Set(rosterCoveredSessions(members));
+  const rows = readJsonFile<{ speechId?: string; meetingId?: string; session?: number }[]>(join(DATA, "unmatched.json"));
+
+  test("名簿は国会の回次をいくつか覆っている（名簿が読めていない実行をこの検査の緑に化けさせない）", () => {
+    // 覆う回次が 0 なら下の検査は全部「覆わない」になって無意味に赤くなる。先に母数が在ることを確かめる。
+    assert.ok(covered.size > 0, `名簿が 1 回次も覆っていない（members/ を読めていない）`);
+  });
+
+  test("**`unmatched.json` の発言の行に、名簿が覆わない回次が 1 つも無い**", () => {
+    // **これが Issue #1247 の壊れた状態で鳴る検査である。**
+    // 実測 2026-10-08（`origin/main` = eaff0d40 の時点）: 発言 157,222 行のうち **156,977 行**が
+    // 名簿の覆わない回次（第200〜215回）だった。名簿が覆うのは第216回以降だけである。
+    const offRoster = rows.filter((r) => r.speechId !== undefined && r.session !== undefined && !covered.has(r.session));
+    const sessions = [...new Set(offRoster.map((r) => r.session))].sort((a, b) => (a ?? 0) - (b ?? 0));
+    assert.deepEqual(
+      { rows: offRoster.length, sessions },
+      { rows: 0, sessions: [] },
+      `名簿が覆わない回次の発言が unmatched.json に入っている（#1247）。名簿が覆うのは ${[...covered].sort((a, b) => a - b).join(" ")}`,
+    );
+  });
+
+  test("**`/coverage` が読む `unmatched.json` の行数が桁の上限に収まっている**", () => {
+    assert.equal(
+      unmatchedMagnitudeExceeded(rows.length),
+      false,
+      `unmatched.json が ${rows.length} 行で上限 ${unmatchedMagnitudeLimit()} を超えている（#1247）`,
+    );
+  });
+});
+
+/* ------------------------------------------------------------------------------------------------
+ * `cli.ts` の結線（`packages/etl/test/match-speeches.test.ts` と同じ形で原文を読む）。
+ *
+ * 純粋関数が正しくても `cli.ts` が使っていなければ計器は鳴らない。
+ * 発言・委員会出席・委員会の役職の 3 つのループが `targets` のままだと壊れ方が戻るので、
+ * **3 つ全部**を名前で確かめる（片側を直して対の側を忘れる形。`fix-one-side-check-the-mirror`）。
+ * ---------------------------------------------------------------------------------------------- */
+
+describe("cli.ts の結線: 名簿が覆わない回次へ氏名の突合を行かせない（#1247）", () => {
+  const src = readFileSync(new URL("../src/cli.ts", import.meta.url), "utf8");
+
+  test("sessionsWithoutRoster の結果から nameMatchableTargets を作っている", () => {
+    assert.ok(/const uncoveredTargets = sessionsWithoutRoster\(targets, members\);/.test(src),
+      "sessionsWithoutRoster を targets と名簿で呼んでいない");
+    assert.ok(/const nameMatchableTargets = targets\.filter\(\(s\) => !uncoveredTargets\.includes\(s\)\);/.test(src),
+      "nameMatchableTargets を uncoveredTargets から作っていない");
+  });
+
+  test("参院の発言のループが nameMatchableTargets を回している（targets ではない）", () => {
+    assert.ok(/for \(const session of nameMatchableTargets\) \{\n  const matched = matchSpeeches\(await fetchSpeeches\(session, "sangiin"/.test(src),
+      "参院の発言を targets の全回次で取りに行っている（名簿が覆わない回次は全件 unmatched になる。#1247）");
+  });
+
+  test("委員会出席のループが nameMatchableTargets を回している", () => {
+    assert.ok(/for \(const session of nameMatchableTargets\) \{\n  const meetings = await fetchCommitteeAttendance\(session\);/.test(src),
+      "委員会出席を targets の全回次で取りに行っている（#1247）");
+  });
+
+  test("委員会の役職の参院側が nameMatchableTargets から作られている", () => {
+    assert.ok(/\.\.\.nameMatchableTargets\.map\(\(s\): \[number, House, Member\[\]\] => \[s, "sangiin", members\]\)/.test(src),
+      "委員会の役職の参院側を targets の全回次で取りに行っている（#1247）");
+  });
+
+  test("採決・議案・質問主意書のループは targets のまま（絞るのは氏名が unmatched.json に落ちる 3 種だけ）", () => {
+    // **極性を間違えないこと**: これらの未突合は `rollCallId` / `billId` / `questionId` から回次を引けるので
+    // 回次別ファイルに分かれ、**`/coverage` が読む `unmatched.json` には入らない**。
+    // 第142〜199回の全票が未突合になるのは #217 からの設計で、**遡りの価値はそこに在る**。
+    // ここを `nameMatchableTargets` に替えると、名簿の無い回次の採決が取れなくなる（#1247 の対象外）。
+    //
+    // **数を数えて固定する**: 絞らないループが 4 本在ることを確かめる。
+    // 1 本でも `nameMatchableTargets` に替わったら落ちるし、新しい `targets` のループが
+    // 黙って増えたときも落ちる（「0 件」と「数えていない」を区別する。#757 / #1056）。
+    const targetLoops = [...src.matchAll(/for \(const session of targets\) \{/g)].length;
+    const fetched = [
+      /for \(const session of targets\) \{[\s\S]{0,400}?fetchBills\(session\)/,
+      /for \(const session of targets\) \{[\s\S]{0,400}?fetchShugiinBills\(session\)/,
+      /for \(const session of targets\) \{[\s\S]{0,400}?fetchShugiinQuestions\(session\)/,
+    ];
+    assert.equal(targetLoops, 4,
+      `targets の全回次を回すループが ${targetLoops} 本（採決・議案・衆院議案・質問主意書の 4 本のはず）。` +
+      "絞ったのなら遡りが取れなくなっていないか、増えたのならその種別の未突合が unmatched.json に入らないかを確かめること（#1247）");
+    for (const re of fetched) {
+      assert.ok(re.test(src), `targets で回していないループが在る: ${re.source.slice(-40)}（#1247 の対象外のはず）`);
+    }
+  });
+
+  test("unmatched.json の行数が桁の上限を超えたら出力せずに止める", () => {
+    assert.ok(/if \(unmatchedMagnitudeExceeded\(rest\.length\)\) \{/.test(src),
+      "桁の検査を shardUnmatched の rest（= unmatched.json に書く行）に当てていない");
+    // **`unmatched.length`（全部）ではなく `rest.length`（unmatched.json に書く分）を見ること。**
+    // 全部を見ると、回次別ファイルに正しく分かれる第142〜199回の票の遡りで止まってしまう。
+    assert.equal(/unmatchedMagnitudeExceeded\(unmatched\.length\)/.test(src), false,
+      "桁の検査を未突合の総数に当てている（回次別に分かれる票の遡りを止めてしまう。#1247）");
+    // **止めることまで確かめる。** 警告だけでは壊れた unmatched.json がそのまま /coverage に出る。
+    // **行頭から見る**（`// process.exit(1);` をコメントアウトして黙らせた形を通さない。
+    // ここは実際に変異で素通りした: `/process\.exit\(1\);/` だけだとコメントの中にも当たる）。
+    const start = src.indexOf("if (unmatchedMagnitudeExceeded(");
+    assert.notEqual(start, -1, "桁の検査そのものが無い");
+    const guard = src.slice(start, src.indexOf("\n}", start));
+    assert.ok(/^\s*process\.exit\(1\);\s*$/m.test(guard),
+      "上限を超えても出力を止めていない（警告だけ・コメントアウト済み。壊れた unmatched.json が /coverage に出る）");
   });
 });
