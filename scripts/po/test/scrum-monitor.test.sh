@@ -1180,9 +1180,27 @@ test_case "monitor: バックティックと多バイト文字を語ごと落と
 #   **長さを許す変異**  `{1,12}` → `{1,40}`    → **`db01` は 4 文字なので長さでは止まらない。**
 #                                                **数字を含まないことが止めている**ので、
 #                                                **長さの変異を殺すには長い純英字の `a:b` 形が要る**
-# **だから fixture は 2 つ要る**（**1 行では X2 を殺せない**）:
+#   **大文字を許す変異** `[a-z]` → `[a-zA-Z]`  → **`vpsHost:appWeb` が通る**（#1248 のレビュー。
+#                                                **`db01:5432` と `averyverylongname:…` は
+#                                                どちらもこの変異では止まったまま**なので、
+#                                                **上の 2 行では殺せない**）
+#   **点を許す変異**     `[a-z]` → `[a-z.]`    → **`abc.internal:web` が通る**（#1248 のレビュー。
+#                                                **FQDN とサービス名の形。**
+#                                                **既存の 2 行はどちらも点を含まない**ので、
+#                                                **やはり上の 2 行では殺せない**）
+# **だから fixture は 4 つ要る**（**1 行では X2 を、2 行では大文字と点を殺せない**）:
 #   `db01:5432`                      → **数字**を許す変異で漏れる
 #   `averyverylongname:averylongsub` → **長さ**を許す変異で漏れる（各節 13 文字以上・純英字）
+#   `vpsHost:appWeb`                 → **大文字**を許す変異で漏れる（#1248 のレビュー）
+#   `abc.internal:web`               → **点**を許す変異で漏れる（#1248 のレビュー）
+#
+# **実測（2026-10-08、基点 7c135ac6。`gh_err_allow` の awk を切り出して 4 語を流した）**:
+#   いまの規則 `^[a-z]{1,12}:[a-z]{1,12}$`
+#     → `abc.internal:web` / `vpsHost:appWeb` / `db01:5432` を**3 件すべて伏せる**（正しい）
+#     → `read:project` は**通る**（スコープ名が読めなくなっては困る）
+#   `[a-z]` → `[a-zA-Z]`  → **`vpsHost:appWeb` が漏れる**（他の 2 件は伏せたまま）
+#   `[a-z]` → `[a-z.]`    → **`abc.internal:web` が漏れる**（他の 2 件は伏せたまま）
+# **どちらの変異も、この 2 語を足す前の検査は緑のまま通していた**（#1248 のレビュー）。
 # **通る側（`read:project` が残ること）は `t_mon_pr_search_error_text_is_shown` が既に固定している**
 # ——**規則を消す／狭める向きの変異はそちらで死ぬ**ので、ここでは重ねない。
 t_mon_err_allowlist_upper_bounds_are_fixed() {
@@ -1191,12 +1209,14 @@ t_mon_err_allowlist_upper_bounds_are_fixed() {
   local hexkey="deadbeefcafebabedeadbeefcafebabe"  # 32 文字の純英字（hex 鍵の形）
   local hostport="db01:5432"                       # 数字を許すと通る（内部ホスト名とポート）
   local longscope="averyverylongname:averylongsub" # 各節 13 文字以上 → 長さを許すと通る
+  local camelhost="vpsHost:appWeb"                 # 大文字を許すと通る（#1248 のレビュー）
+  local fqdnhost="abc.internal:web"                # 点を許すと通る（#1248 のレビュー）
   local h; h=$(handler <<EOF
 handle() {
   case "\$*" in
     "pr list --repo "*) echo '[]' ;;
     "api graphql"*)
-      echo 'gh: HTTP 502 word $pass24 word $stop25 key $hexkey port 54321 node 987654321098765 code 1234 host $hostport scope $longscope' >&2
+      echo 'gh: HTTP 502 word $pass24 word $stop25 key $hexkey port 54321 node 987654321098765 code 1234 host $hostport scope $longscope camel $camelhost fqdn $fqdnhost' >&2
       exit 1 ;;
     *) echo "unexpected: \$*" >&2; exit 99 ;;
   esac
@@ -1221,6 +1241,12 @@ EOF
   assert_not_contains "$ERR" "db01"       "**ホスト名の断片も残さない**"
   assert_not_contains "$ERR" "$longscope" "**スコープ規則は各節 12 文字まで（長い a:b が漏れる・#1235 X2）**"
   assert_not_contains "$ERR" "averyverylongname" "**断片も残さない**"
+  # **#1248 のレビュー**: **大文字を許す変異（`[a-z]` → `[a-zA-Z]`）と
+  # 点を許す変異（`[a-z]` → `[a-z.]`）は、上の 4 行では 1 つも死ななかった**（実測は上の散文）。
+  assert_not_contains "$ERR" "$camelhost" "**スコープ規則は大文字を通さない（vpsHost:appWeb が漏れる・#1248）**"
+  assert_not_contains "$ERR" "vpsHost"    "**ホスト名の断片も残さない**"
+  assert_not_contains "$ERR" "$fqdnhost"  "**スコープ規則は点を通さない（abc.internal:web が漏れる・#1248）**"
+  assert_not_contains "$ERR" "abc.internal" "**FQDN の断片も残さない**"
 }
 test_case "monitor: allowlist の上限（24 文字 / 4 桁）を両側から固定する (#1217 P1/P2)" t_mon_err_allowlist_upper_bounds_are_fixed
 
