@@ -481,3 +481,78 @@ export function carriedTenureVerified(carried: readonly CarriedEntry[], members:
     return tenureVerified(member, { session: c.entry.session, date: c.entry.date });
   });
 }
+
+/**
+ * **名簿がその回次の在職を確認できる回次**（Issue #1247）。
+ *
+ * `tenureVerified` の (a)（`rosterCovers`。その回次の議員一覧に載っている）が
+ * **1 人でも成り立ちうる回次**を名簿そのものから数える。`term` の `sessionFrom`〜`sessionTo` の範囲である。
+ *
+ * **`sessionTo` が無い term は `sessionFrom` の 1 回次しか覆わない**ものとして数える。
+ * `mergeRosters` は「その回次の名簿に載っていた」ことだけから term を畳むので、
+ * `sessionTo` の無い term は「最後に取れた名簿の回次」であって「以後ずっと在職」ではない。
+ * 将来の回次を覆ったことにすると、この計器が**取っていない回次を『覆っている』と答える**。
+ */
+export function rosterCoveredSessions(members: readonly Member[]): number[] {
+  const covered = new Set<number>();
+  for (const m of members) {
+    for (const t of m.terms) {
+      const to = t.sessionTo ?? t.sessionFrom;
+      for (let s = t.sessionFrom; s <= to; s++) covered.add(s);
+    }
+  }
+  return [...covered].sort((a, b) => a - b);
+}
+
+/**
+ * **取りに行っても全件 unmatched になる targets の回次（Issue #1247）。**
+ *
+ * **これは「壊れたときに動く数」である。** 日次実行（既定の直近 5 回次）では**常に空**で、
+ * 名簿が覆わない回次を targets に入れた実行——遡り `pnpm etl 200 … 216`——でだけ中身が入る。
+ *
+ * **なぜ要るか**（実測 2026-10-08、`data/unmatched.json` の 8 commit を対で数えた）:
+ * 参院名簿 `giin/{N}/giin.htm` は**第216回以降しか公開されていない**（第215回以前は 404。
+ * `cli.ts` の「第215回以前は公開されておらず 404 → 無い事実として飛ばす」）。
+ * 遡りはその回次を targets に入れるので `cli.ts` が会議録 API から発言と委員会名簿を取りに行くが、
+ * `tenureVerified` はその回次の在職を名簿から確認できず**候補を 1 人も残さない**（#230。正しい振る舞い）。
+ * 結果、取った氏名が**全件** unmatched に落ちる。発言（`speechId`）と委員会出席（`meetingId`）は
+ * 回次を id から引けないので `sessionOfUnmatched` が分けられず、**まるごと `unmatched.json` に入る**。
+ * `/coverage` が読む唯一のファイルがそれなので、**利用者に見える「名寄せできていない」の数が 3 桁膨らむ**。
+ *
+ * **同じ規則は衆院側に既に在った**（`cli.ts`「過去回次を取っても `tenureVerified` が候補を落として
+ * 全件 unmatched になるだけ。取りに行かない」）。**参院側に回次ごとの判定が無かった**だけである。
+ * 参院名簿は回次ごとの公開が在るので「参院は targets の全回次」で足りると書かれていたが、
+ * **公開が在るのは第216回以降だけ**なので、その前提は遡りでは成り立たない。
+ *
+ * **名簿が空なら targets を全部返す。** 名簿が 1 回次も取れていない実行で発言を取りに行かせない
+ * （「0 件」と「測れなかった」を同じ扱いにしない。#1056）。
+ *
+ * **これは採決（`rollcalls/`）には効かせない。** 票の未突合は `rollCallId` から回次を引けるので
+ * 回次別ファイルに分かれ、`/coverage` が読む `unmatched.json` には入らない。
+ * 第142〜199回の全票が未突合になるのは #217 から承知の設計である（遡りの価値はそこに在る）。
+ */
+export function sessionsWithoutRoster(targets: readonly number[], members: readonly Member[]): number[] {
+  const covered = new Set(rosterCoveredSessions(members));
+  return [...new Set(targets)].filter((s) => !covered.has(s)).sort((a, b) => a - b);
+}
+
+/**
+ * **`/coverage` が読む `unmatched.json` の行数の上限（Issue #1247）。**
+ *
+ * `unmatched.ts` の `sessionOfUnmatched` が発言・委員会出席を回次別に**分けない**のは
+ * 「`/coverage` から見えなくなるから」＋「件数が小さいから」である。
+ * **件数が小さいという前提が崩れたら、分けない判断の根拠も崩れている。**
+ * その状態を黙って公開しないための歯止めで、**桁**だけを見る。
+ *
+ * **この値を実測に合わせて動かさないこと**（#1189 / `expected-table-is-not-a-knob`）。
+ * 壊れた側に寄せて緩めると、この検査は永久に鳴らない。健全な側に寄せて締めると、
+ * 名寄せの表記ゆれが少し増えた日に日次が止まる。**両方の実測から十分に離れた桁**に置く。
+ */
+export function unmatchedMagnitudeLimit(): number {
+  return 10_000;
+}
+
+/** `unmatched.json` に書く行数が上限を超えたか（`unmatchedMagnitudeLimit`）。上限そのものは通す。 */
+export function unmatchedMagnitudeExceeded(rows: number): boolean {
+  return rows > unmatchedMagnitudeLimit();
+}
