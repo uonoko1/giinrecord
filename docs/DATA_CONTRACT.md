@@ -3,6 +3,12 @@
 ETL（書く側）と Web（読む側）はこのファイル群だけで結合する。型は `packages/shared/src/index.ts` が正。
 すべて UTF-8 の JSON。キーはソート済み、末尾改行あり（差分を小さくするため）。
 
+**「ソート済み」は辞書順（UTF-16 コード単位の昇順）である。数値昇順ではない**——
+郵便番号のような整数様のキーでも `"10"` が `"9"` より先に来る（#1226）。
+**検査は直列化されたテキストから並びを見る**（`jsonKeyOrderViolations`）。
+`text === stableJson(JSON.parse(text))` では見えない: **`JSON.parse` も `Object.fromEntries` も
+整数様キーを数値昇順へ並べ替えるので、両辺が同じ壊れ方を再生して恒真になる**。
+
 ```
 data/
   meta.json                         DatasetMeta（取得日時・出典・対象回次）

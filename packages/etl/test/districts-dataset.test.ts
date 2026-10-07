@@ -67,3 +67,62 @@ test("validateDistricts: ファイルが無ければ違反", async () => {
   const v = await validateDistricts(dir);
   assert.ok(v.length >= 1 && v[0].includes("by-zip.json"));
 });
+
+/**
+ * #1226: 「キーはソート済み」は契約（docs/DATA_CONTRACT.md:4）だが、
+ * 検査が `text === stableJson(JSON.parse(text))` だったため**両辺が同じ壊れ方を再生して恒真**だった。
+ * ここでは期待値を `stableJson` から取らず、**逐語のテキストを置いて**赤になることを見る。
+ */
+test("validateDistricts: by-zip.json のキーが辞書順でなければ違反（#1226。整数様キーの数値昇順を見逃さない）", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "districts-"));
+  await writeDistricts(dir, resolved, meta());
+  const file = join(dir, "districts", "by-zip.json");
+  const byZip = JSON.parse(await readFile(file, "utf8")) as Record<string, unknown>;
+  // 旧実装の by-zip.json が出していた形: 整数様キー（先頭 0 無し）が数値昇順で先、
+  // 先頭 0 のキー（整数様でない）が後。郵便番号は 7 桁のまま、件数も meta と合わせる。
+  const keys = Object.keys(byZip);
+  const value = byZip[keys[0]];
+  const renamed = ["9998531", "0010000", ...keys.slice(2)];
+  const lines = renamed.map((k) => `${JSON.stringify(k)}: ${JSON.stringify(k === "9998531" || k === "0010000" ? value : byZip[k])}`);
+  // 逐語でテキストを組む（stableJson を通さない＝期待値と実測が別の源から来る）
+  await writeFile(file, `{\n ${lines.join(",\n ")}\n}\n`);
+  const v = await validateDistricts(dir);
+  assert.ok(v.some((x) => x.includes("by-zip.json") && x.includes("keys out of order")), v.join("\n"));
+  assert.ok(v.some((x) => x.includes('"9998531" before "0010000"')), v.join("\n"));
+});
+
+test("validateDistricts: meta.json のキーが辞書順でなければ違反（#1226）", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "districts-"));
+  await writeDistricts(dir, resolved, meta());
+  const file = join(dir, "districts", "meta.json");
+  const text = await readFile(file, "utf8");
+  // asOf の中のキーを入れ替える（値は変えない）。逐語の置換なので stableJson を通さない。
+  const before = '  "kenAll": "2026-07-31",\n  "shugiinDistricts": "2022-12-28"\n';
+  const after = '  "shugiinDistricts": "2022-12-28",\n  "kenAll": "2026-07-31"\n';
+  assert.ok(text.includes(before), `置換の対象が見つからない:\n${text.slice(0, 200)}`);
+  await writeFile(file, text.replace(before, after));
+  const v = await validateDistricts(dir);
+  assert.ok(v.some((x) => x.includes("meta.json") && x.includes('"shugiinDistricts" before "kenAll"')), v.join("\n"));
+});
+
+test("validateDistricts: municipalities.json（配列の中の object）のキーが辞書順でなければ違反（#1226）", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "districts-"));
+  await writeDistricts(dir, resolved, meta());
+  const file = join(dir, "districts", "municipalities.json");
+  const text = await readFile(file, "utf8");
+  // 先頭の 1 件の "city" と "code" を入れ替える（値は変えない）
+  const m = /^ {2}"city": ("[^"]*"),\n {2}"code": ("[^"]*"),\n/m.exec(text);
+  assert.ok(m, `置換の対象が見つからない:\n${text.slice(0, 200)}`);
+  await writeFile(file, text.replace(m[0], `  "code": ${m[2]},\n  "city": ${m[1]},\n`));
+  const v = await validateDistricts(dir);
+  assert.ok(v.some((x) => x.includes("municipalities.json") && x.includes('"code" before "city"')), v.join("\n"));
+});
+
+test("validateDistricts: 末尾改行が無ければ違反（#1226）", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "districts-"));
+  await writeDistricts(dir, resolved, meta());
+  const file = join(dir, "districts", "meta.json");
+  await writeFile(file, (await readFile(file, "utf8")).replace(/\n$/, ""));
+  const v = await validateDistricts(dir);
+  assert.ok(v.some((x) => x.includes("meta.json") && x.includes("trailing newline")), v.join("\n"));
+});

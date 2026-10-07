@@ -1,6 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { stableJson } from "../../json.ts";
+import { jsonKeyOrderViolations, stableJson } from "../../json.ts";
 import { HOKKAIDO_BUREAUS_URL } from "./hokkaido-bureaus.ts";
 import { KEN_ALL_PAGE_URL, KEN_ALL_ZIP_URL } from "./ken-all.ts";
 import type { ResolveResult, ResolvedMunicipality, ZipDistricts } from "./resolve.ts";
@@ -66,7 +66,16 @@ export async function validateDistricts(dataDir: string): Promise<string[]> {
   const dir = join(dataDir, "districts");
   const v: string[] = [];
   const read = async <T>(name: string): Promise<T | undefined> => {
-    try { return JSON.parse(await readFile(join(dir, name), "utf8")) as T; } catch { v.push(`districts/${name} missing or not JSON`); return undefined; }
+    let text: string;
+    try { text = await readFile(join(dir, name), "utf8"); } catch { v.push(`districts/${name} missing or not JSON`); return undefined; }
+    let value: T;
+    try { value = JSON.parse(text) as T; } catch { v.push(`districts/${name} missing or not JSON`); return undefined; }
+    // #1226: キーの並びは**テキストから**見る。`text === stableJson(JSON.parse(text))` だと
+    // 両辺が同じ直列化を通るので恒真になり得るし、`JSON.parse` 自体が整数様キー（郵便番号）を
+    // 数値昇順に並べ替えるので、パース後の `Object.keys` でも並びを観測できない。
+    for (const line of jsonKeyOrderViolations(text)) v.push(`districts/${name}: ${line}`);
+    if (!text.endsWith("\n")) v.push(`districts/${name}: no trailing newline`);
+    return value;
   };
   const byZip = await read<Record<string, ZipDistricts>>("by-zip.json");
   const municipalities = await read<ResolvedMunicipality[]>("municipalities.json");
