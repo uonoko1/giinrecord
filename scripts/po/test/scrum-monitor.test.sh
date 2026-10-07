@@ -1007,6 +1007,207 @@ EOF
 }
 test_case "monitor: 分類の表（実測 3 件を含む 10 通り）が読み分けられる (#1210)" t_mon_classifier_table
 
+# ---- 2c. **サニタイザの中核が無検査だった 4 か所**（#1217 のレビューで実測）--------------------
+#
+# **4 件の変異が 297/0 のまま生き残っていた。** **検査されていない実装は、
+# 次に触る人が黙って壊せる。** **恒真なテストは 1 件も無かったのに、無検査のコードが在った。**
+#   N1  語の形の allowlist（`gh_err_allow`）を丸ごと外す  → 0 件落ちた
+#   N4  `pr_err_first` を「最初の 1 件」→「最後の 1 件」   → 0 件落ちた
+#   N5  `[すべて除去されました]` の枝を消す                → 0 件落ちた
+#   N6  `shown` を `total` で切り詰める行を外す            → 0 件落ちた
+
+# **N1: 語の形の allowlist が本当に効いているか。**
+#
+# **初版はここを `tr -cd`（文字集合）で書いていて、しかも 1 件も検査が無かった**
+# ——**散文が「これが allowlist の層である」と最も強く主張していた行が、唯一無検査だった。**
+#
+# **この fixture は「安全な文字だけで綴られた秘密」を並べる**（**だから `tr -cd` では落ちない**。
+# **PO が実測した 5 形をそのまま使う**。[[fixtures-and-prose-drift-from-reality]]:
+# **fixture は実物が出す行から採る**——`error connecting to` は `gh` 2.89.0 が
+# `GH_HOST=<存在しないホスト>` で実際に吐く文面である）。
+#
+# **架空の鍵に本物の接頭辞（`ghp_` 等）を使わない**（`forbidden-patterns.sh` の
+# `fixture-secret` 規則に当たる。**実測で当たった**）。
+# **だが「長さが境界を外れた鍵」は測りたい**（初版の `_[A-Za-z0-9]{20,}` は
+# **`_` の後 19 文字で素通りした**）ので、**`faketok_` + 19 文字**で測る。
+# **いまの規則は長さを見ていないので、19 文字でも 28 文字でも同じく落ちる。**
+t_mon_err_allowlist_passes_only_safe_word_shapes() {
+  # **安全な文字だけで綴った秘密**（`/` も `://` も無く、`_` の後は 19 文字）
+  local host="internal-db.giinrecord.invalid"
+  local ipport="10.0.3.17:5432"
+  local shortkey="faketok_ABCDEFGHIJKLMNOPQRS"
+  local bearerval="sk-ant-verysecretvalue99"
+  local qs="graphql?token=abcdefghijklmnop&user=x"
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr list --repo "*) echo '[]' ;;
+    "api graphql"*)
+      echo 'gh: error connecting to $host (HTTP 403)' >&2
+      echo 'gh: dial tcp $ipport connect refused token $shortkey Bearer $bearerval $qs' >&2
+      exit 1 ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 4 "$STATUS" "ボードが読めなければ exit 4: $ERR"
+  # **漏れてはいけないもの**（**すべて「安全な文字だけ」で綴られている**）
+  assert_not_contains "$ERR" "$host"      "**内部のホスト名を出さない（OSS。/ も :// も持たない）**"
+  assert_not_contains "$ERR" "giinrecord.invalid" "**ドメインの一部も残さない**"
+  assert_not_contains "$ERR" "$ipport"    "**内部 IP とポートを出さない**"
+  assert_not_contains "$ERR" "10.0.3.17"  "**IP の一部も残さない**"
+  assert_not_contains "$ERR" "$shortkey"  "**鍵は長さに依存せず落ちる（アンダースコアの後 19 文字でも）**"
+  assert_not_contains "$ERR" "ABCDEFGHIJKLMNOPQRS" "**断片でも鍵は鍵である**"
+  assert_not_contains "$ERR" "$bearerval" "**ヘッダ名が無くても鍵の値は落ちる**"
+  assert_not_contains "$ERR" "verysecret" "**断片も残さない**"
+  assert_not_contains "$ERR" "abcdefghijklmnop" "**クエリ文字列の鍵も落ちる（スラッシュを持たない）**"
+  # **判別に必要な情報は残る**（#1210 の受け入れ条件 3。**消えすぎても困る**）
+  assert_contains "$ERR" "HTTP 403"       "**HTTP の状態は読める（これが無いと分類を追認できない）**"
+  assert_contains "$ERR" "error connecting to" "**英単語は残る（何が起きたかが読める）**"
+  assert_contains "$ERR" "[redacted]"     "**落ちた語は黙って消さず、伏せたことが見える**"
+}
+test_case "monitor: 語の形の allowlist だけを通す（安全な文字で綴った秘密も落ちる。#1217 N1)" t_mon_err_allowlist_passes_only_safe_word_shapes
+
+# **N1 の続き: バックティックと多バイト文字が落ちること。**
+#
+# **これは [[gh-body-must-be-a-file-not-inline]] の実害の直系である**——
+# **隣のプロジェクトでは、Issue 本文に引用されていた `docker rm -f <コンテナ名>` が実際に走った。**
+# **この文字列は `gh issue comment` の本文に入るので、バックティックが残れば同じ経路に乗る。**
+# **別の検査に分けるのは、N1 の fixture（秘密の形）と関心が違うから。**
+t_mon_err_allowlist_drops_shell_metacharacters() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr list --repo "*) echo '[]' ;;
+    "api graphql"*)
+      echo 'gh: host=vps.internal`whoami` $(id) (HTTP 403)' >&2
+      echo 'gh: エラー: 日本語の秘密です' >&2
+      exit 1 ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 4 "$STATUS" "ボードが読めなければ exit 4: $ERR"
+  # **バックティックと `$(` を literal で書くと shellcheck が SC2006 / SC2016 で落ちる**
+  # （**`scripts/ci/shellcheck.sh` は info も error として扱う**。実測で rc=1）。
+  # **8 進で組み立てる**——**測りたいのは「出力にこの文字が在るか」だけ**で、
+  # **綴りを shellcheck に解釈させる必要が無い。**
+  local bt dollarparen
+  bt=$(printf '\140'); dollarparen=$(printf '\044\050')
+  assert_not_contains "$ERR" "$bt"          "**バックティックを出さない（引用が実行に化ける）**"
+  assert_not_contains "$ERR" "$dollarparen" "**コマンド置換の形も出さない**"
+  assert_not_contains "$ERR" 'whoami'  "**バックティックの中身も残さない（語ごと落とす）**"
+  assert_not_contains "$ERR" '日本語の秘密' "**多バイト文字を通さない（allowlist の外）**"
+  assert_contains "$ERR" "HTTP 403"    "**HTTP の状態は残る**"
+}
+test_case "monitor: バックティックと多バイト文字を語ごと落とす (#1217 N1)" t_mon_err_allowlist_drops_shell_metacharacters
+
+# **N5: `[すべて除去されました]` と「gh は何も言わなかった」を区別する。**
+#
+# **初版はこの枝を消しても 0 件落ちた**（#1217 レビュー）。**区別は設計の意図である**:
+# **「何も言わなかった」は gh の事実**で、**「全部除去した」はこの道具の事実**。
+# **混ぜると、読む人が「gh は黙っていた」と誤って受け取る。**
+#
+# **到達可能である。実測して条件を詰めた**（**最初に書いた fixture は到達しなかった**）:
+#   `printf '\n\n'`          → **`$(cat)` が末尾の改行を落とすので `$raw` が空**になり、
+#                               **「gh は何も言いませんでした」の枝に落ちた**（別の枝である）
+#   **空白だけの stderr**      → **`$raw` は空ではない**（空白が在る）が、
+#                               **語が 1 つも無いので `gh_err_allow` の出力が空**になる。
+#                               **これが唯一この枝に落ちる形である**（実測）
+# **`gh` が字下げだけの行を吐く形は実在しうる**（JSON の整形途中で落ちる等）。
+# **`[redacted]` が 1 つでも出れば空にならない**ので、
+# **「ASCII 以外だけの stderr」はこの枝に落ちない**（`[redacted]` が残る）。
+t_mon_err_fully_redacted_is_not_silence() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr list --repo "*) echo '[]' ;;
+    "api graphql"*)
+      printf '   \n' >&2
+      exit 1 ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 4 "$STATUS" "ボードが読めなければ exit 4: $ERR"
+  assert_contains "$ERR" "すべて除去されました" "**「全部除去した」と言う（この道具の事実）**"
+  assert_not_contains "$ERR" "gh は何も言いませんでした" "**「gh が黙っていた」と混ぜない（別の事実）**"
+}
+test_case "monitor: 全部除去されたことと「gh が黙っていた」を混ぜない (#1217 N5)" t_mon_err_fully_redacted_is_not_silence
+
+# **N6: 母数の `shown` が `total` で切り詰められること**（#757。**境界値の `total=1`**）。
+#
+# **初版は切り詰める行を外しても 0 件落ちた**（#1217 レビュー）。
+# **既存の検査は `total=41 > 3` の側だけを測っていた**ので、
+# **`GH_ERR_MAX_LINES` をそのまま書く実装でも「41 行のうち先頭 3 行」で通ってしまう。**
+# **嘘が出るのは `total < GH_ERR_MAX_LINES` の側**——**1 行しか無いのに「先頭 3 行」と言う。**
+# **[[two-numbers-in-two-files-drift]] と同型で、母数の正しさが誰にも見られていなかった。**
+t_mon_err_shown_count_is_clamped_to_total() {
+  local h; h=$(handler <<'EOF'
+handle() {
+  case "$*" in
+    "pr list --repo "*) echo '[]' ;;
+    "api graphql"*)
+      echo 'gh: Bad credentials (HTTP 401)' >&2
+      exit 1 ;;
+    *) echo "unexpected: $*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 4 "$STATUS" "ボードが読めなければ exit 4: $ERR"
+  assert_contains "$ERR" "1 行のうち先頭 1 行" "**1 行しか無ければ「先頭 1 行」と言う（母数を嘘にしない）**"
+  assert_not_contains "$ERR" "1 行のうち先頭 3 行" "**GH_ERR_MAX_LINES をそのまま書くと嘘になる**"
+}
+test_case "monitor: 出した行数は実際の行数で切り詰める（1 行なら「先頭 1 行」。#1217 N6)" t_mon_err_shown_count_is_clamped_to_total
+
+# **N4: `gh` の言い分は「最初の 1 件」を覚える**（**最後の 1 件ではない**）。
+#
+# **初版は「最後の 1 件」に変えても 0 件落ちた**（#1217 レビュー）。
+# **「最初の 1 件」は設計の選択である**: **In Progress が N 件在れば N 回同じ `gh` を叩くので、
+# 全部出すと Issue 本文が同じ文で埋まる**（**鳴り続ける監視は見られなくなる**——
+# [[alerts-ringing-is-not-being-seen]]）。**だから 1 件に絞り、「最初の 1 件」と断る。**
+#
+# **どちらでも 1 件に絞れるので、区別するには 2 件の失敗が違う文面でなければならない。**
+# **fixture は In Progress を 2 件にし、1 件目と 2 件目で別の stderr を出す。**
+# **番号の若い順に引くので、1 件目が「最初」である。**
+t_mon_pr_lookup_error_keeps_the_first_not_the_last() {
+  local h; h=$(handler <<EOF
+handle() {
+  case "\$*" in
+    "pr list --repo "*" --state open"*) echo '[]' ;;
+    "pr list --repo "*"--search 11 in:head"*)
+      echo 'gh: FIRSTERRORMARKER (HTTP 401)' >&2
+      exit 1 ;;
+    "pr list --repo "*"--search 22 in:head"*)
+      echo 'gh: LASTERRORMARKER (HTTP 401)' >&2
+      exit 1 ;;
+    "api graphql"*) echo '$(board_page 11:OPEN:"In Progress":2026-09-29T08:00:00Z 22:OPEN:"In Progress":2026-09-29T08:00:00Z)' ;;
+    *) echo "unexpected: \$*" >&2; exit 99 ;;
+  esac
+}
+git_handle() { :; }
+EOF
+)
+  MONITOR_SKIP_LOCAL=1 MONITOR_NOW=1790712000 run_script "$h" scrum-monitor.sh
+  assert_eq 4 "$STATUS" "**対応表が作れなければ exit 4**: $ERR"
+  assert_contains "$ERR" "2 件のうち 2 件で PR を引けませんでした" "**母数と失敗数を出す（#757）**"
+  assert_contains "$ERR" "FIRSTERRORMARKER" "**最初の 1 件を覚える**"
+  assert_not_contains "$ERR" "LASTERRORMARKER" "**最後の 1 件に上書きしない（同じ文で Issue を埋めない）**"
+}
+test_case "monitor: PR 検索の言い分は最初の 1 件を覚える（最後ではない。#1217 N4)" t_mon_pr_lookup_error_keeps_the_first_not_the_last
+
 # ---- 3. worktree の節 -------------------------------------------------------------------------
 #
 # **実在のディレクトリを使う**（`-d` と `stat` は fake `git` では偽装できない）。
