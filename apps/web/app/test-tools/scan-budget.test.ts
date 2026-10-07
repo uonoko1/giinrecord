@@ -115,8 +115,11 @@ describe("走査の予算: `~/` 検査が testTimeout を食い潰さない（#1
 
   /**
    * **`setParentNodes` を立てない。** `moduleSpecifiers` は `.parent` も `.getText()` も
-   * 使っていないので要らない。実測で**パースが約 1.3 倍**になる（195 ファイルで
-   * median 756ms → 566ms）。立て直されたら気づけるように固定する。
+   * 使っていないので要らない。**同一プロセスで true / false を交互に 8 回ずつ回した median で
+   * 637ms 対 505ms（1.26 倍）**（195 ファイル、load 28）。立て直されたら気づけるように固定する。
+   *
+   * **別プロセスで 1 回ずつ測ってはいけない**——先に走ったほうが必ず遅く出る（JIT の暖機）。
+   * 順番を入れ替えると差が逆転するのを実測した。
    *
    * **`valueImports` / `dynamicImports` / `metaGlobs` は `node.getText(sf)` を呼ぶので、
    * そちらは `true` のままでなければならない**（混同して全部 false にすると、

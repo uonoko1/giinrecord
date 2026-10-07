@@ -120,7 +120,10 @@ export function metaGlobs(code: string, fileName = "x.ts"): string[] {
 export function moduleSpecifiers(code: string, fileName = "x.ts"): string[] {
   // **`setParentNodes` は立てない（#1242）。** この関数は `.parent` も `node.getText()` も
   // 使わない（指定子は `StringLiteralLike.text` から直に取る）。立てると親リンクを張る分だけ
-  // 遅くなり、実測で **195 ファイルの median 756ms → 566ms**（約 1.3 倍）の差が出た。
+  // 遅くなる。**実測は同一プロセスで true / false を交互に 8 回ずつ回した median**:
+  // **637ms（true）対 505ms（false）＝ 1.26 倍**（195 ファイル、load 28）。
+  // **別プロセスで測ると順番の効果に埋もれる**——先に走ったほうが必ず遅く出て、
+  // 順番を入れ替えると差が逆転した（JIT の暖機。最初これを 1.3 倍の根拠にして間違えた）。
   // 答えは 1 件も変わらない（195 ファイルと 20 形の fixture すべてで突き合わせ済み・差 0 件）。
   // **`valueImports` / `dynamicImports` / `metaGlobs` は `node.getText(sf)` を呼ぶので
   // そちらは `true` のままでなければならない**（false にすると空文字が返って静かに黙る）。
