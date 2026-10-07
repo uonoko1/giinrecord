@@ -9,7 +9,7 @@ SCRIPT="$HERE/../monitor/health.sh"
 PASS=0; FAIL=0
 ME=$(id -un)
 
-TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
+TMP=$(mktemp -d); trap '__rc=$?; rm -rf "$TMP" || echo "warn: cleanup left $TMP behind (not a test failure)" >&2; exit $__rc' EXIT
 BIN="$TMP/bin"; mkdir -p "$BIN"
 for cmd in docker systemctl df curl; do
   cat > "$BIN/$cmd" <<STUB

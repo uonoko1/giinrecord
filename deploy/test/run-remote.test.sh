@@ -8,7 +8,7 @@ PASS=0; FAIL=0
 ok(){ PASS=$((PASS+1)); echo "  ok   - $1"; }
 bad(){ FAIL=$((FAIL+1)); echo "  FAIL - $1"; }
 
-TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
+TMP=$(mktemp -d); trap '__rc=$?; rm -rf "$TMP" || echo "warn: cleanup left $TMP behind (not a test failure)" >&2; exit $__rc' EXIT
 BIN="$TMP/bin"; mkdir -p "$BIN"
 # ssh: 引数を記録し、**標準入力が tty かどうか**も記録する（これが守りたい性質そのもの）
 cat > "$BIN/ssh" <<'STUB'

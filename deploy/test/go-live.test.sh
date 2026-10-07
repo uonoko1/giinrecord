@@ -9,7 +9,7 @@ HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 SCRIPT="$HERE/../go-live.sh"
 PASS=0; FAIL=0
 
-TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
+TMP=$(mktemp -d); trap '__rc=$?; rm -rf "$TMP" || echo "warn: cleanup left $TMP behind (not a test failure)" >&2; exit $__rc' EXIT
 BIN="$TMP/bin"; mkdir -p "$BIN"
 for cmd in docker nginx systemctl git install curl certbot getent ss id; do
   cat > "$BIN/$cmd" <<STUB

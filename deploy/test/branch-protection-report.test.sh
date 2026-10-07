@@ -15,7 +15,7 @@ HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 SCRIPT="$HERE/../monitor/branch-protection-report.sh"
 PASS=0; FAIL=0
 
-TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
+TMP=$(mktemp -d); trap '__rc=$?; rm -rf "$TMP" || echo "warn: cleanup left $TMP behind (not a test failure)" >&2; exit $__rc' EXIT
 
 WEAK="[monitor] repo: main の保護設定"
 UNREADABLE="[monitor] repo: main の保護設定を読めない"

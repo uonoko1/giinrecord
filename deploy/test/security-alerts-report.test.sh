@@ -14,7 +14,7 @@ HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 SCRIPT="$HERE/../monitor/security-alerts-report.sh"
 PASS=0; FAIL=0
 
-TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
+TMP=$(mktemp -d); trap '__rc=$?; rm -rf "$TMP" || echo "warn: cleanup left $TMP behind (not a test failure)" >&2; exit $__rc' EXIT
 
 ALERTS="[monitor] repo: security アラート"
 UNREADABLE="[monitor] repo: security アラートを読めない"
