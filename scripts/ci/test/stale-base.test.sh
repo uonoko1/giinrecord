@@ -1213,6 +1213,242 @@ test_case "両方残す rebase なら --verify は通る" t_verify_passes_when_t
 test_case "--verify は在る行を「無い」と言わない（pipefail の 141）" t_verify_does_not_report_present_lines_as_missing
 test_case "--verify は読めない一覧ファイルを通さない" t_verify_rejects_an_unreadable_lines_file
 test_case "あとから通った実行が証拠ファイルを消さない" t_a_later_clean_run_does_not_wipe_the_lines_file
+
+# --- #1191: 形の厳しさが比較の正しさを支えている。その関係を機械が守る ---------------------------
+# **#1161 のレビューと PO が、素通りする変異を 2 件実測した**（どちらも 64/64 緑）:
+#
+#   ZB  `Z$` → `Z?$`（`Z` を任意にする）
+#       base（origin/main）  2026-10-04T01:29:00.000Z
+#       head（枝）           2026-10-04T10:00:00.000     ← Z 無しの裸の表記。JST なら UTC 01:00（28 分の後退）
+#       辞書順:  "2026-10-04T10:00:00.000" < "2026-10-04T01:29:00.000Z"  → **false** → 後退を見逃す（緑）
+#
+#   YE  `DF_RE` の先頭の `^` を外す
+#       対象が 13 件 → **15 件**になり、`apps/web/app/test-fixtures/data/meta.json` が入る。
+#       この fixture の fetchedAt は `+09:00` なので「測れなかった」側に落ち、
+#       **両側同値なのに全 PR が永久に赤**になる（#1147 と同じ型）。
+#
+# **注意（PO が最初にここで誤判定した）**: **同日・同時刻帯の Z 無しは辞書順でも小さいので検出できる。**
+# 破綻するのは**時差が絡む形**——「Z 無しの値が、base より文字列として大きいが、実時刻は古い」。
+# だから下の fixture は **JST を名乗る裸の表記**（UTC より 9 時間先に見える値）で測る。
+# 「Z を外す変異が落ちる」だけでは母数にならない。
+
+t_freshness_1191_naive_local_time_cannot_read_as_newer() {
+  # **ZB を捕まえる case。** `Z` を任意にする変異で、**本物の巻き戻しが緑になる**ことを固定する。
+  #
+  # 既存の 2 case はどちらもここに届かない（#1161 レビューの実測）:
+  #   · `+09:00` を弾く case  → **`Z` が無いので先に落ちて**ここに来ない（`Z?$` でも同じ）
+  #   · 「`Z` の後ろのゴミ」の case → `Z?$` でも `Z` の後ろは弾かれるので何も変わらない
+  new_repo_with_data
+  g checkout -q main
+  write_meta '2026-10-04T01:29:00.000Z'
+  commit "data: refresh"
+  g update-ref refs/remotes/origin/main main
+  branch_from main topic
+  # **実時刻は base より 28 分古い**（JST 10:00 = UTC 01:00）。だが**文字列としては大きい**
+  # （"10" > "01"）。形の検査が `Z` を任意にした瞬間に「進んでいる」と読まれて緑になる。
+  write_meta '2026-10-04T10:00:00.000'
+  commit "タイムゾーンの無い裸の時刻"
+  run --data-freshness origin/main topic
+  assert_eq 1 "$STATUS" "タイムゾーンの無い裸の時刻を ok と言わない（Z が必須。#1191）: $OUT"
+  assert_contains "$OUT" "測れません" "「測れなかった」と言う（黙って通さない）"
+  assert_contains "$OUT" "2026-10-04T10:00:00.000" "どの値が読めなかったか名指しする"
+  # **母数（#757）: この fixture が「辞書順では検出できない」側であることを、この case 自身が示す。**
+  # ここが false なら fixture が弱く、`Z` を任意にする変異は辞書順の比較だけで捕まってしまう
+  # ——つまり**形の検査を測っていない**。PO が最初に踏んだ誤判定がこれ。
+  if [[ '2026-10-04T10:00:00.000' < '2026-10-04T01:29:00.000Z' ]]; then
+    fail "fixture が弱い: 裸の値が辞書順で base より小さい。時差ぶん大きく見える値でなければ形の検査を測れない"
+  fi
+}
+
+t_freshness_1191_a_legitimate_Z_value_still_passes() {
+  # **両側で判断する（#1234 の教訓）。** 片側（裸の値を弾く）を塞いで、もう片側
+  # （正当な `Z` 付きが通る）を壊すのが、このリポジトリが繰り返し踏んでいる形である。
+  # 形の検査を `Z` を**必須より厳しく**した（例えば `Z` を 2 つ要求する、`.` を必須にする）
+  # 変異は、上の case では捕まらない——**この case が捕まえる。**
+  new_repo_with_data
+  g checkout -q main
+  write_meta '2026-10-04T01:29:00.000Z'
+  commit "data: refresh"
+  g update-ref refs/remotes/origin/main main
+  branch_from main topic
+  write_meta '2026-10-04T02:00:00.000Z'            # 正当に進んでいる
+  commit "data: refresh（枝が進める）"
+  run --data-freshness origin/main topic
+  assert_eq 0 "$STATUS" "正当な Z 付きの時刻は通る（厳しくしすぎていない。#1191）: $OUT"
+  assert_not_contains "$OUT" "測れません" "正当な値を「測れなかった」にしない"
+  # 小数部の無い形（`…:00Z`）も正当である。`(\.[0-9]+)?` の `?` を外す変異をここで捕まえる。
+  new_repo_with_data
+  g checkout -q main
+  write_meta '2026-10-04T01:29:00Z'
+  commit "data: refresh（小数部なし）"
+  g update-ref refs/remotes/origin/main main
+  branch_from main topic
+  write_meta '2026-10-04T02:00:00Z'
+  commit "data: refresh（小数部なし・進む）"
+  run --data-freshness origin/main topic
+  assert_eq 0 "$STATUS" "小数部の無い Z 付きも通る（#1191）: $OUT"
+  assert_not_contains "$OUT" "測れません" "小数部なしを「測れなかった」にしない"
+}
+
+t_freshness_1191_lexicographic_order_equals_chronological_order() {
+  # **#1189 と同じ型の穴を塞ぐ。** 「形を厳しく見ているから辞書順の比較でよい」という関係は、
+  # これまで `stale-base.sh:183-185` の**コメントにしか無かった。** 形の検査が緩んだ瞬間に
+  # 比較が壊れるのに、その関係式を機械が見ていなかった。
+  #
+  # ここで**関係式そのものを測る**: **この検査が比較に使う鍵について、
+  # 辞書順の比較と実時刻の比較が一致すること。**
+  # 比較用の `date -u -d` は**このテストの中だけで使う**（本番の経路には持ち込まない。
+  # ロケールとエラー時の exit 0 を持ち込む分だけ弱いという `:183-185` の判断を尊重する）。
+  #
+  # **実装をここに写さない。** 本番の `stale-base.sh` から `df_read` と `df_cmp_key` を
+  # **そのまま読み込んで**使う。逐語で写すと、本番側を緩めてもここが古い版を持ったまま
+  # 緑になる（＝関係式を測れない）。
+  local sb; sb=$(cat "$HERE/../stale-base.sh")
+  # `df_read` の形の検査と `df_cmp_key` を、本番のソースから切り出して実行可能にする。
+  # 切り出せなければ以降は無意味なので、母数（#757）として先に見る。
+  local shim="$TMP/relshim.sh"
+  {
+    echo 'set -uo pipefail'
+    # 形の検査の正規表現（本番の行をそのまま使う）
+    printf '%s\n' "$sb" | LC_ALL=C grep -F 'if [[ ! $val =~ ^[0-9]{4}' \
+      | LC_ALL=C sed -e 's/^ *//' -e 's/if \[\[ ! /df_shape_ok() { local val=$1; [[ /' \
+                    -e 's/ \]\]; then/ ]]; }/'
+    # df_cmp_key の本体（本番の定義をそのまま取る）
+    printf '%s\n' "$sb" | LC_ALL=C sed -n '/^  df_cmp_key() {$/,/^  }$/p' | LC_ALL=C sed 's/^  //'
+  } > "$shim"
+  # 母数（#757）: 切り出せたか。どちらかが欠けていれば、下の判定は「通る」ではなく「測れていない」。
+  if ! LC_ALL=C grep -q 'df_shape_ok()' "$shim"; then
+    fail "stale-base.sh から形の検査を切り出せなかった（以降の判定は無意味）"; return
+  fi
+  if ! LC_ALL=C grep -q 'df_cmp_key()' "$shim"; then
+    fail "stale-base.sh から df_cmp_key を切り出せなかった（以降の判定は無意味）"; return
+  fi
+  # 切り出したものが**動くこと**も見る（sed が空振りして空の関数ができていないか）。
+  local probe
+  probe=$(bash -c 'source "$1"; df_shape_ok "2026-10-04T01:29:00.000Z" && df_cmp_key "2026-10-04T01:29:00.000Z"' _ "$shim" 2>&1) || probe=""
+  if [[ $probe != 2026-10-04T01:29:00.000000000 ]]; then
+    fail "切り出した df_cmp_key が期待の鍵を返さない（得た値: [$probe]。以降の判定は無意味）"; return
+  fi
+
+  # 候補: 正当な UTC 表記（小数部の有無・桁数を混ぜる）と、**時差ぶん大きく見える裸の表記**。
+  # 裸の表記が受理されると照合が必ず破れる（辞書順と実時刻が食い違うため）。
+  local cands=(
+    '2026-10-04T01:29:00.000Z'
+    '2026-10-04T01:29:00Z'            # ← 小数部なし。生の値で比べると .000Z と大小が逆転する
+    '2026-10-04T01:29:00.5Z'
+    '2026-10-04T01:29:00.500Z'
+    '2026-10-04T01:29:00.999Z'
+    '2026-10-04T01:29:01Z'
+    '2026-10-04T02:00:00.000Z'
+    '2026-10-05T00:00:00.000Z'
+    '2026-10-04T10:00:00.000'         # 裸（JST なら UTC 01:00）。受理されたら関係式が破れる
+    '2026-10-04T10:00:00.000+09:00'   # オフセット付き。同じく破れる
+  )
+  # 受理された値だけを集める（**本番の形の検査**で判定する）。
+  local accepted=() v
+  for v in "${cands[@]}"; do
+    if bash -c 'source "$1"; df_shape_ok "$2"' _ "$shim" "$v"; then accepted+=("$v"); fi
+  done
+  # 母数（#757）: 受理が 2 件未満なら比較の組が作れず、この case は何も測っていない。
+  if [[ ${#accepted[@]} -lt 2 ]]; then
+    fail "形の検査が受理した値が ${#accepted[@]} 件しかない（比較の組が作れない。測れていない）"; return
+  fi
+  # **裸の表記・オフセット付きは受理されてはいけない**（ZB の側。ここでも固定する）。
+  for v in '2026-10-04T10:00:00.000' '2026-10-04T10:00:00.000+09:00'; do
+    if [[ " ${accepted[*]} " == *" $v "* ]]; then
+      fail "形の検査が UTC でない綴りを受理した（辞書順 = 時刻順 の前提が崩れる）: $v"
+    fi
+  done
+
+  # **関係式**: 受理された任意の 2 値 a, b について
+  #     ( df_cmp_key a < df_cmp_key b を辞書順で判定 )  ==  ( a の実時刻 < b の実時刻 )
+  local pairs=0 a b ka kb lex chrono ea eb
+  for a in "${accepted[@]}"; do
+    ka=$(bash -c 'source "$1"; df_cmp_key "$2"' _ "$shim" "$a")
+    if ! ea=$(date -u -d "$a" +%s%N 2>/dev/null) || [[ -z $ea ]]; then
+      fail "形の検査が受理した値を date が読めない（関係式を測れない）: $a"; continue
+    fi
+    for b in "${accepted[@]}"; do
+      [[ $a == "$b" ]] && continue
+      kb=$(bash -c 'source "$1"; df_cmp_key "$2"' _ "$shim" "$b")
+      if ! eb=$(date -u -d "$b" +%s%N 2>/dev/null) || [[ -z $eb ]]; then continue; fi
+      pairs=$((pairs+1))
+      if [[ $ka < $kb ]]; then lex=lt; else lex=ge; fi
+      if [[ $ea -lt $eb ]]; then chrono=lt; else chrono=ge; fi
+      if [[ $lex != "$chrono" ]]; then
+        fail "辞書順 = 時刻順 が破れている: [$a]($ka) vs [$b]($kb) 辞書順=$lex 実時刻=$chrono"
+      fi
+    done
+  done
+  # 母数（#757）: 比べた組の数。0 組なら上の loop は何も判定していない。
+  if [[ $pairs -lt 20 ]]; then
+    fail "比べた組が $pairs 件しかない（小数部の有無を混ぜた組が足りず、何も測れていない疑いが在る）"
+  fi
+}
+
+t_freshness_1191_sub_second_rollback_is_detected() {
+  # **関係式のテストが見つけた 3 件目の穴**（#1191 の本文には無かった。2026-10-08 実測）。
+  # 形の検査は小数部を任意（`(\.[0-9]+)?`）にしているので、**小数部の有無が混ざると
+  # 生の値の辞書順が時刻順から外れる**——`.`(0x2E) < `Z`(0x5A) なので:
+  #   "2026-10-04T01:29:00.000Z" < "2026-10-04T01:29:00Z"   ← **同じ瞬間なのに大小が付く**
+  # 実測: base `…00.500Z` / head `…00Z` は **0.5 秒の後退なのに緑**だった。
+  # **穴は 1 秒未満に限られる**（秒が繰り上がれば生の比較でも検出できる）ので #1156 の
+  # 日次 ETL の巻き戻しには届かないが、**不変条件は破れている。**
+  # `df_cmp_key` の正規化を外す変異を、この case が捕まえる。
+  new_repo_with_data
+  g checkout -q main
+  write_meta '2026-10-04T01:29:00.500Z'
+  commit "data: refresh（小数部あり）"
+  g update-ref refs/remotes/origin/main main
+  branch_from main topic
+  write_meta '2026-10-04T01:29:00Z'            # **0.5 秒の後退。小数部が無い綴り**
+  commit "小数部の無い綴りで 0.5 秒戻る"
+  # 母数（#757）: この fixture が「生の辞書順では検出できない」側であることを、case 自身が示す。
+  # ここが検出できてしまうなら fixture が弱く、正規化を測っていない。
+  if [[ '2026-10-04T01:29:00Z' < '2026-10-04T01:29:00.500Z' ]]; then
+    fail "fixture が弱い: 生の辞書順でも検出できてしまう（正規化を測れない）"
+  fi
+  run --data-freshness origin/main topic
+  assert_eq 1 "$STATUS" "1 秒未満の後退も検出する（固定長の鍵で比較している。#1191）: $OUT"
+  assert_contains "$OUT" "古い" "後退として報告する（「測れません」ではない）"
+  # **報告は生の綴りで出す**（正規化した `…000000000` を出すと、利用者が data/meta.json を
+  # grep して突き合わせられない。比較用と表示用を分けてある）。
+  assert_contains "$OUT" "2026-10-04T01:29:00.500Z" "base 側を原文の綴りで出す"
+  assert_not_contains "$OUT" "000000000" "正規化した鍵を利用者に見せない（表示は原文）"
+}
+
+t_freshness_1191_target_set_is_anchored_at_the_repo_root() {
+  # **YE を捕まえる case。** `DF_RE` の先頭の `^` を外すと、対象の**集合が変わる**。
+  # 本物のツリーでは 13 件 → 15 件になり、`apps/web/app/test-fixtures/data/meta.json`
+  # （`fetchedAt` が `+09:00`）が入って、**両側同値なのに全 PR が永久に赤**になる
+  # ——#1147 と同じ型（マージ直前に必ず赤くなる検査は運用を止める）。
+  #
+  # **件数そのもの（13）を固定しない。** `data/` が増えたら 13 は正当に動く。
+  # 見るのは**「集合が変わった」**こと: **`data/` で始まらないパスは対象外**であること。
+  #
+  # **fixture は「実物が出す行」から採る**（#1189 の教訓）。本物のツリーに在る
+  # `apps/web/app/test-fixtures/data/meta.json` と同じ形・同じ `+09:00` を使う。
+  new_repo_with_data
+  mkdir -p "$W/apps/web/app/test-fixtures/data"
+  # **fixture は fixture として正しい。** `+09:00` のまま置く（UTC に書き換えて済ませない。
+  # 対象の式が拾ってはいけないのが筋）。両側同値なので、対象に入れば必ず「測れません」で赤になる。
+  printf '{\n "fetchedAt": "2025-04-01T03:00:00+09:00",\n "sessions": [1]\n}\n' \
+    > "$W/apps/web/app/test-fixtures/data/meta.json"
+  commit "web の test-fixtures（data/ の下ではない）"
+  g update-ref refs/remotes/origin/main main
+  branch_from main topic
+  printf -- '- **教訓 私**\n' >> "$W/docs/WORKING_AGREEMENT.md"
+  commit "my lesson"
+  run --data-freshness origin/main topic
+  # 両側同値の fixture しか増えていないので、**通らなければならない。**
+  assert_eq 0 "$STATUS" "data/ で始まらないパスを対象にしない（^ が効いている。#1191）: $OUT"
+  assert_not_contains "$OUT" "測れません" "リポジトリ直下の data/ 以外の meta.json を測ろうとしない"
+  assert_not_contains "$OUT" "test-fixtures" "対象の集合に test-fixtures が入っていない"
+  # **母数（#757）: 集合の大きさを名指しで固定する。** 1 件（`data/meta.json`）だけが対象であり、
+  # `^` を外すと 2 件になる。**件数を出力から読むので、集合が変わったことが直接見える。**
+  assert_contains "$OUT" "1 件" "対象は data/meta.json の 1 件だけ（^ を外すと 2 件になる）"
+}
+
 # --- 5. Issue #565: a stale local `origin/main` (no `git fetch` run) must not report `ok` ------------
 # `origin` here is a real remote (a second on-disk repo), so `git ls-remote origin` works exactly as it
 # does against GitHub, only against `file://`-speed instead of the network — no network, no `gh`, per the
@@ -1341,4 +1577,9 @@ test_case "引数なしなら origin/main と HEAD（レビューの X1/X2）" t
 test_case "bare（index が無い）でも本物の巻き戻しを見つける（再レビュー (c)、ls-files 化を捕まえる）" t_freshness_works_in_a_bare_repo_without_an_index
 test_case "ツリーを列挙できないのを「対象 0 件」として通さない（|| : が ls-tree の失敗を飲まない）" t_freshness_unlistable_tree_is_not_zero_targets
 test_case "引数が多すぎるときは usage で落ちる（レビューの X4）" t_freshness_too_many_args_is_usage_not_a_pass
+test_case "タイムゾーンの無い裸の時刻が、Z 付きより新しく読まれない（#1191 ZB）" t_freshness_1191_naive_local_time_cannot_read_as_newer
+test_case "正当な Z 付きの時刻は通る（厳しくしすぎていない。両側で判断する。#1191）" t_freshness_1191_a_legitimate_Z_value_still_passes
+test_case "辞書順 = 時刻順 の前提を機械が守る（コメントだけに在った関係式。#1191／#1189）" t_freshness_1191_lexicographic_order_equals_chronological_order
+test_case "1 秒未満の後退も検出する（小数部の有無で辞書順が逆転する。#1191）" t_freshness_1191_sub_second_rollback_is_detected
+test_case "対象の集合はリポジトリ直下の data/ に固定（^ が効いている。#1191 YE）" t_freshness_1191_target_set_is_anchored_at_the_repo_root
 echo "passed $PASS, failed $FAIL"; [[ $FAIL == 0 ]]
