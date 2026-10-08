@@ -22,9 +22,9 @@ HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ROOT=$(cd "$HERE/../../.." && pwd)
 SCRIPT="$ROOT/scripts/ci/playwright-deps.sh"
 PASS=0; FAIL=0
-TMP=$(mktemp -d)
 # #1244: 掃除の終了コードがテスト結果を上書きしないように、trap では結果を変えない。
-trap 'rm -rf "$TMP" || true' EXIT
+# #1251 が逐語で照合する形に揃える（scripts/ci/test/trap-cleanup.test.sh の SHAPE_HEAD/SHAPE_TAIL）。
+TMP=$(mktemp -d); cleanup() { local __rc=$?; rm -rf "$TMP" || echo "warn: cleanup left $TMP behind (not a test failure)" >&2; exit "$__rc"; }; trap cleanup EXIT
 
 fail() { echo "    x $1"; CURRENT_FAILED=1; }
 assert_eq() { [[ "$2" == "$1" ]] || fail "$3: expected [$1] got [$2]"; }
