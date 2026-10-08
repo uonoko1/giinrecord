@@ -28,7 +28,7 @@ fi
 
 TMP=$(mktemp -d)
 NAME="giinrecord-nginx-headers-test-$$"
-cleanup() { docker rm -f "$NAME" >/dev/null 2>&1 || true; rm -rf "$TMP"; }
+cleanup() { local __rc=$?; docker rm -f "$NAME" >/dev/null 2>&1 || true; rm -rf "$TMP" || echo "warn: cleanup left $TMP behind (not a test failure)" >&2; exit "$__rc"; }
 trap cleanup EXIT
 
 # ---- site.conf の location を**全部**数え上げる（#499）----

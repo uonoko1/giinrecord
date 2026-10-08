@@ -14,7 +14,7 @@ PASS=0; FAIL=0
 ok(){ PASS=$((PASS+1)); echo "  ok   - $1"; }
 bad(){ FAIL=$((FAIL+1)); echo "  FAIL - $1"; }
 
-TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
+TMP=$(mktemp -d); cleanup() { local __rc=$?; rm -rf "$TMP" || echo "warn: cleanup left $TMP behind (not a test failure)" >&2; exit "$__rc"; }; trap cleanup EXIT
 BIN="$TMP/bin"; mkdir -p "$BIN"
 # ssh: 呼び出しを記録し、標準入力の1行目（どのスクリプトが渡されたか）も残す
 cat > "$BIN/ssh" <<'STUB'

@@ -16,7 +16,7 @@ SCRIPT="$HERE/../ops-user-setup.sh"
 PASS=0; FAIL=0; SKIP=0
 PUBKEY="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAITESTKEYFIXTUREONLYNOTAREALKEY ops@test"
 
-TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
+TMP=$(mktemp -d); cleanup() { local __rc=$?; rm -rf "$TMP" || echo "warn: cleanup left $TMP behind (not a test failure)" >&2; exit "$__rc"; }; trap cleanup EXIT
 BIN="$TMP/bin"; mkdir -p "$BIN"
 for cmd in adduser usermod chown; do printf '#!/usr/bin/env bash\nexit 0\n' > "$BIN/$cmd"; chmod +x "$BIN/$cmd"; done
 # id: 既定は「居ない」(exit 1)。H_LEGACY_EXISTS=1 のとき gikaiops だけ「居る」ことにする

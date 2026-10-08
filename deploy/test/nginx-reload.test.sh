@@ -10,7 +10,7 @@ HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 DEPLOY=$(cd "$HERE/.." && pwd)
 PASS=0; FAIL=0
 
-TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
+TMP=$(mktemp -d); cleanup() { local __rc=$?; rm -rf "$TMP" || echo "warn: cleanup left $TMP behind (not a test failure)" >&2; exit "$__rc"; }; trap cleanup EXIT
 BIN="$TMP/bin"; mkdir -p "$BIN"
 for cmd in nginx systemctl; do
   cat > "$BIN/$cmd" <<STUB

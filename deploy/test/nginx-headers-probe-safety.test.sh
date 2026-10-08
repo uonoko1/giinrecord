@@ -56,7 +56,7 @@ TMP=$(mktemp -d)
 # 逃がしたファイルの着地点を観測するための「檻」。$TMP 自身の外に出たかを見たいので、
 # 檻の中に作業ディレクトリを掘り、檻の直下に何か現れたら traversal が起きたと判定する。
 CAGE="$TMP/cage"; mkdir -p "$CAGE"
-cleanup() { rm -rf "$TMP"; }
+cleanup() { local __rc=$?; rm -rf "$TMP" || echo "warn: cleanup left $TMP behind (not a test failure)" >&2; exit "$__rc"; }
 trap cleanup EXIT
 
 fail() { echo "    x $1"; CURRENT_FAILED=1; }

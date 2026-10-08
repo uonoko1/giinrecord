@@ -8,7 +8,7 @@ SCRIPT="$HERE/../monitor/setup.sh"
 PASS=0; FAIL=0
 ME=$(id -un)
 
-TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
+TMP=$(mktemp -d); cleanup() { local __rc=$?; rm -rf "$TMP" || echo "warn: cleanup left $TMP behind (not a test failure)" >&2; exit "$__rc"; }; trap cleanup EXIT
 
 fail() { echo "    x $1"; CURRENT_FAILED=1; }
 assert_eq() { [[ "$2" == "$1" ]] || fail "$3: expected [$1] got [$2]"; }

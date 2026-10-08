@@ -24,7 +24,7 @@ fi
 
 TMP=$(mktemp -d)
 NAME="giinrecord-nginx-404-test-$$"
-cleanup() { docker rm -f "$NAME" >/dev/null 2>&1 || true; rm -rf "$TMP"; }
+cleanup() { local __rc=$?; docker rm -f "$NAME" >/dev/null 2>&1 || true; rm -rf "$TMP" || echo "warn: cleanup left $TMP behind (not a test failure)" >&2; exit "$__rc"; }
 trap cleanup EXIT
 
 # 合成の docroot: 本物のビルドは要らない。要るのは「プリレンダー済みページはディレクトリ + index.html、

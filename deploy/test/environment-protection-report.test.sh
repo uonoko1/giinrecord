@@ -15,7 +15,7 @@ HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 SCRIPT="$HERE/../monitor/environment-protection-report.sh"
 PASS=0; FAIL=0
 
-TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
+TMP=$(mktemp -d); cleanup() { local __rc=$?; rm -rf "$TMP" || echo "warn: cleanup left $TMP behind (not a test failure)" >&2; exit "$__rc"; }; trap cleanup EXIT
 
 DRIFT="[monitor] repo: Environment の保護設定"
 UNREADABLE="[monitor] repo: Environment の保護設定を読めない"
