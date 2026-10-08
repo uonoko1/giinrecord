@@ -3,6 +3,18 @@
  "id": "217-衆法-56",
  "kind": "衆法",
  "number": 56,
+ "received": {
+  "shugiin": "2025-06-16"
+ },
+ "referral": {
+  "shugiin": {
+   "committee": "地域活性化・こども政策・デジタル社会形成に関する特別",
+   "date": "2025-10-24"
+  }
+ },
+ "result": {
+  "shugiin": "閉会中審査"
+ },
  "session": 217,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0AB2.htm",
  "status": "未了",

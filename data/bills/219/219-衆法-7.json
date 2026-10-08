@@ -3,11 +3,17 @@
  "id": "219-衆法-7",
  "kind": "衆法",
  "number": 7,
+ "received": {
+  "shugiin": "2025-12-01"
+ },
  "referral": {
   "shugiin": {
    "committee": "国土交通",
    "date": "2026-01-23"
   }
+ },
+ "result": {
+  "shugiin": "閉会中審査"
  },
  "session": 219,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C26.htm",
