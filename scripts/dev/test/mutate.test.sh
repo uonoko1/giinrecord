@@ -541,6 +541,108 @@ t_the_watchdog_refuses_to_overwrite_work_written_during_the_run() {
   assert_work_intact watchdog-stale
 }
 
+# ---- #1259 レビュー: stale 拒否で残った見張りが、後から来た run の退避を戻してしまった ---------
+# **最初の実装は #1255 と同じ落ち方を新しく作っていた。**
+# stop_watchdog が「退避が 1 つでも残っていれば印を消さない」だったので、
+# stale 拒否（人の作業が在るので上書きしない）のあとに**見張りが生き残った**。
+# その見張りは `mutate.sh restore` を木全体に打つので、**後から来た別の run の退避**を戻す。
+# 戻された run は「測っている間に変異が外れた」と言って非 0 で終わり、退避を木に残す
+# ──**#1255 が開かれた落ち方そのもの**である。
+#
+# レビューが母数つきで測った率: この枝 23/150（15.3%）・1 CPU 9/100、`main` は両方 0。
+# 手元でも A（stale 拒否）→ 人が片付ける → B（ふつうの run）で **20 回中 5 回**出た
+# （`main` は 0/20）。
+#
+# **この検査は確率に頼らない。** 見張りの起床を待って競争させるのではなく、
+# 「見張りがこれから restore を打つ」状態を作ってから、**別のファイルに新しい退避を置く**。
+# 見張りが木全体を対象にしていれば必ずそれを戻す。対象が自分の run のファイルに
+# 限られていれば、何回走らせても触らない。どちらに転ぶかは機械の速さで変わらない。
+t_a_leftover_watchdog_does_not_restore_a_later_runs_save() {
+  repo
+  # A: stale 拒否の run。親を sleep で生かしておき、退避が現れてから終わらせる
+  # （こうすると、親が終わった瞬間に見張りが「印が在る／親が死んだ」を見る）。
+  ( cd "$R" && bash "$SCRIPT" run --file src/app.ts --expr 's/ORIGINAL/MUTANT/' -- \
+      bash -c 'printf "MY WORK\n" > src/app.ts; sleep 1' ) >/dev/null 2>&1 &
+  local apid=$!
+  local w=0
+  until [[ -e "$R/src/app.ts$SV_EXT" ]]; do
+    sleep 0.01; w=$((w+1)); [[ $w -lt 500 ]] || { fail "leftover: A の退避が現れないまま時間切れ"; break; }
+  done
+  wait "$apid" 2>/dev/null || true
+  # 人が A の退避を片付ける（stale 拒否は「人が判断する」ための状態なので、これが正しい後始末）
+  rm -f "$R/src/app.ts$SV_EXT" "$R/src/app.ts$SV_EXT.md5"
+  printf 'export const keep = "ORIGINAL";\nconst n = 1;\n' > "$R/src/app.ts"
+  # B の代わり: **A とは別のファイル**に、新しい run の退避と同じものを置く。
+  # A の見張りがこれを戻したら、それは「他人の run を壊した」ことである。
+  printf 'B ORIGINAL\n' > "$R/src/b.ts"
+  cp -p "$R/src/b.ts" "$R/src/b.ts$SV_EXT"
+  printf 'B MUTANT\n' > "$R/src/b.ts"
+  md5 "$R/src/b.ts" > "$R/src/b.ts$SV_EXT.md5"
+  # 見張りが起きるのを待つ。戻されなければ（＝直っていれば）上限まで待って抜ける。
+  w=0
+  until [[ ! -e "$R/src/b.ts$SV_EXT" ]]; do
+    sleep 0.05; w=$((w+1)); [[ $w -lt 60 ]] || break
+  done
+  assert_eq 'B MUTANT' "$(cat "$R/src/b.ts")" "leftover: 残った見張りは後から来た run の変異を戻さない"
+  assert_eq 1 "$(find "$R" -name '*'"$SV_EXT" | wc -l)" "leftover: その退避も消さない"
+  assert_work_intact leftover-watchdog
+}
+
+# 上と同じことを、**印（flag）が残るか**という一段手前で固定する。
+# 親が EXIT まで来たなら、退避が残っていても印は消えなければならない
+# （退避が残る経路は「stale 拒否」と「cp 失敗」の 2 つで、どちらも親が判断を下して
+# 終わっている。見張りが要るのは「判断を下す前に死んだ」ときだけである）。
+# TMPDIR を専用の場所に向けて、**この run が作った印だけ**を数える。
+t_a_stale_refusal_still_releases_the_watchdog() {
+  repo
+  local flags="$TMP/flags.$$"; rm -rf "$flags"; mkdir -p "$flags"
+  set +e
+  OUT=$( (cd "$R" && TMPDIR="$flags" bash "$SCRIPT" run --file src/app.ts --expr 's/ORIGINAL/MUTANT/' -- \
+      bash -c 'printf "MY WORK\n" > src/app.ts') 2>&1 ); STATUS=$?
+  set -e
+  assert_ne 0 "$STATUS" "stale なら run は 0 を返さない: $OUT"
+  assert_eq 1 "$(find "$R" -name '*'"$SV_EXT" | wc -l)" "退避は残る（人が判断できるように）"
+  # 親が終わった時点で印は消えている。見張りが自分で消すのを待たずに数える
+  # （見張りが消してから数えると、残っていても 0 に見えてこの検査が何も見なくなる）。
+  assert_eq 0 "$(find "$flags" -name 'mutate-watchdog.*' | wc -l)" \
+    "stale 拒否でも親は見張りの印を残さない（残すと後の run を壊す）"
+}
+
+# 見張りは `cd -- "$top"` してから自分自身を呼び直す。だから $0 が相対パスのままだと、
+# cd の後にそれは別の場所を指し、`bash "$self" restore` は **127 で死ぬ**。
+# 呼び出しは `|| true` で握り潰されているので、**最後の砦が一言も言わずに不在になる。**
+# リポジトリ内の呼び出しは全部絶対パスなので未発現だったが、`|| true` が在る以上は
+# 発現しても気づけない（#1259 のレビュー）。
+# ここは **サブディレクトリから相対パスで呼んで SIGKILL する**。絶対パスに正規化していないと
+# 見張りが戻せず、退避が残る。
+t_the_watchdog_survives_being_invoked_by_a_relative_path() {
+  repo; local before; before=$(md5 "$R/src/app.ts")
+  # リポジトリの中に mutate.sh の複製を置き、サブディレクトリから相対パスで呼ぶ。
+  # （$SCRIPT を直接相対で呼ぶと、この検査が置かれている場所に依存してしまう）
+  mkdir -p "$R/tools"
+  cp -p "$SCRIPT" "$R/tools/mutate.sh"
+  local log="$TMP/relpath.log"
+  ( cd "$R/src" && setsid bash ../tools/mutate.sh run --file app.ts --expr 's/ORIGINAL/MUTANT/' -- sleep 30 ) \
+    > "$log" 2>&1 &
+  local runner=$!
+  local waited=0
+  until grep -q '当てた' "$log" 2>/dev/null; do
+    sleep 0.05; waited=$((waited+1))
+    [[ $waited -lt 200 ]] || { fail "relpath: 変異が当たらないまま時間切れ"; kill -KILL "$runner" 2>/dev/null; return 0; }
+  done
+  local pgid; pgid=$(ps -o pgid= -p "$runner" 2>/dev/null | tr -d ' ')
+  [[ -n $pgid ]] || { fail "relpath: pgid が取れない"; return 0; }
+  kill -KILL -- -"$pgid" 2>/dev/null
+  wait "$runner" 2>/dev/null || true
+  waited=0
+  until [[ ! -e "$R/src/app.ts$SV_EXT" ]]; do
+    sleep 0.05; waited=$((waited+1))
+    [[ $waited -lt 200 ]] || { fail "relpath: 10 秒待っても退避が消えない（相対パスで見張りが死んでいる）"; break; }
+  done
+  assert_eq "$before" "$(md5 "$R/src/app.ts")" "relpath: 相対パスで呼ばれても見張りが戻す"
+  assert_eq "" "$(find "$R/src" -name '*'"$SV_EXT" -print)" "relpath: 退避も残っていない"
+}
+
 # 設計を読む側。見張りが「親の死」を待っていること、親とは別プロセスであることを、
 # ソースから直接固定する。behavioral な検査が通り過ぎても、ここは機械の速さに依存しない。
 t_the_watchdog_is_a_separate_process_that_outlives_the_shell() {
@@ -556,7 +658,7 @@ t_the_watchdog_is_a_separate_process_that_outlives_the_shell() {
   local cp_line watch_line
   # shellcheck disable=SC2016  # ソースの文字列を逐語で探す（展開させたら別物を探す）
   cp_line=$( { grep -n '^[^#]*cp -p -- "\$f" "\$f\$SV_EXT"' "$src" || true; } | head -1 | cut -d: -f1)
-  watch_line=$( { grep -n '^[[:space:]]*start_watchdog$' "$src" || true; } | head -1 | cut -d: -f1)
+  watch_line=$( { grep -n '^[[:space:]]*start_watchdog\( \|$\)' "$src" || true; } | head -1 | cut -d: -f1)
   assert_ne "" "$watch_line" "見張りを立てる呼び出しが在る"
   if [[ -n $cp_line && -n $watch_line ]]; then
     [[ $watch_line -lt $cp_line ]] || fail "見張りの設置（$watch_line 行）が、退避を作る cp（$cp_line 行）より後にある"
