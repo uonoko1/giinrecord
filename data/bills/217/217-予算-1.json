@@ -6,6 +6,20 @@
  "received": {
   "shugiin": "2025-03-31"
  },
+ "referral": {
+  "sangiin": {
+   "committee": "予算",
+   "date": "2025-03-04"
+  },
+  "sangiinPreliminary": {
+   "committee": "予算",
+   "date": "2025-01-24"
+  },
+  "shugiin": {
+   "committee": "予算",
+   "date": "2025-01-24"
+  }
+ },
  "result": {
   "shugiin": "同意"
  },
@@ -29,5 +43,6 @@
  },
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDEE9E.htm",
  "status": "参議院回付案（同意）",
+ "submitterText": "内閣",
  "title": "令和七年度一般会計予算"
 }
