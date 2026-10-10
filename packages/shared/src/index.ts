@@ -335,11 +335,16 @@ export interface Question {
 /**
  * 出典が「どの院の、どんな記録のために引いたか」（#339）。
  * 議員ページはこれで出典を絞る——衆院議員のページに参院の議員一覧を出さないため。
- * `house: "both"` は院をまたぐ出典（現状なし。将来 内閣提出法案などが該当しうる）。
+ * `house: "both"` は院をまたぐ出典。**最初の実例は `cabinet`（官邸の閣僚等名簿、#1152）**
+ * ——**大臣・副大臣・大臣政務官は衆参どちらからも出る**ので、名簿 1 ページに両院の議員が載っている
+ * （実測 2026-09-30: 134 行のうち 衆 103 / 参 31）。
  */
 export type SourceHouse = "sangiin" | "shugiin" | "both";
-/** roster=議員一覧 / vote=投票結果 / speech=会議録(発言) / committee=会議録(委員会) / bill=議案情報 / question=質問主意書 */
-export type SourceKind = "roster" | "vote" | "speech" | "committee" | "bill" | "question";
+/**
+ * roster=議員一覧 / vote=投票結果 / speech=会議録(発言) / committee=会議録(委員会) /
+ * bill=議案情報 / question=質問主意書 / cabinet=官邸の閣僚等名簿（#1152）
+ */
+export type SourceKind = "roster" | "vote" | "speech" | "committee" | "bill" | "question" | "cabinet";
 
 export interface DatasetSource {
   name: string;
@@ -523,7 +528,42 @@ export type CommitteeRoleEntry = {
   /** firstDate の会議録の冒頭情報の URL（kokkai.ndl.go.jp/txt/…）。一次資料。 */
   sourceUrl: string;
 };
-export type TimelineEntry = VoteEntry | BillEntry | SpeechEntry | StanceEntry | QuestionEntry | AttendanceEntry | CommitteeRoleEntry;
+/**
+ * 大臣・副大臣・大臣政務官として職に在る事実（首相官邸の閣僚等名簿。Issue #1152。取得と名寄せは #1140）。
+ *
+ * ## なぜ `session` を持たないか（**既存の 7 種別と違う唯一の点**）
+ *
+ * **大臣の任免は内閣が行うので、国会の回次と結びつかない。** 名簿に書いてあるのは
+ * **内閣の発足日**だけで、「第221回国会の大臣」という括りは一次資料に存在しない。
+ * **発足日から回次を逆算すると、一次資料に書かれていない値を作ることになる**ので持たない。
+ * Web の `groupBySession` は `session` の無い行を「回次不明」に落とす（#103 からある既存の挙動）。
+ *
+ * ## なぜ終了日を持たないか（`--act-*`＝記録された値 と `--est-*`＝推定された値 の使い分け）
+ *
+ * - **「いつから」= 内閣の発足日。名簿に書いてある**（記録された値）。
+ * - **「いつまで」は名簿に書かれていない**（#1141 の調査）。**次のスナップショットとの差分からしか
+ *   推定できない。** **この型が載せるのは現職だけ**なので、推定値を作る必要が無い。
+ *   **歴代（#1141）で終了日が要るなら、別の欄を足して `estimated` で事実と分ける。**
+ *
+ * 1 行 = 1 人 × 1 役職。**兼務は別の行になる**（実測 2026-09-30: 赤澤 亮正が最大 7 行）。
+ */
+export type CabinetRoleEntry = {
+  kind: "cabinetRole";
+  estimated: false;
+  /** timeline の並びに使う日付＝**内閣の発足日**（名簿に書いてある。就任日の推定ではない）。 */
+  date: string;
+  /** 名簿のページの区分（閣僚等 / 副大臣 / 大臣政務官）。**役職名から導いた分類ではなく、ページの見出しそのもの。** */
+  section: "閣僚等" | "副大臣" | "大臣政務官";
+  /** 役職名の原文（例「内閣府特命担当大臣（金融）」「兼内閣府副大臣」）。丸めない・言い換えない。 */
+  role: string;
+  /** 名簿の日付表記の原文（例「令和８年９月１７日発足」）。 */
+  effectiveDateText: string;
+  /** 内閣の代（名簿 URL に入る。例 105）。 */
+  cabinet: number;
+  /** 名簿ページの URL（www.kantei.go.jp/jp/{代}/meibo/*.html）。一次資料。 */
+  sourceUrl: string;
+};
+export type TimelineEntry = VoteEntry | BillEntry | SpeechEntry | StanceEntry | QuestionEntry | AttendanceEntry | CommitteeRoleEntry | CabinetRoleEntry;
 
 /** Row of `data/rollcalls/index.json` (採決一覧用). */
 /* ---------- 選挙区（data/districts/、Issue #111 / #112） ---------- */

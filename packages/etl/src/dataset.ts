@@ -131,7 +131,12 @@ async function readLocalAssemblyRows(dir: string): Promise<Assembly[]> {
   }
 }
 
-const SOURCE_HOST = /(^|\.)(sangiin\.go\.jp|shugiin\.go\.jp|ndl\.go\.jp)$/;
+/**
+ * 一次資料として出してよいホスト。
+ * `kantei.go.jp` は閣僚等名簿（#1152）の出典。**大臣の任免は内閣が行うので国会のサイトに無い**
+ * （#1135 の調査。官報は `robots.txt` が機械的取得を拒んでいる）。
+ */
+const SOURCE_HOST = /(^|\.)(sangiin\.go\.jp|shugiin\.go\.jp|ndl\.go\.jp|kantei\.go\.jp)$/;
 const VOTE_VALUES = new Set(["賛成", "反対", "投票なし"]);
 const ASSEMBLY_KINDS = new Set(["national", "prefectural", "municipal"]);
 /** 都道府県の団体コード上2桁（01〜47）。 */
@@ -145,12 +150,31 @@ const KEIKA_SOURCE = /^https:\/\/www\.shugiin\.go\.jp\/internet\/itdb_gian\.nsf\
 /** bill 行の sourceUrl は参院 議案情報の議案詳細ページ（提出者・審議状況の一次資料）か衆院の経過ページ。 */
 const BILL_SOURCE = /^https:\/\/www\.sangiin\.go\.jp\/japanese\/joho1\/kousei\/gian\/\d+\/meisai\/m\d+\.htm$/;
 const SOURCE_HOUSES = new Set(["sangiin", "shugiin", "both"]);
-const SOURCE_KINDS = new Set(["roster", "vote", "speech", "committee", "bill", "question"]);
+/**
+ * `meta.sources[].kind`。議員ページの出典の絞り込み（#339）が読む。
+ * `cabinet` は官邸の閣僚等名簿（#1152。**house は `both`**——大臣は衆参どちらからも出る）。
+ */
+const SOURCE_KINDS = new Set(["roster", "vote", "speech", "committee", "bill", "question", "cabinet"]);
 const STANCE_VALUES = new Set(["賛成", "反対"]);
 /** question 行の sourceUrl は衆院 質問答弁情報の経過ページか参院 質問主意書の詳細ページ（提出日・提出者の一次資料、#106）。 */
 const QUESTION_SOURCE = /^https:\/\/(?:www\.shugiin\.go\.jp\/internet\/itdb_shitsumon\.nsf\/html\/shitsumon\/\d+\.htm|www\.sangiin\.go\.jp\/japanese\/joho1\/kousei\/syuisyo\/\d+\/meisai\/m\d+\.htm)$/;
 /** attendance 行の sourceUrl は国会会議録検索システムの会議録（冒頭情報）。 */
 const ATTENDANCE_SOURCE = /^https:\/\/kokkai\.ndl\.go\.jp\/txt\/[0-9A-Za-z]+\/\d+$/;
+/**
+ * cabinetRole 行の sourceUrl は**官邸の閣僚等名簿のページ**（#1152）。
+ * **3 ページしか無い**（`index.html` 閣僚等 / `fukudaijin.html` 副大臣 / `seimukan.html` 大臣政務官）。
+ * **ページを列挙する**のは、`kantei.go.jp` のどのページでも通る形にすると
+ * 「名簿ではないページを出典として付けた」行が素通りするため。
+ */
+const CABINET_SOURCE = /^https:\/\/www\.kantei\.go\.jp\/jp\/(\d+)\/meibo\/(?:index|fukudaijin|seimukan)\.html$/;
+/** 名簿のページ区分（`CabinetRoleEntry.section`）。**ページの見出しそのもので、役職名から導いた分類ではない。** */
+const CABINET_SECTIONS = new Set(["閣僚等", "副大臣", "大臣政務官"]);
+/**
+ * **cabinetRole に付いていてはいけない欄**（#1152）。
+ * **「いつまで」は名簿に書かれていない**（#1141 の調査。次のスナップショットとの差分からしか推定できない）。
+ * **推定した終了日が `estimated: false` の行に混ざったら、利用者からは区別できない。**
+ */
+const CABINET_FORBIDDEN_KEYS = ["endDate", "untilDate", "lastDate", "toDate"] as const;
 /** speech 行の sourceUrl は会議録の該当発言（本会議も委員会も同じ形。#263 が第221回 69,872 件で1形式だけと確認）。 */
 const SPEECH_SOURCE = ATTENDANCE_SOURCE;
 /** bills/ の id は `{提出回次}-{種別原文}-{番号 or 経過ページ id}`。 */
@@ -419,8 +443,15 @@ export async function validateDataset(dir: string): Promise<string[]> {
     for (let i = 0; i < d.timeline.length; i++) {
       const e = d.timeline[i];
       checkSource(rel, e, ` timeline[${i}]`);
-      // 回次（#103）: 全行が持つ。vote 行は採決 id の回次（{回次}-MMDD-vNNN）と一致する（Web の回次ごとの折りたたみと carried の鍵）
-      if (!Number.isInteger(e.session)) v.push(`${rel} timeline[${i}]: session must be an integer, got ${String(e.session)}`);
+      // 回次（#103）: **cabinetRole 以外の全行が持つ**。vote 行は採決 id の回次（{回次}-MMDD-vNNN）と一致する
+      // （Web の回次ごとの折りたたみと carried の鍵）。
+      //
+      // **`cabinetRole` は欄そのものを持たない**（#1152）——**大臣の任免は内閣が行うので国会の回次と
+      // 結びつかない。** **発足日から逆算すると、一次資料に書かれていない値を作ることになる。**
+      // **だから「無くてよい」ではなく「在ってはいけない」にする**（在れば逆算した跡である）。
+      if (e.kind === "cabinetRole") {
+        if ("session" in e) v.push(`${rel} timeline[${i}]: cabinetRole row must not have a session (大臣の任免は国会の回次と結びつかない。#1152)`);
+      } else if (!Number.isInteger(e.session)) v.push(`${rel} timeline[${i}]: session must be an integer, got ${String(e.session)}`);
       else if (e.kind === "vote" && String(e.session) !== e.rollCallId.split("-")[0]) v.push(`${rel} timeline[${i}]: vote session ${e.session} !== rollCallId ${e.rollCallId}`);
       // speech 行は timeline には入らない（#242。発言は members/{id}/speeches.json 側）
       if (e.kind === "speech") v.push(`${rel} timeline[${i}]: speech rows belong in members/${m.id}/speeches.json, not timeline (#242)`);
@@ -460,6 +491,21 @@ export async function validateDataset(dir: string): Promise<string[]> {
         if (e.firstDate > e.lastDate) v.push(`${rel} timeline[${i}]: committeeRole firstDate ${e.firstDate} must not be after lastDate ${e.lastDate}`);
         if (e.date !== e.firstDate) v.push(`${rel} timeline[${i}]: committeeRole date must equal firstDate (出席した最初の会議の日), got ${e.date} !== ${e.firstDate}`);
         if (!ATTENDANCE_SOURCE.test(e.sourceUrl)) v.push(`${rel} timeline[${i}]: committeeRole sourceUrl must be the 会議録 (kokkai.ndl.go.jp/txt/), got ${e.sourceUrl}`);
+      }
+      if (e.kind === "cabinetRole") {
+        // 閣僚等の役職（事実、#1152）。**名簿に書いてある値だけで組み、推定を 1 つも混ぜない。**
+        if (e.estimated !== false) v.push(`${rel} timeline[${i}]: cabinetRole row must have estimated: false`);
+        if (!CABINET_SECTIONS.has(e.section)) v.push(`${rel} timeline[${i}]: cabinetRole section must be one of ${[...CABINET_SECTIONS].join("/")}, got ${JSON.stringify(e.section)}`);
+        if (e.role === "") v.push(`${rel} timeline[${i}]: cabinetRole role must not be empty`);
+        if (e.effectiveDateText === "") v.push(`${rel} timeline[${i}]: cabinetRole effectiveDateText must not be empty (名簿の原文の日付表記)`);
+        const cab = CABINET_SOURCE.exec(e.sourceUrl);
+        if (!cab) v.push(`${rel} timeline[${i}]: cabinetRole sourceUrl must be the 官邸の閣僚等名簿 (www.kantei.go.jp/jp/{代}/meibo/{index,fukudaijin,seimukan}.html), got ${e.sourceUrl}`);
+        // **代は URL にも値にも在る。食い違ったら、どちらかが別の内閣のものである。**
+        else if (Number(cab[1]) !== e.cabinet) v.push(`${rel} timeline[${i}]: cabinetRole cabinet ${String(e.cabinet)} !== sourceUrl ${cab[1]} (${e.sourceUrl})`);
+        // **終了日を持たせない**（推定値を事実の行に混ぜない。#1141）
+        for (const key of CABINET_FORBIDDEN_KEYS) {
+          if (key in e) v.push(`${rel} timeline[${i}]: cabinetRole row must not have ${key} (「いつまで」は名簿に書かれていない。#1141 / #1152)`);
+        }
       }
       if (e.kind === "vote") {
         votes++;

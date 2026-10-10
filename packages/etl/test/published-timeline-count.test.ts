@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Bill, LocalRollCall, Member, MemberDetail, MemberSummary, RollCall } from "@seiji-kiroku/shared";
 import { groupAt } from "../src/group-history.ts";
+import { sessionField } from "../src/aggregate.ts";
 import { assertSameByMember } from "./same-by-member.ts";
 
 /**
@@ -288,6 +289,12 @@ const readJson = async <T>(p: string): Promise<T> => JSON.parse(await readFile(p
  */
 const scanOnce = async () => {
   const index = await readJson<MemberSummary[]>(join(DATA, "members/index.json"));
+  /**
+   * **`meta.json` の出典**。**閣僚等名簿（#1152）が「まだ生成されていない」のか
+   * 「消えた」のかを区別する唯一の観測点**である（下の cabinetRole の検査が読む）。
+   */
+  const meta = await readJson<{ sources?: { kind?: string }[] }>(join(DATA, "meta.json"));
+  const cabinetSourceDeclared = (meta.sources ?? []).some((x) => x.kind === "cabinet");
   /** `{ 種別: { 議員id: 件数 } }`。**0 件の議員は載せない**（「無い」と「0」を同じ形にする） */
   const byKind: Record<string, Record<string, number>> = {};
   const byKindAssembly: Record<string, Record<string, number>> = {};
@@ -302,6 +309,17 @@ const scanOnce = async () => {
    * 鍵は `(議員id, 回次, 委員会名/会議名, meetingId)`。**実測 2026-10-04: 7,370 行で重複 0 件。**
    */
   const dupRowKeys: Record<string, string[]> = {};
+  /** **閣僚等の役職の母数**（#1152）。**回次が無い種別なので、回次以外の軸で数える。** */
+  const cabinet = {
+    rows: 0,
+    people: new Set<string>(),
+    byHouse: {} as Record<string, number>,
+    bySection: {} as Record<string, number>,
+    cabinets: new Set<number>(),
+    sourceUrls: new Set<string>(),
+    seenRows: new Set<string>(),
+    dupRows: [] as string[],
+  };
   const details = new Map<string, MemberDetail>();
   let empty = 0;
   for (const m of index) {
@@ -314,7 +332,7 @@ const scanOnce = async () => {
       (byKind[e.kind] ??= {})[m.id] = ((byKind[e.kind] ?? {})[m.id] ?? 0) + 1;
       const asm = m.assemblyId ?? "(none)";
       (byKindAssembly[e.kind] ??= {})[asm] = ((byKindAssembly[e.kind] ?? {})[asm] ?? 0) + 1;
-      const session = typeof e.session === "number" ? String(e.session) : "(no session)";
+      const session = sessionField(e) === undefined ? "(no session)" : String(sessionField(e));
       const key = `${asm}|${session}`;
       (byKindAssemblySession[e.kind] ??= {})[key] = ((byKindAssemblySession[e.kind] ?? {})[key] ?? 0) + 1;
       if (e.kind === "committeeRole" || e.kind === "attendance") {
@@ -323,9 +341,25 @@ const scanOnce = async () => {
         if ((seen[e.kind] ??= new Set()).has(rowKey)) (dupRowKeys[e.kind] ??= []).push(rowKey);
         seen[e.kind].add(rowKey);
       }
+      // **閣僚等の役職**（#1152）。**回次を持たないので上の `byKindAssemblySession` は
+      // 全件を `(no session)` に落とす**——そこでは「どの回次が消えた」が言えないので、
+      // **人数・院・区分・内閣の代を別に数える**（下の 2 本のテストが読む）。
+      if (e.kind === "cabinetRole") {
+        cabinet.rows++;
+        cabinet.people.add(m.id);
+        cabinet.byHouse[m.house ?? "(none)"] = (cabinet.byHouse[m.house ?? "(none)"] ?? 0) + 1;
+        cabinet.bySection[e.section] = (cabinet.bySection[e.section] ?? 0) + 1;
+        cabinet.cabinets.add(e.cabinet);
+        cabinet.sourceUrls.add(e.sourceUrl);
+        // **行の同一性は `(議員id, 内閣の代, 区分, 役職名)`**。**同じ人に同じ役職を 2 回書いたら落ちる**
+        // （`committeeRole` の `meetingId` に当たる一意な id が名簿に無いので、役職名そのものを鍵にする）。
+        const rowKey = `${m.id}|${e.cabinet}|${e.section}|${e.role}`;
+        if (cabinet.seenRows.has(rowKey)) cabinet.dupRows.push(rowKey);
+        cabinet.seenRows.add(rowKey);
+      }
     }
   }
-  return { index, byKind, byKindAssembly, byKindAssemblySession, dupRowKeys, details, empty };
+  return { index, byKind, byKindAssembly, byKindAssemblySession, dupRowKeys, cabinet, cabinetSourceDeclared, details, empty };
 };
 
 let scan: ReturnType<typeof scanOnce> | undefined;
@@ -536,6 +570,181 @@ test("#1175 committeeRole / attendance: 行の同一性（議員id × 回次 × 
     assert.ok(total > 0, `${kind} の行が 0 件。重複を数える対象が無い（0 件を見て緑になっていないことを示す。#757）`);
     assert.deepEqual(dupRowKeys[kind] ?? [], [], `${kind} の行の同一性が重複している（${total} 行を見た。同じ会議録を 2 回数えている。#1175）`);
   }
+});
+
+/**
+ * **閣僚等の役職の下限**（#1152）。**`committeeRole` / `attendance` と同じく導き元が `data/` に無い。**
+ *
+ * ## なぜ `UNDERIVABLE_FLOOR`（議会 × 回次）に足さなかったか
+ *
+ * **`cabinetRole` は回次を持たない**ので、`byKindAssemblySession` では**全件が `(no session)` の
+ * 1 キーに落ちる**（実測 2026-10-08: `diet-shugiin|(no session)` 103 ＋ `diet-sangiin|(no session)` 31）。
+ * **キーが 2 個しか無いので、「どの回次が消えた」が言えない。** だから**回次以外の軸**で数える:
+ * **行数・人数・院・名簿の区分・内閣の代。**
+ *
+ * ## なぜ絶対値ではなく下限か（**内閣が代わると 134 行が丸ごと入れ替わる**）
+ *
+ * **名簿は「いまの内閣」しか公開していない**（#1140 のフィクスチャの注記と同じ事実）。
+ * **改造・総辞職で名簿が書き換わると、76 人も 134 行も正当に変わる。**
+ * **絶対値で書くと、内閣が代わった日に日次 cron が止まる**（#1175 がまさにその事故である）。
+ *
+ * **下限の根拠は内閣法と国家行政組織法ではなく、名簿の構成である**——
+ * **3 ページ（閣僚等 / 副大臣 / 大臣政務官）はどの内閣でも在り、各ページに複数人載る。**
+ * **だから「3 区分がすべて非空」と「院ごとに 1 人以上」は、どの内閣でも成り立つ。**
+ * **行数・人数の下限は実測値よりはっきり低く取る**——**内閣の規模の揺れで赤くしないため。**
+ *
+ * ## 実測（2026-10-08、フィクスチャの名簿 × `data/members` の実物 771 人）
+ *
+ * ```
+ * tally   { total: 76, byName: 71, byKana: 5, unresolved: 0 }    71+5+0=76 ✓
+ * rows 134   people 76   （重複 0）
+ * rows  by house   { shugiin: 103, sangiin: 31 }     103+31=134 ✓
+ * people by house  { shugiin:  58, sangiin: 18 }      58+18= 76 ✓
+ * rows by section  { 閣僚等: 63, 副大臣: 35, 大臣政務官: 36 }   63+35+36=134 ✓
+ * 1 人あたり最大 7 役職 = 赤澤 亮正（h_fee329b052）
+ * ```
+ *
+ * **下限を下げるときは、どの内閣でどの職が減ったかを書くこと**（#943。「赤いから」で下げない）。
+ */
+const CABINET_FLOOR = {
+  /**
+   * **実測 134 に対して 60**。**全滅の歯止めである——1 ページ落ちは捕まえない。**
+   *
+   * **以前ここには「閣僚等だけでも 63 行あるので 1 ページが丸ごと落ちたら割る」と書いてあったが、
+   * それは偽だった**（#1267 のレビューと PO が別々に実測。2026-10-11）:
+   *
+   * ```
+   * 区分ごとの実測        閣僚等 rows 63 / people 21
+   *                       副大臣 rows 35 / people 27
+   *                       大臣政務官 rows 36 / people 28
+   *
+   * 1 区分が丸ごと落ちたとき   残り rows（下限 60）   残り people（下限 40）
+   *   閣僚等 が落ちる            **71 → 鳴らない**      **55 → 鳴らない**
+   *   副大臣 が落ちる            **99 → 鳴らない**      **49 → 鳴らない**
+   *   大臣政務官 が落ちる        **98 → 鳴らない**      **48 → 鳴らない**
+   * ```
+   *
+   * **134 − 63 = 71 で下限 60 を上回る。** 引き算が合っていなかった。
+   * **1 ページ落ちを捕まえるのは下の `sections` の `deepEqual`** であって、この下限ではない。
+   *
+   * **さらに悪い形**（レビュアーが実測）: **各区分に 1 行だけ残せば `bySection` の鍵は 3 つで
+   * 各 `n > 0` なので、`sections` も `n > 0` も通る。** 止めるのはこの下限だけなので、
+   * **緑のまま rows 134 → 60 / people 76 → 40 まで減らせる**:
+   *
+   * ```
+   * 消える rows   **74 / 134 = 55.2%**
+   * 消える people **36 /  76 = 47.4%**
+   * ```
+   *
+   * **区分ごとの下限は作っていない**——**内閣の代の遷移が 0 回なので、分布を実測から
+   * 導けない**（`committeeRole` は 8 回の遷移が在る）。**実測値に下限を合わせると、
+   * 内閣改造で人数が変わったときに偽陽性になる**（#943 / [[expected-table-is-not-a-knob]]）。
+   * **遷移が 1 回でも観測できたら、そこで区分ごとの下限を入れる。**
+   */
+  rows: 60,
+  /** **実測 76 に対して 40**。**全滅の歯止め**（上の `rows` と同じ理由で、1 ページ落ちは捕まえない） */
+  people: 40,
+  /** **院ごとに 1 人以上**（大臣は衆参どちらからも出る。片側が丸ごと落ちたら割る） */
+  rowsPerHouse: 1,
+  /**
+   * **名簿の 3 区分**。どの内閣でも 3 ページ在る（`MEIBO_PAGES`）。**ここが 2 個になったら 1 ページ落ちている**。
+   * **並びは意味を持たない**（突き合わせる側が両側を `.sort()` する）。**日本語の並びを目で保証させない。**
+   */
+  sections: ["閣僚等", "副大臣", "大臣政務官"],
+};
+
+/**
+ * **閣僚等の役職が消えていないこと**（#1152。**この PBI の受け入れ条件 2**）。
+ *
+ * **#1117 が直した穴と同じ形をここに作らないための検査である**——
+ * **`counts` に `cabinetRole` の欄は無い**（#244 の `committeeRole` と同じ判断で、役職数を件数として
+ * 見せない）。**`dataset.ts` は行の *形* だけを見ている**ので、**行が 0 本なら違反も 0 件になる。**
+ * **「違反が 0 件」は本当である——見ていないものからは違反が出ない**（#855 の青森と同じ形）。
+ *
+ * **だから件数そのものを見る。** **76 人 / 134 行が消えたら、ここが落ちる。**
+ */
+test("#1117/#1152 cabinetRole: 大臣・副大臣・大臣政務官の行が下限を割っていない（0 件と「数えていない」を区別する。#757）", async () => {
+  const { cabinet, cabinetSourceDeclared } = await countTimelines();
+  // **「まだ生成されていない」と「消えた」を区別する**（#1175 の事故を作り直さないため）。
+  //
+  // **`data/` は ETL が別の PR（`data: refresh`）で更新する**ので、**この種別を足したコードが main に
+  // 入った瞬間から、次の ETL 実行までの間、`data/` には 1 行も無い。**
+  // **そこで無条件に `rows > 0` を要求すると、その間 main が赤になり全 PR のマージが止まる**
+  // ——**#1175 がまさにその形で日次 cron を 2 日止めた。**
+  //
+  // **だが「赤いから黙らせる」のでもない**（#943）。**観測できる事実で分岐する**:
+  // **`meta.json` の `sources` に `kind: "cabinet"` が在るか。**
+  // **これは「この種別を出す ETL が実際に走ったか」を示す**（`cli.ts` が書く行）。
+  //
+  //   走った（宣言が在る） → **行が 0 件なら落ちる**（記録が消えた側。守りは全部効く）
+  //   走っていない        → **宣言も行も無いことだけを確かめて通す**（まだ生成されていない）
+  //
+  // **「宣言は在るのに行が 0」は落ちる。** **それが「消えた」の形である。**
+  if (!cabinetSourceDeclared) {
+    assert.equal(cabinet.rows, 0,
+      "meta.json の sources に kind: \"cabinet\" が無いのに cabinetRole の行が在る"
+      + "（出典を宣言せずに行を書いている＝一次資料の記録が meta から消えている。#1152）");
+    return; // **まだ ETL が走っていない。** 次の `data: refresh` で宣言が付き、下の守りが全部効き始める
+  }
+  // **母数を先に出す**（#757）。**ここが 0 なら、下の下限は全部「0 >= 0」で通ってしまう**
+  assert.ok(cabinet.rows > 0, "meta.json は閣僚等名簿を出典に挙げているのに cabinetRole の行が 0 件。"
+    + "**ETL は走ったが行が 1 つも出ていない**（名寄せが全滅した / 名簿の形が変わった）。"
+    + "（「0 件」と「数えていない」を区別する。#757）");
+  assert.ok(cabinet.rows >= CABINET_FLOOR.rows,
+    `cabinetRole の行が ${cabinet.rows} 件（下限 ${CABINET_FLOOR.rows}）。名簿 3 ページのどれかが落ちていないか`
+    + "（#1037 の形: 1 ページ落とすとその層の全員が「役職に就いていない」と区別がつかなくなる）");
+  assert.ok(cabinet.people.size >= CABINET_FLOOR.people,
+    `cabinetRole の付いた議員が ${cabinet.people.size} 人（下限 ${CABINET_FLOOR.people}）。名寄せが後退していないか`);
+  // **院ごとに見る**（合計だけだと片側の消失を反対側が覆い隠す。#235 の 2026-08-24 の事故と同じ理由）
+  for (const house of ["shugiin", "sangiin"]) {
+    assert.ok((cabinet.byHouse[house] ?? 0) >= CABINET_FLOOR.rowsPerHouse,
+      `${house} の cabinetRole が ${String(cabinet.byHouse[house] ?? 0)} 件。片方の院が丸ごと落ちている`);
+  }
+  // **3 区分がすべて在ること**（**増えた側も見る**。知らない区分が黙って現れたら落ちる）。
+  //
+  // **両側を sort する。** 片側だけ `.sort()` して、もう片側は表に書いた並びをそのまま使う形だと、
+  // **表の並びが「正しい」ことを人が目で保証しなければならない**——**日本語では目で判定できない。**
+  // **`.sort()` は UTF-16 のコードユニット順**で、`副`(U+526F) < `大`(U+5927) < `閣`(U+95A3) なので
+  // 正解は `["副大臣","大臣政務官","閣僚等"]` だが、**私は `["大臣政務官","副大臣","閣僚等"]` と書いていた。**
+  // **それは `data/` に行が入った瞬間に main を赤くする**（宣言が無いあいだは早期 return で到達しない）
+  // ——**`rows > 0` を無条件にしないことで避けた #1175 に、別の経路で着くところだった。**
+  // **両側 sort なら表の並びは意味を持たない。**
+  assert.deepEqual([...Object.keys(cabinet.bySection)].sort(), [...CABINET_FLOOR.sections].sort(),
+    "cabinetRole の区分が名簿の 3 ページと違う（1 ページ落ちた、または名簿に無い区分を作っている）");
+  for (const [section, n] of Object.entries(cabinet.bySection)) {
+    assert.ok(n > 0, `${section} の行が 0 件`);
+  }
+  // **内閣の代は 1 つだけ**（名簿は「いまの内閣」しか公開していない。2 つ在れば古い行が残っている）
+  assert.equal(cabinet.cabinets.size, 1,
+    `cabinetRole の内閣の代が ${cabinet.cabinets.size} 種類（${[...cabinet.cabinets].join(",")}）。`
+    + "名簿は「いまの内閣」しか公開していないので、2 つ以上在るのは前の内閣の行が残っているということ");
+  // **出典は 3 ページしか無い**（**1 ページ分の URL が消えたら、その層が落ちている**）
+  assert.equal(cabinet.sourceUrls.size, 3,
+    `cabinetRole の出典 URL が ${cabinet.sourceUrls.size} 種類（${[...cabinet.sourceUrls].sort().join(" ")}）。名簿は 3 ページ`);
+});
+
+/**
+ * **閣僚等の行が重複していないこと**（#1152。`committeeRole` の #1175 と同じ考え方の、固定値を使わない検算）。
+ *
+ * **下限は「減っていないこと」しか言わない**——**同じ役職を 2 回書いて数を増やす形は下限を通る。**
+ * **`matchCabinetPosts` の `assertTallyConsistent` は ETL の中で同じことを見ているが、
+ * それは「出力を作ったとき」の検算である。** **`data/` に書かれたものを読んで数え直すのは、ここだけ。**
+ *
+ * **鍵に `meetingId` のような一意 id が使えない**——名簿に行の id が無いので、
+ * **`(議員id, 内閣の代, 区分, 役職名)`** を鍵にする。
+ * **実測 2026-10-08: 134 行で重複 0 件**（1 人が最大 7 役職を持つが、役職名はすべて異なる）。
+ */
+test("#1152 cabinetRole: 行の同一性（議員id × 内閣の代 × 区分 × 役職名）が重複していない（固定値を使わない検算）", async () => {
+  const { cabinet, cabinetSourceDeclared } = await countTimelines();
+  // **上の検査と同じ分岐**（まだ ETL が走っていないなら重複を数える対象が無い）。
+  // **重複の検査は「行が在るとき」にしか意味を持たない**ので、ここは素直に抜ける。
+  if (!cabinetSourceDeclared) return;
+  // **母数**（#757）: 何行を見た上での「重複 0」なのかを必ず出す
+  assert.ok(cabinet.rows > 0, "cabinetRole の行が 0 件。重複を数える対象が無い（0 件を見て緑になっていないことを示す。#757）");
+  assert.deepEqual(cabinet.dupRows, [], `cabinetRole の行が重複している（${cabinet.rows} 行を見た。同じ役職を 2 回数えている）`);
+  // **人数 × 役職数の関係**: 行数は人数以上（1 人 1 役職以上）。**人数より少なければ数え落としている**
+  assert.ok(cabinet.rows >= cabinet.people.size,
+    `cabinetRole の行 ${cabinet.rows} が人数 ${cabinet.people.size} より少ない（1 人 1 役職以上なので在り得ない）`);
 });
 
 /**

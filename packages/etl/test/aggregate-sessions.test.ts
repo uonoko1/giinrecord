@@ -1,7 +1,7 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import type { Bill, Member, Question, RollCall, Speech, TimelineEntry } from "@seiji-kiroku/shared";
-import { buildDataset, type CarriedEntry } from "../src/aggregate.ts";
+import { buildDataset, sessionField, type CarriedEntry } from "../src/aggregate.ts";
 import type { MatchedBill } from "../src/match-bills.ts";
 import type { MatchedAttendance } from "../src/match-attendance.ts";
 
@@ -37,11 +37,11 @@ describe("buildDataset: timeline の各行に session が付く", () => {
   const h1 = ds.details.find((d) => d.id === "h_1")!;
 
   test("vote は採決の回次、bill（参法）は billId の回次、question は質問の回次、attendance は会議の回次。speech は speeches.json 側で会議録の回次（#242）", () => {
-    assert.deepEqual(m1.timeline.map((e) => [e.kind, e.session]), [["question", 210], ["attendance", 205], ["vote", 200], ["bill", 200]]);
-    assert.deepEqual(ds.speeches.find((x) => x.id === "m_1")!.speeches.map((e) => [e.kind, e.session]), [["speech", 201]]);
+    assert.deepEqual(m1.timeline.map((e) => [e.kind, sessionField(e)]), [["question", 210], ["attendance", 205], ["vote", 200], ["bill", 200]]);
+    assert.deepEqual(ds.speeches.find((x) => x.id === "m_1")!.speeches.map((e) => [e.kind, sessionField(e)]), [["speech", 201]]);
   });
   test("衆院の bill 行・stance 行は議案の提出回次", () => {
-    assert.deepEqual(h1.timeline.map((e) => [e.kind, e.session]), [["bill", 216], ["stance", 216]]);
+    assert.deepEqual(h1.timeline.map((e) => [e.kind, sessionField(e)]), [["bill", 216], ["stance", 216]]);
   });
 });
 
@@ -53,7 +53,7 @@ describe("buildDataset: carried（対象外の回次の行を members/{id}.json 
   test("引き継いだ speech 行はそのまま speeches.json に入り、counts に数える（#242: 行き先が変わっても引き継ぎは止めない）", () => {
     const ds = buildDataset(members, [rollCall("221-0605-v001", 221, "2026-06-05", "m_1")], new Map(), [], [], [], [], [], [], carried);
     const m1 = ds.details[0];
-    assert.deepEqual(m1.timeline.map((e) => [e.kind, e.session, e.date]), [["vote", 221, "2026-06-05"]]);
+    assert.deepEqual(m1.timeline.map((e) => [e.kind, sessionField(e), e.date]), [["vote", 221, "2026-06-05"]]);
     assert.deepEqual(ds.speeches[0].speeches, [old]);
     assert.equal(ds.index[0].counts.speeches, 1);
   });
