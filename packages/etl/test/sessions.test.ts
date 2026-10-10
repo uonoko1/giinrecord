@@ -4,7 +4,7 @@ import { mkdtemp, mkdir, writeFile, rm, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Bill, Member, MemberDetail, RollCall, RollCallSummary, TimelineEntry } from "@seiji-kiroku/shared";
-import { planSessions, readCarried, decisionOfResult, lostVoteMatches, lostTimelineEntries, lostSessionEntries, readSessionCounts, sessionCounts, sessionOfEntry, dropCarriedSpeeches, dropCarriedCommitteeRoles, carriedTenureVerified } from "../src/sessions.ts";
+import { planSessions, readCarried, decisionOfResult, lostBillFields, lostVoteMatches, lostTimelineEntries, lostSessionEntries, readSessionCounts, sessionCounts, sessionOfEntry, dropCarriedSpeeches, dropCarriedCommitteeRoles, carriedTenureVerified } from "../src/sessions.ts";
 import type { CarriedEntry } from "../src/aggregate.ts";
 import { stableJson } from "../src/json.ts";
 
@@ -727,5 +727,84 @@ describe("carriedTenureVerified: 引き継ぎ行も今の名簿で在職を確�
 
   test("名簿から消えた memberId の行は落ちる（従来どおり。付け先が無い）", () => {
     assert.deepEqual(carriedTenureVerified([entry(217, "2025-03-01")], [member("m_2", 216, 221)]), []);
+  });
+});
+
+/**
+ * **#1266: 個票の項目が消えたことを、前回出力を基点に検出する。**
+ *
+ * **実測（2026-10-08、PR #1222 の出力 ↔ `origin/main`、`data/bills/` 1,941 件の全数照合）:**
+ *
+ * ```
+ * ファイル数  1,941 → 1,941   （1 件も増減していない）
+ *   result   が消えた議案  18 件
+ *   received が消えた議案  16 件
+ *   referral が消えた議案   4 件   ← index.json に出るのでこれだけが見えていた
+ * ```
+ *
+ * **この 18 / 16 件は個票にしか無い**ので、`bills/index.json` を見る
+ * `bills-optional-field-session-reach.test.ts` からは原理的に見えなかった
+ * （そのファイルの docblock が「個票の項目は測っていない」と自分で書いている）。
+ */
+describe("lostBillFields: 前回出力の議案が持っていた項目が消えていないか（#1266）", () => {
+  const bill = (over: Partial<Bill> = {}): Bill => ({
+    id: "216-衆法-9", session: 216, kind: "衆法", house: "shugiin", title: "議案",
+    sourceUrl: "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDBA6.htm",
+    ...over,
+  });
+
+  test("項目が在った → 無くなった を、項目名つきで名指しする", () => {
+    const before = [bill({ result: { shugiin: "閉会中審査" }, received: { shugiin: "2024-11-28" }, status: "衆議院で閉会中審査" })];
+    const after = [bill({ status: "未了" })];
+    assert.deepEqual(lostBillFields(before, after), [{ id: "216-衆法-9", session: 216, fields: ["received", "result"] }]);
+  });
+
+  test("#1218 の実データの形（最新回次のページで 3 欄が空）をそのまま固定する", () => {
+    // kaiji216 のページが記録していた付託・結果・受理日が、kaiji220（欄が全部空）の後勝ちで消えた形
+    const before = [bill({
+      referral: { shugiin: { committee: "政治改革に関する特別", date: "2024-12-10" } },
+      result: { shugiin: "閉会中審査" }, received: { shugiin: "2024-12-06" },
+    })];
+    assert.deepEqual(lostBillFields(before, [bill()]), [{ id: "216-衆法-9", session: 216, fields: ["received", "referral", "result"] }]);
+  });
+
+  test("項目が増えた・変わらない・前回も無かった は鳴らない（毎日止まらないこと）", () => {
+    assert.deepEqual(lostBillFields([bill()], [bill({ result: { shugiin: "可決" } })]), [], "増えた分で鳴ってはいけない");
+    const same = [bill({ result: { shugiin: "可決" } })];
+    assert.deepEqual(lostBillFields(same, same), [], "同じなら鳴ってはいけない");
+    assert.deepEqual(lostBillFields([bill()], [bill()]), [], "両方とも無いなら鳴ってはいけない");
+  });
+
+  test("値が別の値に化けた分は対象外（一次資料の訂正・再提出で実際に動く。実測 215-衆法-2）", () => {
+    // 実測: submitterText が "階 猛君外六名" → "階 猛君外五名"、submitterNames から 堤かなめ が落ちた。
+    // **項目は在る**ので鳴らない。鳴らすと毎日止まるので、ここは意図して対象外である。
+    const before = [bill({ submitterText: "階 猛君外六名", submitterNames: ["階猛", "堤かなめ"], status: "衆議院で閉会中審査" })];
+    const after = [bill({ submitterText: "階 猛君外五名", submitterNames: ["階猛"], status: "未了" })];
+    assert.deepEqual(lostBillFields(before, after), []);
+  });
+
+  test("議案ごと消えた分は対象外（lostSessionEntries / by-session.json の担当）", () => {
+    assert.deepEqual(lostBillFields([bill({ result: { shugiin: "可決" } })], []), []);
+  });
+
+  test("空配列・空オブジェクト・空文字は「無い」と数える（両方向で対称）", () => {
+    // supporterNames: [] は「欄はあるが賛成者が居ない」事実だが、利用者には欄ごと無しと同じに出る。
+    // どちらの向きでも鳴らさない（区別して止める意味が無い）。
+    assert.deepEqual(lostBillFields([bill({ supporterNames: [] })], [bill()]), []);
+    assert.deepEqual(lostBillFields([bill()], [bill({ supporterNames: [] })]), []);
+    // 在った → 空配列 は「消えた」である
+    assert.deepEqual(lostBillFields([bill({ supporterNames: ["青柳陽一郎"] })], [bill({ supporterNames: [] })]), [{ id: "216-衆法-9", session: 216, fields: ["supporterNames"] }]);
+    assert.deepEqual(lostBillFields([bill({ result: { shugiin: "可決" } })], [bill({ result: {} })]), [{ id: "216-衆法-9", session: 216, fields: ["result"] }]);
+    assert.deepEqual(lostBillFields([bill({ submitterText: "内閣" })], [bill({ submitterText: "" })]), [{ id: "216-衆法-9", session: 216, fields: ["submitterText"] }]);
+  });
+
+  test("複数の議案で消えたら全部返し、回次 → id の順に並べる", () => {
+    const before = [
+      bill({ id: "216-衆法-9", session: 216, result: { shugiin: "閉会中審査" } }),
+      bill({ id: "215-衆法-1", session: 215, result: { shugiin: "閉会中審査" } }),
+      bill({ id: "216-衆法-12", session: 216, result: { shugiin: "閉会中審査" } }),
+    ];
+    const after = before.map((b) => bill({ id: b.id, session: b.session }));
+    assert.deepEqual(lostBillFields(before, after).map((l) => l.id), ["215-衆法-1", "216-衆法-12", "216-衆法-9"]);
   });
 });
