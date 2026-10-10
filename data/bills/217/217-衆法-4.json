@@ -3,6 +3,18 @@
  "id": "217-衆法-4",
  "kind": "衆法",
  "number": 4,
+ "received": {
+  "shugiin": "2025-01-31"
+ },
+ "referral": {
+  "shugiin": {
+   "committee": "政治改革に関する特別",
+   "date": "2025-10-24"
+  }
+ },
+ "result": {
+  "shugiin": "閉会中審査"
+ },
  "session": 217,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0ADA.htm",
  "status": "未了",

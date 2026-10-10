@@ -3,11 +3,17 @@
  "id": "217-衆法-61",
  "kind": "衆法",
  "number": 61,
+ "received": {
+  "shugiin": "2025-06-18"
+ },
  "referral": {
   "shugiin": {
    "committee": "法務",
    "date": "2026-01-23"
   }
+ },
+ "result": {
+  "shugiin": "閉会中審査"
  },
  "session": 217,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0C9A.htm",
