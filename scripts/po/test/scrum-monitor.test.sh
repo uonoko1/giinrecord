@@ -1205,7 +1205,14 @@ test_case "monitor: バックティックと多バイト文字を語ごと落と
 # （**実測 2026-10-11: :717 の `assert_contains "$ERR" "read:project"`。**
 #  以前ここは `t_mon_pr_search_error_text_is_shown` と書いていたが、**その関数は `read:project` を
 #  1 度も参照していない**——#1248 の実装者が実測で見つけた。**引用先は関数名で確かめる。**）
-# ——**規則を消す／狭める向きの変異はそちらで死ぬ**ので、ここでは重ねない。
+# ——**規則を丸ごと消す向きの変異はそちらで死ぬ**ので、ここでは重ねない。
+# **狭める向きは半分しか死なない**（#1248 のレビュー 2 巡目が実測）:
+#   固定語が `read:project` = **4 文字 : 7 文字**しかないので、
+#   `^[a-z]{1,11}:[a-z]{1,11}$` / `{1,4}:{1,12}` / `{1,7}:{1,7}$` / `{4,12}:{1,12}` の
+#   **4 変異は 46/0 で素通りする**（7 件中 4 件）。
+#   **狭めても固定語が通り続ける範囲は、この検査では見えない。**
+#   偽陰性（守りが緩むのを見逃す）なので、ここで塞ぐべき穴ではない——
+#   **塞ぐなら固定語の長さを散らす**（右節が 12 文字を超える語を足す）。#1248 で別 PBI にした。
 t_mon_err_allowlist_upper_bounds_are_fixed() {
   local pass24="abcdefghijklmnopqrstuvwx"          # 24 文字 → 通る
   local stop25="abcdefghijklmnopqrstuvwxy"         # 25 文字 → 止まる
@@ -1260,9 +1267,8 @@ EOF
   # 上の 6 行では 1 つも死ななかった**（3 変異とも 46/0 のまま通った。実測）。
   # **漏れるのは内部のホスト名・サービス名**——**この規則が守ろうとしているものそのものである。**
   # **通る側は `read:project` が別に固定している**
-  # （**`t_mon_board_permission_error_is_named`** の `assert_contains "$ERR" "read:project"`。
-  # **上の 1204 行目の散文は `t_mon_pr_search_error_text_is_shown` と書いているが、
-  # 実物はこちらである**——実測して確かめた）ので、**ここは「広げすぎ」だけを見る。**
+  # （**`t_mon_board_permission_error_is_named`** の `assert_contains "$ERR" "read:project"`）ので、
+  # **ここは「広げすぎ」だけを見る。**
   assert_not_contains "$ERR" "$snakehost" "**スコープ規則は \`_\` を通さない（my_svc:my_db が漏れる・#1248）**"
   assert_not_contains "$ERR" "my_svc"     "**サービス名の断片も残さない**"
   assert_not_contains "$ERR" "$dashhost"  "**スコープ規則は \`-\` を通さない（a-b:c-d が漏れる・#1248）**"
