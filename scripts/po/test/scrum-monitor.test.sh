@@ -897,6 +897,24 @@ EOF
   # **設計の定数はここに逐語で持つ**（**実装から読まない**。
   # [[expected-table-is-not-a-knob]]: **実装を読むと、実装を緩めたとき表も一緒に緩む**）。
   # **余白は「定型文 + 監視の他の行」のぶんで、両方の変異を破れるだけ小さく取る。**
+  #
+  # **`overhead=1200` を小さくしない**（#1235 R3。**実測 2026-10-08・基点 272cb286**）。
+  # **この上限には「捕まらない帯」が構造的に在る**——測って中身を説明できたので、残す判断をした:
+  #
+  #   `$ERR` の実測（既定 `GH_ERR_MAX_CHARS=300`）            **2,369 文字**
+  #   うち gh の言い分   3 行 × 300 文字 × 2 回（log と一覧）   1,800 文字
+  #   うち監視の他の行（この fixture では固定）                   **569 文字**
+  #   上限 3,000 までの余白                                      **631 文字**
+  #   `GH_ERR_MAX_CHARS` を +1 すると `$ERR` は **+6 文字**（3 行 × 2 回）
+  #   → **捕まるのは 300 + 631/6 ≒ 406 から**（**実測: 405 は通り、406 で落ちる**）
+  #
+  # **つまり帯は 300→405 で、これは「`$ERR` 全体を測る」設計の帰結である。**
+  # **狭めるには `overhead` を 580〜600 まで落とすことになるが、それでは
+  # baseline（2,369）との余白が 11〜31 文字しか残らない**（実測。580/600 でも緑にはなる）。
+  # **その余白は「監視の他の行」の文章量そのもの**なので、
+  # **サニタイザと無関係な文言の変更でこの検査が赤くなる**——**偽陽性で読まれなくなる方が害が大きい。**
+  # **帯を本当に狭めたいなら `$ERR` 全体ではなく「gh の言い分の部分」だけを測る作り直しが要る**
+  # （Issue #1235 の「どちらを採るか」。**ここでは採らない。測って残す判断である**）。
   local max_lines=3 max_chars=300 overhead=1200
   local bound=$(( max_lines * max_chars * 2 + overhead ))
   [[ ${#ERR} -lt $bound ]] || fail "**上限が効いていません**（${max_lines} 行 × ${max_chars} 文字が設計。上限 ${bound}）: ${#ERR} 文字"
@@ -1151,16 +1169,69 @@ test_case "monitor: バックティックと多バイト文字を語ごと落と
 # **fixture の鍵に本物の接頭辞を使わない**（`forbidden-patterns.sh` の `fixture-secret`）。
 # **`deadbeef…` は純英字 32 文字で、hex としても読める**——**形 1 を長さだけが止めている**
 # ことを示すのにちょうどよい。
+#
+# **スコープ規則（形 4 = `^[a-z]{1,12}:[a-z]{1,12}$`）の上限も、同じ理由で無検査だった**
+# （#1235 = #1217 の 3 巡目のレビュー X1 / X2。**実測 2026-10-08・基点 272cb286 で
+# どちらも 303 passed / 0 failed で素通りした**）。
+# **この規則は `read:project` のような OAuth のスコープ名を通すために在る**
+# （`gh_err_sanitize` の散文 4）。**だが数字や長さを許すと内部の情報が通る。**
+#
+#   **数字を許す変異**  `[a-z]` → `[a-z0-9]`   → **`db01:5432` が通る**（ホスト名とポート）
+#   **長さを許す変異**  `{1,12}` → `{1,40}`    → **`db01` は 4 文字なので長さでは止まらない。**
+#                                                **数字を含まないことが止めている**ので、
+#                                                **長さの変異を殺すには長い純英字の `a:b` 形が要る**
+#   **大文字を許す変異** `[a-z]` → `[a-zA-Z]`  → **`vpsHost:appWeb` が通る**（#1248 のレビュー。
+#                                                **`db01:5432` と `averyverylongname:…` は
+#                                                どちらもこの変異では止まったまま**なので、
+#                                                **上の 2 行では殺せない**）
+#   **点を許す変異**     `[a-z]` → `[a-z.]`    → **`abc.internal:web` が通る**（#1248 のレビュー。
+#                                                **FQDN とサービス名の形。**
+#                                                **既存の 2 行はどちらも点を含まない**ので、
+#                                                **やはり上の 2 行では殺せない**）
+# **だから fixture は 4 つ要る**（**1 行では X2 を、2 行では大文字と点を殺せない**）:
+#   `db01:5432`                      → **数字**を許す変異で漏れる
+#   `averyverylongname:averylongsub` → **長さ**を許す変異で漏れる（各節 13 文字以上・純英字）
+#   `vpsHost:appWeb`                 → **大文字**を許す変異で漏れる（#1248 のレビュー）
+#   `abc.internal:web`               → **点**を許す変異で漏れる（#1248 のレビュー）
+#
+# **実測（2026-10-08、基点 7c135ac6。`gh_err_allow` の awk を切り出して 4 語を流した）**:
+#   いまの規則 `^[a-z]{1,12}:[a-z]{1,12}$`
+#     → `abc.internal:web` / `vpsHost:appWeb` / `db01:5432` を**3 件すべて伏せる**（正しい）
+#     → `read:project` は**通る**（スコープ名が読めなくなっては困る）
+#   `[a-z]` → `[a-zA-Z]`  → **`vpsHost:appWeb` が漏れる**（他の 2 件は伏せたまま）
+#   `[a-z]` → `[a-z.]`    → **`abc.internal:web` が漏れる**（他の 2 件は伏せたまま）
+# **どちらの変異も、この 2 語を足す前の検査は緑のまま通していた**（#1248 のレビュー）。
+# **通る側（`read:project` が残ること）は `t_mon_board_permission_error_is_named` が既に固定している**
+# （**実測 2026-10-11: :717 の `assert_contains "$ERR" "read:project"`。**
+#  以前ここは `t_mon_pr_search_error_text_is_shown` と書いていたが、**その関数は `read:project` を
+#  1 度も参照していない**——#1248 の実装者が実測で見つけた。**引用先は関数名で確かめる。**）
+# ——**規則を丸ごと消す向きの変異はそちらで死ぬ**ので、ここでは重ねない。
+# **狭める向きは半分しか死なない**（#1248 のレビュー 2 巡目が実測）:
+#   固定語が `read:project` = **4 文字 : 7 文字**しかないので、
+#   `^[a-z]{1,11}:[a-z]{1,11}$` / `{1,4}:{1,12}` / `{1,7}:{1,7}$` / `{4,12}:{1,12}` の
+#   **4 変異は 46/0 で素通りする**（7 件中 4 件）。
+#   **狭めても固定語が通り続ける範囲は、この検査では見えない。**
+#   偽陰性（守りが緩むのを見逃す）なので、ここで塞ぐべき穴ではない——
+#   **塞ぐなら固定語の長さを散らす**（右節が 12 文字を超える語を足す）。#1248 で別 PBI にした。
 t_mon_err_allowlist_upper_bounds_are_fixed() {
   local pass24="abcdefghijklmnopqrstuvwx"          # 24 文字 → 通る
   local stop25="abcdefghijklmnopqrstuvwxy"         # 25 文字 → 止まる
   local hexkey="deadbeefcafebabedeadbeefcafebabe"  # 32 文字の純英字（hex 鍵の形）
+  local hostport="db01:5432"                       # 数字を許すと通る（内部ホスト名とポート）
+  local longscope="averyverylongname:averylongsub" # 各節 13 文字以上 → 長さを許すと通る
+  local camelhost="vpsHost:appWeb"                 # 大文字を許すと通る（#1248 のレビュー）
+  local fqdnhost="abc.internal:web"                # 点を許すと通る（#1248 のレビュー）
+  local snakehost="my_svc:my_db"                   # `_` を許すと通る（#1248 のレビュー 2 巡目）
+  local dashhost="a-b:c-d"                         # `-` を許すと通る（#1248 のレビュー 2 巡目）
+  # **`pass24` の接頭辞にならない 13 文字を使う**——**`abcdefghijklm` は
+  # `abcdefghijklmnopqrstuvwx`（通る側）の接頭辞なので、断片の検査が原理的に成立しない**（実測で赤）。
+  local len13host="thirteenchars:web"              # 各節 13 文字を許すと通る（#1248 のレビュー 2 巡目）
   local h; h=$(handler <<EOF
 handle() {
   case "\$*" in
     "pr list --repo "*) echo '[]' ;;
     "api graphql"*)
-      echo 'gh: HTTP 502 word $pass24 word $stop25 key $hexkey port 54321 node 987654321098765 code 1234' >&2
+      echo 'gh: HTTP 502 word $pass24 word $stop25 key $hexkey port 54321 node 987654321098765 code 1234 host $hostport scope $longscope camel $camelhost fqdn $fqdnhost snake $snakehost dash $dashhost len13 $len13host' >&2
       exit 1 ;;
     *) echo "unexpected: \$*" >&2; exit 99 ;;
   esac
@@ -1180,6 +1251,29 @@ EOF
   assert_not_contains "$ERR" "deadbeef" "**断片も残さない**"
   assert_not_contains "$ERR" "54321" "**5 桁の数は止まる（ポート番号）**"
   assert_not_contains "$ERR" "987654321098765" "**15 桁の数も止まる（node id）**"
+  # **スコープ規則の上限**（#1235 X1 / X2）。**どちらも「さらに通す」向きの変異で死ぬ。**
+  assert_not_contains "$ERR" "$hostport"  "**スコープ規則は数字を通さない（db01:5432 が漏れる・#1235 X1）**"
+  assert_not_contains "$ERR" "db01"       "**ホスト名の断片も残さない**"
+  assert_not_contains "$ERR" "$longscope" "**スコープ規則は各節 12 文字まで（長い a:b が漏れる・#1235 X2）**"
+  assert_not_contains "$ERR" "averyverylongname" "**断片も残さない**"
+  # **#1248 のレビュー**: **大文字を許す変異（`[a-z]` → `[a-zA-Z]`）と
+  # 点を許す変異（`[a-z]` → `[a-z.]`）は、上の 4 行では 1 つも死ななかった**（実測は上の散文）。
+  assert_not_contains "$ERR" "$camelhost" "**スコープ規則は大文字を通さない（vpsHost:appWeb が漏れる・#1248）**"
+  assert_not_contains "$ERR" "vpsHost"    "**ホスト名の断片も残さない**"
+  assert_not_contains "$ERR" "$fqdnhost"  "**スコープ規則は点を通さない（abc.internal:web が漏れる・#1248）**"
+  assert_not_contains "$ERR" "abc.internal" "**FQDN の断片も残さない**"
+  # **#1248 のレビュー 2 巡目**: **`_` を許す変異（`[a-z]` → `[a-z_]`）・
+  # `-` を許す変異（`[a-z]` → `[a-z-]`）・各節を 13 文字に広げる変異（`{1,12}` → `{1,13}`）は、
+  # 上の 6 行では 1 つも死ななかった**（3 変異とも 46/0 のまま通った。実測）。
+  # **漏れるのは内部のホスト名・サービス名**——**この規則が守ろうとしているものそのものである。**
+  # **通る側は `read:project` が別に固定している**
+  # （**`t_mon_board_permission_error_is_named`** の `assert_contains "$ERR" "read:project"`）ので、
+  # **ここは「広げすぎ」だけを見る。**
+  assert_not_contains "$ERR" "$snakehost" "**スコープ規則は \`_\` を通さない（my_svc:my_db が漏れる・#1248）**"
+  assert_not_contains "$ERR" "my_svc"     "**サービス名の断片も残さない**"
+  assert_not_contains "$ERR" "$dashhost"  "**スコープ規則は \`-\` を通さない（a-b:c-d が漏れる・#1248）**"
+  assert_not_contains "$ERR" "$len13host" "**スコープ規則は各節 12 文字まで（13 文字の a:b が漏れる・#1248）**"
+  assert_not_contains "$ERR" "thirteenchars" "**13 文字の断片も残さない**"
 }
 test_case "monitor: allowlist の上限（24 文字 / 4 桁）を両側から固定する (#1217 P1/P2)" t_mon_err_allowlist_upper_bounds_are_fixed
 
