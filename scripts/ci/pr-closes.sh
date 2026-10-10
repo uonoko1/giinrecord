@@ -254,7 +254,7 @@ if [[ -n "$CLOSING_HITS" ]]; then
 fi
 
 if [[ -n "$NO_ISSUE_HITS" ]]; then
-  echo "pr-closes: ok — 対応する Issue が無いことが明示されています: $(printf '%s\n' "$NO_ISSUE_HITS" | head -1)"
+  echo "pr-closes: ok — 対応する Issue が無いことが明示されています: $(head -1 < <(printf '%s\n' "$NO_ISSUE_HITS"))"
   exit 0
 fi
 
