@@ -613,8 +613,11 @@ const CABINET_FLOOR = {
   people: 40,
   /** **院ごとに 1 人以上**（大臣は衆参どちらからも出る。片側が丸ごと落ちたら割る） */
   rowsPerHouse: 1,
-  /** **名簿の 3 区分**。どの内閣でも 3 ページ在る（`MEIBO_PAGES`）。**ここが 2 個になったら 1 ページ落ちている** */
-  sections: ["大臣政務官", "副大臣", "閣僚等"],
+  /**
+   * **名簿の 3 区分**。どの内閣でも 3 ページ在る（`MEIBO_PAGES`）。**ここが 2 個になったら 1 ページ落ちている**。
+   * **並びは意味を持たない**（突き合わせる側が両側を `.sort()` する）。**日本語の並びを目で保証させない。**
+   */
+  sections: ["閣僚等", "副大臣", "大臣政務官"],
 };
 
 /**
@@ -664,8 +667,16 @@ test("#1117/#1152 cabinetRole: 大臣・副大臣・大臣政務官の行が下�
     assert.ok((cabinet.byHouse[house] ?? 0) >= CABINET_FLOOR.rowsPerHouse,
       `${house} の cabinetRole が ${String(cabinet.byHouse[house] ?? 0)} 件。片方の院が丸ごと落ちている`);
   }
-  // **3 区分がすべて在ること**（**増えた側も見る**。知らない区分が黙って現れたら落ちる）
-  assert.deepEqual(Object.keys(cabinet.bySection).sort(), CABINET_FLOOR.sections,
+  // **3 区分がすべて在ること**（**増えた側も見る**。知らない区分が黙って現れたら落ちる）。
+  //
+  // **両側を sort する。** 片側だけ `.sort()` して、もう片側は表に書いた並びをそのまま使う形だと、
+  // **表の並びが「正しい」ことを人が目で保証しなければならない**——**日本語では目で判定できない。**
+  // **`.sort()` は UTF-16 のコードユニット順**で、`副`(U+526F) < `大`(U+5927) < `閣`(U+95A3) なので
+  // 正解は `["副大臣","大臣政務官","閣僚等"]` だが、**私は `["大臣政務官","副大臣","閣僚等"]` と書いていた。**
+  // **それは `data/` に行が入った瞬間に main を赤くする**（宣言が無いあいだは早期 return で到達しない）
+  // ——**`rows > 0` を無条件にしないことで避けた #1175 に、別の経路で着くところだった。**
+  // **両側 sort なら表の並びは意味を持たない。**
+  assert.deepEqual([...Object.keys(cabinet.bySection)].sort(), [...CABINET_FLOOR.sections].sort(),
     "cabinetRole の区分が名簿の 3 ページと違う（1 ページ落ちた、または名簿に無い区分を作っている）");
   for (const [section, n] of Object.entries(cabinet.bySection)) {
     assert.ok(n > 0, `${section} の行が 0 件`);
