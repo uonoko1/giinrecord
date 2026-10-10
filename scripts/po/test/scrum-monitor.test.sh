@@ -1201,7 +1201,10 @@ test_case "monitor: バックティックと多バイト文字を語ごと落と
 #   `[a-z]` → `[a-zA-Z]`  → **`vpsHost:appWeb` が漏れる**（他の 2 件は伏せたまま）
 #   `[a-z]` → `[a-z.]`    → **`abc.internal:web` が漏れる**（他の 2 件は伏せたまま）
 # **どちらの変異も、この 2 語を足す前の検査は緑のまま通していた**（#1248 のレビュー）。
-# **通る側（`read:project` が残ること）は `t_mon_pr_search_error_text_is_shown` が既に固定している**
+# **通る側（`read:project` が残ること）は `t_mon_board_permission_error_is_named` が既に固定している**
+# （**実測 2026-10-11: :717 の `assert_contains "$ERR" "read:project"`。**
+#  以前ここは `t_mon_pr_search_error_text_is_shown` と書いていたが、**その関数は `read:project` を
+#  1 度も参照していない**——#1248 の実装者が実測で見つけた。**引用先は関数名で確かめる。**）
 # ——**規則を消す／狭める向きの変異はそちらで死ぬ**ので、ここでは重ねない。
 t_mon_err_allowlist_upper_bounds_are_fixed() {
   local pass24="abcdefghijklmnopqrstuvwx"          # 24 文字 → 通る
