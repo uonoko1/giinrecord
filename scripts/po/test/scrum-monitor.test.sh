@@ -1211,12 +1211,17 @@ t_mon_err_allowlist_upper_bounds_are_fixed() {
   local longscope="averyverylongname:averylongsub" # 各節 13 文字以上 → 長さを許すと通る
   local camelhost="vpsHost:appWeb"                 # 大文字を許すと通る（#1248 のレビュー）
   local fqdnhost="abc.internal:web"                # 点を許すと通る（#1248 のレビュー）
+  local snakehost="my_svc:my_db"                   # `_` を許すと通る（#1248 のレビュー 2 巡目）
+  local dashhost="a-b:c-d"                         # `-` を許すと通る（#1248 のレビュー 2 巡目）
+  # **`pass24` の接頭辞にならない 13 文字を使う**——**`abcdefghijklm` は
+  # `abcdefghijklmnopqrstuvwx`（通る側）の接頭辞なので、断片の検査が原理的に成立しない**（実測で赤）。
+  local len13host="thirteenchars:web"              # 各節 13 文字を許すと通る（#1248 のレビュー 2 巡目）
   local h; h=$(handler <<EOF
 handle() {
   case "\$*" in
     "pr list --repo "*) echo '[]' ;;
     "api graphql"*)
-      echo 'gh: HTTP 502 word $pass24 word $stop25 key $hexkey port 54321 node 987654321098765 code 1234 host $hostport scope $longscope camel $camelhost fqdn $fqdnhost' >&2
+      echo 'gh: HTTP 502 word $pass24 word $stop25 key $hexkey port 54321 node 987654321098765 code 1234 host $hostport scope $longscope camel $camelhost fqdn $fqdnhost snake $snakehost dash $dashhost len13 $len13host' >&2
       exit 1 ;;
     *) echo "unexpected: \$*" >&2; exit 99 ;;
   esac
@@ -1247,6 +1252,19 @@ EOF
   assert_not_contains "$ERR" "vpsHost"    "**ホスト名の断片も残さない**"
   assert_not_contains "$ERR" "$fqdnhost"  "**スコープ規則は点を通さない（abc.internal:web が漏れる・#1248）**"
   assert_not_contains "$ERR" "abc.internal" "**FQDN の断片も残さない**"
+  # **#1248 のレビュー 2 巡目**: **`_` を許す変異（`[a-z]` → `[a-z_]`）・
+  # `-` を許す変異（`[a-z]` → `[a-z-]`）・各節を 13 文字に広げる変異（`{1,12}` → `{1,13}`）は、
+  # 上の 6 行では 1 つも死ななかった**（3 変異とも 46/0 のまま通った。実測）。
+  # **漏れるのは内部のホスト名・サービス名**——**この規則が守ろうとしているものそのものである。**
+  # **通る側は `read:project` が別に固定している**
+  # （**`t_mon_board_permission_error_is_named`** の `assert_contains "$ERR" "read:project"`。
+  # **上の 1204 行目の散文は `t_mon_pr_search_error_text_is_shown` と書いているが、
+  # 実物はこちらである**——実測して確かめた）ので、**ここは「広げすぎ」だけを見る。**
+  assert_not_contains "$ERR" "$snakehost" "**スコープ規則は \`_\` を通さない（my_svc:my_db が漏れる・#1248）**"
+  assert_not_contains "$ERR" "my_svc"     "**サービス名の断片も残さない**"
+  assert_not_contains "$ERR" "$dashhost"  "**スコープ規則は \`-\` を通さない（a-b:c-d が漏れる・#1248）**"
+  assert_not_contains "$ERR" "$len13host" "**スコープ規則は各節 12 文字まで（13 文字の a:b が漏れる・#1248）**"
+  assert_not_contains "$ERR" "thirteenchars" "**13 文字の断片も残さない**"
 }
 test_case "monitor: allowlist の上限（24 文字 / 4 桁）を両側から固定する (#1217 P1/P2)" t_mon_err_allowlist_upper_bounds_are_fixed
 
