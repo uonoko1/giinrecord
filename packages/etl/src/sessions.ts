@@ -309,6 +309,88 @@ export function lostDecisions(
   return lost.sort((x, y) => x.session - y.session || (x.id < y.id ? -1 : x.id > y.id ? 1 : 0));
 }
 
+/**
+ * **前回出力の議案が持っていた項目が、今回の出力で消えていないか**（#1266）。
+ *
+ * ## なぜこれが必要か（実測で分かったこと）
+ *
+ * **#1218 / #1232 が直した「同じ id の後勝ち」で消えたのは、`data/bills/index.json` に
+ * 出る `referredCommittees` だけではなかった。** 実測（PR #1222 の出力 ↔ `origin/main`、
+ * `data/bills/` 1,941 件の全数照合）:
+ *
+ * ```
+ * 母数 1,941 件 / ファイル数は 1,941 → 1,941（**1 件も増減していない**）
+ *   result   が消えた議案  18 件
+ *   received が消えた議案  16 件
+ *   referral が消えた議案   4 件   ← **index.json に出るのでこれだけが見えた**
+ * ```
+ *
+ * **`referral` の 4 件は `bills-optional-field-session-reach.test.ts` が見ている
+ * `bills/index.json` に出るので数えられた。`result` の 18 件と `received` の 16 件は
+ * 個票（`bills/{session}/{id}.json`）にしか無く、どの計器も数えていなかった。**
+ *
+ * **そして `validateDataset` は通った**——個票の `result` / `received` は省略可能な項目で、
+ * **「無い」は契約違反ではない**（閣法に提出者名が無いのと同じ形）。
+ * **契約は「在るときの形」を縛るが、「前回在ったものが在り続けること」は縛らない。**
+ *
+ * ## 何を保証して、何を保証しないか
+ *
+ * **保証する**: 前回出力のある議案が持っていた項目が、同じ議案から**消えていないこと**。
+ * `lostDecisions`（#1206）と同じ型の検査で、**前回出力を基点に取る**。
+ *
+ * **保証しない**（どれも「消えた」ではないので、この検査の担当ではない）:
+ * - **値が別の値に化けた。** 実測（`215-衆法-2`、PR #1222）: `submitterText` が
+ *   `"階 猛君外六名"` → `"階 猛君外五名"`、`submitterNames` から `堤かなめ` が落ち、
+ *   `status` が `"衆議院で閉会中審査"` → `"未了"` に動いた。**項目は在るので、ここは鳴らない。**
+ *   **一次資料が訂正される／再提出で提出者が変わることは実際に在る**ので、
+ *   **「値が変わったら止める」にはしない**（毎日止まる）。
+ * - **議案ごと消えた**（`lostSessionEntries` / `bills/by-session.json` の突き合わせの担当）。
+ * - **新しく増えた議案に最初から項目が無い**（前回の基点が無いので、消えたとは言えない）。
+ *
+ * ## 偽陽性の扱い
+ *
+ * **`data/` を消してからの再構築は前回出力が無いので引っかからない**
+ * （`lostTimelineEntries` / `lostSessionEntries` と同じ）。
+ * **一次資料が項目を取り下げる**ことは起こり得るが、**その場合も止めるのが正しい**——
+ * **「出なくなった」を人が見て判断する**ための停止であり、黙って消すより軽い。
+ */
+export function lostBillFields(
+  previous: readonly Bill[],
+  next: readonly Bill[],
+): { id: string; session: number; fields: string[] }[] {
+  const after = new Map(next.map((b) => [b.id, b]));
+  const lost: { id: string; session: number; fields: string[] }[] = [];
+  for (const p of previous) {
+    const now = after.get(p.id);
+    if (!now) continue; // 議案ごと消えた分はここの担当ではない（lostSessionEntries / by-session.json）
+    const fields: string[] = [];
+    for (const key of Object.keys(p) as (keyof Bill)[]) {
+      if (!billFieldPresent(p[key])) continue;      // 前回も「無い」なら消えていない
+      if (billFieldPresent(now[key])) continue;     // 今回も「在る」なら消えていない
+      fields.push(key);
+    }
+    if (fields.length) lost.push({ id: p.id, session: p.session, fields: fields.sort() });
+  }
+  return lost.sort((x, y) => x.session - y.session || (x.id < y.id ? -1 : x.id > y.id ? 1 : 0));
+}
+
+/**
+ * 議案の項目が「在る」か。**`undefined` / 空文字 / 空配列 / 空オブジェクトは「無い」。**
+ *
+ * **`supporterNames: []` は「欄はあるが賛成者が居ない」という事実**で、
+ * `shugiin-bills.ts` の `EMPTY_IS_RECORDED` はそれを事実として採る。
+ * **だがここは「消えたか」を見るので、`[]` → 欄ごと無し を「消えた」と鳴らさない**
+ * （どちらも利用者には「賛成者の記録が無い」と出るので、区別して止める意味が無い）。
+ * **逆向き（欄ごと無し → `[]`）も鳴らない。** 対称にしてある。
+ */
+function billFieldPresent(v: unknown): boolean {
+  if (v === undefined || v === null) return false;
+  if (v === "") return false;
+  if (Array.isArray(v)) return v.length > 0;
+  if (typeof v === "object") return Object.keys(v).length > 0;
+  return true;
+}
+
 /** 参院 議案情報の議案ページ（timeline の参法 bill 行の出典）。衆院の bill 行（経過ページ）は bills/ から作り直すので引き継がない。 */
 const SANGIIN_BILL_SOURCE = /^https:\/\/www\.sangiin\.go\.jp\/japanese\/joho1\/kousei\/gian\/\d+\/meisai\//;
 

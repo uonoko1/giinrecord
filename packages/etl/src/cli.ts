@@ -21,7 +21,7 @@ import { committeePageUrl, fetchCommitteeRosters } from "./sources/kokkai-commit
 import { matchCommitteeRoles, type MatchedCommitteeRole } from "./match-committee.ts";
 import { buildDataset, mergeRosters, rosterSessionsFor, type Roster } from "./aggregate.ts";
 import { dietAssemblies, readSessionsOnDisk, validateDataset, writeDataset } from "./dataset.ts";
-import { carriedTenureVerified, dropCarriedCommitteeRoles, dropCarriedSpeeches, lostDecisions, lostSessionEntries, lostTimelineEntries, lostVoteMatches, planSessions, readCarried, readRollCallIndex, readSessionCounts, restoreDecisions } from "./sessions.ts";
+import { carriedTenureVerified, dropCarriedCommitteeRoles, dropCarriedSpeeches, lostBillFields, lostDecisions, lostSessionEntries, lostTimelineEntries, lostVoteMatches, planSessions, readCarried, readRollCallIndex, readSessionCounts, restoreDecisions } from "./sessions.ts";
 import { readMemberIndex } from "./local-assemblies.ts";
 
 /**
@@ -427,6 +427,27 @@ const dataset = {
     console.error(`roll call decisions lost since the previous output (bill title match broke, and the previous word could not be restored?): ${lost.length}`);
     for (const l of lost) console.error(`  ${l.id} (session ${l.session}): ${l.before} -> (no decision)`);
     console.error("  data/ is unchanged. The decision word only exists in data/rollcalls/index.json; losing it loses the fact (#26).");
+    process.exit(1);
+  }
+}
+
+// 前回出力の議案が持っていた項目が、今回の出力で消えていないか（#1266）。
+// **#1218 / #1232 の「同じ id の後勝ち」で消えたのは index.json に出る referredCommittees だけではなく、
+// 個票にしか無い result（18 件）と received（16 件）も落ちていた**のに、
+// **ファイル数は 1,941 → 1,941 で 1 件も動かず、validateDataset も通った**
+// （省略可能な項目の不在は契約違反ではない）。**計器が無かったので誰も数えていなかった。**
+// 基点は carried.bills（= 前回出力の data/bills/ 全件。readCarried が読んでいる）。
+// 値が別の値に化けた分・議案ごと消えた分は対象外（lostBillFields のコメント）。
+{
+  const lost = lostBillFields(carried.bills, dataset.bills);
+  if (lost.length) {
+    const fieldCounts = new Map<string, number>();
+    for (const l of lost) for (const f of l.fields) fieldCounts.set(f, (fieldCounts.get(f) ?? 0) + 1);
+    console.error(`bill fields lost since the previous output (same bill id, field was present and is now absent): ${lost.length} bills of ${carried.bills.length}`);
+    for (const [f, c] of [...fieldCounts].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))) console.error(`  ${f}: ${c} bills`);
+    for (const l of lost) console.error(`  ${l.id} (session ${l.session}): ${l.fields.join(" ")}`);
+    console.error("  data/ is unchanged. A bill page that is still published must not lose fields it had (#1266 / #1218).");
+    console.error("  If the 一次資料 really stopped publishing them, confirm it on the source page before changing this guard.");
     process.exit(1);
   }
 }
