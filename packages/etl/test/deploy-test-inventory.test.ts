@@ -776,10 +776,10 @@ const DEPLOY_SUBJECTS_PINNED = [
   // probe.sh と同じ 1 行形式を出すだけで、Issue の開閉は run.sh / report.sh がそのまま扱う
   // （#1110 の軸: 新しい監視の入口を増やさない）。
   "deploy/monitor/deploy-started.sh",
-  // #1286: 日次 ETL の連続失敗（機構）を見る。probe/report/run と同じテストが守る
-  "deploy/monitor/etl-streak.sh",
   "deploy/monitor/environment-protection-report.sh",
   "deploy/monitor/environment-protection.sh",
+  // #1286: 日次 ETL の連続失敗（機構）を見る。**並びは ASCII 昇順**（en < et）
+  "deploy/monitor/etl-streak.sh",
   "deploy/monitor/health.sh",
   "deploy/monitor/logrotate.conf",
   "deploy/monitor/probe.sh",

@@ -93,6 +93,20 @@ fi
 
 # **新しい順に並べ直してから数える**（gh の順序に依存しない）。`status != completed` の run は
 # **まだ結末が無いので飛ばす**（走っている最中の run を失敗に数えない。数えると毎晩 1 回鳴る）。
+#
+# **`status == "completed"` の条件は、測った限り等価変異である**（正直に書く。#1286 の変異テスト）:
+#   この条件を外す変異を当てて **123/123 全緑のまま生き残った。** 理由を実測で確かめた——
+#   **走っている run は `conclusion` が `failure` にならない**ので、下の `== "failure"` が先に弾く。
+#   実測（2026-10-11T12:0xZ、`gh run list --limit 200 --json status,conclusion` を
+#   `group_by(.status)` で畳んだ。**母数 200 run**）:
+#     status=completed   → conclusion は cancelled / failure / success
+#     status=in_progress → conclusion は **"" だけ**（REST API では `null`。
+#                          `gh api .../actions/runs?status=in_progress` を同時刻に叩いて確かめた）
+#   **つまり `failure` は `completed` のときしか出ない。** だからこの条件は**多重の守り**であって、
+#   **いま観測できる挙動を変えていない。** **残す理由**: `conclusion` の綴りは GitHub 側の都合で
+#   増えうるし（`startup_failure` など）、**「結末が出ている run だけを数える」という意図が
+#   コードから読めることに価値が在る。** **「変異が死なないから消す」はしない**——
+#   消すと、`conclusion` の集合が変わった日に静かに壊れる。
 if ! verdict=$(printf '%s' "$runs" | python3 -c '
 import json,sys
 try:
@@ -130,7 +144,10 @@ if [ "$verdict" = NONE ]; then
   exit 1
 fi
 
-head_line=$(printf '%s\n' "$verdict" | head -1)
+# **パイプの末尾に `head` を置かない**（#527。`pipefail` のもとで書き手が SIGPIPE で死に、
+# **一致が入力の先頭寄りだと確率的に偽になる**）。`deploy/test/pipefail-sigpipe.test.sh` が
+# **実測でここを捕まえた**——最初はパイプで書いていて、検出器が 25/0 → 24/1 にして落ちた。
+head_line=$(head -1 <<<"$verdict")
 read -r _tag streak total <<<"$head_line"
 if [ "$_tag" != STREAK ] || ! [ "$streak" -ge 0 ] 2>/dev/null; then
   echo "fail etl 測れなかった (${WORKFLOW} の run 一覧を解釈できない)"

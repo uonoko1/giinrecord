@@ -47,11 +47,15 @@ done
 #                      `status` は **200 run すべて 'completed'**、`event` は
 #                      'schedule' 50 / 'workflow_dispatch' 30 / 'push' 23（etl.yml の 103 run の内訳）、
 #                      `databaseId` は **数値**、`createdAt` は末尾 Z の ISO 8601。
-#                      **走っている最中の run は 1 本も無かったので、`status != "completed"` のときの
-#                      `conclusion` の値は観測できていない**（API にも 0 件）。だから
-#                      `etl-streak.sh` は **`status == "completed"` を満たす run だけを数える**形にしてあり、
-#                      **未完了の run の `conclusion` が何であっても結果が変わらない**
-#                      （下の t_etl_streak_ignores_in_progress が両方の綴りで固定している）。
+#                      **走っている run の綴りも実測した**（2026-10-11T12:0xZ。最初に数えた 11:2xZ では
+#                      未完了の run が 0 件で観測できなかったが、同日の 12:0xZ に CI の run が 2 本
+#                      走っていたので捕まえられた）:
+#                        `gh run list --json status,conclusion` → status=in_progress / **conclusion=""**
+#                        `gh api .../actions/runs?status=in_progress` → **conclusion=null**
+#                      **母数 200 run を `group_by(.status)` で畳むと、`failure` は `completed` のときだけ。**
+#                      だから `t_etl_streak_ignores_in_progress` は **"" と null 相当の 2 通り**で固定する
+#                      （`etl-streak.sh` の `status == "completed"` は多重の守りで、
+#                      **外しても今は挙動が変わらない**ことを実装側の docblock に実測で書いた）。
 #   H_STEPS            step name `gh run view --json jobs` reports as failed (#1286); `NOFAIL` = no failed step.
 #                      H_STEPS_<run id> overrides it for one run, so one report can mix two kinds of failure
 #                      (the real 7-night streak did: 6 × "Wait for data PR merge, then deploy" + 1 × "Run ETL").
@@ -482,6 +486,31 @@ t_report_closes_on_ok() {
   assert_contains "$log" "gh issue comment 5" "recovery comment"
   assert_contains "$log" "gh issue close 5" "closed"
   assert_not_contains "$log" "gh issue create" "nothing created"
+}
+# **#1286 受け入れ条件 1 の切り分け**: 「鳴り止んだのに #1221 が閉じなかった」の原因が
+# **(a) 閉じるコードの欠陥**なのか **(b) ok を出す run が来ていない**のかを分けた。
+# **答えは (b) だけだった。** その根拠をここに固定する——
+# **#1221 の実物の形を食わせて、閉じるところまで行くこと。**
+#
+# **実値は `gh issue view 1221` で採った**（2026-10-11T12:0xZ）:
+#   title     `[monitor] production: data — 9h 継続`   ← **改題済み**。素の題では引けない形
+#   createdAt `2026-10-06T20:33:20Z`                   ← 111.2h 前
+#   labels    `monitor` + `escalated`
+#   comments  **26 件**
+# **`origin/main` の無改変の report.sh でも同じ結果になることを確かめた**ので、
+# **この枝が直したから閉じる」のではない**（= (a) は元から無かった）。
+#
+# **だから「閉じる検査」は欠陥の証明ではなく、退行の歯止めである。**
+# **実物が閉じないのは実行間隔の問題（#1292）で、それはこのテストでは直らない。**
+t_report_closes_the_real_1221_shape() {
+  fresh r_close_1221
+  H_OPEN="[{\"number\":1221,\"title\":\"[monitor] production: data — 9h 継続\",\"createdAt\":\"$(HOURS_AGO 111)\",\"labels\":[{\"name\":\"monitor\"},{\"name\":\"escalated\"}],\"comments\":[{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}]}]" \
+    run_report "[monitor] production: data" ok || fail "exit $? $(cat "$P/out")"
+  local log; log=$(cat "$LOG")
+  assert_contains "$log" "gh issue comment 1221" "Recovered を書く"
+  assert_contains "$log" "--remove-label escalated" "escalated を外す（次の障害が escalated で始まらない）"
+  assert_contains "$log" "gh issue close 1221" "**閉じる**（ここが (a) の判定）"
+  assert_not_contains "$log" "gh issue create" "閉じるときに新しく立てない"
 }
 t_report_ok_without_issue_is_noop() {
   fresh r_noop
@@ -1310,8 +1339,14 @@ t_etl_streak_threshold_lives_in_one_place() {
   local n hits
   n=$(etl_default_n)
   [ -n "$n" ] || fail "実装から N の既定値を読めない（1 行で持っていない）"
-  # `deploy/monitor/` と `.github/workflows/` の中で、N の既定値を**値として**書いている行を数える。
-  hits=$(grep -rn 'PROBE_ETL_FAIL_STREAK' "$MON" "$MON/../../.github/workflows" 2>/dev/null \
+  # `deploy/monitor/*.sh` と `.github/workflows/*.yml` の中で、N の既定値を**値として**
+  # 書いている行を数える。
+  # **`grep -r` でディレクトリを総なめしない**: 変異テストの退避（`*.mutate-sv`）や
+  # エディタのバックアップが同じディレクトリに在ると**それも数えてしまう。**
+  # **実測でここに踏んだ**——`mutate.sh` を当てている間だけ「2 本」になり、
+  # **変異と無関係にこのテストが落ちた**（変異が殺したのではなく、退避を数えていた）。
+  # **追跡対象の拡張子だけを名指しで開く。**
+  hits=$(grep -n 'PROBE_ETL_FAIL_STREAK' "$MON"/*.sh "$MON/../../.github/workflows"/*.yml 2>/dev/null \
     | grep -c "[:=-]${n}[}[:space:]]" || true)
   assert_eq 1 "$hits" "N の既定値を持つ行は 1 本だけ（いま ${hits} 本）"
 }
@@ -1798,6 +1833,7 @@ test_case "report: 閾値を越えたら扱いが変わる（改題＋ラベル 
 test_case "report: 閾値の手前では扱いを変えない（でも経過は書く）" t_report_does_not_escalate_before_threshold
 test_case "report: 一度 escalated にしたら毎 round 改題しない（通知で埋もれさせない）" t_report_escalates_only_once
 test_case "report: 改題した後も同名検索が効き、Issue が増殖しない" t_report_finds_the_issue_after_the_title_changed
+test_case "report: #1221 の実物の形（改題済み・escalated・26 コメント）でも閉じる（#1286 の (a) を否定）" t_report_closes_the_real_1221_shape
 # #1286 受け入れ条件 3: 題に通算を出す（実測: #1221 は 111.2h なのに題は「9h 継続」だった）
 test_case "report: 通算が倍を超えたら題の経過を更新する（9h で凍らせない・#1286）" t_report_refreshes_the_title_when_elapsed_doubled
 test_case "report: 倍に届かなければ改題しない（通知で埋もれさせない・両側で判断）" t_report_keeps_the_title_below_double
