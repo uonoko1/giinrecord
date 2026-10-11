@@ -1210,9 +1210,38 @@ test_case "monitor: バックティックと多バイト文字を語ごと落と
 #   固定語が `read:project` = **4 文字 : 7 文字**しかないので、
 #   `^[a-z]{1,11}:[a-z]{1,11}$` / `{1,4}:{1,12}` / `{1,7}:{1,7}$` / `{4,12}:{1,12}` の
 #   **4 変異は 46/0 で素通りする**（7 件中 4 件）。
-#   **狭めても固定語が通り続ける範囲は、この検査では見えない。**
-#   偽陰性（守りが緩むのを見逃す）なので、ここで塞ぐべき穴ではない——
-#   **塞ぐなら固定語の長さを散らす**（右節が 12 文字を超える語を足す）。#1248 で別 PBI にした。
+#   **この 3 行は偽だった**（#1248 のレビュー 3 巡目が実測し、PO が訂正した。**結論は正しく、
+#   処方と判断が偽**だった）。**訂正を残す**——**消すと、同じ誤りがもう一度書かれる。**
+#
+#   **偽 1「狭めても固定語が通り続ける範囲は、この検査では見えない」** → **見える。**
+#     **上限ちょうど・下限ちょうどを通る側に置けば、4 変異すべてが 45/1 で死ぬ**（下の 2 行）。
+#   **偽 2「偽陰性なので、ここで塞ぐべき穴ではない」** → **「守りが緩む」側ではない。**
+#     `scrum-monitor.sh:175-177` が自分で書いているとおり、**どのスコープを足せばよいかが
+#     読めなければ `permission` の verdict が行動に繋がらない**（#1210 の目的そのもの）。
+#     **狭めると `write:packages` / `admin:org` / `workflow:write` が読めなくなる**——
+#     **道具の目的が壊れる側である。**
+#   **偽 3「塞ぐなら右節が 12 文字を超える語を足す」** → **その語は現在の規則でも止まる**
+#     （**実測: `read:thirteenchars` → `[redacted]`**）。**止まる語は通る側の fixture に
+#     ならないので、この手順では 1 件も殺せない。** 正しいのは**上限ちょうど・下限ちょうど**:
+#       `abcdefghijkl:mnopqrstuvwx`（12 : 12）→ `{1,11}` / `{1,4}:{1,12}` / `{1,7}:{1,7}` で伏せられる
+#       `a:b`（1 : 1）                        → `{4,12}:{1,12}` で伏せられる
+#
+# **広げる向きにも 1 件、素通りが残っていた**（#1248 のレビュー 3 巡目）:
+#   **末尾 `$` を外す変異**（`^[a-z]{1,12}:[a-z]{1,12}` = 前方一致）
+#     → **46/0・全件 304/0 で緑のまま `app:srv:10.0.3.17` が素で漏れる。**
+#     **既存の 10 語がすべてちょうど 2 節**だったので、**前方一致に化けても判定が 1 件も変わらない。**
+#   **偽陰性ではない**——**この規則が守っているもの（内部ホスト名・IP・鍵の形）が漏れて、検査は緑。**
+#   **3 節目を持つ語 1 つで塞がる**（下の `tripled`）。
+#
+# **実測（2026-10-11、基点 ea799374。`scripts/po/test/run.sh scrum-monitor.test.sh`）**:
+#   変異なし                        **passed: 46 failed: 0**（下の 3 行を足した後も 46/0 のまま緑）
+#   末尾 `$` を外す                 足す前 **46/0 で素通り** → 足した後 **45/1**
+#   `^[a-z]{1,11}:[a-z]{1,11}$`     足す前 **46/0 で素通り** → 足した後 **45/1**
+#   `^[a-z]{1,4}:[a-z]{1,12}$`      足す前 **46/0 で素通り** → 足した後 **45/1**
+#   `^[a-z]{1,7}:[a-z]{1,7}$`       足す前 **46/0 で素通り** → 足した後 **45/1**
+#   `^[a-z]{4,12}:[a-z]{1,12}$`     足す前 **46/0 で素通り** → 足した後 **45/1**
+# **両側で記録する**——**「殺せた」だけでは足りない**（常に赤い検査は全変異を捕まえる。
+# `[[a-check-is-judged-on-both-sides]]`）。**母数は全件 304 defined。**
 t_mon_err_allowlist_upper_bounds_are_fixed() {
   local pass24="abcdefghijklmnopqrstuvwx"          # 24 文字 → 通る
   local stop25="abcdefghijklmnopqrstuvwxy"         # 25 文字 → 止まる
@@ -1226,12 +1255,20 @@ t_mon_err_allowlist_upper_bounds_are_fixed() {
   # **`pass24` の接頭辞にならない 13 文字を使う**——**`abcdefghijklm` は
   # `abcdefghijklmnopqrstuvwx`（通る側）の接頭辞なので、断片の検査が原理的に成立しない**（実測で赤）。
   local len13host="thirteenchars:web"              # 各節 13 文字を許すと通る（#1248 のレビュー 2 巡目）
+  # **末尾 `$` を外すと通る**（#1248 のレビュー 3 巡目）。**既存の 10 語はすべてちょうど 2 節**なので、
+  # **規則が前方一致に化けても判定が 1 件も変わらず、内部 IP が素で漏れたまま 304/0 で緑だった。**
+  local tripled="app:srv:10.0.3.17"                # 3 節目を持つ語（**RFC1918 の例示値。実在の設備ではない**）
+  # **狭める向きの境界**（#1248 のレビュー 3 巡目）。**通る側は `read:project` = 4 文字 : 7 文字**しか
+  # 固定していないので、**上限ちょうど・下限ちょうどを通る側に置かないと狭める変異が素通りする。**
+  # **12 文字を超える語は現在の規則でも止まる**ので、**通る側の fixture にはならない**（実測）。
+  local max12scope="abcdefghijkl:mnopqrstuvwx"     # 12 : 12（上限ちょうど）→ 通る
+  local min1scope="a:b"                            # 1 : 1（下限ちょうど）→ 通る
   local h; h=$(handler <<EOF
 handle() {
   case "\$*" in
     "pr list --repo "*) echo '[]' ;;
     "api graphql"*)
-      echo 'gh: HTTP 502 word $pass24 word $stop25 key $hexkey port 54321 node 987654321098765 code 1234 host $hostport scope $longscope camel $camelhost fqdn $fqdnhost snake $snakehost dash $dashhost len13 $len13host' >&2
+      echo 'gh: HTTP 502 max12 $max12scope min1 $min1scope tripled $tripled word $pass24 word $stop25 key $hexkey port 54321 node 987654321098765 code 1234 host $hostport scope $longscope camel $camelhost fqdn $fqdnhost snake $snakehost dash $dashhost len13 $len13host' >&2
       exit 1 ;;
     *) echo "unexpected: \$*" >&2; exit 99 ;;
   esac
@@ -1274,6 +1311,17 @@ EOF
   assert_not_contains "$ERR" "$dashhost"  "**スコープ規則は \`-\` を通さない（a-b:c-d が漏れる・#1248）**"
   assert_not_contains "$ERR" "$len13host" "**スコープ規則は各節 12 文字まで（13 文字の a:b が漏れる・#1248）**"
   assert_not_contains "$ERR" "thirteenchars" "**13 文字の断片も残さない**"
+  # **#1248 のレビュー 3 巡目**: **末尾 `$` を外す変異（前方一致に化ける）は、上の 9 行では
+  # 1 件も死ななかった**（46/0・`scripts/po/test/run.sh` 全件でも 304/0 で緑。実測）。
+  # **漏れるのは `app:srv:10.0.3.17` のような 3 節目を持つ語**——**内部 IP とポートそのものである。**
+  # **既存の 10 語がすべてちょうど 2 節だったことが原因**で、**`:1192` の「4 つ要る」の列挙が
+  # この向きを 1 つも含んでいなかった**（列挙漏れ）。
+  assert_not_contains "$ERR" "$tripled"   "**スコープ規則は 3 節目を通さない（app:srv:10.0.3.17 が漏れる・#1248）**"
+  assert_not_contains "$ERR" "10.0.3.17"  "**IP の一部も残さない**"
+  # **狭める向き**（#1248 のレビュー 3 巡目。**この 2 行で 4 変異すべてが死ぬ**。実測は上の散文）。
+  # **通る側に置く**——**狭めると伏せられてしまうことで気づく。**
+  assert_contains "$ERR" "$max12scope" "**各節 12 文字のスコープは通る（上限ちょうど・#1248）**"
+  assert_contains "$ERR" "$min1scope"  "**各節 1 文字のスコープは通る（下限ちょうど・#1248）**"
 }
 test_case "monitor: allowlist の上限（24 文字 / 4 桁）を両側から固定する (#1217 P1/P2)" t_mon_err_allowlist_upper_bounds_are_fixed
 
