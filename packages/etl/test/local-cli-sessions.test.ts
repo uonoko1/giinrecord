@@ -75,9 +75,26 @@ async function sessionsPassedTo(target: string, extra: string[] = []): Promise<n
  */
 test("#901 `--sessions` を渡さないとき、CLI は議会ごとの既定を使う（11 議会すべて。2 のままの議会は 1 つも無い）", async () => {
   // **これが M9 を殺す検査**——**CLI の中の `defaultSessionsFor(target)` を `2` に書き換えると落ちる**
+  //
+  // ## **#1273 で 8 議会の値が動いた**（2026-10-11 の実測。`.measure/1273/`）
+  //
+  // | 議会 | #901 | **#1273** | 動いた理由 |
+  // |---|---:|---:|---|
+  // | 秋田 | 29 | **30** | index が 154 → 155 本（錨が 1 つ後ろへ） |
+  // | 青森 | 14 | **15** | index が 56 → 57 会期 |
+  // | 滋賀 | 19 | **20** | index が 80 → 81 会期 |
+  // | 佐賀 | 13 | **14** | index に 令和8年9月定例会 が入った（**読めた会期を数える**ので窓が押し出される） |
+  // | 高知 | 5 | **13** | **6 本目だけが読めない**のを「6 本目から先が全部読めない」と読んでいた |
+  // | 島根 | 5 | **9** | 同じ形（6 本目が読めるのに 5 で止めていた） |
+  // | 鳥取 | 11 | **13** | 15・16 本目が読めるのに届いていなかった |
+  // | 奈良 | 4 | **6** | 5・9 本目が読めるのに届いていなかった |
+  //
+  // **三重 4 / 徳島 4 / 宮城 11 は動いていない**（**既定の窓が任期内で読める会期をすべて覆っている**）。
+  // **関係式（既定 = min(錨の位置, 任期内で読める会期)）は
+  //  `local-sessions-term-anchor.test.ts` が見ている。**
   const expected: Readonly<Record<string, number>> = {
-    mie: 4, tokushima: 4, nara: 4, kochi: 5, shimane: 5, miyagi: 11, tottori: 11,
-    saga: 13, aomori: 14, shiga: 19, akita: 29,
+    mie: 4, tokushima: 4, nara: 6, shimane: 9, miyagi: 11, kochi: 13, tottori: 13,
+    saga: 14, aomori: 15, shiga: 20, akita: 30,
   };
   // **母数**（#757）——**`LOCAL_SOURCES` の 11 議会を 1 つ残らず見ている**
   assert.deepEqual(Object.keys(expected).sort(), Object.keys(LOCAL_SOURCES).sort(), "見ていない議会がある");
