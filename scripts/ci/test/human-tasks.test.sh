@@ -82,8 +82,9 @@ case "$1 $2" in
     [[ "${STUB_GH_SECRET_FAIL:-0}" = 1 ]] && { echo "gh: secret set failed" >&2; exit 1; }
     [[ "${STUB_GH_SET_FAIL:-0}" = 1 ]] && { echo "gh: secret set failed" >&2; exit 1; }
     ;;
-  "api "*|"api")
+  "api graphql"|"api "*|"api")
     # #786: 置いた PAT で実際にアラートを読めるかの確認。STUB_GH_API_FAIL=1 で権限不足を再現する。
+    # #1212: ボードの確認（`gh api graphql`）も同じ口を通る。
     [[ "${STUB_GH_API_FAIL:-0}" = 1 ]] && exit 1
     echo '[]'
     ;;
@@ -111,7 +112,8 @@ run() {  # run [args...] → OUT / STATUS
   # `RUN_STDIN` が空なら `</dev/null`（`read` が待ち続けてテストが固まらないように）。
   OUT=$(PATH="$BIN:$PATH" STUB_LOG="$TMP/log" HOME="$TMP/fakehome" \
         STUB_GH_SET_FAIL="${STUB_GH_SET_FAIL:-0}" STUB_GH_API_FAIL="${STUB_GH_API_FAIL:-0}" \
-        SECURITY_ALERTS_TOKEN="${SECURITY_ALERTS_TOKEN:-}" "$@" <<<"${RUN_STDIN:-}" 2>&1)
+        SECURITY_ALERTS_TOKEN="${SECURITY_ALERTS_TOKEN:-}" \
+        SCRUM_BOARD_TOKEN="${SCRUM_BOARD_TOKEN:-}" "$@" <<<"${RUN_STDIN:-}" 2>&1)
   STATUS=$?
   set -e
   LOG=$(cat "$TMP/log")
@@ -507,6 +509,115 @@ t_analytics_does_not_leak_the_host() {
   assert_contains "$OUT" "接続先は伏せます" "伏せたことを言う"
 }
 test_case "human-tasks: #1184 の作業でも接続先を出力に出さない" t_analytics_does_not_leak_the_host
+
+# ---- #1212: スクラムボード用の PAT を置く（3 件目の受け皿）-------------------------------------
+# **`GITHUB_TOKEN` で読めない監視が 3 件あるのに、受け皿は 2 件分しか無かった。**
+# #547（main の保護設定、700h+）と #821（security アラート、514h+）には口が在ったが、
+# **#1203（Projects v2 = スクラムボード）には口が無く、鳴っていても運営者に手順が無かった。**
+# **原因は 3 件とも同じ**（`permissions:` に `projects:` というキーは無い。PAT しか手が無い）。
+# **だから 3 件目も先行 2 件と同じ形にする**——手順が違うと運営者が取り違える。
+
+t_board_token_rejects_argv() {
+  run bash "$SCRIPT" --yes --board-token "$TOKEN_CANARY"
+  assert_eq 2 "$STATUS" "**引数でトークンを渡せてはいけない**（履歴と ps に残る）: $OUT"
+  assert_not_contains "$LOG" "gh secret set" "**引数から secret を置かない**"
+  assert_contains "$OUT" "引数では渡せません" "なぜ弾くのかを言う"
+}
+test_case "human-tasks: ボード用 PAT を引数で渡せない（#1212）" t_board_token_rejects_argv
+
+t_board_token_is_never_printed() {
+  RUN_STDIN="$TOKEN_CANARY" run bash "$SCRIPT" --yes --set-board-token
+  assert_not_contains "$OUT" "$TOKEN_CANARY" "**トークンが出力に出ている**（貼られたら漏洩する）"
+  assert_not_contains "$LOG" "$TOKEN_CANARY" "トークンがスタブのログに出ている"
+}
+test_case "human-tasks: ボード用 PAT を出力にもログにも出さない（#1212）" t_board_token_is_never_printed
+
+t_board_token_is_stdin_not_argv() {
+  RUN_STDIN="$TOKEN_CANARY" run bash "$SCRIPT" --yes --set-board-token
+  assert_contains "$LOG" "gh secret set SCRUM_BOARD_TOKEN" "SCRUM_BOARD_TOKEN を置いていない"
+  assert_contains "$LOG" "gh-stdin-bytes ${#TOKEN_CANARY}" \
+    "標準入力でトークンを渡していない（--body \"\$TOKEN\" は ps で見える）"
+}
+test_case "human-tasks: ボード用 PAT は標準入力で渡す（#1212）" t_board_token_is_stdin_not_argv
+
+t_board_token_from_env() {
+  SCRUM_BOARD_TOKEN="$TOKEN_CANARY" run bash "$SCRIPT" --yes
+  assert_contains "$LOG" "gh secret set SCRUM_BOARD_TOKEN" "環境変数から読めていない"
+  assert_contains "$LOG" "gh-stdin-bytes ${#TOKEN_CANARY}" "環境変数の値を標準入力で渡していない"
+  assert_not_contains "$OUT" "$TOKEN_CANARY" "環境変数経由でもトークンを出さない"
+}
+test_case "human-tasks: ボード用 PAT を環境変数でも受け取る（#1212）" t_board_token_from_env
+
+t_board_token_is_verified_not_just_placed() {
+  # **権限の足りない PAT**: secret としては置けるが、ボードは読めない。
+  # **#786 と同じ**（置けただけで成功と言うと、#1203 がそのまま鳴り続ける）。
+  RUN_STDIN="$TOKEN_CANARY" STUB_GH_API_FAIL=1 run bash "$SCRIPT" --yes --set-board-token
+  assert_eq 1 "$STATUS" "**読めない PAT を置いて成功と言ってはいけない**"
+  assert_contains "$OUT" "ボードを読めません" "読めないことを言う"
+  assert_contains "$OUT" "Projects" "何の権限が足りないか言う"
+}
+test_case "human-tasks: ボード用 PAT も置けても読めなければ失敗にする（#1212）" t_board_token_is_verified_not_just_placed
+
+t_board_token_success_path() {
+  RUN_STDIN="$TOKEN_CANARY" run bash "$SCRIPT" --yes --set-board-token
+  assert_contains "$OUT" "ボードを読めました" "読めたことを言う"
+  assert_contains "$LOG" "graphql" "**GraphQL でボードそのものを叩いて確かめている**"
+}
+test_case "human-tasks: 置いた PAT でボードを読めることを確かめる（#1212）" t_board_token_success_path
+
+t_board_no_token_skips_without_failing() {
+  # **PAT が無い間も監視は動き続ける。** ここで落とすと、ほかの 4 つの作業まで止まる。
+  run bash "$SCRIPT" --yes
+  assert_not_contains "$LOG" "gh secret set SCRUM_BOARD_TOKEN" "トークン未指定なのに置いている"
+  assert_contains "$OUT" "スクラムボード用の PAT" "この作業が在ることは出す"
+}
+test_case "human-tasks: ボード用トークン未指定なら飛ばす（#1212）" t_board_no_token_skips_without_failing
+
+t_board_dry_run_does_not_place() {
+  RUN_STDIN="$TOKEN_CANARY" run bash "$SCRIPT" --set-board-token
+  assert_not_contains "$LOG" "gh secret set" "**dry-run なのに secret を置いている**"
+  assert_not_contains "$OUT" "$TOKEN_CANARY" "dry-run でもトークンを出さない"
+}
+test_case "human-tasks: dry-run ではボード用 PAT を置かない（#1212）" t_board_dry_run_does_not_place
+
+# **3 つの secret は別物。** 標準入力は 1 本しかないので、2 つ以上のフラグを同時に受けると
+# **どの secret に入るかが呼ぶ人にも読む人にも決められない**（**権限の違う PAT が逆の用途に置かれる**）。
+# 先行 2 件は既にこの形で弾いている。**3 件目も同じ形で弾く。**
+t_board_token_not_combined_with_others() {
+  run bash "$SCRIPT" --yes --set-board-token --set-token
+  assert_eq 2 "$STATUS" "--set-board-token と --set-token の同時指定を弾いていない: $OUT"
+  assert_not_contains "$LOG" "gh secret set" "弾いたのに secret を置いている"
+
+  run bash "$SCRIPT" --yes --set-board-token --set-security-alerts-token
+  assert_eq 2 "$STATUS" "--set-board-token と --set-security-alerts-token の同時指定を弾いていない: $OUT"
+  assert_not_contains "$LOG" "gh secret set" "弾いたのに secret を置いている"
+}
+test_case "human-tasks: 3 つの PAT フラグは同時に指定できない（#1212）" t_board_token_not_combined_with_others
+
+# **3 件が同じ形であること**を機械で固定する（#1212 の受け入れ条件）。
+# 散文で「同じ形にした」と書いても、片方だけ変えられたら気づけない。
+t_three_tokens_have_the_same_shape() {
+  local missing=""
+  for pair in "--set-token BRANCH_PROTECTION_TOKEN" \
+              "--set-security-alerts-token SECURITY_ALERTS_TOKEN" \
+              "--set-board-token SCRUM_BOARD_TOKEN"; do
+    local flag="${pair%% *}" name="${pair##* }"
+    # 1. usage にフラグが載っている
+    run bash "$SCRIPT" --oops
+    case "$OUT" in *"$flag"*) :;; *) missing="$missing usage:$flag";; esac
+    # 2. 環境変数でも受け取る（標準入力だけではない）
+    env "$name=$TOKEN_CANARY" bash -c 'true'
+    RUN_STDIN="" BOARD_ENVNAME="$name" run env "$name=$TOKEN_CANARY" bash "$SCRIPT" --yes
+    case "$LOG" in *"gh secret set $name"*) :;; *) missing="$missing env:$name";; esac
+    # 3. 標準入力でも受け取る
+    RUN_STDIN="$TOKEN_CANARY" run bash "$SCRIPT" --yes "$flag"
+    case "$LOG" in *"gh secret set $name"*) :;; *) missing="$missing stdin:$flag";; esac
+    # 4. トークンの値を出力にもログにも出さない
+    case "$OUT$LOG" in *"$TOKEN_CANARY"*) missing="$missing leak:$name";; *) :;; esac
+  done
+  assert_eq "" "$missing" "**3 件の手順がそろっていない**（そろえないと運営者が取り違える）"
+}
+test_case "human-tasks: 3 件の PAT が同じ形（usage/環境変数/標準入力/非漏洩）（#1212）" t_three_tokens_have_the_same_shape
 
 echo
 echo "$PASS passed, $FAIL failed"

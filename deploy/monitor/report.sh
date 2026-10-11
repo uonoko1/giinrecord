@@ -112,7 +112,11 @@ case "$STATUS" in
           echo "**まだ失敗しています（経過時間は測れませんでした——この Issue の createdAt を読めませんでした）。**"
         fi
         echo
-        echo "- いまの理由: $(sed -n 's/^- reason: //p' "$BODY" | head -1 || true)"
+        # #1225: パイプの末尾に `head -1` を置くと、一致が先頭寄りのとき
+        # **書き手（sed）が SIGPIPE で死んで pipefail が rc=141 を返す**。
+        # `|| true` は本当に一致しなかった場合まで黙らせるので使えない。
+        # `sed` 自身に 1 本目で終わらせる（`q`）ことで**パイプをなくす**。
+        echo "- いまの理由: $(sed -n '/^- reason: /{s/^- reason: //p;q;}' "$BODY")"
         echo "- この Issue に報告が入った回数: **${ROUNDS} 回以上**（コメント数からの下限。監視は 10 分ごとに走ります）"
         echo
         echo "最新の判定:"

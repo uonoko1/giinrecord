@@ -7,7 +7,7 @@
 #   だから **VPS の IP はこのスクリプトが自分で引く**（`giinrecord.jp` の A レコード）。
 #   **鍵も `~/.ssh/sakura-vps/id_ed25519` にある前提で明示する**（`Host giinops` が無い端末でも通る）。
 #
-# 何をするか（**4 つ**）:
+# 何をするか（**5 つ**）:
 #   1. **`site.conf` を本番に反映する**（#610 / #654 / #746）——ssh が要る。PO の端末には接続先が無い。
 #   2. **branch protection 監視用の PAT を secret に置く**（#790 / #550 / #547）——
 #      **`Branch protection` ワークフローが 6 日連続で failure だった。** 設計は正しく、
@@ -18,6 +18,12 @@
 #      secret scanning / Dependabot のアラートも `GITHUB_TOKEN` では読めない
 #      （**CI 上で実測: 両方 HTTP 403**。run 34753557512）。**2 とは別の secret**
 #      （`SECURITY_ALERTS_TOKEN`）で、**要る権限も違う**（Secret scanning / Dependabot alerts の Read-only）。
+#   5. **スクラムボード監視用の PAT を secret に置く**（#1212 / #1203）——**2 / 3 と同じ形**。
+#      **Projects v2（スクラムボード）も `GITHUB_TOKEN` では読めない。** 原因は 2 / 3 と同じで、
+#      `permissions:` に `projects:` というキーは**無い**（書くと #540 と同じく workflow ごと動かなくなる）。
+#      **PAT しか手が無い。** **2 / 3 とは別の secret**（`SCRUM_BOARD_TOKEN`）で、
+#      **要る権限も違う**（**Account permissions の Projects: Read-only**。Repository permissions ではない）。
+#      **置くまでの間も監視は動き続け、「測れなかった」と正しく報告する**（#1056）。
 #   4. **PV 集計のスクリプトを設置し直し、計器が動いていることを実測する**（#1184）——ssh が要る。
 #      **PV の計器が 39 日間、無言で壊れていた。** 設置済みの `daily.sh` が改名前のログ名
 #      （存在しないファイル）を読み、**0 行の TSV を書いて exit 0 で成功を報告していた**。
@@ -31,8 +37,8 @@
 #     **#543 は人間が手で 2 回打つ**（`docs/ops/pending-decisions.md` の「3.」に手順がある）。
 #   - **PAT の生成そのもの**（GitHub の設定画面での操作。API では作れない）
 #   - **VPS 監視用 PAT の設置**（#155）——**別の secret**（`/etc/gikailog/monitor.token`、root 600）。
-#     **ここで置くのは `BRANCH_PROTECTION_TOKEN` と `SECURITY_ALERTS_TOKEN` の 2 つだけ。
-#     取り違えないこと**（用途も要る権限も違う）。
+#     **ここで置くのは `BRANCH_PROTECTION_TOKEN` / `SECURITY_ALERTS_TOKEN` / `SCRUM_BOARD_TOKEN` の
+#     3 つだけ。取り違えないこと**（用途も要る権限も違う）。
 #   - **Sponsors / 広告 / NDL 照会**（#53 / #48 / #250）——外部に届く。方針の判断も要る
 #
 # **トークンの扱い**:
@@ -58,26 +64,34 @@
 #     （環境変数 SECURITY_ALERTS_TOKEN でも読む。**ただしコマンド行に書くと履歴に残る**）
 #   トークンの作り方は docs/ops/monitoring.md「GitHub の security アラート」。
 #
-#   **2 つの PAT は別物**（#790 と #786）。**両方置くなら 2 回に分けて打つ**——
-#   1 回の実行で読める標準入力は 1 本なので、どちらの値か取り違えないため。
+#   スクラムボードの監視を動かすとき（#1212 / #1203。**1 回きり**。**引数では渡せません**）:
+#     bash scripts/human-tasks.sh --yes --set-board-token
+#       ← これを打ってから、**トークンを貼って Enter**
+#     （環境変数 SCRUM_BOARD_TOKEN でも読む。**ただしコマンド行に書くと履歴に残る**）
+#   トークンの作り方は docs/ops/monitoring.md「スクラムボード（Projects v2）」。
+#
+#   **3 つの PAT は別物**（#790 / #786 / #1212）。**複数置くなら回を分けて打つ**——
+#   1 回の実行で読める標準入力は 1 本なので、どの値か取り違えないため。
 #
 #   Tests: scripts/ci/test/human-tasks.test.sh（ssh / curl / getent / gh はスタブ。実際には何もしない）
 set -euo pipefail
 
-APPLY=0; HOST="${GIINOPS_HOST:-}"; READ_TOKEN_STDIN=0; READ_SEC_TOKEN_STDIN=0
+APPLY=0; HOST="${GIINOPS_HOST:-}"; READ_TOKEN_STDIN=0; READ_SEC_TOKEN_STDIN=0; READ_BOARD_TOKEN_STDIN=0
 usage() {
   cat >&2 <<'USAGE'
-usage: human-tasks.sh [--yes] [--host <IP>] [--set-token | --set-security-alerts-token]
+usage: human-tasks.sh [--yes] [--host <IP>]
+                      [--set-token | --set-security-alerts-token | --set-board-token]
   --yes                         実際に実行する（既定は dry-run。何をするか出すだけ）
   --host <IP>                   ssh の接続先を上書きする（ふだんは要らない。自分で名前解決する）
   --set-token                   BRANCH_PROTECTION_TOKEN を**標準入力から**読む（#790）
   --set-security-alerts-token   SECURITY_ALERTS_TOKEN を**標準入力から**読む（#786）
+  --set-board-token             SCRUM_BOARD_TOKEN を**標準入力から**読む（#1212）
 
   **トークンは引数では渡せません**（シェルの履歴と ps に残るため）。
-  環境変数（BRANCH_PROTECTION_TOKEN / SECURITY_ALERTS_TOKEN）か、
+  環境変数（BRANCH_PROTECTION_TOKEN / SECURITY_ALERTS_TOKEN / SCRUM_BOARD_TOKEN）か、
   上のフラグ + 標準入力で渡してください。
 
-  **2 つの PAT は別物です**（用途も要る権限も違う）。**同時には指定できません。**
+  **3 つの PAT は別物です**（用途も要る権限も違う）。**同時には指定できません。**
 USAGE
   exit 2
 }
@@ -87,6 +101,7 @@ while [[ $# -gt 0 ]]; do
     --host) HOST="${2:-}"; shift 2 ;;
     --set-token) READ_TOKEN_STDIN=1; shift ;;
     --set-security-alerts-token) READ_SEC_TOKEN_STDIN=1; shift ;;
+    --set-board-token) READ_BOARD_TOKEN_STDIN=1; shift ;;
     *) usage ;;
   esac
 done
@@ -94,8 +109,11 @@ done
 # **標準入力は 1 本しかない。** 両方のフラグを同時に受けると、どちらの secret に入るのかが
 # 呼ぶ人にも読む人にも決められない（**取り違えると、権限の違う PAT が逆の用途に置かれる**）。
 # **黙ってどちらかを選ばず、usage で弾く。**
-if [[ "$READ_TOKEN_STDIN" = 1 && "$READ_SEC_TOKEN_STDIN" = 1 ]]; then
-  echo "--set-token と --set-security-alerts-token は同時に指定できません（標準入力は 1 本です）" >&2
+# **3 つになったので、対ごとに書かない**——対は 3 通りあり、4 つ目が増えれば 6 通りになる。
+# **立っている数を数える**（#1212。「片側を直したら対の側を確かめる」の形を作らない）。
+NFLAGS=$((READ_TOKEN_STDIN + READ_SEC_TOKEN_STDIN + READ_BOARD_TOKEN_STDIN))
+if [[ "$NFLAGS" -gt 1 ]]; then
+  echo "--set-token / --set-security-alerts-token / --set-board-token は同時に指定できません（標準入力は 1 本です）" >&2
   usage
 fi
 
@@ -109,7 +127,17 @@ if [[ "$READ_SEC_TOKEN_STDIN" = 1 && -z "$SEC_TOKEN" ]]; then
   IFS= read -r SEC_TOKEN || true
 fi
 
+# #1212: ボード用も**まったく同じ 2 つの口**（環境変数と標準入力）。**引数は受け取らない。**
+BOARD_TOKEN="${SCRUM_BOARD_TOKEN:-}"
+if [[ "$READ_BOARD_TOKEN_STDIN" = 1 && -z "$BOARD_TOKEN" ]]; then
+  IFS= read -r BOARD_TOKEN || true
+fi
+
 log() { echo "[$(date -u +%H:%M:%SZ)] $*"; }
+
+# 議員レコード スクラムボード (project 2)。scrum-monitor.sh / board-set.sh / board-audit.sh と同じ値。
+# **これは秘密ではない**（Projects v2 のノード ID。読むのに権限が要るのはボードの中身のほう）。
+BOARD_PROJECT_ID="PVT_kwHOBy0CLs4BhHqj"
 
 # ssh の宛先を決める。**人間に IP を用意させない**（ユーザーの指示）:
 #   1. `~/.ssh/config` に `Host giinops` があればそれを使う
@@ -381,6 +409,65 @@ else
       log "    上の出力をそのまま Claude に伝えてください"
       fail=1
     fi
+  fi
+fi
+
+# ---- 5. スクラムボード監視用の PAT を secret に置く（#1212 / #1203）------------------------------
+# **2. / 3. と同じ形・同じ流儀。** **別の secret・別の権限**なので取り違えないこと。
+#
+# **なぜ人間の作業か**: `GITHUB_TOKEN` で読めない監視が **3 件**あり、原因は 3 件とも同じである。
+#
+#     鳴っている Issue   読めないもの              受け皿
+#     #547               main の保護設定           作業 2（BRANCH_PROTECTION_TOKEN）
+#     #821               security アラート         作業 3（SECURITY_ALERTS_TOKEN）
+#     #1203              **Projects v2（ボード）**  **ここ**（SCRUM_BOARD_TOKEN）
+#
+# **#1203 には受け皿が無かった**ので、鳴っていても運営者に打つ手順が存在しなかった（#1212）。
+#
+# `permissions:` に `projects:` というキーは**無い**（#540 と同じく、書けば workflow ごと動かなくなる）。
+# **Projects v2 は organization/user レベルの資源**なので、PAT の **Account permissions** 側の
+# **`Projects: Read-only`** が要る（**Repository permissions ではない**——ここが 2 / 3 と違う）。
+#
+# **PAT が無い間も監視は動き続ける。** いまは「測れなかった」と正しく報告している（#1056）。
+# **ここで落として、ほかの 4 つの作業まで止めない。**
+echo
+log "== スクラムボード用の PAT を置く（#1212 / #1203）=="
+if [[ -z "$BOARD_TOKEN" ]]; then
+  log "  トークンが渡されていないので飛ばします（この作業が済んでいれば、それで構いません）"
+  log "  まだなら: docs/ops/monitoring.md「スクラムボード（Projects v2）」の手順で PAT を作り、"
+  log "    bash scripts/human-tasks.sh --yes --set-board-token   ← 打ってからトークンを貼って Enter"
+  log "    （環境変数 SCRUM_BOARD_TOKEN でも読みます。**コマンド行に書くと履歴に残ります**）"
+elif [[ "$APPLY" = 0 ]]; then
+  # **トークンそのものは絶対に出さない。** 長さだけ出して「渡っている」ことを示す。
+  log "  [dry-run] gh secret set SCRUM_BOARD_TOKEN （${#BOARD_TOKEN} 文字のトークンを受け取っています）"
+else
+  # **値は標準入力で渡す**（`--body "$BOARD_TOKEN"` だと argv に載って `ps` で見える）。
+  # **`--body -` も `--body-file -` も誤り**——3. の注記と同じ（実測 2026-09-13）。
+  # 正しいのは **`--body` 系を一切書かないこと**。
+  if printf '%s' "$BOARD_TOKEN" | gh secret set SCRUM_BOARD_TOKEN >/dev/null 2>&1; then
+    log "  SCRUM_BOARD_TOKEN を置きました"
+    # **置けただけでは足りない**（3. と同じ）。権限が足りない PAT でも secret としては置ける。
+    # **実際にボードを読めるか**を、置いたトークンそのもので確かめる。
+    # **ボードそのもの（Projects v2）を GraphQL で叩く**——REST では読めないものなので、
+    # 別の API で代用すると「読めるつもりで読めていない」になる。
+    # shellcheck disable=SC2016  # $id は GraphQL の変数。シェルに展開させない
+    if GH_TOKEN="$BOARD_TOKEN" gh api graphql \
+         -f query='query($id:ID!){ node(id:$id){ ... on ProjectV2 { title } } }' \
+         -F id="$BOARD_PROJECT_ID" >/dev/null 2>&1; then
+      log "  このトークンでボードを読めました（監視の board の節が測れるようになります）"
+      log "  期限を docs/ops/board.md に控えてください"
+      log "  次の実行で Issue「[monitor] scrum: 監視が測れていない」が自動で閉じます（#1203）"
+    else
+      # **ここで黙って成功にしない。** 読めない PAT を置いて緑にするのは #786 の 21 日の再来。
+      log "  **置きましたが、このトークンではボードを読めません。**"
+      log "    PAT の **Account permissions** に「Projects: Read-only」が付いているか確かめてください"
+      log "    （**Repository permissions ではありません**。Projects v2 は user/org の資源です）"
+      fail=1
+    fi
+  else
+    # **gh のエラー文は転記しない**（認証情報が混ざりうる）。
+    log "  gh secret set に失敗しました（gh の認証を確かめてください: gh auth status）"
+    fail=1
   fi
 fi
 
