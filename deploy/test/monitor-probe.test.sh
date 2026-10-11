@@ -38,6 +38,24 @@ done
 #   H_MAIN_META        body served for the raw main data/meta.json (#1185); H_MAIN_CODE its HTTP status
 #   H_MAIN_URL_BASE    where probe.sh is told to read main from (the tests point it at the stubbed curl)
 #   H_RUNS             JSON gh returns for the deploy-data.yml run list (#1185); H_RUNS_EXIT makes gh fail
+#   H_ETL_RUNS         JSON gh returns for the **etl.yml** run list (#1286); H_ETL_RUNS_EXIT makes gh fail.
+#                      **A different variable from H_RUNS on purpose**: the stub filters on `--workflow`, so a
+#                      script that asked for the wrong workflow cannot be green.
+#                      **Use gh's real shapes.** 実測（2026-10-11T11:2xZ、`gh run list --limit 200 --json
+#                      databaseId,createdAt,conclusion,status,event`、母数 200 run）:
+#                      `conclusion` は 'success' 48 / 'failure' 11 / 'cancelled' 1（直近 60 run の内訳）、
+#                      `status` は **200 run すべて 'completed'**、`event` は
+#                      'schedule' 50 / 'workflow_dispatch' 30 / 'push' 23（etl.yml の 103 run の内訳）、
+#                      `databaseId` は **数値**、`createdAt` は末尾 Z の ISO 8601。
+#                      **走っている最中の run は 1 本も無かったので、`status != "completed"` のときの
+#                      `conclusion` の値は観測できていない**（API にも 0 件）。だから
+#                      `etl-streak.sh` は **`status == "completed"` を満たす run だけを数える**形にしてあり、
+#                      **未完了の run の `conclusion` が何であっても結果が変わらない**
+#                      （下の t_etl_streak_ignores_in_progress が両方の綴りで固定している）。
+#   H_STEPS            step name `gh run view --json jobs` reports as failed (#1286); `NOFAIL` = no failed step.
+#                      H_STEPS_<run id> overrides it for one run, so one report can mix two kinds of failure
+#                      (the real 7-night streak did: 6 × "Wait for data PR merge, then deploy" + 1 × "Run ETL").
+#                      H_RUN_VIEW_EXIT makes `gh run view` fail.
 #   H_PRS              JSON gh returns for `pr list --head <branch>` (#1230); H_PRS_EXIT makes gh fail.
 #                      **Use gh's real shapes** (verified in CI against `gh pr list --json
 #                      number,state,autoMergeRequest,createdAt,headRefName`): `state` is "OPEN"/"CLOSED"/"MERGED",
@@ -108,13 +126,47 @@ case "$cmd" in
             | jq -r "$jqexpr"
         fi ;;
       "issue edit")   ;;
-      "run list")     # deploy-data.yml run history (#1185)
-        [ -n "${H_RUNS_EXIT:-}" ] && exit "$H_RUNS_EXIT"
-        # **`${H_RUNS:-[]}` ではなく `${H_RUNS-[]}`**（#1198 R10b）: **`:-` は「空文字」も
-        # 既定値に差し替えるので、`H_RUNS=''`（gh が exit 0 で何も出さない形）を
-        # fixture から作れなかった。** 本物の gh は、レートに当たった・応答が途切れた等で
-        # **stdout が空のまま exit 0 になり得る**。**そこを `[]` と同じ扱いにしてはいけない。**
-        printf '%s' "${H_RUNS-[]}" ;;
+      "run list")     # run history: deploy-data.yml (#1185) と etl.yml (#1286) で**別の fixture**
+        # **`--workflow` を本物と同じようにサーバ側の絞り込みとして効かせる**（#1230 の `--head` と同じ理由）。
+        # ここで workflow を見ずに 1 つの fixture を返すと、**`etl-streak.sh` が
+        # `--workflow etl.yml` をまったく渡さなくてもテストは緑になる**
+        # ——つまり**「どの workflow を見ているか」が誰にも検査されない**（#1228 の型）。
+        wf=''
+        for ((i=1;i<=$#;i++)); do [[ "${!i}" == "--workflow" ]] && { j=$((i+1)); wf=${!j}; }; done
+        if [ -z "$wf" ]; then echo "gh run list: --workflow が無い" >&2; exit 4; fi
+        case "$wf" in
+          etl.yml)
+            # #1286: 日次 ETL の run 一覧。**`H_ETL_RUNS` を持つのはこちらだけ**で、
+            # deploy-data.yml 側（H_RUNS）とは混ざらない——**混ぜると「ETL の run を見ている」
+            # ことが検査されない。**
+            [ -n "${H_ETL_RUNS_EXIT:-}" ] && exit "$H_ETL_RUNS_EXIT"
+            # `${H_ETL_RUNS-[]}`（`:-` ではない）: 空文字の応答も fixture から作れること（#1198 R10b）。
+            printf '%s' "${H_ETL_RUNS-[]}" ;;
+          *)
+            [ -n "${H_RUNS_EXIT:-}" ] && exit "$H_RUNS_EXIT"
+            # **`${H_RUNS:-[]}` ではなく `${H_RUNS-[]}`**（#1198 R10b）: **`:-` は「空文字」も
+            # 既定値に差し替えるので、`H_RUNS=''`（gh が exit 0 で何も出さない形）を
+            # fixture から作れなかった。** 本物の gh は、レートに当たった・応答が途切れた等で
+            # **stdout が空のまま exit 0 になり得る**。**そこを `[]` と同じ扱いにしてはいけない。**
+            printf '%s' "${H_RUNS-[]}" ;;
+        esac ;;
+      "run view")     # #1286: 失敗した step を名指しするための 1 run の詳細
+        [ -n "${H_RUN_VIEW_EXIT:-}" ] && exit "$H_RUN_VIEW_EXIT"
+        # **run id ごとに別の答えを返せること**: 受け入れ条件 3 は「step 12 の時間切れと
+        # step 8 の本物の失敗を区別して報告する」なので、**1 回の報告の中に 2 種類が混ざる形**
+        # （実測の 7 晩がまさにそれ）を fixture から作れなければ検査にならない。
+        # `H_STEPS_<run id>` が在ればそれを、無ければ `H_STEPS` を使う。
+        rid=$3
+        var="H_STEPS_${rid}"
+        nm=${!var:-${H_STEPS:-Run ETL}}
+        if [ "$nm" = NOFAIL ]; then
+          printf '{"jobs":[{"steps":[{"number":1,"name":"Set up job","conclusion":"success"}]}]}'
+        else
+          # 本物の `gh run view --json jobs` の形（実測で確かめた: jobs[].steps[] に
+          # number / name / conclusion）。**失敗した step だけを拾う実装を検査するため、
+          # success の step も混ぜる。**
+          printf '{"jobs":[{"steps":[{"number":1,"name":"Set up job","conclusion":"success"},{"number":8,"name":"%s","conclusion":"failure"},{"number":9,"name":"Job summary","conclusion":"success"}]}]}' "$nm"
+        fi ;;
       "pr list")      # #1230: data/refresh の PR の状態（第 3 の状態 = 意図して止めてある）
         [ -n "${H_PRS_EXIT:-}" ] && exit "$H_PRS_EXIT"
         # **`--head` を本物と同じようにサーバ側の絞り込みとして効かせる。**
@@ -159,12 +211,19 @@ fresh() {
   unset H_CODE_ASSEMBLIES H_CODE_ASSEMBLY H_IDS H_ASSEMBLY_BODY PROBE_ASSEMBLY_SAMPLE PROBE_NOW
   unset H_MAIN_META H_MAIN_CODE H_MAIN_URL_BASE H_RUNS H_RUNS_EXIT H_PRS H_PRS_EXIT PROBE_REFRESH_BRANCH
   unset MONITOR_ESCALATE_HOURS PROBE_MAIN_META_URL PROBE_DEPLOY_LAG_MINUTES
+  # #1286: etl.yml の run 一覧と step の fixture、および N のしきい値
+  unset H_ETL_RUNS H_ETL_RUNS_EXIT H_STEPS H_RUN_VIEW_EXIT PROBE_ETL_FAIL_STREAK PROBE_ETL_RUN_LIMIT
+  unset MONITOR_ETL_STREAK
+  # `H_STEPS_<run id>` は run ごとに置くので、名前で総なめして消す（残ると次のテストに漏れる）
+  while IFS= read -r v; do unset "$v"; done < <(compgen -v | grep '^H_STEPS_' || true)
   unset CF_ACCESS_CLIENT_ID CF_ACCESS_CLIENT_SECRET MONITOR_REQUIRE_CF_ACCESS
 }
 run_probe()  { PATH="$BIN:$PATH" bash "$MON/probe.sh" "$@" > "$P/out" 2>&1; }
 run_report() { PATH="$BIN:$PATH" bash "$MON/report.sh" "$@" > "$P/out" 2>&1; }
 run_run()    { PATH="$BIN:$PATH" bash "$MON/run.sh" "$@" > "$P/out" 2>&1; }
 run_deploy_started() { PATH="$BIN:$PATH" bash "$MON/deploy-started.sh" "$@" > "$P/out" 2>&1; }
+# `etl-streak.sh` は引数を取らない（env と gh だけで決まる）ので `"$@"` を渡さない。
+run_etl_streak() { PATH="$BIN:$PATH" bash "$MON/etl-streak.sh" > "$P/out" 2>&1; }
 
 test_case() {
   local name=$1; shift; CURRENT_FAILED=0
@@ -172,7 +231,7 @@ test_case() {
   if [[ $CURRENT_FAILED == 0 ]]; then PASS=$((PASS+1)); echo "ok   $name"; else FAIL=$((FAIL+1)); echo "FAIL $name"; fi
 }
 
-t_syntax() { for s in probe report run deploy-started; do bash -n "$MON/$s.sh" || fail "bash -n $s"; done; }
+t_syntax() { for s in probe report run deploy-started etl-streak; do bash -n "$MON/$s.sh" || fail "bash -n $s"; done; }
 
 # ---- probe.sh ----
 t_probe_ok() {
@@ -566,9 +625,10 @@ t_report_does_not_escalate_before_threshold() {
   assert_not_contains "$log" "gh issue edit" "まだ扱いは変えない"
   assert_contains "$log" "gh issue comment 5" "でも経過は書く（黙らない）"
 }
-# **一度 escalated にしたら、以後の round で edit を繰り返さない**
+# **一度 escalated にしたら、ラベルは足し直さないし、題も毎 round は書き換えない**
 # （10 分ごとに title を書き換えると通知が 6 回/時 鳴り、**読まれなくなる**——#1185 の本体が
 #  「鳴っていたのに読まれない」なので、ここで同じ穴を作らない）。
+# **#1286 で「倍々でだけ改題する」を足した**ので、**題に数字が無い形ではこれまでどおり何もしない。**
 t_report_escalates_only_once() {
   fresh r_esc_once
   echo "body" > "$P/body"
@@ -576,6 +636,53 @@ t_report_escalates_only_once() {
   H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(HOURS_AGO 9)\",\"comments\":[{},{},{},{},{},{},{},{}],\"labels\":[{\"name\":\"monitor\"},{\"name\":\"escalated\"}]}]" \
     run_report "[monitor] production: data" fail "$P/body" || fail "exit $? $(cat "$P/out")"
   assert_not_contains "$(cat "$LOG")" "gh issue edit" "すでに escalated なら edit しない"
+}
+# ---- #1286 受け入れ条件 3: 題に**通算**を出す ----
+# **実測で PO 自身が踏んだ形**: #1221 は **111.2h 続いていたのに題は `— 9h 継続`** だった
+# （`createdAt 2026-10-06T20:33:20Z` / 最後の報告 `2026-10-11T07:19:56Z` で既に 106.8h /
+#  2026-10-11T11:40Z 現在 111.2h）。**改題を 1 回だけにしたので題の数字が凍った。**
+# **PO は題を見て「9h なら既知の古いもの」と流し、106 時間・26 回鳴っていた本物を 4 日見落とした。**
+# **倍々でだけ改題する**ので、`9h` の題で 18h を超えていたら書き換わる。
+t_report_refreshes_the_title_when_elapsed_doubled() {
+  fresh r_title_refresh
+  echo "body" > "$P/body"
+  MONITOR_ESCALATE_HOURS=6 \
+  H_OPEN="[{\"number\":1221,\"title\":\"[monitor] production: data — 9h 継続\",\"createdAt\":\"$(HOURS_AGO 111)\",\"comments\":[{},{},{}],\"labels\":[{\"name\":\"monitor\"},{\"name\":\"escalated\"}]}]" \
+    run_report "[monitor] production: data" fail "$P/body" || fail "exit $? $(cat "$P/out")"
+  local log; log=$(cat "$LOG")
+  assert_contains "$log" "gh issue edit 1221" "通算が倍を超えたら改題する"
+  assert_contains "$log" "111h 継続" "いまの通算を題に出す（9h のまま凍らせない）"
+  assert_not_contains "$log" "--add-label" "ラベルは足し直さない（すでに escalated）"
+}
+# **倍に届いていなければ改題しない**（10 分ごとの改題で通知に埋もれさせない。#1185 の判断は生きている）。
+# **両側で判断する**: 「鳴るとき鳴る」だけでは、常に改題する実装と区別が付かない。
+t_report_keeps_the_title_below_double() {
+  fresh r_title_keep
+  echo "body" > "$P/body"
+  MONITOR_ESCALATE_HOURS=6 \
+  H_OPEN="[{\"number\":1221,\"title\":\"[monitor] production: data — 9h 継続\",\"createdAt\":\"$(HOURS_AGO 17)\",\"comments\":[{},{},{}],\"labels\":[{\"name\":\"monitor\"},{\"name\":\"escalated\"}]}]" \
+    run_report "[monitor] production: data" fail "$P/body" || fail "exit $? $(cat "$P/out")"
+  assert_not_contains "$(cat "$LOG")" "gh issue edit" "17h は 9h の倍に届かないので改題しない"
+}
+# **人が題を編集した形で暴れない**（数字として読めない接尾辞では改題しない）。
+t_report_does_not_touch_a_hand_edited_title() {
+  fresh r_title_hand
+  echo "body" > "$P/body"
+  MONITOR_ESCALATE_HOURS=6 \
+  H_OPEN="[{\"number\":1221,\"title\":\"[monitor] production: data — PO が調査中\",\"createdAt\":\"$(HOURS_AGO 111)\",\"comments\":[{},{},{}],\"labels\":[{\"name\":\"monitor\"},{\"name\":\"escalated\"}]}]" \
+    run_report "[monitor] production: data" fail "$P/body" || fail "exit $? $(cat "$P/out")"
+  assert_not_contains "$(cat "$LOG")" "gh issue edit" "数字として読めない題は触らない"
+}
+# **改題したあとも同一性が壊れないこと**（改題は検索の対象を変えるので、ここを間違えると増殖する）。
+t_report_finds_the_issue_after_the_title_was_refreshed() {
+  fresh r_title_ident
+  echo "body" > "$P/body"
+  MONITOR_ESCALATE_HOURS=6 \
+  H_OPEN="[{\"number\":1221,\"title\":\"[monitor] production: data — 111h 継続\",\"createdAt\":\"$(HOURS_AGO 111)\",\"comments\":[{},{},{}],\"labels\":[{\"name\":\"monitor\"},{\"name\":\"escalated\"}]}]" \
+    run_report "[monitor] production: data" fail "$P/body" || fail "exit $? $(cat "$P/out")"
+  local log; log=$(cat "$LOG")
+  assert_not_contains "$log" "gh issue create" "改題した自分の Issue をもう一度立てない"
+  assert_not_contains "$log" "gh issue edit" "もう最新なので改題もしない（111h は 111h の倍ではない）"
 }
 # **既に escalated なタイトルでも同一性が壊れないこと。** タイトルを書き換える設計なので、
 # **書き換えた後に同名検索が効かなくなると Issue が増殖する**（1 回の障害で 100 本立つ）。
@@ -968,6 +1075,268 @@ t_deploy_started_output_has_no_paths() {
   fresh ds_safe
   H_RUNS='[]' run_deploy_started "$(MIN_AGO 90)" && true
   assert_not_contains "$(cat "$P/out")" "$TMP" "ローカルパスを出さない"
+}
+
+# ---- etl-streak.sh: 日次 ETL が N 晩連続で失敗している (#1286) ----
+#
+# **なぜこの計器が要るか（#1286。計器が症状だけで機構に 1 つも無かった）**:
+#   既存の `data` check が見ているのは `meta.fetchedAt` の古さ（48h）だけである。
+#   **実測（2026-10-11T11:18Z）**: ETL は **7 晩連続で失敗**していたのに、main も production も
+#   `fetchedAt = 2026-10-10T00:22:40Z`（約 35 時間）で、**35 < 48 なので監視は正しく黙っていた。**
+#   **人が手で PR を運ぶほど `fetchedAt` が若返り、48h の窓がリセットされる**
+#   ——**症状は消え、機構は残る。** だから `fetchedAt` とは独立に run の結末を数える。
+#
+# **下の fixture は実測から採る**（この repo の教訓「fixture は実物が出す行から採る」）。
+# `gh run list --workflow etl.yml --limit 300` の 103 run のうち `event = schedule` の 50 run から、
+# **実際の 7 晩**（2026-10-04T23:40Z〜2026-10-10T23:56Z、databaseId も実物）を使う。
+# **step も実測**: 6 晩が `Wait for data PR merge, then deploy`、1 晩（10-10 夜）が `Run ETL`。
+
+# 実測の連続失敗を模す fixture。`etl_runs <n> [event] [conclusion]` → 新しい順に n 本の run。
+# 既定は `schedule` の `failure`（＝鳴らせたい形）。**時刻は相対にする**（固定日付にすると
+# 日が変わって「古い」判定に引っかかる形を将来作りかねない。ここは時刻で判定しない設計だが、
+# **fixture の側に時計依存を残さないこと自体が検査の安定に効く**）。
+etl_runs() {
+  local n=$1 ev=${2:-schedule} concl=${3:-failure} i sep='' out='['
+  for ((i = 0; i < n; i++)); do
+    out+="${sep}{\"databaseId\":$((38000000 + i)),\"createdAt\":\"$(HOURS_AGO $((24 * i + 1)))\",\"conclusion\":\"$concl\",\"status\":\"completed\",\"event\":\"$ev\"}"
+    sep=','
+  done
+  printf '%s]' "$out"
+}
+# **N の既定値を、実装から読む**（#1264: 2 つの数が同じ制約を分担すると矛盾する。この repo で 2 度踏んだ）。
+# **テストに `3` と書き写さない。** 書き写すと、実装の既定を変えたときに**どちらが正しいか機械に分からない。**
+etl_default_n() { PROBE_ETL_FAIL_STREAK='' bash -c '
+  set -euo pipefail
+  # 実装の既定値の行だけを評価する（実装を走らせずに既定を取り出す）。
+  sed -n "s/^STREAK_N=\${PROBE_ETL_FAIL_STREAK:-\([0-9]\+\)}$/\1/p" "$1"
+' _ "$MON/etl-streak.sh"; }
+
+# **N 晩に届いていなければ黙る。** 自力で直るこけで鳴らすと読まれなくなる（#1185 の型）。
+# 実測: 50 晩で長さ 1 の streak が 2 回・長さ 2 が 1 回在り、**どれも次の晩に success に戻った。**
+t_etl_streak_quiet_below_threshold() {
+  fresh etl_quiet
+  local n; n=$(etl_default_n)
+  # N-1 晩失敗 → そのあと success。**N に 1 つ足りない形で鳴ってはいけない。**
+  local runs; runs=$(python3 -c '
+import json,sys,datetime
+n=int(sys.argv[1]); now=datetime.datetime.now(datetime.timezone.utc)
+rs=[]
+for i in range(n-1):
+    rs.append({"databaseId":38000000+i,"createdAt":(now-datetime.timedelta(hours=24*i+1)).strftime("%Y-%m-%dT%H:%M:%SZ"),"conclusion":"failure","status":"completed","event":"schedule"})
+rs.append({"databaseId":37999999,"createdAt":(now-datetime.timedelta(hours=24*n+1)).strftime("%Y-%m-%dT%H:%M:%SZ"),"conclusion":"success","status":"completed","event":"schedule"})
+print(json.dumps(rs))
+' "$n")
+  H_ETL_RUNS="$runs" run_etl_streak || fail "N-1 晩では鳴らない: $(cat "$P/out")"
+  local out; out=$(cat "$P/out")
+  assert_contains "$out" "ok etl" "しきい値未満は ok"
+  assert_contains "$out" "$((n - 1))" "いま何晩続いているかを数字で出す"
+}
+# **N 晩連続なら鳴る**（実測の 7 晩がこの形）。**両側で示すことが受け入れ条件 2。**
+t_etl_streak_fires_at_threshold() {
+  fresh etl_fire
+  local n; n=$(etl_default_n)
+  H_ETL_RUNS="$(etl_runs "$n")" run_etl_streak && fail "N 晩連続なら鳴らなければならない"
+  local out; out=$(cat "$P/out")
+  assert_contains "$out" "fail etl" "fail になる"
+  assert_contains "$out" "${n}晩連続" "何晩続いているかを数字で出す"
+}
+# **実測の 7 晩そのもの**（#1286 の表）。**しきい値ちょうどではなく、それを超えた形**でも鳴ること。
+t_etl_streak_real_seven_nights() {
+  fresh etl_seven
+  H_ETL_RUNS="$(etl_runs 7)" run_etl_streak && fail "7 晩連続（実測）で鳴らなければならない"
+  local out; out=$(cat "$P/out")
+  assert_contains "$out" "fail etl" "fail になる"
+  assert_contains "$out" "7晩連続" "実測の 7 晩が数字で出る"
+}
+# **受け入れ条件 3: step 12 の時間切れと step 8 の本物の失敗を区別して報告する。**
+# **実測で原因が 2 つに分かれた**ので、名指しできなければ見た人は毎回両方を調べ直す。
+t_etl_streak_names_the_failing_step() {
+  fresh etl_steps
+  local n; n=$(etl_default_n)
+  # 実測の形: いちばん新しい 1 晩が `Run ETL`（本物の取得失敗）、その前が待ち合わせの時間切れ。
+  H_ETL_RUNS="$(etl_runs "$n")" \
+    H_STEPS_38000000='Run ETL' \
+    H_STEPS='Wait for data PR merge, then deploy' \
+    run_etl_streak && true
+  local out; out=$(cat "$P/out")
+  assert_contains "$out" "Run ETL" "本物の取得失敗の step 名を出す"
+  assert_contains "$out" "Wait for data PR merge" "待ち合わせの時間切れの step 名を出す"
+  # **2 種類が同じ報告に混ざることが要点**（実測の 7 晩がまさにそれ: 6 × step 12 + 1 × step 8）。
+  # どちらか片方しか出さない実装では、原因が 2 つに分かれていることが読めない。
+}
+# **step 名が読めなくても鳴ることは変えない。** 名指しは理由を厚くするだけで、判定の条件ではない
+# ——「名前が取れたときだけ鳴る」にすると、gh の 1 本の失敗で監視が黙る。
+t_etl_streak_fires_even_when_steps_unreadable() {
+  fresh etl_nostep
+  local n; n=$(etl_default_n)
+  H_ETL_RUNS="$(etl_runs "$n")" H_RUN_VIEW_EXIT=1 run_etl_streak && fail "step が読めなくても鳴る"
+  local out; out=$(cat "$P/out")
+  assert_contains "$out" "fail etl" "step が読めなくても fail"
+  assert_contains "$out" "step を読めなかった" "読めなかったことを書く（黙って落とさない）"
+}
+# **`workflow_dispatch` / `push` を「晩」と数えない**（実測で 30 本 / 23 本在る）。
+# 手で 3 回試して 3 回失敗したら鳴るのは「毎晩のデータが出ていない」とは別の事実。
+# **ただし「晩の run が 1 本も無い」を ok にはしない**（fail-closed。cron が止まった形がここに来る）。
+# **最初にこのテストを exit 0 で書いて落ちた**——`workflow_dispatch` を除くと母数が 0 になるので、
+# 実装は正しく `測れなかった` を返していた。**落ちたのは実装ではなく、私の期待値だった。**
+t_etl_streak_counts_only_scheduled() {
+  fresh etl_event
+  local n; n=$(etl_default_n)
+  H_ETL_RUNS="$(etl_runs "$n" workflow_dispatch)" run_etl_streak \
+    && fail "晩の run が 0 本なら ok にしない（fail-closed）"
+  local out; out=$(cat "$P/out")
+  assert_contains "$out" "測れなかった" "毎晩の run が無いことは測れていない（ok にしない）"
+  assert_not_contains "$out" "晩連続で失敗" "workflow_dispatch の失敗を連続失敗と数えない"
+}
+# **`push` も同じ**（別の綴りで独立に固定する。片側だけ直す形を防ぐ）
+t_etl_streak_ignores_push_events() {
+  fresh etl_push
+  local n; n=$(etl_default_n)
+  H_ETL_RUNS="$(etl_runs "$n" push)" run_etl_streak && true
+  assert_not_contains "$(cat "$P/out")" "晩連続で失敗" "push の失敗を連続失敗と数えない"
+}
+# **`cancelled` は streak を切る**（実測 8 本。concurrency や手での中止で起きる）。
+# 数えれば N=3 で鳴る回数が 2 → 3 に増える（実測の表で確かめた）。
+t_etl_streak_cancelled_breaks_the_streak() {
+  fresh etl_cancel
+  local n; n=$(etl_default_n)
+  local runs; runs=$(python3 -c '
+import json,sys,datetime
+n=int(sys.argv[1]); now=datetime.datetime.now(datetime.timezone.utc)
+rs=[{"databaseId":38000001,"createdAt":(now-datetime.timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%SZ"),"conclusion":"cancelled","status":"completed","event":"schedule"}]
+for i in range(n):
+    rs.append({"databaseId":38000100+i,"createdAt":(now-datetime.timedelta(hours=24*(i+1)+1)).strftime("%Y-%m-%dT%H:%M:%SZ"),"conclusion":"failure","status":"completed","event":"schedule"})
+print(json.dumps(rs))
+' "$n")
+  H_ETL_RUNS="$runs" run_etl_streak || fail "cancelled は streak を切る: $(cat "$P/out")"
+  assert_contains "$(cat "$P/out")" "ok etl" "いちばん新しいのが cancelled なら連続は 0"
+}
+# **走っている最中の run を失敗に数えない**（数えると毎晩 1 回鳴る）。
+# **`conclusion` の綴りは観測できていない**（実測で未完了の run が 0 件）ので、
+# **`status != completed` で落としてあることを 2 通りの綴りで固定する**
+# ——どちらであっても結果が変わらないなら、観測できていないことが結果に影響しない。
+t_etl_streak_ignores_in_progress() {
+  fresh etl_running
+  local n; n=$(etl_default_n)
+  local c
+  for c in '' 'null-ish'; do
+    local runs; runs=$(python3 -c '
+import json,sys,datetime
+n=int(sys.argv[1]); concl=sys.argv[2]; now=datetime.datetime.now(datetime.timezone.utc)
+rs=[{"databaseId":38000002,"createdAt":(now-datetime.timedelta(minutes=5)).strftime("%Y-%m-%dT%H:%M:%SZ"),"conclusion":concl,"status":"in_progress","event":"schedule"}]
+for i in range(n-1):
+    rs.append({"databaseId":38000200+i,"createdAt":(now-datetime.timedelta(hours=24*(i+1)+1)).strftime("%Y-%m-%dT%H:%M:%SZ"),"conclusion":"failure","status":"completed","event":"schedule"})
+rs.append({"databaseId":37999998,"createdAt":(now-datetime.timedelta(hours=24*n+1)).strftime("%Y-%m-%dT%H:%M:%SZ"),"conclusion":"success","status":"completed","event":"schedule"})
+print(json.dumps(rs))
+' "$n" "$c")
+    H_ETL_RUNS="$runs" run_etl_streak \
+      || fail "走っている run を失敗に数えてはいけない (conclusion=[$c]): $(cat "$P/out")"
+    assert_contains "$(cat "$P/out")" "ok etl" "未完了を除くと N-1 晩なので ok (conclusion=[$c])"
+  done
+}
+# **数えられなかったら ok にしない**（#1056。gh が落ちた・権限が無い・レートに当たった、
+# のいずれでも「異常なし」と言ってはいけない）
+t_etl_streak_gh_failure_is_unmeasured() {
+  fresh etl_gh
+  H_ETL_RUNS_EXIT=1 run_etl_streak && fail "expected non-zero"
+  local out; out=$(cat "$P/out")
+  assert_contains "$out" "測れなかった" "測れなかったと書く"
+  assert_not_contains "$out" "ok etl" "測れていないのに ok にしない"
+}
+# **空の応答を「0 件」と同じ扱いにしない**（#1198 R10b。本物の gh は stdout が空のまま exit 0 になり得る）
+t_etl_streak_empty_response_is_unmeasured() {
+  fresh etl_empty
+  H_ETL_RUNS='' run_etl_streak && fail "空の応答を ok にしてはいけない"
+  assert_contains "$(cat "$P/out")" "測れなかった" "空の応答は測れていない"
+}
+# **正しく答えた空配列は「毎晩の run が 0 本」**——「測れなかった」と区別して、しかし ok にもしない
+# （cron が止まっている形がここに来る）
+t_etl_streak_no_scheduled_runs_is_not_ok() {
+  fresh etl_none
+  H_ETL_RUNS='[]' run_etl_streak && fail "毎晩の run が 0 本なら ok にしない"
+  assert_contains "$(cat "$P/out")" "測れなかった" "0 本は測れていないと書く"
+}
+# **壊れた JSON を ok にしない**
+t_etl_streak_unparseable_is_unmeasured() {
+  fresh etl_bad
+  H_ETL_RUNS='{not json' run_etl_streak && fail "壊れた応答を ok にしてはいけない"
+  assert_contains "$(cat "$P/out")" "測れなかった" "解釈できない応答は測れていない"
+}
+# **窓が N より狭ければ、N 晩連続は原理的に観測できない。** 黙って ok に倒すと
+# 「鳴らない監視」が設定の間違いで作れてしまう。
+t_etl_streak_window_narrower_than_n_is_unmeasured() {
+  fresh etl_window
+  local n; n=$(etl_default_n)
+  H_ETL_RUNS="$(etl_runs "$n")" PROBE_ETL_RUN_LIMIT=$((n - 1)) run_etl_streak \
+    && fail "窓が N より狭ければ測れていない"
+  assert_contains "$(cat "$P/out")" "測れなかった" "窓が狭いことを書く"
+}
+# **`etl.yml` の run を見ていること。** stub は `--workflow` で絞るので、
+# 別の workflow を見ている実装はここで落ちる（#1228 の型を塞ぐ）。
+t_etl_streak_asks_for_the_etl_workflow() {
+  fresh etl_wf
+  local n; n=$(etl_default_n)
+  # deploy-data.yml 側の fixture（H_RUNS）にだけ連続失敗を置く。**それで鳴ってはいけない。**
+  H_RUNS="$(etl_runs "$n")" H_ETL_RUNS='[]' run_etl_streak && true
+  assert_not_contains "$(cat "$P/out")" "晩連続で失敗" "deploy-data.yml の run で鳴ってはいけない"
+  assert_contains "$(cat "$LOG")" "--workflow etl.yml" "etl.yml の run を見る"
+}
+# **`fetchedAt` から独立であること（受け入れ条件 1）。**
+# **これが要点**: 人が手で PR を運ぶと `fetchedAt` は若返るが、機構は壊れたままである。
+# `etl-streak.sh` は meta.json を 1 度も読まない——読んでいれば、ここで curl のログに出る。
+t_etl_streak_is_independent_of_fetched_at() {
+  fresh etl_indep
+  local n; n=$(etl_default_n)
+  # `fetchedAt` は**いま**（= `data` check は ok になる）。それでも連続失敗は鳴る。
+  H_FETCHED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)" H_ETL_RUNS="$(etl_runs "$n")" \
+    run_etl_streak && fail "fetchedAt が新しくても連続失敗は鳴る"
+  assert_contains "$(cat "$P/out")" "fail etl" "fetchedAt が新しくても fail"
+  assert_not_contains "$(cat "$LOG")" "meta.json" "meta.json を読まない（症状ではなく機構を見る）"
+}
+# 出力にサーバー情報・ローカルパス・URL を出さない（OSS。Issue 本文に載る）
+t_etl_streak_output_has_no_paths() {
+  fresh etl_safe
+  local n; n=$(etl_default_n)
+  H_ETL_RUNS="$(etl_runs "$n")" run_etl_streak && true
+  local out; out=$(cat "$P/out")
+  assert_not_contains "$out" "$TMP" "ローカルパスを出さない"
+  assert_not_contains "$out" "https://" "URL を出さない"
+}
+# **N の既定値を 2 か所に書いていないこと**（#1264。この repo で 2 度踏んだ）。
+# **実装の既定の行がただ 1 つであること**を見る。見つからなければ上の `etl_default_n` が
+# 空を返して全テストが壊れるので、**この検査が消えたら他が落ちる**形になっている。
+t_etl_streak_threshold_lives_in_one_place() {
+  fresh etl_one
+  local n hits
+  n=$(etl_default_n)
+  [ -n "$n" ] || fail "実装から N の既定値を読めない（1 行で持っていない）"
+  # `deploy/monitor/` と `.github/workflows/` の中で、N の既定値を**値として**書いている行を数える。
+  hits=$(grep -rn 'PROBE_ETL_FAIL_STREAK' "$MON" "$MON/../../.github/workflows" 2>/dev/null \
+    | grep -c "[:=-]${n}[}[:space:]]" || true)
+  assert_eq 1 "$hits" "N の既定値を持つ行は 1 本だけ（いま ${hits} 本）"
+}
+# **N の選び方が実測の関係式を満たすこと（受け入れ条件 1 の「根拠を実測で書く」）。**
+# **実測（`gh run list --workflow etl.yml --limit 300` の 103 run のうち `event=schedule` の 50 run、
+# 2026-08-22T21:10:23Z〜2026-10-10T23:56:02Z）**:
+#   長さ 1 … 2 回（08-25、09-19。**どちらも次の晩に success**）
+#   長さ 2 … 1 回（10-02〜10-03。**次の晩に success**）
+#   長さ 3 … 1 回（09-24〜09-26。**全 3 晩が step `Run ETL` の本物の取得失敗**）
+#   長さ 7 … 1 回（10-04〜10-10。いま続いている分）
+# **関係式**: N は「自力で直った最長（2）より大きく」「本物の故障の最短（3）以下」。
+#   → **2 < N <= 3 を満たす整数は 3 だけ**。だから N=3 である。
+# **この表を実装の既定値から導出して突き合わせる**ので、**どちらかを動かせば落ちる。**
+# **期待値の表をつまみにしないこと**（この repo の教訓）——下の 2 つの数は**実測の履歴**で、
+# N を変えたくなったら**実測をやり直してこの表を書き換える**のが正しい手順である。
+t_etl_streak_threshold_satisfies_the_measured_relation() {
+  fresh etl_relation
+  local n; n=$(etl_default_n)
+  # 実測の履歴（2026-10-11 に数えた。**これは履歴なので、N を動かすために書き換えてはいけない**）
+  local longest_self_healed=2   # 自力で success に戻った streak の最長（08-25 / 09-19 / 10-02 を数えた）
+  local shortest_real_outage=3  # step `Run ETL` が続いた最短の streak（09-24〜09-26）
+  [ "$n" -gt "$longest_self_healed" ] \
+    || fail "N=${n} は自力で直った最長 ${longest_self_healed} 以下なので、直るものを鳴らす"
+  [ "$n" -le "$shortest_real_outage" ] \
+    || fail "N=${n} は本物の故障の最短 ${shortest_real_outage} より大きいので、本物を取り逃がす"
 }
 
 # ---- run.sh: deploy check と「判定行が無い」(#1185) ----
@@ -1429,6 +1798,11 @@ test_case "report: 閾値を越えたら扱いが変わる（改題＋ラベル 
 test_case "report: 閾値の手前では扱いを変えない（でも経過は書く）" t_report_does_not_escalate_before_threshold
 test_case "report: 一度 escalated にしたら毎 round 改題しない（通知で埋もれさせない）" t_report_escalates_only_once
 test_case "report: 改題した後も同名検索が効き、Issue が増殖しない" t_report_finds_the_issue_after_the_title_changed
+# #1286 受け入れ条件 3: 題に通算を出す（実測: #1221 は 111.2h なのに題は「9h 継続」だった）
+test_case "report: 通算が倍を超えたら題の経過を更新する（9h で凍らせない・#1286）" t_report_refreshes_the_title_when_elapsed_doubled
+test_case "report: 倍に届かなければ改題しない（通知で埋もれさせない・両側で判断）" t_report_keeps_the_title_below_double
+test_case "report: 人が編集した題は触らない（数字として読めない接尾辞）" t_report_does_not_touch_a_hand_edited_title
+test_case "report: 改題後も同一性が壊れず、最新なら改題もしない" t_report_finds_the_issue_after_the_title_was_refreshed
 test_case "report: 復旧時は escalated を外して閉じる（次の障害が escalated で始まらない）" t_report_ok_removes_escalated_label
 test_case "report: 継続コメントにローカルパスを出さない" t_report_escalation_comment_has_no_paths
 test_case "probe: 本番が古く main も古ければ『main も古い』（ETL 側・#1185）" t_probe_data_says_main_is_stale_too
@@ -1463,6 +1837,26 @@ test_case "deploy-started: data/ のコミットが無ければ ok" t_deploy_sta
 test_case "deploy-started: コミット時刻が壊れていれば『測れなかった』" t_deploy_started_bad_timestamp_is_unmeasured
 test_case "deploy-started: コミットより前の run を後続と数えない（毎日 success でも fail）" t_deploy_started_ignores_runs_before_the_commit
 test_case "deploy-started: 出力にローカルパスを出さない" t_deploy_started_output_has_no_paths
+# #1286: 日次 ETL の連続失敗（症状ではなく機構）
+test_case "etl-streak: N 晩に届かなければ鳴らない（自力で直るこけで鳴らさない・#1286）" t_etl_streak_quiet_below_threshold
+test_case "etl-streak: N 晩連続なら鳴る（受け入れ条件 2 の壊れた側）" t_etl_streak_fires_at_threshold
+test_case "etl-streak: 実測の 7 晩で鳴り、晩数を数字で出す（#1286 の表）" t_etl_streak_real_seven_nights
+test_case "etl-streak: 失敗した step を名指しし、2 種類を混ぜて報告する（受け入れ条件 3）" t_etl_streak_names_the_failing_step
+test_case "etl-streak: step が読めなくても鳴る（名指しは判定の条件ではない）" t_etl_streak_fires_even_when_steps_unreadable
+test_case "etl-streak: workflow_dispatch を「晩」と数えない（実測 30 本）" t_etl_streak_counts_only_scheduled
+test_case "etl-streak: push も「晩」と数えない（実測 23 本・別の綴りで独立に固定）" t_etl_streak_ignores_push_events
+test_case "etl-streak: cancelled は streak を切る（実測 8 本）" t_etl_streak_cancelled_breaks_the_streak
+test_case "etl-streak: 走っている run を失敗に数えない（conclusion の綴り 2 通りで固定）" t_etl_streak_ignores_in_progress
+test_case "etl-streak: run を数えられなければ『測れなかった』（ok にしない・#1056）" t_etl_streak_gh_failure_is_unmeasured
+test_case "etl-streak: 空の応答は『測れなかった』（#1198 R10b）" t_etl_streak_empty_response_is_unmeasured
+test_case "etl-streak: 毎晩の run が 0 本なら ok にしない（cron が止まった形）" t_etl_streak_no_scheduled_runs_is_not_ok
+test_case "etl-streak: 壊れた応答は『測れなかった』" t_etl_streak_unparseable_is_unmeasured
+test_case "etl-streak: 窓が N より狭ければ『測れなかった』（鳴らない監視を設定で作れない）" t_etl_streak_window_narrower_than_n_is_unmeasured
+test_case "etl-streak: etl.yml の run を見る（別の workflow で鳴らない・#1228 の型）" t_etl_streak_asks_for_the_etl_workflow
+test_case "etl-streak: fetchedAt から独立（meta.json を読まない・受け入れ条件 1）" t_etl_streak_is_independent_of_fetched_at
+test_case "etl-streak: 出力にローカルパスも URL も出さない" t_etl_streak_output_has_no_paths
+test_case "etl-streak: N の既定値を持つ行は 1 本だけ（#1264 の型を繰り返さない）" t_etl_streak_threshold_lives_in_one_place
+test_case "etl-streak: N が実測の関係式（2 < N <= 3）を満たす（受け入れ条件 1）" t_etl_streak_threshold_satisfies_the_measured_relation
 
 test_case "run: MONITOR_DATA_COMMIT_AT が無ければ deploy check を足さない（#1185）" t_run_no_deploy_check_without_commit_time
 test_case "run: deploy check が fail なら既存の report.sh がそのまま Issue にする（入口を増やさない）" t_run_deploy_check_opens_the_issue
