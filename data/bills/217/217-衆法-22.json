@@ -3,6 +3,18 @@
  "id": "217-衆法-22",
  "kind": "衆法",
  "number": 22,
+ "received": {
+  "shugiin": "2025-03-27"
+ },
+ "referral": {
+  "shugiin": {
+   "committee": "地域活性化・こども政策・デジタル社会形成に関する特別",
+   "date": "2025-10-24"
+  }
+ },
+ "result": {
+  "shugiin": "閉会中審査"
+ },
  "session": 217,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0AAE.htm",
  "status": "未了",

@@ -3,11 +3,17 @@
  "id": "217-衆法-25",
  "kind": "衆法",
  "number": 25,
+ "received": {
+  "shugiin": "2025-04-11"
+ },
  "referral": {
   "shugiin": {
    "committee": "財務金融",
    "date": "2026-01-23"
   }
+ },
+ "result": {
+  "shugiin": "閉会中審査"
  },
  "session": 217,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0CDE.htm",

@@ -4,11 +4,17 @@
  "kind": "その他",
  "kindText": "規則",
  "number": 2,
+ "received": {
+  "shugiin": "2025-06-10"
+ },
  "referral": {
   "shugiin": {
    "committee": "議院運営",
    "date": "2026-01-23"
   }
+ },
+ "result": {
+  "shugiin": "閉会中審査"
  },
  "session": 217,
  "sourceUrl": "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DE0B62.htm",
