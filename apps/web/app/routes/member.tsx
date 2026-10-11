@@ -142,6 +142,7 @@ export const TABS: Record<MemberDetail["house"], TabDef[]> = {
     { id: "question", label: "質問主意書", category: "self", kind: "question" },
     { id: "speech", label: "発言", category: "self", kind: "speech" },
     { id: "committeeRole", label: "委員会の役職", category: "self", kind: "committeeRole" },
+    { id: "cabinetRole", label: "役職", category: "self", kind: "cabinetRole" },
   ],
   shugiin: [
     { id: "all", label: "すべて", category: "all", kind: null },
@@ -149,6 +150,7 @@ export const TABS: Record<MemberDetail["house"], TabDef[]> = {
     { id: "question", label: "質問主意書", category: "self", kind: "question" },
     { id: "speech", label: "発言", category: "self", kind: "speech" },
     { id: "committeeRole", label: "委員会の役職", category: "self", kind: "committeeRole" },
+    { id: "cabinetRole", label: "役職", category: "self", kind: "cabinetRole" },
     { id: "stance", label: "会派の態度", category: "group", kind: "stance" },
   ],
 };
@@ -332,6 +334,13 @@ export function MemberPage({ detail, meta, assembly = null, speechCount = 0, loc
           {tab === "stance" && <p className="member-tab-note">所属会派が議案情報の賛成会派・反対会派に載っていた記録です。会派の態度であり、本人の投票ではありません。</p>}
           {/* 発言は本会議だけでなく委員会も収録している（#242）。どこで発言したかは会議名を原文で各行に出す */}
           {tab === "speech" && speechCount > 0 && <p className="member-tab-note">本会議と委員会の発言です。会議名は会議録の原文をそのまま出します。</p>}
+          {/* 大臣等の役職（#1152）。**名簿は「いまの内閣」しか公開していない**ので、
+              **退任は一次資料に出てこない**（#1141）。それを 1 文で書く（評価語は入れない）。 */}
+          {tab === "cabinetRole" && (
+            <p className="member-tab-note">
+              首相官邸の閣僚等名簿に載っている現在の役職です。日付は内閣の発足日で、退任の記録は名簿に載りません。
+            </p>
+          )}
           {tab === "committeeRole" && (
             <p className="member-tab-note">
               会議録の出席委員欄に載った役職です。在任期間ではありません（会議録に就任日・退任日は書かれておらず、欠席した日は載りません）。
@@ -613,7 +622,7 @@ function Count({ n, label }: { n: number; label: string }) {
 
 function countKinds(timeline: TimelineEntry[]): Counts {
   // speech は timeline に無い（#242。MemberPage が speechCount で上書きする）。all は timeline の全件で、発言は含まない
-  const c: Counts = { vote: 0, bill: 0, stance: 0, question: 0, attendance: 0, committeeRole: 0, speech: 0, localVote: 0, all: timeline.length, submitted: 0, supported: 0 };
+  const c: Counts = { vote: 0, bill: 0, stance: 0, question: 0, attendance: 0, committeeRole: 0, cabinetRole: 0, speech: 0, localVote: 0, all: timeline.length, submitted: 0, supported: 0 };
   for (const e of timeline) {
     c[e.kind] += 1;
     if (e.kind === "bill") c[e.role === "提出者" ? "submitted" : "supported"] += 1;
@@ -666,6 +675,9 @@ function entryKey(e: TimelineEntry): string {
     case "committeeRole":
       // 同じ会議録（同じ日の同じ会議）で委員会・役職が違う行が並びうるので、両方を鍵に入れる
       return `committeeRole:${e.meetingId}:${e.committee}:${e.role}`;
+    case "cabinetRole":
+      // 1 人が同じ内閣で複数の役職を持つ（兼務）。**役職名まで鍵に入れる**（#1152）
+      return `cabinetRole:${e.cabinet}:${e.section}:${e.role}`;
     case "speech":
       return `speech:${e.speechId}`;
     case "localVote":
@@ -769,6 +781,26 @@ function Row({ entry }: { entry: TimelineEntry }) {
             <p className="member-row-meta">
               <MetaLine parts={committeeRoleParts(entry)} />
               <ExternalLink href={entry.sourceUrl}>会議録</ExternalLink>
+            </p>
+          </div>
+        </li>
+      );
+    case "cabinetRole":
+      /* 大臣等の役職（#1152）。**役職名は名簿の原文のまま**（「内閣府特命担当大臣（金融）」を言い換えない）。
+         meta に出すのは**名簿に書いてある 2 つだけ**——ページの区分と、日付表記の原文。
+         **終了日・期間を作らない**: 「いつから」は名簿に在るが「いつまで」は書かれていない（#1141）。
+         だから `committeeRole`（#244）と同じく「〜」「期間」「退任」を 1 つも出さない。**理由は違う**——
+         あちらは「出席の事実で在任ではない」から、こちらは「就任は記録だが退任が記録されていない」から。 */
+      return (
+        <li className="member-row">
+          <Stamp value="就任" />
+          <div className="member-row-body">
+            <p className="member-row-title">{entry.role}</p>
+            <p className="member-row-meta">
+              <MetaLine parts={[entry.effectiveDateText]} />
+              {/* 出典のラベルが名簿の区分（閣僚等／副大臣／大臣政務官）を兼ねる。
+                  meta にも同じ語を出すと 1 行に 2 回並ぶので、**区分はリンクのラベルだけに持たせる。** */}
+              <ExternalLink href={entry.sourceUrl}>{`${entry.section}名簿`}</ExternalLink>
             </p>
           </div>
         </li>
@@ -1042,7 +1074,7 @@ function QuestionTable({ questions }: { questions: QuestionEntry[] }) {
 
 /* ---------- primitives (to be replaced by app/components from #5) ---------- */
 
-type StampValue = "賛成" | "反対" | "投票なし" | "提出" | "賛同" | "質問" | "出席" | "発言";
+type StampValue = "賛成" | "反対" | "投票なし" | "提出" | "賛同" | "質問" | "出席" | "就任" | "発言";
 const STAMP_TONE: Record<StampValue, "yes" | "no" | "none" | "act"> = {
   賛成: "yes",
   反対: "no",
@@ -1051,6 +1083,7 @@ const STAMP_TONE: Record<StampValue, "yes" | "no" | "none" | "act"> = {
   賛同: "act",
   質問: "act",
   出席: "act",
+  就任: "act",
   発言: "act",
 };
 
