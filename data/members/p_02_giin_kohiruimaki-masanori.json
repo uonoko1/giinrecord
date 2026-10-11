@@ -2,7 +2,7 @@
  "asOf": "2026-05-25",
  "assemblyId": "pref-02",
  "counts": {
-  "rollcalls": 611
+  "rollcalls": 649
  },
  "current": true,
  "district": "三沢市",
@@ -20,6 +20,576 @@
   }
  ],
  "timeline": [
+  {
+   "date": "2026-10-01",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "決定",
+   "rollCallId": "pref-02-2026-09-20261001-№1",
+   "sessionLabel": "令和8年9月第327回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/327_giketukekka.pdf",
+   "title": "国内派遣",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-01",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "決定",
+   "rollCallId": "pref-02-2026-09-20261001-№2",
+   "sessionLabel": "令和8年9月第327回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/327_giketukekka.pdf",
+   "title": "国内派遣",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-01",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "決定",
+   "rollCallId": "pref-02-2026-09-20261001-№3",
+   "sessionLabel": "令和8年9月第327回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/327_giketukekka.pdf",
+   "title": "国内派遣",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-01",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "決定",
+   "rollCallId": "pref-02-2026-09-20261001-№4",
+   "sessionLabel": "令和8年9月第327回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/327_giketukekka.pdf",
+   "title": "国内派遣",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-01",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "決定",
+   "rollCallId": "pref-02-2026-09-20261001-№5",
+   "sessionLabel": "令和8年9月第327回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/327_giketukekka.pdf",
+   "title": "国内派遣",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-01",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "決定",
+   "rollCallId": "pref-02-2026-09-20261001-№6",
+   "sessionLabel": "令和8年9月第327回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/327_giketukekka.pdf",
+   "title": "国内派遣",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-01",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "不採択",
+   "rollCallId": "pref-02-2026-09-20261001-受理番号第1号",
+   "sessionLabel": "令和8年9月第327回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/327_giketukekka.pdf",
+   "title": "青森県における副業・兼業推進条例または基本方針の制定についての提案に関す不採択る陳情書",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-01",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "不採択",
+   "rollCallId": "pref-02-2026-09-20261001-受理番号第2号",
+   "sessionLabel": "令和8年9月第327回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/327_giketukekka.pdf",
+   "title": "青森県下北半島に核のゴミを増やさない不採択原子力政策の転換を求める請願書",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-01",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-09-20261001-第10号",
+   "sessionLabel": "令和8年9月第327回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/327_giketukekka.pdf",
+   "title": "工事の請負契約の件",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-01",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-09-20261001-第11号",
+   "sessionLabel": "令和8年9月第327回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/327_giketukekka.pdf",
+   "title": "工事の請負契約の件",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-01",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-09-20261001-第12号",
+   "sessionLabel": "令和8年9月第327回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/327_giketukekka.pdf",
+   "title": "工事の請負契約の件",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-01",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-09-20261001-第13号",
+   "sessionLabel": "令和8年9月第327回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/327_giketukekka.pdf",
+   "title": "工事の請負契約の件",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-01",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-09-20261001-第14号",
+   "sessionLabel": "令和8年9月第327回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/327_giketukekka.pdf",
+   "title": "工事の請負契約の一部変更の件",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-01",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-09-20261001-第15号",
+   "sessionLabel": "令和8年9月第327回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/327_giketukekka.pdf",
+   "title": "工事の請負契約の一部変更の件",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-01",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-09-20261001-第16号",
+   "sessionLabel": "令和8年9月第327回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/327_giketukekka.pdf",
+   "title": "工事の請負契約の一部変更の件",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-01",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-09-20261001-第17号",
+   "sessionLabel": "令和8年9月第327回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/327_giketukekka.pdf",
+   "title": "工事の請負契約の一部変更の件",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-01",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-09-20261001-第18号",
+   "sessionLabel": "令和8年9月第327回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/327_giketukekka.pdf",
+   "title": "権利の放棄の件",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-01",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-09-20261001-第19号",
+   "sessionLabel": "令和8年9月第327回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/327_giketukekka.pdf",
+   "title": "訴えの提起の件",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-01",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-09-20261001-第1号",
+   "sessionLabel": "令和8年9月第327回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/327_giketukekka.pdf",
+   "title": "令和８年度青森県一般会計補正予算（第２号）案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-01",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-09-20261001-第20号",
+   "sessionLabel": "令和8年9月第327回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/327_giketukekka.pdf",
+   "title": "訴えの提起の件",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-01",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-09-20261001-第21号",
+   "sessionLabel": "令和8年9月第327回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/327_giketukekka.pdf",
+   "title": "青森県道路公社の道路の整備に関する基本計画の変更に係る定款の変更について認可の申請をするの件",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-01",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "同意",
+   "rollCallId": "pref-02-2026-09-20261001-第25号",
+   "sessionLabel": "令和8年9月第327回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/327_giketukekka.pdf",
+   "title": "青森県公安委員会委員の任命の件",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-01",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-09-20261001-第2号",
+   "sessionLabel": "令和8年9月第327回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/327_giketukekka.pdf",
+   "title": "令和８年度青森県港湾整備事業特別会計補正予算（第１号）案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-01",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-09-20261001-第3号",
+   "sessionLabel": "令和8年9月第327回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/327_giketukekka.pdf",
+   "title": "令和８年度青森県病院事業会計補正予算（第１号）案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-01",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-09-20261001-第4号",
+   "sessionLabel": "令和8年9月第327回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/327_giketukekka.pdf",
+   "title": "令和８年度青森県下水道事業会計補正予算（第１号）案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-01",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-09-20261001-第5号",
+   "sessionLabel": "令和8年9月第327回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/327_giketukekka.pdf",
+   "title": "青森県地域未来基金条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-01",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-09-20261001-第6号",
+   "sessionLabel": "令和8年9月第327回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/327_giketukekka.pdf",
+   "title": "青森県行政手続における特定の個人を識別するための番号の利用等に関する法律施行条例の一部を改正する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-01",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-09-20261001-第7号-1",
+   "sessionLabel": "令和8年9月第327回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/327_giketukekka.pdf",
+   "title": "青森県児童福祉法施行条例の一部を改正する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-01",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-09-20261001-第7号-2",
+   "sessionLabel": "令和8年9月第327回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/327_giketukekka.pdf",
+   "title": "社会福祉施設職員等退職手当共済制度における保育所等に対する公費助成の継続を求める意見書(案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-01",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-09-20261001-第8号",
+   "sessionLabel": "令和8年9月第327回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/327_giketukekka.pdf",
+   "title": "青森県立学校設置条例の一部を改正する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-01",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-09-20261001-第8号請願・陳情",
+   "sessionLabel": "令和8年9月第327回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/327_giketukekka.pdf",
+   "title": "松くい虫被害およびナラ枯れ被害に万全の対策を求める意見書(案）委員長報告",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-01",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-02-2026-09-20261001-第9号",
+   "sessionLabel": "令和8年9月第327回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/327_giketukekka.pdf",
+   "title": "工事の請負契約の件",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-09-28",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案否決",
+   "rollCallId": "pref-02-2026-09-20260928-第1号",
+   "sessionLabel": "令和8年9月第327回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/327_giketukekka.pdf",
+   "title": "沖縄県の米軍基地がPFAS汚染源であることが判明した報道をふまえ、米軍三沢基地周辺におけるPFAS汚染の原因究明等を求める意見書（案）",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-09-28",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案否決",
+   "rollCallId": "pref-02-2026-09-20260928-第2号",
+   "sessionLabel": "令和8年9月第327回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/327_giketukekka.pdf",
+   "title": "米国政府による国際刑事裁判所（ICC）赤根智子所長らへの制裁の撤回を求める意見書（案）",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-09-28",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案否決",
+   "rollCallId": "pref-02-2026-09-20260928-第3号",
+   "sessionLabel": "令和8年9月第327回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/327_giketukekka.pdf",
+   "title": "地方財政の充実に関する意見書(案)",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-09-28",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案否決",
+   "rollCallId": "pref-02-2026-09-20260928-第4号",
+   "sessionLabel": "令和8年9月第327回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/327_giketukekka.pdf",
+   "title": "女性及び障がい者等の視点を取り入れた防災・避難体制の充実を求める意見書（案）",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-09-28",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案否決",
+   "rollCallId": "pref-02-2026-09-20260928-第5号",
+   "sessionLabel": "令和8年9月第327回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/327_giketukekka.pdf",
+   "title": "非核三原則の尊重と堅持を求める意見書（案）",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-09-28",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案否決",
+   "rollCallId": "pref-02-2026-09-20260928-第6号",
+   "sessionLabel": "令和8年9月第327回定例会",
+   "sourceUrl": "https://www.pref.aomori.lg.jp/soshiki/gikai/files/327_giketukekka.pdf",
+   "title": "こども・若者の性と健康を守るための包括的な取組の充実を求める意見書（案）",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
   {
    "date": "2026-06-29",
    "kind": "localVote",

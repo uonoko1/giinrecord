@@ -2,7 +2,7 @@
  "asOf": "2026-07-24",
  "assemblyId": "pref-05",
  "counts": {
-  "rollcalls": 785
+  "rollcalls": 815
  },
  "current": true,
  "district": "由利本荘市",
@@ -20,6 +20,456 @@
   }
  ],
  "timeline": [
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "原案可決",
+   "rollCallId": "pref-05-2026-10-07-20261007-員会提出意見書案第7号",
+   "sessionLabel": "令和８年第２回定例会（９月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/081007.pdf",
+   "title": "私学助成の充実強化等に関する意見書",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "原案可決",
+   "rollCallId": "pref-05-2026-10-07-20261007-意見書案第10号",
+   "sessionLabel": "令和８年第２回定例会（９月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/081007.pdf",
+   "title": "国土強靱化の強力な推進に必要な予算の確保を求める意見書",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "原案可決",
+   "rollCallId": "pref-05-2026-10-07-20261007-意見書案第8号",
+   "sessionLabel": "令和８年第２回定例会（９月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/081007.pdf",
+   "title": "障害基礎年金と障害厚生年金の「制度の狭間」解消に関する意見書",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "原案可決",
+   "rollCallId": "pref-05-2026-10-07-20261007-意見書案第9号",
+   "sessionLabel": "令和８年第２回定例会（９月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/081007.pdf",
+   "title": "米の安定的な生産及び消費を実現する米政策の確立を求める意見書",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-05-2026-10-07-20261007-知事提出議案第153号",
+   "sessionLabel": "令和８年第２回定例会（９月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/081007.pdf",
+   "title": "令和８年度秋田県一般会計補正予算（第３号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "認定",
+   "rollCallId": "pref-05-2026-10-07-20261007-認定第1号",
+   "sessionLabel": "令和８年第２回定例会（９月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/081007.pdf",
+   "title": "令和７年度秋田県公営企業会計決算の認定について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "認定",
+   "rollCallId": "pref-05-2026-10-07-20261007-認定第2号",
+   "sessionLabel": "令和８年第２回定例会（９月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/081007.pdf",
+   "title": "令和７年度秋田県公営企業会計決算の認定について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "不採択",
+   "rollCallId": "pref-05-2026-10-07-20261007-請願第30号",
+   "sessionLabel": "令和８年第２回定例会（９月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/081007.pdf",
+   "title": "特定利用空港・港湾の指定について",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "採択",
+   "rollCallId": "pref-05-2026-10-07-20261007-請願第31号",
+   "sessionLabel": "令和８年第２回定例会（９月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/081007.pdf",
+   "title": "私学助成に関する意見書の提出を求める請願について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "不採択",
+   "rollCallId": "pref-05-2026-10-07-20261007-請願第32号",
+   "sessionLabel": "令和８年第２回定例会（９月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/081007.pdf",
+   "title": "特定利用空港・港湾の指定について同意しないことを求める請願について",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "否決",
+   "rollCallId": "pref-05-2026-10-07-20261007-議員提出意見書案第11号",
+   "sessionLabel": "令和８年第２回定例会（９月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/081007.pdf",
+   "title": "航空自衛隊航空救難団秋田救難隊の設置運用に関する協定についての意見書",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "原案可決",
+   "rollCallId": "pref-05-2026-10-07-20261007-議案第154号",
+   "sessionLabel": "令和８年第２回定例会（９月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/081007.pdf",
+   "title": "令和８年度秋田県港湾整備事業特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "原案可決",
+   "rollCallId": "pref-05-2026-10-07-20261007-議案第155号",
+   "sessionLabel": "令和８年第２回定例会（９月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/081007.pdf",
+   "title": "令和８年度秋田県電気事業会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "原案可決",
+   "rollCallId": "pref-05-2026-10-07-20261007-議案第156号",
+   "sessionLabel": "令和８年第２回定例会（９月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/081007.pdf",
+   "title": "秋田県公営企業の設置等に関する条例等の一部を改正する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "原案可決",
+   "rollCallId": "pref-05-2026-10-07-20261007-議案第157号",
+   "sessionLabel": "令和８年第２回定例会（９月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/081007.pdf",
+   "title": "市町村への権限移譲の推進に関する条例の一部を改正する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-05-2026-10-07-20261007-議案第158号",
+   "sessionLabel": "令和８年第２回定例会（９月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/081007.pdf",
+   "title": "秋田県立衛生看護学院条例の一部を改正する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "原案可決",
+   "rollCallId": "pref-05-2026-10-07-20261007-議案第159号",
+   "sessionLabel": "令和８年第２回定例会（９月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/081007.pdf",
+   "title": "秋田県環境影響評価条例の一部を改正する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "原案可決",
+   "rollCallId": "pref-05-2026-10-07-20261007-議案第160号",
+   "sessionLabel": "令和８年第２回定例会（９月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/081007.pdf",
+   "title": "秋田県信用保証協会に対する損失補償に係る回収納付金を受け取る権利の放棄に関する条例の一部を改正する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "原案可決",
+   "rollCallId": "pref-05-2026-10-07-20261007-議案第161号",
+   "sessionLabel": "令和８年第２回定例会（９月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/081007.pdf",
+   "title": "秋田県中東情勢に係る中小企業経営安定臨時対策基金条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "原案可決",
+   "rollCallId": "pref-05-2026-10-07-20261007-議案第162号",
+   "sessionLabel": "令和８年第２回定例会（９月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/081007.pdf",
+   "title": "秋田県警察組織条例の一部を改正する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-05-2026-10-07-20261007-議案第163号",
+   "sessionLabel": "令和８年第２回定例会（９月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/081007.pdf",
+   "title": "地方独立行政法人秋田県立病院機構の中期目標の変更について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "原案可決",
+   "rollCallId": "pref-05-2026-10-07-20261007-議案第164号",
+   "sessionLabel": "令和８年第２回定例会（９月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/081007.pdf",
+   "title": "令和７年度秋田県公営企業会計未処分利益剰余金の処分について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "原案可決",
+   "rollCallId": "pref-05-2026-10-07-20261007-議案第165号",
+   "sessionLabel": "令和８年第２回定例会（９月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/081007.pdf",
+   "title": "令和７年度秋田県公営企業会計未処分利益剰余金の処分について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "原案可決",
+   "rollCallId": "pref-05-2026-10-07-20261007-議案第166号",
+   "sessionLabel": "令和８年第２回定例会（９月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/081007.pdf",
+   "title": "工事請負契約の締結について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "原案可決",
+   "rollCallId": "pref-05-2026-10-07-20261007-議案第167号",
+   "sessionLabel": "令和８年第２回定例会（９月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/081007.pdf",
+   "title": "工事請負契約の締結について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "原案可決",
+   "rollCallId": "pref-05-2026-10-07-20261007-議案第168号",
+   "sessionLabel": "令和８年第２回定例会（９月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/081007.pdf",
+   "title": "工事請負変更契約の締結について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "原案可決",
+   "rollCallId": "pref-05-2026-10-07-20261007-議案第169号",
+   "sessionLabel": "令和８年第２回定例会（９月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/081007.pdf",
+   "title": "工事請負変更契約の締結について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "原案可決",
+   "rollCallId": "pref-05-2026-10-07-20261007-議案第170号",
+   "sessionLabel": "令和８年第２回定例会（９月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/081007.pdf",
+   "title": "交通事故に係る和解について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "原案可決",
+   "rollCallId": "pref-05-2026-10-07-20261007-議案第171号",
+   "sessionLabel": "令和８年第２回定例会（９月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/081007.pdf",
+   "title": "交通事故に係る和解について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "原案可決",
+   "rollCallId": "pref-05-2026-10-07-20261007-議案第172号",
+   "sessionLabel": "令和８年第２回定例会（９月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/081007.pdf",
+   "title": "令和８年度秋田県一般会計補正予算（第４号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
   {
    "date": "2026-07-03",
    "kind": "localVote",

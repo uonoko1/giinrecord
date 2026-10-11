@@ -1,21 +1,32 @@
 {
  "assemblyId": "pref-05",
  "countChecked": {
-  "checked": 554,
+  "checked": 584,
   "noCounts": 231,
-  "rows": 785,
+  "rows": 815,
   "unreadableCells": 0
  },
  "counts": {
-  "cells": 32022,
+  "cells": 33252,
   "members": 41,
-  "rollcalls": 785,
+  "rollcalls": 815,
   "unknownCells": 0,
   "unmatchedNames": 2
  },
- "fetchedAt": "2026-09-20T21:55:17.621Z",
+ "fetchedAt": "2026-10-11T12:02:12.061Z",
  "rosterAsOf": "2026-07-24",
  "sessionRosterCoverage": [
+  {
+   "date": "2026-10-07",
+   "rollcalls": 30,
+   "rosterAbsent": 0,
+   "rosterSeen": 41,
+   "seatsChanged": 0,
+   "sessionId": "2026-10-07",
+   "unmatchedNames": 0,
+   "unmatchedVotes": 0,
+   "votes": 1230
+  },
   {
    "date": "2026-07-03",
    "rollcalls": 26,
@@ -338,6 +349,17 @@
  ],
  "sessions": [
   {
+   "pdfUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/081007.pdf",
+   "pdfUrls": [
+    "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/081007.pdf"
+   ],
+   "rollcalls": 30,
+   "sessionId": "2026-10-07",
+   "sessionLabel": "令和８年第２回定例会（９月議会）",
+   "sourceUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/",
+   "unknownCells": 0
+  },
+  {
    "pdfUrl": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/080703.pdf",
    "pdfUrls": [
     "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/080703.pdf"
@@ -659,162 +681,167 @@
  ],
  "sources": [
   {
-   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "fetchedAt": "2026-10-11T12:02:12.061Z",
    "name": "秋田県議会 議員紹介",
    "url": "https://pref.akita.gsl-service.net/doc/2018042300017/"
   },
   {
-   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "fetchedAt": "2026-10-11T12:02:12.061Z",
    "name": "秋田県議会 定例会・臨時会の概要",
    "url": "https://pref.akita.gsl-service.net/doc/2018051000199/"
   },
   {
-   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "fetchedAt": "2026-10-11T12:02:12.061Z",
    "name": "秋田県議会 定例会・臨時会の概要（過去分の一覧）",
    "url": "https://pref.akita.gsl-service.net/doc/2018051000205/"
   },
   {
-   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "fetchedAt": "2026-10-11T12:02:12.061Z",
+   "name": "秋田県議会 令和８年第２回定例会（９月議会） 各議員の表決状況",
+   "url": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/081007.pdf"
+  },
+  {
+   "fetchedAt": "2026-10-11T12:02:12.061Z",
    "name": "秋田県議会 令和８年第１回定例会（６月議会） 各議員の表決状況",
    "url": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/080703.pdf"
   },
   {
-   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "fetchedAt": "2026-10-11T12:02:12.061Z",
    "name": "秋田県議会 令和８年第１回定例会（６月議会） 各議員の表決状況",
    "url": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/080615.pdf"
   },
   {
-   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "fetchedAt": "2026-10-11T12:02:12.061Z",
    "name": "秋田県議会 令和８年第１回定例会（６月議会） 各議員の表決状況",
    "url": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/080609.pdf"
   },
   {
-   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "fetchedAt": "2026-10-11T12:02:12.061Z",
    "name": "秋田県議会 令和８年第１回定例会（２月議会） 各議員の表決状況",
    "url": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/080319.pdf"
   },
   {
-   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "fetchedAt": "2026-10-11T12:02:12.061Z",
    "name": "秋田県議会 令和８年第１回定例会（２月議会） 各議員の表決状況",
    "url": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/080227.pdf"
   },
   {
-   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "fetchedAt": "2026-10-11T12:02:12.061Z",
    "name": "秋田県議会 令和８年第１回定例会（２月議会） 各議員の表決状況",
    "url": "https://pref.akita.gsl-service.net/doc/2026021300064/file_contents/080213.pdf"
   },
   {
-   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "fetchedAt": "2026-10-11T12:02:12.061Z",
    "name": "秋田県議会 令和７年第２回定例会（１２月議会） 各議員の表決状況",
    "url": "https://pref.akita.gsl-service.net/doc/2025021700027/file_contents/071219.pdf"
   },
   {
-   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "fetchedAt": "2026-10-11T12:02:12.061Z",
    "name": "秋田県議会 令和７年第２回定例会（１２月議会） 各議員の表決状況",
    "url": "https://pref.akita.gsl-service.net/doc/2025021700027/file_contents/071208.pdf"
   },
   {
-   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "fetchedAt": "2026-10-11T12:02:12.061Z",
    "name": "秋田県議会 令和７年第２回定例会（１０月議会） 各議員の表決状況",
    "url": "https://pref.akita.gsl-service.net/doc/2025021700027/file_contents/071031.pdf"
   },
   {
-   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "fetchedAt": "2026-10-11T12:02:12.061Z",
    "name": "秋田県議会 令和７年第２回定例会（９月議会） 各議員の表決状況",
    "url": "https://pref.akita.gsl-service.net/doc/2025021700027/file_contents/071003.pdf"
   },
   {
-   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "fetchedAt": "2026-10-11T12:02:12.061Z",
    "name": "秋田県議会 令和７年第１回定例会（６月議会） 各議員の表決状況",
    "url": "https://pref.akita.gsl-service.net/doc/2025021700027/file_contents/070619.pdf"
   },
   {
-   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "fetchedAt": "2026-10-11T12:02:12.061Z",
    "name": "秋田県議会 令和７年第１回定例会（５月１４日） 各議員の表決状況",
    "url": "https://pref.akita.gsl-service.net/doc/2025021700027/file_contents/514.pdf"
   },
   {
-   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "fetchedAt": "2026-10-11T12:02:12.061Z",
    "name": "秋田県議会 令和７年第１回定例会（４月３０日議会） 各議員の表決状況",
    "url": "https://pref.akita.gsl-service.net/doc/2025021700027/file_contents/430.pdf"
   },
   {
-   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "fetchedAt": "2026-10-11T12:02:12.061Z",
    "name": "秋田県議会 令和７年第１回定例会（２月議会） 各議員の表決状況",
    "url": "https://pref.akita.gsl-service.net/doc/2025021700027/file_contents/PDFR736.pdf"
   },
   {
-   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "fetchedAt": "2026-10-11T12:02:12.061Z",
    "name": "秋田県議会 令和７年第１回定例会（２月議会） 各議員の表決状況",
    "url": "https://pref.akita.gsl-service.net/doc/2025021700027/file_contents/PDFR7217.pdf"
   },
   {
-   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "fetchedAt": "2026-10-11T12:02:12.061Z",
    "name": "秋田県議会 令和６年第２回定例会（１２月議会） 各議員の表決状況",
    "url": "https://pref.akita.gsl-service.net/_files/00089340/PDFR61220.pdf"
   },
   {
-   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "fetchedAt": "2026-10-11T12:02:12.061Z",
    "name": "秋田県議会 令和６年第２回定例会（１０月議会） 各議員の表決状況",
    "url": "https://pref.akita.gsl-service.net/_files/00088350/hyoketsu_R061101.pdf"
   },
   {
-   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "fetchedAt": "2026-10-11T12:02:12.061Z",
    "name": "秋田県議会 令和６年第２回定例会（９月議会） 各議員の表決状況",
    "url": "https://pref.akita.gsl-service.net/_files/00087933/hyoketsu_R061004.pdf"
   },
   {
-   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "fetchedAt": "2026-10-11T12:02:12.061Z",
    "name": "秋田県議会 令和６年第１回定例会（６月議会） 各議員の表決状況",
    "url": "https://pref.akita.gsl-service.net/_files/00086745/hyoketsu_R060705.pdf"
   },
   {
-   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "fetchedAt": "2026-10-11T12:02:12.061Z",
    "name": "秋田県議会 令和６年第１回定例会（２月議会） 各議員の表決状況",
    "url": "https://pref.akita.gsl-service.net/_files/00084079/060319hyoketsu.pdf"
   },
   {
-   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "fetchedAt": "2026-10-11T12:02:12.061Z",
    "name": "秋田県議会 令和６年第１回定例会（２月議会） 各議員の表決状況",
    "url": "https://pref.akita.gsl-service.net/_files/00083799/R060228hyoketsu.pdf"
   },
   {
-   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "fetchedAt": "2026-10-11T12:02:12.061Z",
    "name": "秋田県議会 令和６年第１回定例会（２月議会） 各議員の表決状況",
    "url": "https://pref.akita.gsl-service.net/_files/00083737/060220hyoketsu.pdf"
   },
   {
-   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "fetchedAt": "2026-10-11T12:02:12.061Z",
    "name": "秋田県議会 令和５年第３回定例会（１２月議会） 各議員の表決状況",
    "url": "https://pref.akita.gsl-service.net/_files/00082877/051222hyouketsu.pdf"
   },
   {
-   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "fetchedAt": "2026-10-11T12:02:12.061Z",
    "name": "秋田県議会 令和５年第３回定例会（１０月議会） 各議員の表決状況",
    "url": "https://pref.akita.gsl-service.net/_files/00081696/051102hyoketsu.pdf"
   },
   {
-   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "fetchedAt": "2026-10-11T12:02:12.061Z",
    "name": "秋田県議会 令和５年第３回定例会（９月議会） 各議員の表決状況",
    "url": "https://pref.akita.gsl-service.net/_files/00081283/051005hyoketsu.pdf"
   },
   {
-   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "fetchedAt": "2026-10-11T12:02:12.061Z",
    "name": "秋田県議会 令和５年第３回定例会（９月議会） 各議員の表決状況",
    "url": "https://pref.akita.gsl-service.net/_files/00080606/050911hyouketsu.pdf"
   },
   {
-   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "fetchedAt": "2026-10-11T12:02:12.061Z",
    "name": "秋田県議会 令和５年第１回臨時会 各議員の表決状況",
    "url": "https://pref.akita.gsl-service.net/_files/00079914/050728hyouketsu.pdf"
   },
   {
-   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "fetchedAt": "2026-10-11T12:02:12.061Z",
    "name": "秋田県議会 令和５年第２回定例会（６月議会） 各議員の表決状況",
    "url": "https://pref.akita.gsl-service.net/_files/00079501/050706hyoketsu.pdf"
   },
   {
-   "fetchedAt": "2026-09-20T21:55:17.621Z",
+   "fetchedAt": "2026-10-11T12:02:12.061Z",
    "name": "秋田県議会 令和５年第２回定例会（５月議会） 各議員の表決状況",
    "url": "https://pref.akita.gsl-service.net/_files/00076586/05516hyoketsu.pdf"
   }
