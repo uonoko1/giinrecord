@@ -28,6 +28,26 @@
  ],
  "timeline": [
   {
+   "cabinet": 105,
+   "date": "2026-09-18",
+   "effectiveDateText": "令和８年９月１８日",
+   "estimated": false,
+   "kind": "cabinetRole",
+   "role": "兼内閣府副大臣",
+   "section": "副大臣",
+   "sourceUrl": "https://www.kantei.go.jp/jp/105/meibo/fukudaijin.html"
+  },
+  {
+   "cabinet": 105,
+   "date": "2026-09-18",
+   "effectiveDateText": "令和８年９月１８日",
+   "estimated": false,
+   "kind": "cabinetRole",
+   "role": "経済産業副大臣",
+   "section": "副大臣",
+   "sourceUrl": "https://www.kantei.go.jp/jp/105/meibo/fukudaijin.html"
+  },
+  {
    "date": "2026-07-24",
    "groupValue": "反対",
    "kind": "vote",

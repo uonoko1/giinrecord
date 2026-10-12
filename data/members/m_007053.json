@@ -28,6 +28,56 @@
  ],
  "timeline": [
   {
+   "cabinet": 105,
+   "date": "2026-09-17",
+   "effectiveDateText": "令和８年９月１７日発足",
+   "estimated": false,
+   "kind": "cabinetRole",
+   "role": "コンテンツ戦略担当",
+   "section": "閣僚等",
+   "sourceUrl": "https://www.kantei.go.jp/jp/105/meibo/index.html"
+  },
+  {
+   "cabinet": 105,
+   "date": "2026-09-17",
+   "effectiveDateText": "令和８年９月１７日発足",
+   "estimated": false,
+   "kind": "cabinetRole",
+   "role": "サイバー安全保障担当",
+   "section": "閣僚等",
+   "sourceUrl": "https://www.kantei.go.jp/jp/105/meibo/index.html"
+  },
+  {
+   "cabinet": 105,
+   "date": "2026-09-17",
+   "effectiveDateText": "令和８年９月１７日発足",
+   "estimated": false,
+   "kind": "cabinetRole",
+   "role": "デジタル大臣",
+   "section": "閣僚等",
+   "sourceUrl": "https://www.kantei.go.jp/jp/105/meibo/index.html"
+  },
+  {
+   "cabinet": 105,
+   "date": "2026-09-17",
+   "effectiveDateText": "令和８年９月１７日発足",
+   "estimated": false,
+   "kind": "cabinetRole",
+   "role": "内閣府特命担当大臣（知的財産戦略　科学技術政策　宇宙政策　人工知能戦略　海洋政策　サイバー安全保障）",
+   "section": "閣僚等",
+   "sourceUrl": "https://www.kantei.go.jp/jp/105/meibo/index.html"
+  },
+  {
+   "cabinet": 105,
+   "date": "2026-09-17",
+   "effectiveDateText": "令和８年９月１７日発足",
+   "estimated": false,
+   "kind": "cabinetRole",
+   "role": "ＡＩ・デジタル改革推進担当",
+   "section": "閣僚等",
+   "sourceUrl": "https://www.kantei.go.jp/jp/105/meibo/index.html"
+  },
+  {
    "date": "2026-07-24",
    "groupValue": "反対",
    "kind": "vote",

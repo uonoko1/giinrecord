@@ -19,6 +19,46 @@
  ],
  "timeline": [
   {
+   "cabinet": 105,
+   "date": "2026-09-17",
+   "effectiveDateText": "令和８年９月１７日発足",
+   "estimated": false,
+   "kind": "cabinetRole",
+   "role": "内閣府特命担当大臣（経済安全保障）",
+   "section": "閣僚等",
+   "sourceUrl": "https://www.kantei.go.jp/jp/105/meibo/index.html"
+  },
+  {
+   "cabinet": 105,
+   "date": "2026-09-17",
+   "effectiveDateText": "令和８年９月１７日発足",
+   "estimated": false,
+   "kind": "cabinetRole",
+   "role": "外国人との秩序ある共生社会推進担当",
+   "section": "閣僚等",
+   "sourceUrl": "https://www.kantei.go.jp/jp/105/meibo/index.html"
+  },
+  {
+   "cabinet": 105,
+   "date": "2026-09-17",
+   "effectiveDateText": "令和８年９月１７日発足",
+   "estimated": false,
+   "kind": "cabinetRole",
+   "role": "感染症危機管理担当",
+   "section": "閣僚等",
+   "sourceUrl": "https://www.kantei.go.jp/jp/105/meibo/index.html"
+  },
+  {
+   "cabinet": 105,
+   "date": "2026-09-17",
+   "effectiveDateText": "令和８年９月１７日発足",
+   "estimated": false,
+   "kind": "cabinetRole",
+   "role": "経済安全保障担当",
+   "section": "閣僚等",
+   "sourceUrl": "https://www.kantei.go.jp/jp/105/meibo/index.html"
+  },
+  {
    "date": "2026-07-24",
    "groupValue": "反対",
    "kind": "vote",

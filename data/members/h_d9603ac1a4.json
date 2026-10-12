@@ -17,6 +17,46 @@
  ],
  "timeline": [
   {
+   "cabinet": 105,
+   "date": "2026-09-17",
+   "effectiveDateText": "令和８年９月１７日発足",
+   "estimated": false,
+   "kind": "cabinetRole",
+   "role": "内閣府特命担当大臣（沖縄及び北方対策　消費者及び食品安全　アイヌ施策）",
+   "section": "閣僚等",
+   "sourceUrl": "https://www.kantei.go.jp/jp/105/meibo/index.html"
+  },
+  {
+   "cabinet": 105,
+   "date": "2026-09-17",
+   "effectiveDateText": "令和８年９月１７日発足",
+   "estimated": false,
+   "kind": "cabinetRole",
+   "role": "国家公安委員会委員長",
+   "section": "閣僚等",
+   "sourceUrl": "https://www.kantei.go.jp/jp/105/meibo/index.html"
+  },
+  {
+   "cabinet": 105,
+   "date": "2026-09-17",
+   "effectiveDateText": "令和８年９月１７日発足",
+   "estimated": false,
+   "kind": "cabinetRole",
+   "role": "領土問題担当",
+   "section": "閣僚等",
+   "sourceUrl": "https://www.kantei.go.jp/jp/105/meibo/index.html"
+  },
+  {
+   "cabinet": 105,
+   "date": "2026-09-17",
+   "effectiveDateText": "令和８年９月１７日発足",
+   "estimated": false,
+   "kind": "cabinetRole",
+   "role": "ＣＢＲＮＥテロ対策担当",
+   "section": "閣僚等",
+   "sourceUrl": "https://www.kantei.go.jp/jp/105/meibo/index.html"
+  },
+  {
    "billId": "221-衆法-38",
    "date": "2026-07-22",
    "estimated": true,

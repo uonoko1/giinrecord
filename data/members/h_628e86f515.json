@@ -17,6 +17,16 @@
  ],
  "timeline": [
   {
+   "cabinet": 105,
+   "date": "2026-09-17",
+   "effectiveDateText": "令和８年９月１７日発足",
+   "estimated": false,
+   "kind": "cabinetRole",
+   "role": "防衛大臣",
+   "section": "閣僚等",
+   "sourceUrl": "https://www.kantei.go.jp/jp/105/meibo/index.html"
+  },
+  {
    "billId": "221-衆法-38",
    "date": "2026-07-22",
    "estimated": true,
