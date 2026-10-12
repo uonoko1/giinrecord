@@ -778,6 +778,8 @@ const DEPLOY_SUBJECTS_PINNED = [
   "deploy/monitor/deploy-started.sh",
   "deploy/monitor/environment-protection-report.sh",
   "deploy/monitor/environment-protection.sh",
+  // #1286: 日次 ETL の連続失敗（機構）を見る。**並びは ASCII 昇順**（en < et）
+  "deploy/monitor/etl-streak.sh",
   "deploy/monitor/health.sh",
   "deploy/monitor/logrotate.conf",
   "deploy/monitor/probe.sh",
@@ -863,6 +865,8 @@ const SUBJECT_OWNERS: Record<string, string> = {
   "deploy/monitor/run.sh": "monitor-probe.test.sh",
   // #1185: probe/report/run と同じテストが守る（1 行形式も Issue の開閉も同じ仕組みに乗っている）
   "deploy/monitor/deploy-started.sh": "monitor-probe.test.sh",
+  // #1286: 同じテストが守る（1 行形式も Issue の開閉も同じ仕組みに乗っている）
+  "deploy/monitor/etl-streak.sh": "monitor-probe.test.sh",
   "deploy/monitor/security-alerts-report.sh": "security-alerts-report.test.sh",
   "deploy/monitor/security-alerts.sh": "security-alerts.test.sh",
   "deploy/monitor/setup.sh": "monitor-setup.test.sh",
@@ -897,6 +901,8 @@ const SUBJECT_OWNERS_PINNED: Record<string, string> = {
   "deploy/monitor/run.sh": "monitor-probe.test.sh",
   // #1185: probe/report/run と同じテストが守る（1 行形式も Issue の開閉も同じ仕組みに乗っている）
   "deploy/monitor/deploy-started.sh": "monitor-probe.test.sh",
+  // #1286: 同じテストが守る（1 行形式も Issue の開閉も同じ仕組みに乗っている）
+  "deploy/monitor/etl-streak.sh": "monitor-probe.test.sh",
   "deploy/monitor/security-alerts-report.sh": "security-alerts-report.test.sh",
   "deploy/monitor/security-alerts.sh": "security-alerts.test.sh",
   "deploy/monitor/setup.sh": "monitor-setup.test.sh",
