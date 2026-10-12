@@ -17,6 +17,16 @@
  ],
  "timeline": [
   {
+   "cabinet": 105,
+   "date": "2026-09-18",
+   "effectiveDateText": "令和８年９月１８日",
+   "estimated": false,
+   "kind": "cabinetRole",
+   "role": "環境副大臣",
+   "section": "副大臣",
+   "sourceUrl": "https://www.kantei.go.jp/jp/105/meibo/fukudaijin.html"
+  },
+  {
    "billId": "221-衆法-38",
    "date": "2026-07-22",
    "estimated": true,

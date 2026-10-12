@@ -17,6 +17,46 @@
  ],
  "timeline": [
   {
+   "cabinet": 105,
+   "date": "2026-09-17",
+   "effectiveDateText": "令和８年９月１７日発足",
+   "estimated": false,
+   "kind": "cabinetRole",
+   "role": "内閣府特命担当大臣（地方創生）",
+   "section": "閣僚等",
+   "sourceUrl": "https://www.kantei.go.jp/jp/105/meibo/index.html"
+  },
+  {
+   "cabinet": 105,
+   "date": "2026-09-17",
+   "effectiveDateText": "令和８年９月１７日発足",
+   "estimated": false,
+   "kind": "cabinetRole",
+   "role": "副首都整備等推進担当",
+   "section": "閣僚等",
+   "sourceUrl": "https://www.kantei.go.jp/jp/105/meibo/index.html"
+  },
+  {
+   "cabinet": 105,
+   "date": "2026-09-17",
+   "effectiveDateText": "令和８年９月１７日発足",
+   "estimated": false,
+   "kind": "cabinetRole",
+   "role": "地域未来戦略担当",
+   "section": "閣僚等",
+   "sourceUrl": "https://www.kantei.go.jp/jp/105/meibo/index.html"
+  },
+  {
+   "cabinet": 105,
+   "date": "2026-09-17",
+   "effectiveDateText": "令和８年９月１７日発足",
+   "estimated": false,
+   "kind": "cabinetRole",
+   "role": "総務大臣",
+   "section": "閣僚等",
+   "sourceUrl": "https://www.kantei.go.jp/jp/105/meibo/index.html"
+  },
+  {
    "billId": "221-衆法-38",
    "date": "2026-07-22",
    "estimated": true,

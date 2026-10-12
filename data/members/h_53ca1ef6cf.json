@@ -17,6 +17,26 @@
  ],
  "timeline": [
   {
+   "cabinet": 105,
+   "date": "2026-09-18",
+   "effectiveDateText": "令和８年９月１８日",
+   "estimated": false,
+   "kind": "cabinetRole",
+   "role": "兼内閣府大臣政務官",
+   "section": "大臣政務官",
+   "sourceUrl": "https://www.kantei.go.jp/jp/105/meibo/seimukan.html"
+  },
+  {
+   "cabinet": 105,
+   "date": "2026-09-18",
+   "effectiveDateText": "令和８年９月１８日",
+   "estimated": false,
+   "kind": "cabinetRole",
+   "role": "経済産業大臣政務官",
+   "section": "大臣政務官",
+   "sourceUrl": "https://www.kantei.go.jp/jp/105/meibo/seimukan.html"
+  },
+  {
    "billId": "221-衆法-38",
    "date": "2026-07-22",
    "estimated": true,
