@@ -17,6 +17,19 @@
  ],
  "timeline": [
   {
+   "committee": "沖縄及び北方問題に関する特別委員会",
+   "date": "2026-07-30",
+   "estimated": false,
+   "firstDate": "2026-07-30",
+   "kind": "committeeRole",
+   "lastDate": "2026-07-30",
+   "meetingId": "122103895X00520260730_000",
+   "meetings": 1,
+   "role": "委員",
+   "session": 221,
+   "sourceUrl": "https://kokkai.ndl.go.jp/txt/122103895X00520260730/0"
+  },
+  {
    "billId": "221-衆法-38",
    "date": "2026-07-22",
    "estimated": true,
