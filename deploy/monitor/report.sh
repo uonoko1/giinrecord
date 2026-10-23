@@ -46,7 +46,12 @@ SUFFIX_SEP=" — "
 
 # The open Issue with this title (the search is a substring match, so filter again). Since #1185 the title may
 # carry the escalation suffix, so the comparison strips it: `<title>` and `<title> — 9h 継続` are the SAME Issue.
-# Returns one TSV line "<number>\t<createdAt>\t<labels,…>\t<comments>", or nothing.
+# Returns one TSV line "<number>\t<createdAt>\t<labels,…>\t<comments>\t<title as it stands now>", or nothing.
+# #1286: **いまの題そのものも返す。** 題に入っている経過（`— 9h 継続`）を**読んでから**
+# 「更新するか」を決めるので、題を見ずに決めることはできない。
+# **欄は末尾に足す**（既存の `cut -f1..4` の位置を動かさないため）。
+# **題にタブは入らない**（GitHub の Issue の題は改行もタブも持てない。`[monitor] <env>: <check>` は
+# この repo が自分で作る文字列なので、なおさら）。
 # **`// []` / `// ""` が要る**: `.labels[]` は labels が null / 欠けていると
 # `Cannot iterate over null` で jq 自体が落ち、**`open_issue` が空を返す**。
 # **空は「開いている Issue が無い」と同じ形なので、report.sh は新しい Issue を作る**
@@ -58,12 +63,12 @@ open_issue() {
     --json number,title,createdAt,labels,comments \
     --jq 'map(select((.title | split($ENV.SUFFIX_SEP) | .[0]) == $ENV.TITLE))
           | .[0] // empty
-          | [(.number|tostring), (.createdAt // ""), ([(.labels // [])[].name] | join(",")), (((.comments // []) | length)|tostring)]
+          | [(.number|tostring), (.createdAt // ""), ([(.labels // [])[].name] | join(",")), (((.comments // []) | length)|tostring), (.title // "")]
           | @tsv'
 }
 
 ROW=$(open_issue)
-NUM=''; CREATED=''; LABELS=''; NCOMMENTS=''
+NUM=''; CREATED=''; LABELS=''; NCOMMENTS=''; TITLE_FULL=''
 # **`IFS=$'\t' read` では読まない**（#1198 受け入れ条件 3）。**タブは「IFS の空白文字」なので、
 # 連続するタブが 1 つに畳まれ、空の欄が消えて以降がずれる。** 実測（bash 5.2 / 2026-10-05）:
 #     ROW=$'5\t2026-10-01T00:00:00Z\t\t4'            ← labels が空の形
@@ -77,6 +82,8 @@ if [ -n "$ROW" ]; then
   CREATED=$(printf '%s' "$ROW" | cut -f2)
   LABELS=$(printf '%s' "$ROW" | cut -f3)
   NCOMMENTS=$(printf '%s' "$ROW" | cut -f4)
+  # #1286: いまの題（接尾辞つきのまま）。**`cut -f5` なので上の 4 欄の位置は動いていない。**
+  TITLE_FULL=$(printf '%s' "$ROW" | cut -f5)
 fi
 
 # elapsed_hours <iso8601> → whole hours since then, or empty when the timestamp is unusable.
@@ -126,9 +133,34 @@ case "$STATUS" in
       gh issue comment "$NUM" --body-file "$TMPC"
       echo "report: #$NUM still failing${HOURS:+ (${HOURS}h)} for '$TITLE'"
 
-      # **扱いを変える**（閾値超え・1 回だけ）
+      # **扱いを変える**（閾値超え）
       case ",$LABELS," in
-        *",$ESC_LABEL,"*) ;;   # すでに escalated。改題も再ラベルもしない（通知で埋もれさせない）
+        *",$ESC_LABEL,"*)
+          # **すでに escalated。ラベルは足し直さない**が、**題の経過は更新しうる**（#1286）。
+          #
+          # **なぜ更新が要るか（実測。#1286 で PO 自身が踏んだ）**:
+          #   #1221 は **111.2h 続いていたのに、題は `— 9h 継続` のまま**だった
+          #   （`createdAt 2026-10-06T20:33:20Z`、最後の報告 `2026-10-11T07:19:56Z`、
+          #   その時点で既に **106.8h**。2026-10-11T11:40Z 現在 111.2h）。
+          #   **改題を 1 回だけにした #1185 の判断で、題の数字は最初の escalate 時点で凍る。**
+          #   **PO は `label:monitor` の一覧を題で読んで「9h なら既知の古いもの」と流し、
+          #   106 時間・26 回鳴っていた本物を 4 日見落とした。**
+          #   **題が通算を表していないので、題では重さが分からなかった。**
+          #
+          # **それでも 10 分ごとに改題しない**（#1185 の「通知で埋もれると読まれなくなる」は正しい）。
+          # **倍々でだけ改題する**: 題の数字が**いまの経過の半分未満**になったときだけ書き換える。
+          #   → 改題の回数は経過に対して **log2** で増える。6h から始めて 1 年続いても
+          #     **6→12→24→48→96→192→384→768→1536h の 8 回**で、**10 分ごとなら 52,560 回**である。
+          #   **「凍る」と「毎回鳴る」の間を、回数の上限が言える形で取る。**
+          OLD_H=''
+          case "$TITLE_FULL" in
+            *"$SUFFIX_SEP"*) OLD_H=${TITLE_FULL##*"$SUFFIX_SEP"}; OLD_H=${OLD_H%%h 継続} ;;
+          esac
+          # **数字として読めなければ更新しない**（人が題を編集した形で暴れない）。
+          if [ -n "$HOURS" ] && [[ "$OLD_H" =~ ^[0-9]+$ ]] && [ "$((OLD_H * 2))" -le "$HOURS" ]; then
+            gh issue edit "$NUM" --title "${TITLE}${SUFFIX_SEP}${HOURS}h 継続"
+            echo "report: #$NUM title refreshed (${OLD_H}h → ${HOURS}h)"
+          fi ;;
         *)
           if [ -n "$HOURS" ] && [ "$HOURS" -ge "$ESC_HOURS" ]; then
             gh label create "$ESC_LABEL" --force --color B60205 \
