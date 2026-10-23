@@ -529,13 +529,28 @@ t_report_repeat_comments_elapsed() {
 # **Issue 側には出ていなかった**（#1185 の受け入れ条件 1）。
 t_report_repeat_body_has_elapsed_hours() {
   fresh r_elapsed_body
-  echo "fetchedAt 93h old (limit 48h)" > "$P/body"
+  # **実物の形で書く**（`run.sh` が出す `- reason: \`…\``。[[fixtures-and-prose-drift-from-reality]]）
+  # ——**接頭辞の無い本文では抽出が空になり、理由の行を検査できない。**
+  # shellcheck disable=SC2016  # バックティックは run.sh が本文に書くリテラルで、展開させない
+  printf -- '- reason: `fetchedAt 93h old (limit 48h)`\n' > "$P/body"
   H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(HOURS_AGO 7)\",\"labels\":[{\"name\":\"monitor\"}],\"comments\":[{},{},{},{}]}]" \
     run_report "[monitor] production: data" fail "$P/body" || fail "exit $? $(cat "$P/out")"
   [ -f "$LOG.comment" ] || { fail "コメント本文が採れていない"; return; }
   local c; c=$(cat "$LOG.comment")
   assert_contains "$c" "7h" "経過時間が時間で出る"
-  assert_contains "$c" "93h old" "いまの理由も出る（1 回目の理由のままにしない）"
+  # **`assert_contains "$c" "93h old"` では「理由が出ている」を言えない**（#1228 の受け入れ条件 3 で数えた）。
+  # **本文は丸ごと引用されるので、`93h old` は引用のほうに必ず在る**
+  # ——**実測（2026-10-08）: 理由の行を丸ごと消す変異を当てても、この 1 本は緑のままだった。**
+  # **だから行を 1 本取り出して全体で突き合わせる**（隣の 2 本と同じ形）。
+  local reason_line="" line; local n=0
+  while IFS= read -r line; do
+    [[ "$line" == "- いまの理由: "* ]] || continue
+    reason_line="$line"; n=$((n+1))
+  done <<<"$c"
+  assert_eq 1 "$n" "「いまの理由」の行はコメントにちょうど 1 本"
+  # shellcheck disable=SC2016  # バックティックは report.sh が本文に書くリテラルで、展開させない
+  assert_eq '- いまの理由: `fetchedAt 93h old (limit 48h)`' \
+    "$reason_line" "いまの理由は本文の reason 行と一字一句同じ（1 回目の理由のままにしない）"
 }
 # **閾値を越えたら扱いが変わること**（受け入れ条件 1）。選んだのは
 #   (a) タイトルの先頭に経過を出す  (b) ラベル `escalated` を足す
@@ -596,6 +611,52 @@ t_report_ok_removes_escalated_label() {
   local log; log=$(cat "$LOG")
   assert_contains "$log" "gh issue close 5" "閉じる"
   assert_contains "$log" "--remove-label" "escalated を外す"
+}
+# **ラベルの判定は要素の完全一致である**（#1224）。**`report.sh` は `,` で囲んで突き合わせている:**
+#
+#     case ",$LABELS," in
+#       *",$ESC_LABEL,"*) ;;
+#
+# **区切りを落とすと部分一致になり、`escalated` を部分文字列として含む別のラベルが
+# 「すでに escalated」と読まれて、escalation が永久に抑止される。**
+# **止まり方が静かである**ことが害の本体で、**「escalate しなかった」はログに出ない**
+# （`report: #N escalated` が出ないだけ）。**赤くならないので気づく契機が無い。**
+# **#1172 が 93 時間鳴り続けたのに誰も見なかった事故**と同じ型に戻る。
+#
+# **実測（2026-10-08・基点 272cb286）**: 区切りを落とす変異（subject と pattern の両方）を当てると
+# **84 passed / 0 failed で素通りした**。**この 2 本がその変異を殺す。**
+#
+# **fixture の `de-escalated` は実在しなくてよい**——**守っているのは
+# 「部分一致にしない」という性質**で、特定のラベル名ではない。
+# `report.sh:25` が **「復旧時は escalated を外してから閉じる」** と書いているので、
+# **`de-escalated` のような名前が将来入る余地は在る。**
+t_report_escalates_when_a_label_merely_contains_escalated() {
+  fresh r_esc_substr
+  echo "body" > "$P/body"
+  MONITOR_ESCALATE_HOURS=6 \
+  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(HOURS_AGO 9)\",\"labels\":[{\"name\":\"monitor\"},{\"name\":\"de-escalated\"}],\"comments\":[{},{}]}]" \
+    run_report "[monitor] production: data" fail "$P/body" || fail "exit $? $(cat "$P/out")"
+  local log; log=$(cat "$LOG")
+  # **`de-escalated` は `escalated` では無い**ので、**抑止されず escalate すること。**
+  assert_contains "$log" "gh issue edit 5" "**escalated を部分文字列として含む別ラベルは抑止しない（要素の完全一致）**"
+  assert_contains "$log" "--add-label" "ラベルが足される"
+  assert_contains "$log" "9h" "タイトルに経過が入る（一覧で見える）"
+  # **抑止されたときの形を名指しで否定する**（`gh issue edit` が出ない＝黙って通り過ぎた形）
+  assert_contains "$(cat "$P/out")" "escalated (9h >= 6h)" "**escalate したことがログに出る（黙って通り過ぎていない）**"
+}
+# **対の側（#1224 は fail 側だけを名指しするが、同じ形は `ok` 側にも在る）。**
+# **`report.sh` の `ok` 側の `case` も同じ区切りを持っている**——
+# [[fix-one-side-check-the-mirror]]: **対称性は実装の性質で、検査の性質ではない。**
+# **こちらが部分一致になると、`de-escalated` だけが付いた Issue から
+# `escalated` を外そうとする**（`--remove-label escalated` は**付いていないラベルを外す**ので、
+# **gh が 422 を返して `set -e` で死に、Issue が閉じられなくなる**）。
+t_report_ok_does_not_touch_labels_that_merely_contain_escalated() {
+  fresh r_esc_substr_ok
+  H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: data\",\"createdAt\":\"$(HOURS_AGO 9)\",\"labels\":[{\"name\":\"monitor\"},{\"name\":\"de-escalated\"}]}]" \
+    run_report "[monitor] production: data" ok || fail "exit $? $(cat "$P/out")"
+  local log; log=$(cat "$LOG")
+  assert_contains "$log" "gh issue close 5" "閉じる"
+  assert_not_contains "$log" "--remove-label" "**付いていない escalated を外そうとしない（要素の完全一致）**"
 }
 # 本文にサーバー情報を入れない（OSS）
 t_report_escalation_comment_has_no_paths() {
@@ -1188,7 +1249,27 @@ External check **tls** of **production** (https://giinrecord.jp) **produced no v
 BODY
   H_OPEN="[{\"number\":5,\"title\":\"[monitor] production: tls\",\"createdAt\":\"$(HOURS_AGO 2)\",\"labels\":[{\"name\":\"monitor\"}],\"comments\":[{}]}]" \
     run_report "[monitor] production: tls" fail "$P/body" || fail "exit $? $(cat "$P/out")"
-  assert_contains "$(cat "$LOG.comment")" "judgement line missing" "no verdict の本文からも理由を取り出せる"
+  [ -f "$LOG.comment" ] || { fail "コメント本文が採れていない"; return; }
+  local c; c=$(cat "$LOG.comment")
+  # **初版はここが `assert_contains "$c" "judgement line missing"` の 1 行だった。恒真だった**（#1228）。
+  # **原因は本文の引用（`sed 's/^/> /' "$BODY"`）**——
+  # **抽出が何をしても、引用のほうに文字列が残るので部分一致は必ず通る。**
+  # **実測（2026-10-07、基点 c786e331）: 変異 4 件すべてが素通りした**
+  # （`s/^- reason: //p` → `s/^- //p` / ラベルの改名 2 通り / **理由の行を丸ごと削除**）。
+  # **本文の引用は仕様なので消さない**（`report.sh:19`: 一覧で区別が付かないと #1172 の形に戻る）。
+  # **だから隣の `t_report_reason_comes_from_the_real_body_shape` と同じ形にする**:
+  # **部分一致をやめ、行を 1 本取り出して全体で突き合わせ、本数を数える。**
+  # **パイプを使わない**（#527: `pipefail` のもとでパイプ末尾の早期終了が書き手を SIGPIPE で殺す）。
+  local reason_line="" line; local n=0
+  while IFS= read -r line; do
+    [[ "$line" == "- いまの理由: "* ]] || continue
+    reason_line="$line"; n=$((n+1))
+  done <<<"$c"
+  # **1 本だけ在ること**（行が増える変異・消える変異の両方を見る。**削除の変異はここで死ぬ**）
+  assert_eq 1 "$n" "「いまの理由」の行はコメントにちょうど 1 本"
+  # shellcheck disable=SC2016  # バックティックは report.sh が本文に書くリテラルで、展開させない
+  assert_eq '- いまの理由: `judgement line missing (the check did not report ok or fail)`' \
+    "$reason_line" "理由の行は no verdict の本文の reason 行と一字一句同じ（接頭辞も余りも付かない）"
 }
 # **実物とテストの接頭辞がずれたら落ちること**を、run.sh 側からも固定する。
 # **上の 2 つは「report.sh は `- reason: ` を読める」を言っている。**
@@ -1430,6 +1511,8 @@ test_case "report: 閾値の手前では扱いを変えない（でも経過は�
 test_case "report: 一度 escalated にしたら毎 round 改題しない（通知で埋もれさせない）" t_report_escalates_only_once
 test_case "report: 改題した後も同名検索が効き、Issue が増殖しない" t_report_finds_the_issue_after_the_title_changed
 test_case "report: 復旧時は escalated を外して閉じる（次の障害が escalated で始まらない）" t_report_ok_removes_escalated_label
+test_case "report: escalated を部分文字列として含むラベルでは抑止しない（要素の完全一致・#1224）" t_report_escalates_when_a_label_merely_contains_escalated
+test_case "report: ok 側も部分一致にしない（付いていない escalated を外さない・#1224 対の側）" t_report_ok_does_not_touch_labels_that_merely_contain_escalated
 test_case "report: 継続コメントにローカルパスを出さない" t_report_escalation_comment_has_no_paths
 test_case "probe: 本番が古く main も古ければ『main も古い』（ETL 側・#1185）" t_probe_data_says_main_is_stale_too
 test_case "probe: 本番が古く main が新しければ『main は新しい』（deploy 側・#1185）" t_probe_data_says_main_is_fresh_but_undeployed
