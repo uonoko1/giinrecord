@@ -44,10 +44,52 @@ name: Monitor
 #
 # Runbook: docs/ops/monitoring.md. Issue bodies contain the environment, the check, the reason and a link to the run —
 # never server details.
+# Issue #1286 — **鳴り止んだのに Issue が閉じなかった。** #1221 は probe が ok に戻ったあとも OPEN のままだった。
+#   **原因は「閉じるコードが無い」ではない**（`report.sh` の `ok` 側は在るし、`open_issue` も #1221 を
+#   正しく引く。**実測で確かめた**: 2026-10-11T11:3xZ に `gh issue list --label monitor --state open
+#   --search '"[monitor] production: data" in:title'` は **#1221 を返し**、`report.sh` の `--jq` を
+#   そのまま流すと `1221<TAB>2026-10-06T20:33:20Z<TAB>monitor,escalated<TAB>26` が出た）。
+#   **原因は「閉じる判定をする run が来ない」ことである。**
+#
+#   **実測（2026-10-11T11:40Z）**:
+#     `monitor.yml` の run 200 本（2026-09-21T05:32Z〜2026-10-11T08:40Z、**窓 483.1h**）
+#       → **0.41 run/h**。`*/10` の宣言は 6 run/h なので **実行率は約 1/15**。
+#       連続 run の間隔は **p50 126.5 分 / p90 322.6 分 / max 496.1 分**。
+#     さらに **1 run = 1 job** である（`*/10` は production、`7 * * * *` は staging を選ぶ）ので、
+#     **production の job が実際に走ったのは 156.4h で 31 回 = 0.20 回/h**
+#       → 間隔は **p50 321.1 分 / p90 412.7 分 / max 520.4 分**。
+#     **#1221 の最後の報告は 07:19:56Z で、そこから 4.4 時間 production の job は 1 度も走っていない。**
+#     （docs/ops/monitoring.md が #1185 で測った「実行率 8.2%」と同じ現象。**GitHub 側の話なので
+#     cron を細かくしても増えない**——`*/10` でこれなのだから、宣言を増やす方向に手当ては無い。）
+#
+#   **だから 2 つ足す。どちらも「走る回数を増やす」のではなく「走る機会を取りこぼさない」方向である**:
+#     1. **production を全ての firing で走らせる**（下の `if:` を外した）。`7 * * * *` の firing でも
+#        production を見る。**実測での効果**: 上の 60 run を母数に、production の間隔は
+#        **p50 321.1 → 143.0 分 / max 520.4 → 496.1 分**（31 回 → 60 回）。
+#        **max がほとんど動かないことが要点**で、**これ単体では「鳴り止んだらすぐ閉じる」にはならない。**
+#     2. **`deploy-data.yml` が終わったら即 1 周する**（`workflow_run`）。
+#        **`data` が ok に戻る原因はほぼこれである**——本番に新しいデータが載った瞬間に鳴り止む。
+#        **schedule を待たずに、原因の側から 1 周を起こす**ので、
+#        **「復旧したのに 5 時間 Issue が開いたまま」が構造的に無くなる。**
+#        `workflow_run` は**既定の branch（main）の workflow 定義で走る**ので、
+#        **この枝がマージされるまでは発火しない**（それ自体は #1286 の受け入れ条件
+#        「両側で示す」をコードのマージでは満たせない理由でもある）。
+#
+#   **なぜ「閉じる」が重要か**: 鳴り止んでも閉じないと、**次の本物の障害で新しい Issue が立たない**
+#   （`report.sh` は同じ題の open Issue が在れば作らない）。**気づく機会そのものが消える。**
 on:
   schedule:
-    - cron: "*/10 * * * *"   # production
+    # **どちらの firing でも production を見る**（#1286）。`7 * * * *` を残すのは staging のためだが、
+    # **production の job はもう cron を選り分けない**（下の `if:` を外した）。
+    - cron: "*/10 * * * *"   # production（実測の実行率は約 1/15。docs/ops/monitoring.md）
     - cron: "7 * * * *"      # staging (hourly, off the 10-minute grid so the two never race for the same Issue)
+  # #1286: **`data` が ok に戻る原因の側から 1 周を起こす。** 本番に新しいデータが載った直後に
+  # 1 周すれば、**鳴り止んだ Issue が schedule を待たずに閉じる。**
+  # **`types: [completed]`** にしてあるので、`deploy-data.yml` が成功でも失敗でも 1 周する
+  # ——**失敗したときこそ見たい**（失敗なら `data` は古いままなので、鳴り続けるのが正しい）。
+  workflow_run:
+    workflows: ["Deploy data"]
+    types: [completed]
   workflow_dispatch:
 permissions:
   contents: read
@@ -57,7 +99,11 @@ concurrency:
   cancel-in-progress: false
 jobs:
   production:
-    if: github.event_name != 'schedule' || github.event.schedule == '*/10 * * * *'
+    # #1286: **cron の選り分けをやめた。** `*/10` だけに紐づけていたので、
+    # **`7 * * * *` の firing では production を 1 度も見ておらず**（実測 60 run 中 29 run が
+    # staging 専用の firing だった）、**鳴り止んだことに気づく機会をその分だけ捨てていた。**
+    # **`workflow_run` と `workflow_dispatch` でも走る**（`github.event_name != 'schedule'` を
+    # 外しても同じだが、**条件そのものを消すほうが「どの firing でも走る」と読める**）。
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -87,9 +133,20 @@ jobs:
           PROBE_MAIN_META_URL: https://raw.githubusercontent.com/${{ github.repository }}/main/data/meta.json
           # #1185: `data/` が main に入ってから deploy が始まったかを見るための基点。
           MONITOR_DATA_COMMIT_AT: ${{ steps.datacommit.outputs.at }}
+          # #1286: **`etl` check を足す（production だけ）。** `data` が見ているのは**症状**
+          # （`fetchedAt` の古さ 48h）で、`etl` が見るのは**機構**（毎晩の run が N 晩連続で失敗）である。
+          # **実測で両者は食い違った**: 2026-10-11T11:18Z、ETL は 7 晩連続で失敗していたのに
+          # `fetchedAt` は 35h だったので `data` は正しく ok だった。
+          # **人が手で PR を運ぶほど `fetchedAt` は若返り、48h の窓はリセットされる。**
+          # **N のしきい値は `deploy/monitor/etl-streak.sh` の 1 行だけが持つ**（ここに書き写さない。#1264）。
+          MONITOR_ETL_STREAK: "1"
         run: bash deploy/monitor/run.sh production https://giinrecord.jp
   staging:
-    if: github.event_name != 'schedule' || github.event.schedule == '7 * * * *'
+    # #1286: **`workflow_run` では staging を見ない。** `deploy-data.yml` の完了で 1 周するのは
+    # **production の `data` が鳴り止んだことに気づくため**で、staging はその原因に関係しない。
+    # **`github.event_name != 'schedule'` のままにすると `workflow_run` でも走る**ので、
+    # **発火の種類を名指しする**（`schedule` の該当 cron と、手で起動したときだけ）。
+    if: (github.event_name == 'schedule' && github.event.schedule == '7 * * * *') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
