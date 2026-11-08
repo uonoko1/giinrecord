@@ -63,6 +63,10 @@ for line in io.open(sys.argv[1],encoding='utf-8'):
         # 直前に「Build」「ver」「v」などが在るか、周りに「バージョン」と書いてあれば版番号。
         ctx=body[max(0,body.find(m)-40):body.find(m)+len(m)+10]
         if re.search(r'(?i)(build|version|ver\.?|バージョン|ビルド|Adobe|DocuWorks|Acrobat)', ctx): continue
+        # 規格の節番号（4 階層、「PDF 32000-1 x.y.z.w」の形）。PR #998 の docblock 引用を公開 IPv4 として拾い、
+        # security.yml の週次が 2026-10-13 以降ずっと赤だった。規格名か「節/§」が周りに在れば節番号。
+        # ——節番号そのものをここに書くと forbidden-patterns の ip-address がこの行を拾う（上と同じ理由で書かない）。
+        if re.search(r'(?i)(PDF ?32000|ISO[ /-]?\d|§|節|Section|Sec\.)', ctx): continue
         print(f'{num}\t{m}\t{url}')
 PY
 
