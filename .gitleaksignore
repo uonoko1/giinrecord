@@ -1,14 +1,12 @@
-# 過去コミットに残る誤検知だけを抑止する。現在のフィクスチャは REDACTED 済みで、
-# 作業ツリーを素の default config でスキャンすると no leaks found（#216）。
+# 週次の全履歴スキャン（security.yml schedule）だけが拾う、過去コミットの誤検知。
 #
-# ここに残すのは main に既に固定された 7460628 の 4 件のみ。当該コミットはマージ済みで
-# 今後 squash され直すことがないため、Sprint 11 の「squash でハッシュが変わって無効化」
-# は再発しない（無効化していたのは、その時点でまだ PR 上にあったコミットを指していたため）。
-#
-# 新たな誤検知が出た場合はここに追記せず、まずフィクスチャ側の値をサニタイズすること。
-# gitleaks の allowlist は paths と regexes が AND ではなく OR で結合し、
-# paths を書いてもスコープを限定できないため使わない。
-7460628973edc886da1bd6688a6c8637d28724e0:packages/etl/test/fixtures/nara/18579.html:generic-api-key:468
-7460628973edc886da1bd6688a6c8637d28724e0:packages/etl/test/fixtures/nara/52534.html:generic-api-key:839
-7460628973edc886da1bd6688a6c8637d28724e0:packages/etl/test/fixtures/nara/p114001.html:generic-api-key:478
-7460628973edc886da1bd6688a6c8637d28724e0:packages/etl/test/fixtures/nara/p114029.html:generic-api-key:482
+# 奈良県議会サイトの公開ウィジェット token（web_inquiry/?token=…）。作業ツリーの fixtures は
+# #216 で REDACTED に置換済みだが、置換前の値は 2026-08-24 の e26230d8（main 上の squash 後の
+# ハッシュ。もう変わらない）に残っており、2026-10-13 以降の週次がこの 4 件で赤になっていた。
+# PR ごとの gitleaks（差分だけ）は通るので、PR の緑は週次の緑を意味しない。
+# .gitleaks.toml の方針どおり allowlist は使わない（paths と regexes が OR になる）。
+# fingerprint は main 上の commit を指すので squash で無効化しない。
+e26230d8957910be17911202d24fc6c9b8963e0b:packages/etl/test/fixtures/nara/18579.html:generic-api-key:468
+e26230d8957910be17911202d24fc6c9b8963e0b:packages/etl/test/fixtures/nara/52534.html:generic-api-key:839
+e26230d8957910be17911202d24fc6c9b8963e0b:packages/etl/test/fixtures/nara/p114001.html:generic-api-key:478
+e26230d8957910be17911202d24fc6c9b8963e0b:packages/etl/test/fixtures/nara/p114029.html:generic-api-key:482
