@@ -2,7 +2,7 @@
  "asOf": "2023-04-30",
  "assemblyId": "pref-31",
  "counts": {
-  "rollcalls": 572
+  "rollcalls": 542
  },
  "current": true,
  "district": "鳥取市選挙区",
@@ -20,6 +20,305 @@
   }
  ],
  "timeline": [
+  {
+   "date": "2026-10-13",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "同意",
+   "rollCallId": "pref-31-2026-09-20261013-知事提案-第10号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1431502/R8.9giketsukekka.pdf",
+   "title": "鳥取県公安委員会委員の任命について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-13",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "可決",
+   "rollCallId": "pref-31-2026-09-20261013-知事提案-第1号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1431502/R8.9giketsukekka.pdf",
+   "title": "令和８年度鳥取県一般会計補正予算（第２号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-13",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "可決",
+   "rollCallId": "pref-31-2026-09-20261013-知事提案-第2号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1431502/R8.9giketsukekka.pdf",
+   "title": "令和８年度鳥取県営電気事業会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-13",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "可決",
+   "rollCallId": "pref-31-2026-09-20261013-知事提案-第3号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1431502/R8.9giketsukekka.pdf",
+   "title": "令和８年度鳥取県営病院事業会計補正予算（第２号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-13",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "可決",
+   "rollCallId": "pref-31-2026-09-20261013-知事提案-第4号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1431502/R8.9giketsukekka.pdf",
+   "title": "鳥取県税条例及び特定地域等の振興を促進するための県税の課税の特例に関する条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-13",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "可決",
+   "rollCallId": "pref-31-2026-09-20261013-知事提案-第5号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1431502/R8.9giketsukekka.pdf",
+   "title": "鳥取県児童福祉施設に関する条例等の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-13",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "可決",
+   "rollCallId": "pref-31-2026-09-20261013-知事提案-第6号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1431502/R8.9giketsukekka.pdf",
+   "title": "損害賠償に係る和解及び損害賠償の額の決定について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-13",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "継続審査",
+   "rollCallId": "pref-31-2026-09-20261013-知事提案-第7号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1431502/R8.9giketsukekka.pdf",
+   "title": "令和７年度鳥取県天神川流域下水道事業会計決算の認定について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-13",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "継続審査",
+   "rollCallId": "pref-31-2026-09-20261013-知事提案-第8号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1431502/R8.9giketsukekka.pdf",
+   "title": "令和７年度鳥取県営企業決算の認定について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-13",
+   "kind": "localVote",
+   "method": "簡易",
+   "result": "継続審査",
+   "rollCallId": "pref-31-2026-09-20261013-知事提案-第9号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1431502/R8.9giketsukekka.pdf",
+   "title": "令和７年度鳥取県営病院事業決算の認定について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-13",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "可決",
+   "rollCallId": "pref-31-2026-09-20261013-議員提案-第1号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1431502/R8.9giketsukekka.pdf",
+   "title": "「特殊土壌地帯災害防除及び振興臨時措置法」の期限延長に関する意見書",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-13",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "可決",
+   "rollCallId": "pref-31-2026-09-20261013-議員提案-第2号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1431502/R8.9giketsukekka.pdf",
+   "title": "ドナーミルクの利用拡大を求める意見書",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-13",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "可決",
+   "rollCallId": "pref-31-2026-09-20261013-議員提案-第3号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1431502/R8.9giketsukekka.pdf",
+   "title": "「防災庁」発足を見据えた地方自治体との連携強化及び防災体制の抜本的強化を求める意見書",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-13",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "可決",
+   "rollCallId": "pref-31-2026-09-20261013-議員提案-第4号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1431502/R8.9giketsukekka.pdf",
+   "title": "自衛官への理解促進による社会的地位向上、処遇・勤務環境の改善、退職後支援の拡充を求める意見書",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-13",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "研究留保",
+   "rollCallId": "pref-31-2026-09-20261013-陳情-7年-11",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1431502/R8.9giketsukekka.pdf",
+   "title": "旧姓の通称使用の法制化を求める陳情",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-10-13",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "不採択",
+   "rollCallId": "pref-31-2026-09-20261013-陳情-8年-15",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1431502/R8.9giketsukekka.pdf",
+   "title": "『ＴＶアニメ「Ｒｅ：ゼロから始める異世界生活」４ｔｈ ｓｅａｓｏｎ』コラボレーション企画における広報物の表現及び県の対応について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-13",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "不採択",
+   "rollCallId": "pref-31-2026-09-20261013-陳情-8年-16",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1431502/R8.9giketsukekka.pdf",
+   "title": "島根原子力発電所２号機におけるプルサーマル発電に議会として反対の意思表明を求める陳情",
+   "vote": {
+    "legend": "棄権",
+    "raw": "棄"
+   }
+  },
+  {
+   "date": "2026-10-13",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "不採択",
+   "rollCallId": "pref-31-2026-09-20261013-陳情-8年-17",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1431502/R8.9giketsukekka.pdf",
+   "title": "鳥取県議会の政務活動費に係る利息の取扱いの適正化について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-13",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "不採択",
+   "rollCallId": "pref-31-2026-09-20261013-陳情-8年-18",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1431502/R8.9giketsukekka.pdf",
+   "title": "鳥取県議会議員等の選挙における選挙運動用自動車使用等に係る県費負担条例の改正について",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-10-13",
+   "kind": "localVote",
+   "method": "起立",
+   "result": "不採択",
+   "rollCallId": "pref-31-2026-09-20261013-陳情-8年-19",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1431502/R8.9giketsukekka.pdf",
+   "title": "非核３原則の堅持を求める意見書を提出するよう求める陳情",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
   {
    "date": "2026-06-29",
    "kind": "localVote",
@@ -7844,756 +8143,6 @@
    "sessionLabel": "令和6年2月定例会",
    "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1344176/R6-2_giketsukekka_0306sengi.pdf",
    "title": "令和５年度鳥取県営病院事業会計補正予算（第４号）",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "決定",
-   "rollCallId": "pref-31-2023-11-20231220-知事提案-",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "決算認定に係る指摘事項[９月定例会第３３号及び第３４号並びに11月定例会第３３号]",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "認定",
-   "rollCallId": "pref-31-2023-11-20231220-知事提案-9月定例会第32号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "令和４年度鳥取県天神川流域下水道事業会計決算の認定について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "認定",
-   "rollCallId": "pref-31-2023-11-20231220-知事提案-9月定例会第33号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "令和４年度鳥取県営企業決算の認定について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "認定",
-   "rollCallId": "pref-31-2023-11-20231220-知事提案-9月定例会第34号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "令和４年度鳥取県営病院事業決算の認定について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "可決",
-   "rollCallId": "pref-31-2023-11-20231220-知事提案-議案第10号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "鳥取県情報公開条例及び鳥取県個人情報保護条例の一部を改正する条例",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "可決",
-   "rollCallId": "pref-31-2023-11-20231220-知事提案-議案第11号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "鳥取県医療法施行条例の一部を改正する条例",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "可決",
-   "rollCallId": "pref-31-2023-11-20231220-知事提案-議案第12号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "鳥取県盛土等に係る斜面の安全確保に関する条例の一部を改正する条例",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "可決",
-   "rollCallId": "pref-31-2023-11-20231220-知事提案-議案第13号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "鳥取県立産業人材育成センター条例及び鳥取県個人情報保護条例の一部を改正する条例",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "可決",
-   "rollCallId": "pref-31-2023-11-20231220-知事提案-議案第14号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "鳥取県営境港水産物地方卸売市場の設置等に関する条例の一部を改正する条例",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "可決",
-   "rollCallId": "pref-31-2023-11-20231220-知事提案-議案第15号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "鳥取県営病院事業の設置等に関する条例の一部を改正する条例",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "可決",
-   "rollCallId": "pref-31-2023-11-20231220-知事提案-議案第16号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "財産の取得（青谷上寺地遺跡保存用地）についての議決の一部変更について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "可決",
-   "rollCallId": "pref-31-2023-11-20231220-知事提案-議案第17号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "財産の取得（美術作品）について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "可決",
-   "rollCallId": "pref-31-2023-11-20231220-知事提案-議案第18号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "公の施設の指定管理者の指定（鳥取県立米子産業体育館）について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "可決",
-   "rollCallId": "pref-31-2023-11-20231220-知事提案-議案第19号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "公の施設の指定管理者の指定（鳥取県立東郷湖羽合臨海公園（藤津地区、浅津地区及び南谷地区））について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "可決",
-   "rollCallId": "pref-31-2023-11-20231220-知事提案-議案第20号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "公の施設の指定管理者の指定（鳥取県立東郷湖羽合臨海公園（引地地区及び長和田地区））について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "可決",
-   "rollCallId": "pref-31-2023-11-20231220-知事提案-議案第21号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "公の施設の指定管理者の指定（とっとりバイオフロンティア）について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "可決",
-   "rollCallId": "pref-31-2023-11-20231220-知事提案-議案第22号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "公の施設の指定管理者の指定（鳥取県立農村総合研修所）について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "可決",
-   "rollCallId": "pref-31-2023-11-20231220-知事提案-議案第23号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "公の施設の指定管理者の指定（鳥取県立とっとり花回廊）について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "可決",
-   "rollCallId": "pref-31-2023-11-20231220-知事提案-議案第24号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "公の施設の指定管理者の指定（鳥取県立鳥取二十世紀梨記念館）について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "可決",
-   "rollCallId": "pref-31-2023-11-20231220-知事提案-議案第25号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "公の施設の指定管理者の指定（鳥取県立二十一世紀の森）について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "可決",
-   "rollCallId": "pref-31-2023-11-20231220-知事提案-議案第26号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "公の施設の指定管理者の指定（鳥取県立とっとり出合いの森）について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "可決",
-   "rollCallId": "pref-31-2023-11-20231220-知事提案-議案第27号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "公の施設の指定管理者の指定（鳥取県立とっとり賀露かにっこ館）について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "可決",
-   "rollCallId": "pref-31-2023-11-20231220-知事提案-議案第28号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "公の施設の指定管理者の指定（鳥取県営境港水産物地方卸売市場及び境漁港）について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "可決",
-   "rollCallId": "pref-31-2023-11-20231220-知事提案-議案第29号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "公の施設の指定管理者の指定（鳥取県立みなとさかい交流館）について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "可決",
-   "rollCallId": "pref-31-2023-11-20231220-知事提案-議案第2号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "令和５年度鳥取県一般会計補正予算（第６号）",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "可決",
-   "rollCallId": "pref-31-2023-11-20231220-知事提案-議案第30号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "関西広域連合規約の変更に関する協議について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "可決",
-   "rollCallId": "pref-31-2023-11-20231220-知事提案-議案第31号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "公立大学法人公立鳥取環境大学定款等の一部変更について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "可決",
-   "rollCallId": "pref-31-2023-11-20231220-知事提案-議案第32号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "当せん金付証票の発売について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "認定",
-   "rollCallId": "pref-31-2023-11-20231220-知事提案-議案第33号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "令和４年度決算の認定について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "可決",
-   "rollCallId": "pref-31-2023-11-20231220-知事提案-議案第34号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "鳥取県基金条例の一部を改正する条例",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "可決",
-   "rollCallId": "pref-31-2023-11-20231220-知事提案-議案第35号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "職員の給与に関する条例等の一部を改正する条例",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "同意",
-   "rollCallId": "pref-31-2023-11-20231220-知事提案-議案第36号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "鳥取県教育委員会委員の任命について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "可決",
-   "rollCallId": "pref-31-2023-11-20231220-知事提案-議案第3号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "令和５年度鳥取県用品調達等集中管理事業特別会計補正予算（第１号）",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "可決",
-   "rollCallId": "pref-31-2023-11-20231220-知事提案-議案第4号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "令和５年度鳥取県給与集中管理特別会計補正予算（第１号）",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "可決",
-   "rollCallId": "pref-31-2023-11-20231220-知事提案-議案第5号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "令和５年度鳥取県港湾整備事業特別会計補正予算（第１号）",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "可決",
-   "rollCallId": "pref-31-2023-11-20231220-知事提案-議案第6号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "令和５年度鳥取県天神川流域下水道事業会計補正予算（第２号）",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "可決",
-   "rollCallId": "pref-31-2023-11-20231220-知事提案-議案第7号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "令和５年度鳥取県営電気事業会計補正予算（第２号）",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "可決",
-   "rollCallId": "pref-31-2023-11-20231220-知事提案-議案第8号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "令和５年度鳥取県営工業用水道事業会計補正予算（第２号）",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "可決",
-   "rollCallId": "pref-31-2023-11-20231220-知事提案-議案第9号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "令和５年度鳥取県営病院事業会計補正予算（第３号）",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "可決",
-   "rollCallId": "pref-31-2023-11-20231220-議員提案-議案第1号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "鳥取県議会議員の議員報酬、期末手当及び費用弁償に関する条例の一部を改正する条例",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "可決",
-   "rollCallId": "pref-31-2023-11-20231220-議員提案-議案第2号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "イスラエル・パレスチナ情勢における早期の平和的解決を望む決議",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "可決",
-   "rollCallId": "pref-31-2023-11-20231220-議員提案-議案第3号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "投票率低下を踏まえた政治参加を促す選挙制度改革と参議院選挙における合区の解消を求める意見書",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "可決",
-   "rollCallId": "pref-31-2023-11-20231220-議員提案-議案第4号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "人口減少社会における食料・農業・農村基本法の改正を踏まえた国産農畜水産物の安定生産と食料安全保障の強化を求める意見書",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "可決",
-   "rollCallId": "pref-31-2023-11-20231220-議員提案-議案第5号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "地方分権の推進を基調とした国と地方の関係構築を求める意見書",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "可決",
-   "rollCallId": "pref-31-2023-11-20231220-議員提案-議案第6号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "松田正議員に対する辞職勧告決議",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "趣旨採択",
-   "rollCallId": "pref-31-2023-11-20231220-陳情-05年-27",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "精神障がい者の障がい種別の違いによる差別の解消を求める陳情",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "不採択",
-   "rollCallId": "pref-31-2023-11-20231220-陳情-05年-28",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "危険ドラッグの対策について",
-   "vote": {
-    "legend": "反対",
-    "mapped": "反対",
-    "raw": "×"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "不採択",
-   "rollCallId": "pref-31-2023-11-20231220-陳情-05年-29",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "危険ドラッグの対策に係る意見書の提出等について",
-   "vote": {
-    "legend": "反対",
-    "mapped": "反対",
-    "raw": "×"
-   }
-  },
-  {
-   "date": "2023-12-20",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "不採択",
-   "rollCallId": "pref-31-2023-11-20231220-陳情-05年-30",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338977/R5-11_giketsukekka.pdf",
-   "title": "子どものために保育士配置基準の引上げ、労働条件改善による保育士の増員及びさらなる賃金引上げを求める意見書の提出について",
-   "vote": {
-    "legend": "反対",
-    "mapped": "反対",
-    "raw": "×"
-   }
-  },
-  {
-   "date": "2023-12-04",
-   "kind": "localVote",
-   "method": "起立",
-   "result": "可決",
-   "rollCallId": "pref-31-2023-11-20231204-知事提案-議案第1号",
-   "sessionLabel": "令和5年11月定例会",
-   "sourceUrl": "https://www.pref.tottori.lg.jp/secure/1338979/R5_11_sengigiketsukekka.pdf",
-   "title": "令和５年度鳥取県一般会計補正予算（第５号）",
    "vote": {
     "legend": "賛成",
     "mapped": "賛成",
