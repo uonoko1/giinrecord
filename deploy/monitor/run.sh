@@ -33,6 +33,14 @@ CHECKS=(http data tls)
 # （staging にも、手元で叩いたときにも足さない——測れないものを check にしない）。
 DATA_COMMIT_AT=${MONITOR_DATA_COMMIT_AT:-}
 if [ -n "$DATA_COMMIT_AT" ]; then CHECKS+=(deploy); fi
+# #1286: production だけ `etl` を足す。**`MONITOR_ETL_STREAK=1` のときだけ**
+# （staging にも、手元で叩いたときにも足さない——`gh` が無い環境で check を増やさない）。
+# **これは `data` とは別の check である**: `data` は**症状**（`fetchedAt` の古さ 48h）を、
+# `etl` は**機構**（毎晩の run が N 晩連続で失敗）を見る。**実測で両者は食い違った**——
+# 2026-10-11T11:18Z、ETL は 7 晩連続で失敗していたのに `fetchedAt` は 35h で `data` は正しく ok だった。
+# **人が手で PR を運ぶほど `fetchedAt` は若返り、48h の窓はリセットされる**ので、
+# **症状の計器だけでは機構の故障を永久に見られない。**
+if [ "${MONITOR_ETL_STREAK:-0}" = 1 ]; then CHECKS+=(etl); fi
 
 if [ "${MONITOR_REQUIRE_CF_ACCESS:-0}" = 1 ] && { [ -z "${CF_ACCESS_CLIENT_ID:-}" ] || [ -z "${CF_ACCESS_CLIENT_SECRET:-}" ]; }; then
   echo "::warning::$ENV_NAME is behind Cloudflare Access but CF_ACCESS_CLIENT_ID / CF_ACCESS_CLIENT_SECRET are not set; probe skipped (docs/ops/staging-access.md)"
@@ -58,6 +66,11 @@ one_round() {
   bash "$HERE/probe.sh" "$ORIGIN" > "$out" || true
   if [ -n "$DATA_COMMIT_AT" ]; then
     bash "$HERE/deploy-started.sh" "$DATA_COMMIT_AT" >> "$out" || true
+  fi
+  # #1286: 日次 ETL の連続失敗。**`ok etl` / `fail etl <reason>` を 1 行出すだけ**なので、
+  # 2 回連続の判定・Issue の開閉・エスカレーションは上の仕組みがそのまま扱う。
+  if [ "${MONITOR_ETL_STREAK:-0}" = 1 ]; then
+    bash "$HERE/etl-streak.sh" >> "$out" || true
   fi
 }
 

@@ -3,9 +3,10 @@
 Issue #135。外部 SaaS（UptimeRobot / Datadog / Sentry 等）は使わない。**ダッシュボードは無い。label `monitor` の open Issue 一覧が現在の状態**（0 件 = 正常）。
 
 ```
-GitHub Actions  monitor.yml ──10分おき(名目)──▶ https://giinrecord.jp          ┐ /, /members/, /assemblies/, 議会ページ, /data/meta.json, TLS 期限
+GitHub Actions  monitor.yml ──10分おき(名目。実測は約1/15)──▶ https://giinrecord.jp  ┐ /, /members/, /assemblies/, 議会ページ, /data/meta.json, TLS 期限
                             ──毎時────▶ https://staging.giinrecord.jp  ┘ deploy/monitor/probe.sh → run.sh → report.sh (gh)
-                                                                              │ 2 回連続で失敗 → Issue "[monitor] <env>: <check>"
+                            ──deploy-data.yml の完了ごと──▶ production だけ   │ + etl.yml の連続失敗（etl-streak.sh・#1286）
+                              （#1286。schedule を待たず「鳴り止んだ」を見る）  │ 2 回連続で失敗 → Issue "[monitor] <env>: <check>"
 VPS  root cron 5分  /usr/local/lib/giinrecord-monitor/health.sh                 │ 復旧 → 自動 close
        コンテナ healthy・ディスク・nginx・rsync 先の鮮度                        │
        → /var/log/giinrecord-monitor.log, ~ubuntu/monitor/latest.json           │
@@ -31,8 +32,9 @@ GitHub Actions  security-alerts.yml ──毎日 06:53 JST──▶ GitHub 自�
 | `data` | `meta.fetchedAt`（トップレベル＝ETL 実行時刻）が 48 時間以内。**古いときは main 側と `data/refresh` の PR も読んで、どちら側か／そもそも壊れているのかを理由に書く**（#1185 / #1230、下記） | 理由が `main も古い … → ETL 側` → ETL / `… → 止めてある` → **壊れていない**（PR を読む） / `main は新しい` → deploy 側 / `…読めなかった`・`…数えられなかった` → **まだ分かっていない** |
 | `tls` | 証明書の残り 14 日以上 | certbot の自動更新が止まっている（`sudo certbot renew --dry-run`） |
 | `deploy` | **production のみ。** main に `data/` が入ってから **30 分**以内に `deploy-data.yml` の run が始まったか（#1185） | ETL が落ちて dispatch が起きず、`on: push` も GITHUB_TOKEN のマージでは発火しない窓 |
+| `etl` | **production のみ。** `etl.yml` の**毎晩の run（`event = schedule`）が N 晩連続で失敗**していないか（#1286、下記）。**`fetchedAt` の古さとは独立**——こちらは**症状ではなく機構**を見る | 理由に出る**失敗した step 名**で分かれる。`Run ETL` → **本物の取得失敗**（取得元・ネットワーク） / `Wait for data PR merge, then deploy` → **待ち合わせの時間切れ**（データ PR が緑にならない。**ETL 自体は成功している**） / `測れなかった` → **まだ分かっていない** |
 
-- production は `*/10`、staging は毎時 7 分（両方 `workflow_dispatch` 可）。
+- production は**すべての firing で**、staging は毎時 7 分と手動のときだけ（#1286。下の「鳴り止んでも閉じなかった」）。
 - staging は Cloudflare Access の裏（#163）：repo secrets `CF_ACCESS_CLIENT_ID` / `CF_ACCESS_CLIENT_SECRET`（Service Token）でヘッダを付けて
   probe する。無ければ `::warning::` を出してスキップ（誤報しない）。設定とローテーションは `docs/ops/staging-access.md`。
 - **2 回連続**（60 秒空けて再試行）で失敗した check だけ Issue にする（`deploy/monitor/run.sh`）。1 回だけの失敗は run のログに残るのみ。
@@ -42,8 +44,9 @@ GitHub Actions  security-alerts.yml ──毎日 06:53 JST──▶ GitHub 自�
   （何時間続いているか・いまの理由・報告が入った回数の**下限**）。**6 時間以上**（`MONITOR_ESCALATE_HOURS`。
   実装は `-ge` なので**ちょうど 6 時間も含む**）になったら **題の末尾に `— Nh 継続` を足し、
   ラベル `escalated` を付ける**——**改題もラベルも Issue の一覧で見える**ので、
-  1 本開けば「1 回目か 50 回目か」が分かる。**改題は 1 回だけ**（10 分ごとに改題すると通知で埋もれる）。
-  **だから題の `Nh` は、最初に escalate した時点で凍る**（#1198。下の表を見ること）。
+  1 本開けば「1 回目か 50 回目か」が分かる。**改題は倍々でだけ**（10 分ごとに改題すると通知で埋もれる。
+  #1286。**それ以前は 1 回だけだったので題の `Nh` が凍り、111.2h の障害が「9h」と出た**——
+  下の「鳴り止んでも閉じなかった」）。**題の `Nh` といまの経過は最大 2 倍ずれる**（#1198。下の表を見ること）。
   復旧時は `escalated` を外して題を素に戻してから閉じる。
 
 #### どちら側の故障か（`data` が失敗したとき・#1185 / #1230）
@@ -74,6 +77,76 @@ GitHub Actions  security-alerts.yml ──毎日 06:53 JST──▶ GitHub 自�
   なぜ最新 1 本かは実測で決めた（根拠は `deploy/monitor/probe.sh` の `refresh_hold_verdict` 冒頭。
   **母数 57 本のうち CLOSED 未マージは 4 本で、そのうち 3 本は「次の refresh が作られる 0.0 時間前」に
   閉じられた正常系**＝次の run が前の PR を畳んだだけ。最新 1 本に絞ると**誤検出は 4 本中 0 本**）。
+
+#### 症状と機構は別に測る（`data` と `etl`・#1286）
+
+**`data` は症状を、`etl` は機構を見る。** 同じ故障でも**出方が違う**ので、両方要る。
+
+**実測（2026-10-11T11:18Z）がその理由そのものである**:
+
+```
+日次 ETL は 7 晩連続で失敗していた（10-04〜10-10。gh run list --workflow etl.yml）
+しかし main も production も fetchedAt = 2026-10-10T00:22:40Z（約 35 時間）
+  → 35 < 48 なので **`data` は正しく ok だった。嘘はついていない。**
+```
+
+**さらに悪いのは、人が手でデータ PR を運ぶほど `fetchedAt` が若返り、48 時間の窓がリセットされること。**
+**症状は消え、機構は残る。** だから `etl` は **`fetchedAt` を 1 度も読まない**（読んでいないことは
+`deploy/test/monitor-probe.test.sh` が curl のログで固定している）。
+
+- **N の既定値とその根拠は実測**（母数つき）で `deploy/monitor/etl-streak.sh` の冒頭に在る
+  （**値はそこを読むこと。ここには書かない**——散文に書き写すと機械が守れない。#1264）。
+  **要点**: `event = schedule` の 50 run で連続失敗は 1/1/2/3/7 晩の 5 回で、
+  **自力で次の晩に success に戻った最長は 2 晩**、**step `Run ETL` が続いた本物の故障の最短は 3 晩**。
+  → **「自力で直った最長 < N ≤ 本物の故障の最短」を満たす整数はひとつに決まる。**
+  変えるなら**測り直して**そのファイルを書き換える。
+  **上の 2 と 3 は実測の履歴**（2026-10-11 に数えた値）で、**しきい値そのものではない**
+  ——**つまみとして動かしてはいけない**（この repo の教訓「期待値の表はつまみではない」）。
+  **実装の既定値とこの関係式は機械が突き合わせている**
+  （`deploy/test/monitor-probe.test.sh` と `packages/etl/test/monitor-recovery-close.test.ts` が
+  **実装の 1 行から N を読んで**関係式に入れる。**どちらかを動かせば落ちる**）。
+- **`workflow_dispatch` と `push` は「晩」と数えない**（実測 30 本 / 23 本）。
+  手で 3 回試して 3 回失敗するのは「毎晩のデータが出ていない」とは別の事実である。
+  **時刻では判定しない**——`cron` の宣言時刻は実行時刻ではない（下の実測）。
+- **`cancelled` は streak を切る**（実測 8 本。concurrency や手での中止で起きる）。
+- **失敗した step は「名前」で出す。番号では出さない**（workflow を編集すると番号が動く）。
+  **原因が 2 つに分かれるので、名指しできなければ見た人は毎回両方を調べ直すことになる。**
+
+#### 鳴り止んでも Issue が閉じなかった（#1286 受け入れ条件 1）
+
+**`#1221` は probe が ok に戻ったあとも 111.2 時間 OPEN のままだった。**
+**原因は「閉じるコードが無い」ではない**——`report.sh` の `ok` 側は在り、`open_issue` は
+改題後の `#1221` も正しく引く（実測で両方確かめた）。**閉じる判定をする run が来ていなかった。**
+
+```
+monitor.yml の run 200 本（2026-09-21T05:32Z〜2026-10-11T08:40Z、窓 483.1h）
+  → 0.41 run/h。10 分ごとの宣言は 6 run/h なので **実行率は約 1/15**
+さらに **1 run = 1 job** だったので（cron ごとに job を選り分けていた）
+  production が実際に走ったのは 156.4h で 31 回 = **0.20 回/h**
+  → 間隔 p50 321.1 分 / p90 412.7 分 / max 520.4 分
+**#1221 の最後の報告 07:19:56Z から 4.4 時間、production は 1 度も走っていなかった。**
+```
+
+**GitHub 側の都合なので、cron の宣言を細かくしても増えない**（下の「cron は予定どおりには走らない」）。
+そこで**「走る回数を増やす」のではなく「走る機会を取りこぼさない」方向で 2 つ**入れた:
+
+1. **production はすべての firing で走る**（cron の選り分けをやめた）。
+   **実測での効果**: 同じ 60 run を母数に **p50 321.1 → 143.0 分 / max 520.4 → 496.1 分**。
+   **max がほとんど動かない**ので、**これ単体では足りない。**
+2. **`deploy-data.yml` が終わったら即 1 周する**（`on: workflow_run`）。
+   **`data` が ok に戻る原因はほぼこれ**なので、**原因の側から 1 周を起こす。**
+   schedule を待たないので、**「復旧したのに 5 時間 Issue が開いたまま」が構造的に無くなる。**
+
+**なぜ閉じることが重要か**: 鳴り止んでも閉じないと、**次の本物の障害で新しい Issue が立たない**
+（`report.sh` は同じ題の open Issue が在れば作らない）。**気づく機会そのものが消える。**
+
+- **題の経過は「倍々」で更新する**（#1286）。**実測: `#1221` は 111.2h 続いていたのに題は `— 9h 継続`**
+  だった（改題を 1 回だけにしたので最初の escalate 時点で凍る）。
+  **PO は題だけ見て「9h なら既知の古いもの」と流し、106 時間・26 回鳴っていた本物を 4 日見落とした。**
+  いまは**題の数字がいまの経過の半分未満になったときだけ**書き換える
+  ——**改題の回数は log2 で増える**ので（6h から 1 年続いても 8 回）、
+  **「凍る」と「10 分ごとに通知が鳴る」の間を、回数の上限が言える形で取っている。**
+  **人が題を編集した形（数字として読めない接尾辞）では触らない。**
 
 #### 議会ページの監視（#248）
 
@@ -302,7 +375,10 @@ ssh "$VPS_SSH_HOST" 'sudo mv /etc/cron.d/giinrecord-monitor /root/giinrecord-mon
 | `[monitor] production: deploy` | main に `data/` が入って 30 分以上、`deploy-data.yml` が始まっていない | Actions → Deploy data を `workflow_dispatch` で起動 |
 | `[monitor] production: deploy` の理由が `測れなかった` | `gh run list` が落ちた（権限・レート・障害） | **「異常なし」ではない。** run の履歴を手で見る |
 | `[monitor] <env>: <check>` の本文が `no verdict` | check が判定に届く前に死んだ（probe が途中で落ちた） | **緑ではない。** run のログを見る（#1185） |
-| Issue に `escalated` ラベルと `— Nh 継続` | 6 時間以上続いている | **その N は「最初に escalate した時点」の経過であって、いまの経過ではない**（改題は 1 回だけなので凍る。#1198）。**いまの経過は最新のコメントに在る**。優先して見る |
+| `[monitor] production: etl` | 日次 ETL が **N 晩連続で失敗**（#1286） | **理由の step 名で分かれる。** `Run ETL` → 本物の取得失敗（Actions のログで原因を見る） / `Wait for data PR merge, then deploy` → **ETL は成功していて、データ PR が緑にならない**（PR の赤い check を見る。**ETL を見に行かない**） |
+| `[monitor] production: etl` の理由が `測れなかった` | `gh run list` が落ちた／毎晩の run が 0 本（cron が止まった）／窓が N より狭い | **「異常なし」ではない。** `gh run list --workflow etl.yml` を手で見る |
+| `[monitor] production: data` は閉じたのに `etl` が鳴っている | **正常な組み合わせ。** 症状（`fetchedAt`）は手当てで消えるが、機構（連続失敗）は残る（#1286） | **`etl` を信じる。** `data` が閉じたことは「ETL が直った」ではない |
+| Issue に `escalated` ラベルと `— Nh 継続` | 6 時間以上続いている | **N は「倍々で更新した時点」の経過で、いまの経過とは最大 2 倍ずれる**（10 分ごとの改題で通知に埋もれさせないため。#1286。それ以前は**最初の escalate で凍っていた**ので 111.2h が「9h」と出た実例が在る）。**いまの経過は最新のコメントに在る**。優先して見る |
 | log に `note: no token at …` | トークン未設置 | 初回セットアップ 3 |
 | log に `note: API … HTTP 401/403` | PAT 失効・権限不足（Issues: write が要る）・リポジトリ指定漏れ | PAT を作り直す |
 | log に `note: API … curl failed` | VPS からの outbound が不通 | 監視自体は続く。復旧後に自動で報告される |
@@ -317,7 +393,11 @@ ssh "$VPS_SSH_HOST" 'sudo mv /etc/cron.d/giinrecord-monitor /root/giinrecord-mon
 - `ubuntu`（CI deploy 鍵、rrsync 限定）に権限を足さない。`latest.json` は読めるが、監視スクリプトもトークンも root のもの。
 - Actions から VPS に ssh しない（deploy 鍵は rrsync 限定のまま）。VPS → GitHub の outbound のみ。
 - Issue に IP・ホスト名・ユーザー名・パスを書かない。VPS のログ（パスを含む）は root だけが読める。
-- 閾値（48 時間、14 日、85%、2 回連続）はスクリプトの env で変えられるが、変えるなら先にテスト（`deploy/test/monitor-*.test.sh`）を直す。
+- 閾値（48 時間、14 日、85%、2 回連続、ETL の連続失敗 N 晩）はスクリプトの env で変えられるが、変えるなら先にテスト（`deploy/test/monitor-*.test.sh`）を直す。
+  **この行に N の値を書かないのは意図的である**——**docs に書き写すと「2 つの数が同じ制約を分担する」形**
+  になり、この repo はそれで 2 度壊している（#1264）。**値は `deploy/monitor/etl-streak.sh` の 1 行だけが持つ。**
+  （48 時間・30 分は歴史的に散文へ書き写してあるが、**同じ理由で機械が守れていない**。
+  **新しく足すものは散文に値を置かない**。）
 
 ## 変えるとき
 
@@ -326,7 +406,15 @@ ssh "$VPS_SSH_HOST" 'sudo mv /etc/cron.d/giinrecord-monitor /root/giinrecord-mon
 - セットアップは `deploy/monitor/setup.sh` と `deploy/test/monitor-setup.test.sh`（`MONITOR_SETUP_PREFIX`）。
 - `deploy` check は `deploy/monitor/deploy-started.sh`（同じ `monitor-probe.test.sh` が守る）。**N = 30 分の根拠は
   そのファイルの冒頭に実測（母数つき）で在る。** 変えるなら測り直してそこを書き換える。
-- スケジュールは `monitor.yml`。staging の cron を変えたら job の `if:` の文字列も同じにする。
+- `etl` check は `deploy/monitor/etl-streak.sh`（同じ `monitor-probe.test.sh` が守る）。**N の根拠も
+  そのファイルの冒頭に実測（母数つき）で在る。** **しきい値はそこの 1 行だけが持つ**ので、
+  docs や workflow に値を書き写さないこと（#1264。`monitor-recovery-close.test.ts` が複製を検出する）。
+- スケジュールは `monitor.yml`。**staging の cron を変えたら job の `if:` の文字列も同じにする。**
+  **production の job には `if:` を付けないこと**（#1286。cron を選り分けると、
+  その firing のぶん「鳴り止んだことに気づく機会」を捨てる。実測で 60 run 中 29 run を捨てていた）。
+  **`on: workflow_run` の `workflows:` は `deploy-data.yml` の `name:` と逐語で一致していること**
+  ——**綴りが違っても YAML は妥当で actionlint も通り、永久に発火しない**
+  （`monitor-recovery-close.test.ts` が両側を突き合わせる）。
 
 ### GitHub Actions の cron は「予定どおり」には走らない（実測・#1185）
 
