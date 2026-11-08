@@ -2,7 +2,7 @@
  "asOf": "2025-04-01",
  "assemblyId": "pref-41",
  "counts": {
-  "rollcalls": 366
+  "rollcalls": 381
  },
  "current": true,
  "district": "嬉野市",
@@ -20,6 +20,244 @@
   }
  ],
  "timeline": [
+  {
+   "date": "2026-09-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-09-teirei-list06701-20260925-乙第50号議案",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003120993/3_120993_401749_up_nzkynnga.pdf",
+   "title": "佐賀県県税条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-09-teirei-list06701-20260925-乙第51号議案",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003120993/3_120993_401749_up_nzkynnga.pdf",
+   "title": "佐賀県中小企業融資に係る事業再生等のための措置に関する条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-09-teirei-list06701-20260925-乙第52号議案",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003120993/3_120993_401749_up_nzkynnga.pdf",
+   "title": "佐賀県立宇宙科学館条例の一部を改正する条例（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-09-teirei-list06701-20260925-乙第53号議案",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003120993/3_120993_401749_up_nzkynnga.pdf",
+   "title": "県事業に対する市町の負担について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-09-teirei-list06701-20260925-乙第54号議案",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003120993/3_120993_401749_up_nzkynnga.pdf",
+   "title": "国営土地改良事業に対する市町の負担について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-09-teirei-list06701-20260925-乙第55号議案",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003120993/3_120993_401749_up_nzkynnga.pdf",
+   "title": "県営土地改良事業に対する市町の負担について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-09-teirei-list06701-20260925-乙第56号議案",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003120993/3_120993_401749_up_nzkynnga.pdf",
+   "title": "農家所有の自家用車損傷事故に対する損害賠償について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-09-teirei-list06701-20260925-乙第57号議案",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003120993/3_120993_401749_up_nzkynnga.pdf",
+   "title": "警察官による捜索・差押えを起因とする車両損傷に対する損害賠償について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-41-2026-09-teirei-list06701-20260925-乙第58号議案",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003120993/3_120993_401749_up_nzkynnga.pdf",
+   "title": "公安委員会委員の任命について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-09-teirei-list06701-20260925-意第10号意見書案",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003120993/3_120993_401749_up_nzkynnga.pdf",
+   "title": "化学物質過敏症に関する対策強化を求める意見書（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-09-teirei-list06701-20260925-意第11号意見書案",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003120993/3_120993_401749_up_nzkynnga.pdf",
+   "title": "軽油引取税の課税免除措置の継続等を求める意見書（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-09-teirei-list06701-20260925-意第９号意見書案",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003120993/3_120993_401749_up_nzkynnga.pdf",
+   "title": "私学助成の充実強化等に関する意見書（案）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-09-teirei-list06701-20260925-甲第41号議案",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003120993/3_120993_401749_up_nzkynnga.pdf",
+   "title": "令和８年度佐賀県一般会計補正予算（第３号）",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-09-teirei-list06701-20260925-甲第42号議案",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003120993/3_120993_401749_up_nzkynnga.pdf",
+   "title": "令和８年度佐賀県財政調整積立金特別会計補正予算（第２号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-09-teirei-list06701-20260925-甲第43号議案",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003120993/3_120993_401749_up_nzkynnga.pdf",
+   "title": "令和８年度佐賀県土地取得特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-09-teirei-list06701-20260925-甲第44号議案",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003120993/3_120993_401749_up_nzkynnga.pdf",
+   "title": "令和８年度佐賀県国民健康保険事業特別会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-09-10",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-41-2026-09-teirei-list06701-20260910-甲第45号議案",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji003120993/3_120993_401749_up_nzkynnga.pdf",
+   "title": "令和８年度佐賀県一般会計補正予算（第４号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
   {
    "date": "2026-07-01",
    "kind": "localVote",
@@ -5110,34 +5348,6 @@
    "sessionLabel": "令和5年5月臨時会（5月29日）",
    "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00396953/3_96953_281837_up_b40ejbja.pdf",
    "title": "教育長の任命について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-05-11",
-   "kind": "localVote",
-   "result": "同意",
-   "rollCallId": "pref-41-2023-05-rinji-list05938-20230511-乙第37号議案",
-   "sessionLabel": "令和5年5月臨時会（5月9日から11日まで）",
-   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00396145/3_96145_279859_up_jsqwevkw.pdf",
-   "title": "監査委員の選任について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-05-11",
-   "kind": "localVote",
-   "result": "承認",
-   "rollCallId": "pref-41-2023-05-rinji-list05938-20230511-甲第35号議案",
-   "sessionLabel": "令和5年5月臨時会（5月9日から11日まで）",
-   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00396145/3_96145_279859_up_jsqwevkw.pdf",
-   "title": "令和５年度佐賀県一般会計補正予算（第１号）の専決処分について",
    "vote": {
     "legend": "賛成",
     "mapped": "賛成",

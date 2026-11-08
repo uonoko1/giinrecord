@@ -1,0 +1,374 @@
+{
+ "assemblyId": "pref-32",
+ "committeeReport": "不採択",
+ "counts": {
+  "no": 1,
+  "yes": 31
+ },
+ "date": "2026-10-09",
+ "id": "pref-32-500-20261009-請願-請願第31号",
+ "kind": "請願",
+ "number": "請願第31号",
+ "page": 3,
+ "referredCommittees": [
+  "総務委員会"
+ ],
+ "result": "不採択",
+ "sessionId": "500",
+ "sessionLabel": "令和8年9月定例会（第500回）",
+ "sourceUrl": "https://www.pref.shimane.lg.jp/gikai/ugoki/saikin/r0809/index.data/r0809_giinbetu_kekka.pdf",
+ "title": "島根県議会は、「鳥取県との参議院選挙区の合区は、島根県民の民意を国政に十分に反映できない」として、その解消を国に求めています。「島根には島根固有の民意があり、その声を国政に届ける代表者が必要である」、という民主主義の重要な理念からすれば、合区解消の要望は当然のことであり、そのためには、島根県議会自身が、県民の代表機関として、過去の重要な意思決定についても検証し、県民に説明する責任を果たす必要があると考えます。島根県議会が真に県民の民意を代表するのであれば、慰安婦問題のように歴史認識、外交、竹島問題などが密接に絡む重要な問題についてこそ、異なる意見を排除せず、公の場で議論するべきです。合区の解消も、慰安婦問題を解決することも、そして議会という場で県民が納得するように議論を進めていくことは島根県だけでなく国や、未来の日本を担う子供たちのために必要なことです。島根県議会が平成25年6月26日に採択された、「日本軍『慰安婦』問題への誠実な対応を求める請願は決定的な根拠を失ったことを確認する」という決議を求めます。",
+ "voteSubject": "付託先委員会の報告に対する賛否",
+ "votes": [
+  {
+   "group": "自民党ネクスト島根",
+   "memberId": "p_32_giin01_nakamurajun",
+   "nameText": "中村絢",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自民党ネクスト島根",
+   "memberId": "p_32_giin02_moriyama",
+   "nameText": "森山裕介",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自民党ネクスト島根",
+   "memberId": "p_32_giin03_kawauchi",
+   "nameText": "河内大輔",
+   "value": {
+    "legend": "欠席等による不在",
+    "mapped": "投票なし",
+    "raw": "－"
+   }
+  },
+  {
+   "group": "公明党島根県議団",
+   "memberId": "p_32_giin05_okazaki",
+   "nameText": "岡崎綾子",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自民党ネクスト島根",
+   "memberId": "p_32_giin06_notsu",
+   "nameText": "野津直嗣",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自民党ネクスト島根",
+   "memberId": "p_32_giin07_okamoto",
+   "nameText": "岡本淳",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "民主県民クラブ",
+   "memberId": "p_32_giin08_kishi",
+   "nameText": "岸道三",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自民党議員連盟",
+   "memberId": "p_32_giin09_kushiro",
+   "nameText": "久城恵治",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自民党議員連盟",
+   "memberId": "p_32_giin01_tsubouti",
+   "nameText": "坪内涼二",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自民党ネクスト島根",
+   "memberId": "p_32_giin02_hara",
+   "nameText": "原拓也",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自民党議員連盟",
+   "memberId": "p_32_giin03_fukui",
+   "nameText": "福井竜夫",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自民党ネクスト島根",
+   "memberId": "p_32_giin04_tatano",
+   "nameText": "多々納剛人",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自民党ネクスト島根",
+   "memberId": "p_32_giin06_naitou",
+   "nameText": "内藤芳秀",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "日本共産党島根県議団",
+   "memberId": "p_32_giin02_ooguni",
+   "nameText": "大国陽介",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自民党議員連盟",
+   "memberId": "p_32_giin09_tanaka-akemi",
+   "nameText": "田中明美",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自民党ネクスト島根",
+   "memberId": "p_32_giin10_kamoto",
+   "nameText": "嘉本祐一",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "公明党島根県議団",
+   "memberId": "p_32_giin04_yoshino",
+   "nameText": "吉野和彦",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自民党議員連盟",
+   "memberId": "p_32_giin12_yoshida",
+   "nameText": "吉田雅紀",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自民党議員連盟",
+   "memberId": "p_32_giin08_takahashi",
+   "nameText": "高橋雅彦",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "民主県民クラブ",
+   "memberId": "p_32_giin01iwata",
+   "nameText": "岩田浩岳",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自民党議員連盟",
+   "memberId": "p_32_giin03ogosi",
+   "nameText": "生越俊一",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自民党議員連盟",
+   "memberId": "p_32_giin05yamane",
+   "nameText": "山根成二",
+   "value": {
+    "legend": "議長",
+    "mapped": "投票なし",
+    "raw": "議⾧"
+   }
+  },
+  {
+   "group": "民主県民クラブ",
+   "memberId": "p_32_giin02_suyama",
+   "nameText": "須山隆",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自民党議員連盟",
+   "memberId": "p_32_giin21_ikeda",
+   "nameText": "池田一",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自民党議員連盟",
+   "memberId": "p_32_giin04_nakajima",
+   "nameText": "中島謙二",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "民主県民クラブ",
+   "memberId": "p_32_giin05_sumi",
+   "nameText": "角智子",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "民主県民クラブ",
+   "memberId": "p_32_giin08_hakuishi",
+   "nameText": "白石恵子",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "日本共産党島根県議団",
+   "memberId": "p_32_giin10_omura",
+   "nameText": "尾村利成",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自民党議員連盟",
+   "memberId": "p_32_giin11_sonoyama",
+   "nameText": "園山繁",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自民党議員連盟",
+   "memberId": "p_32_giin15_nakamura",
+   "nameText": "中村芳信",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自民党議員連盟",
+   "memberId": "p_32_giin16_oya",
+   "nameText": "大屋俊弘",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自民党議員連盟",
+   "memberId": "p_32_giin20_itohara",
+   "nameText": "絲原德康",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "自民党議員連盟",
+   "memberId": "p_32_giin28_iogawa",
+   "nameText": "五百川純寿",
+   "value": {
+    "legend": "欠席等による不在",
+    "mapped": "投票なし",
+    "raw": "－"
+   }
+  },
+  {
+   "group": "自民党ネクスト島根",
+   "memberId": "p_32_giin33_fukuda",
+   "nameText": "福田正明",
+   "value": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "group": "会派に属しない",
+   "memberId": "p_32_giin34_nariai",
+   "nameText": "成相安信",
+   "value": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "●"
+   }
+  }
+ ]
+}

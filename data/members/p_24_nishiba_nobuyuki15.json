@@ -2,7 +2,7 @@
  "asOf": "2025-11-18",
  "assemblyId": "pref-24",
  "counts": {
-  "rollcalls": 733
+  "rollcalls": 772
  },
  "current": true,
  "district": "多気郡",
@@ -20,6 +20,552 @@
   }
  ],
  "timeline": [
+  {
+   "date": "2026-10-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-24-r08-20261016-意見書案-第11号",
+   "sessionLabel": "令和８年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/common/content/001280381.pdf",
+   "title": "ホルムズ海峡の安定化に向けたイラン周辺における紛争の停止に向けた取組を求める意見書案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "〇"
+   }
+  },
+  {
+   "date": "2026-10-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-24-r08-20261016-意見書案-第12号",
+   "sessionLabel": "令和８年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/common/content/001280381.pdf",
+   "title": "カーボンニュートラル実現に向けた自動車産業への支援の拡充等に関する意見書案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "〇"
+   }
+  },
+  {
+   "date": "2026-10-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-24-r08-20261016-意見書案-第13号",
+   "sessionLabel": "令和８年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/common/content/001280381.pdf",
+   "title": "自動車関係諸税等の見直しを求める意見書案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "〇"
+   }
+  },
+  {
+   "date": "2026-10-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-24-r08-20261016-意見書案-第14号",
+   "sessionLabel": "令和８年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/common/content/001280381.pdf",
+   "title": "子どもの貧困対策等を踏まえた就学及び修学支援に関する制度の拡充を求める意見書案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "〇"
+   }
+  },
+  {
+   "date": "2026-10-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-24-r08-20261016-意見書案-第15号",
+   "sessionLabel": "令和８年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/common/content/001280381.pdf",
+   "title": "教職員の欠員等を速やかに解消する施策の実行並びに教職員定数改善計画の策定及び実施並びに教育予算の拡充を求める意見書案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "〇"
+   }
+  },
+  {
+   "date": "2026-10-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-24-r08-20261016-意見書案-第16号",
+   "sessionLabel": "令和８年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/common/content/001280381.pdf",
+   "title": "学校における防災対策の充実を求める意見書案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "〇"
+   }
+  },
+  {
+   "date": "2026-10-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-24-r08-20261016-意見書案-第17号",
+   "sessionLabel": "令和８年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/common/content/001280381.pdf",
+   "title": "義務教育費国庫負担制度の充実を求める意見書案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "〇"
+   }
+  },
+  {
+   "date": "2026-10-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-24-r08-20261016-意見書案-第18号",
+   "sessionLabel": "令和８年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/common/content/001280381.pdf",
+   "title": "特定の有機フッ素化合物による水環境汚染の防止対策に係る法整備及び財政支援を求める意見書案",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-10-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-24-r08-20261016-意見書案-第19号",
+   "sessionLabel": "令和８年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/common/content/001280381.pdf",
+   "title": "難病医療費助成制度に係る臨床調査個人票等の取得に係る患者の自己負担軽減を求める意見書案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "〇"
+   }
+  },
+  {
+   "date": "2026-10-16",
+   "kind": "localVote",
+   "result": "認定",
+   "rollCallId": "pref-24-r08-20261016-認定-第1号",
+   "sessionLabel": "令和８年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/common/content/001280381.pdf",
+   "title": "令和7年度三重県水道事業会計決算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "〇"
+   }
+  },
+  {
+   "date": "2026-10-16",
+   "kind": "localVote",
+   "result": "認定",
+   "rollCallId": "pref-24-r08-20261016-認定-第2号",
+   "sessionLabel": "令和８年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/common/content/001280381.pdf",
+   "title": "令和7年度三重県工業用水道事業会計決算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "〇"
+   }
+  },
+  {
+   "date": "2026-10-16",
+   "kind": "localVote",
+   "result": "認定",
+   "rollCallId": "pref-24-r08-20261016-認定-第3号",
+   "sessionLabel": "令和８年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/common/content/001280381.pdf",
+   "title": "令和7年度三重県病院事業会計決算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "〇"
+   }
+  },
+  {
+   "date": "2026-10-16",
+   "kind": "localVote",
+   "result": "認定",
+   "rollCallId": "pref-24-r08-20261016-認定-第4号",
+   "sessionLabel": "令和８年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/common/content/001280381.pdf",
+   "title": "令和7年度三重県流域下水道事業会計決算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "〇"
+   }
+  },
+  {
+   "date": "2026-10-16",
+   "kind": "localVote",
+   "result": "採択",
+   "rollCallId": "pref-24-r08-20261016-請願-第56号",
+   "sessionLabel": "令和８年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/common/content/001280381.pdf",
+   "title": "自動車関係諸税などの見直しに関する意見書の提出を求めることについて",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "〇"
+   }
+  },
+  {
+   "date": "2026-10-16",
+   "kind": "localVote",
+   "result": "採択",
+   "rollCallId": "pref-24-r08-20261016-請願-第57号",
+   "sessionLabel": "令和８年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/common/content/001280381.pdf",
+   "title": "カーボンニュートラル達成に向けた自動車産業への支援の拡充等に関することについて",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "〇"
+   }
+  },
+  {
+   "date": "2026-10-16",
+   "kind": "localVote",
+   "result": "採択",
+   "rollCallId": "pref-24-r08-20261016-請願-第58号",
+   "sessionLabel": "令和８年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/common/content/001280381.pdf",
+   "title": "子どもの貧困対策の推進と就学・修学支援に関わる制度の拡充を求めることについて",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "〇"
+   }
+  },
+  {
+   "date": "2026-10-16",
+   "kind": "localVote",
+   "result": "採択",
+   "rollCallId": "pref-24-r08-20261016-請願-第59号",
+   "sessionLabel": "令和８年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/common/content/001280381.pdf",
+   "title": "教職員の欠員を速やかに解消する施策の実行および教職員定数改善計画の策定・実施と教育予算拡充を求めることについて",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "〇"
+   }
+  },
+  {
+   "date": "2026-10-16",
+   "kind": "localVote",
+   "result": "採択",
+   "rollCallId": "pref-24-r08-20261016-請願-第60号",
+   "sessionLabel": "令和８年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/common/content/001280381.pdf",
+   "title": "防災対策の充実を求めることについて",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "〇"
+   }
+  },
+  {
+   "date": "2026-10-16",
+   "kind": "localVote",
+   "result": "採択",
+   "rollCallId": "pref-24-r08-20261016-請願-第61号",
+   "sessionLabel": "令和８年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/common/content/001280381.pdf",
+   "title": "義務教育費国庫負担制度の充実を求めることについて",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "〇"
+   }
+  },
+  {
+   "date": "2026-10-16",
+   "kind": "localVote",
+   "result": "採択",
+   "rollCallId": "pref-24-r08-20261016-請願-第62号",
+   "sessionLabel": "令和８年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/common/content/001280381.pdf",
+   "title": "子どもの豊かな学びを保障するため、教職員の欠員の速やかな解消および教職員配置のさらなる充実を求めることについて",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "〇"
+   }
+  },
+  {
+   "date": "2026-10-16",
+   "kind": "localVote",
+   "result": "不採択",
+   "rollCallId": "pref-24-r08-20261016-請願-第63号",
+   "sessionLabel": "令和８年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/common/content/001280381.pdf",
+   "title": "県独自の学級編制基準の改善によって、25人下限条件をなくし、真の30人学級実現を求めることについて",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-10-16",
+   "kind": "localVote",
+   "result": "不採択",
+   "rollCallId": "pref-24-r08-20261016-請願-第64号",
+   "sessionLabel": "令和８年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/common/content/001280381.pdf",
+   "title": "先生増やして、ゆきとどいた教育を求めることについて",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-10-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-24-r08-20261016-議案-第100号",
+   "sessionLabel": "令和８年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/common/content/001280381.pdf",
+   "title": "三重県環境影響評価条例の一部を改正する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "〇"
+   }
+  },
+  {
+   "date": "2026-10-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-24-r08-20261016-議案-第101号",
+   "sessionLabel": "令和８年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/common/content/001280381.pdf",
+   "title": "三重県景観づくり条例の一部を改正する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "〇"
+   }
+  },
+  {
+   "date": "2026-10-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-24-r08-20261016-議案-第102号",
+   "sessionLabel": "令和８年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/common/content/001280381.pdf",
+   "title": "工事請負契約について（三重県立国児学園寮舎棟ほか建築工事）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "〇"
+   }
+  },
+  {
+   "date": "2026-10-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-24-r08-20261016-議案-第103号",
+   "sessionLabel": "令和８年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/common/content/001280381.pdf",
+   "title": "工事請負契約について（近江島地区農村地域排水対策事業排水機製作据付工事）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "〇"
+   }
+  },
+  {
+   "date": "2026-10-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-24-r08-20261016-議案-第104号",
+   "sessionLabel": "令和８年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/common/content/001280381.pdf",
+   "title": "工事請負契約について（奈屋浦漁港県営水産生産基盤整備事業Ａ防波堤地盤改良工事）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "〇"
+   }
+  },
+  {
+   "date": "2026-10-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-24-r08-20261016-議案-第105号",
+   "sessionLabel": "令和８年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/common/content/001280381.pdf",
+   "title": "工事請負契約について（一級河川木津川河川改修（統合堰下部工）工事）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "〇"
+   }
+  },
+  {
+   "date": "2026-10-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-24-r08-20261016-議案-第106号",
+   "sessionLabel": "令和８年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/common/content/001280381.pdf",
+   "title": "工事請負契約の変更について（一般国道422号（下地工区）道路改良（下地トンネル（仮称））工事）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "〇"
+   }
+  },
+  {
+   "date": "2026-10-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-24-r08-20261016-議案-第107号",
+   "sessionLabel": "令和８年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/common/content/001280381.pdf",
+   "title": "工事請負契約の変更について（盲学校・聾学校建築工事）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "〇"
+   }
+  },
+  {
+   "date": "2026-10-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-24-r08-20261016-議案-第108号",
+   "sessionLabel": "令和８年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/common/content/001280381.pdf",
+   "title": "損害賠償の額の決定及び和解について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "〇"
+   }
+  },
+  {
+   "date": "2026-10-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-24-r08-20261016-議案-第109号",
+   "sessionLabel": "令和８年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/common/content/001280381.pdf",
+   "title": "公立大学法人三重県立看護大学第四期中期目標について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "〇"
+   }
+  },
+  {
+   "date": "2026-10-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-24-r08-20261016-議案-第110号",
+   "sessionLabel": "令和８年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/common/content/001280381.pdf",
+   "title": "地方独立行政法人三重県立総合医療センター第四期中期目標について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "〇"
+   }
+  },
+  {
+   "date": "2026-10-16",
+   "kind": "localVote",
+   "result": "同意",
+   "rollCallId": "pref-24-r08-20261016-議案-第111号",
+   "sessionLabel": "令和８年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/common/content/001280381.pdf",
+   "title": "収用委員会委員の選任につき同意を得るについて",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "〇"
+   }
+  },
+  {
+   "date": "2026-10-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-24-r08-20261016-議案-第97号",
+   "sessionLabel": "令和８年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/common/content/001280381.pdf",
+   "title": "令和8年度三重県一般会計補正予算（第５号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "〇"
+   }
+  },
+  {
+   "date": "2026-10-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-24-r08-20261016-議案-第98号",
+   "sessionLabel": "令和８年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/common/content/001280381.pdf",
+   "title": "三重県カスタマーハラスメント防止条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "〇"
+   }
+  },
+  {
+   "date": "2026-10-16",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-24-r08-20261016-議案-第99号",
+   "sessionLabel": "令和８年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/common/content/001280381.pdf",
+   "title": "三重県手数料条例の一部を改正する条例案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "〇"
+   }
+  },
+  {
+   "date": "2026-09-28",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-24-r08-20260928-議案-第95号",
+   "sessionLabel": "令和８年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/common/content/001277412.pdf",
+   "title": "令和8年度三重県一般会計補正予算（第４号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-09-28",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-24-r08-20260928-議案-第96号",
+   "sessionLabel": "令和８年定例会",
+   "sourceUrl": "https://www.pref.mie.lg.jp/common/content/001277412.pdf",
+   "title": "令和8年度三重県病院事業会計補正予算（第１号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
   {
    "date": "2026-06-30",
    "kind": "localVote",

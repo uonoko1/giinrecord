@@ -1,15 +1,15 @@
 [
  {
-  "date": "2026-06-30",
-  "fetchedAt": "2026-09-19T16:35:54.208Z",
+  "date": "2026-10-16",
+  "fetchedAt": "2026-11-08T18:23:58.844Z",
   "id": "r08",
   "label": "令和８年定例会",
-  "rollcalls": 110,
+  "rollcalls": 149,
   "sourceUrl": "https://www.pref.mie.lg.jp/KENGIKAI/07976009017.htm"
  },
  {
   "date": "2025-12-22",
-  "fetchedAt": "2026-09-19T16:35:54.208Z",
+  "fetchedAt": "2026-11-08T18:23:58.844Z",
   "id": "r07",
   "label": "令和７年定例会",
   "rollcalls": 255,
@@ -17,7 +17,7 @@
  },
  {
   "date": "2024-12-19",
-  "fetchedAt": "2026-09-19T16:35:54.208Z",
+  "fetchedAt": "2026-11-08T18:23:58.844Z",
   "id": "r06",
   "label": "令和６年定例会",
   "rollcalls": 222,
@@ -25,7 +25,7 @@
  },
  {
   "date": "2023-12-21",
-  "fetchedAt": "2026-09-19T16:35:54.208Z",
+  "fetchedAt": "2026-11-08T18:23:58.844Z",
   "id": "r05-2",
   "label": "令和５年第２回定例会",
   "rollcalls": 146,

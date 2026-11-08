@@ -2,7 +2,7 @@
  "asOf": "2026-04-24",
  "assemblyId": "pref-29",
  "counts": {
-  "rollcalls": 180
+  "rollcalls": 192
  },
  "current": true,
  "district": "生駒郡",
@@ -20,6 +20,468 @@
   }
  ],
  "timeline": [
+  {
+   "date": "2026-10-23",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-09-20261023-意見書-第10号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/26052/20261023_giinbetsu_hyoketsu.pdf",
+   "title": "働く者の声を尊重した労働時間法制の実現とＩＬＯ三者構成原則の堅持を求める意見書",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-23",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-09-20261023-意見書-第11号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/26052/20261023_giinbetsu_hyoketsu.pdf",
+   "title": "特定外来生物クビアカツヤカミキリ対策の強化を求める意見書",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-23",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-09-20261023-意見書-第6号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/26052/20261023_giinbetsu_hyoketsu.pdf",
+   "title": "自衛隊員の処遇改善及び退職自衛官の再就職促進に関する意見書",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-23",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-09-20261023-意見書-第7号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/26052/20261023_giinbetsu_hyoketsu.pdf",
+   "title": "「医療提供体制の在り方」に関する意見書",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-23",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-09-20261023-意見書-第8号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/26052/20261023_giinbetsu_hyoketsu.pdf",
+   "title": "高次脳機能障害者及びその家族への支援体制の抜本的強化に関する意見書",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-23",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-09-20261023-意見書-第9号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/26052/20261023_giinbetsu_hyoketsu.pdf",
+   "title": "「防災庁」発足を見据えた地方自治体との連携強化および防災体制の抜本的強化を求める意見書",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-23",
+   "kind": "localVote",
+   "result": "報告受理",
+   "rollCallId": "pref-29-2026-09-20261023-知事提出議案-報第27号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/26052/20261023_giinbetsu_hyoketsu.pdf",
+   "title": "令和７年度奈良県内部統制評価の報告について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-23",
+   "kind": "localVote",
+   "result": "報告受理",
+   "rollCallId": "pref-29-2026-09-20261023-知事提出議案-報第28号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/26052/20261023_giinbetsu_hyoketsu.pdf",
+   "title": "健全化判断比率及び資金不足比率の報告について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-23",
+   "kind": "localVote",
+   "result": "原案認定",
+   "rollCallId": "pref-29-2026-09-20261023-知事提出議案-議第74号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/26052/20261023_giinbetsu_hyoketsu.pdf",
+   "title": "令和７年度奈良県流域下水道事業費特別会計剰余金の処分及び決算の認定について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-23",
+   "kind": "localVote",
+   "result": "原案認定",
+   "rollCallId": "pref-29-2026-09-20261023-知事提出議案-議第85号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/26052/20261023_giinbetsu_hyoketsu.pdf",
+   "title": "令和７年度奈良県歳入歳出決算の認定について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-23",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-09-20261023-議議案員提出-議第87号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/26052/20261023_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県議会会議規則の形式を左横書きに改正する規則",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-08",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-09-20261008-決議-第2号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/26052/20261008_giinbetsu_hyoketsu.pdf",
+   "title": "「飛鳥・藤原の宮都」の世界文化遺産登録を受け、藤原宮跡の国営公園化の早期実現を求める決議",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-08",
+   "kind": "localVote",
+   "result": "報告受理",
+   "rollCallId": "pref-29-2026-09-20261008-知事提出議案-報第21号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/26052/20261008_giinbetsu_hyoketsu.pdf",
+   "title": "公立大学法人奈良県立大学の経営状況の報告について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-08",
+   "kind": "localVote",
+   "result": "報告受理",
+   "rollCallId": "pref-29-2026-09-20261008-知事提出議案-報第22号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/26052/20261008_giinbetsu_hyoketsu.pdf",
+   "title": "公立大学法人奈良県立医科大学の経営状況の報告について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-08",
+   "kind": "localVote",
+   "result": "報告受理",
+   "rollCallId": "pref-29-2026-09-20261008-知事提出議案-報第23号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/26052/20261008_giinbetsu_hyoketsu.pdf",
+   "title": "地方独立行政法人奈良県立病院機構の経営状況の報告について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-08",
+   "kind": "localVote",
+   "result": "報告受理",
+   "rollCallId": "pref-29-2026-09-20261008-知事提出議案-報第24号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/26052/20261008_giinbetsu_hyoketsu.pdf",
+   "title": "令和７年度地方独立行政法人奈良県立病院機構の業務の実績に関する評価結果の報告について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-08",
+   "kind": "localVote",
+   "result": "原案承認",
+   "rollCallId": "pref-29-2026-09-20261008-知事提出議案-報第25号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/26052/20261008_giinbetsu_hyoketsu.pdf",
+   "title": "地方自治法第179条第１項の規定による専決処分の報告について損害賠償額の決定について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-08",
+   "kind": "localVote",
+   "result": "報告受理",
+   "rollCallId": "pref-29-2026-09-20261008-知事提出議案-報第26号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/26052/20261008_giinbetsu_hyoketsu.pdf",
+   "title": "地方自治法第180条第１項の規定による専決処分の報告について知事等の損害賠償責任の一部免責に関する条例等の一部を改正する条例奈良県中小企業者等の事業の再生を支援するための中小企業者等向け融資の損失補償に係る回収納付金を受け取る権利の放棄に関する条例の一部を改正する条例県営住宅家賃の滞納者等に対する住宅明渡等請求申立てに関する訴訟事件について自動車事故にかかる損害賠償額の決定について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-08",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-09-20261008-知事提出議案-議第70号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/26052/20261008_giinbetsu_hyoketsu.pdf",
+   "title": "令和８年度奈良県一般会計補正予算（第２号）",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-08",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-09-20261008-知事提出議案-議第71号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/26052/20261008_giinbetsu_hyoketsu.pdf",
+   "title": "知事及び副知事の給与及び旅費に関する条例等の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-08",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-09-20261008-知事提出議案-議第72号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/26052/20261008_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県環境影響評価条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-08",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-09-20261008-知事提出議案-議第73号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/26052/20261008_giinbetsu_hyoketsu.pdf",
+   "title": "奈良県教科用図書選定審議会委員定数条例の一部を改正する条例",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-08",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-09-20261008-知事提出議案-議第75号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/26052/20261008_giinbetsu_hyoketsu.pdf",
+   "title": "県有施設省エネ推進事業にかかる請負契約の変更について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-08",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-09-20261008-知事提出議案-議第76号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/26052/20261008_giinbetsu_hyoketsu.pdf",
+   "title": "重要文化財等修理受託事業にかかる請負契約の締結について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-08",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-09-20261008-知事提出議案-議第77号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/26052/20261008_giinbetsu_hyoketsu.pdf",
+   "title": "競輪場再整備事業にかかる請負契約の締結について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-08",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-09-20261008-知事提出議案-議第78号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/26052/20261008_giinbetsu_hyoketsu.pdf",
+   "title": "中央卸売市場再整備推進事業にかかる請負契約の締結について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-08",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-09-20261008-知事提出議案-議第79号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/26052/20261008_giinbetsu_hyoketsu.pdf",
+   "title": "和解及び損害賠償額の決定について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-08",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-09-20261008-知事提出議案-議第80号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/26052/20261008_giinbetsu_hyoketsu.pdf",
+   "title": "損害賠償額の決定について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-08",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-09-20261008-知事提出議案-議第81号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/26052/20261008_giinbetsu_hyoketsu.pdf",
+   "title": "損害賠償額の決定について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-08",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-09-20261008-知事提出議案-議第82号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/26052/20261008_giinbetsu_hyoketsu.pdf",
+   "title": "損害賠償額の決定について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-08",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-09-20261008-知事提出議案-議第83号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/26052/20261008_giinbetsu_hyoketsu.pdf",
+   "title": "損害賠償額の決定について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-08",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-29-2026-09-20261008-知事提出議案-議第84号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/26052/20261008_giinbetsu_hyoketsu.pdf",
+   "title": "地方独立行政法人奈良県立病院機構中期計画の変更の認可について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-08",
+   "kind": "localVote",
+   "result": "原案同意",
+   "rollCallId": "pref-29-2026-09-20261008-知事提出議案-議第86号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.nara.lg.jp/documents/26052/20261008_giinbetsu_hyoketsu.pdf",
+   "title": "人事委員会の委員の選任について",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
   {
    "date": "2026-07-02",
    "kind": "localVote",
@@ -2240,300 +2702,6 @@
    "sessionLabel": "令和7年12月定例会",
    "sourceUrl": "https://www.pref.nara.lg.jp/documents/18768/20251215_giinbetsu_hyoketsu.pdf",
    "title": "奈良県立橿原公苑（明日香庭球場）の指定管理者の指定について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2025-10-24",
-   "kind": "localVote",
-   "result": "報告受理",
-   "rollCallId": "pref-29-2025-09-20251024-知事提出議案-報第30号",
-   "sessionLabel": "令和7年9月定例会",
-   "sourceUrl": "https://www.pref.nara.lg.jp/documents/18767/20251024_giinbetsu_hyoketsu.pdf",
-   "title": "令和６年度奈良県内部統制評価の報告について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2025-10-24",
-   "kind": "localVote",
-   "result": "報告受理",
-   "rollCallId": "pref-29-2025-09-20251024-知事提出議案-報第31号",
-   "sessionLabel": "令和7年9月定例会",
-   "sourceUrl": "https://www.pref.nara.lg.jp/documents/18767/20251024_giinbetsu_hyoketsu.pdf",
-   "title": "健全化判断比率及び資金不足比率の報告について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2025-10-24",
-   "kind": "localVote",
-   "result": "原案認定",
-   "rollCallId": "pref-29-2025-09-20251024-知事提出議案-議第76号",
-   "sessionLabel": "令和7年9月定例会",
-   "sourceUrl": "https://www.pref.nara.lg.jp/documents/18767/20251024_giinbetsu_hyoketsu.pdf",
-   "title": "令和６年度奈良県水道用水供給事業費特別会計決算の認定について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2025-10-24",
-   "kind": "localVote",
-   "result": "原案認定",
-   "rollCallId": "pref-29-2025-09-20251024-知事提出議案-議第77号",
-   "sessionLabel": "令和7年9月定例会",
-   "sourceUrl": "https://www.pref.nara.lg.jp/documents/18767/20251024_giinbetsu_hyoketsu.pdf",
-   "title": "令和６年度奈良県流域下水道事業費特別会計剰余金の処分及び決算の認定について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2025-10-24",
-   "kind": "localVote",
-   "result": "原案認定",
-   "rollCallId": "pref-29-2025-09-20251024-知事提出議案-議第81号",
-   "sessionLabel": "令和7年9月定例会",
-   "sourceUrl": "https://www.pref.nara.lg.jp/documents/18767/20251024_giinbetsu_hyoketsu.pdf",
-   "title": "令和６年度奈良県歳入歳出決算の認定について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2025-10-09",
-   "kind": "localVote",
-   "result": "報告受理",
-   "rollCallId": "pref-29-2025-09-20251009-知事提出議案-報第22号",
-   "sessionLabel": "令和7年9月定例会",
-   "sourceUrl": "https://www.pref.nara.lg.jp/documents/18767/20251009_giinbetsu_hyoketsu.pdf",
-   "title": "公立大学法人奈良県立大学の経営状況の報告について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2025-10-09",
-   "kind": "localVote",
-   "result": "報告受理",
-   "rollCallId": "pref-29-2025-09-20251009-知事提出議案-報第23号",
-   "sessionLabel": "令和7年9月定例会",
-   "sourceUrl": "https://www.pref.nara.lg.jp/documents/18767/20251009_giinbetsu_hyoketsu.pdf",
-   "title": "公立大学法人奈良県立医科大学の経営状況の報告について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2025-10-09",
-   "kind": "localVote",
-   "result": "報告受理",
-   "rollCallId": "pref-29-2025-09-20251009-知事提出議案-報第24号",
-   "sessionLabel": "令和7年9月定例会",
-   "sourceUrl": "https://www.pref.nara.lg.jp/documents/18767/20251009_giinbetsu_hyoketsu.pdf",
-   "title": "地方独立行政法人奈良県立病院機構の経営状況の報告について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2025-10-09",
-   "kind": "localVote",
-   "result": "報告受理",
-   "rollCallId": "pref-29-2025-09-20251009-知事提出議案-報第25号",
-   "sessionLabel": "令和7年9月定例会",
-   "sourceUrl": "https://www.pref.nara.lg.jp/documents/18767/20251009_giinbetsu_hyoketsu.pdf",
-   "title": "公立大学法人奈良県立大学の中期目標期間の終了時に見込まれる中期目標期間の業務の実績に関する評価結果の報告について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2025-10-09",
-   "kind": "localVote",
-   "result": "報告受理",
-   "rollCallId": "pref-29-2025-09-20251009-知事提出議案-報第26号",
-   "sessionLabel": "令和7年9月定例会",
-   "sourceUrl": "https://www.pref.nara.lg.jp/documents/18767/20251009_giinbetsu_hyoketsu.pdf",
-   "title": "公立大学法人奈良県立医科大学の中期目標期間の業務の実績に関する評価結果の報告について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2025-10-09",
-   "kind": "localVote",
-   "result": "報告受理",
-   "rollCallId": "pref-29-2025-09-20251009-知事提出議案-報第27号",
-   "sessionLabel": "令和7年9月定例会",
-   "sourceUrl": "https://www.pref.nara.lg.jp/documents/18767/20251009_giinbetsu_hyoketsu.pdf",
-   "title": "令和６年度地方独立行政法人奈良県立病院機構の業務の実績に関する評価結果の報告について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2025-10-09",
-   "kind": "localVote",
-   "result": "原案承認",
-   "rollCallId": "pref-29-2025-09-20251009-知事提出議案-報第28号",
-   "sessionLabel": "令和7年9月定例会",
-   "sourceUrl": "https://www.pref.nara.lg.jp/documents/18767/20251009_giinbetsu_hyoketsu.pdf",
-   "title": "地方自治法第179条第１項の規定による専決処分の報告について損害賠償額の決定について損害賠償額の決定について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2025-10-09",
-   "kind": "localVote",
-   "result": "報告受理",
-   "rollCallId": "pref-29-2025-09-20251009-知事提出議案-報第29号",
-   "sessionLabel": "令和7年9月定例会",
-   "sourceUrl": "https://www.pref.nara.lg.jp/documents/18767/20251009_giinbetsu_hyoketsu.pdf",
-   "title": "地方自治法第180条第１項の規定による専決処分の報告について奈良県税条例の一部を改正する条例奈良県児童福祉施設の設備及び運営の基準に関する条例等の一部を改正する条例県営住宅家賃の滞納者等に対する住宅明渡等請求申立てに関する訴訟事件について自動車事故にかかる損害賠償額の決定について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2025-10-09",
-   "kind": "localVote",
-   "result": "原案可決",
-   "rollCallId": "pref-29-2025-09-20251009-知事提出議案-議第72号",
-   "sessionLabel": "令和7年9月定例会",
-   "sourceUrl": "https://www.pref.nara.lg.jp/documents/18767/20251009_giinbetsu_hyoketsu.pdf",
-   "title": "令和７年度奈良県一般会計補正予算（第２号）",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2025-10-09",
-   "kind": "localVote",
-   "result": "原案可決",
-   "rollCallId": "pref-29-2025-09-20251009-知事提出議案-議第73号",
-   "sessionLabel": "令和7年9月定例会",
-   "sourceUrl": "https://www.pref.nara.lg.jp/documents/18767/20251009_giinbetsu_hyoketsu.pdf",
-   "title": "奈良県事務処理の特例に関する条例の一部を改正する条例",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2025-10-09",
-   "kind": "localVote",
-   "result": "原案可決",
-   "rollCallId": "pref-29-2025-09-20251009-知事提出議案-議第74号",
-   "sessionLabel": "令和7年9月定例会",
-   "sourceUrl": "https://www.pref.nara.lg.jp/documents/18767/20251009_giinbetsu_hyoketsu.pdf",
-   "title": "奈良県附属機関に関する条例の一部を改正する条例",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2025-10-09",
-   "kind": "localVote",
-   "result": "原案可決",
-   "rollCallId": "pref-29-2025-09-20251009-知事提出議案-議第75号",
-   "sessionLabel": "令和7年9月定例会",
-   "sourceUrl": "https://www.pref.nara.lg.jp/documents/18767/20251009_giinbetsu_hyoketsu.pdf",
-   "title": "奈良県文化会館条例の一部を改正する条例",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2025-10-09",
-   "kind": "localVote",
-   "result": "原案可決",
-   "rollCallId": "pref-29-2025-09-20251009-知事提出議案-議第78号",
-   "sessionLabel": "令和7年9月定例会",
-   "sourceUrl": "https://www.pref.nara.lg.jp/documents/18767/20251009_giinbetsu_hyoketsu.pdf",
-   "title": "橿原考古学研究所の研究用機器の取得について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2025-10-09",
-   "kind": "localVote",
-   "result": "原案可決",
-   "rollCallId": "pref-29-2025-09-20251009-知事提出議案-議第79号",
-   "sessionLabel": "令和7年9月定例会",
-   "sourceUrl": "https://www.pref.nara.lg.jp/documents/18767/20251009_giinbetsu_hyoketsu.pdf",
-   "title": "不当利得返還請求事件について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2025-10-09",
-   "kind": "localVote",
-   "result": "原案可決",
-   "rollCallId": "pref-29-2025-09-20251009-知事提出議案-議第80号",
-   "sessionLabel": "令和7年9月定例会",
-   "sourceUrl": "https://www.pref.nara.lg.jp/documents/18767/20251009_giinbetsu_hyoketsu.pdf",
-   "title": "損害賠償額の決定について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2025-10-09",
-   "kind": "localVote",
-   "result": "原案同意",
-   "rollCallId": "pref-29-2025-09-20251009-知事提出議案-議第82号",
-   "sessionLabel": "令和7年9月定例会",
-   "sourceUrl": "https://www.pref.nara.lg.jp/documents/18767/20251009_giinbetsu_hyoketsu.pdf",
-   "title": "人事委員会の委員の選任について",
    "vote": {
     "legend": "賛成",
     "mapped": "賛成",

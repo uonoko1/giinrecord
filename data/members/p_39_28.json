@@ -2,7 +2,7 @@
  "asOf": "2026-07-30",
  "assemblyId": "pref-39",
  "counts": {
-  "rollcalls": 104
+  "rollcalls": 127
  },
  "current": true,
  "district": "高知市",
@@ -20,6 +20,328 @@
   }
  ],
  "timeline": [
+  {
+   "date": "2026-10-20",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-09-20261020-知事提出議案-第10号",
+   "sessionLabel": "令和８年９月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00159258/0809.pdf",
+   "title": "こうち動物愛護センター（仮称）建築主体工事請負契約の締結に関する議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-20",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-39-2026-09-20261020-知事提出議案-第1号",
+   "sessionLabel": "令和８年９月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00159258/0809.pdf",
+   "title": "令和８年度高知県一般会計補正予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-20",
+   "kind": "localVote",
+   "result": "原案可決",
+   "rollCallId": "pref-39-2026-09-20261020-知事提出議案-第2号",
+   "sessionLabel": "令和８年９月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00159258/0809.pdf",
+   "title": "令和８年度高知県災害救助基金特別会計補正予算",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-20",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-09-20261020-知事提出議案-第3号",
+   "sessionLabel": "令和８年９月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00159258/0809.pdf",
+   "title": "高知県一時保護委託者の登録等に関する基準を定める条例議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-20",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-09-20261020-知事提出議案-第4号",
+   "sessionLabel": "令和８年９月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00159258/0809.pdf",
+   "title": "知事等の損害賠償責任の一部免責に関する条例の一部を改正する条例議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-20",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-09-20261020-知事提出議案-第5号",
+   "sessionLabel": "令和８年９月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00159258/0809.pdf",
+   "title": "高知県病院等の人員及び施設に関する基準等を定める条例の一部を改正する条例議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-20",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-09-20261020-知事提出議案-第6号",
+   "sessionLabel": "令和８年９月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00159258/0809.pdf",
+   "title": "高知県環境不動産の建築の促進に関する条例の一部を改正する条例議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-20",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-09-20261020-知事提出議案-第7号",
+   "sessionLabel": "令和８年９月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00159258/0809.pdf",
+   "title": "高知県が当事者である調停における和解の合意に関する議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-20",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-09-20261020-知事提出議案-第8号",
+   "sessionLabel": "令和８年９月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00159258/0809.pdf",
+   "title": "権利の放棄に関する議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-20",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-09-20261020-知事提出議案-第9号",
+   "sessionLabel": "令和８年９月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00159258/0809.pdf",
+   "title": "県有財産（教学機器）の取得に関する議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-20",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-09-20261020-議員提出議案-議発第10号",
+   "sessionLabel": "令和８年９月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00159258/0809.pdf",
+   "title": "化学物質過敏症に関する対策強化を求める意見書議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-20",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-09-20261020-議員提出議案-議発第11号",
+   "sessionLabel": "令和８年９月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00159258/0809.pdf",
+   "title": "夏休み中のこどもの貧困対策及び緊急セーフティーネットの強化を求める意見書議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-20",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-09-20261020-議員提出議案-議発第12号",
+   "sessionLabel": "令和８年９月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00159258/0809.pdf",
+   "title": "働く者の声を尊重した労働時間法制の実現とＩＬＯ三者構成原則の堅持を求める意見書議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-20",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-09-20261020-議員提出議案-議発第13号",
+   "sessionLabel": "令和８年９月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00159258/0809.pdf",
+   "title": "米国産生食用ジャガイモの輸入解禁を行わないことを求める意見書議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-20",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-09-20261020-議員提出議案-議発第14号",
+   "sessionLabel": "令和８年９月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00159258/0809.pdf",
+   "title": "浜岡原発の不正行為を受け全原発の調査を求める意見書議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-20",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-09-20261020-議員提出議案-議発第2号",
+   "sessionLabel": "令和８年９月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00159258/0809.pdf",
+   "title": "議員を派遣することについて議会の決定を求める議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-20",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-09-20261020-議員提出議案-議発第4号",
+   "sessionLabel": "令和８年９月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00159258/0809.pdf",
+   "title": "地方財政の充実・強化に関する意見書議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-20",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-09-20261020-議員提出議案-議発第5号",
+   "sessionLabel": "令和８年９月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00159258/0809.pdf",
+   "title": "学校体育館への空調設備の整備等を早急に進めることを求める意見書議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-20",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-09-20261020-議員提出議案-議発第6号",
+   "sessionLabel": "令和８年９月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00159258/0809.pdf",
+   "title": "水産養殖業の経営継続に向けた支援を求める意見書議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-20",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-09-20261020-議員提出議案-議発第7号",
+   "sessionLabel": "令和８年９月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00159258/0809.pdf",
+   "title": "飲食料品に係る消費税率引下げに伴う地方財政の安定及び地域経済・産業への支援を求める意見書議案",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-10-20",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-09-20261020-議員提出議案-議発第8号",
+   "sessionLabel": "令和８年９月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00159258/0809.pdf",
+   "title": "持続可能な稲作の確立を求める意見書議案",
+   "vote": {
+    "legend": "反対",
+    "mapped": "反対",
+    "raw": "×"
+   }
+  },
+  {
+   "date": "2026-10-20",
+   "kind": "localVote",
+   "result": "否決",
+   "rollCallId": "pref-39-2026-09-20261020-議員提出議案-議発第9号",
+   "sessionLabel": "令和８年９月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00159258/0809.pdf",
+   "title": "防災庁発足を見据えた地方自治体との連携強化及び防災体制の抜本的強化を求める意見書議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "kind": "localVote",
+   "result": "〃",
+   "rollCallId": "pref-39-2026-09-20260925-議員提出議案-議発第1号",
+   "sessionLabel": "令和８年９月定例会",
+   "sourceUrl": "https://gikai.pref.kochi.lg.jp/_files/00159258/0809.pdf",
+   "title": "議員を派遣することについて議会の決定を求める議案",
+   "vote": {
+    "legend": "賛成",
+    "mapped": "賛成",
+    "raw": "○"
+   }
+  },
   {
    "date": "2026-07-10",
    "kind": "localVote",
