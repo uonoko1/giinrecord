@@ -198,8 +198,10 @@ jobs:
           # 両方入ると差が 4 になり **4 本消えても緑**だった。
           # 関係式（実数 − floor = 3）を機械が見ていないのが根本で、それは #1264。
           # （#720 の「実数 − 3」。テストを増やした PR がそのついでに上げる）。
-          echo "loop ran: $ran (floor 36)"
-          [ "$ran" -ge 36 ] || { echo "FAIL: fewer test files ran than expected — glob narrowed or files deleted"; exit 1; }
+                    # #1227 で scripts/ci/test/etl-auto-merge-gate.test.sh が増え**実測 40 本**になったので 36 → 37 に上げる
+          # （#720 の「実数 − 3」。テストを増やした PR がそのついでに上げる）。
+          echo "loop ran: $ran (floor 37)"
+          [ "$ran" -ge 37 ] || { echo "FAIL: fewer test files ran than expected — glob narrowed or files deleted"; exit 1; }
       # #814: **スタブと実装が同じ誤りを共有して緑になった**（`gh secret set --body-file` は存在しない）。
       # リポジトリの中どうしを突き合わせても一致してしまうので、**本物の `gh --help` を一次資料にする。**
       # `--help` だけなので**認証も網も副作用も要らない**（`--no-store` は公開鍵を取りに行くので 401 になる。
