@@ -129,8 +129,20 @@ while :; do
   # **`--kill-after` が無いと、TERM を無視する子に予算を踏み越えられる**
   # ——それは #1254 の「無言で `timeout-minutes` を食い切る」と同じ形である。
   # **この引数は `scripts/ci/test/playwright-deps.test.sh` の t_kill_after_bounds_the_overrun が固定する。**
-  timeout --signal=TERM --kill-after=30s "${this_budget}s" "${CMD[@]}"
+  # **`timeout` は `&` で起こし、返ったらプロセスグループごと KILL する**（#1339）。
+  # 2026-11-14 に `ubuntu-latest` が 26.04 になり、`timeout` が GNU coreutils 9.4 から
+  # **uutils coreutils 0.10.0** に変わった。実測（docker、2026-11-15）:
+  #   GNU 9.4 : `--kill-after` は kill(0, SIGKILL) でグループごと殺す → 孫も死ぬ（3 秒で返る）
+  #   uutils  : KILL は**直接の子にしか届かず、孫（apt-get / sleep）が生き残って stdout を握る**
+  #             → `$( … )` や CI の step は孫が終わるまで返らない（上のテストで 30 秒）
+  # どちらの `timeout` も setpgid(0,0) で**自分の pid を pgid にする**ので、その pid に
+  # マイナスを付けて KILL すればグループ全員に届く。GNU ではもう空なので no-op。
+  # 失敗は無視する（`timeout` 自身が死んでいればグループは消えている）。
+  timeout --signal=TERM --kill-after=30s "${this_budget}s" "${CMD[@]}" &
+  timeout_pid=$!
+  wait "$timeout_pid"
   rc=$?
+  kill -KILL -- "-$timeout_pid" 2>/dev/null || true
   set -e
 
   if [[ $rc -eq 0 ]]; then
