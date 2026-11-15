@@ -132,7 +132,8 @@ t_kill_after_bounds_the_overrun() {
   local s; s=$(with_budget 1 1)
   sed -i "s/--kill-after=30s/--kill-after=2s/" "$s"
   grep -q -- "--kill-after=2s" "$s" || { echo "FATAL: kill-after の置換が当たらなかった。この測定は使えない"; exit 9; }
-  printf '#!/usr/bin/env bash\ntrap "" TERM\nsleep 30\n' > "$TMP/ignores-term.sh"
+  # 孫の `sleep` には他と見分けられる秒数を付ける（#1339: 生き残りを /proc で数える）
+  printf '#!/usr/bin/env bash\ntrap "" TERM\nsleep 31.337\n' > "$TMP/ignores-term.sh"
   chmod +x "$TMP/ignores-term.sh"
   local t0 t1; t0=$(date +%s)
   run env PW_DEPS_CMD_OVERRIDE="$TMP/ignores-term.sh" bash "$s" --cache-hit true
@@ -140,6 +141,13 @@ t_kill_after_bounds_the_overrun() {
   assert_eq 7 "$STATUS" "TERM を無視する子でも 7（無言で張り付かない）"
   assert_contains "$OUT" "rc=137" "**KILL まで行ったこと**を言う（TERM で死んでいないので 124 ではない）"
   [[ $((t1-t0)) -lt 25 ]] || fail "予算 1s + kill-after 2s なのに $((t1-t0))s かかった（--kill-after が効いていない）"
+  # #1339: uutils coreutils（Ubuntu 26.04 の ubuntu-latest）の timeout は KILL を直接の子にしか送らず、
+  # 孫が生き残って stdout を握る（上の `run` が 30 秒返らない）。スクリプト側がプロセスグループごと
+  # 殺しているなら孫は居ない。pgrep（procps）に頼らず /proc を読む（docker の素の ubuntu にも在る）。
+  # **パターンは `[.]` で書く**: 数える grep 自身の cmdline に `sleep 31.337` が入ると自分を数える
+  # （docker で 24.04 / 26.04 とも「1 個生き残り」と出た。pgrep-matches-its-own-wait-loop と同じ罠）。
+  local orphans; orphans=$(for c in /proc/[0-9]*/cmdline; do tr '\0' ' ' < "$c" 2>/dev/null; echo; done | grep -c "sleep 31[.]337" || true)
+  [[ $orphans -eq 0 ]] || fail "孫の sleep が $orphans 個生き残っている（プロセスグループごと KILL されていない）"
 }
 
 
