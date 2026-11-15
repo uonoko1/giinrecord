@@ -121,6 +121,50 @@ export const NDL_API_INTERVAL_MS = 2000;
  */
 export interface FetchOpts { noCache?: boolean; session?: number; latestSession?: number }
 
+/**
+ * 相手側の一時的な失敗に対する再試行（Issue #1340）。
+ *
+ * ## 実測（etl.yml の `Run ETL`、2026-11-11〜13 の 3 晩）
+ *
+ *   11/11・11/13  `[TypeError: fetch failed] { [cause]: SocketError: other side closed }`
+ *   11/12         `Error: HTTP 504 https://www.shugiin.go.jp/.../gian/keika/1DDE08A.htm`
+ *
+ * どちらも 1 回で諦めていた。`other side closed` は keep-alive の接続を相手が閉じた直後に
+ * 再利用したときの典型で、やり直せば通る類。11/14・11/15 は通過しているので間欠的。
+ *
+ * ## 何を再試行し、何をしないか
+ *
+ *   再試行する:  `fetch()` が TypeError で失敗（ネットワーク層）… `HTML_INTERVAL_MS` 待つ
+ *               HTTP 502 / 503 / 504（ゲートウェイ側の一時失敗）… `GATEWAY_RETRY_INTERVAL_MS` 待つ
+ *   しない:      404（「無い」は正常。#103）、他の 4xx、500（相手のバグは繰り返しても変わらない）、
+ *               TypeError 以外の例外（AbortError など。中断は意図されたもの）
+ *
+ * 再試行は**黙って通さない**: 1 回ごとに stderr へ `fetch: retry n/N <url> (<reason>)` を出す。
+ * 後で「何回起きているか」を数えられるようにするため。
+ */
+export const FETCH_MAX_ATTEMPTS = 3;
+export const RETRY_STATUSES: ReadonlySet<number> = new Set([502, 503, 504]);
+export const GATEWAY_RETRY_INTERVAL_MS = HTML_INTERVAL_MS * 5;
+
+/**
+ * テストだけが差し替える fetch / sleep。本番は常に `globalThis.fetch` と実物の `sleep`
+ * （差し替え口を本番経路に出さない）。`undefined` で既定に戻す。
+ * 片方だけ渡したときは、渡さなかった側が既定に戻る。
+ */
+interface FetchDeps { fetch?: typeof fetch; sleep?: (ms: number) => Promise<unknown> }
+let depsOverride: FetchDeps | undefined;
+export function setFetchDepsForTest(deps: FetchDeps | undefined): void { depsOverride = deps; }
+const doFetch = (url: string, init: RequestInit): Promise<Response> => (depsOverride?.fetch ?? globalThis.fetch)(url, init);
+const doSleep = (ms: number): Promise<unknown> => (depsOverride?.sleep ?? sleep)(ms);
+
+/** 例外を 1 行で言い表す（cause があれば連ねる）。undici の `fetch failed` は cause に本当の理由がある。 */
+const describeError = (e: unknown): string => {
+  if (!(e instanceof Error)) return String(e);
+  const cause = e.cause;
+  const causeText = cause instanceof Error ? `: ${cause.message}` : cause !== undefined ? `: ${String(cause)}` : "";
+  return `${e.name}: ${e.message}${causeText}`;
+};
+
 /** Polite fetch with on-disk cache. Government sites are slow; never hammer them. */
 export async function fetchText(url: string, encoding: "utf-8" | "shift_jis" = "utf-8", opts: FetchOpts = {}): Promise<string> {
   const text = await fetchTextOr404(url, encoding, opts);
@@ -155,9 +199,9 @@ export async function fetchTextOr404(url: string, encoding: "utf-8" | "shift_jis
     } catch { /* miss */ }
   }
   hitNetwork = true;
-  const res = await fetch(url, { headers: { "User-Agent": UA } });
+  const res = await fetchWithRetry(url);
   if (res.status === 404) {
-    await sleep(HTML_INTERVAL_MS);
+    await doSleep(HTML_INTERVAL_MS);
     return undefined;
   }
   if (!res.ok) throw new Error(`HTTP ${res.status} ${url}`);
@@ -167,8 +211,40 @@ export async function fetchTextOr404(url: string, encoding: "utf-8" | "shift_jis
   // 「書かない」指定ではない。ここで書き控えると、フラグ無しで走った実行の取得結果が
   // 次の作り直し（フラグ有り）から読めなくなり、前進の足を引っ張る。
   await writeFile(file, text, "utf-8");
-  await sleep(HTML_INTERVAL_MS);
+  await doSleep(HTML_INTERVAL_MS);
   return text;
+}
+
+/**
+ * `fetch()` を最大 `FETCH_MAX_ATTEMPTS` 回試す（#1340）。
+ * 返すのは最後に得た Response（502/503/504 を含む。ステータスの判定は呼び出し側が従来どおり行う）。
+ * TypeError 以外の例外・再試行し尽くした TypeError は、URL と試行回数を付けた Error にして投げる。
+ */
+async function fetchWithRetry(url: string): Promise<Response> {
+  const retries = FETCH_MAX_ATTEMPTS - 1;
+  const note = (attempt: number, reason: string): void => {
+    process.stderr.write(`fetch: retry ${attempt}/${retries} ${url} (${reason})\n`);
+  };
+  for (let attempt = 1; ; attempt++) {
+    let res: Response;
+    try {
+      res = await doFetch(url, { headers: { "User-Agent": UA } });
+    } catch (e) {
+      const reason = describeError(e);
+      if (e instanceof TypeError && attempt < FETCH_MAX_ATTEMPTS) {
+        note(attempt, reason);
+        await doSleep(HTML_INTERVAL_MS);
+        continue;
+      }
+      throw new Error(`fetch failed after ${attempt} attempt(s): ${url} (${reason})`, { cause: e });
+    }
+    if (RETRY_STATUSES.has(res.status) && attempt < FETCH_MAX_ATTEMPTS) {
+      note(attempt, `HTTP ${res.status}`);
+      await doSleep(GATEWAY_RETRY_INTERVAL_MS);
+      continue;
+    }
+    return res;
+  }
 }
 
 export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));

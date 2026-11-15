@@ -18,8 +18,10 @@ describe("fetchTextOr404", () => {
     assert.equal(await fetchTextOr404(URL_404, "utf-8", { noCache: true }), undefined);
   });
   test("5xx は例外（障害を名簿無しと混同しない）", async () => {
-    stub(503);
-    await assert.rejects(() => fetchTextOr404(URL_404, "utf-8", { noCache: true }), /HTTP 503/);
+    // #1340 で 502/503/504 は再試行（実 sleep 5 秒 × 2）になったので、ここは再試行しない 500 で見る。
+    // 503 の挙動は fetch-retry.test.ts が固定する。
+    stub(500);
+    await assert.rejects(() => fetchTextOr404(URL_404, "utf-8", { noCache: true }), /HTTP 500/);
   });
   test("fetchText は 404 も例外のまま（従来どおり）", async () => {
     stub(404);
