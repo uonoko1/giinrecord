@@ -2,7 +2,7 @@
  "asOf": "2025-04-01",
  "assemblyId": "pref-41",
  "counts": {
-  "rollcalls": 240
+  "rollcalls": 238
  },
  "current": true,
  "district": "武雄市",
@@ -3346,34 +3346,6 @@
    "sessionLabel": "令和5年5月臨時会（5月29日）",
    "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00396953/3_96953_281837_up_b40ejbja.pdf",
    "title": "教育長の任命について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-05-11",
-   "kind": "localVote",
-   "result": "同意",
-   "rollCallId": "pref-41-2023-05-rinji-list05938-20230511-乙第37号議案",
-   "sessionLabel": "令和5年5月臨時会（5月9日から11日まで）",
-   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00396145/3_96145_279859_up_jsqwevkw.pdf",
-   "title": "監査委員の選任について",
-   "vote": {
-    "legend": "賛成",
-    "mapped": "賛成",
-    "raw": "○"
-   }
-  },
-  {
-   "date": "2023-05-11",
-   "kind": "localVote",
-   "result": "承認",
-   "rollCallId": "pref-41-2023-05-rinji-list05938-20230511-甲第35号議案",
-   "sessionLabel": "令和5年5月臨時会（5月9日から11日まで）",
-   "sourceUrl": "https://www.pref.saga.lg.jp/gikai/kiji00396145/3_96145_279859_up_jsqwevkw.pdf",
-   "title": "令和５年度佐賀県一般会計補正予算（第１号）の専決処分について",
    "vote": {
     "legend": "賛成",
     "mapped": "賛成",

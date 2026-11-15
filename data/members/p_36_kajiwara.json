@@ -1,8 +1,8 @@
 {
- "asOf": "2026-09-20",
+ "asOf": "2026-11-09",
  "assemblyId": "pref-36",
  "counts": {
-  "rollcalls": 153
+  "rollcalls": 182
  },
  "current": true,
  "district": "徳島選挙区",
@@ -14,19 +14,396 @@
  "sourceUrl": "https://www.pref.tokushima.lg.jp/gikai/giin/kaihabetu/",
  "terms": [
   {
-   "asOf": "2026-09-20",
+   "asOf": "2026-11-09",
    "district": "徳島選挙区",
    "group": "公明党徳島県議団"
   }
  ],
  "timeline": [
   {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2026-09-20261007-知事提出議案-第10号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1080349.pdf",
+   "title": "徳島県職業能力開発校の設置及び管理に関する条例の一部改正について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2026-09-20261007-知事提出議案-第11号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1080349.pdf",
+   "title": "県営土地改良事業分担金等徴収条例の一部改正について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2026-09-20261007-知事提出議案-第12号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1080349.pdf",
+   "title": "特定都市河川浸水被害対策法施行条例の制定について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2026-09-20261007-知事提出議案-第13号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1080349.pdf",
+   "title": "令和8年度県営土地改良事業費に対する受益市町負担金について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2026-09-20261007-知事提出議案-第14号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1080349.pdf",
+   "title": "令和8年度広域漁港整備事業費等に対する受益市町負担金について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2026-09-20261007-知事提出議案-第15号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1080349.pdf",
+   "title": "令和8年度県営林道開設事業費に対する受益市町負担金について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2026-09-20261007-知事提出議案-第16号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1080349.pdf",
+   "title": "令和8年度県単独道路事業費に対する受益市町負担金について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2026-09-20261007-知事提出議案-第17号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1080349.pdf",
+   "title": "令和8年度県営都市計画事業費に対する受益市負担金について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2026-09-20261007-知事提出議案-第18号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1080349.pdf",
+   "title": "令和8年度県単独砂防事業費等に対する受益市町村負担金について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2026-09-20261007-知事提出議案-第19号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1080349.pdf",
+   "title": "令和8年度流域下水道事業費に対する受益市町負担金について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2026-09-20261007-知事提出議案-第1号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1080349.pdf",
+   "title": "令和8年度徳島県一般会計補正予算（第3号）",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2026-09-20261007-知事提出議案-第20号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1080349.pdf",
+   "title": "徳島東環状線街路工事末広住吉高架橋上部工の請負契約の変更請負契約について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2026-09-20261007-知事提出議案-第21号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1080349.pdf",
+   "title": "徳島県鳴門総合運動公園野球場改築工事のうち建築工事（1）の請負契約の変更請負契約について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2026-09-20261007-知事提出議案-第22号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1080349.pdf",
+   "title": "徳島県鳴門総合運動公園野球場改築工事のうち建築工事（2）の請負契約の変更請負契約について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2026-09-20261007-知事提出議案-第23号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1080349.pdf",
+   "title": "徳島県鳴門総合運動公園野球場改築工事のうち建築工事（3）の請負契約の変更請負契約について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2026-09-20261007-知事提出議案-第24号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1080349.pdf",
+   "title": "徳島県鳴門総合運動公園野球場改築工事のうち電気工事の請負契約の変更請負契約について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2026-09-20261007-知事提出議案-第25号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1080349.pdf",
+   "title": "徳島県鳴門総合運動公園野球場改築工事のうち管工事の請負契約の変更請負契約について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2026-09-20261007-知事提出議案-第26号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1080349.pdf",
+   "title": "教育用パソコンの購入契約について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2026-09-20261007-知事提出議案-第27号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1080349.pdf",
+   "title": "損害賠償（国庫補助金申請過誤）の額の決定について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2026-09-20261007-知事提出議案-第2号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1080349.pdf",
+   "title": "令和8年度徳島県港湾等整備事業特別会計補正予算（第1号）",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2026-09-20261007-知事提出議案-第3号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1080349.pdf",
+   "title": "令和8年度徳島県電気事業会計補正予算（第1号）",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2026-09-20261007-知事提出議案-第4号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1080349.pdf",
+   "title": "令和8年度徳島県工業用水道事業会計補正予算（第1号）",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2026-09-20261007-知事提出議案-第5号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1080349.pdf",
+   "title": "徳島県の事務処理の特例に関する条例の一部改正について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2026-09-20261007-知事提出議案-第6号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1080349.pdf",
+   "title": "徳島県地域未来基金条例の制定について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2026-09-20261007-知事提出議案-第7号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1080349.pdf",
+   "title": "徳島県環境影響評価条例の一部改正について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2026-09-20261007-知事提出議案-第8号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1080349.pdf",
+   "title": "就学前の子どもに関する教育、保育等の総合的な提供の推進に関する法律施行条例等の一部改正について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2026-09-20261007-知事提出議案-第9号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1080349.pdf",
+   "title": "児童福祉法施行条例の一部改正について",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "result": "不採択",
+   "rollCallId": "pref-36-2026-09-20261007-請願-第22号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1080349.pdf",
+   "title": "最低賃金引上げの安定的実施に向けた中小企業・小規模企業に対する賃上げ直接支援の実施を求める請願",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "〇"
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "kind": "localVote",
+   "result": "可決",
+   "rollCallId": "pref-36-2026-09-20261007-議員提出議案-第2号",
+   "sessionLabel": "令和8年9月定例会",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1080349.pdf",
+   "title": "後藤田正純知事に対する問責決議",
+   "vote": {
+    "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
+    "raw": "○"
+   }
+  },
+  {
    "date": "2026-09-11",
    "kind": "localVote",
    "result": "可決",
    "rollCallId": "pref-36-2026-09-20260911-議員提出議案-第1号",
    "sessionLabel": "令和8年9月定例会",
-   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1075652.pdf",
+   "sourceUrl": "https://www.pref.tokushima.lg.jp/file/attachment/1080385.pdf",
    "title": "知事の専決処分事項の指定の一部改正について",
    "vote": {
     "legend": "委員会審査結果又は議長宣告に起立（賛成）した者",
