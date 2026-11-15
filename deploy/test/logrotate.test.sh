@@ -124,8 +124,12 @@ t_logrotate_accepts_the_configs() {
     errs=$(printf '%s\n' "$out" | grep 'error:' \
       | grep -v 'state file' | grep -v 'switching euid' || true)
     assert_eq "" "$errs" "$f: logrotate reports no config error"
-    # the directives we care about must actually have been understood
-    assert_contains "$out" "monthly (12 rotations)" "$f: monthly, keep 12 parsed"
+    # the directives we care about must actually have been understood.
+    # #1339: logrotate 3.22.0（Ubuntu 26.04 の ubuntu-latest）は 1 行にまとめて
+    #   "… monthly empty log files are not rotated, … (12 rotations), old logs are removed"
+    # と出す。3.21.0（24.04）は "monthly (12 rotations)" と隣り合う。**語の並びではなく 2 語の存在**を見る。
+    assert_contains "$out" " monthly" "$f: monthly parsed"
+    assert_contains "$out" "(12 rotations)" "$f: keep 12 parsed"
     assert_contains "$out" "33554432" "$f: maxsize 32M parsed"
   done
 }
