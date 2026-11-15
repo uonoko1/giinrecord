@@ -26,6 +26,7 @@
 | `HTML_INTERVAL_MS` | 1 秒 | 衆院・参院・総務省・日本郵便の HTML / PDF / zip（`fetchText`・`sources/districts/fetch.ts`） | 同上 |
 | `NDL_API_INTERVAL_MS` | 2 秒 | 国会会議録検索システム 検索用API（`kokkai-speeches.ts`・`kokkai-attendance.ts` の `REQUEST_INTERVAL_MS`） | API の利用条件が「**データを取得し終えてから数秒程度空けて**次のリクエストを行うように」と明示 |
 | `MIN_INTERVAL_MS`（`sources/local/polite-fetch.ts`） | `POLITENESS_FLOOR_MS` | 地方議会 | 同上（robots.txt 遵守・host アローリストは従来どおり） |
+| `GATEWAY_RETRY_INTERVAL_MS` | `HTML_INTERVAL_MS` × 5（5 秒） | HTTP 502 / 503 / 504 を受けたあとの再試行までの待ち（#1340。最大 `FETCH_MAX_ATTEMPTS` = 3 回試す。ネットワーク層の失敗 `TypeError: fetch failed` の再試行は `HTML_INTERVAL_MS`） | ゲートウェイ側の一時失敗は接続切断より回復に時間がかかるので、礼儀の間隔より長く空ける |
 
 - #231 以前は国会 HTML が 0.5 秒・地方議会が 1 秒という**二重基準**で、経緯で別々に実装されたもの。1 秒に揃えた。
 - 会議録 API だけ 2 秒にしたのは、**提供元自身が明示的に要求している**唯一のケースだから。以前の 1 秒はこの要求を満たしていなかった。
@@ -60,7 +61,7 @@
 | `Run ETL` で非0終了、`data contract violations` | 上流 HTML の構造変化・表記ゆれで不変条件違反 | data/ は触られない。ログの違反行をもとにパーサー／フィクスチャを修正 |
 | `docker/build-push-action` で失敗 | `pnpm install --frozen-lockfile` が lockfile と不一致、または Docker Hub 障害 | `docker build -f packages/etl/Dockerfile .` を手元で再現。lockfile を更新した PR は必ずイメージもビルドされる（etl.yml は毎回ビルド） |
 | `Run ETL` 後に `git add data` が permission denied | コンテナが runner と別の uid で書いた | `docker run --user "$(id -u):$(id -g)"` が外れていないか確認。`.cache` の mkdir が先に走っているか |
-| `Run ETL` で `HTTP 5xx` / timeout | 参議院・国会会議録の障害 | 翌日の schedule で自動再試行。急ぐなら手動 dispatch（取得済みページはキャッシュから復元される） |
+| `Run ETL` で `HTTP 5xx` / timeout / `fetch failed after 3 attempt(s)` | 参議院・衆議院・国会会議録の障害。**502 / 503 / 504 と接続切断（`other side closed`）は `fetch.ts` が最大 3 回試してから落ちる**（#1340。ログに `fetch: retry n/2 <url> (<reason>)` が出る。500・4xx は 1 回で落ちる） | 翌日の schedule で自動再試行。急ぐなら手動 dispatch（取得済みページはキャッシュから復元される）。`fetch: retry` の行数で相手側の不安定さを数えられる |
 | データ PR が作られない／Summary で「なし」 | 本当に差分が無い（ETL は `fetchedAt` を meta.json に書くので通常は毎回差分が出る） | `meta.json` まで変わらないなら ETL が data/ を書いていない。ログの `done` を確認 |
 | `test -n "$NUMBER"` で失敗 | `gh pr create` 失敗（label `etl` が無い、権限不足） | 手元で `gh pr list --head data/refresh`。label が無ければ作る |
 | 15 分待っても MERGED にならない | ブランチ保護の required check が走らない。`GITHUB_TOKEN` の push は `pull_request` イベントを起こさないため、CI を required にすると auto-merge が永遠に待つ | required check を外すか、push に PAT / GitHub App token を使う（`secrets.GITHUB_TOKEN` から差し替える）。手動で PR をマージすれば staging は `push: main` で走るが production は走らない点に注意 → `gh workflow run deploy-data.yml` |

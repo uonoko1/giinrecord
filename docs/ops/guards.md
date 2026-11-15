@@ -51,6 +51,7 @@ grep してから起票してください（**今日の 5 件はそこにあり�
 | 事故 | 防いでいるもの |
 |---|---|
 | 一次資料の URL がリンク切れになったまま気付かない | `packages/etl/src/fetch.ts` の `if (!res.ok) throw new Error` で ETL が落ち、`.github/workflows/etl.yml` の `Open failure Issue` が Issue を立てる |
+| 相手側の**一時的な**失敗（keep-alive の接続切断 `other side closed`・HTTP 502/503/504）で日次 ETL が 1 晩まるごと落ちる（#1340: 2026-11-11〜13 の 3 晩。例外に URL が無くどのページか分からなかった） | `packages/etl/src/fetch.ts` の `fetchWithRetry` が `FETCH_MAX_ATTEMPTS` 回まで試し、再試行のたびに stderr へ `fetch: retry` の 1 行を出す（黙って通さない）。404・他の 4xx・500 は再試行しない。再試行し尽くした例外には `fetch failed after` に URL と試行回数が入る。テストは `packages/etl/test/fetch-retry.test.ts`（fetch と sleep を `setFetchDepsForTest` で差し替え、実ネットワークに出ない。再試行回数を 0 にする変異で 16 件中 8 件が落ちる） |
 | ETL が回らない月の間にリンクが死ぬ（地方は月1回） | `scripts/ci/link-check.sh`（`LINK_CHECK_UA` で名乗り、`2回とも落ちたものだけ` を報告）を `.github/workflows/link-check.yml` が週1（`Link check (weekly)`）で回す。テストは `scripts/ci/test/link-check.test.sh`（#646） |
 | 別人の記録を出す（表決 PDF の氏名 → 名簿） | `packages/etl/src/sources/local/name-match.ts` は候補が 2 人以上なら `return { memberId: "", candidates: [] }` で**選ばない**（#569）。テストは `packages/etl/test/local-name-match.test.ts` |
 | **列がずれて全議員の賛否が入れ替わる**（合計は変わらないので数の検算では気づけない） | 順序敏感なアサーションを置く。`packages/etl/test/kochi-votes-pdf.test.ts` の `parseVotePdf: どの議員がどう投じたか（ゴールデン）。列がずれたら落ちる`、`packages/etl/test/shimane-votes-pdf.test.ts` の `assert.equal(pdf.members[21], "山根成二");`（Sprint 12・#225/#226） |
