@@ -48,8 +48,13 @@ const socketClosed = (): TypeError => {
   return new TypeError("fetch failed", { cause });
 };
 
+/** `fetch.ts` の非 export `UA` と同じ文字列。再試行のたびに付け直す責任は `fetchWithRetry` にある（レビューの R-g）。 */
+const EXPECTED_UA = "giinrecord-etl/0.1 (+https://github.com/uonoko1/giinrecord)";
+
 let dir: string;
 let calls: string[];
+/** 各回の fetch に渡された User-Agent（無ければ undefined）。calls と同じ添字。 */
+let userAgents: (string | undefined)[];
 let sleeps: number[];
 let stderrLines: string[];
 let script: Step[];
@@ -59,12 +64,14 @@ beforeEach(async () => {
   dir = await mkdtemp(join(tmpdir(), "etl-fetch-retry-"));
   setCacheDirForTest(dir);
   calls = [];
+  userAgents = [];
   sleeps = [];
   stderrLines = [];
   script = [];
   setFetchDepsForTest({
-    fetch: (async (url: string | URL | Request) => {
+    fetch: (async (url: string | URL | Request, init?: RequestInit) => {
       calls.push(String(url));
+      userAgents.push(new Headers(init?.headers).get("User-Agent") ?? undefined);
       const step = script.shift();
       if (step === undefined) throw new Error(`台本が尽きた（${calls.length} 回目の fetch）`);
       if (step instanceof Error) throw step;
@@ -105,6 +112,7 @@ describe("ネットワーク層の失敗（TypeError: fetch failed）", () => {
     script = [socketClosed(), ok("<html>q1</html>")];
     assert.equal(await run(), "<html>q1</html>");
     assert.equal(calls.length, 2, "fetch は 2 回呼ばれる");
+    assert.deepEqual(userAgents, [EXPECTED_UA, EXPECTED_UA], "再試行でも User-Agent を落とさない");
     const lines = retryLines();
     assert.equal(lines.length, 1, `retry 行は 1 本:\n${stderrLines.join("\n")}`);
     assert.match(lines[0]!, /^fetch: retry 1\/2 /, "何回目か/最大何回かが分かる形");
