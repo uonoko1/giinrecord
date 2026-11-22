@@ -106,7 +106,20 @@ jobs:
           test -n "$NUMBER"   # PR が無ければここで失敗させる（サイレント失敗対策）
           echo "data PR #$NUMBER"
           echo "number=$NUMBER" >> "$GITHUB_OUTPUT"
-          gh pr merge "$NUMBER" --squash --auto
+          # #1227: **`--auto` を無条件に打たない。** 経緯と根拠は
+          # .github/workflows/etl.yml の同じ箇所と scripts/ci/etl-auto-merge-gate.sh に書いた。
+          # **exit 10 は失敗ではない**（PR は正しく作られていて、マージしないだけ）。
+          GATE_RC=0
+          bash scripts/ci/etl-auto-merge-gate.sh "$DATA_BRANCH" || GATE_RC=$?
+          echo "gate=$GATE_RC" >> "$GITHUB_OUTPUT"
+          if [ "$GATE_RC" = "0" ]; then
+            gh pr merge "$NUMBER" --squash --auto
+          elif [ "$GATE_RC" = "10" ]; then
+            echo "auto-merge は付けない（#1227 の門が止めた）。PR #$NUMBER は人が見てからマージする。"
+          else
+            echo "FAIL: auto-merge の門が exit $GATE_RC で終わった（比較できていない）。" >&2
+            exit "$GATE_RC"
+          fi
 
       - name: Job summary
         if: always()
@@ -114,6 +127,7 @@ jobs:
           PR: ${{ steps.pr.outputs.number }}
           CHANGED: ${{ steps.pr.outputs.changed }}
           STATUS: ${{ job.status }}
+          GATE: ${{ steps.pr.outputs.gate }}
         run: |
           field() { node -e 'const m=JSON.parse(require("fs").readFileSync("data/assemblies/"+process.argv[2]+"/meta.json","utf8"));console.log(process.argv[1].split(".").reduce((o,k)=>o?.[k],m)??"?")' "$1" "$2" 2>/dev/null || echo "?"; }
           if [ -n "$PR" ]; then PR_CELL="#$PR"; else PR_CELL="なし（data/ に変更なし）"; fi
@@ -123,6 +137,13 @@ jobs:
             echo "|---|---|"
             echo "| 結果 | $STATUS |"
             echo "| データ PR | $PR_CELL |"
+            # #1227: armed にしたか、していないかを必ず 1 行にする（黙って止まらない。#1056）。
+            case "${GATE:-}" in
+              0)  echo "| auto-merge | 付けた（#1227 の門を通った） |" ;;
+              10) echo "| auto-merge | **付けていない（#1227 の門が止めた）。上の「auto-merge の門」の表に理由。人が見てからマージすること** |" ;;
+              "") echo "| auto-merge | 門まで到達していない（data/ に変更なし、または途中で失敗した） |" ;;
+              *)  echo "| auto-merge | **付けていない（門が exit $GATE。検査そのものが成立しなかった）** |" ;;
+            esac
             echo "| 変更ファイル数 | ${CHANGED:-?} |"
             echo
             echo "| 議会 | 名簿の as-of | 議員 | 表決（議案） | セル（議員数×議案数） | 不明セル（推定せず「不明」にした数） | 名簿に寄せられなかった氏名（unmatched.json） |"
@@ -141,8 +162,9 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       # auto-merge は Deploy を起動しない（GITHUB_TOKEN のマージは push イベントを起こさない）ので、マージを待って deploy-data.yml を起動する（etl.yml と同じ）。
+      # #1227: 門が armed を止めた日は走らせない（30 分待って exit 1 すると毎晩 failure Issue が立つ）。
       - name: Wait for data PR merge, then deploy
-        if: steps.pr.outputs.number != ''
+        if: steps.pr.outputs.number != '' && steps.pr.outputs.gate == '0'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR: ${{ steps.pr.outputs.number }}

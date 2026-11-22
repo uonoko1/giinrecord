@@ -50,6 +50,7 @@ grep してから起票してください（**今日の 5 件はそこにあり�
 
 | 事故 | 防いでいるもの |
 |---|---|
+| **喪失を運ぶデータ PR が、人が auto-merge を外し忘れた日に自分でマージされる**（個票に復元元が無い項目が在るので戻らない） | 門は `scripts/ci/etl-auto-merge-gate.sh` で、人が置く停止ファイル（`HOLD_FILE`）と `origin/main` の tip から消えた `data/` のファイル（`name-status`）を見て `exit 10` を返す。データ PR を作る 3 本（etl / districts / local-assemblies）はそれを先に通し、10 なら `--auto` を打たない: `.github/workflows/etl.yml` の `GATE_RC` と `auto-merge` の行。振る舞いは `scripts/ci/test/etl-auto-merge-gate.test.sh` の `t_deleted_file_withholds` と `t_clean_refresh_arms`（止める側と止めない側の両方）、配線は `packages/etl/test/workflow-auto-merge-gate.test.ts` の `autoMergeWorkflows`（#1227/#1229） |
 | 一次資料の URL がリンク切れになったまま気付かない | `packages/etl/src/fetch.ts` の `if (!res.ok) throw new Error` で ETL が落ち、`.github/workflows/etl.yml` の `Open failure Issue` が Issue を立てる |
 | 相手側の**一時的な**失敗（keep-alive の接続切断 `other side closed`・HTTP 502/503/504）で日次 ETL が 1 晩まるごと落ちる（#1340: 2026-11-11〜13 の 3 晩。例外に URL が無くどのページか分からなかった） | `packages/etl/src/fetch.ts` の `fetchWithRetry` が `FETCH_MAX_ATTEMPTS` 回まで試し、再試行のたびに stderr へ `fetch: retry` の 1 行を出す（黙って通さない）。404・他の 4xx・500 は再試行しない。再試行し尽くした例外には `fetch failed after` に URL と試行回数が入る。テストは `packages/etl/test/fetch-retry.test.ts`（fetch と sleep を `setFetchDepsForTest` で差し替え、実ネットワークに出ない。再試行回数を 0 にする変異で 16 件中 8 件が落ちる） |
 | ETL が回らない月の間にリンクが死ぬ（地方は月1回） | `scripts/ci/link-check.sh`（`LINK_CHECK_UA` で名乗り、`2回とも落ちたものだけ` を報告）を `.github/workflows/link-check.yml` が週1（`Link check (weekly)`）で回す。テストは `scripts/ci/test/link-check.test.sh`（#646） |
